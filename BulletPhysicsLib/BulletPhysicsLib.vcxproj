@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{ca222ff8-194a-4ad3-a782-750e286a7683}</ProjectGuid>
+    <RootNamespace>BulletPhysicsLib</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <SourcePath>$(VC_SourcePath);..\AdditiveIKLib\BTMANAGER;..\AdditiveIKLib\BTSRC;</SourcePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\AdditiveIKLib\BTMANAGER;..\AdditiveIKLib\BTSRC;</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <SourcePath>$(VC_SourcePath);..\AdditiveIKLib\BTMANAGER;..\AdditiveIKLib\BTSRC;</SourcePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\AdditiveIKLib\BTMANAGER;..\AdditiveIKLib\BTSRC;</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_LIB;_WINDOWS;CONVD3DX11;_ITERATOR_DEBUG_LEVEL=0;BT_USE_PPL;BT_THREADSAFE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <DisableSpecificWarnings>4305;4244;6246;4267;</DisableSpecificWarnings>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <AdditionalIncludeDirectories>..\AdditiveLib\INCLUDE;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <StructMemberAlignment>8Bytes</StructMemberAlignment>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_LIB;_WINDOWS;CONVD3DX11;_ITERATOR_DEBUG_LEVEL=0;BT_USE_PPL;BT_THREADSAFE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <DisableSpecificWarnings>4305;4244;6246;4267;</DisableSpecificWarnings>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <AdditionalIncludeDirectories>..\AdditiveLib\INCLUDE;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <StructMemberAlignment>8Bytes</StructMemberAlignment>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\btBulletCollisionCommon.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\btBulletDynamicsCommon.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3AlignedAllocator.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3AlignedObjectArray.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3CommandLineArgs.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3FileUtils.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3HashMap.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3Logging.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3Matrix3x3.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3MinMax.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3PoolAllocator.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3QuadWord.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3Quaternion.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3Random.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3ResizablePool.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3Scalar.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3StackAlloc.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3Transform.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3TransformUtil.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3Vector3.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\shared\b3Float4.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\shared\b3Int2.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\shared\b3Int4.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\shared\b3Mat3x3.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\shared\b3PlatformDefinitions.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\Bullet3Common\shared\b3Quat.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btAxisSweep3.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btAxisSweep3Internal.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btBroadphaseInterface.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btBroadphaseProxy.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btCollisionAlgorithm.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btDbvt.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btDbvtBroadphase.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btDispatcher.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btOverlappingPairCache.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btOverlappingPairCallback.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btQuantizedBvh.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btSimpleBroadphase.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btActivatingCollisionAlgorithm.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btBox2dBox2dCollisionAlgorithm.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btBoxBoxCollisionAlgorithm.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btBoxBoxDetector.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btCollisionConfiguration.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btCollisionCreateFunc.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btCollisionDispatcher.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btCollisionDispatcherMt.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btCollisionObject.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btCollisionObjectWrapper.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btCollisionWorld.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btCollisionWorldImporter.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btCompoundCollisionAlgorithm.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btCompoundCompoundCollisionAlgorithm.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btConvex2dConvex2dAlgorithm.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btConvexConcaveCollisionAlgorithm.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btConvexConvexAlgorithm.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btConvexPlaneCollisionAlgorithm.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btDefaultCollisionConfiguration.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btEmptyCollisionAlgorithm.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btGhostObject.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btHashedSimplePairCache.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btInternalEdgeUtility.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btManifoldResult.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btSimulationIslandManager.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btSphereBoxCollisionAlgorithm.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btSphereSphereCollisionAlgorithm.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btSphereTriangleCollisionAlgorithm.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btUnionFind.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\SphereTriangleDetector.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btBox2dShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btBoxShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btBvhTriangleMeshShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btCapsuleShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btCollisionMargin.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btCollisionShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btCompoundShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConcaveShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConeShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConvex2dShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConvexHullShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConvexInternalShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConvexPointCloudShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConvexPolyhedron.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConvexShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConvexTriangleMeshShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btCylinderShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btEmptyShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btHeightfieldTerrainShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btMaterial.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btMiniSDF.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btMinkowskiSumShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btMultimaterialTriangleMeshShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btMultiSphereShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btOptimizedBvh.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btPolyhedralConvexShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btScaledBvhTriangleMeshShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btSdfCollisionShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btShapeHull.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btSphereShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btStaticPlaneShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btStridingMeshInterface.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btTetrahedronShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btTriangleBuffer.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btTriangleCallback.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btTriangleIndexVertexArray.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btTriangleIndexVertexMaterialArray.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btTriangleInfoMap.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btTriangleMesh.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btTriangleMeshShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btTriangleShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btUniformScalingShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btBoxCollision.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btClipPolygon.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btCompoundFromGimpact.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btContactProcessing.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btContactProcessingStructs.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btGenericPoolAllocator.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btGeometryOperations.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btGImpactBvh.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btGImpactBvhStructs.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btGImpactCollisionAlgorithm.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btGImpactMassUtil.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btGImpactQuantizedBvh.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btGImpactQuantizedBvhStructs.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btGImpactShape.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btQuantization.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btTriangleShapeEx.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_array.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_basic_geometry_operations.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_bitset.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_box_collision.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_box_set.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_clip_polygon.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_contact.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_geometry.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_geom_types.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_hash_table.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_linear_math.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_math.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_memory.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_pair.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_radixsort.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_tri_collision.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btComputeGjkEpaPenetration.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btContinuousConvexCollision.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btConvexCast.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btConvexPenetrationDepthSolver.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btDiscreteCollisionDetectorInterface.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btGjkCollisionDescription.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btGjkConvexCast.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btGjkEpa2.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btGjkEpa3.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btGjkEpaPenetrationDepthSolver.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btGjkPairDetector.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btManifoldPoint.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btMinkowskiPenetrationDepthSolver.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btMprPenetration.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btPersistentManifold.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btPointCollector.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btPolyhedralContactClipping.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btRaycastCallback.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btSimplexSolverInterface.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btSubSimplexConvexCast.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btVoronoiSimplexSolver.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btAabbUtil2.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btAlignedAllocator.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btAlignedObjectArray.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btConvexHull.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btConvexHullComputer.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btCpuFeatureUtility.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btDefaultMotionState.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btGeometryUtil.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btGrahamScan2dConvexHull.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btHashMap.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btIDebugDraw.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btImplicitQRSVD.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btList.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btMatrix3x3.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btMatrixX.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btMinMax.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btMotionState.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btPolarDecomposition.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btPoolAllocator.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btQuadWord.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btQuaternion.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btQuickprof.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btRandom.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btScalar.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btSerializer.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btSpatialAlgebra.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btStackAlloc.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btThreads.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btTransform.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btTransformUtil.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\btVector3.h" />
+    <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\TaskScheduler\btThreadSupportInterface.h" />
+    <ClInclude Include="..\AdditiveIKLib\examples\MultiThreadedDemo\CommonRigidBodyMTBase.h" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="stdafx.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\btBulletCollisionAll.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\btBulletDynamicsAll.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\btLinearMathAll.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3AlignedAllocator.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3Logging.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\Bullet3Common\b3Vector3.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btAxisSweep3.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btBroadphaseProxy.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btCollisionAlgorithm.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btDbvt.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btDbvtBroadphase.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btDispatcher.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btOverlappingPairCache.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btQuantizedBvh.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\BroadphaseCollision\btSimpleBroadphase.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btActivatingCollisionAlgorithm.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btBox2dBox2dCollisionAlgorithm.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btBoxBoxCollisionAlgorithm.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btBoxBoxDetector.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btCollisionDispatcher.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btCollisionDispatcherMt.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btCollisionObject.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btCollisionWorld.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btCollisionWorldImporter.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btCompoundCollisionAlgorithm.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btCompoundCompoundCollisionAlgorithm.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btConvex2dConvex2dAlgorithm.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btConvexConcaveCollisionAlgorithm.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btConvexConvexAlgorithm.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btConvexPlaneCollisionAlgorithm.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btDefaultCollisionConfiguration.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btEmptyCollisionAlgorithm.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btGhostObject.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btHashedSimplePairCache.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btInternalEdgeUtility.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btManifoldResult.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btSimulationIslandManager.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btSphereBoxCollisionAlgorithm.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btSphereSphereCollisionAlgorithm.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btSphereTriangleCollisionAlgorithm.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\btUnionFind.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionDispatch\SphereTriangleDetector.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btBox2dShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btBoxShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btBvhTriangleMeshShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btCapsuleShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btCollisionShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btCompoundShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConcaveShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConeShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConvex2dShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConvexHullShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConvexInternalShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConvexPointCloudShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConvexPolyhedron.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConvexShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btConvexTriangleMeshShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btCylinderShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btEmptyShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btHeightfieldTerrainShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btMiniSDF.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btMinkowskiSumShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btMultimaterialTriangleMeshShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btMultiSphereShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btOptimizedBvh.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btPolyhedralConvexShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btScaledBvhTriangleMeshShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btSdfCollisionShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btShapeHull.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btSphereShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btStaticPlaneShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btStridingMeshInterface.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btTetrahedronShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btTriangleBuffer.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btTriangleCallback.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btTriangleIndexVertexArray.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btTriangleIndexVertexMaterialArray.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btTriangleMesh.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btTriangleMeshShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\CollisionShapes\btUniformScalingShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btContactProcessing.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btGenericPoolAllocator.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btGImpactBvh.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btGImpactCollisionAlgorithm.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btGImpactQuantizedBvh.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btGImpactShape.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\btTriangleShapeEx.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_box_set.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_contact.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_memory.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\Gimpact\gim_tri_collision.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btContinuousConvexCollision.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btConvexCast.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btGjkConvexCast.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btGjkEpa2.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btGjkEpaPenetrationDepthSolver.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btGjkPairDetector.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btMinkowskiPenetrationDepthSolver.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btPersistentManifold.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btPolyhedralContactClipping.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btRaycastCallback.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btSubSimplexConvexCast.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\BulletCollision\NarrowPhaseCollision\btVoronoiSimplexSolver.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\LinearMath\btAlignedAllocator.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\LinearMath\btConvexHull.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\LinearMath\btConvexHullComputer.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\LinearMath\btGeometryUtil.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\LinearMath\btPolarDecomposition.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\LinearMath\btQuickprof.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\LinearMath\btSerializer.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\LinearMath\btSerializer64.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\LinearMath\btThreads.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\LinearMath\btVector3.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\LinearMath\TaskScheduler\btTaskScheduler.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\LinearMath\TaskScheduler\btThreadSupportPosix.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\BTSRC\LinearMath\TaskScheduler\btThreadSupportWin32.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\examples\MultiThreadedDemo\CommonRigidBodyMTBase.cpp" />
+    <ClCompile Include="BulletPhysicsLib.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\AdditiveIKLib\BTSRC\Bullet3Common\CMakeLists.txt" />
+    <Text Include="..\AdditiveIKLib\BTSRC\LinearMath\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\AdditiveIKLib\BTSRC\Bullet3Common\premake4.lua" />
+    <None Include="..\AdditiveIKLib\BTSRC\LinearMath\premake4.lua" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
