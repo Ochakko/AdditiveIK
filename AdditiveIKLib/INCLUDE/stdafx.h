@@ -2,43 +2,33 @@
 
 #include <Windows.h>
 
-#ifdef CONVD3DX11
-// Direct3D11 includes
-#include <d3dcommon.h>
-#include <dxgi.h>
-#include <d3d11_1.h>
-#include <d3d11_2.h>
-#include <d3dcompiler.h>
-#ifdef USE_DIRECT3D11_3
-#include <d3d11_3.h>
-#endif
-#ifdef USE_DIRECT3D11_4
-#include <d3d11_4.h>
-#endif
-// DirectXMath includes
-#include <DirectXMath.h>
-#include <DirectXColors.h>
-// WIC includes
-#include <wincodec.h>
-// XInput includes
-#include <xinput.h>
-// HRESULT translation for Direct3D and other APIs 
-#include <dxerr.h>
-#endif
+//#ifdef CONVD3DX11
+//// Direct3D11 includes
+//#include <d3dcommon.h>
+//#include <dxgi.h>
+//#include <d3d11_1.h>
+//#include <d3d11_2.h>
+//#include <d3dcompiler.h>
+//#ifdef USE_DIRECT3D11_3
+//#include <d3d11_3.h>
+//#endif
+//#ifdef USE_DIRECT3D11_4
+//#include <d3d11_4.h>
+//#endif
+//// DirectXMath includes
+//#include <DirectXMath.h>
+//#include <DirectXColors.h>
+//// WIC includes
+//#include <wincodec.h>
+//// XInput includes
+//#include <xinput.h>
+//// HRESULT translation for Direct3D and other APIs 
+//#include <dxerr.h>
+//#endif
 
 #include <intrin.h>
 
-
-//fpsチェックの時に有効にする。垂直同期をしないモード。
-//DXUT.cpp のCreate()内でm_state.m_OverrideForceVsync = 0;//(通常1)
-//DXUT.cpp のDXUTRender3DEnvironment10()でhr = pSwapChain->Present(0, 0);//(通常はPresent(1, dwFlags);
-//#define SPEEDTEST__
-
-//ロングタイムラインとオイラーグラフの描画をスキップするときに有効にする。
-//#define SKIP_EULERGRAPH__
-
-//物理シミュをスキップする。
-//#define SKIP_BULLETSIMU__
+#include "../../MiniEngine/MiniEngine.h"
 
 
 //#########################################################################

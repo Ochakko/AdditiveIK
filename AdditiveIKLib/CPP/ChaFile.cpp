@@ -28,7 +28,7 @@
 #include <LIMFIle.h>
 #include <DispGroupFile.h>
 
-#include "..\\..\\MameBake3D\\FrameCopyDlg.h"
+#include "..\\..\\AdditiveIK\FrameCopyDlg.h"
 
 #define DBGH
 #include <dbg.h>

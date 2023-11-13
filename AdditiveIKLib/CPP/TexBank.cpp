@@ -27,7 +27,7 @@ using namespace std;
 
 extern WCHAR g_basedir[ MAX_PATH ];
 
-CTexBank::CTexBank( ID3D11Device* pdev )
+CTexBank::CTexBank( ID3D12Device* pdev )
 {
 	InitParams();
 	m_pdev = pdev;
@@ -85,7 +85,7 @@ CTexElem* CTexBank::ExistTex( const WCHAR* srcpath, const WCHAR* srcname, int sr
 }
 
 //int CTexBank::AddTex( WCHAR* srcpath, WCHAR* srcname, int srctransparent, int srcpool, D3DXCOLOR* srccol, int* dstid )
-int CTexBank::AddTex(ID3D11DeviceContext* pd3dImmediateContext,const WCHAR* srcpath, const WCHAR* srcname, int srctransparent, int srcpool, int* dstid)
+int CTexBank::AddTex(const WCHAR* srcpath, const WCHAR* srcname, int srctransparent, int srcpool, int* dstid)
 {
 	*dstid = -1;
 
@@ -128,7 +128,7 @@ int CTexBank::AddTex(ID3D11DeviceContext* pd3dImmediateContext,const WCHAR* srcp
 	//if (srccol) {
 	//	newelem->SetTransCol(*srccol);
 	//}
-	//CallF( newelem->CreateTexData( m_pdev, pd3dImmediateContext), return 1 );
+	//CallF( newelem->CreateTexData( m_pdev, pRenderContext), return 1 );
 
 
 	//if (wcsstr(srcname, L"_14.png")) {
@@ -137,7 +137,7 @@ int CTexBank::AddTex(ID3D11DeviceContext* pd3dImmediateContext,const WCHAR* srcp
 
 
 
-	int result1 = newelem->CreateTexData(m_pdev, pd3dImmediateContext);
+	int result1 = newelem->CreateTexData(m_pdev);
 	if (result1 == 0) {
 		newelem->SetValidFlag(true);
 	}
@@ -163,13 +163,13 @@ int CTexBank::Invalidate( int invalmode )
 
 	return 0;
 }
-int CTexBank::Restore(ID3D11DeviceContext* pd3dImmediateContext)
+int CTexBank::Restore(RenderContext* pRenderContext)
 {
 	map<int,CTexElem*>::iterator itr;
 	for( itr = m_texmap.begin(); itr != m_texmap.end(); itr++ ){
 		CTexElem* telem = itr->second;
 		if( telem && telem->IsValid()){
-			int result1 = telem->CreateTexData( m_pdev, pd3dImmediateContext);
+			int result1 = telem->CreateTexData(m_pdev);
 			if (result1 != 0) {
 				telem->SetValidFlag(false);
 			}

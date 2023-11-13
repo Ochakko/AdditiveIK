@@ -1,7 +1,7 @@
 ﻿#ifndef BONEH
 #define BONEH
 
-//class ID3D11Device;
+//class ID3D12Device;
 
 
 //#include <d3dx9.h>
@@ -508,7 +508,7 @@ public:
 	int QuaternionInOrder(bool limitdegflag, int srcmotid, double srcframe, CQuaternion* srcdstq);
 	int CalcNewBtMat(CModel* srcmodel, CBone* childbone, ChaMatrix* dstmat, ChaVector3* dstpos);
 
-	int LoadCapsuleShape(ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmediateContext);
+	int LoadCapsuleShape(ID3D12Device* pdev);
 
 	int ChkMovableEul(ChaVector3 srceul);
 

@@ -98,7 +98,7 @@
 #include <OrgWindow.h>
 
 
-#include <DXUT.h>
+//#include <DXUT.h>
 #include <io.h>
 
 
@@ -228,7 +228,7 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vpmat, double src
 	return 0;
 }
 
-int ChaScene::RenderModels(ID3D11DeviceContext* pd3dImmediateContext, int lightflag, ChaVector4 diffusemult, int btflag)
+int ChaScene::RenderModels(RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int btflag)
 {
 
 	if (g_changeUpdateThreadsNum) {
@@ -328,18 +328,18 @@ int ChaScene::RenderModels(ID3D11DeviceContext* pd3dImmediateContext, int lightf
 									if (curobj->GetDispObj()) {
 										if (curobj->GetPm3()) {
 											CallF(curmodel->SetShaderConst(curobj, btflag, calcslotflag), return 1);
-											CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pd3dImmediateContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
+											CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
 										}
 										else if (curobj->GetPm4()) {
 											CallF(curmodel->SetShaderConst(curobj, btflag, calcslotflag), return 1);
-											CallF(curobj->GetDispObj()->RenderNormal(withalpha, pd3dImmediateContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
+											CallF(curobj->GetDispObj()->RenderNormal(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
 										}
 										else {
 											_ASSERT(0);
 										}
 									}
 									else if (curobj->GetDispLine()) {
-										CallF(curobj->GetDispLine()->RenderLine(withalpha, pd3dImmediateContext, diffusemult, materialdisprate), return 1);
+										CallF(curobj->GetDispLine()->RenderLine(withalpha, pRenderContext, diffusemult, materialdisprate), return 1);
 									}
 								}
 							}

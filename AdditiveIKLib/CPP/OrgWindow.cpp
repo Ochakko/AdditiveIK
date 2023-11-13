@@ -130,7 +130,7 @@ namespace OrgWinGUI{
 							0.0f, 0.0f, 0.0f, 0.0f, 1.0f    // must be 1
 						};
 						attr.SetColorMatrix(&cmat);
-						//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\MameBake3D_git\\MameBake3D\\Media\\MameMedia\\img_l105.png");
+						//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\AdditiveIK\Media\\MameMedia\\img_l105.png");
 						if(g_mousehereimage){
 							gdipg->DrawImage(g_mousehereimage, Gdiplus::Rect(mousepoint.x, mousepoint.y, BMP_W, BMP_H),
 								0, 0, BMP_W, BMP_H,
@@ -276,7 +276,7 @@ namespace OrgWinGUI{
 								0.0f, 0.0f, 0.0f, 0.0f, 1.0f    // must be 1
 							};
 							attr.SetColorMatrix(&cmat);
-							//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\MameBake3D_git\\MameBake3D\\Media\\MameMedia\\img_l105.png");
+							//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\AdditiveIK\Media\\MameMedia\\img_l105.png");
 							if (g_mousehereimage){
 								gdipg->DrawImage(g_mousehereimage, Gdiplus::Rect(mousepoint.x, mousepoint.y, BMP_W, BMP_H),
 									0, 0, BMP_W, BMP_H,
@@ -599,7 +599,7 @@ namespace OrgWinGUI{
 							0.0f, 0.0f, 0.0f, 0.0f, 1.0f    // must be 1
 						};
 						attr.SetColorMatrix(&cmat);
-						//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\MameBake3D_git\\MameBake3D\\Media\\MameMedia\\img_l105.png");
+						//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\AdditiveIK\Media\\MameMedia\\img_l105.png");
 						if (g_mousehereimage) {
 							gdipg->DrawImage(g_mousehereimage, Gdiplus::Rect(mousepoint.x, mousepoint.y, BMP_W, BMP_H),
 								0, 0, BMP_W, BMP_H,
@@ -876,7 +876,7 @@ namespace OrgWinGUI{
 							0.0f, 0.0f, 0.0f, 0.0f, 1.0f    // must be 1
 						};
 						attr.SetColorMatrix(&cmat);
-						//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\MameBake3D_git\\MameBake3D\\Media\\MameMedia\\img_l105.png");
+						//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\AdditiveIK\Media\\MameMedia\\img_l105.png");
 						if (g_mousehereimage) {
 							gdipg->DrawImage(g_mousehereimage, Gdiplus::Rect(mousepoint.x, mousepoint.y, BMP_W, BMP_H),
 								0, 0, BMP_W, BMP_H,
@@ -1294,7 +1294,7 @@ namespace OrgWinGUI{
 							0.0f, 0.0f, 0.0f, 0.0f, 1.0f    // must be 1
 						};
 						attr.SetColorMatrix(&cmat);
-						//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\MameBake3D_git\\MameBake3D\\Media\\MameMedia\\img_l105.png");
+						//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\AdditiveIK\Media\\MameMedia\\img_l105.png");
 						if (g_mousehereimage) {
 							gdipg->DrawImage(g_mousehereimage, Gdiplus::Rect(mousepoint.x, mousepoint.y, BMP_W, BMP_H),
 								0, 0, BMP_W, BMP_H,

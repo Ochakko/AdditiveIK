@@ -6289,7 +6289,7 @@ ChaVector3 CBone::GetChildWorld(){
 	return m_childworld;
 };
 
-int CBone::LoadCapsuleShape(ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmediateContext)
+int CBone::LoadCapsuleShape(ID3D12Device* pdev)
 {
 
 	WCHAR wfilename[MAX_PATH];
@@ -6315,7 +6315,7 @@ int CBone::LoadCapsuleShape(ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmedia
 			return 1;
 		}
 		swprintf_s(wfilename, MAX_PATH, L"%s\\%s", mpath, L"cone_dirX.mqo");
-		CallF(s_coldisp[COL_CONE_INDEX]->LoadMQO(pdev, pd3dImmediateContext, wfilename, 0, 1.0f, 0), return 1);
+		CallF(s_coldisp[COL_CONE_INDEX]->LoadMQO(pdev, wfilename, 0, 1.0f, 0), return 1);
 		//CallF(m_coldisp[COL_CONE_INDEX]->MakeDispObj(), return 1);
 	}
 
@@ -6326,7 +6326,7 @@ int CBone::LoadCapsuleShape(ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmedia
 			return 1;
 		}
 		swprintf_s(wfilename, MAX_PATH, L"%s\\%s", mpath, L"capsule_dirX.mqo");
-		CallF(s_coldisp[COL_CAPSULE_INDEX]->LoadMQO(pdev, pd3dImmediateContext, wfilename, 0, 1.0f, 0), return 1);
+		CallF(s_coldisp[COL_CAPSULE_INDEX]->LoadMQO(pdev, wfilename, 0, 1.0f, 0), return 1);
 		//CallF(m_coldisp[COL_CAPSULE_INDEX]->MakeDispObj(), return 1);
 	}
 
@@ -6337,7 +6337,7 @@ int CBone::LoadCapsuleShape(ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmedia
 			return 1;
 		}
 		swprintf_s(wfilename, MAX_PATH, L"%s\\%s", mpath, L"sphere_dirX.mqo");
-		CallF(s_coldisp[COL_SPHERE_INDEX]->LoadMQO(pdev, pd3dImmediateContext, wfilename, 0, 1.0f, 0), return 1);
+		CallF(s_coldisp[COL_SPHERE_INDEX]->LoadMQO(pdev, wfilename, 0, 1.0f, 0), return 1);
 		//CallF(m_coldisp[COL_SPHERE_INDEX]->MakeDispObj(), return 1);
 	}
 
@@ -6348,7 +6348,7 @@ int CBone::LoadCapsuleShape(ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmedia
 			return 1;
 		}
 		swprintf_s(wfilename, MAX_PATH, L"%s\\%s", mpath, L"box.mqo");
-		CallF(s_coldisp[COL_BOX_INDEX]->LoadMQO(pdev, pd3dImmediateContext, wfilename, 0, 1.0f, 0), return 1);
+		CallF(s_coldisp[COL_BOX_INDEX]->LoadMQO(pdev, wfilename, 0, 1.0f, 0), return 1);
 		//CallF(m_coldisp[COL_BOX_INDEX]->MakeDispObj(), return 1);
 	}
 

@@ -8,21 +8,21 @@
 //using namespace std;
 
 
-//class ID3D11Device;
+//class ID3D12Device;
 //class D3DXCOLOR;
 class CTexElem;
 
 class CTexBank
 {
 public:
-	CTexBank( ID3D11Device* pdev );
+	CTexBank( ID3D12Device* pdev );
 	~CTexBank();
 
 	//int AddTex( WCHAR* srcpath, WCHAR* srcname, int srctransparent, int srcpool, D3DXCOLOR* srccol, int* dstid );
-	int AddTex(ID3D11DeviceContext* pd3dImmediateContext, const WCHAR* srcpath, const WCHAR* srcname, int srctransparent, int srcpool, int* dstid);
+	int AddTex(const WCHAR* srcpath, const WCHAR* srcname, int srctransparent, int srcpool, int* dstid);
 
 	int Invalidate( int invalmode );
-	int Restore(ID3D11DeviceContext* pd3dImmediateContext);
+	int Restore(RenderContext* pRenderContext);
 
 	int DestroyTex( int srcid );
 
@@ -42,7 +42,7 @@ private:
 	CTexElem* ExistTex( const WCHAR* srcpath, const WCHAR* srcname, int srctransparent );
 
 private:
-	ID3D11Device* m_pdev;
+	ID3D12Device* m_pdev;
 	std::map<int, CTexElem*> m_texmap;
 };
 #endif

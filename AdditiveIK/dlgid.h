@@ -1,0 +1,18 @@
+#ifndef DLGIDH
+#define DLGIDH
+
+#define IDD_FRAMECOPYDLG	60000
+#define IDN_LIST1			60001
+#define IDN_ADD				60002
+#define IDN_DELETE			60003
+#define IDN_ALLDELETE		60004
+#define IDN_TREE1			60005
+#define IDN_LIST2			60006
+#define IDN_ADD2			60007
+#define IDN_DELETE2			60008
+#define IDN_ALLDELETE2		60009
+#define IDN_MULTIFRAME		60010
+#define IDN_STARTFRAME		60011
+#define IDN_ENDFRAME		60012
+
+#endif

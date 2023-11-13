@@ -7,15 +7,22 @@ Software to IK motion capture as if it were brushed.  DirectX 12. FBX Input/Outp
 
 2023_11_12<br>
 まずはAdditiveIKのレポジトリを作成<br>
-MameBake3D + HLSシェーダーの魔導書(DirectX12)の描画　+ bullet physicsからスタートする予定<br>
+MameBake3D + HLSシェーダーの魔導書(DirectX12)の描画　+ DirectX12の魔導書のDX12文法 + bullet physicsからスタートする予定<br>
 ビルドは出来ますがまだ動きません　これからです.<br>
+<br>
+<br>
+2023_11_14<br>
+もの凄い作り直しをしようとしていましたが　考えた結果　表示とUIの挿げ替えをすることに<br>
+MameBake3Dの表示をPBRとカスケードシャドウに対応させて　UIはimguiで表示するための作業をしていく 予定<br>
+とりあえずDX12用のファイルを足して　DX11をコメントアウト　してビルドして起動可能に<br>
+まだモデルを表示できない状態<br>
+<br>
+<br>
 <br>
 <br>
 サイト：https://ochakkolab.jp<br>
 メール：info@ochakkolab.jp<br>
 Author: おちゃっこ@おちゃっこLAB<br>
-<br>
-<br>
 <br>
 <br>
 <br>
@@ -34,22 +41,31 @@ https://area.autodesk.jp/product/maya-3ds-max-indie/<br>
 OS Windows11 Pro<br>
 VisualStudio2022Pro(VisualStudioSubscription)<br>
 MayaIndie(Subscription FBXの確認はMayaでする)<br>
-Unity3D 2022LTS(2022.3.3)プロが作ったアセットをUnityAssetStore(https://assetstore.unity.com/?locale=ja-JP)でゲットする)<br>
-FBXSDKは2020.3.4(VC2022)(https://www.autodesk.com/products/fbx/)<br>
+Unity3D 2022LTS(2022.3.3)<br>
+プロが作ったアセットをUnityAssetStoreでゲットしてUnity3Dでfbx出力 https://assetstore.unity.com/?locale=ja-JP <br>
+FBXSDKは2020.3.4(VC2022) https://www.autodesk.com/products/fbx/ <br>
 Microsoft MultiThreadLibrary PPL.<br>
 <br>
 DirectX12 (githubのDirectXTK12)<br>
 DirectXTK12のライセンスはReadMe/DirectXTK12_LICENSE<br>
 <br>
-githubのbullet physics ver2.89(https://pybullet.org/wordpress/)<br>
+githubのbullet physics ver2.89 https://pybullet.org/wordpress/ <br>
 bullet physicsのライセンスはReadMe/bulletPhysics_license.txt<br>
 <br>
-HLSLシェーダーの魔導書のMiniEngine(https://github.com/shoeisha-books/hlsl-grimoire-sample)<br>
+HLSLシェーダーの魔導書のMiniEngine https://github.com/shoeisha-books/hlsl-grimoire-sample <br>
 魔導書コードのライセンスはReadMe/hlsl-grimoire_LICENSE<br>
-<br>
-<br>
 <br>
 Testディレクトリのモデル作成にVRoidStudioを使用します<br>
 https://vroid.com/studio<br>
+<br>
+<br>
+<br>
+参考までに　開発ハードウェア(2023/11/13時点)も書いておきます<br>
+古めの８コアIntelマシン<br>
+GeForce RTX 2080 8GB<br>
+128GB RAM<br>
+1T SSD<br>
+<br>
+<br>
 <br>
 <br>

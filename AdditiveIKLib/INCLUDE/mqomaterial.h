@@ -57,7 +57,7 @@ public:
 	int GetColorrefEmissive( COLORREF* dstemissive );
 
 	//int CreateTexture( WCHAR* dirname, int texpool = 0 );
-	int CreateTexture(ID3D11DeviceContext* pd3dImmediateContext, WCHAR* dirname, int texpool = 0);//!!!!!!!!!!!!!!!!!!!!!!!!
+	int CreateTexture(WCHAR* dirname, int texpool = 0);//!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 private:

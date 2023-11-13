@@ -1,4 +1,17 @@
-ï»¿#pragma once
-#define _CRT_SECURE_NO_WARNINGS
+#pragma once
+
+#include <Windows.h>
+
+#include <intrin.h>
+
+
 
 #include "MiniEngine.h"
+
+//#########################################################################
+//Œ»Ý‚Í@ƒ‚[ƒVƒ‡ƒ“ƒ|ƒCƒ“ƒg‚ÌƒCƒ“ƒfƒbƒNƒX‰»‚ð‚µ‚½‚Ì‚Å“Ç‚Ýž‚ÝŽž‚Ì‚Ý‚É‰e‹¿
+//#########################################################################
+//ƒ‚[ƒVƒ‡ƒ“ƒ|ƒCƒ“ƒgŒŸõŽž‚ÉƒLƒƒƒbƒVƒ…‚ð—LŒø‚É‚·‚éB
+//SPEEDTEST__‚ÆSKIP_EULERGRAPH__‚ÆSKIP_BULLETSIMU__‚Ì‚R‚Â‚ð—LŒø‚É‚µ‚½ó‘Ô‚ÅˆÈ‰º‚ð—LŒø‚É‚·‚é‚ÆŒø‰Ê‚ª•ª‚©‚éB
+//‚±‚¿‚ç‚ÌŠÂ‹«‚Å‚Í‚P‚QƒLƒƒƒ‰ƒNƒ^[‚Ìƒ‚[ƒVƒ‡ƒ“Ä¶Žž‚Å”ä‚×‚ÄA‚T”{‚©‚ç‚P‚T”{‘¬‚É‚È‚éB
+#define USE_CACHE_ONGETMOTIONPOINT__

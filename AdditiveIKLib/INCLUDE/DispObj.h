@@ -34,34 +34,34 @@ public:
  * @fn
  * CreateDispObj
  * @breaf メタセコイアからのデータ用の表示用オブジェクトを作成する。
- * @param (ID3D11Device* pdev) IN Direct3Dのデバイス。
+ * @param (ID3D12Device* pdev) IN Direct3Dのデバイス。
  * @param (CPolyMesh3* pm3) IN 形状データへのポインタ。
  * @param (int hasbone) IN ボーン変形有の場合は１、無しの場合は０。MameBake3Dではメタセコイアデータはボーン無し。
  * @return 成功したら０。
  */
-	int CreateDispObj( ID3D11Device* pdev, CPolyMesh3* pm3, int hasbone );
+	int CreateDispObj( ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone );
 
 
 /**
  * @fn
  * CreateDispObj
  * @breaf FBXからのデータ用の表示用オブジェクトを作成する。
- * @param (ID3D11Device* pdev) IN Direct3Dのデバイス。
+ * @param (ID3D12Device* pdev) IN Direct3Dのデバイス。
  * @param (CPolyMesh4* pm4) IN 形状データへのポインタ。
  * @param (int hasbone) IN ボーン変形有の場合は１、無しの場合は０。 * @return 戻り値の説明
  * @return 成功したら０。
  */
-	int CreateDispObj( ID3D11Device* pdev, CPolyMesh4* pm4, int hasbone );
+	int CreateDispObj( ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone );
 
 /**
  * @fn
  * CreateDispObj
  * @breaf 線分データ用の表示用オブジェクトを作成する。
- * @param (ID3D11Device* pdev) IN Direct3Dのデバイス。
+ * @param (ID3D12Device* pdev) IN Direct3Dのデバイス。
  * @param (CExtLine* extline) IN 線の形状データへのポインタ。
  * @return 成功したら０。
  */
-	int CreateDispObj( ID3D11Device* pdev, CExtLine* extline );
+	int CreateDispObj( ID3D12Device* pdev, CExtLine* extline );
 
 
 /**
@@ -74,11 +74,11 @@ public:
  * @return 成功したら０。
  */
 	int RenderNormal(bool withalpha, 
-		ID3D11DeviceContext* pd3d11DeviceContext, int lightflag, 
+		RenderContext* pRenderContext, int lightflag, 
 		ChaVector4 diffusemult, ChaVector4 materialdisprate, CMQOObject* pmqoobj);
 
 	int RenderNormalMaterial(bool laterflag, bool withalpha,
-		ID3D11DeviceContext* pd3d11DeviceContext,
+		RenderContext* pRenderContext,
 		CMQOMaterial* rmaterial, int curoffset, int curtrinum,
 		int lightflag, ChaVector4 diffusemult, ChaVector4 materialdisprate);
 
@@ -92,11 +92,11 @@ public:
  * @detail FBXデータは１オブジェクトにつき１マテリアル(材質)だが、メタセコイアデータは１オブジェクトに複数マテリアルが設定されていることが多い。
  */
 	int RenderNormalPM3(bool withalpha, 
-		ID3D11DeviceContext* pd3d11DeviceContext, int lightflag, 
+		RenderContext* pRenderContext, int lightflag, 
 		ChaVector4 diffusemult, ChaVector4 materialdisprate, CMQOObject* pmqoobj);
 
 	int RenderNormalPM3Material(bool laterflag, bool withalpha,
-		ID3D11DeviceContext* pd3d11DeviceContext,
+		RenderContext* pRenderContext,
 		CMQOMaterial* rmaterial, int curoffset, int curtrinum,
 		int lightflag, ChaVector4 diffusemult, ChaVector4 materialdisprate);
 
@@ -108,7 +108,7 @@ public:
  * @return 成功したら０。
  */
 	int RenderLine(bool withalpha,
-		ID3D11DeviceContext* pd3d11DeviceContext, 
+		RenderContext* pRenderContext, 
 		ChaVector4 diffusemult, ChaVector4 materialdisprate);
 
 /**
@@ -182,53 +182,39 @@ private:
 private:
 	int m_hasbone;//ボーン変形用のオブジェクトであるとき１、それ以外の時は０。
 
-	ID3D11Device* m_pdev;//外部メモリ、Direct3Dのデバイス。
+	ID3D12Device* m_pdev;//外部メモリ、Direct3Dのデバイス。
 	CPolyMesh3* m_pm3;//外部メモリ、メタセコイアファイルから作成した３Dデータ。
 	CPolyMesh4* m_pm4;//外部メモリ、FBXファイルから作成した３Dデータ。
 	CExtLine* m_extline;//外部メモリ、線データ。
 
+	//D3D11_BUFFER_DESC m_BufferDescBone;
+	//D3D11_BUFFER_DESC m_BufferDescNoBone;
+	//D3D11_BUFFER_DESC m_BufferDescInf;
+	//D3D11_BUFFER_DESC m_BufferDescLine;
 
-	/*
-	extern ID3D11EffectTechnique* g_hRenderBoneL0;
-	extern ID3D11EffectTechnique* g_hRenderBoneL1;
-	extern ID3D11EffectTechnique* g_hRenderBoneL2;
-	extern ID3D11EffectTechnique* g_hRenderBoneL3;
-	extern ID3D11EffectTechnique* g_hRenderNoBoneL0;
-	extern ID3D11EffectTechnique* g_hRenderNoBoneL1;
-	extern ID3D11EffectTechnique* g_hRenderNoBoneL2;
-	extern ID3D11EffectTechnique* g_hRenderNoBoneL3;
-	extern ID3D11EffectTechnique* g_hRenderLine;
-	*/
+	//ID3D11InputLayout* m_layoutBoneL0;
+	//ID3D11InputLayout* m_layoutBoneL1;
+	//ID3D11InputLayout* m_layoutBoneL2;
+	//ID3D11InputLayout* m_layoutBoneL3;
+	//ID3D11InputLayout* m_layoutBoneL4;
+	//ID3D11InputLayout* m_layoutBoneL5;
+	//ID3D11InputLayout* m_layoutBoneL6;
+	//ID3D11InputLayout* m_layoutBoneL7;
+	//ID3D11InputLayout* m_layoutBoneL8;
+	//ID3D11InputLayout* m_layoutNoBoneL0;
+	//ID3D11InputLayout* m_layoutNoBoneL1;
+	//ID3D11InputLayout* m_layoutNoBoneL2;
+	//ID3D11InputLayout* m_layoutNoBoneL3;
+	//ID3D11InputLayout* m_layoutNoBoneL4;
+	//ID3D11InputLayout* m_layoutNoBoneL5;
+	//ID3D11InputLayout* m_layoutNoBoneL6;
+	//ID3D11InputLayout* m_layoutNoBoneL7;
+	//ID3D11InputLayout* m_layoutNoBoneL8;
+	//ID3D11InputLayout* m_layoutLine;
 
-
-	D3D11_BUFFER_DESC m_BufferDescBone;
-	D3D11_BUFFER_DESC m_BufferDescNoBone;
-	D3D11_BUFFER_DESC m_BufferDescInf;
-	D3D11_BUFFER_DESC m_BufferDescLine;
-
-	ID3D11InputLayout* m_layoutBoneL0;
-	ID3D11InputLayout* m_layoutBoneL1;
-	ID3D11InputLayout* m_layoutBoneL2;
-	ID3D11InputLayout* m_layoutBoneL3;
-	ID3D11InputLayout* m_layoutBoneL4;
-	ID3D11InputLayout* m_layoutBoneL5;
-	ID3D11InputLayout* m_layoutBoneL6;
-	ID3D11InputLayout* m_layoutBoneL7;
-	ID3D11InputLayout* m_layoutBoneL8;
-	ID3D11InputLayout* m_layoutNoBoneL0;
-	ID3D11InputLayout* m_layoutNoBoneL1;
-	ID3D11InputLayout* m_layoutNoBoneL2;
-	ID3D11InputLayout* m_layoutNoBoneL3;
-	ID3D11InputLayout* m_layoutNoBoneL4;
-	ID3D11InputLayout* m_layoutNoBoneL5;
-	ID3D11InputLayout* m_layoutNoBoneL6;
-	ID3D11InputLayout* m_layoutNoBoneL7;
-	ID3D11InputLayout* m_layoutNoBoneL8;
-	ID3D11InputLayout* m_layoutLine;
-
-    ID3D11Buffer* m_VB;//表示用頂点バッファ。
-	ID3D11Buffer* m_InfB;//表示用ボーン影響度バッファ。
-	ID3D11Buffer* m_IB;//表示用三角のインデックスバッファ。
+ //   ID3D11Buffer* m_VB;//表示用頂点バッファ。
+	//ID3D11Buffer* m_InfB;//表示用ボーン影響度バッファ。
+	//ID3D11Buffer* m_IB;//表示用三角のインデックスバッファ。
 
 
 	ChaVector3 m_scale;

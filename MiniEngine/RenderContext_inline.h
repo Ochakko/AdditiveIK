@@ -56,7 +56,9 @@ inline void RenderContext::SetRenderTargets(UINT numRT, RenderTarget* renderTarg
 {
 	//d
 	D3D12_CPU_DESCRIPTOR_HANDLE rtDSHandleTbl[32];
-	int rtNo = 0;
+	::ZeroMemory(&(rtDSHandleTbl[0]), sizeof(D3D12_CPU_DESCRIPTOR_HANDLE) * 32);//2023/11/13
+
+	//int rtNo = 0;//2023/11/13 comment out
 	for( UINT rtNo = 0; rtNo < numRT; rtNo++){
 		rtDSHandleTbl[rtNo] = renderTargets[rtNo]->GetRTVCpuDescriptorHandle();
 	}

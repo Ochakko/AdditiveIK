@@ -85,7 +85,7 @@
 #include <OrgWindow.h>
 
 
-#include <DXUT.h>
+//#include <DXUT.h>
 #include <io.h>
 
 
@@ -793,7 +793,7 @@ int CModel::DestroyAncObj()
 	return 0;
 }
 
-int CModel::LoadMQO( ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmediateContext, const WCHAR* wfile, const WCHAR* modelfolder, float srcmult, int ismedia, int texpool )
+int CModel::LoadMQO( ID3D12Device* pdev, const WCHAR* wfile, const WCHAR* modelfolder, float srcmult, int ismedia, int texpool )
 {
 	if( modelfolder ){
 		wcscpy_s( m_modelfolder, MAX_PATH, modelfolder );
@@ -857,7 +857,7 @@ int CModel::LoadMQO( ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmediateConte
 	CallF( MakeObjectName(), return 1 );
 
 
-	CallF( CreateMaterialTexture(pd3dImmediateContext), return 1 );
+	CallF( CreateMaterialTexture(), return 1 );
 
 	SetMaterialName();
 
@@ -869,11 +869,11 @@ int CModel::LoadMQO( ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmediateConte
 	return 0;
 }
 
-int CModel::LoadFBX(int skipdefref, ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmediateContext, const WCHAR* wfile, const WCHAR* modelfolder, 
+int CModel::LoadFBX(int skipdefref, ID3D12Device* pdev, const WCHAR* wfile, const WCHAR* modelfolder, 
 	float srcmult, FbxManager* psdk, FbxImporter** ppimporter, FbxScene** ppscene, 
 	int forcenewaxisflag, BOOL motioncachebatchflag)
 {
-	if (!pdev || !pd3dImmediateContext || !wfile || !modelfolder || !psdk) {
+	if (!pdev || !wfile || !modelfolder || !psdk) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -1087,7 +1087,7 @@ int CModel::LoadFBX(int skipdefref, ID3D11Device* pdev, ID3D11DeviceContext* pd3
 				}
 				//m_bonelist[0] = dummybone;
 
-				dummybone->LoadCapsuleShape(m_pdev, pd3dImmediateContext);//!!!!!!!!!!
+				dummybone->LoadCapsuleShape(m_pdev);//!!!!!!!!!!
 				//m_topbone = dummybone;
 			}
 			SetNoBoneFlag(true);
@@ -1134,7 +1134,7 @@ _ASSERT(m_bonelist[0]);
 
 
 	if (motioncachebatchflag == FALSE) {
-		CallF(CreateMaterialTexture(pd3dImmediateContext), return 1);
+		CallF(CreateMaterialTexture(), return 1);
 		CallF(MakeObjectName(), return 1);
 	}
 
@@ -1214,14 +1214,14 @@ _ASSERT(m_bonelist[0]);
 
 		//メモリ使用量のpeak値を小さくするためには　MakePolyMesh*, MakeDispObjをCMQOObject毎に呼ぶ必要有　少し上のコードでそのように実行
 		//if (GetNoBoneFlag() == false) {
-		//	CallF(CreateMaterialTexture(pd3dImmediateContext), return 1);
+		//	CallF(CreateMaterialTexture(pRenderContext), return 1);
 		//	CallF(MakePolyMesh4(), return 1);
 		//	CallF(MakeObjectName(), return 1);
 		//	CreateFBXSkinReq(pRootNode);
 		//}
 		//else {
 		//	//Boneが無い場合には　PolyMesh3
-		//	CallF(CreateMaterialTexture(pd3dImmediateContext), return 1);
+		//	CallF(CreateMaterialTexture(pRenderContext), return 1);
 		//	bool fbxfileflag = true;
 		//	CallF(MakePolyMesh3(fbxfileflag), return 1);
 		//	CallF(MakeObjectName(), return 1);
@@ -1332,13 +1332,13 @@ int CModel::LoadFBXAnim( FbxManager* psdk, FbxImporter* pimporter, FbxScene* psc
 	return 0;
 }
 
-int CModel::CreateMaterialTexture(ID3D11DeviceContext* pd3dImmediateContext)
+int CModel::CreateMaterialTexture()
 {
 
 	map<int,CMQOMaterial*>::iterator itr;
 	for( itr = m_material.begin(); itr != m_material.end(); itr++ ){
 		CMQOMaterial* curmat = itr->second;
-		CallF( curmat->CreateTexture( pd3dImmediateContext, m_dirname, m_texpool ), return 1 );
+		CallF( curmat->CreateTexture( m_dirname, m_texpool ), return 1 );
 	}
 
 	map<int,CMQOObject*>::iterator itrobj;
@@ -1348,7 +1348,7 @@ int CModel::CreateMaterialTexture(ID3D11DeviceContext* pd3dImmediateContext)
 			map<int,CMQOMaterial*>::iterator itrmat;
 			for( itrmat = curobj->GetMaterialBegin(); itrmat != curobj->GetMaterialEnd(); itrmat++ ){
 				CMQOMaterial* curmat = itrmat->second;
-				CallF( curmat->CreateTexture( pd3dImmediateContext, m_dirname, m_texpool ), return 1 );
+				CallF( curmat->CreateTexture( m_dirname, m_texpool ), return 1 );
 			}
 		}
 	}
@@ -1383,7 +1383,7 @@ int CModel::CreateMaterialTexture(ID3D11DeviceContext* pd3dImmediateContext)
 
 
 int CModel::OnRender(bool withalpha, 
-	ID3D11DeviceContext* pd3dImmediateContext, int lightflag, ChaVector4 diffusemult, int btflag, bool calcslotflag )
+	RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int btflag, bool calcslotflag )
 {
 
 	if (GetInView() == false) {
@@ -1437,18 +1437,18 @@ int CModel::OnRender(bool withalpha,
 					if (curobj->GetDispObj()) {
 						if (curobj->GetPm3()) {
 							CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-							CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pd3dImmediateContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
+							CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
 						}
 						else if (curobj->GetPm4()) {
 							CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-							CallF(curobj->GetDispObj()->RenderNormal(withalpha, pd3dImmediateContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
+							CallF(curobj->GetDispObj()->RenderNormal(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
 						}
 						else {
 							_ASSERT(0);
 						}
 					}
 					else if (curobj->GetDispLine()) {
-						CallF(curobj->GetDispLine()->RenderLine(withalpha, pd3dImmediateContext, diffusemult, materialdisprate), return 1);
+						CallF(curobj->GetDispLine()->RenderLine(withalpha, pRenderContext, diffusemult, materialdisprate), return 1);
 					}
 				}
 			}
@@ -1550,7 +1550,7 @@ void CModel::GetSelectedObjTreeReq(FbxNode* pNode, std::vector<int>& selectedobj
 
 
 
-int CModel::RenderTest(bool withalpha, ID3D11DeviceContext* pd3dImmediateContext, int lightflag, ChaVector4 diffusemult, int srcobjno)
+int CModel::RenderTest(bool withalpha, RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int srcobjno)
 {
 
 	if (GetInView() == false) {
@@ -1606,18 +1606,18 @@ int CModel::RenderTest(bool withalpha, ID3D11DeviceContext* pd3dImmediateContext
 			if (curobj->GetDispObj()) {
 				if (curobj->GetPm3()) {
 					CallF(SetShaderConst(curobj, btflag), return 1);
-					CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pd3dImmediateContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
+					CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
 				}
 				else if (curobj->GetPm4()) {
 					CallF(SetShaderConst(curobj, btflag), return 1);					
-					CallF(curobj->GetDispObj()->RenderNormal(withalpha, pd3dImmediateContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
+					CallF(curobj->GetDispObj()->RenderNormal(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
 				}
 				else {
 					_ASSERT(0);
 				}
 			}
 			else if (curobj->GetDispLine()) {
-				CallF(curobj->GetDispLine()->RenderLine(withalpha, pd3dImmediateContext, diffusemult, materialdisprate), return 1);
+				CallF(curobj->GetDispLine()->RenderLine(withalpha, pRenderContext, diffusemult, materialdisprate), return 1);
 			}
 
 		}
@@ -2666,13 +2666,9 @@ int CModel::SetShaderConst( CMQOObject* srcobj, int btflag, bool calcslotflag )
 {
 
 	//ボーンが無くても　非スキンメッシュを表示することはある
-	//g_hmWorld->SetMatrix(m_worldmat.GetDataPtr());
-	g_hmWorld->SetMatrix(m_matWorld.GetDataPtr());
-	//ChaMatrix inimat;
-	//inimat.SetIdentity();
-	//MoveMemory(&(m_setfl4x4[16 * 0]),
-	//	inimat.GetDataPtr(), sizeof(float) * 16);
-	//g_hm4x4Mat->SetMatrixArray((float*)(&m_setfl4x4[0]), 0, 0);
+
+	//g_hmWorld->SetMatrix(m_matWorld.GetDataPtr());
+
 
 
 
@@ -2697,45 +2693,9 @@ int CModel::SetShaderConst( CMQOObject* srcobj, int btflag, bool calcslotflag )
 	curmotid = curmi->motid;
 	curframe = RoundingTime(curmi->curframe);
 
-
-	//g_hmWorld->SetMatrix(m_worldmat.GetDataPtr());
-	//g_pEffect->SetMatrix(g_hmWorld, &(m_worldmat.D3DX()));
-
-
-	//ChaMatrix set4x4[MAXCLUSTERNUM];
-
-	//float setfl4x4[16 * MAXCLUSTERNUM];//メンバーに
-	
-	//ZeroMemory(&(setfl4x4[0]), sizeof(float) * 16 * MAXCLUSTERNUM);
-
-	//int inicnt;
-	//for (inicnt = 0; inicnt < MAXCLUSTERNUM; inicnt++) {
-	//	ChaMatrixIdentity(&(set4x4[inicnt]));
-	//}
-	////ZeroMemory( &set4x4[0], sizeof( ChaMatrix ) * MAXCLUSTERNUM );
-
 	int setclcnt = 0;
 	int clcnt;
 	int clusternum = (int)srcobj->GetClusterSize();
-
-
-
-	////###########
-	////for debug
-	////###########
-	//{
-	//	int dbgcount = srcobj->GetDbgCount();
-	//	if (dbgcount == 0) {
-	//		char strdbg[1024] = { 0 };
-	//		WCHAR wstrdbg[1024] = { 0L };
-	//		sprintf_s(strdbg, 1024, "SetShaderConst firstframe : (%s : %.3f) clusternum %d\r\n",
-	//			srcobj->GetName(), curmi->curframe, clusternum);
-	//		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, strdbg, 1024, wstrdbg, 1024);
-	//		DbgOut(wstrdbg);
-	//		dbgcount++;
-	//		srcobj->SetDbgCount(dbgcount);
-	//	}
-	//}
 
 
 	if (clusternum == 0) {
@@ -2788,42 +2748,6 @@ int CModel::SetShaderConst( CMQOObject* srcobj, int btflag, bool calcslotflag )
 				clustermat.GetDataPtr(), sizeof(float) * 16);
 		}
 
-		////###########
-		////for debug
-		////###########
-		//{
-		//	int dbgoutflag = false;
-		//	int dbgcount = curbone->GetDbgCount();
-		//	if ((dbgcount == 0) && (strstr(curbone->GetBoneName(), "Hips_1") != 0)) {
-		//		dbgcount++;
-		//		curbone->SetDbgCount(dbgcount);
-		//		dbgoutflag = true;
-		//	}
-		//	if ((dbgcount == 0) && (strstr(curbone->GetBoneName(), "Hips_2") != 0)) {
-		//		dbgcount++;
-		//		curbone->SetDbgCount(dbgcount);
-		//		dbgoutflag = true;
-		//	}
-		//	if ((dbgcount == 0) && (strstr(curbone->GetBoneName(), "Hips_3") != 0)) {
-		//		dbgcount++;
-		//		curbone->SetDbgCount(dbgcount);
-		//		dbgoutflag = true;
-		//	}
-		//	if (dbgoutflag) {
-		//		char strdbg[1024] = { 0 };
-		//		WCHAR wstrdbg[1024] = { 0L };
-		//		sprintf_s(strdbg, 1024, "SetShaderConst clustermat : (%s)\r\n\t(%.3f, %.3f, %.3f, %.3f)\r\n\t(%.3f, %.3f, %.3f, %.3f)\r\n\t(%.3f, %.3f, %.3f, %.3f)\r\n\t(%.3f, %.3f, %.3f, %.3f)\r\n",
-		//			curbone->GetBoneName(),
-		//			clustermat.data[MATI_11], clustermat.data[MATI_12], clustermat.data[MATI_13], clustermat.data[MATI_14],
-		//			clustermat.data[MATI_21], clustermat.data[MATI_22], clustermat.data[MATI_23], clustermat.data[MATI_24],
-		//			clustermat.data[MATI_31], clustermat.data[MATI_32], clustermat.data[MATI_33], clustermat.data[MATI_34],
-		//			clustermat.data[MATI_41], clustermat.data[MATI_42], clustermat.data[MATI_43], clustermat.data[MATI_44]
-		//		);
-		//		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, strdbg, 1024, wstrdbg, 1024);
-		//		DbgOut(wstrdbg);
-		//	}
-		//}
-
 		setclcnt++;
 	}
 
@@ -2832,24 +2756,14 @@ int CModel::SetShaderConst( CMQOObject* srcobj, int btflag, bool calcslotflag )
 		_ASSERT(setclcnt <= MAXCLUSTERNUM);
 
 
-		HRESULT hr = S_OK;
-		hr = g_hm4x4Mat->SetMatrixArray((float*)(&m_setfl4x4[0]), 0, setclcnt);
-		//hr = g_hm4x4Mat->SetRawValue((float*)(&setfl4x4[0]), 0, sizeof(float) * 16 * setclcnt);
+		//HRESULT hr = S_OK;
+		//hr = g_hm4x4Mat->SetMatrixArray((float*)(&m_setfl4x4[0]), 0, setclcnt);//2023/11/13 tmp comment out
+		////hr = g_hm4x4Mat->SetRawValue((float*)(&setfl4x4[0]), 0, sizeof(float) * 16 * setclcnt);
 
-
-		//hr = g_hm4x4Mat->SetMatrixArray((float*)(&set4x4[0]), 0, MAXCLUSTERNUM);
-
-		//hr = g_hm4x4Mat->SetRawValue((float*)(&set4x4[0]), 0, sizeof(float) * 16 * MAXCLUSTERNUM);
-		//hr = g_pEffect->SetValue(g_hm4x4Mat, (void*)set4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
-		
-		//hr = g_hm4x4Mat->SetMatrixArray((float*)(&set4x4[0]), 0, MAXCLUSTERNUM);
-		//hr = g_hm4x4Mat->SetRawValue((float*)(&set4x4[0]), 0, sizeof(float) * 16 * MAXCLUSTERNUM);
-		//hr = g_hm4x4Mat->SetMatrixArray((float*)(&set4x4[0]), 0, MAXCLUSTERNUM);
-		//hr = g_pEffect->SetValue( g_hm4x4Mat, (void*)set3x4, sizeof( float ) * 12 * MAXCLUSTERNUM );
-		if(FAILED(hr)){
-			_ASSERT( 0 );
-			return 1;
-		}
+		//if(FAILED(hr)){
+		//	_ASSERT( 0 );
+		//	return 1;
+		//}
 	}
 
 	return 0;
@@ -5427,8 +5341,9 @@ CBone* CModel::CreateNewFbxBone(FbxNodeAttribute::EType type, FbxNode* curnode, 
 		return 0;
 	}
 
-	ID3D11DeviceContext* pd3dImmediateContext = DXUTGetD3D11DeviceContext();
-	newbone->LoadCapsuleShape(m_pdev, pd3dImmediateContext);//!!!!!!!!!!!
+	//RenderContext* pRenderContext = DXUTGetD3D11DeviceContext();
+	//newbone->LoadCapsuleShape(m_pdev, pRenderContext);//!!!!!!!!!!!
+	newbone->LoadCapsuleShape(m_pdev);//!!!!!!!!!!!
 
 	char newbonename[JOINTNAMELENG];
 	strcpy_s(newbonename, JOINTNAMELENG, curnode->GetName());
@@ -6943,9 +6858,9 @@ int CModel::GetFBXSkin( FbxNodeAttribute *pAttrib, FbxNode* pNode )
 	return 0;
 }
 
-int CModel::RenderRefArrow(bool limitdegflag, ID3D11DeviceContext* pd3dImmediateContext, CBone* boneptr, ChaVector4 diffusemult, int refmult, std::vector<ChaVector3> vecbonepos)
+int CModel::RenderRefArrow(bool limitdegflag, RenderContext* pRenderContext, CBone* boneptr, ChaVector4 diffusemult, int refmult, std::vector<ChaVector3> vecbonepos)
 {
-	if (!pd3dImmediateContext || !boneptr) {
+	if (!pRenderContext || !boneptr) {
 		return 1;
 	}
 
@@ -6979,8 +6894,8 @@ int CModel::RenderRefArrow(bool limitdegflag, ID3D11DeviceContext* pd3dImmediate
 		bmmat = scalemat * bmmat;
 		bmmat.SetTranslation(vecbonepos[vecno]);
 
-		g_hmWorld->SetMatrix(bmmat.GetDataPtr());
-		//g_pEffect->SetMatrix(g_hmWorld, &(bmmat.D3DX()));
+		//g_hmWorld->SetMatrix(bmmat.GetDataPtr());//2023/11/13 tmp comment out
+		////g_pEffect->SetMatrix(g_hmWorld, &(bmmat.D3DX()));
 		this->UpdateMatrix(limitdegflag, &bmmat, &m_matVP);
 
 		bool withalpha;
@@ -6990,7 +6905,7 @@ int CModel::RenderRefArrow(bool limitdegflag, ID3D11DeviceContext* pd3dImmediate
 		else {
 			withalpha = false;
 		}
-		CallF(this->OnRender(withalpha, pd3dImmediateContext, 0, diffusemult), return 1);
+		CallF(this->OnRender(withalpha, pRenderContext, 0, diffusemult), return 1);
 	}
 
 	return 0;
@@ -6998,7 +6913,7 @@ int CModel::RenderRefArrow(bool limitdegflag, ID3D11DeviceContext* pd3dImmediate
 
 
 
-int CModel::RenderBoneMark(bool limitdegflag, ID3D11DeviceContext* pd3dImmediateContext, CModel* bmarkptr, CMySprite* bcircleptr, int selboneno, int skiptopbonemark )
+int CModel::RenderBoneMark(bool limitdegflag, RenderContext* pRenderContext, CModel* bmarkptr, CMySprite* bcircleptr, int selboneno, int skiptopbonemark )
 {
 	if( m_bonelist.empty() ){
 		return 0;
@@ -7048,8 +6963,8 @@ int CModel::RenderBoneMark(bool limitdegflag, ID3D11DeviceContext* pd3dImmediate
 		}
 	}
 
-	//pdev->SetRenderState( D3DRS_ZFUNC, D3DCMP_ALWAYS );
-	pd3dImmediateContext->OMSetDepthStencilState(g_pDSStateZCmpAlways, 1);
+	////pdev->SetRenderState( D3DRS_ZFUNC, D3DCMP_ALWAYS );
+	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmpAlways, 1);//2023/11/13 tmp comment out
 	g_zcmpalways = true;
 
 	//ボーンの三角錐表示
@@ -7112,8 +7027,8 @@ int CModel::RenderBoneMark(bool limitdegflag, ID3D11DeviceContext* pd3dImmediate
 							bmmat = scalemat * bmmat;
 							bmmat.SetTranslation(aftbonepos);
 
-							g_hmWorld->SetMatrix(bmmat.GetDataPtr());
-							//g_pEffect->SetMatrix(g_hmWorld, &(bmmat.D3DX()));
+							//g_hmWorld->SetMatrix(bmmat.GetDataPtr());//2023/11/13 tmp comment out
+							////g_pEffect->SetMatrix(g_hmWorld, &(bmmat.D3DX()));
 							bmarkptr->UpdateMatrix(limitdegflag, &bmmat, &m_matVP);
 							ChaVector4 difmult;
 							if (childbone->GetSelectFlag() & 2){
@@ -7124,7 +7039,7 @@ int CModel::RenderBoneMark(bool limitdegflag, ID3D11DeviceContext* pd3dImmediate
 							}
 							bool withalpha = true;
 							if (g_bonemarkflag) {
-								CallF(bmarkptr->OnRender(withalpha, pd3dImmediateContext, 0, difmult), return 1);
+								CallF(bmarkptr->OnRender(withalpha, pRenderContext, 0, difmult), return 1);
 							}
 						}
 
@@ -7153,7 +7068,7 @@ int CModel::RenderBoneMark(bool limitdegflag, ID3D11DeviceContext* pd3dImmediate
 						//ChaMatrix worldcapsulemat = curre->GetCapsulematForColiShape(limitdegflag, 0) * GetWorldMat();//2023/01/18
 						ChaMatrix worldcapsulemat = curre->GetCapsulematForColiShape(limitdegflag, 0);//2023/03/24 modelのwmはすでに掛かっている
 
-						g_hmWorld->SetMatrix(worldcapsulemat.GetDataPtr());
+						//g_hmWorld->SetMatrix(worldcapsulemat.GetDataPtr());//2023/11/13 tmp comment out
 						boneptr->GetCurColDisp(childbone)->UpdateMatrix(limitdegflag, &worldcapsulemat, &m_matVP);
 						//g_hmWorld->SetMatrix((float*)&(curre->GetCapsulemat(0)));
 						//boneptr->GetCurColDisp(childbone)->UpdateMatrix(&(curre->GetCapsulemat(0)), &m_matVP);
@@ -7170,7 +7085,7 @@ int CModel::RenderBoneMark(bool limitdegflag, ID3D11DeviceContext* pd3dImmediate
 						if (g_rigidmarkflag) {
 							//if ((curre->GetSkipflag() == 0) && srcbone->GetParent() && srcbone->GetParent()->GetParent()) {//有効にされている場合のみ表示　RootNodeなども表示しない
 							if (curre->GetSkipflag() == 0) {//有効にされている場合のみ表示
-								CallF(boneptr->GetCurColDisp(childbone)->OnRender(withalpha, pd3dImmediateContext, 0, difmult), return 1);
+								CallF(boneptr->GetCurColDisp(childbone)->OnRender(withalpha, pRenderContext, 0, difmult), return 1);
 							}
 						}
 					}
@@ -7209,7 +7124,7 @@ int CModel::RenderBoneMark(bool limitdegflag, ID3D11DeviceContext* pd3dImmediate
 		}
 	}
 	else{
-		RenderCapsuleReq(limitdegflag, pd3dImmediateContext, m_topbt);
+		RenderCapsuleReq(limitdegflag, pRenderContext, m_topbt);
 	}
 
 
@@ -7274,7 +7189,7 @@ int CModel::RenderBoneMark(bool limitdegflag, ID3D11DeviceContext* pd3dImmediate
 						}
 						bcircleptr->SetSize(bsize);
 					}
-					CallF(bcircleptr->OnRender(pd3dImmediateContext), return 1);
+					CallF(bcircleptr->OnRender(pRenderContext), return 1);
 
 				}
 			}
@@ -7282,23 +7197,23 @@ int CModel::RenderBoneMark(bool limitdegflag, ID3D11DeviceContext* pd3dImmediate
 	}
 	else{
 		if (g_bonemarkflag && bcircleptr){
-			RenderBoneCircleReq(pd3dImmediateContext, m_topbt, bcircleptr);
+			RenderBoneCircleReq(pRenderContext, m_topbt, bcircleptr);
 		}
 	}
 
 
 
 
-	//pdev->SetRenderState( D3DRS_ZFUNC, D3DCMP_LESSEQUAL );
-	pd3dImmediateContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
+	////pdev->SetRenderState( D3DRS_ZFUNC, D3DCMP_LESSEQUAL );
+	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);//2023/11/13 tmp comment out
 	g_zcmpalways = false;
 
 	return 0;
 }
 
-int CModel::RenderBoneCircleOne(bool limitdegflag, ID3D11DeviceContext* pd3dImmediateContext, CMySprite* bcircleptr, int selboneno)
+int CModel::RenderBoneCircleOne(bool limitdegflag, RenderContext* pRenderContext, CMySprite* bcircleptr, int selboneno)
 {
-	if (!pd3dImmediateContext || !bcircleptr) {
+	if (!pRenderContext || !bcircleptr) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -7340,15 +7255,15 @@ int CModel::RenderBoneCircleOne(bool limitdegflag, ID3D11DeviceContext* pd3dImme
 			//}
 			bcircleptr->SetSize(bsize);
 
-			CallF(bcircleptr->OnRender(pd3dImmediateContext), return 1);
+			CallF(bcircleptr->OnRender(pRenderContext), return 1);
 		}
 	}
 	return 0;
 }
 
-void CModel::RenderCapsuleReq(bool limitdegflag, ID3D11DeviceContext* pd3dImmediateContext, CBtObject* srcbto)
+void CModel::RenderCapsuleReq(bool limitdegflag, RenderContext* pRenderContext, CBtObject* srcbto)
 {
-	if (!pd3dImmediateContext || !srcbto) {
+	if (!pRenderContext || !srcbto) {
 		return;
 	}
 
@@ -7372,7 +7287,7 @@ void CModel::RenderCapsuleReq(bool limitdegflag, ID3D11DeviceContext* pd3dImmedi
 			//ChaMatrix tmpcapmat = curre->GetCapsulemat(0);
 			ChaMatrix tmpcapmat = curre->GetCapsulematForColiShape(limitdegflag, 0);//2023/01/18
 
-			g_hmWorld->SetMatrix(tmpcapmat.GetDataPtr());
+			//g_hmWorld->SetMatrix(tmpcapmat.GetDataPtr());//2023/11/13 tmp comment out
 			srcbone->GetCurColDisp(childbone)->UpdateMatrix(limitdegflag, &tmpcapmat, &m_matVP);
 			ChaVector4 difmult;
 			//if( boneptr->GetSelectFlag() & 4 ){
@@ -7385,7 +7300,7 @@ void CModel::RenderCapsuleReq(bool limitdegflag, ID3D11DeviceContext* pd3dImmedi
 			bool withalpha = true;
 			//if ((curre->GetSkipflag() == 0) && srcbone->GetParent() && srcbone->GetParent()->GetParent()) {//有効にされている場合のみ表示　RootNodeなども表示しない
 			if (curre->GetSkipflag() == 0) {//有効にされている場合のみ表示
-				CallF(srcbone->GetCurColDisp(childbone)->OnRender(withalpha, pd3dImmediateContext, 0, difmult), return);
+				CallF(srcbone->GetCurColDisp(childbone)->OnRender(withalpha, pRenderContext, 0, difmult), return);
 			}
 		}
 		//}
@@ -7394,13 +7309,13 @@ void CModel::RenderCapsuleReq(bool limitdegflag, ID3D11DeviceContext* pd3dImmedi
 	int chilno;
 	for (chilno = 0; chilno < srcbto->GetChildBtSize(); chilno++){
 		CBtObject* chilbto = srcbto->GetChildBt(chilno);
-		RenderCapsuleReq(limitdegflag, pd3dImmediateContext, chilbto);
+		RenderCapsuleReq(limitdegflag, pRenderContext, chilbto);
 	}
 
 }
 
 
-void CModel::RenderBoneCircleReq(ID3D11DeviceContext* pd3dImmediateContext, CBtObject* srcbto, CMySprite* bcircleptr)
+void CModel::RenderBoneCircleReq(RenderContext* pRenderContext, CBtObject* srcbto, CMySprite* bcircleptr)
 {
 	if (!srcbto || !bcircleptr) {
 		return;
@@ -7458,7 +7373,7 @@ void CModel::RenderBoneCircleReq(ID3D11DeviceContext* pd3dImmediateContext, CBtO
 					bsize = ChaVector2(0.025f, 0.025f);
 					bcircleptr->SetSize(bsize);
 				}
-				CallF(bcircleptr->OnRender(pd3dImmediateContext), return);
+				CallF(bcircleptr->OnRender(pRenderContext), return);
 
 			}
 		}
@@ -7467,7 +7382,7 @@ void CModel::RenderBoneCircleReq(ID3D11DeviceContext* pd3dImmediateContext, CBtO
 	int chilno;
 	for (chilno = 0; chilno < srcbto->GetChildBtSize(); chilno++){
 		CBtObject* chilbto = srcbto->GetChildBt(chilno);
-		RenderBoneCircleReq(pd3dImmediateContext, chilbto, bcircleptr);
+		RenderBoneCircleReq(pRenderContext, chilbto, bcircleptr);
 	}
 }
 

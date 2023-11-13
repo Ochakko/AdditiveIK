@@ -1,7 +1,7 @@
 #ifndef MQOFILEH
 #define MQOFILEH
 
-//class ID3D11Device;
+//class ID3D12Device;
 
 
 //#include <d3dx9.h>
@@ -19,7 +19,7 @@
 
 //using namespace std;
 
-//class ID3D11Device;
+//class ID3D12Device;
 
 class CModel;
 class CMQOMaterial;
@@ -57,7 +57,7 @@ public:
 	CMQOFile();
 	~CMQOFile();
 
-	int LoadMQOFile( ID3D11Device* pdev, float multiple, WCHAR* filename, 
+	int LoadMQOFile( ID3D12Device* pdev, float multiple, WCHAR* filename, 
 		ChaVector3 offsetpos, ChaVector3 rot, 
 		CModel* srcmodel );
 
@@ -110,7 +110,7 @@ private:
 	char m_linechar[ LINECHARLENG ];
 	WCHAR m_wline[ LINECHARLENG ];
 
-	ID3D11Device* m_pdev;
+	ID3D12Device* m_pdev;
 
 	MQOSTATE m_state;
 	MQOBUF mqobuf;	

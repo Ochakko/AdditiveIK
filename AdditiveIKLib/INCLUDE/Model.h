@@ -2,7 +2,7 @@
 #define MODELH
 
 
-//class ID3D11Device;
+//class ID3D12Device;
 
 //#include <d3dx9.h>
 #include <wchar.h>
@@ -188,7 +188,7 @@ public:
  * @fn
  * LoadMQO
  * @breaf メタセコイアで作成した３Dデータファイル*.mqoを読み込む。
- * @param (ID3D11Device* pdev) IN Direct3Dのデバイス。
+ * @param (ID3D12Device* pdev) IN Direct3Dのデバイス。
  * @param (WCHAR* wfile) IN mqoファイルのフルパス。
  * @param (WCHAR* modelfolder) IN FBX書き出しの際に使用するモデルフォルダー名。ファイル名から拡張子を取ったものに通し番号を付けたものがデフォルト。
  * @param (float srcmult) IN 読み込み倍率。
@@ -197,14 +197,14 @@ public:
  * @return 成功したら０。
  * @detail texpool引数にはデフォルト値があるので省略可能。
  */
-	int LoadMQO( ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmediateContext, const WCHAR* wfile, const WCHAR* modelfolder, float srcmult, int ismedia, int texpool = 0 );
+	int LoadMQO( ID3D12Device* pdev, const WCHAR* wfile, const WCHAR* modelfolder, float srcmult, int ismedia, int texpool = 0 );
 	
 /**
  * @fn
  * LoadFBX
  * @breaf FBXファイルを読み込む。
  * @param (int skipdefref) IN デフォルト剛体設定を利用をスキップするかどうかのフラグ。chaファイルから呼び出すときはrefファイルがあるので１。FBX単体で読み込むときは０。
- * @param (ID3D11Device* pdev) IN Direct3DのDevice。
+ * @param (ID3D12Device* pdev) IN Direct3DのDevice。
  * @param (WCHAR* wfile) IN FBXファイルのフルパス。
  * @param (WCHAR* modelfolder) IN FBX書き出し時に使用するFBXファイルがあるフォルダの名前。chaファイルがあるフォルダの中のFBXがあるフォルダの名前となる。
  * @param (float srcmult) IN 読み込み倍率。
@@ -214,7 +214,7 @@ public:
  * @param (int forcenewaxisflag) 過渡期ファイルのフラグ。
  * @return 成功したら０。
  */
-	int LoadFBX( int skipdefref, ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmediateContext, const WCHAR* wfile, const WCHAR* modelfolder, 
+	int LoadFBX( int skipdefref, ID3D12Device* pdev, const WCHAR* wfile, const WCHAR* modelfolder, 
 		float srcmult, FbxManager* psdk, FbxImporter** ppimporter, FbxScene** ppscene, 
 		int forcenewaxisflag, BOOL motioncachebatchflag);
 
@@ -236,22 +236,22 @@ public:
  * @fn
  * OnRender
  * @breaf モデルデータを描画する。
- * @param (ID3D11Device* pdev) IN Direct3DのDevice。
+ * @param (ID3D12Device* pdev) IN Direct3DのDevice。
  * @param (int lightflag) IN 照光処理をするかどうかのフラグ。
  * @param (ChaVector4 diffusemult) IN ディフューズ(拡散光)に乗算するRGBAの値。ライトを変えなくても明るさを変えることが出来る。
  * @param (int btflag = 0) IN bulletのシミュレーション中であるかどうかのフラグ。
  * @return 成功したら０。
  */
-	int OnRender(bool withalpha, ID3D11DeviceContext* pd3dImmediateContext, int lightflag, ChaVector4 diffusemult, int btflag = 0, bool calcslotflag = false );
+	int OnRender(bool withalpha, RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int btflag = 0, bool calcslotflag = false );
 
-	int RenderRefArrow(bool limitdegflag, ID3D11DeviceContext* pd3dImmediateContext, 
+	int RenderRefArrow(bool limitdegflag, RenderContext* pRenderContext, 
 		CBone* boneptr, ChaVector4 diffusemult, int refmult, std::vector<ChaVector3> vecbonepos);
 
 
 
 	//DispGroup : test button : exclusive display
 	int SetDispGroupGUI(std::vector<OrgWinGUI::OWP_CheckBoxA*>& checkboxvec);
-	int RenderTest(bool withalpha, ID3D11DeviceContext* pd3dImmediateContext, int lightflag, ChaVector4 diffusemult, int srcobjno);
+	int RenderTest(bool withalpha, RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int srcobjno);
 	int SelectRenderObject(int srcobjno, std::vector<CMQOObject*>& selectedobjvec);
 	void SelectRenderObjectReq(FbxNode* pNode, std::vector<CMQOObject*>& selectedobjvec);
 	int GetSelectedObjTree(int srcobjno, std::vector<int>& selectedobjtree);
@@ -266,20 +266,20 @@ public:
  * @fn
  * RenderBoneMark
  * @breaf ボーンマークとジョイントマークと剛体形状を表示する。
- * @param (ID3D11Device* pdev) IN Direct3DのDevice。
+ * @param (ID3D12Device* pdev) IN Direct3DのDevice。
  * @param (CModel* bmarkptr) IN ボーンマークのモデルデータ。
  * @param (CMySprite* bcircleptr) IN ジョイント部分の表示のSprite。
  * @param (int selboneno) IN 選択中のボーンのID。
  * @param (int skiptopbonemark) IN 一番親からのボーンを表示しないフラグ。
  * @return 成功したら０。
  */
-	int RenderBoneMark(bool limitdegflag, ID3D11DeviceContext* pd3dImmediateContext, CModel* bmarkptr, CMySprite* bcircleptr, int selboneno, int skiptopbonemark = 0 );
-	int RenderBoneCircleOne(bool limitdegflag, ID3D11DeviceContext* pd3dImmediateContext, CMySprite* bcircleptr, int selboneno);
+	int RenderBoneMark(bool limitdegflag, RenderContext* pRenderContext, CModel* bmarkptr, CMySprite* bcircleptr, int selboneno, int skiptopbonemark = 0 );
+	int RenderBoneCircleOne(bool limitdegflag, RenderContext* pRenderContext, CMySprite* bcircleptr, int selboneno);
 
 
-	void RenderCapsuleReq(bool limitdegflag, ID3D11DeviceContext* pd3dImmediateContext, CBtObject* srcbto);
+	void RenderCapsuleReq(bool limitdegflag, RenderContext* pRenderContext, CBtObject* srcbto);
 
-	void RenderBoneCircleReq(ID3D11DeviceContext* pd3dImmediateContext, CBtObject* srcbto, CMySprite* bcircleptr);
+	void RenderBoneCircleReq(RenderContext* pRenderContext, CBtObject* srcbto, CMySprite* bcircleptr);
 
 /**
  * @fn
@@ -967,7 +967,7 @@ public:
 private:
 	int InitParams();
 	int DestroyObjs();
-	int CreateMaterialTexture(ID3D11DeviceContext* pd3dImmediateContext);
+	int CreateMaterialTexture();
 
 	MODELBOUND CalcBoneBound();
 	int AddModelBound( MODELBOUND* mb, MODELBOUND* addmb );
@@ -2403,7 +2403,7 @@ private:
 
 
 //以下、privateかつローカルからしか参照しないデータだからアクセッサーも無し。
-	ID3D11Device* m_pdev;//外部メモリ。Direct3DのDevice。
+	ID3D12Device* m_pdev;//外部メモリ。Direct3DのDevice。
 	FbxManager* m_psdk;//外部メモリ。FBX SDKのマネージャ。
 	FbxImporter* m_pimporter;//FBX SDKのインポーター。CModel内でアロケート。
 	FbxString m_fbxcomment;

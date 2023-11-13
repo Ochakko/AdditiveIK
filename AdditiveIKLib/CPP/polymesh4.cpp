@@ -556,7 +556,7 @@ int CPolyMesh4::DumpInfBone( CMQOObject* srcobj, map<int,CBone*>& srcbonelist )
 	return 0;
 }
 
-int CPolyMesh4::SetPm3InfNoSkin( ID3D11Device* pdev, CMQOObject* srcobj, int clusterno, map<int,CBone*>& srcbonelist )
+int CPolyMesh4::SetPm3InfNoSkin( ID3D12Device* pdev, CMQOObject* srcobj, int clusterno, map<int,CBone*>& srcbonelist )
 {
 	if (!m_pm3inf || !m_triface) {
 		_ASSERT(0);

@@ -27,7 +27,7 @@ void AnimationClip::BuildKeyFramesAndAnimationEvents()
 		m_tkaFile.QueryAnimationEvents([&](const TkaFile::AnimationEvent & animEvent) {
 			static wchar_t wEventName[256];
 
-			mbstowcs(wEventName, animEvent.eventName.c_str(), 255);
+			mbstowcs((wchar_t*)(&(wEventName[0])), animEvent.eventName.c_str(), 256);
 			m_animationEvent[eventNo].SetInvokeTime(animEvent.invokeTime);
 			m_animationEvent[eventNo].SetEventName(wEventName);
 			eventNo++;

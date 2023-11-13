@@ -974,7 +974,7 @@ void ChaMatrix::SetBasis(ChaMatrix srcmat)
 	data[MATI_33] = srcmat.data[MATI_33];
 }
 
-#ifdef CONVD3DX11
+//#ifdef CONVD3DX11
 ChaMatrix::ChaMatrix(DirectX::XMMATRIX m)
 {
 	data[MATI_11] = m.r[0].m128_f32[0];
@@ -1018,7 +1018,7 @@ ChaMatrix::ChaMatrix(DirectX::XMMATRIX m)
 	//data[MATI_44] = m.r[3].m128_f32[3];
 
 };
-#endif
+//#endif
 
 
 ChaMatrix::~ChaMatrix()
@@ -1370,7 +1370,7 @@ int CQuaternion::SetParams(float srcw, float srcx, float srcy, float srcz)
 	z = srcz;
 	return 0;
 }
-#ifdef CONVD3DX11
+//#ifdef CONVD3DX11
 int CQuaternion::SetParams(DirectX::XMFLOAT4 srcxq)
 {
 	w = srcxq.w;
@@ -1379,7 +1379,7 @@ int CQuaternion::SetParams(DirectX::XMFLOAT4 srcxq)
 	z = srcxq.z;
 	return 0;
 }
-#endif
+//#endif
 
 float CQuaternion::QuaternionLimitPhai(float srcphai) 
 {
@@ -2298,7 +2298,7 @@ CQuaternion CQuaternion::Slerp(CQuaternion endq, int framenum, int frameno)
 	return retq;
 }
 
-#ifdef CONVD3DX11
+//#ifdef CONVD3DX11
 //int CQuaternion::Squad(CQuaternion q0, CQuaternion q1, CQuaternion q2, CQuaternion q3, float t)
 //{
 //
@@ -2349,7 +2349,7 @@ int CQuaternion::Q2X(DirectX::XMFLOAT4* dstx, CQuaternion srcq)
 
 	return 0;
 }
-#endif
+//#endif
 
 int CQuaternion::inv(CQuaternion* dstq)
 {
@@ -4145,7 +4145,7 @@ COLORREF ChaVector3::ColorRef()
 	return retcol;
 }
 
-#ifdef CONVD3DX11
+//#ifdef CONVD3DX11
 DirectX::XMFLOAT2 ChaVector2::D3DX()
 {
 	DirectX::XMFLOAT2 retv;
@@ -4274,7 +4274,7 @@ DirectX::XMMATRIX ChaMatrix::D3DX()
 
 	return retm;
 }
-#endif
+//#endif
 
 
 N3P::N3P() {

@@ -2106,6 +2106,7 @@ inline HRESULT D3DX12SerializeVersionedRootSignature(
                                         pDescriptorRanges_1_0[x].RangeType = table_1_1.pDescriptorRanges[x].RangeType;
                                         pDescriptorRanges_1_0[x].RegisterSpace = table_1_1.pDescriptorRanges[x].RegisterSpace;
                                     }
+                                    
                                 }
 
                                 D3D12_ROOT_DESCRIPTOR_TABLE& table_1_0 = pParameters_1_0[n].DescriptorTable;

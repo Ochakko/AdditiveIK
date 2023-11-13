@@ -1,0 +1,51 @@
+Metasequoia Document
+Format Text Ver 1.1
+
+Scene {
+	pos 3.7272999 4.2591 2400
+	lookat 0 0 0
+	head 24.2463
+	pich 0.6508
+	bank 0.0000
+	ortho 0
+	zoom2 4.3641
+	amb 0.250 0.250 0.250
+	frontclip 360
+	backclip 72000
+	dirlights 1 {
+		light {
+			dir 0.408 0.408 0.816
+			color 1.000 1.000 1.000
+		}
+	}
+}
+Material 7 {
+	"matred" shader(3) col(1.000 0.000 0.000 1.000) dif(1.000) amb(0.600) emi(0.250) spc(0.000) power(5.00)
+	"matblue" shader(3) col(0.000 0.000 1.000 1.000) dif(1.000) amb(0.600) emi(0.250) spc(0.000) power(5.00)
+	"matgreen" shader(3) col(0.000 1.000 0.000 1.000) dif(1.000) amb(0.600) emi(0.250) spc(0.000) power(5.00)
+	"matyellow" shader(3) col(1.000 0.949 0.000 1.000) dif(1.000) amb(0.600) emi(0.250) spc(0.000) power(5.00)
+	"ringred" shader(3) col(1.000 0.000 0.000 1.000) dif(1.000) amb(0.600) emi(0.000) spc(0.000) power(5.00)
+	"ringgreen" shader(3) col(0.000 1.000 0.000 1.000) dif(1.000) amb(0.600) emi(0.000) spc(0.000) power(5.00)
+	"ringblue" shader(3) col(0.000 0.000 1.000 1.000) dif(1.000) amb(0.600) emi(0.000) spc(0.000) power(5.00)
+}
+Object "EXTLINE_LX" {
+	depth 0
+	folding 0
+	scale 1 1 1
+	rotation 0 0 0
+	translation 0 0 0
+	visible 15
+	locking 0
+	shading 1
+	facet 59.5
+	color 0.500 1.000 1.000
+	color_type 1
+	vertex 2 {
+		0 0 0
+		100 0 0
+	}
+	face 1 {
+		2 V(0 1)
+	}
+}
+Eof

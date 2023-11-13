@@ -1,7 +1,7 @@
 ﻿#ifndef MQOOBJECTH
 #define MQOOBJECTH
 
-//class ID3D11Device;
+//class ID3D12Device;
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -68,10 +68,10 @@ public:
 
 	int Dump();
 
-	int MakePolymesh3(bool fbxfileflag, ID3D11Device* pdev, std::map<int, CMQOMaterial*>& srcmaterial);
-	int MakePolymesh4( ID3D11Device* pdev );
+	int MakePolymesh3(bool fbxfileflag, ID3D12Device* pdev, std::map<int, CMQOMaterial*>& srcmaterial);
+	int MakePolymesh4( ID3D12Device* pdev );
 	int MakeExtLine();
-	int MakeDispObj( ID3D11Device* pdev, int hasbone );
+	int MakeDispObj( ID3D12Device* pdev, int hasbone );
 //	int MakeExtLine( map<int,CMQOMaterial*>& srcmat );
 
 	int HasPolygon();

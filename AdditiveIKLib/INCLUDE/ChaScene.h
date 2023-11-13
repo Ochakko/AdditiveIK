@@ -67,7 +67,7 @@ public:
 
 	int UpdateMatrixModels(bool limitdegflag, ChaMatrix* vpmat, double srcframe);
 	int WaitUpdateThreads();
-	int RenderModels(ID3D11DeviceContext* pd3dImmediateContext, int lightflag, ChaVector4 diffusemult, int btflag = 0);
+	int RenderModels(RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int btflag = 0);
 
 
 	CModel* GetTheLastCameraModel();
