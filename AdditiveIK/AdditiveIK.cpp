@@ -116,6 +116,9 @@
 //for MessageLoop
 #include "system/system.h"
 
+#include "../AdditiveIKLib/Grimoire/RenderingEngine.h"
+#include "../AdditiveIKLib/Grimoire/ModelRender.h"
+
 
 
 using namespace std;
@@ -1082,7 +1085,7 @@ static OWP_Button* s_toolModelWorldMatB = 0;
 //#define CONVBONEMAX		256
 
 //2023/07/08 TheHunt のアセット読み込み時にボーン数制限オーバーしたので　値を大きく
-#define CONVBONEMAX		1024
+//#define CONVBONEMAX		1024//MAXBONENUM 2048;を使う
 
 static OrgWindow* s_convboneWnd = 0;
 static OWP_ScrollWnd* s_convboneSCWnd = 0;
@@ -1090,8 +1093,8 @@ static int s_convbonenum = 0;
 static OWP_Label* s_cbselmodel = 0;
 static OWP_Button* s_cbselbvh = 0;
 static OWP_Label* s_convbonemidashi[2];
-static OWP_Label* s_modelbone[CONVBONEMAX];
-static OWP_Button* s_bvhbone[CONVBONEMAX];
+static OWP_Label* s_modelbone[MAXBONENUM];
+static OWP_Button* s_bvhbone[MAXBONENUM];
 static OWP_Separator* s_convbonesp = 0;
 static OWP_Button* s_convboneconvert = 0;
 static OWP_Label* s_convbonespace1 = 0;
@@ -1103,8 +1106,8 @@ static CModel* s_convbone_model = 0;
 static CModel* s_convbone_model_batch = 0;
 static CModel* s_convbone_bvh = 0;
 static int s_maxboneno = 0;
-static CBone* s_modelbone_bone[CONVBONEMAX];
-static CBone* s_bvhbone_bone[CONVBONEMAX];
+static CBone* s_modelbone_bone[MAXBONENUM];
+static CBone* s_bvhbone_bone[MAXBONENUM];
 static map<CBone*, CBone*> s_convbonemap;
 static int s_bvhbone_cbno = 0;
 static OWP_Button* s_rtgfilesave = 0;
@@ -1293,7 +1296,7 @@ static CEditRange s_previewrange;
 #define MENUOFFSET_SETCONVBONEBVH		(MENUOFFSET_SETCONVBONEMODEL + 100)
 #define MENUOFFSET_SETCONVBONE			(MENUOFFSET_SETCONVBONEBVH + 100)
 //#define MENUOFFSET_SETCONVBONE			(MENUOFFSET_SETCONVBONEBVH + 500)
-#define MENUOFFSET_INITMPFROMTOOL		(MENUOFFSET_SETCONVBONE + CONVBONEMAX)
+#define MENUOFFSET_INITMPFROMTOOL		(MENUOFFSET_SETCONVBONE + MAXBONENUM)
 
 #define MENUOFFSET_GETSYMROOTMODE		(MENUOFFSET_INITMPFROMTOOL + 100)
 #define MENUOFFSET_INTERPOLATEFROMTOOL		(MENUOFFSET_GETSYMROOTMODE + 30)
@@ -1864,7 +1867,8 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 int InitializeMainWindow(CREATESTRUCT* createWindowArgs);
 static HWND CreateMainWindow();
-static HWND Create3DWnd();
+static HWND Create3DWnd(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd);
+static void InitRootSignature(RootSignature& rs);
 static CInfoWindow* CreateInfoWnd();
 //static int CreateCameraDollyWnd();//2023/08/23 CreateDollyHistoryDlg()に移行
 static int ShowCameraDollyDlg();
@@ -1898,8 +1902,9 @@ static int ShowModelWorldMatDlg();
 //--------------------------------------------------------------------------------------
 //bool CALLBACK ModifyDeviceSettings(DXUTDeviceSettings* pDeviceSettings, void* pUserContext);
 void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext);
-LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool* pbNoFurtherProcessing,
-	void* pUserContext);
+//LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool* pbNoFurtherProcessing,
+//	void* pUserContext);
+LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void CALLBACK OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown, void* pUserContext);
 //void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext);
 
@@ -2914,10 +2919,40 @@ INT WINAPI wWinMain(
 	}
 
 
-	//if (!Create3DWnd()) {
-	//	_ASSERT(0);
-	//	return 1;
-	//}
+	if (!Create3DWnd(hInstance, hPrevInstance, lpCmdLine, nShowCmd)) {
+		_ASSERT(0);
+		return 1;
+	}
+	// ルートシグネチャを作成
+	RootSignature rootSignature;
+	InitRootSignature(rootSignature);
+	//レンダリングエンジンを初期化
+	myRenderer::RenderingEngine renderingEngine;
+	renderingEngine.Init();
+	//// 背景モデルのレンダラーを初期化
+	//myRenderer::ModelRender bgModelRender;
+	//bgModelRender.InitDeferredRendering(renderingEngine, "Assets/modelData/bg/bg.tkm", true);
+	//// step-1 ティーポットの描画処理を初期化する
+	//myRenderer::ModelInitDataFR modelInitData;
+	//modelInitData.m_tkmFilePath = "Assets/modelData/teapot.tkm";
+	//modelInitData.m_fxFilePath = "Assets/shader/sample.fx";
+	//// 拡張SRVにZPrepassで作成された深度テクスチャを指定する
+	//modelInitData.m_expandShaderResoruceView[0] = &renderingEngine.GetZPrepassDepthTexture();
+	//// 初期化情報を使って描画処理を初期化する
+	//myRenderer::ModelRender teapotModelRender;
+	//// InitForwardRendering()を利用すると、
+	//// フォワードレンダリングの描画パスで描画される
+	//teapotModelRender.InitForwardRendering(renderingEngine, modelInitData);
+	////シャドウキャスターフラグをオンにする
+	//teapotModelRender.SetShadowCasterFlag(true);
+	//teapotModelRender.UpdateWorldMatrix({ 0.0f, 50.0f, 0.0f }, g_quatIdentity, g_vec3One);
+	////////////////////////////////////////
+	//// 初期化を行うコードを書くのはここまで！！！
+	////////////////////////////////////////
+	auto& renderContext = g_graphicsEngine->GetRenderContext();
+
+
+
 
 	CreatePlaceFolderWnd();
 	CreateTimelineWnd();
@@ -3035,7 +3070,7 @@ INT WINAPI wWinMain(
 
 
 	//// ゲームの初期化 (2023/11/13 仮のウインドウ)
-	InitGame(hInstance, hPrevInstance, lpCmdLine, nShowCmd, TEXT("AddtiveIK"));
+	//InitGame(hInstance, hPrevInstance, lpCmdLine, nShowCmd, TEXT("AddtiveIK"));
 	while (DispatchWindowMessage())
 	{
 	}
@@ -3239,7 +3274,14 @@ void InitApp()
 	s_cancelLButtonDown = false;
 	s_cancelRButtonDown = false;
 
-
+	//########################################################################
+	// s_mainwidth, s_mainheightはInitApp()よりも前にCheckResolution()でセットする
+	// ここでs_mainwidth, s_mainheightを初期化してはいけない
+	//########################################################################
+	//s_mainwidth = 800;
+	//s_mainheight = (520 - MAINMENUAIMBARH);
+	//s_bufwidth = 800;
+	//s_bufheight = (520 - MAINMENUAIMBARH);
 
 	//{
 	//	g_hRenderBoneL0 = 0;
@@ -3987,7 +4029,7 @@ void InitApp()
 	s_convbone_bvh = 0;
 	s_maxboneno = 0;
 	int cbno;
-	for (cbno = 0; cbno < CONVBONEMAX; cbno++) {
+	for (cbno = 0; cbno < MAXBONENUM; cbno++) {
 		s_modelbone[cbno] = 0;
 		s_bvhbone[cbno] = 0;
 		s_modelbone_bone[cbno] = 0;
@@ -7993,8 +8035,10 @@ void PrepairUndo()
 // messages to the application through this callback function. If the application sets 
 // *pbNoFurtherProcessing to TRUE, then DXUT will not process this message.
 //--------------------------------------------------------------------------------------
-LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool* pbNoFurtherProcessing,
-	void* pUserContext)
+LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
+//	, bool* pbNoFurtherProcessing,
+//	void* pUserContext
+)
 {
 	if (!s_sampleuihwnd && hWnd && IsWindow(hWnd)) {
 		s_sampleuihwnd = hWnd;
@@ -8149,8 +8193,8 @@ LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, boo
 		}
 
 		//else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_SETCONVBONE)) && (menuid <= (ID_RMENU_0 + s_maxboneno + 1 + MENUOFFSET_SETCONVBONE))) {
-		else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_SETCONVBONE)) && (menuid < (ID_RMENU_0 + CONVBONEMAX + MENUOFFSET_SETCONVBONE))) {
-			if ((s_bvhbone_cbno >= 0) && (s_bvhbone_cbno < CONVBONEMAX)) {
+		else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_SETCONVBONE)) && (menuid < (ID_RMENU_0 + MAXBONENUM + MENUOFFSET_SETCONVBONE))) {
+			if ((s_bvhbone_cbno >= 0) && (s_bvhbone_cbno < MAXBONENUM)) {
 				if (menuid == (ID_RMENU_0 + 0 + MENUOFFSET_SETCONVBONE)) {
 					//未設定
 					s_bvhbone_bone[s_bvhbone_cbno] = 0;
@@ -18857,7 +18901,7 @@ int DestroyConvBoneWnd()
 	}
 
 	int cbno;
-	for (cbno = 0; cbno < CONVBONEMAX; cbno++) {
+	for (cbno = 0; cbno < MAXBONENUM; cbno++) {
 		if (s_modelbone[cbno]) {
 			delete s_modelbone[cbno];
 			s_modelbone[cbno] = 0;
@@ -18953,17 +18997,17 @@ int CreateConvBoneWnd()
 
 	//s_convbonenum = s_model->GetBoneListSize();
 	s_convbonenum = s_model->GetBoneForMotionSize();
-	if (s_convbonenum >= CONVBONEMAX) {
+	if (s_convbonenum >= MAXBONENUM) {
 		_ASSERT(0);
 		return 1;
 	}
 
 	int windowposx;
 	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 	}
 	else {
-		windowposx = s_timelinewidth + s_mainwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
 	s_convboneWnd = new OrgWindow(
@@ -24922,10 +24966,10 @@ int CreateLightsWnd()
 
 	int windowposx;
 	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 	}
 	else {
-		windowposx = s_timelinewidth + s_mainwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
 	SetParent(s_lightsforeditdlg, s_mainhwnd);
@@ -24983,10 +25027,10 @@ int CreateLaterTransparentWnd()
 
 	int windowposx;
 	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 	}
 	else {
-		windowposx = s_timelinewidth + s_mainwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
 	SetParent(s_latertransparentdlg, s_mainhwnd);
@@ -25071,10 +25115,10 @@ int DispAngleLimitDlg()
 
 	int windowposx;
 	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 	}
 	else {
-		windowposx = s_timelinewidth + s_mainwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
 	SetParent(s_anglelimitdlg, s_mainhwnd);
@@ -27906,10 +27950,10 @@ int DispRotAxisDlg()
 
 	int windowposx;
 	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 	}
 	else {
-		windowposx = s_timelinewidth + s_mainwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
 	SetParent(s_rotaxisdlg, s_mainhwnd);
@@ -30617,10 +30661,10 @@ int CreateCopyHistoryDlg()
 
 	int windowposx;
 	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 	}
 	else {
-		windowposx = s_timelinewidth + s_mainwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
 
@@ -30652,10 +30696,10 @@ int CreateDollyHistoryDlg()
 
 	int windowposx;
 	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 	}
 	else {
-		windowposx = s_timelinewidth + s_mainwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
 
@@ -32826,10 +32870,10 @@ int CreateDmpAnimWnd()
 
 	int windowposx;
 	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 	}
 	else {
-		windowposx = s_timelinewidth + s_mainwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
 	s_dmpanimWnd = new OrgWindow(
@@ -32988,10 +33032,10 @@ int CreateMainMenuAimBarWnd()
 
 	int windowposx;
 	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 	}
 	else {
-		windowposx = s_timelinewidth + s_mainwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
 
@@ -33178,10 +33222,12 @@ int CreateSideMenuWnd()
 
 		int windowposx;
 		if (g_4kresolution) {
-			windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth + 16;
+			//windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
+			windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 		}
 		else {
-			windowposx = s_timelinewidth + s_mainwidth + 16;
+			//windowposx = s_timelinewidth + s_mainwidth;
+			windowposx = s_timelinewidth + s_mainwidth;
 		}
 
 		s_sidemenuWnd->setPos(WindowPos(windowposx, 0));
@@ -33213,10 +33259,10 @@ int CreatePlaceFolderWnd()
 {
 	int windowposx;
 	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 	}
 	else {
-		windowposx = s_timelinewidth + s_mainwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
 
@@ -33360,10 +33406,10 @@ int CreateDispGroupWnd()
 
 	int windowposx;
 	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 	}
 	else {
-		windowposx = s_timelinewidth + s_mainwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
 	s_groupWnd = new OrgWindow(
@@ -34188,10 +34234,10 @@ int CreateRigidWnd()
 
 	int windowposx;
 	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 	}
 	else {
-		windowposx = s_timelinewidth + s_mainwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
 	s_rigidWnd = new OrgWindow(
@@ -35171,10 +35217,10 @@ int CreateImpulseWnd()
 
 	int windowposx;
 	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 	}
 	else {
-		windowposx = s_timelinewidth + s_mainwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
 	//////////
@@ -35359,10 +35405,10 @@ int CreateGPlaneWnd()
 
 	int windowposx;
 	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 	}
 	else {
-		windowposx = s_timelinewidth + s_mainwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
 
@@ -37426,10 +37472,10 @@ int DispCustomRigDlg(int rigno)
 
 	int windowposx;
 	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 	}
 	else {
-		windowposx = s_timelinewidth + s_mainwidth + 16;
+		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
 	SetWindowPos(
@@ -39438,7 +39484,7 @@ HWND CreateMainWindow()
 
 }
 
-HWND Create3DWnd()
+HWND Create3DWnd(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd)
 {
 	//HRESULT hr;
 
@@ -39447,6 +39493,28 @@ HWND Create3DWnd()
 		s_3dwnd = 0;
 	}
 	s_3dwnd = 0;
+
+	RECT rc;
+	ZeroMemory(&rc, sizeof(RECT));
+	if (g_4kresolution) {
+		rc = InitGame(hInstance, hPrevInstance, lpCmdLine, nShowCmd, TEXT("MameBake3D"),
+			s_mainhwnd,
+			s_timelinewidth + s_modelwindowwidth, MAINMENUAIMBARH,
+			s_mainwidth, s_mainheight,
+			MsgProc);
+	}
+	else {
+		rc = InitGame(hInstance, hPrevInstance, lpCmdLine, nShowCmd, TEXT("MameBake3D"),
+			s_mainhwnd,
+			s_timelinewidth, MAINMENUAIMBARH,
+			s_mainwidth, s_mainheight,
+			MsgProc);
+	}
+
+	//s_mainwidth = rc.right - rc.left;
+	//s_mainheight = rc.bottom - rc.top;
+
+	s_3dwnd = g_hWnd;//g_hWndはsystem.cpp, system.hで定義
 
 	//if (g_4kresolution) {
 	//	hr = DXUTCreateWindow(L"MameBake3D", 0, 0, 0, 450 * 2, 0);
@@ -39489,8 +39557,6 @@ HWND Create3DWnd()
 	//winstyle &= ~WS_CAPTION;
 	//winstyle |= WS_CHILD;//2023/02/14
 	//::SetWindowLong(s_3dwnd, GWL_STYLE, winstyle);
-
-
 	//SetParent(s_3dwnd, s_mainhwnd);
 
 
@@ -39512,13 +39578,12 @@ HWND Create3DWnd()
 	//}
 	
 	
-	////s_3dwnd = DXUTGetHWND();
-	////_ASSERT(s_3dwnd);
-	//RECT clientrect2;
-	//GetClientRect(s_3dwnd, &clientrect2);
-
-	//s_bufwidth = clientrect2.right;
-	//s_bufheight = clientrect2.bottom;
+	//s_3dwnd = DXUTGetHWND();
+	//_ASSERT(s_3dwnd);
+	RECT clientrect2;
+	GetClientRect(s_3dwnd, &clientrect2);
+	s_bufwidth = clientrect2.right;
+	s_bufheight = clientrect2.bottom;
 
 
 	////RECT clientrect;
@@ -39528,27 +39593,27 @@ HWND Create3DWnd()
 	////ShowWindow( s_3dwnd, SW_SHOW );
 	////SetWindowPos( s_3dwnd, HWND_TOP, 450, 0, s_mainwidth, s_mainheight, SWP_NOSIZE ); 
 
-	//RECT winrect;
-	//::GetWindowRect(s_3dwnd, &winrect);
-	////::MoveWindow(s_3dwnd, 400, 0, winrect.right - winrect.left, winrect.bottom - winrect.top, TRUE);
-	////::MoveWindow(s_3dwnd, 400, 0, s_mainwidth, s_mainheight, TRUE);
-	//if (g_4kresolution) {
-	//	::MoveWindow(s_3dwnd, s_timelinewidth + s_modelwindowwidth, MAINMENUAIMBARH, s_mainwidth, s_mainheight, TRUE);
-	//	//::SetWindowPos(s_3dwnd, HWND_NOTOPMOST, 
-	//	//	s_toolwidth + s_modelwindowwidth, MAINMENUAIMBARH, s_mainwidth, s_mainheight, SWP_NOSIZE);
-	//}
-	//else {
-	//	::MoveWindow(s_3dwnd, s_timelinewidth, MAINMENUAIMBARH, s_mainwidth, s_mainheight, TRUE);
-	//	//::SetWindowPos(s_3dwnd, HWND_NOTOPMOST, 
-	//	//	s_timelinewidth, MAINMENUAIMBARH, s_mainwidth, s_mainheight, SWP_NOSIZE);
-	//}
+	RECT winrect;
+	::GetWindowRect(s_3dwnd, &winrect);
+	//::MoveWindow(s_3dwnd, 400, 0, winrect.right - winrect.left, winrect.bottom - winrect.top, TRUE);
+	//::MoveWindow(s_3dwnd, 400, 0, s_mainwidth, s_mainheight, TRUE);
+	if (g_4kresolution) {
+		::MoveWindow(s_3dwnd, s_timelinewidth + s_modelwindowwidth, MAINMENUAIMBARH, s_mainwidth, s_mainheight, TRUE);
+		//::SetWindowPos(s_3dwnd, HWND_NOTOPMOST, 
+		//	s_toolwidth + s_modelwindowwidth, MAINMENUAIMBARH, s_mainwidth, s_mainheight, SWP_NOSIZE);
+	}
+	else {
+		::MoveWindow(s_3dwnd, s_timelinewidth, MAINMENUAIMBARH, s_mainwidth, s_mainheight, TRUE);
+		//::SetWindowPos(s_3dwnd, HWND_NOTOPMOST, 
+		//	s_timelinewidth, MAINMENUAIMBARH, s_mainwidth, s_mainheight, SWP_NOSIZE);
+	}
 
-	//s_rc3dwnd.top = MAINMENUAIMBARH;
-	//s_rc3dwnd.bottom = (s_mainheight + MAINMENUAIMBARH);
-	////s_rc3dwnd.left = 0;
-	////s_rc3dwnd.right = s_mainwidth;
-	//s_rc3dwnd.left = s_timelinewidth + s_modelwindowwidth;
-	//s_rc3dwnd.right = s_rc3dwnd.left + s_mainwidth;
+	s_rc3dwnd.top = MAINMENUAIMBARH;
+	s_rc3dwnd.bottom = (s_mainheight + MAINMENUAIMBARH);
+	//s_rc3dwnd.left = 0;
+	//s_rc3dwnd.right = s_mainwidth;
+	s_rc3dwnd.left = s_timelinewidth + s_modelwindowwidth;
+	s_rc3dwnd.right = s_rc3dwnd.left + s_mainwidth;
 
 
 	////#############################################################################
@@ -39573,10 +39638,16 @@ CInfoWindow* CreateInfoWnd()
 	int cxframe = GetSystemMetrics(SM_CXFRAME);
 	int cyframe = GetSystemMetrics(SM_CYFRAME);
 
-	s_rcinfownd.top = s_mainheight + 3 * cyframe + MAINMENUAIMBARH;
-	s_rcinfownd.bottom = (s_infowinheight + 2 * cyframe);
+	//s_rcinfownd.top = s_mainheight + 3 * cyframe + MAINMENUAIMBARH;
+	//s_rcinfownd.bottom = (s_infowinheight + 2 * cyframe);
+	//s_rcinfownd.right = s_infowinwidth;
+	//s_rcinfownd.left = 400;
+	s_rcinfownd.top = s_mainheight + MAINMENUAIMBARH;
+	s_rcinfownd.bottom = s_rcinfownd.top + s_infowinheight + 2 * cyframe;
 	s_rcinfownd.right = s_infowinwidth;
 	s_rcinfownd.left = 400;
+
+
 
 	CInfoWindow* newinfownd = new CInfoWindow();
 	if (newinfownd) {
@@ -39599,14 +39670,16 @@ CInfoWindow* CreateInfoWnd()
 
 		if (g_4kresolution) {
 			ret = newinfownd->CreateInfoWindow(s_mainhwnd,
-				s_timelinewidth + s_modelwindowwidth, s_mainheight + 3 * cyframe + MAINMENUAIMBARH,
+				//s_timelinewidth + s_modelwindowwidth, s_mainheight + 3 * cyframe + MAINMENUAIMBARH,
+				s_timelinewidth + s_modelwindowwidth, s_mainheight + MAINMENUAIMBARH,
 				s_infowinwidth, s_infowinheight + 2 * cyframe);
 
 			s_rcinfownd.left = s_timelinewidth;
 		}
 		else {
 			ret = newinfownd->CreateInfoWindow(s_mainhwnd,
-				s_timelinewidth, s_mainheight + 3 * cyframe + MAINMENUAIMBARH,
+				//s_timelinewidth, s_mainheight + 3 * cyframe + MAINMENUAIMBARH,
+				s_timelinewidth, s_mainheight + MAINMENUAIMBARH,
 				s_infowinwidth, s_infowinheight + 2 * cyframe);
 
 			s_rcinfownd.left = s_timelinewidth;
@@ -51044,4 +51117,11 @@ bool IsClickedSpriteButton()
 
 }
 
+void InitRootSignature(RootSignature& rs)
+{
+	rs.Init(D3D12_FILTER_MIN_MAG_MIP_LINEAR,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP);
+}
 

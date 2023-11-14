@@ -147,6 +147,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\AdditiveIKLib\Grimoire\Bloom.h" />
+    <ClInclude Include="..\AdditiveIKLib\Grimoire\CascadeShadowMapMatrix.h" />
+    <ClInclude Include="..\AdditiveIKLib\Grimoire\Dof.h" />
+    <ClInclude Include="..\AdditiveIKLib\Grimoire\ModelRender.h" />
+    <ClInclude Include="..\AdditiveIKLib\Grimoire\MyRenderer.h" />
+    <ClInclude Include="..\AdditiveIKLib\Grimoire\PostEffect.h" />
+    <ClInclude Include="..\AdditiveIKLib\Grimoire\RenderingEngine.h" />
+    <ClInclude Include="..\AdditiveIKLib\Grimoire\ShadowMapRender.h" />
     <ClInclude Include="..\MiniEngine\Animation.h" />
     <ClInclude Include="..\MiniEngine\AnimationClip.h" />
     <ClInclude Include="..\MiniEngine\AnimationPlayController.h" />
@@ -229,6 +237,13 @@
     <ClInclude Include="UndoSprite.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\AdditiveIKLib\Grimoire\Bloom.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\Grimoire\CascadeShadowMapMatrix.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\Grimoire\Dof.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\Grimoire\ModelRender.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\Grimoire\PostEffect.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\Grimoire\RenderingEngine.cpp" />
+    <ClCompile Include="..\AdditiveIKLib\Grimoire\ShadowMapRender.cpp" />
     <ClCompile Include="..\MiniEngine\Animation.cpp" />
     <ClCompile Include="..\MiniEngine\AnimationClip.cpp" />
     <ClCompile Include="..\MiniEngine\AnimationPlayController.cpp" />

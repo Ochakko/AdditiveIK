@@ -31,6 +31,9 @@
     <Filter Include="MiniEngine\tkFile">
       <UniqueIdentifier>{86b64b50-e354-4d97-8148-cbc13b4b6b98}</UniqueIdentifier>
     </Filter>
+    <Filter Include="MiniEngine\Grimoire">
+      <UniqueIdentifier>{3ce539bf-ae14-472c-accf-77b8cfef2454}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -273,6 +276,30 @@
     <ClInclude Include="StructHistory.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="..\AdditiveIKLib\Grimoire\Bloom.h">
+      <Filter>MiniEngine\Grimoire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\AdditiveIKLib\Grimoire\CascadeShadowMapMatrix.h">
+      <Filter>MiniEngine\Grimoire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\AdditiveIKLib\Grimoire\Dof.h">
+      <Filter>MiniEngine\Grimoire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\AdditiveIKLib\Grimoire\ModelRender.h">
+      <Filter>MiniEngine\Grimoire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\AdditiveIKLib\Grimoire\MyRenderer.h">
+      <Filter>MiniEngine\Grimoire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\AdditiveIKLib\Grimoire\PostEffect.h">
+      <Filter>MiniEngine\Grimoire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\AdditiveIKLib\Grimoire\RenderingEngine.h">
+      <Filter>MiniEngine\Grimoire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\AdditiveIKLib\Grimoire\ShadowMapRender.h">
+      <Filter>MiniEngine\Grimoire</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AdditiveIK.cpp">
@@ -463,6 +490,27 @@
     </ClCompile>
     <ClCompile Include="SettingsDlg.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="..\AdditiveIKLib\Grimoire\Bloom.cpp">
+      <Filter>MiniEngine\Grimoire</Filter>
+    </ClCompile>
+    <ClCompile Include="..\AdditiveIKLib\Grimoire\CascadeShadowMapMatrix.cpp">
+      <Filter>MiniEngine\Grimoire</Filter>
+    </ClCompile>
+    <ClCompile Include="..\AdditiveIKLib\Grimoire\Dof.cpp">
+      <Filter>MiniEngine\Grimoire</Filter>
+    </ClCompile>
+    <ClCompile Include="..\AdditiveIKLib\Grimoire\ModelRender.cpp">
+      <Filter>MiniEngine\Grimoire</Filter>
+    </ClCompile>
+    <ClCompile Include="..\AdditiveIKLib\Grimoire\PostEffect.cpp">
+      <Filter>MiniEngine\Grimoire</Filter>
+    </ClCompile>
+    <ClCompile Include="..\AdditiveIKLib\Grimoire\RenderingEngine.cpp">
+      <Filter>MiniEngine\Grimoire</Filter>
+    </ClCompile>
+    <ClCompile Include="..\AdditiveIKLib\Grimoire\ShadowMapRender.cpp">
+      <Filter>MiniEngine\Grimoire</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

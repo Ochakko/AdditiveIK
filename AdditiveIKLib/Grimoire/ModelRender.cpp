@@ -7,7 +7,7 @@ namespace myRenderer
     void ModelRender::InitDeferredRendering(RenderingEngine& renderingEngine, const char* tkmFilePath, bool isShadowReciever)
     {
         ModelInitData modelInitData;
-        modelInitData.m_fxFilePath = "Assets/shader/preset/RenderToGBufferFor3DModel.fx";
+        modelInitData.m_fxFilePath = "../Media/shader/preset/RenderToGBufferFor3DModel.fx";
         if (isShadowReciever)
         {
             modelInitData.m_psEntryPointFunc = "PSMainShadowReciever";
@@ -38,7 +38,7 @@ namespace myRenderer
         {
             ModelInitData modelInitData;
             modelInitData.m_tkmFilePath = tkmFilePath;
-            modelInitData.m_fxFilePath = "Assets/shader/preset/ZPrepass.fx";
+            modelInitData.m_fxFilePath = "../Media/shader/preset/ZPrepass.fx";
             modelInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R32G32_FLOAT;
 
             m_zprepassModel.Init(modelInitData);
@@ -48,7 +48,7 @@ namespace myRenderer
         {
             ModelInitData modelInitData;
             modelInitData.m_tkmFilePath = tkmFilePath;
-            modelInitData.m_fxFilePath = "Assets/shader/preset/DrawShadowMap.fx";
+            modelInitData.m_fxFilePath = "../Media/shader/preset/DrawShadowMap.fx";
             modelInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R32_FLOAT;
             for (int ligNo = 0;
                  ligNo < NUM_DEFERRED_LIGHTING_DIRECTIONAL_LIGHT;

@@ -128,7 +128,7 @@ namespace myRenderer
         spriteInitData.m_height = g_graphicsEngine->GetFrameBufferHeight();
 
         // ボケ画像をそのまま貼り付けるだけなので、通常の2D描画のシェーダーを指定する
-        spriteInitData.m_fxFilePath = "Assets/shader/preset/sprite.fx";
+        spriteInitData.m_fxFilePath = "../Media/shader/preset/sprite.fx";
         spriteInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 
         // 初期化オブジェクトを使って、スプライトを初期化する
@@ -192,7 +192,7 @@ namespace myRenderer
             spriteInitData.m_textures[texNo++] = &gBuffer.GetRenderTargetTexture();
         }
 
-        spriteInitData.m_fxFilePath = "Assets/shader/preset/DeferredLighting.fx";
+        spriteInitData.m_fxFilePath = "../Media/shader/preset/DeferredLighting.fx";
         spriteInitData.m_expandConstantBuffer = &m_deferredLightingCB;
         spriteInitData.m_expandConstantBufferSize = sizeof(m_deferredLightingCB);
         for (int i = 0; i < NUM_DEFERRED_LIGHTING_DIRECTIONAL_LIGHT; i++)

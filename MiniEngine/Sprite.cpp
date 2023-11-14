@@ -3,6 +3,8 @@
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 
+#include <GlobalVar.h>
+
     namespace {
         struct SSimpleVertex {
             Vector4 pos;
@@ -247,8 +249,11 @@
         m_constantBufferCPU.mulColor.w = 1.0f;
         m_constantBufferCPU.screenParam.x = g_camera3D->GetNear();
         m_constantBufferCPU.screenParam.y = g_camera3D->GetFar();
-        m_constantBufferCPU.screenParam.z = FRAME_BUFFER_W;
-        m_constantBufferCPU.screenParam.w = FRAME_BUFFER_H;
+        //m_constantBufferCPU.screenParam.z = s_mainwidth;
+        //m_constantBufferCPU.screenParam.w = s_mainheight;
+        m_constantBufferCPU.screenParam.z = 800;//2023/11/14 tmp set
+        m_constantBufferCPU.screenParam.w = 600;//2023/11/14 tmp set
+
 
         //定数バッファを更新。
         //renderContext.UpdateConstantBuffer(m_constantBufferGPU, &m_constantBufferCPU);

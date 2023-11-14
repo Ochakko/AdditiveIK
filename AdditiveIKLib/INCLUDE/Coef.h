@@ -45,6 +45,11 @@ class CMQOMaterial;
 
 #define COLIGROUPNUM	10
 
+
+//2023/11/14
+#define MAXBONENUM	2048
+
+
 #define PATH_LENG	2048
 #define MAXMOTIONNUM	100
 #define MAXMODELNUM		100

@@ -10,7 +10,7 @@ namespace myRenderer {
         combineBokeImageSpriteInitData.m_textures[1] = &depthTexture;
         combineBokeImageSpriteInitData.m_width = 1280;
         combineBokeImageSpriteInitData.m_height = 720;
-        combineBokeImageSpriteInitData.m_fxFilePath = "Assets/shader/preset/dof.fx";
+        combineBokeImageSpriteInitData.m_fxFilePath = "../Media/shader/preset/dof.fx";
         combineBokeImageSpriteInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
         // 距離を利用してボケ画像をアルファブレンディングするので、半透明合成モードにする
         combineBokeImageSpriteInitData.m_alphaBlendMode = AlphaBlendMode_Trans;
@@ -50,7 +50,7 @@ namespace myRenderer {
         vertDiagonalBlurSpriteInitData.m_textures[0] = &mainRenderTarget.GetRenderTargetTexture();
         vertDiagonalBlurSpriteInitData.m_width = mainRenderTarget.GetWidth();
         vertDiagonalBlurSpriteInitData.m_height = mainRenderTarget.GetHeight();
-        vertDiagonalBlurSpriteInitData.m_fxFilePath = "Assets/shader/preset/hexaBlur.fx";
+        vertDiagonalBlurSpriteInitData.m_fxFilePath = "../Media/shader/preset/hexaBlur.fx";
 
         // 垂直、対角線ブラー用のピクセルシェーダーを指定する
         vertDiagonalBlurSpriteInitData.m_psEntryPoinFunc = "PSVerticalDiagonalBlur";
@@ -65,7 +65,7 @@ namespace myRenderer {
         phomboidBlurSpriteInitData.m_textures[1] = &m_rtDiagonalBlur.GetRenderTargetTexture();
         phomboidBlurSpriteInitData.m_width = mainRenderTarget.GetWidth();
         phomboidBlurSpriteInitData.m_height = mainRenderTarget.GetHeight();
-        phomboidBlurSpriteInitData.m_fxFilePath = "Assets/shader/preset/hexaBlur.fx";
+        phomboidBlurSpriteInitData.m_fxFilePath = "../Media/shader/preset/hexaBlur.fx";
 
         // 六角形ブラー用のピクセルシェーダーを指定する
         phomboidBlurSpriteInitData.m_psEntryPoinFunc = "PSRhomboidBlur";

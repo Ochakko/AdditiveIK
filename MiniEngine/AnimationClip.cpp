@@ -5,7 +5,7 @@
 #include "stdafx.h"
 #include "AnimationClip.h"
 
-
+#include <Coef.h>
 
 AnimationClip::~AnimationClip()
 {
@@ -49,7 +49,7 @@ void AnimationClip::BuildKeyFramesAndAnimationEvents()
 		m_keyframes.push_back(std::move(keyframe));
 		});
 	//ボーンインデックスごとのキーフレームの連結リストを作成する。
-	m_keyFramePtrListArray.resize(MAX_BONE);
+	m_keyFramePtrListArray.resize(MAXBONENUM);
 	for (auto& keyframe : m_keyframes) {
 		m_keyFramePtrListArray[keyframe->boneIndex].push_back(keyframe.get());
 		if (m_topBoneKeyFramList == nullptr) {
