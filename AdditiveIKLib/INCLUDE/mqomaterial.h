@@ -13,6 +13,12 @@
 
 #include <wchar.h>
 
+#include "../../MiniEngine/Texture.h"
+
+class ConstantBuffer;//定数バッファ。
+class RootSignature;//ルートシグネチャ。
+
+
 class CMQOMaterial
 {
 public:
@@ -58,6 +64,26 @@ public:
 
 	//int CreateTexture( WCHAR* dirname, int texpool = 0 );
 	int CreateTexture(WCHAR* dirname, int texpool = 0);//!!!!!!!!!!!!!!!!!!!!!!!!
+
+	void InitShadersAndPipelines(
+		//const TkmFile::SMaterial& tkmMat,
+		const char* fxFilePath,
+		const char* vsEntryPointFunc,
+		const char* vsSkinEntryPointFunc,
+		const char* psEntryPointFunc,
+		const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat,
+		int numSrv,
+		int numCbv,
+		UINT offsetInDescriptorsFromTableStartCB,
+		UINT offsetInDescriptorsFromTableStartSRV,
+		D3D12_FILTER samplerFilter);
+	void InitPipelineState(const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
+	void InitShaders(const char* fxFilePath,
+		const char* vsEntryPointFunc,
+		const char* vsSkinEntriyPointFunc,
+		const char* psEntryPointFunc
+	);
+	void BeginRender(RenderContext& rc, int hasSkin);
 
 
 private:
@@ -254,6 +280,11 @@ public:
 		m_texid = srcval;
 	};
 
+	Texture& GetAlbedoMap();
+	Texture& GetNormalMap();
+	Texture& GetSpecularMap();
+
+
 private:
 	int m_materialno;
 	char m_name[256];
@@ -289,6 +320,21 @@ private:
 	float m_vanime;
 
 	int m_texid;
+	Texture m_dummytex;
+	Texture* m_albedoMap;//bank管理の外部ポインタ
+	Texture* m_normalMap;//とりあえずnulltexture このクラスで作成するポインタ
+	Texture* m_specularMap;//とりあえずnulltexture このクラスで作成するポインタ
+
+	ConstantBuffer m_constantBuffer;				//定数バッファ。
+	RootSignature m_rootSignature;					//ルートシグネチャ。
+	PipelineState m_nonSkinModelPipelineState;		//スキンなしモデル用のパイプラインステート。
+	PipelineState m_skinModelPipelineState;			//スキンありモデル用のパイプラインステート。
+	PipelineState m_transSkinModelPipelineState;	//スキンありモデル用のパイプラインステート(半透明マテリアル)。
+	PipelineState m_transNonSkinModelPipelineState;	//スキンなしモデル用のパイプラインステート(半透明マテリアル)。
+	Shader* m_vsNonSkinModel = nullptr;				//スキンなしモデル用の頂点シェーダー。
+	Shader* m_vsSkinModel = nullptr;				//スキンありモデル用の頂点シェーダー。
+	Shader* m_psModel = nullptr;					//モデル用のピクセルシェーダー。
+
 
 //以下、クラス外からアクセスしないのでアクセッサー無し。
 	char* m_curtexname;

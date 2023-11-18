@@ -29,6 +29,9 @@ public:
 	/// </summary>
 	/// <param name="data"></param>
 	void Update(void* data);
+	void Update(int srcstride, int srcdatanum, void* data);
+
+
 	/// <summary>
 	/// 初期化されているか判定。
 	/// </summary>

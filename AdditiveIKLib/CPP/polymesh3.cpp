@@ -742,10 +742,10 @@ int CPolyMesh3::SetOptV( PM3DISPV* dispv, int* pleng, int* matnum, map<int,CMQOM
 				
 				//curv->normal = curn3p->pervert->smnormal;
 				if (m_fbxfileflag == true) {
-					curv->normal = -curn3p->pervert->smnormal;//2023/07/29 ”½“]
+					curv->normal = -ChaVector4(curn3p->pervert->smnormal, 0.0f);//2023/07/29 ”½“]
 				}
 				else {
-					curv->normal = curn3p->pervert->smnormal;
+					curv->normal = ChaVector4(curn3p->pervert->smnormal, 0.0f);
 				}
 				
 				curv->uv = curn3p->pervert->uv[0];

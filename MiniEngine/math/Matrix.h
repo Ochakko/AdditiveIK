@@ -220,7 +220,8 @@ public:
 	{
 		DirectX::XMStoreFloat4x4(
 			&mat,
-			DirectX::XMMatrixPerspectiveFovLH(viewAngle, aspect, fNear, fFar)
+			//DirectX::XMMatrixPerspectiveFovLH(viewAngle, aspect, fNear, fFar)
+			DirectX::XMMatrixPerspectiveFovRH(viewAngle, aspect, fNear, fFar)
 		);
 	}
 	/// <summary>
@@ -234,7 +235,8 @@ public:
 	{
 		DirectX::XMStoreFloat4x4(
 			&mat,
-			DirectX::XMMatrixOrthographicLH(w, h, fNear, fFar)
+			//DirectX::XMMatrixOrthographicLH(w, h, fNear, fFar)
+			DirectX::XMMatrixOrthographicRH(w, h, fNear, fFar)
 		);
 	}
 	/// <summary>
@@ -245,9 +247,14 @@ public:
 	/// <param name="up">カメラの上方向</param>
 	void MakeLookAt(const Vector3& position, const Vector3& target, const Vector3& up)
 	{
+		Vector3 direction = target - position;
+		direction.Normalize();
+
 		DirectX::XMStoreFloat4x4(
 			&mat,
-			DirectX::XMMatrixLookAtLH(position, target, up)
+			//DirectX::XMMatrixLookAtLH(position, target, up)
+			//DirectX::XMMatrixLookAtRH(position, target, up)
+			DirectX::XMMatrixLookAtRH(position, direction, up)
 		);
 	}
 	/// <summary>

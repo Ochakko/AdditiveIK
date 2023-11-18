@@ -85,6 +85,9 @@ void Texture::LoadTextureFromDDSFile(const wchar_t* filePath)
 	m_textureDesc = m_texture->GetDesc();
 }
 	
+
+
+//DescriptorHeapのCommitから呼ばれる
 void Texture::RegistShaderResourceView(D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle, int bufferNo)
 {
 	if (m_texture) {

@@ -251,8 +251,10 @@
         m_constantBufferCPU.screenParam.y = g_camera3D->GetFar();
         //m_constantBufferCPU.screenParam.z = s_mainwidth;
         //m_constantBufferCPU.screenParam.w = s_mainheight;
-        m_constantBufferCPU.screenParam.z = 800;//2023/11/14 tmp set
-        m_constantBufferCPU.screenParam.w = 600;//2023/11/14 tmp set
+        //m_constantBufferCPU.screenParam.z = 736;//2023/11/18 tmp set
+        //m_constantBufferCPU.screenParam.w = 488;//2023/11/18 tmp set
+        m_constantBufferCPU.screenParam.z = viewport.Width;//2023/11/18 tmp set
+        m_constantBufferCPU.screenParam.w = viewport.Height;//2023/11/18 tmp set
 
 
         //定数バッファを更新。

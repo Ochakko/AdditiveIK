@@ -23,10 +23,10 @@ void TkEngine::Init(HWND hwnd, UINT frameBufferWidth, UINT frameBufferHeight)
 void TkEngine::BeginFrame()
 {
 	m_graphicsEngine->BeginRender();
-	for (auto& pad : m_pad) {
-		pad.BeginFrame();
-		pad.Update();
-	}
+	//for (auto& pad : m_pad) {
+	//	pad.BeginFrame();
+	//	pad.Update();
+	//}
 	
 }
 void TkEngine::EndFrame()

@@ -85,6 +85,7 @@ public:
 
 //#ifdef CONVD3DX11
 	ChaMatrix(DirectX::XMMATRIX m);
+	ChaMatrix(Matrix m);
 //#endif
 
 	~ChaMatrix();
@@ -841,15 +842,17 @@ typedef  struct tag_pm3optv
 typedef  struct tag_pm3dispv
 {
 	ChaVector4		pos;
-	ChaVector3		normal;
+	ChaVector4		normal;
 	ChaVector2		uv;
-
 	tag_pm3dispv() {
 		pos.x = 0.0f;
 		pos.y = 0.0f;
 		pos.z = 0.0f;
-		pos.w = 0.0f;
-		normal.SetZeroVec3();
+		pos.w = 1.0f;
+		normal.x = 0.0f;
+		normal.y = 0.0f;
+		normal.z = 0.0f;
+		normal.w = 0.0f;
 		uv.x = 0.0f;
 		uv.y = 0.0f;
 	};
@@ -942,9 +945,6 @@ private:
 
 	ChaMatrix m_matVP;
 };
-
-
-
 
 #endif
 

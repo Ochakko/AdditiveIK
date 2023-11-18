@@ -65,7 +65,9 @@ RECT InitWindow(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		//NULL,					//マウスカーソルのハンドル。NULLの場合はデフォルト。
 		LoadCursor(nullptr, IDC_ARROW),
 		//NULL,					//ウィンドウの背景色。NULLの場合はデフォルト。
-		(HBRUSH)GetStockObject(BLACK_BRUSH),
+		//(HBRUSH)GetStockObject(BLACK_BRUSH),
+		//(HBRUSH)GetStockObject(GRAY_BRUSH),
+		NULL,
 		NULL,					//メニュー名。NULLでいい。
 		appName,				//ウィンドウクラスに付ける名前。
 		NULL					//NULLでいい。

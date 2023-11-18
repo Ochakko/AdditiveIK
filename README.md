@@ -18,6 +18,13 @@ MameBake3Dの表示をPBRとカスケードシャドウに対応させて　UI�
 まだモデルを表示できない状態<br>
 <br>
 <br>
+2023/11/18
+DirectX12による表示開始<br>
+とりあえず　白いシルエットでモデルを表示<br>
+VRoidモデルはシルエット表示できた<br>
+仕組みとしてはテクスチャに対応しているのだが　シェーダーでテクスチャを使うと何も表示されなかった<br>
+4000個くらいメッシュがあるfbxを読み込むとアウトオブメモリエラーだった<br>
+次回はテクスチャを表示したい<br>
 <br>
 <br>
 サイト：https://ochakkolab.jp<br>
@@ -46,8 +53,11 @@ Unity3D 2022LTS(2022.3.3)<br>
 FBXSDKは2020.3.4(VC2022) https://www.autodesk.com/products/fbx/ <br>
 Microsoft MultiThreadLibrary PPL.<br>
 <br>
-DirectX12 (githubのDirectXTK12)<br>
+DirectX12 (githubのMicrosoftのDirectXTK12)<br>
 DirectXTK12のライセンスはReadMe/DirectXTK12_LICENSE<br>
+<br>
+DirectXTex (githubのMicrosoftのDirectXTex)<br>
+DirectXTexのライセンスはReadMe/DirectXTex_LICENSE<br>
 <br>
 githubのbullet physics ver2.89 https://pybullet.org/wordpress/ <br>
 bullet physicsのライセンスはReadMe/bulletPhysics_license.txt<br>

@@ -14,7 +14,8 @@ class IShaderResource;
 
 
 
-const int MAX_MODEL_EXPAND_SRV = 6;	//拡張SRVの最大数。
+//const int MAX_MODEL_EXPAND_SRV = 6;	//拡張SRVの最大数。
+const int MAX_MODEL_EXPAND_SRV = 0;	//拡張SRVの最大数。
 
 /// <summary>
 /// メッシュ
@@ -79,6 +80,11 @@ public:
 	/// </summary>
 	/// <param name="skeleton">スケルトン</param>
 	void BindSkeleton(Skeleton& skeleton);
+	void BindSkeleton(int srcdatanum, void* srcdata);
+
+
+
+
 	/// <summary>
 	/// メッシュに対して問い合わせを行う。
 	/// </summary>

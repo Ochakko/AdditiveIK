@@ -4,6 +4,8 @@
 #include "Material.h"
 #include "IndexBuffer.h"
 
+#include <ChaVecCalc.h>
+
 MeshParts::~MeshParts()
 {
 	for (auto& mesh : m_meshs) {
@@ -177,6 +179,17 @@ void MeshParts::CreateMeshFromTkmMesh(
 	m_meshs[meshNo] = mesh;
 	
 }
+
+void MeshParts::BindSkeleton(int srcdatanum, void* srcdata)
+{
+	m_boneMatricesStructureBuffer.Init(
+		sizeof(ChaMatrix),
+		srcdatanum,
+		srcdata
+	);
+}
+
+
 
 void MeshParts::BindSkeleton(Skeleton& skeleton)
 {

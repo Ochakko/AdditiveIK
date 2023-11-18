@@ -30,6 +30,10 @@ public:
 	{
 		m_commandList->IASetVertexBuffers(0, 1, &vb.GetView());
 	}
+	void SetVertexBuffer(D3D12_VERTEX_BUFFER_VIEW& vbview)//CDispObjからの呼び出しに使用
+	{
+		m_commandList->IASetVertexBuffers(0, 1, &vbview);
+	}
 	/// <summary>
 	/// インデックスバッファを設定。
 	/// </summary>
@@ -37,6 +41,10 @@ public:
 	void SetIndexBuffer(IndexBuffer& ib)
 	{
 		m_commandList->IASetIndexBuffer(&ib.GetView());
+	}
+	void SetIndexBuffer(D3D12_INDEX_BUFFER_VIEW& ibview)//CDispObjからの呼び出しに使用
+	{
+		m_commandList->IASetIndexBuffer(&ibview);
 	}
 	/// <summary>
 	/// プリミティブのトポロジーを設定。
@@ -352,6 +360,11 @@ public:
 	{
 		m_commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
 	}
+	void DrawIndexed(UINT indexCount, UINT startindex)//CDispObjからの呼び出しに使用
+	{
+		m_commandList->DrawIndexedInstanced(indexCount, 1, startindex, 0, 0);
+		//m_commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, startindex);
+	}
 	/// <summary>
 	/// インスタンシング描画
 	/// </summary>
@@ -431,9 +444,16 @@ private:
 		);
 	}
 private:
-	enum { MAX_DESCRIPTOR_HEAP = 4 };	//ディスクリプタヒープの最大数。
-	enum { MAX_CONSTANT_BUFFER = 8 };	//定数バッファの最大数。足りなくなったら増やしてね。
-	enum { MAX_SHADER_RESOURCE = 16 };	//シェーダーリソースの最大数。足りなくなったら増やしてね。
+	//enum { MAX_DESCRIPTOR_HEAP = 4 };	//ディスクリプタヒープの最大数。
+	//enum { MAX_CONSTANT_BUFFER = 8 };	//定数バッファの最大数。足りなくなったら増やしてね。
+	//enum { MAX_SHADER_RESOURCE = 16 };	//シェーダーリソースの最大数。足りなくなったら増やしてね。
+	//enum { MAX_DESCRIPTOR_HEAP = (4096 * 8) };	//ディスクリプタヒープの最大数。
+	//enum { MAX_CONSTANT_BUFFER = (4096 * 16) };	//定数バッファの最大数。足りなくなったら増やしてね。
+	//enum { MAX_SHADER_RESOURCE = (4096 * 32) };	//シェーダーリソースの最大数。足りなくなったら増やしてね。
+	enum { MAX_DESCRIPTOR_HEAP = 1024 };	//ディスクリプタヒープの最大数。
+	enum { MAX_CONSTANT_BUFFER = 1024 };	//定数バッファの最大数。足りなくなったら増やしてね。
+	enum { MAX_SHADER_RESOURCE = 1024 };	//シェーダーリソースの最大数。足りなくなったら増やしてね。
+
 
 	D3D12_VIEWPORT m_currentViewport;				//現在のビューポート。
 	ID3D12GraphicsCommandList4* m_commandList;	//コマンドリスト。

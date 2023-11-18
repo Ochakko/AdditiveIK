@@ -15,8 +15,16 @@
 #include <mqomaterial.h>
 
 #include <TexBank.h>
+#include <TexElem.h>
 
 //extern CTexBank* g_texbank;
+
+
+#include "../../MiniEngine/ConstantBuffer.h"
+#include "../../MiniEngine/RootSignature.h"
+#include "../../MiniEngine/Material.h"
+
+
 
 
 CMQOMaterial::CMQOMaterial()
@@ -265,6 +273,11 @@ int CMQOMaterial::InitParams()
 	m_convnamenum = 0;
 	m_ppconvname = 0;
 
+
+	m_albedoMap = nullptr;
+	m_normalMap = nullptr;//とりあえずnulltexture このクラスで作成するポインタ
+	m_specularMap = nullptr;//とりあえずnulltexture このクラスで作成するポインタ
+
 	return 0;
 }
 
@@ -283,6 +296,22 @@ int CMQOMaterial::DestroyObjs()
 		m_ppconvname = 0;
 		m_convnamenum = 0;
 	}
+
+	//m_normalMap = nullptr;//とりあえずnulltexture このクラスで作成するポインタ
+	if (m_normalMap) {
+		delete m_normalMap;
+		m_normalMap = nullptr;
+	}
+
+	//m_specularMap = nullptr;//とりあえずnulltexture このクラスで作成するポインタ
+	if (m_specularMap) {
+		delete m_specularMap;
+		m_specularMap = nullptr;
+	}
+
+	//Texture* m_albedoMap;//bank管理の外部ポインタ
+	m_albedoMap = nullptr;
+
 
 	return 0;
 }
@@ -856,7 +885,54 @@ int CMQOMaterial::CreateTexture( WCHAR* dirname, int texpool )
 
 		//g_texbank->AddTex( dirname, wname, m_transparent, texpool, 0, &m_texid );
 		g_texbank->AddTex(dirname, wname, m_transparent, texpool, &m_texid);
+
+		//CTexElem* findtex = g_texbank->GetTexElem(GetTexID());
+		//if(findtex){
+		//	m_albedoMap = findtex->GetPTex();
+		//}else{
+		//	_ASSERT(0);
+		//	m_albedoMap = 0;
+		//}
 	}
+
+
+	//######################################################
+	//normalMapとspecularMapは　とりあえずnulltextureでテスト
+	//######################################################
+	if (!m_specularMap && !m_normalMap) {
+		{
+			const auto& nullTextureMaps = g_graphicsEngine->GetNullTextureMaps();
+			char* map = nullptr;
+			unsigned int mapSize;
+
+			map = nullTextureMaps.GetNormalMap().get();
+			mapSize = nullTextureMaps.GetNormalMapSize();
+			Texture* texture = new Texture();
+			if (!texture) {
+				_ASSERT(0);
+				return 1;
+			}
+			texture->InitFromMemory(map, mapSize);
+			m_normalMap = texture;
+		}
+		{
+			const auto& nullTextureMaps = g_graphicsEngine->GetNullTextureMaps();
+			char* map = nullptr;
+			unsigned int mapSize;
+
+			map = nullTextureMaps.GetSpecularMap().get();
+			mapSize = nullTextureMaps.GetSpecularMapSize();
+			Texture* texture = new Texture();
+			if (!texture) {
+				_ASSERT(0);
+				return 1;
+			}
+			texture->InitFromMemory(map, mapSize);
+			m_specularMap = texture;
+		}
+	}
+
+
 
 	return 0;
 }
@@ -914,3 +990,256 @@ int CMQOMaterial::AddConvName( char** ppname )
 
 	return 0;
 }
+
+
+void CMQOMaterial::InitShadersAndPipelines(
+	//const TkmFile::SMaterial& tkmMat,
+	const char* fxFilePath,
+	const char* vsEntryPointFunc,
+	const char* vsSkinEntryPointFunc,
+	const char* psEntryPointFunc,
+	const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat,
+	int numSrv,
+	int numCbv,
+	UINT offsetInDescriptorsFromTableStartCB,
+	UINT offsetInDescriptorsFromTableStartSRV,
+	D3D12_FILTER samplerFilter)
+{
+
+
+	//テクスチャをロード。
+	//InitTexture(tkmMat);
+
+//定数バッファを作成。
+	SMaterialParam matParam;
+	//matParam.hasNormalMap = m_normalMap->IsValid() ? 1 : 0;
+	//matParam.hasSpecMap = m_specularMap->IsValid() ? 1 : 0;
+	matParam.hasNormalMap = 0;//まずはprimitive表示テストのため　NormalMapオフ !!!!!!!!!!!!!!!!
+	matParam.hasSpecMap = 0;//まずはprimitive表示テストのため　SpecularMapオフ !!!!!!!!!!!!!!!!
+	m_constantBuffer.Init(sizeof(SMaterialParam), &matParam);
+
+	//ルートシグネチャを初期化。
+	D3D12_STATIC_SAMPLER_DESC samplerDescArray[2];
+	//デフォルトのサンプラ
+	samplerDescArray[0].Filter = samplerFilter;
+	samplerDescArray[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDescArray[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDescArray[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDescArray[0].MipLODBias = 0;
+	samplerDescArray[0].MaxAnisotropy = 0;
+	samplerDescArray[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	samplerDescArray[0].BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+	samplerDescArray[0].MinLOD = 0.0f;
+	samplerDescArray[0].MaxLOD = D3D12_FLOAT32_MAX;
+	samplerDescArray[0].ShaderRegister = 0;
+	samplerDescArray[0].RegisterSpace = 0;
+	samplerDescArray[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	//シャドウマップ用のサンプラ。
+	samplerDescArray[1] = samplerDescArray[0];
+	//比較対象の値が小さければ０、大きければ１を返す比較関数を設定する。
+	samplerDescArray[1].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+	samplerDescArray[1].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER;
+	samplerDescArray[1].MaxAnisotropy = 1;
+	samplerDescArray[1].ShaderRegister = 1;
+
+	m_rootSignature.Init(
+		samplerDescArray,
+		2,
+		numCbv,
+		numSrv,
+		8,
+		offsetInDescriptorsFromTableStartCB,
+		offsetInDescriptorsFromTableStartSRV
+	);
+
+	if (fxFilePath != nullptr && strlen(fxFilePath) > 0) {
+		//シェーダーを初期化。
+		InitShaders(fxFilePath, vsEntryPointFunc, vsSkinEntryPointFunc, psEntryPointFunc);
+		//パイプラインステートを初期化。
+		InitPipelineState(colorBufferFormat);
+	}
+}
+
+void CMQOMaterial::InitPipelineState(const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
+{
+	// 頂点レイアウトを定義する。
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
+	{
+		//{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		//{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		//{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		//{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 36, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		//{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 48, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		//{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0, 56, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		//{ "BLENDWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 72, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+
+		//型：PM3DISPV
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+	};
+
+	//パイプラインステートを作成。
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
+	psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
+	psoDesc.pRootSignature = m_rootSignature.Get();
+	psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsSkinModel->GetCompiledBlob());
+	psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psModel->GetCompiledBlob());
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	//#ifdef SAMPLE_11
+	//	// 背面を描画していないと影がおかしくなるため、
+	//	// シャドウのサンプルのみカリングをオフにする。
+	//	// 本来はアプリ側からカリングモードを渡すのがいいのだけど、
+	//	// 書籍に記載しているコードに追記がいるので、エンジン側で吸収する。
+	//	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	//#else
+	//	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	//#endif
+
+		//2023/11/18
+	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+#ifdef TK_ENABLE_ALPHA_TO_COVERAGE
+	psoDesc.BlendState.AlphaToCoverageEnable = TRUE;
+#endif
+	psoDesc.DepthStencilState.DepthEnable = TRUE;
+	psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	psoDesc.DepthStencilState.StencilEnable = FALSE;
+	psoDesc.SampleMask = UINT_MAX;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+	int numRenderTarget = 0;
+	for (auto& format : colorBufferFormat) {
+		if (format == DXGI_FORMAT_UNKNOWN) {
+			//フォーマットが指定されていない場所が来たら終わり。
+			break;
+		}
+		psoDesc.RTVFormats[numRenderTarget] = colorBufferFormat[numRenderTarget];
+		numRenderTarget++;
+	}
+	psoDesc.NumRenderTargets = numRenderTarget;
+	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+	psoDesc.SampleDesc.Count = 1;
+
+	m_skinModelPipelineState.Init(psoDesc);
+
+	//続いてスキンなしモデル用を作成。
+	psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsNonSkinModel->GetCompiledBlob());
+	m_nonSkinModelPipelineState.Init(psoDesc);
+
+	//続いて半透明マテリアル用。
+	psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsSkinModel->GetCompiledBlob());
+	psoDesc.BlendState.IndependentBlendEnable = TRUE;
+	psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
+	psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+
+
+	m_transSkinModelPipelineState.Init(psoDesc);
+
+	psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsNonSkinModel->GetCompiledBlob());
+	m_transNonSkinModelPipelineState.Init(psoDesc);
+
+}
+
+void CMQOMaterial::InitShaders(
+	const char* fxFilePath,
+	const char* vsEntryPointFunc,
+	const char* vsSkinEntriyPointFunc,
+	const char* psEntryPointFunc
+)
+{
+	//スキンなしモデル用のシェーダーをロードする。
+	m_vsNonSkinModel = g_engine->GetShaderFromBank(fxFilePath, vsEntryPointFunc);
+	if (m_vsNonSkinModel == nullptr) {
+		m_vsNonSkinModel = new Shader;
+		m_vsNonSkinModel->LoadVS(fxFilePath, vsEntryPointFunc);
+		g_engine->RegistShaderToBank(fxFilePath, vsEntryPointFunc, m_vsNonSkinModel);
+	}
+	//スキンありモデル用のシェーダーをロードする。
+	m_vsSkinModel = g_engine->GetShaderFromBank(fxFilePath, vsSkinEntriyPointFunc);
+	if (m_vsSkinModel == nullptr) {
+		m_vsSkinModel = new Shader;
+		m_vsSkinModel->LoadVS(fxFilePath, vsSkinEntriyPointFunc);
+		g_engine->RegistShaderToBank(fxFilePath, vsSkinEntriyPointFunc, m_vsSkinModel);
+	}
+
+	m_psModel = g_engine->GetShaderFromBank(fxFilePath, psEntryPointFunc);
+	if (m_psModel == nullptr) {
+		m_psModel = new Shader;
+		m_psModel->LoadPS(fxFilePath, psEntryPointFunc);
+		g_engine->RegistShaderToBank(fxFilePath, psEntryPointFunc, m_psModel);
+	}
+}
+
+void CMQOMaterial::BeginRender(RenderContext& rc, int hasSkin)
+{
+	rc.SetRootSignature(m_rootSignature);
+
+	if (hasSkin) {
+		rc.SetPipelineState(m_skinModelPipelineState);
+		//rc.SetPipelineState(m_transSkinModelPipelineState);
+	}
+	else {
+		rc.SetPipelineState(m_nonSkinModelPipelineState);
+		//rc.SetPipelineState(m_transNonSkinModelPipelineState);
+	}
+}
+
+Texture& CMQOMaterial::GetAlbedoMap()
+{
+	CTexElem* findtex = g_texbank->GetTexElem(GetTexID());
+	if (findtex) {
+		return findtex->GetPTex();
+	}
+	else {
+		//_ASSERT(0);
+		return m_dummytex;
+	}
+	//if (m_albedoMap) {
+	//	return *m_albedoMap;
+	//}
+	//else {
+	//	//::MessageBox(NULL, L"AlbedoMap NULL error, exit app!!!", L"ERROR", MB_OK);
+	//	//_ASSERT(0);
+	//	//PostQuitMessage(404);
+	//	return m_dummytex;
+	//}
+}
+Texture& CMQOMaterial::GetNormalMap()
+{
+	if (m_normalMap) {
+		return *m_normalMap;
+	}
+	else {
+		//::MessageBox(NULL, L"NormalMap NULL error, exit app!!!", L"ERROR", MB_OK);
+		//_ASSERT(0);
+		//PostQuitMessage(404);
+		return m_dummytex;
+	}
+}
+Texture& CMQOMaterial::GetSpecularMap()
+{
+	if (m_specularMap) {
+		return *m_specularMap;
+	}
+	else {
+		//::MessageBox(NULL, L"SpecularMap NULL error, exit app!!!", L"ERROR", MB_OK);
+		//_ASSERT(0);
+		//PostQuitMessage(404);
+		return m_dummytex;
+	}
+}
+
+
+
+

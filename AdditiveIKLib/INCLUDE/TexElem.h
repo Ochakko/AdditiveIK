@@ -10,6 +10,8 @@
 #include <ChaVecCalc.h>
 #include <wchar.h>
 
+#include "../../MiniEngine/Texture.h"
+
 class CTexElem
 {
 public:
@@ -23,10 +25,25 @@ private:
 	int InitParams();
 	int DestroyObjs();
 
+	int SetNullTexture();
+
 public:
 	//ID3D11ShaderResourceView* GetPTex(){
 	//	return m_ResView;
 	//};
+	//ID3D12Resource* GetPTex() {
+	//	return m_ptex;
+	//}
+	Texture& GetPTex() {
+		if (m_texture) {
+			return *m_texture;
+		}
+		else {
+			::MessageBox(NULL, L"AlbedoMap NULL error, exit app!!!", L"ERROR", MB_OK);
+			PostQuitMessage(404);
+			//return nullptr;
+		}
+	}
 
 	int GetID(){
 		return m_id;
@@ -85,6 +102,11 @@ private:
 
 	//ID3D12Resource* m_ptex;
 	//ID3D11ShaderResourceView* m_ResView;
+
+	//ID3D12Resource* m_ptex;	//テクスチャ。
+	//D3D12_RESOURCE_DESC m_textureDesc;	//テクスチャ情報
+	Texture* m_texture;
+
 	bool m_validflag;
 };
 

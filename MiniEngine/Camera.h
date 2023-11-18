@@ -354,8 +354,14 @@ protected:
 	float		m_far = 5000.0f;						//遠平面。
 	float		m_viewAngle = Math::DegToRad(60.0f);	//画角(ラジアン)。
 	float		m_aspect = 1.0f;						//アスペクト比。
-	float		m_width = 1280.0f;						//平行投影行列を作成するときに使用される幅。
-	float		m_height = 720.0f;						//平行投影行列を作成するときに使用される高さ。
+
+	//float		m_width = 1280.0f;						//平行投影行列を作成するときに使用される幅。
+	//float		m_height = 720.0f;						//平行投影行列を作成するときに使用される高さ。
+	//2023/11/17 SamllWindow時の値決め打ちでテスト
+	float		m_width = 736.0f;						//平行投影行列を作成するときに使用される幅。
+	float		m_height = 488.0f;						//平行投影行列を作成するときに使用される高さ。
+
+
 	EnUpdateProjMatrixFunc m_updateProjMatrixFunc = enUpdateProjMatrixFunc_Perspective;	//プロジェクション行列の更新の仕方。
 	bool		m_isNeedUpdateProjectionMatrix = true;
 	bool		m_isDirty = false;						//ダーティフラグ。

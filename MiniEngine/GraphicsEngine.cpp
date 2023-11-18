@@ -472,7 +472,7 @@ void GraphicsEngine::BeginRender()
 	//レンダリングターゲットを設定。
 	m_renderContext.SetRenderTarget(m_currentFrameBufferRTVHandle, m_currentFrameBufferDSVHandle);
 
-	const float clearColor[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	m_renderContext.ClearRenderTargetView(m_currentFrameBufferRTVHandle, clearColor);
 	m_renderContext.ClearDepthStencilView(m_currentFrameBufferDSVHandle, 1.0f);
 

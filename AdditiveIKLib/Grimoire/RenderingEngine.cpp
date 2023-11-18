@@ -1,6 +1,9 @@
 ﻿#include "stdafx.h"
 #include "RenderingEngine.h"
 
+#include <mqoobject.h>
+#include <DispObj.h>
+
 namespace myRenderer
 {
     void RenderingEngine::Init()
@@ -58,7 +61,8 @@ namespace myRenderer
             g_graphicsEngine->GetFrameBufferHeight(),
             1,
             1,
-            DXGI_FORMAT_R32G32B32A32_FLOAT,
+            //DXGI_FORMAT_R32G32B32A32_FLOAT,
+            DXGI_FORMAT_R8G8B8A8_UNORM,//2023/11/18
             DXGI_FORMAT_UNKNOWN
         );
     }
@@ -74,7 +78,8 @@ namespace myRenderer
             frameBuffer_h,
             1,
             1,
-            DXGI_FORMAT_R32G32B32A32_FLOAT,
+            //DXGI_FORMAT_R32G32B32A32_FLOAT,
+            DXGI_FORMAT_R8G8B8A8_UNORM,//2023/11/18
             DXGI_FORMAT_D32_FLOAT
         );
 
@@ -104,7 +109,8 @@ namespace myRenderer
             frameBuffer_h,
             1,
             1,
-            DXGI_FORMAT_R32G32B32A32_FLOAT,
+            //DXGI_FORMAT_R32G32B32A32_FLOAT,
+            DXGI_FORMAT_R8G8B8A8_UNORM,//2023/11/18
             DXGI_FORMAT_UNKNOWN
         );
         m_gBuffer[enGBUfferShadowParam].Create(
@@ -202,7 +208,8 @@ namespace myRenderer
                 spriteInitData.m_textures[texNo++] = &m_shadowMapRenders[i].GetShadowMap(areaNo);
             }
         }
-        spriteInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        //spriteInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        spriteInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 
         // 初期化データを使ってスプライトを作成
         m_diferredLightingSprite.Init(spriteInitData);
@@ -210,29 +217,37 @@ namespace myRenderer
 
     void RenderingEngine::Execute(RenderContext& rc)
     {
+
+        //const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        //rc.ClearRenderTargetView(m_mainRenderTarget.GetRTVCpuDescriptorHandle(), clearColor);
+        ////rc.ClearDepthStencilView(m_mainRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);//mainRenderTargetにはDepthBufferは無い　NULL
+        //rc.ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
+
+
+
         // シャドウマップへの描画
-        RenderToShadowMap(rc);
+        //RenderToShadowMap(rc);
 
         // ZPrepass
-        ZPrepass(rc);
+        //ZPrepass(rc);
 
         // G-Bufferへのレンダリング
-        RenderToGBuffer(rc);
+        //RenderToGBuffer(rc);
 
         // ディファードライティング
-        DeferredLighting(rc);
+        //DeferredLighting(rc);
 
         // ディファードライティングが終わった時点でスナップショットを撮影する
-        SnapshotMainRenderTarget(rc, EnMainRTSnapshot::enDrawnOpacity);
+        //SnapshotMainRenderTarget(rc, EnMainRTSnapshot::enDrawnOpacity);
 
         // フォワードレンダリング
         ForwardRendering(rc);
 
         // ポストエフェクトを実行
-        m_postEffect.Render(rc, m_mainRenderTarget);
+        //m_postEffect.Render(rc, m_mainRenderTarget);
 
         // メインレンダリングターゲットの内容をフレームバッファにコピー
-        CopyMainRenderTargetToFrameBuffer(rc);
+        //CopyMainRenderTargetToFrameBuffer(rc);
 
         // 登録されている3Dモデルをクリア
         m_renderToGBufferModels.clear();
@@ -264,9 +279,28 @@ namespace myRenderer
         // レンダリングターゲットをクリア
         rc.ClearRenderTargetView(m_zprepassRenderTarget);
 
-        for (auto& model : m_zprepassModels)
+        for (auto& curobj : m_zprepassModels)
         {
-            model->Draw(rc);
+            //model->Draw(rc);
+
+            Matrix mWorld;//とりあえずIdentity ！！！！！！！！！！！！！
+            bool withalpha = false;//とりあえず　不透明！！！！！！！！！
+            int lightflag = 1;
+            ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+            ChaVector4 materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+            if (curobj->GetDispObj()) {
+                if (curobj->GetPm3()) {
+                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                    curobj->GetDispObj()->RenderNormalPM3(withalpha, rc, lightflag, diffusemult, materialdisprate, curobj, mWorld);
+                }
+                else if (curobj->GetPm4()) {
+                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                    curobj->GetDispObj()->RenderNormal(withalpha, rc, lightflag, diffusemult, materialdisprate, curobj, mWorld);
+                }
+                else {
+                    _ASSERT(0);
+                }
+            }
         }
 
         rc.WaitUntilFinishDrawingToRenderTarget(m_zprepassRenderTarget);
@@ -274,18 +308,69 @@ namespace myRenderer
 
     void RenderingEngine::ForwardRendering(RenderContext& rc)
     {
-        rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
+        //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
+        //rc.SetRenderTarget(
+        //    m_mainRenderTarget.GetRTVCpuDescriptorHandle(),
+        //    m_gBuffer[enGBufferAlbedo].GetDSVCpuDescriptorHandle()
+        //);
+
+        //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
+        //rc.SetRenderTarget(
+        //    m_mainRenderTarget.GetRTVCpuDescriptorHandle(),
+        //    //m_gBuffer[enGBufferAlbedo].GetDSVCpuDescriptorHandle()
+        //    //m_mainRenderTarget.GetDSVCpuDescriptorHandle()//!!!!!!!!!!!!!!!!!!!!!!!!! NULL
+        //    m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
+        //);
+
+
+        //rc.WaitUntilToPossibleSetRenderTarget();
         rc.SetRenderTarget(
-            m_mainRenderTarget.GetRTVCpuDescriptorHandle(),
-            m_gBuffer[enGBufferAlbedo].GetDSVCpuDescriptorHandle()
+            g_graphicsEngine->GetCurrentFrameBuffuerRTV(),
+            //g_graphicsEngine->GetCurrentFrameBuffuerDSV()
+            m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
         );
-        for (auto& model : m_forwardRenderModels)
+        rc.ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
+
+        //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
+        //// レンダリングターゲットを設定
+        //rc.SetRenderTargetAndViewport(m_mainRenderTarget);
+
+
+        //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
+        //rc.SetRenderTarget(
+        //    m_mainRenderTarget.GetRTVCpuDescriptorHandle(),
+        //    m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()//ZPrePass Z Buffer !!!!
+        //);
+
+
+
+        for (auto& curobj : m_forwardRenderModels)
         {
-            model->Draw(rc);
+            //model->Draw(rc);
+            Matrix mWorld;//とりあえずIdentity ！！！！！！！！！！！！！
+            bool withalpha = false;//とりあえず　不透明！！！！！！！！！
+            int lightflag = 1;
+            ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+            ChaVector4 materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+            if (curobj->GetDispObj()) {
+                if (curobj->GetPm3()) {
+                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                    curobj->GetDispObj()->RenderNormalPM3(withalpha, rc, lightflag, diffusemult, materialdisprate, curobj, mWorld);
+                }
+                else if (curobj->GetPm4()) {
+                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                    curobj->GetDispObj()->RenderNormal(withalpha, rc, lightflag, diffusemult, materialdisprate, curobj, mWorld);
+                }
+                else {
+                    _ASSERT(0);
+                }
+            }
+
+
         }
 
         // メインレンダリングターゲットへの書き込み終了待ち
-        rc.WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
+       //rc.WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
     }
 
     void RenderingEngine::RenderToGBuffer(RenderContext& rc)
@@ -307,9 +392,29 @@ namespace myRenderer
 
         // レンダリングターゲットをクリア
         rc.ClearRenderTargetViews(ARRAYSIZE(rts), rts);
-        for (auto& model : m_renderToGBufferModels)
+        for (auto& curobj : m_renderToGBufferModels)
         {
-            model->Draw(rc);
+            //model->Draw(rc);
+
+            Matrix mWorld;//とりあえずIdentity ！！！！！！！！！！！！！
+            bool withalpha = false;//とりあえず　不透明！！！！！！！！！
+            int lightflag = 1;
+            ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+            ChaVector4 materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+            if (curobj->GetDispObj()) {
+                if (curobj->GetPm3()) {
+                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                    curobj->GetDispObj()->RenderNormalPM3(withalpha, rc, lightflag, diffusemult, materialdisprate, curobj, mWorld);
+                }
+                else if (curobj->GetPm4()) {
+                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                    curobj->GetDispObj()->RenderNormal(withalpha, rc, lightflag, diffusemult, materialdisprate, curobj, mWorld);
+                }
+                else {
+                    _ASSERT(0);
+                }
+            }
+
         }
 
         // レンダリングターゲットへの書き込み待ち
@@ -351,6 +456,11 @@ namespace myRenderer
 
     void RenderingEngine::CopyMainRenderTargetToFrameBuffer(RenderContext& rc)
     {
+
+        //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
+        //g_graphicsEngine->BeginRender();
+
+
         // メインレンダリングターゲットの絵をフレームバッファーにコピー
         rc.SetRenderTarget(
             g_graphicsEngine->GetCurrentFrameBuffuerRTV(),
@@ -358,15 +468,28 @@ namespace myRenderer
         );
 
         // ビューポートを指定する
+        //D3D12_VIEWPORT viewport;
+        //viewport.TopLeftX = 0;
+        //viewport.TopLeftY = 0;
+        ////viewport.Width = 1280;
+        ////viewport.Height = 720;
+        ////2023/11/17 SamllWindow時の値決め打ちでテスト
+        //viewport.Width = 736;
+        //viewport.Height = 488;
+        //viewport.MinDepth = 0.0f;
+        //viewport.MaxDepth = 1.0f;
+
         D3D12_VIEWPORT viewport;
         viewport.TopLeftX = 0;
         viewport.TopLeftY = 0;
-        viewport.Width = 1280;
-        viewport.Height = 720;
-        viewport.MinDepth = 0.0f;
-        viewport.MaxDepth = 1.0f;
+        viewport.Width = (float)g_graphicsEngine->GetFrameBufferWidth();
+        viewport.Height = (float)g_graphicsEngine->GetFrameBufferHeight();
+        viewport.MinDepth = D3D12_MIN_DEPTH;
+        viewport.MaxDepth = D3D12_MAX_DEPTH;
+
 
         rc.SetViewportAndScissor(viewport);
         m_copyMainRtToFrameBufferSprite.Draw(rc);
+
     }
 }

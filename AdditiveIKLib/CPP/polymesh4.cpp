@@ -369,19 +369,19 @@ int CPolyMesh4::SetOptV( PM3DISPV* dispv, int* pleng, int* matnum, map<int,CMQOM
 
 					if (m_normalleng == (m_facenum * 3)) {
 						if (m_normalmappingmode == 0) {
-							curv->normal = *(m_normal + (setno * 3 + vi[vcnt]));//!!!!!! eByPolygonVertex : save with MameBake3D
+							curv->normal = ChaVector4(*(m_normal + (setno * 3 + vi[vcnt])), 0.0f);//!!!!!! eByPolygonVertex : save with MameBake3D
 						}
 						else {
-							curv->normal = *(m_normal + (setno * 3 + vcnt));//!!!!!!!!!!! eByControlPoint : save with Maya FBX
+							curv->normal = ChaVector4(*(m_normal + (setno * 3 + vcnt)), 0.0f);//!!!!!!!!!!! eByControlPoint : save with Maya FBX
 						}
 					}
 					else if( m_normalleng == m_orgpointnum ){
-						curv->normal = *(m_normal + vno);
+						curv->normal = ChaVector4(*(m_normal + vno), 0.0f);
 					}else{
 						_ASSERT( 0 );
 					}
 				}else{
-					curv->normal = ChaVector3( 0.0f, 0.0f, 1.0f );
+					curv->normal = ChaVector4( 0.0f, 0.0f, 1.0f, 0.0f );
 					_ASSERT( 0 );
 				}
 

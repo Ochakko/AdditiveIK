@@ -975,6 +975,29 @@ void ChaMatrix::SetBasis(ChaMatrix srcmat)
 }
 
 //#ifdef CONVD3DX11
+ChaMatrix::ChaMatrix(Matrix m)
+{
+	data[MATI_11] = m._11;
+	data[MATI_12] = m._12;
+	data[MATI_13] = m._13;
+	data[MATI_14] = m._14;
+
+	data[MATI_21] = m._21;
+	data[MATI_22] = m._22;
+	data[MATI_23] = m._23;
+	data[MATI_24] = m._24;
+
+	data[MATI_31] = m._31;
+	data[MATI_32] = m._32;
+	data[MATI_33] = m._33;
+	data[MATI_34] = m._34;
+
+	data[MATI_41] = m._41;
+	data[MATI_42] = m._42;
+	data[MATI_43] = m._43;
+	data[MATI_44] = m._44;
+}
+
 ChaMatrix::ChaMatrix(DirectX::XMMATRIX m)
 {
 	data[MATI_11] = m.r[0].m128_f32[0];

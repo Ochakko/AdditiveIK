@@ -78,14 +78,14 @@ namespace myRenderer
                 );
             }
         }
-        m_renderingEngine->Add3DModelToZPrepass(m_zprepassModel);
-        if (m_renderToGBufferModel.IsInited())
-        {
-            m_renderingEngine->Add3DModelToRenderGBufferPass(m_renderToGBufferModel);
-        }
-        if (m_forwardRenderModel.IsInited())
-        {
-            m_renderingEngine->Add3DModelToForwardRenderPass(m_forwardRenderModel);
-        }
+        //m_renderingEngine->Add3DModelToZPrepass(m_zprepassModel);
+        //if (m_renderToGBufferModel.IsInited())
+        //{
+        //    m_renderingEngine->Add3DModelToRenderGBufferPass(m_renderToGBufferModel);
+        //}
+        //if (m_forwardRenderModel.IsInited())
+        //{
+        //    m_renderingEngine->Add3DModelToForwardRenderPass(m_forwardRenderModel);
+        //}
     }
 }

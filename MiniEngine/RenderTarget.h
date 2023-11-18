@@ -157,7 +157,10 @@ private:
 	UINT m_dsvDescriptorSize = 0;						//深度ステンシルバッファのディスクリプタのサイズ。
 	int m_width = 0;									//レンダリングターゲットの幅。
 	int m_height = 0;									//レンダリングターゲットの高さ。
+	
 	float m_rtvClearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };	//レンダリングターゲットビューのクリアカラー。
+	//float m_rtvClearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };	//レンダリングターゲットビューのクリアカラー。
+
 	float m_dsvClearValue = 1.0f;							//DSVのクリアカラー。
 };
 

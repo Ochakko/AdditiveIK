@@ -66,58 +66,63 @@ void DescriptorHeap::Commit()
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
 	for (auto& ds : m_descriptorHeap) {
-		auto hr = d3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&ds));
-		g_numDescriptorHeap++;
-		if (FAILED(hr)) {
-			MessageBox(nullptr, L"DescriptorHeap::Commit ディスクリプタヒープの作成に失敗しました。", L"エラー", MB_OK);
-			std::abort();
-		}
+		//if (ds != nullptr) {
+			auto hr = d3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&ds));
+			g_numDescriptorHeap++;
+			if (FAILED(hr)) {
+				_ASSERT(0);
+				MessageBox(nullptr, L"DescriptorHeap::Commit ディスクリプタヒープの作成に失敗しました。", L"エラー", MB_OK);
+				std::abort();
+			}
+		//}
 	}
 	//定数バッファやシェーダーリソースのディスクリプタをヒープに書き込んでいく。
 	int bufferNo = 0;
 	for (auto& descriptorHeap : m_descriptorHeap) {
-		auto cpuHandle = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
-		auto gpuHandle = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
+		if (descriptorHeap != nullptr) {
+			auto cpuHandle = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
+			auto gpuHandle = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 
-		//定数バッファを登録していく。
-		for (int i = 0; i < m_numConstantBuffer; i++) {
-			//@todo bug
-			if (m_constantBuffers[i] != nullptr) {
-				m_constantBuffers[i]->RegistConstantBufferView(cpuHandle, bufferNo);
+			//定数バッファを登録していく。
+			for (int i = 0; i < m_numConstantBuffer; i++) {
+				//@todo bug
+				if (m_constantBuffers[i] != nullptr) {
+					m_constantBuffers[i]->RegistConstantBufferView(cpuHandle, bufferNo);
+				}
+				//次に進める。
+				cpuHandle.ptr += g_graphicsEngine->GetCbrSrvDescriptorSize();
 			}
-			//次に進める。
-			cpuHandle.ptr += g_graphicsEngine->GetCbrSrvDescriptorSize();
-		}
 
-		//続いてシェーダーリソース。
-		for (int i = 0; i < m_numShaderResource; i++) {
-			if (m_shaderResources[i] != nullptr) {
-				m_shaderResources[i]->RegistShaderResourceView(cpuHandle, bufferNo);
+			//続いてシェーダーリソース。
+			for (int i = 0; i < m_numShaderResource; i++) {
+				if (m_shaderResources[i] != nullptr) {
+					m_shaderResources[i]->RegistShaderResourceView(cpuHandle, bufferNo);
+				}
+				//次に進める。
+				cpuHandle.ptr += g_graphicsEngine->GetCbrSrvDescriptorSize();
 			}
-			//次に進める。
-			cpuHandle.ptr += g_graphicsEngine->GetCbrSrvDescriptorSize();
-		}
 
-		//続いてUAV。
-		for (int i = 0; i < m_numUavResource; i++) {
-			if (m_uavResources[i] != nullptr) {
-				m_uavResources[i]->RegistUnorderAccessView(cpuHandle, bufferNo);
+			//続いてUAV。
+			for (int i = 0; i < m_numUavResource; i++) {
+				if (m_uavResources[i] != nullptr) {
+					m_uavResources[i]->RegistUnorderAccessView(cpuHandle, bufferNo);
+				}
+				//次に進める。
+				cpuHandle.ptr += g_graphicsEngine->GetCbrSrvDescriptorSize();
 			}
-			//次に進める。
-			cpuHandle.ptr += g_graphicsEngine->GetCbrSrvDescriptorSize();
+
+			//定数バッファのディスクリプタヒープの開始ハンドルを計算。
+			m_cbGpuDescriptorStart[bufferNo] = gpuHandle;
+			//シェーダーリソースのディスクリプタヒープの開始ハンドルを計算。
+			m_srGpuDescriptorStart[bufferNo] = gpuHandle;
+			m_srGpuDescriptorStart[bufferNo].ptr += (UINT64)g_graphicsEngine->GetCbrSrvDescriptorSize() * m_numConstantBuffer;
+			//UAVリソースのディスクリプタヒープの開始ハンドルを計算。
+			m_uavGpuDescriptorStart[bufferNo] = gpuHandle;
+			m_uavGpuDescriptorStart[bufferNo].ptr += (UINT64)g_graphicsEngine->GetCbrSrvDescriptorSize() * (m_numShaderResource + m_numConstantBuffer);
+
+			gpuHandle.ptr += (UINT64)g_graphicsEngine->GetCbrSrvDescriptorSize() * (m_numShaderResource + m_numConstantBuffer + m_numUavResource);
+
+			bufferNo++;
 		}
-
-		//定数バッファのディスクリプタヒープの開始ハンドルを計算。
-		m_cbGpuDescriptorStart[bufferNo] = gpuHandle;
-		//シェーダーリソースのディスクリプタヒープの開始ハンドルを計算。
-		m_srGpuDescriptorStart[bufferNo] = gpuHandle;
-		m_srGpuDescriptorStart[bufferNo].ptr += (UINT64)g_graphicsEngine->GetCbrSrvDescriptorSize() * m_numConstantBuffer;
-		//UAVリソースのディスクリプタヒープの開始ハンドルを計算。
-		m_uavGpuDescriptorStart[bufferNo] = gpuHandle;
-		m_uavGpuDescriptorStart[bufferNo].ptr += (UINT64)g_graphicsEngine->GetCbrSrvDescriptorSize() * ( m_numShaderResource + m_numConstantBuffer );
-
-		gpuHandle.ptr += (UINT64)g_graphicsEngine->GetCbrSrvDescriptorSize() * (m_numShaderResource + m_numConstantBuffer + m_numUavResource);
-		
-		bufferNo++;
 	}
 }

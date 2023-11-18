@@ -2923,12 +2923,7 @@ INT WINAPI wWinMain(
 		_ASSERT(0);
 		return 1;
 	}
-	// ルートシグネチャを作成
-	RootSignature rootSignature;
-	InitRootSignature(rootSignature);
-	//レンダリングエンジンを初期化
-	myRenderer::RenderingEngine renderingEngine;
-	renderingEngine.Init();
+
 	//// 背景モデルのレンダラーを初期化
 	//myRenderer::ModelRender bgModelRender;
 	//bgModelRender.InitDeferredRendering(renderingEngine, "Assets/modelData/bg/bg.tkm", true);
@@ -2949,8 +2944,7 @@ INT WINAPI wWinMain(
 	////////////////////////////////////////
 	//// 初期化を行うコードを書くのはここまで！！！
 	////////////////////////////////////////
-	auto& renderContext = g_graphicsEngine->GetRenderContext();
-
+	s_pdev = g_graphicsEngine->GetD3DDevice();
 
 
 
@@ -3067,12 +3061,84 @@ INT WINAPI wWinMain(
 	//DXUTMainLoop();
 
 
+	// ルートシグネチャを作成
+	RootSignature rootSignature;
+	InitRootSignature(rootSignature);
+	//レンダリングエンジンを初期化
+	myRenderer::RenderingEngine renderingEngine;
+	renderingEngine.Init();
+	//auto& renderContext = g_graphicsEngine->GetRenderContext();
 
 
 	//// ゲームの初期化 (2023/11/13 仮のウインドウ)
 	//InitGame(hInstance, hPrevInstance, lpCmdLine, nShowCmd, TEXT("AddtiveIK"));
 	while (DispatchWindowMessage())
 	{
+		//if (s_chascene && (s_chascene->GetModelNum() > 0) && (g_underloading == false)) {
+		if (s_chascene && (g_underloading == false)) {
+			// レンダリング開始
+			g_engine->BeginFrame();
+			auto& renderContext = g_graphicsEngine->GetRenderContext();
+
+			if (s_chascene->GetModelNum() > 0) {
+				//CalcTotalBound()が呼ばれた後で　cameye, target == zerovecではない場合に計算
+				g_camera3D->SetNear(g_projnear);
+				g_camera3D->SetFar(g_projfar);
+				g_camera3D->SetViewAngle(60.0f / 180.0f * (float)PI);
+				Vector3 cameye = Vector3(g_camEye.x, g_camEye.y, g_camEye.z);
+				g_camera3D->SetPosition(cameye);
+				Vector3 target = Vector3(g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
+				g_camera3D->SetTarget(target);
+				g_camera3D->SetUp(Vector3(0.0f, 1.0f, 0.0f));
+				g_camera3D->SetWidth(736.0f);
+				g_camera3D->SetHeight(488.0f);
+				g_camera3D->Update();
+
+				s_matWorld = s_model->GetWorldMat();
+				s_matView = ChaMatrix(g_camera3D->GetViewMatrix());
+				s_matProj = ChaMatrix(g_camera3D->GetProjectionMatrix());
+			}
+
+
+
+
+			//g_camera3D->MoveForward(g_pad[0]->GetLStickYF());
+			//g_camera3D->MoveRight(g_pad[0]->GetLStickXF());
+			//g_camera3D->MoveUp(g_pad[0]->GetRStickYF());
+
+			//////////////////////////////////////
+			// ここから絵を描くコードを記述する
+			//////////////////////////////////////
+
+			//bgModelRender.Draw();
+			//// step-2 ティーポットを描画する
+			//teapotModelRender.Draw();
+
+			//Matrix mView, mProj, mVP;
+			//mView = g_camera3D->GetViewMatrix();
+			//mProj = g_camera3D->GetProjectionMatrix();
+			//mVP = mView * mProj;
+			//ChaMatrix matVP = ChaMatrix(mVP);
+			//s_chascene->UpdateMatrixModels(g_limitdegflag, &matVP, 0.0);
+
+			OnUserFrameMove(0.0, 0.0);
+
+			int lightflag = 1;
+			ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+			int btflag = 0;
+			s_chascene->RenderModels(renderingEngine, lightflag, diffusemult, btflag);
+
+
+			//レンダリングエンジンを実行
+			renderingEngine.Execute(renderContext);
+
+			/////////////////////////////////////////
+			// 絵を描くコードを書くのはここまで！！！
+			//////////////////////////////////////
+			// レンダリング終了
+			g_engine->EndFrame();
+
+		}
 	}
 
 
@@ -3120,12 +3186,15 @@ int CheckResolution()
 			::GetClientRect(desktopwnd, &desktoprect);
 			if ((desktoprect.right >= (s_totalwndwidth * 2)) && (desktoprect.bottom >= ((s_totalwndheight - MAINMENUAIMBARH) * 2))) {
 
-				CSelectLSDlg dlg;
-				int dlgret = (int)dlg.DoModal();
-				if (dlgret != IDOK) {
-					return 1;//キャンセルボタンはアプリ終了
-				}
-				BOOL selectL = dlg.GetIsLarge();//4K可能の場合には大小を選択可能
+				//CSelectLSDlg dlg;
+				//int dlgret = (int)dlg.DoModal();
+				//if (dlgret != IDOK) {
+				//	return 1;//キャンセルボタンはアプリ終了
+				//}
+				//BOOL selectL = dlg.GetIsLarge();//4K可能の場合には大小を選択可能
+				
+				BOOL selectL = FALSE;//2023/11/18 まずは小さい画面でテスト　！！！！！！！！！！！！！！
+				
 				if (selectL == TRUE) {
 					g_4kresolution = true;//!!!!!!!!!!!!!!!!
 
@@ -12383,6 +12452,14 @@ void CalcTotalBound()
 
 	////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
 	////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
+
+
+	g_camera3D->SetNear(g_projnear);
+	g_camera3D->SetFar(g_projfar);
+	Vector3 cameye = Vector3(g_camEye.x, g_camEye.y, g_camEye.z);
+	g_camera3D->SetPosition(cameye);
+	Vector3 target = Vector3(g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
+	g_camera3D->SetTarget(target);
 
 }
 
@@ -36193,43 +36270,43 @@ int OnRenderRefPose(RenderContext* pRenderContext, CModel* curmodel)
 
 int OnRenderModel(RenderContext* pRenderContext)
 {
-	//if (g_bvh2fbxbatchflag || g_motioncachebatchflag || g_retargetbatchflag) {
-	//if ((InterlockedAdd(&g_bvh2fbxbatchflag, 0) != 0) || (InterlockedAdd(&g_motioncachebatchflag, 0) != 0) || (InterlockedAdd(&g_retargetbatchflag, 0) != 0)) {
-	if ((InterlockedAdd(&g_bvh2fbxbatchflag, 0) != 0) || (InterlockedAdd(&g_retargetbatchflag, 0) != 0)) {
-		return 0;
-	}
+	////if (g_bvh2fbxbatchflag || g_motioncachebatchflag || g_retargetbatchflag) {
+	////if ((InterlockedAdd(&g_bvh2fbxbatchflag, 0) != 0) || (InterlockedAdd(&g_motioncachebatchflag, 0) != 0) || (InterlockedAdd(&g_retargetbatchflag, 0) != 0)) {
+	//if ((InterlockedAdd(&g_bvh2fbxbatchflag, 0) != 0) || (InterlockedAdd(&g_retargetbatchflag, 0) != 0)) {
+	//	return 0;
+	//}
 
-	if (s_nowloading == true) {
-		return 0;
-	}
+	//if (s_nowloading == true) {
+	//	return 0;
+	//}
 
-	if (!s_model || !s_chascene) {
-		return 0;
-	}
+	//if (!s_model || !s_chascene) {
+	//	return 0;
+	//}
 
 
-	int lightflag = 1;
-	ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-	int btflag = 0;
-	if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-		btflag = 0;
-	}
-	else {
-		if (g_previewFlag == 4) {
-			btflag = 1;
-		}
-		else {
-			//previewFlag == 5
-			if ((s_curboneno >= 0) && ((s_onragdollik != 0) || (s_physicskind == 0))) {
-				btflag = 2;//2022/07/09
-			}
-		}
-	}
+	//int lightflag = 1;
+	//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	//int btflag = 0;
+	//if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
+	//	btflag = 0;
+	//}
+	//else {
+	//	if (g_previewFlag == 4) {
+	//		btflag = 1;
+	//	}
+	//	else {
+	//		//previewFlag == 5
+	//		if ((s_curboneno >= 0) && ((s_onragdollik != 0) || (s_physicskind == 0))) {
+	//			btflag = 2;//2022/07/09
+	//		}
+	//	}
+	//}
 
-	s_chascene->RenderModels(pRenderContext, lightflag, diffusemult, btflag);
-	if (s_sprefpos.state) {
-		OnRenderRefPose(pRenderContext, s_model);
-	}
+	//s_chascene->RenderModels(pRenderContext, lightflag, diffusemult, btflag);
+	//if (s_sprefpos.state) {
+	//	OnRenderRefPose(pRenderContext, s_model);
+	//}
 
 	return 0;
 }

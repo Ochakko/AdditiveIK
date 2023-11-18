@@ -1434,22 +1434,22 @@ int CModel::OnRender(bool withalpha,
 						continue;
 					}
 
-					if (curobj->GetDispObj()) {
-						if (curobj->GetPm3()) {
-							CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-							CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
-						}
-						else if (curobj->GetPm4()) {
-							CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-							CallF(curobj->GetDispObj()->RenderNormal(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
-						}
-						else {
-							_ASSERT(0);
-						}
-					}
-					else if (curobj->GetDispLine()) {
-						CallF(curobj->GetDispLine()->RenderLine(withalpha, pRenderContext, diffusemult, materialdisprate), return 1);
-					}
+					//if (curobj->GetDispObj()) {
+					//	if (curobj->GetPm3()) {
+					//		CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+					//		CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
+					//	}
+					//	else if (curobj->GetPm4()) {
+					//		CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+					//		CallF(curobj->GetDispObj()->RenderNormal(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
+					//	}
+					//	else {
+					//		_ASSERT(0);
+					//	}
+					//}
+					//else if (curobj->GetDispLine()) {
+					//	CallF(curobj->GetDispLine()->RenderLine(withalpha, pRenderContext, diffusemult, materialdisprate), return 1);
+					//}
 				}
 			}
 		}
@@ -1603,22 +1603,22 @@ int CModel::RenderTest(bool withalpha, RenderContext* pRenderContext, int lightf
 				continue;
 			}
 
-			if (curobj->GetDispObj()) {
-				if (curobj->GetPm3()) {
-					CallF(SetShaderConst(curobj, btflag), return 1);
-					CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
-				}
-				else if (curobj->GetPm4()) {
-					CallF(SetShaderConst(curobj, btflag), return 1);					
-					CallF(curobj->GetDispObj()->RenderNormal(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
-				}
-				else {
-					_ASSERT(0);
-				}
-			}
-			else if (curobj->GetDispLine()) {
-				CallF(curobj->GetDispLine()->RenderLine(withalpha, pRenderContext, diffusemult, materialdisprate), return 1);
-			}
+			//if (curobj->GetDispObj()) {
+			//	if (curobj->GetPm3()) {
+			//		CallF(SetShaderConst(curobj, btflag), return 1);
+			//		CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
+			//	}
+			//	else if (curobj->GetPm4()) {
+			//		CallF(SetShaderConst(curobj, btflag), return 1);					
+			//		CallF(curobj->GetDispObj()->RenderNormal(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
+			//	}
+			//	else {
+			//		_ASSERT(0);
+			//	}
+			//}
+			//else if (curobj->GetDispLine()) {
+			//	CallF(curobj->GetDispLine()->RenderLine(withalpha, pRenderContext, diffusemult, materialdisprate), return 1);
+			//}
 
 		}
 	}
@@ -2754,6 +2754,10 @@ int CModel::SetShaderConst( CMQOObject* srcobj, int btflag, bool calcslotflag )
 
 	if(setclcnt > 0 ){
 		_ASSERT(setclcnt <= MAXCLUSTERNUM);
+
+		//if (srcobj->GetDispObj()) {
+		//	srcobj->GetDispObj()->UpdateBoneMatrix(setclcnt, (void*)(&m_setfl4x4[0]));
+		//}
 
 
 		//HRESULT hr = S_OK;

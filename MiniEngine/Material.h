@@ -4,6 +4,12 @@
 /// <summary>
 /// マテリアル。
 /// </summary>
+
+struct SMaterialParam {
+	int hasNormalMap;	//法線マップを保持しているかどうかのフラグ。
+	int hasSpecMap;		//スペキュラマップを保持しているかどうかのフラグ。
+};
+
 class Material {
 public:
 	/// <summary>
@@ -29,6 +35,7 @@ public:
 	/// <param name="rc">レンダリングコンテキスト</param>
 	/// <param name="hasSkin">スキンがあるかどうかのフラグ</param>
 	void BeginRender(RenderContext& rc, int hasSkin);
+
 
 	/// <summary>
 	/// アルベドマップを取得。
@@ -78,6 +85,7 @@ public:
 	{
 		return m_constantBuffer;
 	}
+
 private:
 	/// <summary>
 	/// パイプラインステートの初期化。
@@ -104,15 +112,19 @@ private:
 	/// <summary>
 	/// マテリアルパラメータ。
 	/// </summary>
-	struct SMaterialParam {
-		int hasNormalMap;	//法線マップを保持しているかどうかのフラグ。
-		int hasSpecMap;		//スペキュラマップを保持しているかどうかのフラグ。
-	};
-	Texture*	m_albedoMap;						//アルベドマップ。
-	Texture*	m_normalMap;						//法線マップ。
-	Texture*	m_specularMap;						//スペキュラマップ。
-	Texture*	m_reflectionMap;					//リフレクションマップ。
-	Texture*	m_refractionMap;					//屈折マップ。
+	/// 
+	
+	//SMaterial publicへ移動
+	//struct SMaterialParam {
+	//	int hasNormalMap;	//法線マップを保持しているかどうかのフラグ。
+	//	int hasSpecMap;		//スペキュラマップを保持しているかどうかのフラグ。
+	//};
+
+	Texture*	m_albedoMap;//アルベドマップ。
+	Texture*	m_normalMap;//法線マップ。
+	Texture*	m_specularMap;//スペキュラマップ。
+	Texture*	m_reflectionMap;//リフレクションマップ。
+	Texture*	m_refractionMap;//屈折マップ。
 
 	ConstantBuffer m_constantBuffer;				//定数バッファ。
 	RootSignature m_rootSignature;					//ルートシグネチャ。

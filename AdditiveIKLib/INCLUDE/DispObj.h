@@ -10,6 +10,20 @@ class CPolyMesh3;
 class CPolyMesh4;
 class CExtLine;
 
+
+class ConstantBuffer;//メッシュ共通の定数バッファ。
+class StructuredBuffer;//ボーン行列の構造化バッファ。
+class DescriptorHeap;//ディスクリプタヒープ。
+
+
+struct SConstantBuffer {
+	Matrix mWorld;		//ワールド行列。
+	Matrix mView;		//ビュー行列。
+	Matrix mProj;		//プロジェクション行列。
+};
+
+
+
 class CDispObj
 {
 public:
@@ -74,13 +88,15 @@ public:
  * @return 成功したら０。
  */
 	int RenderNormal(bool withalpha, 
-		RenderContext* pRenderContext, int lightflag, 
-		ChaVector4 diffusemult, ChaVector4 materialdisprate, CMQOObject* pmqoobj);
+		RenderContext& rc, int lightflag, 
+		ChaVector4 diffusemult, ChaVector4 materialdisprate, CMQOObject* pmqoobj, Matrix mWorld);
 
 	int RenderNormalMaterial(bool laterflag, bool withalpha,
-		RenderContext* pRenderContext,
+		RenderContext& rc,
 		CMQOMaterial* rmaterial, int curoffset, int curtrinum,
 		int lightflag, ChaVector4 diffusemult, ChaVector4 materialdisprate);
+
+	void DrawCommon(RenderContext& rc, const Matrix& mWorld, const Matrix& mView, const Matrix& mProj);
 
 /**
  * @fn
@@ -92,13 +108,14 @@ public:
  * @detail FBXデータは１オブジェクトにつき１マテリアル(材質)だが、メタセコイアデータは１オブジェクトに複数マテリアルが設定されていることが多い。
  */
 	int RenderNormalPM3(bool withalpha, 
-		RenderContext* pRenderContext, int lightflag, 
-		ChaVector4 diffusemult, ChaVector4 materialdisprate, CMQOObject* pmqoobj);
+		RenderContext& rc, int lightflag,
+		ChaVector4 diffusemult, ChaVector4 materialdisprate, CMQOObject* pmqoobj, Matrix mWorld);
 
 	int RenderNormalPM3Material(bool laterflag, bool withalpha,
-		RenderContext* pRenderContext,
+		RenderContext& rc,
 		CMQOMaterial* rmaterial, int curoffset, int curtrinum,
 		int lightflag, ChaVector4 diffusemult, ChaVector4 materialdisprate);
+
 
 /**
  * @fn
@@ -137,6 +154,8 @@ public:
 		m_scaleoffset = srcoffset;
 	};
 
+	void UpdateBoneMatrix(int srcdatanum, void* srcdata);
+
 private:
 
 /**
@@ -161,7 +180,7 @@ private:
  * @breaf 表示用頂点データのフォーマット(宣言)を作成する。
  * @return 成功したら０。
  */
-	int CreateDecl();
+	int CreateDecl(ID3D12Device* pdev);
 
 /**
  * @fn
@@ -169,7 +188,7 @@ private:
  * @breaf ３D表示用の頂点バッファとインデックスバッファを作成する。
  * @return 成功したら０。
  */
-	int CreateVBandIB();
+	int CreateVBandIB(ID3D12Device* pdev);
 
 /**
  * @fn
@@ -177,9 +196,20 @@ private:
  * @breaf 線分用の頂点バッファとインデックスバッファを作成する。
  * @return 成功したら０。
  */
-	int CreateVBandIBLine();
+	int CreateVBandIBLine(ID3D12Device* pdev);
+
+
+	void CreateDescriptorHeaps();
 
 private:
+	//拡張SRVが設定されるレジスタの開始番号。
+	const int EXPAND_SRV_REG__START_NO = 10;
+	//const int EXPAND_SRV_REG__START_NO = 4;
+	//１つのマテリアルで使用されるSRVの数。
+	const int NUM_SRV_ONE_MATERIAL = EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV;
+	//１つのマテリアルで使用されるCBVの数。
+	const int NUM_CBV_ONE_MATERIAL = 2;
+
 	int m_hasbone;//ボーン変形用のオブジェクトであるとき１、それ以外の時は０。
 
 	ID3D12Device* m_pdev;//外部メモリ、Direct3Dのデバイス。
@@ -217,12 +247,39 @@ private:
 	//ID3D11Buffer* m_IB;//表示用三角のインデックスバッファ。
 
 
+	ID3D12Resource* m_vertexBuffer;		//頂点バッファ。
+	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;	//頂点バッファビュー。
+
+	ID3D12Resource* m_indexBuffer;	//インデックスバッファ。
+	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;	//インデックスバッファビュー。
+
+
+	ConstantBuffer m_commonConstantBuffer;					//メッシュ共通の定数バッファ。
+	ConstantBuffer m_expandConstantBuffer;					//ユーザー拡張用の定数バッファ
+	std::array<IShaderResource*, MAX_MODEL_EXPAND_SRV> m_expandShaderResourceView = { nullptr };	//ユーザー拡張シェーダーリソースビュー。
+	void* m_expandData = nullptr;
+	StructuredBuffer m_boneMatricesStructureBuffer;	//ボーン行列の構造化バッファ。
+	//std::vector< SMesh* > m_meshs;						//メッシュ。
+	bool m_createdescriptorflag;
+	//////std::vector< DescriptorHeap > m_descriptorHeap;	//ディスクリプタヒープ。
+	DescriptorHeap m_descriptorHeap;					//ディスクリプタヒープ。
+	//Skeleton* m_skeleton = nullptr;						//スケルトン。
+	//void* m_expandData = nullptr;						//ユーザー拡張データ。
+
+
+	//Shaderのポイントはnewした場合もShaderBankに格納する
+	//Shaderの破棄はShaderBankが行うので　CDispObjのデストラクタでは破棄しない
+	Shader* m_vsNonSkinModel;//スキンなしモデル用の頂点シェーダー。
+	Shader* m_vsSkinModel;//スキンありモデル用の頂点シェーダー。
+	Shader* m_psModel;//モデル用のピクセルシェーダー。
+
+
+
+
 	ChaVector3 m_scale;
 	ChaVector3 m_scaleoffset;
 
 	int* m_tmpindexLH;
 };
-
-
 
 #endif

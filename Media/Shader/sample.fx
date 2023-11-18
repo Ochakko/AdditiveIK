@@ -5,6 +5,7 @@
 struct SVSIn
 {
     float4 pos      : POSITION;
+    float4 normal   : NORMAL;
     float2 uv       : TEXCOORD0;
 };
 
@@ -26,6 +27,19 @@ cbuffer ModelCb : register(b0)
     float4x4 mView;
     float4x4 mProj;
 };
+
+float4x4 fixView = { 
+        {-1.0f, 0.0f, 0.0f, 0.0f }, 
+        { 0.0f, 1.0f, 0.0f, 0.0f}, 
+        { 0.0f, 0.0f, -1.0f, 0.0f}, 
+        { 0.0f, -81.5f, 322.0f, 1.0f} };
+float4x4 fixProj = {
+    { 1.14842f, 0.0f, 0.0f, 0.0f},
+    { 0.0f, 1.73205f, 0.0f, 0.0f},
+    { 0.0f, 0.0f, 1.0f, 1.0f},
+    { 0.0f, 0.0f, -1.0922f, 0.0f}    
+};
+
 
 ///////////////////////////////////////////
 // シェーダーリソース
@@ -51,6 +65,9 @@ SPSIn VSMain(SVSIn vsIn, uniform bool hasSkin)
     psIn.pos = mul(mWorld, vsIn.pos);   // モデルの頂点をワールド座標系に変換
     psIn.pos = mul(mView, psIn.pos);    // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos);    // カメラ座標系からスクリーン座標系に変換
+    //psIn.pos = mul(mWorld, vsIn.pos); // モデルの頂点をワールド座標系に変換
+    //psIn.pos = mul(fixView, vsIn.pos); // ワールド座標系からカメラ座標系に変換
+    //psIn.pos = mul(fixProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
     psIn.uv = vsIn.uv;
 
     //step-4 頂点の正規化スクリーン座標系の座標をピクセルシェーダーに渡す
@@ -65,41 +82,15 @@ SPSIn VSMain(SVSIn vsIn, uniform bool hasSkin)
 /// </summary>
 float4 PSMain(SPSIn psIn) : SV_Target0
 {
-    // step-5 近傍8テクセルの深度値を計算して、エッジを抽出する
-    // 正規化スクリーン座標系からUV座標系に変換する
-    float2 uv = psIn.posInProj.xy * float2( 0.5f, -0.5f) + 0.5f;
-
-    // 近傍8テクセルへのUVオフセット
-    float2 uvOffset[8] = {
-        float2(           0.0f,  1.0f / 720.0f), //上
-        float2(           0.0f, -1.0f / 720.0f), //下
-        float2( 1.0f / 1280.0f,           0.0f), //右
-        float2(-1.0f / 1280.0f,           0.0f), //左
-        float2( 1.0f / 1280.0f,  1.0f / 720.0f), //右上
-        float2(-1.0f / 1280.0f,  1.0f / 720.0f), //左上
-        float2( 1.0f / 1280.0f, -1.0f / 720.0f), //右下
-        float2(-1.0f / 1280.0f, -1.0f / 720.0f)  //左下
-    };
-
-    // このピクセルの深度値を取得
-    float depth = g_depthTexture.Sample(g_sampler, uv).x;
-
-    // 近傍8テクセルの深度値の平均値を計算する
-    float depth2 = 0.0f;
-    for( int i = 0; i < 8; i++)
-    {
-        depth2 += g_depthTexture.Sample(g_sampler, uv + uvOffset[i]).x;
-    }
-    depth2 /= 8.0f;
-
-    // 自身の深度値と近傍8テクセルの深度値の差を調べる
-    if(abs(depth - depth2) > 0.00005f)
-    {
-        // 深度値が結構違う場合はピクセルカラーを黒にする
-        // ->これがエッジカラーとなる
-        return float4( 0.0f, 0.0f, 0.0f, 1.0f);
-    }
-
     // 普通にテクスチャを
-    return g_texture.Sample(g_sampler, psIn.uv);
+    //return g_texture.Sample(g_sampler, psIn.uv);
+    //float4 texcol = g_texture.Sample(g_sampler, psIn.uv);
+    //texcol.w = 1.0f;
+    //return texcol;
+        
+    
+    //float4 testcol = {0.5f, 0.5f, 0.5f, 1.0f};
+    float4 testcol = { 1.0f, 1.0f, 1.0f, 1.0f };
+    return testcol;
+
 }

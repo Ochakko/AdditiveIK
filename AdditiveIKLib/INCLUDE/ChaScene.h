@@ -19,6 +19,9 @@
 #include <UndoMotion.h>
 #include <CameraFbx.h>
 
+#include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
+#include "../../AdditiveIKLib/Grimoire/ModelRender.h"
+#include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
 
 class CModel;
 class BPWorld;
@@ -67,7 +70,7 @@ public:
 
 	int UpdateMatrixModels(bool limitdegflag, ChaMatrix* vpmat, double srcframe);
 	int WaitUpdateThreads();
-	int RenderModels(RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int btflag = 0);
+	int RenderModels(myRenderer::RenderingEngine& renderringEngine, int lightflag, ChaVector4 diffusemult, int btflag = 0);
 
 
 	CModel* GetTheLastCameraModel();
@@ -251,6 +254,10 @@ public:
 		}
 	};
 
+	void SetRenderingEngine(myRenderer::RenderingEngine* prenderingEngine)
+	{
+		m_renderingEngine = prenderingEngine;
+	}
 
 private:
 	std::vector<MODELELEM> m_modelindex;
@@ -265,6 +272,8 @@ private:
 	CThreadingSetBtMotion* m_SetBtMotionThreads;//モデル数分配列
 	int m_created_Motion2BtThreadsNum;
 	int m_created_SetBtMotionThreadsNum;
+
+	myRenderer::RenderingEngine* m_renderingEngine;
 
 
 };

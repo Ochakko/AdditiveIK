@@ -4,6 +4,9 @@
 #include "ShadowMapRender.h"
 #include "PostEffect.h"
 
+class CMQOObject;
+class CDispObj;
+
 namespace myRenderer
 {
     // レンダリングエンジン
@@ -69,27 +72,39 @@ namespace myRenderer
         /// ZPrepassの描画パスにモデルを追加
         /// </summary>
         /// <param name="model"></param>
-        void Add3DModelToZPrepass(Model& model)
+        //void Add3DModelToZPrepass(Model& model)
+        //{
+        //    m_zprepassModels.push_back(&model);
+        //}
+        void Add3DModelToZPrepass(CMQOObject* model)
         {
-            m_zprepassModels.push_back(&model);
+            m_zprepassModels.push_back(model);
         }
 
         /// <summary>
         /// GBufferの描画パスにモデルを追加
         /// </summary>
         /// <param name="model"></param>
-        void Add3DModelToRenderGBufferPass(Model& model)
+        //void Add3DModelToRenderGBufferPass(Model& model)
+        //{
+        //    m_renderToGBufferModels.push_back(&model);
+        //}
+        void Add3DModelToRenderGBufferPass(CMQOObject* model)
         {
-            m_renderToGBufferModels.push_back(&model);
+            m_renderToGBufferModels.push_back(model);
         }
 
         /// <summary>
         /// フォワードレンダリングの描画パスにモデルを追加
         /// </summary>
         /// <param name="model"></param>
-        void Add3DModelToForwardRenderPass(Model& model)
+        //void Add3DModelToForwardRenderPass(Model& model)
+        //{
+        //    m_forwardRenderModels.push_back(&model);
+        //}
+        void Add3DModelToForwardRenderPass(CMQOObject* model)
         {
-            m_forwardRenderModels.push_back(&model);
+            m_forwardRenderModels.push_back(model);
         }
 
         /// <summary>
@@ -244,8 +259,14 @@ namespace myRenderer
         RenderTarget m_mainRTSnapshots[(int)EnMainRTSnapshot::enNum];   // メインレンダリングターゲットのスナップショット
         RenderTarget m_gBuffer[enGBufferNum];                           // G-Buffer
         PostEffect m_postEffect;                                        // ポストエフェクト
-        std::vector< Model* > m_zprepassModels;                         // ZPrepassの描画パスで描画されるモデルのリスト
-        std::vector< Model* > m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
-        std::vector< Model* > m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+
+        //std::vector< Model* > m_zprepassModels;                         // ZPrepassの描画パスで描画されるモデルのリスト
+        //std::vector< Model* > m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
+        //std::vector< Model* > m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+        std::vector <CMQOObject*> m_zprepassModels;                         // ZPrepassの描画パスで描画されるモデルのリスト
+        std::vector<CMQOObject*> m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
+        std::vector<CMQOObject*> m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+
+
     };
 }

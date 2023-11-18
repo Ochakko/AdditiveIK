@@ -4,7 +4,7 @@ inline void RenderContext::SetDescriptorHeap(DescriptorHeap& descHeap)
 {
 	m_descriptorHeaps[0] = descHeap.Get();
 	m_commandList->SetDescriptorHeaps(1, m_descriptorHeaps);
-
+	
 	//ディスクリプタテーブルに登録する。
 	if (descHeap.IsRegistConstantBuffer()) {
 		SetGraphicsRootDescriptorTable(0, descHeap.GetConstantBufferGpuDescriptorStartHandle());

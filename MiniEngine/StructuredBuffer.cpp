@@ -47,6 +47,21 @@ void StructuredBuffer::Init(int sizeOfElement, int numElement, void* initData)
 	}
 	m_isInited = true;
 }
+
+void StructuredBuffer::Update(int srcstride, int srcdatanum, void* srcdata)
+{
+	if ((srcstride <= 0) || (srcdatanum <= 0) || !srcdata) {
+		_ASSERT(0);
+		return;
+	}
+
+	if (!IsInited()) {
+		Init(srcstride, srcdatanum, srcdata);
+	}
+	Update(srcdata);
+}
+
+
 void StructuredBuffer::Update(void* data)
 {
 	auto backBufferIndex = g_graphicsEngine->GetBackBufferIndex();

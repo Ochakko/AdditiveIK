@@ -8,8 +8,10 @@ namespace myRenderer {
         //使用するテクスチャは２枚
         combineBokeImageSpriteInitData.m_textures[0] = &bokeTexture;
         combineBokeImageSpriteInitData.m_textures[1] = &depthTexture;
-        combineBokeImageSpriteInitData.m_width = 1280;
-        combineBokeImageSpriteInitData.m_height = 720;
+        //combineBokeImageSpriteInitData.m_width = 1280;
+        //combineBokeImageSpriteInitData.m_height = 720;
+        combineBokeImageSpriteInitData.m_width = 736;//2023/11/17 SamllWindow時の値決め打ちでテスト
+        combineBokeImageSpriteInitData.m_height = 488;//2023/11/17 SamllWindow時の値決め打ちでテスト
         combineBokeImageSpriteInitData.m_fxFilePath = "../Media/shader/preset/dof.fx";
         combineBokeImageSpriteInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
         // 距離を利用してボケ画像をアルファブレンディングするので、半透明合成モードにする
