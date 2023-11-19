@@ -48,7 +48,7 @@ float4x4 fixProj = {
 Texture2D<float4> g_texture : register(t0);
 
 // step-3 深度テクスチャにアクセスするための変数を追加
-Texture2D<float4> g_depthTexture : register(t10);
+//Texture2D<float4> g_depthTexture : register(t10);
 
 ///////////////////////////////////////////
 // サンプラーステート
@@ -84,13 +84,15 @@ float4 PSMain(SPSIn psIn) : SV_Target0
 {
     // 普通にテクスチャを
     //return g_texture.Sample(g_sampler, psIn.uv);
-    //float4 texcol = g_texture.Sample(g_sampler, psIn.uv);
-    //texcol.w = 1.0f;
-    //return texcol;
-        
+    float4 texcol = g_texture.Sample(g_sampler, psIn.uv);
+    texcol.w = 1.0f;
+    return texcol;
+      
+    //return float4(psIn.uv, 1, 1);
+    
     
     //float4 testcol = {0.5f, 0.5f, 0.5f, 1.0f};
-    float4 testcol = { 1.0f, 1.0f, 1.0f, 1.0f };
-    return testcol;
+    //float4 testcol = { 1.0f, 1.0f, 1.0f, 1.0f };
+    //return testcol;
 
 }

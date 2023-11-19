@@ -107,7 +107,7 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 	size_t resizeh = 512;
 
 
-	HRESULT hr0, hr1;// , hr2, hr3;// , hr4;
+	HRESULT hr0, hr1, hr2, hr3;// , hr4;
 	WCHAR patdds[256] = { 0L };
 	wcscpy_s(patdds, 256, L".dds");
 	WCHAR pattga[256] = { 0L };
@@ -115,28 +115,66 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 	WCHAR* finddds = wcsstr(m_name, patdds);
 	WCHAR* findtga = wcsstr(m_name, pattga);
 	if (findtga) {
-		DirectX::TexMetadata meta;
-		ZeroMemory(&meta, sizeof(DirectX::TexMetadata));
-		hr0 = GetMetadataFromTGAFile(m_name, meta);
+		DirectX::TexMetadata metadata;
+		DirectX::ScratchImage scratchImg;
+		hr0 = DirectX::LoadFromTGAFile(m_name, DirectX::TGA_FLAGS_NONE, &metadata, scratchImg);
 		if (FAILED(hr0)) {
 			_ASSERT(0);
-			DbgOut(L"TexElem : CreateTexData : GetMetadataFromTGAFile error!!! %x, path : %s, name : %s\r\n",
-				hr0, m_path, m_name);
 			SetNullTexture();
 			return -1;
 		}
-		ID3D12Resource* texture = nullptr;
-		hr1 = DirectX::CreateTexture(pdev, meta, &texture);
+		auto img = scratchImg.GetImage(0, 0, 0);//生データ抽出
+
+		//WriteToSubresourceで転送する用のヒープ設定
+		D3D12_HEAP_PROPERTIES texHeapProp = {};
+		texHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;//特殊な設定なのでdefaultでもuploadでもなく
+		texHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;//ライトバックで
+		texHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;//転送がL0つまりCPU側から直で
+		texHeapProp.CreationNodeMask = 0;//単一アダプタのため0
+		texHeapProp.VisibleNodeMask = 0;//単一アダプタのため0
+
+		D3D12_RESOURCE_DESC resDesc = {};
+		resDesc.Format = metadata.format;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット
+		resDesc.Width = static_cast<UINT>(metadata.width);//幅
+		resDesc.Height = static_cast<UINT>(metadata.height);//高さ
+		resDesc.DepthOrArraySize = static_cast<uint16_t>(metadata.arraySize);//2Dで配列でもないので１
+		resDesc.SampleDesc.Count = 1;//通常テクスチャなのでアンチェリしない
+		resDesc.SampleDesc.Quality = 0;//
+		resDesc.MipLevels = static_cast<uint16_t>(metadata.mipLevels);//ミップマップしないのでミップ数は１つ
+		resDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);//2Dテクスチャ用
+		resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;//レイアウトについては決定しない
+		resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;//とくにフラグなし
+
+		ID3D12Resource* texbuff = nullptr;
+		hr1 = pdev->CreateCommittedResource(
+			&texHeapProp,
+			D3D12_HEAP_FLAG_NONE,//特に指定なし
+			&resDesc,
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,//テクスチャ用(ピクセルシェーダから見る用)
+			nullptr,
+			IID_PPV_ARGS(&texbuff)
+		);
 		if (FAILED(hr1)) {
 			_ASSERT(0);
-			DbgOut(L"TexElem : CreateTexData : CreateTexture error!!! %x, path : %s, name : %s\r\n",
-				hr1, m_path, m_name);
 			SetNullTexture();
 			return -1;
 		}
+
+		hr2 = texbuff->WriteToSubresource(0,
+			nullptr,//全領域へコピー
+			img->pixels,//元データアドレス
+			static_cast<UINT>(img->rowPitch),//1ラインサイズ
+			static_cast<UINT>(img->slicePitch)//全サイズ
+		);
+		if (FAILED(hr2)) {
+			_ASSERT(0);
+			SetNullTexture();
+			return -1;
+		}
+
 		m_texture = new Texture();
 		if (m_texture) {
-			m_texture->InitFromD3DResource(texture);
+			m_texture->InitFromD3DResource(texbuff);
 		}
 		else {
 			_ASSERT(0);
@@ -175,34 +213,74 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		}
 	}
 	else {
-		DirectX::TexMetadata meta;
-		ZeroMemory(&meta, sizeof(DirectX::TexMetadata));
-		hr0 = GetMetadataFromWICFile(m_name, DirectX::WIC_FLAGS_NONE, meta, nullptr);
+		//WICテクスチャのロード
+		DirectX::TexMetadata metadata = {};
+		DirectX::ScratchImage scratchImg = {};
+		hr0 = DirectX::LoadFromWICFile(m_name, DirectX::WIC_FLAGS_NONE, &metadata, scratchImg);
 		if (FAILED(hr0)) {
 			_ASSERT(0);
-			DbgOut(L"TexElem : CreateTexData : GetMetadataFromWICFile error!!! %x, path : %s, name : %s\r\n",
-				hr0, m_path, m_name);
 			SetNullTexture();
 			return -1;
 		}
-		ID3D12Resource* texture = nullptr;
-		hr1 = DirectX::CreateTexture(pdev, meta, &texture);
+		auto img = scratchImg.GetImage(0, 0, 0);//生データ抽出
+
+		//WriteToSubresourceで転送する用のヒープ設定
+		D3D12_HEAP_PROPERTIES texHeapProp = {};
+		texHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;//特殊な設定なのでdefaultでもuploadでもなく
+		texHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;//ライトバックで
+		texHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;//転送がL0つまりCPU側から直で
+		texHeapProp.CreationNodeMask = 0;//単一アダプタのため0
+		texHeapProp.VisibleNodeMask = 0;//単一アダプタのため0
+
+		D3D12_RESOURCE_DESC resDesc = {};
+		resDesc.Format = metadata.format;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット
+		resDesc.Width = static_cast<UINT>(metadata.width);//幅
+		resDesc.Height = static_cast<UINT>(metadata.height);//高さ
+		resDesc.DepthOrArraySize = static_cast<uint16_t>(metadata.arraySize);//2Dで配列でもないので１
+		resDesc.SampleDesc.Count = 1;//通常テクスチャなのでアンチェリしない
+		resDesc.SampleDesc.Quality = 0;//
+		resDesc.MipLevels = static_cast<uint16_t>(metadata.mipLevels);//ミップマップしないのでミップ数は１つ
+		resDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);//2Dテクスチャ用
+		resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;//レイアウトについては決定しない
+		resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;//とくにフラグなし
+
+		ID3D12Resource* texbuff = nullptr;
+		hr1 = pdev->CreateCommittedResource(
+			&texHeapProp,
+			D3D12_HEAP_FLAG_NONE,//特に指定なし
+			&resDesc,
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,//テクスチャ用(ピクセルシェーダから見る用)
+			nullptr,
+			IID_PPV_ARGS(&texbuff)
+		);
 		if (FAILED(hr1)) {
 			_ASSERT(0);
-			DbgOut(L"TexElem : CreateTexData : CreateTexture error!!! %x, path : %s, name : %s\r\n",
-				hr1, m_path, m_name);
 			SetNullTexture();
 			return -1;
 		}
+
+		hr2 = texbuff->WriteToSubresource(0,
+			nullptr,//全領域へコピー
+			img->pixels,//元データアドレス
+			static_cast<UINT>(img->rowPitch),//1ラインサイズ
+			static_cast<UINT>(img->slicePitch)//全サイズ
+		);
+		if (FAILED(hr2)) {
+			_ASSERT(0);
+			SetNullTexture();
+			return -1;
+		}
+
 		m_texture = new Texture();
 		if (m_texture) {
-			m_texture->InitFromD3DResource(texture);
+			m_texture->InitFromD3DResource(texbuff);
 		}
 		else {
 			_ASSERT(0);
 			SetNullTexture();
 			return -1;
 		}
+
 	}
 
 	m_orgwidth = m_texture->GetWidth();
