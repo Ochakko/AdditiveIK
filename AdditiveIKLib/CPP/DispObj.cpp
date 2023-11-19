@@ -1208,59 +1208,16 @@ int CDispObj::RenderNormal(bool withalpha,
 	ChaVector4 diffusemult, ChaVector4 materialdisprate, CMQOObject* pmqoobj, Matrix mWorld)
 {
 
-	//if (!pRenderContext || !pmqoobj) {
-	//	_ASSERT(0);
-	//	return 0;
-	//}
+	if (!pmqoobj) {
+		_ASSERT(0);
+		return 0;
+	}
 
-	//// Only PM4
-	//if (!m_pm4) {
-	//	_ASSERT(0);
-	//	return 0;
-	//}
-
-	//int materialnum = m_pm4->GetDispMaterialNum();
-	//if (materialnum <= 0) {
-	//	_ASSERT(0);
-	//	return 0;
-	//}
-
-	//int materialcnt;
-	//for (materialcnt = 0; materialcnt < materialnum; materialcnt++) {
-	//	CMQOMaterial* curmat = NULL;
-	//	int curoffset = 0;
-	//	int curtrinum = 0;
-	//	int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
-	//	if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0)) {
-
-	//		bool laterflag = pmqoobj->ExistInLaterMaterial(curmat);
-
-	//		if (laterflag == false) {
-	//			bool laterflag2 = false;
-	//			RenderNormalMaterial(laterflag2, withalpha,
-	//				pRenderContext,
-	//				curmat, curoffset, curtrinum,
-	//				lightflag, diffusemult, materialdisprate);
-	//		}
-	//	}
-	//}
-
-	//int latermatnum = pmqoobj->GetLaterMaterialNum();
-	//if (withalpha && (latermatnum > 0)) {
-	//	//VRoid VRM 裾(すそ)の透過の順番のため　最後に描画
-	//	int laterindex;
-	//	for (laterindex = 0; laterindex < latermatnum; laterindex++) {
-	//		LATERMATERIAL latermaterial = pmqoobj->GetLaterMaterial(laterindex);
-	//		if (latermaterial.pmaterial) {
-	//			bool laterflag2 = true;
-	//			RenderNormalMaterial(laterflag2, withalpha,
-	//				pRenderContext,
-	//				latermaterial.pmaterial, latermaterial.offset, latermaterial.trinum,
-	//				lightflag, diffusemult, materialdisprate);
-	//		}
-	//	}
-	//}
-
+	// Only PM4
+	if (!m_pm4) {
+		_ASSERT(0);
+		return 0;
+	}
 
 	//#################################################
 	//DescriptorHeapが作成されてない場合は　すぐにリターン
@@ -1273,6 +1230,11 @@ int CDispObj::RenderNormal(bool withalpha,
 		return 0;
 	}
 
+	int materialnum = m_pm4->GetDispMaterialNum();
+	if (materialnum <= 0) {
+		_ASSERT(0);
+		return 0;
+	}
 
 	Matrix mView, mProj;
 	mView = g_camera3D->GetViewMatrix();
@@ -1283,14 +1245,10 @@ int CDispObj::RenderNormal(bool withalpha,
 	DrawCommon(rc, mWorld, mView, mProj);
 	//rc.SetDescriptorHeap(m_descriptorHeap);//BeginRender()より後で呼ばないとエラー
 
-	int descriptorHeapNo = 0;
+	//int descriptorHeapNo = 0;
 	//1. 頂点バッファを設定。
 	//rc.SetVertexBuffer(m_vertexBufferView);
-	
-	
-	//マテリアルごとにドロー。
-	int materialnum = m_pm4->GetDispMaterialNum();
-	//int materialnum = 1;//とりあえず　１つだけ描画テスト　！！！！！！！！！！！！！！！！！！！！！
+
 
 	int materialcnt;
 	for (materialcnt = 0; materialcnt < materialnum; materialcnt++) {
@@ -1299,25 +1257,35 @@ int CDispObj::RenderNormal(bool withalpha,
 		int curtrinum = 0;
 		int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
 		if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0)) {
-			int hasskin = 0;//とりあえず　ボーン無しで描画テスト　!!!!!!!!!!!!!!!!!!!
-			curmat->BeginRender(rc, hasskin);
-			rc.SetDescriptorHeap(m_descriptorHeap);
 
-			rc.SetVertexBuffer(m_vertexBufferView);
+			bool laterflag = pmqoobj->ExistInLaterMaterial(curmat);
 
-			//3. インデックスバッファを設定。
-			rc.SetIndexBuffer(m_indexBufferView);
-
-			//4. ドローコールを実行。
-			rc.DrawIndexed(curtrinum * 3, curoffset);
-			//rc.DrawIndexed(m_pm4->GetFaceNum() * 3);
-
-			descriptorHeapNo += NUM_SRV_ONE_MATERIAL;
+			if (laterflag == false) {
+				bool laterflag2 = false;
+				RenderNormalMaterial(laterflag2, withalpha,
+					rc,
+					curmat, curoffset, curtrinum,
+					lightflag, diffusemult, materialdisprate);
+			}
 		}
 	}
 
-
-
+	int latermatnum = pmqoobj->GetLaterMaterialNum();
+	if (withalpha && (latermatnum > 0)) {
+		//VRoid VRM 裾(すそ)の透過の順番のため　最後に描画
+		int laterindex;
+		for (laterindex = 0; laterindex < latermatnum; laterindex++) {
+			LATERMATERIAL latermaterial = pmqoobj->GetLaterMaterial(laterindex);
+			if (latermaterial.pmaterial) {
+				bool laterflag2 = true;
+				RenderNormalMaterial(laterflag2, withalpha,
+					rc,
+					latermaterial.pmaterial, latermaterial.offset, latermaterial.trinum,
+					lightflag, diffusemult, materialdisprate);
+			}
+		}
+	}
+	
 	return 0;
 }
 
@@ -1327,78 +1295,55 @@ int CDispObj::RenderNormalMaterial(bool laterflag, bool withalpha,
 	CMQOMaterial* curmat, int curoffset, int curtrinum, 
 	int lightflag, ChaVector4 diffusemult, ChaVector4 materialdisprate)
 {
-//	if (!curmat) {
-//		_ASSERT(0);
-//		return 1;
-//	}
-//
-//	if (!m_pm4) {
-//		_ASSERT(0);
-//		return 0;
-//	}
-//
-//	HRESULT hr;
-//
-//
-//	ChaVector4 diffuse;
-//	ChaVector4 curdif4f = curmat->GetDif4F();
-//	diffuse.w = curdif4f.w * diffusemult.w;
-//	diffuse.x = curdif4f.x * diffusemult.x * materialdisprate.x;
-//	diffuse.y = curdif4f.y * diffusemult.y * materialdisprate.x;
-//	diffuse.z = curdif4f.z * diffusemult.z * materialdisprate.x;
-//	//diffuse.Clamp(0.0f, 1.0f);
-//
-//	//if ((withalpha == false) && (diffuse.w <= 0.99999f)) {
-//	//	continue;
-//	//}
-//	//if ((withalpha == true) && (diffuse.w > 0.99999f)) {
-//	//	continue;
-//	//}
-//	bool opeflag = false;
-//	if (laterflag && withalpha) {
-//		opeflag = true;
-//	}
-//	else {
-//		if (withalpha == false) {//2023/09/24
-//			if ((curmat->GetTransparent() == 0) && (diffuse.w > 0.99999f)) {
-//				opeflag = true;
-//			}
-//			else {
-//				opeflag = false;
-//			}
-//		}
-//		else {
-//			if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
-//				opeflag = true;
-//			}
-//			else {
-//				opeflag = false;
-//			}
-//		}
-//	}
-//
-//	if (opeflag == false) {
-//		return 0;
-//	}
-//
-//
-//	if (diffuse.w <= 0.99999f) {
-//		//m_pdev->SetRenderState( D3DRS_ZWRITEENABLE, FALSE );
-//		if (g_zcmpalways == false) {
-//			pRenderContext->OMSetDepthStencilState(g_pDSStateZCmpAlways, 1);
-//		}
-//		g_zcmpalways = true;
-//	}
-//	else {
-//		//m_pdev->SetRenderState( D3DRS_ZWRITEENABLE, TRUE );
-//		if (g_zcmpalways == true) {
-//			pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
-//		}
-//		g_zcmpalways = false;
-//	}
-//
-//	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
-//
+	if (!curmat) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	if (!m_pm4) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	HRESULT hr;
+
+
+	ChaVector4 diffuse;
+	ChaVector4 curdif4f = curmat->GetDif4F();
+	diffuse.w = curdif4f.w * diffusemult.w;
+	diffuse.x = curdif4f.x * diffusemult.x * materialdisprate.x;
+	diffuse.y = curdif4f.y * diffusemult.y * materialdisprate.x;
+	diffuse.z = curdif4f.z * diffusemult.z * materialdisprate.x;
+	//diffuse.Clamp(0.0f, 1.0f);
+
+	bool opeflag = false;
+	if (laterflag && withalpha) {
+		opeflag = true;
+	}
+	else {
+		if (withalpha == false) {//2023/09/24
+			if ((curmat->GetTransparent() == 0) && (diffuse.w > 0.99999f)) {
+				opeflag = true;
+			}
+			else {
+				opeflag = false;
+			}
+		}
+		else {
+			if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
+				opeflag = true;
+			}
+			else {
+				opeflag = false;
+			}
+		}
+	}
+
+	if (opeflag == false) {
+		return 0;
+	}
+
+
 //
 ////diffuse = ChaVector4( 0.6f, 0.6f, 0.6f, 1.0f );
 //
@@ -1428,255 +1373,45 @@ int CDispObj::RenderNormalMaterial(bool laterflag, bool withalpha,
 //
 //
 //	pRenderContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-//
-//	ID3DX11EffectTechnique* curtech = 0;
-//	if (m_hasbone) {
-//		if (lightflag != 0) {
-//			switch (g_nNumActiveLights) {
-//			case 1:
-//				curtech = g_hRenderBoneL1;
-//				pRenderContext->IASetInputLayout(m_layoutBoneL1);
-//				break;
-//			case 2:
-//				curtech = g_hRenderBoneL2;
-//				pRenderContext->IASetInputLayout(m_layoutBoneL2);
-//				break;
-//			case 3:
-//				curtech = g_hRenderBoneL3;
-//				pRenderContext->IASetInputLayout(m_layoutBoneL3);
-//				break;
-//			case 4:
-//				curtech = g_hRenderBoneL4;
-//				pRenderContext->IASetInputLayout(m_layoutBoneL4);
-//				break;
-//			case 5:
-//				curtech = g_hRenderBoneL5;
-//				pRenderContext->IASetInputLayout(m_layoutBoneL5);
-//				break;
-//			case 6:
-//				curtech = g_hRenderBoneL6;
-//				pRenderContext->IASetInputLayout(m_layoutBoneL6);
-//				break;
-//			case 7:
-//				curtech = g_hRenderBoneL7;
-//				pRenderContext->IASetInputLayout(m_layoutBoneL7);
-//				break;
-//			case 8:
-//				curtech = g_hRenderBoneL8;
-//				pRenderContext->IASetInputLayout(m_layoutBoneL8);
-//				break;
-//
-//			case 0:
-//				curtech = g_hRenderBoneL0;
-//				pRenderContext->IASetInputLayout(m_layoutBoneL0);
-//				break;
-//
-//			default:
-//				_ASSERT(0);
-//				curtech = g_hRenderBoneL1;
-//				pRenderContext->IASetInputLayout(m_layoutBoneL1);
-//				break;
-//			}
-//		}
-//		else {
-//			curtech = g_hRenderBoneL0;
-//			pRenderContext->IASetInputLayout(m_layoutBoneL0);
-//			//_ASSERT(0);
-//		}
-//
-//		//// no lighting test
-//		//curtech = g_hRenderBoneL0;
-//		//pRenderContext->IASetInputLayout(m_layoutBoneL0);
-//
-//
-//		ID3D11Buffer* pVBset[2] = { m_VB, m_InfB };
-//		UINT strideset[2] = { sizeof(PM3DISPV), sizeof(PM3INF) };
-//		UINT offsetset[2] = { 0, 0 };
-//		pRenderContext->IASetVertexBuffers(0, 2, &pVBset[0], &strideset[0], &offsetset[0]);
-//
-//	}
-//	else {
-//
-//		if (lightflag != 0) {
-//			switch (g_nNumActiveLights) {
-//			case 1:
-//				curtech = g_hRenderNoBoneL1;
-//				pRenderContext->IASetInputLayout(m_layoutNoBoneL1);
-//				break;
-//			case 2:
-//				curtech = g_hRenderNoBoneL2;
-//				pRenderContext->IASetInputLayout(m_layoutNoBoneL2);
-//				break;
-//			case 3:
-//				curtech = g_hRenderNoBoneL3;
-//				pRenderContext->IASetInputLayout(m_layoutNoBoneL3);
-//				break;
-//			case 4:
-//				curtech = g_hRenderNoBoneL4;
-//				pRenderContext->IASetInputLayout(m_layoutNoBoneL4);
-//				break;
-//			case 5:
-//				curtech = g_hRenderNoBoneL5;
-//				pRenderContext->IASetInputLayout(m_layoutNoBoneL5);
-//				break;
-//			case 6:
-//				curtech = g_hRenderNoBoneL6;
-//				pRenderContext->IASetInputLayout(m_layoutNoBoneL6);
-//				break;
-//			case 7:
-//				curtech = g_hRenderNoBoneL7;
-//				pRenderContext->IASetInputLayout(m_layoutNoBoneL7);
-//				break;
-//			case 8:
-//				curtech = g_hRenderNoBoneL8;
-//				pRenderContext->IASetInputLayout(m_layoutNoBoneL8);
-//				break;
-//
-//			case 0:
-//				curtech = g_hRenderNoBoneL0;
-//				pRenderContext->IASetInputLayout(m_layoutNoBoneL0);
-//				break;
-//
-//			default:
-//				_ASSERT(0);
-//				curtech = g_hRenderNoBoneL1;
-//				pRenderContext->IASetInputLayout(m_layoutNoBoneL1);
-//				break;
-//			}
-//		}
-//		else {
-//			curtech = g_hRenderNoBoneL0;
-//			pRenderContext->IASetInputLayout(m_layoutNoBoneL0);
-//			_ASSERT(0);
-//		}
-//
-//
-//		//// no lighting test
-//		//curtech = g_hRenderNoBoneL0;
-//		//pRenderContext->IASetInputLayout(m_layoutNoBoneL0);
-//
-//
-//		UINT vbstride1 = sizeof(PM3DISPV);
-//		UINT offset = 0;
-//		pRenderContext->IASetVertexBuffers(0, 1, &m_VB, &vbstride1, &offset);
-//	}
-//
-//	////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//	//// no bone and no lighting test
-//	////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//	//curtech = g_hRenderNoBoneL0;
-//	//pRenderContext->IASetInputLayout(m_layoutNoBoneL0);
-//	//UINT vbstride1 = sizeof(PM3DISPV);
-//	//UINT offset = 0;
-//	//pRenderContext->IASetVertexBuffers(0, 1, &m_VB, &vbstride1, &offset);
-//
-//
-//	pRenderContext->IASetIndexBuffer(m_IB, DXGI_FORMAT_R32_UINT, 0);
-//
-//
-//	//UINT indexoffset = (UINT)curoffset;
-//	//pRenderContext->IASetIndexBuffer(m_IB, DXGI_FORMAT_R32_UINT, indexoffset);//########## 2022/07/05
-//
-//
-//	//ID3D12Resource* disptex = 0;
-//	//if( curmat->GetTexID() >= 0 ){
-//	//	CTexElem* findtex = g_texbank->GetTexElem( curmat->GetTexID() );
-//	//	if( findtex ){
-//	//		disptex = findtex->GetPTex();
-//	//		_ASSERT( disptex );
-//	//	}else{
-//	//		disptex = 0;
-//	//	}
-//	//}else{
-//	//	disptex = 0;
-//	//}
-//	//int passno;
-//	//if( disptex ){
-//	//	passno = 0;
-//	//}else{
-//	//	passno = 1;
-//	//}
-//	//hr = g_pEffect->SetTexture( g_hMeshTexture, disptex );
-//	//_ASSERT( !hr );
-//
-//	ID3D11ShaderResourceView* texresview = 0;
-//	if (curmat->GetTexID() >= 0) {
-//		CTexElem* findtex = g_texbank->GetTexElem(curmat->GetTexID());
-//		if (findtex && findtex->IsValid()) {
-//			texresview = findtex->GetPTex();
-//			_ASSERT(texresview);
-//		}
-//		else {
-//			texresview = 0;
-//		}
-//	}
-//	else {
-//		texresview = 0;
-//	}
-//
-//	if (texresview && (texresview != g_presview)) {
-//		hr = g_hMeshTexture->SetResource(texresview);
-//		_ASSERT(SUCCEEDED(hr));
-//		g_presview = texresview;
-//	}
-//	else {
-//		//g_hMeshTexture->SetResource(NULL);
-//	}
-//
-//	UINT p;
-//	if (texresview) {
-//		p = 0;
-//	}
-//	else {
-//		p = 1;
-//	}
-//
-//	//// no texture test
-//	//g_hMeshTexture->SetResource(NULL);
-//	//p = 1;///!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! no texture test
-//
-//	//FLOAT blendFactor[4] = { D3D11_BLEND_ZERO, D3D11_BLEND_ZERO, D3D11_BLEND_ZERO, D3D11_BLEND_ZERO };
-//	FLOAT blendFactor[4] = { D3D11_BLEND_ZERO, D3D11_BLEND_ZERO, D3D11_BLEND_ZERO, D3D11_BLEND_ZERO };
-//	pRenderContext->OMSetBlendState(g_blendState, blendFactor, 0xffffffff);
-//
-//
-//	/////////////
-//		//HRESULT hres;
-//
-//	int rendervnum;
-//	//if (m_pm3) {
-//	//	rendervnum = m_pm3->GetOptLeng();
-//	//}
-//	//else 
-//	if (m_pm4) {
-//		rendervnum = m_pm4->GetOptLeng();
-//	}
-//	int curnumprim;
-//	//if (m_pm3) {
-//	//	curnumprim = m_pm3->GetFaceNum();
-//	//}
-//	//else 
-//	if (m_pm4) {
-//		//curnumprim = m_pm4->GetFaceNum();
-//		curnumprim = curtrinum;
-//	}
-//	else {
-//		_ASSERT(0);
-//		return 1;
-//	}
-//
-//	//D3D11_TECHNIQUE_DESC techDesc;
-//	//curtech->GetDesc(&techDesc);
-//	//for (UINT p = 0; p < techDesc.Passes; ++p)
-//	//{
-//		//pはテクスチャの有無によるパスの数字
-//	hr = curtech->GetPassByIndex(p)->Apply(0, pRenderContext);
-//	_ASSERT(SUCCEEDED(hr));
-//	//pRenderContext->DrawIndexed(curnumprim * 3, 0, 0);
-//	pRenderContext->DrawIndexed(curnumprim * 3, curoffset, 0);
-//
-//	//pRenderContext->Draw(rendervnum, 0);
-////}
+
+		//// no lighting test
+		//curtech = g_hRenderBoneL0;
+		//pRenderContext->IASetInputLayout(m_layoutBoneL0);
+
+		//ID3D11Buffer* pVBset[2] = { m_VB, m_InfB };
+		//UINT strideset[2] = { sizeof(PM3DISPV), sizeof(PM3INF) };
+		//UINT offsetset[2] = { 0, 0 };
+		//pRenderContext->IASetVertexBuffers(0, 2, &pVBset[0], &strideset[0], &offsetset[0]);
+
+		//UINT vbstride1 = sizeof(PM3DISPV);
+		//UINT offset = 0;
+		//pRenderContext->IASetVertexBuffers(0, 1, &m_VB, &vbstride1, &offset);
+
+	//pRenderContext->IASetIndexBuffer(m_IB, DXGI_FORMAT_R32_UINT, 0);
+
+
+	////UINT indexoffset = (UINT)curoffset;
+	////pRenderContext->IASetIndexBuffer(m_IB, DXGI_FORMAT_R32_UINT, indexoffset);//########## 2022/07/05
+
+	////FLOAT blendFactor[4] = { D3D11_BLEND_ZERO, D3D11_BLEND_ZERO, D3D11_BLEND_ZERO, D3D11_BLEND_ZERO };
+	//FLOAT blendFactor[4] = { D3D11_BLEND_ZERO, D3D11_BLEND_ZERO, D3D11_BLEND_ZERO, D3D11_BLEND_ZERO };
+	//pRenderContext->OMSetBlendState(g_blendState, blendFactor, 0xffffffff);
+
+
+	int hasskin = 0;//とりあえず　ボーン無しで描画テスト　!!!!!!!!!!!!!!!!!!!
+	curmat->BeginRender(rc, hasskin);
+	rc.SetDescriptorHeap(m_descriptorHeap);
+
+	rc.SetVertexBuffer(m_vertexBufferView);
+
+	//3. インデックスバッファを設定。
+	rc.SetIndexBuffer(m_indexBufferView);
+
+	//4. ドローコールを実行。
+	rc.DrawIndexed(curtrinum * 3, curoffset);
+	//rc.DrawIndexed(m_pm4->GetFaceNum() * 3);
+
+	//descriptorHeapNo += NUM_SRV_ONE_MATERIAL;
 
 	return 0;
 
@@ -1689,58 +1424,12 @@ int CDispObj::RenderNormalPM3(bool withalpha,
 	RenderContext& rc, int lightflag, 
 	ChaVector4 diffusemult, ChaVector4 materialdisprate, CMQOObject* pmqoobj, Matrix mWorld)
 {
-	//if( !m_pm3 ){
-	//	return 0;
-	//}
-	//if( m_pm3->GetCreateOptFlag() == 0 ){
-	//	return 0;
-	//}
-
-
-	////HRESULT hr;
-	//int blno;
-	//for (blno = 0; blno < m_pm3->GetOptMatNum(); blno++) {
-	//	MATERIALBLOCK* currb = m_pm3->GetMatBlock() + blno;
-
-	//	CMQOMaterial* curmat;
-	//	curmat = currb->mqomat;
-	//	if (!curmat) {
-	//		_ASSERT(0);
-	//		return 1;
-	//	}
-
-	//	int curnumprim;
-	//	curnumprim = currb->endface - currb->startface + 1;
-
-	//	bool laterflag = pmqoobj->ExistInLaterMaterial(curmat);
-	//	if (laterflag == false) {
-	//		bool laterflag2 = false;
-	//		int result = RenderNormalPM3Material(laterflag2, withalpha,
-	//			pRenderContext,
-	//			curmat, currb->startface * 3, curnumprim,
-	//			lightflag, diffusemult, materialdisprate);
-	//	}
-	//}
-
-
-
-	//int latermatnum = pmqoobj->GetLaterMaterialNum();
-	//if (withalpha && (latermatnum > 0)) {
-	//	//VRoid VRM 裾(すそ)の透過の順番のため　最後に描画
-	//	int laterindex;
-	//	for (laterindex = 0; laterindex < latermatnum; laterindex++) {
-	//		LATERMATERIAL latermaterial = pmqoobj->GetLaterMaterial(laterindex);
-	//		if (latermaterial.pmaterial) {
-	//			bool laterflag2 = true;
-	//			RenderNormalPM3Material(laterflag2, withalpha,
-	//				pRenderContext,
-	//				latermaterial.pmaterial, latermaterial.offset, latermaterial.trinum,
-	//				lightflag, diffusemult, materialdisprate);
-	//		}
-	//	}
-	//}
-
-
+	if( !m_pm3 ){
+		return 0;
+	}
+	if( m_pm3->GetCreateOptFlag() == 0 ){
+		return 0;
+	}
 
 	//#################################################
 	//DescriptorHeapが作成されてない場合は　すぐにリターン
@@ -1752,7 +1441,6 @@ int CDispObj::RenderNormalPM3(bool withalpha,
 		return 0;
 	}
 
-
 	Matrix mView, mProj;
 	mView = g_camera3D->GetViewMatrix();
 	mProj = g_camera3D->GetProjectionMatrix();
@@ -1761,39 +1449,51 @@ int CDispObj::RenderNormalPM3(bool withalpha,
 	DrawCommon(rc, mWorld, mView, mProj);
 	//rc.SetDescriptorHeap(m_descriptorHeap);//BeginRender()より後で呼ばないとエラー
 
-	int descriptorHeapNo = 0;
+	//int descriptorHeapNo = 0;
 	//1. 頂点バッファを設定。
 	//rc.SetVertexBuffer(m_vertexBufferView);
 	//マテリアルごとにドロー。
 
+	//HRESULT hr;
 	int blno;
-	int blnum = m_pm3->GetOptMatNum();
-	int loopnum = min(1, blnum);
-	//for (blno = 0; blno < m_pm3->GetOptMatNum(); blno++) {
-	for (blno = 0; blno < loopnum; blno++) {//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+	for (blno = 0; blno < m_pm3->GetOptMatNum(); blno++) {
 		MATERIALBLOCK* currb = m_pm3->GetMatBlock() + blno;
 
 		CMQOMaterial* curmat;
 		curmat = currb->mqomat;
-		if (curmat) {
-			int hasskin = 0;//とりあえず　ボーン無しで描画テスト　!!!!!!!!!!!!!!!!!!!
-			curmat->BeginRender(rc, hasskin);
-			rc.SetDescriptorHeap(m_descriptorHeap);
+		if (!curmat) {
+			_ASSERT(0);
+			return 1;
+		}
 
-			//1. 頂点バッファを設定。
-			rc.SetVertexBuffer(m_vertexBufferView);
+		int curnumprim;
+		curnumprim = currb->endface - currb->startface + 1;
 
-			//3. インデックスバッファを設定。
-			rc.SetIndexBuffer(m_indexBufferView);
+		bool laterflag = pmqoobj->ExistInLaterMaterial(curmat);
+		if (laterflag == false) {
+			bool laterflag2 = false;
+			int result = RenderNormalPM3Material(laterflag2, withalpha,
+				rc,
+				curmat, currb->startface * 3, curnumprim,
+				lightflag, diffusemult, materialdisprate);
+		}
+	}
 
-			//4. ドローコールを実行。
-			int curnumprim;
-			curnumprim = currb->endface - currb->startface + 1;
-			rc.DrawIndexed(curnumprim * 3, currb->startface * 3);
-			//rc.DrawIndexed(m_pm3->GetFaceNum() * 3);
 
-			descriptorHeapNo += NUM_SRV_ONE_MATERIAL;
+
+	int latermatnum = pmqoobj->GetLaterMaterialNum();
+	if (withalpha && (latermatnum > 0)) {
+		//VRoid VRM 裾(すそ)の透過の順番のため　最後に描画
+		int laterindex;
+		for (laterindex = 0; laterindex < latermatnum; laterindex++) {
+			LATERMATERIAL latermaterial = pmqoobj->GetLaterMaterial(laterindex);
+			if (latermaterial.pmaterial) {
+				bool laterflag2 = true;
+				RenderNormalPM3Material(laterflag2, withalpha,
+					rc,
+					latermaterial.pmaterial, latermaterial.offset, latermaterial.trinum,
+					lightflag, diffusemult, materialdisprate);
+			}
 		}
 	}
 
@@ -1805,48 +1505,40 @@ int CDispObj::RenderNormalPM3Material(bool laterflag, bool withalpha,
 	CMQOMaterial* curmat, int curoffset, int curtrinum,
 	int lightflag, ChaVector4 diffusemult, ChaVector4 materialdisprate)
 {
-	//ChaVector4 diffuse;
-	//ChaVector4 curdif4f = curmat->GetDif4F();
-	//diffuse.w = curdif4f.w * diffusemult.w;
-	//diffuse.x = curdif4f.x * diffusemult.x * materialdisprate.x;
-	//diffuse.y = curdif4f.y * diffusemult.y * materialdisprate.x;
-	//diffuse.z = curdif4f.z * diffusemult.z * materialdisprate.x;
-	////diffuse.Clamp(0.0f, 1.0f);
+	ChaVector4 diffuse;
+	ChaVector4 curdif4f = curmat->GetDif4F();
+	diffuse.w = curdif4f.w * diffusemult.w;
+	diffuse.x = curdif4f.x * diffusemult.x * materialdisprate.x;
+	diffuse.y = curdif4f.y * diffusemult.y * materialdisprate.x;
+	diffuse.z = curdif4f.z * diffusemult.z * materialdisprate.x;
+	//diffuse.Clamp(0.0f, 1.0f);
 
-	////if ((withalpha == false) && ((curmat->GetTransparent() == 0) && (diffuse.w <= 0.99999f))) {
-	////	continue;
-	////}
-	////if ((withalpha == true) && (((curmat->GetTransparent() == 1) || (diffuse.w > 0.99999f))) {
-	////	continue;
-	////}
-	//bool opeflag = false;
-	//if (withalpha && laterflag) {
-	//	opeflag = true;
-	//}
-	//else {
-	//	if (withalpha == false) {//2023/09/24
-	//		if ((curmat->GetTransparent() == 0) && (diffuse.w > 0.99999f)) {
-	//			opeflag = true;
-	//		}
-	//		else {
-	//			opeflag = false;
-	//		}
-	//	}
-	//	else {
-	//		if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
-	//			opeflag = true;
-	//		}
-	//		else {
-	//			opeflag = false;
-	//		}
-	//	}
-	//}
+	bool opeflag = false;
+	if (withalpha && laterflag) {
+		opeflag = true;
+	}
+	else {
+		if (withalpha == false) {//2023/09/24
+			if ((curmat->GetTransparent() == 0) && (diffuse.w > 0.99999f)) {
+				opeflag = true;
+			}
+			else {
+				opeflag = false;
+			}
+		}
+		else {
+			if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
+				opeflag = true;
+			}
+			else {
+				opeflag = false;
+			}
+		}
+	}
 
-	//if (opeflag == false) {
-	//	return 0;
-	//}
-
-
+	if (opeflag == false) {
+		return 0;
+	}
 
 	//HRESULT hr;
 	//hr = g_hdiffuse->SetRawValue(&diffuse, 0, sizeof(ChaVector4));
@@ -1870,80 +1562,8 @@ int CDispObj::RenderNormalPM3Material(bool laterflag, bool withalpha,
 	//hr = g_hPm3Offset->SetRawValue(&m_scaleoffset, 0, sizeof(ChaVector3));
 	//_ASSERT(SUCCEEDED(hr));
 
-	//if (diffuse.w <= 0.99999f) {
-	//	//m_pdev->SetRenderState( D3DRS_ZWRITEENABLE, FALSE );
-	//	if (g_zcmpalways == false) {
-	//		pRenderContext->OMSetDepthStencilState(g_pDSStateZCmpAlways, 1);
-	//	}
-	//	g_zcmpalways = true;
-	//}
-	//else {
-	//	//m_pdev->SetRenderState( D3DRS_ZWRITEENABLE, TRUE );
-	//	if (g_zcmpalways == true) {
-	//		pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
-	//	}
-	//	g_zcmpalways = false;
-	//}
-
-
 
 	//pRenderContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	//ID3DX11EffectTechnique* curtech = 0;
-
-
-	//if (lightflag != 0) {
-	//	switch (g_nNumActiveLights) {
-	//	case 1:
-	//		curtech = g_hRenderNoBoneL1;
-	//		pRenderContext->IASetInputLayout(m_layoutNoBoneL1);
-	//		break;
-	//	case 2:
-	//		curtech = g_hRenderNoBoneL2;
-	//		pRenderContext->IASetInputLayout(m_layoutNoBoneL2);
-	//		break;
-	//	case 3:
-	//		curtech = g_hRenderNoBoneL3;
-	//		pRenderContext->IASetInputLayout(m_layoutNoBoneL3);
-	//		break;
-	//	case 4:
-	//		curtech = g_hRenderNoBoneL4;
-	//		pRenderContext->IASetInputLayout(m_layoutNoBoneL4);
-	//		break;
-	//	case 5:
-	//		curtech = g_hRenderNoBoneL5;
-	//		pRenderContext->IASetInputLayout(m_layoutNoBoneL5);
-	//		break;
-	//	case 6:
-	//		curtech = g_hRenderNoBoneL6;
-	//		pRenderContext->IASetInputLayout(m_layoutNoBoneL6);
-	//		break;
-	//	case 7:
-	//		curtech = g_hRenderNoBoneL7;
-	//		pRenderContext->IASetInputLayout(m_layoutNoBoneL7);
-	//		break;
-	//	case 8:
-	//		curtech = g_hRenderNoBoneL8;
-	//		pRenderContext->IASetInputLayout(m_layoutNoBoneL8);
-	//		break;
-
-	//	case 0:
-	//		curtech = g_hRenderNoBoneL0;
-	//		pRenderContext->IASetInputLayout(m_layoutNoBoneL0);
-	//		break;
-
-	//	default:
-	//		_ASSERT(0);
-	//		curtech = g_hRenderNoBoneL1;
-	//		pRenderContext->IASetInputLayout(m_layoutNoBoneL1);
-	//		break;
-	//	}
-	//}
-	//else {
-	//	curtech = g_hRenderNoBoneL0;
-	//	pRenderContext->IASetInputLayout(m_layoutNoBoneL0);
-	//	//_ASSERT(0);
-	//}
 
 	//UINT vbstride1 = sizeof(PM3DISPV);
 	//UINT offset = 0;
@@ -1952,56 +1572,39 @@ int CDispObj::RenderNormalPM3Material(bool laterflag, bool withalpha,
 	//pRenderContext->IASetIndexBuffer(m_IB, DXGI_FORMAT_R32_UINT, 0);
 
 
-	//ID3D11ShaderResourceView* texresview = 0;
-	//if (curmat->GetTexID() >= 0) {
-	//	CTexElem* findtex = g_texbank->GetTexElem(curmat->GetTexID());
-	//	if (findtex && findtex->IsValid()) {
-	//		texresview = findtex->GetPTex();
-	//		_ASSERT(texresview);
-	//	}
-	//	else {
-	//		texresview = 0;
-	//	}
-	//}
-	//else {
-	//	texresview = 0;
-	//}
-
-	//if (texresview && (texresview != g_presview)) {
-	//	hr = g_hMeshTexture->SetResource(texresview);
-	//	_ASSERT(SUCCEEDED(hr));
-	//	g_presview = texresview;
-	//}
-	//else {
-	//	//g_hMeshTexture->SetResource(NULL);
-	//}
-
-	//UINT p;
-	//if (texresview) {
-	//	p = 0;
-	//}
-	//else {
-	//	p = 1;
-	//}
-
-
 	//FLOAT blendFactor[4] = { D3D11_BLEND_ZERO, D3D11_BLEND_ZERO, D3D11_BLEND_ZERO, D3D11_BLEND_ZERO };
 	//pRenderContext->OMSetBlendState(g_blendState, blendFactor, 0xffffffff);
 
 
-	///////////////
-	//	//HRESULT hres;
+	/////////////
+		//HRESULT hres;
 
-	//	//D3D11_TECHNIQUE_DESC techDesc;
-	//	//curtech->GetDesc(&techDesc);
-	//	//UINT p = 0;
-	//	//for (UINT p = 0; p < techDesc.Passes; ++p)
-	//	//{
-	//		//pはテクスチャの有無によるパスの数字
+		//D3D11_TECHNIQUE_DESC techDesc;
+		//curtech->GetDesc(&techDesc);
+		//UINT p = 0;
+		//for (UINT p = 0; p < techDesc.Passes; ++p)
+		//{
+			//pはテクスチャの有無によるパスの数字
 	//curtech->GetPassByIndex(p)->Apply(0, pRenderContext);
 	//pRenderContext->DrawIndexed(curtrinum * 3, curoffset, 0);
-	////}
+	//}
 
+
+	int hasskin = 0;//とりあえず　ボーン無しで描画テスト　!!!!!!!!!!!!!!!!!!!
+	curmat->BeginRender(rc, hasskin);
+	rc.SetDescriptorHeap(m_descriptorHeap);
+
+	//1. 頂点バッファを設定。
+	rc.SetVertexBuffer(m_vertexBufferView);
+
+	//3. インデックスバッファを設定。
+	rc.SetIndexBuffer(m_indexBufferView);
+
+	//4. ドローコールを実行。
+	rc.DrawIndexed(curtrinum * 3, curoffset);
+	//rc.DrawIndexed(m_pm3->GetFaceNum() * 3);
+
+	//descriptorHeapNo += NUM_SRV_ONE_MATERIAL;
 
 	return 0;
 }

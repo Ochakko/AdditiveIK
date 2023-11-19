@@ -279,26 +279,37 @@ namespace myRenderer
         // レンダリングターゲットをクリア
         rc.ClearRenderTargetView(m_zprepassRenderTarget);
 
-        for (auto& curobj : m_zprepassModels)
+        for (auto& currenderobj : m_zprepassModels)
         {
             //model->Draw(rc);
 
-            Matrix mWorld;//とりあえずIdentity ！！！！！！！！！！！！！
-            bool withalpha = false;//とりあえず　不透明！！！！！！！！！
-            int lightflag = 1;
-            ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-            ChaVector4 materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-            if (curobj->GetDispObj()) {
-                if (curobj->GetPm3()) {
-                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                    curobj->GetDispObj()->RenderNormalPM3(withalpha, rc, lightflag, diffusemult, materialdisprate, curobj, mWorld);
-                }
-                else if (curobj->GetPm4()) {
-                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                    curobj->GetDispObj()->RenderNormal(withalpha, rc, lightflag, diffusemult, materialdisprate, curobj, mWorld);
-                }
-                else {
-                    _ASSERT(0);
+            if (currenderobj.mqoobj) {
+                if (currenderobj.mqoobj->GetDispObj()) {
+                    if (currenderobj.mqoobj->GetPm3()) {
+                        //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                        currenderobj.mqoobj->GetDispObj()->RenderNormalPM3(
+                            currenderobj.withalpha, 
+                            rc,
+                            currenderobj.lightflag,
+                            currenderobj.diffusemult,
+                            currenderobj.materialdisprate,
+                            currenderobj.mqoobj,
+                            currenderobj.mWorld);
+                    }
+                    else if (currenderobj.mqoobj->GetPm4()) {
+                        //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                        currenderobj.mqoobj->GetDispObj()->RenderNormal(
+                            currenderobj.withalpha,
+                            rc,
+                            currenderobj.lightflag,
+                            currenderobj.diffusemult,
+                            currenderobj.materialdisprate,
+                            currenderobj.mqoobj,
+                            currenderobj.mWorld);
+                    }
+                    else {
+                        _ASSERT(0);
+                    }
                 }
             }
         }
@@ -342,30 +353,38 @@ namespace myRenderer
         //    m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()//ZPrePass Z Buffer !!!!
         //);
 
-
-
-        for (auto& curobj : m_forwardRenderModels)
+        for (auto& currenderobj : m_forwardRenderModels)
         {
             //model->Draw(rc);
-            Matrix mWorld;//とりあえずIdentity ！！！！！！！！！！！！！
-            bool withalpha = false;//とりあえず　不透明！！！！！！！！！
-            int lightflag = 1;
-            ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-            ChaVector4 materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-            if (curobj->GetDispObj()) {
-                if (curobj->GetPm3()) {
-                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                    curobj->GetDispObj()->RenderNormalPM3(withalpha, rc, lightflag, diffusemult, materialdisprate, curobj, mWorld);
-                }
-                else if (curobj->GetPm4()) {
-                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                    curobj->GetDispObj()->RenderNormal(withalpha, rc, lightflag, diffusemult, materialdisprate, curobj, mWorld);
-                }
-                else {
-                    _ASSERT(0);
+            if (currenderobj.mqoobj) {
+                if (currenderobj.mqoobj->GetDispObj()) {
+                    if (currenderobj.mqoobj->GetPm3()) {
+                        //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                        currenderobj.mqoobj->GetDispObj()->RenderNormalPM3(
+                            currenderobj.withalpha,
+                            rc,
+                            currenderobj.lightflag,
+                            currenderobj.diffusemult,
+                            currenderobj.materialdisprate,
+                            currenderobj.mqoobj,
+                            currenderobj.mWorld);
+                    }
+                    else if (currenderobj.mqoobj->GetPm4()) {
+                        //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                        currenderobj.mqoobj->GetDispObj()->RenderNormal(
+                            currenderobj.withalpha,
+                            rc,
+                            currenderobj.lightflag,
+                            currenderobj.diffusemult,
+                            currenderobj.materialdisprate,
+                            currenderobj.mqoobj,
+                            currenderobj.mWorld);
+                    }
+                    else {
+                        _ASSERT(0);
+                    }
                 }
             }
-
 
         }
 
@@ -392,29 +411,39 @@ namespace myRenderer
 
         // レンダリングターゲットをクリア
         rc.ClearRenderTargetViews(ARRAYSIZE(rts), rts);
-        for (auto& curobj : m_renderToGBufferModels)
+        for (auto& currenderobj : m_renderToGBufferModels)
         {
             //model->Draw(rc);
 
-            Matrix mWorld;//とりあえずIdentity ！！！！！！！！！！！！！
-            bool withalpha = false;//とりあえず　不透明！！！！！！！！！
-            int lightflag = 1;
-            ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-            ChaVector4 materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-            if (curobj->GetDispObj()) {
-                if (curobj->GetPm3()) {
-                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                    curobj->GetDispObj()->RenderNormalPM3(withalpha, rc, lightflag, diffusemult, materialdisprate, curobj, mWorld);
-                }
-                else if (curobj->GetPm4()) {
-                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                    curobj->GetDispObj()->RenderNormal(withalpha, rc, lightflag, diffusemult, materialdisprate, curobj, mWorld);
-                }
-                else {
-                    _ASSERT(0);
+            if (currenderobj.mqoobj) {
+                if (currenderobj.mqoobj->GetDispObj()) {
+                    if (currenderobj.mqoobj->GetPm3()) {
+                        //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                        currenderobj.mqoobj->GetDispObj()->RenderNormalPM3(
+                            currenderobj.withalpha,
+                            rc,
+                            currenderobj.lightflag,
+                            currenderobj.diffusemult,
+                            currenderobj.materialdisprate,
+                            currenderobj.mqoobj,
+                            currenderobj.mWorld);
+                    }
+                    else if (currenderobj.mqoobj->GetPm4()) {
+                        //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                        currenderobj.mqoobj->GetDispObj()->RenderNormal(
+                            currenderobj.withalpha,
+                            rc,
+                            currenderobj.lightflag,
+                            currenderobj.diffusemult,
+                            currenderobj.materialdisprate,
+                            currenderobj.mqoobj,
+                            currenderobj.mWorld);
+                    }
+                    else {
+                        _ASSERT(0);
+                    }
                 }
             }
-
         }
 
         // レンダリングターゲットへの書き込み待ち

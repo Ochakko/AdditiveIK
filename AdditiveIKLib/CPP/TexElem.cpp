@@ -107,7 +107,7 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 	size_t resizeh = 512;
 
 
-	HRESULT hr0, hr1, hr2, hr3;// , hr4;
+	HRESULT hr0, hr1, hr2;// , hr3;// , hr4;
 	WCHAR patdds[256] = { 0L };
 	wcscpy_s(patdds, 256, L".dds");
 	WCHAR pattga[256] = { 0L };
@@ -135,6 +135,7 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 
 		D3D12_RESOURCE_DESC resDesc = {};
 		resDesc.Format = metadata.format;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット
+		//resDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット
 		resDesc.Width = static_cast<UINT>(metadata.width);//幅
 		resDesc.Height = static_cast<UINT>(metadata.height);//高さ
 		resDesc.DepthOrArraySize = static_cast<uint16_t>(metadata.arraySize);//2Dで配列でもないので１
@@ -234,6 +235,7 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 
 		D3D12_RESOURCE_DESC resDesc = {};
 		resDesc.Format = metadata.format;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット
+		//resDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット
 		resDesc.Width = static_cast<UINT>(metadata.width);//幅
 		resDesc.Height = static_cast<UINT>(metadata.height);//高さ
 		resDesc.DepthOrArraySize = static_cast<uint16_t>(metadata.arraySize);//2Dで配列でもないので１

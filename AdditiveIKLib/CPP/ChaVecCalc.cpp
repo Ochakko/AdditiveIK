@@ -4252,6 +4252,33 @@ ChaMatrix ChaMatrix::operator= (DirectX::XMMATRIX m) {
 	return *this;
 };
 
+Matrix ChaMatrix::TKMatrix()
+{
+	Matrix retmat;
+	retmat._11 = this->data[MATI_11];
+	retmat._12 = this->data[MATI_12];
+	retmat._13 = this->data[MATI_13];
+	retmat._14 = this->data[MATI_14];
+
+	retmat._21 = this->data[MATI_21];
+	retmat._22 = this->data[MATI_22];
+	retmat._23 = this->data[MATI_23];
+	retmat._24 = this->data[MATI_24];
+
+	retmat._31 = this->data[MATI_31];
+	retmat._32 = this->data[MATI_32];
+	retmat._33 = this->data[MATI_33];
+	retmat._34 = this->data[MATI_34];
+
+	retmat._41 = this->data[MATI_41];
+	retmat._42 = this->data[MATI_42];
+	retmat._43 = this->data[MATI_43];
+	retmat._44 = this->data[MATI_44];
+
+	return retmat;
+}
+
+
 DirectX::XMMATRIX ChaMatrix::D3DX()
 {
 	DirectX::XMMATRIX retm;

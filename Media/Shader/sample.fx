@@ -85,7 +85,7 @@ float4 PSMain(SPSIn psIn) : SV_Target0
     // 普通にテクスチャを
     //return g_texture.Sample(g_sampler, psIn.uv);
     float4 texcol = g_texture.Sample(g_sampler, psIn.uv);
-    texcol.w = 1.0f;
+    //texcol.w = 1.0f;
     return texcol;
       
     //return float4(psIn.uv, 1, 1);

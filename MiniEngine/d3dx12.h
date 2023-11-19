@@ -1754,7 +1754,9 @@ struct CD3DX12_RESOURCE_DESC : public D3D12_RESOURCE_DESC
         UINT64 alignment = 0 )
     {
         return CD3DX12_RESOURCE_DESC( D3D12_RESOURCE_DIMENSION_BUFFER, alignment, width, 1, 1, 1, 
-            DXGI_FORMAT_UNKNOWN, 1, 0, D3D12_TEXTURE_LAYOUT_ROW_MAJOR, flags );
+            DXGI_FORMAT_UNKNOWN, 
+            //DXGI_FORMAT_R8G8B8A8_UNORM,
+            1, 0, D3D12_TEXTURE_LAYOUT_ROW_MAJOR, flags );
     }
     static inline CD3DX12_RESOURCE_DESC Tex1D( 
         DXGI_FORMAT format,

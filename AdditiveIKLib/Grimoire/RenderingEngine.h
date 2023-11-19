@@ -3,12 +3,39 @@
 #include "MyRenderer.h"
 #include "ShadowMapRender.h"
 #include "PostEffect.h"
+#include <ChaVecCalc.h>
 
 class CMQOObject;
 class CDispObj;
 
 namespace myRenderer
 {
+    typedef struct tag_renderobj
+    {
+        CMQOObject* mqoobj;
+        Matrix mWorld;
+        bool withalpha;
+        int lightflag;
+        ChaVector4 diffusemult;
+        ChaVector4 materialdisprate;
+
+        void Init()
+        {
+            mqoobj = nullptr;
+            mWorld.SetIdentity();
+            withalpha = false;
+            lightflag = 1;
+            diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+            materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+        };
+
+        tag_renderobj()
+        {
+            Init();
+        };
+    }RENDEROBJ;
+
+
     // レンダリングエンジン
     class RenderingEngine
     {
@@ -76,9 +103,9 @@ namespace myRenderer
         //{
         //    m_zprepassModels.push_back(&model);
         //}
-        void Add3DModelToZPrepass(CMQOObject* model)
+        void Add3DModelToZPrepass(RENDEROBJ renderobj)
         {
-            m_zprepassModels.push_back(model);
+            m_zprepassModels.push_back(renderobj);
         }
 
         /// <summary>
@@ -89,9 +116,9 @@ namespace myRenderer
         //{
         //    m_renderToGBufferModels.push_back(&model);
         //}
-        void Add3DModelToRenderGBufferPass(CMQOObject* model)
+        void Add3DModelToRenderGBufferPass(RENDEROBJ renderobj)
         {
-            m_renderToGBufferModels.push_back(model);
+            m_renderToGBufferModels.push_back(renderobj);
         }
 
         /// <summary>
@@ -102,9 +129,9 @@ namespace myRenderer
         //{
         //    m_forwardRenderModels.push_back(&model);
         //}
-        void Add3DModelToForwardRenderPass(CMQOObject* model)
+        void Add3DModelToForwardRenderPass(RENDEROBJ renderobj)
         {
-            m_forwardRenderModels.push_back(model);
+            m_forwardRenderModels.push_back(renderobj);
         }
 
         /// <summary>
@@ -263,9 +290,9 @@ namespace myRenderer
         //std::vector< Model* > m_zprepassModels;                         // ZPrepassの描画パスで描画されるモデルのリスト
         //std::vector< Model* > m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
         //std::vector< Model* > m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
-        std::vector <CMQOObject*> m_zprepassModels;                         // ZPrepassの描画パスで描画されるモデルのリスト
-        std::vector<CMQOObject*> m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
-        std::vector<CMQOObject*> m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+        std::vector <RENDEROBJ> m_zprepassModels;                         // ZPrepassの描画パスで描画されるモデルのリスト
+        std::vector<RENDEROBJ> m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
+        std::vector<RENDEROBJ> m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
 
 
     };

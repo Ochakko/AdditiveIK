@@ -313,7 +313,12 @@ public:
 			DirectX::XMMatrixTranspose(*this)
 		);
 	}
-		
+	
+	void SetIdentity()
+	{
+		*this = Identity;
+	}
+
 };
 /// <summary>
 /// 行列同士の乗算

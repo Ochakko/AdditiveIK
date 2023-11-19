@@ -29,6 +29,8 @@ VRoidモデルはシルエット表示できた<br>
 <br>
 2023/11/19<br>
 Texture表示が可能になった<br>
+透過テクスチャを有効に<br>
+透過テクスチャ遅延描画順機能(LaterTransparent)を有効に<br>
 <br>
 <br>
 <br>

@@ -1186,12 +1186,12 @@ void CMQOMaterial::BeginRender(RenderContext& rc, int hasSkin)
 	rc.SetRootSignature(m_rootSignature);
 
 	if (hasSkin) {
-		rc.SetPipelineState(m_skinModelPipelineState);
-		//rc.SetPipelineState(m_transSkinModelPipelineState);
+		//rc.SetPipelineState(m_skinModelPipelineState);
+		rc.SetPipelineState(m_transSkinModelPipelineState);
 	}
 	else {
-		rc.SetPipelineState(m_nonSkinModelPipelineState);
-		//rc.SetPipelineState(m_transNonSkinModelPipelineState);
+		//rc.SetPipelineState(m_nonSkinModelPipelineState);
+		rc.SetPipelineState(m_transNonSkinModelPipelineState);
 	}
 }
 

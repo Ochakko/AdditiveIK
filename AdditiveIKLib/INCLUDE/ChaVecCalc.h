@@ -127,6 +127,7 @@ public:
 
 //#ifdef CONVD3DX11
 	DirectX::XMMATRIX D3DX();
+	Matrix TKMatrix();
 //#endif
 	void SetIdentity();
 	FbxAMatrix FBXAMATRIX();

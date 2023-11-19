@@ -97,6 +97,8 @@
 
 #include <OrgWindow.h>
 
+#include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
+
 
 //#include <DXUT.h>
 #include <io.h>
@@ -286,8 +288,8 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lig
 				for (modelindex = 0; modelindex < modelnum; modelindex++) {
 
 					CModel* curmodel = m_modelindex[modelindex].modelptr;
-					//if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView()) {
-					if (curmodel && curmodel->GetModelDisp()) {
+					if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView()) {
+					//if (curmodel && curmodel->GetModelDisp()) {
 
 						ChaVector4 materialdisprate = curmodel->GetMaterialDispRate();
 
@@ -299,58 +301,45 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lig
 
 								CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
 
-								//if (curobj && curobj->GetVisible()) {
-								if (curobj) {
+								if (curobj && curobj->GetVisible()) {
+								//if (curobj) {
 
 								
-									//if (curobj->GetDispLine()) {
-									//	int dbgflag1 = 1;
-									//}
+									if (curobj->GetDispLine()) {
+										int dbgflag1 = 1;
+									}
 
 
-									//bool found_noalpha = false;
-									//bool found_alpha = false;
-									//int result = curobj->IncludeTransparent(diffusemult.w, &found_noalpha, &found_alpha);//2023/09/24
-									//if (result == 1) {
-									//	_ASSERT(0);
-									//	return 1;
-									//}
-									//else if (result == 2) {
-									//	continue;
-									//}
+									bool found_noalpha = false;
+									bool found_alpha = false;
+									int result = curobj->IncludeTransparent(diffusemult.w, &found_noalpha, &found_alpha);//2023/09/24
+									if (result == 1) {
+										_ASSERT(0);
+										return 1;
+									}
+									else if (result == 2) {
+										continue;
+									}
 
-									//if ((withalpha == false) && (found_noalpha == false)) {
-									//	//不透明描画時　１つも不透明がなければ　レンダースキップ
-									//	continue;
-									//}
-									//if ((withalpha == true) && (found_alpha == false)) {
-									//	//半透明描画時　１つも半透明がなければ　レンダースキップ
-									//	continue;
-									//}
-
-									//if (curobj->GetDispObj()) {
-									//	if (curobj->GetPm3()) {
-									//		CallF(curmodel->SetShaderConst(curobj, btflag, calcslotflag), return 1);
-									//		CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
-									//	}
-									//	else if (curobj->GetPm4()) {
-									//		CallF(curmodel->SetShaderConst(curobj, btflag, calcslotflag), return 1);
-									//		CallF(curobj->GetDispObj()->RenderNormal(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
-									//	}
-									//	else {
-									//		_ASSERT(0);
-									//	}
-									//}
-									//else if (curobj->GetDispLine()) {
-									//	CallF(curobj->GetDispLine()->RenderLine(withalpha, pRenderContext, diffusemult, materialdisprate), return 1);
-									//}
-
-								
+									if ((withalpha == false) && (found_noalpha == false)) {
+										//不透明描画時　１つも不透明がなければ　レンダースキップ
+										continue;
+									}
+									if ((withalpha == true) && (found_alpha == false)) {
+										//半透明描画時　１つも半透明がなければ　レンダースキップ
+										continue;
+									}
 
 									//m_renderingEngine->Add3DModelToZPrepass(curobj);
 									//m_renderingEngine->Add3DModelToRenderGBufferPass(curobj);
-									renderingEngine.Add3DModelToForwardRenderPass(curobj);
-
+									myRenderer::RENDEROBJ renderobj;
+									renderobj.mqoobj = curobj;
+									renderobj.withalpha = withalpha;
+									renderobj.lightflag = lightflag;
+									renderobj.diffusemult = diffusemult;
+									renderobj.materialdisprate = materialdisprate;
+									renderobj.mWorld = curmodel->GetWorldMat().TKMatrix();
+									renderingEngine.Add3DModelToForwardRenderPass(renderobj);
 								}
 							}
 						}
