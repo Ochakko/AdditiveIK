@@ -1689,7 +1689,7 @@ static void OnArrowKey();//DS関数でキーボードの矢印キーに対応
 
 static void CalcTotalBound();
 static int SetCameraModel();
-
+static void SetCamera3DFromEyePos();
 
 //--------------------------------------------------------------------------------------
 // Global variables
@@ -3082,25 +3082,8 @@ INT WINAPI wWinMain(
 
 			if (s_chascene->GetModelNum() > 0) {
 				//CalcTotalBound()が呼ばれた後で　cameye, target == zerovecではない場合に計算
-				g_camera3D->SetNear(g_projnear);
-				g_camera3D->SetFar(g_projfar);
-				g_camera3D->SetViewAngle(60.0f / 180.0f * (float)PI);
-				Vector3 cameye = Vector3(g_camEye.x, g_camEye.y, g_camEye.z);
-				g_camera3D->SetPosition(cameye);
-				Vector3 target = Vector3(g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
-				g_camera3D->SetTarget(target);
-				g_camera3D->SetUp(Vector3(0.0f, 1.0f, 0.0f));
-				g_camera3D->SetWidth(736.0f);
-				g_camera3D->SetHeight(488.0f);
-				g_camera3D->Update();
-
-				s_matWorld = s_model->GetWorldMat();
-				s_matView = ChaMatrix(g_camera3D->GetViewMatrix());
-				s_matProj = ChaMatrix(g_camera3D->GetProjectionMatrix());
+				SetCamera3DFromEyePos();
 			}
-
-
-
 
 			//g_camera3D->MoveForward(g_pad[0]->GetLStickYF());
 			//g_camera3D->MoveRight(g_pad[0]->GetLStickXF());
@@ -3186,15 +3169,13 @@ int CheckResolution()
 			::GetClientRect(desktopwnd, &desktoprect);
 			if ((desktoprect.right >= (s_totalwndwidth * 2)) && (desktoprect.bottom >= ((s_totalwndheight - MAINMENUAIMBARH) * 2))) {
 
-				//CSelectLSDlg dlg;
-				//int dlgret = (int)dlg.DoModal();
-				//if (dlgret != IDOK) {
-				//	return 1;//キャンセルボタンはアプリ終了
-				//}
-				//BOOL selectL = dlg.GetIsLarge();//4K可能の場合には大小を選択可能
-				
-				BOOL selectL = FALSE;//2023/11/18 まずは小さい画面でテスト　！！！！！！！！！！！！！！
-				
+				CSelectLSDlg dlg;
+				int dlgret = (int)dlg.DoModal();
+				if (dlgret != IDOK) {
+					return 1;//キャンセルボタンはアプリ終了
+				}
+				BOOL selectL = dlg.GetIsLarge();//4K可能の場合には大小を選択可能
+								
 				if (selectL == TRUE) {
 					g_4kresolution = true;//!!!!!!!!!!!!!!!!
 
@@ -12443,24 +12424,7 @@ void CalcTotalBound()
 	g_befcamEye = g_camEye;
 	g_befcamtargetpos = g_camtargetpos;
 
-	//////!!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-	//////ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-
-	//////#replacing comment out#g_Camera->SetProjParams(g_fovy, s_fAspectRatio, g_projnear, g_projfar);
-	//////#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-	//////#replacing comment out#g_Camera->SetRadius(fObjectRadius * 3.0f, fObjectRadius * 0.5f, fObjectRadius * 6.0f);
-
-	////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-	////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
-
-
-	g_camera3D->SetNear(g_projnear);
-	g_camera3D->SetFar(g_projfar);
-	Vector3 cameye = Vector3(g_camEye.x, g_camEye.y, g_camEye.z);
-	g_camera3D->SetPosition(cameye);
-	Vector3 target = Vector3(g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
-	g_camera3D->SetTarget(target);
-
+	SetCamera3DFromEyePos();
 }
 
 
@@ -51202,3 +51166,21 @@ void InitRootSignature(RootSignature& rs)
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP);
 }
 
+void SetCamera3DFromEyePos()
+{
+	g_camera3D->SetNear(g_projnear);
+	g_camera3D->SetFar(g_projfar);
+	g_camera3D->SetViewAngle(60.0f / 180.0f * (float)PI);
+	Vector3 cameye = Vector3(g_camEye.x, g_camEye.y, g_camEye.z);
+	g_camera3D->SetPosition(cameye);
+	Vector3 target = Vector3(g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
+	g_camera3D->SetTarget(target);
+	g_camera3D->SetUp(Vector3(0.0f, 1.0f, 0.0f));
+	g_camera3D->SetWidth((float)g_graphicsEngine->GetFrameBufferWidth());//2023/11/20
+	g_camera3D->SetHeight((float)g_graphicsEngine->GetFrameBufferHeight());//2023/11/20
+	g_camera3D->Update();
+
+	s_matWorld = s_model->GetWorldMat();
+	s_matView = ChaMatrix(g_camera3D->GetViewMatrix());
+	s_matProj = ChaMatrix(g_camera3D->GetProjectionMatrix());
+}

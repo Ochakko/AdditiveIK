@@ -257,6 +257,8 @@ namespace myRenderer
         /// </summary>
         void InitShadowMapRender();
 
+        void RenderPolyMesh(RenderContext& rc, RENDEROBJ currenderobj);
+
     private:
         //GBufferの定義
         enum EnGBuffer

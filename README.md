@@ -33,6 +33,8 @@ Texture表示が可能になった<br>
 透過テクスチャ遅延描画順機能(LaterTransparent)を有効に<br>
 <br>
 <br>
+2023/11/20<br>
+4KTV接続時にアプリウインドウ大と小を選べるように<br>
 <br>
 <br>
 <br>

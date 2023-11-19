@@ -1305,7 +1305,7 @@ int CDispObj::RenderNormalMaterial(bool laterflag, bool withalpha,
 		return 0;
 	}
 
-	HRESULT hr;
+	//HRESULT hr;
 
 
 	ChaVector4 diffuse;

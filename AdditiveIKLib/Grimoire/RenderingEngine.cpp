@@ -282,36 +282,7 @@ namespace myRenderer
         for (auto& currenderobj : m_zprepassModels)
         {
             //model->Draw(rc);
-
-            if (currenderobj.mqoobj) {
-                if (currenderobj.mqoobj->GetDispObj()) {
-                    if (currenderobj.mqoobj->GetPm3()) {
-                        //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                        currenderobj.mqoobj->GetDispObj()->RenderNormalPM3(
-                            currenderobj.withalpha, 
-                            rc,
-                            currenderobj.lightflag,
-                            currenderobj.diffusemult,
-                            currenderobj.materialdisprate,
-                            currenderobj.mqoobj,
-                            currenderobj.mWorld);
-                    }
-                    else if (currenderobj.mqoobj->GetPm4()) {
-                        //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                        currenderobj.mqoobj->GetDispObj()->RenderNormal(
-                            currenderobj.withalpha,
-                            rc,
-                            currenderobj.lightflag,
-                            currenderobj.diffusemult,
-                            currenderobj.materialdisprate,
-                            currenderobj.mqoobj,
-                            currenderobj.mWorld);
-                    }
-                    else {
-                        _ASSERT(0);
-                    }
-                }
-            }
+            RenderPolyMesh(rc, currenderobj);
         }
 
         rc.WaitUntilFinishDrawingToRenderTarget(m_zprepassRenderTarget);
@@ -356,36 +327,7 @@ namespace myRenderer
         for (auto& currenderobj : m_forwardRenderModels)
         {
             //model->Draw(rc);
-            if (currenderobj.mqoobj) {
-                if (currenderobj.mqoobj->GetDispObj()) {
-                    if (currenderobj.mqoobj->GetPm3()) {
-                        //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                        currenderobj.mqoobj->GetDispObj()->RenderNormalPM3(
-                            currenderobj.withalpha,
-                            rc,
-                            currenderobj.lightflag,
-                            currenderobj.diffusemult,
-                            currenderobj.materialdisprate,
-                            currenderobj.mqoobj,
-                            currenderobj.mWorld);
-                    }
-                    else if (currenderobj.mqoobj->GetPm4()) {
-                        //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                        currenderobj.mqoobj->GetDispObj()->RenderNormal(
-                            currenderobj.withalpha,
-                            rc,
-                            currenderobj.lightflag,
-                            currenderobj.diffusemult,
-                            currenderobj.materialdisprate,
-                            currenderobj.mqoobj,
-                            currenderobj.mWorld);
-                    }
-                    else {
-                        _ASSERT(0);
-                    }
-                }
-            }
-
+            RenderPolyMesh(rc, currenderobj);
         }
 
         // メインレンダリングターゲットへの書き込み終了待ち
@@ -414,36 +356,7 @@ namespace myRenderer
         for (auto& currenderobj : m_renderToGBufferModels)
         {
             //model->Draw(rc);
-
-            if (currenderobj.mqoobj) {
-                if (currenderobj.mqoobj->GetDispObj()) {
-                    if (currenderobj.mqoobj->GetPm3()) {
-                        //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                        currenderobj.mqoobj->GetDispObj()->RenderNormalPM3(
-                            currenderobj.withalpha,
-                            rc,
-                            currenderobj.lightflag,
-                            currenderobj.diffusemult,
-                            currenderobj.materialdisprate,
-                            currenderobj.mqoobj,
-                            currenderobj.mWorld);
-                    }
-                    else if (currenderobj.mqoobj->GetPm4()) {
-                        //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                        currenderobj.mqoobj->GetDispObj()->RenderNormal(
-                            currenderobj.withalpha,
-                            rc,
-                            currenderobj.lightflag,
-                            currenderobj.diffusemult,
-                            currenderobj.materialdisprate,
-                            currenderobj.mqoobj,
-                            currenderobj.mWorld);
-                    }
-                    else {
-                        _ASSERT(0);
-                    }
-                }
-            }
+            RenderPolyMesh(rc, currenderobj);
         }
 
         // レンダリングターゲットへの書き込み待ち
@@ -521,4 +434,38 @@ namespace myRenderer
         m_copyMainRtToFrameBufferSprite.Draw(rc);
 
     }
+
+    void RenderingEngine::RenderPolyMesh(RenderContext& rc, RENDEROBJ currenderobj)
+    {
+        if (currenderobj.mqoobj) {
+            if (currenderobj.mqoobj->GetDispObj()) {
+                if (currenderobj.mqoobj->GetPm3()) {
+                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                    currenderobj.mqoobj->GetDispObj()->RenderNormalPM3(
+                        currenderobj.withalpha,
+                        rc,
+                        currenderobj.lightflag,
+                        currenderobj.diffusemult,
+                        currenderobj.materialdisprate,
+                        currenderobj.mqoobj,
+                        currenderobj.mWorld);
+                }
+                else if (currenderobj.mqoobj->GetPm4()) {
+                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                    currenderobj.mqoobj->GetDispObj()->RenderNormal(
+                        currenderobj.withalpha,
+                        rc,
+                        currenderobj.lightflag,
+                        currenderobj.diffusemult,
+                        currenderobj.materialdisprate,
+                        currenderobj.mqoobj,
+                        currenderobj.mWorld);
+                }
+                else {
+                    _ASSERT(0);
+                }
+            }
+        }
+    }
 }
+
