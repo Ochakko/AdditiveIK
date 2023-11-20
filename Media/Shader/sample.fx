@@ -26,6 +26,7 @@ cbuffer ModelCb : register(b0)
     float4x4 mWorld;
     float4x4 mView;
     float4x4 mProj;
+    float4 modulatealbedo;
 };
 
 float4x4 fixView = { 
@@ -45,7 +46,8 @@ float4x4 fixProj = {
 // シェーダーリソース
 ///////////////////////////////////////////
 // モデルテクスチャ
-Texture2D<float4> g_texture : register(t0);
+Texture2D<float4> g_diffusetex : register(t0);
+Texture2D<float4> g_albedotex : register(t1);
 
 // step-3 深度テクスチャにアクセスするための変数を追加
 //Texture2D<float4> g_depthTexture : register(t10);
@@ -84,15 +86,17 @@ float4 PSMain(SPSIn psIn) : SV_Target0
 {
     // 普通にテクスチャを
     //return g_texture.Sample(g_sampler, psIn.uv);
-    float4 texcol = g_texture.Sample(g_sampler, psIn.uv);
+    float4 albedocol = g_albedotex.Sample(g_sampler, psIn.uv);
+    float2 diffuseuv = { 0.5f, 0.5f };
+    float4 diffusecol = g_diffusetex.Sample(g_sampler, diffuseuv);
     //texcol.w = 1.0f;
-    return texcol;
+    //return texcol;
       
+    float4 pscol = albedocol * diffusecol;
+    return pscol;
+    
     //return float4(psIn.uv, 1, 1);
-    
-    
     //float4 testcol = {0.5f, 0.5f, 0.5f, 1.0f};
     //float4 testcol = { 1.0f, 1.0f, 1.0f, 1.0f };
     //return testcol;
-
 }

@@ -1,4 +1,4 @@
-#ifndef MQOMATERIALH
+ï»¿#ifndef MQOMATERIALH
 #define MQOMATERIALH
 
 #include <stdio.h>
@@ -15,8 +15,8 @@
 
 #include "../../MiniEngine/Texture.h"
 
-class ConstantBuffer;//’è”ƒoƒbƒtƒ@B
-class RootSignature;//ƒ‹[ƒgƒVƒOƒlƒ`ƒƒB
+class ConstantBuffer;//å®šæ•°ãƒãƒƒãƒ•ã‚¡ã€‚
+class RootSignature;//ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£ã€‚
 
 
 class CMQOMaterial
@@ -47,7 +47,7 @@ public:
 
 	int Dump();
 
-	int IsSame( CMQOMaterial* compmat, int compnameflag, int cmplevel = 0 );//compnameflag == 0 ‚Ì‚ÍA–¼‘O‚Í”äŠr‚µ‚È‚¢B
+	int IsSame( CMQOMaterial* compmat, int compnameflag, int cmplevel = 0 );//compnameflag == 0 ã®æ™‚ã¯ã€åå‰ã¯æ¯”è¼ƒã—ãªã„ã€‚
 
 	//int GetName( int srcmatno, char** nameptr );
 	int AddConvName( char** ppname );
@@ -91,6 +91,9 @@ private:
 	int DestroyObjs();
 
 	int ConvParamsTo3F();
+	int SetWhiteTexture();
+	int SetBlackTexture();
+	int SetDiffuseTexture();
 
 public:
 	//accesser
@@ -280,6 +283,7 @@ public:
 		m_texid = srcval;
 	};
 
+	Texture& GetDiffuseMap();
 	Texture& GetAlbedoMap();
 	Texture& GetNormalMap();
 	Texture& GetSpecularMap();
@@ -320,23 +324,25 @@ private:
 	float m_vanime;
 
 	int m_texid;
-	Texture m_dummytex;
-	Texture* m_albedoMap;//bankŠÇ—‚ÌŠO•”ƒ|ƒCƒ“ƒ^
-	Texture* m_normalMap;//‚Æ‚è‚ ‚¦‚¸nulltexture ‚±‚ÌƒNƒ‰ƒX‚Åì¬‚·‚éƒ|ƒCƒ“ƒ^
-	Texture* m_specularMap;//‚Æ‚è‚ ‚¦‚¸nulltexture ‚±‚ÌƒNƒ‰ƒX‚Åì¬‚·‚éƒ|ƒCƒ“ƒ^
+	Texture m_whitetex;
+	Texture m_blacktex;
+	Texture m_diffuseMap;
+	Texture* m_albedoMap;//bankç®¡ç†ã®å¤–éƒ¨ãƒã‚¤ãƒ³ã‚¿
+	Texture* m_normalMap;//ã¨ã‚Šã‚ãˆãšnulltexture ã“ã®ã‚¯ãƒ©ã‚¹ã§ä½œæˆã™ã‚‹ãƒã‚¤ãƒ³ã‚¿
+	Texture* m_specularMap;//ã¨ã‚Šã‚ãˆãšnulltexture ã“ã®ã‚¯ãƒ©ã‚¹ã§ä½œæˆã™ã‚‹ãƒã‚¤ãƒ³ã‚¿
 
-	ConstantBuffer m_constantBuffer;				//’è”ƒoƒbƒtƒ@B
-	RootSignature m_rootSignature;					//ƒ‹[ƒgƒVƒOƒlƒ`ƒƒB
-	PipelineState m_nonSkinModelPipelineState;		//ƒXƒLƒ“‚È‚µƒ‚ƒfƒ‹—p‚ÌƒpƒCƒvƒ‰ƒCƒ“ƒXƒe[ƒgB
-	PipelineState m_skinModelPipelineState;			//ƒXƒLƒ“‚ ‚èƒ‚ƒfƒ‹—p‚ÌƒpƒCƒvƒ‰ƒCƒ“ƒXƒe[ƒgB
-	PipelineState m_transSkinModelPipelineState;	//ƒXƒLƒ“‚ ‚èƒ‚ƒfƒ‹—p‚ÌƒpƒCƒvƒ‰ƒCƒ“ƒXƒe[ƒg(”¼“§–¾ƒ}ƒeƒŠƒAƒ‹)B
-	PipelineState m_transNonSkinModelPipelineState;	//ƒXƒLƒ“‚È‚µƒ‚ƒfƒ‹—p‚ÌƒpƒCƒvƒ‰ƒCƒ“ƒXƒe[ƒg(”¼“§–¾ƒ}ƒeƒŠƒAƒ‹)B
-	Shader* m_vsNonSkinModel = nullptr;				//ƒXƒLƒ“‚È‚µƒ‚ƒfƒ‹—p‚Ì’¸“_ƒVƒF[ƒ_[B
-	Shader* m_vsSkinModel = nullptr;				//ƒXƒLƒ“‚ ‚èƒ‚ƒfƒ‹—p‚Ì’¸“_ƒVƒF[ƒ_[B
-	Shader* m_psModel = nullptr;					//ƒ‚ƒfƒ‹—p‚ÌƒsƒNƒZƒ‹ƒVƒF[ƒ_[B
+	ConstantBuffer m_constantBuffer;				//å®šæ•°ãƒãƒƒãƒ•ã‚¡ã€‚
+	RootSignature m_rootSignature;					//ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£ã€‚
+	PipelineState m_nonSkinModelPipelineState;		//ã‚¹ã‚­ãƒ³ãªã—ãƒ¢ãƒ‡ãƒ«ç”¨ã®ãƒ‘ã‚¤ãƒ—ãƒ©ã‚¤ãƒ³ã‚¹ãƒ†ãƒ¼ãƒˆã€‚
+	PipelineState m_skinModelPipelineState;			//ã‚¹ã‚­ãƒ³ã‚ã‚Šãƒ¢ãƒ‡ãƒ«ç”¨ã®ãƒ‘ã‚¤ãƒ—ãƒ©ã‚¤ãƒ³ã‚¹ãƒ†ãƒ¼ãƒˆã€‚
+	PipelineState m_transSkinModelPipelineState;	//ã‚¹ã‚­ãƒ³ã‚ã‚Šãƒ¢ãƒ‡ãƒ«ç”¨ã®ãƒ‘ã‚¤ãƒ—ãƒ©ã‚¤ãƒ³ã‚¹ãƒ†ãƒ¼ãƒˆ(åŠé€æ˜ãƒãƒ†ãƒªã‚¢ãƒ«)ã€‚
+	PipelineState m_transNonSkinModelPipelineState;	//ã‚¹ã‚­ãƒ³ãªã—ãƒ¢ãƒ‡ãƒ«ç”¨ã®ãƒ‘ã‚¤ãƒ—ãƒ©ã‚¤ãƒ³ã‚¹ãƒ†ãƒ¼ãƒˆ(åŠé€æ˜ãƒãƒ†ãƒªã‚¢ãƒ«)ã€‚
+	Shader* m_vsNonSkinModel = nullptr;				//ã‚¹ã‚­ãƒ³ãªã—ãƒ¢ãƒ‡ãƒ«ç”¨ã®é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã€‚
+	Shader* m_vsSkinModel = nullptr;				//ã‚¹ã‚­ãƒ³ã‚ã‚Šãƒ¢ãƒ‡ãƒ«ç”¨ã®é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã€‚
+	Shader* m_psModel = nullptr;					//ãƒ¢ãƒ‡ãƒ«ç”¨ã®ãƒ”ã‚¯ã‚»ãƒ«ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã€‚
 
 
-//ˆÈ‰ºAƒNƒ‰ƒXŠO‚©‚çƒAƒNƒZƒX‚µ‚È‚¢‚Ì‚ÅƒAƒNƒZƒbƒT[–³‚µB
+//ä»¥ä¸‹ã€ã‚¯ãƒ©ã‚¹å¤–ã‹ã‚‰ã‚¢ã‚¯ã‚»ã‚¹ã—ãªã„ã®ã§ã‚¢ã‚¯ã‚»ãƒƒã‚µãƒ¼ç„¡ã—ã€‚
 	char* m_curtexname;
 
 	char m_alphatest;

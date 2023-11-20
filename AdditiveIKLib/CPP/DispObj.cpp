@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <math.h>
@@ -116,7 +116,7 @@ int CDispObj::InitParams()
 	m_hasbone = 0;
 
 	m_pdev = 0;
-	m_pm3 = 0;//ŠO•”ƒƒ‚ƒŠ
+	m_pm3 = 0;//å¤–éƒ¨ãƒ¡ãƒ¢ãƒª
 	m_pm4 = 0;
 
 	//m_layoutBoneL0 = 0;
@@ -143,11 +143,11 @@ int CDispObj::InitParams()
 	//m_InfB = 0;
 	//m_IB = 0;
 
-	m_vertexBuffer = nullptr;		//’¸“_ƒoƒbƒtƒ@B
-	ZeroMemory(&m_vertexBufferView, sizeof(D3D12_VERTEX_BUFFER_VIEW));	//’¸“_ƒoƒbƒtƒ@ƒrƒ…[B
+	m_vertexBuffer = nullptr;		//é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã€‚
+	ZeroMemory(&m_vertexBufferView, sizeof(D3D12_VERTEX_BUFFER_VIEW));	//é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ãƒ“ãƒ¥ãƒ¼ã€‚
 
-	m_indexBuffer = nullptr;	//ƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@B
-	ZeroMemory(&m_indexBufferView, sizeof(D3D12_INDEX_BUFFER_VIEW));	//ƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@ƒrƒ…[B
+	m_indexBuffer = nullptr;	//ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡ã€‚
+	ZeroMemory(&m_indexBufferView, sizeof(D3D12_INDEX_BUFFER_VIEW));	//ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡ãƒ“ãƒ¥ãƒ¼ã€‚
 
 	return 0;
 }
@@ -292,10 +292,10 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone)
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
-	};	//ƒŒƒ“ƒ_ƒŠƒ“ƒO‚·‚éƒJƒ‰[ƒoƒbƒtƒ@‚ÌƒtƒH[ƒ}ƒbƒgB
+	};	//ãƒ¬ãƒ³ãƒ€ãƒªãƒ³ã‚°ã™ã‚‹ã‚«ãƒ©ãƒ¼ãƒãƒƒãƒ•ã‚¡ã®ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆã€‚
 
 
-	//int MateiralNo = 0;//!!!!!! shader‚Æpipeline‚Í‚PƒƒbƒVƒ…‚É‚Â‚«‚P‚Â‚É‚µ‚½
+	//int MateiralNo = 0;//!!!!!! shaderã¨pipelineã¯ï¼‘ãƒ¡ãƒƒã‚·ãƒ¥ã«ã¤ãï¼‘ã¤ã«ã—ãŸ
 	int materialNum = m_pm3->GetOptMatNum();
 	int rootindex = 0;
 	int blno;
@@ -348,7 +348,7 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone )
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
-	};	//ƒŒƒ“ƒ_ƒŠƒ“ƒO‚·‚éƒJƒ‰[ƒoƒbƒtƒ@‚ÌƒtƒH[ƒ}ƒbƒgB
+	};	//ãƒ¬ãƒ³ãƒ€ãƒªãƒ³ã‚°ã™ã‚‹ã‚«ãƒ©ãƒ¼ãƒãƒƒãƒ•ã‚¡ã®ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆã€‚
 
 
 	int materialnum = m_pm4->GetDispMaterialNum();
@@ -400,7 +400,7 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 void CDispObj::CreateDescriptorHeaps()
 {
 	if (m_pm4) {
-		//ƒfƒBƒXƒNƒŠƒvƒ^ƒq[ƒv‚ğ\’z‚µ‚Ä‚¢‚­B
+		//ãƒ‡ã‚£ã‚¹ã‚¯ãƒªãƒ—ã‚¿ãƒ’ãƒ¼ãƒ—ã‚’æ§‹ç¯‰ã—ã¦ã„ãã€‚
 		int srvNo = 0;
 		int cbNo = 0;
 		//for (auto& mesh : m_meshs) {
@@ -413,11 +413,12 @@ void CDispObj::CreateDescriptorHeaps()
 			int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
 			if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0)) {
 
-				//ƒfƒBƒXƒNƒŠƒvƒ^ƒq[ƒv‚ÉƒfƒBƒXƒNƒŠƒvƒ^‚ğ“o˜^‚µ‚Ä‚¢‚­B
-				m_descriptorHeap.RegistShaderResource(srvNo, curmat->GetAlbedoMap());			//ƒAƒ‹ƒxƒhƒ}ƒbƒvB
-				m_descriptorHeap.RegistShaderResource(srvNo + 1, curmat->GetNormalMap());		//–@üƒ}ƒbƒvB
-				m_descriptorHeap.RegistShaderResource(srvNo + 2, curmat->GetSpecularMap());		//ƒXƒyƒLƒ…ƒ‰ƒ}ƒbƒvB
-				m_descriptorHeap.RegistShaderResource(srvNo + 3, m_boneMatricesStructureBuffer);//ƒ{[ƒ“‚ÌƒXƒgƒ‰ƒNƒ`ƒƒ[ƒhƒoƒbƒtƒ@B
+				//ãƒ‡ã‚£ã‚¹ã‚¯ãƒªãƒ—ã‚¿ãƒ’ãƒ¼ãƒ—ã«ãƒ‡ã‚£ã‚¹ã‚¯ãƒªãƒ—ã‚¿ã‚’ç™»éŒ²ã—ã¦ã„ãã€‚
+				m_descriptorHeap.RegistShaderResource(srvNo, curmat->GetDiffuseMap());			//ã‚¢ãƒ«ãƒ™ãƒ‰ã«ä¹—ç®—ã™ã‚‹ãƒ†ã‚¯ã‚¹ãƒãƒ£ã€‚
+				m_descriptorHeap.RegistShaderResource(srvNo + 1, curmat->GetAlbedoMap());			//ã‚¢ãƒ«ãƒ™ãƒ‰ãƒãƒƒãƒ—ã€‚
+				m_descriptorHeap.RegistShaderResource(srvNo + 2, curmat->GetNormalMap());		//æ³•ç·šãƒãƒƒãƒ—ã€‚
+				m_descriptorHeap.RegistShaderResource(srvNo + 3, curmat->GetSpecularMap());		//ã‚¹ãƒšã‚­ãƒ¥ãƒ©ãƒãƒƒãƒ—ã€‚
+				m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ãƒœãƒ¼ãƒ³ã®ã‚¹ãƒˆãƒ©ã‚¯ãƒãƒ£ãƒ¼ãƒ‰ãƒãƒƒãƒ•ã‚¡ã€‚
 				for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
 					if (m_expandShaderResourceView[i]) {
 						m_descriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
@@ -439,7 +440,7 @@ void CDispObj::CreateDescriptorHeaps()
 		}
 	}
 	else if (m_pm3) {
-		//ƒfƒBƒXƒNƒŠƒvƒ^ƒq[ƒv‚ğ\’z‚µ‚Ä‚¢‚­B
+		//ãƒ‡ã‚£ã‚¹ã‚¯ãƒªãƒ—ã‚¿ãƒ’ãƒ¼ãƒ—ã‚’æ§‹ç¯‰ã—ã¦ã„ãã€‚
 		int srvNo = 0;
 		int cbNo = 0;
 		//for (auto& mesh : m_meshs) {
@@ -449,11 +450,12 @@ void CDispObj::CreateDescriptorHeaps()
 			CMQOMaterial* curmat;
 			curmat = currb->mqomat;
 			if (curmat) {
-				//ƒfƒBƒXƒNƒŠƒvƒ^ƒq[ƒv‚ÉƒfƒBƒXƒNƒŠƒvƒ^‚ğ“o˜^‚µ‚Ä‚¢‚­B
-				m_descriptorHeap.RegistShaderResource(srvNo, curmat->GetAlbedoMap());			//ƒAƒ‹ƒxƒhƒ}ƒbƒvB
-				m_descriptorHeap.RegistShaderResource(srvNo + 1, curmat->GetNormalMap());		//–@üƒ}ƒbƒvB
-				m_descriptorHeap.RegistShaderResource(srvNo + 2, curmat->GetSpecularMap());		//ƒXƒyƒLƒ…ƒ‰ƒ}ƒbƒvB
-				m_descriptorHeap.RegistShaderResource(srvNo + 3, m_boneMatricesStructureBuffer);					//ƒ{[ƒ“‚ÌƒXƒgƒ‰ƒNƒ`ƒƒ[ƒhƒoƒbƒtƒ@B
+				//ãƒ‡ã‚£ã‚¹ã‚¯ãƒªãƒ—ã‚¿ãƒ’ãƒ¼ãƒ—ã«ãƒ‡ã‚£ã‚¹ã‚¯ãƒªãƒ—ã‚¿ã‚’ç™»éŒ²ã—ã¦ã„ãã€‚
+				m_descriptorHeap.RegistShaderResource(srvNo, curmat->GetDiffuseMap());			//ã‚¢ãƒ«ãƒ™ãƒ‰ã«ä¹—ç®—ã™ã‚‹ãƒ†ã‚¯ã‚¹ãƒãƒ£ã€‚
+				m_descriptorHeap.RegistShaderResource(srvNo + 1, curmat->GetAlbedoMap());			//ã‚¢ãƒ«ãƒ™ãƒ‰ãƒãƒƒãƒ—ã€‚
+				m_descriptorHeap.RegistShaderResource(srvNo + 2, curmat->GetNormalMap());		//æ³•ç·šãƒãƒƒãƒ—ã€‚
+				m_descriptorHeap.RegistShaderResource(srvNo + 3, curmat->GetSpecularMap());		//ã‚¹ãƒšã‚­ãƒ¥ãƒ©ãƒãƒƒãƒ—ã€‚
+				m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ãƒœãƒ¼ãƒ³ã®ã‚¹ãƒˆãƒ©ã‚¯ãƒãƒ£ãƒ¼ãƒ‰ãƒãƒƒãƒ•ã‚¡ã€‚
 				for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
 					if (m_expandShaderResourceView[i]) {
 						m_descriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
@@ -490,7 +492,7 @@ void CDispObj::CreateDescriptorHeaps()
 //	D3D12_FILTER samplerFilter
 //)
 //{
-//	//1. ’¸“_ƒoƒbƒtƒ@‚ğì¬B
+//	//1. é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã‚’ä½œæˆã€‚
 //	int numVertex = (int)tkmMesh.vertexBuffer.size();
 //	int vertexStride = sizeof(TkmFile::SVertex);
 //	auto mesh = new SMesh;
@@ -500,44 +502,44 @@ void CDispObj::CreateDescriptorHeaps()
 //
 //	auto SetSkinFlag = [&](int index) {
 //		if (tkmMesh.vertexBuffer[index].skinWeights.x > 0.0f) {
-//			//ƒXƒLƒ“‚ª‚ ‚éB
+//			//ã‚¹ã‚­ãƒ³ãŒã‚ã‚‹ã€‚
 //			mesh->skinFlags.push_back(1);
 //		}
 //		else {
-//			//ƒXƒLƒ“‚È‚µB
+//			//ã‚¹ã‚­ãƒ³ãªã—ã€‚
 //			mesh->skinFlags.push_back(0);
 //		}
 //		};
-//	//2. ƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@‚ğì¬B
+//	//2. ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡ã‚’ä½œæˆã€‚
 //	if (!tkmMesh.indexBuffer16Array.empty()) {
-//		//ƒCƒ“ƒfƒbƒNƒX‚ÌƒTƒCƒY‚ª2byte
+//		//ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã®ã‚µã‚¤ã‚ºãŒ2byte
 //		mesh->m_indexBufferArray.reserve(tkmMesh.indexBuffer16Array.size());
 //		for (auto& tkIb : tkmMesh.indexBuffer16Array) {
 //			auto ib = new IndexBuffer;
 //			ib->Init(static_cast<int>(tkIb.indices.size()) * 2, 2);
 //			ib->Copy((uint16_t*)&tkIb.indices.at(0));
 //
-//			//ƒXƒLƒ“‚ª‚ ‚é‚©‚Ç‚¤‚©‚ğİ’è‚·‚éB
+//			//ã‚¹ã‚­ãƒ³ãŒã‚ã‚‹ã‹ã©ã†ã‹ã‚’è¨­å®šã™ã‚‹ã€‚
 //			SetSkinFlag(tkIb.indices[0]);
 //
 //			mesh->m_indexBufferArray.push_back(ib);
 //		}
 //	}
 //	else {
-//		//ƒCƒ“ƒfƒbƒNƒX‚ÌƒTƒCƒY‚ª4byte
+//		//ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã®ã‚µã‚¤ã‚ºãŒ4byte
 //		mesh->m_indexBufferArray.reserve(tkmMesh.indexBuffer32Array.size());
 //		for (auto& tkIb : tkmMesh.indexBuffer32Array) {
 //			auto ib = new IndexBuffer;
 //			ib->Init(static_cast<int>(tkIb.indices.size()) * 4, 4);
 //			ib->Copy((uint32_t*)&tkIb.indices.at(0));
 //
-//			//ƒXƒLƒ“‚ª‚ ‚é‚©‚Ç‚¤‚©‚ğİ’è‚·‚éB
+//			//ã‚¹ã‚­ãƒ³ãŒã‚ã‚‹ã‹ã©ã†ã‹ã‚’è¨­å®šã™ã‚‹ã€‚
 //			SetSkinFlag(tkIb.indices[0]);
 //
 //			mesh->m_indexBufferArray.push_back(ib);
 //		}
 //	}
-//	//3. ƒ}ƒeƒŠƒAƒ‹‚ğì¬B
+//	//3. ãƒãƒ†ãƒªã‚¢ãƒ«ã‚’ä½œæˆã€‚
 //	mesh->m_materials.reserve(tkmMesh.materials.size());
 //	for (auto& tkmMat : tkmMesh.materials) {
 //		auto mat = new Material;
@@ -554,7 +556,7 @@ void CDispObj::CreateDescriptorHeaps()
 //			NUM_SRV_ONE_MATERIAL * materialNum,
 //			samplerFilter
 //		);
-//		//ì¬‚µ‚½ƒ}ƒeƒŠƒAƒ‹”‚ğƒJƒEƒ“ƒg‚·‚éB
+//		//ä½œæˆã—ãŸãƒãƒ†ãƒªã‚¢ãƒ«æ•°ã‚’ã‚«ã‚¦ãƒ³ãƒˆã™ã‚‹ã€‚
 //		materialNum++;
 //		mesh->m_materials.push_back(mat);
 //	}
@@ -565,9 +567,9 @@ void CDispObj::CreateDescriptorHeaps()
 
 int CDispObj::CreateDecl(ID3D12Device* pdev)
 {
-	//‹¤’Ê’è”ƒoƒbƒtƒ@‚Ìì¬B
+	//å…±é€šå®šæ•°ãƒãƒƒãƒ•ã‚¡ã®ä½œæˆã€‚
 	m_commonConstantBuffer.Init(sizeof(SConstantBuffer), nullptr);
-	//ƒ†[ƒU[Šg’£—p‚Ì’è”ƒoƒbƒtƒ@‚ğì¬B
+	//ãƒ¦ãƒ¼ã‚¶ãƒ¼æ‹¡å¼µç”¨ã®å®šæ•°ãƒãƒƒãƒ•ã‚¡ã‚’ä½œæˆã€‚
 	//if (expandData) {
 	//	m_expandConstantBuffer.Init(expandDataSize, nullptr);
 	//	m_expandData = expandData;
@@ -583,7 +585,7 @@ int CDispObj::CreateDecl(ID3D12Device* pdev)
 	}
 
 	//2023/11/17
-	//‚Æ‚è‚ ‚¦‚¸@ƒ{[ƒ“–³‚µ‚Å•\¦ƒeƒXƒg
+	//ã¨ã‚Šã‚ãˆãšã€€ãƒœãƒ¼ãƒ³ç„¡ã—ã§è¡¨ç¤ºãƒ†ã‚¹ãƒˆ
 	int datanum = 1;
 	ChaMatrix dummymat;
 	dummymat.SetIdentity();
@@ -594,7 +596,7 @@ int CDispObj::CreateDecl(ID3D12Device* pdev)
 	);
 
 
-	//ƒfƒBƒXƒNƒŠƒvƒ^ƒq[ƒv‚ğì¬B
+	//ãƒ‡ã‚£ã‚¹ã‚¯ãƒªãƒ—ã‚¿ãƒ’ãƒ¼ãƒ—ã‚’ä½œæˆã€‚
 	CreateDescriptorHeaps();
 
 
@@ -678,7 +680,7 @@ int CDispObj::CreateDecl(ID3D12Device* pdev)
 	//}
 
 
-	//// ƒeƒNƒjƒbƒN‚©‚çƒpƒXî•ñ‚ğæ“¾
+	//// ãƒ†ã‚¯ãƒ‹ãƒƒã‚¯ã‹ã‚‰ãƒ‘ã‚¹æƒ…å ±ã‚’å–å¾—
 	//D3DX11_PASS_DESC PassDescBoneL0;
 	//g_hRenderBoneL0->GetPassByIndex(0)->GetDesc(&PassDescBoneL0);
 	//D3DX11_PASS_DESC PassDescBoneL1;
@@ -721,7 +723,7 @@ int CDispObj::CreateDecl(ID3D12Device* pdev)
 	//g_hRenderLine->GetPassByIndex(0)->GetDesc(&PassDescLine);
 
 
-	//// ’¸“_ƒŒƒCƒAƒEƒg‚ğì¬
+	//// é ‚ç‚¹ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆã‚’ä½œæˆ
 	//HRESULT hr;
 	//hr = m_pdev->CreateInputLayout(
 	//	declbone, sizeof(declbone) / sizeof(D3D11_INPUT_ELEMENT_DESC),
@@ -892,7 +894,7 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 
 		
 		//########################
-		//‚Ü‚¸‚Íƒ{[ƒ“–³‚µ•\¦‚ÌƒeƒXƒg
+		//ã¾ãšã¯ãƒœãƒ¼ãƒ³ç„¡ã—è¡¨ç¤ºã®ãƒ†ã‚¹ãƒˆ
 		//########################
 		stride = sizeof(PM3DISPV);
 		//stride = sizeof(PM3DISPV) + sizeof(PM3INF);
@@ -907,7 +909,7 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 
 
 //###########
-//’¸“_ƒoƒbƒtƒ@
+//é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡
 //###########
 	{
 		//auto d3dDevice = g_graphicsEngine->GetD3DDevice();
@@ -922,12 +924,12 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 			IID_PPV_ARGS(&m_vertexBuffer));
 
 		m_vertexBuffer->SetName(L"VertexBuffer");
-		//’¸“_ƒoƒbƒtƒ@‚Ìƒrƒ…[‚ğì¬B
+		//é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã®ãƒ“ãƒ¥ãƒ¼ã‚’ä½œæˆã€‚
 		m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
 		m_vertexBufferView.SizeInBytes = vbsize;
 		m_vertexBufferView.StrideInBytes = stride;
 
-		//’¸“_ƒoƒbƒtƒ@‚ğƒRƒs[.
+		//é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã‚’ã‚³ãƒ”ãƒ¼.
 		uint8_t* pData;
 		m_vertexBuffer->Map(0, nullptr, (void**)&pData);
 		if (m_pm3) {
@@ -936,7 +938,7 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 		else if (m_pm4) {
 
 			//########################
-			//‚Ü‚¸‚Íƒ{[ƒ“–³‚µ•\¦‚ÌƒeƒXƒg
+			//ã¾ãšã¯ãƒœãƒ¼ãƒ³ç„¡ã—è¡¨ç¤ºã®ãƒ†ã‚¹ãƒˆ
 			//########################
 			//DWORD vno;
 			//for (vno = 0; vno < pmvleng; vno++) {
@@ -959,7 +961,7 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 	}
 
 //###################
-//ƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@
+//ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡
 //###################
 	{
 		//auto d3dDevice = g_graphicsEngine->GetD3DDevice();
@@ -974,12 +976,12 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 			nullptr,
 			IID_PPV_ARGS(&m_indexBuffer));
 
-		//ƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@‚Ìƒrƒ…[‚ğì¬B
+		//ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡ã®ãƒ“ãƒ¥ãƒ¼ã‚’ä½œæˆã€‚
 		m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
 		m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 		m_indexBufferView.SizeInBytes = ibsize;
 
-		//ƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@‚ğƒRƒs[B
+		//ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡ã‚’ã‚³ãƒ”ãƒ¼ã€‚
 		uint32_t* pData;
 		DWORD triangleno;
 		m_indexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pData));
@@ -1179,11 +1181,11 @@ int CDispObj::CreateVBandIBLine(ID3D12Device* pdev)
 
 void CDispObj::DrawCommon(RenderContext& rc, const Matrix& mWorld, const Matrix& mView, const Matrix& mProj)
 {
-	//ƒƒbƒVƒ…‚²‚Æ‚Éƒhƒ[
-	//ƒvƒŠƒ~ƒeƒBƒu‚Ìƒgƒ|ƒƒW[‚Íƒgƒ‰ƒCƒAƒ“ƒOƒ‹ƒŠƒXƒg‚Ì‚İB
+	//ãƒ¡ãƒƒã‚·ãƒ¥ã”ã¨ã«ãƒ‰ãƒ­ãƒ¼
+	//ãƒ—ãƒªãƒŸãƒ†ã‚£ãƒ–ã®ãƒˆãƒãƒ­ã‚¸ãƒ¼ã¯ãƒˆãƒ©ã‚¤ã‚¢ãƒ³ã‚°ãƒ«ãƒªã‚¹ãƒˆã®ã¿ã€‚
 	rc.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	//’è”ƒoƒbƒtƒ@‚ğXV‚·‚éB
+	////å®šæ•°ãƒãƒƒãƒ•ã‚¡ã‚’æ›´æ–°ã™ã‚‹ã€‚
 	SConstantBuffer cb;
 	cb.mWorld = mWorld;
 	cb.mView = mView;
@@ -1194,7 +1196,7 @@ void CDispObj::DrawCommon(RenderContext& rc, const Matrix& mWorld, const Matrix&
 		m_expandConstantBuffer.CopyToVRAM(m_expandData);
 	}
 	if (m_boneMatricesStructureBuffer.IsInited()) {
-		//ƒ{[ƒ“s—ñ‚ğXV‚·‚éB
+		//ãƒœãƒ¼ãƒ³è¡Œåˆ—ã‚’æ›´æ–°ã™ã‚‹ã€‚
 
 		ChaMatrix dummymat;
 		//m_boneMatricesStructureBuffer.Update(m_skeleton->GetBoneMatricesTopAddress());
@@ -1220,7 +1222,7 @@ int CDispObj::RenderNormal(bool withalpha,
 	}
 
 	//#################################################
-	//DescriptorHeap‚ªì¬‚³‚ê‚Ä‚È‚¢ê‡‚Í@‚·‚®‚ÉƒŠƒ^[ƒ“
+	//DescriptorHeapãŒä½œæˆã•ã‚Œã¦ãªã„å ´åˆã¯ã€€ã™ãã«ãƒªã‚¿ãƒ¼ãƒ³
 	//#################################################
 	if (m_createdescriptorflag == false) {
 		return 0;
@@ -1241,14 +1243,13 @@ int CDispObj::RenderNormal(bool withalpha,
 	mProj = g_camera3D->GetProjectionMatrix();
 
 
-	//’è”ƒoƒbƒtƒ@‚Ìİ’èAXV‚È‚Ç•`‰æ‚Ì‹¤’Êˆ—‚ğÀs‚·‚éB
+	//å®šæ•°ãƒãƒƒãƒ•ã‚¡ã®è¨­å®šã€æ›´æ–°ãªã©æç”»ã®å…±é€šå‡¦ç†ã‚’å®Ÿè¡Œã™ã‚‹ã€‚
 	DrawCommon(rc, mWorld, mView, mProj);
-	//rc.SetDescriptorHeap(m_descriptorHeap);//BeginRender()‚æ‚èŒã‚ÅŒÄ‚Î‚È‚¢‚ÆƒGƒ‰[
+	//rc.SetDescriptorHeap(m_descriptorHeap);//BeginRender()ã‚ˆã‚Šå¾Œã§å‘¼ã°ãªã„ã¨ã‚¨ãƒ©ãƒ¼
 
 	//int descriptorHeapNo = 0;
-	//1. ’¸“_ƒoƒbƒtƒ@‚ğİ’èB
+	//1. é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã‚’è¨­å®šã€‚
 	//rc.SetVertexBuffer(m_vertexBufferView);
-
 
 	int materialcnt;
 	for (materialcnt = 0; materialcnt < materialnum; materialcnt++) {
@@ -1272,13 +1273,14 @@ int CDispObj::RenderNormal(bool withalpha,
 
 	int latermatnum = pmqoobj->GetLaterMaterialNum();
 	if (withalpha && (latermatnum > 0)) {
-		//VRoid VRM (‚·‚»)‚Ì“§‰ß‚Ì‡”Ô‚Ì‚½‚ß@ÅŒã‚É•`‰æ
+		//VRoid VRM è£¾(ã™ã)ã®é€éã®é †ç•ªã®ãŸã‚ã€€æœ€å¾Œã«æç”»
 		int laterindex;
 		for (laterindex = 0; laterindex < latermatnum; laterindex++) {
 			LATERMATERIAL latermaterial = pmqoobj->GetLaterMaterial(laterindex);
 			if (latermaterial.pmaterial) {
 				bool laterflag2 = true;
-				RenderNormalMaterial(laterflag2, withalpha,
+				RenderNormalMaterial(
+					laterflag2, withalpha,
 					rc,
 					latermaterial.pmaterial, latermaterial.offset, latermaterial.trinum,
 					lightflag, diffusemult, materialdisprate);
@@ -1310,7 +1312,7 @@ int CDispObj::RenderNormalMaterial(bool laterflag, bool withalpha,
 
 	ChaVector4 diffuse;
 	ChaVector4 curdif4f = curmat->GetDif4F();
-	diffuse.w = curdif4f.w * diffusemult.w;
+	diffuse.w = curdif4f.w *diffusemult.w;
 	diffuse.x = curdif4f.x * diffusemult.x * materialdisprate.x;
 	diffuse.y = curdif4f.y * diffusemult.y * materialdisprate.x;
 	diffuse.z = curdif4f.z * diffusemult.z * materialdisprate.x;
@@ -1398,16 +1400,16 @@ int CDispObj::RenderNormalMaterial(bool laterflag, bool withalpha,
 	//pRenderContext->OMSetBlendState(g_blendState, blendFactor, 0xffffffff);
 
 
-	int hasskin = 0;//‚Æ‚è‚ ‚¦‚¸@ƒ{[ƒ“–³‚µ‚Å•`‰æƒeƒXƒg@!!!!!!!!!!!!!!!!!!!
+	int hasskin = 0;//ã¨ã‚Šã‚ãˆãšã€€ãƒœãƒ¼ãƒ³ç„¡ã—ã§æç”»ãƒ†ã‚¹ãƒˆã€€!!!!!!!!!!!!!!!!!!!
 	curmat->BeginRender(rc, hasskin);
 	rc.SetDescriptorHeap(m_descriptorHeap);
 
 	rc.SetVertexBuffer(m_vertexBufferView);
 
-	//3. ƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@‚ğİ’èB
+	//3. ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡ã‚’è¨­å®šã€‚
 	rc.SetIndexBuffer(m_indexBufferView);
 
-	//4. ƒhƒ[ƒR[ƒ‹‚ğÀsB
+	//4. ãƒ‰ãƒ­ãƒ¼ã‚³ãƒ¼ãƒ«ã‚’å®Ÿè¡Œã€‚
 	rc.DrawIndexed(curtrinum * 3, curoffset);
 	//rc.DrawIndexed(m_pm4->GetFaceNum() * 3);
 
@@ -1432,7 +1434,7 @@ int CDispObj::RenderNormalPM3(bool withalpha,
 	}
 
 	//#################################################
-	//DescriptorHeap‚ªì¬‚³‚ê‚Ä‚È‚¢ê‡‚Í@‚·‚®‚ÉƒŠƒ^[ƒ“
+	//DescriptorHeapãŒä½œæˆã•ã‚Œã¦ãªã„å ´åˆã¯ã€€ã™ãã«ãƒªã‚¿ãƒ¼ãƒ³
 	//#################################################
 	if (m_createdescriptorflag == false) {
 		return 0;
@@ -1445,14 +1447,14 @@ int CDispObj::RenderNormalPM3(bool withalpha,
 	mView = g_camera3D->GetViewMatrix();
 	mProj = g_camera3D->GetProjectionMatrix();
 
-	//’è”ƒoƒbƒtƒ@‚Ìİ’èAXV‚È‚Ç•`‰æ‚Ì‹¤’Êˆ—‚ğÀs‚·‚éB
+	//å®šæ•°ãƒãƒƒãƒ•ã‚¡ã®è¨­å®šã€æ›´æ–°ãªã©æç”»ã®å…±é€šå‡¦ç†ã‚’å®Ÿè¡Œã™ã‚‹ã€‚
 	DrawCommon(rc, mWorld, mView, mProj);
-	//rc.SetDescriptorHeap(m_descriptorHeap);//BeginRender()‚æ‚èŒã‚ÅŒÄ‚Î‚È‚¢‚ÆƒGƒ‰[
+	//rc.SetDescriptorHeap(m_descriptorHeap);//BeginRender()ã‚ˆã‚Šå¾Œã§å‘¼ã°ãªã„ã¨ã‚¨ãƒ©ãƒ¼
 
 	//int descriptorHeapNo = 0;
-	//1. ’¸“_ƒoƒbƒtƒ@‚ğİ’èB
+	//1. é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã‚’è¨­å®šã€‚
 	//rc.SetVertexBuffer(m_vertexBufferView);
-	//ƒ}ƒeƒŠƒAƒ‹‚²‚Æ‚Éƒhƒ[B
+	//ãƒãƒ†ãƒªã‚¢ãƒ«ã”ã¨ã«ãƒ‰ãƒ­ãƒ¼ã€‚
 
 	//HRESULT hr;
 	int blno;
@@ -1472,7 +1474,8 @@ int CDispObj::RenderNormalPM3(bool withalpha,
 		bool laterflag = pmqoobj->ExistInLaterMaterial(curmat);
 		if (laterflag == false) {
 			bool laterflag2 = false;
-			int result = RenderNormalPM3Material(laterflag2, withalpha,
+			int result = RenderNormalPM3Material(
+				laterflag2, withalpha,
 				rc,
 				curmat, currb->startface * 3, curnumprim,
 				lightflag, diffusemult, materialdisprate);
@@ -1483,13 +1486,14 @@ int CDispObj::RenderNormalPM3(bool withalpha,
 
 	int latermatnum = pmqoobj->GetLaterMaterialNum();
 	if (withalpha && (latermatnum > 0)) {
-		//VRoid VRM (‚·‚»)‚Ì“§‰ß‚Ì‡”Ô‚Ì‚½‚ß@ÅŒã‚É•`‰æ
+		//VRoid VRM è£¾(ã™ã)ã®é€éã®é †ç•ªã®ãŸã‚ã€€æœ€å¾Œã«æç”»
 		int laterindex;
 		for (laterindex = 0; laterindex < latermatnum; laterindex++) {
 			LATERMATERIAL latermaterial = pmqoobj->GetLaterMaterial(laterindex);
 			if (latermaterial.pmaterial) {
 				bool laterflag2 = true;
-				RenderNormalPM3Material(laterflag2, withalpha,
+				RenderNormalPM3Material(
+					laterflag2, withalpha,
 					rc,
 					latermaterial.pmaterial, latermaterial.offset, latermaterial.trinum,
 					lightflag, diffusemult, materialdisprate);
@@ -1500,7 +1504,8 @@ int CDispObj::RenderNormalPM3(bool withalpha,
 	return 0;
 }
 
-int CDispObj::RenderNormalPM3Material(bool laterflag, bool withalpha,
+int CDispObj::RenderNormalPM3Material( 
+	bool laterflag, bool withalpha,
 	RenderContext& rc,
 	CMQOMaterial* curmat, int curoffset, int curtrinum,
 	int lightflag, ChaVector4 diffusemult, ChaVector4 materialdisprate)
@@ -1512,6 +1517,7 @@ int CDispObj::RenderNormalPM3Material(bool laterflag, bool withalpha,
 	diffuse.y = curdif4f.y * diffusemult.y * materialdisprate.x;
 	diffuse.z = curdif4f.z * diffusemult.z * materialdisprate.x;
 	//diffuse.Clamp(0.0f, 1.0f);
+
 
 	bool opeflag = false;
 	if (withalpha && laterflag) {
@@ -1584,23 +1590,23 @@ int CDispObj::RenderNormalPM3Material(bool laterflag, bool withalpha,
 		//UINT p = 0;
 		//for (UINT p = 0; p < techDesc.Passes; ++p)
 		//{
-			//p‚ÍƒeƒNƒXƒ`ƒƒ‚Ì—L–³‚É‚æ‚éƒpƒX‚Ì”š
+			//pã¯ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®æœ‰ç„¡ã«ã‚ˆã‚‹ãƒ‘ã‚¹ã®æ•°å­—
 	//curtech->GetPassByIndex(p)->Apply(0, pRenderContext);
 	//pRenderContext->DrawIndexed(curtrinum * 3, curoffset, 0);
 	//}
 
 
-	int hasskin = 0;//‚Æ‚è‚ ‚¦‚¸@ƒ{[ƒ“–³‚µ‚Å•`‰æƒeƒXƒg@!!!!!!!!!!!!!!!!!!!
+	int hasskin = 0;//ã¨ã‚Šã‚ãˆãšã€€ãƒœãƒ¼ãƒ³ç„¡ã—ã§æç”»ãƒ†ã‚¹ãƒˆã€€!!!!!!!!!!!!!!!!!!!
 	curmat->BeginRender(rc, hasskin);
 	rc.SetDescriptorHeap(m_descriptorHeap);
 
-	//1. ’¸“_ƒoƒbƒtƒ@‚ğİ’èB
+	//1. é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã‚’è¨­å®šã€‚
 	rc.SetVertexBuffer(m_vertexBufferView);
 
-	//3. ƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@‚ğİ’èB
+	//3. ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡ã‚’è¨­å®šã€‚
 	rc.SetIndexBuffer(m_indexBufferView);
 
-	//4. ƒhƒ[ƒR[ƒ‹‚ğÀsB
+	//4. ãƒ‰ãƒ­ãƒ¼ã‚³ãƒ¼ãƒ«ã‚’å®Ÿè¡Œã€‚
 	rc.DrawIndexed(curtrinum * 3, curoffset);
 	//rc.DrawIndexed(m_pm3->GetFaceNum() * 3);
 

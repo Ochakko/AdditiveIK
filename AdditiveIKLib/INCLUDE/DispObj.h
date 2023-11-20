@@ -1,4 +1,4 @@
-#ifndef DISPOBJH
+ï»¿#ifndef DISPOBJH
 #define DISPOBJH
 
 #include <ChaVecCalc.h>
@@ -11,15 +11,15 @@ class CPolyMesh4;
 class CExtLine;
 
 
-class ConstantBuffer;//ƒƒbƒVƒ…‹¤’Ê‚Ì’è”ƒoƒbƒtƒ@B
-class StructuredBuffer;//ƒ{[ƒ“s—ñ‚Ì\‘¢‰»ƒoƒbƒtƒ@B
-class DescriptorHeap;//ƒfƒBƒXƒNƒŠƒvƒ^ƒq[ƒvB
+class ConstantBuffer;//ãƒ¡ãƒƒã‚·ãƒ¥å…±é€šã®å®šæ•°ãƒãƒƒãƒ•ã‚¡ã€‚
+class StructuredBuffer;//ãƒœãƒ¼ãƒ³è¡Œåˆ—ã®æ§‹é€ åŒ–ãƒãƒƒãƒ•ã‚¡ã€‚
+class DescriptorHeap;//ãƒ‡ã‚£ã‚¹ã‚¯ãƒªãƒ—ã‚¿ãƒ’ãƒ¼ãƒ—ã€‚
 
 
 struct SConstantBuffer {
-	Matrix mWorld;		//ƒ[ƒ‹ƒhs—ñB
-	Matrix mView;		//ƒrƒ…[s—ñB
-	Matrix mProj;		//ƒvƒƒWƒFƒNƒVƒ‡ƒ“s—ñB
+	Matrix mWorld;		//ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ã€‚
+	Matrix mView;		//ãƒ“ãƒ¥ãƒ¼è¡Œåˆ—ã€‚
+	Matrix mProj;		//ãƒ—ãƒ­ã‚¸ã‚§ã‚¯ã‚·ãƒ§ãƒ³è¡Œåˆ—ã€‚
 };
 
 
@@ -31,27 +31,27 @@ public:
 /**
  * @fn
  * CDispObj
- * @breaf ƒRƒ“ƒXƒgƒ‰ƒNƒ^B
- * @return ‚È‚µB
+ * @breaf ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã€‚
+ * @return ãªã—ã€‚
  */
 	CDispObj();
 
 /**
  * @fn
  * ~CDispObj
- * @breaf ƒfƒXƒgƒ‰ƒNƒ^B
- * @return ‚È‚µB
+ * @breaf ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã€‚
+ * @return ãªã—ã€‚
  */
 	~CDispObj();
 
 /**
  * @fn
  * CreateDispObj
- * @breaf ƒƒ^ƒZƒRƒCƒA‚©‚ç‚Ìƒf[ƒ^—p‚Ì•\¦—pƒIƒuƒWƒFƒNƒg‚ğì¬‚·‚éB
- * @param (ID3D12Device* pdev) IN Direct3D‚ÌƒfƒoƒCƒXB
- * @param (CPolyMesh3* pm3) IN Œ`óƒf[ƒ^‚Ö‚Ìƒ|ƒCƒ“ƒ^B
- * @param (int hasbone) IN ƒ{[ƒ“•ÏŒ`—L‚Ìê‡‚Í‚PA–³‚µ‚Ìê‡‚Í‚OBMameBake3D‚Å‚Íƒƒ^ƒZƒRƒCƒAƒf[ƒ^‚Íƒ{[ƒ“–³‚µB
- * @return ¬Œ÷‚µ‚½‚ç‚OB
+ * @breaf ãƒ¡ã‚¿ã‚»ã‚³ã‚¤ã‚¢ã‹ã‚‰ã®ãƒ‡ãƒ¼ã‚¿ç”¨ã®è¡¨ç¤ºç”¨ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ä½œæˆã™ã‚‹ã€‚
+ * @param (ID3D12Device* pdev) IN Direct3Dã®ãƒ‡ãƒã‚¤ã‚¹ã€‚
+ * @param (CPolyMesh3* pm3) IN å½¢çŠ¶ãƒ‡ãƒ¼ã‚¿ã¸ã®ãƒã‚¤ãƒ³ã‚¿ã€‚
+ * @param (int hasbone) IN ãƒœãƒ¼ãƒ³å¤‰å½¢æœ‰ã®å ´åˆã¯ï¼‘ã€ç„¡ã—ã®å ´åˆã¯ï¼ã€‚MameBake3Dã§ã¯ãƒ¡ã‚¿ã‚»ã‚³ã‚¤ã‚¢ãƒ‡ãƒ¼ã‚¿ã¯ãƒœãƒ¼ãƒ³ç„¡ã—ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
  */
 	int CreateDispObj( ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone );
 
@@ -59,21 +59,21 @@ public:
 /**
  * @fn
  * CreateDispObj
- * @breaf FBX‚©‚ç‚Ìƒf[ƒ^—p‚Ì•\¦—pƒIƒuƒWƒFƒNƒg‚ğì¬‚·‚éB
- * @param (ID3D12Device* pdev) IN Direct3D‚ÌƒfƒoƒCƒXB
- * @param (CPolyMesh4* pm4) IN Œ`óƒf[ƒ^‚Ö‚Ìƒ|ƒCƒ“ƒ^B
- * @param (int hasbone) IN ƒ{[ƒ“•ÏŒ`—L‚Ìê‡‚Í‚PA–³‚µ‚Ìê‡‚Í‚OB * @return –ß‚è’l‚Ìà–¾
- * @return ¬Œ÷‚µ‚½‚ç‚OB
+ * @breaf FBXã‹ã‚‰ã®ãƒ‡ãƒ¼ã‚¿ç”¨ã®è¡¨ç¤ºç”¨ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ä½œæˆã™ã‚‹ã€‚
+ * @param (ID3D12Device* pdev) IN Direct3Dã®ãƒ‡ãƒã‚¤ã‚¹ã€‚
+ * @param (CPolyMesh4* pm4) IN å½¢çŠ¶ãƒ‡ãƒ¼ã‚¿ã¸ã®ãƒã‚¤ãƒ³ã‚¿ã€‚
+ * @param (int hasbone) IN ãƒœãƒ¼ãƒ³å¤‰å½¢æœ‰ã®å ´åˆã¯ï¼‘ã€ç„¡ã—ã®å ´åˆã¯ï¼ã€‚ * @return æˆ»ã‚Šå€¤ã®èª¬æ˜
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
  */
 	int CreateDispObj( ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone );
 
 /**
  * @fn
  * CreateDispObj
- * @breaf ü•ªƒf[ƒ^—p‚Ì•\¦—pƒIƒuƒWƒFƒNƒg‚ğì¬‚·‚éB
- * @param (ID3D12Device* pdev) IN Direct3D‚ÌƒfƒoƒCƒXB
- * @param (CExtLine* extline) IN ü‚ÌŒ`óƒf[ƒ^‚Ö‚Ìƒ|ƒCƒ“ƒ^B
- * @return ¬Œ÷‚µ‚½‚ç‚OB
+ * @breaf ç·šåˆ†ãƒ‡ãƒ¼ã‚¿ç”¨ã®è¡¨ç¤ºç”¨ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ä½œæˆã™ã‚‹ã€‚
+ * @param (ID3D12Device* pdev) IN Direct3Dã®ãƒ‡ãƒã‚¤ã‚¹ã€‚
+ * @param (CExtLine* extline) IN ç·šã®å½¢çŠ¶ãƒ‡ãƒ¼ã‚¿ã¸ã®ãƒã‚¤ãƒ³ã‚¿ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
  */
 	int CreateDispObj( ID3D12Device* pdev, CExtLine* extline );
 
@@ -81,11 +81,11 @@ public:
 /**
  * @fn
  * RenderNormal
- * @breaf ’Êí‚Ìƒx[ƒVƒbƒN‚È•û–@‚Å‚RD•`‰æ‚ğ‚·‚éB
- * @param (CMQOMaterial* rmaterial) IN Ş¿‚Ö‚Ìƒ|ƒCƒ“ƒ^B
- * @param (int lightflag) IN ÆŒõˆ—‚·‚é‚Æ‚«‚Í‚PA‚µ‚È‚¢‚Æ‚«‚Í‚OB
- * @param (ChaVector4 diffusemult) IN ƒfƒBƒtƒ…[ƒYF‚ÉŠ|‚¯Z‚·‚é”ä—¦B
- * @return ¬Œ÷‚µ‚½‚ç‚OB
+ * @breaf é€šå¸¸ã®ãƒ™ãƒ¼ã‚·ãƒƒã‚¯ãªæ–¹æ³•ã§ï¼“Dæç”»ã‚’ã™ã‚‹ã€‚
+ * @param (CMQOMaterial* rmaterial) IN æè³ªã¸ã®ãƒã‚¤ãƒ³ã‚¿ã€‚
+ * @param (int lightflag) IN ç…§å…‰å‡¦ç†ã™ã‚‹ã¨ãã¯ï¼‘ã€ã—ãªã„ã¨ãã¯ï¼ã€‚
+ * @param (ChaVector4 diffusemult) IN ãƒ‡ã‚£ãƒ•ãƒ¥ãƒ¼ã‚ºè‰²ã«æ›ã‘ç®—ã™ã‚‹æ¯”ç‡ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
  */
 	int RenderNormal(bool withalpha, 
 		RenderContext& rc, int lightflag, 
@@ -101,17 +101,18 @@ public:
 /**
  * @fn
  * RenderNormalPM3
- * @breaf ’Êí‚Ìƒx[ƒVƒbƒN‚È•û–@‚Åƒƒ^ƒZƒRƒCƒAƒf[ƒ^‚ğ‚RD•\¦‚·‚éB
- * @param (int lightflag) IN ÆŒõˆ—‚·‚é‚Æ‚«‚Í‚PA‚µ‚È‚¢‚Æ‚«‚Í‚OB
- * @param (ChaVector4 diffusemult) IN ƒfƒBƒtƒ…[ƒYF‚ÉŠ|‚¯Z‚·‚é”ä—¦B
- * @return ¬Œ÷‚µ‚½‚ç‚OB
- * @detail FBXƒf[ƒ^‚Í‚PƒIƒuƒWƒFƒNƒg‚É‚Â‚«‚Pƒ}ƒeƒŠƒAƒ‹(Ş¿)‚¾‚ªAƒƒ^ƒZƒRƒCƒAƒf[ƒ^‚Í‚PƒIƒuƒWƒFƒNƒg‚É•¡”ƒ}ƒeƒŠƒAƒ‹‚ªİ’è‚³‚ê‚Ä‚¢‚é‚±‚Æ‚ª‘½‚¢B
+ * @breaf é€šå¸¸ã®ãƒ™ãƒ¼ã‚·ãƒƒã‚¯ãªæ–¹æ³•ã§ãƒ¡ã‚¿ã‚»ã‚³ã‚¤ã‚¢ãƒ‡ãƒ¼ã‚¿ã‚’ï¼“Dè¡¨ç¤ºã™ã‚‹ã€‚
+ * @param (int lightflag) IN ç…§å…‰å‡¦ç†ã™ã‚‹ã¨ãã¯ï¼‘ã€ã—ãªã„ã¨ãã¯ï¼ã€‚
+ * @param (ChaVector4 diffusemult) IN ãƒ‡ã‚£ãƒ•ãƒ¥ãƒ¼ã‚ºè‰²ã«æ›ã‘ç®—ã™ã‚‹æ¯”ç‡ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
+ * @detail FBXãƒ‡ãƒ¼ã‚¿ã¯ï¼‘ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã«ã¤ãï¼‘ãƒãƒ†ãƒªã‚¢ãƒ«(æè³ª)ã ãŒã€ãƒ¡ã‚¿ã‚»ã‚³ã‚¤ã‚¢ãƒ‡ãƒ¼ã‚¿ã¯ï¼‘ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã«è¤‡æ•°ãƒãƒ†ãƒªã‚¢ãƒ«ãŒè¨­å®šã•ã‚Œã¦ã„ã‚‹ã“ã¨ãŒå¤šã„ã€‚
  */
 	int RenderNormalPM3(bool withalpha, 
 		RenderContext& rc, int lightflag,
 		ChaVector4 diffusemult, ChaVector4 materialdisprate, CMQOObject* pmqoobj, Matrix mWorld);
 
-	int RenderNormalPM3Material(bool laterflag, bool withalpha,
+	int RenderNormalPM3Material(
+		bool laterflag, bool withalpha,
 		RenderContext& rc,
 		CMQOMaterial* rmaterial, int curoffset, int curtrinum,
 		int lightflag, ChaVector4 diffusemult, ChaVector4 materialdisprate);
@@ -120,9 +121,9 @@ public:
 /**
  * @fn
  * RenderLine
- * @breaf ü•ªƒf[ƒ^‚ğ•\¦‚·‚éB
- * @param (ChaVector4 diffusemult) IN ƒfƒBƒtƒ…[ƒYF‚ÉŠ|‚¯Z‚·‚é”ä—¦B
- * @return ¬Œ÷‚µ‚½‚ç‚OB
+ * @breaf ç·šåˆ†ãƒ‡ãƒ¼ã‚¿ã‚’è¡¨ç¤ºã™ã‚‹ã€‚
+ * @param (ChaVector4 diffusemult) IN ãƒ‡ã‚£ãƒ•ãƒ¥ãƒ¼ã‚ºè‰²ã«æ›ã‘ç®—ã™ã‚‹æ¯”ç‡ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
  */
 	int RenderLine(bool withalpha,
 		RenderContext* pRenderContext, 
@@ -131,19 +132,19 @@ public:
 /**
  * @fn
  * CopyDispV
- * @breaf FBX‚Ì’¸“_ƒf[ƒ^‚ğ•\¦ƒoƒbƒtƒ@‚ÉƒRƒs[‚·‚éB
- * @param (CPolyMesh4* pm4) IN FBX‚ÌŒ`óƒf[ƒ^B
- * @return ¬Œ÷‚µ‚½‚ç‚OB
+ * @breaf FBXã®é ‚ç‚¹ãƒ‡ãƒ¼ã‚¿ã‚’è¡¨ç¤ºãƒãƒƒãƒ•ã‚¡ã«ã‚³ãƒ”ãƒ¼ã™ã‚‹ã€‚
+ * @param (CPolyMesh4* pm4) IN FBXã®å½¢çŠ¶ãƒ‡ãƒ¼ã‚¿ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
  */
 	int CopyDispV( CPolyMesh4* pm4 );
 
 /**
  * @fn
  * CopyDispV
- * @breaf ƒƒ^ƒZƒRƒCƒA‚Ì’¸“_ƒf[ƒ^‚ğ•\¦ƒoƒbƒtƒ@‚ÉƒRƒs[‚·‚éB
- * @param (CPolyMesh3* pm3) IN ƒƒ^ƒZƒRƒCƒA‚ÌŒ`óƒf[ƒ^B
- * @param (ˆø”–¼) ˆø”‚Ìà–¾
- * @return ¬Œ÷‚µ‚½‚ç‚OB
+ * @breaf ãƒ¡ã‚¿ã‚»ã‚³ã‚¤ã‚¢ã®é ‚ç‚¹ãƒ‡ãƒ¼ã‚¿ã‚’è¡¨ç¤ºãƒãƒƒãƒ•ã‚¡ã«ã‚³ãƒ”ãƒ¼ã™ã‚‹ã€‚
+ * @param (CPolyMesh3* pm3) IN ãƒ¡ã‚¿ã‚»ã‚³ã‚¤ã‚¢ã®å½¢çŠ¶ãƒ‡ãƒ¼ã‚¿ã€‚
+ * @param (å¼•æ•°å) å¼•æ•°ã®èª¬æ˜
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
  */
 	int CopyDispV( CPolyMesh3* pm3 );
 
@@ -161,40 +162,40 @@ private:
 /**
  * @fn
  * InitParams
- * @breaf ƒƒ“ƒo‚ğ‰Šú‰»‚·‚éB
- * @return ‚OB
+ * @breaf ãƒ¡ãƒ³ãƒã‚’åˆæœŸåŒ–ã™ã‚‹ã€‚
+ * @return ï¼ã€‚
  */
 	int InitParams();
 
 /**
  * @fn
  * DestroyObjs
- * @breaf ƒAƒƒP[ƒg‚µ‚½ƒƒ‚ƒŠ‚ğŠJ•ú‚·‚éB
- * @return ‚OB
+ * @breaf ã‚¢ãƒ­ã‚±ãƒ¼ãƒˆã—ãŸãƒ¡ãƒ¢ãƒªã‚’é–‹æ”¾ã™ã‚‹ã€‚
+ * @return ï¼ã€‚
  */
 	int DestroyObjs();
 
 /**
  * @fn
  * CreateDecl
- * @breaf •\¦—p’¸“_ƒf[ƒ^‚ÌƒtƒH[ƒ}ƒbƒg(éŒ¾)‚ğì¬‚·‚éB
- * @return ¬Œ÷‚µ‚½‚ç‚OB
+ * @breaf è¡¨ç¤ºç”¨é ‚ç‚¹ãƒ‡ãƒ¼ã‚¿ã®ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆ(å®£è¨€)ã‚’ä½œæˆã™ã‚‹ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
  */
 	int CreateDecl(ID3D12Device* pdev);
 
 /**
  * @fn
  * CreateVBandIB
- * @breaf ‚RD•\¦—p‚Ì’¸“_ƒoƒbƒtƒ@‚ÆƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@‚ğì¬‚·‚éB
- * @return ¬Œ÷‚µ‚½‚ç‚OB
+ * @breaf ï¼“Dè¡¨ç¤ºç”¨ã®é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã¨ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡ã‚’ä½œæˆã™ã‚‹ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
  */
 	int CreateVBandIB(ID3D12Device* pdev);
 
 /**
  * @fn
  * CreateVBandIBLine
- * @breaf ü•ª—p‚Ì’¸“_ƒoƒbƒtƒ@‚ÆƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@‚ğì¬‚·‚éB
- * @return ¬Œ÷‚µ‚½‚ç‚OB
+ * @breaf ç·šåˆ†ç”¨ã®é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã¨ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡ã‚’ä½œæˆã™ã‚‹ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
  */
 	int CreateVBandIBLine(ID3D12Device* pdev);
 
@@ -202,20 +203,20 @@ private:
 	void CreateDescriptorHeaps();
 
 private:
-	//Šg’£SRV‚ªİ’è‚³‚ê‚éƒŒƒWƒXƒ^‚ÌŠJn”Ô†B
+	//æ‹¡å¼µSRVãŒè¨­å®šã•ã‚Œã‚‹ãƒ¬ã‚¸ã‚¹ã‚¿ã®é–‹å§‹ç•ªå·ã€‚
 	//const int EXPAND_SRV_REG__START_NO = 10;
-	const int EXPAND_SRV_REG__START_NO = 4;
-	//‚P‚Â‚Ìƒ}ƒeƒŠƒAƒ‹‚Åg—p‚³‚ê‚éSRV‚Ì”B
+	const int EXPAND_SRV_REG__START_NO = 6;
+	//ï¼‘ã¤ã®ãƒãƒ†ãƒªã‚¢ãƒ«ã§ä½¿ç”¨ã•ã‚Œã‚‹SRVã®æ•°ã€‚
 	const int NUM_SRV_ONE_MATERIAL = EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV;
-	//‚P‚Â‚Ìƒ}ƒeƒŠƒAƒ‹‚Åg—p‚³‚ê‚éCBV‚Ì”B
+	//ï¼‘ã¤ã®ãƒãƒ†ãƒªã‚¢ãƒ«ã§ä½¿ç”¨ã•ã‚Œã‚‹CBVã®æ•°ã€‚
 	const int NUM_CBV_ONE_MATERIAL = 2;
 
-	int m_hasbone;//ƒ{[ƒ“•ÏŒ`—p‚ÌƒIƒuƒWƒFƒNƒg‚Å‚ ‚é‚Æ‚«‚PA‚»‚êˆÈŠO‚Ì‚Í‚OB
+	int m_hasbone;//ãƒœãƒ¼ãƒ³å¤‰å½¢ç”¨ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã§ã‚ã‚‹ã¨ãï¼‘ã€ãã‚Œä»¥å¤–ã®æ™‚ã¯ï¼ã€‚
 
-	ID3D12Device* m_pdev;//ŠO•”ƒƒ‚ƒŠADirect3D‚ÌƒfƒoƒCƒXB
-	CPolyMesh3* m_pm3;//ŠO•”ƒƒ‚ƒŠAƒƒ^ƒZƒRƒCƒAƒtƒ@ƒCƒ‹‚©‚çì¬‚µ‚½‚RDƒf[ƒ^B
-	CPolyMesh4* m_pm4;//ŠO•”ƒƒ‚ƒŠAFBXƒtƒ@ƒCƒ‹‚©‚çì¬‚µ‚½‚RDƒf[ƒ^B
-	CExtLine* m_extline;//ŠO•”ƒƒ‚ƒŠAüƒf[ƒ^B
+	ID3D12Device* m_pdev;//å¤–éƒ¨ãƒ¡ãƒ¢ãƒªã€Direct3Dã®ãƒ‡ãƒã‚¤ã‚¹ã€‚
+	CPolyMesh3* m_pm3;//å¤–éƒ¨ãƒ¡ãƒ¢ãƒªã€ãƒ¡ã‚¿ã‚»ã‚³ã‚¤ã‚¢ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ä½œæˆã—ãŸï¼“Dãƒ‡ãƒ¼ã‚¿ã€‚
+	CPolyMesh4* m_pm4;//å¤–éƒ¨ãƒ¡ãƒ¢ãƒªã€FBXãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ä½œæˆã—ãŸï¼“Dãƒ‡ãƒ¼ã‚¿ã€‚
+	CExtLine* m_extline;//å¤–éƒ¨ãƒ¡ãƒ¢ãƒªã€ç·šãƒ‡ãƒ¼ã‚¿ã€‚
 
 	//D3D11_BUFFER_DESC m_BufferDescBone;
 	//D3D11_BUFFER_DESC m_BufferDescNoBone;
@@ -242,36 +243,36 @@ private:
 	//ID3D11InputLayout* m_layoutNoBoneL8;
 	//ID3D11InputLayout* m_layoutLine;
 
- //   ID3D11Buffer* m_VB;//•\¦—p’¸“_ƒoƒbƒtƒ@B
-	//ID3D11Buffer* m_InfB;//•\¦—pƒ{[ƒ“‰e‹¿“xƒoƒbƒtƒ@B
-	//ID3D11Buffer* m_IB;//•\¦—pOŠp‚ÌƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@B
+ //   ID3D11Buffer* m_VB;//è¡¨ç¤ºç”¨é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã€‚
+	//ID3D11Buffer* m_InfB;//è¡¨ç¤ºç”¨ãƒœãƒ¼ãƒ³å½±éŸ¿åº¦ãƒãƒƒãƒ•ã‚¡ã€‚
+	//ID3D11Buffer* m_IB;//è¡¨ç¤ºç”¨ä¸‰è§’ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡ã€‚
 
 
-	ID3D12Resource* m_vertexBuffer;		//’¸“_ƒoƒbƒtƒ@B
-	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;	//’¸“_ƒoƒbƒtƒ@ƒrƒ…[B
+	ID3D12Resource* m_vertexBuffer;		//é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã€‚
+	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;	//é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ãƒ“ãƒ¥ãƒ¼ã€‚
 
-	ID3D12Resource* m_indexBuffer;	//ƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@B
-	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;	//ƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@ƒrƒ…[B
+	ID3D12Resource* m_indexBuffer;	//ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡ã€‚
+	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;	//ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡ãƒ“ãƒ¥ãƒ¼ã€‚
 
 
-	ConstantBuffer m_commonConstantBuffer;					//ƒƒbƒVƒ…‹¤’Ê‚Ì’è”ƒoƒbƒtƒ@B
-	ConstantBuffer m_expandConstantBuffer;					//ƒ†[ƒU[Šg’£—p‚Ì’è”ƒoƒbƒtƒ@
-	std::array<IShaderResource*, MAX_MODEL_EXPAND_SRV> m_expandShaderResourceView = { nullptr };	//ƒ†[ƒU[Šg’£ƒVƒF[ƒ_[ƒŠƒ\[ƒXƒrƒ…[B
+	ConstantBuffer m_commonConstantBuffer;					//ãƒ¡ãƒƒã‚·ãƒ¥å…±é€šã®å®šæ•°ãƒãƒƒãƒ•ã‚¡ã€‚
+	ConstantBuffer m_expandConstantBuffer;					//ãƒ¦ãƒ¼ã‚¶ãƒ¼æ‹¡å¼µç”¨ã®å®šæ•°ãƒãƒƒãƒ•ã‚¡
+	std::array<IShaderResource*, MAX_MODEL_EXPAND_SRV> m_expandShaderResourceView = { nullptr };	//ãƒ¦ãƒ¼ã‚¶ãƒ¼æ‹¡å¼µã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒªã‚½ãƒ¼ã‚¹ãƒ“ãƒ¥ãƒ¼ã€‚
 	void* m_expandData = nullptr;
-	StructuredBuffer m_boneMatricesStructureBuffer;	//ƒ{[ƒ“s—ñ‚Ì\‘¢‰»ƒoƒbƒtƒ@B
-	//std::vector< SMesh* > m_meshs;						//ƒƒbƒVƒ…B
+	StructuredBuffer m_boneMatricesStructureBuffer;	//ãƒœãƒ¼ãƒ³è¡Œåˆ—ã®æ§‹é€ åŒ–ãƒãƒƒãƒ•ã‚¡ã€‚
+	//std::vector< SMesh* > m_meshs;						//ãƒ¡ãƒƒã‚·ãƒ¥ã€‚
 	bool m_createdescriptorflag;
-	//////std::vector< DescriptorHeap > m_descriptorHeap;	//ƒfƒBƒXƒNƒŠƒvƒ^ƒq[ƒvB
-	DescriptorHeap m_descriptorHeap;					//ƒfƒBƒXƒNƒŠƒvƒ^ƒq[ƒvB
-	//Skeleton* m_skeleton = nullptr;						//ƒXƒPƒ‹ƒgƒ“B
-	//void* m_expandData = nullptr;						//ƒ†[ƒU[Šg’£ƒf[ƒ^B
+	//////std::vector< DescriptorHeap > m_descriptorHeap;	//ãƒ‡ã‚£ã‚¹ã‚¯ãƒªãƒ—ã‚¿ãƒ’ãƒ¼ãƒ—ã€‚
+	DescriptorHeap m_descriptorHeap;					//ãƒ‡ã‚£ã‚¹ã‚¯ãƒªãƒ—ã‚¿ãƒ’ãƒ¼ãƒ—ã€‚
+	//Skeleton* m_skeleton = nullptr;						//ã‚¹ã‚±ãƒ«ãƒˆãƒ³ã€‚
+	//void* m_expandData = nullptr;						//ãƒ¦ãƒ¼ã‚¶ãƒ¼æ‹¡å¼µãƒ‡ãƒ¼ã‚¿ã€‚
 
 
-	//Shader‚Ìƒ|ƒCƒ“ƒg‚Ínew‚µ‚½ê‡‚àShaderBank‚ÉŠi”[‚·‚é
-	//Shader‚Ì”jŠü‚ÍShaderBank‚ªs‚¤‚Ì‚Å@CDispObj‚ÌƒfƒXƒgƒ‰ƒNƒ^‚Å‚Í”jŠü‚µ‚È‚¢
-	Shader* m_vsNonSkinModel;//ƒXƒLƒ“‚È‚µƒ‚ƒfƒ‹—p‚Ì’¸“_ƒVƒF[ƒ_[B
-	Shader* m_vsSkinModel;//ƒXƒLƒ“‚ ‚èƒ‚ƒfƒ‹—p‚Ì’¸“_ƒVƒF[ƒ_[B
-	Shader* m_psModel;//ƒ‚ƒfƒ‹—p‚ÌƒsƒNƒZƒ‹ƒVƒF[ƒ_[B
+	//Shaderã®ãƒã‚¤ãƒ³ãƒˆã¯newã—ãŸå ´åˆã‚‚ShaderBankã«æ ¼ç´ã™ã‚‹
+	//Shaderã®ç ´æ£„ã¯ShaderBankãŒè¡Œã†ã®ã§ã€€CDispObjã®ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã§ã¯ç ´æ£„ã—ãªã„
+	Shader* m_vsNonSkinModel;//ã‚¹ã‚­ãƒ³ãªã—ãƒ¢ãƒ‡ãƒ«ç”¨ã®é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã€‚
+	Shader* m_vsSkinModel;//ã‚¹ã‚­ãƒ³ã‚ã‚Šãƒ¢ãƒ‡ãƒ«ç”¨ã®é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã€‚
+	Shader* m_psModel;//ãƒ¢ãƒ‡ãƒ«ç”¨ã®ãƒ”ã‚¯ã‚»ãƒ«ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã€‚
 
 
 

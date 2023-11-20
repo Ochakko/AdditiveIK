@@ -731,8 +731,12 @@ LRESULT CDollyHistoryDlg::OnSetDolly(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 		}
 	}
 
+
 	return 0;
 }
+
+
+
 LRESULT CDollyHistoryDlg::OnSaveDolly(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	BOOL bhandled = true;

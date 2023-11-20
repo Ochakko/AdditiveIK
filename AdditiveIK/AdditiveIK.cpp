@@ -35569,7 +35569,7 @@ int CreateGPlaneWnd()
 
 		s_ghSlider->setCursorListener([]() {
 			if (s_model) {
-				if (s_bpWorld && s_gpWnd && s_ghSlider) {
+				if (s_bpWorld && s_gpWnd && s_ghSlider && s_gplane) {
 					s_bpWorld->m_gplaneh = (float)s_ghSlider->getValue();
 					s_bpWorld->RemakeG();
 
@@ -51014,6 +51014,8 @@ int UpdateCameraPosAndTarget()
 		_ASSERT(0);
 		return 1;
 	}
+
+	SetCamera3DFromEyePos();
 }
 
 bool IsClickedSpriteButton()

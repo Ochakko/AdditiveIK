@@ -55,4 +55,13 @@ void NullTextureMaps::Init()
 		m_zeroValueMap,
 		m_zeroValueMapSize);
 
+
+	//2023/11/20
+	m_whiteMapFilePath = "../Media/preset/NullWhiteMap.DDS";
+	//1の値を格納しているマップをロード。
+	TexLoad(
+		m_whiteMapFilePath,
+		m_whiteMap,
+		m_whiteMapSize);
+
 }

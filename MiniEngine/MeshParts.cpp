@@ -6,6 +6,11 @@
 
 #include <ChaVecCalc.h>
 
+
+//for SConstantBuffer
+#include <DispObj.h>
+
+
 MeshParts::~MeshParts()
 {
 	for (auto& mesh : m_meshs) {

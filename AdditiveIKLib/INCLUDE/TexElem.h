@@ -34,14 +34,14 @@ public:
 	//ID3D12Resource* GetPTex() {
 	//	return m_ptex;
 	//}
-	Texture& GetPTex() {
+	Texture* GetPTex() {
 		if (m_texture) {
-			return *m_texture;
+			return m_texture;
 		}
 		else {
-			::MessageBox(NULL, L"AlbedoMap NULL error, exit app!!!", L"ERROR", MB_OK);
-			PostQuitMessage(404);
-			//return nullptr;
+			//::MessageBox(NULL, L"AlbedoMap NULL error, exit app!!!", L"ERROR", MB_OK);
+			//PostQuitMessage(404);
+			return nullptr;
 		}
 	}
 

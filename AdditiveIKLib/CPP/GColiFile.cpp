@@ -205,22 +205,26 @@ int CGColiFile::ReadColiID( XMLIOBUF* xmlbuf )
 	Read_Float( xmlbuf, "<FRICTION>", "</FRICTION>", &fric );
 
 	_ASSERT( m_bpw );
-	m_bpw->m_groupid = gid;
-	m_bpw->m_myselfflag = myself;
-	m_bpw->m_coliids = tmpids;
+	if (m_bpw) {
+		m_bpw->m_groupid = gid;
+		m_bpw->m_myselfflag = myself;
+		m_bpw->m_coliids = tmpids;
 
-	m_bpw->m_gplaneh = gh;
-	m_bpw->m_gdisph = gdisph;
-	m_bpw->m_gplanesize = ChaVector2( sizex, sizez );
-	m_bpw->m_gplanedisp = dflag;
-	m_bpw->m_restitution = rest;
-	m_bpw->m_friction = fric;
+		m_bpw->m_gplaneh = gh;
+		m_bpw->m_gdisph = gdisph;
+		m_bpw->m_gplanesize = ChaVector2(sizex, sizez);
+		m_bpw->m_gplanedisp = dflag;
+		m_bpw->m_restitution = rest;
+		m_bpw->m_friction = fric;
 
-	m_bpw->RemakeG();
+		m_bpw->RemakeG();
 
-	ChaVector3 tra( 0.0f, 0.0f, 0.0f );
-	ChaVector3 mult( m_bpw->m_gplanesize.x, 1.0f, m_bpw->m_gplanesize.y );
-	CallF( m_model->MultDispObj( mult, tra ), return 1 );
+		ChaVector3 tra(0.0f, 0.0f, 0.0f);
+		ChaVector3 mult(m_bpw->m_gplanesize.x, 1.0f, m_bpw->m_gplanesize.y);
+		if (m_model) {
+			CallF(m_model->MultDispObj(mult, tra), return 1);
+		}
+	}
 
 	return 0;
 }

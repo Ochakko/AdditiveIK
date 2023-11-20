@@ -34,6 +34,9 @@ Texture表示が可能になった<br>
 <br>
 <br>
 2023/11/20<br>
+Texture設定の無いメッシュ描画時には白いalbedoテクスチャを使用<br>
+マテリアルのdiffuse色のテクスチャを作成してalbedoテクスチャと乗算して描画<br>
+このようにすることで　古いマテリアル形式と将来対応するPBRとが共存出来る可能性<br>
 4KTV接続時にアプリウインドウ大と小を選べるように<br>
 <br>
 <br>
@@ -75,6 +78,10 @@ bullet physicsのライセンスはReadMe/bulletPhysics_license.txt<br>
 <br>
 HLSLシェーダーの魔導書のMiniEngine https://github.com/shoeisha-books/hlsl-grimoire-sample <br>
 魔導書コードのライセンスはReadMe/hlsl-grimoire_LICENSE<br>
+<br>
+DirectX12の魔導書のサンプルを使用<br>
+ライセンスはReadMe/dx12-grimoire_LICENSE<br>
+<br>
 <br>
 Testディレクトリのモデル作成にVRoidStudioを使用します<br>
 https://vroid.com/studio<br>

@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+class ChaVector4;
 
 class Texture  : public IShaderResource{
 public:
@@ -34,6 +35,14 @@ public:
 	/// </summary>
 	/// <param name="resrouce">D3Dリソース。</param>
 	void InitFromD3DResource(ID3D12Resource* texture);
+
+	/// <summary>
+	/// カスタムカラーからテクスチャを初期化する。
+	/// </summary>
+	/// <param name="resrouce">D3Dリソース。</param>
+	void InitFromCustomColor(ChaVector4 srccol);
+
+
 	/// <summary>
 	/// SRVに登録。
 	/// </summary>

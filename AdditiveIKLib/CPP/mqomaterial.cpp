@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 //#include <stdafx.h>
 
 #include <string.h>
@@ -38,7 +38,7 @@ CMQOMaterial::~CMQOMaterial()
 
 int CMQOMaterial::SetParams( int srcno, ChaVector4 srcsceneamb, char* srcchar, int srcleng )
 {
-	//"”§F" col(1.000 0.792 0.651 1.000) dif(0.490) amb(0.540) emi(0.530) spc(0.020) power(0.00)
+	//"è‚Œè‰²" col(1.000 0.792 0.651 1.000) dif(0.490) amb(0.540) emi(0.530) spc(0.020) power(0.00)
 
 
 //DbgOut( L"check!!!: mqomat : SetParams : %d, %s, %d\r\n", srcno, srcchar, srcleng );
@@ -60,7 +60,7 @@ int CMQOMaterial::SetParams( int srcno, ChaVector4 srcsceneamb, char* srcchar, i
 		"bump(",
 		"shader(",
 		"vcol(",
-		"\"" //IIItex, alpha, bump‚æ‚è‚àŒã‚Å‚È‚¢‚Æ‚¾‚ßB
+		"\"" //ï¼ï¼ï¼tex, alpha, bumpã‚ˆã‚Šã‚‚å¾Œã§ãªã„ã¨ã ã‚ã€‚
 	};
 
 	size_t pos = 0;
@@ -275,8 +275,8 @@ int CMQOMaterial::InitParams()
 
 
 	m_albedoMap = nullptr;
-	m_normalMap = nullptr;//‚Æ‚è‚ ‚¦‚¸nulltexture ‚±‚ÌƒNƒ‰ƒX‚Åì¬‚·‚éƒ|ƒCƒ“ƒ^
-	m_specularMap = nullptr;//‚Æ‚è‚ ‚¦‚¸nulltexture ‚±‚ÌƒNƒ‰ƒX‚Åì¬‚·‚éƒ|ƒCƒ“ƒ^
+	m_normalMap = nullptr;//ã¨ã‚Šã‚ãˆãšnulltexture ã“ã®ã‚¯ãƒ©ã‚¹ã§ä½œæˆã™ã‚‹ãƒã‚¤ãƒ³ã‚¿
+	m_specularMap = nullptr;//ã¨ã‚Šã‚ãˆãšnulltexture ã“ã®ã‚¯ãƒ©ã‚¹ã§ä½œæˆã™ã‚‹ãƒã‚¤ãƒ³ã‚¿
 
 	return 0;
 }
@@ -297,19 +297,19 @@ int CMQOMaterial::DestroyObjs()
 		m_convnamenum = 0;
 	}
 
-	//m_normalMap = nullptr;//‚Æ‚è‚ ‚¦‚¸nulltexture ‚±‚ÌƒNƒ‰ƒX‚Åì¬‚·‚éƒ|ƒCƒ“ƒ^
+	//m_normalMap = nullptr;//ã¨ã‚Šã‚ãˆãšnulltexture ã“ã®ã‚¯ãƒ©ã‚¹ã§ä½œæˆã™ã‚‹ãƒã‚¤ãƒ³ã‚¿
 	if (m_normalMap) {
 		delete m_normalMap;
 		m_normalMap = nullptr;
 	}
 
-	//m_specularMap = nullptr;//‚Æ‚è‚ ‚¦‚¸nulltexture ‚±‚ÌƒNƒ‰ƒX‚Åì¬‚·‚éƒ|ƒCƒ“ƒ^
+	//m_specularMap = nullptr;//ã¨ã‚Šã‚ãˆãšnulltexture ã“ã®ã‚¯ãƒ©ã‚¹ã§ä½œæˆã™ã‚‹ãƒã‚¤ãƒ³ã‚¿
 	if (m_specularMap) {
 		delete m_specularMap;
 		m_specularMap = nullptr;
 	}
 
-	//Texture* m_albedoMap;//bankŠÇ—‚ÌŠO•”ƒ|ƒCƒ“ƒ^
+	//Texture* m_albedoMap;//bankç®¡ç†ã®å¤–éƒ¨ãƒã‚¤ãƒ³ã‚¿
 	m_albedoMap = nullptr;
 
 
@@ -318,12 +318,12 @@ int CMQOMaterial::DestroyObjs()
 
 int CMQOMaterial::SetName( char* srcchar, int pos, int srcleng, int* stepnum )
 {
-	//"”§F"
+	//"è‚Œè‰²"
 	int step = 1;
 
 	while( (pos + step < srcleng) && (*(srcchar + pos + step) != '\"')
 
-// "‚ÌŒã‚É)‚Ü‚½‚ÍƒXƒy[ƒX‚ª‘±‚¢‚½‚Æ‚«‚Ì‚İI’[‚Æ‚·‚éB
+// "ã®å¾Œã«)ã¾ãŸã¯ã‚¹ãƒšãƒ¼ã‚¹ãŒç¶šã„ãŸã¨ãã®ã¿çµ‚ç«¯ã¨ã™ã‚‹ã€‚
 //		!( (*(srcchar + pos + step) == '\"') && ( (*(srcchar + pos + step + 1) == ')' ) || (*(srcchar + pos + step + 1) == ' ' ) ) ) 
 
 	){
@@ -382,7 +382,7 @@ int CMQOMaterial::SetCol( char* srcchar, int pos, int srcleng, int* stepnum )
 		*stepnum += step;
 	}
 
-	(*stepnum)++;//ÅŒã‚Ìj‚Ì•ª
+	(*stepnum)++;//æœ€å¾Œã®ï¼‰ã®åˆ†
 
 	return 0;
 }
@@ -552,7 +552,7 @@ int CMQOMaterial::SetTex( char* srcchar, int pos, int srcleng, int* stepnum )
 	}
 
 	if( pos + step < srcleng )
-		*stepnum = step + 2;//@")‚Ì•ª
+		*stepnum = step + 2;//ã€€")ã®åˆ†
 	else
 		*stepnum = step;
 
@@ -573,7 +573,7 @@ int CMQOMaterial::SetAlpha( char* srcchar, int pos, int srcleng, int* stepnum )
 	}
 
 	if( pos + step < srcleng )
-		*stepnum = step + 2;//@")‚Ì•ª
+		*stepnum = step + 2;//ã€€")ã®åˆ†
 	else
 		*stepnum = step;
 
@@ -593,7 +593,7 @@ int CMQOMaterial::SetBump( char* srcchar, int pos, int srcleng, int* stepnum )
 	}
 
 	if( pos + step < srcleng )
-		*stepnum = step + 2;//@")‚Ì•ª
+		*stepnum = step + 2;//ã€€")ã®åˆ†
 	else
 		*stepnum = step;
 
@@ -707,7 +707,7 @@ int CMQOMaterial::Dump()
 
 int CMQOMaterial::IsSame( CMQOMaterial* compmat, int compnameflag, int cmplevel )
 {
-	//compnameflag == 0 ‚Ì‚ÍA–¼‘O‚Í”äŠr‚µ‚È‚¢B
+	//compnameflag == 0 ã®æ™‚ã¯ã€åå‰ã¯æ¯”è¼ƒã—ãªã„ã€‚
 	/***
 	int materialno;
 	char name[256];
@@ -878,6 +878,11 @@ int CMQOMaterial::CreateTexture( WCHAR* dirname, int texpool )
 {
 	SetCurrentDirectory( dirname );
 	
+
+	SetWhiteTexture();
+	SetBlackTexture();
+	SetDiffuseTexture();
+
 	WCHAR wname[256] = {0};
 
 	if( m_tex[0] ){
@@ -886,18 +891,18 @@ int CMQOMaterial::CreateTexture( WCHAR* dirname, int texpool )
 		//g_texbank->AddTex( dirname, wname, m_transparent, texpool, 0, &m_texid );
 		g_texbank->AddTex(dirname, wname, m_transparent, texpool, &m_texid);
 
-		//CTexElem* findtex = g_texbank->GetTexElem(GetTexID());
-		//if(findtex){
-		//	m_albedoMap = findtex->GetPTex();
-		//}else{
-		//	_ASSERT(0);
-		//	m_albedoMap = 0;
-		//}
+		CTexElem* findtex = g_texbank->GetTexElem(GetTexID());
+		if(findtex){
+			m_albedoMap = findtex->GetPTex();
+		}else{
+			_ASSERT(0);
+			m_albedoMap = 0;
+		}
 	}
 
 
 	//######################################################
-	//normalMap‚ÆspecularMap‚Í@‚Æ‚è‚ ‚¦‚¸nulltexture‚ÅƒeƒXƒg
+	//normalMapã¨specularMapã¯ã€€ã¨ã‚Šã‚ãˆãšnulltextureã§ãƒ†ã‚¹ãƒˆ
 	//######################################################
 	if (!m_specularMap && !m_normalMap) {
 		{
@@ -1007,20 +1012,20 @@ void CMQOMaterial::InitShadersAndPipelines(
 {
 
 
-	//ƒeƒNƒXƒ`ƒƒ‚ğƒ[ƒhB
+	//ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚’ãƒ­ãƒ¼ãƒ‰ã€‚
 	//InitTexture(tkmMat);
 
-//’è”ƒoƒbƒtƒ@‚ğì¬B
+//å®šæ•°ãƒãƒƒãƒ•ã‚¡ã‚’ä½œæˆã€‚
 	SMaterialParam matParam;
 	//matParam.hasNormalMap = m_normalMap->IsValid() ? 1 : 0;
 	//matParam.hasSpecMap = m_specularMap->IsValid() ? 1 : 0;
-	matParam.hasNormalMap = 0;//‚Ü‚¸‚Íprimitive•\¦ƒeƒXƒg‚Ì‚½‚ß@NormalMapƒIƒt !!!!!!!!!!!!!!!!
-	matParam.hasSpecMap = 0;//‚Ü‚¸‚Íprimitive•\¦ƒeƒXƒg‚Ì‚½‚ß@SpecularMapƒIƒt !!!!!!!!!!!!!!!!
+	matParam.hasNormalMap = 0;//ã¾ãšã¯primitiveè¡¨ç¤ºãƒ†ã‚¹ãƒˆã®ãŸã‚ã€€NormalMapã‚ªãƒ• !!!!!!!!!!!!!!!!
+	matParam.hasSpecMap = 0;//ã¾ãšã¯primitiveè¡¨ç¤ºãƒ†ã‚¹ãƒˆã®ãŸã‚ã€€SpecularMapã‚ªãƒ• !!!!!!!!!!!!!!!!
 	m_constantBuffer.Init(sizeof(SMaterialParam), &matParam);
 
-	//ƒ‹[ƒgƒVƒOƒlƒ`ƒƒ‚ğ‰Šú‰»B
+	//ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£ã‚’åˆæœŸåŒ–ã€‚
 	D3D12_STATIC_SAMPLER_DESC samplerDescArray[2];
-	//ƒfƒtƒHƒ‹ƒg‚ÌƒTƒ“ƒvƒ‰
+	//ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®ã‚µãƒ³ãƒ—ãƒ©
 	samplerDescArray[0].Filter = samplerFilter;
 	samplerDescArray[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	samplerDescArray[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -1034,9 +1039,9 @@ void CMQOMaterial::InitShadersAndPipelines(
 	samplerDescArray[0].ShaderRegister = 0;
 	samplerDescArray[0].RegisterSpace = 0;
 	samplerDescArray[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	//ƒVƒƒƒhƒEƒ}ƒbƒv—p‚ÌƒTƒ“ƒvƒ‰B
+	//ã‚·ãƒ£ãƒ‰ã‚¦ãƒãƒƒãƒ—ç”¨ã®ã‚µãƒ³ãƒ—ãƒ©ã€‚
 	samplerDescArray[1] = samplerDescArray[0];
-	//”äŠr‘ÎÛ‚Ì’l‚ª¬‚³‚¯‚ê‚Î‚OA‘å‚«‚¯‚ê‚Î‚P‚ğ•Ô‚·”äŠrŠÖ”‚ğİ’è‚·‚éB
+	//æ¯”è¼ƒå¯¾è±¡ã®å€¤ãŒå°ã•ã‘ã‚Œã°ï¼ã€å¤§ãã‘ã‚Œã°ï¼‘ã‚’è¿”ã™æ¯”è¼ƒé–¢æ•°ã‚’è¨­å®šã™ã‚‹ã€‚
 	samplerDescArray[1].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
 	samplerDescArray[1].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER;
 	samplerDescArray[1].MaxAnisotropy = 1;
@@ -1053,16 +1058,16 @@ void CMQOMaterial::InitShadersAndPipelines(
 	);
 
 	if (fxFilePath != nullptr && strlen(fxFilePath) > 0) {
-		//ƒVƒF[ƒ_[‚ğ‰Šú‰»B
+		//ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‚’åˆæœŸåŒ–ã€‚
 		InitShaders(fxFilePath, vsEntryPointFunc, vsSkinEntryPointFunc, psEntryPointFunc);
-		//ƒpƒCƒvƒ‰ƒCƒ“ƒXƒe[ƒg‚ğ‰Šú‰»B
+		//ãƒ‘ã‚¤ãƒ—ãƒ©ã‚¤ãƒ³ã‚¹ãƒ†ãƒ¼ãƒˆã‚’åˆæœŸåŒ–ã€‚
 		InitPipelineState(colorBufferFormat);
 	}
 }
 
 void CMQOMaterial::InitPipelineState(const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
 {
-	// ’¸“_ƒŒƒCƒAƒEƒg‚ğ’è‹`‚·‚éB
+	// é ‚ç‚¹ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆã‚’å®šç¾©ã™ã‚‹ã€‚
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
 	{
 		//{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -1073,7 +1078,7 @@ void CMQOMaterial::InitPipelineState(const std::array<DXGI_FORMAT, MAX_RENDERING
 		//{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0, 56, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		//{ "BLENDWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 72, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 
-		//Œ^FPM3DISPV
+		//å‹ï¼šPM3DISPV
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
@@ -1085,7 +1090,7 @@ void CMQOMaterial::InitPipelineState(const std::array<DXGI_FORMAT, MAX_RENDERING
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	};
 
-	//ƒpƒCƒvƒ‰ƒCƒ“ƒXƒe[ƒg‚ğì¬B
+	//ãƒ‘ã‚¤ãƒ—ãƒ©ã‚¤ãƒ³ã‚¹ãƒ†ãƒ¼ãƒˆã‚’ä½œæˆã€‚
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
 	psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
 	psoDesc.pRootSignature = m_rootSignature.Get();
@@ -1093,10 +1098,10 @@ void CMQOMaterial::InitPipelineState(const std::array<DXGI_FORMAT, MAX_RENDERING
 	psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psModel->GetCompiledBlob());
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	//#ifdef SAMPLE_11
-	//	// ”w–Ê‚ğ•`‰æ‚µ‚Ä‚¢‚È‚¢‚Æ‰e‚ª‚¨‚©‚µ‚­‚È‚é‚½‚ßA
-	//	// ƒVƒƒƒhƒE‚ÌƒTƒ“ƒvƒ‹‚Ì‚İƒJƒŠƒ“ƒO‚ğƒIƒt‚É‚·‚éB
-	//	// –{—ˆ‚ÍƒAƒvƒŠ‘¤‚©‚çƒJƒŠƒ“ƒOƒ‚[ƒh‚ğ“n‚·‚Ì‚ª‚¢‚¢‚Ì‚¾‚¯‚ÇA
-	//	// ‘Ğ‚É‹LÚ‚µ‚Ä‚¢‚éƒR[ƒh‚É’Ç‹L‚ª‚¢‚é‚Ì‚ÅAƒGƒ“ƒWƒ“‘¤‚Å‹zû‚·‚éB
+	//	// èƒŒé¢ã‚’æç”»ã—ã¦ã„ãªã„ã¨å½±ãŒãŠã‹ã—ããªã‚‹ãŸã‚ã€
+	//	// ã‚·ãƒ£ãƒ‰ã‚¦ã®ã‚µãƒ³ãƒ—ãƒ«ã®ã¿ã‚«ãƒªãƒ³ã‚°ã‚’ã‚ªãƒ•ã«ã™ã‚‹ã€‚
+	//	// æœ¬æ¥ã¯ã‚¢ãƒ—ãƒªå´ã‹ã‚‰ã‚«ãƒªãƒ³ã‚°ãƒ¢ãƒ¼ãƒ‰ã‚’æ¸¡ã™ã®ãŒã„ã„ã®ã ã‘ã©ã€
+	//	// æ›¸ç±ã«è¨˜è¼‰ã—ã¦ã„ã‚‹ã‚³ãƒ¼ãƒ‰ã«è¿½è¨˜ãŒã„ã‚‹ã®ã§ã€ã‚¨ãƒ³ã‚¸ãƒ³å´ã§å¸åã™ã‚‹ã€‚
 	//	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
 	//#else
 	//	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
@@ -1119,7 +1124,7 @@ void CMQOMaterial::InitPipelineState(const std::array<DXGI_FORMAT, MAX_RENDERING
 	int numRenderTarget = 0;
 	for (auto& format : colorBufferFormat) {
 		if (format == DXGI_FORMAT_UNKNOWN) {
-			//ƒtƒH[ƒ}ƒbƒg‚ªw’è‚³‚ê‚Ä‚¢‚È‚¢êŠ‚ª—ˆ‚½‚çI‚í‚èB
+			//ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆãŒæŒ‡å®šã•ã‚Œã¦ã„ãªã„å ´æ‰€ãŒæ¥ãŸã‚‰çµ‚ã‚ã‚Šã€‚
 			break;
 		}
 		psoDesc.RTVFormats[numRenderTarget] = colorBufferFormat[numRenderTarget];
@@ -1131,11 +1136,11 @@ void CMQOMaterial::InitPipelineState(const std::array<DXGI_FORMAT, MAX_RENDERING
 
 	m_skinModelPipelineState.Init(psoDesc);
 
-	//‘±‚¢‚ÄƒXƒLƒ“‚È‚µƒ‚ƒfƒ‹—p‚ğì¬B
+	//ç¶šã„ã¦ã‚¹ã‚­ãƒ³ãªã—ãƒ¢ãƒ‡ãƒ«ç”¨ã‚’ä½œæˆã€‚
 	psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsNonSkinModel->GetCompiledBlob());
 	m_nonSkinModelPipelineState.Init(psoDesc);
 
-	//‘±‚¢‚Ä”¼“§–¾ƒ}ƒeƒŠƒAƒ‹—pB
+	//ç¶šã„ã¦åŠé€æ˜ãƒãƒ†ãƒªã‚¢ãƒ«ç”¨ã€‚
 	psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsSkinModel->GetCompiledBlob());
 	psoDesc.BlendState.IndependentBlendEnable = TRUE;
 	psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
@@ -1158,14 +1163,14 @@ void CMQOMaterial::InitShaders(
 	const char* psEntryPointFunc
 )
 {
-	//ƒXƒLƒ“‚È‚µƒ‚ƒfƒ‹—p‚ÌƒVƒF[ƒ_[‚ğƒ[ƒh‚·‚éB
+	//ã‚¹ã‚­ãƒ³ãªã—ãƒ¢ãƒ‡ãƒ«ç”¨ã®ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‚’ãƒ­ãƒ¼ãƒ‰ã™ã‚‹ã€‚
 	m_vsNonSkinModel = g_engine->GetShaderFromBank(fxFilePath, vsEntryPointFunc);
 	if (m_vsNonSkinModel == nullptr) {
 		m_vsNonSkinModel = new Shader;
 		m_vsNonSkinModel->LoadVS(fxFilePath, vsEntryPointFunc);
 		g_engine->RegistShaderToBank(fxFilePath, vsEntryPointFunc, m_vsNonSkinModel);
 	}
-	//ƒXƒLƒ“‚ ‚èƒ‚ƒfƒ‹—p‚ÌƒVƒF[ƒ_[‚ğƒ[ƒh‚·‚éB
+	//ã‚¹ã‚­ãƒ³ã‚ã‚Šãƒ¢ãƒ‡ãƒ«ç”¨ã®ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‚’ãƒ­ãƒ¼ãƒ‰ã™ã‚‹ã€‚
 	m_vsSkinModel = g_engine->GetShaderFromBank(fxFilePath, vsSkinEntriyPointFunc);
 	if (m_vsSkinModel == nullptr) {
 		m_vsSkinModel = new Shader;
@@ -1195,25 +1200,19 @@ void CMQOMaterial::BeginRender(RenderContext& rc, int hasSkin)
 	}
 }
 
+Texture& CMQOMaterial::GetDiffuseMap()
+{
+	return m_diffuseMap;
+}
+
 Texture& CMQOMaterial::GetAlbedoMap()
 {
-	CTexElem* findtex = g_texbank->GetTexElem(GetTexID());
-	if (findtex) {
-		return findtex->GetPTex();
+	if (m_albedoMap) {
+		return *m_albedoMap;
 	}
 	else {
-		//_ASSERT(0);
-		return m_dummytex;
+		return m_whitetex;
 	}
-	//if (m_albedoMap) {
-	//	return *m_albedoMap;
-	//}
-	//else {
-	//	//::MessageBox(NULL, L"AlbedoMap NULL error, exit app!!!", L"ERROR", MB_OK);
-	//	//_ASSERT(0);
-	//	//PostQuitMessage(404);
-	//	return m_dummytex;
-	//}
 }
 Texture& CMQOMaterial::GetNormalMap()
 {
@@ -1221,10 +1220,7 @@ Texture& CMQOMaterial::GetNormalMap()
 		return *m_normalMap;
 	}
 	else {
-		//::MessageBox(NULL, L"NormalMap NULL error, exit app!!!", L"ERROR", MB_OK);
-		//_ASSERT(0);
-		//PostQuitMessage(404);
-		return m_dummytex;
+		return m_blacktex;
 	}
 }
 Texture& CMQOMaterial::GetSpecularMap()
@@ -1233,13 +1229,39 @@ Texture& CMQOMaterial::GetSpecularMap()
 		return *m_specularMap;
 	}
 	else {
-		//::MessageBox(NULL, L"SpecularMap NULL error, exit app!!!", L"ERROR", MB_OK);
-		//_ASSERT(0);
-		//PostQuitMessage(404);
-		return m_dummytex;
+		return m_blacktex;
 	}
 }
 
+int CMQOMaterial::SetDiffuseTexture()
+{
+	m_diffuseMap.InitFromCustomColor(m_dif4f);
+	return 0;
+}
+
+int CMQOMaterial::SetWhiteTexture()
+{
+	const auto& whiteTextureMaps = g_graphicsEngine->GetNullTextureMaps();
+	char* map = nullptr;
+	unsigned int mapSize;
+
+	map = whiteTextureMaps.GetWhiteMap().get();
+	mapSize = whiteTextureMaps.GetWhiteMapSize();
+	m_whitetex.InitFromMemory(map, mapSize);
+
+	return 0;
+}
+int CMQOMaterial::SetBlackTexture()
+{
+	const auto& blackTextureMaps = g_graphicsEngine->GetNullTextureMaps();
+	char* map = nullptr;
+	unsigned int mapSize;
+
+	map = blackTextureMaps.GetReflectionMap().get();
+	mapSize = blackTextureMaps.GetReflectionMapSize();
+	m_blacktex.InitFromMemory(map, mapSize);
+	return 0;
+}
 
 
 

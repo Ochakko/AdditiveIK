@@ -121,6 +121,27 @@ public:
 	{
 		return m_zeroValueMapFilePath;
 	}
+	/// <summary>
+	/// ホワイトマップを取得。
+	/// </summary>
+	/// <returns></returns>
+	const std::unique_ptr<char[]>& GetWhiteMap() const//2023/11/20
+	{
+		return m_whiteMap;
+	}
+	/// <summary>
+	/// ホワイトマップのサイズを取得。
+	/// </summary>
+	/// <returns></returns>
+	unsigned int GetWhiteMapSize() const//2023/11/20
+	{
+		return m_whiteMapSize;
+	}
+	const char* GetWhiteMapFilePath() const//2023/11/20
+	{
+		return m_whiteMapFilePath;
+	}
+
 private:
 	std::unique_ptr<char[]> m_albedoMap;	//アルベドマップ。
 	unsigned int m_albedoMapSize = 0;		//アルベドマップのサイズ。
@@ -130,8 +151,12 @@ private:
 	unsigned int m_specMapSize = 0;			//法線マップのサイズ。
 	std::unique_ptr<char[]> m_zeroValueMap;	//0の値を格納しているマップ。
 	unsigned int m_zeroValueMapSize = 0;	//0の値を格納しているマップのサイズ。
+	std::unique_ptr<char[]> m_whiteMap;		//2023/11/20 1の値を格納しているマップ。
+	unsigned int m_whiteMapSize = 0;		//2023/11/20 1の値を格納しているマップのサイズ。
 	const char*		m_albedoMapFilePath;
 	const char*		m_normalMapFilePath;
 	const char*		m_specMapFilePath;
 	const char*		m_zeroValueMapFilePath;
+	const char*		m_whiteMapFilePath;//2023/11/20
+
 };
