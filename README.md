@@ -45,8 +45,8 @@ Texture設定の無いメッシュ描画時には白いalbedoテクスチャを�
 プロジェクトやfbxを読み込むとプレートメニューが出ます.<br>
 下の方のカエルボタンでメニュー変更. 上の方のカエルボタンでショートカットボタンを変更.<br>
 モーションはまだ動きません.明日以降に取り掛かる予定.<br>
-<br>
-<br>
+Documents/ModifyAboutGrimoireSpriteClass.docx追加<br>
+Documents/CoexistenceOfConventionalMaterialsAndPBR.docx追加<br>
 <br>
 <br>
 <br>
