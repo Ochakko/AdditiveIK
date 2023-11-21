@@ -73,6 +73,33 @@ namespace myRenderer
             enForwardRender,        // フォワードレンダリングの描画パス
         };
 
+        RenderingEngine() :
+            m_deferredLightingCB(), m_copyMainRtToFrameBufferSprite(), m_diferredLightingSprite(),
+            m_zprepassRenderTarget(), m_mainRenderTarget(), m_postEffect()
+        {
+
+            int differredno;
+            for (differredno = 0; differredno < NUM_DEFERRED_LIGHTING_DIRECTIONAL_LIGHT; differredno++) {
+                m_shadowMapRenders[differredno].Init();
+            }
+
+            //int snapno;
+            //for (snapno = 0; snapno < (int)EnMainRTSnapshot::enNum; snapno++) {
+            //    m_mainRTSnapshots[snapno].
+            //}
+
+            //int gbufno;
+            //for (gbufno = 0; gbufno < enGBufferNum; gbufno++) {
+            //    m_gBuffer[gbufno].
+            //}
+
+            m_zprepassModels.clear();                         // ZPrepassの描画パスで描画されるモデルのリスト
+            m_renderToGBufferModels.clear();                  // Gバッファへの描画パスで描画するモデルのリスト
+            m_forwardRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+        };
+
+
+
         /// <summary>
         /// レンダリングパイプラインを初期化
         /// </summary>

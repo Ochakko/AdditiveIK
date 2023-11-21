@@ -19,6 +19,9 @@ public:
 	/// <returns></returns>
 	ID3D12DescriptorHeap* Get() const;
 	
+	void InitParams();
+
+
 	/// <summary>
 	/// シェーダーリソースをディスクリプタヒープに登録。
 	/// </summary>
@@ -28,6 +31,13 @@ public:
 	/// <param name="sr">シェーダーリソース</param>
 	void RegistShaderResource(int registerNo, IShaderResource& sr)
 	{
+
+		if (m_shaderResources.empty()) {//2023/11/21
+			//m_shaderResources.resize(MAX_SHADER_RESOURCE);
+			//m_shaderResources.resize(1);
+			InitParams();
+		}
+
 		RegistResource(
 			registerNo,
 			&sr,
@@ -47,6 +57,10 @@ public:
 	/// <param name="sr">アンオーダーリソース</param>
 	void RegistUnorderAccessResource(int registerNo, IUnorderAccessResrouce& sr)
 	{
+		if (m_uavResources.empty()) {//2023/11/21
+			InitParams();
+		}
+
 		RegistResource(
 			registerNo, 
 			&sr,
@@ -65,6 +79,12 @@ public:
 	/// <param name="cb">定数バッファ</param>
 	void RegistConstantBuffer(int registerNo, ConstantBuffer& cb)
 	{
+		if (m_constantBuffers.empty()) {//2023/11/21
+			//m_constantBuffers.resize(MAX_CONSTANT_BUFFER);
+			//m_constantBuffers.resize(1);
+			InitParams();
+		}
+
 		RegistResource(
 			registerNo,
 			&cb,
@@ -225,8 +245,8 @@ private:
 	int m_numSamplerDesc = 0;		//サンプラの数。
 	ID3D12DescriptorHeap* m_descriptorHeap[2] = { nullptr };					//ディスクリプタヒープ。
 	std::vector<IShaderResource*> m_shaderResources;		//シェーダーリソース。
-	std::vector < IUnorderAccessResrouce*> m_uavResources;	//UAVリソース。
-	std::vector < ConstantBuffer*> m_constantBuffers;		//定数バッファ。
+	std::vector <IUnorderAccessResrouce*> m_uavResources;	//UAVリソース。
+	std::vector <ConstantBuffer*> m_constantBuffers;		//定数バッファ。
 	D3D12_SAMPLER_DESC m_samplerDescs[MAX_SAMPLER_STATE];						//サンプラステート。
 	D3D12_GPU_DESCRIPTOR_HANDLE m_cbGpuDescriptorStart[2];						//定数バッファのディスクリプタヒープの開始ハンドル。
 	D3D12_GPU_DESCRIPTOR_HANDLE m_srGpuDescriptorStart[2];						//シェーダーリソースのディスクリプタヒープの開始ハンドル。

@@ -55,7 +55,8 @@ namespace raytracing {
 		ZeroMemory(instanceDescs, sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * numInstance);
 
 		Matrix mRot;
-		mRot.MakeRotationX(Math::PI * -0.5f);
+		//mRot.MakeRotationX(Math::PI * -0.5f);
+		mRot.MakeRotationX((float)(PI * -0.5));
 		mRot.Transpose();
 
 		for (int i = 0; i < numInstance; i++) {

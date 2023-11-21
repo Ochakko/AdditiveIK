@@ -24,6 +24,13 @@ public:
 	/// </summary>
 	/// <param name="filePath">ロードするテクスチャのファイルパス。</param>
 	void InitFromDDSFile(const wchar_t* filePath);
+
+	/// <summary>
+	/// WICファイルからテクスチャを初期化する。
+	/// </summary>
+	/// <param name="filePath">ロードするテクスチャのファイルパス。</param>
+	void InitFromWICFile(const wchar_t* filePath);
+
 	/// <summary>
 	/// メモリからテクスチャを初期化する。
 	/// </summary>

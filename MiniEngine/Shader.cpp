@@ -5,6 +5,7 @@
 #include <fstream>
 #include <atlbase.h>
 
+#include <GlobalVar.h>
 
 namespace {
 	const char* g_vsShaderModelName = "vs_5_0";	//頂点シェーダーのシェーダーモデル名。
@@ -47,10 +48,12 @@ void Shader::LoadPS(const char* filePath, const char* entryFuncName)
 }
 void Shader::LoadVS(const char* filePath, const char* entryFuncName)
 {
+	SetCurrentDirectoryW(g_basedir);
 	Load(filePath, entryFuncName, g_vsShaderModelName);
 }
 void Shader::LoadCS(const char* filePath, const char* entryFuncName)
 {
+	SetCurrentDirectoryW(g_basedir);
 	Load(filePath, entryFuncName, g_csShaderModelName);
 }
 void Shader::LoadRaytracing(const wchar_t* filePath)

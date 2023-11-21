@@ -67,7 +67,8 @@ Vector3 Animation::CalcFootstepDeltaValueInWorldSpace(Quaternion rotation, Vecto
 	auto footstepDeltaValueInWorldSpace = m_footstepDeltaValue;
 
 	Matrix mBias = Matrix::Identity;
-	mBias.MakeRotationX(Math::PI * -0.5f);
+	//mBias.MakeRotationX(Math::PI * -0.5f);
+	mBias.MakeRotationX((float)(PI * -0.5));
 	mBias.Apply(footstepDeltaValueInWorldSpace);
 
 	//フットステップの移動量を拡大する。

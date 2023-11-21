@@ -4,11 +4,15 @@
 #include "VertexBuffer.h"
 #include "ConstantBuffer.h"
 
+#include <ChaVecCalc.h>
+
 class Texture;
 
 //スプライトに設定できる最大テクスチャ数。
-const int MAX_TEXTURE = 32;	
-//拡張SRVが設定されるレジスタの開始番号。
+const int MAX_TEXTURE = 32;
+//const int MAX_TEXTURE = 4;
+
+////拡張SRVが設定されるレジスタの開始番号。
 const int EXPAND_SRV_REG__START_NO = 10;
 
 class IShaderResource;
@@ -26,6 +30,7 @@ enum AlphaBlendMode {
 /// </summary>
 struct SpriteInitData {
 	std::array<const char*, MAX_TEXTURE> m_ddsFilePath= {nullptr};	// DDSファイルのファイルパス。
+	std::array<const char*, MAX_TEXTURE> m_wicFilePath = { nullptr };	// WICファイルのファイルパス。
 	std::array<Texture*, MAX_TEXTURE> m_textures = { nullptr };		// 使用するテクスチャ。DDSファイルのパスが指定されている場合は、このパラメータは無視されます。
 	const char* m_vsEntryPointFunc = "VSMain";						// 頂点シェーダーのエントリーポイント。
 	const char* m_psEntryPoinFunc = "PSMain";						// ピクセルシェーダーのエントリーポイント。
@@ -39,8 +44,8 @@ struct SpriteInitData {
 	D3D12_FILTER m_samplerFilter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;	// サンプラのフィルター。
 	std::array<DXGI_FORMAT, MAX_RENDERING_TARGET> m_colorBufferFormat = { 
 		DXGI_FORMAT_R8G8B8A8_UNORM,
-		DXGI_FORMAT_UNKNOWN,
-		DXGI_FORMAT_UNKNOWN,
+		DXGI_FORMAT_B8G8R8A8_UNORM,
+		DXGI_FORMAT_B8G8R8X8_UNORM,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
@@ -59,7 +64,7 @@ public:
 	/// 初期化。
 	/// </summary>
 	/// <param name="initData">初期化データ</param>
-	void Init(const SpriteInitData& initData);
+	void Init(const SpriteInitData& initData, bool srcscreenvertexflag = false);
 	/// <summary>
 	/// 更新。
 	/// </summary>
@@ -74,11 +79,27 @@ public:
 	/// UnityのuGUIに準拠。
 	/// </param>
 	void Update(const Vector3& pos, const Quaternion& rot, const Vector3& scale, const Vector2& pivot = DEFAULT_PIVOT);
+	
+
+	//2023/11/20
+	/// <summary>
+	/// 更新。m_screenvertexflag == trueの場合用のUpdate
+	/// </summary>
+	void UpdateScreen(ChaVector3 srcpos, ChaVector2 srcdispsize);
+
+	
 	/// <summary>
 	/// 描画。
 	/// </summary>
 	/// <param name="renderContext">レンダリングコンテキスト/param>
 	void Draw(RenderContext& renderContext);
+
+	/// <summary>
+	/// 描画。m_screenvertexflag == trueの場合用の描画
+	/// </summary>
+	/// <param name="renderContext">レンダリングコンテキスト/param>
+	void DrawScreen(RenderContext& renderContext);
+
 private:
 	/// <summary>
 	/// テクスチャを初期化。
@@ -134,4 +155,7 @@ private:
 	PipelineState		m_pipelineState;		//パイプラインステート。
 	Shader				m_vs;					//頂点シェーダー。
 	Shader				m_ps;					//ピクセルシェーダー。
+
+	bool m_screenvertexflag;//頂点バッファの座標値を-1.0から1.0にする. m_sizeを掛けない. GUI用のテクスチャ表示に使用
+
 };

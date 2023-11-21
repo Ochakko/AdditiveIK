@@ -232,7 +232,6 @@
     <ClInclude Include="SettingsDlg.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StructHistory.h" />
-    <ClInclude Include="system\system.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="UndoSprite.h" />
   </ItemGroup>
@@ -308,7 +307,6 @@
     <ClCompile Include="SelectLSDlg.cpp" />
     <ClCompile Include="SetDlgPos.cpp" />
     <ClCompile Include="SettingsDlg.cpp" />
-    <ClCompile Include="system\system.cpp" />
     <ClCompile Include="UndoSprite.cpp" />
   </ItemGroup>
   <ItemGroup>

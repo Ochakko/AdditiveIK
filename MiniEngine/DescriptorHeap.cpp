@@ -4,6 +4,30 @@
 
 DescriptorHeap::DescriptorHeap()
 {
+	InitParams();
+}
+DescriptorHeap::~DescriptorHeap()
+{
+	for (auto& ds : m_descriptorHeap) {
+		if (ds) {
+			ds->Release();
+		}
+	}
+}
+
+void DescriptorHeap::InitParams()
+{
+	m_numShaderResource = 0;	//シェーダーリソースの数。
+	m_numConstantBuffer = 0;	//定数バッファの数。
+	m_numUavResource = 0;		//アンオーダーアクセスリソースの数。
+	m_numSamplerDesc = 0;		//サンプラの数。
+	ZeroMemory(m_descriptorHeap, sizeof(ID3D12DescriptorHeap*) * 2);					//ディスクリプタヒープ。
+	ZeroMemory(m_samplerDescs, sizeof(D3D12_SAMPLER_DESC) * MAX_SAMPLER_STATE);
+	ZeroMemory(m_cbGpuDescriptorStart, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE) * 2);
+	ZeroMemory(m_srGpuDescriptorStart, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE) * 2);
+	ZeroMemory(m_uavGpuDescriptorStart, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE) * 2);
+	ZeroMemory(m_samplerGpuDescriptorStart, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE) * 2);
+
 	m_shaderResources.resize(MAX_SHADER_RESOURCE);
 	m_uavResources.resize(MAX_SHADER_RESOURCE);
 	m_constantBuffers.resize(MAX_CONSTANT_BUFFER);
@@ -15,14 +39,6 @@ DescriptorHeap::DescriptorHeap()
 	}
 	for (auto& cbv : m_constantBuffers) {
 		cbv = nullptr;
-	}
-}
-DescriptorHeap::~DescriptorHeap()
-{
-	for (auto& ds : m_descriptorHeap) {
-		if (ds) {
-			ds->Release();
-		}
 	}
 }
 void DescriptorHeap::CommitSamplerHeap()

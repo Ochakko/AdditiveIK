@@ -151,7 +151,8 @@ public:
 		Matrix mBias;
 		if (m_modelUpAxis == enModelUpAxisZ) {
 			//Z-up
-			mBias.MakeRotationX(Math::PI * -0.5f);
+			//mBias.MakeRotationX(Math::PI * -0.5f);
+			mBias.MakeRotationX((float)(PI * -0.5));
 		}
 		Matrix mTrans, mRot, mScale;
 		mTrans.MakeTranslation(pos);

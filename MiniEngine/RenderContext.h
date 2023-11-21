@@ -13,6 +13,16 @@ namespace raytracing{
 /// </summary>
 class RenderContext {
 public:
+	RenderContext() 
+	{
+		ZeroMemory(&m_currentViewport, sizeof(D3D12_VIEWPORT));				//現在のビューポート。
+		m_commandList = 0;	//コマンドリスト。
+		ZeroMemory(m_descriptorHeaps, sizeof(ID3D12DescriptorHeap*) * MAX_DESCRIPTOR_HEAP);
+		ZeroMemory(m_constantBuffers, sizeof(ConstantBuffer*) * MAX_CONSTANT_BUFFER);
+		ZeroMemory(m_shaderResources, sizeof(Texture*) * MAX_SHADER_RESOURCE);
+		m_scratchResourceList.clear();
+	};
+
 	/// <summary>
 	/// 初期化。
 	/// </summary>

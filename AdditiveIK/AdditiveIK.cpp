@@ -16,7 +16,7 @@
 #include <Model.h>
 #include <TexBank.h>
 #include <Bone.h>
-#include <MySprite.h>
+//#include <MySprite.h>
 #include <mqoobject.h>
 
 //#include <OrgWindow.h>
@@ -114,14 +114,25 @@
 
 
 //for MessageLoop
-#include "system/system.h"
+//#include "system/system.h"
 
 #include "../AdditiveIKLib/Grimoire/RenderingEngine.h"
 #include "../AdditiveIKLib/Grimoire/ModelRender.h"
-
+#include "../MiniEngine/Sprite.h"
 
 
 using namespace std;
+
+HWND			g_hWnd;				//ウィンドウハンドル。
+//ゲームの初期化。
+RECT InitGame(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+	LPWSTR lpCmdLine, int nCmdShow, const TCHAR* appName, HWND srcparentwnd,
+	int srcposx, int srcposy,
+	int srcwidth, int srcheight);
+//ウィンドウメッセージをディスパッチ。falseが返ってきたら、ゲーム終了。
+bool DispatchWindowMessage();
+int OnCreateDevice();
+
 
 
 #define WINDOWS_CLASS_NAME TEXT("OchakkoLab.MameBake3D.Window")
@@ -139,10 +150,9 @@ using namespace std;
 
 typedef struct tag_spaxis
 {
-	CMySprite* sprite;
+	Sprite sprite;
 	POINT dispcenter;
-	tag_spaxis() {
-		sprite = 0;
+	tag_spaxis() : sprite() {
 		::ZeroMemory(&dispcenter, sizeof(POINT));
 	};
 }SPAXIS, SPCAM, SPELEM;
@@ -150,13 +160,11 @@ typedef struct tag_spaxis
 typedef struct tag_spsw
 {
 	bool state;//ON : 1 or OFF : 0
-	CMySprite* spriteON;
-	CMySprite* spriteOFF;
+	Sprite spriteON;
+	Sprite spriteOFF;
 	POINT dispcenter;
-	tag_spsw() {
+	tag_spsw() : spriteON(), spriteOFF() {
 		state = 0;
-		spriteON = 0;
-		spriteOFF = 0;
 		::ZeroMemory(&dispcenter, sizeof(POINT));
 	};
 }SPGUISW;
@@ -165,15 +173,12 @@ typedef struct tag_spsw
 typedef struct tag_spsw3 //2023/06/04
 {
 	int mode;
-	CMySprite* sprite1;
-	CMySprite* sprite2;
-	CMySprite* sprite3;
+	Sprite sprite1;
+	Sprite sprite2;
+	Sprite sprite3;
 	POINT dispcenter;
-	tag_spsw3() {
+	tag_spsw3() : sprite1(), sprite2(), sprite3() {
 		mode = 0;
-		sprite1 = 0;
-		sprite2 = 0;
-		sprite3 = 0;
 		::ZeroMemory(&dispcenter, sizeof(POINT));
 	};
 }SPGUISW3;
@@ -886,11 +891,11 @@ static CModel* s_rigopemark_ringZ[RIGMULTINDEXMAX + 1];
 
 
 //static CModel* s_dummytri = NULL;
-static CMySprite* s_bcircle = 0;
-static CMySprite* s_kinsprite = 0;
+static Sprite s_bcircle;
+static Sprite s_kinsprite;
 
-static CUndoSprite* s_undosprite = 0;
-static CFpsSprite* s_fpssprite = 0;
+//static CUndoSprite s_undosprite = 0;
+//static CFpsSprite s_fpssprite = 0;
 
 
 static int s_fbxbunki = 1;
@@ -1387,6 +1392,88 @@ enum {
 
 #define SPPLAYERBUTTONNUM	16
 
+static Texture* s_spritetex1 = 0;
+static Texture* s_spritetex2 = 0;
+static Texture* s_spritetex3 = 0;
+static Texture* s_spritetex4 = 0;
+static Texture* s_spritetex5 = 0;
+static Texture* s_spritetex6 = 0;
+static Texture* s_spritetex7 = 0;
+static Texture* s_spritetex8 = 0;
+static Texture* s_spritetex9 = 0;
+static Texture* s_spritetex10 = 0;
+static Texture* s_spritetex11 = 0;
+static Texture* s_spritetex12 = 0;
+static Texture* s_spritetex13 = 0;
+static Texture* s_spritetex14 = 0;
+static Texture* s_spritetex15 = 0;
+static Texture* s_spritetex16 = 0;
+static Texture* s_spritetex17 = 0;
+static Texture* s_spritetex18 = 0;
+static Texture* s_spritetex19 = 0;
+static Texture* s_spritetex20 = 0;
+static Texture* s_spritetex21 = 0;
+static Texture* s_spritetex22 = 0;
+static Texture* s_spritetex23 = 0;
+static Texture* s_spritetex24 = 0;
+static Texture* s_spritetex25 = 0;
+static Texture* s_spritetex26 = 0;
+static Texture* s_spritetex27 = 0;
+static Texture* s_spritetex28 = 0;
+static Texture* s_spritetex29 = 0;
+static Texture* s_spritetex30 = 0;
+static Texture* s_spritetex31 = 0;
+static Texture* s_spritetex32 = 0;
+static Texture* s_spritetex33 = 0;
+static Texture* s_spritetex34 = 0;
+static Texture* s_spritetex35 = 0;
+static Texture* s_spritetex36 = 0;
+static Texture* s_spritetex37 = 0;
+static Texture* s_spritetex38 = 0;
+static Texture* s_spritetex39 = 0;
+static Texture* s_spritetex40 = 0;
+static Texture* s_spritetex41 = 0;
+static Texture* s_spritetex42 = 0;
+static Texture* s_spritetex43 = 0;
+static Texture* s_spritetex44 = 0;
+static Texture* s_spritetex45 = 0;
+static Texture* s_spritetex46 = 0;
+static Texture* s_spritetex47 = 0;
+static Texture* s_spritetex48 = 0;
+static Texture* s_spritetex49 = 0;
+static Texture* s_spritetex50 = 0;
+static Texture* s_spritetex51 = 0;
+static Texture* s_spritetex52 = 0;
+static Texture* s_spritetex53 = 0;
+static Texture* s_spritetex54 = 0;
+static Texture* s_spritetex55 = 0;
+static Texture* s_spritetex56 = 0;
+static Texture* s_spritetex57 = 0;
+static Texture* s_spritetex58 = 0;
+static Texture* s_spritetex59 = 0;
+static Texture* s_spritetex60 = 0;
+static Texture* s_spritetex61 = 0;
+static Texture* s_spritetex62 = 0;
+static Texture* s_spritetex63 = 0;
+static Texture* s_spritetex64 = 0;
+static Texture* s_spritetex65 = 0;
+static Texture* s_spritetex66 = 0;
+static Texture* s_spritetex67 = 0;
+static Texture* s_spritetex68 = 0;
+static Texture* s_spritetex69 = 0;
+static Texture* s_spritetex70 = 0;
+static Texture* s_spritetex71 = 0;
+static Texture* s_spritetex72 = 0;
+static Texture* s_spritetex73 = 0;
+static Texture* s_spritetex74 = 0;
+static Texture* s_spritetex75 = 0;
+static Texture* s_spritetex76 = 0;
+static Texture* s_spritetex77 = 0;
+static Texture* s_spritetex78 = 0;
+static Texture* s_spritetex79 = 0;
+
+
+
 static int s_toolspritemode = 0;
 static float s_spsize = 45.0f;//CheckResolution()でセットする
 static float s_spsizeSmall = 26.0f;//CheckResolution()でセットする
@@ -1420,8 +1507,8 @@ static SPGUISW s_spdispsw[SPDISPSWNUM];
 static SPGUISW s_sprigidsw[SPRIGIDSWNUM];
 static SPGUISW s_spretargetsw[SPRETARGETSWNUM];
 static bool s_firstmoveaimbar = true;
-static SPGUISW s_spaimbar[SPAIMBARNUM];
-static SPGUISW s_spmenuaimbar[SPMENU_MAX];
+//static SPGUISW s_spaimbar[SPAIMBARNUM];
+//static SPGUISW s_spmenuaimbar[SPMENU_MAX];
 static int s_oprigflag = 0;
 static SPGUISW s_spsel3d;
 static SPELEM s_spmousehere;
@@ -1695,7 +1782,7 @@ static void SetCamera3DFromEyePos();
 // Global variables
 //--------------------------------------------------------------------------------------
 ////ID3DX11Font*                  g_pFont = NULL;         // Font for drawing text
-////ID3DX11Sprite*                g_pSprite = NULL;       // Sprite for batching draw text calls
+////ID3DX11Sprite                g_pSprite = NULL;       // Sprite for batching draw text calls
 //CDXUTTextHelper* g_pTxtHelper = NULL;
 
 bool                        g_bShowHelp = true;     // If true, it renders the UI control text
@@ -1904,7 +1991,9 @@ static int ShowModelWorldMatDlg();
 void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext);
 //LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool* pbNoFurtherProcessing,
 //	void* pUserContext);
-LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+//LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 void CALLBACK OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown, void* pUserContext);
 //void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext);
 
@@ -1999,6 +2088,8 @@ static int ChooseLightColorBar(HWND hDlgWnd, int lightindex, int idcolorbar);
 
 void InitApp();
 int CheckResolution();
+int CreateSprites();
+void DestroySprites();
 
 //HRESULT LoadMesh( ID3D12Device* pd3dDevice, WCHAR* strFileName, ID3DXMesh** ppMesh );
 void RenderText(double fTime);
@@ -2107,7 +2198,7 @@ static int OnRenderRefPose(RenderContext* pRenderContext, CModel* curmodel);
 static int OnRenderGround(RenderContext* pRenderContext);
 static int OnRenderBoneMark(RenderContext* pRenderContext);
 static int OnRenderSelect(RenderContext* pRenderContext);
-static int OnRenderSprite(RenderContext* pRenderContext);
+static int OnRenderSprite(RenderContext& pRenderContext);
 static int OnRenderUtDialog(RenderContext* pRenderContext, float fElapsedTime);
 
 static int PasteMotionPoint(CBone* srcbone, CMotionPoint srcmp, double newframe);
@@ -2299,6 +2390,7 @@ static int SetImpWndParams();
 static int SetGpWndParams();
 static int SetDmpWndParams();
 
+static int SetSpParams();
 static int SetSpSel3DParams();
 static int SetSpAimBarParams();
 static int SetSpMenuAimBarParams();
@@ -2743,6 +2835,14 @@ INT WINAPI wWinMain(
 	OpenDbgFile(s_appcnt);
 
 
+	s_doneinit = 0;
+	InitApp();
+	if (s_doneinit != 1) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
 	//2K TV or 4K TV. Create*Window()よりも前
 	int chkresult = CheckResolution();
 	if (chkresult != 0) {//大小選択ダイアログでキャンセルボタンを押した場合はアプリ終了
@@ -2826,12 +2926,6 @@ INT WINAPI wWinMain(
 
 
 
-	s_doneinit = 0;
-	InitApp();
-	if (s_doneinit != 1) {
-		_ASSERT(0);
-		return 1;
-	}
 
 	//IsRegist();
 
@@ -2945,7 +3039,7 @@ INT WINAPI wWinMain(
 	//// 初期化を行うコードを書くのはここまで！！！
 	////////////////////////////////////////
 	s_pdev = g_graphicsEngine->GetD3DDevice();
-
+	OnCreateDevice();
 
 
 	CreatePlaceFolderWnd();
@@ -3070,6 +3164,7 @@ INT WINAPI wWinMain(
 	//auto& renderContext = g_graphicsEngine->GetRenderContext();
 
 
+
 	//// ゲームの初期化 (2023/11/13 仮のウインドウ)
 	//InitGame(hInstance, hPrevInstance, lpCmdLine, nShowCmd, TEXT("AddtiveIK"));
 	while (DispatchWindowMessage())
@@ -3111,9 +3206,11 @@ INT WINAPI wWinMain(
 			int btflag = 0;
 			s_chascene->RenderModels(renderingEngine, lightflag, diffusemult, btflag);
 
+			OnRenderSprite(renderContext);
 
 			//レンダリングエンジンを実行
 			renderingEngine.Execute(renderContext);
+
 
 			/////////////////////////////////////////
 			// 絵を描くコードを書くのはここまで！！！
@@ -3305,6 +3402,7 @@ int CheckResolution()
 void InitApp()
 {
 	s_hhook = NULL;
+	g_hWnd = NULL;
 
 	InitializeCriticalSection(&s_CritSection_LTimeline);
 	InitializeCriticalSection(&g_CritSection_GetGP);
@@ -3313,6 +3411,8 @@ void InitApp()
 	InitCommonControls();
 
 	CBone::InitColDisp();
+
+	s_platemenukind = SPPLATEMENUKIND_GUI;
 
 	s_chascene = 0;
 
@@ -3568,8 +3668,8 @@ void InitApp()
 	//s_totalmb.min = ChaVector3(-5.0f, -5.0f, -5.0f);
 	//s_totalmb.r = (float)ChaVector3LengthDbl(&s_totalmb.max);
 
-	s_undosprite = 0;
-	s_fpssprite = 0;
+	//s_undosprite = 0;
+	//s_fpssprite = 0;
 
 
 	g_wallscrapingikflag = 0;
@@ -4120,20 +4220,20 @@ void InitApp()
 		::ZeroMemory(&s_spmaterialrate, sizeof(SPELEM));
 		::ZeroMemory(&s_mousecenteron, sizeof(SPELEM));
 	}
-	{
-		::ZeroMemory(&s_spaimbar, sizeof(SPGUISW) * SPAIMBARNUM);
-		int spgno;
-		for (spgno = 0; spgno < SPAIMBARNUM; spgno++) {
-			s_spaimbar[spgno].state = false;
-		}
-	}
-	{
-		::ZeroMemory(&s_spmenuaimbar, sizeof(SPGUISW) * SPMENU_MAX);
-		int spgno;
-		for (spgno = 0; spgno < SPMENU_MAX; spgno++) {
-			s_spmenuaimbar[spgno].state = false;
-		}
-	}
+	//{
+	//	::ZeroMemory(&s_spaimbar, sizeof(SPGUISW) * SPAIMBARNUM);
+	//	int spgno;
+	//	for (spgno = 0; spgno < SPAIMBARNUM; spgno++) {
+	//		s_spaimbar[spgno].state = false;
+	//	}
+	//}
+	//{
+	//	::ZeroMemory(&s_spmenuaimbar, sizeof(SPGUISW) * SPMENU_MAX);
+	//	int spgno;
+	//	for (spgno = 0; spgno < SPMENU_MAX; spgno++) {
+	//		s_spmenuaimbar[spgno].state = false;
+	//	}
+	//}
 	{
 		::ZeroMemory(&s_spsel3d, sizeof(SPGUISW));
 		s_spsel3d.state = false;
@@ -4758,7 +4858,7 @@ void InitApp()
 //		CallF(s_gplane->MultDispObj(mult, tra), return S_FALSE);
 //
 //
-//		s_bcircle = new CMySprite(s_pdev);
+//		s_bcircle = new Sprite(s_pdev);
 //		if (!s_bcircle) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -4836,14 +4936,14 @@ void InitApp()
 //
 //
 //
-//		s_spundo[0].sprite = new CMySprite(s_pdev);
+//		s_spundo[0].sprite = new Sprite(s_pdev);
 //		if (!s_spundo[0].sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spundo[0].sprite->Create(pRenderContext, mpath, L"Undo_1.png", 0, 0), return S_FALSE);
-//		s_spundo[1].sprite = new CMySprite(s_pdev);
+//		s_spundo[1].sprite = new Sprite(s_pdev);
 //		if (!s_spundo[1].sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -4851,21 +4951,21 @@ void InitApp()
 //		}
 //		CallF(s_spundo[1].sprite->Create(pRenderContext, mpath, L"Redo_1.png", 0, 0), return S_FALSE);
 //
-//		s_spaxis[0].sprite = new CMySprite(s_pdev);
+//		s_spaxis[0].sprite = new Sprite(s_pdev);
 //		if (!s_spaxis[0].sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spaxis[0].sprite->Create(pRenderContext, mpath, L"X.gif", 0, 0), return S_FALSE);
-//		s_spaxis[1].sprite = new CMySprite(s_pdev);
+//		s_spaxis[1].sprite = new Sprite(s_pdev);
 //		if (!s_spaxis[1].sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spaxis[1].sprite->Create(pRenderContext, mpath, L"Y.gif", 0, 0), return S_FALSE);
-//		s_spaxis[2].sprite = new CMySprite(s_pdev);
+//		s_spaxis[2].sprite = new Sprite(s_pdev);
 //		if (!s_spaxis[2].sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -4874,14 +4974,14 @@ void InitApp()
 //		CallF(s_spaxis[2].sprite->Create(pRenderContext, mpath, L"Z.gif", 0, 0), return S_FALSE);
 //
 //		//SpriteSwitch RefPos
-//		s_sprefpos.spriteON = new CMySprite(s_pdev);
+//		s_sprefpos.spriteON = new Sprite(s_pdev);
 //		if (!s_sprefpos.spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_sprefpos.spriteON->Create(pRenderContext, mpath, L"RefPosON.gif", 0, 0), return S_FALSE);
-//		s_sprefpos.spriteOFF = new CMySprite(s_pdev);
+//		s_sprefpos.spriteOFF = new Sprite(s_pdev);
 //		if (!s_sprefpos.spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -4890,14 +4990,14 @@ void InitApp()
 //		CallF(s_sprefpos.spriteOFF->Create(pRenderContext, mpath, L"RefPosOFF.gif", 0, 0), return S_FALSE);
 //
 //		//SpriteSwitch LimitEul
-//		s_splimiteul.spriteON = new CMySprite(s_pdev);
+//		s_splimiteul.spriteON = new Sprite(s_pdev);
 //		if (!s_splimiteul.spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_splimiteul.spriteON->Create(pRenderContext, mpath, L"LimitEul_ON.png", 0, 0), return S_FALSE);
-//		s_splimiteul.spriteOFF = new CMySprite(s_pdev);
+//		s_splimiteul.spriteOFF = new Sprite(s_pdev);
 //		if (!s_splimiteul.spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -4906,14 +5006,14 @@ void InitApp()
 //		CallF(s_splimiteul.spriteOFF->Create(pRenderContext, mpath, L"LimitEul_OFF.png", 0, 0), return S_FALSE);
 //
 //		//SpriteSwitch CameraMode
-//		s_spcameramode.spriteON = new CMySprite(s_pdev);
+//		s_spcameramode.spriteON = new Sprite(s_pdev);
 //		if (!s_spcameramode.spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spcameramode.spriteON->Create(pRenderContext, mpath, L"CamAnimON.png", 0, 0), return S_FALSE);
-//		s_spcameramode.spriteOFF = new CMySprite(s_pdev);
+//		s_spcameramode.spriteOFF = new Sprite(s_pdev);
 //		if (!s_spcameramode.spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -4923,21 +5023,21 @@ void InitApp()
 //
 //
 //		//SpriteSwitch CameraInheritMode
-//		s_spcamerainherit.sprite1 = new CMySprite(s_pdev);
+//		s_spcamerainherit.sprite1 = new Sprite(s_pdev);
 //		if (!s_spcamerainherit.sprite1) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spcamerainherit.sprite1->Create(pRenderContext, mpath, L"CameraInherit_All.png", 0, 0), return S_FALSE);
-//		s_spcamerainherit.sprite2 = new CMySprite(s_pdev);
+//		s_spcamerainherit.sprite2 = new Sprite(s_pdev);
 //		if (!s_spcamerainherit.sprite2) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spcamerainherit.sprite2->Create(pRenderContext, mpath, L"CameraInherit_CancelNull1.png", 0, 0), return S_FALSE);
-//		s_spcamerainherit.sprite3 = new CMySprite(s_pdev);
+//		s_spcamerainherit.sprite3 = new Sprite(s_pdev);
 //		if (!s_spcamerainherit.sprite3) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -4948,14 +5048,14 @@ void InitApp()
 //
 //
 //		//SpriteSwitch Scraping
-//		s_spscraping.spriteON = new CMySprite(s_pdev);
+//		s_spscraping.spriteON = new Sprite(s_pdev);
 //		if (!s_spscraping.spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spscraping.spriteON->Create(pRenderContext, mpath, L"WallScrapingIK_ON.png", 0, 0), return S_FALSE);
-//		s_spscraping.spriteOFF = new CMySprite(s_pdev);
+//		s_spscraping.spriteOFF = new Sprite(s_pdev);
 //		if (!s_spscraping.spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -4965,42 +5065,42 @@ void InitApp()
 //
 //
 //		//SpriteSwitch IKMode
-//		s_spikmodesw[0].spriteON = new CMySprite(s_pdev);
+//		s_spikmodesw[0].spriteON = new Sprite(s_pdev);
 //		if (!s_spikmodesw[0].spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spikmodesw[0].spriteON->Create(pRenderContext, mpath, L"IKRot2ON.gif", 0, 0), return S_FALSE);
-//		s_spikmodesw[0].spriteOFF = new CMySprite(s_pdev);
+//		s_spikmodesw[0].spriteOFF = new Sprite(s_pdev);
 //		if (!s_spikmodesw[0].spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spikmodesw[0].spriteOFF->Create(pRenderContext, mpath, L"IKRot2OFF.gif", 0, 0), return S_FALSE);
-//		s_spikmodesw[1].spriteON = new CMySprite(s_pdev);
+//		s_spikmodesw[1].spriteON = new Sprite(s_pdev);
 //		if (!s_spikmodesw[1].spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spikmodesw[1].spriteON->Create(pRenderContext, mpath, L"IKMove2ON.gif", 0, 0), return S_FALSE);
-//		s_spikmodesw[1].spriteOFF = new CMySprite(s_pdev);
+//		s_spikmodesw[1].spriteOFF = new Sprite(s_pdev);
 //		if (!s_spikmodesw[1].spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spikmodesw[1].spriteOFF->Create(pRenderContext, mpath, L"IKMove2OFF.gif", 0, 0), return S_FALSE);
-//		s_spikmodesw[2].spriteON = new CMySprite(s_pdev);
+//		s_spikmodesw[2].spriteON = new Sprite(s_pdev);
 //		if (!s_spikmodesw[2].spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spikmodesw[2].spriteON->Create(pRenderContext, mpath, L"IKScale2ON.gif", 0, 0), return S_FALSE);
-//		s_spikmodesw[2].spriteOFF = new CMySprite(s_pdev);
+//		s_spikmodesw[2].spriteOFF = new Sprite(s_pdev);
 //		if (!s_spikmodesw[2].spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5010,35 +5110,35 @@ void InitApp()
 //
 //
 //		//SpriteSwitch ON
-//		s_spguisw[SPGUISW_CAMERA_AND_IK].spriteON = new CMySprite(s_pdev);
+//		s_spguisw[SPGUISW_CAMERA_AND_IK].spriteON = new Sprite(s_pdev);
 //		if (!s_spguisw[SPGUISW_CAMERA_AND_IK].spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spguisw[SPGUISW_CAMERA_AND_IK].spriteON->Create(pRenderContext, mpath, L"GUIPlate_CameraAndIK140ON.png", 0, 0), return S_FALSE);
-//		s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteON = new CMySprite(s_pdev);
+//		s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteON = new Sprite(s_pdev);
 //		if (!s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteON->Create(pRenderContext, mpath, L"GUIPlate_DispAndLimits140ON.png", 0, 0), return S_FALSE);
-//		s_spguisw[SPGUISW_BRUSHPARAMS].spriteON = new CMySprite(s_pdev);
+//		s_spguisw[SPGUISW_BRUSHPARAMS].spriteON = new Sprite(s_pdev);
 //		if (!s_spguisw[SPGUISW_BRUSHPARAMS].spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spguisw[SPGUISW_BRUSHPARAMS].spriteON->Create(pRenderContext, mpath, L"GUIPlate_BrushParams140ON.png", 0, 0), return S_FALSE);
-//		s_spguisw[SPGUISW_BULLETPHYSICS].spriteON = new CMySprite(s_pdev);
+//		s_spguisw[SPGUISW_BULLETPHYSICS].spriteON = new Sprite(s_pdev);
 //		if (!s_spguisw[SPGUISW_BULLETPHYSICS].spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spguisw[SPGUISW_BULLETPHYSICS].spriteON->Create(pRenderContext, mpath, L"GUIPlate_BulletPhysics140ON.png", 0, 0), return S_FALSE);
-//		s_spguisw[SPGUISW_VSYNC_AND_REFPOS].spriteON = new CMySprite(s_pdev);
+//		s_spguisw[SPGUISW_VSYNC_AND_REFPOS].spriteON = new Sprite(s_pdev);
 //		if (!s_spguisw[SPGUISW_VSYNC_AND_REFPOS].spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5046,35 +5146,35 @@ void InitApp()
 //		}
 //		CallF(s_spguisw[SPGUISW_VSYNC_AND_REFPOS].spriteON->Create(pRenderContext, mpath, L"GUIPlate_RefPos140ON.png", 0, 0), return S_FALSE);
 //		//SpriteSwitch OFF
-//		s_spguisw[SPGUISW_CAMERA_AND_IK].spriteOFF = new CMySprite(s_pdev);
+//		s_spguisw[SPGUISW_CAMERA_AND_IK].spriteOFF = new Sprite(s_pdev);
 //		if (!s_spguisw[SPGUISW_CAMERA_AND_IK].spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spguisw[SPGUISW_CAMERA_AND_IK].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_CameraAndIK140OFF.png", 0, 0), return S_FALSE);
-//		s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteOFF = new CMySprite(s_pdev);
+//		s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteOFF = new Sprite(s_pdev);
 //		if (!s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_DispAndLimits140OFF.png", 0, 0), return S_FALSE);
-//		s_spguisw[SPGUISW_BRUSHPARAMS].spriteOFF = new CMySprite(s_pdev);
+//		s_spguisw[SPGUISW_BRUSHPARAMS].spriteOFF = new Sprite(s_pdev);
 //		if (!s_spguisw[SPGUISW_BRUSHPARAMS].spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spguisw[SPGUISW_BRUSHPARAMS].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_BrushParams140OFF.png", 0, 0), return S_FALSE);
-//		s_spguisw[SPGUISW_BULLETPHYSICS].spriteOFF = new CMySprite(s_pdev);
+//		s_spguisw[SPGUISW_BULLETPHYSICS].spriteOFF = new Sprite(s_pdev);
 //		if (!s_spguisw[SPGUISW_BULLETPHYSICS].spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spguisw[SPGUISW_BULLETPHYSICS].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_BulletPhysics140OFF.png", 0, 0), return S_FALSE);
-//		s_spguisw[SPGUISW_VSYNC_AND_REFPOS].spriteOFF = new CMySprite(s_pdev);
+//		s_spguisw[SPGUISW_VSYNC_AND_REFPOS].spriteOFF = new Sprite(s_pdev);
 //		if (!s_spguisw[SPGUISW_VSYNC_AND_REFPOS].spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5084,7 +5184,7 @@ void InitApp()
 //
 //
 //		//Disp ON
-//		s_spdispsw[SPDISPSW_LIGHTS].spriteON = new CMySprite(s_pdev);
+//		s_spdispsw[SPDISPSW_LIGHTS].spriteON = new Sprite(s_pdev);
 //		if (!s_spdispsw[SPDISPSW_LIGHTS].spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5092,7 +5192,7 @@ void InitApp()
 //		}
 //		CallF(s_spdispsw[SPDISPSW_LIGHTS].spriteON->Create(pRenderContext, mpath, L"GUIPlate_Lights140ON.png", 0, 0), return S_FALSE);
 //		
-//		s_spdispsw[SPDISPSW_DISPGROUP].spriteON = new CMySprite(s_pdev);
+//		s_spdispsw[SPDISPSW_DISPGROUP].spriteON = new Sprite(s_pdev);
 //		if (!s_spdispsw[SPDISPSW_DISPGROUP].spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5100,7 +5200,7 @@ void InitApp()
 //		}
 //		CallF(s_spdispsw[SPDISPSW_DISPGROUP].spriteON->Create(pRenderContext, mpath, L"GUIPlate_DispGroup140ON.png", 0, 0), return S_FALSE);
 //
-//		s_spdispsw[SPDISPSW_LATERTRANSPARENT].spriteON = new CMySprite(s_pdev);
+//		s_spdispsw[SPDISPSW_LATERTRANSPARENT].spriteON = new Sprite(s_pdev);
 //		if (!s_spdispsw[SPDISPSW_LATERTRANSPARENT].spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5108,7 +5208,7 @@ void InitApp()
 //		}
 //		CallF(s_spdispsw[SPDISPSW_LATERTRANSPARENT].spriteON->Create(pRenderContext, mpath, L"GUIPlate_LaterTransparent140ON.png", 0, 0), return S_FALSE);
 //
-//		s_spdispsw[SPDISPSW_LIGHTS].spriteOFF = new CMySprite(s_pdev);
+//		s_spdispsw[SPDISPSW_LIGHTS].spriteOFF = new Sprite(s_pdev);
 //		if (!s_spdispsw[SPDISPSW_LIGHTS].spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5116,7 +5216,7 @@ void InitApp()
 //		}
 //		CallF(s_spdispsw[SPDISPSW_LIGHTS].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_Lights140OFF.png", 0, 0), return S_FALSE);
 //		
-//		s_spdispsw[SPDISPSW_DISPGROUP].spriteOFF = new CMySprite(s_pdev);
+//		s_spdispsw[SPDISPSW_DISPGROUP].spriteOFF = new Sprite(s_pdev);
 //		if (!s_spdispsw[SPDISPSW_DISPGROUP].spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5124,7 +5224,7 @@ void InitApp()
 //		}
 //		CallF(s_spdispsw[SPDISPSW_DISPGROUP].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_DispGroup140OFF.png", 0, 0), return S_FALSE);
 //
-//		s_spdispsw[SPDISPSW_LATERTRANSPARENT].spriteOFF = new CMySprite(s_pdev);
+//		s_spdispsw[SPDISPSW_LATERTRANSPARENT].spriteOFF = new Sprite(s_pdev);
 //		if (!s_spdispsw[SPDISPSW_LATERTRANSPARENT].spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5135,28 +5235,28 @@ void InitApp()
 //
 //
 //		//RigidSwitch ON
-//		s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteON = new CMySprite(s_pdev);
+//		s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteON = new Sprite(s_pdev);
 //		if (!s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteON->Create(pRenderContext, mpath, L"GUIPlate_menuRigid140ON.png", 0, 0), return S_FALSE);
-//		s_sprigidsw[SPRIGIDSW_IMPULSE].spriteON = new CMySprite(s_pdev);
+//		s_sprigidsw[SPRIGIDSW_IMPULSE].spriteON = new Sprite(s_pdev);
 //		if (!s_sprigidsw[SPRIGIDSW_IMPULSE].spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_sprigidsw[SPRIGIDSW_IMPULSE].spriteON->Create(pRenderContext, mpath, L"GUIPlate_menuImpulse140ON.png", 0, 0), return S_FALSE);
-//		s_sprigidsw[SPRIGIDSW_GROUNDPLANE].spriteON = new CMySprite(s_pdev);
+//		s_sprigidsw[SPRIGIDSW_GROUNDPLANE].spriteON = new Sprite(s_pdev);
 //		if (!s_sprigidsw[SPRIGIDSW_GROUNDPLANE].spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_sprigidsw[SPRIGIDSW_GROUNDPLANE].spriteON->Create(pRenderContext, mpath, L"GUIPlate_menuGP140ON.png", 0, 0), return S_FALSE);
-//		s_sprigidsw[SPRIGIDSW_DAMPANIM].spriteON = new CMySprite(s_pdev);
+//		s_sprigidsw[SPRIGIDSW_DAMPANIM].spriteON = new Sprite(s_pdev);
 //		if (!s_sprigidsw[SPRIGIDSW_DAMPANIM].spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5164,28 +5264,28 @@ void InitApp()
 //		}
 //		CallF(s_sprigidsw[SPRIGIDSW_DAMPANIM].spriteON->Create(pRenderContext, mpath, L"GUIPlate_menuDamp140ON.png", 0, 0), return S_FALSE);
 //		//RigidSwitch OFF
-//		s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteOFF = new CMySprite(s_pdev);
+//		s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteOFF = new Sprite(s_pdev);
 //		if (!s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_menuRigid140OFF.png", 0, 0), return S_FALSE);
-//		s_sprigidsw[SPRIGIDSW_IMPULSE].spriteOFF = new CMySprite(s_pdev);
+//		s_sprigidsw[SPRIGIDSW_IMPULSE].spriteOFF = new Sprite(s_pdev);
 //		if (!s_sprigidsw[SPRIGIDSW_IMPULSE].spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_sprigidsw[SPRIGIDSW_IMPULSE].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_menuImpulse140OFF.png", 0, 0), return S_FALSE);
-//		s_sprigidsw[SPRIGIDSW_GROUNDPLANE].spriteOFF = new CMySprite(s_pdev);
+//		s_sprigidsw[SPRIGIDSW_GROUNDPLANE].spriteOFF = new Sprite(s_pdev);
 //		if (!s_sprigidsw[SPRIGIDSW_GROUNDPLANE].spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_sprigidsw[SPRIGIDSW_GROUNDPLANE].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_menuGP140OFF.png", 0, 0), return S_FALSE);
-//		s_sprigidsw[SPRIGIDSW_DAMPANIM].spriteOFF = new CMySprite(s_pdev);
+//		s_sprigidsw[SPRIGIDSW_DAMPANIM].spriteOFF = new Sprite(s_pdev);
 //		if (!s_sprigidsw[SPRIGIDSW_DAMPANIM].spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5193,28 +5293,28 @@ void InitApp()
 //		}
 //		CallF(s_sprigidsw[SPRIGIDSW_DAMPANIM].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_menuDamp140OFF.png", 0, 0), return S_FALSE);
 //
-//		s_spretargetsw[SPRETARGETSW_RETARGET].spriteON = new CMySprite(s_pdev);
+//		s_spretargetsw[SPRETARGETSW_RETARGET].spriteON = new Sprite(s_pdev);
 //		if (!s_spretargetsw[SPRETARGETSW_RETARGET].spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spretargetsw[SPRETARGETSW_RETARGET].spriteON->Create(pRenderContext, mpath, L"GUIPlateRetarget140ON.png", 0, 0), return S_FALSE);
-//		s_spretargetsw[SPRETARGETSW_RETARGET].spriteOFF = new CMySprite(s_pdev);
+//		s_spretargetsw[SPRETARGETSW_RETARGET].spriteOFF = new Sprite(s_pdev);
 //		if (!s_spretargetsw[SPRETARGETSW_RETARGET].spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spretargetsw[SPRETARGETSW_RETARGET].spriteOFF->Create(pRenderContext, mpath, L"GUIPlateRetarget140OFF.png", 0, 0), return S_FALSE);
-//		s_spretargetsw[SPRETARGETSW_LIMITEULER].spriteON = new CMySprite(s_pdev);
+//		s_spretargetsw[SPRETARGETSW_LIMITEULER].spriteON = new Sprite(s_pdev);
 //		if (!s_spretargetsw[SPRETARGETSW_LIMITEULER].spriteON) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spretargetsw[SPRETARGETSW_LIMITEULER].spriteON->Create(pRenderContext, mpath, L"GUIPlateLimitEuler140ON.png", 0, 0), return S_FALSE);
-//		s_spretargetsw[SPRETARGETSW_LIMITEULER].spriteOFF = new CMySprite(s_pdev);
+//		s_spretargetsw[SPRETARGETSW_LIMITEULER].spriteOFF = new Sprite(s_pdev);
 //		if (!s_spretargetsw[SPRETARGETSW_LIMITEULER].spriteOFF) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5225,14 +5325,14 @@ void InitApp()
 //		{
 //			int aimno;
 //			for (aimno = 0; aimno < SPAIMBARNUM; aimno++) {
-//				s_spaimbar[aimno].spriteON = new CMySprite(s_pdev);
+//				s_spaimbar[aimno].spriteON = new Sprite(s_pdev);
 //				if (!s_spaimbar[aimno].spriteON) {
 //					_ASSERT(0);
 //					PostQuitMessage(1);
 //					return S_FALSE;
 //				}
 //				CallF(s_spaimbar[aimno].spriteON->Create(pRenderContext, mpath, L"GUIPlateAim140ON.png", 0, 0), return S_FALSE);
-//				s_spaimbar[aimno].spriteOFF = new CMySprite(s_pdev);
+//				s_spaimbar[aimno].spriteOFF = new Sprite(s_pdev);
 //				if (!s_spaimbar[aimno].spriteOFF) {
 //					_ASSERT(0);
 //					PostQuitMessage(1);
@@ -5244,14 +5344,14 @@ void InitApp()
 //		{
 //			int aimno;
 //			for (aimno = 0; aimno < SPMENU_MAX; aimno++) {
-//				s_spmenuaimbar[aimno].spriteON = new CMySprite(s_pdev);
+//				s_spmenuaimbar[aimno].spriteON = new Sprite(s_pdev);
 //				if (!s_spmenuaimbar[aimno].spriteON) {
 //					_ASSERT(0);
 //					PostQuitMessage(1);
 //					return S_FALSE;
 //				}
 //				CallF(s_spmenuaimbar[aimno].spriteON->Create(pRenderContext, mpath, L"GUIPlateAim140ON.png", 0, 0), return S_FALSE);
-//				s_spmenuaimbar[aimno].spriteOFF = new CMySprite(s_pdev);
+//				s_spmenuaimbar[aimno].spriteOFF = new Sprite(s_pdev);
 //				if (!s_spmenuaimbar[aimno].spriteOFF) {
 //					_ASSERT(0);
 //					PostQuitMessage(1);
@@ -5262,14 +5362,14 @@ void InitApp()
 //		}
 //
 //		{
-//			s_spsel3d.spriteON = new CMySprite(s_pdev);
+//			s_spsel3d.spriteON = new Sprite(s_pdev);
 //			if (!s_spsel3d.spriteON) {
 //				_ASSERT(0);
 //				PostQuitMessage(1);
 //				return S_FALSE;
 //			}
 //			CallF(s_spsel3d.spriteON->Create(pRenderContext, mpath, L"button101_Select.tif", 0, 0), return S_FALSE);
-//			s_spsel3d.spriteOFF = new CMySprite(s_pdev);
+//			s_spsel3d.spriteOFF = new Sprite(s_pdev);
 //			if (!s_spsel3d.spriteOFF) {
 //				_ASSERT(0);
 //				PostQuitMessage(1);
@@ -5280,21 +5380,21 @@ void InitApp()
 //
 //
 //
-//		s_spcam[SPR_CAM_I].sprite = new CMySprite(s_pdev);
+//		s_spcam[SPR_CAM_I].sprite = new Sprite(s_pdev);
 //		if (!s_spcam[SPR_CAM_I].sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spcam[SPR_CAM_I].sprite->Create(pRenderContext, mpath, L"cam_i.gif", 0, 0), return S_FALSE);
-//		s_spcam[SPR_CAM_KAI].sprite = new CMySprite(s_pdev);
+//		s_spcam[SPR_CAM_KAI].sprite = new Sprite(s_pdev);
 //		if (!s_spcam[SPR_CAM_KAI].sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spcam[SPR_CAM_KAI].sprite->Create(pRenderContext, mpath, L"cam_kai.gif", 0, 0), return S_FALSE);
-//		s_spcam[SPR_CAM_KAKU].sprite = new CMySprite(s_pdev);
+//		s_spcam[SPR_CAM_KAKU].sprite = new Sprite(s_pdev);
 //		if (!s_spcam[SPR_CAM_KAKU].sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5302,14 +5402,14 @@ void InitApp()
 //		}
 //		CallF(s_spcam[SPR_CAM_KAKU].sprite->Create(pRenderContext, mpath, L"cam_kaku.gif", 0, 0), return S_FALSE);
 //
-//		s_sprig[SPRIG_INACTIVE].sprite = new CMySprite(s_pdev);
+//		s_sprig[SPRIG_INACTIVE].sprite = new Sprite(s_pdev);
 //		if (!s_sprig[SPRIG_INACTIVE].sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_sprig[SPRIG_INACTIVE].sprite->Create(pRenderContext, mpath, L"RigOFF.gif", 0, 0), return S_FALSE);
-//		s_sprig[SPRIG_ACTIVE].sprite = new CMySprite(s_pdev);
+//		s_sprig[SPRIG_ACTIVE].sprite = new Sprite(s_pdev);
 //		if (!s_sprig[SPRIG_ACTIVE].sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5317,11 +5417,11 @@ void InitApp()
 //		}
 //		CallF(s_sprig[SPRIG_ACTIVE].sprite->Create(pRenderContext, mpath, L"RigON.gif", 0, 0), return S_FALSE);
 //
-//		//s_spbt.sprite = new CMySprite(s_pdev);
+//		//s_spbt.sprite = new Sprite(s_pdev);
 //		//_ASSERT(s_spbt.sprite);
 //		//CallF(s_spbt.sprite->Create(pRenderContext, mpath, L"BtApply.png", 0, 0), return S_FALSE);
 //
-//		s_spmousehere.sprite = new CMySprite(s_pdev);
+//		s_spmousehere.sprite = new Sprite(s_pdev);
 //		if (!s_spmousehere.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5360,7 +5460,7 @@ void InitApp()
 //		}
 //
 //
-//		s_spret2prev.sprite = new CMySprite(s_pdev);
+//		s_spret2prev.sprite = new Sprite(s_pdev);
 //		if (!s_spret2prev.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5368,7 +5468,7 @@ void InitApp()
 //		}
 //		CallF(s_spret2prev.sprite->Create(pRenderContext, mpath, L"img_ret2prev.png", 0, 0), return S_FALSE);
 //
-//		s_spret2prev2.sprite = new CMySprite(s_pdev);
+//		s_spret2prev2.sprite = new Sprite(s_pdev);
 //		if (!s_spret2prev2.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5377,7 +5477,7 @@ void InitApp()
 //		CallF(s_spret2prev2.sprite->Create(pRenderContext, mpath, L"img_ret2prev2.png", 0, 0), return S_FALSE);
 //
 //
-//		s_spcplw2w.sprite = new CMySprite(s_pdev);
+//		s_spcplw2w.sprite = new Sprite(s_pdev);
 //		if (!s_spcplw2w.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5385,7 +5485,7 @@ void InitApp()
 //		}
 //		CallF(s_spcplw2w.sprite->Create(pRenderContext, mpath, L"BakeLW2W.png", 0, 0), return S_FALSE);
 //
-//		s_spsmooth.sprite = new CMySprite(s_pdev);
+//		s_spsmooth.sprite = new Sprite(s_pdev);
 //		if (!s_spsmooth.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5393,14 +5493,14 @@ void InitApp()
 //		}
 //		CallF(s_spsmooth.sprite->Create(pRenderContext, mpath, L"SmoothFilter.png", 0, 0), return S_FALSE);
 //
-//		s_spconstexe.sprite = new CMySprite(s_pdev);
+//		s_spconstexe.sprite = new Sprite(s_pdev);
 //		if (!s_spconstexe.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spconstexe.sprite->Create(pRenderContext, mpath, L"Constraint_Execute.png", 0, 0), return S_FALSE);
-//		s_spconstrefresh.sprite = new CMySprite(s_pdev);
+//		s_spconstrefresh.sprite = new Sprite(s_pdev);
 //		if (!s_spconstrefresh.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5408,28 +5508,28 @@ void InitApp()
 //		}
 //		CallF(s_spconstrefresh.sprite->Create(pRenderContext, mpath, L"Constraint_refresh.png", 0, 0), return S_FALSE);
 //
-//		s_spcopy.sprite = new CMySprite(s_pdev);
+//		s_spcopy.sprite = new Sprite(s_pdev);
 //		if (!s_spcopy.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spcopy.sprite->Create(pRenderContext, mpath, L"CopyButton.gif", 0, 0), return S_FALSE);
-//		s_spsymcopy.sprite = new CMySprite(s_pdev);
+//		s_spsymcopy.sprite = new Sprite(s_pdev);
 //		if (!s_spsymcopy.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spsymcopy.sprite->Create(pRenderContext, mpath, L"SymCopyButton3.png", 0, 0), return S_FALSE);
-//		s_sppaste.sprite = new CMySprite(s_pdev);
+//		s_sppaste.sprite = new Sprite(s_pdev);
 //		if (!s_sppaste.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_sppaste.sprite->Create(pRenderContext, mpath, L"PasteButton.gif", 0, 0), return S_FALSE);
-//		s_spcopyhistory.sprite = new CMySprite(s_pdev);
+//		s_spcopyhistory.sprite = new Sprite(s_pdev);
 //		if (!s_spcopyhistory.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5438,28 +5538,28 @@ void InitApp()
 //		CallF(s_spcopyhistory.sprite->Create(pRenderContext, mpath, L"CopyHistoryButton.gif", 0, 0), return S_FALSE);
 //
 //
-//		s_spinterpolate.sprite = new CMySprite(s_pdev);
+//		s_spinterpolate.sprite = new Sprite(s_pdev);
 //		if (!s_spinterpolate.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spinterpolate.sprite->Create(pRenderContext, mpath, L"InterpolateButton.png", 0, 0), return S_FALSE);
-//		s_spinit.sprite = new CMySprite(s_pdev);
+//		s_spinit.sprite = new Sprite(s_pdev);
 //		if (!s_spinit.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spinit.sprite->Create(pRenderContext, mpath, L"InitButton.png", 0, 0), return S_FALSE);
-//		s_spscaleinit.sprite = new CMySprite(s_pdev);
+//		s_spscaleinit.sprite = new Sprite(s_pdev);
 //		if (!s_spscaleinit.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spscaleinit.sprite->Create(pRenderContext, mpath, L"ScaleInitButton.png", 0, 0), return S_FALSE);
-//		s_spproperty.sprite = new CMySprite(s_pdev);
+//		s_spproperty.sprite = new Sprite(s_pdev);
 //		if (!s_spproperty.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5467,28 +5567,28 @@ void InitApp()
 //		}
 //		CallF(s_spproperty.sprite->Create(pRenderContext, mpath, L"PropertyButton.png", 0, 0), return S_FALSE);
 //
-//		s_spzeroframe.sprite = new CMySprite(s_pdev);
+//		s_spzeroframe.sprite = new Sprite(s_pdev);
 //		if (!s_spzeroframe.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spzeroframe.sprite->Create(pRenderContext, mpath, L"Edit0FrameButton.png", 0, 0), return S_FALSE);
-//		s_spcameradolly.sprite = new CMySprite(s_pdev);
+//		s_spcameradolly.sprite = new Sprite(s_pdev);
 //		if (!s_spcameradolly.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spcameradolly.sprite->Create(pRenderContext, mpath, L"CameraDollyButton.png", 0, 0), return S_FALSE);
-//		s_spmodelposdir.sprite = new CMySprite(s_pdev);
+//		s_spmodelposdir.sprite = new Sprite(s_pdev);
 //		if (!s_spmodelposdir.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
 //			return S_FALSE;
 //		}
 //		CallF(s_spmodelposdir.sprite->Create(pRenderContext, mpath, L"ModelPosDirButton.png", 0, 0), return S_FALSE);
-//		s_spmaterialrate.sprite = new CMySprite(s_pdev);
+//		s_spmaterialrate.sprite = new Sprite(s_pdev);
 //		if (!s_spmaterialrate.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5498,7 +5598,7 @@ void InitApp()
 //
 //
 //
-//		s_mousecenteron.sprite = new CMySprite(s_pdev);
+//		s_mousecenteron.sprite = new Sprite(s_pdev);
 //		if (!s_mousecenteron.sprite) {
 //			_ASSERT(0);
 //			PostQuitMessage(1);
@@ -5870,6 +5970,7 @@ void CALLBACK OnD3D11DestroyDevice(void* pUserContext)
 	//}
 
 
+	DestroySprites();
 
 	//if (s_dsupdater) {
 	//	delete s_dsupdater;
@@ -6217,14 +6318,14 @@ void CALLBACK OnD3D11DestroyDevice(void* pUserContext)
 	CBone::DestroyColDisp();
 
 
-	if (s_undosprite) {
-		delete s_undosprite;
-		s_undosprite = 0;
-	}
-	if (s_fpssprite) {
-		delete s_fpssprite;
-		s_fpssprite = 0;
-	}
+	//if (s_undosprite) {
+	//	delete s_undosprite;
+	//	s_undosprite = 0;
+	//}
+	//if (s_fpssprite) {
+	//	delete s_fpssprite;
+	//	s_fpssprite = 0;
+	//}
 
 
 	if (s_select) {
@@ -6282,14 +6383,14 @@ void CALLBACK OnD3D11DestroyDevice(void* pUserContext)
 	}
 
 
-	if (s_bcircle) {
-		delete s_bcircle;
-		s_bcircle = 0;
-	}
-	if (s_kinsprite) {
-		delete s_kinsprite;
-		s_kinsprite = 0;
-	}
+	//if (s_bcircle) {
+	//	delete s_bcircle;
+	//	s_bcircle = 0;
+	//}
+	//if (s_kinsprite) {
+	//	delete s_kinsprite;
+	//	s_kinsprite = 0;
+	//}
 
 	if (g_texbank) {
 		delete g_texbank;
@@ -6876,377 +6977,6 @@ void CALLBACK OnD3D11DestroyDevice(void* pUserContext)
 		g_motionbrush_value = 0;
 	}
 
-	{
-		//static SPELEM s_spundo[2];
-		int spno;
-		for (spno = 0; spno < 2; spno++) {
-			CMySprite* cursp = s_spundo[spno].sprite;
-			if (cursp) {
-				delete cursp;
-			}
-			s_spundo[spno].sprite = 0;
-		}
-	}
-
-	{
-		//static SPAXIS s_spaxis[3];
-		int spno;
-		for (spno = 0; spno < SPAXISNUM; spno++) {
-			CMySprite* cursp = s_spaxis[spno].sprite;
-			if (cursp) {
-				delete cursp;
-			}
-			s_spaxis[spno].sprite = 0;
-		}
-	}
-
-	{
-		int spgno;
-		for (spgno = 0; spgno < SPAIMBARNUM; spgno++) {
-			CMySprite* curspgON = s_spaimbar[spgno].spriteON;
-			if (curspgON) {
-				delete curspgON;
-			}
-			s_spaimbar[spgno].spriteON = 0;
-
-			CMySprite* curspgOFF = s_spaimbar[spgno].spriteOFF;
-			if (curspgOFF) {
-				delete curspgOFF;
-			}
-			s_spaimbar[spgno].spriteOFF = 0;
-		}
-	}
-	{
-		int spgno;
-		for (spgno = 0; spgno < SPMENU_MAX; spgno++) {
-			CMySprite* curspgON = s_spmenuaimbar[spgno].spriteON;
-			if (curspgON) {
-				delete curspgON;
-			}
-			s_spmenuaimbar[spgno].spriteON = 0;
-
-			CMySprite* curspgOFF = s_spmenuaimbar[spgno].spriteOFF;
-			if (curspgOFF) {
-				delete curspgOFF;
-			}
-			s_spmenuaimbar[spgno].spriteOFF = 0;
-		}
-	}
-	{
-		CMySprite* curspgON = s_spsel3d.spriteON;
-		if (curspgON) {
-			delete curspgON;
-		}
-		s_spsel3d.spriteON = 0;
-
-		CMySprite* curspgOFF = s_spsel3d.spriteOFF;
-		if (curspgOFF) {
-			delete curspgOFF;
-		}
-		s_spsel3d.spriteOFF = 0;
-	}
-
-	{
-		int spgno;
-		for (spgno = 0; spgno < 3; spgno++) {
-			CMySprite* curspgON = s_spikmodesw[spgno].spriteON;
-			if (curspgON) {
-				delete curspgON;
-			}
-			s_spikmodesw[spgno].spriteON = 0;
-
-			CMySprite* curspgOFF = s_spikmodesw[spgno].spriteOFF;
-			if (curspgOFF) {
-				delete curspgOFF;
-			}
-			s_spikmodesw[spgno].spriteOFF = 0;
-
-		}
-	}
-	{
-		CMySprite* curspgON = s_sprefpos.spriteON;
-		if (curspgON) {
-			delete curspgON;
-		}
-		s_sprefpos.spriteON = 0;
-
-		CMySprite* curspgOFF = s_sprefpos.spriteOFF;
-		if (curspgOFF) {
-			delete curspgOFF;
-		}
-		s_sprefpos.spriteOFF = 0;
-	}
-	{
-		CMySprite* curspgON = s_splimiteul.spriteON;
-		if (curspgON) {
-			delete curspgON;
-		}
-		s_splimiteul.spriteON = 0;
-
-		CMySprite* curspgOFF = s_splimiteul.spriteOFF;
-		if (curspgOFF) {
-			delete curspgOFF;
-		}
-		s_splimiteul.spriteOFF = 0;
-	}
-	{
-		CMySprite* curspgON = s_spcameramode.spriteON;
-		if (curspgON) {
-			delete curspgON;
-		}
-		s_spcameramode.spriteON = 0;
-
-		CMySprite* curspgOFF = s_spcameramode.spriteOFF;
-		if (curspgOFF) {
-			delete curspgOFF;
-		}
-		s_spcameramode.spriteOFF = 0;
-	}
-	{
-		CMySprite* curspg1 = s_spcamerainherit.sprite1;
-		if (curspg1) {
-			delete curspg1;
-		}
-		s_spcamerainherit.sprite1 = 0;
-
-		CMySprite* curspg2 = s_spcamerainherit.sprite2;
-		if (curspg2) {
-			delete curspg2;
-		}
-		s_spcamerainherit.sprite2 = 0;
-
-		CMySprite* curspg3 = s_spcamerainherit.sprite3;
-		if (curspg3) {
-			delete curspg3;
-		}
-		s_spcamerainherit.sprite3 = 0;
-	}
-	{
-		CMySprite* curspgON = s_spscraping.spriteON;
-		if (curspgON) {
-			delete curspgON;
-		}
-		s_spscraping.spriteON = 0;
-
-		CMySprite* curspgOFF = s_spscraping.spriteOFF;
-		if (curspgOFF) {
-			delete curspgOFF;
-		}
-		s_spscraping.spriteOFF = 0;
-	}
-	{
-		int spgno;
-		for (spgno = 0; spgno < SPGUISWNUM; spgno++) {
-			CMySprite* curspgON = s_spguisw[spgno].spriteON;
-			if (curspgON) {
-				delete curspgON;
-			}
-			s_spguisw[spgno].spriteON = 0;
-
-			CMySprite* curspgOFF = s_spguisw[spgno].spriteOFF;
-			if (curspgOFF) {
-				delete curspgOFF;
-			}
-			s_spguisw[spgno].spriteOFF = 0;
-
-		}
-	}
-	{
-		int spmno;
-		for (spmno = 0; spmno < SPDISPSWNUM; spmno++) {
-			CMySprite* curspmON = s_spdispsw[spmno].spriteON;
-			if (curspmON) {
-				delete curspmON;
-			}
-			s_spdispsw[spmno].spriteON = 0;
-
-			CMySprite* curspmOFF = s_spdispsw[spmno].spriteOFF;
-			if (curspmOFF) {
-				delete curspmOFF;
-			}
-			s_spdispsw[spmno].spriteOFF = 0;
-
-		}
-	}
-	{
-		int spmno;
-		for (spmno = 0; spmno < SPRIGIDSWNUM; spmno++) {
-			CMySprite* curspmON = s_sprigidsw[spmno].spriteON;
-			if (curspmON) {
-				delete curspmON;
-			}
-			s_sprigidsw[spmno].spriteON = 0;
-
-			CMySprite* curspmOFF = s_sprigidsw[spmno].spriteOFF;
-			if (curspmOFF) {
-				delete curspmOFF;
-			}
-			s_sprigidsw[spmno].spriteOFF = 0;
-
-		}
-	}
-	{
-		int sprno;
-		for (sprno = 0; sprno < SPRETARGETSWNUM; sprno++) {
-			if (s_spretargetsw[sprno].spriteON) {
-				delete s_spretargetsw[sprno].spriteON;
-			}
-			s_spretargetsw[sprno].spriteON = 0;
-
-			if (s_spretargetsw[sprno].spriteOFF) {
-				delete s_spretargetsw[sprno].spriteOFF;
-			}
-			s_spretargetsw[sprno].spriteOFF = 0;
-		}
-	}
-	{
-		int spcno;
-		for (spcno = 0; spcno < SPR_CAM_MAX; spcno++) {
-			CMySprite* curspc = s_spcam[spcno].sprite;
-			if (curspc) {
-				delete curspc;
-			}
-			s_spcam[spcno].sprite = 0;
-		}
-	}
-	{
-		int sprigno;
-		for (sprigno = 0; sprigno < SPRIGMAX; sprigno++) {
-			CMySprite* cursp = s_sprig[sprigno].sprite;
-			if (cursp) {
-				delete cursp;
-			}
-			s_sprig[sprigno].sprite = 0;
-		}
-	}
-
-	//CMySprite* cursp = s_spbt.sprite;
-	//if (cursp) {
-	//	delete cursp;
-	//}
-	//s_spbt.sprite = 0;
-
-	CMySprite* curspmousehere = s_spmousehere.sprite;
-	if (curspmousehere) {
-		delete curspmousehere;
-	}
-	s_spmousehere.sprite = 0;
-
-
-	CMySprite* curspret = s_spret2prev.sprite;
-	if (curspret) {
-		delete curspret;
-	}
-	s_spret2prev.sprite = 0;
-
-	CMySprite* curspret2 = s_spret2prev2.sprite;
-	if (curspret2) {
-		delete curspret2;
-	}
-	s_spret2prev2.sprite = 0;
-
-
-	CMySprite* curspcplw2w = s_spcplw2w.sprite;
-	if (curspcplw2w) {
-		delete curspcplw2w;
-	}
-	s_spcplw2w.sprite = 0;
-
-	CMySprite* curspsmooth = s_spsmooth.sprite;
-	if (curspsmooth) {
-		delete curspsmooth;
-	}
-	s_spsmooth.sprite = 0;
-
-
-	CMySprite* curspconstexe = s_spconstexe.sprite;
-	if (curspconstexe) {
-		delete curspconstexe;
-	}
-	s_spconstexe.sprite = 0;
-	CMySprite* curspconstrefresh = s_spconstrefresh.sprite;
-	if (curspconstrefresh) {
-		delete curspconstrefresh;
-	}
-	s_spconstrefresh.sprite = 0;
-
-
-	CMySprite* curspcopy = s_spcopy.sprite;
-	if (curspcopy) {
-		delete curspcopy;
-	}
-	s_spcopy.sprite = 0;
-	CMySprite* curspsymcopy = s_spsymcopy.sprite;
-	if (curspsymcopy) {
-		delete curspsymcopy;
-	}
-	s_spsymcopy.sprite = 0;
-	CMySprite* cursppaste = s_sppaste.sprite;
-	if (cursppaste) {
-		delete cursppaste;
-	}
-	s_sppaste.sprite = 0;
-	CMySprite* curspcopyhistory = s_spcopyhistory.sprite;
-	if (curspcopyhistory) {
-		delete curspcopyhistory;
-	}
-	s_spcopyhistory.sprite = 0;
-
-
-	CMySprite* curspinterpolate = s_spinterpolate.sprite;
-	if (curspinterpolate) {
-		delete curspinterpolate;
-	}
-	s_spinterpolate.sprite = 0;
-
-	CMySprite* curspinit = s_spinit.sprite;
-	if (curspinit) {
-		delete curspinit;
-	}
-	s_spinit.sprite = 0;
-
-	CMySprite* curspscaleinit = s_spscaleinit.sprite;
-	if (curspscaleinit) {
-		delete curspscaleinit;
-	}
-	s_spscaleinit.sprite = 0;
-
-	CMySprite* curspproperty = s_spproperty.sprite;
-	if (curspproperty) {
-		delete curspproperty;
-	}
-	s_spproperty.sprite = 0;
-
-	CMySprite* curspzeroframe = s_spzeroframe.sprite;
-	if (curspzeroframe) {
-		delete curspzeroframe;
-	}
-	s_spzeroframe.sprite = 0;
-
-	CMySprite* curspcameradolly = s_spcameradolly.sprite;
-	if (curspcameradolly) {
-		delete curspcameradolly;
-	}
-	s_spcameradolly.sprite = 0;
-
-	CMySprite* curspmodelposdir = s_spmodelposdir.sprite;
-	if (curspmodelposdir) {
-		delete curspmodelposdir;
-	}
-	s_spmodelposdir.sprite = 0;
-
-	CMySprite* curspmaterialrate = s_spmaterialrate.sprite;
-	if (curspmaterialrate) {
-		delete curspmaterialrate;
-	}
-	s_spmaterialrate.sprite = 0;
-
-
-	CMySprite* curspm = s_mousecenteron.sprite;
-	if (curspm) {
-		delete curspm;
-	}
-	s_mousecenteron.sprite = 0;
 
 
 	//if (g_Camera) {
@@ -8085,7 +7815,7 @@ void PrepairUndo()
 // messages to the application through this callback function. If the application sets 
 // *pbNoFurtherProcessing to TRUE, then DXUT will not process this message.
 //--------------------------------------------------------------------------------------
-LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
+LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 //	, bool* pbNoFurtherProcessing,
 //	void* pUserContext
 )
@@ -8893,6 +8623,12 @@ LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			return 0;//!!!!!!!!!!!!!!!!
 		}
 
+		if (!s_model) {
+			//!!!!!!!!!!!!!! 
+			return DefWindowProc(hWnd, uMsg, wParam, lParam);
+		}
+
+
 		if (s_curboneno >= 0) {
 			s_saveboneno = s_curboneno;
 		}
@@ -9423,6 +9159,11 @@ LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			return 0;
 		}
 
+		if (!s_model) {
+			//!!!!!!!!!!!!!! 
+			return DefWindowProc(hWnd, uMsg, wParam, lParam);
+		}
+
 
 		//if (s_dispmodel && s_modelpanel.panel && s_modelpanel.separator) {
 		//	POINT tmppos;
@@ -9815,7 +9556,37 @@ LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		//ReleaseCapture();
 		s_pickinfo.buttonflag = 0;
 	}
-
+	else if (uMsg == WM_DESTROY) {
+		//スエンジンの破棄。
+		delete g_engine;
+		PostQuitMessage(0);
+	}
+	else if (uMsg == WM_ACTIVATE) {
+		if (wParam == 1) {
+			DbgOut(L"%f, activate wparam 1\r\n", s_time);
+			ActivatePanel(1);
+		}
+	}
+	else if (uMsg == WM_SYSCOMMAND) {
+		switch (wParam) {
+		case SC_CLOSE:
+			DbgOut(L"%f, syscommand close\r\n", s_time);
+			break;
+		case SC_MINIMIZE:
+			DbgOut(L"%f, syscommand minimize\r\n", s_time);
+			ActivatePanel(0);
+			break;
+		case SC_MAXIMIZE:
+			DbgOut(L"%f, syscommand maximize\r\n", s_time);
+			DefWindowProc(s_3dwnd, uMsg, wParam, lParam);
+			ActivatePanel(1);
+			//return 1;//!!!!!!!!!!!!!
+			break;
+		}
+	}
+	else {
+		return DefWindowProc(hWnd, uMsg, wParam, lParam);
+	}
 
 	/*
 	if( uMsg == WM_LBUTTONDOWN ){
@@ -9859,29 +9630,6 @@ LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	*/
 
 
-	if (uMsg == WM_ACTIVATE) {
-		if (wParam == 1) {
-			DbgOut(L"%f, activate wparam 1\r\n", s_time);
-			ActivatePanel(1);
-		}
-	}
-	if (uMsg == WM_SYSCOMMAND) {
-		switch (wParam) {
-		case SC_CLOSE:
-			DbgOut(L"%f, syscommand close\r\n", s_time);
-			break;
-		case SC_MINIMIZE:
-			DbgOut(L"%f, syscommand minimize\r\n", s_time);
-			ActivatePanel(0);
-			break;
-		case SC_MAXIMIZE:
-			DbgOut(L"%f, syscommand maximize\r\n", s_time);
-			DefWindowProc(s_3dwnd, uMsg, wParam, lParam);
-			ActivatePanel(1);
-			//return 1;//!!!!!!!!!!!!!
-			break;
-		}
-	}
 
 
 	//if ((s_doneinit == 1) && (g_undertrackingRMenu == 1)) {
@@ -10833,39 +10581,39 @@ int RollbackCurBoneNo()
 //	}
 //
 ////static SPAXIS s_spaxis[3];
-//	int spno;
-//	for( spno = 0; spno < 3; spno++ ){
-//		CMySprite* cursp = s_spaxis[spno].sprite;
-//		if( cursp ){
-//			delete cursp;
-//		}
-//		s_spaxis[spno].sprite = 0;
-//	}
-//
-//	int spcno;
-//	for (spcno = 0; spcno < 3; spcno++){
-//		CMySprite* curspc = s_spcam[spcno].sprite;
-//		if (curspc){
-//			delete curspc;
-//		}
-//		s_spcam[spcno].sprite = 0;
-//	}
-//
-//
-//	int sprno;
-//	for (sprno = 0; sprno < 2; sprno++){
-//		CMySprite* cursp = s_sprig[sprno].sprite;
-//		if (cursp){
-//			delete cursp;
-//		}
-//		s_sprig[sprno].sprite = 0;
-//	}
-//
-//	CMySprite* cursp = s_spbt.sprite;
-//	if (cursp){
-//		delete cursp;
-//	}
-//	s_spbt.sprite = 0;
+	//int spno;
+	//for( spno = 0; spno < 3; spno++ ){
+	//	Sprite cursp = s_spaxis[spno].sprite;
+	//	if( cursp ){
+	//		delete cursp;
+	//	}
+	//	s_spaxis[spno].sprite = 0;
+	//}
+
+	//int spcno;
+	//for (spcno = 0; spcno < 3; spcno++){
+	//	Sprite curspc = s_spcam[spcno].sprite;
+	//	if (curspc){
+	//		delete curspc;
+	//	}
+	//	s_spcam[spcno].sprite = 0;
+	//}
+
+
+	//int sprno;
+	//for (sprno = 0; sprno < 2; sprno++){
+	//	Sprite cursp = s_sprig[sprno].sprite;
+	//	if (cursp){
+	//		delete cursp;
+	//	}
+	//	s_sprig[sprno].sprite = 0;
+	//}
+
+	//Sprite cursp = s_spbt.sprite;
+	//if (cursp){
+	//	delete cursp;
+	//}
+	//s_spbt.sprite = 0;
 //
 //
 //
@@ -21320,11 +21068,56 @@ int OnSetMotSpeed()
 	return 0;
 }
 
+
+int SetSpParams()
+{
+	SetSpSel3DParams();
+	SetSpAimBarParams();
+	SetSpMenuAimBarParams();//CreateMainMenuAimBarWndよりも後
+	SetSpAxisParams();
+	SetSpUndoParams();
+	SetSpGUISWParams();
+	SetSpIkModeSWParams();
+	SetSpRefPosSWParams();
+	SetSpDispSWParams();
+	SetSpRigidSWParams();
+	SetSpRetargetSWParams();
+	SetSpCamParams();
+	SetSpRigParams();
+	SetSpCpLW2WParams();
+	SetSpSmoothParams();
+	SetSpLimitEulSWParams();
+	SetSpScrapingSWParams();
+	SetSpConstExeParams();
+	SetSpConstRefreshParams();
+	//SetSpBtParams();
+	SetSpMouseHereParams();
+	SetSpMouseCenterParams();//SetSpCamParamsよりも後で呼ぶ　位置を参照しているから
+	SetSpCameraModeSWParams();
+	SetSpCameraInheritSWParams();
+	
+	SetSpRet2PrevParams();
+	
+	SetSpCopyParams();//SetSpCameraInheritSWParams()よりも後で呼ぶ
+	SetSpSymCopyParams();
+	SetSpPasteParams();
+	SetSpCopyHistoryParams();
+	
+	SetSpInterpolateParams();
+	SetSpInitParams();
+	SetSpScaleInitParams();
+	SetSpPropertyParams();
+	
+	SetSpZeroFrameParams();
+	SetSpCameraDollyParams();
+	SetSpModelPosDirParams();
+	SetSpMaterialRateParams();
+
+	return 0;
+}
 int SetSpUndoParams()
 {
-	if (!(s_spundo[0].sprite)) {
-		return 0;
-	}
+
 
 	int spashift = 6;
 	//s_spundo[0].dispcenter.x = (int)( s_mainwidth * 0.57f );
@@ -21338,20 +21131,29 @@ int SetSpUndoParams()
 	s_spundo[1].dispcenter.x = s_spundo[0].dispcenter.x;
 	s_spundo[1].dispcenter.y = s_spundo[0].dispcenter.y + (int)s_spsize + spashift;
 
+	//{
+	//	s_spaxis[0].dispcenter.x = s_mainwidth - (int)s_spsidemargin - (int)s_spsize - 10;
+	//	s_spaxis[0].dispcenter.y = (int)s_sptopmargin;
+	//	//spashift = (int)( (float)spashift * ( (float)s_mainwidth / 600.0 ) );
+	//
+	//	s_spaxis[1].dispcenter.x = s_spaxis[0].dispcenter.x;
+	//	s_spaxis[1].dispcenter.y = s_spaxis[0].dispcenter.y + (int)s_spsize + spashift;
+	//
+	//	s_spaxis[2].dispcenter.x = s_spaxis[0].dispcenter.x;
+	//	s_spaxis[2].dispcenter.y = s_spaxis[1].dispcenter.y + (int)s_spsize + spashift;;
+	//}
+
+
 	int spacnt;
 	for (spacnt = 0; spacnt < 2; spacnt++) {
 		ChaVector3 disppos;
-		disppos.x = (float)(s_spundo[spacnt].dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-		disppos.y = -((float)(s_spundo[spacnt].dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+		disppos.x = (float)(s_spundo[spacnt].dispcenter.x);
+		disppos.y = (float)(s_spundo[spacnt].dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(s_spsize / (float)s_mainwidth * 2.0f, s_spsize / (float)s_mainheight * 2.0f);
-		if (s_spundo[spacnt].sprite) {
-			CallF(s_spundo[spacnt].sprite->SetPos(disppos), return 1);
-			CallF(s_spundo[spacnt].sprite->SetSize(dispsize), return 1);
-		}
-		else {
-			_ASSERT(0);
-		}
+		ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+		//CallF(s_spundo[spacnt].sprite->SetPos(disppos), return 1);
+		//CallF(s_spundo[spacnt].sprite->SetSize(dispsize), return 1);
+		s_spundo[spacnt].sprite.UpdateScreen(disppos, dispsize);
 	}
 
 	return 0;
@@ -21361,9 +21163,6 @@ int SetSpUndoParams()
 
 int SetSpAxisParams()
 {
-	if (!(s_spaxis[0].sprite)) {
-		return 0;
-	}
 
 	int spashift = 6;
 	//s_spaxis[0].dispcenter.x = (int)( s_mainwidth * 0.57f );
@@ -21383,17 +21182,13 @@ int SetSpAxisParams()
 	int spacnt;
 	for (spacnt = 0; spacnt < SPAXISNUM; spacnt++) {
 		ChaVector3 disppos;
-		disppos.x = (float)(s_spaxis[spacnt].dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-		disppos.y = -((float)(s_spaxis[spacnt].dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+		disppos.x = (float)(s_spaxis[spacnt].dispcenter.x);
+		disppos.y = (float)(s_spaxis[spacnt].dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(s_spsize / (float)s_mainwidth * 2.0f, s_spsize / (float)s_mainheight * 2.0f);
-		if (s_spaxis[spacnt].sprite) {
-			CallF(s_spaxis[spacnt].sprite->SetPos(disppos), return 1);
-			CallF(s_spaxis[spacnt].sprite->SetSize(dispsize), return 1);
-		}
-		else {
-			_ASSERT(0);
-		}
+		ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+		//CallF(s_spaxis[spacnt].sprite->SetPos(disppos), return 1);
+		//CallF(s_spaxis[spacnt].sprite->SetSize(dispsize), return 1);
+		s_spaxis[spacnt].sprite.UpdateScreen(disppos, dispsize);
 	}
 
 	return 0;
@@ -21402,10 +21197,7 @@ int SetSpAxisParams()
 
 int SetSpDispSWParams()
 {
-	if (!(s_spdispsw[SPDISPSW_LIGHTS].spriteON) || !(s_spdispsw[SPDISPSW_LIGHTS].spriteOFF)) {
-		_ASSERT(0);
-		return 0;
-	}
+
 
 	//float spgwidth = 140.0f;
 	float spgwidth = 124.0f;
@@ -21434,26 +21226,18 @@ int SetSpDispSWParams()
 	int spgcnt;
 	for (spgcnt = 0; spgcnt < SPDISPSWNUM; spgcnt++) {
 		ChaVector3 disppos;
-		disppos.x = (float)(s_spdispsw[spgcnt].dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-		disppos.y = -((float)(s_spdispsw[spgcnt].dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+		disppos.x = (float)(s_spdispsw[spgcnt].dispcenter.x);
+		disppos.y = (float)(s_spdispsw[spgcnt].dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(spgwidth / (float)s_mainwidth * 2.0f, spgheight / (float)s_mainheight * 2.0f);
+		ChaVector2 dispsize = ChaVector2(spgwidth, spgheight);
 
-		if (s_spdispsw[spgcnt].spriteON) {
-			CallF(s_spdispsw[spgcnt].spriteON->SetPos(disppos), return 1);
-			CallF(s_spdispsw[spgcnt].spriteON->SetSize(dispsize), return 1);
-		}
-		else {
-			_ASSERT(0);
-		}
-		if (s_spdispsw[spgcnt].spriteOFF) {
-			CallF(s_spdispsw[spgcnt].spriteOFF->SetPos(disppos), return 1);
-			CallF(s_spdispsw[spgcnt].spriteOFF->SetSize(dispsize), return 1);
-		}
-		else {
-			_ASSERT(0);
-		}
+		//CallF(s_spdispsw[spgcnt].spriteON->SetPos(disppos), return 1);
+		//CallF(s_spdispsw[spgcnt].spriteON->SetSize(dispsize), return 1);
+		s_spdispsw[spgcnt].spriteON.UpdateScreen(disppos, dispsize);
 
+		//CallF(s_spdispsw[spgcnt].spriteOFF->SetPos(disppos), return 1);
+		//CallF(s_spdispsw[spgcnt].spriteOFF->SetSize(dispsize), return 1);
+		s_spdispsw[spgcnt].spriteOFF.UpdateScreen(disppos, dispsize);
 	}
 
 	return 0;
@@ -21463,10 +21247,6 @@ int SetSpDispSWParams()
 
 int SetSpRigidSWParams()
 {
-	if (!(s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteON) || !(s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteOFF)) {
-		_ASSERT(0);
-		return 0;
-	}
 
 	//float spgwidth = 140.0f;
 	float spgwidth = 124.0f;
@@ -21497,26 +21277,18 @@ int SetSpRigidSWParams()
 	int spgcnt;
 	for (spgcnt = 0; spgcnt < SPRIGIDSWNUM; spgcnt++) {
 		ChaVector3 disppos;
-		disppos.x = (float)(s_sprigidsw[spgcnt].dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-		disppos.y = -((float)(s_sprigidsw[spgcnt].dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+		disppos.x = (float)(s_sprigidsw[spgcnt].dispcenter.x);
+		disppos.y = (float)(s_sprigidsw[spgcnt].dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(spgwidth / (float)s_mainwidth * 2.0f, spgheight / (float)s_mainheight * 2.0f);
+		ChaVector2 dispsize = ChaVector2(spgwidth, spgheight);
 
-		if (s_sprigidsw[spgcnt].spriteON) {
-			CallF(s_sprigidsw[spgcnt].spriteON->SetPos(disppos), return 1);
-			CallF(s_sprigidsw[spgcnt].spriteON->SetSize(dispsize), return 1);
-		}
-		else {
-			_ASSERT(0);
-		}
-		if (s_sprigidsw[spgcnt].spriteOFF) {
-			CallF(s_sprigidsw[spgcnt].spriteOFF->SetPos(disppos), return 1);
-			CallF(s_sprigidsw[spgcnt].spriteOFF->SetSize(dispsize), return 1);
-		}
-		else {
-			_ASSERT(0);
-		}
+		//CallF(s_sprigidsw[spgcnt].spriteON->SetPos(disppos), return 1);
+		//CallF(s_sprigidsw[spgcnt].spriteON->SetSize(dispsize), return 1);
+		s_sprigidsw[spgcnt].spriteON.UpdateScreen(disppos, dispsize);
 
+		//CallF(s_sprigidsw[spgcnt].spriteOFF->SetPos(disppos), return 1);
+		//CallF(s_sprigidsw[spgcnt].spriteOFF->SetSize(dispsize), return 1);
+		s_sprigidsw[spgcnt].spriteOFF.UpdateScreen(disppos, dispsize);
 	}
 
 	return 0;
@@ -21525,10 +21297,7 @@ int SetSpRigidSWParams()
 
 int SetSpRetargetSWParams()
 {
-	if (!(s_spretargetsw[SPRETARGETSW_RETARGET].spriteON) || !(s_spretargetsw[SPRETARGETSW_RETARGET].spriteOFF)) {
-		_ASSERT(0);
-		return 0;
-	}
+
 
 	//float spgwidth = 140.0f;
 	float spgwidth = 124.0f;
@@ -21553,25 +21322,17 @@ int SetSpRetargetSWParams()
 	int sprcnt;
 	for (sprcnt = 0; sprcnt < SPRETARGETSWNUM; sprcnt++) {
 		ChaVector3 disppos;
-		disppos.x = (float)(s_spretargetsw[sprcnt].dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-		disppos.y = -((float)(s_spretargetsw[sprcnt].dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+		disppos.x = (float)(s_spretargetsw[sprcnt].dispcenter.x);
+		disppos.y = (float)(s_spretargetsw[sprcnt].dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(spgwidth / (float)s_mainwidth * 2.0f, spgheight / (float)s_mainheight * 2.0f);
+		ChaVector2 dispsize = ChaVector2(spgwidth, spgheight);
 
-		if (s_spretargetsw[sprcnt].spriteON) {
-			CallF(s_spretargetsw[sprcnt].spriteON->SetPos(disppos), return 1);
-			CallF(s_spretargetsw[sprcnt].spriteON->SetSize(dispsize), return 1);
-		}
-		else {
-			_ASSERT(0);
-		}
-		if (s_spretargetsw[sprcnt].spriteOFF) {
-			CallF(s_spretargetsw[sprcnt].spriteOFF->SetPos(disppos), return 1);
-			CallF(s_spretargetsw[sprcnt].spriteOFF->SetSize(dispsize), return 1);
-		}
-		else {
-			_ASSERT(0);
-		}
+		//CallF(s_spretargetsw[sprcnt].spriteON->SetPos(disppos), return 1);
+		//CallF(s_spretargetsw[sprcnt].spriteON->SetSize(dispsize), return 1);
+		s_spretargetsw[sprcnt].spriteON.UpdateScreen(disppos, dispsize);
+		//CallF(s_spretargetsw[sprcnt].spriteOFF->SetPos(disppos), return 1);
+		//CallF(s_spretargetsw[sprcnt].spriteOFF->SetSize(dispsize), return 1);
+		s_spretargetsw[sprcnt].spriteOFF.UpdateScreen(disppos, dispsize);
 	}
 
 	return 0;
@@ -21580,10 +21341,7 @@ int SetSpRetargetSWParams()
 
 int SetSpMenuAimBarParams()
 {
-	if (!(s_spmenuaimbar[0].spriteON) || !(s_spmenuaimbar[0].spriteOFF)) {
-		_ASSERT(0);
-		return 0;
-	}
+
 
 	////float spgwidth = 140.0f;
 	////float spgheight = 6.0f;
@@ -21618,8 +21376,8 @@ int SetSpMenuAimBarParams()
 	//			s_spmenuaimbar[menuno].dispcenter.y = 16;
 
 	//			//ChaVector3 disppos;
-	//			//disppos.x = (float)(s_spmenuaimbar[menuno].dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	//			//disppos.y = -((float)(s_spmenuaimbar[menuno].dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	//			//disppos.x = (float)(s_spmenuaimbar[menuno].dispcenter.x);
+	//			//disppos.y = (float)(s_spmenuaimbar[menuno].dispcenter.y);
 	//			//disppos.z = 0.0f;
 	//			//ChaVector2 dispsize = ChaVector2(spritewidth / (float)s_mainwidth * 2.0f, spriteheight / (float)s_mainheight * 2.0f);
 
@@ -21650,64 +21408,51 @@ int SetSpMenuAimBarParams()
 
 int SetSpAimBarParams()
 {
-	if (!(s_spaimbar[SPAIMBAR_1].spriteON) || !(s_spaimbar[SPAIMBAR_1].spriteOFF)) {
-		_ASSERT(0);
-		return 0;
-	}
-
-	//float spgwidth = 140.0f;
-	float spgwidth = 124.0f;
-	float spgheight = 6.0f;
-	int spgshift = 6;
-	s_spaimbar[SPAIMBAR_1].dispcenter.x = s_guibarX0;
-	//s_spaimbar[SPAIMBAR_1].dispcenter.y = 486 + (28 / 2) + (6 / 2);
+	////float spgwidth = 140.0f;
+	//float spgwidth = 124.0f;
+	//float spgheight = 6.0f;
+	//int spgshift = 6;
+	//s_spaimbar[SPAIMBAR_1].dispcenter.x = s_guibarX0;
+	////s_spaimbar[SPAIMBAR_1].dispcenter.y = 486 + (28 / 2) + (6 / 2);
 
 
-	//s_spaimbar[SPAIMBAR_1].dispcenter.y = 486 + (28 / 2) + (6 / 2) - MAINMENUAIMBARH;
-	if (g_4kresolution) {
-		s_spaimbar[SPAIMBAR_1].dispcenter.y = 486 * 2 - MAINMENUAIMBARH + 32 + 16 + 4;
-	}
-	else {
-		s_spaimbar[SPAIMBAR_1].dispcenter.y = 486 + (28 / 2) + (6 / 2) - MAINMENUAIMBARH;
-	}
+	////s_spaimbar[SPAIMBAR_1].dispcenter.y = 486 + (28 / 2) + (6 / 2) - MAINMENUAIMBARH;
+	//if (g_4kresolution) {
+	//	s_spaimbar[SPAIMBAR_1].dispcenter.y = 486 * 2 - MAINMENUAIMBARH + 32 + 16 + 4;
+	//}
+	//else {
+	//	s_spaimbar[SPAIMBAR_1].dispcenter.y = 486 + (28 / 2) + (6 / 2) - MAINMENUAIMBARH;
+	//}
 
 
-	s_spaimbar[SPAIMBAR_2].dispcenter.x = s_spaimbar[SPAIMBAR_1].dispcenter.x + (int)spgwidth + spgshift;
-	s_spaimbar[SPAIMBAR_2].dispcenter.y = s_spaimbar[SPAIMBAR_1].dispcenter.y;
+	//s_spaimbar[SPAIMBAR_2].dispcenter.x = s_spaimbar[SPAIMBAR_1].dispcenter.x + (int)spgwidth + spgshift;
+	//s_spaimbar[SPAIMBAR_2].dispcenter.y = s_spaimbar[SPAIMBAR_1].dispcenter.y;
 
-	s_spaimbar[SPAIMBAR_3].dispcenter.x = s_spaimbar[SPAIMBAR_2].dispcenter.x + (int)spgwidth + spgshift;
-	s_spaimbar[SPAIMBAR_3].dispcenter.y = s_spaimbar[SPAIMBAR_1].dispcenter.y;
+	//s_spaimbar[SPAIMBAR_3].dispcenter.x = s_spaimbar[SPAIMBAR_2].dispcenter.x + (int)spgwidth + spgshift;
+	//s_spaimbar[SPAIMBAR_3].dispcenter.y = s_spaimbar[SPAIMBAR_1].dispcenter.y;
 
-	s_spaimbar[SPAIMBAR_4].dispcenter.x = s_spaimbar[SPAIMBAR_3].dispcenter.x + (int)spgwidth + spgshift;
-	s_spaimbar[SPAIMBAR_4].dispcenter.y = s_spaimbar[SPAIMBAR_1].dispcenter.y;
+	//s_spaimbar[SPAIMBAR_4].dispcenter.x = s_spaimbar[SPAIMBAR_3].dispcenter.x + (int)spgwidth + spgshift;
+	//s_spaimbar[SPAIMBAR_4].dispcenter.y = s_spaimbar[SPAIMBAR_1].dispcenter.y;
 
-	s_spaimbar[SPAIMBAR_5].dispcenter.x = s_spaimbar[SPAIMBAR_4].dispcenter.x + (int)spgwidth + spgshift;
-	s_spaimbar[SPAIMBAR_5].dispcenter.y = s_spaimbar[SPAIMBAR_1].dispcenter.y;
+	//s_spaimbar[SPAIMBAR_5].dispcenter.x = s_spaimbar[SPAIMBAR_4].dispcenter.x + (int)spgwidth + spgshift;
+	//s_spaimbar[SPAIMBAR_5].dispcenter.y = s_spaimbar[SPAIMBAR_1].dispcenter.y;
 
-	int spgcnt;
-	for (spgcnt = 0; spgcnt < SPAIMBARNUM; spgcnt++) {
-		ChaVector3 disppos;
-		disppos.x = (float)(s_spaimbar[spgcnt].dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-		disppos.y = -((float)(s_spaimbar[spgcnt].dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
-		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(spgwidth / (float)s_mainwidth * 2.0f, spgheight / (float)s_mainheight * 2.0f);
+	//int spgcnt;
+	//for (spgcnt = 0; spgcnt < SPAIMBARNUM; spgcnt++) {
+	//	ChaVector3 disppos;
+	//	disppos.x = (float)(s_spaimbar[spgcnt].dispcenter.x);
+	//	disppos.y = (float)(s_spaimbar[spgcnt].dispcenter.y);
+	//	disppos.z = 0.0f;
+	//	ChaVector2 dispsize = ChaVector2(spgwidth, spgheight);
 
-		if (s_spaimbar[spgcnt].spriteON) {
-			CallF(s_spaimbar[spgcnt].spriteON->SetPos(disppos), return 1);
-			CallF(s_spaimbar[spgcnt].spriteON->SetSize(dispsize), return 1);
-		}
-		else {
-			_ASSERT(0);
-		}
-		if (s_spaimbar[spgcnt].spriteOFF) {
-			CallF(s_spaimbar[spgcnt].spriteOFF->SetPos(disppos), return 1);
-			CallF(s_spaimbar[spgcnt].spriteOFF->SetSize(dispsize), return 1);
-		}
-		else {
-			_ASSERT(0);
-		}
+	//	//CallF(s_spaimbar[spgcnt].spriteON->SetPos(disppos), return 1);
+	//	//CallF(s_spaimbar[spgcnt].spriteON->SetSize(dispsize), return 1);
+	//	s_spaimbar[spgcnt].spriteON.UpdateScreen(disppos, dispsize);
 
-	}
+	//	//CallF(s_spaimbar[spgcnt].spriteOFF->SetPos(disppos), return 1);
+	//	//CallF(s_spaimbar[spgcnt].spriteOFF->SetSize(dispsize), return 1);
+	//	s_spaimbar[spgcnt].spriteOFF.UpdateScreen(disppos, dispsize);
+	//}
 
 	return 0;
 
@@ -21715,11 +21460,6 @@ int SetSpAimBarParams()
 
 int SetSpMouseCenterParams()
 {
-	if (!s_mousecenteron.sprite) {
-		_ASSERT(0);
-		return 0;
-	}
-
 	//float spgwidth = 91.0f;
 	//float spgheight = 145.0f;
 	//float spgwidth = 50;
@@ -21744,18 +21484,14 @@ int SetSpMouseCenterParams()
 	//s_spcam[2].dispcenter.y = s_spcam[0].dispcenter.y;
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_mousecenteron.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_mousecenteron.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_mousecenteron.dispcenter.x);
+	disppos.y = (float)(s_mousecenteron.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize / (float)s_mainwidth * 2.0f, s_spsize / (float)s_mainheight * 2.0f);
+	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
 
-	if (s_mousecenteron.sprite) {
-		CallF(s_mousecenteron.sprite->SetPos(disppos), return 1);
-		CallF(s_mousecenteron.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	//CallF(s_mousecenteron.sprite->SetPos(disppos), return 1);
+	//CallF(s_mousecenteron.sprite->SetSize(dispsize), return 1);
+	s_mousecenteron.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -21763,11 +21499,6 @@ int SetSpMouseCenterParams()
 
 int SetSpSel3DParams()
 {
-	if (!(s_spsel3d.spriteON) || !(s_spsel3d.spriteOFF)) {
-		_ASSERT(0);
-		return 0;
-	}
-
 
 	/*
 		float spawidth = 50.0f;
@@ -21797,25 +21528,18 @@ int SetSpSel3DParams()
 	s_spsel3d.dispcenter.y = (LONG)(clientrect.top + (int)s_spsize / 2 + 20);
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spsel3d.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spsel3d.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spsel3d.dispcenter.x);
+	disppos.y = (float)(s_spsel3d.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize / (float)s_mainwidth * 2.0f, s_spsize / (float)s_mainheight * 2.0f);
+	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
 
-	if (s_spsel3d.spriteON) {
-		CallF(s_spsel3d.spriteON->SetPos(disppos), return 1);
-		CallF(s_spsel3d.spriteON->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
-	if (s_spsel3d.spriteOFF) {
-		CallF(s_spsel3d.spriteOFF->SetPos(disppos), return 1);
-		CallF(s_spsel3d.spriteOFF->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	//CallF(s_spsel3d.spriteON->SetPos(disppos), return 1);
+	//CallF(s_spsel3d.spriteON->SetSize(dispsize), return 1);
+	s_spsel3d.spriteON.UpdateScreen(disppos, dispsize);
+
+	//CallF(s_spsel3d.spriteOFF->SetPos(disppos), return 1);
+	//CallF(s_spsel3d.spriteOFF->SetSize(dispsize), return 1);
+	s_spsel3d.spriteOFF.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -21823,11 +21547,6 @@ int SetSpSel3DParams()
 
 int SetSpIkModeSWParams()
 {
-	if (!(s_spikmodesw[0].spriteON) || !(s_spikmodesw[0].spriteOFF)) {
-		_ASSERT(0);
-		return 0;
-	}
-
 
 	int spgshift = 6;
 	s_spikmodesw[0].dispcenter.x = s_mainwidth - (int)s_spsidemargin;
@@ -21842,25 +21561,18 @@ int SetSpIkModeSWParams()
 	int spgcnt;
 	for (spgcnt = 0; spgcnt < 3; spgcnt++) {
 		ChaVector3 disppos;
-		disppos.x = (float)(s_spikmodesw[spgcnt].dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-		disppos.y = -((float)(s_spikmodesw[spgcnt].dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+		disppos.x = (float)(s_spikmodesw[spgcnt].dispcenter.x);
+		disppos.y = (float)(s_spikmodesw[spgcnt].dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(s_spsize / (float)s_mainwidth * 2.0f, s_spsize / (float)s_mainheight * 2.0f);
+		ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
 
-		if (s_spikmodesw[spgcnt].spriteON) {
-			CallF(s_spikmodesw[spgcnt].spriteON->SetPos(disppos), return 1);
-			CallF(s_spikmodesw[spgcnt].spriteON->SetSize(dispsize), return 1);
-		}
-		else {
-			_ASSERT(0);
-		}
-		if (s_spikmodesw[spgcnt].spriteOFF) {
-			CallF(s_spikmodesw[spgcnt].spriteOFF->SetPos(disppos), return 1);
-			CallF(s_spikmodesw[spgcnt].spriteOFF->SetSize(dispsize), return 1);
-		}
-		else {
-			_ASSERT(0);
-		}
+		//CallF(s_spikmodesw[spgcnt].spriteON->SetPos(disppos), return 1);
+		//CallF(s_spikmodesw[spgcnt].spriteON->SetSize(dispsize), return 1);
+		s_spikmodesw[spgcnt].spriteON.UpdateScreen(disppos, dispsize);
+
+		//CallF(s_spikmodesw[spgcnt].spriteOFF->SetPos(disppos), return 1);
+		//CallF(s_spikmodesw[spgcnt].spriteOFF->SetSize(dispsize), return 1);
+		s_spikmodesw[spgcnt].spriteOFF.UpdateScreen(disppos, dispsize);
 	}
 
 	return 0;
@@ -21869,123 +21581,77 @@ int SetSpIkModeSWParams()
 
 int SetSpRefPosSWParams()
 {
-	if (!(s_sprefpos.spriteON) || !(s_sprefpos.spriteOFF)) {
-		_ASSERT(0);
-		return 0;
-	}
-
-
 	int spgshift = 6;
 	s_sprefpos.dispcenter.x = s_mainwidth - (int)s_spsidemargin;
 	s_sprefpos.dispcenter.y = (int)s_sptopmargin + ((int)s_spsize + spgshift) * 3;
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_sprefpos.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_sprefpos.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_sprefpos.dispcenter.x);
+	disppos.y = (float)(s_sprefpos.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize / (float)s_mainwidth * 2.0f, s_spsize / (float)s_mainheight * 2.0f);
+	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
 
-	if (s_sprefpos.spriteON) {
-		CallF(s_sprefpos.spriteON->SetPos(disppos), return 1);
-		CallF(s_sprefpos.spriteON->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
-	if (s_sprefpos.spriteOFF) {
-		CallF(s_sprefpos.spriteOFF->SetPos(disppos), return 1);
-		CallF(s_sprefpos.spriteOFF->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+
+	//CallF(s_sprefpos.spriteON->SetPos(disppos), return 1);
+	//CallF(s_sprefpos.spriteON->SetSize(dispsize), return 1);
+	s_sprefpos.spriteON.UpdateScreen(disppos, dispsize);
+
+	//CallF(s_sprefpos.spriteOFF->SetPos(disppos), return 1);
+	//CallF(s_sprefpos.spriteOFF->SetSize(dispsize), return 1);
+	s_sprefpos.spriteOFF.UpdateScreen(disppos, dispsize);
 
 	return 0;
 }
 
 int SetSpLimitEulSWParams()
 {
-	if (!(s_splimiteul.spriteON) || !(s_splimiteul.spriteOFF)) {
-		_ASSERT(0);
-		return 0;
-	}
-
-
 	int spgshift = 6;
 	s_splimiteul.dispcenter.x = s_mainwidth - (int)s_spsidemargin - (int)s_spsize - 10;
 	s_splimiteul.dispcenter.y = (int)s_sptopmargin + ((int)s_spsize + spgshift) * 6 + spgshift;
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_splimiteul.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_splimiteul.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_splimiteul.dispcenter.x);
+	disppos.y = (float)(s_splimiteul.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize / (float)s_mainwidth * 2.0f, s_spsize / (float)s_mainheight * 2.0f);
+	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
 
-	if (s_splimiteul.spriteON) {
-		CallF(s_splimiteul.spriteON->SetPos(disppos), return 1);
-		CallF(s_splimiteul.spriteON->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
-	if (s_splimiteul.spriteOFF) {
-		CallF(s_splimiteul.spriteOFF->SetPos(disppos), return 1);
-		CallF(s_splimiteul.spriteOFF->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	//CallF(s_splimiteul.spriteON->SetPos(disppos), return 1);
+	//CallF(s_splimiteul.spriteON->SetSize(dispsize), return 1);
+	s_splimiteul.spriteON.UpdateScreen(disppos, dispsize);
+
+	//CallF(s_splimiteul.spriteOFF->SetPos(disppos), return 1);
+	//CallF(s_splimiteul.spriteOFF->SetSize(dispsize), return 1);
+	s_splimiteul.spriteOFF.UpdateScreen(disppos, dispsize);
 
 	return 0;
 }
 
 int SetSpScrapingSWParams()
 {
-	if (!(s_spscraping.spriteON) || !(s_spscraping.spriteOFF)) {
-		_ASSERT(0);
-		return 0;
-	}
-
-
 	int spgshift = 6;
 	s_spscraping.dispcenter.x = s_mainwidth - (int)s_spsidemargin;
 	s_spscraping.dispcenter.y = (int)s_sptopmargin + ((int)s_spsize + spgshift) * 6 + spgshift;
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spscraping.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spscraping.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spscraping.dispcenter.x);
+	disppos.y = (float)(s_spscraping.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize / (float)s_mainwidth * 2.0f, s_spsize / (float)s_mainheight * 2.0f);
+	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
 
-	if (s_spscraping.spriteON) {
-		CallF(s_spscraping.spriteON->SetPos(disppos), return 1);
-		CallF(s_spscraping.spriteON->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
-	if (s_spscraping.spriteOFF) {
-		CallF(s_spscraping.spriteOFF->SetPos(disppos), return 1);
-		CallF(s_spscraping.spriteOFF->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	//CallF(s_spscraping.spriteON->SetPos(disppos), return 1);
+	//CallF(s_spscraping.spriteON->SetSize(dispsize), return 1);
+	s_spscraping.spriteON.UpdateScreen(disppos, dispsize);
+
+	//CallF(s_spscraping.spriteOFF->SetPos(disppos), return 1);
+	//CallF(s_spscraping.spriteOFF->SetSize(dispsize), return 1);
+	s_spscraping.spriteOFF.UpdateScreen(disppos, dispsize);
 
 	return 0;
 }
 
 int SetSpRet2PrevParams()
 {
-	if (!(s_spret2prev.sprite)) {
-		_ASSERT(0);
-		return 0;
-	}
-	if (!(s_spret2prev2.sprite)) {
-		_ASSERT(0);
-		return 0;
-	}
-
+	
 	float spretwidth1;
 	float spretheight1;
 	float spretwidth2;
@@ -22019,18 +21685,14 @@ int SetSpRet2PrevParams()
 		}
 
 		ChaVector3 disppos;
-		disppos.x = (float)(s_spret2prev.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-		disppos.y = -((float)(s_spret2prev.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+		disppos.x = (float)(s_spret2prev.dispcenter.x);
+		disppos.y = (float)(s_spret2prev.dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(spretwidth1 / (float)s_mainwidth * 2.0f, spretheight1 / (float)s_mainheight * 2.0f);
+		ChaVector2 dispsize = ChaVector2(spretwidth1, spretheight1);
 
-		if (s_spret2prev.sprite) {
-			CallF(s_spret2prev.sprite->SetPos(disppos), return 1);
-			CallF(s_spret2prev.sprite->SetSize(dispsize), return 1);
-		}
-		else {
-			_ASSERT(0);
-		}
+		//CallF(s_spret2prev.sprite->SetPos(disppos), return 1);
+		//CallF(s_spret2prev.sprite->SetSize(dispsize), return 1);
+		s_spret2prev.sprite.UpdateScreen(disppos, dispsize);
 	}
 
 	{
@@ -22041,18 +21703,14 @@ int SetSpRet2PrevParams()
 
 
 		ChaVector3 disppos;
-		disppos.x = (float)(s_spret2prev2.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-		disppos.y = -((float)(s_spret2prev2.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+		disppos.x = (float)(s_spret2prev2.dispcenter.x);
+		disppos.y = (float)(s_spret2prev2.dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(spretwidth2 / (float)s_mainwidth * 2.0f, spretheight2 / (float)s_mainheight * 2.0f);
+		ChaVector2 dispsize = ChaVector2(spretwidth2, spretheight2);
 
-		if (s_spret2prev2.sprite) {
-			CallF(s_spret2prev2.sprite->SetPos(disppos), return 1);
-			CallF(s_spret2prev2.sprite->SetSize(dispsize), return 1);
-		}
-		else {
-			_ASSERT(0);
-		}
+		//CallF(s_spret2prev2.sprite->SetPos(disppos), return 1);
+		//CallF(s_spret2prev2.sprite->SetSize(dispsize), return 1);
+		s_spret2prev2.sprite.UpdateScreen(disppos, dispsize);
 	}
 
 	return 0;
@@ -22061,11 +21719,6 @@ int SetSpRet2PrevParams()
 
 int SetSpGUISWParams()
 {
-	if (!(s_spguisw[SPGUISW_CAMERA_AND_IK].spriteON) || !(s_spguisw[SPGUISW_CAMERA_AND_IK].spriteOFF)) {
-		_ASSERT(0);
-		return 0;
-	}
-
 	//float spgwidth = 140.0f;
 	float spgwidth = 124.0f;
 	float spgheight = 28.0f;
@@ -22096,25 +21749,18 @@ int SetSpGUISWParams()
 	int spgcnt;
 	for (spgcnt = 0; spgcnt < SPGUISWNUM; spgcnt++) {
 		ChaVector3 disppos;
-		disppos.x = (float)(s_spguisw[spgcnt].dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-		disppos.y = -((float)(s_spguisw[spgcnt].dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+		disppos.x = (float)(s_spguisw[spgcnt].dispcenter.x);
+		disppos.y = (float)(s_spguisw[spgcnt].dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(spgwidth / (float)s_mainwidth * 2.0f, spgheight / (float)s_mainheight * 2.0f);
+		ChaVector2 dispsize = ChaVector2(spgwidth, spgheight);
 
-		if (s_spguisw[spgcnt].spriteON) {
-			CallF(s_spguisw[spgcnt].spriteON->SetPos(disppos), return 1);
-			CallF(s_spguisw[spgcnt].spriteON->SetSize(dispsize), return 1);
-		}
-		else {
-			_ASSERT(0);
-		}
-		if (s_spguisw[spgcnt].spriteOFF) {
-			CallF(s_spguisw[spgcnt].spriteOFF->SetPos(disppos), return 1);
-			CallF(s_spguisw[spgcnt].spriteOFF->SetSize(dispsize), return 1);
-		}
-		else {
-			_ASSERT(0);
-		}
+		//CallF(s_spguisw[spgcnt].spriteON->SetPos(disppos), return 1);
+		//CallF(s_spguisw[spgcnt].spriteON->SetSize(dispsize), return 1);
+		s_spguisw[spgcnt].spriteON.UpdateScreen(disppos, dispsize);
+
+		//CallF(s_spguisw[spgcnt].spriteOFF->SetPos(disppos), return 1);
+		//CallF(s_spguisw[spgcnt].spriteOFF->SetSize(dispsize), return 1);
+		s_spguisw[spgcnt].spriteOFF.UpdateScreen(disppos, dispsize);
 
 	}
 
@@ -22126,10 +21772,6 @@ int SetSpGUISWParams()
 
 int SetSpCamParams()
 {
-	if (!(s_spcam[SPR_CAM_I].sprite) || !(s_spcam[SPR_CAM_KAI].sprite) || !(s_spcam[SPR_CAM_KAKU].sprite)) {
-		return 0;
-	}
-
 	int spashift = 6;
 	//s_spcam[0].dispcenter.x = (int)(s_mainwidth * 0.57f);
 	//s_spcam[0].dispcenter.y = (int)(30.0f * ((float)s_mainheight / 620.0)) + (int(spawidth * 1.5f));
@@ -22149,17 +21791,15 @@ int SetSpCamParams()
 	int spacnt;
 	for (spacnt = 0; spacnt < SPR_CAM_MAX; spacnt++) {
 		ChaVector3 disppos;
-		disppos.x = (float)(s_spcam[spacnt].dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-		disppos.y = -((float)(s_spcam[spacnt].dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+		disppos.x = (float)(s_spcam[spacnt].dispcenter.x);
+		disppos.y = (float)(s_spcam[spacnt].dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(s_spsize / (float)s_mainwidth * 2.0f, s_spsize / (float)s_mainheight * 2.0f);
-		if (s_spcam[spacnt].sprite) {
-			CallF(s_spcam[spacnt].sprite->SetPos(disppos), return 1);
-			CallF(s_spcam[spacnt].sprite->SetSize(dispsize), return 1);
-		}
-		else {
-			_ASSERT(0);
-		}
+		ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+
+		//CallF(s_spcam[spacnt].sprite->SetPos(disppos), return 1);
+		//CallF(s_spcam[spacnt].sprite->SetSize(dispsize), return 1);
+		s_spcam[spacnt].sprite.UpdateScreen(disppos, dispsize);
+
 	}
 
 	return 0;
@@ -22168,95 +21808,62 @@ int SetSpCamParams()
 
 int SetSpCameraModeSWParams()
 {
-	if (!(s_spcameramode.spriteON) || !(s_spcameramode.spriteOFF)) {
-		_ASSERT(0);
-		return 0;
-	}
-
-
 	int spgshift = 6;
 	s_spcameramode.dispcenter.x = s_mainwidth - (int)s_spsize - 10 - (int)s_spsize - 6 - ((int)s_spsize + 6) * 5;
 	s_spcameramode.dispcenter.y = (int)s_spsize / 2 + 10;
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spcameramode.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spcameramode.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spcameramode.dispcenter.x);
+	disppos.y = (float)(s_spcameramode.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize / (float)s_mainwidth * 2.0f, s_spsize / (float)s_mainheight * 2.0f);
+	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
 
 
 	dispsize *= 0.70f;//大きくみえるデザインなので　少し小さくして表示　当たり判定は元の大きさ
 
+	//CallF(s_spcameramode.spriteON->SetPos(disppos), return 1);
+	//CallF(s_spcameramode.spriteON->SetSize(dispsize), return 1);
+	s_spcameramode.spriteON.UpdateScreen(disppos, dispsize);
 
-	if (s_spcameramode.spriteON) {
-		CallF(s_spcameramode.spriteON->SetPos(disppos), return 1);
-		CallF(s_spcameramode.spriteON->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
-	if (s_spcameramode.spriteOFF) {
-		CallF(s_spcameramode.spriteOFF->SetPos(disppos), return 1);
-		CallF(s_spcameramode.spriteOFF->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	//CallF(s_spcameramode.spriteOFF->SetPos(disppos), return 1);
+	//CallF(s_spcameramode.spriteOFF->SetSize(dispsize), return 1);
+	s_spcameramode.spriteOFF.UpdateScreen(disppos, dispsize);
 
 	return 0;
 }
 
 int SetSpCameraInheritSWParams()
 {
-	if (!(s_spcamerainherit.sprite1) || !(s_spcamerainherit.sprite2) || !(s_spcamerainherit.sprite3)) {
-		_ASSERT(0);
-		return 0;
-	}
-
 	int spgshift = 6;
 	s_spcamerainherit.dispcenter.x = s_mainwidth - (int)s_spsize - 10 - (int)s_spsize - 6 - ((int)s_spsize + 6) * 5 - (int)s_spsize / 2;
 	s_spcamerainherit.dispcenter.y = (int)s_spsize / 2 + 10;
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spcamerainherit.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spcamerainherit.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spcamerainherit.dispcenter.x);
+	disppos.y = (float)(s_spcamerainherit.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize / (float)s_mainwidth * 2.0f, s_spsize / (float)s_mainheight * 2.0f);
+	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
 
 
 	dispsize *= 0.80f;//大きくみえるデザインなので　少し小さくして表示　当たり判定は元の大きさ
 
 
-	if (s_spcamerainherit.sprite1) {
-		CallF(s_spcamerainherit.sprite1->SetPos(disppos), return 1);
-		CallF(s_spcamerainherit.sprite1->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
-	if (s_spcamerainherit.sprite2) {
-		CallF(s_spcamerainherit.sprite2->SetPos(disppos), return 1);
-		CallF(s_spcamerainherit.sprite2->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
-	if (s_spcamerainherit.sprite3) {
-		CallF(s_spcamerainherit.sprite3->SetPos(disppos), return 1);
-		CallF(s_spcamerainherit.sprite3->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	//CallF(s_spcamerainherit.sprite1->SetPos(disppos), return 1);
+	//CallF(s_spcamerainherit.sprite1->SetSize(dispsize), return 1);
+	s_spcamerainherit.sprite1.UpdateScreen(disppos, dispsize);
+
+	//CallF(s_spcamerainherit.sprite2->SetPos(disppos), return 1);
+	//CallF(s_spcamerainherit.sprite2->SetSize(dispsize), return 1);
+	s_spcamerainherit.sprite2.UpdateScreen(disppos, dispsize);
+	//CallF(s_spcamerainherit.sprite3->SetPos(disppos), return 1);
+	//CallF(s_spcamerainherit.sprite3->SetSize(dispsize), return 1);
+	s_spcamerainherit.sprite3.UpdateScreen(disppos, dispsize);
 
 	return 0;
 }
 
 int SetSpCopyParams()
 {
-	if (!s_spcopy.sprite) {
-		return 0;
-	}
 
 	int spgshift = 6;
 	//s_spcopy.dispcenter.x = s_mainwidth - (int)s_spsize - 10 - (int)s_spsize - 6 - ((int)s_spsize + 6) * 5;
@@ -22265,17 +21872,14 @@ int SetSpCopyParams()
 	s_spcopy.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spcopy.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spcopy.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spcopy.dispcenter.x);
+	disppos.y = (float)(s_spcopy.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall / (float)s_mainwidth * 2.0f, s_spsizeSmall / (float)s_mainheight * 2.0f);
-	if (s_spcopy.sprite) {
-		CallF(s_spcopy.sprite->SetPos(disppos), return 1);
-		CallF(s_spcopy.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+
+	//CallF(s_spcopy.sprite->SetPos(disppos), return 1);
+	//CallF(s_spcopy.sprite->SetSize(dispsize), return 1);
+	s_spcopy.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22283,10 +21887,6 @@ int SetSpCopyParams()
 
 int SetSpSymCopyParams()
 {
-	if (!s_spsymcopy.sprite) {
-		return 0;
-	}
-
 	int spgshift = 6;
 	//s_spsymcopy.dispcenter.x = s_mainwidth - (int)s_spsize - 10 - (int)s_spsize - 6 - ((int)s_spsize + 6) * 5 + (int)s_spsizeSmall + 6;
 	s_spsymcopy.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 2;
@@ -22295,17 +21895,14 @@ int SetSpSymCopyParams()
 
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spsymcopy.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spsymcopy.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spsymcopy.dispcenter.x);
+	disppos.y = (float)(s_spsymcopy.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall / (float)s_mainwidth * 2.0f, s_spsizeSmall / (float)s_mainheight * 2.0f);
-	if (s_spsymcopy.sprite) {
-		CallF(s_spsymcopy.sprite->SetPos(disppos), return 1);
-		CallF(s_spsymcopy.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+
+	//CallF(s_spsymcopy.sprite->SetPos(disppos), return 1);
+	//CallF(s_spsymcopy.sprite->SetSize(dispsize), return 1);
+	s_spsymcopy.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22313,9 +21910,6 @@ int SetSpSymCopyParams()
 
 int SetSpPasteParams()
 {
-	if (!s_sppaste.sprite) {
-		return 0;
-	}
 
 	int spgshift = 6;
 	//s_sppaste.dispcenter.x = s_mainwidth - (int)s_spsize - 10 - (int)s_spsize - 6 - ((int)s_spsize + 6) * 5 + (int)(s_spsizeSmall + 6) * 2;
@@ -22325,17 +21919,14 @@ int SetSpPasteParams()
 
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_sppaste.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_sppaste.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_sppaste.dispcenter.x);
+	disppos.y = (float)(s_sppaste.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall / (float)s_mainwidth * 2.0f, s_spsizeSmall / (float)s_mainheight * 2.0f);
-	if (s_sppaste.sprite) {
-		CallF(s_sppaste.sprite->SetPos(disppos), return 1);
-		CallF(s_sppaste.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+
+	//CallF(s_sppaste.sprite->SetPos(disppos), return 1);
+	//CallF(s_sppaste.sprite->SetSize(dispsize), return 1);
+	s_sppaste.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22343,10 +21934,6 @@ int SetSpPasteParams()
 
 int SetSpCopyHistoryParams()
 {
-	if (!s_spcopyhistory.sprite) {
-		return 0;
-	}
-
 	int spgshift = 6;
 	//s_spcopyhistory.dispcenter.x = s_mainwidth - (int)s_spsize - 10 - (int)s_spsize - 6 - ((int)s_spsize + 6) * 5 + (int)(s_spsizeSmall + 6) * 3;
 	s_spcopyhistory.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 0;
@@ -22355,17 +21942,14 @@ int SetSpCopyHistoryParams()
 
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spcopyhistory.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spcopyhistory.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spcopyhistory.dispcenter.x);
+	disppos.y = (float)(s_spcopyhistory.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall / (float)s_mainwidth * 2.0f, s_spsizeSmall / (float)s_mainheight * 2.0f);
-	if (s_spcopyhistory.sprite) {
-		CallF(s_spcopyhistory.sprite->SetPos(disppos), return 1);
-		CallF(s_spcopyhistory.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+
+	//CallF(s_spcopyhistory.sprite->SetPos(disppos), return 1);
+	//CallF(s_spcopyhistory.sprite->SetSize(dispsize), return 1);
+	s_spcopyhistory.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22373,26 +21957,19 @@ int SetSpCopyHistoryParams()
 
 int SetSpInterpolateParams()
 {
-	if (!s_spinterpolate.sprite) {
-		return 0;
-	}
-
 	int spgshift = 6;
 	s_spinterpolate.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 3;
 	s_spinterpolate.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spinterpolate.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spinterpolate.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spinterpolate.dispcenter.x);
+	disppos.y = (float)(s_spinterpolate.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall / (float)s_mainwidth * 2.0f, s_spsizeSmall / (float)s_mainheight * 2.0f);
-	if (s_spinterpolate.sprite) {
-		CallF(s_spinterpolate.sprite->SetPos(disppos), return 1);
-		CallF(s_spinterpolate.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+
+	//CallF(s_spinterpolate.sprite->SetPos(disppos), return 1);
+	//CallF(s_spinterpolate.sprite->SetSize(dispsize), return 1);
+	s_spinterpolate.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22400,27 +21977,20 @@ int SetSpInterpolateParams()
 
 int SetSpInitParams()
 {
-	if (!s_spinit.sprite) {
-		return 0;
-	}
-
 	int spgshift = 6;
 	s_spinit.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 2;
 	s_spinit.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
 
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spinit.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spinit.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spinit.dispcenter.x);
+	disppos.y = (float)(s_spinit.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall / (float)s_mainwidth * 2.0f, s_spsizeSmall / (float)s_mainheight * 2.0f);
-	if (s_spinit.sprite) {
-		CallF(s_spinit.sprite->SetPos(disppos), return 1);
-		CallF(s_spinit.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+
+	//CallF(s_spinit.sprite->SetPos(disppos), return 1);
+	//CallF(s_spinit.sprite->SetSize(dispsize), return 1);
+	s_spinit.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22428,9 +21998,6 @@ int SetSpInitParams()
 
 int SetSpScaleInitParams()
 {
-	if (!s_spscaleinit.sprite) {
-		return 0;
-	}
 
 	int spgshift = 6;
 	s_spscaleinit.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 1;
@@ -22438,17 +22005,14 @@ int SetSpScaleInitParams()
 
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spscaleinit.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spscaleinit.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spscaleinit.dispcenter.x);
+	disppos.y = (float)(s_spscaleinit.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall / (float)s_mainwidth * 2.0f, s_spsizeSmall / (float)s_mainheight * 2.0f);
-	if (s_spscaleinit.sprite) {
-		CallF(s_spscaleinit.sprite->SetPos(disppos), return 1);
-		CallF(s_spscaleinit.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+
+	//CallF(s_spscaleinit.sprite->SetPos(disppos), return 1);
+	//CallF(s_spscaleinit.sprite->SetSize(dispsize), return 1);
+	s_spscaleinit.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22456,27 +22020,20 @@ int SetSpScaleInitParams()
 
 int SetSpPropertyParams()
 {
-	if (!s_spproperty.sprite) {
-		return 0;
-	}
-
 	int spgshift = 6;
 	s_spproperty.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 0;
 	s_spproperty.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
 
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spproperty.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spproperty.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spproperty.dispcenter.x);
+	disppos.y = (float)(s_spproperty.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall / (float)s_mainwidth * 2.0f, s_spsizeSmall / (float)s_mainheight * 2.0f);
-	if (s_spproperty.sprite) {
-		CallF(s_spproperty.sprite->SetPos(disppos), return 1);
-		CallF(s_spproperty.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+
+	//CallF(s_spproperty.sprite->SetPos(disppos), return 1);
+	//CallF(s_spproperty.sprite->SetSize(dispsize), return 1);
+	s_spproperty.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22485,26 +22042,20 @@ int SetSpPropertyParams()
 
 int SetSpZeroFrameParams()
 {
-	if (!s_spzeroframe.sprite) {
-		return 0;
-	}
 
 	int spgshift = 6;
 	s_spzeroframe.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 3;
 	s_spzeroframe.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spzeroframe.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spzeroframe.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spzeroframe.dispcenter.x);
+	disppos.y = (float)(s_spzeroframe.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall / (float)s_mainwidth * 2.0f, s_spsizeSmall / (float)s_mainheight * 2.0f);
-	if (s_spzeroframe.sprite) {
-		CallF(s_spzeroframe.sprite->SetPos(disppos), return 1);
-		CallF(s_spzeroframe.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+
+	//CallF(s_spzeroframe.sprite->SetPos(disppos), return 1);
+	//CallF(s_spzeroframe.sprite->SetSize(dispsize), return 1);
+	s_spzeroframe.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22512,27 +22063,20 @@ int SetSpZeroFrameParams()
 
 int SetSpCameraDollyParams()
 {
-	if (!s_spcameradolly.sprite) {
-		return 0;
-	}
-
 	int spgshift = 6;
 	s_spcameradolly.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 2;
 	s_spcameradolly.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
 
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spcameradolly.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spcameradolly.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spcameradolly.dispcenter.x);
+	disppos.y = (float)(s_spcameradolly.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall / (float)s_mainwidth * 2.0f, s_spsizeSmall / (float)s_mainheight * 2.0f);
-	if (s_spcameradolly.sprite) {
-		CallF(s_spcameradolly.sprite->SetPos(disppos), return 1);
-		CallF(s_spcameradolly.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+
+	//CallF(s_spcameradolly.sprite->SetPos(disppos), return 1);
+	//CallF(s_spcameradolly.sprite->SetSize(dispsize), return 1);
+	s_spcameradolly.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22540,27 +22084,20 @@ int SetSpCameraDollyParams()
 
 int SetSpModelPosDirParams()
 {
-	if (!s_spmodelposdir.sprite) {
-		return 0;
-	}
-
 	int spgshift = 6;
 	s_spmodelposdir.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 1;
 	s_spmodelposdir.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
 
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spmodelposdir.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spmodelposdir.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spmodelposdir.dispcenter.x);
+	disppos.y = (float)(s_spmodelposdir.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall / (float)s_mainwidth * 2.0f, s_spsizeSmall / (float)s_mainheight * 2.0f);
-	if (s_spscaleinit.sprite) {
-		CallF(s_spmodelposdir.sprite->SetPos(disppos), return 1);
-		CallF(s_spmodelposdir.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+
+	//CallF(s_spmodelposdir.sprite->SetPos(disppos), return 1);
+	//CallF(s_spmodelposdir.sprite->SetSize(dispsize), return 1);
+	s_spmodelposdir.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22568,27 +22105,20 @@ int SetSpModelPosDirParams()
 
 int SetSpMaterialRateParams()
 {
-	if (!s_spmaterialrate.sprite) {
-		return 0;
-	}
-
 	int spgshift = 6;
 	s_spmaterialrate.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 0;
 	s_spmaterialrate.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
 
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spmaterialrate.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spmaterialrate.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spmaterialrate.dispcenter.x);
+	disppos.y = (float)(s_spmaterialrate.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall / (float)s_mainwidth * 2.0f, s_spsizeSmall / (float)s_mainheight * 2.0f);
-	if (s_spmaterialrate.sprite) {
-		CallF(s_spmaterialrate.sprite->SetPos(disppos), return 1);
-		CallF(s_spmaterialrate.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+
+	//CallF(s_spmaterialrate.sprite->SetPos(disppos), return 1);
+	//CallF(s_spmaterialrate.sprite->SetSize(dispsize), return 1);
+	s_spmaterialrate.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22597,10 +22127,6 @@ int SetSpMaterialRateParams()
 
 int SetSpRigParams()
 {
-	if (!(s_sprig[SPRIG_INACTIVE].sprite) || !(s_sprig[SPRIG_ACTIVE].sprite)) {
-		return 0;
-	}
-
 	/*
 		//sprefpos
 		float spgwidth = 50.0f;
@@ -22627,24 +22153,18 @@ int SetSpRigParams()
 
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_sprig[0].dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_sprig[0].dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_sprig[0].dispcenter.x);
+	disppos.y = (float)(s_sprig[0].dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize / (float)s_mainwidth * 2.0f, s_spsize / (float)s_mainheight * 2.0f);
-	if (s_sprig[SPRIG_INACTIVE].sprite) {
-		CallF(s_sprig[SPRIG_INACTIVE].sprite->SetPos(disppos), return 1);
-		CallF(s_sprig[SPRIG_INACTIVE].sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
-	if (s_sprig[SPRIG_ACTIVE].sprite) {
-		CallF(s_sprig[SPRIG_ACTIVE].sprite->SetPos(disppos), return 1);
-		CallF(s_sprig[SPRIG_ACTIVE].sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+
+	//CallF(s_sprig[SPRIG_INACTIVE].sprite->SetPos(disppos), return 1);
+	//CallF(s_sprig[SPRIG_INACTIVE].sprite->SetSize(dispsize), return 1);
+	s_sprig[SPRIG_INACTIVE].sprite.UpdateScreen(disppos, dispsize);
+
+	//CallF(s_sprig[SPRIG_ACTIVE].sprite->SetPos(disppos), return 1);
+	//CallF(s_sprig[SPRIG_ACTIVE].sprite->SetSize(dispsize), return 1);
+	s_sprig[SPRIG_ACTIVE].sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22652,26 +22172,19 @@ int SetSpRigParams()
 
 int SetSpCpLW2WParams()
 {
-	if (!s_spcplw2w.sprite) {
-		return 0;
-	}
-
 	int spashift = 6;
 	s_spcplw2w.dispcenter.x = s_mainwidth - (int)s_spsidemargin;
 	s_spcplw2w.dispcenter.y = (int)s_sptopmargin + ((int)s_spsize + spashift) * 5 + spashift;
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spcplw2w.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spcplw2w.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spcplw2w.dispcenter.x);
+	disppos.y = (float)(s_spcplw2w.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize / (float)s_mainwidth * 2.0f, s_spsize / (float)s_mainheight * 2.0f);
-	if (s_spcplw2w.sprite) {
-		CallF(s_spcplw2w.sprite->SetPos(disppos), return 1);
-		CallF(s_spcplw2w.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+
+	//CallF(s_spcplw2w.sprite->SetPos(disppos), return 1);
+	//CallF(s_spcplw2w.sprite->SetSize(dispsize), return 1);
+	s_spcplw2w.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22679,26 +22192,19 @@ int SetSpCpLW2WParams()
 
 int SetSpSmoothParams()
 {
-	if (!s_spsmooth.sprite) {
-		return 0;
-	}
-
 	int spashift = 6;
 	s_spsmooth.dispcenter.x = s_mainwidth - (int)s_spsidemargin - (int)s_spsize - 10;
 	s_spsmooth.dispcenter.y = (int)s_sptopmargin + ((int)s_spsize + spashift) * 5 + spashift;
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spsmooth.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spsmooth.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spsmooth.dispcenter.x);
+	disppos.y = (float)(s_spsmooth.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize / (float)s_mainwidth * 2.0f, s_spsize / (float)s_mainheight * 2.0f);
-	if (s_spsmooth.sprite) {
-		CallF(s_spsmooth.sprite->SetPos(disppos), return 1);
-		CallF(s_spsmooth.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+
+	//CallF(s_spsmooth.sprite->SetPos(disppos), return 1);
+	//CallF(s_spsmooth.sprite->SetSize(dispsize), return 1);
+	s_spsmooth.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22706,26 +22212,19 @@ int SetSpSmoothParams()
 
 int SetSpConstExeParams()
 {
-	if (!s_spconstexe.sprite) {
-		return 0;
-	}
-
 	int spashift = 6;
 	s_spconstexe.dispcenter.x = s_mainwidth - (int)s_spsidemargin;
 	s_spconstexe.dispcenter.y = (int)s_sptopmargin + ((int)s_spsize + spashift) * 7 + spashift;
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spconstexe.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spconstexe.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spconstexe.dispcenter.x);
+	disppos.y = (float)(s_spconstexe.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize / (float)s_mainwidth * 2.0f, s_spsize / (float)s_mainheight * 2.0f);
-	if (s_spconstexe.sprite) {
-		CallF(s_spconstexe.sprite->SetPos(disppos), return 1);
-		CallF(s_spconstexe.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+
+	//CallF(s_spconstexe.sprite->SetPos(disppos), return 1);
+	//CallF(s_spconstexe.sprite->SetSize(dispsize), return 1);
+	s_spconstexe.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22733,26 +22232,19 @@ int SetSpConstExeParams()
 
 int SetSpConstRefreshParams()
 {
-	if (!s_spconstrefresh.sprite) {
-		return 0;
-	}
-
 	int spashift = 6;
 	s_spconstrefresh.dispcenter.x = s_mainwidth - (int)s_spsidemargin - (int)s_spsize - 10;
 	s_spconstrefresh.dispcenter.y = (int)s_sptopmargin + ((int)s_spsize + spashift) * 7 + spashift;
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spconstrefresh.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spconstrefresh.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spconstrefresh.dispcenter.x);
+	disppos.y = (float)(s_spconstrefresh.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize / (float)s_mainwidth * 2.0f, s_spsize / (float)s_mainheight * 2.0f);
-	if (s_spconstrefresh.sprite) {
-		CallF(s_spconstrefresh.sprite->SetPos(disppos), return 1);
-		CallF(s_spconstrefresh.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+
+	//CallF(s_spconstrefresh.sprite->SetPos(disppos), return 1);
+	//CallF(s_spconstrefresh.sprite->SetSize(dispsize), return 1);
+	s_spconstrefresh.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22760,10 +22252,6 @@ int SetSpConstRefreshParams()
 
 int SetSpMouseHereParams()
 {
-	if (!s_spmousehere.sprite) {
-		return 0;
-	}
-
 	float spawidth = 52.0f;
 	int spashift = 50;
 	s_spmousehere.dispcenter.x = 0;
@@ -22771,17 +22259,14 @@ int SetSpMouseHereParams()
 
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_spmousehere.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	disppos.y = -((float)(s_spmousehere.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	disppos.x = (float)(s_spmousehere.dispcenter.x);
+	disppos.y = (float)(s_spmousehere.dispcenter.y);
 	disppos.z = 0.0f;
 	ChaVector2 dispsize = ChaVector2(spawidth / (float)s_mainwidth * 2.0f, spawidth / (float)s_mainheight * 2.0f);
-	if (s_spmousehere.sprite) {
-		CallF(s_spmousehere.sprite->SetPos(disppos), return 1);
-		CallF(s_spmousehere.sprite->SetSize(dispsize), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
+
+	//CallF(s_spmousehere.sprite->SetPos(disppos), return 1);
+	//CallF(s_spmousehere.sprite->SetSize(dispsize), return 1);
+	s_spmousehere.sprite.UpdateScreen(disppos, dispsize);
 
 	return 0;
 }
@@ -22800,8 +22285,8 @@ int SetSpMouseHereParams()
 //
 //
 //	ChaVector3 disppos;
-//	disppos.x = (float)(s_spbt.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-//	disppos.y = -((float)(s_spbt.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+//	disppos.x = (float)(s_spbt.dispcenter.x);
+//	disppos.y = (float)(s_spbt.dispcenter.y);
 //	disppos.z = 0.0f;
 //	ChaVector2 dispsize = ChaVector2(spawidth / (float)s_mainwidth * 2.0f, spawidth / (float)s_mainheight * 2.0f);
 //	if (s_spbt.sprite) {
@@ -23260,9 +22745,6 @@ int PickSpScrapingSW(POINT srcpos)
 
 bool PickSpFrog(POINT srcpos)
 {
-	if (s_spret2prev.sprite == 0) {
-		return 0;
-	}
 
 	int spretwidth = 32;//プレートメニュー横のカエルボタンの大きさは４K時にも同じ
 
@@ -23281,9 +22763,7 @@ bool PickSpFrog(POINT srcpos)
 
 bool PickSpFrog2(POINT srcpos)
 {
-	if (s_spret2prev2.sprite == 0) {
-		return 0;
-	}
+
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
 		//非表示中
 		return 0;
@@ -23524,9 +23004,6 @@ int PickSpRig(POINT srcpos)
 		return 0;
 	}
 
-	if (s_sprig[SPRIG_INACTIVE].sprite == 0) {
-		return 0;
-	}
 
 	int starty = s_sprig[SPRIG_INACTIVE].dispcenter.y - (int)s_spsize / 2;
 	int endy = starty + (int)s_spsize;
@@ -23548,9 +23025,7 @@ int PickSpCpLW2W(POINT srcpos)
 {
 	int pickflag = 0;
 
-	if (s_spcplw2w.sprite == 0) {
-		return 0;
-	}
+
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
 		//非表示中
 		return 0;
@@ -23580,9 +23055,7 @@ int PickSpSmooth(POINT srcpos)
 {
 	int pickflag = 0;
 
-	if (s_spsmooth.sprite == 0) {
-		return 0;
-	}
+
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
 		//非表示中
 		return 0;
@@ -23613,9 +23086,7 @@ int PickSpConstExe(POINT srcpos)
 {
 	int pickflag = 0;
 
-	if (s_spconstexe.sprite == 0) {
-		return 0;
-	}
+
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
 		//非表示中
 		return 0;
@@ -23645,9 +23116,7 @@ int PickSpConstRefresh(POINT srcpos)
 {
 	int pickflag = 0;
 
-	if (s_spconstrefresh.sprite == 0) {
-		return 0;
-	}
+
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
 		//非表示中
 		return 0;
@@ -23677,9 +23146,7 @@ int PickSpCopy(POINT srcpos)
 {
 	int pickflag = 0;
 
-	if (s_spcopy.sprite == 0) {
-		return 0;
-	}
+
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
 		//非表示中
 		return 0;
@@ -23712,9 +23179,7 @@ int PickSpSymCopy(POINT srcpos)
 {
 	int pickflag = 0;
 
-	if (s_spsymcopy.sprite == 0) {
-		return 0;
-	}
+
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
 		//非表示中
 		return 0;
@@ -23747,9 +23212,7 @@ int PickSpPaste(POINT srcpos)
 {
 	int pickflag = 0;
 
-	if (s_sppaste.sprite == 0) {
-		return 0;
-	}
+
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
 		//非表示中
 		return 0;
@@ -23782,9 +23245,7 @@ int PickSpCopyHistory(POINT srcpos)
 {
 	int pickflag = 0;
 
-	if (s_spcopyhistory.sprite == 0) {
-		return 0;
-	}
+
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
 		//非表示中
 		return 0;
@@ -23819,9 +23280,7 @@ int PickSpInterpolate(POINT srcpos)
 {
 	int pickflag = 0;
 
-	if (s_spinterpolate.sprite == 0) {
-		return 0;
-	}
+
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
 		//非表示中
 		return 0;
@@ -23854,9 +23313,7 @@ int PickSpInit(POINT srcpos)
 {
 	int pickflag = 0;
 
-	if (s_spinit.sprite == 0) {
-		return 0;
-	}
+
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
 		//非表示中
 		return 0;
@@ -23889,9 +23346,7 @@ int PickSpScaleInit(POINT srcpos)
 {
 	int pickflag = 0;
 
-	if (s_spscaleinit.sprite == 0) {
-		return 0;
-	}
+
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
 		//非表示中
 		return 0;
@@ -23924,9 +23379,7 @@ int PickSpProperty(POINT srcpos)
 {
 	int pickflag = 0;
 
-	if (s_spproperty.sprite == 0) {
-		return 0;
-	}
+
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
 		//非表示中
 		return 0;
@@ -23962,9 +23415,7 @@ int PickSpZeroFrame(POINT srcpos)
 {
 	int pickflag = 0;
 
-	if (s_spzeroframe.sprite == 0) {
-		return 0;
-	}
+
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
 		//非表示中
 		return 0;
@@ -23997,9 +23448,7 @@ int PickSpCameraDolly(POINT srcpos)
 {
 	int pickflag = 0;
 
-	if (s_spcameradolly.sprite == 0) {
-		return 0;
-	}
+
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
 		//非表示中
 		return 0;
@@ -24032,9 +23481,7 @@ int PickSpModelPosDir(POINT srcpos)
 {
 	int pickflag = 0;
 
-	if (s_spmodelposdir.sprite == 0) {
-		return 0;
-	}
+
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
 		//非表示中
 		return 0;
@@ -24067,9 +23514,7 @@ int PickSpMaterialRate(POINT srcpos)
 {
 	int pickflag = 0;
 
-	if (s_spmaterialrate.sprite == 0) {
-		return 0;
-	}
+
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
 		//非表示中
 		return 0;
@@ -36208,21 +35653,21 @@ int OnRenderRefPose(RenderContext* pRenderContext, CModel* curmodel)
 						}
 
 
-						//render arrow : selected bone : befpos --> aftpos arrow
-						CBone* childbone = curbone->GetChild(false);
-						if (childbone && childbone->IsSkeleton() && curbone->GetColDisp(childbone, COL_CONE_INDEX)) {
-							ChaVector4 arrowdiffusemult = ChaVector4(1.0f, 0.5f, 0.5f, 0.85f);
+						////render arrow : selected bone : befpos --> aftpos arrow
+						//CBone* childbone = curbone->GetChild(false);
+						//if (childbone && childbone->IsSkeleton() && curbone->GetColDisp(childbone, COL_CONE_INDEX)) {
+						//	ChaVector4 arrowdiffusemult = ChaVector4(1.0f, 0.5f, 0.5f, 0.85f);
 
-							//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmpAlways, 1);//不透明の場合には手動で指定
-							g_zcmpalways = true;
-							curbone->GetColDisp(childbone, COL_CONE_INDEX)->RenderRefArrow(g_limitdegflag,
-								pRenderContext, curbone, arrowdiffusemult, 1, vecbonepos);
-							s_model->RenderBoneCircleOne(g_limitdegflag,
-								pRenderContext, s_bcircle, s_curboneno);
+						//	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmpAlways, 1);//不透明の場合には手動で指定
+						//	g_zcmpalways = true;
+						//	curbone->GetColDisp(childbone, COL_CONE_INDEX)->RenderRefArrow(g_limitdegflag,
+						//		pRenderContext, curbone, arrowdiffusemult, 1, vecbonepos);
+						//	s_model->RenderBoneCircleOne(g_limitdegflag,
+						//		pRenderContext, s_bcircle, s_curboneno);
 
-							//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);//元に戻す
-							g_zcmpalways = false;
-						}
+						//	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);//元に戻す
+						//	g_zcmpalways = false;
+						//}
 					}
 				}
 			//}
@@ -36403,8 +35848,12 @@ int OnRenderSelect(RenderContext* pRenderContext)
 	return 0;
 }
 
-int OnRenderSprite(RenderContext* pRenderContext)
+int OnRenderSprite(RenderContext& pRenderContext)
 {
+	if (!s_model) {
+		return 0;
+	}
+
 	//if (s_fpssprite && s_model) {
 	//	int dispfps = (int)(s_avrgfps + 0.5);
 	//	s_fpssprite->Render(pRenderContext, dispfps);
@@ -36416,537 +35865,293 @@ int OnRenderSprite(RenderContext* pRenderContext)
 	//}
 
 
-	////frog
-	//if (s_spret2prev.sprite) {
-	//	s_spret2prev.sprite->OnRender(pRenderContext);
-	//}
-	//else {
-	//	_ASSERT(0);
-	//}
+	//frog
+	s_spret2prev.sprite.DrawScreen(pRenderContext);
 
 
-	////Mouse Middle Button Mark
-	//if ((s_mbuttoncnt == 0) && (s_mousecenteron.sprite)) {
-	//	s_mousecenteron.sprite->OnRender(pRenderContext);
-	//}
+	//Mouse Middle Button Mark
+	if (s_mbuttoncnt == 0) {
+		s_mousecenteron.sprite.DrawScreen(pRenderContext);
+	}
 
-	////aimbar
-	//if (g_enableDS && (s_dsdeviceid >= 0)) {
+	//aimbar
+	if (g_enableDS && (s_dsdeviceid >= 0)) {
 
-	//	int platemenukind = s_platemenukind;
-	//	int platenomax = 0;
+		int platemenukind = s_platemenukind;
+		int platenomax = 0;
 
-	//	switch (platemenukind) {
-	//	case SPPLATEMENUKIND_GUI:
-	//		platenomax = SPGUISWNUM;
-	//		break;
-	//	case SPPLATEMENUKIND_DISP:
-	//		platenomax = SPDISPSWNUM;
-	//		break;
-	//	case SPPLATEMENUKIND_RIGID:
-	//		platenomax = SPRIGIDSWNUM;
-	//		break;
-	//	case SPPLATEMENUKIND_RETARGET:
-	//		platenomax = SPRETARGETSWNUM;
-	//		break;
-	//	default:
-	//		platenomax = 0;
-	//		break;
-	//	}
+		switch (platemenukind) {
+		case SPPLATEMENUKIND_GUI:
+			platenomax = SPGUISWNUM;
+			break;
+		case SPPLATEMENUKIND_DISP:
+			platenomax = SPDISPSWNUM;
+			break;
+		case SPPLATEMENUKIND_RIGID:
+			platenomax = SPRIGIDSWNUM;
+			break;
+		case SPPLATEMENUKIND_RETARGET:
+			platenomax = SPRETARGETSWNUM;
+			break;
+		default:
+			platenomax = 0;
+			break;
+		}
 
-	//	{
-	//		if (s_spsel3d.state) {
-	//			if (s_spsel3d.spriteON) {
-	//				s_spsel3d.spriteON->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
-	//		else {
-	//			if (s_spsel3d.spriteOFF) {
-	//				s_spsel3d.spriteOFF->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
-	//	}
-	//	{
-	//		int spgcnt;
-	//		int chkplatenomax;
-	//		chkplatenomax = min(SPAIMBARNUM, platenomax);
-	//		for (spgcnt = 0; spgcnt < chkplatenomax; spgcnt++) {
-	//			if (s_spaimbar[spgcnt].state) {
-	//				if (s_spaimbar[spgcnt].spriteON) {
-	//					s_spaimbar[spgcnt].spriteON->OnRender(pRenderContext);
-	//				}
-	//				else {
-	//					_ASSERT(0);
-	//				}
-	//			}
-	//			else {
-	//				if (s_spaimbar[spgcnt].spriteOFF) {
-	//					s_spaimbar[spgcnt].spriteOFF->OnRender(pRenderContext);
-	//				}
-	//				else {
-	//					_ASSERT(0);
-	//				}
-	//			}
-	//		}
-	//	}
-	//	{
-	//		if (s_mainmenuaimbarWnd) {
-	//			s_mainmenuaimbarWnd->callRewrite();
-	//		}
+		{
+			if (s_spsel3d.state) {
+				s_spsel3d.spriteON.DrawScreen(pRenderContext);
+			}
+			else {
+				s_spsel3d.spriteOFF.DrawScreen(pRenderContext);
+			}
+		}
+		//{
+		//	int spgcnt;
+		//	int chkplatenomax;
+		//	chkplatenomax = min(SPAIMBARNUM, platenomax);
+		//	for (spgcnt = 0; spgcnt < chkplatenomax; spgcnt++) {
+		//		if (s_spaimbar[spgcnt].state) {
+		//			s_spaimbar[spgcnt].spriteON.DrawScreen(pRenderContext);
+		//		}
+		//		else {
+		//			s_spaimbar[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+		//		}
+		//	}
+		//}
+		//{
+		//	if (s_mainmenuaimbarWnd) {
+		//		s_mainmenuaimbarWnd->callRewrite();
+		//	}
 
 
-	//		//int spgcnt;
-	//		//for (spgcnt = 0; spgcnt < SPMENU_MAX; spgcnt++) {
-	//		//	//MainMenuAimBarWndの背景色は、非選択時に茶色、選択時にオレンジ。オレンジはspriteONの色。よってスプライト表示のオンとオフを入れ替える。
-	//		//	if (s_spmenuaimbar[spgcnt].state) {
-	//		//		if (s_spmenuaimbar[spgcnt].spriteOFF) {//ONのときにOFF色
-	//		//			s_spmenuaimbar[spgcnt].spriteOFF->OnRender(pRenderContext);
-	//		//		}
-	//		//		else {
-	//		//			_ASSERT(0);
-	//		//		}
-	//		//	}
-	//		//	else {
-	//		//		if (s_spmenuaimbar[spgcnt].spriteON) {//OFFのときにON色
-	//		//			s_spmenuaimbar[spgcnt].spriteON->OnRender(pRenderContext);
-	//		//		}
-	//		//		else {
-	//		//			_ASSERT(0);
-	//		//		}
-	//		//	}
-	//		//}
-	//	}
+		//	//int spgcnt;
+		//	//for (spgcnt = 0; spgcnt < SPMENU_MAX; spgcnt++) {
+		//	//	//MainMenuAimBarWndの背景色は、非選択時に茶色、選択時にオレンジ。オレンジはspriteONの色。よってスプライト表示のオンとオフを入れ替える。
+		//	//	if (s_spmenuaimbar[spgcnt].state) {
+		//	//		if (s_spmenuaimbar[spgcnt].spriteOFF) {//ONのときにOFF色
+		//	//			s_spmenuaimbar[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+		//	//		}
+		//	//		else {
+		//	//			_ASSERT(0);
+		//	//		}
+		//	//	}
+		//	//	else {
+		//	//		if (s_spmenuaimbar[spgcnt].spriteON) {//OFFのときにON色
+		//	//			s_spmenuaimbar[spgcnt].spriteON.DrawScreen(pRenderContext);
+		//	//		}
+		//	//		else {
+		//	//			_ASSERT(0);
+		//	//		}
+		//	//	}
+		//	//}
+		//}
 
-	//}
+	}
 
 
 
 
-	//if (s_platemenukind == SPPLATEMENUKIND_GUI) 
-	//{
-	//	//menu 0 : Select 3DWindow GUI
-	//	{
+	if (s_platemenukind == SPPLATEMENUKIND_GUI) 
+	{
+		//menu 0 : Select 3DWindow GUI
+		{
 
-	//		//Plate Menu 0
-	//		int spgcnt;
-	//		for (spgcnt = 0; spgcnt < SPGUISWNUM; spgcnt++) {
-	//			if (s_spguisw[spgcnt].state) {
-	//				if (s_spguisw[spgcnt].spriteON) {
-	//					s_spguisw[spgcnt].spriteON->OnRender(pRenderContext);
-	//				}
-	//				else {
-	//					_ASSERT(0);
-	//				}
-	//			}
-	//			else {
-	//				if (s_spguisw[spgcnt].spriteOFF) {
-	//					s_spguisw[spgcnt].spriteOFF->OnRender(pRenderContext);
-	//				}
-	//				else {
-	//					_ASSERT(0);
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-	//else if (s_platemenukind == SPPLATEMENUKIND_DISP) {
-	//	//menu 1 : Select SideMenu 
+			//Plate Menu 0
+			int spgcnt;
+			for (spgcnt = 0; spgcnt < SPGUISWNUM; spgcnt++) {
+				if (s_spguisw[spgcnt].state) {
+					s_spguisw[spgcnt].spriteON.DrawScreen(pRenderContext);
+				}
+				else {
+					s_spguisw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+				}
+			}
+		}
+	}
+	else if (s_platemenukind == SPPLATEMENUKIND_DISP) {
+		//menu 1 : Select SideMenu 
 
-	//	//Plate Menu 1
-	//	int spgcnt;
-	//	for (spgcnt = 0; spgcnt < SPDISPSWNUM; spgcnt++) {
-	//		if (s_spdispsw[spgcnt].state) {
-	//			if (s_spdispsw[spgcnt].spriteON) {
-	//				s_spdispsw[spgcnt].spriteON->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
-	//		else {
-	//			if (s_spdispsw[spgcnt].spriteOFF) {
-	//				s_spdispsw[spgcnt].spriteOFF->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
-	//	}
-	//}
-	//else if (s_platemenukind == SPPLATEMENUKIND_RIGID) {
-	//	//menu 1 : Select SideMenu 
+		//Plate Menu 1
+		int spgcnt;
+		for (spgcnt = 0; spgcnt < SPDISPSWNUM; spgcnt++) {
+			if (s_spdispsw[spgcnt].state) {
+				s_spdispsw[spgcnt].spriteON.DrawScreen(pRenderContext);
+			}
+			else {
+				s_spdispsw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+			}
+		}
+	}
+	else if (s_platemenukind == SPPLATEMENUKIND_RIGID) {
+		//menu 1 : Select SideMenu 
 
-	//	//Plate Menu 1
-	//	int spgcnt;
-	//	for (spgcnt = 0; spgcnt < SPRIGIDSWNUM; spgcnt++) {
-	//		if (s_sprigidsw[spgcnt].state) {
-	//			if (s_sprigidsw[spgcnt].spriteON) {
-	//				s_sprigidsw[spgcnt].spriteON->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
-	//		else {
-	//			if (s_sprigidsw[spgcnt].spriteOFF) {
-	//				s_sprigidsw[spgcnt].spriteOFF->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
-	//	}
-	//}
-	//else if (s_platemenukind == SPPLATEMENUKIND_RETARGET) {
+		//Plate Menu 1
+		int spgcnt;
+		for (spgcnt = 0; spgcnt < SPRIGIDSWNUM; spgcnt++) {
+			if (s_sprigidsw[spgcnt].state) {
+				s_sprigidsw[spgcnt].spriteON.DrawScreen(pRenderContext);
+			}
+			else {
+				s_sprigidsw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+			}
+		}
+	}
+	else if (s_platemenukind == SPPLATEMENUKIND_RETARGET) {
 
-	//	//Plate Menu 2
-	//	int sprcnt;
-	//	for (sprcnt = 0; sprcnt < SPRETARGETSWNUM; sprcnt++) {
-	//		if (s_spretargetsw[sprcnt].state) {
-	//			if (s_spretargetsw[sprcnt].spriteON) {
-	//				s_spretargetsw[sprcnt].spriteON->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
-	//		else {
-	//			if (s_spretargetsw[sprcnt].spriteOFF) {
-	//				s_spretargetsw[sprcnt].spriteOFF->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
-	//	}
-	//}
+		//Plate Menu 2
+		int sprcnt;
+		for (sprcnt = 0; sprcnt < SPRETARGETSWNUM; sprcnt++) {
+			if (s_spretargetsw[sprcnt].state) {
+				s_spretargetsw[sprcnt].spriteON.DrawScreen(pRenderContext);
+			}
+			else {
+				s_spretargetsw[sprcnt].spriteOFF.DrawScreen(pRenderContext);
+			}
+		}
+	}
 
-	////Sprites of Camera And IK Plate Menu Group
-	//if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
+	//Sprites of Camera And IK Plate Menu Group
+	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
 
-	//	if (g_previewFlag == 0) {
+		if (g_previewFlag == 0) {
 
-	//		//Axis
-	//		int spacnt;
-	//		for (spacnt = 0; spacnt < SPAXISNUM; spacnt++) {
-	//			if (s_spaxis[spacnt].sprite) {
-	//				s_spaxis[spacnt].sprite->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
+			//Axis
+			int spacnt;
+			for (spacnt = 0; spacnt < SPAXISNUM; spacnt++) {
+				s_spaxis[spacnt].sprite.DrawScreen(pRenderContext);
+			}
 
-	//		//IK Mode
-	//		int spgcnt;
-	//		for (spgcnt = 0; spgcnt < 3; spgcnt++) {
-	//			if (s_spikmodesw[spgcnt].state) {
-	//				if (s_spikmodesw[spgcnt].spriteON) {
-	//					s_spikmodesw[spgcnt].spriteON->OnRender(pRenderContext);
-	//				}
-	//				else {
-	//					_ASSERT(0);
-	//				}
-	//			}
-	//			else {
-	//				if (s_spikmodesw[spgcnt].spriteOFF) {
-	//					s_spikmodesw[spgcnt].spriteOFF->OnRender(pRenderContext);
-	//				}
-	//				else {
-	//					_ASSERT(0);
-	//				}
-	//			}
-	//		}
+			//IK Mode
+			int spgcnt;
+			for (spgcnt = 0; spgcnt < 3; spgcnt++) {
+				if (s_spikmodesw[spgcnt].state) {
+					s_spikmodesw[spgcnt].spriteON.DrawScreen(pRenderContext);
+				}
+				else {
+					s_spikmodesw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+				}
+			}
 
-	//		//refpossw
-	//		if (s_sprefpos.state) {
-	//			if (s_sprefpos.spriteON) {
-	//				s_sprefpos.spriteON->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
-	//		else {
-	//			if (s_sprefpos.spriteOFF) {
-	//				s_sprefpos.spriteOFF->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
+			//refpossw
+			if (s_sprefpos.state) {
+				s_sprefpos.spriteON.DrawScreen(pRenderContext);
+			}
+			else {
+				s_sprefpos.spriteOFF.DrawScreen(pRenderContext);
+			}
 
-	//		//limiteulsw
-	//		if (s_splimiteul.state) {
-	//			if (s_splimiteul.spriteON) {
-	//				s_splimiteul.spriteON->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
-	//		else {
-	//			if (s_splimiteul.spriteOFF) {
-	//				s_splimiteul.spriteOFF->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
+			//limiteulsw
+			if (s_splimiteul.state) {
+				s_splimiteul.spriteON.DrawScreen(pRenderContext);
+			}
+			else {
+				s_splimiteul.spriteOFF.DrawScreen(pRenderContext);
+			}
 
-	//		//scrapingsw
-	//		if (s_spscraping.state) {
-	//			if (s_spscraping.spriteON) {
-	//				s_spscraping.spriteON->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
-	//		else {
-	//			if (s_spscraping.spriteOFF) {
-	//				s_spscraping.spriteOFF->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
+			//scrapingsw
+			if (s_spscraping.state) {
+				s_spscraping.spriteON.DrawScreen(pRenderContext);
+			}
+			else {
+				s_spscraping.spriteOFF.DrawScreen(pRenderContext);
+			}
 
-	//		//L2W button
-	//		if (s_spcplw2w.sprite) {
-	//			s_spcplw2w.sprite->OnRender(pRenderContext);
-	//		}
-	//		else {
-	//			if (!s_spcplw2w.sprite) {
-	//				_ASSERT(0);
-	//			}
-	//		}
+			//L2W button
+			s_spcplw2w.sprite.DrawScreen(pRenderContext);
 
-	//		//Undo Redo
-	//		int spucnt;
-	//		for (spucnt = 0; spucnt < 2; spucnt++) {
-	//			if (s_spundo[spucnt].sprite) {
-	//				s_spundo[spucnt].sprite->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
+			//Undo Redo
+			int spucnt;
+			for (spucnt = 0; spucnt < 2; spucnt++) {
+				s_spundo[spucnt].sprite.DrawScreen(pRenderContext);
+			}
 
-	//		//Rig switch
-	//		if ((s_oprigflag >= 0) && (s_oprigflag < SPRIGMAX)) {
-	//			//if (s_customrigbone) {
-	//			if (s_sprig[s_oprigflag].sprite) {
-	//				s_sprig[s_oprigflag].sprite->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//			//}
-	//		}
+			//Rig switch
+			if ((s_oprigflag >= 0) && (s_oprigflag < SPRIGMAX)) {
+				s_sprig[s_oprigflag].sprite.DrawScreen(pRenderContext);
+			}
 
-	//		//Smooth
-	//		if (s_spsmooth.sprite) {//プレビュー時は非表示
-	//			s_spsmooth.sprite->OnRender(pRenderContext);
-	//		}
-	//		else {
-	//			_ASSERT(0);
-	//		}
+			//Smooth
+			s_spsmooth.sprite.DrawScreen(pRenderContext);
 
-	//		//ConstExe
-	//		if (s_spconstexe.sprite) {//プレビュー時は非表示
-	//			s_spconstexe.sprite->OnRender(pRenderContext);
-	//		}
-	//		else {
-	//			_ASSERT(0);
-	//		}
+			//ConstExe
+			s_spconstexe.sprite.DrawScreen(pRenderContext);
 
-	//		//ConstRefresh
-	//		if (s_spconstrefresh.sprite) {//プレビュー時は非表示
-	//			s_spconstrefresh.sprite->OnRender(pRenderContext);
-	//		}
-	//		else {
-	//			_ASSERT(0);
-	//		}
+			//ConstRefresh
+			s_spconstrefresh.sprite.DrawScreen(pRenderContext);
 
 
-	//		if (s_spret2prev2.sprite) {
-	//			s_spret2prev2.sprite->OnRender(pRenderContext);
-	//		}
-	//		else {
-	//			_ASSERT(0);
-	//		}
+			s_spret2prev2.sprite.DrawScreen(pRenderContext);
 
 
-	//		if (s_toolspritemode == 0) {
-	//			//Copy
-	//			if (s_spcopy.sprite) {//プレビュー時は非表示
-	//				s_spcopy.sprite->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//			//SymCopy
-	//			if (s_spsymcopy.sprite) {//プレビュー時は非表示
-	//				s_spsymcopy.sprite->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//			//Paste
-	//			if (s_sppaste.sprite) {//プレビュー時は非表示
-	//				s_sppaste.sprite->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//			//CopyHistory
-	//			if (s_spcopyhistory.sprite) {//プレビュー時は非表示
-	//				s_spcopyhistory.sprite->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
-	//		else if (s_toolspritemode == 1) {
-	//			//Interpolate
-	//			if (s_spinterpolate.sprite) {//プレビュー時は非表示
-	//				s_spinterpolate.sprite->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//			//Init
-	//			if (s_spinit.sprite) {//プレビュー時は非表示
-	//				s_spinit.sprite->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//			//ScaleInit
-	//			if (s_spscaleinit.sprite) {//プレビュー時は非表示
-	//				s_spscaleinit.sprite->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//			//Property
-	//			if (s_spproperty.sprite) {//プレビュー時は非表示
-	//				s_spproperty.sprite->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
-	//		else if (s_toolspritemode == 2) {
-	//			//Edit0Frame
-	//			if (s_spzeroframe.sprite) {//プレビュー時は非表示
-	//				s_spzeroframe.sprite->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//			//CameraDolly
-	//			if (s_spcameradolly.sprite) {//プレビュー時は非表示
-	//				s_spcameradolly.sprite->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//			//ModelPosDir
-	//			if (s_spmodelposdir.sprite) {//プレビュー時は非表示
-	//				s_spmodelposdir.sprite->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//			//MaterialRate
-	//			if (s_spmaterialrate.sprite) {//プレビュー時は非表示
-	//				s_spmaterialrate.sprite->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
-	//		else {
-	//			_ASSERT(0);
-	//		}
+			if (s_toolspritemode == 0) {
+				//Copy
+				s_spcopy.sprite.DrawScreen(pRenderContext);
+				//SymCopy
+				s_spsymcopy.sprite.DrawScreen(pRenderContext);
+				//Paste
+				s_sppaste.sprite.DrawScreen(pRenderContext);
+				//CopyHistory
+				s_spcopyhistory.sprite.DrawScreen(pRenderContext);
+			}
+			else if (s_toolspritemode == 1) {
+				//Interpolate
+				s_spinterpolate.sprite.DrawScreen(pRenderContext);
+				//Init
+				s_spinit.sprite.DrawScreen(pRenderContext);
+				//ScaleInit
+				s_spscaleinit.sprite.DrawScreen(pRenderContext);
+				//Property
+				s_spproperty.sprite.DrawScreen(pRenderContext);
+			}
+			else if (s_toolspritemode == 2) {
+				//Edit0Frame
+				s_spzeroframe.sprite.DrawScreen(pRenderContext);
+				//CameraDolly
+				s_spcameradolly.sprite.DrawScreen(pRenderContext);
+				//ModelPosDir
+				s_spmodelposdir.sprite.DrawScreen(pRenderContext);
+				//MaterialRate
+				s_spmaterialrate.sprite.DrawScreen(pRenderContext);
+			}
+			else {
+				_ASSERT(0);
+			}
 
-	//	}
+		}
 
-	//	//カメラ操作スプライトは　プレビュー中も表示
-	//	int spccnt;
-	//	for (spccnt = 0; spccnt < SPR_CAM_MAX; spccnt++) {
-	//		if (s_spcam[spccnt].sprite) {
-	//			s_spcam[spccnt].sprite->OnRender(pRenderContext);
-	//		}
-	//		else {
-	//			_ASSERT(0);
-	//		}
-	//	}
-	//	//cameramode
-	//	if (s_spcameramode.state == true) {
-	//		if (s_spcameramode.spriteON) {
-	//			s_spcameramode.spriteON->OnRender(pRenderContext);
-	//		}
-	//		else {
-	//			_ASSERT(0);
-	//		}
-	//	}
-	//	else {
-	//		if (s_spcameramode.spriteOFF) {
-	//			s_spcameramode.spriteOFF->OnRender(pRenderContext);
-	//		}
-	//		else {
-	//			_ASSERT(0);
-	//		}
-	//	}
-	//	//camerainherit
-	//	if (g_cameraanimmode != 0) {
-	//		if (s_spcamerainherit.mode == 0) {
-	//			if (s_spcamerainherit.sprite1) {
-	//				s_spcamerainherit.sprite1->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
-	//		else if (s_spcamerainherit.mode == 1) {
-	//			if (s_spcamerainherit.sprite2) {
-	//				s_spcamerainherit.sprite2->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
-	//		else if (s_spcamerainherit.mode == 2) {
-	//			if (s_spcamerainherit.sprite3) {
-	//				s_spcamerainherit.sprite3->OnRender(pRenderContext);
-	//			}
-	//			else {
-	//				_ASSERT(0);
-	//			}
-	//		}
-	//	}
-	//}
+		//カメラ操作スプライトは　プレビュー中も表示
+		int spccnt;
+		for (spccnt = 0; spccnt < SPR_CAM_MAX; spccnt++) {
+			s_spcam[spccnt].sprite.DrawScreen(pRenderContext);
+		}
+		//cameramode
+		if (s_spcameramode.state == true) {
+			s_spcameramode.spriteON.DrawScreen(pRenderContext);
+		}
+		else {
+			s_spcameramode.spriteOFF.DrawScreen(pRenderContext);
+		}
+		//camerainherit
+		if (g_cameraanimmode != 0) {
+			if (s_spcamerainherit.mode == 0) {
+				s_spcamerainherit.sprite1.DrawScreen(pRenderContext);
+			}
+			else if (s_spcamerainherit.mode == 1) {
+				s_spcamerainherit.sprite2.DrawScreen(pRenderContext);
+			}
+			else if (s_spcamerainherit.mode == 2) {
+				s_spcamerainherit.sprite3.DrawScreen(pRenderContext);
+			}
+		}
+	}
 
 
 
-	////UFO
-	//if (g_dsmousewait == 1) {
-	//	if (s_spmousehere.sprite) {
-	//		s_spmousehere.sprite->OnRender(pRenderContext);
-	//	}
-	//	else {
-	//		_ASSERT(0);
-	//	}
-	//}
+	//UFO
+	if (g_dsmousewait == 1) {
+		s_spmousehere.sprite.DrawScreen(pRenderContext);
+	}
 
 
 	return 0;
@@ -39541,15 +38746,13 @@ HWND Create3DWnd(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine,
 		rc = InitGame(hInstance, hPrevInstance, lpCmdLine, nShowCmd, TEXT("MameBake3D"),
 			s_mainhwnd,
 			s_timelinewidth + s_modelwindowwidth, MAINMENUAIMBARH,
-			s_mainwidth, s_mainheight,
-			MsgProc);
+			s_mainwidth, s_mainheight);
 	}
 	else {
 		rc = InitGame(hInstance, hPrevInstance, lpCmdLine, nShowCmd, TEXT("MameBake3D"),
 			s_mainhwnd,
 			s_timelinewidth, MAINMENUAIMBARH,
-			s_mainwidth, s_mainheight,
-			MsgProc);
+			s_mainwidth, s_mainheight);
 	}
 
 	//s_mainwidth = rc.right - rc.left;
@@ -40402,30 +39605,30 @@ void GUISetVisible_Sel3D()
 // g_currentsubmenuid
 void GUISetVisible_MenuAimBar()
 {
-	//static int s_curaimbarno
-	if ((g_currentsubmenuid >= 0) && (g_currentsubmenuid < SPMENU_MAX)) {
-		int aimno;
-		for (aimno = 0; aimno < SPMENU_MAX; aimno++) {
-			s_spmenuaimbar[aimno].state = false;
-		}
+	////static int s_curaimbarno
+	//if ((g_currentsubmenuid >= 0) && (g_currentsubmenuid < SPMENU_MAX)) {
+	//	int aimno;
+	//	for (aimno = 0; aimno < SPMENU_MAX; aimno++) {
+	//		s_spmenuaimbar[aimno].state = false;
+	//	}
 
-		s_spmenuaimbar[g_currentsubmenuid].state = true;
+	//	s_spmenuaimbar[g_currentsubmenuid].state = true;
 
-	}
+	//}
 }
 
 void GUISetVisible_AimBar()
 {
-	//static int s_curaimbarno
-	if ((s_curaimbarno >= 0) && (s_curaimbarno < SPAIMBARNUM)) {
-		int aimno;
-		for (aimno = 0; aimno < SPAIMBARNUM; aimno++) {
-			s_spaimbar[aimno].state = false;
-		}
+	////static int s_curaimbarno
+	//if ((s_curaimbarno >= 0) && (s_curaimbarno < SPAIMBARNUM)) {
+	//	int aimno;
+	//	for (aimno = 0; aimno < SPAIMBARNUM; aimno++) {
+	//		s_spaimbar[aimno].state = false;
+	//	}
 
-		s_spaimbar[s_curaimbarno].state = true;
+	//	s_spaimbar[s_curaimbarno].state = true;
 
-	}
+	//}
 }
 
 void GUISetVisible_CameraAndIK()
@@ -41963,7 +41166,7 @@ void DSSelectWindowAndCtrl()
 		int nextplateno = -1;
 
 		//frogButton ret2prev
-		if ((frogbutton >= 1) && (s_spret2prev.sprite != 0)) {
+		if (frogbutton >= 1) {
 			POINT frogbuttonpos;
 			frogbuttonpos = s_spret2prev.dispcenter;
 
@@ -42049,13 +41252,13 @@ void DSSelectWindowAndCtrl()
 
 					SelectNextWindow(MB3D_WND_3D);//マウスカーソルをプレート位置に移動する前に呼ぶ（この関数ではコントロール位置にマウスは移動する）
 
-					POINT buttonpos;
-					buttonpos = s_spaimbar[s_curaimbarno].dispcenter;
-					buttonpos.y -= (28 / 2 + 6 / 2);
-					ClientToScreen(s_3dwnd, &buttonpos);
-					::SetCursorPos(buttonpos.x, buttonpos.y);
+					//POINT buttonpos;
+					//buttonpos = s_spaimbar[s_curaimbarno].dispcenter;
+					//buttonpos.y -= (28 / 2 + 6 / 2);
+					//ClientToScreen(s_3dwnd, &buttonpos);
+					//::SetCursorPos(buttonpos.x, buttonpos.y);
 
-					GUISetVisible_AimBar();
+					//GUISetVisible_AimBar();
 				}
 			}
 		}
@@ -45338,8 +44541,8 @@ void OnDSMouseHereApeal()
 
 
 	//	ChaVector3 disppos;
-	//	disppos.x = (float)(s_spmousehere.dispcenter.x) / ((float)s_mainwidth / 2.0f) - 1.0f;
-	//	disppos.y = -((float)(s_spmousehere.dispcenter.y) / ((float)s_mainheight / 2.0f) - 1.0f);
+	//	disppos.x = (float)(s_spmousehere.dispcenter.x);
+	//	disppos.y = (float)(s_spmousehere.dispcenter.y);
 	//	disppos.z = 0.0f;
 	//	ChaVector2 dispsize = ChaVector2(spawidth / (float)s_mainwidth * 2.0f, spawidth / (float)s_mainheight * 2.0f);
 	//	if (s_spmousehere.sprite) {
@@ -49622,6 +48825,9 @@ int PickManipulator(UIPICKINFO* ppickinfo, bool pickring)
 		_ASSERT(0);
 		return -1;
 	}
+	if (!s_select) {
+		return 0;
+	}
 
 	if (s_dispselect) {
 		bool excludeinvface = false;
@@ -51182,7 +50388,1445 @@ void SetCamera3DFromEyePos()
 	g_camera3D->SetHeight((float)g_graphicsEngine->GetFrameBufferHeight());//2023/11/20
 	g_camera3D->Update();
 
-	s_matWorld = s_model->GetWorldMat();
+	if (s_model) {
+		s_matWorld = s_model->GetWorldMat();
+	}
+	else {
+		s_matWorld.SetIdentity();
+	}
 	s_matView = ChaMatrix(g_camera3D->GetViewMatrix());
 	s_matProj = ChaMatrix(g_camera3D->GetProjectionMatrix());
+}
+
+int CreateSprites()
+{
+	char cpath[MAX_PATH];
+	char cfxpath[MAX_PATH];
+	char cfilepath[MAX_PATH];
+
+	char cbasedir[MAX_PATH] = { 0 };
+	WideCharToMultiByte(CP_ACP, 0, g_basedir, -1, cbasedir, MAX_PATH, NULL, NULL);
+
+	strcpy_s(cpath, MAX_PATH, cbasedir);
+	char* clasten = 0;
+	char* clast2en = 0;
+	clasten = strrchr(cpath, '\\');
+	if (!clasten) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	*clasten = 0;
+	clast2en = strrchr(cpath, '\\');
+	if (!clast2en) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	*clast2en = 0;
+	strcat_s(cpath, MAX_PATH, "\\Media\\");
+
+
+	SpriteInitData spriteinitdata;
+	strcpy_s(cfxpath, MAX_PATH, cpath);
+	strcat_s(cfxpath, MAX_PATH, "Shader\\preset\\sprite.fx");
+	spriteinitdata.m_fxFilePath = cfxpath;
+	spriteinitdata.m_width = 256;//仮　ファイルから読込時は上書きされる
+	spriteinitdata.m_height = 256;//仮　ファイルから読込時は上書きされる
+	spriteinitdata.m_alphaBlendMode = AlphaBlendMode_Trans;
+
+
+	bool screenvertexflag = true;//!!!!!!!!!!!!
+
+	strcpy_s(cfilepath, MAX_PATH, cpath);
+	strcat_s(cfilepath, MAX_PATH, "MameMedia\\bonecircle.dds");
+	spriteinitdata.m_ddsFilePath[0] = cfilepath;
+	s_bcircle.Init(spriteinitdata, screenvertexflag);
+	spriteinitdata.m_ddsFilePath[0] = 0;
+
+
+
+	///////
+	//WCHAR mpath[MAX_PATH];
+	//wcscpy_s(mpath, MAX_PATH, g_basedir);
+	//lasten = 0;
+	//last2en = 0;
+	//lasten = wcsrchr(mpath, TEXT('\\'));
+	//if (!lasten) {
+	//	_ASSERT(0);
+	//	PostQuitMessage(1);
+	//	return S_FALSE;
+	//}
+	//*lasten = 0L;
+	//last2en = wcsrchr(mpath, TEXT('\\'));
+	//if (!last2en) {
+	//	_ASSERT(0);
+	//	PostQuitMessage(1);
+	//	return S_FALSE;
+	//}
+	//*last2en = 0L;
+	//wcscat_s(mpath, MAX_PATH, L"\\Media\\MameMedia\\");
+	//if (s_undosprite) {
+	//	delete s_undosprite;
+	//	s_undosprite = 0;
+	//}
+	//s_undosprite = new CUndoSprite();
+	//if (!s_undosprite) {
+	//	_ASSERT(0);
+	//	PostQuitMessage(1);
+	//	return S_FALSE;
+	//}
+	//CallF(s_undosprite->CreateSprites(s_pdev, pRenderContext, mpath), return S_FALSE);
+	//
+	//
+	//if (s_fpssprite) {
+	//	delete s_fpssprite;
+	//	s_fpssprite = 0;
+	//}
+	//s_fpssprite = new CFpsSprite();
+	//if (!s_fpssprite) {
+	//	_ASSERT(0);
+	//	PostQuitMessage(1);
+	//	return S_FALSE;
+	//}
+	//CallF(s_fpssprite->CreateSprites(s_pdev, pRenderContext, mpath), return S_FALSE);
+	
+	
+	WCHAR mpath[MAX_PATH];
+	WCHAR filepath[MAX_PATH];
+	WCHAR* lasten;
+	WCHAR* last2en;
+	wcscpy_s(mpath, MAX_PATH, g_basedir);
+	lasten = 0;
+	last2en = 0;
+	lasten = wcsrchr(mpath, TEXT('\\'));
+	if (!lasten) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	*lasten = 0L;
+	last2en = wcsrchr(mpath, TEXT('\\'));
+	if (!last2en) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	*last2en = 0L;
+	wcscat_s(mpath, MAX_PATH, L"\\Media\\");
+
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Undo_1.png");
+	s_spritetex1 = new Texture();
+	s_spritetex1->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex1;
+	s_spundo[0].sprite.Init(spriteinitdata, screenvertexflag);
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Redo_1.png");
+	s_spritetex2 = new Texture();
+	s_spritetex2->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex2;
+	s_spundo[1].sprite.Init(spriteinitdata, screenvertexflag);
+
+	
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Undo_1.png");
+	s_spritetex3 = new Texture();
+	s_spritetex3->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex3;
+	s_spundo[0].sprite.Init(spriteinitdata, screenvertexflag);
+
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Redo_1.png");
+	s_spritetex4 = new Texture();
+	s_spritetex4->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex4;
+	s_spundo[1].sprite.Init(spriteinitdata, screenvertexflag);
+
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\X.gif");
+	s_spritetex5 = new Texture();
+	s_spritetex5->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex5;
+	s_spaxis[0].sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Y.gif");
+	s_spritetex6 = new Texture();
+	s_spritetex6->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex6;
+	s_spaxis[1].sprite.Init(spriteinitdata, screenvertexflag);
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Z.gif");
+	s_spritetex7 = new Texture();
+	s_spritetex7->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex7;
+	s_spaxis[2].sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\RefPosON.gif");
+	s_spritetex8 = new Texture();
+	s_spritetex8->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex8;
+	s_sprefpos.spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\RefPosOFF.gif");
+	s_spritetex9 = new Texture();
+	s_spritetex9->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex9;
+	s_sprefpos.spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\LimitEul_ON.png");
+	s_spritetex10 = new Texture();
+	s_spritetex10->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex10;
+	s_splimiteul.spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\LimitEul_OFF.png");
+	s_spritetex11 = new Texture();
+	s_spritetex11->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex11;
+	s_splimiteul.spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\CamAnimON.png");
+	s_spritetex12 = new Texture();
+	s_spritetex12->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex12;
+	s_spcameramode.spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\CamAnimOFF.png");
+	s_spritetex13 = new Texture();
+	s_spritetex13->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex13;
+	s_spcameramode.spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\CameraInherit_All.png");
+	s_spritetex14 = new Texture();
+	s_spritetex14->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex14;
+	s_spcamerainherit.sprite1.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\CameraInherit_CancelNull1.png");
+	s_spritetex15 = new Texture();
+	s_spritetex15->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex15;
+	s_spcamerainherit.sprite2.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\CameraInherit_CancelNull2.png");
+	s_spritetex16 = new Texture();
+	s_spritetex16->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex16;
+	s_spcamerainherit.sprite3.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\WallScrapingIK_ON.png");
+	s_spritetex17 = new Texture();
+	s_spritetex17->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex17;
+	s_spscraping.spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\WallScrapingIK_OFF.png");
+	s_spritetex18 = new Texture();
+	s_spritetex18->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex18;
+	s_spscraping.spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\IKRot2ON.gif");
+	s_spritetex19 = new Texture();
+	s_spritetex19->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex19;
+	s_spikmodesw[0].spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\IKRot2OFF.gif");
+	s_spritetex20 = new Texture();
+	s_spritetex20->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex20;
+	s_spikmodesw[0].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\IKMove2ON.gif");
+	s_spritetex21 = new Texture();
+	s_spritetex21->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex21;
+	s_spikmodesw[1].spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\IKMove2OFF.gif");
+	s_spritetex22 = new Texture();
+	s_spritetex22->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex22;
+	s_spikmodesw[1].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\IKScale2ON.gif");
+	s_spritetex23 = new Texture();
+	s_spritetex23->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex23;
+	s_spikmodesw[2].spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\IKScale2OFF.gif");
+	s_spritetex24 = new Texture();
+	s_spritetex24->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex24;
+	s_spikmodesw[2].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_CameraAndIK140ON.png");
+	s_spritetex25 = new Texture();
+	s_spritetex25->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex25;
+	s_spguisw[SPGUISW_CAMERA_AND_IK].spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_DispAndLimits140ON.png");
+	s_spritetex26 = new Texture();
+	s_spritetex26->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex26;
+	s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_BrushParams140ON.png");
+	s_spritetex27 = new Texture();
+	s_spritetex27->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex27;
+	s_spguisw[SPGUISW_BRUSHPARAMS].spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_BulletPhysics140ON.png");
+	s_spritetex28 = new Texture();
+	s_spritetex28->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex28;
+	s_spguisw[SPGUISW_BULLETPHYSICS].spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_RefPos140ON.png");
+	s_spritetex29 = new Texture();
+	s_spritetex29->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex29;
+	s_spguisw[SPGUISW_VSYNC_AND_REFPOS].spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_CameraAndIK140OFF.png");
+	s_spritetex30 = new Texture();
+	s_spritetex30->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex30;
+	s_spguisw[SPGUISW_CAMERA_AND_IK].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_DispAndLimits140OFF.png");
+	s_spritetex31 = new Texture();
+	s_spritetex31->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex31;
+	s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_BrushParams140OFF.png");
+	s_spritetex32 = new Texture();
+	s_spritetex32->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex32;
+	s_spguisw[SPGUISW_BRUSHPARAMS].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_BulletPhysics140OFF.png");
+	s_spritetex33 = new Texture();
+	s_spritetex33->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex33;
+	s_spguisw[SPGUISW_BULLETPHYSICS].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_RefPos140OFF.png");
+	s_spritetex34 = new Texture();
+	s_spritetex34->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex34;
+	s_spguisw[SPGUISW_VSYNC_AND_REFPOS].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Lights140ON.png");
+	s_spritetex35 = new Texture();
+	s_spritetex35->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex35;
+	s_spdispsw[SPDISPSW_LIGHTS].spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_DispGroup140ON.png");
+	s_spritetex36 = new Texture();
+	s_spritetex36->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex36;
+	s_spdispsw[SPDISPSW_DISPGROUP].spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_LaterTransparent140ON.png");
+	s_spritetex37 = new Texture();
+	s_spritetex37->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex37;
+	s_spdispsw[SPDISPSW_LATERTRANSPARENT].spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Lights140OFF.png");
+	s_spritetex38 = new Texture();
+	s_spritetex38->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex38;
+	s_spdispsw[SPDISPSW_LIGHTS].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_DispGroup140OFF.png");
+	s_spritetex39 = new Texture();
+	s_spritetex39->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex39;
+	s_spdispsw[SPDISPSW_DISPGROUP].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_LaterTransparent140OFF.png");
+	s_spritetex40 = new Texture();
+	s_spritetex40->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex40;
+	s_spdispsw[SPDISPSW_LATERTRANSPARENT].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_menuRigid140ON.png");
+	s_spritetex41 = new Texture();
+	s_spritetex41->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex41;
+	s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_menuImpulse140ON.png");
+	s_spritetex42 = new Texture();
+	s_spritetex42->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex42;
+	s_sprigidsw[SPRIGIDSW_IMPULSE].spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_menuGP140ON.png");
+	s_spritetex43 = new Texture();
+	s_spritetex43->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex43;
+	s_sprigidsw[SPRIGIDSW_GROUNDPLANE].spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_menuDamp140ON.png");
+	s_spritetex44 = new Texture();
+	s_spritetex44->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex44;
+	s_sprigidsw[SPRIGIDSW_DAMPANIM].spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_menuRigid140OFF.png");
+	s_spritetex45 = new Texture();
+	s_spritetex45->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex45;
+	s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_menuImpulse140OFF.png");
+	s_spritetex46 = new Texture();
+	s_spritetex46->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex46;
+	s_sprigidsw[SPRIGIDSW_IMPULSE].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_menuGP140OFF.png");
+	s_spritetex47 = new Texture();
+	s_spritetex47->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex47;
+	s_sprigidsw[SPRIGIDSW_GROUNDPLANE].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_menuDamp140OFF.png");
+	s_spritetex48 = new Texture();
+	s_spritetex48->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex48;
+	s_sprigidsw[SPRIGIDSW_DAMPANIM].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlateRetarget140ON.png");
+	s_spritetex49 = new Texture();
+	s_spritetex49->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex49;
+	s_spretargetsw[SPRETARGETSW_RETARGET].spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlateRetarget140OFF.png");
+	s_spritetex50 = new Texture();
+	s_spritetex50->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex50;
+	s_spretargetsw[SPRETARGETSW_RETARGET].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlateLimitEuler140ON.png");
+	s_spritetex51 = new Texture();
+	s_spritetex51->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex51;
+	s_spretargetsw[SPRETARGETSW_LIMITEULER].spriteON.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlateLimitEuler140OFF.png");
+	s_spritetex52 = new Texture();
+	s_spritetex52->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex52;
+	s_spretargetsw[SPRETARGETSW_LIMITEULER].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	
+
+	//{
+	//	int aimno;
+	//	for (aimno = 0; aimno < SPAIMBARNUM; aimno++) {
+	//		strcpy_s(filepath, MAX_PATH, path);
+	//		strcat_s(filepath, MAX_PATH, "MameMedia\\GUIPlateAim140ON.png");
+	//		spriteinitdata.m_wicFilePath[0] = filepath; 
+	//		s_spaimbar[aimno].spriteON.Init(spriteinitdata, screenvertexflag);
+	//
+	//		strcpy_s(filepath, MAX_PATH, path);
+	//		strcat_s(filepath, MAX_PATH, "MameMedia\\GUIPlateAim140OFF.png");
+	//		spriteinitdata.m_wicFilePath[0] = filepath; 
+	//		s_spaimbar[aimno].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	//	}
+	//}
+	//{
+	//	int aimno;
+	//	for (aimno = 0; aimno < SPMENU_MAX; aimno++) {
+	//		strcpy_s(filepath, MAX_PATH, path);
+	//		strcat_s(filepath, MAX_PATH, "MameMedia\\GUIPlateAim140ON.png");
+	//		spriteinitdata.m_wicFilePath[0] = filepath; 
+	//		s_spmenuaimbar[aimno].spriteON.Init(spriteinitdata, screenvertexflag);
+	//		
+	//		strcpy_s(filepath, MAX_PATH, path);
+	//		strcat_s(filepath, MAX_PATH, "MameMedia\\GUIPlateAim140OFF.png");
+	//		spriteinitdata.m_wicFilePath[0] = filepath; 
+	//		s_spmenuaimbar[aimno].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	//	}
+	//}
+	
+	{
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\button101_Select.tif");
+		s_spritetex53 = new Texture();
+		s_spritetex53->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = s_spritetex53;
+		s_spsel3d.spriteON.Init(spriteinitdata, screenvertexflag);
+		
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\button101_UnSelect.tif");
+		s_spritetex54 = new Texture();
+		s_spritetex54->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = s_spritetex54;
+		s_spsel3d.spriteOFF.Init(spriteinitdata, screenvertexflag);
+	}
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\cam_i.gif");
+	s_spritetex55 = new Texture();
+	s_spritetex55->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex55;
+	s_spcam[SPR_CAM_I].sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\cam_kai.gif");
+	s_spritetex56 = new Texture();
+	s_spritetex56->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex56;
+	s_spcam[SPR_CAM_KAI].sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\cam_kaku.gif");
+	s_spritetex57 = new Texture();
+	s_spritetex57->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex57;
+	s_spcam[SPR_CAM_KAKU].sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\RigOFF.gif");
+	s_spritetex58 = new Texture();
+	s_spritetex58->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex58;
+	s_sprig[SPRIG_INACTIVE].sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\RigON.gif");
+	s_spritetex59 = new Texture();
+	s_spritetex59->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex59;
+	s_sprig[SPRIG_ACTIVE].sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\img_l105.png");
+	s_spritetex60 = new Texture();
+	s_spritetex60->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex60;
+	s_spmousehere.sprite.Init(spriteinitdata, screenvertexflag);
+	
+
+	{
+		WCHAR pngpath[MAX_PATH];
+		swprintf_s(pngpath, MAX_PATH, L"%simg_l105.png", mpath);
+		//swprintf_s(bmppath, MAX_PATH, L"%simg_l105.bmp", mpath);
+		//g_mouseherebmp = (HBITMAP)::LoadImage(GetModuleHandle(NULL), bmppath, IMAGE_BITMAP, 52, 50, LR_LOADFROMFILE);
+		//_ASSERT(g_mouseherebmp);
+		//g_tranbmp = 0xFF000000;
+		g_mousehereimage = new Gdiplus::Image(pngpath);
+		if (!g_mousehereimage) {
+			_ASSERT(0);
+			PostQuitMessage(1);
+			return S_FALSE;
+		}
+	}
+	
+	{
+		WCHAR pngpath[MAX_PATH];
+		swprintf_s(pngpath, MAX_PATH, L"%sMenuAimBar140.png", mpath);
+		//swprintf_s(bmppath, MAX_PATH, L"%simg_l105.bmp", mpath);
+		//g_mouseherebmp = (HBITMAP)::LoadImage(GetModuleHandle(NULL), bmppath, IMAGE_BITMAP, 52, 50, LR_LOADFROMFILE);
+		//_ASSERT(g_mouseherebmp);
+		//g_tranbmp = 0xFF000000;
+		g_menuaimbarimage = new Gdiplus::Image(pngpath);
+		if (!g_menuaimbarimage) {
+			_ASSERT(0);
+			PostQuitMessage(1);
+			return S_FALSE;
+		}
+	}
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\img_ret2prev.png");
+	s_spritetex61 = new Texture();
+	s_spritetex61->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex61;
+	s_spret2prev.sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\img_ret2prev2.png");
+	s_spritetex62 = new Texture();
+	s_spritetex62->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex62;
+	s_spret2prev2.sprite.Init(spriteinitdata, screenvertexflag);
+	
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\BakeLW2W.png");
+	s_spritetex63 = new Texture();
+	s_spritetex63->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex63;
+	s_spcplw2w.sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\SmoothFilter.png");
+	s_spritetex64 = new Texture();
+	s_spritetex64->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex64;
+	s_spsmooth.sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Constraint_Execute.png");
+	s_spritetex65 = new Texture();
+	s_spritetex65->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex65;
+	s_spconstexe.sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Constraint_refresh.png");
+	s_spritetex66 = new Texture();
+	s_spritetex66->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex66;
+	s_spconstrefresh.sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\CopyButton.gif");
+	s_spritetex67 = new Texture();
+	s_spritetex67->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex67;
+	s_spcopy.sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\SymCopyButton3.png");
+	s_spritetex68 = new Texture();
+	s_spritetex68->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex68;
+	s_spsymcopy.sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\PasteButton.gif");
+	s_spritetex69 = new Texture();
+	s_spritetex69->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex69;
+	s_sppaste.sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\CopyHistoryButton.gif");
+	s_spritetex70 = new Texture();
+	s_spritetex70->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex70;
+	s_spcopyhistory.sprite.Init(spriteinitdata, screenvertexflag);
+
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\InterpolateButton.png");
+	s_spritetex71 = new Texture();
+	s_spritetex71->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex71;
+	s_spinterpolate.sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\InitButton.png");
+	s_spritetex72 = new Texture();
+	s_spritetex72->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex72;
+	s_spinit.sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\ScaleInitButton.png");
+	s_spritetex73 = new Texture();
+	s_spritetex73->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex73;
+	s_spscaleinit.sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\PropertyButton.png");
+	s_spritetex74 = new Texture();
+	s_spritetex74->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex74;
+	s_spproperty.sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Edit0FrameButton.png");
+	s_spritetex75 = new Texture();
+	s_spritetex75->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex75;
+	s_spzeroframe.sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\CameraDollyButton.png");
+	s_spritetex76 = new Texture();
+	s_spritetex76->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex76;
+	s_spcameradolly.sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\ModelPosDirButton.png");
+	s_spritetex77 = new Texture();
+	s_spritetex77->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex77;
+	s_spmodelposdir.sprite.Init(spriteinitdata, screenvertexflag);
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\MaterialRateButton.png");
+	s_spritetex78 = new Texture();
+	s_spritetex78->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex78;
+	s_spmaterialrate.sprite.Init(spriteinitdata, screenvertexflag);
+	
+
+	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\MouseCenterButtonON.png");
+	s_spritetex79 = new Texture();
+	s_spritetex79->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex79;
+	s_mousecenteron.sprite.Init(spriteinitdata, screenvertexflag);
+	
+	return 0;
+}
+
+void DestroySprites()
+{
+	if (s_spritetex1) {
+		delete s_spritetex1;
+		s_spritetex1 = 0;
+	}
+	if (s_spritetex2) {
+		delete s_spritetex2;
+		s_spritetex2 = 0;
+	}
+	if (s_spritetex3) {
+		delete s_spritetex3;
+		s_spritetex3 = 0;
+	}
+	if (s_spritetex4) {
+		delete s_spritetex4;
+		s_spritetex4 = 0;
+	}
+	if (s_spritetex5) {
+		delete s_spritetex5;
+		s_spritetex5 = 0;
+	}
+	if (s_spritetex6) {
+		delete s_spritetex6;
+		s_spritetex6 = 0;
+	}
+	if (s_spritetex7) {
+		delete s_spritetex7;
+		s_spritetex7 = 0;
+	}
+	if (s_spritetex8) {
+		delete s_spritetex8;
+		s_spritetex8 = 0;
+	}
+	if (s_spritetex9) {
+		delete s_spritetex9;
+		s_spritetex9 = 0;
+	}
+	if (s_spritetex10) {
+		delete s_spritetex10;
+		s_spritetex10 = 0;
+	}
+
+	if (s_spritetex11) {
+		delete s_spritetex11;
+		s_spritetex11 = 0;
+	}
+	if (s_spritetex12) {
+		delete s_spritetex12;
+		s_spritetex12 = 0;
+	}
+	if (s_spritetex13) {
+		delete s_spritetex13;
+		s_spritetex13 = 0;
+	}
+	if (s_spritetex14) {
+		delete s_spritetex14;
+		s_spritetex14 = 0;
+	}
+	if (s_spritetex15) {
+		delete s_spritetex15;
+		s_spritetex15 = 0;
+	}
+	if (s_spritetex16) {
+		delete s_spritetex16;
+		s_spritetex16 = 0;
+	}
+	if (s_spritetex17) {
+		delete s_spritetex17;
+		s_spritetex17 = 0;
+	}
+	if (s_spritetex18) {
+		delete s_spritetex18;
+		s_spritetex18 = 0;
+	}
+	if (s_spritetex19) {
+		delete s_spritetex19;
+		s_spritetex19 = 0;
+	}
+	if (s_spritetex20) {
+		delete s_spritetex10;
+		s_spritetex10 = 0;
+	}
+
+	if (s_spritetex21) {
+		delete s_spritetex21;
+		s_spritetex21 = 0;
+	}
+	if (s_spritetex22) {
+		delete s_spritetex22;
+		s_spritetex22 = 0;
+	}
+	if (s_spritetex23) {
+		delete s_spritetex23;
+		s_spritetex23 = 0;
+	}
+	if (s_spritetex24) {
+		delete s_spritetex24;
+		s_spritetex24 = 0;
+	}
+	if (s_spritetex25) {
+		delete s_spritetex25;
+		s_spritetex25 = 0;
+	}
+	if (s_spritetex26) {
+		delete s_spritetex26;
+		s_spritetex26 = 0;
+	}
+	if (s_spritetex27) {
+		delete s_spritetex27;
+		s_spritetex27 = 0;
+	}
+	if (s_spritetex28) {
+		delete s_spritetex28;
+		s_spritetex28 = 0;
+	}
+	if (s_spritetex29) {
+		delete s_spritetex29;
+		s_spritetex29 = 0;
+	}
+	if (s_spritetex30) {
+		delete s_spritetex30;
+		s_spritetex30 = 0;
+	}
+
+	if (s_spritetex31) {
+		delete s_spritetex31;
+		s_spritetex31 = 0;
+	}
+	if (s_spritetex32) {
+		delete s_spritetex32;
+		s_spritetex32 = 0;
+	}
+	if (s_spritetex33) {
+		delete s_spritetex33;
+		s_spritetex33 = 0;
+	}
+	if (s_spritetex34) {
+		delete s_spritetex34;
+		s_spritetex34 = 0;
+	}
+	if (s_spritetex35) {
+		delete s_spritetex35;
+		s_spritetex35 = 0;
+	}
+	if (s_spritetex36) {
+		delete s_spritetex36;
+		s_spritetex36 = 0;
+	}
+	if (s_spritetex37) {
+		delete s_spritetex37;
+		s_spritetex37 = 0;
+	}
+	if (s_spritetex38) {
+		delete s_spritetex38;
+		s_spritetex38 = 0;
+	}
+	if (s_spritetex39) {
+		delete s_spritetex39;
+		s_spritetex39 = 0;
+	}
+	if (s_spritetex40) {
+		delete s_spritetex40;
+		s_spritetex40 = 0;
+	}
+
+	
+	if (s_spritetex41) {
+		delete s_spritetex41;
+		s_spritetex41 = 0;
+	}
+	if (s_spritetex42) {
+		delete s_spritetex42;
+		s_spritetex42 = 0;
+	}
+	if (s_spritetex43) {
+		delete s_spritetex43;
+		s_spritetex43 = 0;
+	}
+	if (s_spritetex44) {
+		delete s_spritetex44;
+		s_spritetex44 = 0;
+	}
+	if (s_spritetex45) {
+		delete s_spritetex45;
+		s_spritetex45 = 0;
+	}
+	if (s_spritetex46) {
+		delete s_spritetex46;
+		s_spritetex46 = 0;
+	}
+	if (s_spritetex47) {
+		delete s_spritetex47;
+		s_spritetex47 = 0;
+	}
+	if (s_spritetex48) {
+		delete s_spritetex48;
+		s_spritetex48 = 0;
+	}
+	if (s_spritetex49) {
+		delete s_spritetex49;
+		s_spritetex49 = 0;
+	}
+	if (s_spritetex50) {
+		delete s_spritetex50;
+		s_spritetex50 = 0;
+	}
+
+
+	if (s_spritetex51) {
+		delete s_spritetex51;
+		s_spritetex51 = 0;
+	}
+	if (s_spritetex52) {
+		delete s_spritetex52;
+		s_spritetex52 = 0;
+	}
+	if (s_spritetex53) {
+		delete s_spritetex53;
+		s_spritetex53 = 0;
+	}
+	if (s_spritetex54) {
+		delete s_spritetex54;
+		s_spritetex54 = 0;
+	}
+	if (s_spritetex55) {
+		delete s_spritetex55;
+		s_spritetex55 = 0;
+	}
+	if (s_spritetex56) {
+		delete s_spritetex56;
+		s_spritetex56 = 0;
+	}
+	if (s_spritetex57) {
+		delete s_spritetex57;
+		s_spritetex57 = 0;
+	}
+	if (s_spritetex58) {
+		delete s_spritetex58;
+		s_spritetex58 = 0;
+	}
+	if (s_spritetex59) {
+		delete s_spritetex59;
+		s_spritetex59 = 0;
+	}
+	if (s_spritetex60) {
+		delete s_spritetex60;
+		s_spritetex60 = 0;
+	}
+
+
+	if (s_spritetex61) {
+		delete s_spritetex61;
+		s_spritetex61 = 0;
+	}
+	if (s_spritetex62) {
+		delete s_spritetex62;
+		s_spritetex62 = 0;
+	}
+	if (s_spritetex63) {
+		delete s_spritetex63;
+		s_spritetex63 = 0;
+	}
+	if (s_spritetex64) {
+		delete s_spritetex64;
+		s_spritetex64 = 0;
+	}
+	if (s_spritetex65) {
+		delete s_spritetex65;
+		s_spritetex65 = 0;
+	}
+	if (s_spritetex66) {
+		delete s_spritetex66;
+		s_spritetex66 = 0;
+	}
+	if (s_spritetex67) {
+		delete s_spritetex67;
+		s_spritetex67 = 0;
+	}
+	if (s_spritetex68) {
+		delete s_spritetex68;
+		s_spritetex68 = 0;
+	}
+	if (s_spritetex69) {
+		delete s_spritetex69;
+		s_spritetex69 = 0;
+	}
+	if (s_spritetex70) {
+		delete s_spritetex70;
+		s_spritetex70 = 0;
+	}
+
+
+
+	if (s_spritetex71) {
+		delete s_spritetex71;
+		s_spritetex71 = 0;
+	}
+	if (s_spritetex72) {
+		delete s_spritetex72;
+		s_spritetex72 = 0;
+	}
+	if (s_spritetex73) {
+		delete s_spritetex73;
+		s_spritetex73 = 0;
+	}
+	if (s_spritetex74) {
+		delete s_spritetex74;
+		s_spritetex74 = 0;
+	}
+	if (s_spritetex75) {
+		delete s_spritetex75;
+		s_spritetex75 = 0;
+	}
+	if (s_spritetex76) {
+		delete s_spritetex76;
+		s_spritetex76 = 0;
+	}
+	if (s_spritetex77) {
+		delete s_spritetex77;
+		s_spritetex77 = 0;
+	}
+	if (s_spritetex78) {
+		delete s_spritetex78;
+		s_spritetex78 = 0;
+	}
+	if (s_spritetex79) {
+		delete s_spritetex79;
+		s_spritetex79 = 0;
+	}
+
+
+}
+
+
+///////////////////////////////////////////////////////////////////
+// ウィンドウの初期化。
+///////////////////////////////////////////////////////////////////
+RECT InitWindow(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+	LPWSTR lpCmdLine, int nCmdShow, const TCHAR* appName,
+	HWND srcparentwnd,
+	int srcposx, int srcposy,
+	int srcwidth, int srcheight)
+{
+	//ウィンドウクラスのパラメータを設定(単なる構造体の変数の初期化です。)
+	WNDCLASSEX wc =
+	{
+		sizeof(WNDCLASSEX),		//構造体のサイズ。
+		//CS_CLASSDC,				//ウィンドウのスタイル。
+		CS_CLASSDC | CS_DBLCLKS,
+		//ここの指定でスクロールバーをつけたりできるが、ゲームでは不要なのでCS_CLASSDCでよい。
+		//MsgProc,				//メッセージプロシージャ(後述)
+		//srcmsgproc,
+		AppMsgProc,
+		0,						//0でいい。
+		0,						//0でいい。
+		//GetModuleHandle(NULL),	//このクラスのためのウインドウプロシージャがあるインスタンスハンドル。
+		hInstance,
+		//何も気にしなくてよい。
+		NULL,					//アイコンのハンドル。アイコンを変えたい場合ここを変更する。とりあえずこれでいい。
+		//NULL,					//マウスカーソルのハンドル。NULLの場合はデフォルト。
+		LoadCursor(nullptr, IDC_ARROW),
+		//NULL,					//ウィンドウの背景色。NULLの場合はデフォルト。
+		//(HBRUSH)GetStockObject(BLACK_BRUSH),
+		//(HBRUSH)GetStockObject(GRAY_BRUSH),
+		NULL,
+		NULL,					//メニュー名。NULLでいい。
+		appName,				//ウィンドウクラスに付ける名前。
+		NULL					//NULLでいい。
+	};
+	//ウィンドウクラスの登録。
+	RegisterClassEx(&wc);
+
+	HMENU hMenu = NULL;
+	LONG winstyle = WS_OVERLAPPEDWINDOW;
+	winstyle &= ~WS_CAPTION;
+	//winstyle &= ~WS_THICKFRAME;
+	winstyle |= WS_CHILD;
+	//LONG winstyle = WS_CHILD;
+
+	RECT rc;
+	SetRect(&rc, 0, 0, srcwidth, srcheight);
+	AdjustWindowRect(&rc, winstyle, (hMenu) ? true : false);
+	s_mainwidth = rc.right - rc.left;
+	s_mainheight = rc.bottom - rc.top;
+
+	// ウィンドウの作成。
+	g_hWnd = CreateWindow(
+		appName,				//使用するウィンドウクラスの名前。
+		//先ほど作成したウィンドウクラスと同じ名前にする。
+		appName,				//ウィンドウの名前。ウィンドウクラスの名前と別名でもよい。
+		//WS_OVERLAPPEDWINDOW,	//ウィンドウスタイル。ゲームでは基本的にWS_OVERLAPPEDWINDOWでいい、
+		winstyle,
+		srcposx,						//ウィンドウの初期X座標。
+		srcposy,						//ウィンドウの初期Y座標。
+		//s_mainwidth,			//ウィンドウの幅。
+		//s_mainheight,			//ウィンドウの高さ。
+		(rc.right - rc.left),
+		(rc.bottom - rc.top),
+		//srcwidth,
+		//srcheight,
+		srcparentwnd,			//親ウィンドウ。ゲームでは基本的にNULLでいい。
+		NULL,					//メニュー。今はNULLでいい。
+		hInstance,				//アプリケーションのインスタンス。
+		NULL
+	);
+	if (!g_hWnd) {
+		_ASSERT(0);
+		::MessageBox(s_mainhwnd, L"ウインドウの作成でエラー.アプリを終了します.", L"CreateWindow Error!!!", MB_OK);
+		abort();
+	}
+
+
+	ShowWindow(g_hWnd, nCmdShow);
+
+	return rc;
+}
+
+
+//ゲームの初期化。
+RECT InitGame(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow, const TCHAR* appName,
+	HWND srcparentwnd,
+	int srcposx, int srcposy,
+	int srcwidth, int srcheight)
+{
+	//ウィンドウを初期化。
+	RECT rc = InitWindow(hInstance, hPrevInstance, lpCmdLine, nCmdShow, appName,
+		srcparentwnd,
+		srcposx, srcposy,
+		srcwidth, srcheight);
+	//TKエンジンの初期化。
+	g_engine = new TkEngine;
+	g_engine->Init(g_hWnd, srcwidth, srcheight);
+
+	return rc;
+}
+//ウィンドウメッセージをディスパッチ。falseが返ってきたら、ゲーム終了。
+bool DispatchWindowMessage()
+{
+	MSG msg = { 0 };
+	while (WM_QUIT != msg.message) {
+		//ウィンドウからのメッセージを受け取る。
+		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		else {
+			//ウィンドウメッセージが空になった。
+			break;
+		}
+	}
+	return msg.message != WM_QUIT;
+}
+
+int OnCreateDevice()
+{
+	CalcTotalBound();
+	
+	
+	//CallF(GetShaderHandle(), return S_FALSE);
+	
+
+	if (!g_texbank) {
+		g_texbank = new CTexBank(s_pdev);
+		if (!g_texbank) {
+			_ASSERT(0);
+			PostQuitMessage(1);
+			return 0;
+		}
+	}
+	CreateSprites();
+	SetSpParams();
+
+
+
+
+	s_select = new CModel();
+	if (!s_select) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	CallF(s_select->LoadMQO(s_pdev, L"..\\Media\\MameMedia\\select_2.mqo", 0, 1.0f, 0), return S_FALSE);
+	//CallF(s_select->MakeDispObj(), return S_FALSE;);
+	
+	s_matred = s_select->GetMQOMaterialByName("matred");
+	if (!s_matred) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	s_ringred = s_select->GetMQOMaterialByName("ringred");
+	if (!s_ringred) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	s_matblue = s_select->GetMQOMaterialByName("matblue");
+	if (!s_matblue) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	s_ringblue = s_select->GetMQOMaterialByName("ringblue");
+	if (!s_ringblue) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	s_matgreen = s_select->GetMQOMaterialByName("matgreen");
+	if (!s_matgreen) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	s_ringgreen = s_select->GetMQOMaterialByName("ringgreen");
+	if (!s_ringgreen) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	s_matyellow = s_select->GetMQOMaterialByName("matyellow");
+	if (!s_matyellow) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	
+	//s_matredmat = s_matred->GetDif4F();
+	//s_ringredmat = s_ringred->GetDif4F();
+	//s_matbluemat = s_matblue->GetDif4F();
+	//s_ringbluemat = s_ringblue->GetDif4F();
+	//s_matgreenmat = s_matgreen->GetDif4F();
+	//s_ringgreenmat = s_ringgreen->GetDif4F();
+	//s_matyellowmat = s_matyellow->GetDif4F();
+	s_matredmat = ChaVector4(255.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f, 1.0f);
+	s_ringredmat = ChaVector4(255.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f, 1.0f);
+	s_matbluemat = ChaVector4(150.0f / 255.0f, 200.0f / 255.0f, 255.0f / 255.0f, 1.0f);
+	s_ringbluemat = ChaVector4(150.0f / 255.0f, 200.0f / 255.0f, 255.0f / 255.0f, 1.0f);
+	s_matgreenmat = ChaVector4(0.0f / 255.0f, 255.0f / 255.0f, 0.0f / 255.0f, 1.0f);
+	s_ringgreenmat = ChaVector4(0.0f / 255.0f, 255.0f / 255.0f, 0.0f / 255.0f, 1.0f);
+	s_matyellowmat = s_matyellow->GetDif4F();
+	
+	
+	
+	
+	s_select_posture = new CModel();
+	if (!s_select_posture) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	CallF(s_select_posture->LoadMQO(s_pdev, L"..\\Media\\MameMedia\\select_2_posture.mqo", 0, 1.0f, 0), return S_FALSE);
+	//CallF(s_select_posture->MakeDispObj(), return S_FALSE);
+	
+	
+	int rigopemarkno;
+	for (rigopemarkno = 0; rigopemarkno <= RIGMULTINDEXMAX; rigopemarkno++) {
+		{
+			s_rigopemark_sphere[rigopemarkno] = new CModel();
+			if (s_rigopemark_sphere[rigopemarkno]) {
+				float rigmult = 0.30f * (float)(rigopemarkno + 1) * 0.5f;
+				CallF(s_rigopemark_sphere[rigopemarkno]->LoadMQO(s_pdev,
+					L"..\\Media\\MameMedia\\rigmark.mqo", 0, rigmult, 0), return S_FALSE);
+				//CallF(s_rigopemark_sphere[rigopemarkno]->MakeDispObj(), return S_FALSE);
+				s_rigmaterial_sphere[rigopemarkno] = s_rigopemark_sphere[rigopemarkno]->GetMQOMaterialByName("mat1");
+				if (!s_rigmaterial_sphere[rigopemarkno]) {
+					_ASSERT(0);
+					PostQuitMessage(1);
+					return S_FALSE;
+				}
+			}
+			else {
+				_ASSERT(0);
+				PostQuitMessage(1);
+				return S_FALSE;
+			}
+		}
+	
+		{
+			s_rigopemark_ringX[rigopemarkno] = new CModel();
+			if (s_rigopemark_ringX[rigopemarkno]) {
+				float rigmult = (float)(rigopemarkno + 1) * 0.5f;
+				CallF(s_rigopemark_ringX[rigopemarkno]->LoadMQO(s_pdev,
+					L"..\\Media\\MameMedia\\ringX.mqo", 0, rigmult, 0), return S_FALSE);
+				//CallF(s_rigopemark_ringX[rigopemarkno]->MakeDispObj(), return S_FALSE);
+				s_rigmaterial_ringX[rigopemarkno] = s_rigopemark_ringX[rigopemarkno]->GetMQOMaterialByName("ringred");
+				if (!s_rigmaterial_ringX[rigopemarkno]) {
+					_ASSERT(0);
+					PostQuitMessage(1);
+					return S_FALSE;
+				}
+			}
+			else {
+				_ASSERT(0);
+				PostQuitMessage(1);
+				return S_FALSE;
+			}
+		}
+	
+		{
+			s_rigopemark_ringY[rigopemarkno] = new CModel();
+			if (s_rigopemark_ringY[rigopemarkno]) {
+				float rigmult = (float)(rigopemarkno + 1) * 0.5f;
+				CallF(s_rigopemark_ringY[rigopemarkno]->LoadMQO(s_pdev,
+					L"..\\Media\\MameMedia\\ringY.mqo", 0, rigmult, 0), return S_FALSE);
+				//CallF(s_rigopemark_ringY[rigopemarkno]->MakeDispObj(), return S_FALSE);
+				s_rigmaterial_ringY[rigopemarkno] = s_rigopemark_ringY[rigopemarkno]->GetMQOMaterialByName("ringgreen");
+				if (!s_rigmaterial_ringY[rigopemarkno]) {
+					_ASSERT(0);
+					PostQuitMessage(1);
+					return S_FALSE;
+				}
+			}
+			else {
+				_ASSERT(0);
+				PostQuitMessage(1);
+				return S_FALSE;
+			}
+		}
+	
+		{
+			s_rigopemark_ringZ[rigopemarkno] = new CModel();
+			if (s_rigopemark_ringZ[rigopemarkno]) {
+				float rigmult = (float)(rigopemarkno + 1) * 0.5f;
+				CallF(s_rigopemark_ringZ[rigopemarkno]->LoadMQO(s_pdev,
+					L"..\\Media\\MameMedia\\ringZ.mqo", 0, rigmult, 0), return S_FALSE);
+				//CallF(s_rigopemark_ringZ[rigopemarkno]->MakeDispObj(), return S_FALSE);
+				s_rigmaterial_ringZ[rigopemarkno] = s_rigopemark_ringZ[rigopemarkno]->GetMQOMaterialByName("ringblue");
+				if (!s_rigmaterial_ringZ[rigopemarkno]) {
+					_ASSERT(0);
+					PostQuitMessage(1);
+					return S_FALSE;
+				}
+			}
+			else {
+				_ASSERT(0);
+				PostQuitMessage(1);
+				return S_FALSE;
+			}
+		}
+	}
+	s_matrigmat = ChaVector4(255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 1.0f);
+	
+	
+	s_bmark = new CModel();
+	if (!s_bmark) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	CallF(s_bmark->LoadMQO(s_pdev, L"..\\Media\\MameMedia\\bonemark.mqo", 0, 1.0f, 0), return S_FALSE);
+	//CallF(s_bmark->MakeDispObj(), return S_FALSE);
+	
+	
+	
+	
+	s_ground = new CModel();
+	if (!s_ground) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	CallF(s_ground->LoadMQO(s_pdev, L"..\\Media\\MameMedia\\ground2.mqo", 0, 1.0f, 0), return S_FALSE);
+	//CallF(s_ground->MakeDispObj(), return S_FALSE);
+	
+	s_gplane = new CModel();
+	if (!s_gplane) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	CallF(s_gplane->LoadMQO(s_pdev, L"..\\Media\\MameMedia\\gplane.mqo", 0, 1.0f, 0), return S_FALSE);
+	//CallF(s_gplane->MakeDispObj(), return S_FALSE);
+	ChaVector3 tra(0.0f, 0.0, 0.0f);
+	ChaVector3 mult(5.0f, 1.0f, 5.0f);
+	CallF(s_gplane->MultDispObj(mult, tra), return S_FALSE);
+
+
+	//WCHAR initialdir[MAX_PATH] = { 0L };
+	//wcscpy_s(initialdir, MAX_PATH, g_basedir);
+	//wcscat_s(initialdir, MAX_PATH, L"..\\Test\\");
+	//SetCurrentDirectoryW(initialdir);
+
+	return 0;
 }

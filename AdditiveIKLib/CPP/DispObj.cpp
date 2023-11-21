@@ -306,7 +306,7 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone)
 		if (curmat) {
 			curmat->InitShadersAndPipelines(
 				//tkmMat,
-				"../../Media/Shader/Sample.fx",
+				"../Media/Shader/Sample.fx",
 				"VSMain",
 				"VSMain",
 				"PSMain",
@@ -363,7 +363,7 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone )
 			if (curmat) {
 				curmat->InitShadersAndPipelines(
 					//tkmMat,
-					"../../Media/Shader/Sample.fx",
+					"../Media/Shader/Sample.fx",
 					"VSMain",
 					"VSMain",
 					"PSMain",

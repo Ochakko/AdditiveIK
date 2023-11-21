@@ -18,7 +18,20 @@
     void Sprite::InitTextures(const SpriteInitData& initData)
     {
         //スプライトで使用するテクスチャを準備する。
-        if (initData.m_ddsFilePath[0] != nullptr) {
+
+        //2023/11/20 WICテクスチャ対応
+        if (initData.m_wicFilePath[0] != nullptr) {
+            //ddsファイルのパスが指定されてるのなら、ddsファイルからテクスチャを作成する。
+            int texNo = 0;
+            while (initData.m_wicFilePath[texNo] && texNo < MAX_TEXTURE) {
+                wchar_t wwicFilePath[1024];
+                mbstowcs(wwicFilePath, initData.m_wicFilePath[texNo], 1023);
+                m_textures[texNo].InitFromWICFile(wwicFilePath);
+                texNo++;
+            }
+            m_numTexture = texNo;
+        }
+        else if (initData.m_ddsFilePath[0] != nullptr) {
             //ddsファイルのパスが指定されてるのなら、ddsファイルからテクスチャを作成する。
             int texNo = 0;
             while (initData.m_ddsFilePath[texNo] && texNo < MAX_TEXTURE) {
@@ -84,8 +97,17 @@
     }
     void Sprite::InitVertexBufferAndIndexBuffer(const SpriteInitData& initData)
     {
-        float halfW = m_size.x * 0.5f;
-        float halfH = m_size.y * 0.5f;
+
+        float halfW, halfH;
+        if (m_screenvertexflag) {
+            halfW = 1.0f;
+            halfH = 1.0f;
+        }
+        else {
+            halfW = m_size.x * 0.5f;
+            halfH = m_size.y * 0.5f;
+        }
+
         //頂点バッファのソースデータ。
         SSimpleVertex vertices[] =
         {
@@ -181,8 +203,10 @@
             );
         }
     }
-    void Sprite::Init(const SpriteInitData& initData)
+    void Sprite::Init(const SpriteInitData& initData, bool srcscreenvertexflag)
     {
+        m_screenvertexflag = srcscreenvertexflag;
+
         m_size.x = static_cast<float>(initData.m_width);
         m_size.y = static_cast<float>(initData.m_height);
 
@@ -206,6 +230,21 @@
         InitPipelineState(initData);
         //ディスクリプタヒープを初期化。
         InitDescriptorHeap(initData);
+
+        //2023/11/21
+        //fileから読み込んだ場合のために　Textureからサイズを取得
+        if (m_textures[0].IsValid()) {
+            m_size.x = static_cast<float>(m_textures[0].GetWidth());
+            m_size.y = static_cast<float>(m_textures[0].GetHeight());
+        }
+        else if (m_textureExternal[0] != nullptr) {
+            m_size.x = static_cast<float>(m_textureExternal[0]->GetWidth());
+            m_size.y = static_cast<float>(m_textureExternal[0]->GetHeight());
+        }
+        else {
+            _ASSERT(0);
+        }
+
     }
     void Sprite::Update(const Vector3& pos, const Quaternion& rot, const Vector3& scale, const Vector2& pivot)
     {
@@ -233,6 +272,88 @@
         m_world = m_world * mRot;
         m_world = m_world * mTrans;
     }
+
+
+    void Sprite::UpdateScreen(ChaVector3 srcpos, ChaVector2 srcdispsize)
+    {
+        float dispsizex, dispsizey;
+        dispsizey = srcdispsize.y;
+        dispsizex = srcdispsize.x;// *m_size.x / m_size.y;
+
+        //D3D12_VIEWPORT viewport = renderContext.GetViewport();
+        UINT screenW, screenH;
+        screenW = g_graphicsEngine->GetFrameBufferWidth();
+        screenH = g_graphicsEngine->GetFrameBufferHeight();
+
+
+        m_world.SetIdentity();
+        m_world._11 = dispsizex / (float)screenW;
+        m_world._22 = dispsizey / (float)screenH;
+        m_world._33 = 0.0f;
+        m_world._41 = (srcpos.x / (float)screenW * 2.0f - 1.0f);
+        m_world._42 = -(srcpos.y / (float)screenH * 2.0f - 1.0f);
+        m_world._43 = srcpos.z;
+
+    }
+
+
+
+    void Sprite::DrawScreen(RenderContext& renderContext)
+    {
+        if (!g_graphicsEngine) {
+            _ASSERT(0);
+            return;
+        }
+        UINT screenW, screenH;
+        screenW = g_graphicsEngine->GetFrameBufferWidth();
+        screenH = g_graphicsEngine->GetFrameBufferHeight();
+
+        m_constantBufferCPU.mvp = m_world;//!!!!!!!!!!!!!!!!
+
+
+        m_constantBufferCPU.mulColor.x = 1.0f;
+        m_constantBufferCPU.mulColor.y = 1.0f;
+        m_constantBufferCPU.mulColor.z = 1.0f;
+        m_constantBufferCPU.mulColor.w = 1.0f;
+        //m_constantBufferCPU.screenParam.x = g_camera3D->GetNear();//org
+        //m_constantBufferCPU.screenParam.y = g_camera3D->GetFar();//org
+        m_constantBufferCPU.screenParam.x = 0.0f;//2023/11/21
+        m_constantBufferCPU.screenParam.y = 1.0f;//2023/11/21
+
+        //m_constantBufferCPU.screenParam.z = s_mainwidth;
+        //m_constantBufferCPU.screenParam.w = s_mainheight;
+        //m_constantBufferCPU.screenParam.z = 736;//2023/11/18 tmp set
+        //m_constantBufferCPU.screenParam.w = 488;//2023/11/18 tmp set
+        //m_constantBufferCPU.screenParam.z = viewport.Width;//2023/11/18 tmp set
+        //m_constantBufferCPU.screenParam.w = viewport.Height;//2023/11/18 tmp set
+        m_constantBufferCPU.screenParam.z = (float)screenW;//2023/11/21
+        m_constantBufferCPU.screenParam.w = (float)screenH;//2023/11/21
+
+
+        //定数バッファを更新。
+        //renderContext.UpdateConstantBuffer(m_constantBufferGPU, &m_constantBufferCPU);
+        m_constantBufferGPU.CopyToVRAM(&m_constantBufferCPU);
+        if (m_userExpandConstantBufferCPU != nullptr) {
+            //renderContext.UpdateConstantBuffer(m_userExpandConstantBufferGPU, m_userExpandConstantBufferCPU);
+            m_userExpandConstantBufferGPU.CopyToVRAM(m_userExpandConstantBufferCPU);
+        }
+        //ルートシグネチャを設定。
+        renderContext.SetRootSignature(m_rootSignature);
+        //パイプラインステートを設定。
+        renderContext.SetPipelineState(m_pipelineState);
+        //頂点バッファを設定。
+        renderContext.SetVertexBuffer(m_vertexBuffer);
+        //インデックスバッファを設定。
+        renderContext.SetIndexBuffer(m_indexBuffer);
+        //プリミティブトポロジーを設定する。
+        renderContext.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+        //ディスクリプタヒープを設定する。
+        renderContext.SetDescriptorHeap(m_descriptorHeap);
+        //描画
+        renderContext.DrawIndexed(m_indexBuffer.GetCount());
+    }
+
+
     void Sprite::Draw(RenderContext& renderContext)
     {
         //現在のビューポートから平行投影行列を計算する。
