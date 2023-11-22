@@ -3257,6 +3257,13 @@ int CheckResolution()
 	(1216 + 450) * 2, (950 - MAINMENUAIMBARH) * 2
 	*/
 
+
+	int cXborder = GetSystemMetrics(SM_CXBORDER);
+	int cYborder = GetSystemMetrics(SM_CYBORDER);
+	int cXFrame = GetSystemMetrics(SM_CXDLGFRAME);
+	int cYFrame = GetSystemMetrics(SM_CYDLGFRAME);
+
+
 	if ((s_appcnt == 0) && (s_launchbyc4 == 0)) {
 
 		HWND desktopwnd;
@@ -3304,6 +3311,7 @@ int CheckResolution()
 					s_sideheight = s_totalwndheight - s_sidemenuheight - 28 * 2 - 4;
 
 					//s_mainwidth = 800 * 2 + 340 + 450 - 64 + 60 - s_modelwindowwidth;
+					//s_mainwidth = s_totalwndwidth - s_timelinewidth - s_modelwindowwidth - s_sidewidth - cXFrame * 2 - cXborder * 8;
 					s_mainwidth = s_totalwndwidth - s_timelinewidth - s_modelwindowwidth - s_sidewidth - 16;
 					s_mainheight = (520 * 2 - MAINMENUAIMBARH);
 					
@@ -8656,6 +8664,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 
 		//SetCapture(DXUTGetHWND());
+		SetCapture(s_3dwnd);
 		
 		
 
@@ -8696,6 +8705,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		//s_pickinfo.winx = (int)DXUTGetWindowWidth();
 		//s_pickinfo.winy = (int)DXUTGetWindowHeight();
+		s_pickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
+		s_pickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
 		s_pickinfo.pickrange = PICKRANGE;
 
 		s_pickinfo.pickobjno = -1;
@@ -9443,6 +9454,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 
 		//SetCapture(DXUTGetHWND());
+		SetCapture(s_3dwnd);
 
 		POINT ptCursor;
 		GetCursorPos(&ptCursor);
@@ -9456,6 +9468,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		//s_pickinfo.winx = (int)DXUTGetWindowWidth();
 		//s_pickinfo.winy = (int)DXUTGetWindowHeight();
+		s_pickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
+		s_pickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
 		s_pickinfo.pickrange = PICKRANGE;
 
 		s_pickinfo.pickobjno = -1;
@@ -23608,6 +23622,8 @@ int SetSelectState()
 
 	//pickinfo.winx = (int)DXUTGetWindowWidth();
 	//pickinfo.winy = (int)DXUTGetWindowHeight();
+	pickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
+	pickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
 	pickinfo.pickrange = PICKRANGE;
 	pickinfo.buttonflag = 0;
 
@@ -37378,6 +37394,8 @@ int BoneRClick(int srcboneno)
 
 		//s_pickinfo.winx = (int)DXUTGetWindowWidth();
 		//s_pickinfo.winy = (int)DXUTGetWindowHeight();
+		s_pickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
+		s_pickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
 		s_pickinfo.pickrange = PICKRANGE;
 
 		s_pickinfo.pickobjno = -1;
@@ -37826,6 +37844,8 @@ void AutoCameraTarget()
 
 			////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
 			////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
+
+			SetCamera3DFromEyePos();
 		}
 	}
 }
@@ -38826,8 +38846,8 @@ HWND Create3DWnd(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine,
 	//_ASSERT(s_3dwnd);
 	RECT clientrect2;
 	GetClientRect(s_3dwnd, &clientrect2);
-	s_bufwidth = clientrect2.right;
-	s_bufheight = clientrect2.bottom;
+	//s_bufwidth = clientrect2.right;
+	//s_bufheight = clientrect2.bottom;
 
 
 	////RECT clientrect;
@@ -39227,43 +39247,26 @@ int OnMouseMoveFunc()
 			cammv *= 0.250f;
 		}
 
-
-		ChaMatrix matview;
-		ChaVector3 weye, wat;
-		matview = s_matView;
-		weye = g_camEye;
-		wat = g_camtargetpos;
-
-		ChaVector3 cameye, camat;
-		ChaVector3TransformCoord(&cameye, &weye, &matview);
-		ChaVector3TransformCoord(&camat, &wat, &matview);
-
-		ChaVector3 aftcameye, aftcamat;
-		aftcameye = cameye + cammv;
-		aftcamat = camat + cammv;
-
-		ChaMatrix invmatview;
-		ChaMatrixInverse(&invmatview, NULL, &matview);
-
-		ChaVector3 neweye, newat;
-		ChaVector3TransformCoord(&neweye, &aftcameye, &invmatview);
-		ChaVector3TransformCoord(&newat, &aftcamat, &invmatview);
-
-		//#replacing comment out#g_Camera->SetViewParamsWithUpVec(neweye.XMVECTOR(1.0f), newat.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-		//#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-		//#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
+		ChaMatrix invmatView;
+		invmatView = ChaMatrixInv(s_matView);
+		ChaVector3 camdirx, camdiry;
+		camdirx = ChaVector3(invmatView.data[MATI_11], invmatView.data[MATI_12], invmatView.data[MATI_13]);
+		camdiry = ChaVector3(invmatView.data[MATI_21], invmatView.data[MATI_22], invmatView.data[MATI_23]);
+		ChaVector3Normalize(&camdirx, &camdirx);
+		ChaVector3Normalize(&camdiry, &camdiry);
+		ChaVector3 movevec = camdirx * cammv.x + camdiry * cammv.y;
 
 		g_befcamEye = g_camEye;
 		g_befcamtargetpos = g_camtargetpos;
-		g_camEye = neweye;
-		g_camtargetpos = newat;
-		//!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-		//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
+
+		g_camEye = g_camEye + movevec;
+		g_camtargetpos = g_camtargetpos + movevec;
+
 		ChaVector3 diffv;
-		diffv = neweye - newat;
+		diffv = g_camtargetpos - g_camEye;
 		g_camdist = (float)ChaVector3LengthDbl(&diffv);
 
-
+		SetCamera3DFromEyePos();
 	}
 	else if (s_twistcameraFlag) {
 		s_pickinfo.mousebefpos = s_pickinfo.mousepos;
@@ -39289,13 +39292,12 @@ int OnMouseMoveFunc()
 		ChaVector3Normalize(&newupvec, &newupvec);
 		g_cameraupdir = newupvec;
 
-		//#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-		//#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-		//#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
 		g_befcamEye = g_camEye;
 		ChaVector3 diffv;
 		diffv = g_camEye - g_camtargetpos;
 		g_camdist = (float)ChaVector3LengthDbl(&diffv);
+
+		SetCamera3DFromEyePos();
 	}
 	else if (s_pickinfo.buttonflag == PICK_CAMROT) {
 
@@ -39424,6 +39426,8 @@ int OnMouseMoveFunc()
 			g_camEye = g_befcamEye;
 			g_camtargetpos = g_befcamtargetpos;
 		}
+
+		SetCamera3DFromEyePos();
 	}
 	else if (s_pickinfo.buttonflag == PICK_CAMDIST) {
 		s_pickinfo.mousebefpos = s_pickinfo.mousepos;
@@ -39472,6 +39476,7 @@ int OnMouseMoveFunc()
 		//#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
 		//#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
 
+		SetCamera3DFromEyePos();
 	}
 
 	s_doingflag = false;
@@ -49588,6 +49593,8 @@ int DispToolTip()
 	//tmppickinfo.firstdiff = ChaVector2(0.0f, 0.0f);
 	////tmppickinfo.winx = (int)DXUTGetWindowWidth();
 	////tmppickinfo.winy = (int)DXUTGetWindowHeight();
+	//tmppickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
+	//tmppickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
 	//tmppickinfo.pickrange = PICKRANGE;
 
 
@@ -50005,6 +50012,8 @@ bool DispTipRig()
 	tmppickinfo.firstdiff = ChaVector2(0.0f, 0.0f);
 	//tmppickinfo.winx = (int)DXUTGetWindowWidth();
 	//tmppickinfo.winy = (int)DXUTGetWindowHeight();
+	tmppickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
+	tmppickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
 	tmppickinfo.pickrange = PICKRANGE;
 
 	//s_customrigのツールチップ表示
@@ -50383,7 +50392,7 @@ void SetCamera3DFromEyePos()
 	g_camera3D->SetPosition(cameye);
 	Vector3 target = Vector3(g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
 	g_camera3D->SetTarget(target);
-	g_camera3D->SetUp(Vector3(0.0f, 1.0f, 0.0f));
+	g_camera3D->SetUp(Vector3(g_cameraupdir.x, g_cameraupdir.y, g_cameraupdir.z));
 	g_camera3D->SetWidth((float)g_graphicsEngine->GetFrameBufferWidth());//2023/11/20
 	g_camera3D->SetHeight((float)g_graphicsEngine->GetFrameBufferHeight());//2023/11/20
 	g_camera3D->Update();
@@ -50396,6 +50405,7 @@ void SetCamera3DFromEyePos()
 	}
 	s_matView = ChaMatrix(g_camera3D->GetViewMatrix());
 	s_matProj = ChaMatrix(g_camera3D->GetProjectionMatrix());
+	s_matVP = s_matView * s_matProj;
 }
 
 int CreateSprites()
@@ -51519,15 +51529,18 @@ RECT InitWindow(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	HMENU hMenu = NULL;
 	LONG winstyle = WS_OVERLAPPEDWINDOW;
 	winstyle &= ~WS_CAPTION;
-	//winstyle &= ~WS_THICKFRAME;
+	winstyle &= ~WS_THICKFRAME;
 	winstyle |= WS_CHILD;
 	//LONG winstyle = WS_CHILD;
 
 	RECT rc;
 	SetRect(&rc, 0, 0, srcwidth, srcheight);
 	AdjustWindowRect(&rc, winstyle, (hMenu) ? true : false);
-	s_mainwidth = rc.right - rc.left;
-	s_mainheight = rc.bottom - rc.top;
+	//s_mainwidth = rc.right - rc.left;
+	//s_mainheight = rc.bottom - rc.top;
+	s_bufwidth = rc.right - rc.left;
+	s_bufheight = rc.bottom - rc.top;
+
 
 	// ウィンドウの作成。
 	g_hWnd = CreateWindow(

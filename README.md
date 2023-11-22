@@ -47,6 +47,9 @@ Texture設定の無いメッシュ描画時には白いalbedoテクスチャを�
 モーションはまだ動きません.明日以降に取り掛かる予定.<br>
 Documents/ModifyAboutGrimoireSpriteClass.docx追加<br>
 Documents/CoexistenceOfConventionalMaterialsAndPBR.docx追加<br>
+カメラ操作を有効に. CameraAndIKプレートをクリックしてボタンを出し、３つのカメラボタンドラッグでカメラ操作.<br>
+<br>
+<br>
 <br>
 <br>
 <br>

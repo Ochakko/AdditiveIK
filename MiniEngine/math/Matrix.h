@@ -247,14 +247,14 @@ public:
 	/// <param name="up">カメラの上方向</param>
 	void MakeLookAt(const Vector3& position, const Vector3& target, const Vector3& up)
 	{
-		Vector3 direction = target - position;
-		direction.Normalize();
+		//Vector3 direction = target - position;
+		//direction.Normalize();
 
 		DirectX::XMStoreFloat4x4(
 			&mat,
 			//DirectX::XMMatrixLookAtLH(position, target, up)
-			//DirectX::XMMatrixLookAtRH(position, target, up)
-			DirectX::XMMatrixLookAtRH(position, direction, up)
+			DirectX::XMMatrixLookAtRH(position, target, up)
+			//DirectX::XMMatrixLookAtRH(position, direction, up)
 		);
 	}
 	/// <summary>
