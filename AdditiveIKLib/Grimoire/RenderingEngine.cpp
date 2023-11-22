@@ -441,25 +441,11 @@ namespace myRenderer
             if (currenderobj.mqoobj->GetDispObj()) {
                 if (currenderobj.mqoobj->GetPm3()) {
                     //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                    currenderobj.mqoobj->GetDispObj()->RenderNormalPM3(
-                        currenderobj.withalpha,
-                        rc,
-                        currenderobj.lightflag,
-                        currenderobj.diffusemult,
-                        currenderobj.materialdisprate,
-                        currenderobj.mqoobj,
-                        currenderobj.mWorld);
+                    currenderobj.mqoobj->GetDispObj()->RenderNormalPM3(rc, currenderobj);
                 }
                 else if (currenderobj.mqoobj->GetPm4()) {
                     //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                    currenderobj.mqoobj->GetDispObj()->RenderNormal(
-                        currenderobj.withalpha,
-                        rc,
-                        currenderobj.lightflag,
-                        currenderobj.diffusemult,
-                        currenderobj.materialdisprate,
-                        currenderobj.mqoobj,
-                        currenderobj.mWorld);
+                    currenderobj.mqoobj->GetDispObj()->RenderNormal(rc, currenderobj);
                 }
                 else {
                     _ASSERT(0);

@@ -91,20 +91,20 @@ SPSIn VSMainWithBone(SVSInWithBone vsIn, uniform bool hasSkin)
 {
     SPSIn psIn;
 
-    float4 wPos;
+    //float4 wPos;
     int bi[4] = { vsIn.bindices.r, vsIn.bindices.g, vsIn.bindices.b, vsIn.bindices.a };
     float bw[4] = { vsIn.bweight.x, vsIn.bweight.y, vsIn.bweight.z, vsIn.bweight.w };
     matrix finalmat = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     for (int i = 0; i < 4; i++)
     {
         matrix addmat = mBoneMat[bi[i]];
-        finalmat += bw[i] * addmat;
+        finalmat += (addmat * bw[i]);
     }
 	
-    wPos = mul(vsIn.pos, finalmat);
-    psIn.pos = mul(mView, wPos);
-    psIn.pos = mul(mProj, wPos);
-    psIn.pos /= psIn.pos.w;
+    psIn.pos = mul(finalmat, vsIn.pos);
+    psIn.pos = mul(mView, psIn.pos);
+    psIn.pos = mul(mProj, psIn.pos);
+    //psIn.pos /= psIn.pos.w;
     
     float3 wNormal;
     wNormal = normalize(mul(finalmat, vsIn.normal)).xyz; // normal (world space)

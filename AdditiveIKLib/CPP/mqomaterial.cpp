@@ -998,7 +998,7 @@ int CMQOMaterial::AddConvName( char** ppname )
 
 
 void CMQOMaterial::InitShadersAndPipelines(
-	//const TkmFile::SMaterial& tkmMat,
+	bool withboneflag,
 	const char* fxFilePath,
 	const char* vsEntryPointFunc,
 	const char* vsSkinEntryPointFunc,
@@ -1061,23 +1061,35 @@ void CMQOMaterial::InitShadersAndPipelines(
 		//シェーダーを初期化。
 		InitShaders(fxFilePath, vsEntryPointFunc, vsSkinEntryPointFunc, psEntryPointFunc);
 		//パイプラインステートを初期化。
-		InitPipelineState(colorBufferFormat);
+		InitPipelineState(withboneflag, colorBufferFormat);
 	}
 }
 
-void CMQOMaterial::InitPipelineState(const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
+void CMQOMaterial::InitPipelineState(bool withboneflag, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
 {
 	// 頂点レイアウトを定義する。
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
+	//パイプラインステートを作成。
+	D3D12_INPUT_ELEMENT_DESC inputElementDescsWithBone[] =
 	{
-		//{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		//{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		//{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		//{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 36, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		//{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 48, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		//{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0, 56, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		//{ "BLENDWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 72, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-
+		//型：PM3DISPV
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "BLENDWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+	};
+	D3D12_INPUT_ELEMENT_DESC inputElementDescsWithoutBone[] =
+	{
 		//型：PM3DISPV
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
@@ -1090,69 +1102,121 @@ void CMQOMaterial::InitPipelineState(const std::array<DXGI_FORMAT, MAX_RENDERING
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	};
 
-	//パイプラインステートを作成。
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
-	psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
-	psoDesc.pRootSignature = m_rootSignature.Get();
-	psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsSkinModel->GetCompiledBlob());
-	psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psModel->GetCompiledBlob());
-	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	//#ifdef SAMPLE_11
-	//	// 背面を描画していないと影がおかしくなるため、
-	//	// シャドウのサンプルのみカリングをオフにする。
-	//	// 本来はアプリ側からカリングモードを渡すのがいいのだけど、
-	//	// 書籍に記載しているコードに追記がいるので、エンジン側で吸収する。
-	//	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-	//#else
-	//	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-	//#endif
-
-		//2023/11/18
-	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-
-	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-#ifdef TK_ENABLE_ALPHA_TO_COVERAGE
-	psoDesc.BlendState.AlphaToCoverageEnable = TRUE;
+	{
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
+		psoDesc.pRootSignature = m_rootSignature.Get();
+		psoDesc.InputLayout = { inputElementDescsWithBone, _countof(inputElementDescsWithBone) };//!!! WithBone
+		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsSkinModel->GetCompiledBlob());//!!!!!!!!! Skin 
+		psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psModel->GetCompiledBlob());
+		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+#ifdef SAMPLE_11
+		// 背面を描画していないと影がおかしくなるため、
+		// シャドウのサンプルのみカリングをオフにする。
+		// 本来はアプリ側からカリングモードを渡すのがいいのだけど、
+		// 書籍に記載しているコードに追記がいるので、エンジン側で吸収する。
+		psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+#else
+		psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
 #endif
-	psoDesc.DepthStencilState.DepthEnable = TRUE;
-	psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-	psoDesc.DepthStencilState.StencilEnable = FALSE;
-	psoDesc.SampleMask = UINT_MAX;
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 
-	int numRenderTarget = 0;
-	for (auto& format : colorBufferFormat) {
-		if (format == DXGI_FORMAT_UNKNOWN) {
-			//フォーマットが指定されていない場所が来たら終わり。
-			break;
+		////2023/11/18
+		//psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+
+		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+#ifdef TK_ENABLE_ALPHA_TO_COVERAGE
+		psoDesc.BlendState.AlphaToCoverageEnable = TRUE;
+#endif
+		psoDesc.DepthStencilState.DepthEnable = TRUE;
+		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		psoDesc.DepthStencilState.StencilEnable = FALSE;
+		psoDesc.SampleMask = UINT_MAX;
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+		int numRenderTarget = 0;
+		for (auto& format : colorBufferFormat) {
+			if (format == DXGI_FORMAT_UNKNOWN) {
+				//フォーマットが指定されていない場所が来たら終わり。
+				break;
+			}
+			psoDesc.RTVFormats[numRenderTarget] = colorBufferFormat[numRenderTarget];
+			numRenderTarget++;
 		}
-		psoDesc.RTVFormats[numRenderTarget] = colorBufferFormat[numRenderTarget];
-		numRenderTarget++;
-	}
-	psoDesc.NumRenderTargets = numRenderTarget;
-	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-	psoDesc.SampleDesc.Count = 1;
+		psoDesc.NumRenderTargets = numRenderTarget;
+		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+		psoDesc.SampleDesc.Count = 1;
 
-	m_skinModelPipelineState.Init(psoDesc);
+		m_skinModelPipelineState.Init(psoDesc);
+
+		//続いて半透明マテリアル用。
+		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsSkinModel->GetCompiledBlob());
+		psoDesc.BlendState.IndependentBlendEnable = TRUE;
+		psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
+		psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+		psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		m_transSkinModelPipelineState.Init(psoDesc);
+
+	}
 
 	//続いてスキンなしモデル用を作成。
-	psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsNonSkinModel->GetCompiledBlob());
-	m_nonSkinModelPipelineState.Init(psoDesc);
+	{
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
+		psoDesc.pRootSignature = m_rootSignature.Get();
+		psoDesc.InputLayout = { inputElementDescsWithoutBone, _countof(inputElementDescsWithoutBone) };//!!! WithoutBone
+		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsNonSkinModel->GetCompiledBlob());//!!!!!!!! NonSkin
+		psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psModel->GetCompiledBlob());
+		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+#ifdef SAMPLE_11
+		// 背面を描画していないと影がおかしくなるため、
+		// シャドウのサンプルのみカリングをオフにする。
+		// 本来はアプリ側からカリングモードを渡すのがいいのだけど、
+		// 書籍に記載しているコードに追記がいるので、エンジン側で吸収する。
+		psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+#else
+		psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+#endif
 
-	//続いて半透明マテリアル用。
-	psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsSkinModel->GetCompiledBlob());
-	psoDesc.BlendState.IndependentBlendEnable = TRUE;
-	psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
-	psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-	psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		////2023/11/18
+		//psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+
+		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+#ifdef TK_ENABLE_ALPHA_TO_COVERAGE
+		psoDesc.BlendState.AlphaToCoverageEnable = TRUE;
+#endif
+		psoDesc.DepthStencilState.DepthEnable = TRUE;
+		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		psoDesc.DepthStencilState.StencilEnable = FALSE;
+		psoDesc.SampleMask = UINT_MAX;
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+		int numRenderTarget = 0;
+		for (auto& format : colorBufferFormat) {
+			if (format == DXGI_FORMAT_UNKNOWN) {
+				//フォーマットが指定されていない場所が来たら終わり。
+				break;
+			}
+			psoDesc.RTVFormats[numRenderTarget] = colorBufferFormat[numRenderTarget];
+			numRenderTarget++;
+		}
+		psoDesc.NumRenderTargets = numRenderTarget;
+		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+		psoDesc.SampleDesc.Count = 1;
+
+		m_nonSkinModelPipelineState.Init(psoDesc);
 
 
-	m_transSkinModelPipelineState.Init(psoDesc);
+		//続いて半透明マテリアル用。
+		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsNonSkinModel->GetCompiledBlob());
+		psoDesc.BlendState.IndependentBlendEnable = TRUE;
+		psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
+		psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+		psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		m_transNonSkinModelPipelineState.Init(psoDesc);
+	}
 
-	psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsNonSkinModel->GetCompiledBlob());
-	m_transNonSkinModelPipelineState.Init(psoDesc);
 
 }
 

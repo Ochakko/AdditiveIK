@@ -44,11 +44,11 @@ Texture設定の無いメッシュ描画時には白いalbedoテクスチャを�
 スプライトGUIを魔導書のSpriteクラスで.<br>
 プロジェクトやfbxを読み込むとプレートメニューが出ます.<br>
 下の方のカエルボタンでメニュー変更. 上の方のカエルボタンでショートカットボタンを変更.<br>
-モーションはまだ動きません.明日以降に取り掛かる予定.<br>
 Documents/ModifyAboutGrimoireSpriteClass.docx追加<br>
 Documents/CoexistenceOfConventionalMaterialsAndPBR.docx追加<br>
 カメラ操作を有効に. CameraAndIKプレートをクリックしてボタンを出し、３つのカメラボタンドラッグでカメラ操作.<br>
-<br>
+モーションのプレビューが出来るようになりました.<br>
+モーション付きモデルを読み込み後にタイムラインのプレイマークのボタンでプレビュー.<br>
 <br>
 <br>
 <br>
@@ -93,6 +93,8 @@ HLSLシェーダーの魔導書のMiniEngine https://github.com/shoeisha-books/h
 <br>
 DirectX12の魔導書のサンプルを使用<br>
 ライセンスはReadMe/dx12-grimoire_LICENSE<br>
+<br>
+MicrosoftのDXUT11のDXUTTimerを使っています.<br>
 <br>
 <br>
 Testディレクトリのモデル作成にVRoidStudioを使用します<br>

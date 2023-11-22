@@ -2,6 +2,7 @@
 #define DISPOBJH
 
 #include <ChaVecCalc.h>
+#include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
 
 
 class CMQOObject;
@@ -20,6 +21,7 @@ struct SConstantBuffer {
 	Matrix mWorld;		//ワールド行列。
 	Matrix mView;		//ビュー行列。
 	Matrix mProj;		//プロジェクション行列。
+	float setfl4x4[16 * MAXCLUSTERNUM];//ボーンの姿勢マトリックス
 };
 
 
@@ -87,16 +89,13 @@ public:
  * @param (ChaVector4 diffusemult) IN ディフューズ色に掛け算する比率。
  * @return 成功したら０。
  */
-	int RenderNormal(bool withalpha, 
-		RenderContext& rc, int lightflag, 
-		ChaVector4 diffusemult, ChaVector4 materialdisprate, CMQOObject* pmqoobj, Matrix mWorld);
+	int RenderNormal(RenderContext& rc, myRenderer::RENDEROBJ renderobj);
 
-	int RenderNormalMaterial(bool laterflag, bool withalpha,
-		RenderContext& rc,
-		CMQOMaterial* rmaterial, int curoffset, int curtrinum,
-		int lightflag, ChaVector4 diffusemult, ChaVector4 materialdisprate);
+	int RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ renderobj, 
+		bool laterflag, CMQOMaterial* rmaterial, int curoffset, int curtrinum);
 
-	void DrawCommon(RenderContext& rc, const Matrix& mWorld, const Matrix& mView, const Matrix& mProj);
+	void DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
+		const Matrix& mView, const Matrix& mProj);
 
 /**
  * @fn
@@ -107,15 +106,11 @@ public:
  * @return 成功したら０。
  * @detail FBXデータは１オブジェクトにつき１マテリアル(材質)だが、メタセコイアデータは１オブジェクトに複数マテリアルが設定されていることが多い。
  */
-	int RenderNormalPM3(bool withalpha, 
-		RenderContext& rc, int lightflag,
-		ChaVector4 diffusemult, ChaVector4 materialdisprate, CMQOObject* pmqoobj, Matrix mWorld);
+	int RenderNormalPM3(RenderContext& rc, myRenderer::RENDEROBJ renderobj);
 
-	int RenderNormalPM3Material(
-		bool laterflag, bool withalpha,
-		RenderContext& rc,
-		CMQOMaterial* rmaterial, int curoffset, int curtrinum,
-		int lightflag, ChaVector4 diffusemult, ChaVector4 materialdisprate);
+	int RenderNormalPM3Material(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
+		bool lasterflag, CMQOMaterial* rmaterial,
+		int curoffset, int curtrinum);
 
 
 /**

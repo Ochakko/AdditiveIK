@@ -34,6 +34,9 @@
     <Filter Include="MiniEngine\Grimoire">
       <UniqueIdentifier>{3ce539bf-ae14-472c-accf-77b8cfef2454}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DXUTmisc">
+      <UniqueIdentifier>{409e55a0-d660-49c7-a77b-e9882856053c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -297,6 +300,9 @@
     <ClInclude Include="..\AdditiveIKLib\Grimoire\ShadowMapRender.h">
       <Filter>MiniEngine\Grimoire</Filter>
     </ClInclude>
+    <ClInclude Include="DXUTmisc\DXUTmisc.h">
+      <Filter>DXUTmisc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AdditiveIK.cpp">
@@ -505,6 +511,9 @@
     </ClCompile>
     <ClCompile Include="..\AdditiveIKLib\Grimoire\ShadowMapRender.cpp">
       <Filter>MiniEngine\Grimoire</Filter>
+    </ClCompile>
+    <ClCompile Include="DXUTmisc\DXUTmisc.cpp">
+      <Filter>DXUTmisc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -213,6 +213,7 @@
     <ClInclude Include="CpInfoDlg.h" />
     <ClInclude Include="dlgid.h" />
     <ClInclude Include="DollyHistoryDlg.h" />
+    <ClInclude Include="DXUTmisc\DXUTmisc.h" />
     <ClInclude Include="FilterDlg.h" />
     <ClInclude Include="FilterType.h" />
     <ClInclude Include="FpsSprite.h" />
@@ -294,6 +295,7 @@
     <ClCompile Include="CopyHistoryDlg.cpp" />
     <ClCompile Include="CpInfoDlg.cpp" />
     <ClCompile Include="DollyHistoryDlg.cpp" />
+    <ClCompile Include="DXUTmisc\DXUTmisc.cpp" />
     <ClCompile Include="FilterDlg.cpp" />
     <ClCompile Include="FpsSprite.cpp" />
     <ClCompile Include="FrameCopyDlg.cpp" />

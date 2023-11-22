@@ -333,12 +333,15 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lig
 									//m_renderingEngine->Add3DModelToZPrepass(curobj);
 									//m_renderingEngine->Add3DModelToRenderGBufferPass(curobj);
 									myRenderer::RENDEROBJ renderobj;
+									renderobj.pmodel = curmodel;
 									renderobj.mqoobj = curobj;
 									renderobj.withalpha = withalpha;
 									renderobj.lightflag = lightflag;
 									renderobj.diffusemult = diffusemult;
 									renderobj.materialdisprate = materialdisprate;
 									renderobj.mWorld = curmodel->GetWorldMat().TKMatrix();
+									renderobj.calcslotflag = calcslotflag;
+									renderobj.btflag = btflag;
 									renderingEngine.Add3DModelToForwardRenderPass(renderobj);
 								}
 							}

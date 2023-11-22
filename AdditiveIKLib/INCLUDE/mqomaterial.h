@@ -66,7 +66,7 @@ public:
 	int CreateTexture(WCHAR* dirname, int texpool = 0);//!!!!!!!!!!!!!!!!!!!!!!!!
 
 	void InitShadersAndPipelines(
-		//const TkmFile::SMaterial& tkmMat,
+		bool withboneflag,
 		const char* fxFilePath,
 		const char* vsEntryPointFunc,
 		const char* vsSkinEntryPointFunc,
@@ -77,7 +77,7 @@ public:
 		UINT offsetInDescriptorsFromTableStartCB,
 		UINT offsetInDescriptorsFromTableStartSRV,
 		D3D12_FILTER samplerFilter);
-	void InitPipelineState(const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
+	void InitPipelineState(bool withboneflag, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
 	void InitShaders(const char* fxFilePath,
 		const char* vsEntryPointFunc,
 		const char* vsSkinEntriyPointFunc,

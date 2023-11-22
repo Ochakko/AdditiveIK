@@ -2670,7 +2670,10 @@ int CModel::SetShaderConst( CMQOObject* srcobj, int btflag, bool calcslotflag )
 	//g_hmWorld->SetMatrix(m_matWorld.GetDataPtr());
 
 
-
+	if (!srcobj) {
+		_ASSERT(0);
+		return 0;
+	}
 
 
 	if( !GetTopBone()){
@@ -2690,6 +2693,7 @@ int CModel::SetShaderConst( CMQOObject* srcobj, int btflag, bool calcslotflag )
 		//_ASSERT(0);
 		return 0;
 	}
+
 	curmotid = curmi->motid;
 	curframe = RoundingTime(curmi->curframe);
 

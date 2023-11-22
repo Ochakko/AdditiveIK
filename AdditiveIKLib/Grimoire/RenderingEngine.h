@@ -12,21 +12,27 @@ namespace myRenderer
 {
     typedef struct tag_renderobj
     {
+        CModel* pmodel;
         CMQOObject* mqoobj;
         Matrix mWorld;
         bool withalpha;
         int lightflag;
         ChaVector4 diffusemult;
         ChaVector4 materialdisprate;
+        bool calcslotflag;
+        int btflag;
 
         void Init()
         {
+            pmodel = nullptr;
             mqoobj = nullptr;
             mWorld.SetIdentity();
             withalpha = false;
             lightflag = 1;
             diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
             materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+            calcslotflag = false;
+            btflag = 0;
         };
 
         tag_renderobj()

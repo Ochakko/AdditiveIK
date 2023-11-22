@@ -21,6 +21,11 @@
 #include <polymesh4.h>
 #include <ExtLine.h>
 
+#include <ChaVecCalc.h>
+#include <Bone.h>
+#include <mqoobject.h>
+#include <Model.h>
+
 #include <coef.h>
 
 #define DBGH
@@ -30,7 +35,6 @@
 #include <TexElem.h>
 
 #include <InfBone.h>
-
 
 #include "../../MiniEngine/ConstantBuffer.h"
 #include "../../MiniEngine/StructuredBuffer.h"
@@ -303,12 +307,13 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone)
 		MATERIALBLOCK* currb = m_pm3->GetMatBlock() + blno;
 		CMQOMaterial* curmat;
 		curmat = currb->mqomat;
+		bool withboneflag = false;
 		if (curmat) {
 			curmat->InitShadersAndPipelines(
-				//tkmMat,
-				"../Media/Shader/Sample.fx",
-				"VSMain",
-				"VSMain",
+				withboneflag,
+				"../Media/Shader/AdditiveIK.fx",
+				"VSMainWithoutBone",
+				"VSMainWithBone",
 				"PSMain",
 				colorBufferFormat,
 				NUM_SRV_ONE_MATERIAL,
@@ -358,14 +363,15 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone )
 		CMQOMaterial* curmat = NULL;
 		int curoffset = 0;
 		int curtrinum = 0;
+		bool withboneflag = true;
 		int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
 		if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0)) {
 			if (curmat) {
 				curmat->InitShadersAndPipelines(
-					//tkmMat,
-					"../Media/Shader/Sample.fx",
-					"VSMain",
-					"VSMain",
+					withboneflag,
+					"../Media/Shader/AdditiveIK.fx",
+					"VSMainWithoutBone",
+					"VSMainWithBone",
 					"PSMain",
 					colorBufferFormat,
 					NUM_SRV_ONE_MATERIAL,
@@ -892,12 +898,8 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 		pmib = m_pm4->GetPm3Inf();
 		pmv = m_pm4->GetPm3Disp();
 
-		
-		//########################
-		//まずはボーン無し表示のテスト
-		//########################
-		stride = sizeof(PM3DISPV);
-		//stride = sizeof(PM3DISPV) + sizeof(PM3INF);
+		//stride = sizeof(PM3DISPV);
+		stride = sizeof(PM3DISPV) + sizeof(PM3INF);
 
 
 		vbsize = pmvleng * stride;
@@ -936,20 +938,16 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 			memcpy(pData, pmv, m_vertexBufferView.SizeInBytes);
 		}
 		else if (m_pm4) {
+			DWORD vno;
+			for (vno = 0; vno < (DWORD)pmvleng; vno++) {
+				uint8_t* pdest = pData + vno * stride;
+				PM3DISPV* curv = pmv + vno;
+				PM3INF* curinf = pmib + vno;
 
-			//########################
-			//まずはボーン無し表示のテスト
-			//########################
-			//DWORD vno;
-			//for (vno = 0; vno < pmvleng; vno++) {
-			//	uint8_t* pdest = pData + vno * stride;
-			//	PM3DISPV* curv = pmv + vno;
-			//	PM3INF* curinf = pmib + vno;
-
-			//	memcpy(pdest, curv, sizeof(PM3DISPV));
-			//	memcpy(pdest + sizeof(PM3DISPV), curinf, sizeof(PM3INF));
-			//}
-			memcpy(pData, pmv, m_vertexBufferView.SizeInBytes);
+				memcpy(pdest, curv, sizeof(PM3DISPV));
+				memcpy(pdest + sizeof(PM3DISPV), curinf, sizeof(PM3INF));
+			}
+			//memcpy(pData, pmv, m_vertexBufferView.SizeInBytes);
 
 		}
 		else {
@@ -983,7 +981,7 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 
 		//インデックスバッファをコピー。
 		uint32_t* pData;
-		DWORD triangleno;
+		//DWORD triangleno;
 		m_indexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pData));
 		if (m_pm3) {
 			//for (triangleno = 0; triangleno < (DWORD)pmfleng; triangleno++) {
@@ -1179,7 +1177,8 @@ int CDispObj::CreateVBandIBLine(ID3D12Device* pdev)
 	return 0;
 }
 
-void CDispObj::DrawCommon(RenderContext& rc, const Matrix& mWorld, const Matrix& mView, const Matrix& mProj)
+void CDispObj::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
+	const Matrix& mView, const Matrix& mProj)
 {
 	//メッシュごとにドロー
 	//プリミティブのトポロジーはトライアングルリストのみ。
@@ -1187,9 +1186,83 @@ void CDispObj::DrawCommon(RenderContext& rc, const Matrix& mWorld, const Matrix&
 
 	////定数バッファを更新する。
 	SConstantBuffer cb;
-	cb.mWorld = mWorld;
+	cb.mWorld = renderobj.mWorld;
 	cb.mView = mView;
 	cb.mProj = mProj;
+
+	float setfl4x4[16 * MAXCLUSTERNUM];
+	ZeroMemory(setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
+
+
+	if(renderobj.pmodel && renderobj.mqoobj)
+	{
+		MOTINFO* curmi = 0;
+		int curmotid;
+		double curframe;
+		curmi = renderobj.pmodel->GetCurMotInfo();
+
+		if (renderobj.pmodel->GetTopBone() && (renderobj.pmodel->GetNoBoneFlag() == false) && curmi) {
+			curmotid = curmi->motid;
+			curframe = RoundingTime(curmi->curframe);
+
+			if (curmotid > 0) {
+				int setclcnt = 0;
+				int clcnt;
+				int clusternum = (int)renderobj.mqoobj->GetClusterSize();
+				if ((clusternum > 0) && (clusternum < MAXCLUSTERNUM)) {
+					for (clcnt = 0; clcnt < clusternum; clcnt++) {
+						CBone* curbone = renderobj.mqoobj->GetCluster(clcnt);
+						if (curbone) {
+							bool currentlimitdegflag = g_limitdegflag;
+							CMotionPoint curmp = curbone->GetCurMp(renderobj.calcslotflag);
+
+
+
+							ChaMatrix clustermat;
+							clustermat.SetIdentity();
+
+							//CMotionPoint tmpmp = curbone->GetCurMp();
+							if (renderobj.btflag == 0) {
+								//set4x4[clcnt] = tmpmp.GetWorldMat();
+								clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
+								MoveMemory(&(setfl4x4[16 * clcnt]),
+									clustermat.GetDataPtr(), sizeof(float) * 16);
+							}
+							else if (renderobj.btflag == 1) {
+								//物理シミュ
+								//set4x4[clcnt] = curbone->GetBtMat();
+								clustermat = curbone->GetBtMat(renderobj.calcslotflag);
+								MoveMemory(&(setfl4x4[16 * clcnt]),
+									clustermat.GetDataPtr(), sizeof(float) * 16);
+							}
+							else if (renderobj.btflag == 2) {
+								//物理IK
+								//set4x4[clcnt] = curbone->GetBtMat();
+								clustermat = curbone->GetBtMat(renderobj.calcslotflag);
+								MoveMemory(&(setfl4x4[16 * clcnt]),
+									curbone->GetBtMat().GetDataPtr(), sizeof(float) * 16);
+							}
+							else {
+								//set4x4[clcnt] = tmpmp.GetWorldMat();
+								clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
+								MoveMemory(&(setfl4x4[16 * clcnt]),
+									clustermat.GetDataPtr(), sizeof(float) * 16);
+							}
+
+							setclcnt++;
+						}
+					}
+
+
+					if (setclcnt > 0) {
+						_ASSERT(setclcnt <= MAXCLUSTERNUM);
+						MoveMemory(&(cb.setfl4x4[0]), &(setfl4x4[0]), sizeof(float) * 16 * setclcnt);
+					}
+				}
+			}
+		}
+	}
+	
 	m_commonConstantBuffer.CopyToVRAM(cb);
 
 	if (m_expandData) {
@@ -1205,12 +1278,10 @@ void CDispObj::DrawCommon(RenderContext& rc, const Matrix& mWorld, const Matrix&
 }
 
 
-int CDispObj::RenderNormal(bool withalpha,
-	RenderContext& rc, int lightflag, 
-	ChaVector4 diffusemult, ChaVector4 materialdisprate, CMQOObject* pmqoobj, Matrix mWorld)
+int CDispObj::RenderNormal(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 {
 
-	if (!pmqoobj) {
+	if (!renderobj.pmodel || !renderobj.mqoobj) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -1241,10 +1312,10 @@ int CDispObj::RenderNormal(bool withalpha,
 	Matrix mView, mProj;
 	mView = g_camera3D->GetViewMatrix();
 	mProj = g_camera3D->GetProjectionMatrix();
-
-
 	//定数バッファの設定、更新など描画の共通処理を実行する。
-	DrawCommon(rc, mWorld, mView, mProj);
+	DrawCommon(rc, renderobj, mView, mProj);
+
+
 	//rc.SetDescriptorHeap(m_descriptorHeap);//BeginRender()より後で呼ばないとエラー
 
 	//int descriptorHeapNo = 0;
@@ -1259,31 +1330,27 @@ int CDispObj::RenderNormal(bool withalpha,
 		int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
 		if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0)) {
 
-			bool laterflag = pmqoobj->ExistInLaterMaterial(curmat);
+			bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
 
 			if (laterflag == false) {
 				bool laterflag2 = false;
-				RenderNormalMaterial(laterflag2, withalpha,
-					rc,
-					curmat, curoffset, curtrinum,
-					lightflag, diffusemult, materialdisprate);
+				RenderNormalMaterial(rc, renderobj, laterflag2,
+					curmat, curoffset, curtrinum);
 			}
 		}
 	}
 
-	int latermatnum = pmqoobj->GetLaterMaterialNum();
-	if (withalpha && (latermatnum > 0)) {
+	int latermatnum = renderobj.mqoobj->GetLaterMaterialNum();
+	if (renderobj.withalpha && (latermatnum > 0)) {
 		//VRoid VRM 裾(すそ)の透過の順番のため　最後に描画
 		int laterindex;
 		for (laterindex = 0; laterindex < latermatnum; laterindex++) {
-			LATERMATERIAL latermaterial = pmqoobj->GetLaterMaterial(laterindex);
+			LATERMATERIAL latermaterial = renderobj.mqoobj->GetLaterMaterial(laterindex);
 			if (latermaterial.pmaterial) {
 				bool laterflag2 = true;
-				RenderNormalMaterial(
-					laterflag2, withalpha,
-					rc,
-					latermaterial.pmaterial, latermaterial.offset, latermaterial.trinum,
-					lightflag, diffusemult, materialdisprate);
+				RenderNormalMaterial(rc, renderobj, 
+					laterflag2,
+					latermaterial.pmaterial, latermaterial.offset, latermaterial.trinum);
 			}
 		}
 	}
@@ -1292,10 +1359,8 @@ int CDispObj::RenderNormal(bool withalpha,
 }
 
 
-int CDispObj::RenderNormalMaterial(bool laterflag, bool withalpha,
-	RenderContext& rc, 
-	CMQOMaterial* curmat, int curoffset, int curtrinum, 
-	int lightflag, ChaVector4 diffusemult, ChaVector4 materialdisprate)
+int CDispObj::RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
+	bool laterflag, CMQOMaterial* curmat, int curoffset, int curtrinum)
 {
 	if (!curmat) {
 		_ASSERT(0);
@@ -1312,18 +1377,18 @@ int CDispObj::RenderNormalMaterial(bool laterflag, bool withalpha,
 
 	ChaVector4 diffuse;
 	ChaVector4 curdif4f = curmat->GetDif4F();
-	diffuse.w = curdif4f.w *diffusemult.w;
-	diffuse.x = curdif4f.x * diffusemult.x * materialdisprate.x;
-	diffuse.y = curdif4f.y * diffusemult.y * materialdisprate.x;
-	diffuse.z = curdif4f.z * diffusemult.z * materialdisprate.x;
+	diffuse.w = curdif4f.w * renderobj.diffusemult.w;
+	diffuse.x = curdif4f.x * renderobj.diffusemult.x * renderobj.materialdisprate.x;
+	diffuse.y = curdif4f.y * renderobj.diffusemult.y * renderobj.materialdisprate.x;
+	diffuse.z = curdif4f.z * renderobj.diffusemult.z * renderobj.materialdisprate.x;
 	//diffuse.Clamp(0.0f, 1.0f);
 
 	bool opeflag = false;
-	if (laterflag && withalpha) {
+	if (laterflag && renderobj.withalpha) {
 		opeflag = true;
 	}
 	else {
-		if (withalpha == false) {//2023/09/24
+		if (renderobj.withalpha == false) {//2023/09/24
 			if ((curmat->GetTransparent() == 0) && (diffuse.w > 0.99999f)) {
 				opeflag = true;
 			}
@@ -1400,7 +1465,7 @@ int CDispObj::RenderNormalMaterial(bool laterflag, bool withalpha,
 	//pRenderContext->OMSetBlendState(g_blendState, blendFactor, 0xffffffff);
 
 
-	int hasskin = 0;//とりあえず　ボーン無しで描画テスト　!!!!!!!!!!!!!!!!!!!
+	int hasskin = 1;
 	curmat->BeginRender(rc, hasskin);
 	rc.SetDescriptorHeap(m_descriptorHeap);
 
@@ -1420,12 +1485,14 @@ int CDispObj::RenderNormalMaterial(bool laterflag, bool withalpha,
 
 }
 
-
-
-int CDispObj::RenderNormalPM3(bool withalpha,
-	RenderContext& rc, int lightflag, 
-	ChaVector4 diffusemult, ChaVector4 materialdisprate, CMQOObject* pmqoobj, Matrix mWorld)
+int CDispObj::RenderNormalPM3(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 {
+	if (!renderobj.pmodel || !renderobj.mqoobj) {
+		_ASSERT(0);
+		return 0;
+	}
+
+
 	if( !m_pm3 ){
 		return 0;
 	}
@@ -1448,7 +1515,7 @@ int CDispObj::RenderNormalPM3(bool withalpha,
 	mProj = g_camera3D->GetProjectionMatrix();
 
 	//定数バッファの設定、更新など描画の共通処理を実行する。
-	DrawCommon(rc, mWorld, mView, mProj);
+	DrawCommon(rc, renderobj, mView, mProj);
 	//rc.SetDescriptorHeap(m_descriptorHeap);//BeginRender()より後で呼ばないとエラー
 
 	//int descriptorHeapNo = 0;
@@ -1471,32 +1538,29 @@ int CDispObj::RenderNormalPM3(bool withalpha,
 		int curnumprim;
 		curnumprim = currb->endface - currb->startface + 1;
 
-		bool laterflag = pmqoobj->ExistInLaterMaterial(curmat);
+		bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
 		if (laterflag == false) {
 			bool laterflag2 = false;
 			int result = RenderNormalPM3Material(
-				laterflag2, withalpha,
-				rc,
-				curmat, currb->startface * 3, curnumprim,
-				lightflag, diffusemult, materialdisprate);
+				rc, renderobj,
+				laterflag2, curmat, currb->startface * 3, curnumprim);
 		}
 	}
 
 
 
-	int latermatnum = pmqoobj->GetLaterMaterialNum();
-	if (withalpha && (latermatnum > 0)) {
+	int latermatnum = renderobj.mqoobj->GetLaterMaterialNum();
+	if (renderobj.withalpha && (latermatnum > 0)) {
 		//VRoid VRM 裾(すそ)の透過の順番のため　最後に描画
 		int laterindex;
 		for (laterindex = 0; laterindex < latermatnum; laterindex++) {
-			LATERMATERIAL latermaterial = pmqoobj->GetLaterMaterial(laterindex);
+			LATERMATERIAL latermaterial = renderobj.mqoobj->GetLaterMaterial(laterindex);
 			if (latermaterial.pmaterial) {
 				bool laterflag2 = true;
 				RenderNormalPM3Material(
-					laterflag2, withalpha,
-					rc,
-					latermaterial.pmaterial, latermaterial.offset, latermaterial.trinum,
-					lightflag, diffusemult, materialdisprate);
+					rc, renderobj,
+					laterflag2,
+					latermaterial.pmaterial, latermaterial.offset, latermaterial.trinum);
 			}
 		}
 	}
@@ -1504,27 +1568,30 @@ int CDispObj::RenderNormalPM3(bool withalpha,
 	return 0;
 }
 
-int CDispObj::RenderNormalPM3Material( 
-	bool laterflag, bool withalpha,
-	RenderContext& rc,
-	CMQOMaterial* curmat, int curoffset, int curtrinum,
-	int lightflag, ChaVector4 diffusemult, ChaVector4 materialdisprate)
+int CDispObj::RenderNormalPM3Material(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
+	bool laterflag, CMQOMaterial* curmat,
+	int curoffset, int curtrinum)
 {
+	if (!curmat) {
+		_ASSERT(0);
+		return 1;
+	}
+
 	ChaVector4 diffuse;
 	ChaVector4 curdif4f = curmat->GetDif4F();
-	diffuse.w = curdif4f.w * diffusemult.w;
-	diffuse.x = curdif4f.x * diffusemult.x * materialdisprate.x;
-	diffuse.y = curdif4f.y * diffusemult.y * materialdisprate.x;
-	diffuse.z = curdif4f.z * diffusemult.z * materialdisprate.x;
+	diffuse.w = curdif4f.w * renderobj.diffusemult.w;
+	diffuse.x = curdif4f.x * renderobj.diffusemult.x * renderobj.materialdisprate.x;
+	diffuse.y = curdif4f.y * renderobj.diffusemult.y * renderobj.materialdisprate.x;
+	diffuse.z = curdif4f.z * renderobj.diffusemult.z * renderobj.materialdisprate.x;
 	//diffuse.Clamp(0.0f, 1.0f);
 
 
 	bool opeflag = false;
-	if (withalpha && laterflag) {
+	if (renderobj.withalpha && laterflag) {
 		opeflag = true;
 	}
 	else {
-		if (withalpha == false) {//2023/09/24
+		if (renderobj.withalpha == false) {//2023/09/24
 			if ((curmat->GetTransparent() == 0) && (diffuse.w > 0.99999f)) {
 				opeflag = true;
 			}
@@ -1596,7 +1663,7 @@ int CDispObj::RenderNormalPM3Material(
 	//}
 
 
-	int hasskin = 0;//とりあえず　ボーン無しで描画テスト　!!!!!!!!!!!!!!!!!!!
+	int hasskin = 0;
 	curmat->BeginRender(rc, hasskin);
 	rc.SetDescriptorHeap(m_descriptorHeap);
 

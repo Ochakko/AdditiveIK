@@ -120,6 +120,7 @@
 #include "../AdditiveIKLib/Grimoire/ModelRender.h"
 #include "../MiniEngine/Sprite.h"
 
+#include "DXUTmisc/DXUTmisc.h"
 
 using namespace std;
 
@@ -3199,7 +3200,14 @@ INT WINAPI wWinMain(
 			//ChaMatrix matVP = ChaMatrix(mVP);
 			//s_chascene->UpdateMatrixModels(g_limitdegflag, &matVP, 0.0);
 
-			OnUserFrameMove(0.0, 0.0);
+			double fTime = 0.0;
+			float fElapsedTime = 0.0;
+			if (DXUTGetGlobalTimer()) {
+				fTime = DXUTGetGlobalTimer()->GetTime();
+				DXUTGetGlobalTimer()->GetElapsedTime();
+			}
+			OnUserFrameMove(fTime, fElapsedTime);
+
 
 			int lightflag = 1;
 			ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
