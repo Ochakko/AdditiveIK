@@ -254,10 +254,10 @@ public:
 		}
 	};
 
-	void SetRenderingEngine(myRenderer::RenderingEngine* prenderingEngine)
-	{
-		m_renderingEngine = prenderingEngine;
-	}
+	//void SetRenderingEngine(myRenderer::RenderingEngine* prenderingEngine)
+	//{
+	//	m_renderingEngine = prenderingEngine;
+	//}
 
 private:
 	std::vector<MODELELEM> m_modelindex;
@@ -273,7 +273,7 @@ private:
 	int m_created_Motion2BtThreadsNum;
 	int m_created_SetBtMotionThreadsNum;
 
-	myRenderer::RenderingEngine* m_renderingEngine;
+	//myRenderer::RenderingEngine* m_renderingEngine;
 
 
 };

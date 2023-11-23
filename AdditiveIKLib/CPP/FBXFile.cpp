@@ -2545,6 +2545,9 @@ int	CreateFbxMaterialFromMQOMaterial(FbxManager* pSdkManager, FbxScene* pScene, 
 	//lMaterialElement->GetIndexArray().SetCount(lMesh->GetPolygonCount());
 
 
+	if (curtex) {
+		curtex->Destroy();//2023/11/23
+	}
 
 	return 0;
 }

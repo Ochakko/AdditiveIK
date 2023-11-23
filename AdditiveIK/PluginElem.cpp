@@ -137,7 +137,12 @@
 //#define MB2VERSION 12029
 
 //2023/11/07
-#define MB2VERSION 12030
+//#define MB2VERSION 12030
+
+
+//2023/11/23 æ“ª‚É‚Q‚ğ•t‰Á@ÅŒã‚Ì‚QŒ…‚Í0.0.0.1‚Ì1‚ğ‚QŒ…•\Œ»
+#define MB2VERSION 210001
+
 
 
 CPluginElem::CPluginElem()

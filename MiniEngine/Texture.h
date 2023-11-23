@@ -7,7 +7,10 @@ public:
 	/// <summary>
 	/// コンストラクタ。
 	/// </summary>
-	Texture() {}
+	Texture() {
+		m_texture = nullptr;	//テクスチャ。
+		ZeroMemory(&m_textureDesc, sizeof(D3D12_RESOURCE_DESC));	//テクスチャ情報
+	};
 	/// <summary>
 	/// デストラクタ。
 	/// </summary>

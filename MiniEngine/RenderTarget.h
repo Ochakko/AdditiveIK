@@ -10,6 +10,27 @@ class GraphicsEngine;
 /// </summary>
 class RenderTarget {
 public:
+	RenderTarget() : m_renderTargetTexture()
+	{
+		m_renderTargetTextureDx12 = nullptr;//レンダリングターゲットとなるテクスチャ。
+		m_depthStencilTexture = nullptr;	//深度ステンシルバッファとなるテクスチャ。
+		m_rtvHeap = nullptr;	//RTV用のディスクリプタヒープ。
+		m_dsvHeap = nullptr;	//深度ステンシルバッファビューのディスクリプタヒープ。
+		m_rtvDescriptorSize = 0;						//フレームバッファのディスクリプタのサイズ。
+		m_dsvDescriptorSize = 0;						//深度ステンシルバッファのディスクリプタのサイズ。
+		m_width = 0;									//レンダリングターゲットの幅。
+		m_height = 0;									//レンダリングターゲットの高さ。
+
+		//レンダリングターゲットビューのクリアカラー。
+		m_rtvClearColor[0] = 0.0f;
+		m_rtvClearColor[1] = 0.0f;
+		m_rtvClearColor[2] = 0.0f;
+		m_rtvClearColor[3] = 1.0f;
+
+		m_dsvClearValue = 1.0f;							//DSVのクリアカラー。
+	};
+
+
 	/// <summary>
 	/// デストラクタ。
 	/// </summary>

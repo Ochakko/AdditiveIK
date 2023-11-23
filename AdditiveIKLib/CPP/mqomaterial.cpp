@@ -899,44 +899,47 @@ int CMQOMaterial::CreateTexture( WCHAR* dirname, int texpool )
 			m_albedoMap = 0;
 		}
 	}
+	else {
+		m_albedoMap = 0;
+	}
 
 
 	//######################################################
 	//normalMapとspecularMapは　とりあえずnulltextureでテスト
 	//######################################################
-	if (!m_specularMap && !m_normalMap) {
-		{
-			const auto& nullTextureMaps = g_graphicsEngine->GetNullTextureMaps();
-			char* map = nullptr;
-			unsigned int mapSize;
+	if (!m_specularMap)
+	{
+		const auto& nullTextureMaps = g_graphicsEngine->GetNullTextureMaps();
+		char* map = nullptr;
+		unsigned int mapSize;
 
-			map = nullTextureMaps.GetNormalMap().get();
-			mapSize = nullTextureMaps.GetNormalMapSize();
-			Texture* texture = new Texture();
-			if (!texture) {
-				_ASSERT(0);
-				return 1;
-			}
-			texture->InitFromMemory(map, mapSize);
-			m_normalMap = texture;
+		map = nullTextureMaps.GetNormalMap().get();
+		mapSize = nullTextureMaps.GetNormalMapSize();
+		Texture* texture = new Texture();
+		if (!texture) {
+			_ASSERT(0);
+			return 1;
 		}
-		{
-			const auto& nullTextureMaps = g_graphicsEngine->GetNullTextureMaps();
-			char* map = nullptr;
-			unsigned int mapSize;
-
-			map = nullTextureMaps.GetSpecularMap().get();
-			mapSize = nullTextureMaps.GetSpecularMapSize();
-			Texture* texture = new Texture();
-			if (!texture) {
-				_ASSERT(0);
-				return 1;
-			}
-			texture->InitFromMemory(map, mapSize);
-			m_specularMap = texture;
-		}
+		texture->InitFromMemory(map, mapSize);
+		m_normalMap = texture;
 	}
+	
+	if (!m_normalMap)
+	{
+		const auto& nullTextureMaps = g_graphicsEngine->GetNullTextureMaps();
+		char* map = nullptr;
+		unsigned int mapSize;
 
+		map = nullTextureMaps.GetSpecularMap().get();
+		mapSize = nullTextureMaps.GetSpecularMapSize();
+		Texture* texture = new Texture();
+		if (!texture) {
+			_ASSERT(0);
+			return 1;
+		}
+		texture->InitFromMemory(map, mapSize);
+		m_specularMap = texture;
+	}
 
 
 	return 0;

@@ -124,15 +124,6 @@
 
 using namespace std;
 
-HWND			g_hWnd;				//ウィンドウハンドル。
-//ゲームの初期化。
-RECT InitGame(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-	LPWSTR lpCmdLine, int nCmdShow, const TCHAR* appName, HWND srcparentwnd,
-	int srcposx, int srcposy,
-	int srcwidth, int srcheight);
-//ウィンドウメッセージをディスパッチ。falseが返ってきたら、ゲーム終了。
-bool DispatchWindowMessage();
-int OnCreateDevice();
 
 
 
@@ -183,25 +174,6 @@ typedef struct tag_spsw3 //2023/06/04
 		::ZeroMemory(&dispcenter, sizeof(POINT));
 	};
 }SPGUISW3;
-
-
-//typedef struct tag_physikrec
-//{
-//	double time;
-//	CBone* pbone;
-//	ChaMatrix btmat;
-//}PHYSIKREC;
-//
-//#define MAXPHYSIKRECCNT		(60 * 30)
-//static std::vector<PHYSIKREC> s_physikrec0;
-//static std::vector<PHYSIKREC> s_physikrec;
-//static double s_phyikrectime = 0.0;
-//static void PhysIKRec(double srcrectime);
-//static void PhysIKRecReq(CBone* srcbone, double srcrectime);
-//static void ApplyPhysIkRec();
-//static void ApplyPhysIkRecReq(CBone* srcbone, double srcframe, double srcrectime);
-
-//static CThreadingUpdateTimeline* s_updatetimeline = 0;
 
 //#define FPSSAVENUM 100
 #define FPSSAVENUM 120
@@ -278,140 +250,11 @@ HWND g_filterdlghwnd = 0;
 CRITICAL_SECTION g_CritSection_GetGP;
 CRITICAL_SECTION g_CritSection_FbxSdk;
 
-static int DispToolTip();
-static int CreateToolTip(POINT ptCursor, WCHAR* srctext);
 
-
-static int CreateTipRig(CBone* currigbone, int currigno, POINT ptCursor);
-static bool DispTipRig();
-static int ClearLimitedWM(CModel* srcmodel);
-
-static float CalcSelectScale(CBone* curboneptr);
-static double CalcRefFrame();
-static void ChangeCurDirFromMameMediaToTest();
-
-static int OnPluginClose();
-static int OnPluginPose();
 static int s_onselectplugin = 0;
 static CPluginElem* s_plugin = 0;
 
-static void InitTimelineSelection();
 
-static HWND GetOFWnd(POINT srcpoint);
-static BOOL CALLBACK EnumChildProc(HWND hwnd, LPARAM lParam);
-static HWND GetNearestEnumDist();
-static BOOL CALLBACK EnumIDOKProc(HWND hwnd, LPARAM lParam);
-static BOOL CALLBACK EnumTreeViewProc(HWND hwnd, LPARAM lParam);
-void CALLBACK WinEventProc(HWINEVENTHOOK hWinEventHook, DWORD event, HWND hwnd, LONG idObject, LONG idChild, DWORD idEventThread, DWORD dwmsEventTime);
-
-static void DSMessageBox(HWND srcparenthwnd, const WCHAR* srcmessage, const WCHAR* srctitle, LONG srcok);
-
-/*
-ID3D11DepthStencilState *g_pDSStateZCmp = 0;
-ID3D11DepthStencilState *g_pDSStateZCmpAlways = 0;
-ID3D11ShaderResourceView* g_presview = 0;
-
-int	g_numthread = 3;
-double g_btcalccnt = 3.0;
-int g_dbgloadcnt = 0;
-double g_calcfps = 60.0;
-
-bool g_selecttolastFlag = false;
-bool g_underselecttolast = false;
-bool g_undereditrange = false;
-
-bool g_limitdegflag = true;
-//bool g_wmatDirectSetFlag = false;
-bool g_underRetargetFlag = false;
-
-float g_impscale = 1.0f;
-float g_mass = 1.0f;
-
-ChaVector3 g_camEye = ChaVector3( 0.0f, 0.0f, 0.0f );
-ChaVector3 g_camtargetpos = ChaVector3( 0.0f, 0.0f, 0.0f );
-
-float g_l_kval[3] = { 1.0f, powf( 10.0f, 2.61f ), 2000.0f };//
-float g_a_kval[3] = { 0.1f, powf( 10.0f, 0.3f ), 70.0f };//
-float g_initcuslk = 1e2;
-//float g_initcuslk = 2000.0f;
-//float g_initcuslk = 100.0f;
-float g_initcusak = 70.0f;
-
-
-//float g_l_dmp = 0.75f;
-//float g_a_dmp = 0.50f;
-
-float g_l_dmp = 0.50f;
-float g_a_dmp = 0.50f;
-
-int g_previewFlag = 0;			// プレビューフラグ
-
-int g_applyendflag = 0;
-int g_slerpoffflag = 0;
-int g_absikflag = 0;
-int g_bonemarkflag = 1;
-int g_pseudolocalflag = 1;
-int g_boneaxis = 1;
-
-CTexBank*	g_texbank = 0;
-
-float g_tmpmqomult = 1.0f;
-WCHAR g_tmpmqopath[MULTIPATH] = {0L};
-float g_tmpbvhfilter = 100.0f;
-
-ID3D11EffectTechnique* g_hRenderBoneL0 = 0;
-ID3D11EffectTechnique* g_hRenderBoneL1 = 0;
-ID3D11EffectTechnique* g_hRenderBoneL2 = 0;
-ID3D11EffectTechnique* g_hRenderBoneL3 = 0;
-ID3D11EffectTechnique* g_hRenderNoBoneL0 = 0;
-ID3D11EffectTechnique* g_hRenderNoBoneL1 = 0;
-ID3D11EffectTechnique* g_hRenderNoBoneL2 = 0;
-ID3D11EffectTechnique* g_hRenderNoBoneL3 = 0;
-ID3D11EffectTechnique* g_hRenderLine = 0;
-ID3D11EffectTechnique* g_hRenderSprite = 0;
-
-ID3D11EffectMatrixVariable* g_hm4x4Mat = 0;
-ID3D11EffectMatrixVariable* g_hmWorld = 0;
-ID3D11EffectMatrixVariable* g_hmVP = 0;
-
-ID3D11EffectVectorVariable* g_hEyePos = 0;
-ID3D11EffectScalarVariable* g_hnNumLight = 0;
-ID3D11EffectVectorVariable* g_hLightDir = 0;
-ID3D11EffectVectorVariable* g_hLightDiffuse = 0;
-ID3D11EffectVectorVariable* g_hLightAmbient = 0;
-ID3D11EffectVectorVariable* g_hSpriteOffset = 0;
-ID3D11EffectVectorVariable* g_hSpriteScale = 0;
-ID3D11EffectVectorVariable* g_hPm3Scale = 0;
-ID3D11EffectVectorVariable* g_hPm3Offset = 0;
-
-
-ID3D11EffectVectorVariable* g_hdiffuse = 0;
-ID3D11EffectVectorVariable* g_hambient = 0;
-ID3D11EffectVectorVariable* g_hspecular = 0;
-ID3D11EffectScalarVariable* g_hpower = 0;
-ID3D11EffectVectorVariable* g_hemissive = 0;
-ID3D11EffectShaderResourceVariable* g_hMeshTexture = 0;
-
-BYTE g_keybuf[256];
-BYTE g_savekeybuf[256];
-
-WCHAR g_basedir[ MAX_PATH ] = {0};
-
-double						g_dspeed = 3.0;
-//double						g_dspeed = 0.0;
-
-
-float g_ikfirst = 1.0f;
-float g_ikrate = 1.0f;
-int g_applyrate = 50;
-float g_physicsmvrate = 1.0f;
-
-
-float                       g_fLightScale;
-int                         g_nNumActiveLights;
-int                         g_nActiveLight;
-
-*/
 
 enum {
 	MB3D_WND_MAIN,
@@ -1729,34 +1572,6 @@ static bool s_utcontrolvisible = true;
 ////static bool s_guivisible_bullet = true;
 ////static bool s_guivisible_physicsik = true;
 
-static void GUIGetNextMenu(POINT ptCursor, int srcmenukind, int* dstmenukind, int* dstplateno);
-static void GUIMenuSetVisible(int srcmenukind, int srcplateno);
-static void ChangeToNextPlateMenuKind(int srcmenukind, int srcmenuno);
-static void ChangeToNextPlateMenuPlate(int srcmenukind, int srcmenuno);
-
-
-static void GUISetVisible(int srcplateno);
-static void GUISetVisible_CameraAndIK();
-static void GUISetVisible_DispAndLimits();
-static void GUISetVisible_BrushParams();
-static void GUISetVisible_Bullet();
-static void GUISetVisible_RefPos();
-static void GUISetVisible_AimBar();
-
-static void GUIDispSetVisible(int srcplateno);
-static void ShowLightsWnd(bool srcflag);
-static void ShowLaterTransparentWnd(bool srcflag);
-static void ShowDispGroupWnd(bool srcflag);
-
-static void GUIRigidSetVisible(int srcplateno);
-static void ShowRigidWnd(bool srcflag);
-static void ShowImpulseWnd(bool srcflag);
-static void ShowGroundWnd(bool srcflag);
-static void ShowDampAnimWnd(bool srcflag);
-
-static void GUIRetargetSetVisible(int srcplateno);
-static void ShowRetargetWnd(bool srcflag);
-static void ShowLimitEulerWnd(bool srcflag);
 
 
 //#define DEBUG_VS   // Uncomment this line to debug vertex shaders 
@@ -1951,13 +1766,95 @@ static ChaVector4 s_lightdiffuseforshader[LIGHTNUMMAX];
 //#define IDC_EDGESMP					88
 
 
-LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+HWND			g_hWnd;				//ウィンドウハンドル。
+//ゲームの初期化。
+RECT InitGame(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+	LPWSTR lpCmdLine, int nCmdShow, const TCHAR* appName, HWND srcparentwnd,
+	int srcposx, int srcposy,
+	int srcwidth, int srcheight);
+//ウィンドウメッセージをディスパッチ。falseが返ってきたら、ゲーム終了。
+bool DispatchWindowMessage();
+int OnCreateDevice();
 
-int InitializeMainWindow(CREATESTRUCT* createWindowArgs);
+
+//##########################
+//MessageProc of Main Window
+//##########################
+LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static void InitApp();
+static int CheckResolution();
 static HWND CreateMainWindow();
-static HWND Create3DWnd(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd);
 static void InitRootSignature(RootSignature& rs);
+static void OnDestroyDevice();
+static int OnPluginClose();
+
+//##########################
+//MessageProc of 3d window
+//##########################
+LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+static HWND Create3DWnd(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd);
+static void OnUserFrameMove(double fTime, float fElapsedTime);
+static void OnFrameRender(myRenderer::RenderingEngine& re, RenderContext& rc, double fTime, float fElapsedTime);
+
+//################
+//GUI Plate Menu
+//################
+static void GUIGetNextMenu(POINT ptCursor, int srcmenukind, int* dstmenukind, int* dstplateno);
+static void GUIMenuSetVisible(int srcmenukind, int srcplateno);
+static void ChangeToNextPlateMenuKind(int srcmenukind, int srcmenuno);
+static void ChangeToNextPlateMenuPlate(int srcmenukind, int srcmenuno);
+static void GUISetVisible(int srcplateno);
+static void GUISetVisible_CameraAndIK();
+static void GUISetVisible_DispAndLimits();
+static void GUISetVisible_BrushParams();
+static void GUISetVisible_Bullet();
+static void GUISetVisible_RefPos();
+static void GUISetVisible_AimBar();
+static void GUIDispSetVisible(int srcplateno);
+static void ShowLightsWnd(bool srcflag);
+static void ShowLaterTransparentWnd(bool srcflag);
+static void ShowDispGroupWnd(bool srcflag);
+static void GUIRigidSetVisible(int srcplateno);
+static void ShowRigidWnd(bool srcflag);
+static void ShowImpulseWnd(bool srcflag);
+static void ShowGroundWnd(bool srcflag);
+static void ShowDampAnimWnd(bool srcflag);
+static void GUIRetargetSetVisible(int srcplateno);
+static void ShowRetargetWnd(bool srcflag);
+static void ShowLimitEulerWnd(bool srcflag);
+
+
 static CInfoWindow* CreateInfoWnd();
+static int CreateSprites();
+static void DestroySprites();
+
+
+//#################################
+//For DualSence GamePad Controller
+//#################################
+static HWND GetOFWnd(POINT srcpoint);
+static BOOL CALLBACK EnumChildProc(HWND hwnd, LPARAM lParam);
+static HWND GetNearestEnumDist();
+static BOOL CALLBACK EnumIDOKProc(HWND hwnd, LPARAM lParam);
+static BOOL CALLBACK EnumTreeViewProc(HWND hwnd, LPARAM lParam);
+void CALLBACK WinEventProc(HWINEVENTHOOK hWinEventHook, DWORD event, HWND hwnd, LONG idObject, LONG idChild, DWORD idEventThread, DWORD dwmsEventTime);
+static void DSMessageBox(HWND srcparenthwnd, const WCHAR* srcmessage, const WCHAR* srctitle, LONG srcok);
+
+
+
+static int DispToolTip();
+static int CreateToolTip(POINT ptCursor, WCHAR* srctext);
+static int CreateTipRig(CBone* currigbone, int currigno, POINT ptCursor);
+
+static bool DispTipRig();
+static int ClearLimitedWM(CModel* srcmodel);
+
+static float CalcSelectScale(CBone* curboneptr);
+static double CalcRefFrame();
+static void ChangeCurDirFromMameMediaToTest();
+
+
+
 //static int CreateCameraDollyWnd();//2023/08/23 CreateDollyHistoryDlg()に移行
 static int ShowCameraDollyDlg();
 static int CreateMaterialRateWnd();
@@ -1967,95 +1864,9 @@ static int CreateModelWorldMatWnd();
 static int SetModel2ModelWorldMatDlg(CModel* srcmodel);
 static int ShowModelWorldMatDlg();
 
-//--------------------------------------------------------------------------------------
-// Forward declarations 
-//--------------------------------------------------------------------------------------
-//bool CALLBACK IsDeviceAcceptable( D3DCAPS10* pCaps, D3DFORMAT AdapterFormat, D3DFORMAT BackBufferFormat, bool bWindowed,
-//                                  void* pUserContext );
-//bool CALLBACK ModifyDeviceSettings( DXUTDeviceSettings* pDeviceSettings, void* pUserContext );
-//HRESULT CALLBACK OnCreateDevice( ID3D12Device* pd3dDevice, const D3DSURFACE_DESC* pBackBufferSurfaceDesc,
-//                                 void* pUserContext );
-//HRESULT CALLBACK OnResetDevice( ID3D12Device* pd3dDevice, const D3DSURFACE_DESC* pBackBufferSurfaceDesc,
-//                                void* pUserContext );
-//void CALLBACK OnFrameMove( double fTime, float fElapsedTime, void* pUserContext );
-//void CALLBACK OnFrameRender( ID3D12Device* pd3dDevice, double fTime, float fElapsedTime, void* pUserContext );
-//LRESULT CALLBACK MsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool* pbNoFurtherProcessing, void* pUserContext );
-//void CALLBACK KeyboardProc( UINT nChar, bool bKeyDown, bool bAltDown, void* pUserContext );
-//void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext );
-//void CALLBACK OnLostDevice( void* pUserContext );
-//void CALLBACK OnDestroyDevice( void* pUserContext );
-
-//--------------------------------------------------------------------------------------
-// Forward declarations 
-//--------------------------------------------------------------------------------------
-//bool CALLBACK ModifyDeviceSettings(DXUTDeviceSettings* pDeviceSettings, void* pUserContext);
-void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext);
-//LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool* pbNoFurtherProcessing,
-//	void* pUserContext);
-//LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 void CALLBACK OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown, void* pUserContext);
 //void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext);
-
-//bool CALLBACK IsD3D9DeviceAcceptable(D3DCAPS9* pCaps, D3DFORMAT AdapterFormat, D3DFORMAT BackBufferFormat,
-//	bool bWindowed, void* pUserContext) {
-//	return false;
-//};
-//HRESULT CALLBACK OnD3D9CreateDevice(IDirect3DDevice9* pd3dDevice,
-//	const D3DSURFACE_DESC* pBackBufferSurfaceDesc, void* pUserContext)
-//{
-//	return -1;
-//};
-//HRESULT CALLBACK OnD3D9ResetDevice(IDirect3DDevice9* pd3dDevice, const D3DSURFACE_DESC* pBackBufferSurfaceDesc,
-//	void* pUserContext) 
-//{
-//	return -1;
-//};
-//void CALLBACK OnD3D9FrameRender(IDirect3DDevice9* pd3dDevice, double fTime, float fElapsedTime,
-//	void* pUserContext)
-//{
-//	return;
-//};
-//void CALLBACK OnD3D9LostDevice(void* pUserContext)
-//{
-//	return;
-//};
-//void CALLBACK OnD3D9DestroyDevice(void* pUserContext)
-//{
-//	return;
-//};
-//bool CALLBACK IsD3D9DeviceAcceptable(D3DCAPS9* pCaps, D3DFORMAT AdapterFormat, D3DFORMAT BackBufferFormat,
-//	bool bWindowed, void* pUserContext);
-//HRESULT CALLBACK OnD3D9CreateDevice(IDirect3DDevice9* pd3dDevice,
-//	const D3DSURFACE_DESC* pBackBufferSurfaceDesc, void* pUserContext);
-//HRESULT CALLBACK OnD3D9ResetDevice(IDirect3DDevice9* pd3dDevice, const D3DSURFACE_DESC* pBackBufferSurfaceDesc,
-//	void* pUserContext);
-//void CALLBACK OnD3D9FrameRender(IDirect3DDevice9* pd3dDevice, double fTime, float fElapsedTime,
-//	void* pUserContext);
-//void CALLBACK OnD3D9LostDevice(void* pUserContext);
-//void CALLBACK OnD3D9DestroyDevice(void* pUserContext);
-
-//bool CALLBACK IsD3D11DeviceAcceptable(const CD3D11EnumAdapterInfo* AdapterInfo, UINT Output, const CD3D11EnumDeviceInfo* DeviceInfo,
-//	DXGI_FORMAT BackBufferFormat, bool bWindowed, void* pUserContext);
-HRESULT CALLBACK OnD3D11CreateDevice(ID3D12Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc,
-	void* pUserContext);
-HRESULT CALLBACK OnD3D11ResizedSwapChain(ID3D12Device* pd3dDevice, IDXGISwapChain* pSwapChain,
-	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc, void* pUserContext);
-void CALLBACK OnD3D11ReleasingSwapChain(void* pUserContext);
-void CALLBACK OnD3D11DestroyDevice(void* pUserContext);
-void CALLBACK OnD3D11FrameRender(ID3D12Device* pd3dDevice, RenderContext* pRenderContext, double fTime,
-	float fElapsedTime, void* pUserContext);
-
-//bool CALLBACK IsD3D11DeviceAcceptable(UINT Adapter, UINT Output, D3D11_DRIVER_TYPE DeviceType,
-//	DXGI_FORMAT BackBufferFormat, bool bWindowed, void* pUserContext);
-//HRESULT CALLBACK OnD3D11CreateDevice(ID3D12Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc,
-//	void* pUserContext);
-//HRESULT CALLBACK OnD3D11ResizedSwapChain(ID3D12Device* pd3dDevice, IDXGISwapChain* pSwapChain,
-//	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc, void* pUserContext);
-//void CALLBACK OnD3D11ReleasingSwapChain(void* pUserContext);
-//void CALLBACK OnD3D11DestroyDevice(void* pUserContext);
-//void CALLBACK OnD3D11FrameRender(ID3D12Device* pd3dDevice, RenderContext* pRenderContext, double fTime, float fElapsedTime, void* pUserContext);
 
 
 LRESULT CALLBACK OpenMqoDlgProc(HWND, UINT, WPARAM, LPARAM);
@@ -2087,10 +1898,8 @@ static int ChooseLightColorBar(HWND hDlgWnd, int lightindex, int idcolorbar);
 
 
 
-void InitApp();
-int CheckResolution();
-int CreateSprites();
-void DestroySprites();
+
+
 
 //HRESULT LoadMesh( ID3D12Device* pd3dDevice, WCHAR* strFileName, ID3DXMesh** ppMesh );
 void RenderText(double fTime);
@@ -2098,7 +1907,7 @@ static int RetargetFile(char* fbxpath);
 
 static int OnMouseMoveFunc();
 
-static void OnUserFrameMove(double fTime, float fElapsedTime);
+
 static int RollbackCurBoneNo();
 static void PrepairUndo();
 static void RollbackBrushState(BRUSHSTATE srcbrushstate);
@@ -2135,6 +1944,7 @@ static int CreatePlaceFolderWnd();
 static int CreateCopyHistoryDlg();
 static int CreateDollyHistoryDlg();
 
+static void InitTimelineSelection();
 
 static int CreateLightsWnd();
 static int Lights2Dlg(HWND hDlgWnd);
@@ -2192,7 +2002,6 @@ static void DispProgressCalcLimitedWM();
 
 static int SetLightDirection();
 
-static int OnRenderSetShaderConst();
 static int OnRenderModel(RenderContext* pRenderContext);
 static int OnRenderOnlyOneObj(RenderContext* pRenderContext);
 static int OnRenderRefPose(RenderContext* pRenderContext, CModel* curmodel);
@@ -2870,32 +2679,6 @@ INT WINAPI wWinMain(
 	s_pasteRJoint.clear();
 
 
-	////DXUTSetCallbackDeviceChanging(ModifyDeviceSettings);
-	//DXUTSetCallbackMsgProc(MsgProc);
-	//DXUTSetCallbackKeyboard(OnKeyboard);
-	//DXUTSetCallbackFrameMove(OnFrameMove);
-
-	////DXUTSetCallbackD3D9DeviceAcceptable(IsD3D9DeviceAcceptable);
-	////DXUTSetCallbackD3D9DeviceCreated(OnD3D9CreateDevice);
-	////DXUTSetCallbackD3D9DeviceReset(OnD3D9ResetDevice);
-	////DXUTSetCallbackD3D9FrameRender(OnD3D9FrameRender);
-	////DXUTSetCallbackD3D9DeviceLost(OnD3D9LostDevice);
-	////DXUTSetCallbackD3D9DeviceDestroyed(OnD3D9DestroyDevice);
-	////DXUTSetCallbackD3D9DeviceAcceptable(IsD3D9DeviceAcceptable);
-	////DXUTSetCallbackD3D9DeviceCreated(NULL);
-	////DXUTSetCallbackD3D9DeviceReset(NULL);
-	////DXUTSetCallbackD3D9FrameRender(NULL);
-	////DXUTSetCallbackD3D9DeviceLost(NULL);
-	////DXUTSetCallbackD3D9DeviceDestroyed(NULL);
-
-
-	//DXUTSetCallbackD3D11DeviceAcceptable(IsD3D11DeviceAcceptable);
-	//DXUTSetCallbackD3D11DeviceCreated(OnD3D11CreateDevice);
-	//DXUTSetCallbackD3D11SwapChainResized(OnD3D11ResizedSwapChain);
-	//DXUTSetCallbackD3D11FrameRender(OnD3D11FrameRender);
-	//DXUTSetCallbackD3D11SwapChainReleasing(OnD3D11ReleasingSwapChain);
-	//DXUTSetCallbackD3D11DeviceDestroyed(OnD3D11DestroyDevice);
-
 
 	s_mainhwnd = CreateMainWindow();
 	if (s_mainhwnd == NULL) {
@@ -2925,70 +2708,6 @@ INT WINAPI wWinMain(
 	//--------------------------------------------------------------------------------------
 	//	void CDXUTTimer::LimitThreadAffinityToCurrentProc()
 
-
-
-
-	//IsRegist();
-
-
-
-
-
-	// Initialize DXUT and create the desired Win32 window and Direct3D 
-	// device for the application. Calling each of these functions is optional, but they
-	// allow you to set several options which control the behavior of the framework.
-	//HRESULT hr;
-	// Initialize DXUT and create the desired Win32 window and Direct3D 
-	// device for the application. Calling each of these functions is optional, but they
-	// allow you to set several options which control the behavior of the framework.
-	//DXUTInit(true, true); // Parse the command line and show msgboxes
-	//DXUTSetHotkeyHandling(true, true, true);
-	//DXUTCreateWindow(L"MameBake3D", 0, 0, s_mainmenu);
-	//DXUTCreateDevice(true, s_mainwidth, s_mainheight);
-	//s_3dwnd = DXUTGetHWND();
-	//_ASSERT(s_3dwnd);
-	//ShowWindow(s_3dwnd, SW_SHOW);
-	//SetWindowPos(s_3dwnd, HWND_TOP, 450, 0, s_mainwidth, s_mainheight, SWP_NOSIZE);
-
-
-	//InitApp();
-	//DXUTInit(true, true, NULL); // Parse the command line, show msgboxes on error, no extra command line params
-	//DXUTSetCursorSettings(true, true); // Show the cursor and clip it when in full screen
-	//DXUTCreateWindow(L"BasicHLSL10");
-	//DXUTCreateDevice(true, 640, 480);
-	//DXUTMainLoop(); // Enter into the DXUT render loop
-
-	//s_mainhwnd = CreateMainWindow();
-	//if (s_mainhwnd == NULL) {
-	//	_ASSERT(0);
-	//	return 1;
-	//}
-
-
-	//hr = DXUTInit(true, true); // Parse the command line and show msgboxes
-	//if (FAILED(hr)) {
-	//	_ASSERT(0);
-	//	return 1;
-	//}
-
-	//// Show the cursor and clip it when in full screen
-	////DXUTSetCursorSettings(true, true);
-	//DXUTSetCursorSettings(false, false);
-
-	////DXUTSetHotkeyHandling( true, true, true );
-	//DXUTSetHotkeyHandling(false, false, false);
-
-	//g_Camera = new CModelViewerCamera();
-	//if (!g_Camera) {
-	//	_ASSERT(0);
-	//	return 1;
-	//}
-
-
-	//DXUTSetOverrideSize(s_mainwidth, s_mainheight);
-
-	////GetDXUTState().SetOverrideWidth(s_mainwidth);
-	////GetDXUTState().SetOverrideHeight(s_mainwidth);
 
 /*
 #define SPAXISNUM	3
@@ -3103,6 +2822,9 @@ INT WINAPI wWinMain(
 		//_ASSERT(0);
 		//return 1;
 	}
+
+
+
 	//s_eventhook = SetWinEventHook(
 	//	//EVENT_SYSTEM_DIALOGSTART,
 	//	//EVENT_SYSTEM_DIALOGSTART,
@@ -3121,17 +2843,13 @@ INT WINAPI wWinMain(
 	//);
 	//IntPtr hhook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, IntPtr.Zero,
 	//	procDelegate, 0, 0, WINEVENT_OUTOFCONTEXT);
-
 	//// MessageBox provides the necessary mesage loop that SetWinEventHook requires.
 	//MessageBox.Show("Tracking focus, close message box to exit.");
-
 	////UnhookWinEvent(hhook);
-
 	//}
 
 
 	//s_iktimerid = (int)::SetTimer(s_mainhwnd, s_iktimerid, 16, NULL);
-
 
 	//if (s_mainhwnd) {
 	//	SetCapture(s_mainhwnd);
@@ -3139,7 +2857,6 @@ INT WINAPI wWinMain(
 
 	s_hhook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, 0,
 		WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
-
 
 	if (g_4kresolution) {
 		s_dispmodel = true;
@@ -3150,55 +2867,23 @@ INT WINAPI wWinMain(
 		DispCameraPanel();
 	}
 	
-	// Pass control to DXUT for handling the message pump and 
-	// dispatching render calls. DXUT will call your FrameMove 
-	// and FrameRender callback when there is idle time between handling window messages.
-	//DXUTMainLoop();
-
-
 	// ルートシグネチャを作成
 	RootSignature rootSignature;
 	InitRootSignature(rootSignature);
 	//レンダリングエンジンを初期化
 	myRenderer::RenderingEngine renderingEngine;
-	renderingEngine.Init();
-	//auto& renderContext = g_graphicsEngine->GetRenderContext();
+	//renderingEngine.Init();//RenderingEngineのコンストラクタについて分からない部分があるので　Initはコンストラクタで呼んで初期化することにした
 
 
-
-	//// ゲームの初期化 (2023/11/13 仮のウインドウ)
-	//InitGame(hInstance, hPrevInstance, lpCmdLine, nShowCmd, TEXT("AddtiveIK"));
 	while (DispatchWindowMessage())
 	{
-		//if (s_chascene && (s_chascene->GetModelNum() > 0) && (g_underloading == false)) {
 		if (s_chascene && (g_underloading == false)) {
 			// レンダリング開始
-			g_engine->BeginFrame();
 			auto& renderContext = g_graphicsEngine->GetRenderContext();
-
-			if (s_chascene->GetModelNum() > 0) {
-				//CalcTotalBound()が呼ばれた後で　cameye, target == zerovecではない場合に計算
-				SetCamera3DFromEyePos();
-			}
 
 			//g_camera3D->MoveForward(g_pad[0]->GetLStickYF());
 			//g_camera3D->MoveRight(g_pad[0]->GetLStickXF());
 			//g_camera3D->MoveUp(g_pad[0]->GetRStickYF());
-
-			//////////////////////////////////////
-			// ここから絵を描くコードを記述する
-			//////////////////////////////////////
-
-			//bgModelRender.Draw();
-			//// step-2 ティーポットを描画する
-			//teapotModelRender.Draw();
-
-			//Matrix mView, mProj, mVP;
-			//mView = g_camera3D->GetViewMatrix();
-			//mProj = g_camera3D->GetProjectionMatrix();
-			//mVP = mView * mProj;
-			//ChaMatrix matVP = ChaMatrix(mVP);
-			//s_chascene->UpdateMatrixModels(g_limitdegflag, &matVP, 0.0);
 
 			double fTime = 0.0;
 			float fElapsedTime = 0.0;
@@ -3206,47 +2891,17 @@ INT WINAPI wWinMain(
 				fTime = DXUTGetGlobalTimer()->GetTime();
 				DXUTGetGlobalTimer()->GetElapsedTime();
 			}
+
+			//ドキュメント更新
 			OnUserFrameMove(fTime, fElapsedTime);
 
-
-			int lightflag = 1;
-			ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-			int btflag = 0;
-			s_chascene->RenderModels(renderingEngine, lightflag, diffusemult, btflag);
-
-			OnRenderSprite(renderContext);
-
-			//レンダリングエンジンを実行
-			renderingEngine.Execute(renderContext);
-
-
-			/////////////////////////////////////////
-			// 絵を描くコードを書くのはここまで！！！
-			//////////////////////////////////////
-			// レンダリング終了
-			g_engine->EndFrame();
+			//ビュー更新
+			OnFrameRender(renderingEngine, renderContext, fTime, fElapsedTime);
 
 		}
 	}
 
-
-	// Perform any application-level cleanup here. Direct3D device resources are released within the
-	// appropriate callback functions and therefore don't require any cleanup code here
-
-
-
-	//2023/11/14 仮
-	OnD3D11DestroyDevice(0);
-
-
-
-	//2023/09/23
-	if (s_mainhwnd && IsWindow(s_mainhwnd)) {
-		DestroyWindow(s_mainhwnd);
-		s_mainhwnd = 0;
-	}
-	s_mainhwnd = 0;
-
+	OnDestroyDevice();
 
 	//return DXUTGetExitCode();
 	return 0;
@@ -4446,1460 +4101,6 @@ void InitApp()
 	s_doneinit = 1;
 }
 
-//--------------------------------------------------------------------------------------
-// Called right before creating a D3D9 or D3D11 device, allowing the app to modify the device settings as needed
-//--------------------------------------------------------------------------------------
-//bool CALLBACK ModifyDeviceSettings(DXUTDeviceSettings* pDeviceSettings, void* pUserContext)
-//{
-//	// Uncomment this to get debug information from D3D11
-//	//pDeviceSettings->d3d11.CreateFlags |= D3D11_CREATE_DEVICE_DEBUG;
-//
-//	// For the first device created if its a REF device, optionally display a warning dialog box
-//	//static bool s_bFirstTime = true;
-//	//if (s_bFirstTime)
-//	//{
-//	//	s_bFirstTime = false;
-//	//	//if ((DXUT_D3D11_DEVICE == pDeviceSettings->ver &&
-//	//	//	pDeviceSettings->d3d11.DriverType == D3D_DRIVER_TYPE_REFERENCE))
-//	//	if ((pDeviceSettings->d3d11.DriverType == D3D_DRIVER_TYPE_REFERENCE))
-//	//	{
-//	//		DXUTDisplaySwitchingToREFWarning(pDeviceSettings->ver);
-//	//	}
-//	//}
-//
-//	return true;
-//}
-
-
-//--------------------------------------------------------------------------------------
-// Called during device initialization, this code checks the device for some 
-// minimum set of capabilities, and rejects those that don't pass by returning E_FAIL.
-//------------------------------------------------
-//bool CALLBACK IsD3D11DeviceAcceptable(const CD3D11EnumAdapterInfo* AdapterInfo, UINT Output, const CD3D11EnumDeviceInfo* DeviceInfo,
-//	DXGI_FORMAT BackBufferFormat, bool bWindowed, void* pUserContext)
-//{
-//	return true;
-//}
-
-
-//--------------------------------------------------------------------------------------
-// Create any D3D11 resources that aren't dependant on the back buffer
-//--------------------------------------------------------------------------------------
-//HRESULT CALLBACK OnD3D11CreateDevice(ID3D12Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc,
-//	void* pUserContext)
-//{
-//	HRESULT hr;
-//
-//	
-//	if (pd3dDevice && (g_endappflag == 0)) {//2023/10/02
-//
-//		RenderContext* pRenderContext = DXUTGetD3D11DeviceContext();
-//		V_RETURN(g_DialogResourceManager.OnD3D11CreateDevice(pd3dDevice, pRenderContext));
-//		//V_RETURN(g_D3DSettingsDlg.OnD3D11CreateDevice(pd3dDevice));
-//		g_pTxtHelper = new CDXUTTextHelper(pd3dDevice, pRenderContext, &g_DialogResourceManager, 10);
-//
-//
-//		s_pdev = pd3dDevice;
-//
-//		//hr = g_SettingsDlg.OnD3D11CreateDevice(pd3dDevice);
-//		//if (FAILED(hr)) {
-//		//	_ASSERT(0);
-//		//	return hr;
-//		//}
-//		//hr = D3DX10CreateFont(pd3dDevice, 15, 0, FW_BOLD, 1, FALSE, DEFAULT_CHARSET,
-//		//	OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
-//		//	L"MS ゴシック", &g_pFont);
-//		//	//L"Arial", &g_pFont10);
-//		//if (FAILED(hr)) {
-//		//	_ASSERT(0);
-//		//	return hr;
-//		//}
-//
-//		//hr = D3DX10CreateSprite(pd3dDevice, 512, &g_pSprite);
-//		//if (FAILED(hr)) {
-//		//	_ASSERT(0);
-//		//	return hr;
-//		//}
-//		////g_pTxtHelper = new CDXUTTextHelper(NULL, NULL, g_pFont, g_pSprite, 15);
-//
-//
-//
-//		//DWORD dwShaderFlags = D3D10_SHADER_ENABLE_STRICTNESS;
-//		DWORD dwShaderFlags = D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY;
-//
-//		////	DWORD dwShaderFlags = D3D11_SHADER_ENABLE_STRICTNESS;
-//	////#if defined( DEBUG ) || defined( _DEBUG )
-//	////	// Set the D3D11_SHADER_DEBUG flag to embed debug information in the shaders.
-//	////	// Setting this flag improves the shader debugging experience, but still allows 
-//	////	// the shaders to be optimized and to run exactly the way they will run in 
-//	////	// the release configuration of this program.
-//	////	dwShaderFlags |= D3D11_SHADER_DEBUG;
-//	////#endif
-//	//
-//		//DWORD dwShaderFlags = D3DXFX_NOT_CLONEABLE;
-//		//DWORD dwShaderFlags = D3DXFX_NOT_CLONEABLE | D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY;
-//	//
-//	//#if defined( DEBUG ) || defined( _DEBUG )
-//	//	// Set the D3DXSHADER_DEBUG flag to embed debug information in the shaders.
-//	//	// Setting this flag improves the shader debugging experience, but still allows 
-//	//	// the shaders to be optimized and to run exactly the way they will run in 
-//	//	// the release configuration of this program.
-//	//	dwShaderFlags |= D3DXSHADER_DEBUG;
-//	//#endif
-//	//
-//	//#ifdef DEBUG_VS
-//	//	dwShaderFlags |= D3DXSHADER_FORCE_VS_SOFTWARE_NOOPT;
-//	//#endif
-//	//#ifdef DEBUG_PS
-//	//	dwShaderFlags |= D3DXSHADER_FORCE_PS_SOFTWARE_NOOPT;
-//	//#endif
-//	//
-//	//	// Preshaders are parts of the shader that the effect system pulls out of the 
-//	//	// shader and runs on the host CPU. They should be used if you are GPU limited. 
-//	//	// The D3DXSHADER_NO_PRESHADER flag disables preshaders.
-//	//	if (!g_bEnablePreshader)
-//	//		dwShaderFlags |= D3DXSHADER_NO_PRESHADER;
-//
-//
-//		// Read the D3DX effect file
-//		WCHAR str[MAX_PATH];
-//		hr = DXUTFindDXSDKMediaFileCch(str, MAX_PATH, L"..\\Media\\Shader\\Ochakko.fx");
-//		//hr = DXUTFindDXSDKMediaFileCch(str, MAX_PATH, L"..\\Media\\Shader\\Ochakko11.fx");
-//		//hr = DXUTFindDXSDKMediaFileCch(str, MAX_PATH, L"..\\Media\\Shader\\Ochakko.fxo");
-//		if (FAILED(hr)) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return hr;
-//		}
-//		//ID3D11Blob*	l_pBlob_Effect = NULL;
-//		//ID3D11Blob*	l_pBlob_Errors = NULL;
-//		//hr = D3DX10CompileEffectFromFile(str, NULL, NULL,
-//		//	D3D11_SHADER_ENABLE_STRICTNESS, 0, NULL,
-//		//	&l_pBlob_Effect, &l_pBlob_Errors);
-//		//if (FAILED(hr)) {
-//		//	LPVOID l_pError = NULL;
-//		//	if (l_pBlob_Errors)
-//		//	{
-//		//		l_pError = l_pBlob_Errors->GetBufferPointer();
-//		//		// then cast to a char* to see it in the locals window
-//		//	}
-//
-//		//	LPVOID l_pErrorEffect = NULL;
-//		//	if (l_pBlob_Effect)
-//		//	{
-//		//		l_pErrorEffect = l_pBlob_Effect->GetBufferPointer();
-//		//		// then cast to a char* to see it in the locals window
-//		//	}
-//
-//		//	_ASSERT(0);
-//		//	return hr;
-//		//}
-//
-//
-//		/*
-//		HRESULT D3DX10CreateEffectFromFile(
-//		  LPCTSTR pFileName,
-//		  CONST D3D11_SHADER_MACRO *pDefines,
-//		  ID3D11Include *pInclude,
-//		  LPCSTR pProfile,
-//		  UINT HLSLFlags,
-//		  UINT FXFlags,
-//		  ID3D12Device *pDevice,
-//		  ID3D11EffectPool *pEffectPool,
-//		  ID3DX10ThreadPump *pPump,
-//		  ID3D11Effect **ppEffect,
-//		  ID3D11Blob **ppErrors,
-//		  HRESULT *pHResult
-//		);*/
-//
-//		//D3DX10CreateEffectFromFile(str, NULL, NULL, "fx_4_0", dwShaderFlags, 0, pd3dDevice, NULL,
-//		//	NULL, &g_pEffect10, NULL, NULL);
-//
-//
-//		ID3D10Blob* l_pBlob_Errors = NULL;
-//		//hr = D3DX11CreateEffectFromFile(str, NULL, NULL,
-//		//	"fx_4_0", dwShaderFlags, 0, pd3dDevice, NULL, NULL,
-//		//	&g_pEffect, &l_pBlob_Errors, NULL);
-//		//hr = D3DX11CreateEffectFromFile(str, dwShaderFlags, pd3dDevice, &g_pEffect);
-//		//HRESULT WINAPI D3DX11CreateEffectFromFile(LPCWSTR pFileName, UINT FXFlags, ID3D12Device *pDevice, ID3DX11Effect **ppEffect)
-//
-//
-//	//	//compile shader
-//	//	ID3DBlob* errorBlob;
-//	//	DWORD shaderFlags = D3DCOMPILE_ENABLE_STRICTNESS;
-//	//
-//	//#if defined _DEBUG || defined DEBUG
-//	//	shaderFlags = D3DCOMPILE_DEBUG;
-//	//#endif
-//
-//		hr = D3DX11CompileEffectFromFile(str, nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, dwShaderFlags,
-//			0, pd3dDevice, &g_pEffect, &l_pBlob_Errors);
-//		////if (FAILED(hr))
-//		////{
-//		////	MessageBox(nullptr, (LPCWSTR)errorBlob->GetBufferPointer(), L"error", MB_OK);
-//		////	return hr;
-//		////}
-//		////m_pTechnique = m_pFx->GetTechniqueByName("ColorTech");
-//		////m_pFxWorldViewProj = m_pFx->GetVariableByName("gWorldViewProj")->AsMatrix();
-//
-//		if (FAILED(hr)) {
-//			LPVOID l_pError = NULL;
-//			if (l_pBlob_Errors)
-//			{
-//				l_pError = l_pBlob_Errors->GetBufferPointer();
-//				// then cast to a char* to see it in the locals window
-//			}
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return hr;
-//		}
-//
-//
-//		CalcTotalBound();
-//
-//
-//		CallF(GetShaderHandle(), return S_FALSE);
-//
-//
-//
-//		if (!g_texbank) {
-//			g_texbank = new CTexBank(s_pdev);
-//			if (!g_texbank) {
-//				_ASSERT(0);
-//				PostQuitMessage(1);
-//				return 0;
-//			}
-//		}
-//
-//		s_select = new CModel();
-//		if (!s_select) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_select->LoadMQO(s_pdev, pRenderContext, L"..\\Media\\MameMedia\\select_2.mqo", 0, 1.0f, 0), return S_FALSE);
-//		//CallF(s_select->MakeDispObj(), return S_FALSE;);
-//
-//		s_matred = s_select->GetMQOMaterialByName("matred");
-//		if (!s_matred) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		s_ringred = s_select->GetMQOMaterialByName("ringred");
-//		if (!s_ringred) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		s_matblue = s_select->GetMQOMaterialByName("matblue");
-//		if (!s_matblue) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		s_ringblue = s_select->GetMQOMaterialByName("ringblue");
-//		if (!s_ringblue) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		s_matgreen = s_select->GetMQOMaterialByName("matgreen");
-//		if (!s_matgreen) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		s_ringgreen = s_select->GetMQOMaterialByName("ringgreen");
-//		if (!s_ringgreen) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		s_matyellow = s_select->GetMQOMaterialByName("matyellow");
-//		if (!s_matyellow) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//
-//		//s_matredmat = s_matred->GetDif4F();
-//		//s_ringredmat = s_ringred->GetDif4F();
-//		//s_matbluemat = s_matblue->GetDif4F();
-//		//s_ringbluemat = s_ringblue->GetDif4F();
-//		//s_matgreenmat = s_matgreen->GetDif4F();
-//		//s_ringgreenmat = s_ringgreen->GetDif4F();
-//		//s_matyellowmat = s_matyellow->GetDif4F();
-//		s_matredmat = ChaVector4(255.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f, 1.0f);
-//		s_ringredmat = ChaVector4(255.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f, 1.0f);
-//		s_matbluemat = ChaVector4(150.0f / 255.0f, 200.0f / 255.0f, 255.0f / 255.0f, 1.0f);
-//		s_ringbluemat = ChaVector4(150.0f / 255.0f, 200.0f / 255.0f, 255.0f / 255.0f, 1.0f);
-//		s_matgreenmat = ChaVector4(0.0f / 255.0f, 255.0f / 255.0f, 0.0f / 255.0f, 1.0f);
-//		s_ringgreenmat = ChaVector4(0.0f / 255.0f, 255.0f / 255.0f, 0.0f / 255.0f, 1.0f);
-//		s_matyellowmat = s_matyellow->GetDif4F();
-//
-//
-//
-//
-//		s_select_posture = new CModel();
-//		if (!s_select_posture) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_select_posture->LoadMQO(s_pdev, pRenderContext, L"..\\Media\\MameMedia\\select_2_posture.mqo", 0, 1.0f, 0), return S_FALSE);
-//		//CallF(s_select_posture->MakeDispObj(), return S_FALSE);
-//
-//
-//		int rigopemarkno;
-//		for (rigopemarkno = 0; rigopemarkno <= RIGMULTINDEXMAX; rigopemarkno++) {
-//			{
-//				s_rigopemark_sphere[rigopemarkno] = new CModel();
-//				if (s_rigopemark_sphere[rigopemarkno]) {
-//					float rigmult = 0.30f * (float)(rigopemarkno + 1) * 0.5f;
-//					CallF(s_rigopemark_sphere[rigopemarkno]->LoadMQO(s_pdev, pRenderContext,
-//						L"..\\Media\\MameMedia\\rigmark.mqo", 0, rigmult, 0), return S_FALSE);
-//					//CallF(s_rigopemark_sphere[rigopemarkno]->MakeDispObj(), return S_FALSE);
-//					s_rigmaterial_sphere[rigopemarkno] = s_rigopemark_sphere[rigopemarkno]->GetMQOMaterialByName("mat1");
-//					if (!s_rigmaterial_sphere[rigopemarkno]) {
-//						_ASSERT(0);
-//						PostQuitMessage(1);
-//						return S_FALSE;
-//					}
-//				}
-//				else {
-//					_ASSERT(0);
-//					PostQuitMessage(1);
-//					return S_FALSE;
-//				}
-//			}
-//
-//			{
-//				s_rigopemark_ringX[rigopemarkno] = new CModel();
-//				if (s_rigopemark_ringX[rigopemarkno]) {
-//					float rigmult = (float)(rigopemarkno + 1) * 0.5f;
-//					CallF(s_rigopemark_ringX[rigopemarkno]->LoadMQO(s_pdev, pRenderContext,
-//						L"..\\Media\\MameMedia\\ringX.mqo", 0, rigmult, 0), return S_FALSE);
-//					//CallF(s_rigopemark_ringX[rigopemarkno]->MakeDispObj(), return S_FALSE);
-//					s_rigmaterial_ringX[rigopemarkno] = s_rigopemark_ringX[rigopemarkno]->GetMQOMaterialByName("ringred");
-//					if (!s_rigmaterial_ringX[rigopemarkno]) {
-//						_ASSERT(0);
-//						PostQuitMessage(1);
-//						return S_FALSE;
-//					}
-//				}
-//				else {
-//					_ASSERT(0);
-//					PostQuitMessage(1);
-//					return S_FALSE;
-//				}
-//			}
-//
-//			{
-//				s_rigopemark_ringY[rigopemarkno] = new CModel();
-//				if (s_rigopemark_ringY[rigopemarkno]) {
-//					float rigmult = (float)(rigopemarkno + 1) * 0.5f;
-//					CallF(s_rigopemark_ringY[rigopemarkno]->LoadMQO(s_pdev, pRenderContext,
-//						L"..\\Media\\MameMedia\\ringY.mqo", 0, rigmult, 0), return S_FALSE);
-//					//CallF(s_rigopemark_ringY[rigopemarkno]->MakeDispObj(), return S_FALSE);
-//					s_rigmaterial_ringY[rigopemarkno] = s_rigopemark_ringY[rigopemarkno]->GetMQOMaterialByName("ringgreen");
-//					if (!s_rigmaterial_ringY[rigopemarkno]) {
-//						_ASSERT(0);
-//						PostQuitMessage(1);
-//						return S_FALSE;
-//					}
-//				}
-//				else {
-//					_ASSERT(0);
-//					PostQuitMessage(1);
-//					return S_FALSE;
-//				}
-//			}
-//
-//			{
-//				s_rigopemark_ringZ[rigopemarkno] = new CModel();
-//				if (s_rigopemark_ringZ[rigopemarkno]) {
-//					float rigmult = (float)(rigopemarkno + 1) * 0.5f;
-//					CallF(s_rigopemark_ringZ[rigopemarkno]->LoadMQO(s_pdev, pRenderContext,
-//						L"..\\Media\\MameMedia\\ringZ.mqo", 0, rigmult, 0), return S_FALSE);
-//					//CallF(s_rigopemark_ringZ[rigopemarkno]->MakeDispObj(), return S_FALSE);
-//					s_rigmaterial_ringZ[rigopemarkno] = s_rigopemark_ringZ[rigopemarkno]->GetMQOMaterialByName("ringblue");
-//					if (!s_rigmaterial_ringZ[rigopemarkno]) {
-//						_ASSERT(0);
-//						PostQuitMessage(1);
-//						return S_FALSE;
-//					}
-//				}
-//				else {
-//					_ASSERT(0);
-//					PostQuitMessage(1);
-//					return S_FALSE;
-//				}
-//			}
-//		}
-//		s_matrigmat = ChaVector4(255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 1.0f);
-//
-//
-//		s_bmark = new CModel();
-//		if (!s_bmark) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_bmark->LoadMQO(s_pdev, pRenderContext, L"..\\Media\\MameMedia\\bonemark.mqo", 0, 1.0f, 0), return S_FALSE);
-//		//CallF(s_bmark->MakeDispObj(), return S_FALSE);
-//
-//
-//
-//
-//		s_ground = new CModel();
-//		if (!s_ground) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_ground->LoadMQO(s_pdev, pRenderContext, L"..\\Media\\MameMedia\\ground2.mqo", 0, 1.0f, 0), return S_FALSE);
-//		//CallF(s_ground->MakeDispObj(), return S_FALSE);
-//
-//		s_gplane = new CModel();
-//		if (!s_gplane) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_gplane->LoadMQO(s_pdev, pRenderContext, L"..\\Media\\MameMedia\\gplane.mqo", 0, 1.0f, 0), return S_FALSE);
-//		//CallF(s_gplane->MakeDispObj(), return S_FALSE);
-//		ChaVector3 tra(0.0f, 0.0, 0.0f);
-//		ChaVector3 mult(5.0f, 1.0f, 5.0f);
-//		CallF(s_gplane->MultDispObj(mult, tra), return S_FALSE);
-//
-//
-//		s_bcircle = new Sprite(s_pdev);
-//		if (!s_bcircle) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//
-//		WCHAR path[MAX_PATH];
-//		wcscpy_s(path, MAX_PATH, g_basedir);
-//		WCHAR* lasten = 0;
-//		WCHAR* last2en = 0;
-//		lasten = wcsrchr(path, TEXT('\\'));
-//		if (!lasten) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		*lasten = 0L;
-//		last2en = wcsrchr(path, TEXT('\\'));
-//		if (!last2en) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		*last2en = 0L;
-//		wcscat_s(path, MAX_PATH, L"\\Media\\MameMedia\\");
-//		CallF(s_bcircle->Create(pRenderContext, path, L"bonecircle.dds", 0, 0), return S_FALSE);
-//
-//		///////
-//		WCHAR mpath[MAX_PATH];
-//		wcscpy_s(mpath, MAX_PATH, g_basedir);
-//		lasten = 0;
-//		last2en = 0;
-//		lasten = wcsrchr(mpath, TEXT('\\'));
-//		if (!lasten) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		*lasten = 0L;
-//		last2en = wcsrchr(mpath, TEXT('\\'));
-//		if (!last2en) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		*last2en = 0L;
-//		wcscat_s(mpath, MAX_PATH, L"\\Media\\MameMedia\\");
-//
-//
-//
-//		if (s_undosprite) {
-//			delete s_undosprite;
-//			s_undosprite = 0;
-//		}
-//		s_undosprite = new CUndoSprite();
-//		if (!s_undosprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_undosprite->CreateSprites(s_pdev, pRenderContext, mpath), return S_FALSE);
-//
-//
-//		if (s_fpssprite) {
-//			delete s_fpssprite;
-//			s_fpssprite = 0;
-//		}
-//		s_fpssprite = new CFpsSprite();
-//		if (!s_fpssprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_fpssprite->CreateSprites(s_pdev, pRenderContext, mpath), return S_FALSE);
-//
-//
-//
-//		s_spundo[0].sprite = new Sprite(s_pdev);
-//		if (!s_spundo[0].sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spundo[0].sprite->Create(pRenderContext, mpath, L"Undo_1.png", 0, 0), return S_FALSE);
-//		s_spundo[1].sprite = new Sprite(s_pdev);
-//		if (!s_spundo[1].sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spundo[1].sprite->Create(pRenderContext, mpath, L"Redo_1.png", 0, 0), return S_FALSE);
-//
-//		s_spaxis[0].sprite = new Sprite(s_pdev);
-//		if (!s_spaxis[0].sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spaxis[0].sprite->Create(pRenderContext, mpath, L"X.gif", 0, 0), return S_FALSE);
-//		s_spaxis[1].sprite = new Sprite(s_pdev);
-//		if (!s_spaxis[1].sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spaxis[1].sprite->Create(pRenderContext, mpath, L"Y.gif", 0, 0), return S_FALSE);
-//		s_spaxis[2].sprite = new Sprite(s_pdev);
-//		if (!s_spaxis[2].sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spaxis[2].sprite->Create(pRenderContext, mpath, L"Z.gif", 0, 0), return S_FALSE);
-//
-//		//SpriteSwitch RefPos
-//		s_sprefpos.spriteON = new Sprite(s_pdev);
-//		if (!s_sprefpos.spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_sprefpos.spriteON->Create(pRenderContext, mpath, L"RefPosON.gif", 0, 0), return S_FALSE);
-//		s_sprefpos.spriteOFF = new Sprite(s_pdev);
-//		if (!s_sprefpos.spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_sprefpos.spriteOFF->Create(pRenderContext, mpath, L"RefPosOFF.gif", 0, 0), return S_FALSE);
-//
-//		//SpriteSwitch LimitEul
-//		s_splimiteul.spriteON = new Sprite(s_pdev);
-//		if (!s_splimiteul.spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_splimiteul.spriteON->Create(pRenderContext, mpath, L"LimitEul_ON.png", 0, 0), return S_FALSE);
-//		s_splimiteul.spriteOFF = new Sprite(s_pdev);
-//		if (!s_splimiteul.spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_splimiteul.spriteOFF->Create(pRenderContext, mpath, L"LimitEul_OFF.png", 0, 0), return S_FALSE);
-//
-//		//SpriteSwitch CameraMode
-//		s_spcameramode.spriteON = new Sprite(s_pdev);
-//		if (!s_spcameramode.spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spcameramode.spriteON->Create(pRenderContext, mpath, L"CamAnimON.png", 0, 0), return S_FALSE);
-//		s_spcameramode.spriteOFF = new Sprite(s_pdev);
-//		if (!s_spcameramode.spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spcameramode.spriteOFF->Create(pRenderContext, mpath, L"CamAnimOFF.png", 0, 0), return S_FALSE);
-//
-//
-//		//SpriteSwitch CameraInheritMode
-//		s_spcamerainherit.sprite1 = new Sprite(s_pdev);
-//		if (!s_spcamerainherit.sprite1) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spcamerainherit.sprite1->Create(pRenderContext, mpath, L"CameraInherit_All.png", 0, 0), return S_FALSE);
-//		s_spcamerainherit.sprite2 = new Sprite(s_pdev);
-//		if (!s_spcamerainherit.sprite2) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spcamerainherit.sprite2->Create(pRenderContext, mpath, L"CameraInherit_CancelNull1.png", 0, 0), return S_FALSE);
-//		s_spcamerainherit.sprite3 = new Sprite(s_pdev);
-//		if (!s_spcamerainherit.sprite3) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spcamerainherit.sprite3->Create(pRenderContext, mpath, L"CameraInherit_CancelNull2.png", 0, 0), return S_FALSE);
-//
-//
-//
-//		//SpriteSwitch Scraping
-//		s_spscraping.spriteON = new Sprite(s_pdev);
-//		if (!s_spscraping.spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spscraping.spriteON->Create(pRenderContext, mpath, L"WallScrapingIK_ON.png", 0, 0), return S_FALSE);
-//		s_spscraping.spriteOFF = new Sprite(s_pdev);
-//		if (!s_spscraping.spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spscraping.spriteOFF->Create(pRenderContext, mpath, L"WallScrapingIK_OFF.png", 0, 0), return S_FALSE);
-//
-//
-//		//SpriteSwitch IKMode
-//		s_spikmodesw[0].spriteON = new Sprite(s_pdev);
-//		if (!s_spikmodesw[0].spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spikmodesw[0].spriteON->Create(pRenderContext, mpath, L"IKRot2ON.gif", 0, 0), return S_FALSE);
-//		s_spikmodesw[0].spriteOFF = new Sprite(s_pdev);
-//		if (!s_spikmodesw[0].spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spikmodesw[0].spriteOFF->Create(pRenderContext, mpath, L"IKRot2OFF.gif", 0, 0), return S_FALSE);
-//		s_spikmodesw[1].spriteON = new Sprite(s_pdev);
-//		if (!s_spikmodesw[1].spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spikmodesw[1].spriteON->Create(pRenderContext, mpath, L"IKMove2ON.gif", 0, 0), return S_FALSE);
-//		s_spikmodesw[1].spriteOFF = new Sprite(s_pdev);
-//		if (!s_spikmodesw[1].spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spikmodesw[1].spriteOFF->Create(pRenderContext, mpath, L"IKMove2OFF.gif", 0, 0), return S_FALSE);
-//		s_spikmodesw[2].spriteON = new Sprite(s_pdev);
-//		if (!s_spikmodesw[2].spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spikmodesw[2].spriteON->Create(pRenderContext, mpath, L"IKScale2ON.gif", 0, 0), return S_FALSE);
-//		s_spikmodesw[2].spriteOFF = new Sprite(s_pdev);
-//		if (!s_spikmodesw[2].spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spikmodesw[2].spriteOFF->Create(pRenderContext, mpath, L"IKScale2OFF.gif", 0, 0), return S_FALSE);
-//
-//
-//		//SpriteSwitch ON
-//		s_spguisw[SPGUISW_CAMERA_AND_IK].spriteON = new Sprite(s_pdev);
-//		if (!s_spguisw[SPGUISW_CAMERA_AND_IK].spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spguisw[SPGUISW_CAMERA_AND_IK].spriteON->Create(pRenderContext, mpath, L"GUIPlate_CameraAndIK140ON.png", 0, 0), return S_FALSE);
-//		s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteON = new Sprite(s_pdev);
-//		if (!s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteON->Create(pRenderContext, mpath, L"GUIPlate_DispAndLimits140ON.png", 0, 0), return S_FALSE);
-//		s_spguisw[SPGUISW_BRUSHPARAMS].spriteON = new Sprite(s_pdev);
-//		if (!s_spguisw[SPGUISW_BRUSHPARAMS].spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spguisw[SPGUISW_BRUSHPARAMS].spriteON->Create(pRenderContext, mpath, L"GUIPlate_BrushParams140ON.png", 0, 0), return S_FALSE);
-//		s_spguisw[SPGUISW_BULLETPHYSICS].spriteON = new Sprite(s_pdev);
-//		if (!s_spguisw[SPGUISW_BULLETPHYSICS].spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spguisw[SPGUISW_BULLETPHYSICS].spriteON->Create(pRenderContext, mpath, L"GUIPlate_BulletPhysics140ON.png", 0, 0), return S_FALSE);
-//		s_spguisw[SPGUISW_VSYNC_AND_REFPOS].spriteON = new Sprite(s_pdev);
-//		if (!s_spguisw[SPGUISW_VSYNC_AND_REFPOS].spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spguisw[SPGUISW_VSYNC_AND_REFPOS].spriteON->Create(pRenderContext, mpath, L"GUIPlate_RefPos140ON.png", 0, 0), return S_FALSE);
-//		//SpriteSwitch OFF
-//		s_spguisw[SPGUISW_CAMERA_AND_IK].spriteOFF = new Sprite(s_pdev);
-//		if (!s_spguisw[SPGUISW_CAMERA_AND_IK].spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spguisw[SPGUISW_CAMERA_AND_IK].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_CameraAndIK140OFF.png", 0, 0), return S_FALSE);
-//		s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteOFF = new Sprite(s_pdev);
-//		if (!s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_DispAndLimits140OFF.png", 0, 0), return S_FALSE);
-//		s_spguisw[SPGUISW_BRUSHPARAMS].spriteOFF = new Sprite(s_pdev);
-//		if (!s_spguisw[SPGUISW_BRUSHPARAMS].spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spguisw[SPGUISW_BRUSHPARAMS].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_BrushParams140OFF.png", 0, 0), return S_FALSE);
-//		s_spguisw[SPGUISW_BULLETPHYSICS].spriteOFF = new Sprite(s_pdev);
-//		if (!s_spguisw[SPGUISW_BULLETPHYSICS].spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spguisw[SPGUISW_BULLETPHYSICS].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_BulletPhysics140OFF.png", 0, 0), return S_FALSE);
-//		s_spguisw[SPGUISW_VSYNC_AND_REFPOS].spriteOFF = new Sprite(s_pdev);
-//		if (!s_spguisw[SPGUISW_VSYNC_AND_REFPOS].spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spguisw[SPGUISW_VSYNC_AND_REFPOS].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_RefPos140OFF.png", 0, 0), return S_FALSE);
-//
-//
-//		//Disp ON
-//		s_spdispsw[SPDISPSW_LIGHTS].spriteON = new Sprite(s_pdev);
-//		if (!s_spdispsw[SPDISPSW_LIGHTS].spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spdispsw[SPDISPSW_LIGHTS].spriteON->Create(pRenderContext, mpath, L"GUIPlate_Lights140ON.png", 0, 0), return S_FALSE);
-//		
-//		s_spdispsw[SPDISPSW_DISPGROUP].spriteON = new Sprite(s_pdev);
-//		if (!s_spdispsw[SPDISPSW_DISPGROUP].spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spdispsw[SPDISPSW_DISPGROUP].spriteON->Create(pRenderContext, mpath, L"GUIPlate_DispGroup140ON.png", 0, 0), return S_FALSE);
-//
-//		s_spdispsw[SPDISPSW_LATERTRANSPARENT].spriteON = new Sprite(s_pdev);
-//		if (!s_spdispsw[SPDISPSW_LATERTRANSPARENT].spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spdispsw[SPDISPSW_LATERTRANSPARENT].spriteON->Create(pRenderContext, mpath, L"GUIPlate_LaterTransparent140ON.png", 0, 0), return S_FALSE);
-//
-//		s_spdispsw[SPDISPSW_LIGHTS].spriteOFF = new Sprite(s_pdev);
-//		if (!s_spdispsw[SPDISPSW_LIGHTS].spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spdispsw[SPDISPSW_LIGHTS].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_Lights140OFF.png", 0, 0), return S_FALSE);
-//		
-//		s_spdispsw[SPDISPSW_DISPGROUP].spriteOFF = new Sprite(s_pdev);
-//		if (!s_spdispsw[SPDISPSW_DISPGROUP].spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spdispsw[SPDISPSW_DISPGROUP].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_DispGroup140OFF.png", 0, 0), return S_FALSE);
-//
-//		s_spdispsw[SPDISPSW_LATERTRANSPARENT].spriteOFF = new Sprite(s_pdev);
-//		if (!s_spdispsw[SPDISPSW_LATERTRANSPARENT].spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spdispsw[SPDISPSW_LATERTRANSPARENT].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_LaterTransparent140OFF.png", 0, 0), return S_FALSE);
-//
-//
-//
-//		//RigidSwitch ON
-//		s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteON = new Sprite(s_pdev);
-//		if (!s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteON->Create(pRenderContext, mpath, L"GUIPlate_menuRigid140ON.png", 0, 0), return S_FALSE);
-//		s_sprigidsw[SPRIGIDSW_IMPULSE].spriteON = new Sprite(s_pdev);
-//		if (!s_sprigidsw[SPRIGIDSW_IMPULSE].spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_sprigidsw[SPRIGIDSW_IMPULSE].spriteON->Create(pRenderContext, mpath, L"GUIPlate_menuImpulse140ON.png", 0, 0), return S_FALSE);
-//		s_sprigidsw[SPRIGIDSW_GROUNDPLANE].spriteON = new Sprite(s_pdev);
-//		if (!s_sprigidsw[SPRIGIDSW_GROUNDPLANE].spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_sprigidsw[SPRIGIDSW_GROUNDPLANE].spriteON->Create(pRenderContext, mpath, L"GUIPlate_menuGP140ON.png", 0, 0), return S_FALSE);
-//		s_sprigidsw[SPRIGIDSW_DAMPANIM].spriteON = new Sprite(s_pdev);
-//		if (!s_sprigidsw[SPRIGIDSW_DAMPANIM].spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_sprigidsw[SPRIGIDSW_DAMPANIM].spriteON->Create(pRenderContext, mpath, L"GUIPlate_menuDamp140ON.png", 0, 0), return S_FALSE);
-//		//RigidSwitch OFF
-//		s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteOFF = new Sprite(s_pdev);
-//		if (!s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_menuRigid140OFF.png", 0, 0), return S_FALSE);
-//		s_sprigidsw[SPRIGIDSW_IMPULSE].spriteOFF = new Sprite(s_pdev);
-//		if (!s_sprigidsw[SPRIGIDSW_IMPULSE].spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_sprigidsw[SPRIGIDSW_IMPULSE].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_menuImpulse140OFF.png", 0, 0), return S_FALSE);
-//		s_sprigidsw[SPRIGIDSW_GROUNDPLANE].spriteOFF = new Sprite(s_pdev);
-//		if (!s_sprigidsw[SPRIGIDSW_GROUNDPLANE].spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_sprigidsw[SPRIGIDSW_GROUNDPLANE].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_menuGP140OFF.png", 0, 0), return S_FALSE);
-//		s_sprigidsw[SPRIGIDSW_DAMPANIM].spriteOFF = new Sprite(s_pdev);
-//		if (!s_sprigidsw[SPRIGIDSW_DAMPANIM].spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_sprigidsw[SPRIGIDSW_DAMPANIM].spriteOFF->Create(pRenderContext, mpath, L"GUIPlate_menuDamp140OFF.png", 0, 0), return S_FALSE);
-//
-//		s_spretargetsw[SPRETARGETSW_RETARGET].spriteON = new Sprite(s_pdev);
-//		if (!s_spretargetsw[SPRETARGETSW_RETARGET].spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spretargetsw[SPRETARGETSW_RETARGET].spriteON->Create(pRenderContext, mpath, L"GUIPlateRetarget140ON.png", 0, 0), return S_FALSE);
-//		s_spretargetsw[SPRETARGETSW_RETARGET].spriteOFF = new Sprite(s_pdev);
-//		if (!s_spretargetsw[SPRETARGETSW_RETARGET].spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spretargetsw[SPRETARGETSW_RETARGET].spriteOFF->Create(pRenderContext, mpath, L"GUIPlateRetarget140OFF.png", 0, 0), return S_FALSE);
-//		s_spretargetsw[SPRETARGETSW_LIMITEULER].spriteON = new Sprite(s_pdev);
-//		if (!s_spretargetsw[SPRETARGETSW_LIMITEULER].spriteON) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spretargetsw[SPRETARGETSW_LIMITEULER].spriteON->Create(pRenderContext, mpath, L"GUIPlateLimitEuler140ON.png", 0, 0), return S_FALSE);
-//		s_spretargetsw[SPRETARGETSW_LIMITEULER].spriteOFF = new Sprite(s_pdev);
-//		if (!s_spretargetsw[SPRETARGETSW_LIMITEULER].spriteOFF) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spretargetsw[SPRETARGETSW_LIMITEULER].spriteOFF->Create(pRenderContext, mpath, L"GUIPlateLimitEuler140OFF.png", 0, 0), return S_FALSE);
-//
-//		{
-//			int aimno;
-//			for (aimno = 0; aimno < SPAIMBARNUM; aimno++) {
-//				s_spaimbar[aimno].spriteON = new Sprite(s_pdev);
-//				if (!s_spaimbar[aimno].spriteON) {
-//					_ASSERT(0);
-//					PostQuitMessage(1);
-//					return S_FALSE;
-//				}
-//				CallF(s_spaimbar[aimno].spriteON->Create(pRenderContext, mpath, L"GUIPlateAim140ON.png", 0, 0), return S_FALSE);
-//				s_spaimbar[aimno].spriteOFF = new Sprite(s_pdev);
-//				if (!s_spaimbar[aimno].spriteOFF) {
-//					_ASSERT(0);
-//					PostQuitMessage(1);
-//					return S_FALSE;
-//				}
-//				CallF(s_spaimbar[aimno].spriteOFF->Create(pRenderContext, mpath, L"GUIPlateAim140OFF.png", 0, 0), return S_FALSE);
-//			}
-//		}
-//		{
-//			int aimno;
-//			for (aimno = 0; aimno < SPMENU_MAX; aimno++) {
-//				s_spmenuaimbar[aimno].spriteON = new Sprite(s_pdev);
-//				if (!s_spmenuaimbar[aimno].spriteON) {
-//					_ASSERT(0);
-//					PostQuitMessage(1);
-//					return S_FALSE;
-//				}
-//				CallF(s_spmenuaimbar[aimno].spriteON->Create(pRenderContext, mpath, L"GUIPlateAim140ON.png", 0, 0), return S_FALSE);
-//				s_spmenuaimbar[aimno].spriteOFF = new Sprite(s_pdev);
-//				if (!s_spmenuaimbar[aimno].spriteOFF) {
-//					_ASSERT(0);
-//					PostQuitMessage(1);
-//					return S_FALSE;
-//				}
-//				CallF(s_spmenuaimbar[aimno].spriteOFF->Create(pRenderContext, mpath, L"GUIPlateAim140OFF.png", 0, 0), return S_FALSE);
-//			}
-//		}
-//
-//		{
-//			s_spsel3d.spriteON = new Sprite(s_pdev);
-//			if (!s_spsel3d.spriteON) {
-//				_ASSERT(0);
-//				PostQuitMessage(1);
-//				return S_FALSE;
-//			}
-//			CallF(s_spsel3d.spriteON->Create(pRenderContext, mpath, L"button101_Select.tif", 0, 0), return S_FALSE);
-//			s_spsel3d.spriteOFF = new Sprite(s_pdev);
-//			if (!s_spsel3d.spriteOFF) {
-//				_ASSERT(0);
-//				PostQuitMessage(1);
-//				return S_FALSE;
-//			}
-//			CallF(s_spsel3d.spriteOFF->Create(pRenderContext, mpath, L"button101_UnSelect.tif", 0, 0), return S_FALSE);
-//		}
-//
-//
-//
-//		s_spcam[SPR_CAM_I].sprite = new Sprite(s_pdev);
-//		if (!s_spcam[SPR_CAM_I].sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spcam[SPR_CAM_I].sprite->Create(pRenderContext, mpath, L"cam_i.gif", 0, 0), return S_FALSE);
-//		s_spcam[SPR_CAM_KAI].sprite = new Sprite(s_pdev);
-//		if (!s_spcam[SPR_CAM_KAI].sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spcam[SPR_CAM_KAI].sprite->Create(pRenderContext, mpath, L"cam_kai.gif", 0, 0), return S_FALSE);
-//		s_spcam[SPR_CAM_KAKU].sprite = new Sprite(s_pdev);
-//		if (!s_spcam[SPR_CAM_KAKU].sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spcam[SPR_CAM_KAKU].sprite->Create(pRenderContext, mpath, L"cam_kaku.gif", 0, 0), return S_FALSE);
-//
-//		s_sprig[SPRIG_INACTIVE].sprite = new Sprite(s_pdev);
-//		if (!s_sprig[SPRIG_INACTIVE].sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_sprig[SPRIG_INACTIVE].sprite->Create(pRenderContext, mpath, L"RigOFF.gif", 0, 0), return S_FALSE);
-//		s_sprig[SPRIG_ACTIVE].sprite = new Sprite(s_pdev);
-//		if (!s_sprig[SPRIG_ACTIVE].sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_sprig[SPRIG_ACTIVE].sprite->Create(pRenderContext, mpath, L"RigON.gif", 0, 0), return S_FALSE);
-//
-//		//s_spbt.sprite = new Sprite(s_pdev);
-//		//_ASSERT(s_spbt.sprite);
-//		//CallF(s_spbt.sprite->Create(pRenderContext, mpath, L"BtApply.png", 0, 0), return S_FALSE);
-//
-//		s_spmousehere.sprite = new Sprite(s_pdev);
-//		if (!s_spmousehere.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spmousehere.sprite->Create(pRenderContext, mpath, L"img_l105.png", 0, 0), return S_FALSE);
-//
-//		{
-//			WCHAR pngpath[MAX_PATH];
-//			swprintf_s(pngpath, MAX_PATH, L"%simg_l105.png", mpath);
-//			//swprintf_s(bmppath, MAX_PATH, L"%simg_l105.bmp", mpath);
-//			//g_mouseherebmp = (HBITMAP)::LoadImage(GetModuleHandle(NULL), bmppath, IMAGE_BITMAP, 52, 50, LR_LOADFROMFILE);
-//			//_ASSERT(g_mouseherebmp);
-//			//g_tranbmp = 0xFF000000;
-//			g_mousehereimage = new Gdiplus::Image(pngpath);
-//			if (!g_mousehereimage) {
-//				_ASSERT(0);
-//				PostQuitMessage(1);
-//				return S_FALSE;
-//			}
-//		}
-//
-//		{
-//			WCHAR pngpath[MAX_PATH];
-//			swprintf_s(pngpath, MAX_PATH, L"%sMenuAimBar140.png", mpath);
-//			//swprintf_s(bmppath, MAX_PATH, L"%simg_l105.bmp", mpath);
-//			//g_mouseherebmp = (HBITMAP)::LoadImage(GetModuleHandle(NULL), bmppath, IMAGE_BITMAP, 52, 50, LR_LOADFROMFILE);
-//			//_ASSERT(g_mouseherebmp);
-//			//g_tranbmp = 0xFF000000;
-//			g_menuaimbarimage = new Gdiplus::Image(pngpath);
-//			if (!g_menuaimbarimage) {
-//				_ASSERT(0);
-//				PostQuitMessage(1);
-//				return S_FALSE;
-//			}
-//		}
-//
-//
-//		s_spret2prev.sprite = new Sprite(s_pdev);
-//		if (!s_spret2prev.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spret2prev.sprite->Create(pRenderContext, mpath, L"img_ret2prev.png", 0, 0), return S_FALSE);
-//
-//		s_spret2prev2.sprite = new Sprite(s_pdev);
-//		if (!s_spret2prev2.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spret2prev2.sprite->Create(pRenderContext, mpath, L"img_ret2prev2.png", 0, 0), return S_FALSE);
-//
-//
-//		s_spcplw2w.sprite = new Sprite(s_pdev);
-//		if (!s_spcplw2w.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spcplw2w.sprite->Create(pRenderContext, mpath, L"BakeLW2W.png", 0, 0), return S_FALSE);
-//
-//		s_spsmooth.sprite = new Sprite(s_pdev);
-//		if (!s_spsmooth.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spsmooth.sprite->Create(pRenderContext, mpath, L"SmoothFilter.png", 0, 0), return S_FALSE);
-//
-//		s_spconstexe.sprite = new Sprite(s_pdev);
-//		if (!s_spconstexe.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spconstexe.sprite->Create(pRenderContext, mpath, L"Constraint_Execute.png", 0, 0), return S_FALSE);
-//		s_spconstrefresh.sprite = new Sprite(s_pdev);
-//		if (!s_spconstrefresh.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spconstrefresh.sprite->Create(pRenderContext, mpath, L"Constraint_refresh.png", 0, 0), return S_FALSE);
-//
-//		s_spcopy.sprite = new Sprite(s_pdev);
-//		if (!s_spcopy.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spcopy.sprite->Create(pRenderContext, mpath, L"CopyButton.gif", 0, 0), return S_FALSE);
-//		s_spsymcopy.sprite = new Sprite(s_pdev);
-//		if (!s_spsymcopy.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spsymcopy.sprite->Create(pRenderContext, mpath, L"SymCopyButton3.png", 0, 0), return S_FALSE);
-//		s_sppaste.sprite = new Sprite(s_pdev);
-//		if (!s_sppaste.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_sppaste.sprite->Create(pRenderContext, mpath, L"PasteButton.gif", 0, 0), return S_FALSE);
-//		s_spcopyhistory.sprite = new Sprite(s_pdev);
-//		if (!s_spcopyhistory.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spcopyhistory.sprite->Create(pRenderContext, mpath, L"CopyHistoryButton.gif", 0, 0), return S_FALSE);
-//
-//
-//		s_spinterpolate.sprite = new Sprite(s_pdev);
-//		if (!s_spinterpolate.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spinterpolate.sprite->Create(pRenderContext, mpath, L"InterpolateButton.png", 0, 0), return S_FALSE);
-//		s_spinit.sprite = new Sprite(s_pdev);
-//		if (!s_spinit.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spinit.sprite->Create(pRenderContext, mpath, L"InitButton.png", 0, 0), return S_FALSE);
-//		s_spscaleinit.sprite = new Sprite(s_pdev);
-//		if (!s_spscaleinit.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spscaleinit.sprite->Create(pRenderContext, mpath, L"ScaleInitButton.png", 0, 0), return S_FALSE);
-//		s_spproperty.sprite = new Sprite(s_pdev);
-//		if (!s_spproperty.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spproperty.sprite->Create(pRenderContext, mpath, L"PropertyButton.png", 0, 0), return S_FALSE);
-//
-//		s_spzeroframe.sprite = new Sprite(s_pdev);
-//		if (!s_spzeroframe.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spzeroframe.sprite->Create(pRenderContext, mpath, L"Edit0FrameButton.png", 0, 0), return S_FALSE);
-//		s_spcameradolly.sprite = new Sprite(s_pdev);
-//		if (!s_spcameradolly.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spcameradolly.sprite->Create(pRenderContext, mpath, L"CameraDollyButton.png", 0, 0), return S_FALSE);
-//		s_spmodelposdir.sprite = new Sprite(s_pdev);
-//		if (!s_spmodelposdir.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spmodelposdir.sprite->Create(pRenderContext, mpath, L"ModelPosDirButton.png", 0, 0), return S_FALSE);
-//		s_spmaterialrate.sprite = new Sprite(s_pdev);
-//		if (!s_spmaterialrate.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_spmaterialrate.sprite->Create(pRenderContext, mpath, L"MaterialRateButton.png", 0, 0), return S_FALSE);
-//
-//
-//
-//		s_mousecenteron.sprite = new Sprite(s_pdev);
-//		if (!s_mousecenteron.sprite) {
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		CallF(s_mousecenteron.sprite->Create(pRenderContext, mpath, L"MouseCenterButtonON.png", 0, 0), return S_FALSE);
-//
-//		///////
-//		//s_pdev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-//		//s_pdev->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
-//		//s_pdev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-//		//s_pdev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-//		//s_pdev->SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
-//		//s_pdev->SetRenderState(D3DRS_ALPHAREF, 0x00);
-//		//s_pdev->SetRenderState(D3DRS_ALPHAFUNC, D3DCMP_GREATEREQUAL);
-//
-//		D3D11_BLEND_DESC blendDesc;
-//		ZeroMemory(&blendDesc, sizeof(blendDesc));
-//		blendDesc.AlphaToCoverageEnable = FALSE;
-//		blendDesc.IndependentBlendEnable = FALSE;
-//		blendDesc.RenderTarget[0].BlendEnable = TRUE;
-//		blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-//		blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-//		//blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_DEST_COLOR;
-//
-//		blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-//		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-//		blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-//		//blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_SRC_ALPHA;
-//		//blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
-//		blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-//		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-//		if (FAILED(s_pdev->CreateBlendState(&blendDesc, &g_blendState)))
-//		{
-//			_ASSERT(0);
-//			PostQuitMessage(1);
-//			return S_FALSE;
-//		}
-//		/*
-//		FLOAT blendFactor[4] = { D3D11_BLEND_ZERO, D3D11_BLEND_ZERO, D3D11_BLEND_ZERO, D3D11_BLEND_ZERO };
-//		g_context->OMSetBlendState(g_blendMode[BlendMode::NONE]->GetBlendState(), blendFactor, 0xffffffff);
-//		*/
-//
-//		D3D11_DEPTH_STENCIL_DESC dsDescNormal;
-//		ZeroMemory(&dsDescNormal, sizeof(D3D11_DEPTH_STENCIL_DESC));
-//		// Depth test parameters
-//		dsDescNormal.DepthEnable = true;
-//		dsDescNormal.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-//		dsDescNormal.DepthFunc = D3D11_COMPARISON_LESS;
-//		// Stencil test parameters
-//		dsDescNormal.StencilEnable = true;
-//		dsDescNormal.StencilReadMask = 0xFF;
-//		dsDescNormal.StencilWriteMask = 0xFF;
-//		// Stencil operations if pixel is front-facing
-//		dsDescNormal.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-//		dsDescNormal.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-//		dsDescNormal.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-//		dsDescNormal.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-//		// Stencil operations if pixel is back-facing
-//		dsDescNormal.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-//		dsDescNormal.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
-//		dsDescNormal.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-//		dsDescNormal.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-//		// Create depth stencil state
-//		//ID3D11DepthStencilState * pDSState;
-//		s_pdev->CreateDepthStencilState(&dsDescNormal, &g_pDSStateZCmp);
-//
-//
-//		D3D11_DEPTH_STENCIL_DESC dsDescZCmpAlways;
-//		ZeroMemory(&dsDescZCmpAlways, sizeof(D3D11_DEPTH_STENCIL_DESC));
-//		// Depth test parameters
-//		dsDescZCmpAlways.DepthEnable = false;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//		dsDescZCmpAlways.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-//		dsDescZCmpAlways.DepthFunc = D3D11_COMPARISON_LESS;
-//		// Stencil test parameters
-//		dsDescZCmpAlways.StencilEnable = true;
-//		dsDescZCmpAlways.StencilReadMask = 0xFF;
-//		dsDescZCmpAlways.StencilWriteMask = 0xFF;
-//		// Stencil operations if pixel is front-facing
-//		dsDescZCmpAlways.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-//		dsDescZCmpAlways.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-//		dsDescZCmpAlways.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-//		dsDescZCmpAlways.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-//		// Stencil operations if pixel is back-facing
-//
-//		dsDescZCmpAlways.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-//		dsDescZCmpAlways.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
-//		dsDescZCmpAlways.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-//		dsDescZCmpAlways.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-//		// Create depth stencil state
-//		//ID3D11DepthStencilState * pDSState;
-//		s_pdev->CreateDepthStencilState(&dsDescZCmpAlways, &g_pDSStateZCmpAlways);
-//
-//
-//		pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
-//		g_zcmpalways = false;
-//
-//
-//		WCHAR initialdir[MAX_PATH] = { 0L };
-//		wcscpy_s(initialdir, MAX_PATH, g_basedir);
-//		wcscat_s(initialdir, MAX_PATH, L"..\\Test\\");
-//		SetCurrentDirectoryW(initialdir);
-//
-//
-//
-//		////check
-//		//double test0 = 0.0;
-//		//double test1 = 1.0;
-//		//double test0add01 = (double)((int)(test0 + 0.1));
-//		//double test0add049 = (double)((int)(test0 + 0.49));
-//		//double test1add01 = (double)((int)(test1 + 0.1));
-//		//double test1add049 = (double)((int)(test1 + 0.49));
-//		//WCHAR strtest[1024] = { 0L };
-//		//swprintf_s(strtest, 1024, L"test0add01 %f, test0add049 %f, test1add01 %f, test1add049 %f",
-//		//	test0add01, test0add049, test1add01, test1add049);
-//		//::MessageBox(NULL, strtest, L"Check", MB_OK);
-//
-//		return S_OK;
-//	}
-//	else {
-//	_ASSERT(0);
-//	return 1;
-//	}
-//}
-
-
-////--------------------------------------------------------------------------------------
-//// This callback function will be called immediately after the Direct3D device has been 
-//// reset, which will happen after a lost device scenario. This is the best location to 
-//// create 0 resources since these resources need to be reloaded whenever 
-//// the device is lost. Resources created here should be released in the OnLostDevice 
-//// callback. 
-////--------------------------------------------------------------------------------------
-//HRESULT CALLBACK OnResetDevice( ID3D12Device* pd3dDevice,
-//                                const D3DSURFACE_DESC* pBackBufferSurfaceDesc, void* pUserContext )
-//{
-//    HRESULT hr;
-//
-//    V_RETURN( g_DialogResourceManager.OnD3D11ResetDevice() );
-//    V_RETURN( g_SettingsDlg.OnD3D11ResetDevice() );
-//
-//    // Create a sprite to help batch calls when drawing many lines of text
-//    V_RETURN( D3DXCreateSprite( pd3dDevice, &g_pSprite ) );
-//
-//    if( g_pFont )
-//        V_RETURN( g_pFont->OnResetDevice() );
-//    if( g_pEffect )
-//        V_RETURN( g_pEffect->OnResetDevice() );
-//
-//
-//	if( g_texbank ){
-//		CallF( g_texbank->Invalidate( INVAL_ONLYDEFAULT ), return S_FALSE );
-//		CallF( g_texbank->Restore(), return 1 );
-//	}
-//
-//    for( int i = 0; i < MAX_LIGHTS; i++ )
-//        g_LightControl[i].OnD3D11ResetDevice( pBackBufferSurfaceDesc );
-//
-//    // Setup the camera's projection parameters
-//    s_fAspectRatio = pBackBufferSurfaceDesc->Width / ( FLOAT )pBackBufferSurfaceDesc->Height;
-////    //#replacing comment out#g_Camera->SetProjParams( D3DX_PI / 4, fAspectRatio, g_initnear, 4.0f * g_initcamdist );
-//	//#replacing comment out#g_Camera->SetProjParams( D3DX_PI / 4, s_fAspectRatio, g_projnear, 5.0f * g_initcamdist );
-//
-//    //#replacing comment out#g_Camera->SetWindow( pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height );
-//	//#replacing comment out#g_Camera->SetButtonMasks( MOUSE_LEFT_BUTTON, MOUSE_WHEEL, MOUSE_MIDDLE_BUTTON );
-//
-//	s_mainwidth = pBackBufferSurfaceDesc->Width;
-//	s_mainheight = pBackBufferSurfaceDesc->Height;
-//
-//    //g_SampleUI.SetLocation( pBackBufferSurfaceDesc->Width - 170, pBackBufferSurfaceDesc->Height - 550 );
-//	//g_SampleUI.SetLocation( pBackBufferSurfaceDesc->Width - 170, 0 );
-//    //g_SampleUI.SetSize( 170, 750 );
-//
-//	g_SampleUI.SetLocation( 0, 0 );
-//	g_SampleUI.SetSize(pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height);
-//	
-//	SetSpAxisParams();
-//	SetSpCamParams();
-//	SetSpRigParams();
-//	SetSpBtParams();
-//
-//    return S_OK;
-//}
-
-//--------------------------------------------------------------------------------------
-// Create any D3D11 resources that depend on the back buffer
-//--------------------------------------------------------------------------------------
-//HRESULT CALLBACK OnD3D11ResizedSwapChain(ID3D12Device* pd3dDevice, IDXGISwapChain* pSwapChain,
-//	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc, void* pUserContext)
-//{
-//	HRESULT hr;
-//
-//
-//	//if (g_endappflag != 0) {
-//	//	return S_OK;
-//	//}
-//
-//
-//	V_RETURN(g_DialogResourceManager.OnD3D11ResizedSwapChain(pd3dDevice, pBackBufferSurfaceDesc));
-//	//V_RETURN(g_SettingsDlg.OnD3D11ResizedSwapChain(pd3dDevice, pBackBufferSurfaceDesc));
-//
-//	// Setup the camera's projection parameters
-//	s_fAspectRatio = pBackBufferSurfaceDesc->Width / (FLOAT)pBackBufferSurfaceDesc->Height;
-//	//    //#replacing comment out#g_Camera->SetProjParams( D3DX_PI / 4, fAspectRatio, g_initnear, 4.0f * g_initcamdist );
-//		////#replacing comment out#g_Camera->SetProjParams( PI / 4, s_fAspectRatio, g_projnear, 5.0f * g_initcamdist );
-//		////#replacing comment out#g_Camera->SetProjParams(PI / 4, s_fAspectRatio, g_projnear, 100.0f * g_initcamdist);
-//	////#replacing comment out#g_Camera->SetProjParams((float)(PI / 4), s_fAspectRatio, g_projnear, 100.0f * g_initcamdist);
-//	//#replacing comment out#g_Camera->SetProjParams(g_fovy, s_fAspectRatio, g_projnear, g_projfar);
-//
-//	//#replacing comment out#g_Camera->SetWindow(pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height);
-//	//#replacing comment out#g_Camera->SetButtonMasks(MOUSE_LEFT_BUTTON, MOUSE_WHEEL, MOUSE_MIDDLE_BUTTON);
-//
-//	s_mainwidth = pBackBufferSurfaceDesc->Width;
-//	s_mainheight = pBackBufferSurfaceDesc->Height;
-//
-//
-//	g_SampleUI.SetLocation(0, 0);
-//	g_SampleUI.SetSize(pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height);
-//
-//	if (s_undosprite) {
-//		s_undosprite->SetParams(s_mainwidth, s_mainheight);
-//	}
-//	if (s_fpssprite) {
-//		s_fpssprite->SetParams(s_mainwidth, s_mainheight);
-//	}
-//
-//	SetSpSel3DParams();
-//	SetSpAimBarParams();
-//	SetSpMenuAimBarParams();//CreateMainMenuAimBarWndよりも後
-//	SetSpAxisParams();
-//	SetSpUndoParams();
-//	SetSpGUISWParams();
-//	SetSpIkModeSWParams();
-//	SetSpRefPosSWParams();
-//	SetSpDispSWParams();
-//	SetSpRigidSWParams();
-//	SetSpRetargetSWParams();
-//	SetSpCamParams();
-//	SetSpRigParams();
-//	SetSpCpLW2WParams();
-//	SetSpSmoothParams();
-//	SetSpLimitEulSWParams();
-//	SetSpScrapingSWParams();
-//	SetSpConstExeParams();
-//	SetSpConstRefreshParams();
-//	//SetSpBtParams();
-//	SetSpMouseHereParams();
-//	SetSpMouseCenterParams();//SetSpCamParamsよりも後で呼ぶ　位置を参照しているから
-//	SetSpCameraModeSWParams();
-//	SetSpCameraInheritSWParams();
-//
-//	SetSpRet2PrevParams();
-//
-//	SetSpCopyParams();//SetSpCameraInheritSWParams()よりも後で呼ぶ
-//	SetSpSymCopyParams();
-//	SetSpPasteParams();
-//	SetSpCopyHistoryParams();
-//
-//	SetSpInterpolateParams();
-//	SetSpInitParams();
-//	SetSpScaleInitParams();
-//	SetSpPropertyParams();
-//
-//	SetSpZeroFrameParams();
-//	SetSpCameraDollyParams();
-//	SetSpModelPosDirParams();
-//	SetSpMaterialRateParams();
-//
-//
-//	//g_HUD.SetLocation(pBackBufferSurfaceDesc->Width - 170, 0);
-//	//g_HUD.SetSize(170, 170);
-//
-//	return S_OK;
-//}
-
-//--------------------------------------------------------------------------------------
-// Release D3D11 resources created in OnD3D11ResizedSwapChain 
-//--------------------------------------------------------------------------------------
-//void CALLBACK OnD3D11ReleasingSwapChain(void* pUserContext)
-//{
-//	UNREFERENCED_PARAMETER(pUserContext);
-//
-//	g_DialogResourceManager.OnD3D11ReleasingSwapChain();
-//}
-
 
 int OnPluginClose()
 {
@@ -5916,35 +4117,8 @@ int OnPluginClose()
 	return 0;
 }
 
-int OnPluginPose()
-{
-	if (!s_plugin) {
-		return 0;
-	}
 
-	//if (!m_shandler || (m_mhandler->m_kindnum <= 0)) {
-	//	return 0;
-	//}
-	//int motid;
-	//motid = g_motdlg->GetMotCookie();
-	//if (motid < 0) {
-	//	return 0;
-	//}
-
-	//int pluginno;
-	//for (pluginno = 0; pluginno < MAXPLUGIN; pluginno++) {
-	//	if ((m_plugin + pluginno)->validflag == 1) {
-	//		(m_plugin + pluginno)->CallOnPose(motid);
-	//	}
-	//}
-
-	return 0;
-}
-
-//--------------------------------------------------------------------------------------
-// Release D3D11 resources created in OnD3D11CreateDevice 
-//--------------------------------------------------------------------------------------
-void CALLBACK OnD3D11DestroyDevice(void* pUserContext)
+void OnDestroyDevice()
 {
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	//DirectX11 : because of DX11 defferd destroy, some ref count will be alive.//!!!!!!!!!!!!!!!
@@ -5977,6 +4151,13 @@ void CALLBACK OnD3D11DestroyDevice(void* pUserContext)
 		UnhookWinEvent(s_hhook);
 		s_hhook = NULL;
 	}
+
+	//エンジンの破棄。
+	if (g_engine) {
+		delete g_engine;
+		g_engine = nullptr;
+	}
+
 
 
 	//if (s_eventhook) {
@@ -6019,239 +4200,6 @@ void CALLBACK OnD3D11DestroyDevice(void* pUserContext)
 
 
 	//::KillTimer(s_mainhwnd, s_iktimerid);
-	/*
-	g_DialogResourceManager.OnD3D11DestroyDevice();
-	g_D3DSettingsDlg.OnD3D11DestroyDevice();
-	//CDXUTDirectionWidget::StaticOnD3D11DestroyDevice();
-	DXUTGetGlobalResourceCache().OnDestroyDevice();
-	SAFE_DELETE( g_pTxtHelper );
-
-	g_Mesh11.Destroy();
-
-	SAFE_RELEASE( g_pVertexLayout11 );
-	SAFE_RELEASE( g_pVertexBuffer );
-	SAFE_RELEASE( g_pIndexBuffer );
-	SAFE_RELEASE( g_pVertexShader );
-	SAFE_RELEASE( g_pPixelShader );
-	SAFE_RELEASE( g_pSamLinear );
-
-	SAFE_RELEASE( g_pcbVSPerObject );
-	SAFE_RELEASE( g_pcbPSPerObject );
-	SAFE_RELEASE( g_pcbPSPerFrame );
-	*/
-
-	//if (g_pDSStateZCmp) {
-	//	g_pDSStateZCmp->Release();
-	//	g_pDSStateZCmp = 0;
-	//}
-	//if (g_pDSStateZCmpAlways) {
-	//	g_pDSStateZCmpAlways->Release();
-	//	g_pDSStateZCmpAlways = 0;
-	//}
-
-
-
-	//#######################################################################
-	// UTDXDialogのデストラクタで　RemoveAllControllsが呼ばれてdeleteされる
-	// ここでdeleteしてしまうと、RemoveAllControllsでエラーになる
-	// コメントアウトする
-	//#######################################################################
-	//if (s_ui_lightscale) {
-	//	delete s_ui_lightscale;
-	//	s_ui_lightscale = 0;
-	//}
-	//if (s_ui_dispbone) {
-	//	delete s_ui_dispbone;
-	//	s_ui_dispbone = 0;
-	//}
-	//if (s_ui_disprigid) {
-	//	delete s_ui_disprigid;
-	//	s_ui_disprigid = 0;
-	//}
-	//if (s_ui_boneaxis) {
-	//	delete s_ui_boneaxis;
-	//	s_ui_boneaxis = 0;
-	//}
-	//if (s_ui_bone) {
-	//	delete s_ui_bone;
-	//	s_ui_bone = 0;
-	//}
-	//if (s_ui_locktosel) {
-	//	delete s_ui_locktosel;
-	//	s_ui_locktosel = 0;
-	//}
-	//if (s_ui_iklevel) {
-	//	delete s_ui_iklevel;
-	//	s_ui_iklevel = 0;
-	//}
-	//if (s_ui_editmode) {
-	//	delete s_ui_editmode;
-	//	s_ui_editmode = 0;
-	//}
-	//if (s_ui_texapplyrate) {
-	//	delete s_ui_texapplyrate;
-	//	s_ui_texapplyrate = 0;
-	//}
-	//if (s_ui_slapplyrate) {
-	//	delete s_ui_slapplyrate;
-	//	s_ui_slapplyrate = 0;
-	//}
-	//if (s_ui_motionbrush) {
-	//	delete s_ui_motionbrush;
-	//	s_ui_motionbrush = 0;
-	//}
-	//if (s_ui_texikorder) {
-	//	delete s_ui_texikorder;
-	//	s_ui_texikorder = 0;
-	//}
-	//if (s_ui_slikorder) {
-	//	delete s_ui_slikorder;
-	//	s_ui_slikorder = 0;
-	//}
-	//if (s_ui_texref) {
-	//	delete s_ui_texref;
-	//	s_ui_texref = 0;
-	//}
-	//if (s_ui_slirefpos) {
-	//	delete s_ui_slirefpos;
-	//	s_ui_slirefpos = 0;
-	//}
-	//if (s_ui_slirefalpha) {
-	//	delete s_ui_slirefalpha;
-	//	s_ui_slirefalpha = 0;
-	//}
-	//if (s_ui_applytotheend) {
-	//	delete s_ui_applytotheend;
-	//	s_ui_applytotheend = 0;
-	//}
-	//if (s_ui_slerpoff) {
-	//	delete s_ui_slerpoff;
-	//	s_ui_slerpoff = 0;
-	//}
-	//if (s_ui_highrpmon) {
-	//	delete s_ui_highrpmon;
-	//	s_ui_highrpmon = 0;
-	//}
-	//if (s_ui_texbrushrepeats) {
-	//	delete s_ui_texbrushrepeats;
-	//	s_ui_texbrushrepeats = 0;
-	//}
-	//if (s_ui_brushrepeats) {
-	//	delete s_ui_brushrepeats;
-	//	s_ui_brushrepeats = 0;
-	//}
-	//if (s_ui_brushmirroru) {
-	//	delete s_ui_brushmirroru;
-	//	s_ui_brushmirroru = 0;
-	//}
-	//if (s_ui_brushmirrorv) {
-	//	delete s_ui_brushmirrorv;
-	//	s_ui_brushmirrorv = 0;
-	//}
-	//if (s_ui_ifmirrorvdiv2) {
-	//	delete s_ui_ifmirrorvdiv2;
-	//	s_ui_ifmirrorvdiv2 = 0;
-	//}
-	////Left 2nd
-	//if (s_ui_texthreadnum) {
-	//	delete s_ui_texthreadnum;
-	//	s_ui_texthreadnum = 0;
-	//}
-	//if (s_ui_slthreadnum) {
-	//	delete s_ui_slthreadnum;
-	//	s_ui_slthreadnum = 0;
-	//}
-	//if (s_ui_umthreads) {
-	//	delete s_ui_umthreads;
-	//	s_ui_umthreads = 0;
-	//}
-	//if (s_ui_slumthreads) {
-	//	delete s_ui_slumthreads;
-	//	s_ui_slumthreads = 0;
-	//}
-	//if (s_ui_wallscrapingik) {
-	//	delete s_ui_wallscrapingik;
-	//	s_ui_wallscrapingik = 0;
-	//}
-	//if (s_ui_limiteul) {
-	//	delete s_ui_limiteul;
-	//	s_ui_limiteul = 0;
-	//}
-	//if (s_ui_texspeed) {
-	//	delete s_ui_texspeed;
-	//	s_ui_texspeed = 0;
-	//}
-	//if (s_ui_speed) {
-	//	delete s_ui_speed;
-	//	s_ui_speed = 0;
-	//}
-	////Bullet
-	//if (s_ui_btstart) {
-	//	delete s_ui_btstart;
-	//	s_ui_btstart = 0;
-	//}
-	//if (s_ui_btrecstart) {
-	//	delete s_ui_btrecstart;
-	//	s_ui_btrecstart = 0;
-	//}
-	//if (s_ui_stopbt) {
-	//	delete s_ui_stopbt;
-	//	s_ui_stopbt = 0;
-	//}
-	//if (s_ui_texbtcalccnt) {
-	//	delete s_ui_texbtcalccnt;
-	//	s_ui_texbtcalccnt = 0;
-	//}
-	//if (s_ui_btcalccnt) {
-	//	delete s_ui_btcalccnt;
-	//	s_ui_btcalccnt = 0;
-	//}
-	//if (s_ui_texerp) {
-	//	delete s_ui_texerp;
-	//	s_ui_texerp = 0;
-	//}
-	//if (s_ui_erp) {
-	//	delete s_ui_erp;
-	//	s_ui_erp = 0;
-	//}
-	////PhysicsIK
-	//if (s_ui_texphysmv) {
-	//	delete s_ui_texphysmv;
-	//	s_ui_texphysmv = 0;
-	//}
-	//if (s_ui_slphysmv) {
-	//	delete s_ui_slphysmv;
-	//	s_ui_slphysmv = 0;
-	//}
-	//if (s_ui_physrotstart) {
-	//	delete s_ui_physrotstart;
-	//	s_ui_physrotstart = 0;
-	//}
-	//if (s_ui_physmvstart) {
-	//	delete s_ui_physmvstart;
-	//	s_ui_physmvstart = 0;
-	//}
-	//if (s_ui_physikstop) {
-	//	delete s_ui_physikstop;
-	//	s_ui_physikstop = 0;
-	//}
-
-
-
-	//g_DialogResourceManager.OnD3D11DestroyDevice();
-	////g_SettingsDlg.OnD3D11DestroyDevice();
-	//CDXUTDirectionWidget::StaticOnD3D11DestroyDevice();//!!!!!!!!!!!
-	//DXUTGetGlobalResourceCache().OnDestroyDevice();
-	//SAFE_DELETE(g_pTxtHelper);
-
-	////SAFE_RELEASE(g_pFont);
-	////SAFE_RELEASE(g_pSprite);
-	////SAFE_RELEASE(g_pVertexLayout);
-	////g_Mesh10.Destroy();
-
-	//
-	//SAFE_RELEASE(g_pEffect);
-	//SAFE_RELEASE(g_blendState);//!!!!!
 
 
 	if (s_editrangehistory) {
@@ -7026,25 +4974,26 @@ void CALLBACK OnD3D11DestroyDevice(void* pUserContext)
 	DestroyEulKeys();
 	DestroyKeys();
 
+	
+	if (s_3dwnd && IsWindow(s_3dwnd)) {
+		DestroyWindow(s_3dwnd);
+		s_3dwnd = 0;
+	}
+	s_3dwnd = 0;
+	if (s_mainhwnd && IsWindow(s_mainhwnd)) {
+		DestroyWindow(s_mainhwnd);
+		s_mainhwnd = 0;
+	}
+	s_mainhwnd = 0;
+
+
+
 	DeleteCriticalSection(&s_CritSection_LTimeline);
 	DeleteCriticalSection(&g_CritSection_GetGP);
 	DeleteCriticalSection(&g_CritSection_FbxSdk);
 
 }
 
-
-
-//--------------------------------------------------------------------------------------
-// This callback function will be called once at the beginning of every frame. This is the
-// best location for your application to handle updates to the scene, but is not 
-// intended to contain actual rendering calls, which should instead be placed in the 
-// OnFrameRender callback.  
-//--------------------------------------------------------------------------------------
-void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
-{
-	int callfromik = 0;
-	OnUserFrameMove(fTime, fElapsedTime);
-}
 
 void OnUserFrameMove(double fTime, float fElapsedTime)
 {
@@ -7493,146 +5442,79 @@ void OnRenderNowLoading()
 
 }
 
-void CALLBACK OnD3D11FrameRender(ID3D12Device* pd3dDevice, RenderContext* pRenderContext, double fTime,
-	float fElapsedTime, void* pUserContext)
+void OnFrameRender(myRenderer::RenderingEngine& re, RenderContext& rc, double fTime, float fElapsedTime)
 {
 
-
-	//if (s_nowloading && s_3dwnd) {
-	//	OnRenderNowLoading();
-	//	return;
-	//}
-
-
-	//OnRenderNowLoadingも何も無しだとdevice->Presentで固まる。 OnRenderNowLoadingを入れると３Dモデル表示がちらつく。よって通常描画する。
+	////OnRenderNowLoadingも何も無しだとdevice->Presentで固まる。 OnRenderNowLoadingを入れると３Dモデル表示がちらつく。よって通常描画する。
 	//if ((InterlockedAdd(&g_bvh2fbxbatchflag, 0) != 0) || (InterlockedAdd(&g_retargetbatchflag, 0) != 0)) {
 	//	//OnRenderNowLoading();
 	//	return;
 	//}
 
 
-	//HRESULT hr;
+	// レンダリング開始
+	g_engine->BeginFrame();
 
-	// If the settings dialog is being shown, then
-	// render it instead of rendering the app's scene
-	//if( g_SettingsDlg.IsActive() )
+	if (s_chascene->GetModelNum() > 0) {
+		SetCamera3DFromEyePos();
+	}
+
+	//g_camera3D->MoveForward(g_pad[0]->GetLStickYF());
+	//g_camera3D->MoveRight(g_pad[0]->GetLStickXF());
+	//g_camera3D->MoveUp(g_pad[0]->GetRStickYF());
+
+	//// Render the light arrow so the user can visually see the light dir
+	//for (int i = 0; i < g_nNumActiveLights; i++)
 	//{
-	//    g_SettingsDlg.OnRender( fElapsedTime );
-	//    return;
+	//	DirectX::XMFLOAT4 arrowColor = (i == g_nActiveLight) ? DirectX::XMFLOAT4(1, 1, 0, 1) : DirectX::XMFLOAT4(1, 1, 1, 1);
+	//	//V(g_LightControl[i].OnRender10(arrowColor, &mView, &mProj, //#replacing comment out#g_Camera->GetEyePt()));
+	//	vLightDir[i] = ChaVector3(g_LightControl[i].GetLightDirection());
+	//	vLightDiffuse[i] = ChaVector4(1, 1, 1, 1) * g_fLightScale;
 	//}
 
-	//// Clear the render target and the zbuffer 
-	//V( pd3dDevice->Clear( 0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR( 0.0f, 0.25f, 0.25f, 0.55f ), 1.0f,
-	//                      0 ) );
+	////V(g_pLightDir->SetRawValue(vLightDir, 0, sizeof(ChaVector3) * MAX_LIGHTS));
+	////V(g_pLightDiffuse->SetFloatVectorArray((float*)vLightDiffuse, 0, MAX_LIGHTS));
+	////V(g_pmWorldViewProjection->SetMatrix((float*)&mWorldViewProjection));
+	////V(g_pmWorld->SetMatrix((float*)&mWorld));
+	////V(g_pfTime->SetFloat((float)fTime));
+	////V(g_pnNumLights->SetInt(g_nNumActiveLights));
 
 
-//	// Clear the render target and depth stencil
-//	//float ClearColor[4] = { 0.0f, 0.25f, 0.25f, 0.55f };
-//	float ClearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-//	//float ClearColor[4] = { (64.0f / 255.0f), (128.0f / 255.0f), (255.0f / 255.0f), 1.0f };
-//	ID3D11RenderTargetView* pRTV = DXUTGetD3D11RenderTargetView();
-//	//pRenderContext->ClearRenderTargetView(pRTV, s_ClearColor);
-//	if ((g_ClearColorIndex >= 0) && (g_ClearColorIndex < BGCOL_MAX)) {
-//		pRenderContext->ClearRenderTargetView(pRTV, g_ClearColor[g_ClearColorIndex]);
-//	}
-//	else {
-//		pRenderContext->ClearRenderTargetView(pRTV, ClearColor);
-//	}
-//	ID3D11DepthStencilView* pDSV = DXUTGetD3D11DepthStencilView();
-//	pRenderContext->ClearDepthStencilView(pDSV, D3D11_CLEAR_DEPTH, 1.0, 0);
-//
-//
-//
-//
-//	ChaMatrix mWorldViewProjection;
-//	//ChaVector3 vLightDir[MAX_LIGHTS];
-//	//ChaVector4 vLightDiffuse[MAX_LIGHTS];
-//	ChaMatrix mWorld;
-//	ChaMatrix mView;
-//	ChaMatrix mProj;
-//
-//	// Get the projection & view matrix from the camera class
-////	mWorld = g_mCenterMesh * *//#replacing comment out#g_Camera->GetWorldMatrix();
-//	mWorld = //#replacing comment out#g_Camera->GetWorldMatrix();
-//	mProj = //#replacing comment out#g_Camera->GetProjMatrix();
-//	mView = //#replacing comment out#g_Camera->GetViewMatrix();
-//
-//	mWorldViewProjection = mWorld * mView * mProj;
-//
-//	//// Render the light arrow so the user can visually see the light dir
-//	//for (int i = 0; i < g_nNumActiveLights; i++)
-//	//{
-//	//	DirectX::XMFLOAT4 arrowColor = (i == g_nActiveLight) ? DirectX::XMFLOAT4(1, 1, 0, 1) : DirectX::XMFLOAT4(1, 1, 1, 1);
-//	//	//V(g_LightControl[i].OnRender10(arrowColor, &mView, &mProj, //#replacing comment out#g_Camera->GetEyePt()));
-//	//	vLightDir[i] = ChaVector3(g_LightControl[i].GetLightDirection());
-//	//	vLightDiffuse[i] = ChaVector4(1, 1, 1, 1) * g_fLightScale;
-//	//}
-//
-//	////V(g_pLightDir->SetRawValue(vLightDir, 0, sizeof(ChaVector3) * MAX_LIGHTS));
-//	////V(g_pLightDiffuse->SetFloatVectorArray((float*)vLightDiffuse, 0, MAX_LIGHTS));
-//	////V(g_pmWorldViewProjection->SetMatrix((float*)&mWorldViewProjection));
-//	////V(g_pmWorld->SetMatrix((float*)&mWorld));
-//	////V(g_pfTime->SetFloat((float)fTime));
-//	////V(g_pnNumLights->SetInt(g_nNumActiveLights));
-//
-//	////// Render the scene with this technique as defined in the .fx file
-//	////ID3D11EffectTechnique* pRenderTechnique;
-//	////switch (g_nNumActiveLights)
-//	////{
-//	////case 1:
-//	////	pRenderTechnique = g_pTechRenderSceneWithTexture1Light;
-//	////	break;
-//	////case 2:
-//	////	pRenderTechnique = g_pTechRenderSceneWithTexture2Light;
-//	////	break;
-//	////case 3:
-//	////	pRenderTechnique = g_pTechRenderSceneWithTexture3Light;
-//	////	break;
-//	////default:
-//	////	pRenderTechnique = g_pTechRenderSceneWithTexture1Light;
-//	////	break;
-//	////}
-//
-//
-//
-//	////s_pdev->SetRenderState( D3DRS_ALPHABLENDENABLE, TRUE );
-//	////s_pdev->SetRenderState( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA );
-//	////s_pdev->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
-//
-//
-//	OnRenderSetShaderConst();
-//
-//	//if ((InterlockedAdd(&g_retargetbatchflag, 0) == 0) && (InterlockedAdd(&g_bvh2fbxbatchflag, 0) == 0) && (InterlockedAdd(&g_motioncachebatchflag, 0) == 0) &&
-//	if ((InterlockedAdd(&g_retargetbatchflag, 0) == 0) && (InterlockedAdd(&g_bvh2fbxbatchflag, 0) == 0) && (InterlockedAdd(&g_calclimitedwmflag, 0) == 0) &&
-//		!s_underdelmodel && !s_underdelmotion && 
-//		!s_underselectmodel && !s_underselectmotion && !s_underselectcamera && !s_underdispmodel && !g_changeUpdateThreadsNum) {
-//
-//		if (s_disponlyoneobj == false) {
-//			OnRenderModel(pRenderContext);
-//			OnRenderGround(pRenderContext);
-//			OnRenderBoneMark(pRenderContext);
-//			OnRenderSelect(pRenderContext);
-//		}
-//		else {
-//			OnRenderOnlyOneObj(pRenderContext);
-//		}
-//		
-//		//OnRenderUtDialog(fElapsedTime);
-//		if (s_dispsampleui) {//ctrl + 1 (one) key --> toggle
-//			OnRenderSprite(pRenderContext);
-//		}
-//
-//		DXUT_BeginPerfEvent(DXUT_PERFEVENTCOLOR, L"HUD / Stats");
-//		////g_HUD.OnRender(fElapsedTime);
-//		if (s_dispsampleui) {//ctrl + 1 (one) key --> toggle
-//			g_SampleUI.OnRender(fElapsedTime);
-//		}
-//		RenderText(fTime);
-//		DXUT_EndPerfEvent();
-//	}
-//	else {
-//		OnRenderNowLoading();
-//	}
+	//if ((InterlockedAdd(&g_retargetbatchflag, 0) == 0) && (InterlockedAdd(&g_bvh2fbxbatchflag, 0) == 0) && (InterlockedAdd(&g_motioncachebatchflag, 0) == 0) &&
+	if ((InterlockedAdd(&g_retargetbatchflag, 0) == 0) && (InterlockedAdd(&g_bvh2fbxbatchflag, 0) == 0) && (InterlockedAdd(&g_calclimitedwmflag, 0) == 0) &&
+		!s_underdelmodel && !s_underdelmotion && 
+		!s_underselectmodel && !s_underselectmotion && !s_underselectcamera && !s_underdispmodel && !g_changeUpdateThreadsNum) {
+
+		if (s_disponlyoneobj == false) {
+			int lightflag = 1;
+			ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+			int btflag = 0;
+			s_chascene->RenderModels(re, lightflag, diffusemult, btflag);
+
+			//OnRenderModel(pRenderContext);
+			//OnRenderGround(pRenderContext);
+			//OnRenderBoneMark(pRenderContext);
+			//OnRenderSelect(pRenderContext);
+		}
+		else {
+			//OnRenderOnlyOneObj(pRenderContext);
+		}
+		
+		//OnRenderUtDialog(fElapsedTime);
+		if (s_dispsampleui) {//ctrl + 1 (one) key --> toggle
+			OnRenderSprite(rc);
+		}
+
+	}
+	else {
+		OnRenderNowLoading();
+	}
+
+
+	//レンダリングエンジンを実行
+	re.Execute(rc);
+	// レンダリング終了
+	g_engine->EndFrame();
 
 }
 
@@ -9579,9 +7461,10 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		s_pickinfo.buttonflag = 0;
 	}
 	else if (uMsg == WM_DESTROY) {
-		//スエンジンの破棄。
-		delete g_engine;
+		//ここでOnDestroyDevice()を呼ぶと　何回もOnDestroyDevice()が呼ばれる
+		//WM_QUITでメッセージループを抜けて　ループを出たところでOnDestroyDevice()を呼ぶ
 		PostQuitMessage(0);
+		return 0;
 	}
 	else if (uMsg == WM_ACTIVATE) {
 		if (wParam == 1) {
@@ -10112,548 +7995,6 @@ int RollbackCurBoneNo()
 //}
 
 
-////--------------------------------------------------------------------------------------
-//// This callback function will be called immediately after the Direct3D device has 
-//// entered a lost state and before IDirect3DDevice9::Reset is called. Resources created
-//// in the OnResetDevice callback should be released here, which generally includes all 
-//// 0 resources. See the "Lost Devices" section of the documentation for 
-//// information about lost devices.
-////--------------------------------------------------------------------------------------
-//void CALLBACK OnLostDevice( void* pUserContext )
-//{
-//    g_DialogResourceManager.OnD3D11LostDevice();
-//    g_SettingsDlg.OnD3D11LostDevice();
-//    CDXUTDirectionWidget::StaticOnD3D11LostDevice();
-//    if( g_pFont )
-//        g_pFont->OnLostDevice();
-//    if( g_pEffect )
-//        g_pEffect->OnLostDevice();
-//    SAFE_RELEASE( g_pSprite );
-//
-//	if( g_texbank ){
-//		CallF( g_texbank->Invalidate( INVAL_ONLYDEFAULT ), return );
-//	}
-//
-//}
-//
-
-//--------------------------------------------------------------------------------------
-// This callback function will be called immediately after the Direct3D device has 
-// been destroyed, which generally happens as a result of application termination or 
-// windowed/full screen toggles. Resources created in the OnCreateDevice callback 
-// should be released here, which generally includes all D3DPOOL_MANAGED resources. 
-//--------------------------------------------------------------------------------------
-//void CALLBACK OnDestroyDevice( void* pUserContext )
-//{
-//    g_DialogResourceManager.OnD3D11DestroyDevice();
-//    g_SettingsDlg.OnD3D11DestroyDevice();
-//    CDXUTDirectionWidget::StaticOnD3D11DestroyDevice();
-//    SAFE_RELEASE( g_pEffect );
-//    SAFE_RELEASE( g_pFont );
-//
-//	if (s_editrangehistory){
-//		delete[] s_editrangehistory;
-//		s_editrangehistory = 0;
-//	}
-//	s_editrangehistoryno = 0;
-//
-//	if (s_anglelimitdlg){
-//		DestroyWindow(s_anglelimitdlg);
-//		s_anglelimitdlg = 0;
-//	}
-//	if (s_rotaxisdlg){
-//		DestroyWindow(s_rotaxisdlg);
-//		s_rotaxisdlg = 0;
-//	}
-//	if (s_customrigdlg){
-//		DestroyWindow(s_customrigdlg);
-//		s_customrigdlg = 0;
-//	}
-//	s_oprigflag = 0;
-//	s_customrigbone = 0;
-//
-//	vector<MODELELEM>::iterator itrmodel;
-//	for( itrmodel = s_modelindex.begin(); itrmodel != s_modelindex.end(); itrmodel++ ){
-//		CModel* curmodel = itrmodel->modelptr;
-//		if( curmodel ){
-//			//FbxScene* pscene = curmodel->GetScene();
-//			//if (pscene){
-//			//	pscene->Destroy();
-//			//}
-//
-//			delete curmodel;
-//		}
-//	}
-//	s_modelindex.clear();
-//	s_model = 0;
-//
-//	if( s_select ){
-//		delete s_select;
-//		s_select = 0;
-//	}
-//	if (s_rigmark){
-//		delete s_rigmark;
-//		s_rigmark = 0;
-//	}
-//	if (s_ground){
-//		delete s_ground;
-//		s_ground = 0;
-//	}
-//	if( s_gplane ){
-//		delete s_gplane;
-//		s_gplane = 0;
-//	}
-//	if( s_bmark ){
-//		delete s_bmark;
-//		s_bmark = 0;
-//	}
-//
-//
-//	if( s_bcircle ){
-//		delete s_bcircle;
-//		s_bcircle = 0;
-//	}
-//	if( s_kinsprite ){
-//		delete s_kinsprite;
-//		s_kinsprite = 0;
-//	}
-//
-//	if( g_texbank ){
-//		delete g_texbank;
-//		g_texbank = 0;
-//	}
-//
-//	if( s_mainmenu ){
-//		DestroyMenu( s_mainmenu );
-//		s_mainmenu = 0;
-//	}
-//
-//	DestroyTimeLine( 1 );
-//
-//	if( s_timelineWnd ){
-//		delete s_timelineWnd;
-//		s_timelineWnd = 0;
-//	}
-//	if( s_LtimelineWnd ){
-//		delete s_LtimelineWnd;
-//		s_LtimelineWnd = 0;
-//	}
-//
-//	if( s_toolWnd ){
-//		delete s_toolWnd;
-//		s_toolWnd = 0;
-//	}
-//
-//	if( s_toolCopyB ){
-//		delete s_toolCopyB;
-//		s_toolCopyB = 0;
-//	}
-//	if( s_toolSymCopyB ){
-//		delete s_toolSymCopyB;
-//		s_toolSymCopyB = 0;
-//	}
-//	if( s_toolCutB ){
-//		delete s_toolCutB;
-//		s_toolCutB = 0;
-//	}
-//	if( s_toolPasteB ){
-//		delete s_toolPasteB;
-//		s_toolPasteB = 0;
-//	}
-//	if( s_toolDeleteB ){
-//		delete s_toolDeleteB;
-//		s_toolDeleteB = 0;
-//	}
-//	if( s_toolMotPropB ){
-//		delete s_toolMotPropB;
-//		s_toolMotPropB = 0;
-//	}
-//	if( s_toolMarkB ){
-//		delete s_toolMarkB;
-//		s_toolMarkB = 0;
-//	}
-//	if( s_toolSelBoneB ){
-//		delete s_toolSelBoneB;
-//		s_toolSelBoneB = 0;
-//	}
-//	if( s_toolInitMPB ){
-//		delete s_toolInitMPB;
-//		s_toolInitMPB = 0;
-//	}
-//	if (s_toolFilterB){
-//		delete s_toolFilterB;
-//		s_toolFilterB = 0;
-//	}
-//	if (s_toolInterpolateB){
-//		delete s_toolInterpolateB;
-//		s_toolInterpolateB = 0;
-//	}
-//
-//	if( s_owpTimeline ){
-//		delete s_owpTimeline;
-//		s_owpTimeline = 0;
-//	}
-//	if( s_owpPlayerButton ){
-//		delete s_owpPlayerButton;
-//		s_owpPlayerButton = 0;
-//	}
-//	if( s_owpLTimeline ){
-//		delete s_owpLTimeline;
-//		s_owpLTimeline = 0;
-//	}
-//
-//	if( s_layerWnd ){
-//		delete s_layerWnd;
-//		s_layerWnd = 0;
-//	}
-//	if( s_owpLayerTable ){
-//		delete s_owpLayerTable;
-//		s_owpLayerTable = 0;
-//	}
-//
-//	if( s_shprateSlider ){
-//		delete s_shprateSlider;
-//		s_shprateSlider = 0;
-//	}
-//	if( s_boxzSlider ){
-//		delete s_boxzSlider;
-//		s_boxzSlider = 0;
-//	}
-//	if( s_boxzlabel ){
-//		delete s_boxzlabel;
-//		s_boxzlabel = 0;
-//	}
-//	if( s_massSlider ){
-//		delete s_massSlider;
-//		s_massSlider = 0;
-//	}
-//	if( s_massSLlabel ){
-//		delete s_massSLlabel;
-//		s_massSLlabel = 0;
-//	}
-//	if( s_massB ){
-//		delete s_massB;
-//		s_massB = 0;
-//	}
-//	if( s_namelabel ){
-//		delete s_namelabel;
-//		s_namelabel = 0;
-//	}
-//	if( s_lenglabel ){
-//		delete s_lenglabel;
-//		s_lenglabel = 0;
-//	}
-//	if( s_rigidskip ){
-//		delete s_rigidskip;
-//		s_rigidskip = 0;
-//	}
-//	if (s_forbidrot){
-//		delete s_forbidrot;
-//		s_forbidrot = 0;
-//	}
-//
-//	if (s_allrigidenableB){
-//		delete s_allrigidenableB;
-//		s_allrigidenableB = 0;
-//	}
-//	if (s_allrigiddisableB){
-//		delete s_allrigiddisableB;
-//		s_allrigiddisableB = 0;
-//	}
-//
-//
-//	if( s_shplabel ){
-//		delete s_shplabel;
-//		s_shplabel = 0;
-//	}
-//	if( s_colradio ){
-//		delete s_colradio;
-//		s_colradio = 0;
-//	}
-//	if( s_lkradio ){
-//		delete s_lkradio;
-//		s_lkradio = 0;
-//	}
-//	if( s_lkSlider ){
-//		delete s_lkSlider;
-//		s_lkSlider = 0;
-//	}
-//	if( s_lklabel ){
-//		delete s_lklabel;
-//		s_lklabel = 0;
-//	}
-//	if( s_akradio ){
-//		delete s_akradio;
-//		s_akradio = 0;
-//	}
-//	if( s_akSlider ){
-//		delete s_akSlider;
-//		s_akSlider = 0;
-//	}
-//	if( s_aklabel ){
-//		delete s_aklabel;
-//		s_aklabel = 0;
-//	}
-//	if( s_restSlider ){
-//		delete s_restSlider;
-//		s_restSlider = 0;
-//	}
-//	if( s_restlabel ){
-//		delete s_restlabel;
-//		s_restlabel = 0;
-//	}
-//	if( s_fricSlider ){
-//		delete s_fricSlider;
-//		s_fricSlider = 0;
-//	}
-//	if( s_friclabel ){
-//		delete s_friclabel;
-//		s_friclabel = 0;
-//	}
-//	if( s_ldmpSlider ){
-//		delete s_ldmpSlider;
-//		s_ldmpSlider = 0;
-//	}
-//	if( s_admpSlider ){
-//		delete s_admpSlider;
-//		s_admpSlider = 0;
-//	}
-//	if( s_kB ){
-//		delete s_kB;
-//		s_kB = 0;
-//	}
-//	if( s_restB ){
-//		delete s_restB;
-//		s_restB = 0;
-//	}
-//	if( s_ldmplabel ){
-//		delete s_ldmplabel;
-//		s_ldmplabel = 0;
-//	}
-//	if( s_admplabel ){
-//		delete s_admplabel;
-//		s_admplabel = 0;
-//	}
-//	if( s_dmpB ){
-//		delete s_dmpB;
-//		s_dmpB = 0;
-//	}
-//	if( s_groupB ){
-//		delete s_groupB;
-//		s_groupB = 0;
-//	}
-//	if( s_gcoliB ){
-//		delete s_gcoliB;
-//		s_gcoliB = 0;
-//	}
-//	if( s_btgSlider ){
-//		delete s_btgSlider;
-//		s_btgSlider = 0;
-//	}
-//	if( s_btglabel ){
-//		delete s_btglabel;
-//		s_btglabel = 0;
-//	}
-//	if( s_btgscSlider ){
-//		delete s_btgscSlider;
-//		s_btgscSlider = 0;
-//	}
-//	if( s_btgsclabel ){
-//		delete s_btgsclabel;
-//		s_btgsclabel = 0;
-//	}
-//	if( s_btforce ){
-//		delete s_btforce;
-//		s_btforce = 0;
-//	}
-//	if( s_groupcheck ){
-//		delete s_groupcheck;
-//		s_groupcheck = 0;
-//	}
-//	if( s_btgB ){
-//		delete s_btgB;
-//		s_btgB = 0;
-//	}
-//	if( s_rigidWnd ){
-//		delete s_rigidWnd;
-//		s_rigidWnd = 0;
-//	}
-//
-//	if( s_dmpgroupcheck ){
-//		delete s_dmpgroupcheck;
-//		s_dmpgroupcheck = 0;
-//	}
-//	if( s_dmpanimLlabel ){
-//		delete s_dmpanimLlabel;
-//		s_dmpanimLlabel = 0;
-//	}
-//	if( s_dmpanimLSlider ){
-//		delete s_dmpanimLSlider;
-//		s_dmpanimLSlider = 0;
-//	}
-//	if( s_dmpanimAlabel ){
-//		delete s_dmpanimAlabel;
-//		s_dmpanimAlabel = 0;
-//	}
-//	if( s_dmpanimASlider ){
-//		delete s_dmpanimASlider;
-//		s_dmpanimASlider = 0;
-//	}
-//	if( s_dmpanimB ){
-//		delete s_dmpanimB;
-//		s_dmpanimB = 0;
-//	}
-//	if( s_dmpanimWnd ){
-//		delete s_dmpanimWnd;
-//		s_dmpanimWnd = 0;
-//	}
-//
-//
-//	if( s_impgroupcheck ){
-//		delete s_impgroupcheck;
-//		s_impgroupcheck = 0;
-//	}
-//	if( s_impzSlider ){
-//		delete s_impzSlider;
-//		s_impzSlider = 0;
-//	}
-//	if( s_impySlider ){
-//		delete s_impySlider;
-//		s_impySlider = 0;
-//	}
-//	if( s_impxSlider ){
-//		delete s_impxSlider;
-//		s_impxSlider = 0;
-//	}
-//	if( s_impzlabel ){
-//		delete s_impzlabel;
-//		s_impzlabel = 0;
-//	}
-//	if( s_impylabel ){
-//		delete s_impylabel;
-//		s_impylabel = 0;
-//	}
-//	if( s_impxlabel ){
-//		delete s_impxlabel;
-//		s_impxlabel = 0;
-//	}
-//	if( s_impscaleSlider ){
-//		delete s_impscaleSlider;
-//		s_impscaleSlider = 0;
-//	}
-//	if( s_impscalelabel ){
-//		delete s_impscalelabel;
-//		s_impscalelabel = 0;
-//	}
-//	if( s_impallB ){
-//		delete s_impallB;
-//		s_impallB = 0;
-//	}
-//	if( s_impWnd ){
-//		delete s_impWnd;
-//		s_impWnd = 0;
-//	}
-//	if( s_gpWnd ){
-//		delete s_gpWnd;
-//		s_gpWnd = 0;
-//	}
-//	if( s_ghSlider ){
-//		delete s_ghSlider;
-//		s_ghSlider = 0;
-//	}
-//	if( s_gsizexSlider ){
-//		delete s_gsizexSlider;
-//		s_gsizexSlider = 0;
-//	}
-//	if( s_gsizezSlider ){
-//		delete s_gsizezSlider;
-//		s_gsizezSlider = 0;
-//	}
-//	if( s_ghlabel ){
-//		delete s_ghlabel;
-//		s_ghlabel = 0;
-//	}
-//	if( s_gsizexlabel ){
-//		delete s_gsizexlabel;
-//		s_gsizexlabel = 0;
-//	}
-//	if( s_gsizezlabel ){
-//		delete s_gsizezlabel;
-//		s_gsizezlabel = 0;
-//	}
-//	if( s_gpdisp ){
-//		delete s_gpdisp;
-//		s_gpdisp = 0;
-//	}
-//	if( s_grestSlider ){
-//		delete s_grestSlider;
-//		s_grestSlider = 0;
-//	}
-//	if( s_grestlabel ){
-//		delete s_grestlabel;
-//		s_grestlabel = 0;
-//	}
-//	if( s_gfricSlider ){
-//		delete s_gfricSlider;
-//		s_gfricSlider = 0;
-//	}
-//	if( s_gfriclabel ){
-//		delete s_gfriclabel;
-//		s_gfriclabel = 0;
-//	}
-//
-////static SPAXIS s_spaxis[3];
-	//int spno;
-	//for( spno = 0; spno < 3; spno++ ){
-	//	Sprite cursp = s_spaxis[spno].sprite;
-	//	if( cursp ){
-	//		delete cursp;
-	//	}
-	//	s_spaxis[spno].sprite = 0;
-	//}
-
-	//int spcno;
-	//for (spcno = 0; spcno < 3; spcno++){
-	//	Sprite curspc = s_spcam[spcno].sprite;
-	//	if (curspc){
-	//		delete curspc;
-	//	}
-	//	s_spcam[spcno].sprite = 0;
-	//}
-
-
-	//int sprno;
-	//for (sprno = 0; sprno < 2; sprno++){
-	//	Sprite cursp = s_sprig[sprno].sprite;
-	//	if (cursp){
-	//		delete cursp;
-	//	}
-	//	s_sprig[sprno].sprite = 0;
-	//}
-
-	//Sprite cursp = s_spbt.sprite;
-	//if (cursp){
-	//	delete cursp;
-	//}
-	//s_spbt.sprite = 0;
-//
-//
-//
-//	DestroyModelPanel();
-//	DestroyConvBoneWnd();
-//
-//	//DestroySdkObjects();
-//
-//	if( s_psdk ){
-//		s_psdk->Destroy();
-//		s_psdk = 0;
-//	}
-//
-//	if( s_bpWorld ){
-//		delete s_bpWorld;
-//		s_bpWorld = 0;
-//	}
-//}
 
 int DestroyTimeLine(int dellist)
 {
@@ -36245,30 +33586,6 @@ int SetLightDirection()
 }
 
 
-int OnRenderSetShaderConst()
-{
-	//////HRESULT hr;
-	////ChaVector3 vLightDir[MAX_LIGHTS];
-	////ChaVector4 vLightDiffuse[MAX_LIGHTS];
-
-	//// Get the projection & view matrix from the camera class
-	//g_hmVP->SetMatrix(s_matVP.GetDataPtr());
-	////g_pEffect->SetMatrix(g_hmVP, &(s_matVP.D3DX()));
-	//////g_pEffect->SetMatrix(g_hmWorld, &s_matW);//CModelへ
-
-
-	//SetLightDirection();
-
-	//g_hLightDir->SetRawValue(s_lightdirforshader, 0, sizeof(ChaVector4) * LIGHTNUMMAX);
-	//g_hLightDiffuse->SetRawValue(s_lightdiffuseforshader, 0, sizeof(ChaVector4) * LIGHTNUMMAX);
-
-	//ChaVector3 eyept = g_camEye;
-	//g_hEyePos->SetRawValue(&eyept, 0, sizeof(ChaVector3));
-	////V(g_pEffect->SetValue(g_hEyePos, &eyept, sizeof(ChaVector3)));
-
-	return 0;
-}
-
 int OnRenderUtDialog(RenderContext* pRenderContext, float fElapsedTime)
 {
 	//if (g_previewFlag != 3) {
@@ -38234,23 +35551,6 @@ int OnTimeLineWheel()
 
 
 
-int InitializeMainWindow(CREATESTRUCT* createWindowArgs)
-{
-	//TCHAR message[1024];
-	//int messageResult;
-	//wsprintf(message,
-	//	TEXT("ウィンドウクラス:%s\nタイトル:%s\nウィンドウを生成しますか？"),
-	//	createWindowArgs->lpszClass, createWindowArgs->lpszName
-	//);
-
-	//messageResult = DSMessageBox(NULL, message, TEXT("確認"), MB_YESNO | MB_ICONINFORMATION);
-
-	//if (messageResult == IDNO)
-	//	return -1;
-	return 0;
-}
-
-
 
 LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -38279,12 +35579,13 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 
 	case WM_DESTROY:
+		//ここでOnDestroyDevice()を呼ぶと　何回もOnDestroyDevice()が呼ばれる
+		//WM_QUITでメッセージループを抜けて　ループを出たところでOnDestroyDevice()を呼ぶ
 		PostQuitMessage(0);
 		return 0;
 		//DXUTShutdown(0);//2023/09/23 ここで解放処理を呼んでも　DirectX11の遅延解放のため？VisualStudioのログにデバイスのAlive情報は出る
 		break;
 	case WM_CREATE:
-		InitializeMainWindow((CREATESTRUCT*)lParam);
 		break;
 	case WM_COMMAND:
 	{
@@ -38575,7 +35876,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lp) {
 	WCHAR strWindowText[1024];
 	GetWindowTextW(hwnd, strWindowText, 1024);
-	if (wcsstr(strWindowText, L"EditMotC4") != 0) {
+	if (wcsstr(strWindowText, L"AdditiveIKC4") != 0) {
 		if (lp) {
 			*((HWND*)lp) = hwnd;
 		}
@@ -38663,7 +35964,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"EditMot Ver1.2.0.30 : No.%d : ", s_appcnt);
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver0.0.0.1 : No.%d : ", s_appcnt);
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -46606,9 +43907,9 @@ void SetMainWindowTitle()
 	}
 
 
-	//"まめばけ３D (MameBake3D)"
+
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"EditMot Ver1.2.0.30 : No.%d : ", s_appcnt);
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver0.0.0.1 : No.%d : ", s_appcnt);
 
 
 	if (s_model && s_chascene) {

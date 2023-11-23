@@ -51,6 +51,11 @@ Documents/CoexistenceOfConventionalMaterialsAndPBR.docx追加<br>
 モーション付きモデルを読み込み後にタイムラインのプレイマークのボタンでプレビュー.<br>
 <br>
 <br>
+2023/11/23<br>
+デバッグビルドで実行終了時に表示されるメモリリークが気になってリファクタリング
+メモリリークは無くなった?<br>
+明日からimguiを導入する予定<br>
+<br>
 <br>
 <br>
 サイト：https://ochakkolab.jp<br>

@@ -116,14 +116,15 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 	WCHAR* findtga = wcsstr(m_name, pattga);
 	if (findtga) {
 		DirectX::TexMetadata metadata;
-		DirectX::ScratchImage scratchImg;
-		hr0 = DirectX::LoadFromTGAFile(m_name, DirectX::TGA_FLAGS_NONE, &metadata, scratchImg);
+		//DirectX::ScratchImage scratchImg;
+		std::unique_ptr<DirectX::ScratchImage> scratchImg(new DirectX::ScratchImage);
+		hr0 = DirectX::LoadFromTGAFile(m_name, DirectX::TGA_FLAGS_NONE, &metadata, *scratchImg);
 		if (FAILED(hr0)) {
 			_ASSERT(0);
 			SetNullTexture();
 			return -1;
 		}
-		auto img = scratchImg.GetImage(0, 0, 0);//生データ抽出
+		auto img = scratchImg->GetImage(0, 0, 0);//生データ抽出
 
 		//WriteToSubresourceで転送する用のヒープ設定
 		D3D12_HEAP_PROPERTIES texHeapProp = {};
@@ -158,6 +159,7 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		if (FAILED(hr1)) {
 			_ASSERT(0);
 			SetNullTexture();
+			scratchImg.reset();
 			return -1;
 		}
 
@@ -170,6 +172,7 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		if (FAILED(hr2)) {
 			_ASSERT(0);
 			SetNullTexture();
+			scratchImg.reset();
 			return -1;
 		}
 
@@ -180,8 +183,10 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		else {
 			_ASSERT(0);
 			SetNullTexture();
+			scratchImg.reset();
 			return -1;
 		}
+		scratchImg.reset();
 	}
 	else if (finddds) {
 		auto device = g_graphicsEngine->GetD3DDevice();
@@ -216,14 +221,14 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 	else {
 		//WICテクスチャのロード
 		DirectX::TexMetadata metadata = {};
-		DirectX::ScratchImage scratchImg = {};
-		hr0 = DirectX::LoadFromWICFile(m_name, DirectX::WIC_FLAGS_NONE, &metadata, scratchImg);
+		std::unique_ptr<DirectX::ScratchImage> scratchImg(new DirectX::ScratchImage);
+		hr0 = DirectX::LoadFromWICFile(m_name, DirectX::WIC_FLAGS_NONE, &metadata, *scratchImg);
 		if (FAILED(hr0)) {
 			_ASSERT(0);
 			SetNullTexture();
 			return -1;
 		}
-		auto img = scratchImg.GetImage(0, 0, 0);//生データ抽出
+		auto img = scratchImg->GetImage(0, 0, 0);//生データ抽出
 
 		//WriteToSubresourceで転送する用のヒープ設定
 		D3D12_HEAP_PROPERTIES texHeapProp = {};
@@ -258,6 +263,7 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		if (FAILED(hr1)) {
 			_ASSERT(0);
 			SetNullTexture();
+			scratchImg.reset();
 			return -1;
 		}
 
@@ -270,6 +276,7 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		if (FAILED(hr2)) {
 			_ASSERT(0);
 			SetNullTexture();
+			scratchImg.reset();
 			return -1;
 		}
 
@@ -280,8 +287,11 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		else {
 			_ASSERT(0);
 			SetNullTexture();
+			scratchImg.reset();
 			return -1;
 		}
+
+		scratchImg.reset();
 
 	}
 

@@ -528,5 +528,20 @@
     <Image Include="AdditiveIK.ico">
       <Filter>リソース ファイル</Filter>
     </Image>
+    <Image Include="..\Media\MameMedia\boneimage.bmp">
+      <Filter>リソース ファイル</Filter>
+    </Image>
+    <Image Include="..\Media\MameMedia\boneselect.bmp">
+      <Filter>リソース ファイル</Filter>
+    </Image>
+    <Image Include="..\media\mamemedia\bitmap2.bmp">
+      <Filter>リソース ファイル</Filter>
+    </Image>
+    <Image Include="..\Media\MameMedia\img_l105.bmp">
+      <Filter>リソース ファイル</Filter>
+    </Image>
+    <Image Include="..\Media\MameBake3D.ico">
+      <Filter>リソース ファイル</Filter>
+    </Image>
   </ItemGroup>
 </Project>

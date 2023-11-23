@@ -21,18 +21,20 @@ public:
 	//int AddTex( WCHAR* srcpath, WCHAR* srcname, int srctransparent, int srcpool, D3DXCOLOR* srccol, int* dstid );
 	int AddTex(const WCHAR* srcpath, const WCHAR* srcname, int srctransparent, int srcpool, int* dstid);
 
-	int Invalidate( int invalmode );
-	int Restore(RenderContext* pRenderContext);
-
-	int DestroyTex( int srcid );
+	//int Invalidate( int invalmode );
+	//int Restore(RenderContext* pRenderContext);
+	//int DestroyTex( int srcid );
 
 public:
 	//accesser
 	CTexElem* GetTexElem( int srcindex ){
-		return m_texmap[ srcindex ];
-	};
-	void GetTexElem2( std::map<int,CTexElem*>& dstmap ){
-		dstmap = m_texmap;
+		auto it = m_texmap.find(srcindex);
+		if (it != m_texmap.end()) {
+			return it->second.get();
+		}
+		else {
+			return nullptr;
+		}
 	};
 
 private:
@@ -43,7 +45,11 @@ private:
 
 private:
 	ID3D12Device* m_pdev;
-	std::map<int, CTexElem*> m_texmap;
+
+	//std::map<int, CTexElem*> m_texmap;
+	using TexElemPtr = std::unique_ptr<CTexElem>;
+	std::map<int, TexElemPtr> m_texmap;
+
 };
 #endif
 

@@ -315,6 +315,11 @@
     <ResourceCompile Include="AdditiveIK.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\Media\MameBake3D.ico" />
+    <Image Include="..\media\mamemedia\bitmap2.bmp" />
+    <Image Include="..\Media\MameMedia\boneimage.bmp" />
+    <Image Include="..\Media\MameMedia\boneselect.bmp" />
+    <Image Include="..\Media\MameMedia\img_l105.bmp" />
     <Image Include="AdditiveIK.ico" />
     <Image Include="small.ico" />
   </ItemGroup>

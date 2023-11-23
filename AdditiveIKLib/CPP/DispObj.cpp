@@ -424,7 +424,7 @@ void CDispObj::CreateDescriptorHeaps()
 				m_descriptorHeap.RegistShaderResource(srvNo + 1, curmat->GetAlbedoMap());			//アルベドマップ。
 				m_descriptorHeap.RegistShaderResource(srvNo + 2, curmat->GetNormalMap());		//法線マップ。
 				m_descriptorHeap.RegistShaderResource(srvNo + 3, curmat->GetSpecularMap());		//スペキュラマップ。
-				m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
+				//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
 				for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
 					if (m_expandShaderResourceView[i]) {
 						m_descriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
@@ -461,7 +461,7 @@ void CDispObj::CreateDescriptorHeaps()
 				m_descriptorHeap.RegistShaderResource(srvNo + 1, curmat->GetAlbedoMap());			//アルベドマップ。
 				m_descriptorHeap.RegistShaderResource(srvNo + 2, curmat->GetNormalMap());		//法線マップ。
 				m_descriptorHeap.RegistShaderResource(srvNo + 3, curmat->GetSpecularMap());		//スペキュラマップ。
-				m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
+				//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
 				for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
 					if (m_expandShaderResourceView[i]) {
 						m_descriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
@@ -590,16 +590,18 @@ int CDispObj::CreateDecl(ID3D12Device* pdev)
 		m_expandShaderResourceView[i] = nullptr;
 	}
 
-	//2023/11/17
-	//とりあえず　ボーン無しで表示テスト
-	int datanum = 1;
-	ChaMatrix dummymat;
-	dummymat.SetIdentity();
-	m_boneMatricesStructureBuffer.Init(
-		sizeof(ChaMatrix),
-		datanum,
-		&dummymat
-	);
+	//2023/11/23
+	// ボーンの姿勢は　メッシュ単位のSConstantBufferで　mWorld, View, Projと一緒に扱うことにした
+	////2023/11/17
+	////とりあえず　ボーン無しで表示テスト
+	//int datanum = 1;
+	//ChaMatrix dummymat;
+	//dummymat.SetIdentity();
+	//m_boneMatricesStructureBuffer.Init(
+	//	sizeof(ChaMatrix),
+	//	datanum,
+	//	&dummymat
+	//);
 
 
 	//ディスクリプタヒープを作成。
@@ -1268,13 +1270,13 @@ void CDispObj::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
 	if (m_expandData) {
 		m_expandConstantBuffer.CopyToVRAM(m_expandData);
 	}
-	if (m_boneMatricesStructureBuffer.IsInited()) {
-		//ボーン行列を更新する。
 
-		ChaMatrix dummymat;
-		//m_boneMatricesStructureBuffer.Update(m_skeleton->GetBoneMatricesTopAddress());
-		m_boneMatricesStructureBuffer.Update(&dummymat);
-	}
+	//if (m_boneMatricesStructureBuffer.IsInited()) {
+	//	//ボーン行列を更新する。
+	//	ChaMatrix dummymat;
+	//	//m_boneMatricesStructureBuffer.Update(m_skeleton->GetBoneMatricesTopAddress());
+	//	m_boneMatricesStructureBuffer.Update(&dummymat);
+	//}
 }
 
 
@@ -1802,15 +1804,15 @@ int CDispObj::CopyDispV( CPolyMesh3* pm3 )
 	return 0;
 }
 
-void CDispObj::UpdateBoneMatrix(int srcdatanum, void* srcdata)
-{
-	if ((srcdatanum <= 0) || !srcdata) {
-		_ASSERT(0);
-		return;
-	}
-
-	m_boneMatricesStructureBuffer.Update(sizeof(ChaMatrix), srcdatanum, srcdata);
-
-}
+//void CDispObj::UpdateBoneMatrix(int srcdatanum, void* srcdata)
+//{
+//	if ((srcdatanum <= 0) || !srcdata) {
+//		_ASSERT(0);
+//		return;
+//	}
+//
+//	m_boneMatricesStructureBuffer.Update(sizeof(ChaMatrix), srcdatanum, srcdata);
+//
+//}
 
 //void Material::InitFromTkmMaterila(

@@ -16,12 +16,14 @@ public:
 	RenderContext() 
 	{
 		ZeroMemory(&m_currentViewport, sizeof(D3D12_VIEWPORT));				//現在のビューポート。
-		m_commandList = 0;	//コマンドリスト。
+		m_commandList = nullptr;	//コマンドリスト。
 		ZeroMemory(m_descriptorHeaps, sizeof(ID3D12DescriptorHeap*) * MAX_DESCRIPTOR_HEAP);
 		ZeroMemory(m_constantBuffers, sizeof(ConstantBuffer*) * MAX_CONSTANT_BUFFER);
 		ZeroMemory(m_shaderResources, sizeof(Texture*) * MAX_SHADER_RESOURCE);
 		m_scratchResourceList.clear();
 	};
+
+	~RenderContext(){};//このクラス内のオブジェクトは作成していない　外部ポインタを保持しているだけなので破棄しない
 
 	/// <summary>
 	/// 初期化。

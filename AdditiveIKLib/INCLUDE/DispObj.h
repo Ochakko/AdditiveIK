@@ -150,7 +150,7 @@ public:
 		m_scaleoffset = srcoffset;
 	};
 
-	void UpdateBoneMatrix(int srcdatanum, void* srcdata);
+	//void UpdateBoneMatrix(int srcdatanum, void* srcdata);
 
 private:
 
@@ -254,7 +254,7 @@ private:
 	ConstantBuffer m_expandConstantBuffer;					//ユーザー拡張用の定数バッファ
 	std::array<IShaderResource*, MAX_MODEL_EXPAND_SRV> m_expandShaderResourceView = { nullptr };	//ユーザー拡張シェーダーリソースビュー。
 	void* m_expandData = nullptr;
-	StructuredBuffer m_boneMatricesStructureBuffer;	//ボーン行列の構造化バッファ。
+	//StructuredBuffer m_boneMatricesStructureBuffer;	//ボーン行列の構造化バッファ。
 	//std::vector< SMesh* > m_meshs;						//メッシュ。
 	bool m_createdescriptorflag;
 	//////std::vector< DescriptorHeap > m_descriptorHeap;	//ディスクリプタヒープ。
@@ -263,11 +263,11 @@ private:
 	//void* m_expandData = nullptr;						//ユーザー拡張データ。
 
 
-	//Shaderのポイントはnewした場合もShaderBankに格納する
-	//Shaderの破棄はShaderBankが行うので　CDispObjのデストラクタでは破棄しない
-	Shader* m_vsNonSkinModel;//スキンなしモデル用の頂点シェーダー。
-	Shader* m_vsSkinModel;//スキンありモデル用の頂点シェーダー。
-	Shader* m_psModel;//モデル用のピクセルシェーダー。
+	////Shaderのポイントはnewした場合もShaderBankに格納する
+	////Shaderの破棄はShaderBankが行うので　CDispObjのデストラクタでは破棄しない
+	//Shader* m_vsNonSkinModel;//スキンなしモデル用の頂点シェーダー。
+	//Shader* m_vsSkinModel;//スキンありモデル用の頂点シェーダー。
+	//Shader* m_psModel;//モデル用のピクセルシェーダー。
 
 
 

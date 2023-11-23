@@ -12,6 +12,7 @@ Texture::~Texture()
 {
 	if (m_texture) {
 		m_texture->Release();
+		m_texture = nullptr;
 	}
 }
 
@@ -24,6 +25,10 @@ void Texture::InitFromCustomColor(ChaVector4 srccol)
 	if (!g_graphicsEngine->GetD3DDevice()) {
 		_ASSERT(0);
 		return;
+	}
+	if (m_texture) {
+		m_texture->Release();
+		m_texture = nullptr;
 	}
 
 
@@ -130,17 +135,21 @@ void Texture::InitFromWICFile(const wchar_t* filePath)
 		_ASSERT(0);
 		return;
 	}
+	if (m_texture) {
+		m_texture->Release();
+		m_texture = nullptr;
+	}
 
 
 	//WICテクスチャのロード
 	DirectX::TexMetadata metadata = {};
-	DirectX::ScratchImage scratchImg = {};
-	HRESULT hr0 = DirectX::LoadFromWICFile(filePath, DirectX::WIC_FLAGS_NONE, &metadata, scratchImg);
+	std::unique_ptr<DirectX::ScratchImage> scratchImg(new DirectX::ScratchImage);
+	HRESULT hr0 = DirectX::LoadFromWICFile(filePath, DirectX::WIC_FLAGS_NONE, &metadata, *scratchImg);
 	if (FAILED(hr0)) {
 		_ASSERT(0);
 		return;
 	}
-	auto img = scratchImg.GetImage(0, 0, 0);//生データ抽出
+	auto img = scratchImg->GetImage(0, 0, 0);//生データ抽出
 
 	//WriteToSubresourceで転送する用のヒープ設定
 	D3D12_HEAP_PROPERTIES texHeapProp = {};
@@ -174,6 +183,7 @@ void Texture::InitFromWICFile(const wchar_t* filePath)
 	);
 	if (FAILED(hr1)) {
 		_ASSERT(0);
+		scratchImg.reset();
 		return;
 	}
 
@@ -185,10 +195,12 @@ void Texture::InitFromWICFile(const wchar_t* filePath)
 	);
 	if (FAILED(hr2)) {
 		_ASSERT(0);
+		scratchImg.reset();
 		return;
 	}
 
 	InitFromD3DResource(texbuff);
+	scratchImg.reset();
 }
 
 void Texture::InitFromDDSFile(const wchar_t* filePath)
@@ -204,6 +216,8 @@ void Texture::InitFromD3DResource(ID3D12Resource* texture)
 	}
 	m_texture = texture;
 	m_texture->AddRef();
+	texture->Release();//2023/11/23
+
 	m_textureDesc = m_texture->GetDesc();
 }
 void Texture::InitFromMemory(const char* memory, unsigned int size)
@@ -215,6 +229,12 @@ void Texture::InitFromMemory(const char* memory, unsigned int size)
 void Texture::LoadTextureFromMemory(const char* memory, unsigned int size
 )
 {
+	if (m_texture) {
+		m_texture->Release();
+		m_texture = nullptr;
+	}
+
+
 	auto device = g_graphicsEngine->GetD3DDevice();
 	DirectX::ResourceUploadBatch re(device);
 	re.Begin();
@@ -241,6 +261,11 @@ void Texture::LoadTextureFromMemory(const char* memory, unsigned int size
 }
 void Texture::LoadTextureFromDDSFile(const wchar_t* filePath)
 {
+	if (m_texture) {
+		m_texture->Release();
+		m_texture = nullptr;
+	}
+
 	auto device = g_graphicsEngine->GetD3DDevice();
 	DirectX::ResourceUploadBatch re(device);
 	re.Begin();

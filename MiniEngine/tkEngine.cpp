@@ -8,7 +8,13 @@ TkEngine::~TkEngine()
 {
 	if (m_graphicsEngine) {
 		delete m_graphicsEngine;
+		m_graphicsEngine = nullptr;
 	}
+
+	m_tkmFileBank.DestroyObjs();//tkmファイルバンク。
+	m_shaderBank.DestroyObjs();//シェーダーバンク
+	m_textureBank.DestroyObjs();//テクスチャバンク。
+
 }
 void TkEngine::Init(HWND hwnd, UINT frameBufferWidth, UINT frameBufferHeight)
 {

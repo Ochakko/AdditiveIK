@@ -197,7 +197,7 @@ IDXGIFactory4* GraphicsEngine::CreateDXGIFactory()
 
 		// Enable additional debug layers.
 		dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
-		debugController->Release();
+		//debugController->Release();//2023/11/23 ここでリリースすると　リークして無くてもダンプ情報が出るのでコメントアウト
 	}
 #endif
 	IDXGIFactory4* factory;
@@ -287,6 +287,7 @@ bool GraphicsEngine::CreateD3DDevice( IDXGIFactory4* dxgiFactory )
 	if (adapterMaxVideoMemory) {
 		adapterMaxVideoMemory->Release();
 	}
+
 	return m_d3dDevice != nullptr;
 }
 bool GraphicsEngine::CreateCommandQueue()
