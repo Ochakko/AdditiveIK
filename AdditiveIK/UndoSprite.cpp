@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 
 //#include <vector>
 //#include <map>
@@ -6,8 +6,6 @@
 
 #include <Coef.h>
 #include <GlobalVar.h>
-//#include <ChaVecCalc.h>
-#include <MySprite.h>
 
 #include "UndoSprite.h"
 
@@ -28,15 +26,9 @@ CUndoSprite::~CUndoSprite()
 }
 void CUndoSprite::InitParams()
 {
-	//bool m_createdflag;
-	//CMySprite* m_sprite[12];
-	//int m_indexR[4];
-	//int m_indexW[4];
-	//POINT m_pointR[4];
-	//POINT m_pointW[4];
-
 	m_createdflag = false;
-	ZeroMemory(m_sprite, sizeof(CMySprite*) * 12);
+	//ZeroMemory(m_sprite, sizeof(CMySprite*) * 12);
+	ZeroMemory(m_texture, sizeof(Texture*) * 12);
 	ZeroMemory(m_indexR, sizeof(int) * 4);
 	ZeroMemory(m_indexW, sizeof(int) * 4);
 	ZeroMemory(m_pointR, sizeof(POINT) * 4);
@@ -56,68 +48,81 @@ void CUndoSprite::DestroyObjs()
 	InitParams();
 }
 
-int CUndoSprite::CreateSprites(ID3D12Device* pdev, WCHAR* mpath)
+int CUndoSprite::CreateSprites(WCHAR* mpath)
 {
 
 	DestroySprites();
 
-	if (!pdev || !mpath) {
+	if (!mpath) {
 		_ASSERT(0);
 		return 1;
 	}
 	
-	m_sprite[0] = new CMySprite(pdev);
-	_ASSERT(m_sprite[0]);
-	CallF(m_sprite[0]->Create(mpath, L"0.png", 0, 0), return 1);
 
-	m_sprite[1] = new CMySprite(pdev);
-	_ASSERT(m_sprite[1]);
-	CallF(m_sprite[1]->Create(mpath, L"1.png", 0, 0), return 1);
+	WCHAR filename[12][MAX_PATH] = {
+		L"MameMedia\\0.png",
+		L"MameMedia\\1.png",
+		L"MameMedia\\2.png",
+		L"MameMedia\\3.png",
+		L"MameMedia\\4.png",
+		L"MameMedia\\5.png",
+		L"MameMedia\\6.png",
+		L"MameMedia\\7.png",
+		L"MameMedia\\8.png",
+		L"MameMedia\\9.png",
+		L"MameMedia\\R_32x32.png",
+		L"MameMedia\\W_32x32.png"
+	};
 
-	m_sprite[2] = new CMySprite(pdev);
-	_ASSERT(m_sprite[2]);
-	CallF(m_sprite[2]->Create(mpath, L"2.png", 0, 0), return 1);
+	char cpath[MAX_PATH];
+	char cfxpath[MAX_PATH];
+	//char cfilepath[MAX_PATH];
+	char cbasedir[MAX_PATH] = { 0 };
+	WideCharToMultiByte(CP_ACP, 0, g_basedir, -1, cbasedir, MAX_PATH, NULL, NULL);
+	strcpy_s(cpath, MAX_PATH, cbasedir);
+	char* clasten = 0;
+	char* clast2en = 0;
+	clasten = strrchr(cpath, '\\');
+	if (!clasten) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	*clasten = 0;
+	clast2en = strrchr(cpath, '\\');
+	if (!clast2en) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	*clast2en = 0;
+	strcat_s(cpath, MAX_PATH, "\\Media\\");
+	SpriteInitData spriteinitdata;
+	strcpy_s(cfxpath, MAX_PATH, cpath);
+	strcat_s(cfxpath, MAX_PATH, "Shader\\preset\\InstancedSprite.fx");
+	spriteinitdata.m_fxFilePath = cfxpath;
+	spriteinitdata.m_width = 256;//仮　ファイルから読込時は上書きされる
+	spriteinitdata.m_height = 256;//仮　ファイルから読込時は上書きされる
+	spriteinitdata.m_alphaBlendMode = AlphaBlendMode_Trans;
 
-	m_sprite[3] = new CMySprite(pdev);
-	_ASSERT(m_sprite[3]);
-	CallF(m_sprite[3]->Create(mpath, L"3.png", 0, 0), return 1);
-
-	m_sprite[4] = new CMySprite(pdev);
-	_ASSERT(m_sprite[4]);
-	CallF(m_sprite[4]->Create(mpath, L"4.png", 0, 0), return 1);
-
-	m_sprite[5] = new CMySprite(pdev);
-	_ASSERT(m_sprite[5]);
-	CallF(m_sprite[5]->Create(mpath, L"5.png", 0, 0), return 1);
-
-	m_sprite[6] = new CMySprite(pdev);
-	_ASSERT(m_sprite[6]);
-	CallF(m_sprite[6]->Create(mpath, L"6.png", 0, 0), return 1);
-
-	m_sprite[7] = new CMySprite(pdev);
-	_ASSERT(m_sprite[7]);
-	CallF(m_sprite[7]->Create(mpath, L"7.png", 0, 0), return 1);
-
-	m_sprite[8] = new CMySprite(pdev);
-	_ASSERT(m_sprite[8]);
-	CallF(m_sprite[8]->Create(mpath, L"8.png", 0, 0), return 1);
-
-	m_sprite[9] = new CMySprite(pdev);
-	_ASSERT(m_sprite[9]);
-	CallF(m_sprite[9]->Create(mpath, L"9.png", 0, 0), return 1);
-
-	m_sprite[10] = new CMySprite(pdev);
-	_ASSERT(m_sprite[10]);
-	CallF(m_sprite[10]->Create(mpath, L"R_32x32.png", 0, 0), return 1);
-
-	m_sprite[11] = new CMySprite(pdev);
-	_ASSERT(m_sprite[11]);
-	CallF(m_sprite[11]->Create(mpath, L"W_32x32.png", 0, 0), return 1);
+	bool screenvertexflag = true;//!!!!!!!!!!!!
 
 
+	int spno;
+	for (spno = 0; spno < 12; spno++) {
+		WCHAR filepath[MAX_PATH];
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, filename[spno]);
+		m_texture[spno] = new Texture();
+		m_texture[spno]->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = m_texture[spno];
+		m_sprite[spno].Init(spriteinitdata);
+	}
 
+	m_createdflag = true;//SetParamsよりは前でセット
 
-	m_createdflag = true;
+	SetParams();
+
 	return 0;
 }
 void CUndoSprite::DestroySprites()
@@ -126,13 +131,15 @@ void CUndoSprite::DestroySprites()
 
 	int spriteno;
 	for (spriteno = 0; spriteno < 12; spriteno++) {
-		CMySprite* cursp = m_sprite[spriteno];
-		if (cursp) {
-			delete cursp;
+		Texture* curtex = m_texture[spriteno];
+		if (curtex) {
+			delete curtex;
+			m_texture[spriteno] = nullptr;
 		}
 	}
 }
-int CUndoSprite::SetParams(int srcmainwidth, int srcmainheight)
+
+int CUndoSprite::SetParams()
 {
 	if (!m_createdflag) {
 		_ASSERT(0);
@@ -167,45 +174,28 @@ int CUndoSprite::SetParams(int srcmainwidth, int srcmainheight)
 	}
 
 
-	m_size = ChaVector2(spawidth / (float)srcmainwidth * 2.0f, spawidth / (float)srcmainheight * 2.0f);
+	m_size = ChaVector2(spawidth, spawidth);
 
 
 	{
 		int spacnt;
 		for (spacnt = 0; spacnt < 4; spacnt++) {
-			m_posR[spacnt].x = (float)(m_pointR[spacnt].x) / ((float)srcmainwidth / 2.0f) - 1.0f;
-			m_posR[spacnt].y = -((float)(m_pointR[spacnt].y) / ((float)srcmainheight / 2.0f) - 1.0f);
+			m_posR[spacnt].x = (float)(m_pointR[spacnt].x);
+			m_posR[spacnt].y = (float)(m_pointR[spacnt].y);
 			m_posR[spacnt].z = 0.0f;
 
-			m_posW[spacnt].x = (float)(m_pointW[spacnt].x) / ((float)srcmainwidth / 2.0f) - 1.0f;
-			m_posW[spacnt].y = -((float)(m_pointW[spacnt].y) / ((float)srcmainheight / 2.0f) - 1.0f);
+			m_posW[spacnt].x = (float)(m_pointW[spacnt].x);
+			m_posW[spacnt].y = (float)(m_pointW[spacnt].y);
 			m_posW[spacnt].z = 0.0f;
-
-
-			//ChaVector2 dispsize = ChaVector2(spawidth / (float)s_mainwidth * 2.0f, spawidth / (float)s_mainheight * 2.0f);
-			//if (m_sprite[spacnt]) {
-			//	CallF(s_spundo[spacnt].sprite->SetPos(disppos), return 1);
-			//	CallF(s_spundo[spacnt].sprite->SetSize(dispsize), return 1);
-			//}
-			//else {
-			//	_ASSERT(0);
-			//}
 		}
 	}
-
-
-
 
 	return 0;
 
 
 }
-int CUndoSprite::Render(RenderContext* pd3dImmediateContext, int undoR, int undoW)
+int CUndoSprite::DrawScreen(RenderContext& rc, int undoR, int undoW)
 {
-	if (!pd3dImmediateContext) {
-		_ASSERT(0);
-		return 1;
-	}
 	if ((undoR < 0) || (undoR >= UNDOMAX)) {
 		_ASSERT(0);
 		return 1;
@@ -265,22 +255,18 @@ int CUndoSprite::Render(RenderContext* pd3dImmediateContext, int undoR, int undo
 		curW = curW - (m_indexW[decindex + 1] * divval);
 	}
 
+
+	int instanceno[12];
+	ZeroMemory(instanceno, sizeof(int) * 12);
+
 	int spacnt;
 	for (spacnt = 0; spacnt < 4; spacnt++) {
-		CMySprite* spriteR;
-		CMySprite* spriteW;
 
 		if ((m_indexR[spacnt] >= 0) && (m_indexR[spacnt] < 12)) {
-			spriteR = m_sprite[m_indexR[spacnt]];
-			if (spriteR) {
-				CallF(spriteR->SetPos(m_posR[spacnt]), return 1);
-				CallF(spriteR->SetSize(m_size), return 1);
-				spriteR->OnRender(pd3dImmediateContext);
-			}
-			else {
-				_ASSERT(0);
-				return 1;
-			}
+			m_sprite[m_indexR[spacnt]].UpdateScreen(instanceno[m_indexR[spacnt]], m_posR[spacnt], m_size);
+			//m_sprite[m_indexR[spacnt]].DrawScreen(rc);
+
+			(instanceno[m_indexR[spacnt]])++;
 		}
 		else {
 			_ASSERT(0);
@@ -288,22 +274,21 @@ int CUndoSprite::Render(RenderContext* pd3dImmediateContext, int undoR, int undo
 		}
 
 		if ((m_indexW[spacnt] >= 0) && (m_indexW[spacnt] < 12)) {
-			spriteW = m_sprite[m_indexW[spacnt]];
-			if (spriteW) {
-				CallF(spriteW->SetPos(m_posW[spacnt]), return 1);
-				CallF(spriteW->SetSize(m_size), return 1);
-				spriteW->OnRender(pd3dImmediateContext);
-			}
-			else {
-				_ASSERT(0);
-				return 1;
-			}
+			m_sprite[m_indexW[spacnt]].UpdateScreen(instanceno[m_indexW[spacnt]], m_posW[spacnt], m_size);
+			//m_sprite[m_indexW[spacnt]].DrawScreen(rc);
+
+			(instanceno[m_indexW[spacnt]])++;
 		}
 		else {
 			_ASSERT(0);
 			return 1;
 		}
+	}
 
+
+	int spno;
+	for (spno = 0; spno < 12; spno++) {
+		m_sprite[spno].DrawScreen(rc);
 	}
 
 

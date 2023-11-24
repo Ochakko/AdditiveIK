@@ -1,11 +1,13 @@
-#ifndef FPSSPRITEH
+﻿#ifndef FPSSPRITEH
 #define FPSSPRITEH
 
 #include <windows.h>
 
 #include <ChaVecCalc.h>
+#include "../MiniEngine/InstancedSprite.h"
+#include "../MiniEngine/Texture.h"
+#include "../MiniEngine/RenderContext.h"
 
-class CMySprite;
 
 class CFpsSprite
 {
@@ -13,25 +15,25 @@ public:
 	CFpsSprite();
 	~CFpsSprite();
 
-	int CreateSprites(ID3D12Device* pdev, WCHAR* mpath);
+	int CreateSprites(WCHAR* mpath);
 	void DestroySprites();
-	int SetParams(int srcmainwidth, int srcmainheight);
-	int Render(RenderContext* pd3dImmediateContext, int srcfps);
+	int DrawScreen(RenderContext& rc, int srcfps);
 
 private:
 	void InitParams();
 	void DestroyObjs();
+	int SetParams();
 
 private:
 	bool m_createdflag;
-	CMySprite* m_sprite[11];
+	InstancedSprite m_sprite[11];
+	Texture* m_texture[11];
 	int m_index[6];
 	POINT m_point[6];//dispcenter
 	ChaVector3 m_pos[6];
 	ChaVector2 m_size_label;
 	ChaVector2 m_size_num;
 };
-
 
 
 #endif

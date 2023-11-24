@@ -351,6 +351,7 @@
         renderContext.SetDescriptorHeap(m_descriptorHeap);
         //描画
         renderContext.DrawIndexed(m_indexBuffer.GetCount());
+        //.DrawIndexedInstanced(m_indexBuffer.GetCount(), numinstanced);
     }
 
 

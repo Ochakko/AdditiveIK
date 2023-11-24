@@ -735,11 +735,6 @@ static CModel* s_rigopemark_ringZ[RIGMULTINDEXMAX + 1];
 
 
 //static CModel* s_dummytri = NULL;
-static Sprite s_bcircle;
-static Sprite s_kinsprite;
-
-//static CUndoSprite s_undosprite = 0;
-//static CFpsSprite s_fpssprite = 0;
 
 
 static int s_fbxbunki = 1;
@@ -1363,6 +1358,10 @@ static SPGUISW s_spscraping;
 static SPELEM s_mousecenteron;
 static SPGUISW s_spcameramode;
 static SPGUISW3 s_spcamerainherit;
+static Sprite s_bcircle;
+static Sprite s_kinsprite;
+static CUndoSprite s_undosprite;
+static CFpsSprite s_fpssprite;
 
 
 typedef struct tag_modelpanel
@@ -1902,7 +1901,7 @@ static int ChooseLightColorBar(HWND hDlgWnd, int lightindex, int idcolorbar);
 
 
 //HRESULT LoadMesh( ID3D12Device* pd3dDevice, WCHAR* strFileName, ID3DXMesh** ppMesh );
-void RenderText(double fTime);
+void CalcFps(double fTime);
 static int RetargetFile(char* fbxpath);
 
 static int OnMouseMoveFunc();
@@ -2874,7 +2873,7 @@ INT WINAPI wWinMain(
 	myRenderer::RenderingEngine renderingEngine;
 	//renderingEngine.Init();//RenderingEngineのコンストラクタについて分からない部分があるので　Initはコンストラクタで呼んで初期化することにした
 
-
+	int dbgcount = 0;
 	while (DispatchWindowMessage())
 	{
 		if (s_chascene && (g_underloading == false)) {
@@ -2891,6 +2890,15 @@ INT WINAPI wWinMain(
 				fTime = DXUTGetGlobalTimer()->GetTime();
 				DXUTGetGlobalTimer()->GetElapsedTime();
 			}
+			CalcFps(fTime);
+
+			
+			////for tmp check
+			//WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
+			//int dispfps = (int)(s_avrgfps + 0.5);
+			//swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver0.0.0.1 : No.%d : fps %d", s_appcnt, dispfps);
+			//SetWindowText(s_mainhwnd, strmaintitle);
+
 
 			//ドキュメント更新
 			OnUserFrameMove(fTime, fElapsedTime);
@@ -2898,6 +2906,10 @@ INT WINAPI wWinMain(
 			//ビュー更新
 			OnFrameRender(renderingEngine, renderContext, fTime, fElapsedTime);
 
+			if (g_infownd && (dbgcount < 60)) {
+				g_infownd->UpdateWindow();//起動時に白くなる不具合に対して　応急処置
+			}
+			dbgcount++;
 		}
 	}
 
@@ -5523,7 +5535,7 @@ void OnFrameRender(myRenderer::RenderingEngine& re, RenderContext& rc, double fT
 // efficient text rendering.
 //--------------------------------------------------------------------------------------
 
-void RenderText(double fTime)
+void CalcFps(double fTime)
 {
 	static double s_savetime = 0.0;
 	//double g_calcfps;
@@ -5547,107 +5559,6 @@ void RenderText(double fTime)
 			s_fps100index = 0;
 		}
 	}
-
-
-
-	//   // The helper object simply helps keep track of text position, and color
-	//   // and then it calls pFont->DrawText( m_pSprite, strMsg, -1, &rc, DT_NOCLIP, m_clr );
-	//   // If NULL is passed in as the sprite object, then it will work fine however the 
-	//   // pFont->DrawText() will not be batched together.  Batching calls will improves perf.
-	//   //CDXUTTextHelper txtHelper( g_pFont, g_pSprite, 15 );
-	   ////CDXUTTextHelper txtHelper( g_pFont, g_pSprite, 18 );
-
-	//   // Output statistics
-	//   g_pTxtHelper->Begin();
-	//   //g_pTxtHelper->SetInsertionPos( 2, 0 );
-	   //g_pTxtHelper->SetInsertionPos(175, 0);
-	//   g_pTxtHelper->SetForegroundColor( DirectX::XMFLOAT4( 1.0f, 1.0f, 0.0f, 1.0f ) );
-	//   //g_pTxtHelper->DrawTextLine( DXUTGetFrameStats( DXUTIsVsyncEnabled() ) );
-	//   //g_pTxtHelper->DrawTextLine( DXUTGetDeviceStats() );
-
-	//   g_pTxtHelper->SetForegroundColor(DirectX::XMFLOAT4( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	//   //g_pTxtHelper->DrawFormattedTextLine( L"fps : %0.2f fTime: %0.1f, preview %d, btcanccnt %.1f, ERP %.5f", g_calcfps, fTime, g_previewFlag, g_btcalccnt, g_erp );
-	   ////g_pTxtHelper->DrawFormattedTextLine(L"fps : %0.2f fTime: %0.1f, preview %d", g_calcfps, fTime, g_previewFlag);
-	   ////g_pTxtHelper->DrawFormattedTextLine(L"fps : %0.2f preview : %d mbuttoncnt %d", g_calcfps, g_previewFlag, s_mbuttoncnt);
-
-	   ////int undoR = 0;
-	   ////int undoW = 0;
-	   ////int undo1st = 0;
-	   ////if (s_model) {
-	   ////	undoR = s_model->GetCurrentUndoR();
-	   ////	undoW = s_model->GetCurrentUndoW();
-	   ////	undo1st = s_model->GetCurrentUndo1st();
-	   ////}
-	   ////g_pTxtHelper->DrawFormattedTextLine(L"fps %0.1f preview %d mbutton %d undoR %d undoW %d undo1st %d", 
-	   ////	avrgfps, g_previewFlag, s_mbuttoncnt, undoR, undoW ,undo1st);
-
-
-	   ////g_pTxtHelper->DrawFormattedTextLine(L"fps %0.1f preview %d mbutton %d",
-	   ////	avrgfps, g_previewFlag, s_mbuttoncnt);
-
-	   //g_pTxtHelper->DrawFormattedTextLine(L"fps %0.1f", avrgfps);
-
-	   //if (s_onefps == 1) {
-	   //	g_pTxtHelper->DrawFormattedTextLine(L" ");
-	   //	g_pTxtHelper->DrawFormattedTextLine(L"PlayerButton OneFpsMode : 1 fps");
-	   //}
-	   //else if (s_onefps == 2) {
-	   //	g_pTxtHelper->DrawFormattedTextLine(L" ");
-	   //	g_pTxtHelper->DrawFormattedTextLine(L"PlayerButton OneFpsMode : 2 fps");
-	   //}
-
-	   ////int tmpnum;
-	   ////double tmpstart, tmpend, tmpapply;
-	   ////s_editrange.GetRange( &tmpnum, &tmpstart, &tmpend, &tmpapply );
-	//   //g_pTxtHelper->SetForegroundColor( D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
-	//   //g_pTxtHelper->DrawFormattedTextLine( L"Select Frame : selnum %d, start %.3f, end %.3f, apply %.3f", tmpnum, tmpstart, tmpend, tmpapply );
-
-	   ////if (s_model && (s_curboneno >= 0)){
-	   ////	CBone* curbone = s_model->GetBoneByID(s_curboneno);
-	   ////	if (curbone){
-	   ////		MOTINFO* curmi = s_model->GetCurMotInfo();
-	   ////		if (curmi){
-	   ////			const WCHAR* wbonename = curbone->GetWBoneName();
-	   ////			ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
-	   ////			int paraxsiflag = 1;
-	   ////			int isfirstbone = 0;
-	   ////			cureul = curbone->CalcLocalEulZXY(paraxsiflag, curmi->motid, curmi->curframe, BEFEUL_ZERO, isfirstbone);
-	   ////			ChaVector3 curtra = ChaVector3(0.0f, 0.0f, 0.0f);
-	   ////			curtra = curbone->CalcLocalTraAnim(curmi->motid, curmi->curframe);
-	   ////			//curbone->SetLocalEul(curmi->motid, curmi->curframe, cureul);
-	   ////			g_pTxtHelper->DrawFormattedTextLine(L"selected bone : %s", wbonename);
-	   ////			g_pTxtHelper->DrawFormattedTextLine(L"selected bone eul : (%.6f, %.6f, %.6f)",cureul.x, cureul.y, cureul.z);
-	   ////			g_pTxtHelper->DrawFormattedTextLine(L"selected bone tra : (%.6f, %.6f, %.6f)", curtra.x, curtra.y, curtra.z);
-	   ////		}
-	   ////	}
-	   ////}
-
-	//   //// Draw help
-	//   //if( g_bShowHelp )
-	//   //{
-	//   //    const D3DSURFACE_DESC* pd3dsdBackBuffer = DXUTGetD3D11BackBufferSurfaceDesc();
-	//   //    g_pTxtHelper->SetInsertionPos( 2, pd3dsdBackBuffer->Height - 15 * 6 );
-	//   //    g_pTxtHelper->SetForegroundColor( D3DXCOLOR( 1.0f, 0.75f, 0.0f, 1.0f ) );
-	//   //    g_pTxtHelper->DrawTextLine( L"Controls:" );
-
-	//   //    g_pTxtHelper->SetInsertionPos( 20, pd3dsdBackBuffer->Height - 15 * 5 );
-	//   //    g_pTxtHelper->DrawTextLine( L"Rotate model: Left mouse button\n"
-	//   //                            L"Rotate light: Right mouse button\n"
-	//   //                            L"Rotate camera: Middle mouse button\n"
-	//   //                            L"Zoom camera: Mouse wheel scroll\n" );
-
-	//   //    g_pTxtHelper->SetInsertionPos( 250, pd3dsdBackBuffer->Height - 15 * 5 );
-	//   //    g_pTxtHelper->DrawTextLine( L"Hide help: F1\n"
-	//   //                            L"Quit: ESC\n" );
-	//   //}
-	//   //else
-	//   //{
-	//   //    g_pTxtHelper->SetForegroundColor( D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	//   //    g_pTxtHelper->DrawTextLine( L"Press F1 for help" );
-	//   //}
-
-	   //g_pTxtHelper->End();
-
 
 	s_savetime = fTime;
 }
@@ -33219,15 +33130,15 @@ int OnRenderSprite(RenderContext& pRenderContext)
 		return 0;
 	}
 
-	//if (s_fpssprite && s_model) {
-	//	int dispfps = (int)(s_avrgfps + 0.5);
-	//	s_fpssprite->Render(pRenderContext, dispfps);
-	//}
+	if (s_model) {
+		int dispfps = (int)(s_avrgfps + 0.5);
+		s_fpssprite.DrawScreen(pRenderContext, dispfps);
+	}
 
 	////Undoの読み込みポイントW と書き込みポイントR を表示
-	//if (s_undosprite && s_model) {
-	//	s_undosprite->Render(pRenderContext, s_model->GetCurrentUndoR(), s_model->GetCurrentUndoW());
-	//}
+	if (s_model) {
+		s_undosprite.DrawScreen(pRenderContext, s_model->GetCurrentUndoR(), s_model->GetCurrentUndoW());
+	}
 
 
 	//frog
@@ -47765,51 +47676,8 @@ int CreateSprites()
 
 
 
-	///////
-	//WCHAR mpath[MAX_PATH];
-	//wcscpy_s(mpath, MAX_PATH, g_basedir);
-	//lasten = 0;
-	//last2en = 0;
-	//lasten = wcsrchr(mpath, TEXT('\\'));
-	//if (!lasten) {
-	//	_ASSERT(0);
-	//	PostQuitMessage(1);
-	//	return S_FALSE;
-	//}
-	//*lasten = 0L;
-	//last2en = wcsrchr(mpath, TEXT('\\'));
-	//if (!last2en) {
-	//	_ASSERT(0);
-	//	PostQuitMessage(1);
-	//	return S_FALSE;
-	//}
-	//*last2en = 0L;
-	//wcscat_s(mpath, MAX_PATH, L"\\Media\\MameMedia\\");
-	//if (s_undosprite) {
-	//	delete s_undosprite;
-	//	s_undosprite = 0;
-	//}
-	//s_undosprite = new CUndoSprite();
-	//if (!s_undosprite) {
-	//	_ASSERT(0);
-	//	PostQuitMessage(1);
-	//	return S_FALSE;
-	//}
-	//CallF(s_undosprite->CreateSprites(s_pdev, pRenderContext, mpath), return S_FALSE);
-	//
-	//
-	//if (s_fpssprite) {
-	//	delete s_fpssprite;
-	//	s_fpssprite = 0;
-	//}
-	//s_fpssprite = new CFpsSprite();
-	//if (!s_fpssprite) {
-	//	_ASSERT(0);
-	//	PostQuitMessage(1);
-	//	return S_FALSE;
-	//}
-	//CallF(s_fpssprite->CreateSprites(s_pdev, pRenderContext, mpath), return S_FALSE);
-	
+	/////
+
 	
 	WCHAR mpath[MAX_PATH];
 	WCHAR filepath[MAX_PATH];
@@ -47833,6 +47701,10 @@ int CreateSprites()
 	}
 	*last2en = 0L;
 	wcscat_s(mpath, MAX_PATH, L"\\Media\\");
+
+
+	s_undosprite.CreateSprites(mpath);
+	s_fpssprite.CreateSprites(mpath);
 
 
 	wcscpy_s(filepath, MAX_PATH, mpath);

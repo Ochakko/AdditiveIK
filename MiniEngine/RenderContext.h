@@ -42,6 +42,10 @@ public:
 	{
 		m_commandList->IASetVertexBuffers(0, 1, &vb.GetView());
 	}
+	void SetVertexBuffer(int srcslotno, VertexBuffer& vb)
+	{
+		m_commandList->IASetVertexBuffers(srcslotno, 1, &vb.GetView());
+	}
 	void SetVertexBuffer(D3D12_VERTEX_BUFFER_VIEW& vbview)//CDispObjからの呼び出しに使用
 	{
 		m_commandList->IASetVertexBuffers(0, 1, &vbview);
@@ -325,6 +329,9 @@ public:
 	void WaitUntilToPossibleSetRenderTarget( ID3D12Resource* renderTarget)
 	{
 		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		//D3D12_RESOURCE_STATE_SHADING_RATE_SOURCE  2023/11/24 How to use???? Present(0, 0)でも可変周波数にならない　後で調査
+		//auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_SHADING_RATE_SOURCE);
+		//auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_SHADING_RATE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 		m_commandList->ResourceBarrier(1,&barrier);
 	}
 	/// <summary>

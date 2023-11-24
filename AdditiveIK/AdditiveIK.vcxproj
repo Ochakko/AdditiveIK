@@ -170,6 +170,7 @@
     <ClInclude Include="..\MiniEngine\GraphicsEngine.h" />
     <ClInclude Include="..\MiniEngine\HID\GamePad.h" />
     <ClInclude Include="..\MiniEngine\IndexBuffer.h" />
+    <ClInclude Include="..\MiniEngine\InstancedSprite.h" />
     <ClInclude Include="..\MiniEngine\IShaderResource.h" />
     <ClInclude Include="..\MiniEngine\IUnorderAccessResource.h" />
     <ClInclude Include="..\MiniEngine\Material.h" />
@@ -257,6 +258,7 @@
     <ClCompile Include="..\MiniEngine\GraphicsEngine.cpp" />
     <ClCompile Include="..\MiniEngine\HID\GamePad.cpp" />
     <ClCompile Include="..\MiniEngine\IndexBuffer.cpp" />
+    <ClCompile Include="..\MiniEngine\InstancedSprite.cpp" />
     <ClCompile Include="..\MiniEngine\Material.cpp" />
     <ClCompile Include="..\MiniEngine\math\Math.cpp" />
     <ClCompile Include="..\MiniEngine\math\Matrix.cpp" />
