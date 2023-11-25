@@ -62,6 +62,8 @@ Documents/CoexistenceOfConventionalMaterialsAndPBR.docx追加<br>
 InstancedSpriteでfpsとアンドゥバッファ位置を表示<br>
 GUIに関しては現在のウインドウに重ねて表示できるものがみつからないため　右ペインに通常通り表示する予定に変更<br>
 なるべくクリック回数が増えないように段階を追って改善していくつもり<br>
+関節部ドラッグでとりあえずAdditiveIK出来るようにしました.　ブラシパラメータ設定などはGUIを準備してから.<br>
+<br>
 <br>
 <br>
 <br>

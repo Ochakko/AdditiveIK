@@ -1785,6 +1785,7 @@ static int CheckResolution();
 static HWND CreateMainWindow();
 static void InitRootSignature(RootSignature& rs);
 static void OnDestroyDevice();
+static int InitPluginMenu();
 static int OnPluginClose();
 
 //##########################
@@ -2736,6 +2737,9 @@ INT WINAPI wWinMain(
 		_ASSERT(0);
 		return 1;
 	}
+
+	InitPluginMenu();
+
 
 	//// 背景モデルのレンダラーを初期化
 	//myRenderer::ModelRender bgModelRender;
@@ -11354,6 +11358,8 @@ int OnCameraMenu(bool dorefreshflag, int selindex, int saveundoflag)
 
 		////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
 		////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
+
+		SetCamera3DFromEyePos();
 	}
 
 
@@ -12645,8 +12651,8 @@ int CalcPickRay(ChaVector3* startptr, ChaVector3* endptr)
 	ChaMatrix mView;
 	ChaMatrix mProj;
 	
-	//mProj = //#replacing comment out#g_Camera->GetProjMatrix();
-	mView = s_matView;
+	mProj = ChaMatrix(g_camera3D->GetProjectionMatrix());
+	mView = ChaMatrix(g_camera3D->GetViewMatrix());
 	ChaMatrix mVP, invmVP;
 	mVP = mView * mProj;
 	ChaMatrixInverse(&invmVP, NULL, &mVP);//2023/03/24 model座標系　model->GetWorldMat()の効果は打ち消しておく
@@ -17204,6 +17210,8 @@ int SetCamera6Angle()
 	ChaVector3 diffv;
 	diffv = g_camEye - g_camtargetpos;
 	g_camdist = (float)ChaVector3LengthDbl(&diffv);
+
+	SetCamera3DFromEyePos();
 
 	return 0;
 }
@@ -28553,6 +28561,20 @@ int InitPluginMenu()
 		FindClose(hFind);
 	}
 
+
+	//一番最初のブラシをカレントのブラシとしてセット
+	if (g_motionbrush_method <= 0) {
+		int pluginno;
+		for (pluginno = 0; pluginno < MAXPLUGIN; pluginno++) {
+			if ((s_plugin + pluginno)->validflag == 1) {
+				g_motionbrush_method = (s_plugin + pluginno)->menuid;//!!!!!!!!!!
+				break;
+			}
+		}
+	}
+
+
+
 	////g_SampleUI.AddComboBox(IDC_COMBO_MOTIONBRUSH_METHOD, 35, iY += addh, ctrlxlen + 25, ctrlh);
 	////s_ui_motionbrush = g_SampleUI.GetControl(IDC_COMBO_MOTIONBRUSH_METHOD);
 	////_ASSERT(s_ui_motionbrush);
@@ -36234,6 +36256,11 @@ int OnMouseMoveFunc()
 	}
 	s_doingflag = true;
 
+	if (g_graphicsEngine) {
+		s_pickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
+		s_pickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
+		s_pickinfo.pickrange = PICKRANGE;
+	}
 
 	if (s_rbuttonSelectFlag) {
 		s_pickinfo.mousebefpos = s_pickinfo.mousepos;
@@ -48719,8 +48746,8 @@ RECT InitWindow(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	AdjustWindowRect(&rc, winstyle, (hMenu) ? true : false);
 	//s_mainwidth = rc.right - rc.left;
 	//s_mainheight = rc.bottom - rc.top;
-	s_bufwidth = rc.right - rc.left;
-	s_bufheight = rc.bottom - rc.top;
+	//s_bufwidth = rc.right - rc.left;
+	//s_bufheight = rc.bottom - rc.top;
 
 
 	// ウィンドウの作成。
