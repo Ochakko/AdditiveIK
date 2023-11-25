@@ -1217,6 +1217,11 @@ void CMQOMaterial::InitPipelineState(bool withboneflag, const std::array<DXGI_FO
 		psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
 		psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
 		psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+
+		//2023/11/25 とりあえずpm3のwithalpha == true時の描画用にFUNC_ALWAYS設定
+		//将来的にはm_transAlwaysNonSkinModelPipelineStateとして独立させる予定
+		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+
 		m_transNonSkinModelPipelineState.Init(psoDesc);
 	}
 

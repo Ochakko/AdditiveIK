@@ -22,6 +22,12 @@
 #include <UndoMotion.h>
 #include <CameraFbx.h>
 
+#include "../../MiniEngine/MiniEngine.h"
+#include "../../MiniEngine/RenderContext.h"
+#include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
+#include "../../MiniEngine/InstancedSprite.h"
+
+
 //using namespace std;
 
 class CMQOMaterial;
@@ -273,7 +279,9 @@ public:
  * @param (int skiptopbonemark) IN 一番親からのボーンを表示しないフラグ。
  * @return 成功したら０。
  */
-	int RenderBoneMark(bool limitdegflag, RenderContext* pRenderContext, CModel* bmarkptr, CMySprite* bcircleptr, int selboneno, int skiptopbonemark = 0 );
+	int RenderBoneMark(myRenderer::RenderingEngine& re, RenderContext& rc,
+		bool limitdegflag, CModel* bmarkptr, InstancedSprite& bcircleptr, 
+		int selboneno, int skiptopbonemark = 0 );
 	int RenderBoneCircleOne(bool limitdegflag, RenderContext* pRenderContext, CMySprite* bcircleptr, int selboneno);
 
 

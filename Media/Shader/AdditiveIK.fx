@@ -25,6 +25,7 @@ struct SPSIn
     float4 pos          : SV_POSITION;
     float2 uv           : TEXCOORD0;
     float4 posInProj    : TEXCOORD1;
+    float4 diffusemult : TEXCOORD2;
 };
 
 ///////////////////////////////////////////
@@ -36,6 +37,7 @@ cbuffer ModelCb : register(b0)
     float4x4 mWorld;
     float4x4 mView;
     float4x4 mProj;
+    float4 diffusemult;
     float4x4 mBoneMat[200];
 };
 
@@ -82,7 +84,9 @@ SPSIn VSMainWithoutBone(SVSInWithoutBone vsIn, uniform bool hasSkin)
     //step-4 頂点の正規化スクリーン座標系の座標をピクセルシェーダーに渡す
     psIn.posInProj = psIn.pos;
     psIn.posInProj.xy /= psIn.posInProj.w;
-
+    
+    psIn.diffusemult = diffusemult;
+    
     return psIn;
 }
 
@@ -115,6 +119,8 @@ SPSIn VSMainWithBone(SVSInWithBone vsIn, uniform bool hasSkin)
     psIn.posInProj = psIn.pos;
     psIn.posInProj.xy /= psIn.posInProj.w;
 
+    psIn.diffusemult = diffusemult;
+    
     return psIn;
 }
 
@@ -133,7 +139,11 @@ float4 PSMain(SPSIn psIn) : SV_Target0
     //texcol.w = 1.0f;
     //return texcol;
       
-    float4 pscol = albedocol * diffusecol;
+    float4 pscol = albedocol * diffusecol * psIn.diffusemult;
+    //pscol.x *= psIn.diffusemult.x;
+    //pscol.y *= psIn.diffusemult.y;
+    //pscol.z *= psIn.diffusemult.z;
+    //pscol.w *= psIn.diffusemult.w;
     return pscol;
     
     //return float4(psIn.uv, 1, 1);

@@ -10,7 +10,7 @@ Texture::Texture(const wchar_t* filePath)
 }
 Texture::~Texture()
 {
-	if (m_texture) {
+	if (!IsRenderTarget() && m_texture) {//2023/11/25
 		m_texture->Release();
 		m_texture = nullptr;
 	}

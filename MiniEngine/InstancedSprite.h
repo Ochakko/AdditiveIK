@@ -57,7 +57,7 @@ class IShaderResource;
 //};
 
 
-#define INSTANCEDSPMAX	8
+#define INSTANCEDSPMAX	MAXBONENUM
 
 typedef struct tag_sppossize {
 	ChaVector4 pos;

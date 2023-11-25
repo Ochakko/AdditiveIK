@@ -1231,6 +1231,7 @@ enum {
 
 #define SPPLAYERBUTTONNUM	16
 
+static Texture* s_spritetex0 = 0;
 static Texture* s_spritetex1 = 0;
 static Texture* s_spritetex2 = 0;
 static Texture* s_spritetex3 = 0;
@@ -1358,7 +1359,7 @@ static SPGUISW s_spscraping;
 static SPELEM s_mousecenteron;
 static SPGUISW s_spcameramode;
 static SPGUISW3 s_spcamerainherit;
-static Sprite s_bcircle;
+static InstancedSprite s_bcircle;
 static Sprite s_kinsprite;
 static CUndoSprite s_undosprite;
 static CFpsSprite s_fpssprite;
@@ -2005,9 +2006,9 @@ static int SetLightDirection();
 static int OnRenderModel(RenderContext* pRenderContext);
 static int OnRenderOnlyOneObj(RenderContext* pRenderContext);
 static int OnRenderRefPose(RenderContext* pRenderContext, CModel* curmodel);
-static int OnRenderGround(RenderContext* pRenderContext);
-static int OnRenderBoneMark(RenderContext* pRenderContext);
-static int OnRenderSelect(RenderContext* pRenderContext);
+static int OnRenderGround(myRenderer::RenderingEngine& re, RenderContext& pRenderContext);
+static int OnRenderBoneMark(myRenderer::RenderingEngine& re, RenderContext& pRenderContext);
+static int OnRenderSelect(myRenderer::RenderingEngine& re, RenderContext& pRenderContext);
 static int OnRenderSprite(RenderContext& pRenderContext);
 static int OnRenderUtDialog(RenderContext* pRenderContext, float fElapsedTime);
 
@@ -2150,9 +2151,9 @@ static int OnDispModel(int dispindex);
 static int OnDelAllModel();
 static int refreshModelPanel();
 //static int refreshMotionPanel();
-static int RenderSelectMark(RenderContext* pRenderContext, int renderflag);
-static int RenderSelectFunc(RenderContext* pRenderContext);
-static int RenderSelectPostureFunc(RenderContext* pRenderContext);
+static int RenderSelectMark(myRenderer::RenderingEngine& re, RenderContext& pRenderContext, int renderflag);
+static int RenderSelectFunc(myRenderer::RenderingEngine& re);
+static int RenderSelectPostureFunc(myRenderer::RenderingEngine& re);
 static int RenderRigMarkFunc(RenderContext* pRenderContext);
 //static int SetSelectState(RenderContext* pRenderContext);
 
@@ -4168,11 +4169,6 @@ void OnDestroyDevice()
 		s_hhook = NULL;
 	}
 
-	//エンジンの破棄。
-	if (g_engine) {
-		delete g_engine;
-		g_engine = nullptr;
-	}
 
 
 
@@ -4990,7 +4986,13 @@ void OnDestroyDevice()
 	DestroyEulKeys();
 	DestroyKeys();
 
-	
+	//エンジンの破棄。
+	if (g_engine) {
+		delete g_engine;
+		g_engine = nullptr;
+	}
+
+
 	if (s_3dwnd && IsWindow(s_3dwnd)) {
 		DestroyWindow(s_3dwnd);
 		s_3dwnd = 0;
@@ -5502,15 +5504,23 @@ void OnFrameRender(myRenderer::RenderingEngine& re, RenderContext& rc, double fT
 		!s_underselectmodel && !s_underselectmotion && !s_underselectcamera && !s_underdispmodel && !g_changeUpdateThreadsNum) {
 
 		if (s_disponlyoneobj == false) {
+
 			int lightflag = 1;
 			ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 			int btflag = 0;
 			s_chascene->RenderModels(re, lightflag, diffusemult, btflag);
 
-			//OnRenderModel(pRenderContext);
-			//OnRenderGround(pRenderContext);
-			//OnRenderBoneMark(pRenderContext);
-			//OnRenderSelect(pRenderContext);
+			//if (s_ground) {
+			//	OnRenderGround(re, rc);//メッシュではなくラインオブジェクト　CD3DDispのlineはまだDirectX12に対応していない
+			//}
+
+			//OnRenderBoneMark(re, rc);//Zバッファ比較をALWAYSにしても　スプライトがメッシュの後ろに隠れてしまう
+
+			if (s_dispselect && s_select) {
+				OnRenderSelect(re, rc);
+			}
+
+
 		}
 		else {
 			//OnRenderOnlyOneObj(pRenderContext);
@@ -12325,7 +12335,7 @@ float CalcSelectScale(CBone* curboneptr)
 }
 
 
-int RenderSelectMark(RenderContext* pRenderContext, int renderflag)
+int RenderSelectMark(myRenderer::RenderingEngine& re, RenderContext& pRenderContext, int renderflag)
 {
 	if (s_curboneno < 0) {
 		return 0;
@@ -12384,18 +12394,18 @@ int RenderSelectMark(RenderContext* pRenderContext, int renderflag)
 			//g_hmVP->SetMatrix(s_matVP.GetDataPtr());
 
 			//g_hmWorld->SetMatrix(s_selectmat.GetDataPtr());
-			RenderSelectFunc(pRenderContext);
+			RenderSelectFunc(re);
 
 
 			//g_hmWorld->SetMatrix(s_selectmat_posture.GetDataPtr());
 			if (s_oprigflag == 0) {
-				RenderSelectPostureFunc(pRenderContext);
+				RenderSelectPostureFunc(re);
 			}
 			else {
 				if (curboneptr == s_customrigbone) {
 				}
 				else {
-					RenderSelectPostureFunc(pRenderContext);
+					RenderSelectPostureFunc(re);
 				}
 			}
 
@@ -12409,17 +12419,20 @@ int RenderSelectMark(RenderContext* pRenderContext, int renderflag)
 	return 0;
 }
 
-int RenderSelectFunc(RenderContext* pRenderContext)
+int RenderSelectFunc(myRenderer::RenderingEngine& re)
 {
-	s_select->UpdateMatrix(g_limitdegflag, &s_selectmat, &s_matVP);
-	//s_pdev->SetRenderState(D3DRS_ZFUNC, D3DCMP_ALWAYS);
-	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmpAlways, 1);
+	if (!s_select || !s_chascene) {
+		return 0;
+	}
+
+	s_chascene->UpdateMatrixOneModel(s_select, g_limitdegflag, &s_selectmat, &s_matVP, 0.0);
 	if (s_dispselect) {
 		int lightflag = 1;
-		//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
-		bool withalpha = true;
-		s_select->OnRender(withalpha, pRenderContext, lightflag, diffusemult);
+		//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
+		ChaVector4 diffusemult = ChaVector4(0.6f, 0.6f, 0.6f, 0.3f);
+		bool forcewithalpha = true;
+		s_chascene->RenderOneModel(s_select, forcewithalpha, re, lightflag, diffusemult, 0);
+		//s_select->OnRender(withalpha, pRenderContext, lightflag, diffusemult);
 	}
 	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
 
@@ -12427,17 +12440,21 @@ int RenderSelectFunc(RenderContext* pRenderContext)
 
 }
 
-int RenderSelectPostureFunc(RenderContext* pRenderContext)
+int RenderSelectPostureFunc(myRenderer::RenderingEngine& re)
 {
-	s_select_posture->UpdateMatrix(g_limitdegflag, &s_selectmat_posture, &s_matVP);
-	//s_pdev->SetRenderState(D3DRS_ZFUNC, D3DCMP_ALWAYS);
-	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmpAlways, 1);
+	if (!s_select_posture || !s_chascene) {
+		return 0;
+	}
+
+	s_chascene->UpdateMatrixOneModel(s_select_posture, g_limitdegflag, &s_selectmat_posture, &s_matVP, 0.0);
 	if (s_dispselect) {
 		int lightflag = 1;
 		//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
-		bool withalpha = true;
-		s_select_posture->OnRender(withalpha, pRenderContext, lightflag, diffusemult);
+		//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
+		ChaVector4 diffusemult = ChaVector4(0.6f, 0.6f, 0.6f, 0.3f);
+		bool forcewithalpha = true;
+		s_chascene->RenderOneModel(s_select_posture, forcewithalpha, re, lightflag, diffusemult, 0);
+		//s_select_posture->OnRender(withalpha, pRenderContext, lightflag, diffusemult);
 	}
 	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
 
@@ -21440,7 +21457,6 @@ int ExportFBXFile()
 
 	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matVP, 0.0);
 	
-
 	WCHAR filename[MAX_PATH] = { 0L };
 	OPENFILENAME ofn1;
 	ZeroMemory(&ofn1, sizeof(OPENFILENAME));
@@ -33061,22 +33077,28 @@ int OnRenderOnlyOneObj(RenderContext* pRenderContext)
 }
 
 
-int OnRenderGround(RenderContext* pRenderContext)
+int OnRenderGround(myRenderer::RenderingEngine& re, RenderContext& pRenderContext)
 {
-	//if (s_ground && s_dispground) {
-	//	g_hmWorld->SetMatrix(s_matWorld.GetDataPtr());
-	//	//g_pEffect->SetMatrix(g_hmWorld, &(s_matWorld.D3DX()));
+	if (!s_chascene) {
+		return 0;
+	}
 
-	//	ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-	//	bool withalpha = false;
-	//	s_ground->OnRender(withalpha, pRenderContext, 0, diffusemult);
-	//}
+	if (s_ground && s_dispground) {
+		//g_hmWorld->SetMatrix(s_matWorld.GetDataPtr());
+		//g_pEffect->SetMatrix(g_hmWorld, &(s_matWorld.D3DX()));
+		ChaMatrix initmat;
+		initmat.SetIdentity();
+		s_chascene->UpdateMatrixOneModel(s_ground, g_limitdegflag, &initmat, &s_matVP, 0.0);
+		ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		bool forcewithalpha = false;
+		s_chascene->RenderOneModel(s_ground, forcewithalpha, re, 0, diffusemult, 0);
+	}
 	//if (s_gplane && s_bpWorld && s_bpWorld->m_gplanedisp) {
 	//	ChaMatrix gpmat = s_inimat;
 	//	gpmat.data[MATI_42] = s_bpWorld->m_gplaneh;
 	//	g_hmWorld->SetMatrix(gpmat.GetDataPtr());
 	//	//g_pEffect->SetMatrix(g_hmWorld, &(gpmat.D3DX()));
-
+	//
 	//	ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	//	bool withalpha = false;
 	//	s_gplane->OnRender(withalpha, pRenderContext, 0, diffusemult);
@@ -33085,61 +33107,64 @@ int OnRenderGround(RenderContext* pRenderContext)
 	return 0;
 }
 
-int OnRenderBoneMark(RenderContext* pRenderContext)
+int OnRenderBoneMark(myRenderer::RenderingEngine& re, RenderContext& rc)
 {
-	//if (g_bonemarkflag || g_rigidmarkflag) {
+	if (g_bonemarkflag || g_rigidmarkflag) {
 
-	//	if (s_allmodelbone == false) {
-	//		//if ((g_previewFlag != 1) && (g_previewFlag != -1) && (g_previewFlag != 4)){
-	//		if (s_model && s_model->GetModelDisp()) {
-	//			//if (s_ikkind >= 3){
-	//			s_model->RenderBoneMark(g_limitdegflag,
-	//				pRenderContext, s_bmark, s_bcircle, s_curboneno);
-	//			//}
-	//			//else{
-	//			//	s_model->RenderBoneMark(s_pdev, s_bmark, s_bcircle, 0, s_curboneno);
-	//			//}
-	//		}
-	//		//}
-	//	}
-	//	else {
-	//		int modelnum = s_chascene->GetModelNum();
-	//		int modelcount;
-	//		for (modelcount = 0; modelcount < modelnum; modelcount++) {
-	//			CModel* curmodel = s_chascene->GetModel(modelcount);
-	//			if (curmodel) {
-	//				curmodel->RenderBoneMark(g_limitdegflag,
-	//					pRenderContext, s_bmark, s_bcircle, 0, s_curboneno);
-	//			}
-	//		}
-	//	}
-	//}
+		//if (s_allmodelbone == false) {
+			//if ((g_previewFlag != 1) && (g_previewFlag != -1) && (g_previewFlag != 4)){
+			if (s_model && s_model->GetModelDisp()) {
+				//if (s_ikkind >= 3){
+				s_model->RenderBoneMark(re, rc, g_limitdegflag, 
+					s_bmark, s_bcircle, s_curboneno);
+				//}
+				//else{
+				//	s_model->RenderBoneMark(s_pdev, s_bmark, s_bcircle, 0, s_curboneno);
+				//}
+			}
+			//}
+		//}
+		//else {
+			//int modelnum = s_chascene->GetModelNum();
+			//int modelcount;
+			//for (modelcount = 0; modelcount < modelnum; modelcount++) {
+			//	CModel* curmodel = s_chascene->GetModel(modelcount);
+			//	if (curmodel) {
+			//		curmodel->RenderBoneMark(g_limitdegflag,
+			//			pRenderContext, s_bmark, s_bcircle, 0, s_curboneno);
+			//		s_model->RenderBoneMark(re, rc, g_limitdegflag,
+			//			s_bmark, s_bcircle, s_curboneno);
+
+			//	}
+			//}
+		//}
+	}
 
 	return 0;
 }
-int OnRenderSelect(RenderContext* pRenderContext)
+int OnRenderSelect(myRenderer::RenderingEngine& re, RenderContext& pRenderContext)
 {
-	//if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-	//	if (s_select && (s_curboneno >= 0) && (g_previewFlag == 0) && (s_model && s_model->GetModelDisp()) && (g_bonemarkflag != 0)) {//underchecking
-	//		//SetSelectCol();
-	//		SetSelectState();
-	//		RenderSelectMark(pRenderContext, 1);
-	//	}
-	//}
-	////else if ((g_previewFlag == 5) && (s_oprigflag == 1)){
-	//else if (g_previewFlag == 5) {
-	//	if (s_select && (s_curboneno >= 0) && (s_model && s_model->GetModelDisp())) {
-	//		//SetSelectCol();
-	//		SetSelectState();
-	//		RenderSelectMark(pRenderContext, 1);
-	//	}
-	//}
+	if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
+		if (s_select && (s_curboneno >= 0) && (g_previewFlag == 0) && (s_model && s_model->GetModelDisp()) && (g_bonemarkflag != 0)) {//underchecking
+			//SetSelectCol();
+			SetSelectState();
+			RenderSelectMark(re, pRenderContext, 1);
+		}
+	}
+	//else if ((g_previewFlag == 5) && (s_oprigflag == 1)){
+	else if (g_previewFlag == 5) {
+		if (s_select && (s_curboneno >= 0) && (s_model && s_model->GetModelDisp())) {
+			//SetSelectCol();
+			SetSelectState();
+			RenderSelectMark(re, pRenderContext, 1);
+		}
+	}
 
 
-	////プレビュー中　物理中は　リグマークは表示しない
+	//プレビュー中　物理中は　リグマークは表示しない
 	//if (g_previewFlag == 0) {
 	//	if ((s_model && s_model->GetModelDisp()) && (s_oprigflag != 0)) {
-	//		RenderRigMarkFunc(pRenderContext);
+	//		RenderRigMarkFunc(re, pRenderContext);
 	//	}
 	//}
 
@@ -47659,7 +47684,6 @@ int CreateSprites()
 {
 	char cpath[MAX_PATH];
 	char cfxpath[MAX_PATH];
-	char cfilepath[MAX_PATH];
 
 	char cbasedir[MAX_PATH] = { 0 };
 	WideCharToMultiByte(CP_ACP, 0, g_basedir, -1, cbasedir, MAX_PATH, NULL, NULL);
@@ -47685,21 +47709,18 @@ int CreateSprites()
 
 
 	SpriteInitData spriteinitdata;
-	strcpy_s(cfxpath, MAX_PATH, cpath);
-	strcat_s(cfxpath, MAX_PATH, "Shader\\preset\\sprite.fx");
-	spriteinitdata.m_fxFilePath = cfxpath;
 	spriteinitdata.m_width = 256;//仮　ファイルから読込時は上書きされる
 	spriteinitdata.m_height = 256;//仮　ファイルから読込時は上書きされる
-	spriteinitdata.m_alphaBlendMode = AlphaBlendMode_Trans;
-
 
 	bool screenvertexflag = true;//!!!!!!!!!!!!
 
-	strcpy_s(cfilepath, MAX_PATH, cpath);
-	strcat_s(cfilepath, MAX_PATH, "MameMedia\\bonecircle.dds");
-	spriteinitdata.m_ddsFilePath[0] = cfilepath;
-	s_bcircle.Init(spriteinitdata, screenvertexflag);
-	spriteinitdata.m_ddsFilePath[0] = 0;
+
+
+	//strcpy_s(cfilepath, MAX_PATH, cpath);
+	//strcat_s(cfilepath, MAX_PATH, "MameMedia\\bonecircle.dds");
+	//spriteinitdata.m_ddsFilePath[0] = cfilepath;
+	//s_bcircle.Init(spriteinitdata, screenvertexflag);
+	//spriteinitdata.m_ddsFilePath[0] = 0;
 
 
 
@@ -47733,6 +47754,26 @@ int CreateSprites()
 	s_undosprite.CreateSprites(mpath);
 	s_fpssprite.CreateSprites(mpath);
 
+
+	strcpy_s(cfxpath, MAX_PATH, cpath);
+	strcat_s(cfxpath, MAX_PATH, "Shader\\preset\\InstancedSprite.fx");//!!!!!!!! Set Shader
+	spriteinitdata.m_fxFilePath = cfxpath;
+	//spriteinitdata.m_alphaBlendMode = AlphaBlendMode_Add;
+	spriteinitdata.m_alphaBlendMode = AlphaBlendMode_Trans;
+
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\bonecircle.dds");
+	s_spritetex0 = new Texture();
+	s_spritetex0->InitFromDDSFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex0;
+	s_bcircle.Init(spriteinitdata);//InstancedSprite
+
+	
+	strcpy_s(cfxpath, MAX_PATH, cpath);
+	strcat_s(cfxpath, MAX_PATH, "Shader\\preset\\sprite.fx");//!!!!!!!! Set Shader
+	spriteinitdata.m_fxFilePath = cfxpath;
+	spriteinitdata.m_alphaBlendMode = AlphaBlendMode_Trans;
 
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Undo_1.png");
@@ -48363,6 +48404,10 @@ int CreateSprites()
 
 void DestroySprites()
 {
+	if (s_spritetex0) {
+		delete s_spritetex0;
+		s_spritetex0 = 0;
+	}
 	if (s_spritetex1) {
 		delete s_spritetex1;
 		s_spritetex1 = 0;

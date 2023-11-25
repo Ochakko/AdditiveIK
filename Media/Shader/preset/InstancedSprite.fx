@@ -57,6 +57,11 @@ PSInput VSMain(VSInput In)
     
     //psIn.pos = mul(wmat, In.pos);
     psIn.pos = mul(In.pos, wmat);//転置　引数順に注意
+    //psIn.pos /= psIn.pos.w;
+    //psIn.pos.z = 0.000010f;
+    //psIn.pos.w = 1.0f;
+    //psIn.pos.z = 0.999999f;
+    
     psIn.uv = In.uv;
     
     

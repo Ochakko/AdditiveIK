@@ -21,6 +21,7 @@ struct SConstantBuffer {
 	Matrix mWorld;		//ワールド行列。
 	Matrix mView;		//ビュー行列。
 	Matrix mProj;		//プロジェクション行列。
+	ChaVector4 diffusemult;
 	float setfl4x4[16 * MAXCLUSTERNUM];//ボーンの姿勢マトリックス
 };
 

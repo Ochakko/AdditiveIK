@@ -6921,7 +6921,9 @@ int CModel::RenderRefArrow(bool limitdegflag, RenderContext* pRenderContext, CBo
 
 
 
-int CModel::RenderBoneMark(bool limitdegflag, RenderContext* pRenderContext, CModel* bmarkptr, CMySprite* bcircleptr, int selboneno, int skiptopbonemark )
+int CModel::RenderBoneMark(myRenderer::RenderingEngine& re, RenderContext& rc,
+	bool limitdegflag, CModel* bmarkptr, InstancedSprite& bcircleptr,
+	int selboneno, int skiptopbonemark)
 {
 	if( m_bonelist.empty() ){
 		return 0;
@@ -6975,174 +6977,174 @@ int CModel::RenderBoneMark(bool limitdegflag, RenderContext* pRenderContext, CMo
 	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmpAlways, 1);//2023/11/13 tmp comment out
 	g_zcmpalways = true;
 
-	//ボーンの三角錐表示
-	if ((g_previewFlag != 5) && (g_previewFlag != 4)){
-		if (g_bonemarkflag && bmarkptr){
-			map<int, CBone*>::iterator itrbone;
-			for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++){
-				CBone* boneptr = itrbone->second;
-				if (boneptr && !boneptr->GetSkipRenderBoneMark() && (boneptr->IsSkeleton())){
+	////ボーンの三角錐表示
+	//if ((g_previewFlag != 5) && (g_previewFlag != 4)){
+	//	if (g_bonemarkflag && bmarkptr){
+	//		map<int, CBone*>::iterator itrbone;
+	//		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++){
+	//			CBone* boneptr = itrbone->second;
+	//			if (boneptr && !boneptr->GetSkipRenderBoneMark() && (boneptr->IsSkeleton())){
 
-					CMotionPoint curmp = boneptr->GetCurMp();
+	//				CMotionPoint curmp = boneptr->GetCurMp();
 
-					CBone* childbone = boneptr->GetChild(false);
-					while (childbone && childbone->IsSkeleton()){//３角錐表示は　boneptr, childbone 両方ともSkeleton
+	//				CBone* childbone = boneptr->GetChild(false);
+	//				while (childbone && childbone->IsSkeleton()){//３角錐表示は　boneptr, childbone 両方ともSkeleton
 
-						CMotionPoint childmp = childbone->GetCurMp();
+	//					CMotionPoint childmp = childbone->GetCurMp();
 
-						int renderflag = 0;
-						if (skiptopbonemark == 0){
-							renderflag = 1;
-						}
-						else{
-							CBone* parentbone = boneptr->GetParent(false);
-							if (parentbone){
-								renderflag = 1;
-							}
-							else{
-								renderflag = 0;
-							}
-						}
-						if (renderflag == 1){
+	//					int renderflag = 0;
+	//					if (skiptopbonemark == 0){
+	//						renderflag = 1;
+	//					}
+	//					else{
+	//						CBone* parentbone = boneptr->GetParent(false);
+	//						if (parentbone){
+	//							renderflag = 1;
+	//						}
+	//						else{
+	//							renderflag = 0;
+	//						}
+	//					}
+	//					if (renderflag == 1){
 
-							ChaVector3 aftbonepos;
-							ChaVector3 tmpfpos = boneptr->GetJointFPos();
-							ChaMatrix tmpwm = boneptr->GetWorldMat(limitdegflag, curmotid, roundingframe, &curmp);
-							ChaVector3TransformCoord(&aftbonepos, &tmpfpos, &tmpwm);
+	//						ChaVector3 aftbonepos;
+	//						ChaVector3 tmpfpos = boneptr->GetJointFPos();
+	//						ChaMatrix tmpwm = boneptr->GetWorldMat(limitdegflag, curmotid, roundingframe, &curmp);
+	//						ChaVector3TransformCoord(&aftbonepos, &tmpfpos, &tmpwm);
 
-							ChaVector3 aftchildpos;
-							ChaVector3 tmpchildfpos = childbone->GetJointFPos();
-							ChaMatrix tmpchildwm = childbone->GetWorldMat(limitdegflag, curmotid, roundingframe, &childmp);
-							ChaVector3TransformCoord(&aftchildpos, &tmpchildfpos, &tmpchildwm);//2022/07/29
-							//ChaVector3TransformCoord(&aftchildpos, &childbone->GetJointFPos(), &(boneptr->GetCurMp().GetWorldMat()));
-
-
-							boneptr->CalcAxisMatZ(&aftbonepos, &aftchildpos);
-
-							ChaMatrix bmmat;
-							bmmat = boneptr->GetLAxisMat();// * boneptr->m_curmp.m_worldmat;
+	//						ChaVector3 aftchildpos;
+	//						ChaVector3 tmpchildfpos = childbone->GetJointFPos();
+	//						ChaMatrix tmpchildwm = childbone->GetWorldMat(limitdegflag, curmotid, roundingframe, &childmp);
+	//						ChaVector3TransformCoord(&aftchildpos, &tmpchildfpos, &tmpchildwm);//2022/07/29
+	//						//ChaVector3TransformCoord(&aftchildpos, &childbone->GetJointFPos(), &(boneptr->GetCurMp().GetWorldMat()));
 
 
-							ChaVector3 diffvec = aftchildpos - aftbonepos;
-							float diffleng = (float)ChaVector3LengthDbl(&diffvec);
+	//						boneptr->CalcAxisMatZ(&aftbonepos, &aftchildpos);
 
-							float fscale;
-							ChaMatrix scalemat;
-							ChaMatrixIdentity(&scalemat);
-							fscale = diffleng / 50.0f;
-							scalemat.SetScale(ChaVector3(fscale, fscale, fscale));
-
-							bmmat = scalemat * bmmat;
-							bmmat.SetTranslation(aftbonepos);
-
-							//g_hmWorld->SetMatrix(bmmat.GetDataPtr());//2023/11/13 tmp comment out
-							////g_pEffect->SetMatrix(g_hmWorld, &(bmmat.D3DX()));
-							bmarkptr->UpdateMatrix(limitdegflag, &bmmat, &m_matVP);
-							ChaVector4 difmult;
-							if (childbone->GetSelectFlag() & 2){
-								difmult = ChaVector4(1.0f, 0.0f, 0.0f, 0.5f);
-							}
-							else{
-								difmult = ChaVector4(0.25f, 0.5f, 0.5f, 0.5f);
-							}
-							bool withalpha = true;
-							if (g_bonemarkflag) {
-								CallF(bmarkptr->OnRender(withalpha, pRenderContext, 0, difmult), return 1);
-							}
-						}
+	//						ChaMatrix bmmat;
+	//						bmmat = boneptr->GetLAxisMat();// * boneptr->m_curmp.m_worldmat;
 
 
-						childbone = childbone->GetBrother(false);
-					}
-				}
-			}
-		}
-	}
+	//						ChaVector3 diffvec = aftchildpos - aftbonepos;
+	//						float diffleng = (float)ChaVector3LengthDbl(&diffvec);
+
+	//						float fscale;
+	//						ChaMatrix scalemat;
+	//						ChaMatrixIdentity(&scalemat);
+	//						fscale = diffleng / 50.0f;
+	//						scalemat.SetScale(ChaVector3(fscale, fscale, fscale));
+
+	//						bmmat = scalemat * bmmat;
+	//						bmmat.SetTranslation(aftbonepos);
+
+	//						//g_hmWorld->SetMatrix(bmmat.GetDataPtr());//2023/11/13 tmp comment out
+	//						////g_pEffect->SetMatrix(g_hmWorld, &(bmmat.D3DX()));
+	//						bmarkptr->UpdateMatrix(limitdegflag, &bmmat, &m_matVP);
+	//						ChaVector4 difmult;
+	//						if (childbone->GetSelectFlag() & 2){
+	//							difmult = ChaVector4(1.0f, 0.0f, 0.0f, 0.5f);
+	//						}
+	//						else{
+	//							difmult = ChaVector4(0.25f, 0.5f, 0.5f, 0.5f);
+	//						}
+	//						bool withalpha = true;
+	//						if (g_bonemarkflag) {
+	//							CallF(bmarkptr->OnRender(withalpha, pRenderContext, 0, difmult), return 1);
+	//						}
+	//					}
 
 
-	//ボーンの剛体表示
-	if ((g_previewFlag != 5) && (g_previewFlag != 4)){
-		map<int, CBone*>::iterator itrbone;
-		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++){
-			CBone* boneptr = itrbone->second;
-			if (boneptr && !boneptr->GetSkipRenderBoneMark() && (boneptr->IsSkeleton())){
-				CBone* childbone = boneptr->GetChild(false);
-				while (childbone && childbone->IsSkeleton()){
-					CRigidElem* curre = boneptr->GetRigidElem(childbone);
-					if (curre){
-						boneptr->CalcRigidElemParams(childbone, 0);
-
-						//ChaMatrix worldcapsulemat = curre->GetCapsulemat(0) * GetWorldMat();
-						//ChaMatrix worldcapsulemat = curre->GetCapsulematForColiShape(limitdegflag, 0) * GetWorldMat();//2023/01/18
-						ChaMatrix worldcapsulemat = curre->GetCapsulematForColiShape(limitdegflag, 0);//2023/03/24 modelのwmはすでに掛かっている
-
-						//g_hmWorld->SetMatrix(worldcapsulemat.GetDataPtr());//2023/11/13 tmp comment out
-						boneptr->GetCurColDisp(childbone)->UpdateMatrix(limitdegflag, &worldcapsulemat, &m_matVP);
-						//g_hmWorld->SetMatrix((float*)&(curre->GetCapsulemat(0)));
-						//boneptr->GetCurColDisp(childbone)->UpdateMatrix(&(curre->GetCapsulemat(0)), &m_matVP);
-						ChaVector4 difmult;
-						//if( boneptr->GetSelectFlag() & 4 ){
-						if (childbone->GetSelectFlag() & 4){
-							difmult = ChaVector4(1.0f, 0.0f, 0.0f, 0.5f);
-						}
-						else{
-							difmult = ChaVector4(0.25f, 0.5f, 0.5f, 0.5f);
-						}
-
-						bool withalpha = true;
-						if (g_rigidmarkflag) {
-							//if ((curre->GetSkipflag() == 0) && srcbone->GetParent() && srcbone->GetParent()->GetParent()) {//有効にされている場合のみ表示　RootNodeなども表示しない
-							if (curre->GetSkipflag() == 0) {//有効にされている場合のみ表示
-								CallF(boneptr->GetCurColDisp(childbone)->OnRender(withalpha, pRenderContext, 0, difmult), return 1);
-							}
-						}
-					}
-
-					childbone = childbone->GetBrother(false);
-				}
+	//					childbone = childbone->GetBrother(false);
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
 
 
+	////ボーンの剛体表示
+	//if ((g_previewFlag != 5) && (g_previewFlag != 4)){
+	//	map<int, CBone*>::iterator itrbone;
+	//	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++){
+	//		CBone* boneptr = itrbone->second;
+	//		if (boneptr && !boneptr->GetSkipRenderBoneMark() && (boneptr->IsSkeleton())){
+	//			CBone* childbone = boneptr->GetChild(false);
+	//			while (childbone && childbone->IsSkeleton()){
+	//				CRigidElem* curre = boneptr->GetRigidElem(childbone);
+	//				if (curre){
+	//					boneptr->CalcRigidElemParams(childbone, 0);
 
-				/*
-				std::map<CBone*, CRigidElem*>::iterator itrtmpmap;
-				for (itrtmpmap = boneptr->GetRigidElemMapBegin(); itrtmpmap != boneptr->GetRigidElemMapEnd(); itrtmpmap++){
-					CRigidElem* curre = itrtmpmap->second;
-					if (curre){
-						CBone* childbone = itrtmpmap->first;
-						_ASSERT(childbone);
-						if (childbone){
-							//DbgOut( L"check!!!: curbone %s, childbone %s\r\n", boneptr->m_wbonename, childbone->m_wbonename );
-							boneptr->CalcRigidElemParams(childbone, 0);
-							g_pEffect->SetMatrix(g_hmWorld, &(curre->GetCapsulemat()));
-							boneptr->GetCurColDisp(childbone)->UpdateMatrix(&(curre->GetCapsulemat()), &m_matVP);
-							ChaVector4 difmult;
-							//if( boneptr->GetSelectFlag() & 4 ){
-							if (childbone->GetSelectFlag() & 4){
-								difmult = ChaVector4(1.0f, 0.0f, 0.0f, 0.5f);
-							}
-							else{
-								difmult = ChaVector4(0.25f, 0.5f, 0.5f, 0.5f);
-							}
-							CallF(boneptr->GetCurColDisp(childbone)->OnRender(pdev, 0, difmult), return 1);
-						}
-					}
-				}
-				*/
-			}
-		}
-	}
-	else{
-		RenderCapsuleReq(limitdegflag, pRenderContext, m_topbt);
-	}
+	//					//ChaMatrix worldcapsulemat = curre->GetCapsulemat(0) * GetWorldMat();
+	//					//ChaMatrix worldcapsulemat = curre->GetCapsulematForColiShape(limitdegflag, 0) * GetWorldMat();//2023/01/18
+	//					ChaMatrix worldcapsulemat = curre->GetCapsulematForColiShape(limitdegflag, 0);//2023/03/24 modelのwmはすでに掛かっている
+
+	//					//g_hmWorld->SetMatrix(worldcapsulemat.GetDataPtr());//2023/11/13 tmp comment out
+	//					boneptr->GetCurColDisp(childbone)->UpdateMatrix(limitdegflag, &worldcapsulemat, &m_matVP);
+	//					//g_hmWorld->SetMatrix((float*)&(curre->GetCapsulemat(0)));
+	//					//boneptr->GetCurColDisp(childbone)->UpdateMatrix(&(curre->GetCapsulemat(0)), &m_matVP);
+	//					ChaVector4 difmult;
+	//					//if( boneptr->GetSelectFlag() & 4 ){
+	//					if (childbone->GetSelectFlag() & 4){
+	//						difmult = ChaVector4(1.0f, 0.0f, 0.0f, 0.5f);
+	//					}
+	//					else{
+	//						difmult = ChaVector4(0.25f, 0.5f, 0.5f, 0.5f);
+	//					}
+
+	//					bool withalpha = true;
+	//					if (g_rigidmarkflag) {
+	//						//if ((curre->GetSkipflag() == 0) && srcbone->GetParent() && srcbone->GetParent()->GetParent()) {//有効にされている場合のみ表示　RootNodeなども表示しない
+	//						if (curre->GetSkipflag() == 0) {//有効にされている場合のみ表示
+	//							CallF(boneptr->GetCurColDisp(childbone)->OnRender(withalpha, pRenderContext, 0, difmult), return 1);
+	//						}
+	//					}
+	//				}
+
+	//				childbone = childbone->GetBrother(false);
+	//			}
 
 
 
+	//			/*
+	//			std::map<CBone*, CRigidElem*>::iterator itrtmpmap;
+	//			for (itrtmpmap = boneptr->GetRigidElemMapBegin(); itrtmpmap != boneptr->GetRigidElemMapEnd(); itrtmpmap++){
+	//				CRigidElem* curre = itrtmpmap->second;
+	//				if (curre){
+	//					CBone* childbone = itrtmpmap->first;
+	//					_ASSERT(childbone);
+	//					if (childbone){
+	//						//DbgOut( L"check!!!: curbone %s, childbone %s\r\n", boneptr->m_wbonename, childbone->m_wbonename );
+	//						boneptr->CalcRigidElemParams(childbone, 0);
+	//						g_pEffect->SetMatrix(g_hmWorld, &(curre->GetCapsulemat()));
+	//						boneptr->GetCurColDisp(childbone)->UpdateMatrix(&(curre->GetCapsulemat()), &m_matVP);
+	//						ChaVector4 difmult;
+	//						//if( boneptr->GetSelectFlag() & 4 ){
+	//						if (childbone->GetSelectFlag() & 4){
+	//							difmult = ChaVector4(1.0f, 0.0f, 0.0f, 0.5f);
+	//						}
+	//						else{
+	//							difmult = ChaVector4(0.25f, 0.5f, 0.5f, 0.5f);
+	//						}
+	//						CallF(boneptr->GetCurColDisp(childbone)->OnRender(pdev, 0, difmult), return 1);
+	//					}
+	//				}
+	//			}
+	//			*/
+	//		}
+	//	}
+	//}
+	//else{
+	//	RenderCapsuleReq(limitdegflag, pRenderContext, m_topbt);
+	//}
 
 
 	//ボーンのサークル表示
 	if ((g_previewFlag != 5) && (g_previewFlag != 4)){
 
-		if (g_bonemarkflag && bcircleptr){
+		if (g_bonemarkflag){
+
+			int instanceno = 0;//!!!!!!!
+
 			map<int, CBone*>::iterator itrbone;
 			for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++){
 				CBone* boneptr = itrbone->second;
@@ -7170,46 +7172,57 @@ int CModel::RenderBoneMark(bool limitdegflag, RenderContext* pRenderContext, CMo
 					}
 
 					ChaVector3TransformCoord(&scpos, &firstpos, &transmat);
-					scpos.z = 0.0f;
-					bcircleptr->SetPos(scpos);
+					scpos.x = (scpos.x + 1.0f) * (float)g_graphicsEngine->GetFrameBufferWidth() / 2.0f;//2023/11/25
+					scpos.y = (-scpos.y + 1.0f) * (float)g_graphicsEngine->GetFrameBufferHeight() / 2.0f;//2023/11/25
+					//scpos.z = scpos.z;
+					scpos.z = 0.00001f;
+
+					//bcircleptr->SetPos(scpos);
 					ChaVector2 bsize;
 					if (boneptr->GetSelectFlag() & 2){
-						bcircleptr->SetColor(ChaVector4(0.0f, 0.0f, 1.0f, 0.7f));
+						//bcircleptr->SetColor(ChaVector4(0.0f, 0.0f, 1.0f, 0.7f));
 						bsize = ChaVector2(0.050f, 0.050f);
 						if (g_4kresolution) {
 							bsize = bsize * 0.5f;
 						}
-						bcircleptr->SetSize(bsize);
+						//bcircleptr->SetSize(bsize);
 					}
 					else if (boneptr->GetSelectFlag() & 1){
-						bcircleptr->SetColor(ChaVector4(1.0f, 0.0f, 0.0f, 0.7f));
+						//bcircleptr->SetColor(ChaVector4(1.0f, 0.0f, 0.0f, 0.7f));
 						bsize = ChaVector2(0.025f, 0.025f);
 						if (g_4kresolution) {
 							bsize = bsize * 0.5f;
 						}
-						bcircleptr->SetSize(bsize);
+						//bcircleptr->SetSize(bsize);
 					}
 					else{
-						bcircleptr->SetColor(ChaVector4(1.0f, 1.0f, 1.0f, 0.7f));
+						//bcircleptr->SetColor(ChaVector4(1.0f, 1.0f, 1.0f, 0.7f));
 						bsize = ChaVector2(0.025f, 0.025f);
 						if (g_4kresolution) {
 							bsize = bsize * 0.5f;
 						}
-						bcircleptr->SetSize(bsize);
+						//bcircleptr->SetSize(bsize);
 					}
-					CallF(bcircleptr->OnRender(pRenderContext), return 1);
+
+					ChaVector2 circlesize = ChaVector2(16.0f, 16.0f);
+
+					bcircleptr.UpdateScreen(instanceno, scpos, circlesize);
+					instanceno++;
+					//CallF(bcircleptr->OnRender(pRenderContext), return 1);
 
 				}
 			}
+
+			if (instanceno > 0) {
+				bcircleptr.DrawScreen(rc);
+			}
 		}
 	}
-	else{
-		if (g_bonemarkflag && bcircleptr){
-			RenderBoneCircleReq(pRenderContext, m_topbt, bcircleptr);
-		}
-	}
-
-
+	//else{
+	//	if (g_bonemarkflag && bcircleptr){
+	//		RenderBoneCircleReq(pRenderContext, m_topbt, bcircleptr);
+	//	}
+	//}
 
 
 	////pdev->SetRenderState( D3DRS_ZFUNC, D3DCMP_LESSEQUAL );

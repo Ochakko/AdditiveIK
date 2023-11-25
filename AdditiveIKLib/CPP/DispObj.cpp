@@ -1191,7 +1191,7 @@ void CDispObj::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
 	cb.mWorld = renderobj.mWorld;
 	cb.mView = mView;
 	cb.mProj = mProj;
-
+	cb.diffusemult = renderobj.diffusemult;
 	float setfl4x4[16 * MAXCLUSTERNUM];
 	ZeroMemory(setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
 
@@ -1317,12 +1317,11 @@ int CDispObj::RenderNormal(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 	//定数バッファの設定、更新など描画の共通処理を実行する。
 	DrawCommon(rc, renderobj, mView, mProj);
 
-
-	//rc.SetDescriptorHeap(m_descriptorHeap);//BeginRender()より後で呼ばないとエラー
-
-	//int descriptorHeapNo = 0;
 	//1. 頂点バッファを設定。
-	//rc.SetVertexBuffer(m_vertexBufferView);
+	rc.SetVertexBuffer(m_vertexBufferView);
+	//3. インデックスバッファを設定。
+	rc.SetIndexBuffer(m_indexBufferView);
+
 
 	int materialcnt;
 	for (materialcnt = 0; materialcnt < materialnum; materialcnt++) {
@@ -1471,10 +1470,9 @@ int CDispObj::RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ rend
 	curmat->BeginRender(rc, hasskin);
 	rc.SetDescriptorHeap(m_descriptorHeap);
 
-	rc.SetVertexBuffer(m_vertexBufferView);
-
-	//3. インデックスバッファを設定。
-	rc.SetIndexBuffer(m_indexBufferView);
+	//rc.SetVertexBuffer(m_vertexBufferView);
+	////3. インデックスバッファを設定。
+	//rc.SetIndexBuffer(m_indexBufferView);
 
 	//4. ドローコールを実行。
 	rc.DrawIndexed(curtrinum * 3, curoffset);
@@ -1520,9 +1518,12 @@ int CDispObj::RenderNormalPM3(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 	DrawCommon(rc, renderobj, mView, mProj);
 	//rc.SetDescriptorHeap(m_descriptorHeap);//BeginRender()より後で呼ばないとエラー
 
-	//int descriptorHeapNo = 0;
 	//1. 頂点バッファを設定。
-	//rc.SetVertexBuffer(m_vertexBufferView);
+	rc.SetVertexBuffer(m_vertexBufferView);
+	//3. インデックスバッファを設定。
+	rc.SetIndexBuffer(m_indexBufferView);
+
+
 	//マテリアルごとにドロー。
 
 	//HRESULT hr;
@@ -1669,11 +1670,10 @@ int CDispObj::RenderNormalPM3Material(RenderContext& rc, myRenderer::RENDEROBJ r
 	curmat->BeginRender(rc, hasskin);
 	rc.SetDescriptorHeap(m_descriptorHeap);
 
-	//1. 頂点バッファを設定。
-	rc.SetVertexBuffer(m_vertexBufferView);
-
-	//3. インデックスバッファを設定。
-	rc.SetIndexBuffer(m_indexBufferView);
+	////1. 頂点バッファを設定。
+	//rc.SetVertexBuffer(m_vertexBufferView);
+	////3. インデックスバッファを設定。
+	//rc.SetIndexBuffer(m_indexBufferView);
 
 	//4. ドローコールを実行。
 	rc.DrawIndexed(curtrinum * 3, curoffset);

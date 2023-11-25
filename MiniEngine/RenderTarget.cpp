@@ -6,15 +6,19 @@ RenderTarget::~RenderTarget()
 {
 	if (m_renderTargetTextureDx12) {
 		m_renderTargetTextureDx12->Release();
+		m_renderTargetTextureDx12 = nullptr;//2023/11/25
 	}
 	if (m_depthStencilTexture) {
 		m_depthStencilTexture->Release();
+		m_depthStencilTexture = nullptr;//2023/11/25
 	}
 	if (m_rtvHeap) {
 		m_rtvHeap->Release();
+		m_rtvHeap = nullptr;//2023/11/25
 	}
 	if (m_dsvHeap) {
 		m_dsvHeap->Release();
+		m_dsvHeap = nullptr;//2023/11/25
 	}
 }
 bool RenderTarget::Create(

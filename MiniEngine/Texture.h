@@ -8,6 +8,7 @@ public:
 	/// コンストラクタ。
 	/// </summary>
 	Texture() {
+		m_rendertargetflag = false;
 		m_texture = nullptr;	//テクスチャ。
 		ZeroMemory(&m_textureDesc, sizeof(D3D12_RESOURCE_DESC));	//テクスチャ情報
 	};
@@ -94,6 +95,14 @@ public:
 	{
 		return m_textureDesc.Format;
 	}
+	void SetRenderTargetFlag(bool srcflag)//2023/11/25
+	{
+		m_rendertargetflag = srcflag;
+	}
+	bool IsRenderTarget()//2023/11/25
+	{
+		return m_rendertargetflag;
+	}
 private:
 	/// <summary>
 	/// DDSファイルからテクスチャをロード。
@@ -110,6 +119,7 @@ private:
 	void LoadTextureFromMemory(const char* memory, unsigned int size );
 		
 private:
+	bool m_rendertargetflag;
 	ID3D12Resource*	m_texture = nullptr;	//テクスチャ。
 	D3D12_RESOURCE_DESC m_textureDesc;	//テクスチャ情報
 };

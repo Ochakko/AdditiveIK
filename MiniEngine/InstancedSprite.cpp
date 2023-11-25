@@ -173,28 +173,52 @@
         psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_ps.GetCompiledBlob());
         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
         psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+        //psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;//<--表示されなくなる
         psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 
-        if (initData.m_alphaBlendMode == AlphaBlendMode_Trans) {
-            //半透明合成のブレンドステートを作成する。
-            psoDesc.BlendState.RenderTarget[0].BlendEnable = true;
-            psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-            psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-            psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-        }
-        else if (initData.m_alphaBlendMode == AlphaBlendMode_Add) {
-            //加算合成。
-            psoDesc.BlendState.RenderTarget[0].BlendEnable = true;
-            psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
-            psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
-            psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-        }
 
-        psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-        psoDesc.DepthStencilState.DepthEnable = FALSE;
-        psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+        //psoDesc.BlendState.IndependentBlendEnable = TRUE;
+        //if (initData.m_alphaBlendMode == AlphaBlendMode_Trans) {
+        //    //半透明合成のブレンドステートを作成する。
+        //    psoDesc.BlendState.RenderTarget[0].BlendEnable = true;
+        //    psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+        //    psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+        //    psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+        //}
+        //else if (initData.m_alphaBlendMode == AlphaBlendMode_Add) {
+        //    //加算合成。
+        //    psoDesc.BlendState.RenderTarget[0].BlendEnable = true;
+        //    psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
+        //    psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+        //    psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+        //}
+        psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
+        psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+        psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+        psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+
+
+
+
+        //psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+        //psoDesc.DepthStencilState.DepthEnable = FALSE;
+        //psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+        //psoDesc.DepthStencilState.StencilEnable = FALSE;
+        //psoDesc.SampleMask = UINT_MAX;
+
+        //psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+        //psoDesc.DepthStencilState.DepthEnable = FALSE;//!!!
+        //psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+        //psoDesc.DepthStencilState.StencilEnable = FALSE;
+        //psoDesc.SampleMask = UINT_MAX;
+
+        psoDesc.DepthStencilState.DepthEnable = TRUE;
+        psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+        psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
         psoDesc.DepthStencilState.StencilEnable = FALSE;
         psoDesc.SampleMask = UINT_MAX;
+
+
         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
         for (auto& format : initData.m_colorBufferFormat) {
             if (format == DXGI_FORMAT_UNKNOWN) {

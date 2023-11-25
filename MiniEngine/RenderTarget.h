@@ -12,6 +12,10 @@ class RenderTarget {
 public:
 	RenderTarget() : m_renderTargetTexture()
 	{
+		
+		m_renderTargetTexture.SetRenderTargetFlag(true);//2023/11/25
+
+
 		m_renderTargetTextureDx12 = nullptr;//レンダリングターゲットとなるテクスチャ。
 		m_depthStencilTexture = nullptr;	//深度ステンシルバッファとなるテクスチャ。
 		m_rtvHeap = nullptr;	//RTV用のディスクリプタヒープ。
