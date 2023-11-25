@@ -255,6 +255,10 @@ void CMQOObject::InitParams()
 
 	m_latermaterial.clear();
 
+	m_settempdiffusemult = false;
+	m_tempdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+
+
 //	next = 0;
 }
 

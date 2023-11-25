@@ -19496,4 +19496,16 @@ int CModel::Retarget(CModel* srcbvhmodel, ChaMatrix smatVP,
 
 }
 
+CMQOObject* CModel::GetMQOObjectByName(const char* findpattern) {
+	std::map<int, CMQOObject*>::iterator itrobj;
+	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+		CMQOObject* curobj = itrobj->second;
+		if (curobj) {
+			if (strcmp(curobj->GetName(), findpattern) == 0) {
+				return curobj;
+			}
+		}
+	}
+	return 0;
+};
 

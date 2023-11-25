@@ -1735,6 +1735,7 @@ public: //accesser
 		return m_materialname.end();
 	};
 
+	CMQOObject* GetMQOObjectByName(const char* findpattern);
 
 	FbxScene* GetScene(){
 		return m_pscene;

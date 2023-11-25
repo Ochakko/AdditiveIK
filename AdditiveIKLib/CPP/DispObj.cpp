@@ -153,6 +153,8 @@ int CDispObj::InitParams()
 	m_indexBuffer = nullptr;	//インデックスバッファ。
 	ZeroMemory(&m_indexBufferView, sizeof(D3D12_INDEX_BUFFER_VIEW));	//インデックスバッファビュー。
 
+	ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
+
 	return 0;
 }
 int CDispObj::DestroyObjs()
@@ -1191,9 +1193,13 @@ void CDispObj::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
 	cb.mWorld = renderobj.mWorld;
 	cb.mView = mView;
 	cb.mProj = mProj;
-	cb.diffusemult = renderobj.diffusemult;
-	float setfl4x4[16 * MAXCLUSTERNUM];
-	ZeroMemory(setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
+	if (renderobj.mqoobj && renderobj.mqoobj->GetTempDiffuseMultFlag()) {
+		cb.diffusemult = renderobj.mqoobj->GetTempDiffuseMult();
+	}
+	else {
+		cb.diffusemult = renderobj.diffusemult;
+	}
+	ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
 
 
 	if(renderobj.pmodel && renderobj.mqoobj)
@@ -1227,27 +1233,27 @@ void CDispObj::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
 							if (renderobj.btflag == 0) {
 								//set4x4[clcnt] = tmpmp.GetWorldMat();
 								clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
-								MoveMemory(&(setfl4x4[16 * clcnt]),
+								MoveMemory(&(m_setfl4x4[16 * clcnt]),
 									clustermat.GetDataPtr(), sizeof(float) * 16);
 							}
 							else if (renderobj.btflag == 1) {
 								//物理シミュ
 								//set4x4[clcnt] = curbone->GetBtMat();
 								clustermat = curbone->GetBtMat(renderobj.calcslotflag);
-								MoveMemory(&(setfl4x4[16 * clcnt]),
+								MoveMemory(&(m_setfl4x4[16 * clcnt]),
 									clustermat.GetDataPtr(), sizeof(float) * 16);
 							}
 							else if (renderobj.btflag == 2) {
 								//物理IK
 								//set4x4[clcnt] = curbone->GetBtMat();
 								clustermat = curbone->GetBtMat(renderobj.calcslotflag);
-								MoveMemory(&(setfl4x4[16 * clcnt]),
+								MoveMemory(&(m_setfl4x4[16 * clcnt]),
 									curbone->GetBtMat().GetDataPtr(), sizeof(float) * 16);
 							}
 							else {
 								//set4x4[clcnt] = tmpmp.GetWorldMat();
 								clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
-								MoveMemory(&(setfl4x4[16 * clcnt]),
+								MoveMemory(&(m_setfl4x4[16 * clcnt]),
 									clustermat.GetDataPtr(), sizeof(float) * 16);
 							}
 
@@ -1258,7 +1264,7 @@ void CDispObj::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
 
 					if (setclcnt > 0) {
 						_ASSERT(setclcnt <= MAXCLUSTERNUM);
-						MoveMemory(&(cb.setfl4x4[0]), &(setfl4x4[0]), sizeof(float) * 16 * setclcnt);
+						MoveMemory(&(cb.setfl4x4[0]), &(m_setfl4x4[0]), sizeof(float) * 16 * setclcnt);
 					}
 				}
 			}

@@ -517,6 +517,13 @@ static CMQOMaterial* s_ringblue = 0;// = s_select->GetMQOMaterialByName("ringblu
 static CMQOMaterial* s_matgreen = 0;// = s_select->GetMQOMaterialByName("matgreen");
 static CMQOMaterial* s_ringgreen = 0;// = s_select->GetMQOMaterialByName("ringgreen");
 static CMQOMaterial* s_matyellow = 0;// = s_select->GetMQOMaterialByName("matyellow");
+static CMQOObject* s_selectobj_objx = 0;
+static CMQOObject* s_selectobj_objy = 0;
+static CMQOObject* s_selectobj_objz = 0;
+static CMQOObject* s_selectobj_ringx = 0;
+static CMQOObject* s_selectobj_ringy = 0;
+static CMQOObject* s_selectobj_ringz = 0;
+static CMQOObject* s_selectobj_center = 0;
 static ChaVector4 s_matredmat;
 static ChaVector4 s_ringredmat;
 static ChaVector4 s_matbluemat;
@@ -525,6 +532,7 @@ static ChaVector4 s_matgreenmat;
 static ChaVector4 s_ringgreenmat;
 static ChaVector4 s_matyellowmat;
 static ChaVector4 s_ringyellowmat;
+
 
 static CMQOMaterial* s_rigmaterial_sphere[RIGMULTINDEXMAX + 1];
 static CMQOMaterial* s_rigmaterial_ringX[RIGMULTINDEXMAX + 1];
@@ -3176,6 +3184,32 @@ void InitApp()
 	//WCHAR strchk[256] = { 0L };
 	//swprintf_s(strchk, 256, L"NULL == %p\nINVALID_HANDLE_VALUE == %p", NULL, INVALID_HANDLE_VALUE);
 	//::MessageBox(NULL, strchk, L"check", MB_OK);
+
+	{
+		s_matred = 0;// = s_select->GetMQOMaterialByName("matred");
+		s_ringred = 0;// = s_select->GetMQOMaterialByName("ringred");
+		s_matblue = 0;// = s_select->GetMQOMaterialByName("matblue");
+		s_ringblue = 0;// = s_select->GetMQOMaterialByName("ringblue");
+		s_matgreen = 0;// = s_select->GetMQOMaterialByName("matgreen");
+		s_ringgreen = 0;// = s_select->GetMQOMaterialByName("ringgreen");
+		s_matyellow = 0;// = s_select->GetMQOMaterialByName("matyellow");
+		s_selectobj_objx = 0;
+		s_selectobj_objy = 0;
+		s_selectobj_objz = 0;
+		s_selectobj_ringx = 0;
+		s_selectobj_ringy = 0;
+		s_selectobj_ringz = 0;
+		s_selectobj_center = 0;
+		s_matredmat = ChaVector4(1.0f, 0.0f, 0.0f, 1.0f);
+		s_ringredmat = ChaVector4(1.0f, 0.0f, 0.0f, 1.0f);
+		s_matbluemat = ChaVector4(0.0f, 0.0f, 1.0f, 1.0f);
+		s_ringbluemat = ChaVector4(0.0f, 0.0f, 1.0f, 1.0f);
+		s_matgreenmat = ChaVector4(0.0f, 1.0f, 0.0f, 1.0f);
+		s_ringgreenmat = ChaVector4(0.0f, 1.0f, 0.0f, 1.0f);
+		s_matyellowmat = ChaVector4(1.0f, 1.0f, 0.0f, 1.0f);
+		s_ringyellowmat = ChaVector4(1.0f, 1.0f, 0.0f, 1.0f);
+	}
+
 
 	::ZeroMemory(s_rigopemark_sphere, sizeof(CModel*) * (RIGMULTINDEXMAX + 1));
 	::ZeroMemory(s_rigopemark_ringX, sizeof(CModel*) * (RIGMULTINDEXMAX + 1));
@@ -20884,6 +20918,16 @@ int SetSelectState()
 		return 0;
 	}
 
+	if (!s_selectobj_objx || !s_selectobj_objy || !s_selectobj_objz || !s_selectobj_center ||
+		!s_selectobj_ringx || !s_selectobj_ringy || !s_selectobj_ringz) {
+		return 0;
+	}
+	if (!s_matred || !s_ringred || !s_matblue || !s_ringblue || !s_matgreen || !s_ringgreen || !s_matyellow || !s_matyellow) {
+		return 0;
+	}
+
+
+
 	if (s_ikkind == 0) {
 		s_select->SetDispFlag("ringX", 1);
 		s_select->SetDispFlag("ringY", 1);
@@ -20998,6 +21042,9 @@ int SetSelectState()
 	float hia = 0.7f;
 	float lowa = 0.3f;
 
+	ChaVector4 hidiffusemult = ChaVector4(hirate, hirate, hirate, hia);
+	ChaVector4 lowdiffusemult = ChaVector4(lowrate, lowrate, lowrate, lowa);
+
 	if (s_matred && s_ringred && s_matblue && s_ringblue && s_matgreen && s_ringgreen && s_matyellow) {
 		if ((pickinfo.pickobjno >= 0) && (s_curboneno == pickinfo.pickobjno)) {
 
@@ -21019,6 +21066,24 @@ int SetSelectState()
 
 				s_matyellow->SetDif4F(s_matyellowmat * lowrate);
 				s_matyellow->SetDif4FW(lowa);
+
+
+				s_selectobj_objx->SetTempDiffuseMult(hidiffusemult);
+				s_selectobj_ringx->SetTempDiffuseMult(hidiffusemult);
+				s_selectobj_objy->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_ringy->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_objz->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_ringz->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_center->SetTempDiffuseMult(lowdiffusemult);
+
+				s_selectobj_objx->SetTempDiffuseMultFlag(true);
+				s_selectobj_ringx->SetTempDiffuseMultFlag(true);
+				s_selectobj_objy->SetTempDiffuseMultFlag(true);
+				s_selectobj_ringy->SetTempDiffuseMultFlag(true);
+				s_selectobj_objz->SetTempDiffuseMultFlag(true);
+				s_selectobj_ringz->SetTempDiffuseMultFlag(true);
+				s_selectobj_center->SetTempDiffuseMultFlag(true);
+
 			}
 			else if ((pickinfo.buttonflag == PICK_Y) || (pickinfo.buttonflag == PICK_SPA_Y)) {//green
 				s_matred->SetDif4F(s_matredmat * lowrate);
@@ -21038,6 +21103,22 @@ int SetSelectState()
 
 				s_matyellow->SetDif4F(s_matyellowmat * lowrate);
 				s_matyellow->SetDif4FW(lowa);
+
+				s_selectobj_objx->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_ringx->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_objy->SetTempDiffuseMult(hidiffusemult);
+				s_selectobj_ringy->SetTempDiffuseMult(hidiffusemult);
+				s_selectobj_objz->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_ringz->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_center->SetTempDiffuseMult(lowdiffusemult);
+
+				s_selectobj_objx->SetTempDiffuseMultFlag(true);
+				s_selectobj_ringx->SetTempDiffuseMultFlag(true);
+				s_selectobj_objy->SetTempDiffuseMultFlag(true);
+				s_selectobj_ringy->SetTempDiffuseMultFlag(true);
+				s_selectobj_objz->SetTempDiffuseMultFlag(true);
+				s_selectobj_ringz->SetTempDiffuseMultFlag(true);
+				s_selectobj_center->SetTempDiffuseMultFlag(true);
 
 			}
 			else if ((pickinfo.buttonflag == PICK_Z) || (pickinfo.buttonflag == PICK_SPA_Z)) {//blue
@@ -21059,6 +21140,22 @@ int SetSelectState()
 				s_matyellow->SetDif4F(s_matyellowmat * lowrate);
 				s_matyellow->SetDif4FW(lowa);
 
+				s_selectobj_objx->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_ringx->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_objy->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_ringy->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_objz->SetTempDiffuseMult(hidiffusemult);
+				s_selectobj_ringz->SetTempDiffuseMult(hidiffusemult);
+				s_selectobj_center->SetTempDiffuseMult(lowdiffusemult);
+
+				s_selectobj_objx->SetTempDiffuseMultFlag(true);
+				s_selectobj_ringx->SetTempDiffuseMultFlag(true);
+				s_selectobj_objy->SetTempDiffuseMultFlag(true);
+				s_selectobj_ringy->SetTempDiffuseMultFlag(true);
+				s_selectobj_objz->SetTempDiffuseMultFlag(true);
+				s_selectobj_ringz->SetTempDiffuseMultFlag(true);
+				s_selectobj_center->SetTempDiffuseMultFlag(true);
+
 			}
 			else if (pickinfo.buttonflag == PICK_CENTER) {//yellow
 				s_matred->SetDif4F(s_matredmat * lowrate);
@@ -21078,6 +21175,23 @@ int SetSelectState()
 
 				s_matyellow->SetDif4F(s_matyellowmat * hirate);
 				s_matyellow->SetDif4FW(hia);
+
+				s_selectobj_objx->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_ringx->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_objy->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_ringy->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_objz->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_ringz->SetTempDiffuseMult(lowdiffusemult);
+				s_selectobj_center->SetTempDiffuseMult(hidiffusemult);
+
+				s_selectobj_objx->SetTempDiffuseMultFlag(true);
+				s_selectobj_ringx->SetTempDiffuseMultFlag(true);
+				s_selectobj_objy->SetTempDiffuseMultFlag(true);
+				s_selectobj_ringy->SetTempDiffuseMultFlag(true);
+				s_selectobj_objz->SetTempDiffuseMultFlag(true);
+				s_selectobj_ringz->SetTempDiffuseMultFlag(true);
+				s_selectobj_center->SetTempDiffuseMultFlag(true);
+
 			}
 		}
 		else {
@@ -21098,6 +21212,23 @@ int SetSelectState()
 
 			s_matyellow->SetDif4F(s_matyellowmat * lowrate);
 			s_matyellow->SetDif4FW(lowa);
+
+			s_selectobj_objx->SetTempDiffuseMult(lowdiffusemult);
+			s_selectobj_ringx->SetTempDiffuseMult(lowdiffusemult);
+			s_selectobj_objy->SetTempDiffuseMult(lowdiffusemult);
+			s_selectobj_ringy->SetTempDiffuseMult(lowdiffusemult);
+			s_selectobj_objz->SetTempDiffuseMult(lowdiffusemult);
+			s_selectobj_ringz->SetTempDiffuseMult(lowdiffusemult);
+			s_selectobj_center->SetTempDiffuseMult(lowdiffusemult);
+
+			s_selectobj_objx->SetTempDiffuseMultFlag(true);
+			s_selectobj_ringx->SetTempDiffuseMultFlag(true);
+			s_selectobj_objy->SetTempDiffuseMultFlag(true);
+			s_selectobj_ringy->SetTempDiffuseMultFlag(true);
+			s_selectobj_objz->SetTempDiffuseMultFlag(true);
+			s_selectobj_ringz->SetTempDiffuseMultFlag(true);
+			s_selectobj_center->SetTempDiffuseMultFlag(true);
+
 		}
 	}
 
@@ -48938,6 +49069,51 @@ int OnCreateDevice()
 		return S_FALSE;
 	}
 	
+	s_selectobj_objx = s_select->GetMQOObjectByName("objX");
+	if (!s_selectobj_objx) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	s_selectobj_ringx = s_select->GetMQOObjectByName("ringX");
+	if (!s_selectobj_ringx) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	s_selectobj_objy = s_select->GetMQOObjectByName("objY");
+	if (!s_selectobj_objy) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	s_selectobj_ringy = s_select->GetMQOObjectByName("ringY");
+	if (!s_selectobj_ringy) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	s_selectobj_objz = s_select->GetMQOObjectByName("objZ");
+	if (!s_selectobj_objz) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	s_selectobj_ringz = s_select->GetMQOObjectByName("ringZ");
+	if (!s_selectobj_ringz) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	s_selectobj_center = s_select->GetMQOObjectByName("obj_CENTER");
+	if (!s_selectobj_center) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+
+
+
 	//s_matredmat = s_matred->GetDif4F();
 	//s_ringredmat = s_ringred->GetDif4F();
 	//s_matbluemat = s_matblue->GetDif4F();

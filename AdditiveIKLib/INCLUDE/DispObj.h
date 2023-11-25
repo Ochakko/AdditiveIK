@@ -208,6 +208,7 @@ private:
 	const int NUM_CBV_ONE_MATERIAL = 2;
 
 	int m_hasbone;//ボーン変形用のオブジェクトであるとき１、それ以外の時は０。
+	float m_setfl4x4[16 * MAXCLUSTERNUM];
 
 	ID3D12Device* m_pdev;//外部メモリ、Direct3Dのデバイス。
 	CPolyMesh3* m_pm3;//外部メモリ、メタセコイアファイルから作成した３Dデータ。

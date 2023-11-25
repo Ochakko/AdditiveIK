@@ -397,6 +397,22 @@ public:
 		}
 	}
 	
+	void SetTempDiffuseMult(ChaVector4 srcmult)
+	{
+		m_tempdiffusemult = srcmult;
+	}
+	ChaVector4 GetTempDiffuseMult()
+	{
+		return m_tempdiffusemult;
+	}
+	void SetTempDiffuseMultFlag(bool srcflag)
+	{
+		m_settempdiffusemult = srcflag;
+	}
+	bool GetTempDiffuseMultFlag()
+	{
+		return m_settempdiffusemult;
+	}
 
 private:
 	int m_objfrom;
@@ -435,6 +451,10 @@ private:
 	FbxNode* m_pnode;
 
 	ChaFrustumInfo m_frustum;
+
+	bool m_settempdiffusemult;
+	ChaVector4 m_tempdiffusemult;
+
 
 //以下、クラス外から参照しないのでアクセッサー無し
 	int m_patch;

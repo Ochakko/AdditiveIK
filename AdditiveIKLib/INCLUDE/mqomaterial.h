@@ -288,7 +288,6 @@ public:
 	Texture& GetNormalMap();
 	Texture& GetSpecularMap();
 
-
 private:
 	int m_materialno;
 	char m_name[256];
@@ -315,6 +314,7 @@ private:
 	ChaVector3 m_emi3f;
 	ChaVector3 m_spc3f;
 	ChaVector4 m_sceneamb;
+
 
 	int m_transparent;
 	int m_texrule;
