@@ -5541,7 +5541,13 @@ void OnFrameRender(myRenderer::RenderingEngine& re, RenderContext& rc, double fT
 
 			int lightflag = 1;
 			ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-			int btflag = 0;
+			int btflag;
+			if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
+				btflag = 0;
+			}
+			else {
+				btflag = 1;
+			}
 			s_chascene->RenderModels(re, lightflag, diffusemult, btflag);
 
 			//if (s_ground) {
@@ -29561,6 +29567,24 @@ int CreateLongTimelineWnd()
 		if (s_owpPlayerButton) {
 			//s_owpPlayerButton->setButtonSize(20);
 			s_LtimelineWnd->addParts(*s_owpPlayerButton);//owp_timelineより前
+
+			s_owpPlayerButton->setPhysicsPlayButtonListener([]() {
+				if (s_model) {
+					s_calclimitedwmState = 101;
+				}
+				});
+			s_owpPlayerButton->setPhysicsRecButtonListener([]() {
+				if (s_model) {
+					if (g_motionbrush_numframe < 10) {
+						WCHAR strmes[1024] = { 0L };
+						swprintf_s(strmes, 1024, L"複数フレームを選択してから再試行してください。\nRetry after selecting frames range.");
+						::DSMessageBox(NULL, strmes, L"error!!!", MB_OK);
+					}
+					else {
+						s_calclimitedwmState = 1001;
+					}
+				}
+				});
 
 			s_owpPlayerButton->setFrontPlayButtonListener([]() {
 				if (s_model) {

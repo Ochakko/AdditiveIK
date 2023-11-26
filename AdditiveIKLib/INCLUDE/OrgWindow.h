@@ -3518,7 +3518,8 @@ void s_dummyfunc()
 				SIZE_Y = 44;
 
 				//ボタンの配置開始位置
-				OFFSET_X = srctotalwidth / 3 + 80;
+				//OFFSET_X = srctotalwidth / 3 + 80;
+				OFFSET_X = srctotalwidth / 3 + 80 - BOX_WIDTH * 3;
 			}
 			else {
 				//BOX_WIDTHとSIZE_Yは setButtonSizeでも変更出来る
@@ -3527,7 +3528,8 @@ void s_dummyfunc()
 				BOX_WIDTH = 26;
 				SIZE_Y = 30;
 
-				OFFSET_X = srctotalwidth / 4 + 30;
+				//OFFSET_X = srctotalwidth / 4 + 30;
+				OFFSET_X = srctotalwidth / 4 + 30 - BOX_WIDTH * 3;
 			}
 
 
@@ -3539,7 +3541,7 @@ void s_dummyfunc()
 		{
 			WindowPos retpos;
 
-			if ((buttonno >= 0) && (buttonno <= 6)) {
+			if ((buttonno >= 0) && (buttonno <= 9)) {
 				//ボタンの四隅になる座標を求める
 				int pos1x = OFFSET_X + pos.x + BOX_POS_X + BOX_WIDTH * buttonno;
 				int pos1y = pos.y + size.y / 2 - BOX_WIDTH / 2;
@@ -3573,7 +3575,7 @@ void s_dummyfunc()
 			drawEdge();
 
 			//全てのボタンについて繰り返す
-			for(int i=0; i<=6; i++){
+			for(int i=0; i<=9; i++){
 
 				//ボタンの四隅になる座標を求める
 				int pos1x= OFFSET_X + pos.x+BOX_POS_X+BOX_WIDTH*i;
@@ -3602,13 +3604,16 @@ void s_dummyfunc()
 				//case 15: btnPrm = &resetdisp; break;
 				//}
 				switch (i) {
-				case 0: btnPrm = &backStep; break;
-				case 1: btnPrm = &backPlay; break;
-				case 2: btnPrm = &reset; break;
-				case 3: btnPrm = &frontPlay; break;
-				case 4: btnPrm = &frontStep; break;
-				case 5: btnPrm = 0; break;
-				case 6: btnPrm = &selecttolast; break;
+				case 0: btnPrm = &physicsPlay; break;
+				case 1: btnPrm = &physicsRec; break;
+				case 2: btnPrm = 0; break;
+				case 3: btnPrm = &backStep; break;
+				case 4: btnPrm = &backPlay; break;
+				case 5: btnPrm = &reset; break;
+				case 6: btnPrm = &frontPlay; break;
+				case 7: btnPrm = &frontStep; break;
+				case 8: btnPrm = 0; break;
+				case 9: btnPrm = &selecttolast; break;
 				default: btnPrm = 0; break;
 				}
 				if (btnPrm) {
@@ -3633,7 +3638,37 @@ void s_dummyfunc()
 					//中身描画
 					int shiftDot = btnPrm->buttonPush ? 1 : 0;
 					switch (i) {
-					case 0:		//先頭フレームジャンプボタン
+					case 0:		//物理再生ボタン
+					{
+						hdcM->setPenAndBrush(RGB(125, 125, 125), RGB(125, 125, 125));
+						int y1 = pos1y + 3;
+						int y2 = pos2y - 2;
+						int x1 = (pos1x + pos2x) / 2 - (y2 - y1) / 4;
+						int x2 = x1 + (y2 - y1) / 2;
+						for (int j = 0; j <= x2 - x1; j++) {
+							MoveToEx(hdcM->hDC, x1 + j + shiftDot, y1 + j + shiftDot, NULL);
+							LineTo(hdcM->hDC, x1 + j + shiftDot, y2 - j + shiftDot);
+						}
+					}break;
+					case 1:		//物理RECボタン
+					{
+						hdcM->setPenAndBrush(RGB(240, 50, 50), RGB(240, 50, 50));
+						int y1 = pos1y + 3;
+						int y2 = pos2y - 2;
+						int x1 = (pos1x + pos2x) / 2 - (y2 - y1) / 4;
+						int x2 = x1 + (y2 - y1) / 2;
+						for (int j = 0; j <= x2 - x1; j++) {
+							MoveToEx(hdcM->hDC, x1 + j + shiftDot, y1 + j + shiftDot, NULL);
+							LineTo(hdcM->hDC, x1 + j + shiftDot, y2 - j + shiftDot);
+						}
+					}break;
+					case 2:
+						break;
+
+
+
+
+					case 3:		//先頭フレームジャンプボタン
 					{
 						hdcM->setPenAndBrush(RGB(240, 240, 240), RGB(240, 240, 240));
 						int x1 = (pos1x + pos2x) / 2 + 2;
@@ -3649,7 +3684,7 @@ void s_dummyfunc()
 							LineTo(hdcM->hDC, x4 - j + shiftDot, y2 - j + shiftDot);
 						}
 					}break;
-					case 1:		//逆再生ボタン
+					case 4:		//逆再生ボタン
 					{
 						hdcM->setPenAndBrush(RGB(240, 240, 240), RGB(240, 240, 240));
 						int y1 = pos1y + 3;
@@ -3661,13 +3696,13 @@ void s_dummyfunc()
 							LineTo(hdcM->hDC, x2 - j + shiftDot, y2 - j + shiftDot);
 						}
 					}break;
-					case 2:		//リセットボタン
+					case 5:		//リセットボタン
 						hdcM->setPenAndBrush(RGB(240, 240, 240), RGB(240, 240, 240));
 						Rectangle(hdcM->hDC,
 							pos1x + 4 + shiftDot, pos1y + 4 + shiftDot,
 							pos2x - 3 + shiftDot, pos2y - 3 + shiftDot);
 						break;
-					case 3:		//再生ボタン
+					case 6:		//再生ボタン
 					{
 						hdcM->setPenAndBrush(RGB(240, 240, 240), RGB(240, 240, 240));
 						int y1 = pos1y + 3;
@@ -3679,7 +3714,7 @@ void s_dummyfunc()
 							LineTo(hdcM->hDC, x1 + j + shiftDot, y2 - j + shiftDot);
 						}
 					}break;
-					case 4:		//最終フレームジャンプボタン
+					case 7:		//最終フレームジャンプボタン
 					{
 						hdcM->setPenAndBrush(RGB(240, 240, 240), RGB(240, 240, 240));
 						int x1 = pos1x + 3;
@@ -3695,9 +3730,9 @@ void s_dummyfunc()
 							LineTo(hdcM->hDC, x3 + j + shiftDot, y2 - j + shiftDot);
 						}
 					}break;
-					case 5:
+					case 8:
 						break;
-					case 6:		//最終フレームまで選択
+					case 9:		//最終フレームまで選択
 					{
 						hdcM->setPenAndBrush(RGB(240, 240, 240), RGB(240, 240, 240));
 						int x1 = pos1x + 4;
@@ -3781,7 +3816,7 @@ void s_dummyfunc()
 		virtual void onLButtonDown(const MouseEvent& e){
 
 			//全てのボタンについて繰り返す
-			for(int i=0; i<=6; i++){
+			for(int i=0; i<=9; i++){
 
 				//まずボタンが押されたかを確認
 				if( ((OFFSET_X + BOX_POS_X + BOX_WIDTH * i) <= e.localX) && (e.localX < (OFFSET_X + BOX_POS_X + BOX_WIDTH * (i+1))) ){
@@ -3792,13 +3827,16 @@ void s_dummyfunc()
 				//ボタンパラメータのインスタンスへのポインタを作成
 				OneButtonParam *btnPrm;
 				switch (i) {
-				case 0: btnPrm = &backStep; break;
-				case 1: btnPrm = &backPlay; break;
-				case 2: btnPrm = &reset; break;
-				case 3: btnPrm = &frontPlay; break;
-				case 4: btnPrm = &frontStep; break;
-				case 5: btnPrm = 0; break;
-				case 6: btnPrm = &selecttolast; break;
+				case 0: btnPrm = &physicsPlay; break;
+				case 1: btnPrm = &physicsRec; break;
+				case 2: btnPrm = 0; break;
+				case 3: btnPrm = &backStep; break;
+				case 4: btnPrm = &backPlay; break;
+				case 5: btnPrm = &reset; break;
+				case 6: btnPrm = &frontPlay; break;
+				case 7: btnPrm = &frontStep; break;
+				case 8: btnPrm = 0; break;
+				case 9: btnPrm = &selecttolast; break;
 				default: btnPrm = 0; break;
 				}
 				if (btnPrm) {
@@ -3815,13 +3853,16 @@ void s_dummyfunc()
 
 					//ボタンアップアニメーションのためのスレッド作成
 					switch (i) {
-					case 0: _beginthread(drawBackStepButtonUpThread, 0, (void*)this); break;
-					case 1: _beginthread(drawBackPlayButtonUpThread, 0, (void*)this); break;
-					case 2: _beginthread(drawResetButtonUpThread, 0, (void*)this); break;
-					case 3: _beginthread(drawFrontPlayButtonUpThread, 0, (void*)this); break;
-					case 4: _beginthread(drawFrontStepButtonUpThread, 0, (void*)this); break;
-					case 5: break;
-					case 6: _beginthread(drawSelectToLastButtonUpThread, 0, (void*)this); break;
+					case 0: _beginthread(drawPhysicsPlayButtonUpThread, 0, (void*)this); break;
+					case 1: _beginthread(drawPhysicsRecButtonUpThread, 0, (void*)this); break;
+					case 2: break;
+					case 3: _beginthread(drawBackStepButtonUpThread, 0, (void*)this); break;
+					case 4: _beginthread(drawBackPlayButtonUpThread, 0, (void*)this); break;
+					case 5: _beginthread(drawResetButtonUpThread, 0, (void*)this); break;
+					case 6: _beginthread(drawFrontPlayButtonUpThread, 0, (void*)this); break;
+					case 7: _beginthread(drawFrontStepButtonUpThread, 0, (void*)this); break;
+					case 8: break;
+					case 9: _beginthread(drawSelectToLastButtonUpThread, 0, (void*)this); break;
 					default: break;
 					}
 				}
@@ -3852,6 +3893,12 @@ void s_dummyfunc()
 			return &(strjointname[0]);
 		}
 
+		void setPhysicsPlayButtonListener(std::function<void()> listener) {
+			physicsPlay.buttonListener = listener;
+		}
+		void setPhysicsRecButtonListener(std::function<void()> listener) {
+			physicsRec.buttonListener = listener;
+		}
 		void setFrontPlayButtonListener(std::function<void()> listener){
 			frontPlay.buttonListener= listener;
 		}
@@ -3924,7 +3971,7 @@ void s_dummyfunc()
 			bool buttonPush;
 			std::function<void()> buttonListener;
 		//}frontPlay,backPlay,stop,reset,frontStep,backStep,onefps,selecttolast,btreset,prevrange,nextrange,plusdisp,minusdisp,plusoffsetdisp,minusoffsetdisp,resetdisp;
-		}backStep, backPlay, reset, frontPlay, frontStep, selecttolast;
+		}physicsPlay, physicsRec, backStep, backPlay, reset, frontPlay, frontStep, selecttolast;
 		
 
 		int SIZE_Y;
@@ -3936,6 +3983,20 @@ void s_dummyfunc()
 
 		//////////////////////////// Method //////////////////////////////
 		//	Method : ボタンアップのスレッド
+		static void drawPhysicsPlayButtonUpThread(LPVOID	pParam) {
+			Sleep(100);
+
+			OWP_PlayerButton* thisClass = (OWP_PlayerButton*)pParam;
+			thisClass->physicsPlay.buttonPush = false;
+			thisClass->callRewrite();
+		}
+		static void drawPhysicsRecButtonUpThread(LPVOID	pParam) {
+			Sleep(100);
+
+			OWP_PlayerButton* thisClass = (OWP_PlayerButton*)pParam;
+			thisClass->physicsRec.buttonPush = false;
+			thisClass->callRewrite();
+		}
 		static void drawFrontPlayButtonUpThread(LPVOID	pParam){
 			Sleep(100);
 
