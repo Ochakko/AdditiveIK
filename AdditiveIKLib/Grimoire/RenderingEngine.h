@@ -7,6 +7,10 @@
 
 class CMQOObject;
 class CDispObj;
+class Sprite;
+class InstancedSprite;
+class CFpsSprite;
+class CUndoSprite;
 
 namespace myRenderer
 {
@@ -40,6 +44,27 @@ namespace myRenderer
             Init();
         };
     }RENDEROBJ;
+
+    typedef struct tag_rendersprite {
+        Sprite* psprite;
+        InstancedSprite* pinstancedsprite;
+        CFpsSprite* pfpssprite;
+        CUndoSprite* pundosprite;
+        int userint1;
+        int userint2;
+        void Init() {
+            psprite = 0;
+            pinstancedsprite = 0;
+            pfpssprite = 0;
+            pundosprite = 0;
+            userint1 = 0;
+            userint2 = 0;
+        };
+        tag_rendersprite()
+        {
+            Init();
+        };
+    }RENDERSPRITE;
 
 
     // レンダリングエンジン
@@ -173,6 +198,12 @@ namespace myRenderer
         {
             m_forwardRenderModels.push_back(renderobj);
         }
+
+        void AddSpriteToForwardRenderPass(RENDERSPRITE rendersprite)
+        {
+            m_forwardRenderSprites.push_back(rendersprite);
+        }
+
 
         /// <summary>
         /// ZPrepassで作成された深度テクスチャを取得
@@ -335,7 +366,7 @@ namespace myRenderer
         std::vector <RENDEROBJ> m_zprepassModels;                         // ZPrepassの描画パスで描画されるモデルのリスト
         std::vector<RENDEROBJ> m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
         std::vector<RENDEROBJ> m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
-
+        std::vector<RENDERSPRITE> m_forwardRenderSprites;
 
     };
 }

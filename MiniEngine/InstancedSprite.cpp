@@ -127,7 +127,8 @@
             }
 
         };
-        unsigned short indices[] = { 0,1,2,3 };
+        //unsigned short indices[] = { 0,1,2,3 };
+        unsigned short indices[] = { 0, 2, 1, 3 };//右手座標系　RH
 
         m_vertexBuffer.Init(sizeof(vertices), sizeof(vertices[0]));
         m_vertexBuffer.Copy(vertices);
@@ -141,12 +142,90 @@
         for (instano = 0; instano < INSTANCEDSPMAX; instano++) {
             m_possize[instano].Init();
         }
-        UINT possizestride = sizeof(SPPOSSIZE);
+        UINT possizestride = sizeof(SPPOSSIZECOL);
         UINT possizebuffsize = possizestride * INSTANCEDSPMAX;
         m_possizeBuffer.Init(possizebuffsize, possizestride);
         m_possizeBuffer.Copy(m_possize);
 
     }
+
+
+    // Matches CommonStates::AlphaBlend
+    const D3D12_BLEND_DESC s_DefaultBlendDesc =
+    {
+        FALSE, // AlphaToCoverageEnable
+        FALSE, // IndependentBlendEnable
+        { {
+            TRUE, // BlendEnable
+            FALSE, // LogicOpEnable
+            D3D12_BLEND_ONE, // SrcBlend
+            D3D12_BLEND_INV_SRC_ALPHA, // DestBlend
+            D3D12_BLEND_OP_ADD, // BlendOp
+            D3D12_BLEND_ONE, // SrcBlendAlpha
+            D3D12_BLEND_INV_SRC_ALPHA, // DestBlendAlpha
+            D3D12_BLEND_OP_ADD, // BlendOpAlpha
+            D3D12_LOGIC_OP_NOOP,
+            D3D12_COLOR_WRITE_ENABLE_ALL
+        } }
+    };
+
+    // Same to CommonStates::CullCounterClockwise
+    const D3D12_RASTERIZER_DESC s_DefaultRasterizerDesc =
+    {
+        D3D12_FILL_MODE_SOLID,
+
+        D3D12_CULL_MODE_NONE,
+        //D3D12_CULL_MODE_BACK,
+
+
+        FALSE, // FrontCounterClockwise
+        //TRUE,
+
+        D3D12_DEFAULT_DEPTH_BIAS,
+        D3D12_DEFAULT_DEPTH_BIAS_CLAMP,
+        D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS,
+
+        //TRUE, // DepthClipEnable
+        FALSE, // DepthClipEnable
+        
+        TRUE, // MultisampleEnable
+        FALSE, // AntialiasedLineEnable
+        0, // ForcedSampleCount
+        D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF
+    };
+
+    // Same as CommonStates::DepthNone
+    const D3D12_DEPTH_STENCIL_DESC s_DefaultDepthStencilDesc =
+    {
+        //FALSE, // DepthEnable
+        TRUE,
+
+        //D3D12_DEPTH_WRITE_MASK_ZERO,
+        D3D12_DEPTH_WRITE_MASK_ALL,
+        
+        //D3D12_COMPARISON_FUNC_LESS_EQUAL, // DepthFunc
+        D3D12_COMPARISON_FUNC_ALWAYS, // DepthFunc
+
+        FALSE, // StencilEnable
+        D3D12_DEFAULT_STENCIL_READ_MASK,
+        D3D12_DEFAULT_STENCIL_WRITE_MASK,
+        {
+            D3D12_STENCIL_OP_KEEP, // StencilFailOp
+            D3D12_STENCIL_OP_KEEP, // StencilDepthFailOp
+            D3D12_STENCIL_OP_KEEP, // StencilPassOp
+            D3D12_COMPARISON_FUNC_ALWAYS // StencilFunc
+        }, // FrontFace
+        {
+            D3D12_STENCIL_OP_KEEP, // StencilFailOp
+            D3D12_STENCIL_OP_KEEP, // StencilDepthFailOp
+            D3D12_STENCIL_OP_KEEP, // StencilPassOp
+            D3D12_COMPARISON_FUNC_ALWAYS // StencilFunc
+        } // BackFace
+    };
+
+
+
+
     void InstancedSprite::InitPipelineState(const SpriteInitData& initData)
     {
         // 頂点レイアウトを定義する。
@@ -163,6 +242,8 @@
             D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
             { "POSITION", 3, DXGI_FORMAT_R32G32_FLOAT, 1,
             D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+            { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+            D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
         };
 
         //パイプラインステートを作成。
@@ -171,53 +252,46 @@
         psoDesc.pRootSignature = m_rootSignature.Get();
         psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vs.GetCompiledBlob());
         psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_ps.GetCompiledBlob());
+        
+        //psoDesc.RasterizerState = s_DefaultRasterizerDesc;
+
         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-        psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-        //psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;//<--表示されなくなる
+        //psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+        psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+
         psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+        //psoDesc.BlendState = s_DefaultBlendDesc;
 
 
-        //psoDesc.BlendState.IndependentBlendEnable = TRUE;
-        //if (initData.m_alphaBlendMode == AlphaBlendMode_Trans) {
-        //    //半透明合成のブレンドステートを作成する。
-        //    psoDesc.BlendState.RenderTarget[0].BlendEnable = true;
-        //    psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-        //    psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-        //    psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-        //}
-        //else if (initData.m_alphaBlendMode == AlphaBlendMode_Add) {
-        //    //加算合成。
-        //    psoDesc.BlendState.RenderTarget[0].BlendEnable = true;
-        //    psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
-        //    psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
-        //    psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-        //}
-        psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
-        psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-        psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-        psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+        psoDesc.BlendState.IndependentBlendEnable = TRUE;
+        if (initData.m_alphaBlendMode == AlphaBlendMode_Trans) {
+            //半透明合成のブレンドステートを作成する。
+            psoDesc.BlendState.RenderTarget[0].BlendEnable = true;
+            psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+            psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+            psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+        }
+        else if (initData.m_alphaBlendMode == AlphaBlendMode_Add) {
+            //加算合成。
+            psoDesc.BlendState.RenderTarget[0].BlendEnable = true;
+            psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
+            psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+            psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+        }
 
-
-
+        psoDesc.DepthStencilState = s_DefaultDepthStencilDesc;
+        //psoDesc.DepthStencilState = D3D12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 
         //psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
         //psoDesc.DepthStencilState.DepthEnable = FALSE;
         //psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
         //psoDesc.DepthStencilState.StencilEnable = FALSE;
         //psoDesc.SampleMask = UINT_MAX;
-
-        //psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-        //psoDesc.DepthStencilState.DepthEnable = FALSE;//!!!
-        //psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-        //psoDesc.DepthStencilState.StencilEnable = FALSE;
-        //psoDesc.SampleMask = UINT_MAX;
-
-        //psoDesc.DepthStencilState.DepthEnable = FALSE;
-        psoDesc.DepthStencilState.DepthEnable = TRUE;
-        psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-        //psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;//!!!!!!!!!!!!
         psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-        //psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+        //psoDesc.DepthStencilState.DepthEnable = FALSE;//!!!
+        psoDesc.DepthStencilState.DepthEnable = TRUE;//!!!
+        psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+        //psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
         psoDesc.DepthStencilState.StencilEnable = FALSE;
         psoDesc.SampleMask = UINT_MAX;
 
@@ -341,11 +415,13 @@
 
     //}
 
-    void InstancedSprite::UpdateScreen(int instanceno, ChaVector3 srcpos, ChaVector2 srcdispsize)
+    void InstancedSprite::UpdateScreen(int instanceno, 
+        ChaVector3 srcpos, ChaVector2 srcdispsize, ChaVector4 srccolmult)
     {
         if ((instanceno >= 0) && (instanceno < INSTANCEDSPMAX)) {
             m_possize[instanceno].pos = ChaVector4(srcpos, 1.0f);
             m_possize[instanceno].size = srcdispsize;
+            m_possize[instanceno].colmult = srccolmult;
 
             UINT screenW, screenH;
             screenW = g_graphicsEngine->GetFrameBufferWidth();
@@ -372,7 +448,7 @@
             return;
         }
 
-        UINT possizestride = sizeof(SPPOSSIZE);
+        UINT possizestride = sizeof(SPPOSSIZECOL);
         UINT possizebuffsize = possizestride * m_instancenum;
         m_possizeBuffer.Copy(m_possize);
 

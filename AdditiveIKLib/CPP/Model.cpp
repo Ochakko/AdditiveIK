@@ -84,6 +84,8 @@
 
 #include <OrgWindow.h>
 
+#include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
+
 
 //#include <DXUT.h>
 #include <io.h>
@@ -7178,9 +7180,10 @@ int CModel::RenderBoneMark(myRenderer::RenderingEngine& re, RenderContext& rc,
 					scpos.z = 0.00001f;
 
 					//bcircleptr->SetPos(scpos);
-					ChaVector2 bsize;
+					ChaVector2 bsize = ChaVector2(1.0f, 1.0f);
+					ChaVector4 bcolor = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
 					if (boneptr->GetSelectFlag() & 2){
-						//bcircleptr->SetColor(ChaVector4(0.0f, 0.0f, 1.0f, 0.7f));
+						bcolor = ChaVector4(0.0f, 0.0f, 1.0f, 0.7f);
 						bsize = ChaVector2(0.050f, 0.050f);
 						if (g_4kresolution) {
 							bsize = bsize * 0.5f;
@@ -7188,7 +7191,7 @@ int CModel::RenderBoneMark(myRenderer::RenderingEngine& re, RenderContext& rc,
 						//bcircleptr->SetSize(bsize);
 					}
 					else if (boneptr->GetSelectFlag() & 1){
-						//bcircleptr->SetColor(ChaVector4(1.0f, 0.0f, 0.0f, 0.7f));
+						bcolor = ChaVector4(1.0f, 0.0f, 0.0f, 0.7f);
 						bsize = ChaVector2(0.025f, 0.025f);
 						if (g_4kresolution) {
 							bsize = bsize * 0.5f;
@@ -7196,7 +7199,7 @@ int CModel::RenderBoneMark(myRenderer::RenderingEngine& re, RenderContext& rc,
 						//bcircleptr->SetSize(bsize);
 					}
 					else{
-						//bcircleptr->SetColor(ChaVector4(1.0f, 1.0f, 1.0f, 0.7f));
+						bcolor = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
 						bsize = ChaVector2(0.025f, 0.025f);
 						if (g_4kresolution) {
 							bsize = bsize * 0.5f;
@@ -7204,9 +7207,9 @@ int CModel::RenderBoneMark(myRenderer::RenderingEngine& re, RenderContext& rc,
 						//bcircleptr->SetSize(bsize);
 					}
 
-					ChaVector2 circlesize = ChaVector2(16.0f, 16.0f);
+					ChaVector2 circlesize = ChaVector2(6.0f, 6.0f);
 
-					bcircleptr.UpdateScreen(instanceno, scpos, circlesize);
+					bcircleptr.UpdateScreen(instanceno, scpos, circlesize, bcolor);
 					instanceno++;
 					//CallF(bcircleptr->OnRender(pRenderContext), return 1);
 
@@ -7214,7 +7217,12 @@ int CModel::RenderBoneMark(myRenderer::RenderingEngine& re, RenderContext& rc,
 			}
 
 			if (instanceno > 0) {
-				bcircleptr.DrawScreen(rc);
+				//bcircleptr.DrawScreen(rc);
+
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.pinstancedsprite = &bcircleptr;
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 	}

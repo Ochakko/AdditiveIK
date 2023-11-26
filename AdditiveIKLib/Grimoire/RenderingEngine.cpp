@@ -4,6 +4,11 @@
 #include <mqoobject.h>
 #include <DispObj.h>
 
+#include "../../MiniEngine/InstancedSprite.h"
+#include "../../AdditiveIK/FpsSprite.h"
+#include "../../AdditiveIK/UndoSprite.h"
+
+
 namespace myRenderer
 {
     void RenderingEngine::Init()
@@ -253,6 +258,7 @@ namespace myRenderer
         m_renderToGBufferModels.clear();
         m_forwardRenderModels.clear();
         m_zprepassModels.clear();
+        m_forwardRenderSprites.clear();
     }
 
     void RenderingEngine::RenderToShadowMap(RenderContext& rc)
@@ -329,6 +335,26 @@ namespace myRenderer
             //model->Draw(rc);
             RenderPolyMesh(rc, currenderobj);
         }
+
+
+        //Sprite (ScreenVertexMode)
+        for (auto& currendersprite : m_forwardRenderSprites)
+        {
+            if (currendersprite.psprite) {
+                currendersprite.psprite->DrawScreen(rc);
+            }
+            else if (currendersprite.pinstancedsprite) {
+                currendersprite.pinstancedsprite->DrawScreen(rc);
+            }
+            else if (currendersprite.pfpssprite) {
+                currendersprite.pfpssprite->DrawScreen(rc, currendersprite.userint1);
+            }
+            else if (currendersprite.pundosprite) {
+                currendersprite.pundosprite->DrawScreen(rc, currendersprite.userint1, currendersprite.userint2);
+            }
+        }
+
+
 
         // メインレンダリングターゲットへの書き込み終了待ち
        //rc.WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);

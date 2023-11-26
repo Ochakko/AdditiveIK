@@ -129,7 +129,8 @@
             }
 
         };
-        unsigned short indices[] = { 0,1,2,3 };
+        //unsigned short indices[] = { 0,1,2,3 };
+        unsigned short indices[] = { 0, 2, 1, 3 };//右手座標系　RH
 
         m_vertexBuffer.Init(sizeof(vertices), sizeof(vertices[0]));
         m_vertexBuffer.Copy(vertices);
@@ -153,7 +154,8 @@
         psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vs.GetCompiledBlob());
         psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_ps.GetCompiledBlob());
         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-        psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+        //psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+        psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
         psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 
         if (initData.m_alphaBlendMode == AlphaBlendMode_Trans) {

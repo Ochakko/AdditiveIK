@@ -59,21 +59,23 @@ class IShaderResource;
 
 #define INSTANCEDSPMAX	MAXBONENUM
 
-typedef struct tag_sppossize {
+typedef struct tag_sppossizecol {
 	ChaVector4 pos;
 	ChaVector2 size;
 	ChaVector2 WH;
+	ChaVector4 colmult;
 	void Init()
 	{
 		pos = ChaVector4(0.0f, 0.0f, 0.0f, 1.0f);
 		size = ChaVector2(1.0f, 1.0f);
 		WH.x = 800.0f;
 		WH.y = 600.0f;
+		colmult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	};
-	tag_sppossize() {
+	tag_sppossizecol() {
 		Init();
 	};
-}SPPOSSIZE;
+}SPPOSSIZECOL;
 
 
 /// <summary>
@@ -108,7 +110,8 @@ public:
 	/// <summary>
 	/// 更新。m_screenvertexflag == trueの場合用のUpdate
 	/// </summary>
-	void UpdateScreen(int instanceno, ChaVector3 srcpos, ChaVector2 srcdispsize);
+	void UpdateScreen(int instanceno, 
+		ChaVector3 srcpos, ChaVector2 srcdispsize, ChaVector4 srccolmult);
 
 	
 	/// <summary>
@@ -165,7 +168,7 @@ private:
 	Texture* m_textureExternal = nullptr;	//外部から指定されたテクスチャ
 	//Vector3 m_position[INSTANCEDSPMAX];				//座標。
 	Vector2 m_size;						//読込画像サイズ。
-	SPPOSSIZE m_possize[INSTANCEDSPMAX]; //表示位置と表示サイズ
+	SPPOSSIZECOL m_possize[INSTANCEDSPMAX]; //表示位置と表示サイズ
 	Quaternion m_rotation[INSTANCEDSPMAX];			//回転。
 	Matrix m_world;					//ワールド行列。
 

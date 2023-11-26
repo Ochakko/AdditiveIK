@@ -3652,15 +3652,18 @@ void s_dummyfunc()
 					}break;
 					case 1:		//物理RECボタン
 					{
-						hdcM->setPenAndBrush(RGB(240, 50, 50), RGB(240, 50, 50));
+						hdcM->setPenAndBrush(RGB(168, 129, 129), RGB(168, 129, 129));
 						int y1 = pos1y + 3;
 						int y2 = pos2y - 2;
 						int x1 = (pos1x + pos2x) / 2 - (y2 - y1) / 4;
 						int x2 = x1 + (y2 - y1) / 2;
-						for (int j = 0; j <= x2 - x1; j++) {
-							MoveToEx(hdcM->hDC, x1 + j + shiftDot, y1 + j + shiftDot, NULL);
-							LineTo(hdcM->hDC, x1 + j + shiftDot, y2 - j + shiftDot);
-						}
+
+						Ellipse(hdcM->hDC, pos1x + 4, pos1y + 4, pos2x - 4, pos2y - 4);
+
+						//for (int j = 0; j <= x2 - x1; j++) {
+						//	MoveToEx(hdcM->hDC, x1 + j + shiftDot, y1 + j + shiftDot, NULL);
+						//	LineTo(hdcM->hDC, x1 + j + shiftDot, y2 - j + shiftDot);
+						//}
 					}break;
 					case 2:
 						break;

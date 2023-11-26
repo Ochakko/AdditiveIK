@@ -259,11 +259,13 @@ int CUndoSprite::DrawScreen(RenderContext& rc, int undoR, int undoW)
 	int instanceno[12];
 	ZeroMemory(instanceno, sizeof(int) * 12);
 
+	ChaVector4 colmult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+
 	int spacnt;
 	for (spacnt = 0; spacnt < 4; spacnt++) {
 
 		if ((m_indexR[spacnt] >= 0) && (m_indexR[spacnt] < 12)) {
-			m_sprite[m_indexR[spacnt]].UpdateScreen(instanceno[m_indexR[spacnt]], m_posR[spacnt], m_size);
+			m_sprite[m_indexR[spacnt]].UpdateScreen(instanceno[m_indexR[spacnt]], m_posR[spacnt], m_size, colmult);
 			//m_sprite[m_indexR[spacnt]].DrawScreen(rc);
 
 			(instanceno[m_indexR[spacnt]])++;
@@ -274,7 +276,7 @@ int CUndoSprite::DrawScreen(RenderContext& rc, int undoR, int undoW)
 		}
 
 		if ((m_indexW[spacnt] >= 0) && (m_indexW[spacnt] < 12)) {
-			m_sprite[m_indexW[spacnt]].UpdateScreen(instanceno[m_indexW[spacnt]], m_posW[spacnt], m_size);
+			m_sprite[m_indexW[spacnt]].UpdateScreen(instanceno[m_indexW[spacnt]], m_posW[spacnt], m_size, colmult);
 			//m_sprite[m_indexW[spacnt]].DrawScreen(rc);
 
 			(instanceno[m_indexW[spacnt]])++;

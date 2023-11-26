@@ -249,7 +249,8 @@ int CFpsSprite::DrawScreen(RenderContext& rc, int srcfps)
 			else {
 				cursize = m_size_num;
 			}
-			m_sprite[m_index[spacnt]].UpdateScreen(instanceno[m_index[spacnt]], m_pos[spacnt], cursize);
+			ChaVector4 colmult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+			m_sprite[m_index[spacnt]].UpdateScreen(instanceno[m_index[spacnt]], m_pos[spacnt], cursize, colmult);
 			//m_sprite[m_index[spacnt]].DrawScreen(rc);
 
 			(instanceno[m_index[spacnt]])++;

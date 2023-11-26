@@ -12,12 +12,14 @@ struct VSInput
     float4 disppos : POSITION1;
     float2 dispsize : POSITION2;
     float2 wh : POSITION3;
+    float4 colmult : COLOR0;
 };
 
 struct PSInput
 {
     float4 pos : SV_POSITION;
     float2 uv  : TEXCOORD0;
+    float4 colmult : COLOR0;
 };
 
 Texture2D<float4> colorTexture : register(t0); // カラーテクスチャ
@@ -51,7 +53,8 @@ PSInput VSMain(VSInput In)
     wmat[2][3] = 0.0f;
     wmat[3][0] = In.disppos.x / In.wh.x * 2.0f - 1.0f;
     wmat[3][1] = -(In.disppos.y / In.wh.y * 2.0f - 1.0f);
-    wmat[3][2] = In.disppos.z;
+    //wmat[3][2] = In.disppos.z;
+    wmat[3][2] = 0.0f;
     wmat[3][3] = 1.0f;
  
     
@@ -63,7 +66,7 @@ PSInput VSMain(VSInput In)
     //psIn.pos.z = 0.999999f;
     
     psIn.uv = In.uv;
-    
+    psIn.colmult = In.colmult;
     
     
     return psIn;
@@ -75,7 +78,9 @@ float4 PSMain(PSInput In) : SV_Target0
     //float4 color = mainRenderTargetTexture.Sample(Sampler, In.uv);
     //float4 color = { 0.0f, 0.0f, 1.0f, 1.0f };
     
+    float4 pscol = color * In.colmult;
+    
     // step-3 ピクセルシェーダーから出力するαを変更する
 
-    return color;
+    return pscol;
 }

@@ -2017,7 +2017,7 @@ static int OnRenderRefPose(RenderContext* pRenderContext, CModel* curmodel);
 static int OnRenderGround(myRenderer::RenderingEngine& re, RenderContext& pRenderContext);
 static int OnRenderBoneMark(myRenderer::RenderingEngine& re, RenderContext& pRenderContext);
 static int OnRenderSelect(myRenderer::RenderingEngine& re, RenderContext& pRenderContext);
-static int OnRenderSprite(RenderContext& pRenderContext);
+static int OnRenderSprite(myRenderer::RenderingEngine& re, RenderContext& pRenderContext);
 static int OnRenderUtDialog(RenderContext* pRenderContext, float fElapsedTime);
 
 static int PasteMotionPoint(CBone* srcbone, CMotionPoint srcmp, double newframe);
@@ -5554,7 +5554,7 @@ void OnFrameRender(myRenderer::RenderingEngine& re, RenderContext& rc, double fT
 			//	OnRenderGround(re, rc);//メッシュではなくラインオブジェクト　CD3DDispのlineはまだDirectX12に対応していない
 			//}
 
-			//OnRenderBoneMark(re, rc);//Zバッファ比較をALWAYSにしても　スプライトがメッシュの後ろに隠れてしまう
+			OnRenderBoneMark(re, rc);
 
 			if (s_dispselect && s_select) {
 				OnRenderSelect(re, rc);
@@ -5568,7 +5568,7 @@ void OnFrameRender(myRenderer::RenderingEngine& re, RenderContext& rc, double fT
 		
 		//OnRenderUtDialog(fElapsedTime);
 		if (s_dispsampleui) {//ctrl + 1 (one) key --> toggle
-			OnRenderSprite(rc);
+			OnRenderSprite(re, rc);
 		}
 
 	}
@@ -29577,7 +29577,7 @@ int CreateLongTimelineWnd()
 				if (s_model) {
 					if (g_motionbrush_numframe < 10) {
 						WCHAR strmes[1024] = { 0L };
-						swprintf_s(strmes, 1024, L"複数フレームを選択してから再試行してください。\nRetry after selecting frames range.");
+						swprintf_s(strmes, 1024, L"複数フレームを選択してから再試行してください。\nPlease select more than 10 frames and try again.");
 						::DSMessageBox(NULL, strmes, L"error!!!", MB_OK);
 					}
 					else {
@@ -33326,7 +33326,7 @@ int OnRenderSelect(myRenderer::RenderingEngine& re, RenderContext& pRenderContex
 	return 0;
 }
 
-int OnRenderSprite(RenderContext& pRenderContext)
+int OnRenderSprite(myRenderer::RenderingEngine& re, RenderContext& pRenderContext)
 {
 	if (!s_model) {
 		return 0;
@@ -33334,22 +33334,43 @@ int OnRenderSprite(RenderContext& pRenderContext)
 
 	if (s_model) {
 		int dispfps = (int)(s_avrgfps + 0.5);
-		s_fpssprite.DrawScreen(pRenderContext, dispfps);
+		//s_fpssprite.DrawScreen(pRenderContext, dispfps);
+
+		myRenderer::RENDERSPRITE rendersprite;
+		rendersprite.Init();
+		rendersprite.pfpssprite = &s_fpssprite;
+		rendersprite.userint1 = dispfps;
+		re.AddSpriteToForwardRenderPass(rendersprite);
 	}
 
 	////Undoの読み込みポイントW と書き込みポイントR を表示
 	if (s_model) {
-		s_undosprite.DrawScreen(pRenderContext, s_model->GetCurrentUndoR(), s_model->GetCurrentUndoW());
+		//s_undosprite.DrawScreen(pRenderContext, s_model->GetCurrentUndoR(), s_model->GetCurrentUndoW());
+
+		myRenderer::RENDERSPRITE rendersprite;
+		rendersprite.Init();
+		rendersprite.pundosprite = &s_undosprite;
+		rendersprite.userint1 = s_model->GetCurrentUndoR();
+		rendersprite.userint2 = s_model->GetCurrentUndoW();
+		re.AddSpriteToForwardRenderPass(rendersprite);
 	}
 
 
 	//frog
-	s_spret2prev.sprite.DrawScreen(pRenderContext);
+	//s_spret2prev.sprite.DrawScreen(pRenderContext);
+	myRenderer::RENDERSPRITE rendersprite;
+	rendersprite.Init();
+	rendersprite.psprite = &(s_spret2prev.sprite);
+	re.AddSpriteToForwardRenderPass(rendersprite);
 
 
 	//Mouse Middle Button Mark
 	if (s_mbuttoncnt == 0) {
-		s_mousecenteron.sprite.DrawScreen(pRenderContext);
+		//s_mousecenteron.sprite.DrawScreen(pRenderContext);
+		myRenderer::RENDERSPRITE rendersprite;
+		rendersprite.Init();
+		rendersprite.psprite = &(s_mousecenteron.sprite);
+		re.AddSpriteToForwardRenderPass(rendersprite);
 	}
 
 	//aimbar
@@ -33378,10 +33399,18 @@ int OnRenderSprite(RenderContext& pRenderContext)
 
 		{
 			if (s_spsel3d.state) {
-				s_spsel3d.spriteON.DrawScreen(pRenderContext);
+				//s_spsel3d.spriteON.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spsel3d.spriteON);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 			else {
-				s_spsel3d.spriteOFF.DrawScreen(pRenderContext);
+				//s_spsel3d.spriteOFF.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spsel3d.spriteOFF);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 		//{
@@ -33439,10 +33468,18 @@ int OnRenderSprite(RenderContext& pRenderContext)
 			int spgcnt;
 			for (spgcnt = 0; spgcnt < SPGUISWNUM; spgcnt++) {
 				if (s_spguisw[spgcnt].state) {
-					s_spguisw[spgcnt].spriteON.DrawScreen(pRenderContext);
+					//s_spguisw[spgcnt].spriteON.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_spguisw[spgcnt].spriteON);
+					re.AddSpriteToForwardRenderPass(rendersprite);
 				}
 				else {
-					s_spguisw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+					//s_spguisw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_spguisw[spgcnt].spriteOFF);
+					re.AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
 		}
@@ -33454,10 +33491,18 @@ int OnRenderSprite(RenderContext& pRenderContext)
 		int spgcnt;
 		for (spgcnt = 0; spgcnt < SPDISPSWNUM; spgcnt++) {
 			if (s_spdispsw[spgcnt].state) {
-				s_spdispsw[spgcnt].spriteON.DrawScreen(pRenderContext);
+				//s_spdispsw[spgcnt].spriteON.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spdispsw[spgcnt].spriteON);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 			else {
-				s_spdispsw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+				//s_spdispsw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spdispsw[spgcnt].spriteOFF);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 	}
@@ -33468,10 +33513,18 @@ int OnRenderSprite(RenderContext& pRenderContext)
 		int spgcnt;
 		for (spgcnt = 0; spgcnt < SPRIGIDSWNUM; spgcnt++) {
 			if (s_sprigidsw[spgcnt].state) {
-				s_sprigidsw[spgcnt].spriteON.DrawScreen(pRenderContext);
+				//s_sprigidsw[spgcnt].spriteON.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_sprigidsw[spgcnt].spriteON);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 			else {
-				s_sprigidsw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+				//s_sprigidsw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_sprigidsw[spgcnt].spriteOFF);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 	}
@@ -33481,10 +33534,18 @@ int OnRenderSprite(RenderContext& pRenderContext)
 		int sprcnt;
 		for (sprcnt = 0; sprcnt < SPRETARGETSWNUM; sprcnt++) {
 			if (s_spretargetsw[sprcnt].state) {
-				s_spretargetsw[sprcnt].spriteON.DrawScreen(pRenderContext);
+				//s_spretargetsw[sprcnt].spriteON.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spretargetsw[sprcnt].spriteON);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 			else {
-				s_spretargetsw[sprcnt].spriteOFF.DrawScreen(pRenderContext);
+				//s_spretargetsw[sprcnt].spriteOFF.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spretargetsw[sprcnt].spriteOFF);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 	}
@@ -33497,100 +33558,252 @@ int OnRenderSprite(RenderContext& pRenderContext)
 			//Axis
 			int spacnt;
 			for (spacnt = 0; spacnt < SPAXISNUM; spacnt++) {
-				s_spaxis[spacnt].sprite.DrawScreen(pRenderContext);
+				//s_spaxis[spacnt].sprite.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spaxis[spacnt].sprite);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			//IK Mode
 			int spgcnt;
 			for (spgcnt = 0; spgcnt < 3; spgcnt++) {
 				if (s_spikmodesw[spgcnt].state) {
-					s_spikmodesw[spgcnt].spriteON.DrawScreen(pRenderContext);
+					//s_spikmodesw[spgcnt].spriteON.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_spikmodesw[spgcnt].spriteON);
+					re.AddSpriteToForwardRenderPass(rendersprite);
 				}
 				else {
-					s_spikmodesw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+					//s_spikmodesw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_spikmodesw[spgcnt].spriteOFF);
+					re.AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
 
 			//refpossw
 			if (s_sprefpos.state) {
-				s_sprefpos.spriteON.DrawScreen(pRenderContext);
+				//s_sprefpos.spriteON.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_sprefpos.spriteON);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 			else {
-				s_sprefpos.spriteOFF.DrawScreen(pRenderContext);
+				//s_sprefpos.spriteOFF.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_sprefpos.spriteOFF);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			//limiteulsw
 			if (s_splimiteul.state) {
-				s_splimiteul.spriteON.DrawScreen(pRenderContext);
+				//s_splimiteul.spriteON.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_splimiteul.spriteON);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 			else {
-				s_splimiteul.spriteOFF.DrawScreen(pRenderContext);
+				//s_splimiteul.spriteOFF.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_splimiteul.spriteOFF);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			//scrapingsw
 			if (s_spscraping.state) {
-				s_spscraping.spriteON.DrawScreen(pRenderContext);
+				//s_spscraping.spriteON.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spscraping.spriteON);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 			else {
-				s_spscraping.spriteOFF.DrawScreen(pRenderContext);
+				//s_spscraping.spriteOFF.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spscraping.spriteOFF);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 
-			//L2W button
-			s_spcplw2w.sprite.DrawScreen(pRenderContext);
+			{
+				//L2W button
+				//s_spcplw2w.sprite.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spcplw2w.sprite);
+				re.AddSpriteToForwardRenderPass(rendersprite);
+			}
+
 
 			//Undo Redo
 			int spucnt;
 			for (spucnt = 0; spucnt < 2; spucnt++) {
-				s_spundo[spucnt].sprite.DrawScreen(pRenderContext);
+				//s_spundo[spucnt].sprite.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spundo[spucnt].sprite);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			//Rig switch
 			if ((s_oprigflag >= 0) && (s_oprigflag < SPRIGMAX)) {
-				s_sprig[s_oprigflag].sprite.DrawScreen(pRenderContext);
+				//s_sprig[s_oprigflag].sprite.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_sprig[s_oprigflag].sprite);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 
-			//Smooth
-			s_spsmooth.sprite.DrawScreen(pRenderContext);
+			{
+				//Smooth
+				//s_spsmooth.sprite.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spsmooth.sprite);
+				re.AddSpriteToForwardRenderPass(rendersprite);
+			}
 
-			//ConstExe
-			s_spconstexe.sprite.DrawScreen(pRenderContext);
+			{
+				//ConstExe
+				//s_spconstexe.sprite.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spconstexe.sprite);
+				re.AddSpriteToForwardRenderPass(rendersprite);
+			}
 
-			//ConstRefresh
-			s_spconstrefresh.sprite.DrawScreen(pRenderContext);
+			{
+				//ConstRefresh
+				//s_spconstrefresh.sprite.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spconstrefresh.sprite);
+				re.AddSpriteToForwardRenderPass(rendersprite);
+			}
 
-
-			s_spret2prev2.sprite.DrawScreen(pRenderContext);
+			{
+				//s_spret2prev2.sprite.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spret2prev2.sprite);
+				re.AddSpriteToForwardRenderPass(rendersprite);
+			}
 
 
 			if (s_toolspritemode == 0) {
-				//Copy
-				s_spcopy.sprite.DrawScreen(pRenderContext);
-				//SymCopy
-				s_spsymcopy.sprite.DrawScreen(pRenderContext);
-				//Paste
-				s_sppaste.sprite.DrawScreen(pRenderContext);
-				//CopyHistory
-				s_spcopyhistory.sprite.DrawScreen(pRenderContext);
+				{
+					//Copy
+					//s_spcopy.sprite.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_spcopy.sprite);
+					re.AddSpriteToForwardRenderPass(rendersprite);
+				}
+
+				{
+					//SymCopy
+					//s_spsymcopy.sprite.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_spsymcopy.sprite);
+					re.AddSpriteToForwardRenderPass(rendersprite);
+				}
+
+				{
+					//Paste
+					//s_sppaste.sprite.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_sppaste.sprite);
+					re.AddSpriteToForwardRenderPass(rendersprite);
+				}
+
+				{
+					//CopyHistory
+					//s_spcopyhistory.sprite.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_spcopyhistory.sprite);
+					re.AddSpriteToForwardRenderPass(rendersprite);
+				}
 			}
 			else if (s_toolspritemode == 1) {
-				//Interpolate
-				s_spinterpolate.sprite.DrawScreen(pRenderContext);
-				//Init
-				s_spinit.sprite.DrawScreen(pRenderContext);
-				//ScaleInit
-				s_spscaleinit.sprite.DrawScreen(pRenderContext);
-				//Property
-				s_spproperty.sprite.DrawScreen(pRenderContext);
+				{
+					//Interpolate
+					//s_spinterpolate.sprite.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_spinterpolate.sprite);
+					re.AddSpriteToForwardRenderPass(rendersprite);
+				}
+
+				{
+					//Init
+					//s_spinit.sprite.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_spinit.sprite);
+					re.AddSpriteToForwardRenderPass(rendersprite);
+				}
+				{
+					//ScaleInit
+					//s_spscaleinit.sprite.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_spscaleinit.sprite);
+					re.AddSpriteToForwardRenderPass(rendersprite);
+				}
+				{
+					//Property
+					//s_spproperty.sprite.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_spproperty.sprite);
+					re.AddSpriteToForwardRenderPass(rendersprite);
+				}
 			}
 			else if (s_toolspritemode == 2) {
-				//Edit0Frame
-				s_spzeroframe.sprite.DrawScreen(pRenderContext);
-				//CameraDolly
-				s_spcameradolly.sprite.DrawScreen(pRenderContext);
-				//ModelPosDir
-				s_spmodelposdir.sprite.DrawScreen(pRenderContext);
-				//MaterialRate
-				s_spmaterialrate.sprite.DrawScreen(pRenderContext);
+				{
+					//Edit0Frame
+					//s_spzeroframe.sprite.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_spzeroframe.sprite);
+					re.AddSpriteToForwardRenderPass(rendersprite);
+				}
+				{
+					//CameraDolly
+					//s_spcameradolly.sprite.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_spcameradolly.sprite);
+					re.AddSpriteToForwardRenderPass(rendersprite);
+
+				}
+				{
+					//ModelPosDir
+					//s_spmodelposdir.sprite.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_spmodelposdir.sprite);
+					re.AddSpriteToForwardRenderPass(rendersprite);
+
+				}
+				{
+					//MaterialRate
+					//s_spmaterialrate.sprite.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_spmaterialrate.sprite);
+					re.AddSpriteToForwardRenderPass(rendersprite);
+				}
 			}
 			else {
 				_ASSERT(0);
@@ -33601,25 +33814,49 @@ int OnRenderSprite(RenderContext& pRenderContext)
 		//カメラ操作スプライトは　プレビュー中も表示
 		int spccnt;
 		for (spccnt = 0; spccnt < SPR_CAM_MAX; spccnt++) {
-			s_spcam[spccnt].sprite.DrawScreen(pRenderContext);
+			//s_spcam[spccnt].sprite.DrawScreen(pRenderContext);
+			myRenderer::RENDERSPRITE rendersprite;
+			rendersprite.Init();
+			rendersprite.psprite = &(s_spcam[spccnt].sprite);
+			re.AddSpriteToForwardRenderPass(rendersprite);
 		}
 		//cameramode
 		if (s_spcameramode.state == true) {
-			s_spcameramode.spriteON.DrawScreen(pRenderContext);
+			//s_spcameramode.spriteON.DrawScreen(pRenderContext);
+			myRenderer::RENDERSPRITE rendersprite;
+			rendersprite.Init();
+			rendersprite.psprite = &(s_spcameramode.spriteON);
+			re.AddSpriteToForwardRenderPass(rendersprite);
 		}
 		else {
-			s_spcameramode.spriteOFF.DrawScreen(pRenderContext);
+			//s_spcameramode.spriteOFF.DrawScreen(pRenderContext);
+			myRenderer::RENDERSPRITE rendersprite;
+			rendersprite.Init();
+			rendersprite.psprite = &(s_spcameramode.spriteOFF);
+			re.AddSpriteToForwardRenderPass(rendersprite);
 		}
 		//camerainherit
 		if (g_cameraanimmode != 0) {
 			if (s_spcamerainherit.mode == 0) {
-				s_spcamerainherit.sprite1.DrawScreen(pRenderContext);
+				//s_spcamerainherit.sprite1.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spcamerainherit.sprite1);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 			else if (s_spcamerainherit.mode == 1) {
-				s_spcamerainherit.sprite2.DrawScreen(pRenderContext);
+				//s_spcamerainherit.sprite2.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spcamerainherit.sprite2);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 			else if (s_spcamerainherit.mode == 2) {
-				s_spcamerainherit.sprite3.DrawScreen(pRenderContext);
+				//s_spcamerainherit.sprite3.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spcamerainherit.sprite3);
+				re.AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 	}
@@ -33628,7 +33865,11 @@ int OnRenderSprite(RenderContext& pRenderContext)
 
 	//UFO
 	if (g_dsmousewait == 1) {
-		s_spmousehere.sprite.DrawScreen(pRenderContext);
+		//s_spmousehere.sprite.DrawScreen(pRenderContext);
+		myRenderer::RENDERSPRITE rendersprite;
+		rendersprite.Init();
+		rendersprite.psprite = &(s_spmousehere.sprite);
+		re.AddSpriteToForwardRenderPass(rendersprite);
 	}
 
 
@@ -47918,9 +48159,9 @@ int CreateSprites()
 
 
 	wcscpy_s(filepath, MAX_PATH, mpath);
-	wcscat_s(filepath, MAX_PATH, L"MameMedia\\bonecircle.dds");
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\JointMark_1.png");
 	s_spritetex0 = new Texture();
-	s_spritetex0->InitFromDDSFile(filepath);
+	s_spritetex0->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex0;
 	s_bcircle.Init(spriteinitdata);//InstancedSprite
 
