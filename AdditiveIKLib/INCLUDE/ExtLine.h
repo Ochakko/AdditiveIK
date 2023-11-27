@@ -6,6 +6,8 @@
 #include <ChaVecCalc.h>
 
 class CMQOFace;
+class CMQOMaterial;
+class CModel;
 
 class CExtLine
 {
@@ -38,7 +40,7 @@ public:
  * @param (ChaVector4 srccol) IN 線分の色。
  * @return 成功したら０。
  */
-	int CreateExtLine( int pointnum, int facenum, ChaVector3* pointptr, CMQOFace* faceptr, ChaVector4 srccol );
+	int CreateExtLine( CModel* srcmodel, int pointnum, int facenum, ChaVector3* pointptr, CMQOFace* faceptr, ChaVector4 srccol );
 
 
 /**
@@ -81,8 +83,27 @@ private:
  */
 	int CreateBuffer( EXTLINEV* lineptr, int arrayleng, int* setnum );
 
-
 public:
+	CMQOMaterial* GetMaterial() {
+		return m_material;
+	};
+	int GetLineNum()
+	{
+		return m_linenum;
+	}
+	EXTLINEV* GetExtLineV()
+	{
+		return m_linev;
+	}
+	MODELBOUND GetBound()
+	{
+		return m_bound;
+	}
+	ChaVector4 GetColor()
+	{
+		return m_color;
+	}
+private:
 	int m_linenum;//線分の数。
 	EXTLINEV* m_linev;//頂点データ。
 	ChaVector4 m_color;//線分の色
@@ -94,6 +115,7 @@ private:
 	int m_facenum;//面（線分）の数。
 	ChaVector3* m_pointptr;//頂点データ。
 	CMQOFace* m_faceptr;//面(線分)データ。
+	CMQOMaterial* m_material;
 };
 
 

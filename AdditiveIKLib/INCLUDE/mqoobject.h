@@ -28,6 +28,7 @@ class CDispObj;
 class CBone;
 class CInfBone;
 class CRigidElem;
+class CModel;
 
 typedef struct tag_latermaterial
 {
@@ -70,7 +71,7 @@ public:
 
 	int MakePolymesh3(bool fbxfileflag, ID3D12Device* pdev, std::map<int, CMQOMaterial*>& srcmaterial);
 	int MakePolymesh4( ID3D12Device* pdev );
-	int MakeExtLine();
+	int MakeExtLine(CModel* srcmodel);
 	int MakeDispObj( ID3D12Device* pdev, int hasbone );
 //	int MakeExtLine( map<int,CMQOMaterial*>& srcmat );
 

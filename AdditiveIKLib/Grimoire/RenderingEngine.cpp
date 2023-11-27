@@ -484,9 +484,12 @@ namespace myRenderer
                     //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
                     currenderobj.mqoobj->GetDispObj()->RenderNormal(rc, currenderobj);
                 }
-                else {
-                    _ASSERT(0);
-                }
+            }
+            if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
+                //################################
+                //GetDispObj()ではなくGetDispLine()
+                //################################
+                currenderobj.mqoobj->GetDispLine()->RenderLine(rc, currenderobj);
             }
         }
     }

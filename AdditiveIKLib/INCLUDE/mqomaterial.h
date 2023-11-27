@@ -66,7 +66,7 @@ public:
 	int CreateTexture(WCHAR* dirname, int texpool = 0);//!!!!!!!!!!!!!!!!!!!!!!!!
 
 	void InitShadersAndPipelines(
-		bool withboneflag,
+		int vertextype,
 		const char* fxFilePath,
 		const char* vsEntryPointFunc,
 		const char* vsSkinEntryPointFunc,
@@ -77,13 +77,13 @@ public:
 		UINT offsetInDescriptorsFromTableStartCB,
 		UINT offsetInDescriptorsFromTableStartSRV,
 		D3D12_FILTER samplerFilter);
-	void InitPipelineState(bool withboneflag, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
+	void InitPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
 	void InitShaders(const char* fxFilePath,
 		const char* vsEntryPointFunc,
 		const char* vsSkinEntriyPointFunc,
 		const char* psEntryPointFunc
 	);
-	void BeginRender(RenderContext& rc, int hasSkin);
+	void BeginRender(RenderContext& rc, int hasSkin, bool isline);
 
 
 private:

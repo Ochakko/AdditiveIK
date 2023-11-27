@@ -902,7 +902,7 @@ int CMQOObject::MakePolymesh4( ID3D12Device* pdev )
 }
 
 
-int CMQOObject::MakeExtLine()
+int CMQOObject::MakeExtLine(CModel* srcmodel)
 {
 	if( m_extline ){
 		delete m_extline;
@@ -914,7 +914,7 @@ int CMQOObject::MakeExtLine()
 		m_displine = 0;
 	}
 
-	if( !m_pointbuf || !m_facebuf )
+	if( !srcmodel || !m_pointbuf || !m_facebuf )
 		return 0;
 
 
@@ -925,9 +925,9 @@ int CMQOObject::MakeExtLine()
 		return 1;
 	}
 
-	CallF( m_extline->CreateExtLine( m_vertex, m_face, m_pointbuf, m_facebuf, m_color ), return 1 );
+	CallF( m_extline->CreateExtLine( srcmodel, m_vertex, m_face, m_pointbuf, m_facebuf, m_color ), return 1 );
 
-	if( m_extline->m_linenum <= 0 ){
+	if( m_extline->GetLineNum() <= 0 ){
 		delete m_extline;
 		m_extline = 0;
 	}
@@ -990,14 +990,13 @@ int CMQOObject::MakeDispObj( ID3D12Device* pdev, int hasbone )
 		m_pm4->DestroySystemDispObj();
 
 	}
-
-	if( m_extline ){
+	else if(m_extline){
 		m_displine = new CDispObj();
 		if( !m_displine ){
 			_ASSERT( 0 );
 			return 1;
 		}
-		CallF( m_displine->CreateDispObj( pdev, m_extline ), return 1 );
+		CallF( m_displine->CreateDispObj(pdev, m_extline), return 1 );
 
 		m_extline->CalcBound();
 
@@ -2449,12 +2448,14 @@ int CMQOObject::ChkInView(ChaMatrix matWorld, ChaMatrix matVP)
 			//2023/10/07
 			//extlineは　視野内とする
 			m_frustum.SetVisible(true);
+			return 0;//!!!!!!
 		}
 		else {
 			return 2;
 		}
 	}
 	else {
+		_ASSERT(0);
 		return 2;
 	}
 
@@ -2584,7 +2585,7 @@ int CMQOObject::IncludeTransparent(float multalpha, bool* pfound_noalpha, bool* 
 			bool found_alpha = false;
 			bool found_noalpha = false;
 
-			if ((GetExtLine()->m_color.w * multalpha) > 0.99999f) {
+			if ((GetExtLine()->GetColor().w * multalpha) > 0.99999f) {
 				found_noalpha = true;
 			}
 			else {

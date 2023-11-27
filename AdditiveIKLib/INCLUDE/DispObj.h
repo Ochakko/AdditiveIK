@@ -121,9 +121,7 @@ public:
  * @param (ChaVector4 diffusemult) IN ディフューズ色に掛け算する比率。
  * @return 成功したら０。
  */
-	int RenderLine(bool withalpha,
-		RenderContext* pRenderContext, 
-		ChaVector4 diffusemult, ChaVector4 materialdisprate);
+	int RenderLine(RenderContext& rc, myRenderer::RENDEROBJ renderobj);
 
 /**
  * @fn
@@ -193,7 +191,7 @@ private:
  * @breaf 線分用の頂点バッファとインデックスバッファを作成する。
  * @return 成功したら０。
  */
-	int CreateVBandIBLine(ID3D12Device* pdev);
+	//int CreateVBandIBLine(ID3D12Device* pdev);//extlineもCreateVBandIBで処理
 
 
 	void CreateDescriptorHeaps();

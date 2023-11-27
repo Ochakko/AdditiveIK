@@ -866,7 +866,7 @@ typedef  struct tag_extlinev
 		pos.x = 0.0f;
 		pos.y = 0.0f;
 		pos.z = 0.0f;
-		pos.w = 0.0f;
+		pos.w = 1.0f;
 	};
 }EXTLINEV;
 

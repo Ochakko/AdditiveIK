@@ -1352,8 +1352,16 @@ int CModel::CreateMaterialTexture()
 				CMQOMaterial* curmat = itrmat->second;
 				CallF( curmat->CreateTexture( m_dirname, m_texpool ), return 1 );
 			}
+
+			if (curobj->GetExtLine()) {
+				//ExtLineの　m_rootsignatureとDescriptorHeap用　のマテリアル初期化
+				if (curobj->GetExtLine()->GetMaterial()) {
+					curobj->GetExtLine()->GetMaterial()->CreateTexture(m_dirname, m_texpool);
+				}
+			}
 		}
 	}
+
 
 	return 0;
 }
@@ -1666,9 +1674,9 @@ int CModel::GetModelBound( MODELBOUND* dstb )
 		if( curobj->GetExtLine() ){
 			//curobj->GetExtLine()->CalcBound();//MakeDispObj()に移動　ここでは既にpointbufなどが削除された後
 			if( calcflag == 0 ){
-				mb = curobj->GetExtLine()->m_bound;
+				mb = curobj->GetExtLine()->GetBound();
 			}else{
-				addmb = curobj->GetExtLine()->m_bound;
+				addmb = curobj->GetExtLine()->GetBound();
 				AddModelBound( &mb, &addmb );
 			}
 			calcflag++;
@@ -2048,7 +2056,7 @@ int CModel::MakeExtLine()
 	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
 		CMQOObject* curobj = itr->second;
 		if( curobj ){
-			CallF( curobj->MakeExtLine(), return 1 );
+			CallF( curobj->MakeExtLine(this), return 1 );
 		}
 	}
 

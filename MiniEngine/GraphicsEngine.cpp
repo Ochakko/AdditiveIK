@@ -197,7 +197,16 @@ IDXGIFactory4* GraphicsEngine::CreateDXGIFactory()
 
 		// Enable additional debug layers.
 		dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
-		//debugController->Release();//2023/11/23 ここでリリースすると　リークして無くてもダンプ情報が出るのでコメントアウト
+
+		//2023/11/23 ここでリリースすると　リークして無くてもダンプ情報が出るのでコメントアウト
+		// 2023/11/27 補足　
+		// 解釈が合っているかどうかについては自信が無いが
+		// Microsoftのドキュメントに書いてあったことによると
+		// ID3D12DebugがDeviceを削除しますと書いてあった
+		// それはつまり　アプリ終了時にID3D12DebugがDeviceを削除してからメモリリークをチェックする　ということだと思う
+		// なぜなら　デバイスを削除しないとリークしているかどうかをチェック出来ないからである
+		// よって　ID3D12Debugをリリースしない
+		//debugController->Release();
 	}
 #endif
 	IDXGIFactory4* factory;

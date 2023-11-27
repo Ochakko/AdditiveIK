@@ -5565,9 +5565,9 @@ void OnFrameRender(myRenderer::RenderingEngine& re, RenderContext& rc, double fT
 			}
 			s_chascene->RenderModels(re, lightflag, diffusemult, btflag);
 
-			//if (s_ground) {
-			//	OnRenderGround(re, rc);//メッシュではなくラインオブジェクト　CD3DDispのlineはまだDirectX12に対応していない
-			//}
+			if (s_ground) {
+				OnRenderGround(re, rc);//メッシュではなくラインオブジェクト
+			}
 
 			OnRenderBoneMark(re, rc);
 
@@ -33263,6 +33263,9 @@ int OnRenderOnlyOneObj(RenderContext* pRenderContext)
 int OnRenderGround(myRenderer::RenderingEngine& re, RenderContext& pRenderContext)
 {
 	if (!s_chascene) {
+		return 0;
+	}
+	if (!s_model) {
 		return 0;
 	}
 

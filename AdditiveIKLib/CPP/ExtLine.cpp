@@ -16,7 +16,8 @@
 
 #include <ExtLine.h>
 #include <mqoface.h>
-
+#include <mqomaterial.h>
+#include <Model.h>
 
 CExtLine::CExtLine()
 {
@@ -39,6 +40,8 @@ int CExtLine::InitParams()
 	m_pointptr = 0;
 	m_faceptr = 0;
 
+	m_material = nullptr;
+
 	return 0;
 }
 int CExtLine::DestroyObjs()
@@ -47,6 +50,11 @@ int CExtLine::DestroyObjs()
 		free( m_linev );
 		m_linev = 0;
 	}
+	if (m_material) {
+		delete m_material;
+		m_material = nullptr;
+	}
+
 	m_linenum = 0;
 
 	m_pointnum = 0;
@@ -55,22 +63,48 @@ int CExtLine::DestroyObjs()
 	m_pointptr = 0;
 	m_faceptr = 0;
 
+
+
 	return 0;
 }
 
 
-int CExtLine::CreateExtLine( int pointnum, int facenum, ChaVector3* pointptr, CMQOFace* faceptr, ChaVector4 srccol )
+int CExtLine::CreateExtLine( CModel* srcmodel, int pointnum, int facenum, ChaVector3* pointptr, CMQOFace* faceptr, ChaVector4 srccol )
 {
+
 	m_pointptr = pointptr;
 	m_faceptr = faceptr;
 	m_color = srccol;
 	m_pointnum = pointnum;
 	m_facenum = facenum;
 
-	if (!m_pointptr || !m_faceptr){
+	if (!srcmodel || !m_pointptr || !m_faceptr){
 		_ASSERT(0);
 		return 1;
 	}
+
+	if (!m_material) {
+		m_material = new CMQOMaterial();
+		if (!m_material) {
+			DbgOut(L"ExtLine : CreateExtLine : newmat alloc error !!!");
+			return 1;
+		}
+		//DbgOut( L"MQOFile : ReadMaterial : SetParams : %s\n", m_linechar );
+		//int matno = srcmodel->GetMQOMaterialSize();
+		//m_linechar[LINECHARLENG - 1] = 0;
+		//size_t lineleng = strlen(m_linechar);
+		//ret = newmat->SetParams(matno, m_scene_ambient, m_linechar, (int)lineleng);
+		//if (ret) {
+		//	DbgOut(L"MQOFile : ReadMaterial : newmat SetParams error !!!");
+		//	_ASSERT(0);
+		//	*nextstate = BEGIN_FINISH;
+		//	return 1;
+		//}
+		int magicmaterialno = 1001;
+		m_material->SetMaterialNo(magicmaterialno);
+	}
+
+
 
 	int lnum = 0;
 	CallF( CreateBuffer( 0, 0, &lnum ), return 1 );

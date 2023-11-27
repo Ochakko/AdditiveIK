@@ -1001,7 +1001,7 @@ int CMQOMaterial::AddConvName( char** ppname )
 
 
 void CMQOMaterial::InitShadersAndPipelines(
-	bool withboneflag,
+	int vertextype,
 	const char* fxFilePath,
 	const char* vsEntryPointFunc,
 	const char* vsSkinEntryPointFunc,
@@ -1013,6 +1013,11 @@ void CMQOMaterial::InitShadersAndPipelines(
 	UINT offsetInDescriptorsFromTableStartSRV,
 	D3D12_FILTER samplerFilter)
 {
+
+	//############################################
+	// vertextype : 0-->pm4, 1-->pm3, 2-->extline
+	//############################################
+
 
 
 	//テクスチャをロード。
@@ -1064,12 +1069,20 @@ void CMQOMaterial::InitShadersAndPipelines(
 		//シェーダーを初期化。
 		InitShaders(fxFilePath, vsEntryPointFunc, vsSkinEntryPointFunc, psEntryPointFunc);
 		//パイプラインステートを初期化。
-		InitPipelineState(withboneflag, colorBufferFormat);
+		InitPipelineState(vertextype, colorBufferFormat);
 	}
 }
 
-void CMQOMaterial::InitPipelineState(bool withboneflag, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
+void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
 {
+
+
+	//############################################
+	// vertextype : 0-->pm4, 1-->pm3, 2-->extline
+	//############################################
+
+
+
 	// 頂点レイアウトを定義する。
 	//パイプラインステートを作成。
 	D3D12_INPUT_ELEMENT_DESC inputElementDescsWithBone[] =
@@ -1104,24 +1117,43 @@ void CMQOMaterial::InitPipelineState(bool withboneflag, const std::array<DXGI_FO
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	};
+	D3D12_INPUT_ELEMENT_DESC inputElementDescsExtLine[] =
+	{
+		//型：ExtLine
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+	};
+
+
 
 	{
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
 		psoDesc.pRootSignature = m_rootSignature.Get();
-		psoDesc.InputLayout = { inputElementDescsWithBone, _countof(inputElementDescsWithBone) };//!!! WithBone
+		if (vertextype != 2) {
+			psoDesc.InputLayout = { inputElementDescsWithBone, _countof(inputElementDescsWithBone) };//!!! WithBone
+		}
+		else {
+			psoDesc.InputLayout = { inputElementDescsExtLine, _countof(inputElementDescsExtLine) };
+		}
 		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsSkinModel->GetCompiledBlob());//!!!!!!!!! Skin 
 		psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psModel->GetCompiledBlob());
 		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-#ifdef SAMPLE_11
-		// 背面を描画していないと影がおかしくなるため、
-		// シャドウのサンプルのみカリングをオフにする。
-		// 本来はアプリ側からカリングモードを渡すのがいいのだけど、
-		// 書籍に記載しているコードに追記がいるので、エンジン側で吸収する。
-		psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-#else
-		psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-#endif
 
+		if (vertextype != 2) {
+#ifdef SAMPLE_11
+			// 背面を描画していないと影がおかしくなるため、
+			// シャドウのサンプルのみカリングをオフにする。
+			// 本来はアプリ側からカリングモードを渡すのがいいのだけど、
+			// 書籍に記載しているコードに追記がいるので、エンジン側で吸収する。
+			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+#else
+			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+#endif
+		}
+		else {
+			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+		}
 		////2023/11/18
 		//psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
 
@@ -1134,7 +1166,12 @@ void CMQOMaterial::InitPipelineState(bool withboneflag, const std::array<DXGI_FO
 		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 		psoDesc.DepthStencilState.StencilEnable = FALSE;
 		psoDesc.SampleMask = UINT_MAX;
-		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		if (vertextype != 2) {
+			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		}
+		else {
+			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+		}
 
 		int numRenderTarget = 0;
 		for (auto& format : colorBufferFormat) {
@@ -1166,19 +1203,32 @@ void CMQOMaterial::InitPipelineState(bool withboneflag, const std::array<DXGI_FO
 	{
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
 		psoDesc.pRootSignature = m_rootSignature.Get();
-		psoDesc.InputLayout = { inputElementDescsWithoutBone, _countof(inputElementDescsWithoutBone) };//!!! WithoutBone
+		if (vertextype != 2) {
+			//pm4, pm3
+			psoDesc.InputLayout = { inputElementDescsWithoutBone, _countof(inputElementDescsWithoutBone) };//!!! WithoutBone
+		}
+		else {
+			//extline
+			psoDesc.InputLayout = { inputElementDescsExtLine, _countof(inputElementDescsExtLine) };//!!! ExtLIne
+		}
 		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsNonSkinModel->GetCompiledBlob());//!!!!!!!! NonSkin
 		psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psModel->GetCompiledBlob());
 		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+
+		if (vertextype != 2) {
 #ifdef SAMPLE_11
-		// 背面を描画していないと影がおかしくなるため、
-		// シャドウのサンプルのみカリングをオフにする。
-		// 本来はアプリ側からカリングモードを渡すのがいいのだけど、
-		// 書籍に記載しているコードに追記がいるので、エンジン側で吸収する。
-		psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+			// 背面を描画していないと影がおかしくなるため、
+			// シャドウのサンプルのみカリングをオフにする。
+			// 本来はアプリ側からカリングモードを渡すのがいいのだけど、
+			// 書籍に記載しているコードに追記がいるので、エンジン側で吸収する。
+			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
 #else
-		psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
 #endif
+		}
+		else {
+			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+		}
 
 		////2023/11/18
 		//psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
@@ -1192,7 +1242,12 @@ void CMQOMaterial::InitPipelineState(bool withboneflag, const std::array<DXGI_FO
 		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 		psoDesc.DepthStencilState.StencilEnable = FALSE;
 		psoDesc.SampleMask = UINT_MAX;
-		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		if (vertextype != 2) {
+			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		}
+		else {
+			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+		}
 
 		int numRenderTarget = 0;
 		for (auto& format : colorBufferFormat) {
@@ -1258,17 +1313,27 @@ void CMQOMaterial::InitShaders(
 	}
 }
 
-void CMQOMaterial::BeginRender(RenderContext& rc, int hasSkin)
+void CMQOMaterial::BeginRender(RenderContext& rc, int hasSkin, bool isline)
 {
 	rc.SetRootSignature(m_rootSignature);
 
 	if (hasSkin) {
-		//rc.SetPipelineState(m_skinModelPipelineState);
-		rc.SetPipelineState(m_transSkinModelPipelineState);
+		//
+		//if (!isline) {
+			rc.SetPipelineState(m_transSkinModelPipelineState);
+		//}
+		//else {
+		//	rc.SetPipelineState(m_skinModelPipelineState);
+		//}	
 	}
 	else {
-		//rc.SetPipelineState(m_nonSkinModelPipelineState);
-		rc.SetPipelineState(m_transNonSkinModelPipelineState);
+		//
+		//if (!isline) {
+			rc.SetPipelineState(m_transNonSkinModelPipelineState);
+		//}
+		//else {
+		//	rc.SetPipelineState(m_nonSkinModelPipelineState);
+		//}
 	}
 }
 

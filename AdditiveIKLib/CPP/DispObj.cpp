@@ -310,9 +310,10 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone)
 		CMQOMaterial* curmat;
 		curmat = currb->mqomat;
 		bool withboneflag = false;
+		int vertextype = 1;//pm3
 		if (curmat) {
 			curmat->InitShadersAndPipelines(
-				withboneflag,
+				vertextype,
 				"../Media/Shader/AdditiveIK.fx",
 				"VSMainWithoutBone",
 				"VSMainWithBone",
@@ -369,8 +370,9 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone )
 		int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
 		if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0)) {
 			if (curmat) {
+				int vertextype = 0;//pm4
 				curmat->InitShadersAndPipelines(
-					withboneflag,
+					vertextype,
 					"../Media/Shader/AdditiveIK.fx",
 					"VSMainWithoutBone",
 					"VSMainWithBone",
@@ -400,7 +402,45 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 	m_extline = extline;
 
 	CallF( CreateDecl(pdev), return 1 );
-	CallF( CreateVBandIBLine(pdev), return 1 );
+	//CallF( CreateVBandIBLine(pdev), return 1 );
+	CallF(CreateVBandIB(pdev), return 1);
+
+
+	std::array<DXGI_FORMAT, MAX_RENDERING_TARGET> colorBufferFormat = {
+		DXGI_FORMAT_R8G8B8A8_UNORM,
+		//DXGI_FORMAT_R32G32B32A32_FLOAT,
+		DXGI_FORMAT_UNKNOWN,
+		DXGI_FORMAT_UNKNOWN,
+		DXGI_FORMAT_UNKNOWN,
+		DXGI_FORMAT_UNKNOWN,
+		DXGI_FORMAT_UNKNOWN,
+		DXGI_FORMAT_UNKNOWN,
+		DXGI_FORMAT_UNKNOWN,
+	};	//レンダリングするカラーバッファのフォーマット。
+
+
+	int materialNum = 1;
+	int rootindex = 0;
+
+	CMQOMaterial* curmat = m_extline->GetMaterial();
+	if (curmat) {
+		int vertextype = 2;//extline
+		curmat->InitShadersAndPipelines(
+			vertextype,
+			"../Media/Shader/AdditiveIK.fx",
+			"VSMainExtLine",
+			"VSMainExtLine",
+			"PSMainExtLine",
+			colorBufferFormat,
+			NUM_SRV_ONE_MATERIAL,
+			NUM_CBV_ONE_MATERIAL,
+			NUM_CBV_ONE_MATERIAL * rootindex,//offset
+			NUM_SRV_ONE_MATERIAL * rootindex,//offset
+			D3D12_FILTER_MIN_MAG_MIP_LINEAR
+		);
+
+		rootindex++;
+	}
 
 	return 0;
 }
@@ -420,6 +460,9 @@ void CDispObj::CreateDescriptorHeaps()
 			int curtrinum = 0;
 			int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
 			if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0)) {
+
+
+
 
 				//ディスクリプタヒープにディスクリプタを登録していく。
 				m_descriptorHeap.RegistShaderResource(srvNo, curmat->GetDiffuseMap());			//アルベドに乗算するテクスチャ。
@@ -479,6 +522,40 @@ void CDispObj::CreateDescriptorHeaps()
 			}
 		}
 		//}
+		if (m_createdescriptorflag) {
+			m_descriptorHeap.Commit();
+		}
+	}
+	else if (m_extline) {
+		//ディスクリプタヒープを構築していく。
+		int srvNo = 0;
+		int cbNo = 0;
+		CMQOMaterial* curmat;
+		curmat = m_extline->GetMaterial();
+		if (curmat) {
+			//ディスクリプタヒープにディスクリプタを登録していく。
+			m_descriptorHeap.RegistShaderResource(srvNo, curmat->GetDiffuseMap());			//アルベドに乗算するテクスチャ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 1, curmat->GetAlbedoMap());			//アルベドマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 2, curmat->GetNormalMap());		//法線マップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 3, curmat->GetSpecularMap());		//スペキュラマップ。
+			//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
+			for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
+				if (m_expandShaderResourceView[i]) {
+					m_descriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
+				}
+			}
+			srvNo += NUM_SRV_ONE_MATERIAL;
+			m_descriptorHeap.RegistConstantBuffer(cbNo, m_commonConstantBuffer);
+			if (m_expandConstantBuffer.IsValid()) {
+				m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
+			}
+			cbNo += NUM_CBV_ONE_MATERIAL;
+			m_createdescriptorflag = true;
+		}
+		else {
+			_ASSERT(0);
+		}
+
 		if (m_createdescriptorflag) {
 			m_descriptorHeap.Commit();
 		}
@@ -880,15 +957,16 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 
 	UINT elemleng, infleng;
 
-	elemleng = sizeof( PM3DISPV );
-	infleng = sizeof( PM3INF );
+	elemleng = sizeof(PM3DISPV);
+	infleng = sizeof(PM3INF);
 
 	int pmvleng, pmfleng;
 	PM3INF* pmib = 0;
 	PM3DISPV* pmv = 0;
+	EXTLINEV* plinev = 0;
 	DWORD vbsize;
 	DWORD stride;
-	if( m_pm3 ){
+	if (m_pm3) {
 		pmvleng = m_pm3->GetOptLeng();
 		pmfleng = m_pm3->GetFaceNum();
 		pmib = 0;
@@ -896,7 +974,8 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 
 		stride = sizeof(PM3DISPV);
 		vbsize = pmvleng * stride;
-	}else if( m_pm4 ){
+	}
+	else if (m_pm4) {
 		pmvleng = m_pm4->GetOptLeng();
 		pmfleng = m_pm4->GetFaceNum();
 		pmib = m_pm4->GetPm3Inf();
@@ -906,6 +985,16 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 		stride = sizeof(PM3DISPV) + sizeof(PM3INF);
 
 
+		vbsize = pmvleng * stride;
+	}
+	else if (m_extline) {
+		pmvleng = m_extline->GetLineNum() * 2;
+		pmfleng = m_extline->GetLineNum();
+		pmib = 0;
+		pmv = 0;
+		plinev = m_extline->GetExtLineV();
+
+		stride = sizeof(EXTLINEV);
 		vbsize = pmvleng * stride;
 	}
 	else {
@@ -954,6 +1043,9 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 			//memcpy(pData, pmv, m_vertexBufferView.SizeInBytes);
 
 		}
+		else if (m_extline) {
+			memcpy(pData, plinev, m_vertexBufferView.SizeInBytes);
+		}
 		else {
 			_ASSERT(0);
 			//m_vertexBuffer->Unmap(0, nullptr);
@@ -966,49 +1058,80 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 //インデックスバッファ
 //###################
 	{
-		//auto d3dDevice = g_graphicsEngine->GetD3DDevice();
-		DWORD ibsize = pmfleng * 3 * sizeof(int);
-		auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-		auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(ibsize);
-		auto hr = pdev->CreateCommittedResource(
-			&heapProp,
-			D3D12_HEAP_FLAG_NONE,
-			&rDesc,
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&m_indexBuffer));
+		if (m_pm3 || m_pm4) {
+			//auto d3dDevice = g_graphicsEngine->GetD3DDevice();
+			DWORD ibsize = pmfleng * 3 * sizeof(int);
+			auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+			auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(ibsize);
+			auto hr = pdev->CreateCommittedResource(
+				&heapProp,
+				D3D12_HEAP_FLAG_NONE,
+				&rDesc,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr,
+				IID_PPV_ARGS(&m_indexBuffer));
 
-		//インデックスバッファのビューを作成。
-		m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
-		m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-		m_indexBufferView.SizeInBytes = ibsize;
+			//インデックスバッファのビューを作成。
+			m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
+			m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+			m_indexBufferView.SizeInBytes = ibsize;
 
-		//インデックスバッファをコピー。
-		uint32_t* pData;
-		//DWORD triangleno;
-		m_indexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pData));
-		if (m_pm3) {
-			//for (triangleno = 0; triangleno < (DWORD)pmfleng; triangleno++) {
-			//	*(pData + triangleno * 3) = *(m_pm3->GetDispIndex() + triangleno * 3);
-			//	*(pData + triangleno * 3 + 1) = *(m_pm3->GetDispIndex() + triangleno * 3 + 1);
-			//	*(pData + triangleno * 3 + 2) = *(m_pm3->GetDispIndex() + triangleno * 3 + 2);
-			//}
-			MoveMemory(pData, m_pm3->GetDispIndex(), pmfleng * 3 * sizeof(int));
-		}
-		else if (m_pm4) {
-			//for (triangleno = 0; triangleno < (DWORD)pmfleng; triangleno++) {
-			//	*(pData + triangleno * 3) = *(m_pm4->GetDispIndex() + triangleno * 3);
-			//	*(pData + triangleno * 3 + 1) = *(m_pm4->GetDispIndex() + triangleno * 3 + 1);
-			//	*(pData + triangleno * 3 + 2) = *(m_pm4->GetDispIndex() + triangleno * 3 + 2);
-			//}
-			MoveMemory(pData, m_pm4->GetDispIndex(), pmfleng * 3 * sizeof(int));
-		}
-		else {
-			_ASSERT(0);
+			//インデックスバッファをコピー。
+			uint32_t* pData;
+			//DWORD triangleno;
+			m_indexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pData));
+			if (m_pm3) {
+				//for (triangleno = 0; triangleno < (DWORD)pmfleng; triangleno++) {
+				//	*(pData + triangleno * 3) = *(m_pm3->GetDispIndex() + triangleno * 3);
+				//	*(pData + triangleno * 3 + 1) = *(m_pm3->GetDispIndex() + triangleno * 3 + 1);
+				//	*(pData + triangleno * 3 + 2) = *(m_pm3->GetDispIndex() + triangleno * 3 + 2);
+				//}
+				MoveMemory(pData, m_pm3->GetDispIndex(), pmfleng * 3 * sizeof(int));
+			}
+			else if (m_pm4) {
+				//for (triangleno = 0; triangleno < (DWORD)pmfleng; triangleno++) {
+				//	*(pData + triangleno * 3) = *(m_pm4->GetDispIndex() + triangleno * 3);
+				//	*(pData + triangleno * 3 + 1) = *(m_pm4->GetDispIndex() + triangleno * 3 + 1);
+				//	*(pData + triangleno * 3 + 2) = *(m_pm4->GetDispIndex() + triangleno * 3 + 2);
+				//}
+				MoveMemory(pData, m_pm4->GetDispIndex(), pmfleng * 3 * sizeof(int));
+			}
+			else {
+				_ASSERT(0);
+				//m_indexBuffer->Unmap(0, nullptr);
+				return 1;
+			}
 			//m_indexBuffer->Unmap(0, nullptr);
-			return 1;
 		}
-		//m_indexBuffer->Unmap(0, nullptr);
+		else if (m_extline) {
+			DWORD ibsize = pmfleng * 2 * sizeof(int);
+			auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+			auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(ibsize);
+			auto hr = pdev->CreateCommittedResource(
+				&heapProp,
+				D3D12_HEAP_FLAG_NONE,
+				&rDesc,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr,
+				IID_PPV_ARGS(&m_indexBuffer));
+
+			//インデックスバッファのビューを作成。
+			m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
+			m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+			m_indexBufferView.SizeInBytes = ibsize;
+
+			//インデックスバッファをコピー。
+			uint32_t* pData;
+			//DWORD triangleno;
+			m_indexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pData));
+
+			DWORD lineno;
+			for (lineno = 0; lineno < (DWORD)pmfleng; lineno++) {
+				*(pData + lineno * 2) = lineno * 2;
+				*(pData + lineno * 2 + 1) = lineno * 2 + 1;
+			}
+			//m_indexBuffer->Unmap(0, nullptr);
+		}
 	}
 
 
@@ -1128,77 +1251,97 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 	return 0;
 }
 
-int CDispObj::CreateVBandIBLine(ID3D12Device* pdev)
-{
-	//HRESULT hr;
-
-	UINT elemleng;
-	//DWORD curFVF;
-
-	elemleng = sizeof( EXTLINEV );
-
-
-	//m_BufferDescLine.ByteWidth = m_extline->m_linenum * 2 * sizeof(EXTLINEV);
-	//m_BufferDescLine.Usage = D3D11_USAGE_DEFAULT;//D3D11_USAGE_DYNAMIC;//!!!!!!!!!!!!!!!!!!!!!!!!
-	//m_BufferDescLine.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	//m_BufferDescLine.CPUAccessFlags = 0;
-	//m_BufferDescLine.MiscFlags = 0;
-
-
-	//D3D11_SUBRESOURCE_DATA SubData;
-	//SubData.pSysMem = m_extline->m_linev;
-	//SubData.SysMemPitch = 0;
-	//SubData.SysMemSlicePitch = 0;
-	//hr = m_pdev->CreateBuffer(&m_BufferDescLine, &SubData, &m_VB);
-	//if (FAILED(hr)) {
-	//	_ASSERT(0);
-	//	return 1;
-	//}
-
-
-	//////IndexBuffer
-	////D3D11_BUFFER_DESC IndexBufferDesc;
-	////D3D11_SUBRESOURCE_DATA SubDataIndex;
-
-	////IndexBufferDesc.Usage = D3D11_USAGE_DEFAULT;//D3D11_USAGE_DYNAMIC;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	////IndexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	////IndexBufferDesc.CPUAccessFlags = 0;//D3D11_CPU_ACCESS_WRITE;
-	////IndexBufferDesc.MiscFlags = 0;
-
-	////SubDataIndex.SysMemPitch = 0;
-	////SubDataIndex.SysMemSlicePitch = 0;
-
-	////IndexBufferDesc.ByteWidth = m_extline->m_linenum * 2 * sizeof(int);
-	////SubDataIndex.pSysMem = m_extline->m_linev;
-
-	////hr = m_pdev->CreateBuffer(&IndexBufferDesc, &SubDataIndex, &m_IB);
-	////if (FAILED(hr)) {
-	////	_ASSERT(0);
-	////	return 1;
-	////}
-
-
-	return 0;
-}
+//int CDispObj::CreateVBandIBLine(ID3D12Device* pdev)
+//{
+//	//HRESULT hr;
+//
+//	UINT elemleng;
+//	//DWORD curFVF;
+//
+//	elemleng = sizeof( EXTLINEV );
+//
+//
+//	//m_BufferDescLine.ByteWidth = m_extline->m_linenum * 2 * sizeof(EXTLINEV);
+//	//m_BufferDescLine.Usage = D3D11_USAGE_DEFAULT;//D3D11_USAGE_DYNAMIC;//!!!!!!!!!!!!!!!!!!!!!!!!
+//	//m_BufferDescLine.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+//	//m_BufferDescLine.CPUAccessFlags = 0;
+//	//m_BufferDescLine.MiscFlags = 0;
+//
+//
+//	//D3D11_SUBRESOURCE_DATA SubData;
+//	//SubData.pSysMem = m_extline->m_linev;
+//	//SubData.SysMemPitch = 0;
+//	//SubData.SysMemSlicePitch = 0;
+//	//hr = m_pdev->CreateBuffer(&m_BufferDescLine, &SubData, &m_VB);
+//	//if (FAILED(hr)) {
+//	//	_ASSERT(0);
+//	//	return 1;
+//	//}
+//
+//
+//	//////IndexBuffer
+//	////D3D11_BUFFER_DESC IndexBufferDesc;
+//	////D3D11_SUBRESOURCE_DATA SubDataIndex;
+//
+//	////IndexBufferDesc.Usage = D3D11_USAGE_DEFAULT;//D3D11_USAGE_DYNAMIC;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//	////IndexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+//	////IndexBufferDesc.CPUAccessFlags = 0;//D3D11_CPU_ACCESS_WRITE;
+//	////IndexBufferDesc.MiscFlags = 0;
+//
+//	////SubDataIndex.SysMemPitch = 0;
+//	////SubDataIndex.SysMemSlicePitch = 0;
+//
+//	////IndexBufferDesc.ByteWidth = m_extline->m_linenum * 2 * sizeof(int);
+//	////SubDataIndex.pSysMem = m_extline->m_linev;
+//
+//	////hr = m_pdev->CreateBuffer(&IndexBufferDesc, &SubDataIndex, &m_IB);
+//	////if (FAILED(hr)) {
+//	////	_ASSERT(0);
+//	////	return 1;
+//	////}
+//
+//
+//	return 0;
+//}
 
 void CDispObj::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
 	const Matrix& mView, const Matrix& mProj)
 {
-	//メッシュごとにドロー
-	//プリミティブのトポロジーはトライアングルリストのみ。
-	rc.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	if (m_pm3 || m_pm4) {
+		rc.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	}
+	else if (m_extline) {
+		rc.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+	}
+	else {
+		_ASSERT(0);
+		return;
+	}
+	
 
 	////定数バッファを更新する。
 	SConstantBuffer cb;
 	cb.mWorld = renderobj.mWorld;
 	cb.mView = mView;
 	cb.mProj = mProj;
-	if (renderobj.mqoobj && renderobj.mqoobj->GetTempDiffuseMultFlag()) {
-		cb.diffusemult = renderobj.mqoobj->GetTempDiffuseMult();
+	if (m_pm3 || m_pm4) {
+		if (renderobj.mqoobj && renderobj.mqoobj->GetTempDiffuseMultFlag()) {
+			cb.diffusemult = renderobj.mqoobj->GetTempDiffuseMult();
+		}
+		else {
+			cb.diffusemult = renderobj.diffusemult;
+		}
+	}
+	else if (m_extline) {
+		cb.diffusemult = m_extline->GetColor();
 	}
 	else {
-		cb.diffusemult = renderobj.diffusemult;
+		_ASSERT(0);
+		cb.diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	}
+
+
 	ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
 
 
@@ -1473,7 +1616,8 @@ int CDispObj::RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ rend
 
 
 	int hasskin = 1;
-	curmat->BeginRender(rc, hasskin);
+	bool isline = false;
+	curmat->BeginRender(rc, hasskin, isline);
 	rc.SetDescriptorHeap(m_descriptorHeap);
 
 	//rc.SetVertexBuffer(m_vertexBufferView);
@@ -1673,7 +1817,8 @@ int CDispObj::RenderNormalPM3Material(RenderContext& rc, myRenderer::RENDEROBJ r
 
 
 	int hasskin = 0;
-	curmat->BeginRender(rc, hasskin);
+	bool isline = false;
+	curmat->BeginRender(rc, hasskin, isline);
 	rc.SetDescriptorHeap(m_descriptorHeap);
 
 	////1. 頂点バッファを設定。
@@ -1691,62 +1836,57 @@ int CDispObj::RenderNormalPM3Material(RenderContext& rc, myRenderer::RENDEROBJ r
 }
 
 
-int CDispObj::RenderLine(bool withalpha,
-	RenderContext* pRenderContext, 
-	ChaVector4 diffusemult, ChaVector4 materialdisprate)
+int CDispObj::RenderLine(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 {
-	//if( !m_extline ){
-	//	return 0;
-	//}
-	//if( m_extline->m_linenum <= 0 ){
-	//	return 0;
-	//}
+	if( !m_extline ){
+		return 0;
+	}
+	if( m_extline->GetLineNum() <= 0 ){
+		return 0;
+	}
 
 	//HRESULT hr;
 
-	//ChaVector4 diffuse;
-	//diffuse.w = m_extline->m_color.w * diffusemult.w;
-	//diffuse.x = m_extline->m_color.x * diffusemult.x * materialdisprate.x;
-	//diffuse.y = m_extline->m_color.y * diffusemult.y * materialdisprate.x;
-	//diffuse.z = m_extline->m_color.z * diffusemult.z * materialdisprate.x;
-	////diffuse.Clamp(0.0f, 1.0f);
+	ChaVector4 diffuse;
+	diffuse.w = m_extline->GetColor().w * renderobj.diffusemult.w;
+	diffuse.x = m_extline->GetColor().x * renderobj.diffusemult.x;// *materialdisprate.x;
+	diffuse.y = m_extline->GetColor().y * renderobj.diffusemult.y;// *materialdisprate.x;
+	diffuse.z = m_extline->GetColor().z * renderobj.diffusemult.z;// *materialdisprate.x;
+	//diffuse.Clamp(0.0f, 1.0f);
 
-	//if ((withalpha == false) && (diffuse.w <= 0.99999f)) {
-	//	return 0;
-	//}
-	//if ((withalpha == true) && (diffuse.w > 0.99999f)) {
-	//	return 0;
-	//}
-
-
-
-	//hr = g_hdiffuse->SetRawValue(&diffuse, 0, sizeof(ChaVector4));
-	//_ASSERT(SUCCEEDED(hr));
-
-	//pRenderContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-
-	//ID3DX11EffectTechnique* curtech = g_hRenderLine;
-	//pRenderContext->IASetInputLayout(m_layoutLine);
-
-	//UINT vbstride = sizeof(EXTLINEV);
-	//UINT offset = 0;
-	//pRenderContext->IASetVertexBuffers(0, 1, &m_VB, &vbstride, &offset);
-	////m_pdev->IASetIndexBuffer(m_IB, DXGI_FORMAT_R32_UINT, 0);
-
-	//int curnumprim;
-	//curnumprim = m_extline->m_linenum;
+	if ((renderobj.withalpha == false) && (diffuse.w <= 0.99999f)) {
+		return 0;
+	}
+	if ((renderobj.withalpha == true) && (diffuse.w > 0.99999f)) {
+		return 0;
+	}
 
 
-	////D3D11_TECHNIQUE_DESC techDesc;
-	////curtech->GetDesc(&techDesc);
-	//UINT p = 0;
-	////for (UINT p = 0; p < techDesc.Passes; ++p)
-	////{
-	//	curtech->GetPassByIndex(p)->Apply(0, pRenderContext);
-	//	//m_pdev->DrawIndexed(curnumprim * 2, 0, 0);
-	//	pRenderContext->Draw(curnumprim * 2, 0);
-	////}
+	Matrix mView, mProj;
+	mView = g_camera3D->GetViewMatrix();
+	mProj = g_camera3D->GetProjectionMatrix();
 
+	//定数バッファの設定、更新など描画の共通処理を実行する。
+	DrawCommon(rc, renderobj, mView, mProj);
+	//rc.SetDescriptorHeap(m_descriptorHeap);//BeginRender()より後で呼ばないとエラー
+
+	//1. 頂点バッファを設定。
+	rc.SetVertexBuffer(m_vertexBufferView);
+	//3. インデックスバッファを設定。
+	rc.SetIndexBuffer(m_indexBufferView);
+
+	int curnumprim;
+	curnumprim = m_extline->GetLineNum();
+
+	int hasskin = 0;
+	bool isline = true;
+	CMQOMaterial* curmat = m_extline->GetMaterial();//m_rootsignatureのためのMaterial. 色はextline::m_colorにある
+	if (curmat) {
+		curmat->BeginRender(rc, hasskin, isline);
+		rc.SetDescriptorHeap(m_descriptorHeap);
+
+		rc.DrawIndexed(curnumprim * 2);
+	}
 
 	return 0;
 }

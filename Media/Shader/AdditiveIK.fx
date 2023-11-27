@@ -18,6 +18,10 @@ struct SVSInWithBone
     int4 bindices : BLENDINDICES;
 };
 
+struct SVSInExtLine
+{
+    float4 pos : POSITION;
+};
 
 // ピクセルシェーダーへの入力
 struct SPSIn
@@ -26,6 +30,12 @@ struct SPSIn
     float2 uv           : TEXCOORD0;
     float4 posInProj    : TEXCOORD1;
     float4 diffusemult : TEXCOORD2;
+};
+
+struct SPSInExtLine
+{
+    float4 pos : SV_POSITION;
+    float4 diffusemult : COLOR0;
 };
 
 ///////////////////////////////////////////
@@ -90,6 +100,18 @@ SPSIn VSMainWithoutBone(SVSInWithoutBone vsIn, uniform bool hasSkin)
     return psIn;
 }
 
+SPSInExtLine VSMainExtLine(SVSInExtLine vsIn, uniform bool hasSkin)
+{
+    SPSInExtLine psIn;
+
+    psIn.pos = mul(mWorld, vsIn.pos); // モデルの頂点をワールド座標系に変換
+    psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
+    psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
+
+    psIn.diffusemult = diffusemult;
+    
+    return psIn;
+}
 
 SPSIn VSMainWithBone(SVSInWithBone vsIn, uniform bool hasSkin)
 {
@@ -150,4 +172,12 @@ float4 PSMain(SPSIn psIn) : SV_Target0
     //float4 testcol = {0.5f, 0.5f, 0.5f, 1.0f};
     //float4 testcol = { 1.0f, 1.0f, 1.0f, 1.0f };
     //return testcol;
+}
+
+
+float4 PSMainExtLine(SPSInExtLine psIn) : SV_Target0
+{
+    float4 pscol = psIn.diffusemult;
+    //float4 pscol = { 1.0f, 1.0f, 1.0f, 1.0f };
+    return pscol;
 }
