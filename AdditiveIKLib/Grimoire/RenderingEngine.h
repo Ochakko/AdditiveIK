@@ -66,6 +66,30 @@ namespace myRenderer
         };
     }RENDERSPRITE;
 
+    typedef struct tag_renderfont {
+        Font* pfont;
+        WCHAR strfont[512];
+        Vector2 disppos;//-0.5から0.5
+        Vector4 color;
+        float rotation;
+        float scale;
+        Vector2 pivot;
+
+        void Init() {
+            pfont = 0;
+            ZeroMemory(strfont, sizeof(WCHAR) * 512);
+            disppos = Vector2(0.0f, 0.0f);
+            color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+            rotation = 0.0f;
+            scale = 1.0f;
+            pivot = Vector2(0.0f, 0.0f);
+        };
+        tag_renderfont()
+        {
+            Init();
+        };
+    }RENDERFONT;
+
 
     // レンダリングエンジン
     class RenderingEngine
@@ -203,7 +227,10 @@ namespace myRenderer
         {
             m_forwardRenderSprites.push_back(rendersprite);
         }
-
+        void AddFontToForwardRenderPass(RENDERFONT renderfont)
+        {
+            m_forwardRenderFont.push_back(renderfont);
+        }
 
         /// <summary>
         /// ZPrepassで作成された深度テクスチャを取得
@@ -367,6 +394,6 @@ namespace myRenderer
         std::vector<RENDEROBJ> m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
         std::vector<RENDEROBJ> m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
         std::vector<RENDERSPRITE> m_forwardRenderSprites;
-
+        std::vector<RENDERFONT> m_forwardRenderFont;
     };
 }

@@ -259,6 +259,7 @@ namespace myRenderer
         m_forwardRenderModels.clear();
         m_zprepassModels.clear();
         m_forwardRenderSprites.clear();
+        m_forwardRenderFont.clear();
     }
 
     void RenderingEngine::RenderToShadowMap(RenderContext& rc)
@@ -354,7 +355,17 @@ namespace myRenderer
             }
         }
 
-
+        //Font : MiniEngine
+        for (auto& currenderfont : m_forwardRenderFont)
+        {
+            if (currenderfont.pfont && (currenderfont.strfont[0] != 0L)) {
+                currenderfont.pfont->Begin(rc);
+                currenderfont.pfont->Draw(currenderfont.strfont, 
+                    currenderfont.disppos, currenderfont.color, 
+                    currenderfont.rotation, currenderfont.scale, currenderfont.pivot);
+                currenderfont.pfont->End(rc);
+            }
+        }
 
         // メインレンダリングターゲットへの書き込み終了待ち
        //rc.WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
