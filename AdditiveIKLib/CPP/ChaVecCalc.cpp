@@ -214,7 +214,10 @@ bool IsEqualRoundingTime(double srctime1, double srctime2)
 	return chacalcfunc.ccfIsEqualRoundingTime(srctime1, srctime2);
 }
 
-
+int Float2Int(float srcfloat)
+{
+	return (int)(srcfloat + 0.0001f);
+}
 
 double VecLength(ChaVector3 srcvec)
 {

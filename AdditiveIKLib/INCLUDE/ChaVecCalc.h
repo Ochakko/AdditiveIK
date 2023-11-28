@@ -556,6 +556,8 @@ bool IsJustEqualTime(double srctime1, double srctime2);
 double RoundingTime(double srctime);
 int IntTime(double srctime);
 bool IsEqualRoundingTime(double srctime1, double srctime2);
+int Float2Int(float srcfloat);
+
 
 double VecLength(ChaVector3 srcvec);
 void GetSRTMatrix(ChaMatrix srcmat, ChaVector3* svecptr, ChaMatrix* rmatptr, ChaVector3* tvecptr);
@@ -645,6 +647,7 @@ extern bool IsJustEqualTime(double srctime1, double srctime2);
 extern double RoundingTime(double srctime);
 extern int IntTime(double srctime);
 extern bool IsEqualRoundingTime(double srctime1, double srctime2);
+extern int Float2Int(float srcfloat);
 
 extern double VecLength(ChaVector3 srcvec);
 extern void GetSRTMatrix(ChaMatrix srcmat, ChaVector3* svecptr, ChaMatrix* rmatptr, ChaVector3* tvecptr);
