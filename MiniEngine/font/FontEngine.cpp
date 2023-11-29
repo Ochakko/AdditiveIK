@@ -17,17 +17,18 @@ void FontEngine::Init()
 	auto d3dDevice = g_graphicsEngine->GetD3DDevice();
 
 
-	//CurrentDirectoryがMameMediaになっていたときにはTestディレクトリに変える
-	WCHAR curdir[MAX_PATH] = { 0L };
-	ZeroMemory(curdir, sizeof(WCHAR) * MAX_PATH);
-	GetCurrentDirectory(MAX_PATH, curdir);
-	WCHAR* findpat = wcsstr(curdir, L"\\MameMedia");
-	if (findpat) {
-		WCHAR initialdir[MAX_PATH] = { 0L };
-		wcscpy_s(initialdir, MAX_PATH, g_basedir);
-		wcscat_s(initialdir, MAX_PATH, L"..\\Test\\");
-		SetCurrentDirectoryW(initialdir);
-	}
+	////CurrentDirectoryがMameMediaになっていたときにはTestディレクトリに変える
+	//WCHAR curdir[MAX_PATH] = { 0L };
+	//ZeroMemory(curdir, sizeof(WCHAR) * MAX_PATH);
+	//GetCurrentDirectory(MAX_PATH, curdir);
+	//WCHAR* findpat = wcsstr(curdir, L"\\MameMedia");
+	//if (findpat) {
+	//	WCHAR initialdir[MAX_PATH] = { 0L };
+	//	wcscpy_s(initialdir, MAX_PATH, g_basedir);
+	//	wcscat_s(initialdir, MAX_PATH, L"..\\Test\\");
+	//	SetCurrentDirectoryW(initialdir);
+	//}
+	SetCurrentDirectoryW(g_basedir);
 
 
 	//ディスクリプタヒープを作成。

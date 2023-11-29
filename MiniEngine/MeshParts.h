@@ -141,7 +141,7 @@ private:
 	//拡張SRVが設定されるレジスタの開始番号。
 	const int EXPAND_SRV_REG__START_NO = 10;
 	//１つのマテリアルで使用されるSRVの数。
-	const int NUM_SRV_ONE_MATERIAL = EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV;
+	const int NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
 	//１つのマテリアルで使用されるCBVの数。
 	const int NUM_CBV_ONE_MATERIAL = 2;
 	/// <summary>

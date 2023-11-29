@@ -1,6 +1,17 @@
 ﻿#include "stdafx.h"
 #include "ConstantBuffer.h"
 
+ConstantBuffer::ConstantBuffer()
+{
+	m_constantBuffer[0] = nullptr;
+	m_constantBuffer[1] = nullptr;
+	m_constBufferCPU[0] = nullptr;
+	m_constBufferCPU[1] = nullptr;
+	m_size = 0;
+	m_allocSize = 0;
+	m_isValid = false;
+}
+
 ConstantBuffer::~ConstantBuffer()
 {
 	//アンマーップ

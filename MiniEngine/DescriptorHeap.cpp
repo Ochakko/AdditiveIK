@@ -28,18 +28,25 @@ void DescriptorHeap::InitParams()
 	ZeroMemory(m_uavGpuDescriptorStart, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE) * 2);
 	ZeroMemory(m_samplerGpuDescriptorStart, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE) * 2);
 
-	m_shaderResources.resize(MAX_SHADER_RESOURCE);
-	m_uavResources.resize(MAX_SHADER_RESOURCE);
-	m_constantBuffers.resize(MAX_CONSTANT_BUFFER);
-	for (auto& srv : m_shaderResources) {
-		srv = nullptr;
-	}
-	for (auto& uav : m_uavResources) {
-		uav = nullptr;
-	}
-	for (auto& cbv : m_constantBuffers) {
-		cbv = nullptr;
-	}
+
+	m_shaderResources.clear();
+	m_uavResources.clear();
+	m_constantBuffers.clear();
+
+	//m_shaderResources.resize(MAX_SHADER_RESOURCE);
+	//m_uavResources.resize(MAX_SHADER_RESOURCE);
+	//m_constantBuffers.resize(MAX_CONSTANT_BUFFER);
+	//for (auto& srv : m_shaderResources) {
+	//	srv = nullptr;
+	//}
+	//for (auto& uav : m_uavResources) {
+	//	uav = nullptr;
+	//}
+	//for (auto& cbv : m_constantBuffers) {
+	//	cbv = nullptr;
+	//}
+
+	m_initflag = true;
 }
 void DescriptorHeap::CommitSamplerHeap()
 {
@@ -82,7 +89,7 @@ void DescriptorHeap::Commit()
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
 	for (auto& ds : m_descriptorHeap) {
-		//if (ds != nullptr) {
+		//if (ds != nullptr) {//dsにCreate結果を格納する　dsはCreate前はnullptr. &dsがnullptrでなければ良い
 			auto hr = d3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&ds));
 			g_numDescriptorHeap++;
 			if (FAILED(hr)) {

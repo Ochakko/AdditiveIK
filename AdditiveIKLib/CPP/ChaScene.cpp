@@ -388,27 +388,61 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lig
 		//Renderはm_updateslotとは違う側の計算済のデータを参照する
 		//#########################################################################################################################
 
-		//Render中は同時進行し　Render後に待つことで　ダブルバッファ同期!!!!!!!!!!!!!!!!
-		if ((g_previewFlag != 0) && (g_previewFlag != 4)) {
-			WaitUpdateThreads();
-		}
-		else if (g_previewFlag == 4) {
-			WaitSetBtMotionFinished();//!!!!!!!!!!!!!!!!
-		}
-		else {
-			//
-			//g_previewFlag == 0
-			// 
-			// 
-			//2023/11/09 1.2.0.30 RC1
-			//プレビュー中以外に　タイムラインのフレームを移動する場合に　前フレーム以前の表示が気になるので
-			//プレビュー中以外のときには同期する(UpdaetMatrixModelsの終わりで終了待機)　Render()においてはcalcslotflag=trueで描画
-		}
+
+		//##########################################################
+		//2023/11/29
+		//GraphicsEngine::EndRender()内のm_swapChain->Present()の前で
+		//WaitForUpdateMatrixModels()を呼ぶことにした
+		//##########################################################
+		////Render中は同時進行し　Render後に待つことで　ダブルバッファ同期!!!!!!!!!!!!!!!!
+		//if ((g_previewFlag != 0) && (g_previewFlag != 4)) {
+		//	WaitUpdateThreads();
+		//}
+		//else if (g_previewFlag == 4) {
+		//	WaitSetBtMotionFinished();//!!!!!!!!!!!!!!!!
+		//}
+		//else {
+		//	//
+		//	//g_previewFlag == 0
+		//	// 
+		//	// 
+		//	//2023/11/09 1.2.0.30 RC1
+		//	//プレビュー中以外に　タイムラインのフレームを移動する場合に　前フレーム以前の表示が気になるので
+		//	//プレビュー中以外のときには同期する(UpdaetMatrixModelsの終わりで終了待機)　Render()においてはcalcslotflag=trueで描画
+		//}
 
 		
 	}
 
 	return 0;
+}
+
+void ChaScene::WaitForUpdateMatrixModels()
+{
+	//Render中は同時進行し　Render後に待つことで　ダブルバッファ同期!!!!!!!!!!!!!!!!
+
+	//##########################################################
+	//2023/11/29
+	//GraphicsEngine::EndRender()内のm_swapChain->Present()の前で
+	//WaitForUpdateMatrixModels()を呼ぶことにした
+	//##########################################################
+
+	if ((g_previewFlag != 0) && (g_previewFlag != 4)) {
+		WaitUpdateThreads();
+	}
+	else if (g_previewFlag == 4) {
+		WaitSetBtMotionFinished();//!!!!!!!!!!!!!!!!
+	}
+	else {
+		//
+		//g_previewFlag == 0
+		// 
+		// 
+		//2023/11/09 1.2.0.30 RC1
+		//プレビュー中以外に　タイムラインのフレームを移動する場合に　前フレーム以前の表示が気になるので
+		//プレビュー中以外のときには同期する(UpdaetMatrixModelsの終わりで終了待機)　Render()においてはcalcslotflag=trueで描画
+	}
+
 }
 
 int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,

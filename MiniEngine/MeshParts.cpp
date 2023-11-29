@@ -58,7 +58,7 @@ void MeshParts::InitFromTkmFile(
 		meshNo++;
 	});
 	//共通定数バッファの作成。
-	m_commonConstantBuffer.Init(sizeof(SConstantBuffer), nullptr);
+	m_commonConstantBuffer.Init(sizeof(SConstantBufferNoBone), nullptr);
 	//ユーザー拡張用の定数バッファを作成。
 	if (expandData) {
 		m_expandConstantBuffer.Init(expandDataSize, nullptr);
@@ -213,7 +213,7 @@ void MeshParts::DrawCommon(RenderContext& rc, const Matrix& mWorld, const Matrix
 	rc.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	//定数バッファを更新する。
-	SConstantBuffer cb;
+	SConstantBufferNoBone cb;
 	cb.mWorld = mWorld;
 	cb.mView = mView;
 	cb.mProj = mProj;

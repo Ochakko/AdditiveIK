@@ -12,6 +12,35 @@
         };
     }
     const Vector2	Sprite::DEFAULT_PIVOT = { 0.5f, 0.5f };
+
+    Sprite::Sprite() : 
+        m_indexBuffer(), m_vertexBuffer(), m_constantBufferGPU(), 
+        m_userExpandConstantBufferGPU(),
+        //m_descriptorHeap(),
+        m_rootSignature(),
+        m_pipelineState(),
+        m_vs(),
+        m_ps()
+    {
+
+        m_descriptorHeap.InitParams();
+
+        int texno;
+        for (texno = 0; texno < MAX_TEXTURE; texno++) {
+            m_textures[texno].InitParams();
+            m_textureExternal[texno] = nullptr;
+        }
+        ZeroMemory(&m_constantBufferCPU, sizeof(LocalConstantBuffer));
+        m_numTexture = 0;
+        m_position = Vector3(0.0f, 0.0f, 0.0f);				//座標。
+        m_size = Vector2(1.0f, 1.0f);						//サイズ。
+        m_rotation = Quaternion(0.0f, 0.0f, 0.0f, 1.0f);			//回転。
+        m_world.SetIdentity();					//ワールド行列。
+
+        m_userExpandConstantBufferCPU = nullptr;		//ユーザー拡張の定数バッファ(CPU側)
+        m_screenvertexflag = false;//頂点バッファの座標値を-1.0から1.0にする. m_sizeを掛けない. GUI用のテクスチャ表示に使用
+    }
+
     Sprite::~Sprite()
     {
     }
@@ -76,10 +105,16 @@
                 m_descriptorHeap.RegistShaderResource(texNo, *m_textureExternal[texNo]);
             }
         }
-        else {
+        else if (m_numTexture > 0) {
             for (int texNo = 0; texNo < m_numTexture; texNo++) {
                 m_descriptorHeap.RegistShaderResource(texNo, m_textures[texNo]);
             }
+        }
+        else {
+            //2023/11/29
+            _ASSERT(0);
+            ::MessageBox(nullptr, L"Sprite::InitDescriptorHeap : No texture error !!!", L"ERROR", MB_OK);
+            abort();
         }
         if (initData.m_expandShaderResoruceView != nullptr) {
             //拡張シェーダーリソースビュー。

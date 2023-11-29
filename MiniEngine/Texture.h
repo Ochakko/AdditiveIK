@@ -8,14 +8,18 @@ public:
 	/// コンストラクタ。
 	/// </summary>
 	Texture() {
-		m_rendertargetflag = false;
-		m_texture = nullptr;	//テクスチャ。
-		ZeroMemory(&m_textureDesc, sizeof(D3D12_RESOURCE_DESC));	//テクスチャ情報
+		InitParams();
 	};
 	/// <summary>
 	/// デストラクタ。
 	/// </summary>
 	~Texture();
+
+	void InitParams() {
+		m_rendertargetflag = false;
+		m_texture = nullptr;	//テクスチャ。
+		ZeroMemory(&m_textureDesc, sizeof(D3D12_RESOURCE_DESC));	//テクスチャ情報
+	};
 
 	/// <summary>
 	/// ファイルからテクスチャをロードするコンストラクタ

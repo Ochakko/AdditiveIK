@@ -153,11 +153,8 @@ namespace myRenderer
         //    m_forwardRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
         //};
 
-        RenderingEngine() {//2023/11/23
-            Init();
-        };
+        RenderingEngine();//2023/11/23
         ~RenderingEngine() {
-
         };
 
 

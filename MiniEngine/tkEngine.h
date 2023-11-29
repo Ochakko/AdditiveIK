@@ -7,6 +7,7 @@
 
 class GraphicsEngine;
 class Texture;
+class ChaScene;
 
 class TkEngine {
 public:
@@ -21,7 +22,7 @@ public:
 	/// <summary>
 	/// フレームの終了時に呼ばれる処理。
 	/// </summary>
-	void EndFrame();
+	void EndFrame(ChaScene* srcchascene);
 	/// <summary>
 	/// ゲームエンジンの初期化。
 	/// </summary>

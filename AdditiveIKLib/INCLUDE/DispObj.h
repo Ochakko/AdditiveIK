@@ -17,7 +17,7 @@ class StructuredBuffer;//ボーン行列の構造化バッファ。
 class DescriptorHeap;//ディスクリプタヒープ。
 
 
-struct SConstantBuffer {
+struct SConstantBufferWithBone {
 	Matrix mWorld;		//ワールド行列。
 	Matrix mView;		//ビュー行列。
 	Matrix mProj;		//プロジェクション行列。
@@ -25,6 +25,12 @@ struct SConstantBuffer {
 	float setfl4x4[16 * MAXCLUSTERNUM];//ボーンの姿勢マトリックス
 };
 
+struct SConstantBufferNoBone {
+	Matrix mWorld;		//ワールド行列。
+	Matrix mView;		//ビュー行列。
+	Matrix mProj;		//プロジェクション行列。
+	ChaVector4 diffusemult;
+};
 
 
 class CDispObj
@@ -199,11 +205,14 @@ private:
 private:
 	//拡張SRVが設定されるレジスタの開始番号。
 	//const int EXPAND_SRV_REG__START_NO = 10;
-	const int EXPAND_SRV_REG__START_NO = 6;
+	//const int EXPAND_SRV_REG__START_NO = 6;
+	const int EXPAND_SRV_REG__START_NO = 4;
 	//１つのマテリアルで使用されるSRVの数。
-	const int NUM_SRV_ONE_MATERIAL = EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV;
+	const int NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
 	//１つのマテリアルで使用されるCBVの数。
-	const int NUM_CBV_ONE_MATERIAL = 2;
+	//const int NUM_CBV_ONE_MATERIAL = 2;
+	const int NUM_CBV_ONE_MATERIAL = 1;
+
 
 	int m_hasbone;//ボーン変形用のオブジェクトであるとき１、それ以外の時は０。
 	float m_setfl4x4[16 * MAXCLUSTERNUM];

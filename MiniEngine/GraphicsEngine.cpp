@@ -1,6 +1,8 @@
 ﻿#include "stdafx.h"
 #include "GraphicsEngine.h"
 
+#include <ChaScene.h>
+
 GraphicsEngine* g_graphicsEngine = nullptr;	//グラフィックスエンジン
 Camera* g_camera2D = nullptr;				//2Dカメラ。
 Camera* g_camera3D = nullptr;				//3Dカメラ。
@@ -491,7 +493,7 @@ void GraphicsEngine::ChangeRenderTargetToFrameBuffer(RenderContext& rc)
 {
 	rc.SetRenderTarget(m_currentFrameBufferRTVHandle, m_currentFrameBufferDSVHandle);
 }
-void GraphicsEngine::EndRender()
+void GraphicsEngine::EndRender(ChaScene* srcchascene)
 {
 	// レンダリングターゲットへの描き込み完了待ち
 	m_renderContext.WaitUntilFinishDrawingToRenderTarget(m_renderTargets[m_frameIndex]);
@@ -512,6 +514,11 @@ void GraphicsEngine::EndRender()
 //	// Present the frame.
 //	m_swapChain->Present(1, 0);
 //#endif
+
+	if (srcchascene) {
+		srcchascene->WaitForUpdateMatrixModels();
+	}
+
 
 	m_swapChain->Present(0, 0);
 

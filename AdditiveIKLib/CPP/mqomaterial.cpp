@@ -1319,21 +1319,21 @@ void CMQOMaterial::BeginRender(RenderContext& rc, int hasSkin, bool isline)
 
 	if (hasSkin) {
 		//
-		//if (!isline) {
+		if (!isline) {
 			rc.SetPipelineState(m_transSkinModelPipelineState);
-		//}
-		//else {
-		//	rc.SetPipelineState(m_skinModelPipelineState);
-		//}	
+		}
+		else {
+			rc.SetPipelineState(m_skinModelPipelineState);
+		}	
 	}
 	else {
 		//
-		//if (!isline) {
+		if (!isline) {
 			rc.SetPipelineState(m_transNonSkinModelPipelineState);
-		//}
-		//else {
-		//	rc.SetPipelineState(m_nonSkinModelPipelineState);
-		//}
+		}
+		else {
+			rc.SetPipelineState(m_nonSkinModelPipelineState);
+		}
 	}
 }
 

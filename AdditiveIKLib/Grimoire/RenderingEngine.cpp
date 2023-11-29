@@ -11,8 +11,22 @@
 
 namespace myRenderer
 {
+
+
+    RenderingEngine::RenderingEngine()
+    {
+        Init();
+    }
+
+
     void RenderingEngine::Init()
     {
+        m_zprepassModels.clear();                         // ZPrepassの描画パスで描画されるモデルのリスト
+        m_renderToGBufferModels.clear();                  // Gバッファへの描画パスで描画するモデルのリスト
+        m_forwardRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+        m_forwardRenderSprites.clear();
+        m_forwardRenderFont.clear();
+
         InitZPrepassRenderTarget();
         InitMainRenderTarget();
         InitGBuffer();

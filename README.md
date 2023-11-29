@@ -90,6 +90,14 @@ GUIに関しては現在のウインドウに重ねて表示できるものが�
 ２段目のプレートをオンにすると１段目のCameraAndIK以外はオフになる.<br>
 <br>
 <br>
+2023/11/29<br>
+DescriptorHeapに関するリファクタリング<br>
+大きい背景読み込み時に4038個目のDescriptorHeap作成でE_OUTOFMEMORYになる症状は変わらず<br>
+背景の描画をきれいにしたかったのだが　どうするか試しながら考える<br>
+<br>
+<br>
+<br>
+<br>
 <br>
 <br>
 サイト：https://ochakkolab.jp<br>

@@ -144,6 +144,6 @@ namespace raytracing {
 		//シェーダーテーブルを作成。
 		m_shaderTable.Init(m_world, m_pipelineStateObject, m_descriptorHeaps);
 		
-		g_graphicsEngine->EndRender();
+		g_graphicsEngine->EndRender(nullptr);
 	}
 }//namespace raytracing

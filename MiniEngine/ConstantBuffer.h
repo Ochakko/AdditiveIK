@@ -6,7 +6,7 @@ public:
 	/// <summary>
 	/// コンストラクタ
 	/// </summary>
-	ConstantBuffer() {}
+	ConstantBuffer();
 	/// <summary>
 	/// デストラクタ。
 	/// </summary>

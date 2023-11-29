@@ -3,6 +3,7 @@
 #include "GraphicsEngine.h"
 
 TkEngine* g_engine = nullptr;
+class ChaScene;
 
 TkEngine::~TkEngine()
 {
@@ -35,7 +36,7 @@ void TkEngine::BeginFrame()
 	//}
 	
 }
-void TkEngine::EndFrame()
+void TkEngine::EndFrame(ChaScene* srcchascene)
 {
-	m_graphicsEngine->EndRender();
+	m_graphicsEngine->EndRender(srcchascene);
 }

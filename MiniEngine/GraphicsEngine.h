@@ -47,7 +47,7 @@ public:
 	/// <remarks>
 	/// 1フレームのレンダリングの終了時に呼び出してください。
 	/// </remarks>
-	void EndRender();
+	void EndRender(ChaScene* srcchascene);
 	/// <summary>
 	/// D3Dデバイスを取得。
 	/// </summary>

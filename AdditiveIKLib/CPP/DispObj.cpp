@@ -96,7 +96,8 @@ extern int	g_nNumActiveLights;
 extern bool g_zcmpalways;
 
 
-CDispObj::CDispObj()
+CDispObj::CDispObj() : m_descriptorHeap(), 
+m_commonConstantBuffer(), m_expandConstantBuffer() //2023/11/29
 {
 	InitParams();
 }
@@ -154,6 +155,7 @@ int CDispObj::InitParams()
 	ZeroMemory(&m_indexBufferView, sizeof(D3D12_INDEX_BUFFER_VIEW));	//インデックスバッファビュー。
 
 	ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
+
 
 	return 0;
 }
@@ -477,9 +479,9 @@ void CDispObj::CreateDescriptorHeaps()
 				}
 				srvNo += NUM_SRV_ONE_MATERIAL;
 				m_descriptorHeap.RegistConstantBuffer(cbNo, m_commonConstantBuffer);
-				if (m_expandConstantBuffer.IsValid()) {
-					m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
-				}
+				//if (m_expandConstantBuffer.IsValid()) {
+				//	m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
+				//}
 				cbNo += NUM_CBV_ONE_MATERIAL;
 
 				m_createdescriptorflag = true;
@@ -514,9 +516,9 @@ void CDispObj::CreateDescriptorHeaps()
 				}
 				srvNo += NUM_SRV_ONE_MATERIAL;
 				m_descriptorHeap.RegistConstantBuffer(cbNo, m_commonConstantBuffer);
-				if (m_expandConstantBuffer.IsValid()) {
-					m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
-				}
+				//if (m_expandConstantBuffer.IsValid()) {
+				//	m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
+				//}
 				cbNo += NUM_CBV_ONE_MATERIAL;
 				m_createdescriptorflag = true;
 			}
@@ -546,9 +548,9 @@ void CDispObj::CreateDescriptorHeaps()
 			}
 			srvNo += NUM_SRV_ONE_MATERIAL;
 			m_descriptorHeap.RegistConstantBuffer(cbNo, m_commonConstantBuffer);
-			if (m_expandConstantBuffer.IsValid()) {
-				m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
-			}
+			//if (m_expandConstantBuffer.IsValid()) {
+			//	m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
+			//}
 			cbNo += NUM_CBV_ONE_MATERIAL;
 			m_createdescriptorflag = true;
 		}
@@ -653,7 +655,13 @@ void CDispObj::CreateDescriptorHeaps()
 int CDispObj::CreateDecl(ID3D12Device* pdev)
 {
 	//共通定数バッファの作成。
-	m_commonConstantBuffer.Init(sizeof(SConstantBuffer), nullptr);
+	if (m_pm4) {
+		m_commonConstantBuffer.Init(sizeof(SConstantBufferWithBone), nullptr);
+	}
+	else {
+		m_commonConstantBuffer.Init(sizeof(SConstantBufferNoBone), nullptr);
+	}
+	
 	//ユーザー拡張用の定数バッファを作成。
 	//if (expandData) {
 	//	m_expandConstantBuffer.Init(expandDataSize, nullptr);
@@ -662,12 +670,12 @@ int CDispObj::CreateDecl(ID3D12Device* pdev)
 	//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
 	//	m_expandShaderResourceView[i] = expandShaderResourceView[i];
 	//}
-	int expandDataSize = 0;
-	m_expandConstantBuffer.Init(expandDataSize, nullptr);
-	m_expandData = nullptr;
-	for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
-		m_expandShaderResourceView[i] = nullptr;
-	}
+	//int expandDataSize = 0;
+	//m_expandConstantBuffer.Init(expandDataSize, nullptr);
+	//m_expandData = nullptr;
+	//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
+	//	m_expandShaderResourceView[i] = nullptr;
+	//}
 
 	//2023/11/23
 	// ボーンの姿勢は　メッシュ単位のSConstantBufferで　mWorld, View, Projと一緒に扱うことにした
@@ -1321,104 +1329,132 @@ void CDispObj::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
 	
 
 	////定数バッファを更新する。
-	SConstantBuffer cb;
-	cb.mWorld = renderobj.mWorld;
-	cb.mView = mView;
-	cb.mProj = mProj;
-	if (m_pm3 || m_pm4) {
-		if (renderobj.mqoobj && renderobj.mqoobj->GetTempDiffuseMultFlag()) {
-			cb.diffusemult = renderobj.mqoobj->GetTempDiffuseMult();
+	if (m_pm4) {
+		SConstantBufferWithBone cb;
+		cb.mWorld = renderobj.mWorld;
+		cb.mView = mView;
+		cb.mProj = mProj;
+		if (m_pm3 || m_pm4) {
+			if (renderobj.mqoobj && renderobj.mqoobj->GetTempDiffuseMultFlag()) {
+				cb.diffusemult = renderobj.mqoobj->GetTempDiffuseMult();
+			}
+			else {
+				cb.diffusemult = renderobj.diffusemult;
+			}
+		}
+		else if (m_extline) {
+			cb.diffusemult = m_extline->GetColor();
 		}
 		else {
-			cb.diffusemult = renderobj.diffusemult;
+			_ASSERT(0);
+			cb.diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 		}
-	}
-	else if (m_extline) {
-		cb.diffusemult = m_extline->GetColor();
-	}
-	else {
-		_ASSERT(0);
-		cb.diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-	}
 
 
-	ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
+		ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
 
 
-	if(renderobj.pmodel && renderobj.mqoobj)
-	{
-		MOTINFO* curmi = 0;
-		int curmotid;
-		double curframe;
-		curmi = renderobj.pmodel->GetCurMotInfo();
+		if (renderobj.pmodel && renderobj.mqoobj)
+		{
+			MOTINFO* curmi = 0;
+			int curmotid;
+			double curframe;
+			curmi = renderobj.pmodel->GetCurMotInfo();
 
-		if (renderobj.pmodel->GetTopBone() && (renderobj.pmodel->GetNoBoneFlag() == false) && curmi) {
-			curmotid = curmi->motid;
-			curframe = RoundingTime(curmi->curframe);
+			if (renderobj.pmodel->GetTopBone() && (renderobj.pmodel->GetNoBoneFlag() == false) && curmi) {
+				curmotid = curmi->motid;
+				curframe = RoundingTime(curmi->curframe);
 
-			if (curmotid > 0) {
-				int setclcnt = 0;
-				int clcnt;
-				int clusternum = (int)renderobj.mqoobj->GetClusterSize();
-				if ((clusternum > 0) && (clusternum < MAXCLUSTERNUM)) {
-					for (clcnt = 0; clcnt < clusternum; clcnt++) {
-						CBone* curbone = renderobj.mqoobj->GetCluster(clcnt);
-						if (curbone) {
-							bool currentlimitdegflag = g_limitdegflag;
-							CMotionPoint curmp = curbone->GetCurMp(renderobj.calcslotflag);
+				if (curmotid > 0) {
+					int setclcnt = 0;
+					int clcnt;
+					int clusternum = (int)renderobj.mqoobj->GetClusterSize();
+					if ((clusternum > 0) && (clusternum < MAXCLUSTERNUM)) {
+						for (clcnt = 0; clcnt < clusternum; clcnt++) {
+							CBone* curbone = renderobj.mqoobj->GetCluster(clcnt);
+							if (curbone) {
+								bool currentlimitdegflag = g_limitdegflag;
+								CMotionPoint curmp = curbone->GetCurMp(renderobj.calcslotflag);
 
 
 
-							ChaMatrix clustermat;
-							clustermat.SetIdentity();
+								ChaMatrix clustermat;
+								clustermat.SetIdentity();
 
-							//CMotionPoint tmpmp = curbone->GetCurMp();
-							if (renderobj.btflag == 0) {
-								//set4x4[clcnt] = tmpmp.GetWorldMat();
-								clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
-								MoveMemory(&(m_setfl4x4[16 * clcnt]),
-									clustermat.GetDataPtr(), sizeof(float) * 16);
+								//CMotionPoint tmpmp = curbone->GetCurMp();
+								if (renderobj.btflag == 0) {
+									//set4x4[clcnt] = tmpmp.GetWorldMat();
+									clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
+									MoveMemory(&(m_setfl4x4[16 * clcnt]),
+										clustermat.GetDataPtr(), sizeof(float) * 16);
+								}
+								else if (renderobj.btflag == 1) {
+									//物理シミュ
+									//set4x4[clcnt] = curbone->GetBtMat();
+									clustermat = curbone->GetBtMat(renderobj.calcslotflag);
+									MoveMemory(&(m_setfl4x4[16 * clcnt]),
+										clustermat.GetDataPtr(), sizeof(float) * 16);
+								}
+								else if (renderobj.btflag == 2) {
+									//物理IK
+									//set4x4[clcnt] = curbone->GetBtMat();
+									clustermat = curbone->GetBtMat(renderobj.calcslotflag);
+									MoveMemory(&(m_setfl4x4[16 * clcnt]),
+										curbone->GetBtMat().GetDataPtr(), sizeof(float) * 16);
+								}
+								else {
+									//set4x4[clcnt] = tmpmp.GetWorldMat();
+									clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
+									MoveMemory(&(m_setfl4x4[16 * clcnt]),
+										clustermat.GetDataPtr(), sizeof(float) * 16);
+								}
+
+								setclcnt++;
 							}
-							else if (renderobj.btflag == 1) {
-								//物理シミュ
-								//set4x4[clcnt] = curbone->GetBtMat();
-								clustermat = curbone->GetBtMat(renderobj.calcslotflag);
-								MoveMemory(&(m_setfl4x4[16 * clcnt]),
-									clustermat.GetDataPtr(), sizeof(float) * 16);
-							}
-							else if (renderobj.btflag == 2) {
-								//物理IK
-								//set4x4[clcnt] = curbone->GetBtMat();
-								clustermat = curbone->GetBtMat(renderobj.calcslotflag);
-								MoveMemory(&(m_setfl4x4[16 * clcnt]),
-									curbone->GetBtMat().GetDataPtr(), sizeof(float) * 16);
-							}
-							else {
-								//set4x4[clcnt] = tmpmp.GetWorldMat();
-								clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
-								MoveMemory(&(m_setfl4x4[16 * clcnt]),
-									clustermat.GetDataPtr(), sizeof(float) * 16);
-							}
-
-							setclcnt++;
 						}
-					}
 
 
-					if (setclcnt > 0) {
-						_ASSERT(setclcnt <= MAXCLUSTERNUM);
-						MoveMemory(&(cb.setfl4x4[0]), &(m_setfl4x4[0]), sizeof(float) * 16 * setclcnt);
+						if (setclcnt > 0) {
+							_ASSERT(setclcnt <= MAXCLUSTERNUM);
+							MoveMemory(&(cb.setfl4x4[0]), &(m_setfl4x4[0]), sizeof(float) * 16 * setclcnt);
+						}
 					}
 				}
 			}
 		}
-	}
-	
-	m_commonConstantBuffer.CopyToVRAM(cb);
 
-	if (m_expandData) {
-		m_expandConstantBuffer.CopyToVRAM(m_expandData);
+		m_commonConstantBuffer.CopyToVRAM(cb);
+
 	}
+	else {
+		SConstantBufferNoBone cb;
+		cb.mWorld = renderobj.mWorld;
+		cb.mView = mView;
+		cb.mProj = mProj;
+		if (m_pm3 || m_pm4) {
+			if (renderobj.mqoobj && renderobj.mqoobj->GetTempDiffuseMultFlag()) {
+				cb.diffusemult = renderobj.mqoobj->GetTempDiffuseMult();
+			}
+			else {
+				cb.diffusemult = renderobj.diffusemult;
+			}
+		}
+		else if (m_extline) {
+			cb.diffusemult = m_extline->GetColor();
+		}
+		else {
+			_ASSERT(0);
+			cb.diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		}
+
+		ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
+
+		m_commonConstantBuffer.CopyToVRAM(cb);
+	}
+
+	//if (m_expandData) {
+	//	m_expandConstantBuffer.CopyToVRAM(m_expandData);
+	//}
 
 	//if (m_boneMatricesStructureBuffer.IsInited()) {
 	//	//ボーン行列を更新する。

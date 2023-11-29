@@ -32,16 +32,22 @@ public:
 	void RegistShaderResource(int registerNo, IShaderResource& sr)
 	{
 
-		if (m_shaderResources.empty()) {//2023/11/21
-			//m_shaderResources.resize(MAX_SHADER_RESOURCE);
-			//m_shaderResources.resize(1);
-			InitParams();
-		}
+		//if (m_shaderResources.empty()) {//2023/11/21
+		//	//m_shaderResources.resize(MAX_SHADER_RESOURCE);
+		//	//m_shaderResources.resize(1);
+		//	//InitParams();
+		//	//_ASSERT(0);
+		//	if (!IsInited()) {
+		//		_ASSERT(0);
+		//		InitParams();
+		//	}
+		//}
 
 		RegistResource(
 			registerNo,
 			&sr,
-			&m_shaderResources.front(),
+			//&m_shaderResources.front(),
+			m_shaderResources,
 			m_numShaderResource,
 			MAX_SHADER_RESOURCE,
 			L"DescriptorHeap::RegistShaderResource() レジスタ番号が範囲外です。"
@@ -57,14 +63,20 @@ public:
 	/// <param name="sr">アンオーダーリソース</param>
 	void RegistUnorderAccessResource(int registerNo, IUnorderAccessResrouce& sr)
 	{
-		if (m_uavResources.empty()) {//2023/11/21
-			InitParams();
-		}
+		//if (m_uavResources.empty()) {//2023/11/21
+		//	//InitParams();
+		//	//_ASSERT(0);
+		//	if (!IsInited()) {
+		//		_ASSERT(0);
+		//		InitParams();
+		//	}
+		//}
 
 		RegistResource(
 			registerNo, 
 			&sr,
-			&m_uavResources.front(), 
+			//&m_uavResources.front(), 
+			m_uavResources,
 			m_numUavResource, 
 			MAX_SHADER_RESOURCE, 
 			L"DescriptorHeap::RegistUnorderAccessResource() レジスタ番号が範囲外です。"
@@ -79,16 +91,22 @@ public:
 	/// <param name="cb">定数バッファ</param>
 	void RegistConstantBuffer(int registerNo, ConstantBuffer& cb)
 	{
-		if (m_constantBuffers.empty()) {//2023/11/21
-			//m_constantBuffers.resize(MAX_CONSTANT_BUFFER);
-			//m_constantBuffers.resize(1);
-			InitParams();
-		}
+		//if (m_constantBuffers.empty()) {//2023/11/21
+		//	//m_constantBuffers.resize(MAX_CONSTANT_BUFFER);
+		//	//m_constantBuffers.resize(1);
+		//	//InitParams();
+		//	//_ASSERT(0);
+		//	if (!IsInited()) {
+		//		_ASSERT(0);
+		//		InitParams();
+		//	}
+		//}
 
 		RegistResource(
 			registerNo,
 			&cb,
-			&m_constantBuffers.front(),
+			//&m_constantBuffers.front(),
+			m_constantBuffers,
 			m_numConstantBuffer,
 			MAX_CONSTANT_BUFFER,
 			L"DescriptorHeap::RegistConstantBuffer() レジスタ番号が範囲外です。"
@@ -105,7 +123,7 @@ public:
 	/// </param>
 	void RegistSamplerDesc(int registerNo, const D3D12_SAMPLER_DESC& desc)
 	{
-		RegistResource(
+		RegistResourceArray(
 			registerNo,
 			desc,
 			m_samplerDescs,
@@ -200,6 +218,12 @@ public:
 	{
 		return m_numShaderResource + m_numUavResource;
 	}
+
+	bool IsInited()
+	{
+		return m_initflag;
+	}
+
 private:
 	/// <summary>
 	/// リソースをディスクリプタヒープに登録。
@@ -210,6 +234,45 @@ private:
 	/// <param name="numRes">登録されているリソースの数。本関数を呼び出すと、この数が１インクリメントされます。</param>
 	template<class T>
 	void RegistResource(
+		int registerNo,
+		T res,
+		//T resTbl[],
+		std::vector<T>& resvec,
+		int& numRes,
+		const int MAX_RESOURCE,
+		const wchar_t* errorMessage
+	)
+	{
+		//if (registerNo == -1) {
+		//	//-1が指定されていたら、現在登録されている末尾のリソースの次に登録される。
+		//	registerNo = numRes;
+		//}
+		//if (registerNo < MAX_RESOURCE) {
+		//	//resTbl[registerNo] = res;
+		//	resvec.push_back(res);
+		//	if (numRes < registerNo + 1) {
+		//		numRes = registerNo + 1;
+		//	}
+		//}
+		//else {
+		//	MessageBox(nullptr, errorMessage, L"エラー", MB_OK);
+		//	std::abort();
+		//}
+
+		int curressize = (int)resvec.size();
+		if (curressize < MAX_RESOURCE) {
+			resvec.push_back(res);
+			int newressize = (int)resvec.size();
+			numRes = newressize;
+		}
+		else {
+			MessageBox(nullptr, errorMessage, L"エラー", MB_OK);
+			std::abort();
+		}
+	}
+
+	template<class T>
+	void RegistResourceArray(
 		int registerNo,
 		T res,
 		T resTbl[],
@@ -233,17 +296,29 @@ private:
 			std::abort();
 		}
 	}
+
+
 private:
+	//enum {
+	//	MAX_SHADER_RESOURCE = (1024 * 10),	//シェーダーリソースの最大数。
+	//	MAX_CONSTANT_BUFFER = (1024 * 10),	//定数バッファの最大数。
+	//	MAX_SAMPLER_STATE = 16,	//サンプラステートの最大数。
+	//};
 	enum {
-		MAX_SHADER_RESOURCE = 1024 * 10,	//シェーダーリソースの最大数。
-		MAX_CONSTANT_BUFFER = 1024 * 10,	//定数バッファの最大数。
+		MAX_SHADER_RESOURCE = (1024 * 40),	//シェーダーリソースの最大数。
+		MAX_CONSTANT_BUFFER = (1024 * 40),	//定数バッファの最大数。
 		MAX_SAMPLER_STATE = 16,	//サンプラステートの最大数。
 	};
+
 	int m_numShaderResource = 0;	//シェーダーリソースの数。
 	int m_numConstantBuffer = 0;	//定数バッファの数。
 	int m_numUavResource = 0;		//アンオーダーアクセスリソースの数。
 	int m_numSamplerDesc = 0;		//サンプラの数。
+
+	
 	ID3D12DescriptorHeap* m_descriptorHeap[2] = { nullptr };					//ディスクリプタヒープ。
+	
+
 	std::vector<IShaderResource*> m_shaderResources;		//シェーダーリソース。
 	std::vector <IUnorderAccessResrouce*> m_uavResources;	//UAVリソース。
 	std::vector <ConstantBuffer*> m_constantBuffers;		//定数バッファ。
@@ -252,4 +327,6 @@ private:
 	D3D12_GPU_DESCRIPTOR_HANDLE m_srGpuDescriptorStart[2];						//シェーダーリソースのディスクリプタヒープの開始ハンドル。
 	D3D12_GPU_DESCRIPTOR_HANDLE m_uavGpuDescriptorStart[2];						//UAVリソースのディスクリプタヒープの開始ハンドル。
 	D3D12_GPU_DESCRIPTOR_HANDLE m_samplerGpuDescriptorStart[2];					//Samplerのでスクリプタヒープの開始ハンドル。
+
+	bool m_initflag = false;
 };

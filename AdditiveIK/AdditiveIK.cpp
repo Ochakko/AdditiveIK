@@ -230,39 +230,105 @@ enum {
 
 
 
-typedef struct tag_spaxis
+//typedef struct tag_spaxis
+//{
+//	Sprite sprite;
+//	POINT dispcenter;
+//	tag_spaxis() : sprite() {
+//		::ZeroMemory(&dispcenter, sizeof(POINT));
+//	};
+//}SPAXIS, SPCAM;
+
+class CSpAxis
 {
-	Sprite sprite;
-	POINT dispcenter;
-	tag_spaxis() : sprite() {
+public:
+	CSpAxis() : sprite() {
 		::ZeroMemory(&dispcenter, sizeof(POINT));
 	};
-}SPAXIS, SPCAM, SPELEM;
+	~CSpAxis()
+	{
 
-typedef struct tag_spsw
+	};
+
+public:
+	Sprite sprite;
+	POINT dispcenter;
+};
+
+class CSpCam
 {
+public:
+	CSpCam() : sprite() {
+		::ZeroMemory(&dispcenter, sizeof(POINT));
+	};
+	~CSpCam()
+	{
+
+	};
+
+public:
+	Sprite sprite;
+	POINT dispcenter;
+};
+
+class CSpElem
+{
+public:
+	CSpElem() : sprite() {
+		::ZeroMemory(&dispcenter, sizeof(POINT));
+	};
+	~CSpElem()
+	{
+
+	};
+public:
+	Sprite sprite;
+	POINT dispcenter;
+};
+
+//typedef struct tag_spsw
+//{
+//	bool state;//ON : 1 or OFF : 0
+//	Sprite spriteON;
+//	Sprite spriteOFF;
+//	POINT dispcenter;
+//	tag_spsw() : spriteON(), spriteOFF() {
+//		state = 0;
+//		::ZeroMemory(&dispcenter, sizeof(POINT));
+//	};
+//}SPGUISW;
+class CSpGUISW
+{
+public:
+	CSpGUISW() : spriteON(),  spriteOFF() {
+		state = 0;
+		::ZeroMemory(&dispcenter, sizeof(POINT));
+	};
+	~CSpGUISW() {};
+
+public:
 	bool state;//ON : 1 or OFF : 0
 	Sprite spriteON;
 	Sprite spriteOFF;
 	POINT dispcenter;
-	tag_spsw() : spriteON(), spriteOFF() {
-		state = 0;
+};
+
+class CSpGUISW3
+{
+public:
+	CSpGUISW3() : sprite1(), sprite2(), sprite3() 
+	{
+		mode = 0;
 		::ZeroMemory(&dispcenter, sizeof(POINT));
 	};
-}SPGUISW;
+	~CSpGUISW3() {};
 
-
-typedef struct tag_spsw3 //2023/06/04
-{
+public:
 	int mode;
 	Sprite sprite1;
 	Sprite sprite2;
 	Sprite sprite3;
 	POINT dispcenter;
-	tag_spsw3() : sprite1(), sprite2(), sprite3() {
-		mode = 0;
-		::ZeroMemory(&dispcenter, sizeof(POINT));
-	};
 }SPGUISW3;
 
 //#define FPSSAVENUM 100
@@ -1347,46 +1413,46 @@ static float s_spsize = 45.0f;//CheckResolution()でセットする
 static float s_spsizeSmall = 26.0f;//CheckResolution()でセットする
 static float s_sptopmargin = 35.0f;
 static float s_spsidemargin = 35.0f;
-static SPELEM s_spundo[2];
-static SPAXIS s_spaxis[SPAXISNUM];
-static SPCAM s_spcam[SPR_CAM_MAX];
-static SPELEM s_sprig[SPRIGMAX];//inactive, active
-//static SPELEM s_spbt;
-static SPELEM s_spret2prev;
-static SPELEM s_spret2prev2;
-static SPELEM s_spcplw2w;
-static SPELEM s_spsmooth;
-static SPELEM s_spconstexe;
-static SPELEM s_spconstrefresh;
-static SPELEM s_spcopy;
-static SPELEM s_spsymcopy;
-static SPELEM s_sppaste;
-static SPELEM s_spcopyhistory;
-static SPELEM s_spinterpolate;
-static SPELEM s_spinit;
-static SPELEM s_spscaleinit;
-static SPELEM s_spproperty;
-static SPELEM s_spzeroframe;
-static SPELEM s_spcameradolly;
-static SPELEM s_spmodelposdir;
-static SPELEM s_spmaterialrate;
-static SPGUISW s_spguisw[SPGUISWNUM];
-static SPGUISW s_spdispsw[SPDISPSWNUM];
-static SPGUISW s_sprigidsw[SPRIGIDSWNUM];
-static SPGUISW s_spretargetsw[SPRETARGETSWNUM];
+static CSpElem s_spundo[2];
+static CSpAxis s_spaxis[SPAXISNUM];
+static CSpCam s_spcam[SPR_CAM_MAX];
+static CSpElem s_sprig[SPRIGMAX];//inactive, active
+//static CSpElem s_spbt;
+static CSpElem s_spret2prev;
+static CSpElem s_spret2prev2;
+static CSpElem s_spcplw2w;
+static CSpElem s_spsmooth;
+static CSpElem s_spconstexe;
+static CSpElem s_spconstrefresh;
+static CSpElem s_spcopy;
+static CSpElem s_spsymcopy;
+static CSpElem s_sppaste;
+static CSpElem s_spcopyhistory;
+static CSpElem s_spinterpolate;
+static CSpElem s_spinit;
+static CSpElem s_spscaleinit;
+static CSpElem s_spproperty;
+static CSpElem s_spzeroframe;
+static CSpElem s_spcameradolly;
+static CSpElem s_spmodelposdir;
+static CSpElem s_spmaterialrate;
+static CSpGUISW s_spguisw[SPGUISWNUM];
+static CSpGUISW s_spdispsw[SPDISPSWNUM];
+static CSpGUISW s_sprigidsw[SPRIGIDSWNUM];
+static CSpGUISW s_spretargetsw[SPRETARGETSWNUM];
 static bool s_firstmoveaimbar = true;
-//static SPGUISW s_spaimbar[SPAIMBARNUM];
-//static SPGUISW s_spmenuaimbar[SPMENU_MAX];
+//static CSpGUISW s_spaimbar[SPAIMBARNUM];
+//static CSpGUISW s_spmenuaimbar[SPMENU_MAX];
 static int s_oprigflag = 0;
-static SPGUISW s_spsel3d;
-static SPELEM s_spmousehere;
-static SPGUISW s_spikmodesw[3];
-static SPGUISW s_sprefpos;
-static SPGUISW s_splimiteul;
-static SPGUISW s_spscraping;
-static SPELEM s_mousecenteron;
-static SPGUISW s_spcameramode;
-static SPGUISW3 s_spcamerainherit;
+static CSpGUISW s_spsel3d;
+static CSpElem s_spmousehere;
+static CSpGUISW s_spikmodesw[3];
+static CSpGUISW s_sprefpos;
+static CSpGUISW s_splimiteul;
+static CSpGUISW s_spscraping;
+static CSpElem s_mousecenteron;
+static CSpGUISW s_spcameramode;
+static CSpGUISW3 s_spcamerainherit;
 static InstancedSprite s_bcircle;
 static Sprite s_kinsprite;
 static CUndoSprite s_undosprite;
@@ -3982,31 +4048,31 @@ void InitApp()
 
 	{
 		s_toolspritemode = 0;
-		::ZeroMemory(s_spundo, sizeof(SPELEM) * 2);
-		::ZeroMemory(s_spaxis, sizeof(SPAXIS) * SPAXISNUM);
-		::ZeroMemory(s_spcam, sizeof(SPCAM) * SPR_CAM_MAX);
-		::ZeroMemory(s_sprig, sizeof(SPELEM) * SPRIGMAX);
-		//::ZeroMemory(&s_spbt, sizeof(SPELEM));
-		::ZeroMemory(&s_spmousehere, sizeof(SPELEM));
-		::ZeroMemory(&s_spret2prev, sizeof(SPELEM));
-		::ZeroMemory(&s_spret2prev2, sizeof(SPELEM));
-		::ZeroMemory(&s_spcplw2w, sizeof(SPELEM));
-		::ZeroMemory(&s_spsmooth, sizeof(SPELEM));
-		::ZeroMemory(&s_spconstexe, sizeof(SPELEM));
-		::ZeroMemory(&s_spconstrefresh, sizeof(SPELEM));
-		::ZeroMemory(&s_spcopy, sizeof(SPELEM));
-		::ZeroMemory(&s_spsymcopy, sizeof(SPELEM));
-		::ZeroMemory(&s_sppaste, sizeof(SPELEM));
-		::ZeroMemory(&s_spcopyhistory, sizeof(SPELEM));
-		::ZeroMemory(&s_spinterpolate, sizeof(SPELEM));
-		::ZeroMemory(&s_spinit, sizeof(SPELEM));
-		::ZeroMemory(&s_spscaleinit, sizeof(SPELEM));
-		::ZeroMemory(&s_spproperty, sizeof(SPELEM));
-		::ZeroMemory(&s_spzeroframe, sizeof(SPELEM));
-		::ZeroMemory(&s_spcameradolly, sizeof(SPELEM));
-		::ZeroMemory(&s_spmodelposdir, sizeof(SPELEM));
-		::ZeroMemory(&s_spmaterialrate, sizeof(SPELEM));
-		::ZeroMemory(&s_mousecenteron, sizeof(SPELEM));
+		//::ZeroMemory(s_spundo, sizeof(CSpElem) * 2);
+		//::ZeroMemory(s_spaxis, sizeof(SPAXIS) * SPAXISNUM);
+		//::ZeroMemory(s_spcam, sizeof(SPCAM) * SPR_CAM_MAX);
+		//::ZeroMemory(s_sprig, sizeof(CSpElem) * SPRIGMAX);
+		//::ZeroMemory(&s_spbt, sizeof(CSpElem));
+		//::ZeroMemory(&s_spmousehere, sizeof(CSpElem));
+		//::ZeroMemory(&s_spret2prev, sizeof(CSpElem));
+		//::ZeroMemory(&s_spret2prev2, sizeof(CSpElem));
+		//::ZeroMemory(&s_spcplw2w, sizeof(CSpElem));
+		//::ZeroMemory(&s_spsmooth, sizeof(CSpElem));
+		//::ZeroMemory(&s_spconstexe, sizeof(CSpElem));
+		//::ZeroMemory(&s_spconstrefresh, sizeof(CSpElem));
+		//::ZeroMemory(&s_spcopy, sizeof(CSpElem));
+		//::ZeroMemory(&s_spsymcopy, sizeof(CSpElem));
+		//::ZeroMemory(&s_sppaste, sizeof(CSpElem));
+		//::ZeroMemory(&s_spcopyhistory, sizeof(CSpElem));
+		//::ZeroMemory(&s_spinterpolate, sizeof(CSpElem));
+		//::ZeroMemory(&s_spinit, sizeof(CSpElem));
+		//::ZeroMemory(&s_spscaleinit, sizeof(CSpElem));
+		//::ZeroMemory(&s_spproperty, sizeof(CSpElem));
+		//::ZeroMemory(&s_spzeroframe, sizeof(CSpElem));
+		//::ZeroMemory(&s_spcameradolly, sizeof(CSpElem));
+		//::ZeroMemory(&s_spmodelposdir, sizeof(CSpElem));
+		//::ZeroMemory(&s_spmaterialrate, sizeof(CSpElem));
+		//::ZeroMemory(&s_mousecenteron, sizeof(CSpElem));
 	}
 	//{
 	//	::ZeroMemory(&s_spaimbar, sizeof(SPGUISW) * SPAIMBARNUM);
@@ -4022,67 +4088,67 @@ void InitApp()
 	//		s_spmenuaimbar[spgno].state = false;
 	//	}
 	//}
-	{
-		::ZeroMemory(&s_spsel3d, sizeof(SPGUISW));
-		s_spsel3d.state = false;
-	}
-	{
-		::ZeroMemory(&s_spikmodesw, sizeof(SPGUISW) * 3);
-		s_spikmodesw[0].state = true;
-		s_spikmodesw[1].state = false;
-		s_spikmodesw[2].state = false;
-	}
-	{
-		::ZeroMemory(&s_sprefpos, sizeof(SPGUISW));
-		//s_sprefpos.state = true;
-		s_sprefpos.state = false;//2021/11/22 ReferencePose Off by default
-	}
-	{
-		::ZeroMemory(&s_splimiteul, sizeof(SPGUISW));
-		//s_splimiteul.state = true;
-		s_splimiteul.state = false;
-	}
-	{
-		::ZeroMemory(&s_spcameramode, sizeof(SPGUISW));
-		//s_splimiteul.state = true;
-		s_spcameramode.state = false;
-	}
-	{
-		::ZeroMemory(&s_spcamerainherit, sizeof(SPGUISW3));
-		//s_splimiteul.state = true;
-		s_spcamerainherit.mode = CAMERA_INHERIT_ALL;
-	}
-	{
-		::ZeroMemory(&s_spscraping, sizeof(SPGUISW));
-		//s_spscraping.state = true;
-		s_spscraping.state = false;
-	}
-	{
-		::ZeroMemory(&s_spguisw, sizeof(SPGUISW) * SPGUISWNUM);
-		int spgno;
-		for (spgno = 0; spgno < SPGUISWNUM; spgno++) {
-			s_spguisw[spgno].state = false;
-		}
-	}
-	{
-		::ZeroMemory(&s_spdispsw, sizeof(SPGUISW) * SPDISPSWNUM);
-		int spgno;
-		for (spgno = 0; spgno < SPDISPSWNUM; spgno++) {
-			s_spdispsw[spgno].state = false;
-		}
-		s_spdispsw[SPDISPSW_LIGHTS].state = true;
-	}
-	{
-		::ZeroMemory(&s_sprigidsw, sizeof(SPGUISW) * SPRIGIDSWNUM);
-		int spgno;
-		for (spgno = 0; spgno < SPRIGIDSWNUM; spgno++) {
-			s_sprigidsw[spgno].state = false;
-		}
-		s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].state = true;
-	}
-	::ZeroMemory(&s_spretargetsw, sizeof(SPGUISW) * SPRETARGETSWNUM);
-	s_spretargetsw[SPRETARGETSW_RETARGET].state = false;
-	s_spretargetsw[SPRETARGETSW_LIMITEULER].state = false;
+	//{
+	//	::ZeroMemory(&s_spsel3d, sizeof(SPGUISW));
+	//	s_spsel3d.state = false;
+	//}
+	//{
+	//	::ZeroMemory(&s_spikmodesw, sizeof(SPGUISW) * 3);
+	//	s_spikmodesw[0].state = true;
+	//	s_spikmodesw[1].state = false;
+	//	s_spikmodesw[2].state = false;
+	//}
+	//{
+	//	::ZeroMemory(&s_sprefpos, sizeof(SPGUISW));
+	//	//s_sprefpos.state = true;
+	//	s_sprefpos.state = false;//2021/11/22 ReferencePose Off by default
+	//}
+	//{
+	//	::ZeroMemory(&s_splimiteul, sizeof(SPGUISW));
+	//	//s_splimiteul.state = true;
+	//	s_splimiteul.state = false;
+	//}
+	//{
+	//	::ZeroMemory(&s_spcameramode, sizeof(SPGUISW));
+	//	//s_splimiteul.state = true;
+	//	s_spcameramode.state = false;
+	//}
+	//{
+	//	::ZeroMemory(&s_spcamerainherit, sizeof(SPGUISW3));
+	//	//s_splimiteul.state = true;
+	//	s_spcamerainherit.mode = CAMERA_INHERIT_ALL;
+	//}
+	//{
+	//	::ZeroMemory(&s_spscraping, sizeof(SPGUISW));
+	//	//s_spscraping.state = true;
+	//	s_spscraping.state = false;
+	//}
+	//{
+	//	::ZeroMemory(&s_spguisw, sizeof(SPGUISW) * SPGUISWNUM);
+	//	int spgno;
+	//	for (spgno = 0; spgno < SPGUISWNUM; spgno++) {
+	//		s_spguisw[spgno].state = false;
+	//	}
+	//}
+	//{
+	//	::ZeroMemory(&s_spdispsw, sizeof(SPGUISW) * SPDISPSWNUM);
+	//	int spgno;
+	//	for (spgno = 0; spgno < SPDISPSWNUM; spgno++) {
+	//		s_spdispsw[spgno].state = false;
+	//	}
+	//	s_spdispsw[SPDISPSW_LIGHTS].state = true;
+	//}
+	//{
+	//	::ZeroMemory(&s_sprigidsw, sizeof(SPGUISW) * SPRIGIDSWNUM);
+	//	int spgno;
+	//	for (spgno = 0; spgno < SPRIGIDSWNUM; spgno++) {
+	//		s_sprigidsw[spgno].state = false;
+	//	}
+	//	s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].state = true;
+	//}
+	//::ZeroMemory(&s_spretargetsw, sizeof(SPGUISW) * SPRETARGETSWNUM);
+	//s_spretargetsw[SPRETARGETSW_RETARGET].state = false;
+	//s_spretargetsw[SPRETARGETSW_LIMITEULER].state = false;
 
 
 	g_bonecntmap.clear();
@@ -5590,6 +5656,11 @@ void OnFrameRender(myRenderer::RenderingEngine& re, RenderContext& rc, double fT
 	//	return;
 	//}
 
+	if (!s_chascene) {
+		_ASSERT(0);
+		return;
+	}
+
 
 	// レンダリング開始
 	g_engine->BeginFrame();
@@ -5680,7 +5751,7 @@ void OnFrameRender(myRenderer::RenderingEngine& re, RenderContext& rc, double fT
 	//レンダリングエンジンを実行
 	re.Execute(rc);
 	// レンダリング終了
-	g_engine->EndFrame();
+	g_engine->EndFrame(s_chascene);
 
 }
 
@@ -9169,18 +9240,18 @@ int OpenFile()
 
 
 
-	//CurrentDirectoryがMameMediaになっていたときにはTestディレクトリに変える
-	WCHAR curdir[MAX_PATH] = { 0L };
-	ZeroMemory(curdir, sizeof(WCHAR) * MAX_PATH);
-	GetCurrentDirectory(MAX_PATH, curdir);
-	WCHAR* findpat = wcsstr(curdir, L"\\MameMedia");
-	if (findpat) {
-		WCHAR initialdir[MAX_PATH] = { 0L };
-		wcscpy_s(initialdir, MAX_PATH, g_basedir);
-		wcscat_s(initialdir, MAX_PATH, L"..\\Test\\");
-		SetCurrentDirectoryW(initialdir);
-	}
-
+	////CurrentDirectoryがMameMediaになっていたときにはTestディレクトリに変える
+	//WCHAR curdir[MAX_PATH] = { 0L };
+	//ZeroMemory(curdir, sizeof(WCHAR) * MAX_PATH);
+	//GetCurrentDirectory(MAX_PATH, curdir);
+	//WCHAR* findpat = wcsstr(curdir, L"\\MameMedia");
+	//if (findpat) {
+	//	WCHAR initialdir[MAX_PATH] = { 0L };
+	//	wcscpy_s(initialdir, MAX_PATH, g_basedir);
+	//	wcscat_s(initialdir, MAX_PATH, L"..\\Test\\");
+	//	SetCurrentDirectoryW(initialdir);
+	//}
+	SetCurrentDirectoryW(g_basedir);
 
 
 	int dlgret;
@@ -19117,10 +19188,10 @@ int SetSpRet2PrevParams()
 		s_spret2prev.dispcenter.x = s_guibarX0 - 70 - (LONG)(16.0f + 8.0f);
 		//s_spret2prev.dispcenter.y = 486;
 		if (g_4kresolution) {
-			s_spret2prev.dispcenter.y = 486 * 2 - MAINMENUAIMBARH + 32 - Float2Int(spretheight2) - 6;
+			s_spret2prev.dispcenter.y = 486 * 2 - MAINMENUAIMBARH + 32;
 		}
 		else {
-			s_spret2prev.dispcenter.y = 486 - MAINMENUAIMBARH - Float2Int(spretheight2) - 6;
+			s_spret2prev.dispcenter.y = 486 - MAINMENUAIMBARH;
 		}
 
 		ChaVector3 disppos;
@@ -49462,6 +49533,9 @@ int CreateSprites()
 	}
 	*clast2en = 0;
 	strcat_s(cpath, MAX_PATH, "\\Media\\");
+
+
+	SetCurrentDirectoryW(g_basedir);
 
 
 	SpriteInitData spriteinitdata;
