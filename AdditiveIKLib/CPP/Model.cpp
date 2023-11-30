@@ -85,7 +85,7 @@
 #include <OrgWindow.h>
 
 #include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
-
+#include "../../MiniEngine/TResourceBank.h"
 
 //#include <DXUT.h>
 #include <io.h>
@@ -96,6 +96,10 @@
 
 
 using namespace std;
+
+
+//extern
+extern TResourceBank<CMQOMaterial> g_materialbank;
 
 
 ////######################################
@@ -733,13 +737,16 @@ int CModel::DestroyAllMotionInfo()
 int CModel::DestroyMaterial()
 {
 
-	map<int, CMQOMaterial*>::iterator itr;
-	for( itr = m_material.begin(); itr != m_material.end(); itr++ ){
-		CMQOMaterial* delmat = itr->second;
-		if( delmat ){
-			delete delmat;
-		}
-	}
+	//########
+	//bank管理
+	//########
+	//map<int, CMQOMaterial*>::iterator itr;
+	//for( itr = m_material.begin(); itr != m_material.end(); itr++ ){
+	//	CMQOMaterial* delmat = itr->second;
+	//	if( delmat ){
+	//		delete delmat;
+	//	}
+	//}
 	m_material.clear();
 
 	return 0;
@@ -1140,6 +1147,9 @@ _ASSERT(m_bonelist[0]);
 		CallF(MakeObjectName(), return 1);
 	}
 
+	
+	int matrixindex = 0;
+	SetBoneMatrixIndexReq(GetTopBone(false), &matrixindex);//2023/11/30
 
 
 	ChaMatrix offsetmat;
@@ -3838,17 +3848,24 @@ int CModel::MakeEnglishName()
 int CModel::AddDefMaterial()
 {
 
-	CMQOMaterial* dummymat = new CMQOMaterial();
-	if( !dummymat ){
-		_ASSERT( 0 );
-		return 1;
+	char dummyname[256] = { 0 };
+	strcpy_s(dummyname, 256, "dummyMaterial");
+
+	CMQOMaterial* dummymat = g_materialbank.Get(dummyname);//既に存在するかどうかチェック
+	if (!dummymat) {
+		dummymat = new CMQOMaterial();
+		if (!dummymat) {
+			_ASSERT(0);
+			return 1;
+		}
+		int defmaterialno = (int)g_materialbank.GetSize();
+		dummymat->SetMaterialNo(defmaterialno);
+		dummymat->SetName("dummyMaterial");
+		g_materialbank.Regist(dummyname, dummymat);
 	}
 
-	int defmaterialno = (int)m_material.size();
-	dummymat->SetMaterialNo( defmaterialno );
-	dummymat->SetName( "dummyMaterial" );
+	m_material[dummymat->GetMaterialNo()] = dummymat;
 
-	m_material[defmaterialno] = dummymat;
 
 	return 0;
 }
@@ -4385,12 +4402,20 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 		for (int i = 0; i < materialNum_; i++) {
 			FbxSurfaceMaterial* material = node->GetMaterial( i );
 			if ( material != 0 ) {
-				CMQOMaterial* newmqomat = new CMQOMaterial();
-				int mqomatno = newobj->GetMaterialSize();
-				newmqomat->SetMaterialNo( mqomatno );
-				newobj->SetMaterial( mqomatno, newmqomat );
-
-				SetMQOMaterial( newmqomat, material );
+				char materialname[256] = { 0 };
+				strcpy_s(materialname, 256, material->GetName());
+				CMQOMaterial* currentmaterial = g_materialbank.Get(materialname);//既に存在するかどうかチェック
+				if (!currentmaterial) {
+					currentmaterial = new CMQOMaterial();
+					int mqomatno = g_materialbank.GetSize();
+					currentmaterial->SetMaterialNo(mqomatno);
+					newobj->SetMaterial(mqomatno, currentmaterial);
+					SetMQOMaterial(currentmaterial, material);
+					g_materialbank.Regist(materialname, currentmaterial);
+				}
+				else {
+					newobj->SetMaterial(currentmaterial->GetMaterialNo(), currentmaterial);
+				}
 
 				//const char* texname = newmqomat->GetTex();
 				//const char* nodename = node->GetName();
@@ -4470,10 +4495,45 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 				lookupIndex = 0;
 				break;
 			}
-			int materialIndex = pPolygonMaterials->mIndexArray->GetAt(lookupIndex);
-			if ((materialIndex >= 0) && (materialIndex < materialNum_)) {
-				curface->SetMaterialNo(materialIndex);
+			int materialIndex = pPolygonMaterials->mIndexArray->GetAt(lookupIndex);//Mesh単位のマテリアルへのインデックス
+			CMQOMaterial* curmqomat = 0;
+			int materialcount = 0;
+			std::map<int, CMQOMaterial*>::iterator itrmat;
+			for(itrmat = newobj->GetMaterialBegin(); itrmat != newobj->GetMaterialEnd(); itrmat++){
+				if (materialcount == materialIndex) {
+					curmqomat = itrmat->second;
+					break;
+				}
+				materialcount++;
 			}
+			if (curmqomat) {
+				int curmaterialno = curmqomat->GetMaterialNo();
+				curface->SetMaterialNo(curmaterialno);
+			}
+			else {
+				_ASSERT(0);
+			}
+
+			//if ((materialIndex >= 0) && (materialIndex < materialNum_)) {
+			//	curface->SetMaterialNo(materialIndex);
+			//}
+			//FbxLayerElementMaterial* currentMaterial = pMesh->GetElementMaterial(materialIndex);
+			//if (currentMaterial) {
+			//	char currentmaterialname[256] = { 0 };
+			//	strcpy_s(currentmaterialname, 256, currentMaterial->GetName());
+			//	CMQOMaterial* curmqomat = g_materialbank.Get(currentmaterialname);
+			//	if (curmqomat) {
+			//		int curmaterialno = curmqomat->GetMaterialNo();
+			//		curface->SetMaterialNo(curmaterialno);
+			//	}
+			//	else {
+			//		_ASSERT(0);
+			//	}
+			//}
+			//else {
+			//	_ASSERT(0);
+			//}
+
 		}
 		else {
 			lookupIndex = 0;
@@ -6813,7 +6873,8 @@ int CModel::GetFBXSkin( FbxNodeAttribute *pAttrib, FbxNode* pNode )
 							//if ((lClusterMode == FbxCluster::eAdditive) || (weight >= 0.05f)) {
 							if ((lClusterMode == FbxCluster::eAdditive) || (weight >= 0.001f)) {
 								//if ((lClusterMode == FbxCluster::eAdditive)){
-								newobj->AddInfBone(curclusterno, index, weight, isadditive);
+								//newobj->AddInfBone(curclusterno, index, weight, isadditive);
+								newobj->AddInfBone(curbone->GetMatrixIndex(), index, weight, isadditive);//2023/11/30
 							}
 						}
 
@@ -6855,7 +6916,8 @@ int CModel::GetFBXSkin( FbxNodeAttribute *pAttrib, FbxNode* pNode )
 					int isadditive;
 					isadditive = 1;
 					int curclusterno = 0;
-					newobj->AddInfBone(curclusterno, pointindex, weight, isadditive);
+					//newobj->AddInfBone(curclusterno, pointindex, weight, isadditive);
+					newobj->AddInfBone(curbone->GetMatrixIndex(), pointindex, weight, isadditive);//2023/11/30
 				}
 
 				makecnt++;
@@ -19524,4 +19586,22 @@ CMQOObject* CModel::GetMQOObjectByName(const char* findpattern) {
 	}
 	return 0;
 };
+
+void CModel::SetBoneMatrixIndexReq(CBone* srcbone, int* pcount)
+{
+	if (srcbone) {
+		
+		if (srcbone->IsSkeleton()) {
+			srcbone->SetMatrixIndex(*pcount);
+			(*pcount)++;
+		}
+
+		if (srcbone->GetChild(false)) {
+			SetBoneMatrixIndexReq(srcbone->GetChild(false), pcount);
+		}
+		if (srcbone->GetBrother(false)) {
+			SetBoneMatrixIndexReq(srcbone->GetBrother(false), pcount);
+		}
+	}
+}
 

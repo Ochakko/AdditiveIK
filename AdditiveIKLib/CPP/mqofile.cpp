@@ -19,11 +19,17 @@
 #include <mqoobject.h>
 #include <mqoface.h>
 
+#include "../../MiniEngine/TResourceBank.h"
+
 #include <algorithm>
 #include <iostream>
 #include <iterator>
 
+
 using namespace std;
+
+//extern
+extern TResourceBank<CMQOMaterial> g_materialbank;
 
 
 #define BUFBLOCKLEN	2048
@@ -824,16 +830,17 @@ int CMQOFile::ReadMaterial( MQOSTATE* nextstate )
 			findend = 1;
 			//*nextstate = BEGIN_FINISH;
 		}else{
-			CMQOMaterial* newmat;
-			newmat = new CMQOMaterial();
+
+			//この時点ではまだマテリアルの名前が分からない
+			//bankに登録済かどうかのチェックは　名前をパースした後でチェックする
+			//まずは　作成する
+			CMQOMaterial* newmat = new CMQOMaterial();
 			if( !newmat ){
 				DbgOut( L"MQOFile : ReadMaterial : newmat alloc error !!!" );
 				*nextstate = BEGIN_FINISH;
 				return 1;
 			}
 		
-
-
 //DbgOut( L"MQOFile : ReadMaterial : SetParams : %s\n", m_linechar );
 			matno = m_modelptr->GetMQOMaterialSize();
 			m_linechar[LINECHARLENG - 1] = 0;
@@ -846,7 +853,19 @@ int CMQOFile::ReadMaterial( MQOSTATE* nextstate )
 				return 1;
 			}
 
-			m_modelptr->SetMQOMaterial( newmat->GetMaterialNo(), newmat ); 
+			char materialname[256] = { 0 };
+			strcpy_s(materialname, 256, newmat->GetName());
+			CMQOMaterial* chkmaterial = g_materialbank.Get(materialname);//既に存在していたかどうかをチェックする
+			if (chkmaterial) {
+				//既に存在していた場合には　newmatを削除して　既に在る方を登録
+				delete newmat;
+				newmat = 0;
+				m_modelptr->SetMQOMaterial(chkmaterial->GetMaterialNo(), chkmaterial);
+			}
+			else {
+				m_modelptr->SetMQOMaterial(newmat->GetMaterialNo(), newmat);
+				g_materialbank.Regist(materialname, newmat);
+			}
 		}
 	}
 	

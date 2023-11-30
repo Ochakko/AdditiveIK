@@ -120,7 +120,7 @@
 #include "../AdditiveIKLib/Grimoire/ModelRender.h"
 #include "../MiniEngine/Sprite.h"
 #include "../MiniEngine/font/Font.h"
-
+#include "../MiniEngine/TResourceBank.h"
 
 #include "DXUTmisc/DXUTmisc.h"
 
@@ -334,6 +334,12 @@ public:
 //#define FPSSAVENUM 100
 #define FPSSAVENUM 120
 
+
+//global
+TResourceBank<CMQOMaterial> g_materialbank;
+
+
+//staic
 static HWINEVENTHOOK s_hhook = NULL;
 
 
@@ -3221,6 +3227,8 @@ void InitApp()
 	InitCommonControls();
 
 	CBone::InitColDisp();
+
+	g_materialbank.InitParams();
 
 	s_platemenukind = SPPLATEMENUKIND_DISP;
 	s_platemenuno = 1;

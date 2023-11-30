@@ -17,6 +17,17 @@
 #include <TexBank.h>
 #include <TexElem.h>
 
+#include <ChaVecCalc.h>
+#include <Bone.h>
+#include <mqoobject.h>
+#include <Model.h>
+
+#include <mqoobject.h>
+#include <polymesh3.h>
+#include <polymesh4.h>
+#include <ExtLine.h>
+
+
 //extern CTexBank* g_texbank;
 
 
@@ -27,7 +38,8 @@
 
 
 
-CMQOMaterial::CMQOMaterial()
+CMQOMaterial::CMQOMaterial() : m_descriptorHeap(),
+m_commonConstantBuffer(), m_expandConstantBuffer() //2023/11/29
 {
 	InitParams();
 }
@@ -207,8 +219,16 @@ int CMQOMaterial::ConvParamsTo3F()
 
 int CMQOMaterial::InitParams()
 {	
+	m_initpipelineflag = false;
+	m_createdescriptorflag = false;
+	//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
+	ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
+
 	m_materialno = -1;
 	ZeroMemory ( m_name, 256 );
+
+	m_cbWithBone.Init();
+	m_cbNoBone.Init();
 
 	m_col.w = 1.0f;
 	m_col.x = 1.0f;
@@ -283,6 +303,8 @@ int CMQOMaterial::InitParams()
 
 int CMQOMaterial::DestroyObjs()
 {
+	m_createdescriptorflag = false;
+
 	if( m_convnamenum > 0 ){
 		int nameno;
 		for( nameno = 0; nameno < m_convnamenum; nameno++ ){
@@ -1020,6 +1042,14 @@ void CMQOMaterial::InitShadersAndPipelines(
 
 
 
+	if (m_initpipelineflag) {
+		//###############################
+		//既に初期化済の場合は　すぐにリターン
+		//###############################
+		return;
+	}
+
+
 	//テクスチャをロード。
 	//InitTexture(tkmMat);
 
@@ -1071,6 +1101,8 @@ void CMQOMaterial::InitShadersAndPipelines(
 		//パイプラインステートを初期化。
 		InitPipelineState(vertextype, colorBufferFormat);
 	}
+
+	m_initpipelineflag = true;
 }
 
 void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
@@ -1275,7 +1307,8 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 
 		//2023/11/25 とりあえずpm3のwithalpha == true時の描画用にFUNC_ALWAYS設定
 		//将来的にはm_transAlwaysNonSkinModelPipelineStateとして独立させる予定
-		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		//psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
 		m_transNonSkinModelPipelineState.Init(psoDesc);
 	}
@@ -1335,6 +1368,9 @@ void CMQOMaterial::BeginRender(RenderContext& rc, int hasSkin, bool isline)
 			rc.SetPipelineState(m_nonSkinModelPipelineState);
 		}
 	}
+
+	rc.SetDescriptorHeap(m_descriptorHeap);
+
 }
 
 Texture& CMQOMaterial::GetDiffuseMap()
@@ -1402,3 +1438,347 @@ int CMQOMaterial::SetBlackTexture()
 
 
 
+int CMQOMaterial::CreateDecl(ID3D12Device* pdev, int objecttype)
+{
+	//###########################################
+	//vertextype : 0-->pm4, 1-->pm3, 2-->extline
+	//###########################################
+
+	if (m_createdescriptorflag) {
+		//###############################
+		//既に初期化済の場合は　すぐにリターン
+		//###############################
+		return 0;
+	}
+
+
+
+	//共通定数バッファの作成。
+	if (objecttype == 0) {
+		m_commonConstantBuffer.Init(sizeof(SConstantBufferWithBone), nullptr);
+	}
+	else {
+		m_commonConstantBuffer.Init(sizeof(SConstantBufferNoBone), nullptr);
+	}
+
+	//ユーザー拡張用の定数バッファを作成。
+	//if (expandData) {
+	//	m_expandConstantBuffer.Init(expandDataSize, nullptr);
+	//	m_expandData = expandData;
+	//}
+	//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
+	//	m_expandShaderResourceView[i] = expandShaderResourceView[i];
+	//}
+	//int expandDataSize = 0;
+	//m_expandConstantBuffer.Init(expandDataSize, nullptr);
+	//m_expandData = nullptr;
+	//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
+	//	m_expandShaderResourceView[i] = nullptr;
+	//}
+
+	//2023/11/23
+	// ボーンの姿勢は　メッシュ単位のSConstantBufferで　mWorld, View, Projと一緒に扱うことにした
+	////2023/11/17
+	////とりあえず　ボーン無しで表示テスト
+	//int datanum = 1;
+	//ChaMatrix dummymat;
+	//dummymat.SetIdentity();
+	//m_boneMatricesStructureBuffer.Init(
+	//	sizeof(ChaMatrix),
+	//	datanum,
+	//	&dummymat
+	//);
+
+
+	//ディスクリプタヒープを作成。
+	CreateDescriptorHeaps(objecttype);
+
+
+	return 0;
+}
+
+void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
+{
+	//###########################################
+	//vertextype : 0-->pm4, 1-->pm3, 2-->extline
+	//###########################################
+
+	if (m_createdescriptorflag) {
+		//###############################
+		//既に初期化済の場合は　すぐにリターン
+		//###############################
+		return;
+	}
+
+	if (objecttype == 0) {
+		//ディスクリプタヒープを構築していく。
+		int srvNo = 0;
+		int cbNo = 0;
+		//ディスクリプタヒープにディスクリプタを登録していく。
+		m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());			//アルベドに乗算するテクスチャ。
+		m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());			//アルベドマップ。
+		m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());		//法線マップ。
+		m_descriptorHeap.RegistShaderResource(srvNo + 3, GetSpecularMap());		//スペキュラマップ。
+		//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
+		for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
+			if (m_expandShaderResourceView[i]) {
+				m_descriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
+			}
+		}
+		srvNo += NUM_SRV_ONE_MATERIAL;
+		m_descriptorHeap.RegistConstantBuffer(cbNo, m_commonConstantBuffer);
+		//if (m_expandConstantBuffer.IsValid()) {
+		//	m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
+		//}
+		cbNo += NUM_CBV_ONE_MATERIAL;
+
+		m_createdescriptorflag = true;
+
+		if (m_createdescriptorflag) {
+			m_descriptorHeap.Commit();
+		}
+	}
+	else if (objecttype == 1) {
+		//ディスクリプタヒープを構築していく。
+		int srvNo = 0;
+		int cbNo = 0;
+		//ディスクリプタヒープにディスクリプタを登録していく。
+		m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());			//アルベドに乗算するテクスチャ。
+		m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());			//アルベドマップ。
+		m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());		//法線マップ。
+		m_descriptorHeap.RegistShaderResource(srvNo + 3, GetSpecularMap());		//スペキュラマップ。
+		//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
+		for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
+			if (m_expandShaderResourceView[i]) {
+				m_descriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
+			}
+		}
+		srvNo += NUM_SRV_ONE_MATERIAL;
+		m_descriptorHeap.RegistConstantBuffer(cbNo, m_commonConstantBuffer);
+		//if (m_expandConstantBuffer.IsValid()) {
+		//	m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
+		//}
+		cbNo += NUM_CBV_ONE_MATERIAL;
+		m_createdescriptorflag = true;
+
+		//}
+		if (m_createdescriptorflag) {
+			m_descriptorHeap.Commit();
+		}
+	}
+	else if (objecttype == 2) {
+		//ディスクリプタヒープを構築していく。
+		int srvNo = 0;
+		int cbNo = 0;
+		//ディスクリプタヒープにディスクリプタを登録していく。
+		m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());			//アルベドに乗算するテクスチャ。
+		m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());			//アルベドマップ。
+		m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());		//法線マップ。
+		m_descriptorHeap.RegistShaderResource(srvNo + 3, GetSpecularMap());		//スペキュラマップ。
+		//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
+		for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
+			if (m_expandShaderResourceView[i]) {
+				m_descriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
+			}
+		}
+		srvNo += NUM_SRV_ONE_MATERIAL;
+		m_descriptorHeap.RegistConstantBuffer(cbNo, m_commonConstantBuffer);
+		//if (m_expandConstantBuffer.IsValid()) {
+		//	m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
+		//}
+		cbNo += NUM_CBV_ONE_MATERIAL;
+		m_createdescriptorflag = true;
+
+		if (m_createdescriptorflag) {
+			m_descriptorHeap.Commit();
+		}
+	}
+	else {
+
+	}
+
+}
+
+void CMQOMaterial::SetFl4x4(myRenderer::RENDEROBJ renderobj)
+{
+	//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
+	//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
+	if (renderobj.pmodel && renderobj.mqoobj)
+	{
+		MOTINFO* curmi = 0;
+		int curmotid;
+		double curframe;
+		curmi = renderobj.pmodel->GetCurMotInfo();
+
+		if (renderobj.pmodel->GetTopBone() && (renderobj.pmodel->GetNoBoneFlag() == false) && curmi) {
+			curmotid = curmi->motid;
+			curframe = RoundingTime(curmi->curframe);
+
+			if (curmotid > 0) {
+				SetBoneMatrixReq(renderobj.pmodel->GetTopBone(false), renderobj);
+
+				MoveMemory(&(m_cbWithBone.setfl4x4[0]), &(m_setfl4x4[0]), sizeof(float) * 16 * MAXBONENUM);
+			}
+		}
+	}
+
+}
+
+void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
+	const Matrix& mView, const Matrix& mProj, bool isfirstmaterial)
+{
+	if (!renderobj.mqoobj) {
+		_ASSERT(0);
+		return;
+	}
+
+	CPolyMesh4* ppm4 = renderobj.mqoobj->GetPm4();
+	CPolyMesh3* ppm3 = renderobj.mqoobj->GetPm3();
+	CExtLine* pextline = renderobj.mqoobj->GetExtLine();
+	CDispObj* pdispline = renderobj.mqoobj->GetDispLine();
+
+	if (pdispline && pextline) {
+		rc.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+	}
+	else if (ppm3 || ppm4) {
+		rc.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	}
+	else {
+		_ASSERT(0);
+		return;
+	}
+
+
+	////定数バッファを更新する。
+	if (pdispline && pextline) {
+		//SConstantBufferNoBone cb;
+		m_cbNoBone.mWorld = renderobj.mWorld;
+		m_cbNoBone.mView = mView;
+		m_cbNoBone.mProj = mProj;
+		m_cbNoBone.diffusemult = pextline->GetColor();
+
+		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
+		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
+
+		m_commonConstantBuffer.CopyToVRAM(m_cbNoBone);
+	}
+	else if (ppm3) {
+		//SConstantBufferNoBone cb;
+		m_cbNoBone.mWorld = renderobj.mWorld;
+		m_cbNoBone.mView = mView;
+		m_cbNoBone.mProj = mProj;
+		if (renderobj.mqoobj && renderobj.mqoobj->GetTempDiffuseMultFlag()) {
+			m_cbNoBone.diffusemult = renderobj.mqoobj->GetTempDiffuseMult();
+		}
+		else {
+			m_cbNoBone.diffusemult = renderobj.diffusemult;
+		}
+
+		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
+		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
+
+		m_commonConstantBuffer.CopyToVRAM(m_cbNoBone);
+
+	}
+	else if (ppm4) {
+		//SConstantBufferWithBone cb;
+		m_cbWithBone.mWorld = renderobj.mWorld;
+		m_cbWithBone.mView = mView;
+		m_cbWithBone.mProj = mProj;
+		if (ppm3 || ppm4) {
+			if (renderobj.mqoobj && renderobj.mqoobj->GetTempDiffuseMultFlag()) {
+				m_cbWithBone.diffusemult = renderobj.mqoobj->GetTempDiffuseMult();
+			}
+			else {
+				m_cbWithBone.diffusemult = renderobj.diffusemult;
+			}
+		}
+		else if (pextline) {
+			m_cbWithBone.diffusemult = pextline->GetColor();
+		}
+		else {
+			_ASSERT(0);
+			m_cbWithBone.diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		}
+
+		//if (isfirstmaterial) {
+			SetFl4x4(renderobj);
+		//}
+		
+		m_commonConstantBuffer.CopyToVRAM(m_cbWithBone);
+	}
+
+
+	//if (m_expandData) {
+	//	m_expandConstantBuffer.CopyToVRAM(m_expandData);
+	//}
+
+	//if (m_boneMatricesStructureBuffer.IsInited()) {
+	//	//ボーン行列を更新する。
+	//	ChaMatrix dummymat;
+	//	//m_boneMatricesStructureBuffer.Update(m_skeleton->GetBoneMatricesTopAddress());
+	//	m_boneMatricesStructureBuffer.Update(&dummymat);
+	//}
+}
+
+void CMQOMaterial::SetBoneMatrixReq(CBone* curbone, myRenderer::RENDEROBJ renderobj)
+{
+	if (curbone) {
+		int matrixindex = curbone->GetMatrixIndex();//2023/11/30
+
+		if (curbone->IsSkeleton() && (matrixindex >= 0) && (matrixindex < MAXBONENUM)) {
+			ChaMatrix clustermat;
+			clustermat.SetIdentity();
+
+			bool currentlimitdegflag = g_limitdegflag;
+			MOTINFO* curmi = 0;
+			int curmotid;
+			double curframe;
+			curmi = renderobj.pmodel->GetCurMotInfo();
+			if (renderobj.pmodel->GetTopBone() && (renderobj.pmodel->GetNoBoneFlag() == false) && curmi) {
+				curmotid = curmi->motid;
+				curframe = RoundingTime(curmi->curframe);
+				if (curmotid > 0) {
+					//CMotionPoint tmpmp = curbone->GetCurMp();
+					
+					CMotionPoint curmp = curbone->GetCurMp(renderobj.calcslotflag);
+
+					if (renderobj.btflag == 0) {
+						//set4x4[clcnt] = tmpmp.GetWorldMat();
+						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
+						MoveMemory(&(m_setfl4x4[16 * matrixindex]),//2023/11/30
+							clustermat.GetDataPtr(), sizeof(float) * 16);
+					}
+					else if (renderobj.btflag == 1) {
+						//物理シミュ
+						//set4x4[clcnt] = curbone->GetBtMat();
+						clustermat = curbone->GetBtMat(renderobj.calcslotflag);
+						MoveMemory(&(m_setfl4x4[16 * matrixindex]),//2023/11/30
+							clustermat.GetDataPtr(), sizeof(float) * 16);
+					}
+					else if (renderobj.btflag == 2) {
+						//物理IK
+						//set4x4[clcnt] = curbone->GetBtMat();
+						clustermat = curbone->GetBtMat(renderobj.calcslotflag);
+						MoveMemory(&(m_setfl4x4[16 * matrixindex]),//2023/11/30
+							curbone->GetBtMat().GetDataPtr(), sizeof(float) * 16);
+					}
+					else {
+						//set4x4[clcnt] = tmpmp.GetWorldMat();
+						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
+						MoveMemory(&(m_setfl4x4[16 * matrixindex]),//2023/11/30
+							clustermat.GetDataPtr(), sizeof(float) * 16);
+					}
+
+				}
+			}
+		}
+
+		if (curbone->GetChild(false)) {
+			SetBoneMatrixReq(curbone->GetChild(false), renderobj);
+		}
+		if (curbone->GetBrother(false)) {
+			SetBoneMatrixReq(curbone->GetBrother(false), renderobj);
+		}
+	}
+}

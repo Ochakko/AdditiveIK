@@ -9,7 +9,7 @@
 
 //for SConstantBuffer
 #include <DispObj.h>
-
+#include <mqomaterial.h>
 
 MeshParts::~MeshParts()
 {

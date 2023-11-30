@@ -103,7 +103,9 @@ public:
 	{
 		return m_color;
 	}
+
 private:
+
 	int m_linenum;//線分の数。
 	EXTLINEV* m_linev;//頂点データ。
 	ChaVector4 m_color;//線分の色

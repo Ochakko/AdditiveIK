@@ -1202,6 +1202,7 @@ private:
 
 	void InitCameraFbx();
 
+	void SetBoneMatrixIndexReq(CBone* srcbone, int* pcount);
 
 public: //accesser
 	FbxManager* GetFBXSDK(){
@@ -1708,12 +1709,12 @@ public: //accesser
 			return 0;
 		}
 	};
-	std::map<int,CMQOMaterial*>::iterator GetMQOMaterialBegin(){
-		return m_material.begin();
-	};
-	std::map<int,CMQOMaterial*>::iterator GetMQOMaterialEnd(){
-		return m_material.end();
-	};
+	//std::map<int,CMQOMaterial*>::iterator GetMQOMaterialBegin(){
+	//	return m_material.begin();
+	//};
+	//std::map<int,CMQOMaterial*>::iterator GetMQOMaterialEnd(){
+	//	return m_material.end();
+	//};
 	void SetMQOMaterial( int srcindex, CMQOMaterial* srcmat ){
 		m_material[ srcindex ] = srcmat;
 	};
@@ -1728,12 +1729,12 @@ public: //accesser
 			return 0;
 		}
 	};
-	std::map<std::string,CMQOMaterial*>::iterator GetMQOMaterialNameBegin(){
-		return m_materialname.begin();
-	};
-	std::map<std::string,CMQOMaterial*>::iterator GetMQOMaterialNameEnd(){
-		return m_materialname.end();
-	};
+	//std::map<std::string,CMQOMaterial*>::iterator GetMQOMaterialNameBegin(){
+	//	return m_materialname.begin();
+	//};
+	//std::map<std::string,CMQOMaterial*>::iterator GetMQOMaterialNameEnd(){
+	//	return m_materialname.end();
+	//};
 
 	CMQOObject* GetMQOObjectByName(const char* findpattern);
 

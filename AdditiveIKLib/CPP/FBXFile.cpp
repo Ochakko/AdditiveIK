@@ -3878,6 +3878,7 @@ int ExistBoneInInf( int boneno, CMQOObject* srcobj, int* dstclusterno )
 	int dirtyflag = 0;
 
 	int clusterno = -1;
+	int matrixindex = -1;
 	CBone* chkbone;
 	int clno;
 	for( clno = 0; clno < srcobj->GetClusterSize(); clno++ ){
@@ -3885,12 +3886,13 @@ int ExistBoneInInf( int boneno, CMQOObject* srcobj, int* dstclusterno )
 		if( chkbone ){
 			if( chkbone->GetBoneNo() == boneno ){
 				clusterno = clno;
+				matrixindex = chkbone->GetMatrixIndex();//2023/11/30
 				break;
 			}
 		}
 	}
 
-	if( clusterno < 0 ){
+	if((clusterno < 0) || (matrixindex < 0)){
 		return 0;
 	}
 
@@ -3911,7 +3913,8 @@ int ExistBoneInInf( int boneno, CMQOObject* srcobj, int* dstclusterno )
 		int vcnt;
 		for (vcnt = 0; vcnt < 3; vcnt++){
 			CInfBone* curib = pm4->GetInfBone() + vno[vcnt];
-			int ieno = curib->ExistBone(srcobj, clusterno);
+			//int ieno = curib->ExistBone(srcobj, clusterno);
+			int ieno = curib->ExistBone(srcobj, matrixindex);//2023/11/30
 			if (ieno >= 0){
 				dirtyflag = 1;
 				break;

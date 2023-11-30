@@ -19,9 +19,17 @@
 #include <mqomaterial.h>
 #include <Model.h>
 
+#include "../../MiniEngine/TResourceBank.h"
+
+//extern
+extern TResourceBank<CMQOMaterial> g_materialbank;
+
+static int s_totallineno = 0;
+
 CExtLine::CExtLine()
 {
 	InitParams();
+	s_totallineno++;
 }
 CExtLine::~CExtLine()
 {
@@ -50,10 +58,14 @@ int CExtLine::DestroyObjs()
 		free( m_linev );
 		m_linev = 0;
 	}
-	if (m_material) {
-		delete m_material;
-		m_material = nullptr;
-	}
+
+	//########
+	//bankŠÇ—
+	//########
+	//if (m_material) {
+	//	delete m_material;
+	//	m_material = nullptr;
+	//}
 
 	m_linenum = 0;
 
@@ -84,27 +96,24 @@ int CExtLine::CreateExtLine( CModel* srcmodel, int pointnum, int facenum, ChaVec
 	}
 
 	if (!m_material) {
-		m_material = new CMQOMaterial();
-		if (!m_material) {
-			DbgOut(L"ExtLine : CreateExtLine : newmat alloc error !!!");
-			return 1;
+		char materialname[256] = { 0 };
+		//strcpy_s(materialname, 256, "materialForLine");
+		sprintf_s(materialname, 256, "materialForLine_%d", s_totallineno);
+		CMQOMaterial* chkmaterial = g_materialbank.Get(materialname);
+		if (!chkmaterial) {
+			m_material = new CMQOMaterial();
+			if (!m_material) {
+				DbgOut(L"ExtLine : CreateExtLine : newmat alloc error !!!");
+				return 1;
+			}
+			int materialno = g_materialbank.GetSize();
+			m_material->SetMaterialNo(materialno);
+			g_materialbank.Regist(materialname, m_material);
 		}
-		//DbgOut( L"MQOFile : ReadMaterial : SetParams : %s\n", m_linechar );
-		//int matno = srcmodel->GetMQOMaterialSize();
-		//m_linechar[LINECHARLENG - 1] = 0;
-		//size_t lineleng = strlen(m_linechar);
-		//ret = newmat->SetParams(matno, m_scene_ambient, m_linechar, (int)lineleng);
-		//if (ret) {
-		//	DbgOut(L"MQOFile : ReadMaterial : newmat SetParams error !!!");
-		//	_ASSERT(0);
-		//	*nextstate = BEGIN_FINISH;
-		//	return 1;
-		//}
-		int magicmaterialno = 1001;
-		m_material->SetMaterialNo(magicmaterialno);
+		else {
+			m_material = chkmaterial;
+		}
 	}
-
-
 
 	int lnum = 0;
 	CallF( CreateBuffer( 0, 0, &lnum ), return 1 );

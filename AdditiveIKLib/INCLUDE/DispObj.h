@@ -17,22 +17,6 @@ class StructuredBuffer;//ボーン行列の構造化バッファ。
 class DescriptorHeap;//ディスクリプタヒープ。
 
 
-struct SConstantBufferWithBone {
-	Matrix mWorld;		//ワールド行列。
-	Matrix mView;		//ビュー行列。
-	Matrix mProj;		//プロジェクション行列。
-	ChaVector4 diffusemult;
-	float setfl4x4[16 * MAXCLUSTERNUM];//ボーンの姿勢マトリックス
-};
-
-struct SConstantBufferNoBone {
-	Matrix mWorld;		//ワールド行列。
-	Matrix mView;		//ビュー行列。
-	Matrix mProj;		//プロジェクション行列。
-	ChaVector4 diffusemult;
-};
-
-
 class CDispObj
 {
 public:
@@ -99,10 +83,8 @@ public:
 	int RenderNormal(RenderContext& rc, myRenderer::RENDEROBJ renderobj);
 
 	int RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ renderobj, 
-		bool laterflag, CMQOMaterial* rmaterial, int curoffset, int curtrinum);
+		bool laterflag, CMQOMaterial* rmaterial, int curoffset, int curtrinum, bool isfirstmaterial);
 
-	void DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
-		const Matrix& mView, const Matrix& mProj);
 
 /**
  * @fn
@@ -203,19 +185,9 @@ private:
 	void CreateDescriptorHeaps();
 
 private:
-	//拡張SRVが設定されるレジスタの開始番号。
-	//const int EXPAND_SRV_REG__START_NO = 10;
-	//const int EXPAND_SRV_REG__START_NO = 6;
-	const int EXPAND_SRV_REG__START_NO = 4;
-	//１つのマテリアルで使用されるSRVの数。
-	const int NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
-	//１つのマテリアルで使用されるCBVの数。
-	//const int NUM_CBV_ONE_MATERIAL = 2;
-	const int NUM_CBV_ONE_MATERIAL = 1;
 
 
 	int m_hasbone;//ボーン変形用のオブジェクトであるとき１、それ以外の時は０。
-	float m_setfl4x4[16 * MAXCLUSTERNUM];
 
 	ID3D12Device* m_pdev;//外部メモリ、Direct3Dのデバイス。
 	CPolyMesh3* m_pm3;//外部メモリ、メタセコイアファイルから作成した３Dデータ。
@@ -258,18 +230,6 @@ private:
 	ID3D12Resource* m_indexBuffer;	//インデックスバッファ。
 	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;	//インデックスバッファビュー。
 
-
-	ConstantBuffer m_commonConstantBuffer;					//メッシュ共通の定数バッファ。
-	ConstantBuffer m_expandConstantBuffer;					//ユーザー拡張用の定数バッファ
-	std::array<IShaderResource*, MAX_MODEL_EXPAND_SRV> m_expandShaderResourceView = { nullptr };	//ユーザー拡張シェーダーリソースビュー。
-	void* m_expandData = nullptr;
-	//StructuredBuffer m_boneMatricesStructureBuffer;	//ボーン行列の構造化バッファ。
-	//std::vector< SMesh* > m_meshs;						//メッシュ。
-	bool m_createdescriptorflag;
-	//////std::vector< DescriptorHeap > m_descriptorHeap;	//ディスクリプタヒープ。
-	DescriptorHeap m_descriptorHeap;					//ディスクリプタヒープ。
-	//Skeleton* m_skeleton = nullptr;						//スケルトン。
-	//void* m_expandData = nullptr;						//ユーザー拡張データ。
 
 
 	////Shaderのポイントはnewした場合もShaderBankに格納する

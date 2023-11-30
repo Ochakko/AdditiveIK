@@ -14,9 +14,41 @@
 #include <wchar.h>
 
 #include "../../MiniEngine/Texture.h"
+#include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
 
 class ConstantBuffer;//定数バッファ。
 class RootSignature;//ルートシグネチャ。
+
+
+struct SConstantBufferWithBone {
+	Matrix mWorld;		//ワールド行列。
+	Matrix mView;		//ビュー行列。
+	Matrix mProj;		//プロジェクション行列。
+	ChaVector4 diffusemult;
+	//float setfl4x4[16 * MAXCLUSTERNUM];//ボーンの姿勢マトリックス
+	float setfl4x4[16 * MAXBONENUM];//ボーンの姿勢マトリックス
+
+	void Init() {
+		mWorld.SetIdentity();
+		mView.SetIdentity();
+		mProj.SetIdentity();
+		diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		ZeroMemory(setfl4x4, sizeof(float) * 16 * MAXBONENUM);
+	};
+};
+
+struct SConstantBufferNoBone {
+	Matrix mWorld;		//ワールド行列。
+	Matrix mView;		//ビュー行列。
+	Matrix mProj;		//プロジェクション行列。
+	ChaVector4 diffusemult;
+	void Init() {
+		mWorld.SetIdentity();
+		mView.SetIdentity();
+		mProj.SetIdentity();
+		diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	};
+};
 
 
 class CMQOMaterial
@@ -65,6 +97,8 @@ public:
 	//int CreateTexture( WCHAR* dirname, int texpool = 0 );
 	int CreateTexture(WCHAR* dirname, int texpool = 0);//!!!!!!!!!!!!!!!!!!!!!!!!
 
+	int CreateDecl(ID3D12Device* pdev, int objecttype);
+	void CreateDescriptorHeaps(int objecttype);
 	void InitShadersAndPipelines(
 		int vertextype,
 		const char* fxFilePath,
@@ -83,8 +117,14 @@ public:
 		const char* vsSkinEntriyPointFunc,
 		const char* psEntryPointFunc
 	);
+
+	void SetFl4x4(myRenderer::RENDEROBJ renderobj);
+	void DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
+		const Matrix& mView, const Matrix& mProj,
+		bool isfirstmaterial = false);
 	void BeginRender(RenderContext& rc, int hasSkin, bool isline);
 
+	void SetBoneMatrixReq(CBone* srcbone, myRenderer::RENDEROBJ renderobj);
 
 private:
 	int InitParams();
@@ -287,8 +327,34 @@ public:
 	Texture& GetAlbedoMap();
 	Texture& GetNormalMap();
 	Texture& GetSpecularMap();
+public:
+	//拡張SRVが設定されるレジスタの開始番号。
+	//const int EXPAND_SRV_REG__START_NO = 10;
+	//const int EXPAND_SRV_REG__START_NO = 6;
+	const int EXPAND_SRV_REG__START_NO = 4;
+	//１つのマテリアルで使用されるSRVの数。
+	const int NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
+	//１つのマテリアルで使用されるCBVの数。
+	//const int NUM_CBV_ONE_MATERIAL = 2;
+	const int NUM_CBV_ONE_MATERIAL = 1;
 
 private:
+
+	ConstantBuffer m_commonConstantBuffer;					//メッシュ共通の定数バッファ。
+	ConstantBuffer m_expandConstantBuffer;					//ユーザー拡張用の定数バッファ
+	std::array<IShaderResource*, MAX_MODEL_EXPAND_SRV> m_expandShaderResourceView = { nullptr };	//ユーザー拡張シェーダーリソースビュー。
+	void* m_expandData = nullptr;
+	//StructuredBuffer m_boneMatricesStructureBuffer;	//ボーン行列の構造化バッファ。
+	//std::vector< SMesh* > m_meshs;						//メッシュ。
+	bool m_createdescriptorflag;
+	//////std::vector< DescriptorHeap > m_descriptorHeap;	//ディスクリプタヒープ。
+	DescriptorHeap m_descriptorHeap;					//ディスクリプタヒープ。
+	//Skeleton* m_skeleton = nullptr;						//スケルトン。
+	//void* m_expandData = nullptr;						//ユーザー拡張データ。
+	//float m_setfl4x4[16 * MAXCLUSTERNUM];
+	float m_setfl4x4[16 * MAXBONENUM];
+
+
 	int m_materialno;
 	char m_name[256];
 
@@ -341,6 +407,10 @@ private:
 	Shader* m_vsSkinModel = nullptr;				//スキンありモデル用の頂点シェーダー。
 	Shader* m_psModel = nullptr;					//モデル用のピクセルシェーダー。
 
+	SConstantBufferNoBone m_cbNoBone;
+	SConstantBufferWithBone m_cbWithBone;
+
+	bool m_initpipelineflag = false;
 
 //以下、クラス外からアクセスしないのでアクセッサー無し。
 	char* m_curtexname;

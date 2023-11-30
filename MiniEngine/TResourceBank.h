@@ -46,12 +46,22 @@
 template<class TResource>
 class TResourceBank {
 public:
+	TResourceBank() {
+		InitParams();
+	};
 	~TResourceBank() {
 		DestroyObjs();
 	};
 	
+	void InitParams() {
+		m_resourceMap.clear();
+	};
 	void DestroyObjs() {
 		m_resourceMap.clear();
+	};
+
+	int GetSize() {
+		return (int)m_resourceMap.size();
 	};
 
 	TResource* Get(const char* filePath)

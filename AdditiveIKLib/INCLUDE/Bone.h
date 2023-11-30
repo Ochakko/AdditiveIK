@@ -1700,6 +1700,20 @@ public: //accesser
 		m_pastedoneflag = srcflag;
 	}
 
+	void SetMatrixIndex(int srcindex) {
+		if ((srcindex < 0) || (srcindex >= MAXBONENUM)) {
+			_ASSERT(0);
+			m_matrixindex = 0;
+		}
+		else {
+			m_matrixindex = srcindex;
+		}
+	}
+	int GetMatrixIndex()
+	{
+		return m_matrixindex;
+	}
+
 public:
 	CRITICAL_SECTION m_CritSection_GetBefNext;
 	CRITICAL_SECTION m_CritSection_GetBefNext2;
@@ -1880,7 +1894,7 @@ private:
 	int m_dbgcount;
 
 	bool m_pastedoneflag;
-
+	int m_matrixindex;//for constant buffer
 
 	CBone* m_parent;
 	CBone* m_child;

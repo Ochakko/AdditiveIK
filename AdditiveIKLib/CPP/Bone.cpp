@@ -350,6 +350,9 @@ int CBone::InitParams()
 	m_dbgcount = 0;
 	m_pastedoneflag = false;
 
+	m_matrixindex = 0;//for constant buffer
+
+
 	m_extendflag = false;
 
 	m_fbxnodeonload = 0;//2022/11/01

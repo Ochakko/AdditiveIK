@@ -96,13 +96,16 @@ CMQOObject::~CMQOObject()
 	DestroyShapeObj();
 
 
-	map<int, CMQOMaterial*>::iterator itr;
-	for( itr = m_material.begin(); itr != m_material.end(); itr++ ){
-		CMQOMaterial* delmat = itr->second;
-		if( delmat ){
-			delete delmat;
-		}
-	}
+	//########
+	//bank管理
+	//########
+	//map<int, CMQOMaterial*>::iterator itr;
+	//for( itr = m_material.begin(); itr != m_material.end(); itr++ ){
+	//	CMQOMaterial* delmat = itr->second;
+	//	if( delmat ){
+	//		delete delmat;
+	//	}
+	//}
 	m_material.clear();
 
 }

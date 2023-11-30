@@ -47,8 +47,9 @@ class CMQOMaterial;
 
 
 //2023/11/14
-#define MAXBONENUM	2048
-
+//#define MAXBONENUM	2048
+//2023/11/30
+#define MAXBONENUM	1000
 
 #define PATH_LENG	2048
 #define MAXMOTIONNUM	100
