@@ -29,7 +29,7 @@
 using namespace std;
 
 //extern
-extern TResourceBank<CMQOMaterial> g_materialbank;
+//extern TResourceBank<CMQOMaterial> g_materialbank;
 
 
 #define BUFBLOCKLEN	2048
@@ -261,7 +261,9 @@ int CMQOFile::LoadMQOFile_aft( float multiple, ChaVector3 offsetpos, ChaVector3 
 		}
 	}
 
-	CallF( m_modelptr->AddDefMaterial(), return 1 );
+
+	CallF(m_modelptr->AddDefMaterialIfEmpty(), return 1);
+
 
 	//map<int, CMQOObject*> curobject;
 	//m_modelptr->GetMqoObject2( curobject );
@@ -855,16 +857,18 @@ int CMQOFile::ReadMaterial( MQOSTATE* nextstate )
 
 			char materialname[256] = { 0 };
 			strcpy_s(materialname, 256, newmat->GetName());
-			CMQOMaterial* chkmaterial = g_materialbank.Get(materialname);//Šù‚É‘¶Ý‚µ‚Ä‚¢‚½‚©‚Ç‚¤‚©‚ðƒ`ƒFƒbƒN‚·‚é
-			if (chkmaterial) {
-				//Šù‚É‘¶Ý‚µ‚Ä‚¢‚½ê‡‚É‚Í@newmat‚ðíœ‚µ‚Ä@Šù‚ÉÝ‚é•û‚ð“o˜^
-				delete newmat;
-				newmat = 0;
-				m_modelptr->SetMQOMaterial(chkmaterial->GetMaterialNo(), chkmaterial);
-			}
-			else {
-				m_modelptr->SetMQOMaterial(newmat->GetMaterialNo(), newmat);
-				g_materialbank.Regist(materialname, newmat);
+			if (m_modelptr) {
+				CMQOMaterial* chkmat = m_modelptr->GetMQOMaterialByName(materialname);
+				if (chkmat) {
+					//CModel‚É“o˜^Ï
+					//V‚µ‚¢mqomat‚Ííœ‚µ‚Ä@“o˜^Ï‚Ìchkmat‚ðŽg‚¤
+					delete newmat;
+					newmat = 0;
+				}
+				else {
+					//CModel‚É–¢“o˜^
+					m_modelptr->SetMQOMaterial(materialname, newmat);
+				}
 			}
 		}
 	}

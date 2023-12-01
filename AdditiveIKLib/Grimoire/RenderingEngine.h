@@ -25,6 +25,7 @@ namespace myRenderer
         ChaVector4 materialdisprate;
         bool calcslotflag;
         int btflag;
+        bool zcmpalways;
 
         void Init()
         {
@@ -37,6 +38,7 @@ namespace myRenderer
             materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
             calcslotflag = false;
             btflag = 0;
+            zcmpalways = false;
         };
 
         tag_renderobj()

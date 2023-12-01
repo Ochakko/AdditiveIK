@@ -705,7 +705,7 @@ public:
  * @return 成功したら０。
  * @detail メタセコイアファイルには材質が含まれていない場合がある。材質が１つもないと描画時にエラーになるのでデフォルトの材質を作成する。
  */
-	int AddDefMaterial();
+	int AddDefMaterialIfEmpty();
 
 /**
  * @fn
@@ -1070,7 +1070,7 @@ private:
 
 	//void FillUpEmptyKeyReq( int motid, double animleng, CBone* curbone, CBone* parentbone );//publicへ
 
-	int SetMaterialName();
+	//int SetMaterialName();
 
 
 	int DestroyBtObject();
@@ -1695,46 +1695,12 @@ public: //accesser
 	};
 
 
-	int GetMQOMaterialSize(){
-		return (int)m_material.size();
-	};
-	CMQOMaterial* GetMQOMaterial( int srcindex ){
-		std::map<int, CMQOMaterial*>::iterator itrmaterial;
-		itrmaterial = m_material.find(srcindex);
-		if (itrmaterial != m_material.end()) {
-			return itrmaterial->second;
-		}
-		else {
-			_ASSERT(0);
-			return 0;
-		}
-	};
-	//std::map<int,CMQOMaterial*>::iterator GetMQOMaterialBegin(){
-	//	return m_material.begin();
-	//};
-	//std::map<int,CMQOMaterial*>::iterator GetMQOMaterialEnd(){
-	//	return m_material.end();
-	//};
-	void SetMQOMaterial( int srcindex, CMQOMaterial* srcmat ){
-		m_material[ srcindex ] = srcmat;
-	};
-	CMQOMaterial* GetMQOMaterialByName(std::string srcname ){
-		std::map<std::string, CMQOMaterial*>::iterator itrmaterial;
-		itrmaterial = m_materialname.find(srcname);
-		if (itrmaterial != m_materialname.end()) {
-			return itrmaterial->second;
-		}
-		else {
-			_ASSERT(0);
-			return 0;
-		}
-	};
-	//std::map<std::string,CMQOMaterial*>::iterator GetMQOMaterialNameBegin(){
-	//	return m_materialname.begin();
-	//};
-	//std::map<std::string,CMQOMaterial*>::iterator GetMQOMaterialNameEnd(){
-	//	return m_materialname.end();
-	//};
+	int GetMQOMaterialSize();
+	CMQOMaterial* GetMQOMaterial( int srcmatno );
+	int ExistMQOMaterial(CMQOMaterial* srcmat);
+	void SetMQOMaterial(const char* srcname, CMQOMaterial* srcmat);
+	CMQOMaterial* GetMQOMaterialByName(std::string srcname );
+
 
 	CMQOObject* GetMQOObjectByName(const char* findpattern);
 
@@ -2324,6 +2290,16 @@ public: //accesser
 		m_loopstartflag = srcflag;
 	}
 
+	void ResetUpdateFl4x4Flag();//materialのリセットも行う
+	void SetUpdateFl4x4Flag()
+	{
+		m_updatefl4x4flag = true;
+	}
+	bool GetUpdateFl4x4Flag()
+	{
+		return m_updatefl4x4flag;
+	}
+
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];
@@ -2339,6 +2315,8 @@ private:
 	bool m_befinview;
 	ChaFrustumInfo m_frustum;
 	MODELBOUND m_bound;
+
+	bool m_updatefl4x4flag;
 
 	int m_vrmtexcount;
 
@@ -2402,8 +2380,10 @@ private:
 	float m_tmpmotspeed;//モーション再生倍率の一時保存用。
 
 	////polymesh3用のマテリアル。polymesh4はmqoobjectのmqomaterialを使用する。
-	std::map<int, CMQOMaterial*> m_material;
-	std::map<std::string, CMQOMaterial*> m_materialname;
+	//std::map<int, CMQOMaterial*> m_material;
+	//std::map<std::string, CMQOMaterial*> m_materialname;
+	TResourceBank<CMQOMaterial> m_materialbank;
+
 
 	FbxScene* m_pscene;//FBX SDKのシーンへのポインタ。CModel内でアロケート。
 	FbxArray<FbxString*> mAnimStackNameArray;//アニメーション名を保存するFBX形式のデータ。

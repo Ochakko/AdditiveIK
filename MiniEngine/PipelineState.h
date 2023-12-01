@@ -6,6 +6,14 @@
 /// </summary>
 class PipelineState {
 public:
+	PipelineState() {
+		InitParams();
+	};
+
+	void InitParams() {
+		m_pipelineState = nullptr;
+	};
+
 	/// <summary>
 	/// デストラクタ。
 	/// </summary>

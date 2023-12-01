@@ -18,6 +18,7 @@ class CMQOFace;
 class CInfBone;
 //class CInfScope;
 class CBone;
+class CModel;
 
 class CPolyMesh3
 {
@@ -26,7 +27,7 @@ public:
 	~CPolyMesh3();
 
 	int CreatePM3(bool fbxfileflag, int pointnum, int facenum, float facet, ChaVector3* pointptr, CMQOFace* faceptr, 
-		std::map<int,CMQOMaterial*>& srcmat, ChaMatrix multmat);
+		CModel* pmodel, ChaMatrix multmat);
 	
 	//int SetIndexBuf();	
 	//int InvIndexBuf();
@@ -58,7 +59,7 @@ private:
 	int AddSmFace( N3P* n3p1, N3P* n3p2 );
 	//int CalcSMNormal();
 
-	int SetOptV( PM3DISPV* optv, int* pleng, int* matnum, std::map<int,CMQOMaterial*>& srcmat );
+	int SetOptV(PM3DISPV* optv, int* pleng, int* matnum, CModel* pmodel);
 
 
 /***

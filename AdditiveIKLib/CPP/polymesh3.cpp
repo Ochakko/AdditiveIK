@@ -19,6 +19,7 @@
 
 #include <crtdbg.h>
 
+#include <Model.h>
 #include <mqoobject.h>
 #include <polymesh3.h>
 //#include <InfScope.h>
@@ -230,7 +231,7 @@ int sortfunc_order0( void *context, const void *elem1, const void *elem2)
 
 
 int CPolyMesh3::CreatePM3(bool fbxfileflag, int pointnum, int facenum, float facet, ChaVector3* pointptr, CMQOFace* faceptr, 
-	map<int,CMQOMaterial*>& srcmat, ChaMatrix multmat)
+	CModel* pmodel, ChaMatrix multmat)
 {
 	m_orgpointnum = pointnum;
 	m_orgfacenum = facenum;
@@ -316,7 +317,7 @@ int CPolyMesh3::CreatePM3(bool fbxfileflag, int pointnum, int facenum, float fac
 	qsort_s( m_n3p, m_facenum * 3, sizeof( N3P ), sortfunc_order0, (void*)this );
 
 ///////////
-	CallF( SetOptV( 0, &m_optleng, &m_optmatnum, srcmat ), return 1 );
+	CallF( SetOptV( 0, &m_optleng, &m_optmatnum, pmodel ), return 1 );
 	if( (m_optleng <= 0) || (m_optmatnum <= 0) ){
 		_ASSERT( 0 );
 		return 0;
@@ -342,7 +343,7 @@ int CPolyMesh3::CreatePM3(bool fbxfileflag, int pointnum, int facenum, float fac
 	ZeroMemory( m_dispindex, sizeof( int ) * m_facenum * 3 );
 
 	int tmpleng, tmpmatnum;
-	CallF( SetOptV( m_dispv, &tmpleng, &tmpmatnum, srcmat ), return 1 );
+	CallF( SetOptV( m_dispv, &tmpleng, &tmpmatnum, pmodel ), return 1 );
 	if( (tmpleng != m_optleng) || (tmpmatnum != m_optmatnum) ){
 		_ASSERT( 0 );
 		return 1;
@@ -687,9 +688,13 @@ int CPolyMesh3::AddSmFace( N3P* n3p1, N3P* n3p2 )
 	return 0;
 }
 
-int CPolyMesh3::SetOptV( PM3DISPV* dispv, int* pleng, int* matnum, map<int,CMQOMaterial*>& srcmat )
+int CPolyMesh3::SetOptV(PM3DISPV* dispv, int* pleng, int* matnum, CModel* pmodel)
 {
 	*pleng = 0;
+	if (!pmodel) {
+		_ASSERT(0);
+		return 1;
+	}
 
 	int n3;
 	int materialcnt = 0;
@@ -711,11 +716,12 @@ int CPolyMesh3::SetOptV( PM3DISPV* dispv, int* pleng, int* matnum, map<int,CMQOM
 		if( befmaterialno != curmaterialno ){
 			if( dispv ){
 				(m_matblock + materialcnt)->materialno = curmaterialno;
-				CMQOMaterial* setmqomat = GetMaterialFromNo( srcmat, curmaterialno );
+				CMQOMaterial* setmqomat = pmodel->GetMQOMaterial(curmaterialno);
 				if( !setmqomat ){
-					int defmatno = (int)srcmat.size() - 1;
+					_ASSERT(0);
+					int defmatno = pmodel->GetMQOMaterialSize();
 					_ASSERT( defmatno >= 0 );
-					setmqomat = GetMaterialFromNo( srcmat, defmatno );
+					setmqomat = pmodel->GetMQOMaterial(defmatno);
 					_ASSERT( setmqomat );
 				}
 				(m_matblock + materialcnt)->mqomat = setmqomat;

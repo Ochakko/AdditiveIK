@@ -314,7 +314,7 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone)
 				vertextype,
 				"../Media/Shader/AdditiveIK.fx",
 				"VSMainWithoutBone",
-				"VSMainWithBone",
+				"VSMainWithoutBone",
 				"PSMain",
 				colorBufferFormat,
 				curmat->NUM_SRV_ONE_MATERIAL,
@@ -373,8 +373,8 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone )
 
 				curmat->InitShadersAndPipelines(
 					vertextype,
-					"../Media/Shader/AdditiveIK.fx",
-					"VSMainWithoutBone",
+					"../Media/Shader/AdditiveIK_Skin.fx",//Skin
+					"VSMainWithBone",
 					"VSMainWithBone",
 					"PSMain",
 					colorBufferFormat,
@@ -1084,7 +1084,7 @@ int CDispObj::RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ rend
 
 	int hasskin = 1;
 	bool isline = false;
-	curmat->BeginRender(rc, hasskin, isline);
+	curmat->BeginRender(rc, hasskin, isline, renderobj.zcmpalways);
 
 	//rc.SetVertexBuffer(m_vertexBufferView);
 	////3. インデックスバッファを設定。
@@ -1290,7 +1290,7 @@ int CDispObj::RenderNormalPM3Material(RenderContext& rc, myRenderer::RENDEROBJ r
 
 	int hasskin = 0;
 	bool isline = false;
-	curmat->BeginRender(rc, hasskin, isline);
+	curmat->BeginRender(rc, hasskin, isline, renderobj.zcmpalways);
 	//rc.SetDescriptorHeap(m_descriptorHeap);
 
 	////1. 頂点バッファを設定。
@@ -1359,7 +1359,7 @@ int CDispObj::RenderLine(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 		//定数バッファの設定、更新など描画の共通処理を実行する。
 		curmat->DrawCommon(rc, renderobj, mView, mProj);
 
-		curmat->BeginRender(rc, hasskin, isline);
+		curmat->BeginRender(rc, hasskin, isline, renderobj.zcmpalways);
 		//rc.SetDescriptorHeap(m_descriptorHeap);
 
 		//1. 頂点バッファを設定。

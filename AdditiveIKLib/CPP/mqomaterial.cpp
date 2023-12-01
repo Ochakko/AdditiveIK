@@ -36,12 +36,25 @@
 #include "../../MiniEngine/Material.h"
 
 
+static int s_alloccount = 0;
 
 
 CMQOMaterial::CMQOMaterial() : m_descriptorHeap(),
-m_commonConstantBuffer(), m_expandConstantBuffer() //2023/11/29
+m_commonConstantBuffer(), m_expandConstantBuffer(), //2023/11/29
+m_whitetex(), m_blacktex(), m_diffuseMap(), m_cb(), m_cbMatrix(), //2023/12/01
+m_nonSkinModelPipelineState(),
+m_skinModelPipelineState(),
+m_transSkinModelPipelineState(),
+m_transSkinAlwaysModelPipelineState(),
+m_transNonSkinModelPipelineState(),
+m_transNonSkinAlwaysModelPipelineState(),
+m_constantBuffer(),
+m_rootSignature()
 {
 	InitParams();
+
+	s_alloccount++;
+	m_materialno = s_alloccount;
 }
 CMQOMaterial::~CMQOMaterial()
 {
@@ -223,12 +236,13 @@ int CMQOMaterial::InitParams()
 	m_createdescriptorflag = false;
 	//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
 	ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
+	m_updatefl4x4flag = false;
 
 	m_materialno = -1;
 	ZeroMemory ( m_name, 256 );
 
-	m_cbWithBone.Init();
-	m_cbNoBone.Init();
+	m_cb.Init();
+	m_cbMatrix.Init();
 
 	m_col.w = 1.0f;
 	m_col.x = 1.0f;
@@ -297,6 +311,9 @@ int CMQOMaterial::InitParams()
 	m_albedoMap = nullptr;
 	m_normalMap = nullptr;//とりあえずnulltexture このクラスで作成するポインタ
 	m_specularMap = nullptr;//とりあえずnulltexture このクラスで作成するポインタ
+
+	m_settempdiffusemult = false;
+	m_tempdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	return 0;
 }
@@ -1162,11 +1179,20 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 	{
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
 		psoDesc.pRootSignature = m_rootSignature.Get();
-		if (vertextype != 2) {
+
+		//2023/12/01 シェーダのエントリ関数として　skin有無を切り替えることはあるが　頂点フォーマットはvertextypeによって決める
+		if (vertextype == 0) {//pm4
 			psoDesc.InputLayout = { inputElementDescsWithBone, _countof(inputElementDescsWithBone) };//!!! WithBone
 		}
-		else {
+		else if (vertextype == 1) {//pm3
+			psoDesc.InputLayout = { inputElementDescsWithoutBone, _countof(inputElementDescsWithoutBone) };
+		}
+		else if (vertextype == 2) {//extline
 			psoDesc.InputLayout = { inputElementDescsExtLine, _countof(inputElementDescsExtLine) };
+		}
+		else {
+			_ASSERT(0);
+			abort();
 		}
 		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsSkinModel->GetCompiledBlob());//!!!!!!!!! Skin 
 		psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psModel->GetCompiledBlob());
@@ -1227,7 +1253,15 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
 		psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
 		psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		//psoDesc.DepthStencilState.DepthEnable = FALSE;
+		psoDesc.DepthStencilState.DepthEnable = TRUE;
 		m_transSkinModelPipelineState.Init(psoDesc);
+
+		////2023/12/01
+		psoDesc.DepthStencilState.DepthEnable = TRUE;
+		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		m_transSkinAlwaysModelPipelineState.Init(psoDesc);
+
 
 	}
 
@@ -1235,13 +1269,20 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 	{
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
 		psoDesc.pRootSignature = m_rootSignature.Get();
-		if (vertextype != 2) {
-			//pm4, pm3
-			psoDesc.InputLayout = { inputElementDescsWithoutBone, _countof(inputElementDescsWithoutBone) };//!!! WithoutBone
+
+		//2023/12/01 シェーダのエントリ関数として　skin有無を切り替えることはあるが　頂点フォーマットはvertextypeによって決める
+		if (vertextype == 0) {//pm4
+			psoDesc.InputLayout = { inputElementDescsWithBone, _countof(inputElementDescsWithBone) };
+		}
+		else if (vertextype == 1) {//pm3
+			psoDesc.InputLayout = { inputElementDescsWithoutBone, _countof(inputElementDescsWithoutBone) };
+		}
+		else if (vertextype == 2) {//extline
+			psoDesc.InputLayout = { inputElementDescsExtLine, _countof(inputElementDescsExtLine) };
 		}
 		else {
-			//extline
-			psoDesc.InputLayout = { inputElementDescsExtLine, _countof(inputElementDescsExtLine) };//!!! ExtLIne
+			_ASSERT(0);
+			abort();
 		}
 		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsNonSkinModel->GetCompiledBlob());//!!!!!!!! NonSkin
 		psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psModel->GetCompiledBlob());
@@ -1304,13 +1345,16 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
 		psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
 		psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-
-		//2023/11/25 とりあえずpm3のwithalpha == true時の描画用にFUNC_ALWAYS設定
-		//将来的にはm_transAlwaysNonSkinModelPipelineStateとして独立させる予定
-		//psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		
+		psoDesc.DepthStencilState.DepthEnable = TRUE;
 		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-
 		m_transNonSkinModelPipelineState.Init(psoDesc);
+
+		////2023/12/01
+		psoDesc.DepthStencilState.DepthEnable = TRUE;
+		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		m_transNonSkinAlwaysModelPipelineState.Init(psoDesc);
+
 	}
 
 
@@ -1346,26 +1390,26 @@ void CMQOMaterial::InitShaders(
 	}
 }
 
-void CMQOMaterial::BeginRender(RenderContext& rc, int hasSkin, bool isline)
+void CMQOMaterial::BeginRender(RenderContext& rc, int hasSkin, bool isline, bool zcmpalways)
 {
 	rc.SetRootSignature(m_rootSignature);
 
 	if (hasSkin) {
 		//
-		if (!isline) {
+		if (!zcmpalways) {
 			rc.SetPipelineState(m_transSkinModelPipelineState);
 		}
 		else {
-			rc.SetPipelineState(m_skinModelPipelineState);
-		}	
+			rc.SetPipelineState(m_transSkinAlwaysModelPipelineState);
+		}
 	}
 	else {
 		//
-		if (!isline) {
+		if (!zcmpalways) {
 			rc.SetPipelineState(m_transNonSkinModelPipelineState);
 		}
 		else {
-			rc.SetPipelineState(m_nonSkinModelPipelineState);
+			rc.SetPipelineState(m_transNonSkinAlwaysModelPipelineState);
 		}
 	}
 
@@ -1455,10 +1499,23 @@ int CMQOMaterial::CreateDecl(ID3D12Device* pdev, int objecttype)
 
 	//共通定数バッファの作成。
 	if (objecttype == 0) {
-		m_commonConstantBuffer.Init(sizeof(SConstantBufferWithBone), nullptr);
+		//####
+		//pm4
+		//####
+		EXPAND_SRV_REG__START_NO = 4;
+		NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
+		NUM_CBV_ONE_MATERIAL = 2;
+		m_commonConstantBuffer.Init(sizeof(SConstantBuffer), nullptr);
+		m_expandConstantBuffer.Init(sizeof(SConstantBufferBoneMatrix), nullptr);
 	}
 	else {
-		m_commonConstantBuffer.Init(sizeof(SConstantBufferNoBone), nullptr);
+		//#############
+		//pm3, extline
+		//#############
+		EXPAND_SRV_REG__START_NO = 4;
+		NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
+		NUM_CBV_ONE_MATERIAL = 1;
+		m_commonConstantBuffer.Init(sizeof(SConstantBuffer), nullptr);
 	}
 
 	//ユーザー拡張用の定数バッファを作成。
@@ -1527,9 +1584,9 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 		}
 		srvNo += NUM_SRV_ONE_MATERIAL;
 		m_descriptorHeap.RegistConstantBuffer(cbNo, m_commonConstantBuffer);
-		//if (m_expandConstantBuffer.IsValid()) {
-		//	m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
-		//}
+		if (m_expandConstantBuffer.IsValid()) {
+			m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);//BoneMatrix
+		}
 		cbNo += NUM_CBV_ONE_MATERIAL;
 
 		m_createdescriptorflag = true;
@@ -1615,9 +1672,10 @@ void CMQOMaterial::SetFl4x4(myRenderer::RENDEROBJ renderobj)
 			curframe = RoundingTime(curmi->curframe);
 
 			if (curmotid > 0) {
-				SetBoneMatrixReq(renderobj.pmodel->GetTopBone(false), renderobj);
+				//SetBoneMatrixReq(renderobj.pmodel->GetTopBone(false), renderobj);
+				SetBoneMatrix(renderobj);
 
-				MoveMemory(&(m_cbWithBone.setfl4x4[0]), &(m_setfl4x4[0]), sizeof(float) * 16 * MAXBONENUM);
+				//MoveMemory(&(m_cbMatrix.setfl4x4[0]), &(m_setfl4x4[0]), sizeof(float) * 16 * MAXBONENUM);
 			}
 		}
 	}
@@ -1625,9 +1683,10 @@ void CMQOMaterial::SetFl4x4(myRenderer::RENDEROBJ renderobj)
 }
 
 void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
-	const Matrix& mView, const Matrix& mProj, bool isfirstmaterial)
+	const Matrix& mView, const Matrix& mProj,
+	bool isfirstmaterial)
 {
-	if (!renderobj.mqoobj) {
+	if (!renderobj.mqoobj || !renderobj.pmodel) {
 		_ASSERT(0);
 		return;
 	}
@@ -1651,62 +1710,56 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 
 	////定数バッファを更新する。
 	if (pdispline && pextline) {
-		//SConstantBufferNoBone cb;
-		m_cbNoBone.mWorld = renderobj.mWorld;
-		m_cbNoBone.mView = mView;
-		m_cbNoBone.mProj = mProj;
-		m_cbNoBone.diffusemult = pextline->GetColor();
+		m_cb.mWorld = renderobj.mWorld;
+		m_cb.mView = mView;
+		m_cb.mProj = mProj;
+		//m_cb.diffusemult = renderobj.diffusemult;
+		m_cb.diffusemult = pextline->GetColor();
 
 		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
 		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
 
-		m_commonConstantBuffer.CopyToVRAM(m_cbNoBone);
+		m_commonConstantBuffer.CopyToVRAM(m_cb);
 	}
 	else if (ppm3) {
-		//SConstantBufferNoBone cb;
-		m_cbNoBone.mWorld = renderobj.mWorld;
-		m_cbNoBone.mView = mView;
-		m_cbNoBone.mProj = mProj;
-		if (renderobj.mqoobj && renderobj.mqoobj->GetTempDiffuseMultFlag()) {
-			m_cbNoBone.diffusemult = renderobj.mqoobj->GetTempDiffuseMult();
+		m_cb.mWorld = renderobj.mWorld;
+		m_cb.mView = mView;
+		m_cb.mProj = mProj;
+		//m_cb.diffusemult = renderobj.diffusemult;
+		if (GetTempDiffuseMultFlag()) {
+			m_cb.diffusemult = GetTempDiffuseMult();
 		}
 		else {
-			m_cbNoBone.diffusemult = renderobj.diffusemult;
+			m_cb.diffusemult = renderobj.diffusemult;
 		}
 
 		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
 		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
 
-		m_commonConstantBuffer.CopyToVRAM(m_cbNoBone);
-
+		m_commonConstantBuffer.CopyToVRAM(m_cb);
 	}
 	else if (ppm4) {
-		//SConstantBufferWithBone cb;
-		m_cbWithBone.mWorld = renderobj.mWorld;
-		m_cbWithBone.mView = mView;
-		m_cbWithBone.mProj = mProj;
-		if (ppm3 || ppm4) {
-			if (renderobj.mqoobj && renderobj.mqoobj->GetTempDiffuseMultFlag()) {
-				m_cbWithBone.diffusemult = renderobj.mqoobj->GetTempDiffuseMult();
-			}
-			else {
-				m_cbWithBone.diffusemult = renderobj.diffusemult;
-			}
-		}
-		else if (pextline) {
-			m_cbWithBone.diffusemult = pextline->GetColor();
-		}
-		else {
-			_ASSERT(0);
-			m_cbWithBone.diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		m_cb.mWorld = renderobj.mWorld;
+		m_cb.mView = mView;
+		m_cb.mProj = mProj;
+		m_cb.diffusemult = renderobj.diffusemult;
+		m_commonConstantBuffer.CopyToVRAM(m_cb);
+
+
+		if (!GetUpdateFl4x4Flag()) {//2023/12/01
+		//if (isfirstmaterial) {
+		//if (isfirstmaterial && !GetUpdateFl4x4Flag()) {
+		//if (!renderobj.pmodel->GetUpdateFl4x4Flag()) {
+			
+			SetFl4x4(renderobj);
+			m_expandConstantBuffer.CopyToVRAM(m_cbMatrix);
+
+			renderobj.pmodel->SetUpdateFl4x4Flag();
+			SetUpdateFl4x4Flag();
 		}
 
-		//if (isfirstmaterial) {
-			SetFl4x4(renderobj);
-		//}
-		
-		m_commonConstantBuffer.CopyToVRAM(m_cbWithBone);
 	}
+
 
 
 	//if (m_expandData) {
@@ -1721,64 +1774,124 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 	//}
 }
 
-void CMQOMaterial::SetBoneMatrixReq(CBone* curbone, myRenderer::RENDEROBJ renderobj)
+void CMQOMaterial::SetBoneMatrix(myRenderer::RENDEROBJ renderobj)
 {
-	if (curbone) {
-		int matrixindex = curbone->GetMatrixIndex();//2023/11/30
+	CModel* pmodel = renderobj.pmodel;
+	if (!pmodel) {
+		_ASSERT(0);
+		return;
+	}
+	MOTINFO* curmi = renderobj.pmodel->GetCurMotInfo();
+	if (renderobj.pmodel->GetTopBone() && (renderobj.pmodel->GetNoBoneFlag() == false) && curmi) {
 
-		if (curbone->IsSkeleton() && (matrixindex >= 0) && (matrixindex < MAXBONENUM)) {
-			ChaMatrix clustermat;
-			clustermat.SetIdentity();
+		bool currentlimitdegflag = g_limitdegflag;
+		int curmotid = curmi->motid;
+		double curframe = RoundingTime(curmi->curframe);
+		if (curmotid > 0) {
+			std::map<int, CBone*>::iterator itrbone;
+			for (itrbone = renderobj.pmodel->GetBoneListBegin(); itrbone != renderobj.pmodel->GetBoneListEnd(); itrbone++) {
+				CBone* curbone = itrbone->second;
+				if (curbone) {
+					int matrixindex = curbone->GetMatrixIndex();//2023/11/30
 
-			bool currentlimitdegflag = g_limitdegflag;
-			MOTINFO* curmi = 0;
-			int curmotid;
-			double curframe;
-			curmi = renderobj.pmodel->GetCurMotInfo();
-			if (renderobj.pmodel->GetTopBone() && (renderobj.pmodel->GetNoBoneFlag() == false) && curmi) {
-				curmotid = curmi->motid;
-				curframe = RoundingTime(curmi->curframe);
-				if (curmotid > 0) {
-					//CMotionPoint tmpmp = curbone->GetCurMp();
-					
-					CMotionPoint curmp = curbone->GetCurMp(renderobj.calcslotflag);
+					if (curbone->IsSkeleton() && (matrixindex >= 0) && (matrixindex < MAXBONENUM)) {
+						ChaMatrix clustermat;
+						clustermat.SetIdentity();
 
-					if (renderobj.btflag == 0) {
-						//set4x4[clcnt] = tmpmp.GetWorldMat();
-						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
-						MoveMemory(&(m_setfl4x4[16 * matrixindex]),//2023/11/30
-							clustermat.GetDataPtr(), sizeof(float) * 16);
-					}
-					else if (renderobj.btflag == 1) {
-						//物理シミュ
-						//set4x4[clcnt] = curbone->GetBtMat();
-						clustermat = curbone->GetBtMat(renderobj.calcslotflag);
-						MoveMemory(&(m_setfl4x4[16 * matrixindex]),//2023/11/30
-							clustermat.GetDataPtr(), sizeof(float) * 16);
-					}
-					else if (renderobj.btflag == 2) {
-						//物理IK
-						//set4x4[clcnt] = curbone->GetBtMat();
-						clustermat = curbone->GetBtMat(renderobj.calcslotflag);
-						MoveMemory(&(m_setfl4x4[16 * matrixindex]),//2023/11/30
-							curbone->GetBtMat().GetDataPtr(), sizeof(float) * 16);
-					}
-					else {
-						//set4x4[clcnt] = tmpmp.GetWorldMat();
-						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
-						MoveMemory(&(m_setfl4x4[16 * matrixindex]),//2023/11/30
-							clustermat.GetDataPtr(), sizeof(float) * 16);
-					}
+						CMotionPoint curmp = curbone->GetCurMp(renderobj.calcslotflag);
 
+						if (renderobj.btflag == 0) {
+							//set4x4[clcnt] = tmpmp.GetWorldMat();
+							clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
+							MoveMemory(&(m_cbMatrix.setfl4x4[16 * matrixindex]),//2023/11/30
+								clustermat.GetDataPtr(), sizeof(float) * 16);
+						}
+						else if (renderobj.btflag == 1) {
+							//物理シミュ
+							//set4x4[clcnt] = curbone->GetBtMat();
+							clustermat = curbone->GetBtMat(renderobj.calcslotflag);
+							MoveMemory(&(m_cbMatrix.setfl4x4[16 * matrixindex]),//2023/11/30
+								clustermat.GetDataPtr(), sizeof(float) * 16);
+						}
+						else if (renderobj.btflag == 2) {
+							//物理IK
+							//set4x4[clcnt] = curbone->GetBtMat();
+							clustermat = curbone->GetBtMat(renderobj.calcslotflag);
+							MoveMemory(&(m_cbMatrix.setfl4x4[16 * matrixindex]),//2023/11/30
+								curbone->GetBtMat().GetDataPtr(), sizeof(float) * 16);
+						}
+						else {
+							//set4x4[clcnt] = tmpmp.GetWorldMat();
+							clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
+							MoveMemory(&(m_cbMatrix.setfl4x4[16 * matrixindex]),//2023/11/30
+								clustermat.GetDataPtr(), sizeof(float) * 16);
+						}
+					}
 				}
 			}
 		}
-
-		if (curbone->GetChild(false)) {
-			SetBoneMatrixReq(curbone->GetChild(false), renderobj);
-		}
-		if (curbone->GetBrother(false)) {
-			SetBoneMatrixReq(curbone->GetBrother(false), renderobj);
-		}
 	}
 }
+
+
+//void CMQOMaterial::SetBoneMatrixReq(CBone* curbone, myRenderer::RENDEROBJ renderobj)
+//{
+//	if (curbone) {
+//		int matrixindex = curbone->GetMatrixIndex();//2023/11/30
+//
+//		if (curbone->IsSkeleton() && (matrixindex >= 0) && (matrixindex < MAXBONENUM)) {
+//			ChaMatrix clustermat;
+//			clustermat.SetIdentity();
+//
+//			bool currentlimitdegflag = g_limitdegflag;
+//			MOTINFO* curmi = 0;
+//			int curmotid;
+//			double curframe;
+//			curmi = renderobj.pmodel->GetCurMotInfo();
+//			if (renderobj.pmodel->GetTopBone() && (renderobj.pmodel->GetNoBoneFlag() == false) && curmi) {
+//				curmotid = curmi->motid;
+//				curframe = RoundingTime(curmi->curframe);
+//				if (curmotid > 0) {
+//					//CMotionPoint tmpmp = curbone->GetCurMp();
+//					
+//					CMotionPoint curmp = curbone->GetCurMp(renderobj.calcslotflag);
+//
+//					if (renderobj.btflag == 0) {
+//						//set4x4[clcnt] = tmpmp.GetWorldMat();
+//						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
+//						MoveMemory(&(m_cbMatrix.setfl4x4[16 * matrixindex]),//2023/11/30
+//							clustermat.GetDataPtr(), sizeof(float) * 16);
+//					}
+//					else if (renderobj.btflag == 1) {
+//						//物理シミュ
+//						//set4x4[clcnt] = curbone->GetBtMat();
+//						clustermat = curbone->GetBtMat(renderobj.calcslotflag);
+//						MoveMemory(&(m_cbMatrix.setfl4x4[16 * matrixindex]),//2023/11/30
+//							clustermat.GetDataPtr(), sizeof(float) * 16);
+//					}
+//					else if (renderobj.btflag == 2) {
+//						//物理IK
+//						//set4x4[clcnt] = curbone->GetBtMat();
+//						clustermat = curbone->GetBtMat(renderobj.calcslotflag);
+//						MoveMemory(&(m_cbMatrix.setfl4x4[16 * matrixindex]),//2023/11/30
+//							curbone->GetBtMat().GetDataPtr(), sizeof(float) * 16);
+//					}
+//					else {
+//						//set4x4[clcnt] = tmpmp.GetWorldMat();
+//						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
+//						MoveMemory(&(m_cbMatrix.setfl4x4[16 * matrixindex]),//2023/11/30
+//							clustermat.GetDataPtr(), sizeof(float) * 16);
+//					}
+//
+//				}
+//			}
+//		}
+//
+//		if (curbone->GetChild(false)) {
+//			SetBoneMatrixReq(curbone->GetChild(false), renderobj);
+//		}
+//		if (curbone->GetBrother(false)) {
+//			SetBoneMatrixReq(curbone->GetBrother(false), renderobj);
+//		}
+//	}
+//}

@@ -73,7 +73,8 @@ public:
 	int WaitUpdateThreads();
 	int RenderModels(myRenderer::RenderingEngine& renderringEngine, int lightflag, ChaVector4 diffusemult, int btflag = 0);
 	void WaitForUpdateMatrixModels();
-	int RenderOneModel(CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine& renderringEngine, int lightflag, ChaVector4 diffusemult, int btflag = 0);
+	int RenderOneModel(CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine& renderringEngine, 
+		int lightflag, ChaVector4 diffusemult, int btflag, bool zcmpalways);
 
 
 	CModel* GetTheLastCameraModel();

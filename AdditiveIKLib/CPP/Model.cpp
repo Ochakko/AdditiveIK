@@ -99,7 +99,7 @@ using namespace std;
 
 
 //extern
-extern TResourceBank<CMQOMaterial> g_materialbank;
+//extern TResourceBank<CMQOMaterial> g_materialbank;
 
 
 ////######################################
@@ -486,6 +486,9 @@ int CModel::InitParams()
 	m_befinview = false;
 	m_bound.Init();
 
+	m_materialbank.InitParams();
+
+	m_updatefl4x4flag = false;
 
 	m_Under_CalcEul = false;
 	m_Under_CopyW2LW = false;
@@ -736,19 +739,8 @@ int CModel::DestroyAllMotionInfo()
 
 int CModel::DestroyMaterial()
 {
-
-	//########
-	//bank管理
-	//########
-	//map<int, CMQOMaterial*>::iterator itr;
-	//for( itr = m_material.begin(); itr != m_material.end(); itr++ ){
-	//	CMQOMaterial* delmat = itr->second;
-	//	if( delmat ){
-	//		delete delmat;
-	//	}
-	//}
-	m_material.clear();
-
+	//m_materialbankのCMQOMaterial*は
+	//非ポインタメンバ変数　m_materialbankのデストラクタでunique_ptrの機能で解放される 
 	return 0;
 }
 int CModel::DestroyObject()
@@ -868,7 +860,7 @@ int CModel::LoadMQO( ID3D12Device* pdev, const WCHAR* wfile, const WCHAR* modelf
 
 	CallF( CreateMaterialTexture(), return 1 );
 
-	SetMaterialName();
+	//SetMaterialName();
 
 	
 	CallF(MakeDispObj(), return 1);
@@ -1183,7 +1175,7 @@ _ASSERT(m_bonelist[0]);
 							//NonSkinMesh : PolyMesh3
 							//########################
 							bool fbxfileflag = true;
-							CallF(curobj->MakePolymesh3(fbxfileflag, m_pdev, m_material), return 1);
+							CallF(curobj->MakePolymesh3(fbxfileflag, m_pdev, this), return 1);
 						}
 
 						//##################################################################################################
@@ -1238,7 +1230,7 @@ _ASSERT(m_bonelist[0]);
 		//	CallF(MakePolyMesh3(fbxfileflag), return 1);
 		//	CallF(MakeObjectName(), return 1);
 		//}
-		SetMaterialName();
+		//SetMaterialName();
 
 		//for dispgroup
 		CreateObjno2DigElem();
@@ -1347,11 +1339,18 @@ int CModel::LoadFBXAnim( FbxManager* psdk, FbxImporter* pimporter, FbxScene* psc
 int CModel::CreateMaterialTexture()
 {
 
-	map<int,CMQOMaterial*>::iterator itr;
-	for( itr = m_material.begin(); itr != m_material.end(); itr++ ){
-		CMQOMaterial* curmat = itr->second;
-		CallF( curmat->CreateTexture( m_dirname, m_texpool ), return 1 );
+	int materialnum = m_materialbank.GetSize();
+	int matindex;
+	for (matindex = 0; matindex < materialnum; matindex++) {
+		CMQOMaterial* curmaterial = m_materialbank.Get(matindex);
+		if (curmaterial) {
+			CallF(curmaterial->CreateTexture(m_dirname, m_texpool), return 1);
+		}
+		else {
+			_ASSERT(0);
+		}
 	}
+
 
 	map<int,CMQOObject*>::iterator itrobj;
 	for( itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++ ){
@@ -1360,7 +1359,12 @@ int CModel::CreateMaterialTexture()
 			map<int,CMQOMaterial*>::iterator itrmat;
 			for( itrmat = curobj->GetMaterialBegin(); itrmat != curobj->GetMaterialEnd(); itrmat++ ){
 				CMQOMaterial* curmat = itrmat->second;
-				CallF( curmat->CreateTexture( m_dirname, m_texpool ), return 1 );
+				if (curmat) {
+					CallF(curmat->CreateTexture(m_dirname, m_texpool), return 1);
+				}
+				else {
+					_ASSERT(0);
+				}
 			}
 
 			if (curobj->GetExtLine()) {
@@ -2041,7 +2045,7 @@ int CModel::MakePolyMesh3(bool fbxfileflag)
 	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
 		CMQOObject* curobj = itr->second;
 		if( curobj ){
-			CallF(curobj->MakePolymesh3(fbxfileflag, m_pdev, m_material), return 1);
+			CallF(curobj->MakePolymesh3(fbxfileflag, m_pdev, this), return 1);
 		}
 	}
 
@@ -3845,27 +3849,23 @@ int CModel::MakeEnglishName()
 	return 0;
 }
 
-int CModel::AddDefMaterial()
+int CModel::AddDefMaterialIfEmpty()
 {
+	if (m_materialbank.GetSize() <= 0) {
+		char dummyname[256] = { 0 };
+		strcpy_s(dummyname, 256, "dummyMaterial");
 
-	char dummyname[256] = { 0 };
-	strcpy_s(dummyname, 256, "dummyMaterial");
-
-	CMQOMaterial* dummymat = g_materialbank.Get(dummyname);//既に存在するかどうかチェック
-	if (!dummymat) {
-		dummymat = new CMQOMaterial();
+		CMQOMaterial* dummymat = GetMQOMaterialByName(dummyname);//既に存在するかどうかチェック
 		if (!dummymat) {
-			_ASSERT(0);
-			return 1;
+			dummymat = new CMQOMaterial();
+			if (!dummymat) {
+				_ASSERT(0);
+				return 1;
+			}
+			dummymat->SetName("dummyMaterial");
+			SetMQOMaterial(dummyname, dummymat);
 		}
-		int defmaterialno = (int)g_materialbank.GetSize();
-		dummymat->SetMaterialNo(defmaterialno);
-		dummymat->SetName("dummyMaterial");
-		g_materialbank.Regist(dummyname, dummymat);
 	}
-
-	m_material[dummymat->GetMaterialNo()] = dummymat;
-
 
 	return 0;
 }
@@ -4404,17 +4404,22 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 			if ( material != 0 ) {
 				char materialname[256] = { 0 };
 				strcpy_s(materialname, 256, material->GetName());
-				CMQOMaterial* currentmaterial = g_materialbank.Get(materialname);//既に存在するかどうかチェック
+				CMQOMaterial* currentmaterial = GetMQOMaterialByName(materialname);//既に存在するかどうかチェック
 				if (!currentmaterial) {
 					currentmaterial = new CMQOMaterial();
-					int mqomatno = g_materialbank.GetSize();
-					currentmaterial->SetMaterialNo(mqomatno);
-					newobj->SetMaterial(mqomatno, currentmaterial);
-					SetMQOMaterial(currentmaterial, material);
-					g_materialbank.Regist(materialname, currentmaterial);
+					SetMQOMaterial(currentmaterial, material);//内容をセット
+					SetMQOMaterial(materialname, currentmaterial);//表にセット
+
+					CMQOMaterial* chkmaterial = newobj->GetMaterial(currentmaterial->GetMaterialNo());
+					if (!chkmaterial) {
+						newobj->SetMaterial(currentmaterial->GetMaterialNo(), currentmaterial);
+					}
 				}
 				else {
-					newobj->SetMaterial(currentmaterial->GetMaterialNo(), currentmaterial);
+					CMQOMaterial* chkmaterial = newobj->GetMaterial(currentmaterial->GetMaterialNo());
+					if (!chkmaterial) {
+						newobj->SetMaterial(currentmaterial->GetMaterialNo(), currentmaterial);
+					}
 				}
 
 				//const char* texname = newmqomat->GetTex();
@@ -7753,18 +7758,18 @@ int CModel::SetDefaultBonePos(FbxScene* pScene)
 //}
 
 
-int CModel::SetMaterialName()
-{
-	m_materialname.clear();
-
-	map<int, CMQOMaterial*>::iterator itrmat;
-	for( itrmat = m_material.begin(); itrmat != m_material.end(); itrmat++ ){
-		CMQOMaterial* curmat = itrmat->second;
-		m_materialname[ curmat->GetName() ] = curmat;
-	}
-
-	return 0;
-}
+//int CModel::SetMaterialName()
+//{
+//	m_materialname.clear();
+//
+//	map<int, CMQOMaterial*>::iterator itrmat;
+//	for( itrmat = m_material.begin(); itrmat != m_material.end(); itrmat++ ){
+//		CMQOMaterial* curmat = itrmat->second;
+//		m_materialname[ curmat->GetName() ] = curmat;
+//	}
+//
+//	return 0;
+//}
 
 int CModel::GetTextureNameVec(std::vector<std::string>& dstvec)
 {
@@ -7772,10 +7777,35 @@ int CModel::GetTextureNameVec(std::vector<std::string>& dstvec)
 
 	vector<string> tmpvec;
 
-	//MQOファイル用のマテリアルを格納
-	map<int, CMQOMaterial*>::iterator itrmat;
-	for (itrmat = m_material.begin(); itrmat != m_material.end(); itrmat++) {
-		CMQOMaterial* curmat = itrmat->second;
+	////MQOファイル用のマテリアルを格納
+	//map<int, CMQOMaterial*>::iterator itrmat;
+	//for (itrmat = m_material.begin(); itrmat != m_material.end(); itrmat++) {
+	//	CMQOMaterial* curmat = itrmat->second;
+	//	if (curmat) {
+	//		if (curmat->GetTex() && (strlen(curmat->GetTex()) > 0)) {
+	//			string curtexname = curmat->GetTex();
+
+
+	//			bool sameflag = false;
+	//			vector<string>::iterator itrchk;
+	//			for (itrchk = dstvec.begin(); itrchk != dstvec.end(); itrchk++) {
+	//				if (*itrchk == curtexname) {
+	//					sameflag = true;
+	//					break;
+	//				}
+	//			}
+
+	//			if (sameflag == false) {
+	//				dstvec.push_back(curtexname);//重複を除いて格納
+	//			}
+	//			tmpvec.push_back(curtexname);//textureが在るものは重複可で全部格納
+	//		}
+	//	}
+	//}
+	int materialnum = GetMQOMaterialSize();
+	int matindex;
+	for (matindex = 0; matindex < materialnum; matindex++) {
+		CMQOMaterial* curmat = m_materialbank.Get(matindex);
 		if (curmat) {
 			if (curmat->GetTex() && (strlen(curmat->GetTex()) > 0)) {
 				string curtexname = curmat->GetTex();
@@ -19605,3 +19635,58 @@ void CModel::SetBoneMatrixIndexReq(CBone* srcbone, int* pcount)
 	}
 }
 
+int CModel::GetMQOMaterialSize() {
+	return m_materialbank.GetSize();
+};
+CMQOMaterial* CModel::GetMQOMaterial(int srcmatno) {
+	int materialnum = GetMQOMaterialSize();
+	int matindex;
+	for (matindex = 0; matindex < materialnum; matindex++) {
+		CMQOMaterial* chkmat = m_materialbank.Get(matindex);
+		if (chkmat && (chkmat->GetMaterialNo() == srcmatno)) {
+			return chkmat;
+		}
+	}
+	return 0;
+};
+int CModel::ExistMQOMaterial(CMQOMaterial* srcmat) {
+	int materialnum = GetMQOMaterialSize();
+	int matindex;
+	for (matindex = 0; matindex < materialnum; matindex++) {
+		CMQOMaterial* chkmat = m_materialbank.Get(matindex);
+		if (chkmat && (chkmat == srcmat)) {
+			return chkmat->GetMaterialNo();
+		}
+	}
+	return -1;
+};
+
+void CModel::SetMQOMaterial(const char* srcname, CMQOMaterial* srcmat) {
+	if (srcname && srcname[0] && srcmat) {
+		m_materialbank.Regist(srcname, srcmat);
+	}
+	else {
+		_ASSERT(0);
+	}
+};
+
+CMQOMaterial* CModel::GetMQOMaterialByName(std::string srcname) {
+	return m_materialbank.Get(srcname.c_str());
+};
+
+
+void CModel::ResetUpdateFl4x4Flag()//materialのリセットも行う
+{
+
+	m_updatefl4x4flag = false;
+
+
+	int materialnum = GetMQOMaterialSize();
+	int matindex;
+	for (matindex = 0; matindex < materialnum; matindex++) {
+		CMQOMaterial* resetmqomat = m_materialbank.Get(matindex);
+		if (resetmqomat) {
+			resetmqomat->ResetUpdateFl4x4Flag();
+		}
+	}
+}

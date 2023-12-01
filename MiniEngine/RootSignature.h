@@ -3,12 +3,18 @@
 class Shader;
 class RootSignature {
 public:
+	RootSignature() {
+		InitParams();
+	};
+	void InitParams() {
+		m_rootSignature = nullptr;
+	};
 	~RootSignature()
 	{
 		if (m_rootSignature) {
 			m_rootSignature->Release();
 		}
-	}
+	};
 	/// <summary>
 	/// 初期化
 	/// </summary>

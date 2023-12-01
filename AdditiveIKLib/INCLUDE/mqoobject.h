@@ -69,7 +69,7 @@ public:
 
 	int Dump();
 
-	int MakePolymesh3(bool fbxfileflag, ID3D12Device* pdev, std::map<int, CMQOMaterial*>& srcmaterial);
+	int MakePolymesh3(bool fbxfileflag, ID3D12Device* pdev, CModel* pmodel);
 	int MakePolymesh4( ID3D12Device* pdev );
 	int MakeExtLine(CModel* srcmodel);
 	int MakeDispObj( ID3D12Device* pdev, int hasbone );
@@ -303,7 +303,14 @@ public:
 		return (int)m_material.size();
 	};
 	CMQOMaterial* GetMaterial( int srcindex ){
-		return m_material[ srcindex ];
+		std::map<int, CMQOMaterial*>::iterator itrfind;
+		itrfind = m_material.find(srcindex);
+		if (itrfind != m_material.end()) {
+			return itrfind->second;
+		}
+		else {
+			return nullptr;
+		}
 	};
 	std::map<int,CMQOMaterial*>::iterator GetMaterialBegin(){
 		return m_material.begin();
@@ -319,7 +326,13 @@ public:
 		return (int)m_cluster.size();
 	};
 	CBone* GetCluster( int srcindex ){
-		return m_cluster[ srcindex ];
+		int clustersize = GetClusterSize();
+		if ((srcindex >= 0) && (srcindex < clustersize)) {
+			return m_cluster[srcindex];
+		}
+		else {
+			return nullptr;
+		}
 	};
 	std::vector<CBone*>::iterator GetClusterBegin(){
 		return m_cluster.begin();
@@ -398,23 +411,6 @@ public:
 		}
 	}
 	
-	void SetTempDiffuseMult(ChaVector4 srcmult)
-	{
-		m_tempdiffusemult = srcmult;
-	}
-	ChaVector4 GetTempDiffuseMult()
-	{
-		return m_tempdiffusemult;
-	}
-	void SetTempDiffuseMultFlag(bool srcflag)
-	{
-		m_settempdiffusemult = srcflag;
-	}
-	bool GetTempDiffuseMultFlag()
-	{
-		return m_settempdiffusemult;
-	}
-
 private:
 	int m_objfrom;
 
@@ -452,9 +448,6 @@ private:
 	FbxNode* m_pnode;
 
 	ChaFrustumInfo m_frustum;
-
-	bool m_settempdiffusemult;
-	ChaVector4 m_tempdiffusemult;
 
 
 //以下、クラス外から参照しないのでアクセッサー無し

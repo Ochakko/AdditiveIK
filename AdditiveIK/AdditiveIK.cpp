@@ -336,8 +336,8 @@ public:
 
 
 //global
-TResourceBank<CMQOMaterial> g_materialbank;
-
+//2023/12/01 mqofileのmaterialno読込対応時に　マテリアルが被らないようにモデル単位に変更
+//TResourceBank<CMQOMaterial> g_materialbank;
 
 //staic
 static HWINEVENTHOOK s_hhook = NULL;
@@ -3228,7 +3228,7 @@ void InitApp()
 
 	CBone::InitColDisp();
 
-	g_materialbank.InitParams();
+	//g_materialbank.InitParams();
 
 	s_platemenukind = SPPLATEMENUKIND_DISP;
 	s_platemenuno = 1;
@@ -5714,6 +5714,7 @@ void OnFrameRender(myRenderer::RenderingEngine& re, RenderContext& rc, double fT
 			else {
 				btflag = 1;
 			}
+
 			s_chascene->RenderModels(re, lightflag, diffusemult, btflag);
 
 			if (s_ground) {
@@ -5754,6 +5755,7 @@ void OnFrameRender(myRenderer::RenderingEngine& re, RenderContext& rc, double fT
 	//s_fontfortip.SetShadowParam(true, 1.0, Vector4(0.0f, 1.0f, 0.0f, 1.0f));
 	//s_fontfortip.Draw(L"Font Test", fontpos, fontcol, 0.0, 1.0, fontpivot);
 	//s_fontfortip.End(rc);
+
 
 
 	//レンダリングエンジンを実行
@@ -12650,7 +12652,9 @@ int RenderSelectFunc(myRenderer::RenderingEngine& re)
 		//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
 		ChaVector4 diffusemult = ChaVector4(0.6f, 0.6f, 0.6f, 0.3f);
 		bool forcewithalpha = true;
-		s_chascene->RenderOneModel(s_select, forcewithalpha, re, lightflag, diffusemult, 0);
+		int btflag = 0;
+		bool zcmpalways = true;
+		s_chascene->RenderOneModel(s_select, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
 		//s_select->OnRender(withalpha, pRenderContext, lightflag, diffusemult);
 	}
 	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
@@ -12672,7 +12676,9 @@ int RenderSelectPostureFunc(myRenderer::RenderingEngine& re)
 		//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
 		ChaVector4 diffusemult = ChaVector4(0.6f, 0.6f, 0.6f, 0.3f);
 		bool forcewithalpha = true;
-		s_chascene->RenderOneModel(s_select_posture, forcewithalpha, re, lightflag, diffusemult, 0);
+		int btflag = 0;
+		bool zcmpalways = true;
+		s_chascene->RenderOneModel(s_select_posture, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
 		//s_select_posture->OnRender(withalpha, pRenderContext, lightflag, diffusemult);
 	}
 	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
@@ -21224,195 +21230,197 @@ int SetSelectState()
 	float lowrate = 0.6f;
 
 	//float hia = 0.3f;
-	float hia = 0.7f;
+	//float hia = 0.7f;
+	float hia = 0.3f;
 	float lowa = 0.3f;
 
 	ChaVector4 hidiffusemult = ChaVector4(hirate, hirate, hirate, hia);
 	ChaVector4 lowdiffusemult = ChaVector4(lowrate, lowrate, lowrate, lowa);
+	//ChaVector4 hidiffusemult = ChaVector4(hirate, hirate, hirate, hia);
+	//ChaVector4 lowdiffusemult = ChaVector4(hirate, hirate, hirate, lowa);
+
 
 	if (s_matred && s_ringred && s_matblue && s_ringblue && s_matgreen && s_ringgreen && s_matyellow) {
 		if ((pickinfo.pickobjno >= 0) && (s_curboneno == pickinfo.pickobjno)) {
 
 			if ((pickinfo.buttonflag == PICK_X) || (pickinfo.buttonflag == PICK_SPA_X)) {//red
-				s_matred->SetDif4F(s_matredmat * hirate);
-				s_ringred->SetDif4F(s_ringredmat * hirate);
-				s_matred->SetDif4FW(hia);
-				s_ringred->SetDif4FW(hia);
+				//s_matred->SetDif4F(s_matredmat * hirate);
+				//s_ringred->SetDif4F(s_ringredmat * hirate);
+				//s_matred->SetDif4FW(hia);
+				//s_ringred->SetDif4FW(hia);
 
-				s_matblue->SetDif4F(s_matbluemat * lowrate);
-				s_ringblue->SetDif4F(s_ringbluemat * lowrate);
-				s_matblue->SetDif4FW(lowa);
-				s_ringblue->SetDif4FW(lowa);
+				//s_matblue->SetDif4F(s_matbluemat * lowrate);
+				//s_ringblue->SetDif4F(s_ringbluemat * lowrate);
+				//s_matblue->SetDif4FW(lowa);
+				//s_ringblue->SetDif4FW(lowa);
 
-				s_matgreen->SetDif4F(s_matgreenmat * lowrate);
-				s_ringgreen->SetDif4F(s_ringgreenmat * lowrate);
-				s_matgreen->SetDif4FW(lowa);
-				s_ringgreen->SetDif4FW(lowa);
+				//s_matgreen->SetDif4F(s_matgreenmat * lowrate);
+				//s_ringgreen->SetDif4F(s_ringgreenmat * lowrate);
+				//s_matgreen->SetDif4FW(lowa);
+				//s_ringgreen->SetDif4FW(lowa);
 
-				s_matyellow->SetDif4F(s_matyellowmat * lowrate);
-				s_matyellow->SetDif4FW(lowa);
+				//s_matyellow->SetDif4F(s_matyellowmat * lowrate);
+				//s_matyellow->SetDif4FW(lowa);
 
 
-				s_selectobj_objx->SetTempDiffuseMult(hidiffusemult);
-				s_selectobj_ringx->SetTempDiffuseMult(hidiffusemult);
-				s_selectobj_objy->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_ringy->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_objz->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_ringz->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_center->SetTempDiffuseMult(lowdiffusemult);
+				s_matred->SetTempDiffuseMult(hidiffusemult);
+				s_ringred->SetTempDiffuseMult(hidiffusemult);
+				s_matblue->SetTempDiffuseMult(lowdiffusemult);
+				s_ringblue->SetTempDiffuseMult(lowdiffusemult);
+				s_matgreen->SetTempDiffuseMult(lowdiffusemult);
+				s_ringgreen->SetTempDiffuseMult(lowdiffusemult);
+				s_matyellow->SetTempDiffuseMult(lowdiffusemult);
 
-				s_selectobj_objx->SetTempDiffuseMultFlag(true);
-				s_selectobj_ringx->SetTempDiffuseMultFlag(true);
-				s_selectobj_objy->SetTempDiffuseMultFlag(true);
-				s_selectobj_ringy->SetTempDiffuseMultFlag(true);
-				s_selectobj_objz->SetTempDiffuseMultFlag(true);
-				s_selectobj_ringz->SetTempDiffuseMultFlag(true);
-				s_selectobj_center->SetTempDiffuseMultFlag(true);
+				s_matred->SetTempDiffuseMultFlag(true);
+				s_ringred->SetTempDiffuseMultFlag(true);
+				s_matblue->SetTempDiffuseMultFlag(true);
+				s_ringblue->SetTempDiffuseMultFlag(true);
+				s_matgreen->SetTempDiffuseMultFlag(true);
+				s_ringgreen->SetTempDiffuseMultFlag(true);
+				s_matyellow->SetTempDiffuseMultFlag(true);
 
 			}
 			else if ((pickinfo.buttonflag == PICK_Y) || (pickinfo.buttonflag == PICK_SPA_Y)) {//green
-				s_matred->SetDif4F(s_matredmat * lowrate);
-				s_ringred->SetDif4F(s_ringredmat * lowrate);
-				s_matred->SetDif4FW(lowa);
-				s_ringred->SetDif4FW(lowa);
+				//s_matred->SetDif4F(s_matredmat * lowrate);
+				//s_ringred->SetDif4F(s_ringredmat * lowrate);
+				//s_matred->SetDif4FW(lowa);
+				//s_ringred->SetDif4FW(lowa);
 
-				s_matblue->SetDif4F(s_matbluemat * lowrate);
-				s_ringblue->SetDif4F(s_ringbluemat * lowrate);
-				s_matblue->SetDif4FW(lowa);
-				s_ringblue->SetDif4FW(lowa);
+				//s_matblue->SetDif4F(s_matbluemat * lowrate);
+				//s_ringblue->SetDif4F(s_ringbluemat * lowrate);
+				//s_matblue->SetDif4FW(lowa);
+				//s_ringblue->SetDif4FW(lowa);
 
-				s_matgreen->SetDif4F(s_matgreenmat * hirate);
-				s_ringgreen->SetDif4F(s_ringgreenmat * hirate);
-				s_matgreen->SetDif4FW(hia);
-				s_ringgreen->SetDif4FW(hia);
+				//s_matgreen->SetDif4F(s_matgreenmat * hirate);
+				//s_ringgreen->SetDif4F(s_ringgreenmat * hirate);
+				//s_matgreen->SetDif4FW(hia);
+				//s_ringgreen->SetDif4FW(hia);
 
-				s_matyellow->SetDif4F(s_matyellowmat * lowrate);
-				s_matyellow->SetDif4FW(lowa);
+				//s_matyellow->SetDif4F(s_matyellowmat * lowrate);
+				//s_matyellow->SetDif4FW(lowa);
 
-				s_selectobj_objx->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_ringx->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_objy->SetTempDiffuseMult(hidiffusemult);
-				s_selectobj_ringy->SetTempDiffuseMult(hidiffusemult);
-				s_selectobj_objz->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_ringz->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_center->SetTempDiffuseMult(lowdiffusemult);
+				s_matred->SetTempDiffuseMult(lowdiffusemult);
+				s_ringred->SetTempDiffuseMult(lowdiffusemult);
+				s_matblue->SetTempDiffuseMult(lowdiffusemult);
+				s_ringblue->SetTempDiffuseMult(lowdiffusemult);
+				s_matgreen->SetTempDiffuseMult(hidiffusemult);
+				s_ringgreen->SetTempDiffuseMult(hidiffusemult);
+				s_matyellow->SetTempDiffuseMult(lowdiffusemult);
 
-				s_selectobj_objx->SetTempDiffuseMultFlag(true);
-				s_selectobj_ringx->SetTempDiffuseMultFlag(true);
-				s_selectobj_objy->SetTempDiffuseMultFlag(true);
-				s_selectobj_ringy->SetTempDiffuseMultFlag(true);
-				s_selectobj_objz->SetTempDiffuseMultFlag(true);
-				s_selectobj_ringz->SetTempDiffuseMultFlag(true);
-				s_selectobj_center->SetTempDiffuseMultFlag(true);
-
+				s_matred->SetTempDiffuseMultFlag(true);
+				s_ringred->SetTempDiffuseMultFlag(true);
+				s_matblue->SetTempDiffuseMultFlag(true);
+				s_ringblue->SetTempDiffuseMultFlag(true);
+				s_matgreen->SetTempDiffuseMultFlag(true);
+				s_ringgreen->SetTempDiffuseMultFlag(true);
+				s_matyellow->SetTempDiffuseMultFlag(true);
 			}
 			else if ((pickinfo.buttonflag == PICK_Z) || (pickinfo.buttonflag == PICK_SPA_Z)) {//blue
-				s_matred->SetDif4F(s_matredmat * lowrate);
-				s_ringred->SetDif4F(s_ringredmat * lowrate);
-				s_matred->SetDif4FW(lowa);
-				s_ringred->SetDif4FW(lowa);
+				//s_matred->SetDif4F(s_matredmat * lowrate);
+				//s_ringred->SetDif4F(s_ringredmat * lowrate);
+				//s_matred->SetDif4FW(lowa);
+				//s_ringred->SetDif4FW(lowa);
 
-				s_matblue->SetDif4F(s_matbluemat * hirate);
-				s_ringblue->SetDif4F(s_ringbluemat * hirate);
-				s_matblue->SetDif4FW(hia);
-				s_ringblue->SetDif4FW(hia);
+				//s_matblue->SetDif4F(s_matbluemat * hirate);
+				//s_ringblue->SetDif4F(s_ringbluemat * hirate);
+				//s_matblue->SetDif4FW(hia);
+				//s_ringblue->SetDif4FW(hia);
 
-				s_matgreen->SetDif4F(s_matgreenmat * lowrate);
-				s_ringgreen->SetDif4F(s_ringgreenmat * lowrate);
-				s_matgreen->SetDif4FW(lowa);
-				s_ringgreen->SetDif4FW(lowa);
+				//s_matgreen->SetDif4F(s_matgreenmat * lowrate);
+				//s_ringgreen->SetDif4F(s_ringgreenmat * lowrate);
+				//s_matgreen->SetDif4FW(lowa);
+				//s_ringgreen->SetDif4FW(lowa);
 
-				s_matyellow->SetDif4F(s_matyellowmat * lowrate);
-				s_matyellow->SetDif4FW(lowa);
+				//s_matyellow->SetDif4F(s_matyellowmat * lowrate);
+				//s_matyellow->SetDif4FW(lowa);
 
-				s_selectobj_objx->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_ringx->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_objy->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_ringy->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_objz->SetTempDiffuseMult(hidiffusemult);
-				s_selectobj_ringz->SetTempDiffuseMult(hidiffusemult);
-				s_selectobj_center->SetTempDiffuseMult(lowdiffusemult);
 
-				s_selectobj_objx->SetTempDiffuseMultFlag(true);
-				s_selectobj_ringx->SetTempDiffuseMultFlag(true);
-				s_selectobj_objy->SetTempDiffuseMultFlag(true);
-				s_selectobj_ringy->SetTempDiffuseMultFlag(true);
-				s_selectobj_objz->SetTempDiffuseMultFlag(true);
-				s_selectobj_ringz->SetTempDiffuseMultFlag(true);
-				s_selectobj_center->SetTempDiffuseMultFlag(true);
+				s_matred->SetTempDiffuseMult(lowdiffusemult);
+				s_ringred->SetTempDiffuseMult(lowdiffusemult);
+				s_matblue->SetTempDiffuseMult(hidiffusemult);
+				s_ringblue->SetTempDiffuseMult(hidiffusemult);
+				s_matgreen->SetTempDiffuseMult(lowdiffusemult);
+				s_ringgreen->SetTempDiffuseMult(lowdiffusemult);
+				s_matyellow->SetTempDiffuseMult(lowdiffusemult);
 
+				s_matred->SetTempDiffuseMultFlag(true);
+				s_ringred->SetTempDiffuseMultFlag(true);
+				s_matblue->SetTempDiffuseMultFlag(true);
+				s_ringblue->SetTempDiffuseMultFlag(true);
+				s_matgreen->SetTempDiffuseMultFlag(true);
+				s_ringgreen->SetTempDiffuseMultFlag(true);
+				s_matyellow->SetTempDiffuseMultFlag(true);
 			}
 			else if (pickinfo.buttonflag == PICK_CENTER) {//yellow
-				s_matred->SetDif4F(s_matredmat * lowrate);
-				s_ringred->SetDif4F(s_ringredmat * lowrate);
-				s_matred->SetDif4FW(lowa);
-				s_ringred->SetDif4FW(lowa);
+				//s_matred->SetDif4F(s_matredmat * lowrate);
+				//s_ringred->SetDif4F(s_ringredmat * lowrate);
+				//s_matred->SetDif4FW(lowa);
+				//s_ringred->SetDif4FW(lowa);
 
-				s_matblue->SetDif4F(s_matbluemat * lowrate);
-				s_ringblue->SetDif4F(s_ringbluemat * lowrate);
-				s_matblue->SetDif4FW(lowa);
-				s_ringblue->SetDif4FW(lowa);
+				//s_matblue->SetDif4F(s_matbluemat * lowrate);
+				//s_ringblue->SetDif4F(s_ringbluemat * lowrate);
+				//s_matblue->SetDif4FW(lowa);
+				//s_ringblue->SetDif4FW(lowa);
 
-				s_matgreen->SetDif4F(s_matgreenmat * lowrate);
-				s_ringgreen->SetDif4F(s_ringgreenmat * lowrate);
-				s_matgreen->SetDif4FW(lowa);
-				s_ringgreen->SetDif4FW(lowa);
+				//s_matgreen->SetDif4F(s_matgreenmat * lowrate);
+				//s_ringgreen->SetDif4F(s_ringgreenmat * lowrate);
+				//s_matgreen->SetDif4FW(lowa);
+				//s_ringgreen->SetDif4FW(lowa);
 
-				s_matyellow->SetDif4F(s_matyellowmat * hirate);
-				s_matyellow->SetDif4FW(hia);
+				//s_matyellow->SetDif4F(s_matyellowmat * hirate);
+				//s_matyellow->SetDif4FW(hia);
 
-				s_selectobj_objx->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_ringx->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_objy->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_ringy->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_objz->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_ringz->SetTempDiffuseMult(lowdiffusemult);
-				s_selectobj_center->SetTempDiffuseMult(hidiffusemult);
+				s_matred->SetTempDiffuseMult(lowdiffusemult);
+				s_ringred->SetTempDiffuseMult(lowdiffusemult);
+				s_matblue->SetTempDiffuseMult(lowdiffusemult);
+				s_ringblue->SetTempDiffuseMult(lowdiffusemult);
+				s_matgreen->SetTempDiffuseMult(lowdiffusemult);
+				s_ringgreen->SetTempDiffuseMult(lowdiffusemult);
+				s_matyellow->SetTempDiffuseMult(hidiffusemult);
 
-				s_selectobj_objx->SetTempDiffuseMultFlag(true);
-				s_selectobj_ringx->SetTempDiffuseMultFlag(true);
-				s_selectobj_objy->SetTempDiffuseMultFlag(true);
-				s_selectobj_ringy->SetTempDiffuseMultFlag(true);
-				s_selectobj_objz->SetTempDiffuseMultFlag(true);
-				s_selectobj_ringz->SetTempDiffuseMultFlag(true);
-				s_selectobj_center->SetTempDiffuseMultFlag(true);
-
+				s_matred->SetTempDiffuseMultFlag(true);
+				s_ringred->SetTempDiffuseMultFlag(true);
+				s_matblue->SetTempDiffuseMultFlag(true);
+				s_ringblue->SetTempDiffuseMultFlag(true);
+				s_matgreen->SetTempDiffuseMultFlag(true);
+				s_ringgreen->SetTempDiffuseMultFlag(true);
+				s_matyellow->SetTempDiffuseMultFlag(true);
 			}
 		}
 		else {
-			s_matred->SetDif4F(s_matredmat * lowrate);
-			s_ringred->SetDif4F(s_ringredmat * lowrate);
-			s_matred->SetDif4FW(lowa);
-			s_ringred->SetDif4FW(lowa);
+			//s_matred->SetDif4F(s_matredmat * lowrate);
+			//s_ringred->SetDif4F(s_ringredmat * lowrate);
+			//s_matred->SetDif4FW(lowa);
+			//s_ringred->SetDif4FW(lowa);
 
-			s_matblue->SetDif4F(s_matbluemat * lowrate);
-			s_ringblue->SetDif4F(s_ringbluemat * lowrate);
-			s_matblue->SetDif4FW(lowa);
-			s_ringblue->SetDif4FW(lowa);
+			//s_matblue->SetDif4F(s_matbluemat * lowrate);
+			//s_ringblue->SetDif4F(s_ringbluemat * lowrate);
+			//s_matblue->SetDif4FW(lowa);
+			//s_ringblue->SetDif4FW(lowa);
 
-			s_matgreen->SetDif4F(s_matgreenmat * lowrate);
-			s_ringgreen->SetDif4F(s_ringgreenmat * lowrate);
-			s_matgreen->SetDif4FW(lowa);
-			s_ringgreen->SetDif4FW(lowa);
+			//s_matgreen->SetDif4F(s_matgreenmat * lowrate);
+			//s_ringgreen->SetDif4F(s_ringgreenmat * lowrate);
+			//s_matgreen->SetDif4FW(lowa);
+			//s_ringgreen->SetDif4FW(lowa);
 
-			s_matyellow->SetDif4F(s_matyellowmat * lowrate);
-			s_matyellow->SetDif4FW(lowa);
+			//s_matyellow->SetDif4F(s_matyellowmat * lowrate);
+			//s_matyellow->SetDif4FW(lowa);
 
-			s_selectobj_objx->SetTempDiffuseMult(lowdiffusemult);
-			s_selectobj_ringx->SetTempDiffuseMult(lowdiffusemult);
-			s_selectobj_objy->SetTempDiffuseMult(lowdiffusemult);
-			s_selectobj_ringy->SetTempDiffuseMult(lowdiffusemult);
-			s_selectobj_objz->SetTempDiffuseMult(lowdiffusemult);
-			s_selectobj_ringz->SetTempDiffuseMult(lowdiffusemult);
-			s_selectobj_center->SetTempDiffuseMult(lowdiffusemult);
+			s_matred->SetTempDiffuseMult(lowdiffusemult);
+			s_ringred->SetTempDiffuseMult(lowdiffusemult);
+			s_matblue->SetTempDiffuseMult(lowdiffusemult);
+			s_ringblue->SetTempDiffuseMult(lowdiffusemult);
+			s_matgreen->SetTempDiffuseMult(lowdiffusemult);
+			s_ringgreen->SetTempDiffuseMult(lowdiffusemult);
+			s_matyellow->SetTempDiffuseMult(lowdiffusemult);
 
-			s_selectobj_objx->SetTempDiffuseMultFlag(true);
-			s_selectobj_ringx->SetTempDiffuseMultFlag(true);
-			s_selectobj_objy->SetTempDiffuseMultFlag(true);
-			s_selectobj_ringy->SetTempDiffuseMultFlag(true);
-			s_selectobj_objz->SetTempDiffuseMultFlag(true);
-			s_selectobj_ringz->SetTempDiffuseMultFlag(true);
-			s_selectobj_center->SetTempDiffuseMultFlag(true);
+			s_matred->SetTempDiffuseMultFlag(true);
+			s_ringred->SetTempDiffuseMultFlag(true);
+			s_matblue->SetTempDiffuseMultFlag(true);
+			s_ringblue->SetTempDiffuseMultFlag(true);
+			s_matgreen->SetTempDiffuseMultFlag(true);
+			s_ringgreen->SetTempDiffuseMultFlag(true);
+			s_matyellow->SetTempDiffuseMultFlag(true);
 
 		}
 	}
@@ -34455,7 +34463,9 @@ int OnRenderGround(myRenderer::RenderingEngine& re, RenderContext& pRenderContex
 		s_chascene->UpdateMatrixOneModel(s_ground, g_limitdegflag, &initmat, &s_matVP, 0.0);
 		ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 		bool forcewithalpha = false;
-		s_chascene->RenderOneModel(s_ground, forcewithalpha, re, 0, diffusemult, 0);
+		int btflag = 0;
+		bool zcmpalways = false;
+		s_chascene->RenderOneModel(s_ground, forcewithalpha, re, 0, diffusemult, btflag, zcmpalways);
 	}
 	//if (s_gplane && s_bpWorld && s_bpWorld->m_gplanedisp) {
 	//	ChaMatrix gpmat = s_inimat;

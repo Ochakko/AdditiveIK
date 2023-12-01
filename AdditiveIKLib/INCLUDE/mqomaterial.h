@@ -20,24 +20,15 @@ class ConstantBuffer;//定数バッファ。
 class RootSignature;//ルートシグネチャ。
 
 
-struct SConstantBufferWithBone {
-	Matrix mWorld;		//ワールド行列。
-	Matrix mView;		//ビュー行列。
-	Matrix mProj;		//プロジェクション行列。
-	ChaVector4 diffusemult;
+struct SConstantBufferBoneMatrix {
 	//float setfl4x4[16 * MAXCLUSTERNUM];//ボーンの姿勢マトリックス
 	float setfl4x4[16 * MAXBONENUM];//ボーンの姿勢マトリックス
-
 	void Init() {
-		mWorld.SetIdentity();
-		mView.SetIdentity();
-		mProj.SetIdentity();
-		diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 		ZeroMemory(setfl4x4, sizeof(float) * 16 * MAXBONENUM);
 	};
 };
 
-struct SConstantBufferNoBone {
+struct SConstantBuffer {
 	Matrix mWorld;		//ワールド行列。
 	Matrix mView;		//ビュー行列。
 	Matrix mProj;		//プロジェクション行列。
@@ -121,10 +112,11 @@ public:
 	void SetFl4x4(myRenderer::RENDEROBJ renderobj);
 	void DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
 		const Matrix& mView, const Matrix& mProj,
-		bool isfirstmaterial = false);
-	void BeginRender(RenderContext& rc, int hasSkin, bool isline);
+		bool isfirstmaterial  = false);
+	void BeginRender(RenderContext& rc, int hasSkin, bool isline, bool zcmpalways);
 
-	void SetBoneMatrixReq(CBone* srcbone, myRenderer::RENDEROBJ renderobj);
+	void SetBoneMatrix(myRenderer::RENDEROBJ renderobj);
+	//void SetBoneMatrixReq(CBone* srcbone, myRenderer::RENDEROBJ renderobj);
 
 private:
 	int InitParams();
@@ -327,16 +319,47 @@ public:
 	Texture& GetAlbedoMap();
 	Texture& GetNormalMap();
 	Texture& GetSpecularMap();
+
+	void ResetUpdateFl4x4Flag()
+	{
+		m_updatefl4x4flag = false;
+	}
+	void SetUpdateFl4x4Flag()
+	{
+		m_updatefl4x4flag = true;
+	}
+	bool GetUpdateFl4x4Flag()
+	{
+		return m_updatefl4x4flag;
+	}
+
+	void SetTempDiffuseMult(ChaVector4 srcmult)
+	{
+		m_tempdiffusemult = srcmult;
+	}
+	ChaVector4 GetTempDiffuseMult()
+	{
+		return m_tempdiffusemult;
+	}
+	void SetTempDiffuseMultFlag(bool srcflag)
+	{
+		m_settempdiffusemult = srcflag;
+	}
+	bool GetTempDiffuseMultFlag()
+	{
+		return m_settempdiffusemult;
+	}
+
 public:
 	//拡張SRVが設定されるレジスタの開始番号。
 	//const int EXPAND_SRV_REG__START_NO = 10;
 	//const int EXPAND_SRV_REG__START_NO = 6;
-	const int EXPAND_SRV_REG__START_NO = 4;
+	int EXPAND_SRV_REG__START_NO = 4;
 	//１つのマテリアルで使用されるSRVの数。
-	const int NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
+	int NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
 	//１つのマテリアルで使用されるCBVの数。
 	//const int NUM_CBV_ONE_MATERIAL = 2;
-	const int NUM_CBV_ONE_MATERIAL = 1;
+	int NUM_CBV_ONE_MATERIAL = 1;
 
 private:
 
@@ -402,15 +425,18 @@ private:
 	PipelineState m_nonSkinModelPipelineState;		//スキンなしモデル用のパイプラインステート。
 	PipelineState m_skinModelPipelineState;			//スキンありモデル用のパイプラインステート。
 	PipelineState m_transSkinModelPipelineState;	//スキンありモデル用のパイプラインステート(半透明マテリアル)。
+	PipelineState m_transSkinAlwaysModelPipelineState;	//スキンありモデル用のパイプラインステート(半透明ALWAYSマテリアル)。
 	PipelineState m_transNonSkinModelPipelineState;	//スキンなしモデル用のパイプラインステート(半透明マテリアル)。
+	PipelineState m_transNonSkinAlwaysModelPipelineState;//スキンなしモデル用のパイプラインステート(半透明ALWAYSマテリアル)。
 	Shader* m_vsNonSkinModel = nullptr;				//スキンなしモデル用の頂点シェーダー。
 	Shader* m_vsSkinModel = nullptr;				//スキンありモデル用の頂点シェーダー。
 	Shader* m_psModel = nullptr;					//モデル用のピクセルシェーダー。
 
-	SConstantBufferNoBone m_cbNoBone;
-	SConstantBufferWithBone m_cbWithBone;
+	SConstantBuffer m_cb;
+	SConstantBufferBoneMatrix m_cbMatrix;
 
 	bool m_initpipelineflag = false;
+	bool m_updatefl4x4flag = false;
 
 //以下、クラス外からアクセスしないのでアクセッサー無し。
 	char* m_curtexname;
@@ -424,6 +450,9 @@ private:
 
 	int m_convnamenum;
 	char** m_ppconvname;
+
+	bool m_settempdiffusemult;
+	ChaVector4 m_tempdiffusemult;
 
 };
 

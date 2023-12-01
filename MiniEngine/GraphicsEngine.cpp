@@ -515,15 +515,18 @@ void GraphicsEngine::EndRender(ChaScene* srcchascene)
 //	m_swapChain->Present(1, 0);
 //#endif
 
-	if (srcchascene) {
-		srcchascene->WaitForUpdateMatrixModels();
-	}
 
 
 	m_swapChain->Present(0, 0);
 
-
 	m_directXTKGfxMemroy->GarbageCollect();
+
 	//描画完了待ち。
 	WaitDraw();
+
+	if (srcchascene) {
+		//UpdateMatrixスレッド終了待ち
+		srcchascene->WaitForUpdateMatrixModels();
+	}
+
 }

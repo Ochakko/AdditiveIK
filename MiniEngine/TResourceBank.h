@@ -54,9 +54,11 @@ public:
 	};
 	
 	void InitParams() {
+		m_resourceVec.clear();
 		m_resourceMap.clear();
 	};
 	void DestroyObjs() {
+		m_resourceVec.clear();
 		m_resourceMap.clear();
 	};
 
@@ -72,6 +74,18 @@ public:
 		}
 		return nullptr;
 	}
+	TResource* Get(int srcindex)
+	{
+		int resnum = GetSize();
+		if ((srcindex >= 0) && (resnum)) {
+			return m_resourceVec[srcindex];
+		}
+		else {
+			_ASSERT(0);
+			return 0;
+		}
+	}
+
 	void Regist(const char* filePath, TResource* resource)
 	{
 		auto it = m_resourceMap.find(filePath);
@@ -79,9 +93,12 @@ public:
 			m_resourceMap.insert(
 				std::pair< std::string, TResourcePtr>(filePath, resource )
 			);
+			m_resourceVec.push_back(resource);
 		}
 	}
 private:
 	using TResourcePtr = std::unique_ptr<TResource> ;
-	std::map<std::string, TResourcePtr> m_resourceMap;
+	std::map<std::string, TResourcePtr> m_resourceMap;//unique_ptr:空にすると削除される
+	std::vector<TResource*> m_resourceVec;//普通のポインタ  indexで取得可能に
 };
+

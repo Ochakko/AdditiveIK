@@ -22,7 +22,7 @@
 #include "../../MiniEngine/TResourceBank.h"
 
 //extern
-extern TResourceBank<CMQOMaterial> g_materialbank;
+//extern TResourceBank<CMQOMaterial> g_materialbank;
 
 static int s_totallineno = 0;
 
@@ -97,18 +97,15 @@ int CExtLine::CreateExtLine( CModel* srcmodel, int pointnum, int facenum, ChaVec
 
 	if (!m_material) {
 		char materialname[256] = { 0 };
-		//strcpy_s(materialname, 256, "materialForLine");
 		sprintf_s(materialname, 256, "materialForLine_%d", s_totallineno);
-		CMQOMaterial* chkmaterial = g_materialbank.Get(materialname);
+		CMQOMaterial* chkmaterial = srcmodel->GetMQOMaterialByName(materialname);//bankŒŸõ
 		if (!chkmaterial) {
 			m_material = new CMQOMaterial();
 			if (!m_material) {
 				DbgOut(L"ExtLine : CreateExtLine : newmat alloc error !!!");
 				return 1;
 			}
-			int materialno = g_materialbank.GetSize();
-			m_material->SetMaterialNo(materialno);
-			g_materialbank.Regist(materialname, m_material);
+			srcmodel->SetMQOMaterial(materialname, m_material);
 		}
 		else {
 			m_material = chkmaterial;

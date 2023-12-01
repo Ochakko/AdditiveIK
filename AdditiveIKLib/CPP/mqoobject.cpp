@@ -258,10 +258,6 @@ void CMQOObject::InitParams()
 
 	m_latermaterial.clear();
 
-	m_settempdiffusemult = false;
-	m_tempdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-
-
 //	next = 0;
 }
 
@@ -764,7 +760,7 @@ int CMQOObject::SetColor( char* srcchar, int srcleng )
 	return 0;
 }
 
-int CMQOObject::MakePolymesh3(bool fbxfileflag, ID3D12Device* pdev, std::map<int, CMQOMaterial*>& srcmaterial)
+int CMQOObject::MakePolymesh3(bool fbxfileflag, ID3D12Device* pdev, CModel* pmodel)
 {
 	if( !m_pointbuf || !m_facebuf )
 		return 0;
@@ -843,7 +839,8 @@ int CMQOObject::MakePolymesh3(bool fbxfileflag, ID3D12Device* pdev, std::map<int
 	if (fbxfileflag == false) {
 		//mqofile
 		//materialはCModelから引数で受け取ったsrcmaterial
-		CallF(m_pm3->CreatePM3(fbxfileflag, vert_count, face_count, m_facet, pointptr, faceptr, srcmaterial, m_multmat), return 1);
+		CallF(m_pm3->CreatePM3(fbxfileflag, vert_count, face_count, m_facet, 
+			pointptr, faceptr, pmodel, m_multmat), return 1);
 	}
 	else {
 		
@@ -873,7 +870,9 @@ int CMQOObject::MakePolymesh3(bool fbxfileflag, ID3D12Device* pdev, std::map<int
 			}
 		}
 
-		CallF(m_pm3->CreatePM3(fbxfileflag, vert_count, face_count, m_facet, pointptr, faceptr, m_material, m_multmat), return 1);
+		//2023/12/01
+		//注意　コメントには　mqoobjのmaterialを渡すと書いてあるが　pmodelを渡す
+		CallF(m_pm3->CreatePM3(fbxfileflag, vert_count, face_count, m_facet, pointptr, faceptr, pmodel, m_multmat), return 1);
 	}
 	
 	return 0;

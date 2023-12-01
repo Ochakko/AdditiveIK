@@ -98,6 +98,7 @@
 #include <OrgWindow.h>
 
 #include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
+#include "../../MiniEngine/TResourceBank.h"
 
 
 //#include <DXUT.h>
@@ -111,6 +112,8 @@
 using namespace std;
 
 
+//extern
+//extern TResourceBank<CMQOMaterial> g_materialbank;
 
 
 ChaScene::ChaScene()
@@ -256,7 +259,6 @@ int ChaScene::UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, ChaMatri
 	return 0;
 }
 
-
 int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lightflag, ChaVector4 diffusemult, int btflag)
 {
 
@@ -264,7 +266,6 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lig
 		//アップデート用スレッド数を変更中
 		return 0;
 	}
-
 
 	//2023/11/09
 	//マウスホイールで　ロングタイムラインのフレームを移動する際に
@@ -291,10 +292,21 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lig
 	//####################################################################################
 
 
+
+
 	if (!m_modelindex.empty()) {
 		int modelnum = (int)m_modelindex.size();
 		int modelindex;
 		int renderindex;
+
+		int resetmodelno;
+		for (resetmodelno = 0; resetmodelno < modelnum; resetmodelno++) {
+			CModel* resetmodel = m_modelindex[resetmodelno].modelptr;
+			if (resetmodel) {
+				resetmodel->ResetUpdateFl4x4Flag();
+			}
+		}
+
 
 
 		//int renderslot = (int)(!(m_updateslot != 0));
@@ -360,6 +372,7 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lig
 									//m_renderingEngine->Add3DModelToZPrepass(curobj);
 									//m_renderingEngine->Add3DModelToRenderGBufferPass(curobj);
 									myRenderer::RENDEROBJ renderobj;
+									renderobj.Init();
 									renderobj.pmodel = curmodel;
 									renderobj.mqoobj = curobj;
 									renderobj.withalpha = withalpha;
@@ -446,7 +459,8 @@ void ChaScene::WaitForUpdateMatrixModels()
 }
 
 int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
-	myRenderer::RenderingEngine& renderingEngine, int lightflag, ChaVector4 diffusemult, int btflag)
+	myRenderer::RenderingEngine& renderingEngine, 
+	int lightflag, ChaVector4 diffusemult, int btflag, bool zcmpalways)
 {
 
 	if (g_changeUpdateThreadsNum) {
@@ -554,6 +568,7 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 							//m_renderingEngine->Add3DModelToZPrepass(curobj);
 							//m_renderingEngine->Add3DModelToRenderGBufferPass(curobj);
 							myRenderer::RENDEROBJ renderobj;
+							renderobj.Init();
 							renderobj.pmodel = curmodel;
 							renderobj.mqoobj = curobj;
 							renderobj.withalpha = withalpha;
@@ -563,6 +578,7 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 							renderobj.mWorld = curmodel->GetWorldMat().TKMatrix();
 							renderobj.calcslotflag = calcslotflag;
 							renderobj.btflag = btflag;
+							renderobj.zcmpalways = zcmpalways;
 							renderingEngine.Add3DModelToForwardRenderPass(renderobj);
 						}
 					}
