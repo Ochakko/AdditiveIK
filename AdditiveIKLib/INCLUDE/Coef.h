@@ -48,8 +48,10 @@ class CMQOMaterial;
 
 //2023/11/14
 //#define MAXBONENUM	2048
-//2023/11/30
+
+//2023/11/30 MAXBONENUMはシェーダ定数の配列長にも使っている(数値直書き)ので変更時にはシェーダも変更
 #define MAXBONENUM	1000
+
 
 #define PATH_LENG	2048
 #define MAXMOTIONNUM	100

@@ -17,7 +17,7 @@
 
 #include <crtdbg.h>
 
-
+#include <Model.h>
 #include <polymesh4.h>
 
 
@@ -164,8 +164,13 @@ int sortfunc_material( void *context, const void *elem1, const void *elem2)
 }
 
 
-int CPolyMesh4::CreatePM4(int normalmappingmode, int pointnum, int facenum, int normalleng, int uvleng, ChaVector3* pointptr, ChaVector3* nptr, ChaVector2* uvptr, CMQOFace* faceptr, map<int,CMQOMaterial*>& srcmat )
+int CPolyMesh4::CreatePM4(int normalmappingmode, int pointnum, int facenum, int normalleng, int uvleng, ChaVector3* pointptr, ChaVector3* nptr, ChaVector2* uvptr, CMQOFace* faceptr, CModel* pmodel)
 {
+	if (!pmodel) {
+		_ASSERT(0);
+		return 1;
+	}
+
 	m_orgpointnum = pointnum;
 	m_orgfacenum = facenum;
 	m_mqoface = faceptr;
@@ -194,7 +199,7 @@ int CPolyMesh4::CreatePM4(int normalmappingmode, int pointnum, int facenum, int 
 	//qsort_s( m_triface, m_facenum, sizeof( CMQOFace ), sortfunc_material, (void*)this );
 //////////
 	int optmatnum = 0;
-	CallF( SetOptV( 0, &m_optleng, &optmatnum, srcmat ), return 1 );
+	CallF( SetOptV( 0, &m_optleng, &optmatnum, pmodel ), return 1 );
 	if( (m_optleng <= 0) ){
 		_ASSERT( 0 );
 		return 0;
@@ -239,7 +244,7 @@ int CPolyMesh4::CreatePM4(int normalmappingmode, int pointnum, int facenum, int 
 
 
 	int tmpleng, tmpmatnum;
-	SetOptV( m_dispv, &tmpleng, &tmpmatnum, srcmat );
+	SetOptV( m_dispv, &tmpleng, &tmpmatnum, pmodel );
 //	CallF( SetOptV( m_dispv, m_pm3inf, &tmpleng, &tmpmatnum, srcmat ), return 1 );
 	if( (tmpleng != m_optleng) ){
 		_ASSERT( 0 );
@@ -318,10 +323,15 @@ int CPolyMesh4::SetTriFace( CMQOFace* faceptr, int* numptr )
 }
 
 
-int CPolyMesh4::SetOptV( PM3DISPV* dispv, int* pleng, int* matnum, map<int,CMQOMaterial*>& srcmat )
+int CPolyMesh4::SetOptV(PM3DISPV* dispv, int* pleng, int* matnum, CModel* pmodel)
 {
 	*pleng = 0;
 	*matnum = 0;
+
+	if (!pmodel) {
+		_ASSERT(0);
+		return 1;
+	}
 
 	int fno;
 	int setno = 0;
@@ -342,8 +352,9 @@ int CPolyMesh4::SetOptV( PM3DISPV* dispv, int* pleng, int* matnum, map<int,CMQOM
 			int fbx2020NormalVi[3] = { 0, 1, 2 };
 
 
-			int materialindex = curface->GetMaterialNo();
-			curmaterial = GetMaterialFromNo(srcmat, curface->GetMaterialNo());
+			int materialno = curface->GetMaterialNo();
+			//curmaterial = GetMaterialFromNo(srcmat, curface->GetMaterialNo());
+			curmaterial = pmodel->GetMQOMaterialByMaterialNo(materialno);
 
 			if ((fno == 0) || (curmaterial != befmaterial)) {
 				m_materialoffset[setno * 3] = curmaterial;

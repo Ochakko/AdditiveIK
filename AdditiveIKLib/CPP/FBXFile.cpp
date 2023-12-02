@@ -2158,18 +2158,25 @@ FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene,
 	lSaveMaterialElement->SetMappingMode(lLoadMaterialElement->GetMappingMode());
 	lSaveMaterialElement->SetReferenceMode(lLoadMaterialElement->GetReferenceMode());
 
-	int materialindexnum = lLoadMaterialElement->GetIndexArray().GetCount();
-
 	int result2 = CreateFbxMaterial(pSdkManager, pScene, lNode, lSaveMesh, lSaveMaterialElement, pmodel, curobj);
 	if (result2 != 0) {
 		_ASSERT(0);
 		return lNode;
 	}
-	int materialindex;
-	for (materialindex = 0; materialindex < materialindexnum; materialindex++) {
-		int srcindex = lLoadMaterialElement->GetIndexArray().GetAt(materialindex);
+
+	//int materialindex;
+	//for (materialindex = 0; materialindex < materialindexnum; materialindex++) {
+	//	int srcindex = lLoadMaterialElement->GetIndexArray().GetAt(materialindex);
+	//	lSaveMaterialElement->GetIndexArray().Add(srcindex);
+	//}
+
+	int materialindexnum = lLoadMaterialElement->GetIndexArray().GetCount();
+	int matindex;
+	for (matindex = 0; matindex < materialindexnum; matindex++) {
+		int srcindex = lLoadMaterialElement->GetIndexArray().GetAt(matindex);
 		lSaveMaterialElement->GetIndexArray().Add(srcindex);
 	}
+
 
 	return lNode;
 }
@@ -2393,7 +2400,7 @@ FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene,
 
 int CreateFbxMaterial(FbxManager* pSdkManager, FbxScene* pScene, FbxNode* lNode, FbxMesh* lMesh, FbxGeometryElementMaterial* lMaterialElement, CModel* pmodel, CMQOObject* curobj)
 {
-	if (!curobj) {
+	if (!curobj || !pmodel) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -2401,59 +2408,14 @@ int CreateFbxMaterial(FbxManager* pSdkManager, FbxScene* pScene, FbxNode* lNode,
 	CPolyMesh3* pm3 = curobj->GetPm3();
 	CPolyMesh4* pm4 = curobj->GetPm4();
 
-	//int materialnum;
-	if (pm4) {
-		//materialnum = pm4->GetDispMaterialNum();
-		//int materialcnt;
-		//for (materialcnt = 0; materialcnt < materialnum; materialcnt++) {
-		//	CMQOMaterial* curmqomat = 0;
-		//	int curoffset = 0;
-		//	int curtrinum = 0;
-		//	int result1 = pm4->GetDispMaterial(materialcnt, &curmqomat, &curoffset, &curtrinum);
-		//	if ((result1 == 0) && (curmqomat != NULL) && (curtrinum > 0)) {
-		//		CreateFbxMaterialFromMQOMaterial(pSdkManager, pScene, lNode, lMaterialElement, pmodel, curobj, curmqomat, curtrinum);
-		//	}
-		//}
-		////lMaterialElement->GetIndexArray().SetCount(lMesh->GetPolygonCount());
-
-		map<int, CMQOMaterial*>::iterator itrmqomat;
-		for (itrmqomat = curobj->GetMaterialBegin(); itrmqomat != curobj->GetMaterialEnd(); itrmqomat++) {
-			CMQOMaterial* curmqomat = itrmqomat->second;
-			if (curmqomat) {
-				CreateFbxMaterialFromMQOMaterial(pSdkManager, pScene, lNode, lMaterialElement, pmodel, curobj, curmqomat);
-			}
+	int materialnum = curobj->GetOnLoadMaterialSize();
+	int matindex;
+	for (matindex = 0; matindex < materialnum; matindex++) {
+		CMQOMaterial* curmqomat = nullptr;
+		curmqomat = curobj->GetOnLoadMaterialByIndex(matindex);
+		if (curmqomat) {
+			CreateFbxMaterialFromMQOMaterial(pSdkManager, pScene, lNode, lMaterialElement, pmodel, curobj, curmqomat);
 		}
-
-	}
-	else if (pm3) {
-		//materialnum = 1;
-		//CMQOMaterial* curmqomat = curobj->GetMaterialBegin()->second;
-		//if (curmqomat != NULL) {
-		//	CreateFbxMaterialFromMQOMaterial(pSdkManager, pScene, lNode, lMaterialElement, pmodel, curobj, curmqomat, lMesh->GetPolygonCount());
-		//}
-
-		//int blno;
-		//for (blno = 0; blno < pm3->GetOptMatNum(); blno++) {
-		//	MATERIALBLOCK* currb = pm3->GetMatBlock() + blno;
-		//	CMQOMaterial* curmqomat = currb->mqomat;
-		//	int curtrinum = currb->endface - currb->startface + 1;
-		//	if ((curmqomat != NULL) && (curtrinum > 0)) {
-		//		CreateFbxMaterialFromMQOMaterial(pSdkManager, pScene, lNode, lMaterialElement, pmodel, curobj, curmqomat, curtrinum);
-		//	}
-		//}
-
-		map<int, CMQOMaterial*>::iterator itrmqomat;
-		for (itrmqomat = curobj->GetMaterialBegin(); itrmqomat != curobj->GetMaterialEnd(); itrmqomat++) {
-			CMQOMaterial* curmqomat = itrmqomat->second;
-			if (curmqomat) {
-				CreateFbxMaterialFromMQOMaterial(pSdkManager, pScene, lNode, lMaterialElement, pmodel, curobj, curmqomat);
-			}
-		}
-
-	}
-	else {
-		_ASSERT(0);
-		return 1;
 	}
 
 	return 0;
@@ -2545,9 +2507,10 @@ int	CreateFbxMaterialFromMQOMaterial(FbxManager* pSdkManager, FbxScene* pScene, 
 	//lMaterialElement->GetIndexArray().SetCount(lMesh->GetPolygonCount());
 
 
-	if (curtex) {
-		curtex->Destroy();//2023/11/23
-	}
+	//2023/12/02 curtexは必要　シーン破棄時に破棄される
+	//if (curtex) {
+	//	curtex->Destroy();//2023/11/23
+	//}
 
 	return 0;
 }

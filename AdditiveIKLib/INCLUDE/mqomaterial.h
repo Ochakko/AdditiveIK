@@ -113,7 +113,8 @@ public:
 	void DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
 		const Matrix& mView, const Matrix& mProj,
 		bool isfirstmaterial  = false);
-	void BeginRender(RenderContext& rc, int hasSkin, bool isline, bool zcmpalways);
+	void BeginRender(RenderContext& rc, int hasSkin, bool isline, 
+		bool zcmpalways, bool withalpha);
 
 	void SetBoneMatrix(myRenderer::RENDEROBJ renderobj);
 	//void SetBoneMatrixReq(CBone* srcbone, myRenderer::RENDEROBJ renderobj);
@@ -351,6 +352,9 @@ public:
 	}
 
 public:
+	//###################################################
+	//CreateDecl()内で　頂点フォーマットによって　定数を設定する
+	//###################################################
 	//拡張SRVが設定されるレジスタの開始番号。
 	//const int EXPAND_SRV_REG__START_NO = 10;
 	//const int EXPAND_SRV_REG__START_NO = 6;
@@ -375,7 +379,7 @@ private:
 	//Skeleton* m_skeleton = nullptr;						//スケルトン。
 	//void* m_expandData = nullptr;						//ユーザー拡張データ。
 	//float m_setfl4x4[16 * MAXCLUSTERNUM];
-	float m_setfl4x4[16 * MAXBONENUM];
+	//float m_setfl4x4[16 * MAXBONENUM];
 
 
 	int m_materialno;

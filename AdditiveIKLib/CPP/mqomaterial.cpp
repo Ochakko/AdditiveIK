@@ -235,7 +235,7 @@ int CMQOMaterial::InitParams()
 	m_initpipelineflag = false;
 	m_createdescriptorflag = false;
 	//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
-	ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
+	//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
 	m_updatefl4x4flag = false;
 
 	m_materialno = -1;
@@ -1390,26 +1390,48 @@ void CMQOMaterial::InitShaders(
 	}
 }
 
-void CMQOMaterial::BeginRender(RenderContext& rc, int hasSkin, bool isline, bool zcmpalways)
+void CMQOMaterial::BeginRender(RenderContext& rc, int hasSkin, bool isline, bool zcmpalways, bool withalpha)
 {
 	rc.SetRootSignature(m_rootSignature);
 
-	if (hasSkin) {
-		//
-		if (!zcmpalways) {
-			rc.SetPipelineState(m_transSkinModelPipelineState);
+	if (withalpha) {
+		//######
+		//半透明
+		//######
+		if (hasSkin) {
+			//スキン
+			if (!zcmpalways) {
+				//手前だけ描画
+				rc.SetPipelineState(m_transSkinModelPipelineState);
+			}
+			else {
+				//常に上書き
+				rc.SetPipelineState(m_transSkinAlwaysModelPipelineState);
+			}
 		}
 		else {
-			rc.SetPipelineState(m_transSkinAlwaysModelPipelineState);
+			//非スキン
+			if (!zcmpalways) {
+				//手前だけ描画
+				rc.SetPipelineState(m_transNonSkinModelPipelineState);
+			}
+			else {
+				//常に上書き
+				rc.SetPipelineState(m_transNonSkinAlwaysModelPipelineState);
+			}
 		}
 	}
 	else {
-		//
-		if (!zcmpalways) {
-			rc.SetPipelineState(m_transNonSkinModelPipelineState);
+		//######
+		//不透明
+		//######
+		if (hasSkin) {
+			//スキン
+			rc.SetPipelineState(m_skinModelPipelineState);
 		}
 		else {
-			rc.SetPipelineState(m_transNonSkinAlwaysModelPipelineState);
+			//非スキン
+			rc.SetPipelineState(m_nonSkinModelPipelineState);
 		}
 	}
 
@@ -1658,28 +1680,20 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 
 void CMQOMaterial::SetFl4x4(myRenderer::RENDEROBJ renderobj)
 {
-	//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
-	//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
 	if (renderobj.pmodel && renderobj.mqoobj)
 	{
 		MOTINFO* curmi = 0;
 		int curmotid;
-		double curframe;
+		//double curframe;
 		curmi = renderobj.pmodel->GetCurMotInfo();
 
 		if (renderobj.pmodel->GetTopBone() && (renderobj.pmodel->GetNoBoneFlag() == false) && curmi) {
 			curmotid = curmi->motid;
-			curframe = RoundingTime(curmi->curframe);
-
 			if (curmotid > 0) {
-				//SetBoneMatrixReq(renderobj.pmodel->GetTopBone(false), renderobj);
-				SetBoneMatrix(renderobj);
-
-				//MoveMemory(&(m_cbMatrix.setfl4x4[0]), &(m_setfl4x4[0]), sizeof(float) * 16 * MAXBONENUM);
+				SetBoneMatrix(renderobj);//CModel::SetShaderConst()でセットしたマトリックス配列をコピーするだけ
 			}
 		}
 	}
-
 }
 
 void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
@@ -1783,115 +1797,8 @@ void CMQOMaterial::SetBoneMatrix(myRenderer::RENDEROBJ renderobj)
 	}
 	MOTINFO* curmi = renderobj.pmodel->GetCurMotInfo();
 	if (renderobj.pmodel->GetTopBone() && (renderobj.pmodel->GetNoBoneFlag() == false) && curmi) {
-
-		bool currentlimitdegflag = g_limitdegflag;
-		int curmotid = curmi->motid;
-		double curframe = RoundingTime(curmi->curframe);
-		if (curmotid > 0) {
-			std::map<int, CBone*>::iterator itrbone;
-			for (itrbone = renderobj.pmodel->GetBoneListBegin(); itrbone != renderobj.pmodel->GetBoneListEnd(); itrbone++) {
-				CBone* curbone = itrbone->second;
-				if (curbone) {
-					int matrixindex = curbone->GetMatrixIndex();//2023/11/30
-
-					if (curbone->IsSkeleton() && (matrixindex >= 0) && (matrixindex < MAXBONENUM)) {
-						ChaMatrix clustermat;
-						clustermat.SetIdentity();
-
-						CMotionPoint curmp = curbone->GetCurMp(renderobj.calcslotflag);
-
-						if (renderobj.btflag == 0) {
-							//set4x4[clcnt] = tmpmp.GetWorldMat();
-							clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
-							MoveMemory(&(m_cbMatrix.setfl4x4[16 * matrixindex]),//2023/11/30
-								clustermat.GetDataPtr(), sizeof(float) * 16);
-						}
-						else if (renderobj.btflag == 1) {
-							//物理シミュ
-							//set4x4[clcnt] = curbone->GetBtMat();
-							clustermat = curbone->GetBtMat(renderobj.calcslotflag);
-							MoveMemory(&(m_cbMatrix.setfl4x4[16 * matrixindex]),//2023/11/30
-								clustermat.GetDataPtr(), sizeof(float) * 16);
-						}
-						else if (renderobj.btflag == 2) {
-							//物理IK
-							//set4x4[clcnt] = curbone->GetBtMat();
-							clustermat = curbone->GetBtMat(renderobj.calcslotflag);
-							MoveMemory(&(m_cbMatrix.setfl4x4[16 * matrixindex]),//2023/11/30
-								curbone->GetBtMat().GetDataPtr(), sizeof(float) * 16);
-						}
-						else {
-							//set4x4[clcnt] = tmpmp.GetWorldMat();
-							clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
-							MoveMemory(&(m_cbMatrix.setfl4x4[16 * matrixindex]),//2023/11/30
-								clustermat.GetDataPtr(), sizeof(float) * 16);
-						}
-					}
-				}
-			}
-		}
+		//CModel::SetShaderConst()でセットしたマトリックス配列をコピーするだけ
+		renderobj.pmodel->GetBoneMatrix(m_cbMatrix.setfl4x4, MAXBONENUM);
 	}
 }
 
-
-//void CMQOMaterial::SetBoneMatrixReq(CBone* curbone, myRenderer::RENDEROBJ renderobj)
-//{
-//	if (curbone) {
-//		int matrixindex = curbone->GetMatrixIndex();//2023/11/30
-//
-//		if (curbone->IsSkeleton() && (matrixindex >= 0) && (matrixindex < MAXBONENUM)) {
-//			ChaMatrix clustermat;
-//			clustermat.SetIdentity();
-//
-//			bool currentlimitdegflag = g_limitdegflag;
-//			MOTINFO* curmi = 0;
-//			int curmotid;
-//			double curframe;
-//			curmi = renderobj.pmodel->GetCurMotInfo();
-//			if (renderobj.pmodel->GetTopBone() && (renderobj.pmodel->GetNoBoneFlag() == false) && curmi) {
-//				curmotid = curmi->motid;
-//				curframe = RoundingTime(curmi->curframe);
-//				if (curmotid > 0) {
-//					//CMotionPoint tmpmp = curbone->GetCurMp();
-//					
-//					CMotionPoint curmp = curbone->GetCurMp(renderobj.calcslotflag);
-//
-//					if (renderobj.btflag == 0) {
-//						//set4x4[clcnt] = tmpmp.GetWorldMat();
-//						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
-//						MoveMemory(&(m_cbMatrix.setfl4x4[16 * matrixindex]),//2023/11/30
-//							clustermat.GetDataPtr(), sizeof(float) * 16);
-//					}
-//					else if (renderobj.btflag == 1) {
-//						//物理シミュ
-//						//set4x4[clcnt] = curbone->GetBtMat();
-//						clustermat = curbone->GetBtMat(renderobj.calcslotflag);
-//						MoveMemory(&(m_cbMatrix.setfl4x4[16 * matrixindex]),//2023/11/30
-//							clustermat.GetDataPtr(), sizeof(float) * 16);
-//					}
-//					else if (renderobj.btflag == 2) {
-//						//物理IK
-//						//set4x4[clcnt] = curbone->GetBtMat();
-//						clustermat = curbone->GetBtMat(renderobj.calcslotflag);
-//						MoveMemory(&(m_cbMatrix.setfl4x4[16 * matrixindex]),//2023/11/30
-//							curbone->GetBtMat().GetDataPtr(), sizeof(float) * 16);
-//					}
-//					else {
-//						//set4x4[clcnt] = tmpmp.GetWorldMat();
-//						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
-//						MoveMemory(&(m_cbMatrix.setfl4x4[16 * matrixindex]),//2023/11/30
-//							clustermat.GetDataPtr(), sizeof(float) * 16);
-//					}
-//
-//				}
-//			}
-//		}
-//
-//		if (curbone->GetChild(false)) {
-//			SetBoneMatrixReq(curbone->GetChild(false), renderobj);
-//		}
-//		if (curbone->GetBrother(false)) {
-//			SetBoneMatrixReq(curbone->GetBrother(false), renderobj);
-//		}
-//	}
-//}

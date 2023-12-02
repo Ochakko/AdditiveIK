@@ -1084,7 +1084,8 @@ int CDispObj::RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ rend
 
 	int hasskin = 1;
 	bool isline = false;
-	curmat->BeginRender(rc, hasskin, isline, renderobj.zcmpalways);
+	curmat->BeginRender(rc, hasskin, isline, 
+		renderobj.zcmpalways, renderobj.withalpha);
 
 	//rc.SetVertexBuffer(m_vertexBufferView);
 	////3. インデックスバッファを設定。
@@ -1290,7 +1291,9 @@ int CDispObj::RenderNormalPM3Material(RenderContext& rc, myRenderer::RENDEROBJ r
 
 	int hasskin = 0;
 	bool isline = false;
-	curmat->BeginRender(rc, hasskin, isline, renderobj.zcmpalways);
+	curmat->BeginRender(rc, hasskin, isline, 
+		renderobj.zcmpalways, renderobj.withalpha);
+
 	//rc.SetDescriptorHeap(m_descriptorHeap);
 
 	////1. 頂点バッファを設定。
@@ -1359,7 +1362,8 @@ int CDispObj::RenderLine(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 		//定数バッファの設定、更新など描画の共通処理を実行する。
 		curmat->DrawCommon(rc, renderobj, mView, mProj);
 
-		curmat->BeginRender(rc, hasskin, isline, renderobj.zcmpalways);
+		curmat->BeginRender(rc, hasskin, isline, 
+			renderobj.zcmpalways, renderobj.withalpha);
 		//rc.SetDescriptorHeap(m_descriptorHeap);
 
 		//1. 頂点バッファを設定。

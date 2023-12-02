@@ -5715,6 +5715,8 @@ void OnFrameRender(myRenderer::RenderingEngine& re, RenderContext& rc, double fT
 				btflag = 1;
 			}
 
+			bool calcslotflag = false;
+			s_chascene->SetBoneMatrixForShader(btflag, calcslotflag);
 			s_chascene->RenderModels(re, lightflag, diffusemult, btflag);
 
 			if (s_ground) {

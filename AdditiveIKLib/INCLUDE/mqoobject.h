@@ -70,7 +70,7 @@ public:
 	int Dump();
 
 	int MakePolymesh3(bool fbxfileflag, ID3D12Device* pdev, CModel* pmodel);
-	int MakePolymesh4( ID3D12Device* pdev );
+	int MakePolymesh4(ID3D12Device* pdev, CModel* pmodel);
 	int MakeExtLine(CModel* srcmodel);
 	int MakeDispObj( ID3D12Device* pdev, int hasbone );
 //	int MakeExtLine( map<int,CMQOMaterial*>& srcmat );
@@ -299,28 +299,15 @@ public:
 		m_uvbuf = srcval;
 	};
 
-	int GetMaterialSize(){
-		return (int)m_material.size();
+	int GetOnLoadMaterialSize(){
+		return (int)m_onloadmaterial.size();
 	};
-	CMQOMaterial* GetMaterial( int srcindex ){
-		std::map<int, CMQOMaterial*>::iterator itrfind;
-		itrfind = m_material.find(srcindex);
-		if (itrfind != m_material.end()) {
-			return itrfind->second;
-		}
-		else {
-			return nullptr;
-		}
+	void AddOnLoadMaterial(CMQOMaterial* srcmat) {
+		m_onloadmaterial.push_back(srcmat);
 	};
-	std::map<int,CMQOMaterial*>::iterator GetMaterialBegin(){
-		return m_material.begin();
-	};
-	std::map<int,CMQOMaterial*>::iterator GetMaterialEnd(){
-		return m_material.end();
-	};
-	void SetMaterial( int srcindex, CMQOMaterial* srcval ){
-		m_material[ srcindex ] = srcval;
-	};
+	CMQOMaterial* GetOnLoadMaterialByMaterialNo( int srcno );
+	CMQOMaterial* GetOnLoadMaterialByIndex(int srcindex);
+	CMQOMaterial* GetOnLoadMaterialByName(const char* srcname);
 
 	int GetClusterSize(){
 		return (int)m_cluster.size();
@@ -439,7 +426,10 @@ private:
 	ChaVector3* m_normal;
 	int m_uvleng;
 	ChaVector2* m_uvbuf;
-	std::map<int, CMQOMaterial*> m_material;
+
+	//マテリアルを読み込み順で保存　CMQOMaterial*は外部ポインタ　破棄しない
+	std::vector<CMQOMaterial*> m_onloadmaterial;
+
 	std::vector<CBone*> m_cluster;//中身のCBone*は外部メモリ
 
 	std::map<std::string,int> m_findshape;

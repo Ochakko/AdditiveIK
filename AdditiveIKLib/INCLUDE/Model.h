@@ -368,11 +368,9 @@ public:
  * @fn
  * SetShaderConst
  * @breaf シェーダーの定数をセットする。アニメーション、ライト、テクスチャなどのシェーダー定数をDirect3Dの描画命令を呼び出す前にセットしておく。
- * @param (CMQOObject* srcobj) IN 描画対象のCMQOObject。
- * @param (int btflag = 0) IN bulletのシミュレーション中かどうかのフラグ。
  * @return 成功したら０。
  */
-	int SetShaderConst(CMQOObject* srcobj, int btflag = 0, bool calcslotflag = false);
+	int SetShaderConst(int btflag = 0, bool calcslotflag = false);
 
 /**
  * @fn
@@ -971,11 +969,11 @@ public:
 		std::map<CBone*, CBone*>& sconvbonemap,
 		int (*srcAddMotionFunc)(const WCHAR* wfilename, double srcmotleng));
 
+	int CreateMaterialTexture();
 
 private:
 	int InitParams();
 	int DestroyObjs();
-	int CreateMaterialTexture();
 
 	MODELBOUND CalcBoneBound();
 	int AddModelBound( MODELBOUND* mb, MODELBOUND* addmb );
@@ -1699,7 +1697,9 @@ public: //accesser
 	CMQOMaterial* GetMQOMaterial( int srcmatno );
 	int ExistMQOMaterial(CMQOMaterial* srcmat);
 	void SetMQOMaterial(const char* srcname, CMQOMaterial* srcmat);
-	CMQOMaterial* GetMQOMaterialByName(std::string srcname );
+	CMQOMaterial* GetMQOMaterialByName(std::string srcname );//マテリアル名
+	CMQOMaterial* GetMQOMaterialByIndex(int srcmatindex);//配列インデックス
+	CMQOMaterial* GetMQOMaterialByMaterialNo(int srcmatno);//マテリアル番号
 
 
 	CMQOObject* GetMQOObjectByName(const char* findpattern);
@@ -2300,6 +2300,15 @@ public: //accesser
 		return m_updatefl4x4flag;
 	}
 
+	void GetBoneMatrix(float* dstfl4x4, int dstmatrixnum) 
+	{
+		if (!dstfl4x4 || (dstmatrixnum != MAXBONENUM)) {
+			_ASSERT(0);
+			return;
+		}
+		MoveMemory(dstfl4x4, m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
+	};
+
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];
@@ -2433,7 +2442,8 @@ private:
 
 	int m_loadingmotionnum;//ローディング中のfbxに含まれるモーションの数
 
-	float m_setfl4x4[16 * MAXCLUSTERNUM];//SetShaderConst用
+	//float m_setfl4x4[16 * MAXCLUSTERNUM];//SetShaderConst用
+	float m_setfl4x4[16 * MAXBONENUM];//SetShaderConst用
 
 	std::vector<CBone*> m_iktargetbonevec;
 

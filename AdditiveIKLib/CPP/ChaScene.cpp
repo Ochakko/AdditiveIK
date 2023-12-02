@@ -1288,3 +1288,16 @@ void ChaScene::WaitSetBtMotionFinished()
 	}
 
 }
+
+
+int ChaScene::SetBoneMatrixForShader(int btflag, bool calcslotflag)
+{
+	vector<MODELELEM>::iterator itrmodel;
+	for (itrmodel = m_modelindex.begin(); itrmodel != m_modelindex.end(); itrmodel++) {
+		CModel* curmodel = itrmodel->modelptr;
+		if (curmodel) {
+			curmodel->SetShaderConst(btflag, calcslotflag);
+		}
+	}
+	return 0;
+}

@@ -14,6 +14,8 @@
 #include <BntFile.h>
 
 #include <Model.h>
+#include <polymesh3.h>
+#include <polymesh4.h>
 #include <MQOObject.h>
 #include <MQOMaterial.h>
 #include <polymesh4.h>
@@ -273,14 +275,35 @@ typedef struct tag_bntmaterial
 	char tex[256];
 }BNTMATERIAL;
 */
-	CMQOMaterial* curmate = 0;
-	map<int, CMQOMaterial*>::iterator itrmate = srcobj->GetMaterialBegin();
-	if( itrmate != srcobj->GetMaterialEnd() ){
-		curmate = itrmate->second;
-	}else{
-		_ASSERT( 0 );
+	if (!srcobj) {
+		_ASSERT(0);
 		return 1;
 	}
+
+	if (!m_me.modelptr) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	//###########################
+	//bntファイルは
+	//1obuject 1material仕様
+	//１番目のマテリアルについて処理
+	//###########################
+
+	CMQOMaterial* curmate = 0;
+	if (srcobj->GetOnLoadMaterialSize() > 0) {
+		curmate = srcobj->GetOnLoadMaterialByIndex(0);
+	}
+
+	//CMQOMaterial* curmate = 0;
+	//map<int, CMQOMaterial*>::iterator itrmate = srcobj->GetMaterialBegin();
+	//if( itrmate != srcobj->GetMaterialEnd() ){
+	//	curmate = itrmate->second;
+	//}else{
+	//	_ASSERT( 0 );
+	//	return 1;
+	//}
 	if( !curmate ){
 		_ASSERT( 0 );
 		return 1;

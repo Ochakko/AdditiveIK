@@ -26,7 +26,7 @@ public:
 	CPolyMesh4();
 	~CPolyMesh4();
 
-	int CreatePM4( int normalmappingmode, int pointnum, int facenum, int normalleng, int uvleng, ChaVector3* pointptr, ChaVector3* nptr, ChaVector2* uvptr, CMQOFace* faceptr, std::map<int,CMQOMaterial*>& srcmat );
+	int CreatePM4(int normalmappingmode, int pointnum, int facenum, int normalleng, int uvleng, ChaVector3* pointptr, ChaVector3* nptr, ChaVector2* uvptr, CMQOFace* faceptr, CModel* pmodel);
 	
 	int ChkAlphaNum( std::map<int,CMQOMaterial*>& srcmat );
 	int CalcBound();
@@ -44,7 +44,7 @@ private:
 	void DestroyObjs();
 
 	int SetTriFace( CMQOFace* faceptr, int* numptr );
-	int SetOptV( PM3DISPV* optv, int* pleng, int* matnum, std::map<int,CMQOMaterial*>& srcmat );
+	int SetOptV(PM3DISPV* optv, int* pleng, int* matnum, CModel* pmodel);
 	int SetLastValidVno();
 
 public:

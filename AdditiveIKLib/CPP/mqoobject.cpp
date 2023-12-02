@@ -106,7 +106,7 @@ CMQOObject::~CMQOObject()
 	//		delete delmat;
 	//	}
 	//}
-	m_material.clear();
+	m_onloadmaterial.clear();
 
 }
 
@@ -257,6 +257,7 @@ void CMQOObject::InitParams()
 	m_meshmat.SetIdentity();
 
 	m_latermaterial.clear();
+	m_onloadmaterial.clear();
 
 //	next = 0;
 }
@@ -845,7 +846,6 @@ int CMQOObject::MakePolymesh3(bool fbxfileflag, ID3D12Device* pdev, CModel* pmod
 	else {
 		
 		//fbxfile
-		//materialはCMQOObjectのm_material
 		//uvはCMQOObjectのm_uvbuf
 
 		if (m_uvbuf ) {
@@ -871,16 +871,20 @@ int CMQOObject::MakePolymesh3(bool fbxfileflag, ID3D12Device* pdev, CModel* pmod
 		}
 
 		//2023/12/01
-		//注意　コメントには　mqoobjのmaterialを渡すと書いてあるが　pmodelを渡す
+		//マテリアル情報のために　pmodelを渡す
 		CallF(m_pm3->CreatePM3(fbxfileflag, vert_count, face_count, m_facet, pointptr, faceptr, pmodel, m_multmat), return 1);
 	}
 	
 	return 0;
 }
 
-int CMQOObject::MakePolymesh4( ID3D12Device* pdev )
+int CMQOObject::MakePolymesh4(ID3D12Device* pdev, CModel* pmodel)
 {
-	if( !m_pointbuf || !m_facebuf )
+	if (!pmodel) {
+		_ASSERT(0);
+		return 1;
+	}
+	if(!m_pointbuf || !m_facebuf)
 		return 0;
 
 	if( m_pm4 ){
@@ -898,7 +902,7 @@ int CMQOObject::MakePolymesh4( ID3D12Device* pdev )
 		return 1;
 	}
 
-	CallF( m_pm4->CreatePM4( m_normalmappingmode, m_vertex, m_face, m_normalleng, m_uvleng, m_pointbuf, m_normal, m_uvbuf, m_facebuf, m_material ), return 1 );
+	CallF( m_pm4->CreatePM4(m_normalmappingmode, m_vertex, m_face, m_normalleng, m_uvleng, m_pointbuf, m_normal, m_uvbuf, m_facebuf, pmodel), return 1 );
 	
 	return 0;
 }
@@ -2533,16 +2537,21 @@ int CMQOObject::IncludeTransparent(float multalpha, bool* pfound_noalpha, bool* 
 			bool found_noalpha = false;
 			int laternum = GetLaterMaterialNum();
 
-			std::map<int, CMQOMaterial*>::iterator itrmaterial;
-			for (itrmaterial = GetMaterialBegin(); itrmaterial != GetMaterialEnd(); itrmaterial++) {
-				CMQOMaterial* curmaterial = itrmaterial->second;
-				if (curmaterial) {
 
-					////for debug
-					//if (curmaterial->GetTex() &&
-					//	((strstr(curmaterial->GetTex(), "_13.png") != 0) || (strstr(curmaterial->GetTex(), "_15.png") != 0))) {
-					//	int dbgflag1 = 1;
-					//}
+			//int materialnum = m_pm4->GetDispMaterialNum();
+			//int materialcnt;
+			//for (materialcnt = 0; materialcnt < materialnum; materialcnt++) {
+			//	CMQOMaterial* curmaterial = nullptr;
+			//	int curoffset = 0;
+			//	int curtrinum = 0;
+			//	int result0 = m_pm4->GetDispMaterial(materialcnt, &curmaterial, &curoffset, &curtrinum);
+			//	if ((result0 == 0) && (curmaterial != nullptr) && (curtrinum > 0)) {
+			int materialnum = GetOnLoadMaterialSize();
+			int matindex;
+			for(matindex = 0; matindex < materialnum; matindex++){
+				CMQOMaterial* curmaterial = nullptr;
+				curmaterial = GetOnLoadMaterialByIndex(matindex);
+				if (curmaterial) {
 
 					if (curmaterial->GetTransparent() != 0) {//2023/09/24 VRoidの裾(すそ)透過対策
 						found_alpha = true;
@@ -2572,6 +2581,45 @@ int CMQOObject::IncludeTransparent(float multalpha, bool* pfound_noalpha, bool* 
 					}
 				}
 			}
+			//std::map<int, CMQOMaterial*>::iterator itrmaterial;
+			//for (itrmaterial = GetMaterialBegin(); itrmaterial != GetMaterialEnd(); itrmaterial++) {
+			//	CMQOMaterial* curmaterial = itrmaterial->second;
+			//	if (curmaterial) {
+
+			//		////for debug
+			//		//if (curmaterial->GetTex() &&
+			//		//	((strstr(curmaterial->GetTex(), "_13.png") != 0) || (strstr(curmaterial->GetTex(), "_15.png") != 0))) {
+			//		//	int dbgflag1 = 1;
+			//		//}
+
+			//		if (curmaterial->GetTransparent() != 0) {//2023/09/24 VRoidの裾(すそ)透過対策
+			//			found_alpha = true;
+			//		}
+			//		else {
+			//			if ((curmaterial->GetDif4F().w * multalpha) <= 0.99999f) {
+			//				found_alpha = true;
+			//			}
+			//			else {
+			//				found_noalpha = true;
+			//			}
+			//		}
+
+			//		//latermaterialチェック
+			//		if ((found_alpha == false) && (laternum > 0)) {
+			//			int laterno;
+			//			for (laterno = 0; laterno < laternum; laterno++) {
+			//				LATERMATERIAL chklatermat = GetLaterMaterial(laterno);
+			//				if (chklatermat.pmaterial && (chklatermat.pmaterial == curmaterial)) {
+			//					found_alpha = true;
+			//				}
+			//			}
+			//		}
+
+			//		if (found_noalpha && found_alpha) {
+			//			break;
+			//		}
+			//	}
+			//}
 			*pfound_noalpha = found_noalpha;
 			*pfound_alpha = found_alpha;
 			retresult = 0;
@@ -2710,3 +2758,47 @@ bool CMQOObject::ExistInLaterMaterial(CMQOMaterial* srcmat)
 
 	return false;
 }
+
+
+CMQOMaterial* CMQOObject::GetOnLoadMaterialByMaterialNo(int srcno) {
+	int materialnum = GetOnLoadMaterialSize();
+	int matindex;
+	for (matindex = 0; matindex < materialnum; matindex++) {
+		CMQOMaterial* curmqomat = nullptr;
+		curmqomat = m_onloadmaterial[matindex];
+		if (curmqomat && (curmqomat->GetMaterialNo() == srcno)) {
+			return curmqomat;
+		}
+	}
+	return nullptr;
+};
+CMQOMaterial* CMQOObject::GetOnLoadMaterialByIndex(int srcindex) {
+	if ((srcindex >= 0) && (srcindex < GetOnLoadMaterialSize())) {
+		return m_onloadmaterial[srcindex];
+	}
+	else {
+		return nullptr;
+	}
+};
+CMQOMaterial* CMQOObject::GetOnLoadMaterialByName(const char* srcname) {
+
+	CMQOMaterial* retmqomat = nullptr;
+
+	if (srcname && srcname[0]) {
+		int materialnum = GetOnLoadMaterialSize();
+		int matindex;
+		for (matindex = 0; matindex < materialnum; matindex++) {
+			CMQOMaterial* curmqomat = nullptr;
+			curmqomat = m_onloadmaterial[matindex];
+			if (curmqomat && (strcmp(curmqomat->GetName(), srcname) == 0)) {
+				retmqomat = curmqomat;
+				break;
+			}
+		}
+	}
+	else {
+		retmqomat = nullptr;
+	}
+	return retmqomat;
+};
+

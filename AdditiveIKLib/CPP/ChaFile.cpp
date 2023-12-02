@@ -356,30 +356,28 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, m
 		//################################
 		//FBXファイルの場合のテクスチャ
 		//################################
-		map<int, CMQOObject*>::iterator itrobj;
-		for (itrobj = curmodel->GetMqoObjectBegin(); itrobj != curmodel->GetMqoObjectEnd(); itrobj++) {
-			CMQOObject* curobj = itrobj->second;
-			if (curobj) {
-				map<int, CMQOMaterial*>::iterator itr;
-				for (itr = curobj->GetMaterialBegin(); itr != curobj->GetMaterialEnd(); itr++) {
-					CMQOMaterial* curmqomat = itr->second;
-					if (curmqomat && *(curmqomat->GetTex()) && (curmqomat->GetTexID() >= 0)) {
-						WCHAR wtex[256] = { 0L };
-						MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, curmqomat->GetTex(), 256, wtex, 256);
-						swprintf_s(srcpath, MAX_PATH, L"%s\\%s", curmodel->GetDirName(), wtex);
-						swprintf_s(dstpath, MAX_PATH, L"%s\\%s", charafolder, wtex);
 
-						int chksame = wcscmp(curmodel->GetDirName(), charafolder);
-						if (chksame != 0) {
-							bcancel = FALSE;
-							bret = CopyFileEx(srcpath, dstpath, NULL, NULL, &bcancel, 0);
-							if (bret == 0) {
-								_ASSERT(0);
-								return 1;
-							}
+
+		int materialnum = curmodel->GetMQOMaterialSize();
+		int matindex;
+		for (matindex = 0; matindex < materialnum; matindex++) {
+			CMQOMaterial* curmqomat = curmodel->GetMQOMaterialByIndex(matindex);
+			if (curmqomat) {
+				if (curmqomat && *(curmqomat->GetTex()) && (curmqomat->GetTexID() >= 0)) {
+					WCHAR wtex[256] = { 0L };
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, curmqomat->GetTex(), 256, wtex, 256);
+					swprintf_s(srcpath, MAX_PATH, L"%s\\%s", curmodel->GetDirName(), wtex);
+					swprintf_s(dstpath, MAX_PATH, L"%s\\%s", charafolder, wtex);
+
+					int chksame = wcscmp(curmodel->GetDirName(), charafolder);
+					if (chksame != 0) {
+						bcancel = FALSE;
+						bret = CopyFileEx(srcpath, dstpath, NULL, NULL, &bcancel, 0);
+						if (bret == 0) {
+							_ASSERT(0);
+							return 1;
 						}
 					}
-
 				}
 			}
 		}

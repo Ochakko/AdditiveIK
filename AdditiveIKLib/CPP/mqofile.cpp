@@ -857,12 +857,22 @@ int CMQOFile::ReadMaterial( MQOSTATE* nextstate )
 
 			char materialname[256] = { 0 };
 			strcpy_s(materialname, 256, newmat->GetName());
+
+			if (currentobj) {
+				//オブジェクト毎に　読み込み順にマテリアルを保存
+				CMQOMaterial* onloadmaterial = currentobj->GetOnLoadMaterialByName(materialname);
+				if (!onloadmaterial) {
+					currentobj->AddOnLoadMaterial(newmat);
+				}
+
+			}
+
 			if (m_modelptr) {
 				CMQOMaterial* chkmat = m_modelptr->GetMQOMaterialByName(materialname);
 				if (chkmat) {
 					//CModelに登録済
 					//新しいmqomatは削除して　登録済のchkmatを使う
-					delete newmat;
+					delete newmat;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  newobj 削除　以降で使わないように注意　！！！
 					newmat = 0;
 				}
 				else {
@@ -870,6 +880,8 @@ int CMQOFile::ReadMaterial( MQOSTATE* nextstate )
 					m_modelptr->SetMQOMaterial(materialname, newmat);
 				}
 			}
+
+
 		}
 	}
 	
