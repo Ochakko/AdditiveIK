@@ -44,8 +44,9 @@ private:
 	void DestroyObjs();
 
 	int SetTriFace( CMQOFace* faceptr, int* numptr );
-	int SetOptV(PM3DISPV* optv, int* pleng, int* matnum, CModel* pmodel);
+	int SetOptV(BINORMALDISPV* optv, int* pleng, int* matnum, CModel* pmodel);
 	int SetLastValidVno();
+	int BuildTangentAndBinormal();
 
 public:
 	//accesser
@@ -93,7 +94,7 @@ public:
 		return m_infbone;
 	};
 
-	PM3DISPV* GetPm3Disp(){
+	BINORMALDISPV* GetPm3Disp(){
 		return m_dispv;
 	};
 
@@ -233,7 +234,7 @@ private:
 	CInfBone* m_infbone;//orgpointnum’·
 
 	int m_optleng;
-	PM3DISPV* m_dispv;
+	BINORMALDISPV* m_dispv;
 	PM3INF* m_pm3inf;
 	int*	m_dispindex;
 	int*	m_orgindex;

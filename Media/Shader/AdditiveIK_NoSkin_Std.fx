@@ -1,3 +1,13 @@
+///////////////////////////////////////////////////
+// 定数
+///////////////////////////////////////////////////
+//static const int NUM_DIRECTIONAL_LIGHT = 4; // ディレクションライトの本数
+static const int NUM_DIRECTIONAL_LIGHT = 2; // ディレクションライトの本数
+static const float PI = 3.1415926f; // π
+//static const float POW = 15.0;
+//static const float POW = 0.2f;
+static const float POW = 5.0f;
+
 ///////////////////////////////////////////
 // 構造体
 ///////////////////////////////////////////
@@ -6,6 +16,8 @@ struct SVSInWithoutBone
 {
     float4 pos      : POSITION;
     float4 normal   : NORMAL;
+    float4 tangent : TANGENT;
+    float4 biNormal : BINORMAL; 
     float2 uv       : TEXCOORD0;
 };
 
@@ -39,23 +51,33 @@ cbuffer ModelCb : register(b0)
     float4x4 mView;
     float4x4 mProj;
     float4 diffusemult;
-    //float4x4 mBoneMat[1000];
 };
 
+// ディレクションライト
+struct DirectionalLight
+{
+    float4 direction; // ライトの方向
+    float4 color; // ライトの色
+};
+
+// ライト用の定数バッファー
+cbuffer LightCb : register(b1)
+{
+    DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
+    float4 eyePos; // カメラの視点
+    float4 specPow; // スペキュラの絞り
+    float4 ambientLight; // 環境光
+};
 
 ///////////////////////////////////////////
 // シェーダーリソース
 ///////////////////////////////////////////
 // モデルテクスチャ
 Texture2D<float4> g_diffusetex : register(t0);
-Texture2D<float4> g_albedotex : register(t1);
-
-// step-3 深度テクスチャにアクセスするための変数を追加
-//Texture2D<float4> g_depthTexture : register(t10);
-
-///////////////////////////////////////////
+Texture2D<float4> g_albedo : register(t1); // アルベドマップ
+Texture2D<float4> g_normalMap : register(t2); // 法線マップ
+Texture2D<float4> g_metallicSmoothMap : register(t3); // メタリックスムースマップ。rにメタリック、aにスムース
 // サンプラーステート
-///////////////////////////////////////////
 sampler g_sampler : register(s0);
 
 /// <summary>
@@ -101,7 +123,7 @@ float4 PSMain(SPSIn psIn) : SV_Target0
 {
     // 普通にテクスチャを
     //return g_texture.Sample(g_sampler, psIn.uv);
-    float4 albedocol = g_albedotex.Sample(g_sampler, psIn.uv);
+    float4 albedocol = g_albedo.Sample(g_sampler, psIn.uv);
     float2 diffuseuv = { 0.5f, 0.5f };
     float4 diffusecol = g_diffusetex.Sample(g_sampler, diffuseuv);
     //texcol.w = 1.0f;

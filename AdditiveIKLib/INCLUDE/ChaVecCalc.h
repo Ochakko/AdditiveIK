@@ -248,6 +248,7 @@ public:
 
 
 	void Clamp(float srcmin, float srcmax);
+	void Normalize();
 
 	//int GetRowNo(int srcrowno);
 
@@ -315,7 +316,13 @@ public:
 	bool operator!= (const ChaVector4 &v) const { return !(*this == v); };
 
 	void Clamp(float srcmin, float srcmax);
-
+	void Normalize();
+	void SetZeroVec4(float srcw) {
+		x = 0.0f;
+		y = 0.0f;
+		z = 0.0f;
+		w = srcw;
+	};
 
 //#ifdef CONVD3DX11
 	DirectX::XMFLOAT4 D3DX();
@@ -484,193 +491,6 @@ public:
 	float z;
 	float w;
 };
-
-
-
-#ifdef CHACALCCPP
-BOOL IsValidNewEul(ChaVector3 srcneweul, ChaVector3 srcbefeul);
-ChaMatrix ChaMatrixTranspose(ChaMatrix srcmat);
-
-double ChaVector3LengthDbl(ChaVector3* psrc);
-double ChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2);
-
-
-//float ChaVector3LengthDbl(ChaVector3* psrc);
-void ChaVector3Normalize(ChaVector3* pdst, const ChaVector3* psrc);
-float ChaVector3Dot(const ChaVector3* psrc1, const ChaVector3* psrc2);
-void ChaVector3Cross(ChaVector3* pdst, const ChaVector3* psrc1, const ChaVector3* psrc2);
-void ChaVector3TransformCoord(ChaVector3* pdst, ChaVector3* psrc, ChaMatrix* pmat);
-double ChaVector3LengthSqDbl(ChaVector3* psrc);
-ChaVector3* ChaVector3TransformNormal(ChaVector3 *pOut, const ChaVector3* pV, const ChaMatrix* pM);
-
-
-void ChaMatrixIdentity(ChaMatrix* pdst);
-ChaMatrix ChaMatrixScale(ChaMatrix srcmat);//スケール成分だけの行列にする
-ChaMatrix ChaMatrixRot(ChaMatrix srcmat);//回転成分だけの行列にする
-ChaMatrix ChaMatrixTra(ChaMatrix srcmat);//移動成分だけの行列にする
-ChaVector3 ChaMatrixScaleVec(ChaMatrix srcmat);//スケール成分のベクトルを取得
-ChaVector3 ChaMatrixRotVec(ChaMatrix srcmat, int notmodify180flag);//回転成分のベクトルを取得
-ChaVector3 ChaMatrixTraVec(ChaMatrix srcmat);//移動成分のベクトルを取得
-CQuaternion ChaMatrix2Q(ChaMatrix srcmat);//ChaMatrixを受け取って　CQuaternionを返す
-void ChaMatrixNormalizeRot(ChaMatrix* pdst);
-void ChaMatrixInverse(ChaMatrix* pdst, float* pdet, const ChaMatrix* psrc);
-void ChaMatrixTranslation(ChaMatrix* pdst, float srcx, float srcy, float srcz);
-void ChaMatrixTranspose(ChaMatrix* pdst, ChaMatrix* psrc);
-void ChaMatrixRotationAxis(ChaMatrix* pdst, ChaVector3* srcaxis, float srcrad);
-void ChaMatrixScaling(ChaMatrix* pdst, float srcx, float srcy, float srcz);
-void ChaMatrixLookAtRH(ChaMatrix* dstviewmat, ChaVector3* camEye, ChaVector3* camtar, ChaVector3* camUpVec);
-ChaMatrix* ChaMatrixOrthoOffCenterRH(ChaMatrix* pOut, float l, float r, float t, float b, float zn, float zf);
-ChaMatrix* ChaMatrixPerspectiveFovRH(ChaMatrix* pOut, float fovY, float Aspect, float zn, float zf);
-ChaMatrix* ChaMatrixRotationYawPitchRoll(ChaMatrix* pOut, float srcyaw, float srcpitch, float srcroll);
-ChaMatrix* ChaMatrixRotationX(ChaMatrix* pOut, float srcrad);
-ChaMatrix* ChaMatrixRotationY(ChaMatrix* pOut, float srcrad);
-ChaMatrix* ChaMatrixRotationZ(ChaMatrix* pOut, float srcrad);
-
-
-const ChaMatrix* ChaMatrixRotationQuaternion(ChaMatrix* dstmat, CQuaternion* srcq);
-
-void CQuaternionIdentity(CQuaternion* dstq);
-CQuaternion CQuaternionInv(CQuaternion srcq);
-
-
-//int qToEulerAxis(CQuaternion axisQ, CQuaternion* srcq, ChaVector3* Euler);
-//int modifyEuler(ChaVector3* eulerA, ChaVector3* eulerB);// new, old
-
-double vecDotVec(ChaVector3* vec1, ChaVector3* vec2);
-double lengthVec(ChaVector3* vec);
-double aCos(double dot);
-int vec3RotateY(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
-int vec3RotateX(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
-int vec3RotateZ(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
-
-int GetRound(float srcval);
-int IsInitRot(ChaMatrix srcmat);
-int IsSameMat(ChaMatrix srcmat1, ChaMatrix srcmat2);
-int IsSameEul(ChaVector3 srceul1, ChaVector3 srceul2);
-
-//void InitAngleLimit(ANGLELIMIT* dstal);
-//void SetAngleLimitOff(ANGLELIMIT* dstal);
-
-
-bool IsJustEqualTime(double srctime1, double srctime2);
-double RoundingTime(double srctime);
-int IntTime(double srctime);
-bool IsEqualRoundingTime(double srctime1, double srctime2);
-int Float2Int(float srcfloat);
-
-
-double VecLength(ChaVector3 srcvec);
-void GetSRTMatrix(ChaMatrix srcmat, ChaVector3* svecptr, ChaMatrix* rmatptr, ChaVector3* tvecptr);
-void GetSRTMatrix2(ChaMatrix srcmat, ChaMatrix* smatptr, ChaMatrix* rmatptr, ChaMatrix* tmatptr);
-void GetSRTandTraAnim(ChaMatrix srcmat, ChaMatrix srcnodemat, ChaMatrix* smatptr, ChaMatrix* rmatptr, ChaMatrix* tmatptr, ChaMatrix* tanimmatptr);//For Local Posture
-ChaMatrix ChaMatrixFromSRT(bool sflag, bool tflag, ChaMatrix srcnodemat, ChaMatrix* srcsmat, ChaMatrix* srcrmat, ChaMatrix* srctmat);//For Local Posture
-ChaMatrix ChaMatrixFromSRTraAnim(bool sflag, bool tanimflag, ChaMatrix srcnodemat, ChaMatrix* srcsmat, ChaMatrix* srcrmat, ChaMatrix* srctanimmat);//For Local Posture
-ChaMatrix GetS0RTMatrix(ChaMatrix srcmat);//拡大縮小を初期化したRT行列を返す
-ChaMatrix ChaMatrixKeepScale(ChaMatrix srcmat, ChaVector3 srcsvec);
-
-ChaMatrix TransZeroMat(ChaMatrix srcmat);
-ChaMatrix ChaMatrixFromBtMat3x3(btMatrix3x3* srcmat3x3);
-ChaMatrix ChaMatrixFromBtTransform(btMatrix3x3* srcmat3x3, btVector3* srcpipot);
-ChaMatrix ChaMatrixInv(ChaMatrix srcmat);
-
-
-CQuaternion QMakeFromBtMat3x3(btMatrix3x3* eulmat);
-
-ChaMatrix MakeRotMatFromChaMatrix(ChaMatrix srcmat);
-
-ChaMatrix ChaMatrixFromFbxAMatrix(FbxAMatrix srcmat);
-ChaMatrix CalcAxisMatX(ChaVector3 vecx, ChaVector3 srcpos, ChaMatrix srcmat);
-
-#else
-extern BOOL IsValidNewEul(ChaVector3 srcneweul, ChaVector3 srcbefeul);
-extern ChaMatrix ChaMatrixTranspose(ChaMatrix srcmat);
-
-extern double ChaVector3LengthDbl(ChaVector3* psrc);
-extern double ChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2);
-
-//extern float ChaVector3LengthDbl(ChaVector3* psrc);
-extern void ChaVector3Normalize(ChaVector3* pdst, const ChaVector3* psrc);
-extern float ChaVector3Dot(const ChaVector3* psrc1, const ChaVector3* psrc2);
-extern void ChaVector3Cross(ChaVector3* pdst, const ChaVector3* psrc1, const ChaVector3* psrc2);
-extern void ChaVector3TransformCoord(ChaVector3* pdst, ChaVector3* psrc, ChaMatrix* pmat);
-extern double ChaVector3LengthSqDbl(ChaVector3* psrc);
-extern ChaVector3* ChaVector3TransformNormal(ChaVector3 *pOut, const ChaVector3* pV, const ChaMatrix* pM);
-
-extern void ChaMatrixIdentity(ChaMatrix* pdst);
-extern ChaMatrix ChaMatrixScale(ChaMatrix srcmat);//スケール成分だけの行列にする
-extern ChaMatrix ChaMatrixRot(ChaMatrix srcmat);//回転成分だけの行列にする
-extern ChaMatrix ChaMatrixTra(ChaMatrix srcmat);//移動成分だけの行列にする
-extern ChaVector3 ChaMatrixScaleVec(ChaMatrix srcmat);//スケール成分のベクトルを取得
-extern ChaVector3 ChaMatrixRotVec(ChaMatrix srcmat, int notmodify180flag);//回転成分のベクトルを取得
-extern ChaVector3 ChaMatrixTraVec(ChaMatrix srcmat);//移動成分のベクトルを取得
-extern CQuaternion ChaMatrix2Q(ChaMatrix srcmat);//ChaMatrixを受け取って　CQuaternionを返す
-extern void ChaMatrixNormalizeRot(ChaMatrix* pdst);
-extern void ChaMatrixInverse(ChaMatrix* pdst, float* pdet, const ChaMatrix* psrc);
-extern void ChaMatrixTranslation(ChaMatrix* pdst, float srcx, float srcy, float srcz);
-extern void ChaMatrixTranspose(ChaMatrix* pdst, ChaMatrix* psrc);
-extern void ChaMatrixRotationAxis(ChaMatrix* pdst, ChaVector3* srcaxis, float srcrad);
-extern void ChaMatrixScaling(ChaMatrix* pdst, float srcx, float srcy, float srcz);
-extern void ChaMatrixLookAtRH(ChaMatrix* dstviewmat, ChaVector3* camEye, ChaVector3* camtar, ChaVector3* camUpVec);
-extern ChaMatrix* ChaMatrixOrthoOffCenterRH(ChaMatrix* pOut, float l, float r, float t, float b, float zn, float zf);
-extern ChaMatrix* ChaMatrixPerspectiveFovRH(ChaMatrix* pOut, float fovY, float Aspect, float zn, float zf);
-extern ChaMatrix* ChaMatrixRotationYawPitchRoll(ChaMatrix* pOut, float srcyaw, float srcpitch, float srcroll);
-extern ChaMatrix* ChaMatrixRotationX(ChaMatrix* pOut, float srcrad);
-extern ChaMatrix* ChaMatrixRotationY(ChaMatrix* pOut, float srcrad);
-extern ChaMatrix* ChaMatrixRotationZ(ChaMatrix* pOut, float srcrad);
-
-extern const ChaMatrix* ChaMatrixRotationQuaternion(ChaMatrix* dstmat, CQuaternion* srcq);
-
-extern void CQuaternionIdentity(CQuaternion* dstq);
-extern CQuaternion CQuaternionInv(CQuaternion srcq);
-
-
-//extern int qToEulerAxis(CQuaternion axisQ, CQuaternion* srcq, ChaVector3* Euler);
-//extern int modifyEuler(ChaVector3* eulerA, ChaVector3* eulerB);// new, old
-
-extern double vecDotVec(ChaVector3* vec1, ChaVector3* vec2);
-extern double lengthVec(ChaVector3* vec);
-extern double aCos(double dot);
-extern int vec3RotateY(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
-extern int vec3RotateX(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
-extern int vec3RotateZ(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
-
-extern int GetRound(float srcval);
-extern int IsInitRot(ChaMatrix srcmat);
-extern int IsSameMat(ChaMatrix srcmat1, ChaMatrix srcmat2);
-extern int IsSameEul(ChaVector3 srceul1, ChaVector3 srceul2);
-
-//extern void InitAngleLimit(ANGLELIMIT* dstal);
-//extern void SetAngleLimitOff(ANGLELIMIT* dstal);
-
-
-extern bool IsJustEqualTime(double srctime1, double srctime2);
-extern double RoundingTime(double srctime);
-extern int IntTime(double srctime);
-extern bool IsEqualRoundingTime(double srctime1, double srctime2);
-extern int Float2Int(float srcfloat);
-
-extern double VecLength(ChaVector3 srcvec);
-extern void GetSRTMatrix(ChaMatrix srcmat, ChaVector3* svecptr, ChaMatrix* rmatptr, ChaVector3* tvecptr);
-extern void GetSRTMatrix2(ChaMatrix srcmat, ChaMatrix* smatptr, ChaMatrix* rmatptr, ChaMatrix* tmatptr);
-extern void GetSRTandTraAnim(ChaMatrix srcmat, ChaMatrix srcnodemat, ChaMatrix* smatptr, ChaMatrix* rmatptr, ChaMatrix* tmatptr, ChaMatrix* tanimmatptr);//For Local Posture
-extern ChaMatrix ChaMatrixFromSRT(bool sflag, bool tflag, ChaMatrix srcnodemat, ChaMatrix* srcsmat, ChaMatrix* srcrmat, ChaMatrix* srctmat);//For Local Posture
-extern ChaMatrix ChaMatrixFromSRTraAnim(bool sflag, bool tanimflag, ChaMatrix srcnodemat, ChaMatrix* srcsmat, ChaMatrix* srcrmat, ChaMatrix* srctanimmat);//For Local Posture
-extern ChaMatrix GetS0RTMatrix(ChaMatrix srcmat);//拡大縮小を初期化したRT行列を返す
-extern ChaMatrix ChaMatrixKeepScale(ChaMatrix srcmat, ChaVector3 srcsvec);
-
-extern ChaMatrix TransZeroMat(ChaMatrix srcmat);
-extern ChaMatrix ChaMatrixFromBtMat3x3(btMatrix3x3* srcmat3x3);
-extern ChaMatrix ChaMatrixFromBtTransform(btMatrix3x3* srcmat3x3, btVector3* srcpipot);
-extern ChaMatrix ChaMatrixInv(ChaMatrix srcmat);
-
-
-extern CQuaternion QMakeFromBtMat3x3(btMatrix3x3* eulmat);
-
-extern ChaMatrix MakeRotMatFromChaMatrix(ChaMatrix srcmat);
-extern ChaMatrix ChaMatrixFromFbxAMatrix(FbxAMatrix srcmat);
-extern ChaMatrix CalcAxisMatX(ChaVector3 vecx, ChaVector3 srcpos, ChaMatrix srcmat);
-
-#endif
 
 
 //struct
@@ -843,12 +663,33 @@ typedef  struct tag_pm3optv
 
 }PM3OPTV;
 
-typedef  struct tag_pm3dispv
+//typedef  struct tag_pm3dispv
+//{
+//	ChaVector4		pos;
+//	ChaVector4		normal;
+//	ChaVector2		uv;
+//	tag_pm3dispv() {
+//		pos.x = 0.0f;
+//		pos.y = 0.0f;
+//		pos.z = 0.0f;
+//		pos.w = 1.0f;
+//		normal.x = 0.0f;
+//		normal.y = 0.0f;
+//		normal.z = 0.0f;
+//		normal.w = 0.0f;
+//		uv.x = 0.0f;
+//		uv.y = 0.0f;
+//	};
+//}PM3DISPV;
+
+typedef struct tag_binormaldispv
 {
 	ChaVector4		pos;
 	ChaVector4		normal;
+	ChaVector4		tangent;
+	ChaVector4		binormal;
 	ChaVector2		uv;
-	tag_pm3dispv() {
+	tag_binormaldispv() {
 		pos.x = 0.0f;
 		pos.y = 0.0f;
 		pos.z = 0.0f;
@@ -857,10 +698,20 @@ typedef  struct tag_pm3dispv
 		normal.y = 0.0f;
 		normal.z = 0.0f;
 		normal.w = 0.0f;
+		tangent.x = 0.0f;
+		tangent.y = 0.0f;
+		tangent.z = 0.0f;
+		tangent.w = 0.0f;
+		binormal.x = 0.0f;
+		binormal.y = 0.0f;
+		binormal.z = 0.0f;
+		binormal.w = 0.0f;
 		uv.x = 0.0f;
 		uv.y = 0.0f;
 	};
-}PM3DISPV;
+}BINORMALDISPV;
+
+
 
 typedef  struct tag_extlinev
 {
@@ -893,6 +744,195 @@ typedef  struct tag_modelbound
 	};
 }MODELBOUND;
 
+
+
+
+#ifdef CHACALCCPP
+BOOL IsValidNewEul(ChaVector3 srcneweul, ChaVector3 srcbefeul);
+ChaMatrix ChaMatrixTranspose(ChaMatrix srcmat);
+
+int CalcTangentAndBinormal(BINORMALDISPV* vert_0, BINORMALDISPV* vert_1, BINORMALDISPV* vert_2);
+double ChaVector3LengthDbl(ChaVector3* psrc);
+double ChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2);
+
+
+//float ChaVector3LengthDbl(ChaVector3* psrc);
+void ChaVector3Normalize(ChaVector3* pdst, const ChaVector3* psrc);
+float ChaVector3Dot(const ChaVector3* psrc1, const ChaVector3* psrc2);
+void ChaVector3Cross(ChaVector3* pdst, const ChaVector3* psrc1, const ChaVector3* psrc2);
+void ChaVector3TransformCoord(ChaVector3* pdst, ChaVector3* psrc, ChaMatrix* pmat);
+double ChaVector3LengthSqDbl(ChaVector3* psrc);
+ChaVector3* ChaVector3TransformNormal(ChaVector3 *pOut, const ChaVector3* pV, const ChaMatrix* pM);
+
+
+void ChaMatrixIdentity(ChaMatrix* pdst);
+ChaMatrix ChaMatrixScale(ChaMatrix srcmat);//スケール成分だけの行列にする
+ChaMatrix ChaMatrixRot(ChaMatrix srcmat);//回転成分だけの行列にする
+ChaMatrix ChaMatrixTra(ChaMatrix srcmat);//移動成分だけの行列にする
+ChaVector3 ChaMatrixScaleVec(ChaMatrix srcmat);//スケール成分のベクトルを取得
+ChaVector3 ChaMatrixRotVec(ChaMatrix srcmat, int notmodify180flag);//回転成分のベクトルを取得
+ChaVector3 ChaMatrixTraVec(ChaMatrix srcmat);//移動成分のベクトルを取得
+CQuaternion ChaMatrix2Q(ChaMatrix srcmat);//ChaMatrixを受け取って　CQuaternionを返す
+void ChaMatrixNormalizeRot(ChaMatrix* pdst);
+void ChaMatrixInverse(ChaMatrix* pdst, float* pdet, const ChaMatrix* psrc);
+void ChaMatrixTranslation(ChaMatrix* pdst, float srcx, float srcy, float srcz);
+void ChaMatrixTranspose(ChaMatrix* pdst, ChaMatrix* psrc);
+void ChaMatrixRotationAxis(ChaMatrix* pdst, ChaVector3* srcaxis, float srcrad);
+void ChaMatrixScaling(ChaMatrix* pdst, float srcx, float srcy, float srcz);
+void ChaMatrixLookAtRH(ChaMatrix* dstviewmat, ChaVector3* camEye, ChaVector3* camtar, ChaVector3* camUpVec);
+ChaMatrix* ChaMatrixOrthoOffCenterRH(ChaMatrix* pOut, float l, float r, float t, float b, float zn, float zf);
+ChaMatrix* ChaMatrixPerspectiveFovRH(ChaMatrix* pOut, float fovY, float Aspect, float zn, float zf);
+ChaMatrix* ChaMatrixRotationYawPitchRoll(ChaMatrix* pOut, float srcyaw, float srcpitch, float srcroll);
+ChaMatrix* ChaMatrixRotationX(ChaMatrix* pOut, float srcrad);
+ChaMatrix* ChaMatrixRotationY(ChaMatrix* pOut, float srcrad);
+ChaMatrix* ChaMatrixRotationZ(ChaMatrix* pOut, float srcrad);
+
+
+const ChaMatrix* ChaMatrixRotationQuaternion(ChaMatrix* dstmat, CQuaternion* srcq);
+
+void CQuaternionIdentity(CQuaternion* dstq);
+CQuaternion CQuaternionInv(CQuaternion srcq);
+
+
+//int qToEulerAxis(CQuaternion axisQ, CQuaternion* srcq, ChaVector3* Euler);
+//int modifyEuler(ChaVector3* eulerA, ChaVector3* eulerB);// new, old
+
+double vecDotVec(ChaVector3* vec1, ChaVector3* vec2);
+double lengthVec(ChaVector3* vec);
+double aCos(double dot);
+int vec3RotateY(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
+int vec3RotateX(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
+int vec3RotateZ(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
+
+int GetRound(float srcval);
+int IsInitRot(ChaMatrix srcmat);
+int IsSameMat(ChaMatrix srcmat1, ChaMatrix srcmat2);
+int IsSameEul(ChaVector3 srceul1, ChaVector3 srceul2);
+
+//void InitAngleLimit(ANGLELIMIT* dstal);
+//void SetAngleLimitOff(ANGLELIMIT* dstal);
+
+
+bool IsJustEqualTime(double srctime1, double srctime2);
+double RoundingTime(double srctime);
+int IntTime(double srctime);
+bool IsEqualRoundingTime(double srctime1, double srctime2);
+int Float2Int(float srcfloat);
+
+
+double VecLength(ChaVector3 srcvec);
+void GetSRTMatrix(ChaMatrix srcmat, ChaVector3* svecptr, ChaMatrix* rmatptr, ChaVector3* tvecptr);
+void GetSRTMatrix2(ChaMatrix srcmat, ChaMatrix* smatptr, ChaMatrix* rmatptr, ChaMatrix* tmatptr);
+void GetSRTandTraAnim(ChaMatrix srcmat, ChaMatrix srcnodemat, ChaMatrix* smatptr, ChaMatrix* rmatptr, ChaMatrix* tmatptr, ChaMatrix* tanimmatptr);//For Local Posture
+ChaMatrix ChaMatrixFromSRT(bool sflag, bool tflag, ChaMatrix srcnodemat, ChaMatrix* srcsmat, ChaMatrix* srcrmat, ChaMatrix* srctmat);//For Local Posture
+ChaMatrix ChaMatrixFromSRTraAnim(bool sflag, bool tanimflag, ChaMatrix srcnodemat, ChaMatrix* srcsmat, ChaMatrix* srcrmat, ChaMatrix* srctanimmat);//For Local Posture
+ChaMatrix GetS0RTMatrix(ChaMatrix srcmat);//拡大縮小を初期化したRT行列を返す
+ChaMatrix ChaMatrixKeepScale(ChaMatrix srcmat, ChaVector3 srcsvec);
+
+ChaMatrix TransZeroMat(ChaMatrix srcmat);
+ChaMatrix ChaMatrixFromBtMat3x3(btMatrix3x3* srcmat3x3);
+ChaMatrix ChaMatrixFromBtTransform(btMatrix3x3* srcmat3x3, btVector3* srcpipot);
+ChaMatrix ChaMatrixInv(ChaMatrix srcmat);
+
+
+CQuaternion QMakeFromBtMat3x3(btMatrix3x3* eulmat);
+
+ChaMatrix MakeRotMatFromChaMatrix(ChaMatrix srcmat);
+
+ChaMatrix ChaMatrixFromFbxAMatrix(FbxAMatrix srcmat);
+ChaMatrix CalcAxisMatX(ChaVector3 vecx, ChaVector3 srcpos, ChaMatrix srcmat);
+
+#else
+extern BOOL IsValidNewEul(ChaVector3 srcneweul, ChaVector3 srcbefeul);
+extern ChaMatrix ChaMatrixTranspose(ChaMatrix srcmat);
+
+extern int CalcTangentAndBinormal(BINORMALDISPV* vert_0, BINORMALDISPV* vert_1, BINORMALDISPV* vert_2);
+extern double ChaVector3LengthDbl(ChaVector3* psrc);
+extern double ChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2);
+
+//extern float ChaVector3LengthDbl(ChaVector3* psrc);
+extern void ChaVector3Normalize(ChaVector3* pdst, const ChaVector3* psrc);
+extern float ChaVector3Dot(const ChaVector3* psrc1, const ChaVector3* psrc2);
+extern void ChaVector3Cross(ChaVector3* pdst, const ChaVector3* psrc1, const ChaVector3* psrc2);
+extern void ChaVector3TransformCoord(ChaVector3* pdst, ChaVector3* psrc, ChaMatrix* pmat);
+extern double ChaVector3LengthSqDbl(ChaVector3* psrc);
+extern ChaVector3* ChaVector3TransformNormal(ChaVector3 *pOut, const ChaVector3* pV, const ChaMatrix* pM);
+
+extern void ChaMatrixIdentity(ChaMatrix* pdst);
+extern ChaMatrix ChaMatrixScale(ChaMatrix srcmat);//スケール成分だけの行列にする
+extern ChaMatrix ChaMatrixRot(ChaMatrix srcmat);//回転成分だけの行列にする
+extern ChaMatrix ChaMatrixTra(ChaMatrix srcmat);//移動成分だけの行列にする
+extern ChaVector3 ChaMatrixScaleVec(ChaMatrix srcmat);//スケール成分のベクトルを取得
+extern ChaVector3 ChaMatrixRotVec(ChaMatrix srcmat, int notmodify180flag);//回転成分のベクトルを取得
+extern ChaVector3 ChaMatrixTraVec(ChaMatrix srcmat);//移動成分のベクトルを取得
+extern CQuaternion ChaMatrix2Q(ChaMatrix srcmat);//ChaMatrixを受け取って　CQuaternionを返す
+extern void ChaMatrixNormalizeRot(ChaMatrix* pdst);
+extern void ChaMatrixInverse(ChaMatrix* pdst, float* pdet, const ChaMatrix* psrc);
+extern void ChaMatrixTranslation(ChaMatrix* pdst, float srcx, float srcy, float srcz);
+extern void ChaMatrixTranspose(ChaMatrix* pdst, ChaMatrix* psrc);
+extern void ChaMatrixRotationAxis(ChaMatrix* pdst, ChaVector3* srcaxis, float srcrad);
+extern void ChaMatrixScaling(ChaMatrix* pdst, float srcx, float srcy, float srcz);
+extern void ChaMatrixLookAtRH(ChaMatrix* dstviewmat, ChaVector3* camEye, ChaVector3* camtar, ChaVector3* camUpVec);
+extern ChaMatrix* ChaMatrixOrthoOffCenterRH(ChaMatrix* pOut, float l, float r, float t, float b, float zn, float zf);
+extern ChaMatrix* ChaMatrixPerspectiveFovRH(ChaMatrix* pOut, float fovY, float Aspect, float zn, float zf);
+extern ChaMatrix* ChaMatrixRotationYawPitchRoll(ChaMatrix* pOut, float srcyaw, float srcpitch, float srcroll);
+extern ChaMatrix* ChaMatrixRotationX(ChaMatrix* pOut, float srcrad);
+extern ChaMatrix* ChaMatrixRotationY(ChaMatrix* pOut, float srcrad);
+extern ChaMatrix* ChaMatrixRotationZ(ChaMatrix* pOut, float srcrad);
+
+extern const ChaMatrix* ChaMatrixRotationQuaternion(ChaMatrix* dstmat, CQuaternion* srcq);
+
+extern void CQuaternionIdentity(CQuaternion* dstq);
+extern CQuaternion CQuaternionInv(CQuaternion srcq);
+
+
+//extern int qToEulerAxis(CQuaternion axisQ, CQuaternion* srcq, ChaVector3* Euler);
+//extern int modifyEuler(ChaVector3* eulerA, ChaVector3* eulerB);// new, old
+
+extern double vecDotVec(ChaVector3* vec1, ChaVector3* vec2);
+extern double lengthVec(ChaVector3* vec);
+extern double aCos(double dot);
+extern int vec3RotateY(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
+extern int vec3RotateX(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
+extern int vec3RotateZ(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
+
+extern int GetRound(float srcval);
+extern int IsInitRot(ChaMatrix srcmat);
+extern int IsSameMat(ChaMatrix srcmat1, ChaMatrix srcmat2);
+extern int IsSameEul(ChaVector3 srceul1, ChaVector3 srceul2);
+
+//extern void InitAngleLimit(ANGLELIMIT* dstal);
+//extern void SetAngleLimitOff(ANGLELIMIT* dstal);
+
+
+extern bool IsJustEqualTime(double srctime1, double srctime2);
+extern double RoundingTime(double srctime);
+extern int IntTime(double srctime);
+extern bool IsEqualRoundingTime(double srctime1, double srctime2);
+extern int Float2Int(float srcfloat);
+
+extern double VecLength(ChaVector3 srcvec);
+extern void GetSRTMatrix(ChaMatrix srcmat, ChaVector3* svecptr, ChaMatrix* rmatptr, ChaVector3* tvecptr);
+extern void GetSRTMatrix2(ChaMatrix srcmat, ChaMatrix* smatptr, ChaMatrix* rmatptr, ChaMatrix* tmatptr);
+extern void GetSRTandTraAnim(ChaMatrix srcmat, ChaMatrix srcnodemat, ChaMatrix* smatptr, ChaMatrix* rmatptr, ChaMatrix* tmatptr, ChaMatrix* tanimmatptr);//For Local Posture
+extern ChaMatrix ChaMatrixFromSRT(bool sflag, bool tflag, ChaMatrix srcnodemat, ChaMatrix* srcsmat, ChaMatrix* srcrmat, ChaMatrix* srctmat);//For Local Posture
+extern ChaMatrix ChaMatrixFromSRTraAnim(bool sflag, bool tanimflag, ChaMatrix srcnodemat, ChaMatrix* srcsmat, ChaMatrix* srcrmat, ChaMatrix* srctanimmat);//For Local Posture
+extern ChaMatrix GetS0RTMatrix(ChaMatrix srcmat);//拡大縮小を初期化したRT行列を返す
+extern ChaMatrix ChaMatrixKeepScale(ChaMatrix srcmat, ChaVector3 srcsvec);
+
+extern ChaMatrix TransZeroMat(ChaMatrix srcmat);
+extern ChaMatrix ChaMatrixFromBtMat3x3(btMatrix3x3* srcmat3x3);
+extern ChaMatrix ChaMatrixFromBtTransform(btMatrix3x3* srcmat3x3, btVector3* srcpipot);
+extern ChaMatrix ChaMatrixInv(ChaMatrix srcmat);
+
+
+extern CQuaternion QMakeFromBtMat3x3(btMatrix3x3* eulmat);
+
+extern ChaMatrix MakeRotMatFromChaMatrix(ChaMatrix srcmat);
+extern ChaMatrix ChaMatrixFromFbxAMatrix(FbxAMatrix srcmat);
+extern ChaMatrix CalcAxisMatX(ChaVector3 vecx, ChaVector3 srcpos, ChaMatrix srcmat);
+
+#endif
 
 class N3SM;
 

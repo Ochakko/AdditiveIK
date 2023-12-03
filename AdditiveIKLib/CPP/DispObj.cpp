@@ -310,25 +310,44 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone)
 		if (curmat) {
 			curmat->CreateDecl(pdev, vertextype);
 
-			curmat->InitShadersAndPipelines(
-				vertextype,
-				"../Media/Shader/AdditiveIK.fx",
-				"VSMainWithoutBone",
-				"VSMainWithoutBone",
-				"PSMain",
-				colorBufferFormat,
-				curmat->NUM_SRV_ONE_MATERIAL,
-				curmat->NUM_CBV_ONE_MATERIAL,
-				0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
-				0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
-				D3D12_FILTER_MIN_MAG_MIP_LINEAR
-			);
+			//if (curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) {
+			//if (curmat->GetAlbedoTex()[0]) {
+				//PBR
+				curmat->InitShadersAndPipelines(
+					vertextype,
+					"../Media/Shader/AdditiveIK_NoSkin_PBR.fx",
+					"VSMainWithoutBone",
+					"VSMainWithoutBone",
+					"PSMain",
+					colorBufferFormat,
+					curmat->NUM_SRV_ONE_MATERIAL,
+					curmat->NUM_CBV_ONE_MATERIAL,
+					0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
+					0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
+					D3D12_FILTER_MIN_MAG_MIP_LINEAR
+				);
+			//}
+			//else {
+			//	//Standard
+			//	curmat->InitShadersAndPipelines(
+			//		vertextype,
+			//		"../Media/Shader/AdditiveIK_NoSkin_Std.fx",
+			//		"VSMainWithoutBone",
+			//		"VSMainWithoutBone",
+			//		"PSMain",
+			//		colorBufferFormat,
+			//		curmat->NUM_SRV_ONE_MATERIAL,
+			//		curmat->NUM_CBV_ONE_MATERIAL,
+			//		0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
+			//		0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
+			//		D3D12_FILTER_MIN_MAG_MIP_LINEAR
+			//	);
+			//}
+
 
 			rootindex++;
 		}
 	}
-
-
 
 	return 0;
 }
@@ -371,19 +390,39 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone )
 
 				curmat->CreateDecl(pdev, vertextype);
 
-				curmat->InitShadersAndPipelines(
-					vertextype,
-					"../Media/Shader/AdditiveIK_Skin.fx",//Skin
-					"VSMainWithBone",
-					"VSMainWithBone",
-					"PSMain",
-					colorBufferFormat,
-					curmat->NUM_SRV_ONE_MATERIAL,
-					curmat->NUM_CBV_ONE_MATERIAL,
-					0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
-					0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
-					D3D12_FILTER_MIN_MAG_MIP_LINEAR
-				);
+				if (curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) {
+				//if (curmat->GetAlbedoTex()[0]) {
+					//PBR
+					curmat->InitShadersAndPipelines(
+						vertextype,
+						"../Media/Shader/AdditiveIK_Skin_PBR.fx",//Skin
+						"VSMainWithBone",
+						"VSMainWithBone",
+						"PSMain",
+						colorBufferFormat,
+						curmat->NUM_SRV_ONE_MATERIAL,
+						curmat->NUM_CBV_ONE_MATERIAL,
+						0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
+						0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
+						D3D12_FILTER_MIN_MAG_MIP_LINEAR
+					);
+				}
+				else {
+				//	//Standard
+					curmat->InitShadersAndPipelines(
+						vertextype,
+						"../Media/Shader/AdditiveIK_Skin_Std.fx",//Skin
+						"VSMainWithBone",
+						"VSMainWithBone",
+						"PSMain",
+						colorBufferFormat,
+						curmat->NUM_SRV_ONE_MATERIAL,
+						curmat->NUM_CBV_ONE_MATERIAL,
+						0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
+						0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
+						D3D12_FILTER_MIN_MAG_MIP_LINEAR
+					);
+				}
 				rootindex++;
 			}
 		}
@@ -429,7 +468,7 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 
 		curmat->InitShadersAndPipelines(
 			vertextype,
-			"../Media/Shader/AdditiveIK.fx",
+			"../Media/Shader/AdditiveIK_NoSkin_Std.fx",
 			"VSMainExtLine",
 			"VSMainExtLine",
 			"PSMainExtLine",
@@ -538,32 +577,34 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 
 	UINT elemleng, infleng;
 
-	elemleng = sizeof(PM3DISPV);
 	infleng = sizeof(PM3INF);
 
 	int pmvleng, pmfleng;
 	PM3INF* pmib = 0;
-	PM3DISPV* pmv = 0;
+	BINORMALDISPV* pm3v = 0;
+	BINORMALDISPV* pm4v = 0;
 	EXTLINEV* plinev = 0;
 	DWORD vbsize;
 	DWORD stride;
 	if (m_pm3) {
+		elemleng = sizeof(BINORMALDISPV);
 		pmvleng = m_pm3->GetOptLeng();
 		pmfleng = m_pm3->GetFaceNum();
 		pmib = 0;
-		pmv = m_pm3->GetDispV();
+		pm3v = m_pm3->GetDispV();
 
-		stride = sizeof(PM3DISPV);
+		stride = sizeof(BINORMALDISPV);
 		vbsize = pmvleng * stride;
 	}
 	else if (m_pm4) {
+		elemleng = sizeof(BINORMALDISPV);
 		pmvleng = m_pm4->GetOptLeng();
 		pmfleng = m_pm4->GetFaceNum();
 		pmib = m_pm4->GetPm3Inf();
-		pmv = m_pm4->GetPm3Disp();
+		pm4v = m_pm4->GetPm3Disp();
 
-		//stride = sizeof(PM3DISPV);
-		stride = sizeof(PM3DISPV) + sizeof(PM3INF);
+		//stride = sizeof(BINORMALDISPV);
+		stride = sizeof(BINORMALDISPV) + sizeof(PM3INF);
 
 
 		vbsize = pmvleng * stride;
@@ -572,7 +613,8 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 		pmvleng = m_extline->GetLineNum() * 2;
 		pmfleng = m_extline->GetLineNum();
 		pmib = 0;
-		pmv = 0;
+		pm3v = 0;
+		pm4v = 0;
 		plinev = m_extline->GetExtLineV();
 
 		stride = sizeof(EXTLINEV);
@@ -609,17 +651,17 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 		uint8_t* pData;
 		m_vertexBuffer->Map(0, nullptr, (void**)&pData);
 		if (m_pm3) {
-			memcpy(pData, pmv, m_vertexBufferView.SizeInBytes);
+			memcpy(pData, pm3v, m_vertexBufferView.SizeInBytes);
 		}
 		else if (m_pm4) {
 			DWORD vno;
 			for (vno = 0; vno < (DWORD)pmvleng; vno++) {
 				uint8_t* pdest = pData + vno * stride;
-				PM3DISPV* curv = pmv + vno;
+				BINORMALDISPV* curv = pm4v + vno;
 				PM3INF* curinf = pmib + vno;
 
-				memcpy(pdest, curv, sizeof(PM3DISPV));
-				memcpy(pdest + sizeof(PM3DISPV), curinf, sizeof(PM3INF));
+				memcpy(pdest, curv, sizeof(BINORMALDISPV));
+				memcpy(pdest + sizeof(BINORMALDISPV), curinf, sizeof(PM3INF));
 			}
 			//memcpy(pData, pmv, m_vertexBufferView.SizeInBytes);
 
@@ -924,10 +966,10 @@ int CDispObj::RenderNormal(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 	////定数バッファの設定、更新など描画の共通処理を実行する。
 	//DrawCommon(rc, renderobj, mView, mProj);
 
-	//1. 頂点バッファを設定。
-	rc.SetVertexBuffer(m_vertexBufferView);
-	//3. インデックスバッファを設定。
-	rc.SetIndexBuffer(m_indexBufferView);
+	////1. 頂点バッファを設定。
+	//rc.SetVertexBuffer(m_vertexBufferView);
+	////3. インデックスバッファを設定。
+	//rc.SetIndexBuffer(m_indexBufferView);
 
 	bool isfirstmaterial = true;
 	int materialcnt;
@@ -1087,9 +1129,9 @@ int CDispObj::RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ rend
 	curmat->BeginRender(rc, hasskin, isline, 
 		renderobj.zcmpalways, renderobj.withalpha);
 
-	//rc.SetVertexBuffer(m_vertexBufferView);
-	////3. インデックスバッファを設定。
-	//rc.SetIndexBuffer(m_indexBufferView);
+	rc.SetVertexBuffer(m_vertexBufferView);
+	//3. インデックスバッファを設定。
+	rc.SetIndexBuffer(m_indexBufferView);
 
 	//4. ドローコールを実行。
 	rc.DrawIndexed(curtrinum * 3, curoffset);
@@ -1134,10 +1176,10 @@ int CDispObj::RenderNormalPM3(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 	//DrawCommon(rc, renderobj, mView, mProj);
 	//rc.SetDescriptorHeap(m_descriptorHeap);//BeginRender()より後で呼ばないとエラー
 
-	//1. 頂点バッファを設定。
-	rc.SetVertexBuffer(m_vertexBufferView);
-	//3. インデックスバッファを設定。
-	rc.SetIndexBuffer(m_indexBufferView);
+	////1. 頂点バッファを設定。
+	//rc.SetVertexBuffer(m_vertexBufferView);
+	////3. インデックスバッファを設定。
+	//rc.SetIndexBuffer(m_indexBufferView);
 
 
 	//マテリアルごとにドロー。
@@ -1296,10 +1338,10 @@ int CDispObj::RenderNormalPM3Material(RenderContext& rc, myRenderer::RENDEROBJ r
 
 	//rc.SetDescriptorHeap(m_descriptorHeap);
 
-	////1. 頂点バッファを設定。
-	//rc.SetVertexBuffer(m_vertexBufferView);
-	////3. インデックスバッファを設定。
-	//rc.SetIndexBuffer(m_indexBufferView);
+	//1. 頂点バッファを設定。
+	rc.SetVertexBuffer(m_vertexBufferView);
+	//3. インデックスバッファを設定。
+	rc.SetIndexBuffer(m_indexBufferView);
 
 	//4. ドローコールを実行。
 	rc.DrawIndexed(curtrinum * 3, curoffset);

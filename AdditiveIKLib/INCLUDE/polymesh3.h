@@ -59,8 +59,8 @@ private:
 	int AddSmFace( N3P* n3p1, N3P* n3p2 );
 	//int CalcSMNormal();
 
-	int SetOptV(PM3DISPV* optv, int* pleng, int* matnum, CModel* pmodel);
-
+	int SetOptV(BINORMALDISPV* optv, int* pleng, int* matnum, CModel* pmodel);
+	int BuildTangentAndBinormal();
 
 /***
 typedef struct tag_verface
@@ -161,7 +161,7 @@ public:
 		return m_optmatnum;
 	};
 
-	PM3DISPV* GetDispV(){
+	BINORMALDISPV* GetDispV(){
 		return m_dispv;
 	};
 
@@ -198,7 +198,7 @@ private:
 
 	int m_optleng;
 	int m_optmatnum;
-	PM3DISPV* m_dispv;
+	BINORMALDISPV* m_dispv;
 	int*	m_dispindex;
 	int m_createoptflag;
 

@@ -223,7 +223,7 @@ typedef struct tag_bntvertex
 		}
 //vertex
 		int curvnum = curpm4->GetOptLeng();
-		PM3DISPV* curdispv = curpm4->GetPm3Disp();
+		BINORMALDISPV* curdispv = curpm4->GetPm3Disp();
 		PM3INF* curinf = curpm4->GetPm3Inf();
 		if (!curinf || !curdispv) {
 			_ASSERT(0);
@@ -376,12 +376,12 @@ typedef struct tag_bntcluster
 	return 0;
 }
 
-int CBntFile::WriteBntVertex( PM3DISPV* srcpm3dispv, PM3INF* srcpm3inf )
+int CBntFile::WriteBntVertex(BINORMALDISPV* srcpm3dispv, PM3INF* srcpm3inf )
 {
 /*
 typedef struct tag_bntvertex
 {
-	PM3DISPV dispv;
+	BINORMALDISPV dispv;
 	PM3INF inf;
 }BNTVERTEX;
 */

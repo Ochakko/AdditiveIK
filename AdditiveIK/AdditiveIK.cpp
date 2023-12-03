@@ -21228,12 +21228,13 @@ int SetSelectState()
 		return 0;//!!!!!!!!!!!!!!!!!!!!!!!
 	}
 
-	float hirate = 1.0f;
+	//float hirate = 1.0f;
+	float hirate = 1.25f;
 	float lowrate = 0.6f;
 
 	//float hia = 0.3f;
-	//float hia = 0.7f;
-	float hia = 0.3f;
+	float hia = 0.7f;
+	//float hia = 0.3f;
 	float lowa = 0.3f;
 
 	ChaVector4 hidiffusemult = ChaVector4(hirate, hirate, hirate, hia);

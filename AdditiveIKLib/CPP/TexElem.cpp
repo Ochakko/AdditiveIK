@@ -83,7 +83,9 @@ int CTexElem::DestroyObjs()
 int CTexElem::CreateTexData(ID3D12Device* pdev)
 {
 	if (m_texture) {
-		return 0;
+		//return 0;
+		delete m_texture;
+		m_texture = nullptr;
 	}
 
 

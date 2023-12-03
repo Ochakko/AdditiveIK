@@ -65,7 +65,7 @@ typedef struct tag_bntvertex
 	ChaVector3		normal;
 	ChaVector2		uv;
 */
-	PM3DISPV dispv;
+	BINORMALDISPV dispv;
 /*
 	float weight[4];
 	int boneindex[4];
@@ -108,7 +108,7 @@ private:
 	int WriteObject( CModel* srcmodel );
 	int WriteBntObjInfo( CMQOObject* srcobj );
 	int WriteBntCluster( CBone* srcbone );
-	int WriteBntVertex( PM3DISPV* srcpm3disp, PM3INF* srcpm3inf );
+	int WriteBntVertex( BINORMALDISPV* srcpm3disp, PM3INF* srcpm3inf );
 	int WriteBntIndex( int* srcindex, int indexnum );
 
 	int WriteOneMotion(bool limitdegflag, CModel* srcmodel);

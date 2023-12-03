@@ -119,6 +119,20 @@ MaterialBankをモデル(fbx, mqo)ごとに持つように修正<br>
 Testフォルダをgit add. モデルはVRoid.<br>
 <br>
 <br>
+2023/12/04<br>
+PBR対応開始<br>
+スキンメッシュについてはノーマルマップがある場合にPBR、無い場合はStandardで描画<br>
+背景などの非スキンメッシュについては全部PBR<br>
+調整などはこれから<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
 <br>
 <br>
 <br>

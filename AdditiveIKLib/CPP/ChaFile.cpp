@@ -363,7 +363,23 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, m
 		for (matindex = 0; matindex < materialnum; matindex++) {
 			CMQOMaterial* curmqomat = curmodel->GetMQOMaterialByIndex(matindex);
 			if (curmqomat) {
-				if (curmqomat && *(curmqomat->GetTex()) && (curmqomat->GetTexID() >= 0)) {
+				if (*(curmqomat->GetAlbedoTex()) && (curmqomat->GetAlbedoTexID() >= 0)) {
+					WCHAR wtex[256] = { 0L };
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, curmqomat->GetAlbedoTex(), 256, wtex, 256);
+					swprintf_s(srcpath, MAX_PATH, L"%s\\%s", curmodel->GetDirName(), wtex);
+					swprintf_s(dstpath, MAX_PATH, L"%s\\%s", charafolder, wtex);
+
+					int chksame = wcscmp(curmodel->GetDirName(), charafolder);
+					if (chksame != 0) {
+						bcancel = FALSE;
+						bret = CopyFileEx(srcpath, dstpath, NULL, NULL, &bcancel, 0);
+						if (bret == 0) {
+							_ASSERT(0);
+							//return 1;
+						}
+					}
+				}
+				else if (*(curmqomat->GetTex())) {
 					WCHAR wtex[256] = { 0L };
 					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, curmqomat->GetTex(), 256, wtex, 256);
 					swprintf_s(srcpath, MAX_PATH, L"%s\\%s", curmodel->GetDirName(), wtex);
@@ -375,7 +391,41 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, m
 						bret = CopyFileEx(srcpath, dstpath, NULL, NULL, &bcancel, 0);
 						if (bret == 0) {
 							_ASSERT(0);
-							return 1;
+							//return 1;
+						}
+					}
+				}
+				
+				if (*(curmqomat->GetNormalTex()) && (curmqomat->GetNormalTexID() >= 0)) {
+					WCHAR wtex[256] = { 0L };
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, curmqomat->GetNormalTex(), 256, wtex, 256);
+					swprintf_s(srcpath, MAX_PATH, L"%s\\%s", curmodel->GetDirName(), wtex);
+					swprintf_s(dstpath, MAX_PATH, L"%s\\%s", charafolder, wtex);
+
+					int chksame = wcscmp(curmodel->GetDirName(), charafolder);
+					if (chksame != 0) {
+						bcancel = FALSE;
+						bret = CopyFileEx(srcpath, dstpath, NULL, NULL, &bcancel, 0);
+						if (bret == 0) {
+							_ASSERT(0);
+							//return 1;
+						}
+					}
+				}
+
+				if (*(curmqomat->GetMetalTex()) && (curmqomat->GetMetalTexID() >= 0)) {
+					WCHAR wtex[256] = { 0L };
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, curmqomat->GetMetalTex(), 256, wtex, 256);
+					swprintf_s(srcpath, MAX_PATH, L"%s\\%s", curmodel->GetDirName(), wtex);
+					swprintf_s(dstpath, MAX_PATH, L"%s\\%s", charafolder, wtex);
+
+					int chksame = wcscmp(curmodel->GetDirName(), charafolder);
+					if (chksame != 0) {
+						bcancel = FALSE;
+						bret = CopyFileEx(srcpath, dstpath, NULL, NULL, &bcancel, 0);
+						if (bret == 0) {
+							_ASSERT(0);
+							//return 1;
 						}
 					}
 				}

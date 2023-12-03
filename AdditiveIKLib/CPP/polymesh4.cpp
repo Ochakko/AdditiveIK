@@ -204,12 +204,12 @@ int CPolyMesh4::CreatePM4(int normalmappingmode, int pointnum, int facenum, int 
 		_ASSERT( 0 );
 		return 0;
 	}
-	m_dispv = (PM3DISPV*)malloc( sizeof( PM3DISPV ) * m_optleng );
+	m_dispv = (BINORMALDISPV*)malloc( sizeof( BINORMALDISPV ) * m_optleng );
 	if( !m_dispv ){
 		_ASSERT( 0 );
 		return 1;
 	}
-	ZeroMemory( m_dispv, sizeof( PM3DISPV ) * m_optleng );
+	ZeroMemory( m_dispv, sizeof( BINORMALDISPV ) * m_optleng );
 
 	m_dispindex = (int*)malloc( sizeof( int ) * m_facenum * 3 );
 	if( !m_dispindex ){
@@ -250,6 +250,8 @@ int CPolyMesh4::CreatePM4(int normalmappingmode, int pointnum, int facenum, int 
 		_ASSERT( 0 );
 		return 1;
 	}
+
+	BuildTangentAndBinormal();
 
 	CallF( CalcBound(), return 1 );
 
@@ -323,7 +325,7 @@ int CPolyMesh4::SetTriFace( CMQOFace* faceptr, int* numptr )
 }
 
 
-int CPolyMesh4::SetOptV(PM3DISPV* dispv, int* pleng, int* matnum, CModel* pmodel)
+int CPolyMesh4::SetOptV(BINORMALDISPV* dispv, int* pleng, int* matnum, CModel* pmodel)
 {
 	*pleng = 0;
 	*matnum = 0;
@@ -362,7 +364,7 @@ int CPolyMesh4::SetOptV(PM3DISPV* dispv, int* pleng, int* matnum, CModel* pmodel
 
 			int vcnt;
 			for( vcnt = 0; vcnt < 3; vcnt++ ){
-				PM3DISPV* curv = dispv + (setno * 3 + vcnt);//!!!!!!!!!!!!!!!!!!!!
+				BINORMALDISPV* curv = dispv + (setno * 3 + vcnt);//!!!!!!!!!!!!!!!!!!!!
 				int vno = (m_triface + setno)->GetIndex( vi[vcnt] );
 				// 0 2 1
 				_ASSERT( (vno >= 0) && (vno < m_orgpointnum) );
@@ -395,6 +397,9 @@ int CPolyMesh4::SetOptV(PM3DISPV* dispv, int* pleng, int* matnum, CModel* pmodel
 					curv->normal = ChaVector4( 0.0f, 0.0f, 1.0f, 0.0f );
 					_ASSERT( 0 );
 				}
+				curv->tangent = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
+				curv->binormal = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
+
 
 				if( m_uvbuf ){
 					if (m_uvleng == (m_facenum * 3)) {
@@ -663,7 +668,7 @@ int CPolyMesh4::UpdateMorphBuffer( ChaVector3* mpoint )
 	int vno;
 	for( vno = 0; vno < (m_facenum * 3); vno++ ){
 		int curindex = *(m_orgindex + vno);
-		PM3DISPV* curv = m_dispv + vno;
+		BINORMALDISPV* curv = m_dispv + vno;
 
 		curv->pos = ChaVector4( (mpoint + curindex)->x, (mpoint + curindex)->y, (mpoint + curindex)->z, 1.0f );
 	}
@@ -763,7 +768,7 @@ ChaVector2 CPolyMesh4::GetUVByControlPointNo(int vno)
 		return ChaVector2(0.0f, 0.0f);
 	}
 
-	//m_dispv = (PM3DISPV*)malloc(sizeof(PM3DISPV) * m_optleng);
+	//m_dispv = (BINORMALDISPV*)malloc(sizeof(BINORMALDISPV) * m_optleng);
 
 
 }
@@ -776,6 +781,36 @@ int CPolyMesh4::SetLastValidVno()
 	for (vno = 0; vno < m_orgpointnum; vno++){
 		if (*(m_dirtyflag + vno) == 1){
 			m_lastvalidvno = vno;
+		}
+	}
+
+	return 0;
+}
+
+int CPolyMesh4::BuildTangentAndBinormal()
+{
+	if (!m_dispv || !m_dispindex) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int faceno;
+	for (faceno = 0; faceno < m_facenum; faceno++) {
+		int i1 = *(m_dispindex + faceno * 3);
+		int i2 = *(m_dispindex + faceno * 3 + 1);
+		int i3 = *(m_dispindex + faceno * 3 + 2);
+		BINORMALDISPV* v1 = m_dispv + i1;
+		BINORMALDISPV* v2 = m_dispv + i2;
+		BINORMALDISPV* v3 = m_dispv + i3;
+		CalcTangentAndBinormal(v1, v2, v3);
+	}
+	int vno;
+	for (vno = 0; vno < (m_facenum * 3); vno++) {
+		BINORMALDISPV* pv = m_dispv + vno;
+		if (pv) {
+			pv->normal.Normalize();
+			pv->tangent.Normalize();
+			pv->binormal.Normalize();
 		}
 	}
 

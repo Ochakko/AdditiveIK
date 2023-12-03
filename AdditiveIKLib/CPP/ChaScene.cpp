@@ -340,7 +340,7 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lig
 
 								CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
 
-								if (curobj && curobj->GetVisible()) {
+								if (curobj && (curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible()) {
 								//if (curobj) {
 
 								
@@ -531,7 +531,7 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 
 						CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
 
-						if (curobj && curobj->GetVisible()) {
+						if (curobj && (curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible()) {
 							//if (curobj) {
 
 

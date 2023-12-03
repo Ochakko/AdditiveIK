@@ -1038,6 +1038,7 @@ private:
 	//int ComputeShapeDeformation2(FbxNode* pNode, FbxMesh* pMesh, FbxTime& pTime, FbxAnimLayer * pAnimLayer, CMQOObject* curobj, char* takename );
 
 	int SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* material );
+	int SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname);
 	void CreateFBXBoneReq(FbxScene* pScene, FbxNode* pNode, FbxNode* parnode );
 	//void CreateExtendBoneReq(CBone* srcbone);
 	int GetFBXBone(FbxScene* pScene, FbxNodeAttribute::EType type, FbxNodeAttribute *pAttrib, FbxNode* curnode, FbxNode* parnode );

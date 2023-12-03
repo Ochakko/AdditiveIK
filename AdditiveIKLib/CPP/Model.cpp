@@ -4346,7 +4346,8 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 	if ( node != 0 ) {
 		// マテリアルの数
 		materialNum_ = node->GetMaterialCount();
-		
+		char meshname[256] = { 0 };
+		strcpy_s(meshname, 256, pMesh->GetName());
 
 		//for dbginfo
 		//if (materialNum_ != 1) {
@@ -4365,6 +4366,11 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 			if ( material != 0 ) {
 				char materialname[256] = { 0 };
 				strcpy_s(materialname, 256, material->GetName());
+
+				if ((strstr(meshname, "plane__35") != 0) || (strstr(materialname, "plane__35") != 0) || (strstr(cname, "plane__35") != 0)) {
+					int dbgflag2 = 1;
+				}
+
 				CMQOMaterial* currentmaterial = GetMQOMaterialByName(materialname);//既に存在するかどうかチェック
 				if (!currentmaterial) {
 					//未登録テクスチャの登録処理
@@ -4734,7 +4740,18 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 
 //UV
 	int layerCount = pMesh->GetLayerCount();   // meshはFbxMesh
+	if (layerCount >= 2) {
+		int dbgflag1 = 1;
+		if (strstr(cname, "plane__35") !=0) {
+			int dbgflag2 = 1;
+		}
+	}
 	for ( int uvi = 0; uvi < layerCount; ++uvi ) {
+
+		//#####################################
+		//2023/12/03 １回目のループ終了でbreakする
+		//#####################################
+
 		FbxLayer* layer = pMesh->GetLayer( uvi );
 		FbxLayerElementUV* elem = layer->GetUVs();
 		if ( elem == 0 ) {
@@ -4773,7 +4790,7 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 				pMesh->GetPolygonVertexUV(faceno1, vno, elem->GetName(), srcuv, bunmapped);
 
 				ChaVector2* curuv = newobj->GetUVBuf() + faceno1 * 3 + vno;
-				*curuv = ChaVector2((float)srcuv[0], 1.0f - (float)srcuv[1]);
+				*curuv = ChaVector2((float)srcuv[0], 1.0f - (float)srcuv[1]);//!!! 1.0f - uv.y
 			}
 		}
 
@@ -4998,7 +5015,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 
 
 //texture
-	bool findalbedometal = false;
+	//bool findalbedometal = false;
 	{
 		FbxProperty pProperty;
 		pProperty = pMaterial->FindProperty(FbxSurfaceMaterial::sDiffuse);
@@ -5007,10 +5024,6 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 		{
 			for (int j = 0; j < lLayeredTextureCount; ++j)
 			{
-				if (findalbedometal == true) {
-					break;
-				}
-
 				FbxLayeredTexture* lLayeredTexture = pProperty.GetSrcObject<FbxLayeredTexture>(j);
 				int lNbTextures = lLayeredTexture->GetSrcObjectCount<FbxTexture>();
 				for (int k = 0; k < lNbTextures; ++k)
@@ -5019,88 +5032,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 					if (lLayeredTexture->GetName()) {
 						char tempname[256];
 						strcpy_s(tempname, 256, lLayeredTexture->GetName());
-						char* lastslash = strrchr(tempname, '/');
-						if (!lastslash) {
-							lastslash = strrchr(tempname, '\\');
-						}
-						if (lastslash) {
-							newmqomat->SetTex(lastslash + 1);
-						}
-						else {
-							newmqomat->SetTex(tempname);
-						}
-						char* lastp = strrchr((char*)newmqomat->GetTex(), '.');
-						if (!lastp) {
-							newmqomat->Add2Tex(".tga");
-						}
-						else if (strcmp(lastp, ".vrm") == 0) {
-							//VRM1.0のテクスチャパスは　vrmファイルの絶対パス(全テクスチャ名が同じvrmパス)
-							// テクスチャとしてUnityでみえるのは　*.texture2Dファイル
-							// .texture2DファイルはUnityスクリプトでpngに変換可能なので　そのようにしたpngをユーザが用意していることを想定
-							// 2023/08/28現在はVRM0.0もサポートされていて　VRM0.0をUnityに読み込むとテクスチャはpngのものが生成される
-
-							m_vrmtexcount++;
-							if (m_vrmtexcount == 5) {
-								//char convname[256] = { 0 };
-								//strcpy_s(convname, 256, "_05.normal.png");
-								//newmqomat->SetTex(convname);
-
-								m_vrmtexcount++;
-
-								char convname[256] = { 0 };
-								sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-								newmqomat->SetTex(convname);
-							}
-							else if (m_vrmtexcount == 8) {
-								
-								m_vrmtexcount++;
-
-								char convname[256] = { 0 };
-								sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-								newmqomat->SetTex(convname);
-							}
-							else if (m_vrmtexcount == 11) {
-								//char convname[256] = { 0 };
-								//strcpy_s(convname, 256, "_11.normal.png");
-								//newmqomat->SetTex(convname);
-
-								m_vrmtexcount++;
-
-								char convname[256] = { 0 };
-								sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-								newmqomat->SetTex(convname);
-							}
-							else {
-								char convname[256] = { 0 };
-								sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-								newmqomat->SetTex(convname);
-							}
-
-						}
-						else {
-							////jpegのテクスチャは現状ありえない？　pngに置き換えると読めるデータがある　TheHunt Character
-							//if (((unsigned long)(lastp - tempname) > (256 - 4)) &&
-							//	((strstr(lastp, "jpg") != 0) || (strstr(lastp, "jpeg") != 0))) {
-							//	*(lastp + 1) = 'p';
-							//	*(lastp + 2) = 'n';
-							//	*(lastp + 3) = 'g';
-							//	*(lastp + 4) = 0;
-							//}
-							int dbgflag1 = 1;
-						}
-						WCHAR wname[256];
-						::ZeroMemory(wname, sizeof(WCHAR) * 256);
-						MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, newmqomat->GetTex(), 256, wname, 256);
-
-						DbgOut(L"SetMQOMaterial : layered texture(%d)(%d) %s\r\n", j, k, wname);
-
-						//break;
-						if ((strstr(tempname, "albedo") != 0) || (strstr(tempname, "Albedo") != 0) ||
-							(strstr(tempname, "metallic") != 0) || (strstr(tempname, "Metallic") != 0)) {
-							//複数テクスチャがある場合　albedoまたはmetallicがみつかったところでbreakする
-							findalbedometal = true;
-							break;
-						}
+						SetMaterialTexNames(newmqomat, tempname);
 					}
 				}
 			}
@@ -5120,90 +5052,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 						if (nameptr) {
 							char tempname[256];
 							strcpy_s(tempname, 256, nameptr);
-							char* lastslash = strrchr(tempname, '/');
-							if (!lastslash) {
-								lastslash = strrchr(tempname, '\\');
-							}
-							if (lastslash) {
-								newmqomat->SetTex(lastslash + 1);
-							}
-							else {
-								newmqomat->SetTex(tempname);
-							}
-							char* lastp = strrchr((char*)newmqomat->GetTex(), '.');
-							if (!lastp) {
-								newmqomat->Add2Tex(".tga");
-							}
-							else if (strcmp(lastp, ".vrm") == 0) {
-								//VRM1.0のテクスチャパスは　vrmファイルの絶対パス(全テクスチャ名が同じvrmパス)
-								// テクスチャとしてUnityでみえるのは　*.texture2Dファイル
-								// .texture2DファイルはUnityスクリプトでpngに変換可能なので　そのようにしたpngをユーザが用意していることを想定
-								// 2023/08/28現在はVRM0.0もサポートされていて　VRM0.0をUnityに読み込むとテクスチャはpngのものが生成される
-
-								m_vrmtexcount++;
-								if (m_vrmtexcount == 5) {
-									//char convname[256] = { 0 };
-									//strcpy_s(convname, 256, "_05.normal.png");
-									//newmqomat->SetTex(convname);
-
-									m_vrmtexcount++;
-
-									char convname[256] = { 0 };
-									sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-									newmqomat->SetTex(convname);
-								}
-								else if (m_vrmtexcount == 8) {
-
-									m_vrmtexcount++;
-
-									char convname[256] = { 0 };
-									sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-									newmqomat->SetTex(convname);
-								}
-								else if (m_vrmtexcount == 11) {
-									//char convname[256] = { 0 };
-									//strcpy_s(convname, 256, "_11.normal.png");
-									//newmqomat->SetTex(convname);
-
-									m_vrmtexcount++;
-
-									char convname[256] = { 0 };
-									sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-									newmqomat->SetTex(convname);
-								}
-								else {
-									char convname[256] = { 0 };
-									sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-									newmqomat->SetTex(convname);
-								}
-
-							}
-							else {
-								////jpegのテクスチャは現状ありえない？　pngに置き換えると読めるデータがある　TheHunt Character
-								//if (((unsigned long)(lastp - tempname) > (256 - 4)) &&
-								//	((strstr(lastp, "jpg") != 0) || (strstr(lastp, "jpeg") != 0))) {
-								//	*(lastp + 1) = 'p';
-								//	*(lastp + 2) = 'n';
-								//	*(lastp + 3) = 'g';
-								//	*(lastp + 4) = 0;
-								//}
-								int dbgflag2 = 1;
-							}
-
-							WCHAR wname[256];
-							::ZeroMemory(wname, sizeof(WCHAR) * 256);
-							MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, newmqomat->GetTex(), 256, wname, 256);
-
-							DbgOut(L"SetMQOMaterial : texture(0)(%d) %s\r\n", j, wname);
-							
-							//break;
-							if ((strstr(tempname, "albedo") != 0) || (strstr(tempname, "Albedo") != 0) ||
-								(strstr(tempname, "metallic") != 0) || (strstr(tempname, "Metallic") != 0)) {
-									//複数テクスチャがある場合　albedoまたはmetallicがみつかったところでbreakする
-								findalbedometal = true;
-								break;
-							}
-
+							SetMaterialTexNames(newmqomat, tempname);
 						}
 					}
 				}
@@ -5211,7 +5060,93 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 		}
 	}
 
+	{
+		FbxProperty pProperty;
+		pProperty = pMaterial->FindProperty(FbxSurfaceMaterial::sNormalMap);
+		int lLayeredTextureCount = pProperty.GetSrcObjectCount<FbxLayeredTexture>();
+		if (lLayeredTextureCount > 0)
+		{
+			for (int j = 0; j < lLayeredTextureCount; ++j)
+			{
+				FbxLayeredTexture* lLayeredTexture = pProperty.GetSrcObject<FbxLayeredTexture>(j);
+				int lNbTextures = lLayeredTexture->GetSrcObjectCount<FbxTexture>();
+				for (int k = 0; k < lNbTextures; ++k)
+				{
+					//char* nameptr = (char*)lLayeredTexture->GetName();
+					if (lLayeredTexture->GetName()) {
+						char tempname[256];
+						strcpy_s(tempname, 256, lLayeredTexture->GetName());
+						SetMaterialTexNames(newmqomat, tempname);
+					}
+				}
+			}
+		}
+		else
+		{
+			//no layered texture simply get on the property
+			int lNbTextures = pProperty.GetSrcObjectCount<FbxTexture>();
+			if (lNbTextures > 0)
+			{
+				for (int j = 0; j < lNbTextures; ++j)
+				{
+					FbxFileTexture* lTexture = pProperty.GetSrcObject<FbxFileTexture>(j);
+					if (lTexture)
+					{
+						char* nameptr = (char*)lTexture->GetFileName();
+						if (nameptr) {
+							char tempname[256];
+							strcpy_s(tempname, 256, nameptr);
+							SetMaterialTexNames(newmqomat, tempname);
+						}
+					}
+				}
+			}
+		}
+	}
 
+	//{
+	//	FbxProperty pProperty;
+	//	pProperty = pMaterial->FindProperty(FbxSurfaceMaterial::sShininess);
+	//	int lLayeredTextureCount = pProperty.GetSrcObjectCount<FbxLayeredTexture>();
+	//	if (lLayeredTextureCount > 0)
+	//	{
+	//		for (int j = 0; j < lLayeredTextureCount; ++j)
+	//		{
+	//			FbxLayeredTexture* lLayeredTexture = pProperty.GetSrcObject<FbxLayeredTexture>(j);
+	//			int lNbTextures = lLayeredTexture->GetSrcObjectCount<FbxTexture>();
+	//			for (int k = 0; k < lNbTextures; ++k)
+	//			{
+	//				//char* nameptr = (char*)lLayeredTexture->GetName();
+	//				if (lLayeredTexture->GetName()) {
+	//					char tempname[256];
+	//					strcpy_s(tempname, 256, lLayeredTexture->GetName());
+	//					SetMaterialTexNames(newmqomat, tempname);
+	//				}
+	//			}
+	//		}
+	//	}
+	//	else
+	//	{
+	//		//no layered texture simply get on the property
+	//		int lNbTextures = pProperty.GetSrcObjectCount<FbxTexture>();
+	//		if (lNbTextures > 0)
+	//		{
+	//			for (int j = 0; j < lNbTextures; ++j)
+	//			{
+	//				FbxFileTexture* lTexture = pProperty.GetSrcObject<FbxFileTexture>(j);
+	//				if (lTexture)
+	//				{
+	//					char* nameptr = (char*)lTexture->GetFileName();
+	//					if (nameptr) {
+	//						char tempname[256];
+	//						strcpy_s(tempname, 256, nameptr);
+	//						SetMaterialTexNames(newmqomat, tempname);
+	//					}
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
 	//if (newmqomat->GetTex() && (strlen(newmqomat->GetTex()) > 0)) {
 	//	if ((strstr(newmqomat->GetTex(), "_13.png") != 0) || (strstr(newmqomat->GetTex(), "_15.png") != 0) || (strstr(newmqomat->GetTex(), "_16.png") != 0)) {
 	//		//2023/09/24 VRoidの服の裾(すそ)に透過の印を付ける
@@ -5223,6 +5158,113 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 
    return 0;
 }
+
+int CModel::SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname)
+{
+	char temptexname[256] = {0};
+
+	char* lastslash = strrchr(tempname, '/');
+	if (!lastslash) {
+		lastslash = strrchr(tempname, '\\');
+	}
+	if (lastslash) {
+		//newmqomat->SetTex(lastslash + 1);
+		strcpy_s(temptexname, 256, lastslash + 1);
+	}
+	else {
+		//newmqomat->SetTex(tempname);
+		strcpy_s(temptexname, 256, tempname);
+	}
+
+	//char* lastp = strrchr((char*)newmqomat->GetTex(), '.');
+	char* lastp = strrchr(temptexname, '.');
+	if (!lastp) {
+		//newmqomat->Add2Tex(".tga");
+		strcat_s(temptexname, ".tga");
+	}
+	else if (strcmp(lastp, ".psd") == 0) {
+		strcpy(lastp, ".png");
+	}
+	else if (strcmp(lastp, ".vrm") == 0) {
+		//VRM1.0のテクスチャパスは　vrmファイルの絶対パス(全テクスチャ名が同じvrmパス)
+		// テクスチャとしてUnityでみえるのは　*.texture2Dファイル
+		// .texture2DファイルはUnityスクリプトでpngに変換可能なので　そのようにしたpngをユーザが用意していることを想定
+		// 2023/08/28現在はVRM0.0もサポートされていて　VRM0.0をUnityに読み込むとテクスチャはpngのものが生成される
+
+		m_vrmtexcount++;
+		if (m_vrmtexcount == 5) {
+			//char convname[256] = { 0 };
+			//strcpy_s(convname, 256, "_05.normal.png");
+			//newmqomat->SetTex(convname);
+
+			m_vrmtexcount++;
+
+			char convname[256] = { 0 };
+			sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
+			//newmqomat->SetTex(convname);
+			strcpy_s(temptexname, convname);
+		}
+		else if (m_vrmtexcount == 8) {
+
+			m_vrmtexcount++;
+
+			char convname[256] = { 0 };
+			sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
+			//newmqomat->SetTex(convname);
+			strcpy_s(temptexname, convname);
+		}
+		else if (m_vrmtexcount == 11) {
+			////char convname[256] = { 0 };
+			////strcpy_s(convname, 256, "_11.normal.png");
+			////newmqomat->SetTex(convname);
+
+			m_vrmtexcount++;
+
+			char convname[256] = { 0 };
+			sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
+			//newmqomat->SetTex(convname);
+			strcpy_s(temptexname, convname);
+		}
+		else {
+			char convname[256] = { 0 };
+			sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
+			//newmqomat->SetTex(convname);
+			strcpy_s(temptexname, convname);
+		}
+	}
+	else {
+		//拡張子付きの通常ファイル名　そのまま
+	}
+
+	WCHAR wname[256];
+	::ZeroMemory(wname, sizeof(WCHAR) * 256);
+	//MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, newmqomat->GetTex(), 256, wname, 256);
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, temptexname, 256, wname, 256);
+
+	DbgOut(L"SetMaterialTextureName : texture %s\r\n", wname);
+
+
+
+	if ((newmqomat->GetAlbedoTex() && !(newmqomat->GetAlbedoTex()[0])) &&
+		(strstr(temptexname, "albedo") != 0) || (strstr(temptexname, "Albedo") != 0)) {
+		newmqomat->SetAlbedoTex(temptexname);
+	}
+	else if ((newmqomat->GetNormalTex() && !(newmqomat->GetNormalTex()[0])) &&
+		(strstr(temptexname, "normal") != 0) || (strstr(temptexname, "Normal") != 0)) {
+		newmqomat->SetNormalTex(temptexname);
+	}
+	else if ((newmqomat->GetMetalTex() && !(newmqomat->GetMetalTex()[0])) &&
+		(strstr(temptexname, "metal") != 0) || (strstr(temptexname, "Metal") != 0)) {
+		newmqomat->SetMetalTex(temptexname);
+	}else if (newmqomat->GetTex() && !(newmqomat->GetTex()[0])) {
+		//TexNameに一回もセットされていない場合に　TexNameにtemptexnameをセット
+		newmqomat->SetTex(temptexname);
+	}
+
+
+	return 0;
+}
+
 
 
 //// Get specific property value and connected texture if any.
@@ -19131,7 +19173,7 @@ int CModel::ChkInView()
 		map<int, CMQOObject*>::iterator itr;
 		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 			CMQOObject* curobj = itr->second;
-			if (curobj) {
+			if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
 				//curobj->ChkInView(m_matWorld, m_matVP);
 				curobj->ChkInView(m_matWorld, m_matVP);
 				if (curobj->GetVisible()) {

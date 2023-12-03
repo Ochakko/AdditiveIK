@@ -402,6 +402,14 @@ ChaVector3::~ChaVector3()
 
 }
 
+void ChaVector3::Normalize()
+{
+	ChaVector3 resultvec3;
+	resultvec3.SetZeroVec3();
+	ChaVector3Normalize(&resultvec3, this);
+	*this = resultvec3;
+}
+
 void ChaVector3::Clamp(float srcmin, float srcmax)
 {
 	float tmpx = max(srcmin, min(srcmax, x));
@@ -562,6 +570,18 @@ ChaVector4::~ChaVector4()
 
 }
 
+void ChaVector4::Normalize()
+{
+	if (w >= 0.0000010f) {
+		*this = *this / w;
+	}
+	ChaVector3 xyz = ChaVector3(x, y, z);
+	ChaVector3Normalize(&xyz, &xyz);
+	x = xyz.x;
+	y = xyz.y;
+	z = xyz.z;
+	w = w;
+}
 
 ChaVector4 ChaVector4::operator= (ChaVector4 v) { this->x = v.x; this->y = v.y; this->z = v.z; this->w = v.w; return *this; };
 ChaVector4 ChaVector4::operator* (float srcw) const { return ChaVector4((float)((double)this->x * (double)srcw), (float)((double)this->y * (double)srcw), (float)((double)this->z * (double)srcw), (float)((double)this->w * (double)srcw)); }
@@ -4170,6 +4190,79 @@ COLORREF ChaVector3::ColorRef()
 
 	return retcol;
 }
+
+
+int CalcTangentAndBinormal(BINORMALDISPV* vert_0, BINORMALDISPV* vert_1, BINORMALDISPV* vert_2)
+{
+	if (!vert_0 || !vert_1 || !vert_2) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	//頂点スムースは気にしない。
+	Vector3 cp0[] = {
+		{ vert_0->pos.x, vert_0->uv.x, vert_0->uv.y},
+		{ vert_0->pos.y, vert_0->uv.x, vert_0->uv.y},
+		{ vert_0->pos.z, vert_0->uv.x, vert_0->uv.y}
+	};
+
+	Vector3 cp1[] = {
+		{ vert_1->pos.x, vert_1->uv.x, vert_1->uv.y},
+		{ vert_1->pos.y, vert_1->uv.x, vert_1->uv.y},
+		{ vert_1->pos.z, vert_1->uv.x, vert_1->uv.y}
+	};
+
+	Vector3 cp2[] = {
+		{ vert_2->pos.x, vert_2->uv.x, vert_2->uv.y},
+		{ vert_2->pos.y, vert_2->uv.x, vert_2->uv.y},
+		{ vert_2->pos.z, vert_2->uv.x, vert_2->uv.y}
+	};
+
+	// 平面パラメータからUV軸座標算出する。
+	Vector3 tangent, binormal;
+	for (int i = 0; i < 3; ++i) {
+		auto V1 = cp1[i] - cp0[i];
+		auto V2 = cp2[i] - cp1[i];
+		//auto V1 = cp0[i] - cp1[i];
+		//auto V2 = cp1[i] - cp2[i];
+		auto ABC = Cross(V1, V2);
+		//auto ABC = Cross(V2, V1);
+
+		if (ABC.x == 0.0f) {
+			tangent.v[i] = 0.0f;
+			binormal.v[i] = 0.0f;
+		}
+		else {
+			//tangent.v[i] = -ABC.y / ABC.x;
+			//binormal.v[i] = -ABC.z / ABC.x;
+			tangent.v[i] = -ABC.y / ABC.x;
+			binormal.v[i] = -ABC.z / ABC.x;
+		}
+	}
+
+	tangent.Normalize();
+	binormal.Normalize();
+
+	vert_0->tangent += ChaVector4(ChaVector3(tangent), 0.0f);
+	vert_1->tangent += ChaVector4(ChaVector3(tangent), 0.0f);
+	vert_2->tangent += ChaVector4(ChaVector3(tangent), 0.0f);
+
+	vert_0->binormal += ChaVector4(ChaVector3(binormal), 0.0f);
+	vert_1->binormal += ChaVector4(ChaVector3(binormal), 0.0f);
+	vert_2->binormal += ChaVector4(ChaVector3(binormal), 0.0f);
+
+	//vert_0->tangent.Normalize();
+	//vert_1->tangent.Normalize();
+	//vert_2->tangent.Normalize();
+	//vert_0->binormal.Normalize();
+	//vert_1->binormal.Normalize();
+	//vert_2->binormal.Normalize();
+
+	return 0;
+}
+
+
 
 //#ifdef CONVD3DX11
 DirectX::XMFLOAT2 ChaVector2::D3DX()

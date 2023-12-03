@@ -41,15 +41,16 @@ static int s_alloccount = 0;
 
 CMQOMaterial::CMQOMaterial() : m_descriptorHeap(),
 m_commonConstantBuffer(), m_expandConstantBuffer(), //2023/11/29
-m_whitetex(), m_blacktex(), m_diffuseMap(), m_cb(), m_cbMatrix(), //2023/12/01
-m_nonSkinModelPipelineState(),
-m_skinModelPipelineState(),
-m_transSkinModelPipelineState(),
-m_transSkinAlwaysModelPipelineState(),
-m_transNonSkinModelPipelineState(),
-m_transNonSkinAlwaysModelPipelineState(),
-m_constantBuffer(),
-m_rootSignature()
+m_whitetex(), m_blacktex(), m_diffuseMap(), 
+m_cb(), m_cbMatrix(), m_cbLights(), //2023/12/01 //2023/12/02
+m_nonSkinModelPipelineState(), //2023/12/01
+m_skinModelPipelineState(), //2023/12/01
+m_transSkinModelPipelineState(), //2023/12/01
+m_transSkinAlwaysModelPipelineState(), //2023/12/01
+m_transNonSkinModelPipelineState(), //2023/12/01
+m_transNonSkinAlwaysModelPipelineState(), //2023/12/01
+m_constantBuffer(), //2023/12/01
+m_rootSignature() //2023/12/01
 {
 	InitParams();
 
@@ -243,6 +244,7 @@ int CMQOMaterial::InitParams()
 
 	m_cb.Init();
 	m_cbMatrix.Init();
+	m_cbLights.Init();
 
 	m_col.w = 1.0f;
 	m_col.x = 1.0f;
@@ -255,9 +257,13 @@ int CMQOMaterial::InitParams()
 	m_spc = 0.0f;
 	m_power = 0.0f;
 
-	ZeroMemory ( m_tex, 256 );
-	ZeroMemory ( m_alpha, 256 );
-	ZeroMemory ( m_bump, 256 );
+	ZeroMemory ( m_tex, sizeof(char) * 256 );
+	ZeroMemory ( m_alpha, sizeof(char) * 256 );
+	ZeroMemory ( m_bump, sizeof(char) * 256 );
+
+	ZeroMemory(m_albedotex, sizeof(char) * 256);
+	ZeroMemory(m_normaltex, sizeof(char) * 256);
+	ZeroMemory(m_metaltex, sizeof(char) * 256);
 
 	//next = 0;
 
@@ -302,15 +308,17 @@ int CMQOMaterial::InitParams()
 
 	m_orgalpha = 1.0f;
 
-	m_texid = -1;
+	m_albedotexid = -1;
+	m_normaltexid = -1;
+	m_metaltexid = -1;
 
 	m_convnamenum = 0;
 	m_ppconvname = 0;
 
 
-	m_albedoMap = nullptr;
-	m_normalMap = nullptr;//とりあえずnulltexture このクラスで作成するポインタ
-	m_specularMap = nullptr;//とりあえずnulltexture このクラスで作成するポインタ
+	m_albedoMap = nullptr;//bank管理の外部ポインタ
+	m_normalMap = nullptr;//bank管理の外部ポインタ
+	m_metalMap = nullptr;//bank管理の外部ポインタ
 
 	m_settempdiffusemult = false;
 	m_tempdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -336,20 +344,23 @@ int CMQOMaterial::DestroyObjs()
 		m_convnamenum = 0;
 	}
 
-	//m_normalMap = nullptr;//とりあえずnulltexture このクラスで作成するポインタ
-	if (m_normalMap) {
-		delete m_normalMap;
-		m_normalMap = nullptr;
-	}
 
-	//m_specularMap = nullptr;//とりあえずnulltexture このクラスで作成するポインタ
-	if (m_specularMap) {
-		delete m_specularMap;
-		m_specularMap = nullptr;
-	}
-
-	//Texture* m_albedoMap;//bank管理の外部ポインタ
+	//bank管理の外部ポインタ
 	m_albedoMap = nullptr;
+
+	//bank管理の外部ポインタ
+	//if (m_normalMap) {
+	//	delete m_normalMap;
+	//	m_normalMap = nullptr;
+	//}
+	m_normalMap = nullptr;
+
+	//bank管理の外部ポインタ
+	//if (m_specularMap) {
+	//	delete m_specularMap;
+	//	m_specularMap = nullptr;
+	//}
+	m_metalMap = nullptr;
 
 
 	return 0;
@@ -924,13 +935,13 @@ int CMQOMaterial::CreateTexture( WCHAR* dirname, int texpool )
 
 	WCHAR wname[256] = {0};
 
-	if( m_tex[0] ){
-		MultiByteToWideChar( CP_ACP, MB_PRECOMPOSED, m_tex, 256, wname, 256 );
+	if(m_albedotex[0]){
+		MultiByteToWideChar( CP_ACP, MB_PRECOMPOSED, m_albedotex, 256, wname, 256 );
 
 		//g_texbank->AddTex( dirname, wname, m_transparent, texpool, 0, &m_texid );
-		g_texbank->AddTex(dirname, wname, m_transparent, texpool, &m_texid);
+		g_texbank->AddTex(dirname, wname, m_transparent, texpool, &m_albedotexid);
 
-		CTexElem* findtex = g_texbank->GetTexElem(GetTexID());
+		CTexElem* findtex = g_texbank->GetTexElem(GetAlbedoTexID());
 		if(findtex){
 			m_albedoMap = findtex->GetPTex();
 		}else{
@@ -939,45 +950,65 @@ int CMQOMaterial::CreateTexture( WCHAR* dirname, int texpool )
 		}
 	}
 	else {
-		m_albedoMap = 0;
+		//texture名にalbedoが付いていなかった場合用　最初に見つかったテクスチャをalbedoとして使う
+		if (m_tex[0]) {
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_tex, 256, wname, 256);
+
+			//g_texbank->AddTex( dirname, wname, m_transparent, texpool, 0, &m_texid );
+			g_texbank->AddTex(dirname, wname, m_transparent, texpool, &m_albedotexid);
+
+			CTexElem* findtex = g_texbank->GetTexElem(GetAlbedoTexID());
+			if (findtex) {
+				m_albedoMap = findtex->GetPTex();
+				SetAlbedoTex(m_tex);
+			}
+			else {
+				_ASSERT(0);
+				m_albedoMap = 0;
+			}
+		}
+		else {
+			m_albedoMap = 0;
+		}
 	}
 
 
-	//######################################################
-	//normalMapとspecularMapは　とりあえずnulltextureでテスト
-	//######################################################
-	if (!m_specularMap)
-	{
-		const auto& nullTextureMaps = g_graphicsEngine->GetNullTextureMaps();
-		char* map = nullptr;
-		unsigned int mapSize;
+	if (m_normaltex[0]) {
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_normaltex, 256, wname, 256);
 
-		map = nullTextureMaps.GetNormalMap().get();
-		mapSize = nullTextureMaps.GetNormalMapSize();
-		Texture* texture = new Texture();
-		if (!texture) {
-			_ASSERT(0);
-			return 1;
+		//g_texbank->AddTex( dirname, wname, m_transparent, texpool, 0, &m_texid );
+		g_texbank->AddTex(dirname, wname, m_transparent, texpool, &m_normaltexid);
+
+		CTexElem* findtex = g_texbank->GetTexElem(GetNormalTexID());
+		if (findtex) {
+			m_normalMap = findtex->GetPTex();
 		}
-		texture->InitFromMemory(map, mapSize);
-		m_normalMap = texture;
+		else {
+			_ASSERT(0);
+			m_normalMap = 0;
+		}
 	}
-	
-	if (!m_normalMap)
-	{
-		const auto& nullTextureMaps = g_graphicsEngine->GetNullTextureMaps();
-		char* map = nullptr;
-		unsigned int mapSize;
+	else {
+		m_normalMap = 0;
+	}
 
-		map = nullTextureMaps.GetSpecularMap().get();
-		mapSize = nullTextureMaps.GetSpecularMapSize();
-		Texture* texture = new Texture();
-		if (!texture) {
-			_ASSERT(0);
-			return 1;
+	if (m_metaltex[0]) {
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_metaltex, 256, wname, 256);
+
+		//g_texbank->AddTex( dirname, wname, m_transparent, texpool, 0, &m_texid );
+		g_texbank->AddTex(dirname, wname, m_transparent, texpool, &m_metaltexid);
+
+		CTexElem* findtex = g_texbank->GetTexElem(GetMetalTexID());
+		if (findtex) {
+			m_metalMap = findtex->GetPTex();
 		}
-		texture->InitFromMemory(map, mapSize);
-		m_specularMap = texture;
+		else {
+			_ASSERT(0);
+			m_metalMap = 0;
+		}
+	}
+	else {
+		m_metalMap = 0;
 	}
 
 
@@ -1033,8 +1064,6 @@ int CMQOMaterial::AddConvName( char** ppname )
 		return 1;//error!!!!
 	}
 
-
-
 	return 0;
 }
 
@@ -1073,7 +1102,8 @@ void CMQOMaterial::InitShadersAndPipelines(
 //定数バッファを作成。
 	SMaterialParam matParam;
 	//matParam.hasNormalMap = m_normalMap->IsValid() ? 1 : 0;
-	//matParam.hasSpecMap = m_specularMap->IsValid() ? 1 : 0;
+	////matParam.hasSpecMap = m_specularMap->IsValid() ? 1 : 0;
+	//matParam.hasSpecMap = m_metalMap->IsValid() ? 1 : 0;
 	matParam.hasNormalMap = 0;//まずはprimitive表示テストのため　NormalMapオフ !!!!!!!!!!!!!!!!
 	matParam.hasSpecMap = 0;//まずはprimitive表示テストのため　SpecularMapオフ !!!!!!!!!!!!!!!!
 	m_constantBuffer.Init(sizeof(SMaterialParam), &matParam);
@@ -1136,13 +1166,19 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 	//パイプラインステートを作成。
 	D3D12_INPUT_ELEMENT_DESC inputElementDescsWithBone[] =
 	{
-		//型：PM3DISPV
+		//型：BINORMALDISPV + PM3INF
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -1155,13 +1191,19 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 	};
 	D3D12_INPUT_ELEMENT_DESC inputElementDescsWithoutBone[] =
 	{
-		//型：PM3DISPV
+		//型：BINORMALDISPV
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -1459,16 +1501,18 @@ Texture& CMQOMaterial::GetNormalMap()
 		return *m_normalMap;
 	}
 	else {
-		return m_blacktex;
+		//return m_blacktex;
+		return m_whitetex;
 	}
 }
-Texture& CMQOMaterial::GetSpecularMap()
+Texture& CMQOMaterial::GetMetalMap()
 {
-	if (m_specularMap) {
-		return *m_specularMap;
+	if (m_metalMap) {
+		return *m_metalMap;
 	}
 	else {
 		return m_blacktex;
+		//return m_whitetex;
 	}
 }
 
@@ -1530,9 +1574,19 @@ int CMQOMaterial::CreateDecl(ID3D12Device* pdev, int objecttype)
 		m_commonConstantBuffer.Init(sizeof(SConstantBuffer), nullptr);
 		m_expandConstantBuffer.Init(sizeof(SConstantBufferBoneMatrix), nullptr);
 	}
+	else if (objecttype == 1){
+		//#############
+		//pm3
+		//#############
+		EXPAND_SRV_REG__START_NO = 4;
+		NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
+		NUM_CBV_ONE_MATERIAL = 2;
+		m_commonConstantBuffer.Init(sizeof(SConstantBuffer), nullptr);
+		m_expandConstantBuffer.Init(sizeof(SConstantBufferLights), nullptr);
+	}
 	else {
 		//#############
-		//pm3, extline
+		//extline
 		//#############
 		EXPAND_SRV_REG__START_NO = 4;
 		NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
@@ -1597,7 +1651,7 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 		m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());			//アルベドに乗算するテクスチャ。
 		m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());			//アルベドマップ。
 		m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());		//法線マップ。
-		m_descriptorHeap.RegistShaderResource(srvNo + 3, GetSpecularMap());		//スペキュラマップ。
+		m_descriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());		//Metalマップ。
 		//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
 		for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
 			if (m_expandShaderResourceView[i]) {
@@ -1625,7 +1679,7 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 		m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());			//アルベドに乗算するテクスチャ。
 		m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());			//アルベドマップ。
 		m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());		//法線マップ。
-		m_descriptorHeap.RegistShaderResource(srvNo + 3, GetSpecularMap());		//スペキュラマップ。
+		m_descriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());		//Metalマップ。
 		//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
 		for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
 			if (m_expandShaderResourceView[i]) {
@@ -1634,9 +1688,9 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 		}
 		srvNo += NUM_SRV_ONE_MATERIAL;
 		m_descriptorHeap.RegistConstantBuffer(cbNo, m_commonConstantBuffer);
-		//if (m_expandConstantBuffer.IsValid()) {
-		//	m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
-		//}
+		if (m_expandConstantBuffer.IsValid()) {
+			m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
+		}
 		cbNo += NUM_CBV_ONE_MATERIAL;
 		m_createdescriptorflag = true;
 
@@ -1653,7 +1707,7 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 		m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());			//アルベドに乗算するテクスチャ。
 		m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());			//アルベドマップ。
 		m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());		//法線マップ。
-		m_descriptorHeap.RegistShaderResource(srvNo + 3, GetSpecularMap());		//スペキュラマップ。
+		m_descriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());		//Metalマップ。
 		//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
 		for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
 			if (m_expandShaderResourceView[i]) {
@@ -1751,6 +1805,41 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
 
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
+
+
+		//#########################################
+		//2023/12/03 ライトパラメータは　まずは決め打ち
+		//#########################################
+		// 太陽光
+		m_cbLights.Init();
+		m_cbLights.directionalLight[0].color.x = 1.5f;
+		m_cbLights.directionalLight[0].color.y = 1.5f;
+		m_cbLights.directionalLight[0].color.z = 1.5f;
+		m_cbLights.directionalLight[0].direction.w = 0.0f;
+		
+		ChaVector3 cameye = ChaVector3(g_camera3D->GetPosition());
+		ChaVector3 camtarget = ChaVector3(g_camera3D->GetTarget());
+		m_cbLights.directionalLight[0].direction = ChaVector4((camtarget - cameye), 0.0f);//この向きで合っている
+		m_cbLights.directionalLight[0].direction.Normalize();
+
+		// 地面からの照り返し
+		m_cbLights.directionalLight[1].color.x = 0.3f;
+		m_cbLights.directionalLight[1].color.y = 0.3f;
+		m_cbLights.directionalLight[1].color.z = 0.3f;
+		m_cbLights.directionalLight[1].color.w = 0.0f;
+		m_cbLights.directionalLight[1].direction.x = 0.0f;
+		m_cbLights.directionalLight[1].direction.y = 1.0f;
+		m_cbLights.directionalLight[1].direction.z = 0.0f;
+		m_cbLights.directionalLight[1].direction.w = 0.0f;
+		m_cbLights.directionalLight[1].direction.Normalize();
+		m_cbLights.ambientLight.x = 0.1f;
+		m_cbLights.ambientLight.y = 0.1f;
+		m_cbLights.ambientLight.z = 0.1f;
+		m_cbLights.ambientLight.w = 1.0f;
+		m_cbLights.eyePos = ChaVector4(ChaVector3(g_camera3D->GetPosition()), 0.0f);
+		m_cbLights.specPow = ChaVector4(5.0f, 5.0f, 5.0f, 0.0f);
+
+		m_expandConstantBuffer.CopyToVRAM(m_cbLights);
 	}
 	else if (ppm4) {
 		m_cb.mWorld = renderobj.mWorld;
@@ -1760,17 +1849,48 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 
 
-		if (!GetUpdateFl4x4Flag()) {//2023/12/01
+		//if (!GetUpdateFl4x4Flag()) {//2023/12/01
 		//if (isfirstmaterial) {
 		//if (isfirstmaterial && !GetUpdateFl4x4Flag()) {
 		//if (!renderobj.pmodel->GetUpdateFl4x4Flag()) {
-			
+			//#########################################
+			//2023/12/02 ライトパラメータは　まずは決め打ち
+			//#########################################
+			// 太陽光
+			m_cbMatrix.lights.Init();
+			m_cbMatrix.lights.directionalLight[0].color.x = 1.5f;
+			m_cbMatrix.lights.directionalLight[0].color.y = 1.5f;
+			m_cbMatrix.lights.directionalLight[0].color.z = 1.5f;
+			m_cbMatrix.lights.directionalLight[0].direction.w = 0.0f;
+
+			ChaVector3 cameye = ChaVector3(g_camera3D->GetPosition());
+			ChaVector3 camtarget = ChaVector3(g_camera3D->GetTarget());
+			m_cbMatrix.lights.directionalLight[0].direction = ChaVector4((camtarget - cameye), 0.0f);//この向きで合っている
+			m_cbMatrix.lights.directionalLight[0].direction.Normalize();
+
+			// 地面からの照り返し
+			m_cbMatrix.lights.directionalLight[1].color.x = 0.3f;
+			m_cbMatrix.lights.directionalLight[1].color.y = 0.3f;
+			m_cbMatrix.lights.directionalLight[1].color.z = 0.3f;
+			m_cbMatrix.lights.directionalLight[1].color.w = 0.0f;
+			m_cbMatrix.lights.directionalLight[1].direction.x = 0.0f;
+			m_cbMatrix.lights.directionalLight[1].direction.y = 1.0f;
+			m_cbMatrix.lights.directionalLight[1].direction.z = 0.0f;
+			m_cbMatrix.lights.directionalLight[1].direction.w = 0.0f;
+			m_cbMatrix.lights.directionalLight[1].direction.Normalize();
+			m_cbMatrix.lights.ambientLight.x = 0.1f;
+			m_cbMatrix.lights.ambientLight.y = 0.1f;
+			m_cbMatrix.lights.ambientLight.z = 0.1f;
+			m_cbMatrix.lights.ambientLight.w = 1.0f;
+			m_cbMatrix.lights.eyePos = ChaVector4(ChaVector3(g_camera3D->GetPosition()), 0.0f);
+			m_cbMatrix.lights.specPow = ChaVector4(5.0f, 5.0f, 5.0f, 0.0f);
+		
 			SetFl4x4(renderobj);
 			m_expandConstantBuffer.CopyToVRAM(m_cbMatrix);
 
 			renderobj.pmodel->SetUpdateFl4x4Flag();
 			SetUpdateFl4x4Flag();
-		}
+		//}
 
 	}
 

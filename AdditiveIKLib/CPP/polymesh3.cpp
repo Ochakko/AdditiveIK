@@ -28,6 +28,8 @@
 #include <mqoface.h>
 #include <Bone.h>
 
+#include <ChaVecCalc.h>
+
 #include <algorithm>
 #include <iostream>
 #include <iterator>
@@ -322,12 +324,12 @@ int CPolyMesh3::CreatePM3(bool fbxfileflag, int pointnum, int facenum, float fac
 		_ASSERT( 0 );
 		return 0;
 	}
-	m_dispv = (PM3DISPV*)malloc( sizeof( PM3DISPV ) * m_optleng );
+	m_dispv = (BINORMALDISPV*)malloc( sizeof( BINORMALDISPV ) * m_optleng );
 	if( !m_dispv ){
 		_ASSERT( 0 );
 		return 1;
 	}
-	ZeroMemory( m_dispv, sizeof( PM3DISPV ) * m_optleng );
+	ZeroMemory( m_dispv, sizeof( BINORMALDISPV ) * m_optleng );
 	m_matblock = (MATERIALBLOCK*)malloc( sizeof( MATERIALBLOCK ) * m_optmatnum );
 	if( !m_matblock ){
 		_ASSERT( 0 );
@@ -349,6 +351,10 @@ int CPolyMesh3::CreatePM3(bool fbxfileflag, int pointnum, int facenum, float fac
 		return 1;
 	}
 
+	BuildTangentAndBinormal();
+
+
+
 	CallF( CalcBound(), return 1 );
 
 
@@ -362,6 +368,37 @@ int CPolyMesh3::CreatePM3(bool fbxfileflag, int pointnum, int facenum, float fac
 
 	return 0;
 }
+
+int CPolyMesh3::BuildTangentAndBinormal()
+{
+	if (!m_dispv || !m_dispindex) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int faceno;
+	for (faceno = 0; faceno < m_facenum; faceno++) {
+		int i1 = *(m_dispindex + faceno * 3);
+		int i2 = *(m_dispindex + faceno * 3 + 1);
+		int i3 = *(m_dispindex + faceno * 3 + 2);
+		BINORMALDISPV* v1 = m_dispv + i1;
+		BINORMALDISPV* v2 = m_dispv + i2; 
+		BINORMALDISPV* v3 = m_dispv + i3;
+		CalcTangentAndBinormal(v1, v2, v3);
+	}
+	int vno;
+	for (vno = 0; vno < (m_facenum * 3); vno++) {
+		BINORMALDISPV* pv = m_dispv + vno;
+		if (pv) {
+			pv->normal.Normalize();
+			pv->tangent.Normalize();
+			pv->binormal.Normalize();
+		}
+	}
+
+	return 0;
+}
+
 
 int CPolyMesh3::MultVert( ChaMatrix multmat )
 {
@@ -688,7 +725,7 @@ int CPolyMesh3::AddSmFace( N3P* n3p1, N3P* n3p2 )
 	return 0;
 }
 
-int CPolyMesh3::SetOptV(PM3DISPV* dispv, int* pleng, int* matnum, CModel* pmodel)
+int CPolyMesh3::SetOptV(BINORMALDISPV* dispv, int* pleng, int* matnum, CModel* pmodel)
 {
 	*pleng = 0;
 	if (!pmodel) {
@@ -740,7 +777,7 @@ int CPolyMesh3::SetOptV(PM3DISPV* dispv, int* pleng, int* matnum, CModel* pmodel
 //		if( curn3p->pervert->createflag != 0 ){
 
 			if( dispv ){
-				PM3DISPV* curv = dispv + setno;
+				BINORMALDISPV* curv = dispv + setno;
 				curv->pos.x = (m_pointbuf + curn3p->pervert->vno)->x;
 				curv->pos.y = (m_pointbuf + curn3p->pervert->vno)->y;
 				curv->pos.z = (m_pointbuf + curn3p->pervert->vno)->z;
@@ -753,7 +790,10 @@ int CPolyMesh3::SetOptV(PM3DISPV* dispv, int* pleng, int* matnum, CModel* pmodel
 				else {
 					curv->normal = ChaVector4(curn3p->pervert->smnormal, 0.0f);
 				}
-				
+
+				curv->tangent = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
+				curv->binormal = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
+
 				curv->uv = curn3p->pervert->uv[0];
 
 				/***
@@ -903,7 +943,7 @@ int CPolyMesh3::MultScale( ChaVector3 srcscale, ChaVector3 srctra )
 		N3P* curn3p = m_n3p + vno;
 		int orgvno = curn3p->pervert->vno;
 		ChaVector3* srcv = m_pointbuf + orgvno;
-		PM3DISPV* curv = m_dispv + vno;
+		BINORMALDISPV* curv = m_dispv + vno;
 		curv->pos = ChaVector4( srcv->x * srcscale.x + srctra.x, srcv->y * srcscale.y + srctra.y, srcv->z * srcscale.z + srctra.z, 1.0f );
 	}
 

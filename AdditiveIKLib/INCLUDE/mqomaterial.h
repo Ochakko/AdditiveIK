@@ -20,14 +20,6 @@ class ConstantBuffer;//定数バッファ。
 class RootSignature;//ルートシグネチャ。
 
 
-struct SConstantBufferBoneMatrix {
-	//float setfl4x4[16 * MAXCLUSTERNUM];//ボーンの姿勢マトリックス
-	float setfl4x4[16 * MAXBONENUM];//ボーンの姿勢マトリックス
-	void Init() {
-		ZeroMemory(setfl4x4, sizeof(float) * 16 * MAXBONENUM);
-	};
-};
-
 struct SConstantBuffer {
 	Matrix mWorld;		//ワールド行列。
 	Matrix mView;		//ビュー行列。
@@ -41,6 +33,41 @@ struct SConstantBuffer {
 	};
 };
 
+struct DirectionalLight
+{
+	ChaVector4 direction; // ライトの方向
+	ChaVector4 color; // ライトの色
+	void Init() {
+		direction.SetZeroVec4(0.0f);
+		color.SetZeroVec4(1.0f);
+	};
+};
+
+#define NUM_DIRECTIONAL_LIGHT 2
+struct SConstantBufferLights {
+	DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
+	ChaVector4 eyePos; // カメラの視点
+	ChaVector4 specPow; // スペキュラの絞り
+	ChaVector4 ambientLight; // 環境光
+	void Init() {
+		int lindex;
+		for (lindex = 0; lindex < NUM_DIRECTIONAL_LIGHT; lindex++) {
+			directionalLight[lindex].Init();
+		}
+		eyePos.SetZeroVec4(1.0f);
+		specPow.SetZeroVec4(0.0f);
+		ambientLight.SetZeroVec4(1.0f);
+	};
+};
+
+struct SConstantBufferBoneMatrix {
+	SConstantBufferLights lights;
+	float setfl4x4[16 * MAXBONENUM];//ボーンの姿勢マトリックス
+	void Init() {
+		lights.Init();
+		ZeroMemory(setfl4x4, sizeof(float) * 16 * MAXBONENUM);
+	};
+};
 
 class CMQOMaterial
 {
@@ -217,6 +244,9 @@ public:
 		strcpy_s( m_bump, 256, srcname );
 	};
 
+
+
+
 	int GetVcolFlag(){
 		return m_vcolflag;
 	};
@@ -309,17 +339,77 @@ public:
 		return m_curtexname;
 	};
 
-	int GetTexID(){
-		return m_texid;
+	//#######
+	//albedo
+	//#######
+	const char* GetAlbedoTex() {
+		return m_albedotex;
 	};
-	void SetTexID( int srcval ){
-		m_texid = srcval;
+	void SetAlbedoTex(const char* srcname) {
+		if (srcname && srcname[0]) {
+			strcpy_s(m_albedotex, 256, srcname);
+		}
+		else {
+			_ASSERT(0);
+			m_albedotex[0] = 0;
+		}
 	};
+	int GetAlbedoTexID(){
+		return m_albedotexid;
+	};
+	void SetAlbedoTexID( int srcval ){
+		m_albedotexid = srcval;
+	};
+
+	//#######
+	//normal
+	//#######
+	const char* GetNormalTex() {
+		return m_normaltex;
+	};
+	void SetNormalTex(const char* srcname) {
+		if (srcname && srcname[0]) {
+			strcpy_s(m_normaltex, 256, srcname);
+		}
+		else {
+			_ASSERT(0);
+			m_normaltex[0] = 0;
+		}
+	};
+	int GetNormalTexID() {
+		return m_normaltexid;
+	};
+	void SetNormalTexID(int srcval) {
+		m_normaltexid = srcval;
+	};
+
+	//#######
+	//metal
+	//#######
+	const char* GetMetalTex() {
+		return m_metaltex;
+	};
+	void SetMetalTex(const char* srcname) {
+		if (srcname && srcname[0]) {
+			strcpy_s(m_metaltex, 256, srcname);
+		}
+		else {
+			_ASSERT(0);
+			m_metaltex[0] = 0;
+		}
+	};
+	int GetMetalTexID() {
+		return m_metaltexid;
+	};
+	void SetMetalTexID(int srcval) {
+		m_metaltexid = srcval;
+	};
+
 
 	Texture& GetDiffuseMap();
 	Texture& GetAlbedoMap();
 	Texture& GetNormalMap();
-	Texture& GetSpecularMap();
+	Texture& GetMetalMap();
 
 	void ResetUpdateFl4x4Flag()
 	{
@@ -396,6 +486,11 @@ private:
 	char m_alpha[256];
 	char m_bump[256];
 
+	char m_albedotex[256];
+	char m_normaltex[256];
+	char m_metaltex[256];
+
+
 	int m_vcolflag;
 ////
 
@@ -416,13 +511,16 @@ private:
 	float m_uanime;
 	float m_vanime;
 
-	int m_texid;
+	int m_albedotexid;
+	int m_normaltexid;
+	int m_metaltexid;
+
 	Texture m_whitetex;
 	Texture m_blacktex;
 	Texture m_diffuseMap;
 	Texture* m_albedoMap;//bank管理の外部ポインタ
-	Texture* m_normalMap;//とりあえずnulltexture このクラスで作成するポインタ
-	Texture* m_specularMap;//とりあえずnulltexture このクラスで作成するポインタ
+	Texture* m_normalMap;//bank管理の外部ポインタ
+	Texture* m_metalMap;//bank管理の外部ポインタ
 
 	ConstantBuffer m_constantBuffer;				//定数バッファ。
 	RootSignature m_rootSignature;					//ルートシグネチャ。
@@ -438,6 +536,7 @@ private:
 
 	SConstantBuffer m_cb;
 	SConstantBufferBoneMatrix m_cbMatrix;
+	SConstantBufferLights m_cbLights;
 
 	bool m_initpipelineflag = false;
 	bool m_updatefl4x4flag = false;
