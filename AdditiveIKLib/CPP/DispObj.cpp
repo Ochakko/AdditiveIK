@@ -1277,37 +1277,14 @@ int CDispObj::RenderZPrePm4(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 			diffuse.z = curdif4f.z * renderobj.diffusemult.z * renderobj.materialdisprate.x;
 			//diffuse.Clamp(0.0f, 1.0f);
 
-			bool laterflag = false;
 
-			bool opeflag = false;
-			if (renderobj.withalpha && renderobj.forcewithalpha) {
-				opeflag = true;
+			//#####################################################
+			//半透明はZバッファに書き込まないように　ZPrepass処理をスキップ
+			//#####################################################
+			if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
+				continue;
 			}
-			else {
-				if (laterflag && renderobj.withalpha) {
-					opeflag = true;
-				}
-				else {
-					if (renderobj.withalpha == false) {//2023/09/24
-						if ((curmat->GetTransparent() == 0) && (diffuse.w > 0.99999f)) {
-							opeflag = true;
-						}
-						else {
-							opeflag = false;
-						}
-					}
-					else {
-						if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
-							opeflag = true;
-						}
-						else {
-							opeflag = false;
-						}
-					}
-				}
-			}
-
-			if (opeflag == false) {
+			if (renderobj.withalpha || renderobj.forcewithalpha) {
 				continue;
 			}
 
@@ -1616,37 +1593,18 @@ int CDispObj::RenderZPrePm3(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 		diffuse.z = curdif4f.z * renderobj.diffusemult.z * renderobj.materialdisprate.x;
 		//diffuse.Clamp(0.0f, 1.0f);
 
-		bool laterflag = false;
-		bool opeflag = false;
-		if (renderobj.withalpha && renderobj.forcewithalpha) {
-			opeflag = true;
-		}
-		else {
-			if (renderobj.withalpha && laterflag) {
-				opeflag = true;
-			}
-			else {
-				if (renderobj.withalpha == false) {//2023/09/24
-					if ((curmat->GetTransparent() == 0) && (diffuse.w > 0.99999f)) {
-						opeflag = true;
-					}
-					else {
-						opeflag = false;
-					}
-				}
-				else {
-					if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
-						opeflag = true;
-					}
-					else {
-						opeflag = false;
-					}
-				}
-			}
-		}
-		if (opeflag == false) {
+
+
+		//#####################################################
+		//半透明はZバッファに書き込まないように　ZPrepass処理をスキップ
+		//#####################################################
+		if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
 			continue;
 		}
+		if (renderobj.withalpha || renderobj.forcewithalpha) {
+			continue;
+		}
+
 
 		Matrix mView, mProj;
 		mView = g_camera3D->GetViewMatrix();
