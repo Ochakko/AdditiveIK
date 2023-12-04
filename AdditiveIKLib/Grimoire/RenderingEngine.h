@@ -20,6 +20,7 @@ namespace myRenderer
         CMQOObject* mqoobj;
         Matrix mWorld;
         bool withalpha;
+        bool forcewithalpha;//rendergroup >= 2の場合強制半透明
         int lightflag;
         ChaVector4 diffusemult;
         ChaVector4 materialdisprate;
@@ -33,6 +34,7 @@ namespace myRenderer
             mqoobj = nullptr;
             mWorld.SetIdentity();
             withalpha = false;
+            forcewithalpha = false;
             lightflag = 1;
             diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
             materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);

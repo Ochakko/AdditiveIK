@@ -180,7 +180,14 @@ static void AnimateSkeletonOfBVH( FbxScene* pScene );
 static void AnimateBoneOfBVHReq( CFBXBone* fbxbone, FbxAnimLayer* lAnimLayer );
 
 
-static FbxTexture*  CreateTexture( FbxManager* pSdkManager, CModel* srcmodel, CMQOMaterial* mqomat );
+enum {
+	CREATETEX_ALBEDO,
+	CREATETEX_NORMAL,
+	CREATETEX_METAL,
+	CREATETEX_MAX
+};
+static FbxTexture*  CreateTexture( FbxManager* pSdkManager, CModel* srcmodel, CMQOMaterial* mqomat, int texturetype );
+
 static int ExistBoneInInf( int boneno, CMQOObject* srcobj, int* dstclusterno );
 
 static int MapShapesOnMesh( FbxScene* pScene, FbxNode* pNode, CModel* pmodel, CMQOObject* curobj, BLSINDEX* blsindex );
@@ -2423,6 +2430,13 @@ int CreateFbxMaterial(FbxManager* pSdkManager, FbxScene* pScene, FbxNode* lNode,
 
 int	CreateFbxMaterialFromMQOMaterial(FbxManager* pSdkManager, FbxScene* pScene, FbxNode* lNode, FbxGeometryElementMaterial* lMaterialElement, CModel* pmodel, CMQOObject* curobj, CMQOMaterial* mqomat)
 {
+	if (!pSdkManager || !pScene || 
+		!lNode || !lMaterialElement || 
+		!pmodel || !curobj || !mqomat) {
+		_ASSERT(0);
+		return 1;
+	}
+
 	static int s_matcnt = 0;
 	s_matcnt++;
 
@@ -2461,14 +2475,34 @@ int	CreateFbxMaterialFromMQOMaterial(FbxManager* pSdkManager, FbxScene* pScene, 
 	//lMaterial->AmbientFactor.Set(1.0);
 	//lMaterial->AmbientFactor.Set(0.1);
 	lMaterial->AmbientFactor.Set(g_AmbientFactorAtSaving);
-	FbxTexture* curtex = CreateTexture(pSdkManager, pmodel, mqomat);
-	if (curtex) {
-		lMaterial->Diffuse.ConnectSrcObject(curtex);
+
+	int texkind;
+	bool findtexture = false;
+	for (texkind = CREATETEX_ALBEDO; texkind <= CREATETEX_METAL; texkind++) {
+		FbxTexture* curtex = CreateTexture(pSdkManager, pmodel, mqomat, texkind);
+		if (curtex) {
+			switch (texkind) {
+			case CREATETEX_ALBEDO:
+			case CREATETEX_METAL:
+				lMaterial->Diffuse.ConnectSrcObject(curtex);
+				break;
+			case CREATETEX_NORMAL:
+				lMaterial->NormalMap.ConnectSrcObject(curtex);//2023/12/04 normalmapとしてコネクト
+				break;
+			default:
+				_ASSERT(0);
+				break;
+			}
+			findtexture = true;
+		}
+	}
+	if (findtexture) {
 		lNode->SetShadingMode(FbxNode::eTextureShading);
 	}
 	else {
 		lNode->SetShadingMode(FbxNode::eHardShading);
 	}
+
 
 	//lMaterial->DiffuseFactor.Set(1.0);
 	lMaterial->DiffuseFactor.Set(g_DiffuseFactorAtSaving);
@@ -2516,27 +2550,62 @@ int	CreateFbxMaterialFromMQOMaterial(FbxManager* pSdkManager, FbxScene* pScene, 
 }
 
 
-FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMaterial* mqomat)
+FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMaterial* mqomat, int texkind)
 {
-	if( !*(mqomat->GetTex()) ){
-		return NULL;
+	if (!pSdkManager || !srcmodel || !mqomat) {
+		_ASSERT(0);
+		return nullptr;
 	}
 
-    FbxFileTexture* lTexture = FbxFileTexture::Create(pSdkManager,"");
 
+	FbxFileTexture* lTexture = nullptr;
+	char texturename[256] = { 0 };
 
+	switch (texkind) {
+	case CREATETEX_ALBEDO:
+	{
+		if (!*(mqomat->GetAlbedoTex())) {
+			return NULL;
+		}
+		strcpy_s(texturename, 256, mqomat->GetAlbedoTex());
+	}
+		break;
+	case CREATETEX_NORMAL:
+	{
+		if (!*(mqomat->GetNormalTex())) {
+			return NULL;
+		}
+		strcpy_s(texturename, 256, mqomat->GetNormalTex());
+	}
+	break;
+	case CREATETEX_METAL:
+	{
+		if (!*(mqomat->GetMetalTex())) {
+			return NULL;
+		}
+		strcpy_s(texturename, 256, mqomat->GetMetalTex());
+	}
+	break;
+	default:
+		_ASSERT(0);
+		texturename[0] = 0;
+		return nullptr;
+		break;
+	}
+
+    lTexture = FbxFileTexture::Create(pSdkManager,"");
     //FbxString lTexPath = mqomat->GetTex();
 	
-	const char* lasten = strrchr(mqomat->GetTex(), '\\');
+	const char* lasten = strrchr(texturename, '\\');
 	const char* ptex = 0;
 	if (!lasten) {
-		lasten = strrchr(mqomat->GetTex(), '/');
+		lasten = strrchr(texturename, '/');
 	}
 	if (lasten) {
 		ptex = (lasten + 1);
 	}
 	else {
-		ptex = mqomat->GetTex();
+		ptex = texturename;
 	}
 
 	//2023/08/29

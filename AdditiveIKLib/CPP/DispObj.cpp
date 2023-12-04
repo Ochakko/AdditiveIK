@@ -992,7 +992,7 @@ int CDispObj::RenderNormal(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 	}
 
 	int latermatnum = renderobj.mqoobj->GetLaterMaterialNum();
-	if (renderobj.withalpha && (latermatnum > 0)) {
+	if ((renderobj.forcewithalpha || renderobj.withalpha) && (latermatnum > 0)) {
 		//VRoid VRM 裾(すそ)の透過の順番のため　最後に描画
 		int laterindex;
 		for (laterindex = 0; laterindex < latermatnum; laterindex++) {
@@ -1037,24 +1037,29 @@ int CDispObj::RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ rend
 	//diffuse.Clamp(0.0f, 1.0f);
 
 	bool opeflag = false;
-	if (laterflag && renderobj.withalpha) {
+	if (renderobj.withalpha && renderobj.forcewithalpha) {
 		opeflag = true;
 	}
 	else {
-		if (renderobj.withalpha == false) {//2023/09/24
-			if ((curmat->GetTransparent() == 0) && (diffuse.w > 0.99999f)) {
-				opeflag = true;
-			}
-			else {
-				opeflag = false;
-			}
+		if (laterflag && renderobj.withalpha) {
+			opeflag = true;
 		}
 		else {
-			if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
-				opeflag = true;
+			if (renderobj.withalpha == false) {//2023/09/24
+				if ((curmat->GetTransparent() == 0) && (diffuse.w > 0.99999f)) {
+					opeflag = true;
+				}
+				else {
+					opeflag = false;
+				}
 			}
 			else {
-				opeflag = false;
+				if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
+					opeflag = true;
+				}
+				else {
+					opeflag = false;
+				}
 			}
 		}
 	}
@@ -1126,8 +1131,9 @@ int CDispObj::RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ rend
 
 	int hasskin = 1;
 	bool isline = false;
+	bool withalpha = (renderobj.withalpha || renderobj.forcewithalpha);
 	curmat->BeginRender(rc, hasskin, isline, 
-		renderobj.zcmpalways, renderobj.withalpha);
+		renderobj.zcmpalways, withalpha);
 
 	rc.SetVertexBuffer(m_vertexBufferView);
 	//3. インデックスバッファを設定。
@@ -1211,7 +1217,7 @@ int CDispObj::RenderNormalPM3(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 
 
 	int latermatnum = renderobj.mqoobj->GetLaterMaterialNum();
-	if (renderobj.withalpha && (latermatnum > 0)) {
+	if ((renderobj.forcewithalpha || renderobj.withalpha) && (latermatnum > 0)) {
 		//VRoid VRM 裾(すそ)の透過の順番のため　最後に描画
 		int laterindex;
 		for (laterindex = 0; laterindex < latermatnum; laterindex++) {
@@ -1248,28 +1254,32 @@ int CDispObj::RenderNormalPM3Material(RenderContext& rc, myRenderer::RENDEROBJ r
 
 
 	bool opeflag = false;
-	if (renderobj.withalpha && laterflag) {
+	if (renderobj.withalpha && renderobj.forcewithalpha) {
 		opeflag = true;
 	}
 	else {
-		if (renderobj.withalpha == false) {//2023/09/24
-			if ((curmat->GetTransparent() == 0) && (diffuse.w > 0.99999f)) {
-				opeflag = true;
-			}
-			else {
-				opeflag = false;
-			}
+		if (renderobj.withalpha && laterflag) {
+			opeflag = true;
 		}
 		else {
-			if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
-				opeflag = true;
+			if (renderobj.withalpha == false) {//2023/09/24
+				if ((curmat->GetTransparent() == 0) && (diffuse.w > 0.99999f)) {
+					opeflag = true;
+				}
+				else {
+					opeflag = false;
+				}
 			}
 			else {
-				opeflag = false;
+				if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
+					opeflag = true;
+				}
+				else {
+					opeflag = false;
+				}
 			}
 		}
 	}
-
 	if (opeflag == false) {
 		return 0;
 	}
@@ -1333,8 +1343,9 @@ int CDispObj::RenderNormalPM3Material(RenderContext& rc, myRenderer::RENDEROBJ r
 
 	int hasskin = 0;
 	bool isline = false;
+	bool withalpha = (renderobj.withalpha || renderobj.forcewithalpha);
 	curmat->BeginRender(rc, hasskin, isline, 
-		renderobj.zcmpalways, renderobj.withalpha);
+		renderobj.zcmpalways, withalpha);
 
 	//rc.SetDescriptorHeap(m_descriptorHeap);
 

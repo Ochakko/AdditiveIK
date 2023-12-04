@@ -123,6 +123,8 @@ Testフォルダをgit add. モデルはVRoid.<br>
 PBR対応開始<br>
 スキンメッシュについてはノーマルマップがある場合にPBR、無い場合はStandardで描画<br>
 背景などの非スキンメッシュについては全部PBR<br>
+プロジェクト保存時　fbxのPBR用テクスチャ(albedo, normal, metal)も保存<br>
+描画はモデルを横断してDispGroupNo順に行っている　DispGroupNo >= 2の描画時には強制的に半透明描画<br>
 調整などはこれから<br>
 <br>
 <br>

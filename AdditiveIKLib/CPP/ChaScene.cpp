@@ -313,7 +313,8 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lig
 
 		for (renderindex = 0; renderindex < 2; renderindex++) {
 
-			bool withalpha;
+			bool withalpha = false;
+			bool forcewithalpha = false;
 			if (renderindex == 0) {
 				withalpha = false;
 			}
@@ -323,6 +324,16 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lig
 
 			int groupindex;
 			for (groupindex = 0; groupindex < MAXDISPGROUPNUM; groupindex++) {
+
+				if (groupindex >= 1) {
+					forcewithalpha = true;
+				}
+				else {
+					forcewithalpha = false;
+				}
+				if (forcewithalpha && (renderindex == 0)) {
+					continue;
+				}
 
 				for (modelindex = 0; modelindex < modelnum; modelindex++) {
 
@@ -348,26 +359,31 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lig
 										int dbgflag1 = 1;
 									}
 
+									if (forcewithalpha) {
+										//groupno >= 2以降は強制半透明
+									}
+									else {
+										bool found_noalpha = false;
+										bool found_alpha = false;
+										int result = curobj->IncludeTransparent(diffusemult.w, &found_noalpha, &found_alpha);//2023/09/24
+										if (result == 1) {
+											_ASSERT(0);
+											return 1;
+										}
+										else if (result == 2) {
+											continue;
+										}
 
-									bool found_noalpha = false;
-									bool found_alpha = false;
-									int result = curobj->IncludeTransparent(diffusemult.w, &found_noalpha, &found_alpha);//2023/09/24
-									if (result == 1) {
-										_ASSERT(0);
-										return 1;
+										if ((withalpha == false) && (found_noalpha == false)) {
+											//不透明描画時　１つも不透明がなければ　レンダースキップ
+											continue;
+										}
+										if ((withalpha == true) && (found_alpha == false)) {
+											//半透明描画時　１つも半透明がなければ　レンダースキップ
+											continue;
+										}
 									}
-									else if (result == 2) {
-										continue;
-									}
-
-									if ((withalpha == false) && (found_noalpha == false)) {
-										//不透明描画時　１つも不透明がなければ　レンダースキップ
-										continue;
-									}
-									if ((withalpha == true) && (found_alpha == false)) {
-										//半透明描画時　１つも半透明がなければ　レンダースキップ
-										continue;
-									}
+									
 
 									//m_renderingEngine->Add3DModelToZPrepass(curobj);
 									//m_renderingEngine->Add3DModelToRenderGBufferPass(curobj);
@@ -376,6 +392,7 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lig
 									renderobj.pmodel = curmodel;
 									renderobj.mqoobj = curobj;
 									renderobj.withalpha = withalpha;
+									renderobj.forcewithalpha = forcewithalpha;
 									renderobj.lightflag = lightflag;
 									renderobj.diffusemult = diffusemult;
 									renderobj.materialdisprate = materialdisprate;
@@ -572,6 +589,7 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 							renderobj.pmodel = curmodel;
 							renderobj.mqoobj = curobj;
 							renderobj.withalpha = withalpha;
+							renderobj.forcewithalpha = forcewithalpha;
 							renderobj.lightflag = lightflag;
 							renderobj.diffusemult = diffusemult;
 							renderobj.materialdisprate = materialdisprate;
