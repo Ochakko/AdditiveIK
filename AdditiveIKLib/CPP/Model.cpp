@@ -19741,6 +19741,7 @@ void CModel::ResetUpdateFl4x4Flag()//materialのリセットも行う
 		CMQOMaterial* resetmqomat = m_materialbank.Get(matindex);
 		if (resetmqomat) {
 			resetmqomat->ResetUpdateFl4x4Flag();
+			resetmqomat->ResetUpdateLightsFlag();
 		}
 	}
 }

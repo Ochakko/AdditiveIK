@@ -129,10 +129,26 @@ public:
 		UINT offsetInDescriptorsFromTableStartCB,
 		UINT offsetInDescriptorsFromTableStartSRV,
 		D3D12_FILTER samplerFilter);
+	void InitZPreShadersAndPipelines(
+		int vertextype,
+		const char* fxFilePath,
+		const char* vsEntryPointFunc,
+		const char* psEntryPointFunc,
+		const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat,
+		int numSrv,
+		int numCbv,
+		UINT offsetInDescriptorsFromTableStartCB,
+		UINT offsetInDescriptorsFromTableStartSRV,
+		D3D12_FILTER samplerFilter);
 	void InitPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
+	void InitZPrePipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
 	void InitShaders(const char* fxFilePath,
 		const char* vsEntryPointFunc,
 		const char* vsSkinEntriyPointFunc,
+		const char* psEntryPointFunc
+	);
+	void InitZPreShaders(const char* fxFilePath,
+		const char* vsEntryPointFunc,
 		const char* psEntryPointFunc
 	);
 
@@ -142,6 +158,12 @@ public:
 		bool isfirstmaterial  = false);
 	void BeginRender(RenderContext& rc, int hasSkin, bool isline, 
 		bool zcmpalways, bool withalpha);
+	void ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
+		const Matrix& mView, const Matrix& mProj,
+		bool isfirstmaterial = false);
+	void ZPreBeginRender(RenderContext& rc);
+
+
 
 	void SetBoneMatrix(myRenderer::RENDEROBJ renderobj);
 	//void SetBoneMatrixReq(CBone* srcbone, myRenderer::RENDEROBJ renderobj);
@@ -423,6 +445,19 @@ public:
 	{
 		return m_updatefl4x4flag;
 	}
+	void ResetUpdateLightsFlag()
+	{
+		m_updatelightsflag = false;
+	}
+	void SetUpdateLightsFlag()
+	{
+		m_updatelightsflag = true;
+	}
+	bool GetUpdateLightsFlag()
+	{
+		return m_updatelightsflag;
+	}
+
 
 	void SetTempDiffuseMult(ChaVector4 srcmult)
 	{
@@ -534,12 +569,19 @@ private:
 	Shader* m_vsSkinModel = nullptr;				//スキンありモデル用の頂点シェーダー。
 	Shader* m_psModel = nullptr;					//モデル用のピクセルシェーダー。
 
+	RootSignature m_ZPrerootSignature;					//ZPreルートシグネチャ。
+	PipelineState m_ZPreModelPipelineState;		//ZPreモデル用のパイプラインステート。
+	Shader* m_vsZPreModel = nullptr;				//ZPreモデル用の頂点シェーダー。
+	Shader* m_psZPreModel = nullptr;					//ZPreモデル用のピクセルシェーダー。
+
+
 	SConstantBuffer m_cb;
 	SConstantBufferBoneMatrix m_cbMatrix;
 	SConstantBufferLights m_cbLights;
 
 	bool m_initpipelineflag = false;
 	bool m_updatefl4x4flag = false;
+	bool m_updatelightsflag = false;
 
 //以下、クラス外からアクセスしないのでアクセッサー無し。
 	char* m_curtexname;

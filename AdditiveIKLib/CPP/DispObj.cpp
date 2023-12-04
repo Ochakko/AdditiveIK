@@ -286,8 +286,8 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone)
 
 	std::array<DXGI_FORMAT, MAX_RENDERING_TARGET> colorBufferFormat = {
 		DXGI_FORMAT_R8G8B8A8_UNORM,
-		//DXGI_FORMAT_R32G32B32A32_FLOAT,
-		DXGI_FORMAT_UNKNOWN,
+		DXGI_FORMAT_R32G32B32A32_FLOAT,
+		//DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
@@ -314,6 +314,9 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone)
 			//2023/12/04
 			//テクスチャ設定が無い場合と　ノーマルまたはメタル設定がある場合にPBR
 			//テクスチャが無い場合の表示が　きつい真っ白にならないように
+			//例：UnityAsset TheHunt Street1をstdシェーダにしてからfbxエクスポートしそれを読み込むと
+			// Stdシェーダではお店のWall_Boxが真っ白になる
+			// その場合のWall_Boxのマテリアルはテクスチャ無しの　DiffuseとEmission設定のみであった
 			//##########################################################
 			if ((curmat->GetAlbedoTex() && !(curmat->GetAlbedoTex())[0]) ||
 				(curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) ||
@@ -351,6 +354,20 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone)
 				);
 			}
 
+			curmat->InitZPreShadersAndPipelines(
+				vertextype,
+				"../Media/Shader/AdditiveIK_NoSkin_ZPrepass.fx",
+				"VSMainZPrepass",
+				"PSMainZPrepass",
+				colorBufferFormat,
+				curmat->NUM_SRV_ONE_MATERIAL,
+				curmat->NUM_CBV_ONE_MATERIAL,
+				0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
+				0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
+				D3D12_FILTER_MIN_MAG_MIP_LINEAR
+			);
+
+
 			rootindex++;
 		}
 	}
@@ -370,8 +387,8 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone )
 
 	std::array<DXGI_FORMAT, MAX_RENDERING_TARGET> colorBufferFormat = {
 		DXGI_FORMAT_R8G8B8A8_UNORM,
-		//DXGI_FORMAT_R32G32B32A32_FLOAT,
-		DXGI_FORMAT_UNKNOWN,
+		DXGI_FORMAT_R32G32B32A32_FLOAT,
+		//DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
@@ -400,6 +417,9 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone )
 				//2023/12/04
 				//テクスチャ設定が無い場合と　ノーマルまたはメタル設定がある場合にPBR
 				//テクスチャが無い場合の表示が　きつい真っ白にならないように
+				//例：UnityAsset TheHunt Street1をstdシェーダにしてからfbxエクスポートしそれを読み込むと
+				// Stdシェーダではお店のWall_Boxが真っ白になる
+				// その場合のWall_Boxのマテリアルはテクスチャ無しの　DiffuseとEmission設定のみであった
 				//##########################################################
 				if ((curmat->GetAlbedoTex() && !(curmat->GetAlbedoTex())[0]) ||
 					(curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) ||
@@ -437,6 +457,22 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone )
 						D3D12_FILTER_MIN_MAG_MIP_LINEAR
 					);
 				}
+
+
+				curmat->InitZPreShadersAndPipelines(
+					vertextype,
+					"../Media/Shader/AdditiveIK_Skin_ZPrepass.fx",
+					"VSMainZPrepass",
+					"PSMainZPrepass",
+					colorBufferFormat,
+					curmat->NUM_SRV_ONE_MATERIAL,
+					curmat->NUM_CBV_ONE_MATERIAL,
+					0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
+					0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
+					D3D12_FILTER_MIN_MAG_MIP_LINEAR
+				);
+
+
 				rootindex++;
 			}
 		}
@@ -460,8 +496,8 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 
 	std::array<DXGI_FORMAT, MAX_RENDERING_TARGET> colorBufferFormat = {
 		DXGI_FORMAT_R8G8B8A8_UNORM,
-		//DXGI_FORMAT_R32G32B32A32_FLOAT,
-		DXGI_FORMAT_UNKNOWN,
+		DXGI_FORMAT_R32G32B32A32_FLOAT,
+		//DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
@@ -980,10 +1016,19 @@ int CDispObj::RenderNormal(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 	////定数バッファの設定、更新など描画の共通処理を実行する。
 	//DrawCommon(rc, renderobj, mView, mProj);
 
-	////1. 頂点バッファを設定。
-	//rc.SetVertexBuffer(m_vertexBufferView);
-	////3. インデックスバッファを設定。
-	//rc.SetIndexBuffer(m_indexBufferView);
+
+	//##################################################################################
+	//2023/12/04　メモ
+	//SetVertexBufferとSetIndexBufferの呼び出し位置について
+	//マテリアルループに入るここで呼び出せば良いようだ
+	//マテリアルが思い通りに設定されない場合などに
+	//原因を探しながら　度々マテリアルループの中に移動するが
+	//SetVertexBufferとSetIndexBufferの呼び出し位置の問題で無いことが分かるとこの場所に戻している
+	//##################################################################################
+	//1. 頂点バッファを設定。
+	rc.SetVertexBuffer(m_vertexBufferView);
+	//3. インデックスバッファを設定。
+	rc.SetIndexBuffer(m_indexBufferView);
 
 	bool isfirstmaterial = true;
 	int materialcnt;
@@ -1149,9 +1194,9 @@ int CDispObj::RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ rend
 	curmat->BeginRender(rc, hasskin, isline, 
 		renderobj.zcmpalways, withalpha);
 
-	rc.SetVertexBuffer(m_vertexBufferView);
-	//3. インデックスバッファを設定。
-	rc.SetIndexBuffer(m_indexBufferView);
+	//rc.SetVertexBuffer(m_vertexBufferView);
+	////3. インデックスバッファを設定。
+	//rc.SetIndexBuffer(m_indexBufferView);
 
 	//4. ドローコールを実行。
 	rc.DrawIndexed(curtrinum * 3, curoffset);
@@ -1163,6 +1208,125 @@ int CDispObj::RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ rend
 
 
 }
+
+
+int CDispObj::RenderZPrePm4(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
+{
+
+	if (!renderobj.pmodel || !renderobj.mqoobj) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	// Only PM4
+	if (!m_pm4) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	//#################################################
+	//DescriptorHeapが作成されてない場合は　すぐにリターン
+	//#################################################
+	//if (m_createdescriptorflag == false) {
+	//	return 0;
+	//}
+	//if (m_descriptorHeap.Get() == nullptr) {
+	//	int dbgflag1 = 1;
+	//	return 0;
+	//}
+
+	int materialnum = m_pm4->GetDispMaterialNum();
+	if (materialnum <= 0) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	//Matrix mView, mProj;
+	//mView = g_camera3D->GetViewMatrix();
+	//mProj = g_camera3D->GetProjectionMatrix();
+	////定数バッファの設定、更新など描画の共通処理を実行する。
+	//DrawCommon(rc, renderobj, mView, mProj);
+
+
+	//##################################################################################
+	//2023/12/04　メモ
+	//SetVertexBufferとSetIndexBufferの呼び出し位置について
+	//マテリアルループに入るここで呼び出せば良いようだ
+	//マテリアルが思い通りに設定されない場合などに
+	//原因を探しながら　度々マテリアルループの中に移動するが
+	//SetVertexBufferとSetIndexBufferの呼び出し位置の問題で無いことが分かるとこの場所に戻している
+	//##################################################################################
+	//1. 頂点バッファを設定。
+	rc.SetVertexBuffer(m_vertexBufferView);
+	//3. インデックスバッファを設定。
+	rc.SetIndexBuffer(m_indexBufferView);
+
+	bool isfirstmaterial = true;
+	int materialcnt;
+	for (materialcnt = 0; materialcnt < materialnum; materialcnt++) {
+		CMQOMaterial* curmat = NULL;
+		int curoffset = 0;
+		int curtrinum = 0;
+		int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
+		if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0)) {
+			ChaVector4 diffuse;
+			ChaVector4 curdif4f = curmat->GetDif4F();
+			diffuse.w = curdif4f.w * renderobj.diffusemult.w;
+			diffuse.x = curdif4f.x * renderobj.diffusemult.x * renderobj.materialdisprate.x;
+			diffuse.y = curdif4f.y * renderobj.diffusemult.y * renderobj.materialdisprate.x;
+			diffuse.z = curdif4f.z * renderobj.diffusemult.z * renderobj.materialdisprate.x;
+			//diffuse.Clamp(0.0f, 1.0f);
+
+			bool laterflag = false;
+
+			bool opeflag = false;
+			if (renderobj.withalpha && renderobj.forcewithalpha) {
+				opeflag = true;
+			}
+			else {
+				if (laterflag && renderobj.withalpha) {
+					opeflag = true;
+				}
+				else {
+					if (renderobj.withalpha == false) {//2023/09/24
+						if ((curmat->GetTransparent() == 0) && (diffuse.w > 0.99999f)) {
+							opeflag = true;
+						}
+						else {
+							opeflag = false;
+						}
+					}
+					else {
+						if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
+							opeflag = true;
+						}
+						else {
+							opeflag = false;
+						}
+					}
+				}
+			}
+
+			if (opeflag == false) {
+				continue;
+			}
+
+			Matrix mView, mProj;
+			mView = g_camera3D->GetViewMatrix();
+			mProj = g_camera3D->GetProjectionMatrix();
+			//定数バッファの設定、更新など描画の共通処理を実行する。
+			curmat->ZPreDrawCommon(rc, renderobj, mView, mProj, isfirstmaterial);
+			curmat->ZPreBeginRender(rc);
+
+			//4. ドローコールを実行。
+			rc.DrawIndexed(curtrinum * 3, curoffset);
+		}
+	}
+
+	return 0;
+}
+
+
 
 int CDispObj::RenderNormalPM3(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 {
@@ -1196,10 +1360,19 @@ int CDispObj::RenderNormalPM3(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 	//DrawCommon(rc, renderobj, mView, mProj);
 	//rc.SetDescriptorHeap(m_descriptorHeap);//BeginRender()より後で呼ばないとエラー
 
-	////1. 頂点バッファを設定。
-	//rc.SetVertexBuffer(m_vertexBufferView);
-	////3. インデックスバッファを設定。
-	//rc.SetIndexBuffer(m_indexBufferView);
+
+	//##################################################################################
+	//2023/12/04　メモ
+	//SetVertexBufferとSetIndexBufferの呼び出し位置について
+	//マテリアルループに入るここで呼び出せば良いようだ
+	//マテリアルが思い通りに設定されない場合などに
+	//原因を探しながら　度々マテリアルループの中に移動するが
+	//SetVertexBufferとSetIndexBufferの呼び出し位置の問題で無いことが分かるとこの場所に戻している
+	//##################################################################################
+	//1. 頂点バッファを設定。
+	rc.SetVertexBuffer(m_vertexBufferView);
+	//3. インデックスバッファを設定。
+	rc.SetIndexBuffer(m_indexBufferView);
 
 
 	//マテリアルごとにドロー。
@@ -1363,16 +1536,136 @@ int CDispObj::RenderNormalPM3Material(RenderContext& rc, myRenderer::RENDEROBJ r
 
 	//rc.SetDescriptorHeap(m_descriptorHeap);
 
-	//1. 頂点バッファを設定。
-	rc.SetVertexBuffer(m_vertexBufferView);
-	//3. インデックスバッファを設定。
-	rc.SetIndexBuffer(m_indexBufferView);
+	////1. 頂点バッファを設定。
+	//rc.SetVertexBuffer(m_vertexBufferView);
+	////3. インデックスバッファを設定。
+	//rc.SetIndexBuffer(m_indexBufferView);
 
 	//4. ドローコールを実行。
 	rc.DrawIndexed(curtrinum * 3, curoffset);
 	//rc.DrawIndexed(m_pm3->GetFaceNum() * 3);
 
 	//descriptorHeapNo += NUM_SRV_ONE_MATERIAL;
+
+	return 0;
+}
+
+
+int CDispObj::RenderZPrePm3(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
+{
+	if (!renderobj.pmodel || !renderobj.mqoobj) {
+		_ASSERT(0);
+		return 0;
+	}
+
+
+	if (!m_pm3) {
+		return 0;
+	}
+	if (m_pm3->GetCreateOptFlag() == 0) {
+		return 0;
+	}
+
+	//#################################################
+	//DescriptorHeapが作成されてない場合は　すぐにリターン
+	//#################################################
+	//if (m_createdescriptorflag == false) {
+	//	return 0;
+	//}
+	//if (m_descriptorHeap.Get() == nullptr) {
+	//	return 0;
+	//}
+
+	//##################################################################################
+	//2023/12/04　メモ
+	//SetVertexBufferとSetIndexBufferの呼び出し位置について
+	//マテリアルループに入るここで呼び出せば良いようだ
+	//マテリアルが思い通りに設定されない場合などに
+	//原因を探しながら　度々マテリアルループの中に移動するが
+	//SetVertexBufferとSetIndexBufferの呼び出し位置の問題で無いことが分かるとこの場所に戻している
+	//##################################################################################
+	//1. 頂点バッファを設定。
+	rc.SetVertexBuffer(m_vertexBufferView);
+	//3. インデックスバッファを設定。
+	rc.SetIndexBuffer(m_indexBufferView);
+
+
+	//マテリアルごとにドロー。
+
+	//HRESULT hr;
+	int blno;
+	for (blno = 0; blno < m_pm3->GetOptMatNum(); blno++) {
+		MATERIALBLOCK* currb = m_pm3->GetMatBlock() + blno;
+
+		CMQOMaterial* curmat;
+		curmat = currb->mqomat;
+		if (!curmat) {
+			_ASSERT(0);
+			return 1;
+		}
+
+		int curtrinum;
+		curtrinum = currb->endface - currb->startface + 1;
+		int curoffset = currb->startface * 3;
+
+		ChaVector4 diffuse;
+		ChaVector4 curdif4f = curmat->GetDif4F();
+		diffuse.w = curdif4f.w * renderobj.diffusemult.w;
+		diffuse.x = curdif4f.x * renderobj.diffusemult.x * renderobj.materialdisprate.x;
+		diffuse.y = curdif4f.y * renderobj.diffusemult.y * renderobj.materialdisprate.x;
+		diffuse.z = curdif4f.z * renderobj.diffusemult.z * renderobj.materialdisprate.x;
+		//diffuse.Clamp(0.0f, 1.0f);
+
+		bool laterflag = false;
+		bool opeflag = false;
+		if (renderobj.withalpha && renderobj.forcewithalpha) {
+			opeflag = true;
+		}
+		else {
+			if (renderobj.withalpha && laterflag) {
+				opeflag = true;
+			}
+			else {
+				if (renderobj.withalpha == false) {//2023/09/24
+					if ((curmat->GetTransparent() == 0) && (diffuse.w > 0.99999f)) {
+						opeflag = true;
+					}
+					else {
+						opeflag = false;
+					}
+				}
+				else {
+					if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
+						opeflag = true;
+					}
+					else {
+						opeflag = false;
+					}
+				}
+			}
+		}
+		if (opeflag == false) {
+			continue;
+		}
+
+		Matrix mView, mProj;
+		mView = g_camera3D->GetViewMatrix();
+		mProj = g_camera3D->GetProjectionMatrix();
+		//定数バッファの設定、更新など描画の共通処理を実行する。
+		curmat->ZPreDrawCommon(rc, renderobj, mView, mProj);
+		curmat->ZPreBeginRender(rc);
+
+		//rc.SetDescriptorHeap(m_descriptorHeap);
+
+		////1. 頂点バッファを設定。
+		//rc.SetVertexBuffer(m_vertexBufferView);
+		////3. インデックスバッファを設定。
+		//rc.SetIndexBuffer(m_indexBufferView);
+
+		//4. ドローコールを実行。
+		rc.DrawIndexed(curtrinum * 3, curoffset);
+
+	}
 
 	return 0;
 }

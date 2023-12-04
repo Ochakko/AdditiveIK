@@ -80,6 +80,7 @@ public:
  * @param (ChaVector4 diffusemult) IN ディフューズ色に掛け算する比率。
  * @return 成功したら０。
  */
+
 	int RenderNormal(RenderContext& rc, myRenderer::RENDEROBJ renderobj);
 
 	int RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ renderobj, 
@@ -100,6 +101,9 @@ public:
 	int RenderNormalPM3Material(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
 		bool lasterflag, CMQOMaterial* rmaterial,
 		int curoffset, int curtrinum);
+
+	int RenderZPrePm4(RenderContext& rc, myRenderer::RENDEROBJ renderobj);
+	int RenderZPrePm3(RenderContext& rc, myRenderer::RENDEROBJ renderobj);
 
 
 /**

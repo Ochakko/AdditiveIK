@@ -50,7 +50,9 @@ m_transSkinAlwaysModelPipelineState(), //2023/12/01
 m_transNonSkinModelPipelineState(), //2023/12/01
 m_transNonSkinAlwaysModelPipelineState(), //2023/12/01
 m_constantBuffer(), //2023/12/01
-m_rootSignature() //2023/12/01
+m_rootSignature(), //2023/12/01
+m_ZPrerootSignature(), //2023/12/05
+m_ZPreModelPipelineState() //2023/12/05
 {
 	InitParams();
 
@@ -238,6 +240,7 @@ int CMQOMaterial::InitParams()
 	//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
 	//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
 	m_updatefl4x4flag = false;
+	m_updatelightsflag = false;
 
 	m_materialno = -1;
 	ZeroMemory ( m_name, 256 );
@@ -322,6 +325,14 @@ int CMQOMaterial::InitParams()
 
 	m_settempdiffusemult = false;
 	m_tempdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+
+
+	m_vsNonSkinModel = nullptr;				//スキンなしモデル用の頂点シェーダー。
+	m_vsSkinModel = nullptr;				//スキンありモデル用の頂点シェーダー。
+	m_psModel = nullptr;					//モデル用のピクセルシェーダー。
+	m_vsZPreModel = nullptr;				//ZPreモデル用の頂点シェーダー。
+	m_psZPreModel = nullptr;					//ZPreモデル用のピクセルシェーダー。
+
 
 	return 0;
 }
@@ -1067,6 +1078,77 @@ int CMQOMaterial::AddConvName( char** ppname )
 	return 0;
 }
 
+void CMQOMaterial::InitZPreShadersAndPipelines(
+	int vertextype,
+	const char* fxFilePath,
+	const char* vsEntryPointFunc,
+	const char* psEntryPointFunc,
+	const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat,
+	int numSrv,
+	int numCbv,
+	UINT offsetInDescriptorsFromTableStartCB,
+	UINT offsetInDescriptorsFromTableStartSRV,
+	D3D12_FILTER samplerFilter)
+{
+	//############################################
+	// vertextype : 0-->pm4, 1-->pm3, 2-->extline
+	//############################################
+
+	if ((vertextype != 0) && (vertextype != 1)) {
+		return;
+	}
+
+
+	//if (m_initpipelineflag) {
+	//	//###############################
+	//	//既に初期化済の場合は　すぐにリターン
+	//	//###############################
+	//	return;
+	//}
+
+
+	//ルートシグネチャを初期化。
+	D3D12_STATIC_SAMPLER_DESC samplerDescArray[2];
+	//デフォルトのサンプラ
+	samplerDescArray[0].Filter = samplerFilter;
+	samplerDescArray[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDescArray[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDescArray[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDescArray[0].MipLODBias = 0;
+	samplerDescArray[0].MaxAnisotropy = 0;
+	samplerDescArray[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	samplerDescArray[0].BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+	samplerDescArray[0].MinLOD = 0.0f;
+	samplerDescArray[0].MaxLOD = D3D12_FLOAT32_MAX;
+	samplerDescArray[0].ShaderRegister = 0;
+	samplerDescArray[0].RegisterSpace = 0;
+	samplerDescArray[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	//シャドウマップ用のサンプラ。
+	samplerDescArray[1] = samplerDescArray[0];
+	//比較対象の値が小さければ０、大きければ１を返す比較関数を設定する。
+	samplerDescArray[1].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+	samplerDescArray[1].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER;
+	samplerDescArray[1].MaxAnisotropy = 1;
+	samplerDescArray[1].ShaderRegister = 1;
+
+	m_ZPrerootSignature.Init(
+		samplerDescArray,
+		2,
+		numCbv,
+		numSrv,
+		8,
+		offsetInDescriptorsFromTableStartCB,
+		offsetInDescriptorsFromTableStartSRV
+	);
+
+	if (fxFilePath != nullptr && strlen(fxFilePath) > 0) {
+		//シェーダーを初期化。
+		InitZPreShaders(fxFilePath, vsEntryPointFunc, psEntryPointFunc);
+		//パイプラインステートを初期化。
+		InitZPrePipelineState(vertextype, colorBufferFormat);
+	}
+}
+
 
 void CMQOMaterial::InitShadersAndPipelines(
 	int vertextype,
@@ -1151,6 +1233,7 @@ void CMQOMaterial::InitShadersAndPipelines(
 
 	m_initpipelineflag = true;
 }
+
 
 void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
 {
@@ -1402,6 +1485,149 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 
 }
 
+void CMQOMaterial::InitZPrePipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
+{
+
+
+	//############################################
+	// vertextype : 0-->pm4, 1-->pm3, 2-->extline
+	//############################################
+
+	if ((vertextype != 0) && (vertextype != 1)) {
+		return;
+	}
+
+	// 頂点レイアウトを定義する。
+	//パイプラインステートを作成。
+	D3D12_INPUT_ELEMENT_DESC inputElementDescsWithBone[] =
+	{
+		//型：BINORMALDISPV + PM3INF
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "BLENDWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+	};
+	D3D12_INPUT_ELEMENT_DESC inputElementDescsWithoutBone[] =
+	{
+		//型：BINORMALDISPV
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+	};
+	D3D12_INPUT_ELEMENT_DESC inputElementDescsExtLine[] =
+	{
+		//型：ExtLine
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+	};
+
+
+
+	{
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
+		psoDesc.pRootSignature = m_ZPrerootSignature.Get();
+
+		//2023/12/01 シェーダのエントリ関数として　skin有無を切り替えることはあるが　頂点フォーマットはvertextypeによって決める
+		if (vertextype == 0) {//pm4
+			psoDesc.InputLayout = { inputElementDescsWithBone, _countof(inputElementDescsWithBone) };//!!! WithBone
+		}
+		else if (vertextype == 1) {//pm3
+			psoDesc.InputLayout = { inputElementDescsWithoutBone, _countof(inputElementDescsWithoutBone) };
+		}
+		//else if (vertextype == 2) {//extline
+		//	psoDesc.InputLayout = { inputElementDescsExtLine, _countof(inputElementDescsExtLine) };
+		//}
+		else {
+			_ASSERT(0);
+			abort();
+		}
+		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsZPreModel->GetCompiledBlob());//!!!!!!!!! Skin 
+		psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psZPreModel->GetCompiledBlob());
+		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+
+		if (vertextype != 2) {
+#ifdef SAMPLE_11
+			// 背面を描画していないと影がおかしくなるため、
+			// シャドウのサンプルのみカリングをオフにする。
+			// 本来はアプリ側からカリングモードを渡すのがいいのだけど、
+			// 書籍に記載しているコードに追記がいるので、エンジン側で吸収する。
+			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+#else
+			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+#endif
+		}
+		else {
+			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+		}
+		////2023/11/18
+		//psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+
+		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+#ifdef TK_ENABLE_ALPHA_TO_COVERAGE
+		psoDesc.BlendState.AlphaToCoverageEnable = TRUE;
+#endif
+		psoDesc.DepthStencilState.DepthEnable = TRUE;
+		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		psoDesc.DepthStencilState.StencilEnable = FALSE;
+		psoDesc.SampleMask = UINT_MAX;
+		if (vertextype != 2) {
+			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		}
+		else {
+			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+		}
+
+		int numRenderTarget = 0;
+		for (auto& format : colorBufferFormat) {
+			if (format == DXGI_FORMAT_UNKNOWN) {
+				//フォーマットが指定されていない場所が来たら終わり。
+				break;
+			}
+			psoDesc.RTVFormats[numRenderTarget] = colorBufferFormat[numRenderTarget];
+			numRenderTarget++;
+		}
+		psoDesc.NumRenderTargets = numRenderTarget;
+		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+		psoDesc.SampleDesc.Count = 1;
+
+		m_ZPreModelPipelineState.Init(psoDesc);
+
+
+	}
+
+}
+
 void CMQOMaterial::InitShaders(
 	const char* fxFilePath,
 	const char* vsEntryPointFunc,
@@ -1431,6 +1657,29 @@ void CMQOMaterial::InitShaders(
 		g_engine->RegistShaderToBank(fxFilePath, psEntryPointFunc, m_psModel);
 	}
 }
+
+void CMQOMaterial::InitZPreShaders(
+	const char* fxFilePath,
+	const char* vsEntryPointFunc,
+	const char* psEntryPointFunc
+)
+{
+	//スキンなしモデル用のシェーダーをロードする。
+	m_vsZPreModel = g_engine->GetShaderFromBank(fxFilePath, vsEntryPointFunc);
+	if (m_vsZPreModel == nullptr) {
+		m_vsZPreModel = new Shader;
+		m_vsZPreModel->LoadVS(fxFilePath, vsEntryPointFunc);
+		g_engine->RegistShaderToBank(fxFilePath, vsEntryPointFunc, m_vsZPreModel);
+	}
+
+	m_psZPreModel = g_engine->GetShaderFromBank(fxFilePath, psEntryPointFunc);
+	if (m_psZPreModel == nullptr) {
+		m_psZPreModel = new Shader;
+		m_psZPreModel->LoadPS(fxFilePath, psEntryPointFunc);
+		g_engine->RegistShaderToBank(fxFilePath, psEntryPointFunc, m_psZPreModel);
+	}
+}
+
 
 void CMQOMaterial::BeginRender(RenderContext& rc, int hasSkin, bool isline, bool zcmpalways, bool withalpha)
 {
@@ -1480,6 +1729,16 @@ void CMQOMaterial::BeginRender(RenderContext& rc, int hasSkin, bool isline, bool
 	rc.SetDescriptorHeap(m_descriptorHeap);
 
 }
+
+void CMQOMaterial::ZPreBeginRender(RenderContext& rc)
+{
+	rc.SetRootSignature(m_ZPrerootSignature);
+	rc.SetPipelineState(m_ZPreModelPipelineState);
+	rc.SetDescriptorHeap(m_descriptorHeap);
+}
+
+
+
 
 Texture& CMQOMaterial::GetDiffuseMap()
 {
@@ -1806,40 +2065,43 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 
+		//if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
+			//#########################################
+			//2023/12/03 ライトパラメータは　まずは決め打ち
+			//#########################################
+			// 太陽光
+			m_cbLights.Init();
+			m_cbLights.directionalLight[0].color.x = 1.5f;
+			m_cbLights.directionalLight[0].color.y = 1.5f;
+			m_cbLights.directionalLight[0].color.z = 1.5f;
+			m_cbLights.directionalLight[0].direction.w = 0.0f;
 
-		//#########################################
-		//2023/12/03 ライトパラメータは　まずは決め打ち
-		//#########################################
-		// 太陽光
-		m_cbLights.Init();
-		m_cbLights.directionalLight[0].color.x = 1.5f;
-		m_cbLights.directionalLight[0].color.y = 1.5f;
-		m_cbLights.directionalLight[0].color.z = 1.5f;
-		m_cbLights.directionalLight[0].direction.w = 0.0f;
-		
-		ChaVector3 cameye = ChaVector3(g_camera3D->GetPosition());
-		ChaVector3 camtarget = ChaVector3(g_camera3D->GetTarget());
-		m_cbLights.directionalLight[0].direction = ChaVector4((camtarget - cameye), 0.0f);//この向きで合っている
-		m_cbLights.directionalLight[0].direction.Normalize();
+			ChaVector3 cameye = ChaVector3(g_camera3D->GetPosition());
+			ChaVector3 camtarget = ChaVector3(g_camera3D->GetTarget());
+			m_cbLights.directionalLight[0].direction = ChaVector4((camtarget - cameye), 0.0f);//この向きで合っている
+			m_cbLights.directionalLight[0].direction.Normalize();
 
-		// 地面からの照り返し
-		m_cbLights.directionalLight[1].color.x = 0.3f;
-		m_cbLights.directionalLight[1].color.y = 0.3f;
-		m_cbLights.directionalLight[1].color.z = 0.3f;
-		m_cbLights.directionalLight[1].color.w = 0.0f;
-		m_cbLights.directionalLight[1].direction.x = 0.0f;
-		m_cbLights.directionalLight[1].direction.y = 1.0f;
-		m_cbLights.directionalLight[1].direction.z = 0.0f;
-		m_cbLights.directionalLight[1].direction.w = 0.0f;
-		m_cbLights.directionalLight[1].direction.Normalize();
-		m_cbLights.ambientLight.x = 0.1f;
-		m_cbLights.ambientLight.y = 0.1f;
-		m_cbLights.ambientLight.z = 0.1f;
-		m_cbLights.ambientLight.w = 1.0f;
-		m_cbLights.eyePos = ChaVector4(ChaVector3(g_camera3D->GetPosition()), 0.0f);
-		m_cbLights.specPow = ChaVector4(5.0f, 5.0f, 5.0f, 0.0f);
+			// 地面からの照り返し
+			m_cbLights.directionalLight[1].color.x = 0.3f;
+			m_cbLights.directionalLight[1].color.y = 0.3f;
+			m_cbLights.directionalLight[1].color.z = 0.3f;
+			m_cbLights.directionalLight[1].color.w = 0.0f;
+			m_cbLights.directionalLight[1].direction.x = 0.0f;
+			m_cbLights.directionalLight[1].direction.y = 1.0f;
+			m_cbLights.directionalLight[1].direction.z = 0.0f;
+			m_cbLights.directionalLight[1].direction.w = 0.0f;
+			m_cbLights.directionalLight[1].direction.Normalize();
+			m_cbLights.ambientLight.x = 0.1f;
+			m_cbLights.ambientLight.y = 0.1f;
+			m_cbLights.ambientLight.z = 0.1f;
+			m_cbLights.ambientLight.w = 1.0f;
+			m_cbLights.eyePos = ChaVector4(ChaVector3(g_camera3D->GetPosition()), 0.0f);
+			m_cbLights.specPow = ChaVector4(5.0f, 5.0f, 5.0f, 0.0f);
 
-		m_expandConstantBuffer.CopyToVRAM(m_cbLights);
+			m_expandConstantBuffer.CopyToVRAM(m_cbLights);
+
+			SetUpdateLightsFlag();
+		//}
 	}
 	else if (ppm4) {
 		m_cb.mWorld = renderobj.mWorld;
@@ -1849,7 +2111,7 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 
 
-		//if (!GetUpdateFl4x4Flag()) {//2023/12/01
+		if (!GetUpdateFl4x4Flag()) {//2023/12/01
 		//if (isfirstmaterial) {
 		//if (isfirstmaterial && !GetUpdateFl4x4Flag()) {
 		//if (!renderobj.pmodel->GetUpdateFl4x4Flag()) {
@@ -1890,7 +2152,7 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 
 			renderobj.pmodel->SetUpdateFl4x4Flag();
 			SetUpdateFl4x4Flag();
-		//}
+		}
 
 	}
 
@@ -1906,6 +2168,154 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 	//	//m_boneMatricesStructureBuffer.Update(m_skeleton->GetBoneMatricesTopAddress());
 	//	m_boneMatricesStructureBuffer.Update(&dummymat);
 	//}
+}
+
+void CMQOMaterial::ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
+	const Matrix& mView, const Matrix& mProj,
+	bool isfirstmaterial)
+{
+	if (!renderobj.mqoobj || !renderobj.pmodel) {
+		_ASSERT(0);
+		return;
+	}
+
+	CPolyMesh4* ppm4 = renderobj.mqoobj->GetPm4();
+	CPolyMesh3* ppm3 = renderobj.mqoobj->GetPm3();
+	CExtLine* pextline = renderobj.mqoobj->GetExtLine();
+	CDispObj* pdispline = renderobj.mqoobj->GetDispLine();
+
+	if (pdispline && pextline) {
+		rc.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+	}
+	else if (ppm3 || ppm4) {
+		rc.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	}
+	else {
+		_ASSERT(0);
+		return;
+	}
+
+
+	////定数バッファを更新する。
+	if (pdispline && pextline) {
+		m_cb.mWorld = renderobj.mWorld;
+		m_cb.mView = mView;
+		m_cb.mProj = mProj;
+		//m_cb.diffusemult = renderobj.diffusemult;
+		m_cb.diffusemult = pextline->GetColor();
+
+		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
+		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
+
+		m_commonConstantBuffer.CopyToVRAM(m_cb);
+	}
+	else if (ppm3) {
+		m_cb.mWorld = renderobj.mWorld;
+		m_cb.mView = mView;
+		m_cb.mProj = mProj;
+		//m_cb.diffusemult = renderobj.diffusemult;
+		if (GetTempDiffuseMultFlag()) {
+			m_cb.diffusemult = GetTempDiffuseMult();
+		}
+		else {
+			m_cb.diffusemult = renderobj.diffusemult;
+		}
+
+		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
+		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
+
+		m_commonConstantBuffer.CopyToVRAM(m_cb);
+
+		//if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
+			//#########################################
+			//2023/12/03 ライトパラメータは　まずは決め打ち
+			//#########################################
+			// 太陽光
+		m_cbLights.Init();
+		m_cbLights.directionalLight[0].color.x = 1.5f;
+		m_cbLights.directionalLight[0].color.y = 1.5f;
+		m_cbLights.directionalLight[0].color.z = 1.5f;
+		m_cbLights.directionalLight[0].direction.w = 0.0f;
+
+		ChaVector3 cameye = ChaVector3(g_camera3D->GetPosition());
+		ChaVector3 camtarget = ChaVector3(g_camera3D->GetTarget());
+		m_cbLights.directionalLight[0].direction = ChaVector4((camtarget - cameye), 0.0f);//この向きで合っている
+		m_cbLights.directionalLight[0].direction.Normalize();
+
+		// 地面からの照り返し
+		m_cbLights.directionalLight[1].color.x = 0.3f;
+		m_cbLights.directionalLight[1].color.y = 0.3f;
+		m_cbLights.directionalLight[1].color.z = 0.3f;
+		m_cbLights.directionalLight[1].color.w = 0.0f;
+		m_cbLights.directionalLight[1].direction.x = 0.0f;
+		m_cbLights.directionalLight[1].direction.y = 1.0f;
+		m_cbLights.directionalLight[1].direction.z = 0.0f;
+		m_cbLights.directionalLight[1].direction.w = 0.0f;
+		m_cbLights.directionalLight[1].direction.Normalize();
+		m_cbLights.ambientLight.x = 0.1f;
+		m_cbLights.ambientLight.y = 0.1f;
+		m_cbLights.ambientLight.z = 0.1f;
+		m_cbLights.ambientLight.w = 1.0f;
+		m_cbLights.eyePos = ChaVector4(ChaVector3(g_camera3D->GetPosition()), 0.0f);
+		m_cbLights.specPow = ChaVector4(5.0f, 5.0f, 5.0f, 0.0f);
+
+		m_expandConstantBuffer.CopyToVRAM(m_cbLights);
+
+		SetUpdateLightsFlag();
+		//}
+	}
+	else if (ppm4) {
+		m_cb.mWorld = renderobj.mWorld;
+		m_cb.mView = mView;
+		m_cb.mProj = mProj;
+		m_cb.diffusemult = renderobj.diffusemult;
+		m_commonConstantBuffer.CopyToVRAM(m_cb);
+
+
+		//if (!GetUpdateFl4x4Flag()) {//2023/12/01
+			//if (isfirstmaterial) {
+			//if (isfirstmaterial && !GetUpdateFl4x4Flag()) {
+			//if (!renderobj.pmodel->GetUpdateFl4x4Flag()) {
+				//#########################################
+				//2023/12/02 ライトパラメータは　まずは決め打ち
+				//#########################################
+				// 太陽光
+			m_cbMatrix.lights.Init();
+			m_cbMatrix.lights.directionalLight[0].color.x = 1.5f;
+			m_cbMatrix.lights.directionalLight[0].color.y = 1.5f;
+			m_cbMatrix.lights.directionalLight[0].color.z = 1.5f;
+			m_cbMatrix.lights.directionalLight[0].direction.w = 0.0f;
+
+			ChaVector3 cameye = ChaVector3(g_camera3D->GetPosition());
+			ChaVector3 camtarget = ChaVector3(g_camera3D->GetTarget());
+			m_cbMatrix.lights.directionalLight[0].direction = ChaVector4((camtarget - cameye), 0.0f);//この向きで合っている
+			m_cbMatrix.lights.directionalLight[0].direction.Normalize();
+
+			// 地面からの照り返し
+			m_cbMatrix.lights.directionalLight[1].color.x = 0.3f;
+			m_cbMatrix.lights.directionalLight[1].color.y = 0.3f;
+			m_cbMatrix.lights.directionalLight[1].color.z = 0.3f;
+			m_cbMatrix.lights.directionalLight[1].color.w = 0.0f;
+			m_cbMatrix.lights.directionalLight[1].direction.x = 0.0f;
+			m_cbMatrix.lights.directionalLight[1].direction.y = 1.0f;
+			m_cbMatrix.lights.directionalLight[1].direction.z = 0.0f;
+			m_cbMatrix.lights.directionalLight[1].direction.w = 0.0f;
+			m_cbMatrix.lights.directionalLight[1].direction.Normalize();
+			m_cbMatrix.lights.ambientLight.x = 0.1f;
+			m_cbMatrix.lights.ambientLight.y = 0.1f;
+			m_cbMatrix.lights.ambientLight.z = 0.1f;
+			m_cbMatrix.lights.ambientLight.w = 1.0f;
+			m_cbMatrix.lights.eyePos = ChaVector4(ChaVector3(g_camera3D->GetPosition()), 0.0f);
+			m_cbMatrix.lights.specPow = ChaVector4(5.0f, 5.0f, 5.0f, 0.0f);
+
+			SetFl4x4(renderobj);
+			m_expandConstantBuffer.CopyToVRAM(m_cbMatrix);
+
+			//renderobj.pmodel->SetUpdateFl4x4Flag();
+			//SetUpdateFl4x4Flag();
+		//}
+
+	}
 }
 
 void CMQOMaterial::SetBoneMatrix(myRenderer::RENDEROBJ renderobj)

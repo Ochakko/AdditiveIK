@@ -227,8 +227,8 @@ namespace myRenderer
                 spriteInitData.m_textures[texNo++] = &m_shadowMapRenders[i].GetShadowMap(areaNo);
             }
         }
-        //spriteInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
-        spriteInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        spriteInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        //spriteInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 
         // 初期化データを使ってスプライトを作成
         m_diferredLightingSprite.Init(spriteInitData);
@@ -248,7 +248,7 @@ namespace myRenderer
         //RenderToShadowMap(rc);
 
         // ZPrepass
-        //ZPrepass(rc);
+        ZPrepass(rc);
 
         // G-Bufferへのレンダリング
         //RenderToGBuffer(rc);
@@ -303,7 +303,7 @@ namespace myRenderer
         for (auto& currenderobj : m_zprepassModels)
         {
             //model->Draw(rc);
-            RenderPolyMesh(rc, currenderobj);
+            RenderPolyMeshZPre(rc, currenderobj);
         }
 
         rc.WaitUntilFinishDrawingToRenderTarget(m_zprepassRenderTarget);
@@ -316,8 +316,8 @@ namespace myRenderer
         //    m_mainRenderTarget.GetRTVCpuDescriptorHandle(),
         //    m_gBuffer[enGBufferAlbedo].GetDSVCpuDescriptorHandle()
         //);
-
         //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
+
         //rc.SetRenderTarget(
         //    m_mainRenderTarget.GetRTVCpuDescriptorHandle(),
         //    //m_gBuffer[enGBufferAlbedo].GetDSVCpuDescriptorHandle()
@@ -332,7 +332,7 @@ namespace myRenderer
             //g_graphicsEngine->GetCurrentFrameBuffuerDSV()
             m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
         );
-        rc.ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
+        //rc.ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
 
         //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
         //// レンダリングターゲットを設定
@@ -507,5 +507,29 @@ namespace myRenderer
             }
         }
     }
+
+
+    void RenderingEngine::RenderPolyMeshZPre(RenderContext& rc, RENDEROBJ currenderobj)
+    {
+        if (currenderobj.mqoobj) {
+            if (currenderobj.mqoobj->GetDispObj()) {
+                if (currenderobj.mqoobj->GetPm3()) {
+                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                    currenderobj.mqoobj->GetDispObj()->RenderZPrePm3(rc, currenderobj);
+                }
+                else if (currenderobj.mqoobj->GetPm4()) {
+                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                    currenderobj.mqoobj->GetDispObj()->RenderZPrePm4(rc, currenderobj);
+                }
+            }
+            if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
+                //################################
+                //GetDispObj()ではなくGetDispLine()
+                //################################
+                //currenderobj.mqoobj->GetDispLine()->RenderLine(rc, currenderobj);
+            }
+        }
+    }
+
 }
 

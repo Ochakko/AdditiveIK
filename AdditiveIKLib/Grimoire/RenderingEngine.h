@@ -357,6 +357,7 @@ namespace myRenderer
         void InitShadowMapRender();
 
         void RenderPolyMesh(RenderContext& rc, RENDEROBJ currenderobj);
+        void RenderPolyMeshZPre(RenderContext& rc, RENDEROBJ currenderobj);
 
     private:
         //GBufferの定義

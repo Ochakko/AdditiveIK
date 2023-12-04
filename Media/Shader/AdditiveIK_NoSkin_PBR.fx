@@ -488,3 +488,7 @@ float4 PSMainExtLine(SPSInExtLine psIn) : SV_Target0
     //float4 pscol = { 1.0f, 1.0f, 1.0f, 1.0f };
     return pscol;
 }
+
+
+
+
