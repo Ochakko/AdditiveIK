@@ -310,7 +310,14 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone)
 		if (curmat) {
 			curmat->CreateDecl(pdev, vertextype);
 
-			//if (curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) {
+			//##########################################################
+			//2023/12/04
+			//テクスチャ設定が無い場合と　ノーマルまたはメタル設定がある場合にPBR
+			//テクスチャが無い場合の表示が　きつい真っ白にならないように
+			//##########################################################
+			if ((curmat->GetAlbedoTex() && !(curmat->GetAlbedoTex())[0]) ||
+				(curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) ||
+				(curmat->GetMetalTex() && (curmat->GetMetalTex())[0])) {
 			//if (curmat->GetAlbedoTex()[0]) {
 				//PBR
 				curmat->InitShadersAndPipelines(
@@ -326,24 +333,23 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone)
 					0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
 					D3D12_FILTER_MIN_MAG_MIP_LINEAR
 				);
-			//}
-			//else {
-			//	//Standard
-			//	curmat->InitShadersAndPipelines(
-			//		vertextype,
-			//		"../Media/Shader/AdditiveIK_NoSkin_Std.fx",
-			//		"VSMainWithoutBone",
-			//		"VSMainWithoutBone",
-			//		"PSMain",
-			//		colorBufferFormat,
-			//		curmat->NUM_SRV_ONE_MATERIAL,
-			//		curmat->NUM_CBV_ONE_MATERIAL,
-			//		0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
-			//		0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
-			//		D3D12_FILTER_MIN_MAG_MIP_LINEAR
-			//	);
-			//}
-
+			}
+			else {
+				//Standard
+				curmat->InitShadersAndPipelines(
+					vertextype,
+					"../Media/Shader/AdditiveIK_NoSkin_Std.fx",
+					"VSMainWithoutBone",
+					"VSMainWithoutBone",
+					"PSMain",
+					colorBufferFormat,
+					curmat->NUM_SRV_ONE_MATERIAL,
+					curmat->NUM_CBV_ONE_MATERIAL,
+					0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
+					0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
+					D3D12_FILTER_MIN_MAG_MIP_LINEAR
+				);
+			}
 
 			rootindex++;
 		}
@@ -390,7 +396,15 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone )
 
 				curmat->CreateDecl(pdev, vertextype);
 
-				if (curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) {
+				//##########################################################
+				//2023/12/04
+				//テクスチャ設定が無い場合と　ノーマルまたはメタル設定がある場合にPBR
+				//テクスチャが無い場合の表示が　きつい真っ白にならないように
+				//##########################################################
+				if ((curmat->GetAlbedoTex() && !(curmat->GetAlbedoTex())[0]) ||
+					(curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) ||
+					(curmat->GetMetalTex() && (curmat->GetMetalTex())[0])) {
+				//if (curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) {
 				//if (curmat->GetAlbedoTex()[0]) {
 					//PBR
 					curmat->InitShadersAndPipelines(

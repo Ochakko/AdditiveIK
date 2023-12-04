@@ -1501,8 +1501,8 @@ Texture& CMQOMaterial::GetNormalMap()
 		return *m_normalMap;
 	}
 	else {
-		//return m_blacktex;
-		return m_whitetex;
+		return m_blacktex;
+		//return m_whitetex;
 	}
 }
 Texture& CMQOMaterial::GetMetalMap()

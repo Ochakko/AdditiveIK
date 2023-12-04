@@ -4256,6 +4256,15 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 	}
 
 
+	char nodename[256] = { 0 };
+	strcpy_s(nodename, 256, pNode->GetName());
+	WCHAR wnodename[256] = L"none for debug";
+	ZeroMemory(wnodename, sizeof(WCHAR) * 256);
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, nodename, 256, wnodename, 256);//256長の配列にコピーしてから変換する
+	char meshname[256] = { 0 };
+	strcpy_s(meshname, 256, pMesh->GetName());
+
+
 
 	ChaMatrix globalmeshmat;//頂点用
 	ChaMatrix globalnormalmat;//法線用
@@ -4311,20 +4320,14 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 		_ASSERT(0);
 		return 0;
 	}
-	newobj->SetObjFrom( OBJFROM_FBX );
-	newobj->SetName( (char*)pNode->GetName() );
+	newobj->SetObjFrom(OBJFROM_FBX);
+	newobj->SetName(nodename);
 	newobj->SetFbxNode(pNode);
 	m_object[ newobj->GetObjectNo() ] = newobj;
 	m_node2mqoobj[pNode] = newobj;
 
 
-	char cname[256] = { 0 };
-	strcpy_s(cname, 256, pNode->GetName());
 
-	WCHAR wname[256] = L"none for debug";
-	ZeroMemory( wname, sizeof( WCHAR ) * 256 );
-	//MultiByteToWideChar( CP_ACP, MB_PRECOMPOSED, pNode->GetName(), 256, wname, 256 );//複数キャラ読み込み時に落ちることがある？？
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, cname, 256, wname, 256);//256長の配列にコピーしてから変換する
 
 
 	FBXOBJ* fbxobj = (FBXOBJ*)malloc(sizeof(FBXOBJ));
@@ -4342,12 +4345,17 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 
 //マテリアル
 	int materialNum_ = 1;
-	FbxNode* node = pMesh->GetNode();
-	if ( node != 0 ) {
+
+
+	//FbxNode* node = pMesh->GetNode();
+	//#######################################################################################################
+	//2023/12/04 mesh->GetNode()に対してGetMaterial(i)を呼んでマテリアル情報を取得しようとすると不正な情報が入っていた
+	//マテリアル名に本来のマテリアル情報とは異なるtypo_2という名前, テクスチャにtype_2.pngが入っていた
+	//mesh->GetNode()はマテリアル情報のためには使わないことに.
+	//########################################################################################################
+	//if ( node != 0 ) {
 		// マテリアルの数
-		materialNum_ = node->GetMaterialCount();
-		char meshname[256] = { 0 };
-		strcpy_s(meshname, 256, pMesh->GetName());
+		materialNum_ = pNode->GetMaterialCount();
 
 		//for dbginfo
 		//if (materialNum_ != 1) {
@@ -4355,19 +4363,22 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 			//sprintf_s(strinfo, MAX_PATH, "mesh %s, materialNum_ %d", pNode->GetName(), materialNum_);
 			//::MessageBoxA(NULL, strinfo, "check!!!", MB_OK);
 		//}
-		DbgOut(L"mesh %s, materialNum_ %d\r\n", wname, materialNum_);
+		DbgOut(L"mesh %s, materialNum_ %d\r\n", wnodename, materialNum_);
 
 
 
 		// マテリアル情報を取得
 		//for( int i = 0; i < materialNum_; ++i ) {
 		for (int i = 0; i < materialNum_; i++) {
-			FbxSurfaceMaterial* material = node->GetMaterial( i );
+			FbxSurfaceMaterial* material = pNode->GetMaterial( i );
 			if ( material != 0 ) {
 				char materialname[256] = { 0 };
 				strcpy_s(materialname, 256, material->GetName());
 
-				if ((strstr(meshname, "plane__35") != 0) || (strstr(materialname, "plane__35") != 0) || (strstr(cname, "plane__35") != 0)) {
+				//if ((strstr(meshname, "plane__35") != 0) || (strstr(materialname, "plane__35") != 0) || (strstr(nodename, "plane__35") != 0)) {
+				//	int dbgflag2 = 1;
+				//}
+				if ((strstr(meshname, "plane__35") != 0) || (strstr(materialname, "Caution") != 0) || (strstr(nodename, "Neon_Other_4") != 0)) {
 					int dbgflag2 = 1;
 				}
 
@@ -4396,7 +4407,7 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 				_ASSERT(0);
 			}
 		}
-	}
+	//}
 
 
 //頂点
@@ -4407,7 +4418,7 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 	int controlNum = pMesh->GetControlPointsCount();   // 頂点数
 	FbxVector4* src = pMesh->GetControlPoints();    // 頂点座標配列
 
-	DbgOut(L"LDCheck : GetFBXMesh : nodename %s, controlnum %d, polygonnum %d, polygonvertexnum %d\r\n", wname, controlNum, PolygonNum, PolygonVertexNum);
+	DbgOut(L"LDCheck : GetFBXMesh : nodename %s, controlnum %d, polygonnum %d, polygonvertexnum %d\r\n", wnodename, controlNum, PolygonNum, PolygonVertexNum);
 
 	// コピー
 	newobj->SetVertex( controlNum );
@@ -4470,7 +4481,7 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 				break;
 			}
 			int materialIndex = pPolygonMaterials->mIndexArray->GetAt(lookupIndex);//Mesh単位のマテリアルへのインデックス
-			FbxSurfaceMaterial* material = node->GetMaterial(materialIndex);
+			FbxSurfaceMaterial* material = pNode->GetMaterial(materialIndex);
 			if (material != 0) {
 				char materialname[256] = { 0 };
 				strcpy_s(materialname, 256, material->GetName());
@@ -4619,7 +4630,7 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 		int    indexNum           = normalElem->GetIndexArray().GetCount();
 
 
-//DbgOut( L"GetFBXMesh : %s : normalNum %d : indexNum %d\r\n", wname, normalNum, indexNum );
+//DbgOut( L"GetFBXMesh : %s : normalNum %d : indexNum %d\r\n", wnodename, normalNum, indexNum );
 
 		// マッピングモード・リファレンスモード取得
 		FbxLayerElement::EMappingMode mappingMode = normalElem->GetMappingMode();
@@ -4655,12 +4666,12 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 
 
 //		if ( mappingMode == FbxLayerElement::eByPolygonVertex ) {
-////DbgOut( L"GetFBXMesh : %s : mapping eByPolygonVertex\r\n", wname );
+////DbgOut( L"GetFBXMesh : %s : mapping eByPolygonVertex\r\n", wnodename );
 //
 //			newobj->SetNormalMappingMode(0);
 //
 //			if ( refMode == FbxLayerElement::eDirect ) {
-////DbgOut( L"GetFBXMesh : %s : ref eDirect\r\n", wname );
+////DbgOut( L"GetFBXMesh : %s : ref eDirect\r\n", wnodename );
 //
 //				newobj->SetNormalLeng( normalNum );
 //				newobj->SetNormal( (ChaVector3*)malloc( sizeof( ChaVector3 ) * normalNum ) );
@@ -4679,7 +4690,7 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 //					ChaVector3Normalize(curn, curn);
 //				}
 //		   }else if ( refMode == FbxLayerElement::eIndexToDirect ){
-////DbgOut( L"GetFBXMesh : %s : ref eIndexToDirect\r\n", wname );
+////DbgOut( L"GetFBXMesh : %s : ref eIndexToDirect\r\n", wnodename );
 //
 //				newobj->SetNormalLeng( indexNum );
 //				newobj->SetNormal( (ChaVector3*)malloc( sizeof( ChaVector3 ) * indexNum ) );
@@ -4703,13 +4714,13 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 //				}
 //		   }
 //		} else if ( mappingMode == FbxLayerElement::eByControlPoint ) {
-////DbgOut( L"GetFBXMesh : %s : mapping eByControlPoint\r\n", wname );
+////DbgOut( L"GetFBXMesh : %s : mapping eByControlPoint\r\n", wnodename );
 //
 //			newobj->SetNormalMappingMode(1);
 //
 //
 //		   if ( refMode == FbxLayerElement::eDirect ) {
-////DbgOut( L"GetFBXMesh : %s : ref eDirect\r\n", wname );
+////DbgOut( L"GetFBXMesh : %s : ref eDirect\r\n", wnodename );
 //
 //				newobj->SetNormalLeng( normalNum );
 //				newobj->SetNormal( (ChaVector3*)malloc( sizeof( ChaVector3 ) * normalNum ) );
@@ -4728,7 +4739,7 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 //					ChaVector3Normalize(curn, curn);
 //				}
 //		   }else{
-////DbgOut( L"GetFBXMesh : %s : ref %d\r\n", wname, refMode );
+////DbgOut( L"GetFBXMesh : %s : ref %d\r\n", wnodename, refMode );
 //			   _ASSERT(0);
 //		   }
 //		} else {
@@ -4742,7 +4753,7 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 	int layerCount = pMesh->GetLayerCount();   // meshはFbxMesh
 	if (layerCount >= 2) {
 		int dbgflag1 = 1;
-		if (strstr(cname, "plane__35") !=0) {
+		if (strstr(nodename, "Neon_Other_4") !=0) {
 			int dbgflag2 = 1;
 		}
 	}
@@ -4886,9 +4897,14 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 
 int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMaterial )
 {
+	if (!newmqomat || !pMaterial) {
+		_ASSERT(0);
+		return 1;
+	}
+
 	char tmpname[512];
 	strcpy_s(tmpname, 512, pMaterial->GetName());
-	newmqomat->SetName( tmpname );
+	newmqomat->SetName(tmpname);
 
 
 	//::MessageBoxA(NULL, tmpname, "MaterialName", MB_OK);
@@ -5015,6 +5031,12 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 
 
 //texture
+
+	if (strstr(tmpname, "plane__35_") != 0) {
+		int dbgflag1 = 1;
+	}
+
+
 	//bool findalbedometal = false;
 	{
 		FbxProperty pProperty;
