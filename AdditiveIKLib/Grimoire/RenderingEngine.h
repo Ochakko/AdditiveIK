@@ -18,6 +18,7 @@ namespace myRenderer
     {
         CModel* pmodel;
         CMQOObject* mqoobj;
+        int shadertype;//MQOSHADER_PBR, MQOSHADER_STD, MQOSHADER_NOLIGHTの中から選択　-1指定でAutoSelect
         Matrix mWorld;
         bool withalpha;
         bool forcewithalpha;//rendergroup >= 2の場合強制半透明
@@ -32,6 +33,7 @@ namespace myRenderer
         {
             pmodel = nullptr;
             mqoobj = nullptr;
+            shadertype = -1;
             mWorld.SetIdentity();
             withalpha = false;
             forcewithalpha = false;

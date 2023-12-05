@@ -391,6 +391,7 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lig
 									renderobj.Init();
 									renderobj.pmodel = curmodel;
 									renderobj.mqoobj = curobj;
+									renderobj.shadertype = g_shadertype;//!!!!!!!!!!! シェーダの選択はDispParamsプレートメニューを押すと出る右ペインウインドウにて
 									renderobj.withalpha = withalpha;
 									renderobj.forcewithalpha = forcewithalpha;
 									renderobj.lightflag = lightflag;
@@ -589,6 +590,7 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 							renderobj.Init();
 							renderobj.pmodel = curmodel;
 							renderobj.mqoobj = curobj;
+							renderobj.shadertype = MQOSHADER_NOLIGHT;//!!!!!!!!!!! マニピュレータと地面はNOLIGHTで表示
 							renderobj.withalpha = withalpha;
 							renderobj.forcewithalpha = forcewithalpha;
 							renderobj.lightflag = lightflag;

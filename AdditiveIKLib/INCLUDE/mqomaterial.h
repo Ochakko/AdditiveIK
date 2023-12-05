@@ -19,6 +19,12 @@
 class ConstantBuffer;//定数バッファ。
 class RootSignature;//ルートシグネチャ。
 
+enum {
+	MQOSHADER_PBR,
+	MQOSHADER_STD,
+	MQOSHADER_NOLIGHT,
+	MQOSHADER_MAX
+};
 
 struct SConstantBuffer {
 	Matrix mWorld;		//ワールド行列。
@@ -117,18 +123,39 @@ public:
 
 	int CreateDecl(ID3D12Device* pdev, int objecttype);
 	void CreateDescriptorHeaps(int objecttype);
+
+
 	void InitShadersAndPipelines(
 		int vertextype,
-		const char* fxFilePath,
-		const char* vsEntryPointFunc,
-		const char* vsSkinEntryPointFunc,
-		const char* psEntryPointFunc,
+		const char* fxPBRPath,
+		const char* fxStdPath,
+		const char* fxNoLightPath,
+		const char* vsPBRFunc,
+		const char* vsStdFunc,
+		const char* vsNoLightFunc,
+		const char* psPBRFunc,
+		const char* psStdFunc,
+		const char* psNoLightFunc,
 		const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat,
 		int numSrv,
 		int numCbv,
 		UINT offsetInDescriptorsFromTableStartCB,
 		UINT offsetInDescriptorsFromTableStartSRV,
 		D3D12_FILTER samplerFilter);
+	void InitPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
+	void InitShaders(
+		const char* fxPBRPath,
+		const char* fxStdPath,
+		const char* fxNoLightPath,
+		const char* vsPBRFunc,
+		const char* vsStdFunc,
+		const char* vsNoLightFunc,
+		const char* psPBRFunc,
+		const char* psStdFunc,
+		const char* psNoLightFunc
+	);
+
+
 	void InitZPreShadersAndPipelines(
 		int vertextype,
 		const char* fxFilePath,
@@ -140,24 +167,18 @@ public:
 		UINT offsetInDescriptorsFromTableStartCB,
 		UINT offsetInDescriptorsFromTableStartSRV,
 		D3D12_FILTER samplerFilter);
-	void InitPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
 	void InitZPrePipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
-	void InitShaders(const char* fxFilePath,
-		const char* vsEntryPointFunc,
-		const char* vsSkinEntriyPointFunc,
-		const char* psEntryPointFunc
-	);
 	void InitZPreShaders(const char* fxFilePath,
 		const char* vsEntryPointFunc,
 		const char* psEntryPointFunc
 	);
 
+
 	void SetFl4x4(myRenderer::RENDEROBJ renderobj);
 	void DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
 		const Matrix& mView, const Matrix& mProj,
 		bool isfirstmaterial  = false);
-	void BeginRender(RenderContext& rc, int hasSkin, bool isline, 
-		bool zcmpalways, bool withalpha);
+	void BeginRender(RenderContext& rc, myRenderer::RENDEROBJ renderobj);
 	void ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
 		const Matrix& mView, const Matrix& mProj,
 		bool isfirstmaterial = false);
@@ -559,15 +580,22 @@ private:
 
 	ConstantBuffer m_constantBuffer;				//定数バッファ。
 	RootSignature m_rootSignature;					//ルートシグネチャ。
-	PipelineState m_nonSkinModelPipelineState;		//スキンなしモデル用のパイプラインステート。
-	PipelineState m_skinModelPipelineState;			//スキンありモデル用のパイプラインステート。
-	PipelineState m_transSkinModelPipelineState;	//スキンありモデル用のパイプラインステート(半透明マテリアル)。
-	PipelineState m_transSkinAlwaysModelPipelineState;	//スキンありモデル用のパイプラインステート(半透明ALWAYSマテリアル)。
-	PipelineState m_transNonSkinModelPipelineState;	//スキンなしモデル用のパイプラインステート(半透明マテリアル)。
-	PipelineState m_transNonSkinAlwaysModelPipelineState;//スキンなしモデル用のパイプラインステート(半透明ALWAYSマテリアル)。
-	Shader* m_vsNonSkinModel = nullptr;				//スキンなしモデル用の頂点シェーダー。
-	Shader* m_vsSkinModel = nullptr;				//スキンありモデル用の頂点シェーダー。
-	Shader* m_psModel = nullptr;					//モデル用のピクセルシェーダー。
+	PipelineState m_opaquePipelineState[MQOSHADER_MAX];
+	PipelineState m_transPipelineState[MQOSHADER_MAX];
+	PipelineState m_zalwaysPipelineState[MQOSHADER_MAX];
+	Shader* m_vsMQOShader[MQOSHADER_MAX];
+	Shader* m_psMQOShader[MQOSHADER_MAX];
+
+	//PipelineState m_nonSkinModelPipelineState;		//スキンなしモデル用のパイプラインステート。
+	//PipelineState m_skinModelPipelineState;			//スキンありモデル用のパイプラインステート。
+	//PipelineState m_transSkinModelPipelineState;	//スキンありモデル用のパイプラインステート(半透明マテリアル)。
+	//PipelineState m_transSkinAlwaysModelPipelineState;	//スキンありモデル用のパイプラインステート(半透明ALWAYSマテリアル)。
+	//PipelineState m_transNonSkinModelPipelineState;	//スキンなしモデル用のパイプラインステート(半透明マテリアル)。
+	//PipelineState m_transNonSkinAlwaysModelPipelineState;//スキンなしモデル用のパイプラインステート(半透明ALWAYSマテリアル)。
+	//Shader* m_vsNonSkinModel = nullptr;				//スキンなしモデル用の頂点シェーダー。
+	//Shader* m_vsSkinModel = nullptr;				//スキンありモデル用の頂点シェーダー。
+	//Shader* m_psModel = nullptr;					//モデル用のピクセルシェーダー。
+
 
 	RootSignature m_ZPrerootSignature;					//ZPreルートシグネチャ。
 	PipelineState m_ZPreModelPipelineState;		//ZPreモデル用のパイプラインステート。

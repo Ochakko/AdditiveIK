@@ -294,7 +294,7 @@ float CalcDiffuseFromFresnel(float3 N, float3 L, float3 V)
 /// <summary>
 /// モデル用の頂点シェーダーのエントリーポイント
 /// </summary>
-SPSIn VSMainWithBone(SVSIn vsIn, uniform bool hasSkin)
+SPSIn VSMainSkinPBR(SVSIn vsIn, uniform bool hasSkin)
 {
     SPSIn psIn;
 
@@ -327,7 +327,7 @@ SPSIn VSMainWithBone(SVSIn vsIn, uniform bool hasSkin)
 /// <summary>
 /// モデル用のピクセルシェーダーのエントリーポイント
 /// </summary>
-float4 PSMain(SPSIn psIn) : SV_Target0
+float4 PSMainSkinPBR(SPSIn psIn) : SV_Target0
 {
     float2 diffuseuv = { 0.5f, 0.5f };
     float4 diffusecol = g_diffusetex.Sample(g_sampler, diffuseuv);

@@ -43,12 +43,6 @@ CMQOMaterial::CMQOMaterial() : m_descriptorHeap(),
 m_commonConstantBuffer(), m_expandConstantBuffer(), //2023/11/29
 m_whitetex(), m_blacktex(), m_diffuseMap(), 
 m_cb(), m_cbMatrix(), m_cbLights(), //2023/12/01 //2023/12/02
-m_nonSkinModelPipelineState(), //2023/12/01
-m_skinModelPipelineState(), //2023/12/01
-m_transSkinModelPipelineState(), //2023/12/01
-m_transSkinAlwaysModelPipelineState(), //2023/12/01
-m_transNonSkinModelPipelineState(), //2023/12/01
-m_transNonSkinAlwaysModelPipelineState(), //2023/12/01
 m_constantBuffer(), //2023/12/01
 m_rootSignature(), //2023/12/01
 m_ZPrerootSignature(), //2023/12/05
@@ -268,6 +262,16 @@ int CMQOMaterial::InitParams()
 	ZeroMemory(m_normaltex, sizeof(char) * 256);
 	ZeroMemory(m_metaltex, sizeof(char) * 256);
 
+	int shaderindex;
+	for (shaderindex = 0; shaderindex < MQOSHADER_MAX; shaderindex++) {
+		m_opaquePipelineState[shaderindex].InitParams();
+		m_transPipelineState[shaderindex].InitParams();
+		m_zalwaysPipelineState[shaderindex].InitParams();
+		m_vsMQOShader[shaderindex] = nullptr;
+		m_psMQOShader[shaderindex] = nullptr;
+	}
+
+
 	//next = 0;
 
 
@@ -325,13 +329,6 @@ int CMQOMaterial::InitParams()
 
 	m_settempdiffusemult = false;
 	m_tempdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-
-
-	m_vsNonSkinModel = nullptr;				//スキンなしモデル用の頂点シェーダー。
-	m_vsSkinModel = nullptr;				//スキンありモデル用の頂点シェーダー。
-	m_psModel = nullptr;					//モデル用のピクセルシェーダー。
-	m_vsZPreModel = nullptr;				//ZPreモデル用の頂点シェーダー。
-	m_psZPreModel = nullptr;					//ZPreモデル用のピクセルシェーダー。
 
 
 	return 0;
@@ -1152,10 +1149,15 @@ void CMQOMaterial::InitZPreShadersAndPipelines(
 
 void CMQOMaterial::InitShadersAndPipelines(
 	int vertextype,
-	const char* fxFilePath,
-	const char* vsEntryPointFunc,
-	const char* vsSkinEntryPointFunc,
-	const char* psEntryPointFunc,
+	const char* fxPBRPath,
+	const char* fxStdPath,
+	const char* fxNoLightPath,
+	const char* vsPBRFunc,
+	const char* vsStdFunc,
+	const char* vsNoLightFunc,
+	const char* psPBRFunc,
+	const char* psStdFunc,
+	const char* psNoLightFunc,
 	const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat,
 	int numSrv,
 	int numCbv,
@@ -1168,7 +1170,21 @@ void CMQOMaterial::InitShadersAndPipelines(
 	// vertextype : 0-->pm4, 1-->pm3, 2-->extline
 	//############################################
 
+	if (!fxPBRPath || !fxStdPath || !fxNoLightPath ||
+		!vsPBRFunc || !vsStdFunc || !vsNoLightFunc ||
+		!psPBRFunc || !psStdFunc || !psNoLightFunc) {
+		_ASSERT(0);
+		abort();
+		return;
+	}
 
+	if ((strlen(fxPBRPath) <= 0) || (strlen(fxStdPath) <= 0) || (strlen(fxNoLightPath) <= 0) ||
+		(strlen(vsPBRFunc) <= 0) || (strlen(vsStdFunc) <= 0) || (strlen(vsNoLightFunc) <= 0) ||
+		(strlen(psPBRFunc) <= 0) || (strlen(psStdFunc) <= 0) || (strlen(psNoLightFunc) <= 0)) {
+		_ASSERT(0);
+		abort();
+		return;
+	}
 
 	if (m_initpipelineflag) {
 		//###############################
@@ -1176,19 +1192,6 @@ void CMQOMaterial::InitShadersAndPipelines(
 		//###############################
 		return;
 	}
-
-
-	//テクスチャをロード。
-	//InitTexture(tkmMat);
-
-//定数バッファを作成。
-	SMaterialParam matParam;
-	//matParam.hasNormalMap = m_normalMap->IsValid() ? 1 : 0;
-	////matParam.hasSpecMap = m_specularMap->IsValid() ? 1 : 0;
-	//matParam.hasSpecMap = m_metalMap->IsValid() ? 1 : 0;
-	matParam.hasNormalMap = 0;//まずはprimitive表示テストのため　NormalMapオフ !!!!!!!!!!!!!!!!
-	matParam.hasSpecMap = 0;//まずはprimitive表示テストのため　SpecularMapオフ !!!!!!!!!!!!!!!!
-	m_constantBuffer.Init(sizeof(SMaterialParam), &matParam);
 
 	//ルートシグネチャを初期化。
 	D3D12_STATIC_SAMPLER_DESC samplerDescArray[2];
@@ -1224,12 +1227,20 @@ void CMQOMaterial::InitShadersAndPipelines(
 		offsetInDescriptorsFromTableStartSRV
 	);
 
-	if (fxFilePath != nullptr && strlen(fxFilePath) > 0) {
-		//シェーダーを初期化。
-		InitShaders(fxFilePath, vsEntryPointFunc, vsSkinEntryPointFunc, psEntryPointFunc);
-		//パイプラインステートを初期化。
-		InitPipelineState(vertextype, colorBufferFormat);
-	}
+	//シェーダーを初期化。
+	InitShaders(
+		fxPBRPath,
+		fxStdPath,
+		fxNoLightPath,
+		vsPBRFunc,
+		vsStdFunc,
+		vsNoLightFunc,
+		psPBRFunc,
+		psStdFunc,
+		psNoLightFunc);
+
+	//パイプラインステートを初期化。
+	InitPipelineState(vertextype, colorBufferFormat);
 
 	m_initpipelineflag = true;
 }
@@ -1237,6 +1248,15 @@ void CMQOMaterial::InitShadersAndPipelines(
 
 void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
 {
+
+
+	if (!m_vsMQOShader[MQOSHADER_PBR] || !m_vsMQOShader[MQOSHADER_STD] || !m_vsMQOShader[MQOSHADER_NOLIGHT] ||
+		!m_psMQOShader[MQOSHADER_PBR] || !m_psMQOShader[MQOSHADER_STD] || !m_psMQOShader[MQOSHADER_NOLIGHT]) {
+		_ASSERT(0);
+		abort();
+		return;
+	}
+
 
 
 	//############################################
@@ -1301,6 +1321,9 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 
 
 
+
+	int shaderindex;
+	for(shaderindex = 0; shaderindex < MQOSHADER_MAX; shaderindex++)
 	{
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
 		psoDesc.pRootSignature = m_rootSignature.Get();
@@ -1319,8 +1342,8 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 			_ASSERT(0);
 			abort();
 		}
-		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsSkinModel->GetCompiledBlob());//!!!!!!!!! Skin 
-		psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psModel->GetCompiledBlob());
+		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsMQOShader[shaderindex]->GetCompiledBlob());//!!!!!!!!! Skin 
+		psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psMQOShader[shaderindex]->GetCompiledBlob());
 		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 
 		if (vertextype != 2) {
@@ -1369,10 +1392,11 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 		psoDesc.SampleDesc.Count = 1;
 
-		m_skinModelPipelineState.Init(psoDesc);
+		m_opaquePipelineState[shaderindex].Init(psoDesc);
+
 
 		//続いて半透明マテリアル用。
-		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsSkinModel->GetCompiledBlob());
+		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsMQOShader[shaderindex]->GetCompiledBlob());
 		psoDesc.BlendState.IndependentBlendEnable = TRUE;
 		psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
 		psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
@@ -1380,109 +1404,13 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
 		//psoDesc.DepthStencilState.DepthEnable = FALSE;
 		psoDesc.DepthStencilState.DepthEnable = TRUE;
-		m_transSkinModelPipelineState.Init(psoDesc);
+		m_transPipelineState[shaderindex].Init(psoDesc);
 
 		////2023/12/01
 		psoDesc.DepthStencilState.DepthEnable = TRUE;
 		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-		m_transSkinAlwaysModelPipelineState.Init(psoDesc);
-
-
+		m_zalwaysPipelineState[shaderindex].Init(psoDesc);
 	}
-
-	//続いてスキンなしモデル用を作成。
-	{
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
-		psoDesc.pRootSignature = m_rootSignature.Get();
-
-		//2023/12/01 シェーダのエントリ関数として　skin有無を切り替えることはあるが　頂点フォーマットはvertextypeによって決める
-		if (vertextype == 0) {//pm4
-			psoDesc.InputLayout = { inputElementDescsWithBone, _countof(inputElementDescsWithBone) };
-		}
-		else if (vertextype == 1) {//pm3
-			psoDesc.InputLayout = { inputElementDescsWithoutBone, _countof(inputElementDescsWithoutBone) };
-		}
-		else if (vertextype == 2) {//extline
-			psoDesc.InputLayout = { inputElementDescsExtLine, _countof(inputElementDescsExtLine) };
-		}
-		else {
-			_ASSERT(0);
-			abort();
-		}
-		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsNonSkinModel->GetCompiledBlob());//!!!!!!!! NonSkin
-		psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psModel->GetCompiledBlob());
-		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-
-		if (vertextype != 2) {
-#ifdef SAMPLE_11
-			// 背面を描画していないと影がおかしくなるため、
-			// シャドウのサンプルのみカリングをオフにする。
-			// 本来はアプリ側からカリングモードを渡すのがいいのだけど、
-			// 書籍に記載しているコードに追記がいるので、エンジン側で吸収する。
-			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-#else
-			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-#endif
-		}
-		else {
-			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-		}
-
-		////2023/11/18
-		//psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-
-		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-#ifdef TK_ENABLE_ALPHA_TO_COVERAGE
-		psoDesc.BlendState.AlphaToCoverageEnable = TRUE;
-#endif
-		psoDesc.DepthStencilState.DepthEnable = TRUE;
-		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-		psoDesc.DepthStencilState.StencilEnable = FALSE;
-		psoDesc.SampleMask = UINT_MAX;
-		if (vertextype != 2) {
-			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		}
-		else {
-			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
-		}
-
-		int numRenderTarget = 0;
-		for (auto& format : colorBufferFormat) {
-			if (format == DXGI_FORMAT_UNKNOWN) {
-				//フォーマットが指定されていない場所が来たら終わり。
-				break;
-			}
-			psoDesc.RTVFormats[numRenderTarget] = colorBufferFormat[numRenderTarget];
-			numRenderTarget++;
-		}
-		psoDesc.NumRenderTargets = numRenderTarget;
-		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-		psoDesc.SampleDesc.Count = 1;
-
-		m_nonSkinModelPipelineState.Init(psoDesc);
-
-
-		//続いて半透明マテリアル用。
-		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsNonSkinModel->GetCompiledBlob());
-		psoDesc.BlendState.IndependentBlendEnable = TRUE;
-		psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
-		psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-		psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-		psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-		
-		psoDesc.DepthStencilState.DepthEnable = TRUE;
-		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-		m_transNonSkinModelPipelineState.Init(psoDesc);
-
-		////2023/12/01
-		psoDesc.DepthStencilState.DepthEnable = TRUE;
-		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-		m_transNonSkinAlwaysModelPipelineState.Init(psoDesc);
-
-	}
-
-
 }
 
 void CMQOMaterial::InitZPrePipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
@@ -1629,33 +1557,59 @@ void CMQOMaterial::InitZPrePipelineState(int vertextype, const std::array<DXGI_F
 }
 
 void CMQOMaterial::InitShaders(
-	const char* fxFilePath,
-	const char* vsEntryPointFunc,
-	const char* vsSkinEntriyPointFunc,
-	const char* psEntryPointFunc
+	const char* fxPBRPath,
+	const char* fxStdPath,
+	const char* fxNoLightPath,
+	const char* vsPBRFunc,
+	const char* vsStdFunc,
+	const char* vsNoLightFunc,
+	const char* psPBRFunc,
+	const char* psStdFunc,
+	const char* psNoLightFunc
 )
 {
-	//スキンなしモデル用のシェーダーをロードする。
-	m_vsNonSkinModel = g_engine->GetShaderFromBank(fxFilePath, vsEntryPointFunc);
-	if (m_vsNonSkinModel == nullptr) {
-		m_vsNonSkinModel = new Shader;
-		m_vsNonSkinModel->LoadVS(fxFilePath, vsEntryPointFunc);
-		g_engine->RegistShaderToBank(fxFilePath, vsEntryPointFunc, m_vsNonSkinModel);
+	//PBRシェーダ
+	m_vsMQOShader[MQOSHADER_PBR] = g_engine->GetShaderFromBank(fxPBRPath, vsPBRFunc);
+	if (m_vsMQOShader[MQOSHADER_PBR] == nullptr) {
+		m_vsMQOShader[MQOSHADER_PBR] = new Shader;
+		m_vsMQOShader[MQOSHADER_PBR]->LoadVS(fxPBRPath, vsPBRFunc);
+		g_engine->RegistShaderToBank(fxPBRPath, vsPBRFunc, m_vsMQOShader[MQOSHADER_PBR]);
 	}
-	//スキンありモデル用のシェーダーをロードする。
-	m_vsSkinModel = g_engine->GetShaderFromBank(fxFilePath, vsSkinEntriyPointFunc);
-	if (m_vsSkinModel == nullptr) {
-		m_vsSkinModel = new Shader;
-		m_vsSkinModel->LoadVS(fxFilePath, vsSkinEntriyPointFunc);
-		g_engine->RegistShaderToBank(fxFilePath, vsSkinEntriyPointFunc, m_vsSkinModel);
+	m_psMQOShader[MQOSHADER_PBR] = g_engine->GetShaderFromBank(fxPBRPath, psPBRFunc);
+	if (m_psMQOShader[MQOSHADER_PBR] == nullptr) {
+		m_psMQOShader[MQOSHADER_PBR] = new Shader;
+		m_psMQOShader[MQOSHADER_PBR]->LoadPS(fxPBRPath, psPBRFunc);
+		g_engine->RegistShaderToBank(fxPBRPath, psPBRFunc, m_psMQOShader[MQOSHADER_PBR]);
 	}
 
-	m_psModel = g_engine->GetShaderFromBank(fxFilePath, psEntryPointFunc);
-	if (m_psModel == nullptr) {
-		m_psModel = new Shader;
-		m_psModel->LoadPS(fxFilePath, psEntryPointFunc);
-		g_engine->RegistShaderToBank(fxFilePath, psEntryPointFunc, m_psModel);
+	//Standardシェーダ
+	m_vsMQOShader[MQOSHADER_STD] = g_engine->GetShaderFromBank(fxStdPath, vsStdFunc);
+	if (m_vsMQOShader[MQOSHADER_STD] == nullptr) {
+		m_vsMQOShader[MQOSHADER_STD] = new Shader;
+		m_vsMQOShader[MQOSHADER_STD]->LoadVS(fxStdPath, vsStdFunc);
+		g_engine->RegistShaderToBank(fxStdPath, vsStdFunc, m_vsMQOShader[MQOSHADER_STD]);
 	}
+	m_psMQOShader[MQOSHADER_STD] = g_engine->GetShaderFromBank(fxStdPath, psStdFunc);
+	if (m_psMQOShader[MQOSHADER_STD] == nullptr) {
+		m_psMQOShader[MQOSHADER_STD] = new Shader;
+		m_psMQOShader[MQOSHADER_STD]->LoadPS(fxStdPath, psStdFunc);
+		g_engine->RegistShaderToBank(fxStdPath, psStdFunc, m_psMQOShader[MQOSHADER_STD]);
+	}
+
+	//NoLightシェーダ
+	m_vsMQOShader[MQOSHADER_NOLIGHT] = g_engine->GetShaderFromBank(fxNoLightPath, vsNoLightFunc);
+	if (m_vsMQOShader[MQOSHADER_NOLIGHT] == nullptr) {
+		m_vsMQOShader[MQOSHADER_NOLIGHT] = new Shader;
+		m_vsMQOShader[MQOSHADER_NOLIGHT]->LoadVS(fxNoLightPath, vsNoLightFunc);
+		g_engine->RegistShaderToBank(fxNoLightPath, vsNoLightFunc, m_vsMQOShader[MQOSHADER_NOLIGHT]);
+	}
+	m_psMQOShader[MQOSHADER_NOLIGHT] = g_engine->GetShaderFromBank(fxNoLightPath, psNoLightFunc);
+	if (m_psMQOShader[MQOSHADER_NOLIGHT] == nullptr) {
+		m_psMQOShader[MQOSHADER_NOLIGHT] = new Shader;
+		m_psMQOShader[MQOSHADER_NOLIGHT]->LoadPS(fxNoLightPath, psNoLightFunc);
+		g_engine->RegistShaderToBank(fxNoLightPath, psNoLightFunc, m_psMQOShader[MQOSHADER_NOLIGHT]);
+	}
+
 }
 
 void CMQOMaterial::InitZPreShaders(
@@ -1681,48 +1635,143 @@ void CMQOMaterial::InitZPreShaders(
 }
 
 
-void CMQOMaterial::BeginRender(RenderContext& rc, int hasSkin, bool isline, bool zcmpalways, bool withalpha)
+void CMQOMaterial::BeginRender(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 {
+	if (!renderobj.pmodel || !renderobj.mqoobj) {
+		_ASSERT(0);
+		return;
+	}
+
+
 	rc.SetRootSignature(m_rootSignature);
 
+	bool withalpha = renderobj.forcewithalpha || renderobj.withalpha;
+	CPolyMesh3* pm3 = nullptr;
+	CPolyMesh4* pm4 = nullptr;
+	pm3 = renderobj.mqoobj->GetPm3();
+	pm4 = renderobj.mqoobj->GetPm4();
+
+	//#####################################################################################################
+	//2023/12/05
+	//renderobj.shadertype : MQOSHADER_PBR, MQOSHADER_STD, MOQSHADER_NOLIGHTで指定されたようにパイプラインを設定
+	//-1指定の場合には　テクスチャの設定具合をみて自動で設定
+	//テクスチャが１つも無い場合について迷ったが　STDで描画するとPBRの中で明るすぎて非常に浮く　テクスチャ無しもPBRで描画することに
+	//#####################################################################################################
+
+
 	if (withalpha) {
-		//######
-		//半透明
-		//######
-		if (hasSkin) {
-			//スキン
-			if (!zcmpalways) {
-				//手前だけ描画
-				rc.SetPipelineState(m_transSkinModelPipelineState);
-			}
-			else {
-				//常に上書き
-				rc.SetPipelineState(m_transSkinAlwaysModelPipelineState);
+		if (renderobj.zcmpalways) {
+			//###########################
+			//Z cmp Always 半透明常に上書き
+			//###########################
+			switch (renderobj.shadertype) {
+			case MQOSHADER_PBR:
+			case MQOSHADER_STD:
+			case MQOSHADER_NOLIGHT:
+				rc.SetPipelineState(m_zalwaysPipelineState[renderobj.shadertype]);
+				break;
+			case -1:
+				if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
+					(GetNormalTex() && (GetNormalTex())[0]) ||
+					(GetMetalTex() && (GetMetalTex())[0])) {
+				//if (
+				//	(GetNormalTex() && (GetNormalTex())[0]) ||
+				//	(GetMetalTex() && (GetMetalTex())[0])) {
+					//PBR
+					rc.SetPipelineState(m_zalwaysPipelineState[MQOSHADER_PBR]);
+				}
+				else {
+					if (pm4) {
+						//NoLight
+						rc.SetPipelineState(m_zalwaysPipelineState[MQOSHADER_NOLIGHT]);
+					}
+					else {
+						//Standard
+						rc.SetPipelineState(m_zalwaysPipelineState[MQOSHADER_STD]);
+					}
+				}
+				break;
+			default:
+				_ASSERT(0);
+				rc.SetPipelineState(m_zalwaysPipelineState[MQOSHADER_NOLIGHT]);
+				break;
 			}
 		}
 		else {
-			//非スキン
-			if (!zcmpalways) {
-				//手前だけ描画
-				rc.SetPipelineState(m_transNonSkinModelPipelineState);
-			}
-			else {
-				//常に上書き
-				rc.SetPipelineState(m_transNonSkinAlwaysModelPipelineState);
+			//###################
+			//translucent　半透明
+			//###################
+			switch (renderobj.shadertype) {
+			case MQOSHADER_PBR:
+			case MQOSHADER_STD:
+			case MQOSHADER_NOLIGHT:
+				rc.SetPipelineState(m_transPipelineState[renderobj.shadertype]);
+				break;
+			case -1:
+				if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
+					(GetNormalTex() && (GetNormalTex())[0]) ||
+					(GetMetalTex() && (GetMetalTex())[0])) {
+				//if (
+				//	(GetNormalTex() && (GetNormalTex())[0]) ||
+				//	(GetMetalTex() && (GetMetalTex())[0])) {
+					//PBR
+					rc.SetPipelineState(m_transPipelineState[MQOSHADER_PBR]);
+				}
+				else {
+					if (pm4) {
+						//NoLight
+						rc.SetPipelineState(m_transPipelineState[MQOSHADER_NOLIGHT]);
+					}
+					else {
+						//Standard
+						rc.SetPipelineState(m_transPipelineState[MQOSHADER_STD]);
+					}
+				}
+				break;
+			default:
+				_ASSERT(0);
+				rc.SetPipelineState(m_transPipelineState[MQOSHADER_NOLIGHT]);
+				break;
 			}
 		}
 	}
 	else {
-		//######
-		//不透明
-		//######
-		if (hasSkin) {
-			//スキン
-			rc.SetPipelineState(m_skinModelPipelineState);
-		}
-		else {
-			//非スキン
-			rc.SetPipelineState(m_nonSkinModelPipelineState);
+
+		//##############
+		//Opaque 不透明
+		//##############
+
+		switch (renderobj.shadertype) {
+		case MQOSHADER_PBR:
+		case MQOSHADER_STD:
+		case MQOSHADER_NOLIGHT:
+			rc.SetPipelineState(m_opaquePipelineState[renderobj.shadertype]);
+			break;
+		case -1:
+			if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
+				(GetNormalTex() && (GetNormalTex())[0]) ||
+				(GetMetalTex() && (GetMetalTex())[0])) {
+			//if (
+			//	(GetNormalTex() && (GetNormalTex())[0]) ||
+			//	(GetMetalTex() && (GetMetalTex())[0])) {
+				//PBR
+				rc.SetPipelineState(m_opaquePipelineState[MQOSHADER_PBR]);
+			}
+			else {
+				if (pm4) {
+					//NoLight
+					rc.SetPipelineState(m_opaquePipelineState[MQOSHADER_NOLIGHT]);
+				}
+				else {
+					//Standard
+					rc.SetPipelineState(m_opaquePipelineState[MQOSHADER_STD]);
+				}
+			}
+			break;
+		default:
+			_ASSERT(0);
+			rc.SetPipelineState(m_opaquePipelineState[MQOSHADER_NOLIGHT]);
+			break;
 		}
 	}
 
@@ -2071,9 +2120,12 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 			//#########################################
 			// 太陽光
 			m_cbLights.Init();
-			m_cbLights.directionalLight[0].color.x = 1.5f;
-			m_cbLights.directionalLight[0].color.y = 1.5f;
-			m_cbLights.directionalLight[0].color.z = 1.5f;
+			//m_cbLights.directionalLight[0].color.x = 1.5f;
+			//m_cbLights.directionalLight[0].color.y = 1.5f;
+			//m_cbLights.directionalLight[0].color.z = 1.5f;
+			m_cbLights.directionalLight[0].color.x = 0.8f;
+			m_cbLights.directionalLight[0].color.y = 0.8f;
+			m_cbLights.directionalLight[0].color.z = 0.8f;
 			m_cbLights.directionalLight[0].direction.w = 0.0f;
 
 			ChaVector3 cameye = ChaVector3(g_camera3D->GetPosition());
@@ -2120,9 +2172,12 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 			//#########################################
 			// 太陽光
 			m_cbMatrix.lights.Init();
-			m_cbMatrix.lights.directionalLight[0].color.x = 1.5f;
-			m_cbMatrix.lights.directionalLight[0].color.y = 1.5f;
-			m_cbMatrix.lights.directionalLight[0].color.z = 1.5f;
+			//m_cbMatrix.lights.directionalLight[0].color.x = 1.5f;
+			//m_cbMatrix.lights.directionalLight[0].color.y = 1.5f;
+			//m_cbMatrix.lights.directionalLight[0].color.z = 1.5f;
+			m_cbMatrix.lights.directionalLight[0].color.x = 0.8f;
+			m_cbMatrix.lights.directionalLight[0].color.y = 0.8f;
+			m_cbMatrix.lights.directionalLight[0].color.z = 0.8f;
 			m_cbMatrix.lights.directionalLight[0].direction.w = 0.0f;
 
 			ChaVector3 cameye = ChaVector3(g_camera3D->GetPosition());

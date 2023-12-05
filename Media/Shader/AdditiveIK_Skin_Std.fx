@@ -27,6 +27,7 @@ struct SVSIn
 struct SPSIn
 {
     float4 pos          : SV_POSITION;
+    float4 normal       : NORMAL;    
     float2 uv           : TEXCOORD0;
     float4 posInProj    : TEXCOORD1;
     float4 diffusemult : TEXCOORD2;
@@ -75,7 +76,7 @@ sampler g_sampler : register(s0);
 /// <summary>
 /// モデル用の頂点シェーダーのエントリーポイント
 /// </summary>
-SPSIn VSMainWithBone(SVSIn vsIn, uniform bool hasSkin)
+SPSIn VSMainSkinStd(SVSIn vsIn, uniform bool hasSkin)
 {
     SPSIn psIn;
 
@@ -94,9 +95,7 @@ SPSIn VSMainWithBone(SVSIn vsIn, uniform bool hasSkin)
     psIn.pos = mul(mProj, psIn.pos);
     //psIn.pos /= psIn.pos.w;
     
-    float3 wNormal;
-    wNormal = normalize(mul(finalmat, vsIn.normal)).xyz; // normal (world space)
- 
+    psIn.normal = normalize(mul(finalmat, vsIn.normal));    
     psIn.uv = vsIn.uv;
 
     //step-4 頂点の正規化スクリーン座標系の座標をピクセルシェーダーに渡す
@@ -113,7 +112,46 @@ SPSIn VSMainWithBone(SVSIn vsIn, uniform bool hasSkin)
 /// <summary>
 /// モデル用のピクセルシェーダーのエントリーポイント
 /// </summary>
-float4 PSMain(SPSIn psIn) : SV_Target0
+
+float4 PSMainSkinStd(SPSIn psIn) : SV_Target0
+{
+    // 普通にテクスチャを
+    //return g_texture.Sample(g_sampler, psIn.uv);
+    float4 albedocol = g_albedo.Sample(g_sampler, psIn.uv);
+    float2 diffuseuv = { 0.5f, 0.5f };
+    float4 diffusecol = g_diffusetex.Sample(g_sampler, diffuseuv);
+    //texcol.w = 1.0f;
+    //return texcol;
+     
+    float3 wPos = psIn.pos.xyz / psIn.pos.w;
+    
+    float3 totaldiffuse = float3(0, 0, 0);
+    float3 totalspecular = float3(0, 0, 0);
+    float calcpower = POW * 0.05f; //!!!!!!!!!!!
+    float3 lig = 0;
+    //for (int ligNo = 0; ligNo < NUM_DIRECTIONAL_LIGHT; ligNo++)
+    for (int ligNo = 0; ligNo < 1; ligNo++)//!!!!!!!!!!!!!!!!!!!!!
+    {
+        float nl;
+        float3 h;
+        float nh;
+        float4 tmplight;
+		
+        nl = dot(psIn.normal.xyz, -directionalLight[ligNo].direction.xyz);
+        h = normalize((-directionalLight[ligNo].direction.xyz + eyePos.xyz - wPos) * 0.5f);
+        nh = dot(psIn.normal.xyz, h);
+
+        totaldiffuse += directionalLight[ligNo].color.xyz * max(0, dot(psIn.normal.xyz, -directionalLight[ligNo].direction.xyz));
+        totalspecular += ((nl) < 0) || ((nh) < 0) ? 0 : ((nh) * calcpower);
+    }
+    float4 totaldiffuse4 = float4(totaldiffuse, 1.0f);
+    float4 totalspecular4 = float4(totalspecular, 0.0f);
+    float4 pscol = albedocol * diffusecol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
+    return pscol;
+}
+
+
+float4 PSMainSkinNoLight(SPSIn psIn) : SV_Target0
 {
     // 普通にテクスチャを
     //return g_texture.Sample(g_sampler, psIn.uv);
@@ -124,15 +162,6 @@ float4 PSMain(SPSIn psIn) : SV_Target0
     //return texcol;
       
     float4 pscol = albedocol * diffusecol * psIn.diffusemult;
-    //pscol.x *= psIn.diffusemult.x;
-    //pscol.y *= psIn.diffusemult.y;
-    //pscol.z *= psIn.diffusemult.z;
-    //pscol.w *= psIn.diffusemult.w;
     return pscol;
-    
-    //return float4(psIn.uv, 1, 1);
-    //float4 testcol = {0.5f, 0.5f, 0.5f, 1.0f};
-    //float4 testcol = { 1.0f, 1.0f, 1.0f, 1.0f };
-    //return testcol;
 }
 

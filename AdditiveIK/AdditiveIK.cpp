@@ -1935,6 +1935,7 @@ static void ShowRetargetWnd(bool srcflag);
 static void ShowLimitEulerWnd(bool srcflag);
 
 
+
 static CInfoWindow* CreateInfoWnd();
 static int CreateSprites();
 static void DestroySprites();
@@ -2076,6 +2077,7 @@ static int CreateGUIDlgDispParams();
 static int CreateGUIDlgBrushes();
 static int CreateGUIDlgBullet();
 static int CreateGUIDlgRefPos();
+static void CheckShaderTypeButton(HWND hDlgWnd, int srcshadertype);
 
 
 
@@ -3219,6 +3221,7 @@ void InitApp()
 {
 	s_hhook = NULL;
 	g_hWnd = NULL;
+	g_shadertype = -1;
 
 	InitializeCriticalSection(&s_CritSection_LTimeline);
 	InitializeCriticalSection(&g_CritSection_GetGP);
@@ -24293,6 +24296,48 @@ LRESULT CALLBACK LaterTransparentDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 
 }
 
+void CheckShaderTypeButton(HWND hDlgWnd, int srcshadertype)
+{
+	switch (srcshadertype) {
+	case -1:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, TRUE, 0);//!!!!!!
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
+		g_shadertype = srcshadertype;
+		break;
+	case MQOSHADER_PBR:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, TRUE, 0);//!!!!
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
+		g_shadertype = srcshadertype;
+		break;
+	case MQOSHADER_STD:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, TRUE, 0);//!!!!!!!
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
+		g_shadertype = srcshadertype;
+		break;
+	case MQOSHADER_NOLIGHT:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, TRUE, 0);//!!!!!!
+		g_shadertype = srcshadertype;
+		break;
+	default:
+		_ASSERT(0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, TRUE, 0);//!!!!
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
+		g_shadertype = -1;
+		break;
+	}
+}
+
 
 LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -24301,6 +24346,12 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 	{
 		//Lights2Dlg(hDlgWnd);
 		//EnableWindow(GetDlgItem(hDlgWnd, IDC_RESETLIM_CURRENT), FALSE);
+
+		//#######
+		//Button
+		//#######
+		CheckShaderTypeButton(hDlgWnd, g_shadertype);
+
 
 		//#######
 		//Slider
@@ -24507,6 +24558,23 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 	case WM_COMMAND:
 
 		switch (LOWORD(wp)) {
+
+
+		case IDC_SHADER_AUTO:
+			CheckShaderTypeButton(hDlgWnd, -1);
+			break;
+		case IDC_SHADER_PBR:
+			CheckShaderTypeButton(hDlgWnd, MQOSHADER_PBR);
+			break;
+		case IDC_SHADER_STD:
+			CheckShaderTypeButton(hDlgWnd, MQOSHADER_STD);
+			break;
+		case IDC_SHADER_NOLIGHT:
+			CheckShaderTypeButton(hDlgWnd, MQOSHADER_NOLIGHT);
+			break;
+
+
+
 		case IDC_CHECK_LIGHTS:
 		{
 			UINT ischecked = 0;

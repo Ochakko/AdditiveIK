@@ -3,10 +3,16 @@
 
 #include <mqoobject.h>
 #include <DispObj.h>
+//#include <GlobalVar.h>
 
 #include "../../MiniEngine/InstancedSprite.h"
 #include "../../AdditiveIK/FpsSprite.h"
 #include "../../AdditiveIK/UndoSprite.h"
+
+
+
+extern bool g_4kresolution;//AdditiveIk.cpp
+
 
 
 namespace myRenderer
@@ -248,7 +254,14 @@ namespace myRenderer
         //RenderToShadowMap(rc);
 
         // ZPrepass
-        ZPrepass(rc);
+        //2023/12/05
+        //4Kモードでは重いシーンで効果があった
+        //2Kモードでは遮蔽面積が小さいために　ZPrepassのコストの方が大きくなり遅くなる
+        //ZPrepassは4Kモードの場合だけ呼び出すことに.
+        if (g_4kresolution) {
+            ZPrepass(rc);
+        }
+        
 
         // G-Bufferへのレンダリング
         //RenderToGBuffer(rc);
@@ -332,7 +345,13 @@ namespace myRenderer
             //g_graphicsEngine->GetCurrentFrameBuffuerDSV()
             m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
         );
-        //rc.ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
+
+        if (g_4kresolution == false) {
+            //2023/12/05
+            //2Kモードの場合には　ZPrepassを実行しないために　ここでZBufferをクリア
+            rc.ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
+        }
+
 
         //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
         //// レンダリングターゲットを設定
@@ -511,16 +530,26 @@ namespace myRenderer
 
     void RenderingEngine::RenderPolyMeshZPre(RenderContext& rc, RENDEROBJ currenderobj)
     {
+
+        //2023/12/05
+        //4Kモードでは重いシーンで効果があった
+        //2Kモードでは遮蔽面積が小さいために　ZPrepassのコストの方が大きくなり遅くなる
+        //ZPrepassは4Kモードの場合だけ呼び出すことに.
+
         if (currenderobj.mqoobj) {
             if (currenderobj.mqoobj->GetDispObj()) {
                 if (currenderobj.mqoobj->GetPm3()) {
                     //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
                     currenderobj.mqoobj->GetDispObj()->RenderZPrePm3(rc, currenderobj);
                 }
-                else if (currenderobj.mqoobj->GetPm4()) {
-                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                    currenderobj.mqoobj->GetDispObj()->RenderZPrePm4(rc, currenderobj);
-                }
+
+                //小さい画面では遮蔽される面積が小さいので　ボーン変形のコストの方が高いことがある
+                //背景のZPrepassだけにするためにPm4のZPrepassはコメントアウト
+                //else if (currenderobj.mqoobj->GetPm4()) {
+                //    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                //    currenderobj.mqoobj->GetDispObj()->RenderZPrePm4(rc, currenderobj);
+                //}
+
             }
             if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
                 //################################

@@ -304,7 +304,7 @@ float CalcDiffuseFromFresnel(float3 N, float3 L, float3 V)
 /// <summary>
 /// モデル用の頂点シェーダーのエントリーポイント
 /// </summary>
-SPSIn VSMainWithoutBone(SVSInWithoutBone vsIn, uniform bool hasSkin)
+SPSIn VSMainNoSkinPBR(SVSInWithoutBone vsIn, uniform bool hasSkin)
 {
     SPSIn psIn;
 
@@ -340,7 +340,7 @@ SPSInExtLine VSMainExtLine(SVSInExtLine vsIn, uniform bool hasSkin)
 /// <summary>
 /// モデル用のピクセルシェーダーのエントリーポイント
 /// </summary>
-float4 PSMain(SPSIn psIn) : SV_Target0
+float4 PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
 {
     float2 diffuseuv = { 0.5f, 0.5f };
     float4 diffusecol = g_diffusetex.Sample(g_sampler, diffuseuv);
@@ -422,7 +422,7 @@ float4 PSMain(SPSIn psIn) : SV_Target0
     float3 specColor = albedoColor.xyz;
 
     // 金属度
-    float metallic = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).r * 0.7f;//!!!! * 0.7f
+    float metallic = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).r * 0.7f; //!!!! * 0.7f
 
     // 滑らかさ
     float smooth = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).a * 0.7f; //!!!!! * 0.7f
@@ -454,7 +454,7 @@ float4 PSMain(SPSIn psIn) : SV_Target0
         // 金属度が高ければ、鏡面反射はスペキュラカラー、低ければ白
         // スペキュラカラーの強さを鏡面反射率として扱う
         spec *= lerp(float3(1.0f, 1.0f, 1.0f), specColor, metallic);
-
+        
         // 滑らかさを使って、拡散反射光と鏡面反射光を合成する
         // 滑らかさが高ければ、拡散反射は弱くなる
         lig += diffuse * (1.0f - smooth) + spec;

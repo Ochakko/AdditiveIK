@@ -310,49 +310,34 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone)
 		if (curmat) {
 			curmat->CreateDecl(pdev, vertextype);
 
-			//##########################################################
-			//2023/12/04
-			//テクスチャ設定が無い場合と　ノーマルまたはメタル設定がある場合にPBR
-			//テクスチャが無い場合の表示が　きつい真っ白にならないように
-			//例：UnityAsset TheHunt Street1をstdシェーダにしてからfbxエクスポートしそれを読み込むと
-			// Stdシェーダではお店のWall_Boxが真っ白になる
-			// その場合のWall_Boxのマテリアルはテクスチャ無しの　DiffuseとEmission設定のみであった
-			//##########################################################
-			if ((curmat->GetAlbedoTex() && !(curmat->GetAlbedoTex())[0]) ||
-				(curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) ||
-				(curmat->GetMetalTex() && (curmat->GetMetalTex())[0])) {
-			//if (curmat->GetAlbedoTex()[0]) {
-				//PBR
-				curmat->InitShadersAndPipelines(
-					vertextype,
-					"../Media/Shader/AdditiveIK_NoSkin_PBR.fx",
-					"VSMainWithoutBone",
-					"VSMainWithoutBone",
-					"PSMain",
-					colorBufferFormat,
-					curmat->NUM_SRV_ONE_MATERIAL,
-					curmat->NUM_CBV_ONE_MATERIAL,
-					0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
-					0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
-					D3D12_FILTER_MIN_MAG_MIP_LINEAR
-				);
-			}
-			else {
-				//Standard
-				curmat->InitShadersAndPipelines(
-					vertextype,
-					"../Media/Shader/AdditiveIK_NoSkin_Std.fx",
-					"VSMainWithoutBone",
-					"VSMainWithoutBone",
-					"PSMain",
-					colorBufferFormat,
-					curmat->NUM_SRV_ONE_MATERIAL,
-					curmat->NUM_CBV_ONE_MATERIAL,
-					0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
-					0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
-					D3D12_FILTER_MIN_MAG_MIP_LINEAR
-				);
-			}
+			curmat->InitShadersAndPipelines(
+				vertextype,
+				"../Media/Shader/AdditiveIK_NoSkin_PBR.fx",//fx NoSkin PBR
+				"../Media/Shader/AdditiveIK_NoSkin_Std.fx",//fx NoSkin Std
+				"../Media/Shader/AdditiveIK_NoSkin_Std.fx",//fx NoSkin NoLight
+				"VSMainNoSkinPBR",//VS NoSkin PBR
+				"VSMainNoSkinStd",//VS NoSkin Std
+				"VSMainNoSkinStd",//VS NoSkin NoLight
+				"PSMainNoSkinPBR",//PS NoSkin PBR
+				"PSMainNoSkinStd",//PS NoSkin Std
+				"PSMainNoSkinNoLight",//PS NoSkin NoLight
+				colorBufferFormat,
+				curmat->NUM_SRV_ONE_MATERIAL,
+				curmat->NUM_CBV_ONE_MATERIAL,
+				0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
+				0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
+				D3D12_FILTER_MIN_MAG_MIP_LINEAR
+			);
+
+			//if ((curmat->GetAlbedoTex() && !(curmat->GetAlbedoTex())[0]) ||
+			//	(curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) ||
+			//	(curmat->GetMetalTex() && (curmat->GetMetalTex())[0])) {
+			////if (curmat->GetAlbedoTex()[0]) {
+			//	//PBR
+			//}
+			//else {
+			//	//Standard
+			//}
 
 			curmat->InitZPreShadersAndPipelines(
 				vertextype,
@@ -413,51 +398,35 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone )
 
 				curmat->CreateDecl(pdev, vertextype);
 
-				//##########################################################
-				//2023/12/04
-				//テクスチャ設定が無い場合と　ノーマルまたはメタル設定がある場合にPBR
-				//テクスチャが無い場合の表示が　きつい真っ白にならないように
-				//例：UnityAsset TheHunt Street1をstdシェーダにしてからfbxエクスポートしそれを読み込むと
-				// Stdシェーダではお店のWall_Boxが真っ白になる
-				// その場合のWall_Boxのマテリアルはテクスチャ無しの　DiffuseとEmission設定のみであった
-				//##########################################################
-				if ((curmat->GetAlbedoTex() && !(curmat->GetAlbedoTex())[0]) ||
-					(curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) ||
-					(curmat->GetMetalTex() && (curmat->GetMetalTex())[0])) {
-				//if (curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) {
-				//if (curmat->GetAlbedoTex()[0]) {
-					//PBR
-					curmat->InitShadersAndPipelines(
-						vertextype,
-						"../Media/Shader/AdditiveIK_Skin_PBR.fx",//Skin
-						"VSMainWithBone",
-						"VSMainWithBone",
-						"PSMain",
-						colorBufferFormat,
-						curmat->NUM_SRV_ONE_MATERIAL,
-						curmat->NUM_CBV_ONE_MATERIAL,
-						0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
-						0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
-						D3D12_FILTER_MIN_MAG_MIP_LINEAR
-					);
-				}
-				else {
-				//	//Standard
-					curmat->InitShadersAndPipelines(
-						vertextype,
-						"../Media/Shader/AdditiveIK_Skin_Std.fx",//Skin
-						"VSMainWithBone",
-						"VSMainWithBone",
-						"PSMain",
-						colorBufferFormat,
-						curmat->NUM_SRV_ONE_MATERIAL,
-						curmat->NUM_CBV_ONE_MATERIAL,
-						0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
-						0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
-						D3D12_FILTER_MIN_MAG_MIP_LINEAR
-					);
-				}
+				curmat->InitShadersAndPipelines(
+					vertextype,
+					"../Media/Shader/AdditiveIK_Skin_PBR.fx",//fx Skin PBR
+					"../Media/Shader/AdditiveIK_Skin_Std.fx",//fx Skin Std
+					"../Media/Shader/AdditiveIK_Skin_Std.fx",//fx Skin NoLight
+					"VSMainSkinPBR",//VS Skin PBR
+					"VSMainSkinStd",//VS Skin Std
+					"VSMainSkinStd",//VS Skin NoLight
+					"PSMainSkinPBR",//PS Skin PBR
+					"PSMainSkinStd",//PS Skin Std
+					"PSMainSkinNoLight",//PS Skin NoLight
+					colorBufferFormat,
+					curmat->NUM_SRV_ONE_MATERIAL,
+					curmat->NUM_CBV_ONE_MATERIAL,
+					0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
+					0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
+					D3D12_FILTER_MIN_MAG_MIP_LINEAR
+				);
 
+				//if ((curmat->GetAlbedoTex() && !(curmat->GetAlbedoTex())[0]) ||
+				//	(curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) ||
+				//	(curmat->GetMetalTex() && (curmat->GetMetalTex())[0])) {
+				////if (curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) {
+				////if (curmat->GetAlbedoTex()[0]) {
+				//	//PBR
+				//}
+				//else {
+				////	//Standard
+				//}
 
 				curmat->InitZPreShadersAndPipelines(
 					vertextype,
@@ -519,8 +488,13 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 		curmat->InitShadersAndPipelines(
 			vertextype,
 			"../Media/Shader/AdditiveIK_NoSkin_Std.fx",
+			"../Media/Shader/AdditiveIK_NoSkin_Std.fx",
+			"../Media/Shader/AdditiveIK_NoSkin_Std.fx",
 			"VSMainExtLine",
 			"VSMainExtLine",
+			"VSMainExtLine",
+			"PSMainExtLine",
+			"PSMainExtLine",
 			"PSMainExtLine",
 			colorBufferFormat,
 			curmat->NUM_SRV_ONE_MATERIAL,
@@ -1191,8 +1165,7 @@ int CDispObj::RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ rend
 	int hasskin = 1;
 	bool isline = false;
 	bool withalpha = (renderobj.withalpha || renderobj.forcewithalpha);
-	curmat->BeginRender(rc, hasskin, isline, 
-		renderobj.zcmpalways, withalpha);
+	curmat->BeginRender(rc, renderobj);
 
 	//rc.SetVertexBuffer(m_vertexBufferView);
 	////3. インデックスバッファを設定。
@@ -1508,8 +1481,7 @@ int CDispObj::RenderNormalPM3Material(RenderContext& rc, myRenderer::RENDEROBJ r
 	int hasskin = 0;
 	bool isline = false;
 	bool withalpha = (renderobj.withalpha || renderobj.forcewithalpha);
-	curmat->BeginRender(rc, hasskin, isline, 
-		renderobj.zcmpalways, withalpha);
+	curmat->BeginRender(rc, renderobj);
 
 	//rc.SetDescriptorHeap(m_descriptorHeap);
 
@@ -1680,8 +1652,7 @@ int CDispObj::RenderLine(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 		//定数バッファの設定、更新など描画の共通処理を実行する。
 		curmat->DrawCommon(rc, renderobj, mView, mProj);
 
-		curmat->BeginRender(rc, hasskin, isline, 
-			renderobj.zcmpalways, renderobj.withalpha);
+		curmat->BeginRender(rc, renderobj);
 		//rc.SetDescriptorHeap(m_descriptorHeap);
 
 		//1. 頂点バッファを設定。
