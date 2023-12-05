@@ -2114,7 +2114,7 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 
-		//if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
+		if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
 			//#########################################
 			//2023/12/03 ライトパラメータは　まずは決め打ち
 			//#########################################
@@ -2153,7 +2153,7 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 			m_expandConstantBuffer.CopyToVRAM(m_cbLights);
 
 			SetUpdateLightsFlag();
-		//}
+		}
 	}
 	else if (ppm4) {
 		m_cb.mWorld = renderobj.mWorld;
