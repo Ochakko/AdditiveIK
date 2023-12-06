@@ -10,6 +10,9 @@ MITランセンス.<br>
 ![TopFig0](ScreenShots/AdditiveIK_To1001_SS1_800.png "トップ絵0")  
 Fig.1 ScreenShot of AdditiveIK.  
 <br>
+![TopFig1](ScreenShots/AdditiveIK_To1001_Lights_1_small.png "トップ絵1")
+Fig.2 Lighting Test 2023/12/06 (UnityAsset TheHuntを読込).
+<br>
 <br>
 # 免責<br>
 このソフトにより問題が起きたとしてもその責任は持ちません。<br>

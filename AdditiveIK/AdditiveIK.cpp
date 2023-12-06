@@ -1726,8 +1726,8 @@ ChaMatrix               g_mCenterWorld;
 ////#define MAX_LIGHTS 3
 ////CDXUTDirectionWidget g_LightControl[MAX_LIGHTS];
 //CDXUTDirectionWidget g_LightControl[LIGHTNUMMAX];
-static ChaVector4 s_lightdirforshader[LIGHTNUMMAX];
-static ChaVector4 s_lightdiffuseforshader[LIGHTNUMMAX];
+ChaVector4 g_lightdirforshader[LIGHTNUMMAX];
+ChaVector4 g_lightdiffuseforshader[LIGHTNUMMAX];
 
 
 
@@ -4189,10 +4189,10 @@ void InitApp()
 				(float)-cos(initrad));
 			ChaVector3Normalize(&ndir, &dir0);
 			g_lightDir[slotindex][lightindex] = ndir;
-			//s_lightdirforshader[lightindex] = -g_lightdir[lightindex];//-lightdir
+			//g_lightdirforshader[lightindex] = -g_lightdir[lightindex];//-lightdir
 
 			g_lightDiffuse[slotindex][lightindex] = ChaVector3(1.0f, 1.0f, 1.0f);
-			//s_lightdiffuseforshader[lightindex] = ChaVector4(g_lightdiffuse[lightindex].x, g_lightdiffuse[lightindex].y, g_lightdiffuse[lightindex].z, 1.0f);
+			//g_lightdiffuseforshader[lightindex] = ChaVector4(g_lightdiffuse[lightindex].x, g_lightdiffuse[lightindex].y, g_lightdiffuse[lightindex].z, 1.0f);
 
 			if (lightindex == 0) {//初期状態では lightindex == 0のときキャラの正面を照らす向き
 				g_lightEnable[slotindex][lightindex] = true;
@@ -35303,17 +35303,19 @@ int SetLightDirection()
 					rotdir = ChaVector3(-nlightdir.x, nlightdir.y, -nlightdir.z);
 				}
 				ChaVector3Normalize(&nrotdir, &rotdir);
-				s_lightdirforshader[activenum] = -ChaVector4(nrotdir, 0.0f);//-lightdir
+				//g_lightdirforshader[activenum] = -ChaVector4(nrotdir, 0.0f);//-lightdir
+				g_lightdirforshader[activenum] = ChaVector4(nrotdir, 0.0f);//新しいシェーダに合わせて
 			}
 			else {
 				ChaVector3 nrotdir;
 				ChaVector3Normalize(&nrotdir, &(g_lightDir[g_lightSlot][lightindex]));
-				s_lightdirforshader[activenum] = -ChaVector4(nrotdir, 0.0f);//-lightdir
+				//g_lightdirforshader[activenum] = -ChaVector4(nrotdir, 0.0f);//-lightdir
+				g_lightdirforshader[activenum] = ChaVector4(nrotdir, 0.0f);//新しいシェーダに合わせて
 			}
 
 			ChaVector3 scaleddiffuse;
 			scaleddiffuse = g_lightDiffuse[g_lightSlot][lightindex] * g_lightScale[g_lightSlot][lightindex] * g_fLightScale;
-			s_lightdiffuseforshader[activenum] = ChaVector4(scaleddiffuse.x, scaleddiffuse.y, scaleddiffuse.z, 1.0f);
+			g_lightdiffuseforshader[activenum] = ChaVector4(scaleddiffuse.x, scaleddiffuse.y, scaleddiffuse.z, 1.0f);
 
 			activenum++;
 		}

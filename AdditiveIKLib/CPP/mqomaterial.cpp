@@ -38,6 +38,10 @@
 
 static int s_alloccount = 0;
 
+extern ChaVector4 g_lightdirforshader[LIGHTNUMMAX];
+extern ChaVector4 g_lightdiffuseforshader[LIGHTNUMMAX];
+
+
 
 CMQOMaterial::CMQOMaterial() : m_descriptorHeap(),
 m_commonConstantBuffer(), m_expandConstantBuffer(), //2023/11/29
@@ -2040,6 +2044,27 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 
 }
 
+void CMQOMaterial::SetConstLights(SConstantBufferLights* pcbLights)
+{
+	if (!pcbLights) {
+		_ASSERT(0);
+		return;
+	}
+	pcbLights->Init();
+	pcbLights->lightsnum[0] = g_nNumActiveLights;
+	int lightno;
+	for (lightno = 0; lightno < g_nNumActiveLights; lightno++) {
+		pcbLights->directionalLight[lightno].color = g_lightdiffuseforshader[lightno];
+		pcbLights->directionalLight[lightno].direction = g_lightdirforshader[lightno];
+	}	
+	//ChaVector3 cameye = ChaVector3(g_camera3D->GetPosition());
+	//ChaVector3 camtarget = ChaVector3(g_camera3D->GetTarget());
+	//m_cbLights.directionalLight[0].direction = ChaVector4((camtarget - cameye), 0.0f);//この向きで合っている
+	pcbLights->eyePos = ChaVector4(ChaVector3(g_camera3D->GetPosition()), 0.0f);
+	pcbLights->specPow = ChaVector4(5.0f, 5.0f, 5.0f, 0.0f);
+}
+
+
 void CMQOMaterial::SetFl4x4(myRenderer::RENDEROBJ renderobj)
 {
 	if (renderobj.pmodel && renderobj.mqoobj)
@@ -2091,10 +2116,6 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 		m_cb.mProj = mProj;
 		//m_cb.diffusemult = renderobj.diffusemult;
 		m_cb.diffusemult = pextline->GetColor();
-
-		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
-		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
-
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 	}
 	else if (ppm3) {
@@ -2108,50 +2129,12 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 		else {
 			m_cb.diffusemult = renderobj.diffusemult;
 		}
-
-		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
-		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
-
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 
+
 		if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
-			//#########################################
-			//2023/12/03 ライトパラメータは　まずは決め打ち
-			//#########################################
-			// 太陽光
-			m_cbLights.Init();
-			//m_cbLights.directionalLight[0].color.x = 1.5f;
-			//m_cbLights.directionalLight[0].color.y = 1.5f;
-			//m_cbLights.directionalLight[0].color.z = 1.5f;
-			m_cbLights.directionalLight[0].color.x = 0.8f;
-			m_cbLights.directionalLight[0].color.y = 0.8f;
-			m_cbLights.directionalLight[0].color.z = 0.8f;
-			m_cbLights.directionalLight[0].direction.w = 0.0f;
-
-			ChaVector3 cameye = ChaVector3(g_camera3D->GetPosition());
-			ChaVector3 camtarget = ChaVector3(g_camera3D->GetTarget());
-			m_cbLights.directionalLight[0].direction = ChaVector4((camtarget - cameye), 0.0f);//この向きで合っている
-			m_cbLights.directionalLight[0].direction.Normalize();
-
-			// 地面からの照り返し
-			m_cbLights.directionalLight[1].color.x = 0.3f;
-			m_cbLights.directionalLight[1].color.y = 0.3f;
-			m_cbLights.directionalLight[1].color.z = 0.3f;
-			m_cbLights.directionalLight[1].color.w = 0.0f;
-			m_cbLights.directionalLight[1].direction.x = 0.0f;
-			m_cbLights.directionalLight[1].direction.y = 1.0f;
-			m_cbLights.directionalLight[1].direction.z = 0.0f;
-			m_cbLights.directionalLight[1].direction.w = 0.0f;
-			m_cbLights.directionalLight[1].direction.Normalize();
-			m_cbLights.ambientLight.x = 0.1f;
-			m_cbLights.ambientLight.y = 0.1f;
-			m_cbLights.ambientLight.z = 0.1f;
-			m_cbLights.ambientLight.w = 1.0f;
-			m_cbLights.eyePos = ChaVector4(ChaVector3(g_camera3D->GetPosition()), 0.0f);
-			m_cbLights.specPow = ChaVector4(5.0f, 5.0f, 5.0f, 0.0f);
-
+			SetConstLights(&m_cbLights);
 			m_expandConstantBuffer.CopyToVRAM(m_cbLights);
-
 			SetUpdateLightsFlag();
 		}
 	}
@@ -2167,41 +2150,7 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 		//if (isfirstmaterial) {
 		//if (isfirstmaterial && !GetUpdateFl4x4Flag()) {
 		//if (!renderobj.pmodel->GetUpdateFl4x4Flag()) {
-			//#########################################
-			//2023/12/02 ライトパラメータは　まずは決め打ち
-			//#########################################
-			// 太陽光
-			m_cbMatrix.lights.Init();
-			//m_cbMatrix.lights.directionalLight[0].color.x = 1.5f;
-			//m_cbMatrix.lights.directionalLight[0].color.y = 1.5f;
-			//m_cbMatrix.lights.directionalLight[0].color.z = 1.5f;
-			m_cbMatrix.lights.directionalLight[0].color.x = 0.8f;
-			m_cbMatrix.lights.directionalLight[0].color.y = 0.8f;
-			m_cbMatrix.lights.directionalLight[0].color.z = 0.8f;
-			m_cbMatrix.lights.directionalLight[0].direction.w = 0.0f;
-
-			ChaVector3 cameye = ChaVector3(g_camera3D->GetPosition());
-			ChaVector3 camtarget = ChaVector3(g_camera3D->GetTarget());
-			m_cbMatrix.lights.directionalLight[0].direction = ChaVector4((camtarget - cameye), 0.0f);//この向きで合っている
-			m_cbMatrix.lights.directionalLight[0].direction.Normalize();
-
-			// 地面からの照り返し
-			m_cbMatrix.lights.directionalLight[1].color.x = 0.3f;
-			m_cbMatrix.lights.directionalLight[1].color.y = 0.3f;
-			m_cbMatrix.lights.directionalLight[1].color.z = 0.3f;
-			m_cbMatrix.lights.directionalLight[1].color.w = 0.0f;
-			m_cbMatrix.lights.directionalLight[1].direction.x = 0.0f;
-			m_cbMatrix.lights.directionalLight[1].direction.y = 1.0f;
-			m_cbMatrix.lights.directionalLight[1].direction.z = 0.0f;
-			m_cbMatrix.lights.directionalLight[1].direction.w = 0.0f;
-			m_cbMatrix.lights.directionalLight[1].direction.Normalize();
-			m_cbMatrix.lights.ambientLight.x = 0.1f;
-			m_cbMatrix.lights.ambientLight.y = 0.1f;
-			m_cbMatrix.lights.ambientLight.z = 0.1f;
-			m_cbMatrix.lights.ambientLight.w = 1.0f;
-			m_cbMatrix.lights.eyePos = ChaVector4(ChaVector3(g_camera3D->GetPosition()), 0.0f);
-			m_cbMatrix.lights.specPow = ChaVector4(5.0f, 5.0f, 5.0f, 0.0f);
-		
+			SetConstLights(&(m_cbMatrix.lights));
 			SetFl4x4(renderobj);
 			m_expandConstantBuffer.CopyToVRAM(m_cbMatrix);
 
@@ -2258,10 +2207,6 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ rende
 		m_cb.mProj = mProj;
 		//m_cb.diffusemult = renderobj.diffusemult;
 		m_cb.diffusemult = pextline->GetColor();
-
-		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
-		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
-
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 	}
 	else if (ppm3) {
@@ -2275,49 +2220,13 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ rende
 		else {
 			m_cb.diffusemult = renderobj.diffusemult;
 		}
-
-		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
-		//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
-
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 
-		//if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
-			//#########################################
-			//2023/12/03 ライトパラメータは　まずは決め打ち
-			//#########################################
-			// 太陽光
-		m_cbLights.Init();
-		m_cbLights.directionalLight[0].color.x = 1.5f;
-		m_cbLights.directionalLight[0].color.y = 1.5f;
-		m_cbLights.directionalLight[0].color.z = 1.5f;
-		m_cbLights.directionalLight[0].direction.w = 0.0f;
-
-		ChaVector3 cameye = ChaVector3(g_camera3D->GetPosition());
-		ChaVector3 camtarget = ChaVector3(g_camera3D->GetTarget());
-		m_cbLights.directionalLight[0].direction = ChaVector4((camtarget - cameye), 0.0f);//この向きで合っている
-		m_cbLights.directionalLight[0].direction.Normalize();
-
-		// 地面からの照り返し
-		m_cbLights.directionalLight[1].color.x = 0.3f;
-		m_cbLights.directionalLight[1].color.y = 0.3f;
-		m_cbLights.directionalLight[1].color.z = 0.3f;
-		m_cbLights.directionalLight[1].color.w = 0.0f;
-		m_cbLights.directionalLight[1].direction.x = 0.0f;
-		m_cbLights.directionalLight[1].direction.y = 1.0f;
-		m_cbLights.directionalLight[1].direction.z = 0.0f;
-		m_cbLights.directionalLight[1].direction.w = 0.0f;
-		m_cbLights.directionalLight[1].direction.Normalize();
-		m_cbLights.ambientLight.x = 0.1f;
-		m_cbLights.ambientLight.y = 0.1f;
-		m_cbLights.ambientLight.z = 0.1f;
-		m_cbLights.ambientLight.w = 1.0f;
-		m_cbLights.eyePos = ChaVector4(ChaVector3(g_camera3D->GetPosition()), 0.0f);
-		m_cbLights.specPow = ChaVector4(5.0f, 5.0f, 5.0f, 0.0f);
-
-		m_expandConstantBuffer.CopyToVRAM(m_cbLights);
-
-		SetUpdateLightsFlag();
-		//}
+		if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
+			SetConstLights(&m_cbLights);
+			m_expandConstantBuffer.CopyToVRAM(m_cbLights);
+			SetUpdateLightsFlag();
+		}
 	}
 	else if (ppm4) {
 		m_cb.mWorld = renderobj.mWorld;
@@ -2326,49 +2235,17 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ rende
 		m_cb.diffusemult = renderobj.diffusemult;
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 
-
-		//if (!GetUpdateFl4x4Flag()) {//2023/12/01
+		if (!GetUpdateFl4x4Flag()) {//2023/12/01
 			//if (isfirstmaterial) {
 			//if (isfirstmaterial && !GetUpdateFl4x4Flag()) {
 			//if (!renderobj.pmodel->GetUpdateFl4x4Flag()) {
-				//#########################################
-				//2023/12/02 ライトパラメータは　まずは決め打ち
-				//#########################################
-				// 太陽光
-			m_cbMatrix.lights.Init();
-			m_cbMatrix.lights.directionalLight[0].color.x = 1.5f;
-			m_cbMatrix.lights.directionalLight[0].color.y = 1.5f;
-			m_cbMatrix.lights.directionalLight[0].color.z = 1.5f;
-			m_cbMatrix.lights.directionalLight[0].direction.w = 0.0f;
-
-			ChaVector3 cameye = ChaVector3(g_camera3D->GetPosition());
-			ChaVector3 camtarget = ChaVector3(g_camera3D->GetTarget());
-			m_cbMatrix.lights.directionalLight[0].direction = ChaVector4((camtarget - cameye), 0.0f);//この向きで合っている
-			m_cbMatrix.lights.directionalLight[0].direction.Normalize();
-
-			// 地面からの照り返し
-			m_cbMatrix.lights.directionalLight[1].color.x = 0.3f;
-			m_cbMatrix.lights.directionalLight[1].color.y = 0.3f;
-			m_cbMatrix.lights.directionalLight[1].color.z = 0.3f;
-			m_cbMatrix.lights.directionalLight[1].color.w = 0.0f;
-			m_cbMatrix.lights.directionalLight[1].direction.x = 0.0f;
-			m_cbMatrix.lights.directionalLight[1].direction.y = 1.0f;
-			m_cbMatrix.lights.directionalLight[1].direction.z = 0.0f;
-			m_cbMatrix.lights.directionalLight[1].direction.w = 0.0f;
-			m_cbMatrix.lights.directionalLight[1].direction.Normalize();
-			m_cbMatrix.lights.ambientLight.x = 0.1f;
-			m_cbMatrix.lights.ambientLight.y = 0.1f;
-			m_cbMatrix.lights.ambientLight.z = 0.1f;
-			m_cbMatrix.lights.ambientLight.w = 1.0f;
-			m_cbMatrix.lights.eyePos = ChaVector4(ChaVector3(g_camera3D->GetPosition()), 0.0f);
-			m_cbMatrix.lights.specPow = ChaVector4(5.0f, 5.0f, 5.0f, 0.0f);
-
+			SetConstLights(&(m_cbMatrix.lights));
 			SetFl4x4(renderobj);
 			m_expandConstantBuffer.CopyToVRAM(m_cbMatrix);
 
-			//renderobj.pmodel->SetUpdateFl4x4Flag();
-			//SetUpdateFl4x4Flag();
-		//}
+			renderobj.pmodel->SetUpdateFl4x4Flag();
+			SetUpdateFl4x4Flag();
+		}
 
 	}
 }

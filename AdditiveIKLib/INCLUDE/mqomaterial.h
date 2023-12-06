@@ -49,13 +49,15 @@ struct DirectionalLight
 	};
 };
 
-#define NUM_DIRECTIONAL_LIGHT 2
+#define NUM_DIRECTIONAL_LIGHT 8
 struct SConstantBufferLights {
+	int lightsnum[4];
 	DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
 	ChaVector4 eyePos; // カメラの視点
 	ChaVector4 specPow; // スペキュラの絞り
 	ChaVector4 ambientLight; // 環境光
 	void Init() {
+		ZeroMemory(&lightsnum, sizeof(int) * 4);
 		int lindex;
 		for (lindex = 0; lindex < NUM_DIRECTIONAL_LIGHT; lindex++) {
 			directionalLight[lindex].Init();
@@ -175,6 +177,7 @@ public:
 
 
 	void SetFl4x4(myRenderer::RENDEROBJ renderobj);
+	void SetConstLights(SConstantBufferLights* pcbLights);
 	void DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
 		const Matrix& mView, const Matrix& mProj,
 		bool isfirstmaterial  = false);

@@ -2,7 +2,7 @@
 // 定数
 ///////////////////////////////////////////////////
 //static const int NUM_DIRECTIONAL_LIGHT = 4; // ディレクションライトの本数
-static const int NUM_DIRECTIONAL_LIGHT = 2; // ディレクションライトの本数
+static const int NUM_DIRECTIONAL_LIGHT = 8; // ディレクションライトの本数
 static const float PI = 3.1415926f; // π
 //static const float POW = 15.0;
 //static const float POW = 0.2f;
@@ -64,6 +64,7 @@ struct DirectionalLight
 // ライト用の定数バッファー
 cbuffer LightCb : register(b1)
 {
+    int4 lightsnum;
     DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
     float4 eyePos; // カメラの視点
     float4 specPow; // スペキュラの絞り
@@ -139,8 +140,9 @@ float4 PSMainNoSkinStd(SPSIn psIn) : SV_Target0
     float3 totalspecular = float3(0, 0, 0);
     float calcpower = POW * 0.05f;//!!!!!!!!!!!
     float3 lig = 0;
-    //for (int ligNo = 0; ligNo < NUM_DIRECTIONAL_LIGHT; ligNo++)
-    for (int ligNo = 0; ligNo < 1; ligNo++)//!!!!!!!!!!!!!!!!!!!!!
+    //for (int ligNo = 0; ligNo < 1; ligNo++)
+    for (int ligNo = 0; ligNo < NUM_DIRECTIONAL_LIGHT; ligNo++)
+    //for (int ligNo = 0; ligNo < lightsnum; ligNo++)//!!!!!!!!!!!!!!!!!!!!!
     {
         float nl;
         float3 h;
@@ -155,7 +157,7 @@ float4 PSMainNoSkinStd(SPSIn psIn) : SV_Target0
         totalspecular += ((nl) < 0) || ((nh) < 0) ? 0 : ((nh) * calcpower);
     }
     float4 totaldiffuse4 = float4(totaldiffuse, 1.0f);
-    float4 totalspecular4 = float4(totalspecular, 0.0f);
+    float4 totalspecular4 = float4(totalspecular, 0.0f) * 0.125f; //ライト８個で白飛びしないように応急処置1/8=0.125
     float4 pscol = albedocol * diffusecol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
     return pscol;
 }

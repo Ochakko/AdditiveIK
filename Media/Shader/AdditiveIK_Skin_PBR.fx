@@ -2,7 +2,7 @@
 // 定数
 ///////////////////////////////////////////////////
 //static const int NUM_DIRECTIONAL_LIGHT = 4; // ディレクションライトの本数
-static const int NUM_DIRECTIONAL_LIGHT = 2; // ディレクションライトの本数
+static const int NUM_DIRECTIONAL_LIGHT = 8; // ディレクションライトの本数
 static const float PI = 3.1415926f; // π
 //static const float POW = 15.0;
 //static const float POW = 0.2f;
@@ -56,6 +56,7 @@ struct DirectionalLight
 
 cbuffer ModelCbMatrix : register(b1)
 {
+    int4 lightsnum;    
     DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
     float4 eyePos; // カメラの視点
     float4 specPow; // スペキュラの絞り
@@ -419,6 +420,7 @@ float4 PSMainSkinPBR(SPSIn psIn) : SV_Target0
 
     float3 lig = 0;
     for (int ligNo = 0; ligNo < NUM_DIRECTIONAL_LIGHT; ligNo++)
+    //for (int ligNo = 0; ligNo < lightsnum; ligNo++)
     {
         // シンプルなディズニーベースの拡散反射を実装する。
         // フレネル反射を考慮した拡散反射を計算

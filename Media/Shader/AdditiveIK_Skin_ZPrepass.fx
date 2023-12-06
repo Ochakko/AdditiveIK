@@ -2,7 +2,7 @@
 // 定数
 ///////////////////////////////////////////////////
 //static const int NUM_DIRECTIONAL_LIGHT = 4; // ディレクションライトの本数
-static const int NUM_DIRECTIONAL_LIGHT = 2; // ディレクションライトの本数
+static const int NUM_DIRECTIONAL_LIGHT = 8; // ディレクションライトの本数
 static const float PI = 3.1415926f; // π
 //static const float POW = 15.0;
 //static const float POW = 0.2f;
@@ -49,6 +49,7 @@ struct DirectionalLight
 
 cbuffer ModelCbMatrix : register(b1)
 {
+    int4 lightsnum;
     DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
     float4 eyePos; // カメラの視点
     float4 specPow; // スペキュラの絞り
