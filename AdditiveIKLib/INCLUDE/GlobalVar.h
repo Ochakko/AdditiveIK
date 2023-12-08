@@ -33,7 +33,7 @@
 
 ////#undef DEFINE_GUID
 ////#include "INITGUID.h"
-//#include "e:\PG\MameBake3D_git\AdditiveIK\Effects11\Inc\d3dx11effect.h"
+//#include "e:\PG\AdditiveIK_git\AdditiveIK\Effects11\Inc\d3dx11effect.h"
 //
 ////#include "..\..\Effects11\pchfx.h"
 
@@ -56,7 +56,7 @@
 
 class CInfoWindow;
 
-#ifdef MAMEBAKE3DLIBGLOBALVAR
+#ifdef ADDITIVEIKLIBGLOBALVAR
 
 bool g_zcmpalways = false;
 bool g_rotatetanim = false;
@@ -171,7 +171,7 @@ float g_initcusak = 0.5f;
 float g_l_dmp = 0.50f;
 float g_a_dmp = 0.50f;
 
-int g_shadertype = -1;
+//int g_shadertype = -1;//マテリアル毎に設定することに
 int g_previewFlag = 0;			// プレビューフラグ
 int g_cameraanimmode = 0;//0: OFF, 1:ON, 2:ON and RootMotionOption ON
 int g_cameraInheritMode = CAMERA_INHERIT_ALL;
@@ -383,7 +383,7 @@ extern float g_initcusak;
 extern float g_l_dmp;
 extern float g_a_dmp;
 
-extern int g_shadertype;
+//extern int g_shadertype;////マテリアル毎に設定することに
 extern int g_previewFlag;			// プレビューフラグ
 extern int g_cameraanimmode;//0: OFF, 1:ON, 2:ON and RootMotionOption ON
 extern int g_cameraInheritMode;

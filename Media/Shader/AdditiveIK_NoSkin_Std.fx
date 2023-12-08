@@ -52,6 +52,7 @@ cbuffer ModelCb : register(b0)
     float4x4 mView;
     float4x4 mProj;
     float4 diffusemult;
+    float4 metalcoef;
 };
 
 // ディレクションライト
@@ -149,11 +150,11 @@ float4 PSMainNoSkinStd(SPSIn psIn) : SV_Target0
         float nh;
         float4 tmplight;
 		
-        nl = dot(psIn.normal.xyz, -directionalLight[ligNo].direction.xyz);
-        h = normalize((-directionalLight[ligNo].direction.xyz + eyePos.xyz - wPos) * 0.5f);
+        nl = dot(psIn.normal.xyz, directionalLight[ligNo].direction.xyz);
+        h = normalize((directionalLight[ligNo].direction.xyz + eyePos.xyz - wPos) * 0.5f);
         nh = dot(psIn.normal.xyz, h);
 
-        totaldiffuse += directionalLight[ligNo].color.xyz * max(0, dot(psIn.normal.xyz, -directionalLight[ligNo].direction.xyz));
+        totaldiffuse += directionalLight[ligNo].color.xyz * max(0, dot(psIn.normal.xyz, directionalLight[ligNo].direction.xyz));
         totalspecular += ((nl) < 0) || ((nh) < 0) ? 0 : ((nh) * calcpower);
     }
     float4 totaldiffuse4 = float4(totaldiffuse, 1.0f);

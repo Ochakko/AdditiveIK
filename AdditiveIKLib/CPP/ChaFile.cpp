@@ -27,6 +27,7 @@
 #include <RigFile.h>
 #include <LIMFIle.h>
 #include <DispGroupFile.h>
+#include <ShaderTypeFile.h>
 
 #include "..\\..\\AdditiveIK\FrameCopyDlg.h"
 
@@ -324,6 +325,20 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, m
 		rigfile.WriteRigFile(rigname, curmodel);
 	}
 
+
+	{
+		WCHAR wfilename[MAX_PATH] = { 0L };
+		ZeroMemory(wfilename, sizeof(WCHAR) * 256);
+		swprintf_s(wfilename, 256, L"%s.stf", curmodel->GetFileName());
+
+		WCHAR pathname[MAX_PATH] = { 0L };
+		swprintf_s(pathname, MAX_PATH, L"%s\\%s", charafolder, wfilename);
+
+		CShaderTypeFile stfile;
+		CallF(stfile.WriteShaderTypeFile(pathname, curmodel), return 1);
+	}
+
+
 	/***
 	//mqoファイルの場合のテクスチャ
 	map<int, CMQOMaterial*>::iterator itrmat;
@@ -479,6 +494,8 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, m
 		CImpFile impfile;
 		CallF( impfile.WriteImpFile( wimpname, curmodel ), return 1 );
 	}
+
+
 
 
 	CallF( Write2File( "  </Chara>\r\n" ), return 1 );
@@ -789,6 +806,19 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt, XMLIOBUF*
 		newmodel->AddLaterTransparent(latername[laterno]);
 	}
 	newmodel->MakeLaterMaterial();
+
+	{
+		WCHAR stfilename[MAX_PATH] = { 0L };
+		ZeroMemory(stfilename, sizeof(WCHAR) * 256);
+		swprintf_s(stfilename, 256, L"%s.stf", newmodel->GetFileName());
+
+		WCHAR pathname[MAX_PATH] = { 0L };
+		swprintf_s(pathname, MAX_PATH, L"%s\\%s\\%s", m_wloaddir, wmodelfolder, stfilename);
+
+		CShaderTypeFile stfile;
+		stfile.LoadShaderTypeFile(pathname, newmodel);
+	}
+
 
 	{
 		WCHAR digfilename[MAX_PATH] = { 0L };

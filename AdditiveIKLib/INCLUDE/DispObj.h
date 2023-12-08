@@ -43,7 +43,7 @@ public:
  * @breaf メタセコイアからのデータ用の表示用オブジェクトを作成する。
  * @param (ID3D12Device* pdev) IN Direct3Dのデバイス。
  * @param (CPolyMesh3* pm3) IN 形状データへのポインタ。
- * @param (int hasbone) IN ボーン変形有の場合は１、無しの場合は０。MameBake3Dではメタセコイアデータはボーン無し。
+ * @param (int hasbone) IN ボーン変形有の場合は１、無しの場合は０。AdditiveIKではメタセコイアデータはボーン無し。
  * @return 成功したら０。
  */
 	int CreateDispObj( ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone );

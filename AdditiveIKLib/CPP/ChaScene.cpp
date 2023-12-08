@@ -391,7 +391,8 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lig
 									renderobj.Init();
 									renderobj.pmodel = curmodel;
 									renderobj.mqoobj = curobj;
-									renderobj.shadertype = g_shadertype;//!!!!!!!!!!! シェーダの選択はDispParamsプレートメニューを押すと出る右ペインウインドウにて
+									//renderobj.shadertype = g_shadertype;//!!!!!!!!!!! シェーダの選択はDispParamsプレートメニューを押すと出る右ペインウインドウにて
+									renderobj.shadertype = -2;//-2:materialの設定に従う印
 									renderobj.withalpha = withalpha;
 									renderobj.forcewithalpha = forcewithalpha;
 									renderobj.lightflag = lightflag;

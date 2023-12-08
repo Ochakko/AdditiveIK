@@ -47,7 +47,7 @@
 
 #include <MotionPoint.h>
 //#include <quaternion.h>
-#include <ChaVecCalc.h>
+//#include <ChaVecCalc.h>//TheadingCalcEul.hでChaCalcFunc.hからChaVecCalc.hはインクルート
 
 #include <Collision.h>
 #include <EngName.h>
@@ -73,13 +73,21 @@
 
 #include <ThreadingLoadFbx.h>
 #include <ThreadingUpdateMatrix.h>
+#include <ThreadingPostIK.h>
+#include <ThreadingFKTra.h>
+#include <ThreadingCopyW2LW.h>
+#include <ThreadingCalcEul.h>
+#include <ThreadingRetarget.h>
+#include <ThreadingInitMp.h>
 
 #include <NodeOnLoad.h>
 
 #include <OrgWindow.h>
 
+#include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
+#include "../../MiniEngine/TResourceBank.h"
 
-#include <DXUT.h>
+//#include <DXUT.h>
 #include <io.h>
 
 
@@ -88,6 +96,10 @@
 
 
 using namespace std;
+
+
+//extern
+//extern TResourceBank<CMQOMaterial> g_materialbank;
 
 
 ////######################################
@@ -333,6 +345,7 @@ static FbxAnimEvaluator* s_animevaluator = 0;
 #define MAMEBAKE3DLIBGLOBALVAR
 #include <GlobalVar.h>
 
+extern LONG g_retargetbatchflag;
 extern bool g_btsimurecflag;
 
 extern CRITICAL_SECTION g_CritSection_GetGP;
@@ -473,6 +486,27 @@ int CModel::InitParams()
 	m_befinview = false;
 	m_bound.Init();
 
+	m_materialbank.InitParams();
+
+	m_updatefl4x4flag = false;
+
+	m_Under_CalcEul = false;
+	m_Under_CopyW2LW = false;
+	m_Under_PostFKTra = false;
+	m_Under_InitMP = false;
+	m_Under_LoadFbx = false;
+	//m_Under_PostIK = false;
+	m_Under_Retarget = false;
+	//m_Under_UpdateMatrix = false;
+	m_Under_UpdateTimeline = false;
+	m_Under_IKRot = false;
+	m_Under_IKRotApplyFrame = false;
+	m_Under_Motion2Bt = false;
+	m_Under_Bt2Motion = false;
+
+
+	m_loopstartflag = 0;
+
 	m_vrmtexcount = 0;
 
 	m_iktargetbonevec.clear();
@@ -511,10 +545,14 @@ int CModel::InitParams()
 
 	m_boneupdatematrix = 0;
 	m_LoadFbxAnim = 0;
+	m_PostIKThreads = 0;
+	m_CalcEulThreads = 0;
+	m_FKTraThreads = 0;
+	m_CopyW2LWThreads = 0;
+	m_RetargetThreads = 0;
+	m_InitMpThreads = 0;
 	m_creatednum_boneupdatematrix = 0;//スレッド数の変化に対応。作成済の数。処理用。
 	m_creatednum_loadfbxanim = 0;//スレッド数の変化に対応。作成済の数。処理用。
-
-
 
 	m_loadbonecount = 0;
 
@@ -585,13 +623,18 @@ int CModel::InitParams()
 	//g_motionbrush_numframe = 1;
 	//g_motionbrush_value = 0;
 
-	::ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);//SetShaderConst用
+	//::ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);//SetShaderConst用
+	::ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);//SetShaderConst用
 
 	m_noboneflag = false;
 
 	m_latertransparent.clear();
 
 	InitUndoMotion( 0 );
+
+	m_withStrJoint = 0;
+	m_withoutStrJoint = 0;
+
 
 	return 0;
 }
@@ -606,10 +649,24 @@ int CModel::DestroyObjs()
 	InitUndoMotion(0);
 
 	//スレッドを先に止める
-	DestroyBoneUpdateMatrix();
 	WaitUpdateMatrixFinished();
-	DestroyLoadFbxAnim();
+	DestroyBoneUpdateMatrix();
 	WaitLoadFbxAnimFinished();
+	DestroyLoadFbxAnim();
+	WaitCalcEulFinished();
+	DestroyCalcEulThreads();
+	WaitPostIKFinished();
+	DestroyPostIKThreads();
+	WaitFKTraFinished();
+	DestroyFKTraThreads();
+	WaitCopyW2LWFinished();
+	DestroyCopyW2LWThreads();
+	WaitRetargetFinished();
+	DestroyRetargetThreads();
+	WaitInitMpFinished();
+	DestroyInitMpThreads();
+
+	
 	DeleteCriticalSection(&m_CritSection_Node);//スレッド終了よりも後
 
 
@@ -683,16 +740,8 @@ int CModel::DestroyAllMotionInfo()
 
 int CModel::DestroyMaterial()
 {
-
-	map<int, CMQOMaterial*>::iterator itr;
-	for( itr = m_material.begin(); itr != m_material.end(); itr++ ){
-		CMQOMaterial* delmat = itr->second;
-		if( delmat ){
-			delete delmat;
-		}
-	}
-	m_material.clear();
-
+	//m_materialbankのCMQOMaterial*は
+	//非ポインタメンバ変数　m_materialbankのデストラクタでunique_ptrの機能で解放される 
 	return 0;
 }
 int CModel::DestroyObject()
@@ -725,6 +774,8 @@ int CModel::DestroyAncObj()
 
 	m_bonename.clear();
 
+	m_withStrJoint = 0;
+	m_withoutStrJoint = 0;
 
 	map<CMQOObject*, FBXOBJ*>::iterator itrobjindex;
 	for (itrobjindex = m_fbxobj.begin(); itrobjindex != m_fbxobj.end(); itrobjindex++) {
@@ -744,7 +795,7 @@ int CModel::DestroyAncObj()
 	return 0;
 }
 
-int CModel::LoadMQO( ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmediateContext, const WCHAR* wfile, const WCHAR* modelfolder, float srcmult, int ismedia, int texpool )
+int CModel::LoadMQO( ID3D12Device* pdev, const WCHAR* wfile, const WCHAR* modelfolder, float srcmult, int ismedia, int texpool )
 {
 	if( modelfolder ){
 		wcscpy_s( m_modelfolder, MAX_PATH, modelfolder );
@@ -808,9 +859,9 @@ int CModel::LoadMQO( ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmediateConte
 	CallF( MakeObjectName(), return 1 );
 
 
-	CallF( CreateMaterialTexture(pd3dImmediateContext), return 1 );
+	CallF( CreateMaterialTexture(), return 1 );
 
-	SetMaterialName();
+	//SetMaterialName();
 
 	
 	CallF(MakeDispObj(), return 1);
@@ -820,11 +871,11 @@ int CModel::LoadMQO( ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmediateConte
 	return 0;
 }
 
-int CModel::LoadFBX(int skipdefref, ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmediateContext, const WCHAR* wfile, const WCHAR* modelfolder, 
+int CModel::LoadFBX(int skipdefref, ID3D12Device* pdev, const WCHAR* wfile, const WCHAR* modelfolder, 
 	float srcmult, FbxManager* psdk, FbxImporter** ppimporter, FbxScene** ppscene, 
 	int forcenewaxisflag, BOOL motioncachebatchflag)
 {
-	if (!pdev || !pd3dImmediateContext || !wfile || !modelfolder || !psdk) {
+	if (!pdev || !wfile || !modelfolder || !psdk) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -1038,7 +1089,7 @@ int CModel::LoadFBX(int skipdefref, ID3D11Device* pdev, ID3D11DeviceContext* pd3
 				}
 				//m_bonelist[0] = dummybone;
 
-				dummybone->LoadCapsuleShape(m_pdev, pd3dImmediateContext);//!!!!!!!!!!
+				dummybone->LoadCapsuleShape(m_pdev);//!!!!!!!!!!
 				//m_topbone = dummybone;
 			}
 			SetNoBoneFlag(true);
@@ -1057,8 +1108,15 @@ int CModel::LoadFBX(int skipdefref, ID3D11Device* pdev, ID3D11DeviceContext* pd3
 
 _ASSERT(m_bonelist[0]);
 
-
-	CreateBoneUpdateMatrix();
+	if (GetNoBoneFlag() == false) {
+		CreateBoneUpdateMatrix();
+		CreateCalcEulThreads();
+		CreatePostIKThreads();
+		CreateFKTraThreads();
+		CreateCopyW2LWThreads();
+		CreateRetargetThreads();
+		CreateInitMpThreads();
+	}
 
 
 	ChaMatrix firstmeshmat;
@@ -1078,10 +1136,13 @@ _ASSERT(m_bonelist[0]);
 
 
 	if (motioncachebatchflag == FALSE) {
-		CallF(CreateMaterialTexture(pd3dImmediateContext), return 1);
+		CallF(CreateMaterialTexture(), return 1);
 		CallF(MakeObjectName(), return 1);
 	}
 
+	
+	int matrixindex = 0;
+	SetBoneMatrixIndexReq(GetTopBone(false), &matrixindex);//2023/11/30
 
 
 	ChaMatrix offsetmat;
@@ -1107,7 +1168,7 @@ _ASSERT(m_bonelist[0]);
 							//#####################
 							//SkinMesh : PolyMesh4
 							//#####################
-							CallF(curobj->MakePolymesh4(m_pdev), return 1);
+							CallF(curobj->MakePolymesh4(m_pdev, this), return 1);
 							GetFBXSkin(pAttrib, fbxnode);
 						}
 						else {
@@ -1115,7 +1176,7 @@ _ASSERT(m_bonelist[0]);
 							//NonSkinMesh : PolyMesh3
 							//########################
 							bool fbxfileflag = true;
-							CallF(curobj->MakePolymesh3(fbxfileflag, m_pdev, m_material), return 1);
+							CallF(curobj->MakePolymesh3(fbxfileflag, m_pdev, this), return 1);
 						}
 
 						//##################################################################################################
@@ -1158,19 +1219,19 @@ _ASSERT(m_bonelist[0]);
 
 		//メモリ使用量のpeak値を小さくするためには　MakePolyMesh*, MakeDispObjをCMQOObject毎に呼ぶ必要有　少し上のコードでそのように実行
 		//if (GetNoBoneFlag() == false) {
-		//	CallF(CreateMaterialTexture(pd3dImmediateContext), return 1);
+		//	CallF(CreateMaterialTexture(pRenderContext), return 1);
 		//	CallF(MakePolyMesh4(), return 1);
 		//	CallF(MakeObjectName(), return 1);
 		//	CreateFBXSkinReq(pRootNode);
 		//}
 		//else {
 		//	//Boneが無い場合には　PolyMesh3
-		//	CallF(CreateMaterialTexture(pd3dImmediateContext), return 1);
+		//	CallF(CreateMaterialTexture(pRenderContext), return 1);
 		//	bool fbxfileflag = true;
 		//	CallF(MakePolyMesh3(fbxfileflag), return 1);
 		//	CallF(MakeObjectName(), return 1);
 		//}
-		SetMaterialName();
+		//SetMaterialName();
 
 		//for dispgroup
 		CreateObjno2DigElem();
@@ -1276,26 +1337,46 @@ int CModel::LoadFBXAnim( FbxManager* psdk, FbxImporter* pimporter, FbxScene* psc
 	return 0;
 }
 
-int CModel::CreateMaterialTexture(ID3D11DeviceContext* pd3dImmediateContext)
+int CModel::CreateMaterialTexture()
 {
 
-	map<int,CMQOMaterial*>::iterator itr;
-	for( itr = m_material.begin(); itr != m_material.end(); itr++ ){
-		CMQOMaterial* curmat = itr->second;
-		CallF( curmat->CreateTexture( pd3dImmediateContext, m_dirname, m_texpool ), return 1 );
-	}
-
-	map<int,CMQOObject*>::iterator itrobj;
-	for( itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++ ){
-		CMQOObject* curobj = itrobj->second;
-		if( curobj ){
-			map<int,CMQOMaterial*>::iterator itrmat;
-			for( itrmat = curobj->GetMaterialBegin(); itrmat != curobj->GetMaterialEnd(); itrmat++ ){
-				CMQOMaterial* curmat = itrmat->second;
-				CallF( curmat->CreateTexture( pd3dImmediateContext, m_dirname, m_texpool ), return 1 );
-			}
+	int materialnum = m_materialbank.GetSize();
+	int matindex;
+	for (matindex = 0; matindex < materialnum; matindex++) {
+		CMQOMaterial* curmaterial = m_materialbank.Get(matindex);
+		if (curmaterial) {
+			CallF(curmaterial->CreateTexture(m_dirname, m_texpool), return 1);
+		}
+		else {
+			_ASSERT(0);
 		}
 	}
+
+
+	//map<int,CMQOObject*>::iterator itrobj;
+	//for( itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++ ){
+	//	CMQOObject* curobj = itrobj->second;
+	//	if( curobj ){
+	//		map<int,CMQOMaterial*>::iterator itrmat;
+	//		for( itrmat = curobj->GetMaterialBegin(); itrmat != curobj->GetMaterialEnd(); itrmat++ ){
+	//			CMQOMaterial* curmat = itrmat->second;
+	//			if (curmat) {
+	//				CallF(curmat->CreateTexture(m_dirname, m_texpool), return 1);
+	//			}
+	//			else {
+	//				_ASSERT(0);
+	//			}
+	//		}
+
+	//		if (curobj->GetExtLine()) {
+	//			//ExtLineの　m_rootsignatureとDescriptorHeap用　のマテリアル初期化
+	//			if (curobj->GetExtLine()->GetMaterial()) {
+	//				curobj->GetExtLine()->GetMaterial()->CreateTexture(m_dirname, m_texpool);
+	//			}
+	//		}
+	//	}
+	//}
+
 
 	return 0;
 }
@@ -1327,7 +1408,7 @@ int CModel::CreateMaterialTexture(ID3D11DeviceContext* pd3dImmediateContext)
 
 
 int CModel::OnRender(bool withalpha, 
-	ID3D11DeviceContext* pd3dImmediateContext, int lightflag, ChaVector4 diffusemult, int btflag )
+	RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int btflag, bool calcslotflag )
 {
 
 	if (GetInView() == false) {
@@ -1378,22 +1459,22 @@ int CModel::OnRender(bool withalpha,
 						continue;
 					}
 
-					if (curobj->GetDispObj()) {
-						if (curobj->GetPm3()) {
-							CallF(SetShaderConst(curobj, btflag), return 1);
-							CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pd3dImmediateContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
-						}
-						else if (curobj->GetPm4()) {
-							CallF(SetShaderConst(curobj, btflag), return 1);						
-							CallF(curobj->GetDispObj()->RenderNormal(withalpha, pd3dImmediateContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
-						}
-						else {
-							_ASSERT(0);
-						}
-					}
-					else if (curobj->GetDispLine()) {
-						CallF(curobj->GetDispLine()->RenderLine(withalpha, pd3dImmediateContext, diffusemult, materialdisprate), return 1);
-					}
+					//if (curobj->GetDispObj()) {
+					//	if (curobj->GetPm3()) {
+					//		CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+					//		CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
+					//	}
+					//	else if (curobj->GetPm4()) {
+					//		CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+					//		CallF(curobj->GetDispObj()->RenderNormal(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
+					//	}
+					//	else {
+					//		_ASSERT(0);
+					//	}
+					//}
+					//else if (curobj->GetDispLine()) {
+					//	CallF(curobj->GetDispLine()->RenderLine(withalpha, pRenderContext, diffusemult, materialdisprate), return 1);
+					//}
 				}
 			}
 		}
@@ -1494,7 +1575,7 @@ void CModel::GetSelectedObjTreeReq(FbxNode* pNode, std::vector<int>& selectedobj
 
 
 
-int CModel::RenderTest(bool withalpha, ID3D11DeviceContext* pd3dImmediateContext, int lightflag, ChaVector4 diffusemult, int srcobjno)
+int CModel::RenderTest(bool withalpha, RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int srcobjno)
 {
 
 	if (GetInView() == false) {
@@ -1547,22 +1628,22 @@ int CModel::RenderTest(bool withalpha, ID3D11DeviceContext* pd3dImmediateContext
 				continue;
 			}
 
-			if (curobj->GetDispObj()) {
-				if (curobj->GetPm3()) {
-					CallF(SetShaderConst(curobj, btflag), return 1);
-					CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pd3dImmediateContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
-				}
-				else if (curobj->GetPm4()) {
-					CallF(SetShaderConst(curobj, btflag), return 1);					
-					CallF(curobj->GetDispObj()->RenderNormal(withalpha, pd3dImmediateContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
-				}
-				else {
-					_ASSERT(0);
-				}
-			}
-			else if (curobj->GetDispLine()) {
-				CallF(curobj->GetDispLine()->RenderLine(withalpha, pd3dImmediateContext, diffusemult, materialdisprate), return 1);
-			}
+			//if (curobj->GetDispObj()) {
+			//	if (curobj->GetPm3()) {
+			//		CallF(SetShaderConst(curobj, btflag), return 1);
+			//		CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
+			//	}
+			//	else if (curobj->GetPm4()) {
+			//		CallF(SetShaderConst(curobj, btflag), return 1);					
+			//		CallF(curobj->GetDispObj()->RenderNormal(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
+			//	}
+			//	else {
+			//		_ASSERT(0);
+			//	}
+			//}
+			//else if (curobj->GetDispLine()) {
+			//	CallF(curobj->GetDispLine()->RenderLine(withalpha, pRenderContext, diffusemult, materialdisprate), return 1);
+			//}
 
 		}
 	}
@@ -1608,9 +1689,9 @@ int CModel::GetModelBound( MODELBOUND* dstb )
 		if( curobj->GetExtLine() ){
 			//curobj->GetExtLine()->CalcBound();//MakeDispObj()に移動　ここでは既にpointbufなどが削除された後
 			if( calcflag == 0 ){
-				mb = curobj->GetExtLine()->m_bound;
+				mb = curobj->GetExtLine()->GetBound();
 			}else{
-				addmb = curobj->GetExtLine()->m_bound;
+				addmb = curobj->GetExtLine()->GetBound();
 				AddModelBound( &mb, &addmb );
 			}
 			calcflag++;
@@ -1965,7 +2046,7 @@ int CModel::MakePolyMesh3(bool fbxfileflag)
 	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
 		CMQOObject* curobj = itr->second;
 		if( curobj ){
-			CallF(curobj->MakePolymesh3(fbxfileflag, m_pdev, m_material), return 1);
+			CallF(curobj->MakePolymesh3(fbxfileflag, m_pdev, this), return 1);
 		}
 	}
 
@@ -1977,7 +2058,7 @@ int CModel::MakePolyMesh4()
 	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
 		CMQOObject* curobj = itr->second;
 		if( curobj ){
-			CallF( curobj->MakePolymesh4( m_pdev ), return 1 );
+			CallF( curobj->MakePolymesh4(m_pdev, this), return 1 );
 		}
 	}
 
@@ -1990,7 +2071,7 @@ int CModel::MakeExtLine()
 	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
 		CMQOObject* curobj = itr->second;
 		if( curobj ){
-			CallF( curobj->MakeExtLine(), return 1 );
+			CallF( curobj->MakeExtLine(this), return 1 );
 		}
 	}
 
@@ -2033,134 +2114,20 @@ int CModel::MakeDispObj()
 	return 0;
 }
 
-int CModel::Motion2Bt(bool limitdegflag, int firstflag, double nextframe, ChaMatrix* mW, ChaMatrix* mVP, int selectboneno )
+int CModel::Motion2Bt(bool limitdegflag, double nextframe, ChaMatrix* pmVP, int updateslot)
 {
-	UpdateMatrix(limitdegflag, mW, mVP);
-
-
-	if (!m_topbt){
-		return 0;
-	}
-	if (!m_btWorld){
-		return 0;
+	if (!pmVP) {
+		_ASSERT(0);
+		return 1;
 	}
 
-
-	//if( m_topbt ){
-	//	if (g_previewFlag != 5){
-	//		//SetBtKinFlagReq(m_topbt, 0);
-	//	}
-	//	else{
-	//		//if (GetBtCnt() <= 10) {
-	//		//	SetKinematicFlag();
-	//		//	//SetBtEquilibriumPoint();
-	//		//}
-	//		//else {
-	//		//	SetRagdollKinFlagReq(m_topbt, selectboneno);
-	//		//}
-	//	}
-	//}
-
-	//if (firstflag == 1){
-	//	map<int, CBone*>::iterator itrbone;
-	//	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++){
-	//		CBone* boneptr = itrbone->second;
-	//		if (boneptr){
-	//			//boneptr->SetStartMat2(boneptr->GetCurMp().GetWorldMat());
-	//			boneptr->SetStartMat2(boneptr->GetCurrentZeroFrameMat(0));
-	//		}
-	//	}
-	//}
-
-	map<int, CBone*>::iterator itrbone;
-	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++){
-		CBone* boneptr = itrbone->second;
-		if (boneptr && boneptr->GetParent(false) && (boneptr->IsSkeleton())){
-			CRigidElem* curre = boneptr->GetParent(false)->GetRigidElem(boneptr);
-			if (curre){
-				boneptr->GetParent(false)->CalcRigidElemParams(boneptr, firstflag);
-			}
-		}
-
-		/*
-		if (boneptr){
-			std::map<CBone*, CRigidElem*>::iterator itrtmpmap;
-			for (itrtmpmap = boneptr->GetRigidElemMapBegin(); itrtmpmap != boneptr->GetRigidElemMapEnd(); itrtmpmap++){
-				CRigidElem* curre = itrtmpmap->second;
-				if (curre){
-					CBone* childbone = itrtmpmap->first;
-					_ASSERT(childbone);
-					if (childbone){
-						boneptr->CalcRigidElemParams(childbone, firstflag);
-					}
-				}
-			}
-		}
-		*/
-	}
-
-
-	Motion2BtReq(m_topbt);
-
-	/*
-	//map<int, CBone*>::iterator itrbone;
-	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++){
-		CBone* curbone = itrbone->second;
-		if (curbone){
-			if ((curbone->GetBtKinFlag() == 0) && curbone->GetParent() && (curbone->GetParent()->GetBtKinFlag() == 1)){
-				map<CBone*, CBtObject*>::iterator itrbto;
-				for (itrbto = curbone->GetBtObjectMapBegin(); itrbto != curbone->GetBtObjectMapEnd(); itrbto++){
-					CBtObject* curbto = itrbto->second;
-					if (curbto){
-						CBtObject* parbto = itrbto->second->GetParBt();
-						if (parbto){
-							int constraintnum = parbto->GetConstraintSize();
-							int cno;
-							for (cno = 0; cno < constraintnum; cno++){
-								CONSTRAINTELEM ce = parbto->GetConstraintElem(cno);
-								if (ce.centerbone == curbone){
-									btGeneric6DofSpringConstraint* dofC = ce.constraint;
-									if (dofC){
-										int dofid;
-										for (dofid = 0; dofid < 3; dofid++){
-											dofC->enableSpring(dofid, false);//!!!!!!!!!!!!!
-											//dofC->enableSpring(dofid, true);
-										}
-										for (dofid = 3; dofid < 6; dofid++){
-											//dofC->enableSpring(dofid, true);
-											dofC->enableSpring(dofid, false);//!!!!!!!!!!!!!
-										}
-										//dofC->setAngularLowerLimit(btVector3(0.0, 0.0, 0.0));
-										//dofC->setAngularUpperLimit(btVector3(0.0, 0.0, 0.0));
-
-										//ChaVector3 bonepos = parbto->Getparentbone()->GetBtchildpos();
-										//ChaVector3 bonepos = curbone->GetParent()->GetBtchildpos();
-										ChaVector3 bonepos = curbone->GetBtparentpos();
-
-										dofC->setLinearLowerLimit(btVector3(bonepos.x, bonepos.y, bonepos.z));
-										dofC->setLinearUpperLimit(btVector3(bonepos.x, bonepos.y, bonepos.z));
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	*/
-
-	//if (g_previewFlag == 5){
-	//	if (m_topbt){
-	//		SetBtEquilibriumPointReq(m_topbt);
-	//	}
-	//}
-
+	ChaCalcFunc chacalcfunc;
+	chacalcfunc.Motion2Bt(this, limitdegflag, nextframe, pmVP, updateslot);
 
 	return 0;
 }
 
-void CModel::Motion2BtReq( CBtObject* srcbto )
+void CModel::Motion2BtReq(CBtObject* srcbto)
 {
 	//if( srcbto->GetBone() && (srcbto->GetBone()->GetBtKinFlag() == 1) ){
 	if (srcbto->GetBone()){
@@ -2229,7 +2196,8 @@ void CModel::Motion2BtReq( CBtObject* srcbto )
 //	return 0;
 //}
 
-int CModel::UpdateMatrix(bool limitdegflag, ChaMatrix* wmat, ChaMatrix* vpmat, bool needwaitfinished) // default : needwaitfinished = false
+int CModel::UpdateMatrix(bool limitdegflag, ChaMatrix* wmat, ChaMatrix* vpmat, bool needwaitfinished, int updateslot) 
+// default : needwaitfinished = false, updateslot = 0
 {
 	m_matWorld = *wmat;
 	m_matVP = *vpmat;
@@ -2266,43 +2234,44 @@ int CModel::UpdateMatrix(bool limitdegflag, ChaMatrix* wmat, ChaMatrix* vpmat, b
 	//}
 
 
+	if (GetNoBoneFlag() == false) {
+		//if ((m_boneupdatematrix != NULL) && (m_bonelist.size() >= (m_creatednum_boneupdatematrix * 4))) {
+		if ((m_boneupdatematrix != NULL) && (m_bonelist.size() >= (m_creatednum_boneupdatematrix * 2))) {
 
-	//if ((m_boneupdatematrix != NULL) && (m_bonelist.size() >= (m_creatednum_boneupdatematrix * 4))) {
-	if ((m_boneupdatematrix != NULL) && (m_bonelist.size() >= (m_creatednum_boneupdatematrix * 2))) {
-
-		//WaitUpdateMatrixFinished();//needwaitfinishedがfalseのときにも必要
-		//SwapCurrentMotionPoint();//<--- この方式は角度制限を有効にしたときに顕著にぎくしゃくするのでやめた
+			//WaitUpdateMatrixFinished();//needwaitfinishedがfalseのときにも必要
+			//SwapCurrentMotionPoint();//<--- この方式は角度制限を有効にしたときに顕著にぎくしゃくするのでやめた
 
 
-		//2023/02/02
-		//limitdegflag == true時にも　UpdateMatrixは計算済を補間するだけなので　再帰呼び出ししなくてOKになった
-		//limitdegflag == true時にも　UpdateMatrixでオイラー角もセットされるようになった(スレッド後処理は不要)
-		int updatecount;
-		for (updatecount = 0; updatecount < m_creatednum_boneupdatematrix; updatecount++) {
-			CThreadingUpdateMatrix* curupdate = m_boneupdatematrix + updatecount;
-			curupdate->UpdateMatrix(limitdegflag, curmotid, curframe, wmat, vpmat);
+			//2023/02/02
+			//limitdegflag == true時にも　UpdateMatrixは計算済を補間するだけなので　再帰呼び出ししなくてOKになった
+			//limitdegflag == true時にも　UpdateMatrixでオイラー角もセットされるようになった(スレッド後処理は不要)
+			int updatecount;
+			for (updatecount = 0; updatecount < m_creatednum_boneupdatematrix; updatecount++) {
+				CThreadingUpdateMatrix* curupdate = m_boneupdatematrix + updatecount;
+				curupdate->UpdateMatrix(limitdegflag, curmotid, curframe, wmat, vpmat, updateslot);
+			}
+
+			if (needwaitfinished) {
+				WaitUpdateMatrixFinished();
+			}
+
+
+			//if (g_limitdegflag == true) {
+			//	CalcWorldMatAfterThreadReq(m_topbone, curmotid, curframe, wmat, vpmat);//curframe : 時間補間有り
+			//	//CalcLimitedEulAfterThreadReq(m_topbone, curmotid, curframe);
+			//}
 		}
-
-		////if (needwaitfinished) {//<--- この方式は角度制限を有効にしたときに顕著にぎくしゃくするのでやめた
-			WaitUpdateMatrixFinished();
-		////}
-
-		//if (g_limitdegflag == true) {
-		//	CalcWorldMatAfterThreadReq(m_topbone, curmotid, curframe, wmat, vpmat);//curframe : 時間補間有り
-		//	//CalcLimitedEulAfterThreadReq(m_topbone, curmotid, curframe);
-		//}
+		else {
+			//map<int, CBone*>::iterator itrbone;
+			//for( itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++ ){
+			//	CBone* curbone = itrbone->second;
+			//	if( curbone ){
+			//		curbone->UpdateMatrix( curmotid, curframe, wmat, vpmat );
+			//	}
+			//}
+			UpdateMatrixReq(limitdegflag, GetTopBone(false), curmotid, curframe, wmat, vpmat);
+		}
 	}
-	else {
-		//map<int, CBone*>::iterator itrbone;
-		//for( itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++ ){
-		//	CBone* curbone = itrbone->second;
-		//	if( curbone ){
-		//		curbone->UpdateMatrix( curmotid, curframe, wmat, vpmat );
-		//	}
-		//}
-		UpdateMatrixReq(limitdegflag, GetTopBone(false), curmotid, curframe, wmat, vpmat);
-	}
-
 
 
 
@@ -2418,39 +2387,41 @@ void CModel::CopyLimitedWorldToWorldReq(CBone* srcbone, int srcmotid, double src
 
 void CModel::CopyWorldToLimitedWorldReq(CBone* srcbone, int srcmotid, double srcframe)
 {
-	if (srcbone) {
-
-		if (srcbone->IsSkeleton()) {
-			srcbone->CopyWorldToLimitedWorld(srcmotid, srcframe);
-		}
-
-		if (srcbone->GetChild(false)) {
-			CopyWorldToLimitedWorldReq(srcbone->GetChild(false), srcmotid, srcframe);
-		}
-		if (srcbone->GetBrother(false)) {
-			CopyWorldToLimitedWorldReq(srcbone->GetBrother(false), srcmotid, srcframe);
-		}
-	}
+	ChaCalcFunc chacalcfunc;
+	chacalcfunc.CopyWorldToLimitedWorldReq(this, srcbone, srcmotid, srcframe);
 }
 
 
-void CModel::ApplyNewLimitsToWMReq(CBone* srcbone, int srcmotid, double srcframe)
+void CModel::ApplyNewLimitsToWMReq(CBone* srcbone, int srcmotid, double srcframe, ChaMatrix befeditparentmat)
 {
 
 	//2023/02/03
 	//この関数を実行する前に　CopyWorldToLimitedWorldを実行しておく
 
+	//###########################################################################################################
+	//2023/10/25
+	// SetWorldMat()内にて　directset == falseの部分で
+	//角度制限により動かさない場合にbefeul.befframeeulを使うので　ApplyNewLimitsToWM()はマルチスレッド化出来ない
+	//###########################################################################################################
+
+	double roundingframe = RoundingTime(srcframe);
+
 	if (srcbone) {
+		ChaMatrix befeditcurrentwm;
+		befeditcurrentwm.SetIdentity();
 
 		if (srcbone->IsSkeleton()) {
-			srcbone->ApplyNewLimitsToWM(srcmotid, srcframe);
+			bool limitdegflag = true;//!!!
+			befeditcurrentwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+
+			srcbone->ApplyNewLimitsToWM(srcmotid, roundingframe, befeditparentmat);
 		}
 
 		if (srcbone->GetChild(false)) {
-			ApplyNewLimitsToWMReq(srcbone->GetChild(false), srcmotid, srcframe);
+			ApplyNewLimitsToWMReq(srcbone->GetChild(false), srcmotid, roundingframe, befeditcurrentwm);
 		}
 		if (srcbone->GetBrother(false)) {
-			ApplyNewLimitsToWMReq(srcbone->GetBrother(false), srcmotid, srcframe);
+			ApplyNewLimitsToWMReq(srcbone->GetBrother(false), srcmotid, roundingframe, befeditparentmat);
 		}
 	}
 }
@@ -2716,20 +2687,10 @@ int CModel::GetShapeWeight(FbxNode* pNode, FbxMesh* pMesh, FbxTime& pTime, FbxAn
 }
 
 
-int CModel::SetShaderConst( CMQOObject* srcobj, int btflag )
+int CModel::SetShaderConst(int btflag, bool calcslotflag)
 {
-
 	//ボーンが無くても　非スキンメッシュを表示することはある
-	//g_hmWorld->SetMatrix(m_worldmat.GetDataPtr());
-	g_hmWorld->SetMatrix(m_matWorld.GetDataPtr());
-	//ChaMatrix inimat;
-	//inimat.SetIdentity();
-	//MoveMemory(&(m_setfl4x4[16 * 0]),
-	//	inimat.GetDataPtr(), sizeof(float) * 16);
-	//g_hm4x4Mat->SetMatrixArray((float*)(&m_setfl4x4[0]), 0, 0);
-
-
-
+	//g_hmWorld->SetMatrix(m_matWorld.GetDataPtr());
 
 	if( !GetTopBone()){
 		//_ASSERT(0);
@@ -2739,7 +2700,6 @@ int CModel::SetShaderConst( CMQOObject* srcobj, int btflag )
 		return 0;
 	}
 
-
 	MOTINFO* curmi = 0;
 	int curmotid;
 	double curframe;
@@ -2748,161 +2708,54 @@ int CModel::SetShaderConst( CMQOObject* srcobj, int btflag )
 		//_ASSERT(0);
 		return 0;
 	}
+
 	curmotid = curmi->motid;
 	curframe = RoundingTime(curmi->curframe);
 
-
-	//g_hmWorld->SetMatrix(m_worldmat.GetDataPtr());
-	//g_pEffect->SetMatrix(g_hmWorld, &(m_worldmat.D3DX()));
-
-
-	//ChaMatrix set4x4[MAXCLUSTERNUM];
-
-	//float setfl4x4[16 * MAXCLUSTERNUM];//メンバーに
-	
-	//ZeroMemory(&(setfl4x4[0]), sizeof(float) * 16 * MAXCLUSTERNUM);
-
-	//int inicnt;
-	//for (inicnt = 0; inicnt < MAXCLUSTERNUM; inicnt++) {
-	//	ChaMatrixIdentity(&(set4x4[inicnt]));
-	//}
-	////ZeroMemory( &set4x4[0], sizeof( ChaMatrix ) * MAXCLUSTERNUM );
-
 	int setclcnt = 0;
-	int clcnt;
-	int clusternum = (int)srcobj->GetClusterSize();
 
+	std::map<int, CBone*>::iterator itrbone;
+	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
+		CBone* curbone = itrbone->second;
+		if (curbone && curbone->IsSkeleton()) {
+			bool currentlimitdegflag = g_limitdegflag;
+			CMotionPoint curmp = curbone->GetCurMp(calcslotflag);
 
+			ChaMatrix clustermat;
+			clustermat.SetIdentity();
 
-	////###########
-	////for debug
-	////###########
-	//{
-	//	int dbgcount = srcobj->GetDbgCount();
-	//	if (dbgcount == 0) {
-	//		char strdbg[1024] = { 0 };
-	//		WCHAR wstrdbg[1024] = { 0L };
-	//		sprintf_s(strdbg, 1024, "SetShaderConst firstframe : (%s : %.3f) clusternum %d\r\n",
-	//			srcobj->GetName(), curmi->curframe, clusternum);
-	//		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, strdbg, 1024, wstrdbg, 1024);
-	//		DbgOut(wstrdbg);
-	//		dbgcount++;
-	//		srcobj->SetDbgCount(dbgcount);
-	//	}
-	//}
+			int matrixindex = curbone->GetMatrixIndex();
+			if (matrixindex >= 0) {
+				//CMotionPoint tmpmp = curbone->GetCurMp();
+				if (btflag == 0) {
+					//set4x4[matrixindex] = tmpmp.GetWorldMat();
+					clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
+					MoveMemory(&(m_setfl4x4[16 * matrixindex]),
+						clustermat.GetDataPtr(), sizeof(float) * 16);
+				}
+				else if (btflag == 1) {
+					//物理シミュ
+					//set4x4[matrixindex] = curbone->GetBtMat();
+					clustermat = curbone->GetBtMat(calcslotflag);
+					MoveMemory(&(m_setfl4x4[16 * matrixindex]),
+						clustermat.GetDataPtr(), sizeof(float) * 16);
+				}
+				else if (btflag == 2) {
+					//物理IK
+					//set4x4[matrixindex] = curbone->GetBtMat();
+					clustermat = curbone->GetBtMat(calcslotflag);
+					MoveMemory(&(m_setfl4x4[16 * matrixindex]),
+						curbone->GetBtMat().GetDataPtr(), sizeof(float) * 16);
+				}
+				else {
+					//set4x4[matrixindex] = tmpmp.GetWorldMat();
+					clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
+					MoveMemory(&(m_setfl4x4[16 * matrixindex]),
+						clustermat.GetDataPtr(), sizeof(float) * 16);
+				}
 
-
-	if (clusternum == 0) {
-		return 0;
-	}
-	if ((clusternum < 0) || (clusternum >= MAXCLUSTERNUM)) {
-		_ASSERT(0);
-		return 1;
-	}
-	
-	for( clcnt = 0; clcnt < clusternum; clcnt++ ){
-		CBone* curbone = srcobj->GetCluster( clcnt );
-		if( !curbone ){
-			_ASSERT( 0 );
-			return 1;
-		}
-
-		bool currentlimitdegflag = g_limitdegflag;
-		CMotionPoint curmp = curbone->GetCurMp();
-
-
-
-		ChaMatrix clustermat;
-		clustermat.SetIdentity();
-
-		//CMotionPoint tmpmp = curbone->GetCurMp();
-		if( btflag == 0 ){
-			//set4x4[clcnt] = tmpmp.GetWorldMat();
-			clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
-			MoveMemory(&(m_setfl4x4[16 * clcnt]), 
-				clustermat.GetDataPtr(), sizeof(float) * 16);
-		}else if(btflag == 1){
-			//物理シミュ
-			//set4x4[clcnt] = curbone->GetBtMat();
-			clustermat = curbone->GetBtMat();
-			MoveMemory(&(m_setfl4x4[16 * clcnt]), 
-				clustermat.GetDataPtr(), sizeof(float) * 16);
-		}
-		else if (btflag == 2) {
-			//物理IK
-			//set4x4[clcnt] = curbone->GetBtMat();
-			clustermat = curbone->GetBtMat();
-			MoveMemory(&(m_setfl4x4[16 * clcnt]), 
-				curbone->GetBtMat().GetDataPtr(), sizeof(float) * 16);
-		}
-		else {
-			//set4x4[clcnt] = tmpmp.GetWorldMat();
-			clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
-			MoveMemory(&(m_setfl4x4[16 * clcnt]),
-				clustermat.GetDataPtr(), sizeof(float) * 16);
-		}
-
-		////###########
-		////for debug
-		////###########
-		//{
-		//	int dbgoutflag = false;
-		//	int dbgcount = curbone->GetDbgCount();
-		//	if ((dbgcount == 0) && (strstr(curbone->GetBoneName(), "Hips_1") != 0)) {
-		//		dbgcount++;
-		//		curbone->SetDbgCount(dbgcount);
-		//		dbgoutflag = true;
-		//	}
-		//	if ((dbgcount == 0) && (strstr(curbone->GetBoneName(), "Hips_2") != 0)) {
-		//		dbgcount++;
-		//		curbone->SetDbgCount(dbgcount);
-		//		dbgoutflag = true;
-		//	}
-		//	if ((dbgcount == 0) && (strstr(curbone->GetBoneName(), "Hips_3") != 0)) {
-		//		dbgcount++;
-		//		curbone->SetDbgCount(dbgcount);
-		//		dbgoutflag = true;
-		//	}
-		//	if (dbgoutflag) {
-		//		char strdbg[1024] = { 0 };
-		//		WCHAR wstrdbg[1024] = { 0L };
-		//		sprintf_s(strdbg, 1024, "SetShaderConst clustermat : (%s)\r\n\t(%.3f, %.3f, %.3f, %.3f)\r\n\t(%.3f, %.3f, %.3f, %.3f)\r\n\t(%.3f, %.3f, %.3f, %.3f)\r\n\t(%.3f, %.3f, %.3f, %.3f)\r\n",
-		//			curbone->GetBoneName(),
-		//			clustermat.data[MATI_11], clustermat.data[MATI_12], clustermat.data[MATI_13], clustermat.data[MATI_14],
-		//			clustermat.data[MATI_21], clustermat.data[MATI_22], clustermat.data[MATI_23], clustermat.data[MATI_24],
-		//			clustermat.data[MATI_31], clustermat.data[MATI_32], clustermat.data[MATI_33], clustermat.data[MATI_34],
-		//			clustermat.data[MATI_41], clustermat.data[MATI_42], clustermat.data[MATI_43], clustermat.data[MATI_44]
-		//		);
-		//		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, strdbg, 1024, wstrdbg, 1024);
-		//		DbgOut(wstrdbg);
-		//	}
-		//}
-
-		setclcnt++;
-	}
-
-
-	if(setclcnt > 0 ){
-		_ASSERT(setclcnt <= MAXCLUSTERNUM);
-
-
-		HRESULT hr = S_OK;
-		hr = g_hm4x4Mat->SetMatrixArray((float*)(&m_setfl4x4[0]), 0, setclcnt);
-		//hr = g_hm4x4Mat->SetRawValue((float*)(&setfl4x4[0]), 0, sizeof(float) * 16 * setclcnt);
-
-
-		//hr = g_hm4x4Mat->SetMatrixArray((float*)(&set4x4[0]), 0, MAXCLUSTERNUM);
-
-		//hr = g_hm4x4Mat->SetRawValue((float*)(&set4x4[0]), 0, sizeof(float) * 16 * MAXCLUSTERNUM);
-		//hr = g_pEffect->SetValue(g_hm4x4Mat, (void*)set4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
-		
-		//hr = g_hm4x4Mat->SetMatrixArray((float*)(&set4x4[0]), 0, MAXCLUSTERNUM);
-		//hr = g_hm4x4Mat->SetRawValue((float*)(&set4x4[0]), 0, sizeof(float) * 16 * MAXCLUSTERNUM);
-		//hr = g_hm4x4Mat->SetMatrixArray((float*)(&set4x4[0]), 0, MAXCLUSTERNUM);
-		//hr = g_pEffect->SetValue( g_hm4x4Mat, (void*)set3x4, sizeof( float ) * 12 * MAXCLUSTERNUM );
-		if(FAILED(hr)){
-			_ASSERT( 0 );
-			return 1;
+				setclcnt++;
+			}
 		}
 	}
 
@@ -3135,12 +2988,33 @@ int CModel::AddMotion(const char* srcname, const WCHAR* wfilename, double srclen
 	// 
 	//モーションを持たないfbxに対して　MotionPointを作成するのは　
 	//Main.cppのInitCurMotion()から呼ばれるInitMPReqとCreateIndexedMotionPointReq
+	// 
+	// 
+	//2023/10/27
+	//モーションを持たないfbxに対して　MotionPointを作成するのは　
+	//Main.cppのAddMotion()から呼ばれる　本関数(CModel::AddMotion())のInitMPReqとCreateIndexedMotionPointReq
+
 
 	if (GetLoadedFlag() == true) {
+
+		//####################################################################################################
+		//2023/10/27
+		//この部分においては　シングルスレッド版を使う
+		//ここで実行する時点においては　モーションポイントのインデックスが未作成
+		//インデックスが未作成の場合には GetBefNextMP()はキャッシュを参照しながら　チェインをたどる処理をする
+		//インデックス未作成時にマルチスレッド版を使うと　キャッシュヒット率が低い
+		//よって　ここでは　キャッシュ付きのシングルスレッド版を使う方が高速
+		//####################################################################################################
 		double framecnt;
 		for (framecnt = 0.0; framecnt < srcleng; framecnt += 1.0) {
 			InitMPReq(limitdegflagOnAddMotion, GetTopBone(false), newid, framecnt);//motionpointが無い場合は作成も
 		}
+
+
+		// 
+		//2023/10/26 マルチスレッド版を使う
+		//InitMpFrame(limitdegflagOnAddMotion, newid, GetTopBone(false), 0.0, srcleng - 1.0);
+
 
 		int errorcount = 0;
 		CreateIndexedMotionPointReq(GetTopBone(false), newid, srcleng, &errorcount);//2022/10/30
@@ -3212,11 +3086,17 @@ int CModel::SetCurrentMotion( int srcmotid )
 		return 0;
 	}
 }
-int CModel::SetMotionFrame( double srcframe )
+int CModel::SetMotionFrame(double srcframe)
 {
 	if( !m_curmotinfo ){
-		_ASSERT( 0 );
-		return 1;
+		if (GetNoBoneFlag()) {
+			return 0;//エラーではない　ボーンが無いだけ
+		}
+		else {
+			//エラーの可能性がある
+			_ASSERT(0);
+			return 1;
+		}
 	}
 
 	m_curmotinfo->curframe = max( 0.0, min( (m_curmotinfo->frameleng - 1.0), srcframe ) );
@@ -3228,6 +3108,16 @@ int CModel::SetMotionFrame(int srcmotid, double srcframe)
 	MOTINFO* curmi = GetMotInfo(srcmotid);
 	if (curmi) {
 		curmi->curframe = max(0.0, min((curmi->frameleng - 1.0), srcframe));
+	}
+	else {
+		if (GetNoBoneFlag()) {
+			return 0;//エラーではない　ボーンが無いだけ
+		}
+		else {
+			//エラーの可能性がある
+			_ASSERT(0);
+			return 1;
+		}
 	}
 
 	return 0;
@@ -3920,20 +3810,23 @@ int CModel::MakeEnglishName()
 	return 0;
 }
 
-int CModel::AddDefMaterial()
+int CModel::AddDefMaterialIfEmpty()
 {
+	if (m_materialbank.GetSize() <= 0) {
+		char dummyname[256] = { 0 };
+		strcpy_s(dummyname, 256, "dummyMaterial");
 
-	CMQOMaterial* dummymat = new CMQOMaterial();
-	if( !dummymat ){
-		_ASSERT( 0 );
-		return 1;
+		CMQOMaterial* dummymat = GetMQOMaterialByName(dummyname);//既に存在するかどうかチェック
+		if (!dummymat) {
+			dummymat = new CMQOMaterial();
+			if (!dummymat) {
+				_ASSERT(0);
+				return 1;
+			}
+			dummymat->SetName("dummyMaterial");
+			SetMQOMaterial(dummyname, dummymat);
+		}
 	}
-
-	int defmaterialno = (int)m_material.size();
-	dummymat->SetMaterialNo( defmaterialno );
-	dummymat->SetName( "dummyMaterial" );
-
-	m_material[defmaterialno] = dummymat;
 
 	return 0;
 }
@@ -4363,6 +4256,15 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 	}
 
 
+	char nodename[256] = { 0 };
+	strcpy_s(nodename, 256, pNode->GetName());
+	WCHAR wnodename[256] = L"none for debug";
+	ZeroMemory(wnodename, sizeof(WCHAR) * 256);
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, nodename, 256, wnodename, 256);//256長の配列にコピーしてから変換する
+	char meshname[256] = { 0 };
+	strcpy_s(meshname, 256, pMesh->GetName());
+
+
 
 	ChaMatrix globalmeshmat;//頂点用
 	ChaMatrix globalnormalmat;//法線用
@@ -4418,20 +4320,14 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 		_ASSERT(0);
 		return 0;
 	}
-	newobj->SetObjFrom( OBJFROM_FBX );
-	newobj->SetName( (char*)pNode->GetName() );
+	newobj->SetObjFrom(OBJFROM_FBX);
+	newobj->SetName(nodename);
 	newobj->SetFbxNode(pNode);
 	m_object[ newobj->GetObjectNo() ] = newobj;
 	m_node2mqoobj[pNode] = newobj;
 
 
-	char cname[256] = { 0 };
-	strcpy_s(cname, 256, pNode->GetName());
 
-	WCHAR wname[256] = L"none for debug";
-	ZeroMemory( wname, sizeof( WCHAR ) * 256 );
-	//MultiByteToWideChar( CP_ACP, MB_PRECOMPOSED, pNode->GetName(), 256, wname, 256 );//複数キャラ読み込み時に落ちることがある？？
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, cname, 256, wname, 256);//256長の配列にコピーしてから変換する
 
 
 	FBXOBJ* fbxobj = (FBXOBJ*)malloc(sizeof(FBXOBJ));
@@ -4449,11 +4345,17 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 
 //マテリアル
 	int materialNum_ = 1;
-	FbxNode* node = pMesh->GetNode();
-	if ( node != 0 ) {
+
+
+	//FbxNode* node = pMesh->GetNode();
+	//#######################################################################################################
+	//2023/12/04 mesh->GetNode()に対してGetMaterial(i)を呼んでマテリアル情報を取得しようとすると不正な情報が入っていた
+	//マテリアル名に本来のマテリアル情報とは異なるtypo_2という名前, テクスチャにtype_2.pngが入っていた
+	//mesh->GetNode()はマテリアル情報のためには使わないことに.
+	//########################################################################################################
+	//if ( node != 0 ) {
 		// マテリアルの数
-		materialNum_ = node->GetMaterialCount();
-		
+		materialNum_ = pNode->GetMaterialCount();
 
 		//for dbginfo
 		//if (materialNum_ != 1) {
@@ -4461,28 +4363,51 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 			//sprintf_s(strinfo, MAX_PATH, "mesh %s, materialNum_ %d", pNode->GetName(), materialNum_);
 			//::MessageBoxA(NULL, strinfo, "check!!!", MB_OK);
 		//}
-		DbgOut(L"mesh %s, materialNum_ %d\r\n", wname, materialNum_);
+		DbgOut(L"mesh %s, materialNum_ %d\r\n", wnodename, materialNum_);
 
 
 
 		// マテリアル情報を取得
 		//for( int i = 0; i < materialNum_; ++i ) {
 		for (int i = 0; i < materialNum_; i++) {
-			FbxSurfaceMaterial* material = node->GetMaterial( i );
+			FbxSurfaceMaterial* material = pNode->GetMaterial( i );
 			if ( material != 0 ) {
-				CMQOMaterial* newmqomat = new CMQOMaterial();
-				int mqomatno = newobj->GetMaterialSize();
-				newmqomat->SetMaterialNo( mqomatno );
-				newobj->SetMaterial( mqomatno, newmqomat );
+				char materialname[256] = { 0 };
+				strcpy_s(materialname, 256, material->GetName());
 
-				SetMQOMaterial( newmqomat, material );
+				//if ((strstr(meshname, "plane__35") != 0) || (strstr(materialname, "plane__35") != 0) || (strstr(nodename, "plane__35") != 0)) {
+				//	int dbgflag2 = 1;
+				//}
+				if ((strstr(meshname, "plane__35") != 0) || (strstr(materialname, "Caution") != 0) || (strstr(nodename, "Neon_Other_4") != 0)) {
+					int dbgflag2 = 1;
+				}
+
+				CMQOMaterial* currentmaterial = GetMQOMaterialByName(materialname);//既に存在するかどうかチェック
+				if (!currentmaterial) {
+					//未登録テクスチャの登録処理
+					currentmaterial = new CMQOMaterial();
+					SetMQOMaterial(currentmaterial, material);//内容をセット
+					SetMQOMaterial(materialname, currentmaterial);//表にセット
+				}
+				else {
+					//登録済　何もしない
+				}
+
+				//オブジェクト毎のマテリアル読込順序を保存して　書き出し時に使うための処理
+				//CMQOMaterial* onloadmaterial = newobj->GetOnLoadMaterialByName(materialname);
+				//if (!onloadmaterial) {
+					newobj->AddOnLoadMaterial(currentmaterial);
+				//}
 
 				//const char* texname = newmqomat->GetTex();
 				//const char* nodename = node->GetName();
 				//_ASSERT(0);
 			}
+			else {
+				_ASSERT(0);
+			}
 		}
-	}
+	//}
 
 
 //頂点
@@ -4493,7 +4418,7 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 	int controlNum = pMesh->GetControlPointsCount();   // 頂点数
 	FbxVector4* src = pMesh->GetControlPoints();    // 頂点座標配列
 
-	DbgOut(L"LDCheck : GetFBXMesh : nodename %s, controlnum %d, polygonnum %d, polygonvertexnum %d\r\n", wname, controlNum, PolygonNum, PolygonVertexNum);
+	DbgOut(L"LDCheck : GetFBXMesh : nodename %s, controlnum %d, polygonnum %d, polygonvertexnum %d\r\n", wnodename, controlNum, PolygonNum, PolygonVertexNum);
 
 	// コピー
 	newobj->SetVertex( controlNum );
@@ -4555,10 +4480,65 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 				lookupIndex = 0;
 				break;
 			}
-			int materialIndex = pPolygonMaterials->mIndexArray->GetAt(lookupIndex);
-			if ((materialIndex >= 0) && (materialIndex < materialNum_)) {
-				curface->SetMaterialNo(materialIndex);
+			int materialIndex = pPolygonMaterials->mIndexArray->GetAt(lookupIndex);//Mesh単位のマテリアルへのインデックス
+			FbxSurfaceMaterial* material = pNode->GetMaterial(materialIndex);
+			if (material != 0) {
+				char materialname[256] = { 0 };
+				strcpy_s(materialname, 256, material->GetName());
+				CMQOMaterial* currentmaterial = GetMQOMaterialByName(materialname);//既に存在するかどうかチェック
+				if (!currentmaterial) {
+					_ASSERT(0);
+					lookupIndex = 0;
+					curface->SetMaterialNo(0);
+				}
+				else {
+					int curmaterialno = currentmaterial->GetMaterialNo();
+					curface->SetMaterialNo(curmaterialno);
+				}
 			}
+			else {
+				_ASSERT(0);
+				lookupIndex = 0;
+				curface->SetMaterialNo(0);
+			}
+
+			//int materialcount = 0;
+			//std::map<int, CMQOMaterial*>::iterator itrmat;
+			//for(itrmat = newobj->GetMaterialBegin(); itrmat != newobj->GetMaterialEnd(); itrmat++){
+			//	if (materialcount == materialIndex) {
+			//		curmqomat = itrmat->second;
+			//		break;
+			//	}
+			//	materialcount++;
+			//}
+			//if (curmqomat) {
+			//	int curmaterialno = curmqomat->GetMaterialNo();
+			//	curface->SetMaterialNo(curmaterialno);
+			//}
+			//else {
+			//	_ASSERT(0);
+			//}
+
+			//if ((materialIndex >= 0) && (materialIndex < materialNum_)) {
+			//	curface->SetMaterialNo(materialIndex);
+			//}
+			//FbxLayerElementMaterial* currentMaterial = pMesh->GetElementMaterial(materialIndex);
+			//if (currentMaterial) {
+			//	char currentmaterialname[256] = { 0 };
+			//	strcpy_s(currentmaterialname, 256, currentMaterial->GetName());
+			//	CMQOMaterial* curmqomat = g_materialbank.Get(currentmaterialname);
+			//	if (curmqomat) {
+			//		int curmaterialno = curmqomat->GetMaterialNo();
+			//		curface->SetMaterialNo(curmaterialno);
+			//	}
+			//	else {
+			//		_ASSERT(0);
+			//	}
+			//}
+			//else {
+			//	_ASSERT(0);
+			//}
+
 		}
 		else {
 			lookupIndex = 0;
@@ -4650,7 +4630,7 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 		int    indexNum           = normalElem->GetIndexArray().GetCount();
 
 
-//DbgOut( L"GetFBXMesh : %s : normalNum %d : indexNum %d\r\n", wname, normalNum, indexNum );
+//DbgOut( L"GetFBXMesh : %s : normalNum %d : indexNum %d\r\n", wnodename, normalNum, indexNum );
 
 		// マッピングモード・リファレンスモード取得
 		FbxLayerElement::EMappingMode mappingMode = normalElem->GetMappingMode();
@@ -4686,12 +4666,12 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 
 
 //		if ( mappingMode == FbxLayerElement::eByPolygonVertex ) {
-////DbgOut( L"GetFBXMesh : %s : mapping eByPolygonVertex\r\n", wname );
+////DbgOut( L"GetFBXMesh : %s : mapping eByPolygonVertex\r\n", wnodename );
 //
 //			newobj->SetNormalMappingMode(0);
 //
 //			if ( refMode == FbxLayerElement::eDirect ) {
-////DbgOut( L"GetFBXMesh : %s : ref eDirect\r\n", wname );
+////DbgOut( L"GetFBXMesh : %s : ref eDirect\r\n", wnodename );
 //
 //				newobj->SetNormalLeng( normalNum );
 //				newobj->SetNormal( (ChaVector3*)malloc( sizeof( ChaVector3 ) * normalNum ) );
@@ -4710,7 +4690,7 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 //					ChaVector3Normalize(curn, curn);
 //				}
 //		   }else if ( refMode == FbxLayerElement::eIndexToDirect ){
-////DbgOut( L"GetFBXMesh : %s : ref eIndexToDirect\r\n", wname );
+////DbgOut( L"GetFBXMesh : %s : ref eIndexToDirect\r\n", wnodename );
 //
 //				newobj->SetNormalLeng( indexNum );
 //				newobj->SetNormal( (ChaVector3*)malloc( sizeof( ChaVector3 ) * indexNum ) );
@@ -4734,13 +4714,13 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 //				}
 //		   }
 //		} else if ( mappingMode == FbxLayerElement::eByControlPoint ) {
-////DbgOut( L"GetFBXMesh : %s : mapping eByControlPoint\r\n", wname );
+////DbgOut( L"GetFBXMesh : %s : mapping eByControlPoint\r\n", wnodename );
 //
 //			newobj->SetNormalMappingMode(1);
 //
 //
 //		   if ( refMode == FbxLayerElement::eDirect ) {
-////DbgOut( L"GetFBXMesh : %s : ref eDirect\r\n", wname );
+////DbgOut( L"GetFBXMesh : %s : ref eDirect\r\n", wnodename );
 //
 //				newobj->SetNormalLeng( normalNum );
 //				newobj->SetNormal( (ChaVector3*)malloc( sizeof( ChaVector3 ) * normalNum ) );
@@ -4759,7 +4739,7 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 //					ChaVector3Normalize(curn, curn);
 //				}
 //		   }else{
-////DbgOut( L"GetFBXMesh : %s : ref %d\r\n", wname, refMode );
+////DbgOut( L"GetFBXMesh : %s : ref %d\r\n", wnodename, refMode );
 //			   _ASSERT(0);
 //		   }
 //		} else {
@@ -4771,7 +4751,18 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 
 //UV
 	int layerCount = pMesh->GetLayerCount();   // meshはFbxMesh
+	if (layerCount >= 2) {
+		int dbgflag1 = 1;
+		if (strstr(nodename, "Neon_Other_4") !=0) {
+			int dbgflag2 = 1;
+		}
+	}
 	for ( int uvi = 0; uvi < layerCount; ++uvi ) {
+
+		//#####################################
+		//2023/12/03 １回目のループ終了でbreakする
+		//#####################################
+
 		FbxLayer* layer = pMesh->GetLayer( uvi );
 		FbxLayerElementUV* elem = layer->GetUVs();
 		if ( elem == 0 ) {
@@ -4810,7 +4801,7 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 				pMesh->GetPolygonVertexUV(faceno1, vno, elem->GetName(), srcuv, bunmapped);
 
 				ChaVector2* curuv = newobj->GetUVBuf() + faceno1 * 3 + vno;
-				*curuv = ChaVector2((float)srcuv[0], 1.0f - (float)srcuv[1]);
+				*curuv = ChaVector2((float)srcuv[0], 1.0f - (float)srcuv[1]);//!!! 1.0f - uv.y
 			}
 		}
 
@@ -4906,9 +4897,14 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 
 int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMaterial )
 {
+	if (!newmqomat || !pMaterial) {
+		_ASSERT(0);
+		return 1;
+	}
+
 	char tmpname[512];
 	strcpy_s(tmpname, 512, pMaterial->GetName());
-	newmqomat->SetName( tmpname );
+	newmqomat->SetName(tmpname);
 
 
 	//::MessageBoxA(NULL, tmpname, "MaterialName", MB_OK);
@@ -5035,7 +5031,13 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 
 
 //texture
-	bool findalbedometal = false;
+
+	if (strstr(tmpname, "plane__35_") != 0) {
+		int dbgflag1 = 1;
+	}
+
+
+	//bool findalbedometal = false;
 	{
 		FbxProperty pProperty;
 		pProperty = pMaterial->FindProperty(FbxSurfaceMaterial::sDiffuse);
@@ -5044,10 +5046,6 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 		{
 			for (int j = 0; j < lLayeredTextureCount; ++j)
 			{
-				if (findalbedometal == true) {
-					break;
-				}
-
 				FbxLayeredTexture* lLayeredTexture = pProperty.GetSrcObject<FbxLayeredTexture>(j);
 				int lNbTextures = lLayeredTexture->GetSrcObjectCount<FbxTexture>();
 				for (int k = 0; k < lNbTextures; ++k)
@@ -5056,88 +5054,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 					if (lLayeredTexture->GetName()) {
 						char tempname[256];
 						strcpy_s(tempname, 256, lLayeredTexture->GetName());
-						char* lastslash = strrchr(tempname, '/');
-						if (!lastslash) {
-							lastslash = strrchr(tempname, '\\');
-						}
-						if (lastslash) {
-							newmqomat->SetTex(lastslash + 1);
-						}
-						else {
-							newmqomat->SetTex(tempname);
-						}
-						char* lastp = strrchr((char*)newmqomat->GetTex(), '.');
-						if (!lastp) {
-							newmqomat->Add2Tex(".tga");
-						}
-						else if (strcmp(lastp, ".vrm") == 0) {
-							//VRM1.0のテクスチャパスは　vrmファイルの絶対パス(全テクスチャ名が同じvrmパス)
-							// テクスチャとしてUnityでみえるのは　*.texture2Dファイル
-							// .texture2DファイルはUnityスクリプトでpngに変換可能なので　そのようにしたpngをユーザが用意していることを想定
-							// 2023/08/28現在はVRM0.0もサポートされていて　VRM0.0をUnityに読み込むとテクスチャはpngのものが生成される
-
-							m_vrmtexcount++;
-							if (m_vrmtexcount == 5) {
-								//char convname[256] = { 0 };
-								//strcpy_s(convname, 256, "_05.normal.png");
-								//newmqomat->SetTex(convname);
-
-								m_vrmtexcount++;
-
-								char convname[256] = { 0 };
-								sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-								newmqomat->SetTex(convname);
-							}
-							else if (m_vrmtexcount == 8) {
-								
-								m_vrmtexcount++;
-
-								char convname[256] = { 0 };
-								sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-								newmqomat->SetTex(convname);
-							}
-							else if (m_vrmtexcount == 11) {
-								//char convname[256] = { 0 };
-								//strcpy_s(convname, 256, "_11.normal.png");
-								//newmqomat->SetTex(convname);
-
-								m_vrmtexcount++;
-
-								char convname[256] = { 0 };
-								sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-								newmqomat->SetTex(convname);
-							}
-							else {
-								char convname[256] = { 0 };
-								sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-								newmqomat->SetTex(convname);
-							}
-
-						}
-						else {
-							////jpegのテクスチャは現状ありえない？　pngに置き換えると読めるデータがある　TheHunt Character
-							//if (((unsigned long)(lastp - tempname) > (256 - 4)) &&
-							//	((strstr(lastp, "jpg") != 0) || (strstr(lastp, "jpeg") != 0))) {
-							//	*(lastp + 1) = 'p';
-							//	*(lastp + 2) = 'n';
-							//	*(lastp + 3) = 'g';
-							//	*(lastp + 4) = 0;
-							//}
-							int dbgflag1 = 1;
-						}
-						WCHAR wname[256];
-						::ZeroMemory(wname, sizeof(WCHAR) * 256);
-						MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, newmqomat->GetTex(), 256, wname, 256);
-
-						DbgOut(L"SetMQOMaterial : layered texture(%d)(%d) %s\r\n", j, k, wname);
-
-						//break;
-						if ((strstr(tempname, "albedo") != 0) || (strstr(tempname, "Albedo") != 0) ||
-							(strstr(tempname, "metallic") != 0) || (strstr(tempname, "Metallic") != 0)) {
-							//複数テクスチャがある場合　albedoまたはmetallicがみつかったところでbreakする
-							findalbedometal = true;
-							break;
-						}
+						SetMaterialTexNames(newmqomat, tempname);
 					}
 				}
 			}
@@ -5157,90 +5074,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 						if (nameptr) {
 							char tempname[256];
 							strcpy_s(tempname, 256, nameptr);
-							char* lastslash = strrchr(tempname, '/');
-							if (!lastslash) {
-								lastslash = strrchr(tempname, '\\');
-							}
-							if (lastslash) {
-								newmqomat->SetTex(lastslash + 1);
-							}
-							else {
-								newmqomat->SetTex(tempname);
-							}
-							char* lastp = strrchr((char*)newmqomat->GetTex(), '.');
-							if (!lastp) {
-								newmqomat->Add2Tex(".tga");
-							}
-							else if (strcmp(lastp, ".vrm") == 0) {
-								//VRM1.0のテクスチャパスは　vrmファイルの絶対パス(全テクスチャ名が同じvrmパス)
-								// テクスチャとしてUnityでみえるのは　*.texture2Dファイル
-								// .texture2DファイルはUnityスクリプトでpngに変換可能なので　そのようにしたpngをユーザが用意していることを想定
-								// 2023/08/28現在はVRM0.0もサポートされていて　VRM0.0をUnityに読み込むとテクスチャはpngのものが生成される
-
-								m_vrmtexcount++;
-								if (m_vrmtexcount == 5) {
-									//char convname[256] = { 0 };
-									//strcpy_s(convname, 256, "_05.normal.png");
-									//newmqomat->SetTex(convname);
-
-									m_vrmtexcount++;
-
-									char convname[256] = { 0 };
-									sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-									newmqomat->SetTex(convname);
-								}
-								else if (m_vrmtexcount == 8) {
-
-									m_vrmtexcount++;
-
-									char convname[256] = { 0 };
-									sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-									newmqomat->SetTex(convname);
-								}
-								else if (m_vrmtexcount == 11) {
-									//char convname[256] = { 0 };
-									//strcpy_s(convname, 256, "_11.normal.png");
-									//newmqomat->SetTex(convname);
-
-									m_vrmtexcount++;
-
-									char convname[256] = { 0 };
-									sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-									newmqomat->SetTex(convname);
-								}
-								else {
-									char convname[256] = { 0 };
-									sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-									newmqomat->SetTex(convname);
-								}
-
-							}
-							else {
-								////jpegのテクスチャは現状ありえない？　pngに置き換えると読めるデータがある　TheHunt Character
-								//if (((unsigned long)(lastp - tempname) > (256 - 4)) &&
-								//	((strstr(lastp, "jpg") != 0) || (strstr(lastp, "jpeg") != 0))) {
-								//	*(lastp + 1) = 'p';
-								//	*(lastp + 2) = 'n';
-								//	*(lastp + 3) = 'g';
-								//	*(lastp + 4) = 0;
-								//}
-								int dbgflag2 = 1;
-							}
-
-							WCHAR wname[256];
-							::ZeroMemory(wname, sizeof(WCHAR) * 256);
-							MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, newmqomat->GetTex(), 256, wname, 256);
-
-							DbgOut(L"SetMQOMaterial : texture(0)(%d) %s\r\n", j, wname);
-							
-							//break;
-							if ((strstr(tempname, "albedo") != 0) || (strstr(tempname, "Albedo") != 0) ||
-								(strstr(tempname, "metallic") != 0) || (strstr(tempname, "Metallic") != 0)) {
-									//複数テクスチャがある場合　albedoまたはmetallicがみつかったところでbreakする
-								findalbedometal = true;
-								break;
-							}
-
+							SetMaterialTexNames(newmqomat, tempname);
 						}
 					}
 				}
@@ -5248,7 +5082,93 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 		}
 	}
 
+	{
+		FbxProperty pProperty;
+		pProperty = pMaterial->FindProperty(FbxSurfaceMaterial::sNormalMap);
+		int lLayeredTextureCount = pProperty.GetSrcObjectCount<FbxLayeredTexture>();
+		if (lLayeredTextureCount > 0)
+		{
+			for (int j = 0; j < lLayeredTextureCount; ++j)
+			{
+				FbxLayeredTexture* lLayeredTexture = pProperty.GetSrcObject<FbxLayeredTexture>(j);
+				int lNbTextures = lLayeredTexture->GetSrcObjectCount<FbxTexture>();
+				for (int k = 0; k < lNbTextures; ++k)
+				{
+					//char* nameptr = (char*)lLayeredTexture->GetName();
+					if (lLayeredTexture->GetName()) {
+						char tempname[256];
+						strcpy_s(tempname, 256, lLayeredTexture->GetName());
+						SetMaterialTexNames(newmqomat, tempname);
+					}
+				}
+			}
+		}
+		else
+		{
+			//no layered texture simply get on the property
+			int lNbTextures = pProperty.GetSrcObjectCount<FbxTexture>();
+			if (lNbTextures > 0)
+			{
+				for (int j = 0; j < lNbTextures; ++j)
+				{
+					FbxFileTexture* lTexture = pProperty.GetSrcObject<FbxFileTexture>(j);
+					if (lTexture)
+					{
+						char* nameptr = (char*)lTexture->GetFileName();
+						if (nameptr) {
+							char tempname[256];
+							strcpy_s(tempname, 256, nameptr);
+							SetMaterialTexNames(newmqomat, tempname);
+						}
+					}
+				}
+			}
+		}
+	}
 
+	//{
+	//	FbxProperty pProperty;
+	//	pProperty = pMaterial->FindProperty(FbxSurfaceMaterial::sShininess);
+	//	int lLayeredTextureCount = pProperty.GetSrcObjectCount<FbxLayeredTexture>();
+	//	if (lLayeredTextureCount > 0)
+	//	{
+	//		for (int j = 0; j < lLayeredTextureCount; ++j)
+	//		{
+	//			FbxLayeredTexture* lLayeredTexture = pProperty.GetSrcObject<FbxLayeredTexture>(j);
+	//			int lNbTextures = lLayeredTexture->GetSrcObjectCount<FbxTexture>();
+	//			for (int k = 0; k < lNbTextures; ++k)
+	//			{
+	//				//char* nameptr = (char*)lLayeredTexture->GetName();
+	//				if (lLayeredTexture->GetName()) {
+	//					char tempname[256];
+	//					strcpy_s(tempname, 256, lLayeredTexture->GetName());
+	//					SetMaterialTexNames(newmqomat, tempname);
+	//				}
+	//			}
+	//		}
+	//	}
+	//	else
+	//	{
+	//		//no layered texture simply get on the property
+	//		int lNbTextures = pProperty.GetSrcObjectCount<FbxTexture>();
+	//		if (lNbTextures > 0)
+	//		{
+	//			for (int j = 0; j < lNbTextures; ++j)
+	//			{
+	//				FbxFileTexture* lTexture = pProperty.GetSrcObject<FbxFileTexture>(j);
+	//				if (lTexture)
+	//				{
+	//					char* nameptr = (char*)lTexture->GetFileName();
+	//					if (nameptr) {
+	//						char tempname[256];
+	//						strcpy_s(tempname, 256, nameptr);
+	//						SetMaterialTexNames(newmqomat, tempname);
+	//					}
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
 	//if (newmqomat->GetTex() && (strlen(newmqomat->GetTex()) > 0)) {
 	//	if ((strstr(newmqomat->GetTex(), "_13.png") != 0) || (strstr(newmqomat->GetTex(), "_15.png") != 0) || (strstr(newmqomat->GetTex(), "_16.png") != 0)) {
 	//		//2023/09/24 VRoidの服の裾(すそ)に透過の印を付ける
@@ -5260,6 +5180,113 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 
    return 0;
 }
+
+int CModel::SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname)
+{
+	char temptexname[256] = {0};
+
+	char* lastslash = strrchr(tempname, '/');
+	if (!lastslash) {
+		lastslash = strrchr(tempname, '\\');
+	}
+	if (lastslash) {
+		//newmqomat->SetTex(lastslash + 1);
+		strcpy_s(temptexname, 256, lastslash + 1);
+	}
+	else {
+		//newmqomat->SetTex(tempname);
+		strcpy_s(temptexname, 256, tempname);
+	}
+
+	//char* lastp = strrchr((char*)newmqomat->GetTex(), '.');
+	char* lastp = strrchr(temptexname, '.');
+	if (!lastp) {
+		//newmqomat->Add2Tex(".tga");
+		strcat_s(temptexname, ".tga");
+	}
+	else if (strcmp(lastp, ".psd") == 0) {
+		strcpy(lastp, ".png");
+	}
+	else if (strcmp(lastp, ".vrm") == 0) {
+		//VRM1.0のテクスチャパスは　vrmファイルの絶対パス(全テクスチャ名が同じvrmパス)
+		// テクスチャとしてUnityでみえるのは　*.texture2Dファイル
+		// .texture2DファイルはUnityスクリプトでpngに変換可能なので　そのようにしたpngをユーザが用意していることを想定
+		// 2023/08/28現在はVRM0.0もサポートされていて　VRM0.0をUnityに読み込むとテクスチャはpngのものが生成される
+
+		m_vrmtexcount++;
+		if (m_vrmtexcount == 5) {
+			//char convname[256] = { 0 };
+			//strcpy_s(convname, 256, "_05.normal.png");
+			//newmqomat->SetTex(convname);
+
+			m_vrmtexcount++;
+
+			char convname[256] = { 0 };
+			sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
+			//newmqomat->SetTex(convname);
+			strcpy_s(temptexname, convname);
+		}
+		else if (m_vrmtexcount == 8) {
+
+			m_vrmtexcount++;
+
+			char convname[256] = { 0 };
+			sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
+			//newmqomat->SetTex(convname);
+			strcpy_s(temptexname, convname);
+		}
+		else if (m_vrmtexcount == 11) {
+			////char convname[256] = { 0 };
+			////strcpy_s(convname, 256, "_11.normal.png");
+			////newmqomat->SetTex(convname);
+
+			m_vrmtexcount++;
+
+			char convname[256] = { 0 };
+			sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
+			//newmqomat->SetTex(convname);
+			strcpy_s(temptexname, convname);
+		}
+		else {
+			char convname[256] = { 0 };
+			sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
+			//newmqomat->SetTex(convname);
+			strcpy_s(temptexname, convname);
+		}
+	}
+	else {
+		//拡張子付きの通常ファイル名　そのまま
+	}
+
+	WCHAR wname[256];
+	::ZeroMemory(wname, sizeof(WCHAR) * 256);
+	//MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, newmqomat->GetTex(), 256, wname, 256);
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, temptexname, 256, wname, 256);
+
+	DbgOut(L"SetMaterialTextureName : texture %s\r\n", wname);
+
+
+
+	if ((newmqomat->GetAlbedoTex() && !(newmqomat->GetAlbedoTex()[0])) &&
+		(strstr(temptexname, "albedo") != 0) || (strstr(temptexname, "Albedo") != 0)) {
+		newmqomat->SetAlbedoTex(temptexname);
+	}
+	else if ((newmqomat->GetNormalTex() && !(newmqomat->GetNormalTex()[0])) &&
+		(strstr(temptexname, "normal") != 0) || (strstr(temptexname, "Normal") != 0)) {
+		newmqomat->SetNormalTex(temptexname);
+	}
+	else if ((newmqomat->GetMetalTex() && !(newmqomat->GetMetalTex()[0])) &&
+		(strstr(temptexname, "metal") != 0) || (strstr(temptexname, "Metal") != 0)) {
+		newmqomat->SetMetalTex(temptexname);
+	}else if (newmqomat->GetTex() && !(newmqomat->GetTex()[0])) {
+		//TexNameに一回もセットされていない場合に　TexNameにtemptexnameをセット
+		newmqomat->SetTex(temptexname);
+	}
+
+
+	return 0;
+}
+
 
 
 //// Get specific property value and connected texture if any.
@@ -5444,8 +5471,9 @@ CBone* CModel::CreateNewFbxBone(FbxNodeAttribute::EType type, FbxNode* curnode, 
 		return 0;
 	}
 
-	ID3D11DeviceContext* pd3dImmediateContext = DXUTGetD3D11DeviceContext();
-	newbone->LoadCapsuleShape(m_pdev, pd3dImmediateContext);//!!!!!!!!!!!
+	//RenderContext* pRenderContext = DXUTGetD3D11DeviceContext();
+	//newbone->LoadCapsuleShape(m_pdev, pRenderContext);//!!!!!!!!!!!
+	newbone->LoadCapsuleShape(m_pdev);//!!!!!!!!!!!
 
 	char newbonename[JOINTNAMELENG];
 	strcpy_s(newbonename, JOINTNAMELENG, curnode->GetName());
@@ -5487,6 +5515,24 @@ CBone* CModel::CreateNewFbxBone(FbxNodeAttribute::EType type, FbxNode* curnode, 
 	}
 	else if (type == FbxNodeAttribute::eSkeleton) {
 		newbone->SetType(FBXBONE_SKELETON);
+
+
+		//2023/10/26 GetBoneByName()高速化用
+		const char* pjoint = strstr(newbonename, "_Joint");
+		if (pjoint) {
+			size_t strjointlen = strlen(pjoint);
+			if (strjointlen == strlen("_Joint")) {
+				m_withStrJoint++;
+			}
+			else {
+				m_withoutStrJoint++;
+			}
+		}
+		else {
+			m_withoutStrJoint++;
+		}
+
+
 	}
 	else if (type == FbxNodeAttribute::eNull) {
 		newbone->SetType(FBXBONE_NULL);
@@ -5688,6 +5734,18 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 		return 0;
 	}
 	else {
+
+
+		CreateLoadFbxAnim(pScene);
+		//#### 2022/11/01 ################################################
+		//この時点において　m_bonelistにはCBone*がセットされている 
+		//LoadFbx()内で　CBone::SetFbxNodeOnLoadするようにした
+		//よって　スレッド準備は　CreateLoadFbxAnimでしてしまうことが可能
+		//CreateFbxAnimReq不要
+		//#### 2022/11/01 ################################################
+		//CreateFBXAnimReq(animno, pScene, pPose, prootnode, curmotid, animleng);//2022/10/21 : 最終フレームのモーションフレーム無し問題対応
+
+
 		int animno;
 		for (animno = 0; animno < lAnimStackCount; animno++) {
 
@@ -5706,6 +5764,7 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 			FbxAnimStack* lCurrentAnimationStack = m_pscene->FindMember<FbxAnimStack>(mAnimStackNameArray[animno]->Buffer());
 			if (lCurrentAnimationStack == NULL) {
 				_ASSERT(0);
+				DestroyLoadFbxAnim();
 				return 1;
 			}
 
@@ -5811,19 +5870,16 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 			//Local情報からモーションを計算する
 			m_loadbonecount = 0;
 
-			if (animno == 0) {
-				CreateLoadFbxAnim(pScene);
-
-				//#### 2022/11/01 ################################################
-				//この時点において　m_bonelistにはCBone*がセットされている 
-				//LoadFbx()内で　CBone::SetFbxNodeOnLoadするようにした
-				//よって　スレッド準備は　CreateLoadFbxAnimでしてしまうことが可能
-				//CreateFbxAnimReq不要
-				//#### 2022/11/01 ################################################
-				//CreateFBXAnimReq(animno, pScene, pPose, prootnode, curmotid, animleng);//2022/10/21 : 最終フレームのモーションフレーム無し問題対応
-
-
-			}
+			//if (animno == 0) {//2023/11/04 anim loopが始まる前の場所に引っ越し
+			//	CreateLoadFbxAnim(pScene);
+			//	//#### 2022/11/01 ################################################
+			//	//この時点において　m_bonelistにはCBone*がセットされている 
+			//	//LoadFbx()内で　CBone::SetFbxNodeOnLoadするようにした
+			//	//よって　スレッド準備は　CreateLoadFbxAnimでしてしまうことが可能
+			//	//CreateFbxAnimReq不要
+			//	//#### 2022/11/01 ################################################
+			//	//CreateFBXAnimReq(animno, pScene, pPose, prootnode, curmotid, animleng);//2022/10/21 : 最終フレームのモーションフレーム無し問題対応
+			//}
 
 			//スレッド読み込みしない場合
 			//map<int, CBone*>::iterator itranimbone;
@@ -5872,9 +5928,9 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 			}
 			else {
 			}
-			if (animno == (lAnimStackCount - 1)) {
-				DestroyLoadFbxAnim();
-			}
+			//if (animno == (lAnimStackCount - 1)) {//2023/11/04 anim loopを出たところに引っ越し
+			//	DestroyLoadFbxAnim();
+			//}
 
 
 			//motioncreatebatchflagが立っていた場合ここまで
@@ -5884,10 +5940,10 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 				//FillUpEmptyKeyReq(curmotid, (animleng - 1), m_topbone, 0);//nullジョイント対策？ 初期姿勢で初期化する処理はmotid==1以外のときにAddMotion内で行う
 
 
-			if (animno == 0) {
-				//2022/11/01 Comment out
-				//CallF(CreateFBXShape(mCurrentAnimLayer, animleng, mStart, mFrameTime2), return 1);//2022/10/21 : 最終フレームのモーションフレーム無し問題対応
-			}
+			//if (animno == 0) {
+			//	//2022/11/01 Comment out
+			//	//CallF(CreateFBXShape(mCurrentAnimLayer, animleng, mStart, mFrameTime2), return 1);//2022/10/21 : 最終フレームのモーションフレーム無し問題対応
+			//}
 
 
 			MOTINFO* pmotinfo = GetMotInfo(curmotid);
@@ -5899,6 +5955,8 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 
 			//}
 		}
+
+		DestroyLoadFbxAnim();
 
 
 		////読み込みが終わったら最初のモーションをセットしておく
@@ -6532,7 +6590,7 @@ void CModel::PostLoadFbxAnimReq(FbxAnimLayer* mCurrentAnimLayer, int srcmotid, d
 					//CCameraFbx::PostLoadFbxAnim()でのmotidとCAMERANODE*の対応表エントリーよりも後で呼ぶ
 					if (srcbone->IsSkeleton() || (srcbone->IsCamera() && IsCameraMotion(srcmotid))) {
 						bool limitdegflag = false;
-						ChaVector3 cureul = srcbone->CalcFBXEulXYZ(limitdegflag, srcmotid, curframe, 0);
+						ChaVector3 cureul = srcbone->CalcFBXEulXYZ(limitdegflag, srcmotid, curframe);
 						curmp->SetLocalEul(cureul);
 						curmp->SetLimitedLocalEul(cureul);
 						curmp->SetCalcLimitedWM(2);
@@ -6867,7 +6925,8 @@ int CModel::GetFBXSkin( FbxNodeAttribute *pAttrib, FbxNode* pNode )
 							//if ((lClusterMode == FbxCluster::eAdditive) || (weight >= 0.05f)) {
 							if ((lClusterMode == FbxCluster::eAdditive) || (weight >= 0.001f)) {
 								//if ((lClusterMode == FbxCluster::eAdditive)){
-								newobj->AddInfBone(curclusterno, index, weight, isadditive);
+								//newobj->AddInfBone(curclusterno, index, weight, isadditive);
+								newobj->AddInfBone(curbone->GetMatrixIndex(), index, weight, isadditive);//2023/11/30
 							}
 						}
 
@@ -6909,7 +6968,8 @@ int CModel::GetFBXSkin( FbxNodeAttribute *pAttrib, FbxNode* pNode )
 					int isadditive;
 					isadditive = 1;
 					int curclusterno = 0;
-					newobj->AddInfBone(curclusterno, pointindex, weight, isadditive);
+					//newobj->AddInfBone(curclusterno, pointindex, weight, isadditive);
+					newobj->AddInfBone(curbone->GetMatrixIndex(), pointindex, weight, isadditive);//2023/11/30
 				}
 
 				makecnt++;
@@ -6930,9 +6990,9 @@ int CModel::GetFBXSkin( FbxNodeAttribute *pAttrib, FbxNode* pNode )
 	return 0;
 }
 
-int CModel::RenderRefArrow(bool limitdegflag, ID3D11DeviceContext* pd3dImmediateContext, CBone* boneptr, ChaVector4 diffusemult, int refmult, std::vector<ChaVector3> vecbonepos)
+int CModel::RenderRefArrow(bool limitdegflag, RenderContext* pRenderContext, CBone* boneptr, ChaVector4 diffusemult, int refmult, std::vector<ChaVector3> vecbonepos)
 {
-	if (!pd3dImmediateContext || !boneptr) {
+	if (!pRenderContext || !boneptr) {
 		return 1;
 	}
 
@@ -6966,8 +7026,8 @@ int CModel::RenderRefArrow(bool limitdegflag, ID3D11DeviceContext* pd3dImmediate
 		bmmat = scalemat * bmmat;
 		bmmat.SetTranslation(vecbonepos[vecno]);
 
-		g_hmWorld->SetMatrix(bmmat.GetDataPtr());
-		//g_pEffect->SetMatrix(g_hmWorld, &(bmmat.D3DX()));
+		//g_hmWorld->SetMatrix(bmmat.GetDataPtr());//2023/11/13 tmp comment out
+		////g_pEffect->SetMatrix(g_hmWorld, &(bmmat.D3DX()));
 		this->UpdateMatrix(limitdegflag, &bmmat, &m_matVP);
 
 		bool withalpha;
@@ -6977,7 +7037,7 @@ int CModel::RenderRefArrow(bool limitdegflag, ID3D11DeviceContext* pd3dImmediate
 		else {
 			withalpha = false;
 		}
-		CallF(this->OnRender(withalpha, pd3dImmediateContext, 0, diffusemult), return 1);
+		CallF(this->OnRender(withalpha, pRenderContext, 0, diffusemult), return 1);
 	}
 
 	return 0;
@@ -6985,7 +7045,9 @@ int CModel::RenderRefArrow(bool limitdegflag, ID3D11DeviceContext* pd3dImmediate
 
 
 
-int CModel::RenderBoneMark(bool limitdegflag, ID3D11DeviceContext* pd3dImmediateContext, CModel* bmarkptr, CMySprite* bcircleptr, int selboneno, int skiptopbonemark )
+int CModel::RenderBoneMark(myRenderer::RenderingEngine& re, RenderContext& rc,
+	bool limitdegflag, CModel* bmarkptr, InstancedSprite& bcircleptr,
+	int selboneno, int skiptopbonemark)
 {
 	if( m_bonelist.empty() ){
 		return 0;
@@ -7035,178 +7097,178 @@ int CModel::RenderBoneMark(bool limitdegflag, ID3D11DeviceContext* pd3dImmediate
 		}
 	}
 
-	//pdev->SetRenderState( D3DRS_ZFUNC, D3DCMP_ALWAYS );
-	pd3dImmediateContext->OMSetDepthStencilState(g_pDSStateZCmpAlways, 1);
+	////pdev->SetRenderState( D3DRS_ZFUNC, D3DCMP_ALWAYS );
+	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmpAlways, 1);//2023/11/13 tmp comment out
 	g_zcmpalways = true;
 
-	//ボーンの三角錐表示
-	if ((g_previewFlag != 5) && (g_previewFlag != 4)){
-		if (g_bonemarkflag && bmarkptr){
-			map<int, CBone*>::iterator itrbone;
-			for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++){
-				CBone* boneptr = itrbone->second;
-				if (boneptr && !boneptr->GetSkipRenderBoneMark() && (boneptr->IsSkeleton())){
+	////ボーンの三角錐表示
+	//if ((g_previewFlag != 5) && (g_previewFlag != 4)){
+	//	if (g_bonemarkflag && bmarkptr){
+	//		map<int, CBone*>::iterator itrbone;
+	//		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++){
+	//			CBone* boneptr = itrbone->second;
+	//			if (boneptr && !boneptr->GetSkipRenderBoneMark() && (boneptr->IsSkeleton())){
 
-					CMotionPoint curmp = boneptr->GetCurMp();
+	//				CMotionPoint curmp = boneptr->GetCurMp();
 
-					CBone* childbone = boneptr->GetChild(false);
-					while (childbone && childbone->IsSkeleton()){//３角錐表示は　boneptr, childbone 両方ともSkeleton
+	//				CBone* childbone = boneptr->GetChild(false);
+	//				while (childbone && childbone->IsSkeleton()){//３角錐表示は　boneptr, childbone 両方ともSkeleton
 
-						CMotionPoint childmp = childbone->GetCurMp();
+	//					CMotionPoint childmp = childbone->GetCurMp();
 
-						int renderflag = 0;
-						if (skiptopbonemark == 0){
-							renderflag = 1;
-						}
-						else{
-							CBone* parentbone = boneptr->GetParent(false);
-							if (parentbone){
-								renderflag = 1;
-							}
-							else{
-								renderflag = 0;
-							}
-						}
-						if (renderflag == 1){
+	//					int renderflag = 0;
+	//					if (skiptopbonemark == 0){
+	//						renderflag = 1;
+	//					}
+	//					else{
+	//						CBone* parentbone = boneptr->GetParent(false);
+	//						if (parentbone){
+	//							renderflag = 1;
+	//						}
+	//						else{
+	//							renderflag = 0;
+	//						}
+	//					}
+	//					if (renderflag == 1){
 
-							ChaVector3 aftbonepos;
-							ChaVector3 tmpfpos = boneptr->GetJointFPos();
-							ChaMatrix tmpwm = boneptr->GetWorldMat(limitdegflag, curmotid, roundingframe, &curmp);
-							ChaVector3TransformCoord(&aftbonepos, &tmpfpos, &tmpwm);
+	//						ChaVector3 aftbonepos;
+	//						ChaVector3 tmpfpos = boneptr->GetJointFPos();
+	//						ChaMatrix tmpwm = boneptr->GetWorldMat(limitdegflag, curmotid, roundingframe, &curmp);
+	//						ChaVector3TransformCoord(&aftbonepos, &tmpfpos, &tmpwm);
 
-							ChaVector3 aftchildpos;
-							ChaVector3 tmpchildfpos = childbone->GetJointFPos();
-							ChaMatrix tmpchildwm = childbone->GetWorldMat(limitdegflag, curmotid, roundingframe, &childmp);
-							ChaVector3TransformCoord(&aftchildpos, &tmpchildfpos, &tmpchildwm);//2022/07/29
-							//ChaVector3TransformCoord(&aftchildpos, &childbone->GetJointFPos(), &(boneptr->GetCurMp().GetWorldMat()));
-
-
-							boneptr->CalcAxisMatZ(&aftbonepos, &aftchildpos);
-
-							ChaMatrix bmmat;
-							bmmat = boneptr->GetLAxisMat();// * boneptr->m_curmp.m_worldmat;
+	//						ChaVector3 aftchildpos;
+	//						ChaVector3 tmpchildfpos = childbone->GetJointFPos();
+	//						ChaMatrix tmpchildwm = childbone->GetWorldMat(limitdegflag, curmotid, roundingframe, &childmp);
+	//						ChaVector3TransformCoord(&aftchildpos, &tmpchildfpos, &tmpchildwm);//2022/07/29
+	//						//ChaVector3TransformCoord(&aftchildpos, &childbone->GetJointFPos(), &(boneptr->GetCurMp().GetWorldMat()));
 
 
-							ChaVector3 diffvec = aftchildpos - aftbonepos;
-							float diffleng = (float)ChaVector3LengthDbl(&diffvec);
+	//						boneptr->CalcAxisMatZ(&aftbonepos, &aftchildpos);
 
-							float fscale;
-							ChaMatrix scalemat;
-							ChaMatrixIdentity(&scalemat);
-							fscale = diffleng / 50.0f;
-							scalemat.SetScale(ChaVector3(fscale, fscale, fscale));
-
-							bmmat = scalemat * bmmat;
-							bmmat.SetTranslation(aftbonepos);
-
-							g_hmWorld->SetMatrix(bmmat.GetDataPtr());
-							//g_pEffect->SetMatrix(g_hmWorld, &(bmmat.D3DX()));
-							bmarkptr->UpdateMatrix(limitdegflag, &bmmat, &m_matVP);
-							ChaVector4 difmult;
-							if (childbone->GetSelectFlag() & 2){
-								difmult = ChaVector4(1.0f, 0.0f, 0.0f, 0.5f);
-							}
-							else{
-								difmult = ChaVector4(0.25f, 0.5f, 0.5f, 0.5f);
-							}
-							bool withalpha = true;
-							if (g_bonemarkflag) {
-								CallF(bmarkptr->OnRender(withalpha, pd3dImmediateContext, 0, difmult), return 1);
-							}
-						}
+	//						ChaMatrix bmmat;
+	//						bmmat = boneptr->GetLAxisMat();// * boneptr->m_curmp.m_worldmat;
 
 
-						childbone = childbone->GetBrother(false);
-					}
-				}
-			}
-		}
-	}
+	//						ChaVector3 diffvec = aftchildpos - aftbonepos;
+	//						float diffleng = (float)ChaVector3LengthDbl(&diffvec);
+
+	//						float fscale;
+	//						ChaMatrix scalemat;
+	//						ChaMatrixIdentity(&scalemat);
+	//						fscale = diffleng / 50.0f;
+	//						scalemat.SetScale(ChaVector3(fscale, fscale, fscale));
+
+	//						bmmat = scalemat * bmmat;
+	//						bmmat.SetTranslation(aftbonepos);
+
+	//						//g_hmWorld->SetMatrix(bmmat.GetDataPtr());//2023/11/13 tmp comment out
+	//						////g_pEffect->SetMatrix(g_hmWorld, &(bmmat.D3DX()));
+	//						bmarkptr->UpdateMatrix(limitdegflag, &bmmat, &m_matVP);
+	//						ChaVector4 difmult;
+	//						if (childbone->GetSelectFlag() & 2){
+	//							difmult = ChaVector4(1.0f, 0.0f, 0.0f, 0.5f);
+	//						}
+	//						else{
+	//							difmult = ChaVector4(0.25f, 0.5f, 0.5f, 0.5f);
+	//						}
+	//						bool withalpha = true;
+	//						if (g_bonemarkflag) {
+	//							CallF(bmarkptr->OnRender(withalpha, pRenderContext, 0, difmult), return 1);
+	//						}
+	//					}
 
 
-	//ボーンの剛体表示
-	if ((g_previewFlag != 5) && (g_previewFlag != 4)){
-		map<int, CBone*>::iterator itrbone;
-		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++){
-			CBone* boneptr = itrbone->second;
-			if (boneptr && !boneptr->GetSkipRenderBoneMark() && (boneptr->IsSkeleton())){
-				CBone* childbone = boneptr->GetChild(false);
-				while (childbone && childbone->IsSkeleton()){
-					CRigidElem* curre = boneptr->GetRigidElem(childbone);
-					if (curre){
-						boneptr->CalcRigidElemParams(childbone, 0);
-
-						//ChaMatrix worldcapsulemat = curre->GetCapsulemat(0) * GetWorldMat();
-						//ChaMatrix worldcapsulemat = curre->GetCapsulematForColiShape(limitdegflag, 0) * GetWorldMat();//2023/01/18
-						ChaMatrix worldcapsulemat = curre->GetCapsulematForColiShape(limitdegflag, 0);//2023/03/24 modelのwmはすでに掛かっている
-
-						g_hmWorld->SetMatrix(worldcapsulemat.GetDataPtr());
-						boneptr->GetCurColDisp(childbone)->UpdateMatrix(limitdegflag, &worldcapsulemat, &m_matVP);
-						//g_hmWorld->SetMatrix((float*)&(curre->GetCapsulemat(0)));
-						//boneptr->GetCurColDisp(childbone)->UpdateMatrix(&(curre->GetCapsulemat(0)), &m_matVP);
-						ChaVector4 difmult;
-						//if( boneptr->GetSelectFlag() & 4 ){
-						if (childbone->GetSelectFlag() & 4){
-							difmult = ChaVector4(1.0f, 0.0f, 0.0f, 0.5f);
-						}
-						else{
-							difmult = ChaVector4(0.25f, 0.5f, 0.5f, 0.5f);
-						}
-
-						bool withalpha = true;
-						if (g_rigidmarkflag) {
-							//if ((curre->GetSkipflag() == 0) && srcbone->GetParent() && srcbone->GetParent()->GetParent()) {//有効にされている場合のみ表示　RootNodeなども表示しない
-							if (curre->GetSkipflag() == 0) {//有効にされている場合のみ表示
-								CallF(boneptr->GetCurColDisp(childbone)->OnRender(withalpha, pd3dImmediateContext, 0, difmult), return 1);
-							}
-						}
-					}
-
-					childbone = childbone->GetBrother(false);
-				}
+	//					childbone = childbone->GetBrother(false);
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
 
 
+	////ボーンの剛体表示
+	//if ((g_previewFlag != 5) && (g_previewFlag != 4)){
+	//	map<int, CBone*>::iterator itrbone;
+	//	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++){
+	//		CBone* boneptr = itrbone->second;
+	//		if (boneptr && !boneptr->GetSkipRenderBoneMark() && (boneptr->IsSkeleton())){
+	//			CBone* childbone = boneptr->GetChild(false);
+	//			while (childbone && childbone->IsSkeleton()){
+	//				CRigidElem* curre = boneptr->GetRigidElem(childbone);
+	//				if (curre){
+	//					boneptr->CalcRigidElemParams(childbone, 0);
 
-				/*
-				std::map<CBone*, CRigidElem*>::iterator itrtmpmap;
-				for (itrtmpmap = boneptr->GetRigidElemMapBegin(); itrtmpmap != boneptr->GetRigidElemMapEnd(); itrtmpmap++){
-					CRigidElem* curre = itrtmpmap->second;
-					if (curre){
-						CBone* childbone = itrtmpmap->first;
-						_ASSERT(childbone);
-						if (childbone){
-							//DbgOut( L"check!!!: curbone %s, childbone %s\r\n", boneptr->m_wbonename, childbone->m_wbonename );
-							boneptr->CalcRigidElemParams(childbone, 0);
-							g_pEffect->SetMatrix(g_hmWorld, &(curre->GetCapsulemat()));
-							boneptr->GetCurColDisp(childbone)->UpdateMatrix(&(curre->GetCapsulemat()), &m_matVP);
-							ChaVector4 difmult;
-							//if( boneptr->GetSelectFlag() & 4 ){
-							if (childbone->GetSelectFlag() & 4){
-								difmult = ChaVector4(1.0f, 0.0f, 0.0f, 0.5f);
-							}
-							else{
-								difmult = ChaVector4(0.25f, 0.5f, 0.5f, 0.5f);
-							}
-							CallF(boneptr->GetCurColDisp(childbone)->OnRender(pdev, 0, difmult), return 1);
-						}
-					}
-				}
-				*/
-			}
-		}
-	}
-	else{
-		RenderCapsuleReq(limitdegflag, pd3dImmediateContext, m_topbt);
-	}
+	//					//ChaMatrix worldcapsulemat = curre->GetCapsulemat(0) * GetWorldMat();
+	//					//ChaMatrix worldcapsulemat = curre->GetCapsulematForColiShape(limitdegflag, 0) * GetWorldMat();//2023/01/18
+	//					ChaMatrix worldcapsulemat = curre->GetCapsulematForColiShape(limitdegflag, 0);//2023/03/24 modelのwmはすでに掛かっている
+
+	//					//g_hmWorld->SetMatrix(worldcapsulemat.GetDataPtr());//2023/11/13 tmp comment out
+	//					boneptr->GetCurColDisp(childbone)->UpdateMatrix(limitdegflag, &worldcapsulemat, &m_matVP);
+	//					//g_hmWorld->SetMatrix((float*)&(curre->GetCapsulemat(0)));
+	//					//boneptr->GetCurColDisp(childbone)->UpdateMatrix(&(curre->GetCapsulemat(0)), &m_matVP);
+	//					ChaVector4 difmult;
+	//					//if( boneptr->GetSelectFlag() & 4 ){
+	//					if (childbone->GetSelectFlag() & 4){
+	//						difmult = ChaVector4(1.0f, 0.0f, 0.0f, 0.5f);
+	//					}
+	//					else{
+	//						difmult = ChaVector4(0.25f, 0.5f, 0.5f, 0.5f);
+	//					}
+
+	//					bool withalpha = true;
+	//					if (g_rigidmarkflag) {
+	//						//if ((curre->GetSkipflag() == 0) && srcbone->GetParent() && srcbone->GetParent()->GetParent()) {//有効にされている場合のみ表示　RootNodeなども表示しない
+	//						if (curre->GetSkipflag() == 0) {//有効にされている場合のみ表示
+	//							CallF(boneptr->GetCurColDisp(childbone)->OnRender(withalpha, pRenderContext, 0, difmult), return 1);
+	//						}
+	//					}
+	//				}
+
+	//				childbone = childbone->GetBrother(false);
+	//			}
 
 
 
+	//			/*
+	//			std::map<CBone*, CRigidElem*>::iterator itrtmpmap;
+	//			for (itrtmpmap = boneptr->GetRigidElemMapBegin(); itrtmpmap != boneptr->GetRigidElemMapEnd(); itrtmpmap++){
+	//				CRigidElem* curre = itrtmpmap->second;
+	//				if (curre){
+	//					CBone* childbone = itrtmpmap->first;
+	//					_ASSERT(childbone);
+	//					if (childbone){
+	//						//DbgOut( L"check!!!: curbone %s, childbone %s\r\n", boneptr->m_wbonename, childbone->m_wbonename );
+	//						boneptr->CalcRigidElemParams(childbone, 0);
+	//						g_pEffect->SetMatrix(g_hmWorld, &(curre->GetCapsulemat()));
+	//						boneptr->GetCurColDisp(childbone)->UpdateMatrix(&(curre->GetCapsulemat()), &m_matVP);
+	//						ChaVector4 difmult;
+	//						//if( boneptr->GetSelectFlag() & 4 ){
+	//						if (childbone->GetSelectFlag() & 4){
+	//							difmult = ChaVector4(1.0f, 0.0f, 0.0f, 0.5f);
+	//						}
+	//						else{
+	//							difmult = ChaVector4(0.25f, 0.5f, 0.5f, 0.5f);
+	//						}
+	//						CallF(boneptr->GetCurColDisp(childbone)->OnRender(pdev, 0, difmult), return 1);
+	//					}
+	//				}
+	//			}
+	//			*/
+	//		}
+	//	}
+	//}
+	//else{
+	//	RenderCapsuleReq(limitdegflag, pRenderContext, m_topbt);
+	//}
 
 
 	//ボーンのサークル表示
 	if ((g_previewFlag != 5) && (g_previewFlag != 4)){
 
-		if (g_bonemarkflag && bcircleptr){
+		if (g_bonemarkflag){
+
+			int instanceno = 0;//!!!!!!!
+
 			map<int, CBone*>::iterator itrbone;
 			for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++){
 				CBone* boneptr = itrbone->second;
@@ -7234,58 +7296,75 @@ int CModel::RenderBoneMark(bool limitdegflag, ID3D11DeviceContext* pd3dImmediate
 					}
 
 					ChaVector3TransformCoord(&scpos, &firstpos, &transmat);
-					scpos.z = 0.0f;
-					bcircleptr->SetPos(scpos);
-					ChaVector2 bsize;
+					scpos.x = (scpos.x + 1.0f) * (float)g_graphicsEngine->GetFrameBufferWidth() / 2.0f;//2023/11/25
+					scpos.y = (-scpos.y + 1.0f) * (float)g_graphicsEngine->GetFrameBufferHeight() / 2.0f;//2023/11/25
+					//scpos.z = scpos.z;
+					scpos.z = 0.00001f;
+
+					//bcircleptr->SetPos(scpos);
+					ChaVector2 bsize = ChaVector2(1.0f, 1.0f);
+					ChaVector4 bcolor = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
 					if (boneptr->GetSelectFlag() & 2){
-						bcircleptr->SetColor(ChaVector4(0.0f, 0.0f, 1.0f, 0.7f));
+						bcolor = ChaVector4(0.0f, 0.0f, 1.0f, 0.7f);
 						bsize = ChaVector2(0.050f, 0.050f);
 						if (g_4kresolution) {
 							bsize = bsize * 0.5f;
 						}
-						bcircleptr->SetSize(bsize);
+						//bcircleptr->SetSize(bsize);
 					}
 					else if (boneptr->GetSelectFlag() & 1){
-						bcircleptr->SetColor(ChaVector4(1.0f, 0.0f, 0.0f, 0.7f));
+						bcolor = ChaVector4(1.0f, 0.0f, 0.0f, 0.7f);
 						bsize = ChaVector2(0.025f, 0.025f);
 						if (g_4kresolution) {
 							bsize = bsize * 0.5f;
 						}
-						bcircleptr->SetSize(bsize);
+						//bcircleptr->SetSize(bsize);
 					}
 					else{
-						bcircleptr->SetColor(ChaVector4(1.0f, 1.0f, 1.0f, 0.7f));
+						bcolor = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
 						bsize = ChaVector2(0.025f, 0.025f);
 						if (g_4kresolution) {
 							bsize = bsize * 0.5f;
 						}
-						bcircleptr->SetSize(bsize);
+						//bcircleptr->SetSize(bsize);
 					}
-					CallF(bcircleptr->OnRender(pd3dImmediateContext), return 1);
+
+					ChaVector2 circlesize = ChaVector2(6.0f, 6.0f);
+
+					bcircleptr.UpdateScreen(instanceno, scpos, circlesize, bcolor);
+					instanceno++;
+					//CallF(bcircleptr->OnRender(pRenderContext), return 1);
 
 				}
 			}
+
+			if (instanceno > 0) {
+				//bcircleptr.DrawScreen(rc);
+
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.pinstancedsprite = &bcircleptr;
+				re.AddSpriteToForwardRenderPass(rendersprite);
+			}
 		}
 	}
-	else{
-		if (g_bonemarkflag && bcircleptr){
-			RenderBoneCircleReq(pd3dImmediateContext, m_topbt, bcircleptr);
-		}
-	}
+	//else{
+	//	if (g_bonemarkflag && bcircleptr){
+	//		RenderBoneCircleReq(pRenderContext, m_topbt, bcircleptr);
+	//	}
+	//}
 
 
-
-
-	//pdev->SetRenderState( D3DRS_ZFUNC, D3DCMP_LESSEQUAL );
-	pd3dImmediateContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
+	////pdev->SetRenderState( D3DRS_ZFUNC, D3DCMP_LESSEQUAL );
+	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);//2023/11/13 tmp comment out
 	g_zcmpalways = false;
 
 	return 0;
 }
 
-int CModel::RenderBoneCircleOne(bool limitdegflag, ID3D11DeviceContext* pd3dImmediateContext, CMySprite* bcircleptr, int selboneno)
+int CModel::RenderBoneCircleOne(bool limitdegflag, RenderContext* pRenderContext, CMySprite* bcircleptr, int selboneno)
 {
-	if (!pd3dImmediateContext || !bcircleptr) {
+	if (!pRenderContext || !bcircleptr) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -7327,15 +7406,15 @@ int CModel::RenderBoneCircleOne(bool limitdegflag, ID3D11DeviceContext* pd3dImme
 			//}
 			bcircleptr->SetSize(bsize);
 
-			CallF(bcircleptr->OnRender(pd3dImmediateContext), return 1);
+			CallF(bcircleptr->OnRender(pRenderContext), return 1);
 		}
 	}
 	return 0;
 }
 
-void CModel::RenderCapsuleReq(bool limitdegflag, ID3D11DeviceContext* pd3dImmediateContext, CBtObject* srcbto)
+void CModel::RenderCapsuleReq(bool limitdegflag, RenderContext* pRenderContext, CBtObject* srcbto)
 {
-	if (!pd3dImmediateContext || !srcbto) {
+	if (!pRenderContext || !srcbto) {
 		return;
 	}
 
@@ -7359,7 +7438,7 @@ void CModel::RenderCapsuleReq(bool limitdegflag, ID3D11DeviceContext* pd3dImmedi
 			//ChaMatrix tmpcapmat = curre->GetCapsulemat(0);
 			ChaMatrix tmpcapmat = curre->GetCapsulematForColiShape(limitdegflag, 0);//2023/01/18
 
-			g_hmWorld->SetMatrix(tmpcapmat.GetDataPtr());
+			//g_hmWorld->SetMatrix(tmpcapmat.GetDataPtr());//2023/11/13 tmp comment out
 			srcbone->GetCurColDisp(childbone)->UpdateMatrix(limitdegflag, &tmpcapmat, &m_matVP);
 			ChaVector4 difmult;
 			//if( boneptr->GetSelectFlag() & 4 ){
@@ -7372,7 +7451,7 @@ void CModel::RenderCapsuleReq(bool limitdegflag, ID3D11DeviceContext* pd3dImmedi
 			bool withalpha = true;
 			//if ((curre->GetSkipflag() == 0) && srcbone->GetParent() && srcbone->GetParent()->GetParent()) {//有効にされている場合のみ表示　RootNodeなども表示しない
 			if (curre->GetSkipflag() == 0) {//有効にされている場合のみ表示
-				CallF(srcbone->GetCurColDisp(childbone)->OnRender(withalpha, pd3dImmediateContext, 0, difmult), return);
+				CallF(srcbone->GetCurColDisp(childbone)->OnRender(withalpha, pRenderContext, 0, difmult), return);
 			}
 		}
 		//}
@@ -7381,13 +7460,13 @@ void CModel::RenderCapsuleReq(bool limitdegflag, ID3D11DeviceContext* pd3dImmedi
 	int chilno;
 	for (chilno = 0; chilno < srcbto->GetChildBtSize(); chilno++){
 		CBtObject* chilbto = srcbto->GetChildBt(chilno);
-		RenderCapsuleReq(limitdegflag, pd3dImmediateContext, chilbto);
+		RenderCapsuleReq(limitdegflag, pRenderContext, chilbto);
 	}
 
 }
 
 
-void CModel::RenderBoneCircleReq(ID3D11DeviceContext* pd3dImmediateContext, CBtObject* srcbto, CMySprite* bcircleptr)
+void CModel::RenderBoneCircleReq(RenderContext* pRenderContext, CBtObject* srcbto, CMySprite* bcircleptr)
 {
 	if (!srcbto || !bcircleptr) {
 		return;
@@ -7445,7 +7524,7 @@ void CModel::RenderBoneCircleReq(ID3D11DeviceContext* pd3dImmediateContext, CBtO
 					bsize = ChaVector2(0.025f, 0.025f);
 					bcircleptr->SetSize(bsize);
 				}
-				CallF(bcircleptr->OnRender(pd3dImmediateContext), return);
+				CallF(bcircleptr->OnRender(pRenderContext), return);
 
 			}
 		}
@@ -7454,7 +7533,7 @@ void CModel::RenderBoneCircleReq(ID3D11DeviceContext* pd3dImmediateContext, CBtO
 	int chilno;
 	for (chilno = 0; chilno < srcbto->GetChildBtSize(); chilno++){
 		CBtObject* chilbto = srcbto->GetChildBt(chilno);
-		RenderBoneCircleReq(pd3dImmediateContext, chilbto, bcircleptr);
+		RenderBoneCircleReq(pRenderContext, chilbto, bcircleptr);
 	}
 }
 
@@ -7726,18 +7805,18 @@ int CModel::SetDefaultBonePos(FbxScene* pScene)
 //}
 
 
-int CModel::SetMaterialName()
-{
-	m_materialname.clear();
-
-	map<int, CMQOMaterial*>::iterator itrmat;
-	for( itrmat = m_material.begin(); itrmat != m_material.end(); itrmat++ ){
-		CMQOMaterial* curmat = itrmat->second;
-		m_materialname[ curmat->GetName() ] = curmat;
-	}
-
-	return 0;
-}
+//int CModel::SetMaterialName()
+//{
+//	m_materialname.clear();
+//
+//	map<int, CMQOMaterial*>::iterator itrmat;
+//	for( itrmat = m_material.begin(); itrmat != m_material.end(); itrmat++ ){
+//		CMQOMaterial* curmat = itrmat->second;
+//		m_materialname[ curmat->GetName() ] = curmat;
+//	}
+//
+//	return 0;
+//}
 
 int CModel::GetTextureNameVec(std::vector<std::string>& dstvec)
 {
@@ -7745,10 +7824,35 @@ int CModel::GetTextureNameVec(std::vector<std::string>& dstvec)
 
 	vector<string> tmpvec;
 
-	//MQOファイル用のマテリアルを格納
-	map<int, CMQOMaterial*>::iterator itrmat;
-	for (itrmat = m_material.begin(); itrmat != m_material.end(); itrmat++) {
-		CMQOMaterial* curmat = itrmat->second;
+	////MQOファイル用のマテリアルを格納
+	//map<int, CMQOMaterial*>::iterator itrmat;
+	//for (itrmat = m_material.begin(); itrmat != m_material.end(); itrmat++) {
+	//	CMQOMaterial* curmat = itrmat->second;
+	//	if (curmat) {
+	//		if (curmat->GetTex() && (strlen(curmat->GetTex()) > 0)) {
+	//			string curtexname = curmat->GetTex();
+
+
+	//			bool sameflag = false;
+	//			vector<string>::iterator itrchk;
+	//			for (itrchk = dstvec.begin(); itrchk != dstvec.end(); itrchk++) {
+	//				if (*itrchk == curtexname) {
+	//					sameflag = true;
+	//					break;
+	//				}
+	//			}
+
+	//			if (sameflag == false) {
+	//				dstvec.push_back(curtexname);//重複を除いて格納
+	//			}
+	//			tmpvec.push_back(curtexname);//textureが在るものは重複可で全部格納
+	//		}
+	//	}
+	//}
+	int materialnum = GetMQOMaterialSize();
+	int matindex;
+	for (matindex = 0; matindex < materialnum; matindex++) {
+		CMQOMaterial* curmat = m_materialbank.Get(matindex);
 		if (curmat) {
 			if (curmat->GetTex() && (strlen(curmat->GetTex()) > 0)) {
 				string curtexname = curmat->GetTex();
@@ -7772,37 +7876,37 @@ int CModel::GetTextureNameVec(std::vector<std::string>& dstvec)
 	}
 
 
-	//fbxファイル用のマテリアルを格納
-	map<int, CMQOObject*>::iterator itrobj;
-	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
-		CMQOObject* curobj = itrobj->second;
-		if (curobj) {
-			map<int, CMQOMaterial*>::iterator itrmat2;
-			for (itrmat2 = curobj->GetMaterialBegin(); itrmat2 != curobj->GetMaterialEnd(); itrmat2++) {
-				CMQOMaterial* curmat2 = itrmat2->second;
-				if (curmat2) {
-					if (curmat2->GetTex() && (strlen(curmat2->GetTex()) > 0)) {
-						string curtexname2 = curmat2->GetTex();
-							
-						bool sameflag2 = false;
-						vector<string>::iterator itrchk2;
-						for (itrchk2 = dstvec.begin(); itrchk2 != dstvec.end(); itrchk2++) {
-							if (*itrchk2 == curtexname2) {
-								sameflag2 = true;
-								break;
-							}
-						}
+	////fbxファイル用のマテリアルを格納
+	//map<int, CMQOObject*>::iterator itrobj;
+	//for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+	//	CMQOObject* curobj = itrobj->second;
+	//	if (curobj) {
+	//		map<int, CMQOMaterial*>::iterator itrmat2;
+	//		for (itrmat2 = curobj->GetMaterialBegin(); itrmat2 != curobj->GetMaterialEnd(); itrmat2++) {
+	//			CMQOMaterial* curmat2 = itrmat2->second;
+	//			if (curmat2) {
+	//				if (curmat2->GetTex() && (strlen(curmat2->GetTex()) > 0)) {
+	//					string curtexname2 = curmat2->GetTex();
+	//						
+	//					bool sameflag2 = false;
+	//					vector<string>::iterator itrchk2;
+	//					for (itrchk2 = dstvec.begin(); itrchk2 != dstvec.end(); itrchk2++) {
+	//						if (*itrchk2 == curtexname2) {
+	//							sameflag2 = true;
+	//							break;
+	//						}
+	//					}
 
-						if (sameflag2 == false) {
-							dstvec.push_back(curtexname2);//重複を除いて格納
-						}
-						tmpvec.push_back(curtexname2);//textureが在るものは重複可で全部格納
+	//					if (sameflag2 == false) {
+	//						dstvec.push_back(curtexname2);//重複を除いて格納
+	//					}
+	//					tmpvec.push_back(curtexname2);//textureが在るものは重複可で全部格納
 
-					}
-				}
-			}
-		}
-	}
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
 
 	return 0;
 }
@@ -8442,7 +8546,32 @@ void CModel::CalcRigidElemReq(CBone* curbone)
 
 }
 
+int CModel::CalcRigidElemParamsOnBt()
+{
+	if (!GetTopBt()) {
+		return 0;
+	}
+	if (!GetBtWorld()) {
+		return 0;
+	}
 
+
+	int firstflag = 0;//OnBtのときには　firstflag = 0 !!!! CalcRigidElem()との違い
+
+	map<int, CBone*>::iterator itrbone;
+	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
+		CBone* boneptr = itrbone->second;
+		if (boneptr && boneptr->GetParent(false) && (boneptr->IsSkeleton())) {
+			CRigidElem* curre = boneptr->GetParent(false)->GetRigidElem(boneptr);
+			if (curre) {
+				boneptr->GetParent(false)->CalcRigidElemParams(boneptr, firstflag);
+			}
+		}
+	}
+
+	return 0;
+
+}
 
 void CModel::CalcBtAxismat(int onfirstcreate)
 {
@@ -8474,6 +8603,106 @@ void CModel::CalcBtAxismatReq( CBone* curbone, int onfirstcreate )
 		CalcBtAxismatReq(curbone->GetBrother(false), onfirstcreate);
 	}
 }
+
+
+int CModel::SetBtMotionOnBt(bool limitdegflag,
+	double srcframe, ChaMatrix* vpmat, int updateslot)
+{
+	if (!vpmat) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	//m_matWorld = *wmat;//そのまま
+	m_matVP = *vpmat;
+
+	if (!m_topbt) {
+		//_ASSERT( 0 );
+		return 0;
+	}
+	if (!m_btWorld) {
+		return 0;
+	}
+	if (!m_curmotinfo) {
+		_ASSERT(0);
+		return 0;//!!!!!!!!!!!!
+	}
+
+	int curmotid = m_curmotinfo->motid;
+	double curframe = m_curmotinfo->curframe;
+
+	ChaMatrix inimat;
+	ChaMatrixIdentity(&inimat);
+	CQuaternion iniq;
+	iniq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+
+	map<int, CBone*>::iterator itrbone;
+	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
+		CBone* curbone = itrbone->second;
+		if (curbone) {
+			//CMotionPoint curmp = curbone->GetCurMp();
+			curbone->SetBtFlag(0);
+			//curbone->SetCurMp( curmp );
+		}
+	}
+
+	SetBtMotionReq(limitdegflag, m_topbt, &m_matWorld, vpmat);
+
+	//#########################################################################################
+	//2022/07/09
+	// endjointが頂点に影響度を持つ場合、物理時に動かないendjointに頂点が引っ張られる不具合解消
+	//2022/07/11
+	// SetShaderConstから本関数SetBtMotionに処理を移動。
+	//#########################################################################################
+
+	double roundingframe = RoundingTime(curframe);
+
+	map<int, CBone*>::iterator itrbone2;
+	for (itrbone2 = m_bonelist.begin(); itrbone2 != m_bonelist.end(); itrbone2++) {
+		CBone* curbone2 = itrbone2->second;
+		if (curbone2 && (curbone2->IsSkeleton())) {
+			if ((curbone2->GetChild(false) == NULL) || (curbone2->GetChild(false)->IsNull())) {//2023/05/09 eNullの場合も
+				if (curbone2->GetParent(false)) {
+					//2023/05/09
+					//Kinematic == falseの場合だけ　BtMatはセットされている
+					//Kinematic == trueの場合には　BtMatはセットされていない
+
+					if ((curbone2->GetParent(false)->GetBtKinFlag() != 0) ||
+						(curbone2->GetParent(false)->GetTmpKinematic() == true)) {
+
+						//parentがkinematicの場合　worldmat, limitedworldmatをセット
+						bool calcslotflag = true;
+						CMotionPoint tmpmp2 = curbone2->GetParent(false)->GetCurMp(calcslotflag);//motid, curframeを参照してもうなくいかない。GetCurMpを使う。
+						if (limitdegflag == false) {
+							curbone2->SetBtMat(tmpmp2.GetWorldMat());
+						}
+						else {
+							curbone2->SetBtMat(tmpmp2.GetLimitedWM());
+						}
+
+					}
+					else {
+						//parentが　simuの場合　btmatをセット
+						curbone2->SetBtMat(curbone2->GetParent(false)->GetBtMat(false));
+					}
+				}
+				else {
+					bool calcslotflag = true;
+					CMotionPoint tmpmp4 = curbone2->GetCurMp(calcslotflag);//motid, curframeを参照してもうなくいかない。GetCurMpを使う。
+					if (limitdegflag == false) {
+						curbone2->SetBtMat(tmpmp4.GetWorldMat());
+					}
+					else {
+						curbone2->SetBtMat(tmpmp4.GetLimitedWM());
+					}
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
 
 int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag, 
 	double srcframe, ChaMatrix* wmat, ChaMatrix* vpmat )
@@ -8566,7 +8795,8 @@ int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag,
 						(curbone2->GetParent(false)->GetTmpKinematic() == true)) {
 
 						//parentがkinematicの場合　worldmat, limitedworldmatをセット
-						CMotionPoint tmpmp2 = curbone2->GetParent(false)->GetCurMp();//motid, curframeを参照してもうなくいかない。GetCurMpを使う。
+						bool calcslotflag = true;
+						CMotionPoint tmpmp2 = curbone2->GetParent(false)->GetCurMp(calcslotflag);//motid, curframeを参照してもうなくいかない。GetCurMpを使う。
 						if (limitdegflag == false) {
 							curbone2->SetBtMat(tmpmp2.GetWorldMat());
 						}
@@ -8577,11 +8807,12 @@ int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag,
 					}
 					else {
 						//parentが　simuの場合　btmatをセット
-						curbone2->SetBtMat(curbone2->GetParent(false)->GetBtMat());
+						curbone2->SetBtMat(curbone2->GetParent(false)->GetBtMat(false));
 					}
 				}
 				else {
-					CMotionPoint tmpmp4 = curbone2->GetCurMp();//motid, curframeを参照してもうなくいかない。GetCurMpを使う。
+					bool calcslotflag = true;
+					CMotionPoint tmpmp4 = curbone2->GetCurMp(calcslotflag);//motid, curframeを参照してもうなくいかない。GetCurMpを使う。
 					//curbone2->SetBtMat(tmpmp4.GetWorldMat());
 					if (limitdegflag == false) {
 						curbone2->SetBtMat(tmpmp4.GetWorldMat());
@@ -10754,81 +10985,6 @@ int CModel::SetBefEditMatFK(bool limitdegflag, CEditRange* erptr, CBone* curbone
 	return 0;
 }
 
-bool CModel::CalcAxisAndRotForIKRotateAxis(int limitdegflag,
-	CBone* parentbone, CBone* firstbone,
-	double curframe, ChaVector3 targetpos, 
-	ChaVector3 srcikaxis,
-	ChaVector3* dstaxis, float* dstrotrad)
-{
-	//return nearflag : too near to move
-
-
-	//########################################################
-	//2023/03/24
-	//model座標系で計算：modelのWorldMatの影響を無くして計算
-	//########################################################
-
-
-	if (!parentbone || !firstbone || !dstaxis || !dstrotrad) {
-		_ASSERT(0);
-		return true;
-	}
-
-	if (!firstbone->GetParent(false)) {
-		_ASSERT(0);
-		return true;
-	}
-
-	ChaMatrix invmodelwm = ChaMatrixInv(GetWorldMat());
-
-	ChaVector3 ikaxis = srcikaxis;//!!!!!!!!!!!!
-	ChaVector3Normalize(&ikaxis, &ikaxis);
-
-	ChaVector3 modelparentpos, modelchildpos;
-	{
-		ChaVector3 parentworld;
-		parentworld = parentbone->GetWorldPos(limitdegflag, m_curmotinfo->motid, curframe);
-		ChaVector3TransformCoord(&modelparentpos, &parentworld, &invmodelwm);
-
-		ChaMatrix parentmat = firstbone->GetParent(false)->GetWorldMat(limitdegflag, m_curmotinfo->motid, curframe, 0);// *GetWorldMat();
-		ChaVector3 tmpfirstfpos = firstbone->GetJointFPos();
-		ChaVector3TransformCoord(&modelchildpos, &tmpfirstfpos, &parentmat);
-	}
-
-	ChaVector3 childtotarget = targetpos - modelchildpos;
-	double distance = ChaVector3LengthDbl(&childtotarget);
-	//if (distance <= 0.10f) {
-	//	return true;
-	//}
-
-
-	ChaVector3 parbef, chilbef, tarbef;
-	parbef = modelparentpos;
-	CalcShadowToPlane(modelchildpos, ikaxis, modelparentpos, &chilbef);
-	CalcShadowToPlane(targetpos, ikaxis, modelparentpos, &tarbef);
-
-	ChaVector3 vec0, vec1;
-	vec0 = chilbef - parbef;
-	ChaVector3Normalize(&vec0, &vec0);
-	vec1 = tarbef - parbef;
-	ChaVector3Normalize(&vec1, &vec1);
-
-	ChaVector3 rotaxis2;
-	ChaVector3Cross(&rotaxis2, (const ChaVector3*)&vec0, (const ChaVector3*)&vec1);
-	ChaVector3Normalize(&rotaxis2, &rotaxis2);
-
-	float rotdot2, rotrad2;
-	rotdot2 = ChaVector3Dot(&vec0, &vec1);
-	rotdot2 = min(1.0f, rotdot2);
-	rotdot2 = max(-1.0f, rotdot2);
-	rotrad2 = (float)acos(rotdot2);
-
-	*dstaxis = rotaxis2;
-	*dstrotrad = rotrad2;
-
-	return false;
-}
-
 
 int CModel::CalcAxisAndRotForIKRotate(int limitdegflag, 
 	CBone* parentbone, CBone* firstbone, 
@@ -10988,145 +11144,6 @@ int CModel::CalcAxisAndRotForIKRotateVert(int limitdegflag,
 }
 
 
-int CModel::IKRotateOneFrame(int limitdegflag, CEditRange* erptr,
-	int keyno, CBone* rotbone, CBone* parentbone,
-	double curframe, double startframe, double applyframe,
-	CQuaternion rotq0, bool keynum1flag, bool postflag, bool fromiktarget)
-{
-
-	//for return value
-	int ismovable = 1;
-
-
-	if (!erptr || !rotbone || !parentbone) {
-		_ASSERT(0);
-		return 0;//not move
-	}
-
-	if (rotbone->IsNotSkeleton()) {
-		return 0;//not move
-	}
-
-	CQuaternion qForRot;
-	CQuaternion qForHipsRot;
-
-	if (fromiktarget == true) {
-		qForRot = rotq0;
-		qForHipsRot = rotq0;
-
-		//bool calcaplyflag = false;
-		//CalcQForRot(limitdegflag, calcaplyflag, 
-		//	m_curmotinfo->motid, curframe, applyframe, rotq0,
-		//	parentbone, parentbone,
-		//	&qForRot, &qForHipsRot);
-
-		//IKTragetの場合には
-		//0.080で刻んで　徐々に近づける
-		//近づきが足りない場合は　処理後に　ConstExecuteボタンを押す
-		CQuaternion endq;
-		CQuaternion curqForRot;
-		CQuaternion curqForHipsRot;
-		endq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-		qForRot.Slerp2(endq, 0.080f, &curqForRot);
-		curqForHipsRot = curqForRot;
-		bool infooutflag = true;
-		ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
-			infooutflag, 0, m_curmotinfo->motid, curframe, curqForRot, curqForHipsRot, fromiktarget);
-
-		//bool infooutflag = true;
-		//parentbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
-		//	infooutflag, 0, m_curmotinfo->motid, curframe, qForRot, qForHipsRot, fromiktarget);
-
-	}
-	else if (keynum1flag) {
-		qForRot = rotq0;
-		qForHipsRot = rotq0;
-
-		//bool calcaplyflag = false;
-		//CalcQForRot(limitdegflag, calcaplyflag, 
-		//	m_curmotinfo->motid, curframe, applyframe, rotq0,
-		//	parentbone, parentbone,
-		//	&qForRot, &qForHipsRot);
-
-		bool infooutflag = true;
-		ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
-			infooutflag, 0, m_curmotinfo->motid, curframe, qForRot, qForHipsRot, fromiktarget);
-
-		if ((fromiktarget != true) && (postflag != true)) {
-			IKTargetVec(limitdegflag, erptr, curframe, postflag);
-		}
-	}
-	else {
-		if (g_pseudolocalflag == 1) {
-			bool calcaplyflag = true;
-			CalcQForRot(limitdegflag, calcaplyflag, 
-				m_curmotinfo->motid, curframe, applyframe, rotq0,
-				rotbone, parentbone,
-				&qForRot, &qForHipsRot);
-		}
-		else {
-			qForRot = rotq0;
-			qForHipsRot = rotq0;
-		}
-
-		double changerate;
-		if (fromiktarget == false) {
-			changerate = (double)(*(g_motionbrush_value + (int)curframe));
-		}
-		else {
-			changerate = 1.0;
-		}
-
-
-		bool infooutflag;
-		if (curframe == applyframe) {
-			infooutflag = true;
-		}
-		else {
-			infooutflag = false;
-		}
-
-		double firstframe = 0.0;
-
-		if (keyno == 0) {
-			firstframe = curframe;
-		}
-		if (g_absikflag == 0) {
-			if (g_slerpoffflag == 0) {
-				CQuaternion endq;
-				CQuaternion curqForRot;
-				CQuaternion curqForHipsRot;
-				endq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-				qForRot.Slerp2(endq, 1.0 - changerate, &curqForRot);
-				qForHipsRot.Slerp2(endq, 1.0 - changerate, &curqForHipsRot);
-
-				ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
-					infooutflag, 0, m_curmotinfo->motid, curframe, curqForRot, curqForHipsRot, fromiktarget);
-			}
-			else {
-				ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
-					infooutflag, 0, m_curmotinfo->motid, curframe, qForRot, qForHipsRot, fromiktarget);
-			}
-		}
-		else {
-			if (keyno == 0) {
-				ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
-					infooutflag, 0, m_curmotinfo->motid, curframe, qForRot, qForHipsRot, fromiktarget);
-			}
-			else {
-				rotbone->SetAbsMatReq(limitdegflag, 0, m_curmotinfo->motid, curframe, firstframe);
-			}
-		}
-
-
-		if ((fromiktarget != true) && (postflag != true)) {
-			IKTargetVec(limitdegflag, erptr, curframe, postflag);
-		}
-	}
-	
-	return ismovable;
-}
-
 void CModel::ClearIKRotRec()
 {
 	ClearIKRotRecReq(GetTopBone(false));
@@ -11168,6 +11185,7 @@ void CModel::ClearIKRotRecUVReq(CBone* srcbone)
 int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 	int srcboneno, ChaVector3 targetpos, int maxlevel)
 {
+	ChaCalcFunc chacalcfunc;
 
 	SetIKTargetVec();
 
@@ -11292,10 +11310,10 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 						bool keynum1flag = false;
 						bool postflag = false;
 						bool fromiktarget = false;
-						ismovable2 = IKRotateOneFrame(limitdegflag, erptr,
+						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 							keyno, 
 							parentbone, parentbone,
-							curframe, startframe, applyframe,
+							m_curmotinfo->motid, curframe, startframe, applyframe,
 							rotq0, keynum1flag, postflag, fromiktarget);
 
 						keyno++;
@@ -11304,10 +11322,10 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 						bool keynum1flag = true;
 						bool postflag = false;
 						bool fromiktarget = false;
-						ismovable2 = IKRotateOneFrame(limitdegflag, erptr,
+						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 							0, 
 							parentbone, parentbone,
-							m_curmotinfo->curframe, startframe, applyframe,
+							m_curmotinfo->motid, m_curmotinfo->curframe, startframe, applyframe,
 							rotq0, keynum1flag, postflag, fromiktarget);
 					}
 
@@ -11320,6 +11338,8 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 
 					//parentboneのrotqを保存
 					IKROTREC currotrec;
+					currotrec.applyframemat = parentbone->GetWorldMat(limitdegflag, m_curmotinfo->motid, applyframe, 0);
+					currotrec.applyframeeul = parentbone->GetLocalEul(limitdegflag, m_curmotinfo->motid, applyframe, 0);
 					currotrec.rotq = rotq0;
 					currotrec.targetpos = targetpos;
 					currotrec.lessthanthflag = false;
@@ -11341,6 +11361,8 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 					rotq0.SetAxisAndRot(rotaxis2, rotrad2);
 
 					IKROTREC currotrec;
+					currotrec.applyframemat = parentbone->GetWorldMat(limitdegflag, m_curmotinfo->motid, applyframe, 0);
+					currotrec.applyframeeul = parentbone->GetLocalEul(limitdegflag, m_curmotinfo->motid, applyframe, 0);
 					currotrec.rotq = rotq0;
 					currotrec.targetpos = targetpos;
 					currotrec.lessthanthflag = true;//!!!!!!!!!!!
@@ -11365,7 +11387,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 
 		//絶対モードの場合
 		if ((calccnt == (calcnum - 1)) && g_absikflag && lastpar) {
-			AdjustBoneTra(limitdegflag, erptr, lastpar);
+			chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastpar, m_curmotinfo->motid);
 		}
 	}
 
@@ -11383,6 +11405,8 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 int CModel::IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
 	int srcboneno, int maxlevel)
 {
+	ChaCalcFunc chacalcfunc;
+
 
 	CBone* firstbone = m_bonelist[srcboneno];
 	if (!firstbone) {
@@ -11409,6 +11433,9 @@ int CModel::IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
 	erptr->GetRange(&keynum, &startframe0, &endframe0, &applyframe);
 	startframe = startframe0;
 	endframe = endframe0;
+
+
+	SetPostIKFrame(RoundingTime(startframe), RoundingTime(endframe));//2023/10/17
 
 
 	CBone* curbone = firstbone;
@@ -11478,25 +11505,59 @@ int CModel::IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
 						if (lessthanthflag == false) {
 							if (keynum >= 2) {
 								int keyno = 0;
-								double curframe;
-								for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
-									if (curframe != applyframe) {
-										bool keynum1flag = false;
-										bool postflag = true;
-										bool fromiktarget = false;
-										IKRotateOneFrame(limitdegflag, erptr,
-											keyno, 
+								bool keynum1flag = false;
+								bool postflag = true;
+								bool fromiktarget = false;
+
+								if (m_PostIKThreads) {
+									//SetUnderPostIK(true);
+									int updatecount;
+									for (updatecount = 0; updatecount < POSTIK_THREADSNUM; updatecount++) {
+										CThreadingPostIK* curupdate = m_PostIKThreads + updatecount;
+										curupdate->IKRotateOneFrame(this, limitdegflag, erptr,
+											keyno,
 											parentbone, parentbone,
-											curframe, startframe, applyframe,
+											m_curmotinfo->motid, startframe, applyframe,
 											rotq0, keynum1flag, postflag, fromiktarget);
 									}
+									WaitPostIKFinished();
+									//SetUnderPostIK(false);
 								}
-								keyno++;
+
+
+								//double curframe;
+								//for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
+								//	if (curframe != applyframe) {
+								//		bool keynum1flag = false;
+								//		bool postflag = true;
+								//		bool fromiktarget = false;
+								//		chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
+								//			keyno, 
+								//			parentbone, parentbone,
+								//			m_curmotinfo->motid, curframe, startframe, applyframe,
+								//			rotq0, keynum1flag, postflag, fromiktarget);
+								//	}
+								//	//else {//2023/10/16_1 Q2EulXYZusingQ()にて　IK時にbefeul.currentframeeulを使用することにしたので不要に
+								//	//	//2023/10/12
+								//	//	//applyframeにも　オイラー角の計算は必要
+								//	//	//ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
+								//	//	//neweul = parentbone->CalcLocalEulXYZ(limitdegflag, -1, m_curmotinfo->motid, curframe, BEFEUL_BEFFRAME);
+								//	//	//parentbone->SetLocalEul(limitdegflag, m_curmotinfo->motid, curframe, neweul, 0);
+								//	//	
+								//	//	//2023/10/16
+								//	//	// applyframeで急激に値が変わるとカーブが想定と違うことがあるので　計算済を徐々にトレースしながら
+								//	//	parentbone->SetWorldMat(limitdegflag, m_curmotinfo->motid, curframe, currotrec.applyframemat, 0);
+								//	//	ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
+								//	//	neweul = parentbone->CalcLocalEulXYZ(limitdegflag, -1, m_curmotinfo->motid, curframe, BEFEUL_BEFFRAME);
+								//	//	parentbone->SetLocalEul(limitdegflag, m_curmotinfo->motid, curframe, neweul, 0);
+								//	//}
+								//}
+								//keyno++;
 							}
 						}
 						//else {
 						//	bool keynum1flag = true;
-						//	IKRotateOneFrame(limitdegflag, erptr,
+						//	chacalcfunc.IKRotateOneFrame(limitdegflag, erptr,
 						//		0, parentbone,
 						//		m_curmotinfo->curframe, startframe, applyframe,
 						//		rotq0, keynum1flag);
@@ -11531,15 +11592,16 @@ int CModel::IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
 		for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
 			if (curframe != applyframe) {
 				bool postflag = true;
-				IKTargetVec(limitdegflag, erptr, curframe, postflag);
+				chacalcfunc.IKTargetVec(this, limitdegflag, erptr, m_curmotinfo->motid, curframe, postflag);
 			}
 		}
 	}
 
 	//絶対モードの場合
 	if ((calccnt == (calcnum - 1)) && g_absikflag && lastpar) {
-		AdjustBoneTra(limitdegflag, erptr, lastpar);
+		chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastpar, m_curmotinfo->motid);
 	}
+
 
 	//g_underIKRot = false;//2023/01/14 parent limited or not
 	if (editboneforret)
@@ -11555,6 +11617,7 @@ int CModel::IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
 int CModel::IKRotate(bool limitdegflag, CEditRange* erptr, 
 	int srcboneno, ChaVector3 targetpos, int maxlevel, double directframe)//default : directframe = -1.0
 {
+	ChaCalcFunc chacalcfunc;
 
 	CBone* firstbone = m_bonelist[ srcboneno ];
 	if( !firstbone ){
@@ -11686,10 +11749,10 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 							bool keynum1flag = false;
 							bool postflag = false;
 							bool fromiktarget = false;
-							IKRotateOneFrame(limitdegflag, erptr,
+							chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 								keyno, 
 								parentbone, parentbone, 
-								curframe, startframe, applyframe,
+								m_curmotinfo->motid, curframe, startframe, applyframe,
 								rotq0, keynum1flag, postflag, fromiktarget);
 
 							keyno++;
@@ -11699,10 +11762,10 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 						bool keynum1flag = true;
 						bool postflag = false;
 						bool fromiktarget = false;
-						IKRotateOneFrame(limitdegflag, erptr,
+						chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 							0, 
 							parentbone, parentbone,
-							m_curmotinfo->curframe, startframe, applyframe,
+							m_curmotinfo->motid, m_curmotinfo->curframe, startframe, applyframe,
 							rotq0, keynum1flag, postflag, fromiktarget);
 					}
 
@@ -11739,7 +11802,7 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 
 		//絶対モードの場合
 		if( (calccnt == (calcnum - 1)) && g_absikflag && lastpar ){
-			AdjustBoneTra(limitdegflag, erptr, lastpar);
+			chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastpar, m_curmotinfo->motid);
 		}
 	}
 
@@ -11761,209 +11824,6 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 
 }
 
-
-//IKRotate()と違うところ　：　カメラ軸回転とカメラ軸に垂直な軸回転と　２回回転するところ
-int CModel::IKRotateForIKTarget(bool limitdegflag, CEditRange* erptr,
-	int srcboneno, ChaVector3 targetpos, int maxlevel, double directframe, bool postflag)
-{
-
-	double curframe = directframe;
-
-	CBone* firstbone = m_bonelist[srcboneno];
-	if (!firstbone) {
-		_ASSERT(0);
-		//g_underIKRot = false;//2023/01/14 parent limited or not
-		return -1;
-	}
-	if (firstbone->IsNotSkeleton()) {
-		return -1;
-	}
-
-
-	bool ishipsjoint = false;
-	if (firstbone->GetParent(false)) {
-		ishipsjoint = firstbone->GetParent(false)->IsHipsBone();
-	}
-	else {
-		ishipsjoint = false;
-	}
-
-	int keynum;
-	double startframe, endframe, applyframe;
-	erptr->GetRange(&keynum, &startframe, &endframe, &applyframe);
-
-
-	//if (postflag && (directframe == applyframe)) {
-	//	return srcboneno;
-	//}
-
-
-	CBone* curbone = firstbone;
-	CBone* lastpar = curbone;
-	SetBefEditMat(limitdegflag, erptr, curbone, maxlevel);
-	CBone* editboneforret = 0;
-	if (firstbone->GetParent(false)) {
-		editboneforret = firstbone->GetParent(false);
-	}
-	else {
-		editboneforret = firstbone;
-	}
-
-
-	//For IKTraget
-	//カメラ軸回転とカメラ軸に垂直な軸回転と　２回実行する
-	int calcnum = 3;
-
-	int calccnt;
-	for (calccnt = 1; calccnt <= calcnum; calccnt++) {
-		curbone = firstbone;
-		lastpar = curbone;
-
-		int levelcnt = 0;
-		float currate;
-		//currate = g_ikrate;
-		currate = 0.750f;
-
-		while (curbone && lastpar && lastpar->GetParent(false) && ((maxlevel == 0) || (levelcnt < maxlevel)))
-		{
-
-			//IKTarget()でフラグがリセットされるので　ループ先頭で　セットし直し
-			//g_underIKRot = true;
-
-			//CBone* parentbone = curbone->GetParent();
-			CBone* parentbone = lastpar->GetParent(false);
-			if (parentbone && parentbone->IsSkeleton() && (curbone->GetJointFPos() != parentbone->GetJointFPos())) {
-				//UpdateMatrix(limitdegflag, &m_matWorld, &m_matVP);//curmp更新
-
-				CRigidElem* curre = GetRigidElem(lastpar->GetBoneNo());
-				if (curre && (curre->GetForbidRotFlag() != 0)) {
-
-					//_ASSERT(0);
-
-					//回転禁止の場合処理をスキップ
-					if (parentbone) {
-						lastpar = parentbone;
-					}
-					levelcnt++;
-					currate = (float)pow((double)g_ikrate, (double)g_ikfirst * (double)levelcnt);
-					continue;
-				}
-
-				ChaVector3 rotaxis2;
-				float rotrad2;
-				//if ((calccnt % 2) != 0) {
-				//	CalcAxisAndRotForIKRotate(limitdegflag,
-				//		parentbone, firstbone,
-				//		curframe, targetpos,
-				//		&rotaxis2, &rotrad2);
-				//}
-				//else {
-				//	CalcAxisAndRotForIKRotateVert(limitdegflag,
-				//		parentbone, firstbone,
-				//		curframe, targetpos,
-				//		&rotaxis2, &rotrad2);
-				//}
-
-
-				ChaMatrix parentnodemat;
-				parentnodemat = parentbone->GetNodeMat();
-				ChaMatrix parentnoderot;
-				parentnoderot = ChaMatrixRot(parentnodemat);
-				ChaVector3 ikaxis;
-				if ((calccnt % 3) == 0) {
-					ikaxis = parentnoderot.GetRow(0);
-				}
-				else if ((calccnt % 2) == 0) {
-					ikaxis = parentnoderot.GetRow(1);
-				}
-				else {
-					ikaxis = parentnoderot.GetRow(2);
-				}
-				bool nearflag = CalcAxisAndRotForIKRotateAxis(limitdegflag,
-					parentbone, firstbone,
-					curframe, targetpos,
-					ikaxis,
-					&rotaxis2, &rotrad2);
-
-				//rotrad2 *= currate;
-
-				double firstframe = 0.0;
-				if ((nearflag == false) && (fabs(rotrad2) > 1.0e-4)) {
-					CQuaternion rotq0;
-					rotq0.SetAxisAndRot(rotaxis2, rotrad2);
-
-					//parentbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
-					// 
-					//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-					parentbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe);
-
-
-					//IKRotateは壁すりIKで行うので　回転可能かどうかのチェックはここではしない
-
-
-					int keyno = 0;
-					bool keynum1flag = false;
-					bool fromiktarget = true;
-					IKRotateOneFrame(limitdegflag, erptr,
-						keyno, 
-						parentbone, parentbone,
-						curframe, startframe, applyframe,
-						rotq0, keynum1flag, postflag, fromiktarget);
-					keyno++;
-
-					if (g_applyendflag == 1) {
-						//curmotinfo->curframeから最後までcurmotinfo->curframeの姿勢を適用
-						int tolast;
-						for (tolast = (int)m_curmotinfo->curframe + 1; tolast < m_curmotinfo->frameleng; tolast++) {
-							(m_bonelist[0])->PasteRotReq(limitdegflag, m_curmotinfo->motid, m_curmotinfo->curframe, tolast);
-						}
-					}
-				}
-
-			}
-
-			if (parentbone) {
-				lastpar = parentbone;
-
-				//コンストレイント用回転も　IKStopで止める必要有
-				//体の中心まで回転を伝えた方が　コンストレイントしやすいが
-				//shoulderのIKStopで回転を止めない場合
-				//右手と左手のコンストレイント順番により　どちらかにしか拘束できなくなる
-				//check ikstopflag
-				if (parentbone->GetIKStopFlag()) {
-					break;
-				}
-			}
-
-
-			levelcnt++;
-
-			//currate = (float)pow((double)g_ikrate, (double)g_ikfirst * (double)levelcnt);
-		}
-
-		//絶対モードの場合
-		if ((calccnt == calcnum) && g_absikflag && lastpar) {
-			AdjustBoneTra(limitdegflag, erptr, lastpar);
-		}
-	}
-
-	//if( lastpar ){
-	//	return lastpar->GetBoneNo();
-	//}else{
-	//	return srcboneno;
-	//}
-
-
-	//g_underIKRot = false;//2023/01/14 parent limited or not
-	if (editboneforret)
-	{
-		return editboneforret->GetBoneNo();
-	}
-	else {
-		return srcboneno;
-	}
-
-}
 
 //int CModel::PhysicsRot(CEditRange* erptr, int srcboneno, ChaVector3 targetpos, int maxlevel)
 //{
@@ -13145,58 +13005,10 @@ int CModel::IKRotateForIKTarget(bool limitdegflag, CEditRange* erptr,
 //}
 
 
-int CModel::AdjustBoneTra(bool limitdegflag, CEditRange* erptr, CBone* lastpar)
-{
-	int keynum = erptr->GetKeyNum();
-	double startframe = erptr->GetStartFrame();
-	double endframe;
-	if (g_applyendflag == 1){
-		endframe = m_curmotinfo->frameleng - 1.0;
-	}
-	else{
-		endframe = erptr->GetEndFrame();
-	}
-
-	if( lastpar && (keynum >= 2) ){
-		int keyno = 0;
-		double curframe;
-		for( curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0 ){
-			if( keyno >= 1 ){
-				CMotionPoint* pcurmp = 0;
-				int curmotid = m_curmotinfo->motid;
-				pcurmp = lastpar->GetMotionPoint(curmotid, curframe);
-				if(pcurmp){
-					ChaVector3 orgpos;
-					ChaVector3 tmplastfpos = lastpar->GetJointFPos();
-					ChaMatrix tmpbefeditmat = pcurmp->GetBefEditMat();
-					ChaVector3TransformCoord( &orgpos, &tmplastfpos, &tmpbefeditmat );
-
-					ChaVector3 newpos;
-					ChaMatrix tmpwm = lastpar->GetWorldMat(limitdegflag, curmotid, curframe, pcurmp);
-					ChaVector3TransformCoord( &newpos, &tmplastfpos, &tmpwm );
-
-					ChaVector3 diffpos;
-					diffpos = orgpos - newpos;
-
-					CEditRange tmper;
-					KeyInfo tmpki;
-					tmpki.time = curframe;
-					list<KeyInfo> tmplist;
-					tmplist.push_back( tmpki );
-					tmper.SetRange( tmplist, curframe );
-					//FKBoneTra( 0, &tmper, lastpar->GetBoneNo(), diffpos );
-					FKBoneTra(limitdegflag, 1, &tmper, lastpar->GetBoneNo(), diffpos);//2022/11/07 FKBoneTra内でframeno loopしないように　onlyoneflag = 1
-				}
-			}
-			keyno++;
-		}
-	}
-
-	return 0;
-}
 
 int CModel::RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig, int buttonflag)
 {
+	ChaCalcFunc chacalcfunc;
 
 	bool fromiktarget = false;
 
@@ -13399,7 +13211,7 @@ int CModel::RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, int s
 
 									if (aplybone && (g_pseudolocalflag == 1)) {
 										bool calcaplyflag = true;
-										CalcQForRot(limitdegflag, calcaplyflag,
+										chacalcfunc.CalcQForRot(limitdegflag, calcaplyflag,
 											m_curmotinfo->motid, curframe, applyframe, localq,
 											curbone, aplybone,
 											&qForRot, &qForHipsRot);
@@ -13510,6 +13322,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 	int uvno, float srcdelta, 
 	CUSTOMRIG ikcustomrig, int buttonflag)
 {
+	ChaCalcFunc chacalcfunc;
 
 	SetIKTargetVec();
 
@@ -13666,10 +13479,10 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 							bool keynum1flag = false;
 							bool postflag = false;
 							bool fromiktarget = false;
-							ismovable2 = IKRotateOneFrame(limitdegflag, erptr,
+							ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 								keyno, 
 								curbone, aplybone,
-								curframe, startframe, applyframe,
+								m_curmotinfo->motid, curframe, startframe, applyframe,
 								localq, keynum1flag, postflag, fromiktarget);
 
 						}
@@ -13677,10 +13490,10 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 							bool keynum1flag = true;
 							bool postflag = false;
 							bool fromiktarget = false;
-							ismovable2 = IKRotateOneFrame(limitdegflag, erptr,
+							ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 								0, 
 								curbone, aplybone,
-								m_curmotinfo->curframe, startframe, applyframe,
+								m_curmotinfo->motid, m_curmotinfo->curframe, startframe, applyframe,
 								localq, keynum1flag, postflag, fromiktarget);
 						}
 
@@ -13760,6 +13573,7 @@ int CModel::RigControlPostRig(bool limitdegflag, int depthcnt,
 	int uvno,
 	CUSTOMRIG ikcustomrig, int buttonflag)
 {
+	ChaCalcFunc chacalcfunc;
 
 	if (depthcnt >= 10) {
 		_ASSERT(0);
@@ -13782,6 +13596,10 @@ int CModel::RigControlPostRig(bool limitdegflag, int depthcnt,
 	int keynum;
 	double startframe, endframe, applyframe;
 	erptr->GetRange(&keynum, &startframe, &endframe, &applyframe);
+
+
+	SetPostIKFrame(RoundingTime(startframe), RoundingTime(endframe));//2023/10/20
+
 
 	double roundingstartframe, roundingendframe, roundingapplyframe;
 	roundingstartframe = RoundingTime(startframe);
@@ -13885,19 +13703,23 @@ int CModel::RigControlPostRig(bool limitdegflag, int depthcnt,
 						if (lessthanthflag == false) {
 							if (keynum >= 2) {
 								int keyno = 0;
-								double curframe;
-								for (curframe = roundingstartframe; curframe <= roundingendframe; curframe += 1.0) {
-									if (curframe != roundingapplyframe) {
-										bool keynum1flag = false;
-										bool postflag = true;
-										bool fromiktarget = false;
-										IKRotateOneFrame(limitdegflag, erptr,
-											keyno, 
+								bool keynum1flag = false;
+								bool postflag = true;
+								bool fromiktarget = false;
+
+								if (m_PostIKThreads) {
+									//SetUnderPostIK(true);
+									int updatecount;
+									for (updatecount = 0; updatecount < POSTIK_THREADSNUM; updatecount++) {
+										CThreadingPostIK* curupdate = m_PostIKThreads + updatecount;
+										curupdate->IKRotateOneFrame(this, limitdegflag, erptr,
+											keyno,
 											curbone, aplybone,
-											curframe, roundingstartframe, roundingapplyframe,
+											m_curmotinfo->motid, startframe, applyframe,
 											localq, keynum1flag, postflag, fromiktarget);
 									}
-									keyno++;
+									WaitPostIKFinished();
+									//SetUnderPostIK(false);
 								}
 							}
 						}
@@ -13926,7 +13748,7 @@ int CModel::RigControlPostRig(bool limitdegflag, int depthcnt,
 		for (curframe = roundingstartframe; curframe <= roundingendframe; curframe += 1.0) {
 			if (curframe != roundingapplyframe) {
 				bool postflag = true;
-				IKTargetVec(limitdegflag, erptr, curframe, postflag);
+				chacalcfunc.IKTargetVec(this, limitdegflag, erptr, m_curmotinfo->motid, curframe, postflag);
 			}
 		}
 	}
@@ -14369,81 +14191,11 @@ void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone,
 //
 //}
 
-int CModel::CalcQForRot(bool limitdegflag, bool calcaplyflag, 
-	int srcmotid, double srcframe, double srcapplyframe, CQuaternion srcaddrot,
-	CBone* srcrotbone, CBone* srcaplybone, 
-	CQuaternion* dstqForRot, CQuaternion* dstqForHipsRot)
-{
-	if ((!srcrotbone) || (!srcaplybone) || (!dstqForRot) || (!dstqForHipsRot)) {
-		_ASSERT(0);
-		return 1;
-	}
-
-	if (srcrotbone->IsNotSkeleton()) {
-		dstqForRot->SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-		dstqForHipsRot->SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-		return 0;
-	}
-
-	double roundingframe = RoundingTime(srcframe);
-	double roundingapplyframe = RoundingTime(srcapplyframe);
-
-	//ChaMatrix curparrotmat = curparmp->GetWorldMat();
-	ChaMatrix curparrotmat = srcrotbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
-	curparrotmat.SetTranslationZero();
-	//ChaMatrix invcurparrotmat = curparmp->GetInvWorldMat();
-	ChaMatrix invcurparrotmat = ChaMatrixInv(curparrotmat);
-	invcurparrotmat.SetTranslationZero();
-
-	//ChaMatrix aplyparrotmat = aplyparmp->GetWorldMat();
-	ChaMatrix aplyparrotmat = srcaplybone->GetWorldMat(limitdegflag, srcmotid, roundingapplyframe, 0);
-	aplyparrotmat.SetTranslationZero();
-	//ChaMatrix invaplyparrotmat = aplyparmp->GetInvWorldMat();
-	ChaMatrix invaplyparrotmat = ChaMatrixInv(aplyparrotmat);
-	invaplyparrotmat.SetTranslationZero();
-
-	CQuaternion invcurparrotq, aplyparrotq, invaplyparrotq, curparrotq;
-	invcurparrotq.RotationMatrix(invcurparrotmat);
-	aplyparrotq.RotationMatrix(aplyparrotmat);
-	invaplyparrotq.RotationMatrix(invaplyparrotmat);
-	curparrotq.RotationMatrix(curparrotmat);
-
-
-	//意味：RotBoneQReq()にrotqを渡し　currentworldmatの後ろに　invpivot * rotq * pivotを掛ける
-	//つまり　A = currentworldmat, B = localq.MakeRotMatX()とすると A * (invA * B * A)
-	ChaMatrix transmat2ForRot;
-	ChaMatrix transmat2ForHipsRot;
-
-	//hisp移動はうまくいくが　回転がおかしい 　hips以外は良い
-	//transmat2 = invcurparrotmat * aplyparrotmat * localq.MakeRotMatX() * invaplyparrotmat * curparrotmat;//bef
-
-	//hips回転はうまくいくが　移動がおかしい
-	//transmat2 = localq.MakeRotMatX();//for hips edit
-
-	//####################################################################
-	//ToDo : RotQBoneReq2()を作って　引数として上記２つの回転情報を渡す
-	//####################################################################
-
-	if (calcaplyflag == true) {
-		transmat2ForRot = invcurparrotmat * aplyparrotmat * srcaddrot.MakeRotMatX() * invaplyparrotmat * curparrotmat;//bef
-	}
-	else {
-		transmat2ForRot = invcurparrotmat * srcaddrot.MakeRotMatX() * curparrotmat;//bef
-	}
-	
-	transmat2ForHipsRot = srcaddrot.MakeRotMatX();//for hips edit
-
-
-	dstqForRot->RotationMatrix(transmat2ForRot);
-	dstqForHipsRot->RotationMatrix(transmat2ForHipsRot);
-
-
-	return 0;
-}
 
 int CModel::IsMovableRot(bool limitdegflag, int srcmotid, double srcframe, double srcapplyframe, CQuaternion srcaddrot,
 	CBone* srcrotbone, CBone* srcaplybone)
 {
+	ChaCalcFunc chacalcfunc;
 
 	bool fromiktarget = false;
 
@@ -14470,7 +14222,7 @@ int CModel::IsMovableRot(bool limitdegflag, int srcmotid, double srcframe, doubl
 	CQuaternion qForRot;
 	CQuaternion qForHipsRot;
 	bool calcaplyflag = true;
-	CalcQForRot(limitdegflag, calcaplyflag,
+	chacalcfunc.CalcQForRot(limitdegflag, calcaplyflag,
 		m_curmotinfo->motid, roundingframe, roundingapplyframe, srcaddrot,
 		srcrotbone, srcaplybone,
 		&qForRot, &qForHipsRot);
@@ -14510,6 +14262,8 @@ int CModel::IKRotateAxisDeltaUnderIK(
 	//回転平面がブレない
 	//スードローカル動作確認 : 体全体を回転しながら　足をRectブラシで開くと　体が反対を向いても足が開く
 	//####################################################################################################
+
+	ChaCalcFunc chacalcfunc;
 
 	if (!m_curmotinfo) {
 		return 0;
@@ -14702,10 +14456,10 @@ int CModel::IKRotateAxisDeltaUnderIK(
 					bool keynum1flag = false;
 					bool postflag = false;
 					bool fromiktarget = false;
-					ismovable2 = IKRotateOneFrame(limitdegflag, erptr,
+					ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 						keyno, 
 						aplybone, aplybone,
-						curframe, startframe, applyframe,
+						m_curmotinfo->motid, curframe, startframe, applyframe,
 						localq, keynum1flag, postflag, fromiktarget);
 
 					keyno++;
@@ -14719,10 +14473,10 @@ int CModel::IKRotateAxisDeltaUnderIK(
 					bool keynum1flag = true;
 					bool postflag = false;
 					bool fromiktarget = false;
-					ismovable2 = IKRotateOneFrame(limitdegflag, erptr,
+					ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 						0, 
 						aplybone, aplybone,
-						m_curmotinfo->curframe, startframe, applyframe,
+						m_curmotinfo->motid, m_curmotinfo->curframe, startframe, applyframe,
 						localq, keynum1flag, false, fromiktarget);
 				}
 
@@ -14753,6 +14507,8 @@ int CModel::IKRotateAxisDeltaUnderIK(
 
 				////parentboneのrotqを保存
 				IKROTREC currotrec;
+				currotrec.applyframemat = aplybone->GetWorldMat(limitdegflag, m_curmotinfo->motid, applyframe, 0);
+				currotrec.applyframeeul = aplybone->GetLocalEul(limitdegflag, m_curmotinfo->motid, applyframe, 0);
 				currotrec.rotq = localq;
 				currotrec.targetpos = ChaVector3(0.0f, 0.0f, 0.0f);
 				currotrec.lessthanthflag = false;
@@ -14762,6 +14518,8 @@ int CModel::IKRotateAxisDeltaUnderIK(
 				//rotqの回転角度が1e-4より小さい場合
 				//ウェイトが小さいフレームにおいても　IKTargetが走るように記録する必要がある
 				IKROTREC currotrec;
+				currotrec.applyframemat = aplybone->GetWorldMat(limitdegflag, m_curmotinfo->motid, applyframe, 0);
+				currotrec.applyframeeul = aplybone->GetLocalEul(limitdegflag, m_curmotinfo->motid, applyframe, 0);
 				currotrec.rotq = localq;
 				currotrec.targetpos = ChaVector3(0.0f, 0.0f, 0.0f);
 				currotrec.lessthanthflag = true;//!!!!!!!!!!!
@@ -14783,7 +14541,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 
 		//絶対モードの場合
 		if ((calccnt == (calcnum - 1)) && g_absikflag && lastbone) {
-			AdjustBoneTra(limitdegflag, erptr, lastbone);
+			chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastbone, m_curmotinfo->motid);
 		}
 	}
 
@@ -14802,6 +14560,8 @@ int CModel::IKRotateAxisDeltaPostIK(
 	bool limitdegflag, CEditRange* erptr,
 	int axiskind, int srcboneno, int maxlevel, int ikcnt)
 {
+	ChaCalcFunc chacalcfunc;
+
 	if (!m_curmotinfo) {
 		return 0;
 	}
@@ -14826,6 +14586,10 @@ int CModel::IKRotateAxisDeltaPostIK(
 		return 0;
 	}
 
+
+	SetPostIKFrame(RoundingTime(startframe), RoundingTime(endframe));//2023/10/17
+
+
 	bool ishipsjoint = false;
 	if (curbone && curbone->GetParent(false)) {
 		ishipsjoint = curbone->GetParent(false)->IsHipsBone();
@@ -14837,6 +14601,7 @@ int CModel::IKRotateAxisDeltaPostIK(
 	CBone* firstbone = curbone;
 	CBone* parentbone = 0;
 	CBone* lastbone = 0;
+	CBone* lastaplybone = 0;
 	//CBone* topbone = GetTopBone();
 	CBone* editboneforret = 0;
 	if (firstbone->GetParent(false)) {
@@ -14917,20 +14682,55 @@ int CModel::IKRotateAxisDeltaPostIK(
 					if (lessthanthflag == false) {
 						if (keynum >= 2) {
 							int keyno = 0;
-							double curframe;
-							for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
-								if (curframe != applyframe) {
-									bool keynum1flag = false;
-									bool postflag = true;
-									bool fromiktarget = false;
-									IKRotateOneFrame(limitdegflag, erptr,
-										keyno, 
+							bool keynum1flag = false;
+							bool postflag = true;
+							bool fromiktarget = false;
+
+							if (m_PostIKThreads) {
+								//SetUnderPostIK(true);
+								int updatecount;
+								for (updatecount = 0; updatecount < POSTIK_THREADSNUM; updatecount++) {
+									CThreadingPostIK* curupdate = m_PostIKThreads + updatecount;
+									curupdate->IKRotateOneFrame(this, limitdegflag, erptr,
+										keyno,
 										aplybone, aplybone,
-										curframe, startframe, applyframe,
+										m_curmotinfo->motid, startframe, applyframe,
 										localq, keynum1flag, postflag, fromiktarget);
 								}
-								keyno++;
+								WaitPostIKFinished();
+								//SetUnderPostIK(false);
 							}
+
+							//int keyno = 0;
+							//double curframe;
+							//for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
+							//	if (curframe != applyframe) {
+							//		bool keynum1flag = false;
+							//		bool postflag = true;
+							//		bool fromiktarget = false;
+							//		chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
+							//			keyno, 
+							//			aplybone, aplybone,
+							//			m_curmotinfo->motid, curframe, startframe, applyframe,
+							//			localq, keynum1flag, postflag, fromiktarget);
+							//	}
+							//	//else {//2023/10/16_1 Q2EulXYZusingQ()にて　IK時にbefeul.currentframeeulを使用することにしたので不要に
+							//	//	//2023/10/12
+							//	//	//applyframeにも　オイラー角の計算は必要
+							//	//	//ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
+							//	//	//neweul = aplybone->CalcLocalEulXYZ(limitdegflag, -1, m_curmotinfo->motid, curframe, BEFEUL_BEFFRAME);
+							//	//	//aplybone->SetLocalEul(limitdegflag, m_curmotinfo->motid, curframe, neweul, 0);
+
+							//	//	//2023/10/16
+							//	//	// applyframeで急激に値が変わるとカーブが想定と違うことがあるので　計算済を徐々にトレースしながら
+							//	//	aplybone->SetWorldMat(limitdegflag, m_curmotinfo->motid, curframe, currotrec.applyframemat, 0);
+							//	//	ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
+							//	//	neweul = aplybone->CalcLocalEulXYZ(limitdegflag, -1, m_curmotinfo->motid, curframe, BEFEUL_BEFFRAME);
+							//	//	aplybone->SetLocalEul(limitdegflag, m_curmotinfo->motid, curframe, neweul, 0);
+
+							//	//}
+							//	keyno++;
+							//}
 						}
 					}
 					//else {
@@ -14938,7 +14738,7 @@ int CModel::IKRotateAxisDeltaPostIK(
 					//	//rotq.RotationMatrix(transmat);
 
 					//	bool keynum1flag = true;
-					//	IKRotateOneFrame(limitdegflag, erptr,
+					//	chacalcfunc.IKRotateOneFrame(limitdegflag, erptr,
 					//		0, aplybone,
 					//		m_curmotinfo->curframe, startframe, applyframe,
 					//		localq, keynum1flag);
@@ -14947,6 +14747,8 @@ int CModel::IKRotateAxisDeltaPostIK(
 				}
 			}
 			
+			lastaplybone = aplybone;
+
 			if (aplybone) {
 				//check ikstopflag
 				if (aplybone->GetIKStopFlag()) {
@@ -14976,7 +14778,7 @@ int CModel::IKRotateAxisDeltaPostIK(
 		for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
 			if (curframe != applyframe) {
 				bool postflag = true;
-				IKTargetVec(limitdegflag, erptr, curframe, postflag);
+				chacalcfunc.IKTargetVec(this, limitdegflag, erptr, m_curmotinfo->motid, curframe, postflag);
 			}
 		}
 
@@ -14985,10 +14787,8 @@ int CModel::IKRotateAxisDeltaPostIK(
 
 	//絶対モードの場合
 	if ((calccnt == (calcnum - 1)) && g_absikflag && lastbone) {
-		AdjustBoneTra(limitdegflag, erptr, lastbone);
+		chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastbone, m_curmotinfo->motid);
 	}
-	
-
 
 	//g_underIKRot = false;//2023/01/14 parent limited or not
 	if (editboneforret) {
@@ -15011,6 +14811,8 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind
 	//回転平面がブレない
 	//スードローカル動作確認 : 体全体を回転しながら　足をRectブラシで開くと　体が反対を向いても足が開く
 	//####################################################################################################
+
+	ChaCalcFunc chacalcfunc;
 
 	if (!m_curmotinfo){
 		return 0;
@@ -15197,10 +14999,10 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind
 					bool keynum1flag = false;
 					bool postflag = false;
 					bool fromiktarget = false;
-					IKRotateOneFrame(limitdegflag, erptr,
+					chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 						keyno, 
 						aplybone, aplybone,
-						curframe, startframe, applyframe,
+						m_curmotinfo->motid, curframe, startframe, applyframe,
 						localq, keynum1flag, postflag, fromiktarget);
 
 					keyno++;
@@ -15214,10 +15016,10 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind
 				bool keynum1flag = true;
 				bool postflag = false;
 				bool fromiktarget = false;
-				IKRotateOneFrame(limitdegflag, erptr,
+				chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 					0, 
 					aplybone, aplybone,
-					m_curmotinfo->curframe, startframe, applyframe,
+					m_curmotinfo->motid, m_curmotinfo->curframe, startframe, applyframe,
 					localq, keynum1flag, postflag, fromiktarget);
 			}
 
@@ -15241,7 +15043,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind
 
 		//絶対モードの場合
 		if ((calccnt == (calcnum - 1)) && g_absikflag && lastbone){
-			AdjustBoneTra(limitdegflag, erptr, lastbone);
+			chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastbone, m_curmotinfo->motid);
 		}
 	}
 
@@ -15403,44 +15205,10 @@ int CModel::FKRotate(bool limitdegflag, bool onretarget, int reqflag,
 	CBone* bvhbone, int traflag, ChaVector3 traanim, double srcframe, int srcboneno, 
 	CQuaternion rotq)//, int setmatflag, ChaMatrix* psetmat)
 {
-
-	if( srcboneno < 0 ){
-		_ASSERT( 0 );
-		return 1;
-	}
-
-	CBone* curbone = m_bonelist[ srcboneno ];
-	if( !curbone ){
-		_ASSERT( 0 );
-		return 1;
-	}
-	if (curbone->IsNotSkeleton()) {
-		return 1;
-	}
-
-
-	double roundingframe = RoundingTime(srcframe);
-
-	bool onaddmotion = true;//for getbychain
-	CBone* parentbone = curbone->GetParent(false);
-	CMotionPoint* parmp = 0;
-	if (parentbone && parentbone->IsSkeleton()){
-		parmp = parentbone->GetMotionPoint(m_curmotinfo->motid, roundingframe, onaddmotion);
-	}
-
-	if (reqflag == 1){
-		ChaMatrix dummyparentwm;
-		dummyparentwm.SetIdentity();
-		bool infooutflag = true;
-		curbone->RotBoneQReq(limitdegflag, infooutflag, 0, m_curmotinfo->motid, roundingframe, rotq, dummyparentwm, dummyparentwm,
-			bvhbone, traanim);// , setmatflag, psetmat, onretarget);
-	}
-	else if(bvhbone){
-		ChaMatrix setmat = bvhbone->GetTmpMat();
-		curbone->RotBoneQOne(limitdegflag, parentbone, parmp, m_curmotinfo->motid, roundingframe, setmat);
-	}
-
-	return curbone->GetBoneNo();
+	ChaCalcFunc chacalcfunc;
+	return chacalcfunc.FKRotate(this, limitdegflag, onretarget, reqflag,
+		bvhbone, traflag, traanim, srcframe, srcboneno,
+		rotq);
 }
 
 int CModel::FKBoneTraAxisUnderFK(
@@ -15507,12 +15275,19 @@ int CModel::FKBoneTraAxisPostFK(
 
 int CModel::FKBoneTraAxis(bool limitdegflag, int onlyoneflag, CEditRange* erptr, int srcboneno, int axiskind, float delta, ChaMatrix selectmat)
 {
+	ChaCalcFunc chacalcfunc;
+
 	if ((srcboneno < 0) && !GetTopBone()){
 		return 0;
 	}
 
 	CBone* curbone = GetBoneByID(srcboneno);
 	if (!curbone){
+		_ASSERT(0);
+		return 0;
+	}
+
+	if (!m_curmotinfo) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -15540,7 +15315,7 @@ int CModel::FKBoneTraAxis(bool limitdegflag, int onlyoneflag, CEditRange* erptr,
 	ChaVector3 addtra;
 	addtra = basevec * delta;
 
-	FKBoneTra(limitdegflag, 0, erptr, srcboneno, addtra);
+	chacalcfunc.FKBoneTra(this, limitdegflag, 0, erptr, srcboneno, m_curmotinfo->motid, addtra);
 
 	return 0;
 }
@@ -15549,6 +15324,8 @@ int CModel::FKBoneTraUnderFK(
 	bool limitdegflag, CEditRange* erptr,
 	int srcboneno, ChaVector3 addtra)
 {
+	ChaCalcFunc chacalcfunc;
+
 
 	if (srcboneno < 0) {
 		_ASSERT(0);
@@ -15618,7 +15395,7 @@ int CModel::FKBoneTraUnderFK(
 			}
 
 			bool postflag = false;
-			IKTargetVec(limitdegflag, erptr, curframe, postflag);
+			chacalcfunc.IKTargetVec(this, limitdegflag, erptr, m_curmotinfo->motid, curframe, postflag);
 
 
 			keyno++;
@@ -15630,7 +15407,7 @@ int CModel::FKBoneTraUnderFK(
 		curbone->AddBoneTraReq(limitdegflag, 0, m_curmotinfo->motid, startframe, translation, dummyparentwm, dummyparentwm);
 
 		bool postflag = false;
-		IKTargetVec(limitdegflag, erptr, startframe, postflag);
+		chacalcfunc.IKTargetVec(this, limitdegflag, erptr, m_curmotinfo->motid, startframe, postflag);
 
 	}
 
@@ -15647,6 +15424,8 @@ int CModel::FKBoneTraPostFK(
 	bool limitdegflag, CEditRange* erptr,
 	int srcboneno)
 {
+
+	ChaCalcFunc chacalcfunc;
 
 	if (srcboneno < 0) {
 		_ASSERT(0);
@@ -15671,6 +15450,10 @@ int CModel::FKBoneTraPostFK(
 	double startframe, endframe, applyframe;
 	erptr->GetRange(&keynum, &startframe, &endframe, &applyframe);
 
+
+	SetFKTraFrame(RoundingTime(startframe), RoundingTime(endframe));//2023/10/20
+
+
 	curbone = firstbone;
 	double firstframe = 0.0;
 
@@ -15686,21 +15469,14 @@ int CModel::FKBoneTraPostFK(
 			bool lessthanthflag = currotrec.lessthanthflag;
 
 			if (keynum >= 2) {
-				int keyno = 0;
-				double curframe;
-				for (curframe = RoundingTime(startframe); curframe <= RoundingTime(endframe); curframe += 1.0) {
-					if (curframe != RoundingTime(applyframe)) {
-						if (keyno == 0) {
-							firstframe = curframe;
-						}
-
-						double changerate = (double)(*(g_motionbrush_value + (int)curframe));
-						ChaVector3 currenttranslation = translation * changerate;
-
-						curbone->AddBoneTraReq(limitdegflag, 0, m_curmotinfo->motid, curframe,
-							currenttranslation, dummyparentwm, dummyparentwm);
+				if (m_FKTraThreads) {
+					int updatecount;
+					for (updatecount = 0; updatecount < POSTFKTRA_THREADSNUM; updatecount++) {
+						CThreadingFKTra* curupdate = m_FKTraThreads + updatecount;
+						curupdate->FKBoneTraOneFrame(this, limitdegflag, erptr,
+							curbone->GetBoneNo(), m_curmotinfo->motid, translation);
 					}
-					keyno++;
+					WaitFKTraFinished();
 				}
 			}
 			//else {
@@ -15715,115 +15491,8 @@ int CModel::FKBoneTraPostFK(
 	for (curframe = RoundingTime(startframe); curframe <= RoundingTime(endframe); curframe += 1.0) {
 		if (curframe != RoundingTime(applyframe)) {
 			bool postflag = true;
-			IKTargetVec(limitdegflag, erptr, curframe, postflag);
+			chacalcfunc.IKTargetVec(this, limitdegflag, erptr, m_curmotinfo->motid, curframe, postflag);
 		}
-	}
-
-
-	return curbone->GetBoneNo();
-}
-
-
-//default:onlyoneframe = 0.0. onlyoneflag == 1のとき　onlyoneframeだけを処理
-int CModel::FKBoneTra(bool limitdegflag, int onlyoneflag, CEditRange* erptr, 
-	int srcboneno, ChaVector3 addtra, double onlyoneframe)
-{
-
-	if( srcboneno < 0 ){
-		_ASSERT( 0 );
-		return 1;
-	}
-
-	CBone* firstbone = m_bonelist[ srcboneno ];
-	if( !firstbone ){
-		_ASSERT( 0 );
-		return 1;
-	}
-	if (firstbone->IsNotSkeleton()) {
-		return 1;
-	}
-
-	CBone* curbone = firstbone;
-	SetBefEditMatFK(limitdegflag, erptr, curbone);
-
-	CBone* lastpar = firstbone->GetParent(false);
-
-	int keynum;
-	double startframe, endframe, applyframe;
-	erptr->GetRange(&keynum, &startframe, &endframe, &applyframe);
-	if (onlyoneflag == 0) {
-	}
-	else {
-		startframe = onlyoneframe;
-		endframe = onlyoneframe;
-	}
-	
-
-	curbone = firstbone;
-	double firstframe = 0.0;
-
-	ChaMatrix dummyparentwm;
-	dummyparentwm.SetIdentity();//Req関数の最初の呼び出し時は　Identityを渡せばよい
-
-	if( keynum >= 2 ){
-		//float changerate = 1.0f / (float)(endframe - startframe + 1);
-
-		int keyno = 0;
-		double curframe;
-		for (curframe = startframe; curframe <= endframe; curframe += 1.0){
-			double changerate;
-			//if( curframe <= applyframe ){
-			//	changerate = 1.0 / (applyframe - startframe + 1);
-			//}else{
-			//	changerate = 1.0 / (endframe - applyframe + 1);
-			//}
-			changerate = (double)(*(g_motionbrush_value + (int)curframe));
-
-
-			if( keyno == 0 ){
-				firstframe = curframe;
-			}
-			if( g_absikflag == 0 ){
-				if( g_slerpoffflag == 0 ){
-					//double currate2;
-					//if( curframe <= applyframe ){
-					//	currate2 = changerate * (curframe - startframe + 1);
-					//}else{
-					//	currate2 = changerate * (endframe - curframe + 1);
-					//}
-					//ChaVector3 curtra;
-					//curtra = addtra * (float)currate2;
-					ChaVector3 curtra;
-					curtra = addtra * (float)changerate;
-	
-					//currate2 = changerate * keyno;
-					//ChaVector3 curtra;
-					//curtra = (1.0 - currate2) * addtra;
-
-					curbone->AddBoneTraReq(limitdegflag, 0, m_curmotinfo->motid, curframe, curtra, dummyparentwm, dummyparentwm);
-				}else{
-					curbone->AddBoneTraReq(limitdegflag, 0, m_curmotinfo->motid, curframe, addtra, dummyparentwm, dummyparentwm);
-				}
-			}else{
-				if( keyno == 0 ){
-					curbone->AddBoneTraReq(limitdegflag, 0, m_curmotinfo->motid, curframe, addtra, dummyparentwm, dummyparentwm);
-				}else{
-					curbone->SetAbsMatReq(limitdegflag, 0, m_curmotinfo->motid, curframe, firstframe);
-				}
-			}
-
-			bool postflag = false;
-			IKTargetVec(limitdegflag, erptr, curframe, postflag);
-
-
-			keyno++;
-
-		}
-	}else{
-		curbone->AddBoneTraReq(limitdegflag, 0, m_curmotinfo->motid,  startframe, addtra, dummyparentwm, dummyparentwm);
-
-		bool postflag = false;
-		IKTargetVec(limitdegflag, erptr, startframe, postflag);
 	}
 
 
@@ -15906,6 +15575,8 @@ int CModel::RefreshPosConstraint()
 
 int CModel::PosConstraintExecuteFromButton(bool limitdegflag, CEditRange* erptr)
 {
+	ChaCalcFunc chacalcfunc;
+
 	if (!erptr) {
 		_ASSERT(0);
 		return 1;
@@ -15921,38 +15592,13 @@ int CModel::PosConstraintExecuteFromButton(bool limitdegflag, CEditRange* erptr)
 			bool postflag = true;
 			int calccount;
 			for (calccount = 0; calccount < 1; calccount++) {//IKTargetVecでも複数回計算している
-				IKTargetVec(limitdegflag, erptr, curframe, postflag);
+				chacalcfunc.IKTargetVec(this, limitdegflag, erptr, m_curmotinfo->motid, curframe, postflag);
 			}
 		}
 	}
 	else {
 		_ASSERT(0);
 		return 1;
-	}
-
-	return 0;
-}
-
-int CModel::IKTargetVec(bool limitdegflag, CEditRange* erptr, double srcframe, bool postflag)
-{
-	if (!erptr) {
-		_ASSERT(0);
-		return 1;
-	}
-
-	std::vector<CBone*>::iterator itrtargetbone;
-	for (itrtargetbone = m_iktargetbonevec.begin(); itrtargetbone != m_iktargetbonevec.end(); itrtargetbone++) {
-		CBone* srcbone = *itrtargetbone;
-		if (srcbone && srcbone->IsSkeleton() && srcbone->GetParent(false) && srcbone->GetIKTargetFlag()) {
-			ChaVector3 iktargetpos = srcbone->GetIKTargetPos();//model座標系
-			int calccount;
-			const int calccountmax = 30;
-			for (calccount = 0; calccount < calccountmax; calccount++) {
-				int maxlevel = 0;
-				IKRotateForIKTarget(limitdegflag, erptr, srcbone->GetBoneNo(), 
-					iktargetpos, maxlevel, srcframe, postflag);
-			}
-		}
 	}
 
 	return 0;
@@ -16263,7 +15909,7 @@ int CModel::InitUndoMotion( int saveflag )
 	return 0;
 }
 
-int CModel::SaveUndoMotion(bool limitdegflag, int curboneno, int curbaseno, CEditRange* srcer,
+int CModel::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, int curboneno, int curbaseno, CEditRange* srcer,
 	double srcapplyrate, BRUSHSTATE srcbrushstate, bool allframeflag)
 {
 	//saveによって次回のundo位置は変わる
@@ -16277,7 +15923,9 @@ int CModel::SaveUndoMotion(bool limitdegflag, int curboneno, int curbaseno, CEdi
 	int saveundoid = m_undo_writepoint;
 	m_undo_writepoint = GetNewUndoID();
 
-	int result = m_undomotion[m_undo_writepoint].SaveUndoMotion(limitdegflag, this, 
+
+	//2023/10/27 1.2.0.27 RC5 : LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
+	int result = m_undomotion[m_undo_writepoint].SaveUndoMotion(LimitDegCheckBoxFlag, limitdegflag, this,
 		curboneno, curbaseno, srcer, srcapplyrate, srcbrushstate, allframeflag);
 	if (result == 1) {//result == 2はエラーにしない
 		_ASSERT(0);
@@ -16606,6 +16254,36 @@ int CModel::RecalcBoneAxisX(CBone* srcbone)
 	return 0;
 }
 
+//###############################################
+//この関数の下に　１フレームだけ計算する関数あり
+//###############################################
+void CModel::CalcBoneEulReq(bool limitdegflag, CBone* curbone, int srcmotid, double startframe, double endframe)
+{
+	if (!curbone) {
+		return;
+	}
+
+	if (curbone->IsSkeleton()) {
+		ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+		int paraxiskind = -1;
+		double srcframe;
+		for (srcframe = startframe; srcframe <= endframe; srcframe += 1.0) {
+			cureul = curbone->CalcLocalEulXYZ(limitdegflag, paraxiskind, srcmotid, srcframe, BEFEUL_BEFFRAME);
+			curbone->SetLocalEul(limitdegflag, srcmotid, srcframe, cureul, 0);
+		}
+	}
+
+	if (curbone->GetChild(false)) {
+		CalcBoneEulReq(limitdegflag, curbone->GetChild(false), srcmotid, startframe, endframe);
+	}
+	if (curbone->GetBrother(false)) {
+		CalcBoneEulReq(limitdegflag, curbone->GetBrother(false), srcmotid, startframe, endframe);
+	}
+}
+
+//#################################################
+//この関数の上に　フレーム範囲を　計算する関数あり
+//#################################################
 void CModel::CalcBoneEulReq(bool limitdegflag, CBone* curbone, int srcmotid, double srcframe)
 {
 	if (!curbone){
@@ -16635,29 +16313,21 @@ int CModel::CalcBoneEul(bool limitdegflag, int srcmotid)
 	if (GetNoBoneFlag() == true) {
 		return 0;
 	}
+	
+	//ChaCalcFunc chacalcfunc;
+	//chacalcfunc.CalcBoneEul(this, limitdegflag, srcmotid);
 
-
-	if (srcmotid >= 0){
-		MOTINFO* mi = GetMotInfo(srcmotid);
-		if (mi){
-			double frame;
-			for (frame = 0.0; frame < mi->frameleng; frame += 1.0){
-			//for (frame = 1.0; frame < mi->frameleng; frame += 1.0) {//0frameは計算スキップ
-				CalcBoneEulReq(limitdegflag, GetTopBone(false), mi->motid, frame);
-			}
+	if (m_CalcEulThreads) {
+		//g_underCalcEul = true;//2023/10/19 このフラグが立っている間だけ　CalcEulスレッドがHighRpmになる
+		SetUnderCalcEul(true);
+		int updatecount;
+		for (updatecount = 0; updatecount < CALCEUL_THREADSNUM; updatecount++) {
+			CThreadingCalcEul* curupdate = m_CalcEulThreads + updatecount;
+			curupdate->CalcBoneEul(this, limitdegflag, srcmotid);
 		}
-	}
-	else{
-		map<int, MOTINFO*>::iterator itrmi;
-		for (itrmi = m_motinfo.begin(); itrmi != m_motinfo.end(); itrmi++){
-			MOTINFO* chkmi = itrmi->second;
-			if (chkmi) {
-				int motid = chkmi->motid;
-				if (motid > 0) {
-					CalcBoneEul(limitdegflag, motid);
-				}
-			}
-		}
+		WaitCalcEulFinished();
+		//g_underCalcEul = false;//2023/10/19
+		SetUnderCalcEul(false);
 	}
 
 	return 0;
@@ -17084,11 +16754,11 @@ void CModel::ApplyBtToMotionReq(bool limitdegflag, CBone* srcbone)
 	if (srcbone->IsSkeleton()){
 		ChaMatrix btmat;
 		if (srcbone->GetChild(false)){
-			btmat = srcbone->GetBtMat();
+			btmat = srcbone->GetBtMat(false);
 		}
 		else{
 			if (srcbone->GetParent(false) && srcbone->GetParent(false)->IsSkeleton()) {
-				btmat = srcbone->GetParent(false)->GetBtMat();
+				btmat = srcbone->GetParent(false)->GetBtMat(false);
 			}
 			else {
 				btmat.SetIdentity();
@@ -17271,7 +16941,7 @@ void CModel::PhysIKRecReq(bool limitdegflag, CBone* srcbone, double srcrectime)
 		PHYSIKREC currec;
 		currec.time = srcrectime;
 		currec.pbone = srcbone;
-		currec.btmat = srcbone->GetBtMat();
+		currec.btmat = srcbone->GetBtMat(false);
 
 		//currec.btmat = srcbone->GetWorldMat(curmi->motid, curmi->curframe);
 
@@ -17415,8 +17085,8 @@ void CModel::ApplyPhysIkRecReq(bool limitdegflag, CBone* srcbone, double srcfram
 
 			if (foundrecdata0 && foundrecdata) {
 				ChaMatrix worldmat0 = btbone->GetWorldMat(limitdegflag, curmi->motid, RoundingTime(g_motionbrush_applyframe), 0);//or srcframe
-				ChaMatrix btmat0 = recdata0.btmat;//カレントボーンのApplyFrameにおけるドラッグ時間ゼロの姿勢
-				ChaMatrix btmat = recdata.btmat;//カレントボーンのApplyFrameにおけるドラッグ時間カレントの姿勢
+				ChaMatrix btmat0 = recdata0.btmat * ChaMatrixInv(GetWorldMat());//カレントボーンのApplyFrameにおけるドラッグ時間ゼロの姿勢
+				ChaMatrix btmat = recdata.btmat * ChaMatrixInv(GetWorldMat());//カレントボーンのApplyFrameにおけるドラッグ時間カレントの姿勢
 
 				ChaMatrix curworldmat = btbone->GetWorldMat(limitdegflag, curmi->motid, roundingframe, 0);
 
@@ -17576,14 +17246,33 @@ int CModel::CopyWorldToLimitedWorld()
 		return 0;
 	}
 
-	ChaMatrix tmpwm = GetWorldMat();
 	MOTINFO* curmi = GetCurMotInfo();
 	if (curmi) {
-		double curframe;
-		//for (curframe = 0.0; curframe < curmi->frameleng; curframe += 1.0) {
-		for (curframe = 1.0; curframe < curmi->frameleng; curframe += 1.0) {
-			CopyWorldToLimitedWorldReq(GetTopBone(false), curmi->motid, curframe);
+
+		SetCopyW2LWFrame(RoundingTime(1.0), RoundingTime(curmi->frameleng - 1.0));//2023/10/20
+
+		if (m_CopyW2LWThreads) {
+
+			//g_underCopyW2LW = true;//!!!!!!
+			SetUnderCopyW2LW(true);
+
+			int updatecount;
+			for (updatecount = 0; updatecount < COPYW2LW_THREADSNUM; updatecount++) {
+				CThreadingCopyW2LW* curupdate = m_CopyW2LWThreads + updatecount;
+				curupdate->CopyWorldToLimitedWorld(GetTopBone(false), curmi->motid, 1.0, RoundingTime(curmi->frameleng - 1.0));
+			}
+			WaitCopyW2LWFinished();
+
+			//g_underCopyW2LW = false;//!!!!!!
+			SetUnderCopyW2LW(false);
 		}
+
+
+		//unlimtedの計算
+		//2023/10/21 CopyW2LWは前フレーム姿勢を考慮していないマルチスレッド　CalcBoneEul()で前フレーム考慮マルチスレッドによる後処理
+		//CopyW2LWとCalcBoneEulはセットで呼び出す
+		CalcBoneEul(false, curmi->motid);
+
 	}
 
 	return 0;
@@ -17593,23 +17282,29 @@ int CModel::CopyWorldToLimitedWorld()
 int CModel::AdditiveCurrentToAngleLimit(CBone* srcbone)
 {
 
-	if (!srcbone) {
-		map<int, CBone*>::iterator itrbone;
-		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
-			CBone* curbone = itrbone->second;
-			//if (curbone) {
-	//物理シミュ用のボーンの制限角度は上書きしないことにした
-	//物理シミュ以外のボーンの制限角度を変えるたびに　何回も物理シミュボーンの設定をやり直すのが非常に手間だから
-			if (curbone && (curbone->GetBtForce() == 0) && (curbone->IsSkeleton())) {
-				curbone->AdditiveCurrentToAngleLimit();
-			}
-		}
-	}
-	else {
+	MOTINFO* curmi = GetCurMotInfo();
+	if (curmi) {
+		bool calclimitdegflag = false;
+		CalcBoneEul(calclimitdegflag, curmi->motid);
+
+		if (!srcbone) {
+			map<int, CBone*>::iterator itrbone;
+			for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
+				CBone* curbone = itrbone->second;
+				//if (curbone) {
 		//物理シミュ用のボーンの制限角度は上書きしないことにした
 		//物理シミュ以外のボーンの制限角度を変えるたびに　何回も物理シミュボーンの設定をやり直すのが非常に手間だから
-		if (srcbone && (srcbone->GetBtForce() == 0) && (srcbone->IsSkeleton())) {
-			srcbone->AdditiveCurrentToAngleLimit();
+				if (curbone && (curbone->GetBtForce() == 0) && (curbone->IsSkeleton())) {
+					curbone->AdditiveCurrentToAngleLimit();
+				}
+			}
+		}
+		else {
+			//物理シミュ用のボーンの制限角度は上書きしないことにした
+			//物理シミュ以外のボーンの制限角度を変えるたびに　何回も物理シミュボーンの設定をやり直すのが非常に手間だから
+			if (srcbone && (srcbone->GetBtForce() == 0) && (srcbone->IsSkeleton())) {
+				srcbone->AdditiveCurrentToAngleLimit();
+			}
 		}
 	}
 	return 0;
@@ -17617,14 +17312,20 @@ int CModel::AdditiveCurrentToAngleLimit(CBone* srcbone)
 
 int CModel::AdditiveAllMotionsToAngleLimit()
 {
-	map<int, CBone*>::iterator itrbone;
-	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
-		CBone* curbone = itrbone->second;
-		//if (curbone) {
-	//物理シミュ用のボーンの制限角度は上書きしないことにした
-	//物理シミュ以外のボーンの制限角度を変えるたびに　何回も物理シミュボーンの設定をやり直すのが非常に手間だから
-		if (curbone && (curbone->GetBtForce() == 0) && (curbone->IsSkeleton())) {
-			curbone->AdditiveAllMotionsToAngleLimit();
+	MOTINFO* curmi = GetCurMotInfo();
+	if (curmi) {
+		bool calclimitdegflag = false;
+		CalcBoneEul(calclimitdegflag, curmi->motid);
+
+		map<int, CBone*>::iterator itrbone;
+		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
+			CBone* curbone = itrbone->second;
+			//if (curbone) {
+		//物理シミュ用のボーンの制限角度は上書きしないことにした
+		//物理シミュ以外のボーンの制限角度を変えるたびに　何回も物理シミュボーンの設定をやり直すのが非常に手間だから
+			if (curbone && (curbone->GetBtForce() == 0) && (curbone->IsSkeleton())) {
+				curbone->AdditiveAllMotionsToAngleLimit();
+			}
 		}
 	}
 
@@ -17688,7 +17389,11 @@ int CModel::CreateLoadFbxAnim(FbxScene* pscene)
 	int bonenointhread = 0;
 	int bonecount;
 	int bonenum = (int)m_bonelist.size();
-	int maxbonenuminthread = bonenum / LOADFBXANIMTHREAD + 1;
+	//int maxbonenuminthread = bonenum / LOADFBXANIMTHREAD + 1;
+	int maxbonenuminthread = bonenum / LOADFBXANIMTHREAD;
+	if (maxbonenuminthread == 0) {
+		maxbonenuminthread = 1;
+	}
 
 	for (bonecount = 0; bonecount < bonenum; bonecount++) {
 		CBone* curbone = m_bonelist[bonecount];
@@ -17700,6 +17405,9 @@ int CModel::CreateLoadFbxAnim(FbxScene* pscene)
 				curupdate->SetBoneList(bonenointhread, curnode, curbone);
 
 				threadcount = bonecount / maxbonenuminthread;
+				if (threadcount >= LOADFBXANIMTHREAD) {
+					threadcount = LOADFBXANIMTHREAD - 1;//余りは全部　最終スレッドに任せる
+				}
 
 				if (threadcount == befthreadcount) {
 					bonenointhread++;
@@ -17767,7 +17475,7 @@ int CModel::CreateBoneUpdateMatrix()
 {
 
 	DestroyBoneUpdateMatrix();
-	Sleep(100);
+	//Sleep(100);
 
 
 	if (m_bonelist[0] == NULL) {
@@ -17775,15 +17483,20 @@ int CModel::CreateBoneUpdateMatrix()
 		return 1;
 	}
 
+	if (GetNoBoneFlag()) {
+		return 0;
+	}
 
-	m_boneupdatematrix = new CThreadingUpdateMatrix[g_UpdateMatrixThreads];
-	if (!m_boneupdatematrix) {
+
+	//m_boneupdatematrix = new CThreadingUpdateMatrix[g_UpdateMatrixThreads];
+	CThreadingUpdateMatrix* newthreads = new CThreadingUpdateMatrix[g_UpdateMatrixThreads];//作成途中でアクセスされないように
+	if (!newthreads) {
 		_ASSERT(0);
 		return 1;
 	}
 	int createno;
 	for (createno = 0; createno < g_UpdateMatrixThreads; createno++) {
-		CThreadingUpdateMatrix* curupdate = m_boneupdatematrix + createno;
+		CThreadingUpdateMatrix* curupdate = newthreads + createno;
 		curupdate->ClearBoneList();
 		curupdate->CreateThread((DWORD)(1 << createno));//2023/08/27
 
@@ -17791,22 +17504,23 @@ int CModel::CreateBoneUpdateMatrix()
 	}
 
 
-
 	int threadcount = 0;
 	int befthreadcount = 0;
 	int bonenointhread = 0;
 	int bonecount;
 	int bonenum = (int)m_bonelist.size();
-	int maxbonenuminthread = bonenum / g_UpdateMatrixThreads + 1;
-
-
+	//int maxbonenuminthread = bonenum / g_UpdateMatrixThreads + 1;
+	int maxbonenuminthread = bonenum / g_UpdateMatrixThreads;
+	if (maxbonenuminthread == 0) {
+		maxbonenuminthread = 1;
+	}
 
 	for (bonecount = 0; bonecount < bonenum; bonecount++) {
 		CBone* curbone = m_bonelist[bonecount];
 		if (curbone && (curbone->IsSkeleton() || curbone->IsCamera())) {
-			CThreadingUpdateMatrix* curupdate = m_boneupdatematrix + threadcount;
+			CThreadingUpdateMatrix* curupdate = newthreads + threadcount;
 
-			curupdate->SetBoneList(bonenointhread, curbone);
+			curupdate->AddBoneList(curbone);
 
 			//threadcount++;
 			//threadcount = (threadcount % g_UpdateMatrixThreads);
@@ -17816,6 +17530,10 @@ int CModel::CreateBoneUpdateMatrix()
 
 
 			threadcount = bonecount / maxbonenuminthread;
+			if (threadcount >= g_UpdateMatrixThreads) {
+				threadcount = g_UpdateMatrixThreads - 1;//余りは全部　最終スレッドに任せる
+			}
+
 
 			if (threadcount == befthreadcount) {
 				bonenointhread++;
@@ -17828,7 +17546,8 @@ int CModel::CreateBoneUpdateMatrix()
 		}
 	}
 
-	m_creatednum_boneupdatematrix = g_UpdateMatrixThreads;
+	m_boneupdatematrix = newthreads;//作成途中でアクセスされないように　作成完了後にセット
+	m_creatednum_boneupdatematrix = g_UpdateMatrixThreads;//DestroyBoneUpdateMatrixで0セットされていて　ここで値をセット
 
 
 	return 0;
@@ -17841,12 +17560,18 @@ int CModel::DestroyBoneUpdateMatrix()
 		delete[] m_boneupdatematrix;
 	}
 	m_boneupdatematrix = 0;
+	m_creatednum_boneupdatematrix = 0;
 
 	return 0;
 }
 
 void CModel::WaitUpdateMatrixFinished()
 {
+	if (GetNoBoneFlag() == true) {
+		//2023/11/03 ボーンが無いモデルの場合　即リターン
+		return;
+	}
+
 	if (m_boneupdatematrix != NULL) {
 
 		bool yetflag = true;
@@ -17876,33 +17601,969 @@ void CModel::WaitUpdateMatrixFinished()
 
 }
 
+int CModel::CreateCalcEulThreads()
+{
+	DestroyCalcEulThreads();
+	//Sleep(100);
+
+	if (m_bonelist[0] == NULL) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	if (GetNoBoneFlag()) {
+		return 0;
+	}
+
+	m_CalcEulThreads = new CThreadingCalcEul[CALCEUL_THREADSNUM];
+	if (!m_CalcEulThreads) {
+		_ASSERT(0);
+		return 1;
+	}
+	int createno;
+	for (createno = 0; createno < CALCEUL_THREADSNUM; createno++) {
+		CThreadingCalcEul* curupdate = m_CalcEulThreads + createno;
+		curupdate->ClearBoneList();
+		curupdate->CreateThread((DWORD)(1 << createno));
+
+		curupdate->SetModel(this);
+	}
+
+
+
+	//int threadcount = 0;
+	//int bonecount;
+	//int bonenum = (int)m_bonelist.size();
+	//for (bonecount = 0; bonecount < bonenum; bonecount++) {
+	//	CBone* curbone = m_bonelist[bonecount];
+	//	if (curbone && curbone->IsSkeleton()) {
+	//		CThreadingCalcEul* curupdate = m_CalcEulThreads + threadcount;
+	//
+	//		curupdate->AddBoneList(curbone);
+	//
+	//		threadcount++;
+	//		if (threadcount >= CALCEUL_THREADSNUM) {
+	//			threadcount = 0;
+	//		}
+	//	}
+	//}
+
+	int threadcount = 0;
+	int befthreadcount = 0;
+	int bonenointhread = 0;
+	int bonecount;
+	int bonenum = (int)m_bonelist.size();
+	//int maxbonenuminthread = bonenum / g_UpdateMatrixThreads + 1;
+	int maxbonenuminthread = bonenum / CALCEUL_THREADSNUM;
+	if (maxbonenuminthread == 0) {
+		maxbonenuminthread = 1;
+	}
+
+	for (bonecount = 0; bonecount < bonenum; bonecount++) {
+		CBone* curbone = m_bonelist[bonecount];
+		if (curbone && curbone->IsSkeleton()) {
+			CThreadingCalcEul* curupdate = m_CalcEulThreads + threadcount;
+
+			curupdate->AddBoneList(curbone);
+
+			//threadcount++;
+			//threadcount = (threadcount % g_UpdateMatrixThreads);
+			//if (threadcount == 0) {
+			//	bonenointhread++;
+			//}
+
+
+			threadcount = bonecount / maxbonenuminthread;
+			if (threadcount >= CALCEUL_THREADSNUM) {
+				threadcount = CALCEUL_THREADSNUM - 1;//余りは全部　最終スレッドに任せる
+			}
+
+
+			if (threadcount == befthreadcount) {
+				bonenointhread++;
+			}
+			else {
+				bonenointhread = 0;
+			}
+
+			befthreadcount = threadcount;
+		}
+	}
+
+
+	return 0;
+}
+
+int CModel::DestroyCalcEulThreads()
+{
+	if (m_CalcEulThreads) {
+		delete[] m_CalcEulThreads;
+	}
+	m_CalcEulThreads = 0;
+
+	return 0;
+
+}
+void CModel::WaitCalcEulFinished()
+{
+	if (m_CalcEulThreads != NULL) {
+
+		bool yetflag = true;
+		while (yetflag == true) {
+			int finishedcount = 0;
+			int updatecount;
+			for (updatecount = 0; updatecount < CALCEUL_THREADSNUM; updatecount++) {
+				CThreadingCalcEul* curupdate = m_CalcEulThreads + updatecount;
+				if (curupdate->IsFinished()) {
+					finishedcount++;
+				}
+			}
+
+			if (finishedcount == CALCEUL_THREADSNUM) {
+				yetflag = false;
+				return;
+			}
+			else {
+				//__nop();
+				//__nop();
+				//__nop();
+				//__nop();
+			}
+		}
+	}
+
+}
+
+int CModel::CreatePostIKThreads()
+{
+
+	DestroyPostIKThreads();
+	Sleep(100);
+
+
+	if (m_bonelist[0] == NULL) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	if (GetNoBoneFlag()) {
+		return 0;
+	}
+
+
+	m_PostIKThreads = new CThreadingPostIK[POSTIK_THREADSNUM];
+	if (!m_PostIKThreads) {
+		_ASSERT(0);
+		return 1;
+	}
+	int createno;
+	for (createno = 0; createno < POSTIK_THREADSNUM; createno++) {
+		CThreadingPostIK* curupdate = m_PostIKThreads + createno;
+		curupdate->ClearFrameList();
+		curupdate->CreateThread((DWORD)(1 << createno));
+
+		curupdate->SetModel(this);
+	}
+
+	//int threadcount = 0;
+	//int befthreadcount = 0;
+	//int bonenointhread = 0;
+	//int bonecount;
+	//int bonenum = (int)m_bonelist.size();
+	//int maxbonenuminthread = bonenum / g_UpdateMatrixThreads + 1;
+
+
+
+	//for (bonecount = 0; bonecount < bonenum; bonecount++) {
+	//	CBone* curbone = m_bonelist[bonecount];
+	//	if (curbone && (curbone->IsSkeleton() || curbone->IsCamera())) {
+	//		CThreadingUpdateMatrix* curupdate = m_boneupdatematrix + threadcount;
+
+	//		curupdate->SetBoneList(bonenointhread, curbone);
+
+	//		//threadcount++;
+	//		//threadcount = (threadcount % g_UpdateMatrixThreads);
+	//		//if (threadcount == 0) {
+	//		//	bonenointhread++;
+	//		//}
+
+
+	//		threadcount = bonecount / maxbonenuminthread;
+
+	//		if (threadcount == befthreadcount) {
+	//			bonenointhread++;
+	//		}
+	//		else {
+	//			bonenointhread = 0;
+	//		}
+
+	//		befthreadcount = threadcount;
+	//	}
+	//}
+
+	//m_creatednum_boneupdatematrix = g_UpdateMatrixThreads;
+
+
+	return 0;
+}
+
+int CModel::DestroyPostIKThreads()
+{
+
+	if (m_PostIKThreads) {
+		delete[] m_PostIKThreads;
+	}
+	m_PostIKThreads = 0;
+
+	return 0;
+}
+
+void CModel::WaitPostIKFinished()
+{
+	if (m_PostIKThreads != NULL) {
+
+		bool yetflag = true;
+		while (yetflag == true) {
+			int finishedcount = 0;
+			int updatecount;
+			for (updatecount = 0; updatecount < POSTIK_THREADSNUM; updatecount++) {
+				CThreadingPostIK* curupdate = m_PostIKThreads + updatecount;
+				if (curupdate->IsFinished()) {
+					finishedcount++;
+				}
+			}
+
+			if (finishedcount == POSTIK_THREADSNUM) {
+				yetflag = false;
+				return;
+			}
+			else {
+				//__nop();
+				//__nop();
+				//__nop();
+				//__nop();
+			}
+		}
+
+	}
+
+}
+
+int CModel::SetPostIKFrame(double srcstart, double srcend)
+{
+	if (!m_PostIKThreads) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	int updatecount;
+	for (updatecount = 0; updatecount < POSTIK_THREADSNUM; updatecount++) {
+		CThreadingPostIK* curupdate = m_PostIKThreads + updatecount;
+		curupdate->ClearFrameList();
+	}
+
+
+	//double setframe;
+	//int threadcount = 0;
+	//for (setframe = RoundingTime(srcstart); setframe <= RoundingTime(srcend); setframe+= 1.0) {
+	//	CThreadingPostIK* curupdate = m_PostIKThreads + threadcount;
+	//
+	//	curupdate->AddFramenoList(setframe);
+	//
+	//	threadcount++;
+	//	if (threadcount >= POSTIK_THREADSNUM) {
+	//		threadcount = 0;
+	//	}
+	//}
+
+	int threadcount = 0;
+	int befthreadcount = 0;
+	int framenointhread = 0;
+	int framecount;
+	int framenum = IntTime(srcend) - IntTime(srcstart) + 1;
+	int maxframenuminthread = framenum / POSTIK_THREADSNUM;
+	if (maxframenuminthread == 0) {
+		maxframenuminthread = 1;
+	}
+
+	for (framecount = 0; framecount < framenum; framecount++) {
+		double curframe = (double)(framecount + IntTime(srcstart));
+		CThreadingPostIK* curupdate = m_PostIKThreads + threadcount;
+
+		curupdate->AddFramenoList(curframe);
+
+		threadcount = framecount / maxframenuminthread;
+		if (threadcount >= POSTIK_THREADSNUM) {
+			threadcount = POSTIK_THREADSNUM - 1;//余りは全部　最終スレッドに任せる
+		}
+
+		if (threadcount == befthreadcount) {
+			framenointhread++;
+		}
+		else {
+			framenointhread = 0;
+		}
+
+		befthreadcount = threadcount;
+	}
+
+
+
+	return 0;
+}
+
+int CModel::CreateInitMpThreads()
+{
+
+	DestroyInitMpThreads();
+	//Sleep(100);
+
+
+	if (m_bonelist[0] == NULL) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	if (GetNoBoneFlag()) {
+		return 0;
+	}
+
+	m_InitMpThreads = new CThreadingInitMp[INITMP_THREADSNUM];
+	if (!m_InitMpThreads) {
+		_ASSERT(0);
+		return 1;
+	}
+	int createno;
+	for (createno = 0; createno < INITMP_THREADSNUM; createno++) {
+		CThreadingInitMp* curupdate = m_InitMpThreads + createno;
+		curupdate->ClearFrameList();
+		curupdate->CreateThread((DWORD)(1 << createno));
+
+		curupdate->SetModel(this);
+	}
+
+	//int threadcount = 0;
+	//int befthreadcount = 0;
+	//int bonenointhread = 0;
+	//int bonecount;
+	//int bonenum = (int)m_bonelist.size();
+	//int maxbonenuminthread = bonenum / g_UpdateMatrixThreads + 1;
+
+
+
+	//for (bonecount = 0; bonecount < bonenum; bonecount++) {
+	//	CBone* curbone = m_bonelist[bonecount];
+	//	if (curbone && (curbone->IsSkeleton() || curbone->IsCamera())) {
+	//		CThreadingUpdateMatrix* curupdate = m_boneupdatematrix + threadcount;
+
+	//		curupdate->SetBoneList(bonenointhread, curbone);
+
+	//		//threadcount++;
+	//		//threadcount = (threadcount % g_UpdateMatrixThreads);
+	//		//if (threadcount == 0) {
+	//		//	bonenointhread++;
+	//		//}
+
+
+	//		threadcount = bonecount / maxbonenuminthread;
+
+	//		if (threadcount == befthreadcount) {
+	//			bonenointhread++;
+	//		}
+	//		else {
+	//			bonenointhread = 0;
+	//		}
+
+	//		befthreadcount = threadcount;
+	//	}
+	//}
+
+	//m_creatednum_boneupdatematrix = g_UpdateMatrixThreads;
+
+
+	return 0;
+}
+
+int CModel::DestroyInitMpThreads()
+{
+
+	if (m_InitMpThreads) {
+		delete[] m_InitMpThreads;
+	}
+	m_InitMpThreads = 0;
+
+	return 0;
+}
+
+void CModel::WaitInitMpFinished()
+{
+	if (m_InitMpThreads != NULL) {
+
+		bool yetflag = true;
+		while (yetflag == true) {
+			int finishedcount = 0;
+			int updatecount;
+			for (updatecount = 0; updatecount < INITMP_THREADSNUM; updatecount++) {
+				CThreadingInitMp* curupdate = m_InitMpThreads + updatecount;
+				if (curupdate->IsFinished()) {
+					finishedcount++;
+				}
+			}
+
+			if (finishedcount == INITMP_THREADSNUM) {
+				yetflag = false;
+				return;
+			}
+			else {
+				//__nop();
+				//__nop();
+				//__nop();
+				//__nop();
+			}
+		}
+
+	}
+
+}
+
+int CModel::SetInitMpFrame(double srcstart, double srcend)
+{
+	if (!m_InitMpThreads) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	int updatecount;
+	for (updatecount = 0; updatecount < INITMP_THREADSNUM; updatecount++) {
+		CThreadingInitMp* curupdate = m_InitMpThreads + updatecount;
+		curupdate->ClearFrameList();
+	}
+
+
+	//double setframe;
+	//int threadcount = 0;
+	//for (setframe = RoundingTime(srcstart); setframe <= RoundingTime(srcend); setframe += 1.0) {
+	//	CThreadingInitMp* curupdate = m_InitMpThreads + threadcount;
+	//
+	//	curupdate->AddFramenoList(setframe);
+	//
+	//	threadcount++;
+	//	if (threadcount >= INITMP_THREADSNUM) {
+	//		threadcount = 0;
+	//	}
+	//}
+
+	int threadcount = 0;
+	int befthreadcount = 0;
+	int framenointhread = 0;
+	int framecount;
+	int framenum = IntTime(srcend) - IntTime(srcstart) + 1;
+	int maxframenuminthread = framenum / INITMP_THREADSNUM;
+	if (maxframenuminthread == 0) {
+		maxframenuminthread = 1;
+	}
+
+	for (framecount = 0; framecount < framenum; framecount++) {
+		double curframe = (double)(framecount + IntTime(srcstart));
+		CThreadingInitMp* curupdate = m_InitMpThreads + threadcount;
+
+		curupdate->AddFramenoList(curframe);
+
+		threadcount = framecount / maxframenuminthread;
+		if (threadcount >= INITMP_THREADSNUM) {
+			threadcount = INITMP_THREADSNUM - 1;//余りは全部　最終スレッドに任せる
+		}
+
+		if (threadcount == befthreadcount) {
+			framenointhread++;
+		}
+		else {
+			framenointhread = 0;
+		}
+
+		befthreadcount = threadcount;
+	}
+
+
+
+	return 0;
+}
+
+int CModel::CreateRetargetThreads()
+{
+
+	DestroyRetargetThreads();
+	//Sleep(100);
+
+
+	if (m_bonelist[0] == NULL) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	if (GetNoBoneFlag()) {
+		return 0;
+	}
+
+	m_RetargetThreads = new CThreadingRetarget[RETARGET_THREADSNUM];
+	if (!m_RetargetThreads) {
+		_ASSERT(0);
+		return 1;
+	}
+	int createno;
+	for (createno = 0; createno < RETARGET_THREADSNUM; createno++) {
+		CThreadingRetarget* curupdate = m_RetargetThreads + createno;
+		curupdate->ClearFrameList();
+		curupdate->CreateThread((DWORD)(1 << createno));
+
+		curupdate->SetModel(this);
+	}
+
+	return 0;
+}
+
+int CModel::DestroyRetargetThreads()
+{
+
+	if (m_RetargetThreads) {
+		delete[] m_RetargetThreads;
+	}
+	m_RetargetThreads = 0;
+
+	return 0;
+}
+
+void CModel::WaitRetargetFinished()
+{
+	if (m_RetargetThreads != NULL) {
+
+		bool yetflag = true;
+		while (yetflag == true) {
+			int finishedcount = 0;
+			int updatecount;
+			for (updatecount = 0; updatecount < RETARGET_THREADSNUM; updatecount++) {
+				CThreadingRetarget* curupdate = m_RetargetThreads + updatecount;
+				if (curupdate->IsFinished()) {
+					finishedcount++;
+				}
+			}
+
+			if (finishedcount == RETARGET_THREADSNUM) {
+				yetflag = false;
+				return;
+			}
+			else {
+				//__nop();
+				//__nop();
+				//__nop();
+				//__nop();
+			}
+		}
+
+	}
+
+}
+
+int CModel::SetRetargetFrame(double srcstart, double srcend)
+{
+	if (!m_RetargetThreads) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	int updatecount;
+	for (updatecount = 0; updatecount < RETARGET_THREADSNUM; updatecount++) {
+		CThreadingRetarget* curupdate = m_RetargetThreads + updatecount;
+		curupdate->ClearFrameList();
+	}
+
+
+	//double setframe;
+	//int threadcount = 0;
+	//for (setframe = RoundingTime(srcstart); setframe <= RoundingTime(srcend); setframe += 1.0) {
+	//	CThreadingRetarget* curupdate = m_RetargetThreads + threadcount;
+	//
+	//	curupdate->AddFramenoList(setframe);
+	//
+	//	threadcount++;
+	//	if (threadcount >= RETARGET_THREADSNUM) {
+	//		threadcount = 0;
+	//	}
+	//}
+
+	int threadcount = 0;
+	int befthreadcount = 0;
+	int framenointhread = 0;
+	int framecount;
+	int framenum = IntTime(srcend) - IntTime(srcstart) + 1;
+	int maxframenuminthread = framenum / RETARGET_THREADSNUM;
+	if (maxframenuminthread == 0) {
+		maxframenuminthread = 1;
+	}
+
+	for (framecount = 0; framecount < framenum; framecount++) {
+		double curframe = (double)(framecount + IntTime(srcstart));
+		CThreadingRetarget* curupdate = m_RetargetThreads + threadcount;
+
+		curupdate->AddFramenoList(curframe);
+
+		threadcount = framecount / maxframenuminthread;
+		if (threadcount >= RETARGET_THREADSNUM) {
+			threadcount = RETARGET_THREADSNUM - 1;//余りは全部　最終スレッドに任せる
+		}
+
+		if (threadcount == befthreadcount) {
+			framenointhread++;
+		}
+		else {
+			framenointhread = 0;
+		}
+
+		befthreadcount = threadcount;
+	}
+
+
+	return 0;
+}
+
+
+int CModel::CreateFKTraThreads()
+{
+
+	DestroyFKTraThreads();
+	//Sleep(100);
+
+
+	if (m_bonelist[0] == NULL) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	if (GetNoBoneFlag()) {
+		return 0;
+	}
+
+	m_FKTraThreads = new CThreadingFKTra[POSTFKTRA_THREADSNUM];
+	if (!m_FKTraThreads) {
+		_ASSERT(0);
+		return 1;
+	}
+	int createno;
+	for (createno = 0; createno < POSTFKTRA_THREADSNUM; createno++) {
+		CThreadingFKTra* curupdate = m_FKTraThreads + createno;
+		curupdate->ClearFrameList();
+		curupdate->CreateThread((DWORD)(1 << createno));
+
+		curupdate->SetModel(this);
+	}
+
+	return 0;
+}
+
+int CModel::DestroyFKTraThreads()
+{
+
+	if (m_FKTraThreads) {
+		delete[] m_FKTraThreads;
+	}
+	m_FKTraThreads = 0;
+
+	return 0;
+}
+
+void CModel::WaitFKTraFinished()
+{
+	if (m_FKTraThreads != NULL) {
+
+		bool yetflag = true;
+		while (yetflag == true) {
+			int finishedcount = 0;
+			int updatecount;
+			for (updatecount = 0; updatecount < POSTFKTRA_THREADSNUM; updatecount++) {
+				CThreadingFKTra* curupdate = m_FKTraThreads + updatecount;
+				if (curupdate->IsFinished()) {
+					finishedcount++;
+				}
+			}
+
+			if (finishedcount == POSTFKTRA_THREADSNUM) {
+				yetflag = false;
+				return;
+			}
+			else {
+				//__nop();
+				//__nop();
+				//__nop();
+				//__nop();
+			}
+		}
+
+	}
+
+}
+
+int CModel::SetFKTraFrame(double srcstart, double srcend)
+{
+	if (!m_FKTraThreads) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	int updatecount;
+	for (updatecount = 0; updatecount < POSTFKTRA_THREADSNUM; updatecount++) {
+		CThreadingFKTra* curupdate = m_FKTraThreads + updatecount;
+		curupdate->ClearFrameList();
+	}
+
+
+	//double setframe;
+	//int threadcount = 0;
+	//for (setframe = RoundingTime(srcstart); setframe <= RoundingTime(srcend); setframe += 1.0) {
+	//	CThreadingFKTra* curupdate = m_FKTraThreads + threadcount;
+	//
+	//	curupdate->AddFramenoList(setframe);
+	//
+	//	threadcount++;
+	//	if (threadcount >= POSTFKTRA_THREADSNUM) {
+	//		threadcount = 0;
+	//	}
+	//}
+
+	int threadcount = 0;
+	int befthreadcount = 0;
+	int framenointhread = 0;
+	int framecount;
+	int framenum = IntTime(srcend) - IntTime(srcstart) + 1;
+	int maxframenuminthread = framenum / POSTFKTRA_THREADSNUM;
+	if (maxframenuminthread == 0) {
+		maxframenuminthread = 1;
+	}
+
+	for (framecount = 0; framecount < framenum; framecount++) {
+		double curframe = (double)(framecount + IntTime(srcstart));
+		CThreadingFKTra* curupdate = m_FKTraThreads + threadcount;
+
+		curupdate->AddFramenoList(curframe);
+
+		threadcount = framecount / maxframenuminthread;
+		if (threadcount >= POSTFKTRA_THREADSNUM) {
+			threadcount = POSTFKTRA_THREADSNUM - 1;//余りは全部　最終スレッドに任せる
+		}
+
+		if (threadcount == befthreadcount) {
+			framenointhread++;
+		}
+		else {
+			framenointhread = 0;
+		}
+
+		befthreadcount = threadcount;
+	}
+
+	return 0;
+}
+
+int CModel::CreateCopyW2LWThreads()
+{
+
+	DestroyCopyW2LWThreads();
+	//Sleep(100);
+
+
+	if (m_bonelist[0] == NULL) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	if (GetNoBoneFlag()) {
+		return 0;
+	}
+
+	m_CopyW2LWThreads = new CThreadingCopyW2LW[COPYW2LW_THREADSNUM];
+	if (!m_CopyW2LWThreads) {
+		_ASSERT(0);
+		return 1;
+	}
+	int createno;
+	for (createno = 0; createno < COPYW2LW_THREADSNUM; createno++) {
+		CThreadingCopyW2LW* curupdate = m_CopyW2LWThreads + createno;
+		curupdate->ClearFrameList();
+		curupdate->CreateThread((DWORD)(1 << createno));
+
+		curupdate->SetModel(this);
+	}
+
+	return 0;
+}
+
+int CModel::DestroyCopyW2LWThreads()
+{
+
+	if (m_CopyW2LWThreads) {
+		delete[] m_CopyW2LWThreads;
+	}
+	m_CopyW2LWThreads = 0;
+
+	return 0;
+}
+
+void CModel::WaitCopyW2LWFinished()
+{
+	if (m_CopyW2LWThreads != NULL) {
+
+		bool yetflag = true;
+		while (yetflag == true) {
+			int finishedcount = 0;
+			int updatecount;
+			for (updatecount = 0; updatecount < COPYW2LW_THREADSNUM; updatecount++) {
+				CThreadingCopyW2LW* curupdate = m_CopyW2LWThreads + updatecount;
+				if (curupdate->IsFinished()) {
+					finishedcount++;
+				}
+			}
+
+			if (finishedcount == COPYW2LW_THREADSNUM) {
+				yetflag = false;
+				return;
+			}
+			else {
+				//__nop();
+				//__nop();
+				//__nop();
+				//__nop();
+			}
+		}
+
+	}
+
+}
+
+int CModel::SetCopyW2LWFrame(double srcstart, double srcend)
+{
+	if (!m_CopyW2LWThreads) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	int updatecount;
+	for (updatecount = 0; updatecount < COPYW2LW_THREADSNUM; updatecount++) {
+		CThreadingCopyW2LW* curupdate = m_CopyW2LWThreads + updatecount;
+		curupdate->ClearFrameList();
+	}
+
+
+	//double setframe;
+	//int threadcount = 0;
+	//for (setframe = RoundingTime(srcstart); setframe <= RoundingTime(srcend); setframe += 1.0) {
+	//	CThreadingCopyW2LW* curupdate = m_CopyW2LWThreads + threadcount;
+	//
+	//	curupdate->AddFramenoList(setframe);
+	//
+	//	threadcount++;
+	//	if (threadcount >= COPYW2LW_THREADSNUM) {
+	//		threadcount = 0;
+	//	}
+	//}
+
+
+	int threadcount = 0;
+	int befthreadcount = 0;
+	int framenointhread = 0;
+	int framecount;
+	int framenum = IntTime(srcend) - IntTime(srcstart) + 1;
+	int maxframenuminthread = framenum / COPYW2LW_THREADSNUM;
+	if (maxframenuminthread == 0) {
+		maxframenuminthread = 1;
+	}
+
+	for (framecount = 0; framecount < framenum; framecount++) {
+		double curframe = (double)(framecount + IntTime(srcstart));
+		CThreadingCopyW2LW* curupdate = m_CopyW2LWThreads + threadcount;
+
+		curupdate->AddFramenoList(curframe);
+
+		threadcount = framecount / maxframenuminthread;
+		if (threadcount >= COPYW2LW_THREADSNUM) {
+			threadcount = COPYW2LW_THREADSNUM - 1;//余りは全部　最終スレッドに任せる
+		}
+
+		if (threadcount == befthreadcount) {
+			framenointhread++;
+		}
+		else {
+			framenointhread = 0;
+		}
+
+		befthreadcount = threadcount;
+	}
+
+
+	return 0;
+}
+
+
+int CModel::InitMpFrame(bool limitdegflag, int srcmotid, CBone* srcbone, double srcstartframe, double srcendframe)
+{
+	if (!GetTopBone(false) || !srcbone) {
+		return 0;
+	}
+
+	//g_underInitMp = true;//!!!!!!!!!!!!!!!!!!
+	
+	MOTINFO* curmi = GetMotInfo(srcmotid);
+	if (curmi) {
+		double startframe = RoundingTime(srcstartframe);
+		double endframe = RoundingTime(srcendframe);
+		
+
+		//double curframe;
+		//for (curframe = startframe; curframe <= endframe; curframe += 1.0) {
+		//	InitMPReq(limitdegflag, GetTopBone(false), srcmotid, curframe);
+		//}
+
+
+		//###################
+		//マルチスレッド処理
+		//###################
+		SetInitMpFrame(RoundingTime(startframe), RoundingTime(endframe));//2023/10/17
+		if (m_InitMpThreads) {
+			SetUnderInitMP(true);
+			int updatecount;
+			for (updatecount = 0; updatecount < INITMP_THREADSNUM; updatecount++) {
+				CThreadingInitMp* curupdate = m_InitMpThreads + updatecount;
+				curupdate->InitMPReq(limitdegflag, srcbone, srcmotid);
+			}
+			WaitInitMpFinished();
+			SetUnderInitMP(false);
+		}
+	}
+	
+	//g_underInitMp = false;//!!!!!!!!!!!!!!!!!!
+	
+
+	return 0;
+}
 
 
 void CModel::InitMPReq(bool limitdegflag, CBone* curbone, int srcmotid, double curframe)
 {
-	if (!curbone) {
-		return;
-	}
-	if (GetNoBoneFlag() == true) {
-		return;
-	}
-
-	if (curbone->IsSkeleton()) {
-		InitMP(limitdegflag, curbone, srcmotid, curframe);
-	}
-
-	if (curbone->GetChild(false)) {
-		InitMPReq(limitdegflag, curbone->GetChild(false), srcmotid, curframe);
-	}
-	if (curbone->GetBrother(false)) {
-		InitMPReq(limitdegflag, curbone->GetBrother(false), srcmotid, curframe);
-	}
+	ChaCalcFunc chacalcfunc;
+	chacalcfunc.InitMPReq(this, limitdegflag, curbone, srcmotid, curframe);
 }
 
 
 
 int CModel::InitMP(bool limitdegflag, CBone* curbone, int srcmotid, double curframe)
 {
+	ChaCalcFunc chacalcfunc;
+	return chacalcfunc.InitMP(this, limitdegflag, curbone, srcmotid, curframe);
+
+
 	//CMotionPoint* pcurmp = 0;
 	//pcurmp = curbone->GetMotionPoint(GetCurMotInfo()->motid, curframe);
 
@@ -17983,29 +18644,8 @@ void CModel::GetRootOrReferenceReq(FbxNode* srcnode, FbxNode** dstppnode)
 
 void CModel::GetHipsBoneReq(CBone* srcbone, CBone** dstppbone)
 {
-
-	if (GetNoBoneFlag() == true) {
-		*dstppbone = 0;
-		return;
-	}
-
-
-	if (srcbone && dstppbone && !(*dstppbone)) {
-
-		if (srcbone->IsHipsBone()) {
-			*dstppbone = srcbone;
-			return;
-		}
-
-		if (!(*dstppbone)) {
-			if (srcbone->GetBrother(false)) {
-				GetHipsBoneReq(srcbone->GetBrother(false), dstppbone);
-			}
-			if (srcbone->GetChild(false)) {
-				GetHipsBoneReq(srcbone->GetChild(false), dstppbone);
-			}
-		}
-	}
+	ChaCalcFunc chacalcfunc;
+	chacalcfunc.GetHipsBoneReq(this, srcbone, dstppbone);
 }
 
 void CModel::CalcModelWorldMatOnLoad()
@@ -18031,36 +18671,13 @@ void CModel::CalcModelWorldMatOnLoad()
 
 CBone* CModel::GetTopBone(bool excludenullflag)//default : excludenullflag = true
 {
-	CBone* ptopbone = 0;
-	GetTopBoneReq(m_topbone, &ptopbone, excludenullflag);
-	return ptopbone;
+	ChaCalcFunc chacalcfunc;
+	return chacalcfunc.GetTopBone(this, excludenullflag);
 }
 void CModel::GetTopBoneReq(CBone* srcbone, CBone** pptopbone, bool excludenullflag)
 {
-	if (srcbone && pptopbone && !(*pptopbone)) {
-
-		if (excludenullflag == true) {
-			//if ((srcbone->IsSkeleton()) || (srcbone->GetType() == FBXBONE_ROOTNODE)) {
-			if (srcbone->IsSkeleton()) {//FBXBONE_ROOTNODEはここでは除外 　FBXBONE_ROOTNODEはGetRootNode()で取得するように
-				*pptopbone = srcbone;
-				return;
-			}
-		}
-		else {
-			*pptopbone = srcbone;
-			return;
-		}
-
-		if (!(*pptopbone)) {
-			if (srcbone->GetBrother(false)) {
-				GetTopBoneReq(srcbone->GetBrother(false), pptopbone, excludenullflag);
-			}
-			if (srcbone->GetChild(false))
-			{
-				GetTopBoneReq(srcbone->GetChild(false), pptopbone, excludenullflag);
-			}
-		}
-	}
+	ChaCalcFunc chacalcfunc;
+	chacalcfunc.GetTopBoneReq(this, srcbone, pptopbone, excludenullflag);
 }
 
 
@@ -18306,7 +18923,7 @@ ChaMatrix CModel::GetCameraTransformMat(int cameramotid, double nextframe, int i
 
 }
 
-ChaVector3 CModel::CalcCameraFbxEulXYZ(int cameramotid, double srcframe, ChaVector3 befeul)
+ChaVector3 CModel::CalcCameraFbxEulXYZ(int cameramotid, double srcframe)
 {
 	ChaVector3 reteul = ChaVector3(0.0f, 0.0f, 0.0f);
 
@@ -18321,7 +18938,7 @@ ChaVector3 CModel::CalcCameraFbxEulXYZ(int cameramotid, double srcframe, ChaVect
 		return reteul;
 	}
 
-	return m_camerafbx.CalcCameraFbxEulXYZ(cameramotid, srcframe, befeul);
+	return m_camerafbx.CalcCameraFbxEulXYZ(cameramotid, srcframe);
 }
 
 
@@ -18578,7 +19195,7 @@ int CModel::ChkInView()
 		map<int, CMQOObject*>::iterator itr;
 		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 			CMQOObject* curobj = itr->second;
-			if (curobj) {
+			if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
 				//curobj->ChkInView(m_matWorld, m_matVP);
 				curobj->ChkInView(m_matWorld, m_matVP);
 				if (curobj->GetVisible()) {
@@ -18814,3 +19431,317 @@ int CModel::SetLaterTransparentVec(std::vector<std::wstring> srclatervec)
 }
 
 
+//###############################################################################################
+//ModifyEuler360 と　CalcLocalEulXYZとでは　結果が違った (CalcLocalEulXYZの方が大分きれい)
+// PostIKの後処理としては　内部でCalcLocalEulXYZを呼び出しているCalcBoneEulReq()を使用することに
+//###############################################################################################
+//void CModel::ModifyEuler360Req(int limitdegflag, CBone* srcbone, int srcmotid, double startframe, double endframe)
+//{
+//	if (srcbone) {
+//
+//		if (srcbone->IsSkeleton()) {
+//			double curframe;
+//			for (curframe = startframe; curframe <= endframe; curframe += 1.0) {
+//				if (curframe >= 1.01) {
+//					double befframe;
+//					befframe = curframe - 1.0;
+//
+//					//ChaMatrix befwm = srcbone->GetWorldMat(limitdegflag, srcmotid, curframe, 0);
+//					//ChaVector3 befeul = srcbone->GetLocalEul(limitdegflag, srcmotid, befframe, 0);
+//					//ChaVector3 cureul = srcbone->GetLocalEul(limitdegflag, srcmotid, curframe, 0);
+//					//ChaModifyEuler360(&cureul, &befeul, 0, 180.0f, 180.0f, 180.0f);
+//					//ChaModifyEuler360(&cureul, &befeul, 0, 91.0f, 181.0f, 181.0f);
+//					//srcbone->SetWorldMatFromEul(limitdegflag, 0, 0, befwm, cureul, srcmotid, curframe, 0);
+//					//srcbone->SetLocalEul(limitdegflag, srcmotid, curframe, cureul, 0);
+//
+//					ChaVector3 cureul;
+//					cureul = srcbone->CalcLocalEulXYZ(limitdegflag, -1, srcmotid, curframe, BEFEUL_BEFFRAME);
+//					srcbone->SetLocalEul(limitdegflag, srcmotid, curframe, cureul, 0);
+//				}
+//			}
+//		}
+//
+//		if (srcbone->GetChild(false)) {
+//			ModifyEuler360Req(limitdegflag, srcbone->GetChild(false), srcmotid, startframe, endframe);
+//		}
+//		if (srcbone->GetBrother(false)) {
+//			ModifyEuler360Req(limitdegflag, srcbone->GetBrother(false), srcmotid, startframe, endframe);
+//		}
+//	}
+//
+//}
+
+int CModel::Retarget(CModel* srcbvhmodel, ChaMatrix smatVP,
+	std::map<CBone*, CBone*>& sconvbonemap,
+	int (*srcAddMotionFunc)(const WCHAR* wfilename, double srcmotleng))
+{
+
+	//retargetは　unlimitedに対して行い　unlimitedにセットする
+	bool limitdegflag = false;
+
+	if (!srcbvhmodel || !srcAddMotionFunc) {
+		return 0;
+	}
+
+	//g_underRetargetFlag = true;//!!!!!!!!!!!!
+	SetUnderRetarget(true);
+
+	//MOTINFO* bvhmi = srcbvhmodel->GetMotInfoBegin()->second;
+	//if (!bvhmi) {
+	//	::MessageBox(NULL, L"motion of bvh is not found error.", L"error!!!", MB_OK);
+	//	g_underRetargetFlag = false;
+	//	return 1;
+	//}
+
+	//############################################################
+	//2023/08/14 : bvh側の全モーションに関してリターゲットループ
+	//############################################################
+	std::map<int, MOTINFO*>::iterator itrbvhmi;
+	for (itrbvhmi = srcbvhmodel->GetMotInfoBegin(); itrbvhmi != srcbvhmodel->GetMotInfoEnd(); itrbvhmi++) {
+		MOTINFO* bvhmi = itrbvhmi->second;
+		if (!bvhmi) {
+			//::MessageBox(NULL, L"motion of bvh is not found error.", L"error!!!", MB_OK);
+			//g_underRetargetFlag = false;
+			//return 1;
+			continue;
+		}
+
+		double motleng = bvhmi->frameleng;//2022/11/01
+		//double motleng = bvhmi->frameleng - 1.0;//2021/10/13
+		int bvhmotid = bvhmi->motid;//motion側のmotid
+		srcbvhmodel->SetCurrentMotion(bvhmotid);
+
+
+		//AddMotion内部でSetCurrentMotionされる
+		(srcAddMotionFunc)(0, motleng);//model側のaddmotion　model側のSetCurrentMotionもされる
+
+		//(srcInitCurMotionFunc)(0, 0);//CModel::AddMotionで初期化することにしたのでコメントアウト　2022/08/28
+
+
+		MOTINFO* modelmi = GetCurMotInfo();
+		CBone* modelbone;
+		if (modelmi) {
+			CBone* modeltopbone = GetTopBone();
+			CBone* modelhipsbone = 0;
+			if (!modeltopbone) {
+				::MessageBox(NULL, L"modelside bone is not found error.", L"error!!!", MB_OK);
+				//g_underRetargetFlag = false;
+				SetUnderRetarget(false);
+				return 1;
+			}
+			else {
+				GetHipsBoneReq(modeltopbone, &modelhipsbone);
+				if (modelhipsbone) {
+					modelbone = modelhipsbone;
+				}
+				else {
+					modelbone = modeltopbone;
+				}
+			}
+			//modelbone = srcmodel->GetTopBone();
+		}
+		else {
+			::MessageBox(NULL, L"modelside motion is not found error.", L"error!!!", MB_OK);
+			SetUnderRetarget(false);
+			return 1;
+		}
+
+
+		CBone* bvhtopbone = 0;
+		CBone* bvhhipsbone = 0;
+		CBone* befbvhbone = 0;
+		bvhtopbone = srcbvhmodel->GetTopBone();
+		if (bvhtopbone) {
+			srcbvhmodel->GetHipsBoneReq(bvhtopbone, &bvhhipsbone);
+			if (bvhhipsbone) {
+				befbvhbone = bvhhipsbone;
+			}
+			else {
+				befbvhbone = bvhtopbone;
+			}
+		}
+		else {
+			::MessageBox(NULL, L"bvhside motion is not found error.", L"error!!!", MB_OK);
+			SetUnderRetarget(false);
+			return 1;
+		}
+
+
+		HINFO bvhhi;
+		bvhhi.minh = 1e7;
+		bvhhi.maxh = -1e7;
+		bvhhi.height = 0.0f;
+		srcbvhmodel->SetFirstFrameBonePos(&bvhhi, befbvhbone);//hips指定
+
+		HINFO modelhi;
+		modelhi.minh = 1e7;
+		modelhi.maxh = -1e7;
+		modelhi.height = 0.0f;
+		SetFirstFrameBonePos(&modelhi, modelbone);//hips指定
+
+		float hrate;
+		if (bvhhi.height != 0.0f) {
+			hrate = modelhi.height / bvhhi.height;
+		}
+		else {
+			//hrate = 0.0f;
+			hrate = 1.0f;
+			_ASSERT(0);
+		}
+
+		//2023/02/08
+		if (fabs(hrate) <= 0.0001f) {
+			hrate = 1.0f;
+		}
+
+
+
+		////リターゲットマルチスレッド計算 2023/10/23
+		SetRetargetFrame(1.0, RoundingTime(motleng - 1.0));
+		if (m_RetargetThreads) {
+			int updatecount;
+			for (updatecount = 0; updatecount < RETARGET_THREADSNUM; updatecount++) {
+				CThreadingRetarget* curupdate = m_RetargetThreads + updatecount;
+		
+				curupdate->RetargetReqOne(limitdegflag, this, srcbvhmodel, modelbone,
+					bvhtopbone, hrate, sconvbonemap);
+			}
+			WaitRetargetFinished();
+		}
+
+
+		//double frame;
+		//////for (frame = 0.0; frame < motleng; frame += 1.0) {
+		//for (frame = 1.0; frame < motleng; frame += 1.0) {//2023/03/27 : 0フレームはInitMPの姿勢のままにする
+		//	if (modelbone) {
+		//		if (bvhtopbone) {
+		//			ChaCalcFunc chacalcfunc;
+		//			chacalcfunc.RetargetReq(this, srcbvhmodel, modelbone, frame, bvhtopbone, hrate, sconvbonemap);
+		//		}
+		//	}
+		//}
+
+
+		//###############################
+		// マルチスレッドの後処理
+		//前フレーム考慮のオイラー角計算
+		//###############################
+		if (modelmi) {
+			SetUnderRetarget(false);//!!!!!!!!!!!!
+			CalcBoneEul(limitdegflag, modelmi->motid);
+			SetUnderRetarget(true);//!!!!!!!!!!!!
+		}
+		
+
+		ChaMatrix tmpwm = GetWorldMat();
+		UpdateMatrix(limitdegflag, &tmpwm, &smatVP);
+
+
+	}
+
+
+	SetUnderRetarget(false);//!!!!!!!!!!!!
+
+	//if (!g_retargetbatchflag) {
+	if (InterlockedAdd(&g_retargetbatchflag, 0) == 0) {
+		::MessageBox(NULL, L"Finish of convertion.", L"check!!!", MB_OK);
+	}
+
+	return 0;
+
+}
+
+CMQOObject* CModel::GetMQOObjectByName(const char* findpattern) {
+	std::map<int, CMQOObject*>::iterator itrobj;
+	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+		CMQOObject* curobj = itrobj->second;
+		if (curobj) {
+			if (strcmp(curobj->GetName(), findpattern) == 0) {
+				return curobj;
+			}
+		}
+	}
+	return 0;
+};
+
+void CModel::SetBoneMatrixIndexReq(CBone* srcbone, int* pcount)
+{
+	if (srcbone) {
+		
+		if (srcbone->IsSkeleton()) {
+			srcbone->SetMatrixIndex(*pcount);
+			(*pcount)++;
+		}
+
+		if (srcbone->GetChild(false)) {
+			SetBoneMatrixIndexReq(srcbone->GetChild(false), pcount);
+		}
+		if (srcbone->GetBrother(false)) {
+			SetBoneMatrixIndexReq(srcbone->GetBrother(false), pcount);
+		}
+	}
+}
+
+int CModel::GetMQOMaterialSize() {
+	return m_materialbank.GetSize();
+};
+CMQOMaterial* CModel::GetMQOMaterial(int srcmatno) {//indexではなくmaterialno
+	int materialnum = GetMQOMaterialSize();
+	int matindex;
+	for (matindex = 0; matindex < materialnum; matindex++) {
+		CMQOMaterial* chkmat = m_materialbank.Get(matindex);
+		if (chkmat && (chkmat->GetMaterialNo() == srcmatno)) {
+			return chkmat;
+		}
+	}
+	return 0;
+};
+int CModel::ExistMQOMaterial(CMQOMaterial* srcmat) {
+	int materialnum = GetMQOMaterialSize();
+	int matindex;
+	for (matindex = 0; matindex < materialnum; matindex++) {
+		CMQOMaterial* chkmat = m_materialbank.Get(matindex);
+		if (chkmat && (chkmat == srcmat)) {
+			return chkmat->GetMaterialNo();
+		}
+	}
+	return -1;
+};
+
+void CModel::SetMQOMaterial(const char* srcname, CMQOMaterial* srcmat) {
+	if (srcname && srcname[0] && srcmat) {
+		m_materialbank.Regist(srcname, srcmat);
+	}
+	else {
+		_ASSERT(0);
+	}
+};
+
+CMQOMaterial* CModel::GetMQOMaterialByName(std::string srcname) {
+	return m_materialbank.Get(srcname.c_str());
+};
+CMQOMaterial* CModel::GetMQOMaterialByIndex(int srcmatindex)
+{
+	return m_materialbank.Get(srcmatindex);
+}
+CMQOMaterial* CModel::GetMQOMaterialByMaterialNo(int srcmatno)
+{
+	return GetMQOMaterial(srcmatno);
+}
+
+
+void CModel::ResetUpdateFl4x4Flag()//materialのリセットも行う
+{
+
+	m_updatefl4x4flag = false;
+
+	int materialnum = GetMQOMaterialSize();
+	int matindex;
+	for (matindex = 0; matindex < materialnum; matindex++) {
+		CMQOMaterial* resetmqomat = m_materialbank.Get(matindex);
+		if (resetmqomat) {
+			resetmqomat->ResetUpdateFl4x4Flag();
+			resetmqomat->ResetUpdateLightsFlag();
+		}
+	}
+}

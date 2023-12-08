@@ -382,7 +382,7 @@ int CPolyMesh4::SetOptV(BINORMALDISPV* dispv, int* pleng, int* matnum, CModel* p
 
 					if (m_normalleng == (m_facenum * 3)) {
 						if (m_normalmappingmode == 0) {
-							curv->normal = ChaVector4(*(m_normal + (setno * 3 + vi[vcnt])), 0.0f);//!!!!!! eByPolygonVertex : save with MameBake3D
+							curv->normal = ChaVector4(*(m_normal + (setno * 3 + vi[vcnt])), 0.0f);//!!!!!! eByPolygonVertex : save with AdditiveIK
 						}
 						else {
 							curv->normal = ChaVector4(*(m_normal + (setno * 3 + vcnt)), 0.0f);//!!!!!!!!!!! eByControlPoint : save with Maya FBX

@@ -7,11 +7,11 @@ DirectX12対応. fbx入出力. BulletPhysics対応.<br>
 MITランセンス.<br>
 <br>
 # ScreenShot
-![TopFig0](ScreenShots/AdditiveIK_To1001_SS1_800.png "トップ絵0")  
-Fig.1 ScreenShot of AdditiveIK.  
+![TopFig0](ScreenShots/AdditiveIK_To1001_SS1_800.png "トップ絵0")<br>
+Fig.1 ScreenShot of AdditiveIK.<br>
 <br>
-![TopFig1](ScreenShots/AdditiveIK_To1001_Lights_1_small.png "トップ絵1")
-Fig.2 Lighting Test 2023/12/06 (UnityAsset TheHuntを読込).
+![TopFig1](ScreenShots/AdditiveIK_To1001_ShaderPlateMenu_1_800.png "トップ絵1")<br>
+Fig.2 ShaderPlateMenu 2023/12/08 (UnityAsset JapaneseCityを読込後Shaderメニューで設定).<br>
 <br>
 <br>
 # 免責<br>

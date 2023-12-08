@@ -2,7 +2,7 @@
 #define MODELH
 
 
-//class ID3D11Device;
+//class ID3D12Device;
 
 //#include <d3dx9.h>
 #include <wchar.h>
@@ -22,6 +22,12 @@
 #include <UndoMotion.h>
 #include <CameraFbx.h>
 
+#include "../../MiniEngine/MiniEngine.h"
+#include "../../MiniEngine/RenderContext.h"
+#include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
+#include "../../MiniEngine/InstancedSprite.h"
+
+
 //using namespace std;
 
 class CMQOMaterial;
@@ -36,6 +42,12 @@ class CRigidElem;
 class CEditRange;
 class CThreadingLoadFbx;
 class CThreadingUpdateMatrix;
+class CThreadingPostIK;
+class CThreadingCalcEul;
+class CThreadingFKTra;
+class CThreadingCopyW2LW;
+class CThreadingRetarget;
+class CThreadingInitMp;
 class CNodeOnLoad;
 
 typedef struct funcmpparams
@@ -110,6 +122,27 @@ typedef struct tag_physikrec
 	};
 }PHYSIKREC;
 
+typedef struct tag_dispgroupelem
+{
+	int objno;
+	int depth;
+	int groupno;
+	FbxNode* pNode;
+	CMQOObject* mqoobject;
+
+	void Init() {
+		objno = 0;
+		depth = 0;
+		groupno = 1;
+		pNode = 0;
+		mqoobject = 0;
+	};
+
+	tag_dispgroupelem() {
+		Init();
+	};
+}DISPGROUPELEM;
+
 
 #define MAXPHYSIKRECCNT		(60 * 60)
 
@@ -161,7 +194,7 @@ public:
  * @fn
  * LoadMQO
  * @breaf メタセコイアで作成した３Dデータファイル*.mqoを読み込む。
- * @param (ID3D11Device* pdev) IN Direct3Dのデバイス。
+ * @param (ID3D12Device* pdev) IN Direct3Dのデバイス。
  * @param (WCHAR* wfile) IN mqoファイルのフルパス。
  * @param (WCHAR* modelfolder) IN FBX書き出しの際に使用するモデルフォルダー名。ファイル名から拡張子を取ったものに通し番号を付けたものがデフォルト。
  * @param (float srcmult) IN 読み込み倍率。
@@ -170,14 +203,14 @@ public:
  * @return 成功したら０。
  * @detail texpool引数にはデフォルト値があるので省略可能。
  */
-	int LoadMQO( ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmediateContext, const WCHAR* wfile, const WCHAR* modelfolder, float srcmult, int ismedia, int texpool = 0 );
+	int LoadMQO( ID3D12Device* pdev, const WCHAR* wfile, const WCHAR* modelfolder, float srcmult, int ismedia, int texpool = 0 );
 	
 /**
  * @fn
  * LoadFBX
  * @breaf FBXファイルを読み込む。
  * @param (int skipdefref) IN デフォルト剛体設定を利用をスキップするかどうかのフラグ。chaファイルから呼び出すときはrefファイルがあるので１。FBX単体で読み込むときは０。
- * @param (ID3D11Device* pdev) IN Direct3DのDevice。
+ * @param (ID3D12Device* pdev) IN Direct3DのDevice。
  * @param (WCHAR* wfile) IN FBXファイルのフルパス。
  * @param (WCHAR* modelfolder) IN FBX書き出し時に使用するFBXファイルがあるフォルダの名前。chaファイルがあるフォルダの中のFBXがあるフォルダの名前となる。
  * @param (float srcmult) IN 読み込み倍率。
@@ -187,7 +220,7 @@ public:
  * @param (int forcenewaxisflag) 過渡期ファイルのフラグ。
  * @return 成功したら０。
  */
-	int LoadFBX( int skipdefref, ID3D11Device* pdev, ID3D11DeviceContext* pd3dImmediateContext, const WCHAR* wfile, const WCHAR* modelfolder, 
+	int LoadFBX( int skipdefref, ID3D12Device* pdev, const WCHAR* wfile, const WCHAR* modelfolder, 
 		float srcmult, FbxManager* psdk, FbxImporter** ppimporter, FbxScene** ppscene, 
 		int forcenewaxisflag, BOOL motioncachebatchflag);
 
@@ -209,34 +242,52 @@ public:
  * @fn
  * OnRender
  * @breaf モデルデータを描画する。
- * @param (ID3D11Device* pdev) IN Direct3DのDevice。
+ * @param (ID3D12Device* pdev) IN Direct3DのDevice。
  * @param (int lightflag) IN 照光処理をするかどうかのフラグ。
  * @param (ChaVector4 diffusemult) IN ディフューズ(拡散光)に乗算するRGBAの値。ライトを変えなくても明るさを変えることが出来る。
  * @param (int btflag = 0) IN bulletのシミュレーション中であるかどうかのフラグ。
  * @return 成功したら０。
  */
-	int OnRender(bool withalpha, ID3D11DeviceContext* pd3dImmediateContext, int lightflag, ChaVector4 diffusemult, int btflag = 0 );
+	int OnRender(bool withalpha, RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int btflag = 0, bool calcslotflag = false );
 
-	int RenderRefArrow(bool limitdegflag, ID3D11DeviceContext* pd3dImmediateContext, 
+	int RenderRefArrow(bool limitdegflag, RenderContext* pRenderContext, 
 		CBone* boneptr, ChaVector4 diffusemult, int refmult, std::vector<ChaVector3> vecbonepos);
+
+
+
+	//DispGroup : test button : exclusive display
+	int SetDispGroupGUI(std::vector<OrgWinGUI::OWP_CheckBoxA*>& checkboxvec);
+	int RenderTest(bool withalpha, RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int srcobjno);
+	int SelectRenderObject(int srcobjno, std::vector<CMQOObject*>& selectedobjvec);
+	void SelectRenderObjectReq(FbxNode* pNode, std::vector<CMQOObject*>& selectedobjvec);
+	int GetSelectedObjTree(int srcobjno, std::vector<int>& selectedobjtree);
+	void GetSelectedObjTreeReq(FbxNode* pNode, std::vector<int>& selectedobjtree);
+
+
+	int CreateObjno2DigElem();
+	void CreateObjno2DigElemReq(FbxNode* pNode, int* pobjno, int depth);
+	int MakeDispGroupForRender();
+
 /**
  * @fn
  * RenderBoneMark
  * @breaf ボーンマークとジョイントマークと剛体形状を表示する。
- * @param (ID3D11Device* pdev) IN Direct3DのDevice。
+ * @param (ID3D12Device* pdev) IN Direct3DのDevice。
  * @param (CModel* bmarkptr) IN ボーンマークのモデルデータ。
  * @param (CMySprite* bcircleptr) IN ジョイント部分の表示のSprite。
  * @param (int selboneno) IN 選択中のボーンのID。
  * @param (int skiptopbonemark) IN 一番親からのボーンを表示しないフラグ。
  * @return 成功したら０。
  */
-	int RenderBoneMark(bool limitdegflag, ID3D11DeviceContext* pd3dImmediateContext, CModel* bmarkptr, CMySprite* bcircleptr, int selboneno, int skiptopbonemark = 0 );
-	int RenderBoneCircleOne(bool limitdegflag, ID3D11DeviceContext* pd3dImmediateContext, CMySprite* bcircleptr, int selboneno);
+	int RenderBoneMark(myRenderer::RenderingEngine& re, RenderContext& rc,
+		bool limitdegflag, CModel* bmarkptr, InstancedSprite& bcircleptr, 
+		int selboneno, int skiptopbonemark = 0 );
+	int RenderBoneCircleOne(bool limitdegflag, RenderContext* pRenderContext, CMySprite* bcircleptr, int selboneno);
 
 
-	void RenderCapsuleReq(bool limitdegflag, ID3D11DeviceContext* pd3dImmediateContext, CBtObject* srcbto);
+	void RenderCapsuleReq(bool limitdegflag, RenderContext* pRenderContext, CBtObject* srcbto);
 
-	void RenderBoneCircleReq(ID3D11DeviceContext* pd3dImmediateContext, CBtObject* srcbto, CMySprite* bcircleptr);
+	void RenderBoneCircleReq(RenderContext* pRenderContext, CBtObject* srcbto, CMySprite* bcircleptr);
 
 /**
  * @fn
@@ -255,13 +306,15 @@ public:
  */
 	int MakeObjectName();
 
+	int MakeLaterMaterial();
+
 /**
  * @fn
  * MakePolyMesh3
  * @breaf メタセコイアから読み込んだデータの表示用データを作成する。
  * @return 成功したら０。
  */
-	int MakePolyMesh3();
+	int MakePolyMesh3(bool fbxfileflag);
 
 /**
  * @fn
@@ -295,16 +348,17 @@ public:
  * @param (ChaMatrix* vpmat) IN View * Projection変換行列。
  * @return 成功したら０。
  */
-	int UpdateMatrix(bool limitdegflag, ChaMatrix* wmat, ChaMatrix* vpmat, bool needwaitfinished = false );
+	int UpdateMatrix(bool limitdegflag, ChaMatrix* wmat, ChaMatrix* vpmat, bool needwaitfinished = true, int updateslot = 0);
 	void UpdateMatrixReq(bool limitdegflag, CBone* srcbone, int srcmotid, double srcframe, ChaMatrix* wmat, ChaMatrix* vpmat);
-	int SwapCurrentMotionPoint();
+	int ChkInView();
+	//int SwapCurrentMotionPoint();
 	int HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone, ChaMatrix* wmat, ChaMatrix* vpmat);
 	//int UpdateLimitedWM(int srcmotid, double srcframe);
 	int ClearLimitedWM(int srcmotid, double srcframe);
 	void CopyWorldToLimitedWorldReq(CBone* srcbone, int srcmotid, double srcframe);
 	void CopyLimitedWorldToWorldReq(CBone* srcbone, int srcmotid, double srcframe);
 	int CopyLimitedWorldToWorldOne(CBone* srcbone, int srcmotid, double srcframe);
-	void ApplyNewLimitsToWMReq(CBone* srcbone, int srcmotid, double srcframe);
+	void ApplyNewLimitsToWMReq(CBone* srcbone, int srcmotid, double srcframe, ChaMatrix befeditparentmat);
 
 	void WaitUpdateMatrixFinished();
 	//void CalcWorldMatAfterThreadReq(CBone* srcbone, int srcmotid, double srcframe, ChaMatrix* wmat, ChaMatrix* vpmat);
@@ -314,11 +368,9 @@ public:
  * @fn
  * SetShaderConst
  * @breaf シェーダーの定数をセットする。アニメーション、ライト、テクスチャなどのシェーダー定数をDirect3Dの描画命令を呼び出す前にセットしておく。
- * @param (CMQOObject* srcobj) IN 描画対象のCMQOObject。
- * @param (int btflag = 0) IN bulletのシミュレーション中かどうかのフラグ。
  * @return 成功したら０。
  */
-	int SetShaderConst( CMQOObject* srcobj, int btflag = 0 );
+	int SetShaderConst(int btflag = 0, bool calcslotflag = false);
 
 /**
  * @fn
@@ -333,6 +385,7 @@ public:
 	int FillTimeLineOne(CBone* curbone, int lineno,
 		OrgWinGUI::OWP_Timeline& timeline,
 		std::map<int, int>& lineno2boneno, std::map<int, int>& boneno2lineno);
+
 
 /**
  * @fn
@@ -354,7 +407,6 @@ public:
  * @return 成功したら０。
  */
 	int SetCurrentMotion( int srcmotid );
-
 /**
  * @fn
  * SetMotionFrame
@@ -445,14 +497,20 @@ public:
 	int IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
 		int srcboneno, int maxlevel);
 
+
 	void ClearIKRotRec();
 	void ClearIKRotRecUV();
 
 
 	int IKRotate(bool limitdegflag, CEditRange* erptr, int srcboneno, ChaVector3 targetpos, int maxlevel, double directframe = -1.0);
-	int IKRotateForIKTarget(bool limitdegflag, CEditRange* erptr, int srcboneno, ChaVector3 targetpos, 
-		int maxlevel, double directframe, bool postflag);
-	int IKTargetVec(bool limitdegflag, CEditRange* srptr, double srcframe, bool postflag);
+	
+	//2023/10/17 ChaCalcFuncに移動
+	//int IKRotateForIKTarget(bool limitdegflag, CEditRange* erptr, int srcboneno, ChaVector3 targetpos, 
+
+	//2023/10/17 ChaCalcFuncに移動
+	//	int maxlevel, double directframe, bool postflag);
+	//int IKTargetVec(bool limitdegflag, CEditRange* srptr, double srcframe, bool postflag);
+
 	int SetIKTargetVec();
 	void SetIKTargetVecReq(CBone* srcbone);
 	int PosConstraintExecuteFromButton(bool limitdegflag, CEditRange* erptr);
@@ -555,9 +613,9 @@ public:
 		bool limitdegflag, CEditRange* erptr,
 		int srcboneno);
 
-
-	int FKBoneTra(bool limitdegflag, int onlyoneflag, CEditRange* erptr, 
-		int srcboneno, ChaVector3 addtra, double onlyoneframe = 0.0 );
+	//2023/10/17 ChaCalcFuncに移動
+	//int FKBoneTra(bool limitdegflag, int onlyoneflag, CEditRange* erptr, 
+	//	int srcboneno, ChaVector3 addtra, double onlyoneframe = 0.0 );
 
 
 
@@ -645,7 +703,7 @@ public:
  * @return 成功したら０。
  * @detail メタセコイアファイルには材質が含まれていない場合がある。材質が１つもないと描画時にエラーになるのでデフォルトの材質を作成する。
  */
-	int AddDefMaterial();
+	int AddDefMaterialIfEmpty();
 
 /**
  * @fn
@@ -671,6 +729,8 @@ public:
  */
 	int SetBtMotion(bool limitdegflag, CBone* srcbone, int rgdollflag, 
 		double srcframe, ChaMatrix* wmat, ChaMatrix* vpmat );
+	int SetBtMotionOnBt(bool limitdegflag,
+		double srcframe, ChaMatrix* vpmat, int updateslot);
 
 /**
  * @fn
@@ -735,8 +795,9 @@ public:
 
 	int SetColTypeAll(int reindex, int srctype);
 
-	int Motion2Bt(bool limitdegflag, int firstflag, double nextframe, 
-		ChaMatrix* mW, ChaMatrix* mVP, int selectboneno);
+	int Motion2Bt(bool limitdegflag, double nextframe, ChaMatrix* pmVP, int updateslot);
+	void Motion2BtReq(CBtObject* srcbto);
+
 	//int SetRagdollKinFlag(int selectbone, int physicsmvkind = 0);
 	int SetKinematicFlag();
 	int CreateRigidElem();
@@ -755,7 +816,7 @@ public:
 	int ResetBt();
 
 	int InitUndoMotion( int saveflag );
-	int SaveUndoMotion(bool limitdegflag, int curboneno, int curbaseno,
+	int SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, int curboneno, int curbaseno,
 		CEditRange* srcer, double srcapplyrate, BRUSHSTATE srcbrushstate, bool allframeflag);
 	int RollBackUndoMotion(bool limitdegflag, HWND hmainwnd, int redoflag, 
 		int* curboneno, int* curbaseno, 
@@ -775,6 +836,8 @@ public:
 
 	int CalcBoneEul(bool limitdegflag, int srcmotid);
 	void CalcBoneEulReq(bool limitdegflag, CBone* curbone, int srcmotid, double srcframe);
+	void CalcBoneEulReq(bool limitdegflag, CBone* curbone, int srcmotid, double startframe, double endframe);
+
 
 	int RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, 
 		int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig, int buttonflag);
@@ -798,6 +861,7 @@ public:
 	int ApplyBtToMotion(bool limitdegflag);
 	void CalcBtAxismat(int onfirstcreate);
 	void CalcRigidElem();
+	int CalcRigidElemParamsOnBt();
 	void SetBtKinFlagReq(CBtObject* srcbto, int oncreateflag);
 	void SetKinematicFlagReq(CBtObject* srcbto);
 
@@ -823,8 +887,42 @@ public:
 	bool ChkBoneHasRig(CBone* srcbone);
 
 	int CreateBoneUpdateMatrix();//g_UpdateMatrixThreads変更時にも呼ぶ
+	
+	int CreatePostIKThreads();
+	int DestroyPostIKThreads();
+	void WaitPostIKFinished();
+	int SetPostIKFrame(double srcstart, double srcend);
+
+	int CreateInitMpThreads();
+	int DestroyInitMpThreads();
+	void WaitInitMpFinished();
+	int SetInitMpFrame(double srcstart, double srcend);
+
+	int CreateRetargetThreads();
+	int DestroyRetargetThreads();
+	void WaitRetargetFinished();
+	int SetRetargetFrame(double srcstart, double srcend);
+
+	int CreateFKTraThreads();
+	int DestroyFKTraThreads();
+	void WaitFKTraFinished();
+	int SetFKTraFrame(double srcstart, double srcend);
+
+	int CreateCopyW2LWThreads();
+	int DestroyCopyW2LWThreads();
+	void WaitCopyW2LWFinished();
+	int SetCopyW2LWFrame(double srcstart, double srcend);
+
+
+	int CreateCalcEulThreads();
+	int DestroyCalcEulThreads();
+	void WaitCalcEulFinished();
+
+
+
 	//int GetFBXAnim(int animno, FbxNode* pNode, int motid, double animleng, bool callingbythread = false);//CThreadingLoadFbxからも呼ぶ CBoneに移動
 
+	int InitMpFrame(bool limitdegflag, int srcmotid, CBone* srcbone, double srcstartframe, double srcendframe);
 	void InitMPReq(bool limitdegflag, CBone* curbone, int srcmotid, double curframe);
 	int InitMP(bool limitdegflag, CBone* curbone, int srcmotid, double curframe);
 
@@ -837,7 +935,7 @@ public:
 	CNodeOnLoad* FindNodeOnLoadByName(const char* srcname);
 	FbxNode* FindNodeByBone(CBone* srcbone);
 	CBone* FindBoneByNode(FbxNode* srcnode);
-
+	bool HasCluster(FbxNode* srcnode, FbxNodeAttribute** ppAttrib);
 
 	//NodeMatが変わらないように　SetRotationActiveは変更しないことに
 	//void SetRotationActiveToBone();
@@ -852,16 +950,30 @@ public:
 	int GetCameraAnimParams(int cameramotid, double nextframe, double camdist, ChaVector3* pEyePos, ChaVector3* pTargetPos, ChaVector3* pcamupvec, ChaMatrix* protmat, int inheritmode);
 	int GetCameraAnimParams(double nextframe, double camdist, ChaVector3* pEyePos, ChaVector3* pTargetPos, ChaVector3* pcamupvec, ChaMatrix* protmat, int inheritmode);
 	int GetCameraProjParams(int cameramotid, float* pprojnear, float* pprojfar, float* pfovy, ChaVector3* pcampos, ChaVector3* pcamdir, ChaVector3* pcamupvec);
-	ChaVector3 CalcCameraFbxEulXYZ(int cameramotid, double srcframe, ChaVector3 befeul);
+	ChaVector3 CalcCameraFbxEulXYZ(int cameramotid, double srcframe);
 	ChaMatrix GetCameraTransformMat(int cameramotid, double nextframe, int inheritmode, bool multInvNodeMat);
 
 	ChaVector3 GetCameraAdjustPos(int cameramotid);
 
 
+	int SetIKStopFlag();
+
+	int GetTextureNameVec(std::vector<std::string>& dstvec);
+	int SetLaterTransparentVec(std::vector<std::wstring> srclatervec);//丸ごと設定
+
+
+	int SetBefEditMat(bool limitdegflag, CEditRange* erptr, CBone* curbone, int maxlevel);
+	int SetBefEditMatFK(bool limitdegflag, CEditRange* erptr, CBone* curbone);
+
+	int Retarget(CModel* srcbvhmodel, ChaMatrix smatVP,
+		std::map<CBone*, CBone*>& sconvbonemap,
+		int (*srcAddMotionFunc)(const WCHAR* wfilename, double srcmotleng));
+
+	int CreateMaterialTexture();
+
 private:
 	int InitParams();
 	int DestroyObjs();
-	int CreateMaterialTexture(ID3D11DeviceContext* pd3dImmediateContext);
 
 	MODELBOUND CalcBoneBound();
 	int AddModelBound( MODELBOUND* mb, MODELBOUND* addmb );
@@ -918,12 +1030,15 @@ private:
 
 
 	CMQOObject* GetFBXMesh(FbxNode* pNode, FbxNodeAttribute* pAttrib);
-	void CalcMeshMatReq(FbxNode* pNode, ChaMatrix* pmeshmat);
+	ChaMatrix CalcGlobalMeshMat(FbxNode* pNode, double srctime);
+	ChaMatrix CalcLocalMeshMat(FbxNode* pNode, double srctime);
+	void CalcMeshMatReq(FbxNode* pNode, double srctime, ChaMatrix* pmeshmat);
 	int GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj, FbxAnimLayer* panimlayer, double animleng, FbxTime starttime, FbxTime timestep );
 	//int ComputeShapeDeformation(FbxNode* pNode, FbxMesh* pMesh, FbxTime& pTime, FbxAnimLayer * pAnimLayer, CMQOObject* curobj, char* takename );
 	//int ComputeShapeDeformation2(FbxNode* pNode, FbxMesh* pMesh, FbxTime& pTime, FbxAnimLayer * pAnimLayer, CMQOObject* curobj, char* takename );
 
 	int SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* material );
+	int SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname);
 	void CreateFBXBoneReq(FbxScene* pScene, FbxNode* pNode, FbxNode* parnode );
 	//void CreateExtendBoneReq(CBone* srcbone);
 	int GetFBXBone(FbxScene* pScene, FbxNodeAttribute::EType type, FbxNodeAttribute *pAttrib, FbxNode* curnode, FbxNode* parnode );
@@ -954,7 +1069,8 @@ private:
 
 	//void FillUpEmptyKeyReq( int motid, double animleng, CBone* curbone, CBone* parentbone );//publicへ
 
-	int SetMaterialName();
+	//int SetMaterialName();
+
 
 	int DestroyBtObject();
 	void DestroyBtObjectReq( CBtObject* curbt );
@@ -996,7 +1112,6 @@ private:
 	void SetColTypeReq(int reindex, CBone* srcbone, int srctype);
 
 	//void SetBtKinFlagReq(CBtObject* srcbto, int oncreateflag);
-	void Motion2BtReq( CBtObject* srcbto );
 	//void SetBtGravityReq( CBtObject* srcbto );
 	//void SetRagdollKinFlagReq( CBtObject* srcbto, int selectbone, int physicsmvkind = 0 );
 	//void CreateBtConnectReq( CBone* curbone );
@@ -1012,10 +1127,8 @@ private:
 	int GetValidUndoID();//undo用のid
 	int GetValidRedoID();//redo用のid
 
-	int SetBefEditMat(bool limitdegflag, CEditRange* erptr, CBone* curbone, int maxlevel);
-	int SetBefEditMatFK(bool limitdegflag, CEditRange* erptr, CBone* curbone);
-
-	int AdjustBoneTra(bool limitdegflag, CEditRange* erptr, CBone* lastpar);
+	//2023/10/17 ChaCalcFuncに移動
+	//int AdjustBoneTra(bool limitdegflag, CEditRange* erptr, CBone* lastpar);
 
 	void SetFirstFrameBonePosReq(CBone* srcbone, int srcmotid, HINFO* phinfo);
 	void InterpolateBetweenSelectionReq(bool limitdegflag, CBone* interpolatebone, 
@@ -1041,19 +1154,22 @@ private:
 
 	void SetCurrentRigidElemReq(CBone* srcbone, std::string curname);
 
-
-	int CalcQForRot(bool limitdegflag, bool calcaplyflag,
-		int srcmotid, double srcframe, double srcapplyframe, CQuaternion srcaddrot,
-		CBone* srcrotbone, CBone* srcaplybone, 
-		CQuaternion* dstqForRot, CQuaternion* dstqForHipsRot);
+	//2023/10/17 ChaCalcFuncクラスに移動
+	//int CalcQForRot(bool limitdegflag, bool calcaplyflag,
+	//	int srcmotid, double srcframe, double srcapplyframe, CQuaternion srcaddrot,
+	//	CBone* srcrotbone, CBone* srcaplybone, 
+	//	CQuaternion* dstqForRot, CQuaternion* dstqForHipsRot);
 	int IsMovableRot(bool limitdegflag, int srcmotid, double srcframe, double srcapplyframe, 
 		CQuaternion srcaddrot, CBone* srcrotbone, CBone* srcaplybone);
 
-	bool CalcAxisAndRotForIKRotateAxis(int limitdegflag,
-		CBone* parentbone, CBone* firstbone,
-		double curframe, ChaVector3 targetpos,
-		ChaVector3 srcikaxis,
-		ChaVector3* dstaxis, float* dstrotrad);
+	//2023/10/17 ChaCalcFuncに移動
+	//bool CalcAxisAndRotForIKRotateAxis(int limitdegflag,
+	//	CBone* parentbone, CBone* firstbone,
+	//	double curframe, ChaVector3 targetpos,
+	//	ChaVector3 srcikaxis,
+	//	ChaVector3* dstaxis, float* dstrotrad);
+
+
 	int CalcAxisAndRotForIKRotate(int limitdegflag,
 		CBone* parentbone, CBone* firstbone, 
 		double curframe, ChaVector3 targetpos, 
@@ -1063,10 +1179,11 @@ private:
 		double curframe, ChaVector3 targetpos,
 		ChaVector3* dstaxis, float* dstrotrad);
 
-	int IKRotateOneFrame(int limitdegflag, CEditRange* erptr,
-		int keyno, CBone* rotbone, CBone* parentbone,
-		double curframe, double startframe, double applyframe,
-		CQuaternion rotq0, bool keynum1flag, bool postflag, bool fromiktarget);
+	//2023/10/17 ChaCalcFuncクラスに移動
+	//int IKRotateOneFrame(int limitdegflag, CEditRange* erptr,
+	//	int keyno, CBone* rotbone, CBone* parentbone,
+	//	double curframe, double startframe, double applyframe,
+	//	CQuaternion rotq0, bool keynum1flag, bool postflag, bool fromiktarget);
 
 	void ClearIKRotRecReq(CBone* srcbone);
 	void ClearIKRotRecUVReq(CBone* srcbone);
@@ -1084,7 +1201,7 @@ private:
 
 	void InitCameraFbx();
 
-
+	void SetBoneMatrixIndexReq(CBone* srcbone, int* pcount);
 
 public: //accesser
 	FbxManager* GetFBXSDK(){
@@ -1098,6 +1215,21 @@ public: //accesser
 
 	float GetLoadMult(){ return m_loadmult; };
 	void SetLoadMult( float srcmult ){ m_loadmult = srcmult; };
+
+	bool GetInView() {
+		return m_inview;
+	};
+	bool GetBefInView() {
+		return m_befinview;
+	}
+	void SetInView(bool srcflag) {
+		m_befinview = m_inview;
+		m_inview = srcflag;
+	};
+
+
+	int GetCurrentMotID();
+	double GetCurrentFrame();
 
 	const WCHAR* GetFileName(){ return m_filename; };
 	const WCHAR* GetDirName(){ return m_dirname; };
@@ -1130,15 +1262,109 @@ public: //accesser
 	};
 
 	CBone* GetBoneByName(std::string srcname ){
+
+		//2023/10/26 Joint有無について高速化
+		const char* pjoint = strstr(srcname.c_str(), "_Joint");
+		if (pjoint) {
+			size_t strjointlen = strlen(pjoint);
+			if (strjointlen == strlen("_Joint")) {
+				if (m_withStrJoint == 0) {
+					return 0;
+				}
+			}
+			else {
+				if (m_withoutStrJoint == 0) {
+					return 0;
+				}
+			}
+		}
+		else {
+			if (m_withoutStrJoint == 0) {
+				return 0;
+			}
+		}
+
+
 		std::map<std::string, CBone*>::iterator itrbone;
 		itrbone = m_bonename.find(srcname);
-		if (itrbone != m_bonename.end()){
+		if (itrbone != m_bonename.end()) {
 			return itrbone->second;
 		}
 		else{
 			return 0;
 		}
 		//return m_bonename[ srcname ];
+	};
+
+
+	//###############################
+	//名前が部分一致するボーンを返す
+	//###############################
+	CBone* FindBoneByPattern(std::string srcpattern)
+	{
+		std::map<std::string, CBone*>::iterator itrbone;
+		for (itrbone = m_bonename.begin(); itrbone != m_bonename.end(); itrbone++) {
+			if (strstr(itrbone->first.c_str(), srcpattern.c_str()) != 0) {
+				return itrbone->second;
+			}
+		}
+		return 0;
+	};
+
+
+	//#####################################################
+	//_Jointが付いている名前と付いていない名前の両方を検索
+	//#####################################################
+	CBone* FindBoneByName(std::string srcname) {//名前完全一致
+		bool srcwithsufix = false;
+
+		char bonename[256] = { 0 };
+		char bonename1[256];//_Joint有り
+		char bonename2[256];//_Joint無し
+		ZeroMemory(bonename, sizeof(char) * 256);
+		strcpy_s(bonename, 256, srcname.c_str());
+		char* jointnameptr = strstr(bonename, "_Joint");
+		if (!jointnameptr) {
+			srcwithsufix = false;
+
+			sprintf_s(bonename1, 256, "%s_Joint", bonename);
+			strcpy_s(bonename2, 256, bonename);
+		}
+		else {
+			srcwithsufix = true;
+
+			strcpy_s(bonename1, 256, bonename);
+			strcpy_s(bonename2, 256, bonename);
+			int headleng = (int)(jointnameptr - bonename);
+			*(bonename2 + headleng) = 0;
+		}
+
+		CBone* retbone = 0;
+
+		//2023/10/23 srcnameに一致する方を先に調べることで速くなる可能性
+		if (srcwithsufix == false) {
+
+			if (m_withoutStrJoint > 0) {
+				retbone = GetBoneByName(bonename2);
+			}
+			if (!retbone) {
+				if (m_withStrJoint > 0) {
+					retbone = GetBoneByName(bonename1);
+				}
+			}
+		}
+		else {
+			if (m_withStrJoint > 0) {
+				retbone = GetBoneByName(bonename1);
+			}
+			if (!retbone) {
+				if (m_withoutStrJoint > 0) {
+					retbone = GetBoneByName(bonename2);
+				}
+			}
+		}
+
+		return retbone;
 	};
 
 	CBone* GetBoneByWName(WCHAR* srcname){
@@ -1156,10 +1382,14 @@ public: //accesser
 		}
 	};
 
+
+
+
 	int GetBoneListSize(){//eNull含む
 		return (int)m_bonelist.size();
 	};
 	int GetBoneForMotionSize();//eNull含まない
+	int GetMaxBoneNo();
 
 	std::map<int,CBone*>::iterator GetBoneListBegin(){
 		return m_bonelist.begin();
@@ -1202,7 +1432,10 @@ public: //accesser
 	};
 
 
-
+	CBone* DirectGetTopBone()
+	{
+		return m_topbone;
+	}
 	CBone* GetTopBone(bool excludenullflag = true);
 	void GetTopBoneReq(CBone* srcbone, CBone** pptopbone, bool excludenullflag = true);
 	//CBone* GetTopBone() {
@@ -1237,16 +1470,26 @@ public: //accesser
 	};
 
 	int GetMotInfoSize(){
-		return (int)m_motinfo.size();
+		if (GetNoBoneFlag() == false) {
+			return (int)m_motinfo.size();
+		}
+		else {
+			return 0;
+		}
 	};
 	MOTINFO* GetMotInfo( int srcid ){//motidは1から
 		//return m_motinfo[srcid - 1];
 
-		//DeleteMotion時に要素をeraseするのでid - 1が配列のインデックスになるとは限らない//2021/08/26
-		int miindex;
-		miindex = MotionID2Index(srcid);
-		if (miindex >= 0) {
-			return m_motinfo[miindex];
+		if (GetNoBoneFlag() == false) {
+			//DeleteMotion時に要素をeraseするのでid - 1が配列のインデックスになるとは限らない//2021/08/26
+			int miindex;
+			miindex = MotionID2Index(srcid);
+			if (miindex >= 0) {
+				return m_motinfo[miindex];
+			}
+			else {
+				return 0;
+			}
 		}
 		else {
 			return 0;
@@ -1259,8 +1502,17 @@ public: //accesser
 		return m_motinfo.end();
 	};
 
+
+	int GetCurrentMotion();
+	double GetCurrentMotionFrame();
+
 	MOTINFO* GetCurMotInfo(){
-		return m_curmotinfo;
+		if (GetNoBoneFlag() == false) {
+			return m_curmotinfo;
+		}
+		else {
+			return 0;
+		}
 	};
 	void SetCurMotInfo( MOTINFO* srcinfo ){
 		if (m_curmotinfo) {
@@ -1269,16 +1521,21 @@ public: //accesser
 	};
 	MOTINFO* GetFirstValidMotInfo()
 	{
-		MOTINFO* retmi = 0;
-		std::map<int, MOTINFO*>::iterator itrmi;
-		for (itrmi = m_motinfo.begin(); itrmi != m_motinfo.end(); itrmi++) {
-			MOTINFO* curmi = itrmi->second;
-			if (curmi) {//NULLではないとき
-				retmi = curmi;
-				break;
+		if (GetNoBoneFlag() == false) {
+			MOTINFO* retmi = 0;
+			std::map<int, MOTINFO*>::iterator itrmi;
+			for (itrmi = m_motinfo.begin(); itrmi != m_motinfo.end(); itrmi++) {
+				MOTINFO* curmi = itrmi->second;
+				if (curmi) {//NULLではないとき
+					retmi = curmi;
+					break;
+				}
 			}
+			return retmi;
 		}
-		return retmi;
+		else {
+			return 0;
+		}
 	};
 
 
@@ -1360,7 +1617,18 @@ public: //accesser
 		return (int)m_rigideleminfo.size();
 	};
 	REINFO GetRigidElemInfo( int srcindex ){
-		return m_rigideleminfo[ srcindex ];
+		if ((srcindex >= 0) && (srcindex < m_rigideleminfo.size())) {
+			return m_rigideleminfo[srcindex];
+		}
+		else {
+			_ASSERT(0);
+
+			REINFO errorinfo;
+			errorinfo.Init();
+			strcpy_s(errorinfo.filename, MAX_PATH, "error");
+			return errorinfo;
+		}
+		
 	};
 	void PushBackRigidElemInfo( REINFO srcinfo ){
 		m_rigideleminfo.push_back( srcinfo );
@@ -1376,8 +1644,15 @@ public: //accesser
 		return m_impinfo[ srcindex ];
 	};
 	std::string GetCurImpName(){
-		std::string curimpname = m_impinfo[m_curimpindex];
-		return curimpname;
+		if ((m_curimpindex >= 0) && (m_curimpindex < m_impinfo.size())) {
+			std::string curimpname = m_impinfo[m_curimpindex];
+			return curimpname;
+		}
+		else {
+			_ASSERT(0);
+			std::string strerror = "error";
+			return strerror;
+		}
 	};
 	void PushBackImpInfo( std::string srcname )
 	{
@@ -1418,40 +1693,30 @@ public: //accesser
 		m_tmpmotspeed = srcval;
 	};
 
-	int GetMQOMaterialSize(){
-		return (int)m_material.size();
-	};
-	CMQOMaterial* GetMQOMaterial( int srcindex ){
-		return m_material[ srcindex ];
-	};
-	std::map<int,CMQOMaterial*>::iterator GetMQOMaterialBegin(){
-		return m_material.begin();
-	};
-	std::map<int,CMQOMaterial*>::iterator GetMQOMaterialEnd(){
-		return m_material.end();
-	};
 
-	void SetMQOMaterial( int srcindex, CMQOMaterial* srcmat ){
-		m_material[ srcindex ] = srcmat;
-	};
+	int GetMQOMaterialSize();
+	CMQOMaterial* GetMQOMaterial( int srcmatno );
+	int ExistMQOMaterial(CMQOMaterial* srcmat);
+	void SetMQOMaterial(const char* srcname, CMQOMaterial* srcmat);
+	CMQOMaterial* GetMQOMaterialByName(std::string srcname );//マテリアル名
+	CMQOMaterial* GetMQOMaterialByIndex(int srcmatindex);//配列インデックス
+	CMQOMaterial* GetMQOMaterialByMaterialNo(int srcmatno);//マテリアル番号
 
-	CMQOMaterial* GetMQOMaterialByName(std::string srcname ){
-		return m_materialname[ srcname ];
-	};
-	std::map<std::string,CMQOMaterial*>::iterator GetMQOMaterialNameBegin(){
-		return m_materialname.begin();
-	};
-	std::map<std::string,CMQOMaterial*>::iterator GetMQOMaterialNameEnd(){
-		return m_materialname.end();
-	};
 
+	CMQOObject* GetMQOObjectByName(const char* findpattern);
 
 	FbxScene* GetScene(){
 		return m_pscene;
 	};
 
 	FbxString* GetAnimStackName( int srcindex ){
-		return mAnimStackNameArray[ srcindex ];
+		if ((srcindex >= 0) && (srcindex < mAnimStackNameArray.Size())) {
+			return mAnimStackNameArray[srcindex];
+		}
+		else {
+			_ASSERT(0);
+			return 0;
+		}
 	};
 
 	int GetBtCnt(){
@@ -1466,6 +1731,10 @@ public: //accesser
 
 	void SetBtWorld( btDynamicsWorld* srcworld ){
 		m_btWorld = srcworld;
+	};
+	btDynamicsWorld* GetBtWorld()
+	{
+		return m_btWorld;
 	};
 
 	int GetOldAxisFlagAtLoading()
@@ -1533,15 +1802,25 @@ public: //accesser
 	//	m_worldmat.data[MATI_42] = m_modelposition.y;
 	//	m_worldmat.data[MATI_43] = m_modelposition.z;
 	//};
-	void SetWorldMat(ChaMatrix srcmat) {
-		m_worldmat = srcmat;
-	};
+
+
+	//###########################################
+	//使うのはm_matWorld. m_worldmatではなくて.
+	//###########################################
+	//void SetWorldMat(ChaMatrix srcmat) {
+	//	m_worldmat = srcmat;
+	//};
+	//ChaMatrix GetWorldMat()
+	//{
+	//	return m_worldmat;
+	//	//m_worldmat = CalcModelWorldMatOnLoad();
+	//	//return m_worldmat;
+	//};
 	ChaMatrix GetWorldMat()
 	{
-		return m_worldmat;
-		//m_worldmat = CalcModelWorldMatOnLoad();
-		//return m_worldmat;
+		return m_matWorld;
 	};
+
 
 	int GetFbxComment(char* dstcomment, int dstlen)
 	{
@@ -1670,6 +1949,367 @@ public: //accesser
 	//CCameraFbx GetCameraFbx();
 	void SetCameraMotionId(int srcid);
 	int GetCameraMotionId();
+
+
+	void SetENullTime(double srcenulltime)
+	{
+		//SetShaderConstにおける　ボーンの無いメッシュアニメ enull evaluate用の時間
+		m_enulltime = srcenulltime;
+	};
+	double GetENullTime()
+	{
+		return m_enulltime;
+	}
+
+	void ClearIKStopName()
+	{
+		m_ikstopname.clear();
+	}
+	void AddIKStopName(const char* srcname)
+	{
+		if (!srcname) {
+			_ASSERT(0);
+			return;
+		}
+		size_t len = strlen(srcname);
+		if ((len == 0) || (len >= 256)) {
+			_ASSERT(0);
+			return;
+		}
+		m_ikstopname.push_back(srcname);
+
+	}
+	int GetIKStopNameSize()
+	{
+		return (int)m_ikstopname.size();
+	}
+	std::string GetIKStopName(int srcindex, int* perror)
+	{
+		if (!perror) {
+			_ASSERT(0);
+			return std::string("error!!!");
+		}
+		*perror = 0;
+
+		int num = GetIKStopNameSize();
+		if (num <= 0) {
+			*perror = 1;
+			return std::string("none!!!");
+		}
+		if ((srcindex >= 0) && (srcindex < num)) {
+			*perror = 0;
+			return m_ikstopname[srcindex];
+		}
+		else {
+			*perror = 2;
+			return std::string("outofrange!!!");
+		}
+	}
+	bool IsIKStopName(const char* srcname)
+	{
+		if (!srcname) {
+			_ASSERT(0);
+			return false;
+		}
+		size_t len = strlen(srcname);
+		if ((len == 0) || (len >= 256)) {
+			_ASSERT(0);
+			return false;
+		}
+
+		int stopnamesize = GetIKStopNameSize();
+		int cmpno;
+		for (cmpno = 0; cmpno < stopnamesize; cmpno++) {
+			int errorno = 0;
+			std::string cmpname = GetIKStopName(cmpno, &errorno);
+			if (errorno == 0) {
+				if (strstr(srcname, cmpname.c_str()) != 0) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+
+	int GetDispGroupForRender(int srcgroupindex, std::vector<DISPGROUPELEM>& dstvec)
+	{
+		if ((srcgroupindex >= 0) && (srcgroupindex < MAXDISPGROUPNUM)) {
+			dstvec = m_dispgroup[srcgroupindex];
+			return 0;
+		}
+		else {
+			dstvec.clear();
+			return 1;
+		}
+	}
+	void SetDispGroup(int srcgroupindex, const char* srcnodename)
+	{
+		if (!srcnodename) {
+			_ASSERT(0);
+			return;
+		}
+
+		if ((srcgroupindex >= 0) && (srcgroupindex < MAXDISPGROUPNUM)) {
+			std::map<int, DISPGROUPELEM>::iterator itrdigelem;
+			for (itrdigelem = m_objno2digelem.begin(); itrdigelem != m_objno2digelem.end(); itrdigelem++) {
+				DISPGROUPELEM digelem = itrdigelem->second;
+				if (digelem.pNode) {
+					char chknodename[256] = { 0 };
+					strcpy_s(chknodename, 256, digelem.pNode->GetName());
+					if (strcmp(chknodename, srcnodename) == 0) {//名前が一致
+						itrdigelem->second.groupno = srcgroupindex + 1;//groupno = groupindex + 1
+					}
+				}
+			}
+		}
+		else {
+			_ASSERT(0);
+		}
+	}
+	void SetDispGroup(int srcgroupindex, int srcobjno)
+	{
+		if ((srcgroupindex >= 0) && (srcgroupindex < MAXDISPGROUPNUM)) {
+			std::map<int, DISPGROUPELEM>::iterator itrdigelem;
+			itrdigelem = m_objno2digelem.find(srcobjno);
+			if (itrdigelem != m_objno2digelem.end()) {
+				itrdigelem->second.groupno = srcgroupindex + 1;//groupno = groupindex + 1
+			}
+		}
+		else {
+			_ASSERT(0);
+		}
+	}
+	bool GetDispGroupON(int srcgroupindex)
+	{
+		if ((srcgroupindex >= 0) && (srcgroupindex < MAXDISPGROUPNUM)) {
+			return m_dispgroupON[srcgroupindex];
+		}
+		else {
+			_ASSERT(0);
+			return false;
+		}
+	}
+	void SetDispGroupON(int srcgroupindex, bool srcflag)
+	{
+		if ((srcgroupindex >= 0) && (srcgroupindex < MAXDISPGROUPNUM)) {
+			m_dispgroupON[srcgroupindex] = srcflag;
+		}
+		else {
+			_ASSERT(0);
+		}
+	}
+	bool DispGroupEmpty(int srcgroupindex)
+	{
+		if ((srcgroupindex >= 0) && (srcgroupindex < MAXDISPGROUPNUM)) {
+			return (m_dispgroup[srcgroupindex]).empty();
+		}
+		else {
+			_ASSERT(0);
+			return true;
+		}
+	}
+	int GetDispGroupSize(int srcgroupindex)
+	{
+		if ((srcgroupindex >= 0) && (srcgroupindex < MAXDISPGROUPNUM)) {
+			return (int)m_dispgroup[srcgroupindex].size();
+		}
+		else {
+			_ASSERT(0);
+			return 0;
+		}		
+	}
+	CMQOObject* GetDispGroupMQOObject(int srcgroupindex, int srcelemno)
+	{
+		if ((srcgroupindex >= 0) && (srcgroupindex < MAXDISPGROUPNUM)) {
+			int elemnum = (int)m_dispgroup[srcgroupindex].size();
+			if ((srcelemno >= 0) && (srcelemno < elemnum)) {
+				return (m_dispgroup[srcgroupindex])[srcelemno].mqoobject;
+			}
+			else {
+				_ASSERT(0);
+				return 0;
+			}
+		}
+		else {
+			_ASSERT(0);
+			return 0;
+		}
+	}
+
+
+
+	void AddLaterTransparent(std::string srctexname)
+	{
+		m_latertransparent.push_back(srctexname);
+	}
+	int GetLaterTransparentNum()
+	{
+		return (int)m_latertransparent.size();
+	}
+	std::string GetLaterTransparent(int srcindex)
+	{
+		if ((srcindex >= 0) && (srcindex < GetLaterTransparentNum())) {
+			return m_latertransparent[srcindex];
+		}
+		else {
+			_ASSERT(0);
+			std::string strerror = "indexError";
+			return strerror;
+		}
+	}
+
+	int GetIKTargetBoneVecSize()
+	{
+		return (int)m_iktargetbonevec.size();
+	}
+	CBone* GetIKTargetBone(int srcindex)
+	{
+		int leng = GetIKTargetBoneVecSize();
+		if ((srcindex >= 0) && (srcindex < leng)) {
+			return m_iktargetbonevec[srcindex];
+		}
+		else {
+			return 0;
+		}
+	}
+
+	void SetUnderMotion2Bt(bool srcflag)
+	{
+		m_Under_Motion2Bt = srcflag;
+	}
+	bool GetUnderMotion2Bt()
+	{
+		return m_Under_Motion2Bt;
+	}
+	void SetUnderBt2Motion(bool srcflag)
+	{
+		m_Under_Bt2Motion = srcflag;
+	}
+	bool GetUnderBt2Motion()
+	{
+		return m_Under_Bt2Motion;
+	}
+	void SetUnderIKRot(bool srcflag)
+	{
+		m_Under_IKRot = srcflag;
+	}
+	bool GetUnderIKRot()
+	{
+		return m_Under_IKRot;
+	}
+	void SetUnderIKRotApplyFrame(bool srcflag)
+	{
+		m_Under_IKRotApplyFrame = srcflag;
+	}
+	bool GetUnderIKRotApplyFrame()
+	{
+		return m_Under_IKRotApplyFrame;
+	}
+	void SetUnderCalcEul(bool srcflag)
+	{
+		m_Under_CalcEul = srcflag;
+	}
+	bool GetUnderCalcEul()
+	{
+		return m_Under_CalcEul;
+	}
+	void SetUnderCopyW2LW(bool srcflag)
+	{
+		m_Under_CopyW2LW = srcflag;
+	}
+	bool GetUnderCopyW2LW()
+	{
+		return m_Under_CopyW2LW;
+	}
+	void SetUnderPostFKTra(bool srcflag)
+	{
+		m_Under_PostFKTra = srcflag;
+	}
+	bool GetUnderPostFKTra()
+	{
+		return m_Under_PostFKTra;
+	}
+	void SetUnderInitMP(bool srcflag)
+	{
+		m_Under_InitMP = srcflag;
+	}
+	bool GetUnderInitMP()
+	{
+		return m_Under_InitMP;
+	}
+	void SetUnderLoadFbx(bool srcflag)
+	{
+		m_Under_LoadFbx = srcflag;
+	}
+	bool GetUnderLoadFbx()
+	{
+		return m_Under_LoadFbx;
+	}
+	//void SetUnderPostIK(bool srcflag)
+	//{
+	//	m_Under_PostIK = srcflag;
+	//}
+	//bool GetUnderPostIK()
+	//{
+	//	return m_Under_PostIK;
+	//}
+	void SetUnderRetarget(bool srcflag)
+	{
+		m_Under_Retarget = srcflag;
+	}
+	bool GetUnderRetarget()
+	{
+		return m_Under_Retarget;
+	}
+	void SetUnderUpdateTimeline(bool srcflag)
+	{
+		m_Under_UpdateTimeline = srcflag;
+	}
+	bool GetUnderUpdateTimeline()
+	{
+		return m_Under_UpdateTimeline;
+	}
+	//m_Under_UpdateMatrix;
+
+	CThreadingUpdateMatrix* GetThreadingUpdateMatrix()
+	{
+		return m_boneupdatematrix;
+	}
+	int GetThreadingUpdateMatrixNum()
+	{
+		return m_creatednum_boneupdatematrix;
+	}
+
+	int GetLoopStartFlag()
+	{
+		return m_loopstartflag;
+	}
+	void SetLoopStartFlag(int srcflag)
+	{
+		m_loopstartflag = srcflag;
+	}
+
+	void ResetUpdateFl4x4Flag();//materialのリセットも行う
+	void SetUpdateFl4x4Flag()
+	{
+		m_updatefl4x4flag = true;
+	}
+	bool GetUpdateFl4x4Flag()
+	{
+		return m_updatefl4x4flag;
+	}
+
+	void GetBoneMatrix(float* dstfl4x4, int dstmatrixnum) 
+	{
+		if (!dstfl4x4 || (dstmatrixnum != MAXBONENUM)) {
+			_ASSERT(0);
+			return;
+		}
+		MoveMemory(dstfl4x4, m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
+	};
+
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];
@@ -1681,7 +2321,15 @@ public:
 	CRITICAL_SECTION m_CritSection_Node;
 
 private:
-	
+	bool m_inview;
+	bool m_befinview;
+	ChaFrustumInfo m_frustum;
+	MODELBOUND m_bound;
+
+	bool m_updatefl4x4flag;
+
+	int m_vrmtexcount;
+
 	int m_physicsikcnt;
 	int m_initaxismatx;
 	int m_modelno;//モデルのID
@@ -1701,6 +2349,7 @@ private:
 	std::map<int, CMQOObject*> m_object;//オブジェクト。別の言葉でいうと３Dモデルにおける名前が付けられているパーツや部品。
 	std::map<int, CBone*> m_bonelist;//ボーンをボーンIDから検索できるようにしたmap。
 	std::map<std::string, CBone*> m_bonename;//ボーンを名前から検索できるようにしたmap。
+	std::vector<std::string> m_ikstopname;//2023/07/21 IKStopフラグを設定するジョイントの名前の一部
 
 	CBone* m_topbone;//一番親のボーン。
 	CBtObject* m_topbt;//一番親のbullet剛体オブジェクト。
@@ -1709,8 +2358,23 @@ private:
 
 	CThreadingUpdateMatrix* m_boneupdatematrix;
 	CThreadingLoadFbx* m_LoadFbxAnim;
+	CThreadingPostIK* m_PostIKThreads;
+	CThreadingCalcEul* m_CalcEulThreads;
+	CThreadingFKTra* m_FKTraThreads;
+	CThreadingCopyW2LW* m_CopyW2LWThreads;
+	CThreadingRetarget* m_RetargetThreads;
+	CThreadingInitMp* m_InitMpThreads;
 	int m_creatednum_boneupdatematrix;//スレッド数の変化に対応。作成済の数。処理用。
 	int m_creatednum_loadfbxanim;//スレッド数の変化に対応。作成済の数。処理用。
+
+
+	//2023/10/19
+	//threadsnumをCoef.hの定数に移動し　4から8に変更　CPUコアの数に応じて調整
+	//#define POSTIK_THREADSNUM		8
+	//#define CALCEUL_THREADSNUM	8
+	//int m_postikthreadsnum;//4
+	//int m_calceulthreadsnum;//4
+
 
 	std::map<int, MOTINFO*> m_motinfo;//モーションのプロパティをモーションIDから検索できるようにしたmap。
 	MOTINFO* m_curmotinfo;//m_motinfoの中の現在再生中のMOTINFOへのポインタ。
@@ -1725,9 +2389,11 @@ private:
 
 	float m_tmpmotspeed;//モーション再生倍率の一時保存用。
 
-	//polymesh3用のマテリアル。polymesh4はmqoobjectのmqomaterialを使用する。
-	std::map<int, CMQOMaterial*> m_material;
-	std::map<std::string, CMQOMaterial*> m_materialname;
+	////polymesh3用のマテリアル。polymesh4はmqoobjectのmqomaterialを使用する。
+	//std::map<int, CMQOMaterial*> m_material;
+	//std::map<std::string, CMQOMaterial*> m_materialname;
+	TResourceBank<CMQOMaterial> m_materialbank;
+
 
 	FbxScene* m_pscene;//FBX SDKのシーンへのポインタ。CModel内でアロケート。
 	FbxArray<FbxString*> mAnimStackNameArray;//アニメーション名を保存するFBX形式のデータ。
@@ -1737,7 +2403,7 @@ private:
 
 
 //以下、privateかつローカルからしか参照しないデータだからアクセッサーも無し。
-	ID3D11Device* m_pdev;//外部メモリ。Direct3DのDevice。
+	ID3D12Device* m_pdev;//外部メモリ。Direct3DのDevice。
 	FbxManager* m_psdk;//外部メモリ。FBX SDKのマネージャ。
 	FbxImporter* m_pimporter;//FBX SDKのインポーター。CModel内でアロケート。
 	FbxString m_fbxcomment;
@@ -1767,7 +2433,7 @@ private:
 	int m_undo_writepoint;
 	int m_undo_firstflag;
 
-	ChaMatrix m_worldmat;
+	//ChaMatrix m_worldmat;
 	ChaVector3 m_modelposition;//読み込み時位置
 	ChaVector3 m_modelrotation;//読み込み時向き
 
@@ -1777,7 +2443,8 @@ private:
 
 	int m_loadingmotionnum;//ローディング中のfbxに含まれるモーションの数
 
-	float m_setfl4x4[16 * MAXCLUSTERNUM];//SetShaderConst用
+	//float m_setfl4x4[16 * MAXCLUSTERNUM];//SetShaderConst用
+	float m_setfl4x4[16 * MAXBONENUM];//SetShaderConst用
 
 	std::vector<CBone*> m_iktargetbonevec;
 
@@ -1789,11 +2456,45 @@ private:
 	std::map<FbxNode*, CMQOObject*> m_node2mqoobj;
 	std::map<FbxNode*, CBone*> m_node2bone;
 
+
+	std::map<int, DISPGROUPELEM> m_objno2digelem;
+	std::vector<DISPGROUPELEM> m_dispgroup[MAXDISPGROUPNUM];//m_dispgroup[groupno] = vector<objno>
+	bool m_dispgroupON[MAXDISPGROUPNUM];
+	std::vector<std::string> m_latertransparent;
+
+
 	bool m_noboneflag;
 	CCameraFbx m_camerafbx;
 	int m_cameramotionid;
 
 	int m_loadbonecount;//GetFbxAnim用
+
+	double m_enulltime;//SetShaderConstにおける　ボーンの無いメッシュアニメ enull evaluate用の時間
+
+
+	//2023/10/26
+	//GetBoneByName()の高速化のために　_Jointが名前に付いているジョイントと付いていないジョイントの数をセットしておく
+	// ０個のときに即座に０リターン
+	int m_withStrJoint;
+	int m_withoutStrJoint;
+
+
+	//For High Rpm Threading
+	bool m_Under_IKRot;
+	bool m_Under_IKRotApplyFrame;
+	bool m_Under_CalcEul;
+	bool m_Under_CopyW2LW;
+	bool m_Under_PostFKTra;
+	bool m_Under_InitMP;
+	bool m_Under_LoadFbx;
+	//bool m_Under_PostIK;
+	bool m_Under_Retarget;
+	//bool m_Under_UpdateMatrix;
+	bool m_Under_UpdateTimeline;
+	bool m_Under_Motion2Bt;
+	bool m_Under_Bt2Motion;
+
+	int m_loopstartflag;
 };
 
 #endif

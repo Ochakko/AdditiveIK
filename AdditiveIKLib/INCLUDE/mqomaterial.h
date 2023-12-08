@@ -31,11 +31,13 @@ struct SConstantBuffer {
 	Matrix mView;		//ビュー行列。
 	Matrix mProj;		//プロジェクション行列。
 	ChaVector4 diffusemult;
+	ChaVector4 metalcoef;
 	void Init() {
 		mWorld.SetIdentity();
 		mView.SetIdentity();
 		mProj.SetIdentity();
 		diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		metalcoef = ChaVector4(0.70f, 0.0f, 0.0f, 0.0f);
 	};
 };
 
@@ -301,10 +303,40 @@ public:
 	};
 
 	int GetShader(){
-		return m_shader;
+		return m_shader;//mqofileのshader
 	};
 	void SetShader( int srcval ){
-		m_shader = srcval;
+		m_shader = srcval;//mqofileのshader
+	};
+
+	int GetShaderType() {
+		return m_shadertype;//DirectX12描画用のshader
+	};
+	void SetShaderType(int srcval) {
+		m_shadertype = srcval;//DirectX12描画用のshader
+	};
+	float GetMetalCoef() {
+		return m_metalcoef;
+	};
+	void SetMetalCoef(float srcval) {
+		m_metalcoef = srcval;
+	};
+	float GetLightScale(int srcindex) {
+		if ((srcindex >= 0) && (srcindex < LIGHTNUMMAX)) {
+			return m_lightscale[srcindex];
+		}
+		else {
+			_ASSERT(0);
+			return 0.0f;
+		}
+	};
+	void SetLightScale(int srcindex, float srcval) {
+		if ((srcindex >= 0) && (srcindex < LIGHTNUMMAX)) {
+			m_lightscale[srcindex] = srcval;
+		}
+		else {
+			_ASSERT(0);
+		}
 	};
 
 
@@ -553,7 +585,10 @@ private:
 	int m_vcolflag;
 ////
 
-	int m_shader;
+	int m_shader;//mqofile記述のshader
+	int m_shadertype;//DirectX12描画用のshader　//Shaderプレートメニュー用
+	float m_metalcoef;//Shaderプレートメニュー用
+	float m_lightscale[LIGHTNUMMAX];//Shaderプレートメニュー用
 
 ////
 	ChaVector4 m_dif4f;

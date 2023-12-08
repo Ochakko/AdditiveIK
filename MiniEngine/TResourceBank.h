@@ -77,7 +77,7 @@ public:
 	TResource* Get(int srcindex)
 	{
 		int resnum = GetSize();
-		if ((srcindex >= 0) && (resnum)) {
+		if ((srcindex >= 0) && (srcindex < resnum)) {
 			return m_resourceVec[srcindex];
 		}
 		else {

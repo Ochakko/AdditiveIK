@@ -130,7 +130,7 @@ using namespace std;
 
 
 
-#define WINDOWS_CLASS_NAME TEXT("OchakkoLab.MameBake3D.Window")
+#define WINDOWS_CLASS_NAME TEXT("OchakkoLab.AdditiveIK.Window")
 
 #define WM_USER_FOR_BATCH_PROGRESS	(WM_USER + 1)
 
@@ -184,6 +184,7 @@ enum {//2023/08/07
 	SPDISPSW_LIGHTS,
 	SPDISPSW_DISPGROUP,
 	SPDISPSW_LATERTRANSPARENT,
+	SPDISPSW_SHADERTYPE,//2023/12/08
 	SPDISPSWNUM
 };
 //#define SPDISPSWNUM	3
@@ -490,6 +491,7 @@ static RECT s_rctoolwnd;
 static RECT s_rcltwnd;
 static RECT s_rcsidemenuwnd;
 static RECT s_rcrigidwnd;
+static RECT s_rcshadertypewnd;
 static RECT s_rcinfownd;
 static RECT s_rcmainmenuaimbarwnd;
 static RECT s_rcmodelpanel;
@@ -604,6 +606,7 @@ static HWND s_motpropdlghwnd = 0;
 //static HWND s_cameradollydlgwnd = 0;
 static HWND s_materialratedlgwnd = 0;
 static HWND s_modelworldmatdlgwnd = 0;
+static HWND s_shadertypeparamsdlgwnd = 0;
 static HWND s_savechadlghwnd = 0;
 static HWND s_bvhdlghwnd = 0;
 static HWND s_saveredlghwnd = 0;
@@ -979,14 +982,28 @@ static OWP_Label* s_mainmenulabel = 0;
 
 
 static OrgWindow* s_placefolderWnd = 0;
-static OWP_Label* s_placefolderlabel_1 = 0;
-static OWP_Label* s_placefolderlabel_2 = 0;
-static OWP_Label* s_placefolderlabel_3 = 0;
+//static OWP_Label* s_placefolderlabel_1 = 0;
+//static OWP_Label* s_placefolderlabel_2 = 0;
+//static OWP_Label* s_placefolderlabel_3 = 0;
 //#define SHORTCUTTEXTNUM	35
 //#define SHORTCUTTEXTNUM	40
 //#define SHORTCUTTEXTNUM	44
 #define SHORTCUTTEXTNUM	48
 static OWP_Label* s_shortcuttext[SHORTCUTTEXTNUM];
+
+
+static OrgWindow* s_shadertypeWnd = 0;
+static OWP_ScrollWnd* s_SCshadertype = 0;
+static OWP_Separator* s_shadersp1 = 0;
+static OWP_Separator* s_shadersp2 = 0;
+static OWP_Separator* s_shadersp3 = 0;
+static OWP_Label* s_modelnamelabel = 0;
+static OWP_Button* s_materialnameB[MAXMATERIALNUM + 1];//+1は見出しの分
+static OWP_Label* s_shadertypelabel[MAXMATERIALNUM + 1];//+1は見出しの分
+static OWP_Label* s_metalcoeflabel[MAXMATERIALNUM + 1];//+1は見出しの分
+static OWP_Label* s_lightscalelabel[MAXMATERIALNUM + 1];//+1は見出しの分
+static bool s_shadertypeparamsFlag = false;
+static int s_shadertypeparamsindex = 0;//index==0は全てのマテリアルに設定. それ以外はindex - 1のマテリアルに設定
 
 
 static OrgWindow* s_rigidWnd = 0;
@@ -1369,9 +1386,11 @@ static Texture* s_spritetex34 = 0;
 static Texture* s_spritetex35 = 0;
 static Texture* s_spritetex36 = 0;
 static Texture* s_spritetex37 = 0;
+static Texture* s_spritetex37_1 = 0;
 static Texture* s_spritetex38 = 0;
 static Texture* s_spritetex39 = 0;
 static Texture* s_spritetex40 = 0;
+static Texture* s_spritetex40_1 = 0;
 static Texture* s_spritetex41 = 0;
 static Texture* s_spritetex42 = 0;
 static Texture* s_spritetex43 = 0;
@@ -1927,6 +1946,8 @@ static void ShowLaterTransparentWnd(bool srcflag);
 static void ShowDispGroupWnd(bool srcflag);
 static void GUIRigidSetVisible(int srcplateno);
 static void ShowRigidWnd(bool srcflag);
+static void ShowShaderTypeWnd(bool srcflag);
+static int ModalShaderTypeDlg();
 static void ShowImpulseWnd(bool srcflag);
 static void ShowGroundWnd(bool srcflag);
 static void ShowDampAnimWnd(bool srcflag);
@@ -1975,6 +1996,11 @@ static int SetModel2MaterialRateDlg(CModel* srcmodel);
 static int CreateModelWorldMatWnd();
 static int SetModel2ModelWorldMatDlg(CModel* srcmodel);
 static int ShowModelWorldMatDlg();
+static int CreateShaderTypeParamsDlg();
+static int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat);
+static int ShowShaderTypeParamsDlg();
+static void CheckShaderTypeButton(HWND hDlgWnd, int srcshadertype);//DispAndLimitプレートメニュー用
+static void CheckShaderTypeParamsButton(HWND hDlgWnd, int srcshadertype);//Shaderプレートメニューから呼び出すparamsダイアログ用
 
 
 void CALLBACK OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown, void* pUserContext);
@@ -1986,6 +2012,7 @@ LRESULT CALLBACK MotPropDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK CameraDollyDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK MaterialRateDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ModelWorldMatDlgProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK OpenBvhDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK SaveChaDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK ExportXDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
@@ -2049,6 +2076,8 @@ static int CreateTimelineWnd();
 static int CreateLongTimelineWnd();
 static int CreateDmpAnimWnd();
 static int CreateRigidWnd();
+static int CreateShaderTypeWnd();
+static void DestroyShaderTypeWnd();
 static int CreateSideMenuWnd();
 static int CreateMainMenuAimBarWnd();
 static int CreateImpulseWnd();
@@ -2077,7 +2106,6 @@ static int CreateGUIDlgDispParams();
 static int CreateGUIDlgBrushes();
 static int CreateGUIDlgBullet();
 static int CreateGUIDlgRefPos();
-static void CheckShaderTypeButton(HWND hDlgWnd, int srcshadertype);
 
 
 
@@ -2085,6 +2113,7 @@ static void CheckShaderTypeButton(HWND hDlgWnd, int srcshadertype);
 static int CreateLaterTransparentWnd();
 static int LaterTransparent2Dlg(HWND hDlgWnd);
 static int Dlg2LaterTransparent(HWND hDlgWnd);
+
 
 
 static int CreateDispGroupWnd();
@@ -2309,7 +2338,7 @@ static int InitJointPair2ConvBoneWnd();
 //static int ConvBoneConvert();//--> RetargetMotion()に改名
 static int RetargetMotion();
 
-//MameBake3DLibのRetarget.h, Retarget.cppへ移動
+//AdditiveIKLibのRetarget.h, Retarget.cppへ移動
 //static void ConvBoneConvertReq(CBone* modelbone, double srcframe, CBone* befbvhbone, float hrate);
 //static int ConvBoneRotation(int selfflag, CBone* srcbone, CBone* bvhbone, double srcframe, CBone* befbvhbone, float hrate);
 
@@ -2631,7 +2660,7 @@ int RegistKey()
 			if( s_registflag == 0 ){
 				LONG lret;
 				DWORD dwret;
-				lret = RegCreateKeyExA( HKEY_CURRENT_USER, "Software\\OchakkoLab\\MameBake3D_0003", 0, "",
+				lret = RegCreateKeyExA( HKEY_CURRENT_USER, "Software\\OchakkoLab\\AdditiveIK_0003", 0, "",
 					REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &s_hkey, &dwret );
 				if( dwret == REG_CREATED_NEW_KEY ){
 					lret = RegSetValueExA( s_hkey, "registkey", 0, REG_SZ, (LPBYTE)(dlg.m_regkey), sizeof(char) * 36 );
@@ -2658,7 +2687,7 @@ int IsRegist()
 
 	/*
 		LONG lret;
-		lret = RegOpenKeyExA( HKEY_CURRENT_USER, "Software\\OchakkoLab\\MameBake3D_0003", 0, KEY_ALL_ACCESS, &s_hkey );
+		lret = RegOpenKeyExA( HKEY_CURRENT_USER, "Software\\OchakkoLab\\AdditiveIK_0003", 0, KEY_ALL_ACCESS, &s_hkey );
 		if( lret == ERROR_SUCCESS ){
 			DWORD dwtype;
 			char strkey[37] = {0};
@@ -2897,6 +2926,7 @@ INT WINAPI wWinMain(
 	CreateLongTimelineWnd();
 	CreateDmpAnimWnd();
 	CreateRigidWnd();
+	CreateShaderTypeWnd();
 	CreateImpulseWnd();
 	CreateGPlaneWnd();
 	CreateLayerWnd();
@@ -2921,6 +2951,9 @@ INT WINAPI wWinMain(
 	}
 	CreateMaterialRateWnd();
 	CreateModelWorldMatWnd();
+	CreateShaderTypeParamsDlg();
+
+
 
 	//CreateCopyHistoryDlg();//s_modelが出来てから呼ぶ　OnModelMenu()に移動
 
@@ -3221,7 +3254,7 @@ void InitApp()
 {
 	s_hhook = NULL;
 	g_hWnd = NULL;
-	g_shadertype = -1;
+	//g_shadertype = -1;//マテリアル毎に設定することに
 
 	InitializeCriticalSection(&s_CritSection_LTimeline);
 	InitializeCriticalSection(&g_CritSection_GetGP);
@@ -3454,12 +3487,35 @@ void InitApp()
 	}
 
 
+	{
+		s_shadertypeparamsFlag = false;
+		s_shadertypeparamsindex = 0;//index==0は全てのマテリアルに設定. それ以外はindex - 1のマテリアルに設定
+
+		s_shadertypeWnd = 0;
+		s_SCshadertype = 0;
+
+		s_shadersp1 = 0;
+		s_shadersp2 = 0;
+		s_shadersp3 = 0;
+
+		s_modelnamelabel = 0;
+
+		//+1は見出しの分
+		int objno;
+		for (objno = 0; objno < (MAXMATERIALNUM + 1); objno++) {
+			s_materialnameB[objno] = 0;//+1は見出しの分
+			s_shadertypelabel[objno] = 0;//+1は見出しの分
+			s_metalcoeflabel[objno] = 0;//+1は見出しの分
+			s_lightscalelabel[objno] = 0;//+1は見出しの分
+		}
+	}
+
 
 	{
 		s_placefolderWnd = 0;
-		s_placefolderlabel_1 = 0;
-		s_placefolderlabel_2 = 0;
-		s_placefolderlabel_3 = 0;
+		//s_placefolderlabel_1 = 0;
+		//s_placefolderlabel_2 = 0;
+		//s_placefolderlabel_3 = 0;
 		ZeroMemory(s_shortcuttext, sizeof(OWP_Label*) * SHORTCUTTEXTNUM);
 	}
 
@@ -3801,6 +3857,10 @@ void InitApp()
 	s_rcrigidwnd.left = 0;
 	s_rcrigidwnd.bottom = 0;
 	s_rcrigidwnd.right = 0;
+	s_rcshadertypewnd.top = 0;
+	s_rcshadertypewnd.left = 0;
+	s_rcshadertypewnd.bottom = 0;
+	s_rcshadertypewnd.right = 0;
 	s_rcinfownd.top = 0;
 	s_rcinfownd.left = 0;
 	s_rcinfownd.bottom = 0;
@@ -4256,6 +4316,7 @@ void InitApp()
 	//s_cameradollydlgwnd = 0;
 	s_materialratedlgwnd = 0;
 	s_modelworldmatdlgwnd = 0;
+	s_shadertypeparamsdlgwnd = 0;
 
 	{
 		char strtitle[256];
@@ -4457,6 +4518,10 @@ void OnDestroyDevice()
 	if (s_modelworldmatdlgwnd) {
 		DestroyWindow(s_modelworldmatdlgwnd);
 		s_modelworldmatdlgwnd = 0;
+	}
+	if (s_shadertypeparamsdlgwnd) {
+		DestroyWindow(s_shadertypeparamsdlgwnd);
+		s_shadertypeparamsdlgwnd = 0;
 	}
 
 	CloseDbgFile();
@@ -4932,23 +4997,22 @@ void OnDestroyDevice()
 		s_rigidWnd = 0;
 	}
 
-
 	DestroyDispGroupWnd();
+	DestroyShaderTypeWnd();
 
 
-
-	if (s_placefolderlabel_1) {
-		delete s_placefolderlabel_1;
-		s_placefolderlabel_1 = 0;
-	}
-	if (s_placefolderlabel_2) {
-		delete s_placefolderlabel_2;
-		s_placefolderlabel_2 = 0;
-	}
-	if (s_placefolderlabel_3) {
-		delete s_placefolderlabel_3;
-		s_placefolderlabel_3 = 0;
-	}
+	//if (s_placefolderlabel_1) {
+	//	delete s_placefolderlabel_1;
+	//	s_placefolderlabel_1 = 0;
+	//}
+	//if (s_placefolderlabel_2) {
+	//	delete s_placefolderlabel_2;
+	//	s_placefolderlabel_2 = 0;
+	//}
+	//if (s_placefolderlabel_3) {
+	//	delete s_placefolderlabel_3;
+	//	s_placefolderlabel_3 = 0;
+	//}
 	if (s_placefolderWnd) {
 		delete s_placefolderWnd;
 		s_placefolderWnd = 0;
@@ -5266,9 +5330,9 @@ void OnUserFrameMove(double fTime, float fElapsedTime)
 		//g_SampleUI.GetStatic(IDC_STATIC_UMTHREADS)->SetText(sz);
 
 
-		//if (g_undertrackingRMenu == 0) {
-		//	OnDSUpdate();
-		//}
+		if (g_undertrackingRMenu == 0) {
+			OnDSUpdate();
+		}
 
 
 		OnFrameStartPreview(fTime, &savetime);
@@ -11906,6 +11970,7 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		SetMainWindowTitle();
 		ShowDispGroupWnd(s_spdispsw[SPDISPSW_DISPGROUP].state);
 		ShowLaterTransparentWnd(s_spdispsw[SPDISPSW_LATERTRANSPARENT].state);
+		ShowShaderTypeWnd(s_spdispsw[SPDISPSW_SHADERTYPE].state);
 
 
 		s_underselectmodel = false;
@@ -11936,6 +12001,7 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		SetMainWindowTitle();
 		ShowDispGroupWnd(s_spdispsw[SPDISPSW_DISPGROUP].state);
 		ShowLaterTransparentWnd(s_spdispsw[SPDISPSW_LATERTRANSPARENT].state);
+		ShowShaderTypeWnd(s_spdispsw[SPDISPSW_SHADERTYPE].state);
 
 
 		s_underselectmodel = false;
@@ -11976,6 +12042,7 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 			refreshModelPanel();
 			ShowDispGroupWnd(s_spdispsw[SPDISPSW_DISPGROUP].state);
 			ShowLaterTransparentWnd(s_spdispsw[SPDISPSW_LATERTRANSPARENT].state);
+			ShowShaderTypeWnd(s_spdispsw[SPDISPSW_SHADERTYPE].state);
 
 			OnAnimMenu(dorefreshtl, s_motmenuindexmap[s_model]);
 		}
@@ -12028,6 +12095,13 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 			}
 		}
 
+		{
+			if (s_shadertypeparamsdlgwnd) {
+				if (s_model) {
+					SetMaterial2ShaderTypeParamsDlg(nullptr);
+				}
+			}
+		}
 
 		if (s_model) {
 			if (s_model->GetRigidElemInfoSize() > 0) {
@@ -18751,6 +18825,8 @@ int SetSpDispSWParams()
 	s_spdispsw[SPDISPSW_LATERTRANSPARENT].dispcenter.x = s_spdispsw[SPDISPSW_DISPGROUP].dispcenter.x + (int)spgwidth + spgshift;
 	s_spdispsw[SPDISPSW_LATERTRANSPARENT].dispcenter.y = s_spdispsw[SPDISPSW_DISPGROUP].dispcenter.y;
 
+	s_spdispsw[SPDISPSW_SHADERTYPE].dispcenter.x = s_spdispsw[SPDISPSW_LATERTRANSPARENT].dispcenter.x + (int)spgwidth + spgshift;
+	s_spdispsw[SPDISPSW_SHADERTYPE].dispcenter.y = s_spdispsw[SPDISPSW_LATERTRANSPARENT].dispcenter.y;
 
 	int spgcnt;
 	for (spgcnt = 0; spgcnt < SPDISPSWNUM; spgcnt++) {
@@ -19981,6 +20057,9 @@ int PickSpDispSW(POINT srcpos)
 						break;
 					case 2:
 						kind = 3;
+						break;
+					case 3:
+						kind = 4;
 						break;
 					default:
 						kind = 0;
@@ -24298,34 +24377,38 @@ LRESULT CALLBACK LaterTransparentDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 
 void CheckShaderTypeButton(HWND hDlgWnd, int srcshadertype)
 {
+	//############################
+	//DispAndLimitプレートメニュー用
+	//############################
+
 	switch (srcshadertype) {
 	case -1:
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, TRUE, 0);//!!!!!!
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
-		g_shadertype = srcshadertype;
+		//g_shadertype = srcshadertype;
 		break;
 	case MQOSHADER_PBR:
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, FALSE, 0);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, TRUE, 0);//!!!!
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
-		g_shadertype = srcshadertype;
+		//g_shadertype = srcshadertype;
 		break;
 	case MQOSHADER_STD:
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, FALSE, 0);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, TRUE, 0);//!!!!!!!
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
-		g_shadertype = srcshadertype;
+		//g_shadertype = srcshadertype;
 		break;
 	case MQOSHADER_NOLIGHT:
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, FALSE, 0);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, TRUE, 0);//!!!!!!
-		g_shadertype = srcshadertype;
+		//g_shadertype = srcshadertype;
 		break;
 	default:
 		_ASSERT(0);
@@ -24333,11 +24416,52 @@ void CheckShaderTypeButton(HWND hDlgWnd, int srcshadertype)
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
-		g_shadertype = -1;
+		//g_shadertype = -1;
 		break;
 	}
 }
 
+void CheckShaderTypeParamsButton(HWND hDlgWnd, int srcshadertype)
+{
+	//###############################################
+	//Shaderプレートメニューから呼び出すparamsダイアログ用
+	//###############################################
+
+	switch (srcshadertype) {
+	case -1:
+	case -2:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO2), BM_SETSTATE, TRUE, 0);//!!!!!!
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT2), BM_SETSTATE, FALSE, 0);
+		break;
+	case MQOSHADER_PBR:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR2), BM_SETSTATE, TRUE, 0);//!!!!
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT2), BM_SETSTATE, FALSE, 0);
+		break;
+	case MQOSHADER_STD:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD2), BM_SETSTATE, TRUE, 0);//!!!!!!!
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT2), BM_SETSTATE, FALSE, 0);
+		break;
+	case MQOSHADER_NOLIGHT:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT2), BM_SETSTATE, TRUE, 0);//!!!!!!
+		break;
+	default:
+		//_ASSERT(0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO2), BM_SETSTATE, TRUE, 0);//!!!!
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT2), BM_SETSTATE, FALSE, 0);
+		break;
+	}
+}
 
 LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -24350,7 +24474,8 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		//#######
 		//Button
 		//#######
-		CheckShaderTypeButton(hDlgWnd, g_shadertype);
+		// //マテリアル毎に設定することに
+		//CheckShaderTypeButton(hDlgWnd, g_shadertype);
 
 
 		//#######
@@ -24560,18 +24685,19 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		switch (LOWORD(wp)) {
 
 
-		case IDC_SHADER_AUTO:
-			CheckShaderTypeButton(hDlgWnd, -1);
-			break;
-		case IDC_SHADER_PBR:
-			CheckShaderTypeButton(hDlgWnd, MQOSHADER_PBR);
-			break;
-		case IDC_SHADER_STD:
-			CheckShaderTypeButton(hDlgWnd, MQOSHADER_STD);
-			break;
-		case IDC_SHADER_NOLIGHT:
-			CheckShaderTypeButton(hDlgWnd, MQOSHADER_NOLIGHT);
-			break;
+		////マテリアル毎に設定することに
+		//case IDC_SHADER_AUTO:
+		//	CheckShaderTypeButton(hDlgWnd, -1);
+		//	break;
+		//case IDC_SHADER_PBR:
+		//	CheckShaderTypeButton(hDlgWnd, MQOSHADER_PBR);
+		//	break;
+		//case IDC_SHADER_STD:
+		//	CheckShaderTypeButton(hDlgWnd, MQOSHADER_STD);
+		//	break;
+		//case IDC_SHADER_NOLIGHT:
+		//	CheckShaderTypeButton(hDlgWnd, MQOSHADER_NOLIGHT);
+		//	break;
 
 
 
@@ -24764,6 +24890,228 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 	return TRUE;
 
 }
+
+LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+	
+	if (!s_shadertypeparamsdlgwnd) {
+		s_shadertypeparamsdlgwnd = hDlgWnd;//条件リターンより前でセット
+	}
+
+
+	if (!s_model) {
+		return DefWindowProc(hDlgWnd, msg, wp, lp);
+	}
+	int materialnum = s_model->GetMQOMaterialSize();
+	CMQOMaterial* curmqomat = nullptr;
+	if ((s_shadertypeparamsindex < 0) || (s_shadertypeparamsindex >= (materialnum + 1))) {
+		return DefWindowProc(hDlgWnd, msg, wp, lp);
+	}
+	int materialindex = s_shadertypeparamsindex - 1;
+	int curshadertype;
+	float curmetalcoef;
+	float curlightscale[LIGHTNUMMAX];
+	WCHAR wmaterialname[256] = { 0L };
+	if (materialindex >= 0) {
+		curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
+		if (curmqomat) {
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
+				curmqomat->GetName(), 0, wmaterialname, 256);
+			curshadertype = curmqomat->GetShaderType();
+			curmetalcoef = curmqomat->GetMetalCoef();
+			int litno;
+			for (litno = 0; litno < LIGHTNUMMAX; litno++) {
+				curlightscale[litno] = curmqomat->GetLightScale(litno);
+			}
+		}
+		else {
+			_ASSERT(0);
+			abort();
+		}
+	}
+	else {
+		curmqomat = 0;//全てのマテリアルに対して設定するボタンを押した場合
+		wcscpy_s(wmaterialname, 256, L"(All)");
+		curshadertype = -1;
+		curmetalcoef = 0.70f;
+		int litno;
+		for (litno = 0; litno < LIGHTNUMMAX; litno++) {
+			curlightscale[litno] = 1.0f;
+		}
+	}
+	
+	int lightsliderid[LIGHTNUMMAX] = {
+		IDC_SL_LITSCALE1, IDC_SL_LITSCALE2, IDC_SL_LITSCALE3, IDC_SL_LITSCALE4,
+		IDC_SL_LITSCALE5, IDC_SL_LITSCALE6, IDC_SL_LITSCALE7, IDC_SL_LITSCALE8
+	};
+	int lighttextid[LIGHTNUMMAX] = {
+		IDC_STATIC_LIGHTSCALE1, IDC_STATIC_LIGHTSCALE2, IDC_STATIC_LIGHTSCALE3, IDC_STATIC_LIGHTSCALE4,
+		IDC_STATIC_LIGHTSCALE5, IDC_STATIC_LIGHTSCALE6, IDC_STATIC_LIGHTSCALE7, IDC_STATIC_LIGHTSCALE8
+	};
+
+	switch (msg) {
+	case WM_INITDIALOG:
+	{
+		SetMaterial2ShaderTypeParamsDlg(curmqomat);
+		return FALSE;
+	}
+	break;
+
+	case WM_DRAWITEM://オーナードローコントロールの描画 : リソースでカラーバーボタンにオーナードロー属性を設定してある
+		//DefWindowProc(hDlgWnd, msg, wp, lp);
+		break;
+
+	case WM_HSCROLL:
+		if (GetDlgItem(hDlgWnd, IDC_SLIDER_METALCOEF) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_METALCOEF), TBM_GETPOS, 0, 0);
+			float newmetalcoef = (float)((double)cursliderpos / 100.0);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"MetalCoef %.2f", newmetalcoef);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_METALCOEF, strdlg);
+
+			if (curmqomat) {
+				curmqomat->SetMetalCoef(newmetalcoef);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetMetalCoef(newmetalcoef);
+					}
+				}
+			}
+		}
+
+		{
+			int litno4;
+			for (litno4 = 0; litno4 < LIGHTNUMMAX; litno4++) {
+				HWND litwnd = GetDlgItem(hDlgWnd, lightsliderid[litno4]);
+				if ((litwnd != NULL) && (litwnd == (HWND)lp)) {
+					int cursliderpos = (int)SendMessage(litwnd, TBM_GETPOS, 0, 0);
+					float newlitscale = (float)((double)cursliderpos / 100.0);
+
+					WCHAR strdlg[256] = { 0L };
+					swprintf_s(strdlg, 256, L"LightScale%d %.2f", (litno4 + 1), newlitscale);
+					SetDlgItemText(hDlgWnd, lighttextid[litno4], strdlg);
+
+					if (curmqomat) {
+						curmqomat->SetLightScale(litno4, newlitscale);
+					}
+					else {
+						int materialindex4;
+						for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
+							CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex4);
+							if (setmqomat) {
+								setmqomat->SetLightScale(litno4, newlitscale);
+							}
+						}
+					}
+				}
+			}
+		}
+		break;
+
+	case WM_COMMAND:
+
+		switch (LOWORD(wp)) {
+
+
+		case IDC_SHADER_AUTO2:
+		{
+			CheckShaderTypeParamsButton(hDlgWnd, -1);
+			if (curmqomat) {
+				curmqomat->SetShaderType(-1);
+			}
+			else {
+				int materialindex5;
+				for (materialindex5 = 0; materialindex5 < materialnum; materialindex5++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex5);
+					if (setmqomat) {
+						setmqomat->SetShaderType(-1);
+					}
+				}
+			}
+		}
+			break;
+		case IDC_SHADER_PBR2:
+		{
+			CheckShaderTypeParamsButton(hDlgWnd, MQOSHADER_PBR);
+			if (curmqomat) {
+				curmqomat->SetShaderType(MQOSHADER_PBR);
+			}
+			else {
+				int materialindex6;
+				for (materialindex6 = 0; materialindex6 < materialnum; materialindex6++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex6);
+					if (setmqomat) {
+						setmqomat->SetShaderType(MQOSHADER_PBR);
+					}
+				}
+			}
+		}
+			break;
+		case IDC_SHADER_STD2:
+		{
+			CheckShaderTypeParamsButton(hDlgWnd, MQOSHADER_STD);
+			if (curmqomat) {
+				curmqomat->SetShaderType(MQOSHADER_STD);
+			}
+			else {
+				int materialindex7;
+				for (materialindex7 = 0; materialindex7 < materialnum; materialindex7++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex7);
+					if (setmqomat) {
+						setmqomat->SetShaderType(MQOSHADER_STD);
+					}
+				}
+			}
+		}
+			break;
+		case IDC_SHADER_NOLIGHT2:
+		{
+			CheckShaderTypeParamsButton(hDlgWnd, MQOSHADER_NOLIGHT);
+			if (curmqomat) {
+				curmqomat->SetShaderType(MQOSHADER_NOLIGHT);
+			}
+			else {
+				int materialindex8;
+				for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex8);
+					if (setmqomat) {
+						setmqomat->SetShaderType(MQOSHADER_NOLIGHT);
+					}
+				}
+			}
+		}
+			break;
+
+
+		case IDOK:
+		case IDCANCEL:
+			//EndDialog(hDlgWnd, IDCANCEL);
+			//s_shadertypeparamsFlag = false;
+			ShowWindow(hDlgWnd, SW_HIDE);
+			break;
+		default:
+			return FALSE;
+			break;
+		}
+		break;
+	case WM_CLOSE:
+		//s_shadertypeparamsFlag = false;
+		ShowWindow(hDlgWnd, SW_HIDE);
+		break;
+	default:
+		DefWindowProc(hDlgWnd, msg, wp, lp);
+		return FALSE;
+	}
+	return TRUE;
+
+}
+
+
 LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
 	switch (msg) {
@@ -28350,7 +28698,15 @@ int OnFrameToolWnd()
 		}
 		s_modelworldmatFlag = false;
 	}
-
+	if (s_shadertypeparamsFlag) {
+		if (s_model) {
+			int materialnum = s_model->GetMQOMaterialSize();
+			if ((s_shadertypeparamsindex >= 0) && (s_shadertypeparamsindex < (materialnum + 1))) {
+				ShowShaderTypeParamsDlg();
+			}
+		}
+		s_shadertypeparamsFlag = false;//ダイアログを開いたまま　別マテリアルでダイアログを更新できるように　フラグをすぐリセット
+	}
 
 	if (s_interpolateFlag) {
 		if (s_model && s_owpTimeline && s_owpLTimeline && s_model->GetCurMotInfo()) {
@@ -31520,24 +31876,24 @@ int CreatePlaceFolderWnd()
 		true, true);					//サイズ変更の可否
 
 	if (s_placefolderWnd) {
-		s_placefolderlabel_1 = new OWP_Label(L"After Loading Model Data,");
-		if (!s_placefolderlabel_1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_placefolderlabel_2 = new OWP_Label(L"Click Frog Button for Change Plate Menu.");
-		if (!s_placefolderlabel_2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_placefolderlabel_3 = new OWP_Label(L" ");
-		if (!s_placefolderlabel_3) {
-			_ASSERT(0);
-			return 1;
-		}
+		//s_placefolderlabel_1 = new OWP_Label(L"After Loading Model Data,");
+		//if (!s_placefolderlabel_1) {
+		//	_ASSERT(0);
+		//	return 1;
+		//}
+		//s_placefolderlabel_2 = new OWP_Label(L"Click Frog Button for Change Plate Menu.");
+		//if (!s_placefolderlabel_2) {
+		//	_ASSERT(0);
+		//	return 1;
+		//}
+		//s_placefolderlabel_3 = new OWP_Label(L" ");
+		//if (!s_placefolderlabel_3) {
+		//	_ASSERT(0);
+		//	return 1;
+		//}
 
 
-		WCHAR shortcuttext[SHORTCUTTEXTNUM][256] = {
+		WCHAR shortcuttext[SHORTCUTTEXTNUM][80] = {
 			L" ",
 			L" ",
 			L"ShortCutKey",
@@ -31547,7 +31903,7 @@ int CreatePlaceFolderWnd()
 			L"　　C + SpaceKey　：　Change Plate.",
 			L"　　V + SpaceKey　：　Change ToolShortCutButtons.",
 			L" ",
-			L"　Selection",
+			L"　Joint Selection",
 			
 			L"　　H + LeftArrow or RightArrow　：　Select LeftHand or RightHand.",
 			L"	　　　JointName whitch contain string L_Hand or LeftHand",
@@ -31590,7 +31946,6 @@ int CreatePlaceFolderWnd()
 			L"　OWP_ScrollWindow",
 			L"　　MouseWheel on ScrollBar　：　Scroll Window.",
 			L" "
-
 		};
 
 		int textno;
@@ -31604,9 +31959,9 @@ int CreatePlaceFolderWnd()
 
 
 
-		s_placefolderWnd->addParts(*s_placefolderlabel_1);
-		s_placefolderWnd->addParts(*s_placefolderlabel_2);
-		s_placefolderWnd->addParts(*s_placefolderlabel_3);
+		//s_placefolderWnd->addParts(*s_placefolderlabel_1);
+		//s_placefolderWnd->addParts(*s_placefolderlabel_2);
+		//s_placefolderWnd->addParts(*s_placefolderlabel_3);
 		for (textno = 0; textno < SHORTCUTTEXTNUM; textno++) {
 			s_placefolderWnd->addParts(*s_shortcuttext[textno]);
 		}
@@ -33449,6 +33804,285 @@ int CreateRigidWnd()
 	
 	return 0;
 }
+
+void DestroyShaderTypeWnd()
+{
+	if (s_modelnamelabel) {
+		delete s_modelnamelabel;
+		s_modelnamelabel = 0;
+	}
+
+	int index;
+	for (index = 0; index < (MAXMATERIALNUM + 1); index++) {
+		if (s_materialnameB[index]) {
+			delete s_materialnameB[index];
+			s_materialnameB[index] = 0;
+		}
+		if (s_shadertypelabel[index]) {
+			delete s_shadertypelabel[index];
+			s_shadertypelabel[index] = 0;
+		}
+		if (s_metalcoeflabel[index]) {
+			delete s_metalcoeflabel[index];
+			s_metalcoeflabel[index] = 0;
+		}
+		if (s_lightscalelabel[index]) {
+			delete s_lightscalelabel[index];
+			s_lightscalelabel[index] = 0;
+		}
+	}
+
+
+	if (s_shadersp2) {
+		delete s_shadersp2;
+		s_shadersp2 = 0;
+	}
+	if (s_shadersp3) {
+		delete s_shadersp3;
+		s_shadersp3 = 0;
+	}
+	if (s_shadersp1) {
+		delete s_shadersp1;
+		s_shadersp1 = 0;
+	}
+	if (s_SCshadertype) {
+		delete s_SCshadertype;
+		s_SCshadertype = 0;
+	}
+
+	if (s_shadertypeWnd) {
+		delete s_shadertypeWnd;
+		s_shadertypeWnd = 0;
+	}
+
+}
+
+
+int CreateShaderTypeWnd()
+{
+	DestroyShaderTypeWnd();
+
+
+	//s_dsrigidctrls.clear();
+
+	int windowposx;
+	if (g_4kresolution) {
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
+	}
+	else {
+		windowposx = s_timelinewidth + s_mainwidth;
+	}
+
+	s_shadertypeWnd = new OrgWindow(
+		0,
+		_T("ShaderTypeWindow"),		//ウィンドウクラス名
+		GetModuleHandle(NULL),	//インスタンスハンドル
+		WindowPos(windowposx, s_sidemenuheight),
+		WindowSize(s_sidewidth, s_sideheight),		//サイズ
+		_T("ShderTypeWindow"),	//タイトル
+		s_mainhwnd,	//親ウィンドウハンドル
+		true,					//表示・非表示状態
+		//70, 50, 70,				//カラー
+		0, 0, 0,				//カラー
+		true, true);					//サイズ変更の可否
+
+
+
+	if (!s_model) {
+		//モデルが無い場合には　ウインドウ枠だけ作成してリターン
+		return 0;
+	}
+
+	int materialnum = s_model->GetMQOMaterialSize();
+
+	if (s_shadertypeWnd) {
+		int linedatasize;
+		linedatasize = (int)((double)materialnum * 1.2);
+
+
+		s_SCshadertype = new OWP_ScrollWnd(L"ShaderTypeScWnd", true);
+		if (!s_SCshadertype) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_SCshadertype->setLineDataSize(linedatasize);//!!!!!!!!!!!!!
+		s_shadertypeWnd->addParts(*s_SCshadertype);
+
+
+		s_shadersp1 = new OWP_Separator(s_shadertypeWnd, false, 0.75, true);
+		if (!s_shadersp1) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_SCshadertype->addParts(*s_shadersp1);
+
+		s_shadersp2 = new OWP_Separator(s_shadertypeWnd, false, 0.80, true);;
+		if (!s_shadersp2) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_shadersp3 = new OWP_Separator(s_shadertypeWnd, false, 0.5, true);;
+		if (!s_shadersp3) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_shadersp1->addParts1(*s_shadersp2);
+		s_shadersp1->addParts2(*s_shadersp3);
+
+		//見出し行　見出し行のs_materialnameBは全てのマテリアルに適用するためのボタン
+		//OrgWinGUI::OrgWindowParts::color_tag colorforindex;//RGB(168, 129, 129)
+		//colorforindex.r = 168;
+		//colorforindex.g = 129;
+		//colorforindex.b = 129;
+		COLORREF indexcolor = RGB(168, 129, 129);
+		s_materialnameB[0] = new OWP_Button(L"MaterialName");
+		if (!s_materialnameB[0]) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_materialnameB[0]->setTextColor(indexcolor);
+		s_shadertypelabel[0] = new OWP_Label(L"ShaderType");
+		if (!s_shadertypelabel[0]) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_shadertypelabel[0]->setTextColor(indexcolor);
+		s_metalcoeflabel[0] = new OWP_Label(L"MetalCoef");
+		if (!s_metalcoeflabel[0]) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_metalcoeflabel[0]->setTextColor(indexcolor);
+		s_lightscalelabel[0] = new OWP_Label(L"LightScale");
+		if (!s_lightscalelabel[0]) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_lightscalelabel[0]->setTextColor(indexcolor);
+
+		s_shadersp2->addParts1(*(s_materialnameB[0]));
+		s_shadersp2->addParts2(*(s_shadertypelabel[0]));
+		s_shadersp3->addParts1(*(s_metalcoeflabel[0]));
+		s_shadersp3->addParts2(*(s_lightscalelabel[0]));
+
+
+		int setindex;
+		for (setindex = 1; setindex < (materialnum + 1); setindex++) {
+			int materialindex = setindex - 1;
+			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
+			if (!curmqomat) {
+				_ASSERT(0);
+				return 1;
+			}
+
+
+			char name[256] = { 0 };
+			strcpy_s(name, 256, curmqomat->GetName());
+			WCHAR wname[256] = { 0L };
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, 256, wname, 256);
+			s_materialnameB[setindex] = new OWP_Button(wname);
+			if (!s_materialnameB[setindex]) {
+				_ASSERT(0);
+				return 1;
+			}
+
+
+			int shadertype = curmqomat->GetShaderType();
+			WCHAR strshadertype[256] = { 0L };
+			switch (shadertype) {
+			case MQOSHADER_PBR:
+				wcscpy_s(strshadertype, 256, L"PBR");
+				break;
+			case MQOSHADER_STD:
+				wcscpy_s(strshadertype, 256, L"STD");
+				break;
+			case MQOSHADER_NOLIGHT:
+				wcscpy_s(strshadertype, 256, L"NOLIGHT");
+				break;
+			case -1:
+			case -2:
+				wcscpy_s(strshadertype, 256, L"AUTO");
+				break;
+			default:
+				_ASSERT(0);
+				wcscpy_s(strshadertype, 256, L"Unknown");
+				break;
+			}
+			s_shadertypelabel[setindex] = new OWP_Label(strshadertype);
+			if (!s_shadertypelabel[setindex]) {
+				_ASSERT(0);
+				return 1;
+			}
+			
+			float metalcoef = curmqomat->GetMetalCoef();
+			WCHAR strmetalcoef[256] = { 0L };
+			swprintf_s(strmetalcoef, 256, L"%.3f", metalcoef);
+			s_metalcoeflabel[setindex] = new OWP_Label(strmetalcoef);
+			if (!s_metalcoeflabel[setindex]) {
+				_ASSERT(0);
+				return 1;
+			}
+
+			WCHAR strlightscale[256] = { 0L };
+			wcscpy_s(strlightscale, 256, L"*****");//後で. 1.0以外のスケールのライト番号を","で区切って表示する予定
+			s_lightscalelabel[setindex] = new OWP_Label(strlightscale);
+			if (!s_lightscalelabel[setindex]) {
+				_ASSERT(0);
+				return 1;
+			}
+
+
+			s_shadersp2->addParts1(*(s_materialnameB[materialindex]));
+			s_shadersp2->addParts2(*(s_shadertypelabel[materialindex]));
+			s_shadersp3->addParts1(*(s_metalcoeflabel[materialindex]));
+			s_shadersp3->addParts2(*(s_lightscalelabel[materialindex]));
+
+		}
+
+
+		//ボタンのラムダ関数
+		int setindex2;
+		for (setindex2 = 0; setindex2 < (materialnum + 1); setindex2++) {
+			//int materialindex = setindex2 - 1;	
+			if (s_materialnameB[setindex2]) {
+				s_materialnameB[setindex2]->setButtonListener([setindex2]() {
+					if (!s_shadertypeparamsFlag) {
+						s_shadertypeparamsindex = setindex2;//index==0は全てのマテリアルに設定. それ以外はindex - 1のマテリアルに設定
+						s_shadertypeparamsFlag = true;
+					}
+				});
+			}
+		}
+
+
+		//autoResizeしないと　チェックボックス４段目以下が反応なかった
+		s_SCshadertype->autoResize();
+		s_shadersp3->autoResize();
+		s_shadersp2->autoResize();
+		s_shadersp1->autoResize();
+
+		s_shadertypeWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
+		s_shadertypeWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
+		//１クリック目問題対応
+		s_shadertypeWnd->refreshPosAndSize();
+		s_shadertypeWnd->autoResizeAllParts();
+		s_shadertypeWnd->setVisible(false);
+
+
+
+		s_rcshadertypewnd.bottom = s_sideheight;
+		s_rcshadertypewnd.right = s_sidewidth;
+
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	return 0;
+}
+
 
 int CreateImpulseWnd()
 {
@@ -35304,20 +35938,26 @@ int SetLightDirection()
 				}
 				ChaVector3Normalize(&nrotdir, &rotdir);
 				//g_lightdirforshader[activenum] = -ChaVector4(nrotdir, 0.0f);//-lightdir
-				g_lightdirforshader[activenum] = ChaVector4(nrotdir, 0.0f);//新しいシェーダに合わせて
+				g_lightdirforshader[lightindex] = -ChaVector4(nrotdir, 0.0f);//-lightdir
 			}
 			else {
 				ChaVector3 nrotdir;
 				ChaVector3Normalize(&nrotdir, &(g_lightDir[g_lightSlot][lightindex]));
 				//g_lightdirforshader[activenum] = -ChaVector4(nrotdir, 0.0f);//-lightdir
-				g_lightdirforshader[activenum] = ChaVector4(nrotdir, 0.0f);//新しいシェーダに合わせて
+				g_lightdirforshader[lightindex] = -ChaVector4(nrotdir, 0.0f);//-lightdir
 			}
 
 			ChaVector3 scaleddiffuse;
 			scaleddiffuse = g_lightDiffuse[g_lightSlot][lightindex] * g_lightScale[g_lightSlot][lightindex] * g_fLightScale;
-			g_lightdiffuseforshader[activenum] = ChaVector4(scaleddiffuse.x, scaleddiffuse.y, scaleddiffuse.z, 1.0f);
-
+			//g_lightdiffuseforshader[activenum] = ChaVector4(scaleddiffuse.x, scaleddiffuse.y, scaleddiffuse.z, 1.0f);
+			g_lightdiffuseforshader[lightindex] = ChaVector4(scaleddiffuse.x, scaleddiffuse.y, scaleddiffuse.z, 1.0f);
 			activenum++;
+		}
+		else {
+			//シェーダ定数のintでfor分を回すことは出来ない　シェーダ引数のuniform intでなら可だがfxファイルのtechniqueを記述する必要有
+			//shaderではif分でスキップするよりは配列分計算した方が速いので　計算結果が０になるようなデータを入れる
+			g_lightdirforshader[lightindex] = ChaVector4(0.0f, 0.0f, 1.0f, 0.0f);
+			g_lightdiffuseforshader[lightindex] = ChaVector4(0.0f, 0.0f, 0.0f, 1.0f);
 		}
 	}
 
@@ -37650,13 +38290,16 @@ HWND CreateMainWindow()
 	ZeroMemory(&wcx, sizeof(WNDCLASSEX));
 	int returnCode = 0;
 
+	HICON appicon = LoadIcon(NULL, MAKEINTRESOURCE(IDI_ICON1));
+
 	wcx.cbSize = sizeof(WNDCLASSEX);
 	wcx.style = CS_HREDRAW | CS_VREDRAW;
 	wcx.lpfnWndProc = MainWindowProc;
 	wcx.cbClsExtra = 0;
 	wcx.cbWndExtra = 0;
 	wcx.hInstance = (HINSTANCE)GetModuleHandle(NULL);
-	wcx.hIcon = NULL;
+	//wcx.hIcon = NULL;
+	wcx.hIcon = appicon;
 	wcx.hCursor = NULL;
 	wcx.hbrBackground = (HBRUSH)COLOR_BACKGROUND + 1;
 	wcx.lpszMenuName = NULL;
@@ -37669,7 +38312,7 @@ HWND CreateMainWindow()
 		return NULL;
 	}
 
-	HICON appicon = LoadIcon(NULL, MAKEINTRESOURCE(IDI_ICON1));
+	//HICON appicon = LoadIcon(NULL, MAKEINTRESOURCE(IDI_ICON1));
 
 	s_mainmenu = LoadMenuW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MENU1));
 	if (s_mainmenu == NULL) {
@@ -37813,13 +38456,13 @@ HWND Create3DWnd(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine,
 	RECT rc;
 	ZeroMemory(&rc, sizeof(RECT));
 	if (g_4kresolution) {
-		rc = InitGame(hInstance, hPrevInstance, lpCmdLine, nShowCmd, TEXT("MameBake3D"),
+		rc = InitGame(hInstance, hPrevInstance, lpCmdLine, nShowCmd, TEXT("AdditiveIK"),
 			s_mainhwnd,
 			s_timelinewidth + s_modelwindowwidth, MAINMENUAIMBARH,
 			s_mainwidth, s_mainheight);
 	}
 	else {
-		rc = InitGame(hInstance, hPrevInstance, lpCmdLine, nShowCmd, TEXT("MameBake3D"),
+		rc = InitGame(hInstance, hPrevInstance, lpCmdLine, nShowCmd, TEXT("AdditiveIK"),
 			s_mainhwnd,
 			s_timelinewidth, MAINMENUAIMBARH,
 			s_mainwidth, s_mainheight);
@@ -37831,24 +38474,24 @@ HWND Create3DWnd(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine,
 	s_3dwnd = g_hWnd;//g_hWndはsystem.cpp, system.hで定義
 
 	//if (g_4kresolution) {
-	//	hr = DXUTCreateWindow(L"MameBake3D", 0, 0, 0, 450 * 2, 0);
+	//	hr = DXUTCreateWindow(L"AdditiveIK", 0, 0, 0, 450 * 2, 0);
 	//}
 	//else {
-	//	hr = DXUTCreateWindow(L"MameBake3D", 0, 0, 0, 450, 0);
+	//	hr = DXUTCreateWindow(L"AdditiveIK", 0, 0, 0, 450, 0);
 	//}
 
 
 
 	//if (g_4kresolution) {
-	//	//hr = DXUTCreateWindow(L"MameBake3D", 0, 0, 0, s_toolwidth + s_modelwindowwidth, 0);
-	//	hr = DXUTCreateWindow(L"MameBake3D", s_mainhwnd, (HINSTANCE)GetModuleHandle(NULL),
+	//	//hr = DXUTCreateWindow(L"AdditiveIK", 0, 0, 0, s_toolwidth + s_modelwindowwidth, 0);
+	//	hr = DXUTCreateWindow(L"AdditiveIK", s_mainhwnd, (HINSTANCE)GetModuleHandle(NULL),
 	//		0, 0,
 	//		(s_timelinewidth + s_modelwindowwidth), MAINMENUAIMBARH,
 	//		s_mainwidth, s_mainheight);
 	//}
 	//else {
-	//	//hr = DXUTCreateWindow(L"MameBake3D", 0, 0, 0, s_timelinewidth, 0);
-	//	hr = DXUTCreateWindow(L"MameBake3D", s_mainhwnd, (HINSTANCE)GetModuleHandle(NULL),
+	//	//hr = DXUTCreateWindow(L"AdditiveIK", 0, 0, 0, s_timelinewidth, 0);
+	//	hr = DXUTCreateWindow(L"AdditiveIK", s_mainhwnd, (HINSTANCE)GetModuleHandle(NULL),
 	//		0, 0, 
 	//		s_timelinewidth, MAINMENUAIMBARH,
 	//		s_mainwidth, s_mainheight);
@@ -38564,21 +39207,31 @@ void GUIDispSetVisible(int srcplateno)
 		ShowLightsWnd(true);
 		ShowDispGroupWnd(false);
 		ShowLaterTransparentWnd(false);
+		ShowShaderTypeWnd(false);
 	}
 	else if (srcplateno == 2) {
 		ShowLightsWnd(false);
 		ShowDispGroupWnd(true);
 		ShowLaterTransparentWnd(false);
+		ShowShaderTypeWnd(false);
 	}
 	else if (srcplateno == 3) {
 		ShowLightsWnd(false);
 		ShowDispGroupWnd(false);
 		ShowLaterTransparentWnd(true);
+		ShowShaderTypeWnd(false);
+	}
+	else if (srcplateno == 4) {
+		ShowLightsWnd(false);
+		ShowDispGroupWnd(false);
+		ShowLaterTransparentWnd(false);
+		ShowShaderTypeWnd(true);
 	}
 	else if (srcplateno == -2) {
 		ShowLightsWnd(false);
 		ShowDispGroupWnd(false);
 		ShowLaterTransparentWnd(false);
+		ShowShaderTypeWnd(false);
 	}
 	else {
 		_ASSERT(0);
@@ -39008,6 +39661,45 @@ void ShowRigidWnd(bool srcflag)
 		}
 	}
 }
+
+
+void ShowShaderTypeWnd(bool srcflag)
+{
+	//if (s_model) {
+	//	s_shadertypeWnd->setVisible(srcflag);
+	//	s_spdispsw[SPDISPSW_SHADERTYPE].state = srcflag;
+	//}
+
+	if (s_model) {
+		if (srcflag == true) {
+			//if (!s_convboneWnd) {
+			CreateShaderTypeWnd();
+			//}
+			if (s_shadertypeWnd) {
+				s_shadertypeWnd->setListenMouse(true);
+				s_shadertypeWnd->setVisible(true);
+			}
+			s_spdispsw[SPDISPSW_SHADERTYPE].state = true;
+		}
+		else {
+			if (s_shadertypeWnd) {
+				s_shadertypeWnd->setListenMouse(false);
+				s_shadertypeWnd->setVisible(false);
+			}
+			s_spdispsw[SPDISPSW_SHADERTYPE].state = false;
+		}
+	}
+
+}
+
+int ModalShaderTypeDlg()
+{
+	//IDD_MODALSHADERTYPEDLG
+
+
+	return 0;
+}
+
 
 void ShowImpulseWnd(bool srcflag)
 {
@@ -39605,52 +40297,52 @@ void OnDSUpdate()
 	}
 
 
-	GetDSValues();
+	//GetDSValues();
 
-	ChangeMouseSetCapture();//処理前にキャプチャーをセット
-
-
-
-	DSColorAndVibration();
-
-	DSSelectWindowAndCtrl();//L1, square, triangle
-	DSSelectCharactor();//(L2 or R2) and L1
-
-	bool firstctrlselect = false;
-	DSCrossButton(firstctrlselect);
+	//ChangeMouseSetCapture();//処理前にキャプチャーをセット
 
 
-	//R1ボタン：３Dウインドウ選択、カレントボーン位置へマウスジャンプ
-	DSR1ButtonSelectCurrentBone();
-	DSR1ButtonSelectMotion();
 
-	//L3, R3ボタンでマウス位置アピール
-	DSL3R3ButtonMouseHere();
+	//DSColorAndVibration();
 
+	//DSSelectWindowAndCtrl();//L1, square, triangle
+	//DSSelectCharactor();//(L2 or R2) and L1
 
-	if (g_undertrackingRMenu == 0) {
-		//OK button popupmenuを出していないとき
-		DSAimBarOK();
-
-		//optionボタンは右クリック相当
-		DSOptionButtonRightClick();
-	}
-	else if (g_undertrackingRMenu == 1) {
-		//OK button popupmenuを出しているとき
-		DSOButtonSelectedPopupMenu();
-	}
-
-	//Cancel button : メニューのドロップダウンをキャンセルする　Cancel dropdown menu. L2 + X --> Undo, R2 + X --> Redo.
-	DSXButtonCancel();
-
-	//Axis L Mouse Move
-	DSAxisLMouseMove();
-
-	//Axis R MenuBar of MainWindow
-	DSAxisRMainMenuBar();
+	//bool firstctrlselect = false;
+	//DSCrossButton(firstctrlselect);
 
 
-	ChangeMouseReleaseCapture();//処理が終わってからキャプチャーを外す
+	////R1ボタン：３Dウインドウ選択、カレントボーン位置へマウスジャンプ
+	//DSR1ButtonSelectCurrentBone();
+	//DSR1ButtonSelectMotion();
+
+	////L3, R3ボタンでマウス位置アピール
+	//DSL3R3ButtonMouseHere();
+
+
+	//if (g_undertrackingRMenu == 0) {
+	//	//OK button popupmenuを出していないとき
+	//	DSAimBarOK();
+
+	//	//optionボタンは右クリック相当
+	//	DSOptionButtonRightClick();
+	//}
+	//else if (g_undertrackingRMenu == 1) {
+	//	//OK button popupmenuを出しているとき
+	//	DSOButtonSelectedPopupMenu();
+	//}
+
+	////Cancel button : メニューのドロップダウンをキャンセルする　Cancel dropdown menu. L2 + X --> Undo, R2 + X --> Redo.
+	//DSXButtonCancel();
+
+	////Axis L Mouse Move
+	//DSAxisLMouseMove();
+
+	////Axis R MenuBar of MainWindow
+	//DSAxisRMainMenuBar();
+
+
+	//ChangeMouseReleaseCapture();//処理が終わってからキャプチャーを外す
 
 	//OutputToInfoWnd(L"\n\n");
 	//OutputToInfoWnd(L"Axis 0 : %1.4f\n", axisval0);
@@ -45359,338 +46051,344 @@ void DSAimBarOK()
 void ChangeMouseSetCapture()
 {
 
-	//static bool s_firstflag = true;
-	//static int s_capwndid = -1;
+	static bool s_firstflag = true;
+	static int s_capwndid = -1;
 
 	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
 	//	return;
 	//}
 
-	//if (!s_mainhwnd) {
-	//	return;
+	if (!s_mainhwnd) {
+		return;
+	}
+
+	int dragbuttondown;
+	int dragbuttonup;
+
+	dragbuttondown = s_dsbuttondown[2];
+	dragbuttonup = s_dsbuttonup[2];
+
+
+	//〇ボタン押していないときには何もしないでリターン
+	if (!dragbuttondown) {
+		return;
+	}
+
+
+	POINT mousepoint;
+	::GetCursorPos(&mousepoint);
+	POINT clientpoint = mousepoint;
+	::ScreenToClient(s_mainhwnd, &clientpoint);
+
+	int chkx = clientpoint.x;
+	int chky = clientpoint.y;
+
+
+	//static RECT s_rcmainwnd;
+	//static RECT s_rc3dwnd;
+	//static RECT s_rctreewnd;
+	//static RECT s_rctoolwnd;
+	//static RECT s_rcltwnd;
+	//static RECT s_rcsidemenuwnd;
+	//static RECT s_rcrigidwnd;
+	//static RECT s_rcinfownd;
+
+
+	int nextcapwndid = -1;
+
+	////check mainwnd
+	{
+		int wndtop = 0;
+		int wndleft = 0;
+		int wndbottom = s_rcmainwnd.bottom;
+		int wndright = s_rcmainwnd.right;
+
+		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
+			nextcapwndid = 0;
+		}
+	}
+
+	//check 3dwnd
+	{
+		int wndtop = s_rc3dwnd.top;
+		int wndleft = s_rctreewnd.right;
+		int wndbottom = s_rc3dwnd.bottom;
+		int wndright = wndleft + s_rc3dwnd.right;
+
+		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
+			nextcapwndid = 1;
+		}
+	}
+
+	//check treewnd
+	{
+		int wndtop = s_rctreewnd.top;
+		int wndleft = 0;
+		int wndbottom = s_rctreewnd.bottom;
+		int wndright = s_rctreewnd.right;
+
+		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
+			nextcapwndid = 2;
+		}
+	}
+
+	//check toolwnd
+	{
+		int wndtop = s_rctreewnd.bottom;
+		int wndleft = 0;
+		int wndbottom = s_rctreewnd.bottom + s_rctoolwnd.bottom;
+		int wndright = s_rctoolwnd.right;
+
+		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
+			nextcapwndid = 3;
+		}
+	}
+
+	//check ltwnd
+	{
+		int wndtop = s_rctreewnd.bottom;
+		int wndleft = s_rctoolwnd.right;
+		int wndbottom = s_rctreewnd.bottom + s_rcltwnd.bottom;
+		int wndright = s_rctoolwnd.right + s_rcltwnd.right;
+
+		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
+			nextcapwndid = 4;
+		}
+	}
+
+	//check sidemenuwnd
+	{
+		int wndtop = 0;
+		int wndleft = s_rctreewnd.right + s_rc3dwnd.right;
+		int wndbottom = s_rcsidemenuwnd.bottom;
+		int wndright = s_rctreewnd.right + s_rc3dwnd.right + s_rcsidemenuwnd.right;
+
+		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
+			nextcapwndid = 5;
+		}
+	}
+
+	//check rigidwnd
+	{
+		int wndtop = s_rcsidemenuwnd.bottom;
+		int wndleft = s_rctreewnd.right + s_rc3dwnd.right;
+		int wndbottom = s_rcsidemenuwnd.bottom + s_rcrigidwnd.bottom;
+		int wndright = s_rctreewnd.right + s_rc3dwnd.right + s_rcrigidwnd.right;
+
+		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
+			nextcapwndid = 6;
+		}
+	}
+
+	//check infownd
+	{
+		int wndtop = s_rc3dwnd.bottom;
+		int wndleft = s_rctreewnd.right;
+		int wndbottom = s_rc3dwnd.bottom + s_rcinfownd.bottom;
+		int wndright = s_rctreewnd.right + s_rcinfownd.right;
+
+		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
+			nextcapwndid = 7;
+		}
+	}
+
+	if (s_dispmodel) {
+		//check modelpanel
+		{
+			int wndtop = s_rcmodelpanel.top;
+			int wndleft = s_rcmodelpanel.left;
+			int wndbottom = s_rcmodelpanel.bottom;
+			int wndright = s_rcmodelpanel.right;
+
+			if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
+				nextcapwndid = 8;
+			}
+		}
+	}
+	if (s_dispmotion) {
+		//check motionpanel
+		{
+			int wndtop = s_rcmotionpanel.top;
+			int wndleft = s_rcmotionpanel.left;
+			int wndbottom = s_rcmotionpanel.bottom;
+			int wndright = s_rcmotionpanel.right;
+
+			if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
+				nextcapwndid = 9;
+			}
+		}
+	}
+	if (s_dispcamera) {
+		//check camerapanel
+		{
+			int wndtop = s_rccamerapanel.top;
+			int wndleft = s_rccamerapanel.left;
+			int wndbottom = s_rccamerapanel.bottom;
+			int wndright = s_rccamerapanel.right;
+
+			if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
+				nextcapwndid = 10;
+			}
+		}
+	}
+
+
+	///////////////
+	///////////////
+
+	//if ((s_pickinfo.buttonflag == PICK_CAMMOVE) || (s_pickinfo.buttonflag == PICK_CAMROT) || (s_pickinfo.buttonflag == PICK_CAMDIST)) {
+	//	//ここでは、カメラスプライトをドラッグ中はマウスキャプチャーをいじらない
 	//}
-
-	//int dragbuttondown;
-	//int dragbuttonup;
-
-	//dragbuttondown = s_dsbuttondown[2];
-	//dragbuttonup = s_dsbuttonup[2];
+	//if ((nextcapwndid != s_capwndid) || (s_wmlbuttonup == 1) || (s_dspushedOK == 0) || (g_undertrackingRMenu == 0)) {
+	//else if ((nextcapwndid != s_capwndid) || (s_wmlbuttonup == 1) || (s_dspushedOK == 0)) {
 
 
-	////〇ボタン押していないときには何もしないでリターン
-	//if (!dragbuttondown) {
-	//	return;
-	//}
+	if (dragbuttondown >= 1) {//〇ボタンを押したときにキャプチャーオン
 
+		//if ((nextcapwndid != s_capwndid) || (s_wmlbuttonup == 1)) {//常にではなく、〇ボタンを押したときだけ処理。同じウインドウでも必要なことがある。
+		switch (nextcapwndid) {
+		case 0:
+			if (s_mainhwnd) {
+				if (s_mainhwnd) {
+					SetCapture(s_mainhwnd);
+				}
+			}
+			break;
 
-	//POINT mousepoint;
-	//::GetCursorPos(&mousepoint);
-	//POINT clientpoint = mousepoint;
-	//::ScreenToClient(s_mainhwnd, &clientpoint);
+		case 1:
+			//if (s_3dwnd) {
+			//	//SetCapture(s_3dwnd);
+			//	HWND dlghwnd;
+			//	dlghwnd = g_SampleUI.GetHWnd();
+			//	if (dlghwnd) {
+			//		SetCapture(dlghwnd);
+			//	}
+			//}
+			break;
+		case 2:
+			if (s_timelineWnd) {
+				SetCapture(s_timelineWnd->getHWnd());
+			}
+			break;
+		case 3:
+			if (s_toolWnd) {
+				SetCapture(s_toolWnd->getHWnd());
+			}
+			break;
+		case 4:
+			if (s_LtimelineWnd) {
+				SetCapture(s_LtimelineWnd->getHWnd());
+			}
+			break;
+		case 5:
+			if (s_sidemenuWnd) {
+				SetCapture(s_sidemenuWnd->getHWnd());
+			}
+			break;
+		case 6:
+			//plate menuで場合分け必要
+			//if (s_platemenukind == SPPLATEMENUKIND_GUI) {
+			//	if (s_mainhwnd) {
+			//		SetCapture(s_mainhwnd);
+			//	}
+			//}
+			//else 
+			if (s_platemenukind == SPPLATEMENUKIND_DISP) {
+				if (s_platemenuno == (SPDISPSW_LIGHTS + 1)) {
+					if (s_lightsforeditdlg) {
+						SetCapture(s_lightsforeditdlg);
+					}
+				}
+				else if (s_platemenuno == (SPDISPSW_DISPGROUP + 1)) {
+					if (s_groupWnd) {
+						SetCapture(s_groupWnd->getHWnd());
+					}
+				}
+				else if (s_platemenuno == (SPDISPSW_LATERTRANSPARENT + 1)) {
+					if (s_latertransparentdlg) {
+						SetCapture(s_latertransparentdlg);
+					}
+				}
+				else if (s_platemenuno == (SPDISPSW_SHADERTYPE + 1)) {
+					if (s_shadertypeWnd) {
+						SetCapture(s_shadertypeWnd->getHWnd());
+					}
+				}
+			}
+			else if (s_platemenukind == SPPLATEMENUKIND_RIGID) {
+				if (s_platemenuno == (SPRIGIDSW_RIGIDPARAMS + 1)) {
+					if (s_rigidWnd) {
+						SetCapture(s_rigidWnd->getHWnd());
+					}
+				}
+				else if (s_platemenuno == (SPRIGIDSW_IMPULSE + 1)) {
+					if (s_impWnd) {
+						SetCapture(s_impWnd->getHWnd());
+					}
+				}
+				else if (s_platemenuno == (SPRIGIDSW_GROUNDPLANE + 1)) {
+					if (s_gpWnd) {
+						SetCapture(s_gpWnd->getHWnd());
+					}
+				}
+				else if (s_platemenuno == (SPRIGIDSW_DAMPANIM + 1)) {
+					if (s_dmpanimWnd) {
+						SetCapture(s_dmpanimWnd->getHWnd());
+					}
+				}
+			}
+			else if (s_platemenukind == SPPLATEMENUKIND_RETARGET) {
+				if (s_platemenuno == (SPRETARGETSW_RETARGET + 1)) {
+					if (s_convboneWnd) {
+						SetCapture(s_convboneWnd->getHWnd());
+					}
+				}
+				else if (s_platemenuno == (SPRETARGETSW_LIMITEULER + 1)) {
+					if (s_anglelimitdlg) {
+						SetCapture(s_anglelimitdlg);
+					}
+				}
+			}
+			break;
+		case 7:
+			if (g_infownd) {
+				SetCapture(g_infownd->GetHWnd());
+			}
+			break;
+		case 8:
+			if (s_modelpanel.panel) {
+				SetCapture(s_modelpanel.panel->getHWnd());
+			}
+			break;
+		case 9:
+			if (s_motionpanel.panel) {
+				SetCapture(s_motionpanel.panel->getHWnd());
+			}
+			break;
+		case 10:
+			if (s_camerapanel.panel) {
+				SetCapture(s_camerapanel.panel->getHWnd());
+			}
+			break;
 
-	//int chkx = clientpoint.x;
-	//int chky = clientpoint.y;
+		default:
+			if (s_mainhwnd) {
+				SetCapture(s_mainhwnd);
+			}
+			//if (s_mainhwnd) {
+			//	if (!s_firstflag) {
+			//		ReleaseCapture();
+			//		s_firstflag = false;
+			//	}
+			//	SetCapture(s_mainhwnd);
+			//}
+			break;
+		}
 
-
-	////static RECT s_rcmainwnd;
-	////static RECT s_rc3dwnd;
-	////static RECT s_rctreewnd;
-	////static RECT s_rctoolwnd;
-	////static RECT s_rcltwnd;
-	////static RECT s_rcsidemenuwnd;
-	////static RECT s_rcrigidwnd;
-	////static RECT s_rcinfownd;
-
-
-	//int nextcapwndid = -1;
-
-	//////check mainwnd
-	//{
-	//	int wndtop = 0;
-	//	int wndleft = 0;
-	//	int wndbottom = s_rcmainwnd.bottom;
-	//	int wndright = s_rcmainwnd.right;
-
-	//	if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-	//		nextcapwndid = 0;
-	//	}
-	//}
-
-	////check 3dwnd
-	//{
-	//	int wndtop = s_rc3dwnd.top;
-	//	int wndleft = s_rctreewnd.right;
-	//	int wndbottom = s_rc3dwnd.bottom;
-	//	int wndright = wndleft + s_rc3dwnd.right;
-
-	//	if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-	//		nextcapwndid = 1;
-	//	}
-	//}
-
-	////check treewnd
-	//{
-	//	int wndtop = s_rctreewnd.top;
-	//	int wndleft = 0;
-	//	int wndbottom = s_rctreewnd.bottom;
-	//	int wndright = s_rctreewnd.right;
-
-	//	if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-	//		nextcapwndid = 2;
-	//	}
-	//}
-
-	////check toolwnd
-	//{
-	//	int wndtop = s_rctreewnd.bottom;
-	//	int wndleft = 0;
-	//	int wndbottom = s_rctreewnd.bottom + s_rctoolwnd.bottom;
-	//	int wndright = s_rctoolwnd.right;
-
-	//	if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-	//		nextcapwndid = 3;
-	//	}
-	//}
-
-	////check ltwnd
-	//{
-	//	int wndtop = s_rctreewnd.bottom;
-	//	int wndleft = s_rctoolwnd.right;
-	//	int wndbottom = s_rctreewnd.bottom + s_rcltwnd.bottom;
-	//	int wndright = s_rctoolwnd.right + s_rcltwnd.right;
-
-	//	if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-	//		nextcapwndid = 4;
-	//	}
-	//}
-
-	////check sidemenuwnd
-	//{
-	//	int wndtop = 0;
-	//	int wndleft = s_rctreewnd.right + s_rc3dwnd.right;
-	//	int wndbottom = s_rcsidemenuwnd.bottom;
-	//	int wndright = s_rctreewnd.right + s_rc3dwnd.right + s_rcsidemenuwnd.right;
-
-	//	if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-	//		nextcapwndid = 5;
-	//	}
-	//}
-
-	////check rigidwnd
-	//{
-	//	int wndtop = s_rcsidemenuwnd.bottom;
-	//	int wndleft = s_rctreewnd.right + s_rc3dwnd.right;
-	//	int wndbottom = s_rcsidemenuwnd.bottom + s_rcrigidwnd.bottom;
-	//	int wndright = s_rctreewnd.right + s_rc3dwnd.right + s_rcrigidwnd.right;
-
-	//	if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-	//		nextcapwndid = 6;
-	//	}
-	//}
-
-	////check infownd
-	//{
-	//	int wndtop = s_rc3dwnd.bottom;
-	//	int wndleft = s_rctreewnd.right;
-	//	int wndbottom = s_rc3dwnd.bottom + s_rcinfownd.bottom;
-	//	int wndright = s_rctreewnd.right + s_rcinfownd.right;
-
-	//	if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-	//		nextcapwndid = 7;
-	//	}
-	//}
-
-	//if (s_dispmodel) {
-	//	//check modelpanel
-	//	{
-	//		int wndtop = s_rcmodelpanel.top;
-	//		int wndleft = s_rcmodelpanel.left;
-	//		int wndbottom = s_rcmodelpanel.bottom;
-	//		int wndright = s_rcmodelpanel.right;
-
-	//		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-	//			nextcapwndid = 8;
-	//		}
-	//	}
-	//}
-	//if (s_dispmotion) {
-	//	//check motionpanel
-	//	{
-	//		int wndtop = s_rcmotionpanel.top;
-	//		int wndleft = s_rcmotionpanel.left;
-	//		int wndbottom = s_rcmotionpanel.bottom;
-	//		int wndright = s_rcmotionpanel.right;
-
-	//		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-	//			nextcapwndid = 9;
-	//		}
-	//	}
-	//}
-	//if (s_dispcamera) {
-	//	//check camerapanel
-	//	{
-	//		int wndtop = s_rccamerapanel.top;
-	//		int wndleft = s_rccamerapanel.left;
-	//		int wndbottom = s_rccamerapanel.bottom;
-	//		int wndright = s_rccamerapanel.right;
-
-	//		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-	//			nextcapwndid = 10;
-	//		}
-	//	}
-	//}
-
-
-	/////////////////
-	/////////////////
-
-	////if ((s_pickinfo.buttonflag == PICK_CAMMOVE) || (s_pickinfo.buttonflag == PICK_CAMROT) || (s_pickinfo.buttonflag == PICK_CAMDIST)) {
-	////	//ここでは、カメラスプライトをドラッグ中はマウスキャプチャーをいじらない
-	////}
-	////if ((nextcapwndid != s_capwndid) || (s_wmlbuttonup == 1) || (s_dspushedOK == 0) || (g_undertrackingRMenu == 0)) {
-	////else if ((nextcapwndid != s_capwndid) || (s_wmlbuttonup == 1) || (s_dspushedOK == 0)) {
-
-
-	//if (dragbuttondown >= 1) {//〇ボタンを押したときにキャプチャーオン
-
-	//	//if ((nextcapwndid != s_capwndid) || (s_wmlbuttonup == 1)) {//常にではなく、〇ボタンを押したときだけ処理。同じウインドウでも必要なことがある。
-	//	switch (nextcapwndid) {
-	//	case 0:
-	//		if (s_mainhwnd) {
-	//			if (s_mainhwnd) {
-	//				SetCapture(s_mainhwnd);
-	//			}
-	//		}
-	//		break;
-
-	//	case 1:
-	//		if (s_3dwnd) {
-	//			//SetCapture(s_3dwnd);
-	//			HWND dlghwnd;
-	//			dlghwnd = g_SampleUI.GetHWnd();
-	//			if (dlghwnd) {
-	//				SetCapture(dlghwnd);
-	//			}
-	//		}
-	//		break;
-	//	case 2:
-	//		if (s_timelineWnd) {
-	//			SetCapture(s_timelineWnd->getHWnd());
-	//		}
-	//		break;
-	//	case 3:
-	//		if (s_toolWnd) {
-	//			SetCapture(s_toolWnd->getHWnd());
-	//		}
-	//		break;
-	//	case 4:
-	//		if (s_LtimelineWnd) {
-	//			SetCapture(s_LtimelineWnd->getHWnd());
-	//		}
-	//		break;
-	//	case 5:
-	//		if (s_sidemenuWnd) {
-	//			SetCapture(s_sidemenuWnd->getHWnd());
-	//		}
-	//		break;
-	//	case 6:
-	//		//plate menuで場合分け必要
-	//		if (s_platemenukind == SPPLATEMENUKIND_GUI) {
-	//			if (s_mainhwnd) {
-	//				SetCapture(s_mainhwnd);
-	//			}
-	//		}
-	//		else if (s_platemenukind == SPPLATEMENUKIND_DISP) {
-	//			if (s_platemenuno == (SPDISPSW_LIGHTS + 1)) {
-	//				if (s_lightsforeditdlg) {
-	//					SetCapture(s_lightsforeditdlg);
-	//				}
-	//			}
-	//			else if (s_platemenuno == (SPDISPSW_DISPGROUP + 1)) {
-	//				if (s_groupWnd) {
-	//					SetCapture(s_groupWnd->getHWnd());
-	//				}
-	//			}
-	//			else if (s_platemenuno == (SPDISPSW_LATERTRANSPARENT + 1)) {
-	//				if (s_latertransparentdlg) {
-	//					SetCapture(s_latertransparentdlg);
-	//				}
-	//			}
-	//		}
-	//		else if (s_platemenukind == SPPLATEMENUKIND_RIGID) {
-	//			if (s_platemenuno == (SPRIGIDSW_RIGIDPARAMS + 1)) {
-	//				if (s_rigidWnd) {
-	//					SetCapture(s_rigidWnd->getHWnd());
-	//				}
-	//			}
-	//			else if (s_platemenuno == (SPRIGIDSW_IMPULSE + 1)) {
-	//				if (s_impWnd) {
-	//					SetCapture(s_impWnd->getHWnd());
-	//				}
-	//			}
-	//			else if (s_platemenuno == (SPRIGIDSW_GROUNDPLANE + 1)) {
-	//				if (s_gpWnd) {
-	//					SetCapture(s_gpWnd->getHWnd());
-	//				}
-	//			}
-	//			else if (s_platemenuno == (SPRIGIDSW_DAMPANIM + 1)) {
-	//				if (s_dmpanimWnd) {
-	//					SetCapture(s_dmpanimWnd->getHWnd());
-	//				}
-	//			}
-	//		}
-	//		else if (s_platemenukind == SPPLATEMENUKIND_RETARGET) {
-	//			if (s_platemenuno == (SPRETARGETSW_RETARGET + 1)) {
-	//				if (s_convboneWnd) {
-	//					SetCapture(s_convboneWnd->getHWnd());
-	//				}
-	//			}
-	//			else if (s_platemenuno == (SPRETARGETSW_LIMITEULER + 1)) {
-	//				if (s_anglelimitdlg) {
-	//					SetCapture(s_anglelimitdlg);
-	//				}
-	//			}
-	//		}
-	//		break;
-	//	case 7:
-	//		if (g_infownd) {
-	//			SetCapture(g_infownd->GetHWnd());
-	//		}
-	//		break;
-	//	case 8:
-	//		if (s_modelpanel.panel) {
-	//			SetCapture(s_modelpanel.panel->getHWnd());
-	//		}
-	//		break;
-	//	case 9:
-	//		if (s_motionpanel.panel) {
-	//			SetCapture(s_motionpanel.panel->getHWnd());
-	//		}
-	//		break;
-	//	case 10:
-	//		if (s_camerapanel.panel) {
-	//			SetCapture(s_camerapanel.panel->getHWnd());
-	//		}
-	//		break;
-
-	//	default:
-	//		if (s_mainhwnd) {
-	//			SetCapture(s_mainhwnd);
-	//		}
-	//		//if (s_mainhwnd) {
-	//		//	if (!s_firstflag) {
-	//		//		ReleaseCapture();
-	//		//		s_firstflag = false;
-	//		//	}
-	//		//	SetCapture(s_mainhwnd);
-	//		//}
-	//		break;
-	//	}
-
-	//	s_capwndid = nextcapwndid;
-	//	s_wmlbuttonup = 0;
-	//	//}
-	//}
+		s_capwndid = nextcapwndid;
+		s_wmlbuttonup = 0;
+		//}
+	}
 }
 
 
@@ -45736,6 +46434,9 @@ void OrgWindowListenMouse(bool srcflag)
 	}
 	if (s_rigidWnd) {
 		s_rigidWnd->setListenMouse(srcflag);
+	}
+	if (s_shadertypeWnd) {
+		s_shadertypeWnd->setListenMouse(srcflag);
 	}
 	if (s_impWnd) {
 		s_impWnd->setListenMouse(srcflag);
@@ -49268,6 +49969,25 @@ int CreateModelWorldMatWnd()
 	return 0;
 }
 
+int CreateShaderTypeParamsDlg()
+{
+
+	//CCameraDollyDlg dlg(g_camEye);
+	//dlg.DoModal();
+	//g_camEye = dlg.GetCameraPos();
+
+	HWND hDlgWnd = CreateDialogW((HMODULE)GetModuleHandle(NULL),
+		MAKEINTRESOURCE(IDD_SHADERTYPEDLG2), s_mainhwnd, (DLGPROC)ShaderTypeParamsDlgProc);
+	if (hDlgWnd == NULL) {
+		return 1;
+	}
+	//s_shadertypeparamsdlgwnd = hDlgWnd;//もっと早いタイミングでも使用するのでProcのINITDIALOGでセット
+	ShowWindow(s_shadertypeparamsdlgwnd, SW_HIDE);
+
+	return 0;
+}
+
+
 int SetModel2ModelWorldMatDlg(CModel* srcmodel)
 {
 	if (srcmodel) {
@@ -49306,6 +50026,99 @@ int SetModel2ModelWorldMatDlg(CModel* srcmodel)
 	return 0;
 }
 
+int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
+{
+	//############################################################
+	//srcmat == nullptrの場合にはs_modelの最初のマテリアルシェーダを表示
+	//############################################################
+
+	if (!s_model || (s_shadertypeparamsdlgwnd == NULL)) {
+		_ASSERT(0);
+		return 1;
+	}
+	HWND hDlgWnd = s_shadertypeparamsdlgwnd;
+
+	int materialnum = s_model->GetMQOMaterialSize();
+	CMQOMaterial* curmqomat = srcmat;
+
+	WCHAR wmaterialname[256] = { 0L };
+	int curshadertype;
+	float curmetalcoef;
+	float curlightscale[LIGHTNUMMAX];
+
+	if (curmqomat) {
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, 
+			curmqomat->GetName(), -1, wmaterialname, 256);
+		curshadertype = curmqomat->GetShaderType();
+		curmetalcoef = curmqomat->GetMetalCoef();
+		int litno;
+		for (litno = 0; litno < LIGHTNUMMAX; litno++) {
+			curlightscale[litno] = curmqomat->GetLightScale(litno);
+		}
+	}
+	else {
+		//全てのマテリアルに対して設定するボタンを押した場合
+		wcscpy_s(wmaterialname, 256, L"(All)");
+		curshadertype = -1;
+		curmetalcoef = 0.70f;
+		int litno;
+		for (litno = 0; litno < LIGHTNUMMAX; litno++) {
+			curlightscale[litno] = 1.0f;
+		}
+	}
+
+	int lightsliderid[LIGHTNUMMAX] = {
+		IDC_SL_LITSCALE1, IDC_SL_LITSCALE2, IDC_SL_LITSCALE3, IDC_SL_LITSCALE4,
+		IDC_SL_LITSCALE5, IDC_SL_LITSCALE6, IDC_SL_LITSCALE7, IDC_SL_LITSCALE8
+	};
+	int lighttextid[LIGHTNUMMAX] = {
+		IDC_STATIC_LIGHTSCALE1, IDC_STATIC_LIGHTSCALE2, IDC_STATIC_LIGHTSCALE3, IDC_STATIC_LIGHTSCALE4,
+		IDC_STATIC_LIGHTSCALE5, IDC_STATIC_LIGHTSCALE6, IDC_STATIC_LIGHTSCALE7, IDC_STATIC_LIGHTSCALE8
+	};
+
+
+	//#######
+	//Button
+	//#######
+	CheckShaderTypeParamsButton(hDlgWnd, curshadertype);
+
+
+	//#######
+	//Slider
+	//#######
+	int sliderpos = (int)(curmetalcoef * 100.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_METALCOEF), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_METALCOEF), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_METALCOEF), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	int litno2;
+	for (litno2 = 0; litno2 < LIGHTNUMMAX; litno2++) {
+		sliderpos = (int)(curlightscale[litno2] * 100.0f);;
+		SendMessage(GetDlgItem(hDlgWnd, lightsliderid[litno2]), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+		SendMessage(GetDlgItem(hDlgWnd, lightsliderid[litno2]), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+		SendMessage(GetDlgItem(hDlgWnd, lightsliderid[litno2]), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+	}
+
+	//#####
+	//Text
+	//#####
+	WCHAR strdlg[256] = { 0L };
+	swprintf_s(strdlg, 256, L"MaterialName:%s", wmaterialname);
+	SetDlgItemText(hDlgWnd, IDC_MATERIALNAME, strdlg);
+
+
+	swprintf_s(strdlg, 256, L"MetalCoef %.2f", curmetalcoef);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_METALCOEF, strdlg);
+
+	int litno3;
+	for (litno3 = 0; litno3 < LIGHTNUMMAX; litno3++) {
+		swprintf_s(strdlg, 256, L"LightScale%d %.2f", (litno3 + 1), curlightscale[litno3]);
+		SetDlgItemText(hDlgWnd, lighttextid[litno3], strdlg);
+	}
+
+	return 0;
+}
+
 
 int ShowModelWorldMatDlg()
 {
@@ -49322,6 +50135,30 @@ int ShowModelWorldMatDlg()
 
 	return 0;
 }
+
+int ShowShaderTypeParamsDlg()
+{
+
+	if (s_shadertypeparamsdlgwnd) {
+		if (s_model) {
+			int materialnum = s_model->GetMQOMaterialSize();
+			CMQOMaterial* curmqomat = nullptr;
+			if ((s_shadertypeparamsindex >= 0) && (s_shadertypeparamsindex < (materialnum + 1))) {
+				int materialindex = s_shadertypeparamsindex - 1;
+				if (materialindex >= 0) {
+					curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
+				}
+			}
+			SetMaterial2ShaderTypeParamsDlg(curmqomat);
+
+			ShowWindow(s_shadertypeparamsdlgwnd, SW_SHOW);
+			UpdateWindow(s_shadertypeparamsdlgwnd);
+		}
+	}
+
+	return 0;
+}
+
 
 
 int CreateMaterialRateWnd()
@@ -49958,7 +50795,15 @@ int CreateSprites()
 	s_spritetex37->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex37;
 	s_spdispsw[SPDISPSW_LATERTRANSPARENT].spriteON.Init(spriteinitdata, screenvertexflag);
-	
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Shader140ON.png");
+	s_spritetex37_1 = new Texture();
+	s_spritetex37_1->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex37_1;
+	s_spdispsw[SPDISPSW_SHADERTYPE].spriteON.Init(spriteinitdata, screenvertexflag);
+
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Lights140OFF.png");
 	s_spritetex38 = new Texture();
@@ -49979,7 +50824,14 @@ int CreateSprites()
 	s_spritetex40->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex40;
 	s_spdispsw[SPDISPSW_LATERTRANSPARENT].spriteOFF.Init(spriteinitdata, screenvertexflag);
-	
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Shader140OFF.png");
+	s_spritetex40_1 = new Texture();
+	s_spritetex40_1->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex40_1;
+	s_spdispsw[SPDISPSW_SHADERTYPE].spriteOFF.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_menuRigid140ON.png");
 	s_spritetex41 = new Texture();
@@ -50480,6 +51332,10 @@ void DestroySprites()
 		delete s_spritetex37;
 		s_spritetex37 = 0;
 	}
+	if (s_spritetex37_1) {
+		delete s_spritetex37_1;
+		s_spritetex37_1 = 0;
+	}
 	if (s_spritetex38) {
 		delete s_spritetex38;
 		s_spritetex38 = 0;
@@ -50491,6 +51347,10 @@ void DestroySprites()
 	if (s_spritetex40) {
 		delete s_spritetex40;
 		s_spritetex40 = 0;
+	}
+	if (s_spritetex40_1) {
+		delete s_spritetex40_1;
+		s_spritetex40_1 = 0;
 	}
 
 	

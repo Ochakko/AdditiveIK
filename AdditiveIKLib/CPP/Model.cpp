@@ -342,7 +342,7 @@ static int s_alloccnt = 0;
 static FbxManager* s_psdk = 0;
 static FbxAnimEvaluator* s_animevaluator = 0;
 
-#define MAMEBAKE3DLIBGLOBALVAR
+#define ADDITIVEIKLIBGLOBALVAR
 #include <GlobalVar.h>
 
 extern LONG g_retargetbatchflag;
@@ -4963,7 +4963,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 	tmpspc.z = (float)lSpecular[2] * g_SpecularFactorAtLoading;
 	newmqomat->SetSpc3F( tmpspc );
 
-    //FbxProperty lShininessProperty = pMaterial->FindProperty(FbxSurfaceMaterial::sShininess);//<-- link error : MameBake3DLib.lib外だから？　
+    //FbxProperty lShininessProperty = pMaterial->FindProperty(FbxSurfaceMaterial::sShininess);//<-- link error : AdditiveIKLib.lib外だから？　
 	//char* shininesstex = 0;
 	//FbxProperty lShininessProperty = FbxGetMaterialProperty(pMaterial,
 	//	FbxSurfaceMaterial::sShininess, FbxSurfaceMaterial::sShininessFactor, &shininesstex);//<-- sSnininessFactorは無い. sShininessは有る.
@@ -6450,7 +6450,7 @@ void CModel::CreateIndexedMotionPointReq(CBone* srcbone, int srcmotid, double sr
 //
 //				//#########################################################
 //				//説明しよう
-//				//Fbxのローカル姿勢表現とMameBake3Dのローカル姿勢表現の互換について
+//				//Fbxのローカル姿勢表現とAdditiveIKのローカル姿勢表現の互換について
 //				//#########################################################
 //
 //				//fbxはひとつのボーンの姿勢を T * S * Rであらわす

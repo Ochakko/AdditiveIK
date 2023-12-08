@@ -279,7 +279,16 @@ int CMQOMaterial::InitParams()
 	//next = 0;
 
 
-	m_shader = 3;
+
+	m_shader = 3;//mqofile記述のshader
+
+	m_shadertype = -2;//DirectX12描画用のshader //Shaderプレートメニュー用
+	m_metalcoef = 0.250f;//Shaderプレートメニュー用
+	int litno;
+	for (litno = 0; litno < LIGHTNUMMAX; litno++) {
+		m_lightscale[litno] = 1.0f;//Shaderプレートメニュー用
+	}
+
 
 	m_vcolflag = 0;
 
@@ -1646,7 +1655,6 @@ void CMQOMaterial::BeginRender(RenderContext& rc, myRenderer::RENDEROBJ renderob
 		return;
 	}
 
-
 	rc.SetRootSignature(m_rootSignature);
 
 	bool withalpha = renderobj.forcewithalpha || renderobj.withalpha;
@@ -1662,121 +1670,65 @@ void CMQOMaterial::BeginRender(RenderContext& rc, myRenderer::RENDEROBJ renderob
 	//テクスチャが１つも無い場合について迷ったが　STDで描画するとPBRの中で明るすぎて非常に浮く　テクスチャ無しもPBRで描画することに
 	//#####################################################################################################
 
+	int tempshadertype;
+	if (renderobj.shadertype == -2) {//shadertype == -2の場合はマテリアルの設定に従う
+		tempshadertype = GetShaderType();
+	}
+	else {
+		tempshadertype = renderobj.shadertype;
+	}
+
+	int shadertype;
+	switch(tempshadertype) {
+	case -1:
+	case -2://マテリアルの設定も-2だった場合にはAUTOとみなす
+		if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
+			(GetNormalTex() && (GetNormalTex())[0]) ||
+			(GetMetalTex() && (GetMetalTex())[0])) {
+			shadertype = MQOSHADER_PBR;
+		}
+		else {
+			if (pm4) {
+				//NoLight
+				shadertype = MQOSHADER_NOLIGHT;
+			}
+			else {
+				//Standard
+				shadertype = MQOSHADER_STD;
+			}
+		}
+		break;
+	case MQOSHADER_PBR:
+	case MQOSHADER_STD:
+	case MQOSHADER_NOLIGHT:
+		shadertype = tempshadertype;
+		break;
+	default:
+		_ASSERT(0);
+		shadertype = MQOSHADER_NOLIGHT;
+		break;
+	}
+
 
 	if (withalpha) {
 		if (renderobj.zcmpalways) {
 			//###########################
 			//Z cmp Always 半透明常に上書き
 			//###########################
-			switch (renderobj.shadertype) {
-			case MQOSHADER_PBR:
-			case MQOSHADER_STD:
-			case MQOSHADER_NOLIGHT:
-				rc.SetPipelineState(m_zalwaysPipelineState[renderobj.shadertype]);
-				break;
-			case -1:
-				if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
-					(GetNormalTex() && (GetNormalTex())[0]) ||
-					(GetMetalTex() && (GetMetalTex())[0])) {
-				//if (
-				//	(GetNormalTex() && (GetNormalTex())[0]) ||
-				//	(GetMetalTex() && (GetMetalTex())[0])) {
-					//PBR
-					rc.SetPipelineState(m_zalwaysPipelineState[MQOSHADER_PBR]);
-				}
-				else {
-					if (pm4) {
-						//NoLight
-						rc.SetPipelineState(m_zalwaysPipelineState[MQOSHADER_NOLIGHT]);
-					}
-					else {
-						//Standard
-						rc.SetPipelineState(m_zalwaysPipelineState[MQOSHADER_STD]);
-					}
-				}
-				break;
-			default:
-				_ASSERT(0);
-				rc.SetPipelineState(m_zalwaysPipelineState[MQOSHADER_NOLIGHT]);
-				break;
-			}
+			rc.SetPipelineState(m_zalwaysPipelineState[shadertype]);
 		}
 		else {
 			//###################
 			//translucent　半透明
 			//###################
-			switch (renderobj.shadertype) {
-			case MQOSHADER_PBR:
-			case MQOSHADER_STD:
-			case MQOSHADER_NOLIGHT:
-				rc.SetPipelineState(m_transPipelineState[renderobj.shadertype]);
-				break;
-			case -1:
-				if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
-					(GetNormalTex() && (GetNormalTex())[0]) ||
-					(GetMetalTex() && (GetMetalTex())[0])) {
-				//if (
-				//	(GetNormalTex() && (GetNormalTex())[0]) ||
-				//	(GetMetalTex() && (GetMetalTex())[0])) {
-					//PBR
-					rc.SetPipelineState(m_transPipelineState[MQOSHADER_PBR]);
-				}
-				else {
-					if (pm4) {
-						//NoLight
-						rc.SetPipelineState(m_transPipelineState[MQOSHADER_NOLIGHT]);
-					}
-					else {
-						//Standard
-						rc.SetPipelineState(m_transPipelineState[MQOSHADER_STD]);
-					}
-				}
-				break;
-			default:
-				_ASSERT(0);
-				rc.SetPipelineState(m_transPipelineState[MQOSHADER_NOLIGHT]);
-				break;
-			}
+			rc.SetPipelineState(m_transPipelineState[shadertype]);
 		}
 	}
 	else {
-
 		//##############
 		//Opaque 不透明
 		//##############
-
-		switch (renderobj.shadertype) {
-		case MQOSHADER_PBR:
-		case MQOSHADER_STD:
-		case MQOSHADER_NOLIGHT:
-			rc.SetPipelineState(m_opaquePipelineState[renderobj.shadertype]);
-			break;
-		case -1:
-			if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
-				(GetNormalTex() && (GetNormalTex())[0]) ||
-				(GetMetalTex() && (GetMetalTex())[0])) {
-			//if (
-			//	(GetNormalTex() && (GetNormalTex())[0]) ||
-			//	(GetMetalTex() && (GetMetalTex())[0])) {
-				//PBR
-				rc.SetPipelineState(m_opaquePipelineState[MQOSHADER_PBR]);
-			}
-			else {
-				if (pm4) {
-					//NoLight
-					rc.SetPipelineState(m_opaquePipelineState[MQOSHADER_NOLIGHT]);
-				}
-				else {
-					//Standard
-					rc.SetPipelineState(m_opaquePipelineState[MQOSHADER_STD]);
-				}
-			}
-			break;
-		default:
-			_ASSERT(0);
-			rc.SetPipelineState(m_opaquePipelineState[MQOSHADER_NOLIGHT]);
-			break;
-		}
+		rc.SetPipelineState(m_opaquePipelineState[shadertype]);
 	}
 
 	rc.SetDescriptorHeap(m_descriptorHeap);
@@ -1813,8 +1765,8 @@ Texture& CMQOMaterial::GetNormalMap()
 		return *m_normalMap;
 	}
 	else {
-		return m_blacktex;
-		//return m_whitetex;
+		//return m_blacktex;
+		return m_whitetex;
 	}
 }
 Texture& CMQOMaterial::GetMetalMap()
@@ -2053,8 +2005,9 @@ void CMQOMaterial::SetConstLights(SConstantBufferLights* pcbLights)
 	pcbLights->Init();
 	pcbLights->lightsnum[0] = g_nNumActiveLights;
 	int lightno;
-	for (lightno = 0; lightno < g_nNumActiveLights; lightno++) {
-		pcbLights->directionalLight[lightno].color = g_lightdiffuseforshader[lightno];
+	for (lightno = 0; lightno < LIGHTNUMMAX; lightno++) {
+		pcbLights->directionalLight[lightno].color = 
+			g_lightdiffuseforshader[lightno] * GetLightScale(lightno);//2023/12/08 materialのlightscaleを掛けるように.
 		pcbLights->directionalLight[lightno].direction = g_lightdirforshader[lightno];
 	}	
 	//ChaVector3 cameye = ChaVector3(g_camera3D->GetPosition());
@@ -2111,6 +2064,7 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 
 	////定数バッファを更新する。
 	if (pdispline && pextline) {
+		m_cb.Init();
 		m_cb.mWorld = renderobj.mWorld;
 		m_cb.mView = mView;
 		m_cb.mProj = mProj;
@@ -2119,6 +2073,7 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 	}
 	else if (ppm3) {
+		m_cb.Init();
 		m_cb.mWorld = renderobj.mWorld;
 		m_cb.mView = mView;
 		m_cb.mProj = mProj;
@@ -2129,6 +2084,7 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 		else {
 			m_cb.diffusemult = renderobj.diffusemult;
 		}
+		m_cb.metalcoef = ChaVector4(GetMetalCoef(), 0.0f, 0.0f, 0.0f);
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 
 
@@ -2139,10 +2095,12 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 		}
 	}
 	else if (ppm4) {
+		m_cb.Init();
 		m_cb.mWorld = renderobj.mWorld;
 		m_cb.mView = mView;
 		m_cb.mProj = mProj;
 		m_cb.diffusemult = renderobj.diffusemult;
+		m_cb.metalcoef = ChaVector4(GetMetalCoef(), 0.0f, 0.0f, 0.0f);
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 
 

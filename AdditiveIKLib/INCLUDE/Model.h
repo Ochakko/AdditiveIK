@@ -489,7 +489,7 @@ public:
  * @param (ChaVector3 targetpos) IN 選択ボーンの目標座標を指定する。
  * @param (int maxlevel) IN IK計算で何階層親までさかのぼるかを指定する。
  * @return 成功したら０。
- * @detail MameBake3Dにおいては、マニピュレータの中央の黄色をドラッグした時に呼ばれる。
+ * @detail AdditiveIKにおいては、マニピュレータの中央の黄色をドラッグした時に呼ばれる。
  */
 
 	int IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
@@ -552,7 +552,7 @@ public:
  * @param (int maxlevel) IN IK計算で何階層親までさかのぼるかを指定する。
  * @param (int ikcnt) IN マウスでドラッグを開始してから何回この関数を実行したか。
  * @return 成功したら０。
- * @detail MameBake3Dにおいては、マニピュレータのリングまたは球をドラッグした時に呼ばれる。
+ * @detail AdditiveIKにおいては、マニピュレータのリングまたは球をドラッグした時に呼ばれる。
  */
 	int IKRotateAxisDeltaUnderIK(
 		bool limitdegflag, CEditRange* erptr, 
@@ -579,7 +579,7 @@ public:
  * @param (int srcboneno) IN 選択ボーンのIDを指定する。
  * @param (float delta) IN 回転角度を指定する。
  * @return 成功したら０。
- * @detail MameBake3Dにおいては、マニピュレータのリングまたは球でボーン軸に関して回転するときに呼ばれる。
+ * @detail AdditiveIKにおいては、マニピュレータのリングまたは球でボーン軸に関して回転するときに呼ばれる。
  */
 	//int RotateXDelta( CEditRange* erptr, int srcboneno, float delta );
 

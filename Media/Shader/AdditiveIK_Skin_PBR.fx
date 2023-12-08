@@ -45,6 +45,7 @@ cbuffer ModelCb : register(b0)
     float4x4 mView;
     float4x4 mProj;
     float4 diffusemult;
+    float4 metalcoef;
 };
 
 // ディレクションライト
@@ -359,10 +360,10 @@ float4 PSMainSkinPBR(SPSIn psIn) : SV_Target0
     //    // シンプルなディズニーベースの拡散反射を実装する。
     //    // フレネル反射を考慮した拡散反射を計算
     //    float diffuseFromFresnel = CalcDiffuseFromFresnel(
-    //        normal, -directionalLight[ligNo].direction.xyz, toEye);
+    //        normal, directionalLight[ligNo].direction.xyz, toEye);
 
     //    // 正規化Lambert拡散反射を求める
-    //    float NdotL = saturate(dot(normal, -directionalLight[ligNo].direction.xyz));
+    //    float NdotL = saturate(dot(normal, directionalLight[ligNo].direction.xyz));
     //    float3 lambertDiffuse = directionalLight[ligNo].color.xyz * NdotL / PI;
 
     //    // 最終的な拡散反射光を計算する
@@ -371,7 +372,7 @@ float4 PSMainSkinPBR(SPSIn psIn) : SV_Target0
     //    // Cook-Torranceモデルを利用した鏡面反射率を計算する
     //    // Cook-Torranceモデルの鏡面反射率を計算する
     //    float3 spec = CookTorranceSpecular(
-    //        -directionalLight[ligNo].direction.xyz, toEye, normal, smooth)
+    //        directionalLight[ligNo].direction.xyz, toEye, normal, smooth)
     //        * directionalLight[ligNo].color.xyz;
 
     //    // 金属度が高ければ、鏡面反射はスペキュラカラー、低ければ白
@@ -410,10 +411,10 @@ float4 PSMainSkinPBR(SPSIn psIn) : SV_Target0
     float3 specColor = albedoColor.xyz;
 
     // 金属度
-    float metallic = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).r * 0.7f; //!!!! * 0.7f
+    float metallic = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).r * metalcoef.x; //!!!!metalcoef
 
     // 滑らかさ
-    float smooth = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).a * 0.7f; //!!!!! * 0.7f
+    float smooth = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).a * metalcoef.x; //!!!!metalcoef
 
     // 視線に向かって伸びるベクトルを計算する
     float3 toEye = normalize(eyePos.xyz - psIn.worldPos.xyz);
@@ -425,10 +426,10 @@ float4 PSMainSkinPBR(SPSIn psIn) : SV_Target0
         // シンプルなディズニーベースの拡散反射を実装する。
         // フレネル反射を考慮した拡散反射を計算
         float diffuseFromFresnel = CalcDiffuseFromFresnel(
-            normal, -directionalLight[ligNo].direction.xyz, toEye);
+            normal, directionalLight[ligNo].direction.xyz, toEye);
 
         // 正規化Lambert拡散反射を求める
-        float NdotL = saturate(dot(normal, -directionalLight[ligNo].direction.xyz));
+        float NdotL = saturate(dot(normal, directionalLight[ligNo].direction.xyz));
         float3 lambertDiffuse = directionalLight[ligNo].color.xyz * NdotL / PI;
 
         // 最終的な拡散反射光を計算する
@@ -437,7 +438,7 @@ float4 PSMainSkinPBR(SPSIn psIn) : SV_Target0
         // Cook-Torranceモデルを利用した鏡面反射率を計算する
         // Cook-Torranceモデルの鏡面反射率を計算する
         float3 spec = CookTorranceSpecular(
-            -directionalLight[ligNo].direction.xyz, toEye, normal, smooth)
+            directionalLight[ligNo].direction.xyz, toEye, normal, smooth)
             * directionalLight[ligNo].color.xyz;
 
         // 金属度が高ければ、鏡面反射はスペキュラカラー、低ければ白
