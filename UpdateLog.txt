@@ -2,6 +2,16 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2023/12/09
+ZPrepassクリッピングをDispAndLimitsメニューのオプションに.
+　シーンによって効果がある場合と　マイナス効果になる場合があったので必要に応じて.
+PBR時NormalMapが無い場合には　GetNormalMap()はblackMapを返すように.
+　PBRにはnormalMapは必須という前提だがそれが無い場合の対応.
+　whiteMapを返すと法線の向きが変わってしまうのでblackMapを返すことに.
+シェーダ定数の転送は　シェーダファイル毎描画フレーム毎に１回にしてみた
+　fpsに変わりはなかった
+
+
 2023/12/08
 Shaderプレートメニュー追加
 　Shaderの設定をマテリアルごとに設定する仕様に変更.

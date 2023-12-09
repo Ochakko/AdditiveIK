@@ -26,6 +26,16 @@ enum {
 	MQOSHADER_MAX
 };
 
+enum {
+	SHADERFX_NOSKIN_STD,
+	SHADERFX_NOSKIN_PBR,
+	SHADERFX_NOSKIN_ZPRE,
+	SHADERFX_SKIN_STD,
+	SHADERFX_SKIN_PBR,
+	SHADERFX_SKIN_ZPRE,
+	SHADERFX_MAX
+};
+
 struct SConstantBuffer {
 	Matrix mWorld;		//ワールド行列。
 	Matrix mView;		//ビュー行列。
@@ -491,27 +501,55 @@ public:
 
 	void ResetUpdateFl4x4Flag()
 	{
-		m_updatefl4x4flag = false;
+		int fxno;
+		for (fxno = 0; fxno < SHADERFX_MAX; fxno++) {
+			m_updatefl4x4flag[fxno] = false;
+		}
 	}
 	void SetUpdateFl4x4Flag()
 	{
-		m_updatefl4x4flag = true;
+		if ((m_shaderfx >= 0) && (m_shaderfx < SHADERFX_MAX)) {
+			m_updatefl4x4flag[m_shaderfx] = true;
+		}
+		else {
+			_ASSERT(0);
+		}
 	}
 	bool GetUpdateFl4x4Flag()
 	{
-		return m_updatefl4x4flag;
+		if ((m_shaderfx >= 0) && (m_shaderfx < SHADERFX_MAX)) {
+			return m_updatefl4x4flag[m_shaderfx];
+		}
+		else {
+			_ASSERT(0);
+			return false;
+		}
 	}
 	void ResetUpdateLightsFlag()
 	{
-		m_updatelightsflag = false;
+		int fxno;
+		for (fxno = 0; fxno < SHADERFX_MAX; fxno++) {
+			m_updatelightsflag[fxno] = false;
+		}
 	}
 	void SetUpdateLightsFlag()
 	{
-		m_updatelightsflag = true;
+		if ((m_shaderfx >= 0) && (m_shaderfx < SHADERFX_MAX)) {
+			m_updatelightsflag[m_shaderfx] = true;
+		}
+		else {
+			_ASSERT(0);
+		}
 	}
 	bool GetUpdateLightsFlag()
 	{
-		return m_updatelightsflag;
+		if ((m_shaderfx >= 0) && (m_shaderfx < SHADERFX_MAX)) {
+			return m_updatelightsflag[m_shaderfx];
+		}
+		else {
+			_ASSERT(0);
+			return false;
+		}
 	}
 
 
@@ -646,8 +684,11 @@ private:
 	SConstantBufferLights m_cbLights;
 
 	bool m_initpipelineflag = false;
-	bool m_updatefl4x4flag = false;
-	bool m_updatelightsflag = false;
+
+	int m_shaderfx;
+	bool m_updatefl4x4flag[SHADERFX_MAX];
+	bool m_updatelightsflag[SHADERFX_MAX];
+
 
 //以下、クラス外からアクセスしないのでアクセッサー無し。
 	char* m_curtexname;

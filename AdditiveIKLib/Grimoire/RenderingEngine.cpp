@@ -3,7 +3,7 @@
 
 #include <mqoobject.h>
 #include <DispObj.h>
-//#include <GlobalVar.h>
+#include <GlobalVar.h>
 
 #include "../../MiniEngine/InstancedSprite.h"
 #include "../../AdditiveIK/FpsSprite.h"
@@ -258,7 +258,8 @@ namespace myRenderer
         //4Kモードでは重いシーンで効果があった
         //2Kモードでは遮蔽面積が小さいために　ZPrepassのコストの方が大きくなり遅くなる
         //ZPrepassは4Kモードの場合だけ呼び出すことに.
-        if (g_4kresolution) {
+        //if (g_4kresolution) {
+        if (g_zpreflag) {//2023/12/09 DispAndLimitsメニューのオプションに.
             ZPrepass(rc);
         }
         
@@ -346,9 +347,11 @@ namespace myRenderer
             m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
         );
 
-        if (g_4kresolution == false) {
+        //if (g_4kresolution == false) {
+        if (!g_zpreflag) {
             //2023/12/05
             //2Kモードの場合には　ZPrepassを実行しないために　ここでZBufferをクリア
+            //2023/12/09 ZPrepassは　DispAndLimitsメニューのオプションに.
             rc.ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
         }
 

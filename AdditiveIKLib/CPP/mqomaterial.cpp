@@ -237,8 +237,14 @@ int CMQOMaterial::InitParams()
 	m_createdescriptorflag = false;
 	//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
 	//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
-	m_updatefl4x4flag = false;
-	m_updatelightsflag = false;
+	
+	m_shaderfx = -1;
+	int fxno;
+	for (fxno = 0; fxno < SHADERFX_MAX; fxno++) {
+		m_updatefl4x4flag[fxno] = false;
+		m_updatelightsflag[fxno] = false;
+	}
+
 
 	m_materialno = -1;
 	ZeroMemory ( m_name, 256 );
@@ -1686,6 +1692,15 @@ void CMQOMaterial::BeginRender(RenderContext& rc, myRenderer::RENDEROBJ renderob
 			(GetNormalTex() && (GetNormalTex())[0]) ||
 			(GetMetalTex() && (GetMetalTex())[0])) {
 			shadertype = MQOSHADER_PBR;
+			if (pm3) {
+				m_shaderfx = SHADERFX_NOSKIN_PBR;
+			}
+			else if (pm4) {
+				m_shaderfx = SHADERFX_SKIN_PBR;
+			}
+			else {
+				m_shaderfx = -1;
+			}
 		}
 		else {
 			if (pm4) {
@@ -1695,6 +1710,15 @@ void CMQOMaterial::BeginRender(RenderContext& rc, myRenderer::RENDEROBJ renderob
 			else {
 				//Standard
 				shadertype = MQOSHADER_STD;
+			}
+			if (pm3) {
+				m_shaderfx = SHADERFX_NOSKIN_STD;
+			}
+			else if (pm4) {
+				m_shaderfx = SHADERFX_SKIN_STD;
+			}
+			else {
+				m_shaderfx = -1;
 			}
 		}
 		break;
@@ -1765,8 +1789,8 @@ Texture& CMQOMaterial::GetNormalMap()
 		return *m_normalMap;
 	}
 	else {
-		//return m_blacktex;
-		return m_whitetex;
+		return m_blacktex;
+		//return m_whitetex;
 	}
 }
 Texture& CMQOMaterial::GetMetalMap()

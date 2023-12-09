@@ -1946,8 +1946,6 @@ static void ShowLaterTransparentWnd(bool srcflag);
 static void ShowDispGroupWnd(bool srcflag);
 static void GUIRigidSetVisible(int srcplateno);
 static void ShowRigidWnd(bool srcflag);
-static void ShowShaderTypeWnd(bool srcflag);
-static int ModalShaderTypeDlg();
 static void ShowImpulseWnd(bool srcflag);
 static void ShowGroundWnd(bool srcflag);
 static void ShowDampAnimWnd(bool srcflag);
@@ -1996,11 +1994,26 @@ static int SetModel2MaterialRateDlg(CModel* srcmodel);
 static int CreateModelWorldMatWnd();
 static int SetModel2ModelWorldMatDlg(CModel* srcmodel);
 static int ShowModelWorldMatDlg();
-static int CreateShaderTypeParamsDlg();
-static int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat);
-static int ShowShaderTypeParamsDlg();
-static void CheckShaderTypeButton(HWND hDlgWnd, int srcshadertype);//DispAndLimitプレートメニュー用
-static void CheckShaderTypeParamsButton(HWND hDlgWnd, int srcshadertype);//Shaderプレートメニューから呼び出すparamsダイアログ用
+
+
+//static void CheckShaderTypeButton(HWND hDlgWnd, int srcshadertype);//DispAndLimitプレートメニュー用
+
+//#################################################
+//ShaderPlateMenuプッシュで表示するOWPのShaderTypeWnd
+//#################################################
+static void ShowShaderTypeWnd(bool srcflag);//OWPの方
+static int ModalShaderTypeDlg();//OWPの方
+static int CreateShaderTypeWnd();//OWPの方
+static void DestroyShaderTypeWnd();//OWPの方
+
+//#######################################################
+//OWPのShaderTypeWndウインドウから呼び出すWin32のparamsDlg
+//#######################################################
+static int CreateShaderTypeParamsDlg();//params設定用　OWPでは無い方
+static int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat);//params設定用　OWPでは無い方
+static int ShowShaderTypeParamsDlg();//params設定用　OWPでは無い方
+static void CheckShaderTypeParamsButton(HWND hDlgWnd, int srcshadertype);//params設定用　OWPでは無い方
+
 
 
 void CALLBACK OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown, void* pUserContext);
@@ -2076,8 +2089,6 @@ static int CreateTimelineWnd();
 static int CreateLongTimelineWnd();
 static int CreateDmpAnimWnd();
 static int CreateRigidWnd();
-static int CreateShaderTypeWnd();
-static void DestroyShaderTypeWnd();
 static int CreateSideMenuWnd();
 static int CreateMainMenuAimBarWnd();
 static int CreateImpulseWnd();
@@ -3524,6 +3535,7 @@ void InitApp()
 	s_materialrateFlag = false;
 	s_modelworldmatFlag = false;
 
+	g_zpreflag = false;
 	g_zcmpalways = false;
 	g_lightflag = 1;
 
@@ -24375,51 +24387,51 @@ LRESULT CALLBACK LaterTransparentDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 
 }
 
-void CheckShaderTypeButton(HWND hDlgWnd, int srcshadertype)
-{
-	//############################
-	//DispAndLimitプレートメニュー用
-	//############################
-
-	switch (srcshadertype) {
-	case -1:
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, TRUE, 0);//!!!!!!
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
-		//g_shadertype = srcshadertype;
-		break;
-	case MQOSHADER_PBR:
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, FALSE, 0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, TRUE, 0);//!!!!
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
-		//g_shadertype = srcshadertype;
-		break;
-	case MQOSHADER_STD:
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, FALSE, 0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, TRUE, 0);//!!!!!!!
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
-		//g_shadertype = srcshadertype;
-		break;
-	case MQOSHADER_NOLIGHT:
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, FALSE, 0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, TRUE, 0);//!!!!!!
-		//g_shadertype = srcshadertype;
-		break;
-	default:
-		_ASSERT(0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, TRUE, 0);//!!!!
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
-		//g_shadertype = -1;
-		break;
-	}
-}
+//void CheckShaderTypeButton(HWND hDlgWnd, int srcshadertype)
+//{
+//	//############################
+//	//DispAndLimitプレートメニュー用
+//	//############################
+//
+//	switch (srcshadertype) {
+//	case -1:
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, TRUE, 0);//!!!!!!
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
+//		//g_shadertype = srcshadertype;
+//		break;
+//	case MQOSHADER_PBR:
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, FALSE, 0);
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, TRUE, 0);//!!!!
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
+//		//g_shadertype = srcshadertype;
+//		break;
+//	case MQOSHADER_STD:
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, FALSE, 0);
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, TRUE, 0);//!!!!!!!
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
+//		//g_shadertype = srcshadertype;
+//		break;
+//	case MQOSHADER_NOLIGHT:
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, FALSE, 0);
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, TRUE, 0);//!!!!!!
+//		//g_shadertype = srcshadertype;
+//		break;
+//	default:
+//		_ASSERT(0);
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, TRUE, 0);//!!!!
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
+//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
+//		//g_shadertype = -1;
+//		break;
+//	}
+//}
 
 void CheckShaderTypeParamsButton(HWND hDlgWnd, int srcshadertype)
 {
@@ -24624,6 +24636,14 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			CheckDlgButton(hDlgWnd, IDC_CHECK_TROT, false);
 		}
 
+		if (g_zpreflag == true) {
+			CheckDlgButton(hDlgWnd, IDC_ZPREPASS, true);
+		}
+		else {
+			CheckDlgButton(hDlgWnd, IDC_ZPREPASS, false);
+		}
+
+
 		return FALSE;
 	}
 	break;
@@ -24794,6 +24814,18 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			}
 			else {
 				g_rotatetanim = false;
+			}
+		}
+		break;
+		case IDC_ZPREPASS:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_ZPREPASS);
+			if (ischecked == BST_CHECKED) {
+				g_zpreflag = true;
+			}
+			else {
+				g_zpreflag = false;
 			}
 		}
 		break;

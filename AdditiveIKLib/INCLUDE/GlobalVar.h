@@ -58,6 +58,7 @@ class CInfoWindow;
 
 #ifdef ADDITIVEIKLIBGLOBALVAR
 
+bool g_zpreflag = false;
 bool g_zcmpalways = false;
 bool g_rotatetanim = false;
 bool g_tpose = true;
@@ -288,6 +289,7 @@ double g_playingend = 1.0;
 
 
 #else
+extern bool g_zpreflag;
 extern bool g_zcmpalways;
 extern bool g_rotatetanim;
 extern bool g_tpose;
