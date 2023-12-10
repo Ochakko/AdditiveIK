@@ -56,6 +56,7 @@ cbuffer ModelCb : register(b0)
     float4x4 mProj;
     float4 diffusemult;
     float4 metalcoef;
+    float4 materialdisprate;
 };
 
 // ディレクションライト
@@ -427,7 +428,7 @@ float4 PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
     float metallic = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).r * metalcoef.x; //!!!!metalcoef
 
     // 滑らかさ
-    float smooth = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).a * metalcoef.x; //!!!!metalcoef
+    float smooth = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).a * metalcoef.y; //!!!!smoothcoef
 
     // 視線に向かって伸びるベクトルを計算する
     float3 toEye = normalize(eyePos.xyz - psIn.worldPos.xyz);
@@ -446,13 +447,13 @@ float4 PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
         float3 lambertDiffuse = directionalLight[ligNo].color.xyz * NdotL / PI;
 
         // 最終的な拡散反射光を計算する
-        float3 diffuse = albedoColor.xyz * diffuseFromFresnel * lambertDiffuse;
+        float3 diffuse = albedoColor.xyz * diffuseFromFresnel * lambertDiffuse * materialdisprate.x;
 
         // Cook-Torranceモデルを利用した鏡面反射率を計算する
         // Cook-Torranceモデルの鏡面反射率を計算する
         float3 spec = CookTorranceSpecular(
             directionalLight[ligNo].direction.xyz, toEye, normal, smooth)
-            * directionalLight[ligNo].color.xyz;
+            * directionalLight[ligNo].color.xyz * materialdisprate.y;
 
         // 金属度が高ければ、鏡面反射はスペキュラカラー、低ければ白
         // スペキュラカラーの強さを鏡面反射率として扱う

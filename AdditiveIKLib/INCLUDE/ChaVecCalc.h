@@ -308,8 +308,8 @@ public:
 	ChaVector4 &operator+= (const ChaVector4 &v);
 	ChaVector4 operator- (const ChaVector4 &v) const;
 	ChaVector4 &operator-= (const ChaVector4 &v);
-	//ChaVector4 operator* (const ChaVector4 &v) const;
-	//ChaVector4 &operator*= (const ChaVector4 &v);
+	ChaVector4 operator* (const ChaVector4 &v) const;
+	ChaVector4 &operator*= (const ChaVector4 &v);
 	ChaVector4 operator- () const;
 
 	bool operator== (const ChaVector4 &v) const { return x == v.x && y == v.y && z == v.z && w == v.w; };

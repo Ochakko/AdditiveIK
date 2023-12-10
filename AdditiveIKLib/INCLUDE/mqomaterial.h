@@ -42,12 +42,14 @@ struct SConstantBuffer {
 	Matrix mProj;		//プロジェクション行列。
 	ChaVector4 diffusemult;
 	ChaVector4 metalcoef;
+	ChaVector4 materialdisprate;
 	void Init() {
 		mWorld.SetIdentity();
 		mView.SetIdentity();
 		mProj.SetIdentity();
 		diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		metalcoef = ChaVector4(0.70f, 0.0f, 0.0f, 0.0f);
+		metalcoef = ChaVector4(0.250f, 0.250f, 0.0f, 0.0f);
+		materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	};
 };
 
@@ -330,6 +332,12 @@ public:
 	};
 	void SetMetalCoef(float srcval) {
 		m_metalcoef = srcval;
+	};
+	float GetSmoothCoef() {
+		return m_smoothcoef;
+	};
+	void SetSmoothCoef(float srcval) {
+		m_smoothcoef = srcval;
 	};
 	float GetLightScale(int srcindex) {
 		if ((srcindex >= 0) && (srcindex < LIGHTNUMMAX)) {
@@ -626,6 +634,7 @@ private:
 	int m_shader;//mqofile記述のshader
 	int m_shadertype;//DirectX12描画用のshader　//Shaderプレートメニュー用
 	float m_metalcoef;//Shaderプレートメニュー用
+	float m_smoothcoef;//Shaderプレートメニュー用
 	float m_lightscale[LIGHTNUMMAX];//Shaderプレートメニュー用
 
 ////

@@ -40,6 +40,7 @@ cbuffer ModelCb : register(b0)
     float4x4 mProj;
     float4 diffusemult;
     float4 metalcoef;
+    float4 materialdisprate;
 };
 // ディレクションライト
 struct DirectionalLight

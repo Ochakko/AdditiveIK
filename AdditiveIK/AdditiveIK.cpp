@@ -24942,6 +24942,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 	int materialindex = s_shadertypeparamsindex - 1;
 	int curshadertype;
 	float curmetalcoef;
+	float cursmoothcoef;
 	float curlightscale[LIGHTNUMMAX];
 	WCHAR wmaterialname[256] = { 0L };
 	if (materialindex >= 0) {
@@ -24951,6 +24952,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 				curmqomat->GetName(), 0, wmaterialname, 256);
 			curshadertype = curmqomat->GetShaderType();
 			curmetalcoef = curmqomat->GetMetalCoef();
+			cursmoothcoef = curmqomat->GetSmoothCoef();
 			int litno;
 			for (litno = 0; litno < LIGHTNUMMAX; litno++) {
 				curlightscale[litno] = curmqomat->GetLightScale(litno);
@@ -24965,7 +24967,8 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 		curmqomat = 0;//全てのマテリアルに対して設定するボタンを押した場合
 		wcscpy_s(wmaterialname, 256, L"(All)");
 		curshadertype = -1;
-		curmetalcoef = 0.70f;
+		curmetalcoef = 0.250f;
+		cursmoothcoef = 0.250f;
 		int litno;
 		for (litno = 0; litno < LIGHTNUMMAX; litno++) {
 			curlightscale[litno] = 1.0f;
@@ -25014,6 +25017,43 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 					}
 				}
 			}
+
+			if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
+				if (s_metalcoeflabel[s_shadertypeparamsindex]) {
+					WCHAR strdlg2[256] = { 0L };
+					swprintf_s(strdlg2, 256, L"%.2f", newmetalcoef);
+					s_metalcoeflabel[s_shadertypeparamsindex]->setName(strdlg2);
+				}
+			}
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_SMOOTHCOEF) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SMOOTHCOEF), TBM_GETPOS, 0, 0);
+			float newsmoothcoef = (float)((double)cursliderpos / 100.0);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"SmoothCoef %.2f", newsmoothcoef);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_SMOOTHCOEF, strdlg);
+
+			if (curmqomat) {
+				curmqomat->SetSmoothCoef(newsmoothcoef);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetSmoothCoef(newsmoothcoef);
+					}
+				}
+			}
+
+			//if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
+			//	if (s_smoothcoeflabel[s_shadertypeparamsindex]) {
+			//		WCHAR strdlg2[256] = { 0L };
+			//		swprintf_s(strdlg2, 256, L"%.2f", newsmoothcoef);
+			//		s_smoothcoeflabel[s_shadertypeparamsindex]->setName(strdlg2);
+			//	}
+			//}
 		}
 
 		{
@@ -25040,6 +25080,45 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 							}
 						}
 					}
+
+					if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
+						bool isedited = false;
+						if (curmqomat) {
+							int litno5;
+							for (litno5 = 0; litno5 < LIGHTNUMMAX; litno5++) {
+								float curscale = curmqomat->GetLightScale(litno5);
+								if ((curscale >= (1.0f - 0.0001f)) && (curscale <= (1.0f + 0.0001f))) {
+									//1.0f
+								}
+								else {
+									isedited = true;
+									break;
+								}
+							}
+						}
+						else {
+							if ((newlitscale >= (1.0f - 0.0001f)) && (newlitscale <= (1.0f + 0.0001f))) {
+								//1.0f
+							}
+							else {
+								isedited = true;
+								break;
+							}
+						}
+
+						if (s_lightscalelabel[s_shadertypeparamsindex]) {
+							WCHAR strdlg2[256] = { 0L };
+							if (isedited) {
+								wcscpy_s(strdlg2, 256, L"***");
+							}
+							else {
+								wcscpy_s(strdlg2, 256, L"1.00");
+							}
+							s_lightscalelabel[s_shadertypeparamsindex]->setName(strdlg2);
+
+						}
+					}
+
 				}
 			}
 		}
@@ -25065,6 +25144,13 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 					}
 				}
 			}
+			if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
+				if (s_shadertypelabel[s_shadertypeparamsindex]) {
+					WCHAR strdlg2[256] = { 0L };
+					wcscpy_s(strdlg2, 256, L"AUTO");
+					s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
+				}
+			}
 		}
 			break;
 		case IDC_SHADER_PBR2:
@@ -25080,6 +25166,13 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 					if (setmqomat) {
 						setmqomat->SetShaderType(MQOSHADER_PBR);
 					}
+				}
+			}
+			if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
+				if (s_shadertypelabel[s_shadertypeparamsindex]) {
+					WCHAR strdlg2[256] = { 0L };
+					wcscpy_s(strdlg2, 256, L"PBR");
+					s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
 				}
 			}
 		}
@@ -25099,6 +25192,13 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 					}
 				}
 			}
+			if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
+				if (s_shadertypelabel[s_shadertypeparamsindex]) {
+					WCHAR strdlg2[256] = { 0L };
+					wcscpy_s(strdlg2, 256, L"STD");
+					s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
+				}
+			}
 		}
 			break;
 		case IDC_SHADER_NOLIGHT2:
@@ -25114,6 +25214,13 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 					if (setmqomat) {
 						setmqomat->SetShaderType(MQOSHADER_NOLIGHT);
 					}
+				}
+			}
+			if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
+				if (s_shadertypelabel[s_shadertypeparamsindex]) {
+					WCHAR strdlg2[256] = { 0L };
+					wcscpy_s(strdlg2, 256, L"NOLIGHT");
+					s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
 				}
 			}
 		}
@@ -34056,7 +34163,24 @@ int CreateShaderTypeWnd()
 			}
 
 			WCHAR strlightscale[256] = { 0L };
-			wcscpy_s(strlightscale, 256, L"*****");//後で. 1.0以外のスケールのライト番号を","で区切って表示する予定
+			bool isedited = false;
+			int litno5;
+			for (litno5 = 0; litno5 < LIGHTNUMMAX; litno5++) {
+				float curscale = curmqomat->GetLightScale(litno5);
+				if ((curscale >= (1.0f - 0.0001f)) && (curscale <= (1.0f + 0.0001f))) {
+					//1.0f
+				}
+				else {
+					isedited = true;
+					break;
+				}
+			}
+			if (isedited) {
+				wcscpy_s(strlightscale, 256, L"***");
+			}
+			else {
+				wcscpy_s(strlightscale, 256, L"1.00");
+			}
 			s_lightscalelabel[setindex] = new OWP_Label(strlightscale);
 			if (!s_lightscalelabel[setindex]) {
 				_ASSERT(0);
@@ -50076,6 +50200,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	WCHAR wmaterialname[256] = { 0L };
 	int curshadertype;
 	float curmetalcoef;
+	float cursmoothcoef;
 	float curlightscale[LIGHTNUMMAX];
 
 	if (curmqomat) {
@@ -50083,6 +50208,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 			curmqomat->GetName(), -1, wmaterialname, 256);
 		curshadertype = curmqomat->GetShaderType();
 		curmetalcoef = curmqomat->GetMetalCoef();
+		cursmoothcoef = curmqomat->GetSmoothCoef();
 		int litno;
 		for (litno = 0; litno < LIGHTNUMMAX; litno++) {
 			curlightscale[litno] = curmqomat->GetLightScale(litno);
@@ -50092,7 +50218,8 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		//全てのマテリアルに対して設定するボタンを押した場合
 		wcscpy_s(wmaterialname, 256, L"(All)");
 		curshadertype = -1;
-		curmetalcoef = 0.70f;
+		curmetalcoef = 0.250f;
+		cursmoothcoef = 0.250f;
 		int litno;
 		for (litno = 0; litno < LIGHTNUMMAX; litno++) {
 			curlightscale[litno] = 1.0f;
@@ -50123,6 +50250,11 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_METALCOEF), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_METALCOEF), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
+	sliderpos = (int)(cursmoothcoef * 100.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SMOOTHCOEF), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SMOOTHCOEF), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SMOOTHCOEF), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
 	int litno2;
 	for (litno2 = 0; litno2 < LIGHTNUMMAX; litno2++) {
 		sliderpos = (int)(curlightscale[litno2] * 100.0f);;
@@ -50135,12 +50267,16 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	//Text
 	//#####
 	WCHAR strdlg[256] = { 0L };
-	swprintf_s(strdlg, 256, L"MaterialName:%s", wmaterialname);
+	swprintf_s(strdlg, 256, L"Material:%s", wmaterialname);
 	SetDlgItemText(hDlgWnd, IDC_MATERIALNAME, strdlg);
 
 
 	swprintf_s(strdlg, 256, L"MetalCoef %.2f", curmetalcoef);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_METALCOEF, strdlg);
+
+	swprintf_s(strdlg, 256, L"SmoothCoef %.2f", cursmoothcoef);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_SMOOTHCOEF, strdlg);
+
 
 	int litno3;
 	for (litno3 = 0; litno3 < LIGHTNUMMAX; litno3++) {

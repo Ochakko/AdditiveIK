@@ -53,6 +53,7 @@ cbuffer ModelCb : register(b0)
     float4x4 mProj;
     float4 diffusemult;
     float4 metalcoef;
+    float4 materialdisprate;
 };
 
 // ディレクションライト
@@ -157,8 +158,8 @@ float4 PSMainNoSkinStd(SPSIn psIn) : SV_Target0
         totaldiffuse += directionalLight[ligNo].color.xyz * max(0, dot(psIn.normal.xyz, directionalLight[ligNo].direction.xyz));
         totalspecular += ((nl) < 0) || ((nh) < 0) ? 0 : ((nh) * calcpower);
     }
-    float4 totaldiffuse4 = float4(totaldiffuse, 1.0f);
-    float4 totalspecular4 = float4(totalspecular, 0.0f) * 0.125f; //ライト８個で白飛びしないように応急処置1/8=0.125
+    float4 totaldiffuse4 = float4(totaldiffuse, 1.0f) * materialdisprate.x;
+    float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * 0.125f; //ライト８個で白飛びしないように応急処置1/8=0.125
     float4 pscol = albedocol * diffusecol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
     return pscol;
 }
@@ -169,7 +170,7 @@ float4 PSMainNoSkinNoLight(SPSIn psIn) : SV_Target0
     //return g_texture.Sample(g_sampler, psIn.uv);
     float4 albedocol = g_albedo.Sample(g_sampler, psIn.uv);
     float2 diffuseuv = { 0.5f, 0.5f };
-    float4 diffusecol = g_diffusetex.Sample(g_sampler, diffuseuv);
+    float4 diffusecol = g_diffusetex.Sample(g_sampler, diffuseuv) * materialdisprate.x;
     //texcol.w = 1.0f;
     //return texcol;
       

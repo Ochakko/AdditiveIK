@@ -596,6 +596,10 @@ ChaVector4 ChaVector4::operator+ (const ChaVector4 &v) const { return ChaVector4
 ChaVector4 &ChaVector4::operator+= (const ChaVector4 &v) { *this = *this + v; return *this; }
 ChaVector4 ChaVector4::operator- (const ChaVector4 &v) const { return ChaVector4(x - v.x, y - v.y, z - v.z, w - v.w); }
 ChaVector4 &ChaVector4::operator-= (const ChaVector4 &v) { *this = *this - v; return *this; }
+ChaVector4 ChaVector4::operator* (const ChaVector4& v) const { return ChaVector4(x * v.x, y * v.y, z * v.z, w * v.w); }
+ChaVector4& ChaVector4::operator*= (const ChaVector4& v) { *this = *this * v; return *this; }
+
+
 
 ChaVector4 ChaVector4::operator- () const { return *this * -1.0; }
 

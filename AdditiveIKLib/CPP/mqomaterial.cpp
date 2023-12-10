@@ -290,6 +290,7 @@ int CMQOMaterial::InitParams()
 
 	m_shadertype = -2;//DirectX12描画用のshader //Shaderプレートメニュー用
 	m_metalcoef = 0.250f;//Shaderプレートメニュー用
+	m_smoothcoef = 0.250f;//Shaderプレートメニュー用
 	int litno;
 	for (litno = 0; litno < LIGHTNUMMAX; litno++) {
 		m_lightscale[litno] = 1.0f;//Shaderプレートメニュー用
@@ -2094,6 +2095,7 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 		m_cb.mProj = mProj;
 		//m_cb.diffusemult = renderobj.diffusemult;
 		m_cb.diffusemult = pextline->GetColor();
+		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 	}
 	else if (ppm3) {
@@ -2108,7 +2110,8 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 		else {
 			m_cb.diffusemult = renderobj.diffusemult;
 		}
-		m_cb.metalcoef = ChaVector4(GetMetalCoef(), 0.0f, 0.0f, 0.0f);
+		m_cb.metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), 0.0f, 0.0f);
+		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 
 
@@ -2124,7 +2127,8 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 		m_cb.mView = mView;
 		m_cb.mProj = mProj;
 		m_cb.diffusemult = renderobj.diffusemult;
-		m_cb.metalcoef = ChaVector4(GetMetalCoef(), 0.0f, 0.0f, 0.0f);
+		m_cb.metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), 0.0f, 0.0f);
+		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 
 
@@ -2189,6 +2193,7 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ rende
 		m_cb.mProj = mProj;
 		//m_cb.diffusemult = renderobj.diffusemult;
 		m_cb.diffusemult = pextline->GetColor();
+		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 	}
 	else if (ppm3) {
@@ -2202,6 +2207,7 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ rende
 		else {
 			m_cb.diffusemult = renderobj.diffusemult;
 		}
+		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 
 		if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
@@ -2215,6 +2221,7 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ rende
 		m_cb.mView = mView;
 		m_cb.mProj = mProj;
 		m_cb.diffusemult = renderobj.diffusemult;
+		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_commonConstantBuffer.CopyToVRAM(m_cb);
 
 		if (!GetUpdateFl4x4Flag()) {//2023/12/01

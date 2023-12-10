@@ -2,6 +2,17 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2023/12/10
+MetalSmoothMapの　rにmetalcoefを　aにsmoothcoefを掛けて調整
+　ShaderメニューのMetalCoefスライダーとSmoothCoefスライダーで設定
+　手持ちのアセットで試したところ　smoothCoefの方が影響が大きい　smoothが大きいほど白く小さいほど拡散色が出る
+ShaderTypeParamsDlgでの設定値をShaderTypeWndにも反映
+ツールボタンショートカットアイコンのMaterialRate設定の内DiffuseRateとSpecularRateをシェーダに反映
+　モデル単位でDiffuseとSpecularに倍率を掛けることが可能
+　AUTO, PBR, STD, NOLIGHTに対して効果有
+
+
+
 2023/12/09
 ZPrepassクリッピングをDispAndLimitsメニューのオプションに.
 　シーンによって効果がある場合と　マイナス効果になる場合があったので必要に応じて.
