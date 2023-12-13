@@ -70,12 +70,13 @@ namespace myRenderer
                  ligNo < NUM_DEFERRED_LIGHTING_DIRECTIONAL_LIGHT;
                  ligNo++)
             {
-                m_renderingEngine->Add3DModelToRenderToShadowMap(
-                    ligNo,
-                    m_shadowModels[ligNo][0],
-                    m_shadowModels[ligNo][1],
-                    m_shadowModels[ligNo][2]
-                );
+                //2023/12/11コメントアウト
+                //m_renderingEngine->Add3DModelToRenderToShadowMap(
+                //    ligNo,
+                //    m_shadowModels[ligNo][0],
+                //    m_shadowModels[ligNo][1],
+                //    m_shadowModels[ligNo][2]
+                //);
             }
         }
         //m_renderingEngine->Add3DModelToZPrepass(m_zprepassModel);

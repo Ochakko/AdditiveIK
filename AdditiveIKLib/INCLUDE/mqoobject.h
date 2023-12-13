@@ -30,6 +30,13 @@ class CInfBone;
 class CRigidElem;
 class CModel;
 
+enum {
+	DISPOBJ_NORMAL,
+	DISPOBJ_SHADOW,
+	DISPOBJ_MAX
+};
+
+
 typedef struct tag_latermaterial
 {
 	CMQOMaterial* pmaterial;
@@ -164,8 +171,10 @@ private:
 
 public:
 	//accesser
-	bool GetVisible();
-	void SetInView(bool srcflag);
+	bool GetVisible();//chkinview
+	bool GetInShadow();//chkinview
+	void SetInView(bool srcflag);//chkinview
+	void SetInShadow(bool srcflag);//chkinview
 
 	int GetObjFrom(){
 		return m_objfrom;
@@ -243,11 +252,24 @@ public:
 		return m_extline;
 	};
 
-	CDispObj* GetDispObj(){
-		return m_dispobj;
+	CDispObj* GetDispObj(int srcindex = 0){
+		if ((srcindex >= 0) && (srcindex < DISPOBJ_MAX)) {
+			return m_dispobj[srcindex];
+		}
+		else {
+			_ASSERT(0);
+			return nullptr;
+		}
+		
 	};
-	void SetDispObj( CDispObj* srcval ){
-		m_dispobj = srcval;
+	void SetDispObj(CDispObj* srcval, int srcindex){
+		if ((srcindex >= 0) && (srcindex < DISPOBJ_MAX)) {
+			m_dispobj[srcindex] = srcval;
+		}
+		else {
+			_ASSERT(0);
+			return;
+		}
 	};
 
 	CDispObj* GetDispLine(){
@@ -417,7 +439,7 @@ private:
 
 	CExtLine* m_extline;
 
-	CDispObj* m_dispobj;
+	CDispObj* m_dispobj[DISPOBJ_MAX];//2023/12/12
 	CDispObj* m_displine;
 
 	int m_dispflag;
@@ -444,7 +466,7 @@ private:
 	int m_patch;
 	int m_segment;
 
-	int m_visible;
+	int m_visible;//mqofileのvisible. chkinviewのvisibleはm_frustum経由で取得
 	int m_locking;
 
 	int m_shading;

@@ -340,6 +340,10 @@ public:
 //2023/12/01 mqofileのmaterialno読込対応時に　マテリアルが被らないようにモデル単位に変更
 //TResourceBank<CMQOMaterial> g_materialbank;
 
+IShaderResource* g_shadowmapforshader = nullptr;
+
+
+
 //staic
 static HWINEVENTHOOK s_hhook = NULL;
 
@@ -1586,6 +1590,7 @@ static bool s_cancelRButtonDown = false;
 
 
 static int s_camtargetflag = 0;
+static int s_camtargetOnceflag = 0;
 static bool s_twistcameraFlag = false;
 static bool s_rbuttonSelectFlag = false;
 //CDXUTCheckBox* s_CamTargetCheckBox = 0;
@@ -3265,6 +3270,7 @@ void InitApp()
 {
 	s_hhook = NULL;
 	g_hWnd = NULL;
+	g_shadowmapforshader = nullptr;
 	//g_shadertype = -1;//マテリアル毎に設定することに
 
 	InitializeCriticalSection(&s_CritSection_LTimeline);
@@ -3428,6 +3434,9 @@ void InitApp()
 	s_savecameraanimmode = 0;
 	g_cameraInheritMode = CAMERA_INHERIT_ALL;
 	s_saveCameraInheritMode = g_cameraInheritMode;
+
+	s_camtargetflag = 0;
+	s_camtargetOnceflag = 0;
 
 	{
 		s_twistcameraFlag = false;
@@ -5390,6 +5399,9 @@ void OnUserFrameMove(double fTime, float fElapsedTime)
 		OnFrameProcessCameraTime(difftime, &cameranextframe, &cameraendflag, &cameraloopstartflag);
 		OnFramePreviewCamera(cameranextframe);
 	
+
+		SetCamera3DFromEyePos();
+
 		//if (g_previewFlag != 0) {
 		//	WCHAR dbgline[1024] = { 0 };
 		//	swprintf_s(dbgline, 1024, L"difftime %f, nextframe %.3f, caemranextframe %.3f\n",
@@ -9552,6 +9564,9 @@ int OpenFile()
 		delete[] tmpsavepath;
 
 
+	s_camtargetOnceflag = 1;//set cameratarget to selected joint ONCE
+
+
 	return 0;
 }
 
@@ -10148,6 +10163,13 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	//	s_model->CalcBoneEul(-1);
 	//}
 
+	CBone* hipsbone = nullptr;
+	s_model->GetHipsBoneReq(s_model->GetTopBone(false), &hipsbone);
+	if (hipsbone) {
+		g_befcamtargetpos = g_camtargetpos;
+		g_camtargetpos = hipsbone->GetChildWorld();
+		s_curboneno = hipsbone->GetBoneNo();
+	}
 
 #ifndef NDEBUG
 	CallF(s_model->DbgDump(), return 0);
@@ -28594,8 +28616,6 @@ int OnFrameMouseButton()
 int OnFrameToolWnd()
 {
 
-
-
 	if (s_frogFlag) {
 		ChangeToNextPlateMenuKind(s_platemenukind, s_platemenuno);
 		s_frogFlag = false;
@@ -28604,6 +28624,23 @@ int OnFrameToolWnd()
 		ChangeToNextPlateMenuPlate(s_platemenukind, s_platemenuno);
 		s_plateFlag = false;
 	}
+
+	if (s_camtargetOnceflag) {
+		if (s_model && (s_curboneno >= 0)) {
+			CBone* curbone = s_model->GetBoneByID(s_curboneno);
+			_ASSERT(curbone);
+			if (curbone) {
+				s_saveboneno = s_curboneno;
+
+				if (s_camtargetflag) {
+					g_befcamtargetpos = g_camtargetpos;
+					g_camtargetpos = curbone->GetChildWorld();
+				}
+			}
+		}
+		s_camtargetOnceflag = 0;
+	}
+
 
 
 	//DispGroupWnd チェックボックスを右クリック　類似をチェックするためのコンテクストメニューを出す
@@ -50601,6 +50638,65 @@ void SetCamera3DFromEyePos()
 	s_matView = ChaMatrix(g_camera3D->GetViewMatrix());
 	s_matProj = ChaMatrix(g_camera3D->GetProjectionMatrix());
 	s_matVP = s_matView * s_matProj;
+
+
+//// camera for shadowmap
+	if (s_model) {
+		ChaVector3 dirright = ChaVector3(g_camera3D->GetRight());
+		ChaVector3 dirup = ChaVector3(g_camera3D->GetUp());
+		ChaVector3 dirforward = ChaVector3(g_camera3D->GetForward());
+
+
+		ChaVector3 modelpos = ChaMatrixTraVec(s_model->GetWorldMat());
+
+		CBone* hipsjoint = nullptr;
+		s_model->GetHipsBoneReq(s_model->GetTopBone(false), &hipsjoint);
+		ChaVector3 seljointpos;
+		if (hipsjoint) {
+			seljointpos = hipsjoint->GetChildWorld();
+		}
+		else {
+			seljointpos = g_camtargetpos;
+		}
+
+
+		g_cameraShadow->Update();
+
+		//ChaVector3 ldir;
+		//ChaVector3Normalize(&ldir, &(g_lightDir[g_lightSlot][3]));
+		//ChaVector3 camdiff = g_camtargetpos - g_camEye;
+		//ChaVector3 lpos;
+		//lpos = g_camEye + dirup * 50.0f + dirright * 50.0f;
+		//ChaVector3 targetshadow;
+		//targetshadow = g_camtargetpos;
+		//g_cameraShadow->SetPosition(Vector3(lpos.x, lpos.y, lpos.z));
+		//g_cameraShadow->SetTarget(Vector3(targetshadow.x, targetshadow.y, targetshadow.z));
+
+
+		ChaVector3 ldir;
+		ChaVector3Normalize(&ldir, &(g_lightDir[g_lightSlot][3]));
+		//ldir = ChaVector3(1.0f, -1.0f, 1.0f);
+		//ChaVector3Normalize(&ldir, &ldir);
+		//ChaVector3 camdiff = g_camtargetpos - g_camEye;
+		ChaVector3 targetshadow;
+		targetshadow = seljointpos;
+		ChaVector3 lpos;
+		lpos = g_camEye - dirright * 250.0f;
+		lpos.y = targetshadow.y + 300.0f;
+		targetshadow.y = modelpos.y;
+		g_cameraShadow->SetPosition(Vector3(lpos.x, lpos.y, lpos.z));
+		g_cameraShadow->SetTarget(Vector3(targetshadow.x, targetshadow.y, targetshadow.z));
+		//g_cameraShadow->SetTarget(Vector3(g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z));
+
+		g_cameraShadow->SetNear(SHADOWMAP_NEAR);
+		g_cameraShadow->SetFar(SHADOWMAP_FAR);
+		//g_cameraShadow->SetViewAngle(45.0f / 180.0f * (float)PI);
+		g_cameraShadow->SetViewAngle(SHADOWMAP_FOV / 180.0f * (float)PI);
+		g_cameraShadow->SetUp(Vector3(0.0f, 1.0f, 0.0f));
+		g_cameraShadow->SetWidth((float)SHADOWMAP_SIZE);//2023/12/11 RenderingEngin::InitShadowMapでのバッファのサイズに合わせる
+		g_cameraShadow->SetHeight((float)SHADOWMAP_SIZE);//2023/12/11 RenderingEngin::InitShadowMapでのバッファのサイズに合わせる
+		g_cameraShadow->Update();
+	}
 }
 
 int CreateSprites()

@@ -608,7 +608,11 @@ int CPolyMesh4::SetPm3InfNoSkin( ID3D12Device* pdev, CMQOObject* srcobj, int clu
 		return 1;
 	}
 
-	CallF( srcobj->GetDispObj()->CreateDispObj( pdev, this, 1 ), return 1 );
+	int doindex;
+	for (doindex = 0; doindex < DISPOBJ_MAX; doindex++) {
+		CallF(srcobj->GetDispObj(doindex)->CreateDispObj(pdev, this, 1), return 1);
+	}
+	
 
 	return 0;
 }

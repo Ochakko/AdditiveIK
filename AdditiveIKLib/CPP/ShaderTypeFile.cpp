@@ -80,6 +80,7 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			strcpy_s(materialname, 256, mqomat->GetName());
 			int shadertype = mqomat->GetShaderType();
 			float metalcoef = mqomat->GetMetalCoef();
+			float smoothcoef = mqomat->GetSmoothCoef();
 			float lightscale[8];
 			int litindex;
 			for (litindex = 0; litindex < 8; litindex++) {
@@ -91,6 +92,7 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			CallF(Write2File("    <MaterialName>%s</MaterialName>\r\n", materialname), return 1);
 			CallF(Write2File("    <ShaderType>%d</ShaderType>\r\n", shadertype), return 1);
 			CallF(Write2File("    <MetalCoef>%f</MetalCoef>\r\n", metalcoef), return 1);
+			CallF(Write2File("    <SmoothCoef>%f</SmoothCoef>\r\n", smoothcoef), return 1);
 
 			CallF(Write2File("    <LightScale1>%f</LightScale1>\r\n", lightscale[0]), return 1);
 			CallF(Write2File("    <LightScale2>%f</LightScale2>\r\n", lightscale[1]), return 1);
@@ -164,6 +166,10 @@ int CShaderTypeFile::LoadShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 				float metalcoef = 0.25f;
 				Read_Float(&materialbuf, "<MetalCoef>", "</MetalCoef>", &metalcoef);
 				curmqomat->SetMetalCoef(metalcoef);
+
+				float smoothcoef = 0.25f;
+				Read_Float(&materialbuf, "<SmoothCoef>", "</SmoothCoef>", &smoothcoef);
+				curmqomat->SetSmoothCoef(smoothcoef);
 
 				float lightscale1 = 1.0f;
 				Read_Float(&materialbuf, "<LightScale1>", "</LightScale1>", &lightscale1);

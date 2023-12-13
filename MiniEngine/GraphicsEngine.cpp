@@ -6,6 +6,7 @@
 GraphicsEngine* g_graphicsEngine = nullptr;	//グラフィックスエンジン
 Camera* g_camera2D = nullptr;				//2Dカメラ。
 Camera* g_camera3D = nullptr;				//3Dカメラ。
+Camera* g_cameraShadow = nullptr;			//ShadowMapカメラ
 
 GraphicsEngine::~GraphicsEngine()
 {
@@ -176,8 +177,12 @@ bool GraphicsEngine::Init(HWND hwnd, UINT frameBufferWidth, UINT frameBufferHeig
 	m_camera3D.SetPosition({0.0f, 50.0f, 200.0f} );
 	m_camera3D.SetTarget({ 0.0f, 50.0f, 0.0f });
 
+	m_cameraShadow.SetPosition({ 0.0f, 50.0f, 200.0f });
+	m_cameraShadow.SetTarget({ 0.0f, 50.0f, 0.0f });
+
 	g_camera2D = &m_camera2D;
 	g_camera3D = &m_camera3D;
+	g_cameraShadow = &m_cameraShadow;
 
 	//DirectXTK用のグラフィックメモリ管理クラスのインスタンスを作成する。
 	m_directXTKGfxMemroy = std::make_unique<DirectX::GraphicsMemory>(m_d3dDevice);
@@ -465,6 +470,7 @@ void GraphicsEngine::BeginRender()
 	//カメラを更新する。
 	m_camera2D.Update();
 	m_camera3D.Update();
+	m_cameraShadow.Update();
 
 	//コマンドアロケータををリセット。
 	m_commandAllocator->Reset();

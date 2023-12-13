@@ -40,15 +40,19 @@ static int s_alloccount = 0;
 
 extern ChaVector4 g_lightdirforshader[LIGHTNUMMAX];
 extern ChaVector4 g_lightdiffuseforshader[LIGHTNUMMAX];
+extern IShaderResource* g_shadowmapforshader;
 
 
 
-CMQOMaterial::CMQOMaterial() : m_descriptorHeap(),
+CMQOMaterial::CMQOMaterial() : m_descriptorHeap(), m_shadowdescriptorHeap(), //2023/12/14
 m_commonConstantBuffer(), m_expandConstantBuffer(), //2023/11/29
+m_expandConstantBuffer2(),//2023/12/10
+m_shadowcommonConstantBuffer(), m_shadowexpandConstantBuffer(), m_shadowexpandConstantBuffer2(), //2023/12/14
 m_whitetex(), m_blacktex(), m_diffuseMap(), 
-m_cb(), m_cbMatrix(), m_cbLights(), //2023/12/01 //2023/12/02
+m_cb(), m_cbMatrix(), m_cbLights(), m_cbShadow(), //2023/12/01 //2023/12/02 //2023/12/10
 m_constantBuffer(), //2023/12/01
 m_rootSignature(), //2023/12/01
+m_shadowrootSignature(), //2023/12/14
 m_ZPrerootSignature(), //2023/12/05
 m_ZPreModelPipelineState() //2023/12/05
 {
@@ -252,6 +256,7 @@ int CMQOMaterial::InitParams()
 	m_cb.Init();
 	m_cbMatrix.Init();
 	m_cbLights.Init();
+	m_cbShadow.Init();
 
 	m_col.w = 1.0f;
 	m_col.x = 1.0f;
@@ -1172,12 +1177,31 @@ void CMQOMaterial::InitShadersAndPipelines(
 	const char* fxPBRPath,
 	const char* fxStdPath,
 	const char* fxNoLightPath,
+
 	const char* vsPBRFunc,
+	const char* vsPBRShadowMapFunc,
+	const char* vsPBRShadowRecieverFunc,
+
 	const char* vsStdFunc,
+	const char* vsStdShadowMapFunc,
+	const char* vsStdShadowRecieverFunc,
+
 	const char* vsNoLightFunc,
+	const char* vsNoLightShadowMapFunc,
+	const char* vsNoLightShadowRecieverFunc,
+
 	const char* psPBRFunc,
+	const char* psPBRShadowMapFunc,
+	const char* psPBRShadowRecieverFunc,
+
 	const char* psStdFunc,
+	const char* psStdShadowMapFunc,
+	const char* psStdShadowRecieverFunc,
+
 	const char* psNoLightFunc,
+	const char* psNoLightShadowMapFunc,
+	const char* psNoLightShadowRecieverFunc,
+
 	const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat,
 	int numSrv,
 	int numCbv,
@@ -1191,16 +1215,30 @@ void CMQOMaterial::InitShadersAndPipelines(
 	//############################################
 
 	if (!fxPBRPath || !fxStdPath || !fxNoLightPath ||
+
 		!vsPBRFunc || !vsStdFunc || !vsNoLightFunc ||
-		!psPBRFunc || !psStdFunc || !psNoLightFunc) {
+		!vsPBRShadowMapFunc || !vsStdShadowMapFunc || !vsNoLightShadowMapFunc ||
+		!vsPBRShadowRecieverFunc || !vsStdShadowRecieverFunc || !vsNoLightShadowRecieverFunc ||
+
+		!psPBRFunc || !psStdFunc || !psNoLightFunc ||
+		!psPBRShadowMapFunc || !psStdShadowMapFunc || !psNoLightShadowMapFunc ||
+		!psPBRShadowRecieverFunc || !psStdShadowRecieverFunc || !psNoLightShadowRecieverFunc) {
+		
 		_ASSERT(0);
 		abort();
 		return;
 	}
 
 	if ((strlen(fxPBRPath) <= 0) || (strlen(fxStdPath) <= 0) || (strlen(fxNoLightPath) <= 0) ||
+
 		(strlen(vsPBRFunc) <= 0) || (strlen(vsStdFunc) <= 0) || (strlen(vsNoLightFunc) <= 0) ||
-		(strlen(psPBRFunc) <= 0) || (strlen(psStdFunc) <= 0) || (strlen(psNoLightFunc) <= 0)) {
+		(strlen(vsPBRShadowMapFunc) <= 0) || (strlen(vsStdShadowMapFunc) <= 0) || (strlen(vsNoLightShadowMapFunc) <= 0) ||
+		(strlen(vsPBRShadowRecieverFunc) <= 0) || (strlen(vsStdShadowRecieverFunc) <= 0) || (strlen(vsNoLightShadowRecieverFunc) <= 0) ||
+
+		(strlen(psPBRFunc) <= 0) || (strlen(psStdFunc) <= 0) || (strlen(psNoLightFunc) <= 0) ||
+		(strlen(psPBRShadowMapFunc) <= 0) || (strlen(psStdShadowMapFunc) <= 0) || (strlen(psNoLightShadowMapFunc) <= 0) ||
+		(strlen(psPBRShadowRecieverFunc) <= 0) || (strlen(psStdShadowRecieverFunc) <= 0) || (strlen(psNoLightShadowRecieverFunc) <= 0)) {
+		
 		_ASSERT(0);
 		abort();
 		return;
@@ -1247,17 +1285,47 @@ void CMQOMaterial::InitShadersAndPipelines(
 		offsetInDescriptorsFromTableStartSRV
 	);
 
+	m_shadowrootSignature.Init(
+		samplerDescArray,
+		2,
+		numCbv,
+		numSrv,
+		8,
+		offsetInDescriptorsFromTableStartCB,
+		offsetInDescriptorsFromTableStartSRV
+	);
+
+
 	//シェーダーを初期化。
 	InitShaders(
 		fxPBRPath,
 		fxStdPath,
 		fxNoLightPath,
+
 		vsPBRFunc,
+		vsPBRShadowMapFunc,
+		vsPBRShadowRecieverFunc,
+
 		vsStdFunc,
+		vsStdShadowMapFunc,
+		vsStdShadowRecieverFunc,
+
 		vsNoLightFunc,
+		vsNoLightShadowMapFunc,
+		vsNoLightShadowRecieverFunc,
+
 		psPBRFunc,
+		psPBRShadowMapFunc,
+		psPBRShadowRecieverFunc,
+
 		psStdFunc,
-		psNoLightFunc);
+		psStdShadowMapFunc,
+		psStdShadowRecieverFunc,
+
+		psNoLightFunc,
+		psNoLightShadowMapFunc,
+		psNoLightShadowRecieverFunc
+	);
 
 	//パイプラインステートを初期化。
 	InitPipelineState(vertextype, colorBufferFormat);
@@ -1269,15 +1337,14 @@ void CMQOMaterial::InitShadersAndPipelines(
 void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
 {
 
-
-	if (!m_vsMQOShader[MQOSHADER_PBR] || !m_vsMQOShader[MQOSHADER_STD] || !m_vsMQOShader[MQOSHADER_NOLIGHT] ||
-		!m_psMQOShader[MQOSHADER_PBR] || !m_psMQOShader[MQOSHADER_STD] || !m_psMQOShader[MQOSHADER_NOLIGHT]) {
-		_ASSERT(0);
-		abort();
-		return;
+	int shaderindex0;
+	for (shaderindex0 = 0; shaderindex0 < MQOSHADER_MAX; shaderindex0++) {
+		if (!m_vsMQOShader[shaderindex0] || !m_psMQOShader[shaderindex0]) {
+			_ASSERT(0);
+			abort();
+			return;
+		}
 	}
-
-
 
 	//############################################
 	// vertextype : 0-->pm4, 1-->pm3, 2-->extline
@@ -1343,10 +1410,17 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 
 
 	int shaderindex;
-	for(shaderindex = 0; shaderindex < MQOSHADER_MAX; shaderindex++)
+	for (shaderindex = 0; shaderindex < MQOSHADER_MAX; shaderindex++)
 	{
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
-		psoDesc.pRootSignature = m_rootSignature.Get();
+		if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
+			(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
+			(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
+			psoDesc.pRootSignature = m_shadowrootSignature.Get();
+		}
+		else {
+			psoDesc.pRootSignature = m_rootSignature.Get();
+		}
 
 		//2023/12/01 シェーダのエントリ関数として　skin有無を切り替えることはあるが　頂点フォーマットはvertextypeによって決める
 		if (vertextype == 0) {//pm4
@@ -1400,13 +1474,32 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		}
 
 		int numRenderTarget = 0;
-		for (auto& format : colorBufferFormat) {
-			if (format == DXGI_FORMAT_UNKNOWN) {
-				//フォーマットが指定されていない場所が来たら終わり。
-				break;
+		if (
+			(shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
+			(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP) ||
+			(shaderindex == MQOSHADER_STD_SHADOWMAP)
+			) {
+			//2023/12/11 ShadowMap
+			//psoDesc.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			psoDesc.RTVFormats[0] = DXGI_FORMAT_R32G32_FLOAT;
+			numRenderTarget = 1;
+		}
+		//else if (
+		//	(shaderindex == MQOSHADER_PBR_SHADOWRECIEVER) ||
+		//	(shaderindex == MQOSHADER_NOLIGHT_SHADOWRECIEVER) ||
+		//	(shaderindex == MQOSHADER_STD_SHADOWRECIEVER)
+		//	) {
+
+		//}
+		else {
+			for (auto& format : colorBufferFormat) {
+				if (format == DXGI_FORMAT_UNKNOWN) {
+					//フォーマットが指定されていない場所が来たら終わり。
+					break;
+				}
+				psoDesc.RTVFormats[numRenderTarget] = colorBufferFormat[numRenderTarget];
+				numRenderTarget++;
 			}
-			psoDesc.RTVFormats[numRenderTarget] = colorBufferFormat[numRenderTarget];
-			numRenderTarget++;
 		}
 		psoDesc.NumRenderTargets = numRenderTarget;
 		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
@@ -1565,6 +1658,7 @@ void CMQOMaterial::InitZPrePipelineState(int vertextype, const std::array<DXGI_F
 			psoDesc.RTVFormats[numRenderTarget] = colorBufferFormat[numRenderTarget];
 			numRenderTarget++;
 		}
+
 		psoDesc.NumRenderTargets = numRenderTarget;
 		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 		psoDesc.SampleDesc.Count = 1;
@@ -1580,15 +1674,35 @@ void CMQOMaterial::InitShaders(
 	const char* fxPBRPath,
 	const char* fxStdPath,
 	const char* fxNoLightPath,
+
 	const char* vsPBRFunc,
+	const char* vsPBRShadowMapFunc,
+	const char* vsPBRShadowRecieverFunc,
+
 	const char* vsStdFunc,
+	const char* vsStdShadowMapFunc,
+	const char* vsStdShadowRecieverFunc,
+
 	const char* vsNoLightFunc,
+	const char* vsNoLightShadowMapFunc,
+	const char* vsNoLightShadowRecieverFunc,
+
 	const char* psPBRFunc,
+	const char* psPBRShadowMapFunc,
+	const char* psPBRShadowRecieverFunc,
+
 	const char* psStdFunc,
-	const char* psNoLightFunc
-)
+	const char* psStdShadowMapFunc,
+	const char* psStdShadowRecieverFunc,
+
+	const char* psNoLightFunc,
+	const char* psNoLightShadowMapFunc,
+	const char* psNoLightShadowRecieverFunc
+	)
 {
-	//PBRシェーダ
+//###########
+//PBRシェーダ
+//###########
 	m_vsMQOShader[MQOSHADER_PBR] = g_engine->GetShaderFromBank(fxPBRPath, vsPBRFunc);
 	if (m_vsMQOShader[MQOSHADER_PBR] == nullptr) {
 		m_vsMQOShader[MQOSHADER_PBR] = new Shader;
@@ -1602,7 +1716,35 @@ void CMQOMaterial::InitShaders(
 		g_engine->RegistShaderToBank(fxPBRPath, psPBRFunc, m_psMQOShader[MQOSHADER_PBR]);
 	}
 
-	//Standardシェーダ
+	m_vsMQOShader[MQOSHADER_PBR_SHADOWMAP] = g_engine->GetShaderFromBank(fxPBRPath, vsPBRShadowMapFunc);
+	if (m_vsMQOShader[MQOSHADER_PBR_SHADOWMAP] == nullptr) {
+		m_vsMQOShader[MQOSHADER_PBR_SHADOWMAP] = new Shader;
+		m_vsMQOShader[MQOSHADER_PBR_SHADOWMAP]->LoadVS(fxPBRPath, vsPBRShadowMapFunc);
+		g_engine->RegistShaderToBank(fxPBRPath, vsPBRShadowMapFunc, m_vsMQOShader[MQOSHADER_PBR_SHADOWMAP]);
+	}
+	m_psMQOShader[MQOSHADER_PBR_SHADOWMAP] = g_engine->GetShaderFromBank(fxPBRPath, psPBRShadowMapFunc);
+	if (m_psMQOShader[MQOSHADER_PBR_SHADOWMAP] == nullptr) {
+		m_psMQOShader[MQOSHADER_PBR_SHADOWMAP] = new Shader;
+		m_psMQOShader[MQOSHADER_PBR_SHADOWMAP]->LoadPS(fxPBRPath, psPBRShadowMapFunc);
+		g_engine->RegistShaderToBank(fxPBRPath, psPBRShadowMapFunc, m_psMQOShader[MQOSHADER_PBR_SHADOWMAP]);
+	}
+
+	m_vsMQOShader[MQOSHADER_PBR_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxPBRPath, vsPBRShadowRecieverFunc);
+	if (m_vsMQOShader[MQOSHADER_PBR_SHADOWRECIEVER] == nullptr) {
+		m_vsMQOShader[MQOSHADER_PBR_SHADOWRECIEVER] = new Shader;
+		m_vsMQOShader[MQOSHADER_PBR_SHADOWRECIEVER]->LoadVS(fxPBRPath, vsPBRShadowRecieverFunc);
+		g_engine->RegistShaderToBank(fxPBRPath, vsPBRShadowRecieverFunc, m_vsMQOShader[MQOSHADER_PBR_SHADOWRECIEVER]);
+	}
+	m_psMQOShader[MQOSHADER_PBR_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxPBRPath, psPBRShadowRecieverFunc);
+	if (m_psMQOShader[MQOSHADER_PBR_SHADOWRECIEVER] == nullptr) {
+		m_psMQOShader[MQOSHADER_PBR_SHADOWRECIEVER] = new Shader;
+		m_psMQOShader[MQOSHADER_PBR_SHADOWRECIEVER]->LoadPS(fxPBRPath, psPBRShadowRecieverFunc);
+		g_engine->RegistShaderToBank(fxPBRPath, psPBRShadowRecieverFunc, m_psMQOShader[MQOSHADER_PBR_SHADOWRECIEVER]);
+	}
+
+//################
+//Standardシェーダ
+//################
 	m_vsMQOShader[MQOSHADER_STD] = g_engine->GetShaderFromBank(fxStdPath, vsStdFunc);
 	if (m_vsMQOShader[MQOSHADER_STD] == nullptr) {
 		m_vsMQOShader[MQOSHADER_STD] = new Shader;
@@ -1616,7 +1758,35 @@ void CMQOMaterial::InitShaders(
 		g_engine->RegistShaderToBank(fxStdPath, psStdFunc, m_psMQOShader[MQOSHADER_STD]);
 	}
 
-	//NoLightシェーダ
+	m_vsMQOShader[MQOSHADER_STD_SHADOWMAP] = g_engine->GetShaderFromBank(fxStdPath, vsStdShadowMapFunc);
+	if (m_vsMQOShader[MQOSHADER_STD_SHADOWMAP] == nullptr) {
+		m_vsMQOShader[MQOSHADER_STD_SHADOWMAP] = new Shader;
+		m_vsMQOShader[MQOSHADER_STD_SHADOWMAP]->LoadVS(fxStdPath, vsStdShadowMapFunc);
+		g_engine->RegistShaderToBank(fxStdPath, vsStdShadowMapFunc, m_vsMQOShader[MQOSHADER_STD_SHADOWMAP]);
+	}
+	m_psMQOShader[MQOSHADER_STD_SHADOWMAP] = g_engine->GetShaderFromBank(fxStdPath, psStdShadowMapFunc);
+	if (m_psMQOShader[MQOSHADER_STD_SHADOWMAP] == nullptr) {
+		m_psMQOShader[MQOSHADER_STD_SHADOWMAP] = new Shader;
+		m_psMQOShader[MQOSHADER_STD_SHADOWMAP]->LoadPS(fxStdPath, psStdShadowMapFunc);
+		g_engine->RegistShaderToBank(fxStdPath, psStdShadowMapFunc, m_psMQOShader[MQOSHADER_STD_SHADOWMAP]);
+	}
+
+	m_vsMQOShader[MQOSHADER_STD_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxStdPath, vsStdShadowRecieverFunc);
+	if (m_vsMQOShader[MQOSHADER_STD_SHADOWRECIEVER] == nullptr) {
+		m_vsMQOShader[MQOSHADER_STD_SHADOWRECIEVER] = new Shader;
+		m_vsMQOShader[MQOSHADER_STD_SHADOWRECIEVER]->LoadVS(fxStdPath, vsStdShadowRecieverFunc);
+		g_engine->RegistShaderToBank(fxStdPath, vsStdShadowRecieverFunc, m_vsMQOShader[MQOSHADER_STD_SHADOWRECIEVER]);
+	}
+	m_psMQOShader[MQOSHADER_STD_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxStdPath, psStdShadowRecieverFunc);
+	if (m_psMQOShader[MQOSHADER_STD_SHADOWRECIEVER] == nullptr) {
+		m_psMQOShader[MQOSHADER_STD_SHADOWRECIEVER] = new Shader;
+		m_psMQOShader[MQOSHADER_STD_SHADOWRECIEVER]->LoadPS(fxStdPath, psStdShadowRecieverFunc);
+		g_engine->RegistShaderToBank(fxStdPath, psStdShadowRecieverFunc, m_psMQOShader[MQOSHADER_STD_SHADOWRECIEVER]);
+	}
+
+//###############
+//NoLightシェーダ
+//###############
 	m_vsMQOShader[MQOSHADER_NOLIGHT] = g_engine->GetShaderFromBank(fxNoLightPath, vsNoLightFunc);
 	if (m_vsMQOShader[MQOSHADER_NOLIGHT] == nullptr) {
 		m_vsMQOShader[MQOSHADER_NOLIGHT] = new Shader;
@@ -1628,6 +1798,32 @@ void CMQOMaterial::InitShaders(
 		m_psMQOShader[MQOSHADER_NOLIGHT] = new Shader;
 		m_psMQOShader[MQOSHADER_NOLIGHT]->LoadPS(fxNoLightPath, psNoLightFunc);
 		g_engine->RegistShaderToBank(fxNoLightPath, psNoLightFunc, m_psMQOShader[MQOSHADER_NOLIGHT]);
+	}
+
+	m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP] = g_engine->GetShaderFromBank(fxNoLightPath, vsNoLightShadowMapFunc);
+	if (m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP] == nullptr) {
+		m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP] = new Shader;
+		m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP]->LoadVS(fxNoLightPath, vsNoLightShadowMapFunc);
+		g_engine->RegistShaderToBank(fxNoLightPath, vsNoLightShadowMapFunc, m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP]);
+	}
+	m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP] = g_engine->GetShaderFromBank(fxNoLightPath, psNoLightShadowMapFunc);
+	if (m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP] == nullptr) {
+		m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP] = new Shader;
+		m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP]->LoadPS(fxNoLightPath, psNoLightShadowMapFunc);
+		g_engine->RegistShaderToBank(fxNoLightPath, psNoLightShadowMapFunc, m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP]);
+	}
+
+	m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxNoLightPath, vsNoLightShadowRecieverFunc);
+	if (m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER] == nullptr) {
+		m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER] = new Shader;
+		m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER]->LoadVS(fxNoLightPath, vsNoLightShadowRecieverFunc);
+		g_engine->RegistShaderToBank(fxNoLightPath, vsNoLightShadowRecieverFunc, m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER]);
+	}
+	m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxNoLightPath, psNoLightShadowRecieverFunc);
+	if (m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER] == nullptr) {
+		m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER] = new Shader;
+		m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER]->LoadPS(fxNoLightPath, psNoLightShadowRecieverFunc);
+		g_engine->RegistShaderToBank(fxNoLightPath, psNoLightShadowRecieverFunc, m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER]);
 	}
 
 }
@@ -1662,7 +1858,6 @@ void CMQOMaterial::BeginRender(RenderContext& rc, myRenderer::RENDEROBJ renderob
 		return;
 	}
 
-	rc.SetRootSignature(m_rootSignature);
 
 	bool withalpha = renderobj.forcewithalpha || renderobj.withalpha;
 	CPolyMesh3* pm3 = nullptr;
@@ -1693,15 +1888,6 @@ void CMQOMaterial::BeginRender(RenderContext& rc, myRenderer::RENDEROBJ renderob
 			(GetNormalTex() && (GetNormalTex())[0]) ||
 			(GetMetalTex() && (GetMetalTex())[0])) {
 			shadertype = MQOSHADER_PBR;
-			if (pm3) {
-				m_shaderfx = SHADERFX_NOSKIN_PBR;
-			}
-			else if (pm4) {
-				m_shaderfx = SHADERFX_SKIN_PBR;
-			}
-			else {
-				m_shaderfx = -1;
-			}
 		}
 		else {
 			if (pm4) {
@@ -1711,15 +1897,6 @@ void CMQOMaterial::BeginRender(RenderContext& rc, myRenderer::RENDEROBJ renderob
 			else {
 				//Standard
 				shadertype = MQOSHADER_STD;
-			}
-			if (pm3) {
-				m_shaderfx = SHADERFX_NOSKIN_STD;
-			}
-			else if (pm4) {
-				m_shaderfx = SHADERFX_SKIN_STD;
-			}
-			else {
-				m_shaderfx = -1;
 			}
 		}
 		break;
@@ -1735,29 +1912,108 @@ void CMQOMaterial::BeginRender(RenderContext& rc, myRenderer::RENDEROBJ renderob
 	}
 
 
-	if (withalpha) {
-		if (renderobj.zcmpalways) {
-			//###########################
-			//Z cmp Always 半透明常に上書き
-			//###########################
-			rc.SetPipelineState(m_zalwaysPipelineState[shadertype]);
+	int shaderindex = -1;
+	switch (shadertype) {
+	case MQOSHADER_PBR:
+		switch (renderobj.renderkind) {//renderobj.renderkindはCDispObj::Render*()関数内でセット
+		case RENDERKIND_NORMAL:
+			shaderindex = MQOSHADER_PBR;
+			break;
+		case RENDERKIND_SHADOWMAP:
+			shaderindex = MQOSHADER_PBR_SHADOWMAP;
+			break;
+		case RENDERKIND_SHADOWRECIEVER:
+			shaderindex = MQOSHADER_PBR_SHADOWRECIEVER;
+			break;
+		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
+		default:
+			shaderindex = -1;
+			break;
+		}
+		break;
+	case MQOSHADER_STD:
+		switch (renderobj.renderkind) {//renderobj.renderkindはCDispObj::Render*()関数内でセット
+		case RENDERKIND_NORMAL:
+			shaderindex = MQOSHADER_STD;
+			break;
+		case RENDERKIND_SHADOWMAP:
+			shaderindex = MQOSHADER_STD_SHADOWMAP;
+			break;
+		case RENDERKIND_SHADOWRECIEVER:
+			shaderindex = MQOSHADER_STD_SHADOWRECIEVER;
+			break;
+		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
+		default:
+			shaderindex = -1;
+			break;
+		}
+		break;
+	case MQOSHADER_NOLIGHT:
+		switch (renderobj.renderkind) {//renderobj.renderkindはCDispObj::Render*()関数内でセット
+		case RENDERKIND_NORMAL:
+			shaderindex = MQOSHADER_NOLIGHT;
+			break;
+		case RENDERKIND_SHADOWMAP:
+			shaderindex = MQOSHADER_NOLIGHT_SHADOWMAP;
+			break;
+		case RENDERKIND_SHADOWRECIEVER:
+			shaderindex = MQOSHADER_NOLIGHT_SHADOWRECIEVER;
+			break;
+		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
+		default:
+			shaderindex = -1;
+			break;
+		}
+		break;
+	default:
+		break;
+	}
+
+
+	if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
+		(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
+		(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
+		rc.SetRootSignature(m_shadowrootSignature);
+	}
+	else {
+		rc.SetRootSignature(m_rootSignature);
+	}
+
+
+	if (shaderindex >= 0) {
+		if (withalpha) {
+			if (renderobj.zcmpalways) {
+				//###########################
+				//Z cmp Always 半透明常に上書き
+				//###########################
+				rc.SetPipelineState(m_zalwaysPipelineState[shaderindex]);
+			}
+			else {
+				//###################
+				//translucent　半透明
+				//###################
+				rc.SetPipelineState(m_transPipelineState[shaderindex]);
+			}
 		}
 		else {
-			//###################
-			//translucent　半透明
-			//###################
-			rc.SetPipelineState(m_transPipelineState[shadertype]);
+			//##############
+			//Opaque 不透明
+			//##############
+			rc.SetPipelineState(m_opaquePipelineState[shaderindex]);
 		}
 	}
 	else {
-		//##############
-		//Opaque 不透明
-		//##############
-		rc.SetPipelineState(m_opaquePipelineState[shadertype]);
+		rc.SetPipelineState(m_opaquePipelineState[MQOSHADER_NOLIGHT]);
 	}
 
-	rc.SetDescriptorHeap(m_descriptorHeap);
-
+	if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
+		(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
+		(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
+		rc.SetDescriptorHeap(m_shadowdescriptorHeap);
+	}
+	else {
+		rc.SetDescriptorHeap(m_descriptorHeap);
+	}
 }
 
 void CMQOMaterial::ZPreBeginRender(RenderContext& rc)
@@ -1857,30 +2113,39 @@ int CMQOMaterial::CreateDecl(ID3D12Device* pdev, int objecttype)
 		//####
 		//pm4
 		//####
-		EXPAND_SRV_REG__START_NO = 4;
+		EXPAND_SRV_REG__START_NO = 5;
 		NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
-		NUM_CBV_ONE_MATERIAL = 2;
+		NUM_CBV_ONE_MATERIAL = 3;
 		m_commonConstantBuffer.Init(sizeof(SConstantBuffer), nullptr);
 		m_expandConstantBuffer.Init(sizeof(SConstantBufferBoneMatrix), nullptr);
+		m_expandConstantBuffer2.Init(sizeof(SConstantBufferShadow), nullptr);
+		m_shadowcommonConstantBuffer.Init(sizeof(SConstantBuffer), nullptr);
+		m_shadowexpandConstantBuffer.Init(sizeof(SConstantBufferBoneMatrix), nullptr);
+		m_shadowexpandConstantBuffer2.Init(sizeof(SConstantBufferShadow), nullptr);
 	}
 	else if (objecttype == 1){
 		//#############
 		//pm3
 		//#############
-		EXPAND_SRV_REG__START_NO = 4;
+		EXPAND_SRV_REG__START_NO = 5;
 		NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
-		NUM_CBV_ONE_MATERIAL = 2;
+		NUM_CBV_ONE_MATERIAL = 3;
 		m_commonConstantBuffer.Init(sizeof(SConstantBuffer), nullptr);
 		m_expandConstantBuffer.Init(sizeof(SConstantBufferLights), nullptr);
+		m_expandConstantBuffer2.Init(sizeof(SConstantBufferShadow), nullptr);
+		m_shadowcommonConstantBuffer.Init(sizeof(SConstantBuffer), nullptr);
+		m_shadowexpandConstantBuffer.Init(sizeof(SConstantBufferLights), nullptr);
+		m_shadowexpandConstantBuffer2.Init(sizeof(SConstantBufferShadow), nullptr);
 	}
 	else {
 		//#############
 		//extline
 		//#############
-		EXPAND_SRV_REG__START_NO = 4;
+		EXPAND_SRV_REG__START_NO = 5;
 		NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
 		NUM_CBV_ONE_MATERIAL = 1;
 		m_commonConstantBuffer.Init(sizeof(SConstantBuffer), nullptr);
+		m_shadowcommonConstantBuffer.Init(sizeof(SConstantBuffer), nullptr);
 	}
 
 	//ユーザー拡張用の定数バッファを作成。
@@ -1934,92 +2199,209 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 
 	if (objecttype == 0) {
 		//ディスクリプタヒープを構築していく。
-		int srvNo = 0;
-		int cbNo = 0;
-		//ディスクリプタヒープにディスクリプタを登録していく。
-		m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());			//アルベドに乗算するテクスチャ。
-		m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());			//アルベドマップ。
-		m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());		//法線マップ。
-		m_descriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());		//Metalマップ。
-		//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
-		for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
-			if (m_expandShaderResourceView[i]) {
-				m_descriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
+		{
+			int srvNo = 0;
+			int cbNo = 0;
+			//ディスクリプタヒープにディスクリプタを登録していく。
+			m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());			//アルベドに乗算するテクスチャ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());			//アルベドマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());		//法線マップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());		//Metalマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 4, *g_shadowmapforshader);//Shadowマップ。
+			//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
+			//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
+			//	if (m_expandShaderResourceView[i]) {
+			//		m_descriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
+			//	}
+			//}
+			srvNo += NUM_SRV_ONE_MATERIAL;
+			m_descriptorHeap.RegistConstantBuffer(cbNo, m_commonConstantBuffer);
+			if (m_expandConstantBuffer.IsValid()) {
+				m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);//BoneMatrix
 			}
+			if (m_expandConstantBuffer2.IsValid()) {
+				m_descriptorHeap.RegistConstantBuffer(cbNo + 2, m_expandConstantBuffer2);//Shadow
+			}
+			cbNo += NUM_CBV_ONE_MATERIAL;
+
+			m_descriptorHeap.Commit();
 		}
-		srvNo += NUM_SRV_ONE_MATERIAL;
-		m_descriptorHeap.RegistConstantBuffer(cbNo, m_commonConstantBuffer);
-		if (m_expandConstantBuffer.IsValid()) {
-			m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);//BoneMatrix
+
+		{
+			int srvNo = 0;
+			int cbNo = 0;
+			//ディスクリプタヒープにディスクリプタを登録していく。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());			//アルベドに乗算するテクスチャ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());			//アルベドマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());		//法線マップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());		//Metalマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, *g_shadowmapforshader);//Shadowマップ。
+			//m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
+			//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
+			//	if (m_expandShaderResourceView[i]) {
+			//		m_shadowdescriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
+			//	}
+			//}
+			srvNo += NUM_SRV_ONE_MATERIAL;
+			m_shadowdescriptorHeap.RegistConstantBuffer(cbNo, m_shadowcommonConstantBuffer);
+			if (m_expandConstantBuffer.IsValid()) {
+				m_shadowdescriptorHeap.RegistConstantBuffer(cbNo + 1, m_shadowexpandConstantBuffer);//BoneMatrix
+			}
+			if (m_expandConstantBuffer2.IsValid()) {
+				m_shadowdescriptorHeap.RegistConstantBuffer(cbNo + 2, m_shadowexpandConstantBuffer2);//Shadow
+			}
+			cbNo += NUM_CBV_ONE_MATERIAL;
+
+			m_createdescriptorflag = true;
+
+			m_shadowdescriptorHeap.Commit();
 		}
-		cbNo += NUM_CBV_ONE_MATERIAL;
 
 		m_createdescriptorflag = true;
 
-		if (m_createdescriptorflag) {
-			m_descriptorHeap.Commit();
-		}
 	}
 	else if (objecttype == 1) {
 		//ディスクリプタヒープを構築していく。
-		int srvNo = 0;
-		int cbNo = 0;
-		//ディスクリプタヒープにディスクリプタを登録していく。
-		m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());			//アルベドに乗算するテクスチャ。
-		m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());			//アルベドマップ。
-		m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());		//法線マップ。
-		m_descriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());		//Metalマップ。
-		//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
-		for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
-			if (m_expandShaderResourceView[i]) {
-				m_descriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
+		{
+			int srvNo = 0;
+			int cbNo = 0;
+			//ディスクリプタヒープにディスクリプタを登録していく。
+			m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());			//アルベドに乗算するテクスチャ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());			//アルベドマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());		//法線マップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());		//Metalマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 4, *g_shadowmapforshader);//Shadowマップ。
+			//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
+			//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
+			//	if (m_expandShaderResourceView[i]) {
+			//		m_descriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
+			//	}
+			//}
+			srvNo += NUM_SRV_ONE_MATERIAL;
+			m_descriptorHeap.RegistConstantBuffer(cbNo, m_commonConstantBuffer);
+			if (m_expandConstantBuffer.IsValid()) {
+				m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
 			}
-		}
-		srvNo += NUM_SRV_ONE_MATERIAL;
-		m_descriptorHeap.RegistConstantBuffer(cbNo, m_commonConstantBuffer);
-		if (m_expandConstantBuffer.IsValid()) {
-			m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
-		}
-		cbNo += NUM_CBV_ONE_MATERIAL;
-		m_createdescriptorflag = true;
+			if (m_expandConstantBuffer2.IsValid()) {
+				m_descriptorHeap.RegistConstantBuffer(cbNo + 2, m_expandConstantBuffer2);
+			}
+			cbNo += NUM_CBV_ONE_MATERIAL;
 
-		//}
-		if (m_createdescriptorflag) {
 			m_descriptorHeap.Commit();
 		}
+
+		{
+			int srvNo = 0;
+			int cbNo = 0;
+			//ディスクリプタヒープにディスクリプタを登録していく。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());			//アルベドに乗算するテクスチャ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());			//アルベドマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());		//法線マップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());		//Metalマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, *g_shadowmapforshader);//Shadowマップ。
+			//m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
+			//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
+			//	if (m_expandShaderResourceView[i]) {
+			//		m_shadowdescriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
+			//	}
+			//}
+			srvNo += NUM_SRV_ONE_MATERIAL;
+			m_shadowdescriptorHeap.RegistConstantBuffer(cbNo, m_shadowcommonConstantBuffer);
+			if (m_expandConstantBuffer.IsValid()) {
+				m_shadowdescriptorHeap.RegistConstantBuffer(cbNo + 1, m_shadowexpandConstantBuffer);
+			}
+			if (m_expandConstantBuffer2.IsValid()) {
+				m_shadowdescriptorHeap.RegistConstantBuffer(cbNo + 2, m_shadowexpandConstantBuffer2);
+			}
+			cbNo += NUM_CBV_ONE_MATERIAL;
+
+			m_shadowdescriptorHeap.Commit();
+		}
+
+		m_createdescriptorflag = true;
+
 	}
 	else if (objecttype == 2) {
 		//ディスクリプタヒープを構築していく。
-		int srvNo = 0;
-		int cbNo = 0;
-		//ディスクリプタヒープにディスクリプタを登録していく。
-		m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());			//アルベドに乗算するテクスチャ。
-		m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());			//アルベドマップ。
-		m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());		//法線マップ。
-		m_descriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());		//Metalマップ。
-		//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
-		for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
-			if (m_expandShaderResourceView[i]) {
-				m_descriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
-			}
-		}
-		srvNo += NUM_SRV_ONE_MATERIAL;
-		m_descriptorHeap.RegistConstantBuffer(cbNo, m_commonConstantBuffer);
-		//if (m_expandConstantBuffer.IsValid()) {
-		//	m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
-		//}
-		cbNo += NUM_CBV_ONE_MATERIAL;
-		m_createdescriptorflag = true;
+		{
+			int srvNo = 0;
+			int cbNo = 0;
+			//ディスクリプタヒープにディスクリプタを登録していく。
+			m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());			//アルベドに乗算するテクスチャ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());			//アルベドマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());		//法線マップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());		//Metalマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 4, *g_shadowmapforshader);//Shadowマップ。
+			//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
+			//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
+			//	if (m_expandShaderResourceView[i]) {
+			//		m_descriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
+			//	}
+			//}
+			srvNo += NUM_SRV_ONE_MATERIAL;
+			m_descriptorHeap.RegistConstantBuffer(cbNo, m_commonConstantBuffer);
+			//if (m_expandConstantBuffer.IsValid()) {
+			//	m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
+			//}
+			cbNo += NUM_CBV_ONE_MATERIAL;
 
-		if (m_createdescriptorflag) {
 			m_descriptorHeap.Commit();
 		}
+
+		{
+			int srvNo = 0;
+			int cbNo = 0;
+			//ディスクリプタヒープにディスクリプタを登録していく。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());			//アルベドに乗算するテクスチャ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());			//アルベドマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());		//法線マップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());		//Metalマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, *g_shadowmapforshader);//Shadowマップ。
+			//m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
+			//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
+			//	if (m_expandShaderResourceView[i]) {
+			//		m_shadowdescriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
+			//	}
+			//}
+			srvNo += NUM_SRV_ONE_MATERIAL;
+			m_shadowdescriptorHeap.RegistConstantBuffer(cbNo, m_shadowcommonConstantBuffer);
+			//if (m_expandConstantBuffer.IsValid()) {
+			//	m_shadowdescriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
+			//}
+			cbNo += NUM_CBV_ONE_MATERIAL;
+
+			m_shadowdescriptorHeap.Commit();
+		}
+
+		m_createdescriptorflag = true;
+
+
 	}
 	else {
 
 	}
 
 }
+
+void CMQOMaterial::SetConstShadow(SConstantBufferShadow* pcbShadow)
+{
+	if (!pcbShadow) {
+		_ASSERT(0);
+		return;
+	}
+	pcbShadow->Init();
+
+	g_cameraShadow->Update();
+	Vector3 lpos = g_cameraShadow->GetPosition();
+	pcbShadow->lightPos = ChaVector4(lpos.x, lpos.y, lpos.z, 1.0f);
+	//ChaMatrix lvp = ChaMatrix(g_cameraShadow->GetViewProjectionMatrix());
+	ChaMatrix mView = g_cameraShadow->GetViewMatrix();
+	ChaMatrix mProj = g_cameraShadow->GetProjectionMatrix();
+	ChaMatrix mVP = mView * mProj;
+	MoveMemory(&(pcbShadow->mLVP),
+		mVP.GetDataPtr(), sizeof(float) * 16);
+}
+
 
 void CMQOMaterial::SetConstLights(SConstantBufferLights* pcbLights)
 {
@@ -2087,6 +2469,72 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 	}
 
 
+//m_shaderfxのセット
+	int tempshadertype;
+	if (renderobj.shadertype == -2) {//shadertype == -2の場合はマテリアルの設定に従う
+		tempshadertype = GetShaderType();
+	}
+	else {
+		tempshadertype = renderobj.shadertype;
+	}
+	switch (tempshadertype) {
+	case -1:
+	case -2://マテリアルの設定も-2だった場合にはAUTOとみなす
+		if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
+			(GetNormalTex() && (GetNormalTex())[0]) ||
+			(GetMetalTex() && (GetMetalTex())[0])) {
+			if (ppm3) {
+				m_shaderfx = SHADERFX_NOSKIN_PBR;
+			}
+			else if (ppm4) {
+				m_shaderfx = SHADERFX_SKIN_PBR;
+			}
+			else {
+				m_shaderfx = SHADERFX_NOSKIN_STD;
+			}
+		}
+		else {
+			if (ppm3) {
+				m_shaderfx = SHADERFX_NOSKIN_STD;
+			}
+			else if (ppm4) {
+				m_shaderfx = SHADERFX_SKIN_STD;
+			}
+			else {
+				m_shaderfx = SHADERFX_NOSKIN_STD;
+			}
+		}
+		break;
+	case MQOSHADER_PBR:
+	case MQOSHADER_STD:
+	case MQOSHADER_NOLIGHT:
+		if (ppm3) {
+			m_shaderfx = SHADERFX_NOSKIN_STD;
+		}
+		else if (ppm4) {
+			m_shaderfx = SHADERFX_SKIN_STD;
+		}
+		else {
+			m_shaderfx = SHADERFX_NOSKIN_STD;
+		}
+		break;
+	default:
+		_ASSERT(0);
+		if (ppm3) {
+			m_shaderfx = SHADERFX_NOSKIN_STD;
+		}
+		else if (ppm4) {
+			m_shaderfx = SHADERFX_SKIN_STD;
+		}
+		else {
+			m_shaderfx = SHADERFX_NOSKIN_STD;
+		}
+		break;
+	}
+
+
+
+
 	////定数バッファを更新する。
 	if (pdispline && pextline) {
 		m_cb.Init();
@@ -2096,7 +2544,12 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 		//m_cb.diffusemult = renderobj.diffusemult;
 		m_cb.diffusemult = pextline->GetColor();
 		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
-		m_commonConstantBuffer.CopyToVRAM(m_cb);
+		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
+			m_commonConstantBuffer.CopyToVRAM(m_cb);
+		}
+		else {
+			m_shadowcommonConstantBuffer.CopyToVRAM(m_cb);
+		}
 	}
 	else if (ppm3) {
 		m_cb.Init();
@@ -2112,14 +2565,26 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 		}
 		m_cb.metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), 0.0f, 0.0f);
 		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
-		m_commonConstantBuffer.CopyToVRAM(m_cb);
-
-
-		if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
-			SetConstLights(&m_cbLights);
-			m_expandConstantBuffer.CopyToVRAM(m_cbLights);
-			SetUpdateLightsFlag();
+		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
+			m_commonConstantBuffer.CopyToVRAM(m_cb);
 		}
+		else {
+			m_shadowcommonConstantBuffer.CopyToVRAM(m_cb);
+		}
+
+		//if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
+			SetConstLights(&m_cbLights);
+			SetConstShadow(&m_cbShadow);
+			if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
+				m_expandConstantBuffer.CopyToVRAM(m_cbLights);
+				m_expandConstantBuffer2.CopyToVRAM(m_cbShadow);
+			}
+			else {
+				m_shadowexpandConstantBuffer.CopyToVRAM(m_cbLights);
+				m_shadowexpandConstantBuffer2.CopyToVRAM(m_cbShadow);
+			}
+			SetUpdateLightsFlag();
+		//}
 	}
 	else if (ppm4) {
 		m_cb.Init();
@@ -2129,21 +2594,33 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 		m_cb.diffusemult = renderobj.diffusemult;
 		m_cb.metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), 0.0f, 0.0f);
 		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
-		m_commonConstantBuffer.CopyToVRAM(m_cb);
+		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
+			m_commonConstantBuffer.CopyToVRAM(m_cb);
+		}
+		else {
+			m_shadowcommonConstantBuffer.CopyToVRAM(m_cb);
+		}
 
-
-		if (!GetUpdateFl4x4Flag()) {//2023/12/01
+		//if (!GetUpdateFl4x4Flag()) {//2023/12/01
 		//if (isfirstmaterial) {
 		//if (isfirstmaterial && !GetUpdateFl4x4Flag()) {
 		//if (!renderobj.pmodel->GetUpdateFl4x4Flag()) {
 			SetConstLights(&(m_cbMatrix.lights));
 			SetFl4x4(renderobj);
-			m_expandConstantBuffer.CopyToVRAM(m_cbMatrix);
+			SetConstShadow(&m_cbShadow);
+
+			if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
+				m_expandConstantBuffer.CopyToVRAM(m_cbMatrix);
+				m_expandConstantBuffer2.CopyToVRAM(m_cbShadow);
+			}
+			else {
+				m_shadowexpandConstantBuffer.CopyToVRAM(m_cbMatrix);
+				m_shadowexpandConstantBuffer2.CopyToVRAM(m_cbShadow);
+			}
 
 			renderobj.pmodel->SetUpdateFl4x4Flag();
 			SetUpdateFl4x4Flag();
-		}
-
+		//}
 	}
 
 
@@ -2194,7 +2671,12 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ rende
 		//m_cb.diffusemult = renderobj.diffusemult;
 		m_cb.diffusemult = pextline->GetColor();
 		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
-		m_commonConstantBuffer.CopyToVRAM(m_cb);
+		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
+			m_commonConstantBuffer.CopyToVRAM(m_cb);
+		}
+		else {
+			m_shadowcommonConstantBuffer.CopyToVRAM(m_cb);
+		}
 	}
 	else if (ppm3) {
 		m_cb.mWorld = renderobj.mWorld;
@@ -2208,11 +2690,21 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ rende
 			m_cb.diffusemult = renderobj.diffusemult;
 		}
 		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
-		m_commonConstantBuffer.CopyToVRAM(m_cb);
 
+		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
+			m_commonConstantBuffer.CopyToVRAM(m_cb);
+		}
+		else {
+			m_shadowcommonConstantBuffer.CopyToVRAM(m_cb);
+		}
 		if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
 			SetConstLights(&m_cbLights);
-			m_expandConstantBuffer.CopyToVRAM(m_cbLights);
+			if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
+				m_expandConstantBuffer.CopyToVRAM(m_cbLights);
+			}
+			else {
+				m_shadowexpandConstantBuffer.CopyToVRAM(m_cbLights);
+			}
 			SetUpdateLightsFlag();
 		}
 	}
@@ -2222,16 +2714,26 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ rende
 		m_cb.mProj = mProj;
 		m_cb.diffusemult = renderobj.diffusemult;
 		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
-		m_commonConstantBuffer.CopyToVRAM(m_cb);
 
+		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
+			m_commonConstantBuffer.CopyToVRAM(m_cb);
+		}
+		else {
+			m_shadowcommonConstantBuffer.CopyToVRAM(m_cb);
+		}
 		if (!GetUpdateFl4x4Flag()) {//2023/12/01
 			//if (isfirstmaterial) {
 			//if (isfirstmaterial && !GetUpdateFl4x4Flag()) {
 			//if (!renderobj.pmodel->GetUpdateFl4x4Flag()) {
 			SetConstLights(&(m_cbMatrix.lights));
 			SetFl4x4(renderobj);
-			m_expandConstantBuffer.CopyToVRAM(m_cbMatrix);
 
+			if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
+				m_expandConstantBuffer.CopyToVRAM(m_cbMatrix);
+			}
+			else {
+				m_shadowexpandConstantBuffer.CopyToVRAM(m_cbMatrix);
+			}
 			renderobj.pmodel->SetUpdateFl4x4Flag();
 			SetUpdateFl4x4Flag();
 		}

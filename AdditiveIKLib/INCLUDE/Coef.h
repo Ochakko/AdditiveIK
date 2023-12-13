@@ -23,6 +23,15 @@ class CMQOMaterial;
 #define ALIGNED		_declspec(align(16))
 #define	u_long	unsigned long
 
+//2023/12/13
+//for shadowmap
+#define SHADOWMAP_SIZE	2048
+#define SHADOWMAP_FOV	60.0f
+#define SHADOWMAP_NEAR	50.0f
+#define SHADOWMAP_FAR	2000.0f
+#define SHADOWMAP_BIAS	0.0010f
+
+
 
 //2023/10/19 計算に使うスレッドの数　CPUコアの数に応じて調整
 // 

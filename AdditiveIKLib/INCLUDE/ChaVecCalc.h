@@ -975,12 +975,20 @@ public:
 	void SetVisible(bool srcflag) {
 		m_visible = srcflag;
 	};
+	bool GetInShadow() {
+		return m_inshadow;
+	};
+	void SetInShadow(bool srcflag) {
+		m_inshadow = srcflag;
+	};
+
 private:
 	void InitParams();
 	//int GetFootOnPlane(int srcplaneindex, ChaVector3 srcpos);
 
 private:
 	bool m_visible;
+	bool m_inshadow;
 
 	ChaVector3 m_vecFrustum[8];
 	ChaVector3 m_vecTraFrustum[8];

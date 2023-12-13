@@ -1221,12 +1221,17 @@ public: //accesser
 	};
 	bool GetBefInView() {
 		return m_befinview;
-	}
+	};
 	void SetInView(bool srcflag) {
 		m_befinview = m_inview;
 		m_inview = srcflag;
 	};
-
+	bool GetInShadow() {
+		return m_inshadow;
+	};
+	void SetInShadow(bool srcflag) {
+		m_inshadow = srcflag;
+	};
 
 	int GetCurrentMotID();
 	double GetCurrentFrame();
@@ -2323,6 +2328,7 @@ public:
 private:
 	bool m_inview;
 	bool m_befinview;
+	bool m_inshadow;
 	ChaFrustumInfo m_frustum;
 	MODELBOUND m_bound;
 

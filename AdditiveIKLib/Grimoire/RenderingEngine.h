@@ -19,6 +19,7 @@ namespace myRenderer
         CModel* pmodel;
         CMQOObject* mqoobj;
         int shadertype;//MQOSHADER_PBR, MQOSHADER_STD, MQOSHADER_NOLIGHTの中から選択　-1指定でAutoSelect
+        int renderkind;//CDispObj::Render*()内でセット。RENDERKIND_NORMAL, _SHADOWMAP, _SHADOERECIEVER, ZPREPSSから選択
         Matrix mWorld;
         bool withalpha;
         bool forcewithalpha;//rendergroup >= 2の場合強制半透明
@@ -34,6 +35,7 @@ namespace myRenderer
             pmodel = nullptr;
             mqoobj = nullptr;
             shadertype = -1;
+            renderkind = -1;
             mWorld.SetIdentity();
             withalpha = false;
             forcewithalpha = false;
@@ -177,15 +179,21 @@ namespace myRenderer
         /// <param name="model0">近景用のシャドウマップに描画するモデル</param>
         /// <param name="model1">中景用のシャドウマップ1に描画するモデル</param>
         /// <param name="model2">遠景用のシャドウマップ2に描画するモデル</param>
-        void Add3DModelToRenderToShadowMap(
-            int ligNo,
-            Model& model0,
-            Model& model1,
-            Model& model2
-        )
+        //void Add3DModelToRenderToShadowMap(
+        //    int ligNo,
+        //    Model& model0,
+        //    Model& model1,
+        //    Model& model2
+        //)
+        //{
+        //    m_shadowMapRenders[ligNo].Add3DModel(model0, model1, model2);
+        //}
+        void Add3DModelToRenderToShadowMap(RENDEROBJ renderobj)
         {
-            m_shadowMapRenders[ligNo].Add3DModel(model0, model1, model2);
-        }
+            m_shadowmapModels.push_back(renderobj);
+        };
+
+
 
         /// <summary>
         /// ZPrepassの描画パスにモデルを追加
@@ -360,6 +368,8 @@ namespace myRenderer
 
         void RenderPolyMesh(RenderContext& rc, RENDEROBJ currenderobj);
         void RenderPolyMeshZPre(RenderContext& rc, RENDEROBJ currenderobj);
+        void RenderPolyMeshShadowMap(RenderContext& rc, RENDEROBJ currenderobj);
+        void RenderPolyMeshShadowReciever(RenderContext& rc, RENDEROBJ currenderobj);
 
     private:
         //GBufferの定義
@@ -381,7 +391,9 @@ namespace myRenderer
             Matrix mlvp[NUM_DEFERRED_LIGHTING_DIRECTIONAL_LIGHT][NUM_SHADOW_MAP];
         };
 
-        shadow::ShadowMapRender m_shadowMapRenders[NUM_DEFERRED_LIGHTING_DIRECTIONAL_LIGHT];	//シャドウマップへの描画処理
+        //shadow::ShadowMapRender m_shadowMapRenders[NUM_DEFERRED_LIGHTING_DIRECTIONAL_LIGHT];	//シャドウマップへの描画処理
+        RenderTarget m_shadowMapRenderTarget;//2023/12/10
+        GaussianBlur m_shadowBlur;//2023/12/10
         SDeferredLightingCB m_deferredLightingCB;   // ディファードライティング用の定数バッファ
         Sprite m_copyMainRtToFrameBufferSprite;     // メインレンダリングターゲットをフレームバッファにコピーするためのスプライト
         Sprite m_diferredLightingSprite;            // ディファードライティングを行うためのスプライト
@@ -394,7 +406,8 @@ namespace myRenderer
         //std::vector< Model* > m_zprepassModels;                         // ZPrepassの描画パスで描画されるモデルのリスト
         //std::vector< Model* > m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
         //std::vector< Model* > m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
-        std::vector <RENDEROBJ> m_zprepassModels;                         // ZPrepassの描画パスで描画されるモデルのリスト
+        std::vector<RENDEROBJ> m_zprepassModels;                         // ZPrepassの描画パスで描画されるモデルのリスト
+        std::vector<RENDEROBJ> m_shadowmapModels;
         std::vector<RENDEROBJ> m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
         std::vector<RENDEROBJ> m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
         std::vector<RENDERSPRITE> m_forwardRenderSprites;

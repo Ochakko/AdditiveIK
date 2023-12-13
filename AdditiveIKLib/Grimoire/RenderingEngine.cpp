@@ -10,9 +10,8 @@
 #include "../../AdditiveIK/UndoSprite.h"
 
 
-
 extern bool g_4kresolution;//AdditiveIk.cpp
-
+extern IShaderResource* g_shadowmapforshader;
 
 
 namespace myRenderer
@@ -28,6 +27,7 @@ namespace myRenderer
     void RenderingEngine::Init()
     {
         m_zprepassModels.clear();                         // ZPrepassの描画パスで描画されるモデルのリスト
+        m_shadowmapModels.clear();
         m_renderToGBufferModels.clear();                  // Gバッファへの描画パスで描画するモデルのリスト
         m_forwardRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
         m_forwardRenderSprites.clear();
@@ -46,10 +46,38 @@ namespace myRenderer
     void RenderingEngine::InitShadowMapRender()
     {
         // シャドウマップの描画処理の初期化
-        for (auto& shadowMapRender : m_shadowMapRenders)
-        {
-            shadowMapRender.Init();
-        }
+        //for (auto& shadowMapRender : m_shadowMapRenders)
+        //{
+        //    shadowMapRender.Init();
+        //}
+
+
+    // step-1 シャドウマップ描画用のレンダリングターゲットを作成する
+        float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        m_shadowMapRenderTarget.Create(
+            SHADOWMAP_SIZE,//このサイズを変える場合には　g_cameraShadowのWとHも変えること
+            SHADOWMAP_SIZE,//このサイズを変える場合には　g_cameraShadowのWとHも変えること
+            //1024,//このサイズを変える場合には　g_cameraShadowのWとHも変えること
+            //1024,//このサイズを変える場合には　g_cameraShadowのWとHも変えること
+            //g_graphicsEngine->GetFrameBufferWidth(),
+            //g_graphicsEngine->GetFrameBufferHeight(),
+            1,
+            1,
+            // 【注目】シャドウマップのカラーバッファーのフォーマットを変更している
+            DXGI_FORMAT_R32G32_FLOAT,
+            //DXGI_FORMAT_R32G32B32A32_FLOAT,
+            DXGI_FORMAT_D32_FLOAT,
+            clearColor
+        );
+
+        g_shadowmapforshader = &m_shadowMapRenderTarget.GetRenderTargetTexture();
+
+
+        //m_shadowBlur.Init(
+        //    &m_shadowMapRenderTarget.GetRenderTargetTexture() // ぼかすテクスチャはシャドウマップのテクスチャ
+        //);
+        //g_shadowmapforshader = &m_shadowBlur.GetBokeTexture();
+
     }
 
     void RenderingEngine::InitZPrepassRenderTarget()
@@ -168,76 +196,76 @@ namespace myRenderer
 
     void RenderingEngine::InitDeferredLighting()
     {
-        int frameBuffer_w = g_graphicsEngine->GetFrameBufferWidth();
-        int frameBuffer_h = g_graphicsEngine->GetFrameBufferHeight();
+        //int frameBuffer_w = g_graphicsEngine->GetFrameBufferWidth();
+        //int frameBuffer_h = g_graphicsEngine->GetFrameBufferHeight();
 
-        // 太陽光
-        m_deferredLightingCB.m_light.directionalLight[0].color.x = 4.8f;
-        m_deferredLightingCB.m_light.directionalLight[0].color.y = 4.8f;
-        m_deferredLightingCB.m_light.directionalLight[0].color.z = 4.8f;
+        //// 太陽光
+        //m_deferredLightingCB.m_light.directionalLight[0].color.x = 4.8f;
+        //m_deferredLightingCB.m_light.directionalLight[0].color.y = 4.8f;
+        //m_deferredLightingCB.m_light.directionalLight[0].color.z = 4.8f;
 
-        m_deferredLightingCB.m_light.directionalLight[0].direction.x = 1.0f;
-        m_deferredLightingCB.m_light.directionalLight[0].direction.y = -1.0f;
-        m_deferredLightingCB.m_light.directionalLight[0].direction.z = -1.0f;
-        m_deferredLightingCB.m_light.directionalLight[0].direction.Normalize();
-        m_deferredLightingCB.m_light.directionalLight[0].castShadow = true;
+        //m_deferredLightingCB.m_light.directionalLight[0].direction.x = 1.0f;
+        //m_deferredLightingCB.m_light.directionalLight[0].direction.y = -1.0f;
+        //m_deferredLightingCB.m_light.directionalLight[0].direction.z = -1.0f;
+        //m_deferredLightingCB.m_light.directionalLight[0].direction.Normalize();
+        //m_deferredLightingCB.m_light.directionalLight[0].castShadow = true;
 
-        //
-        m_deferredLightingCB.m_light.directionalLight[1].color.x = 4.8f;
-        m_deferredLightingCB.m_light.directionalLight[1].color.y = 4.8f;
-        m_deferredLightingCB.m_light.directionalLight[1].color.z = 4.8f;
+        ////
+        //m_deferredLightingCB.m_light.directionalLight[1].color.x = 4.8f;
+        //m_deferredLightingCB.m_light.directionalLight[1].color.y = 4.8f;
+        //m_deferredLightingCB.m_light.directionalLight[1].color.z = 4.8f;
 
-        m_deferredLightingCB.m_light.directionalLight[1].direction.x = -1.0f;
-        m_deferredLightingCB.m_light.directionalLight[1].direction.y = -1.0f;
-        m_deferredLightingCB.m_light.directionalLight[1].direction.z = -1.0f;
-        m_deferredLightingCB.m_light.directionalLight[1].direction.Normalize();
-        m_deferredLightingCB.m_light.directionalLight[1].castShadow = true;
+        //m_deferredLightingCB.m_light.directionalLight[1].direction.x = -1.0f;
+        //m_deferredLightingCB.m_light.directionalLight[1].direction.y = -1.0f;
+        //m_deferredLightingCB.m_light.directionalLight[1].direction.z = -1.0f;
+        //m_deferredLightingCB.m_light.directionalLight[1].direction.Normalize();
+        //m_deferredLightingCB.m_light.directionalLight[1].castShadow = true;
 
-        //地面からの照り返し
-        m_deferredLightingCB.m_light.directionalLight[2].color.x = 0.8f;
-        m_deferredLightingCB.m_light.directionalLight[2].color.y = 0.8f;
-        m_deferredLightingCB.m_light.directionalLight[2].color.z = 0.8f;
+        ////地面からの照り返し
+        //m_deferredLightingCB.m_light.directionalLight[2].color.x = 0.8f;
+        //m_deferredLightingCB.m_light.directionalLight[2].color.y = 0.8f;
+        //m_deferredLightingCB.m_light.directionalLight[2].color.z = 0.8f;
 
-        m_deferredLightingCB.m_light.directionalLight[2].direction.x = -1.0f;
-        m_deferredLightingCB.m_light.directionalLight[2].direction.y = 1.0f;
-        m_deferredLightingCB.m_light.directionalLight[2].direction.z = -1.0f;
-        m_deferredLightingCB.m_light.directionalLight[2].direction.Normalize();
+        //m_deferredLightingCB.m_light.directionalLight[2].direction.x = -1.0f;
+        //m_deferredLightingCB.m_light.directionalLight[2].direction.y = 1.0f;
+        //m_deferredLightingCB.m_light.directionalLight[2].direction.z = -1.0f;
+        //m_deferredLightingCB.m_light.directionalLight[2].direction.Normalize();
 
-        m_deferredLightingCB.m_light.ambinetLight.x = 0.2f;
-        m_deferredLightingCB.m_light.ambinetLight.y = 0.2f;
-        m_deferredLightingCB.m_light.ambinetLight.z = 0.2f;
-        m_deferredLightingCB.m_light.eyePos = g_camera3D->GetPosition();
-        m_deferredLightingCB.m_light.specPow = 5.0f;
+        //m_deferredLightingCB.m_light.ambinetLight.x = 0.2f;
+        //m_deferredLightingCB.m_light.ambinetLight.y = 0.2f;
+        //m_deferredLightingCB.m_light.ambinetLight.z = 0.2f;
+        //m_deferredLightingCB.m_light.eyePos = g_camera3D->GetPosition();
+        //m_deferredLightingCB.m_light.specPow = 5.0f;
 
-        // ポストエフェクト的にディファードライティングを行うためのスプライトを初期化
-        SpriteInitData spriteInitData;
+        //// ポストエフェクト的にディファードライティングを行うためのスプライトを初期化
+        //SpriteInitData spriteInitData;
 
-        // 画面全体にレンダリングするので幅と高さはフレームバッファーの幅と高さと同じ
-        spriteInitData.m_width = frameBuffer_w;
-        spriteInitData.m_height = frameBuffer_h;
+        //// 画面全体にレンダリングするので幅と高さはフレームバッファーの幅と高さと同じ
+        //spriteInitData.m_width = frameBuffer_w;
+        //spriteInitData.m_height = frameBuffer_h;
 
-        // ディファードライティングで使用するテクスチャを設定
-        int texNo = 0;
-        for (auto& gBuffer : m_gBuffer)
-        {
-            spriteInitData.m_textures[texNo++] = &gBuffer.GetRenderTargetTexture();
-        }
+        //// ディファードライティングで使用するテクスチャを設定
+        //int texNo = 0;
+        //for (auto& gBuffer : m_gBuffer)
+        //{
+        //    spriteInitData.m_textures[texNo++] = &gBuffer.GetRenderTargetTexture();
+        //}
 
-        spriteInitData.m_fxFilePath = "../Media/shader/preset/DeferredLighting.fx";
-        spriteInitData.m_expandConstantBuffer = &m_deferredLightingCB;
-        spriteInitData.m_expandConstantBufferSize = sizeof(m_deferredLightingCB);
-        for (int i = 0; i < NUM_DEFERRED_LIGHTING_DIRECTIONAL_LIGHT; i++)
-        {
-            for (int areaNo = 0; areaNo < NUM_SHADOW_MAP; areaNo++)
-            {
-                spriteInitData.m_textures[texNo++] = &m_shadowMapRenders[i].GetShadowMap(areaNo);
-            }
-        }
-        spriteInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
-        //spriteInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        //spriteInitData.m_fxFilePath = "../Media/shader/preset/DeferredLighting.fx";
+        //spriteInitData.m_expandConstantBuffer = &m_deferredLightingCB;
+        //spriteInitData.m_expandConstantBufferSize = sizeof(m_deferredLightingCB);
+        //for (int i = 0; i < NUM_DEFERRED_LIGHTING_DIRECTIONAL_LIGHT; i++)
+        //{
+        //    for (int areaNo = 0; areaNo < NUM_SHADOW_MAP; areaNo++)
+        //    {
+        //        spriteInitData.m_textures[texNo++] = &m_shadowMapRenders[i].GetShadowMap(areaNo);
+        //    }
+        //}
+        //spriteInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        ////spriteInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-        // 初期化データを使ってスプライトを作成
-        m_diferredLightingSprite.Init(spriteInitData);
+        //// 初期化データを使ってスプライトを作成
+        //m_diferredLightingSprite.Init(spriteInitData);
     }
 
     void RenderingEngine::Execute(RenderContext& rc)
@@ -251,7 +279,7 @@ namespace myRenderer
 
 
         // シャドウマップへの描画
-        //RenderToShadowMap(rc);
+        RenderToShadowMap(rc);
 
         // ZPrepass
         //2023/12/05
@@ -283,6 +311,7 @@ namespace myRenderer
         //CopyMainRenderTargetToFrameBuffer(rc);
 
         // 登録されている3Dモデルをクリア
+        m_shadowmapModels.clear();
         m_renderToGBufferModels.clear();
         m_forwardRenderModels.clear();
         m_zprepassModels.clear();
@@ -292,15 +321,34 @@ namespace myRenderer
 
     void RenderingEngine::RenderToShadowMap(RenderContext& rc)
     {
-        int ligNo = 0;
-        for (auto& shadowMapRender : m_shadowMapRenders)
+        //int ligNo = 0;
+        //for (auto& shadowMapRender : m_shadowMapRenders)
+        //{
+        //    shadowMapRender.Render(
+        //        rc,
+        //        m_deferredLightingCB.m_light.directionalLight[ligNo].direction
+        //    );
+        //    ligNo++;
+        //}
+
+        rc.WaitUntilToPossibleSetRenderTarget(m_shadowMapRenderTarget);
+        rc.SetRenderTargetAndViewport(m_shadowMapRenderTarget);
+        rc.ClearRenderTargetView(m_shadowMapRenderTarget);
+
+        // 影モデルを描画
+        for (auto& currenderobj : m_shadowmapModels)
         {
-            shadowMapRender.Render(
-                rc,
-                m_deferredLightingCB.m_light.directionalLight[ligNo].direction
-            );
-            ligNo++;
+            //model->Draw(rc);
+            RenderPolyMeshShadowMap(rc, currenderobj);
         }
+
+
+        // 書き込み完了待ち
+        rc.WaitUntilFinishDrawingToRenderTarget(m_shadowMapRenderTarget);
+
+        // step-7 シャドウマップをぼかすためのガウシアンブラーを実行する
+        //m_shadowBlur.ExecuteOnGPU(rc, 5.0f);
+
     }
 
     void RenderingEngine::ZPrepass(RenderContext& rc)
@@ -347,6 +395,9 @@ namespace myRenderer
             m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
         );
 
+        //前のパスで異なるviewportを設定した場合にはviewportの設定し直しが必要
+        rc.SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
+
         //if (g_4kresolution == false) {
         if (!g_zpreflag) {
             //2023/12/05
@@ -354,7 +405,6 @@ namespace myRenderer
             //2023/12/09 ZPrepassは　DispAndLimitsメニューのオプションに.
             rc.ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
         }
-
 
         //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
         //// レンダリングターゲットを設定
@@ -367,10 +417,13 @@ namespace myRenderer
         //    m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()//ZPrePass Z Buffer !!!!
         //);
 
-        for (auto& currenderobj : m_forwardRenderModels)
+        for (auto& currenderobjsdw : m_shadowmapModels)
         {
-            //model->Draw(rc);
-            RenderPolyMesh(rc, currenderobj);
+            RenderPolyMeshShadowReciever(rc, currenderobjsdw);
+        }
+        for (auto& currenderobjfwd : m_forwardRenderModels)
+        {
+            RenderPolyMesh(rc, currenderobjfwd);
         }
 
 
@@ -447,26 +500,26 @@ namespace myRenderer
 
     void RenderingEngine::DeferredLighting(RenderContext& rc)
     {
-        // ディファードライティングに必要なライト情報を更新する
-        m_deferredLightingCB.m_light.eyePos = g_camera3D->GetPosition();
-        for (int i = 0; i < NUM_DEFERRED_LIGHTING_DIRECTIONAL_LIGHT; i++)
-        {
-            for (int areaNo = 0; areaNo < NUM_SHADOW_MAP; areaNo++)
-            {
-                m_deferredLightingCB.mlvp[i][areaNo] = m_shadowMapRenders[i].GetLVPMatrix(areaNo);
-            }
-        }
+        //// ディファードライティングに必要なライト情報を更新する
+        //m_deferredLightingCB.m_light.eyePos = g_camera3D->GetPosition();
+        //for (int i = 0; i < NUM_DEFERRED_LIGHTING_DIRECTIONAL_LIGHT; i++)
+        //{
+        //    for (int areaNo = 0; areaNo < NUM_SHADOW_MAP; areaNo++)
+        //    {
+        //        m_deferredLightingCB.mlvp[i][areaNo] = m_shadowMapRenders[i].GetLVPMatrix(areaNo);
+        //    }
+        //}
 
-        // レンダリング先をメインレンダリングターゲットにする
-        // メインレンダリングターゲットを設定
-        rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
-        rc.SetRenderTargetAndViewport(m_mainRenderTarget);
+        //// レンダリング先をメインレンダリングターゲットにする
+        //// メインレンダリングターゲットを設定
+        //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
+        //rc.SetRenderTargetAndViewport(m_mainRenderTarget);
 
-        // G-Bufferの内容を元にしてディファードライティング
-        m_diferredLightingSprite.Draw(rc);
+        //// G-Bufferの内容を元にしてディファードライティング
+        //m_diferredLightingSprite.Draw(rc);
 
-        // メインレンダリングターゲットへの書き込み終了待ち
-        rc.WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
+        //// メインレンダリングターゲットへの書き込み終了待ち
+        //rc.WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
     }
 
     void RenderingEngine::CopyMainRenderTargetToFrameBuffer(RenderContext& rc)
@@ -562,6 +615,53 @@ namespace myRenderer
             }
         }
     }
+
+
+    void RenderingEngine::RenderPolyMeshShadowMap(RenderContext& rc, RENDEROBJ currenderobj)
+    {
+        if (currenderobj.mqoobj) {
+            if (currenderobj.mqoobj->GetDispObj() && 
+                currenderobj.mqoobj->GetDispObj()->GetShadowDispObj()) {
+                if (currenderobj.mqoobj->GetPm3()) {
+                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                    currenderobj.mqoobj->GetDispObj()->GetShadowDispObj()->RenderShadowMapPM3(rc, currenderobj);
+                }
+                else if (currenderobj.mqoobj->GetPm4()) {
+                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                    currenderobj.mqoobj->GetDispObj()->GetShadowDispObj()->RenderShadowMap(rc, currenderobj);
+                }
+            }
+            //if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
+            //    //################################
+            //    //GetDispObj()ではなくGetDispLine()
+            //    //################################
+            //    currenderobj.mqoobj->GetDispLine()->RenderLine(rc, currenderobj);
+            //}
+        }
+    }
+
+    void RenderingEngine::RenderPolyMeshShadowReciever(RenderContext& rc, RENDEROBJ currenderobj)
+    {
+        if (currenderobj.mqoobj) {
+            if (currenderobj.mqoobj->GetDispObj()) {
+                if (currenderobj.mqoobj->GetPm3()) {
+                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                    currenderobj.mqoobj->GetDispObj()->RenderShadowRecieverPM3(rc, currenderobj);
+                }
+                else if (currenderobj.mqoobj->GetPm4()) {
+                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                    currenderobj.mqoobj->GetDispObj()->RenderShadowReciever(rc, currenderobj);
+                }
+            }
+            if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
+                //################################
+                //GetDispObj()ではなくGetDispLine()
+                //################################
+                currenderobj.mqoobj->GetDispLine()->RenderLine(rc, currenderobj);
+            }
+        }
+    }
+
 
 }
 

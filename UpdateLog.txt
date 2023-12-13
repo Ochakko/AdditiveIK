@@ -2,6 +2,15 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2023/12/14
+デプスシャドウ機能を追加
+　テストとしてカメラから選択モデルのHipsジョイントの方向へシャドウ用のライトを向けています
+プロジェクト保存時に　Shaderメニューのsmoothcoefも保存
+デプスシャドウのスクリーンショットをREADME.mdに追加
+
+
+
+
 2023/12/10
 MetalSmoothMapの　rにmetalcoefを　aにsmoothcoefを掛けて調整
 　ShaderメニューのMetalCoefスライダーとSmoothCoefスライダーで設定

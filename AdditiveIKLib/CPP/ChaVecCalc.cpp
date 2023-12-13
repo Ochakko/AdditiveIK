@@ -4955,26 +4955,72 @@ int ChaFrustumInfo::ChkInView(MODELBOUND srcmb, ChaMatrix matWorld)
 	ChaVector3TransformCoord(&tracenter, &(srcmb.center), &matWorld);
 	//tracenter = srcmb.center;
 
-	ChaVector3 camdir = g_camtargetpos - g_camEye;
-	ChaVector3Normalize(&camdir, &camdir);
+	{
+		ChaVector3 camdir = g_camtargetpos - g_camEye;
+		ChaVector3Normalize(&camdir, &camdir);
 
 
-	ChaVector3 cam2obj = tracenter - g_camEye;
-	float dist_cam2obj = (float)ChaVector3LengthDbl(&cam2obj);
+		ChaVector3 cam2obj = tracenter - g_camEye;
+		float dist_cam2obj = (float)ChaVector3LengthDbl(&cam2obj);
 
-	ChaVector3 backpos = g_camEye - camdir * srcmb.r;
-	ChaVector3 back2obj = tracenter - backpos;
-	ChaVector3Normalize(&back2obj, &back2obj);
-	float dot = ChaVector3Dot(&camdir, &back2obj);
+		ChaVector3 backpos = g_camEye - camdir * srcmb.r * 0.60f;//!!!!!!!!!!! * 0.6f
+		ChaVector3 back2obj = tracenter - backpos;
+		ChaVector3Normalize(&back2obj, &back2obj);
+		float dot = ChaVector3Dot(&camdir, &back2obj);
 
-	float dotclip = (float)cos(g_fovy);
-	
-	if ((dot >= dotclip) && (dist_cam2obj <= (g_projfar + srcmb.r))) {
-		SetVisible(true);
+		float dotclip = (float)cos(g_fovy);
+
+		if ((dot >= dotclip) && (dist_cam2obj <= (g_projfar + srcmb.r))) {
+			SetVisible(true);
+		}
+		else {
+			SetVisible(false);
+		}
+	}
+
+	if (GetVisible()) {
+		//#####################################################################
+		//視野内の場合には　シャドウマップがシャドウ射影範囲に入っているかどうかの判定をする
+		//#####################################################################
+		ChaVector3 lightpos;
+		ChaVector3 lighttarget;
+		if (g_cameraShadow) {
+			lightpos = ChaVector3(g_cameraShadow->GetPosition());
+			lighttarget = ChaVector3(g_cameraShadow->GetTarget());
+		}
+		else {
+			lightpos = g_camEye;
+			lighttarget = g_camtargetpos;
+		}
+
+		ChaVector3 camdir = lighttarget - lightpos;
+		ChaVector3Normalize(&camdir, &camdir);
+
+		ChaVector3 cam2obj = tracenter - lightpos;
+		float dist_cam2obj = (float)ChaVector3LengthDbl(&cam2obj);
+
+		ChaVector3 backpos = lightpos - camdir * srcmb.r * 0.60f;//!!!!!!!!!!! * 0.6f
+		ChaVector3 back2obj = tracenter - backpos;
+		ChaVector3Normalize(&back2obj, &back2obj);
+		float dot = ChaVector3Dot(&camdir, &back2obj);
+
+		float dotclip = (float)cos(SHADOWMAP_FOV);
+
+		if ((dot >= dotclip) && (dist_cam2obj <= (SHADOWMAP_FAR + srcmb.r))) {
+			SetInShadow(true);
+		}
+		else {
+			SetInShadow(false);
+		}
 	}
 	else {
-		SetVisible(false);
+		//#####################
+		//視野外は　シャドウ領域外
+		//#####################
+
+		SetInShadow(false);
 	}
+
 
 	return 0;
 }
@@ -4996,6 +5042,7 @@ void ChaFrustumInfo::InitParams()
 	m_matVP.SetIdentity();
 
 	SetVisible(true);
+	SetInShadow(false);
 }
 
 //################

@@ -10,8 +10,8 @@ MITランセンス.<br>
 ![TopFig0](ScreenShots/AdditiveIK_To1001_SS1_800.png "トップ絵0")<br>
 Fig.1 ScreenShot of AdditiveIK.<br>
 <br>
-![TopFig1](ScreenShots/AdditiveIK_To1001_ShaderPlateMenu_1_800.png "トップ絵1")<br>
-Fig.2 ShaderPlateMenu 2023/12/08 (UnityAsset JapaneseCityを読込後Shaderメニューで設定).<br>
+![TopFig1](ScreenShots/AdditiveIK_To1001_Shadow_1_800.png "トップ絵1")<br>
+Fig.2 Test of DepthShadow 2023/12/14 (UnityAsset JapaneseCityを読込).<br>
 <br>
 <br>
 # 免責<br>

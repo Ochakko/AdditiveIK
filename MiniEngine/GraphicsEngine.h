@@ -313,6 +313,7 @@ private:
 	UINT m_frameBufferHeight = 0;				//フレームバッファの高さ。
 	Camera m_camera2D;							//2Dカメラ。
 	Camera m_camera3D;							//3Dカメラ。
+	Camera m_cameraShadow;						//ShadowMapカメラ。
 	raytracing::Engine m_raytracingEngine;		//レイトレエンジン。
 	NullTextureMaps m_nullTextureMaps;			//ヌルテクスチャマップ。
 	FontEngine m_fontEngine;					//フォントエンジン。
@@ -322,3 +323,4 @@ private:
 extern GraphicsEngine* g_graphicsEngine;	//グラフィックスエンジン
 extern Camera* g_camera2D;					//2Dカメラ。
 extern Camera* g_camera3D;					//3Dカメラ。
+extern Camera* g_cameraShadow;				//ShadowMapカメラ。

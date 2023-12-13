@@ -484,6 +484,7 @@ int CModel::InitParams()
 {
 	m_inview = false;
 	m_befinview = false;
+	m_inshadow = false;
 	m_bound.Init();
 
 	m_materialbank.InitParams();
@@ -19141,6 +19142,7 @@ int CModel::ChkInView()
 		//このアプリにおいては　mqoファイル(マニピュレータや地面格子)はクリッピングしない用途に使用しているので　常に描画するように
 
 		SetInView(true);
+		SetInShadow(false);
 
 		map<int, CMQOObject*>::iterator itr;
 		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
@@ -19155,6 +19157,7 @@ int CModel::ChkInView()
 		//bvhにはメッシュが無いが　UpdateMatrixを実行するためにInViewである必要
 
 		SetInView(true);
+		SetInShadow(false);
 
 		map<int, CMQOObject*>::iterator itr;
 		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
@@ -19192,6 +19195,7 @@ int CModel::ChkInView()
 		//###############################################################
 		int objnum = 0;
 		int inviewnum = 0;
+		int inshadownum = 0;
 		map<int, CMQOObject*>::iterator itr;
 		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 			CMQOObject* curobj = itr->second;
@@ -19200,6 +19204,9 @@ int CModel::ChkInView()
 				curobj->ChkInView(m_matWorld, m_matVP);
 				if (curobj->GetVisible()) {
 					inviewnum++;
+				}
+				if (curobj->GetInShadow()) {
+					inshadownum++;
 				}
 				objnum++;
 			}
@@ -19210,6 +19217,12 @@ int CModel::ChkInView()
 		}
 		else {
 			SetInView(false);//全てのメッシュが視野外の場合　モデルとして視野外のマークをする
+		}
+		if (inshadownum != 0) {
+			SetInShadow(true);
+		}
+		else {
+			SetInShadow(false);
 		}
 	}
 	return 0;

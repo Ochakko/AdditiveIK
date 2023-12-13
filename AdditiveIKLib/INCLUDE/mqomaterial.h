@@ -23,6 +23,16 @@ enum {
 	MQOSHADER_PBR,
 	MQOSHADER_STD,
 	MQOSHADER_NOLIGHT,
+
+	MQOSHADER_PBR_SHADOWMAP,
+	MQOSHADER_PBR_SHADOWRECIEVER,
+
+	MQOSHADER_STD_SHADOWMAP,
+	MQOSHADER_STD_SHADOWRECIEVER,
+
+	MQOSHADER_NOLIGHT_SHADOWMAP,
+	MQOSHADER_NOLIGHT_SHADOWRECIEVER,
+
 	MQOSHADER_MAX
 };
 
@@ -36,6 +46,14 @@ enum {
 	SHADERFX_MAX
 };
 
+enum {//renderobj.renderkind
+	RENDERKIND_NORMAL,
+	RENDERKIND_SHADOWMAP,
+	RENDERKIND_SHADOWRECIEVER,
+	RENDERKIND_ZPREPASS,
+	RENDERKIND_MAX
+};
+
 struct SConstantBuffer {
 	Matrix mWorld;		//ワールド行列。
 	Matrix mView;		//ビュー行列。
@@ -43,6 +61,7 @@ struct SConstantBuffer {
 	ChaVector4 diffusemult;
 	ChaVector4 metalcoef;
 	ChaVector4 materialdisprate;
+	ChaVector4 shadowmaxz;
 	void Init() {
 		mWorld.SetIdentity();
 		mView.SetIdentity();
@@ -50,6 +69,7 @@ struct SConstantBuffer {
 		diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 		metalcoef = ChaVector4(0.250f, 0.250f, 0.0f, 0.0f);
 		materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		shadowmaxz = ChaVector4(SHADOWMAP_FAR, SHADOWMAP_BIAS, 0.0f, 0.0f);
 	};
 };
 
@@ -90,6 +110,17 @@ struct SConstantBufferBoneMatrix {
 		ZeroMemory(setfl4x4, sizeof(float) * 16 * MAXBONENUM);
 	};
 };
+
+struct SConstantBufferShadow {
+	float mLVP[16]; // ライトビュープロジェクション行列
+	ChaVector4 lightPos; // ライトの座標
+	void Init() {
+		//mLVP.SetIdentity();
+		ZeroMemory(mLVP, sizeof(float) * 16);
+		lightPos.SetZeroVec4(1.0f);
+	};
+};
+
 
 class CMQOMaterial
 {
@@ -140,35 +171,72 @@ public:
 	int CreateDecl(ID3D12Device* pdev, int objecttype);
 	void CreateDescriptorHeaps(int objecttype);
 
-
 	void InitShadersAndPipelines(
 		int vertextype,
 		const char* fxPBRPath,
 		const char* fxStdPath,
 		const char* fxNoLightPath,
+	
 		const char* vsPBRFunc,
+		const char* vsPBRShadowMapFunc,
+		const char* vsPBRShadowRecieverFunc,
+
 		const char* vsStdFunc,
+		const char* vsStdShadowMapFunc,
+		const char* vsStdShadowRecieverFunc,
+
 		const char* vsNoLightFunc,
+		const char* vsNoLightShadowMapFunc,
+		const char* vsNoLightShadowRecieverFunc,
+
 		const char* psPBRFunc,
+		const char* psPBRShadowMapFunc,
+		const char* psPBRShadowRecieverFunc,
+
 		const char* psStdFunc,
+		const char* psStdShadowMapFunc,
+		const char* psStdShadowRecieverFunc,
+
 		const char* psNoLightFunc,
+		const char* psNoLightShadowMapFunc,
+		const char* psNoLightShadowRecieverFunc,
+		
 		const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat,
 		int numSrv,
 		int numCbv,
 		UINT offsetInDescriptorsFromTableStartCB,
 		UINT offsetInDescriptorsFromTableStartSRV,
 		D3D12_FILTER samplerFilter);
+
 	void InitPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
 	void InitShaders(
 		const char* fxPBRPath,
 		const char* fxStdPath,
 		const char* fxNoLightPath,
+
 		const char* vsPBRFunc,
+		const char* vsPBRShadowMapFunc,
+		const char* vsPBRShadowRecieverFunc,
+
 		const char* vsStdFunc,
+		const char* vsStdShadowMapFunc,
+		const char* vsStdShadowRecieverFunc,
+
 		const char* vsNoLightFunc,
+		const char* vsNoLightShadowMapFunc,
+		const char* vsNoLightShadowRecieverFunc,
+
 		const char* psPBRFunc,
+		const char* psPBRShadowMapFunc,
+		const char* psPBRShadowRecieverFunc,
+
 		const char* psStdFunc,
-		const char* psNoLightFunc
+		const char* psStdShadowMapFunc,
+		const char* psStdShadowRecieverFunc,
+
+		const char* psNoLightFunc,
+		const char* psNoLightShadowMapFunc,
+		const char* psNoLightShadowRecieverFunc
 	);
 
 
@@ -192,6 +260,7 @@ public:
 
 	void SetFl4x4(myRenderer::RENDEROBJ renderobj);
 	void SetConstLights(SConstantBufferLights* pcbLights);
+	void SetConstShadow(SConstantBufferShadow* pcbShadow);
 	void DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
 		const Matrix& mView, const Matrix& mProj,
 		bool isfirstmaterial  = false);
@@ -596,17 +665,18 @@ private:
 
 	ConstantBuffer m_commonConstantBuffer;					//メッシュ共通の定数バッファ。
 	ConstantBuffer m_expandConstantBuffer;					//ユーザー拡張用の定数バッファ
+	ConstantBuffer m_expandConstantBuffer2;					//ユーザー拡張用の定数バッファ
 	std::array<IShaderResource*, MAX_MODEL_EXPAND_SRV> m_expandShaderResourceView = { nullptr };	//ユーザー拡張シェーダーリソースビュー。
 	void* m_expandData = nullptr;
-	//StructuredBuffer m_boneMatricesStructureBuffer;	//ボーン行列の構造化バッファ。
-	//std::vector< SMesh* > m_meshs;						//メッシュ。
 	bool m_createdescriptorflag;
-	//////std::vector< DescriptorHeap > m_descriptorHeap;	//ディスクリプタヒープ。
 	DescriptorHeap m_descriptorHeap;					//ディスクリプタヒープ。
-	//Skeleton* m_skeleton = nullptr;						//スケルトン。
-	//void* m_expandData = nullptr;						//ユーザー拡張データ。
-	//float m_setfl4x4[16 * MAXCLUSTERNUM];
-	//float m_setfl4x4[16 * MAXBONENUM];
+	
+	
+	ConstantBuffer m_shadowcommonConstantBuffer;					//メッシュ共通の定数バッファ。
+	ConstantBuffer m_shadowexpandConstantBuffer;					//ユーザー拡張用の定数バッファ
+	ConstantBuffer m_shadowexpandConstantBuffer2;					//ユーザー拡張用の定数バッファ
+	DescriptorHeap m_shadowdescriptorHeap;					//ディスクリプタヒープ。
+
 
 
 	int m_materialno;
@@ -665,6 +735,7 @@ private:
 
 	ConstantBuffer m_constantBuffer;				//定数バッファ。
 	RootSignature m_rootSignature;					//ルートシグネチャ。
+	RootSignature m_shadowrootSignature;					//ルートシグネチャ。
 	PipelineState m_opaquePipelineState[MQOSHADER_MAX];
 	PipelineState m_transPipelineState[MQOSHADER_MAX];
 	PipelineState m_zalwaysPipelineState[MQOSHADER_MAX];
@@ -691,6 +762,8 @@ private:
 	SConstantBuffer m_cb;
 	SConstantBufferBoneMatrix m_cbMatrix;
 	SConstantBufferLights m_cbLights;
+	SConstantBufferShadow m_cbShadow;
+
 
 	bool m_initpipelineflag = false;
 

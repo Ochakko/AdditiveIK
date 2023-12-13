@@ -151,7 +151,7 @@ int CDispObj::InitParams()
 	m_indexBuffer = nullptr;	//インデックスバッファ。
 	ZeroMemory(&m_indexBufferView, sizeof(D3D12_INDEX_BUFFER_VIEW));	//インデックスバッファビュー。
 
-
+	m_shadowdispobj = nullptr;
 
 	return 0;
 }
@@ -315,12 +315,42 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone)
 				"../Media/Shader/AdditiveIK_NoSkin_PBR.fx",//fx NoSkin PBR
 				"../Media/Shader/AdditiveIK_NoSkin_Std.fx",//fx NoSkin Std
 				"../Media/Shader/AdditiveIK_NoSkin_Std.fx",//fx NoSkin NoLight
-				"VSMainNoSkinPBR",//VS NoSkin PBR
-				"VSMainNoSkinStd",//VS NoSkin Std
-				"VSMainNoSkinStd",//VS NoSkin NoLight
-				"PSMainNoSkinPBR",//PS NoSkin PBR
-				"PSMainNoSkinStd",//PS NoSkin Std
-				"PSMainNoSkinNoLight",//PS NoSkin NoLight
+			//###
+			//VS
+			//###
+				//VS NoSkin PBR
+				"VSMainNoSkinPBR",
+				"VSMainNoSkinPBRShadowMap",
+				"VSMainNoSkinPBRShadowReciever",
+
+				//VS NoSkin Std
+				"VSMainNoSkinStd",
+				"VSMainNoSkinStdShadowMap",
+				"VSMainNoSkinStdShadowReciever",
+
+				//VS NoSkin NoLight
+				"VSMainNoSkinStd",
+				"VSMainNoSkinStdShadowMap",
+				"VSMainNoSkinStdShadowReciever",
+
+			//###
+			//PS
+			//###
+				//PS NoSkin PBR
+				"PSMainNoSkinPBR",
+				"PSMainNoSkinPBRShadowMap",
+				"PSMainNoSkinPBRShadowReciever",
+
+				//PS NoSkin Std
+				"PSMainNoSkinStd",
+				"PSMainNoSkinStdShadowMap",
+				"PSMainNoSkinStdShadowReciever",
+
+				//PS NoSkin NoLight
+				"PSMainNoSkinNoLight",
+				"PSMainNoSkinStdShadowMap",
+				"PSMainNoSkinNoLightShadowReciever",
+
 				colorBufferFormat,
 				curmat->NUM_SRV_ONE_MATERIAL,
 				curmat->NUM_CBV_ONE_MATERIAL,
@@ -403,12 +433,42 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone )
 					"../Media/Shader/AdditiveIK_Skin_PBR.fx",//fx Skin PBR
 					"../Media/Shader/AdditiveIK_Skin_Std.fx",//fx Skin Std
 					"../Media/Shader/AdditiveIK_Skin_Std.fx",//fx Skin NoLight
-					"VSMainSkinPBR",//VS Skin PBR
-					"VSMainSkinStd",//VS Skin Std
-					"VSMainSkinStd",//VS Skin NoLight
-					"PSMainSkinPBR",//PS Skin PBR
-					"PSMainSkinStd",//PS Skin Std
-					"PSMainSkinNoLight",//PS Skin NoLight
+					//###
+					//VS
+					//###
+						//VS Skin PBR
+					"VSMainSkinPBR",
+					"VSMainSkinPBRShadowMap",
+					"VSMainSkinPBRShadowReciever",
+
+					//VS Skin Std
+					"VSMainSkinStd",
+					"VSMainSkinStdShadowMap",
+					"VSMainSkinStdShadowReciever",
+
+					//VS Skin NoLight
+					"VSMainSkinStd",
+					"VSMainSkinStdShadowMap",
+					"VSMainSkinStdShadowReciever",
+
+					//###
+					//PS
+					//###
+						//PS Skin PBR
+					"PSMainSkinPBR",
+					"PSMainSkinPBRShadowMap",
+					"PSMainSkinPBRShadowReciever",
+
+					//PS Skin Std
+					"PSMainSkinStd",
+					"PSMainSkinStdShadowMap",
+					"PSMainSkinStdShadowReciever",
+
+					//PS Skin NoLight
+					"PSMainSkinNoLight",
+					"PSMainSkinStdShadowMap",
+					"PSMainSkinNoLightShadowReciever",
+
 					colorBufferFormat,
 					curmat->NUM_SRV_ONE_MATERIAL,
 					curmat->NUM_CBV_ONE_MATERIAL,
@@ -490,12 +550,32 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 			"../Media/Shader/AdditiveIK_NoSkin_Std.fx",
 			"../Media/Shader/AdditiveIK_NoSkin_Std.fx",
 			"../Media/Shader/AdditiveIK_NoSkin_Std.fx",
+
 			"VSMainExtLine",
 			"VSMainExtLine",
 			"VSMainExtLine",
+
+			"VSMainExtLine",
+			"VSMainExtLine",
+			"VSMainExtLine",
+
+			"VSMainExtLine",
+			"VSMainExtLine",
+			"VSMainExtLine",
+
+
 			"PSMainExtLine",
 			"PSMainExtLine",
 			"PSMainExtLine",
+
+			"PSMainExtLine",
+			"PSMainExtLine",
+			"PSMainExtLine",
+
+			"PSMainExtLine",
+			"PSMainExtLine",
+			"PSMainExtLine",
+
 			colorBufferFormat,
 			curmat->NUM_SRV_ONE_MATERIAL,
 			curmat->NUM_CBV_ONE_MATERIAL,
@@ -952,6 +1032,26 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 //}
 
 
+int CDispObj::RenderShadowMap(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
+{
+	renderobj.renderkind = RENDERKIND_SHADOWMAP;
+	return RenderNormal(rc, renderobj);
+}
+int CDispObj::RenderShadowMapPM3(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
+{
+	renderobj.renderkind = RENDERKIND_SHADOWMAP;
+	return RenderNormalPM3(rc, renderobj);
+}
+int CDispObj::RenderShadowReciever(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
+{
+	renderobj.renderkind = RENDERKIND_SHADOWRECIEVER;
+	return RenderNormal(rc, renderobj);
+}
+int CDispObj::RenderShadowRecieverPM3(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
+{
+	renderobj.renderkind = RENDERKIND_SHADOWRECIEVER;
+	return RenderNormalPM3(rc, renderobj);
+}
 
 int CDispObj::RenderNormal(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 {
@@ -1003,6 +1103,12 @@ int CDispObj::RenderNormal(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 	rc.SetVertexBuffer(m_vertexBufferView);
 	//3. インデックスバッファを設定。
 	rc.SetIndexBuffer(m_indexBufferView);
+
+
+	if (renderobj.renderkind == -1) {
+		renderobj.renderkind = RENDERKIND_NORMAL;//2023/12/11
+	}
+	
 
 	bool isfirstmaterial = true;
 	int materialcnt;
@@ -1157,8 +1263,15 @@ int CDispObj::RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ rend
 
 
 	Matrix mView, mProj;
-	mView = g_camera3D->GetViewMatrix();
-	mProj = g_camera3D->GetProjectionMatrix();
+	if ((renderobj.renderkind != RENDERKIND_SHADOWMAP)) {
+		mView = g_camera3D->GetViewMatrix();
+		mProj = g_camera3D->GetProjectionMatrix();
+	}
+	else {
+		//for shadow
+		mView = g_cameraShadow->GetViewMatrix();
+		mProj = g_cameraShadow->GetProjectionMatrix();
+	}
 	//定数バッファの設定、更新など描画の共通処理を実行する。
 	curmat->DrawCommon(rc, renderobj, mView, mProj, isfirstmaterial);
 
@@ -1233,6 +1346,8 @@ int CDispObj::RenderZPrePm4(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 	rc.SetVertexBuffer(m_vertexBufferView);
 	//3. インデックスバッファを設定。
 	rc.SetIndexBuffer(m_indexBufferView);
+
+	renderobj.renderkind = RENDERKIND_ZPREPASS;//2023/12/11
 
 	bool isfirstmaterial = true;
 	int materialcnt;
@@ -1324,6 +1439,9 @@ int CDispObj::RenderNormalPM3(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 	//3. インデックスバッファを設定。
 	rc.SetIndexBuffer(m_indexBufferView);
 
+	if (renderobj.renderkind == -1) {
+		renderobj.renderkind = RENDERKIND_NORMAL;//2023/12/11
+	}
 
 	//マテリアルごとにドロー。
 
@@ -1472,8 +1590,15 @@ int CDispObj::RenderNormalPM3Material(RenderContext& rc, myRenderer::RENDEROBJ r
 
 
 	Matrix mView, mProj;
-	mView = g_camera3D->GetViewMatrix();
-	mProj = g_camera3D->GetProjectionMatrix();
+	if ((renderobj.renderkind != RENDERKIND_SHADOWMAP)) {
+		mView = g_camera3D->GetViewMatrix();
+		mProj = g_camera3D->GetProjectionMatrix();
+	}
+	else {
+		//for shadow
+		mView = g_cameraShadow->GetViewMatrix();
+		mProj = g_cameraShadow->GetProjectionMatrix();
+	}
 	//定数バッファの設定、更新など描画の共通処理を実行する。
 	curmat->DrawCommon(rc, renderobj, mView, mProj);
 
@@ -1538,6 +1663,8 @@ int CDispObj::RenderZPrePm3(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 	//3. インデックスバッファを設定。
 	rc.SetIndexBuffer(m_indexBufferView);
 
+
+	renderobj.renderkind = RENDERKIND_ZPREPASS;//2023/12/11
 
 	//マテリアルごとにドロー。
 
@@ -1627,6 +1754,7 @@ int CDispObj::RenderLine(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 	}
 
 
+	
 	//Matrix mView, mProj;
 	//mView = g_camera3D->GetViewMatrix();
 	//mProj = g_camera3D->GetProjectionMatrix();
@@ -1638,6 +1766,8 @@ int CDispObj::RenderLine(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 	//rc.SetVertexBuffer(m_vertexBufferView);
 	////3. インデックスバッファを設定。
 	//rc.SetIndexBuffer(m_indexBufferView);
+
+	renderobj.renderkind = RENDERKIND_NORMAL;//2023/12/11
 
 	int curnumprim;
 	curnumprim = m_extline->GetLineNum();
