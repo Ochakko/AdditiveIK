@@ -50645,19 +50645,18 @@ void SetCamera3DFromEyePos()
 		ChaVector3 dirright = ChaVector3(g_camera3D->GetRight());
 		ChaVector3 dirup = ChaVector3(g_camera3D->GetUp());
 		ChaVector3 dirforward = ChaVector3(g_camera3D->GetForward());
-
-
 		ChaVector3 modelpos = ChaMatrixTraVec(s_model->GetWorldMat());
+		ChaVector3 camdiff = g_camtargetpos - g_camEye;
 
-		CBone* hipsjoint = nullptr;
-		s_model->GetHipsBoneReq(s_model->GetTopBone(false), &hipsjoint);
-		ChaVector3 seljointpos;
-		if (hipsjoint) {
-			seljointpos = hipsjoint->GetChildWorld();
-		}
-		else {
-			seljointpos = g_camtargetpos;
-		}
+		//CBone* hipsjoint = nullptr;
+		//s_model->GetHipsBoneReq(s_model->GetTopBone(false), &hipsjoint);
+		//ChaVector3 seljointpos;
+		//if (hipsjoint) {
+		//	seljointpos = hipsjoint->GetChildWorld();
+		//}
+		//else {
+		//	seljointpos = g_camtargetpos;
+		//}
 
 
 		g_cameraShadow->Update();
@@ -50679,11 +50678,13 @@ void SetCamera3DFromEyePos()
 		//ChaVector3Normalize(&ldir, &ldir);
 		//ChaVector3 camdiff = g_camtargetpos - g_camEye;
 		ChaVector3 targetshadow;
-		targetshadow = seljointpos;
+		//targetshadow = seljointpos;
+		targetshadow = g_camtargetpos;// + dirright * ChaVector3LengthDbl(&camdiff);
 		ChaVector3 lpos;
-		lpos = g_camEye - dirright * 250.0f;
-		lpos.y = targetshadow.y + 300.0f;
-		targetshadow.y = modelpos.y;
+		//lpos = g_camEye - dirright * 250.0f;
+		lpos = g_camEye - dirright * ChaVector3LengthDbl(&camdiff);
+		lpos.y = targetshadow.y + 300.0f * SHADOWMAP_PROJSCALE;
+		//targetshadow.y = modelpos.y;
 		g_cameraShadow->SetPosition(Vector3(lpos.x, lpos.y, lpos.z));
 		g_cameraShadow->SetTarget(Vector3(targetshadow.x, targetshadow.y, targetshadow.z));
 		//g_cameraShadow->SetTarget(Vector3(g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z));

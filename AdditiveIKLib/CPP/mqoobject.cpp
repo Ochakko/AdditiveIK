@@ -82,12 +82,9 @@ CMQOObject::~CMQOObject()
 		m_extline = 0;
 	}
 
-	int doindex;
-	for (doindex = 0; doindex < DISPOBJ_MAX; doindex++) {
-		if (m_dispobj[doindex]) {
-			delete m_dispobj[doindex];
-			m_dispobj[doindex] = nullptr;
-		}
+	if (m_dispobj) {
+		delete m_dispobj;
+		m_dispobj = nullptr;
 	}
 
 	if( m_displine ){
@@ -244,11 +241,7 @@ void CMQOObject::InitParams()
 	m_extline = 0;
 	ChaMatrixIdentity( &m_multmat );
 
-	int doindex;
-	for (doindex = 0; doindex < DISPOBJ_MAX; doindex++) {
-		m_dispobj[doindex] = nullptr;
-	}
-
+	m_dispobj = nullptr;
 	m_displine = 0;
 
 	m_normalleng = 0;
@@ -777,12 +770,9 @@ int CMQOObject::MakePolymesh3(bool fbxfileflag, ID3D12Device* pdev, CModel* pmod
 		delete m_pm3;
 		m_pm3 = 0;
 	}
-	int doindex;
-	for (doindex = 0; doindex < DISPOBJ_MAX; doindex++) {
-		if (m_dispobj[doindex]) {
-			delete m_dispobj[doindex];
-			m_dispobj[doindex] = nullptr;
-		}
+	if (m_dispobj) {
+		delete m_dispobj;
+		m_dispobj = nullptr;
 	}
 
 
@@ -901,12 +891,9 @@ int CMQOObject::MakePolymesh4(ID3D12Device* pdev, CModel* pmodel)
 		delete m_pm4;
 		m_pm4 = 0;
 	}
-	int doindex;
-	for (doindex = 0; doindex < DISPOBJ_MAX; doindex++) {
-		if (m_dispobj[doindex]) {
-			delete m_dispobj[doindex];
-			m_dispobj[doindex] = nullptr;
-		}
+	if (m_dispobj) {
+		delete m_dispobj;
+		m_dispobj = nullptr;
 	}
 
 	m_pm4 = new CPolyMesh4();
@@ -956,16 +943,10 @@ int CMQOObject::MakeExtLine(CModel* srcmodel)
 
 int CMQOObject::MakeDispObj( ID3D12Device* pdev, int hasbone )
 {
-	{
-		int doindex;
-		for (doindex = 0; doindex < DISPOBJ_MAX; doindex++) {
-			if (m_dispobj[doindex]) {
-				delete m_dispobj[doindex];
-				m_dispobj[doindex] = nullptr;
-			}
-		}
+	if (m_dispobj) {
+		delete m_dispobj;
+		m_dispobj = nullptr;
 	}
-
 	if( m_displine ){
 		delete m_displine;
 		m_displine = 0;
@@ -981,17 +962,12 @@ int CMQOObject::MakeDispObj( ID3D12Device* pdev, int hasbone )
 
 	if( m_pm3 && m_pm3->GetCreateOptFlag() ){
 		
-		int doindex;
-		for (doindex = 0; doindex < DISPOBJ_MAX; doindex++) {
-			m_dispobj[doindex] = new CDispObj();
-			if (!m_dispobj[doindex]) {
-				_ASSERT(0);
-				return 1;
-			}
-			CallF(m_dispobj[doindex]->CreateDispObj(pdev, m_pm3, hasbone), return 1);
+		m_dispobj = new CDispObj();
+		if (!m_dispobj) {
+			_ASSERT(0);
+			return 1;
 		}
-		m_dispobj[DISPOBJ_NORMAL]->SetShadowDispObj(m_dispobj[DISPOBJ_SHADOW]);
-
+		CallF(m_dispobj->CreateDispObj(pdev, m_pm3, hasbone), return 1);
 
 		m_pm3->CalcBound();
 
@@ -1007,16 +983,12 @@ int CMQOObject::MakeDispObj( ID3D12Device* pdev, int hasbone )
 			CallF(m_pm4->SetPm3Inf(this), return 1);
 		}
 
-		int doindex;
-		for (doindex = 0; doindex < DISPOBJ_MAX; doindex++) {
-			m_dispobj[doindex] = new CDispObj();
-			if (!m_dispobj[doindex]) {
-				_ASSERT(0);
-				return 1;
-			}
-			CallF(m_dispobj[doindex]->CreateDispObj(pdev, m_pm4, hasbone), return 1);
+		m_dispobj = new CDispObj();
+		if (!m_dispobj) {
+			_ASSERT(0);
+			return 1;
 		}
-		m_dispobj[DISPOBJ_NORMAL]->SetShadowDispObj(m_dispobj[DISPOBJ_SHADOW]);
+		CallF(m_dispobj->CreateDispObj(pdev, m_pm4, hasbone), return 1);
 
 
 		m_pm4->CalcBound();
@@ -2134,7 +2106,7 @@ int CMQOObject::NormalizeInfBone()
 
 int CMQOObject::UpdateMorphBuffer()
 {
-	if( !m_pm4 || !m_mpoint || !m_dispobj[0] || !m_dispobj[1]) {
+	if( !m_pm4 || !m_mpoint || !m_dispobj) {
 		_ASSERT( 0 );
 		return 1;
 	}
@@ -2178,8 +2150,7 @@ int CMQOObject::UpdateMorphBuffer()
 	}
 
 	CallF( m_pm4->UpdateMorphBuffer( m_mpoint ), return 1 );
-	CallF(m_dispobj[0]->CopyDispV(m_pm4), return 1);
-	CallF(m_dispobj[1]->CopyDispV(m_pm4), return 1);
+	CallF(m_dispobj->CopyDispV(m_pm4), return 1);
 
 	return 0;
 }
@@ -2340,11 +2311,8 @@ int CMQOObject::ScaleBtCapsule( CRigidElem* reptr, float boneleng, int srctype, 
 int CMQOObject::MultScale( ChaVector3 srcscale, ChaVector3 srctra )
 {
 
-	int doindex;
-	for (doindex = 0; doindex < DISPOBJ_MAX; doindex++) {
-		if (m_dispobj[doindex]) {
-			m_dispobj[doindex]->SetScale(srcscale, srctra);
-		}
+	if (m_dispobj) {
+		m_dispobj->SetScale(srcscale, srctra);
 	}
 
 

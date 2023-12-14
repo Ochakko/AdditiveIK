@@ -252,24 +252,11 @@ public:
 		return m_extline;
 	};
 
-	CDispObj* GetDispObj(int srcindex = 0){
-		if ((srcindex >= 0) && (srcindex < DISPOBJ_MAX)) {
-			return m_dispobj[srcindex];
-		}
-		else {
-			_ASSERT(0);
-			return nullptr;
-		}
-		
+	CDispObj* GetDispObj(){
+		return m_dispobj;
 	};
-	void SetDispObj(CDispObj* srcval, int srcindex){
-		if ((srcindex >= 0) && (srcindex < DISPOBJ_MAX)) {
-			m_dispobj[srcindex] = srcval;
-		}
-		else {
-			_ASSERT(0);
-			return;
-		}
+	void SetDispObj(CDispObj* srcval){
+		m_dispobj = srcval;
 	};
 
 	CDispObj* GetDispLine(){
@@ -439,7 +426,7 @@ private:
 
 	CExtLine* m_extline;
 
-	CDispObj* m_dispobj[DISPOBJ_MAX];//2023/12/12
+	CDispObj* m_dispobj;
 	CDispObj* m_displine;
 
 	int m_dispflag;

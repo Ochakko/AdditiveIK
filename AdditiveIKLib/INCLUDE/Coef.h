@@ -23,13 +23,21 @@ class CMQOMaterial;
 #define ALIGNED		_declspec(align(16))
 #define	u_long	unsigned long
 
-//2023/12/13
+//2023/12/13, 2023/12/14
 //for shadowmap
+//シャドウマップパラメータは　この後GUIで設定可能にし g_*変数 にする予定
 #define SHADOWMAP_SIZE	2048
 #define SHADOWMAP_FOV	60.0f
-#define SHADOWMAP_NEAR	50.0f
-#define SHADOWMAP_FAR	2000.0f
+//2023/12/14 PROJSCALEはアセットのシーン全体の倍率を想定　シャドウライトの高さにも影響
+//PROJSCALE : UnityAssetJapaneseCityで1.0f, UnityAssetTheHuntStreet1で7.0f位
+#define SHADOWMAP_PROJSCALE	1.0f
+#define SHADOWMAP_NEAR	(50.0f * SHADOWMAP_PROJSCALE)
+#define SHADOWMAP_FAR	(2000.0f * SHADOWMAP_PROJSCALE)
 #define SHADOWMAP_BIAS	0.0010f
+
+
+//バウンダリー簡易クリッピング計算用　大きいほど見切れないが重くなる
+#define CHKINVIEW_BACKPOSCOEF	0.70f
 
 
 

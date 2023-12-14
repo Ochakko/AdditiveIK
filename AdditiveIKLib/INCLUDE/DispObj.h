@@ -147,13 +147,6 @@ public:
 
 	//void UpdateBoneMatrix(int srcdatanum, void* srcdata);
 
-	void SetShadowDispObj(CDispObj* srcobj) {
-		m_shadowdispobj = srcobj;
-	}
-	CDispObj* GetShadowDispObj() {
-		return m_shadowdispobj;
-	}
-
 
 private:
 

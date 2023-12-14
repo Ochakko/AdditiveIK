@@ -620,15 +620,14 @@ namespace myRenderer
     void RenderingEngine::RenderPolyMeshShadowMap(RenderContext& rc, RENDEROBJ currenderobj)
     {
         if (currenderobj.mqoobj) {
-            if (currenderobj.mqoobj->GetDispObj() && 
-                currenderobj.mqoobj->GetDispObj()->GetShadowDispObj()) {
+            if (currenderobj.mqoobj->GetDispObj()) {
                 if (currenderobj.mqoobj->GetPm3()) {
                     //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                    currenderobj.mqoobj->GetDispObj()->GetShadowDispObj()->RenderShadowMapPM3(rc, currenderobj);
+                    currenderobj.mqoobj->GetDispObj()->RenderShadowMapPM3(rc, currenderobj);
                 }
                 else if (currenderobj.mqoobj->GetPm4()) {
                     //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                    currenderobj.mqoobj->GetDispObj()->GetShadowDispObj()->RenderShadowMap(rc, currenderobj);
+                    currenderobj.mqoobj->GetDispObj()->RenderShadowMap(rc, currenderobj);
                 }
             }
             //if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {

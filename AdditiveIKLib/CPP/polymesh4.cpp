@@ -574,7 +574,7 @@ int CPolyMesh4::DumpInfBone( CMQOObject* srcobj, map<int,CBone*>& srcbonelist )
 
 int CPolyMesh4::SetPm3InfNoSkin( ID3D12Device* pdev, CMQOObject* srcobj, int clusterno, map<int,CBone*>& srcbonelist )
 {
-	if (!m_pm3inf || !m_triface) {
+	if (!m_pm3inf || !m_triface || !srcobj) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -608,9 +608,11 @@ int CPolyMesh4::SetPm3InfNoSkin( ID3D12Device* pdev, CMQOObject* srcobj, int clu
 		return 1;
 	}
 
-	int doindex;
-	for (doindex = 0; doindex < DISPOBJ_MAX; doindex++) {
-		CallF(srcobj->GetDispObj(doindex)->CreateDispObj(pdev, this, 1), return 1);
+	if (srcobj->GetDispObj()) {
+		CallF(srcobj->GetDispObj()->CreateDispObj(pdev, this, 1), return 1);
+	}
+	else {
+		_ASSERT(0);
 	}
 	
 

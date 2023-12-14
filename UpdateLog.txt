@@ -2,11 +2,13 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
 2023/12/14
 デプスシャドウ機能を追加
 　テストとしてカメラから選択モデルのHipsジョイントの方向へシャドウ用のライトを向けています
 プロジェクト保存時に　Shaderメニューのsmoothcoefも保存
 デプスシャドウのスクリーンショットをREADME.mdに追加
+デプスシャドウリファクタリング　必要不要を試行錯誤して判断しメモリの不要な多重化をやめた
 
 
 

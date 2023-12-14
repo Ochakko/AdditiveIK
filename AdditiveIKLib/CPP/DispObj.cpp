@@ -151,8 +151,6 @@ int CDispObj::InitParams()
 	m_indexBuffer = nullptr;	//インデックスバッファ。
 	ZeroMemory(&m_indexBufferView, sizeof(D3D12_INDEX_BUFFER_VIEW));	//インデックスバッファビュー。
 
-	m_shadowdispobj = nullptr;
-
 	return 0;
 }
 int CDispObj::DestroyObjs()

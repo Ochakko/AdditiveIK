@@ -4963,7 +4963,7 @@ int ChaFrustumInfo::ChkInView(MODELBOUND srcmb, ChaMatrix matWorld)
 		ChaVector3 cam2obj = tracenter - g_camEye;
 		float dist_cam2obj = (float)ChaVector3LengthDbl(&cam2obj);
 
-		ChaVector3 backpos = g_camEye - camdir * srcmb.r * 0.60f;//!!!!!!!!!!! * 0.6f
+		ChaVector3 backpos = g_camEye - camdir * srcmb.r * CHKINVIEW_BACKPOSCOEF;//!!!!!!!!!!!
 		ChaVector3 back2obj = tracenter - backpos;
 		ChaVector3Normalize(&back2obj, &back2obj);
 		float dot = ChaVector3Dot(&camdir, &back2obj);
@@ -4999,7 +4999,7 @@ int ChaFrustumInfo::ChkInView(MODELBOUND srcmb, ChaMatrix matWorld)
 		ChaVector3 cam2obj = tracenter - lightpos;
 		float dist_cam2obj = (float)ChaVector3LengthDbl(&cam2obj);
 
-		ChaVector3 backpos = lightpos - camdir * srcmb.r * 0.60f;//!!!!!!!!!!! * 0.6f
+		ChaVector3 backpos = lightpos - camdir * srcmb.r * CHKINVIEW_BACKPOSCOEF;//!!!!!!!!!!!
 		ChaVector3 back2obj = tracenter - backpos;
 		ChaVector3Normalize(&back2obj, &back2obj);
 		float dot = ChaVector3Dot(&camdir, &back2obj);
