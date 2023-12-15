@@ -70,6 +70,7 @@
     <ClCompile Include="..\CPP\Bone.cpp" />
     <ClCompile Include="..\BTMANAGER\BPWorld.cpp" />
     <ClCompile Include="..\CPP\ShaderTypeFile.cpp" />
+    <ClCompile Include="..\CPP\ShadowParamsFile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\BTSRC\BulletCollision\CollisionDispatch\SphereTriangleDetector.h" />
@@ -1031,6 +1032,7 @@
     <ClInclude Include="..\INCLUDE\Bone.h" />
     <ClInclude Include="..\BTMANAGER\BPWorld.h" />
     <ClInclude Include="..\INCLUDE\ShaderTypeFile.h" />
+    <ClInclude Include="..\INCLUDE\ShadowParamsFile.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\BTSRC\BulletInverseDynamics\premake4.lua">

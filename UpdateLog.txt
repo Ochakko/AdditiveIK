@@ -2,6 +2,12 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2023/12/15
+Shadowプレートメニュー追加
+　設定はアプリ終了時にtempフォルダに保存し　起動時に自動読込
+
+
+
 
 2023/12/14
 デプスシャドウ機能を追加

@@ -45,6 +45,7 @@
 #include <MNLFile.h>
 #include <ChooseColorFile.h>
 #include <LightsForEditFile.h>
+#include <ShadowParamsFile.h>
 #include "IniFile.h"
 
 
@@ -151,14 +152,14 @@ enum {
 };
 //#define SPRIGMAX	2
 
-enum {
-	//SPPLATEMENUKIND_GUI,
+enum {//２段目プレートメニュー行の種類
+	//SPPLATEMENUKIND_GUI,//<--１段目は常時表示することにしたので状態遷移の種類からは外す
 	SPPLATEMENUKIND_DISP,//2023/08/07
 	SPPLATEMENUKIND_RIGID,
 	SPPLATEMENUKIND_RETARGET,
 	SPPLATEMENUKINDNUM
 };
-enum {
+enum {//１段目のプレート種類
 	SPGUISW_CAMERA_AND_IK,
 	SPGUISW_DISP_AND_LIMITS,
 	SPGUISW_BRUSHPARAMS,
@@ -168,8 +169,8 @@ enum {
 };
 //#define SPGUISWNUM	5
 
-enum {
-	//DLG_CAMERA_AND_IK,
+enum {//１段目のメニュープッシュで出る右ペインダイアログの種類
+	//DLG_CAMERA_AND_IK,//<--ダイアログではなく画面上スプライト
 	GUIDLG_DISP_AND_LIMITS,
 	GUIDLG_BRUSHPARAMS,
 	GUIDLG_BULLETPHYSICS,
@@ -179,16 +180,18 @@ enum {
 
 
 
-
+//２段目メニューのSPGUISW_DISP_AND_LIMITS行のプレート
 enum {//2023/08/07
 	SPDISPSW_LIGHTS,
 	SPDISPSW_DISPGROUP,
 	SPDISPSW_LATERTRANSPARENT,
 	SPDISPSW_SHADERTYPE,//2023/12/08
+	SPDISPSW_SHADOWPARAMS,//2023/12/14
 	SPDISPSWNUM
 };
-//#define SPDISPSWNUM	3
+//#define SPDISPSWNUM	5
 
+//２段目メニューのSPPLATEMENUKIND_RIGID行のプレート
 enum {
 	SPRIGIDSW_RIGIDPARAMS,
 	SPRIGIDSW_IMPULSE,
@@ -198,6 +201,7 @@ enum {
 };
 //#define SPRIGIDSWNUM	4
 
+//２段目メニューのSPPLATEMENUKIND_RETARGET行のプレート
 enum {
 	SPRETARGETSW_RETARGET,
 	SPRETARGETSW_LIMITEULER,
@@ -725,6 +729,7 @@ static bool s_savelimitdegflag = true;
 
 static HWND s_lightsforeditdlg = 0;
 static HWND s_latertransparentdlg = 0;
+static HWND s_shadowparamsdlg = 0;
 static HWND s_guidlg[GUIDLGNUM];
 
 static HWND s_rotaxisdlg = 0;
@@ -1434,6 +1439,8 @@ static Texture* s_spritetex76 = 0;
 static Texture* s_spritetex77 = 0;
 static Texture* s_spritetex78 = 0;
 static Texture* s_spritetex79 = 0;
+static Texture* s_spritetex80 = 0;
+static Texture* s_spritetex81 = 0;
 
 
 
@@ -1948,6 +1955,7 @@ static void ShowGUIDlgBullet(bool srcflag);
 static void ShowGUIDlgRefPos(bool srcflag);
 
 static void ShowLaterTransparentWnd(bool srcflag);
+static void ShowShadowParamsWnd(bool srcflag);
 static void ShowDispGroupWnd(bool srcflag);
 static void GUIRigidSetVisible(int srcplateno);
 static void ShowRigidWnd(bool srcflag);
@@ -2045,6 +2053,7 @@ LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 LRESULT CALLBACK GUIBulletDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK GUIRefPosDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK LaterTransparentDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
+LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK RotAxisDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK CustomRigDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK AboutDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
@@ -2130,6 +2139,9 @@ static int CreateLaterTransparentWnd();
 static int LaterTransparent2Dlg(HWND hDlgWnd);
 static int Dlg2LaterTransparent(HWND hDlgWnd);
 
+static int CreateShadowParamsWnd();
+static int ShadowParams2Dlg(HWND hDlgWnd);
+static void CheckShadowDirectionButton(HWND hDlgWnd, int srcshadowdir);
 
 
 static int CreateDispGroupWnd();
@@ -2221,6 +2233,8 @@ static int LoadChooseColor();
 static int SaveChooseColor();
 static int LoadLightsForEdit();
 static int SaveLightsForEdit();
+static int LoadShadowParamsFile();
+static int SaveShadowParamsFile();
 
 static int OpenFile();
 static int BVH2FBX();
@@ -3270,7 +3284,6 @@ void InitApp()
 {
 	s_hhook = NULL;
 	g_hWnd = NULL;
-	g_shadowmapforshader = nullptr;
 	//g_shadertype = -1;//マテリアル毎に設定することに
 
 	InitializeCriticalSection(&s_CritSection_LTimeline);
@@ -3288,6 +3301,106 @@ void InitApp()
 	s_guiswflag = true;//true : １段目メニュー内容を右ペインに. false : ２段目メニュー内容を右ペインに
 	s_guiswplateno = 1;
 
+	{
+		s_spritetex0 = 0;
+		s_spritetex1 = 0;
+		s_spritetex2 = 0;
+		s_spritetex3 = 0;
+		s_spritetex4 = 0;
+		s_spritetex5 = 0;
+		s_spritetex6 = 0;
+		s_spritetex7 = 0;
+		s_spritetex8 = 0;
+		s_spritetex9 = 0;
+		s_spritetex10 = 0;
+		s_spritetex11 = 0;
+		s_spritetex12 = 0;
+		s_spritetex13 = 0;
+		s_spritetex14 = 0;
+		s_spritetex15 = 0;
+		s_spritetex16 = 0;
+		s_spritetex17 = 0;
+		s_spritetex18 = 0;
+		s_spritetex19 = 0;
+		s_spritetex20 = 0;
+		s_spritetex21 = 0;
+		s_spritetex22 = 0;
+		s_spritetex23 = 0;
+		s_spritetex24 = 0;
+		s_spritetex25 = 0;
+		s_spritetex26 = 0;
+		s_spritetex27 = 0;
+		s_spritetex28 = 0;
+		s_spritetex29 = 0;
+		s_spritetex30 = 0;
+		s_spritetex31 = 0;
+		s_spritetex32 = 0;
+		s_spritetex33 = 0;
+		s_spritetex34 = 0;
+		s_spritetex35 = 0;
+		s_spritetex36 = 0;
+		s_spritetex37 = 0;
+		s_spritetex37_1 = 0;
+		s_spritetex38 = 0;
+		s_spritetex39 = 0;
+		s_spritetex40 = 0;
+		s_spritetex40_1 = 0;
+		s_spritetex41 = 0;
+		s_spritetex42 = 0;
+		s_spritetex43 = 0;
+		s_spritetex44 = 0;
+		s_spritetex45 = 0;
+		s_spritetex46 = 0;
+		s_spritetex47 = 0;
+		s_spritetex48 = 0;
+		s_spritetex49 = 0;
+		s_spritetex50 = 0;
+		s_spritetex51 = 0;
+		s_spritetex52 = 0;
+		s_spritetex53 = 0;
+		s_spritetex54 = 0;
+		s_spritetex55 = 0;
+		s_spritetex56 = 0;
+		s_spritetex57 = 0;
+		s_spritetex58 = 0;
+		s_spritetex59 = 0;
+		s_spritetex60 = 0;
+		s_spritetex61 = 0;
+		s_spritetex62 = 0;
+		s_spritetex63 = 0;
+		s_spritetex64 = 0;
+		s_spritetex65 = 0;
+		s_spritetex66 = 0;
+		s_spritetex67 = 0;
+		s_spritetex68 = 0;
+		s_spritetex69 = 0;
+		s_spritetex70 = 0;
+		s_spritetex71 = 0;
+		s_spritetex72 = 0;
+		s_spritetex73 = 0;
+		s_spritetex74 = 0;
+		s_spritetex75 = 0;
+		s_spritetex76 = 0;
+		s_spritetex77 = 0;
+		s_spritetex78 = 0;
+		s_spritetex79 = 0;
+		s_spritetex80 = 0;
+		s_spritetex81 = 0;
+	}
+
+	{
+		g_shadowmapforshader = nullptr;
+
+		g_shadowmap_fov = 60.0f;
+		g_shadowmap_projscale = 1.0f;
+		g_shadowmap_near = 50.0f;
+		g_shadowmap_far = 2000.0f;
+		g_shadowmap_color = 0.5f;
+		g_shadowmap_bias = 0.0010f;
+		g_shadowmap_plusup = 300.0f;
+		g_shadowmap_plusright = 1.0f;
+		g_shadowmap_lightdir = 1;
+	}
 
 	s_chascene = 0;
 
@@ -4038,6 +4151,7 @@ void InitApp()
 
 	s_lightsforeditdlg = 0;
 	s_latertransparentdlg = 0;
+	s_shadowparamsdlg = 0;
 	int dlgno;
 	for (dlgno = 0; dlgno < GUIDLGNUM; dlgno++) {
 		s_guidlg[GUIDLGNUM] = nullptr;
@@ -4295,6 +4409,10 @@ void InitApp()
 	SetLightDirection();
 
 
+	LoadShadowParamsFile();//ファイルに保存してあるShadowParams情報をg_shadowmap_*に読み込む
+
+
+
 	//CreateUtDialog();
 
 
@@ -4409,6 +4527,7 @@ void OnDestroyDevice()
 	SaveIniFile();
 	SaveChooseColor();
 	SaveLightsForEdit();
+	SaveShadowParamsFile();
 
 
 	//if (s_updatetimeline) {
@@ -4497,6 +4616,12 @@ void OnDestroyDevice()
 			DestroyWindow(s_latertransparentdlg);
 		}
 		s_latertransparentdlg = nullptr;
+	}
+	if (s_shadowparamsdlg) {
+		if (IsWindow(s_shadowparamsdlg)) {
+			DestroyWindow(s_shadowparamsdlg);
+		}
+		s_shadowparamsdlg = nullptr;
 	}
 	int guidlgno;
 	for (guidlgno = 0; guidlgno < GUIDLGNUM; guidlgno++) {
@@ -12005,6 +12130,7 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		ShowDispGroupWnd(s_spdispsw[SPDISPSW_DISPGROUP].state);
 		ShowLaterTransparentWnd(s_spdispsw[SPDISPSW_LATERTRANSPARENT].state);
 		ShowShaderTypeWnd(s_spdispsw[SPDISPSW_SHADERTYPE].state);
+		ShowShadowParamsWnd(s_spdispsw[SPDISPSW_SHADOWPARAMS].state);
 
 
 		s_underselectmodel = false;
@@ -12036,6 +12162,7 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		ShowDispGroupWnd(s_spdispsw[SPDISPSW_DISPGROUP].state);
 		ShowLaterTransparentWnd(s_spdispsw[SPDISPSW_LATERTRANSPARENT].state);
 		ShowShaderTypeWnd(s_spdispsw[SPDISPSW_SHADERTYPE].state);
+		ShowShadowParamsWnd(s_spdispsw[SPDISPSW_SHADOWPARAMS].state);
 
 
 		s_underselectmodel = false;
@@ -12077,6 +12204,7 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 			ShowDispGroupWnd(s_spdispsw[SPDISPSW_DISPGROUP].state);
 			ShowLaterTransparentWnd(s_spdispsw[SPDISPSW_LATERTRANSPARENT].state);
 			ShowShaderTypeWnd(s_spdispsw[SPDISPSW_SHADERTYPE].state);
+			ShowShadowParamsWnd(s_spdispsw[SPDISPSW_SHADOWPARAMS].state);
 
 			OnAnimMenu(dorefreshtl, s_motmenuindexmap[s_model]);
 		}
@@ -18862,6 +18990,9 @@ int SetSpDispSWParams()
 	s_spdispsw[SPDISPSW_SHADERTYPE].dispcenter.x = s_spdispsw[SPDISPSW_LATERTRANSPARENT].dispcenter.x + (int)spgwidth + spgshift;
 	s_spdispsw[SPDISPSW_SHADERTYPE].dispcenter.y = s_spdispsw[SPDISPSW_LATERTRANSPARENT].dispcenter.y;
 
+	s_spdispsw[SPDISPSW_SHADOWPARAMS].dispcenter.x = s_spdispsw[SPDISPSW_SHADERTYPE].dispcenter.x + (int)spgwidth + spgshift;
+	s_spdispsw[SPDISPSW_SHADOWPARAMS].dispcenter.y = s_spdispsw[SPDISPSW_SHADERTYPE].dispcenter.y;
+
 	int spgcnt;
 	for (spgcnt = 0; spgcnt < SPDISPSWNUM; spgcnt++) {
 		ChaVector3 disppos;
@@ -20094,6 +20225,9 @@ int PickSpDispSW(POINT srcpos)
 						break;
 					case 3:
 						kind = 4;
+						break;
+					case 4:
+						kind = 5;
 						break;
 					default:
 						kind = 0;
@@ -22443,6 +22577,66 @@ int CreateLaterTransparentWnd()
 	return 0;
 }
 
+int CreateShadowParamsWnd()
+{
+
+	if (s_shadowparamsdlg) {
+		//already opened
+		return 0;
+	}
+
+
+	////s_dseullimitctrls.clear();
+
+
+	s_shadowparamsdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_SHADOWPARAMS), s_mainhwnd, (DLGPROC)ShadowParamsDlgProc);
+	if (!s_shadowparamsdlg) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int windowposx;
+	if (g_4kresolution) {
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
+	}
+	else {
+		windowposx = s_timelinewidth + s_mainwidth;
+	}
+
+	SetParent(s_shadowparamsdlg, s_mainhwnd);
+	SetWindowPos(
+		s_shadowparamsdlg,
+		HWND_TOP,
+		windowposx,
+		s_sidemenuheight,
+		s_sidewidth,
+		s_sideheight,
+		SWP_SHOWWINDOW
+	);
+
+	////s_dseullimitctrls.push_back(IDD_ANGLELIMITDLG);
+	//s_dseullimitctrls.push_back(IDC_BONEAXIS);
+	//s_dseullimitctrls.push_back(IDC_EDIT_XL);
+	//s_dseullimitctrls.push_back(IDC_EDIT_XU);
+	//s_dseullimitctrls.push_back(IDC_EDIT_YL);
+	//s_dseullimitctrls.push_back(IDC_EDIT_YU);
+	//s_dseullimitctrls.push_back(IDC_EDIT_ZL);
+	//s_dseullimitctrls.push_back(IDC_EDIT_ZU);
+	//s_dseullimitctrls.push_back(IDOK);
+
+
+	//ShowWindow(s_lightsforeditdlg, SW_SHOW);
+	//UpdateWindow(s_lightsforeditdlg);
+
+	ShowWindow(s_shadowparamsdlg, SW_HIDE);
+	//UpdateWindow(s_lightsforeditdlg);
+
+
+	//AngleLimit2Bone();
+
+
+	return 0;
+}
 
 int DispAngleLimitDlg()
 {
@@ -23421,6 +23615,174 @@ int Dlg2LaterTransparent(HWND hDlgWnd)
 
 	return 0;
 }
+
+
+int ShadowParams2Dlg(HWND hDlgWnd)
+{
+	WCHAR strdlg[256] = { 0L };
+
+	//########
+	//EditBox
+	//########
+	swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_plusup);
+	SetDlgItemText(hDlgWnd, IDC_EDIT_PLUSUP, strdlg);
+
+	swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_plusright);
+	SetDlgItemText(hDlgWnd, IDC_EDIT_PLUSRIGHT, strdlg);
+
+	swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_near);
+	SetDlgItemText(hDlgWnd, IDC_EDIT_NEAR, strdlg);
+
+	swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_far);
+	SetDlgItemText(hDlgWnd, IDC_EDIT_FAR, strdlg);
+
+	//#######
+	//Slider
+	//#######
+	int sliderpos = (int)(g_shadowmap_fov + 0.0001f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_FOV), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)10);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_FOV), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)60);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_FOV), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(g_shadowmap_color * 100.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_COLOR), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_COLOR), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_COLOR), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(g_shadowmap_bias * 10000.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)10);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(g_shadowmap_projscale * 10.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PROJSCALE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)1);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PROJSCALE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PROJSCALE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+
+	//#####
+	//Text
+	//#####
+	swprintf_s(strdlg, 256, L"FOV:%.1fdeg", g_shadowmap_fov);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_FOV, strdlg);
+
+	swprintf_s(strdlg, 256, L"Color:%.2f", g_shadowmap_color);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_COLOR, strdlg);
+
+	swprintf_s(strdlg, 256, L"Bias:%.3f", g_shadowmap_bias);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_BIAS, strdlg);
+
+	swprintf_s(strdlg, 256, L"SceneMult:%.1f", g_shadowmap_projscale);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_PROJSCALE, strdlg);
+
+	//#######
+	//Button
+	//#######
+	CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+
+	return 0;
+}
+
+void CheckShadowDirectionButton(HWND hDlgWnd, int srcshadowdir)
+{
+	//####################################################
+	//Shadowプレートメニューから呼び出すShadowParamsダイアログ用
+	//####################################################
+
+	switch (srcshadowdir) {
+	case 1:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_1), BM_SETSTATE, TRUE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_3), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_4), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_5), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_6), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_7), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_8), BM_SETSTATE, FALSE, 0);
+		break;
+	case 2:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_1), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_2), BM_SETSTATE, TRUE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_3), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_4), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_5), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_6), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_7), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_8), BM_SETSTATE, FALSE, 0);
+		break;
+	case 3:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_1), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_3), BM_SETSTATE, TRUE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_4), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_5), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_6), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_7), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_8), BM_SETSTATE, FALSE, 0);
+		break;
+	case 4:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_1), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_3), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_4), BM_SETSTATE, TRUE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_5), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_6), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_7), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_8), BM_SETSTATE, FALSE, 0);
+		break;
+	case 5:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_1), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_3), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_4), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_5), BM_SETSTATE, TRUE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_6), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_7), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_8), BM_SETSTATE, FALSE, 0);
+		break;
+	case 6:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_1), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_3), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_4), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_5), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_6), BM_SETSTATE, TRUE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_7), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_8), BM_SETSTATE, FALSE, 0);
+		break;
+	case 7:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_1), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_3), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_4), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_5), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_6), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_7), BM_SETSTATE, TRUE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_8), BM_SETSTATE, FALSE, 0);
+		break;
+	case 8:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_1), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_3), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_4), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_5), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_6), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_7), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_8), BM_SETSTATE, TRUE, 0);
+		break;
+	default:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_1), BM_SETSTATE, TRUE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_2), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_3), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_4), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_5), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_6), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_7), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADOWDIR_8), BM_SETSTATE, FALSE, 0);
+		break;
+	}
+}
+
 
 int AngleLimit2Dlg(HWND hDlgWnd, bool updateonlycheckeul)
 {
@@ -24408,6 +24770,195 @@ LRESULT CALLBACK LaterTransparentDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 	return TRUE;
 
 }
+
+
+LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+	WCHAR streditbox[256] = { 0L };
+	float tempeditvalue;
+
+	switch (msg) {
+	case WM_INITDIALOG:
+	{
+		ShadowParams2Dlg(hDlgWnd);
+		return FALSE;
+	}
+	break;
+
+	case WM_COMMAND:
+
+		switch (LOWORD(wp)) {
+
+		case IDC_SHADOWDIR_1:
+			g_shadowmap_lightdir = 1;
+			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+			SetCamera3DFromEyePos();
+			break;
+		case IDC_SHADOWDIR_2:
+			g_shadowmap_lightdir = 2;
+			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+			SetCamera3DFromEyePos();
+			break;
+		case IDC_SHADOWDIR_3:
+			g_shadowmap_lightdir = 3;
+			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+			SetCamera3DFromEyePos();
+			break;
+		case IDC_SHADOWDIR_4:
+			g_shadowmap_lightdir = 4;
+			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+			SetCamera3DFromEyePos();
+			break;
+		case IDC_SHADOWDIR_5:
+			g_shadowmap_lightdir = 5;
+			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+			SetCamera3DFromEyePos();
+			break;
+		case IDC_SHADOWDIR_6:
+			g_shadowmap_lightdir = 6;
+			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+			SetCamera3DFromEyePos();
+			break;
+		case IDC_SHADOWDIR_7:
+			g_shadowmap_lightdir = 7;
+			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+			SetCamera3DFromEyePos();
+			break;
+		case IDC_SHADOWDIR_8:
+			g_shadowmap_lightdir = 8;
+			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+			SetCamera3DFromEyePos();
+			break;
+
+		case IDC_APPLYEDITBOX:
+			GetDlgItemText(hDlgWnd, IDC_EDIT_PLUSUP, streditbox, 256);
+			tempeditvalue = (float)_wtof(streditbox);
+			if ((tempeditvalue >= -50000.0f) && (tempeditvalue <= 50000.0f)) {
+				g_shadowmap_plusup = tempeditvalue;
+			}
+			else {
+				::MessageBox(hDlgWnd, L"invalid editbox value : plusup", L"Invalid Value", MB_OK);
+			}
+
+			GetDlgItemText(hDlgWnd, IDC_EDIT_PLUSRIGHT, streditbox, 256);
+			tempeditvalue = (float)_wtof(streditbox);
+			if ((tempeditvalue >= -50000.0f) && (tempeditvalue <= 50000.0f)) {
+				g_shadowmap_plusright = tempeditvalue;
+			}
+			else {
+				::MessageBox(hDlgWnd, L"invalid editbox value : plusright", L"Invalid Value", MB_OK);
+			}
+
+			GetDlgItemText(hDlgWnd, IDC_EDIT_NEAR, streditbox, 256);
+			tempeditvalue = (float)_wtof(streditbox);
+			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
+				g_shadowmap_near = tempeditvalue;
+			}
+			else {
+				::MessageBox(hDlgWnd, L"invalid editbox value : near", L"Invalid Value", MB_OK);
+			}
+
+			GetDlgItemText(hDlgWnd, IDC_EDIT_FAR, streditbox, 256);
+			tempeditvalue = (float)_wtof(streditbox);
+			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
+				g_shadowmap_far = tempeditvalue;
+			}
+			else {
+				::MessageBox(hDlgWnd, L"invalid editbox value : near", L"Invalid Value", MB_OK);
+			}
+
+			SetCamera3DFromEyePos();
+
+			break;
+		
+		case IDC_INITSHADOW:
+			g_shadowmap_fov = 60.0f;
+			g_shadowmap_projscale = 1.0f;
+			g_shadowmap_near = 50.0f;
+			g_shadowmap_far = 2000.0f;
+			g_shadowmap_color = 0.5f;
+			g_shadowmap_bias = 0.0010f;
+			g_shadowmap_plusup = 300.0f;
+			g_shadowmap_plusright = 1.0f;
+			g_shadowmap_lightdir = 1;
+
+			ShadowParams2Dlg(hDlgWnd);
+			SetCamera3DFromEyePos();
+			break;
+
+		case IDCANCEL:
+			//EndDialog(hDlgWnd, IDCANCEL);
+			break;
+		default:
+			return FALSE;
+			break;
+		}
+		break;
+
+	case WM_HSCROLL:
+		if (GetDlgItem(hDlgWnd, IDC_SLIDER_FOV) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_FOV), TBM_GETPOS, 0, 0);
+			g_shadowmap_fov = (float)cursliderpos;
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"FOV:%.1fdeg", g_shadowmap_fov);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_FOV, strdlg);
+			SetCamera3DFromEyePos();
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_COLOR) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_COLOR), TBM_GETPOS, 0, 0);
+			g_shadowmap_color = (float)((double)cursliderpos / 100.0);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"Color:%.2f", g_shadowmap_color);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_COLOR, strdlg);
+			SetCamera3DFromEyePos();
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_GETPOS, 0, 0);
+			g_shadowmap_bias = (float)((double)cursliderpos / 10000.0);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"Bias:%.3f", g_shadowmap_bias);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_BIAS, strdlg);
+			SetCamera3DFromEyePos();
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_PROJSCALE) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PROJSCALE), TBM_GETPOS, 0, 0);
+			g_shadowmap_projscale = (float)((double)cursliderpos / 10.0);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"SceneMult:%.1f", g_shadowmap_projscale);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_PROJSCALE, strdlg);
+			SetCamera3DFromEyePos();
+		}
+		break;
+
+
+
+
+	case WM_CLOSE:
+		if (s_shadowparamsdlg) {
+
+			//if (s_lightstimerid > 0) {
+			//	KillTimer(hDlgWnd, s_lightstimerid);
+			//	s_lightstimerid = 0;
+			//}
+
+			//DestroyWindow(s_latertransparentdlg);
+			//s_latertransparentdlg = 0;
+
+			ShowShadowParamsWnd(false);
+		}
+		break;
+	default:
+		DefWindowProc(hDlgWnd, msg, wp, lp);
+		return FALSE;
+	}
+	return TRUE;
+
+}
+
 
 //void CheckShaderTypeButton(HWND hDlgWnd, int srcshadertype)
 //{
@@ -39401,30 +39952,42 @@ void GUIDispSetVisible(int srcplateno)
 		ShowDispGroupWnd(false);
 		ShowLaterTransparentWnd(false);
 		ShowShaderTypeWnd(false);
+		ShowShadowParamsWnd(false);
 	}
 	else if (srcplateno == 2) {
 		ShowLightsWnd(false);
 		ShowDispGroupWnd(true);
 		ShowLaterTransparentWnd(false);
 		ShowShaderTypeWnd(false);
+		ShowShadowParamsWnd(false);
 	}
 	else if (srcplateno == 3) {
 		ShowLightsWnd(false);
 		ShowDispGroupWnd(false);
 		ShowLaterTransparentWnd(true);
 		ShowShaderTypeWnd(false);
+		ShowShadowParamsWnd(false);
 	}
 	else if (srcplateno == 4) {
 		ShowLightsWnd(false);
 		ShowDispGroupWnd(false);
 		ShowLaterTransparentWnd(false);
 		ShowShaderTypeWnd(true);
+		ShowShadowParamsWnd(false);
+	}
+	else if (srcplateno == 5) {
+		ShowLightsWnd(false);
+		ShowDispGroupWnd(false);
+		ShowLaterTransparentWnd(false);
+		ShowShaderTypeWnd(false);
+		ShowShadowParamsWnd(true);
 	}
 	else if (srcplateno == -2) {
 		ShowLightsWnd(false);
 		ShowDispGroupWnd(false);
 		ShowLaterTransparentWnd(false);
 		ShowShaderTypeWnd(false);
+		ShowShadowParamsWnd(false);
 	}
 	else {
 		_ASSERT(0);
@@ -39884,6 +40447,31 @@ void ShowShaderTypeWnd(bool srcflag)
 	}
 
 }
+
+void ShowShadowParamsWnd(bool srcflag)
+{
+	if (srcflag == true) {
+		if (s_shadowparamsdlg) {
+			DestroyWindow(s_shadowparamsdlg);
+			s_shadowparamsdlg = 0;
+		}
+
+		int result = CreateShadowParamsWnd();
+		if ((result == 0) && s_shadowparamsdlg) {
+			ShowWindow(s_shadowparamsdlg, SW_SHOW);
+			UpdateWindow(s_shadowparamsdlg);
+		}
+	}
+	else {
+		if (s_shadowparamsdlg) {
+			DestroyWindow(s_shadowparamsdlg);
+			s_shadowparamsdlg = 0;
+		}
+	}
+
+	s_spdispsw[SPDISPSW_SHADOWPARAMS].state = srcflag;
+}
+
 
 int ModalShaderTypeDlg()
 {
@@ -46507,6 +47095,11 @@ void ChangeMouseSetCapture()
 						SetCapture(s_shadertypeWnd->getHWnd());
 					}
 				}
+				else if (s_platemenuno == (SPDISPSW_SHADOWPARAMS + 1)) {
+					if (s_shadowparamsdlg) {
+						SetCapture(s_shadowparamsdlg);
+					}
+				}
 			}
 			else if (s_platemenukind == SPPLATEMENUKIND_RIGID) {
 				if (s_platemenuno == (SPRIGIDSW_RIGIDPARAMS + 1)) {
@@ -48918,6 +49511,20 @@ int LoadLightsForEdit()
 	return result;
 }
 
+int LoadShadowParamsFile()
+{
+	int result = 0;
+
+	WCHAR filepath[MAX_PATH] = { 0L };
+	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjShadowParams_0.txt", s_temppath);
+
+	CShadowParamsFile shadowparamsfile;
+	result = shadowparamsfile.LoadShadowParamsFile(filepath);
+
+	return result;
+}
+
+
 int PickManipulator(UIPICKINFO* ppickinfo, bool pickring)
 {
 	if (!ppickinfo) {
@@ -49041,6 +49648,21 @@ int SaveLightsForEdit()
 	}
 	return result;
 }
+
+int SaveShadowParamsFile()
+{
+	int result = 0;
+
+	WCHAR filepath[MAX_PATH] = { 0L };
+	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjShadowParams_0.txt", s_temppath);
+
+	CShadowParamsFile shadowparamsfile;
+	result = shadowparamsfile.WriteShadowParamsFile(filepath);
+	_ASSERT(result == 0);
+
+	return result;
+}
+
 
 int SaveChooseColor()
 {
@@ -50648,51 +51270,56 @@ void SetCamera3DFromEyePos()
 		ChaVector3 modelpos = ChaMatrixTraVec(s_model->GetWorldMat());
 		ChaVector3 camdiff = g_camtargetpos - g_camEye;
 
-		//CBone* hipsjoint = nullptr;
-		//s_model->GetHipsBoneReq(s_model->GetTopBone(false), &hipsjoint);
-		//ChaVector3 seljointpos;
-		//if (hipsjoint) {
-		//	seljointpos = hipsjoint->GetChildWorld();
-		//}
-		//else {
-		//	seljointpos = g_camtargetpos;
-		//}
-
-
 		g_cameraShadow->Update();
 
-		//ChaVector3 ldir;
-		//ChaVector3Normalize(&ldir, &(g_lightDir[g_lightSlot][3]));
-		//ChaVector3 camdiff = g_camtargetpos - g_camEye;
-		//ChaVector3 lpos;
-		//lpos = g_camEye + dirup * 50.0f + dirright * 50.0f;
-		//ChaVector3 targetshadow;
-		//targetshadow = g_camtargetpos;
-		//g_cameraShadow->SetPosition(Vector3(lpos.x, lpos.y, lpos.z));
-		//g_cameraShadow->SetTarget(Vector3(targetshadow.x, targetshadow.y, targetshadow.z));
-
-
 		ChaVector3 ldir;
-		ChaVector3Normalize(&ldir, &(g_lightDir[g_lightSlot][3]));
-		//ldir = ChaVector3(1.0f, -1.0f, 1.0f);
-		//ChaVector3Normalize(&ldir, &ldir);
-		//ChaVector3 camdiff = g_camtargetpos - g_camEye;
+		if ((g_shadowmap_lightdir >= 1) && (g_shadowmap_lightdir <= 8)) {
+			ChaVector3 dirz = ChaVector3(0.0f, 0.0f, 1.0f);
+			ChaVector3 lightdir0, nlightdir0;
+			lightdir0 = g_camEye - g_camtargetpos;
+			ChaVector3Normalize(&nlightdir0, &lightdir0);
+			bool rot180flag = false;
+			float chkdot180 = ChaVector3Dot(&dirz, &nlightdir0);
+			if (chkdot180 <= -0.9999f) {
+				rot180flag = true;
+			}
+			else {
+				rot180flag = false;
+			}
+			CQuaternion camrotq;
+			camrotq.RotationArc(dirz, nlightdir0);
+
+
+			ChaVector3 nlightdir;
+			ChaVector3Normalize(&nlightdir, &(g_lightDir[g_lightSlot][g_shadowmap_lightdir]));
+			ChaVector3 rotdir;
+			if (rot180flag == false) {
+				camrotq.Rotate(&rotdir, nlightdir);
+			}
+			else {
+				rotdir = ChaVector3(-nlightdir.x, nlightdir.y, -nlightdir.z);
+			}
+			ChaVector3Normalize(&ldir, &rotdir);
+		}
+		else {
+			ChaVector3Normalize(&ldir, &(g_lightDir[g_lightSlot][0]));
+		}
+	
+
 		ChaVector3 targetshadow;
-		//targetshadow = seljointpos;
-		targetshadow = g_camtargetpos;// + dirright * ChaVector3LengthDbl(&camdiff);
+		targetshadow = g_camtargetpos;
+
 		ChaVector3 lpos;
-		//lpos = g_camEye - dirright * 250.0f;
-		lpos = g_camEye - dirright * ChaVector3LengthDbl(&camdiff);
-		lpos.y = targetshadow.y + 300.0f * SHADOWMAP_PROJSCALE;
-		//targetshadow.y = modelpos.y;
+		//lpos = g_camEye + ldir * (g_shadowmap_plusright * g_shadowmap_projscale);
+		lpos = g_camtargetpos - ldir * (ChaVector3LengthDbl(&camdiff) * g_shadowmap_plusright * g_shadowmap_projscale);
+		lpos.y = targetshadow.y + g_shadowmap_plusup * g_shadowmap_projscale;
+
 		g_cameraShadow->SetPosition(Vector3(lpos.x, lpos.y, lpos.z));
 		g_cameraShadow->SetTarget(Vector3(targetshadow.x, targetshadow.y, targetshadow.z));
-		//g_cameraShadow->SetTarget(Vector3(g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z));
 
-		g_cameraShadow->SetNear(SHADOWMAP_NEAR);
-		g_cameraShadow->SetFar(SHADOWMAP_FAR);
-		//g_cameraShadow->SetViewAngle(45.0f / 180.0f * (float)PI);
-		g_cameraShadow->SetViewAngle(SHADOWMAP_FOV / 180.0f * (float)PI);
+		g_cameraShadow->SetNear(g_shadowmap_near * g_shadowmap_projscale);
+		g_cameraShadow->SetFar(g_shadowmap_far * g_shadowmap_projscale);
+		g_cameraShadow->SetViewAngle(g_shadowmap_fov / 180.0f * (float)PI);
 		g_cameraShadow->SetUp(Vector3(0.0f, 1.0f, 0.0f));
 		g_cameraShadow->SetWidth((float)SHADOWMAP_SIZE);//2023/12/11 RenderingEngin::InitShadowMapでのバッファのサイズに合わせる
 		g_cameraShadow->SetHeight((float)SHADOWMAP_SIZE);//2023/12/11 RenderingEngin::InitShadowMapでのバッファのサイズに合わせる
@@ -51005,6 +51632,7 @@ int CreateSprites()
 	spriteinitdata.m_textures[0] = s_spritetex29;
 	s_spguisw[SPGUISW_VSYNC_AND_REFPOS].spriteON.Init(spriteinitdata, screenvertexflag);
 	
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_CameraAndIK140OFF.png");
 	s_spritetex30 = new Texture();
@@ -51068,6 +51696,13 @@ int CreateSprites()
 	spriteinitdata.m_textures[0] = s_spritetex37_1;
 	s_spdispsw[SPDISPSW_SHADERTYPE].spriteON.Init(spriteinitdata, screenvertexflag);
 
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Shadow140ON.png");
+	s_spritetex80 = new Texture();
+	s_spritetex80->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex80;
+	s_spdispsw[SPDISPSW_SHADOWPARAMS].spriteON.Init(spriteinitdata, screenvertexflag);
+
 
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Lights140OFF.png");
@@ -51096,6 +51731,14 @@ int CreateSprites()
 	s_spritetex40_1->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex40_1;
 	s_spdispsw[SPDISPSW_SHADERTYPE].spriteOFF.Init(spriteinitdata, screenvertexflag);
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Shadow140OFF.png");
+	s_spritetex81 = new Texture();
+	s_spritetex81->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex81;
+	s_spdispsw[SPDISPSW_SHADOWPARAMS].spriteOFF.Init(spriteinitdata, screenvertexflag);
+
 
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_menuRigid140ON.png");
@@ -51781,6 +52424,14 @@ void DestroySprites()
 	if (s_spritetex79) {
 		delete s_spritetex79;
 		s_spritetex79 = 0;
+	}
+	if (s_spritetex80) {
+		delete s_spritetex80;
+		s_spritetex80 = 0;
+	}
+	if (s_spritetex81) {
+		delete s_spritetex81;
+		s_spritetex81 = 0;
 	}
 
 

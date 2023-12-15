@@ -284,7 +284,7 @@ float4 PSMainNoSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     // ライトビュースクリーン空間でのZ値を計算する
     float zInLVP = psIn.posInLVP.z;
     float2 shadowValue = g_shadowMap.Sample(g_sampler, shadowMapUV).xy;
-    pscol.xyz *= ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f) && ((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? 0.5f : 1.0f;
+    pscol.xyz *= ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f) && ((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? shadowmaxz.z : 1.0f;
 
     //if ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f)
     //    && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f))
@@ -355,7 +355,7 @@ float4 PSMainNoSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     // ライトビュースクリーン空間でのZ値を計算する
     float zInLVP = psIn.posInLVP.z;
     float2 shadowValue = g_shadowMap.Sample(g_sampler, shadowMapUV).xy;
-    pscol.xyz *= ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f) && ((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? 0.5f : 1.0f;
+    pscol.xyz *= ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f) && ((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? shadowmaxz.z : 1.0f;
 
     //if ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f)
     //    && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f))

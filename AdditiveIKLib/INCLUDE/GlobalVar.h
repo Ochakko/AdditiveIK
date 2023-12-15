@@ -58,6 +58,17 @@ class CInfoWindow;
 
 #ifdef ADDITIVEIKLIBGLOBALVAR
 
+
+float g_shadowmap_fov = 60.0f;
+float g_shadowmap_projscale = 1.0f;
+float g_shadowmap_near = 50.0f;
+float g_shadowmap_far = 2000.0f;
+float g_shadowmap_color = 0.5f;
+float g_shadowmap_bias = 0.0010f;
+float g_shadowmap_plusup = 300.0f;
+float g_shadowmap_plusright = 1.0f;
+int g_shadowmap_lightdir = 1;
+
 bool g_zpreflag = false;
 bool g_zcmpalways = false;
 bool g_rotatetanim = false;
@@ -289,6 +300,17 @@ double g_playingend = 1.0;
 
 
 #else
+
+extern float g_shadowmap_fov;
+extern float g_shadowmap_projscale;
+extern float g_shadowmap_near;
+extern float g_shadowmap_far;
+extern float g_shadowmap_color;
+extern float g_shadowmap_bias;
+extern float g_shadowmap_plusup;
+extern float g_shadowmap_plusright;
+extern int g_shadowmap_lightdir;
+
 extern bool g_zpreflag;
 extern bool g_zcmpalways;
 extern bool g_rotatetanim;

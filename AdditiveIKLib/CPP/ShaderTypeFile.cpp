@@ -131,7 +131,7 @@ int CShaderTypeFile::LoadShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 	m_hfile = CreateFile( filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
 		FILE_FLAG_SEQUENTIAL_SCAN, NULL );
 	if( m_hfile == INVALID_HANDLE_VALUE ){
-		_ASSERT( 0 );
+		//_ASSERT( 0 );
 		return 1;
 	}	
 

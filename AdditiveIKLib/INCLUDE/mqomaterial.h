@@ -69,7 +69,7 @@ struct SConstantBuffer {
 		diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 		metalcoef = ChaVector4(0.250f, 0.250f, 0.0f, 0.0f);
 		materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		shadowmaxz = ChaVector4(SHADOWMAP_FAR, SHADOWMAP_BIAS, 0.0f, 0.0f);
+		shadowmaxz = ChaVector4(3000.0f, 0.0010f, 0.0f, 0.0f);
 	};
 };
 

@@ -5004,9 +5004,9 @@ int ChaFrustumInfo::ChkInView(MODELBOUND srcmb, ChaMatrix matWorld)
 		ChaVector3Normalize(&back2obj, &back2obj);
 		float dot = ChaVector3Dot(&camdir, &back2obj);
 
-		float dotclip = (float)cos(SHADOWMAP_FOV);
+		float dotclip = (float)cos(g_shadowmap_fov);
 
-		if ((dot >= dotclip) && (dist_cam2obj <= (SHADOWMAP_FAR + srcmb.r))) {
+		if ((dot >= dotclip) && (dist_cam2obj <= (g_shadowmap_far * g_shadowmap_projscale + srcmb.r))) {
 			SetInShadow(true);
 		}
 		else {
