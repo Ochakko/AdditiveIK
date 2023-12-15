@@ -5,7 +5,11 @@ https://github.com/Ochakko/AdditiveIK
 2023/12/15
 Shadowプレートメニュー追加
 　設定はアプリ終了時にtempフォルダに保存し　起動時に自動読込
-
+DispAndLimitsメニューに　Free fpsチェックボックス追加
+　FreeFpsをオンにするとfpsは大きくなりますが　
+　可変周波数対応モニタ以外でオンにすると　ティアリングが起こることがあります
+Shadowメニューに　EnableShadowチェックボックス追加
+　シャドウ表示をオンオフ出来ます
 
 
 

@@ -354,7 +354,7 @@ static HWINEVENTHOOK s_hhook = NULL;
 
 static CColDlg s_coldlg;
 
-
+static double s_befftime = 0.0;
 static double s_fps100[FPSSAVENUM];
 static int s_fps100index = 0;
 static double s_avrgfps = 0.0;
@@ -3301,6 +3301,9 @@ void InitApp()
 	s_guiswflag = true;//true : １段目メニュー内容を右ペインに. false : ２段目メニュー内容を右ペインに
 	s_guiswplateno = 1;
 
+	g_freefps = true;
+	s_befftime = 0.0;
+
 	{
 		s_spritetex0 = 0;
 		s_spritetex1 = 0;
@@ -3389,6 +3392,7 @@ void InitApp()
 	}
 
 	{
+		g_enableshadow = true;
 		g_shadowmapforshader = nullptr;
 
 		g_shadowmap_fov = 60.0f;
@@ -5952,12 +5956,13 @@ void OnFrameRender(myRenderer::RenderingEngine& re, RenderContext& rc, double fT
 		}
 		
 		//OnRenderUtDialog(fElapsedTime);
+
+		//2023/12/15 freefps時に　fps表示の数字が変わりすぎてちらつくので　16ms以上で一回描画
 		if (s_dispsampleui) {//ctrl + 1 (one) key --> toggle
 			OnRenderSprite(re, rc);
 		}
 
 		OnRenderFontForTip(re, rc);
-
 
 	}
 	else {
@@ -5981,6 +5986,8 @@ void OnFrameRender(myRenderer::RenderingEngine& re, RenderContext& rc, double fT
 	// レンダリング終了
 	g_engine->EndFrame(s_chascene);
 
+	
+
 }
 
 //--------------------------------------------------------------------------------------
@@ -5999,19 +6006,28 @@ void CalcFps(double fTime)
 		g_calcfps = 100.0;
 	}
 
-	s_avrgfps = 0.0;
 	if ((s_fps100index >= 0) && (s_fps100index < FPSSAVENUM)) {
 		s_fps100[s_fps100index] = g_calcfps;
-		int saveno;
-		for (saveno = 0; saveno < FPSSAVENUM; saveno++) {
-			s_avrgfps += s_fps100[saveno];
-		}
-		s_avrgfps /= (double)FPSSAVENUM;
 		s_fps100index++;
 		if (s_fps100index >= FPSSAVENUM) {
 			s_fps100index = 0;
 		}
 	}
+
+
+	//2023/12/15
+	//表示用の数字の更新は10fps程にしておく
+	if ((s_befftime == 0.0) || ((fTime - s_befftime) >= 0.10)) {
+		s_avrgfps = 0.0;
+		int saveno;
+		for (saveno = 0; saveno < FPSSAVENUM; saveno++) {
+			s_avrgfps += s_fps100[saveno];
+		}
+		s_avrgfps /= (double)FPSSAVENUM;
+
+		s_befftime = fTime;//値を更新した時だけセット
+	}
+
 
 	s_savetime = fTime;
 }
@@ -23621,6 +23637,16 @@ int ShadowParams2Dlg(HWND hDlgWnd)
 {
 	WCHAR strdlg[256] = { 0L };
 
+	//#########
+	//CheckBox
+	//#########
+	if ((bool)g_enableshadow == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_ENABLESHADOW, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_ENABLESHADOW, false);
+	}
+
 	//########
 	//EditBox
 	//########
@@ -24789,6 +24815,20 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 
 		switch (LOWORD(wp)) {
 
+		case IDC_CHECK_ENABLESHADOW:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_ENABLESHADOW);
+			if (ischecked == BST_CHECKED) {
+				g_enableshadow = true;
+			}
+			else {
+				g_enableshadow = false;
+			}
+		}
+		break;
+
+
 		case IDC_SHADOWDIR_1:
 			g_shadowmap_lightdir = 1;
 			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
@@ -25153,6 +25193,13 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		//#########
 		//CheckBox
 		//#########
+		if (g_freefps == true) {
+			CheckDlgButton(hDlgWnd, IDC_CHECK_FREEFPS, true);
+		}
+		else {
+			CheckDlgButton(hDlgWnd, IDC_CHECK_FREEFPS, false);
+		}
+
 		if ((bool)g_lightflag == true) {
 			CheckDlgButton(hDlgWnd, IDC_CHECK_LIGHTS, true);
 		}
@@ -25293,6 +25340,18 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		//	break;
 
 
+		case IDC_CHECK_FREEFPS:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_FREEFPS);
+			if (ischecked == BST_CHECKED) {
+				g_freefps = true;
+			}
+			else {
+				g_freefps = false;
+			}
+		}
+		break;
 
 		case IDC_CHECK_LIGHTS:
 		{

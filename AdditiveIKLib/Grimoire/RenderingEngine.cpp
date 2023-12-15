@@ -279,7 +279,10 @@ namespace myRenderer
 
 
         // シャドウマップへの描画
-        RenderToShadowMap(rc);
+        if (g_enableshadow) {
+            RenderToShadowMap(rc);
+        }
+        
 
         // ZPrepass
         //2023/12/05
@@ -417,9 +420,11 @@ namespace myRenderer
         //    m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()//ZPrePass Z Buffer !!!!
         //);
 
-        for (auto& currenderobjsdw : m_shadowmapModels)
-        {
-            RenderPolyMeshShadowReciever(rc, currenderobjsdw);
+        if (g_enableshadow) {
+            for (auto& currenderobjsdw : m_shadowmapModels)
+            {
+                RenderPolyMeshShadowReciever(rc, currenderobjsdw);
+            }
         }
         for (auto& currenderobjfwd : m_forwardRenderModels)
         {

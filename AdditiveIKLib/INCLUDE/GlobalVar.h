@@ -58,7 +58,9 @@ class CInfoWindow;
 
 #ifdef ADDITIVEIKLIBGLOBALVAR
 
+bool g_freefps = true;
 
+bool g_enableshadow = true;
 float g_shadowmap_fov = 60.0f;
 float g_shadowmap_projscale = 1.0f;
 float g_shadowmap_near = 50.0f;
@@ -301,6 +303,9 @@ double g_playingend = 1.0;
 
 #else
 
+extern bool g_freefps;
+
+extern bool g_enableshadow;
 extern float g_shadowmap_fov;
 extern float g_shadowmap_projscale;
 extern float g_shadowmap_near;

@@ -86,6 +86,12 @@ int CShadowParamsFile::WriteShadowParamsFile(const WCHAR* srcfilepath)
 	//float g_shadowmap_plusup = 300.0f;
 	//float g_shadowmap_plusright = 1.0f;
 	//int g_shadowmap_lightdir = 1;
+	if (g_enableshadow) {
+		CallF(Write2File("    <ShadowEnable>1</ShadowEnable>\r\n"), return 1);
+	}
+	else {
+		CallF(Write2File("    <ShadowEnable>0</ShadowEnable>\r\n"), return 1);
+	}
 	CallF(Write2File("    <ShadowMapFov>%.1f</ShadowMapFov>\r\n", g_shadowmap_fov), return 1);
 	CallF(Write2File("    <ShadowMapProjScale>%.1f</ShadowMapProjScale>\r\n", g_shadowmap_projscale), return 1);
 	CallF(Write2File("    <ShadowMapNear>%.1f</ShadowMapNear>\r\n", g_shadowmap_near), return 1);
@@ -107,7 +113,7 @@ int CShadowParamsFile::WriteFileInfo()
 
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShadowParamsFile</kind>\r\n    <version>1001</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//2023/08/18 To12024 : Add <TotalScale>%.3f</TotalScale> and <Scale>%.3f</Scale>
-	CallF(Write2File("  <FileInfo>\r\n    <kind>ShadowParamsFile</kind>\r\n    <version>1001</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	CallF(Write2File("  <FileInfo>\r\n    <kind>ShadowParamsFile</kind>\r\n    <version>1002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	return 0;
 }
@@ -154,9 +160,21 @@ int CShadowParamsFile::LoadShadowParamsFile(const WCHAR* srcfilepath)
 	float shadowmap_plusup = 300.0f;
 	float shadowmap_plusright = 1.0f;
 	int shadowmap_lightdir = 1;
+	int shadowenable = 1;
 
 	int result;
 	m_xmliobuf.pos = 0;
+
+	result = Read_Int(&m_xmliobuf, "<ShadowEnable>", "</ShadowEnable>",
+		&shadowenable);
+	if (result == 0) {
+		if (shadowenable == 1) {
+			g_enableshadow = true;
+		}
+		else {
+			g_enableshadow = false;
+		}
+	}
 	result = Read_Float(&m_xmliobuf, "<ShadowMapFov>", "</ShadowMapFov>", 
 		&shadowmap_fov);
 	if (result == 0) {

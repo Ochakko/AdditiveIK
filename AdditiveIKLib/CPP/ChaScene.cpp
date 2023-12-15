@@ -404,9 +404,13 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lig
 
 									renderingEngine.Add3DModelToZPrepass(renderobj);
 									
-
-									if ((curmodel->GetInShadow()) && (curobj->GetInShadow())) {
-										renderingEngine.Add3DModelToRenderToShadowMap(renderobj);
+									if (g_enableshadow) {
+										if ((curmodel->GetInShadow()) && (curobj->GetInShadow())) {
+											renderingEngine.Add3DModelToRenderToShadowMap(renderobj);
+										}
+										else {
+											renderingEngine.Add3DModelToForwardRenderPass(renderobj);
+										}
 									}
 									else {
 										renderingEngine.Add3DModelToForwardRenderPass(renderobj);

@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "GraphicsEngine.h"
 
+#include <GlobalVar.h>
 #include <ChaScene.h>
 
 GraphicsEngine* g_graphicsEngine = nullptr;	//グラフィックスエンジン
@@ -335,6 +336,10 @@ bool GraphicsEngine::CreateSwapChain(
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.SampleDesc.Count = 1;
 
+	//2023/12/15 PresentのflagsでもALLOW_TEARINGする必要有
+	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+
+
 	IDXGISwapChain1* swapChain;
 	dxgiFactory->CreateSwapChainForHwnd(
 		m_commandQueue,
@@ -523,16 +528,33 @@ void GraphicsEngine::EndRender(ChaScene* srcchascene)
 
 
 
-	m_swapChain->Present(0, 0);
+	//m_swapChain->Present(0, 0);
+	//m_swapChain->Present(0, DXGI_PRESENT_DO_NOT_WAIT);
 
-	m_directXTKGfxMemroy->GarbageCollect();
+	if (g_freefps) {
+		//##########
+		//Free fps
+		//##########
+		//2023/12/15 CreateSwapChainのFlagsでもALLOW_TEARINGする必要有
+		m_swapChain->Present(0, DXGI_PRESENT_ALLOW_TEARING);
+	}
+	else {
+		//######
+		//VSync
+		//######
+		m_swapChain->Present(1, 0);
+	}
 
-	//描画完了待ち。
-	WaitDraw();
+
+	//m_directXTKGfxMemroy->GarbageCollect();
 
 	if (srcchascene) {
 		//UpdateMatrixスレッド終了待ち
 		srcchascene->WaitForUpdateMatrixModels();
 	}
+
+	//描画完了待ち。
+	WaitDraw();
+
 
 }
