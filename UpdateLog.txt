@@ -2,6 +2,11 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2023/12/17
+ピクセルシェーダ内の計算が有効なライトの個数分だけループするように.
+
+
+
 2023/12/15
 Shadowプレートメニュー追加
 　設定はアプリ終了時にtempフォルダに保存し　起動時に自動読込

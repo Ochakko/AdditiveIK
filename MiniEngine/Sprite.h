@@ -97,13 +97,13 @@ public:
 	/// 描画。
 	/// </summary>
 	/// <param name="renderContext">レンダリングコンテキスト/param>
-	void Draw(RenderContext& renderContext);
+	void Draw(RenderContext* renderContext);
 
 	/// <summary>
 	/// 描画。m_screenvertexflag == trueの場合用の描画
 	/// </summary>
 	/// <param name="renderContext">レンダリングコンテキスト/param>
-	void DrawScreen(RenderContext& renderContext);
+	void DrawScreen(RenderContext* renderContext);
 
 private:
 	/// <summary>

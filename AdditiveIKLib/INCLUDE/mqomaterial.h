@@ -91,7 +91,11 @@ struct SConstantBufferLights {
 	ChaVector4 specPow; // スペキュラの絞り
 	ChaVector4 ambientLight; // 環境光
 	void Init() {
-		ZeroMemory(&lightsnum, sizeof(int) * 4);
+		//ZeroMemory(&lightsnum, sizeof(int) * 4);
+		lightsnum[0] = 1;
+		lightsnum[1] = 1;
+		lightsnum[2] = 1;
+		lightsnum[3] = 1;
 		int lindex;
 		for (lindex = 0; lindex < NUM_DIRECTIONAL_LIGHT; lindex++) {
 			directionalLight[lindex].Init();
@@ -261,14 +265,14 @@ public:
 	void SetFl4x4(myRenderer::RENDEROBJ renderobj);
 	void SetConstLights(SConstantBufferLights* pcbLights);
 	void SetConstShadow(SConstantBufferShadow* pcbShadow);
-	void DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
+	void DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 		const Matrix& mView, const Matrix& mProj,
 		bool isfirstmaterial  = false);
-	void BeginRender(RenderContext& rc, myRenderer::RENDEROBJ renderobj);
-	void ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
+	void BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
+	void ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 		const Matrix& mView, const Matrix& mProj,
 		bool isfirstmaterial = false);
-	void ZPreBeginRender(RenderContext& rc);
+	void ZPreBeginRender(RenderContext* rc);
 
 
 
@@ -576,52 +580,52 @@ public:
 	Texture& GetNormalMap();
 	Texture& GetMetalMap();
 
-	void ResetUpdateFl4x4Flag()
+	void ResetUpdateFl4x4Flag()//パイプライン毎
 	{
 		int fxno;
-		for (fxno = 0; fxno < SHADERFX_MAX; fxno++) {
+		for (fxno = 0; fxno < (MQOSHADER_MAX * 3); fxno++) {
 			m_updatefl4x4flag[fxno] = false;
 		}
 	}
-	void SetUpdateFl4x4Flag()
+	void SetUpdateFl4x4Flag(int srcindex)//パイプライン毎
 	{
-		if ((m_shaderfx >= 0) && (m_shaderfx < SHADERFX_MAX)) {
-			m_updatefl4x4flag[m_shaderfx] = true;
+		if ((srcindex >= 0) && (srcindex < (MQOSHADER_MAX * 3))) {
+			m_updatefl4x4flag[srcindex] = true;
 		}
 		else {
 			_ASSERT(0);
 		}
 	}
-	bool GetUpdateFl4x4Flag()
+	bool GetUpdateFl4x4Flag(int srcindex)//パイプライン毎
 	{
-		if ((m_shaderfx >= 0) && (m_shaderfx < SHADERFX_MAX)) {
-			return m_updatefl4x4flag[m_shaderfx];
+		if ((srcindex >= 0) && (srcindex < (MQOSHADER_MAX * 3))) {
+			return m_updatefl4x4flag[srcindex];
 		}
 		else {
 			_ASSERT(0);
 			return false;
 		}
 	}
-	void ResetUpdateLightsFlag()
+	void ResetUpdateLightsFlag()//パイプライン毎
 	{
 		int fxno;
-		for (fxno = 0; fxno < SHADERFX_MAX; fxno++) {
+		for (fxno = 0; fxno < (MQOSHADER_MAX * 3); fxno++) {
 			m_updatelightsflag[fxno] = false;
 		}
 	}
-	void SetUpdateLightsFlag()
+	void SetUpdateLightsFlag(int srcindex)//パイプライン毎
 	{
-		if ((m_shaderfx >= 0) && (m_shaderfx < SHADERFX_MAX)) {
-			m_updatelightsflag[m_shaderfx] = true;
+		if ((srcindex >= 0) && (srcindex < (MQOSHADER_MAX * 3))) {
+			m_updatelightsflag[srcindex] = true;
 		}
 		else {
 			_ASSERT(0);
 		}
 	}
-	bool GetUpdateLightsFlag()
+	bool GetUpdateLightsFlag(int srcindex)//パイプライン毎
 	{
-		if ((m_shaderfx >= 0) && (m_shaderfx < SHADERFX_MAX)) {
-			return m_updatelightsflag[m_shaderfx];
+		if ((srcindex >= 0) && (srcindex < (MQOSHADER_MAX * 3))) {
+			return m_updatelightsflag[srcindex];
 		}
 		else {
 			_ASSERT(0);
@@ -768,8 +772,8 @@ private:
 	bool m_initpipelineflag = false;
 
 	int m_shaderfx;
-	bool m_updatefl4x4flag[SHADERFX_MAX];
-	bool m_updatelightsflag[SHADERFX_MAX];
+	bool m_updatefl4x4flag[MQOSHADER_MAX * 3];
+	bool m_updatelightsflag[MQOSHADER_MAX * 3];
 
 
 //以下、クラス外からアクセスしないのでアクセッサー無し。

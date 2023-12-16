@@ -18,7 +18,7 @@ public:
 	/// </remarks>
 	/// <param name="rc">レンダリングターゲット</param>
 	/// <param name="blurPower">ブラーの強さ。値が大きいほどボケが強くなる。</param>
-	void ExecuteOnGPU(RenderContext& rc, float blurPower);
+	void ExecuteOnGPU(RenderContext* rc, float blurPower);
 	/// <summary>
 	/// ボケテクスチャを取得。
 	/// </summary>

@@ -194,8 +194,13 @@ int CUndoSprite::SetParams()
 
 
 }
-int CUndoSprite::DrawScreen(RenderContext& rc, int undoR, int undoW)
+int CUndoSprite::DrawScreen(RenderContext* rc, int undoR, int undoW)
 {
+	if (!rc) {
+		_ASSERT(0);
+		return 1;
+	}
+
 	if ((undoR < 0) || (undoR >= UNDOMAX)) {
 		_ASSERT(0);
 		return 1;

@@ -274,7 +274,7 @@ namespace myRenderer
         /// レンダリングパイプラインを実行
         /// </summary>
         /// <param name="rc">レンダリングコンテキスト。</param>
-        void Execute(RenderContext& rc);
+        void Execute(RenderContext* rc);
 
         /// <summary>
         /// ディレクションライトのパラメータを設定
@@ -303,37 +303,37 @@ namespace myRenderer
         /// シャドウマップに描画
         /// </summary>
         /// <param name="rc">レンダリングコンテキスト</param>
-        void RenderToShadowMap(RenderContext& rc);
+        void RenderToShadowMap(RenderContext* rc);
 
         /// <summary>
         /// ZPrepass
         /// </summary>
         /// <param name="rc">レンダリングコンテキスト</param>
-        void ZPrepass(RenderContext& rc);
+        void ZPrepass(RenderContext* rc);
 
         /// <summary>
         /// G-Bufferへの描画
         /// </summary>
         /// <param name="rc">レンダリングコンテキスト。</param>
-        void RenderToGBuffer(RenderContext& rc);
+        void RenderToGBuffer(RenderContext* rc);
 
         /// <summary>
         /// ディファードライティング
         /// </summary>
         /// <param name="rc">レンダリングコンテキスト</param>
-        void DeferredLighting(RenderContext& rc);
+        void DeferredLighting(RenderContext* rc);
 
         /// <summary>
         /// メインレンダリングターゲットの内容をフレームバッファにコピーする
         /// </summary>
         /// <param name="rc">レンダリングコンテキスト</param>
-        void CopyMainRenderTargetToFrameBuffer(RenderContext& rc);
+        void CopyMainRenderTargetToFrameBuffer(RenderContext* rc);
 
         /// <summary>
         /// フォワードレンダリング
         /// </summary>
         /// <param name="rc">レンダリングコンテキスト</param>
-        void ForwardRendering(RenderContext& rc);
+        void ForwardRendering(RenderContext* rc);
 
         /// <summary>
         /// メインレンダリングターゲットを初期化
@@ -359,17 +359,17 @@ namespace myRenderer
         /// <summary>
         /// メインレンダリングターゲットのスナップショットを撮影
         /// </summary>
-        void SnapshotMainRenderTarget(RenderContext& rc, EnMainRTSnapshot enSnapshot);
+        void SnapshotMainRenderTarget(RenderContext* rc, EnMainRTSnapshot enSnapshot);
 
         /// <summary>
         /// シャドウマップへの描画処理を初期化
         /// </summary>
         void InitShadowMapRender();
 
-        void RenderPolyMesh(RenderContext& rc, RENDEROBJ currenderobj);
-        void RenderPolyMeshZPre(RenderContext& rc, RENDEROBJ currenderobj);
-        void RenderPolyMeshShadowMap(RenderContext& rc, RENDEROBJ currenderobj);
-        void RenderPolyMeshShadowReciever(RenderContext& rc, RENDEROBJ currenderobj);
+        void RenderPolyMesh(RenderContext* rc, RENDEROBJ currenderobj);
+        void RenderPolyMeshZPre(RenderContext* rc, RENDEROBJ currenderobj);
+        void RenderPolyMeshShadowMap(RenderContext* rc, RENDEROBJ currenderobj);
+        void RenderPolyMeshShadowReciever(RenderContext* rc, RENDEROBJ currenderobj);
 
     private:
         //GBufferの定義

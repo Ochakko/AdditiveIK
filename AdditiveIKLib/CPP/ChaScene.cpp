@@ -259,8 +259,12 @@ int ChaScene::UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, ChaMatri
 	return 0;
 }
 
-int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lightflag, ChaVector4 diffusemult, int btflag)
+int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lightflag, ChaVector4 diffusemult, int btflag)
 {
+	if (!renderingEngine) {
+		_ASSERT(0);
+		return 1;
+	}
 
 	if (g_changeUpdateThreadsNum) {
 		//アップデート用スレッド数を変更中
@@ -402,18 +406,18 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine& renderingEngine, int lig
 									renderobj.calcslotflag = calcslotflag;
 									renderobj.btflag = btflag;
 
-									renderingEngine.Add3DModelToZPrepass(renderobj);
+									renderingEngine->Add3DModelToZPrepass(renderobj);
 									
 									if (g_enableshadow) {
 										if ((curmodel->GetInShadow()) && (curobj->GetInShadow())) {
-											renderingEngine.Add3DModelToRenderToShadowMap(renderobj);
+											renderingEngine->Add3DModelToRenderToShadowMap(renderobj);
 										}
 										else {
-											renderingEngine.Add3DModelToForwardRenderPass(renderobj);
+											renderingEngine->Add3DModelToForwardRenderPass(renderobj);
 										}
 									}
 									else {
-										renderingEngine.Add3DModelToForwardRenderPass(renderobj);
+										renderingEngine->Add3DModelToForwardRenderPass(renderobj);
 									}
 								}
 							}
@@ -491,9 +495,14 @@ void ChaScene::WaitForUpdateMatrixModels()
 }
 
 int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
-	myRenderer::RenderingEngine& renderingEngine, 
+	myRenderer::RenderingEngine* renderingEngine, 
 	int lightflag, ChaVector4 diffusemult, int btflag, bool zcmpalways)
 {
+	if (!renderingEngine) {
+		_ASSERT(0);
+		return 1;
+	}
+
 
 	if (g_changeUpdateThreadsNum) {
 		//アップデート用スレッド数を変更中
@@ -613,7 +622,7 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 							renderobj.calcslotflag = calcslotflag;
 							renderobj.btflag = btflag;
 							renderobj.zcmpalways = zcmpalways;
-							renderingEngine.Add3DModelToForwardRenderPass(renderobj);
+							renderingEngine->Add3DModelToForwardRenderPass(renderobj);
 						}
 					}
 				}

@@ -279,8 +279,8 @@ public:
  * @param (int skiptopbonemark) IN 一番親からのボーンを表示しないフラグ。
  * @return 成功したら０。
  */
-	int RenderBoneMark(myRenderer::RenderingEngine& re, RenderContext& rc,
-		bool limitdegflag, CModel* bmarkptr, InstancedSprite& bcircleptr, 
+	int RenderBoneMark(myRenderer::RenderingEngine* re, RenderContext* rc,
+		bool limitdegflag, CModel* bmarkptr, InstancedSprite* bcircleptr, 
 		int selboneno, int skiptopbonemark = 0 );
 	int RenderBoneCircleOne(bool limitdegflag, RenderContext* pRenderContext, CMySprite* bcircleptr, int selboneno);
 

@@ -335,8 +335,13 @@
 
 
 
-    void Sprite::DrawScreen(RenderContext& renderContext)
+    void Sprite::DrawScreen(RenderContext* renderContext)
     {
+        if (!renderContext) {
+            _ASSERT(0);
+            return;
+        }
+
         if (!g_graphicsEngine) {
             _ASSERT(0);
             return;
@@ -375,27 +380,31 @@
             m_userExpandConstantBufferGPU.CopyToVRAM(m_userExpandConstantBufferCPU);
         }
         //ルートシグネチャを設定。
-        renderContext.SetRootSignature(m_rootSignature);
+        renderContext->SetRootSignature(m_rootSignature);
         //パイプラインステートを設定。
-        renderContext.SetPipelineState(m_pipelineState);
+        renderContext->SetPipelineState(m_pipelineState);
         //頂点バッファを設定。
-        renderContext.SetVertexBuffer(m_vertexBuffer);
+        renderContext->SetVertexBuffer(m_vertexBuffer);
         //インデックスバッファを設定。
-        renderContext.SetIndexBuffer(m_indexBuffer);
+        renderContext->SetIndexBuffer(m_indexBuffer);
         //プリミティブトポロジーを設定する。
-        renderContext.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+        renderContext->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
         //ディスクリプタヒープを設定する。
-        renderContext.SetDescriptorHeap(m_descriptorHeap);
+        renderContext->SetDescriptorHeap(m_descriptorHeap);
         //描画
-        renderContext.DrawIndexed(m_indexBuffer.GetCount());
+        renderContext->DrawIndexed(m_indexBuffer.GetCount());
         //.DrawIndexedInstanced(m_indexBuffer.GetCount(), numinstanced);
     }
 
 
-    void Sprite::Draw(RenderContext& renderContext)
+    void Sprite::Draw(RenderContext* renderContext)
     {
+        if (!renderContext) {
+            _ASSERT(0);
+            return;
+        }
         //現在のビューポートから平行投影行列を計算する。
-        D3D12_VIEWPORT viewport = renderContext.GetViewport();
+        D3D12_VIEWPORT viewport = renderContext->GetViewport();
         //todo カメラ行列は定数に使用。どうせ変えないし・・・。
         Matrix viewMatrix = g_camera2D->GetViewMatrix();
         Matrix projMatrix;
@@ -424,18 +433,18 @@
             m_userExpandConstantBufferGPU.CopyToVRAM(m_userExpandConstantBufferCPU);
         }
         //ルートシグネチャを設定。
-        renderContext.SetRootSignature(m_rootSignature);
+        renderContext->SetRootSignature(m_rootSignature);
         //パイプラインステートを設定。
-        renderContext.SetPipelineState(m_pipelineState);
+        renderContext->SetPipelineState(m_pipelineState);
         //頂点バッファを設定。
-        renderContext.SetVertexBuffer(m_vertexBuffer);
+        renderContext->SetVertexBuffer(m_vertexBuffer);
         //インデックスバッファを設定。
-        renderContext.SetIndexBuffer(m_indexBuffer);
+        renderContext->SetIndexBuffer(m_indexBuffer);
         //プリミティブトポロジーを設定する。
-        renderContext.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+        renderContext->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
         //ディスクリプタヒープを設定する。
-        renderContext.SetDescriptorHeap(m_descriptorHeap);
+        renderContext->SetDescriptorHeap(m_descriptorHeap);
         //描画
-        renderContext.DrawIndexed(m_indexBuffer.GetCount());
+        renderContext->DrawIndexed(m_indexBuffer.GetCount());
     }
 

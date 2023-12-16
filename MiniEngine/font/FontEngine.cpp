@@ -76,8 +76,13 @@ void FontEngine::Init()
 	re.End(g_graphicsEngine->GetCommandQueue());
 }
 
-void FontEngine::BeginDraw(RenderContext& rc)
+void FontEngine::BeginDraw(RenderContext* rc)
 {
+	if (!rc) {
+		_ASSERT(0);
+		return;
+	}
+
 	auto commandList = g_graphicsEngine->GetCommandList();
 	auto d3dDevice = g_graphicsEngine->GetD3DDevice();
 	m_spriteBatch->Begin(
@@ -87,8 +92,12 @@ void FontEngine::BeginDraw(RenderContext& rc)
 	);
 	commandList->SetDescriptorHeaps(1, &m_srvDescriptorHeap);
 }
-void FontEngine::EndDraw(RenderContext& rc)
+void FontEngine::EndDraw(RenderContext* rc)
 {
+	if (!rc) {
+		_ASSERT(0);
+		return;
+	}
 	m_spriteBatch->End();
 }
 

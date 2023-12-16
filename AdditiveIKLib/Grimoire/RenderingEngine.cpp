@@ -268,8 +268,12 @@ namespace myRenderer
         //m_diferredLightingSprite.Init(spriteInitData);
     }
 
-    void RenderingEngine::Execute(RenderContext& rc)
+    void RenderingEngine::Execute(RenderContext* rc)
     {
+        if (!rc) {
+            _ASSERT(0);
+            return;
+        }
 
         //const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
         //rc.ClearRenderTargetView(m_mainRenderTarget.GetRTVCpuDescriptorHandle(), clearColor);
@@ -322,8 +326,13 @@ namespace myRenderer
         m_forwardRenderFont.clear();
     }
 
-    void RenderingEngine::RenderToShadowMap(RenderContext& rc)
+    void RenderingEngine::RenderToShadowMap(RenderContext* rc)
     {
+        if (!rc) {
+            _ASSERT(0);
+            return;
+        }
+
         //int ligNo = 0;
         //for (auto& shadowMapRender : m_shadowMapRenders)
         //{
@@ -334,9 +343,9 @@ namespace myRenderer
         //    ligNo++;
         //}
 
-        rc.WaitUntilToPossibleSetRenderTarget(m_shadowMapRenderTarget);
-        rc.SetRenderTargetAndViewport(m_shadowMapRenderTarget);
-        rc.ClearRenderTargetView(m_shadowMapRenderTarget);
+        rc->WaitUntilToPossibleSetRenderTarget(m_shadowMapRenderTarget);
+        rc->SetRenderTargetAndViewport(m_shadowMapRenderTarget);
+        rc->ClearRenderTargetView(m_shadowMapRenderTarget);
 
         // 影モデルを描画
         for (auto& currenderobj : m_shadowmapModels)
@@ -347,23 +356,28 @@ namespace myRenderer
 
 
         // 書き込み完了待ち
-        rc.WaitUntilFinishDrawingToRenderTarget(m_shadowMapRenderTarget);
+        rc->WaitUntilFinishDrawingToRenderTarget(m_shadowMapRenderTarget);
 
         // step-7 シャドウマップをぼかすためのガウシアンブラーを実行する
         //m_shadowBlur.ExecuteOnGPU(rc, 5.0f);
 
     }
 
-    void RenderingEngine::ZPrepass(RenderContext& rc)
+    void RenderingEngine::ZPrepass(RenderContext* rc)
     {
+        if (!rc) {
+            _ASSERT(0);
+            return;
+        }
+
         // まず、レンダリングターゲットとして設定できるようになるまで待つ
-        rc.WaitUntilToPossibleSetRenderTarget(m_zprepassRenderTarget);
+        rc->WaitUntilToPossibleSetRenderTarget(m_zprepassRenderTarget);
 
         // レンダリングターゲットを設定
-        rc.SetRenderTargetAndViewport(m_zprepassRenderTarget);
+        rc->SetRenderTargetAndViewport(m_zprepassRenderTarget);
 
         // レンダリングターゲットをクリア
-        rc.ClearRenderTargetView(m_zprepassRenderTarget);
+        rc->ClearRenderTargetView(m_zprepassRenderTarget);
 
         for (auto& currenderobj : m_zprepassModels)
         {
@@ -371,11 +385,15 @@ namespace myRenderer
             RenderPolyMeshZPre(rc, currenderobj);
         }
 
-        rc.WaitUntilFinishDrawingToRenderTarget(m_zprepassRenderTarget);
+        rc->WaitUntilFinishDrawingToRenderTarget(m_zprepassRenderTarget);
     }
 
-    void RenderingEngine::ForwardRendering(RenderContext& rc)
+    void RenderingEngine::ForwardRendering(RenderContext* rc)
     {
+        if (!rc) {
+            _ASSERT(0);
+            return;
+        }
         //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
         //rc.SetRenderTarget(
         //    m_mainRenderTarget.GetRTVCpuDescriptorHandle(),
@@ -392,21 +410,21 @@ namespace myRenderer
 
 
         //rc.WaitUntilToPossibleSetRenderTarget();
-        rc.SetRenderTarget(
+        rc->SetRenderTarget(
             g_graphicsEngine->GetCurrentFrameBuffuerRTV(),
             //g_graphicsEngine->GetCurrentFrameBuffuerDSV()
             m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
         );
 
         //前のパスで異なるviewportを設定した場合にはviewportの設定し直しが必要
-        rc.SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
+        rc->SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
 
         //if (g_4kresolution == false) {
         if (!g_zpreflag) {
             //2023/12/05
             //2Kモードの場合には　ZPrepassを実行しないために　ここでZBufferをクリア
             //2023/12/09 ZPrepassは　DispAndLimitsメニューのオプションに.
-            rc.ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
+            rc->ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
         }
 
         //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
@@ -465,8 +483,12 @@ namespace myRenderer
        //rc.WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
     }
 
-    void RenderingEngine::RenderToGBuffer(RenderContext& rc)
+    void RenderingEngine::RenderToGBuffer(RenderContext* rc)
     {
+        if (!rc) {
+            _ASSERT(0);
+            return;
+        }
         // レンダリングターゲットをG-Bufferに変更
         RenderTarget* rts[enGBufferNum] = {
             &m_gBuffer[enGBufferAlbedo],        // 0番目のレンダリングターゲット
@@ -477,13 +499,13 @@ namespace myRenderer
         };
 
         // まず、レンダリングターゲットとして設定できるようになるまで待つ
-        rc.WaitUntilToPossibleSetRenderTargets(ARRAYSIZE(rts), rts);
+        rc->WaitUntilToPossibleSetRenderTargets(ARRAYSIZE(rts), rts);
 
         // レンダリングターゲットを設定
-        rc.SetRenderTargets(ARRAYSIZE(rts), rts);
+        rc->SetRenderTargets(ARRAYSIZE(rts), rts);
 
         // レンダリングターゲットをクリア
-        rc.ClearRenderTargetViews(ARRAYSIZE(rts), rts);
+        rc->ClearRenderTargetViews(ARRAYSIZE(rts), rts);
         for (auto& currenderobj : m_renderToGBufferModels)
         {
             //model->Draw(rc);
@@ -491,20 +513,28 @@ namespace myRenderer
         }
 
         // レンダリングターゲットへの書き込み待ち
-        rc.WaitUntilFinishDrawingToRenderTargets(ARRAYSIZE(rts), rts);
+        rc->WaitUntilFinishDrawingToRenderTargets(ARRAYSIZE(rts), rts);
     }
 
-    void RenderingEngine::SnapshotMainRenderTarget(RenderContext& rc, EnMainRTSnapshot enSnapshot)
+    void RenderingEngine::SnapshotMainRenderTarget(RenderContext* rc, EnMainRTSnapshot enSnapshot)
     {
+        if (!rc) {
+            _ASSERT(0);
+            return;
+        }
         // メインレンダリングターゲットの内容をスナップショット
-        rc.WaitUntilToPossibleSetRenderTarget(m_mainRTSnapshots[(int)enSnapshot]);
-        rc.SetRenderTargetAndViewport(m_mainRTSnapshots[(int)enSnapshot]);
+        rc->WaitUntilToPossibleSetRenderTarget(m_mainRTSnapshots[(int)enSnapshot]);
+        rc->SetRenderTargetAndViewport(m_mainRTSnapshots[(int)enSnapshot]);
         m_copyMainRtToFrameBufferSprite.Draw(rc);
-        rc.WaitUntilFinishDrawingToRenderTarget(m_mainRTSnapshots[(int)enSnapshot]);
+        rc->WaitUntilFinishDrawingToRenderTarget(m_mainRTSnapshots[(int)enSnapshot]);
     }
 
-    void RenderingEngine::DeferredLighting(RenderContext& rc)
+    void RenderingEngine::DeferredLighting(RenderContext* rc)
     {
+        if (!rc) {
+            _ASSERT(0);
+            return;
+        }
         //// ディファードライティングに必要なライト情報を更新する
         //m_deferredLightingCB.m_light.eyePos = g_camera3D->GetPosition();
         //for (int i = 0; i < NUM_DEFERRED_LIGHTING_DIRECTIONAL_LIGHT; i++)
@@ -527,15 +557,18 @@ namespace myRenderer
         //rc.WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
     }
 
-    void RenderingEngine::CopyMainRenderTargetToFrameBuffer(RenderContext& rc)
+    void RenderingEngine::CopyMainRenderTargetToFrameBuffer(RenderContext* rc)
     {
-
+        if (!rc) {
+            _ASSERT(0);
+            return;
+        }
         //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
         //g_graphicsEngine->BeginRender();
 
 
         // メインレンダリングターゲットの絵をフレームバッファーにコピー
-        rc.SetRenderTarget(
+        rc->SetRenderTarget(
             g_graphicsEngine->GetCurrentFrameBuffuerRTV(),
             g_graphicsEngine->GetCurrentFrameBuffuerDSV()
         );
@@ -561,13 +594,18 @@ namespace myRenderer
         viewport.MaxDepth = D3D12_MAX_DEPTH;
 
 
-        rc.SetViewportAndScissor(viewport);
+        rc->SetViewportAndScissor(viewport);
         m_copyMainRtToFrameBufferSprite.Draw(rc);
 
     }
 
-    void RenderingEngine::RenderPolyMesh(RenderContext& rc, RENDEROBJ currenderobj)
+    void RenderingEngine::RenderPolyMesh(RenderContext* rc, RENDEROBJ currenderobj)
     {
+        if (!rc) {
+            _ASSERT(0);
+            return;
+        }
+
         if (currenderobj.mqoobj) {
             if (currenderobj.mqoobj->GetDispObj()) {
                 if (currenderobj.mqoobj->GetPm3()) {
@@ -589,8 +627,12 @@ namespace myRenderer
     }
 
 
-    void RenderingEngine::RenderPolyMeshZPre(RenderContext& rc, RENDEROBJ currenderobj)
+    void RenderingEngine::RenderPolyMeshZPre(RenderContext* rc, RENDEROBJ currenderobj)
     {
+        if (!rc) {
+            _ASSERT(0);
+            return;
+        }
 
         //2023/12/05
         //4Kモードでは重いシーンで効果があった
@@ -622,8 +664,13 @@ namespace myRenderer
     }
 
 
-    void RenderingEngine::RenderPolyMeshShadowMap(RenderContext& rc, RENDEROBJ currenderobj)
+    void RenderingEngine::RenderPolyMeshShadowMap(RenderContext* rc, RENDEROBJ currenderobj)
     {
+        if (!rc) {
+            _ASSERT(0);
+            return;
+        }
+
         if (currenderobj.mqoobj) {
             if (currenderobj.mqoobj->GetDispObj()) {
                 if (currenderobj.mqoobj->GetPm3()) {
@@ -644,8 +691,13 @@ namespace myRenderer
         }
     }
 
-    void RenderingEngine::RenderPolyMeshShadowReciever(RenderContext& rc, RENDEROBJ currenderobj)
+    void RenderingEngine::RenderPolyMeshShadowReciever(RenderContext* rc, RENDEROBJ currenderobj)
     {
+        if (!rc) {
+            _ASSERT(0);
+            return;
+        }
+
         if (currenderobj.mqoobj) {
             if (currenderobj.mqoobj->GetDispObj()) {
                 if (currenderobj.mqoobj->GetPm3()) {

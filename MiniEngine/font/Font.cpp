@@ -5,13 +5,21 @@
 #include "FontEngine.h"
 #include "font.h"
 
-void Font::Begin(RenderContext& rc)
+void Font::Begin(RenderContext* rc)
 {
+	if (!rc) {
+		_ASSERT(0);
+		return;
+	}
 	auto& fontEngine = g_graphicsEngine->GetFontEngine();
 	fontEngine.BeginDraw(rc);
 }
-void Font::End(RenderContext& rc)
+void Font::End(RenderContext* rc)
 {
+	if (!rc) {
+		_ASSERT(0);
+		return;
+	}
 	auto& fontEngine = g_graphicsEngine->GetFontEngine();
 	fontEngine.EndDraw(rc);
 }

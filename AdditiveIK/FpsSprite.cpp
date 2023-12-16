@@ -189,9 +189,14 @@ int CFpsSprite::SetParams()
 
 
 }
-int CFpsSprite::DrawScreen(RenderContext& rc, int srcfps)
+int CFpsSprite::DrawScreen(RenderContext* rc, int srcfps)
 {
 #define FPSDISPMAX	99999
+
+	if (!rc) {
+		_ASSERT(0);
+		return 1;
+	}
 
 	if ((srcfps < 0) || (srcfps >= FPSDISPMAX)) {
 		_ASSERT(0);

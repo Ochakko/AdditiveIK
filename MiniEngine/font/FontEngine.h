@@ -28,7 +28,7 @@ public:
 	/// <summary>
 	/// 描画開始。
 	/// </summary>
-	void BeginDraw(RenderContext& rc);
+	void BeginDraw(RenderContext* rc);
 	/// <summary>
 	/// 文字列を描画。
 	/// </summary>
@@ -48,7 +48,7 @@ public:
 	/// <summary>
 	/// 描画終了。
 	/// </summary>
-	void EndDraw(RenderContext& rc);
+	void EndDraw(RenderContext* rc);
 private:
 	std::unique_ptr<DirectX::SpriteBatch> m_spriteBatch;	//スプライトバッチ。
 	std::unique_ptr<DirectX::SpriteFont>	m_spriteFont;	//スプライトフォント。

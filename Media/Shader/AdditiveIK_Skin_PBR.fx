@@ -82,7 +82,7 @@ struct DirectionalLight
 
 cbuffer ModelCbMatrix : register(b1)
 {
-    int4 lightsnum;    
+    uniform int4 lightsnum;
     DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
     float4 eyePos; // カメラの視点
     float4 specPow; // スペキュラの絞り
@@ -521,7 +521,8 @@ float4 PSMainSkinPBR(SPSIn psIn) : SV_Target0
     float3 toEye = normalize(eyePos.xyz - psIn.worldPos.xyz);
 
     float3 lig = 0;
-    for (int ligNo = 0; ligNo < NUM_DIRECTIONAL_LIGHT; ligNo++)
+    for (int ligNo = 0; ligNo < lightsnum.x; ligNo++)    
+    //for (int ligNo = 0; ligNo < NUM_DIRECTIONAL_LIGHT; ligNo++)
     //for (int ligNo = 0; ligNo < lightsnum; ligNo++)
     {
         // シンプルなディズニーベースの拡散反射を実装する。
@@ -660,7 +661,8 @@ float4 PSMainSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     float3 toEye = normalize(eyePos.xyz - psIn.worldPos.xyz);
 
     float3 lig = 0;
-    for (int ligNo = 0; ligNo < NUM_DIRECTIONAL_LIGHT; ligNo++)
+    for (int ligNo = 0; ligNo < lightsnum.x; ligNo++)
+    //for (int ligNo = 0; ligNo < NUM_DIRECTIONAL_LIGHT; ligNo++)
     //for (int ligNo = 0; ligNo < lightsnum; ligNo++)
     {
         // シンプルなディズニーベースの拡散反射を実装する。

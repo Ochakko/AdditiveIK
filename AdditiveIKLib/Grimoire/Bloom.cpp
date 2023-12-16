@@ -65,19 +65,24 @@ namespace myRenderer
             m_finalSprite.Init(spriteInitData);
         }
     }
-    void Bloom::Render(RenderContext& rc, RenderTarget& mainRenderTarget)
+    void Bloom::Render(RenderContext* rc, RenderTarget& mainRenderTarget)
     {
+        if (!rc) {
+            _ASSERT(0);
+            return;
+        }
+
         // 輝度抽出
         // 輝度抽出用のレンダリングターゲットに変更
-        rc.WaitUntilToPossibleSetRenderTarget(m_luminanceRenderTarget);
+        rc->WaitUntilToPossibleSetRenderTarget(m_luminanceRenderTarget);
         // レンダリングターゲットを設定
-        rc.SetRenderTargetAndViewport(m_luminanceRenderTarget);
+        rc->SetRenderTargetAndViewport(m_luminanceRenderTarget);
         // レンダリングターゲットをクリア
-        rc.ClearRenderTargetView(m_luminanceRenderTarget);
+        rc->ClearRenderTargetView(m_luminanceRenderTarget);
         // 輝度抽出を行う
         m_luminanceSprite.Draw(rc);
         // レンダリングターゲットへの書き込み終了待ち
-        rc.WaitUntilFinishDrawingToRenderTarget(m_luminanceRenderTarget);
+        rc->WaitUntilFinishDrawingToRenderTarget(m_luminanceRenderTarget);
 
         // ガウシアンブラーを4回実行する
         m_gaussianBlur[0].ExecuteOnGPU(rc, 10);
@@ -87,12 +92,12 @@ namespace myRenderer
 
         // 4枚のボケ画像を合成してメインレンダリングターゲットに加算合成
         // レンダリングターゲットとして利用できるまで待つ
-        rc.WaitUntilToPossibleSetRenderTarget(mainRenderTarget);
+        rc->WaitUntilToPossibleSetRenderTarget(mainRenderTarget);
         // レンダリングターゲットを設定
-        rc.SetRenderTargetAndViewport(mainRenderTarget);
+        rc->SetRenderTargetAndViewport(mainRenderTarget);
         // 最終合成
         m_finalSprite.Draw(rc);
         // レンダリングターゲットへの書き込み終了待ち
-        rc.WaitUntilFinishDrawingToRenderTarget(mainRenderTarget);
+        rc->WaitUntilFinishDrawingToRenderTarget(mainRenderTarget);
     }
 }

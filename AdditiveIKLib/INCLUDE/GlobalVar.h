@@ -288,6 +288,7 @@ ChaVector3 g_lightDiffuse[LIGHTSLOTNUM][LIGHTNUMMAX];
 bool g_lightEnable[LIGHTSLOTNUM][LIGHTNUMMAX];
 bool g_lightDirWithView[LIGHTSLOTNUM][LIGHTNUMMAX];
 float g_lightScale[LIGHTSLOTNUM][LIGHTNUMMAX];
+int g_lightNo[LIGHTNUMMAX];
 
 int g_motionbrush_method = 0;
 double g_motionbrush_startframe = 0.0;
@@ -510,6 +511,7 @@ extern ChaVector3 g_lightDiffuse[LIGHTSLOTNUM][LIGHTNUMMAX];
 extern bool g_lightEnable[LIGHTSLOTNUM][LIGHTNUMMAX];
 extern bool g_lightDirWithView[LIGHTSLOTNUM][LIGHTNUMMAX];
 extern float g_lightScale[LIGHTSLOTNUM][LIGHTNUMMAX];
+extern int g_lightNo[LIGHTNUMMAX];
 
 extern int g_motionbrush_method;
 extern double g_motionbrush_startframe;

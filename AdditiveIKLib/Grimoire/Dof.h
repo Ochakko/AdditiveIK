@@ -15,7 +15,7 @@ namespace myRenderer {
         /// </summary>
         /// <param name="rc">レンダリングコンテキスト</param>
         /// <param name="mainRenderTarget">メインレンダリングターゲット</param>
-        void Render(RenderContext& rc, RenderTarget& mainRenderTarget);
+        void Render(RenderContext* rc, RenderTarget& mainRenderTarget);
     private:
         void InitCombimeBokeImageToSprite(Sprite& combineBokeImageSprite, Texture& bokeTexture, Texture& depthTexture);
     private:

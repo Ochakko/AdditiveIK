@@ -1851,9 +1851,9 @@ void CMQOMaterial::InitZPreShaders(
 }
 
 
-void CMQOMaterial::BeginRender(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
+void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 {
-	if (!renderobj.pmodel || !renderobj.mqoobj) {
+	if (!rc || !renderobj.pmodel || !renderobj.mqoobj) {
 		_ASSERT(0);
 		return;
 	}
@@ -1973,10 +1973,10 @@ void CMQOMaterial::BeginRender(RenderContext& rc, myRenderer::RENDEROBJ renderob
 	if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 		(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
 		(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
-		rc.SetRootSignature(m_shadowrootSignature);
+		rc->SetRootSignature(m_shadowrootSignature);
 	}
 	else {
-		rc.SetRootSignature(m_rootSignature);
+		rc->SetRootSignature(m_rootSignature);
 	}
 
 
@@ -1986,41 +1986,45 @@ void CMQOMaterial::BeginRender(RenderContext& rc, myRenderer::RENDEROBJ renderob
 				//###########################
 				//Z cmp Always 半透明常に上書き
 				//###########################
-				rc.SetPipelineState(m_zalwaysPipelineState[shaderindex]);
+				rc->SetPipelineState(m_zalwaysPipelineState[shaderindex]);
 			}
 			else {
 				//###################
 				//translucent　半透明
 				//###################
-				rc.SetPipelineState(m_transPipelineState[shaderindex]);
+				rc->SetPipelineState(m_transPipelineState[shaderindex]);
 			}
 		}
 		else {
 			//##############
 			//Opaque 不透明
 			//##############
-			rc.SetPipelineState(m_opaquePipelineState[shaderindex]);
+			rc->SetPipelineState(m_opaquePipelineState[shaderindex]);
 		}
 	}
 	else {
-		rc.SetPipelineState(m_opaquePipelineState[MQOSHADER_NOLIGHT]);
+		rc->SetPipelineState(m_opaquePipelineState[MQOSHADER_NOLIGHT]);
 	}
 
 	if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 		(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
 		(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
-		rc.SetDescriptorHeap(m_shadowdescriptorHeap);
+		rc->SetDescriptorHeap(m_shadowdescriptorHeap);
 	}
 	else {
-		rc.SetDescriptorHeap(m_descriptorHeap);
+		rc->SetDescriptorHeap(m_descriptorHeap);
 	}
 }
 
-void CMQOMaterial::ZPreBeginRender(RenderContext& rc)
+void CMQOMaterial::ZPreBeginRender(RenderContext* rc)
 {
-	rc.SetRootSignature(m_ZPrerootSignature);
-	rc.SetPipelineState(m_ZPreModelPipelineState);
-	rc.SetDescriptorHeap(m_descriptorHeap);
+	if (!rc) {
+		_ASSERT(0);
+		return;
+	}
+	rc->SetRootSignature(m_ZPrerootSignature);
+	rc->SetPipelineState(m_ZPreModelPipelineState);
+	rc->SetDescriptorHeap(m_descriptorHeap);
 }
 
 
@@ -2412,9 +2416,10 @@ void CMQOMaterial::SetConstLights(SConstantBufferLights* pcbLights)
 	pcbLights->Init();
 	pcbLights->lightsnum[0] = g_nNumActiveLights;
 	int lightno;
-	for (lightno = 0; lightno < LIGHTNUMMAX; lightno++) {
+	for (lightno = 0; lightno < g_nNumActiveLights; lightno++) {//2023/12/17必要分だけ詰めて受け渡し
+	//for (lightno = 0; lightno < LIGHTNUMMAX; lightno++) {
 		pcbLights->directionalLight[lightno].color = 
-			g_lightdiffuseforshader[lightno] * GetLightScale(lightno);//2023/12/08 materialのlightscaleを掛けるように.
+			g_lightdiffuseforshader[lightno] * GetLightScale(g_lightNo[lightno]);//2023/12/08 materialのlightscaleを掛けるように.
 		pcbLights->directionalLight[lightno].direction = g_lightdirforshader[lightno];
 	}	
 	//ChaVector3 cameye = ChaVector3(g_camera3D->GetPosition());
@@ -2443,33 +2448,33 @@ void CMQOMaterial::SetFl4x4(myRenderer::RENDEROBJ renderobj)
 	}
 }
 
-void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
+void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 	const Matrix& mView, const Matrix& mProj,
 	bool isfirstmaterial)
 {
-	if (!renderobj.mqoobj || !renderobj.pmodel) {
+	if (!rc || !renderobj.mqoobj || !renderobj.pmodel) {
 		_ASSERT(0);
 		return;
 	}
 
+	bool withalpha = renderobj.forcewithalpha || renderobj.withalpha;
 	CPolyMesh4* ppm4 = renderobj.mqoobj->GetPm4();
 	CPolyMesh3* ppm3 = renderobj.mqoobj->GetPm3();
 	CExtLine* pextline = renderobj.mqoobj->GetExtLine();
 	CDispObj* pdispline = renderobj.mqoobj->GetDispLine();
 
-	if (pdispline && pextline) {
-		rc.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
-	}
-	else if (ppm3 || ppm4) {
-		rc.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	}
-	else {
-		_ASSERT(0);
-		return;
-	}
+	//if (pdispline && pextline) {
+	//	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+	//}
+	//else if (ppm3 || ppm4) {
+	//	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//}
+	//else {
+	//	_ASSERT(0);
+	//	return;
+	//}
 
 
-//m_shaderfxのセット
 	int tempshadertype;
 	if (renderobj.shadertype == -2) {//shadertype == -2の場合はマテリアルの設定に従う
 		tempshadertype = GetShaderType();
@@ -2477,60 +2482,139 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 	else {
 		tempshadertype = renderobj.shadertype;
 	}
+
+	int shadertype;
 	switch (tempshadertype) {
 	case -1:
 	case -2://マテリアルの設定も-2だった場合にはAUTOとみなす
 		if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
 			(GetNormalTex() && (GetNormalTex())[0]) ||
 			(GetMetalTex() && (GetMetalTex())[0])) {
-			if (ppm3) {
-				m_shaderfx = SHADERFX_NOSKIN_PBR;
-			}
-			else if (ppm4) {
-				m_shaderfx = SHADERFX_SKIN_PBR;
-			}
-			else {
-				m_shaderfx = SHADERFX_NOSKIN_STD;
-			}
+			shadertype = MQOSHADER_PBR;
 		}
 		else {
-			if (ppm3) {
-				m_shaderfx = SHADERFX_NOSKIN_STD;
-			}
-			else if (ppm4) {
-				m_shaderfx = SHADERFX_SKIN_STD;
+			if (ppm4) {
+				//NoLight
+				shadertype = MQOSHADER_NOLIGHT;
 			}
 			else {
-				m_shaderfx = SHADERFX_NOSKIN_STD;
+				//Standard
+				shadertype = MQOSHADER_STD;
 			}
 		}
 		break;
 	case MQOSHADER_PBR:
 	case MQOSHADER_STD:
 	case MQOSHADER_NOLIGHT:
-		if (ppm3) {
-			m_shaderfx = SHADERFX_NOSKIN_STD;
-		}
-		else if (ppm4) {
-			m_shaderfx = SHADERFX_SKIN_STD;
-		}
-		else {
-			m_shaderfx = SHADERFX_NOSKIN_STD;
-		}
+		shadertype = tempshadertype;
 		break;
 	default:
 		_ASSERT(0);
-		if (ppm3) {
-			m_shaderfx = SHADERFX_NOSKIN_STD;
-		}
-		else if (ppm4) {
-			m_shaderfx = SHADERFX_SKIN_STD;
-		}
-		else {
-			m_shaderfx = SHADERFX_NOSKIN_STD;
-		}
+		shadertype = MQOSHADER_NOLIGHT;
 		break;
 	}
+
+
+	int shaderindex = -1;
+	switch (shadertype) {
+	case MQOSHADER_PBR:
+		switch (renderobj.renderkind) {//renderobj.renderkindはCDispObj::Render*()関数内でセット
+		case RENDERKIND_NORMAL:
+			shaderindex = MQOSHADER_PBR;
+			break;
+		case RENDERKIND_SHADOWMAP:
+			shaderindex = MQOSHADER_PBR_SHADOWMAP;
+			break;
+		case RENDERKIND_SHADOWRECIEVER:
+			shaderindex = MQOSHADER_PBR_SHADOWRECIEVER;
+			break;
+		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
+		default:
+			shaderindex = -1;
+			break;
+		}
+		break;
+	case MQOSHADER_STD:
+		switch (renderobj.renderkind) {//renderobj.renderkindはCDispObj::Render*()関数内でセット
+		case RENDERKIND_NORMAL:
+			shaderindex = MQOSHADER_STD;
+			break;
+		case RENDERKIND_SHADOWMAP:
+			shaderindex = MQOSHADER_STD_SHADOWMAP;
+			break;
+		case RENDERKIND_SHADOWRECIEVER:
+			shaderindex = MQOSHADER_STD_SHADOWRECIEVER;
+			break;
+		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
+		default:
+			shaderindex = -1;
+			break;
+		}
+		break;
+	case MQOSHADER_NOLIGHT:
+		switch (renderobj.renderkind) {//renderobj.renderkindはCDispObj::Render*()関数内でセット
+		case RENDERKIND_NORMAL:
+			shaderindex = MQOSHADER_NOLIGHT;
+			break;
+		case RENDERKIND_SHADOWMAP:
+			shaderindex = MQOSHADER_NOLIGHT_SHADOWMAP;
+			break;
+		case RENDERKIND_SHADOWRECIEVER:
+			shaderindex = MQOSHADER_NOLIGHT_SHADOWRECIEVER;
+			break;
+		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
+		default:
+			shaderindex = -1;
+			break;
+		}
+		break;
+	default:
+		break;
+	}
+
+
+	if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
+		(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
+		(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
+		rc->SetRootSignature(m_shadowrootSignature);
+	}
+	else {
+		rc->SetRootSignature(m_rootSignature);
+	}
+
+
+	int pipelineindex = 0;//!!!!!!!!!
+
+	if (shaderindex >= 0) {
+		if (withalpha) {
+			if (renderobj.zcmpalways) {
+				//###########################
+				//Z cmp Always 半透明常に上書き
+				//###########################
+				pipelineindex = shaderindex + MQOSHADER_MAX * 2;
+				//rc->SetPipelineState(m_zalwaysPipelineState[shaderindex]);
+			}
+			else {
+				//###################
+				//translucent　半透明
+				//###################
+				//rc->SetPipelineState(m_transPipelineState[shaderindex]);
+				pipelineindex = shaderindex + MQOSHADER_MAX;
+			}
+		}
+		else {
+			//##############
+			//Opaque 不透明
+			//##############
+			//rc->SetPipelineState(m_opaquePipelineState[shaderindex]);
+			pipelineindex = shaderindex;
+		}
+	}
+	else {
+		//rc->SetPipelineState(m_opaquePipelineState[MQOSHADER_NOLIGHT]);
+		pipelineindex = shaderindex;
+	}
+
 
 
 
@@ -2578,7 +2662,7 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 			m_shadowcommonConstantBuffer.CopyToVRAM(m_cb);
 		}
 
-		//if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
+		if (!GetUpdateLightsFlag(pipelineindex)) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
 			SetConstLights(&m_cbLights);
 			SetConstShadow(&m_cbShadow);
 			if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
@@ -2589,8 +2673,8 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 				m_shadowexpandConstantBuffer.CopyToVRAM(m_cbLights);
 				m_shadowexpandConstantBuffer2.CopyToVRAM(m_cbShadow);
 			}
-			SetUpdateLightsFlag();
-		//}
+			SetUpdateLightsFlag(pipelineindex);
+		}
 	}
 	else if (ppm4) {
 		m_cb.Init();
@@ -2610,7 +2694,7 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 			m_shadowcommonConstantBuffer.CopyToVRAM(m_cb);
 		}
 
-		//if (!GetUpdateFl4x4Flag()) {//2023/12/01
+		if (!GetUpdateFl4x4Flag(pipelineindex)) {//2023/12/01
 		//if (isfirstmaterial) {
 		//if (isfirstmaterial && !GetUpdateFl4x4Flag()) {
 		//if (!renderobj.pmodel->GetUpdateFl4x4Flag()) {
@@ -2628,8 +2712,8 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 			}
 
 			renderobj.pmodel->SetUpdateFl4x4Flag();
-			SetUpdateFl4x4Flag();
-		//}
+			SetUpdateFl4x4Flag(pipelineindex);
+		}
 	}
 
 
@@ -2646,11 +2730,11 @@ void CMQOMaterial::DrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 	//}
 }
 
-void CMQOMaterial::ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
+void CMQOMaterial::ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 	const Matrix& mView, const Matrix& mProj,
 	bool isfirstmaterial)
 {
-	if (!renderobj.mqoobj || !renderobj.pmodel) {
+	if (!rc || !renderobj.mqoobj || !renderobj.pmodel) {
 		_ASSERT(0);
 		return;
 	}
@@ -2660,16 +2744,16 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ rende
 	CExtLine* pextline = renderobj.mqoobj->GetExtLine();
 	CDispObj* pdispline = renderobj.mqoobj->GetDispLine();
 
-	if (pdispline && pextline) {
-		rc.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
-	}
-	else if (ppm3 || ppm4) {
-		rc.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	}
-	else {
-		_ASSERT(0);
-		return;
-	}
+	//if (pdispline && pextline) {
+	//	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+	//}
+	//else if (ppm3 || ppm4) {
+	//	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//}
+	//else {
+	//	_ASSERT(0);
+	//	return;
+	//}
 
 
 	////定数バッファを更新する。
@@ -2711,7 +2795,7 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ rende
 		else {
 			m_shadowcommonConstantBuffer.CopyToVRAM(m_cb);
 		}
-		if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
+		//if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
 			SetConstLights(&m_cbLights);
 			if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 				m_expandConstantBuffer.CopyToVRAM(m_cbLights);
@@ -2719,8 +2803,8 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ rende
 			else {
 				m_shadowexpandConstantBuffer.CopyToVRAM(m_cbLights);
 			}
-			SetUpdateLightsFlag();
-		}
+			//SetUpdateLightsFlag();
+		//}
 	}
 	else if (ppm4) {
 		m_cb.mWorld = renderobj.mWorld;
@@ -2737,7 +2821,7 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ rende
 		else {
 			m_shadowcommonConstantBuffer.CopyToVRAM(m_cb);
 		}
-		if (!GetUpdateFl4x4Flag()) {//2023/12/01
+		//if (!GetUpdateFl4x4Flag()) {//2023/12/01
 			//if (isfirstmaterial) {
 			//if (isfirstmaterial && !GetUpdateFl4x4Flag()) {
 			//if (!renderobj.pmodel->GetUpdateFl4x4Flag()) {
@@ -2751,8 +2835,8 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext& rc, myRenderer::RENDEROBJ rende
 				m_shadowexpandConstantBuffer.CopyToVRAM(m_cbMatrix);
 			}
 			renderobj.pmodel->SetUpdateFl4x4Flag();
-			SetUpdateFl4x4Flag();
-		}
+			//SetUpdateFl4x4Flag();
+		//}
 
 	}
 }

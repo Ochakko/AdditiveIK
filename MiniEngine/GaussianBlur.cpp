@@ -13,34 +13,39 @@ void GaussianBlur::Init(Texture* originalTexture)
 }
 
 
-void GaussianBlur::ExecuteOnGPU(RenderContext& rc, float blurPower)
+void GaussianBlur::ExecuteOnGPU(RenderContext* rc, float blurPower)
 {
+	if (!rc) {
+		_ASSERT(0);
+		return;
+	}
+
 	//重みテーブルを更新する。
 	UpdateWeightsTable(blurPower);
 
 	//横ブラーを実行。
 	//レンダリングターゲットとして利用できるようになるまでwaitを入れる。
-	rc.WaitUntilToPossibleSetRenderTarget(m_xBlurRenderTarget);
+	rc->WaitUntilToPossibleSetRenderTarget(m_xBlurRenderTarget);
 	//レンダリングターゲットを設定。
-	rc.SetRenderTargetAndViewport(m_xBlurRenderTarget);
+	rc->SetRenderTargetAndViewport(m_xBlurRenderTarget);
 	//レンダリングターゲットをクリア。
-	rc.ClearRenderTargetView(m_xBlurRenderTarget);
+	rc->ClearRenderTargetView(m_xBlurRenderTarget);
 	//ドロー。
 	m_xBlurSprite.Draw(rc);
 	//レンダリングターゲットへの書き込み終了待ち。
-	rc.WaitUntilFinishDrawingToRenderTarget(m_xBlurRenderTarget);
+	rc->WaitUntilFinishDrawingToRenderTarget(m_xBlurRenderTarget);
 
 	//縦ブラーを実行。
 	//レンダリングターゲットとして利用できるようになるまでwaitを入れる。
-	rc.WaitUntilToPossibleSetRenderTarget(m_yBlurRenderTarget);
+	rc->WaitUntilToPossibleSetRenderTarget(m_yBlurRenderTarget);
 	//レンダリングターゲットを設定。
-	rc.SetRenderTargetAndViewport(m_yBlurRenderTarget);
+	rc->SetRenderTargetAndViewport(m_yBlurRenderTarget);
 	//レンダリングターゲットをクリア。
-	rc.ClearRenderTargetView(m_yBlurRenderTarget);
+	rc->ClearRenderTargetView(m_yBlurRenderTarget);
 	//ドロー。
 	m_yBlurSprite.Draw(rc);
 	//レンダリングターゲットへの書き込み終了待ち。
-	rc.WaitUntilFinishDrawingToRenderTarget(m_yBlurRenderTarget);
+	rc->WaitUntilFinishDrawingToRenderTarget(m_yBlurRenderTarget);
 }
 
 void GaussianBlur::InitRenderTargets()

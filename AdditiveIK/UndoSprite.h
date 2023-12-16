@@ -16,7 +16,7 @@ public:
 
 	int CreateSprites(WCHAR* mpath);
 	void DestroySprites();
-	int DrawScreen(RenderContext& rc, int undoR, int undoW);
+	int DrawScreen(RenderContext* rc, int undoR, int undoW);
 
 private:
 	void InitParams();

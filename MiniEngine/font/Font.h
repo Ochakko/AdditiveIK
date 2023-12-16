@@ -13,7 +13,7 @@ public:
 	/// 描画開始
 	/// </summary>
 	/// <param name="rc">レンダリングコンテキスト。</param>
-	void Begin(RenderContext& rc);
+	void Begin(RenderContext* rc);
 	/*!
 		* @brief	描画終了。
 		*/
@@ -21,7 +21,7 @@ public:
 	/// 描画終了
 	/// </summary>
 	/// <param name="rc">レンダリングコンテキスト</param>
-	void End(RenderContext& rc);
+	void End(RenderContext* rc);
 	/*!
 		* @brief	描画。
 		*@param[in]	text		表示したいテキスト。

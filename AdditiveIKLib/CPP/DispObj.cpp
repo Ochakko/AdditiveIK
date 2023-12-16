@@ -1030,31 +1030,47 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 //}
 
 
-int CDispObj::RenderShadowMap(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
+int CDispObj::RenderShadowMap(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 {
+	if (!rc) {
+		_ASSERT(0);
+		return 1;
+	}
 	renderobj.renderkind = RENDERKIND_SHADOWMAP;
 	return RenderNormal(rc, renderobj);
 }
-int CDispObj::RenderShadowMapPM3(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
+int CDispObj::RenderShadowMapPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 {
+	if (!rc) {
+		_ASSERT(0);
+		return 1;
+	}
 	renderobj.renderkind = RENDERKIND_SHADOWMAP;
 	return RenderNormalPM3(rc, renderobj);
 }
-int CDispObj::RenderShadowReciever(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
+int CDispObj::RenderShadowReciever(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 {
+	if (!rc) {
+		_ASSERT(0);
+		return 1;
+	}
 	renderobj.renderkind = RENDERKIND_SHADOWRECIEVER;
 	return RenderNormal(rc, renderobj);
 }
-int CDispObj::RenderShadowRecieverPM3(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
+int CDispObj::RenderShadowRecieverPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 {
+	if (!rc) {
+		_ASSERT(0);
+		return 1;
+	}
 	renderobj.renderkind = RENDERKIND_SHADOWRECIEVER;
 	return RenderNormalPM3(rc, renderobj);
 }
 
-int CDispObj::RenderNormal(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
+int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 {
 
-	if (!renderobj.pmodel || !renderobj.mqoobj) {
+	if (!rc || !renderobj.pmodel || !renderobj.mqoobj) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -1087,6 +1103,8 @@ int CDispObj::RenderNormal(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 	//mProj = g_camera3D->GetProjectionMatrix();
 	////定数バッファの設定、更新など描画の共通処理を実行する。
 	//DrawCommon(rc, renderobj, mView, mProj);
+	
+	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 
 	//##################################################################################
@@ -1098,9 +1116,9 @@ int CDispObj::RenderNormal(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 	//SetVertexBufferとSetIndexBufferの呼び出し位置の問題で無いことが分かるとこの場所に戻している
 	//##################################################################################
 	//1. 頂点バッファを設定。
-	rc.SetVertexBuffer(m_vertexBufferView);
+	rc->SetVertexBuffer(m_vertexBufferView);
 	//3. インデックスバッファを設定。
-	rc.SetIndexBuffer(m_indexBufferView);
+	rc->SetIndexBuffer(m_indexBufferView);
 
 
 	if (renderobj.renderkind == -1) {
@@ -1149,10 +1167,10 @@ int CDispObj::RenderNormal(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 }
 
 
-int CDispObj::RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
+int CDispObj::RenderNormalMaterial(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 	bool laterflag, CMQOMaterial* curmat, int curoffset, int curtrinum, bool isfirstmaterial)
 {
-	if (!curmat) {
+	if (!rc || !curmat) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -1283,7 +1301,7 @@ int CDispObj::RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ rend
 	//rc.SetIndexBuffer(m_indexBufferView);
 
 	//4. ドローコールを実行。
-	rc.DrawIndexed(curtrinum * 3, curoffset);
+	rc->DrawIndexed(curtrinum * 3, curoffset);
 	//rc.DrawIndexed(m_pm4->GetFaceNum() * 3);
 
 	//descriptorHeapNo += NUM_SRV_ONE_MATERIAL;
@@ -1294,10 +1312,10 @@ int CDispObj::RenderNormalMaterial(RenderContext& rc, myRenderer::RENDEROBJ rend
 }
 
 
-int CDispObj::RenderZPrePm4(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
+int CDispObj::RenderZPrePm4(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 {
 
-	if (!renderobj.pmodel || !renderobj.mqoobj) {
+	if (!rc || !renderobj.pmodel || !renderobj.mqoobj) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -1341,9 +1359,9 @@ int CDispObj::RenderZPrePm4(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 	//SetVertexBufferとSetIndexBufferの呼び出し位置の問題で無いことが分かるとこの場所に戻している
 	//##################################################################################
 	//1. 頂点バッファを設定。
-	rc.SetVertexBuffer(m_vertexBufferView);
+	rc->SetVertexBuffer(m_vertexBufferView);
 	//3. インデックスバッファを設定。
-	rc.SetIndexBuffer(m_indexBufferView);
+	rc->SetIndexBuffer(m_indexBufferView);
 
 	renderobj.renderkind = RENDERKIND_ZPREPASS;//2023/12/11
 
@@ -1382,7 +1400,7 @@ int CDispObj::RenderZPrePm4(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 			curmat->ZPreBeginRender(rc);
 
 			//4. ドローコールを実行。
-			rc.DrawIndexed(curtrinum * 3, curoffset);
+			rc->DrawIndexed(curtrinum * 3, curoffset);
 		}
 	}
 
@@ -1391,9 +1409,9 @@ int CDispObj::RenderZPrePm4(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 
 
 
-int CDispObj::RenderNormalPM3(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
+int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 {
-	if (!renderobj.pmodel || !renderobj.mqoobj) {
+	if (!rc || !renderobj.pmodel || !renderobj.mqoobj) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -1423,6 +1441,9 @@ int CDispObj::RenderNormalPM3(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 	//DrawCommon(rc, renderobj, mView, mProj);
 	//rc.SetDescriptorHeap(m_descriptorHeap);//BeginRender()より後で呼ばないとエラー
 
+	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+
 
 	//##################################################################################
 	//2023/12/04　メモ
@@ -1433,9 +1454,9 @@ int CDispObj::RenderNormalPM3(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 	//SetVertexBufferとSetIndexBufferの呼び出し位置の問題で無いことが分かるとこの場所に戻している
 	//##################################################################################
 	//1. 頂点バッファを設定。
-	rc.SetVertexBuffer(m_vertexBufferView);
+	rc->SetVertexBuffer(m_vertexBufferView);
 	//3. インデックスバッファを設定。
-	rc.SetIndexBuffer(m_indexBufferView);
+	rc->SetIndexBuffer(m_indexBufferView);
 
 	if (renderobj.renderkind == -1) {
 		renderobj.renderkind = RENDERKIND_NORMAL;//2023/12/11
@@ -1488,11 +1509,11 @@ int CDispObj::RenderNormalPM3(RenderContext& rc, myRenderer::RENDEROBJ renderobj
 	return 0;
 }
 
-int CDispObj::RenderNormalPM3Material(RenderContext& rc, myRenderer::RENDEROBJ renderobj,
+int CDispObj::RenderNormalPM3Material(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 	bool laterflag, CMQOMaterial* curmat,
 	int curoffset, int curtrinum)
 {
-	if (!curmat) {
+	if (!rc || !curmat) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -1614,7 +1635,7 @@ int CDispObj::RenderNormalPM3Material(RenderContext& rc, myRenderer::RENDEROBJ r
 	//rc.SetIndexBuffer(m_indexBufferView);
 
 	//4. ドローコールを実行。
-	rc.DrawIndexed(curtrinum * 3, curoffset);
+	rc->DrawIndexed(curtrinum * 3, curoffset);
 	//rc.DrawIndexed(m_pm3->GetFaceNum() * 3);
 
 	//descriptorHeapNo += NUM_SRV_ONE_MATERIAL;
@@ -1623,9 +1644,9 @@ int CDispObj::RenderNormalPM3Material(RenderContext& rc, myRenderer::RENDEROBJ r
 }
 
 
-int CDispObj::RenderZPrePm3(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
+int CDispObj::RenderZPrePm3(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 {
-	if (!renderobj.pmodel || !renderobj.mqoobj) {
+	if (!rc || !renderobj.pmodel || !renderobj.mqoobj) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -1657,9 +1678,9 @@ int CDispObj::RenderZPrePm3(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 	//SetVertexBufferとSetIndexBufferの呼び出し位置の問題で無いことが分かるとこの場所に戻している
 	//##################################################################################
 	//1. 頂点バッファを設定。
-	rc.SetVertexBuffer(m_vertexBufferView);
+	rc->SetVertexBuffer(m_vertexBufferView);
 	//3. インデックスバッファを設定。
-	rc.SetIndexBuffer(m_indexBufferView);
+	rc->SetIndexBuffer(m_indexBufferView);
 
 
 	renderobj.renderkind = RENDERKIND_ZPREPASS;//2023/12/11
@@ -1718,7 +1739,7 @@ int CDispObj::RenderZPrePm3(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 		//rc.SetIndexBuffer(m_indexBufferView);
 
 		//4. ドローコールを実行。
-		rc.DrawIndexed(curtrinum * 3, curoffset);
+		rc->DrawIndexed(curtrinum * 3, curoffset);
 
 	}
 
@@ -1726,9 +1747,9 @@ int CDispObj::RenderZPrePm3(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 }
 
 
-int CDispObj::RenderLine(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
+int CDispObj::RenderLine(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 {
-	if( !m_extline ){
+	if(!rc || !m_extline){
 		return 0;
 	}
 	if( m_extline->GetLineNum() <= 0 ){
@@ -1774,6 +1795,9 @@ int CDispObj::RenderLine(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 	bool isline = true;
 	CMQOMaterial* curmat = m_extline->GetMaterial();//m_rootsignatureのためのMaterial. 色はextline::m_colorにある
 	if (curmat) {
+
+		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+
 		Matrix mView, mProj;
 		mView = g_camera3D->GetViewMatrix();
 		mProj = g_camera3D->GetProjectionMatrix();
@@ -1784,12 +1808,12 @@ int CDispObj::RenderLine(RenderContext& rc, myRenderer::RENDEROBJ renderobj)
 		//rc.SetDescriptorHeap(m_descriptorHeap);
 
 		//1. 頂点バッファを設定。
-		rc.SetVertexBuffer(m_vertexBufferView);
+		rc->SetVertexBuffer(m_vertexBufferView);
 		//3. インデックスバッファを設定。
-		rc.SetIndexBuffer(m_indexBufferView);
+		rc->SetIndexBuffer(m_indexBufferView);
 
 
-		rc.DrawIndexed(curnumprim * 2);
+		rc->DrawIndexed(curnumprim * 2);
 	}
 
 	return 0;

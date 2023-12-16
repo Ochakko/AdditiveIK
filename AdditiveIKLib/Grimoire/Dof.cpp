@@ -82,8 +82,13 @@ namespace myRenderer {
         );
 
     }
-    void Dof::Render(RenderContext& rc, RenderTarget& mainRenderTarget)
+    void Dof::Render(RenderContext* rc, RenderTarget& mainRenderTarget)
     {
+        if (!rc) {
+            _ASSERT(0);
+            return;
+        }
+
         //step-4 垂直、対角線ブラーをかける
         RenderTarget* blurRts[] = {
             &m_rtVerticalBlur,
@@ -91,34 +96,34 @@ namespace myRenderer {
         };
 
         //レンダリングターゲットとして利用できるまで待つ
-        rc.WaitUntilToPossibleSetRenderTargets(2, blurRts);
+        rc->WaitUntilToPossibleSetRenderTargets(2, blurRts);
         //レンダリングターゲットを設定
-        rc.SetRenderTargetsAndViewport(2, blurRts);
+        rc->SetRenderTargetsAndViewport(2, blurRts);
         // レンダリングターゲットをクリア
-        rc.ClearRenderTargetViews(2, blurRts);
+        rc->ClearRenderTargetViews(2, blurRts);
         //
         m_vertDIagonalBlurSprite.Draw(rc);
         // レンダリングターゲットへの書き込み終了待ち
-        rc.WaitUntilFinishDrawingToRenderTargets(2, blurRts);
+        rc->WaitUntilFinishDrawingToRenderTargets(2, blurRts);
 
         //step-5 六角形ブラーをかける
-        rc.WaitUntilToPossibleSetRenderTarget(m_rtPhomboidBlur);
-        rc.SetRenderTargetAndViewport(m_rtPhomboidBlur);
+        rc->WaitUntilToPossibleSetRenderTarget(m_rtPhomboidBlur);
+        rc->SetRenderTargetAndViewport(m_rtPhomboidBlur);
 
         m_phomboidBlurSprite.Draw(rc);
 
         // レンダリングターゲットへの書き込み終了待ち
-        rc.WaitUntilFinishDrawingToRenderTarget(m_rtPhomboidBlur);
+        rc->WaitUntilFinishDrawingToRenderTarget(m_rtPhomboidBlur);
 
         // ボケ画像と深度テクスチャを利用して、ボケ画像を描きこんでいく
         // メインレンダリングターゲットを設定
-        rc.WaitUntilToPossibleSetRenderTarget(mainRenderTarget);
-        rc.SetRenderTargetAndViewport(mainRenderTarget);
+        rc->WaitUntilToPossibleSetRenderTarget(mainRenderTarget);
+        rc->SetRenderTargetAndViewport(mainRenderTarget);
 
         // スプライトを描画&
         m_combineBokeImageSprite.Draw(rc);
 
         // レンダリングターゲットへの書き込み終了待ち
-        rc.WaitUntilFinishDrawingToRenderTarget(mainRenderTarget);
+        rc->WaitUntilFinishDrawingToRenderTarget(mainRenderTarget);
     }
 }

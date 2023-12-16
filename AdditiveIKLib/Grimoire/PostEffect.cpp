@@ -6,8 +6,12 @@ namespace myRenderer {
         m_bloom.Init(mainRenderTarget);
         m_dof.Init(mainRenderTarget, zprepassRenderTarget);
     }
-    void PostEffect::Render(RenderContext& rc, RenderTarget& mainRenderTarget)
+    void PostEffect::Render(RenderContext* rc, RenderTarget& mainRenderTarget)
     {
+        if (!rc) {
+            _ASSERT(0);
+            return;
+        }
         m_bloom.Render(rc, mainRenderTarget);
         m_dof.Render(rc, mainRenderTarget);
     }

@@ -4,7 +4,7 @@ namespace myRenderer {
     {
     public:
         void Init(RenderTarget& mainRenderTarget);
-        void Render(RenderContext& rc, RenderTarget& mainRenderTarget);
+        void Render(RenderContext* rc, RenderTarget& mainRenderTarget);
     private:
         RenderTarget m_luminanceRenderTarget;	//輝度抽出用のレンダリングターゲット
         Sprite m_luminanceSprite;				//輝度抽出用のスプライト

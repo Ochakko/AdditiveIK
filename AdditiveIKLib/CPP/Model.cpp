@@ -7046,10 +7046,16 @@ int CModel::RenderRefArrow(bool limitdegflag, RenderContext* pRenderContext, CBo
 
 
 
-int CModel::RenderBoneMark(myRenderer::RenderingEngine& re, RenderContext& rc,
-	bool limitdegflag, CModel* bmarkptr, InstancedSprite& bcircleptr,
+int CModel::RenderBoneMark(myRenderer::RenderingEngine* re, RenderContext* rc,
+	bool limitdegflag, CModel* bmarkptr, InstancedSprite* bcircleptr,
 	int selboneno, int skiptopbonemark)
 {
+	if (!re || !rc || !bcircleptr) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
 	if( m_bonelist.empty() ){
 		return 0;
 	}
@@ -7332,7 +7338,7 @@ int CModel::RenderBoneMark(myRenderer::RenderingEngine& re, RenderContext& rc,
 
 					ChaVector2 circlesize = ChaVector2(6.0f, 6.0f);
 
-					bcircleptr.UpdateScreen(instanceno, scpos, circlesize, bcolor);
+					bcircleptr->UpdateScreen(instanceno, scpos, circlesize, bcolor);
 					instanceno++;
 					//CallF(bcircleptr->OnRender(pRenderContext), return 1);
 
@@ -7344,8 +7350,8 @@ int CModel::RenderBoneMark(myRenderer::RenderingEngine& re, RenderContext& rc,
 
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
-				rendersprite.pinstancedsprite = &bcircleptr;
-				re.AddSpriteToForwardRenderPass(rendersprite);
+				rendersprite.pinstancedsprite = bcircleptr;
+				re->AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 	}
