@@ -497,7 +497,9 @@ void GraphicsEngine::BeginRender()
 
 	const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	m_renderContext.ClearRenderTargetView(m_currentFrameBufferRTVHandle, clearColor);
-	m_renderContext.ClearDepthStencilView(m_currentFrameBufferDSVHandle, 1.0f);
+	
+	//2023/12/17 Forwardレンダリングにおいて　ZBufferはZprepassのものを使用　よってcurrentFrameのZ初期化はスキップ
+	//m_renderContext.ClearDepthStencilView(m_currentFrameBufferDSVHandle, 1.0f);
 
 }
 void GraphicsEngine::ChangeRenderTargetToFrameBuffer(RenderContext& rc)

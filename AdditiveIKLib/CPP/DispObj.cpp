@@ -283,8 +283,8 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone)
 
 
 	std::array<DXGI_FORMAT, MAX_RENDERING_TARGET> colorBufferFormat = {
-		DXGI_FORMAT_R8G8B8A8_UNORM,
 		DXGI_FORMAT_R32G32B32A32_FLOAT,
+		DXGI_FORMAT_R8G8B8A8_UNORM,
 		//DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
@@ -399,8 +399,8 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone )
 	CallF( CreateVBandIB(pdev), return 1 );
 
 	std::array<DXGI_FORMAT, MAX_RENDERING_TARGET> colorBufferFormat = {
-		DXGI_FORMAT_R8G8B8A8_UNORM,
 		DXGI_FORMAT_R32G32B32A32_FLOAT,
+		DXGI_FORMAT_R8G8B8A8_UNORM,
 		//DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
@@ -522,8 +522,8 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 
 
 	std::array<DXGI_FORMAT, MAX_RENDERING_TARGET> colorBufferFormat = {
-		DXGI_FORMAT_R8G8B8A8_UNORM,
 		DXGI_FORMAT_R32G32B32A32_FLOAT,
+		DXGI_FORMAT_R8G8B8A8_UNORM,
 		//DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
@@ -1099,7 +1099,7 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 	}
 
 	//Matrix mView, mProj;
-	//mView = g_camera3D->GetViewMatrix();
+	//mView = g_camera3D->GetViewMatrix(false);
 	//mProj = g_camera3D->GetProjectionMatrix();
 	////定数バッファの設定、更新など描画の共通処理を実行する。
 	//DrawCommon(rc, renderobj, mView, mProj);
@@ -1280,12 +1280,12 @@ int CDispObj::RenderNormalMaterial(RenderContext* rc, myRenderer::RENDEROBJ rend
 
 	Matrix mView, mProj;
 	if ((renderobj.renderkind != RENDERKIND_SHADOWMAP)) {
-		mView = g_camera3D->GetViewMatrix();
+		mView = g_camera3D->GetViewMatrix(false);
 		mProj = g_camera3D->GetProjectionMatrix();
 	}
 	else {
 		//for shadow
-		mView = g_cameraShadow->GetViewMatrix();
+		mView = g_cameraShadow->GetViewMatrix(false);
 		mProj = g_cameraShadow->GetProjectionMatrix();
 	}
 	//定数バッファの設定、更新など描画の共通処理を実行する。
@@ -1344,7 +1344,7 @@ int CDispObj::RenderZPrePm4(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 	}
 
 	//Matrix mView, mProj;
-	//mView = g_camera3D->GetViewMatrix();
+	//mView = g_camera3D->GetViewMatrix(false);
 	//mProj = g_camera3D->GetProjectionMatrix();
 	////定数バッファの設定、更新など描画の共通処理を実行する。
 	//DrawCommon(rc, renderobj, mView, mProj);
@@ -1393,7 +1393,7 @@ int CDispObj::RenderZPrePm4(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 			}
 
 			Matrix mView, mProj;
-			mView = g_camera3D->GetViewMatrix();
+			mView = g_camera3D->GetViewMatrix(false);
 			mProj = g_camera3D->GetProjectionMatrix();
 			//定数バッファの設定、更新など描画の共通処理を実行する。
 			curmat->ZPreDrawCommon(rc, renderobj, mView, mProj, isfirstmaterial);
@@ -1435,7 +1435,7 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	//}
 
 	//Matrix mView, mProj;
-	//mView = g_camera3D->GetViewMatrix();
+	//mView = g_camera3D->GetViewMatrix(false);
 	//mProj = g_camera3D->GetProjectionMatrix();
 	////定数バッファの設定、更新など描画の共通処理を実行する。
 	//DrawCommon(rc, renderobj, mView, mProj);
@@ -1610,12 +1610,12 @@ int CDispObj::RenderNormalPM3Material(RenderContext* rc, myRenderer::RENDEROBJ r
 
 	Matrix mView, mProj;
 	if ((renderobj.renderkind != RENDERKIND_SHADOWMAP)) {
-		mView = g_camera3D->GetViewMatrix();
+		mView = g_camera3D->GetViewMatrix(false);
 		mProj = g_camera3D->GetProjectionMatrix();
 	}
 	else {
 		//for shadow
-		mView = g_cameraShadow->GetViewMatrix();
+		mView = g_cameraShadow->GetViewMatrix(false);
 		mProj = g_cameraShadow->GetProjectionMatrix();
 	}
 	//定数バッファの設定、更新など描画の共通処理を実行する。
@@ -1725,7 +1725,7 @@ int CDispObj::RenderZPrePm3(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 
 
 		Matrix mView, mProj;
-		mView = g_camera3D->GetViewMatrix();
+		mView = g_camera3D->GetViewMatrix(false);
 		mProj = g_camera3D->GetProjectionMatrix();
 		//定数バッファの設定、更新など描画の共通処理を実行する。
 		curmat->ZPreDrawCommon(rc, renderobj, mView, mProj);
@@ -1775,7 +1775,7 @@ int CDispObj::RenderLine(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 
 	
 	//Matrix mView, mProj;
-	//mView = g_camera3D->GetViewMatrix();
+	//mView = g_camera3D->GetViewMatrix(false);
 	//mProj = g_camera3D->GetProjectionMatrix();
 	////定数バッファの設定、更新など描画の共通処理を実行する。
 	//DrawCommon(rc, renderobj, mView, mProj);
@@ -1799,7 +1799,7 @@ int CDispObj::RenderLine(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 
 		Matrix mView, mProj;
-		mView = g_camera3D->GetViewMatrix();
+		mView = g_camera3D->GetViewMatrix(false);
 		mProj = g_camera3D->GetProjectionMatrix();
 		//定数バッファの設定、更新など描画の共通処理を実行する。
 		curmat->DrawCommon(rc, renderobj, mView, mProj);

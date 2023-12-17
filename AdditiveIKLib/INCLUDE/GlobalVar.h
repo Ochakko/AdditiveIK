@@ -58,6 +58,7 @@ class CInfoWindow;
 
 #ifdef ADDITIVEIKLIBGLOBALVAR
 
+bool g_hdrpbloom = true;
 bool g_freefps = true;
 
 bool g_enableshadow = true;
@@ -304,6 +305,7 @@ double g_playingend = 1.0;
 
 #else
 
+extern bool g_hdrpbloom;
 extern bool g_freefps;
 
 extern bool g_enableshadow;

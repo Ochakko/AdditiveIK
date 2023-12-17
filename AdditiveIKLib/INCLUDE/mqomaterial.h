@@ -770,6 +770,7 @@ private:
 
 
 	bool m_initpipelineflag = false;
+	bool m_initprezpipelineflag = false;
 
 	int m_shaderfx;
 	bool m_updatefl4x4flag[MQOSHADER_MAX * 3];

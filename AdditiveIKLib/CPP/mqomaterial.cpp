@@ -238,6 +238,7 @@ int CMQOMaterial::ConvParamsTo3F()
 int CMQOMaterial::InitParams()
 {	
 	m_initpipelineflag = false;
+	m_initprezpipelineflag = false;
 	m_createdescriptorflag = false;
 	//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
 	//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
@@ -1120,13 +1121,13 @@ void CMQOMaterial::InitZPreShadersAndPipelines(
 		return;
 	}
 
-
+	if (m_initprezpipelineflag) {
 	//if (m_initpipelineflag) {
-	//	//###############################
-	//	//既に初期化済の場合は　すぐにリターン
-	//	//###############################
-	//	return;
-	//}
+		//###############################
+		//既に初期化済の場合は　すぐにリターン
+		//###############################
+		return;
+	}
 
 
 	//ルートシグネチャを初期化。
@@ -1169,6 +1170,8 @@ void CMQOMaterial::InitZPreShadersAndPipelines(
 		//パイプラインステートを初期化。
 		InitZPrePipelineState(vertextype, colorBufferFormat);
 	}
+
+	m_initprezpipelineflag = true;
 }
 
 
@@ -2399,7 +2402,7 @@ void CMQOMaterial::SetConstShadow(SConstantBufferShadow* pcbShadow)
 	Vector3 lpos = g_cameraShadow->GetPosition();
 	pcbShadow->lightPos = ChaVector4(lpos.x, lpos.y, lpos.z, 1.0f);
 	//ChaMatrix lvp = ChaMatrix(g_cameraShadow->GetViewProjectionMatrix());
-	ChaMatrix mView = g_cameraShadow->GetViewMatrix();
+	ChaMatrix mView = g_cameraShadow->GetViewMatrix(false);
 	ChaMatrix mProj = g_cameraShadow->GetProjectionMatrix();
 	ChaMatrix mVP = mView * mProj;
 	MoveMemory(&(pcbShadow->mLVP),

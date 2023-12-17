@@ -114,8 +114,8 @@ namespace myRenderer
             g_graphicsEngine->GetFrameBufferHeight(),
             1,
             1,
-            //DXGI_FORMAT_R32G32B32A32_FLOAT,
-            DXGI_FORMAT_R8G8B8A8_UNORM,//2023/11/18
+            DXGI_FORMAT_R32G32B32A32_FLOAT,
+            //DXGI_FORMAT_R8G8B8A8_UNORM,//2023/11/18
             DXGI_FORMAT_UNKNOWN
         );
     }
@@ -131,8 +131,8 @@ namespace myRenderer
             frameBuffer_h,
             1,
             1,
-            //DXGI_FORMAT_R32G32B32A32_FLOAT,
-            DXGI_FORMAT_R8G8B8A8_UNORM,//2023/11/18
+            DXGI_FORMAT_R32G32B32A32_FLOAT,
+            //DXGI_FORMAT_R8G8B8A8_UNORM,//2023/11/18
             DXGI_FORMAT_D32_FLOAT
         );
 
@@ -162,8 +162,8 @@ namespace myRenderer
             frameBuffer_h,
             1,
             1,
-            //DXGI_FORMAT_R32G32B32A32_FLOAT,
-            DXGI_FORMAT_R8G8B8A8_UNORM,//2023/11/18
+            DXGI_FORMAT_R32G32B32A32_FLOAT,
+            //DXGI_FORMAT_R8G8B8A8_UNORM,//2023/11/18
             DXGI_FORMAT_UNKNOWN
         );
         m_gBuffer[enGBUfferShadowParam].Create(
@@ -311,11 +311,13 @@ namespace myRenderer
         // フォワードレンダリング
         ForwardRendering(rc);
 
-        // ポストエフェクトを実行
-        //m_postEffect.Render(rc, m_mainRenderTarget);
+        if (g_hdrpbloom) {
+            // ポストエフェクトを実行
+            m_postEffect.Render(rc, m_mainRenderTarget);
+        }
 
         // メインレンダリングターゲットの内容をフレームバッファにコピー
-        //CopyMainRenderTargetToFrameBuffer(rc);
+        CopyMainRenderTargetToFrameBuffer(rc);
 
         // 登録されている3Dモデルをクリア
         m_shadowmapModels.clear();
@@ -394,12 +396,16 @@ namespace myRenderer
             _ASSERT(0);
             return;
         }
-        //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
-        //rc.SetRenderTarget(
-        //    m_mainRenderTarget.GetRTVCpuDescriptorHandle(),
-        //    m_gBuffer[enGBufferAlbedo].GetDSVCpuDescriptorHandle()
-        //);
-        //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
+        rc->WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
+        rc->SetRenderTarget(
+            m_mainRenderTarget.GetRTVCpuDescriptorHandle(),
+            //m_gBuffer[enGBufferAlbedo].GetDSVCpuDescriptorHandle()
+            m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
+        );
+        rc->WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
+        const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        rc->ClearRenderTargetView(m_mainRenderTarget.GetRTVCpuDescriptorHandle(), clearColor);
+
 
         //rc.SetRenderTarget(
         //    m_mainRenderTarget.GetRTVCpuDescriptorHandle(),
@@ -409,23 +415,26 @@ namespace myRenderer
         //);
 
 
-        //rc.WaitUntilToPossibleSetRenderTarget();
-        rc->SetRenderTarget(
-            g_graphicsEngine->GetCurrentFrameBuffuerRTV(),
-            //g_graphicsEngine->GetCurrentFrameBuffuerDSV()
-            m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
-        );
 
-        //前のパスで異なるviewportを設定した場合にはviewportの設定し直しが必要
+
+        ////rc.WaitUntilToPossibleSetRenderTarget();
+        //rc->SetRenderTarget(
+        //    g_graphicsEngine->GetCurrentFrameBuffuerRTV(),
+        //    //g_graphicsEngine->GetCurrentFrameBuffuerDSV()
+        //    m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
+        //);
+        ////前のパスで異なるviewportを設定した場合にはviewportの設定し直しが必要
         rc->SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
-
-        //if (g_4kresolution == false) {
+        ////if (g_4kresolution == false) {
         if (!g_zpreflag) {
             //2023/12/05
             //2Kモードの場合には　ZPrepassを実行しないために　ここでZBufferをクリア
             //2023/12/09 ZPrepassは　DispAndLimitsメニューのオプションに.
             rc->ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
         }
+
+
+
 
         //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
         //// レンダリングターゲットを設定
@@ -480,7 +489,7 @@ namespace myRenderer
         }
 
         // メインレンダリングターゲットへの書き込み終了待ち
-       //rc.WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
+       rc->WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
     }
 
     void RenderingEngine::RenderToGBuffer(RenderContext* rc)
@@ -572,6 +581,7 @@ namespace myRenderer
             g_graphicsEngine->GetCurrentFrameBuffuerRTV(),
             g_graphicsEngine->GetCurrentFrameBuffuerDSV()
         );
+        rc->ClearDepthStencilView(g_graphicsEngine->GetCurrentFrameBuffuerDSV(), 1.0f);
 
         // ビューポートを指定する
         //D3D12_VIEWPORT viewport;
@@ -596,7 +606,8 @@ namespace myRenderer
 
         rc->SetViewportAndScissor(viewport);
         m_copyMainRtToFrameBufferSprite.Draw(rc);
-
+        //m_copyMainRtToFrameBufferSprite.UpdateScreen(ChaVector3(viewport.Width * 0.5f, viewport.Height * 0.5f, 0.0f), ChaVector2(viewport.Width, viewport.Height));
+        //m_copyMainRtToFrameBufferSprite.DrawScreen(rc);
     }
 
     void RenderingEngine::RenderPolyMesh(RenderContext* rc, RENDEROBJ currenderobj)

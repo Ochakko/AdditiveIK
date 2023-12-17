@@ -74,13 +74,13 @@ void Model::Draw(RenderContext& rc)
 	m_meshParts.Draw(
 		rc, 
 		m_world, 
-		g_camera3D->GetViewMatrix(), 
+		g_camera3D->GetViewMatrix(false), 
 		g_camera3D->GetProjectionMatrix()
 	);
 }
 void Model::Draw(RenderContext& rc, Camera& camera)
 {
-	Draw(rc, camera.GetViewMatrix(), camera.GetProjectionMatrix());
+	Draw(rc, camera.GetViewMatrix(true), camera.GetProjectionMatrix());
 }
 
 void Model::Draw(RenderContext& rc, const Matrix& viewMatrix, const Matrix& projMatrix)
@@ -99,7 +99,7 @@ void Model::DrawInstancing(RenderContext& rc, int numInstance)
 	m_meshParts.DrawInstancing(
 		rc, 
 		numInstance, 
-		g_camera3D->GetViewMatrix(), 
+		g_camera3D->GetViewMatrix(false), 
 		g_camera3D->GetProjectionMatrix()
 	);
 }

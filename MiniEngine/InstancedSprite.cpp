@@ -508,7 +508,7 @@
     //    //現在のビューポートから平行投影行列を計算する。
     //    D3D12_VIEWPORT viewport = renderContext.GetViewport();
     //    //todo カメラ行列は定数に使用。どうせ変えないし・・・。
-    //    Matrix viewMatrix = g_camera2D->GetViewMatrix();
+    //    Matrix viewMatrix = g_camera2D->GetViewMatrix(true);
     //    Matrix projMatrix;
     //    projMatrix.MakeOrthoProjectionMatrix(viewport.Width, viewport.Height, 0.1f, 1.0f);
 

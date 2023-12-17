@@ -164,8 +164,22 @@
             }
 
         };
+
+        //unsigned short indices[4];
         //unsigned short indices[] = { 0,1,2,3 };
         unsigned short indices[] = { 0, 2, 1, 3 };//右手座標系　RH
+        //if (!m_screenvertexflag) {
+        //    indices[0] = 0;
+        //    indices[1] = 1;
+        //    indices[2] = 2;
+        //    indices[3] = 3;
+        //}
+        //else {
+        //    indices[0] = 0;
+        //    indices[1] = 2;
+        //    indices[2] = 1;
+        //    indices[3] = 3;
+        //}
 
         m_vertexBuffer.Init(sizeof(vertices), sizeof(vertices[0]));
         m_vertexBuffer.Copy(vertices);
@@ -268,18 +282,20 @@
         //ディスクリプタヒープを初期化。
         InitDescriptorHeap(initData);
 
-        //2023/11/21
-        //fileから読み込んだ場合のために　Textureからサイズを取得
-        if (m_textures[0].IsValid()) {
-            m_size.x = static_cast<float>(m_textures[0].GetWidth());
-            m_size.y = static_cast<float>(m_textures[0].GetHeight());
-        }
-        else if (m_textureExternal[0] != nullptr) {
-            m_size.x = static_cast<float>(m_textureExternal[0]->GetWidth());
-            m_size.y = static_cast<float>(m_textureExternal[0]->GetHeight());
-        }
-        else {
-            _ASSERT(0);
+        if (m_screenvertexflag) {
+            //2023/11/21
+            //fileから読み込んだ場合のために　Textureからサイズを取得
+            if (m_textures[0].IsValid()) {
+                m_size.x = static_cast<float>(m_textures[0].GetWidth());
+                m_size.y = static_cast<float>(m_textures[0].GetHeight());
+            }
+            else if (m_textureExternal[0] != nullptr) {
+                m_size.x = static_cast<float>(m_textureExternal[0]->GetWidth());
+                m_size.y = static_cast<float>(m_textureExternal[0]->GetHeight());
+            }
+            else {
+                _ASSERT(0);
+            }
         }
 
     }
@@ -379,6 +395,8 @@
             //renderContext.UpdateConstantBuffer(m_userExpandConstantBufferGPU, m_userExpandConstantBufferCPU);
             m_userExpandConstantBufferGPU.CopyToVRAM(m_userExpandConstantBufferCPU);
         }
+
+
         //ルートシグネチャを設定。
         renderContext->SetRootSignature(m_rootSignature);
         //パイプラインステートを設定。
@@ -406,9 +424,9 @@
         //現在のビューポートから平行投影行列を計算する。
         D3D12_VIEWPORT viewport = renderContext->GetViewport();
         //todo カメラ行列は定数に使用。どうせ変えないし・・・。
-        Matrix viewMatrix = g_camera2D->GetViewMatrix();
+        Matrix viewMatrix = g_camera2D->GetViewMatrix(true);
         Matrix projMatrix;
-        projMatrix.MakeOrthoProjectionMatrix(viewport.Width, viewport.Height, 0.1f, 1.0f);
+        projMatrix.MakeOrthoProjectionMatrix(true, viewport.Width, viewport.Height, 0.1f, 1.0f);
 
         m_constantBufferCPU.mvp = m_world * viewMatrix * projMatrix;
         m_constantBufferCPU.mulColor.x = 1.0f;
@@ -426,7 +444,7 @@
 
 
         //定数バッファを更新。
-        //renderContext.UpdateConstantBuffer(m_constantBufferGPU, &m_constantBufferCPU);
+        //renderContext->UpdateConstantBuffer(m_constantBufferGPU, &m_constantBufferCPU);
         m_constantBufferGPU.CopyToVRAM(&m_constantBufferCPU);
         if (m_userExpandConstantBufferCPU != nullptr) {
             //renderContext.UpdateConstantBuffer(m_userExpandConstantBufferGPU, m_userExpandConstantBufferCPU);

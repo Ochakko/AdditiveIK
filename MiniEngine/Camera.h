@@ -150,13 +150,33 @@ public:
 	/// <summary>
 	/// ビュー行列を取得。
 	/// </summary>
-	const Matrix& GetViewMatrix() 
+	const Matrix& GetViewMatrix(bool LHflag) 
 	{
-		if (m_isDirty) {
-			//更新する必要がある。
-			Update();
+		if (!LHflag) {
+			//###
+			//RH
+			//###
+			if (m_isDirty) {
+				//更新する必要がある。
+				Update();
+			}
+			return m_viewMatrix;
 		}
-		return m_viewMatrix;
+		else {
+			//###
+			//LH
+			//###
+			DirectX::XMFLOAT4X4 mat;
+			DirectX::XMStoreFloat4x4(
+				&mat,
+				DirectX::XMMatrixLookAtLH(GetPosition(), GetTarget(), GetUp())
+				//DirectX::XMMatrixLookAtRH(position, target, up)
+			);
+
+			Matrix retmat;
+			retmat = mat;
+			return retmat;
+		}
 	}
 	/// <summary>
 	/// プロジェクション行列を取得。

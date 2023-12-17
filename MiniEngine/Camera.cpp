@@ -22,7 +22,7 @@ void Camera::Update()
 		}
 		else {
 			//平行投影行列を計算。
-			m_projectionMatrix.MakeOrthoProjectionMatrix(m_width, m_height, m_near, m_far);
+			m_projectionMatrix.MakeOrthoProjectionMatrix(false, m_width, m_height, m_near, m_far);
 		}
 	}
 	//ビュー行列の算出

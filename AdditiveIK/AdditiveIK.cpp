@@ -3301,6 +3301,7 @@ void InitApp()
 	s_guiswflag = true;//true : １段目メニュー内容を右ペインに. false : ２段目メニュー内容を右ペインに
 	s_guiswplateno = 1;
 
+	g_hdrpbloom = true;
 	g_freefps = true;
 	s_befftime = 0.0;
 
@@ -13166,7 +13167,7 @@ int CalcPickRay(ChaVector3* startptr, ChaVector3* endptr)
 	ChaMatrix mProj;
 	
 	mProj = ChaMatrix(g_camera3D->GetProjectionMatrix());
-	mView = ChaMatrix(g_camera3D->GetViewMatrix());
+	mView = ChaMatrix(g_camera3D->GetViewMatrix(false));
 	ChaMatrix mVP, invmVP;
 	mVP = mView * mProj;
 	ChaMatrixInverse(&invmVP, NULL, &mVP);//2023/03/24 model座標系　model->GetWorldMat()の効果は打ち消しておく
@@ -23124,7 +23125,7 @@ int Lights2DlgEach(HWND hDlgWnd, int lightindex,
 
 	int sliderpos = (int)(g_lightScale[g_lightSlot][lightindex] * 100.0f + 0.0001f);
 	SendMessage(GetDlgItem(hDlgWnd, idslider), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-	SendMessage(GetDlgItem(hDlgWnd, idslider), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, idslider), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)300);
 	SendMessage(GetDlgItem(hDlgWnd, idslider), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
 	
@@ -25208,6 +25209,13 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		//#########
 		//CheckBox
 		//#########
+		if (g_hdrpbloom == true) {
+			CheckDlgButton(hDlgWnd, IDC_CHECK_BLOOM, true);
+		}
+		else {
+			CheckDlgButton(hDlgWnd, IDC_CHECK_BLOOM, false);
+		}
+
 		if (g_freefps == true) {
 			CheckDlgButton(hDlgWnd, IDC_CHECK_FREEFPS, true);
 		}
@@ -25354,6 +25362,18 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		//	CheckShaderTypeButton(hDlgWnd, MQOSHADER_NOLIGHT);
 		//	break;
 
+		case IDC_CHECK_BLOOM:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_BLOOM);
+			if (ischecked == BST_CHECKED) {
+				g_hdrpbloom = true;
+			}
+			else {
+				g_hdrpbloom = false;
+			}
+		}
+		break;
 
 		case IDC_CHECK_FREEFPS:
 		{
@@ -51048,7 +51068,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	for (litno2 = 0; litno2 < LIGHTNUMMAX; litno2++) {
 		sliderpos = (int)(curlightscale[litno2] * 100.0f);;
 		SendMessage(GetDlgItem(hDlgWnd, lightsliderid[litno2]), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-		SendMessage(GetDlgItem(hDlgWnd, lightsliderid[litno2]), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+		SendMessage(GetDlgItem(hDlgWnd, lightsliderid[litno2]), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)300);
 		SendMessage(GetDlgItem(hDlgWnd, lightsliderid[litno2]), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 	}
 
@@ -51387,7 +51407,7 @@ void SetCamera3DFromEyePos()
 	else {
 		s_matWorld.SetIdentity();
 	}
-	s_matView = ChaMatrix(g_camera3D->GetViewMatrix());
+	s_matView = ChaMatrix(g_camera3D->GetViewMatrix(false));
 	s_matProj = ChaMatrix(g_camera3D->GetProjectionMatrix());
 	s_matVP = s_matView * s_matProj;
 

@@ -231,13 +231,22 @@ public:
 	/// <param name="h">ビューボリュームの高さ。</param>
 	/// <param name="fNear">近平面。</param>
 	/// <param name="fFar">遠平面。</param>
-	void MakeOrthoProjectionMatrix(float w, float h, float fNear, float fFar)
+	void MakeOrthoProjectionMatrix(bool LHflag, float w, float h, float fNear, float fFar)
 	{
-		DirectX::XMStoreFloat4x4(
-			&mat,
-			//DirectX::XMMatrixOrthographicLH(w, h, fNear, fFar)
-			DirectX::XMMatrixOrthographicRH(w, h, fNear, fFar)
-		);
+		if (!LHflag) {
+			DirectX::XMStoreFloat4x4(
+				&mat,
+				//DirectX::XMMatrixOrthographicLH(w, h, fNear, fFar)
+				DirectX::XMMatrixOrthographicRH(w, h, fNear, fFar)
+			);
+		}
+		else {
+			DirectX::XMStoreFloat4x4(
+				&mat,
+				DirectX::XMMatrixOrthographicLH(w, h, fNear, fFar)
+				//DirectX::XMMatrixOrthographicRH(w, h, fNear, fFar)
+			);
+		}
 	}
 	/// <summary>
 	/// カメラ行列を作成。
