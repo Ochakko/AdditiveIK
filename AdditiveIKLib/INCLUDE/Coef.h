@@ -34,6 +34,7 @@ class CMQOMaterial;
 //#define SHADOWMAP_NEAR	(50.0f * SHADOWMAP_PROJSCALE)
 //#define SHADOWMAP_FAR	(2000.0f * SHADOWMAP_PROJSCALE)
 //#define SHADOWMAP_BIAS	0.0010f
+#define SHADOWSLOTNUM	8
 
 
 //バウンダリー簡易クリッピング計算用　大きいほど見切れないが重くなる

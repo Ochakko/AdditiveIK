@@ -2620,6 +2620,10 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 
 
 
+	if ((g_shadowmap_slotno < 0) || (g_shadowmap_slotno >= SHADOWSLOTNUM)) {
+		_ASSERT(0);
+		g_shadowmap_slotno = 0;
+	}
 
 
 	////定数バッファを更新する。
@@ -2632,8 +2636,8 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb.diffusemult = pextline->GetColor();
 		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_cb.shadowmaxz = ChaVector4(
-			g_shadowmap_far * g_shadowmap_projscale, 
-			g_shadowmap_bias, g_shadowmap_color, 0.0f);
+			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
+			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer.CopyToVRAM(m_cb);
 		}
@@ -2656,8 +2660,8 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb.metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), 0.0f, 0.0f);
 		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_cb.shadowmaxz = ChaVector4(
-			g_shadowmap_far * g_shadowmap_projscale,
-			g_shadowmap_bias, g_shadowmap_color, 0.0f);
+			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
+			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer.CopyToVRAM(m_cb);
 		}
@@ -2688,8 +2692,8 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb.metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), 0.0f, 0.0f);
 		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_cb.shadowmaxz = ChaVector4(
-			g_shadowmap_far * g_shadowmap_projscale,
-			g_shadowmap_bias, g_shadowmap_color, 0.0f);
+			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
+			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer.CopyToVRAM(m_cb);
 		}
@@ -2759,6 +2763,12 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ rende
 	//}
 
 
+	if ((g_shadowmap_slotno < 0) || (g_shadowmap_slotno >= SHADOWSLOTNUM)) {
+		_ASSERT(0);
+		g_shadowmap_slotno = 0;
+	}
+
+
 	////定数バッファを更新する。
 	if (pdispline && pextline) {
 		m_cb.mWorld = renderobj.mWorld;
@@ -2768,8 +2778,8 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ rende
 		m_cb.diffusemult = pextline->GetColor();
 		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_cb.shadowmaxz = ChaVector4(
-			g_shadowmap_far * g_shadowmap_projscale,
-			g_shadowmap_bias, g_shadowmap_color, 0.0f);
+			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
+			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer.CopyToVRAM(m_cb);
 		}
@@ -2790,8 +2800,8 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ rende
 		}
 		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_cb.shadowmaxz = ChaVector4(
-			g_shadowmap_far * g_shadowmap_projscale,
-			g_shadowmap_bias, g_shadowmap_color, 0.0f);
+			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
+			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer.CopyToVRAM(m_cb);
 		}
@@ -2816,8 +2826,8 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ rende
 		m_cb.diffusemult = renderobj.diffusemult;
 		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_cb.shadowmaxz = ChaVector4(
-			g_shadowmap_far * g_shadowmap_projscale,
-			g_shadowmap_bias, g_shadowmap_color, 0.0f);
+			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
+			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer.CopyToVRAM(m_cb);
 		}

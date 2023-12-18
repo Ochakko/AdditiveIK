@@ -4982,6 +4982,12 @@ int ChaFrustumInfo::ChkInView(MODELBOUND srcmb, ChaMatrix matWorld)
 		//#####################################################################
 		//視野内の場合には　シャドウマップがシャドウ射影範囲に入っているかどうかの判定をする
 		//#####################################################################
+
+		if ((g_shadowmap_slotno < 0) || (g_shadowmap_slotno >= SHADOWSLOTNUM)) {
+			_ASSERT(0);
+			g_shadowmap_slotno = 0;
+		}
+
 		ChaVector3 lightpos;
 		ChaVector3 lighttarget;
 		if (g_cameraShadow) {
@@ -5004,9 +5010,10 @@ int ChaFrustumInfo::ChkInView(MODELBOUND srcmb, ChaMatrix matWorld)
 		ChaVector3Normalize(&back2obj, &back2obj);
 		float dot = ChaVector3Dot(&camdir, &back2obj);
 
-		float dotclip = (float)cos(g_shadowmap_fov);
+		float dotclip = (float)cos(g_shadowmap_fov[g_shadowmap_slotno]);
 
-		if ((dot >= dotclip) && (dist_cam2obj <= (g_shadowmap_far * g_shadowmap_projscale + srcmb.r))) {
+		if ((dot >= dotclip) && 
+			(dist_cam2obj <= (g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno] + srcmb.r))) {
 			SetInShadow(true);
 		}
 		else {

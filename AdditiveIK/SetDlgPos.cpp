@@ -34,12 +34,17 @@ int SetDlgPosDesktopCenter(HWND hDlgWnd, HWND hWndInsertAfter)
 		//2023/01/26 dlgサイズを考慮して　デスクトップ中央に配置
 		RECT dlgrect;
 		::GetClientRect(hDlgWnd, &dlgrect);
-		setposx = max(60, (lefttopposx - (dlgrect.right - dlgrect.left) / 2));
-		setposy = max(60, (lefttopposy - (dlgrect.bottom - dlgrect.top) / 2));
-		setposx = min(max(60, desktoprect.right - 60), setposx);
-		setposy = min(max(60, desktoprect.bottom - 60), setposy);
+		POINT screenlefttop = { 0, 0 };
+		::ClientToScreen(hDlgWnd, &screenlefttop);
+		//2023/12/18 左上隅に表示されている場合だけセンターに持ってくる
+		if ((screenlefttop.x == 0) && (screenlefttop.y == 0)) {
+			setposx = max(60, (lefttopposx - (dlgrect.right - dlgrect.left) / 2));
+			setposy = max(60, (lefttopposy - (dlgrect.bottom - dlgrect.top) / 2));
+			setposx = min(max(60, desktoprect.right - 60), setposx);
+			setposy = min(max(60, desktoprect.bottom - 60), setposy);
 
-		SetWindowPos(hDlgWnd, hWndInsertAfter, setposx, setposy, 0, 0, SWP_NOSIZE);
+			SetWindowPos(hDlgWnd, hWndInsertAfter, setposx, setposy, 0, 0, SWP_NOSIZE);
+		}
 	}
 	else {
 		lefttopposx = 0;

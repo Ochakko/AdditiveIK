@@ -2120,7 +2120,7 @@ static int CreateLightsWnd();
 static int Lights2Dlg(HWND hDlgWnd);
 static int Lights2DlgEach(HWND hDlgWnd, int lightindex,
 	int iddirx, int iddiry, int iddirz,
-	int idenable, int idwithviewrot, int idslider);
+	int idenable, int idwithviewrot, int idslider, int idtextlight);
 static int Dlg2Lights(HWND hDlgWnd, int lightindex);
 static int Dlg2LightsEach(HWND hDlgWnd, int lightindex,
 	int iddirx, int iddiry, int iddirz,
@@ -3094,7 +3094,7 @@ INT WINAPI wWinMain(
 			////for tmp check
 			//WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
 			//int dispfps = (int)(s_avrgfps + 0.5);
-			//swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver0.0.0.1 : No.%d : fps %d", s_appcnt, dispfps);
+			//swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.1 : No.%d : fps %d", s_appcnt, dispfps);
 			//SetWindowText(s_mainhwnd, strmaintitle);
 
 
@@ -3395,16 +3395,19 @@ void InitApp()
 	{
 		g_enableshadow = true;
 		g_shadowmapforshader = nullptr;
-
-		g_shadowmap_fov = 60.0f;
-		g_shadowmap_projscale = 1.0f;
-		g_shadowmap_near = 50.0f;
-		g_shadowmap_far = 2000.0f;
-		g_shadowmap_color = 0.5f;
-		g_shadowmap_bias = 0.0010f;
-		g_shadowmap_plusup = 300.0f;
-		g_shadowmap_plusright = 1.0f;
-		g_shadowmap_lightdir = 1;
+		g_shadowmap_slotno = 0;
+		int slotno;
+		for (slotno = 0; slotno < SHADOWSLOTNUM; slotno++) {
+			g_shadowmap_fov[slotno] = 60.0f;
+			g_shadowmap_projscale[slotno] = 1.0f;
+			g_shadowmap_near[slotno] = 50.0f;
+			g_shadowmap_far[slotno] = 2000.0f;
+			g_shadowmap_color[slotno] = 0.5f;
+			g_shadowmap_bias[slotno] = 0.0010f;
+			g_shadowmap_plusup[slotno] = 300.0f;
+			g_shadowmap_plusright[slotno] = 1.0f;
+			g_shadowmap_lightdir[slotno] = 1;
+		}
 	}
 
 	s_chascene = 0;
@@ -23084,7 +23087,7 @@ int GetAngleLimitEditInt(HWND hDlgWnd, int editresid, int* dstlimit)
 
 int Lights2DlgEach(HWND hDlgWnd, int lightindex,
 	int iddirx, int iddiry, int iddirz,
-	int idenable, int idwithviewrot, int idslider)
+	int idenable, int idwithviewrot, int idslider, int idtextlight)
 {
 	if (!hDlgWnd) {
 		_ASSERT(0);
@@ -23128,6 +23131,10 @@ int Lights2DlgEach(HWND hDlgWnd, int lightindex,
 	SendMessage(GetDlgItem(hDlgWnd, idslider), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)300);
 	SendMessage(GetDlgItem(hDlgWnd, idslider), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
+	WCHAR strlight[256] = { 0L };
+	swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][lightindex]);
+	SetDlgItemText(hDlgWnd, idtextlight, strlight);
+
 	
 	return 0;
 }
@@ -23162,7 +23169,7 @@ int Lights2Dlg(HWND hDlgWnd)
 
 		int result1 = Lights2DlgEach(hDlgWnd, 0,
 			IDC_LIGHTDIRX1, IDC_LIGHTDIRY1, IDC_LIGHTDIRZ1,
-			IDC_ENABLE1, IDC_WITHVIEWROT1, IDC_SLIDER1);
+			IDC_ENABLE1, IDC_WITHVIEWROT1, IDC_SLIDER1, IDC_TEXT_LIGHT1);
 		if (result1 != 0) {
 			_ASSERT(0);
 			return 1;
@@ -23170,7 +23177,7 @@ int Lights2Dlg(HWND hDlgWnd)
 
 		int result2 = Lights2DlgEach(hDlgWnd, 1,
 			IDC_LIGHTDIRX2, IDC_LIGHTDIRY2, IDC_LIGHTDIRZ2,
-			IDC_ENABLE2, IDC_WITHVIEWROT2, IDC_SLIDER2);
+			IDC_ENABLE2, IDC_WITHVIEWROT2, IDC_SLIDER2, IDC_TEXT_LIGHT2);
 		if (result2 != 0) {
 			_ASSERT(0);
 			return 1;
@@ -23178,7 +23185,7 @@ int Lights2Dlg(HWND hDlgWnd)
 
 		int result3 = Lights2DlgEach(hDlgWnd, 2,
 			IDC_LIGHTDIRX3, IDC_LIGHTDIRY3, IDC_LIGHTDIRZ3,
-			IDC_ENABLE3, IDC_WITHVIEWROT3, IDC_SLIDER3);
+			IDC_ENABLE3, IDC_WITHVIEWROT3, IDC_SLIDER3, IDC_TEXT_LIGHT3);
 		if (result3 != 0) {
 			_ASSERT(0);
 			return 1;
@@ -23186,7 +23193,7 @@ int Lights2Dlg(HWND hDlgWnd)
 
 		int result4 = Lights2DlgEach(hDlgWnd, 3,
 			IDC_LIGHTDIRX4, IDC_LIGHTDIRY4, IDC_LIGHTDIRZ4,
-			IDC_ENABLE4, IDC_WITHVIEWROT4, IDC_SLIDER4);
+			IDC_ENABLE4, IDC_WITHVIEWROT4, IDC_SLIDER4, IDC_TEXT_LIGHT4);
 		if (result4 != 0) {
 			_ASSERT(0);
 			return 1;
@@ -23194,7 +23201,7 @@ int Lights2Dlg(HWND hDlgWnd)
 
 		int result5 = Lights2DlgEach(hDlgWnd, 4,
 			IDC_LIGHTDIRX5, IDC_LIGHTDIRY5, IDC_LIGHTDIRZ5,
-			IDC_ENABLE5, IDC_WITHVIEWROT5, IDC_SLIDER5);
+			IDC_ENABLE5, IDC_WITHVIEWROT5, IDC_SLIDER5, IDC_TEXT_LIGHT5);
 		if (result5 != 0) {
 			_ASSERT(0);
 			return 1;
@@ -23202,7 +23209,7 @@ int Lights2Dlg(HWND hDlgWnd)
 
 		int result6 = Lights2DlgEach(hDlgWnd, 5,
 			IDC_LIGHTDIRX6, IDC_LIGHTDIRY6, IDC_LIGHTDIRZ6,
-			IDC_ENABLE6, IDC_WITHVIEWROT6, IDC_SLIDER6);
+			IDC_ENABLE6, IDC_WITHVIEWROT6, IDC_SLIDER6, IDC_TEXT_LIGHT6);
 		if (result6 != 0) {
 			_ASSERT(0);
 			return 1;
@@ -23210,7 +23217,7 @@ int Lights2Dlg(HWND hDlgWnd)
 
 		int result7 = Lights2DlgEach(hDlgWnd, 6,
 			IDC_LIGHTDIRX7, IDC_LIGHTDIRY7, IDC_LIGHTDIRZ7,
-			IDC_ENABLE7, IDC_WITHVIEWROT7, IDC_SLIDER7);
+			IDC_ENABLE7, IDC_WITHVIEWROT7, IDC_SLIDER7, IDC_TEXT_LIGHT7);
 		if (result7 != 0) {
 			_ASSERT(0);
 			return 1;
@@ -23218,7 +23225,7 @@ int Lights2Dlg(HWND hDlgWnd)
 
 		int result8 = Lights2DlgEach(hDlgWnd, 7,
 			IDC_LIGHTDIRX8, IDC_LIGHTDIRY8, IDC_LIGHTDIRZ8,
-			IDC_ENABLE8, IDC_WITHVIEWROT8, IDC_SLIDER8);
+			IDC_ENABLE8, IDC_WITHVIEWROT8, IDC_SLIDER8, IDC_TEXT_LIGHT8);
 		if (result8 != 0) {
 			_ASSERT(0);
 			return 1;
@@ -23653,6 +23660,32 @@ int ShadowParams2Dlg(HWND hDlgWnd)
 {
 	WCHAR strdlg[256] = { 0L };
 
+
+	if ((g_shadowmap_slotno < 0) || (g_shadowmap_slotno >= SHADOWSLOTNUM)) {
+		_ASSERT(0);
+		g_shadowmap_slotno = 0;
+	}
+
+	//#########
+	//ComboBox
+	//#########
+	HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_SLOT);
+	if (combownd != NULL) {
+		SendMessage(combownd, CB_RESETCONTENT, 0, 0);
+		int slotno;
+		for (slotno = 0; slotno < SHADOWSLOTNUM; slotno++) {
+			WCHAR strcombo[256];
+			swprintf_s(strcombo, 256, L"slot:%d", slotno);
+			SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)strcombo);
+		}
+		::SendMessage(combownd, CB_SETCURSEL, (WPARAM)g_shadowmap_slotno, 0);
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+
+
 	//#########
 	//CheckBox
 	//#########
@@ -23666,37 +23699,37 @@ int ShadowParams2Dlg(HWND hDlgWnd)
 	//########
 	//EditBox
 	//########
-	swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_plusup);
+	swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_plusup[g_shadowmap_slotno]);
 	SetDlgItemText(hDlgWnd, IDC_EDIT_PLUSUP, strdlg);
 
-	swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_plusright);
+	swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_plusright[g_shadowmap_slotno]);
 	SetDlgItemText(hDlgWnd, IDC_EDIT_PLUSRIGHT, strdlg);
 
-	swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_near);
+	swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_near[g_shadowmap_slotno]);
 	SetDlgItemText(hDlgWnd, IDC_EDIT_NEAR, strdlg);
 
-	swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_far);
+	swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_far[g_shadowmap_slotno]);
 	SetDlgItemText(hDlgWnd, IDC_EDIT_FAR, strdlg);
 
 	//#######
 	//Slider
 	//#######
-	int sliderpos = (int)(g_shadowmap_fov + 0.0001f);
+	int sliderpos = (int)(g_shadowmap_fov[g_shadowmap_slotno] + 0.0001f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_FOV), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)10);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_FOV), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)60);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_FOV), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(g_shadowmap_color * 100.0f);
+	sliderpos = (int)(g_shadowmap_color[g_shadowmap_slotno] * 100.0f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_COLOR), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_COLOR), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_COLOR), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(g_shadowmap_bias * 10000.0f);
+	sliderpos = (int)(g_shadowmap_bias[g_shadowmap_slotno] * 10000.0f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)10);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(g_shadowmap_projscale * 10.0f);
+	sliderpos = (int)(g_shadowmap_projscale[g_shadowmap_slotno] * 10.0f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PROJSCALE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)1);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PROJSCALE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PROJSCALE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
@@ -23705,22 +23738,25 @@ int ShadowParams2Dlg(HWND hDlgWnd)
 	//#####
 	//Text
 	//#####
-	swprintf_s(strdlg, 256, L"FOV:%.1fdeg", g_shadowmap_fov);
+	swprintf_s(strdlg, 256, L"FOV:%.1fdeg", g_shadowmap_fov[g_shadowmap_slotno]);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_FOV, strdlg);
 
-	swprintf_s(strdlg, 256, L"Color:%.2f", g_shadowmap_color);
+	swprintf_s(strdlg, 256, L"Color:%.2f", g_shadowmap_color[g_shadowmap_slotno]);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_COLOR, strdlg);
 
-	swprintf_s(strdlg, 256, L"Bias:%.3f", g_shadowmap_bias);
+	swprintf_s(strdlg, 256, L"Bias:%.3f", g_shadowmap_bias[g_shadowmap_slotno]);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_BIAS, strdlg);
 
-	swprintf_s(strdlg, 256, L"SceneMult:%.1f", g_shadowmap_projscale);
+	swprintf_s(strdlg, 256, L"SceneMult:%.1f", g_shadowmap_projscale[g_shadowmap_slotno]);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_PROJSCALE, strdlg);
 
 	//#######
 	//Button
 	//#######
-	CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+	CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir[g_shadowmap_slotno]);
+
+
+
 
 	return 0;
 }
@@ -24819,6 +24855,12 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 	WCHAR streditbox[256] = { 0L };
 	float tempeditvalue;
 
+	if ((g_shadowmap_slotno < 0) || (g_shadowmap_slotno >= SHADOWSLOTNUM)) {
+		_ASSERT(0);
+		g_shadowmap_slotno = 0;
+	}
+
+
 	switch (msg) {
 	case WM_INITDIALOG:
 	{
@@ -24846,43 +24888,43 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 
 
 		case IDC_SHADOWDIR_1:
-			g_shadowmap_lightdir = 1;
-			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+			g_shadowmap_lightdir[g_shadowmap_slotno] = 1;
+			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir[g_shadowmap_slotno]);
 			SetCamera3DFromEyePos();
 			break;
 		case IDC_SHADOWDIR_2:
-			g_shadowmap_lightdir = 2;
-			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+			g_shadowmap_lightdir[g_shadowmap_slotno] = 2;
+			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir[g_shadowmap_slotno]);
 			SetCamera3DFromEyePos();
 			break;
 		case IDC_SHADOWDIR_3:
-			g_shadowmap_lightdir = 3;
-			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+			g_shadowmap_lightdir[g_shadowmap_slotno] = 3;
+			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir[g_shadowmap_slotno]);
 			SetCamera3DFromEyePos();
 			break;
 		case IDC_SHADOWDIR_4:
-			g_shadowmap_lightdir = 4;
-			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+			g_shadowmap_lightdir[g_shadowmap_slotno] = 4;
+			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir[g_shadowmap_slotno]);
 			SetCamera3DFromEyePos();
 			break;
 		case IDC_SHADOWDIR_5:
-			g_shadowmap_lightdir = 5;
-			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+			g_shadowmap_lightdir[g_shadowmap_slotno] = 5;
+			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir[g_shadowmap_slotno]);
 			SetCamera3DFromEyePos();
 			break;
 		case IDC_SHADOWDIR_6:
-			g_shadowmap_lightdir = 6;
-			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+			g_shadowmap_lightdir[g_shadowmap_slotno] = 6;
+			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir[g_shadowmap_slotno]);
 			SetCamera3DFromEyePos();
 			break;
 		case IDC_SHADOWDIR_7:
-			g_shadowmap_lightdir = 7;
-			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+			g_shadowmap_lightdir[g_shadowmap_slotno] = 7;
+			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir[g_shadowmap_slotno]);
 			SetCamera3DFromEyePos();
 			break;
 		case IDC_SHADOWDIR_8:
-			g_shadowmap_lightdir = 8;
-			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir);
+			g_shadowmap_lightdir[g_shadowmap_slotno] = 8;
+			CheckShadowDirectionButton(hDlgWnd, g_shadowmap_lightdir[g_shadowmap_slotno]);
 			SetCamera3DFromEyePos();
 			break;
 
@@ -24890,7 +24932,7 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 			GetDlgItemText(hDlgWnd, IDC_EDIT_PLUSUP, streditbox, 256);
 			tempeditvalue = (float)_wtof(streditbox);
 			if ((tempeditvalue >= -50000.0f) && (tempeditvalue <= 50000.0f)) {
-				g_shadowmap_plusup = tempeditvalue;
+				g_shadowmap_plusup[g_shadowmap_slotno] = tempeditvalue;
 			}
 			else {
 				::MessageBox(hDlgWnd, L"invalid editbox value : plusup", L"Invalid Value", MB_OK);
@@ -24899,7 +24941,7 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 			GetDlgItemText(hDlgWnd, IDC_EDIT_PLUSRIGHT, streditbox, 256);
 			tempeditvalue = (float)_wtof(streditbox);
 			if ((tempeditvalue >= -50000.0f) && (tempeditvalue <= 50000.0f)) {
-				g_shadowmap_plusright = tempeditvalue;
+				g_shadowmap_plusright[g_shadowmap_slotno] = tempeditvalue;
 			}
 			else {
 				::MessageBox(hDlgWnd, L"invalid editbox value : plusright", L"Invalid Value", MB_OK);
@@ -24908,7 +24950,7 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 			GetDlgItemText(hDlgWnd, IDC_EDIT_NEAR, streditbox, 256);
 			tempeditvalue = (float)_wtof(streditbox);
 			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-				g_shadowmap_near = tempeditvalue;
+				g_shadowmap_near[g_shadowmap_slotno] = tempeditvalue;
 			}
 			else {
 				::MessageBox(hDlgWnd, L"invalid editbox value : near", L"Invalid Value", MB_OK);
@@ -24917,7 +24959,7 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 			GetDlgItemText(hDlgWnd, IDC_EDIT_FAR, streditbox, 256);
 			tempeditvalue = (float)_wtof(streditbox);
 			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-				g_shadowmap_far = tempeditvalue;
+				g_shadowmap_far[g_shadowmap_slotno] = tempeditvalue;
 			}
 			else {
 				::MessageBox(hDlgWnd, L"invalid editbox value : near", L"Invalid Value", MB_OK);
@@ -24928,19 +24970,48 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 			break;
 		
 		case IDC_INITSHADOW:
-			g_shadowmap_fov = 60.0f;
-			g_shadowmap_projscale = 1.0f;
-			g_shadowmap_near = 50.0f;
-			g_shadowmap_far = 2000.0f;
-			g_shadowmap_color = 0.5f;
-			g_shadowmap_bias = 0.0010f;
-			g_shadowmap_plusup = 300.0f;
-			g_shadowmap_plusright = 1.0f;
-			g_shadowmap_lightdir = 1;
+			g_shadowmap_fov[g_shadowmap_slotno] = 60.0f;
+			g_shadowmap_projscale[g_shadowmap_slotno] = 1.0f;
+			g_shadowmap_near[g_shadowmap_slotno] = 50.0f;
+			g_shadowmap_far[g_shadowmap_slotno] = 2000.0f;
+			g_shadowmap_color[g_shadowmap_slotno] = 0.5f;
+			g_shadowmap_bias[g_shadowmap_slotno] = 0.0010f;
+			g_shadowmap_plusup[g_shadowmap_slotno] = 300.0f;
+			g_shadowmap_plusright[g_shadowmap_slotno] = 1.0f;
+			g_shadowmap_lightdir[g_shadowmap_slotno] = 1;
 
 			ShadowParams2Dlg(hDlgWnd);
 			SetCamera3DFromEyePos();
 			break;
+
+		//##########
+		//COMBO BOX
+		//##########
+		case IDC_COMBO_SLOT:
+			if (HIWORD(wp) == CBN_SELCHANGE) {
+				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_SLOT);
+				if (combownd != NULL) {
+					int combono;
+					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
+					if ((combono >= 0) && (combono < SHADOWSLOTNUM)) {
+						g_shadowmap_slotno = combono;
+						ShadowParams2Dlg(hDlgWnd);
+						SetCamera3DFromEyePos();
+					}
+					else {
+						_ASSERT(0);
+						return false;
+					}
+				}
+				else {
+					_ASSERT(0);
+					return false;
+				}
+
+			}
+			break;
+
+
 
 		case IDCANCEL:
 			//EndDialog(hDlgWnd, IDCANCEL);
@@ -24954,37 +25025,37 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 	case WM_HSCROLL:
 		if (GetDlgItem(hDlgWnd, IDC_SLIDER_FOV) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_FOV), TBM_GETPOS, 0, 0);
-			g_shadowmap_fov = (float)cursliderpos;
+			g_shadowmap_fov[g_shadowmap_slotno] = (float)cursliderpos;
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"FOV:%.1fdeg", g_shadowmap_fov);
+			swprintf_s(strdlg, 256, L"FOV:%.1fdeg", g_shadowmap_fov[g_shadowmap_slotno]);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_FOV, strdlg);
 			SetCamera3DFromEyePos();
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_COLOR) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_COLOR), TBM_GETPOS, 0, 0);
-			g_shadowmap_color = (float)((double)cursliderpos / 100.0);
+			g_shadowmap_color[g_shadowmap_slotno] = (float)((double)cursliderpos / 100.0);
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"Color:%.2f", g_shadowmap_color);
+			swprintf_s(strdlg, 256, L"Color:%.2f", g_shadowmap_color[g_shadowmap_slotno]);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_COLOR, strdlg);
 			SetCamera3DFromEyePos();
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_GETPOS, 0, 0);
-			g_shadowmap_bias = (float)((double)cursliderpos / 10000.0);
+			g_shadowmap_bias[g_shadowmap_slotno] = (float)((double)cursliderpos / 10000.0);
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"Bias:%.3f", g_shadowmap_bias);
+			swprintf_s(strdlg, 256, L"Bias:%.3f", g_shadowmap_bias[g_shadowmap_slotno]);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_BIAS, strdlg);
 			SetCamera3DFromEyePos();
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_PROJSCALE) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PROJSCALE), TBM_GETPOS, 0, 0);
-			g_shadowmap_projscale = (float)((double)cursliderpos / 10.0);
+			g_shadowmap_projscale[g_shadowmap_slotno] = (float)((double)cursliderpos / 10.0);
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"SceneMult:%.1f", g_shadowmap_projscale);
+			swprintf_s(strdlg, 256, L"SceneMult:%.1f", g_shadowmap_projscale[g_shadowmap_slotno]);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_PROJSCALE, strdlg);
 			SetCamera3DFromEyePos();
 		}
@@ -26465,48 +26536,72 @@ LRESULT CALLBACK LightsForEditDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		{
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER1), TBM_GETPOS, 0, 0);
 			g_lightScale[g_lightSlot][0] = (float)((double)cursliderpos / 100.0);
+			WCHAR strlight[256] = { 0L };
+			swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][0]);
+			SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT1, strlight);
 			SetLightDirection();
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER2) == (HWND)lp)
 		{
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER2), TBM_GETPOS, 0, 0);
 			g_lightScale[g_lightSlot][1] = (float)((double)cursliderpos / 100.0);
+			WCHAR strlight[256] = { 0L };
+			swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][1]);
+			SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT2, strlight);
 			SetLightDirection();
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER3) == (HWND)lp)
 		{
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER3), TBM_GETPOS, 0, 0);
 			g_lightScale[g_lightSlot][2] = (float)((double)cursliderpos / 100.0);
+			WCHAR strlight[256] = { 0L };
+			swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][2]);
+			SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT3, strlight);
 			SetLightDirection();
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER4) == (HWND)lp)
 		{
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER4), TBM_GETPOS, 0, 0);
 			g_lightScale[g_lightSlot][3] = (float)((double)cursliderpos / 100.0);
+			WCHAR strlight[256] = { 0L };
+			swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][3]);
+			SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT4, strlight);
 			SetLightDirection();
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER5) == (HWND)lp)
 		{
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER5), TBM_GETPOS, 0, 0);
 			g_lightScale[g_lightSlot][4] = (float)((double)cursliderpos / 100.0);
+			WCHAR strlight[256] = { 0L };
+			swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][4]);
+			SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT5, strlight);
 			SetLightDirection();
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER6) == (HWND)lp)
 		{
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER6), TBM_GETPOS, 0, 0);
 			g_lightScale[g_lightSlot][5] = (float)((double)cursliderpos / 100.0);
+			WCHAR strlight[256] = { 0L };
+			swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][5]);
+			SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT6, strlight);
 			SetLightDirection();
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER7) == (HWND)lp)
 		{
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER7), TBM_GETPOS, 0, 0);
 			g_lightScale[g_lightSlot][6] = (float)((double)cursliderpos / 100.0);
+			WCHAR strlight[256] = { 0L };
+			swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][6]);
+			SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT7, strlight);
 			SetLightDirection();
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER8) == (HWND)lp)
 		{
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER8), TBM_GETPOS, 0, 0);
 			g_lightScale[g_lightSlot][7] = (float)((double)cursliderpos / 100.0);
+			WCHAR strlight[256] = { 0L };
+			swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][7]);
+			SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT8, strlight);
 			SetLightDirection();
 		}
 		break;
@@ -26524,48 +26619,72 @@ LRESULT CALLBACK LightsForEditDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 					{
 						int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER1), TBM_GETPOS, 0, 0);
 						g_lightScale[g_lightSlot][0] = (float)((double)cursliderpos / 100.0);
+						WCHAR strlight[256] = { 0L };
+						swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][0]);
+						SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT1, strlight);
 						SetLightDirection();
 					}
 					else if (GetDlgItem(hDlgWnd, IDC_SLIDER2) == nmhdr->hwndFrom)
 					{
 						int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER2), TBM_GETPOS, 0, 0);
 						g_lightScale[g_lightSlot][1] = (float)((double)cursliderpos / 100.0);
+						WCHAR strlight[256] = { 0L };
+						swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][1]);
+						SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT2, strlight);
 						SetLightDirection();
 					}
 					else if (GetDlgItem(hDlgWnd, IDC_SLIDER3) == nmhdr->hwndFrom)
 					{
 						int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER3), TBM_GETPOS, 0, 0);
 						g_lightScale[g_lightSlot][2] = (float)((double)cursliderpos / 100.0);
+						WCHAR strlight[256] = { 0L };
+						swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][2]);
+						SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT3, strlight);
 						SetLightDirection();
 					}
 					else if (GetDlgItem(hDlgWnd, IDC_SLIDER4) == nmhdr->hwndFrom)
 					{
 						int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER4), TBM_GETPOS, 0, 0);
 						g_lightScale[g_lightSlot][3] = (float)((double)cursliderpos / 100.0);
+						WCHAR strlight[256] = { 0L };
+						swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][3]);
+						SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT4, strlight);
 						SetLightDirection();
 					}
 					else if (GetDlgItem(hDlgWnd, IDC_SLIDER5) == nmhdr->hwndFrom)
 					{
 						int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER5), TBM_GETPOS, 0, 0);
 						g_lightScale[g_lightSlot][4] = (float)((double)cursliderpos / 100.0);
+						WCHAR strlight[256] = { 0L };
+						swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][4]);
+						SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT5, strlight);
 						SetLightDirection();
 					}
 					else if (GetDlgItem(hDlgWnd, IDC_SLIDER6) == nmhdr->hwndFrom)
 					{
 						int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER6), TBM_GETPOS, 0, 0);
 						g_lightScale[g_lightSlot][5] = (float)((double)cursliderpos / 100.0);
+						WCHAR strlight[256] = { 0L };
+						swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][5]);
+						SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT6, strlight);
 						SetLightDirection();
 					}
 					else if (GetDlgItem(hDlgWnd, IDC_SLIDER7) == nmhdr->hwndFrom)
 					{
 						int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER7), TBM_GETPOS, 0, 0);
 						g_lightScale[g_lightSlot][6] = (float)((double)cursliderpos / 100.0);
+						WCHAR strlight[256] = { 0L };
+						swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][6]);
+						SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT7, strlight);
 						SetLightDirection();
 					}
 					else if (GetDlgItem(hDlgWnd, IDC_SLIDER8) == nmhdr->hwndFrom)
 					{
 						int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER8), TBM_GETPOS, 0, 0);
 						g_lightScale[g_lightSlot][7] = (float)((double)cursliderpos / 100.0);
+						WCHAR strlight[256] = { 0L };
+						swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][7]);
+						SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT8, strlight);
 						SetLightDirection();
 					}
 					break;
@@ -36205,7 +36324,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 	}
 
 	////Undoの読み込みポイントW と書き込みポイントR を表示
-	if (s_model) {
+	if (s_model && (g_previewFlag == 0)) {
 		//s_undosprite.DrawScreen(pRenderContext, s_model->GetCurrentUndoR(), s_model->GetCurrentUndoW());
 
 		myRenderer::RENDERSPRITE rendersprite;
@@ -36321,129 +36440,131 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 
 
 	//if (s_platemenukind == SPPLATEMENUKIND_GUI) 
-	if(s_guiswflag)
-	{
-		//menu 0 : Select 3DWindow GUI
+	if (g_previewFlag == 0) {
+		if (s_guiswflag)
 		{
+			//menu 0 : Select 3DWindow GUI
+			{
 
-			//常時表示だが　２段目クリック時には１段目は全てOFFにする　１段目クリックに対してだけONを表示する
+				//常時表示だが　２段目クリック時には１段目は全てOFFにする　１段目クリックに対してだけONを表示する
 
+				//Plate Menu 0
+				int spgcnt;
+				for (spgcnt = 0; spgcnt < SPGUISWNUM; spgcnt++) {
+					if (s_spguisw[spgcnt].state) {
+						//s_spguisw[spgcnt].spriteON.DrawScreen(pRenderContext);
+						myRenderer::RENDERSPRITE rendersprite;
+						rendersprite.Init();
+						rendersprite.psprite = &(s_spguisw[spgcnt].spriteON);
+						re->AddSpriteToForwardRenderPass(rendersprite);
+					}
+					else {
+						//s_spguisw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+						myRenderer::RENDERSPRITE rendersprite;
+						rendersprite.Init();
+						rendersprite.psprite = &(s_spguisw[spgcnt].spriteOFF);
+						re->AddSpriteToForwardRenderPass(rendersprite);
+					}
+				}
+			}
+		}
+		else {
 			//Plate Menu 0
 			int spgcnt;
-			for (spgcnt = 0; spgcnt < SPGUISWNUM; spgcnt++) {
-				if (s_spguisw[spgcnt].state) {
-					//s_spguisw[spgcnt].spriteON.DrawScreen(pRenderContext);
+			for (spgcnt = SPGUISW_DISP_AND_LIMITS; spgcnt < SPGUISWNUM; spgcnt++) {
+
+				//常時表示だが　２段目クリック時には１段目はCameraAndIK以外OFFにする　１段目クリックに対してだけONを表示する
+
+				//s_spguisw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spguisw[spgcnt].spriteOFF);
+				re->AddSpriteToForwardRenderPass(rendersprite);
+			}
+
+
+			//CameraAndIKに関しては s_guiswflag==falseの場合にも　ONのときはON
+			if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
+				//s_spguisw[spgcnt].spriteON.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spguisw[SPGUISW_CAMERA_AND_IK].spriteON);
+				re->AddSpriteToForwardRenderPass(rendersprite);
+			}
+			else {
+				//s_spguisw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = &(s_spguisw[SPGUISW_CAMERA_AND_IK].spriteOFF);
+				re->AddSpriteToForwardRenderPass(rendersprite);
+			}
+
+		}
+		//else 
+
+		if (s_platemenukind == SPPLATEMENUKIND_DISP) {
+			//menu 1 : Select SideMenu 
+
+			//Plate Menu 1
+			int spgcnt;
+			for (spgcnt = 0; spgcnt < SPDISPSWNUM; spgcnt++) {
+				if (s_spdispsw[spgcnt].state) {
+					//s_spdispsw[spgcnt].spriteON.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
-					rendersprite.psprite = &(s_spguisw[spgcnt].spriteON);
+					rendersprite.psprite = &(s_spdispsw[spgcnt].spriteON);
 					re->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				else {
-					//s_spguisw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+					//s_spdispsw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
-					rendersprite.psprite = &(s_spguisw[spgcnt].spriteOFF);
+					rendersprite.psprite = &(s_spdispsw[spgcnt].spriteOFF);
 					re->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
 		}
-	}
-	else {
-		//Plate Menu 0
-		int spgcnt;
-		for (spgcnt = SPGUISW_DISP_AND_LIMITS; spgcnt < SPGUISWNUM; spgcnt++) {
+		else if (s_platemenukind == SPPLATEMENUKIND_RIGID) {
+			//menu 1 : Select SideMenu 
 
-			//常時表示だが　２段目クリック時には１段目はCameraAndIK以外OFFにする　１段目クリックに対してだけONを表示する
-
-			//s_spguisw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
-			myRenderer::RENDERSPRITE rendersprite;
-			rendersprite.Init();
-			rendersprite.psprite = &(s_spguisw[spgcnt].spriteOFF);
-			re->AddSpriteToForwardRenderPass(rendersprite);
-		}
-
-
-		//CameraAndIKに関しては s_guiswflag==falseの場合にも　ONのときはON
-		if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
-			//s_spguisw[spgcnt].spriteON.DrawScreen(pRenderContext);
-			myRenderer::RENDERSPRITE rendersprite;
-			rendersprite.Init();
-			rendersprite.psprite = &(s_spguisw[SPGUISW_CAMERA_AND_IK].spriteON);
-			re->AddSpriteToForwardRenderPass(rendersprite);
-		}
-		else {
-			//s_spguisw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
-			myRenderer::RENDERSPRITE rendersprite;
-			rendersprite.Init();
-			rendersprite.psprite = &(s_spguisw[SPGUISW_CAMERA_AND_IK].spriteOFF);
-			re->AddSpriteToForwardRenderPass(rendersprite);
-		}
-
-	}
-	//else 
-	
-	if (s_platemenukind == SPPLATEMENUKIND_DISP) {
-		//menu 1 : Select SideMenu 
-
-		//Plate Menu 1
-		int spgcnt;
-		for (spgcnt = 0; spgcnt < SPDISPSWNUM; spgcnt++) {
-			if (s_spdispsw[spgcnt].state) {
-				//s_spdispsw[spgcnt].spriteON.DrawScreen(pRenderContext);
-				myRenderer::RENDERSPRITE rendersprite;
-				rendersprite.Init();
-				rendersprite.psprite = &(s_spdispsw[spgcnt].spriteON);
-				re->AddSpriteToForwardRenderPass(rendersprite);
-			}
-			else {
-				//s_spdispsw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
-				myRenderer::RENDERSPRITE rendersprite;
-				rendersprite.Init();
-				rendersprite.psprite = &(s_spdispsw[spgcnt].spriteOFF);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+			//Plate Menu 1
+			int spgcnt;
+			for (spgcnt = 0; spgcnt < SPRIGIDSWNUM; spgcnt++) {
+				if (s_sprigidsw[spgcnt].state) {
+					//s_sprigidsw[spgcnt].spriteON.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_sprigidsw[spgcnt].spriteON);
+					re->AddSpriteToForwardRenderPass(rendersprite);
+				}
+				else {
+					//s_sprigidsw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_sprigidsw[spgcnt].spriteOFF);
+					re->AddSpriteToForwardRenderPass(rendersprite);
+				}
 			}
 		}
-	}
-	else if (s_platemenukind == SPPLATEMENUKIND_RIGID) {
-		//menu 1 : Select SideMenu 
+		else if (s_platemenukind == SPPLATEMENUKIND_RETARGET) {
 
-		//Plate Menu 1
-		int spgcnt;
-		for (spgcnt = 0; spgcnt < SPRIGIDSWNUM; spgcnt++) {
-			if (s_sprigidsw[spgcnt].state) {
-				//s_sprigidsw[spgcnt].spriteON.DrawScreen(pRenderContext);
-				myRenderer::RENDERSPRITE rendersprite;
-				rendersprite.Init();
-				rendersprite.psprite = &(s_sprigidsw[spgcnt].spriteON);
-				re->AddSpriteToForwardRenderPass(rendersprite);
-			}
-			else {
-				//s_sprigidsw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
-				myRenderer::RENDERSPRITE rendersprite;
-				rendersprite.Init();
-				rendersprite.psprite = &(s_sprigidsw[spgcnt].spriteOFF);
-				re->AddSpriteToForwardRenderPass(rendersprite);
-			}
-		}
-	}
-	else if (s_platemenukind == SPPLATEMENUKIND_RETARGET) {
-
-		//Plate Menu 2
-		int sprcnt;
-		for (sprcnt = 0; sprcnt < SPRETARGETSWNUM; sprcnt++) {
-			if (s_spretargetsw[sprcnt].state) {
-				//s_spretargetsw[sprcnt].spriteON.DrawScreen(pRenderContext);
-				myRenderer::RENDERSPRITE rendersprite;
-				rendersprite.Init();
-				rendersprite.psprite = &(s_spretargetsw[sprcnt].spriteON);
-				re->AddSpriteToForwardRenderPass(rendersprite);
-			}
-			else {
-				//s_spretargetsw[sprcnt].spriteOFF.DrawScreen(pRenderContext);
-				myRenderer::RENDERSPRITE rendersprite;
-				rendersprite.Init();
-				rendersprite.psprite = &(s_spretargetsw[sprcnt].spriteOFF);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+			//Plate Menu 2
+			int sprcnt;
+			for (sprcnt = 0; sprcnt < SPRETARGETSWNUM; sprcnt++) {
+				if (s_spretargetsw[sprcnt].state) {
+					//s_spretargetsw[sprcnt].spriteON.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_spretargetsw[sprcnt].spriteON);
+					re->AddSpriteToForwardRenderPass(rendersprite);
+				}
+				else {
+					//s_spretargetsw[sprcnt].spriteOFF.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_spretargetsw[sprcnt].spriteOFF);
+					re->AddSpriteToForwardRenderPass(rendersprite);
+				}
 			}
 		}
 	}
@@ -39242,7 +39363,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver0.0.0.1 : No.%d : ", s_appcnt);
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.1 : No.%d : ", s_appcnt);
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -47437,7 +47558,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver0.0.0.1 : No.%d : ", s_appcnt);
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.1 : No.%d : ", s_appcnt);
 
 
 	if (s_model && s_chascene) {
@@ -51068,7 +51189,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	for (litno2 = 0; litno2 < LIGHTNUMMAX; litno2++) {
 		sliderpos = (int)(curlightscale[litno2] * 100.0f);;
 		SendMessage(GetDlgItem(hDlgWnd, lightsliderid[litno2]), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-		SendMessage(GetDlgItem(hDlgWnd, lightsliderid[litno2]), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)300);
+		SendMessage(GetDlgItem(hDlgWnd, lightsliderid[litno2]), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)500);
 		SendMessage(GetDlgItem(hDlgWnd, lightsliderid[litno2]), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 	}
 
@@ -51422,8 +51543,14 @@ void SetCamera3DFromEyePos()
 
 		g_cameraShadow->Update();
 
+		if ((g_shadowmap_slotno < 0) || (g_shadowmap_slotno >= SHADOWSLOTNUM)) {
+			_ASSERT(0);
+			g_shadowmap_slotno = 0;
+		}
+
 		ChaVector3 ldir;
-		if ((g_shadowmap_lightdir >= 1) && (g_shadowmap_lightdir <= 8)) {
+		if ((g_shadowmap_lightdir[g_shadowmap_slotno] >= 1) && 
+			(g_shadowmap_lightdir[g_shadowmap_slotno] <= 8)) {
 			ChaVector3 dirz = ChaVector3(0.0f, 0.0f, 1.0f);
 			ChaVector3 lightdir0, nlightdir0;
 			lightdir0 = g_camEye - g_camtargetpos;
@@ -51441,7 +51568,7 @@ void SetCamera3DFromEyePos()
 
 
 			ChaVector3 nlightdir;
-			ChaVector3Normalize(&nlightdir, &(g_lightDir[g_lightSlot][g_shadowmap_lightdir]));
+			ChaVector3Normalize(&nlightdir, &(g_lightDir[g_lightSlot][g_shadowmap_lightdir[g_shadowmap_slotno]]));
 			ChaVector3 rotdir;
 			if (rot180flag == false) {
 				camrotq.Rotate(&rotdir, nlightdir);
@@ -51461,15 +51588,16 @@ void SetCamera3DFromEyePos()
 
 		ChaVector3 lpos;
 		//lpos = g_camEye + ldir * (g_shadowmap_plusright * g_shadowmap_projscale);
-		lpos = g_camtargetpos - ldir * (ChaVector3LengthDbl(&camdiff) * g_shadowmap_plusright * g_shadowmap_projscale);
-		lpos.y = targetshadow.y + g_shadowmap_plusup * g_shadowmap_projscale;
+		lpos = g_camtargetpos - ldir * (ChaVector3LengthDbl(&camdiff) * 
+			g_shadowmap_plusright[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno]);
+		lpos.y = targetshadow.y + g_shadowmap_plusup[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
 
 		g_cameraShadow->SetPosition(Vector3(lpos.x, lpos.y, lpos.z));
 		g_cameraShadow->SetTarget(Vector3(targetshadow.x, targetshadow.y, targetshadow.z));
 
-		g_cameraShadow->SetNear(g_shadowmap_near * g_shadowmap_projscale);
-		g_cameraShadow->SetFar(g_shadowmap_far * g_shadowmap_projscale);
-		g_cameraShadow->SetViewAngle(g_shadowmap_fov / 180.0f * (float)PI);
+		g_cameraShadow->SetNear(g_shadowmap_near[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno]);
+		g_cameraShadow->SetFar(g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno]);
+		g_cameraShadow->SetViewAngle(g_shadowmap_fov[g_shadowmap_slotno] / 180.0f * (float)PI);
 		g_cameraShadow->SetUp(Vector3(0.0f, 1.0f, 0.0f));
 		g_cameraShadow->SetWidth((float)SHADOWMAP_SIZE);//2023/12/11 RenderingEngin::InitShadowMapでのバッファのサイズに合わせる
 		g_cameraShadow->SetHeight((float)SHADOWMAP_SIZE);//2023/12/11 RenderingEngin::InitShadowMapでのバッファのサイズに合わせる
