@@ -572,16 +572,16 @@ namespace myRenderer
             _ASSERT(0);
             return;
         }
-        //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
+        rc->WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
         //g_graphicsEngine->BeginRender();
-
+        //rc->WaitUntilToPossibleSetRenderTarget(g_graphicsEngine->GetRenderTarget());//2023/12/19
 
         // メインレンダリングターゲットの絵をフレームバッファーにコピー
         rc->SetRenderTarget(
             g_graphicsEngine->GetCurrentFrameBuffuerRTV(),
             g_graphicsEngine->GetCurrentFrameBuffuerDSV()
         );
-        rc->ClearDepthStencilView(g_graphicsEngine->GetCurrentFrameBuffuerDSV(), 1.0f);
+        //rc->ClearDepthStencilView(g_graphicsEngine->GetCurrentFrameBuffuerDSV(), 1.0f);
 
         // ビューポートを指定する
         //D3D12_VIEWPORT viewport;
@@ -608,6 +608,10 @@ namespace myRenderer
         m_copyMainRtToFrameBufferSprite.Draw(rc);
         //m_copyMainRtToFrameBufferSprite.UpdateScreen(ChaVector3(viewport.Width * 0.5f, viewport.Height * 0.5f, 0.0f), ChaVector2(viewport.Width, viewport.Height));
         //m_copyMainRtToFrameBufferSprite.DrawScreen(rc);
+
+        // 書き込み完了待ち
+        rc->WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
+        //rc->WaitUntilFinishDrawingToRenderTarget(g_graphicsEngine->GetRenderTarget());//2023/12/19
     }
 
     void RenderingEngine::RenderPolyMesh(RenderContext* rc, RENDEROBJ currenderobj)

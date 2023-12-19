@@ -2652,7 +2652,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb.mProj = mProj;
 		//m_cb.diffusemult = renderobj.diffusemult;
 		if (GetTempDiffuseMultFlag()) {
-			m_cb.diffusemult = GetTempDiffuseMult();
+			m_cb.diffusemult = GetTempDiffuseMult() * renderobj.diffusemult;
 		}
 		else {
 			m_cb.diffusemult = renderobj.diffusemult;
@@ -2688,7 +2688,12 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb.mWorld = renderobj.mWorld;
 		m_cb.mView = mView;
 		m_cb.mProj = mProj;
-		m_cb.diffusemult = renderobj.diffusemult;
+		if (GetTempDiffuseMultFlag()) {
+			m_cb.diffusemult = GetTempDiffuseMult() * renderobj.diffusemult;
+		}
+		else {
+			m_cb.diffusemult = renderobj.diffusemult;
+		}
 		m_cb.metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), 0.0f, 0.0f);
 		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_cb.shadowmaxz = ChaVector4(

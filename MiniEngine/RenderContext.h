@@ -326,7 +326,7 @@ public:
 	/// </remarks>
 	void WaitUntilToPossibleSetRenderTargets(int numRt, RenderTarget* renderTargets[]);
 	void WaitUntilToPossibleSetRenderTarget(RenderTarget& renderTarget);
-	void WaitUntilToPossibleSetRenderTarget( ID3D12Resource* renderTarget)
+	void WaitUntilToPossibleSetRenderTarget(ID3D12Resource* renderTarget)
 	{
 		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 		//D3D12_RESOURCE_STATE_SHADING_RATE_SOURCE  2023/11/24 How to use???? Present(0, 0)でも可変周波数にならない　後で調査

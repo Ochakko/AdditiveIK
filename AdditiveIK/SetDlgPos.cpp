@@ -12,6 +12,9 @@
 using namespace std;
 
 
+extern HWND g_mainhwnd;//アプリケーションウインドウハンドル
+
+
 int SetDlgPosDesktopCenter(HWND hDlgWnd, HWND hWndInsertAfter)
 {
 	int lefttopposx = 0;
@@ -32,18 +35,31 @@ int SetDlgPosDesktopCenter(HWND hDlgWnd, HWND hWndInsertAfter)
 		lefttopposy = (desktoprect.top + desktoprect.bottom) / 2;
 
 		//2023/01/26 dlgサイズを考慮して　デスクトップ中央に配置
+
+
 		RECT dlgrect;
 		::GetClientRect(hDlgWnd, &dlgrect);
-		POINT screenlefttop = { 0, 0 };
-		::ClientToScreen(hDlgWnd, &screenlefttop);
-		//2023/12/18 左上隅に表示されている場合だけセンターに持ってくる
-		if ((screenlefttop.x == 0) && (screenlefttop.y == 0)) {
+		POINT clientlefttop = { 0, 0 };
+		::ClientToScreen(hDlgWnd, &clientlefttop);
+		RECT apprect;
+		::GetWindowRect(g_mainhwnd, &apprect);
+		POINT windowlefttop = { apprect.left, apprect.top };
+
+		//2023/12/18 Appの左上隅に表示されている場合だけセンターに持ってくる
+		if (((clientlefttop.x - windowlefttop.x) >= 0) && 
+			((clientlefttop.x - windowlefttop.x) <= 24) &&//16:フレームの厚さなどの分より少し大きめ
+			((clientlefttop.y - windowlefttop.y) >= 0) &&
+			((clientlefttop.y - windowlefttop.y) <= 100)) {//82:Menuなどの分より少し大きめ
+
 			setposx = max(60, (lefttopposx - (dlgrect.right - dlgrect.left) / 2));
 			setposy = max(60, (lefttopposy - (dlgrect.bottom - dlgrect.top) / 2));
 			setposx = min(max(60, desktoprect.right - 60), setposx);
 			setposy = min(max(60, desktoprect.bottom - 60), setposy);
 
 			SetWindowPos(hDlgWnd, hWndInsertAfter, setposx, setposy, 0, 0, SWP_NOSIZE);
+		}
+		else {
+			int dbgflag1 = 1;
 		}
 	}
 	else {

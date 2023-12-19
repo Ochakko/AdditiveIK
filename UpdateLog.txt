@@ -2,6 +2,14 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2023/12/19
+AdditiveIK 1.0.0.1 RC2(リリース候補2)
+　ダイアログの最初の出現位置をセンターにしつつ　操作中に元の位置に戻らないように.
+　Rigボタンを押したときのRigの表示. Rigは球、RingX, RingY, RingZの４種類あり　それぞれ24個までの制限に.
+　準備中のウインドウ領域が白くならないように.
+
+
+
 2023/12/18
 AdditiveIK 1.0.0.1 RC1(リリース候補1)
 　Shadowパラメータを８スロット分設定可能に.

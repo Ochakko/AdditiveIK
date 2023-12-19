@@ -1310,6 +1310,8 @@ void s_dummyfunc()
 
 
 		void registerWindowClass(){
+			HBRUSH blkbrush = CreateSolidBrush(RGB(0, 0, 0));//自分で削除しない　DestroyWindow時に解放される
+
 			ZeroMemory((LPVOID)&wcex, sizeof(WNDCLASSEX));
 
 			wcex.cbSize			= sizeof(WNDCLASSEX);
@@ -1323,7 +1325,8 @@ void s_dummyfunc()
 			wcex.hIcon			= NULL;
 			wcex.hCursor		= LoadCursor(NULL,IDC_ARROW);
 			//wcex.hCursor		= NULL;
-			wcex.hbrBackground	= ( HBRUSH)( COLOR_WINDOW+1);
+			//wcex.hbrBackground	= ( HBRUSH)( COLOR_WINDOW+1);
+			wcex.hbrBackground = blkbrush;// (HBRUSH)COLOR_BACKGROUND + 1;
 			wcex.lpszMenuName	= NULL;
 			wcex.lpszClassName	= szclassName;
 			wcex.hIconSm		= NULL;

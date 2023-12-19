@@ -93,7 +93,8 @@ public:
 	/// <summary>
 	/// カメラの座標を取得。
 	/// </summary>
-	const Vector3& GetPosition() const
+	//const Vector3& GetPosition() const
+	const Vector3 GetPosition() const
 	{
 		return m_position;
 	}
@@ -112,7 +113,8 @@ public:
 	/// <summary>
 	/// 注視点を取得。
 	/// </summary>
-	const Vector3& GetTarget() const
+	//const Vector3& GetTarget() const
+	const Vector3 GetTarget() const
 	{
 		return m_target;
 	}
@@ -139,7 +141,8 @@ public:
 	/// <summary>
 	/// ビュー行列の逆行列を取得。
 	/// </summary>
-	const Matrix& GetViewMatrixInv() 
+	//const Matrix& GetViewMatrixInv() 
+	const Matrix GetViewMatrixInv()
 	{
 		if (m_isDirty) {
 			//更新する必要がある。
@@ -150,7 +153,8 @@ public:
 	/// <summary>
 	/// ビュー行列を取得。
 	/// </summary>
-	const Matrix& GetViewMatrix(bool LHflag) 
+	//const Matrix& GetViewMatrix(bool LHflag) 
+	const Matrix GetViewMatrix(bool LHflag)
 	{
 		if (!LHflag) {
 			//###
@@ -181,7 +185,8 @@ public:
 	/// <summary>
 	/// プロジェクション行列を取得。
 	/// </summary>
-	const Matrix& GetProjectionMatrix() 
+	//const Matrix& GetProjectionMatrix() 
+	const Matrix GetProjectionMatrix()
 	{
 		if (m_isDirty) {
 			//更新する必要がある。
@@ -192,7 +197,8 @@ public:
 	/// <summary>
 	/// ビュー×プロジェクション行列を取得。
 	/// </summary>
-	const Matrix& GetViewProjectionMatrix() 
+	//const Matrix& GetViewProjectionMatrix() 
+	const Matrix GetViewProjectionMatrix()
 	{
 		if (m_isDirty) {
 			//更新する必要がある。
@@ -203,7 +209,8 @@ public:
 	/// <summary>
 	/// カメラの回転行列を取得。
 	/// </summary>
-	const Matrix& GetCameraRotation() 
+	//const Matrix& GetCameraRotation() 
+	const Matrix GetCameraRotation()
 	{
 		if (m_isDirty) {
 			//更新する必要がある。

@@ -64,6 +64,12 @@ public:
 	{
 		return m_frameIndex;
 	}
+
+	ID3D12Resource* GetRenderTarget()
+	{
+		return m_renderTargets[m_frameIndex];
+	}
+
 	/// <summary>
 	/// コマンドキューを取得。
 	/// </summary>

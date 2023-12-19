@@ -91,7 +91,8 @@ class CMQOMaterial;
 #define JOINTNAMELENG	256	
 
 #define RIGPOSINDEXMAX	30
-#define RIGMULTINDEXMAX	12	
+//#define RIGMULTINDEXMAX	12	
+#define RIGMULTINDEXMAX	24
 
 
 // * 100だとOpenFile()関数のスタックサイズが大きすぎて警告が出るので * 32に変更

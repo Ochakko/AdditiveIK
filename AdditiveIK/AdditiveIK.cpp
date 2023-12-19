@@ -675,7 +675,6 @@ static ChaMatrix s_ikselectmat;//for ik, fk
 static int s_selectuserscale = 100;
 
 
-static HWND s_mainhwnd = NULL;
 
 static int s_onragdollik = 0;
 static int s_physicskind = 0;
@@ -710,11 +709,6 @@ static ChaVector4 s_matyellowmat;
 static ChaVector4 s_ringyellowmat;
 
 
-static CMQOMaterial* s_rigmaterial_sphere[RIGMULTINDEXMAX + 1];
-static CMQOMaterial* s_rigmaterial_ringX[RIGMULTINDEXMAX + 1];
-static CMQOMaterial* s_rigmaterial_ringY[RIGMULTINDEXMAX + 1];
-static CMQOMaterial* s_rigmaterial_ringZ[RIGMULTINDEXMAX + 1];
-static ChaVector4 s_matrigmat;
 
 
 
@@ -913,10 +907,21 @@ static CModel* s_bmark = NULL;
 //static CModel* s_coldisp[ COL_MAX ];
 static CModel* s_ground = NULL;
 static CModel* s_gplane = NULL;
+
+
+static int s_rigsphere_num;
+static int s_rigringX_num;
+static int s_rigringY_num;
+static int s_rigringZ_num;
 static CModel* s_rigopemark_sphere[RIGMULTINDEXMAX + 1];
 static CModel* s_rigopemark_ringX[RIGMULTINDEXMAX + 1];
 static CModel* s_rigopemark_ringY[RIGMULTINDEXMAX + 1];
 static CModel* s_rigopemark_ringZ[RIGMULTINDEXMAX + 1];
+static CMQOMaterial* s_rigmaterial_sphere[RIGMULTINDEXMAX + 1];
+static CMQOMaterial* s_rigmaterial_ringX[RIGMULTINDEXMAX + 1];
+static CMQOMaterial* s_rigmaterial_ringY[RIGMULTINDEXMAX + 1];
+static CMQOMaterial* s_rigmaterial_ringZ[RIGMULTINDEXMAX + 1];
+static ChaVector4 s_matrigmat;
 
 
 //static CModel* s_dummytri = NULL;
@@ -1901,7 +1906,10 @@ ChaVector4 g_lightdiffuseforshader[LIGHTNUMMAX];
 //#define IDC_EDGESMP					88
 
 
-HWND			g_hWnd;				//ウィンドウハンドル。
+HWND g_mainhwnd = NULL;//アプリケーションウインドウハンドル
+HWND g_hWnd = NULL;//3Dウィンドウハンドル。
+
+
 //ゲームの初期化。
 RECT InitGame(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	LPWSTR lpCmdLine, int nCmdShow, const TCHAR* appName, HWND srcparentwnd,
@@ -2338,10 +2346,11 @@ static int refreshModelPanel();
 static int RenderSelectMark(myRenderer::RenderingEngine* re, RenderContext* pRenderContext, int renderflag);
 static int RenderSelectFunc(myRenderer::RenderingEngine* re);
 static int RenderSelectPostureFunc(myRenderer::RenderingEngine* re);
-static int RenderRigMarkFunc(RenderContext* pRenderContext);
+static int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
 //static int SetSelectState(RenderContext* pRenderContext);
 
 
+static void ResetRigModelNum();
 static CModel* GetCurRigModel(CUSTOMRIG currig);
 static CFrameCopyDlg* GetCurrentFrameCopyDlg();
 
@@ -2457,7 +2466,7 @@ static int PickSpMaterialRate(POINT srcpos);
 
 
 static int PickRigBone(UIPICKINFO* ppickinfo, bool forrigtip = false, int* dstrigno = 0);
-static ChaMatrix CalcRigMat(CBone* curbone, int curmotid, double curframe, int dispaxis, int disporder, bool posinverse);
+static ChaMatrix CalcRigMat(CUSTOMRIG* currig, CBone* curbone, int curmotid, double curframe, int dispaxis, int disporder, bool posinverse);
 
 static int PickManipulator(UIPICKINFO* ppickinfo, bool pickring);
 
@@ -2865,8 +2874,8 @@ INT WINAPI wWinMain(
 
 
 
-	s_mainhwnd = CreateMainWindow();
-	if (s_mainhwnd == NULL) {
+	g_mainhwnd = CreateMainWindow();
+	if (g_mainhwnd == NULL) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -3046,10 +3055,10 @@ INT WINAPI wWinMain(
 	//}
 
 
-	//s_iktimerid = (int)::SetTimer(s_mainhwnd, s_iktimerid, 16, NULL);
+	//s_iktimerid = (int)::SetTimer(g_mainhwnd, s_iktimerid, 16, NULL);
 
-	//if (s_mainhwnd) {
-	//	SetCapture(s_mainhwnd);
+	//if (g_mainhwnd) {
+	//	SetCapture(g_mainhwnd);
 	//}
 
 	s_hhook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, 0,
@@ -3095,7 +3104,7 @@ INT WINAPI wWinMain(
 			//WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
 			//int dispfps = (int)(s_avrgfps + 0.5);
 			//swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.1 : No.%d : fps %d", s_appcnt, dispfps);
-			//SetWindowText(s_mainhwnd, strmaintitle);
+			//SetWindowText(g_mainhwnd, strmaintitle);
 
 
 			//ドキュメント更新
@@ -4598,7 +4607,7 @@ void OnDestroyDevice()
 	s_rgdindexmap.clear();
 
 
-	//::KillTimer(s_mainhwnd, s_iktimerid);
+	//::KillTimer(g_mainhwnd, s_iktimerid);
 
 
 	if (s_editrangehistory) {
@@ -5414,11 +5423,11 @@ void OnDestroyDevice()
 		s_3dwnd = 0;
 	}
 	s_3dwnd = 0;
-	if (s_mainhwnd && IsWindow(s_mainhwnd)) {
-		DestroyWindow(s_mainhwnd);
-		s_mainhwnd = 0;
+	if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+		DestroyWindow(g_mainhwnd);
+		g_mainhwnd = 0;
 	}
-	s_mainhwnd = 0;
+	g_mainhwnd = 0;
 
 
 
@@ -5897,14 +5906,20 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 		_ASSERT(0);
 		return;
 	}
+	if ((s_chascene->GetModelNum() > 0) && 
+		s_model && s_model->GetLoadedFlag() && (s_nowloading == false)) {
+		SetCamera3DFromEyePos();
+	}
+	else {
+		OnRenderNowLoading();
+		Sleep(1);
+		return;//!!!!!!!!!!!! ModelNum == 0のときは　すぐにリターン
+	}
 
 
 	// レンダリング開始
 	g_engine->BeginFrame();
 
-	if (s_chascene->GetModelNum() > 0) {
-		SetCamera3DFromEyePos();
-	}
 
 	//g_camera3D->MoveForward(g_pad[0]->GetLStickYF());
 	//g_camera3D->MoveRight(g_pad[0]->GetLStickXF());
@@ -6960,7 +6975,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				if ((s_undoFlag == false) && (s_redoFlag == false)) {
 					s_undoFlag = true;
 				}
-				//PostMessage(s_mainhwnd, WM_KEYDOWN, VK_CONTROL | 'Z', 0);
+				//PostMessage(g_mainhwnd, WM_KEYDOWN, VK_CONTROL | 'Z', 0);
 				//PostMessage(s_3dwnd, WM_KEYDOWN, VK_CONTROL | 'Z', 0);
 			}
 			else if (pickundo == PICK_REDO)
@@ -6969,7 +6984,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				if ((s_undoFlag == false) && (s_redoFlag == false)) {
 					s_redoFlag = true;
 				}
-				//PostMessage(s_mainhwnd, WM_KEYDOWN, VK_CONTROL | VK_SHIFT | 'Z', 0);
+				//PostMessage(g_mainhwnd, WM_KEYDOWN, VK_CONTROL | VK_SHIFT | 'Z', 0);
 				//PostMessage(s_3dwnd, WM_KEYDOWN, VK_CONTROL | VK_SHIFT | 'Z', 0);
 			}
 		}
@@ -8132,7 +8147,7 @@ int RollbackCurBoneNo()
 //				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 //				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 //					_ASSERT(0);
-//					::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+//					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 //					PostQuitMessage(result);
 //				}
 //				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
@@ -8147,7 +8162,7 @@ int RollbackCurBoneNo()
 //				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 //				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 //					_ASSERT(0);
-//					::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+//					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 //					PostQuitMessage(result);
 //				}
 //				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
@@ -8162,7 +8177,7 @@ int RollbackCurBoneNo()
 //				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 //				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 //					_ASSERT(0);
-//					::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+//					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 //					PostQuitMessage(result);
 //				}
 //				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
@@ -8179,7 +8194,7 @@ int RollbackCurBoneNo()
 //			int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 //			if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 //				_ASSERT(0);
-//				::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+//				::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 //				PostQuitMessage(result);
 //			}
 //		}
@@ -8201,7 +8216,7 @@ int RollbackCurBoneNo()
 //			int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 //			if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 //				_ASSERT(0);
-//				::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+//				::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 //				PostQuitMessage(result);
 //			}
 //		}
@@ -8239,7 +8254,7 @@ int RollbackCurBoneNo()
 //				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 //				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 //					_ASSERT(0);
-//					::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+//					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 //					PostQuitMessage(result);
 //				}
 //			}
@@ -9046,7 +9061,7 @@ int RetargetBatch()
 
 	//2023/10/12
 	int optionret;
-	optionret = (int)::MessageBox(s_mainhwnd, L"リターゲット前にSmooth処理をしますか？\nDo you want to smooth before retargeting?\nN or Y.", L"Select Option", 
+	optionret = (int)::MessageBox(g_mainhwnd, L"リターゲット前にSmooth処理をしますか？\nDo you want to smooth before retargeting?\nN or Y.", L"Select Option", 
 		MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2);
 	if (optionret == IDYES) {
 		s_smoothBefRetarget = true;
@@ -9610,7 +9625,7 @@ int OpenFile()
 		if (result != 0) {
 			WCHAR strerror[MAX_PATH * 2] = { 0L };
 			swprintf_s(strerror, MAX_PATH * 2, L"%s の\n読み込みに失敗しました。", g_tmpmqopath);
-			MessageBox(s_mainhwnd, strerror, L"エラー", MB_OK);
+			MessageBox(g_mainhwnd, strerror, L"エラー", MB_OK);
 			s_nowloading = false;
 
 			if (tmpsavepath)
@@ -9680,7 +9695,7 @@ int OpenFile()
 			if (result != 0) {
 				WCHAR strerror[MAX_PATH * 2] = { 0L };
 				swprintf_s(strerror, MAX_PATH * 2, L"%s の\n読み込みに失敗しました。", g_tmpmqopath);
-				MessageBox(s_mainhwnd, strerror, L"エラー", MB_OK);
+				MessageBox(g_mainhwnd, strerror, L"エラー", MB_OK);
 				s_nowloading = false;
 				if (tmpsavepath)
 					delete[] tmpsavepath;
@@ -9696,7 +9711,7 @@ int OpenFile()
 			else {
 				WCHAR strerror[MAX_PATH * 2] = { 0L };
 				swprintf_s(strerror, MAX_PATH * 2, L"%s の\n読み込みに失敗しました。", g_tmpmqopath);
-				MessageBox(s_mainhwnd, strerror, L"エラー", MB_OK);
+				MessageBox(g_mainhwnd, strerror, L"エラー", MB_OK);
 				s_nowloading = false;
 				if (tmpsavepath)
 					delete[] tmpsavepath;
@@ -10147,7 +10162,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 
 
 
-//::MessageBox(s_mainhwnd, L"check 1", L"check!!!", MB_OK);
+//::MessageBox(g_mainhwnd, L"check 1", L"check!!!", MB_OK);
 
 	CalcTotalBound();
 
@@ -10165,7 +10180,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	//	OnDelMotion( 0 );//初期状態のダミーモーションを削除
 	//}
 
-//::MessageBox(s_mainhwnd, L"check 2", L"check!!!", MB_OK);
+//::MessageBox(g_mainhwnd, L"check 2", L"check!!!", MB_OK);
 
 	//OnAnimMenuでCreateRigidElemを呼ぶ前に、default_ref.refを読む
 	if (skipdefref == 1) {//プロジェクトファイルから呼ばれて、かつ、default_ref.refが存在する場合
@@ -10192,7 +10207,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 		}
 	}
 
-	//::MessageBox(s_mainhwnd, L"check 3", L"check!!!", MB_OK);
+	//::MessageBox(g_mainhwnd, L"check 3", L"check!!!", MB_OK);
 
 
 		//if (inittimelineflag == 1)//inittimelineflag は 最後のキャラの時に１
@@ -10204,7 +10219,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 
 			//WCHAR strchk[256] = { 0L };
 			//swprintf_s(strchk, 256, L"check 3 : %d / %d", motno, motnum);
-			//::MessageBox(s_mainhwnd, strchk, L"check!!!", MB_OK);
+			//::MessageBox(g_mainhwnd, strchk, L"check!!!", MB_OK);
 
 			MOTINFO* curmi = s_model->GetMotInfo(motno + 1);
 			if (curmi) {
@@ -10226,7 +10241,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	}
 	//}
 
-//::MessageBox(s_mainhwnd, L"check 4", L"check!!!", MB_OK);
+//::MessageBox(g_mainhwnd, L"check 4", L"check!!!", MB_OK);
 
 
 	//2023/10/27
@@ -10259,7 +10274,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 		OnRenderNowLoading();
 	}
 
-	//::MessageBox(s_mainhwnd, L"check 5", L"check!!!", MB_OK);
+	//::MessageBox(g_mainhwnd, L"check 5", L"check!!!", MB_OK);
 
 	OnRgdMorphMenu(0);
 
@@ -10298,7 +10313,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 		//_ASSERT(chkret2 == 0);
 	}
 
-	//::MessageBox(s_mainhwnd, L"check 6", L"check!!!", MB_OK);
+	//::MessageBox(g_mainhwnd, L"check 6", L"check!!!", MB_OK);
 
 
 	s_model->SetMotionSpeed(g_dspeed);
@@ -10338,7 +10353,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 
 	//ShowRigidWnd(true);
 
-//::MessageBox(s_mainhwnd, L"check 7", L"check!!!", MB_OK);
+//::MessageBox(g_mainhwnd, L"check 7", L"check!!!", MB_OK);
 
 
 
@@ -10356,7 +10371,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 
 	OrgWindowListenMouse(true);
 
-	//::MessageBox(s_mainhwnd, L"check 8", L"check!!!", MB_OK);
+	//::MessageBox(g_mainhwnd, L"check 8", L"check!!!", MB_OK);
 
 
 	SetTimelineHasRigFlag();
@@ -10973,7 +10988,7 @@ int refreshEulerGraph()
 		int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 		if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 			_ASSERT(0);
-			::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+			::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 			PostQuitMessage(result);
 		}
 		//}
@@ -12976,15 +12991,22 @@ CFrameCopyDlg* GetCurrentFrameCopyDlg()
 }
 
 
+void ResetRigModelNum()
+{
+	s_rigsphere_num = 0;
+	s_rigringX_num = 0;
+	s_rigringY_num = 0;
+	s_rigringZ_num = 0;
+}
 CModel* GetCurRigModel(CUSTOMRIG currig)
 {
-	int rigopemarkno = currig.shapemult;
+	//int rigopemarkno = currig.shapemult;
 	int rigshapekind = currig.shapekind;
 	int rigaxis = currig.dispaxis;
 	int rigcolor = currig.rigcolor;
 
-	if ((rigopemarkno >= 0) && (rigopemarkno <= RIGMULTINDEXMAX) &&
-		(rigshapekind >= RIGSHAPE_SPHERE) && (rigshapekind < RIGSHAPE_MAX) &&
+	//if ((rigopemarkno >= 0) && (rigopemarkno <= RIGMULTINDEXMAX) &&
+	if((rigshapekind >= RIGSHAPE_SPHERE) && (rigshapekind < RIGSHAPE_MAX) &&
 		(rigaxis >= 0) && (rigaxis <= 2) && 
 		(rigcolor >= 0) && (rigcolor < RIGCOLOR_MAX)) {
 
@@ -13012,20 +13034,56 @@ CModel* GetCurRigModel(CUSTOMRIG currig)
 
 		CModel* currigmodel;
 		if (rigshapekind == RIGSHAPE_SPHERE) {
-			currigmodel = s_rigopemark_sphere[rigopemarkno];
-			s_rigmaterial_sphere[rigopemarkno]->SetDif4F(s_matrigmat);
+			if (s_rigsphere_num >= RIGMULTINDEXMAX) {
+				_ASSERT(0);
+				return nullptr;
+			}
+
+			currigmodel = s_rigopemark_sphere[s_rigsphere_num];
+			//s_rigmaterial_sphere[s_rigsphere_num]->SetDif4F(s_matrigmat);
+			s_rigmaterial_sphere[s_rigsphere_num]->SetTempDiffuseMult(s_matrigmat);
+			s_rigmaterial_sphere[s_rigsphere_num]->SetTempDiffuseMultFlag(true);
+
+			s_rigsphere_num++;
 		}
 		else if (rigshapekind == RIGSHAPE_RINGX) {
-			currigmodel = s_rigopemark_ringX[rigopemarkno];
-			s_rigmaterial_ringX[rigopemarkno]->SetDif4F(s_matrigmat);
+			if (s_rigringX_num >= RIGMULTINDEXMAX) {
+				_ASSERT(0);
+				return nullptr;
+			}
+
+			currigmodel = s_rigopemark_ringX[s_rigringX_num];
+			//s_rigmaterial_ringX[s_rigringX_num]->SetDif4F(s_matrigmat);
+			s_rigmaterial_ringX[s_rigringX_num]->SetTempDiffuseMult(s_matrigmat);
+			s_rigmaterial_ringX[s_rigringX_num]->SetTempDiffuseMultFlag(true);
+
+			s_rigringX_num++;
 		}
 		else if (rigshapekind == RIGSHAPE_RINGY) {
-			currigmodel = s_rigopemark_ringY[rigopemarkno];
-			s_rigmaterial_ringY[rigopemarkno]->SetDif4F(s_matrigmat);
+			if (s_rigringY_num >= RIGMULTINDEXMAX) {
+				_ASSERT(0);
+				return nullptr;
+			}
+
+			currigmodel = s_rigopemark_ringY[s_rigringY_num];
+			//s_rigmaterial_ringY[s_rigringY_num]->SetDif4F(s_matrigmat);
+			s_rigmaterial_ringY[s_rigringY_num]->SetTempDiffuseMult(s_matrigmat);
+			s_rigmaterial_ringY[s_rigringY_num]->SetTempDiffuseMultFlag(true);
+
+			s_rigringY_num++;
 		}
 		else if (rigshapekind == RIGSHAPE_RINGZ) {
-			currigmodel = s_rigopemark_ringZ[rigopemarkno];
-			s_rigmaterial_ringZ[rigopemarkno]->SetDif4F(s_matrigmat);
+			if (s_rigringZ_num >= RIGMULTINDEXMAX) {
+				_ASSERT(0);
+				return nullptr;
+			}
+
+			currigmodel = s_rigopemark_ringZ[s_rigringZ_num];
+			//s_rigmaterial_ringZ[s_rigringZ_num]->SetDif4F(s_matrigmat);
+			s_rigmaterial_ringZ[s_rigringZ_num]->SetTempDiffuseMult(s_matrigmat);
+			s_rigmaterial_ringZ[s_rigringZ_num]->SetTempDiffuseMultFlag(true);
+
+			s_rigringZ_num++;
 		}
 		else {
 			_ASSERT(0);
@@ -13040,7 +13098,7 @@ CModel* GetCurRigModel(CUSTOMRIG currig)
 
 }
 
-int RenderRigMarkFunc(RenderContext* pRenderContext)
+int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 {
 	if (!pRenderContext) {
 		_ASSERT(0);
@@ -13054,7 +13112,7 @@ int RenderRigMarkFunc(RenderContext* pRenderContext)
 
 	//g_hmVP->SetMatrix(s_matVP.GetDataPtr());
 
-
+	ResetRigModelNum();
 	MOTINFO* curmi = s_model->GetCurMotInfo();
 	if (curmi) {
 		int curmotid = curmi->motid;
@@ -13072,31 +13130,19 @@ int RenderRigMarkFunc(RenderContext* pRenderContext)
 						CModel* currigmodel;
 						currigmodel = GetCurRigModel(currig);
 						if (currigmodel) {
-							//ChaVector3 curbonepos = curbone->GetWorldPos(g_limitdegflag, curmotid, curframe);
-
-							//pos transform
 							ChaMatrix rigmat;
 							ChaMatrixIdentity(&rigmat);
-							rigmat = CalcRigMat(curbone, curmotid, curframe, currig.dispaxis, currig.disporder, currig.posinverse);
+							rigmat = CalcRigMat(&currig, curbone, curmotid, curframe, currig.dispaxis, currig.disporder, currig.posinverse);
 							//g_hmWorld->SetMatrix(rigmat.GetDataPtr());
 
-							//####################################
-							//zcmpalways, zcmpは alphaで自動切換え
-							//####################################
-
 							currigmodel->UpdateMatrix(g_limitdegflag, &rigmat, &s_matVP);
-							//s_pdev->SetRenderState(D3DRS_ZFUNC, D3DCMP_ALWAYS);
-							//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmpAlways, 1);
+
 							int lightflag = 0;
-							//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-							ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-							bool withalpha = false;
-							currigmodel->OnRender(withalpha, pRenderContext, lightflag, diffusemult);
-							withalpha = true;
-							currigmodel->OnRender(withalpha, pRenderContext, lightflag, diffusemult);
-							//s_pdev->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
-							//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
-						
+							ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.75f);
+							bool forcewithalpha = true;
+							int btflag = 0;
+							bool zcmpalways = false;
+							s_chascene->RenderOneModel(currigmodel, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
 						}
 					}
 				}
@@ -15516,7 +15562,12 @@ int CreateModelPanel()
 		return 0;
 	}
 
+	if (s_modelpanel.panel) {
+		s_firstmodelpanelpos = false;
+		s_modelpanelpos = s_modelpanel.panel->getPos();
+	}
 	DestroyModelPanel();
+
 
 	if (!s_chascene) {
 		_ASSERT(0);
@@ -15535,7 +15586,7 @@ int CreateModelPanel()
 	HWND parentwnd;
 	int istopmost;
 	if (g_4kresolution) {
-		parentwnd = s_mainhwnd;
+		parentwnd = g_mainhwnd;
 		istopmost = 0;
 		//istopmost = 1;
 	}
@@ -15544,22 +15595,21 @@ int CreateModelPanel()
 		istopmost = 1;
 	}
 
-	if (s_firstmodelpanelpos) {
-		if (g_4kresolution) {
-			s_modelpanelpos = WindowPos(s_timelinewidth, MAINMENUAIMBARH);
+	if (g_4kresolution) {
+		//4Kの場合には　位置固定フレームに埋め込み
+		s_modelpanelpos = WindowPos(s_timelinewidth, MAINMENUAIMBARH);
+	}
+	else if (s_firstmodelpanelpos) {
+		RECT wnd3drect;
+		if (g_mainhwnd) {
+			GetWindowRect(g_mainhwnd, &wnd3drect);
+			s_modelpanelpos = WindowPos(wnd3drect.left + 100, wnd3drect.top + 500);
 		}
 		else {
-			RECT wnd3drect;
-			if (s_mainhwnd) {
-				GetWindowRect(s_mainhwnd, &wnd3drect);
-				s_modelpanelpos = WindowPos(wnd3drect.left + 100, wnd3drect.top + 500);
-			}
-			else {
-				s_modelpanelpos = WindowPos(200, s_2ndposy);
-			}
+			s_modelpanelpos = WindowPos(200, s_2ndposy);
 		}
-		s_firstmodelpanelpos = false;
 	}
+	s_firstmodelpanelpos = false;
 
 
 	s_modelpanel.panel = new OrgWindow(
@@ -15570,7 +15620,7 @@ int CreateModelPanel()
 		s_modelpanelpos,
 		WindowSize(s_modelwindowwidth, s_modelwindowheight),	//サイズ
 		L"ModelPanel",	//タイトル
-		//s_mainhwnd,					//親ウィンドウハンドル
+		//g_mainhwnd,					//親ウィンドウハンドル
 		//false,
 		parentwnd,
 		true,					//表示・非表示状態
@@ -15804,8 +15854,8 @@ int CreateModelPanel()
 		//	}
 		//	else {
 		//		RECT wnd3drect;
-		//		if (s_mainhwnd) {
-		//			GetWindowRect(s_mainhwnd, &wnd3drect);
+		//		if (g_mainhwnd) {
+		//			GetWindowRect(g_mainhwnd, &wnd3drect);
 		//			s_modelpanelpos = WindowPos(wnd3drect.left + 100, wnd3drect.top + 500);
 		//		}
 		//		else {
@@ -15885,7 +15935,10 @@ int CreateCameraPanel()
 		return 0;
 	}
 
-
+	if (s_camerapanel.panel) {
+		s_firstcamerapanelpos = false;
+		s_camerapanelpos = s_camerapanel.panel->getPos();
+	}
 	DestroyCameraPanel();
 
 	if (!s_chascene) {
@@ -15919,7 +15972,7 @@ int CreateCameraPanel()
 	HWND parentwnd;
 	int istopmost;
 	if (g_4kresolution) {
-		parentwnd = s_mainhwnd;
+		parentwnd = g_mainhwnd;
 		istopmost = 0;
 		//istopmost = 1;
 	}
@@ -15928,22 +15981,22 @@ int CreateCameraPanel()
 		istopmost = 1;
 	}
 
-	if (s_firstcamerapanelpos) {
+
+	if (g_4kresolution) {
+		//4Kの場合には　位置固定フレームに埋め込み
+		s_camerapanelpos = WindowPos(s_timelinewidth, MAINMENUAIMBARH + s_modelwindowheight + s_motionwindowheight);
+	}
+	else if (s_firstcamerapanelpos) {
 		RECT wnd3drect;
-		if (g_4kresolution) {
-			s_camerapanelpos = WindowPos(s_timelinewidth, MAINMENUAIMBARH + s_modelwindowheight + s_motionwindowheight);
+		if (g_mainhwnd) {
+			GetWindowRect(g_mainhwnd, &wnd3drect);
+			s_camerapanelpos = WindowPos(wnd3drect.left + 500 + 500, wnd3drect.top + 500);
 		}
 		else {
-			if (s_mainhwnd) {
-				GetWindowRect(s_mainhwnd, &wnd3drect);
-				s_camerapanelpos = WindowPos(wnd3drect.left + 500 + 500, wnd3drect.top + 500);
-			}
-			else {
-				s_motionpanelpos = WindowPos(700, s_2ndposy);
-			}
+			s_motionpanelpos = WindowPos(700, s_2ndposy);
 		}
-		s_firstcamerapanelpos = false;
 	}
+	s_firstcamerapanelpos = false;
 
 
 	s_camerapanel.panel = new OrgWindow(
@@ -15953,7 +16006,7 @@ int CreateCameraPanel()
 		s_camerapanelpos,		//位置
 		WindowSize(s_camerawindowwidth, s_camerawindowheight),	//サイズ
 		L"CameraPanel",	//タイトル
-		//s_mainhwnd,					//親ウィンドウハンドル
+		//g_mainhwnd,					//親ウィンドウハンドル
 		//false,
 		parentwnd,
 		true,					//表示・非表示状態
@@ -16203,7 +16256,10 @@ int CreateMotionPanel()
 		return 0;
 	}
 
-
+	if (s_motionpanel.panel) {
+		s_firstmotionpanelpos = false;
+		s_motionpanelpos = s_motionpanel.panel->getPos();
+	}
 	DestroyMotionPanel();
 
 
@@ -16238,7 +16294,7 @@ int CreateMotionPanel()
 	HWND parentwnd;
 	int istopmost;
 	if (g_4kresolution) {
-		parentwnd = s_mainhwnd;
+		parentwnd = g_mainhwnd;
 		istopmost = 0;
 		//istopmost = 1;
 	}
@@ -16247,22 +16303,22 @@ int CreateMotionPanel()
 		istopmost = 1;
 	}
 
-	if (s_firstmotionpanelpos) {
+
+	if (g_4kresolution) {
+		//4Kの場合には　位置固定フレームに埋め込み
+		s_motionpanelpos = WindowPos(s_timelinewidth, MAINMENUAIMBARH + s_modelwindowheight);
+	}
+	else if (s_firstmotionpanelpos) {
 		RECT wnd3drect;
-		if (g_4kresolution) {
-			s_motionpanelpos = WindowPos(s_timelinewidth, MAINMENUAIMBARH + s_modelwindowheight);
+		if (g_mainhwnd) {
+			GetWindowRect(g_mainhwnd, &wnd3drect);
+			s_motionpanelpos = WindowPos(wnd3drect.left + 500, wnd3drect.top + 500);
 		}
 		else {
-			if (s_mainhwnd) {
-				GetWindowRect(s_mainhwnd, &wnd3drect);
-				s_motionpanelpos = WindowPos(wnd3drect.left + 500, wnd3drect.top + 500);
-			}
-			else {
-				s_motionpanelpos = WindowPos(600, s_2ndposy);
-			}
+			s_motionpanelpos = WindowPos(600, s_2ndposy);
 		}
-		s_firstmotionpanelpos = false;
 	}
+	s_firstmotionpanelpos = false;
 
 
 	s_motionpanel.panel = new OrgWindow(
@@ -16272,7 +16328,7 @@ int CreateMotionPanel()
 		s_motionpanelpos,		//位置
 		WindowSize(s_motionwindowwidth, s_motionwindowheight),	//サイズ
 		L"MotionPanel",	//タイトル
-		//s_mainhwnd,					//親ウィンドウハンドル
+		//g_mainhwnd,					//親ウィンドウハンドル
 		//false,
 		parentwnd,
 		true,					//表示・非表示状態
@@ -16571,7 +16627,7 @@ int CreateConvBoneWnd()
 
 	if (!s_model) {
 		_ASSERT(0);
-		::MessageBox(s_mainhwnd, L"modelメニューでmodelを選択して下さい", L"model not selected !!!", MB_OK);
+		::MessageBox(g_mainhwnd, L"modelメニューでmodelを選択して下さい", L"model not selected !!!", MB_OK);
 		return 0;
 	}
 	//if (s_model->GetBoneListSize() <= 1) {
@@ -16604,7 +16660,7 @@ int CreateConvBoneWnd()
 		WindowPos(windowposx, s_sidemenuheight),		//位置
 		WindowSize(s_sidewidth, s_sideheight),	//サイズ
 		L"ConvBoneWnd",	//タイトル
-		s_mainhwnd,					//親ウィンドウハンドル
+		g_mainhwnd,					//親ウィンドウハンドル
 		false,					//表示・非表示状態
 		//true,					//表示・非表示状態
 		//70, 50, 70,				//カラー
@@ -16876,7 +16932,7 @@ int CreateConvBoneWnd()
 			s_cbselbvh->setButtonListener([]() {
 				if (s_model) {
 					if (!s_convbone_model || (s_convbone_model != s_model)) {
-						::DSMessageBox(s_mainhwnd, L"Retry after selecting ShapeModel using ModelMenu Of MainWindow.", L"error!!!", MB_OK);
+						::DSMessageBox(g_mainhwnd, L"Retry after selecting ShapeModel using ModelMenu Of MainWindow.", L"error!!!", MB_OK);
 					}
 					else {
 						SetConvBoneBvh();
@@ -17743,18 +17799,18 @@ int OnAddMotion(int srcmotid, bool dorefreshtl)
 
 //WCHAR strchk[256] = { 0L };
 //swprintf_s(strchk, 256, L"check OnAddMotion : 1 : %d, %d", srcmotid, (int)dorefreshtl);
-//::MessageBox(s_mainhwnd, strchk, L"check!!!", MB_OK);
+//::MessageBox(g_mainhwnd, strchk, L"check!!!", MB_OK);
 
 	CallF(AddTimeLine(srcmotid, dorefreshtl), return 1);
 
 	//swprintf_s(strchk, 256, L"check OnAddMotion : 2 : %d, %d", srcmotid, (int)dorefreshtl);
-	//::MessageBox(s_mainhwnd, strchk, L"check!!!", MB_OK);
+	//::MessageBox(g_mainhwnd, strchk, L"check!!!", MB_OK);
 
 	int selindex = (int)s_tlarray.size() - 1;
 	CallF(OnAnimMenu(dorefreshtl, selindex), return 1);
 
 	//swprintf_s(strchk, 256, L"check OnAddMotion : 3 : %d, %d", srcmotid, (int)dorefreshtl);
-	//::MessageBox(s_mainhwnd, strchk, L"check!!!", MB_OK);
+	//::MessageBox(g_mainhwnd, strchk, L"check!!!", MB_OK);
 
 
 	return 0;
@@ -18487,7 +18543,7 @@ int SaveProject()
 	int result = chafile.WriteChaFile(g_bakelimiteulonsave, s_bpWorld, s_projectdir, s_projectname,
 		writemodelindex, (float)g_dspeed, s_selbonedlgmap);
 	if (result) {
-		::MessageBox(s_mainhwnd, L"保存に失敗しました。", L"Error", MB_OK);
+		::MessageBox(g_mainhwnd, L"保存に失敗しました。", L"Error", MB_OK);
 		if (oldcursor) {
 			SetCursor(oldcursor);
 		}
@@ -19153,7 +19209,7 @@ int SetSpMenuAimBarParams()
 	////int spgshift = 6;
 
 	//HMENU mainmenu;
-	//mainmenu = GetMenu(s_mainhwnd);
+	//mainmenu = GetMenu(g_mainhwnd);
 	//int menuno;
 	//for (menuno = 0; menuno < SPMENU_MAX; menuno++) {
 	//	HMENU submenu = GetSubMenu(mainmenu, menuno);
@@ -19162,7 +19218,7 @@ int SetSpMenuAimBarParams()
 	//		curmenuitemid = ::GetMenuItemID(submenu, 0);
 	//		if (curmenuitemid >= 0) {
 	//			RECT rc;
-	//			GetMenuItemRect(s_mainhwnd, mainmenu, menuno, &rc);
+	//			GetMenuItemRect(g_mainhwnd, mainmenu, menuno, &rc);
 	//			int spritewidth = rc.right - rc.left;//org:140
 	//			int spriteheight = 6;//org:6
 
@@ -19172,8 +19228,8 @@ int SetSpMenuAimBarParams()
 	//			point1.y = rc.top;
 	//			point2.x = rc.right;
 	//			point2.y = rc.bottom;
-	//			::ClientToScreen(s_mainhwnd, &point1);
-	//			::ClientToScreen(s_mainhwnd, &point2);
+	//			::ClientToScreen(g_mainhwnd, &point1);
+	//			::ClientToScreen(g_mainhwnd, &point2);
 	//			//::ScreenToClient(s_mainmenuaimbarWnd->getHWnd(), &point1);
 	//			//::ScreenToClient(s_mainmenuaimbarWnd->getHWnd(), &point2);
 
@@ -21842,7 +21898,7 @@ int CreateMotionBrush(double srcstart, double srcend, bool onrefreshflag)
 					ret = (s_plugin + pluginno)->CreateMotionBrush(g_motionbrush_startframe, g_motionbrush_endframe, g_motionbrush_applyframe, g_motionbrush_frameleng, g_brushrepeats, g_brushmirrorUflag, g_brushmirrorVflag, g_ifmirrorVDiv2flag, tempvalue);
 					if ((ret != 0) && (ret != 2)) {
 						_ASSERT(0);
-						::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+						::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 						PostQuitMessage(ret);
 					}
 				}
@@ -22351,7 +22407,7 @@ int CreateGUIDlgDispParams()
 		return 0;
 	}
 
-	s_guidlg[GUIDLG_DISP_AND_LIMITS] = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_GUIDISPPARAMS), s_mainhwnd, (DLGPROC)GUIDispParamsDlgProc);
+	s_guidlg[GUIDLG_DISP_AND_LIMITS] = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_GUIDISPPARAMS), g_mainhwnd, (DLGPROC)GUIDispParamsDlgProc);
 	if (!s_guidlg[GUIDLG_DISP_AND_LIMITS]) {
 		_ASSERT(0);
 		return 1;
@@ -22365,7 +22421,7 @@ int CreateGUIDlgDispParams()
 		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
-	SetParent(s_guidlg[GUIDLG_DISP_AND_LIMITS], s_mainhwnd);
+	SetParent(s_guidlg[GUIDLG_DISP_AND_LIMITS], g_mainhwnd);
 	SetWindowPos(
 		s_guidlg[GUIDLG_DISP_AND_LIMITS],
 		HWND_TOP,
@@ -22387,7 +22443,7 @@ int CreateGUIDlgBrushes()
 		return 0;
 	}
 
-	s_guidlg[GUIDLG_BRUSHPARAMS] = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_GUIBRUSHESDLG), s_mainhwnd, (DLGPROC)GUIBrushesDlgProc);
+	s_guidlg[GUIDLG_BRUSHPARAMS] = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_GUIBRUSHESDLG), g_mainhwnd, (DLGPROC)GUIBrushesDlgProc);
 	if (!s_guidlg[GUIDLG_BRUSHPARAMS]) {
 		_ASSERT(0);
 		return 1;
@@ -22401,7 +22457,7 @@ int CreateGUIDlgBrushes()
 		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
-	SetParent(s_guidlg[GUIDLG_BRUSHPARAMS], s_mainhwnd);
+	SetParent(s_guidlg[GUIDLG_BRUSHPARAMS], g_mainhwnd);
 	SetWindowPos(
 		s_guidlg[GUIDLG_BRUSHPARAMS],
 		HWND_TOP,
@@ -22423,7 +22479,7 @@ int CreateGUIDlgBullet()
 		return 0;
 	}
 
-	s_guidlg[GUIDLG_BULLETPHYSICS] = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_GUIBULLETDLG), s_mainhwnd, (DLGPROC)GUIBulletDlgProc);
+	s_guidlg[GUIDLG_BULLETPHYSICS] = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_GUIBULLETDLG), g_mainhwnd, (DLGPROC)GUIBulletDlgProc);
 	if (!s_guidlg[GUIDLG_BULLETPHYSICS]) {
 		_ASSERT(0);
 		return 1;
@@ -22437,7 +22493,7 @@ int CreateGUIDlgBullet()
 		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
-	SetParent(s_guidlg[GUIDLG_BULLETPHYSICS], s_mainhwnd);
+	SetParent(s_guidlg[GUIDLG_BULLETPHYSICS], g_mainhwnd);
 	SetWindowPos(
 		s_guidlg[GUIDLG_BULLETPHYSICS],
 		HWND_TOP,
@@ -22459,7 +22515,7 @@ int CreateGUIDlgRefPos()
 		return 0;
 	}
 
-	s_guidlg[GUIDLG_VSYNC_AND_REFPOS] = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_GUIREFPOSDLG), s_mainhwnd, (DLGPROC)GUIRefPosDlgProc);
+	s_guidlg[GUIDLG_VSYNC_AND_REFPOS] = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_GUIREFPOSDLG), g_mainhwnd, (DLGPROC)GUIRefPosDlgProc);
 	if (!s_guidlg[GUIDLG_VSYNC_AND_REFPOS]) {
 		_ASSERT(0);
 		return 1;
@@ -22473,7 +22529,7 @@ int CreateGUIDlgRefPos()
 		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
-	SetParent(s_guidlg[GUIDLG_VSYNC_AND_REFPOS], s_mainhwnd);
+	SetParent(s_guidlg[GUIDLG_VSYNC_AND_REFPOS], g_mainhwnd);
 	SetWindowPos(
 		s_guidlg[GUIDLG_VSYNC_AND_REFPOS],
 		HWND_TOP,
@@ -22502,7 +22558,7 @@ int CreateLightsWnd()
 	//s_dseullimitctrls.clear();
 
 
-	s_lightsforeditdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_LIGHTSFOREDITDLG), s_mainhwnd, (DLGPROC)LightsForEditDlgProc);
+	s_lightsforeditdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_LIGHTSFOREDITDLG), g_mainhwnd, (DLGPROC)LightsForEditDlgProc);
 	if (!s_lightsforeditdlg) {
 		_ASSERT(0);
 		return 1;
@@ -22516,7 +22572,7 @@ int CreateLightsWnd()
 		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
-	SetParent(s_lightsforeditdlg, s_mainhwnd);
+	SetParent(s_lightsforeditdlg, g_mainhwnd);
 	SetWindowPos(
 		s_lightsforeditdlg,
 		HWND_TOP,
@@ -22563,7 +22619,7 @@ int CreateLaterTransparentWnd()
 	////s_dseullimitctrls.clear();
 
 
-	s_latertransparentdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_LATERTRANSPARENTDLG), s_mainhwnd, (DLGPROC)LaterTransparentDlgProc);
+	s_latertransparentdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_LATERTRANSPARENTDLG), g_mainhwnd, (DLGPROC)LaterTransparentDlgProc);
 	if (!s_latertransparentdlg) {
 		_ASSERT(0);
 		return 1;
@@ -22577,7 +22633,7 @@ int CreateLaterTransparentWnd()
 		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
-	SetParent(s_latertransparentdlg, s_mainhwnd);
+	SetParent(s_latertransparentdlg, g_mainhwnd);
 	SetWindowPos(
 		s_latertransparentdlg,
 		HWND_TOP,
@@ -22624,7 +22680,7 @@ int CreateShadowParamsWnd()
 	////s_dseullimitctrls.clear();
 
 
-	s_shadowparamsdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_SHADOWPARAMS), s_mainhwnd, (DLGPROC)ShadowParamsDlgProc);
+	s_shadowparamsdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_SHADOWPARAMS), g_mainhwnd, (DLGPROC)ShadowParamsDlgProc);
 	if (!s_shadowparamsdlg) {
 		_ASSERT(0);
 		return 1;
@@ -22638,7 +22694,7 @@ int CreateShadowParamsWnd()
 		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
-	SetParent(s_shadowparamsdlg, s_mainhwnd);
+	SetParent(s_shadowparamsdlg, g_mainhwnd);
 	SetWindowPos(
 		s_shadowparamsdlg,
 		HWND_TOP,
@@ -22710,8 +22766,8 @@ int DispAngleLimitDlg()
 	}
 	*/
 	//s_anglelimitdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ANGLELIMITDLG), s_3dwnd, (DLGPROC)AngleLimitDlgProc);
-	//s_anglelimitdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ANGLELIMITDLG), s_mainhwnd, (DLGPROC)AngleLimitDlgProc);
-	s_anglelimitdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ANGLELIMITDLG3), s_mainhwnd, (DLGPROC)AngleLimitDlgProc2);
+	//s_anglelimitdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ANGLELIMITDLG), g_mainhwnd, (DLGPROC)AngleLimitDlgProc);
+	s_anglelimitdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ANGLELIMITDLG3), g_mainhwnd, (DLGPROC)AngleLimitDlgProc2);
 	if (!s_anglelimitdlg) {
 		_ASSERT(0);
 		return 1;
@@ -22725,7 +22781,7 @@ int DispAngleLimitDlg()
 		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
-	SetParent(s_anglelimitdlg, s_mainhwnd);
+	SetParent(s_anglelimitdlg, g_mainhwnd);
 	SetWindowPos(
 		s_anglelimitdlg,
 		HWND_TOP,
@@ -23983,36 +24039,36 @@ int AngleDlg2AngleLimit(HWND hDlgWnd)//2022/12/05 エラー入力通知ダイア
 
 	result_xl = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_XL, &val_xl);
 	if (result_xl != 0) {
-		::MessageBox(s_mainhwnd, L"AngleLimitDlgのXLowerの入力値が不正です。", L"入力し直してください。", MB_OK);
+		::MessageBox(g_mainhwnd, L"AngleLimitDlgのXLowerの入力値が不正です。", L"入力し直してください。", MB_OK);
 		errorflag = true;
 	}
 	result_xu = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_XU, &val_xu);
 	if (result_xu != 0) {
-		::MessageBox(s_mainhwnd, L"AngleLimitDlgのXUpperの入力値が不正です。", L"入力し直してください。", MB_OK);
+		::MessageBox(g_mainhwnd, L"AngleLimitDlgのXUpperの入力値が不正です。", L"入力し直してください。", MB_OK);
 		errorflag = true;
 	}
 
 
 	result_yl = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_YL, &val_yl);
 	if (result_yl != 0) {
-		::MessageBox(s_mainhwnd, L"AngleLimitDlgのYLowerの入力値が不正です。", L"入力し直してください。", MB_OK);
+		::MessageBox(g_mainhwnd, L"AngleLimitDlgのYLowerの入力値が不正です。", L"入力し直してください。", MB_OK);
 		errorflag = true;
 	}
 	result_yu = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_YU, &val_yu);
 	if (result_yu != 0) {
-		::MessageBox(s_mainhwnd, L"AngleLimitDlgのYUpperの入力値が不正です。", L"入力し直してください。", MB_OK);
+		::MessageBox(g_mainhwnd, L"AngleLimitDlgのYUpperの入力値が不正です。", L"入力し直してください。", MB_OK);
 		errorflag = true;
 	}
 
 
 	result_zl = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_ZL, &val_zl);
 	if (result_zl != 0) {
-		::MessageBox(s_mainhwnd, L"AngleLimitDlgのZLowerの入力値が不正です。", L"入力し直してください。", MB_OK);
+		::MessageBox(g_mainhwnd, L"AngleLimitDlgのZLowerの入力値が不正です。", L"入力し直してください。", MB_OK);
 		errorflag = true;
 	}
 	result_zu = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_ZU, &val_zu);
 	if (result_zu != 0) {
-		::MessageBox(s_mainhwnd, L"AngleLimitDlgのZUpperの入力値が不正です。", L"入力し直してください。", MB_OK);
+		::MessageBox(g_mainhwnd, L"AngleLimitDlgのZUpperの入力値が不正です。", L"入力し直してください。", MB_OK);
 		errorflag = true;
 	}
 
@@ -26093,7 +26149,7 @@ LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 					_ASSERT(0);
-					::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 					PostQuitMessage(result);
 				}
 				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
@@ -26118,7 +26174,7 @@ LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 					_ASSERT(0);
-					::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 					PostQuitMessage(result);
 				}
 				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
@@ -26165,7 +26221,7 @@ LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 								int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 								if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 									_ASSERT(0);
-									::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+									::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 									PostQuitMessage(result);
 								}
 								//PrepairUndo();//保存はOnFrameUtCheckBoxにて
@@ -26203,7 +26259,7 @@ LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 					_ASSERT(0);
-					::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 					PostQuitMessage(result);
 				}
 				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
@@ -26229,7 +26285,7 @@ LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 					_ASSERT(0);
-					::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 					PostQuitMessage(result);
 				}
 				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
@@ -27423,7 +27479,7 @@ int DispRotAxisDlg()
 
 
 	//s_rotaxisdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ROTAXISDLG), s_3dwnd, (DLGPROC)RotAxisDlgProc);
-	s_rotaxisdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ROTAXISDLG), s_mainhwnd, (DLGPROC)RotAxisDlgProc);
+	s_rotaxisdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ROTAXISDLG), g_mainhwnd, (DLGPROC)RotAxisDlgProc);
 	if (!s_rotaxisdlg) {
 		_ASSERT(0);
 		return 1;
@@ -27437,7 +27493,7 @@ int DispRotAxisDlg()
 		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
-	SetParent(s_rotaxisdlg, s_mainhwnd);
+	SetParent(s_rotaxisdlg, g_mainhwnd);
 	SetWindowPos(
 		s_rotaxisdlg,
 		HWND_TOP,
@@ -29057,7 +29113,7 @@ int OnFrameTimeLineWnd()
 				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 					_ASSERT(0);
-					::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 					PostQuitMessage(result);
 				}
 				PrepairUndo();//LTimelineの選択後かつ編集前の保存を想定
@@ -29079,7 +29135,7 @@ int OnFrameTimeLineWnd()
 			int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 			if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 				_ASSERT(0);
-				::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+				::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 				PostQuitMessage(result);
 			}
 			PrepairUndo();//LTimelineの選択後かつ編集前の保存を想定
@@ -29102,7 +29158,7 @@ int OnFrameTimeLineWnd()
 			int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 			if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 				_ASSERT(0);
-				::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+				::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 				PostQuitMessage(result);
 			}
 			PrepairUndo();//LTimelineの選択後かつ編集前の保存を想定
@@ -29129,7 +29185,7 @@ int OnFrameTimeLineWnd()
 			int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 			if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 				_ASSERT(0);
-				::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+				::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 				PostQuitMessage(result);
 			}
 			PrepairUndo();//LTimelineの選択後かつ編集前の保存を想定
@@ -29190,7 +29246,7 @@ int OnFrameTimeLineWnd()
 					int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 					if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 						_ASSERT(0);
-						::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+						::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 						PostQuitMessage(result);
 					}
 				}
@@ -29261,7 +29317,7 @@ int OnFrameTimeLineWnd()
 				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 					_ASSERT(0);
-					::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 					PostQuitMessage(result);
 				}
 
@@ -30159,9 +30215,9 @@ void AddRJointReq(CBone* srcbone)
 int CreateCopyHistoryDlg()
 {
 	if (s_copyhistorydlg.GetCreatedFlag() == false) {
-		s_copyhistorydlg.Create(s_mainhwnd);
+		s_copyhistorydlg.Create(g_mainhwnd);
 	}
-	SetParent(s_copyhistorydlg.m_hWnd, s_mainhwnd);
+	SetParent(s_copyhistorydlg.m_hWnd, g_mainhwnd);
 
 	int windowposx;
 	if (g_4kresolution) {
@@ -30193,10 +30249,10 @@ int CreateCopyHistoryDlg()
 int CreateDollyHistoryDlg()
 {
 	if (s_dollyhistorydlg.GetCreatedFlag() == false) {
-		s_dollyhistorydlg.Create(s_mainhwnd);
+		s_dollyhistorydlg.Create(g_mainhwnd);
 		s_dollyhistorydlg.SetUpdateFunc(UpdateCameraPosAndTarget);
 	}
-	SetParent(s_dollyhistorydlg.m_hWnd, s_mainhwnd);
+	SetParent(s_dollyhistorydlg.m_hWnd, g_mainhwnd);
 
 	int windowposx;
 	if (g_4kresolution) {
@@ -30970,7 +31026,7 @@ int OnSpriteUndo()
 	if (s_model && (s_undoFlag == true)) {
 		//undo
 		StopBt();
-		s_model->RollBackUndoMotion(g_limitdegflag, s_mainhwnd,
+		s_model->RollBackUndoMotion(g_limitdegflag, g_mainhwnd,
 			0, &s_curboneno, &s_curbaseno,
 			&tmpselectstart, &tmpselectend, &tmpapplyrate, &brushstate);//!!!!!!!!!!!
 
@@ -30982,7 +31038,7 @@ int OnSpriteUndo()
 	{
 		//redo
 		StopBt();
-		s_model->RollBackUndoMotion(g_limitdegflag, s_mainhwnd,
+		s_model->RollBackUndoMotion(g_limitdegflag, g_mainhwnd,
 			1, &s_curboneno, &s_curbaseno,
 			&tmpselectstart, &tmpselectend, &tmpapplyrate, &brushstate);//!!!!!!!!!!!
 
@@ -31059,7 +31115,7 @@ int OnSpriteUndo()
 			int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 			if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 				_ASSERT(0);
-				::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+				::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 				PostQuitMessage(result);
 			}
 
@@ -32033,7 +32089,7 @@ int CreateTimelineWnd()
 		WindowSize(s_timelinewidth, s_timelineheight),	//サイズ 
 		//WindowSize(150,540),	//サイズ
 		L"TimeLine",				//タイトル
-		s_mainhwnd,					//親ウィンドウハンドル
+		g_mainhwnd,					//親ウィンドウハンドル
 		true,					//表示・非表示状態
 		//70, 50, 70);				//カラー
 		0, 0, 0);				//カラー
@@ -32131,7 +32187,7 @@ int CreateLongTimelineWnd()
 		WindowPos(s_toolwidth, s_2ndposy),		//位置
 		WindowSize(s_longtimelinewidth, s_longtimelineheight),	//サイズ
 		L"EditRangeTimeLine",				//タイトル
-		s_mainhwnd,					//親ウィンドウハンドル
+		g_mainhwnd,					//親ウィンドウハンドル
 		true,					//表示・非表示状態
 		//70, 50, 70);				//カラー
 		0, 0, 0);				//カラー
@@ -32419,7 +32475,7 @@ int CreateDmpAnimWnd()
 		WindowPos(windowposx, s_sidemenuheight),
 		WindowSize(s_sidewidth, s_sideheight),		//サイズ
 		_T("AnimOfDumping"),	//タイトル
-		s_mainhwnd,	//親ウィンドウハンドル
+		g_mainhwnd,	//親ウィンドウハンドル
 		false,					//表示・非表示状態
 		//70, 50, 70,				//カラー
 		0, 0, 0,				//カラー
@@ -32586,7 +32642,7 @@ int CreateMainMenuAimBarWnd()
 		//WindowSize(450, 760),		//サイズ
 		WindowSize(windowposx, MAINMENUAIMBARH),		//サイズ
 		_T("MainMenuAimBarWnd"),	//タイトル
-		s_mainhwnd,	//親ウィンドウハンドル
+		g_mainhwnd,	//親ウィンドウハンドル
 		true,					//表示・非表示状態
 		//70, 50, 70,				//カラー
 		0, 0, 0,				//カラー
@@ -32650,7 +32706,7 @@ int CreateSideMenuWnd()
 		//WindowSize(450, 760),		//サイズ
 		WindowSize(s_sidemenuwidth, s_sidemenuheight),		//サイズ
 		_T("SideMenu"),	//タイトル
-		s_mainhwnd,	//親ウィンドウハンドル
+		g_mainhwnd,	//親ウィンドウハンドル
 		true,					//表示・非表示状態
 		//70, 50, 70,				//カラー
 		0, 0, 0,				//カラー
@@ -32809,7 +32865,7 @@ int CreatePlaceFolderWnd()
 		WindowPos(windowposx, s_sidemenuheight),
 		WindowSize(s_sidewidth, s_sideheight),		//サイズ
 		_T("PlaceFolderWindow"),	//タイトル
-		s_mainhwnd,	//親ウィンドウハンドル
+		g_mainhwnd,	//親ウィンドウハンドル
 		true,					//表示・非表示状態
 		//70, 50, 70,				//カラー
 		0, 0, 0,				//カラー
@@ -32954,7 +33010,7 @@ int CreateDispGroupWnd()
 		WindowPos(windowposx, s_sidemenuheight),
 		WindowSize(s_sidewidth, s_sideheight),		//サイズ
 		_T("DispGroupWindow"),	//タイトル
-		s_mainhwnd,	//親ウィンドウハンドル
+		g_mainhwnd,	//親ウィンドウハンドル
 		true,					//表示・非表示状態
 		//70, 50, 70,				//カラー
 		0, 0, 0,				//カラー
@@ -33759,7 +33815,7 @@ int CreateRigidWnd()
 	//	//WindowSize(450, 760),		//サイズ
 	//	WindowSize(450, 780),		//サイズ
 	//	_T("剛体設定ウィンドウ"),	//タイトル
-	//	s_mainhwnd,	//親ウィンドウハンドル
+	//	g_mainhwnd,	//親ウィンドウハンドル
 	//	true,					//表示・非表示状態
 	//	70, 50, 70,				//カラー
 	//	true,					//閉じられるか否か
@@ -33782,7 +33838,7 @@ int CreateRigidWnd()
 		WindowPos(windowposx, s_sidemenuheight),
 		WindowSize(s_sidewidth, s_sideheight),		//サイズ
 		_T("RigidWindow"),	//タイトル
-		s_mainhwnd,	//親ウィンドウハンドル
+		g_mainhwnd,	//親ウィンドウハンドル
 		true,					//表示・非表示状態
 		//70, 50, 70,				//カラー
 		0, 0, 0,				//カラー
@@ -34820,7 +34876,7 @@ int CreateShaderTypeWnd()
 		WindowPos(windowposx, s_sidemenuheight),
 		WindowSize(s_sidewidth, s_sideheight),		//サイズ
 		_T("ShderTypeWindow"),	//タイトル
-		s_mainhwnd,	//親ウィンドウハンドル
+		g_mainhwnd,	//親ウィンドウハンドル
 		true,					//表示・非表示状態
 		//70, 50, 70,				//カラー
 		0, 0, 0,				//カラー
@@ -35062,7 +35118,7 @@ int CreateImpulseWnd()
 		WindowPos(windowposx, s_sidemenuheight),
 		WindowSize(s_sidewidth, s_sideheight),		//サイズ
 		_T("ImpulseWindow"),	//タイトル
-		s_mainhwnd,	//親ウィンドウハンドル
+		g_mainhwnd,	//親ウィンドウハンドル
 		false,					//表示・非表示状態
 		//70, 50, 70,				//カラー
 		0, 0, 0,				//カラー
@@ -35251,7 +35307,7 @@ int CreateGPlaneWnd()
 		WindowPos(windowposx, s_sidemenuheight),		//位置
 		WindowSize(s_sidewidth, s_sideheight),		//サイズ
 		_T("GroudOfPhysics"),	//タイトル
-		s_mainhwnd,	//親ウィンドウハンドル
+		g_mainhwnd,	//親ウィンドウハンドル
 		false,					//表示・非表示状態
 		//70, 50, 70,				//カラー
 		0, 0, 0,				//カラー
@@ -35456,7 +35512,7 @@ int CreateToolWnd()
 		WindowSize(s_toolwidth, s_toolheight),		//サイズ
 		L"ToolWindow",	//タイトル
 		//s_timelineWnd->getHWnd(),	//親ウィンドウハンドル
-		s_mainhwnd,
+		g_mainhwnd,
 		true,					//表示・非表示状態
 		//70, 50, 70);// ,				//カラー
 		0, 0, 0);				//カラー
@@ -35763,7 +35819,7 @@ int CreateLayerWnd()
 			WindowPos(2000, 660),		//位置
 			layersize,		//サイズ
 			_T("LayerTool"),	//タイトル
-			//s_mainhwnd,					//親ウィンドウハンドル
+			//g_mainhwnd,					//親ウィンドウハンドル
 			//s_3dwnd,
 			NULL,//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 他所をクリックしても隠れないように
 			true,					//表示・非表示状態
@@ -35785,7 +35841,7 @@ int CreateLayerWnd()
 			WindowPos(2000, 660),		//位置
 			layersize,		//サイズ
 			_T("LayerTool"),	//タイトル
-			//s_mainhwnd,					//親ウィンドウハンドル
+			//g_mainhwnd,					//親ウィンドウハンドル
 			//s_3dwnd,
 			NULL,//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 他所をクリックしても隠れないように
 			true,					//表示・非表示状態
@@ -35873,8 +35929,8 @@ int CreateLayerWnd()
 			});
 
 		RECT wnd3drect;
-		if (s_mainhwnd) {
-			GetWindowRect(s_mainhwnd, &wnd3drect);
+		if (g_mainhwnd) {
+			GetWindowRect(g_mainhwnd, &wnd3drect);
 			s_layerWnd->setPos(WindowPos(wnd3drect.left + 750, wnd3drect.top + 500));
 		}
 		else {
@@ -36227,11 +36283,11 @@ int OnRenderSelect(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 
 
 	//プレビュー中　物理中は　リグマークは表示しない
-	//if (g_previewFlag == 0) {
-	//	if ((s_model && s_model->GetModelDisp()) && (s_oprigflag != 0)) {
-	//		RenderRigMarkFunc(re, pRenderContext);
-	//	}
-	//}
+	if (g_previewFlag == 0) {
+		if ((s_model && s_model->GetModelDisp()) && (s_oprigflag != 0)) {
+			RenderRigMarkFunc(re, pRenderContext);
+		}
+	}
 
 	return 0;
 }
@@ -37441,7 +37497,7 @@ int DispCustomRigDlg(int rigno)
 
 	if (!s_customrigdlg) {
 		//s_customrigdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_CUSTOMRIGDLG), s_3dwnd, (DLGPROC)CustomRigDlgProc);
-		s_customrigdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_CUSTOMRIGDLG), s_mainhwnd, (DLGPROC)CustomRigDlgProc);
+		s_customrigdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_CUSTOMRIGDLG), g_mainhwnd, (DLGPROC)CustomRigDlgProc);
 		if (!s_customrigdlg) {
 			_ASSERT(0);
 			return 1;
@@ -37451,7 +37507,7 @@ int DispCustomRigDlg(int rigno)
 		CustomRig2Dlg(s_customrigdlg);
 	}
 
-	SetParent(s_customrigdlg, s_mainhwnd);
+	SetParent(s_customrigdlg, g_mainhwnd);
 
 	int windowposx;
 	if (g_4kresolution) {
@@ -38480,7 +38536,7 @@ int GetSymRootMode()
 	}
 	int ret;
 	ret = rmenu->Create(s_3dwnd, MENUOFFSET_GETSYMROOTMODE);
-	//ret = rmenu->Create(s_mainhwnd);
+	//ret = rmenu->Create(g_mainhwnd);
 	if (ret) {
 		return 0;
 	}
@@ -38774,7 +38830,7 @@ int OnTimeLineMButtonDown(bool ctrlshiftflag)
 			int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 			if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 				_ASSERT(0);
-				::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+				::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 				PostQuitMessage(result);
 			}
 
@@ -38889,7 +38945,7 @@ int OnTimeLineWheel()
 					int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 					if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 						_ASSERT(0);
-						::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+						::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 						PostQuitMessage(result);
 					}
 				}
@@ -38932,7 +38988,7 @@ int OnTimeLineWheel()
 					int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 					if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
 						_ASSERT(0);
-						::MessageBox(s_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+						::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 						PostQuitMessage(result);
 					}
 				}
@@ -38963,7 +39019,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 		//case WM_LBUTTONDOWN:
 		//case WM_RBUTTONDOWN:
-		//	SetCapture(s_mainhwnd);
+		//	SetCapture(g_mainhwnd);
 		//	break;
 		//case WM_LBUTTONUP:
 		//case WM_RBUTTONUP:
@@ -39286,11 +39342,11 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lp) {
 
 HWND CreateMainWindow()
 {
-	if (s_mainhwnd && IsWindow(s_mainhwnd)) {
-		DestroyWindow(s_mainhwnd);
-		s_mainhwnd = 0;
+	if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+		DestroyWindow(g_mainhwnd);
+		g_mainhwnd = 0;
 	}
-	s_mainhwnd = 0;
+	g_mainhwnd = 0;
 
 
 	//EditMotC4.exeが起動していればそのウインドウを親にする
@@ -39306,6 +39362,7 @@ HWND CreateMainWindow()
 	int returnCode = 0;
 
 	HICON appicon = LoadIcon(NULL, MAKEINTRESOURCE(IDI_ICON1));
+	HBRUSH blkbrush = CreateSolidBrush(RGB(0, 0, 0));//自分で削除しない　DestroyWindow時に解放される
 
 	wcx.cbSize = sizeof(WNDCLASSEX);
 	wcx.style = CS_HREDRAW | CS_VREDRAW;
@@ -39316,7 +39373,7 @@ HWND CreateMainWindow()
 	//wcx.hIcon = NULL;
 	wcx.hIcon = appicon;
 	wcx.hCursor = NULL;
-	wcx.hbrBackground = (HBRUSH)COLOR_BACKGROUND + 1;
+	wcx.hbrBackground = blkbrush;// (HBRUSH)COLOR_BACKGROUND + 1;
 	wcx.lpszMenuName = NULL;
 	wcx.lpszClassName = WINDOWS_CLASS_NAME;
 	wcx.hIconSm = NULL;
@@ -39390,11 +39447,11 @@ HWND CreateMainWindow()
 
 
 
-	s_mainhwnd = window;
+	g_mainhwnd = window;
 
 	if ((s_launchbyc4 != 0) && parenthwnd) {
-		SetParent(s_mainhwnd, parenthwnd);
-		//::MessageBox(s_mainhwnd, L"setparent", L"check!!!", MB_OK);
+		SetParent(g_mainhwnd, parenthwnd);
+		//::MessageBox(g_mainhwnd, L"setparent", L"check!!!", MB_OK);
 	}
 
 
@@ -39406,14 +39463,14 @@ HWND CreateMainWindow()
 		//if ((s_appcnt == 0) && (desktoprect.right >= 3840) && (desktoprect.bottom >= 2160)) {
 		if (s_appcnt == 0) {
 			//if (g_4kresolution) {
-			//	SetWindowPos(s_mainhwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE);
+			//	SetWindowPos(g_mainhwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE);
 			//}
 			//else {
 			//	if (s_launchbyc4 == 0) {
-			//		SetWindowPos(s_mainhwnd, HWND_TOP, 1100, 1000, 0, 0, SWP_NOSIZE);
+			//		SetWindowPos(g_mainhwnd, HWND_TOP, 1100, 1000, 0, 0, SWP_NOSIZE);
 			//	}
 			//	else {
-			//		SetWindowPos(s_mainhwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE);
+			//		SetWindowPos(g_mainhwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE);
 			//	}
 			//}
 			if (s_launchbyc4 == 0) {
@@ -39432,25 +39489,25 @@ HWND CreateMainWindow()
 				diffx = desktopcenterx - currentcenterx;
 				diffy = desktopcentery - currentcentery;
 
-				SetWindowPos(s_mainhwnd, HWND_TOP, diffx, diffy, 0, 0, SWP_NOSIZE);
+				SetWindowPos(g_mainhwnd, HWND_TOP, diffx, diffy, 0, 0, SWP_NOSIZE);
 
 			}
 			else {
-				SetWindowPos(s_mainhwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE);
+				SetWindowPos(g_mainhwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE);
 			}
 
 		}
 		else if (s_appcnt == 1) {
-			SetWindowPos(s_mainhwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE);
+			SetWindowPos(g_mainhwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE);
 		}
 		else if (s_appcnt == 2) {
-			SetWindowPos(s_mainhwnd, HWND_TOP, s_totalwndwidth, 0, 0, 0, SWP_NOSIZE);
+			SetWindowPos(g_mainhwnd, HWND_TOP, s_totalwndwidth, 0, 0, 0, SWP_NOSIZE);
 		}
 		else if (s_appcnt == 3) {
-			SetWindowPos(s_mainhwnd, HWND_TOP, 0, s_totalwndheight, 0, 0, SWP_NOSIZE);
+			SetWindowPos(g_mainhwnd, HWND_TOP, 0, s_totalwndheight, 0, 0, SWP_NOSIZE);
 		}
 		else if (s_appcnt == 4) {
-			SetWindowPos(s_mainhwnd, HWND_TOP, s_totalwndwidth, s_totalwndheight, 0, 0, SWP_NOSIZE);
+			SetWindowPos(g_mainhwnd, HWND_TOP, s_totalwndwidth, s_totalwndheight, 0, 0, SWP_NOSIZE);
 		}
 	}
 
@@ -39472,13 +39529,13 @@ HWND Create3DWnd(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine,
 	ZeroMemory(&rc, sizeof(RECT));
 	if (g_4kresolution) {
 		rc = InitGame(hInstance, hPrevInstance, lpCmdLine, nShowCmd, TEXT("AdditiveIK"),
-			s_mainhwnd,
+			g_mainhwnd,
 			s_timelinewidth + s_modelwindowwidth, MAINMENUAIMBARH,
 			s_mainwidth, s_mainheight);
 	}
 	else {
 		rc = InitGame(hInstance, hPrevInstance, lpCmdLine, nShowCmd, TEXT("AdditiveIK"),
-			s_mainhwnd,
+			g_mainhwnd,
 			s_timelinewidth, MAINMENUAIMBARH,
 			s_mainwidth, s_mainheight);
 	}
@@ -39499,14 +39556,14 @@ HWND Create3DWnd(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine,
 
 	//if (g_4kresolution) {
 	//	//hr = DXUTCreateWindow(L"AdditiveIK", 0, 0, 0, s_toolwidth + s_modelwindowwidth, 0);
-	//	hr = DXUTCreateWindow(L"AdditiveIK", s_mainhwnd, (HINSTANCE)GetModuleHandle(NULL),
+	//	hr = DXUTCreateWindow(L"AdditiveIK", g_mainhwnd, (HINSTANCE)GetModuleHandle(NULL),
 	//		0, 0,
 	//		(s_timelinewidth + s_modelwindowwidth), MAINMENUAIMBARH,
 	//		s_mainwidth, s_mainheight);
 	//}
 	//else {
 	//	//hr = DXUTCreateWindow(L"AdditiveIK", 0, 0, 0, s_timelinewidth, 0);
-	//	hr = DXUTCreateWindow(L"AdditiveIK", s_mainhwnd, (HINSTANCE)GetModuleHandle(NULL),
+	//	hr = DXUTCreateWindow(L"AdditiveIK", g_mainhwnd, (HINSTANCE)GetModuleHandle(NULL),
 	//		0, 0, 
 	//		s_timelinewidth, MAINMENUAIMBARH,
 	//		s_mainwidth, s_mainheight);
@@ -39529,7 +39586,7 @@ HWND Create3DWnd(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine,
 	//winstyle &= ~WS_CAPTION;
 	//winstyle |= WS_CHILD;//2023/02/14
 	//::SetWindowLong(s_3dwnd, GWL_STYLE, winstyle);
-	//SetParent(s_3dwnd, s_mainhwnd);
+	//SetParent(s_3dwnd, g_mainhwnd);
 
 
 	//int cycaption = GetSystemMetrics(SM_CYCAPTION);
@@ -39626,14 +39683,14 @@ CInfoWindow* CreateInfoWnd()
 
 		int ret;
 		//if (g_4kresolution) {
-		//	ret = newinfownd->CreateInfoWindow(s_mainhwnd,
+		//	ret = newinfownd->CreateInfoWindow(g_mainhwnd,
 		//		400 * 2, s_mainheight + 3 * cyframe + MAINMENUAIMBARH,
 		//		s_infowinwidth, s_infowinheight + 2 * cyframe);
 
 		//	s_rcinfownd.left = 400 * 2;
 		//}
 		//else {
-		//	ret = newinfownd->CreateInfoWindow(s_mainhwnd,
+		//	ret = newinfownd->CreateInfoWindow(g_mainhwnd,
 		//		400, s_mainheight + 3 * cyframe + MAINMENUAIMBARH,
 		//		s_infowinwidth, s_infowinheight + 2 * cyframe);
 
@@ -39641,7 +39698,7 @@ CInfoWindow* CreateInfoWnd()
 		//}
 
 		if (g_4kresolution) {
-			ret = newinfownd->CreateInfoWindow(s_mainhwnd,
+			ret = newinfownd->CreateInfoWindow(g_mainhwnd,
 				//s_timelinewidth + s_modelwindowwidth, s_mainheight + 3 * cyframe + MAINMENUAIMBARH,
 				s_timelinewidth + s_modelwindowwidth, s_mainheight + MAINMENUAIMBARH,
 				s_infowinwidth, s_infowinheight + 2 * cyframe);
@@ -39649,7 +39706,7 @@ CInfoWindow* CreateInfoWnd()
 			s_rcinfownd.left = s_timelinewidth;
 		}
 		else {
-			ret = newinfownd->CreateInfoWindow(s_mainhwnd,
+			ret = newinfownd->CreateInfoWindow(g_mainhwnd,
 				//s_timelinewidth, s_mainheight + 3 * cyframe + MAINMENUAIMBARH,
 				s_timelinewidth, s_mainheight + MAINMENUAIMBARH,
 				s_infowinwidth, s_infowinheight + 2 * cyframe);
@@ -41752,7 +41809,7 @@ void SelectNextWindow(int nextwndid)
 
 	HWND hwnds[MB3D_WND_MAX];
 	ZeroMemory(hwnds, sizeof(HWND) * MB3D_WND_MAX);
-	//hwnds[MB3D_WND_MAIN] = s_mainhwnd;
+	//hwnds[MB3D_WND_MAIN] = g_mainhwnd;
 	hwnds[MB3D_WND_MAIN] = tmpmainmenuaimbarwnd;
 	hwnds[MB3D_WND_3D] = s_3dwnd;
 	hwnds[MB3D_WND_TREE] = tmptlwnd;
@@ -41801,7 +41858,7 @@ void SelectNextWindow(int nextwndid)
 
 
 			//::SetWindowPos(hwnds[0], HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-			::SetWindowPos(s_mainhwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+			::SetWindowPos(g_mainhwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
 			if (s_mainmenuaimbarWnd) {
 				s_mainmenuaimbarWnd->setBackGroundColor(true);
 			}
@@ -44772,7 +44829,7 @@ void DSAxisRMainMenuBar()
 	//	if ((g_currentsubmenuid >= 0) && (g_currentsubmenuid < SPMENU_MAX)) {
 
 	//		HMENU mainmenu;
-	//		mainmenu = GetMenu(s_mainhwnd);
+	//		mainmenu = GetMenu(g_mainhwnd);
 	//		int menuno = g_currentsubmenuid;
 	//		s_cursubmenu = GetSubMenu(mainmenu, menuno);
 	//		if (s_cursubmenu) {
@@ -44780,7 +44837,7 @@ void DSAxisRMainMenuBar()
 	//			curmenuitemid = ::GetMenuItemID(s_cursubmenu, 0);
 	//			if (curmenuitemid >= 0) {
 	//				RECT rc;
-	//				GetMenuItemRect(s_mainhwnd, mainmenu, menuno, &rc);//rcはスクリーン座標
+	//				GetMenuItemRect(g_mainhwnd, mainmenu, menuno, &rc);//rcはスクリーン座標
 	//				g_submenuwidth = rc.right - rc.left;//org:140
 
 	//				::SetCursorPos(rc.left, rc.bottom + 22);
@@ -44796,19 +44853,19 @@ void DSAxisRMainMenuBar()
 
 	//	//HMENU mainmenu;
 	//	////HMENU cursubmenu;
-	//	//mainmenu = GetMenu(s_mainhwnd);
+	//	//mainmenu = GetMenu(g_mainhwnd);
 	//	//s_cursubmenu = GetSubMenu(mainmenu, g_currentsubmenuid);
 	//	//if (s_cursubmenu) {
 	//	//	int curmenuitemid;
 	//	//	curmenuitemid = ::GetMenuItemID(s_cursubmenu, 0);
 	//	//	if (curmenuitemid >= 0) {
 	//	//		
-	//	//		//::SendMessage(s_mainhwnd, WM_NOTIFY, 0, (LPARAM)&nmtoolbara);
-	//	//		////::SendMessage(s_mainhwnd, WM_COMMAND, curmenuitemid, 0);//選択決定時のコマンド
+	//	//		//::SendMessage(g_mainhwnd, WM_NOTIFY, 0, (LPARAM)&nmtoolbara);
+	//	//		////::SendMessage(g_mainhwnd, WM_COMMAND, curmenuitemid, 0);//選択決定時のコマンド
 
 	//	//		RECT rc;
 	//	//		TPMPARAMS tpm;
-	//	//		GetMenuItemRect(s_mainhwnd, mainmenu, g_currentsubmenuid, &rc);
+	//	//		GetMenuItemRect(g_mainhwnd, mainmenu, g_currentsubmenuid, &rc);
 	//	//		tpm.cbSize = sizeof(TPMPARAMS);//
 	//	//		tpm.rcExclude = rc;//
 
@@ -44831,23 +44888,23 @@ void DSAxisRMainMenuBar()
 	//	//		//wparam = (g_currentsubmenuid << 16) | curmenuitemid;
 	//	//		//LPARAM lparam;
 	//	//		//lparam = (LPARAM)mainmenu;
-	//	//		//::SendMessage(s_mainhwnd, WM_COMMAND, wparam, lparam);
+	//	//		//::SendMessage(g_mainhwnd, WM_COMMAND, wparam, lparam);
 
 
 
 	//	//		//wparam = ((MF_POPUP | MF_MOUSESELECT) << 16) | (WORD)g_currentsubmenuid;//g_currentsubmenuid, curmenuitemid
-	//	//		//::SendMessage(s_mainhwnd, WM_MENUSELECT, wparam, (LPARAM)mainmenu);//GetMenu(s_mainhwnd), cursubmenu
+	//	//		//::SendMessage(g_mainhwnd, WM_MENUSELECT, wparam, (LPARAM)mainmenu);//GetMenu(g_mainhwnd), cursubmenu
 
 
 
 
 	//	//		//TrackPopupMenuEx(cursubmenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_VERTICAL,
-	//	//		//	rc.left, rc.bottom, s_mainhwnd, &tpm);//
+	//	//		//	rc.left, rc.bottom, g_mainhwnd, &tpm);//
 	//	//		//SetCapture(s_3dwnd);
 
-	//	//		SetForegroundWindow(s_mainhwnd);//この処理をしないと範囲外クリックでPopupが閉じない
+	//	//		SetForegroundWindow(g_mainhwnd);//この処理をしないと範囲外クリックでPopupが閉じない
 
-	//	//		int retmenuid = ::TrackPopupMenu(s_cursubmenu, TPM_RETURNCMD | TPM_LEFTALIGN, rc.left, rc.bottom, 0, s_mainhwnd, NULL);
+	//	//		int retmenuid = ::TrackPopupMenu(s_cursubmenu, TPM_RETURNCMD | TPM_LEFTALIGN, rc.left, rc.bottom, 0, g_mainhwnd, NULL);
 
 	//	//		//ReleaseCapture();
 
@@ -44880,13 +44937,13 @@ void DSAxisRMainMenuBar()
 	//	//		threelparam = (client3dpoint.y << 16) | client3dpoint.x;
 	//	//		::SendMessage(s_3dwnd, WM_MOUSEMOVE, 0, threelparam);
 	//	//	}
-	//	//	if (s_mainhwnd) {
+	//	//	if (g_mainhwnd) {
 	//	//		POINT clientpoint;
 	//	//		clientpoint = cursorpos;
-	//	//		::ScreenToClient(s_mainhwnd, &clientpoint);
+	//	//		::ScreenToClient(g_mainhwnd, &clientpoint);
 	//	//		LPARAM mainlparam;
 	//	//		mainlparam = (clientpoint.y << 16) | clientpoint.x;
-	//	//		::SendMessage(s_mainhwnd, WM_MOUSEMOVE, 0, mainlparam);
+	//	//		::SendMessage(g_mainhwnd, WM_MOUSEMOVE, 0, mainlparam);
 	//	//	}
 	//	//	HWND dlghwnd;
 	//	//	dlghwnd = g_SampleUI.GetHWnd();
@@ -45256,9 +45313,9 @@ void DSAxisLMouseMove()
 	//		//WPARAM wparam = ((MF_MOUSESELECT | MF_SYSMENU) << 16) | 3;
 
 	//		//HMENU motmenu = GetSubMenu(s_mainmenu, 2);
-	//		//::SendMessage(s_mainhwnd, WM_MENUSELECT, wparam, (LPARAM)motmenu);
-	//		//::SendMessage(s_mainhwnd, WM_MENUSELECT, wparam, (LPARAM)s_mainmenu);
-	//		//::SendMessage(s_mainhwnd, WM_MENUSELECT, wparam, (LPARAM)40026);
+	//		//::SendMessage(g_mainhwnd, WM_MENUSELECT, wparam, (LPARAM)motmenu);
+	//		//::SendMessage(g_mainhwnd, WM_MENUSELECT, wparam, (LPARAM)s_mainmenu);
+	//		//::SendMessage(g_mainhwnd, WM_MENUSELECT, wparam, (LPARAM)40026);
 
 
 
@@ -45268,7 +45325,7 @@ void DSAxisLMouseMove()
 
 
 
-	//		//::SendMessage(s_mainhwnd, WM_KEYDOWN, VK_DOWN, 0);
+	//		//::SendMessage(g_mainhwnd, WM_KEYDOWN, VK_DOWN, 0);
 
 
 	//		//const double ScaleX = 0xffff / GetSystemMetrics(SM_CXSCREEN);
@@ -45289,13 +45346,13 @@ void DSAxisLMouseMove()
 	//			threelparam = (client3dpoint.y << 16) | client3dpoint.x;
 	//			::SendMessage(s_3dwnd, WM_MOUSEMOVE, 0, threelparam);
 	//		}
-	//		if (s_mainhwnd) {
+	//		if (g_mainhwnd) {
 	//			POINT clientpoint;
 	//			clientpoint = cursorpos;
-	//			::ScreenToClient(s_mainhwnd, &clientpoint);
+	//			::ScreenToClient(g_mainhwnd, &clientpoint);
 	//			LPARAM mainlparam;
 	//			mainlparam = (clientpoint.y << 16) | clientpoint.x;
-	//			::SendMessage(s_mainhwnd, WM_MOUSEMOVE, 0, mainlparam);
+	//			::SendMessage(g_mainhwnd, WM_MOUSEMOVE, 0, mainlparam);
 	//		}
 	//		HWND dlghwnd;
 	//		dlghwnd = g_SampleUI.GetHWnd();
@@ -45534,7 +45591,7 @@ void DSXButtonCancel()
 	//	return;
 	//}
 
-	//if (!s_mainhwnd) {
+	//if (!g_mainhwnd) {
 	//	return;
 	//}
 	//if (!s_3dwnd) {
@@ -45566,8 +45623,8 @@ void DSXButtonCancel()
 	//		OnFrameUndo(true, 1);//fromds, fromdskind
 	//	}
 	//	else {
-	//		//TrackPopupMenuの前でSetForegrandWindow(s_mainhwnd)をしている場合に次の関数でpopupを閉じることが出来る。
-	//		PostMessage(s_mainhwnd, WM_KEYDOWN, VK_ESCAPE, 0);
+	//		//TrackPopupMenuの前でSetForegrandWindow(g_mainhwnd)をしている場合に次の関数でpopupを閉じることが出来る。
+	//		PostMessage(g_mainhwnd, WM_KEYDOWN, VK_ESCAPE, 0);
 	//		PostMessage(s_3dwnd, WM_KEYDOWN, VK_ESCAPE, 0);
 
 	//	}
@@ -45805,13 +45862,13 @@ void DSOButtonSelectedPopupMenu()
 	//			InterlockedExchange(&g_undertrackingRMenu, (LONG)0);//コマンド発行が決まったらトラッキングフラグ解除!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-	//			//::PostMessage(s_mainhwnd, WM_KEYDOWN, VK_RETURN, 0);
+	//			//::PostMessage(g_mainhwnd, WM_KEYDOWN, VK_RETURN, 0);
 
 
 	//			//if (commandsubmenunum == 1) {
 	//				//メニュー項目が１つだけの場合にはポップアップを解除してからWM_COMMANDを呼んでみる
-	//				//TrackPopupMenuの前でSetForegrandWindow(s_mainhwnd)をしている場合に次の関数でpopupを閉じることが出来る。
-	//			PostMessage(s_mainhwnd, WM_KEYDOWN, VK_ESCAPE, 0);
+	//				//TrackPopupMenuの前でSetForegrandWindow(g_mainhwnd)をしている場合に次の関数でpopupを閉じることが出来る。
+	//			PostMessage(g_mainhwnd, WM_KEYDOWN, VK_ESCAPE, 0);
 	//			PostMessage(s_3dwnd, WM_KEYDOWN, VK_ESCAPE, 0);
 	//			//}
 
@@ -45828,7 +45885,7 @@ void DSOButtonSelectedPopupMenu()
 	//			//lparam = (LPARAM)commandsubmenu;
 
 
-	//			//::SendMessage(s_mainhwnd, WM_COMMAND, wparam, lparam);
+	//			//::SendMessage(g_mainhwnd, WM_COMMAND, wparam, lparam);
 	//			//::SendMessage(s_3dwnd, WM_COMMAND, wparam, lparam);//menuのMsgProcはs_3dwndのメッセージプロック
 	//			::SendMessage(s_3dwnd, WM_COMMAND, wparam, 0);//menuのMsgProcはs_3dwndのメッセージプロック
 	//		}
@@ -46105,12 +46162,12 @@ void DSOButtonSelectedPopupMenu()
 	//			//	//wparam = (g_currentsubmenuid << 16) | curmenuitemid;
 	//			//	//LPARAM lparam;
 	//			//	//lparam = (LPARAM)mainmenu;
-	//			//	//::SendMessage(s_mainhwnd, WM_COMMAND, wparam, lparam);
+	//			//	//::SendMessage(g_mainhwnd, WM_COMMAND, wparam, lparam);
 
 	//			//	if ((submenuitemnum == 1) && (selectedsubmenuitemno >= 0) && (g_currentsubmenuid >= 0)) {
 	//			//		//メニュー項目が１つだけの場合にはポップアップを解除してからWM_COMMANDを呼んでみる
-	//			//		//TrackPopupMenuの前でSetForegrandWindow(s_mainhwnd)をしている場合に次の関数でpopupを閉じることが出来る。
-	//			//		PostMessage(s_mainhwnd, WM_KEYDOWN, VK_ESCAPE, 0);
+	//			//		//TrackPopupMenuの前でSetForegrandWindow(g_mainhwnd)をしている場合に次の関数でpopupを閉じることが出来る。
+	//			//		PostMessage(g_mainhwnd, WM_KEYDOWN, VK_ESCAPE, 0);
 	//			//		PostMessage(s_3dwnd, WM_KEYDOWN, VK_ESCAPE, 0);
 	//			//	}
 	//			//	
@@ -46122,7 +46179,7 @@ void DSOButtonSelectedPopupMenu()
 	//			//	LPARAM lparam;
 	//			//	//lparam = (LPARAM)s_mainmenu;
 	//			//	lparam = (LPARAM)s_cursubmenu;
-	//			//	::SendMessage(s_mainhwnd, WM_COMMAND, wparam, lparam);
+	//			//	::SendMessage(g_mainhwnd, WM_COMMAND, wparam, lparam);
 	//			//}
 	//}
 
@@ -47065,7 +47122,7 @@ void DSAimBarOK()
 	//				caphwnd = ::GetCapture();
 	//				if (caphwnd && IsWindow(caphwnd)) {
 	//					//WPARAM wparam = (0xFFFF << 16) | (WORD)g_currentsubmenuid;//g_currentsubmenuid, curmenuitemid
-	//					//::SendMessage(s_mainhwnd, WM_MENUSELECT, wparam, (LPARAM)GetMenu(s_mainhwnd));//GetMenu(s_mainhwnd), cursubmenu
+	//					//::SendMessage(g_mainhwnd, WM_MENUSELECT, wparam, (LPARAM)GetMenu(g_mainhwnd));//GetMenu(g_mainhwnd), cursubmenu
 	//					POINT cappoint;
 	//					cappoint = cursorpos;
 	//					::ScreenToClient(caphwnd, &cappoint);
@@ -47078,9 +47135,9 @@ void DSAimBarOK()
 	//				if ((s_currentwndid == MB3D_WND_MAIN) && s_cursubmenu && (g_currentsubmenuid >= 0) && (g_currentsubmenuid < SPMENU_MAX)) {
 	//					//SelectNextWindow(MB3D_WND_3D);//続いて　O button を押したときにメニューが開かないように。//プレート選択時に該当ウインドウをハイライトするようにしたので必要ない。
 	//					InterlockedExchange(&g_undertrackingRMenu, (LONG)1);
-	//					//SetForegroundWindow(s_mainhwnd);//この処理をしないと範囲外クリックでPopupが閉じない
+	//					//SetForegroundWindow(g_mainhwnd);//この処理をしないと範囲外クリックでPopupが閉じない
 	//					SetForegroundWindow(s_3dwnd);//この処理をしないと範囲外クリックでPopupが閉じない
-	//					//int retmenuid = ::TrackPopupMenu(s_cursubmenu, TPM_RETURNCMD | TPM_LEFTALIGN, g_currentsubmenupos.x, g_currentsubmenupos.y, 0, s_mainhwnd, NULL);
+	//					//int retmenuid = ::TrackPopupMenu(s_cursubmenu, TPM_RETURNCMD | TPM_LEFTALIGN, g_currentsubmenupos.x, g_currentsubmenupos.y, 0, g_mainhwnd, NULL);
 	//					int retmenuid = ::TrackPopupMenu(s_cursubmenu, TPM_RETURNCMD | TPM_LEFTALIGN, g_currentsubmenupos.x, g_currentsubmenupos.y, 0, s_3dwnd, NULL);
 	//					InterlockedExchange(&g_undertrackingRMenu, (LONG)0);
 	//				}
@@ -47110,7 +47167,7 @@ void ChangeMouseSetCapture()
 	//	return;
 	//}
 
-	if (!s_mainhwnd) {
+	if (!g_mainhwnd) {
 		return;
 	}
 
@@ -47130,7 +47187,7 @@ void ChangeMouseSetCapture()
 	POINT mousepoint;
 	::GetCursorPos(&mousepoint);
 	POINT clientpoint = mousepoint;
-	::ScreenToClient(s_mainhwnd, &clientpoint);
+	::ScreenToClient(g_mainhwnd, &clientpoint);
 
 	int chkx = clientpoint.x;
 	int chky = clientpoint.y;
@@ -47300,9 +47357,9 @@ void ChangeMouseSetCapture()
 		//if ((nextcapwndid != s_capwndid) || (s_wmlbuttonup == 1)) {//常にではなく、〇ボタンを押したときだけ処理。同じウインドウでも必要なことがある。
 		switch (nextcapwndid) {
 		case 0:
-			if (s_mainhwnd) {
-				if (s_mainhwnd) {
-					SetCapture(s_mainhwnd);
+			if (g_mainhwnd) {
+				if (g_mainhwnd) {
+					SetCapture(g_mainhwnd);
 				}
 			}
 			break;
@@ -47340,8 +47397,8 @@ void ChangeMouseSetCapture()
 		case 6:
 			//plate menuで場合分け必要
 			//if (s_platemenukind == SPPLATEMENUKIND_GUI) {
-			//	if (s_mainhwnd) {
-			//		SetCapture(s_mainhwnd);
+			//	if (g_mainhwnd) {
+			//		SetCapture(g_mainhwnd);
 			//	}
 			//}
 			//else 
@@ -47429,15 +47486,15 @@ void ChangeMouseSetCapture()
 			break;
 
 		default:
-			if (s_mainhwnd) {
-				SetCapture(s_mainhwnd);
+			if (g_mainhwnd) {
+				SetCapture(g_mainhwnd);
 			}
-			//if (s_mainhwnd) {
+			//if (g_mainhwnd) {
 			//	if (!s_firstflag) {
 			//		ReleaseCapture();
 			//		s_firstflag = false;
 			//	}
-			//	SetCapture(s_mainhwnd);
+			//	SetCapture(g_mainhwnd);
 			//}
 			break;
 		}
@@ -47451,7 +47508,7 @@ void ChangeMouseSetCapture()
 
 void ChangeMouseReleaseCapture()
 {
-	//if (!s_mainhwnd) {
+	//if (!g_mainhwnd) {
 	//	return;
 	//}
 
@@ -47551,7 +47608,7 @@ void DSMessageBox(HWND srcparenthwnd, const WCHAR* srcmessage, const WCHAR* srct
 
 void SetMainWindowTitle()
 {
-	if (!s_mainhwnd) {
+	if (!g_mainhwnd) {
 		return;
 	}
 
@@ -47601,7 +47658,7 @@ void SetMainWindowTitle()
 		}
 	}
 
-	SetWindowText(s_mainhwnd, strmaintitle);
+	SetWindowText(g_mainhwnd, strmaintitle);
 
 }
 
@@ -49455,9 +49512,9 @@ void OnArrowKey()
 	//複数個のEditMotを立ち上げたときに操作中のEditMotだけに影響するように
 	POINT cursorpoint;
 	GetCursorPos(&cursorpoint);
-	::ScreenToClient(s_mainhwnd, &cursorpoint);
+	::ScreenToClient(g_mainhwnd, &cursorpoint);
 	RECT appclientrect;
-	GetClientRect(s_mainhwnd, &appclientrect);
+	GetClientRect(g_mainhwnd, &appclientrect);
 	if ((cursorpoint.x < appclientrect.left) || (cursorpoint.x > appclientrect.right) ||
 		(cursorpoint.y < appclientrect.top) || (cursorpoint.y > appclientrect.bottom)) {
 		//MainWindow外につき処理しない
@@ -49553,14 +49610,21 @@ void OnArrowKey()
 //
 //}
 
-ChaMatrix CalcRigMat(CBone* curbone, int curmotid, double curframe, int dispaxis, int disporder, bool posinverse)
+ChaMatrix CalcRigMat(CUSTOMRIG* currig, CBone* curbone, int curmotid, double curframe, int dispaxis, int disporder, bool posinverse)
 {
+
 	ChaMatrix retmat;
 	ChaMatrixIdentity(&retmat);
 	if (!curbone) {
+		_ASSERT(0);
 		return retmat;
 	}
 	if (!curbone->GetParModel()) {
+		_ASSERT(0);
+		return retmat;
+	}
+	if (!currig) {
+		_ASSERT(0);
 		return retmat;
 	}
 
@@ -49589,7 +49653,23 @@ ChaMatrix CalcRigMat(CBone* curbone, int curmotid, double curframe, int dispaxis
 
 	ChaMatrix scalemat;
 	ChaMatrixIdentity(&scalemat);
-	ChaMatrixScaling(&scalemat, s_selectscale, s_selectscale, s_selectscale);
+	//ChaMatrixScaling(&scalemat, s_selectscale, s_selectscale, s_selectscale);
+	float rigmult;
+	switch (currig->shapekind) {
+	case RIGSHAPE_SPHERE:
+		rigmult = 0.5f * s_selectscale * (float)(currig->shapemult + 1) * 0.5f;
+		break;
+	case RIGSHAPE_RINGX:
+	case RIGSHAPE_RINGY:
+	case RIGSHAPE_RINGZ:
+		rigmult = s_selectscale * (float)(currig->shapemult + 1) * 0.5f;
+		break;
+	default:
+		rigmult = s_selectscale;
+		_ASSERT(0);
+		break;
+	}
+	ChaMatrixScaling(&scalemat, rigmult, rigmult, rigmult);
 
 	//ChaVector3 curbonepos = curbone->GetWorldPos(g_limitdegflag, curmotid, curframe);//world座標系
 	//ChaMatrix invmodelwm = ChaMatrixInv(curbone->GetParModel()->GetWorldMat());
@@ -49671,7 +49751,7 @@ int PickRigBone(UIPICKINFO* ppickinfo, bool forrigtip, int* dstrigno)//default:f
 		return -1;
 	}
 
-
+	ResetRigModelNum();
 	MOTINFO* curmi = s_model->GetCurMotInfo();
 	if (curmi) {
 		int curmotid = curmi->motid;
@@ -49692,7 +49772,7 @@ int PickRigBone(UIPICKINFO* ppickinfo, bool forrigtip, int* dstrigno)//default:f
 						if (currigmodel) {
 							ChaMatrix rigmat;
 							ChaMatrixIdentity(&rigmat);
-							rigmat = CalcRigMat(curbone, curmotid, curframe, currig.dispaxis, currig.disporder, currig.posinverse);
+							rigmat = CalcRigMat(&currig, curbone, curmotid, curframe, currig.dispaxis, currig.disporder, currig.posinverse);
 
 							//g_hmWorld->SetMatrix(rigmat.GetDataPtr());
 							currigmodel->UpdateMatrix(g_limitdegflag, &rigmat, &s_matVP);
@@ -51027,7 +51107,7 @@ bool DispTipRig()
 //	//g_camEye = dlg.GetCameraPos();
 //
 //	HWND hDlgWnd = CreateDialogW((HMODULE)GetModuleHandle(NULL), 
-//		MAKEINTRESOURCE(IDD_DOLLYDLG), s_mainhwnd, (DLGPROC)CameraDollyDlgProc);
+//		MAKEINTRESOURCE(IDD_DOLLYDLG), g_mainhwnd, (DLGPROC)CameraDollyDlgProc);
 //	if (hDlgWnd == NULL) {
 //		return 1;
 //	}
@@ -51045,7 +51125,7 @@ int CreateModelWorldMatWnd()
 	//g_camEye = dlg.GetCameraPos();
 
 	HWND hDlgWnd = CreateDialogW((HMODULE)GetModuleHandle(NULL),
-		MAKEINTRESOURCE(IDD_MODELWORLDMATDLG), s_mainhwnd, (DLGPROC)ModelWorldMatDlgProc);
+		MAKEINTRESOURCE(IDD_MODELWORLDMATDLG), g_mainhwnd, (DLGPROC)ModelWorldMatDlgProc);
 	if (hDlgWnd == NULL) {
 		return 1;
 	}
@@ -51063,7 +51143,7 @@ int CreateShaderTypeParamsDlg()
 	//g_camEye = dlg.GetCameraPos();
 
 	HWND hDlgWnd = CreateDialogW((HMODULE)GetModuleHandle(NULL),
-		MAKEINTRESOURCE(IDD_SHADERTYPEDLG2), s_mainhwnd, (DLGPROC)ShaderTypeParamsDlgProc);
+		MAKEINTRESOURCE(IDD_SHADERTYPEDLG2), g_mainhwnd, (DLGPROC)ShaderTypeParamsDlgProc);
 	if (hDlgWnd == NULL) {
 		return 1;
 	}
@@ -51267,7 +51347,7 @@ int CreateMaterialRateWnd()
 	//g_camEye = dlg.GetCameraPos();
 
 	HWND hDlgWnd = CreateDialogW((HMODULE)GetModuleHandle(NULL),
-		MAKEINTRESOURCE(IDD_MATERIALRATEDLG), s_mainhwnd, (DLGPROC)MaterialRateDlgProc);
+		MAKEINTRESOURCE(IDD_MATERIALRATEDLG), g_mainhwnd, (DLGPROC)MaterialRateDlgProc);
 	if (hDlgWnd == NULL) {
 		return 1;
 	}
@@ -51639,6 +51719,7 @@ int CreateSprites()
 	SpriteInitData spriteinitdata;
 	spriteinitdata.m_width = 256;//仮　ファイルから読込時は上書きされる
 	spriteinitdata.m_height = 256;//仮　ファイルから読込時は上書きされる
+	spriteinitdata.m_colorBufferFormat[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
 
 	bool screenvertexflag = true;//!!!!!!!!!!!!
 
@@ -52792,7 +52873,7 @@ RECT InitWindow(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	);
 	if (!g_hWnd) {
 		_ASSERT(0);
-		::MessageBox(s_mainhwnd, L"ウインドウの作成でエラー.アプリを終了します.", L"CreateWindow Error!!!", MB_OK);
+		::MessageBox(g_mainhwnd, L"ウインドウの作成でエラー.アプリを終了します.", L"CreateWindow Error!!!", MB_OK);
 		abort();
 	}
 
@@ -52991,7 +53072,8 @@ int OnCreateDevice()
 		{
 			s_rigopemark_sphere[rigopemarkno] = new CModel();
 			if (s_rigopemark_sphere[rigopemarkno]) {
-				float rigmult = 0.30f * (float)(rigopemarkno + 1) * 0.5f;
+				//float rigmult = 0.30f * (float)(rigopemarkno + 1) * 0.5f;
+				float rigmult = 1.0f;
 				CallF(s_rigopemark_sphere[rigopemarkno]->LoadMQO(s_pdev,
 					L"..\\Media\\MameMedia\\rigmark.mqo", 0, rigmult, 0), return S_FALSE);
 				//CallF(s_rigopemark_sphere[rigopemarkno]->MakeDispObj(), return S_FALSE);
@@ -53012,7 +53094,8 @@ int OnCreateDevice()
 		{
 			s_rigopemark_ringX[rigopemarkno] = new CModel();
 			if (s_rigopemark_ringX[rigopemarkno]) {
-				float rigmult = (float)(rigopemarkno + 1) * 0.5f;
+				//float rigmult = (float)(rigopemarkno + 1) * 0.5f;
+				float rigmult = 1.0f;
 				CallF(s_rigopemark_ringX[rigopemarkno]->LoadMQO(s_pdev,
 					L"..\\Media\\MameMedia\\ringX.mqo", 0, rigmult, 0), return S_FALSE);
 				//CallF(s_rigopemark_ringX[rigopemarkno]->MakeDispObj(), return S_FALSE);
@@ -53033,7 +53116,8 @@ int OnCreateDevice()
 		{
 			s_rigopemark_ringY[rigopemarkno] = new CModel();
 			if (s_rigopemark_ringY[rigopemarkno]) {
-				float rigmult = (float)(rigopemarkno + 1) * 0.5f;
+				//float rigmult = (float)(rigopemarkno + 1) * 0.5f;
+				float rigmult = 1.0f;
 				CallF(s_rigopemark_ringY[rigopemarkno]->LoadMQO(s_pdev,
 					L"..\\Media\\MameMedia\\ringY.mqo", 0, rigmult, 0), return S_FALSE);
 				//CallF(s_rigopemark_ringY[rigopemarkno]->MakeDispObj(), return S_FALSE);
@@ -53054,7 +53138,8 @@ int OnCreateDevice()
 		{
 			s_rigopemark_ringZ[rigopemarkno] = new CModel();
 			if (s_rigopemark_ringZ[rigopemarkno]) {
-				float rigmult = (float)(rigopemarkno + 1) * 0.5f;
+				//float rigmult = (float)(rigopemarkno + 1) * 0.5f;
+				float rigmult = 1.0f;
 				CallF(s_rigopemark_ringZ[rigopemarkno]->LoadMQO(s_pdev,
 					L"..\\Media\\MameMedia\\ringZ.mqo", 0, rigmult, 0), return S_FALSE);
 				//CallF(s_rigopemark_ringZ[rigopemarkno]->MakeDispObj(), return S_FALSE);

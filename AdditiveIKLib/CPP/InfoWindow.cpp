@@ -123,6 +123,7 @@ int CInfoWindow::CreateInfoWindow(HWND srcparentwnd, int srcposx, int srcposy, i
 	}
 	ZeroMemory(m_stroutput, sizeof(WCHAR) * INFOWINDOWLINEW * INFOWINDOWLINEH);
 
+	HBRUSH blkbrush = CreateSolidBrush(RGB(0, 0, 0));//自分で削除しない　DestroyWindow時に解放される
 
 	//ウィンドウクラスを登録
 	WNDCLASSEX wcex;
@@ -136,7 +137,8 @@ int CInfoWindow::CreateInfoWindow(HWND srcparentwnd, int srcposx, int srcposy, i
 	wcex.hIcon = NULL;
 	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
 	//wcex.hCursor = NULL;
-	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	//wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wcex.hbrBackground = blkbrush;// (HBRUSH)COLOR_BACKGROUND + 1;
 	wcex.lpszMenuName = NULL;
 	wcex.lpszClassName = L"InfoWindow_";
 	wcex.hIconSm = NULL;
