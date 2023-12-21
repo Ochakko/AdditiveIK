@@ -59,6 +59,8 @@ struct SConstantBuffer {
 	Matrix mView;		//ビュー行列。
 	Matrix mProj;		//プロジェクション行列。
 	ChaVector4 diffusemult;
+	ChaVector4 ambient;
+	ChaVector4 emission;
 	ChaVector4 metalcoef;
 	ChaVector4 materialdisprate;
 	ChaVector4 shadowmaxz;
@@ -67,6 +69,8 @@ struct SConstantBuffer {
 		mView.SetIdentity();
 		mProj.SetIdentity();
 		diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		ambient = ChaVector4(0.2f, 0.2f, 0.2f, 1.0f);
+		emission = ChaVector4(0.0f, 0.0f, 0.0f, 1.0f);
 		metalcoef = ChaVector4(0.250f, 0.250f, 0.0f, 0.0f);
 		materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 		shadowmaxz = ChaVector4(3000.0f, 0.0010f, 0.0f, 0.0f);
@@ -651,6 +655,15 @@ public:
 		return m_settempdiffusemult;
 	}
 
+	void SetEnableEmission(bool srcflag) 
+	{
+		m_enableEmission = srcflag;
+	}
+	bool GetEnableEmission()
+	{
+		return m_enableEmission;
+	}
+
 public:
 	//###################################################
 	//CreateDecl()内で　頂点フォーマットによって　定数を設定する
@@ -717,7 +730,7 @@ private:
 	ChaVector3 m_emi3f;
 	ChaVector3 m_spc3f;
 	ChaVector4 m_sceneamb;
-
+	bool m_enableEmission;
 
 	int m_transparent;
 	int m_texrule;

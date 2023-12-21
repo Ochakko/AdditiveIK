@@ -36,7 +36,7 @@ struct SPSIn
     float4 biNormal : BINORMAL;
     float2 uv : TEXCOORD0; // uv座標
     float4 worldPos : TEXCOORD1; // ワールド空間でのピクセルの座標
-    float4 diffusemult : TEXCOORD2;   
+    float4 diffusemult : TEXCOORD2;
 };
 
 struct SPSInExtLine
@@ -76,6 +76,8 @@ cbuffer ModelCb : register(b0)
     float4x4 mView;
     float4x4 mProj;
     float4 diffusemult;
+    float4 ambient;
+    float4 emission;    
     float4 metalcoef;
     float4 materialdisprate;
     float4 shadowmaxz;
@@ -549,7 +551,7 @@ float4 PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
     //finalColor.xyz = lig;
     //finalColor.w = albedoColor.w;
     
-    float4 finalColor = float4(lig, albedoColor.w) * diffusecol * psIn.diffusemult;
+    float4 finalColor = emission * materialdisprate.z + float4(lig, albedoColor.w) * diffusecol * psIn.diffusemult;
     return finalColor;
 
 }
@@ -689,7 +691,7 @@ float4 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     //finalColor.xyz = lig;
     //finalColor.w = albedoColor.w;
     
-    float4 finalColor = float4(lig, albedoColor.w) * diffusecol * psIn.diffusemult;
+    float4 finalColor = emission * materialdisprate.z + float4(lig, albedoColor.w) * diffusecol * psIn.diffusemult;
 
 /////////
     //// ライトビュースクリーン空間からUV空間に座標変換

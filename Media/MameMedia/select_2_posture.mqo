@@ -20,10 +20,10 @@ Scene {
 	}
 }
 Material 7 {
-	"matred" shader(3) col(1.000 0.000 0.000 1.000) dif(1.000) amb(0.600) emi(0.250) spc(0.000) power(5.00)
-	"matblue" shader(3) col(0.000 0.000 1.000 1.000) dif(1.000) amb(0.600) emi(0.250) spc(0.000) power(5.00)
-	"matgreen" shader(3) col(0.000 1.000 0.000 1.000) dif(1.000) amb(0.600) emi(0.250) spc(0.000) power(5.00)
-	"matyellow" shader(3) col(1.000 0.949 0.000 1.000) dif(1.000) amb(0.600) emi(0.250) spc(0.000) power(5.00)
+	"matred" shader(3) col(1.000 0.000 0.000 1.000) dif(1.000) amb(0.600) emi(0.000) spc(0.000) power(5.00)
+	"matblue" shader(3) col(0.000 0.000 1.000 1.000) dif(1.000) amb(0.600) emi(0.000) spc(0.000) power(5.00)
+	"matgreen" shader(3) col(0.000 1.000 0.000 1.000) dif(1.000) amb(0.600) emi(0.000) spc(0.000) power(5.00)
+	"matyellow" shader(3) col(1.000 0.949 0.000 1.000) dif(1.000) amb(0.600) emi(0.000) spc(0.000) power(5.00)
 	"ringred" shader(3) col(1.000 0.000 0.000 1.000) dif(1.000) amb(0.600) emi(0.000) spc(0.000) power(5.00)
 	"ringgreen" shader(3) col(0.000 1.000 0.000 1.000) dif(1.000) amb(0.600) emi(0.000) spc(0.000) power(5.00)
 	"ringblue" shader(3) col(0.000 0.000 1.000 1.000) dif(1.000) amb(0.600) emi(0.000) spc(0.000) power(5.00)

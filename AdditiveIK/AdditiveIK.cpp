@@ -1017,7 +1017,7 @@ static OWP_Label* s_shadertypelabel[MAXMATERIALNUM + 1];//+1は見出しの分
 static OWP_Label* s_metalcoeflabel[MAXMATERIALNUM + 1];//+1は見出しの分
 static OWP_Label* s_lightscalelabel[MAXMATERIALNUM + 1];//+1は見出しの分
 static bool s_shadertypeparamsFlag = false;
-static int s_shadertypeparamsindex = 0;//index==0は全てのマテリアルに設定. それ以外はindex - 1のマテリアルに設定
+static int s_shadertypeparamsindex = -1;//index==0は全てのマテリアルに設定. それ以外はindex - 1のマテリアルに設定
 
 
 static OrgWindow* s_rigidWnd = 0;
@@ -2347,7 +2347,7 @@ static int RenderSelectMark(myRenderer::RenderingEngine* re, RenderContext* pRen
 static int RenderSelectFunc(myRenderer::RenderingEngine* re);
 static int RenderSelectPostureFunc(myRenderer::RenderingEngine* re);
 static int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
-//static int SetSelectState(RenderContext* pRenderContext);
+static int SetSelectState();
 
 
 static void ResetRigModelNum();
@@ -3639,7 +3639,7 @@ void InitApp()
 
 	{
 		s_shadertypeparamsFlag = false;
-		s_shadertypeparamsindex = 0;//index==0は全てのマテリアルに設定. それ以外はindex - 1のマテリアルに設定
+		s_shadertypeparamsindex = -1;//index==0は全てのマテリアルに設定. それ以外はindex - 1のマテリアルに設定
 
 		s_shadertypeWnd = 0;
 		s_SCshadertype = 0;
@@ -12935,7 +12935,8 @@ int RenderSelectFunc(myRenderer::RenderingEngine* re)
 	if (s_dispselect) {
 		int lightflag = 1;
 		//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
-		ChaVector4 diffusemult = ChaVector4(0.6f, 0.6f, 0.6f, 0.3f);
+		//ChaVector4 diffusemult = ChaVector4(0.6f, 0.6f, 0.6f, 0.3f);
+		ChaVector4 diffusemult = ChaVector4(0.6f, 0.6f, 0.6f, 1.0f);
 		bool forcewithalpha = true;
 		int btflag = 0;
 		bool zcmpalways = true;
@@ -21570,13 +21571,16 @@ int SetSelectState()
 	}
 
 	//float hirate = 1.0f;
-	float hirate = 1.25f;
+	//float hirate = 1.25f;
+	float hirate = 1.0f;//2023/12/21
 	float lowrate = 0.6f;
 
 	//float hia = 0.3f;
-	float hia = 0.7f;
+	//float hia = 0.7f;
+	float hia = 0.50f;//2023/12/21
 	//float hia = 0.3f;
-	float lowa = 0.3f;
+	//float lowa = 0.3f;
+	float lowa = 0.45f;//23023/12/21
 
 	ChaVector4 hidiffusemult = ChaVector4(hirate, hirate, hirate, hia);
 	ChaVector4 lowdiffusemult = ChaVector4(lowrate, lowrate, lowrate, lowa);
@@ -25731,6 +25735,9 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 	int materialnum = s_model->GetMQOMaterialSize();
 	CMQOMaterial* curmqomat = nullptr;
 	if ((s_shadertypeparamsindex < 0) || (s_shadertypeparamsindex >= (materialnum + 1))) {
+		if (s_shadertypeparamsindex != -1) {
+			int dbgflag1 = 1;
+		}
 		return DefWindowProc(hDlgWnd, msg, wp, lp);
 	}
 	int materialindex = s_shadertypeparamsindex - 1;
@@ -25738,6 +25745,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 	float curmetalcoef;
 	float cursmoothcoef;
 	float curlightscale[LIGHTNUMMAX];
+	bool enableEmission = false;
 	WCHAR wmaterialname[256] = { 0L };
 	if (materialindex >= 0) {
 		curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
@@ -25751,6 +25759,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			for (litno = 0; litno < LIGHTNUMMAX; litno++) {
 				curlightscale[litno] = curmqomat->GetLightScale(litno);
 			}
+			enableEmission = curmqomat->GetEnableEmission();
 		}
 		else {
 			_ASSERT(0);
@@ -25767,6 +25776,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 		for (litno = 0; litno < LIGHTNUMMAX; litno++) {
 			curlightscale[litno] = 1.0f;
 		}
+		enableEmission = false;
 	}
 	
 	int lightsliderid[LIGHTNUMMAX] = {
@@ -26021,11 +26031,42 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			break;
 
 
+
+		case IDC_CHECK_EMISSION:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_EMISSION);
+			if (ischecked == BST_CHECKED) {
+				enableEmission = true;
+			}
+			else {
+				enableEmission = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetEnableEmission(enableEmission);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetEnableEmission(enableEmission);
+					}
+				}
+			}
+		}
+		break;
+
+
+
+
 		case IDOK:
 		case IDCANCEL:
 			//EndDialog(hDlgWnd, IDCANCEL);
 			//s_shadertypeparamsFlag = false;
 			ShowWindow(hDlgWnd, SW_HIDE);
+			s_shadertypeparamsindex = -1;
 			break;
 		default:
 			return FALSE;
@@ -26035,6 +26076,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 	case WM_CLOSE:
 		//s_shadertypeparamsFlag = false;
 		ShowWindow(hDlgWnd, SW_HIDE);
+		s_shadertypeparamsindex = -1;
 		break;
 	default:
 		DefWindowProc(hDlgWnd, msg, wp, lp);
@@ -34893,7 +34935,7 @@ int CreateShaderTypeWnd()
 
 	if (s_shadertypeWnd) {
 		int linedatasize;
-		linedatasize = (int)((double)materialnum * 1.2);
+		linedatasize = (int)((double)(materialnum + 1) * 1.2);
 
 
 		s_SCshadertype = new OWP_ScrollWnd(L"ShaderTypeScWnd", true);
@@ -34905,25 +34947,27 @@ int CreateShaderTypeWnd()
 		s_shadertypeWnd->addParts(*s_SCshadertype);
 
 
-		s_shadersp1 = new OWP_Separator(s_shadertypeWnd, false, 0.75, true);
+		//s_shadersp1 = new OWP_Separator(s_shadertypeWnd, false, 0.75, true);
+		s_shadersp1 = new OWP_Separator(s_shadertypeWnd, false, 0.75, true, s_SCshadertype);//2023/12/22
 		if (!s_shadersp1) {
 			_ASSERT(0);
 			return 1;
 		}
 		s_SCshadertype->addParts(*s_shadersp1);
 
-		s_shadersp2 = new OWP_Separator(s_shadertypeWnd, false, 0.80, true);;
-		if (!s_shadersp2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_shadersp3 = new OWP_Separator(s_shadertypeWnd, false, 0.5, true);;
-		if (!s_shadersp3) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_shadersp1->addParts1(*s_shadersp2);
-		s_shadersp1->addParts2(*s_shadersp3);
+		//s_shadersp2 = new OWP_Separator(s_shadertypeWnd, false, 0.80, true, s_SCshadertype);
+		//if (!s_shadersp2) {
+		//	_ASSERT(0);
+		//	return 1;
+		//}
+		//s_shadersp1->addParts1(*s_shadersp2);
+
+		//s_shadersp3 = new OWP_Separator(s_shadertypeWnd, false, 0.5, true, s_SCshadertype);
+		//if (!s_shadersp3) {
+		//	_ASSERT(0);
+		//	return 1;
+		//}
+		//s_shadersp1->addParts2(*s_shadersp3);
 
 		//見出し行　見出し行のs_materialnameBは全てのマテリアルに適用するためのボタン
 		//OrgWinGUI::OrgWindowParts::color_tag colorforindex;//RGB(168, 129, 129)
@@ -34942,28 +34986,37 @@ int CreateShaderTypeWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_shadertypelabel[0]->setTextColor(indexcolor);
-		s_metalcoeflabel[0] = new OWP_Label(L"MetalCoef");
-		if (!s_metalcoeflabel[0]) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_metalcoeflabel[0]->setTextColor(indexcolor);
-		s_lightscalelabel[0] = new OWP_Label(L"LightScale");
-		if (!s_lightscalelabel[0]) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_lightscalelabel[0]->setTextColor(indexcolor);
+		//s_shadertypelabel[0]->setTextColor(indexcolor);
+		//s_metalcoeflabel[0] = new OWP_Label(L"MetalCoef");
+		//if (!s_metalcoeflabel[0]) {
+		//	_ASSERT(0);
+		//	return 1;
+		//}
+		//s_metalcoeflabel[0]->setTextColor(indexcolor);
+		//s_lightscalelabel[0] = new OWP_Label(L"LightScale");
+		//if (!s_lightscalelabel[0]) {
+		//	_ASSERT(0);
+		//	return 1;
+		//}
+		//s_lightscalelabel[0]->setTextColor(indexcolor);
 
-		s_shadersp2->addParts1(*(s_materialnameB[0]));
-		s_shadersp2->addParts2(*(s_shadertypelabel[0]));
-		s_shadersp3->addParts1(*(s_metalcoeflabel[0]));
-		s_shadersp3->addParts2(*(s_lightscalelabel[0]));
+		//s_shadersp2->addParts1(*(s_materialnameB[0]));
+		//s_shadersp2->addParts2(*(s_shadertypelabel[0]));
+		//s_shadersp3->addParts1(*(s_metalcoeflabel[0]));
+		//s_shadersp3->addParts2(*(s_lightscalelabel[0]));
+
+		s_shadersp1->addParts1(*(s_materialnameB[0]));
+		s_shadersp1->addParts2(*(s_shadertypelabel[0]));
+
 
 
 		int setindex;
 		for (setindex = 1; setindex < (materialnum + 1); setindex++) {
+
+			if (setindex == materialnum) {
+				int dbgflag2 = 1;
+			}
+
 			int materialindex = setindex - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 			if (!curmqomat) {
@@ -35010,45 +35063,53 @@ int CreateShaderTypeWnd()
 				return 1;
 			}
 			
-			float metalcoef = curmqomat->GetMetalCoef();
-			WCHAR strmetalcoef[256] = { 0L };
-			swprintf_s(strmetalcoef, 256, L"%.3f", metalcoef);
-			s_metalcoeflabel[setindex] = new OWP_Label(strmetalcoef);
-			if (!s_metalcoeflabel[setindex]) {
-				_ASSERT(0);
-				return 1;
-			}
+			//float metalcoef = curmqomat->GetMetalCoef();
+			//WCHAR strmetalcoef[256] = { 0L };
+			//swprintf_s(strmetalcoef, 256, L"%.3f", metalcoef);
+			//s_metalcoeflabel[setindex] = new OWP_Label(strmetalcoef);
+			//if (!s_metalcoeflabel[setindex]) {
+			//	_ASSERT(0);
+			//	return 1;
+			//}
 
-			WCHAR strlightscale[256] = { 0L };
-			bool isedited = false;
-			int litno5;
-			for (litno5 = 0; litno5 < LIGHTNUMMAX; litno5++) {
-				float curscale = curmqomat->GetLightScale(litno5);
-				if ((curscale >= (1.0f - 0.0001f)) && (curscale <= (1.0f + 0.0001f))) {
-					//1.0f
-				}
-				else {
-					isedited = true;
-					break;
-				}
-			}
-			if (isedited) {
-				wcscpy_s(strlightscale, 256, L"***");
-			}
-			else {
-				wcscpy_s(strlightscale, 256, L"1.00");
-			}
-			s_lightscalelabel[setindex] = new OWP_Label(strlightscale);
-			if (!s_lightscalelabel[setindex]) {
-				_ASSERT(0);
-				return 1;
-			}
+			//WCHAR strlightscale[256] = { 0L };
+			//bool isedited = false;
+			//int litno5;
+			//for (litno5 = 0; litno5 < LIGHTNUMMAX; litno5++) {
+			//	float curscale = curmqomat->GetLightScale(litno5);
+			//	if ((curscale >= (1.0f - 0.0001f)) && (curscale <= (1.0f + 0.0001f))) {
+			//		//1.0f
+			//	}
+			//	else {
+			//		isedited = true;
+			//		break;
+			//	}
+			//}
+			//if (isedited) {
+			//	wcscpy_s(strlightscale, 256, L"***");
+			//}
+			//else {
+			//	wcscpy_s(strlightscale, 256, L"1.00");
+			//}
+			//s_lightscalelabel[setindex] = new OWP_Label(strlightscale);
+			//if (!s_lightscalelabel[setindex]) {
+			//	_ASSERT(0);
+			//	return 1;
+			//}
 
 
-			s_shadersp2->addParts1(*(s_materialnameB[materialindex]));
-			s_shadersp2->addParts2(*(s_shadertypelabel[materialindex]));
-			s_shadersp3->addParts1(*(s_metalcoeflabel[materialindex]));
-			s_shadersp3->addParts2(*(s_lightscalelabel[materialindex]));
+			////s_shadersp2->addParts1(*(s_materialnameB[materialindex]));
+			////s_shadersp2->addParts2(*(s_shadertypelabel[materialindex]));
+			////s_shadersp3->addParts1(*(s_metalcoeflabel[materialindex]));
+			////s_shadersp3->addParts2(*(s_lightscalelabel[materialindex]));
+			//s_shadersp2->addParts1(*(s_materialnameB[setindex]));
+			//s_shadersp2->addParts2(*(s_shadertypelabel[setindex]));
+			//s_shadersp3->addParts1(*(s_metalcoeflabel[setindex]));
+			//s_shadersp3->addParts2(*(s_lightscalelabel[setindex]));
+
+
+			s_shadersp1->addParts1(*(s_materialnameB[setindex]));
+			s_shadersp1->addParts2(*(s_shadertypelabel[setindex]));
 
 		}
 
@@ -35056,6 +35117,11 @@ int CreateShaderTypeWnd()
 		//ボタンのラムダ関数
 		int setindex2;
 		for (setindex2 = 0; setindex2 < (materialnum + 1); setindex2++) {
+
+			if (setindex2 == materialnum) {
+				int dbgflag3 = 1;
+			}
+
 			//int materialindex = setindex2 - 1;	
 			if (s_materialnameB[setindex2]) {
 				s_materialnameB[setindex2]->setButtonListener([setindex2]() {
@@ -35069,10 +35135,10 @@ int CreateShaderTypeWnd()
 
 
 		//autoResizeしないと　チェックボックス４段目以下が反応なかった
-		s_SCshadertype->autoResize();
-		s_shadersp3->autoResize();
-		s_shadersp2->autoResize();
-		s_shadersp1->autoResize();
+		//s_SCshadertype->autoResize();
+		//s_shadersp3->autoResize();
+		//s_shadersp2->autoResize();
+		//s_shadersp1->autoResize();
 
 		s_shadertypeWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
 		s_shadertypeWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
@@ -51212,7 +51278,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	float curmetalcoef;
 	float cursmoothcoef;
 	float curlightscale[LIGHTNUMMAX];
-
+	bool enableEmission = false;
 	if (curmqomat) {
 		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, 
 			curmqomat->GetName(), -1, wmaterialname, 256);
@@ -51223,6 +51289,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		for (litno = 0; litno < LIGHTNUMMAX; litno++) {
 			curlightscale[litno] = curmqomat->GetLightScale(litno);
 		}
+		enableEmission = curmqomat->GetEnableEmission();
 	}
 	else {
 		//全てのマテリアルに対して設定するボタンを押した場合
@@ -51234,6 +51301,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		for (litno = 0; litno < LIGHTNUMMAX; litno++) {
 			curlightscale[litno] = 1.0f;
 		}
+		enableEmission = false;
 	}
 
 	int lightsliderid[LIGHTNUMMAX] = {
@@ -51293,6 +51361,17 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		swprintf_s(strdlg, 256, L"LightScale%d %.2f", (litno3 + 1), curlightscale[litno3]);
 		SetDlgItemText(hDlgWnd, lighttextid[litno3], strdlg);
 	}
+
+	//#########
+	//CheckBox
+	//#########
+	if ((bool)enableEmission == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_EMISSION, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_EMISSION, false);
+	}
+
 
 	return 0;
 }

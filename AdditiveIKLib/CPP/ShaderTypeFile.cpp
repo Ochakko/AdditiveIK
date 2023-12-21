@@ -103,6 +103,13 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			CallF(Write2File("    <LightScale7>%f</LightScale7>\r\n", lightscale[6]), return 1);
 			CallF(Write2File("    <LightScale8>%f</LightScale8>\r\n", lightscale[7]), return 1);
 
+			if (mqomat->GetEnableEmission()) {
+				CallF(Write2File("    <EnableEmission>1</EnableEmission>\r\n"), return 1);
+			}
+			else {
+				CallF(Write2File("    <EnableEmission>0</EnableEmission>\r\n"), return 1);
+			}
+
 			CallF(Write2File("  </Material>\r\n"), return 1);
 
 		}
@@ -116,7 +123,7 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 
 int CShaderTypeFile::WriteFileInfo()
 {
-	CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1001</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	return 0;
 }
 
@@ -202,6 +209,16 @@ int CShaderTypeFile::LoadShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 				float lightscale8 = 1.0f;
 				Read_Float(&materialbuf, "<LightScale8>", "</LightScale8>", &lightscale8);
 				curmqomat->SetLightScale(7, lightscale8);
+
+				int enableEmission = 0;
+				Read_Int(&materialbuf, "<EnableEmission>", "</EnableEmission>", &enableEmission);
+				if (enableEmission == 1) {
+					curmqomat->SetEnableEmission(true);
+				}
+				else {
+					curmqomat->SetEnableEmission(false);
+				}
+				
 			}
 		}		
 	}

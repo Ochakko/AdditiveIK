@@ -150,7 +150,7 @@ int CFpsSprite::SetParams()
 
 	//m_pointR[0].x = 175;
 	m_point[0].x = 180 - (int)spawidth - spashift;
-	m_point[0].y = 10;
+	m_point[0].y = 15;
 
 	m_point[1].x = m_point[0].x + (int)spawidth * 2 + spashift;
 	m_point[1].y = m_point[0].y;

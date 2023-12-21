@@ -2,6 +2,16 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2023/12/22
+AdditiveIK 1.0.0.1 RC4(リリース候補4)
+　ShaderTypeダイアログがスクロール出来ていなかったのを修正.
+　ShaderTypeParamsダイアログにEnableEmissionチェックボックスを追加.
+　　色の計算にEmissionを含める場合にはEnableEmissionにチェックを入れる.
+　　EnableEmissionの初期値はfalse.
+　マニピュレータの色調整.
+  fps数字表示位置を少し下に移動.
+
+
 
 2023/12/21
 AdditiveIK 1.0.0.1 RC3(リリース候補3)

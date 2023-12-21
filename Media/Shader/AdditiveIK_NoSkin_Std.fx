@@ -73,6 +73,8 @@ cbuffer ModelCb : register(b0)
     float4x4 mView;
     float4x4 mProj;
     float4 diffusemult;
+    float4 ambient;
+    float4 emission;    
     float4 metalcoef;
     float4 materialdisprate;
     float4 shadowmaxz;
@@ -230,7 +232,7 @@ float4 PSMainNoSkinStd(SPSIn psIn) : SV_Target0
     }
     float4 totaldiffuse4 = float4(totaldiffuse, 1.0f) * materialdisprate.x;
     float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * 0.125f; //ライト８個で白飛びしないように応急処置1/8=0.125
-    float4 pscol = albedocol * diffusecol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
+    float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
     return pscol;
 }
 
@@ -273,7 +275,7 @@ float4 PSMainNoSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     }
     float4 totaldiffuse4 = float4(totaldiffuse, 1.0f) * materialdisprate.x;
     float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * 0.125f; //ライト８個で白飛びしないように応急処置1/8=0.125
-    float4 pscol = albedocol * diffusecol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
+    float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
 
 ///////////
     // ライトビュースクリーン空間からUV空間に座標変換
@@ -331,7 +333,7 @@ float4 PSMainNoSkinNoLight(SPSIn psIn) : SV_Target0
     //texcol.w = 1.0f;
     //return texcol;
       
-    float4 pscol = albedocol * diffusecol * psIn.diffusemult;
+    float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
     return pscol;
 }
 
@@ -345,7 +347,7 @@ float4 PSMainNoSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     //texcol.w = 1.0f;
     //return texcol;
       
-    float4 pscol = albedocol * diffusecol * psIn.diffusemult;
+    float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
 ////////
     // ライトビュースクリーン空間からUV空間に座標変換
     float2 shadowMapUV = psIn.posInLVP.xy / psIn.posInLVP.w;

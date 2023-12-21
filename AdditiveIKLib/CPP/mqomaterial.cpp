@@ -270,6 +270,8 @@ int CMQOMaterial::InitParams()
 	m_spc = 0.0f;
 	m_power = 0.0f;
 
+	m_enableEmission = false;
+
 	ZeroMemory ( m_tex, sizeof(char) * 256 );
 	ZeroMemory ( m_alpha, sizeof(char) * 256 );
 	ZeroMemory ( m_bump, sizeof(char) * 256 );
@@ -538,6 +540,10 @@ int CMQOMaterial::SetEmi( char* srcchar, int pos, int srcleng, int* stepnum )
 	m_emi3f.y = m_col.y * m_emi;
 	m_emi3f.z = m_col.z * m_emi;
 
+
+	//if (m_emi != 0.0f) {
+	//	int dbgflag1 = 1;
+	//}
 
 	*stepnum += step + 1;
 
@@ -2657,6 +2663,13 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		else {
 			m_cb.diffusemult = renderobj.diffusemult;
 		}
+		m_cb.ambient = ChaVector4(GetAmb3F(), 0.0f);
+		if (GetEnableEmission()) {
+			m_cb.emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+		}
+		else {
+			m_cb.emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+		}
 		m_cb.metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), 0.0f, 0.0f);
 		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_cb.shadowmaxz = ChaVector4(
@@ -2693,6 +2706,13 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		}
 		else {
 			m_cb.diffusemult = renderobj.diffusemult;
+		}
+		m_cb.ambient = ChaVector4(GetAmb3F(), 0.0f);
+		if (GetEnableEmission()) {
+			m_cb.emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+		}
+		else {
+			m_cb.emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
 		m_cb.metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), 0.0f, 0.0f);
 		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
@@ -2803,6 +2823,13 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ rende
 		else {
 			m_cb.diffusemult = renderobj.diffusemult;
 		}
+		m_cb.ambient = ChaVector4(GetAmb3F(), 0.0f);
+		if (GetEnableEmission()) {
+			m_cb.emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+		}
+		else {
+			m_cb.emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+		}
 		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_cb.shadowmaxz = ChaVector4(
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
@@ -2828,7 +2855,19 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ rende
 		m_cb.mWorld = renderobj.mWorld;
 		m_cb.mView = mView;
 		m_cb.mProj = mProj;
-		m_cb.diffusemult = renderobj.diffusemult;
+		if (GetTempDiffuseMultFlag()) {
+			m_cb.diffusemult = GetTempDiffuseMult() * renderobj.diffusemult;
+		}
+		else {
+			m_cb.diffusemult = renderobj.diffusemult;
+		}
+		m_cb.ambient = ChaVector4(GetAmb3F(), 0.0f);
+		if (GetEnableEmission()) {
+			m_cb.emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+		}
+		else {
+			m_cb.emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+		}
 		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_cb.shadowmaxz = ChaVector4(
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
