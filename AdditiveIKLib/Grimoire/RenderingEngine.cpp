@@ -402,7 +402,6 @@ namespace myRenderer
             //m_gBuffer[enGBufferAlbedo].GetDSVCpuDescriptorHandle()
             m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
         );
-        rc->WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
         const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
         rc->ClearRenderTargetView(m_mainRenderTarget.GetRTVCpuDescriptorHandle(), clearColor);
 

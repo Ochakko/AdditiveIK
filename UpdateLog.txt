@@ -2,6 +2,15 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2023/12/21
+AdditiveIK 1.0.0.1 RC3(リリース候補3)
+　デバッグビルドで　レンダー時にバリアの警告が出ていた問題について修正
+　README.mdに使い方を追記
+
+
+
+
 2023/12/19
 AdditiveIK 1.0.0.1 RC2(リリース候補2)
 　ダイアログの最初の出現位置をセンターにしつつ　操作中に元の位置に戻らないように.
