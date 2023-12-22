@@ -25822,13 +25822,13 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 				}
 			}
 
-			if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-				if (s_metalcoeflabel[s_shadertypeparamsindex]) {
-					WCHAR strdlg2[256] = { 0L };
-					swprintf_s(strdlg2, 256, L"%.2f", newmetalcoef);
-					s_metalcoeflabel[s_shadertypeparamsindex]->setName(strdlg2);
-				}
-			}
+			//if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
+			//	if (s_metalcoeflabel[s_shadertypeparamsindex]) {
+			//		WCHAR strdlg2[256] = { 0L };
+			//		swprintf_s(strdlg2, 256, L"%.2f", newmetalcoef);
+			//		s_metalcoeflabel[s_shadertypeparamsindex]->setName(strdlg2);
+			//	}
+			//}
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_SMOOTHCOEF) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SMOOTHCOEF), TBM_GETPOS, 0, 0);
@@ -25885,43 +25885,43 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 						}
 					}
 
-					if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-						bool isedited = false;
-						if (curmqomat) {
-							int litno5;
-							for (litno5 = 0; litno5 < LIGHTNUMMAX; litno5++) {
-								float curscale = curmqomat->GetLightScale(litno5);
-								if ((curscale >= (1.0f - 0.0001f)) && (curscale <= (1.0f + 0.0001f))) {
-									//1.0f
-								}
-								else {
-									isedited = true;
-									break;
-								}
-							}
-						}
-						else {
-							if ((newlitscale >= (1.0f - 0.0001f)) && (newlitscale <= (1.0f + 0.0001f))) {
-								//1.0f
-							}
-							else {
-								isedited = true;
-								break;
-							}
-						}
-
-						if (s_lightscalelabel[s_shadertypeparamsindex]) {
-							WCHAR strdlg2[256] = { 0L };
-							if (isedited) {
-								wcscpy_s(strdlg2, 256, L"***");
-							}
-							else {
-								wcscpy_s(strdlg2, 256, L"1.00");
-							}
-							s_lightscalelabel[s_shadertypeparamsindex]->setName(strdlg2);
-
-						}
-					}
+					//if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
+					//	bool isedited = false;
+					//	if (curmqomat) {
+					//		int litno5;
+					//		for (litno5 = 0; litno5 < LIGHTNUMMAX; litno5++) {
+					//			float curscale = curmqomat->GetLightScale(litno5);
+					//			if ((curscale >= (1.0f - 0.0001f)) && (curscale <= (1.0f + 0.0001f))) {
+					//				//1.0f
+					//			}
+					//			else {
+					//				isedited = true;
+					//				break;
+					//			}
+					//		}
+					//	}
+					//	else {
+					//		if ((newlitscale >= (1.0f - 0.0001f)) && (newlitscale <= (1.0f + 0.0001f))) {
+					//			//1.0f
+					//		}
+					//		else {
+					//			isedited = true;
+					//			break;
+					//		}
+					//	}
+					//
+					//	if (s_lightscalelabel[s_shadertypeparamsindex]) {
+					//		WCHAR strdlg2[256] = { 0L };
+					//		if (isedited) {
+					//			wcscpy_s(strdlg2, 256, L"***");
+					//		}
+					//		else {
+					//			wcscpy_s(strdlg2, 256, L"1.00");
+					//		}
+					//		s_lightscalelabel[s_shadertypeparamsindex]->setName(strdlg2);
+					//
+					//	}
+					//}
 
 				}
 			}
@@ -25938,6 +25938,14 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			CheckShaderTypeParamsButton(hDlgWnd, -1);
 			if (curmqomat) {
 				curmqomat->SetShaderType(-1);
+
+				if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
+					if (s_shadertypelabel[s_shadertypeparamsindex]) {
+						WCHAR strdlg2[256] = { 0L };
+						wcscpy_s(strdlg2, 256, L"AUTO");
+						s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
+					}
+				}
 			}
 			else {
 				int materialindex5;
@@ -25946,13 +25954,12 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 					if (setmqomat) {
 						setmqomat->SetShaderType(-1);
 					}
-				}
-			}
-			if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-				if (s_shadertypelabel[s_shadertypeparamsindex]) {
-					WCHAR strdlg2[256] = { 0L };
-					wcscpy_s(strdlg2, 256, L"AUTO");
-					s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
+
+					if (s_shadertypelabel[materialindex5]) {
+						WCHAR strdlg2[256] = { 0L };
+						wcscpy_s(strdlg2, 256, L"AUTO");
+						s_shadertypelabel[materialindex5]->setName(strdlg2);
+					}
 				}
 			}
 		}
@@ -25962,6 +25969,14 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			CheckShaderTypeParamsButton(hDlgWnd, MQOSHADER_PBR);
 			if (curmqomat) {
 				curmqomat->SetShaderType(MQOSHADER_PBR);
+
+				if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
+					if (s_shadertypelabel[s_shadertypeparamsindex]) {
+						WCHAR strdlg2[256] = { 0L };
+						wcscpy_s(strdlg2, 256, L"PBR");
+						s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
+					}
+				}
 			}
 			else {
 				int materialindex6;
@@ -25970,13 +25985,12 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 					if (setmqomat) {
 						setmqomat->SetShaderType(MQOSHADER_PBR);
 					}
-				}
-			}
-			if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-				if (s_shadertypelabel[s_shadertypeparamsindex]) {
-					WCHAR strdlg2[256] = { 0L };
-					wcscpy_s(strdlg2, 256, L"PBR");
-					s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
+
+					if (s_shadertypelabel[materialindex6]) {
+						WCHAR strdlg2[256] = { 0L };
+						wcscpy_s(strdlg2, 256, L"PBR");
+						s_shadertypelabel[materialindex6]->setName(strdlg2);
+					}
 				}
 			}
 		}
@@ -25986,6 +26000,14 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			CheckShaderTypeParamsButton(hDlgWnd, MQOSHADER_STD);
 			if (curmqomat) {
 				curmqomat->SetShaderType(MQOSHADER_STD);
+
+				if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
+					if (s_shadertypelabel[s_shadertypeparamsindex]) {
+						WCHAR strdlg2[256] = { 0L };
+						wcscpy_s(strdlg2, 256, L"STD");
+						s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
+					}
+				}
 			}
 			else {
 				int materialindex7;
@@ -25994,13 +26016,12 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 					if (setmqomat) {
 						setmqomat->SetShaderType(MQOSHADER_STD);
 					}
-				}
-			}
-			if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-				if (s_shadertypelabel[s_shadertypeparamsindex]) {
-					WCHAR strdlg2[256] = { 0L };
-					wcscpy_s(strdlg2, 256, L"STD");
-					s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
+
+					if (s_shadertypelabel[materialindex7]) {
+						WCHAR strdlg2[256] = { 0L };
+						wcscpy_s(strdlg2, 256, L"STD");
+						s_shadertypelabel[materialindex7]->setName(strdlg2);
+					}
 				}
 			}
 		}
@@ -26010,6 +26031,14 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			CheckShaderTypeParamsButton(hDlgWnd, MQOSHADER_NOLIGHT);
 			if (curmqomat) {
 				curmqomat->SetShaderType(MQOSHADER_NOLIGHT);
+
+				if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
+					if (s_shadertypelabel[s_shadertypeparamsindex]) {
+						WCHAR strdlg2[256] = { 0L };
+						wcscpy_s(strdlg2, 256, L"NOLIGHT");
+						s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
+					}
+				}
 			}
 			else {
 				int materialindex8;
@@ -26018,13 +26047,12 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 					if (setmqomat) {
 						setmqomat->SetShaderType(MQOSHADER_NOLIGHT);
 					}
-				}
-			}
-			if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-				if (s_shadertypelabel[s_shadertypeparamsindex]) {
-					WCHAR strdlg2[256] = { 0L };
-					wcscpy_s(strdlg2, 256, L"NOLIGHT");
-					s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
+
+					if (s_shadertypelabel[materialindex8]) {
+						WCHAR strdlg2[256] = { 0L };
+						wcscpy_s(strdlg2, 256, L"NOLIGHT");
+						s_shadertypelabel[materialindex8]->setName(strdlg2);
+					}
 				}
 			}
 		}
@@ -26067,6 +26095,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			//s_shadertypeparamsFlag = false;
 			ShowWindow(hDlgWnd, SW_HIDE);
 			s_shadertypeparamsindex = -1;
+			s_shadertypeparamsFlag = false;
 			break;
 		default:
 			return FALSE;
@@ -26077,6 +26106,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 		//s_shadertypeparamsFlag = false;
 		ShowWindow(hDlgWnd, SW_HIDE);
 		s_shadertypeparamsindex = -1;
+		s_shadertypeparamsFlag = false;
 		break;
 	default:
 		DefWindowProc(hDlgWnd, msg, wp, lp);
@@ -29737,13 +29767,13 @@ int OnFrameToolWnd()
 		s_modelworldmatFlag = false;
 	}
 	if (s_shadertypeparamsFlag) {
+		s_shadertypeparamsFlag = false;
 		if (s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			if ((s_shadertypeparamsindex >= 0) && (s_shadertypeparamsindex < (materialnum + 1))) {
 				ShowShaderTypeParamsDlg();
 			}
 		}
-		s_shadertypeparamsFlag = false;//ダイアログを開いたまま　別マテリアルでダイアログを更新できるように　フラグをすぐリセット
 	}
 
 	if (s_interpolateFlag) {
@@ -35125,10 +35155,10 @@ int CreateShaderTypeWnd()
 			//int materialindex = setindex2 - 1;	
 			if (s_materialnameB[setindex2]) {
 				s_materialnameB[setindex2]->setButtonListener([setindex2]() {
-					if (!s_shadertypeparamsFlag) {
+					//if (!s_shadertypeparamsFlag) {//開いたまま別マテリアルの表示をするためにコメントアウト
 						s_shadertypeparamsindex = setindex2;//index==0は全てのマテリアルに設定. それ以外はindex - 1のマテリアルに設定
 						s_shadertypeparamsFlag = true;
-					}
+					//}
 				});
 			}
 		}
@@ -40837,6 +40867,16 @@ void ShowShaderTypeWnd(bool srcflag)
 				s_shadertypeWnd->setVisible(false);
 			}
 			s_spdispsw[SPDISPSW_SHADERTYPE].state = false;
+
+
+			//############################
+			//2023/12/22 ParamsDlgも閉じる
+			//############################
+			if (s_shadertypeparamsdlgwnd) {
+				ShowWindow(s_shadertypeparamsdlgwnd, SW_HIDE);
+			}
+			s_shadertypeparamsindex = -1;
+			s_shadertypeparamsFlag = false;
 		}
 	}
 
@@ -51215,6 +51255,8 @@ int CreateShaderTypeParamsDlg()
 	}
 	//s_shadertypeparamsdlgwnd = hDlgWnd;//もっと早いタイミングでも使用するのでProcのINITDIALOGでセット
 	ShowWindow(s_shadertypeparamsdlgwnd, SW_HIDE);
+	s_shadertypeparamsindex = -1;
+	s_shadertypeparamsFlag = false;
 
 	return 0;
 }

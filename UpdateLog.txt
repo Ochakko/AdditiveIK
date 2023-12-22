@@ -3,6 +3,9 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2023/12/22
+AdditiveIK 1.0.0.1 RC5(リリース候補5)
+　ShaderTypeウインドウ、ShaderTypeParamsダイアログの挙動修正
+
 AdditiveIK 1.0.0.1 RC4(リリース候補4)
 　ShaderTypeダイアログがスクロール出来ていなかったのを修正.
 　ShaderTypeParamsダイアログにEnableEmissionチェックボックスを追加.
