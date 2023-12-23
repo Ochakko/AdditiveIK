@@ -18,7 +18,7 @@ int (*MBGetVersion)( int* verptr );
 MBPLUGIN_EXPORT int MBCheckVersion( DWORD exe_version, DWORD* pluginver )
 {
 	if (exe_version < 1005) {
-		*pluginver = 0;// !!!!!!!!!!! 古いEditMotでは、使用不能
+		*pluginver = 0;// !!!!!!!!!!! 古いAdditiveIKでは、使用不可
 	}
 	else {
 		*pluginver = MBPLUGIN_VERSION;

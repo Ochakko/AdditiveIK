@@ -73,7 +73,7 @@ int CIniFile::WriteIniFile(WCHAR* srcpath)
 int CIniFile::WriteFileInfo()
 {
 
-	CallF( Write2File( "  <FileInfo>\r\n    <kind>EditMotIniFile</kind>\r\n    <version>1001</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n" ), return 1 );
+	CallF( Write2File( "  <FileInfo>\r\n    <kind>AdditiveIKIniFile</kind>\r\n    <version>1001</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n" ), return 1 );
 
 	return 0;
 }

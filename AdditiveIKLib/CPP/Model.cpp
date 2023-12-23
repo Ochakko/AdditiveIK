@@ -18969,13 +18969,8 @@ int CModel::GetCameraAnimParams(double nextframe, double camdist,
 	//###########################################################################################
 	// UnityAsset TheHuntのStreet1でテスト
 	// テスト方法
-	// Cameraノードをその親のeNullノードごとElementsツリーにドラッグアンドドロップ
-	// CameraノードにCamera_1アニメをコンポーネントとして追加
-	// CameraノードのRootMotionにチェック
-	// 使わないカメラアニメを全てdelete
-	// timelineノードもdelete
-	// Unity上でカメラアニメ再生チェック後　Elementsノードを　WorldAbsオプションオンでfbx出力
-	// EditMotでElements.fbxを読み込んで　モーションplayボタン
+	// Documents/TroubleShooting/AboutCameraAnim.docxを参照のこと
+	//
 	//###########################################################################################
 
 

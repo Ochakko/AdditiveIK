@@ -1961,6 +1961,8 @@ static void ShowGUIDlgDispParams(bool srcflag);
 static void ShowGUIDlgBrushes(bool srcflag);
 static void ShowGUIDlgBullet(bool srcflag);
 static void ShowGUIDlgRefPos(bool srcflag);
+static void CloseTheFirstRowGUI();
+
 
 static void ShowLaterTransparentWnd(bool srcflag);
 static void ShowShadowParamsWnd(bool srcflag);
@@ -14129,7 +14131,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\EditMot1.2.0.30\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.1\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -39445,7 +39447,7 @@ HWND CreateMainWindow()
 	g_mainhwnd = 0;
 
 
-	//EditMotC4.exeが起動していればそのウインドウを親にする
+	//AdditiveIKC4.exeが起動していればそのウインドウを親にする
 	HWND parenthwnd = 0;
 	if (s_launchbyc4 != 0) {
 		EnumWindows(EnumWindowsProc, (LPARAM)&parenthwnd);
@@ -41022,7 +41024,7 @@ void GUIMenuSetVisible(int srcmenukind, int srcplateno)
 		GUIRigidSetVisible(-2);
 		GUIRetargetSetVisible(-2);
 		GUIDispSetVisible(-2);
-
+		CloseTheFirstRowGUI();
 
 		//#####################
 		//プレートメニュー更新
@@ -49615,7 +49617,7 @@ void OnArrowKey()
 {
 
 	//マウスカーソルが起動中ソフトのウインドウ内にある場合だけ処理
-	//複数個のEditMotを立ち上げたときに操作中のEditMotだけに影響するように
+	//複数個のAdditiveIKを立ち上げたときに操作中のAdditiveIKだけに影響するように
 	POINT cursorpoint;
 	GetCursorPos(&cursorpoint);
 	::ScreenToClient(g_mainhwnd, &cursorpoint);
@@ -50082,7 +50084,7 @@ int LoadIniFile()
 	*last2en = 0L;
 
 	WCHAR inifilepath[MAX_PATH] = { 0L };
-	swprintf_s(inifilepath, MAX_PATH, L"%s\\EditMot%d.ini", path, s_appcnt);
+	swprintf_s(inifilepath, MAX_PATH, L"%s\\AdditiveIK%d.ini", path, s_appcnt);
 
 	CIniFile inifile;
 	inifile.LoadIniFile(inifilepath);
@@ -50158,7 +50160,7 @@ int SaveIniFile()
 	*last2en = 0L;
 
 	WCHAR inifilepath[MAX_PATH] = { 0L };
-	swprintf_s(inifilepath, MAX_PATH, L"%s\\EditMot%d.ini", path, s_appcnt);
+	swprintf_s(inifilepath, MAX_PATH, L"%s\\AdditiveIK%d.ini", path, s_appcnt);
 
 	CIniFile inifile;
 	inifile.WriteIniFile(inifilepath);
@@ -53322,3 +53324,12 @@ int OnCreateDevice()
 
 	return 0;
 }
+
+void CloseTheFirstRowGUI()
+{
+	ShowGUIDlgDispParams(false);
+	ShowGUIDlgBrushes(false);
+	ShowGUIDlgBullet(false);
+	ShowGUIDlgRefPos(false);
+}
+

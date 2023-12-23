@@ -1560,7 +1560,7 @@ float CBone::CalcAxisMatX_Manipulator(bool limitdegflag, int srcboneaxis, int bi
 	//AXISKIND_CURRENTについて
 	//この関数は GetParent()->CalcAxisMatX_Manipulator( , childbone, ,,)のように呼び出される
 	//つまり選択中のジョイントの親としての関数が呼び出されている
-	//EditMot(AdditiveIK)においては　回転用のマニピュレータの操作は　IK　つまり　子供ジョイントドラッグで親ジョイントを回転する
+	//AdditiveIKにおいては　回転用のマニピュレータの操作は　IK　つまり　子供ジョイントドラッグで親ジョイントを回転する
 	//マニピュレータは　子供ジョイント位置に表示するが　その軸の向きは　Parentの姿勢を反映したものとなる
 	//よってAXISKIND_CURRENTの場合　親からみた　currentのNodeMatにcurrentのGetLimitedWorldMatを掛けたものが基準となる
 	//#########################################################################################################################

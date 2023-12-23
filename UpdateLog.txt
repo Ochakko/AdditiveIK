@@ -2,6 +2,17 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2023/12/23
+AdditiveIK 1.0.0.1 RC6(リリース候補6)
+　１段目と２段目のプレートメニュークリックで出る右ペインウインドウが重なって表示されていた不具合修正
+　iniファイルのファイル名修正
+　Testフォルダのモデルデータのまゆ毛透過をLaterTransparentメニューで設定
+　TestフォルダのSpring1の髪の毛がまだ少し肩に食い込んでいたので調整
+　ファイルオープンダイアログのTestフォルダのパスが古かったのを修正
+
+
+
+
 2023/12/22
 AdditiveIK 1.0.0.1 RC5(リリース候補5)
 　ShaderTypeウインドウ、ShaderTypeParamsダイアログの挙動修正

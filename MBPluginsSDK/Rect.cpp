@@ -59,7 +59,7 @@ MBPLUGIN_EXPORT int MBGetPlugInID(DWORD* Product, DWORD* ID)
 //---------------------------------------------------------------------------
 //  MBGetPlugInName
 //    プラグイン名を返す。
-//    EditMotのブラシの種類のコンボボックスに、この名前が表示される。
+//    AdditiveIKのブラシの種類のコンボボックスに、この名前が表示される。
 //---------------------------------------------------------------------------
 MBPLUGIN_EXPORT const WCHAR* MBGetPlugInName(void)
 {
@@ -69,7 +69,7 @@ MBPLUGIN_EXPORT const WCHAR* MBGetPlugInName(void)
 
 //---------------------------------------------------------------------------
 //  MBOnClose
-//    EditMotが終了する直前にEditMotから呼ばれる。
+//    AdditiveIKが終了する直前にAdditiveIKから呼ばれる。
 //---------------------------------------------------------------------------
 MBPLUGIN_EXPORT int MBOnClose(void)
 {
@@ -88,7 +88,7 @@ MBPLUGIN_EXPORT int MBOnPose(int motid)
 
 //----------------------------------------------------------------------------
 //  MBOnSelectPlugin
-//  EditMotで複数フレームを選択した時、ブラシの種類を選んだ時、ブラシのパラメータを変えたときに呼ばれます。
+//  AdditiveIKで複数フレームを選択した時、ブラシの種類を選んだ時、ブラシのパラメータを変えたときに呼ばれます。
 //  選択された複数フレーム分のブラシ値を計算して配列dstvalueにセットします。
 //----------------------------------------------------------------------------
 
@@ -97,7 +97,7 @@ MBPLUGIN_EXPORT int MBCreateMotionBrush(double srcstartframe, double srcendframe
 	int MB2version;
 	if (MBGetVersion) {
 		MBGetVersion(&MB2version);
-		//Write2File( L"EditMot version : %d\r\n", MB2version );
+		//Write2File( L"AdditiveIK version : %d\r\n", MB2version );
 	}
 
 	if ((srcstartframe >= 0.0) && (srcstartframe < 1e5) && (srcendframe >= srcstartframe) && (srcendframe < 1e5) &&

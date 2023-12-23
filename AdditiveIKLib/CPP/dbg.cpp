@@ -116,7 +116,7 @@ void ErrorMessage(const WCHAR* szMessage, HRESULT hr)
 int OpenDbgFile(int srcappcnt)
 {
 	WCHAR dbgfilename[MAX_PATH] = { 0L };
-	swprintf_s(dbgfilename, MAX_PATH, L"dbg%d.txt", srcappcnt);//•¡”‚ÌEditMot‚ğ—§‚¿ã‚°‚é‚½‚ß
+	swprintf_s(dbgfilename, MAX_PATH, L"dbg%d.txt", srcappcnt);//•¡”‚ÌAdditiveIK‚ğ—§‚¿ã‚°‚é‚½‚ß
 
 	if (!dbgfile) {
 		//dbgfile = CreateFile(L"dbg.txt", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS,
@@ -137,7 +137,7 @@ int OpenDbgFile(int srcappcnt)
 
 		WCHAR infofilename[MAX_PATH] = { 0L };
 		swprintf_s(infofilename, MAX_PATH, L"info%d_%4u_%02u_%02u_%02u_%02u_%02u.txt",
-			srcappcnt,//•¡”‚ÌEditMot‚ğ—§‚¿ã‚°‚é‚½‚ß
+			srcappcnt,//•¡”‚ÌAdditiveIK‚ğ—§‚¿ã‚°‚é‚½‚ß
 			st.wYear, st.wMonth, st.wDay,
 			st.wHour, st.wMinute, st.wSecond);
 

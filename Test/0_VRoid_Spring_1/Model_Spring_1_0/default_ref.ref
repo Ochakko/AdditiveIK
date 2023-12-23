@@ -57,8 +57,8 @@
       <ChildName>J_Bip_C_Spine</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.068702</ShpRate>
+      <BoxzRate>1.106870</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
@@ -301,8 +301,8 @@
       <ChildName>J_Bip_C_Chest</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.068702</ShpRate>
+      <BoxzRate>1.106870</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
@@ -329,8 +329,8 @@
       <ChildName>J_Bip_C_UpperChest</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.106870</ShpRate>
+      <BoxzRate>1.183206</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
@@ -405,8 +405,8 @@
       <ChildName>J_Bip_C_Neck</ChildName>
       <ColType>3</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.648855</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.106870</ShpRate>
+      <BoxzRate>1.068702</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
@@ -429,8 +429,8 @@
       <ChildName>J_Bip_L_Shoulder</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.030534</ShpRate>
+      <BoxzRate>0.992366</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
@@ -453,8 +453,8 @@
       <ChildName>J_Bip_R_Shoulder</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.068702</ShpRate>
+      <BoxzRate>1.106870</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
@@ -1101,12 +1101,12 @@
       <ChildName>J_Sec_Hair3_03</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.068702</ShpRate>
+      <BoxzRate>1.106870</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
-      <CUSAK>0.500000</CUSAK>
+      <CUSAK>2.000000</CUSAK>
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
@@ -1129,8 +1129,8 @@
       <ChildName>J_Sec_Hair4_03</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.068702</ShpRate>
+      <BoxzRate>1.106870</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
@@ -1157,8 +1157,8 @@
       <ChildName>J_Sec_Hair5_03</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.145038</ShpRate>
+      <BoxzRate>1.145038</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
@@ -1185,8 +1185,8 @@
       <ChildName>J_Sec_Hair6_03</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.068702</ShpRate>
+      <BoxzRate>1.106870</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
@@ -1241,8 +1241,8 @@
       <ChildName>J_Sec_Hair3_04</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.030534</ShpRate>
+      <BoxzRate>1.106870</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
@@ -1269,12 +1269,12 @@
       <ChildName>J_Sec_Hair4_04</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.030534</ShpRate>
+      <BoxzRate>1.068702</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
-      <CUSAK>0.500000</CUSAK>
+      <CUSAK>2.000000</CUSAK>
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
@@ -1297,12 +1297,12 @@
       <ChildName>J_Sec_Hair5_04</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.030534</ShpRate>
+      <BoxzRate>1.106870</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
-      <CUSAK>0.500000</CUSAK>
+      <CUSAK>2.000000</CUSAK>
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
@@ -1353,12 +1353,12 @@
       <ChildName>J_Sec_Hair3_05</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.068702</ShpRate>
+      <BoxzRate>1.145038</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
-      <CUSAK>0.500000</CUSAK>
+      <CUSAK>2.000000</CUSAK>
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
@@ -1381,8 +1381,8 @@
       <ChildName>J_Sec_Hair4_05</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.106870</ShpRate>
+      <BoxzRate>1.145038</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
@@ -1409,12 +1409,12 @@
       <ChildName>J_Sec_Hair5_05</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.068702</ShpRate>
+      <BoxzRate>1.068702</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
-      <CUSAK>0.500000</CUSAK>
+      <CUSAK>2.000000</CUSAK>
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
@@ -1829,8 +1829,8 @@
       <ChildName>J_Bip_L_UpperArm</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.106870</ShpRate>
+      <BoxzRate>1.145038</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
@@ -1857,8 +1857,8 @@
       <ChildName>J_Bip_L_LowerArm</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.030534</ShpRate>
+      <BoxzRate>1.068702</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
@@ -2421,8 +2421,8 @@
       <ChildName>J_Bip_R_UpperArm</ChildName>
       <ColType>1</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.145038</ShpRate>
+      <BoxzRate>1.106870</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
@@ -2477,12 +2477,12 @@
       <ChildName>J_Sec_R_LowerSleeve_01</ChildName>
       <ColType>1</ColType>
       <SkipFlag>1</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.030534</ShpRate>
+      <BoxzRate>1.030534</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
-      <CUSAK>0.500000</CUSAK>
+      <CUSAK>2.000000</CUSAK>
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>

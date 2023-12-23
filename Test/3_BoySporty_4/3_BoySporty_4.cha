@@ -26,6 +26,11 @@
     <CustomIKStopName>1</CustomIKStopName>
     <IKStopName>Shoulder</IKStopName>
     <IKStopName>UpperLeg</IKStopName>
+    <LaterTransparent>_02.png</LaterTransparent>
+    <LaterTransparent>_03.png</LaterTransparent>
+    <LaterTransparent>_07.png</LaterTransparent>
+    <LaterTransparent>_09.png</LaterTransparent>
+    <LaterTransparent>_14.png</LaterTransparent>
     <RGDMORPH>0</RGDMORPH>
     <CURRE>0</CURRE>
     <RGD>0</RGD>
