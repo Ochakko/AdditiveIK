@@ -4029,7 +4029,68 @@ int CModel::CreateFBXMeshReq( FbxNode* pNode)
 
 		switch ( type )
 		{
+			//case FbxNodeAttribute::eLODGroup:
+			//{
+			//	FbxLODGroup* plod = (FbxLODGroup*)pAttrib;
+			//	//plod = pNode->GetLodGroup();
+			//	if (plod) {
+			//		char lodname[256] = { 0 };
+			//		strcpy_s(lodname, 256, plod->GetName());
+			//		int lodnum = plod->GetNumDisplayLevels();
+			//		int thnum = plod->GetNumThresholds();
+			//		int lodno;
+			//		//for (lodno = 0; lodno < lodnum; lodno++) {
+			//		FbxDouble lodthreshvalue1 = 0.0;
+			//		//plod->GetThreshold(lodno, lodthreshvalue1);
+			//		plod->GetThreshold(0, lodthreshvalue1);
+			//		if (lodthreshvalue1 != FbxDouble(0.0)) {
+			//			int dbgflag1 = 1;
+			//		}
+			//		//}
+
+			//		//for (lodno = 0; lodno < thnum; lodno++) {
+			//		FbxDouble lodthreshvalue2 = 0.0;
+			//		//plod->GetThreshold(lodno, lodthreshvalue2);
+			//		plod->GetThreshold(0, lodthreshvalue2);
+			//		if (lodthreshvalue2 != FbxDouble(0.0)) {
+			//			int dbgflag2 = 1;
+			//		}
+			//		//}
+			//	}
+			//}
+				break;
 			case FbxNodeAttribute::eMesh:
+				//{
+
+				//	FbxLODGroup* plod = (FbxLODGroup*)pAttrib;
+				//	//plod = pNode->GetLodGroup();
+				//	if (plod) {
+				//		char lodname[256] = { 0 };
+				//		strcpy_s(lodname, 256, plod->GetName());
+				//		int lodnum = plod->GetNumDisplayLevels();
+				//		int thnum = plod->GetNumThresholds();
+				//		int lodno;
+				//		//for (lodno = 0; lodno < lodnum; lodno++) {
+				//			FbxDouble lodthreshvalue1 = 0.0;
+				//			//plod->GetThreshold(lodno, lodthreshvalue1);
+				//			plod->GetThreshold(0, lodthreshvalue1);
+				//			if (lodthreshvalue1 != FbxDouble(0.0)) {
+				//				int dbgflag1 = 1;
+				//			}
+				//		//}
+
+				//		//for (lodno = 0; lodno < thnum; lodno++) {
+				//			FbxDouble lodthreshvalue2 = 0.0;
+				//			//plod->GetThreshold(lodno, lodthreshvalue2);
+				//			plod->GetThreshold(0, lodthreshvalue2);
+				//			if (lodthreshvalue2 != FbxDouble(0.0)) {
+				//				int dbgflag2 = 1;
+				//			}
+				//		//}
+				//	}
+
+				//}
+
 				newobj = GetFBXMesh(pNode, pAttrib);     // メッシュを作成
 				if (newobj){
 					shapecnt = pNode->GetMesh()->GetShapeCount();
@@ -4045,6 +4106,35 @@ int CModel::CreateFBXMeshReq( FbxNode* pNode)
 //				GetFBXMesh( pAttrib, pNode->GetName() );     // メッシュを作成
 //				break;
 			case FbxNodeAttribute::eNull:
+			//{
+			//	FbxLODGroup* plod = (FbxLODGroup*)pAttrib;
+			//	//plod = pNode->GetLodGroup();
+			//	if (plod) {
+			//		char lodname[256] = { 0 };
+			//		strcpy_s(lodname, 256, plod->GetName());
+			//		int lodnum = plod->GetNumDisplayLevels();
+			//		int thnum = plod->GetNumThresholds();
+			//		int lodno;
+			//		//for (lodno = 0; lodno < lodnum; lodno++) {
+			//		FbxDouble lodthreshvalue1 = 0.0;
+			//		//plod->GetThreshold(lodno, lodthreshvalue1);
+			//		plod->GetThreshold(0, lodthreshvalue1);
+			//		if (lodthreshvalue1 != FbxDouble(0.0)) {
+			//			int dbgflag1 = 1;
+			//		}
+			//		//}
+
+			//		//for (lodno = 0; lodno < thnum; lodno++) {
+			//		FbxDouble lodthreshvalue2 = 0.0;
+			//		//plod->GetThreshold(lodno, lodthreshvalue2);
+			//		plod->GetThreshold(0, lodthreshvalue2);
+			//		if (lodthreshvalue2 != FbxDouble(0.0)) {
+			//			int dbgflag2 = 1;
+			//		}
+			//		//}
+			//	}
+			//}
+				break;
 			case FbxNodeAttribute::eSkeleton:
 					break;
 			default:
