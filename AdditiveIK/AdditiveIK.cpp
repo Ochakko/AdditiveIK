@@ -26608,6 +26608,8 @@ LRESULT CALLBACK GUILODDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				::MessageBox(hDlgWnd, L"invalid editbox value : far", L"Invalid Value", MB_OK);
 			}
 
+			SetCamera3DFromEyePos();//2023/12/30
+
 			break;
 
 		//case IDC_INITSHADOW:
@@ -26630,6 +26632,8 @@ LRESULT CALLBACK GUILODDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			WCHAR strdlg[256] = { 0L };
 			swprintf_s(strdlg, 256, L"FOV:%.1fdeg", g_fovy * 180.0f / (float)PI);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_FOV2, strdlg);
+
+			SetCamera3DFromEyePos();//2023/12/30
 		}
 
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_2L_LOD0) == (HWND)lp) {
@@ -51816,7 +51820,8 @@ void SetCamera3DFromEyePos()
 {
 	g_camera3D->SetNear(g_projnear);
 	g_camera3D->SetFar(g_projfar);
-	g_camera3D->SetViewAngle(60.0f / 180.0f * (float)PI);
+	//g_camera3D->SetViewAngle(60.0f / 180.0f * (float)PI);
+	g_camera3D->SetViewAngle(g_fovy);//2023/12/30
 	Vector3 cameye = Vector3(g_camEye.x, g_camEye.y, g_camEye.z);
 	g_camera3D->SetPosition(cameye);
 	Vector3 target = Vector3(g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);

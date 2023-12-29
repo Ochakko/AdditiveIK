@@ -4968,7 +4968,8 @@ int ChaFrustumInfo::ChkInView(int srclodnum, int srclodno, MODELBOUND srcmb, Cha
 		ChaVector3Normalize(&back2obj, &back2obj);
 		float dot = ChaVector3Dot(&camdir, &back2obj);
 
-		float dotclip = (float)cos(g_fovy);
+		//float dotclip = (float)cos(g_fovy);
+		float dotclip = (float)cos(g_fovy * 0.85f);//2023/12/30 backposの分　狭くて済むはず
 
 
 

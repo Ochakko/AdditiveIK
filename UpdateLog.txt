@@ -16,13 +16,20 @@ https://github.com/Ochakko/AdditiveIK
 　　　プロジェクションパラメータを絞り込む方が目にみえて効果がある
 　　　例えばFov(視野角)をシーンが欠けない程度に小さくする
 　　　例えばnearを出来るだけ大きく、farを出来るだけ小さく(near < farの範囲で)
-　　　4KモードにおいてはDispAndLimitsメニューのZPrePassCullingがとても効果的
+　　　####!!!!  4KモードにおいてはDispAndLimitsメニューのZPrePassCullingがとても効果的  !!!!####
 　　　DispAndLimitsメニューでDispBoneMarkをオフにしても効果有
 　　　DispAndLimitsメニューでHighRpmにしてからUpdateThreadsスライダーを調整
 　　　上記パラメータ設定にての合わせ技にて
 　　　当方の環境(古めの８コアPC+RTX2080)では４Kモード(ウインドウ大モード)でアセットシーンがどれも33fps程になった
 　　　最近のゲーミングPCでなら60fpsを越えるものと思われる　(とにかく重い処理をしているのだからしょうがない)
-
+　12/30 その２
+　　ProjAndLODメニューのFOV(視野角)の設定がカメラの設定に適用されていなかったのを修正
+　　(クリッピングにだけ反映されていた)
+　　FOVは焦点距離に関係する. 小さくするほど描画は速くなるが絵の奥行き感が減る.
+　　視野内判定ChkInViewを最適化して少し高速化.
+　　
+　　
+　　
 
 
 
