@@ -61,6 +61,11 @@ class CInfoWindow;
 bool g_hdrpbloom = true;
 bool g_freefps = true;
 
+
+float g_lodrate2L[CHKINVIEW_LODMAX];
+float g_lodrate3L[CHKINVIEW_LODMAX];
+
+
 bool g_enableshadow = true;
 int g_shadowmap_slotno = 0;
 float g_shadowmap_fov[SHADOWSLOTNUM];
@@ -308,6 +313,9 @@ double g_playingend = 1.0;
 
 extern bool g_hdrpbloom;
 extern bool g_freefps;
+
+extern float g_lodrate2L[CHKINVIEW_LODMAX];
+extern float g_lodrate3L[CHKINVIEW_LODMAX];
 
 extern bool g_enableshadow;
 extern int g_shadowmap_slotno;

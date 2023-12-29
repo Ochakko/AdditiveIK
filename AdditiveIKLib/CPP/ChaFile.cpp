@@ -31,6 +31,9 @@
 
 #include "..\\..\\AdditiveIK\FrameCopyDlg.h"
 
+
+#include <GlobalVar.h>
+
 #define DBGH
 #include <dbg.h>
 
@@ -140,6 +143,17 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 	CallF( gcofile.WriteGColiFile( wgconame, srcbpw ), return 1 );
 
 
+	CallF(Write2File("  <ProjFov>%.3f</ProjFov>\r\n", g_fovy * 180.0f / (float)PI), return 1);
+	CallF(Write2File("  <ProjNear>%.3f</ProjNear>\r\n", g_projnear), return 1);
+	CallF(Write2File("  <ProjFar>%.3f</ProjFar>\r\n", g_projfar), return 1);
+
+	CallF(Write2File("  <2L_LOD0>%.2f</2L_LOD0>\r\n", g_lodrate2L[CHKINVIEW_LOD0]), return 1);
+	CallF(Write2File("  <2L_LOD1>%.2f</2L_LOD1>\r\n", g_lodrate2L[CHKINVIEW_LOD1]), return 1);
+
+	CallF(Write2File("  <3L_LOD0>%.2f</3L_LOD0>\r\n", g_lodrate3L[CHKINVIEW_LOD0]), return 1);
+	CallF(Write2File("  <3L_LOD1>%.2f</3L_LOD1>\r\n", g_lodrate3L[CHKINVIEW_LOD1]), return 1);
+	CallF(Write2File("  <3L_LOD2>%.2f</3L_LOD2>\r\n", g_lodrate3L[CHKINVIEW_LOD2]), return 1);
+
 	int modelnum = (int)m_modelindex.size();
 	int modelcnt;
 	for( modelcnt = 0; modelcnt < modelnum; modelcnt++ ){
@@ -161,7 +175,7 @@ int CChaFile::WriteFileInfo()
 	//version 1003 : 2023/03/24 1.2.0.17 RC3
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>ChatCats3D_ProjectFile</kind>\r\n    <version>1003</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1004 : 2023/07/21 1.2.0.23へ向けて
-	CallF(Write2File("  <FileInfo>\r\n    <kind>ChatCats3D_ProjectFile</kind>\r\n    <version>1004</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1005</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -569,6 +583,53 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 		return 1;
 	}
 
+	bool getfov = false;
+	int result = 0;
+	float tempfovy = 45.0f * (float)PI / 180.0f;
+	result = Read_Float(&m_xmliobuf, "<ProjFov>", "</ProjFov>", &tempfovy);
+	if (result == 0) {
+		//g_fovy = tempfovy * (float)PI / 180.0f;
+		getfov = true;//ReadCharaより後でセット
+	}
+
+	bool getnear = false;
+	float tempnear = 1.0f;
+	result = Read_Float(&m_xmliobuf, "<ProjNear>", "</ProjNear>", &tempnear);
+	if (result == 0) {
+		//g_projnear = tempnear;
+		getnear = true;//ReadCharaより後でセット
+	}
+	bool getfar = false;
+	float tempfar = 3000.0f;
+	result = Read_Float(&m_xmliobuf, "<ProjFar>", "</ProjFar>", &tempfar);
+	if (result == 0) {
+		//g_projfar = tempfar;
+		getfar = true;//ReadCharaより後でセット
+	}
+
+	float templod = 0.01f;
+	result = Read_Float(&m_xmliobuf, "<2L_LOD0>", "</2L_LOD0>", &templod);
+	if (result == 0) {
+		g_lodrate2L[CHKINVIEW_LOD0] = templod;
+	}
+	result = Read_Float(&m_xmliobuf, "<2L_LOD1>", "</2L_LOD1>", &templod);
+	if (result == 0) {
+		g_lodrate2L[CHKINVIEW_LOD1] = templod;
+	}
+
+	result = Read_Float(&m_xmliobuf, "<3L_LOD0>", "</3L_LOD0>", &templod);
+	if (result == 0) {
+		g_lodrate3L[CHKINVIEW_LOD0] = templod;
+	}
+	result = Read_Float(&m_xmliobuf, "<3L_LOD1>", "</3L_LOD1>", &templod);
+	if (result == 0) {
+		g_lodrate3L[CHKINVIEW_LOD1] = templod;
+	}
+	result = Read_Float(&m_xmliobuf, "<3L_LOD2>", "</3L_LOD2>", &templod);
+	if (result == 0) {
+		g_lodrate3L[CHKINVIEW_LOD2] = templod;
+	}
+
 
 	m_xmliobuf.pos = 0;
 	int characnt;
@@ -578,6 +639,20 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 		CallF( SetXmlIOBuf( &m_xmliobuf, "<Chara>", "</Chara>", &charabuf ), return 1 );
 		CallF( ReadChara(limitdegflag, charanum, characnt, &charabuf), return 1 );
 	}
+
+
+	//ReadCharaより後でセット
+	if (getfov) {
+		g_fovy = tempfovy * (float)PI / 180.0f;
+	}
+	if (getnear) {
+		g_projnear = tempnear;
+	}
+	if (getfar) {
+		g_projfar = tempfar;
+	}
+
+
 
 	m_xmliobuf.pos = 0;
 	XMLIOBUF wallbuf;

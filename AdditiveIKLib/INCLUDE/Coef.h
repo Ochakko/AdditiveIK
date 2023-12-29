@@ -38,7 +38,7 @@ class CMQOMaterial;
 
 
 //バウンダリー簡易クリッピング計算用　大きいほど見切れないが重くなる
-#define CHKINVIEW_BACKPOSCOEF	0.70f
+#define CHKINVIEW_BACKPOSCOEF	1.0f
 
 
 
@@ -116,6 +116,15 @@ class CMQOMaterial;
 //boneごとのRIG配列長
 #define MAXRIGNUM	10
 #define MAXRIGELEMNUM	5
+
+
+enum
+{
+	CHKINVIEW_LOD0,
+	CHKINVIEW_LOD1,
+	CHKINVIEW_LOD2,
+	CHKINVIEW_LODMAX
+};
 
 
 enum

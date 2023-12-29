@@ -308,6 +308,8 @@ public:
 
 	int MakeLaterMaterial();
 
+	int SetLODNum();
+	int SetLODNum(const char* srcheadname, int srcnum);
 /**
  * @fn
  * MakePolyMesh3

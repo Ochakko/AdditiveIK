@@ -4945,7 +4945,7 @@ ChaFrustumInfo::~ChaFrustumInfo()
 //}
 
 
-int ChaFrustumInfo::ChkInView(MODELBOUND srcmb, ChaMatrix matWorld)
+int ChaFrustumInfo::ChkInView(int srclodnum, int srclodno, MODELBOUND srcmb, ChaMatrix matWorld)
 {
 	//###################################
 	//視錐体より　軽くて　まあまあの精度
@@ -4970,7 +4970,65 @@ int ChaFrustumInfo::ChkInView(MODELBOUND srcmb, ChaMatrix matWorld)
 
 		float dotclip = (float)cos(g_fovy);
 
-		if ((dot >= dotclip) && (dist_cam2obj <= (g_projfar + srcmb.r))) {
+
+
+		//############################
+		//LODがvisibleかどうかチェック
+		//############################
+		float lod_mindist = 0.0f;
+		float lod_maxdist = g_projfar;
+		switch (srclodno) {
+		case -1:
+			//LOD無し
+			lod_mindist = 0.0f;
+			lod_maxdist = g_projfar;
+			break;
+		case CHKINVIEW_LOD0:
+			lod_mindist = 0.0f;
+			if (srclodnum == 3) {//3段階LOD
+				lod_maxdist = g_projfar * g_lodrate3L[srclodno];
+			}
+			else {//2段階LOD
+				lod_maxdist = g_projfar * g_lodrate2L[srclodno];
+			}
+			break;
+		case CHKINVIEW_LOD1:
+		case CHKINVIEW_LOD2:
+			if (srclodnum == 3) {//3段階LOD
+				lod_mindist = g_projfar * g_lodrate3L[srclodno - 1];
+				lod_maxdist = g_projfar * g_lodrate3L[srclodno];
+			}
+			else {//2段階LOD
+				lod_mindist = g_projfar * g_lodrate2L[srclodno - 1];
+				lod_maxdist = g_projfar * g_lodrate2L[srclodno];
+			}
+			break;
+		default:
+			_ASSERT(0);
+			//LOD無し
+			lod_mindist = g_projnear;
+			lod_maxdist = g_projfar;
+			break;
+		}
+		bool lodinview;
+		if (srclodno >= 0) {
+			if ((dist_cam2obj < lod_maxdist) && (dist_cam2obj >= lod_mindist)) {
+				lodinview = true;
+			}
+			else {
+				lodinview = false;
+			}
+		}
+		else {
+			lodinview = true;
+		}
+
+
+		//##################
+		//LODがvisible && 
+		//##################
+		if (lodinview && (dot >= dotclip) &&
+			(dist_cam2obj < (g_projfar + srcmb.r))) {
 			SetVisible(true);
 		}
 		else {
@@ -5012,8 +5070,11 @@ int ChaFrustumInfo::ChkInView(MODELBOUND srcmb, ChaMatrix matWorld)
 
 		float dotclip = (float)cos(g_shadowmap_fov[g_shadowmap_slotno]);
 
+		float mindist = 0.0f;//g_shadowmap_near[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
+		float maxdist = g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
+
 		if ((dot >= dotclip) && 
-			(dist_cam2obj <= (g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno] + srcmb.r))) {
+			(dist_cam2obj < (maxdist + srcmb.r)) && (dist_cam2obj >= mindist)) {
 			SetInShadow(true);
 		}
 		else {

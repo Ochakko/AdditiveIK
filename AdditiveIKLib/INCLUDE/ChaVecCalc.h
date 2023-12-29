@@ -967,7 +967,7 @@ public:
 	~ChaFrustumInfo();
 
 	//int UpdateFrustum(ChaMatrix matVP);
-	int ChkInView(MODELBOUND srcmb, ChaMatrix matWorld);
+	int ChkInView(int srclodnum, int srclodno, MODELBOUND srcmb, ChaMatrix matWorld);
 
 	bool GetVisible() {
 		return m_visible;

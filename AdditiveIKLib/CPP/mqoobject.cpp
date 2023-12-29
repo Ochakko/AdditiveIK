@@ -189,6 +189,8 @@ void CMQOObject::InitParams()
 	m_pnode = 0;
 	m_cluster.clear();
 
+	m_lodnum = 1;
+
 	m_normalmappingmode = 0;//0:eByPolygonVertex, 1:eByControlPoint
 	m_dbgcount = 0;
 
@@ -2471,7 +2473,19 @@ int CMQOObject::ChkInView(ChaMatrix matWorld, ChaMatrix matVP)
 		return 2;
 	}
 
-	m_frustum.ChkInView(srcmb, chkmatworld);
+
+	int lodno = -1;
+	if (strstr(GetName(), "LOD0") != 0) {
+		lodno = CHKINVIEW_LOD0;
+	}
+	else if (strstr(GetName(), "LOD1") != 0) {
+		lodno = CHKINVIEW_LOD1;
+	}
+	else if (strstr(GetName(), "LOD2") != 0) {
+		lodno = CHKINVIEW_LOD2;
+	}
+
+	m_frustum.ChkInView(GetLODNum(), lodno, srcmb, chkmatworld);
 
 	return 0;
 }

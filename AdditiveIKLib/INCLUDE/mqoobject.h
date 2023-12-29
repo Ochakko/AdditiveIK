@@ -407,6 +407,17 @@ public:
 		}
 	}
 	
+	void SetLODNum(int srcnum)
+	{
+		if (srcnum > m_lodnum) {
+			m_lodnum = srcnum;
+		}
+	}
+	int GetLODNum()
+	{
+		return m_lodnum;
+	}
+
 private:
 	int m_objfrom;
 
@@ -496,6 +507,8 @@ private:
 	int m_dbgcount;
 
 	std::vector<LATERMATERIAL> m_latermaterial;
+
+	int m_lodnum;
 
 };
 

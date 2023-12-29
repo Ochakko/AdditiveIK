@@ -986,6 +986,12 @@ int CModel::LoadFBX(int skipdefref, ID3D12Device* pdev, const WCHAR* wfile, cons
         (*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_ANIMATION,       true);
         (*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, true);
 
+		(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_EXT_SDK_GRP, true);
+		(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_MODEL, true);
+		(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_MODEL_COUNT, true);
+		(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_POLYGROUP, true);
+
+
 		//(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_MATERIAL, true);
 		//(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_TEXTURE, true);
 		//(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_LINK, false);
@@ -1239,7 +1245,7 @@ _ASSERT(m_bonelist[0]);
 		MakeDispGroupForRender();
 
 		MakeLaterMaterial();//*.cha経由で読み込まれる場合は　ChaFile.cpp内でLaterTransparentタグ読み込み後に　MakeLaterMaterial()が改めて呼ばれる
-
+		SetLODNum();
 
 		_ASSERT(m_bonelist[0]);
 
@@ -4031,8 +4037,8 @@ int CModel::CreateFBXMeshReq( FbxNode* pNode)
 		{
 			//case FbxNodeAttribute::eLODGroup:
 			//{
-			//	FbxLODGroup* plod = (FbxLODGroup*)pAttrib;
-			//	//plod = pNode->GetLodGroup();
+			//	FbxLODGroup* plod;// = (FbxLODGroup*)pAttrib;
+			//	plod = pNode->GetLodGroup();
 			//	if (plod) {
 			//		char lodname[256] = { 0 };
 			//		strcpy_s(lodname, 256, plod->GetName());
@@ -4058,12 +4064,12 @@ int CModel::CreateFBXMeshReq( FbxNode* pNode)
 			//		//}
 			//	}
 			//}
-				break;
+			//	break;
 			case FbxNodeAttribute::eMesh:
 				//{
 
-				//	FbxLODGroup* plod = (FbxLODGroup*)pAttrib;
-				//	//plod = pNode->GetLodGroup();
+				//	FbxLODGroup* plod;// = (FbxLODGroup*)pAttrib;
+				//	plod = pNode->GetLodGroup();
 				//	if (plod) {
 				//		char lodname[256] = { 0 };
 				//		strcpy_s(lodname, 256, plod->GetName());
@@ -4107,8 +4113,8 @@ int CModel::CreateFBXMeshReq( FbxNode* pNode)
 //				break;
 			case FbxNodeAttribute::eNull:
 			//{
-			//	FbxLODGroup* plod = (FbxLODGroup*)pAttrib;
-			//	//plod = pNode->GetLodGroup();
+			//	FbxLODGroup* plod;// = (FbxLODGroup*)pAttrib;
+			//	plod = pNode->GetLodGroup();
 			//	if (plod) {
 			//		char lodname[256] = { 0 };
 			//		strcpy_s(lodname, 256, plod->GetName());
@@ -19339,6 +19345,56 @@ double CModel::GetCurrentFrame()
 	else {
 		return 1.0;
 	}
+}
+
+int CModel::SetLODNum()
+{
+	//################################################################
+	//LODが2Levelsなのか3Levelsなのかを調べて　LODGroupにLODNumをセットする
+	//################################################################
+
+	map<int, CMQOObject*>::iterator itr;
+	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+		CMQOObject* curobj = itr->second;
+		if (curobj) {
+			char objname[256] = { 0 };
+			strcpy_s(objname, 256, curobj->GetName());
+			char headname[256] = { 0 };
+
+			const char* plod1 = strstr(objname, "LOD1");
+			const char* plod2 = strstr(objname, "LOD2");
+			if ((plod1 != 0) && ((plod1 - objname) >= 1)) {
+				size_t headlen = (size_t)(plod1 - objname - 1);
+				strncpy_s(headname, 256, objname, headlen);
+				*(headname + headlen) = 0;
+
+				SetLODNum((const char*)headname, 2);
+			}
+			else if ((plod2 != 0) && ((plod2 - objname) >= 1)) {
+				size_t headlen = (size_t)(plod2 - objname - 1);
+				strncpy_s(headname, 256, objname, headlen);
+				*(headname + headlen) = 0;
+
+				SetLODNum((const char*)headname, 3);
+			}
+		}
+	}
+	return 0;
+}
+
+int CModel::SetLODNum(const char* srcheadname, int srcnum)
+{
+	map<int, CMQOObject*>::iterator itr;
+	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+		CMQOObject* curobj = itr->second;
+		if (curobj) {
+			if (strstr(curobj->GetName(), srcheadname) != 0) {
+				curobj->SetLODNum(srcnum);//srcnumがm_lodnumより大きい場合にだけセットされる
+			}
+		}
+	}
+
+	return 0;
 }
 
 int CModel::CreateObjno2DigElem()
