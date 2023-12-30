@@ -1961,6 +1961,7 @@ static void ShowGUIDlgDispParams(bool srcflag);
 static void ShowGUIDlgBrushes(bool srcflag);
 static void ShowGUIDlgBullet(bool srcflag);
 static void ShowGUIDlgLOD(bool srcflag);
+static void CloseAllRightPainWindow();
 static void CloseTheFirstRowGUI();
 
 
@@ -3167,6 +3168,7 @@ int CheckResolution()
 								
 				if (selectL == TRUE) {
 					g_4kresolution = true;//!!!!!!!!!!!!!!!!
+					g_zpreflag = true;//2023/12/30 4Kのときだけtrue
 
 					s_modelwindowwidth = 400;
 					s_motionwindowwidth = s_modelwindowwidth;
@@ -3236,6 +3238,8 @@ int CheckResolution()
 
 
 	if (!g_4kresolution) {
+		g_zpreflag = false;//2023/12/30 4Kのときだけtrue
+
 
 		//s_spsize = 38.0f;
 		s_spsize = 32.0f;
@@ -3723,7 +3727,7 @@ void InitApp()
 	g_fpskind = 0;
 
 	g_rotatetanim = false;
-	g_HighRpmMode = false;
+	g_HighRpmMode = true;//2023/12/30 起動時にオン
 	g_UpdateMatrixThreads = 2;
 
 	int saveno;
@@ -23746,7 +23750,8 @@ int LODParams2Dlg(HWND hDlgWnd)
 	//#######
 	int sliderpos = (int)(g_fovy * 180.0f / (float)PI + 0.0001f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_FOV2), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)10);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_FOV2), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)89);
+	//SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_FOV2), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)89);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_FOV2), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)179);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_FOV2), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
 
@@ -26173,8 +26178,11 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			//EndDialog(hDlgWnd, IDCANCEL);
 			//s_shadertypeparamsFlag = false;
 			ShowWindow(hDlgWnd, SW_HIDE);
-			s_shadertypeparamsindex = -1;
-			s_shadertypeparamsFlag = false;
+
+			//2023/12/30 以下２行　ここで呼び出すと２回目にSW_SHOWしても表示されないことがあるので　コメントアウト
+			// WindowProcを回す必要があるため
+			//s_shadertypeparamsindex = -1;
+			//s_shadertypeparamsFlag = false;
 			break;
 		default:
 			return FALSE;
@@ -26184,8 +26192,11 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 	case WM_CLOSE:
 		//s_shadertypeparamsFlag = false;
 		ShowWindow(hDlgWnd, SW_HIDE);
-		s_shadertypeparamsindex = -1;
-		s_shadertypeparamsFlag = false;
+
+		//2023/12/30 以下２行　ここで呼び出すと２回目にSW_SHOWしても表示されないことがあるので　コメントアウト
+		// WindowProcを回す必要があるため
+		//s_shadertypeparamsindex = -1;
+		//s_shadertypeparamsFlag = false;
 		break;
 	default:
 		DefWindowProc(hDlgWnd, msg, wp, lp);
@@ -32959,8 +32970,8 @@ int CreateSideMenuWnd()
 				if (s_model && (s_curboneno >= 0)) {
 					s_platemenukind = SPPLATEMENUKIND_RIGID;
 					GUIMenuSetVisible(s_platemenukind, 1);
+					s_sidemenuWnd->callRewrite();						//再描画
 				}
-				s_sidemenuWnd->callRewrite();						//再描画
 				});
 		}
 		if (s_sidemenu_limiteul) {
@@ -32968,16 +32979,16 @@ int CreateSideMenuWnd()
 				if (s_model && (s_curboneno >= 0)) {
 					s_platemenukind = SPPLATEMENUKIND_RETARGET;
 					GUIMenuSetVisible(s_platemenukind, 2);
+					s_sidemenuWnd->callRewrite();						//再描画
 				}
-				s_sidemenuWnd->callRewrite();						//再描画
 				});
 		}
 		if (s_sidemenu_copyhistory) {
 			s_sidemenu_copyhistory->setButtonListener([]() {
 				if (s_model && (s_curboneno >= 0)) {
 					s_selCopyHisotryFlag = true;
+					s_sidemenuWnd->callRewrite();						//再描画
 				}
-				s_sidemenuWnd->callRewrite();						//再描画
 				});
 		}
 		if (s_sidemenu_retarget) {
@@ -32985,8 +32996,8 @@ int CreateSideMenuWnd()
 				if (s_model && (s_curboneno >= 0)) {
 					s_platemenukind = SPPLATEMENUKIND_RETARGET;
 					GUIMenuSetVisible(s_platemenukind, 1);
+					s_sidemenuWnd->callRewrite();						//再描画
 				}
-				s_sidemenuWnd->callRewrite();						//再描画
 				});
 		}
 
@@ -40982,8 +40993,11 @@ void ShowShaderTypeWnd(bool srcflag)
 			if (s_shadertypeparamsdlgwnd) {
 				ShowWindow(s_shadertypeparamsdlgwnd, SW_HIDE);
 			}
-			s_shadertypeparamsindex = -1;
-			s_shadertypeparamsFlag = false;
+
+			//2023/12/30 以下２行　ここで呼び出すと２回目にSW_SHOWしても表示されないことがあるので　コメントアウト
+			// WindowProcを回す必要があるため
+			//s_shadertypeparamsindex = -1;
+			//s_shadertypeparamsFlag = false;
 		}
 	}
 
@@ -41100,37 +41114,9 @@ void ShowDampAnimWnd(bool srcflag)
 
 void GUIMenuSetVisible(int srcmenukind, int srcplateno)
 {
+	CloseAllRightPainWindow();
+
 	if ((srcmenukind >= SPPLATEMENUKIND_DISP) && (srcmenukind <= SPPLATEMENUKIND_RETARGET)) {
-
-		//platemenu用のウインドウ以外を閉じるまたは破棄する
-		if (s_copyhistorydlg.GetCreatedFlag() == true) {
-			s_copyhistorydlg.ShowWindow(SW_HIDE);
-		}
-		if (s_dollyhistorydlg.GetCreatedFlag() == true) {
-			s_dollyhistorydlg.ShowWindow(SW_HIDE);
-		}
-		if (s_anglelimitdlg) {
-			s_underanglelimithscroll = 0;
-			DestroyWindow(s_anglelimitdlg);
-			s_anglelimitdlg = 0;
-		}
-		if (s_rotaxisdlg) {
-			DestroyWindow(s_rotaxisdlg);
-			s_rotaxisdlg = 0;
-		}
-		if (s_customrigdlg) {
-			DestroyWindow(s_customrigdlg);
-			s_customrigdlg = 0;
-		}
-
-		//#####################################
-		//まず変更前のプレートメニューを閉じる
-		//#####################################
-		GUIRigidSetVisible(-2);
-		GUIRetargetSetVisible(-2);
-		GUIDispSetVisible(-2);
-		CloseTheFirstRowGUI();
-
 		//#####################
 		//プレートメニュー更新
 		//#####################
@@ -41226,45 +41212,6 @@ void GUIMenuSetVisible(int srcmenukind, int srcplateno)
 				break;
 			}
 		}
-	}
-	else if (srcmenukind == -1) {
-		if (s_placefolderWnd) {
-			s_placefolderWnd->setVisible(false);
-		}
-
-		//platemenu用のウインドウ以外を閉じるまたは破棄する
-		if (s_copyhistorydlg.GetCreatedFlag() == true) {
-			s_copyhistorydlg.ShowWindow(SW_HIDE);
-		}
-		if (s_dollyhistorydlg.GetCreatedFlag() == true) {
-			s_dollyhistorydlg.ShowWindow(SW_HIDE);
-		}
-		if (s_anglelimitdlg) {
-			s_underanglelimithscroll = 0;
-			DestroyWindow(s_anglelimitdlg);
-			s_anglelimitdlg = 0;
-		}
-		if (s_rotaxisdlg) {
-			DestroyWindow(s_rotaxisdlg);
-			s_rotaxisdlg = 0;
-		}
-		if (s_customrigdlg) {
-			DestroyWindow(s_customrigdlg);
-			s_customrigdlg = 0;
-		}
-
-		//#####################################
-		//まず変更前のプレートメニューを閉じる
-		//#####################################
-		GUIRigidSetVisible(-2);
-		GUIRetargetSetVisible(-2);
-		GUIDispSetVisible(-2);
-
-		//SelectNextWindow(MB3D_WND_3D);
-	}
-	else {
-		_ASSERT(0);
-		return;
 	}
 
 }
@@ -51338,7 +51285,8 @@ int CreateModelWorldMatWnd()
 	//g_camEye = dlg.GetCameraPos();
 
 	HWND hDlgWnd = CreateDialogW((HMODULE)GetModuleHandle(NULL),
-		MAKEINTRESOURCE(IDD_MODELWORLDMATDLG), g_mainhwnd, (DLGPROC)ModelWorldMatDlgProc);
+		//MAKEINTRESOURCE(IDD_MODELWORLDMATDLG), g_mainhwnd, (DLGPROC)ModelWorldMatDlgProc);
+		MAKEINTRESOURCE(IDD_MODELWORLDMATDLG), s_3dwnd, (DLGPROC)ModelWorldMatDlgProc);
 	if (hDlgWnd == NULL) {
 		return 1;
 	}
@@ -51356,11 +51304,12 @@ int CreateShaderTypeParamsDlg()
 	//g_camEye = dlg.GetCameraPos();
 
 	HWND hDlgWnd = CreateDialogW((HMODULE)GetModuleHandle(NULL),
-		MAKEINTRESOURCE(IDD_SHADERTYPEDLG2), g_mainhwnd, (DLGPROC)ShaderTypeParamsDlgProc);
+		//MAKEINTRESOURCE(IDD_SHADERTYPEDLG2), g_mainhwnd, (DLGPROC)ShaderTypeParamsDlgProc);
+		MAKEINTRESOURCE(IDD_SHADERTYPEDLG2), s_3dwnd, (DLGPROC)ShaderTypeParamsDlgProc);
 	if (hDlgWnd == NULL) {
 		return 1;
 	}
-	//s_shadertypeparamsdlgwnd = hDlgWnd;//もっと早いタイミングでも使用するのでProcのINITDIALOGでセット
+	s_shadertypeparamsdlgwnd = hDlgWnd;
 	ShowWindow(s_shadertypeparamsdlgwnd, SW_HIDE);
 	s_shadertypeparamsindex = -1;
 	s_shadertypeparamsFlag = false;
@@ -51575,7 +51524,8 @@ int CreateMaterialRateWnd()
 	//g_camEye = dlg.GetCameraPos();
 
 	HWND hDlgWnd = CreateDialogW((HMODULE)GetModuleHandle(NULL),
-		MAKEINTRESOURCE(IDD_MATERIALRATEDLG), g_mainhwnd, (DLGPROC)MaterialRateDlgProc);
+		//MAKEINTRESOURCE(IDD_MATERIALRATEDLG), g_mainhwnd, (DLGPROC)MaterialRateDlgProc);
+		MAKEINTRESOURCE(IDD_MATERIALRATEDLG), s_3dwnd, (DLGPROC)MaterialRateDlgProc);
 	if (hDlgWnd == NULL) {
 		return 1;
 	}
@@ -53429,6 +53379,41 @@ int OnCreateDevice()
 	//SetCurrentDirectoryW(initialdir);
 
 	return 0;
+}
+
+void CloseAllRightPainWindow()
+{
+	//platemenu用のウインドウ以外を閉じるまたは破棄する
+	if (s_placefolderWnd) {
+		s_placefolderWnd->setVisible(false);
+	}
+	if (s_copyhistorydlg.GetCreatedFlag() == true) {
+		s_copyhistorydlg.ShowWindow(SW_HIDE);
+	}
+	if (s_dollyhistorydlg.GetCreatedFlag() == true) {
+		s_dollyhistorydlg.ShowWindow(SW_HIDE);
+	}
+	if (s_anglelimitdlg) {
+		s_underanglelimithscroll = 0;
+		DestroyWindow(s_anglelimitdlg);
+		s_anglelimitdlg = 0;
+	}
+	if (s_rotaxisdlg) {
+		DestroyWindow(s_rotaxisdlg);
+		s_rotaxisdlg = 0;
+	}
+	if (s_customrigdlg) {
+		DestroyWindow(s_customrigdlg);
+		s_customrigdlg = 0;
+	}
+
+
+	//platemenuのwindowを閉じる
+	GUIRigidSetVisible(-2);
+	GUIRetargetSetVisible(-2);
+	GUIDispSetVisible(-2);
+	CloseTheFirstRowGUI();
+
 }
 
 void CloseTheFirstRowGUI()

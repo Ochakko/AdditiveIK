@@ -78,7 +78,7 @@ float g_shadowmap_plusup[SHADOWSLOTNUM];
 float g_shadowmap_plusright[SHADOWSLOTNUM];
 int g_shadowmap_lightdir[SHADOWSLOTNUM];
 
-bool g_zpreflag = false;
+bool g_zpreflag = true;
 bool g_zcmpalways = false;
 bool g_rotatetanim = false;
 bool g_tpose = true;
@@ -97,7 +97,7 @@ float g_EmissiveFactorAtSaving = 1.0f;
 
 bool g_VSync = false;
 int g_fpskind = 0;
-bool g_HighRpmMode = false;
+bool g_HighRpmMode = true;
 int g_UpdateMatrixThreads = 2;
 int g_lightflag = 1;
 

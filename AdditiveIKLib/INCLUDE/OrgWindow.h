@@ -1546,7 +1546,7 @@ void s_dummyfunc()
 
 
 				
-				////タイトルバー
+				//////タイトルバー
 				//if( (1 <= e.localX) && (e.localX <= size.x - 2)
 				if ((1 <= e.localX) && (e.localX <= (size.x - 20 - 8)) //2023/10/15 スクロールバーの幅 20 : スクロールバーのSetCaptureを呼ぶため除外
 				 && (1 <= e.localY) && (e.localY <= 1 + 2 + 9 + 1) ){
@@ -1648,6 +1648,8 @@ void s_dummyfunc()
 			if( lButton ) mouseCaptureFlagL=false;
 			else		  mouseCaptureFlagR=false;
 			if( !mouseCaptureFlagL && !mouseCaptureFlagR ) ReleaseCapture();
+		
+
 
 			//内部パーツ
 			//setDoneFlag(0);
