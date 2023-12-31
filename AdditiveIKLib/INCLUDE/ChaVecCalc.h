@@ -804,6 +804,7 @@ int vec3RotateY(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
 int vec3RotateX(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
 int vec3RotateZ(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
 
+size_t AlignmentSize(size_t size, size_t alignment);
 int GetRound(float srcval);
 int IsInitRot(ChaMatrix srcmat);
 int IsSameMat(ChaMatrix srcmat1, ChaMatrix srcmat2);
@@ -896,6 +897,7 @@ extern int vec3RotateY(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
 extern int vec3RotateX(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
 extern int vec3RotateZ(ChaVector3* dstvec, double deg, ChaVector3* srcvec);
 
+extern size_t AlignmentSize(size_t size, size_t alignment);
 extern int GetRound(float srcval);
 extern int IsInitRot(ChaMatrix srcmat);
 extern int IsSameMat(ChaMatrix srcmat1, ChaMatrix srcmat2);

@@ -20,6 +20,12 @@
 #include <TexElem.h>
 #include "../../DirectXTex/DirectXTex/DirectXTex.h"
 
+#include "../../MiniEngine/MiniEngine.h"
+#include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
+
+
+extern GraphicsEngine* g_graphicsEngine;	//グラフィックスエンジン
+
 
 static int s_alloccnt = 0;
 
@@ -109,7 +115,7 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 	size_t resizeh = 512;
 
 
-	HRESULT hr0, hr1, hr2;// , hr3;// , hr4;
+	HRESULT hr0, hr1, hr2, hrmip;// hr3, hr4;
 	WCHAR patdds[256] = { 0L };
 	wcscpy_s(patdds, 256, L".dds");
 	WCHAR pattga[256] = { 0L };
@@ -128,6 +134,23 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		}
 		auto img = scratchImg->GetImage(0, 0, 0);//生データ抽出
 
+
+		//2023/12/31 MIPMAP作成
+		std::unique_ptr<DirectX::ScratchImage> mipChain(new DirectX::ScratchImage);
+		hrmip = DirectX::GenerateMipMaps(
+			*img,
+			DirectX::TEX_FILTER_DEFAULT,
+			0,
+			*mipChain);
+		if (FAILED(hrmip)) {
+			_ASSERT(0);
+			SetNullTexture();
+			return -1;
+		}
+		//auto mipimg = mipChain->GetImage(0, 0, 0);
+		auto mipimg = mipChain->GetImages();
+
+
 		//WriteToSubresourceで転送する用のヒープ設定
 		D3D12_HEAP_PROPERTIES texHeapProp = {};
 		texHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;//特殊な設定なのでdefaultでもuploadでもなく
@@ -137,15 +160,16 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		texHeapProp.VisibleNodeMask = 0;//単一アダプタのため0
 
 		D3D12_RESOURCE_DESC resDesc = {};
-		resDesc.Format = metadata.format;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット
-		//resDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット
-		resDesc.Width = static_cast<UINT>(metadata.width);//幅
-		resDesc.Height = static_cast<UINT>(metadata.height);//高さ
-		resDesc.DepthOrArraySize = static_cast<uint16_t>(metadata.arraySize);//2Dで配列でもないので１
+		resDesc.Format = mipChain->GetMetadata().format;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット
+		//resDesc.Width = static_cast<UINT>(mipChain->GetMetadata().width);//幅
+		//resDesc.Width = static_cast<UINT>(AlignmentSize(mipChain->GetMetadata().width, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT));//幅
+		resDesc.Width = static_cast<UINT>(mipChain->GetMetadata().width);//幅
+		resDesc.Height = static_cast<UINT>(mipChain->GetMetadata().height);//高さ
+		resDesc.DepthOrArraySize = static_cast<uint16_t>(mipChain->GetMetadata().arraySize);//2Dで配列でもないので１
 		resDesc.SampleDesc.Count = 1;//通常テクスチャなのでアンチェリしない
 		resDesc.SampleDesc.Quality = 0;//
-		resDesc.MipLevels = static_cast<uint16_t>(metadata.mipLevels);//ミップマップしないのでミップ数は１つ
-		resDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);//2Dテクスチャ用
+		resDesc.MipLevels = static_cast<uint16_t>(mipChain->GetMetadata().mipLevels);//ミップマップ 1
+		resDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(mipChain->GetMetadata().dimension);//2Dテクスチャ用
 		resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;//レイアウトについては決定しない
 		resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;//とくにフラグなし
 
@@ -155,6 +179,9 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 			D3D12_HEAP_FLAG_NONE,//特に指定なし
 			&resDesc,
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,//テクスチャ用(ピクセルシェーダから見る用)
+			//D3D12_RESOURCE_STATE_COPY_DEST,
+			//D3D12_RESOURCE_STATE_GENERIC_READ,
+			//D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr,
 			IID_PPV_ARGS(&texbuff)
 		);
@@ -165,17 +192,30 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 			return -1;
 		}
 
-		hr2 = texbuff->WriteToSubresource(0,
-			nullptr,//全領域へコピー
-			img->pixels,//元データアドレス
-			static_cast<UINT>(img->rowPitch),//1ラインサイズ
-			static_cast<UINT>(img->slicePitch)//全サイズ
-		);
-		if (FAILED(hr2)) {
-			_ASSERT(0);
-			SetNullTexture();
-			scratchImg.reset();
-			return -1;
+
+		int subresno;
+		for (subresno = 0; subresno < mipChain->GetMetadata().mipLevels; subresno++) {
+		//for (subresno = 0; subresno < mipChain->GetImageCount(); subresno++) {
+			hr2 = texbuff->WriteToSubresource(
+				subresno,
+				nullptr,//全領域へコピー
+				//img->pixels,//元データアドレス
+				//static_cast<UINT>(img->rowPitch),//1ラインサイズ
+				//static_cast<UINT>(img->slicePitch)//全サイズ
+				//mipimg->pixels,//2023/12/31 mipmap
+				//static_cast<UINT>(mipimg->rowPitch),//2023/12/31 mipmap//1ラインサイズ
+				//static_cast<UINT>(mipimg->slicePitch)//2023/12/31 mipmap//全サイズ
+				mipChain->GetImage(subresno, 0, 0)->pixels,
+				(UINT)mipChain->GetImage(subresno, 0, 0)->rowPitch,
+				(UINT)mipChain->GetImage(subresno, 0, 0)->slicePitch
+			);
+			if (FAILED(hr2)) {
+				_ASSERT(0);
+				SetNullTexture();
+				scratchImg.reset();
+				mipChain.reset();
+				return -1;
+			}
 		}
 
 		m_texture = new Texture();
@@ -188,7 +228,10 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 			scratchImg.reset();
 			return -1;
 		}
+
 		scratchImg.reset();
+
+
 	}
 	else if (finddds) {
 		auto device = g_graphicsEngine->GetD3DDevice();
@@ -232,6 +275,23 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		}
 		auto img = scratchImg->GetImage(0, 0, 0);//生データ抽出
 
+
+		//2023/12/31 MIPMAP作成
+		std::unique_ptr<DirectX::ScratchImage> mipChain(new DirectX::ScratchImage);
+		hrmip = DirectX::GenerateMipMaps(
+			*img,
+			DirectX::TEX_FILTER_DEFAULT,
+			0, 
+			*mipChain);
+		if (FAILED(hrmip)) {
+			_ASSERT(0);
+			SetNullTexture();
+			return -1;
+		}
+		//auto mipimg = mipChain->GetImage(0, 0, 0);
+		auto mipimg = mipChain->GetImages();
+
+
 		//WriteToSubresourceで転送する用のヒープ設定
 		D3D12_HEAP_PROPERTIES texHeapProp = {};
 		texHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;//特殊な設定なのでdefaultでもuploadでもなく
@@ -241,15 +301,15 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		texHeapProp.VisibleNodeMask = 0;//単一アダプタのため0
 
 		D3D12_RESOURCE_DESC resDesc = {};
-		resDesc.Format = metadata.format;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット
-		//resDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット
-		resDesc.Width = static_cast<UINT>(metadata.width);//幅
-		resDesc.Height = static_cast<UINT>(metadata.height);//高さ
-		resDesc.DepthOrArraySize = static_cast<uint16_t>(metadata.arraySize);//2Dで配列でもないので１
+		resDesc.Format = mipChain->GetMetadata().format;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット
+		//resDesc.Width = static_cast<UINT>(AlignmentSize(mipChain->GetMetadata().width, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT));//幅
+		resDesc.Width = static_cast<UINT>(mipChain->GetMetadata().width);//幅
+		resDesc.Height = static_cast<UINT>(mipChain->GetMetadata().height);//高さ
+		resDesc.DepthOrArraySize = static_cast<uint16_t>(mipChain->GetMetadata().arraySize);//2Dで配列でもないので１
 		resDesc.SampleDesc.Count = 1;//通常テクスチャなのでアンチェリしない
 		resDesc.SampleDesc.Quality = 0;//
-		resDesc.MipLevels = static_cast<uint16_t>(metadata.mipLevels);//ミップマップしないのでミップ数は１つ
-		resDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);//2Dテクスチャ用
+		resDesc.MipLevels = static_cast<uint16_t>(mipChain->GetMetadata().mipLevels);//ミップマップ 1
+		resDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(mipChain->GetMetadata().dimension);//2Dテクスチャ用
 		resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;//レイアウトについては決定しない
 		resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;//とくにフラグなし
 
@@ -259,6 +319,9 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 			D3D12_HEAP_FLAG_NONE,//特に指定なし
 			&resDesc,
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,//テクスチャ用(ピクセルシェーダから見る用)
+			//D3D12_RESOURCE_STATE_COPY_DEST,
+			//D3D12_RESOURCE_STATE_GENERIC_READ,
+			//D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr,
 			IID_PPV_ARGS(&texbuff)
 		);
@@ -269,18 +332,35 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 			return -1;
 		}
 
-		hr2 = texbuff->WriteToSubresource(0,
-			nullptr,//全領域へコピー
-			img->pixels,//元データアドレス
-			static_cast<UINT>(img->rowPitch),//1ラインサイズ
-			static_cast<UINT>(img->slicePitch)//全サイズ
-		);
-		if (FAILED(hr2)) {
-			_ASSERT(0);
-			SetNullTexture();
-			scratchImg.reset();
-			return -1;
+
+		int subresno;
+		for (subresno = 0; subresno < mipChain->GetMetadata().mipLevels; subresno++) {
+		//for (subresno = 0; subresno < mipChain->GetImageCount(); subresno++) {
+			hr2 = texbuff->WriteToSubresource(
+				subresno,
+				nullptr,//全領域へコピー
+				//img->pixels,//元データアドレス
+				//static_cast<UINT>(img->rowPitch),//1ラインサイズ
+				//static_cast<UINT>(img->slicePitch)//全サイズ
+				//mipimg->pixels,//2023/12/31 mipmap
+				//static_cast<UINT>(mipimg->rowPitch),//2023/12/31 mipmap//1ラインサイズ
+				//static_cast<UINT>(mipimg->slicePitch)//2023/12/31 mipmap//全サイズ
+				mipChain->GetImage(subresno, 0, 0)->pixels,
+				(UINT)mipChain->GetImage(subresno, 0, 0)->rowPitch,
+				(UINT)mipChain->GetImage(subresno, 0, 0)->slicePitch
+				//(UINT)(AlignmentSize(mipChain->GetImage(subresno, 0, 0)->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT)),
+				//(UINT)(AlignmentSize(mipChain->GetImage(subresno, 0, 0)->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT) * 
+				//	mipChain->GetImage(subresno, 0, 0)->height)
+			);
+			if (FAILED(hr2)) {
+				_ASSERT(0);
+				SetNullTexture();
+				scratchImg.reset();
+				mipChain.reset();
+				return -1;
+			}
 		}
+
 
 		m_texture = new Texture();
 		if (m_texture) {

@@ -4267,6 +4267,11 @@ int CalcTangentAndBinormal(BINORMALDISPV* vert_0, BINORMALDISPV* vert_1, BINORMA
 }
 
 
+size_t AlignmentSize(size_t size, size_t alignment)
+{
+	return ((size + alignment) & ~alignment);
+}
+
 
 //#ifdef CONVD3DX11
 DirectX::XMFLOAT2 ChaVector2::D3DX()

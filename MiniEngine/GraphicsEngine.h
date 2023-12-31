@@ -48,6 +48,12 @@ public:
 	/// 1フレームのレンダリングの終了時に呼び出してください。
 	/// </remarks>
 	void EndRender(ChaScene* srcchascene);
+
+
+	void CopyTextureRegionGE(ID3D12Resource* pres, 
+		D3D12_TEXTURE_COPY_LOCATION* dst, D3D12_TEXTURE_COPY_LOCATION* src);
+
+
 	/// <summary>
 	/// D3Dデバイスを取得。
 	/// </summary>

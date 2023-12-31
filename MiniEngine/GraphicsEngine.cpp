@@ -557,3 +557,45 @@ void GraphicsEngine::EndRender(ChaScene* srcchascene)
 
 
 }
+
+void GraphicsEngine::CopyTextureRegionGE(ID3D12Resource* pres, D3D12_TEXTURE_COPY_LOCATION* dst, D3D12_TEXTURE_COPY_LOCATION* src)
+{
+	if (!pres || !dst || !src) {
+		_ASSERT(0);
+		return;
+	}
+
+	m_commandList->CopyTextureRegion(dst, 0, 0, 0, src, nullptr);
+
+	//D3D12_RESOURCE_BARRIER BarrierDesc = {};
+	//BarrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	//BarrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	//BarrierDesc.Transition.pResource = pres;
+	//BarrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	//BarrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+	//BarrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	//m_commandList->ResourceBarrier(1, &BarrierDesc);
+	//m_commandList->Close();
+
+	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+		pres,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	m_commandList->ResourceBarrier(1, &barrier);
+
+
+	ID3D12CommandList* ppCommandLists[] = { m_commandList };
+	m_commandQueue->ExecuteCommandLists(1, ppCommandLists);
+
+
+	const UINT64 fence = m_fenceValue;
+	m_commandQueue->Signal(m_fence, fence);
+	m_fenceValue++;
+	if (m_fence->GetCompletedValue() < fence)
+	{
+		m_fence->SetEventOnCompletion(fence, m_fenceEvent);
+		WaitForSingleObject(m_fenceEvent, INFINITE);
+	}
+
+}
+

@@ -5,6 +5,10 @@ class Texture;
 class DescriptorHeap;
 class RenderTarget;
 
+//#include <d3dx12.h>
+//#include "../../DirectXTex/DirectXTex/DirectXTex.h"
+#include "../DirectXTex/DirectXTex/d3dx12.h"
+
 namespace raytracing{
 	class PSO;
 }
@@ -429,9 +433,42 @@ public:
 	void CopyResource(ID3D12Resource* pDst, ID3D12Resource* pSrc)
 	{
 		m_commandList->CopyResource(pDst, pSrc);
+	
 	}
 	
+	UINT64 UpdateSubresourcesRC(
+		//_In_ ID3D12GraphicsCommandList* pCmdList,
+		ID3D12Resource* pDestinationResource,
+		ID3D12Resource* pIntermediate,
+		UINT64 IntermediateOffset,
+		UINT FirstSubresource,
+		UINT NumSubresources,
+		D3D12_SUBRESOURCE_DATA* pSrcData)
+	{
+			return UpdateSubresources(
+				m_commandList,
+				pDestinationResource, 
+				pIntermediate, IntermediateOffset,
+				FirstSubresource, NumSubresources,
+				pSrcData);
 	
+		//texbuff.Get(), nullptr,
+		//	(UINT64)mipChain->GetImages(),
+		//	mipChain->GetImageCount(),
+		//	mipChain->GetMetadata().width,//  .bytesPerRow, 
+		//	mipChain->GetMetadata().width* mipChain->GetMetadata().height,  //.totalBytes, 
+		//	nullptr
+	
+	}
+
+
+	//void CopyTextureRegionRC(D3D12_TEXTURE_COPY_LOCATION* dst, D3D12_TEXTURE_COPY_LOCATION* src)
+	//{
+	//	m_commandList->CopyTextureRegion(dst, 0, 0, 0, src, nullptr);
+	//	
+	//}
+
+
 private:
 
 	/// <summary>
@@ -462,6 +499,10 @@ private:
 			BaseDescriptor
 		);
 	}
+
+
+
+
 private:
 	//enum { MAX_DESCRIPTOR_HEAP = 4 };	//ディスクリプタヒープの最大数。
 	//enum { MAX_CONSTANT_BUFFER = 8 };	//定数バッファの最大数。足りなくなったら増やしてね。
