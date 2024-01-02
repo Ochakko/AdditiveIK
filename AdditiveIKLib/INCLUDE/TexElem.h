@@ -1,4 +1,4 @@
-#ifndef TEXELEMH
+ï»¿#ifndef TEXELEMH
 #define TEXELEMH
 
 //class ID3D12Device;
@@ -103,8 +103,8 @@ private:
 	//ID3D12Resource* m_ptex;
 	//ID3D11ShaderResourceView* m_ResView;
 
-	//ID3D12Resource* m_ptex;	//ƒeƒNƒXƒ`ƒƒB
-	//D3D12_RESOURCE_DESC m_textureDesc;	//ƒeƒNƒXƒ`ƒƒî•ñ
+	//ID3D12Resource* m_ptex;	//ãƒ†ã‚¯ã‚¹ãƒãƒ£ã€‚
+	//D3D12_RESOURCE_DESC m_textureDesc;	//ãƒ†ã‚¯ã‚¹ãƒãƒ£æƒ…å ±
 	Texture* m_texture;
 
 	bool m_validflag;

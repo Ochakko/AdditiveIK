@@ -1,5 +1,5 @@
-#include "stdafx.h"
-//#include <stdafx.h> //ƒ_ƒ~[
+ï»¿#include "stdafx.h"
+//#include <stdafx.h> //ãƒ€ãƒŸãƒ¼
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,7 +24,7 @@
 #include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
 
 
-extern GraphicsEngine* g_graphicsEngine;	//ƒOƒ‰ƒtƒBƒbƒNƒXƒGƒ“ƒWƒ“
+extern GraphicsEngine* g_graphicsEngine;	//ã‚°ãƒ©ãƒ•ã‚£ãƒƒã‚¯ã‚¹ã‚¨ãƒ³ã‚¸ãƒ³
 
 
 static int s_alloccnt = 0;
@@ -58,8 +58,8 @@ int CTexElem::InitParams()
 	//m_ptex = 0;
 	//m_ResView = 0;
 
-	//m_ptex = nullptr;//ƒeƒNƒXƒ`ƒƒB
-	//ZeroMemory(&m_textureDesc, sizeof(D3D12_RESOURCE_DESC));//ƒeƒNƒXƒ`ƒƒî•ñ
+	//m_ptex = nullptr;//ãƒ†ã‚¯ã‚¹ãƒãƒ£ã€‚
+	//ZeroMemory(&m_textureDesc, sizeof(D3D12_RESOURCE_DESC));//ãƒ†ã‚¯ã‚¹ãƒãƒ£æƒ…å ±
 	m_texture = nullptr;
 
 	return 0;
@@ -96,9 +96,9 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 
 
 	//###############################################
-	//ƒtƒ@ƒCƒ‹“Ç‚İ‚İ‚É¸”s‚µ‚½ê‡‚É‚à
-	//•K‚¸@m_texture‚Ínew‚µ‚Änulltexture‚ğƒZƒbƒg‚·‚é
-	//GetPTex‚ª *m_texture ‚ğ•Ô‚·‚©‚ç
+	//ãƒ•ã‚¡ã‚¤ãƒ«èª­ã¿è¾¼ã¿ã«å¤±æ•—ã—ãŸå ´åˆã«ã‚‚
+	//å¿…ãšã€€m_textureã¯newã—ã¦nulltextureã‚’ã‚»ãƒƒãƒˆã™ã‚‹
+	//GetPTexãŒ *m_texture ã‚’è¿”ã™ã‹ã‚‰
 	//###############################################
 
 	int ret;
@@ -132,10 +132,10 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 			SetNullTexture();
 			return -1;
 		}
-		auto img = scratchImg->GetImage(0, 0, 0);//¶ƒf[ƒ^’Šo
+		auto img = scratchImg->GetImage(0, 0, 0);//ç”Ÿãƒ‡ãƒ¼ã‚¿æŠ½å‡º
 
 
-		//2023/12/31 MIPMAPì¬
+		//2023/12/31 MIPMAPä½œæˆ
 		std::unique_ptr<DirectX::ScratchImage> mipChain(new DirectX::ScratchImage);
 		hrmip = DirectX::GenerateMipMaps(
 			*img,
@@ -151,34 +151,34 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		auto mipimg = mipChain->GetImages();
 
 
-		//WriteToSubresource‚Å“]‘—‚·‚é—p‚Ìƒq[ƒvİ’è
+		//WriteToSubresourceã§è»¢é€ã™ã‚‹ç”¨ã®ãƒ’ãƒ¼ãƒ—è¨­å®š
 		D3D12_HEAP_PROPERTIES texHeapProp = {};
-		texHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;//“Áê‚Èİ’è‚È‚Ì‚Ådefault‚Å‚àupload‚Å‚à‚È‚­
-		texHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;//ƒ‰ƒCƒgƒoƒbƒN‚Å
-		texHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;//“]‘—‚ªL0‚Â‚Ü‚èCPU‘¤‚©‚ç’¼‚Å
-		texHeapProp.CreationNodeMask = 0;//’PˆêƒAƒ_ƒvƒ^‚Ì‚½‚ß0
-		texHeapProp.VisibleNodeMask = 0;//’PˆêƒAƒ_ƒvƒ^‚Ì‚½‚ß0
+		texHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;//ç‰¹æ®Šãªè¨­å®šãªã®ã§defaultã§ã‚‚uploadã§ã‚‚ãªã
+		texHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;//ãƒ©ã‚¤ãƒˆãƒãƒƒã‚¯ã§
+		texHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;//è»¢é€ãŒL0ã¤ã¾ã‚ŠCPUå´ã‹ã‚‰ç›´ã§
+		texHeapProp.CreationNodeMask = 0;//å˜ä¸€ã‚¢ãƒ€ãƒ—ã‚¿ã®ãŸã‚0
+		texHeapProp.VisibleNodeMask = 0;//å˜ä¸€ã‚¢ãƒ€ãƒ—ã‚¿ã®ãŸã‚0
 
 		D3D12_RESOURCE_DESC resDesc = {};
-		resDesc.Format = mipChain->GetMetadata().format;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAƒtƒH[ƒ}ƒbƒg
-		//resDesc.Width = static_cast<UINT>(mipChain->GetMetadata().width);//•
-		//resDesc.Width = static_cast<UINT>(AlignmentSize(mipChain->GetMetadata().width, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT));//•
-		resDesc.Width = static_cast<UINT>(mipChain->GetMetadata().width);//•
-		resDesc.Height = static_cast<UINT>(mipChain->GetMetadata().height);//‚‚³
-		resDesc.DepthOrArraySize = static_cast<uint16_t>(mipChain->GetMetadata().arraySize);//2D‚Å”z—ñ‚Å‚à‚È‚¢‚Ì‚Å‚P
-		resDesc.SampleDesc.Count = 1;//’ÊíƒeƒNƒXƒ`ƒƒ‚È‚Ì‚ÅƒAƒ“ƒ`ƒFƒŠ‚µ‚È‚¢
+		resDesc.Format = mipChain->GetMetadata().format;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆ
+		//resDesc.Width = static_cast<UINT>(mipChain->GetMetadata().width);//å¹…
+		//resDesc.Width = static_cast<UINT>(AlignmentSize(mipChain->GetMetadata().width, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT));//å¹…
+		resDesc.Width = static_cast<UINT>(mipChain->GetMetadata().width);//å¹…
+		resDesc.Height = static_cast<UINT>(mipChain->GetMetadata().height);//é«˜ã•
+		resDesc.DepthOrArraySize = static_cast<uint16_t>(mipChain->GetMetadata().arraySize);//2Dã§é…åˆ—ã§ã‚‚ãªã„ã®ã§ï¼‘
+		resDesc.SampleDesc.Count = 1;//é€šå¸¸ãƒ†ã‚¯ã‚¹ãƒãƒ£ãªã®ã§ã‚¢ãƒ³ãƒã‚§ãƒªã—ãªã„
 		resDesc.SampleDesc.Quality = 0;//
-		resDesc.MipLevels = static_cast<uint16_t>(mipChain->GetMetadata().mipLevels);//ƒ~ƒbƒvƒ}ƒbƒv 1
-		resDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(mipChain->GetMetadata().dimension);//2DƒeƒNƒXƒ`ƒƒ—p
-		resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;//ƒŒƒCƒAƒEƒg‚É‚Â‚¢‚Ä‚ÍŒˆ’è‚µ‚È‚¢
-		resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;//‚Æ‚­‚Éƒtƒ‰ƒO‚È‚µ
+		resDesc.MipLevels = static_cast<uint16_t>(mipChain->GetMetadata().mipLevels);//ãƒŸãƒƒãƒ—ãƒãƒƒãƒ— 1
+		resDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(mipChain->GetMetadata().dimension);//2Dãƒ†ã‚¯ã‚¹ãƒãƒ£ç”¨
+		resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;//ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆã«ã¤ã„ã¦ã¯æ±ºå®šã—ãªã„
+		resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;//ã¨ãã«ãƒ•ãƒ©ã‚°ãªã—
 
 		ID3D12Resource* texbuff = nullptr;
 		hr1 = pdev->CreateCommittedResource(
 			&texHeapProp,
-			D3D12_HEAP_FLAG_NONE,//“Á‚Éw’è‚È‚µ
+			D3D12_HEAP_FLAG_NONE,//ç‰¹ã«æŒ‡å®šãªã—
 			&resDesc,
-			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,//ƒeƒNƒXƒ`ƒƒ—p(ƒsƒNƒZƒ‹ƒVƒF[ƒ_‚©‚çŒ©‚é—p)
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,//ãƒ†ã‚¯ã‚¹ãƒãƒ£ç”¨(ãƒ”ã‚¯ã‚»ãƒ«ã‚·ã‚§ãƒ¼ãƒ€ã‹ã‚‰è¦‹ã‚‹ç”¨)
 			//D3D12_RESOURCE_STATE_COPY_DEST,
 			//D3D12_RESOURCE_STATE_GENERIC_READ,
 			//D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_COPY_DEST,
@@ -198,13 +198,13 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		//for (subresno = 0; subresno < mipChain->GetImageCount(); subresno++) {
 			hr2 = texbuff->WriteToSubresource(
 				subresno,
-				nullptr,//‘S—Ìˆæ‚ÖƒRƒs[
-				//img->pixels,//Œ³ƒf[ƒ^ƒAƒhƒŒƒX
-				//static_cast<UINT>(img->rowPitch),//1ƒ‰ƒCƒ“ƒTƒCƒY
-				//static_cast<UINT>(img->slicePitch)//‘SƒTƒCƒY
+				nullptr,//å…¨é ˜åŸŸã¸ã‚³ãƒ”ãƒ¼
+				//img->pixels,//å…ƒãƒ‡ãƒ¼ã‚¿ã‚¢ãƒ‰ãƒ¬ã‚¹
+				//static_cast<UINT>(img->rowPitch),//1ãƒ©ã‚¤ãƒ³ã‚µã‚¤ã‚º
+				//static_cast<UINT>(img->slicePitch)//å…¨ã‚µã‚¤ã‚º
 				//mipimg->pixels,//2023/12/31 mipmap
-				//static_cast<UINT>(mipimg->rowPitch),//2023/12/31 mipmap//1ƒ‰ƒCƒ“ƒTƒCƒY
-				//static_cast<UINT>(mipimg->slicePitch)//2023/12/31 mipmap//‘SƒTƒCƒY
+				//static_cast<UINT>(mipimg->rowPitch),//2023/12/31 mipmap//1ãƒ©ã‚¤ãƒ³ã‚µã‚¤ã‚º
+				//static_cast<UINT>(mipimg->slicePitch)//2023/12/31 mipmap//å…¨ã‚µã‚¤ã‚º
 				mipChain->GetImage(subresno, 0, 0)->pixels,
 				(UINT)mipChain->GetImage(subresno, 0, 0)->rowPitch,
 				(UINT)mipChain->GetImage(subresno, 0, 0)->slicePitch
@@ -248,7 +248,7 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		re.End(g_graphicsEngine->GetCommandQueue());
 
 		if (FAILED(hr)) {
-			//ƒeƒNƒXƒ`ƒƒ‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½B
+			//ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸã€‚
 			_ASSERT(0);
 			SetNullTexture();
 			return -1;
@@ -264,7 +264,7 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		}
 	}
 	else {
-		//WICƒeƒNƒXƒ`ƒƒ‚Ìƒ[ƒh
+		//WICãƒ†ã‚¯ã‚¹ãƒãƒ£ã®ãƒ­ãƒ¼ãƒ‰
 		DirectX::TexMetadata metadata = {};
 		std::unique_ptr<DirectX::ScratchImage> scratchImg(new DirectX::ScratchImage);
 		hr0 = DirectX::LoadFromWICFile(m_name, DirectX::WIC_FLAGS_NONE, &metadata, *scratchImg);
@@ -273,10 +273,10 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 			SetNullTexture();
 			return -1;
 		}
-		auto img = scratchImg->GetImage(0, 0, 0);//¶ƒf[ƒ^’Šo
+		auto img = scratchImg->GetImage(0, 0, 0);//ç”Ÿãƒ‡ãƒ¼ã‚¿æŠ½å‡º
 
 
-		//2023/12/31 MIPMAPì¬
+		//2023/12/31 MIPMAPä½œæˆ
 		std::unique_ptr<DirectX::ScratchImage> mipChain(new DirectX::ScratchImage);
 		hrmip = DirectX::GenerateMipMaps(
 			*img,
@@ -292,33 +292,33 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		auto mipimg = mipChain->GetImages();
 
 
-		//WriteToSubresource‚Å“]‘—‚·‚é—p‚Ìƒq[ƒvİ’è
+		//WriteToSubresourceã§è»¢é€ã™ã‚‹ç”¨ã®ãƒ’ãƒ¼ãƒ—è¨­å®š
 		D3D12_HEAP_PROPERTIES texHeapProp = {};
-		texHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;//“Áê‚Èİ’è‚È‚Ì‚Ådefault‚Å‚àupload‚Å‚à‚È‚­
-		texHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;//ƒ‰ƒCƒgƒoƒbƒN‚Å
-		texHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;//“]‘—‚ªL0‚Â‚Ü‚èCPU‘¤‚©‚ç’¼‚Å
-		texHeapProp.CreationNodeMask = 0;//’PˆêƒAƒ_ƒvƒ^‚Ì‚½‚ß0
-		texHeapProp.VisibleNodeMask = 0;//’PˆêƒAƒ_ƒvƒ^‚Ì‚½‚ß0
+		texHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;//ç‰¹æ®Šãªè¨­å®šãªã®ã§defaultã§ã‚‚uploadã§ã‚‚ãªã
+		texHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;//ãƒ©ã‚¤ãƒˆãƒãƒƒã‚¯ã§
+		texHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;//è»¢é€ãŒL0ã¤ã¾ã‚ŠCPUå´ã‹ã‚‰ç›´ã§
+		texHeapProp.CreationNodeMask = 0;//å˜ä¸€ã‚¢ãƒ€ãƒ—ã‚¿ã®ãŸã‚0
+		texHeapProp.VisibleNodeMask = 0;//å˜ä¸€ã‚¢ãƒ€ãƒ—ã‚¿ã®ãŸã‚0
 
 		D3D12_RESOURCE_DESC resDesc = {};
-		resDesc.Format = mipChain->GetMetadata().format;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAƒtƒH[ƒ}ƒbƒg
-		//resDesc.Width = static_cast<UINT>(AlignmentSize(mipChain->GetMetadata().width, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT));//•
-		resDesc.Width = static_cast<UINT>(mipChain->GetMetadata().width);//•
-		resDesc.Height = static_cast<UINT>(mipChain->GetMetadata().height);//‚‚³
-		resDesc.DepthOrArraySize = static_cast<uint16_t>(mipChain->GetMetadata().arraySize);//2D‚Å”z—ñ‚Å‚à‚È‚¢‚Ì‚Å‚P
-		resDesc.SampleDesc.Count = 1;//’ÊíƒeƒNƒXƒ`ƒƒ‚È‚Ì‚ÅƒAƒ“ƒ`ƒFƒŠ‚µ‚È‚¢
+		resDesc.Format = mipChain->GetMetadata().format;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆ
+		//resDesc.Width = static_cast<UINT>(AlignmentSize(mipChain->GetMetadata().width, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT));//å¹…
+		resDesc.Width = static_cast<UINT>(mipChain->GetMetadata().width);//å¹…
+		resDesc.Height = static_cast<UINT>(mipChain->GetMetadata().height);//é«˜ã•
+		resDesc.DepthOrArraySize = static_cast<uint16_t>(mipChain->GetMetadata().arraySize);//2Dã§é…åˆ—ã§ã‚‚ãªã„ã®ã§ï¼‘
+		resDesc.SampleDesc.Count = 1;//é€šå¸¸ãƒ†ã‚¯ã‚¹ãƒãƒ£ãªã®ã§ã‚¢ãƒ³ãƒã‚§ãƒªã—ãªã„
 		resDesc.SampleDesc.Quality = 0;//
-		resDesc.MipLevels = static_cast<uint16_t>(mipChain->GetMetadata().mipLevels);//ƒ~ƒbƒvƒ}ƒbƒv 1
-		resDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(mipChain->GetMetadata().dimension);//2DƒeƒNƒXƒ`ƒƒ—p
-		resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;//ƒŒƒCƒAƒEƒg‚É‚Â‚¢‚Ä‚ÍŒˆ’è‚µ‚È‚¢
-		resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;//‚Æ‚­‚Éƒtƒ‰ƒO‚È‚µ
+		resDesc.MipLevels = static_cast<uint16_t>(mipChain->GetMetadata().mipLevels);//ãƒŸãƒƒãƒ—ãƒãƒƒãƒ— 1
+		resDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(mipChain->GetMetadata().dimension);//2Dãƒ†ã‚¯ã‚¹ãƒãƒ£ç”¨
+		resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;//ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆã«ã¤ã„ã¦ã¯æ±ºå®šã—ãªã„
+		resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;//ã¨ãã«ãƒ•ãƒ©ã‚°ãªã—
 
 		ID3D12Resource* texbuff = nullptr;
 		hr1 = pdev->CreateCommittedResource(
 			&texHeapProp,
-			D3D12_HEAP_FLAG_NONE,//“Á‚Éw’è‚È‚µ
+			D3D12_HEAP_FLAG_NONE,//ç‰¹ã«æŒ‡å®šãªã—
 			&resDesc,
-			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,//ƒeƒNƒXƒ`ƒƒ—p(ƒsƒNƒZƒ‹ƒVƒF[ƒ_‚©‚çŒ©‚é—p)
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,//ãƒ†ã‚¯ã‚¹ãƒãƒ£ç”¨(ãƒ”ã‚¯ã‚»ãƒ«ã‚·ã‚§ãƒ¼ãƒ€ã‹ã‚‰è¦‹ã‚‹ç”¨)
 			//D3D12_RESOURCE_STATE_COPY_DEST,
 			//D3D12_RESOURCE_STATE_GENERIC_READ,
 			//D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_COPY_DEST,
@@ -338,13 +338,13 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		//for (subresno = 0; subresno < mipChain->GetImageCount(); subresno++) {
 			hr2 = texbuff->WriteToSubresource(
 				subresno,
-				nullptr,//‘S—Ìˆæ‚ÖƒRƒs[
-				//img->pixels,//Œ³ƒf[ƒ^ƒAƒhƒŒƒX
-				//static_cast<UINT>(img->rowPitch),//1ƒ‰ƒCƒ“ƒTƒCƒY
-				//static_cast<UINT>(img->slicePitch)//‘SƒTƒCƒY
+				nullptr,//å…¨é ˜åŸŸã¸ã‚³ãƒ”ãƒ¼
+				//img->pixels,//å…ƒãƒ‡ãƒ¼ã‚¿ã‚¢ãƒ‰ãƒ¬ã‚¹
+				//static_cast<UINT>(img->rowPitch),//1ãƒ©ã‚¤ãƒ³ã‚µã‚¤ã‚º
+				//static_cast<UINT>(img->slicePitch)//å…¨ã‚µã‚¤ã‚º
 				//mipimg->pixels,//2023/12/31 mipmap
-				//static_cast<UINT>(mipimg->rowPitch),//2023/12/31 mipmap//1ƒ‰ƒCƒ“ƒTƒCƒY
-				//static_cast<UINT>(mipimg->slicePitch)//2023/12/31 mipmap//‘SƒTƒCƒY
+				//static_cast<UINT>(mipimg->rowPitch),//2023/12/31 mipmap//1ãƒ©ã‚¤ãƒ³ã‚µã‚¤ã‚º
+				//static_cast<UINT>(mipimg->slicePitch)//2023/12/31 mipmap//å…¨ã‚µã‚¤ã‚º
 				mipChain->GetImage(subresno, 0, 0)->pixels,
 				(UINT)mipChain->GetImage(subresno, 0, 0)->rowPitch,
 				(UINT)mipChain->GetImage(subresno, 0, 0)->slicePitch

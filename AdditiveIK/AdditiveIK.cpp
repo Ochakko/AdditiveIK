@@ -26256,7 +26256,7 @@ LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		sliderpos = g_brushrepeats;
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)1);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)10);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 		CEditRange::SetApplyRate((double)g_applyrate);
 		double applyframe = s_editrange.GetApplyFrame();

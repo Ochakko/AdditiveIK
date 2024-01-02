@@ -3,6 +3,21 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2023/01/02
+　Testフォルダにモデル追加
+　　Test/3_Winter2_1
+　　VRoid製のモデルです  ３万数千ポリゴンです
+　VRoid特有のジョイント名がある場合には　シェーダー設定がAUTOのときにNOLIGHTを適用してトゥーン風に表示
+　ブラシ設定のRepeatsのスライダーの最大値を100に.(変える前は10)
+　トラブルシューティング追加
+　　Documsnts/TroubleShooting/AboutSettingsOfLOD.docx
+　　Documsnts/TroubleShooting/AboutSettingsOfShader.docx
+　　Documsnts/TroubleShooting/AboutSettingsOfShadow.docx
+　　Documsnts/TroubleShooting/DarkNoiseOn3DScreen.docx
+
+
+
+
 2024/01/01
 　MipMapに対応
 　　とりあえず対応しました

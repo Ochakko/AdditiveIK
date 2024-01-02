@@ -488,6 +488,7 @@ int CModel::InitParams()
 	m_bound.Init();
 
 	m_materialbank.InitParams();
+	m_vroidjointname = false;
 
 	m_updatefl4x4flag = false;
 
@@ -1064,6 +1065,8 @@ int CModel::LoadFBX(int skipdefref, ID3D12Device* pdev, const WCHAR* wfile, cons
 		m_topbone = 0;
 		//_ASSERT(0);
 	}
+	m_vroidjointname = false;
+	CheckVRoidJointNameReq(GetTopBone(false), &m_vroidjointname);
 
 
 	InitCameraFbx();
@@ -18744,6 +18747,31 @@ void CModel::GetRootOrReferenceReq(FbxNode* srcnode, FbxNode** dstppnode)
 	}
 
 }
+
+void CModel::CheckVRoidJointNameReq(CBone* srcbone, bool* dstflag)
+{
+	if (!srcbone || !dstflag) {
+		return;
+	}
+
+	if (*dstflag == true) {
+		return;
+	}
+
+	if (strcmp(srcbone->GetBoneName(), "J_Bip_C_Hips") == 0) {
+		*dstflag = true;
+		return;
+	}
+	else {
+		if (srcbone->GetBrother(false)) {
+			CheckVRoidJointNameReq(srcbone->GetBrother(false), dstflag);
+		}
+		if (srcbone->GetChild(false)) {
+			CheckVRoidJointNameReq(srcbone->GetChild(false), dstflag);
+		}
+	}
+}
+
 
 void CModel::GetHipsBoneReq(CBone* srcbone, CBone** dstppbone)
 {

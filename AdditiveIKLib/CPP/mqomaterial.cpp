@@ -1893,19 +1893,26 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 	switch(tempshadertype) {
 	case -1:
 	case -2://マテリアルの設定も-2だった場合にはAUTOとみなす
-		if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
-			(GetNormalTex() && (GetNormalTex())[0]) ||
-			(GetMetalTex() && (GetMetalTex())[0])) {
-			shadertype = MQOSHADER_PBR;
+		if (renderobj.pmodel->GetVRoidJointName()) {
+			//VRoid特有のジョイント名を含み　シェーダタイプがAUTOの場合にはNOLIGHTでトゥーン風味に
+			//NoLight
+			shadertype = MQOSHADER_NOLIGHT;
 		}
 		else {
-			if (pm4) {
-				//NoLight
-				shadertype = MQOSHADER_NOLIGHT;
+			if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
+				(GetNormalTex() && (GetNormalTex())[0]) ||
+				(GetMetalTex() && (GetMetalTex())[0])) {
+				shadertype = MQOSHADER_PBR;
 			}
 			else {
-				//Standard
-				shadertype = MQOSHADER_STD;
+				if (pm4) {
+					//NoLight
+					shadertype = MQOSHADER_NOLIGHT;
+				}
+				else {
+					//Standard
+					shadertype = MQOSHADER_STD;
+				}
 			}
 		}
 		break;
@@ -2496,19 +2503,26 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	switch (tempshadertype) {
 	case -1:
 	case -2://マテリアルの設定も-2だった場合にはAUTOとみなす
-		if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
-			(GetNormalTex() && (GetNormalTex())[0]) ||
-			(GetMetalTex() && (GetMetalTex())[0])) {
-			shadertype = MQOSHADER_PBR;
+		if (renderobj.pmodel->GetVRoidJointName()) {
+			//VRoid特有のジョイント名を含み　シェーダタイプがAUTOの場合にはNOLIGHTでトゥーン風味に
+			//NoLight
+			shadertype = MQOSHADER_NOLIGHT;
 		}
-		else {
-			if (ppm4) {
-				//NoLight
-				shadertype = MQOSHADER_NOLIGHT;
+		else{
+			if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
+				(GetNormalTex() && (GetNormalTex())[0]) ||
+				(GetMetalTex() && (GetMetalTex())[0])) {
+				shadertype = MQOSHADER_PBR;
 			}
 			else {
-				//Standard
-				shadertype = MQOSHADER_STD;
+				if (ppm4) {
+					//NoLight
+					shadertype = MQOSHADER_NOLIGHT;
+				}
+				else {
+					//Standard
+					shadertype = MQOSHADER_STD;
+				}
 			}
 		}
 		break;
@@ -2582,14 +2596,15 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	}
 
 
-	if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
-		(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
-		(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
-		rc->SetRootSignature(m_shadowrootSignature);
-	}
-	else {
-		rc->SetRootSignature(m_rootSignature);
-	}
+	//2023/01/02 SetRootSignatureは　BeginRender()で実行しているのでコメントアウト
+	//if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
+	//	(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
+	//	(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
+	//	rc->SetRootSignature(m_shadowrootSignature);
+	//}
+	//else {
+	//	rc->SetRootSignature(m_rootSignature);
+	//}
 
 
 	int pipelineindex = 0;//!!!!!!!!!

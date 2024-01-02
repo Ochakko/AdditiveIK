@@ -1452,7 +1452,7 @@ public: //accesser
 	void GetHipsBoneReq(CBone* srcbone, CBone** dstppbone);
 	bool IncludeRootOrReference(FbxNode* ptopnode);
 	void GetRootOrReferenceReq(FbxNode* srcnode, FbxNode** dstppnode);
-
+	void CheckVRoidJointNameReq(CBone* srcbone, bool* dstflag);
 
 	CBtObject* GetTopBt(){
 		return m_topbt;
@@ -2317,6 +2317,15 @@ public: //accesser
 		MoveMemory(dstfl4x4, m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
 	};
 
+	void SetVRoidJointName(bool srcflag)
+	{
+		m_vroidjointname = srcflag;
+	}
+	bool GetVRoidJointName()
+	{
+		return m_vroidjointname;
+	}
+
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];
@@ -2503,6 +2512,8 @@ private:
 	bool m_Under_Bt2Motion;
 
 	int m_loopstartflag;
+	bool m_vroidjointname;//J_Bip_C_Hipsという名前のジョイントがあればtrue
+
 };
 
 #endif
