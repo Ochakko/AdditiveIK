@@ -13592,8 +13592,8 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	OPENFILENAME ofn;
 	ZeroMemory(&ofn, sizeof(OPENFILENAME));
 	ofn.lStructSize = sizeof(OPENFILENAME);
-	//ofn.hwndOwner = hDlgWnd;
-	ofn.hwndOwner = s_3dwnd;
+	ofn.hwndOwner = hDlgWnd;//2024/01/03
+	//ofn.hwndOwner = s_3dwnd;
 	ofn.hInstance = 0;
 	ofn.lpstrFilter = L"project(*.cha)chara(*.fbx)\0*.cha;*.fbx\0Rigid(*.ref)\0*.ref\0Impulse(*.imp)\0*.imp\0Ground(*.gco)\0*.gco\0BVH(*.bvh)\0*.bvh\0MNL(*.mnl)\0*.mnl\0Retarget(*.rtg)\0*.rtg\0";
 	ofn.lpstrCustomFilter = NULL;
@@ -24460,6 +24460,34 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		case IDCANCEL:
 			ShowWindow(hDlgWnd, SW_HIDE);
 			break;
+
+		case IDC_TOCAMERAPOS:
+		{
+			swprintf_s(strval, 256, L"%.3f", g_camEye.x);
+			SetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONX, strval);
+			swprintf_s(strval, 256, L"%.3f", g_camEye.y);
+			SetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONY, strval);
+			swprintf_s(strval, 256, L"%.3f", g_camEye.z);
+			SetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONZ, strval);
+
+			s_model->SetModelPosition(g_camEye);
+			s_model->CalcModelWorldMatOnLoad();
+		}
+			break;
+		case IDC_TOCAMERATARGET:
+		{
+			swprintf_s(strval, 256, L"%.3f", g_camtargetpos.x);
+			SetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONX, strval);
+			swprintf_s(strval, 256, L"%.3f", g_camtargetpos.y);
+			SetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONY, strval);
+			swprintf_s(strval, 256, L"%.3f", g_camtargetpos.z);
+			SetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONZ, strval);
+
+			s_model->SetModelPosition(g_camtargetpos);
+			s_model->CalcModelWorldMatOnLoad();
+		}
+			break;
+
 		case IDC_APPLYMODELWORLDMAT:
 		{
 			if (s_model) {

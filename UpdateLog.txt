@@ -3,7 +3,35 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
-2023/01/02
+2024/01/03
+　AdditiveIK 1.0.0.2 RC1(リリース候補1)
+　　1.0.0.1からの変更点
+　　　不具合修正
+　　　　ボタンを押してもShader設定ダイアログが出ないことがある不具合修正
+　　　　Rigの設定が意図せず重複して片方を選べなくなる不具合修正
+　　　LOD機能追加　ProjAndLODプレートメニュー追加
+　　　MipMap対応
+　　　　テクスチャ読み込み時に全レベルMipMapを作成して転送
+　　　　サンプリングステートでMipを有効に
+　　　VRoid特有のジョイント名がある場合には　シェーダー設定がAUTOのときにNOLIGHTを適用してトゥーン風に表示
+　　　ブラシ設定のRepeatsのスライダーの最大値を100に.(変える前は10)
+　　　起動時の初期値を変更
+　　　　HighRpmを最初から有効に.
+　　　　4Kモード時には　ZprepassCullingを最初から有効に.
+　　　ツールショートカットボタンのModelWorldMat設定ウインドウにカメラ位置、カメラ注視点にモデルを置くボタンを追加
+　　　Testフォルダにモデル追加　
+　　　　Test/3_Winter2_1
+　　トラブルシューティング追加
+　　　Documsnts/TroubleShooting/AboutSettingsOfLOD.docx
+　　　Documsnts/TroubleShooting/AboutSettingsOfShader.docx
+　　　Documsnts/TroubleShooting/AboutSettingsOfShadow.docx
+　　　Documsnts/TroubleShooting/DarkNoiseOn3DScreen.docx
+
+
+
+
+
+2024/01/02
 　Testフォルダにモデル追加
 　　Test/3_Winter2_1
 　　VRoid製のモデルです  ３万数千ポリゴンです
