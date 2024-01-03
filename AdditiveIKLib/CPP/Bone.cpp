@@ -1565,7 +1565,7 @@ float CBone::CalcAxisMatX_Manipulator(bool limitdegflag, int srcboneaxis, int bi
 	//よってAXISKIND_CURRENTの場合　親からみた　currentのNodeMatにcurrentのGetLimitedWorldMatを掛けたものが基準となる
 	//#########################################################################################################################
 
-	bool ishipsjoint = IsHipsBone();
+	//bool ishipsjoint = IsHipsBone();
 
 
 	ChaVector3 aftbonepos;
@@ -1583,6 +1583,9 @@ float CBone::CalcAxisMatX_Manipulator(bool limitdegflag, int srcboneaxis, int bi
 		*dstmat = inimat;
 		return 0.0f;
 	}
+
+	bool ishipsjoint = childbone->IsHipsBone();//2024/01/03
+
 	if (!GetParModel()) {
 		_ASSERT(0);
 		ChaMatrix inimat;
@@ -1626,44 +1629,45 @@ float CBone::CalcAxisMatX_Manipulator(bool limitdegflag, int srcboneaxis, int bi
 	ChaMatrix tmpchildzerofm = childbone->GetNodeMat() * childbone->GetCurrentZeroFrameMat(limitdegflag, 1);
 	ChaMatrix tmpchildlimwm = childbone->GetNodeMat() * childbone->GetCurrentWorldMat(false);
 	ChaMatrix tmpchildbtmat = childbone->GetNodeMat() * childbone->GetBtMat();
-	//ChaMatrix tmpchildbtmat;
-	ChaMatrix tmpparentzerofm;
-	ChaMatrix tmpparentlimwm;
-	ChaMatrix tmpparentbtmat;
-	if (GetParent(false)) {
-		if (GetParent(false)->IsSkeleton()) {
-			tmpparentzerofm = GetParent(false)->GetNodeMat() * GetParent(false)->GetCurrentZeroFrameMat(limitdegflag, 1);
-			tmpparentlimwm = GetParent(false)->GetNodeMat() * GetParent(false)->GetCurrentWorldMat(false);
-			tmpparentbtmat = GetParent(false)->GetNodeMat() * GetParent(false)->GetBtMat();
-		}
-		else if (GetParent(false)->IsNull()) {
-			tmpparentzerofm = GetParent(false)->GetTransformMat(0.0, false);
-			tmpparentlimwm = GetParent(false)->GetTransformMat(curframe, false);
-			tmpparentbtmat = GetParent(false)->GetTransformMat(curframe, false);
-		}
-		else {
-			tmpparentzerofm.SetIdentity();
-			tmpparentlimwm.SetIdentity();
-			tmpparentbtmat.SetIdentity();
-		}
-	}
-	else {
-		tmpparentzerofm.SetIdentity();
-		tmpparentlimwm.SetIdentity();
-		tmpparentbtmat.SetIdentity();
-	}
+
+	////ChaMatrix tmpchildbtmat;
+	//ChaMatrix tmpparentzerofm;
+	//ChaMatrix tmpparentlimwm;
+	//ChaMatrix tmpparentbtmat;
+	//if (GetParent(false)) {//<--- 2024/01/13 parentに対して呼び出すので実質gpar
+	//	if (GetParent(false)->IsSkeleton()) {
+	//		tmpparentzerofm = GetParent(false)->GetNodeMat() * GetParent(false)->GetCurrentZeroFrameMat(limitdegflag, 1);
+	//		tmpparentlimwm = GetParent(false)->GetNodeMat() * GetParent(false)->GetCurrentWorldMat(false);
+	//		tmpparentbtmat = GetParent(false)->GetNodeMat() * GetParent(false)->GetBtMat();
+	//	}
+	//	else if (GetParent(false)->IsNull()) {
+	//		tmpparentzerofm = GetParent(false)->GetTransformMat(0.0, false);
+	//		tmpparentlimwm = GetParent(false)->GetTransformMat(curframe, false);
+	//		tmpparentbtmat = GetParent(false)->GetTransformMat(curframe, false);
+	//	}
+	//	else {
+	//		tmpparentzerofm.SetIdentity();
+	//		tmpparentlimwm.SetIdentity();
+	//		tmpparentbtmat.SetIdentity();
+	//	}
+	//}
+	//else {
+	//	tmpparentzerofm.SetIdentity();
+	//	tmpparentlimwm.SetIdentity();
+	//	tmpparentbtmat.SetIdentity();
+	//}
 
 
 	ChaMatrix convmat;
 	convmat.SetIdentity();
 
 	if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-		ChaVector3TransformCoord(&aftparentpos, &zeropos, &tmpparentlimwm);
+		//ChaVector3TransformCoord(&aftparentpos, &zeropos, &tmpparentlimwm);
 		ChaVector3TransformCoord(&aftbonepos, &zeropos, &tmplimwm);
 		ChaVector3TransformCoord(&aftchildpos, &zeropos, &tmpchildlimwm);
 	}
 	else {
-		ChaVector3TransformCoord(&aftparentpos, &zeropos, &tmpparentbtmat);
+		//ChaVector3TransformCoord(&aftparentpos, &zeropos, &tmpparentbtmat);
 		ChaVector3TransformCoord(&aftbonepos, &zeropos, &tmpbtmat);
 		ChaVector3TransformCoord(&aftchildpos, &zeropos, &tmpchildbtmat);
 	}
@@ -1673,22 +1677,36 @@ float CBone::CalcAxisMatX_Manipulator(bool limitdegflag, int srcboneaxis, int bi
 		//hipsjointではない場合
 
 		if ((srcboneaxis == BONEAXIS_CURRENT) || (srcboneaxis == BONEAXIS_BINDPOSE)) {
+			////current bone axis
+			//if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
+			//	convmat = tmplimwm;
+			//}
+			//else {
+			//	convmat = tmpbtmat;
+			//}
 			//current bone axis
 			if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-				convmat = tmplimwm;
+				convmat = tmpchildlimwm;//2024/01/03
 			}
 			else {
-				convmat = tmpbtmat;
+				convmat = tmpchildbtmat;//2024/01/03
 			}
-			
+
 		}
 		else if (srcboneaxis == BONEAXIS_PARENT) {
+			////parent bone axis
+			//if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
+			//	convmat = tmpparentlimwm;
+			//}
+			//else {
+			//	convmat = tmpparentbtmat;
+			//}
 			//parent bone axis
 			if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-				convmat = tmpparentlimwm;
+				convmat = tmplimwm;//2024/01/03
 			}
 			else {
-				convmat = tmpparentbtmat;
+				convmat = tmpbtmat;//2024/01/03
 			}
 		}
 		else if (srcboneaxis == BONEAXIS_GLOBAL) {

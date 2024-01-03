@@ -1197,12 +1197,12 @@
     </RigElem>
   </Bone>
   <Bone>
-    <RigName>RLeg_YBack</RigName>
+    <RigName>RLeg_YFront</RigName>
     <OwnerBone>J_Bip_R_Foot</OwnerBone>
     <RigNumber>1</RigNumber>
     <ElemNum>3</ElemNum>
     <DispAxis>0</DispAxis>
-    <DispOrder>4</DispOrder>
+    <DispOrder>8</DispOrder>
     <DispPosInverse>1</DispPosInverse>
     <ShapeMult>4</ShapeMult>
     <ShapeKind>1</ShapeKind>
@@ -1287,12 +1287,12 @@
     </RigElem>
   </Bone>
   <Bone>
-    <RigName>RLeg_YFront</RigName>
+    <RigName>RLeg_YBack</RigName>
     <OwnerBone>J_Bip_R_Foot</OwnerBone>
     <RigNumber>3</RigNumber>
     <ElemNum>3</ElemNum>
     <DispAxis>0</DispAxis>
-    <DispOrder>8</DispOrder>
+    <DispOrder>4</DispOrder>
     <DispPosInverse>1</DispPosInverse>
     <ShapeMult>4</ShapeMult>
     <ShapeKind>1</ShapeKind>
