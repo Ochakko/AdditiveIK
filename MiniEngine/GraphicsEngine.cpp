@@ -336,6 +336,11 @@ bool GraphicsEngine::CreateSwapChain(
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.SampleDesc.Count = 1;
 
+	//2024/01/03 アンチエイリアシング Device作成時にも指定必要　ハードウェア対応の必要有
+	//ビデオカードのコントロールパネルからアプリのアンチエイリアス設定を変更可能なので　その方法をトラブルシューティングに書く
+	//swapChainDesc.SampleDesc.Count = 4;
+
+
 	//2023/12/15 PresentのflagsでもALLOW_TEARINGする必要有
 	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 

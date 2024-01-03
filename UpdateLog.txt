@@ -4,7 +4,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/01/03
-　AdditiveIK 1.0.0.2 RC1(リリース候補1)
+　AdditiveIK 1.0.0.2 RC2(リリース候補2)
 　　1.0.0.1からの変更点
 　　　不具合修正
 　　　　ボタンを押してもShader設定ダイアログが出ないことがある不具合修正
@@ -21,12 +21,13 @@ https://github.com/Ochakko/AdditiveIK
 　　　ツールショートカットボタンのModelWorldMat設定ウインドウにカメラ位置、カメラ注視点にモデルを置くボタンを追加
 　　　Testフォルダにモデル追加　
 　　　　Test/3_Winter2_1
-　　トラブルシューティング追加
-　　　Documsnts/TroubleShooting/AboutSettingsOfLOD.docx
-　　　Documsnts/TroubleShooting/AboutSettingsOfShader.docx
-　　　Documsnts/TroubleShooting/AboutSettingsOfShadow.docx
-　　　Documsnts/TroubleShooting/DarkNoiseOn3DScreen.docx
-
+　　　トラブルシューティング追加
+　　　　Documsnts/TroubleShooting/AboutSettingsOfLOD.docx
+　　　　Documsnts/TroubleShooting/AboutSettingsOfShader.docx
+　　　　Documsnts/TroubleShooting/AboutSettingsOfShadow.docx
+　　　　Documsnts/TroubleShooting/DarkNoiseOn3DScreen.docx
+　　　　Documsnts/TroubleShooting/HowToImproveJaggedImageQuality.docx
+　　　　Documsnts/TroubleShooting/Partially180DegreesDifferent.docx
 
 
 
