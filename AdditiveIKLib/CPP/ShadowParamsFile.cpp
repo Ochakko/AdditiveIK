@@ -84,7 +84,7 @@ int CShadowParamsFile::WriteShadowParamsFile(const WCHAR* srcfilepath)
 	//float g_shadowmap_color = 0.5f;
 	//float g_shadowmap_bias = 0.0010f;
 	//float g_shadowmap_plusup = 300.0f;
-	//float g_shadowmap_plusright = 1.0f;
+	//float g_shadowmap_distscale = 1.0f;
 	//int g_shadowmap_lightdir = 1;
 	if (g_enableshadow) {
 		CallF(Write2File("    <ShadowEnable>1</ShadowEnable>\r\n"), return 1);
@@ -143,7 +143,7 @@ int CShadowParamsFile::WriteShadowParamsFile(const WCHAR* srcfilepath)
 				CallF(Write2File("    %s%.2f%s\r\n", strbegintag, g_shadowmap_plusup[slotno], strendtag), return 1);
 				break;
 			case 7:
-				CallF(Write2File("    %s%.2f%s\r\n", strbegintag, g_shadowmap_plusright[slotno], strendtag), return 1);
+				CallF(Write2File("    %s%.2f%s\r\n", strbegintag, g_shadowmap_distscale[slotno], strendtag), return 1);
 				break;
 			case 8:
 				CallF(Write2File("    %s%d%s\r\n", strbegintag, g_shadowmap_lightdir[slotno], strendtag), return 1);
@@ -162,7 +162,7 @@ int CShadowParamsFile::WriteShadowParamsFile(const WCHAR* srcfilepath)
 	//CallF(Write2File("    <ShadowMapColor>%.2f</ShadowMapColor>\r\n", g_shadowmap_color), return 1);
 	//CallF(Write2File("    <ShadowMapBias>%.3f</ShadowMapBias>\r\n", g_shadowmap_bias), return 1);
 	//CallF(Write2File("    <ShadowMapPlusUp>%.2f</ShadowMapPlusUp>\r\n", g_shadowmap_plusup), return 1);
-	//CallF(Write2File("    <ShadowMapDistScale>%.2f</ShadowMapDistScale>\r\n", g_shadowmap_plusright), return 1);
+	//CallF(Write2File("    <ShadowMapDistScale>%.2f</ShadowMapDistScale>\r\n", g_shadowmap_distscale), return 1);
 	//CallF(Write2File("    <ShadowMapLightDir>%d</ShadowMapLightDir>\r\n", g_shadowmap_lightdir), return 1);
 
 
@@ -336,7 +336,7 @@ int CShadowParamsFile::LoadShadowParamsFile(const WCHAR* srcfilepath)
 				result = Read_Float(&m_xmliobuf, strbegintag, strendtag,
 					&shadowmap_plusright);
 				if (result == 0) {
-					g_shadowmap_plusright[slotno] = shadowmap_plusright;
+					g_shadowmap_distscale[slotno] = shadowmap_plusright;
 				}
 			}
 				break;

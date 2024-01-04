@@ -75,7 +75,7 @@ float g_shadowmap_far[SHADOWSLOTNUM];
 float g_shadowmap_color[SHADOWSLOTNUM];
 float g_shadowmap_bias[SHADOWSLOTNUM];
 float g_shadowmap_plusup[SHADOWSLOTNUM];
-float g_shadowmap_plusright[SHADOWSLOTNUM];
+float g_shadowmap_distscale[SHADOWSLOTNUM];
 int g_shadowmap_lightdir[SHADOWSLOTNUM];
 
 bool g_zpreflag = true;
@@ -326,7 +326,7 @@ extern float g_shadowmap_far[SHADOWSLOTNUM];
 extern float g_shadowmap_color[SHADOWSLOTNUM];
 extern float g_shadowmap_bias[SHADOWSLOTNUM];
 extern float g_shadowmap_plusup[SHADOWSLOTNUM];
-extern float g_shadowmap_plusright[SHADOWSLOTNUM];
+extern float g_shadowmap_distscale[SHADOWSLOTNUM];
 extern int g_shadowmap_lightdir[SHADOWSLOTNUM];
 
 extern bool g_zpreflag;

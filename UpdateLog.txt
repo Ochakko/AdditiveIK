@@ -4,15 +4,19 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/01/03
-　AdditiveIK 1.0.0.2 RC3(リリース候補3)
+　AdditiveIK 1.0.0.2 RC4(リリース候補4)
 　　1.0.0.1からの変更点
-　　　マニピュレータの軸(計算と表示共に)がparent側に１階層分ずれていたのを修正
-　　　　体全体を９０度回転した場合に足の付け根のRigの軸が設定と異なる現象を追いかけていたら発覚
-　　　　IK操作、Rig操作とRigの設定に影響
-　　　　IK操作の軸が操作中にブレないことを再確認
 　　　不具合修正
 　　　　ボタンを押してもShader設定ダイアログが出ないことがある不具合修正
 　　　　Rigの設定が意図せず重複して片方を選べなくなる不具合修正
+　　　　シャドウの向きを修正
+　　　　マニピュレータの軸(計算と表示共に)がparent側に１階層分ずれていたのを修正
+　　　　　体全体を９０度回転した場合に足の付け根のRigの軸が設定と異なる現象を追いかけていたら発覚
+　　　　　IK操作、Rig操作とRigの設定に影響
+　　　　　軸の種類はDispAndLimitプレートメニューのAxisKindコンボボックスで
+　　　　　Current, Parent, Global, Nodematから選択可能. 
+　　　　　今回の修正をする前の振る舞い再現はAxisKindでParentを選択すれば可能(Rigの設定が昔のままの場合).
+　　　　　IK操作の軸が操作中にブレないことを再確認
 　　　LOD機能追加　ProjAndLODプレートメニュー追加
 　　　MipMap対応
 　　　　テクスチャ読み込み時に全レベルMipMapを作成して転送
@@ -23,6 +27,7 @@ https://github.com/Ochakko/AdditiveIK
 　　　　HighRpmを最初から有効に.
 　　　　4Kモード時には　ZprepassCullingを最初から有効に.
 　　　ツールショートカットボタンのModelWorldMat設定ウインドウにカメラ位置、カメラ注視点にモデルを置くボタンを追加
+　　　シャドウのbiasスライダーの最小値を0に.(変更前は0.001)
 　　　Testフォルダにモデル追加　
 　　　　Test/3_Winter2_1
 　　　トラブルシューティング追加

@@ -3431,7 +3431,7 @@ void InitApp()
 			g_shadowmap_color[slotno] = 0.5f;
 			g_shadowmap_bias[slotno] = 0.0010f;
 			g_shadowmap_plusup[slotno] = 300.0f;
-			g_shadowmap_plusright[slotno] = 1.0f;
+			g_shadowmap_distscale[slotno] = 1.0f;
 			g_shadowmap_lightdir[slotno] = 1;
 		}
 	}
@@ -23846,7 +23846,7 @@ int ShadowParams2Dlg(HWND hDlgWnd)
 	swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_plusup[g_shadowmap_slotno]);
 	SetDlgItemText(hDlgWnd, IDC_EDIT_PLUSUP, strdlg);
 
-	swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_plusright[g_shadowmap_slotno]);
+	swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_distscale[g_shadowmap_slotno]);
 	SetDlgItemText(hDlgWnd, IDC_EDIT_PLUSRIGHT, strdlg);
 
 	swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_near[g_shadowmap_slotno]);
@@ -23869,7 +23869,8 @@ int ShadowParams2Dlg(HWND hDlgWnd)
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_COLOR), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
 	sliderpos = (int)(g_shadowmap_bias[g_shadowmap_slotno] * 10000.0f);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)10);
+	//SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)10);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);//2024/01/04 0も可
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
@@ -25113,7 +25114,7 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 			GetDlgItemText(hDlgWnd, IDC_EDIT_PLUSRIGHT, streditbox, 256);
 			tempeditvalue = (float)_wtof(streditbox);
 			if ((tempeditvalue >= -50000.0f) && (tempeditvalue <= 50000.0f)) {
-				g_shadowmap_plusright[g_shadowmap_slotno] = tempeditvalue;
+				g_shadowmap_distscale[g_shadowmap_slotno] = tempeditvalue;
 			}
 			else {
 				::MessageBox(hDlgWnd, L"invalid editbox value : plusright", L"Invalid Value", MB_OK);
@@ -25149,7 +25150,7 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 			g_shadowmap_color[g_shadowmap_slotno] = 0.5f;
 			g_shadowmap_bias[g_shadowmap_slotno] = 0.0010f;
 			g_shadowmap_plusup[g_shadowmap_slotno] = 300.0f;
-			g_shadowmap_plusright[g_shadowmap_slotno] = 1.0f;
+			g_shadowmap_distscale[g_shadowmap_slotno] = 1.0f;
 			g_shadowmap_lightdir[g_shadowmap_slotno] = 1;
 
 			ShadowParams2Dlg(hDlgWnd);
@@ -51855,10 +51856,15 @@ void SetCamera3DFromEyePos()
 
 
 			ChaVector3 nlightdir;
-			ChaVector3Normalize(&nlightdir, &(g_lightDir[g_lightSlot][g_shadowmap_lightdir[g_shadowmap_slotno]]));
+			ChaVector3Normalize(&nlightdir, &(g_lightDir[g_lightSlot][g_shadowmap_lightdir[g_shadowmap_slotno] - 1]));//2024/01/04 -1
 			ChaVector3 rotdir;
-			if (rot180flag == false) {
-				camrotq.Rotate(&rotdir, nlightdir);
+			if (g_lightDirWithView[g_lightSlot]) {//2024/01/04
+				if (rot180flag == false) {
+					camrotq.Rotate(&rotdir, nlightdir);
+				}
+				else {
+					rotdir = ChaVector3(-nlightdir.x, nlightdir.y, -nlightdir.z);
+				}
 			}
 			else {
 				rotdir = ChaVector3(-nlightdir.x, nlightdir.y, -nlightdir.z);
@@ -51874,9 +51880,9 @@ void SetCamera3DFromEyePos()
 		targetshadow = g_camtargetpos;
 
 		ChaVector3 lpos;
-		//lpos = g_camEye + ldir * (g_shadowmap_plusright * g_shadowmap_projscale);
+		//lpos = g_camEye + ldir * (g_shadowmap_distscale * g_shadowmap_projscale);
 		lpos = g_camtargetpos - ldir * (ChaVector3LengthDbl(&camdiff) * 
-			g_shadowmap_plusright[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno]);
+			g_shadowmap_distscale[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno]);
 		lpos.y = targetshadow.y + g_shadowmap_plusup[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
 
 		g_cameraShadow->SetPosition(Vector3(lpos.x, lpos.y, lpos.z));
