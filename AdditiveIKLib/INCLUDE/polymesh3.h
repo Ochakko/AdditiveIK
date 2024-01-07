@@ -27,7 +27,7 @@ public:
 	~CPolyMesh3();
 
 	int CreatePM3(bool fbxfileflag, int pointnum, int facenum, float facet, ChaVector3* pointptr, CMQOFace* faceptr, 
-		CModel* pmodel, ChaMatrix multmat);
+		CModel* pmodel, ChaMatrix multmat, int srcuvnum);
 	
 	//int SetIndexBuf();	
 	//int InvIndexBuf();
@@ -59,8 +59,8 @@ private:
 	int AddSmFace( N3P* n3p1, N3P* n3p2 );
 	//int CalcSMNormal();
 
-	int SetOptV(BINORMALDISPV* optv, int* pleng, int* matnum, CModel* pmodel);
-	int BuildTangentAndBinormal();
+	int SetOptV(BINORMALDISPV* optv, int* pleng, int* matnum, CModel* pmodel, int srcuvnum);
+	int BuildTangentAndBinormal(int srcuvnum);
 
 /***
 typedef struct tag_verface

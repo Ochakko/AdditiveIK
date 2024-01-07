@@ -165,22 +165,49 @@ int sortfunc_material( void *context, const void *elem1, const void *elem2)
 				float dv;
 				dv = n3p1->pervert->uv[0].y - n3p2->pervert->uv[0].y;
 				if( dv == 0.0f ){
-					int dvcolflag;
-					dvcolflag = n3p1->pervert->vcolflag - n3p2->pervert->vcolflag;
-					if( dvcolflag ){
-						DWORD dvcol;
-						dvcol = n3p1->pervert->vcol - n3p2->pervert->vcol;
-						if( dvcol == 0 ){
-							return 0;
-						}else{
-							if( n3p1->pervert->vcol < n3p2->pervert->vcol ){
-								return -1;
-							}else{
-								return 1;
+					float du1;
+					du1 = n3p1->pervert->uv[1].x - n3p2->pervert->uv[1].x;
+					if (du1 == 0.0f) {
+						float dv1;
+						dv1 = n3p1->pervert->uv[1].y - n3p2->pervert->uv[1].y;
+						if (dv1 == 0.0f) {
+							int dvcolflag;
+							dvcolflag = n3p1->pervert->vcolflag - n3p2->pervert->vcolflag;
+							if (dvcolflag) {
+								DWORD dvcol;
+								dvcol = n3p1->pervert->vcol - n3p2->pervert->vcol;
+								if (dvcol == 0) {
+									return 0;
+								}
+								else {
+									if (n3p1->pervert->vcol < n3p2->pervert->vcol) {
+										return -1;
+									}
+									else {
+										return 1;
+									}
+								}
+							}
+							else {
+								return dvcolflag;
 							}
 						}
-					}else{
-						return dvcolflag;
+						else {
+							if (dv1 >= 0.0f) {
+								return 1;
+							}
+							else {
+								return -1;
+							}
+						}
+					}
+					else {
+						if (du1 >= 0.0f) {
+							return 1;
+						}
+						else {
+							return -1;
+						}
 					}
 				}else{
 					if( dv >= 0.0f ){
@@ -233,7 +260,7 @@ int sortfunc_order0( void *context, const void *elem1, const void *elem2)
 
 
 int CPolyMesh3::CreatePM3(bool fbxfileflag, int pointnum, int facenum, float facet, ChaVector3* pointptr, CMQOFace* faceptr, 
-	CModel* pmodel, ChaMatrix multmat)
+	CModel* pmodel, ChaMatrix multmat, int srcuvnum)
 {
 	m_orgpointnum = pointnum;
 	m_orgfacenum = facenum;
@@ -319,7 +346,7 @@ int CPolyMesh3::CreatePM3(bool fbxfileflag, int pointnum, int facenum, float fac
 	qsort_s( m_n3p, m_facenum * 3, sizeof( N3P ), sortfunc_order0, (void*)this );
 
 ///////////
-	CallF( SetOptV( 0, &m_optleng, &m_optmatnum, pmodel ), return 1 );
+	CallF( SetOptV( 0, &m_optleng, &m_optmatnum, pmodel, srcuvnum ), return 1 );
 	if( (m_optleng <= 0) || (m_optmatnum <= 0) ){
 		_ASSERT( 0 );
 		return 0;
@@ -345,13 +372,13 @@ int CPolyMesh3::CreatePM3(bool fbxfileflag, int pointnum, int facenum, float fac
 	ZeroMemory( m_dispindex, sizeof( int ) * m_facenum * 3 );
 
 	int tmpleng, tmpmatnum;
-	CallF( SetOptV( m_dispv, &tmpleng, &tmpmatnum, pmodel ), return 1 );
+	CallF( SetOptV( m_dispv, &tmpleng, &tmpmatnum, pmodel, srcuvnum), return 1 );
 	if( (tmpleng != m_optleng) || (tmpmatnum != m_optmatnum) ){
 		_ASSERT( 0 );
 		return 1;
 	}
 
-	BuildTangentAndBinormal();
+	BuildTangentAndBinormal(srcuvnum);
 
 
 
@@ -369,7 +396,7 @@ int CPolyMesh3::CreatePM3(bool fbxfileflag, int pointnum, int facenum, float fac
 	return 0;
 }
 
-int CPolyMesh3::BuildTangentAndBinormal()
+int CPolyMesh3::BuildTangentAndBinormal(int srcuvnum)
 {
 	if (!m_dispv || !m_dispindex) {
 		_ASSERT(0);
@@ -384,7 +411,7 @@ int CPolyMesh3::BuildTangentAndBinormal()
 		BINORMALDISPV* v1 = m_dispv + i1;
 		BINORMALDISPV* v2 = m_dispv + i2; 
 		BINORMALDISPV* v3 = m_dispv + i3;
-		CalcTangentAndBinormal(v1, v2, v3);
+		CalcTangentAndBinormal(srcuvnum, v1, v2, v3);
 	}
 	int vno;
 	for (vno = 0; vno < (m_facenum * 3); vno++) {
@@ -437,8 +464,9 @@ int CPolyMesh3::CreateN3PFromMQOFace( N3P* n3pptr, int* numptr )
 
 					(curn3p + indexno)->pervert->indexno = indexno;
 					(curn3p + indexno)->pervert->vno = curmqof->GetIndex( seti[indexno] );
-					(curn3p + indexno)->pervert->uvnum = 1;
+					(curn3p + indexno)->pervert->uvnum = 2;
 					(curn3p + indexno)->pervert->uv[0] = curmqof->GetUV( seti[indexno] );
+					(curn3p + indexno)->pervert->uv[1] = curmqof->GetUV1(seti[indexno]);
 					(curn3p + indexno)->pervert->vcolflag = curmqof->GetVcolSetFlag();
 					(curn3p + indexno)->pervert->vcol = (DWORD)( curmqof->GetCol( seti[indexno] ) & 0xFFFFFFFF );
 				}			
@@ -456,8 +484,9 @@ int CPolyMesh3::CreateN3PFromMQOFace( N3P* n3pptr, int* numptr )
 
 					(curn3p + indexno)->pervert->indexno = indexno;
 					(curn3p + indexno)->pervert->vno = curmqof->GetIndex( seti[indexno] );
-					(curn3p + indexno)->pervert->uvnum = 1;
+					(curn3p + indexno)->pervert->uvnum = 2;
 					(curn3p + indexno)->pervert->uv[0] = curmqof->GetUV( seti[indexno] );
+					(curn3p + indexno)->pervert->uv[1] = curmqof->GetUV1(seti[indexno]);
 					(curn3p + indexno)->pervert->vcolflag = curmqof->GetVcolSetFlag();
 					(curn3p + indexno)->pervert->vcol = (DWORD)( curmqof->GetCol( seti[indexno] ) & 0xFFFFFFFF );
 				}			
@@ -471,8 +500,9 @@ int CPolyMesh3::CreateN3PFromMQOFace( N3P* n3pptr, int* numptr )
 
 					(curn3p + indexno)->pervert->indexno = indexno - 3;
 					(curn3p + indexno)->pervert->vno = curmqof->GetIndex( seci[indexno - 3] );
-					(curn3p + indexno)->pervert->uvnum = 1;
+					(curn3p + indexno)->pervert->uvnum = 2;
 					(curn3p + indexno)->pervert->uv[0] = curmqof->GetUV( seci[indexno - 3] );
+					(curn3p + indexno)->pervert->uv[1] = curmqof->GetUV1(seci[indexno - 3]);
 					(curn3p + indexno)->pervert->vcolflag = curmqof->GetVcolSetFlag();
 					(curn3p + indexno)->pervert->vcol = (DWORD)( curmqof->GetCol( seci[indexno - 3] ) & 0xFFFFFFFF );
 				}			
@@ -725,7 +755,7 @@ int CPolyMesh3::AddSmFace( N3P* n3p1, N3P* n3p2 )
 	return 0;
 }
 
-int CPolyMesh3::SetOptV(BINORMALDISPV* dispv, int* pleng, int* matnum, CModel* pmodel)
+int CPolyMesh3::SetOptV(BINORMALDISPV* dispv, int* pleng, int* matnum, CModel* pmodel, int srcuvnum)
 {
 	*pleng = 0;
 	if (!pmodel) {
@@ -794,7 +824,14 @@ int CPolyMesh3::SetOptV(BINORMALDISPV* dispv, int* pleng, int* matnum, CModel* p
 				curv->tangent = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
 				curv->binormal = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
 
-				curv->uv = curn3p->pervert->uv[0];
+				curv->uv[0] = curn3p->pervert->uv[0];
+				if (srcuvnum >= 2) {
+					curv->uv[1] = curn3p->pervert->uv[1];
+				}
+				else {
+					curv->uv[1] = curn3p->pervert->uv[0];
+				}
+				
 
 				/***
 				curoptv->materialno = curn3p->perface->materialno;

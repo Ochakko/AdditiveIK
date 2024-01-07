@@ -3,7 +3,7 @@
 
 cmake_minimum_required (VERSION 3.20)
 
-set(DIRECTXTEX_VERSION 2.0.1)
+set(DIRECTXTEX_VERSION 2.0.2)
 
 if(WINDOWS_STORE OR (DEFINED XBOX_CONSOLE_TARGET))
   set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
@@ -28,6 +28,10 @@ option(BUILD_DX12 "Build with DirectX12 Runtime support" ON)
 # Enable the use of OpenMP for software BC6H/BC7 compression
 option(BC_USE_OPENMP "Build with OpenMP support" ON)
 
+# Builds Xbox extensions for Host PC
+option(BUILD_XBOX_EXTS_XBOXONE "Build Xbox library extensions for Xbox One" OFF)
+option(BUILD_XBOX_EXTS_SCARLETT "Build Xbox library extensions for Xbox Series X|S" OFF)
+
 # https://devblogs.microsoft.com/cppblog/spectre-mitigations-in-msvc/
 option(ENABLE_SPECTRE_MITIGATION "Build using /Qspectre for MSVC" OFF)
 
@@ -38,6 +42,8 @@ option(ENABLE_CODE_ANALYSIS "Use Static Code Analysis on build" OFF)
 option(USE_PREBUILT_SHADERS "Use externally built HLSL shaders" OFF)
 
 option(NO_WCHAR_T "Use legacy wide-character as unsigned short" OFF)
+
+option(BUILD_FUZZING "Build for fuzz testing" OFF)
 
 # Includes the functions for loading/saving OpenEXR files at runtime
 option(ENABLE_OPENEXR_SUPPORT "Build with OpenEXR support" OFF)
@@ -102,9 +108,44 @@ set(LIBRARY_SOURCES
     DirectXTex/DirectXTexUtil.cpp)
 
 if(WIN32)
-   set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
+   list(APPEND LIBRARY_SOURCES
        DirectXTex/DirectXTexFlipRotate.cpp
        DirectXTex/DirectXTexWIC.cpp)
+endif()
+
+if(DEFINED XBOX_CONSOLE_TARGET)
+
+    list(APPEND LIBRARY_HEADERS Auxiliary/DirectXTexXbox.h)
+
+    list(APPEND LIBRARY_SOURCES
+       Auxiliary/DirectXTexXboxDDS.cpp
+       Auxiliary/DirectXTexXboxDetile.cpp
+       Auxiliary/DirectXTexXboxImage.cpp
+       Auxiliary/DirectXTexXboxTile.cpp)
+
+    if((XBOX_CONSOLE_TARGET STREQUAL "durango") AND BUILD_DX11)
+       list(APPEND LIBRARY_SOURCES Auxiliary/DirectXTexXboxD3D11X.cpp)
+    endif()
+
+    if(BUILD_DX12)
+       list(APPEND LIBRARY_SOURCES Auxiliary/DirectXTexXboxD3D12X.cpp)
+    endif()
+
+elseif((BUILD_XBOX_EXTS_XBOXONE OR BUILD_XBOX_EXTS_SCARLETT) AND WIN32)
+    if(DEFINED ENV{GameDKLatest})
+        cmake_path(SET GameDK_DIR "$ENV{GameDKLatest}")
+    endif()
+    if(DEFINED ENV{XboxOneXDKLatest})
+        cmake_path(SET XboxOneXDK_DIR "$ENV{XboxOneXDKLatest}")
+    endif()
+
+    list(APPEND LIBRARY_HEADERS Auxiliary/DirectXTexXbox.h)
+
+    list(APPEND LIBRARY_SOURCES
+       Auxiliary/DirectXTexXboxDDS.cpp
+       Auxiliary/DirectXTexXboxDetile.cpp
+       Auxiliary/DirectXTexXboxImage.cpp
+       Auxiliary/DirectXTexXboxTile.cpp)
 endif()
 
 set(SHADER_SOURCES
@@ -112,7 +153,7 @@ set(SHADER_SOURCES
     DirectXTex/Shaders/BC7Encode.hlsl)
 
 if(BUILD_DX11 AND WIN32)
-   set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
+   list(APPEND LIBRARY_SOURCES
        DirectXTex/BCDirectCompute.h
        DirectXTex/BCDirectCompute.cpp
        DirectXTex/DirectXTexCompressGPU.cpp
@@ -120,17 +161,16 @@ if(BUILD_DX11 AND WIN32)
 endif()
 
 if(BUILD_DX12)
-   set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
-       DirectXTex/d3dx12.h
-       DirectXTex/DirectXTexD3D12.cpp)
+   list(APPEND LIBRARY_SOURCES DirectXTex/DirectXTexD3D12.cpp)
+
+   if(NOT (DEFINED XBOX_CONSOLE_TARGET))
+       list(APPEND LIBRARY_SOURCES DirectXTex/d3dx12.h)
+   endif()
 endif()
 
 if(ENABLE_OPENEXR_SUPPORT)
-   set(LIBRARY_HEADERS ${LIBRARY_HEADERS}
-       Auxiliary/DirectXTexEXR.h)
-
-   set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
-       Auxiliary/DirectXTexEXR.cpp)
+   list(APPEND LIBRARY_HEADERS Auxiliary/DirectXTexEXR.h)
+   list(APPEND LIBRARY_SOURCES Auxiliary/DirectXTexEXR.cpp)
 endif()
 
 if(BUILD_DX11 AND WIN32)
@@ -144,8 +184,7 @@ if(BUILD_DX11 AND WIN32)
         file(TO_CMAKE_PATH ${COMPILED_SHADERS} COMPILED_SHADERS)
     endif()
 
-    set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
-        ${COMPILED_SHADERS}/BC6HEncode_EncodeBlockCS.inc)
+    list(APPEND LIBRARY_SOURCES ${COMPILED_SHADERS}/BC6HEncode_EncodeBlockCS.inc)
 
     if(NOT USE_PREBUILT_SHADERS)
         add_custom_command(
@@ -185,6 +224,27 @@ endif()
 if(ENABLE_OPENEXR_SUPPORT)
   find_package(OpenEXR REQUIRED)
   target_link_libraries(${PROJECT_NAME} PUBLIC OpenEXR::OpenEXR)
+endif()
+
+if(BUILD_XBOX_EXTS_SCARLETT AND WIN32)
+    if (EXISTS "${GameDK_DIR}/GXDK/toolKit/include/gxdk.h")
+        message(STATUS "Building Xbox extensions for Xbox Series X|S")
+        target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_GXDK _USE_SCARLETT)
+        target_include_directories(${PROJECT_NAME} PRIVATE ${GameDK_DIR}/GXDK/toolKit/include ${GameDK_DIR}/GXDK/toolKit/include/Scarlett)
+    else()
+        message(FATAL_ERROR "Building Xbox extensions requires GameDKLatest")
+    endif()
+elseif(BUILD_XBOX_EXTS_XBOXONE AND WIN32)
+    if (EXISTS "${GameDK_DIR}/GXDK/toolKit/include/gxdk.h")
+        message(STATUS "Building Xbox extensions for XboxOne using the Microsoft GDK")
+        target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_GXDK)
+        target_include_directories(${PROJECT_NAME} PRIVATE ${GameDK_DIR}/GXDK/toolKit/include ${GameDK_DIR}/GXDK/toolKit/include/XboxOne)
+    elseif (EXISTS "${XboxOneXDK_DIR}/PC/include/xdk.h")
+        message(STATUS "Building Xbox extensions for XboxOne using the Xbox One XDK")
+        target_include_directories(${PROJECT_NAME} PRIVATE ${XboxOneXDK_DIR}/PC/include)
+    else()
+        message(FATAL_ERROR "Building Xbox extensions requires GameDKLatest or XboxOneXDKLatest")
+    endif()
 endif()
 
 if(NOT MINGW)
@@ -280,10 +340,39 @@ install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}-config-version.cmake
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PACKAGE_NAME})
 
-#--- Command-line tools
-if(BUILD_TOOLS AND BUILD_DX11 AND WIN32)
-  set(TOOL_EXES texassemble texconv texdiag)
+# Create pkg-config file
+include(build/JoinPaths.cmake)
+# from: https://github.com/jtojnar/cmake-snips#concatenating-paths-when-building-pkg-config-files
+join_paths(DIRECTXTEX_INCLUDEDIR_FOR_PKG_CONFIG "\${prefix}" "${CMAKE_INSTALL_INCLUDEDIR}")
+join_paths(DIRECTXTEX_LIBDIR_FOR_PKG_CONFIG "\${prefix}"     "${CMAKE_INSTALL_LIBDIR}")
 
+set(DIRECTXTEX_DEP_L "")
+if(ENABLE_OPENEXR_SUPPORT)
+  list(APPEND DIRECTXTEX_DEP_L "OpenEXR")
+endif()
+if(directxmath_FOUND)
+  list(APPEND DIRECTXTEX_DEP_L "DirectXMath")
+endif()
+if(directx-headers_FOUND)
+  list(APPEND DIRECTXTEX_DEP_L "DirectX-Headers")
+endif()
+list(LENGTH DIRECTXTEX_DEP_L DEP_L)
+if(DEP_L)
+  STRING(REPLACE ";" ", " DIRECTXTEX_DEP " ${DIRECTXTEX_DEP_L}")
+endif()
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/build/DirectXTex.pc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/DirectXTex.pc" @ONLY)
+
+# Install the pkg-config file
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/DirectXTex.pc"
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+
+#--- Command-line tools
+set(TOOL_EXES "")
+
+if(BUILD_TOOLS AND WIN32)
   add_executable(texassemble
     Texassemble/texassemble.cpp
     Texassemble/texassemble.rc
@@ -291,7 +380,10 @@ if(BUILD_TOOLS AND BUILD_DX11 AND WIN32)
     Texassemble/AnimatedGif.cpp)
   target_link_libraries(texassemble PRIVATE ${PROJECT_NAME} ole32.lib version.lib)
   source_group(texassemble REGULAR_EXPRESSION Texassemble/*.*)
+  list(APPEND TOOL_EXES texassemble)
+endif()
 
+if(BUILD_TOOLS AND BUILD_DX11 AND WIN32)
   add_executable(texconv
     Texconv/texconv.cpp
     Texconv/texconv.rc
@@ -300,18 +392,24 @@ if(BUILD_TOOLS AND BUILD_DX11 AND WIN32)
     Texconv/PortablePixMap.cpp)
   target_link_libraries(texconv PRIVATE ${PROJECT_NAME} ole32.lib shell32.lib version.lib)
   source_group(texconv REGULAR_EXPRESSION Texconv/*.*)
+  list(APPEND TOOL_EXES texconv)
 
+  if(BC_USE_OPENMP)
+    target_link_libraries(texconv PRIVATE OpenMP::OpenMP_CXX)
+  endif()
+endif()
+
+if(BUILD_TOOLS AND WIN32)
   add_executable(texdiag
     Texdiag/texdiag.cpp
     Texdiag/texdiag.rc
     Texdiag/settings.manifest)
   target_link_libraries(texdiag PRIVATE ${PROJECT_NAME} ole32.lib version.lib)
   source_group(texdiag REGULAR_EXPRESSION Texdiag/*.*)
+  list(APPEND TOOL_EXES texdiag)
+endif()
 
-  if(BC_USE_OPENMP)
-    target_link_libraries(texconv PRIVATE OpenMP::OpenMP_CXX)
-  endif()
-
+if(BUILD_TOOLS AND WIN32)
   if(ENABLE_OPENEXR_SUPPORT)
     foreach(t IN LISTS TOOL_EXES)
       target_include_directories(${t} PRIVATE Auxiliary)
@@ -365,7 +463,7 @@ endif()
 if(MSVC)
     foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
       target_compile_options(${t} PRIVATE /Wall /GR- /fp:fast "$<$<NOT:$<CONFIG:DEBUG>>:/guard:cf>")
-      target_link_options(${t} PRIVATE /DYNAMICBASE /NXCOMPAT)
+      target_link_options(${t} PRIVATE /DYNAMICBASE /NXCOMPAT /INCREMENTAL:NO)
     endforeach()
 
     if((CMAKE_SIZEOF_VOID_P EQUAL 4) AND (NOT (${DIRECTX_ARCH} MATCHES "^arm")))
@@ -430,8 +528,27 @@ elseif(NOT (${DIRECTX_ARCH} MATCHES "^arm"))
     endforeach()
 endif()
 
+if(MINGW)
+    foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
+      target_link_options(${t} PRIVATE -municode)
+    endforeach()
+endif()
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(WarningsLib -Wall -Wpedantic -Wextra)
+
+    if((BUILD_XBOX_EXTS_XBOXONE OR BUILD_XBOX_EXTS_SCARLETT) AND WIN32)
+        list(APPEND WarningsLib "-Wno-microsoft-enum-value" "-Wno-non-virtual-dtor" "-Wno-ignored-pragmas" "-Wno-deprecated-dynamic-exception-spec")
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0)
+            list(APPEND WarningsLib "-Wno-reserved-identifier")
+        endif()
+    endif()
+
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0)
+        list(APPEND WarningsLib "-Wno-unsafe-buffer-usage")
+    endif()
+    target_compile_options(${PROJECT_NAME} PRIVATE ${WarningsLib})
+
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0)
         list(APPEND WarningsLib "-Wno-unsafe-buffer-usage")
     endif()
@@ -441,10 +558,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     foreach(t IN LISTS TOOL_EXES)
       target_compile_options(${t} PRIVATE ${WarningsEXE})
     endforeach()
-elseif(MINGW)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
       target_compile_options(${t} PRIVATE -Wno-ignored-attributes)
-      target_link_options(${t} PRIVATE -municode)
     endforeach()
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
@@ -468,6 +584,9 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
           target_compile_options(${t} PRIVATE /Zc:preprocessor /wd5105)
         endforeach()
+        if(BUILD_XBOX_EXTS_XBOXONE)
+            target_compile_options(${PROJECT_NAME} PRIVATE /wd5104 /wd5204)
+        endif()
     endif()
 
     if((CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.27) AND (NOT (${DIRECTX_ARCH} MATCHES "^arm")))
@@ -496,13 +615,20 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         endif()
     endif()
 
-    set(WarningsEXE "/wd4061" "/wd4062" "/wd4365" "/wd4514" "/wd4625" "/wd4626" "/wd4627" "/wd4668" "/wd4710" "/wd4751" "/wd4820" "/wd5026" "/wd5027" "/wd5039" "/wd5045" "/wd5219")
+    set(WarningsEXE "/wd4061" "/wd4062" "/wd4365" "/wd4514" "/wd4625" "/wd4626" "/wd4627" "/wd4668" "/wd4710" "/wd4711" "/wd4751" "/wd4820" "/wd5026" "/wd5027" "/wd5039" "/wd5045" "/wd5219")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.34)
         list(APPEND WarningsEXE "/wd5262" "/wd5264")
     endif()
     foreach(t IN LISTS TOOL_EXES)
       target_compile_options(${t} PRIVATE ${WarningsEXE})
     endforeach()
+
+    if (BUILD_FUZZING AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.32)
+        foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
+           target_compile_options(${t} PRIVATE /fsanitize=address /fsanitize-coverage=inline-8bit-counters /fsanitize-coverage=edge /fsanitize-coverage=trace-cmp /fsanitize-coverage=trace-div)
+           target_link_libraries(${t} PRIVATE sancov.lib)
+        endforeach()
+    endif()
 endif()
 
 if(WIN32)
@@ -540,4 +666,8 @@ if(BUILD_TESTING AND WIN32 AND (NOT WINDOWS_STORE) AND (NOT (DEFINED XBOX_CONSOL
    AND (EXISTS "${CMAKE_CURRENT_LIST_DIR}/Tests/CMakeLists.txt"))
   enable_testing()
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/Tests)
+elseif(BUILD_FUZZING AND WIN32 AND (NOT WINDOWS_STORE) AND (NOT (DEFINED XBOX_CONSOLE_TARGET))
+   AND (EXISTS "${CMAKE_CURRENT_LIST_DIR}/Tests/fuzzloaders/CMakeLists.txt"))
+  message(STATUS "Building for fuzzing")
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/Tests/fuzzloaders)
 endif()

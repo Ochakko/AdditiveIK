@@ -152,8 +152,13 @@ static bool SaveScene(FbxManager* pSdkManager, FbxDocument* pScene, const char* 
 static bool CreateScene(bool limitdegflag, FbxManager* pSdkManager, FbxScene* pScene, CModel* pmodel, char* fbxdate );
 static bool CreateBVHScene(FbxManager* pSdkManager, FbxScene* pScene, char* fbxdate );
 static FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene, CModel* pmodel, CMQOObject* curobj, FbxNode* lNode, FbxNode* srcnode);
-static int CreateFbxMaterial(FbxManager* pSdkManager, FbxScene* pScene, FbxNode* lNode, FbxMesh* lMesh, FbxGeometryElementMaterial* lMaterialElement, CModel* pmodel, CMQOObject* curobj);
-static int CreateFbxMaterialFromMQOMaterial(FbxManager* pSdkManager, FbxScene* pScene, FbxNode* lNode, FbxGeometryElementMaterial* lMaterialElement, CModel* pmodel, CMQOObject* curobj, CMQOMaterial* mqomat);
+static int CreateFbxMaterial(FbxManager* pSdkManager, FbxScene* pScene, FbxNode* lNode, 
+	FbxMesh* lLoadMesh, FbxMesh* lMesh, 
+	CModel* pmodel, CMQOObject* curobj);
+static int CreateFbxMaterialFromMQOMaterial(FbxManager* pSdkManager, FbxScene* pScene, 
+	FbxNode* lNode,
+	FbxMesh* lLoadMesh, FbxMesh* lMesh,
+	CModel* pmodel, CMQOObject* curobj, CMQOMaterial* mqomat);
 
 ////static FbxNode* CreateSkeleton(FbxScene* pScene, CModel* pmodel);
 ////static void CreateSkeletonReq( FbxScene* pScene, CBone* pbone, CBone* pparentbone, FbxNode* pparnode );
@@ -2076,57 +2081,72 @@ FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene,
 	//	lSaveElementNormal->GetIndexArray().Add(srcindex);
 	//}
 
-
-	FbxGeometryElementUV* lLoadUVDiffuseElement = lLoadMesh->GetElementUV(0);
-	FbxGeometryElementUV* lSaveUVDiffuseElement = 0;
-	if (lLoadUVDiffuseElement) {
-		lSaveUVDiffuseElement = lSaveMesh->CreateElementUV(lLoadUVDiffuseElement->GetName());
-		if (lSaveUVDiffuseElement) {
-			lSaveUVDiffuseElement->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
-			lSaveUVDiffuseElement->SetReferenceMode(FbxGeometryElement::eDirect);
-		}
-	}
-	//if (!lLoadUVDiffuseElement || !lSaveUVDiffuseElement) {
-	//	_ASSERT(0);
-	//	return lNode;
+	int uvlayercount = lLoadMesh->GetUVLayerCount();
+	//int newlayerno;
+	//for (newlayerno = 0; newlayerno < uvlayercount; newlayerno++) {
+	//	int resultlayer = lSaveMesh->CreateLayer();
+	//	if (resultlayer == -1) {
+	//		_ASSERT(0);
+	//		return lNode;
+	//	}
 	//}
+	int layerno;
+	int validuvlayer = 0;
+	for (layerno = 0; layerno < uvlayercount; layerno++) {
+		FbxGeometryElementUV* lLoadUVDiffuseElement = lLoadMesh->GetElementUV(layerno);
+		FbxGeometryElementUV* lSaveUVDiffuseElement = 0;
 
-
-	//int uvdirectnum = lLoadUVDiffuseElement->GetDirectArray().GetCount();
-	//int uvindexnum = lLoadUVDiffuseElement->GetIndexArray().GetCount();
-	//lSaveUVDiffuseElement->GetDirectArray().SetCount(uvdirectnum);
-	//lSaveUVDiffuseElement->GetIndexArray().SetCount(uvindexnum);
-
-	//int uvdirectno;
-	//for (uvdirectno = 0; uvdirectno < uvdirectnum; uvdirectno++) {
-	//	FbxVector2 srcuv = lLoadUVDiffuseElement->GetDirectArray().GetAt(uvdirectno);
-	//	lSaveUVDiffuseElement->GetDirectArray().Add(srcuv);
-	//}
-	//int uvindexno;
-	//for (uvindexno = 0; uvindexno < uvindexnum; uvindexno++) {
-	//	int srcindex = lLoadUVDiffuseElement->GetIndexArray().GetAt(uvindexno);
-	//	lSaveUVDiffuseElement->GetIndexArray().Add(srcindex);
-	//}
-
-	int facenum0 = lLoadMesh->GetPolygonCount();
-	int faceno0;
-	for (faceno0 = 0; faceno0 < facenum0; faceno0++) {
-		int vnum = lLoadMesh->GetPolygonSize(faceno0);
-		int vno;
-		for (vno = 0; vno < vnum; vno++) {
-			FbxVector4 srcnormal;
-			lLoadMesh->GetPolygonVertexNormal(faceno0, vno, srcnormal);
-			lSaveElementNormal->GetDirectArray().Add(srcnormal);
-
-			FbxVector2 srcuv;
-			bool bunmapped = false;
-			if (lLoadUVDiffuseElement && lSaveUVDiffuseElement) {
-				lLoadMesh->GetPolygonVertexUV(faceno0, vno, lLoadUVDiffuseElement->GetName(), srcuv, bunmapped);
-				lSaveUVDiffuseElement->GetDirectArray().Add(srcuv);
+		if (lLoadUVDiffuseElement) {
+			lSaveUVDiffuseElement = lSaveMesh->CreateElementUV(lLoadUVDiffuseElement->GetName());
+			////FbxLayer* lSaveLayer = lSaveMesh->GetLayer(layerno);
+			//int resultlayer = lSaveMesh->CreateLayer();
+			//if (resultlayer == -1) {
+			//	_ASSERT(0);
+			//	return lNode;
+			//}
+			//if (uvlayercount != 1) {
+			//	int dbgflag1 = 1;
+			//}
+			//FbxLayer* lSaveLayer = lSaveMesh->GetLayer(layerno);
+			//lSaveLayer->CreateLayerElementOfType(FbxLayerElement::EType::eUV, true);
+			//lSaveUVDiffuseElement = lSaveMesh->GetElementUV(layerno);
+			if (lSaveUVDiffuseElement) {
+				char uvname[256];
+				strcpy_s(uvname, 256, lLoadUVDiffuseElement->GetName());
+				lSaveUVDiffuseElement->SetName(uvname);
+				lSaveUVDiffuseElement->SetMappingMode(FbxGeometryElement::eByPolygonVertex);
+				lSaveUVDiffuseElement->SetReferenceMode(FbxGeometryElement::eDirect);
+			}
+			else {
+				_ASSERT(0);
+				return lNode;
 			}
 		}
-	}
+		else {
+			continue;
+		}
+		int facenum0 = lLoadMesh->GetPolygonCount();
+		int faceno0;
+		for (faceno0 = 0; faceno0 < facenum0; faceno0++) {
+			int vnum = lLoadMesh->GetPolygonSize(faceno0);
+			int vno;
+			for (vno = 0; vno < vnum; vno++) {
+				if (validuvlayer == 0) {
+					FbxVector4 srcnormal;
+					lLoadMesh->GetPolygonVertexNormal(faceno0, vno, srcnormal);
+					lSaveElementNormal->GetDirectArray().Add(srcnormal);
+				}
 
+				FbxVector2 srcuv;
+				bool bunmapped = false;
+				if (lLoadUVDiffuseElement && lSaveUVDiffuseElement) {
+					lLoadMesh->GetPolygonVertexUV(faceno0, vno, lLoadUVDiffuseElement->GetName(), srcuv, bunmapped);
+					lSaveUVDiffuseElement->GetDirectArray().Add(srcuv);
+				}
+			}
+		}
+		validuvlayer++;
+	}
 
 
 	int facenum1 = lLoadMesh->GetPolygonCount();
@@ -2156,34 +2176,43 @@ FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene,
 
 
 	// Set material mapping.
-	FbxGeometryElementMaterial* lLoadMaterialElement = lLoadMesh->GetElementMaterial(0);
-	FbxGeometryElementMaterial* lSaveMaterialElement = lSaveMesh->CreateElementMaterial();
-	if (!lLoadMaterialElement || !lSaveMaterialElement) {
-		_ASSERT(0);
-		return lNode;
-	}
-	lSaveMaterialElement->SetMappingMode(lLoadMaterialElement->GetMappingMode());
-	lSaveMaterialElement->SetReferenceMode(lLoadMaterialElement->GetReferenceMode());
-
-	int result2 = CreateFbxMaterial(pSdkManager, pScene, lNode, lSaveMesh, lSaveMaterialElement, pmodel, curobj);
+	int result2 = CreateFbxMaterial(pSdkManager, pScene, lNode, lLoadMesh, lSaveMesh, pmodel, curobj);
 	if (result2 != 0) {
 		_ASSERT(0);
 		return lNode;
 	}
 
-	//int materialindex;
-	//for (materialindex = 0; materialindex < materialindexnum; materialindex++) {
-	//	int srcindex = lLoadMaterialElement->GetIndexArray().GetAt(materialindex);
-	//	lSaveMaterialElement->GetIndexArray().Add(srcindex);
-	//}
+	////int materialindex;
+	////for (materialindex = 0; materialindex < materialindexnum; materialindex++) {
+	////	int srcindex = lLoadMaterialElement->GetIndexArray().GetAt(materialindex);
+	////	lSaveMaterialElement->GetIndexArray().Add(srcindex);
+	////}
 
-	int materialindexnum = lLoadMaterialElement->GetIndexArray().GetCount();
-	int matindex;
-	for (matindex = 0; matindex < materialindexnum; matindex++) {
-		int srcindex = lLoadMaterialElement->GetIndexArray().GetAt(matindex);
-		lSaveMaterialElement->GetIndexArray().Add(srcindex);
+	int elemmatnum = lLoadMesh->GetElementMaterialCount();
+	int elemmatno;
+	for (elemmatno = 0; elemmatno < elemmatnum; elemmatno++) {
+		//FbxGeometryElementMaterial* lLoadMaterialElement = lLoadMesh->GetElementMaterial(0);
+		//FbxGeometryElementMaterial* lSaveMaterialElement = lSaveMesh->CreateElementMaterial();
+		FbxGeometryElementMaterial* lLoadMaterialElement = lLoadMesh->GetElementMaterial(elemmatno);
+		if (!lLoadMaterialElement) {
+			_ASSERT(0);
+			return lNode;
+		}
+		FbxGeometryElementMaterial* lSaveMaterialElement = lSaveMesh->CreateElementMaterial();
+		if (!lSaveMaterialElement) {
+			_ASSERT(0);
+			return lNode;
+		}
+		lSaveMaterialElement->SetMappingMode(lLoadMaterialElement->GetMappingMode());
+		lSaveMaterialElement->SetReferenceMode(lLoadMaterialElement->GetReferenceMode());
+
+		int materialindexnum = lLoadMaterialElement->GetIndexArray().GetCount();
+		int matindex;
+		for (matindex = 0; matindex < materialindexnum; matindex++) {
+			int srcindex = lLoadMaterialElement->GetIndexArray().GetAt(matindex);
+			lSaveMaterialElement->GetIndexArray().Add(srcindex);
+		}
 	}
-
 
 	return lNode;
 }
@@ -2405,9 +2434,13 @@ FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene,
 //	return lNode;
 //}
 
-int CreateFbxMaterial(FbxManager* pSdkManager, FbxScene* pScene, FbxNode* lNode, FbxMesh* lMesh, FbxGeometryElementMaterial* lMaterialElement, CModel* pmodel, CMQOObject* curobj)
+int CreateFbxMaterial(FbxManager* pSdkManager, FbxScene* pScene, 
+	FbxNode* lNode, 
+	FbxMesh* lLoadMesh, FbxMesh* lMesh, 
+	CModel* pmodel, CMQOObject* curobj)
 {
-	if (!curobj || !pmodel) {
+	if (!curobj || !pmodel || !pSdkManager || !pScene ||
+		!lLoadMesh || !lMesh) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -2421,17 +2454,22 @@ int CreateFbxMaterial(FbxManager* pSdkManager, FbxScene* pScene, FbxNode* lNode,
 		CMQOMaterial* curmqomat = nullptr;
 		curmqomat = curobj->GetOnLoadMaterialByIndex(matindex);
 		if (curmqomat) {
-			CreateFbxMaterialFromMQOMaterial(pSdkManager, pScene, lNode, lMaterialElement, pmodel, curobj, curmqomat);
+			CreateFbxMaterialFromMQOMaterial(pSdkManager, pScene, lNode, 
+				lLoadMesh, lMesh, pmodel, curobj, curmqomat);
 		}
 	}
 
 	return 0;
 }
 
-int	CreateFbxMaterialFromMQOMaterial(FbxManager* pSdkManager, FbxScene* pScene, FbxNode* lNode, FbxGeometryElementMaterial* lMaterialElement, CModel* pmodel, CMQOObject* curobj, CMQOMaterial* mqomat)
+int	CreateFbxMaterialFromMQOMaterial(FbxManager* pSdkManager, FbxScene* pScene, 
+	FbxNode* lNode, 
+	FbxMesh* lLoadMesh, FbxMesh* lMesh,
+	CModel* pmodel, 
+	CMQOObject* curobj, CMQOMaterial* mqomat)
 {
 	if (!pSdkManager || !pScene || 
-		!lNode || !lMaterialElement || 
+		!lNode || 
 		!pmodel || !curobj || !mqomat) {
 		_ASSERT(0);
 		return 1;
@@ -2483,11 +2521,19 @@ int	CreateFbxMaterialFromMQOMaterial(FbxManager* pSdkManager, FbxScene* pScene, 
 		if (curtex) {
 			switch (texkind) {
 			case CREATETEX_ALBEDO:
+				//if (*mqomat->GetAlbedoTex()) {
+					lMaterial->Diffuse.ConnectSrcObject(curtex);
+				//}
+				break;
 			case CREATETEX_METAL:
-				lMaterial->Diffuse.ConnectSrcObject(curtex);
+				//if (*mqomat->GetMetalTex()) {
+					lMaterial->Diffuse.ConnectSrcObject(curtex);
+				//}
 				break;
 			case CREATETEX_NORMAL:
-				lMaterial->NormalMap.ConnectSrcObject(curtex);//2023/12/04 normalmapとしてコネクト
+				//if (*mqomat->GetNormalTex()) {
+					lMaterial->NormalMap.ConnectSrcObject(curtex);//2023/12/04 normalmapとしてコネクト
+				//}
 				break;
 			default:
 				_ASSERT(0);
@@ -2532,7 +2578,6 @@ int	CreateFbxMaterialFromMQOMaterial(FbxManager* pSdkManager, FbxScene* pScene, 
 	//lMaterial->EmissiveFactor.Set(0.1);
 	lMaterial->EmissiveFactor.Set(g_EmissiveFactorAtSaving);
 
-
 	lNode->AddMaterial(lMaterial);
 	// We are in eByPolygon, so there's only need for index (a plane has 1 polygon).
 	
@@ -2544,6 +2589,46 @@ int	CreateFbxMaterialFromMQOMaterial(FbxManager* pSdkManager, FbxScene* pScene, 
 	//2023/12/02 curtexは必要　シーン破棄時に破棄される
 	//if (curtex) {
 	//	curtex->Destroy();//2023/11/23
+	//}
+
+	//FbxGeometryElementMaterial* srcelementmat = nullptr;
+	//int loadmatnum = lLoadMesh->GetElementMaterialCount();
+	//int loadmatno;
+	//for (loadmatno = 0; loadmatno < loadmatnum; loadmatno++) {
+	//	FbxGeometryElementMaterial* chkmat = lLoadMesh->GetElementMaterial(loadmatno);
+	//	if (chkmat) {
+	//		char chkname[256];
+	//		strcpy_s(chkname, 256, chkmat->GetName());
+	//		if (strcmp(chkname, matname) == 0) {
+	//			srcelementmat = chkmat;
+	//			break;
+	//		}
+	//	}
+	//}
+	//FbxGeometryElementMaterial* saveelementmat = nullptr;
+	//int savematnum = lMesh->GetElementMaterialCount();
+	//int savematno;
+	//for (savematno = 0; savematno < savematnum; savematno++) {
+	//	FbxGeometryElementMaterial* chkmat = lMesh->GetElementMaterial(savematno);
+	//	if (chkmat) {
+	//		char chkname[256];
+	//		strcpy_s(chkname, 256, chkmat->GetName());
+	//		if (strcmp(chkname, matname) == 0) {
+	//			saveelementmat = chkmat;
+	//			break;
+	//		}
+	//	}
+	//}
+	//if (srcelementmat && saveelementmat) {
+	//	int materialindexnum = srcelementmat->GetIndexArray().GetCount();
+	//	int matindex;
+	//	for (matindex = 0; matindex < materialindexnum; matindex++) {
+	//		int srcindex = srcelementmat->GetIndexArray().GetAt(matindex);
+	//		saveelementmat->GetIndexArray().Add(srcindex);
+	//	}
+	//}
+	//else {
+	//	_ASSERT(0);
 	//}
 
 	return 0;
@@ -2560,6 +2645,8 @@ FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMateri
 
 	FbxFileTexture* lTexture = nullptr;
 	char texturename[256] = { 0 };
+	FbxTexture::EWrapMode addressU;
+	FbxTexture::EWrapMode addressV;
 
 	switch (texkind) {
 	case CREATETEX_ALBEDO:
@@ -2568,6 +2655,19 @@ FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMateri
 			return NULL;
 		}
 		strcpy_s(texturename, 256, mqomat->GetAlbedoTex());
+
+		if (mqomat->GetAddressU_albedo() == D3D12_TEXTURE_ADDRESS_MODE_WRAP) {
+			addressU = FbxTexture::EWrapMode::eRepeat;
+		}
+		else {
+			addressU = FbxTexture::EWrapMode::eClamp;
+		}
+		if (mqomat->GetAddressV_albedo() == D3D12_TEXTURE_ADDRESS_MODE_WRAP) {
+			addressV = FbxTexture::EWrapMode::eRepeat;
+		}
+		else {
+			addressV = FbxTexture::EWrapMode::eClamp;
+		}
 	}
 		break;
 	case CREATETEX_NORMAL:
@@ -2576,6 +2676,19 @@ FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMateri
 			return NULL;
 		}
 		strcpy_s(texturename, 256, mqomat->GetNormalTex());
+
+		if (mqomat->GetAddressU_normal() == D3D12_TEXTURE_ADDRESS_MODE_WRAP) {
+			addressU = FbxTexture::EWrapMode::eRepeat;
+		}
+		else {
+			addressU = FbxTexture::EWrapMode::eClamp;
+		}
+		if (mqomat->GetAddressV_normal() == D3D12_TEXTURE_ADDRESS_MODE_WRAP) {
+			addressV = FbxTexture::EWrapMode::eRepeat;
+		}
+		else {
+			addressV = FbxTexture::EWrapMode::eClamp;
+		}
 	}
 	break;
 	case CREATETEX_METAL:
@@ -2584,6 +2697,19 @@ FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMateri
 			return NULL;
 		}
 		strcpy_s(texturename, 256, mqomat->GetMetalTex());
+
+		if (mqomat->GetAddressU_metal() == D3D12_TEXTURE_ADDRESS_MODE_WRAP) {
+			addressU = FbxTexture::EWrapMode::eRepeat;
+		}
+		else {
+			addressU = FbxTexture::EWrapMode::eClamp;
+		}
+		if (mqomat->GetAddressV_metal() == D3D12_TEXTURE_ADDRESS_MODE_WRAP) {
+			addressV = FbxTexture::EWrapMode::eRepeat;
+		}
+		else {
+			addressV = FbxTexture::EWrapMode::eClamp;
+		}
 	}
 	break;
 	default:
@@ -2638,6 +2764,9 @@ FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMateri
     lTexture->SetTranslation(0.0, 0.0);
     lTexture->SetScale(1.0, 1.0);
     lTexture->SetRotation(0.0, 0.0);
+
+	lTexture->SetWrapMode(addressU, addressV);
+
 
     return lTexture;
 }

@@ -180,6 +180,7 @@ public:
 	void CreateDescriptorHeaps(int objecttype);
 
 	void InitShadersAndPipelines(
+		int srcuvnum,
 		int vertextype,
 		const char* fxPBRPath,
 		const char* fxStdPath,
@@ -664,6 +665,85 @@ public:
 		return m_enableEmission;
 	}
 
+
+	void SetAddressU_albedo(FbxTexture::EWrapMode srcmode) {//eClamp or eRepeat
+		if (srcmode == FbxTexture::EWrapMode::eClamp) {
+			m_addressU_albedo = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		}
+		else {
+			m_addressU_albedo = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		}
+	}
+	D3D12_TEXTURE_ADDRESS_MODE GetAddressU_albedo()
+	{
+		return m_addressU_albedo;
+	}
+	void SetAddressV_albedo(FbxTexture::EWrapMode srcmode) {//eClamp or eRepeat
+		if (srcmode == FbxTexture::EWrapMode::eClamp) {
+			m_addressV_albedo = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		}
+		else {
+			m_addressV_albedo = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		}
+	}
+	D3D12_TEXTURE_ADDRESS_MODE GetAddressV_albedo()
+	{
+		return m_addressV_albedo;
+	}
+
+
+	void SetAddressU_normal(FbxTexture::EWrapMode srcmode) {//eClamp or eRepeat
+		if (srcmode == FbxTexture::EWrapMode::eClamp) {
+			m_addressU_normal = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		}
+		else {
+			m_addressU_normal = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		}
+	}
+	D3D12_TEXTURE_ADDRESS_MODE GetAddressU_normal()
+	{
+		return m_addressU_normal;
+	}
+	void SetAddressV_normal(FbxTexture::EWrapMode srcmode) {//eClamp or eRepeat
+		if (srcmode == FbxTexture::EWrapMode::eClamp) {
+			m_addressV_normal = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		}
+		else {
+			m_addressV_normal = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		}
+	}
+	D3D12_TEXTURE_ADDRESS_MODE GetAddressV_normal()
+	{
+		return m_addressV_normal;
+	}
+
+
+	void SetAddressU_metal(FbxTexture::EWrapMode srcmode) {//eClamp or eRepeat
+
+		if (srcmode == FbxTexture::EWrapMode::eClamp) {
+			m_addressU_metal = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		}
+		else {
+			m_addressU_metal = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		}
+	}
+	D3D12_TEXTURE_ADDRESS_MODE GetAddressU_metal()
+	{
+		return m_addressU_metal;
+	}
+	void SetAddressV_metal(FbxTexture::EWrapMode srcmode) {//eClamp or eRepeat
+		if (srcmode == FbxTexture::EWrapMode::eClamp) {
+			m_addressV_metal = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		}
+		else {
+			m_addressV_metal = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		}
+	}
+	D3D12_TEXTURE_ADDRESS_MODE GetAddressV_metal()
+	{
+		return m_addressV_metal;
+	}
+
 public:
 	//###################################################
 	//CreateDecl()内で　頂点フォーマットによって　定数を設定する
@@ -671,7 +751,7 @@ public:
 	//拡張SRVが設定されるレジスタの開始番号。
 	//const int EXPAND_SRV_REG__START_NO = 10;
 	//const int EXPAND_SRV_REG__START_NO = 6;
-	int EXPAND_SRV_REG__START_NO = 4;
+	int EXPAND_SRV_REG__START_NO = 5;
 	//１つのマテリアルで使用されるSRVの数。
 	int NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
 	//１つのマテリアルで使用されるCBVの数。
@@ -749,6 +829,15 @@ private:
 	Texture* m_albedoMap;//bank管理の外部ポインタ
 	Texture* m_normalMap;//bank管理の外部ポインタ
 	Texture* m_metalMap;//bank管理の外部ポインタ
+
+	D3D12_TEXTURE_ADDRESS_MODE m_addressU_albedo;
+	D3D12_TEXTURE_ADDRESS_MODE m_addressV_albedo;
+	D3D12_TEXTURE_ADDRESS_MODE m_addressU_normal;
+	D3D12_TEXTURE_ADDRESS_MODE m_addressV_normal;
+	D3D12_TEXTURE_ADDRESS_MODE m_addressU_metal;
+	D3D12_TEXTURE_ADDRESS_MODE m_addressV_metal;
+
+
 
 	ConstantBuffer m_constantBuffer;				//定数バッファ。
 	RootSignature m_rootSignature;					//ルートシグネチャ。

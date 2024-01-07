@@ -108,6 +108,7 @@ private:
 	Texture* m_texture;
 
 	bool m_validflag;
+
 };
 
 #endif

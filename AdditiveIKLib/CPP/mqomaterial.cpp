@@ -359,6 +359,13 @@ int CMQOMaterial::InitParams()
 	m_tempdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 
 
+	m_addressU_albedo = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	m_addressV_albedo = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	m_addressU_normal = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	m_addressV_normal = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	m_addressU_metal = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	m_addressV_metal = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+
 	return 0;
 }
 
@@ -1140,25 +1147,26 @@ void CMQOMaterial::InitZPreShadersAndPipelines(
 	D3D12_STATIC_SAMPLER_DESC samplerDescArray[2];
 	//デフォルトのサンプラ
 	samplerDescArray[0].Filter = samplerFilter;
-	samplerDescArray[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	samplerDescArray[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	samplerDescArray[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDescArray[0].AddressU = GetAddressU_albedo();//2024/01/06
+	samplerDescArray[0].AddressV = GetAddressV_albedo();//2024/01/06
+	samplerDescArray[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 	samplerDescArray[0].MipLODBias = 0;
 	samplerDescArray[0].MaxAnisotropy = 0;
 	samplerDescArray[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 	samplerDescArray[0].BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
 	samplerDescArray[0].MinLOD = 0.0f;
 	samplerDescArray[0].MaxLOD = D3D12_FLOAT32_MAX;
-	samplerDescArray[0].ShaderRegister = 0;
+	samplerDescArray[0].ShaderRegister = 0;//!!!!!!!!!
 	samplerDescArray[0].RegisterSpace = 0;
 	samplerDescArray[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
 	//シャドウマップ用のサンプラ。
 	samplerDescArray[1] = samplerDescArray[0];
 	//比較対象の値が小さければ０、大きければ１を返す比較関数を設定する。
 	samplerDescArray[1].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
 	samplerDescArray[1].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER;
 	samplerDescArray[1].MaxAnisotropy = 1;
-	samplerDescArray[1].ShaderRegister = 1;
+	samplerDescArray[1].ShaderRegister = 1;//!!!!!!!!!
 
 	m_ZPrerootSignature.Init(
 		samplerDescArray,
@@ -1182,6 +1190,7 @@ void CMQOMaterial::InitZPreShadersAndPipelines(
 
 
 void CMQOMaterial::InitShadersAndPipelines(
+	int srcuvnum,
 	int vertextype,
 	const char* fxPBRPath,
 	const char* fxStdPath,
@@ -1261,7 +1270,7 @@ void CMQOMaterial::InitShadersAndPipelines(
 	}
 
 	//ルートシグネチャを初期化。
-	D3D12_STATIC_SAMPLER_DESC samplerDescArray[2];
+	D3D12_STATIC_SAMPLER_DESC samplerDescArray[5];
 	//デフォルトのサンプラ
 	samplerDescArray[0].Filter = samplerFilter;
 	samplerDescArray[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -1273,20 +1282,55 @@ void CMQOMaterial::InitShadersAndPipelines(
 	samplerDescArray[0].BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
 	samplerDescArray[0].MinLOD = 0.0f;
 	samplerDescArray[0].MaxLOD = D3D12_FLOAT32_MAX;
-	samplerDescArray[0].ShaderRegister = 0;
+	samplerDescArray[0].ShaderRegister = 0;//!!!!!!!!
 	samplerDescArray[0].RegisterSpace = 0;
 	samplerDescArray[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	//シャドウマップ用のサンプラ。
+
 	samplerDescArray[1] = samplerDescArray[0];
+	samplerDescArray[1].ShaderRegister = 1;//!!!!!!!!
+	samplerDescArray[1].AddressU = GetAddressU_albedo();//2024/01/06
+	samplerDescArray[1].AddressV = GetAddressV_albedo();//2024/01/06
+
+	samplerDescArray[2] = samplerDescArray[0];
+	samplerDescArray[2].ShaderRegister = 2;//!!!!!!!!
+	if (srcuvnum >= 2) {
+		samplerDescArray[2].AddressU = GetAddressU_normal();//2024/01/06
+		samplerDescArray[2].AddressV = GetAddressV_normal();//2024/01/06
+	}
+	else {
+		samplerDescArray[2].AddressU = GetAddressU_albedo();//2024/01/06
+		samplerDescArray[2].AddressV = GetAddressV_albedo();//2024/01/06
+	}
+	//samplerDescArray[2].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	//samplerDescArray[2].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	//samplerDescArray[2].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+
+	samplerDescArray[3] = samplerDescArray[0];
+	samplerDescArray[3].ShaderRegister = 3;//!!!!!!!!
+	if (srcuvnum >= 2) {
+		samplerDescArray[3].AddressU = GetAddressU_metal();//2024/01/06
+		samplerDescArray[3].AddressV = GetAddressV_metal();//2024/01/06
+	}
+	else {
+		samplerDescArray[3].AddressU = GetAddressU_albedo();//2024/01/06
+		samplerDescArray[3].AddressV = GetAddressV_albedo();//2024/01/06
+	}
+	//シャドウマップ用のサンプラ。
+	samplerDescArray[4] = samplerDescArray[0];
+	samplerDescArray[4].ShaderRegister = 4;//!!!!!!!!
 	//比較対象の値が小さければ０、大きければ１を返す比較関数を設定する。
-	samplerDescArray[1].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
-	samplerDescArray[1].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER;
-	samplerDescArray[1].MaxAnisotropy = 1;
-	samplerDescArray[1].ShaderRegister = 1;
+	samplerDescArray[4].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+	samplerDescArray[4].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER;
+	samplerDescArray[4].MaxAnisotropy = 1;
+
+
+
+
+
 
 	m_rootSignature.Init(
 		samplerDescArray,
-		2,
+		5,
 		numCbv,
 		numSrv,
 		8,
@@ -1296,7 +1340,7 @@ void CMQOMaterial::InitShadersAndPipelines(
 
 	m_shadowrootSignature.Init(
 		samplerDescArray,
-		2,
+		5,
 		numCbv,
 		numSrv,
 		8,
@@ -1378,7 +1422,7 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0,
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "BLENDWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
@@ -1403,7 +1447,7 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0,
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	};
@@ -1564,7 +1608,7 @@ void CMQOMaterial::InitZPrePipelineState(int vertextype, const std::array<DXGI_F
 		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0,
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "BLENDWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
@@ -1589,7 +1633,7 @@ void CMQOMaterial::InitZPrePipelineState(int vertextype, const std::array<DXGI_F
 		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0,
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	};

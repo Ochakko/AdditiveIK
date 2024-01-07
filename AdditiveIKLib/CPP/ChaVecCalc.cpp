@@ -4196,7 +4196,7 @@ COLORREF ChaVector3::ColorRef()
 }
 
 
-int CalcTangentAndBinormal(BINORMALDISPV* vert_0, BINORMALDISPV* vert_1, BINORMALDISPV* vert_2)
+int CalcTangentAndBinormal(int srcuvnum, BINORMALDISPV* vert_0, BINORMALDISPV* vert_1, BINORMALDISPV* vert_2)
 {
 	if (!vert_0 || !vert_1 || !vert_2) {
 		_ASSERT(0);
@@ -4205,30 +4205,77 @@ int CalcTangentAndBinormal(BINORMALDISPV* vert_0, BINORMALDISPV* vert_1, BINORMA
 
 
 	//頂点スムースは気にしない。
-	Vector3 cp0[] = {
-		{ vert_0->pos.x, vert_0->uv.x, vert_0->uv.y},
-		{ vert_0->pos.y, vert_0->uv.x, vert_0->uv.y},
-		{ vert_0->pos.z, vert_0->uv.x, vert_0->uv.y}
-	};
+	Vector3 cp0[3];
+	Vector3 cp1[3];
+	Vector3 cp2[3];
+	//Vector3 cp0[] = {
+	//	{ vert_0->pos.x, vert_0->uv[1].x, vert_0->uv[1].y},
+	//	{ vert_0->pos.y, vert_0->uv[1].x, vert_0->uv[1].y},
+	//	{ vert_0->pos.z, vert_0->uv[1].x, vert_0->uv[1].y}
+	//};
+	//Vector3 cp1[] = {
+	//	{ vert_1->pos.x, vert_1->uv[1].x, vert_1->uv[1].y},
+	//	{ vert_1->pos.y, vert_1->uv[1].x, vert_1->uv[1].y},
+	//	{ vert_1->pos.z, vert_1->uv[1].x, vert_1->uv[1].y}
+	//};
+	//Vector3 cp2[] = {
+	//	{ vert_2->pos.x, vert_2->uv[1].x, vert_2->uv[1].y},
+	//	{ vert_2->pos.y, vert_2->uv[1].x, vert_2->uv[1].y},
+	//	{ vert_2->pos.z, vert_2->uv[1].x, vert_2->uv[1].y}
+	//};
+	//Vector3 cp0[] = {
+	//	{ vert_0->pos.x, vert_0->uv[0].x, vert_0->uv[0].y},
+	//	{ vert_0->pos.y, vert_0->uv[0].x, vert_0->uv[0].y},
+	//	{ vert_0->pos.z, vert_0->uv[0].x, vert_0->uv[0].y}
+	//};
+	//Vector3 cp1[] = {
+	//	{ vert_1->pos.x, vert_1->uv[0].x, vert_1->uv[0].y},
+	//	{ vert_1->pos.y, vert_1->uv[0].x, vert_1->uv[0].y},
+	//	{ vert_1->pos.z, vert_1->uv[0].x, vert_1->uv[0].y}
+	//};
+	//Vector3 cp2[] = {
+	//	{ vert_2->pos.x, vert_2->uv[0].x, vert_2->uv[0].y},
+	//	{ vert_2->pos.y, vert_2->uv[0].x, vert_2->uv[0].y},
+	//	{ vert_2->pos.z, vert_2->uv[0].x, vert_2->uv[0].y}
+	//};
 
-	Vector3 cp1[] = {
-		{ vert_1->pos.x, vert_1->uv.x, vert_1->uv.y},
-		{ vert_1->pos.y, vert_1->uv.x, vert_1->uv.y},
-		{ vert_1->pos.z, vert_1->uv.x, vert_1->uv.y}
-	};
+	if (srcuvnum >= 2) {
+		cp0[0] = Vector3(vert_0->pos.x, vert_0->uv[1].x, vert_0->uv[1].y);
+		cp0[1] = Vector3(vert_0->pos.y, vert_0->uv[1].x, vert_0->uv[1].y);
+		cp0[2] = Vector3(vert_0->pos.z, vert_0->uv[1].x, vert_0->uv[1].y);
 
-	Vector3 cp2[] = {
-		{ vert_2->pos.x, vert_2->uv.x, vert_2->uv.y},
-		{ vert_2->pos.y, vert_2->uv.x, vert_2->uv.y},
-		{ vert_2->pos.z, vert_2->uv.x, vert_2->uv.y}
-	};
+		cp1[0] = Vector3(vert_1->pos.x, vert_1->uv[1].x, vert_1->uv[1].y);
+		cp1[1] = Vector3(vert_1->pos.y, vert_1->uv[1].x, vert_1->uv[1].y);
+		cp1[2] = Vector3(vert_1->pos.z, vert_1->uv[1].x, vert_1->uv[1].y);
+
+		cp2[0] = Vector3(vert_2->pos.x, vert_2->uv[1].x, vert_2->uv[1].y);
+		cp2[1] = Vector3(vert_2->pos.y, vert_2->uv[1].x, vert_2->uv[1].y);
+		cp2[2] = Vector3(vert_2->pos.z, vert_2->uv[1].x, vert_2->uv[1].y);
+	}
+	else {
+		cp0[0] = Vector3(vert_0->pos.x, vert_0->uv[0].x, vert_0->uv[0].y);
+		cp0[1] = Vector3(vert_0->pos.y, vert_0->uv[0].x, vert_0->uv[0].y);
+		cp0[2] = Vector3(vert_0->pos.z, vert_0->uv[0].x, vert_0->uv[0].y);
+
+		cp1[0] = Vector3(vert_1->pos.x, vert_1->uv[0].x, vert_1->uv[0].y);
+		cp1[1] = Vector3(vert_1->pos.y, vert_1->uv[0].x, vert_1->uv[0].y);
+		cp1[2] = Vector3(vert_1->pos.z, vert_1->uv[0].x, vert_1->uv[0].y);
+
+		cp2[0] = Vector3(vert_2->pos.x, vert_2->uv[0].x, vert_2->uv[0].y);
+		cp2[1] = Vector3(vert_2->pos.y, vert_2->uv[0].x, vert_2->uv[0].y);
+		cp2[2] = Vector3(vert_2->pos.z, vert_2->uv[0].x, vert_2->uv[0].y);
+	}
+
+
 
 	// 平面パラメータからUV軸座標算出する。
 	Vector3 tangent, binormal;
 	for (int i = 0; i < 3; ++i) {
 		auto V1 = cp1[i] - cp0[i];
 		auto V2 = cp2[i] - cp1[i];
-		//auto V1 = cp0[i] - cp1[i];
+		////auto V1 = cp0[i] - cp1[i];
+		////auto V2 = cp1[i] - cp2[i];
+		//auto V1 = cp2[i] - cp0[i];
 		//auto V2 = cp1[i] - cp2[i];
 		auto ABC = Cross(V1, V2);
 		//auto ABC = Cross(V2, V1);

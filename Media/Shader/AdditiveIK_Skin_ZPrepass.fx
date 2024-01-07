@@ -18,7 +18,7 @@ struct SVSIn
     float4 normal : NORMAL;
     float4 tangent : TANGENT;
     float4 biNormal : BINORMAL;
-    float2 uv : TEXCOORD0;
+    float4 uv : TEXCOORD0;
     float4 bweight : BLENDWEIGHT;
     int4 bindices : BLENDINDICES;
 };

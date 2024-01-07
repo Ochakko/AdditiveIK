@@ -4544,12 +4544,12 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 
 	}
 
-	const FbxLayerElementMaterial* pPolygonMaterials = NULL;
-	FbxGeometryElement::EMappingMode materialmappingMode = FbxGeometryElement::eAllSame;
-	pPolygonMaterials = pMesh->GetElementMaterial();
-	if (pPolygonMaterials != NULL) {
-		materialmappingMode = pPolygonMaterials->GetMappingMode();
-	}
+	//const FbxLayerElementMaterial* pPolygonMaterials = NULL;
+	//FbxGeometryElement::EMappingMode materialmappingMode = FbxGeometryElement::eAllSame;
+	//pPolygonMaterials = pMesh->GetElementMaterial();
+	//if (pPolygonMaterials != NULL) {
+	//	materialmappingMode = pPolygonMaterials->GetMappingMode();
+	//}
 
 	newobj->SetFace(PolygonNum);
 	newobj->SetFaceBuf(new CMQOFace[PolygonNum]);
@@ -4566,84 +4566,58 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 		curface->SetFaceNo(p);
 		curface->SetBoneType(MIKOBONE_NONE);
 
-
-		int lookupIndex = 0;
-		if (pPolygonMaterials) {
-			switch (materialmappingMode) {
-			case FbxGeometryElement::eByPolygon:
-				lookupIndex = p;//triangleNo.
-				break;
-			case FbxGeometryElement::eAllSame:
-				lookupIndex = 0;
-				break;
-			default:
-				lookupIndex = 0;
-				break;
+		int materialnum = pMesh->GetElementMaterialCount();
+		int materialindex;
+		for (materialindex = 0; materialindex < materialnum; materialindex++) {
+			const FbxLayerElementMaterial* pPolygonMaterials = NULL;
+			FbxGeometryElement::EMappingMode materialmappingMode = FbxGeometryElement::eAllSame;
+			pPolygonMaterials = pMesh->GetElementMaterial(materialindex);
+			if (pPolygonMaterials != NULL) {
+				materialmappingMode = pPolygonMaterials->GetMappingMode();
 			}
-			int materialIndex = pPolygonMaterials->mIndexArray->GetAt(lookupIndex);//Mesh単位のマテリアルへのインデックス
-			FbxSurfaceMaterial* material = pNode->GetMaterial(materialIndex);
-			if (material != 0) {
-				char materialname[256] = { 0 };
-				strcpy_s(materialname, 256, material->GetName());
-				CMQOMaterial* currentmaterial = GetMQOMaterialByName(materialname);//既に存在するかどうかチェック
-				if (!currentmaterial) {
-					_ASSERT(0);
+
+			int lookupIndex = 0;
+			if (pPolygonMaterials) {
+				switch (materialmappingMode) {
+				case FbxGeometryElement::eByPolygon:
+					lookupIndex = p;//triangleNo.
+					break;
+				case FbxGeometryElement::eAllSame:
 					lookupIndex = 0;
-					curface->SetMaterialNo(0);
+					break;
+				default:
+					lookupIndex = 0;
+					break;
 				}
-				else {
-					int curmaterialno = currentmaterial->GetMaterialNo();
-					curface->SetMaterialNo(curmaterialno);
+
+				int materialIndex = pPolygonMaterials->mIndexArray->GetAt(lookupIndex);//Mesh単位のマテリアルへのインデックス
+				FbxSurfaceMaterial* material = pNode->GetMaterial(materialIndex);
+				if (material != 0) {
+					char materialname[256] = { 0 };
+					strcpy_s(materialname, 256, material->GetName());
+					CMQOMaterial* currentmaterial = GetMQOMaterialByName(materialname);//既に存在するかどうかチェック
+					if (!currentmaterial) {
+						_ASSERT(0);
+						lookupIndex = 0;
+						curface->SetMaterialNo(0);
+					}
+					else {
+						int curmaterialno = currentmaterial->GetMaterialNo();
+						curface->SetMaterialNo(curmaterialno);
+					}
 				}
+				//else {
+				//	_ASSERT(0);
+				//	lookupIndex = 0;
+				//	curface->SetMaterialNo(0);
+				//}
 			}
 			else {
-				_ASSERT(0);
 				lookupIndex = 0;
 				curface->SetMaterialNo(0);
 			}
-
-			//int materialcount = 0;
-			//std::map<int, CMQOMaterial*>::iterator itrmat;
-			//for(itrmat = newobj->GetMaterialBegin(); itrmat != newobj->GetMaterialEnd(); itrmat++){
-			//	if (materialcount == materialIndex) {
-			//		curmqomat = itrmat->second;
-			//		break;
-			//	}
-			//	materialcount++;
-			//}
-			//if (curmqomat) {
-			//	int curmaterialno = curmqomat->GetMaterialNo();
-			//	curface->SetMaterialNo(curmaterialno);
-			//}
-			//else {
-			//	_ASSERT(0);
-			//}
-
-			//if ((materialIndex >= 0) && (materialIndex < materialNum_)) {
-			//	curface->SetMaterialNo(materialIndex);
-			//}
-			//FbxLayerElementMaterial* currentMaterial = pMesh->GetElementMaterial(materialIndex);
-			//if (currentMaterial) {
-			//	char currentmaterialname[256] = { 0 };
-			//	strcpy_s(currentmaterialname, 256, currentMaterial->GetName());
-			//	CMQOMaterial* curmqomat = g_materialbank.Get(currentmaterialname);
-			//	if (curmqomat) {
-			//		int curmaterialno = curmqomat->GetMaterialNo();
-			//		curface->SetMaterialNo(curmaterialno);
-			//	}
-			//	else {
-			//		_ASSERT(0);
-			//	}
-			//}
-			//else {
-			//	_ASSERT(0);
-			//}
-
 		}
-		else {
-			lookupIndex = 0;
-			curface->SetMaterialNo(0);
-		}
+		
 
 		for (int n = 0; n < IndexNumInPolygon; n++) {
 			// ポリゴンpを構成するn番目の頂点のインデックス番号
@@ -4850,146 +4824,52 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 	}
 
 //UV
-	int layerCount = pMesh->GetLayerCount();   // meshはFbxMesh
-	if (layerCount >= 2) {
-		int dbgflag1 = 1;
-		if (strstr(nodename, "Neon_Other_4") !=0) {
-			int dbgflag2 = 1;
-		}
-	}
-	for ( int uvi = 0; uvi < layerCount; ++uvi ) {
+	int uvlayercount = pMesh->GetUVLayerCount();
+	int layerno;
+	
+	int getuvnum = 0;
+	newobj->SetUVNum(0);
 
-		//#####################################
-		//2023/12/03 １回目のループ終了でbreakする
-		//#####################################
+	for (layerno = 0; layerno < uvlayercount; layerno++) {
+		FbxGeometryElementUV* lUVDiffuseElement = pMesh->GetElementUV(layerno);
 
-		FbxLayer* layer = pMesh->GetLayer( uvi );
-		FbxLayerElementUV* elem = layer->GetUVs();
-		if ( elem == 0 ) {
+		if (!lUVDiffuseElement) {
 			continue;
 		}
 
-		// UV情報を取得
-		// UVの数・インデックス
-		int UVNum = elem->GetDirectArray().GetCount();
-		int indexNum = elem->GetIndexArray().GetCount();
-//		int size = UVNum > indexNum ? UVNum : indexNum;
-
-		// マッピングモード・リファレンスモード別にUV取得
-		FbxLayerElement::EMappingMode mappingMode = elem->GetMappingMode();
-		FbxLayerElement::EReferenceMode refMode = elem->GetReferenceMode();
-
-		bool invvflag = true;//!!!!!!!!!!!!!
-
-		int facenum1 = pMesh->GetPolygonCount();
-		newobj->SetUVLeng(facenum1 * 3);
-		newobj->SetUVBuf((ChaVector2*)malloc(sizeof(ChaVector2) * (facenum1 * 3)));
-
-		int faceno1;
-		for (faceno1 = 0; faceno1 < facenum1; faceno1++) {
-			int vnum = pMesh->GetPolygonSize(faceno1);
-			int vno;
-
-			if (vnum != 3) {
-				_ASSERT(0);
-				vnum = 3;
+		if (getuvnum < 2) {
+			int facenum1 = pMesh->GetPolygonCount();
+			if (getuvnum == 0) {
+				newobj->SetUVLeng(facenum1 * 3);
+				newobj->SetUVBuf((ChaVector2*)malloc(sizeof(ChaVector2)* (facenum1 * 3)));
+			}
+			else {
+				newobj->SetUVBuf1((ChaVector2*)malloc(sizeof(ChaVector2)* (facenum1 * 3)));
 			}
 
-			for (vno = 0; vno < vnum; vno++) {
-				FbxVector2 srcuv;
-				bool bunmapped = false;
-				pMesh->GetPolygonVertexUV(faceno1, vno, elem->GetName(), srcuv, bunmapped);
-
-				ChaVector2* curuv = newobj->GetUVBuf() + faceno1 * 3 + vno;
-				*curuv = ChaVector2((float)srcuv[0], 1.0f - (float)srcuv[1]);//!!! 1.0f - uv.y
+			int faceno1;
+			for (faceno1 = 0; faceno1 < facenum1; faceno1++) {
+				int vnum = pMesh->GetPolygonSize(faceno1);
+				int vno;
+				for (vno = 0; vno < vnum; vno++) {
+					FbxVector2 srcuv;
+					bool bunmapped = false;
+					if (lUVDiffuseElement) {
+						pMesh->GetPolygonVertexUV(faceno1, vno, lUVDiffuseElement->GetName(), srcuv, bunmapped);
+						if (getuvnum == 0) {
+							ChaVector2* curuv = newobj->GetUVBuf() + faceno1 * 3 + vno;
+							*curuv = ChaVector2((float)srcuv[0], 1.0f - (float)srcuv[1]);//!!! 1.0f - uv.y
+						}
+						else {
+							ChaVector2* curuv1 = newobj->GetUVBuf1() + faceno1 * 3 + vno;
+							*curuv1 = ChaVector2((float)srcuv[0], 1.0f - (float)srcuv[1]);//!!! 1.0f - uv.y
+						}
+					}
+				}
 			}
+			getuvnum++;
+			newobj->SetUVNum(getuvnum);
 		}
-
-
-
-//		if (mappingMode == FbxLayerElement::eByPolygonVertex) {
-//			DbgOut(L"\r\n\r\n");
-//			DbgOut(L"check !!! GetFBXMesh : %s : UV : mapping eByPolygonVertex\r\n", wname);
-//
-//			if (refMode == FbxLayerElement::eDirect) {
-//				DbgOut(L"GetFBXMesh : %s : UV : refMode eDirect\r\n", wname);
-//				int size = UVNum;
-//				newobj->SetUVLeng(size);
-//				newobj->SetUVBuf((ChaVector2*)malloc(sizeof(ChaVector2) * size));
-//
-//				// 直接取得
-//				//for (int i = 0; i < size; ++i) {
-//				for (int i = 0; i < size; i++) {
-//					(newobj->GetUVBuf() + i)->x = (float)elem->GetDirectArray().GetAt(i)[0];
-//					if (invvflag == false) {
-//						(newobj->GetUVBuf() + i)->y = (float)elem->GetDirectArray().GetAt(i)[1];
-//					}
-//					else {
-//						(newobj->GetUVBuf() + i)->y = 1.0f - (float)elem->GetDirectArray().GetAt(i)[1];
-//					}				
-//					DbgOut(L"direct %d, u : %f, v : %f\r\n", i, (newobj->GetUVBuf() + i)->x, (newobj->GetUVBuf() + i)->y);
-//				}
-//				DbgOut(L"\r\n\r\n");
-//			}
-//			else if (refMode == FbxLayerElement::eIndexToDirect) {
-//				DbgOut(L"\r\n\r\n");
-//				DbgOut(L"Check !!! GetFBXMesh : %s : UV : refMode eIndexToDirect\r\n", wname);
-//				int size = indexNum;
-//				newobj->SetUVLeng(size);
-//				newobj->SetUVBuf((ChaVector2*)malloc(sizeof(ChaVector2) * size));
-//
-//				// インデックスから取得
-//				//for (int i = 0; i < size; ++i) {
-//				for (int i = 0; i < size; i++) {
-//					int index = elem->GetIndexArray().GetAt(i);
-//					(newobj->GetUVBuf() + i)->x = (float)elem->GetDirectArray().GetAt(index)[0];
-//					if (invvflag == false) {
-//						(newobj->GetUVBuf() + i)->y = (float)elem->GetDirectArray().GetAt(index)[1];
-//					}
-//					else {
-//						(newobj->GetUVBuf() + i)->y = 1.0f - (float)elem->GetDirectArray().GetAt(index)[1];
-//					}
-//					
-//					DbgOut(L"direct %d, u : %f, v : %f\r\n", i, (newobj->GetUVBuf() + i)->x, (newobj->GetUVBuf() + i)->y);
-//				}
-//				DbgOut(L"\r\n\r\n");
-//			}
-//			else {
-//				DbgOut(L"GetFBXMesh : %s : UV : refMode %d\r\n", wname, refMode);
-//				_ASSERT(0);
-//			}
-//		}
-//		else if (mappingMode == FbxLayerElement::eByControlPoint) {
-//			if (refMode == FbxLayerElement::eDirect) {
-//				DbgOut(L"\r\n\r\n");
-//				DbgOut(L"check !!! GetFBXMesh : %s : UV : refMode eDirect\r\n", wname);
-//				int size = UVNum;
-//				newobj->SetUVLeng(size);
-//				ChaVector2* newuv = (ChaVector2*)malloc(sizeof(ChaVector2) * size);
-//				_ASSERT(newuv);
-//				newobj->SetUVBuf(newuv);
-//				//newobj->SetUVBuf((ChaVector2*)malloc(sizeof(ChaVector2) * size));
-//
-//				// 直接取得
-//				//for (int i = 0; i < size; ++i) {
-//				for (int i = 0; i < size; i++) {
-//					(newobj->GetUVBuf() + i)->x = (float)elem->GetDirectArray().GetAt(i)[0];
-//					if (invvflag == false) {
-//						(newobj->GetUVBuf() + i)->y = (float)elem->GetDirectArray().GetAt(i)[1];
-//					}
-//					else {
-//						(newobj->GetUVBuf() + i)->y = 1.0f - (float)elem->GetDirectArray().GetAt(i)[1];
-//					}
-//					DbgOut(L"direct %d, u : %f, v : %f\r\n", i, (newobj->GetUVBuf() + i)->x, (newobj->GetUVBuf() + i)->y);
-//				}
-//			}
-//			DbgOut(L"\r\n\r\n");
-//		} else {
-//DbgOut( L"GetFBXMesh : %s : UV : mappingMode %d\r\n", wname, mappingMode );
-//DbgOut( L"GetFBXMesh : %s : UV : refMode %d\r\n", wname, refMode );
-//_ASSERT(0);
-//		}
-		break;
 	}
 
 	return newobj;
@@ -5154,7 +5034,8 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 					if (lLayeredTexture->GetName()) {
 						char tempname[256];
 						strcpy_s(tempname, 256, lLayeredTexture->GetName());
-						SetMaterialTexNames(newmqomat, tempname);
+						SetMaterialTexNames(newmqomat, tempname,
+							lLayeredTexture->GetWrapModeU(), lLayeredTexture->GetWrapModeV());					
 					}
 				}
 			}
@@ -5174,7 +5055,8 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 						if (nameptr) {
 							char tempname[256];
 							strcpy_s(tempname, 256, nameptr);
-							SetMaterialTexNames(newmqomat, tempname);
+							SetMaterialTexNames(newmqomat, tempname,
+								lTexture->GetWrapModeU(), lTexture->GetWrapModeV());
 						}
 					}
 				}
@@ -5198,7 +5080,8 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 					if (lLayeredTexture->GetName()) {
 						char tempname[256];
 						strcpy_s(tempname, 256, lLayeredTexture->GetName());
-						SetMaterialTexNames(newmqomat, tempname);
+						SetMaterialTexNames(newmqomat, tempname,
+							lLayeredTexture->GetWrapModeU(), lLayeredTexture->GetWrapModeV());
 					}
 				}
 			}
@@ -5218,7 +5101,8 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 						if (nameptr) {
 							char tempname[256];
 							strcpy_s(tempname, 256, nameptr);
-							SetMaterialTexNames(newmqomat, tempname);
+							SetMaterialTexNames(newmqomat, tempname,
+								lTexture->GetWrapModeU(), lTexture->GetWrapModeV());
 						}
 					}
 				}
@@ -5281,7 +5165,8 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
    return 0;
 }
 
-int CModel::SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname)
+int CModel::SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname,
+	FbxTexture::EWrapMode addressU, FbxTexture::EWrapMode addressV)
 {
 	char temptexname[256] = {0};
 
@@ -5365,22 +5250,33 @@ int CModel::SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname)
 
 	DbgOut(L"SetMaterialTextureName : texture %s\r\n", wname);
 
-
+	//if (strstr(temptexname, "Glass_A_Base") != 0) {
+	//	int dbgflag1 = 1;
+	//}
 
 	if ((newmqomat->GetAlbedoTex() && !(newmqomat->GetAlbedoTex()[0])) &&
-		(strstr(temptexname, "albedo") != 0) || (strstr(temptexname, "Albedo") != 0)) {
+		(strstr(temptexname, "albedo") != 0) || (strstr(temptexname, "Albedo") != 0) || 
+		(strstr(temptexname, "_Base") != 0)) {
 		newmqomat->SetAlbedoTex(temptexname);
+		newmqomat->SetAddressU_albedo(addressU);
+		newmqomat->SetAddressV_albedo(addressV);
 	}
 	else if ((newmqomat->GetNormalTex() && !(newmqomat->GetNormalTex()[0])) &&
 		(strstr(temptexname, "normal") != 0) || (strstr(temptexname, "Normal") != 0)) {
 		newmqomat->SetNormalTex(temptexname);
+		newmqomat->SetAddressU_normal(addressU);
+		newmqomat->SetAddressV_normal(addressV);
 	}
 	else if ((newmqomat->GetMetalTex() && !(newmqomat->GetMetalTex()[0])) &&
 		(strstr(temptexname, "metal") != 0) || (strstr(temptexname, "Metal") != 0)) {
 		newmqomat->SetMetalTex(temptexname);
+		newmqomat->SetAddressU_metal(addressU);
+		newmqomat->SetAddressV_metal(addressV);
 	}else if (newmqomat->GetTex() && !(newmqomat->GetTex()[0])) {
 		//TexNameに一回もセットされていない場合に　TexNameにtemptexnameをセット
 		newmqomat->SetTex(temptexname);
+		newmqomat->SetAddressU_albedo(addressU);
+		newmqomat->SetAddressV_albedo(addressV);
 	}
 
 

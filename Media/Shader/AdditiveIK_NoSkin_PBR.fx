@@ -19,7 +19,7 @@ struct SVSInWithoutBone
     float4 normal   : NORMAL;
     float4 tangent : TANGENT;
     float4 biNormal : BINORMAL; 
-    float2 uv       : TEXCOORD0;
+    float4 uv       : TEXCOORD0;
 };
 
 struct SVSInExtLine
@@ -35,8 +35,9 @@ struct SPSIn
     float4 tangent : TANGENT;
     float4 biNormal : BINORMAL;
     float2 uv : TEXCOORD0; // uv座標
-    float4 worldPos : TEXCOORD1; // ワールド空間でのピクセルの座標
-    float4 diffusemult : TEXCOORD2;
+    float2 uv1 : TEXCOORD1; // uv座標
+    float4 worldPos : TEXCOORD2; // ワールド空間でのピクセルの座標
+    float4 diffusemult : TEXCOORD3;
 };
 
 struct SPSInExtLine
@@ -59,11 +60,12 @@ struct SPSInShadowReciever
     float4 tangent : TANGENT;
     float4 biNormal : BINORMAL;
     float2 uv : TEXCOORD0; // uv座標
-    float4 worldPos : TEXCOORD1; // ワールド空間でのピクセルの座標
-    float4 diffusemult : TEXCOORD2;
+    float2 uv1 : TEXCOORD1; // uv座標
+    float4 worldPos : TEXCOORD2; // ワールド空間でのピクセルの座標
+    float4 diffusemult : TEXCOORD3;
     
     // ライトビュースクリーン空間での座標を追加
-    float4 posInLVP : TEXCOORD3; // ライトビュースクリーン空間でのピクセルの座標    
+    float4 posInLVP : TEXCOORD4; // ライトビュースクリーン空間でのピクセルの座標    
 };
 
 ///////////////////////////////////////////
@@ -118,6 +120,10 @@ Texture2D<float4> g_metallicSmoothMap : register(t3); // メタリックスム�
 Texture2D<float4> g_shadowMap : register(t4);
 // サンプラーステート
 sampler g_sampler : register(s0);
+sampler g_sampler_albedo : register(s1);
+sampler g_sampler_normal : register(s2);
+sampler g_sampler_metal : register(s3);
+sampler g_sampler_shadow : register(s4);
 
 
 //float3 GetNormal(float3 normal, float3 tangent, float3 biNormal, float2 uv)
@@ -236,9 +242,9 @@ sampler g_sampler : register(s0);
 //#############
 //7-2
 //#############
-float3 GetNormal(float3 normal, float3 tangent, float3 biNormal, float2 uv)
+float3 GetNormal(float3 normal, float3 tangent, float3 biNormal, float2 uv1)
 {
-    float3 binSpaceNormal = g_normalMap.SampleLevel(g_sampler, uv, 0.0f).xyz;
+    float3 binSpaceNormal = g_normalMap.SampleLevel(g_sampler_normal, uv1, 0.0f).xyz;
     binSpaceNormal = (binSpaceNormal * 2.0f) - 1.0f;
 
     float3 newNormal = tangent * binSpaceNormal.x + biNormal * binSpaceNormal.y + normal * binSpaceNormal.z;
@@ -346,7 +352,8 @@ SPSIn VSMainNoSkinPBR(SVSInWithoutBone vsIn, uniform bool hasSkin)
     psIn.worldPos = psIn.pos;    
     psIn.pos = mul(mView, psIn.pos);    // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos);    // カメラ座標系からスクリーン座標系に変換
-    psIn.uv = vsIn.uv;    
+    psIn.uv = vsIn.uv.xy;
+    psIn.uv1 = vsIn.uv.zw;
     psIn.diffusemult = diffusemult;
     
     psIn.normal = normalize(mul(mWorld, vsIn.normal));
@@ -366,7 +373,7 @@ SPSInShadowMap VSMainNoSkinPBRShadowMap(SVSInWithoutBone vsIn, uniform bool hasS
     //float4 worldPos = vsIn.pos;
     psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
-    psIn.uv = vsIn.uv;
+    psIn.uv = vsIn.uv.xy;
 
     psIn.depth.x = length(worldPos.xyz - lightPos.xyz) / shadowmaxz.x;
     //float4 posLVP = mul(mLVP, worldPos);
@@ -384,7 +391,8 @@ SPSInShadowReciever VSMainNoSkinPBRShadowReciever(SVSInWithoutBone vsIn, uniform
     psIn.worldPos = psIn.pos;    
     psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
-    psIn.uv = vsIn.uv;
+    psIn.uv = vsIn.uv.xy;
+    psIn.uv1 = vsIn.uv.zw;
     psIn.diffusemult = diffusemult;
     
     // ライトビュースクリーン空間の座標を計算する
@@ -425,7 +433,7 @@ SPSInExtLine VSMainExtLine(SVSInExtLine vsIn, uniform bool hasSkin)
 float4 PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
 {
     float2 diffuseuv = { 0.5f, 0.5f };
-    float4 diffusecol = g_diffusetex.Sample(g_sampler, diffuseuv);
+    float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv);
 
     
     //  // 法線を計算
@@ -494,20 +502,20 @@ float4 PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
     //7-2
     //#########
       // 法線を計算
-    float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, psIn.uv);
+    float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, psIn.uv1);
 
     // アルベドカラー、スペキュラカラー、金属度、滑らかさをサンプリングする。
     // アルベドカラー（拡散反射光）
-    float4 albedoColor = g_albedo.Sample(g_sampler, psIn.uv); // * diffusecol;
+    float4 albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv); // * diffusecol;
 
     // スペキュラカラーはアルベドカラーと同じにする。
     float3 specColor = albedoColor.xyz;
 
     // 金属度
-    float metallic = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).r * metalcoef.x; //!!!!metalcoef
+    float metallic = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv1).r * metalcoef.x; //!!!!metalcoef
 
     // 滑らかさ
-    float smooth = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).a * metalcoef.y; //!!!!smoothcoef
+    float smooth = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv1).a * metalcoef.y; //!!!!smoothcoef
 
     // 視線に向かって伸びるベクトルを計算する
     float3 toEye = normalize(eyePos.xyz - psIn.worldPos.xyz);
@@ -565,7 +573,7 @@ float4 PSMainNoSkinPBRShadowMap(SPSInShadowMap psIn) : SV_Target0
 float4 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
     float2 diffuseuv = { 0.5f, 0.5f };
-    float4 diffusecol = g_diffusetex.Sample(g_sampler, diffuseuv);
+    float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv);
 
     
     //  // 法線を計算
@@ -634,20 +642,20 @@ float4 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     //7-2
     //#########
       // 法線を計算
-    float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, psIn.uv);
+    float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, psIn.uv1);
 
     // アルベドカラー、スペキュラカラー、金属度、滑らかさをサンプリングする。
     // アルベドカラー（拡散反射光）
-    float4 albedoColor = g_albedo.Sample(g_sampler, psIn.uv); // * diffusecol;
+    float4 albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv); // * diffusecol;
 
     // スペキュラカラーはアルベドカラーと同じにする。
     float3 specColor = albedoColor.xyz;
 
     // 金属度
-    float metallic = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).r * metalcoef.x; //!!!!metalcoef
+    float metallic = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv1).r * metalcoef.x; //!!!!metalcoef
 
     // 滑らかさ
-    float smooth = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).a * metalcoef.y; //!!!!smoothcoef
+    float smooth = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv1).a * metalcoef.y; //!!!!smoothcoef
 
     // 視線に向かって伸びるベクトルを計算する
     float3 toEye = normalize(eyePos.xyz - psIn.worldPos.xyz);
@@ -701,7 +709,7 @@ float4 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 
     // ライトビュースクリーン空間でのZ値を計算する
     float zInLVP = psIn.posInLVP.z;
-    float2 shadowValue = g_shadowMap.Sample(g_sampler, shadowMapUV).xy;
+    float2 shadowValue = g_shadowMap.Sample(g_sampler_shadow, shadowMapUV).xy;
     finalColor.xyz *= ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f) && ((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? shadowmaxz.z : 1.0f;
      
     //if ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) &&

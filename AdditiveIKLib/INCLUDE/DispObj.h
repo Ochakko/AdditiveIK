@@ -46,7 +46,7 @@ public:
 	 * @param (int hasbone) IN ボーン変形有の場合は１、無しの場合は０。AdditiveIKではメタセコイアデータはボーン無し。
 	 * @return 成功したら０。
 	 */
-	int CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone);
+	int CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, int srcuvnum);
 
 
 	/**
@@ -58,7 +58,7 @@ public:
 	 * @param (int hasbone) IN ボーン変形有の場合は１、無しの場合は０。 * @return 戻り値の説明
 	 * @return 成功したら０。
 	 */
-	int CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone);
+	int CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, int srcuvnum);
 
 	/**
 	 * @fn

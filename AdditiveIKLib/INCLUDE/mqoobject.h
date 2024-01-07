@@ -307,6 +307,12 @@ public:
 	void SetUVBuf( ChaVector2* srcval ){
 		m_uvbuf = srcval;
 	};
+	ChaVector2* GetUVBuf1() {
+		return m_uvbuf1;
+	};
+	void SetUVBuf1(ChaVector2* srcval) {
+		m_uvbuf1 = srcval;
+	};
 
 	int GetOnLoadMaterialSize(){
 		return (int)m_onloadmaterial.size();
@@ -418,6 +424,14 @@ public:
 		return m_lodnum;
 	}
 
+	void SetUVNum(int srcnum)
+	{
+		m_getuvnum = srcnum;
+	}
+	int GetUVNum()
+	{
+		return m_getuvnum;
+	}
 private:
 	int m_objfrom;
 
@@ -446,6 +460,7 @@ private:
 	ChaVector3* m_normal;
 	int m_uvleng;
 	ChaVector2* m_uvbuf;
+	ChaVector2* m_uvbuf1;
 
 	//マテリアルを読み込み順で保存　CMQOMaterial*は外部ポインタ　破棄しない
 	std::vector<CMQOMaterial*> m_onloadmaterial;
@@ -509,6 +524,7 @@ private:
 	std::vector<LATERMATERIAL> m_latermaterial;
 
 	int m_lodnum;
+	int m_getuvnum;
 
 };
 

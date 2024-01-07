@@ -3,6 +3,21 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/01/07
+　２個までのマルチUVに対応
+　　ただし用途は限定　１つ目のUVはalbedoテクスチャ　２つ目のUVはノーマルマップとメタルマップ用
+　　マルチUV対応で　ノーマルマップの模様ががカメラ距離で伸び縮みする不具合解消
+　１メッシュに複数マテリアルがある場合に　面のマテリアル番号設定に問題があったのを修正
+　テクスチャアドレッシングモードの読み込みと表示への適用と保存
+　　サンプラーステートにも適用
+　テクスチャ命名規則を少し修正(_Baseが加わった)
+　　Albedoまたはalbedoまたは_Baseが名前にテクスチャをAlbedoMap
+　　Normalまたはnormalが名前につくテクスチャをNormalMap
+　　Metalまたはmetalが名前につくテクスチャをMetalMap
+　DirectXTexをDec2023に差し替え
+
+
+
 
 2024/01/05
 　DirectXTK12をJun2023からDec2023に差し替え.

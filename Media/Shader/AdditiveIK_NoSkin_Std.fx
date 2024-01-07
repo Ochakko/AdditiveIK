@@ -18,7 +18,7 @@ struct SVSInWithoutBone
     float4 normal   : NORMAL;
     float4 tangent : TANGENT;
     float4 biNormal : BINORMAL; 
-    float2 uv       : TEXCOORD0;
+    float4 uv       : TEXCOORD0;
 };
 
 struct SVSInExtLine
@@ -32,7 +32,8 @@ struct SPSIn
     float4 pos          : SV_POSITION;
     float4 normal       : NORMAL;
     float2 uv           : TEXCOORD0;
-    float4 diffusemult  : TEXCOORD1;
+    float2 uv1          : TEXCOORD1;
+    float4 diffusemult  : TEXCOORD2;
 };
 
 
@@ -49,10 +50,11 @@ struct SPSInShadowReciever
     float4 pos : SV_POSITION;
     float4 normal : NORMAL;
     float2 uv : TEXCOORD0;
-    float4 diffusemult : TEXCOORD1;
+    float2 uv1 : TEXCOORD1;
+    float4 diffusemult : TEXCOORD2;
     
     // ライトビュースクリーン空間での座標を追加
-    float4 posInLVP : TEXCOORD2; // ライトビュースクリーン空間でのピクセルの座標
+    float4 posInLVP : TEXCOORD3; // ライトビュースクリーン空間でのピクセルの座標
 };
 
 
@@ -114,6 +116,11 @@ Texture2D<float4> g_metallicSmoothMap : register(t3); // メタリックスム�
 Texture2D<float4> g_shadowMap : register(t4);
 // サンプラーステート
 sampler g_sampler : register(s0);
+sampler g_sampler_albedo : register(s1);
+sampler g_sampler_normal : register(s2);
+sampler g_sampler_metal : register(s3);
+sampler g_sampler_shadow : register(s4);
+
 
 /// <summary>
 /// モデル用の頂点シェーダーのエントリーポイント
@@ -125,7 +132,8 @@ SPSIn VSMainNoSkinStd(SVSInWithoutBone vsIn, uniform bool hasSkin)
     psIn.pos = mul(mWorld, vsIn.pos);   // モデルの頂点をワールド座標系に変換
     psIn.pos = mul(mView, psIn.pos);    // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos);    // カメラ座標系からスクリーン座標系に変換
-    psIn.uv = vsIn.uv;
+    psIn.uv = vsIn.uv.xy;
+    psIn.uv1 = vsIn.uv.zw;
 
     psIn.diffusemult = diffusemult;
     
@@ -143,7 +151,7 @@ SPSInShadowMap VSMainNoSkinStdShadowMap(SVSInWithoutBone vsIn, uniform bool hasS
     //float4 worldPos = psIn.pos;
     psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
-    psIn.uv = vsIn.uv;
+    psIn.uv = vsIn.uv.xy;
 
     psIn.depth.x = length(worldPos.xyz - lightPos.xyz) / shadowmaxz.x;
     //float4 posLVP = mul(mLVP, worldPos);
@@ -160,7 +168,8 @@ SPSInShadowReciever VSMainNoSkinStdShadowReciever(SVSInWithoutBone vsIn, uniform
     float4 worldPos = mul(mWorld, vsIn.pos);
     psIn.pos = mul(mView, worldPos);
     psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
-    psIn.uv = vsIn.uv;
+    psIn.uv = vsIn.uv.xy;
+    psIn.uv1 = vsIn.uv.zw;
 
     
     // ライトビュースクリーン空間の座標を計算する
@@ -202,9 +211,9 @@ float4 PSMainNoSkinStd(SPSIn psIn) : SV_Target0
 {
     // 普通にテクスチャを
     //return g_texture.Sample(g_sampler, psIn.uv);
-    float4 albedocol = g_albedo.Sample(g_sampler, psIn.uv);
+    float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
     float2 diffuseuv = { 0.5f, 0.5f };
-    float4 diffusecol = g_diffusetex.Sample(g_sampler, diffuseuv);
+    float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv);
     //texcol.w = 1.0f;
     //return texcol;
      
@@ -245,9 +254,9 @@ float4 PSMainNoSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
     // 普通にテクスチャを
     //return g_texture.Sample(g_sampler, psIn.uv);
-    float4 albedocol = g_albedo.Sample(g_sampler, psIn.uv);
+    float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
     float2 diffuseuv = { 0.5f, 0.5f };
-    float4 diffusecol = g_diffusetex.Sample(g_sampler, diffuseuv);
+    float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv);
     //texcol.w = 1.0f;
     //return texcol;
      
@@ -285,7 +294,7 @@ float4 PSMainNoSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 
     // ライトビュースクリーン空間でのZ値を計算する
     float zInLVP = psIn.posInLVP.z;
-    float2 shadowValue = g_shadowMap.Sample(g_sampler, shadowMapUV).xy;
+    float2 shadowValue = g_shadowMap.Sample(g_sampler_shadow, shadowMapUV).xy;
     pscol.xyz *= ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f) && ((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? shadowmaxz.z : 1.0f;
 
     //if ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f)
@@ -327,9 +336,9 @@ float4 PSMainNoSkinNoLight(SPSIn psIn) : SV_Target0
 {
     // 普通にテクスチャを
     //return g_texture.Sample(g_sampler, psIn.uv);
-    float4 albedocol = g_albedo.Sample(g_sampler, psIn.uv);
+    float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
     float2 diffuseuv = { 0.5f, 0.5f };
-    float4 diffusecol = g_diffusetex.Sample(g_sampler, diffuseuv) * materialdisprate.x;
+    float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv) * materialdisprate.x;
     //texcol.w = 1.0f;
     //return texcol;
       
@@ -341,9 +350,9 @@ float4 PSMainNoSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
     // 普通にテクスチャを
     //return g_texture.Sample(g_sampler, psIn.uv);
-    float4 albedocol = g_albedo.Sample(g_sampler, psIn.uv);
+    float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
     float2 diffuseuv = { 0.5f, 0.5f };
-    float4 diffusecol = g_diffusetex.Sample(g_sampler, diffuseuv) * materialdisprate.x;
+    float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv) * materialdisprate.x;
     //texcol.w = 1.0f;
     //return texcol;
       
@@ -356,7 +365,7 @@ float4 PSMainNoSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 
     // ライトビュースクリーン空間でのZ値を計算する
     float zInLVP = psIn.posInLVP.z;
-    float2 shadowValue = g_shadowMap.Sample(g_sampler, shadowMapUV).xy;
+    float2 shadowValue = g_shadowMap.Sample(g_sampler_shadow, shadowMapUV).xy;
     pscol.xyz *= ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f) && ((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? shadowmaxz.z : 1.0f;
 
     //if ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f)

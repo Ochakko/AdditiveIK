@@ -91,6 +91,19 @@ public:
 			m_uv[ srci ] = srcval;
 		}
 	};
+	ChaVector2 GetUV1(int srci) {
+		if ((srci >= 0) && (srci < 4)) {
+			return m_uv1[srci];
+		}
+		else {
+			return ChaVector2(0.0f, 0.0f);
+		}
+	};
+	void SetUV1(int srci, ChaVector2 srcval) {
+		if ((srci >= 0) && (srci < 4)) {
+			m_uv1[srci] = srcval;
+		}
+	};
 
 	__int64 GetCol( int srci ){
 		if( (srci >= 0) && (srci < 4) ){
@@ -173,6 +186,7 @@ private:
 	
 	int m_hasuv;
 	ChaVector2 m_uv[4];
+	ChaVector2 m_uv1[4];
 
 	__int64 m_col[4];
 	int m_vcolsetflag;

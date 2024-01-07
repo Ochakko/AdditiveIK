@@ -44,7 +44,8 @@ void CMQOFace::InitParams()
 	m_materialno = -1;
 
 	m_hasuv = 0;
-	ZeroMemory( m_uv, sizeof( ChaVector2 ) * 4 );
+	ZeroMemory(m_uv, sizeof(ChaVector2) * 4);
+	ZeroMemory(m_uv1, sizeof(ChaVector2) * 4);
 
 	m_dirtyflag = 0;
 
@@ -363,6 +364,7 @@ int CMQOFace::SetInvFace( CMQOFace* srcface, int offset )
 	m_hasuv = srcface->m_hasuv;
 	for( i = 0; i < m_pointnum; i++ ){
 		m_uv[i] = srcface->m_uv[ m_pointnum - 1 - i ];
+		m_uv1[i] = srcface->m_uv1[m_pointnum - 1 - i];
 	}
 
 	return 0;

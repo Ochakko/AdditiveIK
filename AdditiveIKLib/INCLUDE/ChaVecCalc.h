@@ -688,7 +688,7 @@ typedef struct tag_binormaldispv
 	ChaVector4		normal;
 	ChaVector4		tangent;
 	ChaVector4		binormal;
-	ChaVector2		uv;
+	ChaVector2		uv[2];
 	tag_binormaldispv() {
 		pos.x = 0.0f;
 		pos.y = 0.0f;
@@ -706,8 +706,10 @@ typedef struct tag_binormaldispv
 		binormal.y = 0.0f;
 		binormal.z = 0.0f;
 		binormal.w = 0.0f;
-		uv.x = 0.0f;
-		uv.y = 0.0f;
+		uv[0].x = 0.0f;
+		uv[0].y = 0.0f;
+		uv[1].x = 0.0f;
+		uv[1].y = 0.0f;
 	};
 }BINORMALDISPV;
 
@@ -751,7 +753,7 @@ typedef  struct tag_modelbound
 BOOL IsValidNewEul(ChaVector3 srcneweul, ChaVector3 srcbefeul);
 ChaMatrix ChaMatrixTranspose(ChaMatrix srcmat);
 
-int CalcTangentAndBinormal(BINORMALDISPV* vert_0, BINORMALDISPV* vert_1, BINORMALDISPV* vert_2);
+int CalcTangentAndBinormal(int srcuvnum, BINORMALDISPV* vert_0, BINORMALDISPV* vert_1, BINORMALDISPV* vert_2);
 double ChaVector3LengthDbl(ChaVector3* psrc);
 double ChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2);
 
@@ -847,7 +849,7 @@ ChaMatrix CalcAxisMatX(ChaVector3 vecx, ChaVector3 srcpos, ChaMatrix srcmat);
 extern BOOL IsValidNewEul(ChaVector3 srcneweul, ChaVector3 srcbefeul);
 extern ChaMatrix ChaMatrixTranspose(ChaMatrix srcmat);
 
-extern int CalcTangentAndBinormal(BINORMALDISPV* vert_0, BINORMALDISPV* vert_1, BINORMALDISPV* vert_2);
+extern int CalcTangentAndBinormal(int srcuvnum, BINORMALDISPV* vert_0, BINORMALDISPV* vert_1, BINORMALDISPV* vert_2);
 extern double ChaVector3LengthDbl(ChaVector3* psrc);
 extern double ChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2);
 

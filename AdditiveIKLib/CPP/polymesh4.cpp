@@ -62,7 +62,8 @@ void CPolyMesh4::InitParams()
 	m_pointbuf = 0;//外部メモリ
 	m_normal = 0;//外部メモリ
 	m_uvbuf = 0;//外部メモリ
-	
+	m_uv1buf = 0;//外部メモリ
+
 	m_normalleng = 0;
 	m_uvleng = 0;
 
@@ -143,6 +144,7 @@ void CPolyMesh4::DestroySystemDispObj()
 	m_pointbuf = 0;//外部メモリ
 	m_normal = 0;//外部メモリ
 	m_uvbuf = 0;//外部メモリ
+	m_uv1buf = 0;//外部メモリ
 
 }
 
@@ -164,7 +166,8 @@ int sortfunc_material( void *context, const void *elem1, const void *elem2)
 }
 
 
-int CPolyMesh4::CreatePM4(int normalmappingmode, int pointnum, int facenum, int normalleng, int uvleng, ChaVector3* pointptr, ChaVector3* nptr, ChaVector2* uvptr, CMQOFace* faceptr, CModel* pmodel)
+int CPolyMesh4::CreatePM4(int normalmappingmode, int pointnum, int facenum, int normalleng, int uvleng, ChaVector3* pointptr, ChaVector3* nptr, 
+	ChaVector2* uvptr, ChaVector2* uv1ptr, CMQOFace* faceptr, CModel* pmodel, int srcuvnum)
 {
 	if (!pmodel) {
 		_ASSERT(0);
@@ -177,6 +180,7 @@ int CPolyMesh4::CreatePM4(int normalmappingmode, int pointnum, int facenum, int 
 	m_pointbuf = pointptr;
 	m_normal = nptr;
 	m_uvbuf = uvptr;
+	m_uv1buf = uv1ptr;
 	m_normalleng = normalleng;
 	m_uvleng = uvleng;
 	m_normalmappingmode = normalmappingmode;
@@ -199,7 +203,7 @@ int CPolyMesh4::CreatePM4(int normalmappingmode, int pointnum, int facenum, int 
 	//qsort_s( m_triface, m_facenum, sizeof( CMQOFace ), sortfunc_material, (void*)this );
 //////////
 	int optmatnum = 0;
-	CallF( SetOptV( 0, &m_optleng, &optmatnum, pmodel ), return 1 );
+	CallF( SetOptV( 0, &m_optleng, &optmatnum, pmodel, srcuvnum), return 1 );
 	if( (m_optleng <= 0) ){
 		_ASSERT( 0 );
 		return 0;
@@ -244,14 +248,14 @@ int CPolyMesh4::CreatePM4(int normalmappingmode, int pointnum, int facenum, int 
 
 
 	int tmpleng, tmpmatnum;
-	SetOptV( m_dispv, &tmpleng, &tmpmatnum, pmodel );
+	SetOptV( m_dispv, &tmpleng, &tmpmatnum, pmodel, srcuvnum );
 //	CallF( SetOptV( m_dispv, m_pm3inf, &tmpleng, &tmpmatnum, srcmat ), return 1 );
 	if( (tmpleng != m_optleng) ){
 		_ASSERT( 0 );
 		return 1;
 	}
 
-	BuildTangentAndBinormal();
+	BuildTangentAndBinormal(srcuvnum);
 
 	CallF( CalcBound(), return 1 );
 
@@ -325,7 +329,7 @@ int CPolyMesh4::SetTriFace( CMQOFace* faceptr, int* numptr )
 }
 
 
-int CPolyMesh4::SetOptV(BINORMALDISPV* dispv, int* pleng, int* matnum, CModel* pmodel)
+int CPolyMesh4::SetOptV(BINORMALDISPV* dispv, int* pleng, int* matnum, CModel* pmodel, int srcuvnum)
 {
 	*pleng = 0;
 	*matnum = 0;
@@ -400,37 +404,58 @@ int CPolyMesh4::SetOptV(BINORMALDISPV* dispv, int* pleng, int* matnum, CModel* p
 				curv->tangent = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
 				curv->binormal = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
 
-
+				//####
+				//uv0
+				//####
 				if( m_uvbuf ){
 					if (m_uvleng == (m_facenum * 3)) {
 						//0 2 1 if文優先
-						curv->uv = *(m_uvbuf + setno * 3 + vi[vcnt]);
+						curv->uv[0] = *(m_uvbuf + setno * 3 + vi[vcnt]);
 					}
 					else if (m_uvleng >= m_orgpointnum) {//m_orgpointnumのときとm_orgpointnum * 2のとき
-						curv->uv = *(m_uvbuf + vno);
+						curv->uv[0] = *(m_uvbuf + vno);
 					}
 					else {
 						_ASSERT(0);
 					}
-
-
-
-					//if (m_uvleng == (m_facenum * 3)){
-					//	//0 2 1 if文優先
-					//	curv->uv = *(m_uvbuf + setno * 3 + vi[vcnt]);
-					//}
-					//else if(m_uvleng >= m_orgpointnum){//m_orgpointnumのときとm_orgpointnum * 2のとき
-					//	curv->uv = *(m_uvbuf + vno);
-					//}
-					//else{
-					//	_ASSERT(0);
-					//}
-
-					//curv->uv.y = 1.0f - curv->uv.y;//表示用 CModel::GetFBXMeshでしている
-
 				}else{
-					curv->uv = ChaVector2( 0.0f, 0.0f );
+					curv->uv[0] = ChaVector2(0.0f, 0.0f);
 				}
+
+				//####
+				//uv1
+				//####
+				if ((srcuvnum >= 2) && m_uv1buf) {
+					if (m_uvleng == (m_facenum * 3)) {
+						//0 2 1 if文優先
+						curv->uv[1] = *(m_uv1buf + setno * 3 + vi[vcnt]);
+					}
+					else if (m_uvleng >= m_orgpointnum) {//m_orgpointnumのときとm_orgpointnum * 2のとき
+						curv->uv[1] = *(m_uv1buf + vno);
+					}
+					else {
+						_ASSERT(0);
+					}
+				}
+				else {
+					if (m_uvbuf) {
+						if (m_uvleng == (m_facenum * 3)) {
+							//0 2 1 if文優先
+							curv->uv[1] = *(m_uvbuf + setno * 3 + vi[vcnt]);
+						}
+						else if (m_uvleng >= m_orgpointnum) {//m_orgpointnumのときとm_orgpointnum * 2のとき
+							curv->uv[1] = *(m_uvbuf + vno);
+						}
+						else {
+							_ASSERT(0);
+						}
+					}
+					else {
+						curv->uv[1] = ChaVector2(0.0f, 0.0f);
+					}
+				}
+
+
 
 				if (m_dispindex) {
 					*(m_dispindex + setno * 3 + vcnt) = setno * 3 + vcnt;
@@ -572,52 +597,52 @@ int CPolyMesh4::DumpInfBone( CMQOObject* srcobj, map<int,CBone*>& srcbonelist )
 	return 0;
 }
 
-int CPolyMesh4::SetPm3InfNoSkin( ID3D12Device* pdev, CMQOObject* srcobj, int clusterno, map<int,CBone*>& srcbonelist )
-{
-	if (!m_pm3inf || !m_triface || !srcobj) {
-		_ASSERT(0);
-		return 1;
-	}
-	ZeroMemory( m_pm3inf, sizeof( PM3INF ) * m_optleng );
-
-	int fno;
-	int setno = 0;
-	for( fno = 0; fno < m_facenum; fno++ ){
-		if( m_pm3inf ){
-			int vi[3] = {0, 2, 1};
-			int vcnt;
-			for( vcnt = 0; vcnt < 3; vcnt++ ){
-				PM3INF* curinf = m_pm3inf + ((size_t)setno * 3 + vcnt);
-				int vno = (m_triface + setno)->GetIndex( vi[vcnt] );
-				_ASSERT( (vno >= 0) && (vno < m_orgpointnum) );
-				curinf->boneindex[0] = clusterno;
-				curinf->weight[0] = 1.0f;
-				curinf->boneindex[1] = 0;
-				curinf->weight[1] = 0.0f;
-				curinf->boneindex[2] = 0;
-				curinf->weight[2] = 0.0f;
-				curinf->boneindex[3] = 0;
-				curinf->weight[3] = 0.0f;
-			}
-		}
-		setno ++;
-	}
-
-	if( (setno * 3) != m_optleng ){
-		_ASSERT( 0 );
-		return 1;
-	}
-
-	if (srcobj->GetDispObj()) {
-		CallF(srcobj->GetDispObj()->CreateDispObj(pdev, this, 1), return 1);
-	}
-	else {
-		_ASSERT(0);
-	}
-	
-
-	return 0;
-}
+//int CPolyMesh4::SetPm3InfNoSkin( ID3D12Device* pdev, CMQOObject* srcobj, int clusterno, map<int,CBone*>& srcbonelist )
+//{
+//	if (!m_pm3inf || !m_triface || !srcobj) {
+//		_ASSERT(0);
+//		return 1;
+//	}
+//	ZeroMemory( m_pm3inf, sizeof( PM3INF ) * m_optleng );
+//
+//	int fno;
+//	int setno = 0;
+//	for( fno = 0; fno < m_facenum; fno++ ){
+//		if( m_pm3inf ){
+//			int vi[3] = {0, 2, 1};
+//			int vcnt;
+//			for( vcnt = 0; vcnt < 3; vcnt++ ){
+//				PM3INF* curinf = m_pm3inf + ((size_t)setno * 3 + vcnt);
+//				int vno = (m_triface + setno)->GetIndex( vi[vcnt] );
+//				_ASSERT( (vno >= 0) && (vno < m_orgpointnum) );
+//				curinf->boneindex[0] = clusterno;
+//				curinf->weight[0] = 1.0f;
+//				curinf->boneindex[1] = 0;
+//				curinf->weight[1] = 0.0f;
+//				curinf->boneindex[2] = 0;
+//				curinf->weight[2] = 0.0f;
+//				curinf->boneindex[3] = 0;
+//				curinf->weight[3] = 0.0f;
+//			}
+//		}
+//		setno ++;
+//	}
+//
+//	if( (setno * 3) != m_optleng ){
+//		_ASSERT( 0 );
+//		return 1;
+//	}
+//
+//	if (srcobj->GetDispObj()) {
+//		CallF(srcobj->GetDispObj()->CreateDispObj(pdev, this, 1), return 1);
+//	}
+//	else {
+//		_ASSERT(0);
+//	}
+//	
+//
+//	return 0;
+//}
 
 int CPolyMesh4::SetPm3Inf(CMQOObject* srcobj)
 {
@@ -710,74 +735,74 @@ ChaVector3 CPolyMesh4::GetNormalByControlPointNo(int vno)
 		return ChaVector3(0.0f, 0.0f, 0.0f);
 	}
 }
-ChaVector2 CPolyMesh4::GetUVByControlPointNo(int vno)
-{
-	/*
-	if (m_uvleng == (m_facenum * 3)){
-		curv->uv = *(m_uvbuf + setno * 3 + vi[vcnt]);
-	}
-	else if (m_uvleng >= m_orgpointnum){//m_orgpointnumのときとm_orgpointnum * 2のとき
-		curv->uv = *(m_uvbuf + vno);
-	}
-	*/
-
-	/*
-	if (m_uvleng == (m_facenum * 3)){
-		int findindex = -1;
-		int chki;
-		for (chki = 0; chki < (m_facenum * 3); chki++){
-			int curvno = *(m_orgindex + chki);
-			if (vno == curvno){
-				findindex = chki;
-				break;
-			}
-		}
-		if (findindex >= 0){
-			return *(m_uvbuf + findindex);
-		}
-		else{
-			_ASSERT(0);
-			return ChaVector2(0.0f, 0.0f);
-		}
-	}
-	else if (m_uvleng >= m_orgpointnum){
-		return *(m_uvbuf + vno);
-	}
-	else{
-		_ASSERT(0);
-		return ChaVector2(0.0f, 0.0f);
-	}
-	*/
-	if (m_uvleng == (m_facenum * 3)){
-		int findindex = -1;
-		int chki;
-		for (chki = 0; chki < (m_facenum * 3); chki++){
-			int curvno = *(m_orgindex + chki);
-			if (vno == curvno){
-				findindex = chki;
-				break;
-			}
-		}
-		if (findindex >= 0){
-			return *(m_uvbuf + findindex);
-		}
-		else{
-			_ASSERT(0);
-			return ChaVector2(0.0f, 0.0f);
-		}
-	}
-	else if (m_uvleng >= m_orgpointnum){
-		return *(m_uvbuf + vno);
-	}
-	else{
-		_ASSERT(0);
-		return ChaVector2(0.0f, 0.0f);
-	}
-
-	//m_dispv = (BINORMALDISPV*)malloc(sizeof(BINORMALDISPV) * m_optleng);
-
-
-}
+//ChaVector2 CPolyMesh4::GetUVByControlPointNo(int vno)
+//{
+//	/*
+//	if (m_uvleng == (m_facenum * 3)){
+//		curv->uv = *(m_uvbuf + setno * 3 + vi[vcnt]);
+//	}
+//	else if (m_uvleng >= m_orgpointnum){//m_orgpointnumのときとm_orgpointnum * 2のとき
+//		curv->uv = *(m_uvbuf + vno);
+//	}
+//	*/
+//
+//	/*
+//	if (m_uvleng == (m_facenum * 3)){
+//		int findindex = -1;
+//		int chki;
+//		for (chki = 0; chki < (m_facenum * 3); chki++){
+//			int curvno = *(m_orgindex + chki);
+//			if (vno == curvno){
+//				findindex = chki;
+//				break;
+//			}
+//		}
+//		if (findindex >= 0){
+//			return *(m_uvbuf + findindex);
+//		}
+//		else{
+//			_ASSERT(0);
+//			return ChaVector2(0.0f, 0.0f);
+//		}
+//	}
+//	else if (m_uvleng >= m_orgpointnum){
+//		return *(m_uvbuf + vno);
+//	}
+//	else{
+//		_ASSERT(0);
+//		return ChaVector2(0.0f, 0.0f);
+//	}
+//	*/
+//	if (m_uvleng == (m_facenum * 3)){
+//		int findindex = -1;
+//		int chki;
+//		for (chki = 0; chki < (m_facenum * 3); chki++){
+//			int curvno = *(m_orgindex + chki);
+//			if (vno == curvno){
+//				findindex = chki;
+//				break;
+//			}
+//		}
+//		if (findindex >= 0){
+//			return *(m_uvbuf + findindex);
+//		}
+//		else{
+//			_ASSERT(0);
+//			return ChaVector2(0.0f, 0.0f);
+//		}
+//	}
+//	else if (m_uvleng >= m_orgpointnum){
+//		return *(m_uvbuf + vno);
+//	}
+//	else{
+//		_ASSERT(0);
+//		return ChaVector2(0.0f, 0.0f);
+//	}
+//
+//	//m_dispv = (BINORMALDISPV*)malloc(sizeof(BINORMALDISPV) * m_optleng);
+//
+//
+//}
 
 int CPolyMesh4::SetLastValidVno()
 {
@@ -793,7 +818,7 @@ int CPolyMesh4::SetLastValidVno()
 	return 0;
 }
 
-int CPolyMesh4::BuildTangentAndBinormal()
+int CPolyMesh4::BuildTangentAndBinormal(int srcuvnum)
 {
 	if (!m_dispv || !m_dispindex) {
 		_ASSERT(0);
@@ -808,7 +833,7 @@ int CPolyMesh4::BuildTangentAndBinormal()
 		BINORMALDISPV* v1 = m_dispv + i1;
 		BINORMALDISPV* v2 = m_dispv + i2;
 		BINORMALDISPV* v3 = m_dispv + i3;
-		CalcTangentAndBinormal(v1, v2, v3);
+		CalcTangentAndBinormal(srcuvnum, v1, v2, v3);
 	}
 	int vno;
 	for (vno = 0; vno < (m_facenum * 3); vno++) {

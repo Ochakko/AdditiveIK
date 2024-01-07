@@ -26,7 +26,10 @@ public:
 	CPolyMesh4();
 	~CPolyMesh4();
 
-	int CreatePM4(int normalmappingmode, int pointnum, int facenum, int normalleng, int uvleng, ChaVector3* pointptr, ChaVector3* nptr, ChaVector2* uvptr, CMQOFace* faceptr, CModel* pmodel);
+	int CreatePM4(int normalmappingmode, int pointnum, int facenum, 
+		int normalleng, int uvleng, ChaVector3* pointptr, 
+		ChaVector3* nptr, ChaVector2* uvptr, ChaVector2* uv1ptr, 
+		CMQOFace* faceptr, CModel* pmodel, int srcuvnum);
 	
 	int ChkAlphaNum( std::map<int,CMQOMaterial*>& srcmat );
 	int CalcBound();
@@ -35,7 +38,7 @@ public:
 	int UpdateMorphBuffer( ChaVector3* mpoint );
 
 	int DumpInfBone( CMQOObject* srcobj, std::map<int,CBone*>& srcbonelist );
-	int SetPm3InfNoSkin( ID3D12Device* pdev, CMQOObject* srcobj, int clusterno, std::map<int,CBone*>& srcbonelist );
+	//int SetPm3InfNoSkin( ID3D12Device* pdev, CMQOObject* srcobj, int clusterno, std::map<int,CBone*>& srcbonelist );
 
 	void DestroySystemDispObj();
 
@@ -44,9 +47,9 @@ private:
 	void DestroyObjs();
 
 	int SetTriFace( CMQOFace* faceptr, int* numptr );
-	int SetOptV(BINORMALDISPV* optv, int* pleng, int* matnum, CModel* pmodel);
+	int SetOptV(BINORMALDISPV* optv, int* pleng, int* matnum, CModel* pmodel, int srcuvnum);
 	int SetLastValidVno();
-	int BuildTangentAndBinormal();
+	int BuildTangentAndBinormal(int srcuvnum);
 
 public:
 	//accesser
@@ -72,6 +75,10 @@ public:
 	ChaVector2* GetOrgUV()
 	{
 		return m_uvbuf;
+	};
+	ChaVector2* GetOrgUV1()
+	{
+		return m_uv1buf;
 	};
 	int GetOrgUVLeng(){
 		return m_uvleng;
@@ -123,7 +130,7 @@ public:
 	};
 
 	ChaVector3 GetNormalByControlPointNo(int vno);
-	ChaVector2 GetUVByControlPointNo(int vno);
+	//ChaVector2 GetUVByControlPointNo(int vno);
 
 	int GetDispMaterialNum()
 	{
@@ -254,6 +261,7 @@ private:
 	ChaVector3* m_pointbuf;//外部メモリ
 	ChaVector3* m_normal;//外部メモリ
 	ChaVector2* m_uvbuf;//外部メモリ
+	ChaVector2* m_uv1buf;//外部メモリ
 	CMQOFace* m_triface;
 
 	CHKALPHA chkalpha;

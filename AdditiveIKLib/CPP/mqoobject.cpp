@@ -155,6 +155,10 @@ void CMQOObject::DestroySystemDispObj()
 		free(m_uvbuf);
 		m_uvbuf = 0;
 	}
+	if (m_uvbuf1) {
+		free(m_uvbuf1);
+		m_uvbuf1 = 0;
+	}
 
 	if (m_mpoint) {
 		free(m_mpoint);
@@ -250,6 +254,7 @@ void CMQOObject::InitParams()
 	m_normal = 0;
 	m_uvleng = 0;
 	m_uvbuf = 0;
+	m_uvbuf1 = 0;
 
 	m_shapevert.clear();
 	m_shapeweight.clear();
@@ -260,6 +265,8 @@ void CMQOObject::InitParams()
 
 	m_latermaterial.clear();
 	m_onloadmaterial.clear();
+
+	m_getuvnum = 0;
 
 //	next = 0;
 }
@@ -843,14 +850,14 @@ int CMQOObject::MakePolymesh3(bool fbxfileflag, ID3D12Device* pdev, CModel* pmod
 		//mqofile
 		//materialはCModelから引数で受け取ったsrcmaterial
 		CallF(m_pm3->CreatePM3(fbxfileflag, vert_count, face_count, m_facet, 
-			pointptr, faceptr, pmodel, m_multmat), return 1);
+			pointptr, faceptr, pmodel, m_multmat, GetUVNum()), return 1);
 	}
 	else {
 		
 		//fbxfile
 		//uvはCMQOObjectのm_uvbuf
 
-		if (m_uvbuf ) {
+		if (m_uvbuf) {
 			int datano1 = 0;
 			int faceno1;
 			int trino1;
@@ -867,6 +874,11 @@ int CMQOObject::MakePolymesh3(bool fbxfileflag, ID3D12Device* pdev, CModel* pmod
 						}
 						ChaVector2* srcuv = m_uvbuf + faceno1 * 3 + trino1;
 						curface->SetUV(trino1, *srcuv);
+
+						if (m_uvbuf1) {
+							ChaVector2* srcuv1 = m_uvbuf1 + faceno1 * 3 + trino1;
+							curface->SetUV1(trino1, *srcuv1);
+						}
 					}
 				}
 			}
@@ -874,7 +886,8 @@ int CMQOObject::MakePolymesh3(bool fbxfileflag, ID3D12Device* pdev, CModel* pmod
 
 		//2023/12/01
 		//マテリアル情報のために　pmodelを渡す
-		CallF(m_pm3->CreatePM3(fbxfileflag, vert_count, face_count, m_facet, pointptr, faceptr, pmodel, m_multmat), return 1);
+		CallF(m_pm3->CreatePM3(fbxfileflag, vert_count, face_count, m_facet, 
+			pointptr, faceptr, pmodel, m_multmat, GetUVNum()), return 1);
 	}
 	
 	return 0;
@@ -904,7 +917,7 @@ int CMQOObject::MakePolymesh4(ID3D12Device* pdev, CModel* pmodel)
 		return 1;
 	}
 
-	CallF( m_pm4->CreatePM4(m_normalmappingmode, m_vertex, m_face, m_normalleng, m_uvleng, m_pointbuf, m_normal, m_uvbuf, m_facebuf, pmodel), return 1 );
+	CallF( m_pm4->CreatePM4(m_normalmappingmode, m_vertex, m_face, m_normalleng, m_uvleng, m_pointbuf, m_normal, m_uvbuf, m_uvbuf1, m_facebuf, pmodel, GetUVNum()), return 1 );
 	
 	return 0;
 }
@@ -969,7 +982,7 @@ int CMQOObject::MakeDispObj( ID3D12Device* pdev, int hasbone )
 			_ASSERT(0);
 			return 1;
 		}
-		CallF(m_dispobj->CreateDispObj(pdev, m_pm3, hasbone), return 1);
+		CallF(m_dispobj->CreateDispObj(pdev, m_pm3, hasbone, GetUVNum()), return 1);
 
 		m_pm3->CalcBound();
 
@@ -990,7 +1003,7 @@ int CMQOObject::MakeDispObj( ID3D12Device* pdev, int hasbone )
 			_ASSERT(0);
 			return 1;
 		}
-		CallF(m_dispobj->CreateDispObj(pdev, m_pm4, hasbone), return 1);
+		CallF(m_dispobj->CreateDispObj(pdev, m_pm4, hasbone, GetUVNum()), return 1);
 
 
 		m_pm4->CalcBound();

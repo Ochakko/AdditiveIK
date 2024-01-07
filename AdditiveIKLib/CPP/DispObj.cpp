@@ -270,7 +270,7 @@ int CDispObj::DestroyObjs()
 }
 
 
-int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone)
+int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, int srcuvnum)
 {
 	DestroyObjs();
 
@@ -309,6 +309,7 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone)
 			curmat->CreateDecl(pdev, vertextype);
 
 			curmat->InitShadersAndPipelines(
+				srcuvnum,
 				vertextype,
 				"../Media/Shader/AdditiveIK_NoSkin_PBR.fx",//fx NoSkin PBR
 				"../Media/Shader/AdditiveIK_NoSkin_Std.fx",//fx NoSkin Std
@@ -387,7 +388,7 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone)
 
 	return 0;
 }
-int CDispObj::CreateDispObj( ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone )
+int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, int srcuvnum)
 {
 	DestroyObjs();
 
@@ -427,6 +428,7 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone )
 				curmat->CreateDecl(pdev, vertextype);
 
 				curmat->InitShadersAndPipelines(
+					srcuvnum,
 					vertextype,
 					"../Media/Shader/AdditiveIK_Skin_PBR.fx",//fx Skin PBR
 					"../Media/Shader/AdditiveIK_Skin_Std.fx",//fx Skin Std
@@ -544,6 +546,7 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 		curmat->CreateDecl(pdev, vertextype);
 
 		curmat->InitShadersAndPipelines(
+			0,
 			vertextype,
 			"../Media/Shader/AdditiveIK_NoSkin_Std.fx",
 			"../Media/Shader/AdditiveIK_NoSkin_Std.fx",
