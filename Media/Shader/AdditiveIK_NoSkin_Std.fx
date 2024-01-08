@@ -32,8 +32,7 @@ struct SPSIn
     float4 pos          : SV_POSITION;
     float4 normal       : NORMAL;
     float2 uv           : TEXCOORD0;
-    float2 uv1          : TEXCOORD1;
-    float4 diffusemult  : TEXCOORD2;
+    float4 diffusemult  : TEXCOORD1;
 };
 
 
@@ -50,11 +49,10 @@ struct SPSInShadowReciever
     float4 pos : SV_POSITION;
     float4 normal : NORMAL;
     float2 uv : TEXCOORD0;
-    float2 uv1 : TEXCOORD1;
-    float4 diffusemult : TEXCOORD2;
+    float4 diffusemult : TEXCOORD1;
     
     // ライトビュースクリーン空間での座標を追加
-    float4 posInLVP : TEXCOORD3; // ライトビュースクリーン空間でのピクセルの座標
+    float4 posInLVP : TEXCOORD2; // ライトビュースクリーン空間でのピクセルの座標
 };
 
 
@@ -76,10 +74,11 @@ cbuffer ModelCb : register(b0)
     float4x4 mProj;
     float4 diffusemult;
     float4 ambient;
-    float4 emission;    
+    float4 emission;
     float4 metalcoef;
     float4 materialdisprate;
     float4 shadowmaxz;
+    int4 UVs;
 };
 
 // ディレクションライト
@@ -132,8 +131,7 @@ SPSIn VSMainNoSkinStd(SVSInWithoutBone vsIn, uniform bool hasSkin)
     psIn.pos = mul(mWorld, vsIn.pos);   // モデルの頂点をワールド座標系に変換
     psIn.pos = mul(mView, psIn.pos);    // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos);    // カメラ座標系からスクリーン座標系に変換
-    psIn.uv = vsIn.uv.xy;
-    psIn.uv1 = vsIn.uv.zw;
+    psIn.uv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
 
     psIn.diffusemult = diffusemult;
     
@@ -168,9 +166,8 @@ SPSInShadowReciever VSMainNoSkinStdShadowReciever(SVSInWithoutBone vsIn, uniform
     float4 worldPos = mul(mWorld, vsIn.pos);
     psIn.pos = mul(mView, worldPos);
     psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
-    psIn.uv = vsIn.uv.xy;
-    psIn.uv1 = vsIn.uv.zw;
-
+    psIn.uv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+    
     
     // ライトビュースクリーン空間の座標を計算する
     psIn.posInLVP = mul(mLVP, worldPos);

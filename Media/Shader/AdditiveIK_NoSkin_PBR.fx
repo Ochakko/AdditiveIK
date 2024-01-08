@@ -35,9 +35,8 @@ struct SPSIn
     float4 tangent : TANGENT;
     float4 biNormal : BINORMAL;
     float2 uv : TEXCOORD0; // uv座標
-    float2 uv1 : TEXCOORD1; // uv座標
-    float4 worldPos : TEXCOORD2; // ワールド空間でのピクセルの座標
-    float4 diffusemult : TEXCOORD3;
+    float4 worldPos : TEXCOORD1; // ワールド空間でのピクセルの座標
+    float4 diffusemult : TEXCOORD2;
 };
 
 struct SPSInExtLine
@@ -60,12 +59,11 @@ struct SPSInShadowReciever
     float4 tangent : TANGENT;
     float4 biNormal : BINORMAL;
     float2 uv : TEXCOORD0; // uv座標
-    float2 uv1 : TEXCOORD1; // uv座標
-    float4 worldPos : TEXCOORD2; // ワールド空間でのピクセルの座標
-    float4 diffusemult : TEXCOORD3;
+    float4 worldPos : TEXCOORD1; // ワールド空間でのピクセルの座標
+    float4 diffusemult : TEXCOORD2;
     
     // ライトビュースクリーン空間での座標を追加
-    float4 posInLVP : TEXCOORD4; // ライトビュースクリーン空間でのピクセルの座標    
+    float4 posInLVP : TEXCOORD3; // ライトビュースクリーン空間でのピクセルの座標    
 };
 
 ///////////////////////////////////////////
@@ -79,10 +77,11 @@ cbuffer ModelCb : register(b0)
     float4x4 mProj;
     float4 diffusemult;
     float4 ambient;
-    float4 emission;    
+    float4 emission;
     float4 metalcoef;
     float4 materialdisprate;
     float4 shadowmaxz;
+    int4 UVs;
 };
 
 // ディレクションライト
@@ -95,7 +94,7 @@ struct DirectionalLight
 // ライト用の定数バッファー
 cbuffer LightCb : register(b1)
 {
-    uniform int4 lightsnum;    
+    uniform int4 lightsnum;
     DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
     float4 eyePos; // カメラの視点
     float4 specPow; // スペキュラの絞り
@@ -352,8 +351,7 @@ SPSIn VSMainNoSkinPBR(SVSInWithoutBone vsIn, uniform bool hasSkin)
     psIn.worldPos = psIn.pos;    
     psIn.pos = mul(mView, psIn.pos);    // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos);    // カメラ座標系からスクリーン座標系に変換
-    psIn.uv = vsIn.uv.xy;
-    psIn.uv1 = vsIn.uv.zw;
+    psIn.uv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
     psIn.diffusemult = diffusemult;
     
     psIn.normal = normalize(mul(mWorld, vsIn.normal));
@@ -391,8 +389,7 @@ SPSInShadowReciever VSMainNoSkinPBRShadowReciever(SVSInWithoutBone vsIn, uniform
     psIn.worldPos = psIn.pos;    
     psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
-    psIn.uv = vsIn.uv.xy;
-    psIn.uv1 = vsIn.uv.zw;
+    psIn.uv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
     psIn.diffusemult = diffusemult;
     
     // ライトビュースクリーン空間の座標を計算する
@@ -502,7 +499,7 @@ float4 PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
     //7-2
     //#########
       // 法線を計算
-    float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, psIn.uv1);
+    float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, psIn.uv);
 
     // アルベドカラー、スペキュラカラー、金属度、滑らかさをサンプリングする。
     // アルベドカラー（拡散反射光）
@@ -512,10 +509,10 @@ float4 PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
     float3 specColor = albedoColor.xyz;
 
     // 金属度
-    float metallic = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv1).r * metalcoef.x; //!!!!metalcoef
+    float metallic = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv).r * metalcoef.x; //!!!!metalcoef
 
     // 滑らかさ
-    float smooth = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv1).a * metalcoef.y; //!!!!smoothcoef
+    float smooth = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv).a * metalcoef.y; //!!!!smoothcoef
 
     // 視線に向かって伸びるベクトルを計算する
     float3 toEye = normalize(eyePos.xyz - psIn.worldPos.xyz);
@@ -642,7 +639,7 @@ float4 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     //7-2
     //#########
       // 法線を計算
-    float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, psIn.uv1);
+    float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, psIn.uv);
 
     // アルベドカラー、スペキュラカラー、金属度、滑らかさをサンプリングする。
     // アルベドカラー（拡散反射光）
@@ -652,10 +649,10 @@ float4 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     float3 specColor = albedoColor.xyz;
 
     // 金属度
-    float metallic = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv1).r * metalcoef.x; //!!!!metalcoef
+    float metallic = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv).r * metalcoef.x; //!!!!metalcoef
 
     // 滑らかさ
-    float smooth = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv1).a * metalcoef.y; //!!!!smoothcoef
+    float smooth = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv).a * metalcoef.y; //!!!!smoothcoef
 
     // 視線に向かって伸びるベクトルを計算する
     float3 toEye = normalize(eyePos.xyz - psIn.worldPos.xyz);

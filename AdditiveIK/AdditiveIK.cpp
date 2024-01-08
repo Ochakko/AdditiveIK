@@ -3321,6 +3321,7 @@ void InitApp()
 	g_freefps = true;
 	s_befftime = 0.0;
 
+	g_uvset = 0;
 
 	g_lodrate2L[CHKINVIEW_LOD0] = 0.05f;//rate * projfar.  distance of clipping
 	g_lodrate2L[CHKINVIEW_LOD1] = 1.0f;
@@ -25450,6 +25451,27 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			return 1;
 		}
 
+
+		combownd = GetDlgItem(hDlgWnd, IDC_COMBO_UVSET);
+		if (combownd != NULL) {
+			SendMessage(combownd, CB_RESETCONTENT, 0, 0);
+
+			WCHAR struvset[256];
+			ULONG uvindex;
+			swprintf_s(struvset, 256, L"UVSet0");
+			uvindex = BONEAXIS_CURRENT;
+			SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)struvset);
+			swprintf_s(struvset, 256, L"UVSet1");
+			uvindex = BONEAXIS_PARENT;
+			SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)struvset);
+			SendMessage(combownd, CB_SETCURSEL, (WPARAM)g_uvset, 0);
+		}
+		else {
+			_ASSERT(0);
+			return 1;
+		}
+
+
 		//#########
 		//CheckBox
 		//#########
@@ -25791,6 +25813,29 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 							g_boneaxis = BONEAXIS_CURRENT;
 							break;
 						}
+					}
+					else {
+						_ASSERT(0);
+						return false;
+					}
+				}
+				else {
+					_ASSERT(0);
+					return false;
+				}
+				//RECT clientrect;
+				//GetClientRect(hDlgWnd, &clientrect);
+				//InvalidateRect(hDlgWnd, &clientrect, TRUE);
+			}
+			break;
+		case IDC_COMBO_UVSET:
+			if (HIWORD(wp) == CBN_SELCHANGE) {
+				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_UVSET);
+				if (combownd != NULL) {
+					int combono;
+					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
+					if ((combono >= 0) && (combono <= 1)) {
+						g_uvset = combono;
 					}
 					else {
 						_ASSERT(0);

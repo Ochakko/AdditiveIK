@@ -3,6 +3,16 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/01/08
+　マルチUVの使い方を修正
+　　Albedo, Normal, Metal丸ごと一緒にUVSet0とUVSet1を切り替えるように.
+　　DispAndLimitsプレートメニューに UVSetコンボボックスを追加
+　LaterTransparent設定ウインドウに　Albedoテクスチャ名がエントリーされていなかった不具合修正
+　　AlbedoでもNormalでもMetalでもないテクスチャ名だけがエントリーされていた不具合だった
+
+
+
+
 2024/01/07
 　２個までのマルチUVに対応
 　　ただし用途は限定　１つ目のUVはalbedoテクスチャ　２つ目のUVはノーマルマップとメタルマップ用

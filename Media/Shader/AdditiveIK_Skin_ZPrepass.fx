@@ -39,9 +39,12 @@ cbuffer ModelCb : register(b0)
     float4x4 mView;
     float4x4 mProj;
     float4 diffusemult;
+    float4 ambient;
+    float4 emission;
     float4 metalcoef;
     float4 materialdisprate;
     float4 shadowmaxz;
+    int4 UVs;
 };
 // ディレクションライト
 struct DirectionalLight
@@ -52,7 +55,7 @@ struct DirectionalLight
 
 cbuffer ModelCbMatrix : register(b1)
 {
-    int4 lightsnum;
+    uniform int4 lightsnum;
     DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
     float4 eyePos; // カメラの視点
     float4 specPow; // スペキュラの絞り

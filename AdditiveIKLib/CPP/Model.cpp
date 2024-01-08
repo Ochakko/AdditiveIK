@@ -5035,7 +5035,8 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 						char tempname[256];
 						strcpy_s(tempname, 256, lLayeredTexture->GetName());
 						SetMaterialTexNames(newmqomat, tempname,
-							lLayeredTexture->GetWrapModeU(), lLayeredTexture->GetWrapModeV());					
+							lLayeredTexture->GetWrapModeU(), lLayeredTexture->GetWrapModeV());	
+						break;
 					}
 				}
 			}
@@ -5082,6 +5083,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 						strcpy_s(tempname, 256, lLayeredTexture->GetName());
 						SetMaterialTexNames(newmqomat, tempname,
 							lLayeredTexture->GetWrapModeU(), lLayeredTexture->GetWrapModeV());
+						break;
 					}
 				}
 			}
@@ -7856,8 +7858,10 @@ int CModel::GetTextureNameVec(std::vector<std::string>& dstvec)
 	for (matindex = 0; matindex < materialnum; matindex++) {
 		CMQOMaterial* curmat = m_materialbank.Get(matindex);
 		if (curmat) {
-			if (curmat->GetTex() && (strlen(curmat->GetTex()) > 0)) {
-				string curtexname = curmat->GetTex();
+			//if (curmat->GetTex() && (strlen(curmat->GetTex()) > 0)) {
+			//	string curtexname = curmat->GetTex();
+			if (curmat->GetAlbedoTex() && (strlen(curmat->GetAlbedoTex()) > 0)) {//2024/01/08
+				string curtexname = curmat->GetAlbedoTex();
 
 
 				bool sameflag = false;

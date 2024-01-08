@@ -64,6 +64,7 @@ struct SConstantBuffer {
 	ChaVector4 metalcoef;
 	ChaVector4 materialdisprate;
 	ChaVector4 shadowmaxz;
+	int UVs[4];
 	void Init() {
 		mWorld.SetIdentity();
 		mView.SetIdentity();
@@ -74,6 +75,7 @@ struct SConstantBuffer {
 		metalcoef = ChaVector4(0.250f, 0.250f, 0.0f, 0.0f);
 		materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 		shadowmaxz = ChaVector4(3000.0f, 0.0010f, 0.0f, 0.0f);
+		ZeroMemory(UVs, sizeof(int) * 4);
 	};
 };
 

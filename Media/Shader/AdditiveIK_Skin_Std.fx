@@ -29,8 +29,7 @@ struct SPSIn
     float4 pos          : SV_POSITION;
     float4 normal       : NORMAL;    
     float2 uv           : TEXCOORD0;
-    float2 uv1          : TEXCOORD1;
-    float4 diffusemult : TEXCOORD2;
+    float4 diffusemult : TEXCOORD1;
 };
 
 struct SPSInShadowMap
@@ -46,11 +45,10 @@ struct SPSInShadowReciever
     float4 pos : SV_POSITION;
     float4 normal : NORMAL;
     float2 uv : TEXCOORD0;
-    float2 uv1 : TEXCOORD1;
-    float4 diffusemult : TEXCOORD2;
+    float4 diffusemult : TEXCOORD1;
     
     // ライトビュースクリーン空間での座標を追加
-    float4 posInLVP : TEXCOORD3; // ライトビュースクリーン空間でのピクセルの座標
+    float4 posInLVP : TEXCOORD2; // ライトビュースクリーン空間でのピクセルの座標
 };
 
 
@@ -69,6 +67,7 @@ cbuffer ModelCb : register(b0)
     float4 metalcoef;
     float4 materialdisprate;
     float4 shadowmaxz;
+    int4 UVs;    
 };
 
 // ディレクションライト
@@ -80,7 +79,7 @@ struct DirectionalLight
 
 cbuffer ModelCbMatrix : register(b1)
 {
-    uniform int4 lightsnum; 
+    uniform int4 lightsnum;
     DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
     float4 eyePos; // カメラの視点
     float4 specPow; // スペキュラの絞り
@@ -135,8 +134,8 @@ SPSIn VSMainSkinStd(SVSIn vsIn, uniform bool hasSkin)
     //psIn.pos /= psIn.pos.w;
     
     psIn.normal = normalize(mul(finalmat, vsIn.normal));    
-    psIn.uv = vsIn.uv.xy;
-    psIn.uv1 = vsIn.uv.zw;
+    psIn.uv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+    
     psIn.diffusemult = diffusemult;
     
     return psIn;
@@ -205,8 +204,7 @@ SPSInShadowReciever VSMainSkinStdShadowReciever(SVSIn vsIn, uniform bool hasSkin
     psIn.posInLVP.z = length(worldPos.xyz - lightPos.xyz) / shadowmaxz.x;
     
     psIn.normal = normalize(mul(finalmat, vsIn.normal));
-    psIn.uv = vsIn.uv.xy;
-    psIn.uv1 = vsIn.uv.zw;
+    psIn.uv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
 
     psIn.diffusemult = diffusemult;
    

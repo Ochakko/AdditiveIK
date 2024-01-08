@@ -60,7 +60,7 @@ class CInfoWindow;
 
 bool g_hdrpbloom = true;
 bool g_freefps = true;
-
+int g_uvset = 0;
 
 float g_lodrate2L[CHKINVIEW_LODMAX];
 float g_lodrate3L[CHKINVIEW_LODMAX];
@@ -313,6 +313,7 @@ double g_playingend = 1.0;
 
 extern bool g_hdrpbloom;
 extern bool g_freefps;
+extern int g_uvset;
 
 extern float g_lodrate2L[CHKINVIEW_LODMAX];
 extern float g_lodrate3L[CHKINVIEW_LODMAX];

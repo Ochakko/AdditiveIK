@@ -2703,6 +2703,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb.shadowmaxz = ChaVector4(
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
+		m_cb.UVs[0] = g_uvset;
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer.CopyToVRAM(m_cb);
 		}
@@ -2734,6 +2735,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb.shadowmaxz = ChaVector4(
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
+		m_cb.UVs[0] = g_uvset;
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer.CopyToVRAM(m_cb);
 		}
@@ -2778,6 +2780,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb.shadowmaxz = ChaVector4(
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
+		m_cb.UVs[0] = g_uvset;
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer.CopyToVRAM(m_cb);
 		}
@@ -2864,6 +2867,7 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ rende
 		m_cb.shadowmaxz = ChaVector4(
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
+		m_cb.UVs[0] = g_uvset;
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer.CopyToVRAM(m_cb);
 		}
@@ -2893,6 +2897,7 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ rende
 		m_cb.shadowmaxz = ChaVector4(
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
+		m_cb.UVs[0] = g_uvset;
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer.CopyToVRAM(m_cb);
 		}
@@ -2931,6 +2936,7 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ rende
 		m_cb.shadowmaxz = ChaVector4(
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
+		m_cb.UVs[0] = g_uvset;
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer.CopyToVRAM(m_cb);
 		}
