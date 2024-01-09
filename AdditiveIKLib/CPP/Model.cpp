@@ -13104,7 +13104,12 @@ int CModel::RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, int s
 					}
 
 
-					int axiskind = currigelem.transuv[uvno].axiskind;
+					//int axiskind = currigelem.transuv[uvno].axiskind;
+					int rigaxiskind = currigelem.transuv[uvno].axiskind;
+					int rigaxis0, rigaxis1;
+					rigaxis0 = rigaxiskind / 3;//BONEAXIS_CURRENT, BONEAXIS_PARENT, BONEAXIS_GLOBAL, BONEAXIS_BINDPOSE
+					rigaxis1 = rigaxiskind % 3;//AXIS_X, AXIS_Y, AXIS_Z
+
 					float rotrad2 = rotrad * currigelem.transuv[uvno].applyrate;
 					if (currigelem.transuv[uvno].enable == 1){
 						//if (fabs(rotrad2) >= (0.020 * DEG2PAI)){
@@ -13141,19 +13146,20 @@ int CModel::RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, int s
 							//int multworld = 1;//!!!!!!!!!!!!!!!!!!!!!!!!!!
 							//selectmat = curbone->CalcManipulatorMatrix(0, multworld, m_curmotinfo->motid, m_curmotinfo->curframe);//curmotinfo!!!
 							if (curbone && curbone->GetParent(false)) {
-								curbone->GetParent(false)->CalcAxisMatX_Manipulator(limitdegflag, g_boneaxis, 0, curbone, &selectmat, 0);
+								//curbone->GetParent(false)->CalcAxisMatX_Manipulator(limitdegflag, g_boneaxis, 0, curbone, &selectmat, 0);
+								curbone->GetParent(false)->CalcAxisMatX_Manipulator(limitdegflag, rigaxis0, 0, curbone, &selectmat, 0);
 							}
 							else {
 								selectmat.SetIdentity();
 							}
 							ChaMatrixInverse(&invselectmat, NULL, &selectmat);
-							if (axiskind == AXIS_X) {
+							if (rigaxis1 == AXIS_X) {
 								axis0 = selectmat.GetRow(0);
 							}
-							else if (axiskind == AXIS_Y) {
+							else if (rigaxis1 == AXIS_Y) {
 								axis0 = selectmat.GetRow(1);
 							}
-							else if (axiskind == AXIS_Z) {
+							else if (rigaxis1 == AXIS_Z) {
 								axis0 = selectmat.GetRow(2);
 							}
 							else {
@@ -13427,7 +13433,11 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 				}
 
 
-				int axiskind = currigelem.transuv[uvno].axiskind;
+				int rigaxiskind = currigelem.transuv[uvno].axiskind;
+				int rigaxis0, rigaxis1;
+				rigaxis0 = rigaxiskind / 3;//BONEAXIS_CURRENT, BONEAXIS_PARENT, BONEAXIS_GLOBAL, BONEAXIS_BINDPOSE
+				rigaxis1 = rigaxiskind % 3;//AXIS_X, AXIS_Y, AXIS_Z
+
 				float rotrad2 = rotrad * currigelem.transuv[uvno].applyrate;
 				if (currigelem.transuv[uvno].enable == 1) {
 
@@ -13439,19 +13449,22 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 					selectmat.SetIdentity();
 					invselectmat.SetIdentity();
 					if (curbone && curbone->GetParent(false)) {
-						curbone->GetParent(false)->CalcAxisMatX_Manipulator(limitdegflag, g_boneaxis, 0, curbone, &selectmat, 0);
+						//curbone->GetParent(false)->CalcAxisMatX_Manipulator(limitdegflag, g_boneaxis, 0, curbone, &selectmat, 0);
+						
+						//2024/01/09
+						curbone->GetParent(false)->CalcAxisMatX_Manipulator(limitdegflag, rigaxis0, 0, curbone, &selectmat, 0);
 					}
 					else {
 						selectmat.SetIdentity();
 					}
 					ChaMatrixInverse(&invselectmat, NULL, &selectmat);
-					if (axiskind == AXIS_X) {
+					if (rigaxis1 == AXIS_X) {
 						axis0 = selectmat.GetRow(0);
 					}
-					else if (axiskind == AXIS_Y) {
+					else if (rigaxis1 == AXIS_Y) {
 						axis0 = selectmat.GetRow(1);
 					}
-					else if (axiskind == AXIS_Z) {
+					else if (rigaxis1 == AXIS_Z) {
 						axis0 = selectmat.GetRow(2);
 					}
 					else {

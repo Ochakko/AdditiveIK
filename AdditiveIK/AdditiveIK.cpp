@@ -18927,11 +18927,22 @@ int OnSetMotSpeed()
 	//	return 0;
 	//}
 
-	//SetMotionSpeed() : モーションごとのスピード
-	//SetTmpMotSpeed() : モーションが変わってもスライダー指定のスピード
-	//モーションが変わってもスライダー指定のスピードを維持するようにする
-	//g_dspeed = s_model->GetCurMotInfo()->speed;
-	g_dspeed = s_model->GetTmpMotSpeed();
+
+	//スライダーからspeedの値を取得
+	if (s_guidlg[GUIDLG_DISP_AND_LIMITS]) {
+		HWND speedwnd = GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_SLIDER_SPEED);
+		if (speedwnd && IsWindow(speedwnd)) {
+			int cursliderpos = (int)SendMessage(speedwnd, TBM_GETPOS, 0, 0);
+			g_dspeed = (float)((double)cursliderpos / 100.0);
+		}
+	}
+
+
+	////SetMotionSpeed() : モーションごとのスピード
+	////SetTmpMotSpeed() : モーションが変わってもスライダー指定のスピード
+	////モーションが変わってもスライダー指定のスピードを維持するようにする
+	////g_dspeed = s_model->GetCurMotInfo()->speed;
+	//g_dspeed = s_model->GetTmpMotSpeed();
 	s_chascene->SetMotionSpeed(-1, g_dspeed);
 
 
@@ -38094,13 +38105,32 @@ int CustomRig2Dlg(HWND hDlgWnd)
 
 
 			SendMessage(GetDlgItem(hDlgWnd, axisuid[elemno]), CB_RESETCONTENT, 0, 0);
-			wcscpy_s(strcombo, 256, L"X");
+			wcscpy_s(strcombo, 256, L"CurrentX");
 			SendMessage(GetDlgItem(hDlgWnd, axisuid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
-			wcscpy_s(strcombo, 256, L"Y");
+			wcscpy_s(strcombo, 256, L"CurrentY");
 			SendMessage(GetDlgItem(hDlgWnd, axisuid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
-			wcscpy_s(strcombo, 256, L"Z");
+			wcscpy_s(strcombo, 256, L"CurrentZ");
 			SendMessage(GetDlgItem(hDlgWnd, axisuid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
-			if ((currigelem.transuv[0].axiskind >= AXIS_X) && (currigelem.transuv[0].axiskind <= AXIS_Z)) {
+			wcscpy_s(strcombo, 256, L"ParentX");
+			SendMessage(GetDlgItem(hDlgWnd, axisuid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+			wcscpy_s(strcombo, 256, L"ParentY");
+			SendMessage(GetDlgItem(hDlgWnd, axisuid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+			wcscpy_s(strcombo, 256, L"ParentZ");
+			SendMessage(GetDlgItem(hDlgWnd, axisuid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+			wcscpy_s(strcombo, 256, L"GlobalX");
+			SendMessage(GetDlgItem(hDlgWnd, axisuid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+			wcscpy_s(strcombo, 256, L"GlobalY");
+			SendMessage(GetDlgItem(hDlgWnd, axisuid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+			wcscpy_s(strcombo, 256, L"GlobalZ");
+			SendMessage(GetDlgItem(hDlgWnd, axisuid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+			wcscpy_s(strcombo, 256, L"NodeX");
+			SendMessage(GetDlgItem(hDlgWnd, axisuid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+			wcscpy_s(strcombo, 256, L"NodeY");
+			SendMessage(GetDlgItem(hDlgWnd, axisuid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+			wcscpy_s(strcombo, 256, L"NodeZ");
+			SendMessage(GetDlgItem(hDlgWnd, axisuid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+
+			if ((currigelem.transuv[0].axiskind >= 0) && (currigelem.transuv[0].axiskind < RIGAXIS_MAX)) {
 				SendMessage(GetDlgItem(hDlgWnd, axisuid[elemno]), CB_SETCURSEL, currigelem.transuv[0].axiskind, 0);
 			}
 			swprintf_s(strval, 256, L"%f", currigelem.transuv[0].applyrate);
@@ -38108,13 +38138,32 @@ int CustomRig2Dlg(HWND hDlgWnd)
 
 
 			SendMessage(GetDlgItem(hDlgWnd, axisvid[elemno]), CB_RESETCONTENT, 0, 0);
-			wcscpy_s(strcombo, 256, L"X");
+			wcscpy_s(strcombo, 256, L"CurrentX");
 			SendMessage(GetDlgItem(hDlgWnd, axisvid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
-			wcscpy_s(strcombo, 256, L"Y");
+			wcscpy_s(strcombo, 256, L"CurrentY");
 			SendMessage(GetDlgItem(hDlgWnd, axisvid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
-			wcscpy_s(strcombo, 256, L"Z");
+			wcscpy_s(strcombo, 256, L"CurrentZ");
 			SendMessage(GetDlgItem(hDlgWnd, axisvid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
-			if ((currigelem.transuv[0].axiskind >= AXIS_X) && (currigelem.transuv[0].axiskind <= AXIS_Z)) {
+			wcscpy_s(strcombo, 256, L"ParentX");
+			SendMessage(GetDlgItem(hDlgWnd, axisvid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+			wcscpy_s(strcombo, 256, L"ParentY");
+			SendMessage(GetDlgItem(hDlgWnd, axisvid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+			wcscpy_s(strcombo, 256, L"ParentZ");
+			SendMessage(GetDlgItem(hDlgWnd, axisvid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+			wcscpy_s(strcombo, 256, L"GlobalX");
+			SendMessage(GetDlgItem(hDlgWnd, axisvid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+			wcscpy_s(strcombo, 256, L"GlobalY");
+			SendMessage(GetDlgItem(hDlgWnd, axisvid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+			wcscpy_s(strcombo, 256, L"GlobalZ");
+			SendMessage(GetDlgItem(hDlgWnd, axisvid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+			wcscpy_s(strcombo, 256, L"NodeX");
+			SendMessage(GetDlgItem(hDlgWnd, axisvid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+			wcscpy_s(strcombo, 256, L"NodeY");
+			SendMessage(GetDlgItem(hDlgWnd, axisvid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+			wcscpy_s(strcombo, 256, L"NodeZ");
+			SendMessage(GetDlgItem(hDlgWnd, axisvid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
+
+			if ((currigelem.transuv[0].axiskind >= 0) && (currigelem.transuv[0].axiskind < RIGAXIS_MAX)) {
 				SendMessage(GetDlgItem(hDlgWnd, axisvid[elemno]), CB_SETCURSEL, currigelem.transuv[1].axiskind, 0);
 			}
 			swprintf_s(strval, 256, L"%f", currigelem.transuv[1].applyrate);
@@ -38348,11 +38397,11 @@ LRESULT CALLBACK CustomRigDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 
 					int combono = (int)SendMessage(GetDlgItem(hDlgWnd, axisuid[elemno]), CB_GETCURSEL, 0, 0);
-					if ((combono >= AXIS_X) && (combono <= AXIS_Z)) {
+					if ((combono >= 0) && (combono < RIGAXIS_MAX)) {
 						s_customrig.rigelem[elemno].transuv[0].axiskind = combono;
 					}
 					combono = (int)SendMessage(GetDlgItem(hDlgWnd, axisvid[elemno]), CB_GETCURSEL, 0, 0);
-					if ((combono >= AXIS_X) && (combono <= AXIS_Z)) {
+					if ((combono >= 0) && (combono < RIGAXIS_MAX)) {
 						s_customrig.rigelem[elemno].transuv[1].axiskind = combono;
 					}
 
@@ -39326,6 +39375,18 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		break;
 	case WM_CREATE:
 		break;
+
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONDBLCLK:
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONDBLCLK:
+		SetCapture(g_mainhwnd);
+		break;
+	case WM_LBUTTONUP:
+	case WM_RBUTTONUP:
+		ReleaseCapture();
+		break;
+
 	case WM_COMMAND:
 	{
 		if ((menuid >= 59900) && (menuid <= (59900 + MAXMOTIONNUM))) {

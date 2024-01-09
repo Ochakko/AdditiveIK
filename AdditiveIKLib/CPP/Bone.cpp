@@ -288,7 +288,7 @@ int IsValidRigElem(CModel* srcmodel, RIGELEM srcrigelem)
 		int uvno;
 		for (uvno = 0; uvno < 2; uvno++) {
 			RIGTRANS currigtrans = srcrigelem.transuv[uvno];
-			if ((currigtrans.axiskind < AXIS_X) || (currigtrans.axiskind > AXIS_Z)) {
+			if ((currigtrans.axiskind < 0) || (currigtrans.axiskind >= RIGAXIS_MAX)) {
 				WCHAR strerr[256];
 				swprintf_s(strerr, 256, L"エラー。UV %d : axiskind : %d", uvno, currigtrans.axiskind);
 				::MessageBox(NULL, strerr, L"入力エラー", MB_OK);
@@ -1584,7 +1584,7 @@ float CBone::CalcAxisMatX_Manipulator(bool limitdegflag, int srcboneaxis, int bi
 		return 0.0f;
 	}
 
-	bool ishipsjoint = childbone->IsHipsBone();//2024/01/03
+	//bool ishipsjoint = childbone->IsHipsBone();//2024/01/03
 
 	if (!GetParModel()) {
 		_ASSERT(0);
@@ -1672,7 +1672,7 @@ float CBone::CalcAxisMatX_Manipulator(bool limitdegflag, int srcboneaxis, int bi
 		ChaVector3TransformCoord(&aftchildpos, &zeropos, &tmpchildbtmat);
 	}
 
-	if (ishipsjoint == false) {
+	//if (ishipsjoint == false) {
 
 		//hipsjointではない場合
 
@@ -1716,13 +1716,13 @@ float CBone::CalcAxisMatX_Manipulator(bool limitdegflag, int srcboneaxis, int bi
 		else {
 			convmat = tmplimwm;
 		}
-	}
-	else {
-		//2023/01/14
-		//hipsjointの場合には　IK回転として　Global回転するしかない(移動成分も回転する)ので　マニピュレータもそれに合わせる
-		//global axis
-		convmat.SetIdentity();
-	}
+	//}
+	//else {
+	//	//2023/01/14
+	//	//hipsjointの場合には　IK回転として　Global回転するしかない(移動成分も回転する)ので　マニピュレータもそれに合わせる
+	//	//global axis
+	//	convmat.SetIdentity();
+	//}
 
 
 
@@ -1733,7 +1733,8 @@ float CBone::CalcAxisMatX_Manipulator(bool limitdegflag, int srcboneaxis, int bi
 
 
 
-	if ((aftbonepos == aftchildpos) || (srcboneaxis == BONEAXIS_GLOBAL) || (ishipsjoint == true)) {
+	//if ((aftbonepos == aftchildpos) || (srcboneaxis == BONEAXIS_GLOBAL) || (ishipsjoint == true)) {
+	if ((aftbonepos == aftchildpos) || (srcboneaxis == BONEAXIS_GLOBAL)) {
 		//ボーンの長さが０のとき　Identity回転　ボーン軸の種類がグローバルの場合　Identity回転
 		dstmat->SetIdentity();
 		//#########################################################

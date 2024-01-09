@@ -3,6 +3,29 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+
+2024/01/09
+　Rigの設定(ジョイント右クリック->Rig名->Settingメニューで出る)の回転軸の追加
+　　CurrentX, CurrentY, CurrentZ,
+　　ParentX, ParentY, ParentZ,
+　　GlobalX, GlobalY, GLobalZ,
+　　NodeX, NodeY, NodeZ
+　　上記９種類に増やした
+　　足の付け根UpperLegの前後回転軸はParentYとした
+　　Testフォルダのrigファイルを更新
+　　古い設定はCurrent*として扱う
+　マニピュレータの計算の修正
+　　Hipsの特別扱いを止めて　Hips自身の回転を考慮するようにした
+　　Rigの足の付け根(UpperLeg)の回転が　体全体の回転後も設定どおりに曲がるようになった
+　右ペインのウインドウのスクロールバードラッグのキャプチャとリリースに関して修正
+　　スクロールバードラッグ中に　画面外でマウスを離した場合に　挙動がおかしくなる不具合が直った
+　モデルを追加読み込みするとモーションスピードがスライダーの値と異なってしまう不具合を修正
+　　DispAndLimitsプレートメニューのSpeedスライダーの設定どおりになった
+
+
+
+
+
 2024/01/08
 　マルチUVの使い方を修正
 　　Albedo, Normal, Metal丸ごと一緒にUVSet0とUVSet1を切り替えるように.

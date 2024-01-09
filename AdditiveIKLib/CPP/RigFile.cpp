@@ -99,7 +99,10 @@ int CRigFile::WriteRigFile( WCHAR* strpath, CModel* srcmodel )
 	//2023/03/02 1.2.0.14 RC3
 	//shapekind新規　[RIGSHAPE_SPHERE(0), RIGSHAPE_RING(1)]
 	//rigcolor新規　[RIGCOLOR_RED(0), RIGCOLOR_BLUE(2)]
-	CallF(Write2File("    <FileInfo>1001-04</FileInfo>\r\n"), return 1);
+	//CallF(Write2File("    <FileInfo>1001-04</FileInfo>\r\n"), return 1);
+	//2024/01/09
+	CallF(Write2File("    <FileInfo>1002-01</FileInfo>\r\n"), return 1);
+
 
 	//WriteRigReq( m_model->GetTopBone(false) );
 
@@ -252,11 +255,16 @@ int CRigFile::WriteRig(CBone* srcbone)
 		}
 		CallF(Write2File("      <BoneName>%s</BoneName>\r\n", rigelembone->GetBoneName()), return 1);
 
-		char straxis[3][10] = {"X", "Y", "Z"};
+		char straxis[RIGAXIS_MAX][20] = {
+			"CurrentX", "CurrentY", "CurrentZ",
+			"ParentX", "ParentY", "ParentZ",
+			"GlobalX", "GlobalY", "GlobalZ",
+			"NodeX", "NodeY", "NodeZ"
+		};
 		int axiskind;
 
 		axiskind = currigelem.transuv[0].axiskind;
-		if ((axiskind < AXIS_X) || (axiskind > AXIS_Z)){
+		if ((axiskind < 0) || (axiskind >= RIGAXIS_MAX)){
 			_ASSERT(0);
 			return 1;
 		}
@@ -265,7 +273,7 @@ int CRigFile::WriteRig(CBone* srcbone)
 		CallF(Write2File("      <EnableU>%d</EnableU>\r\n", currigelem.transuv[0].enable), return 1);
 
 		axiskind = currigelem.transuv[1].axiskind;
-		if ((axiskind < AXIS_X) || (axiskind > AXIS_Z)){
+		if ((axiskind < 0) || (axiskind >= RIGAXIS_MAX)) {
 			_ASSERT(0);
 			return 1;
 		}
@@ -561,17 +569,69 @@ int CRigFile::ReadRig(XMLIOBUF* xmlbuf, int elemno)
 		char straxis[256] = { 0 };
 		CallF(Read_Str(xmlbuf, str_startaxis[uvno], str_endaxis[uvno], straxis, 256), return 1);
 		int cmpx, cmpy, cmpz;
-		cmpx = strncmp(straxis, "X", 1);
-		cmpy = strncmp(straxis, "Y", 1);
-		cmpz = strncmp(straxis, "Z", 1);
-		if (cmpx == 0){
-			dstrigelem->transuv[uvno].axiskind = AXIS_X;
+		int cmpxCurrent, cmpyCurrent, cmpzCurrent;
+		int cmpxParent, cmpyParent, cmpzParent;
+		int cmpxGlobal, cmpyGlobal, cmpzGlobal;
+		int cmpxNode, cmpyNode, cmpzNode;
+		cmpx = strncmp(straxis, "X", 1);//旧ファイル(fileinfo 1001-*)対応
+		cmpy = strncmp(straxis, "Y", 1);//旧ファイル(fileinfo 1001-*)対応
+		cmpz = strncmp(straxis, "Z", 1);//旧ファイル(fileinfo 1001-*)対応
+		cmpxCurrent = strncmp(straxis, "CurrentX", 8);
+		cmpyCurrent = strncmp(straxis, "CurrentY", 8);
+		cmpzCurrent = strncmp(straxis, "CurrentZ", 8);
+		cmpxParent = strncmp(straxis, "ParentX", 7);
+		cmpyParent = strncmp(straxis, "ParentY", 7);
+		cmpzParent = strncmp(straxis, "ParentZ", 7);
+		cmpxGlobal = strncmp(straxis, "GlobalX", 7);
+		cmpyGlobal = strncmp(straxis, "GlobalY", 7);
+		cmpzGlobal = strncmp(straxis, "GlobalZ", 7);
+		cmpxNode = strncmp(straxis, "NodeX", 5);
+		cmpyNode = strncmp(straxis, "NodeY", 5);
+		cmpzNode = strncmp(straxis, "NodeZ", 5);
+		if (cmpx == 0) {
+			dstrigelem->transuv[uvno].axiskind = RIGAXIS_CURRENT_X;
 		}
-		else if (cmpy == 0){
-			dstrigelem->transuv[uvno].axiskind = AXIS_Y;
+		else if (cmpy == 0) {
+			dstrigelem->transuv[uvno].axiskind = RIGAXIS_CURRENT_Y;
 		}
-		else if (cmpz == 0){
-			dstrigelem->transuv[uvno].axiskind = AXIS_Z;
+		else if (cmpz == 0) {
+			dstrigelem->transuv[uvno].axiskind = RIGAXIS_CURRENT_Z;
+		}
+		else if (cmpxCurrent == 0){
+			dstrigelem->transuv[uvno].axiskind = RIGAXIS_CURRENT_X;
+		}
+		else if (cmpyCurrent == 0){
+			dstrigelem->transuv[uvno].axiskind = RIGAXIS_CURRENT_Y;
+		}
+		else if (cmpzCurrent == 0){
+			dstrigelem->transuv[uvno].axiskind = RIGAXIS_CURRENT_Z;
+		}
+		else if (cmpxParent == 0) {
+			dstrigelem->transuv[uvno].axiskind = RIGAXIS_PARENT_X;
+		}
+		else if (cmpyParent == 0) {
+			dstrigelem->transuv[uvno].axiskind = RIGAXIS_PARENT_Y;
+		}
+		else if (cmpzParent == 0) {
+			dstrigelem->transuv[uvno].axiskind = RIGAXIS_PARENT_Z;
+		}
+		else if (cmpxGlobal == 0) {
+			dstrigelem->transuv[uvno].axiskind = RIGAXIS_GLOBAL_X;
+		}
+		else if (cmpyGlobal == 0) {
+			dstrigelem->transuv[uvno].axiskind = RIGAXIS_GLOBAL_Y;
+		}
+		else if (cmpzGlobal == 0) {
+			dstrigelem->transuv[uvno].axiskind = RIGAXIS_GLOBAL_Z;
+		}
+		else if (cmpxNode == 0) {
+			dstrigelem->transuv[uvno].axiskind = RIGAXIS_NODE_X;
+		}
+		else if (cmpyNode == 0) {
+			dstrigelem->transuv[uvno].axiskind = RIGAXIS_NODE_Y;
+		}
+		else if (cmpzNode == 0) {
+			dstrigelem->transuv[uvno].axiskind = RIGAXIS_NODE_Z;
 		}
 		else {
 			_ASSERT(0);
