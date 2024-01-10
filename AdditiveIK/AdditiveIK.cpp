@@ -2507,7 +2507,8 @@ static int CreateTimeLineMark(int topboneno = -1);
 static void CreateMarkReq(int curboneno, int broflag);
 static int SetLTimelineMark(int curboneno);
 static int SetTimelineMark();
-static int CreateMotionBrush(double srcstart, double srcend, bool onrefresh);
+static int CreateMotionBrush(double srcstart, double srcend, bool onrefreshflag);
+static int UpdateTopPosText();
 
 
 static int ExportBntFile();
@@ -21989,6 +21990,8 @@ int CreateMotionBrush(double srcstart, double srcend, bool onrefreshflag)
 	}
 
 
+	UpdateTopPosText();
+
 	SavePlayingStartEnd();
 
 
@@ -26386,11 +26389,14 @@ LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS), TBM_GETPOS, 0, 0);
 			g_applyrate = cursliderpos;
 
-			CEditRange::SetApplyRate((double)g_applyrate);
-			double applyframe = s_editrange.GetApplyFrame();
-			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"TopPos %d%% : %d", g_applyrate, IntTime(applyframe));
-			SetDlgItemText(hDlgWnd, IDC_STATIC_TOPPOS, strdlg);
+
+			//2024/01/11 以下５行　内容を修正してUpdateTopPosText()に移動
+			//CEditRange::SetApplyRate((double)g_applyrate);
+			//double applyframe = s_editrange.GetApplyFrame();
+			//WCHAR strdlg[256] = { 0L };
+			//swprintf_s(strdlg, 256, L"TopPos %d%% : %d", g_applyrate, IntTime(applyframe));
+			//SetDlgItemText(hDlgWnd, IDC_STATIC_TOPPOS, strdlg);
+
 
 			if (s_editmotionflag < 0) {//IK中でないとき
 				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
@@ -39027,8 +39033,12 @@ int OnTimeLineSelectFromSelectedKey()
 				s_owpEulerGraph->setCurrentTime(applyframe, false);
 				AddEditRangeHistory();
 			}
+
+			UpdateTopPosText();
 		}
 	}
+
+
 
 	return 0;
 }
@@ -39332,6 +39342,8 @@ int OnTimeLineWheel()
 			}
 
 		}
+
+		UpdateTopPosText();
 	}
 
 	return 0;
@@ -53564,3 +53576,17 @@ void CloseTheFirstRowGUI()
 	ShowGUIDlgLOD(false);
 }
 
+int UpdateTopPosText()
+{
+	//BrushesウインドウのTopPosスライダーの　フレーム番号表示を更新
+	if (s_guidlg[GUIDLG_BRUSHPARAMS]) {
+		HWND topposslider = GetDlgItem(s_guidlg[GUIDLG_BRUSHPARAMS], IDC_SLIDER_TOPPOS);
+		HWND toppostext = GetDlgItem(s_guidlg[GUIDLG_BRUSHPARAMS], IDC_STATIC_TOPPOS);
+		if (topposslider || toppostext) {
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"TopPos %d%% : %d", g_applyrate, IntTime(g_motionbrush_applyframe));
+			SetDlgItemText(s_guidlg[GUIDLG_BRUSHPARAMS], IDC_STATIC_TOPPOS, strdlg);
+		}
+	}
+	return 0;
+}
