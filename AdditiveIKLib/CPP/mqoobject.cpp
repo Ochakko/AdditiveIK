@@ -2170,7 +2170,7 @@ int CMQOObject::UpdateMorphBuffer()
 	return 0;
 }
 
-int CMQOObject::ScaleBtBox( CRigidElem* reptr, float boneleng, float* cyliptr, float* sphptr, float* boxzptr )
+int CMQOObject::ScaleBtBox(bool setinstancescale, CRigidElem* reptr, float boneleng, float* cyliptr, float* sphptr, float* boxzptr )
 {
 	float sccyli, scsph, scboxz;
 
@@ -2194,15 +2194,16 @@ int CMQOObject::ScaleBtBox( CRigidElem* reptr, float boneleng, float* cyliptr, f
 	scale = ChaVector3(sccyli, scsph, scboxz);
 	tra = ChaVector3( 0.0f, 0.0f, 0.0f );
 
-
-	MultScale( scale, tra );
+	if (setinstancescale) {//インスタンシングのデータ順に関わるので必要な時だけ
+		MultScale(scale, tra);
+	}
 
 
 	return 0;
 }
 
 
-int CMQOObject::ScaleBtCone( CRigidElem* reptr, float boneleng, float* cyliptr, float* sphptr )
+int CMQOObject::ScaleBtCone(bool setinstancescale, CRigidElem* reptr, float boneleng, float* cyliptr, float* sphptr )
 {
 	float sccyli, scsph;
 
@@ -2224,12 +2225,14 @@ int CMQOObject::ScaleBtCone( CRigidElem* reptr, float boneleng, float* cyliptr, 
 	tra = ChaVector3(0.0f, 0.0f, 0.0f);
 
 
-	MultScale( scale, tra );
+	if (setinstancescale) {//インスタンシングのデータ順に関わるので必要な時だけ
+		MultScale(scale, tra);
+	}
 
 
 	return 0;
 }
-int CMQOObject::ScaleBtSphere( CRigidElem* reptr, float boneleng, float* cyliptr, float* sphptr )
+int CMQOObject::ScaleBtSphere(bool setinstancescale, CRigidElem* reptr, float boneleng, float* cyliptr, float* sphptr )
 {
 	float sccyli;
 
@@ -2244,12 +2247,14 @@ int CMQOObject::ScaleBtSphere( CRigidElem* reptr, float boneleng, float* cyliptr
 	scale = ChaVector3( sccyli, sccyli, sccyli );
 	tra = ChaVector3( 0.0f, 0.0f, 0.0f );
 
-	MultScale( scale, tra );
+	if (setinstancescale) {//インスタンシングのデータ順に関わるので必要な時だけ
+		MultScale(scale, tra);
+	}
 
 	return 0;
 }
 
-int CMQOObject::ScaleBtCapsule( CRigidElem* reptr, float boneleng, int srctype, float* lengptr )
+int CMQOObject::ScaleBtCapsule(bool setinstancescale, CRigidElem* reptr, float boneleng, int srctype, float* lengptr )
 {
 	float sccyli, scsph;
 
@@ -2317,7 +2322,10 @@ int CMQOObject::ScaleBtCapsule( CRigidElem* reptr, float boneleng, int srctype, 
 			*lengptr = scsph * 100.0f;
 		}
 	}
-	MultScale(scale, tra);
+
+	if (setinstancescale) {//インスタンシングのデータ順に関わるので必要な時だけ
+		MultScale(scale, tra);
+	}
 
 	return 0;
 }
@@ -2325,6 +2333,7 @@ int CMQOObject::ScaleBtCapsule( CRigidElem* reptr, float boneleng, int srctype, 
 
 int CMQOObject::MultScale( ChaVector3 srcscale, ChaVector3 srctra )
 {
+	//インスタンシングのデータ順に関わるので必要な時だけ
 
 	if (m_dispobj) {
 		m_dispobj->SetScale(srcscale, srctra);

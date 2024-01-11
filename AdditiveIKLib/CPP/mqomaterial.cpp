@@ -1866,6 +1866,13 @@ void CMQOMaterial::InitInstancingPipelineState(int vertextype, const std::array<
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+
+		{ "TEXCOORD", 9, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+		{ "TEXCOORD", 10, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 	};
 
 
@@ -1917,15 +1924,16 @@ void CMQOMaterial::InitInstancingPipelineState(int vertextype, const std::array<
 #endif
 		psoDesc.DepthStencilState.DepthEnable = TRUE;
 		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		//psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;//!!!!!!!!!!!
 		psoDesc.DepthStencilState.StencilEnable = FALSE;
 		psoDesc.SampleMask = UINT_MAX;
-		if (vertextype != 2) {
-			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		}
-		else {
+		//if (vertextype != 2) {
+		//	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		//}
+		//else {
 			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
-		}
+		//}
 
 		int numRenderTarget = 0;
 		for (auto& format : colorBufferFormat) {
@@ -3275,7 +3283,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		}
 	}
 	else if (ppm3) {
-		m_cb.mWorld = renderobj.mWorld;
+		m_cb.mWorld = renderobj.mWorld;//呼び出し元で剛体のscalematを入れる
 		m_cb.mView = mView;
 		m_cb.mProj = mProj;
 		//m_cb.diffusemult = renderobj.diffusemult;

@@ -20,7 +20,7 @@ Scene {
 	}
 }
 Material 1 {
-	"mat1" shader(3) col(1.000 1.000 1.000 0.430) dif(1.000) amb(0.100) emi(0.000) spc(0.000) power(5.00)
+	"RIGmat1" shader(3) col(1.000 1.000 1.000 0.430) dif(1.000) amb(0.100) emi(0.000) spc(0.000) power(5.00)
 }
 Object "obj1" {
 	depth 0

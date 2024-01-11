@@ -2,6 +2,7 @@
 #define DISPOBJH
 
 #include <ChaVecCalc.h>
+#include <mqomaterial.h>
 #include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
 
 
@@ -15,6 +16,7 @@ class CExtLine;
 class ConstantBuffer;//メッシュ共通の定数バッファ。
 class StructuredBuffer;//ボーン行列の構造化バッファ。
 class DescriptorHeap;//ディスクリプタヒープ。
+
 
 
 class CDispObj
@@ -140,12 +142,10 @@ public:
 	 */
 	int CopyDispV(CPolyMesh3* pm3);
 
+	void ResetScaleInstancing();
+	void SetScale(ChaVector3 srcscale, ChaVector3 srcoffset);
+	SCALEINSTANCING* GetScaleInstancing();
 
-	void SetScale(ChaVector3 srcscale, ChaVector3 srcoffset)
-	{
-		m_scale = srcscale;
-		m_scaleoffset = srcoffset;
-	};
 
 	//void UpdateBoneMatrix(int srcdatanum, void* srcdata);
 
@@ -254,9 +254,8 @@ private:
 
 	CDispObj* m_shadowdispobj;
 
-
-	ChaVector3 m_scale;
-	ChaVector3 m_scaleoffset;
+	int m_scaleinstancenum;
+	SCALEINSTANCING m_scaleInstancing[RIGMULTINDEXMAX];
 
 	int* m_tmpindexLH;
 };

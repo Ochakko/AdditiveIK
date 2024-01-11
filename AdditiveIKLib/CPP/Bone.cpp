@@ -34,6 +34,8 @@
 #include <EngName.h>
 //#include <BoneProp.h>
 
+#include <ChaScene.h>
+
 //for __nop()
 #include <intrin.h>
 
@@ -321,7 +323,7 @@ int IsValidRigElem(CModel* srcmodel, RIGELEM srcrigelem)
 //class
 
 static CModel* s_coldisp[COL_MAX];
-
+static int s_coldispgetnum[COL_MAX];
 
 CBone::CBone( CModel* parmodel )// : m_curmp(), m_axisq()
 {
@@ -536,6 +538,7 @@ int CBone::InitParamsForReUse(CModel* srcparmodel)
 void CBone::InitColDisp()//static function
 {
 	ZeroMemory(s_coldisp, sizeof(CModel*) * COL_MAX);
+	ZeroMemory(s_coldispgetnum, sizeof(int) * COL_MAX);
 }
 void CBone::DestroyColDisp()//static function
 {
@@ -547,7 +550,48 @@ void CBone::DestroyColDisp()//static function
 			s_coldisp[colindex] = 0;
 		}
 	}
+	InitColDisp();
 }
+void CBone::ResetColDispInstancingParams()//static function
+{
+	int colindex;
+	for (colindex = 0; colindex < COL_MAX; colindex++) {
+		CModel* curcol = s_coldisp[colindex];
+		if (curcol) {
+			curcol->ResetInstancingParams();
+			curcol->ResetDispObjScale();
+		}
+	}
+	ZeroMemory(s_coldispgetnum, sizeof(int) * COL_MAX);
+}
+
+void CBone::RenderColDisp(ChaScene* srcchascene, myRenderer::RenderingEngine* re)//static function
+{
+	int lightflag = 0;
+	ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.75f);
+	bool forcewithalpha = true;
+	int btflag = 0;
+	bool zcmpalways = true;
+	
+	if (s_coldisp[COL_CONE_INDEX] && (s_coldisp[COL_CONE_INDEX]->GetInstancingDrawNum() > 0)) {
+		srcchascene->RenderInstancingModel(s_coldisp[COL_CONE_INDEX],
+			forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+	}
+	if (s_coldisp[COL_CAPSULE_INDEX] && (s_coldisp[COL_CAPSULE_INDEX]->GetInstancingDrawNum() > 0)) {
+		srcchascene->RenderInstancingModel(s_coldisp[COL_CAPSULE_INDEX],
+			forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);\
+	}
+	if (s_coldisp[COL_SPHERE_INDEX] && (s_coldisp[COL_SPHERE_INDEX]->GetInstancingDrawNum() > 0)) {
+		srcchascene->RenderInstancingModel(s_coldisp[COL_SPHERE_INDEX],
+			forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+	}
+	if (s_coldisp[COL_BOX_INDEX] && (s_coldisp[COL_BOX_INDEX]->GetInstancingDrawNum() > 0)) {
+		srcchascene->RenderInstancingModel(s_coldisp[COL_BOX_INDEX],
+			forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+	}
+
+}
+
 
 
 int CBone::SetParams(CModel* parmodel)
@@ -2284,9 +2328,12 @@ int CBone::CalcAxisMatZ_aft(ChaVector3 curpos, ChaVector3 childpos, ChaMatrix* d
 //	return 0;
 //}
 
-int CBone::CalcRigidElemParams( CBone* childbone, int setstartflag )
+int CBone::CalcRigidElemParams(bool setinstancescale, CBone* childbone, int setstartflag )
 {
 	
+	ChaMatrix retmat;
+	retmat.SetIdentity();
+
 	//2023/04/28
 	if (IsNotSkeleton()) {
 		return 0;
@@ -2317,7 +2364,6 @@ int CBone::CalcRigidElemParams( CBone* childbone, int setstartflag )
 	_ASSERT( curcoldisp );
 
 
-
 	//ChaMatrix bmmat;
 	//ChaMatrixIdentity(&bmmat);
 	//CalcAxisMatZ( &aftbonepos, &aftchildpos );
@@ -2341,53 +2387,53 @@ int CBone::CalcRigidElemParams( CBone* childbone, int setstartflag )
 	float boxz = curre->GetBoxz();
 
 	//if ((setstartflag != 0) || (m_firstcalcrigid == true)){
-		if (curre->GetColtype() == COL_CAPSULE_INDEX){
-			map<int, CMQOObject*>::iterator itrobj;
-			for (itrobj = curcoldisp->GetMqoObjectBegin(); itrobj != curcoldisp->GetMqoObjectEnd(); itrobj++){
-				CMQOObject* curobj = itrobj->second;
-				_ASSERT(curobj);
-				if (strcmp(curobj->GetName(), "cylinder") == 0){
-					CallF(curobj->ScaleBtCapsule(curre, diffleng, 0, &cylileng), return 1);
-				}
-				else if (strcmp(curobj->GetName(), "sph_ue") == 0){
-					CallF(curobj->ScaleBtCapsule(curre, diffleng, 1, &sphr), return 1);
-				}
-				else{
-					CallF(curobj->ScaleBtCapsule(curre, diffleng, 2, 0), return 1);
-				}
+	if (curre->GetColtype() == COL_CAPSULE_INDEX) {
+		map<int, CMQOObject*>::iterator itrobj;
+		for (itrobj = curcoldisp->GetMqoObjectBegin(); itrobj != curcoldisp->GetMqoObjectEnd(); itrobj++) {
+			CMQOObject* curobj = itrobj->second;
+			_ASSERT(curobj);
+			if (strcmp(curobj->GetName(), "cylinder") == 0) {
+				CallF(curobj->ScaleBtCapsule(setinstancescale, curre, diffleng, 0, &cylileng), return 1);
+			}
+			else if (strcmp(curobj->GetName(), "sph_ue") == 0) {
+				CallF(curobj->ScaleBtCapsule(setinstancescale, curre, diffleng, 1, &sphr), return 1);
+			}
+			else {
+				CallF(curobj->ScaleBtCapsule(setinstancescale, curre, diffleng, 2, 0), return 1);
 			}
 		}
-		else if (curre->GetColtype() == COL_CONE_INDEX){
-			map<int, CMQOObject*>::iterator itrobj;
-			for (itrobj = curcoldisp->GetMqoObjectBegin(); itrobj != curcoldisp->GetMqoObjectEnd(); itrobj++){
-				CMQOObject* curobj = itrobj->second;
-				_ASSERT(curobj);
-				CallF(curobj->ScaleBtCone(curre, diffleng, &cylileng, &sphr), return 1);
-			}
+	}
+	else if (curre->GetColtype() == COL_CONE_INDEX) {
+		map<int, CMQOObject*>::iterator itrobj;
+		for (itrobj = curcoldisp->GetMqoObjectBegin(); itrobj != curcoldisp->GetMqoObjectEnd(); itrobj++) {
+			CMQOObject* curobj = itrobj->second;
+			_ASSERT(curobj);
+			CallF(curobj->ScaleBtCone(setinstancescale, curre, diffleng, &cylileng, &sphr), return 1);
 		}
-		else if (curre->GetColtype() == COL_SPHERE_INDEX){
-			map<int, CMQOObject*>::iterator itrobj;
-			for (itrobj = curcoldisp->GetMqoObjectBegin(); itrobj != curcoldisp->GetMqoObjectEnd(); itrobj++){
-				CMQOObject* curobj = itrobj->second;
-				_ASSERT(curobj);
-				CallF(curobj->ScaleBtSphere(curre, diffleng, &cylileng, &sphr), return 1);
-			}
+	}
+	else if (curre->GetColtype() == COL_SPHERE_INDEX) {
+		map<int, CMQOObject*>::iterator itrobj;
+		for (itrobj = curcoldisp->GetMqoObjectBegin(); itrobj != curcoldisp->GetMqoObjectEnd(); itrobj++) {
+			CMQOObject* curobj = itrobj->second;
+			_ASSERT(curobj);
+			CallF(curobj->ScaleBtSphere(setinstancescale, curre, diffleng, &cylileng, &sphr), return 1);
 		}
-		else if (curre->GetColtype() == COL_BOX_INDEX){
-			map<int, CMQOObject*>::iterator itrobj;
-			for (itrobj = curcoldisp->GetMqoObjectBegin(); itrobj != curcoldisp->GetMqoObjectEnd(); itrobj++){
-				CMQOObject* curobj = itrobj->second;
-				_ASSERT(curobj);
-				CallF(curobj->ScaleBtBox(curre, diffleng, &cylileng, &sphr, &boxz), return 1);
+	}
+	else if (curre->GetColtype() == COL_BOX_INDEX) {
+		map<int, CMQOObject*>::iterator itrobj;
+		for (itrobj = curcoldisp->GetMqoObjectBegin(); itrobj != curcoldisp->GetMqoObjectEnd(); itrobj++) {
+			CMQOObject* curobj = itrobj->second;
+			_ASSERT(curobj);
+			CallF(curobj->ScaleBtBox(setinstancescale, curre, diffleng, &cylileng, &sphr, &boxz), return 1);
 #ifndef NDEBUG
-				DbgOut(L"bonecpp : calcrigidelemparams : BOX : cylileng %f, sphr %f, boxz %f\r\n", cylileng, sphr, boxz);
+			DbgOut(L"bonecpp : calcrigidelemparams : BOX : cylileng %f, sphr %f, boxz %f\r\n", cylileng, sphr, boxz);
 #endif
-			}
 		}
-		else{
-			_ASSERT(0);
-			return 1;
-		}
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
 	//}
 
 	//bmmat._41 = ( aftbonepos.x + aftchildpos.x ) * 0.5f;
@@ -2402,11 +2448,9 @@ int CBone::CalcRigidElemParams( CBone* childbone, int setstartflag )
 	//bmmat = curre->GetEndbone()->CalcManipulatorPostureMatrix(0, 1, 1);
 
 	//curre->SetCapsulemat( bmmat );
-	curre->SetCylileng( cylileng );
-	curre->SetSphr( sphr );
-	curre->SetBoxz( boxz );
-
-
+	curre->SetCylileng(cylileng);
+	curre->SetSphr(sphr);
+	curre->SetBoxz(boxz);
 
 	if( setstartflag != 0 ){
 		//bmmat = curre->GetCapsulemat(1);
@@ -6336,6 +6380,7 @@ int CBone::LoadCapsuleShape(ID3D12Device* pdev)
 			_ASSERT(0);
 			return 1;
 		}
+		s_coldisp[COL_CONE_INDEX]->SetInstancingNum(RIGMULTINDEXMAX);
 		swprintf_s(wfilename, MAX_PATH, L"%s\\%s", mpath, L"cone_dirX.mqo");
 		CallF(s_coldisp[COL_CONE_INDEX]->LoadMQO(pdev, wfilename, 0, 1.0f, 0), return 1);
 		//CallF(m_coldisp[COL_CONE_INDEX]->MakeDispObj(), return 1);
@@ -6347,6 +6392,7 @@ int CBone::LoadCapsuleShape(ID3D12Device* pdev)
 			_ASSERT(0);
 			return 1;
 		}
+		s_coldisp[COL_CAPSULE_INDEX]->SetInstancingNum(RIGMULTINDEXMAX);
 		swprintf_s(wfilename, MAX_PATH, L"%s\\%s", mpath, L"capsule_dirX.mqo");
 		CallF(s_coldisp[COL_CAPSULE_INDEX]->LoadMQO(pdev, wfilename, 0, 1.0f, 0), return 1);
 		//CallF(m_coldisp[COL_CAPSULE_INDEX]->MakeDispObj(), return 1);
@@ -6358,6 +6404,7 @@ int CBone::LoadCapsuleShape(ID3D12Device* pdev)
 			_ASSERT(0);
 			return 1;
 		}
+		s_coldisp[COL_SPHERE_INDEX]->SetInstancingNum(RIGMULTINDEXMAX);
 		swprintf_s(wfilename, MAX_PATH, L"%s\\%s", mpath, L"sphere_dirX.mqo");
 		CallF(s_coldisp[COL_SPHERE_INDEX]->LoadMQO(pdev, wfilename, 0, 1.0f, 0), return 1);
 		//CallF(m_coldisp[COL_SPHERE_INDEX]->MakeDispObj(), return 1);
@@ -6369,6 +6416,7 @@ int CBone::LoadCapsuleShape(ID3D12Device* pdev)
 			_ASSERT(0);
 			return 1;
 		}
+		s_coldisp[COL_BOX_INDEX]->SetInstancingNum(RIGMULTINDEXMAX);
 		swprintf_s(wfilename, MAX_PATH, L"%s\\%s", mpath, L"box.mqo");
 		CallF(s_coldisp[COL_BOX_INDEX]->LoadMQO(pdev, wfilename, 0, 1.0f, 0), return 1);
 		//CallF(m_coldisp[COL_BOX_INDEX]->MakeDispObj(), return 1);
@@ -6411,17 +6459,21 @@ CModel* CBone::GetColDisp(CBone* childbone, int srcindex)
 }
 
 
-CModel* CBone::GetCurColDisp(CBone* childbone)
+CModel* CBone::GetCurColDispInstancing(CBone* childbone, int* pinstanceno)
 {
-	if (!childbone) {
+	if (!childbone || !pinstanceno) {
 		return 0;
 	}
+
+	*pinstanceno = -1;
 
 	//2023/04/28
 	if (IsNotSkeleton()) {
 		return 0;
 	}
-
+	if (!GetParModel()) {
+		return 0;
+	}
 
 	CRigidElem* curre = GetRigidElem(childbone);
 	if (!curre){
@@ -6432,8 +6484,13 @@ CModel* CBone::GetCurColDisp(CBone* childbone)
 	//_ASSERT(colptr);
 	_ASSERT(childbone);
 
+
+	int instanceno = s_coldispgetnum[curre->GetColtype()];
+	*pinstanceno = instanceno;
+
 	CModel* curcoldisp = s_coldisp[curre->GetColtype()];
 	_ASSERT(curcoldisp);
+	s_coldispgetnum[curre->GetColtype()] = instanceno + 1;
 
 	return curcoldisp;
 }

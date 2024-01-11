@@ -13181,7 +13181,7 @@ int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderCon
 		ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.75f);
 		bool forcewithalpha = true;
 		int btflag = 0;
-		bool zcmpalways = false;
+		bool zcmpalways = true;
 
 		if (s_rigsphere_num > 0) {
 			s_chascene->RenderInstancingModel(s_rigopemark_sphere, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
@@ -36552,7 +36552,18 @@ int OnRenderBoneMark(myRenderer::RenderingEngine* re, RenderContext* rc)
 		_ASSERT(0);
 		return 1;
 	}
-
+	if (g_changeUpdateThreadsNum) {
+		//アップデート用スレッド数を変更中
+		return 0;
+	}
+	if (!s_model) {
+		return 0;
+	}
+	if (!s_model->GetLoadedFlag() || (s_model->GetBoneForMotionSize() == 0) || 
+		(s_model->GetBoneForMotionSize() >= RIGMULTINDEXMAX)) {
+		//インスタンシング最大数を越えた場合にもリターン0
+		return 0;
+	}
 
 	if (g_bonemarkflag || g_rigidmarkflag) {
 
@@ -36560,8 +36571,10 @@ int OnRenderBoneMark(myRenderer::RenderingEngine* re, RenderContext* rc)
 			//if ((g_previewFlag != 1) && (g_previewFlag != -1) && (g_previewFlag != 4)){
 			if (s_model && s_model->GetModelDisp()) {
 				//if (s_ikkind >= 3){
-				s_model->RenderBoneMark(re, rc, g_limitdegflag, 
-					s_bmark, &s_bcircle, s_curboneno);
+				s_model->RenderBoneMark(re,
+					g_limitdegflag, &s_bcircle,
+					s_curboneno, s_chascene, s_matVP);
+
 				//}
 				//else{
 				//	s_model->RenderBoneMark(s_pdev, s_bmark, s_bcircle, 0, s_curboneno);

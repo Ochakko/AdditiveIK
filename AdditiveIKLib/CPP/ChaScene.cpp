@@ -698,8 +698,8 @@ int ChaScene::RenderInstancingModel(CModel* srcmodel, bool forcewithalpha,
 
 		int groupindex;
 		for (groupindex = 0; groupindex < MAXDISPGROUPNUM; groupindex++) {
-			if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView()) {
-				//if (curmodel && curmodel->GetModelDisp()) {
+			//if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView()) {
+			if (curmodel && curmodel->GetModelDisp()) {//剛体マーク、ジョイントマークは視野内判定無し
 
 				ChaVector4 materialdisprate = curmodel->GetMaterialDispRate();
 

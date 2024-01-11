@@ -15,7 +15,7 @@
 #include <DispObj.h>
 
 #include <mqoobject.h>
-#include <mqomaterial.h>
+//#include <mqomaterial.h>
 
 #include <polymesh3.h>
 #include <polymesh4.h>
@@ -107,8 +107,7 @@ int CDispObj::InitParams()
 {
 	m_tmpindexLH = 0;
 
-	m_scale = ChaVector3(1.0f, 1.0f, 1.0f);
-	m_scaleoffset = ChaVector3(0.0f, 0.0f, 0.0f);
+	ResetScaleInstancing();
 
 	//ZeroMemory(&m_BufferDescBone, sizeof(D3D11_BUFFER_DESC));
 	//ZeroMemory(&m_BufferDescNoBone, sizeof(D3D11_BUFFER_DESC));
@@ -1806,8 +1805,29 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 	//1. 頂点バッファを設定。
 	rc->SetVertexBuffer(m_vertexBufferView);
 
-	m_InstancingBuffer.Copy(renderobj.pmodel->GetInstancingParams());
-	rc->SetVertexBuffer(1, m_InstancingBuffer);//!!!!!!! InstancingBuffer !!!!!!
+
+	//#####################################################
+	//インスタンシングはモデル単位。剛体のスケール情報はメッシュ単位。
+	//m_InstancingBufferはメッシュと同じ単位。
+	//スケール情報にメッシュのスケールを格納する。
+	//#####################################################
+	INSTANCINGPARAMS* pinstancingparams = renderobj.pmodel->GetInstancingParams();
+	SCALEINSTANCING* pscale = GetScaleInstancing();
+	if (pinstancingparams && pscale) {
+		int instanceno;
+		for (instanceno = 0; instanceno < RIGMULTINDEXMAX; instanceno++) {
+			INSTANCINGPARAMS* curparams = renderobj.pmodel->GetInstancingParams() + instanceno;
+			SCALEINSTANCING* curscale = GetScaleInstancing() + instanceno;
+			curparams->scale = curscale->scale;
+			curparams->scaleoffset = curscale->offset;
+		}
+		m_InstancingBuffer.Copy(pinstancingparams);
+		rc->SetVertexBuffer(1, m_InstancingBuffer);//!!!!!!! InstancingBuffer !!!!!!
+	}
+	else {
+		_ASSERT(0);
+		abort();
+	}
 
 	//3. インデックスバッファを設定。
 	rc->SetIndexBuffer(m_indexBufferView);
@@ -1861,11 +1881,24 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 		//}
 
 
-		Matrix mView, mProj;
+		//ChaMatrix objscalemat;
+		//ChaMatrix beftramat, afttramat, scalemat;
+		//beftramat.SetIdentity();
+		//afttramat.SetIdentity();
+		//scalemat.SetIdentity();
+		//beftramat.SetTranslation(-GetScaleOffset());
+		//afttramat.SetTranslation(GetScaleOffset());
+		//scalemat.SetScale(GetScale());
+		//objscalemat = beftramat * scalemat * afttramat;
+
+
+
+		Matrix mWorld, mView, mProj;
 		mView = g_camera3D->GetViewMatrix(false);
 		mProj = g_camera3D->GetProjectionMatrix();
 		//定数バッファの設定、更新など描画の共通処理を実行する。
-		curmat->InstancingDrawCommon(rc, renderobj, mView, mProj);
+
+		curmat->InstancingDrawCommon(rc, renderobj, mView, mProj, GetScaleInstancing());
 		curmat->InstancingBeginRender(rc);
 
 		//rc.SetDescriptorHeap(m_descriptorHeap);
@@ -2028,3 +2061,31 @@ int CDispObj::CopyDispV( CPolyMesh3* pm3 )
 //}
 
 //void Material::InitFromTkmMaterila(
+
+
+void CDispObj::ResetScaleInstancing()
+{
+	int instanceno;
+	for (instanceno = 0; instanceno < RIGMULTINDEXMAX; instanceno++) {
+		m_scaleInstancing[instanceno].Init();
+	}
+	m_scaleinstancenum = 0;
+};
+void CDispObj::SetScale(ChaVector3 srcscale, ChaVector3 srcoffset)
+{
+	if ((m_scaleinstancenum >= 0) && (m_scaleinstancenum < RIGMULTINDEXMAX)) {
+		m_scaleInstancing[m_scaleinstancenum].scale = ChaVector4(srcscale, 0.0f);
+		m_scaleInstancing[m_scaleinstancenum].offset = ChaVector4(srcoffset, 0.0f);
+		m_scaleinstancenum++;
+	}
+	else {
+		_ASSERT(0);
+	}
+};
+
+SCALEINSTANCING* CDispObj::GetScaleInstancing()
+{
+	return m_scaleInstancing;
+}
+
+

@@ -28,6 +28,8 @@ struct SVSInInstancing
     float4 vpmat2 : TEXCOORD7;
     float4 vpmat3 : TEXCOORD8;
     float4 material : COLOR0;
+    float4 scaleinsta : TEXCOORD9;
+    float4 offsetinsta : TEXCOORD10;
 };
 
 // ピクセルシェーダーへの入力
@@ -116,10 +118,16 @@ SPSIn VSMainNoSkinInstancing(SVSInInstancing vsIn, uniform bool hasSkin)
     vpmat._31_32_33_34 = vsIn.vpmat2;
     vpmat._41_42_43_44 = vsIn.vpmat3;
 
+    float4 scalepos;
+    scalepos.x = (vsIn.pos.x - vsIn.offsetinsta.x) * vsIn.scaleinsta.x + vsIn.offsetinsta.x;
+    scalepos.y = (vsIn.pos.y - vsIn.offsetinsta.y) * vsIn.scaleinsta.y + vsIn.offsetinsta.y;
+    scalepos.z = (vsIn.pos.z - vsIn.offsetinsta.z) * vsIn.scaleinsta.z + vsIn.offsetinsta.z;
+    scalepos.w = 1.0f;
     
     //psIn.pos = mul(wmat, vsIn.pos);
     //psIn.pos = mul(vpmat, psIn.pos);
-    psIn.pos = mul(vsIn.pos, wmat);
+    //psIn.pos = mul(mWorld, vsIn.pos);//剛体のscalematが入っている
+    psIn.pos = mul(scalepos, wmat);
     psIn.pos = mul(psIn.pos, vpmat);
     psIn.uv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
     psIn.diffusemult = vsIn.material;

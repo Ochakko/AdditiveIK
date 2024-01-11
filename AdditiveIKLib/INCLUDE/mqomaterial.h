@@ -134,6 +134,21 @@ struct SConstantBufferShadow {
 };
 
 
+typedef struct tag_scaleinstancing
+{
+	ChaVector4 scale;
+	ChaVector4 offset;
+	void Init() {
+		scale = ChaVector4(1.0f, 1.0f, 1.0f, 0.0f);
+		offset = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
+	};
+	tag_scaleinstancing()
+	{
+		Init();
+	};
+}SCALEINSTANCING;
+
+
 class CMQOMaterial
 {
 public:

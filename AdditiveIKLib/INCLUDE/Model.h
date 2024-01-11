@@ -148,12 +148,15 @@ typedef struct tag_instancingparams
 	float wmat[16];
 	float vpmat[16];
 	ChaVector4 diffusemult;
-
+	ChaVector4 scale;
+	ChaVector4 scaleoffset;
 	void Init()
 	{
 		ZeroMemory(wmat, sizeof(float) * 16);
 		ZeroMemory(vpmat, sizeof(float) * 16);
 		diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		scale = ChaVector4(1.0f, 1.0f, 1.0f, 0.0f);
+		scaleoffset = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
 	};
 	tag_instancingparams() {
 		Init();
@@ -297,13 +300,19 @@ public:
  * @param (int skiptopbonemark) IN 一番親からのボーンを表示しないフラグ。
  * @return 成功したら０。
  */
-	int RenderBoneMark(myRenderer::RenderingEngine* re, RenderContext* rc,
-		bool limitdegflag, CModel* bmarkptr, InstancedSprite* bcircleptr, 
-		int selboneno, int skiptopbonemark = 0 );
+	int RenderBoneMark(myRenderer::RenderingEngine* re,
+		bool limitdegflag, InstancedSprite* bcircleptr,
+		int selboneno, ChaScene* srcchascene, ChaMatrix srcmatVP);
+	void ResetBoneMarkInstanceScale();
+
+
 	int RenderBoneCircleOne(bool limitdegflag, RenderContext* pRenderContext, CMySprite* bcircleptr, int selboneno);
 
 
-	void RenderCapsuleReq(bool limitdegflag, RenderContext* pRenderContext, CBtObject* srcbto);
+	//void RenderCapsuleReq(bool limitdegflag, RenderContext* pRenderContext, CBtObject* srcbto);
+	void RenderCapsuleReq(CBtObject* srcbt, myRenderer::RenderingEngine* re, bool limitdegflag,
+		int selboneno, ChaScene* srcchascene, ChaMatrix srcmatVP);
+	void ResetDispObjScale();
 
 	void RenderBoneCircleReq(RenderContext* pRenderContext, CBtObject* srcbto, CMySprite* bcircleptr);
 
@@ -2374,10 +2383,23 @@ public: //accesser
 	{
 		return m_instancingdrawnum;
 	}
-
+	void SetInstancingDrawNum(int srcnum) 
+	{
+		if ((srcnum >= 0) && (srcnum <= RIGMULTINDEXMAX)) {
+			m_instancingdrawnum = srcnum;
+		}
+		else {
+			_ASSERT(0);
+		}
+	}
 	int SetInstancingParams(int srcinstancingno, ChaMatrix srcwmat, ChaMatrix srcvpmat, ChaVector4 srcdiffusemult)
 	{
-		if ((srcinstancingno >= 0) && (srcinstancingno < RIGMULTINDEXMAX) && (srcinstancingno == m_instancingdrawnum)) {
+		//#######################################################################################
+		//srcinstancingnoは参考程度の値
+		//GetしたCModelのインデックスと　様々なスキップ処理を経てDrawするCModelのインデックスには違いが生じる
+		//#######################################################################################
+
+		if ((m_instancingdrawnum >= 0) && (m_instancingdrawnum < RIGMULTINDEXMAX)) {
 
 			INSTANCINGPARAMS params;
 			params.Init();

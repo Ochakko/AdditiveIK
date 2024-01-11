@@ -92,7 +92,8 @@ class CMQOMaterial;
 
 #define RIGPOSINDEXMAX	30
 //#define RIGMULTINDEXMAX	12	
-#define RIGMULTINDEXMAX	24
+//#define RIGMULTINDEXMAX	24
+#define RIGMULTINDEXMAX	256
 
 
 // * 100だとOpenFile()関数のスタックサイズが大きすぎて警告が出るので * 32に変更

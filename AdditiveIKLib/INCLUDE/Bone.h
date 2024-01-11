@@ -19,7 +19,10 @@
 #include <ChaVecCalc.h>
 
 #include <MotionPoint.h>
-
+#include "../../MiniEngine/MiniEngine.h"
+#include "../../MiniEngine/RenderContext.h"
+#include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
+#include "../../MiniEngine/InstancedSprite.h"
 
 #define BONEPOOLBLKLEN	256
 
@@ -29,7 +32,7 @@ class CMotionPoint;
 class CRigidElem;
 class CBtObject;
 class CModel;
-
+class ChaScene;
 
 typedef struct tag_ikrotrec
 {
@@ -66,7 +69,8 @@ public:
 
 	static void InitColDisp();
 	static void DestroyColDisp();
-
+	static void ResetColDispInstancingParams();
+	static void RenderColDisp(ChaScene* srcchascene, myRenderer::RenderingEngine* re);
 
 	ChaVector3 m_btparentpos;//Motion2Bt時のボーンの位置(剛体行列計算用)
 	ChaVector3 m_btchildpos;//Motion2Bt時のボーンの位置(剛体行列計算用)
@@ -221,12 +225,10 @@ public:
  * @fn
  * CalcRigidElemParams
  * @breaf 剛体表示用のデータを剛体のパラメータに従ってスケールするための変換行列を求めてスケールする。
- * @param (CBone* childbone) IN　剛体を指定するための子供ボーン。
- * @param (int setstartflag) IN　剛体シミュレーション開始時の呼び出し時に１をセットする。
- * @return 成功したら０。
+ * @return 成功したら0を返す。
  * @detail 剛体をボーンの位置に表示するために、剛体表示用の形状をスケールするために呼ぶ。剛体はボーンの子供ジョイントと１対１で対応するため、指定にchildboneを使う。
  */
-	int CalcRigidElemParams( CBone* childbone, int setstartflag );
+	int CalcRigidElemParams(bool setinstancescale, CBone* childbone, int setstartflag );
 
 /**
  * @fn
@@ -1312,7 +1314,7 @@ public: //accesser
 	int GetBtFlag(){ return m_setbtflag; };
 	void SetBtFlag(int srcflag){ m_setbtflag = srcflag; };
 
-	CModel* GetCurColDisp(CBone* childbone);
+	CModel* GetCurColDispInstancing(CBone* childbone, int* pinstanceno);
 	CModel* GetColDisp(CBone* childbone, int srcindex);
 	void SetFirstCalcRigid(bool srcflag){
 		m_firstcalcrigid = srcflag;

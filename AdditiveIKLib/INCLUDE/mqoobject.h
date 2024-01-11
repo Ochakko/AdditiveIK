@@ -114,10 +114,10 @@ public:
 	int NormalizeInfBone();
 	int UpdateMorphBuffer();
 
-	int ScaleBtCapsule( CRigidElem* reptr, float boneleng, int srctype, float* lengptr );
-	int ScaleBtCone( CRigidElem* reptr, float boneleng, float* cyliptr, float* sphptr );
-	int ScaleBtBox( CRigidElem* reptr, float boneleng, float* cyliptr, float* sphptr, float* boxz );
-	int ScaleBtSphere( CRigidElem* reptr, float boneleng, float* cyliptr, float* sphptr );
+	int ScaleBtCapsule(bool setinstancescale, CRigidElem* reptr, float boneleng, int srctype, float* lengptr );
+	int ScaleBtCone(bool setinstancescale, CRigidElem* reptr, float boneleng, float* cyliptr, float* sphptr );
+	int ScaleBtBox(bool setinstancescale, CRigidElem* reptr, float boneleng, float* cyliptr, float* sphptr, float* boxz );
+	int ScaleBtSphere(bool setinstancescale, CRigidElem* reptr, float boneleng, float* cyliptr, float* sphptr );
 
 	int MultScale( ChaVector3 srcscale, ChaVector3 srctra );
 
