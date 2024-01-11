@@ -633,6 +633,144 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 	return 0;
 }
 
+int ChaScene::RenderInstancingModel(CModel* srcmodel, bool forcewithalpha,
+	myRenderer::RenderingEngine* renderingEngine,
+	int lightflag, ChaVector4 diffusemult, int btflag, bool zcmpalways)
+{
+	if (!renderingEngine) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	if (g_changeUpdateThreadsNum) {
+		//アップデート用スレッド数を変更中
+		return 0;
+	}
+
+	if (!srcmodel) {
+		return 0;
+	}
+	CModel* curmodel = srcmodel;
+
+
+	//2023/11/09
+	//マウスホイールで　ロングタイムラインのフレームを移動する際に
+	//前フレーム以前のゴーストがみえないように calcslotflag = trueを SetShaderConst()に渡す
+	bool calcslotflag;
+	if (g_previewFlag == 0) {
+		calcslotflag = true;
+	}
+	else {
+		calcslotflag = false;
+	}
+
+
+	//####################################################################################
+	//2023/10/31
+	//全モデルを横断して　DispGourpのグループ番号順に描画
+	// モデルの描画順序を操作しなくても　グループ番号設定で描画順を制御可能
+	// 
+	// 描画順の例：　
+	//	noalpha 
+	//		model1のgroup1-->model2のgorup1-->model1のgroup2-->model2のgroup2--> ...
+	// -->withalpha
+	//		model1のgroup1-->model2のgorup1-->model1のgroup2-->model2のgroup2--> ...
+	//####################################################################################
+
+
+	int renderindex;
+	//int renderslot = (int)(!(m_updateslot != 0));
+	for (renderindex = 0; renderindex < 2; renderindex++) {
+
+		bool withalpha;
+		if (renderindex == 0) {
+			withalpha = false;
+		}
+		else {
+			withalpha = true;
+		}
+
+		if ((forcewithalpha == true) && (renderindex == 0)) {
+			continue;
+		}
+
+
+		int groupindex;
+		for (groupindex = 0; groupindex < MAXDISPGROUPNUM; groupindex++) {
+			if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView()) {
+				//if (curmodel && curmodel->GetModelDisp()) {
+
+				ChaVector4 materialdisprate = curmodel->GetMaterialDispRate();
+
+				if (!(curmodel->DispGroupEmpty(groupindex)) && curmodel->GetDispGroupON(groupindex)) {
+
+					int elemnum = curmodel->GetDispGroupSize(groupindex);
+					int elemno;
+					for (elemno = 0; elemno < elemnum; elemno++) {
+
+						CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
+
+						if (curobj && (curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible()) {
+							//if (curobj) {
+
+
+							if (curobj->GetDispLine()) {
+								int dbgflag1 = 1;
+							}
+
+
+							if (forcewithalpha == true && renderindex == 1) {
+								//強制的に半透明として描画
+							}
+							else {
+								bool found_noalpha = false;
+								bool found_alpha = false;
+								int result = curobj->IncludeTransparent(diffusemult.w, &found_noalpha, &found_alpha);//2023/09/24
+								if (result == 1) {
+									_ASSERT(0);
+									return 1;
+								}
+								else if (result == 2) {
+									continue;
+								}
+
+								if ((withalpha == false) && (found_noalpha == false)) {
+									//不透明描画時　１つも不透明がなければ　レンダースキップ
+									continue;
+								}
+								if ((withalpha == true) && (found_alpha == false)) {
+									//半透明描画時　１つも半透明がなければ　レンダースキップ
+									continue;
+								}
+							}
+
+							//m_renderingEngine->Add3DModelToZPrepass(curobj);
+							//m_renderingEngine->Add3DModelToRenderGBufferPass(curobj);
+							myRenderer::RENDEROBJ renderobj;
+							renderobj.Init();
+							renderobj.pmodel = curmodel;
+							renderobj.mqoobj = curobj;
+							renderobj.shadertype = MQOSHADER_NOLIGHT;//!!!!!!!!!!! マニピュレータと地面はNOLIGHTで表示
+							renderobj.withalpha = withalpha;
+							renderobj.forcewithalpha = forcewithalpha;
+							renderobj.lightflag = lightflag;
+							renderobj.diffusemult = diffusemult;
+							renderobj.materialdisprate = materialdisprate;
+							renderobj.mWorld = curmodel->GetWorldMat().TKMatrix();
+							renderobj.calcslotflag = calcslotflag;
+							renderobj.btflag = btflag;
+							renderobj.zcmpalways = zcmpalways;
+							renderingEngine->Add3DModelToInstancingRenderPass(renderobj);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return 0;
+}
 
 
 int ChaScene::WaitUpdateThreads()

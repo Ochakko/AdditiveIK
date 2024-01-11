@@ -913,14 +913,14 @@ static int s_rigsphere_num;
 static int s_rigringX_num;
 static int s_rigringY_num;
 static int s_rigringZ_num;
-static CModel* s_rigopemark_sphere[RIGMULTINDEXMAX + 1];
-static CModel* s_rigopemark_ringX[RIGMULTINDEXMAX + 1];
-static CModel* s_rigopemark_ringY[RIGMULTINDEXMAX + 1];
-static CModel* s_rigopemark_ringZ[RIGMULTINDEXMAX + 1];
-static CMQOMaterial* s_rigmaterial_sphere[RIGMULTINDEXMAX + 1];
-static CMQOMaterial* s_rigmaterial_ringX[RIGMULTINDEXMAX + 1];
-static CMQOMaterial* s_rigmaterial_ringY[RIGMULTINDEXMAX + 1];
-static CMQOMaterial* s_rigmaterial_ringZ[RIGMULTINDEXMAX + 1];
+static CModel* s_rigopemark_sphere;//2024/01/11 use Instancing
+static CModel* s_rigopemark_ringX;//2024/01/11 use Instancing
+static CModel* s_rigopemark_ringY;//2024/01/11 use Instancing
+static CModel* s_rigopemark_ringZ;//2024/01/11 use Instancing
+//static CMQOMaterial* s_rigmaterial_sphere[RIGMULTINDEXMAX + 1];
+//static CMQOMaterial* s_rigmaterial_ringX[RIGMULTINDEXMAX + 1];
+//static CMQOMaterial* s_rigmaterial_ringY[RIGMULTINDEXMAX + 1];
+//static CMQOMaterial* s_rigmaterial_ringZ[RIGMULTINDEXMAX + 1];
 static ChaVector4 s_matrigmat;
 
 
@@ -2355,7 +2355,7 @@ static int SetSelectState();
 
 
 static void ResetRigModelNum();
-static CModel* GetCurRigModel(CUSTOMRIG currig);
+static CModel* GetCurRigModel(CUSTOMRIG currig, int* pinstanceno, ChaVector4* prigmat);
 static CFrameCopyDlg* GetCurrentFrameCopyDlg();
 
 
@@ -3546,14 +3546,14 @@ void InitApp()
 	}
 
 
-	::ZeroMemory(s_rigopemark_sphere, sizeof(CModel*) * (RIGMULTINDEXMAX + 1));
-	::ZeroMemory(s_rigopemark_ringX, sizeof(CModel*) * (RIGMULTINDEXMAX + 1));
-	::ZeroMemory(s_rigopemark_ringY, sizeof(CModel*) * (RIGMULTINDEXMAX + 1));
-	::ZeroMemory(s_rigopemark_ringZ, sizeof(CModel*) * (RIGMULTINDEXMAX + 1));
-	::ZeroMemory(s_rigmaterial_sphere, sizeof(CMQOMaterial*) * (RIGMULTINDEXMAX + 1));
-	::ZeroMemory(s_rigmaterial_ringX, sizeof(CMQOMaterial*) * (RIGMULTINDEXMAX + 1));
-	::ZeroMemory(s_rigmaterial_ringY, sizeof(CMQOMaterial*) * (RIGMULTINDEXMAX + 1));
-	::ZeroMemory(s_rigmaterial_ringZ, sizeof(CMQOMaterial*) * (RIGMULTINDEXMAX + 1));
+	s_rigopemark_sphere = nullptr;
+	s_rigopemark_ringX = nullptr;
+	s_rigopemark_ringY = nullptr;
+	s_rigopemark_ringZ = nullptr;
+	//::ZeroMemory(s_rigmaterial_sphere, sizeof(CMQOMaterial*) * (RIGMULTINDEXMAX + 1));
+	//::ZeroMemory(s_rigmaterial_ringX, sizeof(CMQOMaterial*) * (RIGMULTINDEXMAX + 1));
+	//::ZeroMemory(s_rigmaterial_ringY, sizeof(CMQOMaterial*) * (RIGMULTINDEXMAX + 1));
+	//::ZeroMemory(s_rigmaterial_ringZ, sizeof(CMQOMaterial*) * (RIGMULTINDEXMAX + 1));
 	s_matrigmat = ChaVector4(255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 1.0f);
 
 
@@ -3611,13 +3611,6 @@ void InitApp()
 		s_bmark = NULL;
 		s_ground = NULL;
 		s_gplane = NULL;
-		int modelno;
-		for (modelno = 0; modelno < (RIGMULTINDEXMAX + 1); modelno++) {
-			s_rigopemark_sphere[modelno] = NULL;
-			s_rigopemark_ringX[modelno] = NULL;
-			s_rigopemark_ringY[modelno] = NULL;
-			s_rigopemark_ringZ[modelno] = NULL;
-		}
 	}
 
 
@@ -4758,37 +4751,24 @@ void OnDestroyDevice()
 		s_select_posture = 0;
 	}
 
-	int rigopemarkno;
-	for (rigopemarkno = 0; rigopemarkno <= RIGMULTINDEXMAX; rigopemarkno++) {
-		{
-			CModel* delmodel = s_rigopemark_sphere[rigopemarkno];
-			if (delmodel) {
-				delete delmodel;
-			}
-			s_rigopemark_sphere[rigopemarkno] = 0;
-		}
-		{
-			CModel* delmodel = s_rigopemark_ringX[rigopemarkno];
-			if (delmodel) {
-				delete delmodel;
-			}
-			s_rigopemark_ringX[rigopemarkno] = 0;
-		}
-		{
-			CModel* delmodel = s_rigopemark_ringY[rigopemarkno];
-			if (delmodel) {
-				delete delmodel;
-			}
-			s_rigopemark_ringY[rigopemarkno] = 0;
-		}
-		{
-			CModel* delmodel = s_rigopemark_ringZ[rigopemarkno];
-			if (delmodel) {
-				delete delmodel;
-			}
-			s_rigopemark_ringZ[rigopemarkno] = 0;
-		}
+
+	if (s_rigopemark_sphere) {
+		delete s_rigopemark_sphere;
+		s_rigopemark_sphere = nullptr;
 	}
+	if (s_rigopemark_ringX) {
+		delete s_rigopemark_ringX;
+		s_rigopemark_ringX = nullptr;
+	}
+	if (s_rigopemark_ringY) {
+		delete s_rigopemark_ringY;
+		s_rigopemark_ringY = nullptr;
+	}
+	if (s_rigopemark_ringZ) {
+		delete s_rigopemark_ringZ;
+		s_rigopemark_ringZ = nullptr;
+	}
+
 
 	if (s_ground) {
 		delete s_ground;
@@ -13018,8 +12998,17 @@ void ResetRigModelNum()
 	s_rigringY_num = 0;
 	s_rigringZ_num = 0;
 }
-CModel* GetCurRigModel(CUSTOMRIG currig)
+CModel* GetCurRigModel(CUSTOMRIG currig, int* pinstanceno, ChaVector4* prigmat)
 {
+	if (!pinstanceno || !prigmat) {
+		_ASSERT(0);
+		return nullptr;
+	}
+
+	*pinstanceno = -1;//error値で初期化
+	*prigmat = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);//error値で初期化
+
+
 	//int rigopemarkno = currig.shapemult;
 	int rigshapekind = currig.shapekind;
 	int rigaxis = currig.dispaxis;
@@ -13059,10 +13048,13 @@ CModel* GetCurRigModel(CUSTOMRIG currig)
 				return nullptr;
 			}
 
-			currigmodel = s_rigopemark_sphere[s_rigsphere_num];
-			//s_rigmaterial_sphere[s_rigsphere_num]->SetDif4F(s_matrigmat);
-			s_rigmaterial_sphere[s_rigsphere_num]->SetTempDiffuseMult(s_matrigmat);
-			s_rigmaterial_sphere[s_rigsphere_num]->SetTempDiffuseMultFlag(true);
+			currigmodel = s_rigopemark_sphere;
+			*pinstanceno = s_rigsphere_num;
+			*prigmat = s_matrigmat;
+
+			////s_rigmaterial_sphere[s_rigsphere_num]->SetDif4F(s_matrigmat);
+			//s_rigmaterial_sphere[s_rigsphere_num]->SetTempDiffuseMult(s_matrigmat);
+			//s_rigmaterial_sphere[s_rigsphere_num]->SetTempDiffuseMultFlag(true);
 
 			s_rigsphere_num++;
 		}
@@ -13072,10 +13064,13 @@ CModel* GetCurRigModel(CUSTOMRIG currig)
 				return nullptr;
 			}
 
-			currigmodel = s_rigopemark_ringX[s_rigringX_num];
-			//s_rigmaterial_ringX[s_rigringX_num]->SetDif4F(s_matrigmat);
-			s_rigmaterial_ringX[s_rigringX_num]->SetTempDiffuseMult(s_matrigmat);
-			s_rigmaterial_ringX[s_rigringX_num]->SetTempDiffuseMultFlag(true);
+			currigmodel = s_rigopemark_ringX;
+			*pinstanceno = s_rigringX_num;
+			*prigmat = s_matrigmat;
+
+			////s_rigmaterial_ringX[s_rigringX_num]->SetDif4F(s_matrigmat);
+			//s_rigmaterial_ringX[s_rigringX_num]->SetTempDiffuseMult(s_matrigmat);
+			//s_rigmaterial_ringX[s_rigringX_num]->SetTempDiffuseMultFlag(true);
 
 			s_rigringX_num++;
 		}
@@ -13085,10 +13080,13 @@ CModel* GetCurRigModel(CUSTOMRIG currig)
 				return nullptr;
 			}
 
-			currigmodel = s_rigopemark_ringY[s_rigringY_num];
-			//s_rigmaterial_ringY[s_rigringY_num]->SetDif4F(s_matrigmat);
-			s_rigmaterial_ringY[s_rigringY_num]->SetTempDiffuseMult(s_matrigmat);
-			s_rigmaterial_ringY[s_rigringY_num]->SetTempDiffuseMultFlag(true);
+			currigmodel = s_rigopemark_ringY;
+			*pinstanceno = s_rigringY_num;
+			*prigmat = s_matrigmat;
+
+			////s_rigmaterial_ringY[s_rigringY_num]->SetDif4F(s_matrigmat);
+			//s_rigmaterial_ringY[s_rigringY_num]->SetTempDiffuseMult(s_matrigmat);
+			//s_rigmaterial_ringY[s_rigringY_num]->SetTempDiffuseMultFlag(true);
 
 			s_rigringY_num++;
 		}
@@ -13098,10 +13096,13 @@ CModel* GetCurRigModel(CUSTOMRIG currig)
 				return nullptr;
 			}
 
-			currigmodel = s_rigopemark_ringZ[s_rigringZ_num];
-			//s_rigmaterial_ringZ[s_rigringZ_num]->SetDif4F(s_matrigmat);
-			s_rigmaterial_ringZ[s_rigringZ_num]->SetTempDiffuseMult(s_matrigmat);
-			s_rigmaterial_ringZ[s_rigringZ_num]->SetTempDiffuseMultFlag(true);
+			currigmodel = s_rigopemark_ringZ;
+			*pinstanceno = s_rigringZ_num;
+			*prigmat = s_matrigmat;
+
+			////s_rigmaterial_ringZ[s_rigringZ_num]->SetDif4F(s_matrigmat);
+			//s_rigmaterial_ringZ[s_rigringZ_num]->SetTempDiffuseMult(s_matrigmat);
+			//s_rigmaterial_ringZ[s_rigringZ_num]->SetTempDiffuseMultFlag(true);
 
 			s_rigringZ_num++;
 		}
@@ -13133,6 +13134,12 @@ int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderCon
 	//g_hmVP->SetMatrix(s_matVP.GetDataPtr());
 
 	ResetRigModelNum();
+	s_rigopemark_sphere->ResetInstancingParams();
+	s_rigopemark_ringX->ResetInstancingParams();
+	s_rigopemark_ringY->ResetInstancingParams();
+	s_rigopemark_ringZ->ResetInstancingParams();
+
+	int rendercount = 0;
 	MOTINFO* curmi = s_model->GetCurMotInfo();
 	if (curmi) {
 		int curmotid = curmi->motid;
@@ -13148,21 +13155,18 @@ int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderCon
 					if (currig.useflag == 2) {//0: free, 1: allocated, 2: valid
 					//if (currig.rigboneno > 0) {
 						CModel* currigmodel;
-						currigmodel = GetCurRigModel(currig);
-						if (currigmodel) {
+						int instancingno;
+						ChaVector4 rigmaterial;
+						currigmodel = GetCurRigModel(currig, &instancingno, &rigmaterial);
+						if (currigmodel && (instancingno >= 0) && (instancingno < RIGMULTINDEXMAX)) {
 							ChaMatrix rigmat;
 							ChaMatrixIdentity(&rigmat);
 							rigmat = CalcRigMat(&currig, curbone, curmotid, curframe, currig.dispaxis, currig.disporder, currig.posinverse);
-							//g_hmWorld->SetMatrix(rigmat.GetDataPtr());
 
-							currigmodel->UpdateMatrix(g_limitdegflag, &rigmat, &s_matVP);
+							//currigmodel->UpdateMatrix(g_limitdegflag, &rigmat, &s_matVP);
+							currigmodel->SetInstancingParams(instancingno, rigmat, s_matVP, rigmaterial);
 
-							int lightflag = 0;
-							ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.75f);
-							bool forcewithalpha = true;
-							int btflag = 0;
-							bool zcmpalways = false;
-							s_chascene->RenderOneModel(currigmodel, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+							rendercount++;
 						}
 					}
 				}
@@ -13171,6 +13175,28 @@ int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderCon
 
 		//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
 	}
+
+	{
+		int lightflag = 0;
+		ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.75f);
+		bool forcewithalpha = true;
+		int btflag = 0;
+		bool zcmpalways = false;
+
+		if (s_rigsphere_num > 0) {
+			s_chascene->RenderInstancingModel(s_rigopemark_sphere, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+		}
+		if (s_rigringX_num > 0) {
+			s_chascene->RenderInstancingModel(s_rigopemark_ringX, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+		}
+		if (s_rigringY_num > 0) {
+			s_chascene->RenderInstancingModel(s_rigopemark_ringY, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+		}
+		if (s_rigringZ_num > 0) {
+			s_chascene->RenderInstancingModel(s_rigopemark_ringZ, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+		}
+	}
+
 
 	return 0;
 }
@@ -50075,8 +50101,10 @@ int PickRigBone(UIPICKINFO* ppickinfo, bool forrigtip, int* dstrigno)//default:f
 						//s_matrig->SetDif4F(s_matrigmat);
 
 						CModel* currigmodel;
-						currigmodel = GetCurRigModel(currig);
-						if (currigmodel) {
+						int instancingno;
+						ChaVector4 rigmaterial;
+						currigmodel = GetCurRigModel(currig, &instancingno, &rigmaterial);
+						if (currigmodel && (instancingno >= 0) && (instancingno < RIGMULTINDEXMAX)) {
 							ChaMatrix rigmat;
 							ChaMatrixIdentity(&rigmat);
 							rigmat = CalcRigMat(&currig, curbone, curmotid, curframe, currig.dispaxis, currig.disporder, currig.posinverse);
@@ -53397,97 +53425,47 @@ int OnCreateDevice()
 	CallF(s_select_posture->LoadMQO(s_pdev, L"..\\Media\\MameMedia\\select_2_posture.mqo", 0, 1.0f, 0), return S_FALSE);
 	//CallF(s_select_posture->MakeDispObj(), return S_FALSE);
 	
-	
-	int rigopemarkno;
-	for (rigopemarkno = 0; rigopemarkno <= RIGMULTINDEXMAX; rigopemarkno++) {
-		{
-			s_rigopemark_sphere[rigopemarkno] = new CModel();
-			if (s_rigopemark_sphere[rigopemarkno]) {
-				//float rigmult = 0.30f * (float)(rigopemarkno + 1) * 0.5f;
-				float rigmult = 1.0f;
-				CallF(s_rigopemark_sphere[rigopemarkno]->LoadMQO(s_pdev,
-					L"..\\Media\\MameMedia\\rigmark.mqo", 0, rigmult, 0), return S_FALSE);
-				//CallF(s_rigopemark_sphere[rigopemarkno]->MakeDispObj(), return S_FALSE);
-				s_rigmaterial_sphere[rigopemarkno] = s_rigopemark_sphere[rigopemarkno]->GetMQOMaterialByName("mat1");
-				if (!s_rigmaterial_sphere[rigopemarkno]) {
-					_ASSERT(0);
-					PostQuitMessage(1);
-					return S_FALSE;
-				}
-			}
-			else {
-				_ASSERT(0);
-				PostQuitMessage(1);
-				return S_FALSE;
-			}
-		}
-	
-		{
-			s_rigopemark_ringX[rigopemarkno] = new CModel();
-			if (s_rigopemark_ringX[rigopemarkno]) {
-				//float rigmult = (float)(rigopemarkno + 1) * 0.5f;
-				float rigmult = 1.0f;
-				CallF(s_rigopemark_ringX[rigopemarkno]->LoadMQO(s_pdev,
-					L"..\\Media\\MameMedia\\ringX.mqo", 0, rigmult, 0), return S_FALSE);
-				//CallF(s_rigopemark_ringX[rigopemarkno]->MakeDispObj(), return S_FALSE);
-				s_rigmaterial_ringX[rigopemarkno] = s_rigopemark_ringX[rigopemarkno]->GetMQOMaterialByName("ringred");
-				if (!s_rigmaterial_ringX[rigopemarkno]) {
-					_ASSERT(0);
-					PostQuitMessage(1);
-					return S_FALSE;
-				}
-			}
-			else {
-				_ASSERT(0);
-				PostQuitMessage(1);
-				return S_FALSE;
-			}
-		}
-	
-		{
-			s_rigopemark_ringY[rigopemarkno] = new CModel();
-			if (s_rigopemark_ringY[rigopemarkno]) {
-				//float rigmult = (float)(rigopemarkno + 1) * 0.5f;
-				float rigmult = 1.0f;
-				CallF(s_rigopemark_ringY[rigopemarkno]->LoadMQO(s_pdev,
-					L"..\\Media\\MameMedia\\ringY.mqo", 0, rigmult, 0), return S_FALSE);
-				//CallF(s_rigopemark_ringY[rigopemarkno]->MakeDispObj(), return S_FALSE);
-				s_rigmaterial_ringY[rigopemarkno] = s_rigopemark_ringY[rigopemarkno]->GetMQOMaterialByName("ringgreen");
-				if (!s_rigmaterial_ringY[rigopemarkno]) {
-					_ASSERT(0);
-					PostQuitMessage(1);
-					return S_FALSE;
-				}
-			}
-			else {
-				_ASSERT(0);
-				PostQuitMessage(1);
-				return S_FALSE;
-			}
-		}
-	
-		{
-			s_rigopemark_ringZ[rigopemarkno] = new CModel();
-			if (s_rigopemark_ringZ[rigopemarkno]) {
-				//float rigmult = (float)(rigopemarkno + 1) * 0.5f;
-				float rigmult = 1.0f;
-				CallF(s_rigopemark_ringZ[rigopemarkno]->LoadMQO(s_pdev,
-					L"..\\Media\\MameMedia\\ringZ.mqo", 0, rigmult, 0), return S_FALSE);
-				//CallF(s_rigopemark_ringZ[rigopemarkno]->MakeDispObj(), return S_FALSE);
-				s_rigmaterial_ringZ[rigopemarkno] = s_rigopemark_ringZ[rigopemarkno]->GetMQOMaterialByName("ringblue");
-				if (!s_rigmaterial_ringZ[rigopemarkno]) {
-					_ASSERT(0);
-					PostQuitMessage(1);
-					return S_FALSE;
-				}
-			}
-			else {
-				_ASSERT(0);
-				PostQuitMessage(1);
-				return S_FALSE;
-			}
-		}
+	float rigmult = 1.0f;
+	s_rigopemark_sphere = new CModel();
+	if (!s_rigopemark_sphere) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
 	}
+	s_rigopemark_sphere->SetInstancingNum(RIGMULTINDEXMAX);
+	CallF(s_rigopemark_sphere->LoadMQO(s_pdev,
+		L"..\\Media\\MameMedia\\rigmark.mqo", 0, rigmult, 0), return S_FALSE);
+
+	s_rigopemark_ringX = new CModel();
+	if (!s_rigopemark_ringX) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	s_rigopemark_ringX->SetInstancingNum(RIGMULTINDEXMAX);
+	CallF(s_rigopemark_ringX->LoadMQO(s_pdev,
+		L"..\\Media\\MameMedia\\ringX.mqo", 0, rigmult, 0), return S_FALSE);
+
+	s_rigopemark_ringY = new CModel();
+	if (!s_rigopemark_ringY) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	s_rigopemark_ringY->SetInstancingNum(RIGMULTINDEXMAX);
+	CallF(s_rigopemark_ringY->LoadMQO(s_pdev,
+		L"..\\Media\\MameMedia\\ringY.mqo", 0, rigmult, 0), return S_FALSE);
+
+	s_rigopemark_ringZ = new CModel();
+	if (!s_rigopemark_ringZ) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	s_rigopemark_ringZ->SetInstancingNum(RIGMULTINDEXMAX);
+	CallF(s_rigopemark_ringZ->LoadMQO(s_pdev,
+		L"..\\Media\\MameMedia\\ringZ.mqo", 0, rigmult, 0), return S_FALSE);
+
 	s_matrigmat = ChaVector4(255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 1.0f);
 	
 	

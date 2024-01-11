@@ -40,6 +40,7 @@ enum {
 	SHADERFX_NOSKIN_STD,
 	SHADERFX_NOSKIN_PBR,
 	SHADERFX_NOSKIN_ZPRE,
+	SHADERFX_NOSKIN_INSTANCING,
 	SHADERFX_SKIN_STD,
 	SHADERFX_SKIN_PBR,
 	SHADERFX_SKIN_ZPRE,
@@ -51,6 +52,7 @@ enum {//renderobj.renderkind
 	RENDERKIND_SHADOWMAP,
 	RENDERKIND_SHADOWRECIEVER,
 	RENDERKIND_ZPREPASS,
+	RENDERKIND_INSTANCING,
 	RENDERKIND_MAX
 };
 
@@ -269,6 +271,25 @@ public:
 	);
 
 
+	void InitInstancingShadersAndPipelines(
+		int vertextype,
+		const char* fxFilePath,
+		const char* vsEntryPointFunc,
+		const char* psEntryPointFunc,
+		const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat,
+		int numSrv,
+		int numCbv,
+		UINT offsetInDescriptorsFromTableStartCB,
+		UINT offsetInDescriptorsFromTableStartSRV,
+		D3D12_FILTER samplerFilter);
+	void InitInstancingPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
+	void InitInstancingShaders(const char* fxFilePath,
+		const char* vsEntryPointFunc,
+		const char* psEntryPointFunc
+	);
+
+
+
 	void SetFl4x4(myRenderer::RENDEROBJ renderobj);
 	void SetConstLights(SConstantBufferLights* pcbLights);
 	void SetConstShadow(SConstantBufferShadow* pcbShadow);
@@ -280,6 +301,10 @@ public:
 		const Matrix& mView, const Matrix& mProj,
 		bool isfirstmaterial = false);
 	void ZPreBeginRender(RenderContext* rc);
+	void InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
+		const Matrix& mView, const Matrix& mProj,
+		bool isfirstmaterial = false);
+	void InstancingBeginRender(RenderContext* rc);
 
 
 
@@ -866,6 +891,12 @@ private:
 	Shader* m_vsZPreModel = nullptr;				//ZPreモデル用の頂点シェーダー。
 	Shader* m_psZPreModel = nullptr;					//ZPreモデル用のピクセルシェーダー。
 
+	RootSignature m_InstancingrootSignature;					//ZPreルートシグネチャ。
+	PipelineState m_InstancingModelPipelineState;		//ZPreモデル用のパイプラインステート。
+	Shader* m_vsInstancingModel = nullptr;				//ZPreモデル用の頂点シェーダー。
+	Shader* m_psInstancingModel = nullptr;					//ZPreモデル用のピクセルシェーダー。
+
+
 
 	SConstantBuffer m_cb;
 	SConstantBufferBoneMatrix m_cbMatrix;
@@ -875,6 +906,7 @@ private:
 
 	bool m_initpipelineflag = false;
 	bool m_initprezpipelineflag = false;
+	bool m_initInstancingpipelineflag = false;
 
 	int m_shaderfx;
 	bool m_updatefl4x4flag[MQOSHADER_MAX * 3];

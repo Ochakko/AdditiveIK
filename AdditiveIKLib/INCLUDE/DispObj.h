@@ -105,6 +105,8 @@ public:
 	int RenderZPrePm4(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
 	int RenderZPrePm3(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
 
+	int RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
+
 	int RenderShadowMap(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
 	int RenderShadowMapPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
 	int RenderShadowReciever(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
@@ -236,6 +238,8 @@ private:
 
 	ID3D12Resource* m_vertexBuffer;		//頂点バッファ。
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;	//頂点バッファビュー。
+	VertexBuffer  m_InstancingBuffer;		//インスタンシング頂点バッファ。
+
 
 	ID3D12Resource* m_indexBuffer;	//インデックスバッファ。
 	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;	//インデックスバッファビュー。

@@ -54,7 +54,9 @@ m_constantBuffer(), //2023/12/01
 m_rootSignature(), //2023/12/01
 m_shadowrootSignature(), //2023/12/14
 m_ZPrerootSignature(), //2023/12/05
-m_ZPreModelPipelineState() //2023/12/05
+m_ZPreModelPipelineState(), //2023/12/05
+m_InstancingrootSignature(), //2024/01/11
+m_InstancingModelPipelineState() //2024/01/11
 {
 	InitParams();
 
@@ -239,6 +241,7 @@ int CMQOMaterial::InitParams()
 {	
 	m_initpipelineflag = false;
 	m_initprezpipelineflag = false;
+	m_initInstancingpipelineflag = false;
 	m_createdescriptorflag = false;
 	//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXCLUSTERNUM);
 	//ZeroMemory(m_setfl4x4, sizeof(float) * 16 * MAXBONENUM);
@@ -1189,6 +1192,81 @@ void CMQOMaterial::InitZPreShadersAndPipelines(
 }
 
 
+void CMQOMaterial::InitInstancingShadersAndPipelines(
+	int vertextype,
+	const char* fxFilePath,
+	const char* vsEntryPointFunc,
+	const char* psEntryPointFunc,
+	const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat,
+	int numSrv,
+	int numCbv,
+	UINT offsetInDescriptorsFromTableStartCB,
+	UINT offsetInDescriptorsFromTableStartSRV,
+	D3D12_FILTER samplerFilter)
+{
+	//############################################
+	// vertextype : 0-->pm4, 1-->pm3, 2-->extline
+	//############################################
+
+	if ((vertextype != 0) && (vertextype != 1)) {
+		return;
+	}
+
+	if (m_initInstancingpipelineflag) {
+		//if (m_initpipelineflag) {
+			//###############################
+			//既に初期化済の場合は　すぐにリターン
+			//###############################
+		return;
+	}
+
+
+	//ルートシグネチャを初期化。
+	D3D12_STATIC_SAMPLER_DESC samplerDescArray[2];
+	//デフォルトのサンプラ
+	samplerDescArray[0].Filter = samplerFilter;
+	samplerDescArray[0].AddressU = GetAddressU_albedo();//2024/01/06
+	samplerDescArray[0].AddressV = GetAddressV_albedo();//2024/01/06
+	samplerDescArray[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	samplerDescArray[0].MipLODBias = 0;
+	samplerDescArray[0].MaxAnisotropy = 0;
+	samplerDescArray[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	samplerDescArray[0].BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+	samplerDescArray[0].MinLOD = 0.0f;
+	samplerDescArray[0].MaxLOD = D3D12_FLOAT32_MAX;
+	samplerDescArray[0].ShaderRegister = 0;//!!!!!!!!!
+	samplerDescArray[0].RegisterSpace = 0;
+	samplerDescArray[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	//シャドウマップ用のサンプラ。
+	samplerDescArray[1] = samplerDescArray[0];
+	//比較対象の値が小さければ０、大きければ１を返す比較関数を設定する。
+	samplerDescArray[1].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+	samplerDescArray[1].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER;
+	samplerDescArray[1].MaxAnisotropy = 1;
+	samplerDescArray[1].ShaderRegister = 1;//!!!!!!!!!
+
+	m_InstancingrootSignature.Init(
+		samplerDescArray,
+		2,
+		numCbv,
+		numSrv,
+		8,
+		offsetInDescriptorsFromTableStartCB,
+		offsetInDescriptorsFromTableStartSRV
+	);
+
+	if (fxFilePath != nullptr && strlen(fxFilePath) > 0) {
+		//シェーダーを初期化。
+		InitInstancingShaders(fxFilePath, vsEntryPointFunc, psEntryPointFunc);
+		//パイプラインステートを初期化。
+		InitInstancingPipelineState(vertextype, colorBufferFormat);
+	}
+
+	m_initInstancingpipelineflag = true;
+}
+
+
 void CMQOMaterial::InitShadersAndPipelines(
 	int srcuvnum,
 	int vertextype,
@@ -1723,6 +1801,151 @@ void CMQOMaterial::InitZPrePipelineState(int vertextype, const std::array<DXGI_F
 
 }
 
+void CMQOMaterial::InitInstancingPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
+{
+
+
+	//############################################
+	// vertextype : 0-->pm4, 1-->pm3, 2-->extline
+	//############################################
+
+	if ((vertextype != 0) && (vertextype != 1)) {
+		return;
+	}
+
+	// 頂点レイアウトを定義する。
+	//パイプラインステートを作成。
+	D3D12_INPUT_ELEMENT_DESC inputElementDescsWithoutBone[] =
+	{
+		//型：BINORMALDISPV
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+
+		//wmat : texcoord0 - texcoord4
+		{ "TEXCOORD", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+		{ "TEXCOORD", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+		{ "TEXCOORD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+		{ "TEXCOORD", 4, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+
+		//vpmat : texcoord5 - texcoord8
+		{ "TEXCOORD", 5, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+		{ "TEXCOORD", 6, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+		{ "TEXCOORD", 7, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+		{ "TEXCOORD", 8, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+
+		//diffusemult
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+	};
+
+
+	{
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
+		psoDesc.pRootSignature = m_InstancingrootSignature.Get();
+
+		//2023/12/01 シェーダのエントリ関数として　skin有無を切り替えることはあるが　頂点フォーマットはvertextypeによって決める
+		if (vertextype == 0) {//pm4
+			//psoDesc.InputLayout = { inputElementDescsWithBone, _countof(inputElementDescsWithBone) };//!!! WithBone
+
+			_ASSERT(0);//not support
+			abort();
+		}
+		else if (vertextype == 1) {//pm3
+			psoDesc.InputLayout = { inputElementDescsWithoutBone, _countof(inputElementDescsWithoutBone) };
+		}
+		//else if (vertextype == 2) {//extline
+		//	psoDesc.InputLayout = { inputElementDescsExtLine, _countof(inputElementDescsExtLine) };
+		//}
+		else {
+			_ASSERT(0);
+			abort();
+		}
+		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsInstancingModel->GetCompiledBlob());//!!!!!!!!! Skin 
+		psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psInstancingModel->GetCompiledBlob());
+		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+
+		if (vertextype != 2) {
+#ifdef SAMPLE_11
+			// 背面を描画していないと影がおかしくなるため、
+			// シャドウのサンプルのみカリングをオフにする。
+			// 本来はアプリ側からカリングモードを渡すのがいいのだけど、
+			// 書籍に記載しているコードに追記がいるので、エンジン側で吸収する。
+			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+#else
+			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+#endif
+		}
+		else {
+			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+		}
+		////2023/11/18
+		//psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+
+		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+#ifdef TK_ENABLE_ALPHA_TO_COVERAGE
+		psoDesc.BlendState.AlphaToCoverageEnable = TRUE;
+#endif
+		psoDesc.DepthStencilState.DepthEnable = TRUE;
+		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		psoDesc.DepthStencilState.StencilEnable = FALSE;
+		psoDesc.SampleMask = UINT_MAX;
+		if (vertextype != 2) {
+			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		}
+		else {
+			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+		}
+
+		int numRenderTarget = 0;
+		for (auto& format : colorBufferFormat) {
+			if (format == DXGI_FORMAT_UNKNOWN) {
+				//フォーマットが指定されていない場所が来たら終わり。
+				break;
+			}
+			psoDesc.RTVFormats[numRenderTarget] = colorBufferFormat[numRenderTarget];
+			numRenderTarget++;
+		}
+
+		psoDesc.NumRenderTargets = numRenderTarget;
+		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+		psoDesc.SampleDesc.Count = 1;
+
+		m_InstancingModelPipelineState.Init(psoDesc);
+
+	}
+}
+
 void CMQOMaterial::InitShaders(
 	const char* fxPBRPath,
 	const char* fxStdPath,
@@ -1903,6 +2126,27 @@ void CMQOMaterial::InitZPreShaders(
 	}
 }
 
+void CMQOMaterial::InitInstancingShaders(
+	const char* fxFilePath,
+	const char* vsEntryPointFunc,
+	const char* psEntryPointFunc
+)
+{
+	//スキンなしモデル用のシェーダーをロードする。
+	m_vsInstancingModel = g_engine->GetShaderFromBank(fxFilePath, vsEntryPointFunc);
+	if (m_vsInstancingModel == nullptr) {
+		m_vsInstancingModel = new Shader;
+		m_vsInstancingModel->LoadVS(fxFilePath, vsEntryPointFunc);
+		g_engine->RegistShaderToBank(fxFilePath, vsEntryPointFunc, m_vsInstancingModel);
+	}
+
+	m_psInstancingModel = g_engine->GetShaderFromBank(fxFilePath, psEntryPointFunc);
+	if (m_psInstancingModel == nullptr) {
+		m_psInstancingModel = new Shader;
+		m_psInstancingModel->LoadPS(fxFilePath, psEntryPointFunc);
+		g_engine->RegistShaderToBank(fxFilePath, psEntryPointFunc, m_psInstancingModel);
+	}
+}
 
 void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 {
@@ -1986,6 +2230,7 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 			shaderindex = MQOSHADER_PBR_SHADOWRECIEVER;
 			break;
 		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING://Instancingの場合にはこの関数は呼ばれないはず
 		default:
 			shaderindex = -1;
 			break;
@@ -2003,6 +2248,7 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 			shaderindex = MQOSHADER_STD_SHADOWRECIEVER;
 			break;
 		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING://Instancingの場合にはこの関数は呼ばれないはず
 		default:
 			shaderindex = -1;
 			break;
@@ -2020,6 +2266,7 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 			shaderindex = MQOSHADER_NOLIGHT_SHADOWRECIEVER;
 			break;
 		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING://Instancingの場合にはこの関数は呼ばれないはず
 		default:
 			shaderindex = -1;
 			break;
@@ -2087,6 +2334,16 @@ void CMQOMaterial::ZPreBeginRender(RenderContext* rc)
 	rc->SetDescriptorHeap(m_descriptorHeap);
 }
 
+void CMQOMaterial::InstancingBeginRender(RenderContext* rc)
+{
+	if (!rc) {
+		_ASSERT(0);
+		return;
+	}
+	rc->SetRootSignature(m_InstancingrootSignature);
+	rc->SetPipelineState(m_InstancingModelPipelineState);
+	rc->SetDescriptorHeap(m_descriptorHeap);
+}
 
 
 
@@ -2596,6 +2853,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			shaderindex = MQOSHADER_PBR_SHADOWRECIEVER;
 			break;
 		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING://Instancingの場合にはこの関数は呼ばれないはず
 		default:
 			shaderindex = -1;
 			break;
@@ -2613,6 +2871,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			shaderindex = MQOSHADER_STD_SHADOWRECIEVER;
 			break;
 		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING://Instancingの場合にはこの関数は呼ばれないはず
 		default:
 			shaderindex = -1;
 			break;
@@ -2630,6 +2889,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			shaderindex = MQOSHADER_NOLIGHT_SHADOWRECIEVER;
 			break;
 		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING://Instancingの場合にはこの関数は呼ばれないはず
 		default:
 			shaderindex = -1;
 			break;
@@ -2962,6 +3222,146 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ rende
 
 	}
 }
+
+void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
+	const Matrix& mView, const Matrix& mProj,
+	bool isfirstmaterial)
+{
+	if (!rc || !renderobj.mqoobj || !renderobj.pmodel) {
+		_ASSERT(0);
+		return;
+	}
+
+	CPolyMesh4* ppm4 = renderobj.mqoobj->GetPm4();
+	CPolyMesh3* ppm3 = renderobj.mqoobj->GetPm3();
+	CExtLine* pextline = renderobj.mqoobj->GetExtLine();
+	CDispObj* pdispline = renderobj.mqoobj->GetDispLine();
+
+	//if (pdispline && pextline) {
+	//	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+	//}
+	//else if (ppm3 || ppm4) {
+	//	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//}
+	//else {
+	//	_ASSERT(0);
+	//	return;
+	//}
+
+
+	if ((g_shadowmap_slotno < 0) || (g_shadowmap_slotno >= SHADOWSLOTNUM)) {
+		_ASSERT(0);
+		g_shadowmap_slotno = 0;
+	}
+
+
+	////定数バッファを更新する。
+	if (pdispline && pextline) {
+		m_cb.mWorld = renderobj.mWorld;
+		m_cb.mView = mView;
+		m_cb.mProj = mProj;
+		//m_cb.diffusemult = renderobj.diffusemult;
+		m_cb.diffusemult = pextline->GetColor();
+		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
+		m_cb.shadowmaxz = ChaVector4(
+			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
+			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
+		m_cb.UVs[0] = g_uvset;
+		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
+			m_commonConstantBuffer.CopyToVRAM(m_cb);
+		}
+		else {
+			m_shadowcommonConstantBuffer.CopyToVRAM(m_cb);
+		}
+	}
+	else if (ppm3) {
+		m_cb.mWorld = renderobj.mWorld;
+		m_cb.mView = mView;
+		m_cb.mProj = mProj;
+		//m_cb.diffusemult = renderobj.diffusemult;
+		if (GetTempDiffuseMultFlag()) {
+			m_cb.diffusemult = GetTempDiffuseMult();
+		}
+		else {
+			m_cb.diffusemult = renderobj.diffusemult;
+		}
+		m_cb.ambient = ChaVector4(GetAmb3F(), 0.0f);
+		if (GetEnableEmission()) {
+			m_cb.emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+		}
+		else {
+			m_cb.emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+		}
+		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
+		m_cb.shadowmaxz = ChaVector4(
+			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
+			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
+		m_cb.UVs[0] = g_uvset;
+		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
+			m_commonConstantBuffer.CopyToVRAM(m_cb);
+		}
+		else {
+			m_shadowcommonConstantBuffer.CopyToVRAM(m_cb);
+		}
+		//if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
+		SetConstLights(&m_cbLights);
+		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
+			m_expandConstantBuffer.CopyToVRAM(m_cbLights);
+		}
+		else {
+			m_shadowexpandConstantBuffer.CopyToVRAM(m_cbLights);
+		}
+		//SetUpdateLightsFlag();
+	//}
+	}
+	else if (ppm4) {
+		m_cb.mWorld = renderobj.mWorld;
+		m_cb.mView = mView;
+		m_cb.mProj = mProj;
+		if (GetTempDiffuseMultFlag()) {
+			m_cb.diffusemult = GetTempDiffuseMult() * renderobj.diffusemult;
+		}
+		else {
+			m_cb.diffusemult = renderobj.diffusemult;
+		}
+		m_cb.ambient = ChaVector4(GetAmb3F(), 0.0f);
+		if (GetEnableEmission()) {
+			m_cb.emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+		}
+		else {
+			m_cb.emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+		}
+		m_cb.materialdisprate = renderobj.pmodel->GetMaterialDispRate();
+		m_cb.shadowmaxz = ChaVector4(
+			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
+			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
+		m_cb.UVs[0] = g_uvset;
+		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
+			m_commonConstantBuffer.CopyToVRAM(m_cb);
+		}
+		else {
+			m_shadowcommonConstantBuffer.CopyToVRAM(m_cb);
+		}
+		//if (!GetUpdateFl4x4Flag()) {//2023/12/01
+			//if (isfirstmaterial) {
+			//if (isfirstmaterial && !GetUpdateFl4x4Flag()) {
+			//if (!renderobj.pmodel->GetUpdateFl4x4Flag()) {
+		SetConstLights(&(m_cbMatrix.lights));
+		SetFl4x4(renderobj);
+
+		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
+			m_expandConstantBuffer.CopyToVRAM(m_cbMatrix);
+		}
+		else {
+			m_shadowexpandConstantBuffer.CopyToVRAM(m_cbMatrix);
+		}
+		renderobj.pmodel->SetUpdateFl4x4Flag();
+		//SetUpdateFl4x4Flag();
+	//}
+
+	}
+}
+
 
 void CMQOMaterial::SetBoneMatrix(myRenderer::RENDEROBJ renderobj)
 {

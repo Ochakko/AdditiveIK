@@ -30,6 +30,7 @@ namespace myRenderer
         m_shadowmapModels.clear();
         m_renderToGBufferModels.clear();                  // Gバッファへの描画パスで描画するモデルのリスト
         m_forwardRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+        m_instancingRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
         m_forwardRenderSprites.clear();
         m_forwardRenderFont.clear();
 
@@ -323,6 +324,7 @@ namespace myRenderer
         m_shadowmapModels.clear();
         m_renderToGBufferModels.clear();
         m_forwardRenderModels.clear();
+        m_instancingRenderModels.clear();
         m_zprepassModels.clear();
         m_forwardRenderSprites.clear();
         m_forwardRenderFont.clear();
@@ -457,6 +459,10 @@ namespace myRenderer
             RenderPolyMesh(rc, currenderobjfwd);
         }
 
+        for (auto& currenderobjinsta : m_instancingRenderModels)
+        {
+            RenderPolyMeshInstancing(rc, currenderobjinsta);
+        }
 
         //Sprite (ScreenVertexMode)
         for (auto& currendersprite : m_forwardRenderSprites)
@@ -640,6 +646,34 @@ namespace myRenderer
         }
     }
 
+    void RenderingEngine::RenderPolyMeshInstancing(RenderContext* rc, RENDEROBJ currenderobj)
+    {
+        if (!rc) {
+            _ASSERT(0);
+            return;
+        }
+
+        if (currenderobj.mqoobj) {
+            if (currenderobj.mqoobj->GetDispObj()) {
+                if (currenderobj.mqoobj->GetPm3()) {
+                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                    currenderobj.mqoobj->GetDispObj()->RenderInstancingPm3(rc, currenderobj);
+                }
+                else if (currenderobj.mqoobj->GetPm4()) {
+                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                    //currenderobj.mqoobj->GetDispObj()->RenderNormal(rc, currenderobj);
+                    _ASSERT(0);//not support
+                }
+            }
+            if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
+                //################################
+                //GetDispObj()ではなくGetDispLine()
+                //################################
+                //currenderobj.mqoobj->GetDispLine()->RenderLine(rc, currenderobj);
+                _ASSERT(0);//not support
+            }
+        }
+    }
 
     void RenderingEngine::RenderPolyMeshZPre(RenderContext* rc, RENDEROBJ currenderobj)
     {

@@ -233,6 +233,10 @@ namespace myRenderer
         {
             m_forwardRenderModels.push_back(renderobj);
         }
+        void Add3DModelToInstancingRenderPass(RENDEROBJ renderobj)
+        {
+            m_instancingRenderModels.push_back(renderobj);
+        }
 
         void AddSpriteToForwardRenderPass(RENDERSPRITE rendersprite)
         {
@@ -370,6 +374,7 @@ namespace myRenderer
         void RenderPolyMeshZPre(RenderContext* rc, RENDEROBJ currenderobj);
         void RenderPolyMeshShadowMap(RenderContext* rc, RENDEROBJ currenderobj);
         void RenderPolyMeshShadowReciever(RenderContext* rc, RENDEROBJ currenderobj);
+        void RenderPolyMeshInstancing(RenderContext* rc, RENDEROBJ currenderobj);
 
     private:
         //GBufferの定義
@@ -410,6 +415,7 @@ namespace myRenderer
         std::vector<RENDEROBJ> m_shadowmapModels;
         std::vector<RENDEROBJ> m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
         std::vector<RENDEROBJ> m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+        std::vector<RENDEROBJ> m_instancingRenderModels;                    // インスタンシングレンダリングの描画パスで描画されるモデルのリスト
         std::vector<RENDERSPRITE> m_forwardRenderSprites;
         std::vector<RENDERFONT> m_forwardRenderFont;
     };

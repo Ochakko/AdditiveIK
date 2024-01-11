@@ -487,6 +487,10 @@ int CModel::InitParams()
 	m_inshadow = false;
 	m_bound.Init();
 
+	m_instancingnum = 0;
+	m_instancingdrawnum = 0;
+	ZeroMemory(m_instancingparams, sizeof(INSTANCINGPARAMS) * RIGMULTINDEXMAX);
+
 	m_materialbank.InitParams();
 	m_vroidjointname = false;
 

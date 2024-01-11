@@ -143,6 +143,24 @@ typedef struct tag_dispgroupelem
 	};
 }DISPGROUPELEM;
 
+typedef struct tag_instancingparams
+{
+	float wmat[16];
+	float vpmat[16];
+	ChaVector4 diffusemult;
+
+	void Init()
+	{
+		ZeroMemory(wmat, sizeof(float) * 16);
+		ZeroMemory(vpmat, sizeof(float) * 16);
+		diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	};
+	tag_instancingparams() {
+		Init();
+	};
+}INSTANCINGPARAMS;
+
+
 
 #define MAXPHYSIKRECCNT		(60 * 60)
 
@@ -2327,6 +2345,63 @@ public: //accesser
 		return m_vroidjointname;
 	}
 
+	void SetInstancingNum(int srcnum)
+	{
+		if ((srcnum >= 1) && (srcnum <= RIGMULTINDEXMAX)) {
+			m_instancingnum = srcnum;
+		}
+		else {
+			_ASSERT(0);
+		}
+	}
+	int GetInstancingNum()
+	{
+		if ((m_instancingnum >= 1) && (m_instancingnum <= RIGMULTINDEXMAX)) {
+			return m_instancingnum;
+		}
+		else {
+			_ASSERT(0);
+			return 0;
+		}
+	}
+	int ResetInstancingParams()
+	{
+		m_instancingdrawnum = 0;
+		ZeroMemory(m_instancingparams, sizeof(INSTANCINGPARAMS) * RIGMULTINDEXMAX);
+		return 0;
+	}
+	int GetInstancingDrawNum()
+	{
+		return m_instancingdrawnum;
+	}
+
+	int SetInstancingParams(int srcinstancingno, ChaMatrix srcwmat, ChaMatrix srcvpmat, ChaVector4 srcdiffusemult)
+	{
+		if ((srcinstancingno >= 0) && (srcinstancingno < RIGMULTINDEXMAX) && (srcinstancingno == m_instancingdrawnum)) {
+
+			INSTANCINGPARAMS params;
+			params.Init();
+
+			MoveMemory(&(params.wmat[0]), srcwmat.GetDataPtr(), sizeof(float) * 16);
+			MoveMemory(&(params.vpmat[0]), srcvpmat.GetDataPtr(), sizeof(float) * 16);
+			params.diffusemult = srcdiffusemult;
+
+			m_instancingparams[m_instancingdrawnum] = params;
+			m_instancingdrawnum++;
+		}
+		else {
+			_ASSERT(0);
+			return 1;
+		}
+
+
+		return 0;
+	}
+	INSTANCINGPARAMS* GetInstancingParams()
+	{
+		return m_instancingparams;
+	}
+
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];
@@ -2514,6 +2589,10 @@ private:
 
 	int m_loopstartflag;
 	bool m_vroidjointname;//J_Bip_C_Hipsという名前のジョイントがあればtrue
+
+	int m_instancingnum;
+	int m_instancingdrawnum;
+	INSTANCINGPARAMS m_instancingparams[RIGMULTINDEXMAX];
 
 };
 
