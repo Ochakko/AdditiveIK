@@ -73,7 +73,10 @@ int CIniFile::WriteIniFile(WCHAR* srcpath)
 int CIniFile::WriteFileInfo()
 {
 
-	CallF( Write2File( "  <FileInfo>\r\n    <kind>AdditiveIKIniFile</kind>\r\n    <version>1001</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n" ), return 1 );
+	//CallF( Write2File( "  <FileInfo>\r\n    <kind>AdditiveIKIniFile</kind>\r\n    <version>1001</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n" ), return 1 );
+
+	//2024/01/12
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIKIniFile</kind>\r\n    <version>1002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	return 0;
 }
@@ -95,6 +98,10 @@ int CIniFile::WriteIniInfo()
 	CallF(Write2File("    <DiffuseFactorAtSaving>%f</DiffuseFactorAtSaving>\r\n", g_AmbientFactorAtSaving), return 1);
 	CallF(Write2File("    <SpecularFactorAtSaving>%f</SpecularFactorAtSaving>\r\n", g_AmbientFactorAtSaving), return 1);
 	CallF(Write2File("    <EmissiveFactorAtSaving>%f</EmissiveFactorAtSaving>\r\n", g_AmbientFactorAtSaving), return 1);
+
+	CallF(Write2File("    <BoneMarkBrightness>%f</BoneMarkBrightness>\r\n", g_bonemark_bright), return 1);
+	CallF(Write2File("    <RigidMarkAlpha>%f</RigidMarkAlpha>\r\n", g_rigidmark_alpha), return 1);
+	CallF(Write2File("    <RigMarkAlpha>%f</RigMarkAlpha>\r\n", g_rigmark_alpha), return 1);
 
 	CallF(Write2File("  </IniFileBody>\r\n"), return 1);
 
@@ -326,6 +333,45 @@ int CIniFile::ReadIniInfo(XMLIOBUF* xmlbuf )
 	}
 
 
+
+	int result12, result13, result14;
+	float bonemarkbrightness, rigidmarkalpha, rigmarkalpha;
+	result12 = Read_Float(xmlbuf, "<BoneMarkBrightness>", "</BoneMarkBrightness>", &bonemarkbrightness);
+	if (result12 == 0) {
+		if ((bonemarkbrightness >= 0.0) && (bonemarkbrightness <= 1.0f)) {
+			g_bonemark_bright = bonemarkbrightness;
+		}
+		else {
+			g_bonemark_bright = 1.0f;
+		}
+	}
+	else {
+		g_bonemark_bright = 1.0f;
+	}
+	result13 = Read_Float(xmlbuf, "<RigidMarkAlpha>", "</RigidMarkAlpha>", &rigidmarkalpha);
+	if (result13 == 0) {
+		if ((rigidmarkalpha >= 0.0) && (rigidmarkalpha <= 1.0f)) {
+			g_rigidmark_alpha = rigidmarkalpha;
+		}
+		else {
+			g_rigidmark_alpha = 0.75f;
+		}
+	}
+	else {
+		g_rigidmark_alpha = 0.75f;
+	}
+	result14 = Read_Float(xmlbuf, "<RigMarkAlpha>", "</RigMarkAlpha>", &rigmarkalpha);
+	if (result14 == 0) {
+		if ((rigmarkalpha >= 0.0) && (rigmarkalpha <= 1.0f)) {
+			g_rigmark_alpha = rigmarkalpha;
+		}
+		else {
+			g_rigmark_alpha = 0.75f;
+		}
+	}
+	else {
+		g_rigmark_alpha = 0.75f;
+	}
 
 
 /*

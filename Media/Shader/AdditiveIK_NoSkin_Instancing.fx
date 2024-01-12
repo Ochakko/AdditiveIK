@@ -119,9 +119,10 @@ SPSIn VSMainNoSkinInstancing(SVSInInstancing vsIn, uniform bool hasSkin)
     vpmat._41_42_43_44 = vsIn.vpmat3;
 
     float4 scalepos;
-    scalepos.x = (vsIn.pos.x - vsIn.offsetinsta.x) * vsIn.scaleinsta.x + vsIn.offsetinsta.x;
-    scalepos.y = (vsIn.pos.y - vsIn.offsetinsta.y) * vsIn.scaleinsta.y + vsIn.offsetinsta.y;
-    scalepos.z = (vsIn.pos.z - vsIn.offsetinsta.z) * vsIn.scaleinsta.z + vsIn.offsetinsta.z;
+    //scalepos.x = (vsIn.pos.x - vsIn.offsetinsta.x) * vsIn.scaleinsta.x + vsIn.offsetinsta.x;
+    //scalepos.y = (vsIn.pos.y - vsIn.offsetinsta.y) * vsIn.scaleinsta.y + vsIn.offsetinsta.y;
+    //scalepos.z = (vsIn.pos.z - vsIn.offsetinsta.z) * vsIn.scaleinsta.z + vsIn.offsetinsta.z;
+    scalepos.xyz = (vsIn.pos.xyz - vsIn.offsetinsta.xyz) * vsIn.scaleinsta.xyz + vsIn.offsetinsta.xyz;
     scalepos.w = 1.0f;
     
     //psIn.pos = mul(wmat, vsIn.pos);
@@ -130,7 +131,7 @@ SPSIn VSMainNoSkinInstancing(SVSInInstancing vsIn, uniform bool hasSkin)
     psIn.pos = mul(scalepos, wmat);
     psIn.pos = mul(psIn.pos, vpmat);
     psIn.uv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
-    psIn.diffusemult = vsIn.material;
+    psIn.diffusemult = diffusemult * vsIn.material;
     
     psIn.normal = normalize(mul(wmat, vsIn.normal));
     

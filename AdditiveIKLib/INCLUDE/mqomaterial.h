@@ -319,7 +319,7 @@ public:
 	void InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 		const Matrix& mView, const Matrix& mProj,
 		bool isfirstmaterial = false);
-	void InstancingBeginRender(RenderContext* rc);
+	void InstancingBeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
 
 
 
@@ -906,10 +906,12 @@ private:
 	Shader* m_vsZPreModel = nullptr;				//ZPreモデル用の頂点シェーダー。
 	Shader* m_psZPreModel = nullptr;					//ZPreモデル用のピクセルシェーダー。
 
-	RootSignature m_InstancingrootSignature;					//ZPreルートシグネチャ。
-	PipelineState m_InstancingModelPipelineState;		//ZPreモデル用のパイプラインステート。
-	Shader* m_vsInstancingModel = nullptr;				//ZPreモデル用の頂点シェーダー。
-	Shader* m_psInstancingModel = nullptr;					//ZPreモデル用のピクセルシェーダー。
+	RootSignature m_InstancingrootSignature;
+	PipelineState m_InstancingOpequePipelineState;
+	PipelineState m_InstancingtransPipelineState;
+	PipelineState m_InstancingzalwaysPipelineState;
+	Shader* m_vsInstancingModel = nullptr;
+	Shader* m_psInstancingModel = nullptr;
 
 
 

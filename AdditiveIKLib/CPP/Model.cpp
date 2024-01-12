@@ -7173,7 +7173,7 @@ int CModel::RenderBoneMark(myRenderer::RenderingEngine* re,
 						//bcircleptr->SetSize(bsize);
 					}
 					else if (boneptr->GetSelectFlag() & 1){
-						bcolor = ChaVector4(1.0f, 0.0f, 0.0f, 0.7f);
+						bcolor = ChaVector4(g_bonemark_bright, 0.0f, 0.0f, 0.7f);//2024/01/12 bright
 						bsize = ChaVector2(0.025f, 0.025f);
 						if (g_4kresolution) {
 							bsize = bsize * 0.5f;
@@ -7181,7 +7181,8 @@ int CModel::RenderBoneMark(myRenderer::RenderingEngine* re,
 						//bcircleptr->SetSize(bsize);
 					}
 					else{
-						bcolor = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
+						//bcolor = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
+						bcolor = ChaVector4(g_bonemark_bright, g_bonemark_bright, g_bonemark_bright, 0.7f);//2024/01/12 bright
 						bsize = ChaVector2(0.025f, 0.025f);
 						if (g_4kresolution) {
 							bsize = bsize * 0.5f;
@@ -7298,31 +7299,38 @@ void CModel::RenderCapsuleReq(CBtObject* srcbto, myRenderer::RenderingEngine* re
 			//CRigidElem* curre = srcbone->GetParent()->GetRigidElem(srcbone);
 		CRigidElem* curre = srcbone->GetRigidElem(childbone);
 		if (curre && (curre->GetSkipflag() == 0)){
-			CModel* curcoldisp;
-			int curinstanceno;
-			curcoldisp = srcbone->GetCurColDispInstancing(childbone, &curinstanceno);
-			if (curcoldisp) {
-				//################################################################################
-				//以降SetInstancingParamsまでの間で処理をスキップしない。
-				// スキップするとgetnoとinstancenoが一致しなくなり　CDispObjに保存してあるscale情報がずれる
-				//################################################################################
+			if ((strstr(childbone->GetBoneName(), "J_Sec_L_CoatSkirt") != 0) ||
+				(strstr(childbone->GetBoneName(), "J_Sec_R_CoatSkirt") != 0))
+			{
+				curre->SetSkipflag(1);//足の横にあるスカート用のジョイントの剛体は自動でスキップ(Invalidate)
+			}
+			else {
+				CModel* curcoldisp;
+				int curinstanceno;
+				curcoldisp = srcbone->GetCurColDispInstancing(childbone, &curinstanceno);
+				if (curcoldisp) {
+					//################################################################################
+					//以降SetInstancingParamsまでの間で処理をスキップしない。
+					// スキップするとgetnoとinstancenoが一致しなくなり　CDispObjに保存してあるscale情報がずれる
+					//################################################################################
 
-				bool setinstancescale = true;
-				srcbone->CalcRigidElemParams(setinstancescale, childbone, 0);//形状データのスケールのために呼ぶ。
-				//srcbto->SetCapsuleBtMotion(curre);
+					bool setinstancescale = true;
+					srcbone->CalcRigidElemParams(setinstancescale, childbone, 0);//形状データのスケールのために呼ぶ。
+					//srcbto->SetCapsuleBtMotion(curre);
 
-				ChaMatrix tmpcapmat = curre->GetCapsulematForColiShape(limitdegflag, 0);//2023/01/18
-				//curcoldisp->UpdateMatrix(limitdegflag, &tmpcapmat, &m_matVP);
-				
-				ChaVector4 difmult;
-				//if( boneptr->GetSelectFlag() & 4 ){
-				if (childbone->GetSelectFlag() & 4) {
-					difmult = ChaVector4(1.0f, 0.0f, 0.0f, 0.5f);
+					ChaMatrix tmpcapmat = curre->GetCapsulematForColiShape(limitdegflag, 0);//2023/01/18
+					//curcoldisp->UpdateMatrix(limitdegflag, &tmpcapmat, &m_matVP);
+
+					ChaVector4 difmult;
+					//if( boneptr->GetSelectFlag() & 4 ){
+					if (childbone->GetSelectFlag() & 4) {
+						difmult = ChaVector4(1.0f, 0.0f, 0.0f, 0.5f);
+					}
+					else {
+						difmult = ChaVector4(0.25f, 0.5f, 0.5f, 0.5f);
+					}
+					curcoldisp->SetInstancingParams(curinstanceno, tmpcapmat, srcmatVP, difmult);
 				}
-				else {
-					difmult = ChaVector4(0.25f, 0.5f, 0.5f, 0.5f);
-				}
-				curcoldisp->SetInstancingParams(curinstanceno, tmpcapmat, srcmatVP, difmult);
 			}
 		}
 		//}
@@ -9855,7 +9863,7 @@ void CModel::SetBoxzrateDataReq(int gid, int rgdindex, CBone * srcbone, float sr
 	}
 }
 
-int CModel::SetAllSkipflagData(int gid, int rgdindex, bool srcval)
+int CModel::SetAllSkipflagData(int gid, int rgdindex, int srcval)
 {
 	if (!GetTopBone()) {
 		return 0;
@@ -9867,7 +9875,7 @@ int CModel::SetAllSkipflagData(int gid, int rgdindex, bool srcval)
 	SetSkipflagDataReq(gid, rgdindex, GetTopBone(false), srcval);
 	return 0;
 }
-void CModel::SetSkipflagDataReq(int gid, int rgdindex, CBone* srcbone, bool srcval)
+void CModel::SetSkipflagDataReq(int gid, int rgdindex, CBone* srcbone, int srcval)
 {
 	if (!srcbone) {
 		return;

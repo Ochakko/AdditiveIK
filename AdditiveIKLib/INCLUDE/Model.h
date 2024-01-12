@@ -806,7 +806,7 @@ public:
 
 	int SetAllSphrateData(int gid, int rgdindex, float srcval);
 	int SetAllBoxzrateData(int gid, int rgdindex, float srcval);
-	int SetAllSkipflagData(int gid, int rgdindex, bool srcval);
+	int SetAllSkipflagData(int gid, int rgdindex, int srcval);
 	int SetAllForbidrotData(int gid, int rgdindex, bool srcval);
 	int SetAllColtypeData(int gid, int rgdindex, int srcval);
 	int SetAllBtforceData(int rgdindex, bool srcval);
@@ -1128,7 +1128,7 @@ private:
 	
 	void SetSphrateDataReq(int gid, int rgdindex, CBone* srcbone, float srcval);
 	void SetBoxzrateDataReq(int gid, int rgdindex, CBone* srcbone, float srcval);
-	void SetSkipflagDataReq(int gid, int rgdindex, CBone* srcbone, bool srcval);
+	void SetSkipflagDataReq(int gid, int rgdindex, CBone* srcbone, int srcval);
 	void SetForbidrotDataReq(int gid, int rgdindex, CBone* srcbone, bool srcval);
 	void SetColtypeDataReq(int gid, int rgdindex, CBone* srcbone, int srcval);
 	void SetBtforceDataReq(int rgdindex, CBone* srcbone, bool srcval);

@@ -145,7 +145,7 @@ public:
 	void ResetScaleInstancing();
 	void SetScale(ChaVector3 srcscale, ChaVector3 srcoffset);
 	SCALEINSTANCING* GetScaleInstancing();
-
+	int GetScaleInstancingNum();
 
 	//void UpdateBoneMatrix(int srcdatanum, void* srcdata);
 

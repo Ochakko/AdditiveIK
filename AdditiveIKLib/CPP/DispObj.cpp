@@ -1899,7 +1899,7 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 		//定数バッファの設定、更新など描画の共通処理を実行する。
 
 		curmat->InstancingDrawCommon(rc, renderobj, mView, mProj, GetScaleInstancing());
-		curmat->InstancingBeginRender(rc);
+		curmat->InstancingBeginRender(rc, renderobj);
 
 		//rc.SetDescriptorHeap(m_descriptorHeap);
 
@@ -2086,6 +2086,10 @@ void CDispObj::SetScale(ChaVector3 srcscale, ChaVector3 srcoffset)
 SCALEINSTANCING* CDispObj::GetScaleInstancing()
 {
 	return m_scaleInstancing;
+}
+int CDispObj::GetScaleInstancingNum()
+{
+	return m_scaleinstancenum;
 }
 
 

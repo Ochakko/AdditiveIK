@@ -56,7 +56,9 @@ m_shadowrootSignature(), //2023/12/14
 m_ZPrerootSignature(), //2023/12/05
 m_ZPreModelPipelineState(), //2023/12/05
 m_InstancingrootSignature(), //2024/01/11
-m_InstancingModelPipelineState() //2024/01/11
+m_InstancingOpequePipelineState(),//2024/01/12
+m_InstancingtransPipelineState(),//2024/01/12
+m_InstancingzalwaysPipelineState()//2024/01/12
 {
 	InitParams();
 
@@ -1924,8 +1926,7 @@ void CMQOMaterial::InitInstancingPipelineState(int vertextype, const std::array<
 #endif
 		psoDesc.DepthStencilState.DepthEnable = TRUE;
 		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-		//psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;//!!!!!!!!!!!
+		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 		psoDesc.DepthStencilState.StencilEnable = FALSE;
 		psoDesc.SampleMask = UINT_MAX;
 		//if (vertextype != 2) {
@@ -1949,7 +1950,23 @@ void CMQOMaterial::InitInstancingPipelineState(int vertextype, const std::array<
 		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 		psoDesc.SampleDesc.Count = 1;
 
-		m_InstancingModelPipelineState.Init(psoDesc);
+		m_InstancingOpequePipelineState.Init(psoDesc);
+
+
+		//続いて半透明マテリアル用。
+		psoDesc.BlendState.IndependentBlendEnable = TRUE;
+		psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
+		psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+		psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		//psoDesc.DepthStencilState.DepthEnable = FALSE;
+		psoDesc.DepthStencilState.DepthEnable = TRUE;
+		m_InstancingtransPipelineState.Init(psoDesc);
+
+		////2023/12/01
+		psoDesc.DepthStencilState.DepthEnable = TRUE;
+		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		m_InstancingzalwaysPipelineState.Init(psoDesc);
 
 	}
 }
@@ -2342,15 +2359,42 @@ void CMQOMaterial::ZPreBeginRender(RenderContext* rc)
 	rc->SetDescriptorHeap(m_descriptorHeap);
 }
 
-void CMQOMaterial::InstancingBeginRender(RenderContext* rc)
+void CMQOMaterial::InstancingBeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 {
 	if (!rc) {
 		_ASSERT(0);
 		return;
 	}
+
+	bool withalpha = renderobj.forcewithalpha || renderobj.withalpha;
+
+
 	rc->SetRootSignature(m_InstancingrootSignature);
-	rc->SetPipelineState(m_InstancingModelPipelineState);
+
+	if (withalpha) {
+		if (renderobj.zcmpalways) {
+			//###########################
+			//Z cmp Always 半透明常に上書き
+			//###########################
+			rc->SetPipelineState(m_InstancingzalwaysPipelineState);
+		}
+		else {
+			//###################
+			//translucent　半透明
+			//###################
+			rc->SetPipelineState(m_InstancingtransPipelineState);
+		}
+	}
+	else {
+		//##############
+		//Opaque 不透明
+		//##############
+		rc->SetPipelineState(m_InstancingOpequePipelineState);
+	}
+
 	rc->SetDescriptorHeap(m_descriptorHeap);
+
+
 }
 
 
@@ -3283,7 +3327,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		}
 	}
 	else if (ppm3) {
-		m_cb.mWorld = renderobj.mWorld;//呼び出し元で剛体のscalematを入れる
+		m_cb.mWorld = renderobj.mWorld;//未使用
 		m_cb.mView = mView;
 		m_cb.mProj = mProj;
 		//m_cb.diffusemult = renderobj.diffusemult;

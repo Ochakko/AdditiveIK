@@ -3323,6 +3323,10 @@ void InitApp()
 	s_befftime = 0.0;
 
 	g_uvset = 0;
+	g_bonemark_bright = 1.0f;//inifile読み込み処理で上書きされる
+	g_rigidmark_alpha = 0.75f;//inifile読み込み処理で上書きされる
+	g_rigmark_alpha = 0.75f;//inifile読み込み処理で上書きされる
+
 
 	g_lodrate2L[CHKINVIEW_LOD0] = 0.05f;//rate * projfar.  distance of clipping
 	g_lodrate2L[CHKINVIEW_LOD1] = 1.0f;
@@ -13178,10 +13182,10 @@ int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderCon
 
 	{
 		int lightflag = 0;
-		ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.75f);
+		ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, g_rigmark_alpha);//2024/01/12 alpha
 		bool forcewithalpha = true;
 		int btflag = 0;
-		bool zcmpalways = true;
+		bool zcmpalways = false;
 
 		if (s_rigsphere_num > 0) {
 			s_chascene->RenderInstancingModel(s_rigopemark_sphere, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
@@ -25427,6 +25431,22 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
+		sliderpos = (int)(g_bonemark_bright * 100.0f);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+		sliderpos = (int)(g_rigidmark_alpha * 100.0f);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+		sliderpos = (int)(g_rigmark_alpha * 100.0f);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+
 		//#####
 		//Text
 		//#####
@@ -25645,7 +25665,18 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			swprintf_s(strdlg, 256, L"Edit Rate %.2f", g_physicsmvrate);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_EDITRATE, strdlg);
 		}
-
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_GETPOS, 0, 0);
+			g_bonemark_bright = (float)((double)cursliderpos / 100.0);
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK), TBM_GETPOS, 0, 0);
+			g_rigidmark_alpha = (float)((double)cursliderpos / 100.0);
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_GETPOS, 0, 0);
+			g_rigmark_alpha = (float)((double)cursliderpos / 100.0);
+		}
 
 	break;
 
@@ -34746,12 +34777,12 @@ int CreateRigidWnd()
 		s_skipB->setButtonListener([]() {
 			if (s_model && s_rigidskip && s_groupcheck) {
 				bool validflag = s_rigidskip->getValue();
-				bool skipflag;
+				int skipflag;
 				if (validflag == false) {
-					skipflag = true;
+					skipflag = 1;
 				}
 				else {
-					skipflag = false;
+					skipflag = 0;
 				}
 				int chkg = (int)s_groupcheck->getValue();
 				int gid = -1;
@@ -52144,7 +52175,8 @@ int CreateSprites()
 
 
 	wcscpy_s(filepath, MAX_PATH, mpath);
-	wcscat_s(filepath, MAX_PATH, L"MameMedia\\JointMark_1.png");
+	//wcscat_s(filepath, MAX_PATH, L"MameMedia\\JointMark_1.png");
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\boneimage.bmp");//2024/01/12
 	s_spritetex0 = new Texture();
 	s_spritetex0->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex0;

@@ -3,6 +3,58 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/01/12
+　AdditiveIK 1.0.0.3 RC1 (リリース候補1)
+　　1.0.0.2からの変更点
+　　　不具合修正
+       １メッシュに複数マテリアルがある場合に　面のマテリアル番号設定に問題があったのを修正
+　　　　LaterTransparent設定ウインドウに　Albedoテクスチャ名がエントリーされていなかった不具合修正
+　　　　　AlbedoでもNormalでもMetalでもないテクスチャ名だけがエントリーされていた不具合だった
+　　　　　(修正前はVRoidではうまくいっていた)
+　　　　BrushParamsプレートメニューのTopPosのテキスト表示更新に関わる不具合を修正
+　　　　　フレーム選択変更時にTopPosのGUI表示が更新されていなかった
+　　　　右ペインのウインドウのスクロールバードラッグのキャプチャとリリースに関して修正
+　　　　　スクロールバードラッグ中に　画面外でマウスを離した場合に　挙動がおかしくなる不具合が直った
+　　　　モデルを追加読み込みするとモーションスピードがスライダーの値と異なってしまう不具合を修正
+　　　　　DispAndLimitsプレートメニューのSpeedスライダーの設定どおりになった
+
+      ２つまでのマルチUVに対応
+　　　　Albedo, Normal, Metal丸ごと一緒にUVSet0とUVSet1を切り替えるように.
+　　　　DispAndLimitsプレートメニューに UVSetコンボボックスを追加
+　　　インスタンシング表示
+　　　　リグと剛体をインスタンシング表示(１モデルに対する１回の描画で複数個表示)
+　　　　フォントとボーンマークは1.0.0.1からインスタンシング表示
+　　　ボーンマークの明るさ、リグ(Rig)の透明度、剛体(Rigid)の透明度を設定可能に.
+　　　　DispAndLimitsプレートメニューのスライダーで設定
+　　　Rigの設定(ジョイント右クリック->Rig名->Settingメニューで出る)の回転軸の追加
+　　　　CurrentX, CurrentY, CurrentZ,
+　　　　ParentX, ParentY, ParentZ,
+　　　　GlobalX, GlobalY, GLobalZ,
+　　　　NodeX, NodeY, NodeZ
+　　　　上記９種類に増やした
+　　　　足の付け根UpperLegの前後回転軸はParentYとした
+　　　　Testフォルダのrigファイルを更新
+　　　　古い設定はCurrent*として扱う　　　
+　　　マニピュレータの計算の修正
+　　　　Hipsの特別扱いを止めて　Hips自身の回転を考慮するようにした
+　　　　Rigの足の付け根(UpperLeg)の回転が　体全体の回転後も設定どおりに曲がるようになった
+　　　テクスチャアドレッシングモードの読み込みと表示への適用と保存
+　　　　サンプラーステートにも適用
+　　　テクスチャ命名規則を少し修正(_Baseが加わった)
+　　　　Albedoまたはalbedoまたは_Baseが名前にテクスチャをAlbedoMapとする
+　　　　Normalまたはnormalが名前につくテクスチャをNormalMapとする
+　　　　Metalまたはmetalが名前につくテクスチャをMetalMapとする
+　　　VRoidに対する剛体作成の修正
+　　　　VRoidの足の横に平行して作成されるCoatSkirt用のボーンに対しては自動で剛体を作成 "しない" ように修正
+　　　ジョイントマークを修正
+　　　　選択時は赤、非選択時は黄色に. 明るさ調整はスライダーで.
+
+　　　外部ライブラリのバージョンアップ(差し替え)
+　　　　DirectXTK12をJun2023からDec2023に差し替え
+　　　　DirectXTexをDec2023に差し替え
+
+
+
 
 2024/01/11
 　BrushParamsプレートメニューのTopPosのテキスト表示更新に関わる不具合を修正

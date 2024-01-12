@@ -568,7 +568,7 @@ void CBone::ResetColDispInstancingParams()//static function
 void CBone::RenderColDisp(ChaScene* srcchascene, myRenderer::RenderingEngine* re)//static function
 {
 	int lightflag = 0;
-	ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.75f);
+	ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, g_rigidmark_alpha);//2024/01/12 alpha
 	bool forcewithalpha = true;
 	int btflag = 0;
 	bool zcmpalways = true;

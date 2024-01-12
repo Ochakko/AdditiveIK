@@ -8,7 +8,7 @@
     <RigidElem>
       <ChildName>J_Bip_C_Spine</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -32,7 +32,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_UpperLeg</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -56,7 +56,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_UpperLeg</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -84,7 +84,7 @@
     <RigidElem>
       <ChildName>J_Bip_C_Chest</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -112,7 +112,7 @@
     <RigidElem>
       <ChildName>J_Bip_C_UpperChest</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -140,7 +140,7 @@
     <RigidElem>
       <ChildName>J_Sec_L_Bust1</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -164,7 +164,7 @@
     <RigidElem>
       <ChildName>J_Sec_R_Bust1</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -187,10 +187,10 @@
     </RigidElem>
     <RigidElem>
       <ChildName>J_Bip_C_Neck</ChildName>
-      <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ColType>3</ColType>
+      <SkipFlag>0</SkipFlag>
+      <ShpRate>1.374046</ShpRate>
+      <BoxzRate>1.488550</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>0</AK>
@@ -212,7 +212,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Shoulder</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -236,7 +236,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Shoulder</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -264,7 +264,7 @@
     <RigidElem>
       <ChildName>J_Sec_L_Bust2</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -292,7 +292,7 @@
     <RigidElem>
       <ChildName>J_Sec_R_Bust2</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -319,10 +319,10 @@
     <BTKIN>0</BTKIN>
     <RigidElem>
       <ChildName>J_Bip_C_Head</ChildName>
-      <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ColType>3</ColType>
+      <SkipFlag>0</SkipFlag>
+      <ShpRate>1.984733</ShpRate>
+      <BoxzRate>3.129771</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>0</AK>
@@ -348,7 +348,7 @@
     <RigidElem>
       <ChildName>J_Adj_L_FaceEye</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -372,7 +372,7 @@
     <RigidElem>
       <ChildName>J_Adj_R_FaceEye</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -396,7 +396,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair1_01</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -420,7 +420,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair1_02</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -444,7 +444,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair1_03</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -468,7 +468,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair1_04</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -492,7 +492,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair1_05</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -516,7 +516,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair1_06</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -540,7 +540,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair1_07</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -564,7 +564,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair1_08</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -588,7 +588,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair1_09</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -612,7 +612,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair1_10</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -636,7 +636,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair1_11</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -664,7 +664,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair2_01</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -692,7 +692,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair3_01</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -720,7 +720,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair2_02</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -748,7 +748,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair3_02</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -776,7 +776,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair2_03</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -804,7 +804,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair3_03</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -832,7 +832,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair2_04</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -860,7 +860,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair3_04</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -888,7 +888,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair2_05</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -916,7 +916,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair3_05</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -944,7 +944,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair2_06</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -972,7 +972,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair3_06</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1000,7 +1000,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair2_07</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1028,7 +1028,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair3_07</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1056,7 +1056,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair2_08</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1084,7 +1084,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair3_08</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1112,7 +1112,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair2_09</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1140,7 +1140,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair3_09</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1168,7 +1168,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair4_09</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1196,7 +1196,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair5_09</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1224,7 +1224,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair2_10</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1252,7 +1252,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair3_10</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1280,7 +1280,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair2_11</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1308,7 +1308,7 @@
     <RigidElem>
       <ChildName>J_Sec_Hair3_11</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1335,10 +1335,10 @@
     <BTKIN>0</BTKIN>
     <RigidElem>
       <ChildName>J_Bip_L_UpperArm</ChildName>
-      <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ColType>3</ColType>
+      <SkipFlag>0</SkipFlag>
+      <ShpRate>1.984733</ShpRate>
+      <BoxzRate>2.137405</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>0</AK>
@@ -1364,7 +1364,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_LowerArm</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1392,7 +1392,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Hand</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1420,7 +1420,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Index1</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1444,7 +1444,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Little1</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1468,7 +1468,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Middle1</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1492,7 +1492,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Ring1</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1516,7 +1516,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Thumb1</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1544,7 +1544,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Index2</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1572,7 +1572,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Index3</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1600,7 +1600,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Little2</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1628,7 +1628,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Little3</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1656,7 +1656,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Middle2</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1684,7 +1684,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Middle3</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1712,7 +1712,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Ring2</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1740,7 +1740,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Ring3</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1768,7 +1768,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Thumb2</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1796,7 +1796,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Thumb3</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1823,10 +1823,10 @@
     <BTKIN>0</BTKIN>
     <RigidElem>
       <ChildName>J_Bip_R_UpperArm</ChildName>
-      <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
-      <ShpRate>0.600000</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ColType>3</ColType>
+      <SkipFlag>0</SkipFlag>
+      <ShpRate>1.793893</ShpRate>
+      <BoxzRate>2.061069</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>0</AK>
@@ -1852,7 +1852,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_LowerArm</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1880,7 +1880,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Hand</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1908,7 +1908,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Index1</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1932,7 +1932,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Little1</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1956,7 +1956,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Middle1</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -1980,7 +1980,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Ring1</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -2004,7 +2004,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Thumb1</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -2032,7 +2032,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Index2</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -2060,7 +2060,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Index3</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -2088,7 +2088,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Little2</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -2116,7 +2116,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Little3</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -2144,7 +2144,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Middle2</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -2172,7 +2172,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Middle3</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -2200,7 +2200,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Ring2</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -2228,7 +2228,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Ring3</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -2256,7 +2256,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Thumb2</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -2284,7 +2284,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Thumb3</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -2312,7 +2312,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_LowerLeg</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -2556,7 +2556,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_Foot</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -2920,7 +2920,7 @@
     <RigidElem>
       <ChildName>J_Bip_L_ToeBase</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -2948,7 +2948,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_LowerLeg</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -3192,7 +3192,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_Foot</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
@@ -3556,7 +3556,7 @@
     <RigidElem>
       <ChildName>J_Bip_R_ToeBase</ChildName>
       <ColType>1</ColType>
-      <SkipFlag>1</SkipFlag>
+      <SkipFlag>0</SkipFlag>
       <ShpRate>0.600000</ShpRate>
       <BoxzRate>0.600000</BoxzRate>
       <LK>2</LK>
