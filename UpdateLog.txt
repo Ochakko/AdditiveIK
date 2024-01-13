@@ -4,7 +4,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/01/12
-　AdditiveIK 1.0.0.3 RC3 (リリース候補3)
+　AdditiveIK 1.0.0.3 release
 　　1.0.0.2からの変更点
 　　　不具合修正
        １メッシュに複数マテリアルがある場合に　面のマテリアル番号設定に問題があったのを修正
@@ -29,7 +29,7 @@ https://github.com/Ochakko/AdditiveIK
 　　　Rigの設定(ジョイント右クリック->Rig名->Settingメニューで出る)の回転軸の追加
 　　　　CurrentX, CurrentY, CurrentZ,
 　　　　ParentX, ParentY, ParentZ,
-　　　　GlobalX, GlobalY, GLobalZ,
+　　　　GlobalX, GlobalY, GlobalZ,
 　　　　NodeX, NodeY, NodeZ
 　　　　上記９種類に増やした
 　　　　足の付け根UpperLegの前後回転軸はParentYとした
