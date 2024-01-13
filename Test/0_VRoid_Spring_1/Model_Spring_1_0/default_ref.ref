@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Shift_JIS"?>
 <RIGIDELEM>
     <FileInfo>1001-01</FileInfo>
-    <SCBTG>59.923664</SCBTG>
+    <SCBTG>100.000000</SCBTG>
   <Bone>
     <Name>J_Bip_C_Hips</Name>
     <BTKIN>0</BTKIN>
@@ -18,7 +18,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -42,7 +42,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -142,7 +142,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -170,7 +170,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -198,7 +198,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -226,7 +226,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -254,7 +254,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -282,7 +282,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -299,10 +299,10 @@
     <BTKIN>0</BTKIN>
     <RigidElem>
       <ChildName>J_Bip_C_Chest</ChildName>
-      <ColType>1</ColType>
+      <ColType>3</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>1.068702</ShpRate>
-      <BoxzRate>1.106870</BoxzRate>
+      <ShpRate>1.984733</ShpRate>
+      <BoxzRate>1.755725</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
@@ -327,11 +327,11 @@
     <BTKIN>0</BTKIN>
     <RigidElem>
       <ChildName>J_Bip_C_UpperChest</ChildName>
-      <ColType>1</ColType>
+      <ColType>3</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>1.106870</ShpRate>
-      <BoxzRate>1.183206</BoxzRate>
-      <LK>2</LK>
+      <ShpRate>2.137405</ShpRate>
+      <BoxzRate>1.641221</BoxzRate>
+      <LK>3</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
       <CUSAK>2.000000</CUSAK>
@@ -537,8 +537,8 @@
       <ChildName>J_Bip_C_Head</ChildName>
       <ColType>3</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>1.374046</ShpRate>
-      <BoxzRate>0.600000</BoxzRate>
+      <ShpRate>1.870229</ShpRate>
+      <BoxzRate>1.832061</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
@@ -1827,11 +1827,11 @@
     <BTKIN>0</BTKIN>
     <RigidElem>
       <ChildName>J_Bip_L_UpperArm</ChildName>
-      <ColType>1</ColType>
+      <ColType>3</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>1.106870</ShpRate>
+      <ShpRate>1.145038</ShpRate>
       <BoxzRate>1.145038</BoxzRate>
-      <LK>2</LK>
+      <LK>0</LK>
       <CUSLK>100.000000</CUSLK>
       <AK>2</AK>
       <CUSAK>2.000000</CUSAK>
@@ -1894,7 +1894,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -1946,7 +1946,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -2094,7 +2094,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -2402,7 +2402,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -2419,9 +2419,9 @@
     <BTKIN>0</BTKIN>
     <RigidElem>
       <ChildName>J_Bip_R_UpperArm</ChildName>
-      <ColType>1</ColType>
+      <ColType>3</ColType>
       <SkipFlag>0</SkipFlag>
-      <ShpRate>1.145038</ShpRate>
+      <ShpRate>1.259542</ShpRate>
       <BoxzRate>1.106870</BoxzRate>
       <LK>2</LK>
       <CUSLK>100.000000</CUSLK>
@@ -2486,7 +2486,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -2538,7 +2538,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -2686,7 +2686,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -2994,7 +2994,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -3022,7 +3022,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -3046,7 +3046,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -3098,7 +3098,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -3126,7 +3126,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -3154,7 +3154,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -3182,7 +3182,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -3210,7 +3210,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -3238,7 +3238,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -3322,7 +3322,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -3346,7 +3346,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -3398,7 +3398,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -3426,7 +3426,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -3454,7 +3454,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -3482,7 +3482,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -3510,7 +3510,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>
@@ -3538,7 +3538,7 @@
       <Mass>1.000000</Mass>
       <LDMP>0.500000</LDMP>
       <ADMP>0.500000</ADMP>
-      <BTG>-0.090000</BTG>
+      <BTG>-1.000000</BTG>
       <DMPANIML>0.000000</DMPANIML>
       <DMPANIMA>0.000000</DMPANIMA>
       <GROUP>2</GROUP>

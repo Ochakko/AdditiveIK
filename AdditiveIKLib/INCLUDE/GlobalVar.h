@@ -275,7 +275,7 @@ BYTE g_savekeybuf[256];
 
 WCHAR g_basedir[MAX_PATH] = { 0 };
 
-double						g_dspeed = 3.0;
+double						g_dspeed = 1.0;
 //double						g_dspeed = 0.0;
 
 

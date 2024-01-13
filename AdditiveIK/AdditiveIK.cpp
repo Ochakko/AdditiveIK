@@ -3321,6 +3321,9 @@ void InitApp()
 	g_hdrpbloom = true;
 	g_freefps = true;
 	s_befftime = 0.0;
+	g_dspeed = 1.0;//2024/01/13  3.0-->1.0に変更
+	g_physicsmvrate = 0.3f;
+
 
 	g_uvset = 0;
 	g_bonemark_bright = 1.0f;//inifile読み込み処理で上書きされる
@@ -14178,7 +14181,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.2\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.3\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
