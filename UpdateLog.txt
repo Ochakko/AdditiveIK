@@ -4,7 +4,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/01/12
-　AdditiveIK 1.0.0.3 RC2 (リリース候補2)
+　AdditiveIK 1.0.0.3 RC3 (リリース候補3)
 　　1.0.0.2からの変更点
 　　　不具合修正
        １メッシュに複数マテリアルがある場合に　面のマテリアル番号設定に問題があったのを修正
@@ -55,7 +55,12 @@ https://github.com/Ochakko/AdditiveIK
 　　　　DirectXTK12をJun2023からDec2023に差し替え
 　　　　DirectXTexをDec2023に差し替え
 
-
+　　　モデル更新
+　　　　Test/3_Winter2_1のモーションを修正
+　　　　　全フレームのHipsのスケールを初期化
+　　　　　スケール値に不具合を引き起こす値が入っていたようで
+　　　　　Mayaで服のテクスチャが表示されなかったり　IK時に軸がブレたりした
+　　　　　スケール初期化で直った
 
 
 2024/01/11
