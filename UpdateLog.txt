@@ -3,6 +3,32 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/01/17
+ 動画作成
+　【DirectX12】AdditiveIK新機能【モーキャプ編集】
+　　VRoidとモーキャプをプロのアセットに盛り付けるツール
+　　AdditiveIK(アディティブアイケー)
+　　のアップデートのお知らせ
+
+　　EditMot + DirectX12 でAdditiveIKとしてリスタート
+　　DirectX12に対応し、魔導書２冊を導入して表示のテコ入れをしました。
+　　主に新機能の紹介として次の９つの項目をざっくり説明しています。
+　　１、LaterTransparent(モデル内半透明描画順序：まゆ毛透過)
+　　２、Shader(シェーダー設定)
+　　３、WorldPos(モデル位置設定)
+　　４、DispGroup(モデル横断半透明描画順序)
+　　５、Shadow(シャドウ設定)
+　　６、Retarget(Rokokoモーションキャプチャをリターゲット)
+　　７、BulletPhysics(物理シミュ設定)
+　　８、LOD(詳細度切替設定)
+　　９、AlphaMarks(マークの明るさと透明度設定)
+
+　　https://youtu.be/oKGY62YosSg
+
+
+
+
+
 2024/01/12
 　AdditiveIK 1.0.0.3 release
 　　1.0.0.2からの変更点
