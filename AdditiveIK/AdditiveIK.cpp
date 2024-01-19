@@ -354,7 +354,10 @@ static HWINEVENTHOOK s_hhook = NULL;
 
 static CColDlg s_coldlg;
 
+static double s_fTime = 0.0;
+static float s_fElapsedTime = 0.0;
 static double s_befftime = 0.0;
+static double s_mousemoveBefTime = 0.0;
 static double s_fps100[FPSSAVENUM];
 static int s_fps100index = 0;
 static double s_avrgfps = 0.0;
@@ -3096,13 +3099,13 @@ INT WINAPI wWinMain(
 			//g_camera3D->MoveRight(g_pad[0]->GetLStickXF());
 			//g_camera3D->MoveUp(g_pad[0]->GetRStickYF());
 
-			double fTime = 0.0;
-			float fElapsedTime = 0.0;
+			//double fTime = 0.0;
+			//float fElapsedTime = 0.0;
 			if (DXUTGetGlobalTimer()) {
-				fTime = DXUTGetGlobalTimer()->GetTime();
-				DXUTGetGlobalTimer()->GetElapsedTime();
+				s_fTime = DXUTGetGlobalTimer()->GetTime();
+				s_fElapsedTime = DXUTGetGlobalTimer()->GetElapsedTime();
 			}
-			CalcFps(fTime);
+			CalcFps(s_fTime);
 
 			
 			////for tmp check
@@ -3113,10 +3116,10 @@ INT WINAPI wWinMain(
 
 
 			//ドキュメント更新
-			OnUserFrameMove(fTime, fElapsedTime);
+			OnUserFrameMove(s_fTime, s_fElapsedTime);
 
 			//ビュー更新
-			OnFrameRender(&renderingEngine, &renderContext, fTime, fElapsedTime);
+			OnFrameRender(&renderingEngine, &renderContext, s_fTime, s_fElapsedTime);
 
 			if (g_infownd && (dbgcount < 60)) {
 				g_infownd->UpdateWindow();//起動時に白くなる不具合に対して　応急処置
@@ -3321,6 +3324,7 @@ void InitApp()
 	g_hdrpbloom = true;
 	g_freefps = true;
 	s_befftime = 0.0;
+	s_mousemoveBefTime = 0.0;
 	g_dspeed = 1.0;//2024/01/13  3.0-->1.0に変更
 	g_physicsmvrate = 0.3f;
 
@@ -3329,6 +3333,8 @@ void InitApp()
 	g_bonemark_bright = 1.0f;//inifile読み込み処理で上書きされる
 	g_rigidmark_alpha = 0.75f;//inifile読み込み処理で上書きされる
 	g_rigmark_alpha = 0.75f;//inifile読み込み処理で上書きされる
+
+	g_boneaxis = BONEAXIS_CURRENT;
 
 
 	g_lodrate2L[CHKINVIEW_LOD0] = 0.05f;//rate * projfar.  distance of clipping
@@ -3731,6 +3737,10 @@ void InitApp()
 	g_rotatetanim = false;
 	g_HighRpmMode = true;//2023/12/30 起動時にオン
 	g_UpdateMatrixThreads = 2;
+
+
+	s_fTime = 0.0;
+	s_fElapsedTime = 0.0;
 
 	int saveno;
 	for (saveno = 0; saveno < FPSSAVENUM; saveno++) {
@@ -22005,6 +22015,16 @@ int CreateMotionBrush(double srcstart, double srcend, bool onrefreshflag)
 		tempvalue = 0;
 	}
 
+
+	//2024/01/19
+	//BrushParamsプレートメニューでTopPosを移動した直後のIK中に　3dwndのポーズが変わらない不具合解消のため
+	//s_editrangeを更新
+	s_buttonselectstart = g_motionbrush_startframe;
+	s_buttonselectend = g_motionbrush_endframe;
+	CEditRange::SetApplyRate((double)g_applyrate);
+	OnTimeLineButtonSelectFromSelectStartEnd(s_buttonselecttothelast);
+
+
 	if (onrefreshflag == false) {//Refresh関数以外から呼び出したとき
 
 		if (s_owpTimeline)
@@ -25505,9 +25525,7 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			swprintf_s(straxis, 256, L"BindPose");
 			boneaxisindex = BONEAXIS_BINDPOSE;
 			SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)straxis);
-			SendMessage(combownd, CB_SETCURSEL, (WPARAM)0, 0);
-
-			g_boneaxis = BONEAXIS_CURRENT;
+			SendMessage(combownd, CB_SETCURSEL, (WPARAM)g_boneaxis, 0);
 		}
 		else {
 			_ASSERT(0);
@@ -39853,7 +39871,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.3 : No.%d : ", s_appcnt);
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.4 : No.%d : ", s_appcnt);
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -40217,6 +40235,19 @@ int OnMouseMoveFunc()
 		s_pickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
 		s_pickinfo.pickrange = PICKRANGE;
 	}
+
+
+	//2024/01/19
+	if (g_fpsforce30) {
+		double difftime = s_fTime - s_mousemoveBefTime;//s_fElapsedTimeは表示に関する時間なのでここでは使わない
+		if (difftime < (1.0 / 33.0)) {
+			s_doingflag = false;
+			return 0;//!!!!!!!!!!!!!! 強制30fpsフラグが経っている場合には 30fps以上の計算(IK計算)はしない
+		}
+		s_mousemoveBefTime = s_fTime;
+	}
+
+
 
 	if (s_rbuttonSelectFlag) {
 		s_pickinfo.mousebefpos = s_pickinfo.mousepos;
@@ -47995,7 +48026,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.3 : No.%d : ", s_appcnt);
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.4 : No.%d : ", s_appcnt);
 
 
 	if (s_model && s_chascene) {

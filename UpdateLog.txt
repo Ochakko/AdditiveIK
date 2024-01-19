@@ -2,6 +2,17 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/01/19
+　不具合修正
+　　BrushParamsプレートメニューでTopPosスライダー操作直後のIK中に、
+　　3dwndのポーズの表示が変化しないことがある不具合を修正
+
+　　IK操作中は30fps以上のマウス移動に対する処理をしないように修正
+　　IKの後処理が重くなり過ぎないようにするため。
+　　表示のfpsは制限を受けない
+
+
+
 
 2024/01/17
  動画作成
