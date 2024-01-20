@@ -26,8 +26,8 @@ namespace myRenderer
 
     void RenderingEngine::Init()
     {
-        m_zprepassModels.clear();                         // ZPrepassの描画パスで描画されるモデルのリスト
-        m_shadowmapModels.clear();
+        //m_zprepassModels.clear();                         // ZPrepassの描画パスで描画されるモデルのリスト
+        //m_shadowmapModels.clear();
         m_renderToGBufferModels.clear();                  // Gバッファへの描画パスで描画するモデルのリスト
         m_forwardRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
         m_instancingRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
@@ -321,11 +321,11 @@ namespace myRenderer
         CopyMainRenderTargetToFrameBuffer(rc);
 
         // 登録されている3Dモデルをクリア
-        m_shadowmapModels.clear();
+        //m_shadowmapModels.clear();
         m_renderToGBufferModels.clear();
         m_forwardRenderModels.clear();
         m_instancingRenderModels.clear();
-        m_zprepassModels.clear();
+        //m_zprepassModels.clear();
         m_forwardRenderSprites.clear();
         m_forwardRenderFont.clear();
     }
@@ -352,10 +352,13 @@ namespace myRenderer
         rc->ClearRenderTargetView(m_shadowMapRenderTarget);
 
         // 影モデルを描画
-        for (auto& currenderobj : m_shadowmapModels)
+        for (auto& currenderobj : m_forwardRenderModels)
         {
-            //model->Draw(rc);
-            RenderPolyMeshShadowMap(rc, currenderobj);
+            if (g_enableshadow) {
+                if (currenderobj.renderkind == RENDERKIND_SHADOWMAP) {
+                    RenderPolyMeshShadowMap(rc, currenderobj);
+                }
+            }
         }
 
 
@@ -383,7 +386,8 @@ namespace myRenderer
         // レンダリングターゲットをクリア
         rc->ClearRenderTargetView(m_zprepassRenderTarget);
 
-        for (auto& currenderobj : m_zprepassModels)
+        //for (auto& currenderobj : m_zprepassModels)
+        for (auto& currenderobj : m_forwardRenderModels)
         {
             //model->Draw(rc);
             RenderPolyMeshZPre(rc, currenderobj);
@@ -448,15 +452,19 @@ namespace myRenderer
         //    m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()//ZPrePass Z Buffer !!!!
         //);
 
-        if (g_enableshadow) {
-            for (auto& currenderobjsdw : m_shadowmapModels)
-            {
-                RenderPolyMeshShadowReciever(rc, currenderobjsdw);
-            }
-        }
-        for (auto& currenderobjfwd : m_forwardRenderModels)
+        for (auto& currenderobj : m_forwardRenderModels)
         {
-            RenderPolyMesh(rc, currenderobjfwd);
+            if (g_enableshadow) {
+                if (currenderobj.renderkind == RENDERKIND_SHADOWMAP) {
+                    RenderPolyMeshShadowReciever(rc, currenderobj);
+                }
+                else {
+                    RenderPolyMesh(rc, currenderobj);
+                }
+            }
+            else {
+                RenderPolyMesh(rc, currenderobj);
+            }
         }
 
         for (auto& currenderobjinsta : m_instancingRenderModels)

@@ -4,8 +4,10 @@
 #include "ShadowMapRender.h"
 #include "PostEffect.h"
 #include <ChaVecCalc.h>
+#include <mqoobject.h>
 
-class CMQOObject;
+
+//class CMQOObject;
 class CDispObj;
 class Sprite;
 class InstancedSprite;
@@ -29,6 +31,30 @@ namespace myRenderer
         bool calcslotflag;
         int btflag;
         bool zcmpalways;
+
+
+        bool operator< (const tag_renderobj& right) const {//sort用
+            if (!mqoobj) {
+                return false;
+            }
+            double srcdist = mqoobj->GetDistFromCamera();
+            if (!right.mqoobj) {
+                return true;
+            }
+            double cmpdist = right.mqoobj->GetDistFromCamera();
+
+            double diffdist = srcdist - cmpdist;
+            if (diffdist < 0) {
+                return true;
+            }
+            else if (diffdist > 0) {
+                return false;
+            }
+            else {
+                return (mqoobj->GetObjectNo() < right.mqoobj->GetObjectNo());
+            }
+        };
+
 
         void Init()
         {
@@ -179,19 +205,19 @@ namespace myRenderer
         /// <param name="model0">近景用のシャドウマップに描画するモデル</param>
         /// <param name="model1">中景用のシャドウマップ1に描画するモデル</param>
         /// <param name="model2">遠景用のシャドウマップ2に描画するモデル</param>
-        //void Add3DModelToRenderToShadowMap(
-        //    int ligNo,
-        //    Model& model0,
-        //    Model& model1,
-        //    Model& model2
-        //)
+        ////void Add3DModelToRenderToShadowMap(
+        ////    int ligNo,
+        ////    Model& model0,
+        ////    Model& model1,
+        ////    Model& model2
+        ////)
+        ////{
+        ////    m_shadowMapRenders[ligNo].Add3DModel(model0, model1, model2);
+        ////}
+        //void Add3DModelToRenderToShadowMap(RENDEROBJ renderobj)
         //{
-        //    m_shadowMapRenders[ligNo].Add3DModel(model0, model1, model2);
-        //}
-        void Add3DModelToRenderToShadowMap(RENDEROBJ renderobj)
-        {
-            m_shadowmapModels.push_back(renderobj);
-        };
+        //    m_shadowmapModels.push_back(renderobj);
+        //};
 
 
 
@@ -199,14 +225,14 @@ namespace myRenderer
         /// ZPrepassの描画パスにモデルを追加
         /// </summary>
         /// <param name="model"></param>
-        //void Add3DModelToZPrepass(Model& model)
+        ////void Add3DModelToZPrepass(Model& model)
+        ////{
+        ////    m_zprepassModels.push_back(&model);
+        ////}
+        //void Add3DModelToZPrepass(RENDEROBJ renderobj)
         //{
-        //    m_zprepassModels.push_back(&model);
+        //    m_zprepassModels.push_back(renderobj);
         //}
-        void Add3DModelToZPrepass(RENDEROBJ renderobj)
-        {
-            m_zprepassModels.push_back(renderobj);
-        }
 
         /// <summary>
         /// GBufferの描画パスにモデルを追加
@@ -229,9 +255,28 @@ namespace myRenderer
         //{
         //    m_forwardRenderModels.push_back(&model);
         //}
-        void Add3DModelToForwardRenderPass(RENDEROBJ renderobj)
+        void Add3DModelToForwardRenderPass(std::vector<RENDEROBJ>& rendervec)
         {
-            m_forwardRenderModels.push_back(renderobj);
+            //m_forwardRenderModels.push_back(renderobj);
+
+            size_t srcsize = m_forwardRenderModels.size();
+            size_t addsize = rendervec.size();
+            size_t newsize = srcsize + addsize;
+
+
+            m_forwardRenderModels.reserve(newsize);
+            ////std::copy(rendervec.begin(), rendervec.end(), std::back_inserter(m_forwardRenderModels));
+
+            //size_t addno;
+            //for (addno = 0; addno < addsize; addno++) {
+            //    m_forwardRenderModels[srcsize + addno] = rendervec[addno];
+            //}
+
+            size_t addno;
+            for (addno = 0; addno < addsize; addno++) {
+                m_forwardRenderModels.push_back(rendervec[addno]);
+            }
+
         }
         void Add3DModelToInstancingRenderPass(RENDEROBJ renderobj)
         {
@@ -408,11 +453,11 @@ namespace myRenderer
         RenderTarget m_gBuffer[enGBufferNum];                           // G-Buffer
         PostEffect m_postEffect;                                        // ポストエフェクト
 
-        //std::vector< Model* > m_zprepassModels;                         // ZPrepassの描画パスで描画されるモデルのリスト
-        //std::vector< Model* > m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
-        //std::vector< Model* > m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
-        std::vector<RENDEROBJ> m_zprepassModels;                         // ZPrepassの描画パスで描画されるモデルのリスト
-        std::vector<RENDEROBJ> m_shadowmapModels;
+        ////std::vector< Model* > m_zprepassModels;                         // ZPrepassの描画パスで描画されるモデルのリスト
+        ////std::vector< Model* > m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
+        ////std::vector< Model* > m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+        //std::vector<RENDEROBJ> m_zprepassModels;                         // ZPrepassの描画パスで描画されるモデルのリスト
+        //std::vector<RENDEROBJ> m_shadowmapModels;
         std::vector<RENDEROBJ> m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
         std::vector<RENDEROBJ> m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
         std::vector<RENDEROBJ> m_instancingRenderModels;                    // インスタンシングレンダリングの描画パスで描画されるモデルのリスト

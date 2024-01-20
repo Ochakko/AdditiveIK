@@ -268,6 +268,8 @@ void CMQOObject::InitParams()
 
 	m_getuvnum = 0;
 
+	m_cancelshadow = false;
+
 //	next = 0;
 }
 

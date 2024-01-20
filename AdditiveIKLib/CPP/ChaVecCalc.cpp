@@ -5087,6 +5087,8 @@ int ChaFrustumInfo::ChkInView(int srclodnum, int srclodno, MODELBOUND srcmb, Cha
 		else {
 			SetVisible(false);
 		}
+		SetDistFromCamera(dist_cam2obj);//2024/01/19
+
 	}
 
 	if (GetVisible()) {
@@ -5164,6 +5166,8 @@ void ChaFrustumInfo::InitParams()
 
 	SetVisible(true);
 	SetInShadow(false);
+
+	m_distfromcamera = 0.0f;
 }
 
 //################

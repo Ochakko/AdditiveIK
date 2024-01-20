@@ -465,6 +465,8 @@ void FbxAMatrix2ChaMatrix(ChaMatrix& retmat, FbxAMatrix srcmat)
 static int s_setrigidflag = 0;
 static DWORD s_rigidflag = 0;
 
+
+
 CModel::CModel() : m_camerafbx(), m_frustum()
 {
 	InitializeCriticalSection(&m_CritSection_Node);
@@ -19144,6 +19146,8 @@ int CModel::ChkInView()
 			SetInShadow(false);
 		}
 	}
+
+
 	return 0;
 }
 
@@ -19367,7 +19371,7 @@ int CModel::MakeDispGroupForRender()
 		for (objno = 0; objno < objnum; objno++) {
 			DISPGROUPELEM digelem = m_objno2digelem[objno];
 
-			if (digelem.groupno == (groupindex + 1)) {
+			if (digelem.mqoobject && (digelem.groupno == (groupindex + 1))) {//2024/01/20 eNullは除外
 				m_dispgroup[groupindex].push_back(digelem);
 			}
 		}

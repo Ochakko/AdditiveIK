@@ -2,6 +2,20 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+
+2024/01/20
+　DispGroupの挙動を修正
+　　グループごとに不透明はカメラから近い順、半透明はカメラから遠い順にソートしてから描画
+　　　Treeのグループ番号を大きい値に設定するだけで、ステージのTreeの影付き透過表示がうまくいくようになった
+
+　　メッシュ名右クリックのSimilarチェック時に
+　　メッシュ名先頭にPrefabがあった場合には２番目の'_'までをパターンとする
+
+
+
+
+
 2024/01/19
 　不具合修正
 　　BrushParamsプレートメニューでTopPosスライダー操作直後のIK中に、

@@ -986,6 +986,14 @@ public:
 		m_inshadow = srcflag;
 	};
 
+	void SetDistFromCamera(double srcdist) {
+		m_distfromcamera = srcdist;
+	};
+	double GetDistFromCamera() {
+		return m_distfromcamera;
+	};
+
+
 private:
 	void InitParams();
 	//int GetFootOnPlane(int srcplaneindex, ChaVector3 srcpos);
@@ -1000,6 +1008,7 @@ private:
 	ChaVector3 m_footpos[6];
 
 	ChaMatrix m_matVP;
+	double m_distfromcamera;
 };
 
 #endif

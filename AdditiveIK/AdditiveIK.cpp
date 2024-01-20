@@ -33872,10 +33872,28 @@ int CheckSimilarGroup(int opetype)
 
 				WCHAR* patptr0 = wcschr(similarname, TEXT('_'));
 				if (patptr0) {
-
 					if (patptr0 != similarname) {//2023/10/08 先頭の文字が '_'以外の場合だけ処理する
 						*patptr0 = 0L;
-						wcscpy_s(pattern0, 512, similarname);
+
+						if ((wcscmp(similarname, L"Prefab") == 0) || (wcscmp(similarname, L"prefab") == 0)) {
+
+							//2024/01/19
+							//名前の先頭がPrefab_またはprefab_の場合にはもう１つ後の_までをパターン文字列とする
+
+							WCHAR* patptr1 = wcschr(patptr0 + 1, TEXT('_'));
+							if (patptr1) {
+								*patptr0 = TEXT('_');
+								*patptr1 = 0L;
+								wcscpy_s(pattern0, 512, similarname);
+							}
+							else {
+								wcscpy_s(pattern0, 512, similarname);
+							}
+						}
+						else {
+							wcscpy_s(pattern0, 512, similarname);
+						}
+
 						int pattern0len = (int)wcslen(pattern0);
 
 						if ((opetype == 0) || (opetype == 1)) {

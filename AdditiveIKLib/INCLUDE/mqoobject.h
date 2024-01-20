@@ -432,6 +432,22 @@ public:
 	{
 		return m_getuvnum;
 	}
+
+	double GetDistFromCamera()
+	{
+		return m_frustum.GetDistFromCamera();
+	}
+
+	void SetCancelShadow(bool srcflag)
+	{
+		m_cancelshadow = srcflag;
+	}
+	bool GetCancelShadow()
+	{
+		return m_cancelshadow;
+	}
+
+
 private:
 	int m_objfrom;
 
@@ -473,6 +489,7 @@ private:
 	FbxNode* m_pnode;
 
 	ChaFrustumInfo m_frustum;
+	bool m_cancelshadow;
 
 
 //以下、クラス外から参照しないのでアクセッサー無し

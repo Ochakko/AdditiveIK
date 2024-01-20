@@ -22,6 +22,9 @@
 #include <UndoMotion.h>
 #include <CameraFbx.h>
 
+//#include <mqoobject.h>
+
+
 #include "../../MiniEngine/MiniEngine.h"
 #include "../../MiniEngine/RenderContext.h"
 #include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
@@ -129,6 +132,29 @@ typedef struct tag_dispgroupelem
 	int groupno;
 	FbxNode* pNode;
 	CMQOObject* mqoobject;
+
+	//bool operator< (const tag_dispgroupelem& right) const {
+	//	if (!mqoobject) {
+	//		return false;
+	//	}
+	//	double srcdist = mqoobject->GetDistFromCamera();
+	//	if (!right.mqoobject) {
+	//		return true;
+	//	}
+	//	double cmpdist = right.mqoobject->GetDistFromCamera();
+	//
+	//	double diffdist = srcdist - cmpdist;
+	//	if (diffdist < 0) {
+	//		return true;
+	//	}
+	//	else if (diffdist > 0) {
+	//		return false;
+	//	}
+	//	else {
+	//		return (mqoobject->GetObjectNo() < right.mqoobject->GetObjectNo());
+	//	}
+	//};
+
 
 	void Init() {
 		objno = 0;
@@ -2066,7 +2092,6 @@ public: //accesser
 
 		return false;
 	}
-
 
 	int GetDispGroupForRender(int srcgroupindex, std::vector<DISPGROUPELEM>& dstvec)
 	{

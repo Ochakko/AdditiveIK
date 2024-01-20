@@ -295,7 +295,7 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 	//		model1のgroup1-->model2のgorup1-->model1のgroup2-->model2のgroup2--> ...
 	//####################################################################################
 
-
+	vector<myRenderer::RENDEROBJ> rendervec;
 
 
 	if (!m_modelindex.empty()) {
@@ -329,6 +329,8 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 			int groupindex;
 			for (groupindex = 0; groupindex < MAXDISPGROUPNUM; groupindex++) {
 
+				rendervec.clear();//!!!!!!!!!!!
+
 				if (groupindex >= 1) {
 					forcewithalpha = true;
 				}
@@ -355,7 +357,7 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 
 								CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
 
-								if (curobj && (curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible()) {
+ 								if (curobj && (curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible()) {
 								//if (curobj) {
 
 								
@@ -406,23 +408,45 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 									renderobj.calcslotflag = calcslotflag;
 									renderobj.btflag = btflag;
 
-									renderingEngine->Add3DModelToZPrepass(renderobj);
+									//renderingEngine->Add3DModelToZPrepass(renderobj);
 									
 									if (g_enableshadow) {
-										if ((curmodel->GetInShadow()) && (curobj->GetInShadow())) {
-											renderingEngine->Add3DModelToRenderToShadowMap(renderobj);
+										if ((curmodel->GetInShadow()) && (curobj->GetInShadow()) &&
+											//(withalpha == false) && (forcewithalpha == false)) {
+											(curobj->GetCancelShadow() == false)) {
+											//renderingEngine->Add3DModelToRenderToShadowMap(renderobj);
+
+											renderobj.renderkind = RENDERKIND_SHADOWMAP;
+											rendervec.push_back(renderobj);
 										}
 										else {
-											renderingEngine->Add3DModelToForwardRenderPass(renderobj);
+											//renderingEngine->Add3DModelToForwardRenderPass(renderobj);
+											renderobj.renderkind = RENDERKIND_NORMAL;
+											rendervec.push_back(renderobj);
 										}
 									}
 									else {
-										renderingEngine->Add3DModelToForwardRenderPass(renderobj);
+										//renderingEngine->Add3DModelToForwardRenderPass(renderobj);
+
+										renderobj.renderkind = RENDERKIND_NORMAL;
+										rendervec.push_back(renderobj);
 									}
 								}
 							}
 						}
 					}
+				}
+
+				//##########################################################
+				//2024/01/20
+				//dispgroup毎に　カメラ距離でソートしてから　renderingEngineに渡す
+				//##########################################################
+				if (!rendervec.empty()) {
+					std::sort(rendervec.begin(), rendervec.end());//カメラ距離でソート
+					if (groupindex != 0) {
+						std::reverse(rendervec.begin(), rendervec.end());//半透明は遠くから順番に描画
+					}//不透明は近くから順に描画
+					renderingEngine->Add3DModelToForwardRenderPass(rendervec);
 				}
 			}
 		}
@@ -460,8 +484,13 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 		//	//プレビュー中以外のときには同期する(UpdaetMatrixModelsの終わりで終了待機)　Render()においてはcalcslotflag=trueで描画
 		//}
 
-		
+
 	}
+
+
+
+
+
 
 	return 0;
 }
@@ -539,6 +568,7 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 	//		model1のgroup1-->model2のgorup1-->model1のgroup2-->model2のgroup2--> ...
 	//####################################################################################
 
+	vector<myRenderer::RENDEROBJ> rendervec;
 
 	int renderindex;
 	//int renderslot = (int)(!(m_updateslot != 0));
@@ -559,6 +589,9 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 
 		int groupindex;
 		for (groupindex = 0; groupindex < MAXDISPGROUPNUM; groupindex++) {
+
+			rendervec.clear();//!!!!!!!!!!!!!!!
+
 			if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView()) {
 				//if (curmodel && curmodel->GetModelDisp()) {
 
@@ -622,10 +655,21 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 							renderobj.calcslotflag = calcslotflag;
 							renderobj.btflag = btflag;
 							renderobj.zcmpalways = zcmpalways;
-							renderingEngine->Add3DModelToForwardRenderPass(renderobj);
+							//renderingEngine->Add3DModelToForwardRenderPass(renderobj);
+
+							renderobj.renderkind = RENDERKIND_NORMAL;
+							rendervec.push_back(renderobj);
 						}
 					}
 				}
+			}
+
+			if (!rendervec.empty()) {
+				//std::sort(rendervec.begin(), rendervec.end());//カメラ距離でソート
+				//if (groupindex != 0) {
+				//	std::reverse(rendervec.begin(), rendervec.end());//半透明は遠くから順番に描画
+				//}
+				renderingEngine->Add3DModelToForwardRenderPass(rendervec);
 			}
 		}
 	}

@@ -1574,15 +1574,24 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 
 		if (vertextype != 2) {
-#ifdef SAMPLE_11
-			// 背面を描画していないと影がおかしくなるため、
-			// シャドウのサンプルのみカリングをオフにする。
-			// 本来はアプリ側からカリングモードを渡すのがいいのだけど、
-			// 書籍に記載しているコードに追記がいるので、エンジン側で吸収する。
-			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-#else
-			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-#endif
+//#ifdef SAMPLE_11
+//			// 背面を描画していないと影がおかしくなるため、
+//			// シャドウのサンプルのみカリングをオフにする。
+//			// 本来はアプリ側からカリングモードを渡すのがいいのだけど、
+//			// 書籍に記載しているコードに追記がいるので、エンジン側で吸収する。
+//			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+//#else
+//			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+//#endif
+			if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
+				(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
+				(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
+
+				psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+			}
+			else {
+				psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+			}
 		}
 		else {
 			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
