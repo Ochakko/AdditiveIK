@@ -87,6 +87,12 @@ SPSInZPrepass VSMainZPrepass(SVSIn vsIn, uniform bool hasSkin)
     psIn.depth.x = psIn.pos.z / psIn.pos.w;
     psIn.depth.y = saturate(psIn.pos.w / 1000.0f);
     
+    
+    //2021/01/20 TEST offset z
+    ////psIn.pos.xyz /= psIn.pos.w;
+    ////psIn.pos.w = 1.0f;
+    //psIn.pos.z += shadowmaxz.y;
+    
     return psIn;
 }
 

@@ -14191,7 +14191,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.3\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.4\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -23939,7 +23939,7 @@ int ShadowParams2Dlg(HWND hDlgWnd)
 	sliderpos = (int)(g_shadowmap_bias[g_shadowmap_slotno] * 10000.0f);
 	//SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)10);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);//2024/01/04 0も可
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)300);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
 	sliderpos = (int)(g_shadowmap_projscale[g_shadowmap_slotno] * 10.0f);
@@ -39012,6 +39012,19 @@ int GetSymRootMode()
 	AppendMenu(submenu, MF_STRING, setmenuid, L"RootBone:SymDirAndSymSale");
 	setmenuid = ID_RMENU_0 + 3 + MENUOFFSET_GETSYMROOTMODE;
 	AppendMenu(submenu, MF_STRING, setmenuid, L"RootBone:SymPos");
+
+
+	//2024/01/20
+	//実際に有効な使用方法としては　RootBone:SymDirAndSymPosAndSymScaleだけとも言えるので　他のメニューはグレーアウト
+	//部分的にペーストしたい場合には　上段カエルショートカットボタンの中のペーストボタンを右クリックして　対象を絞って対称ペーストする
+	MENUITEMINFO mii;
+	ZeroMemory(&mii, sizeof(MENUITEMINFO));
+	mii.cbSize = sizeof(MENUITEMINFO);
+	mii.fMask = MIIM_STATE;
+	mii.fState = MFS_GRAYED;
+	SetMenuItemInfo(submenu, ID_RMENU_0 + MENUOFFSET_GETSYMROOTMODE, FALSE, &mii);
+	SetMenuItemInfo(submenu, ID_RMENU_0 + 2 + MENUOFFSET_GETSYMROOTMODE, FALSE, &mii);
+	SetMenuItemInfo(submenu, ID_RMENU_0 + 3 + MENUOFFSET_GETSYMROOTMODE, FALSE, &mii);
 
 
 	POINT pt;
