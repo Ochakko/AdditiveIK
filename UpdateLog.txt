@@ -5,7 +5,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/01/21
-　AdditiveIK 1.0.0.4 RC2(リリース候補2)
+　AdditiveIK 1.0.0.4 release
 　　1.0.0.3からの変更点
 　　　不具合修正
 　　　　BrushParamsプレートメニューでTopPosスライダー操作直後のIK中に、
@@ -52,6 +52,21 @@ https://github.com/Ochakko/AdditiveIK
 　　動画
 　　　【DirectX12】AdditiveIK新機能【モーキャプ編集】
 　　　https://youtu.be/oKGY62YosSg
+
+
+
+
+
+
+　　既知の問題
+　　　問題005
+　　　１メッシュに複数マテリアルが設定してあるモデルの場合
+　　　AdditiveIKで読み込んでから保存すると
+　　　Unityではきちんと１メッシュに対して複数マテリアルが読み込まれるが
+　　　Mayaではメッシュに１つのマテリアルしかアタッチされていないことがある
+　　　という問題が起きています(Mayaでもマテリアル自体は読み込まれています)
+　　　解決に時間が掛かりそうなのと他の不具合修正分を早く出したいので
+　　　問題005は未解決ですが 1.0.0.4を出します
 
 
 
