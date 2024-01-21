@@ -4728,7 +4728,6 @@ void OnDestroyDevice()
 	s_oprigflag = 0;
 	s_customrigbone = 0;
 
-
 	map<CModel*, CFrameCopyDlg*>::iterator itrcpdlg;
 	for (itrcpdlg = s_selbonedlgmap.begin(); itrcpdlg != s_selbonedlgmap.end(); itrcpdlg++) {
 		CFrameCopyDlg* curcpdlg = itrcpdlg->second;
@@ -6598,7 +6597,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		else if ((menuid >= (ID_RMENU_0 + MAXRIGNUM * 2 + MENUOFFSET_BONERCLICK)) && (menuid < (ID_RMENU_0 + MAXRIGNUM * 3 + MENUOFFSET_BONERCLICK))) {
 			//実行
 			int currigno = s_customrigmenuindex[menuid - (ID_RMENU_0 + MAXRIGNUM * 2) - MENUOFFSET_BONERCLICK];
-			Bone2CustomRig(currigno);
+			//Bone2CustomRig(currigno);
+			GUIMenuSetVisible(-1, -1);
+			DispCustomRigDlg(currigno);//2024/01/21 設定ダイアログ表示をピックしたリグの内容に更新
 			if (s_customrigbone) {
 				s_oprigflag = 1;
 			}
@@ -38034,6 +38035,7 @@ int CustomRig2Bone()
 		return 0;
 	}
 
+
 	if (s_customrigbone) {
 		int isvalid = IsValidCustomRig(s_model, s_customrig, s_customrigbone);
 		if (isvalid == 0) {
@@ -50260,7 +50262,9 @@ int PickRigBone(UIPICKINFO* ppickinfo, bool forrigtip, int* dstrigno)//default:f
 									}
 									ChangeCurrentBone();//2021/11/19
 
-									Bone2CustomRig(rigno);
+									//Bone2CustomRig(rigno);
+									GUIMenuSetVisible(-1, -1);
+									DispCustomRigDlg(rigno);//2024/01/21 設定ダイアログ表示をピックしたリグの内容に更新
 								}
 								else {
 									if (dstrigno) {

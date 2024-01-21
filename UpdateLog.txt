@@ -4,8 +4,8 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
-2024/01/20
-　AdditiveIK 1.0.0.4 RC1(リリース候補1)
+2024/01/21
+　AdditiveIK 1.0.0.4 RC2(リリース候補2)
 　　1.0.0.3からの変更点
 　　　不具合修正
 　　　　BrushParamsプレートメニューでTopPosスライダー操作直後のIK中に、
@@ -30,6 +30,15 @@ https://github.com/Ochakko/AdditiveIK
 　　　　IKの後処理が重くなり過ぎないようにするため。
 　　　　表示のfpsは今回の修正によっては制限を受けない
 
+　　　Rigクリックだけで右ペインにクリックしたRigの設定画面を出すように.
+　　　　設定中のRigと操作中のRigを一致させることにより、誤保存を回避、操作も効率的に。
+
+　　　Test/3_Winter2_1モデルのRig設定を修正
+　　　　このモデルはTestフォルダの中の他のVRoidよりも新しいVRoidで出力したモデル
+　　　　新しいVRoidにはローカル軸が保存されるようになったようだ
+　　　　それを踏まえて、新しいVRoidのリグの設定時には、軸の種類としてNodeX,NodeY,NodeZを選ぶと良い
+　　　　特に足の部分のリグにはNodeX,NodeY,NodeZを選ばないとうまくいかないことが多い
+
 
 　　備考
 　　　ノーマルマップテクスチャの表示について
@@ -40,6 +49,9 @@ https://github.com/Ochakko/AdditiveIK
 　　　ノーマルマップを施しているメッシュについてはLOD(詳細度切替機能)を使って
 　　　遠くのオブジェクトに対してはノーマルマップ無しのモデルに置き換えるというのが良いと思っている
 
+　　動画
+　　　【DirectX12】AdditiveIK新機能【モーキャプ編集】
+　　　https://youtu.be/oKGY62YosSg
 
 
 
