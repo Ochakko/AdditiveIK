@@ -331,6 +331,23 @@ bool SaveScene(FbxManager* pSdkManager, FbxDocument* pScene, const char* pFilena
     IOS_REF.SetBoolProp(EXP_FBX_GOBO,            true);
     IOS_REF.SetBoolProp(EXP_FBX_ANIMATION,       true);
     IOS_REF.SetBoolProp(EXP_FBX_GLOBAL_SETTINGS, true);
+	IOS_REF.SetBoolProp(IMP_FBX_EXT_SDK_GRP, true);
+	IOS_REF.SetBoolProp(IMP_FBX_MODEL, true);
+	IOS_REF.SetBoolProp(IMP_FBX_MODEL_COUNT, true);
+	IOS_REF.SetBoolProp(IMP_FBX_POLYGROUP, true);
+
+	//(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_MATERIAL, true);
+	//(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_TEXTURE, true);
+	//(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_LINK, true);
+	//(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_SHAPE, true);
+	//(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_GOBO, true);
+	//(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_ANIMATION, true);
+	//(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, true);
+	//(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_EXT_SDK_GRP, true);
+	//(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_MODEL, true);
+	//(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_MODEL_COUNT, true);
+	//(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_POLYGROUP, true);
+
 
 
     // Initialize the exporter by providing a filename.
@@ -2032,7 +2049,20 @@ FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene,
 	CModel* pmodel, CMQOObject* curobj, 
 	FbxNode* lNode, FbxNode* srcnode)
 {
-	FbxMesh* lLoadMesh = srcnode->GetMesh();
+	
+	if (!pSdkManager || !pScene || !pmodel || 
+		!curobj || !lNode ||!srcnode) {
+		_ASSERT(0);
+		return lNode;
+	}
+
+	//FbxMesh* lLoadMesh = srcnode->GetMesh();
+	FbxNodeAttribute* lLoadAttrib = srcnode->GetNodeAttribute();
+	if (!lLoadAttrib) {
+		_ASSERT(0);
+		return lNode;
+	}
+	FbxMesh* lLoadMesh = (FbxMesh*)lLoadAttrib;
 	FbxMesh* lSaveMesh = FbxMesh::Create(pScene, lLoadMesh->GetName());
 	//psavenode->SetNodeAttribute(lMesh);
 	if (!lLoadMesh || !lSaveMesh) {
@@ -2164,7 +2194,7 @@ FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene,
 	}
 
 	// set the node attribute
-	lNode->SetNodeAttribute(lSaveMesh);
+	//lNode->SetNodeAttribute(lSaveMesh);
 	// set the shading mode to view texture
 	//lNode->SetShadingMode(FbxNode::eTextureShading);
 	// rotate the plane
@@ -2188,17 +2218,43 @@ FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene,
 	////	lSaveMaterialElement->GetIndexArray().Add(srcindex);
 	////}
 
+
+	//############################################################################
+	//2024/01/22
+	//マルチマテリアルの場合にも通常はFbxGeometryElementMaterialは１つ
+	//古いAdditiveIKで保存したfbxにはFbxGeometryElementMaterialは２つ有り　１つ目は未設定
+	//有効なFbxGeometryElementMaterialのインデックスをloadgeomatindexにセットする
+	//############################################################################
 	int elemmatnum = lLoadMesh->GetElementMaterialCount();
-	int elemmatno;
-	for (elemmatno = 0; elemmatno < elemmatnum; elemmatno++) {
-		//FbxGeometryElementMaterial* lLoadMaterialElement = lLoadMesh->GetElementMaterial(0);
-		//FbxGeometryElementMaterial* lSaveMaterialElement = lSaveMesh->CreateElementMaterial();
-		FbxGeometryElementMaterial* lLoadMaterialElement = lLoadMesh->GetElementMaterial(elemmatno);
+	int loadgeomatindex;
+	if (elemmatnum <= 0) {
+		loadgeomatindex = -1;
+	}
+	else if (elemmatnum == 1) {
+		loadgeomatindex = 0;
+	}
+	else {
+		loadgeomatindex = 1;
+	}
+
+	if (loadgeomatindex >= 0) {
+		FbxGeometryElementMaterial* lLoadMaterialElement = lLoadMesh->GetElementMaterial(loadgeomatindex);
 		if (!lLoadMaterialElement) {
 			_ASSERT(0);
 			return lNode;
 		}
-		FbxGeometryElementMaterial* lSaveMaterialElement = lSaveMesh->CreateElementMaterial();
+		FbxGeometryElement::EMappingMode loadMappingMode = lLoadMaterialElement->GetMappingMode();
+		lSaveMesh->InitMaterialIndices(loadMappingMode);
+
+		//############################################################################################
+		//2024/01/22
+		//CreateElementMaterial()を呼ぶとFbxGeometryElementが２つ出来て１つ目が未設定になる
+		//InitMateiralIndices()するとFbxGeometryElementが作成されるのでその後でGetElementMaterialすれば良い
+		//////FbxGeometryElementMaterial* lSaveMaterialElement = lSaveMesh->CreateElementMaterial();
+		//############################################################################################
+		//2024/01/22
+		//１メッシュに対して複数マテリアルがあるfbxをMaya2024で読み込んでもOKになった
+		FbxGeometryElementMaterial* lSaveMaterialElement = lSaveMesh->GetElementMaterial(0);
 		if (!lSaveMaterialElement) {
 			_ASSERT(0);
 			return lNode;
@@ -2206,13 +2262,41 @@ FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene,
 		lSaveMaterialElement->SetMappingMode(lLoadMaterialElement->GetMappingMode());
 		lSaveMaterialElement->SetReferenceMode(lLoadMaterialElement->GetReferenceMode());
 
-		int materialindexnum = lLoadMaterialElement->GetIndexArray().GetCount();
+		int materialindexnum = lLoadMaterialElement->GetIndexArray().GetCount();//materialindexnumはfacenumと同じ
+
+		lSaveMaterialElement->GetIndexArray().Clear();
+		lSaveMaterialElement->GetIndexArray().SetCount(materialindexnum);
+
 		int matindex;
 		for (matindex = 0; matindex < materialindexnum; matindex++) {
-			int srcindex = lLoadMaterialElement->GetIndexArray().GetAt(matindex);
-			lSaveMaterialElement->GetIndexArray().Add(srcindex);
+			int lookupIndex;
+			switch (loadMappingMode) {
+			case FbxGeometryElement::eByPolygon:
+				lookupIndex = matindex;//triangleNo.
+				break;
+			case FbxGeometryElement::eAllSame://<--必要 VRoidの髪の毛など
+				lookupIndex = 0;
+				break;
+			case FbxGeometryElement::eByPolygonVertex:
+				lookupIndex = 0;
+				break;
+			default:
+				lookupIndex = 0;
+				break;
+			}
+			//int srcindex = lLoadMaterialElement->GetIndexArray().GetAt(matindex);//srcindexはmaterial番号
+			int srcindex = lLoadMaterialElement->GetIndexArray().GetAt(lookupIndex);
+			//lSaveMaterialElement->GetIndexArray().Add(srcindex);
+			FbxSurfaceMaterial* srcmaterial = srcnode->GetMaterial(srcindex);
+			lSaveMaterialElement->GetIndexArray().SetAt(matindex, srcindex);
+
 		}
+
 	}
+
+
+	lNode->SetNodeAttribute(lSaveMesh);
+
 
 	return lNode;
 }

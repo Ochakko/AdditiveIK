@@ -4574,6 +4574,11 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 
 		int materialnum = pMesh->GetElementMaterialCount();
 		int materialindex;
+
+		if (materialnum >= 2) {
+			int dbgflag1 = 1;
+		}
+
 		for (materialindex = 0; materialindex < materialnum; materialindex++) {
 			const FbxLayerElementMaterial* pPolygonMaterials = NULL;
 			FbxGeometryElement::EMappingMode materialmappingMode = FbxGeometryElement::eAllSame;
@@ -4593,6 +4598,7 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 					break;
 				default:
 					lookupIndex = 0;
+					//lookupIndex = p;
 					break;
 				}
 
