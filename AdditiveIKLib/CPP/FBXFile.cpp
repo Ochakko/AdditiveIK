@@ -49,7 +49,7 @@ static CBVHElem* s_behead = 0;
 static int s_invindex[3] = {0, 2, 1};
 static int s_firstanimout = 0;
 static int s_zeroframemotid = 0;
-
+static FbxNode* s_firstbindnode = nullptr;
 
 #include <map>
 using namespace std;
@@ -839,8 +839,16 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 	FbxNode* psavenode = 0;
 	if (srcnode) {
 
-		const char* srcname = srcnode->GetName();
-		//const char* dstname = psavenode->GetName();
+		bool rootskipflag = false;
+		char nodename[256] = { 0 };
+		strcpy_s(nodename, 256, srcnode->GetName());
+		if (strcmp(nodename, "Root") == 0) {
+			rootskipflag = true;
+		}
+		else {
+			rootskipflag = false;
+		}
+
 
 		FbxNodeAttribute* srcattr = srcnode->GetNodeAttribute();
 		if (srcattr) {
@@ -878,14 +886,14 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			case FbxNodeAttribute::eSkeleton:
 
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
 				}
 				psaveparentnode->AddChild(psavenode);
 
-				FbxSkeleton* lSkeletonNodeAttribute = FbxSkeleton::Create(pScene, srcnode->GetName());
+				FbxSkeleton* lSkeletonNodeAttribute = FbxSkeleton::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lSkeletonNodeAttribute);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -902,7 +910,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eMesh:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -917,7 +925,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eLight:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -925,7 +933,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxLight* lLight = FbxLight::Create(pScene, srcnode->GetName());
+				FbxLight* lLight = FbxLight::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lLight);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -937,7 +945,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eMarker:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -945,7 +953,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxMarker* lMarker = FbxMarker::Create(pScene, srcnode->GetName());
+				FbxMarker* lMarker = FbxMarker::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lMarker);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -956,7 +964,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			}
 			case FbxNodeAttribute::eCamera:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -964,7 +972,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxCamera* lCamera = FbxCamera::Create(pScene, srcnode->GetName());
+				FbxCamera* lCamera = FbxCamera::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lCamera);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -982,7 +990,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eBoundary:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -990,7 +998,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxBoundary* lBoundary = FbxBoundary::Create(pScene, srcnode->GetName());
+				FbxBoundary* lBoundary = FbxBoundary::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lBoundary);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -1002,7 +1010,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eNull:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -1010,7 +1018,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxNull* lNull = FbxNull::Create(pScene, srcnode->GetName());
+				FbxNull* lNull = FbxNull::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lNull);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -1027,7 +1035,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eNurbs:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -1035,7 +1043,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxNurbs* lNurbs = FbxNurbs::Create(pScene, srcnode->GetName());
+				FbxNurbs* lNurbs = FbxNurbs::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lNurbs);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -1048,7 +1056,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::ePatch:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -1056,7 +1064,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxPatch* lPatch = FbxPatch::Create(pScene, srcnode->GetName());
+				FbxPatch* lPatch = FbxPatch::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lPatch);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -1069,7 +1077,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eCameraStereo:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -1077,7 +1085,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxCameraStereo* lCameraStereo = FbxCameraStereo::Create(pScene, srcnode->GetName());
+				FbxCameraStereo* lCameraStereo = FbxCameraStereo::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lCameraStereo);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -1090,7 +1098,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eCameraSwitcher:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -1098,7 +1106,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxCameraSwitcher* lCameraSwitcher = FbxCameraSwitcher::Create(pScene, srcnode->GetName());
+				FbxCameraSwitcher* lCameraSwitcher = FbxCameraSwitcher::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lCameraSwitcher);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -1111,7 +1119,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eOpticalReference:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -1119,7 +1127,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxOpticalReference* lOpticalReference = FbxOpticalReference::Create(pScene, srcnode->GetName());
+				FbxOpticalReference* lOpticalReference = FbxOpticalReference::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lOpticalReference);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -1132,7 +1140,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eOpticalMarker:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -1140,7 +1148,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				//FbxOpticalMarker* lOpticalMarker = FbxOpticalMarker::Create(pScene, srcnode->GetName());
+				//FbxOpticalMarker* lOpticalMarker = FbxOpticalMarker::Create(pScene, nodename);
 				//psavenode->SetNodeAttribute(lOpticalMarker);
 
 				//FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -1153,7 +1161,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eNurbsCurve:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -1161,7 +1169,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxNurbsCurve* lNurbsCurve = FbxNurbsCurve::Create(pScene, srcnode->GetName());
+				FbxNurbsCurve* lNurbsCurve = FbxNurbsCurve::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lNurbsCurve);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -1174,7 +1182,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eTrimNurbsSurface:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -1182,7 +1190,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxTrimNurbsSurface* lTrimNurbsSurface = FbxTrimNurbsSurface::Create(pScene, srcnode->GetName());
+				FbxTrimNurbsSurface* lTrimNurbsSurface = FbxTrimNurbsSurface::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lTrimNurbsSurface);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -1195,7 +1203,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eNurbsSurface:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -1203,7 +1211,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxNurbsSurface* lNurbsSurface = FbxNurbsSurface::Create(pScene, srcnode->GetName());
+				FbxNurbsSurface* lNurbsSurface = FbxNurbsSurface::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lNurbsSurface);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -1216,7 +1224,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eShape:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -1224,7 +1232,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxShape* lShape = FbxShape::Create(pScene, srcnode->GetName());
+				FbxShape* lShape = FbxShape::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lShape);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -1237,7 +1245,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eLODGroup:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -1245,7 +1253,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxLODGroup* lLODGroup = FbxLODGroup::Create(pScene, srcnode->GetName());
+				FbxLODGroup* lLODGroup = FbxLODGroup::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lLODGroup);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -1258,7 +1266,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eSubDiv:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -1266,7 +1274,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxSubDiv* lSubDiv = FbxSubDiv::Create(pScene, srcnode->GetName());
+				FbxSubDiv* lSubDiv = FbxSubDiv::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lSubDiv);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -1279,7 +1287,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eCachedEffect:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -1287,7 +1295,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxCachedEffect* lCachedEffect = FbxCachedEffect::Create(pScene, srcnode->GetName());
+				FbxCachedEffect* lCachedEffect = FbxCachedEffect::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lCachedEffect);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -1300,7 +1308,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eLine:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
@@ -1308,7 +1316,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 
-				FbxLine* lLine = FbxLine::Create(pScene, srcnode->GetName());
+				FbxLine* lLine = FbxLine::Create(pScene, nodename);
 				psavenode->SetNodeAttribute(lLine);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -1324,13 +1332,13 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			case FbxNodeAttribute::eUnknown:
 			default:
 			{
-				psavenode = FbxNode::Create(pScene, srcnode->GetName());
+				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
 					return;
 				}
 
-				const char* dbgname = srcnode->GetName();
+				const char* dbgname = nodename;
 
 				psaveparentnode->AddChild(psavenode);
 
@@ -2244,7 +2252,8 @@ FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene,
 			return lNode;
 		}
 		FbxGeometryElement::EMappingMode loadMappingMode = lLoadMaterialElement->GetMappingMode();
-		lSaveMesh->InitMaterialIndices(loadMappingMode);
+		FbxGeometryElement::EReferenceMode loadReferenceMode = lLoadMaterialElement->GetReferenceMode();
+		lSaveMesh->InitMaterialIndices(loadMappingMode);//<---- 重要　下記コメント参照
 
 		//############################################################################################
 		//2024/01/22
@@ -2259,8 +2268,8 @@ FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene,
 			_ASSERT(0);
 			return lNode;
 		}
-		lSaveMaterialElement->SetMappingMode(lLoadMaterialElement->GetMappingMode());
-		lSaveMaterialElement->SetReferenceMode(lLoadMaterialElement->GetReferenceMode());
+		lSaveMaterialElement->SetMappingMode(loadMappingMode);
+		lSaveMaterialElement->SetReferenceMode(loadReferenceMode);
 
 		int materialindexnum = lLoadMaterialElement->GetIndexArray().GetCount();//materialindexnumはfacenumと同じ
 
@@ -2287,7 +2296,7 @@ FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene,
 			//int srcindex = lLoadMaterialElement->GetIndexArray().GetAt(matindex);//srcindexはmaterial番号
 			int srcindex = lLoadMaterialElement->GetIndexArray().GetAt(lookupIndex);
 			//lSaveMaterialElement->GetIndexArray().Add(srcindex);
-			FbxSurfaceMaterial* srcmaterial = srcnode->GetMaterial(srcindex);
+			//FbxSurfaceMaterial* srcmaterial = srcnode->GetMaterial(srcindex);
 			lSaveMaterialElement->GetIndexArray().SetAt(matindex, srcindex);
 
 		}
@@ -3652,6 +3661,7 @@ int WriteBindPose(FbxScene* pScene, CModel* pmodel, int bvhflag)
 
 	static int s_bvhanimcnt = 0;
 
+	s_firstbindnode = nullptr;
 
 	if (!pScene || !pmodel) {
 		_ASSERT(0);
@@ -3698,12 +3708,81 @@ int WriteBindPose(FbxScene* pScene, CModel* pmodel, int bvhflag)
 		//_ASSERT( 0 );
 	}
 
-	FbxPose* lPose = FbxPose::Create(pScene, "BindPose1");
-	lPose->SetIsBindPose(true);
+	FbxPose* lPose = FbxPose::Create(pScene, "bindPose1");
+	if (!lPose) {
+		_ASSERT(0);
+	}
+	else {
+		lPose->SetInitialName("bindPose1");
+		WriteBindPoseReq(pmodel, pScene->GetRootNode(), lPose);
+		lPose->SetIsBindPose(true);
+		pScene->AddPose(lPose);
 
-	WriteBindPoseReq(pmodel, pScene->GetRootNode(), lPose);
 
-	pScene->AddPose(lPose);
+		//bool isvalid = lPose->IsValidBindPose(s_firstbindnode);
+		bool isvalid = lPose->IsValidBindPose(pScene->GetRootNode());
+		if (isvalid == false) {
+			//FbxUserNotification userNotification;// = s_pSdkManager->GetUserNotification();
+			//bool isvalid2 = lPose->IsValidBindPoseVerbose(s_firstbindnode, &userNotification);
+
+			NodeList pMissingAncestors;
+			NodeList pMissingDeformers;
+			NodeList pMissingDeformersAncestors;
+			NodeList pWrongMatrices;
+			bool isvalid2 = lPose->IsValidBindPoseVerbose(
+				//s_firstbindnode,
+				pScene->GetRootNode(),
+				pMissingAncestors, pMissingDeformers, pMissingDeformersAncestors, pWrongMatrices);
+			if (isvalid2 == false) {
+				//_ASSERT(0);
+
+				int dbgsize1 = pMissingAncestors.Size();
+				int dbgno1;
+				for (dbgno1 = 0; dbgno1 < dbgsize1; dbgno1++) {
+					FbxNode* dbgnode = pMissingAncestors.GetAt(dbgno1);
+					if (dbgnode) {
+						char dbgname[256] = { 0 };
+						strcpy_s(dbgname, 256, dbgnode->GetName());
+						int dbgflag1 = 1;
+					}
+				}
+
+				int dbgsize2 = pMissingDeformers.Size();
+				int dbgno2;
+				for (dbgno2 = 0; dbgno2 < dbgsize2; dbgno2++) {
+					FbxNode* dbgnode = pMissingDeformers.GetAt(dbgno2);
+					if (dbgnode) {
+						char dbgname[256] = { 0 };
+						strcpy_s(dbgname, 256, dbgnode->GetName());
+						int dbgflag2 = 1;
+					}
+				}
+
+				int dbgsize3 = pMissingDeformersAncestors.Size();
+				int dbgno3;
+				for (dbgno3 = 0; dbgno3 < dbgsize3; dbgno3++) {
+					FbxNode* dbgnode = pMissingDeformersAncestors.GetAt(dbgno3);
+					if (dbgnode) {
+						char dbgname[256] = { 0 };
+						strcpy_s(dbgname, 256, dbgnode->GetName());
+						int dbgflag3 = 1;
+					}
+				}
+
+				int dbgsize4 = pWrongMatrices.Size();
+				int dbgno4;
+				for (dbgno4 = 0; dbgno4 < dbgsize4; dbgno4++) {
+					FbxNode* dbgnode = pWrongMatrices.GetAt(dbgno4);
+					if (dbgnode) {
+						char dbgname[256] = { 0 };
+						strcpy_s(dbgname, 256, dbgnode->GetName());
+						int dbgflag4 = 1;
+					}
+				}
+			}
+		}
+
+	}
 
 	return 0;
 }
@@ -3734,6 +3813,10 @@ void WriteBindPoseReq(CModel* pmodel, FbxNode* pNode, FbxPose* lPose)
 					lBindMatrix.SetIdentity();
 					CalcBindMatrix(pmodel, &fbxbone, lBindMatrix);
 					lPose->Add(pNode, lBindMatrix);
+
+					if (s_firstbindnode == nullptr) {
+						s_firstbindnode = pNode;
+					}
 				}
 			}
 			else {
@@ -3742,6 +3825,10 @@ void WriteBindPoseReq(CModel* pmodel, FbxNode* pNode, FbxPose* lPose)
 				lBindMatrix.SetIdentity();
 				CalcBindMatrix(pmodel, &fbxbone, lBindMatrix);
 				lPose->Add(pNode, lBindMatrix);
+
+				if (s_firstbindnode == nullptr) {
+					s_firstbindnode = pNode;
+				}
 			}
 		}
 

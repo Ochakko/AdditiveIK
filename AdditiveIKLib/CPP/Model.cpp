@@ -4559,82 +4559,106 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 
 	newobj->SetFace(PolygonNum);
 	newobj->SetFaceBuf(new CMQOFace[PolygonNum]);
-	for (int p = 0; p < PolygonNum; p++) {
-		int IndexNumInPolygon = pMesh->GetPolygonSize(p);  // p番目のポリゴンの頂点数
-		if ((IndexNumInPolygon != 3) && (IndexNumInPolygon != 4)) {
-			_ASSERT(0);
-			return 0;
-		}
 
-		CMQOFace* curface = newobj->GetFaceBuf() + p;
-		curface->SetPointNum(IndexNumInPolygon);
 
-		curface->SetFaceNo(p);
-		curface->SetBoneType(MIKOBONE_NONE);
+	//１メッシュに複数マテリアルが設定してある場合においても
+	//通常はマテリアル番号オブジェクト(FbxGeometryElementMaterial)は１つ
+	int materialnum = pMesh->GetElementMaterialCount();
+	int materialindex;
+	if (materialnum >= 2) {
+		int dbgflag1 = 1;
+	}
+	for (materialindex = 0; materialindex < materialnum; materialindex++) {
+		FbxGeometryElementMaterial* pPolygonMaterials = pMesh->GetElementMaterial(materialindex);
+		if (pPolygonMaterials != NULL) {
+			FbxGeometryElement::EMappingMode materialmappingMode = pPolygonMaterials->GetMappingMode();
 
-		int materialnum = pMesh->GetElementMaterialCount();
-		int materialindex;
-
-		if (materialnum >= 2) {
-			int dbgflag1 = 1;
-		}
-
-		for (materialindex = 0; materialindex < materialnum; materialindex++) {
-			const FbxLayerElementMaterial* pPolygonMaterials = NULL;
-			FbxGeometryElement::EMappingMode materialmappingMode = FbxGeometryElement::eAllSame;
-			pPolygonMaterials = pMesh->GetElementMaterial(materialindex);
-			if (pPolygonMaterials != NULL) {
-				materialmappingMode = pPolygonMaterials->GetMappingMode();
-			}
-
-			int lookupIndex = 0;
-			if (pPolygonMaterials) {
-				switch (materialmappingMode) {
-				case FbxGeometryElement::eByPolygon:
-					lookupIndex = p;//triangleNo.
-					break;
-				case FbxGeometryElement::eAllSame:
-					lookupIndex = 0;
-					break;
-				default:
-					lookupIndex = 0;
-					//lookupIndex = p;
-					break;
+			for (int p = 0; p < PolygonNum; p++) {
+				int IndexNumInPolygon = pMesh->GetPolygonSize(p);  // p番目のポリゴンの頂点数
+				if ((IndexNumInPolygon != 3) && (IndexNumInPolygon != 4)) {
+					_ASSERT(0);
+					return 0;
 				}
 
-				int materialIndex = pPolygonMaterials->mIndexArray->GetAt(lookupIndex);//Mesh単位のマテリアルへのインデックス
-				FbxSurfaceMaterial* material = pNode->GetMaterial(materialIndex);
-				if (material != 0) {
-					char materialname[256] = { 0 };
-					strcpy_s(materialname, 256, material->GetName());
-					CMQOMaterial* currentmaterial = GetMQOMaterialByName(materialname);//既に存在するかどうかチェック
-					if (!currentmaterial) {
-						_ASSERT(0);
+				CMQOFace* curface = newobj->GetFaceBuf() + p;
+				curface->SetPointNum(IndexNumInPolygon);
+
+				curface->SetFaceNo(p);
+				curface->SetBoneType(MIKOBONE_NONE);
+
+				int lookupIndex = 0;
+				if (pPolygonMaterials) {
+					switch (materialmappingMode) {
+					case FbxGeometryElement::eByPolygon:
+						lookupIndex = p;//triangleNo.
+						break;
+					case FbxGeometryElement::eAllSame:
 						lookupIndex = 0;
-						curface->SetMaterialNo(0);
+						break;
+					default:
+						lookupIndex = 0;
+						//lookupIndex = p;
+						break;
 					}
-					else {
-						int curmaterialno = currentmaterial->GetMaterialNo();
-						curface->SetMaterialNo(curmaterialno);
+
+					int materialIndex = pPolygonMaterials->mIndexArray->GetAt(lookupIndex);//Mesh単位のマテリアルへのインデックス
+					FbxSurfaceMaterial* material = pNode->GetMaterial(materialIndex);
+					if (material != 0) {
+						char materialname[256] = { 0 };
+						strcpy_s(materialname, 256, material->GetName());
+						CMQOMaterial* currentmaterial = GetMQOMaterialByName(materialname);//既に存在するかどうかチェック
+						if (!currentmaterial) {
+							_ASSERT(0);
+							lookupIndex = 0;
+							curface->SetMaterialNo(0);
+						}
+						else {
+							int curmaterialno = currentmaterial->GetMaterialNo();
+							curface->SetMaterialNo(curmaterialno);
+						}
 					}
+					//else {
+					//	_ASSERT(0);
+					//	lookupIndex = 0;
+					//	curface->SetMaterialNo(0);
+					//}
 				}
-				//else {
-				//	_ASSERT(0);
-				//	lookupIndex = 0;
-				//	curface->SetMaterialNo(0);
-				//}
-			}
-			else {
-				lookupIndex = 0;
-				curface->SetMaterialNo(0);
+				else {
+					lookupIndex = 0;
+					curface->SetMaterialNo(0);
+				}
+				for (int n = 0; n < IndexNumInPolygon; n++) {
+					// ポリゴンpを構成するn番目の頂点のインデックス番号
+					int IndexNumber = pMesh->GetPolygonVertex(p, n);
+					curface->SetIndex(n, IndexNumber);
+				}
 			}
 		}
-		
+		else {	
+			//マテリアル番号情報が無い場合
+			_ASSERT(0);
 
-		for (int n = 0; n < IndexNumInPolygon; n++) {
-			// ポリゴンpを構成するn番目の頂点のインデックス番号
-			int IndexNumber = pMesh->GetPolygonVertex(p, n);
-			curface->SetIndex(n, IndexNumber);
+			for (int p = 0; p < PolygonNum; p++) {
+				int IndexNumInPolygon = pMesh->GetPolygonSize(p);  // p番目のポリゴンの頂点数
+				if ((IndexNumInPolygon != 3) && (IndexNumInPolygon != 4)) {
+					_ASSERT(0);
+					return 0;
+				}
+
+				CMQOFace* curface = newobj->GetFaceBuf() + p;
+				curface->SetPointNum(IndexNumInPolygon);
+
+				curface->SetFaceNo(p);
+				curface->SetBoneType(MIKOBONE_NONE);
+
+				curface->SetMaterialNo(0);//!!!!!!!!!!!!!!!!!!
+
+				for (int n = 0; n < IndexNumInPolygon; n++) {
+					// ポリゴンpを構成するn番目の頂点のインデックス番号
+					int IndexNumber = pMesh->GetPolygonVertex(p, n);
+					curface->SetIndex(n, IndexNumber);
+				}
+			}
 		}
 	}
 	
