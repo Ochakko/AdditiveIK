@@ -4,12 +4,9 @@
   <DispGroup>
     <GroupNo>1</GroupNo>
     <GroupON>1</GroupON>
-    <NodeName>RootNode</NodeName>
-    <NodeName>boy_sporty_1</NodeName>
     <NodeName>Face</NodeName>
     <NodeName>Body</NodeName>
     <NodeName>Hair</NodeName>
-    <NodeName>secondary</NodeName>
   </DispGroup>
   <DispGroup>
     <GroupNo>2</GroupNo>

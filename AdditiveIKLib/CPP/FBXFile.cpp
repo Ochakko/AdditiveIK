@@ -173,7 +173,7 @@ static int CreateFbxMaterialFromMQOMaterial(FbxManager* pSdkManager, FbxScene* p
 
 
 static int WriteBindPose(FbxScene* pScene, CModel* pmodel, int bvhflag = 0);
-static void WriteBindPoseReq(CModel* pmodel, FbxNode* pNode, FbxPose* lPose);
+static void WriteBindPoseReq(CModel* pmodel, FbxNode* pNode, FbxPose* srcbindpose, FbxPose* lPose);
 
 
 static void FindHipsFbxBoneReq(CFBXBone* srcfbxbone, CFBXBone** ppfindfbxbone);
@@ -366,6 +366,7 @@ bool SaveScene(FbxManager* pSdkManager, FbxDocument* pScene, const char* pFilena
 	//lExporter->SetFileExportVersion(FbxString("FBX201300"),
 	//	FbxSceneRenamer::eNone
 	//);
+
 
 	FbxManager::GetFileFormatVersion(lMajor, lMinor, lRevision);
 	printf("FBX version number for this version of the FBX SDK is %d.%d.%d\n\n", lMajor, lMinor, lRevision);
@@ -3668,6 +3669,14 @@ int WriteBindPose(FbxScene* pScene, CModel* pmodel, int bvhflag)
 		return 1;
 	}
 
+	//2024/01/24
+	FbxPose* srcbindpose = pmodel->GetBindPose();
+	if (!srcbindpose) {
+		return 0;
+	}
+	
+
+
 	if( s_firstoutmot >= 0 ){
 		FbxAnimStack * lCurrentAnimationStack;
 		//lCurrentAnimationStack = pScene->GetMember(FBX_TYPE(FbxAnimStack), s_ai->motid);
@@ -3708,14 +3717,15 @@ int WriteBindPose(FbxScene* pScene, CModel* pmodel, int bvhflag)
 		//_ASSERT( 0 );
 	}
 
+
 	FbxPose* lPose = FbxPose::Create(pScene, "bindPose1");
 	if (!lPose) {
 		_ASSERT(0);
 	}
 	else {
 		lPose->SetInitialName("bindPose1");
-		WriteBindPoseReq(pmodel, pScene->GetRootNode(), lPose);
 		lPose->SetIsBindPose(true);
+		WriteBindPoseReq(pmodel, pScene->GetRootNode(), srcbindpose, lPose);
 		pScene->AddPose(lPose);
 
 
@@ -3787,12 +3797,18 @@ int WriteBindPose(FbxScene* pScene, CModel* pmodel, int bvhflag)
 	return 0;
 }
 
-void WriteBindPoseReq(CModel* pmodel, FbxNode* pNode, FbxPose* lPose)
+void WriteBindPoseReq(CModel* pmodel, FbxNode* pNode, FbxPose* srcbindpose, FbxPose* lPose)
 {
-	if (!pNode || !lPose || !pmodel) {
+	if (!pNode || !lPose || !pmodel || !srcbindpose) {
 		_ASSERT(0);
 		return;
 	}
+	
+	//char nodename[256] = { 0 };
+	//strcpy_s(nodename, 256, pNode->GetName());
+	//if (strcmp(nodename, "Root") == 0) {
+	//	pNode->SetName("FirstJoint");
+	//}
 
 	map<FbxNode*, CBone*>::iterator itrbone;
 	itrbone = s_savenode2bone.find(pNode);
@@ -3801,45 +3817,111 @@ void WriteBindPoseReq(CModel* pmodel, FbxNode* pNode, FbxPose* lPose)
 		fbxbone.SetSkelNode(pNode);
 		CBone* curbone = itrbone->second;
 		fbxbone.SetBone(curbone);//curbone == 0のときも処理する
-	
-		if (curbone && (curbone->GetDefBonePosKind() == DEFBONEPOS_FROMBP)) {//2023/06/06 読み込み時にbindposeが在ったボーンに対してだけbindposeを書き込む
-			FbxNodeAttribute* pAttrib = pNode->GetNodeAttribute();
-			if (pAttrib) {
-				FbxNodeAttribute::EType type = (FbxNodeAttribute::EType)(pAttrib->GetAttributeType());
 
-				//eSkeleton || eNull || eCamera   //2023/06/02
-				if ((type == FbxNodeAttribute::eSkeleton) || (type == FbxNodeAttribute::eNull) || (type == FbxNodeAttribute::eCamera)) {
-					FbxAMatrix lBindMatrix;
-					lBindMatrix.SetIdentity();
-					CalcBindMatrix(pmodel, &fbxbone, lBindMatrix);
-					lPose->Add(pNode, lBindMatrix);
+		FbxMatrix findmatrix;
+		findmatrix.SetIdentity();
+		bool findflag = false;
+		bool islocalmatrix = false;
 
-					if (s_firstbindnode == nullptr) {
-						s_firstbindnode = pNode;
+		if (curbone) {
+			char bonename[256] = { 0 };
+			strcpy_s(bonename, 256, curbone->GetBoneName());
+		
+			int entrynum = srcbindpose->GetCount();
+			int entryno;
+			for (entryno = 0; entryno < entrynum; entryno++) {
+				FbxNode* entrynode = srcbindpose->GetNode(entryno);
+				if (entrynode) {
+					char entryname[256] = { 0 };
+					strcpy_s(entryname, 256, entrynode->GetName());
+					if (strcmp(bonename, entryname) == 0) {
+						findmatrix = srcbindpose->GetMatrix(entryno);
+						islocalmatrix = srcbindpose->IsLocalMatrix(entryno);
+						findflag = true;
+						break;
 					}
 				}
 			}
+		
+			if (findflag) {
+				lPose->Add(pNode, findmatrix, islocalmatrix);
+			}
 			else {
-				//eNullのときにも処理をする
-				FbxAMatrix lBindMatrix;
-				lBindMatrix.SetIdentity();
-				CalcBindMatrix(pmodel, &fbxbone, lBindMatrix);
-				lPose->Add(pNode, lBindMatrix);
+				//2024/01/24
+				//Maya2024.3でバインドポーズの警告が出てモーションがめちゃくちゃになる不具合は
+				//全部のノードに対してバインドポーズを設定することで解決した
+				//ver1.0.0.5よりも古いAdditiveIKで保存したfbxファイルは
+				//ver1.0.0.5以降で読み込んで保存し直すだけでMaya2024.3で正常に再生可能
 
-				if (s_firstbindnode == nullptr) {
-					s_firstbindnode = pNode;
-				}
+				int dbgflag1 = 1;
+				lPose->Add(pNode, findmatrix, islocalmatrix);
 			}
 		}
+		else {
+			//2024/01/24
+			//Maya2024.3でバインドポーズの警告が出てモーションがめちゃくちゃになる不具合は
+			//全部のノードに対してバインドポーズを設定することで解決した
+			//ver1.0.0.5よりも古いAdditiveIKで保存したfbxファイルは
+			//ver1.0.0.5以降で読み込んで保存し直すだけでMaya2024.3で正常に再生可能
+
+			int dbgflag2 = 1;
+			lPose->Add(pNode, findmatrix, islocalmatrix);
+		}
+
+		//if (curbone && (curbone->GetDefBonePosKind() == DEFBONEPOS_FROMBP)) {//2023/06/06 読み込み時にbindposeが在ったボーンに対してだけbindposeを書き込む
+		//	FbxNodeAttribute* pAttrib = pNode->GetNodeAttribute();
+		//	if (pAttrib) {
+		//		FbxNodeAttribute::EType type = (FbxNodeAttribute::EType)(pAttrib->GetAttributeType());
+		//
+		//		//eSkeleton || eNull || eCamera   //2023/06/02
+		//		if ((type == FbxNodeAttribute::eSkeleton) || (type == FbxNodeAttribute::eNull) || (type == FbxNodeAttribute::eCamera)) {
+		//			FbxAMatrix lBindMatrix;
+		//			lBindMatrix.SetIdentity();
+		//			CalcBindMatrix(pmodel, &fbxbone, lBindMatrix);
+		//			lPose->Add(pNode, lBindMatrix);
+		//
+		//			if (s_firstbindnode == nullptr) {
+		//				s_firstbindnode = pNode;
+		//			}
+		//		}
+		//	}
+		//	else {
+		//		//eNullのときにも処理をする
+		//		FbxAMatrix lBindMatrix;
+		//		lBindMatrix.SetIdentity();
+		//		CalcBindMatrix(pmodel, &fbxbone, lBindMatrix);
+		//		lPose->Add(pNode, lBindMatrix);
+		//
+		//		if (s_firstbindnode == nullptr) {
+		//			s_firstbindnode = pNode;
+		//		}
+		//	}
+		//}
 
 	}
+	else {
+		//2024/01/24
+		//Maya2024.3でバインドポーズの警告が出てモーションがめちゃくちゃになる不具合は
+		//全部のノードに対してバインドポーズを設定することで解決した
+		//ver1.0.0.5よりも古いAdditiveIKで保存したfbxファイルは
+		//ver1.0.0.5以降で読み込んで保存し直すだけでMaya2024.3で正常に再生可能
+
+		FbxMatrix findmatrix;
+		findmatrix.SetIdentity();
+		bool findflag = false;
+		bool islocalmatrix = false;
+
+		int dbgflag3 = 1;
+		lPose->Add(pNode, findmatrix, islocalmatrix);
+	}
+
 
 	int childNodeNum;
 	childNodeNum = pNode->GetChildCount();
 	for (int i = 0; i < childNodeNum; i++)
 	{
 		FbxNode* pChild = pNode->GetChild(i);  // 子ノードを取得
-		WriteBindPoseReq(pmodel, pChild, lPose);
+		WriteBindPoseReq(pmodel, pChild, srcbindpose, lPose);
 	}
 
 }

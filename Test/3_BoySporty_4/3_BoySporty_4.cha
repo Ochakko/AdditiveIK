@@ -1,14 +1,22 @@
 <?xml version="1.0" encoding="Shift_JIS"?>
 <CHA>
   <FileInfo>
-    <kind>ChatCats3D_ProjectFile</kind>
-    <version>1004</version>
+    <kind>AdditiveIK_ProjectFile</kind>
+    <version>1005</version>
     <type>0</type>
   </FileInfo>
   <ProjectInfo>
     <CharaNum>2</CharaNum>
   </ProjectInfo>
   <GcoFile>3_BoySporty_4.gco</GcoFile>
+  <ProjFov>45.000</ProjFov>
+  <ProjNear>1.429</ProjNear>
+  <ProjFar>42880.895</ProjFar>
+  <2L_LOD0>0.05</2L_LOD0>
+  <2L_LOD1>1.00</2L_LOD1>
+  <3L_LOD0>0.05</3L_LOD0>
+  <3L_LOD1>0.15</3L_LOD1>
+  <3L_LOD2>1.00</3L_LOD2>
   <Chara>
     <ModelFolder>boy_sporty_1_0</ModelFolder>
     <ModelFile>boy_sporty_1.fbx</ModelFile>

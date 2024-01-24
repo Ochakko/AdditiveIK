@@ -4,11 +4,8 @@
   <DispGroup>
     <GroupNo>1</GroupNo>
     <GroupON>1</GroupON>
-    <NodeName>RootNode</NodeName>
-    <NodeName>Autumn_1_01</NodeName>
     <NodeName>Face</NodeName>
     <NodeName>Hair</NodeName>
-    <NodeName>secondary</NodeName>
   </DispGroup>
   <DispGroup>
     <GroupNo>2</GroupNo>

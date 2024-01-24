@@ -1194,7 +1194,7 @@ private:
 	int DbgDumpBoneReq(int level, CBone* boneptr, int broflag);
 	void DumpBtObjectReq(CBtObject* srcbto, int srcdepth);
 	void DumpBtConstraintReq(CBtObject* srcbto, int srcdepth);
-	FbxPose* GetBindPose();
+	FbxPose* FindBindPose();
 
 	void CreatePhysicsPosConstraintReq(CBone* srcbone, int forceflag = 0);
 	void DestroyPhysicsPosConstraintReq(CBone* srcbone, int forceflag = 0);
@@ -2449,6 +2449,15 @@ public: //accesser
 		return m_instancingparams;
 	}
 
+	void SetBindPose(FbxPose* srcpose)
+	{
+		m_bindpose = srcpose;
+	}
+	FbxPose* GetBindPose()
+	{
+		return m_bindpose;
+	}
+
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];
@@ -2537,6 +2546,7 @@ private:
 
 	FbxScene* m_pscene;//FBX SDKのシーンへのポインタ。CModel内でアロケート。
 	FbxArray<FbxString*> mAnimStackNameArray;//アニメーション名を保存するFBX形式のデータ。
+	FbxPose* m_bindpose;
 
 	btDynamicsWorld* m_btWorld;//bulletのシミュレーション用オブジェクトへのポインタ。
 	int m_btcnt;//bulletのシミュレーションをしたフレーム数を記録する。初回のシミュレーション時に異なる処理をするために必要である。

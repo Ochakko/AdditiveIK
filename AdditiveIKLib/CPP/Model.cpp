@@ -643,6 +643,7 @@ int CModel::InitParams()
 	m_withStrJoint = 0;
 	m_withoutStrJoint = 0;
 
+	m_bindpose = nullptr;
 
 	return 0;
 }
@@ -5896,7 +5897,7 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 			//FbxPose* pPose = pScene->GetPose( 10 );
 
 	//!!!!!!!!!!!!!!!!!!!!!		
-			//FbxPose* pPose = GetBindPose();
+			//FbxPose* pPose = FindBindPose();
 			FbxPose* pPose = NULL;
 
 
@@ -7573,7 +7574,7 @@ void CModel::RenderBoneCircleReq(RenderContext* pRenderContext, CBtObject* srcbt
 //
 //}
 
-FbxPose* CModel::GetBindPose()
+FbxPose* CModel::FindBindPose()
 {
 	//###################################################################################
 	//商用のfbxにはbindposeを取得できないものがあるが、そういうfbxには手を出さない方針で
@@ -7599,6 +7600,14 @@ FbxPose* CModel::GetBindPose()
 	if (!m_pscene) {
 		return 0;
 	}
+
+	int posecount = m_pscene->GetPoseCount();
+	if (posecount != 1) {
+		int dbgflag1 = 1;
+	}
+
+
+
 	FbxPose* bindpose = 0;
 	FbxPose* lastpose = 0;
 	int lastpindex = 0;
@@ -7658,7 +7667,8 @@ int CModel::SetDefaultBonePos(FbxScene* pScene)
 	//SetRotationActiveToBone();//SetFbxDefaultBonePosReq()よりも前で呼ぶ
 
 
-	FbxPose* bindpose = GetBindPose();
+	FbxPose* bindpose = FindBindPose();
+	SetBindPose(bindpose);
 
 
 	FbxTime pTime;
