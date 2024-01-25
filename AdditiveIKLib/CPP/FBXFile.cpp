@@ -3804,12 +3804,6 @@ void WriteBindPoseReq(CModel* pmodel, FbxNode* pNode, FbxPose* srcbindpose, FbxP
 		return;
 	}
 	
-	//char nodename[256] = { 0 };
-	//strcpy_s(nodename, 256, pNode->GetName());
-	//if (strcmp(nodename, "Root") == 0) {
-	//	pNode->SetName("FirstJoint");
-	//}
-
 	map<FbxNode*, CBone*>::iterator itrbone;
 	itrbone = s_savenode2bone.find(pNode);
 	if (itrbone != s_savenode2bone.end()) {
@@ -3818,85 +3812,23 @@ void WriteBindPoseReq(CModel* pmodel, FbxNode* pNode, FbxPose* srcbindpose, FbxP
 		CBone* curbone = itrbone->second;
 		fbxbone.SetBone(curbone);//curbone == 0のときも処理する
 
-		FbxMatrix findmatrix;
-		findmatrix.SetIdentity();
-		bool findflag = false;
-		bool islocalmatrix = false;
-
 		if (curbone) {
-			char bonename[256] = { 0 };
-			strcpy_s(bonename, 256, curbone->GetBoneName());
-		
-			int entrynum = srcbindpose->GetCount();
-			int entryno;
-			for (entryno = 0; entryno < entrynum; entryno++) {
-				FbxNode* entrynode = srcbindpose->GetNode(entryno);
-				if (entrynode) {
-					char entryname[256] = { 0 };
-					strcpy_s(entryname, 256, entrynode->GetName());
-					if (strcmp(bonename, entryname) == 0) {
-						findmatrix = srcbindpose->GetMatrix(entryno);
-						islocalmatrix = srcbindpose->IsLocalMatrix(entryno);
-						findflag = true;
-						break;
-					}
-				}
-			}
-		
-			if (findflag) {
-				lPose->Add(pNode, findmatrix, islocalmatrix);
-			}
-			else {
-				//2024/01/24
-				//Maya2024.3でバインドポーズの警告が出てモーションがめちゃくちゃになる不具合は
-				//全部のノードに対してバインドポーズを設定することで解決した
-				//ver1.0.0.5よりも古いAdditiveIKで保存したfbxファイルは
-				//ver1.0.0.5以降で読み込んで保存し直すだけでMaya2024.3で正常に再生可能
-
-				int dbgflag1 = 1;
-				lPose->Add(pNode, findmatrix, islocalmatrix);
-			}
+			FbxAMatrix lBindMatrix;
+			lBindMatrix.SetIdentity();
+			bool islocalmatrix = false;//!!!!!!
+			lBindMatrix = curbone->GetGlobalPosMat();
+			lPose->Add(pNode, lBindMatrix, islocalmatrix);//global
 		}
 		else {
-			//2024/01/24
-			//Maya2024.3でバインドポーズの警告が出てモーションがめちゃくちゃになる不具合は
-			//全部のノードに対してバインドポーズを設定することで解決した
-			//ver1.0.0.5よりも古いAdditiveIKで保存したfbxファイルは
-			//ver1.0.0.5以降で読み込んで保存し直すだけでMaya2024.3で正常に再生可能
-
-			int dbgflag2 = 1;
-			lPose->Add(pNode, findmatrix, islocalmatrix);
+			FbxMatrix lBindMatrix;
+			lBindMatrix.SetIdentity();
+			bool islocalmatrix = false;//!!!!!!
+			//2024/01/26 シーン全体の移動が設定されている場合があるのでIdentityではなくEvalGlobal
+			FbxTime fbxtime;
+			fbxtime.SetSecondDouble(0.0);
+			lBindMatrix = pNode->EvaluateGlobalTransform(fbxtime, FbxNode::eSourcePivot, true, true);
+			lPose->Add(pNode, lBindMatrix, islocalmatrix);//global
 		}
-
-		//if (curbone && (curbone->GetDefBonePosKind() == DEFBONEPOS_FROMBP)) {//2023/06/06 読み込み時にbindposeが在ったボーンに対してだけbindposeを書き込む
-		//	FbxNodeAttribute* pAttrib = pNode->GetNodeAttribute();
-		//	if (pAttrib) {
-		//		FbxNodeAttribute::EType type = (FbxNodeAttribute::EType)(pAttrib->GetAttributeType());
-		//
-		//		//eSkeleton || eNull || eCamera   //2023/06/02
-		//		if ((type == FbxNodeAttribute::eSkeleton) || (type == FbxNodeAttribute::eNull) || (type == FbxNodeAttribute::eCamera)) {
-		//			FbxAMatrix lBindMatrix;
-		//			lBindMatrix.SetIdentity();
-		//			CalcBindMatrix(pmodel, &fbxbone, lBindMatrix);
-		//			lPose->Add(pNode, lBindMatrix);
-		//
-		//			if (s_firstbindnode == nullptr) {
-		//				s_firstbindnode = pNode;
-		//			}
-		//		}
-		//	}
-		//	else {
-		//		//eNullのときにも処理をする
-		//		FbxAMatrix lBindMatrix;
-		//		lBindMatrix.SetIdentity();
-		//		CalcBindMatrix(pmodel, &fbxbone, lBindMatrix);
-		//		lPose->Add(pNode, lBindMatrix);
-		//
-		//		if (s_firstbindnode == nullptr) {
-		//			s_firstbindnode = pNode;
-		//		}
-		//	}
-		//}
 
 	}
 	else {
@@ -3906,13 +3838,14 @@ void WriteBindPoseReq(CModel* pmodel, FbxNode* pNode, FbxPose* srcbindpose, FbxP
 		//ver1.0.0.5よりも古いAdditiveIKで保存したfbxファイルは
 		//ver1.0.0.5以降で読み込んで保存し直すだけでMaya2024.3で正常に再生可能
 
-		FbxMatrix findmatrix;
-		findmatrix.SetIdentity();
-		bool findflag = false;
-		bool islocalmatrix = false;
-
-		int dbgflag3 = 1;
-		lPose->Add(pNode, findmatrix, islocalmatrix);
+		FbxMatrix lBindMatrix;
+		lBindMatrix.SetIdentity();
+		bool islocalmatrix = false;//!!!!!!
+		//2024/01/26 シーン全体の移動が設定されている場合があるのでIdentityではなくEvalGlobal
+		FbxTime fbxtime;
+		fbxtime.SetSecondDouble(0.0);
+		lBindMatrix = pNode->EvaluateGlobalTransform(fbxtime, FbxNode::eSourcePivot, true, true);
+		lPose->Add(pNode, lBindMatrix, islocalmatrix);//global
 	}
 
 
@@ -5743,63 +5676,86 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 		//####################
 		if (((pmodel->GetFromBvhFlag() == false) || ((pmodel->GetFromBvhFlag() == true) && (oldbvh == false))) &&
 			pmodel->GetHasBindPose()) {//Poseがある場合でもBindPoseでない場合は除外する
-			//if (bvhflag == 0) {
-			if (pNode) {
-				if (pPose) {
-					int lNodeIndex = pPose->Find(pNode);
-					if (lNodeIndex > -1)
+			if (pPose) {
+				int lNodeIndex = pPose->Find(pNode);
+				if (lNodeIndex > -1)
+				{
+					// The bind pose is always a global matrix.
+					// If we have a rest pose, we need to check if it is
+					// stored in global or local space.
+					//if (pPose->IsBindPose() || !pPose->IsLocalMatrix(lNodeIndex))
+					if (!pPose->IsLocalMatrix(lNodeIndex))//2024/01/25
 					{
-						// The bind pose is always a global matrix.
-						// If we have a rest pose, we need to check if it is
-						// stored in global or local space.
-						if (pPose->IsBindPose() || !pPose->IsLocalMatrix(lNodeIndex))
-						{
-							lGlobalPosition = FbxGetPoseMatrix(pPose, lNodeIndex);
-						}
-						else
-						{
-							// We have a local matrix, we need to convert it to
-							// a global space matrix.
-							FbxAMatrix lParentGlobalPosition;
-
-							////if (pParentGlobalPosition)
-							//if (curbone->GetParent(false) && ParentGlobalPosition)
-							//{
-							//	lParentGlobalPosition = *ParentGlobalPosition;
-							//}
-							//else
-							//{
-							//	if (pNode->GetParent())
-							//	{
-							//		//time == 0.0だけのキャッシュ無し先行計算
-							//		bool usecache = false;
-							//		int dummyframe = 0;
-							//		lParentGlobalPosition = FbxGetGlobalPosition(usecache, pmodel, pNode->GetScene(), pNode->GetParent(), pTime, dummyframe, pPose);
-							//	}
-							//	//lParentGlobalPosition.SetIdentity();
-							//}
-
-
-							//2023/05/15
-							if (ParentGlobalPosition) {
-								lParentGlobalPosition = *ParentGlobalPosition;
-							}
-							else {
-								if (pNode->GetParent()) {
-									lParentGlobalPosition = pNode->GetParent()->EvaluateGlobalTransform(pTime, FbxNode::eSourcePivot, true, true);
-								}
-								else {
-									lParentGlobalPosition.SetIdentity();
-								}
-							}
-
-							FbxAMatrix lLocalPosition = FbxGetPoseMatrix(pPose, lNodeIndex);
-							lGlobalPosition = lParentGlobalPosition * lLocalPosition;
-						}
-
+						lGlobalPosition = FbxGetPoseMatrix(pPose, lNodeIndex);
 						lPositionFound = true;
 					}
+					//else
+					//{
+					//	// We have a local matrix, we need to convert it to
+					//	// a global space matrix.
+					//	FbxAMatrix lParentGlobalPosition;
+
+					//	////if (pParentGlobalPosition)
+					//	//if (curbone->GetParent(false) && ParentGlobalPosition)
+					//	//{
+					//	//	lParentGlobalPosition = *ParentGlobalPosition;
+					//	//}
+					//	//else
+					//	//{
+					//	//	if (pNode->GetParent())
+					//	//	{
+					//	//		//time == 0.0だけのキャッシュ無し先行計算
+					//	//		bool usecache = false;
+					//	//		int dummyframe = 0;
+					//	//		lParentGlobalPosition = FbxGetGlobalPosition(usecache, pmodel, pNode->GetScene(), pNode->GetParent(), pTime, dummyframe, pPose);
+					//	//	}
+					//	//	//lParentGlobalPosition.SetIdentity();
+					//	//}
+
+
+					//	//2023/05/15
+					//	if (ParentGlobalPosition) {
+					//		lParentGlobalPosition = *ParentGlobalPosition;
+					//	}
+					//	else {
+					//		//if (pNode->GetParent()) {
+					//		//	lParentGlobalPosition = pNode->GetParent()->EvaluateGlobalTransform(pTime, FbxNode::eSourcePivot, true, true);
+					//		//}
+					//		//else {
+					//			lParentGlobalPosition.SetIdentity();
+					//		//}
+					//	}
+
+					//	//FbxAMatrix lLocalPosition = FbxGetPoseMatrix(pPose, lNodeIndex);
+					//	//lGlobalPosition = lParentGlobalPosition * lLocalPosition;
+
+
+					//	lGlobalPosition = FbxGetPoseMatrix(pPose, lNodeIndex);
+					//}
+
+					//lPositionFound = true;
 				}
+				//else {
+				//	FbxAMatrix lParentGlobalPosition;
+
+				//	if (ParentGlobalPosition) {
+				//		lParentGlobalPosition = *ParentGlobalPosition;
+				//	}
+				//	else {
+				//		//if (pNode->GetParent()) {
+				//		//	lParentGlobalPosition = pNode->GetParent()->EvaluateGlobalTransform(pTime, FbxNode::eSourcePivot, true, true);
+				//		//}
+				//		//else {
+				//			lParentGlobalPosition.SetIdentity();
+				//		//}
+				//	}
+
+				//	//FbxAMatrix lLocalPosition = FbxGetPoseMatrix(pPose, lNodeIndex);
+				//	//lGlobalPosition = lParentGlobalPosition * lLocalPosition;
+				//	lGlobalPosition = lParentGlobalPosition;//2024/01/25
+
+				//	lPositionFound = true;
+				//}
 			}
 		}
 

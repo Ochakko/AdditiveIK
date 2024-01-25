@@ -3,8 +3,9 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
-2024/01/23
-　AdditiveIK 1.0.0.5 RC2(リリース候補2)
+
+2024/01/26
+　AdditiveIK 1.0.0.5 RC3(リリース候補3)
 　　1.0.0.4からの変更点
 　　　不具合修正
 　　　　１メッシュに複数マテリアルが設定してあるfbxの書き出しに関する不具合修正.
