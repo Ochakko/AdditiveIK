@@ -536,10 +536,10 @@
     <RigRigName>!noname!</RigRigName>
     <RigRigNo>-1</RigRigNo>
       <BoneName>J_Bip_L_Thumb3</BoneName>
-      <AxisU>CurrentY</AxisU>
+      <AxisU>NodeY</AxisU>
       <RateU>-0.100000</RateU>
       <EnableU>1</EnableU>
-      <AxisV>CurrentY</AxisV>
+      <AxisV>NodeY</AxisV>
       <RateV>-0.100000</RateV>
       <EnableV>1</EnableV>
     </RigElem>
@@ -547,10 +547,10 @@
     <RigRigName>!noname!</RigRigName>
     <RigRigNo>-1</RigRigNo>
       <BoneName>J_Bip_L_Thumb2</BoneName>
-      <AxisU>CurrentY</AxisU>
+      <AxisU>NodeY</AxisU>
       <RateU>-0.850000</RateU>
       <EnableU>1</EnableU>
-      <AxisV>CurrentY</AxisV>
+      <AxisV>NodeY</AxisV>
       <RateV>-0.850000</RateV>
       <EnableV>1</EnableV>
     </RigElem>
@@ -952,22 +952,22 @@
     <RigRigName>!noname!</RigRigName>
     <RigRigNo>-1</RigRigNo>
       <BoneName>J_Bip_R_Thumb3</BoneName>
-      <AxisU>CurrentY</AxisU>
-      <RateU>0.100000</RateU>
+      <AxisU>NodeY</AxisU>
+      <RateU>-0.100000</RateU>
       <EnableU>1</EnableU>
-      <AxisV>CurrentY</AxisV>
-      <RateV>0.100000</RateV>
+      <AxisV>NodeY</AxisV>
+      <RateV>-0.100000</RateV>
       <EnableV>1</EnableV>
     </RigElem>
     <RigElem>
     <RigRigName>!noname!</RigRigName>
     <RigRigNo>-1</RigRigNo>
       <BoneName>J_Bip_R_Thumb2</BoneName>
-      <AxisU>CurrentY</AxisU>
-      <RateU>0.850000</RateU>
+      <AxisU>NodeY</AxisU>
+      <RateU>-0.850000</RateU>
       <EnableU>1</EnableU>
-      <AxisV>CurrentY</AxisV>
-      <RateV>0.850000</RateV>
+      <AxisV>NodeY</AxisV>
+      <RateV>-0.850000</RateV>
       <EnableV>1</EnableV>
     </RigElem>
   </Bone>

@@ -9,7 +9,7 @@
     <DispAxis>0</DispAxis>
     <DispOrder>0</DispOrder>
     <DispPosInverse>0</DispPosInverse>
-    <ShapeMult>12</ShapeMult>
+    <ShapeMult>9</ShapeMult>
     <ShapeKind>1</ShapeKind>
     <RigColor>0</RigColor>
     <RigElem>
@@ -32,7 +32,7 @@
     <DispAxis>0</DispAxis>
     <DispOrder>8</DispOrder>
     <DispPosInverse>1</DispPosInverse>
-    <ShapeMult>12</ShapeMult>
+    <ShapeMult>9</ShapeMult>
     <ShapeKind>1</ShapeKind>
     <RigColor>1</RigColor>
     <RigElem>
@@ -55,7 +55,7 @@
     <DispAxis>0</DispAxis>
     <DispOrder>16</DispOrder>
     <DispPosInverse>1</DispPosInverse>
-    <ShapeMult>12</ShapeMult>
+    <ShapeMult>9</ShapeMult>
     <ShapeKind>1</ShapeKind>
     <RigColor>2</RigColor>
     <RigElem>
@@ -78,7 +78,7 @@
     <DispAxis>0</DispAxis>
     <DispOrder>0</DispOrder>
     <DispPosInverse>0</DispPosInverse>
-    <ShapeMult>7</ShapeMult>
+    <ShapeMult>4</ShapeMult>
     <ShapeKind>1</ShapeKind>
     <RigColor>0</RigColor>
     <RigElem>
@@ -101,7 +101,7 @@
     <DispAxis>0</DispAxis>
     <DispOrder>6</DispOrder>
     <DispPosInverse>1</DispPosInverse>
-    <ShapeMult>7</ShapeMult>
+    <ShapeMult>4</ShapeMult>
     <ShapeKind>1</ShapeKind>
     <RigColor>1</RigColor>
     <RigElem>
@@ -124,7 +124,7 @@
     <DispAxis>0</DispAxis>
     <DispOrder>12</DispOrder>
     <DispPosInverse>1</DispPosInverse>
-    <ShapeMult>6</ShapeMult>
+    <ShapeMult>4</ShapeMult>
     <ShapeKind>1</ShapeKind>
     <RigColor>2</RigColor>
     <RigElem>
@@ -313,10 +313,10 @@
       <BoneName>J_Bip_L_Hand</BoneName>
       <AxisU>CurrentZ</AxisU>
       <RateU>1.000000</RateU>
-      <EnableU>0</EnableU>
+      <EnableU>1</EnableU>
       <AxisV>CurrentZ</AxisV>
       <RateV>1.000000</RateV>
-      <EnableV>0</EnableV>
+      <EnableV>1</EnableV>
     </RigElem>
     <RigElem>
     <RigRigName>!noname!</RigRigName>
@@ -324,10 +324,10 @@
       <BoneName>J_Bip_L_LowerArm</BoneName>
       <AxisU>CurrentZ</AxisU>
       <RateU>1.000000</RateU>
-      <EnableU>0</EnableU>
+      <EnableU>1</EnableU>
       <AxisV>CurrentZ</AxisV>
       <RateV>1.000000</RateV>
-      <EnableV>0</EnableV>
+      <EnableV>1</EnableV>
     </RigElem>
     <RigElem>
     <RigRigName>!noname!</RigRigName>
@@ -536,10 +536,10 @@
     <RigRigName>!noname!</RigRigName>
     <RigRigNo>-1</RigRigNo>
       <BoneName>J_Bip_L_Thumb3</BoneName>
-      <AxisU>CurrentY</AxisU>
+      <AxisU>NodeY</AxisU>
       <RateU>-0.100000</RateU>
       <EnableU>1</EnableU>
-      <AxisV>CurrentY</AxisV>
+      <AxisV>NodeY</AxisV>
       <RateV>-0.100000</RateV>
       <EnableV>1</EnableV>
     </RigElem>
@@ -547,10 +547,10 @@
     <RigRigName>!noname!</RigRigName>
     <RigRigNo>-1</RigRigNo>
       <BoneName>J_Bip_L_Thumb2</BoneName>
-      <AxisU>CurrentY</AxisU>
+      <AxisU>NodeY</AxisU>
       <RateU>-0.850000</RateU>
       <EnableU>1</EnableU>
-      <AxisV>CurrentY</AxisV>
+      <AxisV>NodeY</AxisV>
       <RateV>-0.850000</RateV>
       <EnableV>1</EnableV>
     </RigElem>
@@ -729,10 +729,10 @@
       <BoneName>J_Bip_R_Hand</BoneName>
       <AxisU>CurrentZ</AxisU>
       <RateU>1.000000</RateU>
-      <EnableU>0</EnableU>
+      <EnableU>1</EnableU>
       <AxisV>CurrentZ</AxisV>
       <RateV>1.000000</RateV>
-      <EnableV>0</EnableV>
+      <EnableV>1</EnableV>
     </RigElem>
     <RigElem>
     <RigRigName>!noname!</RigRigName>
@@ -740,10 +740,10 @@
       <BoneName>J_Bip_R_LowerArm</BoneName>
       <AxisU>CurrentZ</AxisU>
       <RateU>1.000000</RateU>
-      <EnableU>0</EnableU>
+      <EnableU>1</EnableU>
       <AxisV>CurrentZ</AxisV>
       <RateV>1.000000</RateV>
-      <EnableV>0</EnableV>
+      <EnableV>1</EnableV>
     </RigElem>
     <RigElem>
     <RigRigName>!noname!</RigRigName>
@@ -952,22 +952,22 @@
     <RigRigName>!noname!</RigRigName>
     <RigRigNo>-1</RigRigNo>
       <BoneName>J_Bip_R_Thumb3</BoneName>
-      <AxisU>CurrentY</AxisU>
-      <RateU>0.100000</RateU>
+      <AxisU>NodeY</AxisU>
+      <RateU>-0.100000</RateU>
       <EnableU>1</EnableU>
-      <AxisV>CurrentY</AxisV>
-      <RateV>0.100000</RateV>
+      <AxisV>NodeY</AxisV>
+      <RateV>-0.100000</RateV>
       <EnableV>1</EnableV>
     </RigElem>
     <RigElem>
     <RigRigName>!noname!</RigRigName>
     <RigRigNo>-1</RigRigNo>
       <BoneName>J_Bip_R_Thumb2</BoneName>
-      <AxisU>CurrentY</AxisU>
-      <RateU>0.850000</RateU>
+      <AxisU>NodeY</AxisU>
+      <RateU>-0.850000</RateU>
       <EnableU>1</EnableU>
-      <AxisV>CurrentY</AxisV>
-      <RateV>0.850000</RateV>
+      <AxisV>NodeY</AxisV>
+      <RateV>-0.850000</RateV>
       <EnableV>1</EnableV>
     </RigElem>
   </Bone>
@@ -1078,10 +1078,10 @@
       <BoneName>J_Bip_L_Foot</BoneName>
       <AxisU>CurrentZ</AxisU>
       <RateU>0.000000</RateU>
-      <EnableU>0</EnableU>
+      <EnableU>1</EnableU>
       <AxisV>CurrentZ</AxisV>
       <RateV>0.000000</RateV>
-      <EnableV>0</EnableV>
+      <EnableV>1</EnableV>
     </RigElem>
     <RigElem>
     <RigRigName>!noname!</RigRigName>
@@ -1089,10 +1089,10 @@
       <BoneName>J_Bip_L_LowerLeg</BoneName>
       <AxisU>CurrentZ</AxisU>
       <RateU>0.000000</RateU>
-      <EnableU>0</EnableU>
+      <EnableU>1</EnableU>
       <AxisV>CurrentZ</AxisV>
       <RateV>0.000000</RateV>
-      <EnableV>0</EnableV>
+      <EnableV>1</EnableV>
     </RigElem>
     <RigElem>
     <RigRigName>!noname!</RigRigName>
@@ -1258,10 +1258,10 @@
       <BoneName>J_Bip_R_Foot</BoneName>
       <AxisU>CurrentZ</AxisU>
       <RateU>0.000000</RateU>
-      <EnableU>0</EnableU>
+      <EnableU>1</EnableU>
       <AxisV>CurrentZ</AxisV>
       <RateV>0.000000</RateV>
-      <EnableV>0</EnableV>
+      <EnableV>1</EnableV>
     </RigElem>
     <RigElem>
     <RigRigName>!noname!</RigRigName>
@@ -1269,10 +1269,10 @@
       <BoneName>J_Bip_R_LowerLeg</BoneName>
       <AxisU>CurrentZ</AxisU>
       <RateU>0.000000</RateU>
-      <EnableU>0</EnableU>
+      <EnableU>1</EnableU>
       <AxisV>CurrentZ</AxisV>
       <RateV>0.000000</RateV>
-      <EnableV>0</EnableV>
+      <EnableV>1</EnableV>
     </RigElem>
     <RigElem>
     <RigRigName>!noname!</RigRigName>

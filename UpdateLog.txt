@@ -5,7 +5,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/01/26
-　AdditiveIK 1.0.0.5 RC4(リリース候補4)
+　AdditiveIK 1.0.0.5 RC5(リリース候補5)
 　　1.0.0.4からの変更点
 　　　不具合修正
 
@@ -26,6 +26,11 @@ https://github.com/Ochakko/AdditiveIK
 　　　　　古いAdditiveIKで保存したfbxはver1.0.0.5で読み込んで保存し直すことでMaya2024でも正常に読み込めます.
 
 　　　　Testフォルダのモデルを1.0.0.5で読み込んで保存し直し
+
+　　　　Hand_Closeリグで手を握った状態から開こうとするとうまくいかない不具合修正
+　　　　　設定ファイル*.rigを更新
+　　　　　親指の回転軸をNodeYに変更(変更前はCurrentY)
+
 
 
 　　既知の問題
