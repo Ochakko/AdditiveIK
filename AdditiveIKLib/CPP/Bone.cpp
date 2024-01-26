@@ -444,7 +444,7 @@ int CBone::InitParams()
 
 	ChaMatrixIdentity(&m_nodemat);
 	ChaMatrixIdentity(&m_nodeanimmat);
-	m_bindmat.SetIdentity();
+	//m_bindmat.SetIdentity();
 
 	m_jointwpos = ChaVector3( 0.0f, 0.0f, 0.0f );
 	m_jointfpos = ChaVector3( 0.0f, 0.0f, 0.0f );

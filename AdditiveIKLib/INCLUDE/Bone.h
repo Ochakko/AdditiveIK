@@ -907,10 +907,11 @@ public: //accesser
 	void SetNodeAnimMat(ChaMatrix srcmat) { m_nodeanimmat = srcmat; };
 
 
-	FbxAMatrix GetBindMat() {
-		return m_bindmat;
-	}
-	void SetBindMat(FbxAMatrix srcmat) { m_bindmat = srcmat; };
+	//NodeOnLoadのGetBindMat, SetBineMatを使う
+	//FbxAMatrix GetBindMat() {
+	//	return m_bindmat;
+	//}
+	//void SetBindMat(FbxAMatrix srcmat) { m_bindmat = srcmat; };
 
 
 	ChaMatrix GetFirstMat(){ return m_firstmat; };
@@ -1792,7 +1793,7 @@ private:
 	ChaMatrix m_nodemat;//ジョイントの初期位置を計算するときに使用する。FBX読み込み時にセットして使用する。(0frameアニメ無し)
 	ChaMatrix m_nodeanimmat;//ジョイントの初期位置を計算するときに使用する。FBX読み込み時にセットして使用する。(0frameアニメ有り)
 
-	FbxAMatrix m_bindmat;//getpose bindpose
+	//FbxAMatrix m_bindmat;//getpose bindpose// コメントアウト：NodeOnLoadのbindmatを使う
 	ChaMatrix m_firstmat;//ジョイントの初期位置を計算するときに使用する。FBX読み込み時にセットして使用する。
 	ChaMatrix m_invfirstmat;//ジョイントの初期位置を計算するときに使用する。FBX読み込み時にセットして使用する。
 	ChaVector3 m_jointfpos;//ジョイントの初期位置。

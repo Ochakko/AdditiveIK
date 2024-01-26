@@ -204,7 +204,7 @@ static void LinkDummyMeshToSkeleton(CFBXBone* fbxbone, FbxSkin* lSkin, FbxScene*
 
 
 static int CalcLocalNodeMat(CModel* pmodel, CBone* curbone, ChaMatrix* dstnodemat, ChaMatrix* dstnodeanimmat);//pNode = pmodel->GetBoneNode(curbone)を内部で使用
-static void CalcBindMatrix(CModel* pmodel, CFBXBone* fbxbone, FbxAMatrix& lMatrix);
+static void GetBindMatrixNodeOnLoad(CModel* pmodel, CFBXBone* fbxbone, FbxAMatrix& lMatrix);
 
 static int WriteFBXAnimTra(bool limitdegflag, CFBXBone* fbxbone, FbxAnimLayer* lAnimLayer, int curmotid, int maxframe, int axiskind);
 static int WriteFBXAnimRot(bool limitdegflag, CFBXBone* fbxbone, FbxAnimLayer* lAnimLayer, int curmotid, int maxframe, int axiskind);
@@ -3804,50 +3804,32 @@ void WriteBindPoseReq(CModel* pmodel, FbxNode* pNode, FbxPose* srcbindpose, FbxP
 		return;
 	}
 	
+	CFBXBone fbxbone;
+	fbxbone.SetSkelNode(pNode);
+
 	map<FbxNode*, CBone*>::iterator itrbone;
 	itrbone = s_savenode2bone.find(pNode);
 	if (itrbone != s_savenode2bone.end()) {
-		CFBXBone fbxbone;
-		fbxbone.SetSkelNode(pNode);
 		CBone* curbone = itrbone->second;
 		fbxbone.SetBone(curbone);//curbone == 0のときも処理する
-
-		if (curbone) {
-			FbxAMatrix lBindMatrix;
-			lBindMatrix.SetIdentity();
-			bool islocalmatrix = false;//!!!!!!
-			lBindMatrix = curbone->GetGlobalPosMat();
-			lPose->Add(pNode, lBindMatrix, islocalmatrix);//global
-		}
-		else {
-			FbxMatrix lBindMatrix;
-			lBindMatrix.SetIdentity();
-			bool islocalmatrix = false;//!!!!!!
-			//2024/01/26 シーン全体の移動が設定されている場合があるのでIdentityではなくEvalGlobal
-			FbxTime fbxtime;
-			fbxtime.SetSecondDouble(0.0);
-			lBindMatrix = pNode->EvaluateGlobalTransform(fbxtime, FbxNode::eSourcePivot, true, true);
-			lPose->Add(pNode, lBindMatrix, islocalmatrix);//global
-		}
-
 	}
 	else {
-		//2024/01/24
-		//Maya2024.3でバインドポーズの警告が出てモーションがめちゃくちゃになる不具合は
-		//全部のノードに対してバインドポーズを設定することで解決した
-		//ver1.0.0.5よりも古いAdditiveIKで保存したfbxファイルは
-		//ver1.0.0.5以降で読み込んで保存し直すだけでMaya2024.3で正常に再生可能
-
-		FbxMatrix lBindMatrix;
-		lBindMatrix.SetIdentity();
-		bool islocalmatrix = false;//!!!!!!
-		//2024/01/26 シーン全体の移動が設定されている場合があるのでIdentityではなくEvalGlobal
-		FbxTime fbxtime;
-		fbxtime.SetSecondDouble(0.0);
-		lBindMatrix = pNode->EvaluateGlobalTransform(fbxtime, FbxNode::eSourcePivot, true, true);
-		lPose->Add(pNode, lBindMatrix, islocalmatrix);//global
+		fbxbone.SetBone(0);//curbone == 0のときも処理する
 	}
 
+	//###############################################################################
+	//2024/01/26 1005RC4
+	//SetDefaultBonePosReq()にてcurboneが無い場合にもNodeOnLoad->SetBindMat()している
+	//
+	//curboneが無い場合のEvaluateGlobalTransform計算が必要な場合においても
+	//変質していない読込時のpNodeを使って計算した値をGetBindMatrixNodeOnLoadで取得
+	//###############################################################################
+	FbxAMatrix lBindMatrix;
+	lBindMatrix.SetIdentity();
+	GetBindMatrixNodeOnLoad(pmodel, &fbxbone, lBindMatrix);
+
+	bool islocalmatrix = false;//!!!!!!
+	lPose->Add(pNode, lBindMatrix, islocalmatrix);//global
 
 	int childNodeNum;
 	childNodeNum = pNode->GetChildCount();
@@ -3968,7 +3950,7 @@ int CalcLocalNodeMat(CModel* pmodel, CBone* curbone, ChaMatrix* dstnodemat, ChaM
 //}
 
 
-void CalcBindMatrix(CModel* pmodel, CFBXBone* fbxbone, FbxAMatrix& lBindMatrix)
+void GetBindMatrixNodeOnLoad(CModel* pmodel, CFBXBone* fbxbone, FbxAMatrix& lBindMatrix)
 {
 	if (!pmodel || !fbxbone) {
 		_ASSERT(0);
@@ -4117,25 +4099,7 @@ void CalcBindMatrix(CModel* pmodel, CFBXBone* fbxbone, FbxAMatrix& lBindMatrix)
 }
 
 
-/*
-FbxAMatrix CalcBindMatrix(CFBXBone* fbxbone)
-{
-	FbxAMatrix lBindMatrix;
-	FbxTime lTime0;
-	lTime0.SetSecondDouble(0.0);
 
-	FbxNode* curskel = fbxbone->GetSkelNode();
-	if (curskel){
-		lBindMatrix = curskel->EvaluateGlobalTransform(lTime0);
-	}
-	else{
-		lBindMatrix.SetIdentity();
-	}
-	return lBindMatrix;
-}
-
-
-*/
 
 /***
 void StoreBindPose(FbxScene* pScene, FbxNode* pMesh, FbxNode* pSkeletonRoot)
@@ -5642,6 +5606,15 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 	//eNullも計算する
 	//Mayaで確認したところ　eNullノードのプロパティにもbindpose1と記述してあった
 	//##########################################################################
+
+	ChaMatrix nodemat, nodeanimmat;
+	nodemat.SetIdentity();
+	nodeanimmat.SetIdentity();
+
+	ChaMatrix calcnodemat, calcnodeanimmat;
+	calcnodemat.SetIdentity();
+	calcnodeanimmat.SetIdentity();
+
 	if (pNode && curbone &&
 		((curbone->IsSkeleton()) || (curbone->IsNull()) || (curbone->IsCamera()))//2023/05/23
 		//curbone->IsSkeleton()
@@ -5762,14 +5735,6 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 		//########################
 		//bindposeを計算から求める
 		//########################
-		ChaMatrix nodemat, nodeanimmat;
-		nodemat.SetIdentity();
-		nodeanimmat.SetIdentity();
-
-		ChaMatrix calcnodemat, calcnodeanimmat;
-		calcnodemat.SetIdentity();
-		calcnodeanimmat.SetIdentity();
-
 		if (pNode) {
 
 			ChaMatrix localnodemat, localnodeanimmat;
@@ -5808,7 +5773,7 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 			//BindPoseとcluster検索を無効にしてNodeMat計算だけでテスト(TheHunt City1 Camera_1, Camera8)した結果　NodeMatには回転が入っている必要があった
 			//GetNodeMatとGetNodeAnimMatは同じ結果を返すことになった
 			//この変更後にRetargetもテスト　Spring1とbvh121,Rokoko  TheHunt Charactorとbvh121
-				
+
 
 			//2023/07/04 More Tests And Modify CBone::CalcLocalNodePosture()
 			//	NodeMat計算部分(CBone::CalcLocalNodePosture())について　テストケースを増やして　更に修正
@@ -5827,10 +5792,12 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 			calcnodeanimmat = localnodeanimmat * parentnodeanimmat;
 
 		}
-
-
-
-		
+	}
+	else {
+		lGlobalPosition = pNode->EvaluateGlobalTransform(pTime, FbxNode::eSourcePivot, true, true);
+	}
+	
+	if (curbone) {
 		if (lPositionFound) {
 			//########################
 			//bindposeが見つかった場合
@@ -5838,7 +5805,7 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 			curbone->SetDefBonePosKind(DEFBONEPOS_FROMBP);//2023/06/06
 
 			nodemat = ChaMatrixFromFbxAMatrix(lGlobalPosition);
-			
+
 			//nodeanimmat = calcnodeanimmat;
 			nodeanimmat = ChaMatrixFromFbxAMatrix(pNode->EvaluateGlobalTransform(pTime, FbxNode::eSourcePivot, true, true));
 		}
@@ -5862,7 +5829,7 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 
 				//nodemat = ChaMatrixFromFbxAMatrix(clustermat);
 				nodemat = ChaMatrixFromFbxAMatrix(clusterlinkmat);
-				
+
 				//nodeanimmat = calcnodeanimmat;
 				nodeanimmat = ChaMatrixFromFbxAMatrix(pNode->EvaluateGlobalTransform(pTime, FbxNode::eSourcePivot, true, true));
 
@@ -5887,9 +5854,6 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 			}
 		}
 
-
-
-
 		//curbone->SetPositionFound(lPositionFound);//!!!
 		curbone->SetPositionFound(true);//!!! 2022/07/30 bone markを表示するためtrueに。
 
@@ -5899,7 +5863,7 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 		curbone->SetNodeAnimMat(nodeanimmat);
 
 		curbone->SetGlobalPosMat(lGlobalPosition);
-		nodeonload->SetBindMat(lGlobalPosition);//再帰処理におけるparentmatとして使用
+		nodeonload->SetBindMat(lGlobalPosition);//boneではなくnodeonload 再帰処理におけるparentmatとして使用
 
 		ChaVector3 zeropos(0.0f, 0.0f, 0.0f);
 		ChaVector3 tmppos;
@@ -5907,14 +5871,13 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 		ChaVector3TransformCoord(&tmppos, &zeropos, &tmpnm);
 		curbone->SetJointWPos(tmppos);
 		curbone->SetJointFPos(tmppos);
-
-
-		//WCHAR wname[256];
-		//ZeroMemory( wname, sizeof( WCHAR ) * 256 );
-		//MultiByteToWideChar( CP_ACP, MB_PRECOMPOSED, curbone->m_bonename, 256, wname, 256 );
-		//DbgOut( L"SetDefaultBonePos : %s : wpos (%f, %f, %f)\r\n", wname, curbone->m_jointfpos.x, curbone->m_jointfpos.y, curbone->m_jointfpos.z );
 	}
-
+	else {//2024/01/26 1005RC4
+		//!curbone
+		//WriteBindPoseReq()で全ノードのbindpose書き出し時に使う
+		nodeonload->SetBindMat(lGlobalPosition);//boneではなくnodeonload 再帰処理におけるparentmatとして使用
+	}
+	
 	if (nodeonload) {
 		int childnum = nodeonload->GetChildNum();
 		int childno;
