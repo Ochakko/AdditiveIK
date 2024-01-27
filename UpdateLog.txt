@@ -4,8 +4,8 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
-2024/01/26
-　AdditiveIK 1.0.0.5 RC5(リリース候補5)
+2024/01/27
+　AdditiveIK 1.0.0.5 release
 　　1.0.0.4からの変更点
 　　　不具合修正
 
