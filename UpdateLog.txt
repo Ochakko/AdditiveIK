@@ -4,6 +4,15 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/01/28
+　使用例動画
+　【モーキャプ】VRoidでプロのアセットを飛んでみた【編集ツール】
+　 https://youtu.be/R0MsXt8plYg
+
+
+
+
+
 2024/01/27
 　AdditiveIK 1.0.0.5 release
 　　1.0.0.4からの変更点
