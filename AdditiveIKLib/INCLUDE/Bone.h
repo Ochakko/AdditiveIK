@@ -475,6 +475,7 @@ public:
 	int SetWorldMatFromEulAndScaleAndTra(bool limitdegflag, int inittraflag, int setchildflag, ChaMatrix befwm, ChaVector3 srceul, ChaVector3 srcscale, ChaVector3 srctra, int srcmotid, double srcframe);
 	int SetWorldMatFromEulAndTra(bool limitdegflag, int setchildflag, ChaMatrix befwm, ChaVector3 srceul, ChaVector3 srctra, int srcmotid, double srcframe);
 	int SetWorldMatFromQAndTra(bool limitdegflag, int setchildflag, ChaMatrix befwm, CQuaternion axisq, CQuaternion srcq, ChaVector3 srctra, int srcmotid, double srcframe);
+	int SetWorldMatFromQAndScaleAndTra(bool limitdegflag, int setchildflag, ChaMatrix befwm, CQuaternion axisq, CQuaternion srcq, ChaVector3 srcscale, ChaVector3 srctra, int srcmotid, double srcframe);
 	int SetLocalEul(bool limitdegflag, int srcmotid, double srcframe, ChaVector3 srceul, CMotionPoint* srcmp);
 	//int SetLimitedLocalEul(int srcmotid, double srcframe, ChaVector3 srceul);
 

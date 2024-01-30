@@ -362,8 +362,12 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(int cameramotid, double nextframe, i
 	}
 
 
-	double roundingframe = RoundingTime(nextframe);
-	m_time = roundingframe;
+	//double roundingframe = RoundingTime(nextframe);
+	//m_time = roundingframe;
+	
+	//2024/01/31 NotRoundingTime
+	m_time = nextframe;
+
 	FbxTime fbxtime;
 	fbxtime.SetSecondDouble(m_time / 30.0);
 
@@ -376,7 +380,8 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(int cameramotid, double nextframe, i
 	localnodemat.SetIdentity();
 	localnodeanimmat.SetIdentity();
 	bool bindposeflag = false;
-	camerabone->CalcLocalNodePosture(bindposeflag, 0, roundingframe, &localnodemat, &localnodeanimmat);
+	//camerabone->CalcLocalNodePosture(bindposeflag, 0, roundingframe, &localnodemat, &localnodeanimmat);
+	camerabone->CalcLocalNodePosture(bindposeflag, 0, nextframe, &localnodemat, &localnodeanimmat);
 
 	ChaMatrix parentGlobalNodeMat, parentLocalNodeMat;
 	parentGlobalNodeMat.SetIdentity();
@@ -391,11 +396,13 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(int cameramotid, double nextframe, i
 
 		ChaMatrix tmpParentLocalNodeAnimMat;
 		tmpParentLocalNodeAnimMat.SetIdentity();
-		camerabone->GetParent(false)->CalcLocalNodePosture(bindposeflag, 0, roundingframe, &parentLocalNodeMat, &tmpParentLocalNodeAnimMat);
+		//camerabone->GetParent(false)->CalcLocalNodePosture(bindposeflag, 0, roundingframe, &parentLocalNodeMat, &tmpParentLocalNodeAnimMat);
+		camerabone->GetParent(false)->CalcLocalNodePosture(bindposeflag, 0, nextframe, &parentLocalNodeMat, &tmpParentLocalNodeAnimMat);
 
 
-		//parentGlobalNodeMat = camerabone->GetParent(false)->GetENullMatrix(roundingframe);//global
-		parentGlobalNodeMat = camerabone->GetParent(false)->GetTransformMat(roundingframe, true);//global
+		////parentGlobalNodeMat = camerabone->GetParent(false)->GetENullMatrix(roundingframe);//global
+		//parentGlobalNodeMat = camerabone->GetParent(false)->GetTransformMat(roundingframe, true);//global
+		parentGlobalNodeMat = camerabone->GetParent(false)->GetTransformMat(nextframe, true);//global
 	}
 	else {
 		parentGlobalNodeMat.SetIdentity();

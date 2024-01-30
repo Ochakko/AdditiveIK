@@ -28787,8 +28787,11 @@ int OnFrameProcessCameraTime(double difftime, double* pnextframe, int* pendflag,
 		return 0;
 	}
 
-
-	int cameramotid = s_model->GetCameraMotionId();
+	if (!s_cameramodel) {//2024/01/31
+		return 0;
+	}
+	//int cameramotid = s_model->GetCameraMotionId();
+	int cameramotid = s_cameramodel->GetCameraMotionId();//2024/01/31
 	if (cameramotid <= 0) {
 		return 0;
 	}
@@ -28804,10 +28807,12 @@ int OnFrameProcessCameraTime(double difftime, double* pnextframe, int* pendflag,
 			else {
 				rangestart = s_previewrange.GetStartFrame();
 			}
-			s_model->SetMotionFrame(cameramotid, rangestart);
+			//s_model->SetMotionFrame(cameramotid, rangestart);
+			s_cameramodel->SetMotionFrame(cameramotid, rangestart);
 			*pnextframe = 0.0;
 		}
-		s_model->AdvanceTime(0, s_previewrange, g_previewFlag, difftime, pnextframe, pendflag, ploopstartflag, cameramotid);//!!! cameramotid !!!
+		//s_model->AdvanceTime(0, s_previewrange, g_previewFlag, difftime, pnextframe, pendflag, ploopstartflag, cameramotid);//!!! cameramotid !!!
+		s_cameramodel->AdvanceTime(0, s_previewrange, g_previewFlag, difftime, pnextframe, pendflag, ploopstartflag, cameramotid);//!!! cameramotid !!!
 	}
 	else {
 		if (s_owpLTimeline) {
@@ -28821,10 +28826,11 @@ int OnFrameProcessCameraTime(double difftime, double* pnextframe, int* pendflag,
 	//	g_previewFlag = 0;
 	//}
 
-
-	s_model->SetMotionSpeed(cameramotid, g_dspeed);
-	s_model->SetMotionFrame(cameramotid, *pnextframe);
-
+	
+	//s_model->SetMotionSpeed(cameramotid, g_dspeed);
+	//s_model->SetMotionFrame(cameramotid, *pnextframe);
+	s_cameramodel->SetMotionSpeed(cameramotid, g_dspeed);
+	s_cameramodel->SetMotionFrame(cameramotid, *pnextframe);
 
 	return 0;
 }
@@ -28863,11 +28869,15 @@ int OnFramePreviewCamera(double srcnextframe)
 				}
 			}
 
-			double roundingframe = RoundingTime(nextcameraframe);
-
-			s_cameramodel->GetCameraAnimParams(roundingframe, g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir, 0, g_cameraInheritMode);//g_camdist
+			//double roundingframe = RoundingTime(nextcameraframe);
+			//s_cameramodel->GetCameraAnimParams(roundingframe, g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir, 0, g_cameraInheritMode);//g_camdist
 			////#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-			s_cameraframe = roundingframe;
+			//s_cameraframe = roundingframe;
+
+
+			//2024/01/31 NotRoundingTime
+			s_cameramodel->GetCameraAnimParams(nextcameraframe, g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir, 0, g_cameraInheritMode);//g_camdist
+			s_cameraframe = nextcameraframe;
 
 		}
 		else {

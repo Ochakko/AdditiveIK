@@ -3417,36 +3417,48 @@ int CBone::CalcLocalInfo(bool limitdegflag, int motid, double frameno, CMotionPo
 
 	CQuaternion eulq;
 	CMotionPoint* curmp = 0;
+	ChaMatrix localmat;
 	curmp = GetMotionPoint(motid, roundingframe);
+	localmat.SetIdentity();
+
 	if (curmp) {
 		ChaMatrix curwm;
 		curwm = GetWorldMat(limitdegflag, motid, roundingframe, curmp);
+
 		if (GetParent(false)) {
 			ChaMatrix parentwm, eulmat;
 			//parentがeNullの場合はある
-			if (GetParent(false)->IsSkeleton()) {
+			if (GetParent(false)->IsSkeleton() || 
+				GetParent(false)->IsNull() || GetParent(false)->IsCamera()) {
 				parentwm = GetParent(false)->GetWorldMat(limitdegflag, motid, roundingframe, 0);
 				eulq = ChaMatrix2Q(ChaMatrixInv(parentwm)) * ChaMatrix2Q(curwm);
-			}
-			else if (GetParent(false)->IsNull() || GetParent(false)->IsCamera()) {
-				parentwm = GetParent(false)->GetWorldMat(limitdegflag, motid, roundingframe, 0);
-				eulq = ChaMatrix2Q(ChaMatrixInv(parentwm)) * ChaMatrix2Q(curwm);
+				localmat = curwm * ChaMatrixInv(parentwm);
 			}
 			else {
 				eulq = ChaMatrix2Q(curwm);
+				localmat = curwm;
 			}
 		}
 		else {
 			eulq = ChaMatrix2Q(curwm);
+			localmat = curwm;
 		}
 	}
 	else {
 		//_ASSERT(0);
 		eulq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+		localmat.SetIdentity();
 	}
+
+	ChaVector3 svec = ChaVector3(1.0f, 1.0f, 1.0f);
+	ChaMatrix rmat;
+	rmat.SetIdentity();
+	ChaVector3 tvec = ChaVector3(0.0f ,0.0f, 0.0f);
+	GetSRTMatrix(localmat, &svec, &rmat, &tvec);
 
 	CMotionPoint setmp;
 	setmp.CalcQandTra(eulq.MakeRotMatX(), this);
+	setmp.SetLocalScale(svec);//2024/01/31
 	*pdstmp = setmp;
 
 
@@ -4494,7 +4506,6 @@ int CBone::SetWorldMatFromEul(bool limitdegflag, int inittraflag, int setchildfl
 	return 0;
 }
 
-
 //int CBone::SetBtWorldMatFromEul(int setchildflag, ChaVector3 srceul)//initscaleflag = 1 : default
 //{
 //	//anglelimitをした後のオイラー角が渡される。anglelimitはCBone::SetWorldMatで処理する。
@@ -4824,6 +4835,100 @@ int CBone::SetWorldMatFromQAndTra(bool limitdegflag, int setchildflag,
 
 	return 0;
 }
+
+
+int CBone::SetWorldMatFromQAndScaleAndTra(bool limitdegflag, int setchildflag,
+	ChaMatrix befwm, CQuaternion axisq, 
+	CQuaternion srcq, ChaVector3 srcscale, ChaVector3 srctra, int srcmotid, double srcframe)
+{
+	if (!GetChild(false)) {
+		return 0;
+	}
+
+	double roundingframe = RoundingTime(srcframe);
+
+	//2023/04/28
+	if (IsNotSkeleton()) {
+		return 0;
+	}
+
+
+	CQuaternion invaxisq;
+	axisq.inv(&invaxisq);
+	CQuaternion newrot = invaxisq * srcq * axisq;
+	ChaMatrix newlocalrotmat;
+	newlocalrotmat = newrot.MakeRotMatX();
+	ChaMatrix newtramat;
+	ChaMatrixIdentity(&newtramat);
+	ChaMatrixTranslation(&newtramat, srctra.x, srctra.y, srctra.z);
+	ChaMatrix newscmat;
+	newscmat.SetIdentity();
+	newscmat.SetScale(srcscale);
+
+	CMotionPoint* curmp;
+	curmp = GetMotionPoint(srcmotid, roundingframe);
+	if (!curmp) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	//ChaMatrix befwm = curmp->GetBefWorldMat();
+	ChaMatrix curwm;
+	curwm = GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp);
+
+	ChaMatrix parmat;
+	ChaMatrix parnodemat;
+	ChaMatrixIdentity(&parmat);
+	ChaMatrixIdentity(&parnodemat);
+	if (GetParent(false)) {
+		parmat = GetParent(false)->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+		parnodemat = GetParent(false)->GetNodeMat();
+	}
+
+	ChaMatrix cursmat, currmat, curtmat, curtanimmat;
+	GetSRTandTraAnim((curwm * ChaMatrixInv(parmat)), GetNodeMat(), &cursmat, &currmat, &curtmat, &curtanimmat);
+
+	ChaMatrix newlocalmat;
+	bool sflag = true;//!!!!!!
+	bool tanimflag = true;
+	newlocalmat = ChaMatrixFromSRTraAnim(sflag, tanimflag, GetNodeMat(), &newscmat, &newlocalrotmat, &newtramat);
+
+	ChaMatrix newmat;
+	if (GetParent(false)) {
+		ChaMatrix limitedparmat = GetParent(false)->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+		newmat = newlocalmat * limitedparmat;
+	}
+	else {
+		newmat = newlocalmat;
+	}
+
+
+	if (curmp) {
+		//curmp->SetBefWorldMat(curmp->GetWorldMat());
+		SetWorldMat(limitdegflag, srcmotid, roundingframe, newmat, curmp);
+		//ChaVector3 neweul = CalcLocalEulXYZ(-1, srcmotid, roundingframe, BEFEUL_ZERO);
+		ChaVector3 neweul = CalcLocalEulXYZ(limitdegflag, -1, srcmotid, roundingframe, BEFEUL_BEFFRAME);
+		SetLocalEul(limitdegflag, srcmotid, roundingframe, neweul, curmp);
+		if (limitdegflag == true) {
+			curmp->SetCalcLimitedWM(2);
+		}
+
+
+		if (setchildflag == 1) {
+			if (GetChild(false)) {
+				bool setbroflag = true;
+				GetChild(false)->UpdateParentWMReq(limitdegflag, setbroflag,
+					srcmotid, roundingframe, befwm, newmat);
+			}
+		}
+	}
+	else {
+		_ASSERT(0);
+	}
+
+	return 0;
+}
+
 
 
 int CBone::SetWorldMatFromEulAndTra(bool limitdegflag, int setchildflag, 
@@ -8412,7 +8517,9 @@ int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, double srcfra
 	}
 
 	FbxTime fbxtime;
-	fbxtime.SetSecondDouble((double)((int)(srcframe + 0.0001)) / 30.0);
+	//fbxtime.SetSecondDouble((double)((int)(srcframe + 0.0001)) / 30.0);
+	//2024/01/31 NotRoundingTime
+	fbxtime.SetSecondDouble(srcframe / 30.0);
 
 
 	//2023/07/04

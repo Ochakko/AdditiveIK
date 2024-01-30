@@ -220,6 +220,15 @@ public:
 		return m_animmat;
 	};
 
+	void SetLocalScale(ChaVector3 srcscale)
+	{
+		m_scale = srcscale;
+	}
+	ChaVector3 GetLocalScale()
+	{
+		return m_scale;
+	}
+
 	//CBone* GetNewWMOwner()
 	//{
 	//	return m_newwmowner;
@@ -259,6 +268,8 @@ private:
 
 	CQuaternion m_q;
 	ChaVector3 m_localeul;
+
+	ChaVector3 m_scale;//2024/01/31
 
 	ChaMatrix m_worldmat;//ワールド変換と親の影響を受けたマトリックス
 	ChaMatrix m_localmat;//local matrix

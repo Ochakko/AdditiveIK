@@ -13783,22 +13783,28 @@ void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone,
 			srcbone->CalcLocalInfo(limitdegflag, curmotid, roundingendframe, &endmp);
 			CQuaternion startq, endq;
 			ChaVector3 starttra, endtra;
+			ChaVector3 startsc, endsc;
 			startq = startmp.GetQ();
 			endq = endmp.GetQ();
 			starttra = srcbone->CalcLocalTraAnim(limitdegflag, curmotid, roundingstartframe);
 			endtra = srcbone->CalcLocalTraAnim(limitdegflag, curmotid, roundingendframe);
+			startsc = startmp.GetLocalScale();
+			endsc = endmp.GetLocalScale();
 
 			double frame;
 			for (frame = roundingstartframe; frame <= roundingendframe; frame += 1.0) {
 				CQuaternion setq;
 				ChaVector3 settra;
+				ChaVector3 setsc;
 				if (IsEqualRoundingTime(frame, roundingstartframe)) {
 					setq = startq;
 					settra = starttra;
+					setsc = startsc;
 				}
 				else if (IsEqualRoundingTime(frame, roundingendframe)) {
 					setq = endq;
 					settra = endtra;
+					setsc = endsc;
 				}
 				else {
 					double changerate;
@@ -13811,13 +13817,15 @@ void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone,
 
 					startq.Slerp2(endq, changerate, &setq);
 					settra = starttra + (endtra - starttra) * changerate;
-
+					setsc = startsc + (endsc - startsc) * changerate;
 				}
 				int setchildflag1 = 1;
 				CQuaternion iniq;
 				iniq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 				ChaMatrix befwm = srcbone->GetWorldMat(limitdegflag, curmotid, frame, 0);
-				srcbone->SetWorldMatFromQAndTra(limitdegflag, setchildflag1, befwm, iniq, setq, settra, curmotid, frame);
+
+				//2024/01/31 support scale!
+				srcbone->SetWorldMatFromQAndScaleAndTra(limitdegflag, setchildflag1, befwm, iniq, setq, setsc, settra, curmotid, frame);
 			}
 		}
 

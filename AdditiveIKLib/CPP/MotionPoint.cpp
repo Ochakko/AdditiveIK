@@ -45,6 +45,7 @@ int CMotionPoint::InitParams()
 	//m_firstframetra = ChaVector3(0.0f, 0.0f, 0.0f);
 
 	m_localeul = ChaVector3(0.0f, 0.0f, 0.0f);
+	m_scale = ChaVector3(1.0f, 1.0f, 1.0f);
 
 	ChaMatrixIdentity(&m_worldmat);
 	ChaMatrixIdentity(&m_localmat);
@@ -338,6 +339,7 @@ CMotionPoint CMotionPoint::operator= (CMotionPoint mp)
 	m_frame = mp.m_frame;
 	m_q = mp.m_q;
 	m_tra = mp.m_tra;
+	m_scale = mp.m_scale;
 	//m_firstframetra = mp.m_firstframetra;
 	m_localeul = mp.m_localeul;
 	m_worldmat = mp.m_worldmat;
