@@ -15189,7 +15189,7 @@ int CModel::FKBoneTraAxisUnderFK(
 	ChaVector3Normalize(&basevec, &basevec);
 
 	ChaVector3 addtra;
-	addtra = basevec * delta;
+	addtra = basevec * delta * g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
 
 	FKBoneTraUnderFK(limitdegflag, erptr, srcboneno, addtra);
 
@@ -15589,7 +15589,13 @@ int CModel::FKBoneScaleAxis(bool limitdegflag, int onlyoneflag, CEditRange* erpt
 
 	//scaleはworldmatの先頭に掛ける。マニピュレータ行列変換ではない
 	ChaVector3 scalevec;
-	if (axiskind == 0) {
+	if (axiskind == -1) {
+		//2024/01/30 Shiftキー＋X,Y,ZどれかのスプライトドラッグでPICK_CENTERドラッグ処理
+		scalevec.x = scaleval;
+		scalevec.y = scaleval;
+		scalevec.z = scaleval;
+	}
+	else if (axiskind == 0) {
 		scalevec.x = scaleval;
 		scalevec.y = 1.0f;
 		scalevec.z = 1.0f;

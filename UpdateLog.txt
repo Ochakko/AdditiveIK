@@ -7,6 +7,13 @@ https://github.com/Ochakko/AdditiveIK
 　ShaderプレートメニューのEmissionチェックボックスの隣にEmissiveScaleスライダーを追加
 　　Emissionに対して0%から100%まで倍率を指定
 
+　DispAndLimitsプレートメニューのEditRateの値の範囲を0倍から50倍までに.(変更前は０から１)
+　CameraAndIKプレートメニューの移動モード時にもEditRateを考慮(回転モードは以前から対応しているが9.9度以上のステップにはならないリミッター有)
+　　広いステージをスプライトドラッグで移動する場合にも速やかに移動可能に.
+
+　Shiftキーを押しながらスケールドラッグでXYZ全軸に対してスケール処理
+
+
 
 
 2024/01/28

@@ -25450,9 +25450,9 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)700);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-		sliderpos = (int)(g_physicsmvrate * 100.0f);
+		sliderpos = (int)(g_physicsmvrate * 10.0f);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)500);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
 		sliderpos = (int)(g_bonemark_bright * 100.0f);
@@ -25484,7 +25484,7 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		swprintf_s(strdlg, 256, L"Speed %.2f", g_dspeed);
 		SetDlgItemText(hDlgWnd, IDC_STATIC_SPEED, strdlg);
 
-		swprintf_s(strdlg, 256, L"Edit Rate %.2f", g_physicsmvrate);
+		swprintf_s(strdlg, 256, L"EditRate %.1f", g_physicsmvrate);
 		SetDlgItemText(hDlgWnd, IDC_STATIC_EDITRATE, strdlg);
 
 		//#########
@@ -25681,10 +25681,10 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_GETPOS, 0, 0);
-			g_physicsmvrate = (float)((double)cursliderpos / 100.0);
+			g_physicsmvrate = (float)((double)cursliderpos / 10.0);
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"Edit Rate %.2f", g_physicsmvrate);
+			swprintf_s(strdlg, 256, L"EditRate %.1f", g_physicsmvrate);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_EDITRATE, strdlg);
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK) == (HWND)lp) {
@@ -40456,8 +40456,16 @@ int OnMouseMoveFunc()
 							s_editmotionflag = s_curboneno;
 						}
 						else if (s_ikkind == 2) {
-							AddBoneScale(s_pickinfo.buttonflag - PICK_X, deltax);
-							s_editmotionflag = s_curboneno;
+							if (g_shiftkey == false) {
+								AddBoneScale(s_pickinfo.buttonflag - PICK_X, deltax);
+								s_editmotionflag = s_curboneno;
+							}
+							else {
+								//2024/01/30 
+								//shiftキーを押しながらX,Y,ZどれかのスプライトドラッグでPICK_CENTER
+								AddBoneScale(-1, deltax);
+								s_editmotionflag = s_curboneno;
+							}
 						}
 					}
 					s_befdeltax = deltax;
@@ -40507,8 +40515,17 @@ int OnMouseMoveFunc()
 							s_editmotionflag = s_curboneno;
 						}
 						else if (s_ikkind == 2) {
-							AddBoneScale(s_pickinfo.buttonflag, deltax);
-							s_editmotionflag = s_curboneno;
+							if (g_shiftkey) {
+								AddBoneScale(s_pickinfo.buttonflag, deltax);
+								s_editmotionflag = s_curboneno;
+							}
+							else {
+								//2024/01/30 
+								//shiftキーを押しながらX,Y,ZどれかのスプライトドラッグでPICK_CENTER
+								AddBoneScale(-1, deltax);
+								s_editmotionflag = s_curboneno;
+							}
+
 						}
 					}
 					s_befdeltax = deltax;
@@ -40537,6 +40554,7 @@ int OnMouseMoveFunc()
 		if (g_controlkey == true) {
 			cammv *= 0.250f;
 		}
+		cammv *= g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
 
 		ChaMatrix invmatView;
 		invmatView = ChaMatrixInv(s_matView);
@@ -40733,6 +40751,7 @@ int OnMouseMoveFunc()
 		if (g_controlkey == true) {
 			deltadist *= 0.250f;
 		}
+		deltadist *= g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
 
 		float savecamdist = g_camdist;
 
