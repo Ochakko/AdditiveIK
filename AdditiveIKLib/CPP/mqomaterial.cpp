@@ -276,6 +276,7 @@ int CMQOMaterial::InitParams()
 	m_power = 0.0f;
 
 	m_enableEmission = false;
+	m_emissiveScale = 1.0f;
 
 	ZeroMemory ( m_tex, sizeof(char) * 256 );
 	ZeroMemory ( m_alpha, sizeof(char) * 256 );
@@ -3046,7 +3047,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		}
 		m_cb.ambient = ChaVector4(GetAmb3F(), 0.0f);
 		if (GetEnableEmission()) {
-			m_cb.emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+			m_cb.emission = ChaVector4(GetEmi3F() * GetEmissiveScale(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
 		else {
 			m_cb.emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
@@ -3091,7 +3092,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		}
 		m_cb.ambient = ChaVector4(GetAmb3F(), 0.0f);
 		if (GetEnableEmission()) {
-			m_cb.emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+			m_cb.emission = ChaVector4(GetEmi3F() * GetEmissiveScale(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
 		else {
 			m_cb.emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく

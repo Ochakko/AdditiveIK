@@ -25997,6 +25997,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 	float cursmoothcoef;
 	float curlightscale[LIGHTNUMMAX];
 	bool enableEmission = false;
+	float emissiveScale = 1.0f;
 	WCHAR wmaterialname[256] = { 0L };
 	if (materialindex >= 0) {
 		curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
@@ -26011,6 +26012,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 				curlightscale[litno] = curmqomat->GetLightScale(litno);
 			}
 			enableEmission = curmqomat->GetEnableEmission();
+			emissiveScale = curmqomat->GetEmissiveScale();
 		}
 		else {
 			_ASSERT(0);
@@ -26028,6 +26030,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			curlightscale[litno] = 1.0f;
 		}
 		enableEmission = false;
+		emissiveScale = 1.0f;
 	}
 	
 	int lightsliderid[LIGHTNUMMAX] = {
@@ -26109,6 +26112,27 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			//		s_smoothcoeflabel[s_shadertypeparamsindex]->setName(strdlg2);
 			//	}
 			//}
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SL_EMISCALE) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_EMISCALE), TBM_GETPOS, 0, 0);
+			float newemiscale = (float)((double)cursliderpos / 100.0);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"Emission:%.2f", newemiscale);
+			SetDlgItemText(hDlgWnd, IDC_CHECK_EMISSION, strdlg);
+
+			if (curmqomat) {
+				curmqomat->SetEmissiveScale(newemiscale);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetEmissiveScale(newemiscale);
+					}
+				}
+			}
 		}
 
 		{
@@ -39904,7 +39928,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.5 : No.%d : ", s_appcnt);
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.6 : No.%d : ", s_appcnt);
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -48059,7 +48083,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.5 : No.%d : ", s_appcnt);
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.6 : No.%d : ", s_appcnt);
 
 
 	if (s_model && s_chascene) {
@@ -51665,6 +51689,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	float cursmoothcoef;
 	float curlightscale[LIGHTNUMMAX];
 	bool enableEmission = false;
+	float emissiveScale = 1.0f;
 	if (curmqomat) {
 		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, 
 			curmqomat->GetName(), -1, wmaterialname, 256);
@@ -51676,6 +51701,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 			curlightscale[litno] = curmqomat->GetLightScale(litno);
 		}
 		enableEmission = curmqomat->GetEnableEmission();
+		emissiveScale = curmqomat->GetEmissiveScale();
 	}
 	else {
 		//全てのマテリアルに対して設定するボタンを押した場合
@@ -51688,6 +51714,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 			curlightscale[litno] = 1.0f;
 		}
 		enableEmission = false;
+		emissiveScale = 1.0f;
 	}
 
 	int lightsliderid[LIGHTNUMMAX] = {
@@ -51727,6 +51754,12 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		SendMessage(GetDlgItem(hDlgWnd, lightsliderid[litno2]), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 	}
 
+	sliderpos = (int)(emissiveScale * 100.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_EMISCALE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_EMISCALE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_EMISCALE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+
 	//#####
 	//Text
 	//#####
@@ -51747,6 +51780,10 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		swprintf_s(strdlg, 256, L"LightScale%d %.2f", (litno3 + 1), curlightscale[litno3]);
 		SetDlgItemText(hDlgWnd, lighttextid[litno3], strdlg);
 	}
+
+	swprintf_s(strdlg, 256, L"Emission:%.2f", emissiveScale);
+	SetDlgItemText(hDlgWnd, IDC_CHECK_EMISSION, strdlg);
+
 
 	//#########
 	//CheckBox

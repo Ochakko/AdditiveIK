@@ -706,7 +706,14 @@ public:
 	{
 		return m_enableEmission;
 	}
-
+	void SetEmissiveScale(float srcval)
+	{
+		m_emissiveScale = srcval;
+	}
+	float GetEmissiveScale()
+	{
+		return m_emissiveScale;
+	}
 
 	void SetAddressU_albedo(FbxTexture::EWrapMode srcmode) {//eClamp or eRepeat
 		if (srcmode == FbxTexture::EWrapMode::eClamp) {
@@ -853,6 +860,7 @@ private:
 	ChaVector3 m_spc3f;
 	ChaVector4 m_sceneamb;
 	bool m_enableEmission;
+	float m_emissiveScale;
 
 	int m_transparent;
 	int m_texrule;

@@ -3,14 +3,16 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/01/30
+　ShaderプレートメニューのEmissionチェックボックスの隣にEmissiveScaleスライダーを追加
+　　Emissionに対して0%から100%まで倍率を指定
+
+
 
 2024/01/28
 　使用例動画
 　【モーキャプ】VRoidでプロのアセットを飛んでみた【編集ツール】
 　 https://youtu.be/R0MsXt8plYg
-
-
-
 
 
 2024/01/27

@@ -82,6 +82,9 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			float metalcoef = mqomat->GetMetalCoef();
 			float smoothcoef = mqomat->GetSmoothCoef();
 			float lightscale[8];
+			bool enableEmission = mqomat->GetEnableEmission();
+			float emissiveScale = mqomat->GetEmissiveScale();
+
 			int litindex;
 			for (litindex = 0; litindex < 8; litindex++) {
 				lightscale[litindex] = mqomat->GetLightScale(litindex);
@@ -103,12 +106,15 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			CallF(Write2File("    <LightScale7>%f</LightScale7>\r\n", lightscale[6]), return 1);
 			CallF(Write2File("    <LightScale8>%f</LightScale8>\r\n", lightscale[7]), return 1);
 
-			if (mqomat->GetEnableEmission()) {
+			if (enableEmission) {
 				CallF(Write2File("    <EnableEmission>1</EnableEmission>\r\n"), return 1);
 			}
 			else {
 				CallF(Write2File("    <EnableEmission>0</EnableEmission>\r\n"), return 1);
 			}
+
+			//2024/01/30
+			CallF(Write2File("    <EmissiveScale>%f</EmissiveScale>\r\n", emissiveScale), return 1);
 
 			CallF(Write2File("  </Material>\r\n"), return 1);
 
@@ -123,7 +129,11 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 
 int CShaderTypeFile::WriteFileInfo()
 {
-	CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+
+	//2024/01/30
+	CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1003</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+
 	return 0;
 }
 
@@ -219,6 +229,11 @@ int CShaderTypeFile::LoadShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 					curmqomat->SetEnableEmission(false);
 				}
 				
+				//2024/01/30
+				float emissiveScale = 1.0f;
+				Read_Float(&materialbuf, "<EmissiveScale>", "</EmissiveScale>", &emissiveScale);
+				curmqomat->SetEmissiveScale(emissiveScale);
+
 			}
 		}		
 	}
