@@ -7,11 +7,20 @@ DirectX12対応. fbx入出力. BulletPhysics対応.<br>
 MITランセンス.<br>
 <br>
 # ScreenShot
-![TopFig0](ScreenShots/AdditiveIK_To1001_SS1_800.png "トップ絵0")<br>
-Fig.1 ScreenShot of AdditiveIK.<br>
+![TopFig0](ScreenShots/0_AdditiveIK_1003_IndexOfMovie_0_W800.png "トップ絵0")<br>
+Fig.1 New Feature of AdditiveIK.<br>
 <br>
-![TopFig1](ScreenShots/AdditiveIK_To1001_HDRPBloom_1.png "トップ絵1")<br>
+![TopFig1](ScreenShots/AdditiveIK_To1001_SS1_800.png "トップ絵1")<br>
+Fig.1 ScreenShot of this Application(OnLargeWindowMode).<br>
+<br>
+![TopFig2](ScreenShots/AdditiveIK_To1001_HDRPBloom_1.png "トップ絵2")<br>
 Fig.2 HDRP Bloom (UnityAsset JapaneseCityを読込. model:VRoid).<br>
+<br>
+![TopFig3](ScreenShots/AdditiveIK_1003_PracKick_2_W800.png "トップ絵3")<br>
+Fig.3 Multiple Model (UnityAsset HQ Retro Farmhouseを読込. model:VRoid).<br>
+<br>
+![TopFig4](ScreenShots/SS_FlyingCity_4_2_W800.png "トップ絵4")<br>
+Fig.4 PlayFbxCameraAnim (UnityAsset TheHuntを読込. model:VRoid).<br>
 <br>
 <br>
 # 免責<br>
@@ -185,19 +194,19 @@ Smooth平滑化<br>
 　Microsoft MultiThreadLibrary PPL.<br>
 <br>
 　DirectX12 (githubのMicrosoftのDirectXTK12)<br>
-　DirectXTK12のライセンスはReadMe/DirectXTK12_LICENSE<br>
+　DirectXTK12のライセンスは3rd_LICENSE/DirectXTK12_LICENSE<br>
 <br>
 　DirectXTex (githubのMicrosoftのDirectXTex)<br>
-　DirectXTexのライセンスはReadMe/DirectXTex_LICENSE<br>
+　DirectXTexのライセンスは3rd_LICENSE/DirectXTex_LICENSE<br>
 <br>
 　githubのbullet physics ver2.89 https://pybullet.org/wordpress/ <br>
-　bullet physicsのライセンスはReadMe/bulletPhysics_license.txt<br>
+　bullet physicsのライセンスは3rd_LICENSE/bulletPhysics_license.txt<br>
 <br>
 　HLSLシェーダーの魔導書のMiniEngine https://github.com/shoeisha-books/hlsl-grimoire-sample <br>
-　魔導書コードのライセンスはReadMe/hlsl-grimoire_LICENSE<br>
+　魔導書コードのライセンスは3rd_LICENSE/hlsl-grimoire_LICENSE<br>
 <br>
 　DirectX12の魔導書のサンプルを使用<br>
-　ライセンスはReadMe/dx12-grimoire_LICENSE<br>
+　ライセンスは3rd_LICENSE/dx12-grimoire_LICENSE<br>
 <br>
 　MicrosoftのDXUT11のDXUTTimerを使っています.<br>
 <br>
@@ -216,8 +225,10 @@ Smooth平滑化<br>
 # Description
 [Description at OchakoLAB](https://ochakkolab.jp/LABMenu/AdditiveIK.html "Desc-1")
 
-# Channel
-[Youtube Channel](https://www.youtube.com/@ochakkolab "Channel")
+# Explaining Movie
+[Movie About New Feature](https://youtu.be/oKGY62YosSg "About New Feature")
+
+[Movie About Usage Example](https://youtu.be/R0MsXt8plYg "Usage example")
 
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")

@@ -1005,7 +1005,8 @@ static OrgWindow* s_placefolderWnd = 0;
 //#define SHORTCUTTEXTNUM	35
 //#define SHORTCUTTEXTNUM	40
 //#define SHORTCUTTEXTNUM	44
-#define SHORTCUTTEXTNUM	48
+//#define SHORTCUTTEXTNUM	48
+#define SHORTCUTTEXTNUM	50
 static OWP_Label* s_shortcuttext[SHORTCUTTEXTNUM];
 
 
@@ -14192,7 +14193,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.5\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.6\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -33310,12 +33311,14 @@ int CreatePlaceFolderWnd()
 			L"　Edit Motion",
 			L"　　T + MouseWheel　：　Twist motion.",
 			L" ",
+			L"　  <new> Shift + Drag(X or Y or Z) on ScalingMode　：　Scale all axes.",
+			L" ",
 			L" ",
 			L"　Timeline",
 			L"　　Ctrl + MouseWheel　：　Move frame selection by 1 frame.",
-			L" ",
-			L" ",
 
+			L" ",
+			L" ",
 			L"　Manipulator",
 			L"　　S + Mouse_R_Drag　：　Change manipulator scale.",
 			L" ",
@@ -33324,9 +33327,9 @@ int CreatePlaceFolderWnd()
 			L"　　Drag on CenterBar　：　Slide starting from clicked position.",
 			L"    LButton DoubleClick :  Set value of clicked position.",
 			L"    RButton DoubleClick :  Undo value limited to 1,000,000 times.",
+
 			L"    Mouse Wheel : Slide per a pixel.",
 			L" ",
-
 			L" ",
 			L"　DispGroupWindow",
 			L"　　RButton on a Element　：　Context Menu for SimilarCheck.",
@@ -33343,6 +33346,12 @@ int CreatePlaceFolderWnd()
 			if (!s_shortcuttext[textno]) {
 				_ASSERT(0);
 				return 1;
+			}
+
+			//red color new line
+			if (textno == 25) {
+				COLORREF colred = RGB(168, 129, 129);
+				s_shortcuttext[textno]->setTextColor(colred);
 			}
 		}
 
