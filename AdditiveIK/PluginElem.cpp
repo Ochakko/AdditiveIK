@@ -1,4 +1,4 @@
-
+ï»¿
 #include "stdafx.h"
 
 #include <windows.h>
@@ -67,7 +67,7 @@
 //2022/11/23
 //#define MB2VERSION 10035
 
-//2022/12/17 ##### Œ…”‚ð‡‚í‚¹‚é‚½‚ß‚É1101‚Å‚Í‚È‚­11010
+//2022/12/17 ##### æ¡æ•°ã‚’åˆã‚ã›ã‚‹ãŸã‚ã«1101ã§ã¯ãªã11010
 //#define MB2VERSION 11010
 
 //2023/01/08
@@ -140,7 +140,7 @@
 //#define MB2VERSION 12030
 
 
-//2023/11/23 æ“ª‚É‚Q‚ð•t‰Á@ÅŒã‚Ì‚QŒ…‚Í0.0.0.1‚Ì1‚ð‚QŒ…•\Œ»
+//2023/11/23 å…ˆé ­ã«ï¼’ã‚’ä»˜åŠ ã€€æœ€å¾Œã®ï¼’æ¡ã¯0.0.0.1ã®1ã‚’ï¼’æ¡è¡¨ç¾
 //#define MB2VERSION 210001
 
 //2023/12/30
@@ -155,9 +155,11 @@
 //2024/01/22
 //#define MB2VERSION 210005
 
-//2024/01/30 æ“ª‚É‚Q‚ð•t‰Á@ÅŒã‚Ì‚QŒ…‚Í1.0.0.6‚Ì6‚ð‚QŒ…•\Œ»
-#define MB2VERSION 210006
+//2024/01/30 å…ˆé ­ã«ï¼’ã‚’ä»˜åŠ ã€€æœ€å¾Œã®ï¼’æ¡ã¯1.0.0.6ã®6ã‚’ï¼’æ¡è¡¨ç¾
+//#define MB2VERSION 210006
 
+//2024/01/30 å…ˆé ­ã«ï¼’ã‚’ä»˜åŠ ã€€æœ€å¾Œã®ï¼’æ¡ã¯1.0.0.7ã®6ã‚’ï¼’æ¡è¡¨ç¾
+#define MB2VERSION 210007
 
 
 CPluginElem::CPluginElem()
@@ -189,7 +191,7 @@ int CPluginElem::CreateMotionBrush(double srcstartframe, double srcendframe, dou
 {
 	int ret = 0;
 
-	if( (validflag == 1) && MBCreateMotionBrush){//IIIIIII validflag‚É’ˆÓIIIIII
+	if( (validflag == 1) && MBCreateMotionBrush){//ï¼ï¼ï¼ï¼ï¼ï¼ï¼ validflagã«æ³¨æ„ï¼ï¼ï¼ï¼ï¼ï¼
 		//ret = MBOnSelectPlugin();
 		//if ((srcstartframe >= 0.0) && (srcstartframe < 1e5) && (srcendframe >= srcstartframe) && (srcendframe < 1e5) &&
 		//	(srcapplyframe >= srcstartframe) && (srcapplyframe <= srcendframe) &&
@@ -205,7 +207,7 @@ int CPluginElem::CreateMotionBrush(double srcstartframe, double srcendframe, dou
 		}
 		else {
 			_ASSERT(0);
-			return 2;//ƒtƒŒ[ƒ€”ÍˆÍŠO‚Í2‚ð•Ô‚·
+			return 2;//ãƒ•ãƒ¬ãƒ¼ãƒ ç¯„å›²å¤–ã¯2ã‚’è¿”ã™
 		}
 	}
 
@@ -215,7 +217,7 @@ int CPluginElem::CallOnClose()
 {
 	int ret = 0;
 
-	if( (validflag == 1) && MBOnClose ){//IIIIIII validflag‚É’ˆÓIIIIII
+	if( (validflag == 1) && MBOnClose ){//ï¼ï¼ï¼ï¼ï¼ï¼ï¼ validflagã«æ³¨æ„ï¼ï¼ï¼ï¼ï¼ï¼
 		ret = MBOnClose();
 	}
 
@@ -225,7 +227,7 @@ int CPluginElem::CallOnPose( int motid )
 {
 	int ret = 0;
 
-	if( (validflag == 1) && MBOnPose ){//IIIIIII validflag‚É’ˆÓIIIIII
+	if( (validflag == 1) && MBOnPose ){//ï¼ï¼ï¼ï¼ï¼ï¼ï¼ validflagã«æ³¨æ„ï¼ï¼ï¼ï¼ï¼ï¼
 		ret = MBOnPose( motid );
 	}
 

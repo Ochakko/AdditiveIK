@@ -16,6 +16,13 @@
 #include "../../MiniEngine/Texture.h"
 #include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
 
+
+//MeshParts.hから移動してdefineに変更
+//const int MAX_MODEL_EXPAND_SRV = 6;	//拡張SRVの最大数。
+#define MAX_MODEL_EXPAND_SRV 0
+
+
+
 class ConstantBuffer;//定数バッファ。
 class RootSignature;//ルートシグネチャ。
 
@@ -806,6 +813,8 @@ public:
 	//１つのマテリアルで使用されるCBVの数。
 	//const int NUM_CBV_ONE_MATERIAL = 2;
 	int NUM_CBV_ONE_MATERIAL = 1;
+
+
 
 private:
 

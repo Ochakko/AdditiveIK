@@ -9,7 +9,7 @@
 #include "DirectXTK/Inc/DDSTextureLoader.h"
 #include "DirectXTK/Inc/ResourceUploadBatch.h"
 #include "RenderContext.h"
-#include "rayTracing/RaytracingEngine.h"
+//#include "rayTracing/RaytracingEngine.h"
 #include "Camera.h"
 #include "NullTextureMaps.h"
 #include "font/FontEngine.h"
@@ -157,25 +157,25 @@ public:
 	/// 3DModelをレイトレワールドに登録。
 	/// </summary>
 	/// <param name="model"></param>
-	void RegistModelToRaytracingWorld(Model& model)
-	{
-		m_raytracingEngine.RegistGeometry(model);
-	}
+	//void RegistModelToRaytracingWorld(Model& model)
+	//{
+	//	m_raytracingEngine.RegistGeometry(model);
+	//}
 	/// <summary>
 	/// ここまで登録されたモデルを使ってレイトレワールドを構築。
 	/// </summary>
-	void BuildRaytracingWorld(RenderContext& rc)
-	{
-		m_raytracingEngine.CommitRegistGeometry(rc);
-	}
+	//void BuildRaytracingWorld(RenderContext& rc)
+	//{
+	//	m_raytracingEngine.CommitRegistGeometry(rc);
+	//}
 	/// <summary>
 	/// レイトレーシングをディスパッチ。
 	/// </summary>
 	/// <param name="rc"></param>
-	void DispatchRaytracing(RenderContext& rc)
-	{
-		m_raytracingEngine.Dispatch(rc);
-	}
+	//void DispatchRaytracing(RenderContext& rc)
+	//{
+	//	m_raytracingEngine.Dispatch(rc);
+	//}
 	/// <summary>
 	/// フレームバッファにコピー。
 	/// </summary>
@@ -326,7 +326,7 @@ private:
 	Camera m_camera2D;							//2Dカメラ。
 	Camera m_camera3D;							//3Dカメラ。
 	Camera m_cameraShadow;						//ShadowMapカメラ。
-	raytracing::Engine m_raytracingEngine;		//レイトレエンジン。
+	//raytracing::Engine m_raytracingEngine;		//レイトレエンジン。
 	NullTextureMaps m_nullTextureMaps;			//ヌルテクスチャマップ。
 	FontEngine m_fontEngine;					//フォントエンジン。
 	std::unique_ptr<DirectX::GraphicsMemory> m_directXTKGfxMemroy;	//DirectXTKのグラフィックメモリシステム。

@@ -1,4 +1,7 @@
 ﻿#pragma once
+
+#include "../../MiniEngine/GaussianBlur.h"
+
 namespace myRenderer {
     class Bloom
     {

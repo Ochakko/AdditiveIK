@@ -39,7 +39,7 @@
 #include "../../MiniEngine/ConstantBuffer.h"
 #include "../../MiniEngine/StructuredBuffer.h"
 #include "../../MiniEngine/DescriptorHeap.h"
-#include "../../MiniEngine/Material.h"
+//#include "../../MiniEngine/Material.h"
 
 
 

@@ -20,8 +20,8 @@
 #include <CameraFbx.h>
 
 #include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
-#include "../../AdditiveIKLib/Grimoire/ModelRender.h"
-#include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
+//#include "../../AdditiveIKLib/Grimoire/ModelRender.h"
+//#include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
 
 class CModel;
 class BPWorld;

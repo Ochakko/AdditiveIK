@@ -33,7 +33,7 @@
 
 #include "../../MiniEngine/ConstantBuffer.h"
 #include "../../MiniEngine/RootSignature.h"
-#include "../../MiniEngine/Material.h"
+//#include "../../MiniEngine/Material.h"
 
 
 static int s_alloccount = 0;

@@ -12,7 +12,7 @@ TkEngine::~TkEngine()
 		m_graphicsEngine = nullptr;
 	}
 
-	m_tkmFileBank.DestroyObjs();//tkmファイルバンク。
+	//m_tkmFileBank.DestroyObjs();//tkmファイルバンク。
 	m_shaderBank.DestroyObjs();//シェーダーバンク
 	m_textureBank.DestroyObjs();//テクスチャバンク。
 

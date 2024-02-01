@@ -2,16 +2,19 @@
 
 class ConstantBuffer;
 class Texture;
-class DescriptorHeap;
+//class DescriptorHeap;
 class RenderTarget;
+
+#include "DescriptorHeap.h"
+
 
 //#include <d3dx12.h>
 //#include "../../DirectXTex/DirectXTex/DirectXTex.h"
 #include "../DirectXTex/DirectXTex/d3dx12.h"
 
-namespace raytracing{
-	class PSO;
-}
+//namespace raytracing{
+//	class PSO;
+//}
 /// <summary>
 /// レンダリングコンテキスト。
 /// </summary>
@@ -153,7 +156,7 @@ public:
 	/// レイトレ用のパイプラインステートオブジェクトを設定。
 	/// </summary>
 	/// <param name="pso"></param>
-	void SetPipelineState(raytracing::PSO& pso);
+	//void SetPipelineState(raytracing::PSO& pso);
 
 	/// <summary>
 	/// ディスクリプタヒープを設定。
@@ -413,18 +416,18 @@ public:
 	/// <summary>
 	/// GPUでレイトレーシングアクセラレーション構造のビルドを行います。
 	/// </summary>
-	void BuildRaytracingAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc)
-	{
-		m_commandList->BuildRaytracingAccelerationStructure(&desc, 0, nullptr);
-	}
+	//void BuildRaytracingAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc)
+	//{
+	//	m_commandList->BuildRaytracingAccelerationStructure(&desc, 0, nullptr);
+	//}
 	/// <summary>
 	/// レイをディスパッチ
 	/// </summary>
 	/// <param name="rayDesc"></param>
-	void DispatchRays(D3D12_DISPATCH_RAYS_DESC& rayDesc)
-	{
-		m_commandList->DispatchRays(&rayDesc);
-	}
+	//void DispatchRays(D3D12_DISPATCH_RAYS_DESC& rayDesc)
+	//{
+	//	m_commandList->DispatchRays(&rayDesc);
+	//}
 	/// <summary>
 	/// リソースをコピー。
 	/// </summary>

@@ -2,7 +2,7 @@
 
 #include "HID/GamePad.h"
 #include "TResourceBank.h"
-#include "tkFile/TkmFile.h"
+//#include "tkFile/TkmFile.h"
 #include "Shader.h"
 
 class GraphicsEngine;
@@ -50,20 +50,20 @@ public:
 	/// </summary>
 	/// <param name="filePath">ファイルパス</param>
 	/// <returns>tkmファイル。nullptrが返ってきたらバンクに登録されていない。</returns>
-	TkmFile* GetTkmFileFromBank(const char* filePath)
-	{
-		return m_tkmFileBank.Get(filePath);
-	}
+	//TkmFile* GetTkmFileFromBank(const char* filePath)
+	//{
+	//	return m_tkmFileBank.Get(filePath);
+	//}
 	
 	/// <summary>
 	/// tkmファイルをバンクに登録。
 	/// </summary>
 	/// <param name="filePath">tkmファイルパス</param>
 	/// <param name="tkmFile"></param>
-	void RegistTkmFileToBank(const char* filePath, TkmFile* tkmFile)
-	{
-		m_tkmFileBank.Regist(filePath, tkmFile);
-	}
+	//void RegistTkmFileToBank(const char* filePath, TkmFile* tkmFile)
+	//{
+	//	m_tkmFileBank.Regist(filePath, tkmFile);
+	//}
 	/// <summary>
 	/// シェーダーファイルバンクからシェーダーを取得。
 	/// </summary>
@@ -88,7 +88,7 @@ public:
 	}
 private:
 	GraphicsEngine* m_graphicsEngine = nullptr;		//グラフィックエンジン。
-	TResourceBank<TkmFile> m_tkmFileBank;			//tkmファイルバンク。
+	//TResourceBank<TkmFile> m_tkmFileBank;			//tkmファイルバンク。
 	TResourceBank<Shader> m_shaderBank;				//シェーダーバンク
 	TResourceBank<Texture>	m_textureBank;			//テクスチャバンク。
 	GamePad m_pad[GamePad::CONNECT_PAD_MAX];		//ゲームパッド。

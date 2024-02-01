@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "MyRenderer.h"
-#include "ShadowMapRender.h"
+//#include "ShadowMapRender.h"
 #include "PostEffect.h"
 #include <ChaVecCalc.h>
 #include <mqoobject.h>

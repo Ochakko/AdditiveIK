@@ -108,7 +108,7 @@ inline void RenderContext::ClearRenderTargetViews(int numRt, RenderTarget* rende
 		ClearRenderTargetView(renderTargets[i]->GetRTVCpuDescriptorHandle(), renderTargets[i]->GetRTVClearColor());
 	}
 }
-inline void RenderContext::SetPipelineState(raytracing::PSO& pso)
-{
-	m_commandList->SetPipelineState1(pso.Get());
-}
+//inline void RenderContext::SetPipelineState(raytracing::PSO& pso)
+//{
+//	m_commandList->SetPipelineState1(pso.Get());
+//}
