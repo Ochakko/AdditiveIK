@@ -5,7 +5,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/02/01
-　AdditiveIK 1.0.0.6 RC1(リリース候補1)
+　AdditiveIK 1.0.0.6 release
 　　1.0.0.5からの変更点
 　　　不具合修正
 　　　　カメラアニメ選択後にカメラの無いモデルを選択してプレビューすると
