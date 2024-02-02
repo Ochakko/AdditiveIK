@@ -540,6 +540,7 @@ static int s_getsym_retmode = 0;
 static int s_wmlbuttonup = 0;//ゲームパッド用フラグ
 static bool s_utBrushRepeatsFlag = false;//UTDialogのBrushRepeatsスライダー値変更
 static bool s_utApplyRateFlag = false;//UTDialogのApplyRateスライダー値変更
+static bool s_utBrushMethodFlag = false;
 static bool s_BrushMirrorUCheckBoxFlag = false;//UTDialogの
 static bool s_BrushMirrorVCheckBoxFlag = false;//UTDialogの
 static bool s_IfMirrorVDiv2CheckBoxFlag = false;//UTDialogの
@@ -1966,6 +1967,7 @@ static void ShowGUIDlgBrushes(bool srcflag);
 static void ShowGUIDlgBullet(bool srcflag);
 static void ShowGUIDlgLOD(bool srcflag);
 static void CloseAllRightPainWindow();
+static void CloseAllAndDispPlaceFolder();
 static void CloseTheFirstRowGUI();
 
 
@@ -2144,6 +2146,7 @@ static int CheckStr_float(const WCHAR* srcstr);
 
 static int CreateGUIDlgDispParams();
 static int CreateGUIDlgBrushes();
+static int Brushes2Dlg(HWND hDlgWnd);
 static int CreateGUIDlgBullet();
 static int CreateGUIDlgLOD();
 static int LODParams2Dlg(HWND hDlgWnd);
@@ -3752,6 +3755,7 @@ void InitApp()
 
 	s_utBrushRepeatsFlag = false;//UTDialogのBrushRepeatsスライダー値変更
 	s_utApplyRateFlag = false;//UTDialogのApplyRateスライダー値変更
+	s_utBrushMethodFlag = false;
 	s_BrushMirrorUCheckBoxFlag = false;//UTDialogの
 	s_BrushMirrorVCheckBoxFlag = false;//UTDialogの
 	s_IfMirrorVDiv2CheckBoxFlag = false;//UTDialogの
@@ -5467,7 +5471,7 @@ void OnUserFrameMove(double fTime, float fElapsedTime)
 		return;//!!!!!!!!!!!!!!!!!!!
 	}
 
-	DisplayApplyRateText();
+	//DisplayApplyRateText();//2024/02/02　コメントアウト 毎フレーム呼ぶとちらつく　コンボボックス選択中にも更新が入って選択できない
 
 	SetCameraModel();
 
@@ -6724,6 +6728,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				break;
 			case ID_FILE_BVH2FBXBATCH:
 				if (s_registflag == 1) {
+					CloseAllAndDispPlaceFolder();//バッチ処理中にOnModelMenu()で頻繁にCreate*DlgするとDlgが閉じられなくなることがあるので対応
 					ActivatePanel(0);
 					BVH2FBXBatch();
 					ActivatePanel(1);
@@ -6732,6 +6737,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				break;
 			case ID_FILE_RETARGETBATCH:
 				if (s_registflag == 1) {
+					CloseAllAndDispPlaceFolder();//バッチ処理中にOnModelMenu()で頻繁にCreate*DlgするとDlgが閉じられなくなることがあるので対応
 					ActivatePanel(0);
 					RetargetBatch();
 					ActivatePanel(1);
@@ -22703,7 +22709,9 @@ int CreateLaterTransparentWnd()
 
 	if (s_latertransparentdlg) {
 		//already opened
-		return 0;
+		//return 0;
+		DestroyWindow(s_latertransparentdlg);
+		s_latertransparentdlg = 0;
 	}
 
 
@@ -26398,6 +26406,93 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 
 }
 
+int Brushes2Dlg(HWND hDlgWnd)
+{
+	if (!hDlgWnd) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (!IsWindow(hDlgWnd)) {
+		return 1;
+	}
+
+	//##########
+	//Combo Box
+	//##########
+	HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_BRUSHES);
+	if (combownd != NULL) {
+		SendMessage(combownd, CB_RESETCONTENT, 0, 0);
+
+		int currentpluginno = 0;
+		int pluginno;
+		int addindex = 0;
+		for (pluginno = 0; pluginno < MAXPLUGIN; pluginno++) {
+			if ((s_plugin + pluginno)->validflag == 1) {
+				//g_motionbrush_method = (s_plugin + pluginno)->menuid;//!!!!!!!!!!
+				//break;
+
+				WCHAR strcombo[256];
+				swprintf_s(strcombo, 256, (s_plugin + pluginno)->pluginname);
+				SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)strcombo);
+
+				if (g_motionbrush_method == (s_plugin + pluginno)->menuid) {
+					//currentpluginno = pluginno;
+					currentpluginno = addindex;
+				}
+				addindex++;
+			}
+		}
+		::SendMessage(combownd, CB_SETCURSEL, (WPARAM)currentpluginno, 0);
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	//#######
+	//Slider
+	//#######
+	int sliderpos = g_applyrate;
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = g_brushrepeats;
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)1);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+	CEditRange::SetApplyRate((double)g_applyrate);
+	double applyframe = s_editrange.GetApplyFrame();
+
+	//#####
+	//Text
+	//#####
+	WCHAR strdlg[256] = { 0L };
+	swprintf_s(strdlg, 256, L"TopPos %d%% : %d", g_applyrate, IntTime(applyframe));
+	SetDlgItemText(hDlgWnd, IDC_STATIC_TOPPOS, strdlg);
+
+	swprintf_s(strdlg, 256, L"Brush Repeats : %d", g_brushrepeats);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_DLG_BRUSHREPEATS, strdlg);
+
+	//##########
+	//Check Box
+	//##########
+	if (g_brushmirrorUflag == 1) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_BRUSHU, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_BRUSHU, false);
+	}
+	if (g_brushmirrorVflag == 1) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_BRUSHV, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_BRUSHV, false);
+	}
+
+	return 0;
+}
 
 LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -26407,78 +26502,7 @@ LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		//Lights2Dlg(hDlgWnd);
 		//EnableWindow(GetDlgItem(hDlgWnd, IDC_RESETLIM_CURRENT), FALSE);
 
-		//##########
-		//Combo Box
-		//##########
-		HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_BRUSHES);
-		if (combownd != NULL) {
-			SendMessage(combownd, CB_RESETCONTENT, 0, 0);
-
-			int currentpluginno = 0;
-			int pluginno;
-			for (pluginno = 0; pluginno < MAXPLUGIN; pluginno++) {
-				if ((s_plugin + pluginno)->validflag == 1) {
-					//g_motionbrush_method = (s_plugin + pluginno)->menuid;//!!!!!!!!!!
-					//break;
-
-					WCHAR strcombo[256];
-					swprintf_s(strcombo, 256, (s_plugin + pluginno)->pluginname);
-					SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)strcombo);
-
-					if (g_motionbrush_method == (s_plugin + pluginno)->menuid) {
-						currentpluginno = pluginno;
-					}
-				}
-			}
-			::SendMessage(combownd, CB_SETCURSEL, (WPARAM)currentpluginno, 0);
-		}
-		else {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		//#######
-		//Slider
-		//#######
-		int sliderpos = g_applyrate;
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-		sliderpos = g_brushrepeats;
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)1);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-		CEditRange::SetApplyRate((double)g_applyrate);
-		double applyframe = s_editrange.GetApplyFrame();
-
-		//#####
-		//Text
-		//#####
-		WCHAR strdlg[256] = { 0L };
-		swprintf_s(strdlg, 256, L"TopPos %d%% : %d", g_applyrate, IntTime(applyframe));
-		SetDlgItemText(hDlgWnd, IDC_STATIC_TOPPOS, strdlg);
-
-		swprintf_s(strdlg, 256, L"Brush Repeats : %d", g_brushrepeats);
-		SetDlgItemText(hDlgWnd, IDC_STATIC_DLG_BRUSHREPEATS, strdlg);
-
-		//##########
-		//Check Box
-		//##########
-		if (g_brushmirrorUflag == 1) {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_BRUSHU, true);
-		}
-		else {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_BRUSHU, false);
-		}
-		if (g_brushmirrorVflag == 1) {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_BRUSHV, true);
-		}
-		else {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_BRUSHV, false);
-		}
-
+		Brushes2Dlg(hDlgWnd);
 
 		return FALSE;
 	}
@@ -26581,7 +26605,7 @@ LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 									::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
 									PostQuitMessage(result);
 								}
-								//PrepairUndo();//保存はOnFrameUtCheckBoxにて
+								s_utBrushMethodFlag = true;//PrepairUndo();//保存はOnFrameUtCheckBoxにて
 							}
 						}
 						else {
@@ -27712,6 +27736,7 @@ LRESULT CALLBACK AngleLimitDlgProc2(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp
 
 		case IDC_RESETLIM_CURRENT:
 		{
+			//curboneだけ
 			if (s_model && s_anglelimitdlg && s_anglelimitbone) {
 				s_changelimitangleFlag = true;
 				PrepairUndo();//全フレーム変更の前に全フレーム保存
@@ -27733,6 +27758,7 @@ LRESULT CALLBACK AngleLimitDlgProc2(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp
 		break;
 		case IDC_RESET0_CURRENT:
 		{
+			//curboneだけ
 			if (s_model && s_anglelimitdlg && s_anglelimitbone) {
 				s_changelimitangleFlag = true;
 				PrepairUndo();//全フレーム変更の前に全フレーム保存
@@ -27754,6 +27780,7 @@ LRESULT CALLBACK AngleLimitDlgProc2(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp
 		break;
 		case IDC_REPLACE180TO170_CURRENT:
 		{
+			//curboneだけ
 			if (s_model && s_anglelimitdlg && s_anglelimitbone) {
 				s_changelimitangleFlag = true;
 				PrepairUndo();//全フレーム変更の前に全フレーム保存
@@ -27775,6 +27802,7 @@ LRESULT CALLBACK AngleLimitDlgProc2(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp
 		break;
 		case IDC_LIMITFROMMOTION_CURRENT:
 		{
+			//curboneだけ
 			if (s_model && s_anglelimitdlg && s_anglelimitbone) {
 				MOTINFO* curmi;
 				curmi = s_model->GetCurMotInfo();
@@ -27788,7 +27816,8 @@ LRESULT CALLBACK AngleLimitDlgProc2(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp
 					HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
 					bool excludebt = true;
-					s_model->ResetAngleLimit(excludebt, 0);
+					//s_model->ResetAngleLimit(excludebt, 0);
+					s_model->ResetAngleLimit(excludebt, 0, s_anglelimitbone);//2024/02/02 curboneだけリセット
 					UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM, false);
 
 					s_model->AdditiveCurrentToAngleLimit(s_anglelimitbone);//2022/12/05 curbone引数追加
@@ -28571,7 +28600,7 @@ int OnFrameUtCheckBox()
 	static int save_ifmirrorVDiv2flag = g_ifmirrorVDiv2flag;
 	static int save_brushrepeats = g_brushrepeats;
 	static int save_applyrate = g_applyrate;
-
+	static int save_brushmethod = g_motionbrush_method;//2024/02/02
 
 	////g_applyendflag = (int)s_ApplyEndCheckBox->GetChecked();
 	////g_slerpoffflag = (int)s_SlerpOffCheckBox->GetChecked();
@@ -28701,6 +28730,17 @@ int OnFrameUtCheckBox()
 		save_applyrate = g_applyrate;
 
 		s_utApplyRateFlag = false;//OnGUIEventのApplyRateスライダー
+	}
+
+
+	if (s_utBrushMethodFlag) {//2024/02/02
+		//値が変わって　かつ　マウスアップのとき
+		if (s_model && (save_brushmethod != g_motionbrush_method)) {
+			PrepairUndo();
+		}
+		save_brushmethod = g_motionbrush_method;
+
+		s_utBrushMethodFlag = false;
 	}
 
 
@@ -31504,7 +31544,7 @@ int OnSpriteUndo()
 			OnTimeLineButtonSelectFromSelectStartEnd(0);
 			SetShowPosTime();//CreateMotionBrushより前で呼ばないと　TopPosを変えた後のUndoRedoで　描画がずれることがある
 
-			DisplayApplyRateText();
+			DisplayApplyRateText();			
 
 			int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 			if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
@@ -39655,6 +39695,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				break;
 			case ID_FILE_BVH2FBXBATCH:
 				if (s_registflag == 1) {
+					CloseAllAndDispPlaceFolder();//バッチ処理中にOnModelMenu()で頻繁にCreate*DlgするとDlgが閉じられなくなることがあるので対応
 					ActivatePanel(0);
 					BVH2FBXBatch();
 					ActivatePanel(1);
@@ -39671,6 +39712,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				//	break;
 			case ID_FILE_RETARGETBATCH:
 				if (s_registflag == 1) {
+					CloseAllAndDispPlaceFolder();//バッチ処理中にOnModelMenu()で頻繁にCreate*DlgするとDlgが閉じられなくなることがあるので対応
 					ActivatePanel(0);
 					RetargetBatch();
 					ActivatePanel(1);
@@ -41162,6 +41204,7 @@ void ShowGUIDlgBrushes(bool srcflag)
 	if (s_guidlg[GUIDLG_BRUSHPARAMS] != 0) {
 		if (srcflag == true) {
 			ShowWindow(s_guidlg[GUIDLG_BRUSHPARAMS], SW_SHOW);
+			DisplayApplyRateText();//2024/02/02
 			UpdateWindow(s_guidlg[GUIDLG_BRUSHPARAMS]);
 		}
 		else {
@@ -50760,6 +50803,11 @@ int DisplayApplyRateText()
 	//	}
 	//}
 
+	
+	if ((s_guidlg[GUIDLG_BRUSHPARAMS] != 0) && s_spguisw[SPGUISW_BRUSHPARAMS].state) {
+		Brushes2Dlg(s_guidlg[GUIDLG_BRUSHPARAMS]);//2024/02/02
+	}
+
 	return 0;
 }
 
@@ -53734,6 +53782,16 @@ void CloseAllRightPainWindow()
 	CloseTheFirstRowGUI();
 
 }
+
+void CloseAllAndDispPlaceFolder()
+{
+	CloseAllRightPainWindow();
+
+	if (s_placefolderWnd) {
+		s_placefolderWnd->setVisible(true);
+	}
+}
+
 
 void CloseTheFirstRowGUI()
 {
