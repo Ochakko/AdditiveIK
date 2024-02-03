@@ -3570,6 +3570,26 @@ void CModel::SetSelectFlagReq( CBone* boneptr, int broflag )
 }
 
 
+int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex)
+{
+	//当たったら１、当たらなかったら０を返す。エラーも０を返す。
+
+	if (!pickinfo || !pickobj || !hitfaceindex) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	ChaVector3 startlocal, dirlocal;
+	CalcMouseLocalRay(pickinfo, &startlocal, &dirlocal);
+	bool excludeinvface = true;
+	int colli = 0;
+	*hitfaceindex = -1;
+	colli = pickobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, excludeinvface, hitfaceindex);
+	return colli;
+
+}
+
+
 int CModel::CollisionNoBoneObj_Mouse( UIPICKINFO* pickinfo, const char* objnameptr, 
 	bool excludeinvface)
 {
@@ -19375,9 +19395,11 @@ void CModel::CreateObjno2DigElemReq(FbxNode* pNode, int* pobjno, int depth)
 	}
 }
 
-int CModel::SetDispGroupGUI(std::vector<OrgWinGUI::OWP_CheckBoxA*>& checkboxvec)
+int CModel::SetDispGroupGUI(std::vector<OrgWinGUI::OWP_CheckBoxA*>& checkboxvec,
+	std::vector<CMQOObject*>& mqoobjvec)
 {
 	checkboxvec.clear();
+	mqoobjvec.clear();
 
 	int objnum = (int)m_objno2digelem.size();
 	int objno;
@@ -19404,6 +19426,7 @@ int CModel::SetDispGroupGUI(std::vector<OrgWinGUI::OWP_CheckBoxA*>& checkboxvec)
 			}
 
 			checkboxvec.push_back(newchk);
+			mqoobjvec.push_back(digelem.mqoobject);
 		}
 	}
 

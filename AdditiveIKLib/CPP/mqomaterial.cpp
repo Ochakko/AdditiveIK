@@ -1623,8 +1623,8 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 			(shaderindex == MQOSHADER_STD_SHADOWMAP)
 			) {
 			//2023/12/11 ShadowMap
-			//psoDesc.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
-			psoDesc.RTVFormats[0] = DXGI_FORMAT_R32G32_FLOAT;
+			psoDesc.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			//psoDesc.RTVFormats[0] = DXGI_FORMAT_R32G32_FLOAT;
 			numRenderTarget = 1;
 		}
 		//else if (

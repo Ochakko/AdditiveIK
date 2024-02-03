@@ -259,6 +259,79 @@ int ChaScene::UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, ChaMatri
 	return 0;
 }
 
+bool ChaScene::PickPolyMesh3_Mesh(UIPICKINFO* tmppickinfo, 
+	CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial)
+{
+	if (!tmppickinfo || !pickmodel || !pickmqoobj || !pickmaterial) {
+		_ASSERT(0);
+		return false;
+	}
+
+	vector<myRenderer::RENDEROBJ> pickvec;
+
+	if (!m_modelindex.empty()) {
+		int modelnum = (int)m_modelindex.size();
+		int modelindex;
+		int groupindex;
+		for (groupindex = 0; groupindex < MAXDISPGROUPNUM; groupindex++) {
+			for (modelindex = 0; modelindex < modelnum; modelindex++) {
+
+				CModel* curmodel = m_modelindex[modelindex].modelptr;
+				if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView()) {
+					if (!(curmodel->DispGroupEmpty(groupindex)) && curmodel->GetDispGroupON(groupindex)) {
+						int elemnum = curmodel->GetDispGroupSize(groupindex);
+						int elemno;
+						for (elemno = 0; elemno < elemnum; elemno++) {
+
+							CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
+							if (curobj && curobj->GetDispObj() && curobj->GetPm3() && curobj->GetVisible()) {
+								
+								myRenderer::RENDEROBJ pickobj;
+								pickobj.Init();
+								pickobj.pmodel = curmodel;
+								pickobj.mqoobj = curobj;
+
+								pickvec.push_back(pickobj);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		//##########################################################
+		//カメラ距離でソートしてから　pickする
+		//##########################################################
+		if (!pickvec.empty()) {
+			std::sort(pickvec.begin(), pickvec.end());//カメラ距離でソート
+
+			int pickvecsize = (int)pickvec.size();
+			int pickindex;
+			for (pickindex = 0; pickindex < pickvecsize; pickindex++) {
+				myRenderer::RENDEROBJ pickobj = pickvec[pickindex];
+				CModel* curmodel = pickobj.pmodel;
+				CMQOObject* curobj = pickobj.mqoobj;
+				if (curmodel && curobj) {
+					int hitfaceindex = -1;
+					int colli = curmodel->CollisionPolyMesh3_Mouse(tmppickinfo, curobj, &hitfaceindex);
+					if (colli != 0) {
+						*pickmodel = curmodel;
+						*pickmqoobj = curobj;
+						int hitmaterialno = -1;
+						*pickmaterial = curobj->GetMaterialByFaceIndex(hitfaceindex);
+
+						return true;
+					}
+				}
+			}
+		}
+	}
+
+	return false;
+
+}
+
+
 int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lightflag, ChaVector4 diffusemult, int btflag)
 {
 	if (!renderingEngine) {

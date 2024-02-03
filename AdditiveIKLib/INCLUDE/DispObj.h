@@ -149,6 +149,15 @@ public:
 
 	//void UpdateBoneMatrix(int srcdatanum, void* srcdata);
 
+	ID3D12Resource* GetVertexBuffer()
+	{
+		return m_vertexBuffer;
+	}
+	ID3D12Resource* GetIndexBuffer()
+	{
+		return m_indexBuffer;
+	}
+
 
 private:
 

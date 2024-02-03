@@ -104,6 +104,15 @@ typedef  struct tag_n3p
 */
 
 	DestroySystemDispObj();
+	if (m_dispv) {
+		free(m_dispv);
+		m_dispv = 0;
+	}
+	if (m_dispindex) {
+		free(m_dispindex);
+		m_dispindex = 0;
+	}
+
 
 	if( m_matblock ){
 		free( m_matblock );
@@ -125,15 +134,15 @@ void CPolyMesh3::DestroySystemDispObj()
 		m_n3p = 0;
 	}
 
-	if (m_dispv) {
-		free(m_dispv);
-		m_dispv = 0;
-	}
-
-	if (m_dispindex) {
-		free(m_dispindex);
-		m_dispindex = 0;
-	}
+	//pick‚ÅŽg—p‚·‚é‚±‚Æ‚É‚µ‚½‚Ì‚Å‚±‚±‚Å‚Í”jŠü‚µ‚È‚¢
+	//if (m_dispv) {
+	//	free(m_dispv);
+	//	m_dispv = 0;
+	//}
+	//if (m_dispindex) {
+	//	free(m_dispindex);
+	//	m_dispindex = 0;
+	//}
 
 	if (GetFbxFileFlag()) {
 		//###############################################

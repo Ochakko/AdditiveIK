@@ -98,6 +98,10 @@ public:
 		CModel* smodel, bool recstopflag, BPWorld* bpWorld, double srcreccnt,
 		int (*srcStopBtRec)());
 
+	bool PickPolyMesh3_Mesh(UIPICKINFO* tmppickinfo, 
+		CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial);
+
+
 private:
 	void InitParams();
 	void DestroyObjs();

@@ -1961,6 +1961,49 @@ int CMQOObject::GetMaterialNoInUse( int* noptr, int arrayleng, int* getnumptr )
 	return 0;
 }
 
+CMQOMaterial* CMQOObject::GetMaterialByFaceIndex(int srcfaceindex)
+{
+	CPolyMesh3* pm3 = GetPm3();
+	CPolyMesh4* pm4 = GetPm4();
+
+	if (pm3) {
+		int blno;
+		for (blno = 0; blno < pm3->GetOptMatNum(); blno++) {
+			MATERIALBLOCK* currb = pm3->GetMatBlock() + blno;
+
+			if ((srcfaceindex >= currb->startface) && (srcfaceindex <= currb->endface)) {
+				return currb->mqomat;
+			}
+		}
+		return nullptr;
+	}
+	else if (pm4) {
+		CMQOMaterial* befmat = nullptr;
+		int materialnum = pm4->GetDispMaterialNum();
+		int materialcnt;
+		for (materialcnt = 0; materialcnt < materialnum; materialcnt++) {
+			CMQOMaterial* curmat = nullptr;
+			int curoffset = 0;
+			int curtrinum = 0;
+			int result0 = pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
+			if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0)) {
+				if (srcfaceindex < (curoffset / 3)) {
+					break;
+				}
+				else {
+					befmat = curmat;
+				}
+			}
+		}
+		return befmat;
+	}
+	else {
+		return nullptr;
+	}
+
+
+}
+
 int CMQOObject::GetFaceInMaterial( int matno, CMQOFace** ppface, int arrayleng, int* getnumptr )
 {
 	*getnumptr = 0;
@@ -2026,10 +2069,10 @@ int CMQOObject::CollisionLocal_Ray(ChaVector3 startlocal, ChaVector3 dirlocal,
 
 	int allowrev;
 	if (excludeinvface) {
-		allowrev = 1;
+		allowrev = 0;
 	}
 	else {
-		allowrev = 0;
+		allowrev = 1;
 	}
 
 	int fno;
@@ -2063,6 +2106,73 @@ int CMQOObject::CollisionLocal_Ray(ChaVector3 startlocal, ChaVector3 dirlocal,
 	return 0;
 }
 
+int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirlocal,
+	bool excludeinvface, int* hitfaceindex)
+{
+	if (!hitfaceindex) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	CPolyMesh3* pm3ptr = GetPm3();
+	if (!pm3ptr) {
+		return 0;
+	}
+
+	CDispObj* dispobj = GetDispObj();
+	if (!dispobj) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	BINORMALDISPV* dispv = pm3ptr->GetDispV();
+	if (!dispv) {
+		_ASSERT(0);
+		return 0;
+	}
+	int* dispindex = pm3ptr->GetDispIndex();
+	if (!dispindex) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	int face_count;
+	int vert_count;
+	face_count = pm3ptr->GetFaceNum();
+	vert_count = pm3ptr->GetOptLeng();
+
+	int allowrev;
+	if (excludeinvface) {
+		allowrev = 0;
+	}
+	else {
+		allowrev = 1;
+	}
+
+	int fno;
+	int hitflag;
+	int justflag;
+	float justval = 0.01f;
+	for (fno = 0; fno < face_count; fno++) {
+		hitflag = 0;
+		justflag = 0;
+
+		int index0, index1, index2;
+		index0 = *(dispindex + fno * 3);
+		index1 = *(dispindex + fno * 3 + 1);
+		index2 = *(dispindex + fno * 3 + 2);
+
+		hitflag = ChkRay(allowrev, 
+			index0, index1, index2,
+			dispv, startlocal, dirlocal, justval, &justflag);
+		if (hitflag || justflag) {
+			*hitfaceindex = fno;
+			return 1;
+		}
+	}
+
+	return 0;
+}
 
 
 int CMQOObject::AddInfBone( int srcboneno, int srcvno, float srcweight, int isadditive )

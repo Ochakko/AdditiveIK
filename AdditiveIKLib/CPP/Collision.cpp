@@ -108,6 +108,99 @@ int ChkRay( int allowrev, int i1, int i2, int i3,
 	}
 
 }
+
+int ChkRay(int allowrev, int i1, int i2, int i3,
+	BINORMALDISPV* pointbuf, ChaVector3 startpos, ChaVector3 dir,
+	float justval, int* justptr)
+{
+	ChaVector3 v1;
+	v1 = startpos;
+
+	ChaVector3 v;
+	v = dir;
+
+	ChaVector3 e;
+	ChaVector3Normalize(&e, &v);
+
+	ChaVector3 point1, point2, point3;
+	point1 = ChaVector3((pointbuf + i1)->pos.x, (pointbuf + i1)->pos.y, (pointbuf + i1)->pos.z);
+	point2 = ChaVector3((pointbuf + i2)->pos.x, (pointbuf + i2)->pos.y, (pointbuf + i2)->pos.z);
+	point3 = ChaVector3((pointbuf + i3)->pos.x, (pointbuf + i3)->pos.y, (pointbuf + i3)->pos.z);
+
+	ChaVector3 s, t;
+	s = point2 - point1;
+	t = point3 - point1;
+	ChaVector3 abc;
+	ChaVector3Cross(&abc, (const ChaVector3*)&s, (const ChaVector3*)&t);
+	ChaVector3Normalize(&abc, &abc);
+
+	float d;
+	d = -ChaVector3Dot(&abc, &point1);
+
+	float dotface = ChaVector3Dot(&abc, &e);
+	if (dotface == 0.0f) {
+		//		_ASSERT( 0 );
+		return 0;
+	}
+	if ((allowrev == 0) && (dotface < 0.0f)) {
+		//ó†ñ ÇÕìñÇΩÇÁÇ»Ç¢
+		return 0;
+	}
+
+	float k;
+	k = -((ChaVector3Dot(&abc, &v1) + d) / ChaVector3Dot(&abc, &e));
+	if (fabs(k) <= justval) {
+		(*justptr)++;
+		return 0;
+	}
+	if (k < 0.0f) {
+		return 0;
+	}
+
+	ChaVector3 q;
+	q = v1 + e * k;
+
+	ChaVector3 g0, g1, cA, cB, cC;
+
+	g1 = point2 - point1;
+	g0 = q - point1;
+	ChaVector3Cross(&cA, (const ChaVector3*)&g0, (const ChaVector3*)&g1);
+	ChaVector3Normalize(&cA, &cA);
+
+	g1 = point3 - point2;
+	g0 = q - point2;
+	ChaVector3Cross(&cB, (const ChaVector3*)&g0, (const ChaVector3*)&g1);
+	ChaVector3Normalize(&cB, &cB);
+
+	g1 = point1 - point3;
+	g0 = q - point3;
+	ChaVector3Cross(&cC, (const ChaVector3*)&g0, (const ChaVector3*)&g1);
+	ChaVector3Normalize(&cC, &cC);
+
+
+	float dota, dotb, dotc;
+	dota = ChaVector3Dot(&abc, &cA);
+	dotb = ChaVector3Dot(&abc, &cB);
+	dotc = ChaVector3Dot(&abc, &cC);
+
+	int zeroflag;
+	zeroflag = (fabs(dota) < 0.05f) && (fabs(dotb) < 0.05f) && (fabs(dotc) < 0.05f);
+	if (zeroflag != 0) {
+		//(*justptr)++;
+		return 1;
+	}
+
+	if (((dota <= -0.50f) && (dotb <= -0.50f) && (dotc <= -0.50f)) ||
+		((dota >= 0.50f) && (dotb >= 0.50f) && (dotc >= 0.50f))) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+
+}
+
+
 int CalcShadowToPlane( ChaVector3 srcpos, ChaVector3 planedir, ChaVector3 planepos, ChaVector3* shadowptr )
 {
 	//ñ Ç∆ÉåÉCÇ∆ÇÃåì_(shadow)ÇãÅÇﬂÇÈÅB

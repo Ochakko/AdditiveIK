@@ -1193,6 +1193,7 @@ static bool s_groupUnderGetting = false;//s_groupgetBボタンの処理中は　
 //static OWP_Button* s_grouptestB[MAXDISPOBJNUM];
 static std::vector<OWP_CheckBoxA*> s_groupobjvec;
 static std::vector<OWP_Button*> s_grouptestBvec;
+static std::vector<CMQOObject*> s_groupmqoobjvec;
 static int s_grouplinenum = 0;
 static bool s_disponlyoneobj = false;//for test button of groupWnd
 static int s_onlyoneobjno = -1;//for test button of groupWnd
@@ -1640,7 +1641,7 @@ static bool s_rbuttonSelectFlag = false;
 //CDXUTStatic* s_TipText5 = 0;
 
 Font s_fontfortip;
-bool s_dispfontfottip = false;
+bool s_dispfontfortip = false;
 WCHAR s_strfortip[512] = { 0 };
 Vector2 s_fontposfortip;
 
@@ -2006,8 +2007,13 @@ static void DSMessageBox(HWND srcparenthwnd, const WCHAR* srcmessage, const WCHA
 static int DispToolTip();
 static int CreateToolTip(POINT ptCursor, WCHAR* srctext);
 static int CreateTipRig(CBone* currigbone, int currigno, POINT ptCursor);
-
+static bool DispTipUI();
+static bool DispTipUIFrog();
 static bool DispTipRig();
+static bool DispTipMesh();
+static bool DispTipMaterial();
+static bool DispTipBone();
+
 static int ClearLimitedWM(CModel* srcmodel);
 
 static float CalcSelectScale(CBone* curboneptr);
@@ -2345,6 +2351,7 @@ static int AddModelBound(MODELBOUND* mb, MODELBOUND* addmb);
 static int OnSetMotSpeed();
 
 static int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu);
+static int OnModelMenu(CModel* selmodel);
 static int SetTimelineHasRigFlag();
 static int OnREMenu(int selindex, int callbymenu);
 static int OnRgdMenu(int selindex, int callbymenu);
@@ -2397,6 +2404,12 @@ static int CalcTargetPos(ChaVector3* dstpos);
 static int CalcPickRay(ChaVector3* start3d, ChaVector3* end3d);
 static void ActivatePanel(int state);
 static int SetCamera6Angle();
+
+static int PickAndSelectMeshOfDispGroupDlg();
+static int PickAndSelectMaterialOfShaderTypeDlg();
+
+
+
 
 //static int SetSelectCol();
 static int RigidElem2WndParam();
@@ -3457,7 +3470,7 @@ void InitApp()
 
 	s_chascene = 0;
 
-	s_dispfontfottip = false;
+	s_dispfontfortip = false;
 	ZeroMemory(s_strfortip, sizeof(WCHAR) * 512);
 	s_fontposfortip = Vector2(0.0f, 0.0f);
 	s_fontfortip.SetShadowParam(true, 1.0, 
@@ -3659,6 +3672,7 @@ void InitApp()
 		//ZeroMemory(s_grouptestB, sizeof(OWP_Button*)* MAXDISPOBJNUM);
 		s_groupobjvec.clear();
 		s_grouptestBvec.clear();
+		s_groupmqoobjvec.clear();
 
 		s_grouplinenum = 0;
 		s_disponlyoneobj = false;//for test button of groupWnd
@@ -7239,6 +7253,13 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 		}
 
+
+		if (s_spdispsw[SPDISPSW_DISPGROUP].state) {
+			PickAndSelectMeshOfDispGroupDlg();
+		}
+		else if (s_spdispsw[SPDISPSW_SHADERTYPE].state) {
+			PickAndSelectMaterialOfShaderTypeDlg();
+		}
 
 
 		int oprigdoneflag = 0;
@@ -12132,6 +12153,34 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 	}
 
 	return 0;
+}
+
+int OnModelMenu(CModel* selmodel)
+{
+	if (!s_chascene || !s_model) {
+		return 0;
+	}
+
+	int modelnum = s_chascene->GetModelNum();
+	int modelindex;
+	int selmodelindex = -1;
+	for (modelindex = 0; modelindex < modelnum; modelindex++) {
+		CModel* chkmodel = s_chascene->GetModel(modelindex);
+		if (chkmodel && (chkmodel == selmodel)) {
+			selmodelindex = modelindex;
+			break;
+		}
+	}
+
+	if ((selmodelindex >= 0) && (selmodelindex < modelnum)) {
+		ActivatePanel(0);
+		OnModelMenu(true, selmodelindex, 1);
+		ActivatePanel(1);
+		return 0;
+	}
+	else {
+		return 0;
+	}
 }
 
 int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
@@ -33521,7 +33570,7 @@ int CreateDispGroupWnd()
 			}
 		}
 
-		int result = s_model->SetDispGroupGUI(s_groupobjvec);
+		int result = s_model->SetDispGroupGUI(s_groupobjvec, s_groupmqoobjvec);
 		if (result != 0) {
 			_ASSERT(0);
 			return 1;
@@ -36797,7 +36846,7 @@ int OnRenderFontForTip(myRenderer::RenderingEngine* re, RenderContext* rc)
 	}
 
 
-	if (s_dispfontfottip) {
+	if (s_dispfontfortip) {
 	//if (s_strfortip[0] != 0L) {
 		Vector4 fontcol = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 		Vector2 fontpivot = Vector2(0.0f, 0.0f);
@@ -36847,7 +36896,7 @@ int OnRenderFontForTip(myRenderer::RenderingEngine* re, RenderContext* rc)
 		re->AddFontToForwardRenderPass(renderfont);
 	}
 
-	//s_dispfontfottip = false;
+	//s_dispfontfortip = false;
 
 	return 0;
 }
@@ -51195,6 +51244,121 @@ int CreateTipRig(CBone* currigbone, int currigno, POINT ptCursor)
 	return 0;
 }
 
+int PickAndSelectMeshOfDispGroupDlg()
+{
+	if (!s_model) {
+		return 0;
+	}
+	if (g_previewFlag != 0) {
+		return 0;
+	}
+	if (!s_chascene) {
+		return false;
+	}
+	if (s_spdispsw[SPDISPSW_DISPGROUP].state) {
+
+		UIPICKINFO tmppickinfo;
+		ZeroMemory(&tmppickinfo, sizeof(UIPICKINFO));
+		tmppickinfo.mousebefpos = s_pickinfo.mousepos;
+		POINT ptCursor;
+		GetCursorPos(&ptCursor);
+		::ScreenToClient(s_3dwnd, &ptCursor);
+		tmppickinfo.mousepos = ptCursor;
+
+		tmppickinfo.clickpos = ptCursor;
+		tmppickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
+		tmppickinfo.firstdiff = ChaVector2(0.0f, 0.0f);
+		//tmppickinfo.winx = (int)DXUTGetWindowWidth();
+		//tmppickinfo.winy = (int)DXUTGetWindowHeight();
+		tmppickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
+		tmppickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
+		tmppickinfo.pickrange = PICKRANGE;
+
+		CModel* pickmodel = nullptr;
+		CMQOObject* pickmqoobj = nullptr;
+		CMQOMaterial* pickmaterial = nullptr;
+		bool pickflag = s_chascene->PickPolyMesh3_Mesh(&tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
+		if (pickflag && pickmodel && pickmqoobj) {
+
+			OnModelMenu(pickmodel);
+
+			WCHAR objname[256] = { 0L };
+			char tmpobjname[256] = { 0 };
+			strcpy_s(tmpobjname, 256, pickmqoobj->GetName());
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, tmpobjname, 256, objname, 256);
+
+			int selectlineindex = -1;
+			int lineno;
+			for (lineno = 0; lineno < s_grouplinenum; lineno++) {
+				if (s_groupmqoobjvec[lineno]) {
+					if (s_groupmqoobjvec[lineno] == pickmqoobj) {
+						selectlineindex = lineno;
+					}
+				}
+			}
+			if (s_groupWnd && (selectlineindex >= 0)) {
+				s_groupSCWnd->setShowPosLine(selectlineindex);
+			}
+		}
+	}
+
+
+	return 0;
+}
+int PickAndSelectMaterialOfShaderTypeDlg()
+{
+	if (!s_model) {
+		return 0;
+	}
+	if (g_previewFlag != 0) {
+		return 0;
+	}
+	if (s_spdispsw[SPDISPSW_SHADERTYPE].state) {
+
+		UIPICKINFO tmppickinfo;
+		ZeroMemory(&tmppickinfo, sizeof(UIPICKINFO));
+		tmppickinfo.mousebefpos = s_pickinfo.mousepos;
+		POINT ptCursor;
+		GetCursorPos(&ptCursor);
+		::ScreenToClient(s_3dwnd, &ptCursor);
+		tmppickinfo.mousepos = ptCursor;
+
+		tmppickinfo.clickpos = ptCursor;
+		tmppickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
+		tmppickinfo.firstdiff = ChaVector2(0.0f, 0.0f);
+		//tmppickinfo.winx = (int)DXUTGetWindowWidth();
+		//tmppickinfo.winy = (int)DXUTGetWindowHeight();
+		tmppickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
+		tmppickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
+		tmppickinfo.pickrange = PICKRANGE;
+
+		CModel* pickmodel = nullptr;
+		CMQOObject* pickmqoobj = nullptr;
+		CMQOMaterial* pickmaterial = nullptr;
+		bool pickflag = s_chascene->PickPolyMesh3_Mesh(&tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
+		if (pickflag && pickmodel && pickmaterial) {
+
+			OnModelMenu(pickmodel);
+
+			int materialnum = s_model->GetMQOMaterialSize();
+			int materialindex;
+			for (materialindex = 0; materialindex < materialnum; materialindex++) {
+				CMQOMaterial* chkmaterial = s_model->GetMQOMaterialByIndex(materialindex);
+				if (chkmaterial && (chkmaterial == pickmaterial)) {
+					if (s_SCshadertype) {
+						s_SCshadertype->setShowPosLine(materialindex + 1);
+					}
+
+					s_shadertypeparamsindex = materialindex + 1;//index==0は全てのマテリアルに設定. それ以外はindex - 1のマテリアルに設定
+					s_shadertypeparamsFlag = true;
+				}
+			}
+		}
+	}
+
+
+	return 0;
+}
 
 int DispToolTip()
 {
@@ -51206,8 +51370,40 @@ int DispToolTip()
 		return 0;
 	}
 
+	s_dispfontfortip = false;
 
+	if (s_spdispsw[SPDISPSW_DISPGROUP].state) {
+		s_dispfontfortip = DispTipMesh();
+	}
+	else if (s_spdispsw[SPDISPSW_SHADERTYPE].state) {
+		s_dispfontfortip = DispTipMaterial();
+	}
+	else if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
+		s_dispfontfortip = DispTipUI();
+	}
 
+	if (s_dispfontfortip == false) {
+		s_dispfontfortip = DispTipUIFrog();
+	}
+
+	if (s_dispfontfortip == false) {
+		if (s_oprigflag == 0) {
+			s_dispfontfortip = DispTipBone();
+		}
+	}
+
+	if (s_dispfontfortip == false) {
+		//s_customrigのツールチップ表示
+		if ((s_oprigflag != 0) && (g_previewFlag == 0)) {
+			s_dispfontfortip = DispTipRig();
+		}
+	}
+
+	return 0;
+}
+
+bool DispTipUI()
+{
 	UIPICKINFO tmppickinfo;
 	ZeroMemory(&tmppickinfo, sizeof(UIPICKINFO));
 	tmppickinfo.mousebefpos = s_pickinfo.mousepos;
@@ -51228,384 +51424,432 @@ int DispToolTip()
 
 	s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
 
+	WCHAR sz512[512];
+	ZeroMemory(sz512, sizeof(WCHAR) * 512);
+
+
+	bool dispfontfortip = false;
+
+
+	int cameramode;
+	cameramode = PickSpCam(ptCursor);
+	switch (cameramode) {
+	case PICK_CAMROT:
+		dispfontfortip = true;
+		wcscpy_s(sz512, 512, L"LDrag:CameraRot, RDrag:CameraTwist, RDBLCLK:TwistInit.");
+		//CreateToolTip(ptCursor, s_strfortip);
+		break;
+	case PICK_CAMMOVE:
+		dispfontfortip = true;
+		wcscpy_s(sz512, 512, L"Drag Camera : Pan");
+		//CreateToolTip(ptCursor, s_strfortip);
+		break;
+	case PICK_CAMDIST:
+		dispfontfortip = true;
+		wcscpy_s(sz512, 512, L"Drag Camera : Dolly");
+		//CreateToolTip(ptCursor, s_strfortip);
+		break;
+	default:
+		break;
+	}
+
+	if (dispfontfortip == false) {
+		//IK Mode
+		int pickikmodeflag = 0;
+		pickikmodeflag = PickSpIkModeSW(ptCursor);
+		if (pickikmodeflag == 1) {
+			dispfontfortip = true;
+			wcscpy_s(sz512, 512, L"IKMode : Rotation");
+			//CreateToolTip(ptCursor, s_strfortip);
+		}
+		else if (pickikmodeflag == 2) {
+			dispfontfortip = true;
+			wcscpy_s(sz512, 512, L"IKMode : Move");
+			//CreateToolTip(ptCursor, s_strfortip);
+		}
+		else if (pickikmodeflag == 3) {
+			dispfontfortip = true;
+			wcscpy_s(sz512, 512, L"IKMode : Scale");
+			//CreateToolTip(ptCursor, s_strfortip);
+		}
+	}
+
+	if (dispfontfortip == false) {
+		int pickundo = 0;
+		pickundo = PickSpUndo(ptCursor);
+		if (pickundo == PICK_UNDO) {
+			dispfontfortip = true;
+			wcscpy_s(sz512, 512, L"Undo operation");
+			//CreateToolTip(ptCursor, s_strfortip);
+		}
+		else if (pickundo == PICK_REDO) {
+			dispfontfortip = true;
+			wcscpy_s(sz512, 512, L"Redo operation");
+			//CreateToolTip(ptCursor, s_strfortip);
+		}
+	}
+
+	if (dispfontfortip == false) {
+		//lod switch
+		int picklodflag = 0;
+		picklodflag = PickSpLODSW(ptCursor);
+		if (picklodflag == 1) {
+			dispfontfortip = true;
+			wcscpy_s(sz512, 512, L"Disp ReferencePose");
+			//CreateToolTip(ptCursor, s_strfortip);
+		}
+	}
+
+	if (dispfontfortip == false) {
+		//limiteul switch
+		int picklimiteulflag = 0;
+		picklimiteulflag = PickSpLimitEulSW(ptCursor);
+		if (picklimiteulflag == 1) {
+			dispfontfortip = true;
+			wcscpy_s(sz512, 512, L"Angle Limit on IK Rot");
+			//CreateToolTip(ptCursor, s_strfortip);
+		}
+	}
+
+	if (dispfontfortip == false) {
+		//cameramode switch
+		int pickcameramodeflag = 0;
+		pickcameramodeflag = PickSpCameraModeSW(ptCursor);
+		if (pickcameramodeflag == 1) {
+			dispfontfortip = true;
+			wcscpy_s(sz512, 512, L"With or Without CameraAnim");
+			//CreateToolTip(ptCursor, s_strfortip);
+		}
+	}
+
+	if (dispfontfortip == false) {
+		//camerainherit switch
+		int pickcamerainheritflag = 0;
+		pickcamerainheritflag = PickSpCameraInheritSW(ptCursor);
+		if (pickcamerainheritflag == 1) {
+			dispfontfortip = true;
+			wcscpy_s(sz512, 512, L"CameraAnim InheritMode");
+			//CreateToolTip(ptCursor, s_strfortip);
+		}
+	}
+
+	if (dispfontfortip == false) {
+		//wallscraping switch
+		int pickscrapingflag = 0;
+		pickscrapingflag = PickSpScrapingSW(ptCursor);
+		if (pickscrapingflag == 1) {
+			dispfontfortip = true;
+			wcscpy_s(sz512, 512, L"WallScraping on Limited IK Rot");
+			//CreateToolTip(ptCursor, s_strfortip);
+		}
+	}
+
+	if (dispfontfortip == false) {
+		if (PickSpCpLW2W(ptCursor) != 0) {
+			if (s_copyLW2WFlag == false) {
+				dispfontfortip = true;
+				wcscpy_s(sz512, 512, L"Copy LimitedAngleMotion to UnLimitedAngleMotion");
+				//CreateToolTip(ptCursor, s_strfortip);
+			}
+		}
+	}
+
+	if (dispfontfortip == false) {
+		if (PickSpSmooth(ptCursor) != 0) {
+			if (s_smoothFlag == false) {
+				dispfontfortip = true;
+				wcscpy_s(sz512, 512, L"LBtn:Smooth, RBtn:SettingsAndSmooth");
+				//CreateToolTip(ptCursor, s_strfortip);
+			}
+		}
+	}
+
+	if (dispfontfortip == false) {
+		if (PickSpConstExe(ptCursor) != 0) {
+			if (s_constexeFlag == false) {
+				dispfontfortip = true;
+				wcscpy_s(sz512, 512, L"Execute Position Constraint");
+				//CreateToolTip(ptCursor, s_strfortip);
+			}
+		}
+	}
+	if (dispfontfortip == false) {
+		if (PickSpConstRefresh(ptCursor) != 0) {
+			if (s_constrefreshFlag == false) {
+				dispfontfortip = true;
+				wcscpy_s(sz512, 512, L"Update TargetPosition of Constraint");
+				//CreateToolTip(ptCursor, s_strfortip);
+			}
+		}
+	}
+
+
+
+	if (s_toolspritemode == 0) {//ToolShortCut : 0
+		if (dispfontfortip == false) {
+			if (PickSpCopy(ptCursor) != 0) {
+				if (s_model) {
+					dispfontfortip = true;
+					wcscpy_s(sz512, 512, L"Copy Motion");
+					//CreateToolTip(ptCursor, s_strfortip);
+				}
+			}
+		}
+
+		if (dispfontfortip == false) {
+			if (PickSpSymCopy(ptCursor) != 0) {
+				if (s_model) {
+					dispfontfortip = true;
+					wcscpy_s(sz512, 512, L"SymCopy Motion");
+					//CreateToolTip(ptCursor, s_strfortip);
+				}
+			}
+		}
+
+		if (dispfontfortip == false) {
+			if (PickSpPaste(ptCursor) != 0) {
+				if (s_model) {
+					dispfontfortip = true;
+					wcscpy_s(sz512, 512, L"LBtn:Paste Motion, RBtn;Settings And Paste Motion");
+					//CreateToolTip(ptCursor, s_strfortip);
+				}
+			}
+		}
+
+		if (dispfontfortip == false) {
+			if (PickSpCopyHistory(ptCursor) != 0) {
+				if (s_model) {
+					dispfontfortip = true;
+					wcscpy_s(sz512, 512, L"Disp CopyHistory at Right Pain");
+					//CreateToolTip(ptCursor, s_strfortip);
+				}
+			}
+		}
+	}
+	else if (s_toolspritemode == 1) {//ToolShortCut : 1
+		if (dispfontfortip == false) {
+			if (PickSpInterpolate(ptCursor) != 0) {
+				if (s_model) {
+					dispfontfortip = true;
+					wcscpy_s(sz512, 512, L"Interpolate Motion");
+					//CreateToolTip(ptCursor, s_strfortip);
+				}
+			}
+		}
+
+		if (dispfontfortip == false) {
+			if (PickSpInit(ptCursor) != 0) {
+				if (s_model) {
+					dispfontfortip = true;
+					wcscpy_s(sz512, 512, L"Init MotionPoint");
+					//CreateToolTip(ptCursor, s_strfortip);
+				}
+			}
+		}
+
+		if (dispfontfortip == false) {
+			if (PickSpScaleInit(ptCursor) != 0) {
+				if (s_model) {
+					dispfontfortip = true;
+					wcscpy_s(sz512, 512, L"Init All Scale");
+					//CreateToolTip(ptCursor, s_strfortip);
+				}
+			}
+		}
+
+		if (dispfontfortip == false) {
+			if (PickSpProperty(ptCursor) != 0) {
+				if (s_model) {
+					dispfontfortip = true;
+					wcscpy_s(sz512, 512, L"Property of Motion");
+					//CreateToolTip(ptCursor, s_strfortip);
+				}
+			}
+		}
+	}
+	else if (s_toolspritemode == 2) {//ToolShortCut : 2
+		if (dispfontfortip == false) {
+			if (PickSpZeroFrame(ptCursor) != 0) {
+				if (s_model) {
+					dispfontfortip = true;
+					wcscpy_s(sz512, 512, L"Edit 0 Frame");
+					//CreateToolTip(ptCursor, s_strfortip);
+				}
+			}
+		}
+
+		if (dispfontfortip == false) {
+			if (PickSpCameraDolly(ptCursor) != 0) {
+				if (s_model) {
+					dispfontfortip = true;
+					wcscpy_s(sz512, 512, L"Camera Dolly History");
+					//CreateToolTip(ptCursor, s_strfortip);
+				}
+			}
+		}
+
+		if (dispfontfortip == false) {
+			if (PickSpModelPosDir(ptCursor) != 0) {
+				if (s_model) {
+					dispfontfortip = true;
+					wcscpy_s(sz512, 512, L"Model's Pos and Dir");
+					//CreateToolTip(ptCursor, s_strfortip);
+				}
+			}
+		}
+
+		if (dispfontfortip == false) {
+			if (PickSpMaterialRate(ptCursor) != 0) {
+				if (s_model) {
+					dispfontfortip = true;
+					wcscpy_s(sz512, 512, L"Material Rate");
+					//CreateToolTip(ptCursor, s_strfortip);
+				}
+			}
+		}
+	}
+	else {
+		_ASSERT(0);
+	}
+
+	if (dispfontfortip == false) {
+		int oprigs_dispfontfortip = 0;
+		int pickrigflag = 0;
+		pickrigflag = PickSpRig(ptCursor);
+		if (pickrigflag == 1) {
+			dispfontfortip = true;
+			wcscpy_s(sz512, 512, L"Rig On or Off");
+			//CreateToolTip(ptCursor, s_strfortip);
+		}
+	}
+
+	if (dispfontfortip == false) {
+		if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
+			int spakind = PickSpAxis(ptCursor);
+			if (spakind == PICK_SPA_X) {
+				dispfontfortip = true;
+				wcscpy_s(sz512, 512, L"Drag X Axis IK");
+				//CreateToolTip(ptCursor, s_strfortip);
+			}
+			else if (spakind == PICK_SPA_Y) {
+				dispfontfortip = true;
+				wcscpy_s(sz512, 512, L"Drag Y Axis IK");
+				//CreateToolTip(ptCursor, s_strfortip);
+			}
+			else if (spakind == PICK_SPA_Z) {
+				dispfontfortip = true;
+				wcscpy_s(sz512, 512, L"Drag Z Axis IK");
+				//CreateToolTip(ptCursor, s_strfortip);
+			}
+		}
+	}
+
+
+	if (sz512[0] != 0L) {
+		wcscpy_s(s_strfortip, 512, sz512);
+	}
+	return dispfontfortip;
+
+}
+
+bool DispTipUIFrog()
+{
+	UIPICKINFO tmppickinfo;
+	ZeroMemory(&tmppickinfo, sizeof(UIPICKINFO));
+	tmppickinfo.mousebefpos = s_pickinfo.mousepos;
+	POINT ptCursor;
+	GetCursorPos(&ptCursor);
+	::ScreenToClient(s_3dwnd, &ptCursor);
+	tmppickinfo.mousepos = ptCursor;
+
+	tmppickinfo.clickpos = ptCursor;
+	tmppickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
+	tmppickinfo.firstdiff = ChaVector2(0.0f, 0.0f);
+	//tmppickinfo.winx = (int)DXUTGetWindowWidth();
+	//tmppickinfo.winy = (int)DXUTGetWindowHeight();
+	tmppickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
+	tmppickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
+	tmppickinfo.pickrange = PICKRANGE;
+
+
+	s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
 
 	WCHAR sz512[512];
 	ZeroMemory(sz512, sizeof(WCHAR) * 512);
 
-	//bool doneflag = false;
 
-	s_dispfontfottip = false;
+	bool dispfontfortip = false;
 
-
-	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
-
-
-		int cameramode;
-		cameramode = PickSpCam(ptCursor);
-		switch (cameramode) {
-		case PICK_CAMROT:
-			s_dispfontfottip = true;
-			wcscpy_s(sz512, 512, L"LDrag:CameraRot, RDrag:CameraTwist, RDBLCLK:TwistInit.");
-			//CreateToolTip(ptCursor, s_strfortip);
-			break;
-		case PICK_CAMMOVE:
-			s_dispfontfottip = true;
-			wcscpy_s(sz512, 512, L"Drag Camera : Pan");
-			//CreateToolTip(ptCursor, s_strfortip);
-			break;
-		case PICK_CAMDIST:
-			s_dispfontfottip = true;
-			wcscpy_s(sz512, 512, L"Drag Camera : Dolly");
-			//CreateToolTip(ptCursor, s_strfortip);
-			break;
-		default:
-			break;
-		}
-
-		if (s_dispfontfottip == false) {
-			//IK Mode
-			int pickikmodeflag = 0;
-			pickikmodeflag = PickSpIkModeSW(ptCursor);
-			if (pickikmodeflag == 1) {
-				s_dispfontfottip = true;
-				wcscpy_s(sz512, 512, L"IKMode : Rotation");
-				//CreateToolTip(ptCursor, s_strfortip);
-			}
-			else if (pickikmodeflag == 2) {
-				s_dispfontfottip = true;
-				wcscpy_s(sz512, 512, L"IKMode : Move");
-				//CreateToolTip(ptCursor, s_strfortip);
-			}
-			else if (pickikmodeflag == 3) {
-				s_dispfontfottip = true;
-				wcscpy_s(sz512, 512, L"IKMode : Scale");
-				//CreateToolTip(ptCursor, s_strfortip);
-			}
-		}
-
-		if (s_dispfontfottip == false) {
-			int pickundo = 0;
-			pickundo = PickSpUndo(ptCursor);
-			if (pickundo == PICK_UNDO) {
-				s_dispfontfottip = true;
-				wcscpy_s(sz512, 512, L"Undo operation");
-				//CreateToolTip(ptCursor, s_strfortip);
-			}
-			else if (pickundo == PICK_REDO) {
-				s_dispfontfottip = true;
-				wcscpy_s(sz512, 512, L"Redo operation");
-				//CreateToolTip(ptCursor, s_strfortip);
-			}
-		}
-
-		if (s_dispfontfottip == false) {
-			//lod switch
-			int picklodflag = 0;
-			picklodflag = PickSpLODSW(ptCursor);
-			if (picklodflag == 1) {
-				s_dispfontfottip = true;
-				wcscpy_s(sz512, 512, L"Disp ReferencePose");
-				//CreateToolTip(ptCursor, s_strfortip);
-			}
-		}
-
-		if (s_dispfontfottip == false) {
-			//limiteul switch
-			int picklimiteulflag = 0;
-			picklimiteulflag = PickSpLimitEulSW(ptCursor);
-			if (picklimiteulflag == 1) {
-				s_dispfontfottip = true;
-				wcscpy_s(sz512, 512, L"Angle Limit on IK Rot");
-				//CreateToolTip(ptCursor, s_strfortip);
-			}
-		}
-
-		if (s_dispfontfottip == false) {
-			//cameramode switch
-			int pickcameramodeflag = 0;
-			pickcameramodeflag = PickSpCameraModeSW(ptCursor);
-			if (pickcameramodeflag == 1) {
-				s_dispfontfottip = true;
-				wcscpy_s(sz512, 512, L"With or Without CameraAnim");
-				//CreateToolTip(ptCursor, s_strfortip);
-			}
-		}
-
-		if (s_dispfontfottip == false) {
-			//camerainherit switch
-			int pickcamerainheritflag = 0;
-			pickcamerainheritflag = PickSpCameraInheritSW(ptCursor);
-			if (pickcamerainheritflag == 1) {
-				s_dispfontfottip = true;
-				wcscpy_s(sz512, 512, L"CameraAnim InheritMode");
-				//CreateToolTip(ptCursor, s_strfortip);
-			}
-		}
-
-		if (s_dispfontfottip == false) {
-			//wallscraping switch
-			int pickscrapingflag = 0;
-			pickscrapingflag = PickSpScrapingSW(ptCursor);
-			if (pickscrapingflag == 1) {
-				s_dispfontfottip = true;
-				wcscpy_s(sz512, 512, L"WallScraping on Limited IK Rot");
-				//CreateToolTip(ptCursor, s_strfortip);
-			}
-		}
-
-		if (s_dispfontfottip == false) {
-			if (PickSpCpLW2W(ptCursor) != 0) {
-				if (s_copyLW2WFlag == false) {
-					s_dispfontfottip = true;
-					wcscpy_s(sz512, 512, L"Copy LimitedAngleMotion to UnLimitedAngleMotion");
-					//CreateToolTip(ptCursor, s_strfortip);
-				}
-			}
-		}
-
-		if (s_dispfontfottip == false) {
-			if (PickSpSmooth(ptCursor) != 0) {
-				if (s_smoothFlag == false) {
-					s_dispfontfottip = true;
-					wcscpy_s(sz512, 512, L"LBtn:Smooth, RBtn:SettingsAndSmooth");
-					//CreateToolTip(ptCursor, s_strfortip);
-				}
-			}
-		}
-
-		if (s_dispfontfottip == false) {
-			if (PickSpConstExe(ptCursor) != 0) {
-				if (s_constexeFlag == false) {
-					s_dispfontfottip = true;
-					wcscpy_s(sz512, 512, L"Execute Position Constraint");
-					//CreateToolTip(ptCursor, s_strfortip);
-				}
-			}
-		}
-		if (s_dispfontfottip == false) {
-			if (PickSpConstRefresh(ptCursor) != 0) {
-				if (s_constrefreshFlag == false) {
-					s_dispfontfottip = true;
-					wcscpy_s(sz512, 512, L"Update TargetPosition of Constraint");
-					//CreateToolTip(ptCursor, s_strfortip);
-				}
-			}
-		}
-
-
-
-		if (s_toolspritemode == 0) {//ToolShortCut : 0
-			if (s_dispfontfottip == false) {
-				if (PickSpCopy(ptCursor) != 0) {
-					if (s_model) {
-						s_dispfontfottip = true;
-						wcscpy_s(sz512, 512, L"Copy Motion");
-						//CreateToolTip(ptCursor, s_strfortip);
-					}
-				}
-			}
-
-			if (s_dispfontfottip == false) {
-				if (PickSpSymCopy(ptCursor) != 0) {
-					if (s_model) {
-						s_dispfontfottip = true;
-						wcscpy_s(sz512, 512, L"SymCopy Motion");
-						//CreateToolTip(ptCursor, s_strfortip);
-					}
-				}
-			}
-
-			if (s_dispfontfottip == false) {
-				if (PickSpPaste(ptCursor) != 0) {
-					if (s_model) {
-						s_dispfontfottip = true;
-						wcscpy_s(sz512, 512, L"LBtn:Paste Motion, RBtn;Settings And Paste Motion");
-						//CreateToolTip(ptCursor, s_strfortip);
-					}
-				}
-			}
-
-			if (s_dispfontfottip == false) {
-				if (PickSpCopyHistory(ptCursor) != 0) {
-					if (s_model) {
-						s_dispfontfottip = true;
-						wcscpy_s(sz512, 512, L"Disp CopyHistory at Right Pain");
-						//CreateToolTip(ptCursor, s_strfortip);
-					}
-				}
-			}
-		}
-		else if (s_toolspritemode == 1) {//ToolShortCut : 1
-			if (s_dispfontfottip == false) {
-				if (PickSpInterpolate(ptCursor) != 0) {
-					if (s_model) {
-						s_dispfontfottip = true;
-						wcscpy_s(sz512, 512, L"Interpolate Motion");
-						//CreateToolTip(ptCursor, s_strfortip);
-					}
-				}
-			}
-
-			if (s_dispfontfottip == false) {
-				if (PickSpInit(ptCursor) != 0) {
-					if (s_model) {
-						s_dispfontfottip = true;
-						wcscpy_s(sz512, 512, L"Init MotionPoint");
-						//CreateToolTip(ptCursor, s_strfortip);
-					}
-				}
-			}
-
-			if (s_dispfontfottip == false) {
-				if (PickSpScaleInit(ptCursor) != 0) {
-					if (s_model) {
-						s_dispfontfottip = true;
-						wcscpy_s(sz512, 512, L"Init All Scale");
-						//CreateToolTip(ptCursor, s_strfortip);
-					}
-				}
-			}
-
-			if (s_dispfontfottip == false) {
-				if (PickSpProperty(ptCursor) != 0) {
-					if (s_model) {
-						s_dispfontfottip = true;
-						wcscpy_s(sz512, 512, L"Property of Motion");
-						//CreateToolTip(ptCursor, s_strfortip);
-					}
-				}
-			}
-		}
-		else if (s_toolspritemode == 2) {//ToolShortCut : 2
-			if (s_dispfontfottip == false) {
-				if (PickSpZeroFrame(ptCursor) != 0) {
-					if (s_model) {
-						s_dispfontfottip = true;
-						wcscpy_s(sz512, 512, L"Edit 0 Frame");
-						//CreateToolTip(ptCursor, s_strfortip);
-					}
-				}
-			}
-
-			if (s_dispfontfottip == false) {
-				if (PickSpCameraDolly(ptCursor) != 0) {
-					if (s_model) {
-						s_dispfontfottip = true;
-						wcscpy_s(sz512, 512, L"Camera Dolly History");
-						//CreateToolTip(ptCursor, s_strfortip);
-					}
-				}
-			}
-
-			if (s_dispfontfottip == false) {
-				if (PickSpModelPosDir(ptCursor) != 0) {
-					if (s_model) {
-						s_dispfontfottip = true;
-						wcscpy_s(sz512, 512, L"Model's Pos and Dir");
-						//CreateToolTip(ptCursor, s_strfortip);
-					}
-				}
-			}
-
-			if (s_dispfontfottip == false) {
-				if (PickSpMaterialRate(ptCursor) != 0) {
-					if (s_model) {
-						s_dispfontfottip = true;
-						wcscpy_s(sz512, 512, L"Material Rate");
-						//CreateToolTip(ptCursor, s_strfortip);
-					}
-				}
-			}
-		}
-		else {
-			_ASSERT(0);
-		}
-
-		if (s_dispfontfottip == false) {
-			int oprigs_dispfontfottip = 0;
-			int pickrigflag = 0;
-			pickrigflag = PickSpRig(ptCursor);
-			if (pickrigflag == 1) {
-				s_dispfontfottip = true;
-				wcscpy_s(sz512, 512, L"Rig On or Off");
-				//CreateToolTip(ptCursor, s_strfortip);
-			}
-		}
-
-		if (s_dispfontfottip == false) {
-			if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
-				int spakind = PickSpAxis(ptCursor);
-				if (spakind == PICK_SPA_X) {
-					s_dispfontfottip = true;
-					wcscpy_s(sz512, 512, L"Drag X Axis IK");
-					//CreateToolTip(ptCursor, s_strfortip);
-				}
-				else if (spakind == PICK_SPA_Y) {
-					s_dispfontfottip = true;
-					wcscpy_s(sz512, 512, L"Drag Y Axis IK");
-					//CreateToolTip(ptCursor, s_strfortip);
-				}
-				else if (spakind == PICK_SPA_Z) {
-					s_dispfontfottip = true;
-					wcscpy_s(sz512, 512, L"Drag Z Axis IK");
-					//CreateToolTip(ptCursor, s_strfortip);
-				}
-			}
-		}
-
-	}
-
-	if (s_dispfontfottip == false) {
+	if (dispfontfortip == false) {
 		//ret2prev
 		bool pickfrog = PickSpFrog(ptCursor);
 		if (pickfrog == true) {
-			s_dispfontfottip = true;
+			dispfontfortip = true;
 			wcscpy_s(sz512, 512, L"SpaceKey:Change MenuKind. C+SpaceKey:Change Plate.");
 			//CreateToolTip(ptCursor, s_strfortip);
 		}
 	}
-	if (s_dispfontfottip == false) {
+	if (dispfontfortip == false) {
 		//ret2prev2
 		bool pickfrog = PickSpFrog2(ptCursor);
 		if (pickfrog == true) {
-			s_dispfontfottip = true;
+			dispfontfortip = true;
 			wcscpy_s(sz512, 512, L"V + SpaceKey: Change ToolShortCutMenu.");
 			//CreateToolTip(ptCursor, s_strfortip);
-		}
-	}
-
-	
-	if (s_dispfontfottip == false) {
-		if (s_oprigflag == 0) {
-			if (g_shiftkey == false) {
-				s_model->PickBone(&tmppickinfo);
-			}
-			if (tmppickinfo.pickobjno >= 0) {
-				int curboneno = tmppickinfo.pickobjno;
-				CBone* curbone = s_model->GetBoneByID(curboneno);
-				if (curbone) {
-					s_dispfontfottip = true;
-					swprintf_s(s_strfortip, 512, L"Joint : %s", curbone->GetWBoneName());
-					//CreateToolTip(ptCursor, s_strfortip);
-				}
-			}
 		}
 	}
 
 	if (sz512[0] != 0L) {
 		wcscpy_s(s_strfortip, 512, sz512);
 	}
-	else {
-		//s_customrigのツールチップ表示
-		if ((s_oprigflag != 0) && (g_previewFlag == 0)) {
-			s_dispfontfottip = DispTipRig();
+
+	return dispfontfortip;
+}
+
+bool DispTipBone()
+{
+	UIPICKINFO tmppickinfo;
+	ZeroMemory(&tmppickinfo, sizeof(UIPICKINFO));
+	tmppickinfo.mousebefpos = s_pickinfo.mousepos;
+	POINT ptCursor;
+	GetCursorPos(&ptCursor);
+	::ScreenToClient(s_3dwnd, &ptCursor);
+	tmppickinfo.mousepos = ptCursor;
+
+	tmppickinfo.clickpos = ptCursor;
+	tmppickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
+	tmppickinfo.firstdiff = ChaVector2(0.0f, 0.0f);
+	//tmppickinfo.winx = (int)DXUTGetWindowWidth();
+	//tmppickinfo.winy = (int)DXUTGetWindowHeight();
+	tmppickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
+	tmppickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
+	tmppickinfo.pickrange = PICKRANGE;
+
+
+	s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
+
+	WCHAR sz512[512];
+	ZeroMemory(sz512, sizeof(WCHAR) * 512);
+
+
+	bool dispfontfortip = false;
+
+	if (g_shiftkey == false) {
+		s_model->PickBone(&tmppickinfo);
+	}
+	if (tmppickinfo.pickobjno >= 0) {
+		int curboneno = tmppickinfo.pickobjno;
+		CBone* curbone = s_model->GetBoneByID(curboneno);
+		if (curbone) {
+			dispfontfortip = true;
+			swprintf_s(s_strfortip, 512, L"Joint : %s", curbone->GetWBoneName());
 		}
 	}
 
-
-
-	return 0;
+	return dispfontfortip;
 }
+
+
 
 bool DispTipRig()
 {
@@ -51656,6 +51900,114 @@ bool DispTipRig()
 	}
 	return false;
 }
+
+bool DispTipMesh()
+{
+	if (!s_model) {
+		return false;
+	}
+
+	if (!s_chascene) {
+		return false;
+	}
+
+	UIPICKINFO tmppickinfo;
+	ZeroMemory(&tmppickinfo, sizeof(UIPICKINFO));
+	tmppickinfo.mousebefpos = s_pickinfo.mousepos;
+	POINT ptCursor;
+	GetCursorPos(&ptCursor);
+	::ScreenToClient(s_3dwnd, &ptCursor);
+	tmppickinfo.mousepos = ptCursor;
+
+	tmppickinfo.clickpos = ptCursor;
+	tmppickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
+	tmppickinfo.firstdiff = ChaVector2(0.0f, 0.0f);
+	//tmppickinfo.winx = (int)DXUTGetWindowWidth();
+	//tmppickinfo.winy = (int)DXUTGetWindowHeight();
+	tmppickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
+	tmppickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
+	tmppickinfo.pickrange = PICKRANGE;
+
+
+	bool dispfontfortip = false;
+
+
+	if (g_previewFlag == 0) {
+		WCHAR modelname[256] = { 0L };
+		WCHAR objname[256] = { 0L };
+		WCHAR materialname[256] = { 0L };
+		CModel* pickmodel = nullptr;
+		CMQOObject* pickmqoobj = nullptr;
+		CMQOMaterial* pickmaterial = nullptr;
+		dispfontfortip = s_chascene->PickPolyMesh3_Mesh(&tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
+		if (dispfontfortip && pickmodel && pickmqoobj) {
+			wcscpy_s(modelname, 256, pickmodel->GetFileName());
+			char tmpobjname[256] = { 0 };
+			strcpy_s(tmpobjname, 256, pickmqoobj->GetName());
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, tmpobjname, 256, objname, 256);
+
+			swprintf_s(s_strfortip, 512, L"Mesh:%s:%s", modelname, objname);
+			s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
+		}
+	}
+
+	return dispfontfortip;
+}
+
+bool DispTipMaterial()
+{
+	if (!s_model) {
+		return false;
+	}
+
+	if (!s_chascene) {
+		return false;
+	}
+
+	UIPICKINFO tmppickinfo;
+	ZeroMemory(&tmppickinfo, sizeof(UIPICKINFO));
+	tmppickinfo.mousebefpos = s_pickinfo.mousepos;
+	POINT ptCursor;
+	GetCursorPos(&ptCursor);
+	::ScreenToClient(s_3dwnd, &ptCursor);
+	tmppickinfo.mousepos = ptCursor;
+
+	tmppickinfo.clickpos = ptCursor;
+	tmppickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
+	tmppickinfo.firstdiff = ChaVector2(0.0f, 0.0f);
+	//tmppickinfo.winx = (int)DXUTGetWindowWidth();
+	//tmppickinfo.winy = (int)DXUTGetWindowHeight();
+	tmppickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
+	tmppickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
+	tmppickinfo.pickrange = PICKRANGE;
+
+
+	bool dispfontfortip = false;
+
+
+	if (g_previewFlag == 0) {
+		WCHAR modelname[256] = { 0L };
+		WCHAR objname[256] = { 0L };
+		WCHAR materialname[256] = { 0L };
+		CModel* pickmodel = nullptr;
+		CMQOObject* pickmqoobj = nullptr;
+		CMQOMaterial* pickmaterial = nullptr;
+		dispfontfortip = s_chascene->PickPolyMesh3_Mesh(&tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
+		if (dispfontfortip && pickmodel && pickmaterial) {
+			wcscpy_s(modelname, 256, pickmodel->GetFileName());
+			char tmpmaterialname[256] = { 0 };
+			strcpy_s(tmpmaterialname, 256, pickmaterial->GetName());
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, tmpmaterialname, 256, materialname, 256);
+
+			swprintf_s(s_strfortip, 512, L"Material:%s:%s", modelname, materialname);
+			s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
+		}
+	}
+
+	return dispfontfortip;
+}
+
+
 
 //int CreateCameraDollyWnd()
 //{
