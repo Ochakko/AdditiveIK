@@ -3,6 +3,10 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/02/04
+　DispGroupメニューとShaderメニューのピックよりもGUIのピックを優先
+
+
 
 2024/02/03
 　DispGroupプレートメニュー選択時
@@ -18,9 +22,6 @@ https://github.com/Ochakko/AdditiveIK
 
 　シャドウマップとPreZ処理でRGBAすべてに出力していたのにRGのフォーマットを指定していた部分で警告が出たので修正
 　RGBAとして処理
-
-
-
 
 
 2024/02/02

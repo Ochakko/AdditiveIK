@@ -1949,7 +1949,7 @@ static void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, do
 //################
 //GUI Plate Menu
 //################
-static void GUIGetNextMenu(POINT ptCursor, int srcmenukind, int* dstmenukind, int* dstplateno);
+static bool GUIGetNextMenu(POINT ptCursor, int srcmenukind, int* dstmenukind, int* dstplateno);
 static void GUIMenuSetVisible(int srcmenukind, int srcplateno);
 static void ChangeToNextPlateMenuKind(int srcmenukind, int srcmenuno);
 static void ChangeToNextPlateMenuPlate(int srcmenukind, int srcmenuno);
@@ -2405,8 +2405,8 @@ static int CalcPickRay(ChaVector3* start3d, ChaVector3* end3d);
 static void ActivatePanel(int state);
 static int SetCamera6Angle();
 
-static int PickAndSelectMeshOfDispGroupDlg();
-static int PickAndSelectMaterialOfShaderTypeDlg();
+static bool PickAndSelectMeshOfDispGroupDlg();
+static bool PickAndSelectMaterialOfShaderTypeDlg();
 
 
 
@@ -7004,6 +7004,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		GetCursorPos(&ptCursor);
 		::ScreenToClient(s_3dwnd, &ptCursor);
 
+		bool pickflag = false;//2024/02/04
+
 		{
 			//UndoRedo
 			int pickundo = 0;
@@ -7015,6 +7017,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 				//PostMessage(g_mainhwnd, WM_KEYDOWN, VK_CONTROL | 'Z', 0);
 				//PostMessage(s_3dwnd, WM_KEYDOWN, VK_CONTROL | 'Z', 0);
+				pickflag = true;
 			}
 			else if (pickundo == PICK_REDO)
 			{
@@ -7024,6 +7027,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 				//PostMessage(g_mainhwnd, WM_KEYDOWN, VK_CONTROL | VK_SHIFT | 'Z', 0);
 				//PostMessage(s_3dwnd, WM_KEYDOWN, VK_CONTROL | VK_SHIFT | 'Z', 0);
+				pickflag = true;
 			}
 		}
 
@@ -7058,7 +7062,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		//}
 
 		//check and op rigflag : s_oprigflag turn to 1 when RClickRigMenu selected too.
-		{
+		if (pickflag == false) {
 			//IK Mode
 			int pickikmodeflag = 0;
 			pickikmodeflag = PickSpIkModeSW(ptCursor);
@@ -7069,6 +7073,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				s_spikmodesw[2].state = false;
 				SetLTimelineMark(s_curboneno);//グラフの操作ジョイント名表示も
 				refreshEulerGraph();
+				pickflag = true;
 			}
 			else if (pickikmodeflag == 2) {
 				s_ikkind = 1;
@@ -7077,6 +7082,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				s_spikmodesw[2].state = false;
 				SetLTimelineMark(s_curboneno);//グラフの操作ジョイント名表示も
 				refreshEulerGraph();
+				pickflag = true;
 			}
 			else if (pickikmodeflag == 3) {
 				s_ikkind = 2;
@@ -7085,17 +7091,19 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				s_spikmodesw[2].state = true;
 				SetLTimelineMark(s_curboneno);//グラフの操作ジョイント名表示も
 				refreshEulerGraph();
+				pickflag = true;
 			}
 		}
-		{
+		if (pickflag == false) {
 			//RefPos switch
 			int picklodflag = 0;
 			picklodflag = PickSpLODSW(ptCursor);
 			if (picklodflag == 1) {
 				s_splod.state = !s_splod.state;
+				pickflag = true;
 			}
 		}
-		{
+		if (pickflag == false) {
 			//limiteul switch
 			int picklimiteulflag = 0;
 			picklimiteulflag = PickSpLimitEulSW(ptCursor);
@@ -7103,125 +7111,141 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				//2023/02/15
 				bool newstate = !s_splimiteul.state;
 				ChangeLimitDegFlag(newstate, true, true);
+				pickflag = true;
 			}
 		}
-		{
+		if (pickflag == false) {
 			//cameramode switch
 			int pickcameramodeflag = 0;
 			pickcameramodeflag = PickSpCameraModeSW(ptCursor);
 			if (pickcameramodeflag == 1) {
 				ChangeCameraMode(0);//forcemode 反転をセット:0 強制オフ時:1 強制オン時:2
+				pickflag = true;
 			}
 		}
-		{
+		if (pickflag == false) {
 			//camerainherit switch
 			int pickcamerainheritflag = 0;
 			pickcamerainheritflag = PickSpCameraInheritSW(ptCursor);
 			if (pickcamerainheritflag == 1) {
 				ChangeCameraInherit();
+				pickflag = true;
 			}
 		}
-		{
+		if (pickflag == false) {
 			//wallscraping switch
 			int pickscrapingflag = 0;
 			pickscrapingflag = PickSpScrapingSW(ptCursor);
 			if (pickscrapingflag == 1) {
 				bool newstate = !s_spscraping.state;
 				ChangeWallScrapingIKFlag(newstate);
+				pickflag = true;
 			}
 		}
 
 		//2023/02/04
 		//Bake LimitedWorld-->World : currentmotion fullframe
-		if (PickSpCpLW2W(ptCursor) != 0) {
+		if ((pickflag == false) && (PickSpCpLW2W(ptCursor) != 0)) {
 			if (s_copyLW2WFlag == false) {
 				s_copyLW2WFlag = true;
 			}
+			pickflag = true;
 		}
 
-		if (PickSpSmooth(ptCursor) != 0) {
+		if ((pickflag == false) && (PickSpSmooth(ptCursor) != 0)) {
 			if (s_smoothFlag == false) {
 				s_smoothFlag = true;
 			}
+			pickflag = true;
 		}
 
-		if (PickSpConstExe(ptCursor) != 0) {
+		if ((pickflag == false) && (PickSpConstExe(ptCursor) != 0)) {
 			if (s_constexeFlag == false) {
 				s_constexeFlag = true;
 			}
+			pickflag = true;
 		}
-		if (PickSpConstRefresh(ptCursor) != 0) {
+		if ((pickflag == false) && (PickSpConstRefresh(ptCursor) != 0)) {
 			if (s_constrefreshFlag == false) {
 				s_constrefreshFlag = true;
 			}
+			pickflag = true;
 		}
 
 
-		if (PickSpFrog2(ptCursor) != 0) {
+		if ((pickflag == false) && (PickSpFrog2(ptCursor) != 0)) {
 			if (s_model) {
 				ChangeToolSpriteMode();
 			}
+			pickflag = true;
 		}
-		if (PickSpCopy(ptCursor) != 0) {
+		if ((pickflag == false) && (PickSpCopy(ptCursor) != 0)) {
 			if (s_model) {
 				if (s_copyFlag == false) {
 					s_copyFlag = true;
 				}
 			}
+			pickflag = true;
 		}
-		if (PickSpSymCopy(ptCursor) != 0) {
+		if ((pickflag == false) && (PickSpSymCopy(ptCursor) != 0)) {
 			if (s_model) {
 				if (s_symcopyFlag == false) {
 					s_symcopyFlag = true;
 				}
 			}
+			pickflag = true;
 		}
-		if (PickSpPaste(ptCursor) != 0) {
+		if ((pickflag == false) && (PickSpPaste(ptCursor) != 0)) {
 			if (s_model) {
 				if (s_pasteFlag == false) {
 					s_pasteFlag = true;
 				}
 			}
+			pickflag = true;
 		}
-		if (PickSpCopyHistory(ptCursor) != 0) {
+		if ((pickflag == false) && (PickSpCopyHistory(ptCursor) != 0)) {
 			if (s_model) {
 				if (s_selCopyHisotryFlag == false) {
 					s_selCopyHisotryFlag = true;
 				}
 			}
+			pickflag = true;
 		}
 
-		if (PickSpInterpolate(ptCursor) != 0) {
+		if ((pickflag == false) && (PickSpInterpolate(ptCursor) != 0)) {
 			if (s_model) {
 				if (s_interpolateFlag == false) {
 					s_interpolateFlag = true;
 				}
 			}
+			pickflag = true;
 		}
-		if (PickSpInit(ptCursor) != 0) {
+		if ((pickflag == false) && (PickSpInit(ptCursor) != 0)) {
 			if (s_model) {
 				if (s_initmpFlag == false) {
 					s_initmpFlag = true;
 				}
 			}
+			pickflag = true;
 		}
-		if (PickSpScaleInit(ptCursor) != 0) {
+		if ((pickflag == false) && (PickSpScaleInit(ptCursor) != 0)) {
 			if (s_model) {
 				if (s_scaleAllInitFlag == false) {
 					s_scaleAllInitFlag = true;
 				}
 			}
+			pickflag = true;
 		}
-		if (PickSpProperty(ptCursor) != 0) {
+		if ((pickflag == false) && (PickSpProperty(ptCursor) != 0)) {
 			if (s_model) {
 				if (s_motpropFlag == false) {
 					s_motpropFlag = true;
 				}
 			}
+			pickflag = true;
 		}
 
-
-		if (PickSpZeroFrame(ptCursor) != 0) {
+		if ((pickflag == false) && (PickSpZeroFrame(ptCursor) != 0)) {
 			if (s_model) {
 				if (s_zeroFrameFlag == false) {
 					s_LstopFlag = true;
@@ -7230,145 +7254,171 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					s_zeroFrameFlag = true;
 				}
 			}
+			pickflag = true;
 		}
-		if (PickSpCameraDolly(ptCursor) != 0) {
+		if ((pickflag == false) && (PickSpCameraDolly(ptCursor) != 0)) {
 			if (s_model) {
 				if (s_cameradollyFlag == false) {
 					s_cameradollyFlag = true;
 				}
 			}
+			pickflag = true;
 		}
-		if (PickSpModelPosDir(ptCursor) != 0) {
+		if ((pickflag == false) && (PickSpModelPosDir(ptCursor) != 0)) {
 			if (s_model) {
 				if (s_modelworldmatFlag == false) {
 					s_modelworldmatFlag = true;
 				}
 			}
+			pickflag = true;
 		}
-		if (PickSpMaterialRate(ptCursor) != 0) {
+		if ((pickflag == false) && (PickSpMaterialRate(ptCursor) != 0)) {
 			if (s_model) {
 				if (s_materialrateFlag == false) {
 					s_materialrateFlag = true;
 				}
 			}
+			pickflag = true;
 		}
-
-
-		if (s_spdispsw[SPDISPSW_DISPGROUP].state) {
-			PickAndSelectMeshOfDispGroupDlg();
-		}
-		else if (s_spdispsw[SPDISPSW_SHADERTYPE].state) {
-			PickAndSelectMaterialOfShaderTypeDlg();
-		}
-
 
 		int oprigdoneflag = 0;
 		int pickrigflag = 0;
-		pickrigflag = PickSpRig(ptCursor);
-		if (pickrigflag == 1) {
+		if (pickflag == false) {
+			pickrigflag = PickSpRig(ptCursor);
+			if (pickrigflag == 1) {
 
 
-			//開いている設定ダイアログを閉じないと、設定ダイアログのrigboneと新たなrigboneが異なってしまい、Applyボタンで異なるリグを保存することがある
-			if (s_customrigdlg) {
-				DestroyWindow(s_customrigdlg);
-				s_customrigdlg = 0;
-			}
+				//開いている設定ダイアログを閉じないと、設定ダイアログのrigboneと新たなrigboneが異なってしまい、Applyボタンで異なるリグを保存することがある
+				if (s_customrigdlg) {
+					DestroyWindow(s_customrigdlg);
+					s_customrigdlg = 0;
+				}
 
 
-			if (s_oprigflag == 1) {
+				if (s_oprigflag == 1) {
 
-				//オンだったRigをオフにする
-				RollbackCurBoneNo();
-				ToggleRig();
-				oprigdoneflag = 1;
+					//オンだったRigをオフにする
+					RollbackCurBoneNo();
+					ToggleRig();
+					oprigdoneflag = 1;
 
-				s_curboneno = -1;//Sprite Menuより後で。Rigid作成に選択済s_curbonenoが必要。
-			}
-			else {
+					s_curboneno = -1;//Sprite Menuより後で。Rigid作成に選択済s_curbonenoが必要。
+				}
+				else {
 
-				//オフだったリグをオンにする
-				RollbackCurBoneNo();
+					//オフだったリグをオンにする
+					RollbackCurBoneNo();
 
-				ToggleRig();
-				oprigdoneflag = 1;
-				//s_oprigflag == 1 のときのpickrigflag == 0　だから　rigはオン
-				//s_curboneno はそのまま
+					ToggleRig();
+					oprigdoneflag = 1;
+					//s_oprigflag == 1 のときのpickrigflag == 0　だから　rigはオン
+					//s_curboneno はそのまま
+				}
+				pickflag = true;
 			}
 		}
 
-
-		//menukind : from 0 to 4
-		//plateno : from 1 to platenum
-		GUIGetNextMenu(ptCursor, platemenukind, &nextplatemenukind, &nextplateno);
-		if ((nextplatemenukind >= 0) && (nextplateno != 0)) {
-			s_platemenukind = nextplatemenukind;
-			s_platemenuno = nextplateno;
-			GUIMenuSetVisible(s_platemenukind, nextplateno);
+		if (pickflag == false) {
+			//menukind : from 0 to 4
+			//plateno : from 1 to platenum
+			pickflag = GUIGetNextMenu(ptCursor, platemenukind, &nextplatemenukind, &nextplateno);
+			if ((nextplatemenukind >= 0) && (nextplateno != 0)) {
+				s_platemenukind = nextplatemenukind;
+				s_platemenuno = nextplateno;
+				GUIMenuSetVisible(s_platemenukind, nextplateno);
+			}
 		}
 
 		//s_curboneno = -1;//Sprite Menuより後で。Rigid作成に選択済s_curbonenoが必要。
 
 		int spckind = 0;
-		if (s_spguisw[SPGUISW_CAMERA_AND_IK].state && ((spckind = PickSpCam(ptCursor)) != 0)) {
+		if ((pickflag == false) && s_spguisw[SPGUISW_CAMERA_AND_IK].state && ((spckind = PickSpCam(ptCursor)) != 0)) {
 			s_pickinfo.buttonflag = spckind;
 			s_pickinfo.pickobjno = -1;
 			RollbackCurBoneNo();
+			pickflag = true;
 		}
-		else if (s_model) {
+		if (s_model) {
 			int spakind = 0;
 			//int pickrigflag = 0;
-			if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
+			if ((pickflag == false) && s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
 				spakind = PickSpAxis(ptCursor);
-				//pickrigflag = PickSpRig(ptCursor);
 			}
-			if ((spakind != 0) && (s_saveboneno >= 0)) {
-				RollbackCurBoneNo();
-				s_pickinfo.buttonflag = spakind;
-				s_pickinfo.pickobjno = s_curboneno;
+			if (spakind != 0) {
+				
+				pickflag = true;
 
-				//g_underIKRot = true;//2023/10/14 !!!!! 設定し忘れていた
-				//g_underIKRotApplyFrame = true;//2023/10/14 !!!!! 設定し忘れていた
-				s_model->SetUnderIKRot(true);
-				s_model->SetUnderIKRotApplyFrame(true);
+				if (s_saveboneno >= 0) {
+					RollbackCurBoneNo();
+					s_pickinfo.buttonflag = spakind;
+					s_pickinfo.pickobjno = s_curboneno;
+
+					//g_underIKRot = true;//2023/10/14 !!!!! 設定し忘れていた
+					//g_underIKRotApplyFrame = true;//2023/10/14 !!!!! 設定し忘れていた
+					s_model->SetUnderIKRot(true);
+					s_model->SetUnderIKRotApplyFrame(true);
 
 
-				//} else if ((oprigdoneflag == 0) && (pickrigflag == 1)){
-				//	RollbackCurBoneNo();
-				//	ToggleRig();
-
+					//} else if ((oprigdoneflag == 0) && (pickrigflag == 1)){
+					//	RollbackCurBoneNo();
+					//	ToggleRig();
+				}
 			}
-			else {
-				if (s_oprigflag == 0) {
-					if (g_shiftkey == false) {
-						CallF(s_model->PickBone(&s_pickinfo), return 1);
+			
+			if ((pickflag == false) && (s_oprigflag == 0)) {
+				if (g_shiftkey == false) {
+					CallF(s_model->PickBone(&s_pickinfo), return 1);
+				}
+				if (s_pickinfo.pickobjno >= 0) {
+					s_curboneno = s_pickinfo.pickobjno;//!!!!!!!
+
+					if (s_owpTimeline) {
+						s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
 					}
-					if (s_pickinfo.pickobjno >= 0) {
-						s_curboneno = s_pickinfo.pickobjno;//!!!!!!!
 
-						if (s_owpTimeline) {
-							s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
-						}
-
-						ChangeCurrentBone();
+					ChangeCurrentBone();
 
 
-						//if (s_model->GetInitAxisMatX() == 0){//OnAnimMenuに移動
-						//	s_owpLTimeline->setCurrentTime(0.0, true);
-						//	s_owpEulerGraph->setCurrentTime(0.0, false);
-						//	s_model->SetMotionFrame(0.0);
-						//	s_model->UpdateMatrix(&s_model->GetWorldMat(), &s_matVP);
-						//	//ここでAxisMatXの初期化
-						//	s_model->CreateBtObject(1);
-						//	s_model->CalcBtAxismat(2);//2
-						//	s_model->SetInitAxisMatX(1);
-						//}
+					//if (s_model->GetInitAxisMatX() == 0){//OnAnimMenuに移動
+					//	s_owpLTimeline->setCurrentTime(0.0, true);
+					//	s_owpEulerGraph->setCurrentTime(0.0, false);
+					//	s_model->SetMotionFrame(0.0);
+					//	s_model->UpdateMatrix(&s_model->GetWorldMat(), &s_matVP);
+					//	//ここでAxisMatXの初期化
+					//	s_model->CreateBtObject(1);
+					//	s_model->CalcBtAxismat(2);//2
+					//	s_model->SetInitAxisMatX(1);
+					//}
 
-						s_pickinfo.buttonflag = PICK_CENTER;//!!!!!!!!!!!!!
+					s_pickinfo.buttonflag = PICK_CENTER;//!!!!!!!!!!!!!
+					//g_underIKRot = true;
+					//g_underIKRotApplyFrame = true;
+					s_model->SetUnderIKRot(true);
+					s_model->SetUnderIKRotApplyFrame(true);
+
+
+					//IK中は30fpsにする
+					//IK中の描画回数が多いと　IKROTRECの保存数が多すぎて
+					//ドラッグ終了後のウェイトカーソルが長くなりすぎる
+					//IKROTREC保存数を減らすため30fps
+					g_fpsforce30 = true;
+
+
+					//CModel::PickBone内でセット
+					//s_pickinfo.firstdiff.x = (float)s_pickinfo.clickpos.x - s_pickinfo.objscreen.x;
+					//s_pickinfo.firstdiff.y = (float)s_pickinfo.clickpos.y - s_pickinfo.objscreen.y;
+
+					pickflag = true;
+				}
+
+				if (pickflag == false) {
+					bool pickring = false;
+					int pickmanipulator = PickManipulator(&s_pickinfo, pickring);
+					if (pickmanipulator >= 0) {
 						//g_underIKRot = true;
 						//g_underIKRotApplyFrame = true;
 						s_model->SetUnderIKRot(true);
 						s_model->SetUnderIKRotApplyFrame(true);
-
 
 						//IK中は30fpsにする
 						//IK中の描画回数が多いと　IKROTRECの保存数が多すぎて
@@ -7376,65 +7426,51 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						//IKROTREC保存数を減らすため30fps
 						g_fpsforce30 = true;
 
-
-						//CModel::PickBone内でセット
-						//s_pickinfo.firstdiff.x = (float)s_pickinfo.clickpos.x - s_pickinfo.objscreen.x;
-						//s_pickinfo.firstdiff.y = (float)s_pickinfo.clickpos.y - s_pickinfo.objscreen.y;
-
+						pickflag = true;
 					}
-					else {
-						bool pickring = false;
-						int pickmanipulator = PickManipulator(&s_pickinfo, pickring);
-						if (pickmanipulator >= 0) {
-							//g_underIKRot = true;
-							//g_underIKRotApplyFrame = true;
-							s_model->SetUnderIKRot(true);
-							s_model->SetUnderIKRotApplyFrame(true);
+				}
+			}
+			if (pickflag == false) {
+				int savecurboneno = s_curboneno;
+				CBone* saverigbone = s_customrigbone;
+				int pickrigboneno = PickRigBone(&s_pickinfo);
+				if (pickrigboneno < 0) {
+					s_curboneno = savecurboneno;
+					s_customrigbone = saverigbone;
 
-							//IK中は30fpsにする
-							//IK中の描画回数が多いと　IKROTRECの保存数が多すぎて
-							//ドラッグ終了後のウェイトカーソルが長くなりすぎる
-							//IKROTREC保存数を減らすため30fps
-							g_fpsforce30 = true;
-						}
-					}
+					//ZeroMemory(&s_pickinfo, sizeof(UIPICKINFO));
+					s_pickinfo.pickobjno = savecurboneno;
 				}
 				else {
-					int savecurboneno = s_curboneno;
-					CBone* saverigbone = s_customrigbone;
-					int pickrigboneno = PickRigBone(&s_pickinfo);
-					if (pickrigboneno < 0) {
-						s_curboneno = savecurboneno;
-						s_customrigbone = saverigbone;
+					//g_underIKRot = true;
+					//g_underIKRotApplyFrame = true;
+					s_model->SetUnderIKRot(true);
+					s_model->SetUnderIKRotApplyFrame(true);
 
-						//ZeroMemory(&s_pickinfo, sizeof(UIPICKINFO));
-						s_pickinfo.pickobjno = savecurboneno;
-					}
-					else {
-						//g_underIKRot = true;
-						//g_underIKRotApplyFrame = true;
-						s_model->SetUnderIKRot(true);
-						s_model->SetUnderIKRotApplyFrame(true);
+					//IK中は30fpsにする
+					//IK中の描画回数が多いと　IKROTRECの保存数が多すぎて
+					//ドラッグ終了後のウェイトカーソルが長くなりすぎる
+					//IKROTREC保存数を減らすため30fps
+					g_fpsforce30 = true;
 
-						//IK中は30fpsにする
-						//IK中の描画回数が多いと　IKROTRECの保存数が多すぎて
-						//ドラッグ終了後のウェイトカーソルが長くなりすぎる
-						//IKROTREC保存数を減らすため30fps
-						g_fpsforce30 = true;
-					}
+					pickflag = true;
 				}
-				//if( s_owpLTimeline && s_model && s_model->GetCurMotInfo() ){
-				//	int curlineno = s_owpLTimeline->getCurrentLine();
-				//	if( curlineno == 1 ){
-				//		s_editrange.SetRange( s_owpLTimeline->getSelectedKey(), s_owpTimeline->getCurrentTime() );
-				//	}
-				//}
+			}
+
+			//2024/02/04 カメラ操作などのためのpickよりも後で
+			if ((pickflag == false) && s_spdispsw[SPDISPSW_DISPGROUP].state) {
+				pickflag = PickAndSelectMeshOfDispGroupDlg();
+			}
+			if ((pickflag == false) && s_spdispsw[SPDISPSW_SHADERTYPE].state) {
+				pickflag = PickAndSelectMaterialOfShaderTypeDlg();
 			}
 		}
 		else {
 			ZeroMemory(&s_pickinfo, sizeof(UIPICKINFO));
 			s_pickinfo.pickobjno = -1;
 		}
+
+
 
 		//ChaMatrixIdentity(&s_ikselectmat);
 		if (s_model && (s_curboneno >= 0)) {
@@ -41768,8 +41804,10 @@ void ChangeToNextPlateMenuPlate(int srcmenukind, int srcmenuno)
 }
 
 
-void GUIGetNextMenu(POINT ptCursor, int srcmenukind, int* dstmenukind, int* dstplateno)
+bool GUIGetNextMenu(POINT ptCursor, int srcmenukind, int* dstmenukind, int* dstplateno)
 {
+	bool pickflag = false;
+
 	if ((srcmenukind >= 0) && (srcmenukind < SPPLATEMENUKINDNUM)) {
 
 		int nextmenukind = srcmenukind;
@@ -41780,7 +41818,6 @@ void GUIGetNextMenu(POINT ptCursor, int srcmenukind, int* dstmenukind, int* dstp
 		int pickdispplateno = 0;
 		int pickrigidplateno = 0;
 		int pickretargetplateno = 0;
-		bool pickflag = false;
 	
 		//if (srcmenukind == SPPLATEMENUKIND_GUI) {
 		// 
@@ -41793,6 +41830,8 @@ void GUIGetNextMenu(POINT ptCursor, int srcmenukind, int* dstmenukind, int* dstp
 			//２段目は前状態のまま
 			*dstmenukind = s_platemenukind;
 			*dstplateno = s_platemenuno;
+
+			pickflag = true;
 		}
 		else {
 			if (srcmenukind == SPPLATEMENUKIND_DISP) {
@@ -41870,7 +41909,7 @@ void GUIGetNextMenu(POINT ptCursor, int srcmenukind, int* dstmenukind, int* dstp
 		*dstplateno = 1;
 	}
 
-
+	return pickflag;
 }
 
 void InitDSValues()
@@ -51244,17 +51283,20 @@ int CreateTipRig(CBone* currigbone, int currigno, POINT ptCursor)
 	return 0;
 }
 
-int PickAndSelectMeshOfDispGroupDlg()
+bool PickAndSelectMeshOfDispGroupDlg()
 {
 	if (!s_model) {
-		return 0;
+		return false;
 	}
 	if (g_previewFlag != 0) {
-		return 0;
+		return false;
 	}
 	if (!s_chascene) {
 		return false;
 	}
+
+	bool pickflag = false;
+
 	if (s_spdispsw[SPDISPSW_DISPGROUP].state) {
 
 		UIPICKINFO tmppickinfo;
@@ -51277,7 +51319,7 @@ int PickAndSelectMeshOfDispGroupDlg()
 		CModel* pickmodel = nullptr;
 		CMQOObject* pickmqoobj = nullptr;
 		CMQOMaterial* pickmaterial = nullptr;
-		bool pickflag = s_chascene->PickPolyMesh3_Mesh(&tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
+		pickflag = s_chascene->PickPolyMesh3_Mesh(&tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
 		if (pickflag && pickmodel && pickmqoobj) {
 
 			OnModelMenu(pickmodel);
@@ -51303,16 +51345,19 @@ int PickAndSelectMeshOfDispGroupDlg()
 	}
 
 
-	return 0;
+	return pickflag;
 }
-int PickAndSelectMaterialOfShaderTypeDlg()
+bool PickAndSelectMaterialOfShaderTypeDlg()
 {
 	if (!s_model) {
-		return 0;
+		return false;
 	}
 	if (g_previewFlag != 0) {
-		return 0;
+		return false;
 	}
+
+	bool pickflag = false;
+
 	if (s_spdispsw[SPDISPSW_SHADERTYPE].state) {
 
 		UIPICKINFO tmppickinfo;
@@ -51335,7 +51380,7 @@ int PickAndSelectMaterialOfShaderTypeDlg()
 		CModel* pickmodel = nullptr;
 		CMQOObject* pickmqoobj = nullptr;
 		CMQOMaterial* pickmaterial = nullptr;
-		bool pickflag = s_chascene->PickPolyMesh3_Mesh(&tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
+		pickflag = s_chascene->PickPolyMesh3_Mesh(&tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
 		if (pickflag && pickmodel && pickmaterial) {
 
 			OnModelMenu(pickmodel);
@@ -51357,7 +51402,7 @@ int PickAndSelectMaterialOfShaderTypeDlg()
 	}
 
 
-	return 0;
+	return pickflag;
 }
 
 int DispToolTip()
@@ -51372,32 +51417,36 @@ int DispToolTip()
 
 	s_dispfontfortip = false;
 
-	if (s_spdispsw[SPDISPSW_DISPGROUP].state) {
-		s_dispfontfortip = DispTipMesh();
-	}
-	else if (s_spdispsw[SPDISPSW_SHADERTYPE].state) {
-		s_dispfontfortip = DispTipMaterial();
-	}
-	else if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
+
+	//2024/02/04 画面のスプライトドラッグ検知を最優先に
+	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
 		s_dispfontfortip = DispTipUI();
 	}
-
-	if (s_dispfontfortip == false) {
+	else if (s_dispfontfortip == false) {
 		s_dispfontfortip = DispTipUIFrog();
 	}
 
-	if (s_dispfontfortip == false) {
-		if (s_oprigflag == 0) {
-			s_dispfontfortip = DispTipBone();
-		}
+
+	if ((s_dispfontfortip == false) && s_spdispsw[SPDISPSW_DISPGROUP].state) {
+		//DispGroupプレートメニュー選択時　メッシュ名を表示
+		s_dispfontfortip = DispTipMesh();
+	}
+	else if ((s_dispfontfortip == false) && s_spdispsw[SPDISPSW_SHADERTYPE].state) {
+		//Shaderプレートメニュー選択時　マテリアル名を表示
+		s_dispfontfortip = DispTipMaterial();
 	}
 
-	if (s_dispfontfortip == false) {
-		//s_customrigのツールチップ表示
-		if ((s_oprigflag != 0) && (g_previewFlag == 0)) {
+	if ((s_dispfontfortip == false) && (g_previewFlag == 0)) {
+		if (s_oprigflag == 0) {
+			//ジョイント名を表示
+			s_dispfontfortip = DispTipBone();
+		}
+		else {
+			//リグ名を表示
 			s_dispfontfortip = DispTipRig();
 		}
 	}
+
 
 	return 0;
 }
