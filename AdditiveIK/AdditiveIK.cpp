@@ -4363,12 +4363,12 @@ void InitApp()
 	//	::ZeroMemory(&s_spsel3d, sizeof(SPGUISW));
 	//	s_spsel3d.state = false;
 	//}
-	//{
-	//	::ZeroMemory(&s_spikmodesw, sizeof(SPGUISW) * 3);
-	//	s_spikmodesw[0].state = true;
-	//	s_spikmodesw[1].state = false;
-	//	s_spikmodesw[2].state = false;
-	//}
+	{
+		//::ZeroMemory(&s_spikmodesw, sizeof(SPGUISW) * 3);
+		s_spikmodesw[0].state = true;
+		s_spikmodesw[1].state = false;
+		s_spikmodesw[2].state = false;
+	}
 	//{
 	//	::ZeroMemory(&s_splod, sizeof(SPGUISW));
 	//	//s_splod.state = true;
@@ -7006,7 +7006,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		bool pickflag = false;//2024/02/04
 
-		{
+		if (g_previewFlag == 0) {//2024/02/05
 			//UndoRedo
 			int pickundo = 0;
 			pickundo = PickSpUndo(ptCursor);
@@ -7061,360 +7061,396 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		//	SendMessage(s_modelpanel.panel->getHWnd(), WM_LBUTTONDOWN, MK_LBUTTON, panallparam);
 		//}
 
-		//check and op rigflag : s_oprigflag turn to 1 when RClickRigMenu selected too.
-		if (pickflag == false) {
-			//IK Mode
-			int pickikmodeflag = 0;
-			pickikmodeflag = PickSpIkModeSW(ptCursor);
-			if (pickikmodeflag == 1) {
-				s_ikkind = 0;
-				s_spikmodesw[0].state = true;
-				s_spikmodesw[1].state = false;
-				s_spikmodesw[2].state = false;
-				SetLTimelineMark(s_curboneno);//グラフの操作ジョイント名表示も
-				refreshEulerGraph();
-				pickflag = true;
-			}
-			else if (pickikmodeflag == 2) {
-				s_ikkind = 1;
-				s_spikmodesw[0].state = false;
-				s_spikmodesw[1].state = true;
-				s_spikmodesw[2].state = false;
-				SetLTimelineMark(s_curboneno);//グラフの操作ジョイント名表示も
-				refreshEulerGraph();
-				pickflag = true;
-			}
-			else if (pickikmodeflag == 3) {
-				s_ikkind = 2;
-				s_spikmodesw[0].state = false;
-				s_spikmodesw[1].state = false;
-				s_spikmodesw[2].state = true;
-				SetLTimelineMark(s_curboneno);//グラフの操作ジョイント名表示も
-				refreshEulerGraph();
-				pickflag = true;
-			}
-		}
-		if (pickflag == false) {
-			//RefPos switch
-			int picklodflag = 0;
-			picklodflag = PickSpLODSW(ptCursor);
-			if (picklodflag == 1) {
-				s_splod.state = !s_splod.state;
-				pickflag = true;
-			}
-		}
-		if (pickflag == false) {
-			//limiteul switch
-			int picklimiteulflag = 0;
-			picklimiteulflag = PickSpLimitEulSW(ptCursor);
-			if (picklimiteulflag == 1) {
-				//2023/02/15
-				bool newstate = !s_splimiteul.state;
-				ChangeLimitDegFlag(newstate, true, true);
-				pickflag = true;
-			}
-		}
-		if (pickflag == false) {
-			//cameramode switch
-			int pickcameramodeflag = 0;
-			pickcameramodeflag = PickSpCameraModeSW(ptCursor);
-			if (pickcameramodeflag == 1) {
-				ChangeCameraMode(0);//forcemode 反転をセット:0 強制オフ時:1 強制オン時:2
-				pickflag = true;
-			}
-		}
-		if (pickflag == false) {
-			//camerainherit switch
-			int pickcamerainheritflag = 0;
-			pickcamerainheritflag = PickSpCameraInheritSW(ptCursor);
-			if (pickcamerainheritflag == 1) {
-				ChangeCameraInherit();
-				pickflag = true;
-			}
-		}
-		if (pickflag == false) {
-			//wallscraping switch
-			int pickscrapingflag = 0;
-			pickscrapingflag = PickSpScrapingSW(ptCursor);
-			if (pickscrapingflag == 1) {
-				bool newstate = !s_spscraping.state;
-				ChangeWallScrapingIKFlag(newstate);
-				pickflag = true;
-			}
-		}
-
-		//2023/02/04
-		//Bake LimitedWorld-->World : currentmotion fullframe
-		if ((pickflag == false) && (PickSpCpLW2W(ptCursor) != 0)) {
-			if (s_copyLW2WFlag == false) {
-				s_copyLW2WFlag = true;
-			}
-			pickflag = true;
-		}
-
-		if ((pickflag == false) && (PickSpSmooth(ptCursor) != 0)) {
-			if (s_smoothFlag == false) {
-				s_smoothFlag = true;
-			}
-			pickflag = true;
-		}
-
-		if ((pickflag == false) && (PickSpConstExe(ptCursor) != 0)) {
-			if (s_constexeFlag == false) {
-				s_constexeFlag = true;
-			}
-			pickflag = true;
-		}
-		if ((pickflag == false) && (PickSpConstRefresh(ptCursor) != 0)) {
-			if (s_constrefreshFlag == false) {
-				s_constrefreshFlag = true;
-			}
-			pickflag = true;
-		}
 
 
-		if ((pickflag == false) && (PickSpFrog2(ptCursor) != 0)) {
-			if (s_model) {
-				ChangeToolSpriteMode();
-			}
-			pickflag = true;
-		}
-		if ((pickflag == false) && (PickSpCopy(ptCursor) != 0)) {
-			if (s_model) {
-				if (s_copyFlag == false) {
-					s_copyFlag = true;
-				}
-			}
-			pickflag = true;
-		}
-		if ((pickflag == false) && (PickSpSymCopy(ptCursor) != 0)) {
-			if (s_model) {
-				if (s_symcopyFlag == false) {
-					s_symcopyFlag = true;
-				}
-			}
-			pickflag = true;
-		}
-		if ((pickflag == false) && (PickSpPaste(ptCursor) != 0)) {
-			if (s_model) {
-				if (s_pasteFlag == false) {
-					s_pasteFlag = true;
-				}
-			}
-			pickflag = true;
-		}
-		if ((pickflag == false) && (PickSpCopyHistory(ptCursor) != 0)) {
-			if (s_model) {
-				if (s_selCopyHisotryFlag == false) {
-					s_selCopyHisotryFlag = true;
-				}
-			}
-			pickflag = true;
-		}
-
-		if ((pickflag == false) && (PickSpInterpolate(ptCursor) != 0)) {
-			if (s_model) {
-				if (s_interpolateFlag == false) {
-					s_interpolateFlag = true;
-				}
-			}
-			pickflag = true;
-		}
-		if ((pickflag == false) && (PickSpInit(ptCursor) != 0)) {
-			if (s_model) {
-				if (s_initmpFlag == false) {
-					s_initmpFlag = true;
-				}
-			}
-			pickflag = true;
-		}
-		if ((pickflag == false) && (PickSpScaleInit(ptCursor) != 0)) {
-			if (s_model) {
-				if (s_scaleAllInitFlag == false) {
-					s_scaleAllInitFlag = true;
-				}
-			}
-			pickflag = true;
-		}
-		if ((pickflag == false) && (PickSpProperty(ptCursor) != 0)) {
-			if (s_model) {
-				if (s_motpropFlag == false) {
-					s_motpropFlag = true;
-				}
-			}
-			pickflag = true;
-		}
-
-		if ((pickflag == false) && (PickSpZeroFrame(ptCursor) != 0)) {
-			if (s_model) {
-				if (s_zeroFrameFlag == false) {
-					s_LstopFlag = true;
-					g_previewFlag = 0;
-					s_LcursorFlag = true;
-					s_zeroFrameFlag = true;
-				}
-			}
-			pickflag = true;
-		}
-		if ((pickflag == false) && (PickSpCameraDolly(ptCursor) != 0)) {
-			if (s_model) {
-				if (s_cameradollyFlag == false) {
-					s_cameradollyFlag = true;
-				}
-			}
-			pickflag = true;
-		}
-		if ((pickflag == false) && (PickSpModelPosDir(ptCursor) != 0)) {
-			if (s_model) {
-				if (s_modelworldmatFlag == false) {
-					s_modelworldmatFlag = true;
-				}
-			}
-			pickflag = true;
-		}
-		if ((pickflag == false) && (PickSpMaterialRate(ptCursor) != 0)) {
-			if (s_model) {
-				if (s_materialrateFlag == false) {
-					s_materialrateFlag = true;
-				}
-			}
-			pickflag = true;
-		}
-
-		int oprigdoneflag = 0;
-		int pickrigflag = 0;
-		if (pickflag == false) {
-			pickrigflag = PickSpRig(ptCursor);
-			if (pickrigflag == 1) {
-
-
-				//開いている設定ダイアログを閉じないと、設定ダイアログのrigboneと新たなrigboneが異なってしまい、Applyボタンで異なるリグを保存することがある
-				if (s_customrigdlg) {
-					DestroyWindow(s_customrigdlg);
-					s_customrigdlg = 0;
-				}
-
-
-				if (s_oprigflag == 1) {
-
-					//オンだったRigをオフにする
-					RollbackCurBoneNo();
-					ToggleRig();
-					oprigdoneflag = 1;
-
-					s_curboneno = -1;//Sprite Menuより後で。Rigid作成に選択済s_curbonenoが必要。
-				}
-				else {
-
-					//オフだったリグをオンにする
-					RollbackCurBoneNo();
-
-					ToggleRig();
-					oprigdoneflag = 1;
-					//s_oprigflag == 1 のときのpickrigflag == 0　だから　rigはオン
-					//s_curboneno はそのまま
-				}
-				pickflag = true;
-			}
-		}
-
-		if (pickflag == false) {
-			//menukind : from 0 to 4
-			//plateno : from 1 to platenum
-			pickflag = GUIGetNextMenu(ptCursor, platemenukind, &nextplatemenukind, &nextplateno);
-			if ((nextplatemenukind >= 0) && (nextplateno != 0)) {
-				s_platemenukind = nextplatemenukind;
-				s_platemenuno = nextplateno;
-				GUIMenuSetVisible(s_platemenukind, nextplateno);
-			}
-		}
-
-		//s_curboneno = -1;//Sprite Menuより後で。Rigid作成に選択済s_curbonenoが必要。
-
-		int spckind = 0;
-		if ((pickflag == false) && s_spguisw[SPGUISW_CAMERA_AND_IK].state && ((spckind = PickSpCam(ptCursor)) != 0)) {
-			s_pickinfo.buttonflag = spckind;
-			s_pickinfo.pickobjno = -1;
-			RollbackCurBoneNo();
-			pickflag = true;
-		}
-		if (s_model) {
-			int spakind = 0;
-			//int pickrigflag = 0;
-			if ((pickflag == false) && s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
-				spakind = PickSpAxis(ptCursor);
-			}
-			if (spakind != 0) {
-				
-				pickflag = true;
-
-				if (s_saveboneno >= 0) {
-					RollbackCurBoneNo();
-					s_pickinfo.buttonflag = spakind;
-					s_pickinfo.pickobjno = s_curboneno;
-
-					//g_underIKRot = true;//2023/10/14 !!!!! 設定し忘れていた
-					//g_underIKRotApplyFrame = true;//2023/10/14 !!!!! 設定し忘れていた
-					s_model->SetUnderIKRot(true);
-					s_model->SetUnderIKRotApplyFrame(true);
-
-
-					//} else if ((oprigdoneflag == 0) && (pickrigflag == 1)){
-					//	RollbackCurBoneNo();
-					//	ToggleRig();
-				}
-			}
-			
-			if ((pickflag == false) && (s_oprigflag == 0)) {
-				if (g_shiftkey == false) {
-					CallF(s_model->PickBone(&s_pickinfo), return 1);
-				}
-				if (s_pickinfo.pickobjno >= 0) {
-					s_curboneno = s_pickinfo.pickobjno;//!!!!!!!
-
-					if (s_owpTimeline) {
-						s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
-					}
-
-					ChangeCurrentBone();
-
-
-					//if (s_model->GetInitAxisMatX() == 0){//OnAnimMenuに移動
-					//	s_owpLTimeline->setCurrentTime(0.0, true);
-					//	s_owpEulerGraph->setCurrentTime(0.0, false);
-					//	s_model->SetMotionFrame(0.0);
-					//	s_model->UpdateMatrix(&s_model->GetWorldMat(), &s_matVP);
-					//	//ここでAxisMatXの初期化
-					//	s_model->CreateBtObject(1);
-					//	s_model->CalcBtAxismat(2);//2
-					//	s_model->SetInitAxisMatX(1);
-					//}
-
-					s_pickinfo.buttonflag = PICK_CENTER;//!!!!!!!!!!!!!
-					//g_underIKRot = true;
-					//g_underIKRotApplyFrame = true;
-					s_model->SetUnderIKRot(true);
-					s_model->SetUnderIKRotApplyFrame(true);
-
-
-					//IK中は30fpsにする
-					//IK中の描画回数が多いと　IKROTRECの保存数が多すぎて
-					//ドラッグ終了後のウェイトカーソルが長くなりすぎる
-					//IKROTREC保存数を減らすため30fps
-					g_fpsforce30 = true;
-
-
-					//CModel::PickBone内でセット
-					//s_pickinfo.firstdiff.x = (float)s_pickinfo.clickpos.x - s_pickinfo.objscreen.x;
-					//s_pickinfo.firstdiff.y = (float)s_pickinfo.clickpos.y - s_pickinfo.objscreen.y;
-
+		{//2024/02/05 カメラはpreview中もドラッグ可能にする
+			if (pickflag == false) {
+				//cameramode switch
+				int pickcameramodeflag = 0;
+				pickcameramodeflag = PickSpCameraModeSW(ptCursor);
+				if (pickcameramodeflag == 1) {
+					ChangeCameraMode(0);//forcemode 反転をセット:0 強制オフ時:1 強制オン時:2
 					pickflag = true;
 				}
+			}
+			if (pickflag == false) {
+				//camerainherit switch
+				int pickcamerainheritflag = 0;
+				pickcamerainheritflag = PickSpCameraInheritSW(ptCursor);
+				if (pickcamerainheritflag == 1) {
+					ChangeCameraInherit();
+					pickflag = true;
+				}
+			}
+			if ((pickflag == false) && (PickSpCameraDolly(ptCursor) != 0)) {
+				if (s_model) {
+					if (s_cameradollyFlag == false) {
+						s_cameradollyFlag = true;
+					}
+				}
+				pickflag = true;
+			}
+			int spckind = 0;
+			if ((pickflag == false) && s_spguisw[SPGUISW_CAMERA_AND_IK].state && ((spckind = PickSpCam(ptCursor)) != 0)) {
+				s_pickinfo.buttonflag = spckind;
+				s_pickinfo.pickobjno = -1;
+				RollbackCurBoneNo();
+				pickflag = true;
+			}
+		}
 
+
+
+
+		//check and op rigflag : s_oprigflag turn to 1 when RClickRigMenu selected too.
+		if (g_previewFlag == 0) {//2024/02/05
+			if (pickflag == false) {
+				//IK Mode
+				int pickikmodeflag = 0;
+				pickikmodeflag = PickSpIkModeSW(ptCursor);
+				if (pickikmodeflag == 1) {
+					s_ikkind = 0;
+					s_spikmodesw[0].state = true;
+					s_spikmodesw[1].state = false;
+					s_spikmodesw[2].state = false;
+					SetLTimelineMark(s_curboneno);//グラフの操作ジョイント名表示も
+					refreshEulerGraph();
+					pickflag = true;
+				}
+				else if (pickikmodeflag == 2) {
+					s_ikkind = 1;
+					s_spikmodesw[0].state = false;
+					s_spikmodesw[1].state = true;
+					s_spikmodesw[2].state = false;
+					SetLTimelineMark(s_curboneno);//グラフの操作ジョイント名表示も
+					refreshEulerGraph();
+					pickflag = true;
+				}
+				else if (pickikmodeflag == 3) {
+					s_ikkind = 2;
+					s_spikmodesw[0].state = false;
+					s_spikmodesw[1].state = false;
+					s_spikmodesw[2].state = true;
+					SetLTimelineMark(s_curboneno);//グラフの操作ジョイント名表示も
+					refreshEulerGraph();
+					pickflag = true;
+				}
+			}
+			if (pickflag == false) {
+				//RefPos switch
+				int picklodflag = 0;
+				picklodflag = PickSpLODSW(ptCursor);
+				if (picklodflag == 1) {
+					s_splod.state = !s_splod.state;
+					pickflag = true;
+				}
+			}
+			if (pickflag == false) {
+				//limiteul switch
+				int picklimiteulflag = 0;
+				picklimiteulflag = PickSpLimitEulSW(ptCursor);
+				if (picklimiteulflag == 1) {
+					//2023/02/15
+					bool newstate = !s_splimiteul.state;
+					ChangeLimitDegFlag(newstate, true, true);
+					pickflag = true;
+				}
+			}
+			if (pickflag == false) {
+				//wallscraping switch
+				int pickscrapingflag = 0;
+				pickscrapingflag = PickSpScrapingSW(ptCursor);
+				if (pickscrapingflag == 1) {
+					bool newstate = !s_spscraping.state;
+					ChangeWallScrapingIKFlag(newstate);
+					pickflag = true;
+				}
+			}
+
+			//2023/02/04
+			//Bake LimitedWorld-->World : currentmotion fullframe
+			if ((pickflag == false) && (PickSpCpLW2W(ptCursor) != 0)) {
+				if (s_copyLW2WFlag == false) {
+					s_copyLW2WFlag = true;
+				}
+				pickflag = true;
+			}
+
+			if ((pickflag == false) && (PickSpSmooth(ptCursor) != 0)) {
+				if (s_smoothFlag == false) {
+					s_smoothFlag = true;
+				}
+				pickflag = true;
+			}
+
+			if ((pickflag == false) && (PickSpConstExe(ptCursor) != 0)) {
+				if (s_constexeFlag == false) {
+					s_constexeFlag = true;
+				}
+				pickflag = true;
+			}
+			if ((pickflag == false) && (PickSpConstRefresh(ptCursor) != 0)) {
+				if (s_constrefreshFlag == false) {
+					s_constrefreshFlag = true;
+				}
+				pickflag = true;
+			}
+
+
+			if ((pickflag == false) && (PickSpFrog2(ptCursor) != 0)) {
+				if (s_model) {
+					ChangeToolSpriteMode();
+				}
+				pickflag = true;
+			}
+			if ((pickflag == false) && (PickSpCopy(ptCursor) != 0)) {
+				if (s_model) {
+					if (s_copyFlag == false) {
+						s_copyFlag = true;
+					}
+				}
+				pickflag = true;
+			}
+			if ((pickflag == false) && (PickSpSymCopy(ptCursor) != 0)) {
+				if (s_model) {
+					if (s_symcopyFlag == false) {
+						s_symcopyFlag = true;
+					}
+				}
+				pickflag = true;
+			}
+			if ((pickflag == false) && (PickSpPaste(ptCursor) != 0)) {
+				if (s_model) {
+					if (s_pasteFlag == false) {
+						s_pasteFlag = true;
+					}
+				}
+				pickflag = true;
+			}
+			if ((pickflag == false) && (PickSpCopyHistory(ptCursor) != 0)) {
+				if (s_model) {
+					if (s_selCopyHisotryFlag == false) {
+						s_selCopyHisotryFlag = true;
+					}
+				}
+				pickflag = true;
+			}
+
+			if ((pickflag == false) && (PickSpInterpolate(ptCursor) != 0)) {
+				if (s_model) {
+					if (s_interpolateFlag == false) {
+						s_interpolateFlag = true;
+					}
+				}
+				pickflag = true;
+			}
+			if ((pickflag == false) && (PickSpInit(ptCursor) != 0)) {
+				if (s_model) {
+					if (s_initmpFlag == false) {
+						s_initmpFlag = true;
+					}
+				}
+				pickflag = true;
+			}
+			if ((pickflag == false) && (PickSpScaleInit(ptCursor) != 0)) {
+				if (s_model) {
+					if (s_scaleAllInitFlag == false) {
+						s_scaleAllInitFlag = true;
+					}
+				}
+				pickflag = true;
+			}
+			if ((pickflag == false) && (PickSpProperty(ptCursor) != 0)) {
+				if (s_model) {
+					if (s_motpropFlag == false) {
+						s_motpropFlag = true;
+					}
+				}
+				pickflag = true;
+			}
+
+			if ((pickflag == false) && (PickSpZeroFrame(ptCursor) != 0)) {
+				if (s_model) {
+					if (s_zeroFrameFlag == false) {
+						s_LstopFlag = true;
+						g_previewFlag = 0;
+						s_LcursorFlag = true;
+						s_zeroFrameFlag = true;
+					}
+				}
+				pickflag = true;
+			}
+			if ((pickflag == false) && (PickSpModelPosDir(ptCursor) != 0)) {
+				if (s_model) {
+					if (s_modelworldmatFlag == false) {
+						s_modelworldmatFlag = true;
+					}
+				}
+				pickflag = true;
+			}
+			if ((pickflag == false) && (PickSpMaterialRate(ptCursor) != 0)) {
+				if (s_model) {
+					if (s_materialrateFlag == false) {
+						s_materialrateFlag = true;
+					}
+				}
+				pickflag = true;
+			}
+
+			int oprigdoneflag = 0;
+			int pickrigflag = 0;
+			if (pickflag == false) {
+				pickrigflag = PickSpRig(ptCursor);
+				if (pickrigflag == 1) {
+
+
+					//開いている設定ダイアログを閉じないと、設定ダイアログのrigboneと新たなrigboneが異なってしまい、Applyボタンで異なるリグを保存することがある
+					if (s_customrigdlg) {
+						DestroyWindow(s_customrigdlg);
+						s_customrigdlg = 0;
+					}
+
+
+					if (s_oprigflag == 1) {
+
+						//オンだったRigをオフにする
+						RollbackCurBoneNo();
+						ToggleRig();
+						oprigdoneflag = 1;
+
+						s_curboneno = -1;//Sprite Menuより後で。Rigid作成に選択済s_curbonenoが必要。
+					}
+					else {
+
+						//オフだったリグをオンにする
+						RollbackCurBoneNo();
+
+						ToggleRig();
+						oprigdoneflag = 1;
+						//s_oprigflag == 1 のときのpickrigflag == 0　だから　rigはオン
+						//s_curboneno はそのまま
+					}
+					pickflag = true;
+				}
+			}
+
+			if (pickflag == false) {
+				//menukind : from 0 to 4
+				//plateno : from 1 to platenum
+				pickflag = GUIGetNextMenu(ptCursor, platemenukind, &nextplatemenukind, &nextplateno);
+				if ((nextplatemenukind >= 0) && (nextplateno != 0)) {
+					s_platemenukind = nextplatemenukind;
+					s_platemenuno = nextplateno;
+					GUIMenuSetVisible(s_platemenukind, nextplateno);
+				}
+			}
+
+			//s_curboneno = -1;//Sprite Menuより後で。Rigid作成に選択済s_curbonenoが必要。
+
+			if (s_model) {
+				int spakind = 0;
+				//int pickrigflag = 0;
+				if ((pickflag == false) && s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
+					spakind = PickSpAxis(ptCursor);
+				}
+				if (spakind != 0) {
+
+					pickflag = true;
+
+					if (s_saveboneno >= 0) {
+						RollbackCurBoneNo();
+						s_pickinfo.buttonflag = spakind;
+						s_pickinfo.pickobjno = s_curboneno;
+
+						//g_underIKRot = true;//2023/10/14 !!!!! 設定し忘れていた
+						//g_underIKRotApplyFrame = true;//2023/10/14 !!!!! 設定し忘れていた
+						s_model->SetUnderIKRot(true);
+						s_model->SetUnderIKRotApplyFrame(true);
+
+
+						//} else if ((oprigdoneflag == 0) && (pickrigflag == 1)){
+						//	RollbackCurBoneNo();
+						//	ToggleRig();
+					}
+				}
+
+				if ((pickflag == false) && (s_oprigflag == 0)) {
+					if (g_shiftkey == false) {
+						CallF(s_model->PickBone(&s_pickinfo), return 1);
+					}
+					if (s_pickinfo.pickobjno >= 0) {
+						s_curboneno = s_pickinfo.pickobjno;//!!!!!!!
+
+						if (s_owpTimeline) {
+							s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
+						}
+
+						ChangeCurrentBone();
+
+
+						//if (s_model->GetInitAxisMatX() == 0){//OnAnimMenuに移動
+						//	s_owpLTimeline->setCurrentTime(0.0, true);
+						//	s_owpEulerGraph->setCurrentTime(0.0, false);
+						//	s_model->SetMotionFrame(0.0);
+						//	s_model->UpdateMatrix(&s_model->GetWorldMat(), &s_matVP);
+						//	//ここでAxisMatXの初期化
+						//	s_model->CreateBtObject(1);
+						//	s_model->CalcBtAxismat(2);//2
+						//	s_model->SetInitAxisMatX(1);
+						//}
+
+						s_pickinfo.buttonflag = PICK_CENTER;//!!!!!!!!!!!!!
+						//g_underIKRot = true;
+						//g_underIKRotApplyFrame = true;
+						s_model->SetUnderIKRot(true);
+						s_model->SetUnderIKRotApplyFrame(true);
+
+
+						//IK中は30fpsにする
+						//IK中の描画回数が多いと　IKROTRECの保存数が多すぎて
+						//ドラッグ終了後のウェイトカーソルが長くなりすぎる
+						//IKROTREC保存数を減らすため30fps
+						g_fpsforce30 = true;
+
+
+						//CModel::PickBone内でセット
+						//s_pickinfo.firstdiff.x = (float)s_pickinfo.clickpos.x - s_pickinfo.objscreen.x;
+						//s_pickinfo.firstdiff.y = (float)s_pickinfo.clickpos.y - s_pickinfo.objscreen.y;
+
+						pickflag = true;
+					}
+
+					if (pickflag == false) {
+						bool pickring = false;
+						int pickmanipulator = PickManipulator(&s_pickinfo, pickring);
+						if (pickmanipulator >= 0) {
+							//g_underIKRot = true;
+							//g_underIKRotApplyFrame = true;
+							s_model->SetUnderIKRot(true);
+							s_model->SetUnderIKRotApplyFrame(true);
+
+							//IK中は30fpsにする
+							//IK中の描画回数が多いと　IKROTRECの保存数が多すぎて
+							//ドラッグ終了後のウェイトカーソルが長くなりすぎる
+							//IKROTREC保存数を減らすため30fps
+							g_fpsforce30 = true;
+
+							pickflag = true;
+						}
+					}
+				}
 				if (pickflag == false) {
-					bool pickring = false;
-					int pickmanipulator = PickManipulator(&s_pickinfo, pickring);
-					if (pickmanipulator >= 0) {
+					int savecurboneno = s_curboneno;
+					CBone* saverigbone = s_customrigbone;
+					int pickrigboneno = PickRigBone(&s_pickinfo);
+					if (pickrigboneno < 0) {
+						s_curboneno = savecurboneno;
+						s_customrigbone = saverigbone;
+
+						//ZeroMemory(&s_pickinfo, sizeof(UIPICKINFO));
+						s_pickinfo.pickobjno = savecurboneno;
+					}
+					else {
 						//g_underIKRot = true;
 						//g_underIKRotApplyFrame = true;
 						s_model->SetUnderIKRot(true);
@@ -7429,47 +7465,20 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						pickflag = true;
 					}
 				}
-			}
-			if (pickflag == false) {
-				int savecurboneno = s_curboneno;
-				CBone* saverigbone = s_customrigbone;
-				int pickrigboneno = PickRigBone(&s_pickinfo);
-				if (pickrigboneno < 0) {
-					s_curboneno = savecurboneno;
-					s_customrigbone = saverigbone;
 
-					//ZeroMemory(&s_pickinfo, sizeof(UIPICKINFO));
-					s_pickinfo.pickobjno = savecurboneno;
+				//2024/02/04 カメラ操作などのためのpickよりも後で
+				if ((pickflag == false) && s_spdispsw[SPDISPSW_DISPGROUP].state) {
+					pickflag = PickAndSelectMeshOfDispGroupDlg();
 				}
-				else {
-					//g_underIKRot = true;
-					//g_underIKRotApplyFrame = true;
-					s_model->SetUnderIKRot(true);
-					s_model->SetUnderIKRotApplyFrame(true);
-
-					//IK中は30fpsにする
-					//IK中の描画回数が多いと　IKROTRECの保存数が多すぎて
-					//ドラッグ終了後のウェイトカーソルが長くなりすぎる
-					//IKROTREC保存数を減らすため30fps
-					g_fpsforce30 = true;
-
-					pickflag = true;
+				if ((pickflag == false) && s_spdispsw[SPDISPSW_SHADERTYPE].state) {
+					pickflag = PickAndSelectMaterialOfShaderTypeDlg();
 				}
 			}
-
-			//2024/02/04 カメラ操作などのためのpickよりも後で
-			if ((pickflag == false) && s_spdispsw[SPDISPSW_DISPGROUP].state) {
-				pickflag = PickAndSelectMeshOfDispGroupDlg();
-			}
-			if ((pickflag == false) && s_spdispsw[SPDISPSW_SHADERTYPE].state) {
-				pickflag = PickAndSelectMaterialOfShaderTypeDlg();
+			else {
+				ZeroMemory(&s_pickinfo, sizeof(UIPICKINFO));
+				s_pickinfo.pickobjno = -1;
 			}
 		}
-		else {
-			ZeroMemory(&s_pickinfo, sizeof(UIPICKINFO));
-			s_pickinfo.pickobjno = -1;
-		}
-
 
 
 		//ChaMatrixIdentity(&s_ikselectmat);
@@ -7851,60 +7860,65 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		bool doneflag = false;
 
 
-		if (s_skey) {
-			//マニピュレータユーザー倍率
-			//Sキーが押されているRDragは　ジョイント選択時も倍率設定
-			if (doneflag == false) {
-				if (s_rbuttonSelectFlag == false) {
-					s_rbuttonSelectFlag = true;
+
+		//プレビュー中もカメラ操作は可能にする
+		if (doneflag == false) {
+			//カメラの回転を右ドラッグした場合は　OnMouseMoveFunc()にて　カメラのupvecをツイストする
+			if (PickSpCam(ptCursor) == PICK_CAMROT) {
+				if (s_twistcameraFlag == false) {
+					s_twistcameraFlag = true;
 				}
 				doneflag = true;
 			}
 		}
-		else if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
 
-			if (PickSpSmooth(ptCursor) != 0) {
-				//SmoothSpriteButton上で右クリックした場合は　Smooth用のメニューを出す
-				//SmoothSpriteButton上で左クリックした場合には　前回のSmooth設定にてSmoothをすぐに実行
-				FilterFromTool();
-				doneflag = true;
-			}
-
-			if (doneflag == false) {
-				//ペーストスプライトボタン右クリック：操作対象ボーン設定ダイアログを出した後にペースト処理
-				if (PickSpPaste(ptCursor) != 0) {
-					if (s_model) {
-						if ((s_selboneFlag == false) && (s_selboneAndPasteFlag == false)) {
-							s_selboneFlag = true;
-							s_selboneAndPasteFlag = true;
-							doneflag = true;
-						}
-					}
-				}
-			}
-
-			if (doneflag == false) {
-				//カメラの回転を右ドラッグした場合は　OnMouseMoveFunc()にて　カメラのupvecをツイストする
-				if (PickSpCam(ptCursor) == PICK_CAMROT) {
-					if (s_twistcameraFlag == false) {
-						s_twistcameraFlag = true;
+		if (g_previewFlag == 0) {//2024/02/06
+			if (s_skey) {
+				//マニピュレータユーザー倍率
+				//Sキーが押されているRDragは　ジョイント選択時も倍率設定
+				if (doneflag == false) {
+					if (s_rbuttonSelectFlag == false) {
+						s_rbuttonSelectFlag = true;
 					}
 					doneflag = true;
 				}
 			}
+			else if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
 
-			if (doneflag == false) {
-				//スプライトボタンクリック時には　ボーン右クリック用のメニューを出さないように
-				doneflag = IsClickedSpriteButton();
+				if (PickSpSmooth(ptCursor) != 0) {
+					//SmoothSpriteButton上で右クリックした場合は　Smooth用のメニューを出す
+					//SmoothSpriteButton上で左クリックした場合には　前回のSmooth設定にてSmoothをすぐに実行
+					FilterFromTool();
+					doneflag = true;
+				}
+
+				if (doneflag == false) {
+					//ペーストスプライトボタン右クリック：操作対象ボーン設定ダイアログを出した後にペースト処理
+					if (PickSpPaste(ptCursor) != 0) {
+						if (s_model) {
+							if ((s_selboneFlag == false) && (s_selboneAndPasteFlag == false)) {
+								s_selboneFlag = true;
+								s_selboneAndPasteFlag = true;
+								doneflag = true;
+							}
+						}
+					}
+				}
+
+
+				if (doneflag == false) {
+					//スプライトボタンクリック時には　ボーン右クリック用のメニューを出さないように
+					doneflag = IsClickedSpriteButton();
+				}
 			}
-		}
 
-		int pickboneorrig = 0;
-		if (doneflag == false) {
-			//ボーン右クリック用のメニュー
-			pickboneorrig = BoneRClick(-1);
-			if (pickboneorrig != 0) {
-				doneflag = true;
+			int pickboneorrig = 0;
+			if (doneflag == false) {
+				//ボーン右クリック用のメニュー
+				pickboneorrig = BoneRClick(-1);
+				if (pickboneorrig != 0) {
+					doneflag = true;
+				}
 			}
 		}
 	}
