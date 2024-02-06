@@ -1,7 +1,10 @@
 ﻿
 class IUnorderAccessResrouce : public IShaderResource {
 public:
-	virtual ~IUnorderAccessResrouce() {};
+	virtual ~IUnorderAccessResrouce() 
+	{ 
+		IShaderResource::~IShaderResource();
+	};
 	/// <summary>
 	/// UAVに登録。
 	/// </summary>

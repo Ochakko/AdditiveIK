@@ -13,7 +13,7 @@ public:
 	/// <summary>
 	/// デストラクタ。
 	/// </summary>
-	~Texture();
+	virtual ~Texture();
 
 	void InitParams() {
 		m_rendertargetflag = false;

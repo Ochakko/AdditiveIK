@@ -12,7 +12,7 @@ public:
 	/// <summary>
 	/// デストラクタ。
 	/// </summary>
-	~RWStructuredBuffer();
+	virtual ~RWStructuredBuffer();
 	/// <summary>
 	/// 構造化バッファを初期化。
 	/// </summary>

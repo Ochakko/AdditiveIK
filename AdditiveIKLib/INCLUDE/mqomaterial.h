@@ -312,16 +312,17 @@ public:
 
 
 
-	void SetFl4x4(myRenderer::RENDEROBJ renderobj);
+	void SetFl4x4(myRenderer::RENDEROBJ renderobj, int refposindex);
+	int SetRefPosFl4x4(CModel* srcmodel, int refposindex);
 	void SetConstLights(SConstantBufferLights* pcbLights);
 	void SetConstShadow(SConstantBufferShadow* pcbShadow);
 	void DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 		const Matrix& mView, const Matrix& mProj,
-		bool isfirstmaterial  = false);
-	void BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
+		int refposindex = 0);
+	void BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj, 
+		int refposindex = 0);
 	void ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
-		const Matrix& mView, const Matrix& mProj,
-		bool isfirstmaterial = false);
+		const Matrix& mView, const Matrix& mProj);
 	void ZPreBeginRender(RenderContext* rc);
 	void InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 		const Matrix& mView, const Matrix& mProj,
@@ -330,7 +331,7 @@ public:
 
 
 
-	void SetBoneMatrix(myRenderer::RENDEROBJ renderobj);
+	void SetBoneMatrix(myRenderer::RENDEROBJ renderobj, int refposindex);
 	//void SetBoneMatrixReq(CBone* srcbone, myRenderer::RENDEROBJ renderobj);
 
 private:
@@ -800,6 +801,29 @@ public:
 		return m_addressV_metal;
 	}
 
+	void SetRefPosFlag(bool srcflag)
+	{
+		m_refposflag = srcflag;
+	}
+	bool GetRefPosFlag()
+	{
+		return m_refposflag;
+	}
+	void SetRefPosNum(int srcval)
+	{
+		if ((srcval >= 0) && (srcval <= REFPOSMAXNUM)) {
+			m_refposnum = srcval;
+		}
+		else {
+			_ASSERT(0);
+			m_refposnum = 0;
+		}
+	}
+	int GetRefPosNum()
+	{
+		return m_refposnum;
+	}
+
 public:
 	//###################################################
 	//CreateDecl()内で　頂点フォーマットによって　定数を設定する
@@ -817,20 +841,44 @@ public:
 
 
 private:
-
-	ConstantBuffer m_commonConstantBuffer;					//メッシュ共通の定数バッファ。
-	ConstantBuffer m_expandConstantBuffer;					//ユーザー拡張用の定数バッファ
-	ConstantBuffer m_expandConstantBuffer2;					//ユーザー拡張用の定数バッファ
-	std::array<IShaderResource*, MAX_MODEL_EXPAND_SRV> m_expandShaderResourceView = { nullptr };	//ユーザー拡張シェーダーリソースビュー。
-	void* m_expandData = nullptr;
+	//###############
+	//root signature
+	//###############
+	RootSignature m_rootSignature[REFPOSMAXNUM];		//ルートシグネチャ。
+	RootSignature m_shadowrootSignature[REFPOSMAXNUM];	//ルートシグネチャ。
+	//#############
+	//video memory
+	//#############
+	ConstantBuffer m_commonConstantBuffer[REFPOSMAXNUM];						//メッシュ共通の定数バッファ。
+	ConstantBuffer m_expandConstantBuffer[REFPOSMAXNUM];						//ユーザー拡張用の定数バッファ
+	ConstantBuffer m_expandConstantBuffer2[REFPOSMAXNUM];						//ユーザー拡張用の定数バッファ
+	ConstantBuffer m_shadowcommonConstantBuffer[REFPOSMAXNUM];				//メッシュ共通の定数バッファ。(shadow)
+	ConstantBuffer m_shadowexpandConstantBuffer[REFPOSMAXNUM];				//ユーザー拡張用の定数バッファ(shadow)
+	ConstantBuffer m_shadowexpandConstantBuffer2[REFPOSMAXNUM];				//ユーザー拡張用の定数バッファ(shadow)
+	//#############
+	//system memory
+	//#############
+	SConstantBuffer m_cb[REFPOSMAXNUM];
+	SConstantBufferBoneMatrix m_cbMatrix[REFPOSMAXNUM];
+	SConstantBufferLights m_cbLights[REFPOSMAXNUM];
+	SConstantBufferShadow m_cbShadow[REFPOSMAXNUM];
+	//#############
+	//DescriptorHeap
+	//#############
 	bool m_createdescriptorflag;
-	DescriptorHeap m_descriptorHeap;					//ディスクリプタヒープ。
-	
-	
-	ConstantBuffer m_shadowcommonConstantBuffer;					//メッシュ共通の定数バッファ。
-	ConstantBuffer m_shadowexpandConstantBuffer;					//ユーザー拡張用の定数バッファ
-	ConstantBuffer m_shadowexpandConstantBuffer2;					//ユーザー拡張用の定数バッファ
-	DescriptorHeap m_shadowdescriptorHeap;					//ディスクリプタヒープ。
+	DescriptorHeap m_descriptorHeap[REFPOSMAXNUM];						//ディスクリプタヒープ。
+	DescriptorHeap m_shadowdescriptorHeap[REFPOSMAXNUM];					//ディスクリプタヒープ。
+
+	//#######
+	//RefPos
+	//#######
+	bool m_refposflag;
+	int m_refposnum;
+
+
+	//std::array<IShaderResource*, MAX_MODEL_EXPAND_SRV> m_expandShaderResourceView = { nullptr };	//ユーザー拡張シェーダーリソースビュー。
+	//void* m_expandData = nullptr;
+
 
 
 
@@ -897,13 +945,9 @@ private:
 	D3D12_TEXTURE_ADDRESS_MODE m_addressV_metal;
 
 
-
-	ConstantBuffer m_constantBuffer;				//定数バッファ。
-	RootSignature m_rootSignature;					//ルートシグネチャ。
-	RootSignature m_shadowrootSignature;					//ルートシグネチャ。
-	PipelineState m_opaquePipelineState[MQOSHADER_MAX];
-	PipelineState m_transPipelineState[MQOSHADER_MAX];
-	PipelineState m_zalwaysPipelineState[MQOSHADER_MAX];
+	PipelineState m_opaquePipelineState[MQOSHADER_MAX][REFPOSMAXNUM];
+	PipelineState m_transPipelineState[MQOSHADER_MAX][REFPOSMAXNUM];
+	PipelineState m_zalwaysPipelineState[MQOSHADER_MAX][REFPOSMAXNUM];
 	Shader* m_vsMQOShader[MQOSHADER_MAX];
 	Shader* m_psMQOShader[MQOSHADER_MAX];
 
@@ -929,13 +973,6 @@ private:
 	PipelineState m_InstancingzalwaysPipelineState;
 	Shader* m_vsInstancingModel = nullptr;
 	Shader* m_psInstancingModel = nullptr;
-
-
-
-	SConstantBuffer m_cb;
-	SConstantBufferBoneMatrix m_cbMatrix;
-	SConstantBufferLights m_cbLights;
-	SConstantBufferShadow m_cbShadow;
 
 
 	bool m_initpipelineflag = false;

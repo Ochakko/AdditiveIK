@@ -4,14 +4,6 @@
 
 RenderTarget::~RenderTarget()
 {
-	if (m_renderTargetTextureDx12) {
-		m_renderTargetTextureDx12->Release();
-		m_renderTargetTextureDx12 = nullptr;//2023/11/25
-	}
-	if (m_depthStencilTexture) {
-		m_depthStencilTexture->Release();
-		m_depthStencilTexture = nullptr;//2023/11/25
-	}
 	if (m_rtvHeap) {
 		m_rtvHeap->Release();
 		m_rtvHeap = nullptr;//2023/11/25
@@ -19,6 +11,14 @@ RenderTarget::~RenderTarget()
 	if (m_dsvHeap) {
 		m_dsvHeap->Release();
 		m_dsvHeap = nullptr;//2023/11/25
+	}
+	if (m_renderTargetTextureDx12) {
+		m_renderTargetTextureDx12->Release();
+		m_renderTargetTextureDx12 = nullptr;//2023/11/25
+	}
+	if (m_depthStencilTexture) {
+		m_depthStencilTexture->Release();
+		m_depthStencilTexture = nullptr;//2023/11/25
 	}
 }
 bool RenderTarget::Create(
@@ -61,21 +61,25 @@ bool RenderTarget::Create(
 }
 bool RenderTarget::CreateDescriptorHeap(GraphicsEngine& ge, ID3D12Device5*& d3dDevice)
 {
-		
+
+
+
 	//RTV用のディスクリプタヒープを作成する。
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 	desc.NumDescriptors = GraphicsEngine::FRAME_BUFFER_COUNT;
 	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	d3dDevice->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_rtvHeap));
 	if (m_rtvHeap == nullptr) {
-		//RTV用のディスクリプタヒープの作成に失敗した。
-		return false;
+		d3dDevice->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_rtvHeap));
+		if (m_rtvHeap == nullptr) {
+			//RTV用のディスクリプタヒープの作成に失敗した。
+			return false;
+		}
 	}
 	//ディスクリプタのサイズを取得。
 	m_rtvDescriptorSize = d3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-	if (m_depthStencilTexture) {
+	if (m_depthStencilTexture && (m_dsvHeap == nullptr)) {
 		//DSV用のディスクリプタヒープを作成する。
 		desc.NumDescriptors = 1;
 		desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
@@ -100,6 +104,12 @@ bool RenderTarget::CreateRenderTargetTexture(
 	float clearColor[4]
 )
 {
+	if (m_renderTargetTextureDx12 != nullptr) {
+		_ASSERT(0);
+		return false;
+	}
+
+
 	CD3DX12_RESOURCE_DESC desc(
 		D3D12_RESOURCE_DIMENSION_TEXTURE2D,
 		0,
@@ -153,6 +163,12 @@ bool RenderTarget::CreateDepthStencilTexture(
 	int h,
 	DXGI_FORMAT format)
 {
+	if (m_depthStencilTexture != nullptr) {
+		_ASSERT(0);
+		return false;
+	}
+
+
 	D3D12_CLEAR_VALUE dsvClearValue;
 	dsvClearValue.Format = format;
 	dsvClearValue.DepthStencil.Depth = 1.0f;

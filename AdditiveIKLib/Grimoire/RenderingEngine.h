@@ -31,6 +31,7 @@ namespace myRenderer
         bool calcslotflag;
         int btflag;
         bool zcmpalways;
+        int refposindex;
 
 
         bool operator< (const tag_renderobj& right) const {//sort用
@@ -71,6 +72,7 @@ namespace myRenderer
             calcslotflag = false;
             btflag = 0;
             zcmpalways = false;
+            refposindex = 0;
         };
 
         tag_renderobj()

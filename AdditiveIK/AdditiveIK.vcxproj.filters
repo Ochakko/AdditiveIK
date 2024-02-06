@@ -234,9 +234,6 @@
     <ClInclude Include="..\AdditiveIKLib\Grimoire\RenderingEngine.h">
       <Filter>MiniEngine\Grimoire</Filter>
     </ClInclude>
-    <ClInclude Include="..\AdditiveIKLib\Grimoire\ShadowMapRender.h">
-      <Filter>MiniEngine\Grimoire</Filter>
-    </ClInclude>
     <ClInclude Include="DXUTmisc\DXUTmisc.h">
       <Filter>DXUTmisc</Filter>
     </ClInclude>

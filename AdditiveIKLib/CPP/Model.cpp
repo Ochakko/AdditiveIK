@@ -489,6 +489,8 @@ int CModel::InitParams()
 	m_inshadow = false;
 	m_bound.Init();
 
+	m_refposflag = false;
+
 	m_instancingnum = 0;
 	m_instancingdrawnum = 0;
 	ZeroMemory(m_instancingparams, sizeof(INSTANCINGPARAMS) * RIGMULTINDEXMAX);
@@ -19814,5 +19816,33 @@ void CModel::ResetBoneMarkInstanceScale()
 	CBone::ResetColDispInstancingParams();
 	ResetInstancingParams();
 	ResetDispObjScale();
+}
+
+int CModel::SetRefPosFl4x4ToDispObj(int refposindex)
+{
+	int materialnum = GetMQOMaterialSize();
+	int matindex;
+	for (matindex = 0; matindex < materialnum; matindex++) {
+		CMQOMaterial* curmqomat = m_materialbank.Get(matindex);
+		if (curmqomat) {
+			curmqomat->SetRefPosFl4x4(this, refposindex);
+		}
+	}
+	return 0;
+}
+
+int CModel::SetRefPosFlag(bool srcflag)
+{
+	m_refposflag = srcflag;
+
+	int materialnum = GetMQOMaterialSize();
+	int matindex;
+	for (matindex = 0; matindex < materialnum; matindex++) {
+		CMQOMaterial* curmqomat = m_materialbank.Get(matindex);
+		if (curmqomat) {
+			curmqomat->SetRefPosFlag(srcflag);
+		}
+	}
+	return 0;
 }
 

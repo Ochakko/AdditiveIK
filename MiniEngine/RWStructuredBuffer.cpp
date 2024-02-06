@@ -12,6 +12,8 @@ RWStructuredBuffer::~RWStructuredBuffer()
 			buffer->Release();
 		}
 	}
+
+	IUnorderAccessResrouce::~IUnorderAccessResrouce();
 }
 void RWStructuredBuffer::Init(int sizeOfElement, int numElement, void* initData)
 {

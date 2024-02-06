@@ -170,7 +170,7 @@ private:
 	/// ディスクリプタの作成。
 	/// </summary>
 	/// <param name="d3dDevice">D3Dデバイス</param>
-	/// <returns>trueが返ってｋチアら成功。</returns>
+	/// <returns>trueが返ってきたら成功。</returns>
 	void CreateDescriptor(ID3D12Device5*& d3dDevice);
 private:
 	Texture m_renderTargetTexture;

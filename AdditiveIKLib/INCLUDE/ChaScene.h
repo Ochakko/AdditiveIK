@@ -69,13 +69,15 @@ public:
 	//};
 
 	int UpdateMatrixModels(bool limitdegflag, ChaMatrix* vpmat, double srcframe);
-	int UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, ChaMatrix* wmat, ChaMatrix* vpmat, double srcframe);
+	int UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, 
+		ChaMatrix* wmat, ChaMatrix* vpmat, double srcframe);
 	int WaitUpdateThreads();
 	int SetBoneMatrixForShader(int btflag, bool calcslotflag);
 	int RenderModels(myRenderer::RenderingEngine* renderringEngine, int lightflag, ChaVector4 diffusemult, int btflag = 0);
 	void WaitForUpdateMatrixModels();
 	int RenderOneModel(CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine* renderringEngine, 
-		int lightflag, ChaVector4 diffusemult, int btflag, bool zcmpalways);
+		int lightflag, ChaVector4 diffusemult, int btflag, bool zcmpalways,
+		int refposindex = 0);
 	int RenderInstancingModel(CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine* renderringEngine,
 		int lightflag, ChaVector4 diffusemult, int btflag, bool zcmpalways);
 

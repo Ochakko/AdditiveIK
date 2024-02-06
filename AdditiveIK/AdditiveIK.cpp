@@ -1494,7 +1494,7 @@ static int s_oprigflag = 0;
 static CSpGUISW s_spsel3d;
 static CSpElem s_spmousehere;
 static CSpGUISW s_spikmodesw[3];
-static CSpGUISW s_splod;
+static CSpGUISW s_sprefpos;
 static CSpGUISW s_splimiteul;
 static CSpGUISW s_spscraping;
 static CSpElem s_mousecenteron;
@@ -2211,7 +2211,7 @@ static int SetLightDirection();
 
 static int OnRenderModel(RenderContext* pRenderContext);
 static int OnRenderOnlyOneObj(RenderContext* pRenderContext);
-//static int OnRenderRefPos(RenderContext* pRenderContext, CModel* curmodel);
+static int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel);
 static int OnRenderGround(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
 static int OnRenderBoneMark(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
 static int OnRenderSelect(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
@@ -2501,8 +2501,8 @@ static int PickManipulator(UIPICKINFO* ppickinfo, bool pickring);
 static int SetSpMouseHereParams();
 static int SetSpIkModeSWParams();
 static int PickSpIkModeSW(POINT srcpos);
-static int SetSpLODSWParams();
-static int PickSpLODSW(POINT srcpos);
+static int SetSpRefPosSWParams();
+static int PickSpRefPosSW(POINT srcpos);
 
 
 
@@ -2791,6 +2791,11 @@ INT WINAPI wWinMain(
 #endif
 
 	//SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+
+	//_CrtSetBreakAlloc(1081145);
+
+	//_CrtSetBreakAlloc(22296);
+	//_CrtSetBreakAlloc(22292);
 
 	//_CrtSetBreakAlloc(3879301);
 	//_CrtSetBreakAlloc(3879304);
@@ -4370,9 +4375,9 @@ void InitApp()
 		s_spikmodesw[2].state = false;
 	}
 	//{
-	//	::ZeroMemory(&s_splod, sizeof(SPGUISW));
-	//	//s_splod.state = true;
-	//	s_splod.state = false;//2021/11/22 ReferencePose Off by default
+	//	::ZeroMemory(&s_sprefpos, sizeof(SPGUISW));
+	//	//s_sprefpos.state = true;
+		s_sprefpos.state = false;//2021/11/22 ReferencePose Off by default
 	//}
 	//{
 	//	::ZeroMemory(&s_splimiteul, sizeof(SPGUISW));
@@ -4619,7 +4624,6 @@ void OnDestroyDevice()
 	//if (s_eventhook) {
 		////UnhookWinEvent(s_eventhook);
 		//s_eventhook = 0;
-	CoUninitialize();
 	//}
 
 
@@ -5445,11 +5449,6 @@ void OnDestroyDevice()
 	DestroyEulKeys();
 	DestroyKeys();
 
-	//エンジンの破棄。
-	if (g_engine) {
-		delete g_engine;
-		g_engine = nullptr;
-	}
 
 
 	if (s_3dwnd && IsWindow(s_3dwnd)) {
@@ -5457,17 +5456,29 @@ void OnDestroyDevice()
 		s_3dwnd = 0;
 	}
 	s_3dwnd = 0;
+
+
+
+	//エンジンの破棄。
+	if (g_engine) {
+		delete g_engine;
+		g_engine = nullptr;
+	}
+
+	CoUninitialize();
+
+
+	DeleteCriticalSection(&s_CritSection_LTimeline);
+	DeleteCriticalSection(&g_CritSection_GetGP);
+	DeleteCriticalSection(&g_CritSection_FbxSdk);
+
+
 	if (g_mainhwnd && IsWindow(g_mainhwnd)) {
 		DestroyWindow(g_mainhwnd);
 		g_mainhwnd = 0;
 	}
 	g_mainhwnd = 0;
 
-
-
-	DeleteCriticalSection(&s_CritSection_LTimeline);
-	DeleteCriticalSection(&g_CritSection_GetGP);
-	DeleteCriticalSection(&g_CritSection_FbxSdk);
 
 }
 
@@ -5993,9 +6004,21 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 				btflag = 1;
 			}
 
+			if (s_model) {
+				if (s_sprefpos.state) {
+					s_model->SetRefPosFlag(true);
+				}
+				else {
+					s_model->SetRefPosFlag(false);
+				}
+			}
 			bool calcslotflag = false;
 			s_chascene->SetBoneMatrixForShader(btflag, calcslotflag);
 			s_chascene->RenderModels(re, lightflag, diffusemult, btflag);
+			if (s_model && s_sprefpos.state) {
+				OnRenderRefPos(re, s_model);
+			}
+
 
 			if (s_ground) {
 				OnRenderGround(re, rc);//メッシュではなくラインオブジェクト
@@ -7139,9 +7162,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			if (pickflag == false) {
 				//RefPos switch
 				int picklodflag = 0;
-				picklodflag = PickSpLODSW(ptCursor);
+				picklodflag = PickSpRefPosSW(ptCursor);
 				if (picklodflag == 1) {
-					s_splod.state = !s_splod.state;
+					s_sprefpos.state = !s_sprefpos.state;
 					pickflag = true;
 				}
 			}
@@ -19115,7 +19138,7 @@ int SetSpParams()
 	SetSpUndoParams();
 	SetSpGUISWParams();
 	SetSpIkModeSWParams();
-	SetSpLODSWParams();
+	SetSpRefPosSWParams();
 	SetSpDispSWParams();
 	SetSpRigidSWParams();
 	SetSpRetargetSWParams();
@@ -19621,26 +19644,26 @@ int SetSpIkModeSWParams()
 }
 
 
-int SetSpLODSWParams()
+int SetSpRefPosSWParams()
 {
 	int spgshift = 6;
-	s_splod.dispcenter.x = s_mainwidth - (int)s_spsidemargin;
-	s_splod.dispcenter.y = (int)s_sptopmargin + ((int)s_spsize + spgshift) * 3;
+	s_sprefpos.dispcenter.x = s_mainwidth - (int)s_spsidemargin;
+	s_sprefpos.dispcenter.y = (int)s_sptopmargin + ((int)s_spsize + spgshift) * 3;
 
 	ChaVector3 disppos;
-	disppos.x = (float)(s_splod.dispcenter.x);
-	disppos.y = (float)(s_splod.dispcenter.y);
+	disppos.x = (float)(s_sprefpos.dispcenter.x);
+	disppos.y = (float)(s_sprefpos.dispcenter.y);
 	disppos.z = 0.0f;
 	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
 
 
-	//CallF(s_splod.spriteON->SetPos(disppos), return 1);
-	//CallF(s_splod.spriteON->SetSize(dispsize), return 1);
-	s_splod.spriteON.UpdateScreen(disppos, dispsize);
+	//CallF(s_sprefpos.spriteON->SetPos(disppos), return 1);
+	//CallF(s_sprefpos.spriteON->SetSize(dispsize), return 1);
+	s_sprefpos.spriteON.UpdateScreen(disppos, dispsize);
 
-	//CallF(s_splod.spriteOFF->SetPos(disppos), return 1);
-	//CallF(s_splod.spriteOFF->SetSize(dispsize), return 1);
-	s_splod.spriteOFF.UpdateScreen(disppos, dispsize);
+	//CallF(s_sprefpos.spriteOFF->SetPos(disppos), return 1);
+	//CallF(s_sprefpos.spriteOFF->SetSize(dispsize), return 1);
+	s_sprefpos.spriteOFF.UpdateScreen(disppos, dispsize);
 
 	return 0;
 }
@@ -20174,8 +20197,8 @@ int SetSpRigParams()
 		float spgwidth = 50.0f;
 		float spgheight = 50.0f;
 		int spgshift = 6;
-		s_splod.dispcenter.x = s_mainwidth - 35;
-		s_splod.dispcenter.y = 35 + ((int)spgheight + spgshift) * 3;
+		s_sprefpos.dispcenter.x = s_mainwidth - 35;
+		s_sprefpos.dispcenter.y = 35 + ((int)spgheight + spgshift) * 3;
 	*/
 
 	int spashift = 6;
@@ -20691,7 +20714,7 @@ int PickSpIkModeSW(POINT srcpos)
 	return kind;
 }
 
-int PickSpLODSW(POINT srcpos)
+int PickSpRefPosSW(POINT srcpos)
 {
 	int ispick = 0;
 
@@ -20710,11 +20733,11 @@ int PickSpLODSW(POINT srcpos)
 
 
 	//splod
-	int startx = s_splod.dispcenter.x - (int)s_spsize / 2;
+	int startx = s_sprefpos.dispcenter.x - (int)s_spsize / 2;
 	int endx = startx + (int)s_spsize;
 
 	if ((srcpos.x >= startx) && (srcpos.x <= endx)) {
-		int starty = s_splod.dispcenter.y - (int)s_spsize / 2;
+		int starty = s_sprefpos.dispcenter.y - (int)s_spsize / 2;
 		int endy = starty + (int)s_spsize + 6;
 
 		if ((srcpos.y >= starty) && (srcpos.y <= endy)) {
@@ -36532,134 +36555,165 @@ int CreateLayerWnd()
 
 }
 
-//int OnRenderRefPos(RenderContext* pRenderContext, CModel* curmodel)
-//{
-//	if (!pRenderContext || !curmodel) {
-//		return 0;
-//	}
-//
-//	if (s_splod.state) {
-//		if (curmodel == s_model) {
-//
-//			int keynum;
-//			double startframe, endframe, applyframe;
-//			double roundingstartframe, roundingendframe, roundingapplyframe;
-//			s_editrange.GetRange(&keynum, &startframe, &endframe, &applyframe);
-//			roundingstartframe = RoundingTime(startframe);
-//			roundingendframe = RoundingTime(endframe);
-//			roundingapplyframe = RoundingTime(applyframe);
-//
-//			//if (keynum >= 3) {
-//				MOTINFO* curmi = s_model->GetCurMotInfo();
-//				if (curmi) {
-//					int curmotid = curmi->motid;
-//					double currentframe = curmi->curframe;
-//					CBone* curbone = s_model->GetBoneByID(s_curboneno);
-//					if (curbone) {
-//						std::vector<ChaVector3> vecbonepos;
-//						vecbonepos.clear();
-//						ChaVector3 curbonepos;
-//
-//						ChaMatrix modelwm = s_model->GetWorldMat();
-//
-//						int rendercount = 0;
-//						double renderframe;
-//						for (renderframe = roundingstartframe; renderframe <= roundingendframe; renderframe += 1.0) {
-//							s_model->SetMotionFrame(renderframe);
-//							//s_model->UpdateMatrix(&s_model->GetWorldMat(), &s_matVP);
-//							//ChaMatrix tmpwm = s_model->GetWorldMat();
-//							//s_model->HierarchyRouteUpdateMatrix(g_limitdegflag, curbone, &modelwm, &s_matVP);//高速化：関係ボーンルート限定アップデート
-//							ChaVector3 tmpfpos = curbone->GetJointFPos();
-//							//ChaMatrix tmpcurwm = curbone->GetCurMp().GetWorldMat() * s_matWorld;//2023/08/27 s_matWorldを掛ける
-//							ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, renderframe, 0) * modelwm;
-//							ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
-//							vecbonepos.push_back(curbonepos);
-//
-//							int lightflag = 0;//!!!!!!!透けるために必要!!!!!!!!!
-//
-//							if (renderframe != currentframe) {
-//								if ((rendercount % g_refposstep) == 0) {
-//									//refframeのポーズを表示
-//									int btflag1 = 0;
-//							
-//									s_model->SetMotionFrame(renderframe);
-//									s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
-//							
-//							
-//									//カレントフレームから離れるほど　透明度を薄くする
-//									const double refstartalpha = 0.80f;
-//									double rendernum;
-//									double renderalpha0, renderalpha;
-//									rendernum = endframe - startframe + 1.0;
-//									renderalpha0 = (rendernum - fabs(currentframe - renderframe)) / rendernum;
-//									renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
-//									ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, (float)renderalpha);
-//							
-//									bool withalpha = true;
-//									bool calcslotflag = true;
-//									s_model->OnRender(withalpha, pRenderContext, lightflag, refdiffusemult, 
-//										btflag1, calcslotflag);//render model at reference pos
-//								}
-//							}
-//							rendercount++;
-//						}
-//
-//
-//						{
-//							////カレントフレームをレンダー
-//							s_model->SetMotionFrame(currentframe);
-//							s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
-//						
-//							int lightflag2 = 0;//!!!!!!!透けるために必要!!!!!!!!!
-//							//const float orgalpha = 0.8880f;
-//							const float orgalpha = 1.0f;
-//							ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, orgalpha);
-//							int btflag2 = 0;
-//							if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-//								btflag2 = 0;
-//							}
-//							else {
-//								if (g_previewFlag == 4) {
-//									btflag2 = 1;
-//								}
-//								else {
-//									//previewFlag == 5
-//									if ((s_curboneno >= 0) && ((s_onragdollik != 0) || (s_physicskind == 0))) {
-//										btflag2 = 2;//2022/07/09
-//									}
-//								}
-//							}
-//							bool withalpha = false;
-//							bool calcslotflag = true;
-//							s_model->OnRender(withalpha, pRenderContext, lightflag2, diffusemult, btflag2, calcslotflag);
-//							withalpha = true;
-//							s_model->OnRender(withalpha, pRenderContext, lightflag2, diffusemult, btflag2, calcslotflag);
-//						}
-//
-//
-//						////render arrow : selected bone : befpos --> aftpos arrow
-//						//CBone* childbone = curbone->GetChild(false);
-//						//if (childbone && childbone->IsSkeleton() && curbone->GetColDisp(childbone, COL_CONE_INDEX)) {
-//						//	ChaVector4 arrowdiffusemult = ChaVector4(1.0f, 0.5f, 0.5f, 0.85f);
-//
-//						//	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmpAlways, 1);//不透明の場合には手動で指定
-//						//	g_zcmpalways = true;
-//						//	curbone->GetColDisp(childbone, COL_CONE_INDEX)->RenderRefArrow(g_limitdegflag,
-//						//		pRenderContext, curbone, arrowdiffusemult, 1, vecbonepos);
-//						//	s_model->RenderBoneCircleOne(g_limitdegflag,
-//						//		pRenderContext, s_bcircle, s_curboneno);
-//
-//						//	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);//元に戻す
-//						//	g_zcmpalways = false;
-//						//}
-//					}
-//				}
-//			//}
-//		}
-//	}
-//
-//	return 0;
-//}
+int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
+{
+	if (!re || !curmodel) {
+		return 0;
+	}
+
+	if (s_sprefpos.state) {
+		if (curmodel == s_model) {
+
+			int keynum;
+			double startframe, endframe, applyframe;
+			double roundingstartframe, roundingendframe, roundingapplyframe;
+			s_editrange.GetRange(&keynum, &startframe, &endframe, &applyframe);
+			roundingstartframe = RoundingTime(startframe);
+			roundingendframe = RoundingTime(endframe);
+			roundingapplyframe = RoundingTime(applyframe);
+
+			//if (keynum >= 3) {
+				MOTINFO* curmi = s_model->GetCurMotInfo();
+				if (curmi) {
+					int curmotid = curmi->motid;
+					double currentframe = curmi->curframe;
+					CBone* curbone = s_model->GetBoneByID(s_curboneno);
+					if (curbone) {
+						std::vector<ChaVector3> vecbonepos;
+						vecbonepos.clear();
+						ChaVector3 curbonepos;
+
+						ChaMatrix modelwm = s_model->GetWorldMat();
+
+						double renderleng = roundingendframe - roundingstartframe + 1;
+						double renderstep = renderleng / (double)(REFPOSMAXNUM - 2);
+
+						int refposindex = 0;
+						double renderframe;
+						//for (renderframe = roundingstartframe; renderframe <= roundingendframe; renderframe += 1.0) {
+						for(renderframe = roundingstartframe; renderframe <= roundingendframe; renderframe += renderstep) {
+							s_model->SetMotionFrame(renderframe);
+							////s_model->UpdateMatrix(&s_model->GetWorldMat(), &s_matVP);
+							////ChaMatrix tmpwm = s_model->GetWorldMat();
+							////s_model->HierarchyRouteUpdateMatrix(g_limitdegflag, curbone, &modelwm, &s_matVP);//高速化：関係ボーンルート限定アップデート
+							//ChaVector3 tmpfpos = curbone->GetJointFPos();
+							////ChaMatrix tmpcurwm = curbone->GetCurMp().GetWorldMat() * s_matWorld;//2023/08/27 s_matWorldを掛ける
+							//ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, renderframe, 0) * modelwm;
+							//ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
+							//vecbonepos.push_back(curbonepos);
+
+							//int lightflag = 0;//!!!!!!!透けるために必要!!!!!!!!!
+
+							//refframeのポーズを表示
+							int btflag1 = 0;
+							
+							s_model->SetMotionFrame(renderframe);
+							//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
+							s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matVP, renderframe);
+							
+
+							bool calcslotflag;
+							calcslotflag = true;
+							s_model->SetShaderConst(btflag1, calcslotflag);
+							s_model->SetRefPosFl4x4ToDispObj(refposindex);
+
+							//カレントフレームから離れるほど　透明度を薄くする
+							const double refstartalpha = 0.80f;
+							double renderalpha0 = (renderleng - fabs(currentframe - renderframe)) / renderleng;
+							//double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
+							double renderalpha = renderalpha0 * renderalpha0 * renderalpha0;
+							ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, (float)renderalpha);
+
+							int lightflag = 0;
+							bool forcewithalpha = true;
+							int btflag = 0;
+							bool zcmpalways = false;
+							s_chascene->RenderOneModel(s_model, forcewithalpha, re, 
+								lightflag, refdiffusemult, btflag, zcmpalways, refposindex);
+
+							refposindex++;							
+						}
+
+						{
+							////カレントフレームをレンダー
+							int btflag1 = 0;
+
+							s_model->SetMotionFrame(currentframe);
+							//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
+							s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matVP, currentframe);
+
+							bool calcslotflag;
+							calcslotflag = true;
+							s_model->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
+							s_model->SetRefPosFl4x4ToDispObj(refposindex);
+
+							ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+
+							int lightflag = 1;
+							bool forcewithalpha = true;
+							int btflag = 0;
+							bool zcmpalways = false;
+							s_chascene->RenderOneModel(s_model, forcewithalpha, re,
+								lightflag, refdiffusemult, btflag, zcmpalways, refposindex);
+						}
+
+
+
+						//{
+						//	////カレントフレームをレンダー
+						//	s_model->SetMotionFrame(currentframe);
+						//	s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
+						//
+						//	int lightflag2 = 0;//!!!!!!!透けるために必要!!!!!!!!!
+						//	//const float orgalpha = 0.8880f;
+						//	const float orgalpha = 1.0f;
+						//	ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, orgalpha);
+						//	int btflag2 = 0;
+						//	if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
+						//		btflag2 = 0;
+						//	}
+						//	else {
+						//		if (g_previewFlag == 4) {
+						//			btflag2 = 1;
+						//		}
+						//		else {
+						//			//previewFlag == 5
+						//			if ((s_curboneno >= 0) && ((s_onragdollik != 0) || (s_physicskind == 0))) {
+						//				btflag2 = 2;//2022/07/09
+						//			}
+						//		}
+						//	}
+						//	bool withalpha = false;
+						//	bool calcslotflag = true;
+						//	s_model->OnRender(withalpha, pRenderContext, lightflag2, diffusemult, btflag2, calcslotflag);
+						//	withalpha = true;
+						//	s_model->OnRender(withalpha, pRenderContext, lightflag2, diffusemult, btflag2, calcslotflag);
+						//}
+
+
+						////render arrow : selected bone : befpos --> aftpos arrow
+						//CBone* childbone = curbone->GetChild(false);
+						//if (childbone && childbone->IsSkeleton() && curbone->GetColDisp(childbone, COL_CONE_INDEX)) {
+						//	ChaVector4 arrowdiffusemult = ChaVector4(1.0f, 0.5f, 0.5f, 0.85f);
+
+						//	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmpAlways, 1);//不透明の場合には手動で指定
+						//	//g_zcmpalways = true;
+						//	//curbone->GetColDisp(childbone, COL_CONE_INDEX)->RenderRefArrow(g_limitdegflag,
+						//	//	pRenderContext, curbone, arrowdiffusemult, 1, vecbonepos);
+						//	//s_model->RenderBoneCircleOne(g_limitdegflag,
+						//	//	pRenderContext, s_bcircle, s_curboneno);
+
+						//	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);//元に戻す
+						//	//g_zcmpalways = false;
+						//}
+					}
+				}
+			//}
+		}
+	}
+
+	return 0;
+}
 
 int OnRenderModel(RenderContext* pRenderContext)
 {
@@ -36703,7 +36757,7 @@ int OnRenderModel(RenderContext* pRenderContext)
 	//}
 
 	//s_chascene->RenderModels(pRenderContext, lightflag, diffusemult, btflag);
-	//if (s_splod.state) {
+	//if (s_sprefpos.state) {
 	//	OnRenderLOD(pRenderContext, s_model);
 	//}
 
@@ -37256,18 +37310,18 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 			}
 
 			//lodsw
-			if (s_splod.state) {
-				//s_splod.spriteON.DrawScreen(pRenderContext);
+			if (s_sprefpos.state) {
+				//s_sprefpos.spriteON.DrawScreen(pRenderContext);
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
-				rendersprite.psprite = &(s_splod.spriteON);
+				rendersprite.psprite = &(s_sprefpos.spriteON);
 				re->AddSpriteToForwardRenderPass(rendersprite);
 			}
 			else {
-				//s_splod.spriteOFF.DrawScreen(pRenderContext);
+				//s_sprefpos.spriteOFF.DrawScreen(pRenderContext);
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
-				rendersprite.psprite = &(s_splod.spriteOFF);
+				rendersprite.psprite = &(s_sprefpos.spriteOFF);
 				re->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
@@ -51555,7 +51609,7 @@ bool DispTipUI()
 	if (dispfontfortip == false) {
 		//lod switch
 		int picklodflag = 0;
-		picklodflag = PickSpLODSW(ptCursor);
+		picklodflag = PickSpRefPosSW(ptCursor);
 		if (picklodflag == 1) {
 			dispfontfortip = true;
 			wcscpy_s(sz512, 512, L"Disp ReferencePose");
@@ -52481,7 +52535,7 @@ bool IsClickedSpriteButton()
 	{
 		//lod switch
 		int picklodflag = 0;
-		picklodflag = PickSpLODSW(ptCursor);
+		picklodflag = PickSpRefPosSW(ptCursor);
 		if (picklodflag == 1) {
 			return true;
 		}
@@ -52853,14 +52907,14 @@ int CreateSprites()
 	s_spritetex8 = new Texture();
 	s_spritetex8->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex8;
-	s_splod.spriteON.Init(spriteinitdata, screenvertexflag);
+	s_sprefpos.spriteON.Init(spriteinitdata, screenvertexflag);
 	
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\RefPosOFF.gif");
 	s_spritetex9 = new Texture();
 	s_spritetex9->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex9;
-	s_splod.spriteOFF.Init(spriteinitdata, screenvertexflag);
+	s_sprefpos.spriteOFF.Init(spriteinitdata, screenvertexflag);
 	
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\LimitEul_ON.png");
@@ -53537,8 +53591,8 @@ void DestroySprites()
 		s_spritetex19 = 0;
 	}
 	if (s_spritetex20) {
-		delete s_spritetex10;
-		s_spritetex10 = 0;
+		delete s_spritetex20;
+		s_spritetex20 = 0;
 	}
 
 	if (s_spritetex21) {

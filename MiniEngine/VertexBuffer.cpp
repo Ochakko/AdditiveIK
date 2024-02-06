@@ -6,6 +6,7 @@ VertexBuffer::~VertexBuffer()
 {
 	if (m_vertexBuffer) {
 		m_vertexBuffer->Release();
+		m_vertexBuffer = nullptr;
 	}
 }
 void VertexBuffer::Init(int size, int stride)

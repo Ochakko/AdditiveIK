@@ -189,15 +189,12 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vpmat, double src
 			CModel* curmodel = m_modelindex[modelindex].modelptr;
 			if (curmodel) {
 				if (curmodel->GetCurMotInfo()) {
-					curmodel->SetMotionFrame(srcframe);
+					curmodel->SetMotionFrame(srcframe);//refposの場合にも必要
+				}
 
+				if (curmodel->GetRefPosFlag() == false) {//2024/02/06
 					ChaMatrix wmat = curmodel->GetWorldMat();
 					curmodel->UpdateMatrix(limitdegflag, &wmat, vpmat, needwaitflag, m_updateslot);
-				}
-				else {
-					//モーションが無い場合にもChkInViewを呼ぶためにUpdateMatrix呼び出しは必要
-					ChaMatrix tmpwm = curmodel->GetWorldMat();
-					curmodel->UpdateMatrix(limitdegflag, &tmpwm, vpmat, needwaitflag, m_updateslot);
 				}
 
 				//2023/11/03
@@ -417,7 +414,8 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 				for (modelindex = 0; modelindex < modelnum; modelindex++) {
 
 					CModel* curmodel = m_modelindex[modelindex].modelptr;
-					if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView()) {
+					if (curmodel && (curmodel->GetRefPosFlag() == false) && 
+						curmodel->GetModelDisp() && curmodel->GetInView()) {
 					//if (curmodel && curmodel->GetModelDisp()) {
 
 						ChaVector4 materialdisprate = curmodel->GetMaterialDispRate();
@@ -598,7 +596,9 @@ void ChaScene::WaitForUpdateMatrixModels()
 
 int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 	myRenderer::RenderingEngine* renderingEngine, 
-	int lightflag, ChaVector4 diffusemult, int btflag, bool zcmpalways)
+	int lightflag, ChaVector4 diffusemult, int btflag, bool zcmpalways, 
+	int refposindex)
+//default:refposindex = 0
 {
 	if (!renderingEngine) {
 		_ASSERT(0);
@@ -731,6 +731,7 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 							//renderingEngine->Add3DModelToForwardRenderPass(renderobj);
 
 							renderobj.renderkind = RENDERKIND_NORMAL;
+							renderobj.refposindex = refposindex;//2024/02/06
 							rendervec.push_back(renderobj);
 						}
 					}

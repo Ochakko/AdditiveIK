@@ -1,6 +1,19 @@
-﻿#pragma once
+﻿#ifndef TRESOURCEBANKH
+#define TRESOURCEBANKH
+
+#include <windows.h>
 
 #include <memory>
+#include <vector>
+#include <map>
+
+//#include "../MiniEngine/MiniEngine.h"
+//#include "d3dx12.h"
+
+//#include "Texture.h"
+//#include "Shader.h"
+//#include "mqomaterial.h"
+
 
 //template<class TResource>
 //class TResourceBank {
@@ -43,8 +56,8 @@
 //	std::map<std::string, TResource*> m_resourceMap;
 //};
 
-template<class TResource>
-class TResourceBank {
+
+template<class TResource> class TResourceBank {
 public:
 	TResourceBank() {
 		InitParams();
@@ -52,14 +65,19 @@ public:
 	~TResourceBank() {
 		DestroyObjs();
 	};
-	
+
 	void InitParams() {
 		m_resourceVec.clear();
 		m_resourceMap.clear();
 	};
 	void DestroyObjs() {
-		m_resourceVec.clear();
-		m_resourceMap.clear();
+		for (auto& it : m_resourceMap) {
+			if (it.second && it.second.get()) {
+				it.second.reset();
+			}
+		}
+		//m_resourceVec.clear();
+		//m_resourceMap.clear();
 	};
 
 	int GetSize() {
@@ -84,21 +102,47 @@ public:
 			_ASSERT(0);
 			return 0;
 		}
+
+		//int resnum = GetSize();
+		//if ((srcindex >= 0) && (srcindex < resnum)) {
+		//	auto it = m_resourceMap.begin();
+		//	if (it != m_resourceMap.end()) {
+		//		int stepcount = 0;
+		//		for (stepcount = 0; stepcount < srcindex; stepcount++) {
+		//			it++;
+		//		}
+		//		if (it != m_resourceMap.end()) {
+		//			return it->second.get();
+		//		}
+		//		else {
+		//			return nullptr;
+		//		}
+		//	}
+		//	else {
+		//		return nullptr;
+		//	}
+		//}
+		//else {
+		//	_ASSERT(0);
+		//	return nullptr;
+		//}
 	}
 
 	void Regist(const char* filePath, TResource* resource)
 	{
 		auto it = m_resourceMap.find(filePath);
 		if (it == m_resourceMap.end()) {
-			m_resourceMap.insert(
-				std::pair< std::string, TResourcePtr>(filePath, resource )
-			);
-			m_resourceVec.push_back(resource);
+			//m_resourceMap.insert(
+			//	std::pair<std::string, TResourcePtr>(filePath, resource);
+			//);
+			m_resourceMap[filePath] = TResourcePtr(resource);
+			m_resourceVec.push_back(resource);//clear時に２回解放されないようにvectorは普通のポインタを格納
 		}
 	}
 private:
-	using TResourcePtr = std::unique_ptr<TResource> ;
+	using TResourcePtr = std::unique_ptr<TResource>;
 	std::map<std::string, TResourcePtr> m_resourceMap;//unique_ptr:空にすると削除される
 	std::vector<TResource*> m_resourceVec;//普通のポインタ  indexで取得可能に
 };
 
+#endif

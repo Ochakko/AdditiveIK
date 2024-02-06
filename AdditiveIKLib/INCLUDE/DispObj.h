@@ -267,6 +267,8 @@ private:
 	SCALEINSTANCING m_scaleInstancing[RIGMULTINDEXMAX];
 
 	int* m_tmpindexLH;
+
+
 };
 
 #endif

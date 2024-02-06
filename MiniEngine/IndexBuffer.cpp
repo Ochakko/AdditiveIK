@@ -8,6 +8,7 @@ IndexBuffer::~IndexBuffer()
 {
 	if (m_indexBuffer) {
 		m_indexBuffer->Release();
+		m_indexBuffer = nullptr;
 	}
 }
 void IndexBuffer::Init(int size, int stride)

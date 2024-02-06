@@ -12,11 +12,12 @@ public:
 	/// <summary>
 	/// デストラクタ。
 	/// </summary>
-	~GPUBuffer()
+	virtual ~GPUBuffer()
 	{
 		if (m_buffer != nullptr) {
 			m_buffer->Release();
 		}
+		IUnorderAccessResrouce::~IUnorderAccessResrouce();
 	}
 	/// <summary>
 	/// 初期化。

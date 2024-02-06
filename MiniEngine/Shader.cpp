@@ -12,6 +12,28 @@ namespace {
 	const char* g_psShaderModelName = "ps_5_0";	//ピクセルシェーダーのシェーダモデル名。
 	const char* g_csShaderModelName = "cs_5_0";	//コンピュートシェーダーのシェーダーモデル名。
 }
+
+Shader::Shader()
+{
+	m_blob = nullptr;	//コンパイル済みのシェーダーデータ。
+	m_dxcBlob = nullptr;	//DXCコンパイラを使用したときのシェーダーデータ。
+	m_isInited = false;		//初期化済み？
+
+}
+Shader::~Shader()
+{
+	if (m_blob) {
+		m_blob->Release();
+		m_blob = nullptr;	//コンパイル済みのシェーダーデータ。
+	}
+	if (m_dxcBlob) {
+		m_dxcBlob->Release();
+		m_dxcBlob = nullptr;	//DXCコンパイラを使用したときのシェーダーデータ。
+	}
+	m_isInited = false;		//初期化済み？
+}
+
+
 void Shader::Load(const char* filePath, const char* entryFuncName, const char* shaderModel)
 {
 	ID3DBlob* errorBlob;

@@ -34,11 +34,20 @@ GraphicsEngine::~GraphicsEngine()
 	if (m_pipelineState) {
 		m_pipelineState->Release();
 	}
-	for (auto& rt : m_renderTargets) {
-		if (rt) {
-			rt->Release();
+
+	int targetindex;
+	for (targetindex = 0; targetindex < FRAME_BUFFER_COUNT; targetindex++) {
+		ID3D12Resource* curtarget = m_renderTargets[targetindex];
+		if (curtarget) {
+			curtarget->Release();
 		}
+		m_renderTargets[targetindex] = nullptr;
 	}
+	//for (auto& rt : m_renderTargets) {
+	//	if (rt) {
+	//		rt->Release();
+	//	}
+	//}
 	if (m_depthStencilBuffer) {
 		m_depthStencilBuffer->Release();
 	}

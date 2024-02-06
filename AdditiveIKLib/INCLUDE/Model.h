@@ -1028,6 +1028,9 @@ public:
 
 	int CreateMaterialTexture();
 
+	int SetRefPosFlag(bool srcflag);
+	int SetRefPosFl4x4ToDispObj(int refposindex);
+
 private:
 	int InitParams();
 	int DestroyObjs();
@@ -2460,6 +2463,11 @@ public: //accesser
 		return m_bindpose;
 	}
 
+	bool GetRefPosFlag()
+	{
+		return m_refposflag;
+	}
+
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];
@@ -2652,6 +2660,8 @@ private:
 	int m_instancingnum;
 	int m_instancingdrawnum;
 	INSTANCINGPARAMS m_instancingparams[RIGMULTINDEXMAX];
+
+	bool m_refposflag;
 
 };
 

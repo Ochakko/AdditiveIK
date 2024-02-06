@@ -10,10 +10,13 @@ Texture::Texture(const wchar_t* filePath)
 }
 Texture::~Texture()
 {
-	if (!IsRenderTarget() && m_texture) {//2023/11/25
+	//if (!IsRenderTarget() && m_texture) {//2023/11/25
+	if (m_texture) {//2024/02/07 RenderTargetの場合InitFromD3DResourceで元のテクスチャをreleaseしてm_textureをAddrefしたので、ここでm_textureをreleaseしても良い
 		m_texture->Release();
 		m_texture = nullptr;
 	}
+
+	IShaderResource::~IShaderResource();
 }
 
 void Texture::InitFromCustomColor(ChaVector4 srccol)

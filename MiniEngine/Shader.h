@@ -3,6 +3,8 @@
 
 class Shader {
 public:
+	Shader();
+	~Shader();
 	/// <summary>
 	/// ピクセルシェーダーをロード。
 	/// </summary>

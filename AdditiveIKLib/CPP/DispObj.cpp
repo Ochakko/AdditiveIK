@@ -1155,7 +1155,6 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 		int curtrinum = 0;
 		int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
 		if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0)) {
-
 			bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
 
 			if (laterflag == false) {
@@ -1310,22 +1309,16 @@ int CDispObj::RenderNormalMaterial(RenderContext* rc, myRenderer::RENDEROBJ rend
 		mProj = g_cameraShadow->GetProjectionMatrix();
 	}
 	//定数バッファの設定、更新など描画の共通処理を実行する。
-	curmat->DrawCommon(rc, renderobj, mView, mProj, isfirstmaterial);
 
+
+	curmat->DrawCommon(rc, renderobj, mView, mProj, renderobj.refposindex);
 	int hasskin = 1;
 	bool isline = false;
 	bool withalpha = (renderobj.withalpha || renderobj.forcewithalpha);
-	curmat->BeginRender(rc, renderobj);
-
-	//rc.SetVertexBuffer(m_vertexBufferView);
-	////3. インデックスバッファを設定。
-	//rc.SetIndexBuffer(m_indexBufferView);
-
+	curmat->BeginRender(rc, renderobj, renderobj.refposindex);
 	//4. ドローコールを実行。
 	rc->DrawIndexed(curtrinum * 3, curoffset);
 	//rc.DrawIndexed(m_pm4->GetFaceNum() * 3);
-
-	//descriptorHeapNo += NUM_SRV_ONE_MATERIAL;
 
 	return 0;
 
@@ -1417,7 +1410,7 @@ int CDispObj::RenderZPrePm4(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 			mView = g_camera3D->GetViewMatrix(false);
 			mProj = g_camera3D->GetProjectionMatrix();
 			//定数バッファの設定、更新など描画の共通処理を実行する。
-			curmat->ZPreDrawCommon(rc, renderobj, mView, mProj, isfirstmaterial);
+			curmat->ZPreDrawCommon(rc, renderobj, mView, mProj);
 			curmat->ZPreBeginRender(rc);
 
 			//4. ドローコールを実行。
@@ -1640,13 +1633,14 @@ int CDispObj::RenderNormalPM3Material(RenderContext* rc, myRenderer::RENDEROBJ r
 		mProj = g_cameraShadow->GetProjectionMatrix();
 	}
 	//定数バッファの設定、更新など描画の共通処理を実行する。
-	curmat->DrawCommon(rc, renderobj, mView, mProj);
+	int refposindex = 0;//!!!!!!!!!
+	curmat->DrawCommon(rc, renderobj, mView, mProj, refposindex);
 
 
 	int hasskin = 0;
 	bool isline = false;
 	bool withalpha = (renderobj.withalpha || renderobj.forcewithalpha);
-	curmat->BeginRender(rc, renderobj);
+	curmat->BeginRender(rc, renderobj, refposindex);
 
 	//rc.SetDescriptorHeap(m_descriptorHeap);
 
@@ -1973,9 +1967,9 @@ int CDispObj::RenderLine(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 		mView = g_camera3D->GetViewMatrix(false);
 		mProj = g_camera3D->GetProjectionMatrix();
 		//定数バッファの設定、更新など描画の共通処理を実行する。
-		curmat->DrawCommon(rc, renderobj, mView, mProj);
+		curmat->DrawCommon(rc, renderobj, mView, mProj, 0);
 
-		curmat->BeginRender(rc, renderobj);
+		curmat->BeginRender(rc, renderobj, 0);
 		//rc.SetDescriptorHeap(m_descriptorHeap);
 
 		//1. 頂点バッファを設定。

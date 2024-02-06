@@ -153,7 +153,6 @@
     <ClInclude Include="..\AdditiveIKLib\Grimoire\MyRenderer.h" />
     <ClInclude Include="..\AdditiveIKLib\Grimoire\PostEffect.h" />
     <ClInclude Include="..\AdditiveIKLib\Grimoire\RenderingEngine.h" />
-    <ClInclude Include="..\AdditiveIKLib\Grimoire\ShadowMapRender.h" />
     <ClInclude Include="..\MiniEngine\Camera.h" />
     <ClInclude Include="..\MiniEngine\ConstantBuffer.h" />
     <ClInclude Include="..\MiniEngine\d3dx12.h" />
