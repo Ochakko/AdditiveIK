@@ -5,11 +5,22 @@
 /// </summary>
 class GaussianBlur {
 public:
+	GaussianBlur() {
+		m_originalTexture = nullptr;	//オリジナルテクスチャ。
+
+		int windex;
+		for (windex = 0; windex < NUM_WEIGHTS; windex++) {
+			m_weights[windex] = 0.0f;
+		}
+	}
+	~GaussianBlur() {
+	}
+
 	/// <summary>
 	/// 初期化。
 	/// </summary>
 	/// <param name="originalTexture">ガウシアンブラーをかけるオリジナルテクスチャ。</param>
-	void Init( Texture* originalTexture );
+	void Init(Texture* originalTexture);
 	/// <summary>
 	/// ガウシアンブラーをGPU上で実行。
 	/// </summary>

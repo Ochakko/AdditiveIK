@@ -4282,6 +4282,7 @@ void s_dummyfunc()
 			selectListener = NULL;
 		}
 		~OWP_RadioButton(){
+
 		}
 
 		//////////////////////////// Method //////////////////////////////
@@ -6300,7 +6301,9 @@ void s_dummyfunc()
 					std::vector<Key*>::iterator it;
 					for (it = key.begin(); it != key.end(); it++) {
 						//delete (*it);
-						((Key*)(*it))->InvalidateKeys();
+						if ((Key*)(*it)) {
+							((Key*)(*it))->InvalidateKeys();
+						}
 					}
 				}
 			}
@@ -6754,14 +6757,18 @@ void s_dummyfunc()
 			void selectClear(){
 				int currentkeynum = (int)key.size();
 				for(int i = 0; i < currentkeynum; i++){
-					key[i]->select=false;
+					if (key[i]) {
+						key[i]->select = false;
+					}
 				}
 			}
 			//	Method : すべてのキーを選択する
 			void selectAll(){
 				int currentkeynum = (int)key.size();
 				for(int i = 0; i < currentkeynum; i++){
-					key[i]->select=true;
+					if (key[i]) {
+						key[i]->select = true;
+					}
 				}
 				parent->ghostShiftTime=0;
 			}
@@ -6889,7 +6896,9 @@ void s_dummyfunc()
 						}
 
 						//delete key[i];
-						key[i]->InvalidateKeys();
+						if (key[i]) {
+							key[i]->InvalidateKeys();
+						}
 
 						deleteNum++;
 					//}
@@ -9258,7 +9267,9 @@ void s_dummyfunc()
 			void selectClear() {
 				int currentkeynum = (int)key.size();
 				for (int i = 0; i < currentkeynum; i++) {
-					key[i]->select = false;
+					if (key[i]) {
+						key[i]->select = false;
+					}
 				}
 				setMinSelected(0);
 				setMaxSelected(0);
@@ -9267,7 +9278,9 @@ void s_dummyfunc()
 			void selectAll() {
 				int currentkeynum = (int)key.size();
 				for (int i = 0; i < currentkeynum; i++) {
-					key[i]->select = true;
+					if (key[i]) {
+						key[i]->select = true;
+					}
 				}
 				setMinSelected(0);
 				setMaxSelected(max(0, (int)key.size() - 1));
@@ -9389,9 +9402,10 @@ void s_dummyfunc()
 				unsigned int deleteNum;
 				deleteNum = (unsigned int)key.size();
 				for (unsigned int i = 0; i < deleteNum; i++) {
-					key[i]->InvalidateEulKeys();
+					if (key[i]) {
+						key[i]->InvalidateEulKeys();
+					}
 				}
-
 				key.clear();
 
 				//unsigned int deleteNum = 0;

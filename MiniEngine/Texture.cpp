@@ -216,6 +216,7 @@ void Texture::InitFromD3DResource(ID3D12Resource* texture)
 {
 	if (m_texture) {
 		m_texture->Release();
+		m_texture = nullptr;
 	}
 	m_texture = texture;
 	m_texture->AddRef();

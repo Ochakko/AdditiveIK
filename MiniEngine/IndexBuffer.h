@@ -21,7 +21,7 @@ public:
 	/// インデックスデータをインデックスバッファにコピー。
 	/// </summary>
 	/// <param name="srcIndecies">コピー元のインデックスデータ。</param>
-	void Copy(uint16_t* srcIndecies) ;
+	//void Copy(uint16_t* srcIndecies) ;
 	/// <summary>
 	/// インデックスデータをインデックスバッファにコピー。
 	/// </summary>

@@ -714,9 +714,9 @@ int CModel::DestroyFBXSDK()
 	
 	//if( m_pimporter ){
 	
-	//if(mAnimStackNameArray.Size() >= 1){
-	//	FbxArrayDelete(mAnimStackNameArray);
-	//}
+	if(mAnimStackNameArray.Size() >= 1){
+		FbxArrayDelete(mAnimStackNameArray);//2024/02/08 やっぱり必要だった。コメントアウトするとアプリ終了時にモーション名がメモリリーク
+	}
 
 	if (m_pimporter) {
 		m_pimporter->Destroy();// インポータの削除
@@ -753,6 +753,9 @@ int CModel::DestroyMaterial()
 {
 	//m_materialbankのCMQOMaterial*は
 	//非ポインタメンバ変数　m_materialbankのデストラクタでunique_ptrの機能で解放される 
+
+	m_materialbank.DestroyObjs();
+
 	return 0;
 }
 int CModel::DestroyObject()

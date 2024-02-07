@@ -41,15 +41,15 @@ void IndexBuffer::Init(int size, int stride)
 	
 	m_count = m_sizeInBytes / m_strideInBytes;
 }
-void IndexBuffer::Copy(uint16_t* srcIndecies)
-{
-	uint32_t* pData;
-	m_indexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pData));
-	for (int i = 0; i < m_count; i++) {
-		pData[i] = srcIndecies[i];
-	}
-	m_indexBuffer->Unmap(0, nullptr);
-}
+//void IndexBuffer::Copy(uint16_t* srcIndecies)
+//{
+//	uint32_t* pData;
+//	m_indexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pData));
+//	for (int i = 0; i < m_count; i++) {
+//		pData[i] = srcIndecies[i];
+//	}
+//	m_indexBuffer->Unmap(0, nullptr);
+//}
 void IndexBuffer::Copy(uint32_t* srcIndecies)
 {
 	uint32_t* pData;

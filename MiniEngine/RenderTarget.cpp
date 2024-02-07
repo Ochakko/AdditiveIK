@@ -12,10 +12,12 @@ RenderTarget::~RenderTarget()
 		m_dsvHeap->Release();
 		m_dsvHeap = nullptr;//2023/11/25
 	}
-	if (m_renderTargetTextureDx12) {
-		m_renderTargetTextureDx12->Release();
-		m_renderTargetTextureDx12 = nullptr;//2023/11/25
-	}
+
+	//if (m_renderTargetTextureDx12) {//2024/02/07 Textureクラス(m_renderTargetTexture)で破棄する
+	//	m_renderTargetTextureDx12->Release();
+	//	m_renderTargetTextureDx12 = nullptr;//2023/11/25
+	//}
+
 	if (m_depthStencilTexture) {
 		m_depthStencilTexture->Release();
 		m_depthStencilTexture = nullptr;//2023/11/25

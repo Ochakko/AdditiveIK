@@ -167,7 +167,8 @@
 
         //unsigned short indices[4];
         //unsigned short indices[] = { 0,1,2,3 };
-        unsigned short indices[] = { 0, 2, 1, 3 };//右手座標系　RH
+        //unsigned short indices[] = { 0, 2, 1, 3 };//右手座標系　RH
+        unsigned int indices[] = { 0, 2, 1, 3 };//右手座標系　RH
         //if (!m_screenvertexflag) {
         //    indices[0] = 0;
         //    indices[1] = 1;

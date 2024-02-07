@@ -223,7 +223,14 @@ IDXGIFactory4* GraphicsEngine::CreateDXGIFactory()
 		// それはつまり　アプリ終了時にID3D12DebugがDeviceを削除してからメモリリークをチェックする　ということだと思う
 		// なぜなら　デバイスを削除しないとリークしているかどうかをチェック出来ないからである
 		// よって　ID3D12Debugをリリースしない
-		//debugController->Release();
+		
+		//2024/02/07
+		//上記のようにdebuginterfaceをリリースしないことによりメモリリークはダンプされていなかった
+		//しかしシステムのアップデートによりそのようにしていてもLiveObjectのダンプが出るようになった
+		//debugController->Release();を呼ぶように修正
+		//LiveObjectのダンプが出るが　少なくとも本クラスにおいてunique_ptrのメンバを使っておりその解放は本クラスのデストラクタよりも後になる
+		//よって正確にLiveObjectのダンプを調べることが難しい状態
+		debugController->Release();
 	}
 #endif
 	IDXGIFactory4* factory;

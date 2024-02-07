@@ -2792,6 +2792,7 @@ INT WINAPI wWinMain(
 
 	//SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 
+	//_CrtSetBreakAlloc(1080459);
 	//_CrtSetBreakAlloc(1081145);
 
 	//_CrtSetBreakAlloc(22296);
@@ -2986,8 +2987,22 @@ INT WINAPI wWinMain(
 	//// 初期化を行うコードを書くのはここまで！！！
 	////////////////////////////////////////
 	s_pdev = g_graphicsEngine->GetD3DDevice();
-	OnCreateDevice();
 
+
+	//##########################################################################################################
+	//2024/02/07
+	//RenderingEngine.Init()でg_shadowmapforshaderを初期化してからモデルを読み込まないとConstBufferのRegistでエラーになる
+	//OnCreateDevice()よりも先にRenderingEngineを初期化する
+	//##########################################################################################################
+	// ルートシグネチャを作成
+	RootSignature rootSignature;
+	InitRootSignature(rootSignature);
+	//レンダリングエンジンを初期化
+	myRenderer::RenderingEngine renderingEngine;
+	//renderingEngine.Init();//RenderingEngineのコンストラクタについて分からない部分があるので　Initはコンストラクタで呼んで初期化することにした
+
+
+	OnCreateDevice();
 
 	CreatePlaceFolderWnd();
 	CreateTimelineWnd();
@@ -3103,12 +3118,6 @@ INT WINAPI wWinMain(
 		DispCameraPanel();
 	}
 	
-	// ルートシグネチャを作成
-	RootSignature rootSignature;
-	InitRootSignature(rootSignature);
-	//レンダリングエンジンを初期化
-	myRenderer::RenderingEngine renderingEngine;
-	//renderingEngine.Init();//RenderingEngineのコンストラクタについて分からない部分があるので　Initはコンストラクタで呼んで初期化することにした
 
 	int dbgcount = 0;
 	while (DispatchWindowMessage())
@@ -3334,7 +3343,6 @@ void InitApp()
 
 	InitCommonControls();
 
-	CBone::InitColDisp();
 
 	//g_materialbank.InitParams();
 
@@ -4636,6 +4644,11 @@ void OnDestroyDevice()
 
 	//EndDS4();
 
+	if (g_mouseherebmp) {
+		::DeleteObject(g_mouseherebmp);
+		g_mouseherebmp = 0;
+	}
+
 	if (g_mousehereimage) {
 		delete g_mousehereimage;
 		g_mousehereimage = 0;
@@ -4647,10 +4660,6 @@ void OnDestroyDevice()
 	Gdiplus::GdiplusShutdown(gdiplusToken);
 
 
-	if (g_mouseherebmp) {
-		::DeleteObject(g_mouseherebmp);
-		g_mouseherebmp = 0;
-	}
 
 
 	s_motmenuindexmap.clear();
@@ -4768,7 +4777,6 @@ void OnDestroyDevice()
 	s_model = 0;
 
 
-	CBone::DestroyColDisp();
 
 
 	//if (s_undosprite) {
@@ -4965,6 +4973,7 @@ void OnDestroyDevice()
 		delete s_LTSeparator;
 		s_LTSeparator = 0;
 	}
+
 
 	if (s_layerWnd) {
 		delete s_layerWnd;
@@ -5443,6 +5452,7 @@ void OnDestroyDevice()
 
 
 	CMotionPoint::DestroyMotionPoints();
+	CBone::DestroyColDisp();
 	CBone::DestroyBones();
 	CRigidElem::DestroyRigidElems();
 
@@ -54004,8 +54014,7 @@ int OnCreateDevice()
 	CreateSprites();
 	SetSpParams();
 
-
-
+	CBone::InitColDisp();
 
 	s_select = new CModel();
 	if (!s_select) {

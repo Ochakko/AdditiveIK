@@ -8,10 +8,22 @@ DescriptorHeap::DescriptorHeap()
 }
 DescriptorHeap::~DescriptorHeap()
 {
-	for (auto& ds : m_descriptorHeap) {
-		if (ds) {
-			ds->Release();
+	//for (auto& ds : m_descriptorHeap) {
+	//	if (ds) {
+	//		ds->Release();
+	//	}
+	//}
+
+	m_uavResources.clear();
+	m_constantBuffers.clear();
+
+	int dhindex;
+	for (dhindex = 0; dhindex < 2; dhindex++) {
+		ID3D12DescriptorHeap* deldh = m_descriptorHeap[dhindex];
+		if (deldh) {
+			deldh->Release();
 		}
+		m_descriptorHeap[dhindex] = nullptr;
 	}
 }
 
@@ -107,28 +119,40 @@ void DescriptorHeap::Commit()
 			auto gpuHandle = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 
 			//定数バッファを登録していく。
+			int cbnum = (int)m_constantBuffers.size();//2024/02/07
 			for (int i = 0; i < m_numConstantBuffer; i++) {
 				//@todo bug
-				if (m_constantBuffers[i] != nullptr) {
+				if ((i < cbnum) && (m_constantBuffers[i] != nullptr)) {//2024/02/07
 					m_constantBuffers[i]->RegistConstantBufferView(cpuHandle, bufferNo);
+				}
+				else {
+					_ASSERT(0);
 				}
 				//次に進める。
 				cpuHandle.ptr += g_graphicsEngine->GetCbrSrvDescriptorSize();
 			}
 
 			//続いてシェーダーリソース。
+			int srnum = (int)m_shaderResources.size();//2024/02/07
 			for (int i = 0; i < m_numShaderResource; i++) {
-				if (m_shaderResources[i] != nullptr) {
+				if ((i < srnum) && (m_shaderResources[i] != nullptr)) {//2024/02/07
 					m_shaderResources[i]->RegistShaderResourceView(cpuHandle, bufferNo);
+				}
+				else {
+					_ASSERT(0);
 				}
 				//次に進める。
 				cpuHandle.ptr += g_graphicsEngine->GetCbrSrvDescriptorSize();
 			}
 
 			//続いてUAV。
+			int uavnum = (int)m_uavResources.size();//2024/02/07
 			for (int i = 0; i < m_numUavResource; i++) {
-				if (m_uavResources[i] != nullptr) {
+				if ((i < uavnum) && (m_uavResources[i] != nullptr)) {//2024/02/07
 					m_uavResources[i]->RegistUnorderAccessView(cpuHandle, bufferNo);
+				}
+				else {
+					_ASSERT(0);
 				}
 				//次に進める。
 				cpuHandle.ptr += g_graphicsEngine->GetCbrSrvDescriptorSize();

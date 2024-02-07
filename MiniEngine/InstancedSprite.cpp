@@ -14,6 +14,7 @@
     const Vector2	InstancedSprite::DEFAULT_PIVOT = { 0.5f, 0.5f };
     InstancedSprite::~InstancedSprite()
     {
+
     }
     void InstancedSprite::InitTextures(const SpriteInitData& initData)
     {
@@ -128,7 +129,8 @@
 
         };
         //unsigned short indices[] = { 0,1,2,3 };
-        unsigned short indices[] = { 0, 2, 1, 3 };//右手座標系　RH
+        //unsigned short indices[] = { 0, 2, 1, 3 };//右手座標系　RH
+        unsigned int indices[] = { 0, 2, 1, 3 };//右手座標系　RH
 
         m_vertexBuffer.Init(sizeof(vertices), sizeof(vertices[0]));
         m_vertexBuffer.Copy(vertices);

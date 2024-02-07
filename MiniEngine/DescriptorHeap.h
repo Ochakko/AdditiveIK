@@ -106,7 +106,7 @@ public:
 			registerNo,
 			&cb,
 			//&m_constantBuffers.front(),
-			m_constantBuffers,
+			m_constantBuffers,//！！！参照を渡している
 			m_numConstantBuffer,
 			MAX_CONSTANT_BUFFER,
 			L"DescriptorHeap::RegistConstantBuffer() レジスタ番号が範囲外です。"
