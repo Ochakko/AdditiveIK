@@ -7052,7 +7052,7 @@ int CModel::GetFBXSkin( FbxNodeAttribute *pAttrib, FbxNode* pNode )
 
 int CModel::RenderRefArrow(bool limitdegflag,
 	myRenderer::RenderingEngine* re, ChaScene* srcchascene, ChaMatrix matVP,
-	CBone* boneptr, ChaVector4 diffusemult, int refmult, std::vector<ChaVector3> vecbonepos)
+	CBone* boneptr, ChaVector4 diffusemult, double refmult, std::vector<ChaVector3> vecbonepos)
 {
 	if (!re || !srcchascene || !boneptr) {
 		_ASSERT(0);
@@ -7069,12 +7069,12 @@ int CModel::RenderRefArrow(bool limitdegflag,
 
 	ResetRefPosMarkInstanceScale();
 
-	CModel* refposmark;
-	int curinstanceno;
-	refposmark = boneptr->GetRefPosMarkInstancing(&curinstanceno);
-	if (refposmark) {
-		int vecno;
-		for (vecno = 0; vecno < (vecsize - 1); vecno++) {
+	CModel* refposmark = nullptr;
+	int curinstanceno = 0;
+	int vecno;
+	for (vecno = 0; vecno < (vecsize - 1); vecno++) {
+		refposmark = boneptr->GetRefPosMarkInstancing(&curinstanceno);
+		if (refposmark) {
 			ChaVector3 diffvec = vecbonepos[vecno + 1] - vecbonepos[vecno];
 			double diffleng = ChaVector3LengthDbl(&diffvec);
 			ChaVector3Normalize(&diffvec, &diffvec);
@@ -7087,10 +7087,11 @@ int CModel::RenderRefArrow(bool limitdegflag,
 			ChaMatrix bmmat;
 			bmmat = rotq.MakeRotMatX();
 
-			double fscale = diffleng / 200.0f;
+			double fscalex = diffleng / 200.0f;
+			double fscaleyz = diffleng / 800.0f;
 			ChaMatrix scalemat;
 			ChaMatrixIdentity(&scalemat);
-			scalemat.SetScale(ChaVector3((float)(fscale), (float)(fscale * (double)refmult), (float)(fscale * (double)refmult)));
+			scalemat.SetScale(ChaVector3((float)(fscalex), (float)(fscaleyz * (double)refmult), (float)(fscaleyz * (double)refmult)));
 			bmmat = scalemat * bmmat;
 			bmmat.SetTranslation(vecbonepos[vecno]);
 
@@ -7098,6 +7099,7 @@ int CModel::RenderRefArrow(bool limitdegflag,
 			////g_pEffect->SetMatrix(g_hmWorld, &(bmmat.D3DX()));
 			//this->UpdateMatrix(limitdegflag, &bmmat, &m_matVP);
 
+			_ASSERT((curinstanceno >= 0) && (curinstanceno < RIGMULTINDEXMAX));
 			refposmark->SetInstancingParams(curinstanceno, bmmat, matVP, diffusemult);
 
 			//CallF(this->OnRender(withalpha, pRenderContext, 0, diffusemult), return 1);

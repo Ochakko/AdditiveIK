@@ -596,7 +596,8 @@ void ChaScene::WaitForUpdateMatrixModels()
 
 int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 	myRenderer::RenderingEngine* renderingEngine, 
-	int lightflag, ChaVector4 diffusemult, int btflag, bool zcmpalways, 
+	int lightflag, ChaVector4 diffusemult, int btflag, 
+	bool zcmpalways, bool zenable,
 	int refposindex)
 //default:refposindex = 0
 {
@@ -728,6 +729,7 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 							renderobj.calcslotflag = calcslotflag;
 							renderobj.btflag = btflag;
 							renderobj.zcmpalways = zcmpalways;
+							renderobj.zenable = zenable;//2024/02/08
 							//renderingEngine->Add3DModelToForwardRenderPass(renderobj);
 
 							renderobj.renderkind = RENDERKIND_NORMAL;
@@ -753,7 +755,9 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 
 int ChaScene::RenderInstancingModel(CModel* srcmodel, bool forcewithalpha,
 	myRenderer::RenderingEngine* renderingEngine,
-	int lightflag, ChaVector4 diffusemult, int btflag, bool zcmpalways)
+	int lightflag, ChaVector4 diffusemult, int btflag, 
+	bool zcmpalways, bool zenable,
+	int renderkind)
 {
 	if (!renderingEngine) {
 		_ASSERT(0);
@@ -867,6 +871,7 @@ int ChaScene::RenderInstancingModel(CModel* srcmodel, bool forcewithalpha,
 							//m_renderingEngine->Add3DModelToRenderGBufferPass(curobj);
 							myRenderer::RENDEROBJ renderobj;
 							renderobj.Init();
+							renderobj.renderkind = renderkind;//2024/02/08 INSTANCINGのTRIANGLEとLINEを選択可能
 							renderobj.pmodel = curmodel;
 							renderobj.mqoobj = curobj;
 							renderobj.shadertype = MQOSHADER_NOLIGHT;//!!!!!!!!!!! マニピュレータと地面はNOLIGHTで表示
@@ -879,6 +884,7 @@ int ChaScene::RenderInstancingModel(CModel* srcmodel, bool forcewithalpha,
 							renderobj.calcslotflag = calcslotflag;
 							renderobj.btflag = btflag;
 							renderobj.zcmpalways = zcmpalways;
+							renderobj.zenable = zenable;//2024/02/08
 							renderingEngine->Add3DModelToInstancingRenderPass(renderobj);
 						}
 					}

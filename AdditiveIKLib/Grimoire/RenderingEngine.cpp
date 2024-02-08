@@ -33,6 +33,8 @@ namespace myRenderer
         m_instancingRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
         m_forwardRenderSprites.clear();
         m_forwardRenderFont.clear();
+        m_forwardModelsReserveSize = 0;
+
 
         InitZPrepassRenderTarget();
         InitMainRenderTarget();

@@ -1827,7 +1827,8 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 	rc->SetIndexBuffer(m_indexBufferView);
 
 
-	renderobj.renderkind = RENDERKIND_INSTANCING;//2024/01/11
+	//renderobj.renderkind = RENDERKIND_INSTANCING;//2024/01/11
+	//renderobj.renderkind = RENDERKIND_INSTANCING_TRIANGLE;//for debug
 
 	//マテリアルごとにドロー。
 

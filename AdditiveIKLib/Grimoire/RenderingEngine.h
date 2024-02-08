@@ -31,6 +31,7 @@ namespace myRenderer
         bool calcslotflag;
         int btflag;
         bool zcmpalways;
+        bool zenable;
         int refposindex;
 
 
@@ -72,6 +73,7 @@ namespace myRenderer
             calcslotflag = false;
             btflag = 0;
             zcmpalways = false;
+            zenable = true;
             refposindex = 0;
         };
 
@@ -265,8 +267,11 @@ namespace myRenderer
             size_t addsize = rendervec.size();
             size_t newsize = srcsize + addsize;
 
+            if ((newsize > 0) && (newsize > m_forwardModelsReserveSize)) {
+                m_forwardRenderModels.reserve(newsize);
+                m_forwardModelsReserveSize = newsize;
+            }
 
-            m_forwardRenderModels.reserve(newsize);
             ////std::copy(rendervec.begin(), rendervec.end(), std::back_inserter(m_forwardRenderModels));
 
             //size_t addno;
@@ -462,6 +467,7 @@ namespace myRenderer
         //std::vector<RENDEROBJ> m_shadowmapModels;
         std::vector<RENDEROBJ> m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
         std::vector<RENDEROBJ> m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+        size_t m_forwardModelsReserveSize;
         std::vector<RENDEROBJ> m_instancingRenderModels;                    // インスタンシングレンダリングの描画パスで描画されるモデルのリスト
         std::vector<RENDERSPRITE> m_forwardRenderSprites;
         std::vector<RENDERFONT> m_forwardRenderFont;

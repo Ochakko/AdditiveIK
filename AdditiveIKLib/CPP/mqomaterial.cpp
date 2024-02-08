@@ -56,9 +56,13 @@ CMQOMaterial::CMQOMaterial() :
 	m_ZPrerootSignature(), //2023/12/05
 	m_ZPreModelPipelineState(), //2023/12/05
 	m_InstancingrootSignature(), //2024/01/11
-	m_InstancingOpequePipelineState(),//2024/01/12
-	m_InstancingtransPipelineState(),//2024/01/12
-	m_InstancingzalwaysPipelineState()//2024/01/12
+	m_InstancingOpequeTrianglePipelineState(),//2024/02/08
+	m_InstancingtransTrianglePipelineState(),//2024/02/08
+	m_InstancingtransTriangleNoZPipelineState(),//2024/02/08
+	m_InstancingzalwaysTrianglePipelineState(),//2024/02/08
+	m_InstancingOpequeLinePipelineState(),//2024/02/08
+	m_InstancingtransLinePipelineState(),//2024/02/08
+	m_InstancingzalwaysLinePipelineState()//2024/02/08
 {
 	InitParams();
 
@@ -298,6 +302,7 @@ int CMQOMaterial::InitParams()
 		for (refposindex2 = 0; refposindex2 < REFPOSMAXNUM; refposindex2++) {
 			m_opaquePipelineState[shaderindex][refposindex2].InitParams();
 			m_transPipelineState[shaderindex][refposindex2].InitParams();
+			m_transNoZPipelineState[shaderindex][refposindex2].InitParams();
 			m_zalwaysPipelineState[shaderindex][refposindex2].InitParams();
 		}
 		m_vsMQOShader[shaderindex] = nullptr;
@@ -1682,6 +1687,7 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 				else {
 					psoDesc.pRootSignature = m_rootSignature[refposindex].Get();
 				}
+				psoDesc.DepthStencilState.DepthEnable = TRUE;
 				m_opaquePipelineState[shaderindex][refposindex].Init(psoDesc);
 			}
 		}
@@ -1694,6 +1700,7 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 			else {
 				psoDesc.pRootSignature = m_rootSignature[0].Get();
 			}
+			psoDesc.DepthStencilState.DepthEnable = TRUE;
 			m_opaquePipelineState[shaderindex][0].Init(psoDesc);
 		}
 
@@ -1706,7 +1713,7 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
 		psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
 		//psoDesc.DepthStencilState.DepthEnable = FALSE;
-		psoDesc.DepthStencilState.DepthEnable = TRUE;
+		//psoDesc.DepthStencilState.DepthEnable = TRUE;
 		if (vertextype == 0) {
 			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
 				if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
@@ -1717,7 +1724,10 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 				else {
 					psoDesc.pRootSignature = m_rootSignature[refposindex].Get();
 				}
+				psoDesc.DepthStencilState.DepthEnable = TRUE;
 				m_transPipelineState[shaderindex][refposindex].Init(psoDesc);
+				psoDesc.DepthStencilState.DepthEnable = FALSE;
+				m_transNoZPipelineState[shaderindex][refposindex].Init(psoDesc);
 			}
 		}
 		else {
@@ -1729,7 +1739,10 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 			else {
 				psoDesc.pRootSignature = m_rootSignature[0].Get();
 			}
+			psoDesc.DepthStencilState.DepthEnable = TRUE;
 			m_transPipelineState[shaderindex][0].Init(psoDesc);
+			psoDesc.DepthStencilState.DepthEnable = FALSE;
+			m_transNoZPipelineState[shaderindex][0].Init(psoDesc);
 		}
 
 		////2023/12/01
@@ -1745,6 +1758,7 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 				else {
 					psoDesc.pRootSignature = m_rootSignature[refposindex].Get();
 				}
+				psoDesc.DepthStencilState.DepthEnable = TRUE;
 				m_zalwaysPipelineState[shaderindex][refposindex].Init(psoDesc);
 			}
 		}
@@ -1757,6 +1771,7 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 			else {
 				psoDesc.pRootSignature = m_rootSignature[0].Get();
 			}
+			psoDesc.DepthStencilState.DepthEnable = TRUE;
 			m_zalwaysPipelineState[shaderindex][0].Init(psoDesc);
 		}
 	}
@@ -2036,7 +2051,7 @@ void CMQOMaterial::InitInstancingPipelineState(int vertextype, const std::array<
 		//	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 		//}
 		//else {
-			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+		//	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
 		//}
 
 		int numRenderTarget = 0;
@@ -2052,8 +2067,11 @@ void CMQOMaterial::InitInstancingPipelineState(int vertextype, const std::array<
 		psoDesc.NumRenderTargets = numRenderTarget;
 		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 		psoDesc.SampleDesc.Count = 1;
-
-		m_InstancingOpequePipelineState.Init(psoDesc);
+		
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		m_InstancingOpequeTrianglePipelineState.Init(psoDesc);
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+		m_InstancingOpequeLinePipelineState.Init(psoDesc);
 
 
 		//続いて半透明マテリアル用。
@@ -2064,12 +2082,24 @@ void CMQOMaterial::InitInstancingPipelineState(int vertextype, const std::array<
 		psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
 		//psoDesc.DepthStencilState.DepthEnable = FALSE;
 		psoDesc.DepthStencilState.DepthEnable = TRUE;
-		m_InstancingtransPipelineState.Init(psoDesc);
+		
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		m_InstancingtransTrianglePipelineState.Init(psoDesc);
+		psoDesc.DepthStencilState.DepthEnable = FALSE;
+		m_InstancingtransTriangleNoZPipelineState.Init(psoDesc);
+		psoDesc.DepthStencilState.DepthEnable = TRUE;
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+		m_InstancingtransLinePipelineState.Init(psoDesc);
 
 		////2023/12/01
 		psoDesc.DepthStencilState.DepthEnable = TRUE;
 		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-		m_InstancingzalwaysPipelineState.Init(psoDesc);
+
+
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		m_InstancingzalwaysTrianglePipelineState.Init(psoDesc);
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+		m_InstancingzalwaysLinePipelineState.Init(psoDesc);
 
 	}
 }
@@ -2359,8 +2389,10 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 			shaderindex = MQOSHADER_PBR_SHADOWRECIEVER;
 			break;
 		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
-		case RENDERKIND_INSTANCING://Instancingの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING_TRIANGLE://Instancingの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING_LINE://Instancingの場合にはこの関数は呼ばれないはず
 		default:
+			_ASSERT(0);
 			shaderindex = -1;
 			break;
 		}
@@ -2377,8 +2409,10 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 			shaderindex = MQOSHADER_STD_SHADOWRECIEVER;
 			break;
 		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
-		case RENDERKIND_INSTANCING://Instancingの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING_TRIANGLE://Instancingの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING_LINE://Instancingの場合にはこの関数は呼ばれないはず
 		default:
+			_ASSERT(0);
 			shaderindex = -1;
 			break;
 		}
@@ -2395,8 +2429,10 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 			shaderindex = MQOSHADER_NOLIGHT_SHADOWRECIEVER;
 			break;
 		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
-		case RENDERKIND_INSTANCING://Instancingの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING_TRIANGLE://Instancingの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING_LINE://Instancingの場合にはこの関数は呼ばれないはず
 		default:
+			_ASSERT(0);
 			shaderindex = -1;
 			break;
 		}
@@ -2441,7 +2477,13 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 				//###################
 				//translucent　半透明
 				//###################
-				rc->SetPipelineState(m_transPipelineState[shaderindex][currentrefposindex]);
+				if (renderobj.zenable) {
+					rc->SetPipelineState(m_transPipelineState[shaderindex][currentrefposindex]);
+				}
+				else {
+					rc->SetPipelineState(m_transNoZPipelineState[shaderindex][currentrefposindex]);
+				}
+				
 			}
 		}
 		else {
@@ -2485,28 +2527,87 @@ void CMQOMaterial::InstancingBeginRender(RenderContext* rc, myRenderer::RENDEROB
 
 	bool withalpha = renderobj.forcewithalpha || renderobj.withalpha;
 
-
 	rc->SetRootSignature(m_InstancingrootSignature);
 
-	if (withalpha) {
-		if (renderobj.zcmpalways) {
-			//###########################
-			//Z cmp Always 半透明常に上書き
-			//###########################
-			rc->SetPipelineState(m_InstancingzalwaysPipelineState);
+	if (renderobj.renderkind == RENDERKIND_INSTANCING_TRIANGLE) {
+		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		if (withalpha) {
+			if (renderobj.zcmpalways) {
+				//###########################
+				//Z cmp Always 半透明常に上書き
+				//###########################
+				rc->SetPipelineState(m_InstancingzalwaysTrianglePipelineState);
+			}
+			else {
+				//###################
+				//translucent　半透明
+				//###################
+				if (renderobj.zenable) {
+					rc->SetPipelineState(m_InstancingtransTrianglePipelineState);
+				}
+				else {
+					rc->SetPipelineState(m_InstancingtransTriangleNoZPipelineState);
+				}
+			}
 		}
 		else {
-			//###################
-			//translucent　半透明
-			//###################
-			rc->SetPipelineState(m_InstancingtransPipelineState);
+			//##############
+			//Opaque 不透明
+			//##############
+			rc->SetPipelineState(m_InstancingOpequeTrianglePipelineState);
+		}
+	}
+	else if (renderobj.renderkind == RENDERKIND_INSTANCING_LINE) {
+		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+		if (withalpha) {
+			if (renderobj.zcmpalways) {
+				//###########################
+				//Z cmp Always 半透明常に上書き
+				//###########################
+				rc->SetPipelineState(m_InstancingzalwaysLinePipelineState);
+			}
+			else {
+				//###################
+				//translucent　半透明
+				//###################
+				rc->SetPipelineState(m_InstancingtransLinePipelineState);
+			}
+		}
+		else {
+			//##############
+			//Opaque 不透明
+			//##############
+			rc->SetPipelineState(m_InstancingOpequeLinePipelineState);
 		}
 	}
 	else {
-		//##############
-		//Opaque 不透明
-		//##############
-		rc->SetPipelineState(m_InstancingOpequePipelineState);
+		_ASSERT(0);
+		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		if (withalpha) {
+			if (renderobj.zcmpalways) {
+				//###########################
+				//Z cmp Always 半透明常に上書き
+				//###########################
+				rc->SetPipelineState(m_InstancingzalwaysTrianglePipelineState);
+			}
+			else {
+				//###################
+				//translucent　半透明
+				//###################
+				if (renderobj.zenable) {
+					rc->SetPipelineState(m_InstancingtransTrianglePipelineState);
+				}
+				else {
+					rc->SetPipelineState(m_InstancingtransTriangleNoZPipelineState);
+				}
+			}
+		}
+		else {
+			//##############
+			//Opaque 不透明
+			//##############
+			rc->SetPipelineState(m_InstancingOpequeTrianglePipelineState);
+		}
 	}
 
 	rc->SetDescriptorHeap(m_descriptorHeap[0]);
@@ -3063,8 +3164,10 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			shaderindex = MQOSHADER_PBR_SHADOWRECIEVER;
 			break;
 		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
-		case RENDERKIND_INSTANCING://Instancingの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING_TRIANGLE://Instancingの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING_LINE://Instancingの場合にはこの関数は呼ばれないはず
 		default:
+			_ASSERT(0);
 			shaderindex = -1;
 			break;
 		}
@@ -3081,8 +3184,10 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			shaderindex = MQOSHADER_STD_SHADOWRECIEVER;
 			break;
 		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
-		case RENDERKIND_INSTANCING://Instancingの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING_TRIANGLE://Instancingの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING_LINE://Instancingの場合にはこの関数は呼ばれないはず
 		default:
+			_ASSERT(0);
 			shaderindex = -1;
 			break;
 		}
@@ -3099,8 +3204,10 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			shaderindex = MQOSHADER_NOLIGHT_SHADOWRECIEVER;
 			break;
 		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
-		case RENDERKIND_INSTANCING://Instancingの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING_TRIANGLE://Instancingの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_INSTANCING_LINE://Instancingの場合にはこの関数は呼ばれないはず
 		default:
+			_ASSERT(0);
 			shaderindex = -1;
 			break;
 		}

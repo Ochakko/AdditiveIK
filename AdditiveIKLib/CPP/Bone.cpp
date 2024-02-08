@@ -591,22 +591,31 @@ void CBone::RenderColDisp(ChaScene* srcchascene, myRenderer::RenderingEngine* re
 	bool forcewithalpha = true;
 	int btflag = 0;
 	bool zcmpalways = true;
-	
+	bool zenable = true;
+
 	if (s_coldisp[COL_CONE_INDEX] && (s_coldisp[COL_CONE_INDEX]->GetInstancingDrawNum() > 0)) {
 		srcchascene->RenderInstancingModel(s_coldisp[COL_CONE_INDEX],
-			forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+			forcewithalpha, re, lightflag, diffusemult, btflag, 
+			zcmpalways, zenable,
+			RENDERKIND_INSTANCING_LINE);
 	}
 	if (s_coldisp[COL_CAPSULE_INDEX] && (s_coldisp[COL_CAPSULE_INDEX]->GetInstancingDrawNum() > 0)) {
 		srcchascene->RenderInstancingModel(s_coldisp[COL_CAPSULE_INDEX],
-			forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);\
+			forcewithalpha, re, lightflag, diffusemult, btflag, 
+			zcmpalways, zenable,
+			RENDERKIND_INSTANCING_LINE);
 	}
 	if (s_coldisp[COL_SPHERE_INDEX] && (s_coldisp[COL_SPHERE_INDEX]->GetInstancingDrawNum() > 0)) {
 		srcchascene->RenderInstancingModel(s_coldisp[COL_SPHERE_INDEX],
-			forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+			forcewithalpha, re, lightflag, diffusemult, btflag, 
+			zcmpalways, zenable,
+			RENDERKIND_INSTANCING_LINE);
 	}
 	if (s_coldisp[COL_BOX_INDEX] && (s_coldisp[COL_BOX_INDEX]->GetInstancingDrawNum() > 0)) {
 		srcchascene->RenderInstancingModel(s_coldisp[COL_BOX_INDEX],
-			forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+			forcewithalpha, re, lightflag, diffusemult, btflag, 
+			zcmpalways, zenable,
+			RENDERKIND_INSTANCING_LINE);
 	}
 
 }
@@ -617,10 +626,12 @@ void CBone::RenderRefPosMark(ChaScene* srcchascene, myRenderer::RenderingEngine*
 	bool forcewithalpha = true;
 	int btflag = 0;
 	bool zcmpalways = true;
+	bool zenable = false;
 
 	if (s_refposmark && (s_refposmark->GetInstancingDrawNum() > 0)) {
 		srcchascene->RenderInstancingModel(s_refposmark,
-			forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+			forcewithalpha, re, lightflag, diffusemult, btflag, 
+			zcmpalways, zenable, RENDERKIND_INSTANCING_TRIANGLE);
 	}
 }
 
@@ -6568,7 +6579,7 @@ int CBone::LoadCapsuleShape(ID3D12Device* pdev)
 			return 1;
 		}
 		s_refposmark->SetInstancingNum(RIGMULTINDEXMAX);
-		swprintf_s(wfilename, MAX_PATH, L"%s\\%s", mpath, L"cone_dirX.mqo");
+		swprintf_s(wfilename, MAX_PATH, L"%s\\%s", mpath, L"Trajectory_dirX.mqo");
 		CallF(s_refposmark->LoadMQO(pdev, wfilename, 0, 1.0f, 0), return 1);
 		//CallF(m_coldisp[COL_REFPOS_INDEX]->MakeDispObj(), return 1);
 	}

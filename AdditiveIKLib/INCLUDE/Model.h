@@ -299,7 +299,7 @@ public:
 
 	int RenderRefArrow(bool limitdegflag, 
 		myRenderer::RenderingEngine* re, ChaScene* srcchascene, ChaMatrix matVP,
-		CBone* boneptr, ChaVector4 diffusemult, int refmult, std::vector<ChaVector3> vecbonepos);
+		CBone* boneptr, ChaVector4 diffusemult, double refmult, std::vector<ChaVector3> vecbonepos);
 	void ResetRefPosMarkInstanceScale();
 
 

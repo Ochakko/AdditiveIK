@@ -59,7 +59,8 @@ enum {//renderobj.renderkind
 	RENDERKIND_SHADOWMAP,
 	RENDERKIND_SHADOWRECIEVER,
 	RENDERKIND_ZPREPASS,
-	RENDERKIND_INSTANCING,
+	RENDERKIND_INSTANCING_LINE,
+	RENDERKIND_INSTANCING_TRIANGLE,
 	RENDERKIND_MAX
 };
 
@@ -947,6 +948,7 @@ private:
 
 	PipelineState m_opaquePipelineState[MQOSHADER_MAX][REFPOSMAXNUM];
 	PipelineState m_transPipelineState[MQOSHADER_MAX][REFPOSMAXNUM];
+	PipelineState m_transNoZPipelineState[MQOSHADER_MAX][REFPOSMAXNUM];
 	PipelineState m_zalwaysPipelineState[MQOSHADER_MAX][REFPOSMAXNUM];
 	Shader* m_vsMQOShader[MQOSHADER_MAX];
 	Shader* m_psMQOShader[MQOSHADER_MAX];
@@ -968,9 +970,13 @@ private:
 	Shader* m_psZPreModel = nullptr;					//ZPreモデル用のピクセルシェーダー。
 
 	RootSignature m_InstancingrootSignature;
-	PipelineState m_InstancingOpequePipelineState;
-	PipelineState m_InstancingtransPipelineState;
-	PipelineState m_InstancingzalwaysPipelineState;
+	PipelineState m_InstancingOpequeTrianglePipelineState;
+	PipelineState m_InstancingtransTrianglePipelineState;
+	PipelineState m_InstancingtransTriangleNoZPipelineState;
+	PipelineState m_InstancingzalwaysTrianglePipelineState;
+	PipelineState m_InstancingOpequeLinePipelineState;
+	PipelineState m_InstancingtransLinePipelineState;
+	PipelineState m_InstancingzalwaysLinePipelineState;
 	Shader* m_vsInstancingModel = nullptr;
 	Shader* m_psInstancingModel = nullptr;
 

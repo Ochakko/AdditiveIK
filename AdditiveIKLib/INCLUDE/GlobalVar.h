@@ -60,6 +60,7 @@ class CInfoWindow;
 
 bool g_hdrpbloom = true;
 bool g_freefps = true;
+bool g_zalways = false;
 int g_uvset = 0;
 float g_bonemark_bright = 1.0f;
 float g_rigidmark_alpha = 0.75f;
@@ -316,6 +317,7 @@ double g_playingend = 1.0;
 
 extern bool g_hdrpbloom;
 extern bool g_freefps;
+extern bool g_zalways;
 extern int g_uvset;
 extern float g_bonemark_bright;
 extern float g_rigidmark_alpha;

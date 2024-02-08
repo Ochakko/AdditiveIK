@@ -3353,6 +3353,7 @@ void InitApp()
 
 	g_hdrpbloom = true;
 	g_freefps = true;
+	g_zalways = false;
 	s_befftime = 0.0;
 	s_mousemoveBefTime = 0.0;
 	g_dspeed = 1.0;//2024/01/13  3.0-->1.0に変更
@@ -13096,7 +13097,8 @@ int RenderSelectFunc(myRenderer::RenderingEngine* re)
 		bool forcewithalpha = true;
 		int btflag = 0;
 		bool zcmpalways = true;
-		s_chascene->RenderOneModel(s_select, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+		bool zenable = false;
+		s_chascene->RenderOneModel(s_select, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);
 		//s_select->OnRender(withalpha, pRenderContext, lightflag, diffusemult);
 	}
 	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
@@ -13120,7 +13122,8 @@ int RenderSelectPostureFunc(myRenderer::RenderingEngine* re)
 		bool forcewithalpha = true;
 		int btflag = 0;
 		bool zcmpalways = true;
-		s_chascene->RenderOneModel(s_select_posture, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+		bool zenable = false;
+		s_chascene->RenderOneModel(s_select_posture, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);
 		//s_select_posture->OnRender(withalpha, pRenderContext, lightflag, diffusemult);
 	}
 	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
@@ -13339,18 +13342,27 @@ int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderCon
 		bool forcewithalpha = true;
 		int btflag = 0;
 		bool zcmpalways = false;
+		bool zenable = true;
 
 		if (s_rigsphere_num > 0) {
-			s_chascene->RenderInstancingModel(s_rigopemark_sphere, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+			s_chascene->RenderInstancingModel(s_rigopemark_sphere, forcewithalpha, re, lightflag, diffusemult, btflag, 
+				zcmpalways, zenable,
+				RENDERKIND_INSTANCING_LINE);
 		}
 		if (s_rigringX_num > 0) {
-			s_chascene->RenderInstancingModel(s_rigopemark_ringX, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+			s_chascene->RenderInstancingModel(s_rigopemark_ringX, forcewithalpha, re, lightflag, diffusemult, btflag, 
+				zcmpalways, zenable,
+				RENDERKIND_INSTANCING_LINE);
 		}
 		if (s_rigringY_num > 0) {
-			s_chascene->RenderInstancingModel(s_rigopemark_ringY, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+			s_chascene->RenderInstancingModel(s_rigopemark_ringY, forcewithalpha, re, lightflag, diffusemult, btflag, 
+				zcmpalways, zenable,
+				RENDERKIND_INSTANCING_LINE);
 		}
 		if (s_rigringZ_num > 0) {
-			s_chascene->RenderInstancingModel(s_rigopemark_ringZ, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+			s_chascene->RenderInstancingModel(s_rigopemark_ringZ, forcewithalpha, re, lightflag, diffusemult, btflag, 
+				zcmpalways, zenable,
+				RENDERKIND_INSTANCING_LINE);
 		}
 	}
 
@@ -14331,7 +14343,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.6\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.7\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -25611,6 +25623,10 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
+		sliderpos = (int)g_refalpha;
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
 		//#####
 		//Text
@@ -25627,6 +25643,9 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 
 		swprintf_s(strdlg, 256, L"EditRate %.1f", g_physicsmvrate);
 		SetDlgItemText(hDlgWnd, IDC_STATIC_EDITRATE, strdlg);
+
+		swprintf_s(strdlg, 256, L"RefPosAlpha %d", g_refalpha);
+		SetDlgItemText(hDlgWnd, IDC_STATIC_REFPOSALPHA, strdlg);
 
 		//#########
 		//ComboBox
@@ -25775,6 +25794,12 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			CheckDlgButton(hDlgWnd, IDC_ZPREPASS, false);
 		}
 
+		if (g_zalways == true) {
+			CheckDlgButton(hDlgWnd, IDC_CHECK_ZALWAYS, true);
+		}
+		else {
+			CheckDlgButton(hDlgWnd, IDC_CHECK_ZALWAYS, false);
+		}
 
 		return FALSE;
 	}
@@ -25839,6 +25864,14 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_GETPOS, 0, 0);
 			g_rigmark_alpha = (float)((double)cursliderpos / 100.0);
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA), TBM_GETPOS, 0, 0);
+			g_refalpha = cursliderpos;
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"RefPosAlpha %d", g_refalpha);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_REFPOSALPHA, strdlg);
 		}
 
 	break;
@@ -25993,6 +26026,18 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			}
 			else {
 				g_zpreflag = false;
+			}
+		}
+		break;
+		case IDC_CHECK_ZALWAYS:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_ZALWAYS);
+			if (ischecked == BST_CHECKED) {
+				g_zalways = true;
+			}
+			else {
+				g_zalways = false;
 			}
 		}
 		break;
@@ -36538,21 +36583,21 @@ int CreateLayerWnd()
 			});
 
 		//レイヤーのプロパティコールリスナー
-		s_owpLayerTable->setCallPropertyListener([](int index) {
-			//_tprintf_s( _T("CallProperty: Index=%3d Name=%s\n"),
-			//			index,
-			//			owpLayerTable->getName(index).c_str() );
-			});
+s_owpLayerTable->setCallPropertyListener([](int index) {
+	//_tprintf_s( _T("CallProperty: Index=%3d Name=%s\n"),
+	//			index,
+	//			owpLayerTable->getName(index).c_str() );
+	});
 
-		RECT wnd3drect;
-		if (g_mainhwnd) {
-			GetWindowRect(g_mainhwnd, &wnd3drect);
-			s_layerWnd->setPos(WindowPos(wnd3drect.left + 750, wnd3drect.top + 500));
-		}
-		else {
-			s_layerWnd->setPos(WindowPos(600, 200));
-		}
-		s_layerWnd->setVisible(false);
+RECT wnd3drect;
+if (g_mainhwnd) {
+	GetWindowRect(g_mainhwnd, &wnd3drect);
+	s_layerWnd->setPos(WindowPos(wnd3drect.left + 750, wnd3drect.top + 500));
+}
+else {
+	s_layerWnd->setPos(WindowPos(600, 200));
+}
+s_layerWnd->setVisible(false);
 
 	}
 	else {
@@ -36560,7 +36605,7 @@ int CreateLayerWnd()
 		return 1;
 	}
 
-	
+
 	return 0;
 
 }
@@ -36574,13 +36619,16 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 	if (s_sprefpos.state) {
 		if (curmodel == s_model) {
 
-			int keynum;
-			double startframe, endframe, applyframe;
+			//int keynum;
+			//double startframe, endframe, applyframe;
 			double roundingstartframe, roundingendframe, roundingapplyframe;
-			s_editrange.GetRange(&keynum, &startframe, &endframe, &applyframe);
-			roundingstartframe = RoundingTime(startframe);
-			roundingendframe = RoundingTime(endframe);
-			roundingapplyframe = RoundingTime(applyframe);
+			//s_editrange.GetRange(&keynum, &startframe, &endframe, &applyframe);
+			//roundingstartframe = RoundingTime(startframe);
+			//roundingendframe = RoundingTime(endframe);
+			//roundingapplyframe = RoundingTime(applyframe);
+			roundingstartframe = RoundingTime(g_motionbrush_startframe);
+			roundingendframe = RoundingTime(g_motionbrush_endframe);
+			roundingapplyframe = RoundingTime(g_motionbrush_applyframe);
 
 			MOTINFO* curmi = s_model->GetCurMotInfo();
 			if (curmi) {
@@ -36597,19 +36645,17 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 					double renderleng = roundingendframe - roundingstartframe + 1;
 
 					//2024/02/08 選択ジョイントの位置の軌跡を表示する際に補間無しのGetWorldMatで済ませたいのでRoundingTimeしてキーの位置限定にする
-					double renderstep = RoundingTime(renderleng / (double)(REFPOSMAXNUM - 2));
+					int divnum;
+					divnum = min((int)renderleng, (REFPOSMAXNUM - 2));//選択フレーム長より多くは分割しない
+					double renderstep = max(1.0, (renderleng / (double)divnum));//renderstep = 0は無限ループになる
 
 					int refposindex = 0;
-					double renderframe;
-					//for (renderframe = roundingstartframe; renderframe <= roundingendframe; renderframe += 1.0) {
-					for(renderframe = roundingstartframe; renderframe <= roundingendframe; renderframe += renderstep) {
-						s_model->SetMotionFrame(renderframe);
-						//s_model->UpdateMatrix(&s_model->GetWorldMat(), &s_matVP);
-						//ChaMatrix tmpwm = s_model->GetWorldMat();
-						//s_model->HierarchyRouteUpdateMatrix(g_limitdegflag, curbone, &modelwm, &s_matVP);//高速化：関係ボーンルート限定アップデート
+					double renderframe, roundingrenderframe;
+					for (renderframe = roundingstartframe; renderframe <= roundingendframe; renderframe += renderstep) {
+						roundingrenderframe = RoundingTime(renderframe);
+						s_model->SetMotionFrame(roundingrenderframe);
 						ChaVector3 tmpfpos = curbone->GetJointFPos();
-						//ChaMatrix tmpcurwm = curbone->GetCurMp().GetWorldMat() * s_matWorld;//2023/08/27 s_matWorldを掛ける
-						ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, renderframe, 0) * modelwm;
+						ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingrenderframe, 0) * modelwm;
 						ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
 						vecbonepos.push_back(curbonepos);
 
@@ -36617,11 +36663,11 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 
 						//refframeのポーズを表示
 						int btflag1 = 0;
-							
+
 						s_model->SetMotionFrame(renderframe);
 						//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
-						s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matVP, renderframe);
-							
+						s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matVP, roundingrenderframe);
+
 
 						bool calcslotflag;
 						calcslotflag = true;
@@ -36631,18 +36677,25 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 						//カレントフレームから離れるほど　透明度を薄くする
 						const double refstartalpha = 0.80f;
 						double renderalpha0 = (renderleng - fabs(currentframe - renderframe)) / renderleng;
+						//2024/02/08 int g_refalpha (0から100) : DispAndLimitsプレートメニューのRefPosAlphaスライダー
 						double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
-						//double renderalpha = renderalpha0 * renderalpha0 * renderalpha0;
 						ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, (float)renderalpha);
 
-						int lightflag = 0;
-						bool forcewithalpha = true;
-						int btflag = 0;
-						bool zcmpalways = false;
-						s_chascene->RenderOneModel(s_model, forcewithalpha, re, 
-							lightflag, refdiffusemult, btflag, zcmpalways, refposindex);
+						if ((refposindex >= 0) && (refposindex < REFPOSMAXNUM)){
+							int lightflag = 0;
+							bool forcewithalpha = true;
+							int btflag = 0;
+							bool zcmpalways = false;
+							bool zenable = false;
+							s_chascene->RenderOneModel(s_model, forcewithalpha, re,
+								lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
 
-						refposindex++;							
+							refposindex++;
+						}
+						else {
+							break;
+						}
+
 					}
 
 					{
@@ -36660,12 +36713,18 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 
 						ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 
-						int lightflag = 1;
-						bool forcewithalpha = true;
-						int btflag = 0;
-						bool zcmpalways = false;
-						s_chascene->RenderOneModel(s_model, forcewithalpha, re,
-							lightflag, refdiffusemult, btflag, zcmpalways, refposindex);
+						if ((refposindex >= 0) && (refposindex < REFPOSMAXNUM)) {
+							int lightflag = 1;
+							bool forcewithalpha = true;
+							int btflag = 0;
+							//bool zcmpalways = false;
+							bool zcmpalways = g_zalways;//2024/02/08 DispAndLimitsプレートメニューのチェックボックス
+							bool zenable = true;
+							s_chascene->RenderOneModel(s_model, forcewithalpha, re,
+								lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
+
+							refposindex++;
+						}
 					}
 
 					{
@@ -36812,7 +36871,8 @@ int OnRenderGround(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		bool forcewithalpha = false;
 		int btflag = 0;
 		bool zcmpalways = false;
-		s_chascene->RenderOneModel(s_ground, forcewithalpha, re, 0, diffusemult, btflag, zcmpalways);
+		bool zenable = true;
+		s_chascene->RenderOneModel(s_ground, forcewithalpha, re, 0, diffusemult, btflag, zcmpalways, zenable);
 	}
 	//if (s_gplane && s_bpWorld && s_bpWorld->m_gplanedisp) {
 	//	ChaMatrix gpmat = s_inimat;

@@ -76,10 +76,12 @@ public:
 	int RenderModels(myRenderer::RenderingEngine* renderringEngine, int lightflag, ChaVector4 diffusemult, int btflag = 0);
 	void WaitForUpdateMatrixModels();
 	int RenderOneModel(CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine* renderringEngine, 
-		int lightflag, ChaVector4 diffusemult, int btflag, bool zcmpalways,
+		int lightflag, ChaVector4 diffusemult, int btflag, 
+		bool zcmpalways, bool zenable,
 		int refposindex = 0);
 	int RenderInstancingModel(CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine* renderringEngine,
-		int lightflag, ChaVector4 diffusemult, int btflag, bool zcmpalways);
+		int lightflag, ChaVector4 diffusemult, int btflag, 
+		bool zcmpalways, bool zenable, int renderkind);
 
 
 	CModel* GetTheLastCameraModel();
