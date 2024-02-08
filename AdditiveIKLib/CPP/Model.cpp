@@ -7050,9 +7050,12 @@ int CModel::GetFBXSkin( FbxNodeAttribute *pAttrib, FbxNode* pNode )
 	return 0;
 }
 
-int CModel::RenderRefArrow(bool limitdegflag, RenderContext* pRenderContext, CBone* boneptr, ChaVector4 diffusemult, int refmult, std::vector<ChaVector3> vecbonepos)
+int CModel::RenderRefArrow(bool limitdegflag,
+	myRenderer::RenderingEngine* re, ChaScene* srcchascene, ChaMatrix matVP,
+	CBone* boneptr, ChaVector4 diffusemult, int refmult, std::vector<ChaVector3> vecbonepos)
 {
-	if (!pRenderContext || !boneptr) {
+	if (!re || !srcchascene || !boneptr) {
+		_ASSERT(0);
 		return 1;
 	}
 
@@ -7064,41 +7067,44 @@ int CModel::RenderRefArrow(bool limitdegflag, RenderContext* pRenderContext, CBo
 		return 0;
 	}
 
+	ResetRefPosMarkInstanceScale();
 
-	int vecno;
-	for (vecno = 0; vecno < (vecsize - 1); vecno++) {
-		ChaVector3 diffvec = vecbonepos[vecno + 1] - vecbonepos[vecno];
-		double diffleng = ChaVector3LengthDbl(&diffvec);
-		ChaVector3Normalize(&diffvec, &diffvec);
+	CModel* refposmark;
+	int curinstanceno;
+	refposmark = boneptr->GetRefPosMarkInstancing(&curinstanceno);
+	if (refposmark) {
+		int vecno;
+		for (vecno = 0; vecno < (vecsize - 1); vecno++) {
+			ChaVector3 diffvec = vecbonepos[vecno + 1] - vecbonepos[vecno];
+			double diffleng = ChaVector3LengthDbl(&diffvec);
+			ChaVector3Normalize(&diffvec, &diffvec);
 
-		ChaVector3 orgdir = ChaVector3(1.0f, 0.0f, 0.0f);
+			ChaVector3 orgdir = ChaVector3(1.0f, 0.0f, 0.0f);
 
-		CQuaternion rotq;
-		rotq.RotationArc(orgdir, diffvec);
+			CQuaternion rotq;
+			rotq.RotationArc(orgdir, diffvec);
 
-		ChaMatrix bmmat;
-		bmmat = rotq.MakeRotMatX();
+			ChaMatrix bmmat;
+			bmmat = rotq.MakeRotMatX();
 
-		double fscale = diffleng / 200.0f;
-		ChaMatrix scalemat;
-		ChaMatrixIdentity(&scalemat);
-		scalemat.SetScale(ChaVector3((float)(fscale), (float)(fscale * (double)refmult), (float)(fscale * (double)refmult)));
-		bmmat = scalemat * bmmat;
-		bmmat.SetTranslation(vecbonepos[vecno]);
+			double fscale = diffleng / 200.0f;
+			ChaMatrix scalemat;
+			ChaMatrixIdentity(&scalemat);
+			scalemat.SetScale(ChaVector3((float)(fscale), (float)(fscale * (double)refmult), (float)(fscale * (double)refmult)));
+			bmmat = scalemat * bmmat;
+			bmmat.SetTranslation(vecbonepos[vecno]);
 
-		//g_hmWorld->SetMatrix(bmmat.GetDataPtr());//2023/11/13 tmp comment out
-		////g_pEffect->SetMatrix(g_hmWorld, &(bmmat.D3DX()));
-		this->UpdateMatrix(limitdegflag, &bmmat, &m_matVP);
+			//g_hmWorld->SetMatrix(bmmat.GetDataPtr());//2023/11/13 tmp comment out
+			////g_pEffect->SetMatrix(g_hmWorld, &(bmmat.D3DX()));
+			//this->UpdateMatrix(limitdegflag, &bmmat, &m_matVP);
 
-		bool withalpha;
-		if (diffusemult.w <= 0.99999f) {
-			withalpha = true;
+			refposmark->SetInstancingParams(curinstanceno, bmmat, matVP, diffusemult);
+
+			//CallF(this->OnRender(withalpha, pRenderContext, 0, diffusemult), return 1);
 		}
-		else {
-			withalpha = false;
-		}
-		CallF(this->OnRender(withalpha, pRenderContext, 0, diffusemult), return 1);
 	}
+
+	CBone::RenderRefPosMark(srcchascene, re, diffusemult);
 
 	return 0;
 }
@@ -19817,6 +19823,12 @@ void CModel::ResetUpdateFl4x4Flag()//materialのリセットも行う
 void CModel::ResetBoneMarkInstanceScale()
 {
 	CBone::ResetColDispInstancingParams();
+	ResetInstancingParams();
+	ResetDispObjScale();
+}
+void CModel::ResetRefPosMarkInstanceScale()
+{
+	CBone::ResetRefPosMarkInstancingParams();
 	ResetInstancingParams();
 	ResetDispObjScale();
 }

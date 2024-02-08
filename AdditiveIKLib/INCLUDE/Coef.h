@@ -106,6 +106,7 @@ class CMQOMaterial;
 #define COL_BOX_INDEX		3
 #define COL_MAX				4
 
+
 #define CGP_GROUND	1
 #define CGP_CHARA	2
 #define COLOF_G		CGP_CHARA

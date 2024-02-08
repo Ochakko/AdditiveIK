@@ -322,8 +322,10 @@ int IsValidRigElem(CModel* srcmodel, RIGELEM srcrigelem)
 
 //class
 
-static CModel* s_coldisp[COL_MAX];
-static int s_coldispgetnum[COL_MAX];
+static CModel* s_coldisp[COL_MAX];//剛体表示用
+static int s_coldispgetnum[COL_MAX];//剛体表示用
+static CModel* s_refposmark;//RefPosジョイント軌跡表示用
+static int s_refposmarkgetnum;//RefPosジョイント軌跡表示用
 
 CBone::CBone( CModel* parmodel )// : m_curmp(), m_axisq()
 {
@@ -539,6 +541,9 @@ void CBone::InitColDisp()//static function
 {
 	ZeroMemory(s_coldisp, sizeof(CModel*) * COL_MAX);
 	ZeroMemory(s_coldispgetnum, sizeof(int) * COL_MAX);
+
+	s_refposmark = 0;
+	s_refposmarkgetnum = 0;
 }
 void CBone::DestroyColDisp()//static function
 {
@@ -550,6 +555,12 @@ void CBone::DestroyColDisp()//static function
 			s_coldisp[colindex] = 0;
 		}
 	}
+
+	if (s_refposmark) {
+		delete s_refposmark;
+		s_refposmark = 0;
+	}
+
 	InitColDisp();
 }
 void CBone::ResetColDispInstancingParams()//static function
@@ -563,6 +574,14 @@ void CBone::ResetColDispInstancingParams()//static function
 		}
 	}
 	ZeroMemory(s_coldispgetnum, sizeof(int) * COL_MAX);
+}
+void CBone::ResetRefPosMarkInstancingParams()//static function
+{
+	if (s_refposmark) {
+		s_refposmark->ResetInstancingParams();
+		s_refposmark->ResetDispObjScale();
+	}
+	s_refposmarkgetnum = 0;
 }
 
 void CBone::RenderColDisp(ChaScene* srcchascene, myRenderer::RenderingEngine* re)//static function
@@ -590,6 +609,19 @@ void CBone::RenderColDisp(ChaScene* srcchascene, myRenderer::RenderingEngine* re
 			forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
 	}
 
+}
+void CBone::RenderRefPosMark(ChaScene* srcchascene, myRenderer::RenderingEngine* re, ChaVector4 diffusemult)//static function
+{
+	int lightflag = 0;
+	//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, g_rigidmark_alpha);//2024/01/12 alpha
+	bool forcewithalpha = true;
+	int btflag = 0;
+	bool zcmpalways = true;
+
+	if (s_refposmark && (s_refposmark->GetInstancingDrawNum() > 0)) {
+		srcchascene->RenderInstancingModel(s_refposmark,
+			forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways);
+	}
 }
 
 
@@ -6528,6 +6560,20 @@ int CBone::LoadCapsuleShape(ID3D12Device* pdev)
 	}
 
 
+	//2024/02/08 for RefPos
+	if (!s_refposmark) {
+		s_refposmark = new CModel();
+		if (!s_refposmark) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_refposmark->SetInstancingNum(RIGMULTINDEXMAX);
+		swprintf_s(wfilename, MAX_PATH, L"%s\\%s", mpath, L"cone_dirX.mqo");
+		CallF(s_refposmark->LoadMQO(pdev, wfilename, 0, 1.0f, 0), return 1);
+		//CallF(m_coldisp[COL_REFPOS_INDEX]->MakeDispObj(), return 1);
+	}
+
+
 	return 0;
 }
 
@@ -6561,6 +6607,14 @@ CModel* CBone::GetColDisp(CBone* childbone, int srcindex)
 	return retcoldisp;
 
 
+}
+CModel* CBone::GetRefPosMark()
+{
+	if (IsNotSkeleton()) {
+		return 0;
+	}
+
+	return s_refposmark;
 }
 
 
@@ -6599,6 +6653,41 @@ CModel* CBone::GetCurColDispInstancing(CBone* childbone, int* pinstanceno)
 
 	return curcoldisp;
 }
+CModel* CBone::GetRefPosMarkInstancing(int* pinstanceno)
+{
+	if (!pinstanceno) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	*pinstanceno = -1;
+
+	//2023/04/28
+	if (IsNotSkeleton()) {
+		return 0;
+	}
+	if (!GetParModel()) {
+		return 0;
+	}
+
+	//CRigidElem* curre = GetRigidElem(childbone);
+	//if (!curre) {
+	//	_ASSERT(0);
+	//	return 0;
+	//}
+	////_ASSERT(colptr);
+	//_ASSERT(childbone);
+
+	int instanceno = s_refposmarkgetnum;
+	*pinstanceno = instanceno;
+
+	_ASSERT(s_refposmark);
+
+	s_refposmarkgetnum = instanceno + 1;
+
+	return s_refposmark;
+}
+
 
 void CBone::SetRigidElemOfMap(std::string srcstr, CBone* srcbone, CRigidElem* srcre)
 {

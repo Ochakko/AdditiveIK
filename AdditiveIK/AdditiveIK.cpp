@@ -36582,143 +36582,108 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 			roundingendframe = RoundingTime(endframe);
 			roundingapplyframe = RoundingTime(applyframe);
 
-			//if (keynum >= 3) {
-				MOTINFO* curmi = s_model->GetCurMotInfo();
-				if (curmi) {
-					int curmotid = curmi->motid;
-					double currentframe = curmi->curframe;
-					CBone* curbone = s_model->GetBoneByID(s_curboneno);
-					if (curbone) {
-						std::vector<ChaVector3> vecbonepos;
-						vecbonepos.clear();
-						ChaVector3 curbonepos;
+			MOTINFO* curmi = s_model->GetCurMotInfo();
+			if (curmi) {
+				int curmotid = curmi->motid;
+				double currentframe = curmi->curframe;
+				CBone* curbone = s_model->GetBoneByID(s_curboneno);
+				if (curbone) {
+					std::vector<ChaVector3> vecbonepos;
+					vecbonepos.clear();
+					ChaVector3 curbonepos;
 
-						ChaMatrix modelwm = s_model->GetWorldMat();
+					ChaMatrix modelwm = s_model->GetWorldMat();
 
-						double renderleng = roundingendframe - roundingstartframe + 1;
-						double renderstep = renderleng / (double)(REFPOSMAXNUM - 2);
+					double renderleng = roundingendframe - roundingstartframe + 1;
 
-						int refposindex = 0;
-						double renderframe;
-						//for (renderframe = roundingstartframe; renderframe <= roundingendframe; renderframe += 1.0) {
-						for(renderframe = roundingstartframe; renderframe <= roundingendframe; renderframe += renderstep) {
-							s_model->SetMotionFrame(renderframe);
-							////s_model->UpdateMatrix(&s_model->GetWorldMat(), &s_matVP);
-							////ChaMatrix tmpwm = s_model->GetWorldMat();
-							////s_model->HierarchyRouteUpdateMatrix(g_limitdegflag, curbone, &modelwm, &s_matVP);//高速化：関係ボーンルート限定アップデート
-							//ChaVector3 tmpfpos = curbone->GetJointFPos();
-							////ChaMatrix tmpcurwm = curbone->GetCurMp().GetWorldMat() * s_matWorld;//2023/08/27 s_matWorldを掛ける
-							//ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, renderframe, 0) * modelwm;
-							//ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
-							//vecbonepos.push_back(curbonepos);
+					//2024/02/08 選択ジョイントの位置の軌跡を表示する際に補間無しのGetWorldMatで済ませたいのでRoundingTimeしてキーの位置限定にする
+					double renderstep = RoundingTime(renderleng / (double)(REFPOSMAXNUM - 2));
 
-							//int lightflag = 0;//!!!!!!!透けるために必要!!!!!!!!!
+					int refposindex = 0;
+					double renderframe;
+					//for (renderframe = roundingstartframe; renderframe <= roundingendframe; renderframe += 1.0) {
+					for(renderframe = roundingstartframe; renderframe <= roundingendframe; renderframe += renderstep) {
+						s_model->SetMotionFrame(renderframe);
+						//s_model->UpdateMatrix(&s_model->GetWorldMat(), &s_matVP);
+						//ChaMatrix tmpwm = s_model->GetWorldMat();
+						//s_model->HierarchyRouteUpdateMatrix(g_limitdegflag, curbone, &modelwm, &s_matVP);//高速化：関係ボーンルート限定アップデート
+						ChaVector3 tmpfpos = curbone->GetJointFPos();
+						//ChaMatrix tmpcurwm = curbone->GetCurMp().GetWorldMat() * s_matWorld;//2023/08/27 s_matWorldを掛ける
+						ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, renderframe, 0) * modelwm;
+						ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
+						vecbonepos.push_back(curbonepos);
 
-							//refframeのポーズを表示
-							int btflag1 = 0;
+						//int lightflag = 0;//!!!!!!!透けるために必要!!!!!!!!!
+
+						//refframeのポーズを表示
+						int btflag1 = 0;
 							
-							s_model->SetMotionFrame(renderframe);
-							//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
-							s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matVP, renderframe);
+						s_model->SetMotionFrame(renderframe);
+						//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
+						s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matVP, renderframe);
 							
 
-							bool calcslotflag;
-							calcslotflag = true;
-							s_model->SetShaderConst(btflag1, calcslotflag);
-							s_model->SetRefPosFl4x4ToDispObj(refposindex);
+						bool calcslotflag;
+						calcslotflag = true;
+						s_model->SetShaderConst(btflag1, calcslotflag);
+						s_model->SetRefPosFl4x4ToDispObj(refposindex);
 
-							//カレントフレームから離れるほど　透明度を薄くする
-							const double refstartalpha = 0.80f;
-							double renderalpha0 = (renderleng - fabs(currentframe - renderframe)) / renderleng;
-							//double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
-							double renderalpha = renderalpha0 * renderalpha0 * renderalpha0;
-							ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, (float)renderalpha);
+						//カレントフレームから離れるほど　透明度を薄くする
+						const double refstartalpha = 0.80f;
+						double renderalpha0 = (renderleng - fabs(currentframe - renderframe)) / renderleng;
+						double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
+						//double renderalpha = renderalpha0 * renderalpha0 * renderalpha0;
+						ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, (float)renderalpha);
 
-							int lightflag = 0;
-							bool forcewithalpha = true;
-							int btflag = 0;
-							bool zcmpalways = false;
-							s_chascene->RenderOneModel(s_model, forcewithalpha, re, 
-								lightflag, refdiffusemult, btflag, zcmpalways, refposindex);
+						int lightflag = 0;
+						bool forcewithalpha = true;
+						int btflag = 0;
+						bool zcmpalways = false;
+						s_chascene->RenderOneModel(s_model, forcewithalpha, re, 
+							lightflag, refdiffusemult, btflag, zcmpalways, refposindex);
 
-							refposindex++;							
-						}
-
-						{
-							////カレントフレームをレンダー
-							int btflag1 = 0;
-
-							s_model->SetMotionFrame(currentframe);
-							//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
-							s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matVP, currentframe);
-
-							bool calcslotflag;
-							calcslotflag = true;
-							s_model->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
-							s_model->SetRefPosFl4x4ToDispObj(refposindex);
-
-							ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-
-							int lightflag = 1;
-							bool forcewithalpha = true;
-							int btflag = 0;
-							bool zcmpalways = false;
-							s_chascene->RenderOneModel(s_model, forcewithalpha, re,
-								lightflag, refdiffusemult, btflag, zcmpalways, refposindex);
-						}
-
-
-
-						//{
-						//	////カレントフレームをレンダー
-						//	s_model->SetMotionFrame(currentframe);
-						//	s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
-						//
-						//	int lightflag2 = 0;//!!!!!!!透けるために必要!!!!!!!!!
-						//	//const float orgalpha = 0.8880f;
-						//	const float orgalpha = 1.0f;
-						//	ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, orgalpha);
-						//	int btflag2 = 0;
-						//	if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-						//		btflag2 = 0;
-						//	}
-						//	else {
-						//		if (g_previewFlag == 4) {
-						//			btflag2 = 1;
-						//		}
-						//		else {
-						//			//previewFlag == 5
-						//			if ((s_curboneno >= 0) && ((s_onragdollik != 0) || (s_physicskind == 0))) {
-						//				btflag2 = 2;//2022/07/09
-						//			}
-						//		}
-						//	}
-						//	bool withalpha = false;
-						//	bool calcslotflag = true;
-						//	s_model->OnRender(withalpha, pRenderContext, lightflag2, diffusemult, btflag2, calcslotflag);
-						//	withalpha = true;
-						//	s_model->OnRender(withalpha, pRenderContext, lightflag2, diffusemult, btflag2, calcslotflag);
-						//}
-
-
-						////render arrow : selected bone : befpos --> aftpos arrow
-						//CBone* childbone = curbone->GetChild(false);
-						//if (childbone && childbone->IsSkeleton() && curbone->GetColDisp(childbone, COL_CONE_INDEX)) {
-						//	ChaVector4 arrowdiffusemult = ChaVector4(1.0f, 0.5f, 0.5f, 0.85f);
-
-						//	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmpAlways, 1);//不透明の場合には手動で指定
-						//	//g_zcmpalways = true;
-						//	//curbone->GetColDisp(childbone, COL_CONE_INDEX)->RenderRefArrow(g_limitdegflag,
-						//	//	pRenderContext, curbone, arrowdiffusemult, 1, vecbonepos);
-						//	//s_model->RenderBoneCircleOne(g_limitdegflag,
-						//	//	pRenderContext, s_bcircle, s_curboneno);
-
-						//	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);//元に戻す
-						//	//g_zcmpalways = false;
-						//}
+						refposindex++;							
 					}
+
+					{
+						////カレントフレームをレンダー
+						int btflag1 = 0;
+
+						s_model->SetMotionFrame(currentframe);
+						//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
+						s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matVP, currentframe);
+
+						bool calcslotflag;
+						calcslotflag = true;
+						s_model->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
+						s_model->SetRefPosFl4x4ToDispObj(refposindex);
+
+						ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+
+						int lightflag = 1;
+						bool forcewithalpha = true;
+						int btflag = 0;
+						bool zcmpalways = false;
+						s_chascene->RenderOneModel(s_model, forcewithalpha, re,
+							lightflag, refdiffusemult, btflag, zcmpalways, refposindex);
+					}
+
+					{
+						//render arrow : selected bone : befpos --> aftpos arrow
+						CBone* childbone = curbone->GetChild(false);
+						if (childbone && childbone->IsSkeleton() && curbone->GetRefPosMark()) {
+							//ChaVector4 arrowdiffusemult = ChaVector4(1.0f, 0.5f, 0.5f, 0.85f);
+							ChaVector4 arrowdiffusemult = ChaVector4(1.0f, 0.5f, 0.5f, 0.5f);
+
+							curbone->GetRefPosMark()->RenderRefArrow(g_limitdegflag,
+								re, s_chascene, s_matVP, curbone, arrowdiffusemult, 1, vecbonepos);
+							//s_model->RenderBoneCircleOne(g_limitdegflag,
+							//	pRenderContext, s_bcircle, s_curboneno);
+						}
+					}
+
 				}
-			//}
+			}
 		}
 	}
 

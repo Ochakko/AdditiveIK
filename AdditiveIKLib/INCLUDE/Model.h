@@ -297,8 +297,10 @@ public:
  */
 	int OnRender(bool withalpha, RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int btflag = 0, bool calcslotflag = false );
 
-	int RenderRefArrow(bool limitdegflag, RenderContext* pRenderContext, 
+	int RenderRefArrow(bool limitdegflag, 
+		myRenderer::RenderingEngine* re, ChaScene* srcchascene, ChaMatrix matVP,
 		CBone* boneptr, ChaVector4 diffusemult, int refmult, std::vector<ChaVector3> vecbonepos);
+	void ResetRefPosMarkInstanceScale();
 
 
 

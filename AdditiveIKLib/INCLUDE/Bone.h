@@ -71,6 +71,9 @@ public:
 	static void DestroyColDisp();
 	static void ResetColDispInstancingParams();
 	static void RenderColDisp(ChaScene* srcchascene, myRenderer::RenderingEngine* re);
+	static void ResetRefPosMarkInstancingParams();
+	static void RenderRefPosMark(ChaScene* srcchascene, myRenderer::RenderingEngine* re, 
+		ChaVector4 diffusemult);
 
 	ChaVector3 m_btparentpos;//Motion2Bt時のボーンの位置(剛体行列計算用)
 	ChaVector3 m_btchildpos;//Motion2Bt時のボーンの位置(剛体行列計算用)
@@ -1318,6 +1321,8 @@ public: //accesser
 
 	CModel* GetCurColDispInstancing(CBone* childbone, int* pinstanceno);
 	CModel* GetColDisp(CBone* childbone, int srcindex);
+	CModel* GetRefPosMarkInstancing(int* pinstanceno);
+	CModel* GetRefPosMark();
 	void SetFirstCalcRigid(bool srcflag){
 		m_firstcalcrigid = srcflag;
 	};
