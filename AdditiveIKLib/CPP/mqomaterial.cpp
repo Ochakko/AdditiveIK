@@ -1419,33 +1419,9 @@ void CMQOMaterial::InitShadersAndPipelines(
 	samplerDescArray[4].MaxAnisotropy = 1;
 
 
-
-
-	if (vertextype == 0) {
-		int refposindex;
-		for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
-			m_rootSignature[refposindex].Init(
-				samplerDescArray,
-				5,
-				numCbv,
-				numSrv,
-				8,
-				offsetInDescriptorsFromTableStartCB,
-				offsetInDescriptorsFromTableStartSRV
-			);
-			m_shadowrootSignature[refposindex].Init(
-				samplerDescArray,
-				5,
-				numCbv,
-				numSrv,
-				8,
-				offsetInDescriptorsFromTableStartCB,
-				offsetInDescriptorsFromTableStartSRV
-			);
-		}
-	}
-	else {
-		m_rootSignature[0].Init(
+	int refposindex;
+	for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+		m_rootSignature[refposindex].Init(
 			samplerDescArray,
 			5,
 			numCbv,
@@ -1454,7 +1430,7 @@ void CMQOMaterial::InitShadersAndPipelines(
 			offsetInDescriptorsFromTableStartCB,
 			offsetInDescriptorsFromTableStartSRV
 		);
-		m_shadowrootSignature[0].Init(
+		m_shadowrootSignature[refposindex].Init(
 			samplerDescArray,
 			5,
 			numCbv,
@@ -1677,31 +1653,17 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 		psoDesc.SampleDesc.Count = 1;
 
-		if (vertextype == 0) {
-			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
-				if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
-					(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
-					(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
-					psoDesc.pRootSignature = m_shadowrootSignature[refposindex].Get();
-				}
-				else {
-					psoDesc.pRootSignature = m_rootSignature[refposindex].Get();
-				}
-				psoDesc.DepthStencilState.DepthEnable = TRUE;
-				m_opaquePipelineState[shaderindex][refposindex].Init(psoDesc);
-			}
-		}
-		else {
+		for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
 			if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 				(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
 				(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
-				psoDesc.pRootSignature = m_shadowrootSignature[0].Get();
+				psoDesc.pRootSignature = m_shadowrootSignature[refposindex].Get();
 			}
 			else {
-				psoDesc.pRootSignature = m_rootSignature[0].Get();
+				psoDesc.pRootSignature = m_rootSignature[refposindex].Get();
 			}
 			psoDesc.DepthStencilState.DepthEnable = TRUE;
-			m_opaquePipelineState[shaderindex][0].Init(psoDesc);
+			m_opaquePipelineState[shaderindex][refposindex].Init(psoDesc);
 		}
 
 
@@ -1714,65 +1676,36 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
 		//psoDesc.DepthStencilState.DepthEnable = FALSE;
 		//psoDesc.DepthStencilState.DepthEnable = TRUE;
-		if (vertextype == 0) {
-			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
-				if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
-					(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
-					(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
-					psoDesc.pRootSignature = m_shadowrootSignature[refposindex].Get();
-				}
-				else {
-					psoDesc.pRootSignature = m_rootSignature[refposindex].Get();
-				}
-				psoDesc.DepthStencilState.DepthEnable = TRUE;
-				m_transPipelineState[shaderindex][refposindex].Init(psoDesc);
-				psoDesc.DepthStencilState.DepthEnable = FALSE;
-				m_transNoZPipelineState[shaderindex][refposindex].Init(psoDesc);
-			}
-		}
-		else {
+
+		for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
 			if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 				(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
 				(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
-				psoDesc.pRootSignature = m_shadowrootSignature[0].Get();
+				psoDesc.pRootSignature = m_shadowrootSignature[refposindex].Get();
 			}
 			else {
-				psoDesc.pRootSignature = m_rootSignature[0].Get();
+				psoDesc.pRootSignature = m_rootSignature[refposindex].Get();
 			}
 			psoDesc.DepthStencilState.DepthEnable = TRUE;
-			m_transPipelineState[shaderindex][0].Init(psoDesc);
+			m_transPipelineState[shaderindex][refposindex].Init(psoDesc);
 			psoDesc.DepthStencilState.DepthEnable = FALSE;
-			m_transNoZPipelineState[shaderindex][0].Init(psoDesc);
+			m_transNoZPipelineState[shaderindex][refposindex].Init(psoDesc);
 		}
 
 		////2023/12/01
 		psoDesc.DepthStencilState.DepthEnable = TRUE;
 		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-		if (vertextype == 0) {
-			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
-				if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
-					(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
-					(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
-					psoDesc.pRootSignature = m_shadowrootSignature[refposindex].Get();
-				}
-				else {
-					psoDesc.pRootSignature = m_rootSignature[refposindex].Get();
-				}
-				psoDesc.DepthStencilState.DepthEnable = TRUE;
-				m_zalwaysPipelineState[shaderindex][refposindex].Init(psoDesc);
-			}
-		}
-		else {
+		for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
 			if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 				(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
 				(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
-				psoDesc.pRootSignature = m_shadowrootSignature[0].Get();
+				psoDesc.pRootSignature = m_shadowrootSignature[refposindex].Get();
 			}
 			else {
-				psoDesc.pRootSignature = m_rootSignature[0].Get();
+				psoDesc.pRootSignature = m_rootSignature[refposindex].Get();
 			}
 			psoDesc.DepthStencilState.DepthEnable = TRUE;
-			m_zalwaysPipelineState[shaderindex][0].Init(psoDesc);
+			m_zalwaysPipelineState[shaderindex][refposindex].Init(psoDesc);
 		}
 	}
 }
@@ -2446,12 +2379,7 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 		currentrefposindex = 0;
 	}
 	else {
-		if (pm4) {
-			currentrefposindex = refposindex;
-		}
-		else {
-			currentrefposindex = 0;
-		}	
+		currentrefposindex = refposindex;
 	}
 
 
@@ -3268,12 +3196,6 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	}
 
 	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
-		refposindex = 0;
-	}
-	if (ppm4) {
-		//refposindexそのまま
-	}
-	else {
 		refposindex = 0;
 	}
 

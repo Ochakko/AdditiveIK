@@ -2,8 +2,8 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
-2024/02/09
-　AdditiveIK 1.0.0.7 RC2(リリース候補2)
+2024/02/10
+　AdditiveIK 1.0.0.7 RC4(リリース候補4)
 　　1.0.0.6からの変更点
 　　　不具合修正
 　　　　LimitEulウインドウでCurrentBoneに対するFromCurrentMotionボタンを実行すると
@@ -48,6 +48,9 @@ https://github.com/Ochakko/AdditiveIK
 　　　RC3: クリック(ピック)＆セットに関する修正
 　　　　メッシュやマテリアルをピックした際にモーション選択が変化してカメラ状態も変わる不便さをなるべく解消
 　　　　ピック前後で選択モデルが同じ場合にはモデル選択関数を呼ばないように.
+　　　RC4: 大きいサイズのfbxを読み込むと落ちやすい不具合が改善
+　　　　GraphicsEngineのコンストラクタ記述によりConstantBuffer::CopyToVRAMで落ちなくなったようだ.
+　　　　ただし1.0.0.7で１つのメッシュ当たりのビデオメモリ消費量が増えたので、大きいfbx読み込み時にビデオメモリ不足で落ちることはあります.
 
 
 

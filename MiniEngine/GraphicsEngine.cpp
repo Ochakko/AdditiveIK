@@ -9,6 +9,49 @@ Camera* g_camera2D = nullptr;				//2Dカメラ。
 Camera* g_camera3D = nullptr;				//3Dカメラ。
 Camera* g_cameraShadow = nullptr;			//ShadowMapカメラ
 
+
+//2024/02/10 コンストラクタを書くことにより　ConstantBuffer::CopyToVRAMで落ちなくなった
+GraphicsEngine::GraphicsEngine() :
+m_renderContext(), m_nullTextureMaps(), m_fontEngine(),
+m_camera2D(), m_camera3D(), m_cameraShadow()
+{
+	m_d3dDevice = nullptr;					//D3Dデバイス。
+	m_commandQueue = nullptr;			//コマンドキュー。
+	m_swapChain = nullptr;					//スワップチェイン。
+	m_rtvHeap = nullptr;				//レンダリングターゲットビューのディスクリプタヒープ。
+	m_dsvHeap = nullptr;				//深度ステンシルビューのディスクリプタヒープ。
+	m_commandAllocator = nullptr;	//コマンドアロケータ。
+	m_commandList = nullptr;		//コマンドリスト。
+	m_pipelineState = nullptr;			//パイプラインステート。
+	m_currentBackBufferIndex = 0;						//現在のバックバッファの番号。
+	m_rtvDescriptorSize = 0;							//フレームバッファのディスクリプタのサイズ。
+	m_dsvDescriptorSize = 0;							//深度ステンシルバッファのディスクリプタのサイズ。
+	m_cbrSrvDescriptorSize = 0;						//CBR_SRVのディスクリプタのサイズ。
+	m_samplerDescriptorSize = 0;					//サンプラのディスクリプタのサイズ。			
+	m_renderTargets[0] = nullptr;	//フレームバッファ用のレンダリングターゲット。
+	m_renderTargets[1] = nullptr;	//フレームバッファ用のレンダリングターゲット。
+	m_depthStencilBuffer = nullptr;	//深度ステンシルバッファ。
+	ZeroMemory(&m_viewport, sizeof(D3D12_VIEWPORT));			//ビューポート。
+	ZeroMemory(&m_scissorRect, sizeof(D3D12_RECT));			//シザリング矩形。
+	//RenderContext m_renderContext;		//レンダリングコンテキスト。
+	m_currentFrameBufferRTVHandle.ptr = 0;		//現在書き込み中のフレームバッファのレンダリングターゲットビューのハンドル。
+	m_currentFrameBufferDSVHandle.ptr = 0;		//現在書き込み中のフレームバッファの深度ステンシルビューの
+	// GPUとの同期で使用する変数。
+	m_frameIndex = 0;
+	m_fenceEvent = nullptr;
+	m_fence = nullptr;
+	m_fenceValue = 0;
+	m_frameBufferWidth = 0;				//フレームバッファの幅。
+	m_frameBufferHeight = 0;				//フレームバッファの高さ。
+	//Camera m_camera2D;							//2Dカメラ。
+	//Camera m_camera3D;							//3Dカメラ。
+	//Camera m_cameraShadow;						//ShadowMapカメラ。
+	////raytracing::Engine m_raytracingEngine;		//レイトレエンジン。
+	//NullTextureMaps m_nullTextureMaps;			//ヌルテクスチャマップ。
+	//FontEngine m_fontEngine;					//フォントエンジン。
+	m_directXTKGfxMemroy = nullptr;	//DirectXTKのグラフィックメモリシステム。
+}
+
 GraphicsEngine::~GraphicsEngine()
 {
 	WaitDraw();
@@ -43,17 +86,16 @@ GraphicsEngine::~GraphicsEngine()
 		}
 		m_renderTargets[targetindex] = nullptr;
 	}
-	//for (auto& rt : m_renderTargets) {
-	//	if (rt) {
-	//		rt->Release();
-	//	}
-	//}
+
 	if (m_depthStencilBuffer) {
 		m_depthStencilBuffer->Release();
 	}
 	if (m_fence) {
 		m_fence->Release();
 	}
+
+	m_directXTKGfxMemroy.reset();
+	m_directXTKGfxMemroy = nullptr;
 
 	if (m_d3dDevice) {
 		m_d3dDevice->Release();

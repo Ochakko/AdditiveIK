@@ -19,6 +19,8 @@
 /// </summary>
 class GraphicsEngine {
 public:
+	GraphicsEngine();//2024/02/10
+
 	/// <summary>
 	/// デストラクタ。
 	/// </summary>

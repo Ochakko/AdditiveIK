@@ -1,5 +1,27 @@
 ﻿#include "stdafx.h"
+#include <tchar.h>
+#include <stdexcept>
 #include "ConstantBuffer.h"
+
+
+class com_exception : public std::exception
+{
+public:
+	com_exception(HRESULT hr) noexcept : result(hr) {}
+
+	const char* what() const noexcept override
+	{
+		static char s_str[64] = {};
+		sprintf_s(s_str, "Failure with HRESULT of %08X", static_cast<unsigned int>(result));
+		return s_str;
+	}
+
+	HRESULT get_result() const noexcept { return result; }
+
+private:
+	HRESULT result;
+};
+
 
 ConstantBuffer::ConstantBuffer()
 {
@@ -76,8 +98,77 @@ void ConstantBuffer::RegistConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE descri
 }
 void ConstantBuffer::CopyToVRAM(void* data)
 {
-	auto backBufferIndex = g_graphicsEngine->GetBackBufferIndex();
-	memcpy(m_constBufferCPU[backBufferIndex], data, m_size);
+
+	//2024/02/10
+	//リリースビルドがこの関数で頻繁に落ちたので
+	//エラー処理を付けまくった
+	//結局は　GraphicsEngineクラスのコンストラクタを書いたらエラーは解決した？
+
+	if (!m_isValid) {
+		_ASSERT(0);
+		OutputDebugStringA("ConstantBuffer::CopyToVRAM : isValid error");
+		::MessageBoxA(NULL, "isValid error", "ConstantBuffer::CopyToVRAM exeptionA0", MB_OK | MB_ICONERROR);
+		abort();
+	}
+	if (!data) {
+		_ASSERT(0);
+		OutputDebugStringA("ConstantBuffer::CopyToVRAM : data null error");
+		::MessageBoxA(NULL, "data null error", "ConstantBuffer::CopyToVRAM exeptionA", MB_OK | MB_ICONERROR);
+		abort();
+	}
+	if (!g_graphicsEngine) {
+		_ASSERT(0);
+		OutputDebugStringA("ConstantBuffer::CopyToVRAM : graphicsEngine null error");
+		::MessageBoxA(NULL, "graphicsEngine null error", "ConstantBuffer::CopyToVRAM exeptionB", MB_OK | MB_ICONERROR);
+		abort();
+	}
+
+	try {
+		UINT backBufferIndex = g_graphicsEngine->GetBackBufferIndex();
+		if ((backBufferIndex != 0) && (backBufferIndex != 1)) {
+			_ASSERT(0);
+			char strdbg[1042] = { 0 };
+			sprintf_s(strdbg, 1042, "ConstantBuffer::CopyToVRAM : backBufferIndex error : %d", backBufferIndex);
+			OutputDebugStringA(strdbg);
+			::MessageBoxA(NULL, strdbg, "ConstantBuffer::CopyToVRAM exeptionC", MB_OK | MB_ICONERROR);
+			abort();
+		}
+		if (!m_constBufferCPU[backBufferIndex]) {
+			_ASSERT(0);
+			OutputDebugStringA("ConstantBuffer::CopyToVRAM : m_constBufferCPU error");
+			::MessageBoxA(NULL, "m_constBufferCPU null error", "ConstantBuffer::CopyToVRAM exeptionD", MB_OK | MB_ICONERROR);
+			abort();
+		}
+		if (m_size <= 0) {
+			_ASSERT(0);
+			OutputDebugStringA("ConstantBuffer::CopyToVRAM : m_size error");
+			::MessageBoxA(NULL, "m_size zero error", "ConstantBuffer::CopyToVRAM exeptionE", MB_OK | MB_ICONERROR);
+			abort();
+		}
+
+		memcpy(m_constBufferCPU[backBufferIndex], data, m_size);
+
+	}
+	//catch (const com_exception& exc)
+	//{
+	//	_ASSERT(0);
+	//	OutputDebugStringA(exc.what());
+	//	::MessageBoxA(NULL, exc.what(), "ConstantBuffer::CopyToVRAM exeption0", MB_OK | MB_ICONERROR);
+	//	abort();
+	//}
+	//catch (const std::exception& exc)
+	//{
+	//	_ASSERT(0);
+	//	OutputDebugStringA(exc.what());
+	//	::MessageBoxA(NULL, exc.what(), "ConstantBuffer::CopyToVRAM exeption1", MB_OK | MB_ICONERROR);
+	//	abort();
+	//}
+	catch (...) {
+		_ASSERT(0);
+		OutputDebugStringA("memcpy error : app must exit.");
+		::MessageBox(NULL, L"memcpy error : app must exit.", L"ConstantBuffer::CopyToVRAM exeption3", MB_OK | MB_ICONERROR);
+		abort();
+	}
 }
 D3D12_GPU_VIRTUAL_ADDRESS ConstantBuffer::GetGPUVirtualAddress()
 {
