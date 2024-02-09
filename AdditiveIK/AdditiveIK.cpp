@@ -2352,7 +2352,7 @@ static int AddModelBound(MODELBOUND* mb, MODELBOUND* addmb);
 static int OnSetMotSpeed();
 
 static int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu);
-static int OnModelMenu(CModel* selmodel);
+static int OnChangeModel(CModel* selmodel);
 static int SetTimelineHasRigFlag();
 static int OnREMenu(int selindex, int callbymenu);
 static int OnRgdMenu(int selindex, int callbymenu);
@@ -12239,11 +12239,19 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 	return 0;
 }
 
-int OnModelMenu(CModel* selmodel)
+int OnChangeModel(CModel* selmodel)
 {
 	if (!s_chascene || !s_model) {
 		return 0;
 	}
+
+	if (s_model == selmodel) {
+		//2024/02/09
+		//操作中にモーションやカメラの状態が変わるのを出来るだけ防ぐために
+		//選択状態が変わらない場合には　OnModelMenuを呼ばないで　すぐに0リターンする
+		return 0;
+	}
+
 
 	int modelnum = s_chascene->GetModelNum();
 	int modelindex;
@@ -51422,7 +51430,7 @@ bool PickAndSelectMeshOfDispGroupDlg()
 		pickflag = s_chascene->PickPolyMesh3_Mesh(&tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
 		if (pickflag && pickmodel && pickmqoobj) {
 
-			OnModelMenu(pickmodel);
+			OnChangeModel(pickmodel);
 
 			WCHAR objname[256] = { 0L };
 			char tmpobjname[256] = { 0 };
@@ -51483,7 +51491,7 @@ bool PickAndSelectMaterialOfShaderTypeDlg()
 		pickflag = s_chascene->PickPolyMesh3_Mesh(&tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
 		if (pickflag && pickmodel && pickmaterial) {
 
-			OnModelMenu(pickmodel);
+			OnChangeModel(pickmodel);
 
 			int materialnum = s_model->GetMQOMaterialSize();
 			int materialindex;
