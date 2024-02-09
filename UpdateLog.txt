@@ -2,8 +2,8 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
-2024/02/08
-　AdditiveIK 1.0.0.7 RC1(リリース候補1)
+2024/02/09
+　AdditiveIK 1.0.0.7 RC2(リリース候補2)
 　　1.0.0.6からの変更点
 　　　不具合修正
 　　　　LimitEulウインドウでCurrentBoneに対するFromCurrentMotionボタンを実行すると
@@ -41,6 +41,10 @@ https://github.com/Ochakko/AdditiveIK
 　　　　DispAndLimitsプレートメニューのRefPosAlphaで残像の透明度調整
 　　　　DispAndLimitsプレートメニューのZCmpAlwaysチェックボックスでカレントフレームのZバッファ方式を切り替え
 
+
+　　　RC2: クリック(ピック)＆セットの不具合修正
+　　　　読み込みモデルによってはクリックしたメッシュやマテリアルに選択が切り替わらない不具合があったのを修正
+　　　　pick構造体の初期化の値の問題だった
 
 
 

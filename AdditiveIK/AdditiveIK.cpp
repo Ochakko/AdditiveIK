@@ -494,6 +494,7 @@ static void DSL3R3ButtonMouseHere();
 static void SelectNextWindow(int nextwndid);
 
 static void SetMainWindowTitle();
+static void InitPickInfo(UIPICKINFO* ppickinfo);
 
 static RECT s_rcmainwnd;
 static RECT s_rc3dwnd;
@@ -4506,7 +4507,7 @@ void InitApp()
 
 
 //////////
-	::ZeroMemory(&s_pickinfo, sizeof(UIPICKINFO));
+	InitPickInfo(&s_pickinfo);
 
 	s_modelpanel.panel = 0;
 	s_modelpanel.scroll = 0;
@@ -7481,7 +7482,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						s_curboneno = savecurboneno;
 						s_customrigbone = saverigbone;
 
-						//ZeroMemory(&s_pickinfo, sizeof(UIPICKINFO));
+						////ZeroMemory(&s_pickinfo, sizeof(UIPICKINFO));
 						s_pickinfo.pickobjno = savecurboneno;
 					}
 					else {
@@ -7509,8 +7510,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 			}
 			else {
-				ZeroMemory(&s_pickinfo, sizeof(UIPICKINFO));
-				s_pickinfo.pickobjno = -1;
+				InitPickInfo(&s_pickinfo);
 			}
 		}
 
@@ -21700,7 +21700,7 @@ int SetSelectState()
 	}
 	////////
 	UIPICKINFO pickinfo;
-	ZeroMemory(&pickinfo, sizeof(UIPICKINFO));
+	InitPickInfo(&pickinfo);
 	POINT ptCursor;
 	GetCursorPos(&ptCursor);
 	::ScreenToClient(s_3dwnd, &ptCursor);
@@ -21780,13 +21780,11 @@ int SetSelectState()
 					pickinfo.buttonflag = PICK_Z;
 				}
 				else {
-					ZeroMemory(&pickinfo, sizeof(UIPICKINFO));
-					pickinfo.pickobjno = -1;
+					InitPickInfo(&pickinfo);
 				}
 			}
 			else {
-				ZeroMemory(&pickinfo, sizeof(UIPICKINFO));
-				pickinfo.pickobjno = -1;
+				InitPickInfo(&pickinfo);
 			}
 		}
 	}
@@ -50668,12 +50666,11 @@ int PickManipulator(UIPICKINFO* ppickinfo, bool pickring)
 			ppickinfo->buttonflag = PICK_Z;
 		}
 		else {
-			ZeroMemory(ppickinfo, sizeof(UIPICKINFO));
+			InitPickInfo(ppickinfo);//2024/02/09 pickinfo->pickobjnoは０ではなく-1で初期化
 		}
 	}
 	else {
-		ZeroMemory(ppickinfo, sizeof(UIPICKINFO));
-		ppickinfo->pickobjno = -1;
+		InitPickInfo(ppickinfo);
 	}
 
 	return ppickinfo->pickobjno;
@@ -51403,7 +51400,7 @@ bool PickAndSelectMeshOfDispGroupDlg()
 	if (s_spdispsw[SPDISPSW_DISPGROUP].state) {
 
 		UIPICKINFO tmppickinfo;
-		ZeroMemory(&tmppickinfo, sizeof(UIPICKINFO));
+		InitPickInfo(&tmppickinfo);
 		tmppickinfo.mousebefpos = s_pickinfo.mousepos;
 		POINT ptCursor;
 		GetCursorPos(&ptCursor);
@@ -51464,7 +51461,7 @@ bool PickAndSelectMaterialOfShaderTypeDlg()
 	if (s_spdispsw[SPDISPSW_SHADERTYPE].state) {
 
 		UIPICKINFO tmppickinfo;
-		ZeroMemory(&tmppickinfo, sizeof(UIPICKINFO));
+		InitPickInfo(&tmppickinfo);
 		tmppickinfo.mousebefpos = s_pickinfo.mousepos;
 		POINT ptCursor;
 		GetCursorPos(&ptCursor);
@@ -51557,7 +51554,7 @@ int DispToolTip()
 bool DispTipUI()
 {
 	UIPICKINFO tmppickinfo;
-	ZeroMemory(&tmppickinfo, sizeof(UIPICKINFO));
+	InitPickInfo(&tmppickinfo);
 	tmppickinfo.mousebefpos = s_pickinfo.mousepos;
 	POINT ptCursor;
 	GetCursorPos(&ptCursor);
@@ -51907,7 +51904,7 @@ bool DispTipUI()
 bool DispTipUIFrog()
 {
 	UIPICKINFO tmppickinfo;
-	ZeroMemory(&tmppickinfo, sizeof(UIPICKINFO));
+	InitPickInfo(&tmppickinfo);
 	tmppickinfo.mousebefpos = s_pickinfo.mousepos;
 	POINT ptCursor;
 	GetCursorPos(&ptCursor);
@@ -51961,7 +51958,7 @@ bool DispTipUIFrog()
 bool DispTipBone()
 {
 	UIPICKINFO tmppickinfo;
-	ZeroMemory(&tmppickinfo, sizeof(UIPICKINFO));
+	InitPickInfo(&tmppickinfo);
 	tmppickinfo.mousebefpos = s_pickinfo.mousepos;
 	POINT ptCursor;
 	GetCursorPos(&ptCursor);
@@ -52010,7 +52007,7 @@ bool DispTipRig()
 	}
 
 	UIPICKINFO tmppickinfo;
-	ZeroMemory(&tmppickinfo, sizeof(UIPICKINFO));
+	InitPickInfo(&tmppickinfo);
 	tmppickinfo.mousebefpos = s_pickinfo.mousepos;
 	POINT ptCursor;
 	GetCursorPos(&ptCursor);
@@ -52064,7 +52061,7 @@ bool DispTipMesh()
 	}
 
 	UIPICKINFO tmppickinfo;
-	ZeroMemory(&tmppickinfo, sizeof(UIPICKINFO));
+	InitPickInfo(&tmppickinfo);
 	tmppickinfo.mousebefpos = s_pickinfo.mousepos;
 	POINT ptCursor;
 	GetCursorPos(&ptCursor);
@@ -52117,7 +52114,7 @@ bool DispTipMaterial()
 	}
 
 	UIPICKINFO tmppickinfo;
-	ZeroMemory(&tmppickinfo, sizeof(UIPICKINFO));
+	InitPickInfo(&tmppickinfo);
 	tmppickinfo.mousebefpos = s_pickinfo.mousepos;
 	POINT ptCursor;
 	GetCursorPos(&ptCursor);
@@ -54317,4 +54314,15 @@ int UpdateTopPosText()
 		}
 	}
 	return 0;
+}
+
+void InitPickInfo(UIPICKINFO* ppickinfo)
+{
+	if (ppickinfo) {
+		::ZeroMemory(ppickinfo, sizeof(UIPICKINFO));
+		ppickinfo->pickobjno = -1;//!!!!!
+	}
+	else {
+		_ASSERT(0);
+	}
 }
