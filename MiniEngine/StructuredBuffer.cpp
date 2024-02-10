@@ -23,7 +23,7 @@ void StructuredBuffer::Init(int sizeOfElement, int numElement, void* initData)
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(m_sizeOfElement * m_numElement);
 	for (auto& buffer : m_buffersOnGPU) {
-		auto hr = device->CreateCommittedResource(
+		HRESULT hrsb0 = device->CreateCommittedResource(
 			&heapProp,
 			D3D12_HEAP_FLAG_NONE,
 			&rDesc,
@@ -31,6 +31,11 @@ void StructuredBuffer::Init(int sizeOfElement, int numElement, void* initData)
 			nullptr,
 			IID_PPV_ARGS(&buffer)
 		);
+		if (FAILED(hrsb0) || !buffer) {
+			::MessageBoxA(NULL, "may not have enough videomemory? App must exit.",
+				"StructuredBuffer::Init Error", MB_OK | MB_ICONERROR);
+			abort();
+		}
 
 		
 		//構造化バッファをCPUからアクセス可能な仮想アドレス空間にマッピングする。

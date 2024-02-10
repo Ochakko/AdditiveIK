@@ -37,7 +37,7 @@ public:
 	/// WICファイルからテクスチャを初期化する。
 	/// </summary>
 	/// <param name="filePath">ロードするテクスチャのファイルパス。</param>
-	void InitFromWICFile(const wchar_t* filePath);
+	int InitFromWICFile(const wchar_t* filePath);
 
 	/// <summary>
 	/// メモリからテクスチャを初期化する。
@@ -55,7 +55,7 @@ public:
 	/// カスタムカラーからテクスチャを初期化する。
 	/// </summary>
 	/// <param name="resrouce">D3Dリソース。</param>
-	void InitFromCustomColor(ChaVector4 srccol);
+	int InitFromCustomColor(ChaVector4 srccol);
 
 
 	/// <summary>

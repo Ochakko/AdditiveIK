@@ -19,15 +19,15 @@ Texture::~Texture()
 	IShaderResource::~IShaderResource();
 }
 
-void Texture::InitFromCustomColor(ChaVector4 srccol)
+int Texture::InitFromCustomColor(ChaVector4 srccol)
 {
 	if (!g_graphicsEngine) {
 		_ASSERT(0);
-		return;
+		return 1;
 	}
 	if (!g_graphicsEngine->GetD3DDevice()) {
 		_ASSERT(0);
-		return;
+		return 1;
 	}
 	if (m_texture) {
 		m_texture->Release();
@@ -102,10 +102,13 @@ void Texture::InitFromCustomColor(ChaVector4 srccol)
 			nullptr,
 			IID_PPV_ARGS(&texbuff)
 		);
-		if (FAILED(hr0)) {
+		if (FAILED(hr0) || !texbuff) {
+			::MessageBoxA(NULL, "CreateTexture error. App must exit.",
+				"Texture::InitFromCustomColor Error", MB_OK | MB_ICONERROR);
 			_ASSERT(0);
+			abort();
 			free(texturedata);
-			return;
+			//return 1;
 		}
 		HRESULT hr1 = texbuff->WriteToSubresource(0,
 			nullptr,//全領域へコピー
@@ -116,27 +119,37 @@ void Texture::InitFromCustomColor(ChaVector4 srccol)
 		);
 		if (FAILED(hr1)) {
 			_ASSERT(0);
+			::MessageBoxA(NULL, "Write To VideoMemory error. App must exit.",
+				"Texture::InitFromCustomColor Error", MB_OK | MB_ICONERROR);
+			abort();
 			free(texturedata);
-			return;
+			//return 1;
 		}
 		
 		InitFromD3DResource(texbuff);
 
 		free(texturedata);
 	}
+	else {
+		_ASSERT(0);
+		::MessageBoxA(NULL, "memory alloc error. App must exit.",
+			"Texture::InitFromCustomColor Error", MB_OK | MB_ICONERROR);
+		abort();
+	}
 	
+	return 0;
 
 }
 
-void Texture::InitFromWICFile(const wchar_t* filePath)
+int Texture::InitFromWICFile(const wchar_t* filePath)
 {
 	if (!g_graphicsEngine) {
 		_ASSERT(0);
-		return;
+		return 1;
 	}
 	if (!g_graphicsEngine->GetD3DDevice()) {
 		_ASSERT(0);
-		return;
+		return 1;
 	}
 	if (m_texture) {
 		m_texture->Release();
@@ -150,7 +163,10 @@ void Texture::InitFromWICFile(const wchar_t* filePath)
 	HRESULT hr0 = DirectX::LoadFromWICFile(filePath, DirectX::WIC_FLAGS_NONE, &metadata, *scratchImg);
 	if (FAILED(hr0)) {
 		_ASSERT(0);
-		return;
+		::MessageBoxA(NULL, "TextureFile not found error. App must exit.",
+			"Texture::InitFromWICFile Error", MB_OK | MB_ICONERROR);
+		abort();
+		//return 1;
 	}
 	auto img = scratchImg->GetImage(0, 0, 0);//生データ抽出
 
@@ -176,7 +192,7 @@ void Texture::InitFromWICFile(const wchar_t* filePath)
 	resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;//とくにフラグなし
 
 	ID3D12Resource* texbuff = nullptr;
-	HRESULT hr1 = g_graphicsEngine->GetD3DDevice()->CreateCommittedResource(
+	HRESULT hrwic1 = g_graphicsEngine->GetD3DDevice()->CreateCommittedResource(
 		&texHeapProp,
 		D3D12_HEAP_FLAG_NONE,//特に指定なし
 		&resDesc,
@@ -184,10 +200,14 @@ void Texture::InitFromWICFile(const wchar_t* filePath)
 		nullptr,
 		IID_PPV_ARGS(&texbuff)
 	);
-	if (FAILED(hr1)) {
-		_ASSERT(0);
-		scratchImg.reset();
-		return;
+	if (FAILED(hrwic1) || !texbuff) {
+		::MessageBoxA(NULL, "may not have enough videomemory? App must exit.",
+			"Texture::InitFromWICFile Error", MB_OK | MB_ICONERROR);
+		abort();
+
+		//_ASSERT(0);
+		//scratchImg.reset();
+		//return;
 	}
 
 	HRESULT hr2 = texbuff->WriteToSubresource(0,
@@ -198,12 +218,18 @@ void Texture::InitFromWICFile(const wchar_t* filePath)
 	);
 	if (FAILED(hr2)) {
 		_ASSERT(0);
+		::MessageBoxA(NULL, "Write To videomemory Error. App must exit.",
+			"Texture::InitFromWICFile Error", MB_OK | MB_ICONERROR);
+		abort();
+
 		scratchImg.reset();
-		return;
+		//return;
 	}
 
 	InitFromD3DResource(texbuff);
 	scratchImg.reset();
+
+	return 0;
 }
 
 void Texture::InitFromDDSFile(const wchar_t* filePath)

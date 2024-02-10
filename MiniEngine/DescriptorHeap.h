@@ -316,17 +316,17 @@ private:
 	int m_numSamplerDesc = 0;		//サンプラの数。
 
 	
-	ID3D12DescriptorHeap* m_descriptorHeap[2] = { nullptr };					//ディスクリプタヒープ。
+	ID3D12DescriptorHeap* m_descriptorHeap = nullptr;					//ディスクリプタヒープ。
 	
 
 	std::vector<IShaderResource*> m_shaderResources;		//シェーダーリソース。
 	std::vector <IUnorderAccessResrouce*> m_uavResources;	//UAVリソース。
 	std::vector <ConstantBuffer*> m_constantBuffers;		//定数バッファ。
 	D3D12_SAMPLER_DESC m_samplerDescs[MAX_SAMPLER_STATE];						//サンプラステート。
-	D3D12_GPU_DESCRIPTOR_HANDLE m_cbGpuDescriptorStart[2];						//定数バッファのディスクリプタヒープの開始ハンドル。
-	D3D12_GPU_DESCRIPTOR_HANDLE m_srGpuDescriptorStart[2];						//シェーダーリソースのディスクリプタヒープの開始ハンドル。
-	D3D12_GPU_DESCRIPTOR_HANDLE m_uavGpuDescriptorStart[2];						//UAVリソースのディスクリプタヒープの開始ハンドル。
-	D3D12_GPU_DESCRIPTOR_HANDLE m_samplerGpuDescriptorStart[2];					//Samplerのでスクリプタヒープの開始ハンドル。
+	D3D12_GPU_DESCRIPTOR_HANDLE m_cbGpuDescriptorStart;						//定数バッファのディスクリプタヒープの開始ハンドル。
+	D3D12_GPU_DESCRIPTOR_HANDLE m_srGpuDescriptorStart;						//シェーダーリソースのディスクリプタヒープの開始ハンドル。
+	D3D12_GPU_DESCRIPTOR_HANDLE m_uavGpuDescriptorStart;						//UAVリソースのディスクリプタヒープの開始ハンドル。
+	D3D12_GPU_DESCRIPTOR_HANDLE m_samplerGpuDescriptorStart;					//Samplerのでスクリプタヒープの開始ハンドル。
 
 	bool m_initflag = false;
 };

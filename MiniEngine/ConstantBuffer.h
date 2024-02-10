@@ -17,18 +17,14 @@ public:
 	/// <param name="r"></param>
 	ConstantBuffer(ConstantBuffer&& r)
 	{
-		m_constantBuffer[0] = r.m_constantBuffer[0];
-		m_constantBuffer[1] = r.m_constantBuffer[1];
-		m_constBufferCPU[0] = r.m_constBufferCPU[0];
-		m_constBufferCPU[1] = r.m_constBufferCPU[1];
+		m_constantBuffer = r.m_constantBuffer;
+		m_constBufferCPU = r.m_constBufferCPU;
 		m_size = r.m_size;
 		m_allocSize = r.m_allocSize;
 		m_isValid = r.m_isValid;
 
-		r.m_constantBuffer[0] = nullptr;
-		r.m_constantBuffer[1] = nullptr;
-		r.m_constBufferCPU[0] = nullptr;
-		r.m_constBufferCPU[1] = nullptr;
+		r.m_constantBuffer = nullptr;
+		r.m_constBufferCPU = nullptr;
 	}
 	/// <summary>
 	/// 初期化。
@@ -59,7 +55,7 @@ public:
 	/// </summary>
 	/// <param name="descriptorHandle"></param>
 	void RegistConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle);
-	void RegistConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle, int bufferNo);
+	//void RegistConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle, int bufferNo);
 	/// <summary>
 	/// VRAM上の仮想アドレスを取得する。
 	/// </summary>
@@ -67,8 +63,8 @@ public:
 	D3D12_GPU_VIRTUAL_ADDRESS GetGPUVirtualAddress();
 	
 private:
-	ID3D12Resource* m_constantBuffer[2] = {nullptr};//定数バッファ。
-	void* m_constBufferCPU[2] = { nullptr };		//CPU側からアクセスできるする定数バッファのアドレス。
+	ID3D12Resource* m_constantBuffer = nullptr;//定数バッファ。
+	void* m_constBufferCPU = nullptr;		//CPU側からアクセスできるする定数バッファのアドレス。
 	int m_size = 0;									//定数バッファのサイズ。
 	int m_allocSize = 0;
 	bool m_isValid = false;							//利用可能？

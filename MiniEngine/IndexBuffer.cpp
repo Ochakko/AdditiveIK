@@ -22,14 +22,20 @@ void IndexBuffer::Init(int size, int stride)
 	auto d3dDevice = g_graphicsEngine->GetD3DDevice();
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(m_sizeInBytes);
-	auto hr = d3dDevice->CreateCommittedResource(
+	HRESULT hrib2 = d3dDevice->CreateCommittedResource(
 		&heapProp,
 		D3D12_HEAP_FLAG_NONE,
 		&rDesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(&m_indexBuffer));
-	
+	if (FAILED(hrib2) || !m_indexBuffer) {
+		::MessageBoxA(NULL, "may not have enough videomemory? App must exit.",
+			"IndexBuffer::Init Error", MB_OK | MB_ICONERROR);
+		abort();
+	}
+
+
 	//インデックスバッファのビューを作成。
 	m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
 	

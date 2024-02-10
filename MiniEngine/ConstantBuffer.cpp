@@ -25,10 +25,8 @@ private:
 
 ConstantBuffer::ConstantBuffer()
 {
-	m_constantBuffer[0] = nullptr;
-	m_constantBuffer[1] = nullptr;
-	m_constBufferCPU[0] = nullptr;
-	m_constBufferCPU[1] = nullptr;
+	m_constantBuffer = nullptr;
+	m_constBufferCPU = nullptr;
 	m_size = 0;
 	m_allocSize = 0;
 	m_isValid = false;
@@ -38,11 +36,9 @@ ConstantBuffer::~ConstantBuffer()
 {
 	//アンマーップ
 	CD3DX12_RANGE readRange(0, 0);
-	for (auto& cb : m_constantBuffer) {
-		if (cb != nullptr) {
-			cb->Unmap(0, &readRange);
-			cb->Release();
-		}
+	if (m_constantBuffer != nullptr) {
+		m_constantBuffer->Unmap(0, &readRange);
+		m_constantBuffer->Release();
 	}
 }
 void ConstantBuffer::Init(int size, void* srcData)
@@ -55,46 +51,64 @@ void ConstantBuffer::Init(int size, void* srcData)
 
 	//定数バッファは256バイトアライメントが要求されるので、256の倍数に切り上げる。
 	m_allocSize = (size + 256) & 0xFFFFFF00;
+
 	//定数バッファの作成。
-	int bufferNo = 0;
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(m_allocSize);
-	for( auto& cb : m_constantBuffer ){
-		device->CreateCommittedResource(
-			&heapProp,
-			D3D12_HEAP_FLAG_NONE,
-			&rDesc,
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&cb)
-		);
-		//定数バッファをCPUからアクセス可能な仮想アドレス空間にマッピングする。
-		//マップ、アンマップのオーバーヘッドを軽減するためにはこのインスタンスが生きている間は行わない。
-		{
-			CD3DX12_RANGE readRange(0, 0);        //     intend to read from this resource on the CPU.
-			cb->Map(0, &readRange, reinterpret_cast<void**>(&m_constBufferCPU[bufferNo]));
-		}
-		if (srcData != nullptr) {
-			memcpy(m_constBufferCPU[bufferNo], srcData, m_size);
-		}
-		bufferNo++;
+	HRESULT hrcb0 = device->CreateCommittedResource(
+		&heapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&rDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&m_constantBuffer)
+	);
+
+	if (FAILED(hrcb0) || !m_constantBuffer) {
+		::MessageBoxA(NULL, "may not have enough videomemory? App must exit.",
+			"ConstantBuffer::Init Error", MB_OK | MB_ICONERROR);
+		abort();
 	}
+
+
+	//定数バッファをCPUからアクセス可能な仮想アドレス空間にマッピングする。
+	//マップ、アンマップのオーバーヘッドを軽減するためにはこのインスタンスが生きている間は行わない。
+	{
+		CD3DX12_RANGE readRange(0, 0);        //     intend to read from this resource on the CPU.
+		HRESULT hrmap = m_constantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_constBufferCPU));
+		if (FAILED(hrmap) || !m_constBufferCPU) {
+			::MessageBoxA(NULL, "may not have enough memory? App must exit.",
+				"ConstantBuffer::Init : Map Error", MB_OK | MB_ICONERROR);
+			abort();
+		}
+	}
+	if (srcData != nullptr) {
+		memcpy(m_constBufferCPU, srcData, m_size);
+	}
+
 	//利用可能にする。
 	m_isValid = true;
 }
-void ConstantBuffer::RegistConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle, int bufferNo)
+//void ConstantBuffer::RegistConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle, int bufferNo)
+//{
+//	//D3Dデバイスを取得。
+//	auto device = g_graphicsEngine->GetD3DDevice();
+//	D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
+//	desc.BufferLocation = m_constantBuffer[bufferNo]->GetGPUVirtualAddress();
+//	desc.SizeInBytes = m_allocSize;
+//	device->CreateConstantBufferView(&desc, descriptorHandle);
+//}
+void ConstantBuffer::RegistConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle)
 {
+	//auto backBufferIndex = g_graphicsEngine->GetBackBufferIndex();
+	//RegistConstantBufferView(descriptorHandle, backBufferIndex);
+
 	//D3Dデバイスを取得。
 	auto device = g_graphicsEngine->GetD3DDevice();
 	D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
-	desc.BufferLocation = m_constantBuffer[bufferNo]->GetGPUVirtualAddress();
+	desc.BufferLocation = m_constantBuffer->GetGPUVirtualAddress();
 	desc.SizeInBytes = m_allocSize;
 	device->CreateConstantBufferView(&desc, descriptorHandle);
-}
-void ConstantBuffer::RegistConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle)
-{
-	auto backBufferIndex = g_graphicsEngine->GetBackBufferIndex();
-	RegistConstantBufferView(descriptorHandle, backBufferIndex);
 }
 void ConstantBuffer::CopyToVRAM(void* data)
 {
@@ -124,16 +138,7 @@ void ConstantBuffer::CopyToVRAM(void* data)
 	}
 
 	try {
-		UINT backBufferIndex = g_graphicsEngine->GetBackBufferIndex();
-		if ((backBufferIndex != 0) && (backBufferIndex != 1)) {
-			_ASSERT(0);
-			char strdbg[1042] = { 0 };
-			sprintf_s(strdbg, 1042, "ConstantBuffer::CopyToVRAM : backBufferIndex error : %d", backBufferIndex);
-			OutputDebugStringA(strdbg);
-			::MessageBoxA(NULL, strdbg, "ConstantBuffer::CopyToVRAM exeptionC", MB_OK | MB_ICONERROR);
-			abort();
-		}
-		if (!m_constBufferCPU[backBufferIndex]) {
+		if (!m_constBufferCPU) {
 			_ASSERT(0);
 			OutputDebugStringA("ConstantBuffer::CopyToVRAM : m_constBufferCPU error");
 			::MessageBoxA(NULL, "m_constBufferCPU null error", "ConstantBuffer::CopyToVRAM exeptionD", MB_OK | MB_ICONERROR);
@@ -146,7 +151,7 @@ void ConstantBuffer::CopyToVRAM(void* data)
 			abort();
 		}
 
-		memcpy(m_constBufferCPU[backBufferIndex], data, m_size);
+		memcpy(m_constBufferCPU, data, m_size);
 
 	}
 	//catch (const com_exception& exc)
@@ -172,6 +177,8 @@ void ConstantBuffer::CopyToVRAM(void* data)
 }
 D3D12_GPU_VIRTUAL_ADDRESS ConstantBuffer::GetGPUVirtualAddress()
 {
-	auto backBufferIndex = g_graphicsEngine->GetBackBufferIndex();
-	return m_constantBuffer[backBufferIndex]->GetGPUVirtualAddress();
+	//auto backBufferIndex = g_graphicsEngine->GetBackBufferIndex();
+	//return m_constantBuffer[backBufferIndex]->GetGPUVirtualAddress();
+
+	return m_constantBuffer->GetGPUVirtualAddress();
 }

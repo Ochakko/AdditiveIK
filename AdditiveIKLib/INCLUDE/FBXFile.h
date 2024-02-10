@@ -40,7 +40,8 @@ class CNodeOnLoad;
  * @detail ボーン影響度やアニメーションも書き出す。
  */	
 	int WriteFBXFile(bool limitdegflag, FbxManager* psdk, CModel* pmodel, char* pfilename, char* fbxdate);
-
+	void DestroySavedScene();
+	
 /**
  * @fn
  * BVH2FBXFile
@@ -68,6 +69,7 @@ class CNodeOnLoad;
 	extern int InitializeSdkObjects();
 	extern int DestroySdkObjects();
 	extern int WriteFBXFile(bool limitdegflag, FbxManager* psdk, CModel* pmodel, char* pfilename, char* fbxdate);
+	extern void DestroySavedScene();
 	extern int BVH2FBXFile(FbxManager* psdk, CBVHFile* pbvhfile, char* pfilename, char* fbxdate);
 
 	extern FbxAMatrix FbxGetGlobalPosition(bool usecache, CModel* srcmodel, FbxScene* pScene, FbxNode* pNode, const FbxTime& pTime, int srcframe, FbxPose* pPose, FbxAMatrix* pParentGlobalPosition = 0);

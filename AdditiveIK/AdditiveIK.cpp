@@ -3146,15 +3146,16 @@ INT WINAPI wWinMain(
 			//swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.1 : No.%d : fps %d", s_appcnt, dispfps);
 			//SetWindowText(g_mainhwnd, strmaintitle);
 
+			if (g_underWriteFbx == false) {//2024/02/10
+				//ドキュメント更新
+				OnUserFrameMove(s_fTime, s_fElapsedTime);
 
-			//ドキュメント更新
-			OnUserFrameMove(s_fTime, s_fElapsedTime);
+				//ビュー更新
+				OnFrameRender(&renderingEngine, &renderContext, s_fTime, s_fElapsedTime);
 
-			//ビュー更新
-			OnFrameRender(&renderingEngine, &renderContext, s_fTime, s_fElapsedTime);
-
-			if (g_infownd && (dbgcount < 60)) {
-				g_infownd->UpdateWindow();//起動時に白くなる不具合に対して　応急処置
+				if (g_infownd && (dbgcount < 60)) {
+					g_infownd->UpdateWindow();//起動時に白くなる不具合に対して　応急処置
+				}
 			}
 			dbgcount++;
 		}
@@ -5442,6 +5443,9 @@ void OnDestroyDevice()
 	//DestroySdkObjects();
 
 
+	DestroySavedScene();//2024/02/10
+
+
 	if (s_psdk) {
 		s_psdk->Destroy();
 		s_psdk = 0;
@@ -6805,6 +6809,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				***/
 			case ID_SAVEPROJ_40035:
 				if (s_registflag == 1) {
+					CloseAllAndDispPlaceFolder();
 					ActivatePanel(0);
 					SaveProject();
 					ActivatePanel(1);
@@ -36648,7 +36653,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 
 					ChaMatrix modelwm = s_model->GetWorldMat();
 
-					double renderleng = roundingendframe - roundingstartframe + 1;
+					double renderleng = roundingendframe - roundingstartframe;
 
 					//2024/02/08 選択ジョイントの位置の軌跡を表示する際に補間無しのGetWorldMatで済ませたいのでRoundingTimeしてキーの位置限定にする
 					int divnum;
@@ -36657,37 +36662,39 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 
 					int refposindex = 0;
 					double renderframe, roundingrenderframe;
-					for (renderframe = roundingstartframe; renderframe <= roundingendframe; renderframe += renderstep) {
-						roundingrenderframe = RoundingTime(renderframe);
-						s_model->SetMotionFrame(roundingrenderframe);
-						ChaVector3 tmpfpos = curbone->GetJointFPos();
-						ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingrenderframe, 0) * modelwm;
-						ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
-						vecbonepos.push_back(curbonepos);
+					for (renderframe = roundingstartframe; renderframe <= (roundingendframe + 0.5); renderframe += renderstep) {
+						if ((refposindex >= 0) && (refposindex < REFPOSMAXNUM)) {
+							roundingrenderframe = RoundingTime(renderframe);
+							s_model->SetMotionFrame(roundingrenderframe);
+							ChaVector3 tmpfpos = curbone->GetJointFPos();
+							ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingrenderframe, 0) * modelwm;
+							ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
+							vecbonepos.push_back(curbonepos);
 
-						//int lightflag = 0;//!!!!!!!透けるために必要!!!!!!!!!
+							//int lightflag = 0;//!!!!!!!透けるために必要!!!!!!!!!
 
-						//refframeのポーズを表示
-						int btflag1 = 0;
+							//refframeのポーズを表示
+							int btflag1 = 0;
 
-						s_model->SetMotionFrame(renderframe);
-						//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
-						s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matVP, roundingrenderframe);
+							s_model->SetMotionFrame(roundingrenderframe);
+							//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
+							s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matVP, roundingrenderframe);
 
 
-						bool calcslotflag;
-						calcslotflag = true;
-						s_model->SetShaderConst(btflag1, calcslotflag);
-						s_model->SetRefPosFl4x4ToDispObj(refposindex);
+							bool calcslotflag;
+							calcslotflag = true;
+							s_model->SetShaderConst(btflag1, calcslotflag);
+							s_model->SetRefPosFl4x4ToDispObj(refposindex);
 
-						//カレントフレームから離れるほど　透明度を薄くする
-						const double refstartalpha = 0.80f;
-						double renderalpha0 = (renderleng - fabs(currentframe - renderframe)) / renderleng;
-						//2024/02/08 int g_refalpha (0から100) : DispAndLimitsプレートメニューのRefPosAlphaスライダー
-						double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
-						ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, (float)renderalpha);
+							//カレントフレームから離れるほど　透明度を薄くする
+							//const double refstartalpha = 0.80f;
+							//double renderalpha0 = (renderleng - fabs(currentframe - renderframe)) / renderleng;
+							////2024/02/08 int g_refalpha (0から100) : DispAndLimitsプレートメニューのRefPosAlphaスライダー
+							//double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
+							//ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, (float)renderalpha);
+							const double refstartalpha = (double)g_refalpha * 0.01f;
+							ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, (float)refstartalpha);
 
-						if ((refposindex >= 0) && (refposindex < REFPOSMAXNUM)){
 							int lightflag = 0;
 							bool forcewithalpha = true;
 							int btflag = 0;
@@ -36705,21 +36712,21 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 					}
 
 					{
-						////カレントフレームをレンダー
-						int btflag1 = 0;
-
-						s_model->SetMotionFrame(currentframe);
-						//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
-						s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matVP, currentframe);
-
-						bool calcslotflag;
-						calcslotflag = true;
-						s_model->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
-						s_model->SetRefPosFl4x4ToDispObj(refposindex);
-
-						ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-
 						if ((refposindex >= 0) && (refposindex < REFPOSMAXNUM)) {
+							////カレントフレームをレンダー
+							int btflag1 = 0;
+
+							s_model->SetMotionFrame(currentframe);
+							//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
+							s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matVP, currentframe);
+
+							bool calcslotflag;
+							calcslotflag = true;
+							s_model->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
+							s_model->SetRefPosFl4x4ToDispObj(refposindex);
+
+							ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+
 							int lightflag = 1;
 							bool forcewithalpha = true;
 							int btflag = 0;
@@ -39923,6 +39930,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				break;
 			case ID_SAVEPROJ_40035:
 				if (s_registflag == 1) {
+					CloseAllAndDispPlaceFolder();
 					ActivatePanel(0);
 					SaveProject();
 					ActivatePanel(1);

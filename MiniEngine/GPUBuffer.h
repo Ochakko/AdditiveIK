@@ -29,13 +29,13 @@ public:
 	/// </summary>
 	/// <param name="cpuHandle">登録するディスクリプタヒープのCPUハンドル</param>
 	/// <param name="bufferNo">バッファ番号</param>
-	void RegistUnorderAccessView(D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle, int bufferNo) override;
+	void RegistUnorderAccessView(D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle);
 	/// <summary>
 	/// SRVとしてディスクリプタヒープに登録。
 	/// </summary>
 	/// <param name="descriptorHandle">登録するディスクリプタヒープのCPUハンドル</param>
 	/// <param name="bufferNo">バッファ番号</param>
-	void RegistShaderResourceView(D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle, int bufferNo) override;
+	void RegistShaderResourceView(D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle);
 	
 	ID3D12Resource* Get()
 	{

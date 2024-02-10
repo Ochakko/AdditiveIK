@@ -142,7 +142,7 @@ bool RenderTarget::CreateRenderTargetTexture(
 	}
 	//リソースを作成。
 	auto prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-	auto hr = d3dDevice->CreateCommittedResource(
+	HRESULT hrrt0 = d3dDevice->CreateCommittedResource(
 		&prop,
 		D3D12_HEAP_FLAG_NONE,
 		&desc,
@@ -150,11 +150,16 @@ bool RenderTarget::CreateRenderTargetTexture(
 		&clearValue,
 		IID_PPV_ARGS(&m_renderTargetTextureDx12)
 	);
-
-	if (FAILED(hr)) {
-		//作成に失敗。
-		return false;
+	if (FAILED(hrrt0) || !m_renderTargetTextureDx12) {
+		::MessageBoxA(NULL, "may not have enough videomemory? App must exit.",
+			"RenderTarget::CreateRenderTargetTexture Error", MB_OK | MB_ICONERROR);
+		abort();
 	}
+
+	//if (FAILED(hr)) {
+	//	//作成に失敗。
+	//	return false;
+	//}
 	m_renderTargetTexture.InitFromD3DResource(m_renderTargetTextureDx12);
 	return true;
 }
@@ -190,7 +195,7 @@ bool RenderTarget::CreateDepthStencilTexture(
 		D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE);
 
 	auto prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-	auto hr = d3dDevice->CreateCommittedResource(
+	HRESULT hrdepth2 = d3dDevice->CreateCommittedResource(
 		&prop,
 		D3D12_HEAP_FLAG_NONE,
 		&desc,
@@ -198,10 +203,15 @@ bool RenderTarget::CreateDepthStencilTexture(
 		&dsvClearValue,
 		IID_PPV_ARGS(&m_depthStencilTexture)
 	);
-	if (FAILED(hr)) {
-		//深度ステンシルバッファの作成に失敗。
-		return false;
+	if (FAILED(hrdepth2) || !m_depthStencilTexture) {
+		::MessageBoxA(NULL, "may not have enough videomemory? App must exit.",
+			"RenderTarget::CreateDepthStencilTexture Error", MB_OK | MB_ICONERROR);
+		abort();
 	}
+	//if (FAILED(hr)) {
+	//	//深度ステンシルバッファの作成に失敗。
+	//	return false;
+	//}
 	return true;
 }
 void RenderTarget::CreateDescriptor(ID3D12Device5*& d3dDevice)

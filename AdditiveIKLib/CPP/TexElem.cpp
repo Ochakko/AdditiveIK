@@ -186,6 +186,8 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 			IID_PPV_ARGS(&texbuff)
 		);
 		if (FAILED(hr1)) {
+			::MessageBoxA(NULL, "CreateTexture error and then SetNullTexture.",
+				"TexElem::CreateTexData (tga) Error", MB_OK | MB_ICONWARNING);
 			_ASSERT(0);
 			SetNullTexture();
 			scratchImg.reset();
@@ -326,6 +328,8 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 			IID_PPV_ARGS(&texbuff)
 		);
 		if (FAILED(hr1)) {
+			::MessageBoxA(NULL, "CreateTexture error and then SetNullTexture.",
+				"TexElem::CreateTexData (WIC) Error", MB_OK | MB_ICONWARNING);
 			_ASSERT(0);
 			SetNullTexture();
 			scratchImg.reset();

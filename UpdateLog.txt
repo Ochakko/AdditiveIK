@@ -2,8 +2,8 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
-2024/02/10
-　AdditiveIK 1.0.0.7 RC4(リリース候補4)
+2024/02/11
+　AdditiveIK 1.0.0.7 RC5(リリース候補5)
 　　1.0.0.6からの変更点
 　　　不具合修正
 　　　　LimitEulウインドウでCurrentBoneに対するFromCurrentMotionボタンを実行すると
@@ -51,6 +51,14 @@ https://github.com/Ochakko/AdditiveIK
 　　　RC4: 大きいサイズのfbxを読み込むと落ちやすい不具合が改善
 　　　　GraphicsEngineのコンストラクタ記述によりConstantBuffer::CopyToVRAMで落ちなくなったようだ.
 　　　　ただし1.0.0.7で１つのメッシュ当たりのビデオメモリ消費量が増えたので、大きいfbx読み込み時にビデオメモリ不足で落ちることはあります.
+　　　RC5:
+　　　　大きいfbx読み込み時にエラーで落ちる不具合には２つ原因があったので修正.
+　　　　１つ目はメッシュタイプとシェーダ定数タイプの組み合わせミス(リファクタリング時のミス).　症状としてはConstantBuffer::CopyToVRAMで例外が出て落ちる.
+　　　　２つ目はビデオメモリ不足. 症状としてはDescriptorHeapのCommit失敗ダイアログが出て落ちる.
+　　　　以前読み込めていたものを読み込むことが出来るようにするために、RefPosの表示数を10個から4個に減らしビデオメモリの節約をした.
+　　　　プロジェクト保存前にGUIを閉じるように修正.
+　　　　ConstantBufferとDescriptorHeapをダブルバッファからシングルバッファに変更.
+　　　　ConstantBufferとDescriptorHeapへのセットは計算関数からではなく、事前作成したものに対して描画関数から呼ぶのでメモリ節約のためにシングルにした.
 
 
 

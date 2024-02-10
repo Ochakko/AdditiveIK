@@ -481,7 +481,7 @@ bool GraphicsEngine::CreateDSVForFrameBuffer( UINT frameBufferWidth, UINT frameB
 		D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE);
 
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-	auto hr = m_d3dDevice->CreateCommittedResource(
+	HRESULT hrdepth0 = m_d3dDevice->CreateCommittedResource(
 		&heapProp,
 		D3D12_HEAP_FLAG_NONE,
 		&desc,
@@ -489,9 +489,13 @@ bool GraphicsEngine::CreateDSVForFrameBuffer( UINT frameBufferWidth, UINT frameB
 		&dsvClearValue,
 		IID_PPV_ARGS(&m_depthStencilBuffer)
 	);
-	if (FAILED(hr)) {
+	if (FAILED(hrdepth0) || !m_depthStencilBuffer) {
+		::MessageBoxA(NULL, "may not have enough videomemory? App must exit.",
+			"GraphicsEngine::CreateDSVForFrameBuffer Error", MB_OK | MB_ICONERROR);
+		abort();
+
 		//深度ステンシルバッファの作成に失敗。
-		return false;
+		//return false;
 	}
 	//ディスクリプタを作成
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_dsvHeap->GetCPUDescriptorHandleForHeapStart();

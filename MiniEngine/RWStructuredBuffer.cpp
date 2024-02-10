@@ -32,7 +32,7 @@ void RWStructuredBuffer::Init(int sizeOfElement, int numElement, void* initData)
 	prop.VisibleNodeMask = 1;
 
 	for (auto& buffer : m_buffersOnGPU) {
-		device->CreateCommittedResource(
+		HRESULT hrrwsb0 = device->CreateCommittedResource(
 			&prop,
 			D3D12_HEAP_FLAG_NONE,
 			&desc,
@@ -40,6 +40,12 @@ void RWStructuredBuffer::Init(int sizeOfElement, int numElement, void* initData)
 			nullptr,
 			IID_PPV_ARGS(&buffer)
 		);
+		if (FAILED(hrrwsb0) || !buffer) {
+			::MessageBoxA(NULL, "may not have enough videomemory? App must exit.",
+				"RWStructuredBuffer::Init Error", MB_OK | MB_ICONERROR);
+			abort();
+		}
+
 		//構造化バッファをCPUからアクセス可能な仮想アドレス空間にマッピングする。
 		//マップ、アンマップのオーバーヘッドを軽減するためにはこのインスタンスが生きている間は行わない。
 		{

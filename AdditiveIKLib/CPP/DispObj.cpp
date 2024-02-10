@@ -751,13 +751,18 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 		//auto d3dDevice = g_graphicsEngine->GetD3DDevice();
 		auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 		auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(vbsize);
-		pdev->CreateCommittedResource(
+		HRESULT hrvb0 = pdev->CreateCommittedResource(
 			&heapProp,
 			D3D12_HEAP_FLAG_NONE,
 			&rDesc,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
 			IID_PPV_ARGS(&m_vertexBuffer));
+		if (FAILED(hrvb0) || !m_vertexBuffer) {
+			::MessageBoxA(NULL, "may not have enough videomemory? App must exit.",
+				"CreateVertexBuffer Error", MB_OK | MB_ICONERROR);
+			abort();
+		}
 
 		m_vertexBuffer->SetName(L"VertexBuffer");
 		//頂点バッファのビューを作成。
@@ -809,13 +814,18 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 			DWORD ibsize = pmfleng * 3 * sizeof(int);
 			auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 			auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(ibsize);
-			auto hr = pdev->CreateCommittedResource(
+			HRESULT hrib0 = pdev->CreateCommittedResource(
 				&heapProp,
 				D3D12_HEAP_FLAG_NONE,
 				&rDesc,
 				D3D12_RESOURCE_STATE_GENERIC_READ,
 				nullptr,
 				IID_PPV_ARGS(&m_indexBuffer));
+			if (FAILED(hrib0) || !m_indexBuffer) {
+				::MessageBoxA(NULL, "may not have enough videomemory? App must exit.",
+					"CreateIndexBuffer Error", MB_OK | MB_ICONERROR);
+				abort();
+			}
 
 			//インデックスバッファのビューを作成。
 			m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
@@ -853,13 +863,18 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 			DWORD ibsize = pmfleng * 2 * sizeof(int);
 			auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 			auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(ibsize);
-			auto hr = pdev->CreateCommittedResource(
+			HRESULT hrib1 = pdev->CreateCommittedResource(
 				&heapProp,
 				D3D12_HEAP_FLAG_NONE,
 				&rDesc,
 				D3D12_RESOURCE_STATE_GENERIC_READ,
 				nullptr,
 				IID_PPV_ARGS(&m_indexBuffer));
+			if (FAILED(hrib1) || !m_indexBuffer) {
+				::MessageBoxA(NULL, "may not have enough videomemory? App must exit.",
+					"CreateIndexBuffer Error", MB_OK | MB_ICONERROR);
+				abort();
+			}
 
 			//インデックスバッファのビューを作成。
 			m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();

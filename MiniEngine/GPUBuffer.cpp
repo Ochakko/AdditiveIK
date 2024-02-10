@@ -15,7 +15,7 @@ void GPUBuffer::Init(D3D12_RESOURCE_DESC desc)
 	};
 
 	auto d3dDevice = g_graphicsEngine->GetD3DDevice();
-	d3dDevice->CreateCommittedResource(
+	HRESULT hrgpu0 = d3dDevice->CreateCommittedResource(
 		&kDefaultHeapProps, 
 		D3D12_HEAP_FLAG_NONE, 
 		&desc,
@@ -23,8 +23,13 @@ void GPUBuffer::Init(D3D12_RESOURCE_DESC desc)
 		nullptr, 
 		IID_PPV_ARGS(&m_buffer)
 	); 
+	if (FAILED(hrgpu0) || !m_buffer) {
+		::MessageBoxA(NULL, "may not have enough videomemory? App must exit.",
+			"GPUBuffer::Init Error", MB_OK | MB_ICONERROR);
+		abort();
+	}
 }
-void GPUBuffer::RegistUnorderAccessView(D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle, int bufferNo)
+void GPUBuffer::RegistUnorderAccessView(D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle)
 {
 	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 	if (m_desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D) {
@@ -44,6 +49,6 @@ void GPUBuffer::RegistUnorderAccessView(D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle, i
 
 	
 }
-void GPUBuffer::RegistShaderResourceView(D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle, int bufferNo)
+void GPUBuffer::RegistShaderResourceView(D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle)
 {
 }

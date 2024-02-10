@@ -39,6 +39,7 @@
 
 #define KARCH_ENV_WIN
 
+static std::vector<FbxScene*> s_savedscenevec;
 
 static FbxNode::EPivotSet s_convPivot;
 
@@ -142,7 +143,6 @@ static CFBXBone* CreateFBXBoneOfBVH( FbxScene* pScene );
 static void CreateFBXBoneOfBVHReq( FbxScene* pScene, CBVHElem* pbe, CFBXBone* parfbxbone );
 
 static int DestroyFBXBoneReq( CFBXBone* fbxbone );
-
 
 
 //static void CreateAndFillIOSettings(FbxManager* pSdkManager);
@@ -448,6 +448,9 @@ int BVH2FBXFile(FbxManager* psdk, CBVHFile* pbvhfile, char* pfilename, char* fbx
 int WriteFBXFile(bool limitdegflag, FbxManager* psdk, CModel* pmodel, char* pfilename, char* fbxdate)
 {
 
+	g_underWriteFbx = true;
+
+
 	s_bvhflag = 0;//ここは初期化の意味。CreateScene()でセット。
 	s_pSdkManager = psdk;
 	s_model = pmodel;
@@ -460,15 +463,18 @@ int WriteFBXFile(bool limitdegflag, FbxManager* psdk, CModel* pmodel, char* pfil
 
 	s_firstoutmot = -1;
 
-	CallF( pmodel->MakeEnglishName(), return 1 );
+	if (pmodel->MakeEnglishName() != 0) {
+		g_underWriteFbx = false;
+		return 1;
+	};
 
     bool lResult;
 
-	g_underWriteFbx = true;
 
     // Create the entity that will hold the scene.
 	FbxScene* lScene;
     lScene = FbxScene::Create(s_pSdkManager,"");
+	s_savedscenevec.push_back(lScene);//2024/02/10
 
     // Create the scene.
     lResult = CreateScene(limitdegflag, s_pSdkManager, lScene, pmodel, fbxdate);
@@ -491,15 +497,19 @@ int WriteFBXFile(bool limitdegflag, FbxManager* psdk, CModel* pmodel, char* pfil
 		return 1;
 	}
 
-	if( s_fbxbone ){
-		DestroyFBXBoneReq( s_fbxbone );
+	//2024/02/10
+	//sceneの削除はアプリ終了時にまとめてDestroySavedSceneで行う
+	//削除済メモリへのアクセスエラー防止のため
+	//if (lScene) {
+	//	lScene->Destroy(true);
+	//	lScene = 0;
+	//}
+
+	if (s_fbxbone) {
+		DestroyFBXBoneReq(s_fbxbone);
 		s_fbxbone = 0;
 	}
 
-	if (lScene) {
-		lScene->Destroy(true);
-		lScene = 0;
-	}
 
 	g_underWriteFbx = false;
 
@@ -6058,3 +6068,16 @@ void FindClusterBySkeletonReq(CNodeOnLoad* pnodeonload, FbxNode* pskeleton, FbxC
 	}
 }
 
+void DestroySavedScene()
+{
+	size_t savednum = s_savedscenevec.size();
+	size_t savedindex;
+	for (savedindex = 0; savedindex < savednum; savedindex++) {
+		FbxScene* lScene = s_savedscenevec[savedindex];
+		if (lScene) {
+			lScene->Destroy(true);
+			lScene = 0;
+		}
+	}
+	s_savedscenevec.clear();
+}
