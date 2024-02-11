@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/02/11
-　AdditiveIK 1.0.0.7 RC5(リリース候補5)
+　AdditiveIK 1.0.0.7 release
 　　1.0.0.6からの変更点
 　　　不具合修正
 　　　　LimitEulウインドウでCurrentBoneに対するFromCurrentMotionボタンを実行すると
