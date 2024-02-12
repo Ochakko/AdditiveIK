@@ -347,13 +347,18 @@ float4 PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 float4 PSMainSkinNoLight(SPSIn psIn) : SV_Target0
 {
     // 普通にテクスチャを
-    //return g_texture.Sample(g_sampler, psIn.uv);
+    ////return g_texture.Sample(g_sampler, psIn.uv);
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    float2 diffuseuv = { 0.5f, 0.5f };
+    //float2 diffuseuv = { 0.5f, 0.5f };
+
+    float3 normaly0 = normalize(float3(psIn.normal.x, 0.0f, psIn.normal.z));
+    float lighty0 = normalize(float3(directionalLight[0].direction.x, 0.0f, directionalLight[0].direction.z));
+    float nl;
+    nl = dot(normaly0, lighty0);
+    float toonh = (nl + 1.0f) * 0.5f;
+    float2 diffuseuv = { toonh, toonh };
     float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv) * materialdisprate.x;
-    //texcol.w = 1.0f;
-    //return texcol;
-      
+        
     float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
     return pscol;
 }
@@ -363,10 +368,15 @@ float4 PSMainSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     // 普通にテクスチャを
     //return g_texture.Sample(g_sampler, psIn.uv);
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    float2 diffuseuv = { 0.5f, 0.5f };
+    //float2 diffuseuv = { 0.5f, 0.5f };
+
+    float3 normaly0 = normalize(float3(psIn.normal.x, 0.0f, psIn.normal.z));
+    float lighty0 = normalize(float3(directionalLight[0].direction.x, 0.0f, directionalLight[0].direction.z));
+    float nl;
+    nl = dot(normaly0, lighty0);
+    float toonh = (nl + 1.0f) * 0.5f;
+    float2 diffuseuv = { toonh, toonh };
     float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv) * materialdisprate.x;
-    //texcol.w = 1.0f;
-    //return texcol;
       
     float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
 //////////

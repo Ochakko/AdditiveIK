@@ -719,7 +719,7 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 							renderobj.Init();
 							renderobj.pmodel = curmodel;
 							renderobj.mqoobj = curobj;
-							renderobj.shadertype = MQOSHADER_NOLIGHT;//!!!!!!!!!!! マニピュレータと地面はNOLIGHTで表示
+							renderobj.shadertype = MQOSHADER_TOON;//!!!!!!!!!!! マニピュレータと地面はNOLIGHTで表示
 							renderobj.withalpha = withalpha;
 							renderobj.forcewithalpha = forcewithalpha;
 							renderobj.lightflag = lightflag;
@@ -874,7 +874,7 @@ int ChaScene::RenderInstancingModel(CModel* srcmodel, bool forcewithalpha,
 							renderobj.renderkind = renderkind;//2024/02/08 INSTANCINGのTRIANGLEとLINEを選択可能
 							renderobj.pmodel = curmodel;
 							renderobj.mqoobj = curobj;
-							renderobj.shadertype = MQOSHADER_NOLIGHT;//!!!!!!!!!!! マニピュレータと地面はNOLIGHTで表示
+							renderobj.shadertype = MQOSHADER_TOON;//!!!!!!!!!!! マニピュレータと地面はNOLIGHTで表示
 							renderobj.withalpha = withalpha;
 							renderobj.forcewithalpha = forcewithalpha;
 							renderobj.lightflag = lightflag;

@@ -20,7 +20,7 @@ namespace myRenderer
     {
         CModel* pmodel;
         CMQOObject* mqoobj;
-        int shadertype;//MQOSHADER_PBR, MQOSHADER_STD, MQOSHADER_NOLIGHTの中から選択　-1指定でAutoSelect
+        int shadertype;//MQOSHADER_PBR, MQOSHADER_STD, MQOSHADER_TOONの中から選択　-1指定でAutoSelect
         int renderkind;//CDispObj::Render*()内でセット。RENDERKIND_NORMAL, _SHADOWMAP, _SHADOERECIEVER, ZPREPSSから選択
         Matrix mWorld;
         bool withalpha;

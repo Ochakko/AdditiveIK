@@ -615,6 +615,132 @@ void ChaVector4::Clamp(float srcmin, float srcmax)
 }
 
 
+int ChaVector4::HSV_AddS(float adds)
+{
+	//this:RGB[0,1], ret:RGB[0,1], temphsv:h[0,360] s[0,1] v[0,1]
+
+	ChaVector4 temphsv = RGB2HSV();
+	temphsv.y += adds;
+	temphsv.y = min(1.0f, temphsv.y);
+	temphsv.y = max(0.0f, temphsv.y);
+
+	ChaVector4 resultrgb = temphsv.HSV2RGB();
+	*this = resultrgb;
+
+	return 0;
+}
+int ChaVector4::HSV_AddV(float addv)
+{
+	//this:RGB[0,1], ret:RGB[0,1], temphsv:h[0,360] s[0,1] v[0,1]
+
+	ChaVector4 temphsv = RGB2HSV();
+	temphsv.z += addv;
+	temphsv.z = min(1.0f, temphsv.z);
+	temphsv.z = max(0.0f, temphsv.z);
+
+	ChaVector4 resultrgb = temphsv.HSV2RGB();
+	*this = resultrgb;
+
+	return 0;
+}
+ChaVector4 ChaVector4::RGB2HSV()
+{
+	//this:RGB[0,1], ret:HSV h[0,360] s[0,1] v[0,1]
+	ChaVector4 rethsv;
+
+	double _max, _min, _diff;
+	_max = fmax(x, fmax(y, z));
+	_min = fmin(x, fmin(y, z));
+	_diff = _max - _min;
+
+	if (fabs(_max) <= 1e-4) {
+		rethsv = ChaVector4(0.0f, 0.0f, 0.0f, this->w);
+	}
+	else {
+		double out_h, out_s, out_v;
+		out_h = 0.0;
+		if (fabs(_diff) <= 1e-4) {
+			out_h = 0.0;
+		}
+		else {
+			if (_max == x) {
+				out_h = 60.0 * (y - z) / _diff;
+			}
+			else if (_max == y) {
+				out_h = (60.0 * (z - x) / _diff) + 120.0;
+			}
+			else if (_max == z) {
+				out_h = (60.0 * (x - y) / _diff) + 240.0;
+			}
+		}
+
+		if (out_h < 0.0) {
+			out_h += 360.0;
+		}
+		out_v = _max;
+		out_s = _diff / _max;
+		rethsv = ChaVector4((float)out_h, (float)out_s, (float)out_v, this->w);
+	}
+
+	return rethsv;
+}
+ChaVector4 ChaVector4::HSV2RGB()
+{
+	//this:HSV h[0,360] s[0,1] v[0,1], ret:RGB[0,1]
+	ChaVector4 retrgb;
+	double out_r, out_g, out_b;
+
+	double f, p, q, t;
+	int Hi;
+
+	if (y == 0.0) {
+		out_r = out_g = out_b = z;
+	}
+	else {
+		Hi = (int)(x / 60.0) % 6;
+		if (Hi < 0) {
+			Hi *= -1;
+		}
+
+		f = x / 60.0 - (double)Hi;
+		p = z * (1.0 - y);
+		q = z * (1.0 - f * y);
+		t = z * (1.0 - (1.0 - f) * y);
+
+		if (Hi == 0) {
+			out_r = z;
+			out_g = t;
+			out_b = p;
+		}
+		else if (Hi == 1) {
+			out_r = q;
+			out_g = z;
+			out_b = p;
+		}
+		else if (Hi == 2) {
+			out_r = p;
+			out_g = z;
+			out_b = t;
+		}
+		else if (Hi == 3) {
+			out_r = p;
+			out_g = q;
+			out_b = z;
+		}
+		else if (Hi == 4) {
+			out_r = t;
+			out_g = p;
+			out_b = z;
+		}
+		else {
+			out_r = z;
+			out_g = p;
+			out_b = q;
+		}
+	}
+	retrgb = ChaVector4((float)out_r, (float)out_g, (float)out_b, this->w);
+	return retrgb;
+}
 
 
 

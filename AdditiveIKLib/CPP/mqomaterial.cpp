@@ -1591,7 +1591,7 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 //#endif
 			if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 				(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
-				(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
+				(shaderindex == MQOSHADER_TOON_SHADOWMAP)) {
 
 				psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
 			}
@@ -1624,7 +1624,7 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		int numRenderTarget = 0;
 		if (
 			(shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
-			(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP) ||
+			(shaderindex == MQOSHADER_TOON_SHADOWMAP) ||
 			(shaderindex == MQOSHADER_STD_SHADOWMAP)
 			) {
 			//2023/12/11 ShadowMap
@@ -1634,7 +1634,7 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		}
 		//else if (
 		//	(shaderindex == MQOSHADER_PBR_SHADOWRECIEVER) ||
-		//	(shaderindex == MQOSHADER_NOLIGHT_SHADOWRECIEVER) ||
+		//	(shaderindex == MQOSHADER_TOON_SHADOWRECIEVER) ||
 		//	(shaderindex == MQOSHADER_STD_SHADOWRECIEVER)
 		//	) {
 
@@ -1657,7 +1657,7 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
 				if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 					(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
-					(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
+					(shaderindex == MQOSHADER_TOON_SHADOWMAP)) {
 					psoDesc.pRootSignature = m_shadowrootSignature[refposindex].Get();
 				}
 				else {
@@ -1670,7 +1670,7 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		else {
 			if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 				(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
-				(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
+				(shaderindex == MQOSHADER_TOON_SHADOWMAP)) {
 				psoDesc.pRootSignature = m_shadowrootSignature[0].Get();
 			}
 			else {
@@ -1695,7 +1695,7 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
 				if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 					(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
-					(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
+					(shaderindex == MQOSHADER_TOON_SHADOWMAP)) {
 					psoDesc.pRootSignature = m_shadowrootSignature[refposindex].Get();
 				}
 				else {
@@ -1710,7 +1710,7 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		else {
 			if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 				(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
-				(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
+				(shaderindex == MQOSHADER_TOON_SHADOWMAP)) {
 				psoDesc.pRootSignature = m_shadowrootSignature[0].Get();
 			}
 			else {
@@ -1729,7 +1729,7 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
 				if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 					(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
-					(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
+					(shaderindex == MQOSHADER_TOON_SHADOWMAP)) {
 					psoDesc.pRootSignature = m_shadowrootSignature[refposindex].Get();
 				}
 				else {
@@ -1742,7 +1742,7 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		else {
 			if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 				(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
-				(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
+				(shaderindex == MQOSHADER_TOON_SHADOWMAP)) {
 				psoDesc.pRootSignature = m_shadowrootSignature[0].Get();
 			}
 			else {
@@ -2198,43 +2198,43 @@ void CMQOMaterial::InitShaders(
 //###############
 //NoLightシェーダ
 //###############
-	m_vsMQOShader[MQOSHADER_NOLIGHT] = g_engine->GetShaderFromBank(fxNoLightPath, vsNoLightFunc);
-	if (m_vsMQOShader[MQOSHADER_NOLIGHT] == nullptr) {
-		m_vsMQOShader[MQOSHADER_NOLIGHT] = new Shader;
-		m_vsMQOShader[MQOSHADER_NOLIGHT]->LoadVS(fxNoLightPath, vsNoLightFunc);
-		g_engine->RegistShaderToBank(fxNoLightPath, vsNoLightFunc, m_vsMQOShader[MQOSHADER_NOLIGHT]);
+	m_vsMQOShader[MQOSHADER_TOON] = g_engine->GetShaderFromBank(fxNoLightPath, vsNoLightFunc);
+	if (m_vsMQOShader[MQOSHADER_TOON] == nullptr) {
+		m_vsMQOShader[MQOSHADER_TOON] = new Shader;
+		m_vsMQOShader[MQOSHADER_TOON]->LoadVS(fxNoLightPath, vsNoLightFunc);
+		g_engine->RegistShaderToBank(fxNoLightPath, vsNoLightFunc, m_vsMQOShader[MQOSHADER_TOON]);
 	}
-	m_psMQOShader[MQOSHADER_NOLIGHT] = g_engine->GetShaderFromBank(fxNoLightPath, psNoLightFunc);
-	if (m_psMQOShader[MQOSHADER_NOLIGHT] == nullptr) {
-		m_psMQOShader[MQOSHADER_NOLIGHT] = new Shader;
-		m_psMQOShader[MQOSHADER_NOLIGHT]->LoadPS(fxNoLightPath, psNoLightFunc);
-		g_engine->RegistShaderToBank(fxNoLightPath, psNoLightFunc, m_psMQOShader[MQOSHADER_NOLIGHT]);
-	}
-
-	m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP] = g_engine->GetShaderFromBank(fxNoLightPath, vsNoLightShadowMapFunc);
-	if (m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP] == nullptr) {
-		m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP] = new Shader;
-		m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP]->LoadVS(fxNoLightPath, vsNoLightShadowMapFunc);
-		g_engine->RegistShaderToBank(fxNoLightPath, vsNoLightShadowMapFunc, m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP]);
-	}
-	m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP] = g_engine->GetShaderFromBank(fxNoLightPath, psNoLightShadowMapFunc);
-	if (m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP] == nullptr) {
-		m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP] = new Shader;
-		m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP]->LoadPS(fxNoLightPath, psNoLightShadowMapFunc);
-		g_engine->RegistShaderToBank(fxNoLightPath, psNoLightShadowMapFunc, m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWMAP]);
+	m_psMQOShader[MQOSHADER_TOON] = g_engine->GetShaderFromBank(fxNoLightPath, psNoLightFunc);
+	if (m_psMQOShader[MQOSHADER_TOON] == nullptr) {
+		m_psMQOShader[MQOSHADER_TOON] = new Shader;
+		m_psMQOShader[MQOSHADER_TOON]->LoadPS(fxNoLightPath, psNoLightFunc);
+		g_engine->RegistShaderToBank(fxNoLightPath, psNoLightFunc, m_psMQOShader[MQOSHADER_TOON]);
 	}
 
-	m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxNoLightPath, vsNoLightShadowRecieverFunc);
-	if (m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER] == nullptr) {
-		m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER] = new Shader;
-		m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER]->LoadVS(fxNoLightPath, vsNoLightShadowRecieverFunc);
-		g_engine->RegistShaderToBank(fxNoLightPath, vsNoLightShadowRecieverFunc, m_vsMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER]);
+	m_vsMQOShader[MQOSHADER_TOON_SHADOWMAP] = g_engine->GetShaderFromBank(fxNoLightPath, vsNoLightShadowMapFunc);
+	if (m_vsMQOShader[MQOSHADER_TOON_SHADOWMAP] == nullptr) {
+		m_vsMQOShader[MQOSHADER_TOON_SHADOWMAP] = new Shader;
+		m_vsMQOShader[MQOSHADER_TOON_SHADOWMAP]->LoadVS(fxNoLightPath, vsNoLightShadowMapFunc);
+		g_engine->RegistShaderToBank(fxNoLightPath, vsNoLightShadowMapFunc, m_vsMQOShader[MQOSHADER_TOON_SHADOWMAP]);
 	}
-	m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxNoLightPath, psNoLightShadowRecieverFunc);
-	if (m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER] == nullptr) {
-		m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER] = new Shader;
-		m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER]->LoadPS(fxNoLightPath, psNoLightShadowRecieverFunc);
-		g_engine->RegistShaderToBank(fxNoLightPath, psNoLightShadowRecieverFunc, m_psMQOShader[MQOSHADER_NOLIGHT_SHADOWRECIEVER]);
+	m_psMQOShader[MQOSHADER_TOON_SHADOWMAP] = g_engine->GetShaderFromBank(fxNoLightPath, psNoLightShadowMapFunc);
+	if (m_psMQOShader[MQOSHADER_TOON_SHADOWMAP] == nullptr) {
+		m_psMQOShader[MQOSHADER_TOON_SHADOWMAP] = new Shader;
+		m_psMQOShader[MQOSHADER_TOON_SHADOWMAP]->LoadPS(fxNoLightPath, psNoLightShadowMapFunc);
+		g_engine->RegistShaderToBank(fxNoLightPath, psNoLightShadowMapFunc, m_psMQOShader[MQOSHADER_TOON_SHADOWMAP]);
+	}
+
+	m_vsMQOShader[MQOSHADER_TOON_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxNoLightPath, vsNoLightShadowRecieverFunc);
+	if (m_vsMQOShader[MQOSHADER_TOON_SHADOWRECIEVER] == nullptr) {
+		m_vsMQOShader[MQOSHADER_TOON_SHADOWRECIEVER] = new Shader;
+		m_vsMQOShader[MQOSHADER_TOON_SHADOWRECIEVER]->LoadVS(fxNoLightPath, vsNoLightShadowRecieverFunc);
+		g_engine->RegistShaderToBank(fxNoLightPath, vsNoLightShadowRecieverFunc, m_vsMQOShader[MQOSHADER_TOON_SHADOWRECIEVER]);
+	}
+	m_psMQOShader[MQOSHADER_TOON_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxNoLightPath, psNoLightShadowRecieverFunc);
+	if (m_psMQOShader[MQOSHADER_TOON_SHADOWRECIEVER] == nullptr) {
+		m_psMQOShader[MQOSHADER_TOON_SHADOWRECIEVER] = new Shader;
+		m_psMQOShader[MQOSHADER_TOON_SHADOWRECIEVER]->LoadPS(fxNoLightPath, psNoLightShadowRecieverFunc);
+		g_engine->RegistShaderToBank(fxNoLightPath, psNoLightShadowRecieverFunc, m_psMQOShader[MQOSHADER_TOON_SHADOWRECIEVER]);
 	}
 
 }
@@ -2320,7 +2320,7 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 		if (renderobj.pmodel->GetVRoidJointName()) {
 			//VRoid特有のジョイント名を含み　シェーダタイプがAUTOの場合にはNOLIGHTでトゥーン風味に
 			//NoLight
-			shadertype = MQOSHADER_NOLIGHT;
+			shadertype = MQOSHADER_TOON;
 		}
 		else {
 			if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
@@ -2331,7 +2331,7 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 			else {
 				if (pm4) {
 					//NoLight
-					shadertype = MQOSHADER_NOLIGHT;
+					shadertype = MQOSHADER_TOON;
 				}
 				else {
 					//Standard
@@ -2342,12 +2342,12 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 		break;
 	case MQOSHADER_PBR:
 	case MQOSHADER_STD:
-	case MQOSHADER_NOLIGHT:
+	case MQOSHADER_TOON:
 		shadertype = tempshadertype;
 		break;
 	default:
 		_ASSERT(0);
-		shadertype = MQOSHADER_NOLIGHT;
+		shadertype = MQOSHADER_TOON;
 		break;
 	}
 
@@ -2394,16 +2394,16 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 			break;
 		}
 		break;
-	case MQOSHADER_NOLIGHT:
+	case MQOSHADER_TOON:
 		switch (renderobj.renderkind) {//renderobj.renderkindはCDispObj::Render*()関数内でセット
 		case RENDERKIND_NORMAL:
-			shaderindex = MQOSHADER_NOLIGHT;
+			shaderindex = MQOSHADER_TOON;
 			break;
 		case RENDERKIND_SHADOWMAP:
-			shaderindex = MQOSHADER_NOLIGHT_SHADOWMAP;
+			shaderindex = MQOSHADER_TOON_SHADOWMAP;
 			break;
 		case RENDERKIND_SHADOWRECIEVER:
-			shaderindex = MQOSHADER_NOLIGHT_SHADOWRECIEVER;
+			shaderindex = MQOSHADER_TOON_SHADOWRECIEVER;
 			break;
 		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
 		case RENDERKIND_INSTANCING_TRIANGLE://Instancingの場合にはこの関数は呼ばれないはず
@@ -2434,7 +2434,7 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 
 	if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 		(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
-		(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
+		(shaderindex == MQOSHADER_TOON_SHADOWMAP)) {
 		rc->SetRootSignature(m_shadowrootSignature[currentrefposindex]);
 	}
 	else {
@@ -2471,12 +2471,12 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 		}
 	}
 	else {
-		rc->SetPipelineState(m_opaquePipelineState[MQOSHADER_NOLIGHT][currentrefposindex]);
+		rc->SetPipelineState(m_opaquePipelineState[MQOSHADER_TOON][currentrefposindex]);
 	}
 
 	if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 		(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
-		(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
+		(shaderindex == MQOSHADER_TOON_SHADOWMAP)) {
 		rc->SetDescriptorHeap(m_shadowdescriptorHeap[currentrefposindex]);
 	}
 	else {
@@ -2631,7 +2631,8 @@ Texture& CMQOMaterial::GetMetalMap()
 
 int CMQOMaterial::SetDiffuseTexture()
 {
-	int result = m_diffuseMap.InitFromCustomColor(m_dif4f);
+	//int result = m_diffuseMap.InitFromCustomColor(m_dif4f);
+	int result = m_diffuseMap.InitToonFromCustomColor(m_dif4f);//2024/02/13 ToonTexture
 	if (result != 0) {
 		_ASSERT(0);
 		::MessageBoxA(NULL, "diffuseMap.InitFromCustomColor error. App must exit.",
@@ -3041,7 +3042,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		if (renderobj.pmodel->GetVRoidJointName()) {
 			//VRoid特有のジョイント名を含み　シェーダタイプがAUTOの場合にはNOLIGHTでトゥーン風味に
 			//NoLight
-			shadertype = MQOSHADER_NOLIGHT;
+			shadertype = MQOSHADER_TOON;
 		}
 		else{
 			if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
@@ -3052,7 +3053,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			else {
 				if (ppm4) {
 					//NoLight
-					shadertype = MQOSHADER_NOLIGHT;
+					shadertype = MQOSHADER_TOON;
 				}
 				else {
 					//Standard
@@ -3063,12 +3064,12 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		break;
 	case MQOSHADER_PBR:
 	case MQOSHADER_STD:
-	case MQOSHADER_NOLIGHT:
+	case MQOSHADER_TOON:
 		shadertype = tempshadertype;
 		break;
 	default:
 		_ASSERT(0);
-		shadertype = MQOSHADER_NOLIGHT;
+		shadertype = MQOSHADER_TOON;
 		break;
 	}
 
@@ -3115,16 +3116,16 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			break;
 		}
 		break;
-	case MQOSHADER_NOLIGHT:
+	case MQOSHADER_TOON:
 		switch (renderobj.renderkind) {//renderobj.renderkindはCDispObj::Render*()関数内でセット
 		case RENDERKIND_NORMAL:
-			shaderindex = MQOSHADER_NOLIGHT;
+			shaderindex = MQOSHADER_TOON;
 			break;
 		case RENDERKIND_SHADOWMAP:
-			shaderindex = MQOSHADER_NOLIGHT_SHADOWMAP;
+			shaderindex = MQOSHADER_TOON_SHADOWMAP;
 			break;
 		case RENDERKIND_SHADOWRECIEVER:
-			shaderindex = MQOSHADER_NOLIGHT_SHADOWRECIEVER;
+			shaderindex = MQOSHADER_TOON_SHADOWRECIEVER;
 			break;
 		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
 		case RENDERKIND_INSTANCING_TRIANGLE://Instancingの場合にはこの関数は呼ばれないはず
@@ -3143,7 +3144,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	//2023/01/02 SetRootSignatureは　BeginRender()で実行しているのでコメントアウト
 	//if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 	//	(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
-	//	(shaderindex == MQOSHADER_NOLIGHT_SHADOWMAP)) {
+	//	(shaderindex == MQOSHADER_TOON_SHADOWMAP)) {
 	//	rc->SetRootSignature(m_shadowrootSignature);
 	//}
 	//else {
@@ -3179,7 +3180,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		}
 	}
 	else {
-		//rc->SetPipelineState(m_opaquePipelineState[MQOSHADER_NOLIGHT]);
+		//rc->SetPipelineState(m_opaquePipelineState[MQOSHADER_TOON]);
 		pipelineindex = shaderindex;
 	}
 

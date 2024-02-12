@@ -25521,7 +25521,7 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 //		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
 //		//g_shadertype = srcshadertype;
 //		break;
-//	case MQOSHADER_NOLIGHT:
+//	case MQOSHADER_TOON:
 //		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, FALSE, 0);
 //		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
 //		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
@@ -25565,7 +25565,7 @@ void CheckShaderTypeParamsButton(HWND hDlgWnd, int srcshadertype)
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD2), BM_SETSTATE, TRUE, 0);//!!!!!!!
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT2), BM_SETSTATE, FALSE, 0);
 		break;
-	case MQOSHADER_NOLIGHT:
+	case MQOSHADER_TOON:
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO2), BM_SETSTATE, FALSE, 0);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR2), BM_SETSTATE, FALSE, 0);
 		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD2), BM_SETSTATE, FALSE, 0);
@@ -25903,7 +25903,7 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		//	CheckShaderTypeButton(hDlgWnd, MQOSHADER_STD);
 		//	break;
 		//case IDC_SHADER_NOLIGHT:
-		//	CheckShaderTypeButton(hDlgWnd, MQOSHADER_NOLIGHT);
+		//	CheckShaderTypeButton(hDlgWnd, MQOSHADER_TOON);
 		//	break;
 
 		case IDC_CHECK_BLOOM:
@@ -26500,14 +26500,14 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			break;
 		case IDC_SHADER_NOLIGHT2:
 		{
-			CheckShaderTypeParamsButton(hDlgWnd, MQOSHADER_NOLIGHT);
+			CheckShaderTypeParamsButton(hDlgWnd, MQOSHADER_TOON);
 			if (curmqomat) {
-				curmqomat->SetShaderType(MQOSHADER_NOLIGHT);
+				curmqomat->SetShaderType(MQOSHADER_TOON);
 
 				if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
 					if (s_shadertypelabel[s_shadertypeparamsindex]) {
 						WCHAR strdlg2[256] = { 0L };
-						wcscpy_s(strdlg2, 256, L"NOLIGHT");
+						wcscpy_s(strdlg2, 256, L"TOON");
 						s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
 					}
 				}
@@ -26517,12 +26517,12 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 				for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
 					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex8);
 					if (setmqomat) {
-						setmqomat->SetShaderType(MQOSHADER_NOLIGHT);
+						setmqomat->SetShaderType(MQOSHADER_TOON);
 					}
 
 					if (s_shadertypelabel[materialindex8]) {
 						WCHAR strdlg2[256] = { 0L };
-						wcscpy_s(strdlg2, 256, L"NOLIGHT");
+						wcscpy_s(strdlg2, 256, L"TOON");
 						s_shadertypelabel[materialindex8]->setName(strdlg2);
 					}
 				}
@@ -35651,8 +35651,8 @@ int CreateShaderTypeWnd()
 			case MQOSHADER_STD:
 				wcscpy_s(strshadertype, 256, L"STD");
 				break;
-			case MQOSHADER_NOLIGHT:
-				wcscpy_s(strshadertype, 256, L"NOLIGHT");
+			case MQOSHADER_TOON:
+				wcscpy_s(strshadertype, 256, L"TOON");
 				break;
 			case -1:
 			case -2:
@@ -40191,7 +40191,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.7 : No.%d : ", s_appcnt);
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.8 : No.%d : ", s_appcnt);
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -48369,7 +48369,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.7 : No.%d : ", s_appcnt);
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.8 : No.%d : ", s_appcnt);
 
 
 	if (s_model && s_chascene) {

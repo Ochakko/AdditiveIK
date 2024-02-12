@@ -57,6 +57,12 @@ public:
 	/// <param name="resrouce">D3Dリソース。</param>
 	int InitFromCustomColor(ChaVector4 srccol);
 
+	/// <summary>
+	/// カスタムカラーからToonテクスチャを初期化する。
+	/// </summary>
+	/// <param name="resrouce">D3Dリソース。</param>
+	int InitToonFromCustomColor(ChaVector4 srccol);
+
 
 	/// <summary>
 	/// SRVに登録。

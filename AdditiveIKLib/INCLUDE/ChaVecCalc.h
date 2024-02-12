@@ -324,12 +324,19 @@ public:
 		w = srcw;
 	};
 
+
+	int HSV_AddS(float adds);
+	int HSV_AddV(float addv);
+	ChaVector4 RGB2HSV();
+	ChaVector4 HSV2RGB();
+
+
 //#ifdef CONVD3DX11
 	DirectX::XMFLOAT4 D3DX();
 //#endif
 
 public:
-	 float x;
+	float x;
 	float y;
 	float z;
 	float w;

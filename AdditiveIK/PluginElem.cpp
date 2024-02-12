@@ -159,7 +159,10 @@
 //#define MB2VERSION 210006
 
 //2024/01/30 先頭に２を付加　最後の２桁は1.0.0.7の6を２桁表現
-#define MB2VERSION 210007
+//#define MB2VERSION 210007
+
+//2024/02/13 先頭に２を付加　最後の２桁は1.0.0.8の6を２桁表現
+#define MB2VERSION 210008
 
 
 CPluginElem::CPluginElem()

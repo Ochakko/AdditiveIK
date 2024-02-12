@@ -2,6 +2,17 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2024/02/13
+　TOONシェーダ対応
+　　NOLIGHTシェーダをTOONシェーダに変更
+　　Shaderプレートメニューでマテリアルの名前のボタンを押してToonを選択すると機能
+　　TOON用のライトとしてはLightプレートメニューの１番目のライトの向きを使用
+　　マテリアルの拡散色から自動的にTOONテクスチャを作成しdiffuseMapとしてシェーダで使用
+　　後で設定画面を足します
+
+
+
 2024/02/11
 　AdditiveIK 1.0.0.7 release
 　　1.0.0.6からの変更点

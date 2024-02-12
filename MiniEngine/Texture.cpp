@@ -141,6 +141,197 @@ int Texture::InitFromCustomColor(ChaVector4 srccol)
 
 }
 
+//ToonTexture
+int Texture::InitToonFromCustomColor(ChaVector4 srccol)
+{
+	if (!g_graphicsEngine) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (!g_graphicsEngine->GetD3DDevice()) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (m_texture) {
+		m_texture->Release();
+		m_texture = nullptr;
+	}
+
+
+	UINT texW, texH;
+	texW = 256;
+	texH = 256;
+
+	struct TexRGBA {
+		unsigned char R, G, B, A;
+	};
+
+	TexRGBA basergba;
+	{
+		ChaVector4 basecol = srccol;
+		basecol.HSV_AddV(-0.1f);
+
+		double colR = (double)basecol.x * 255.0;
+		double colG = (double)basecol.y * 255.0;
+		double colB = (double)basecol.z * 255.0;
+		double colA = (double)basecol.w * 255.0;
+		basergba.R = (unsigned char)(max(0.0, min(255.0, colR)));
+		basergba.G = (unsigned char)(max(0.0, min(255.0, colG)));
+		basergba.B = (unsigned char)(max(0.0, min(255.0, colB)));
+		basergba.A = (unsigned char)(max(0.0, min(255.0, colA)));
+	}
+
+	TexRGBA hirgba;
+	{
+		ChaVector4 hicol = srccol;
+		hicol.HSV_AddV(0.2f);
+
+		double colR = (double)hicol.x * 255.0;
+		double colG = (double)hicol.y * 255.0;
+		double colB = (double)hicol.z * 255.0;
+		double colA = (double)hicol.w * 255.0;
+		hirgba.R = (unsigned char)(max(0.0, min(255.0, colR)));
+		hirgba.G = (unsigned char)(max(0.0, min(255.0, colG)));
+		hirgba.B = (unsigned char)(max(0.0, min(255.0, colB)));
+		hirgba.A = basergba.A;
+	}
+
+	TexRGBA lowrgba;
+	{
+		ChaVector4 lowcol = srccol;
+		lowcol.HSV_AddV(-0.2f);
+
+		double colR = (double)lowcol.x * 255.0;
+		double colG = (double)lowcol.y * 255.0;
+		double colB = (double)lowcol.z * 255.0;
+		double colA = (double)lowcol.w * 255.0;
+		lowrgba.R = (unsigned char)(max(0.0, min(255.0, colR)));
+		lowrgba.G = (unsigned char)(max(0.0, min(255.0, colG)));
+		lowrgba.B = (unsigned char)(max(0.0, min(255.0, colB)));
+		lowrgba.A = basergba.A;
+	}
+
+
+	unsigned char* texturedata = (unsigned char*)malloc(sizeof(unsigned char) * texW * texH * 4);
+
+
+	if (texturedata) {
+		//UINT dataindex;
+		//for (dataindex = 0; dataindex < (texW * texH); dataindex++) {
+		//	unsigned char* ppix = texturedata + dataindex * 4;
+		//	*(ppix) = srcrgba.R;
+		//	*(ppix + 1) = srcrgba.G;
+		//	*(ppix + 2) = srcrgba.B;
+		//	*(ppix + 3) = srcrgba.A;
+		//}
+
+
+		UINT thhi = 200;
+		UINT thlow = 128+ 10;
+
+		UINT indexw, indexh;
+		for (indexh = 0; indexh < texH; indexh++) {
+			for (indexw = 0; indexw < texW; indexw++) {
+				unsigned char* ppix = texturedata + (indexh * texW + indexw) * 4;
+				if (indexh >= thhi) {
+					*(ppix) = hirgba.R;
+					*(ppix + 1) = hirgba.G;
+					*(ppix + 2) = hirgba.B;
+					*(ppix + 3) = hirgba.A;
+				}
+				else if (indexh <= thlow) {
+					*(ppix) = lowrgba.R;
+					*(ppix + 1) = lowrgba.G;
+					*(ppix + 2) = lowrgba.B;
+					*(ppix + 3) = lowrgba.A;
+				}
+				else {
+					*(ppix) = basergba.R;
+					*(ppix + 1) = basergba.G;
+					*(ppix + 2) = basergba.B;
+					*(ppix + 3) = basergba.A;
+				}
+			}
+		}
+
+
+		//WriteToSubresourceで転送する用のヒープ設定
+		D3D12_HEAP_PROPERTIES texHeapProp = {};
+		texHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;//特殊な設定なのでdefaultでもuploadでもなく
+		texHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;//ライトバックで
+		texHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;//転送がL0つまりCPU側から直で
+		texHeapProp.CreationNodeMask = 0;//単一アダプタのため0
+		texHeapProp.VisibleNodeMask = 0;//単一アダプタのため0
+
+		D3D12_RESOURCE_DESC resDesc = {};
+		//resDesc.Format = metadata.format;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット
+		resDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット
+		//resDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;//RGBAフォーマット
+		//resDesc.Width = static_cast<UINT>(metadata.width);//幅
+		//resDesc.Height = static_cast<UINT>(metadata.height);//高さ
+		//resDesc.DepthOrArraySize = static_cast<uint16_t>(metadata.arraySize);//2Dで配列でもないので１
+		resDesc.Width = texW;//幅
+		resDesc.Height = texH;//高さ
+		resDesc.DepthOrArraySize = 1;//2Dで配列でもないので１
+		resDesc.SampleDesc.Count = 1;//通常テクスチャなのでアンチェリしない
+		resDesc.SampleDesc.Quality = 0;//
+		//resDesc.MipLevels = static_cast<uint16_t>(metadata.mipLevels);//ミップマップしないのでミップ数は１つ
+		resDesc.MipLevels = 1;//ミップマップしないのでミップ数は１つ
+		//resDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);//2Dテクスチャ用
+		resDesc.Dimension = D3D12_RESOURCE_DIMENSION::D3D12_RESOURCE_DIMENSION_TEXTURE2D;//2Dテクスチャ用
+		resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;//レイアウトについては決定しない
+		resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;//とくにフラグなし
+
+		ID3D12Resource* texbuff = nullptr;
+		HRESULT hr0 = g_graphicsEngine->GetD3DDevice()->CreateCommittedResource(
+			&texHeapProp,
+			D3D12_HEAP_FLAG_NONE,//特に指定なし
+			&resDesc,
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,//テクスチャ用(ピクセルシェーダから見る用)
+			nullptr,
+			IID_PPV_ARGS(&texbuff)
+		);
+		if (FAILED(hr0) || !texbuff) {
+			::MessageBoxA(NULL, "CreateTexture error. App must exit.",
+				"Texture::InitFromCustomColor Error", MB_OK | MB_ICONERROR);
+			_ASSERT(0);
+			abort();
+			free(texturedata);
+			//return 1;
+		}
+		HRESULT hr1 = texbuff->WriteToSubresource(0,
+			nullptr,//全領域へコピー
+			//img->pixels,//元データアドレス
+			(const void*)texturedata,
+			texW * 4,//1ラインサイズ
+			texW * texH * 4//全サイズ
+		);
+		if (FAILED(hr1)) {
+			_ASSERT(0);
+			::MessageBoxA(NULL, "Write To VideoMemory error. App must exit.",
+				"Texture::InitFromCustomColor Error", MB_OK | MB_ICONERROR);
+			abort();
+			free(texturedata);
+			//return 1;
+		}
+
+		InitFromD3DResource(texbuff);
+
+		free(texturedata);
+	}
+	else {
+		_ASSERT(0);
+		::MessageBoxA(NULL, "memory alloc error. App must exit.",
+			"Texture::InitFromCustomColor Error", MB_OK | MB_ICONERROR);
+		abort();
+	}
+
+	return 0;
+
+}
+
+
+
 int Texture::InitFromWICFile(const wchar_t* filePath)
 {
 	if (!g_graphicsEngine) {
