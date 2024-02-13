@@ -239,6 +239,7 @@ int CMQOMaterial::ConvParamsTo3F()
 	m_spc3f.y = m_col.y * m_spc;
 	m_spc3f.z = m_col.z * m_spc;
 
+
 	return 0;
 }
 
@@ -385,6 +386,8 @@ int CMQOMaterial::InitParams()
 	m_addressV_normal = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	m_addressU_metal = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	m_addressV_metal = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+
+	m_hsvtoon.Init();
 
 	return 0;
 }
@@ -2632,7 +2635,9 @@ Texture& CMQOMaterial::GetMetalMap()
 int CMQOMaterial::SetDiffuseTexture()
 {
 	//int result = m_diffuseMap.InitFromCustomColor(m_dif4f);
-	int result = m_diffuseMap.InitToonFromCustomColor(m_dif4f);//2024/02/13 ToonTexture
+
+	m_hsvtoon.basecolor = m_dif4f;//!!!!!!
+	int result = m_diffuseMap.InitToonFromCustomColor(&m_hsvtoon);//2024/02/13 ToonTexture
 	if (result != 0) {
 		_ASSERT(0);
 		::MessageBoxA(NULL, "diffuseMap.InitFromCustomColor error. App must exit.",
@@ -3642,3 +3647,16 @@ int CMQOMaterial::SetRefPosFl4x4(CModel* srcmodel, int refposindex)
 	return 0;
 }
 
+
+int CMQOMaterial::RemakeDiffuseTexture()
+{
+	m_hsvtoon.basecolor = m_dif4f;//!!!!!!
+	int result = m_diffuseMap.WriteToonToSubResource(&m_hsvtoon, nullptr);//内容を書き換えるだけ
+	if (result != 0) {
+		_ASSERT(0);
+		::MessageBoxA(NULL, "diffuseMap.WriteToonToSubResource error. App must exit.",
+			"CMQOMaterial::RemakeDiffuseTexture error", MB_OK | MB_ICONERROR);
+		abort();
+	}
+	return 0;
+}

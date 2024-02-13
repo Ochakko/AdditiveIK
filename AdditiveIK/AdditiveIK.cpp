@@ -1281,6 +1281,9 @@ static int s_calclimitedwmState = 0;
 
 static bool s_EcursorFlag = false;			// カーソル移動フラグ
 
+static CMQOMaterial* s_toonmqomaterial = nullptr;
+static bool s_toonparamchange = false;
+
 
 static bool s_timelineRUpFlag = false;
 static bool s_timelinembuttonFlag = false;
@@ -3976,6 +3979,10 @@ void InitApp()
 	s_checksimilarFlag = false;
 	s_checksimilarobjno = 0;
 
+	s_toonmqomaterial = nullptr;
+	s_toonparamchange = false;
+
+
 	s_temppath[0] = 0L;
 	::GetTempPathW(MAX_PATH, s_temppath);
 	_ASSERT(s_temppath[0]);
@@ -5523,7 +5530,8 @@ void OnUserFrameMove(double fTime, float fElapsedTime)
 
 	if (s_underdelmotion || s_underdelmodel || 
 		s_underselectmotion || s_underselectcamera || s_underselectmodel || s_underdispmodel || 
-		g_changeUpdateThreadsNum) {
+		g_changeUpdateThreadsNum || s_toonparamchange
+		) {
 
 		OnFrameCloseFlag();
 		OnFrameToolWnd();
@@ -5975,6 +5983,12 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 		OnRenderNowLoading();
 		Sleep(1);
 		return;//!!!!!!!!!!!! ModelNum == 0のときは　すぐにリターン
+	}
+
+	if (s_toonparamchange) {
+		OnRenderNowLoading();
+		Sleep(1);
+		return;//!!!!!!!!!!!!
 	}
 
 
@@ -26195,6 +26209,8 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 	float curlightscale[LIGHTNUMMAX];
 	bool enableEmission = false;
 	float emissiveScale = 1.0f;
+	HSVTOON hsvtoon;
+	hsvtoon.Init();
 	WCHAR wmaterialname[256] = { 0L };
 	if (materialindex >= 0) {
 		curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
@@ -26210,6 +26226,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			}
 			enableEmission = curmqomat->GetEnableEmission();
 			emissiveScale = curmqomat->GetEmissiveScale();
+			hsvtoon = curmqomat->GetHSVToon();
 		}
 		else {
 			_ASSERT(0);
@@ -26228,6 +26245,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 		}
 		enableEmission = false;
 		emissiveScale = 1.0f;
+		hsvtoon.Init();
 	}
 	
 	int lightsliderid[LIGHTNUMMAX] = {
@@ -26332,6 +26350,313 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			}
 		}
 
+
+		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDR) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDR), TBM_GETPOS, 0, 0);
+			hsvtoon.hicolorh = (float)((double)cursliderpos / 100.0);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"ToonHiAddr:%.2f", hsvtoon.hicolorh);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDR, strdlg);
+
+			if (curmqomat) {
+				curmqomat->SetToonHiAddrH(hsvtoon.hicolorh);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonHiAddrH(hsvtoon.hicolorh);
+					}
+				}
+			}
+			if (LOWORD(wp) == SB_ENDSCROLL) {
+				if (curmqomat) {
+					s_toonmqomaterial = curmqomat;
+				}
+				else {
+					s_toonmqomaterial = nullptr;
+				}
+				s_toonparamchange = true;
+			}
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDR) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDR), TBM_GETPOS, 0, 0);
+			hsvtoon.lowcolorh = (float)((double)cursliderpos / 100.0);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"ToonLowAddr:%.2f", hsvtoon.lowcolorh);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDR, strdlg);
+
+			if (curmqomat) {
+				curmqomat->SetToonLowAddrH(hsvtoon.lowcolorh);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonLowAddrH(hsvtoon.lowcolorh);
+					}
+				}
+			}
+			if (LOWORD(wp) == SB_ENDSCROLL) {
+				if (curmqomat) {
+					s_toonmqomaterial = curmqomat;
+				}
+				else {
+					s_toonmqomaterial = nullptr;
+				}
+				s_toonparamchange = true;
+			}
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDH) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDH), TBM_GETPOS, 0, 0);
+			hsvtoon.hiaddhsv.x = (float)((double)cursliderpos - 360.0);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"ToonHi_H:%.1f", hsvtoon.hiaddhsv.x);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDH, strdlg);
+
+			if (curmqomat) {
+				curmqomat->SetToonHiAddH(hsvtoon.hiaddhsv.x);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonHiAddH(hsvtoon.hiaddhsv.x);
+					}
+				}
+			}
+			if (LOWORD(wp) == SB_ENDSCROLL) {
+				if (curmqomat) {
+					s_toonmqomaterial = curmqomat;
+				}
+				else {
+					s_toonmqomaterial = nullptr;
+				}
+				s_toonparamchange = true;
+			}
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDH) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDH), TBM_GETPOS, 0, 0);
+			hsvtoon.lowaddhsv.x = (float)((double)cursliderpos - 360.0);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"ToonLow_H:%.1f", hsvtoon.lowaddhsv.x);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDH, strdlg);
+
+			if (curmqomat) {
+				curmqomat->SetToonLowAddH(hsvtoon.lowaddhsv.x);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonLowAddH(hsvtoon.lowaddhsv.x);
+					}
+				}
+			}
+			if (LOWORD(wp) == SB_ENDSCROLL) {
+				if (curmqomat) {
+					s_toonmqomaterial = curmqomat;
+				}
+				else {
+					s_toonmqomaterial = nullptr;
+				}
+				s_toonparamchange = true;
+			}
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDS) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDS), TBM_GETPOS, 0, 0);
+			hsvtoon.hiaddhsv.y = (float)((double)cursliderpos - 100.0) * 0.01f;
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"ToonHi_S:%.2f", hsvtoon.hiaddhsv.y);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDS, strdlg);
+
+			if (curmqomat) {
+				curmqomat->SetToonHiAddS(hsvtoon.hiaddhsv.y);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonHiAddS(hsvtoon.hiaddhsv.y);
+					}
+				}
+			}
+			if (LOWORD(wp) == SB_ENDSCROLL) {
+				if (curmqomat) {
+					s_toonmqomaterial = curmqomat;
+				}
+				else {
+					s_toonmqomaterial = nullptr;
+				}
+				s_toonparamchange = true;
+			}
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDS) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDS), TBM_GETPOS, 0, 0);
+			hsvtoon.lowaddhsv.y = (float)((double)cursliderpos - 100.0) * 0.01f;
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"ToonLow_S:%.2f", hsvtoon.lowaddhsv.y);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDS, strdlg);
+
+			if (curmqomat) {
+				curmqomat->SetToonLowAddS(hsvtoon.lowaddhsv.y);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonLowAddS(hsvtoon.lowaddhsv.y);
+					}
+				}
+			}
+			if (LOWORD(wp) == SB_ENDSCROLL) {
+				if (curmqomat) {
+					s_toonmqomaterial = curmqomat;
+				}
+				else {
+					s_toonmqomaterial = nullptr;
+				}
+				s_toonparamchange = true;
+			}
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDV) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDV), TBM_GETPOS, 0, 0);
+			hsvtoon.hiaddhsv.z = (float)((double)cursliderpos - 100.0) * 0.01f;
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"ToonHi_V:%.2f", hsvtoon.hiaddhsv.z);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDV, strdlg);
+
+			if (curmqomat) {
+				curmqomat->SetToonHiAddV(hsvtoon.hiaddhsv.z);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonHiAddV(hsvtoon.hiaddhsv.z);
+					}
+				}
+			}
+			if (LOWORD(wp) == SB_ENDSCROLL) {
+				if (curmqomat) {
+					s_toonmqomaterial = curmqomat;
+				}
+				else {
+					s_toonmqomaterial = nullptr;
+				}
+				s_toonparamchange = true;
+			}
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDV) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDV), TBM_GETPOS, 0, 0);
+			hsvtoon.lowaddhsv.z = (float)((double)cursliderpos - 100.0) * 0.01f;
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"ToonLow_V:%.2f", hsvtoon.lowaddhsv.z);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDV, strdlg);
+
+			if (curmqomat) {
+				curmqomat->SetToonLowAddV(hsvtoon.lowaddhsv.z);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonLowAddV(hsvtoon.lowaddhsv.z);
+					}
+				}
+			}
+			if (LOWORD(wp) == SB_ENDSCROLL) {
+				if (curmqomat) {
+					s_toonmqomaterial = curmqomat;
+				}
+				else {
+					s_toonmqomaterial = nullptr;
+				}
+				s_toonparamchange = true;
+			}
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDA) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDA), TBM_GETPOS, 0, 0);
+			hsvtoon.hiaddhsv.w = (float)((double)cursliderpos - 100.0) * 0.01f;
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"ToonHi_A:%.2f", hsvtoon.hiaddhsv.w);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDA, strdlg);
+
+			if (curmqomat) {
+				curmqomat->SetToonHiAddA(hsvtoon.hiaddhsv.w);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonHiAddA(hsvtoon.hiaddhsv.w);
+					}
+				}
+			}
+			if (LOWORD(wp) == SB_ENDSCROLL) {
+				if (curmqomat) {
+					s_toonmqomaterial = curmqomat;
+				}
+				else {
+					s_toonmqomaterial = nullptr;
+				}
+				s_toonparamchange = true;
+			}
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDA) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDA), TBM_GETPOS, 0, 0);
+			hsvtoon.lowaddhsv.w = (float)((double)cursliderpos - 100.0) * 0.01f;
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"ToonLOW_A:%.2f", hsvtoon.lowaddhsv.w);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDA, strdlg);
+
+			if (curmqomat) {
+				curmqomat->SetToonLowAddA(hsvtoon.lowaddhsv.w);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonLowAddA(hsvtoon.lowaddhsv.w);
+					}
+				}
+			}
+			if (LOWORD(wp) == SB_ENDSCROLL) {
+				if (curmqomat) {
+					s_toonmqomaterial = curmqomat;
+				}
+				else {
+					s_toonmqomaterial = nullptr;
+				}
+				s_toonparamchange = true;
+			}
+		}
+
+
+
+
+
+
 		{
 			int litno4;
 			for (litno4 = 0; litno4 < LIGHTNUMMAX; litno4++) {
@@ -26356,44 +26681,6 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 							}
 						}
 					}
-
-					//if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-					//	bool isedited = false;
-					//	if (curmqomat) {
-					//		int litno5;
-					//		for (litno5 = 0; litno5 < LIGHTNUMMAX; litno5++) {
-					//			float curscale = curmqomat->GetLightScale(litno5);
-					//			if ((curscale >= (1.0f - 0.0001f)) && (curscale <= (1.0f + 0.0001f))) {
-					//				//1.0f
-					//			}
-					//			else {
-					//				isedited = true;
-					//				break;
-					//			}
-					//		}
-					//	}
-					//	else {
-					//		if ((newlitscale >= (1.0f - 0.0001f)) && (newlitscale <= (1.0f + 0.0001f))) {
-					//			//1.0f
-					//		}
-					//		else {
-					//			isedited = true;
-					//			break;
-					//		}
-					//	}
-					//
-					//	if (s_lightscalelabel[s_shadertypeparamsindex]) {
-					//		WCHAR strdlg2[256] = { 0L };
-					//		if (isedited) {
-					//			wcscpy_s(strdlg2, 256, L"***");
-					//		}
-					//		else {
-					//			wcscpy_s(strdlg2, 256, L"1.00");
-					//		}
-					//		s_lightscalelabel[s_shadertypeparamsindex]->setName(strdlg2);
-					//
-					//	}
-					//}
 
 				}
 			}
@@ -30057,6 +30344,27 @@ int OnFrameMouseButton()
 
 int OnFrameToolWnd()
 {
+
+	if (s_toonparamchange) {
+		s_toonparamchange = false;
+		if (s_model) {
+			if (s_toonmqomaterial) {
+				s_toonmqomaterial->RemakeDiffuseTexture();
+			}
+			else {
+				int materialnum = s_model->GetMQOMaterialSize();
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->RemakeDiffuseTexture();
+					}
+				}
+			}
+		}
+	}
+
+
 
 	if (s_frogFlag) {
 		ChangeToNextPlateMenuKind(s_platemenukind, s_platemenuno);
@@ -52293,6 +52601,9 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	float curlightscale[LIGHTNUMMAX];
 	bool enableEmission = false;
 	float emissiveScale = 1.0f;
+	HSVTOON hsvtoon;
+	hsvtoon.Init();
+
 	if (curmqomat) {
 		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, 
 			curmqomat->GetName(), -1, wmaterialname, 256);
@@ -52305,6 +52616,8 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		}
 		enableEmission = curmqomat->GetEnableEmission();
 		emissiveScale = curmqomat->GetEmissiveScale();
+
+		hsvtoon = curmqomat->GetHSVToon();
 	}
 	else {
 		//全てのマテリアルに対して設定するボタンを押した場合
@@ -52318,6 +52631,8 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		}
 		enableEmission = false;
 		emissiveScale = 1.0f;
+
+		hsvtoon.Init();
 	}
 
 	int lightsliderid[LIGHTNUMMAX] = {
@@ -52362,6 +52677,55 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_EMISCALE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_EMISCALE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
+	sliderpos = (int)(hsvtoon.hicolorh * 100.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDR), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDR), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDR), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(hsvtoon.lowcolorh * 100.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDR), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDR), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDR), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(hsvtoon.hiaddhsv.x + 360);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDH), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDH), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)720);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDH), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(hsvtoon.lowaddhsv.x + 360);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDH), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDH), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)720);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDH), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(hsvtoon.hiaddhsv.y * 100.0f) + 100;
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(hsvtoon.lowaddhsv.y * 100.0f) + 100;
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(hsvtoon.hiaddhsv.z * 100.0f) + 100;
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDV), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDV), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDV), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(hsvtoon.lowaddhsv.z * 100.0f) + 100;
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDV), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDV), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDV), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(hsvtoon.hiaddhsv.w * 100.0f) + 100;
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDA), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDA), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDA), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(hsvtoon.lowaddhsv.w * 100.0f) + 100;
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDA), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDA), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDA), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
 	//#####
 	//Text
@@ -52386,6 +52750,32 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 
 	swprintf_s(strdlg, 256, L"Emission:%.2f", emissiveScale);
 	SetDlgItemText(hDlgWnd, IDC_CHECK_EMISSION, strdlg);
+
+	swprintf_s(strdlg, 256, L"ToonHiAddr:%.2f", hsvtoon.hicolorh);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDR, strdlg);
+
+	swprintf_s(strdlg, 256, L"ToonLowAddr:%.2f", hsvtoon.lowcolorh);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDR, strdlg);
+
+	swprintf_s(strdlg, 256, L"ToonHi_H:%.1f", hsvtoon.hiaddhsv.x);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDH, strdlg);
+	swprintf_s(strdlg, 256, L"ToonLow_H:%.1f", hsvtoon.lowaddhsv.x);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDH, strdlg);
+
+	swprintf_s(strdlg, 256, L"ToonHi_S:%.2f", hsvtoon.hiaddhsv.y);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDS, strdlg);
+	swprintf_s(strdlg, 256, L"ToonLow_S:%.2f", hsvtoon.lowaddhsv.y);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDS, strdlg);
+
+	swprintf_s(strdlg, 256, L"ToonHi_V:%.2f", hsvtoon.hiaddhsv.z);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDV, strdlg);
+	swprintf_s(strdlg, 256, L"ToonLow_V:%.2f", hsvtoon.lowaddhsv.z);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDV, strdlg);
+
+	swprintf_s(strdlg, 256, L"ToonHi_A:%.2f", hsvtoon.hiaddhsv.w);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDA, strdlg);
+	swprintf_s(strdlg, 256, L"ToonLOW_A:%.2f", hsvtoon.lowaddhsv.w);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDA, strdlg);
 
 
 	//#########

@@ -9,7 +9,16 @@ https://github.com/Ochakko/AdditiveIK
 　　Shaderプレートメニューでマテリアルの名前のボタンを押してToonを選択すると機能
 　　TOON用のライトとしてはLightプレートメニューの１番目のライトの向きを使用
 　　マテリアルの拡散色から自動的にTOONテクスチャを作成しdiffuseMapとしてシェーダで使用
-　　後で設定画面を足します
+　　設定画面
+　　　Shaderプレートメニューで設定
+　　　面の法線(シェーダで少し加工)とライト向き(シェーダで少し加工)の内積をnlとして説明
+　　　(nl + 1) / 2が　HiAddr以上の場合ハイライト色、HiAddrからLowAddrまでの場合拡散色、LowAddrよりも小さい場合陰色
+　　　拡散色はfbxに指定してあるdiffuses色
+　　　ハイライト色はdiffuse色をHSVに変換後AddH, AddS, AddVを施した色
+　　　陰色はdiffuse色をHSVに変換後AddH, AddS, AddVを施した色
+　　　各設定項目にはGUIスライダー有り
+　　　プロジェクト保存時に*.stfファイルにテキスト保存、プロジェクト読み込み時に自動読込
+
 
 
 

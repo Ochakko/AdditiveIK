@@ -84,6 +84,7 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			float lightscale[8];
 			bool enableEmission = mqomat->GetEnableEmission();
 			float emissiveScale = mqomat->GetEmissiveScale();
+			HSVTOON hsvtoon = mqomat->GetHSVToon();
 
 			int litindex;
 			for (litindex = 0; litindex < 8; litindex++) {
@@ -116,6 +117,19 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			//2024/01/30
 			CallF(Write2File("    <EmissiveScale>%f</EmissiveScale>\r\n", emissiveScale), return 1);
 
+			//2024/02/13
+			CallF(Write2File("    <ToonHiColorH>%.2f</ToonHiColorH>\r\n", hsvtoon.hicolorh), return 1);
+			CallF(Write2File("    <ToonLowColorH>%.2f</ToonLowColorH>\r\n", hsvtoon.lowcolorh), return 1);
+			CallF(Write2File("    <ToonHiAddH>%.2f</ToonHiAddH>\r\n", hsvtoon.hiaddhsv.x), return 1);
+			CallF(Write2File("    <ToonHiAddS>%.2f</ToonHiAddS>\r\n", hsvtoon.hiaddhsv.y), return 1);
+			CallF(Write2File("    <ToonHiAddV>%.2f</ToonHiAddV>\r\n", hsvtoon.hiaddhsv.z), return 1);
+			CallF(Write2File("    <ToonHiAddA>%.2f</ToonHiAddA>\r\n", hsvtoon.hiaddhsv.w), return 1);
+			CallF(Write2File("    <ToonLowAddH>%.2f</ToonLowAddH>\r\n", hsvtoon.lowaddhsv.x), return 1);
+			CallF(Write2File("    <ToonLowAddS>%.2f</ToonLowAddS>\r\n", hsvtoon.lowaddhsv.y), return 1);
+			CallF(Write2File("    <ToonLowAddV>%.2f</ToonLowAddV>\r\n", hsvtoon.lowaddhsv.z), return 1);
+			CallF(Write2File("    <ToonLowAddA>%.2f</ToonLowAddA>\r\n", hsvtoon.lowaddhsv.w), return 1);
+
+
 			CallF(Write2File("  </Material>\r\n"), return 1);
 
 		}
@@ -132,7 +146,10 @@ int CShaderTypeFile::WriteFileInfo()
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	//2024/01/30
-	CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1003</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1003</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//2024/02/13
+	CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1004</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+
 
 	return 0;
 }
@@ -234,6 +251,51 @@ int CShaderTypeFile::LoadShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 				Read_Float(&materialbuf, "<EmissiveScale>", "</EmissiveScale>", &emissiveScale);
 				curmqomat->SetEmissiveScale(emissiveScale);
 
+
+				//2024/02/13
+				HSVTOON hsvtoon;
+				hsvtoon.Init();
+				float hicolorh = hsvtoon.hicolorh;
+				Read_Float(&materialbuf, "<ToonHiColorH>", "</ToonHiColorH>\r\n", &hicolorh);
+				hsvtoon.hicolorh = hicolorh;
+
+				float lowcolorh = hsvtoon.lowcolorh;
+				Read_Float(&materialbuf, "<ToonLowColorH>", "</ToonLowColorH>\r\n", &lowcolorh);
+				hsvtoon.lowcolorh = lowcolorh;
+
+				float hiaddh = hsvtoon.hiaddhsv.x;
+				Read_Float(&materialbuf, "<ToonHiAddH>", "</ToonHiAddH>\r\n", &hiaddh);
+				hsvtoon.hiaddhsv.x = hiaddh;
+
+				float hiadds = hsvtoon.hiaddhsv.y;
+				Read_Float(&materialbuf, "<ToonHiAddS>", "</ToonHiAddS>\r\n", &hiadds);
+				hsvtoon.hiaddhsv.y = hiadds;
+
+				float hiaddv = hsvtoon.hiaddhsv.z;
+				Read_Float(&materialbuf, "<ToonHiAddV>", "</ToonHiAddV>\r\n", &hiaddv);
+				hsvtoon.hiaddhsv.z = hiaddv;
+
+				float hiadda = hsvtoon.hiaddhsv.w;
+				Read_Float(&materialbuf, "<ToonHiAddA>", "</ToonHiAddA>\r\n", &hiadda);
+				hsvtoon.hiaddhsv.w = hiadda;
+
+				float lowaddh = hsvtoon.lowaddhsv.x;
+				Read_Float(&materialbuf, "<ToonLowAddH>", "</ToonLowAddH>\r\n", &lowaddh);
+				hsvtoon.lowaddhsv.x = lowaddh;
+
+				float lowadds = hsvtoon.lowaddhsv.y;
+				Read_Float(&materialbuf, "<ToonLowAddS>", "</ToonLowAddS>\r\n", &lowadds);
+				hsvtoon.lowaddhsv.y = lowadds;
+
+				float lowaddv = hsvtoon.lowaddhsv.z;
+				Read_Float(&materialbuf, "<ToonLowAddV>", "</ToonLowAddV>\r\n", &lowaddv);
+				hsvtoon.lowaddhsv.z = lowaddv;
+
+				float lowadda = hsvtoon.lowaddhsv.w;
+				Read_Float(&materialbuf, "<ToonLowAddA>", "</ToonLowAddA>\r\n", &lowadda);
+				hsvtoon.lowaddhsv.w = lowadda;
+
+				curmqomat->SetHSVToon(hsvtoon);
 			}
 		}		
 	}

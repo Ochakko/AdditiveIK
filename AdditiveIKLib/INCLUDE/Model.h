@@ -316,7 +316,7 @@ public:
 	int CreateObjno2DigElem();
 	void CreateObjno2DigElemReq(FbxNode* pNode, int* pobjno, int depth);
 	int MakeDispGroupForRender();
-
+	int RemakeHSVToonTexture(CMQOMaterial* srcmqomat);
 /**
  * @fn
  * RenderBoneMark

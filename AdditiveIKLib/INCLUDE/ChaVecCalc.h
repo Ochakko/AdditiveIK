@@ -325,6 +325,8 @@ public:
 	};
 
 
+	int HSV_Add(ChaVector4 srcadd);
+	int HSV_AddH(float addh);
 	int HSV_AddS(float adds);
 	int HSV_AddV(float addv);
 	ChaVector4 RGB2HSV();

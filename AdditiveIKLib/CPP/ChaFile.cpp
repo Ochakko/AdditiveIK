@@ -892,6 +892,7 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt, XMLIOBUF*
 
 		CShaderTypeFile stfile;
 		stfile.LoadShaderTypeFile(pathname, newmodel);
+		newmodel->RemakeHSVToonTexture(nullptr);//2024/02/13
 	}
 
 

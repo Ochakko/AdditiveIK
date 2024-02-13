@@ -19863,3 +19863,22 @@ int CModel::SetRefPosFlag(bool srcflag)
 	return 0;
 }
 
+int CModel::RemakeHSVToonTexture(CMQOMaterial* srcmqomat)
+{
+	if (srcmqomat) {
+		srcmqomat->RemakeDiffuseTexture();
+	}
+	else {
+		int materialnum = GetMQOMaterialSize();
+		int materialindex2;
+		for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+			CMQOMaterial* setmqomat = GetMQOMaterialByIndex(materialindex2);
+			if (setmqomat) {
+				setmqomat->RemakeDiffuseTexture();
+			}
+		}
+	}
+
+	return 0;
+}
+

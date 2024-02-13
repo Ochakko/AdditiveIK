@@ -156,6 +156,34 @@ typedef struct tag_scaleinstancing
 	};
 }SCALEINSTANCING;
 
+typedef struct tag_hsvtoon
+{
+	ChaVector4 basecolor;//R, G, B, alpha
+	float hicolorh;//[0, 1]
+	float lowcolorh;//[0, 1]
+	ChaVector4 hiaddhsv;//H, S, V, alpha
+	ChaVector4 lowaddhsv;//H, S, V, alpha
+	void Init() {
+		hicolorh = 200.0f / 255.0f;
+		lowcolorh = 138.0f / 255.0f;
+		basecolor = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);//R, G, B, alpha
+		hiaddhsv = ChaVector4(0.0f, 0.0f, 0.2f, 0.0f);//H, S, V, alpha
+		lowaddhsv = ChaVector4(0.0f, 0.0f, -0.2f, 0.0f);//H, S, V, alpha
+	};
+	void InitZero() {
+		hicolorh = 200.0f / 255.0f;
+		lowcolorh = 138.0f / 255.0f;
+		basecolor = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);//R, G, B, alpha
+		hiaddhsv = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);//H, S, V, alpha
+		lowaddhsv = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);//H, S, V, alpha
+	};
+	tag_hsvtoon()
+	{
+		Init();
+	};
+}HSVTOON;
+
+
 
 class CMQOMaterial
 {
@@ -334,6 +362,10 @@ public:
 
 	void SetBoneMatrix(myRenderer::RENDEROBJ renderobj, int refposindex);
 	//void SetBoneMatrixReq(CBone* srcbone, myRenderer::RENDEROBJ renderobj);
+
+
+	int RemakeDiffuseTexture();
+
 
 private:
 	int InitParams();
@@ -825,6 +857,95 @@ public:
 		return m_refposnum;
 	}
 
+	void SetHSVToon(HSVTOON srcval)
+	{
+		m_hsvtoon = srcval;
+	}
+	HSVTOON GetHSVToon()
+	{
+		return m_hsvtoon;
+	}
+	void SetToonHiAddrH(float srcval) 
+	{
+		m_hsvtoon.hicolorh = srcval;
+	}
+	float GetToonHiAddrH()
+	{
+		return m_hsvtoon.hicolorh;
+	}
+	void SetToonLowAddrH(float srcval)
+	{
+		m_hsvtoon.lowcolorh = srcval;
+	}
+	float GetToonLowAddrH()
+	{
+		return m_hsvtoon.lowcolorh;
+	}
+	void SetToonHiAddH(float srcval)
+	{
+		m_hsvtoon.hiaddhsv.x = srcval;
+	}
+	float GetToonHiAddH()
+	{
+		return m_hsvtoon.hiaddhsv.x;
+	}
+	void SetToonHiAddS(float srcval)
+	{
+		m_hsvtoon.hiaddhsv.y = srcval;
+	}
+	float GetToonHiAddS()
+	{
+		return m_hsvtoon.hiaddhsv.y;
+	}
+	void SetToonHiAddV(float srcval)
+	{
+		m_hsvtoon.hiaddhsv.z = srcval;
+	}
+	float GetToonHiAddV()
+	{
+		return m_hsvtoon.hiaddhsv.z;
+	}
+	void SetToonHiAddA(float srcval)
+	{
+		m_hsvtoon.hiaddhsv.w;
+	}
+	float GetToonHiAddA()
+	{
+		return m_hsvtoon.hiaddhsv.w;
+	}
+	void SetToonLowAddH(float srcval)
+	{
+		m_hsvtoon.lowaddhsv.x = srcval;
+	}
+	float GetToonLowAddH()
+	{
+		return m_hsvtoon.lowaddhsv.x;
+	}
+	void SetToonLowAddS(float srcval)
+	{
+		m_hsvtoon.lowaddhsv.y = srcval;
+	}
+	float GetToonLowAddS()
+	{
+		return m_hsvtoon.lowaddhsv.y;
+	}
+	void SetToonLowAddV(float srcval)
+	{
+		m_hsvtoon.lowaddhsv.z = srcval;
+	}
+	float GetToonLowAddV()
+	{
+		return m_hsvtoon.lowaddhsv.z;
+	}
+	void SetToonLowAddA(float srcval)
+	{
+		m_hsvtoon.lowaddhsv.w;
+	}
+	float GetToonLowAddA()
+	{
+		return m_hsvtoon.lowaddhsv.w;
+	}
+
 public:
 	//###################################################
 	//CreateDecl()内で　頂点フォーマットによって　定数を設定する
@@ -1006,6 +1127,7 @@ private:
 	bool m_settempdiffusemult;
 	ChaVector4 m_tempdiffusemult;
 
+	HSVTOON m_hsvtoon;
 };
 
 

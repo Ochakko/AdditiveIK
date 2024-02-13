@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 class ChaVector4;
+struct tag_hsvtoon;
 
 class Texture  : public IShaderResource{
 public:
@@ -20,6 +21,8 @@ public:
 		m_texture = nullptr;	//テクスチャ。
 		ZeroMemory(&m_textureDesc, sizeof(D3D12_RESOURCE_DESC));	//テクスチャ情報
 	};
+
+	void ReleaseTexture();
 
 	/// <summary>
 	/// ファイルからテクスチャをロードするコンストラクタ
@@ -61,8 +64,8 @@ public:
 	/// カスタムカラーからToonテクスチャを初期化する。
 	/// </summary>
 	/// <param name="resrouce">D3Dリソース。</param>
-	int InitToonFromCustomColor(ChaVector4 srccol);
-
+	int InitToonFromCustomColor(const tag_hsvtoon* phsvtoon);
+	int WriteToonToSubResource(const tag_hsvtoon* phsvtoon, ID3D12Resource* srctexbuff);
 
 	/// <summary>
 	/// SRVに登録。

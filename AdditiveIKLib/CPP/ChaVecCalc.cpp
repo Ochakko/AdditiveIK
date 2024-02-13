@@ -614,10 +614,96 @@ void ChaVector4::Clamp(float srcmin, float srcmax)
 	z = tmpz;
 }
 
+int ChaVector4::HSV_Add(ChaVector4 srcadd)
+{
+	ChaVector4 temphsv = RGB2HSV();
+
+	temphsv.x += srcadd.x;
+	if (temphsv.x > 360.0f) {
+		if (fabs(temphsv.x) < (360.0f + 1e-4)) {
+			temphsv.x = 360.0f;//誤差
+		}
+		else {
+			temphsv.x -= 360.0f;
+		}
+	}
+	if (temphsv.x < 0.0f) {
+		if (fabs(temphsv.x) < 1e-4) {
+			temphsv.x = 0.0f;//誤差
+		}
+		else {
+			temphsv.x += 360.0f;
+		}
+	}
+	temphsv.x = min(360.0f, temphsv.x);
+	temphsv.x = max(0.0f, temphsv.x);
+
+	temphsv.y += srcadd.y;
+	temphsv.y = min(1.0f, temphsv.y);
+	temphsv.y = max(0.0f, temphsv.y);
+
+	temphsv.z += srcadd.z;
+	temphsv.z = min(1.0f, temphsv.z);
+	temphsv.z = max(0.0f, temphsv.z);
+
+	temphsv.w += srcadd.w;
+	temphsv.w = min(1.0f, temphsv.w);
+	temphsv.w = max(0.0f, temphsv.w);
+
+	ChaVector4 resultrgb = temphsv.HSV2RGB();
+	*this = resultrgb;
+
+	return 0;
+
+
+}
+
+int ChaVector4::HSV_AddH(float addh)
+{
+	//this:RGB[0,1], ret:RGB[0,1], temphsv:h[0,360] s[0,1] v[0,1]
+
+	if (fabs(addh) <= 1e-4) {
+		return 0;//!!!!!!!!!!!!!!
+	}
+
+
+	ChaVector4 temphsv = RGB2HSV();
+
+	temphsv.x += addh;
+	if (temphsv.x > 360.0f) {
+		if (fabs(temphsv.x) < (360.0f + 1e-4)) {
+			temphsv.x = 360.0f;//誤差
+		}
+		else {
+			temphsv.x -= 360.0f;
+		}
+	}
+	if (temphsv.x < 0.0f) {
+		if (fabs(temphsv.x) < 1e-4) {
+			temphsv.x = 0.0f;//誤差
+		}
+		else {
+			temphsv.x += 360.0f;
+		}
+	}
+	temphsv.x = min(360.0f, temphsv.x);
+	temphsv.x = max(0.0f, temphsv.x);
+
+	ChaVector4 resultrgb = temphsv.HSV2RGB();
+	*this = resultrgb;
+
+	return 0;
+
+}
 
 int ChaVector4::HSV_AddS(float adds)
 {
 	//this:RGB[0,1], ret:RGB[0,1], temphsv:h[0,360] s[0,1] v[0,1]
+
+	if (fabs(adds) <= 1e-4) {
+		return 0;//!!!!!!!!!!!!!!
+	}
+
 
 	ChaVector4 temphsv = RGB2HSV();
 	temphsv.y += adds;
@@ -632,6 +718,10 @@ int ChaVector4::HSV_AddS(float adds)
 int ChaVector4::HSV_AddV(float addv)
 {
 	//this:RGB[0,1], ret:RGB[0,1], temphsv:h[0,360] s[0,1] v[0,1]
+
+	if (fabs(addv) <= 1e-4) {
+		return 0;//!!!!!!!!!!!!!!
+	}
 
 	ChaVector4 temphsv = RGB2HSV();
 	temphsv.z += addv;
@@ -653,7 +743,7 @@ ChaVector4 ChaVector4::RGB2HSV()
 	_min = fmin(x, fmin(y, z));
 	_diff = _max - _min;
 
-	if (fabs(_max) <= 1e-4) {
+	if (_max <= 1e-4) {
 		rethsv = ChaVector4(0.0f, 0.0f, 0.0f, this->w);
 	}
 	else {
