@@ -64,8 +64,8 @@ public:
 	/// カスタムカラーからToonテクスチャを初期化する。
 	/// </summary>
 	/// <param name="resrouce">D3Dリソース。</param>
-	int InitToonFromCustomColor(const tag_hsvtoon* phsvtoon);
-	int WriteToonToSubResource(const tag_hsvtoon* phsvtoon, ID3D12Resource* srctexbuff);
+	int InitToonFromCustomColor(tag_hsvtoon* phsvtoon);
+	int WriteToonToSubResource(tag_hsvtoon* phsvtoon, ID3D12Resource* srctexbuff);
 
 	/// <summary>
 	/// SRVに登録。

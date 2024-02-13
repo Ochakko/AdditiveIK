@@ -2636,7 +2636,7 @@ int CMQOMaterial::SetDiffuseTexture()
 {
 	//int result = m_diffuseMap.InitFromCustomColor(m_dif4f);
 
-	m_hsvtoon.basecolor = m_dif4f;//!!!!!!
+	m_hsvtoon.basehsv = m_dif4f.RGB2HSV();//!!!!!!
 	int result = m_diffuseMap.InitToonFromCustomColor(&m_hsvtoon);//2024/02/13 ToonTexture
 	if (result != 0) {
 		_ASSERT(0);
@@ -2971,6 +2971,7 @@ void CMQOMaterial::SetConstLights(SConstantBufferLights* pcbLights)
 	}
 	pcbLights->Init();
 	pcbLights->lightsnum[0] = g_nNumActiveLights;
+	pcbLights->lightsnum[1] = m_hsvtoon.lightindex;//2024/02/14
 	int lightno;
 	for (lightno = 0; lightno < g_nNumActiveLights; lightno++) {//2023/12/17必要分だけ詰めて受け渡し
 	//for (lightno = 0; lightno < LIGHTNUMMAX; lightno++) {
@@ -3650,7 +3651,7 @@ int CMQOMaterial::SetRefPosFl4x4(CModel* srcmodel, int refposindex)
 
 int CMQOMaterial::RemakeDiffuseTexture()
 {
-	m_hsvtoon.basecolor = m_dif4f;//!!!!!!
+	//m_hsvtoon.basehsv = m_dif4f.RGB2HSV();//!!!!!!Remake時には編集した値を使う
 	int result = m_diffuseMap.WriteToonToSubResource(&m_hsvtoon, nullptr);//内容を書き換えるだけ
 	if (result != 0) {
 		_ASSERT(0);

@@ -2,6 +2,12 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/02/14
+　HSV_Toonの修正
+　　シェーダでの法線の計算が間違っていたのを修正
+　　BaseHSVの設定項目追加
+　　HSV_Toon用のライトインデックス設定項目追加
+
 
 2024/02/13
 　TOONシェーダ対応

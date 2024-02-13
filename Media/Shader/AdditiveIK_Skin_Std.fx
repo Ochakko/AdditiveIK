@@ -352,7 +352,7 @@ float4 PSMainSkinNoLight(SPSIn psIn) : SV_Target0
     //float2 diffuseuv = { 0.5f, 0.5f };
 
     float3 normaly0 = normalize(float3(psIn.normal.x, 0.0f, psIn.normal.z));
-    float lighty0 = normalize(float3(directionalLight[0].direction.x, 0.0f, directionalLight[0].direction.z));
+    float3 lighty0 = normalize(float3(directionalLight[lightsnum.y].direction.x, 0.0f, directionalLight[lightsnum.y].direction.z));
     float nl;
     nl = dot(normaly0, lighty0);
     float toonh = (nl + 1.0f) * 0.5f;
@@ -371,7 +371,7 @@ float4 PSMainSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     //float2 diffuseuv = { 0.5f, 0.5f };
 
     float3 normaly0 = normalize(float3(psIn.normal.x, 0.0f, psIn.normal.z));
-    float lighty0 = normalize(float3(directionalLight[0].direction.x, 0.0f, directionalLight[0].direction.z));
+    float3 lighty0 = normalize(float3(directionalLight[lightsnum.y].direction.x, 0.0f, directionalLight[lightsnum.y].direction.z));
     float nl;
     nl = dot(normaly0, lighty0);
     float toonh = (nl + 1.0f) * 0.5f;

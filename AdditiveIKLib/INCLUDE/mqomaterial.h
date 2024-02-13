@@ -108,10 +108,10 @@ struct SConstantBufferLights {
 	ChaVector4 ambientLight; // 環境光
 	void Init() {
 		//ZeroMemory(&lightsnum, sizeof(int) * 4);
-		lightsnum[0] = 1;
-		lightsnum[1] = 1;
-		lightsnum[2] = 1;
-		lightsnum[3] = 1;
+		lightsnum[0] = 1;//DirectionalLightNum
+		lightsnum[1] = 0;//2024/02/14 HSVToon Light Index
+		lightsnum[2] = 0;
+		lightsnum[3] = 0;
 		int lindex;
 		for (lindex = 0; lindex < NUM_DIRECTIONAL_LIGHT; lindex++) {
 			directionalLight[lindex].Init();
@@ -158,22 +158,25 @@ typedef struct tag_scaleinstancing
 
 typedef struct tag_hsvtoon
 {
-	ChaVector4 basecolor;//R, G, B, alpha
+	int lightindex;
+	ChaVector4 basehsv;//R, G, B, alpha
 	float hicolorh;//[0, 1]
 	float lowcolorh;//[0, 1]
 	ChaVector4 hiaddhsv;//H, S, V, alpha
 	ChaVector4 lowaddhsv;//H, S, V, alpha
 	void Init() {
+		lightindex = 0;
 		hicolorh = 200.0f / 255.0f;
 		lowcolorh = 138.0f / 255.0f;
-		basecolor = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);//R, G, B, alpha
+		basehsv = ChaVector4(0.0f, 0.0f, 0.0f, 1.0f);//H, S, V, alpha
 		hiaddhsv = ChaVector4(0.0f, 0.0f, 0.2f, 0.0f);//H, S, V, alpha
 		lowaddhsv = ChaVector4(0.0f, 0.0f, -0.2f, 0.0f);//H, S, V, alpha
 	};
 	void InitZero() {
+		lightindex = 0;
 		hicolorh = 200.0f / 255.0f;
 		lowcolorh = 138.0f / 255.0f;
-		basecolor = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);//R, G, B, alpha
+		basehsv = ChaVector4(0.0f, 0.0f, 0.0f, 1.0f);//H, S, V, alpha
 		hiaddhsv = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);//H, S, V, alpha
 		lowaddhsv = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);//H, S, V, alpha
 	};
@@ -881,6 +884,51 @@ public:
 	{
 		return m_hsvtoon.lowcolorh;
 	}
+
+	void SetToonLightIndex(int srcval)
+	{
+		m_hsvtoon.lightindex = srcval;
+	}
+	int GetToonLightIndex()
+	{
+		return m_hsvtoon.lightindex;
+	}
+
+	void SetToonBaseH(float srcval)
+	{
+		m_hsvtoon.basehsv.x = srcval;
+	}
+	float GetToonBaseH()
+	{
+		return m_hsvtoon.basehsv.x;
+	}
+	void SetToonBaseS(float srcval)
+	{
+		m_hsvtoon.basehsv.y = srcval;
+	}
+	float GetToonBaseS()
+	{
+		return m_hsvtoon.basehsv.y;
+	}
+	void SetToonBaseV(float srcval)
+	{
+		m_hsvtoon.basehsv.z = srcval;
+	}
+	float GetToonBaseV()
+	{
+		return m_hsvtoon.basehsv.z;
+	}
+	void SetToonBaseA(float srcval)
+	{
+		m_hsvtoon.basehsv.w = srcval;
+		m_dif4f.w = srcval;
+	}
+	float GetToonBaseA()
+	{
+		return m_hsvtoon.basehsv.w;
+	}
+
+
 	void SetToonHiAddH(float srcval)
 	{
 		m_hsvtoon.hiaddhsv.x = srcval;
@@ -907,7 +955,7 @@ public:
 	}
 	void SetToonHiAddA(float srcval)
 	{
-		m_hsvtoon.hiaddhsv.w;
+		m_hsvtoon.hiaddhsv.w = srcval;
 	}
 	float GetToonHiAddA()
 	{
@@ -939,7 +987,7 @@ public:
 	}
 	void SetToonLowAddA(float srcval)
 	{
-		m_hsvtoon.lowaddhsv.w;
+		m_hsvtoon.lowaddhsv.w = srcval;
 	}
 	float GetToonLowAddA()
 	{

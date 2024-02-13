@@ -129,6 +129,13 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			CallF(Write2File("    <ToonLowAddV>%.2f</ToonLowAddV>\r\n", hsvtoon.lowaddhsv.z), return 1);
 			CallF(Write2File("    <ToonLowAddA>%.2f</ToonLowAddA>\r\n", hsvtoon.lowaddhsv.w), return 1);
 
+			//2024/02/14
+			CallF(Write2File("    <ToonLightIndex>%d</ToonLightIndex>\r\n", hsvtoon.lightindex), return 1);
+			CallF(Write2File("    <ToonBaseH>%.2f</ToonBaseH>\r\n", hsvtoon.basehsv.x), return 1);
+			CallF(Write2File("    <ToonBaseS>%.2f</ToonBaseS>\r\n", hsvtoon.basehsv.y), return 1);
+			CallF(Write2File("    <ToonBaseV>%.2f</ToonBaseV>\r\n", hsvtoon.basehsv.z), return 1);
+			CallF(Write2File("    <ToonBaseA>%.2f</ToonBaseA>\r\n", hsvtoon.basehsv.w), return 1);
+
 
 			CallF(Write2File("  </Material>\r\n"), return 1);
 
@@ -294,6 +301,19 @@ int CShaderTypeFile::LoadShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 				float lowadda = hsvtoon.lowaddhsv.w;
 				Read_Float(&materialbuf, "<ToonLowAddA>", "</ToonLowAddA>\r\n", &lowadda);
 				hsvtoon.lowaddhsv.w = lowadda;
+
+				//2024/02/14
+				int lightindex = hsvtoon.lightindex;
+				Read_Int(&materialbuf, "<ToonLightIndex>", "</ToonLightIndex>\r\n", &lightindex);
+				hsvtoon.lightindex = lightindex;
+
+				ChaVector4 basehsv = curmqomat->GetDif4F().RGB2HSV();
+				Read_Float(&materialbuf, "<ToonBaseH>", "</ToonBaseH>\r\n", &(basehsv.x));
+				Read_Float(&materialbuf, "<ToonBaseS>", "</ToonBaseS>\r\n", &(basehsv.y));
+				Read_Float(&materialbuf, "<ToonBaseV>", "</ToonBaseV>\r\n", &(basehsv.z));
+				Read_Float(&materialbuf, "<ToonBaseA>", "</ToonBaseA>\r\n", &(basehsv.w));
+				hsvtoon.basehsv = basehsv;
+
 
 				curmqomat->SetHSVToon(hsvtoon);
 			}

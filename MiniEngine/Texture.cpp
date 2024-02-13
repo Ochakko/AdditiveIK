@@ -148,7 +148,7 @@ int Texture::InitFromCustomColor(ChaVector4 srccol)
 }
 
 //ToonTexture
-int Texture::InitToonFromCustomColor(const tag_hsvtoon* phsvtoon)
+int Texture::InitToonFromCustomColor(tag_hsvtoon* phsvtoon)
 {
 	if (!g_graphicsEngine) {
 		_ASSERT(0);
@@ -230,7 +230,7 @@ int Texture::InitToonFromCustomColor(const tag_hsvtoon* phsvtoon)
 
 }
 
-int Texture::WriteToonToSubResource(const tag_hsvtoon* phsvtoon, ID3D12Resource* srctexbuff)
+int Texture::WriteToonToSubResource(tag_hsvtoon* phsvtoon, ID3D12Resource* srctexbuff)
 {
 	if (!phsvtoon) {
 		_ASSERT(0);
@@ -254,18 +254,18 @@ int Texture::WriteToonToSubResource(const tag_hsvtoon* phsvtoon, ID3D12Resource*
 	texW = (UINT)textureDesc.Width;
 	texH = (UINT)textureDesc.Height;
 
+	ChaVector4 basecolor = phsvtoon->basehsv.HSV2RGB();
+
 	struct TexRGBA {
 		unsigned char R, G, B, A;
 	};
 
 	TexRGBA basergba;
 	{
-		ChaVector4 basecol = phsvtoon->basecolor;
-
-		double colR = (double)basecol.x * 255.0;
-		double colG = (double)basecol.y * 255.0;
-		double colB = (double)basecol.z * 255.0;
-		double colA = (double)basecol.w * 255.0;
+		double colR = (double)basecolor.x * 255.0;
+		double colG = (double)basecolor.y * 255.0;
+		double colB = (double)basecolor.z * 255.0;
+		double colA = (double)basecolor.w * 255.0;
 		basergba.R = (unsigned char)(fmax(0.0, fmin(255.0, colR)));
 		basergba.G = (unsigned char)(fmax(0.0, fmin(255.0, colG)));
 		basergba.B = (unsigned char)(fmax(0.0, fmin(255.0, colB)));
@@ -274,7 +274,7 @@ int Texture::WriteToonToSubResource(const tag_hsvtoon* phsvtoon, ID3D12Resource*
 
 	TexRGBA hirgba;
 	{
-		ChaVector4 hicol = phsvtoon->basecolor;
+		ChaVector4 hicol = basecolor;
 		hicol.HSV_Add(phsvtoon->hiaddhsv);
 
 		double colR = (double)hicol.x * 255.0;
@@ -289,7 +289,7 @@ int Texture::WriteToonToSubResource(const tag_hsvtoon* phsvtoon, ID3D12Resource*
 
 	TexRGBA lowrgba;
 	{
-		ChaVector4 lowcol = phsvtoon->basecolor;
+		ChaVector4 lowcol = basecolor;
 		lowcol.HSV_Add(phsvtoon->lowaddhsv);
 
 		double colR = (double)lowcol.x * 255.0;
