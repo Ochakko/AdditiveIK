@@ -117,6 +117,19 @@ sampler g_sampler_normal : register(s2);
 sampler g_sampler_metal : register(s3);
 sampler g_sampler_shadow : register(s4);
 
+float4 CalcDiffuseColor(float4 meshnormal, float4 lightdir)
+{
+    float3 normaly0 = normalize(float3(meshnormal.x, 0.0f, meshnormal.z));
+    float3 lighty0 = normalize(float3(lightdir.x, 0.0f, lightdir.z));
+    float nl;
+    nl = dot(normaly0, lighty0);
+    float toonh = (nl + 1.0f) * 0.5f;
+    float2 diffuseuv = { 0.5f, toonh };
+    float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv) * materialdisprate.x;
+    
+    return diffusecol;
+}
+
 
 //float3 GetNormal(float3 normal, float3 tangent, float3 biNormal, float2 uv)
 //{
@@ -236,13 +249,13 @@ sampler g_sampler_shadow : register(s4);
 //#############
 float3 GetNormal(float3 normal, float3 tangent, float3 biNormal, float2 uv1)
 {
-    float3 binSpaceNormal = g_normalMap.SampleLevel(g_sampler_normal, uv1, 0.0f).xyz;
-    binSpaceNormal = (binSpaceNormal * 2.0f) - 1.0f;
-
+    float3 normalmapNormal = g_normalMap.SampleLevel(g_sampler_normal, uv1, 0.0f).xyz;
+    float3 binSpaceNormal = (normalmapNormal * 2.0f) - 1.0f;
+   
     float3 newNormal = tangent * binSpaceNormal.x + biNormal * binSpaceNormal.y + normal * binSpaceNormal.z;
-    //float3 newNormal = binSpaceNormal;
-    
-    return newNormal;
+    float normalleng = length(normalmapNormal);
+    float3 retNormal = (normalleng >= 0.5f) ? newNormal : normal;
+    return retNormal;
 }
 
 // ベックマン分布を計算する
@@ -357,9 +370,9 @@ SPSIn VSMainSkinPBR(SVSIn vsIn, uniform bool hasSkin)
     psIn.uv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
     psIn.diffusemult = diffusemult;
 
-    psIn.normal = normalize(mul(mWorld, vsIn.normal));
-    psIn.tangent = normalize(mul(mWorld, vsIn.tangent));
-    psIn.biNormal = normalize(mul(mWorld, vsIn.biNormal));
+    psIn.normal = normalize(mul(finalmat, vsIn.normal));
+    psIn.tangent = normalize(mul(finalmat, vsIn.tangent));
+    psIn.biNormal = normalize(mul(finalmat, vsIn.biNormal));
     
     return psIn;
 }
@@ -425,9 +438,9 @@ SPSInShadowReciever VSMainSkinPBRShadowReciever(SVSIn vsIn, uniform bool hasSkin
     // step-12 頂点のライトから見た深度値を計算する
     psIn.posInLVP.z = length(psIn.worldPos.xyz - lightPos.xyz) / shadowmaxz.x;
         
-    psIn.normal = normalize(mul(mWorld, vsIn.normal));
-    psIn.tangent = normalize(mul(mWorld, vsIn.tangent));
-    psIn.biNormal = normalize(mul(mWorld, vsIn.biNormal));
+    psIn.normal = normalize(mul(finalmat, vsIn.normal));
+    psIn.tangent = normalize(mul(finalmat, vsIn.tangent));
+    psIn.biNormal = normalize(mul(finalmat, vsIn.biNormal));
     
     return psIn;
 }
@@ -439,8 +452,7 @@ SPSInShadowReciever VSMainSkinPBRShadowReciever(SVSIn vsIn, uniform bool hasSkin
 /// </summary>
 float4 PSMainSkinPBR(SPSIn psIn) : SV_Target0
 {
-    float2 diffuseuv = { 0.5f, 0.5f };
-    float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv);
+    float4 diffusecol = CalcDiffuseColor(psIn.normal, directionalLight[lightsnum.y].direction);
 
     
     //  // 法線を計算
@@ -579,8 +591,7 @@ float4 PSMainSkinPBRShadowMap(SPSInShadowMap psIn) : SV_Target0
 
 float4 PSMainSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
-    float2 diffuseuv = { 0.5f, 0.5f };
-    float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv);
+    float4 diffusecol = CalcDiffuseColor(psIn.normal, directionalLight[lightsnum.y].direction);
 
     
     //  // 法線を計算

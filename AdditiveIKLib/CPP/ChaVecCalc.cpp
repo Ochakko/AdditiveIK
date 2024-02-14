@@ -4455,20 +4455,20 @@ int CalcTangentAndBinormal(int srcuvnum, BINORMALDISPV* vert_0, BINORMALDISPV* v
 	//	{ vert_2->pos.z, vert_2->uv[0].x, vert_2->uv[0].y}
 	//};
 
-	if (srcuvnum >= 2) {
-		cp0[0] = Vector3(vert_0->pos.x, vert_0->uv[1].x, vert_0->uv[1].y);
-		cp0[1] = Vector3(vert_0->pos.y, vert_0->uv[1].x, vert_0->uv[1].y);
-		cp0[2] = Vector3(vert_0->pos.z, vert_0->uv[1].x, vert_0->uv[1].y);
+	//if (srcuvnum >= 2) {
+	//	cp0[0] = Vector3(vert_0->pos.x, vert_0->uv[1].x, vert_0->uv[1].y);
+	//	cp0[1] = Vector3(vert_0->pos.y, vert_0->uv[1].x, vert_0->uv[1].y);
+	//	cp0[2] = Vector3(vert_0->pos.z, vert_0->uv[1].x, vert_0->uv[1].y);
 
-		cp1[0] = Vector3(vert_1->pos.x, vert_1->uv[1].x, vert_1->uv[1].y);
-		cp1[1] = Vector3(vert_1->pos.y, vert_1->uv[1].x, vert_1->uv[1].y);
-		cp1[2] = Vector3(vert_1->pos.z, vert_1->uv[1].x, vert_1->uv[1].y);
+	//	cp1[0] = Vector3(vert_1->pos.x, vert_1->uv[1].x, vert_1->uv[1].y);
+	//	cp1[1] = Vector3(vert_1->pos.y, vert_1->uv[1].x, vert_1->uv[1].y);
+	//	cp1[2] = Vector3(vert_1->pos.z, vert_1->uv[1].x, vert_1->uv[1].y);
 
-		cp2[0] = Vector3(vert_2->pos.x, vert_2->uv[1].x, vert_2->uv[1].y);
-		cp2[1] = Vector3(vert_2->pos.y, vert_2->uv[1].x, vert_2->uv[1].y);
-		cp2[2] = Vector3(vert_2->pos.z, vert_2->uv[1].x, vert_2->uv[1].y);
-	}
-	else {
+	//	cp2[0] = Vector3(vert_2->pos.x, vert_2->uv[1].x, vert_2->uv[1].y);
+	//	cp2[1] = Vector3(vert_2->pos.y, vert_2->uv[1].x, vert_2->uv[1].y);
+	//	cp2[2] = Vector3(vert_2->pos.z, vert_2->uv[1].x, vert_2->uv[1].y);
+	//}
+	//else {
 		cp0[0] = Vector3(vert_0->pos.x, vert_0->uv[0].x, vert_0->uv[0].y);
 		cp0[1] = Vector3(vert_0->pos.y, vert_0->uv[0].x, vert_0->uv[0].y);
 		cp0[2] = Vector3(vert_0->pos.z, vert_0->uv[0].x, vert_0->uv[0].y);
@@ -4480,7 +4480,7 @@ int CalcTangentAndBinormal(int srcuvnum, BINORMALDISPV* vert_0, BINORMALDISPV* v
 		cp2[0] = Vector3(vert_2->pos.x, vert_2->uv[0].x, vert_2->uv[0].y);
 		cp2[1] = Vector3(vert_2->pos.y, vert_2->uv[0].x, vert_2->uv[0].y);
 		cp2[2] = Vector3(vert_2->pos.z, vert_2->uv[0].x, vert_2->uv[0].y);
-	}
+	//}
 
 
 
@@ -4508,8 +4508,8 @@ int CalcTangentAndBinormal(int srcuvnum, BINORMALDISPV* vert_0, BINORMALDISPV* v
 		}
 	}
 
-	tangent.Normalize();
-	binormal.Normalize();
+	//tangent.Normalize();
+	//binormal.Normalize();
 
 	vert_0->tangent += ChaVector4(ChaVector3(tangent), 0.0f);
 	vert_1->tangent += ChaVector4(ChaVector3(tangent), 0.0f);

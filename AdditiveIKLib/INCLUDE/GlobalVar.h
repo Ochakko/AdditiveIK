@@ -82,7 +82,7 @@ float g_shadowmap_plusup[SHADOWSLOTNUM];
 float g_shadowmap_distscale[SHADOWSLOTNUM];
 int g_shadowmap_lightdir[SHADOWSLOTNUM];
 
-bool g_zpreflag = true;
+bool g_zpreflag = false;
 bool g_zcmpalways = false;
 bool g_rotatetanim = false;
 bool g_tpose = true;

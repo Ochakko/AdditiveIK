@@ -121,6 +121,20 @@ sampler g_sampler_metal : register(s3);
 sampler g_sampler_shadow : register(s4);
 
 
+float4 CalcDiffuseColor(float4 meshnormal, float4 lightdir)
+{
+    float3 normaly0 = normalize(float3(meshnormal.x, 0.0f, meshnormal.z));
+    float3 lighty0 = normalize(float3(lightdir.x, 0.0f, lightdir.z));
+    float nl;
+    nl = dot(normaly0, lighty0);
+    float toonh = (nl + 1.0f) * 0.5f;
+    float2 diffuseuv = { 0.5f, toonh };
+    float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv) * materialdisprate.x;
+    
+    return diffusecol;
+}
+
+
 /// <summary>
 /// モデル用の頂点シェーダーのエントリーポイント
 /// </summary>
@@ -249,13 +263,9 @@ float4 PSMainNoSkinStdShadowMap(SPSInShadowMap psIn) : SV_Target0
 
 float4 PSMainNoSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
-    // 普通にテクスチャを
-    //return g_texture.Sample(g_sampler, psIn.uv);
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
     float2 diffuseuv = { 0.5f, 0.5f };
-    float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv);
-    //texcol.w = 1.0f;
-    //return texcol;
+    float4 diffusecol = CalcDiffuseColor(psIn.normal, directionalLight[lightsnum.y].direction);
      
     float3 wPos = psIn.pos.xyz / psIn.pos.w;
     
@@ -331,38 +341,16 @@ float4 PSMainNoSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 
 float4 PSMainNoSkinNoLight(SPSIn psIn) : SV_Target0
 {
-    // 普通にテクスチャを
-    //return g_texture.Sample(g_sampler, psIn.uv);
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    //float2 diffuseuv = { 0.5f, 0.5f };
-
-    float3 normaly0 = normalize(float3(psIn.normal.x, 0.0f, psIn.normal.z));
-    float3 lighty0 = normalize(float3(directionalLight[lightsnum.y].direction.x, 0.0f, directionalLight[lightsnum.y].direction.z));
-    float nl;
-    nl = dot(normaly0, lighty0);
-    float toonh = (nl + 1.0f) * 0.5f;
-    float2 diffuseuv = { toonh, toonh };
-    float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv) * materialdisprate.x;
-      
+    float4 diffusecol = CalcDiffuseColor(psIn.normal, directionalLight[lightsnum.y].direction);      
     float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
     return pscol;
 }
 
 float4 PSMainNoSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
-    // 普通にテクスチャを
-    //return g_texture.Sample(g_sampler, psIn.uv);
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    //float2 diffuseuv = { 0.5f, 0.5f };
-
-    float3 normaly0 = normalize(float3(psIn.normal.x, 0.0f, psIn.normal.z));
-    float3 lighty0 = normalize(float3(directionalLight[lightsnum.y].direction.x, 0.0f, directionalLight[lightsnum.y].direction.z));
-    float nl;
-    nl = dot(normaly0, lighty0);
-    float toonh = (nl + 1.0f) * 0.5f;
-    float2 diffuseuv = { toonh, toonh };
-    float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv) * materialdisprate.x;
-      
+    float4 diffusecol = CalcDiffuseColor(psIn.normal, directionalLight[lightsnum.y].direction);     
     float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
 ////////
     // ライトビュースクリーン空間からUV空間に座標変換

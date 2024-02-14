@@ -2,11 +2,73 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+
 2024/02/14
+　AdditiveIK 1.0.0.8 RC1(リリース候補1)
+　　1.0.0.7からの変更点
+　　　TOONシェーダ対応
+　　　　NOLIGHTシェーダをTOONシェーダに変更
+　　　　Shaderプレートメニューでマテリアルの名前のボタンを押してToonを選択すると機能
+　　　　TOON用のライトとしてはLightプレートメニューの１番目のライトの向きを使用
+　　　　マテリアルの拡散色から自動的にTOONテクスチャを作成しdiffuseMapとしてシェーダで使用
+　　　　設定画面
+　　　　　Shaderプレートメニューで設定
+　　　　　面の向きとToon用ライトの向きが同じ向きを向いているほどHiAddr,LowAddrのスライダーは右側にします
+　　　　　HiAddrよりも向きが同じ方向の場合にはハイライト色、LowAddrよりも向きが違う場合には陰色、どちらでもない場合にはベース色を表示
+　　　　　トゥーンの色の設定はHSVで行います
+　　　　　HSVのHは色相で0から360の数値をとります.　Sは彩度で0から1、Vは輝度で0から1.
+　　　　　Base色はHSVの数値そのものを指定.
+　　　　　AddH, AddS, AddVはベース色のHSVに加える分(引くときはマイナスの数値を指定)の数値を指定.
+　　　　　各設定項目にはGUIスライダー有り
+　　　　　プロジェクト保存時に*.stfファイルにテキスト保存、プロジェクト読み込み時に自動読込
+　　　PBR, StdのdiffuseMap参照の際にもHSV_Toonのテクスチャを参照
+　　　PBRの法線修正
+　　　　法線マップが無い場合には頂点法線を使用するように.
+　　　　法線マップが無いメッシュにPBRシェーダを選んでもそれなりに表示されるように.
+　　　Rigスプライトの画像ファイル更新
+　　　　見やすく
+　　　ZPreCullingをデフォルトでオフ
+　　　　ZPreによる効果よりも不具合の方が多くなってきたため.
+　　　RefPosの選択ジョイント軌跡表示修正
+　　　　カレントフレームの選択ジョイント位置も軌跡に含めるように.
+　　　TestフォルダのモデルのShader設定を修正
+　　　　顔には陰が付かないように.
+
+
+
+
+
+
+動画　ver1.0.0.4以降共通
+　新機能の使い方まとめ動画
+　【DirectX12】AdditiveIK新機能【モーキャプ編集】
+ 　https://youtu.be/oKGY62YosSg
+
+   使用例動画
+  【モーキャプ】VRoidでプロのアセットを飛んでみた【編集ツール】
+　  https://youtu.be/R0MsXt8plYg
+
+
+
+
+
+2024/02/14_1
 　HSV_Toonの修正
 　　シェーダでの法線の計算が間違っていたのを修正
 　　BaseHSVの設定項目追加
 　　HSV_Toon用のライトインデックス設定項目追加
+　　Shaderメニューで全マテリアル設定を選んだ場合(見出し行のボタンを押した場合)の処理を修正
+　PBR, StdのdiffuseMap参照の際にもHSV_Toonのテクスチャを参照
+　PBRの法線修正
+　　法線マップが無い場合には頂点法線を使用するように.
+　Rigスプライトの画像ファイル更新
+　　見やすく
+　ZPreCullingをデフォルトでオフ
+　TestフォルダのモデルのShader設定を修正
+　　顔には陰が付かないように.
+
+
 
 
 2024/02/13
@@ -85,20 +147,6 @@ https://github.com/Ochakko/AdditiveIK
 　　　　プロジェクト保存前にGUIを閉じるように修正.
 　　　　ConstantBufferとDescriptorHeapをダブルバッファからシングルバッファに変更.
 　　　　ConstantBufferとDescriptorHeapへのセットは計算関数からではなく、事前作成したものに対して描画関数から呼ぶのでメモリ節約のためにシングルにした.
-
-
-
-
-動画　ver1.0.0.4以降共通
-　新機能の使い方まとめ動画
-　【DirectX12】AdditiveIK新機能【モーキャプ編集】
- 　https://youtu.be/oKGY62YosSg
-
-   使用例動画
-  【モーキャプ】VRoidでプロのアセットを飛んでみた【編集ツール】
-　  https://youtu.be/R0MsXt8plYg
-
-
 
 
 

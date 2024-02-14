@@ -412,6 +412,15 @@ int CPolyMesh3::BuildTangentAndBinormal(int srcuvnum)
 		return 1;
 	}
 
+	int vno;
+	for (vno = 0; vno < (m_facenum * 3); vno++) {
+		BINORMALDISPV* pv = m_dispv + vno;
+		if (pv) {
+			pv->tangent.SetZeroVec4(0.0f);
+			pv->binormal.SetZeroVec4(0.0f);
+		}
+	}
+
 	int faceno;
 	for (faceno = 0; faceno < m_facenum; faceno++) {
 		int i1 = *(m_dispindex + faceno * 3);
@@ -422,7 +431,7 @@ int CPolyMesh3::BuildTangentAndBinormal(int srcuvnum)
 		BINORMALDISPV* v3 = m_dispv + i3;
 		CalcTangentAndBinormal(srcuvnum, v1, v2, v3);
 	}
-	int vno;
+
 	for (vno = 0; vno < (m_facenum * 3); vno++) {
 		BINORMALDISPV* pv = m_dispv + vno;
 		if (pv) {

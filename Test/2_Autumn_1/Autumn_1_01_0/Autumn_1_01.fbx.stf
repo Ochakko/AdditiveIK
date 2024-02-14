@@ -2,12 +2,12 @@
 <SHADERTYPEFILE>
   <FileInfo>
     <kind>ShaderTypeFile</kind>
-    <version>1002</version>
+    <version>1004</version>
     <type>0</type>
   </FileInfo>
   <Material>
     <MaterialName>N00_000_00_FaceMouth_00_FACE__Instance_</MaterialName>
-    <ShaderType>-2</ShaderType>
+    <ShaderType>-1</ShaderType>
     <MetalCoef>0.250000</MetalCoef>
     <SmoothCoef>0.250000</SmoothCoef>
     <LightScale1>1.000000</LightScale1>
@@ -19,10 +19,26 @@
     <LightScale7>1.000000</LightScale7>
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
+    <EmissiveScale>1.000000</EmissiveScale>
+    <ToonHiColorH>0.78</ToonHiColorH>
+    <ToonLowColorH>0.54</ToonLowColorH>
+    <ToonHiAddH>0.00</ToonHiAddH>
+    <ToonHiAddS>0.00</ToonHiAddS>
+    <ToonHiAddV>0.20</ToonHiAddV>
+    <ToonHiAddA>0.00</ToonHiAddA>
+    <ToonLowAddH>0.00</ToonLowAddH>
+    <ToonLowAddS>0.00</ToonLowAddS>
+    <ToonLowAddV>-0.20</ToonLowAddV>
+    <ToonLowAddA>0.00</ToonLowAddA>
+    <ToonLightIndex>0</ToonLightIndex>
+    <ToonBaseH>0.00</ToonBaseH>
+    <ToonBaseS>0.00</ToonBaseS>
+    <ToonBaseV>1.00</ToonBaseV>
+    <ToonBaseA>1.00</ToonBaseA>
   </Material>
   <Material>
     <MaterialName>N00_000_00_EyeIris_00_EYE__Instance_</MaterialName>
-    <ShaderType>-2</ShaderType>
+    <ShaderType>-1</ShaderType>
     <MetalCoef>0.250000</MetalCoef>
     <SmoothCoef>0.250000</SmoothCoef>
     <LightScale1>1.000000</LightScale1>
@@ -34,10 +50,26 @@
     <LightScale7>1.000000</LightScale7>
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
+    <EmissiveScale>1.000000</EmissiveScale>
+    <ToonHiColorH>0.78</ToonHiColorH>
+    <ToonLowColorH>0.54</ToonLowColorH>
+    <ToonHiAddH>0.00</ToonHiAddH>
+    <ToonHiAddS>0.00</ToonHiAddS>
+    <ToonHiAddV>0.20</ToonHiAddV>
+    <ToonHiAddA>0.00</ToonHiAddA>
+    <ToonLowAddH>0.00</ToonLowAddH>
+    <ToonLowAddS>0.00</ToonLowAddS>
+    <ToonLowAddV>-0.20</ToonLowAddV>
+    <ToonLowAddA>0.00</ToonLowAddA>
+    <ToonLightIndex>0</ToonLightIndex>
+    <ToonBaseH>0.00</ToonBaseH>
+    <ToonBaseS>0.00</ToonBaseS>
+    <ToonBaseV>1.00</ToonBaseV>
+    <ToonBaseA>1.00</ToonBaseA>
   </Material>
   <Material>
     <MaterialName>N00_000_00_EyeHighlight_00_EYE__Instance_</MaterialName>
-    <ShaderType>-2</ShaderType>
+    <ShaderType>-1</ShaderType>
     <MetalCoef>0.250000</MetalCoef>
     <SmoothCoef>0.250000</SmoothCoef>
     <LightScale1>1.000000</LightScale1>
@@ -49,10 +81,26 @@
     <LightScale7>1.000000</LightScale7>
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
+    <EmissiveScale>1.000000</EmissiveScale>
+    <ToonHiColorH>0.78</ToonHiColorH>
+    <ToonLowColorH>0.54</ToonLowColorH>
+    <ToonHiAddH>0.00</ToonHiAddH>
+    <ToonHiAddS>0.00</ToonHiAddS>
+    <ToonHiAddV>0.20</ToonHiAddV>
+    <ToonHiAddA>0.00</ToonHiAddA>
+    <ToonLowAddH>0.00</ToonLowAddH>
+    <ToonLowAddS>0.00</ToonLowAddS>
+    <ToonLowAddV>-0.20</ToonLowAddV>
+    <ToonLowAddA>0.00</ToonLowAddA>
+    <ToonLightIndex>0</ToonLightIndex>
+    <ToonBaseH>0.00</ToonBaseH>
+    <ToonBaseS>0.00</ToonBaseS>
+    <ToonBaseV>1.00</ToonBaseV>
+    <ToonBaseA>1.00</ToonBaseA>
   </Material>
   <Material>
     <MaterialName>N00_000_00_Face_00_SKIN__Instance_</MaterialName>
-    <ShaderType>-2</ShaderType>
+    <ShaderType>-1</ShaderType>
     <MetalCoef>0.250000</MetalCoef>
     <SmoothCoef>0.250000</SmoothCoef>
     <LightScale1>1.000000</LightScale1>
@@ -64,10 +112,26 @@
     <LightScale7>1.000000</LightScale7>
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
+    <EmissiveScale>1.000000</EmissiveScale>
+    <ToonHiColorH>0.78</ToonHiColorH>
+    <ToonLowColorH>0.00</ToonLowColorH>
+    <ToonHiAddH>0.00</ToonHiAddH>
+    <ToonHiAddS>0.00</ToonHiAddS>
+    <ToonHiAddV>0.20</ToonHiAddV>
+    <ToonHiAddA>0.00</ToonHiAddA>
+    <ToonLowAddH>0.00</ToonLowAddH>
+    <ToonLowAddS>0.00</ToonLowAddS>
+    <ToonLowAddV>-0.20</ToonLowAddV>
+    <ToonLowAddA>0.00</ToonLowAddA>
+    <ToonLightIndex>0</ToonLightIndex>
+    <ToonBaseH>0.00</ToonBaseH>
+    <ToonBaseS>0.00</ToonBaseS>
+    <ToonBaseV>1.00</ToonBaseV>
+    <ToonBaseA>1.00</ToonBaseA>
   </Material>
   <Material>
     <MaterialName>N00_000_00_EyeWhite_00_EYE__Instance_</MaterialName>
-    <ShaderType>-2</ShaderType>
+    <ShaderType>-1</ShaderType>
     <MetalCoef>0.250000</MetalCoef>
     <SmoothCoef>0.250000</SmoothCoef>
     <LightScale1>1.000000</LightScale1>
@@ -79,10 +143,26 @@
     <LightScale7>1.000000</LightScale7>
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
+    <EmissiveScale>1.000000</EmissiveScale>
+    <ToonHiColorH>0.78</ToonHiColorH>
+    <ToonLowColorH>0.54</ToonLowColorH>
+    <ToonHiAddH>0.00</ToonHiAddH>
+    <ToonHiAddS>0.00</ToonHiAddS>
+    <ToonHiAddV>0.20</ToonHiAddV>
+    <ToonHiAddA>0.00</ToonHiAddA>
+    <ToonLowAddH>0.00</ToonLowAddH>
+    <ToonLowAddS>0.00</ToonLowAddS>
+    <ToonLowAddV>-0.20</ToonLowAddV>
+    <ToonLowAddA>0.00</ToonLowAddA>
+    <ToonLightIndex>0</ToonLightIndex>
+    <ToonBaseH>0.00</ToonBaseH>
+    <ToonBaseS>0.00</ToonBaseS>
+    <ToonBaseV>1.00</ToonBaseV>
+    <ToonBaseA>1.00</ToonBaseA>
   </Material>
   <Material>
     <MaterialName>N00_000_00_FaceBrow_00_FACE__Instance_</MaterialName>
-    <ShaderType>-2</ShaderType>
+    <ShaderType>-1</ShaderType>
     <MetalCoef>0.250000</MetalCoef>
     <SmoothCoef>0.250000</SmoothCoef>
     <LightScale1>1.000000</LightScale1>
@@ -94,10 +174,26 @@
     <LightScale7>1.000000</LightScale7>
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
+    <EmissiveScale>1.000000</EmissiveScale>
+    <ToonHiColorH>0.78</ToonHiColorH>
+    <ToonLowColorH>0.54</ToonLowColorH>
+    <ToonHiAddH>0.00</ToonHiAddH>
+    <ToonHiAddS>0.00</ToonHiAddS>
+    <ToonHiAddV>0.20</ToonHiAddV>
+    <ToonHiAddA>0.00</ToonHiAddA>
+    <ToonLowAddH>0.00</ToonLowAddH>
+    <ToonLowAddS>0.00</ToonLowAddS>
+    <ToonLowAddV>-0.20</ToonLowAddV>
+    <ToonLowAddA>0.00</ToonLowAddA>
+    <ToonLightIndex>0</ToonLightIndex>
+    <ToonBaseH>0.00</ToonBaseH>
+    <ToonBaseS>0.00</ToonBaseS>
+    <ToonBaseV>1.00</ToonBaseV>
+    <ToonBaseA>1.00</ToonBaseA>
   </Material>
   <Material>
     <MaterialName>N00_000_00_FaceEyeline_00_FACE__Instance_</MaterialName>
-    <ShaderType>-2</ShaderType>
+    <ShaderType>-1</ShaderType>
     <MetalCoef>0.250000</MetalCoef>
     <SmoothCoef>0.250000</SmoothCoef>
     <LightScale1>1.000000</LightScale1>
@@ -109,10 +205,26 @@
     <LightScale7>1.000000</LightScale7>
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
+    <EmissiveScale>1.000000</EmissiveScale>
+    <ToonHiColorH>0.78</ToonHiColorH>
+    <ToonLowColorH>0.54</ToonLowColorH>
+    <ToonHiAddH>0.00</ToonHiAddH>
+    <ToonHiAddS>0.00</ToonHiAddS>
+    <ToonHiAddV>0.20</ToonHiAddV>
+    <ToonHiAddA>0.00</ToonHiAddA>
+    <ToonLowAddH>0.00</ToonLowAddH>
+    <ToonLowAddS>0.00</ToonLowAddS>
+    <ToonLowAddV>-0.20</ToonLowAddV>
+    <ToonLowAddA>0.00</ToonLowAddA>
+    <ToonLightIndex>0</ToonLightIndex>
+    <ToonBaseH>0.00</ToonBaseH>
+    <ToonBaseS>0.00</ToonBaseS>
+    <ToonBaseV>1.00</ToonBaseV>
+    <ToonBaseA>1.00</ToonBaseA>
   </Material>
   <Material>
     <MaterialName>N00_000_00_Body_00_SKIN__Instance_</MaterialName>
-    <ShaderType>-2</ShaderType>
+    <ShaderType>-1</ShaderType>
     <MetalCoef>0.250000</MetalCoef>
     <SmoothCoef>0.250000</SmoothCoef>
     <LightScale1>1.000000</LightScale1>
@@ -124,10 +236,26 @@
     <LightScale7>1.000000</LightScale7>
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
+    <EmissiveScale>1.000000</EmissiveScale>
+    <ToonHiColorH>0.78</ToonHiColorH>
+    <ToonLowColorH>0.54</ToonLowColorH>
+    <ToonHiAddH>0.00</ToonHiAddH>
+    <ToonHiAddS>0.00</ToonHiAddS>
+    <ToonHiAddV>0.20</ToonHiAddV>
+    <ToonHiAddA>0.00</ToonHiAddA>
+    <ToonLowAddH>0.00</ToonLowAddH>
+    <ToonLowAddS>0.00</ToonLowAddS>
+    <ToonLowAddV>-0.20</ToonLowAddV>
+    <ToonLowAddA>0.00</ToonLowAddA>
+    <ToonLightIndex>0</ToonLightIndex>
+    <ToonBaseH>0.00</ToonBaseH>
+    <ToonBaseS>0.00</ToonBaseS>
+    <ToonBaseV>1.00</ToonBaseV>
+    <ToonBaseA>1.00</ToonBaseA>
   </Material>
   <Material>
     <MaterialName>N00_000_00_HairBack_00_HAIR__Instance_</MaterialName>
-    <ShaderType>-2</ShaderType>
+    <ShaderType>-1</ShaderType>
     <MetalCoef>0.250000</MetalCoef>
     <SmoothCoef>0.250000</SmoothCoef>
     <LightScale1>1.000000</LightScale1>
@@ -139,10 +267,26 @@
     <LightScale7>1.000000</LightScale7>
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
+    <EmissiveScale>1.000000</EmissiveScale>
+    <ToonHiColorH>0.78</ToonHiColorH>
+    <ToonLowColorH>0.54</ToonLowColorH>
+    <ToonHiAddH>0.00</ToonHiAddH>
+    <ToonHiAddS>0.00</ToonHiAddS>
+    <ToonHiAddV>0.20</ToonHiAddV>
+    <ToonHiAddA>0.00</ToonHiAddA>
+    <ToonLowAddH>0.00</ToonLowAddH>
+    <ToonLowAddS>0.00</ToonLowAddS>
+    <ToonLowAddV>-0.20</ToonLowAddV>
+    <ToonLowAddA>0.00</ToonLowAddA>
+    <ToonLightIndex>0</ToonLightIndex>
+    <ToonBaseH>0.00</ToonBaseH>
+    <ToonBaseS>0.00</ToonBaseS>
+    <ToonBaseV>1.00</ToonBaseV>
+    <ToonBaseA>1.00</ToonBaseA>
   </Material>
   <Material>
     <MaterialName>N00_007_01_Tops_01_CLOTH_01__Instance_</MaterialName>
-    <ShaderType>-2</ShaderType>
+    <ShaderType>-1</ShaderType>
     <MetalCoef>0.250000</MetalCoef>
     <SmoothCoef>0.250000</SmoothCoef>
     <LightScale1>1.000000</LightScale1>
@@ -154,10 +298,26 @@
     <LightScale7>1.000000</LightScale7>
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
+    <EmissiveScale>1.000000</EmissiveScale>
+    <ToonHiColorH>0.78</ToonHiColorH>
+    <ToonLowColorH>0.54</ToonLowColorH>
+    <ToonHiAddH>0.00</ToonHiAddH>
+    <ToonHiAddS>0.00</ToonHiAddS>
+    <ToonHiAddV>0.20</ToonHiAddV>
+    <ToonHiAddA>0.00</ToonHiAddA>
+    <ToonLowAddH>0.00</ToonLowAddH>
+    <ToonLowAddS>0.00</ToonLowAddS>
+    <ToonLowAddV>-0.20</ToonLowAddV>
+    <ToonLowAddA>0.00</ToonLowAddA>
+    <ToonLightIndex>0</ToonLightIndex>
+    <ToonBaseH>27.72</ToonBaseH>
+    <ToonBaseS>0.24</ToonBaseS>
+    <ToonBaseV>0.80</ToonBaseV>
+    <ToonBaseA>1.00</ToonBaseA>
   </Material>
   <Material>
     <MaterialName>N00_005_01_Tops_01_CLOTH__Instance_</MaterialName>
-    <ShaderType>-2</ShaderType>
+    <ShaderType>-1</ShaderType>
     <MetalCoef>0.250000</MetalCoef>
     <SmoothCoef>0.250000</SmoothCoef>
     <LightScale1>1.000000</LightScale1>
@@ -169,10 +329,26 @@
     <LightScale7>1.000000</LightScale7>
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
+    <EmissiveScale>1.000000</EmissiveScale>
+    <ToonHiColorH>0.78</ToonHiColorH>
+    <ToonLowColorH>0.54</ToonLowColorH>
+    <ToonHiAddH>0.00</ToonHiAddH>
+    <ToonHiAddS>0.00</ToonHiAddS>
+    <ToonHiAddV>0.20</ToonHiAddV>
+    <ToonHiAddA>0.00</ToonHiAddA>
+    <ToonLowAddH>0.00</ToonLowAddH>
+    <ToonLowAddS>0.00</ToonLowAddS>
+    <ToonLowAddV>-0.20</ToonLowAddV>
+    <ToonLowAddA>0.00</ToonLowAddA>
+    <ToonLightIndex>0</ToonLightIndex>
+    <ToonBaseH>27.60</ToonBaseH>
+    <ToonBaseS>0.96</ToonBaseS>
+    <ToonBaseV>0.70</ToonBaseV>
+    <ToonBaseA>1.00</ToonBaseA>
   </Material>
   <Material>
     <MaterialName>N00_007_01_Tops_01_CLOTH_02__Instance_</MaterialName>
-    <ShaderType>-2</ShaderType>
+    <ShaderType>-1</ShaderType>
     <MetalCoef>0.250000</MetalCoef>
     <SmoothCoef>0.250000</SmoothCoef>
     <LightScale1>1.000000</LightScale1>
@@ -184,10 +360,26 @@
     <LightScale7>1.000000</LightScale7>
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
+    <EmissiveScale>1.000000</EmissiveScale>
+    <ToonHiColorH>0.78</ToonHiColorH>
+    <ToonLowColorH>0.54</ToonLowColorH>
+    <ToonHiAddH>0.00</ToonHiAddH>
+    <ToonHiAddS>0.00</ToonHiAddS>
+    <ToonHiAddV>0.20</ToonHiAddV>
+    <ToonHiAddA>0.00</ToonHiAddA>
+    <ToonLowAddH>0.00</ToonLowAddH>
+    <ToonLowAddS>0.00</ToonLowAddS>
+    <ToonLowAddV>-0.20</ToonLowAddV>
+    <ToonLowAddA>0.00</ToonLowAddA>
+    <ToonLightIndex>0</ToonLightIndex>
+    <ToonBaseH>27.72</ToonBaseH>
+    <ToonBaseS>0.96</ToonBaseS>
+    <ToonBaseV>0.70</ToonBaseV>
+    <ToonBaseA>1.00</ToonBaseA>
   </Material>
   <Material>
     <MaterialName>N00_010_01_Onepiece_00_CLOTH_01__Instance_</MaterialName>
-    <ShaderType>-2</ShaderType>
+    <ShaderType>-1</ShaderType>
     <MetalCoef>0.250000</MetalCoef>
     <SmoothCoef>0.250000</SmoothCoef>
     <LightScale1>1.000000</LightScale1>
@@ -199,10 +391,26 @@
     <LightScale7>1.000000</LightScale7>
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
+    <EmissiveScale>1.000000</EmissiveScale>
+    <ToonHiColorH>0.78</ToonHiColorH>
+    <ToonLowColorH>0.54</ToonLowColorH>
+    <ToonHiAddH>0.00</ToonHiAddH>
+    <ToonHiAddS>0.00</ToonHiAddS>
+    <ToonHiAddV>0.20</ToonHiAddV>
+    <ToonHiAddA>0.00</ToonHiAddA>
+    <ToonLowAddH>0.00</ToonLowAddH>
+    <ToonLowAddS>0.00</ToonLowAddS>
+    <ToonLowAddV>-0.20</ToonLowAddV>
+    <ToonLowAddA>0.00</ToonLowAddA>
+    <ToonLightIndex>0</ToonLightIndex>
+    <ToonBaseH>27.72</ToonBaseH>
+    <ToonBaseS>0.96</ToonBaseS>
+    <ToonBaseV>0.70</ToonBaseV>
+    <ToonBaseA>1.00</ToonBaseA>
   </Material>
   <Material>
     <MaterialName>N00_010_01_Onepiece_00_CLOTH_02__Instance_</MaterialName>
-    <ShaderType>-2</ShaderType>
+    <ShaderType>-1</ShaderType>
     <MetalCoef>0.250000</MetalCoef>
     <SmoothCoef>0.250000</SmoothCoef>
     <LightScale1>1.000000</LightScale1>
@@ -214,10 +422,26 @@
     <LightScale7>1.000000</LightScale7>
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
+    <EmissiveScale>1.000000</EmissiveScale>
+    <ToonHiColorH>0.78</ToonHiColorH>
+    <ToonLowColorH>0.54</ToonLowColorH>
+    <ToonHiAddH>0.00</ToonHiAddH>
+    <ToonHiAddS>0.00</ToonHiAddS>
+    <ToonHiAddV>0.20</ToonHiAddV>
+    <ToonHiAddA>0.00</ToonHiAddA>
+    <ToonLowAddH>0.00</ToonLowAddH>
+    <ToonLowAddS>0.00</ToonLowAddS>
+    <ToonLowAddV>-0.20</ToonLowAddV>
+    <ToonLowAddA>0.00</ToonLowAddA>
+    <ToonLightIndex>0</ToonLightIndex>
+    <ToonBaseH>27.72</ToonBaseH>
+    <ToonBaseS>0.75</ToonBaseS>
+    <ToonBaseV>0.75</ToonBaseV>
+    <ToonBaseA>1.00</ToonBaseA>
   </Material>
   <Material>
     <MaterialName>N00_004_01_Shoes_01_CLOTH__Instance_</MaterialName>
-    <ShaderType>-2</ShaderType>
+    <ShaderType>-1</ShaderType>
     <MetalCoef>0.250000</MetalCoef>
     <SmoothCoef>0.250000</SmoothCoef>
     <LightScale1>1.000000</LightScale1>
@@ -229,10 +453,26 @@
     <LightScale7>1.000000</LightScale7>
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
+    <EmissiveScale>1.000000</EmissiveScale>
+    <ToonHiColorH>0.78</ToonHiColorH>
+    <ToonLowColorH>0.54</ToonLowColorH>
+    <ToonHiAddH>0.00</ToonHiAddH>
+    <ToonHiAddS>0.00</ToonHiAddS>
+    <ToonHiAddV>0.20</ToonHiAddV>
+    <ToonHiAddA>0.00</ToonHiAddA>
+    <ToonLowAddH>0.00</ToonLowAddH>
+    <ToonLowAddS>0.00</ToonLowAddS>
+    <ToonLowAddV>-0.20</ToonLowAddV>
+    <ToonLowAddA>0.00</ToonLowAddA>
+    <ToonLightIndex>0</ToonLightIndex>
+    <ToonBaseH>27.72</ToonBaseH>
+    <ToonBaseS>0.93</ToonBaseS>
+    <ToonBaseV>0.53</ToonBaseV>
+    <ToonBaseA>1.00</ToonBaseA>
   </Material>
   <Material>
     <MaterialName>N00_000_Hair_00_HAIR__Instance_</MaterialName>
-    <ShaderType>-2</ShaderType>
+    <ShaderType>-1</ShaderType>
     <MetalCoef>0.250000</MetalCoef>
     <SmoothCoef>0.250000</SmoothCoef>
     <LightScale1>1.000000</LightScale1>
@@ -244,5 +484,21 @@
     <LightScale7>1.000000</LightScale7>
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
+    <EmissiveScale>1.000000</EmissiveScale>
+    <ToonHiColorH>0.78</ToonHiColorH>
+    <ToonLowColorH>0.54</ToonLowColorH>
+    <ToonHiAddH>0.00</ToonHiAddH>
+    <ToonHiAddS>0.00</ToonHiAddS>
+    <ToonHiAddV>0.20</ToonHiAddV>
+    <ToonHiAddA>0.00</ToonHiAddA>
+    <ToonLowAddH>0.00</ToonLowAddH>
+    <ToonLowAddS>0.00</ToonLowAddS>
+    <ToonLowAddV>-0.20</ToonLowAddV>
+    <ToonLowAddA>0.00</ToonLowAddA>
+    <ToonLightIndex>0</ToonLightIndex>
+    <ToonBaseH>0.00</ToonBaseH>
+    <ToonBaseS>0.00</ToonBaseS>
+    <ToonBaseV>1.00</ToonBaseV>
+    <ToonBaseA>1.00</ToonBaseA>
   </Material>
 </SHADERTYPEFILE>

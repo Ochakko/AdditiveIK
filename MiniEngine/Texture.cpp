@@ -307,9 +307,9 @@ int Texture::WriteToonToSubResource(tag_hsvtoon* phsvtoon, ID3D12Resource* srcte
 
 
 	if (texturedata) {
-		UINT thhi = (UINT)(phsvtoon->hicolorh * (float)(texW - 1));
-		UINT thlow = (UINT)(phsvtoon->lowcolorh * (float)(texH - 1));
-		thhi = min((texW - 1), thhi);
+		UINT thhi = (UINT)(phsvtoon->hicolorh * (float)(texH - 1) + 0.01f);
+		UINT thlow = (UINT)(phsvtoon->lowcolorh * (float)(texH - 1) + 0.01f);
+		thhi = min((texH - 1), thhi);
 		thhi = max(0, thhi);
 		thlow = min((texH - 1), thlow);
 		thlow = max(0, thlow);
@@ -318,24 +318,44 @@ int Texture::WriteToonToSubResource(tag_hsvtoon* phsvtoon, ID3D12Resource* srcte
 		for (indexh = 0; indexh < texH; indexh++) {
 			for (indexw = 0; indexw < texW; indexw++) {
 				unsigned char* ppix = texturedata + (indexh * texW + indexw) * 4;
-				if (indexh >= thhi) {
-					*(ppix) = hirgba.R;
-					*(ppix + 1) = hirgba.G;
-					*(ppix + 2) = hirgba.B;
-					*(ppix + 3) = hirgba.A;
+				
+				if ((indexh >= thlow) && (indexh <= thhi)) {
+					*(ppix) = basergba.R;
+					*(ppix + 1) = basergba.G;
+					*(ppix + 2) = basergba.B;
+					*(ppix + 3) = basergba.A;
 				}
-				else if (indexh <= thlow) {
+				else if (indexh < thlow) {
 					*(ppix) = lowrgba.R;
 					*(ppix + 1) = lowrgba.G;
 					*(ppix + 2) = lowrgba.B;
 					*(ppix + 3) = lowrgba.A;
 				}
 				else {
-					*(ppix) = basergba.R;
-					*(ppix + 1) = basergba.G;
-					*(ppix + 2) = basergba.B;
-					*(ppix + 3) = basergba.A;
+					*(ppix) = hirgba.R;
+					*(ppix + 1) = hirgba.G;
+					*(ppix + 2) = hirgba.B;
+					*(ppix + 3) = hirgba.A;
 				}
+
+				//if (indexh >= thhi) {
+				//	*(ppix) = hirgba.R;
+				//	*(ppix + 1) = hirgba.G;
+				//	*(ppix + 2) = hirgba.B;
+				//	*(ppix + 3) = hirgba.A;
+				//}
+				//else if (indexh <= thlow) {
+				//	*(ppix) = lowrgba.R;
+				//	*(ppix + 1) = lowrgba.G;
+				//	*(ppix + 2) = lowrgba.B;
+				//	*(ppix + 3) = lowrgba.A;
+				//}
+				//else {
+				//	*(ppix) = basergba.R;
+				//	*(ppix + 1) = basergba.G;
+				//	*(ppix + 2) = basergba.B;
+				//	*(ppix + 3) = basergba.A;
+				//}
 			}
 		}
 
