@@ -4,6 +4,9 @@ namespace myRenderer {
     class Dof
     {
     public:
+        Dof();
+        ~Dof();
+
         /// <summary>
         /// 初期化
         /// </summary>
@@ -16,8 +19,9 @@ namespace myRenderer {
         /// <param name="rc">レンダリングコンテキスト</param>
         /// <param name="mainRenderTarget">メインレンダリングターゲット</param>
         void Render(RenderContext* rc, RenderTarget& mainRenderTarget);
+        void DestroyObjs();
     private:
-        void InitCombimeBokeImageToSprite(Sprite& combineBokeImageSprite, Texture& bokeTexture, Texture& depthTexture);
+        void InitCombimeBokeImageToSprite(Sprite& combineBokeImageSprite, Texture* bokeTexture, Texture* depthTexture);
     private:
         RenderTarget m_rtVerticalBlur;		//垂直ブラーをかけるためのレンダリングターゲット
         RenderTarget m_rtDiagonalBlur;		//対角線ブラーをかけるためのレンダリングターゲット

@@ -5,7 +5,12 @@
 /// </summary>
 class GaussianBlur {
 public:
-	GaussianBlur() {
+	GaussianBlur() : 
+	m_xBlurRenderTarget(),
+	m_yBlurRenderTarget(),
+	m_xBlurSprite(),
+	m_yBlurSprite()
+	{
 		m_originalTexture = nullptr;	//オリジナルテクスチャ。
 
 		int windex;
@@ -14,6 +19,14 @@ public:
 		}
 	}
 	~GaussianBlur() {
+		DestroyObjs();
+	}
+	void DestroyObjs() {
+		m_xBlurRenderTarget.DestroyObjs();
+		m_yBlurRenderTarget.DestroyObjs();
+
+		m_xBlurSprite.DestroyObjs();
+		m_yBlurSprite.DestroyObjs();
 	}
 
 	/// <summary>
@@ -34,7 +47,7 @@ public:
 	/// ボケテクスチャを取得。
 	/// </summary>
 	/// <returns></returns>
-	Texture& GetBokeTexture()
+	Texture* GetBokeTexture()
 	{
 		return m_yBlurRenderTarget.GetRenderTargetTexture();
 	}

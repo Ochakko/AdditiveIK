@@ -11,10 +11,15 @@ public:
 	};
 	~RootSignature()
 	{
+		DestroyObjs();
+	};
+	void DestroyObjs() {
 		if (m_rootSignature) {
 			m_rootSignature->Release();
+			m_rootSignature = nullptr;
 		}
-	};
+	}
+
 	/// <summary>
 	/// 初期化
 	/// </summary>

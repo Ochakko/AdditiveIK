@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include "ConstantBuffer.h"
 
+static int s_cbcreatecount = 0;
 
 class com_exception : public std::exception
 {
@@ -34,15 +35,27 @@ ConstantBuffer::ConstantBuffer()
 
 ConstantBuffer::~ConstantBuffer()
 {
+	DestroyObjs();
+}
+
+void ConstantBuffer::DestroyObjs()
+{
 	//アンマーップ
 	CD3DX12_RANGE readRange(0, 0);
 	if (m_constantBuffer != nullptr) {
 		m_constantBuffer->Unmap(0, &readRange);
 		m_constantBuffer->Release();
+		m_constantBuffer = nullptr;
 	}
 }
+
 void ConstantBuffer::Init(int size, void* srcData)
 {
+	if ((s_cbcreatecount == 46) || (s_cbcreatecount == 47)) {
+		int dbgflag1 = 1;
+	}
+
+
 	m_size = size;
 
 	//D3Dデバイスを取得。
@@ -69,6 +82,12 @@ void ConstantBuffer::Init(int size, void* srcData)
 			"ConstantBuffer::Init Error", MB_OK | MB_ICONERROR);
 		abort();
 	}
+
+	WCHAR objname[1024] = { 0L };
+	swprintf_s(objname, 1024, L"ConstantBuffer:Init:constantBuffer_%d", s_cbcreatecount);
+	s_cbcreatecount++;
+	m_constantBuffer->SetName(objname);
+
 
 
 	//定数バッファをCPUからアクセス可能な仮想アドレス空間にマッピングする。

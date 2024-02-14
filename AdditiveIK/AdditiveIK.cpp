@@ -252,9 +252,11 @@ public:
 	};
 	~CSpAxis()
 	{
-
+		DestroyObjs();
 	};
-
+	void DestroyObjs() {
+		sprite.DestroyObjs();
+	};
 public:
 	Sprite sprite;
 	POINT dispcenter;
@@ -268,7 +270,10 @@ public:
 	};
 	~CSpCam()
 	{
-
+		DestroyObjs();
+	};
+	void DestroyObjs() {
+		sprite.DestroyObjs();
 	};
 
 public:
@@ -284,7 +289,10 @@ public:
 	};
 	~CSpElem()
 	{
-
+		DestroyObjs();
+	};
+	void DestroyObjs() {
+		sprite.DestroyObjs();
 	};
 public:
 	Sprite sprite;
@@ -309,7 +317,13 @@ public:
 		state = 0;
 		::ZeroMemory(&dispcenter, sizeof(POINT));
 	};
-	~CSpGUISW() {};
+	~CSpGUISW() {
+		DestroyObjs();
+	};
+	void DestroyObjs() {
+		spriteON.DestroyObjs();
+		spriteOFF.DestroyObjs();
+	};
 
 public:
 	bool state;//ON : 1 or OFF : 0
@@ -326,7 +340,15 @@ public:
 		mode = 0;
 		::ZeroMemory(&dispcenter, sizeof(POINT));
 	};
-	~CSpGUISW3() {};
+	~CSpGUISW3() {
+		DestroyObjs();
+	};
+	void DestroyObjs() {
+		sprite1.DestroyObjs();
+		sprite2.DestroyObjs();
+		sprite3.DestroyObjs();
+	};
+
 
 public:
 	int mode;
@@ -349,6 +371,8 @@ IShaderResource* g_shadowmapforshader = nullptr;
 
 
 //staic
+static Microsoft::WRL::ComPtr<ID3D12DebugDevice> s_debugDevice;
+
 static HWINEVENTHOOK s_hhook = NULL;
 
 
@@ -3006,7 +3030,7 @@ INT WINAPI wWinMain(
 	InitRootSignature(rootSignature);
 	//レンダリングエンジンを初期化
 	myRenderer::RenderingEngine renderingEngine;
-	//renderingEngine.Init();//RenderingEngineのコンストラクタについて分からない部分があるので　Initはコンストラクタで呼んで初期化することにした
+	renderingEngine.Init();
 
 
 	OnCreateDevice();
@@ -3168,6 +3192,15 @@ INT WINAPI wWinMain(
 	}
 
 	OnDestroyDevice();
+	renderingEngine.DestroyObjs();
+	rootSignature.DestroyObjs();
+
+	//詳細版
+	if (s_debugDevice) {
+		s_debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL);
+		//s_debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_SUMMARY);
+	}
+
 
 	//return DXUTGetExitCode();
 	return 0;
@@ -4794,6 +4827,7 @@ void OnDestroyDevice()
 
 
 
+
 	//if (s_undosprite) {
 	//	delete s_undosprite;
 	//	s_undosprite = 0;
@@ -4845,6 +4879,8 @@ void OnDestroyDevice()
 		s_bmark = 0;
 	}
 
+
+	s_bcircle.DestroyObjs();
 
 	//if (s_bcircle) {
 	//	delete s_bcircle;
@@ -5484,7 +5520,6 @@ void OnDestroyDevice()
 		s_3dwnd = 0;
 	}
 	s_3dwnd = 0;
-
 
 
 	//エンジンの破棄。
@@ -54729,6 +54764,65 @@ void DestroySprites()
 		s_spritetex81 = 0;
 	}
 
+	int delindex;
+	s_spundo[0].DestroyObjs();
+	s_spundo[1].DestroyObjs();
+	for (delindex = 0; delindex < SPAXISNUM; delindex++) {
+		s_spaxis[delindex].DestroyObjs();
+	}
+	for (delindex = 0; delindex < SPR_CAM_MAX; delindex++) {
+		s_spcam[delindex].DestroyObjs();
+	}
+	for (delindex = 0; delindex < SPRIGMAX; delindex++) {
+		s_sprig[delindex].DestroyObjs();
+	}
+	s_spret2prev.DestroyObjs();
+	s_spret2prev2.DestroyObjs();
+	s_spcplw2w.DestroyObjs();
+	s_spsmooth.DestroyObjs();
+	s_spconstexe.DestroyObjs();
+	s_spconstrefresh.DestroyObjs();
+	s_spcopy.DestroyObjs();
+	s_spsymcopy.DestroyObjs();
+	s_sppaste.DestroyObjs();
+	s_spcopyhistory.DestroyObjs();
+	s_spinterpolate.DestroyObjs();
+	s_spinit.DestroyObjs();
+	s_spscaleinit.DestroyObjs();
+	s_spproperty.DestroyObjs();
+	s_spzeroframe.DestroyObjs();
+	s_spcameradolly.DestroyObjs();
+	s_spmodelposdir.DestroyObjs();
+	s_spmaterialrate.DestroyObjs();
+	for (delindex = 0; delindex < SPGUISWNUM; delindex++) {
+		s_spguisw[delindex].DestroyObjs();
+	}
+	for (delindex = 0; delindex < SPDISPSWNUM; delindex++) {
+		s_spdispsw[delindex].DestroyObjs();
+	}
+	for (delindex = 0; delindex < SPRIGIDSWNUM; delindex++) {
+		s_sprigidsw[delindex].DestroyObjs();
+	}
+	for (delindex = 0; delindex < SPRETARGETSWNUM; delindex++) {
+		s_spretargetsw[delindex].DestroyObjs();
+	}
+	s_spsel3d.DestroyObjs();
+	s_spmousehere.DestroyObjs();
+	for (delindex = 0; delindex < 3; delindex++) {
+		s_spikmodesw[delindex].DestroyObjs();
+	}
+	s_sprefpos.DestroyObjs();
+	s_splimiteul.DestroyObjs();
+	s_spscraping.DestroyObjs();
+	s_mousecenteron.DestroyObjs();
+	s_spcameramode.DestroyObjs();
+	s_spcamerainherit.DestroyObjs();
+	//static InstancedSprite s_bcircle;
+	s_kinsprite.DestroyObjs();
+	s_undosprite.DestroySprites();
+	s_fpssprite.DestroySprites();
+
+
 
 }
 
@@ -54834,6 +54928,13 @@ RECT InitGame(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, in
 	//TKエンジンの初期化。
 	g_engine = new TkEngine;
 	g_engine->Init(g_hWnd, srcwidth, srcheight);
+
+	if (g_graphicsEngine->GetD3DDevice()) {
+		g_graphicsEngine->GetD3DDevice()->QueryInterface(s_debugDevice.GetAddressOf());//2024/02/14
+	}
+	else {
+		_ASSERT(0);
+	}
 
 	return rc;
 }

@@ -34,11 +34,11 @@ inline void RenderContext::SetComputeDescriptorHeap(DescriptorHeap& descHeap)
 }
 inline void RenderContext::WaitUntilFinishDrawingToRenderTarget(RenderTarget& renderTarget)
 {
-	WaitUntilFinishDrawingToRenderTarget(renderTarget.GetRenderTargetTexture().Get());
+	WaitUntilFinishDrawingToRenderTarget(renderTarget.GetRenderTargetTexture()->Get());
 }
 inline void RenderContext::WaitUntilToPossibleSetRenderTarget(RenderTarget& renderTarget)
 {
-	WaitUntilToPossibleSetRenderTarget(renderTarget.GetRenderTargetTexture().Get());
+	WaitUntilToPossibleSetRenderTarget(renderTarget.GetRenderTargetTexture()->Get());
 }
 inline void RenderContext::WaitUntilToPossibleSetRenderTargets(int numRt, RenderTarget* renderTargets[])
 {

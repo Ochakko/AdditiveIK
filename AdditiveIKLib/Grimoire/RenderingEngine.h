@@ -166,34 +166,9 @@ namespace myRenderer
             enForwardRender,        // フォワードレンダリングの描画パス
         };
 
-        //RenderingEngine() : //2023/11/23　もともとは無かった　足したら余計にリークしたのでコメントアウト
-        //    m_deferredLightingCB(), m_copyMainRtToFrameBufferSprite(), m_diferredLightingSprite(),
-        //    m_zprepassRenderTarget(), m_mainRenderTarget(), m_postEffect()
-        //{
-
-        //    //int differredno;
-        //    //for (differredno = 0; differredno < NUM_DEFERRED_LIGHTING_DIRECTIONAL_LIGHT; differredno++) {
-        //    //    m_shadowMapRenders[differredno].Init();//2023/11/23 ここを実行すると終了時にリーク
-        //    //}
-
-        //    //int snapno;
-        //    //for (snapno = 0; snapno < (int)EnMainRTSnapshot::enNum; snapno++) {
-        //    //    m_mainRTSnapshots[snapno].
-        //    //}
-
-        //    //int gbufno;
-        //    //for (gbufno = 0; gbufno < enGBufferNum; gbufno++) {
-        //    //    m_gBuffer[gbufno].
-        //    //}
-
-        //    m_zprepassModels.clear();                         // ZPrepassの描画パスで描画されるモデルのリスト
-        //    m_renderToGBufferModels.clear();                  // Gバッファへの描画パスで描画するモデルのリスト
-        //    m_forwardRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
-        //};
 
         RenderingEngine();//2023/11/23
-        ~RenderingEngine() {
-        };
+        ~RenderingEngine();
 
 
 
@@ -201,6 +176,8 @@ namespace myRenderer
         /// レンダリングパイプラインを初期化
         /// </summary>
         void Init();
+        
+        void DestroyObjs();
 
         /// <summary>
         /// シャドウマップへの描画パスにモデルを追加
@@ -246,10 +223,10 @@ namespace myRenderer
         //{
         //    m_renderToGBufferModels.push_back(&model);
         //}
-        void Add3DModelToRenderGBufferPass(RENDEROBJ renderobj)
-        {
-            m_renderToGBufferModels.push_back(renderobj);
-        }
+        //void Add3DModelToRenderGBufferPass(RENDEROBJ renderobj)
+        //{
+        //    m_renderToGBufferModels.push_back(renderobj);
+        //}
 
         /// <summary>
         /// フォワードレンダリングの描画パスにモデルを追加
@@ -303,7 +280,7 @@ namespace myRenderer
         /// ZPrepassで作成された深度テクスチャを取得
         /// </summary>
         /// <returns></returns>
-        Texture& GetZPrepassDepthTexture()
+        Texture* GetZPrepassDepthTexture()
         {
             return m_zprepassRenderTarget.GetRenderTargetTexture();
         }
@@ -312,19 +289,19 @@ namespace myRenderer
         /// GBufferのアルベドテクスチャを取得
         /// </summary>
         /// <returns></returns>
-        Texture& GetGBufferAlbedoTexture()
-        {
-            return m_gBuffer[enGBufferAlbedo].GetRenderTargetTexture();
-        }
+        //Texture* GetGBufferAlbedoTexture()
+        //{
+        //    return m_gBuffer[enGBufferAlbedo].GetRenderTargetTexture();
+        //}
 
         /// <summary>
         /// 不透明オブジェクトの描画完了時のメインレンダリングターゲットのスナップショットを取得
         /// </summary>
         /// <returns></returns>
-        Texture& GetMainRenderTargetSnapshotDrawnOpacity()
-        {
-            return m_mainRTSnapshots[(int)EnMainRTSnapshot::enDrawnOpacity].GetRenderTargetTexture();
-        }
+        //Texture* GetMainRenderTargetSnapshotDrawnOpacity()
+        //{
+        //    return m_mainRTSnapshots[(int)EnMainRTSnapshot::enDrawnOpacity].GetRenderTargetTexture();
+        //}
 
         /// <summary>
         /// レンダリングパイプラインを実行
@@ -348,7 +325,7 @@ namespace myRenderer
         /// <summary>
         /// G-Bufferを初期化
         /// </summary>
-        void InitGBuffer();
+        //void InitGBuffer();
 
         /// <summary>
         /// ディファードライティングの初期化
@@ -371,7 +348,7 @@ namespace myRenderer
         /// G-Bufferへの描画
         /// </summary>
         /// <param name="rc">レンダリングコンテキスト。</param>
-        void RenderToGBuffer(RenderContext* rc);
+        //void RenderToGBuffer(RenderContext* rc);
 
         /// <summary>
         /// ディファードライティング
@@ -399,7 +376,7 @@ namespace myRenderer
         /// <summary>
         /// メインレンダリングターゲットののスナップショットを取るためのレンダリングターゲットを初期化
         /// </summary>
-        void InitMainRTSnapshotRenderTarget();
+        //void InitMainRTSnapshotRenderTarget();
 
         /// <summary>
         /// メインレンダリングターゲットのカラーバッファの内容を
@@ -415,7 +392,7 @@ namespace myRenderer
         /// <summary>
         /// メインレンダリングターゲットのスナップショットを撮影
         /// </summary>
-        void SnapshotMainRenderTarget(RenderContext* rc, EnMainRTSnapshot enSnapshot);
+        //void SnapshotMainRenderTarget(RenderContext* rc, EnMainRTSnapshot enSnapshot);
 
         /// <summary>
         /// シャドウマップへの描画処理を初期化
@@ -448,6 +425,8 @@ namespace myRenderer
             Matrix mlvp[NUM_DEFERRED_LIGHTING_DIRECTIONAL_LIGHT][NUM_SHADOW_MAP];
         };
 
+        bool m_initflag;
+
         //shadow::ShadowMapRender m_shadowMapRenders[NUM_DEFERRED_LIGHTING_DIRECTIONAL_LIGHT];	//シャドウマップへの描画処理
         RenderTarget m_shadowMapRenderTarget;//2023/12/10
         //GaussianBlur m_shadowBlur;//2023/12/10
@@ -456,8 +435,8 @@ namespace myRenderer
         Sprite m_diferredLightingSprite;            // ディファードライティングを行うためのスプライト
         RenderTarget m_zprepassRenderTarget;        // ZPrepass描画用のレンダリングターゲット
         RenderTarget m_mainRenderTarget;            // メインレンダリングターゲット
-        RenderTarget m_mainRTSnapshots[(int)EnMainRTSnapshot::enNum];   // メインレンダリングターゲットのスナップショット
-        RenderTarget m_gBuffer[enGBufferNum];                           // G-Buffer
+        //RenderTarget m_mainRTSnapshots[(int)EnMainRTSnapshot::enNum];   // メインレンダリングターゲットのスナップショット
+        //RenderTarget m_gBuffer[enGBufferNum];                           // G-Buffer
         PostEffect m_postEffect;                                        // ポストエフェクト
 
         ////std::vector< Model* > m_zprepassModels;                         // ZPrepassの描画パスで描画されるモデルのリスト

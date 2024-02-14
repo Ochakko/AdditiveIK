@@ -2,7 +2,14 @@
 #include "RenderTarget.h"
 #include "GraphicsEngine.h"
 
+static int s_rtcreatecount = 0;
+
 RenderTarget::~RenderTarget()
+{
+	DestroyObjs();
+}
+
+void RenderTarget::DestroyObjs()
 {
 	if (m_rtvHeap) {
 		m_rtvHeap->Release();
@@ -13,16 +20,22 @@ RenderTarget::~RenderTarget()
 		m_dsvHeap = nullptr;//2023/11/25
 	}
 
-	//if (m_renderTargetTextureDx12) {//2024/02/07 Textureクラス(m_renderTargetTexture)で破棄する
-	//	m_renderTargetTextureDx12->Release();
-	//	m_renderTargetTextureDx12 = nullptr;//2023/11/25
-	//}
+
+	m_renderTargetTexture.ReleaseTexture();
+
+	if (m_renderTargetTextureDx12) {
+		m_renderTargetTextureDx12->Release();
+		m_renderTargetTextureDx12 = nullptr;//2023/11/25
+	}
 
 	if (m_depthStencilTexture) {
 		m_depthStencilTexture->Release();
 		m_depthStencilTexture = nullptr;//2023/11/25
 	}
+
+	m_initflag = false;
 }
+
 bool RenderTarget::Create(
 	int w,
 	int h,
@@ -33,6 +46,9 @@ bool RenderTarget::Create(
 	float clearColor[4]
 )
 {
+	DestroyObjs();
+
+
 	auto d3dDevice = g_graphicsEngine->GetD3DDevice();
 	m_width = w;
 	m_height = h;
@@ -59,6 +75,9 @@ bool RenderTarget::Create(
 	if (clearColor) {
 		memcpy(m_rtvClearColor, clearColor, sizeof(m_rtvClearColor));
 	}
+
+	m_initflag = true;//2024/02/14
+
 	return true;
 }
 bool RenderTarget::CreateDescriptorHeap(GraphicsEngine& ge, ID3D12Device5*& d3dDevice)
@@ -106,10 +125,21 @@ bool RenderTarget::CreateRenderTargetTexture(
 	float clearColor[4]
 )
 {
-	if (m_renderTargetTextureDx12 != nullptr) {
-		_ASSERT(0);
-		return false;
+
+	if (s_rtcreatecount >= 4) {
+		int dbgflag1 = 1;
 	}
+
+
+	if (m_renderTargetTextureDx12 != nullptr) {
+		m_renderTargetTextureDx12->Release();
+		m_renderTargetTextureDx12 = nullptr;
+	}
+
+	//if (m_renderTargetTextureDx12) {
+	//	m_renderTargetTextureDx12->Release();
+	//	m_renderTargetTextureDx12 = nullptr;
+	//}
 
 
 	CD3DX12_RESOURCE_DESC desc(
@@ -156,11 +186,21 @@ bool RenderTarget::CreateRenderTargetTexture(
 		abort();
 	}
 
+	WCHAR objname[1024] = { 0L };
+	swprintf_s(objname, 1024, L"RenderTarget:CreateRenderTargetTexture:texDx12_%d", s_rtcreatecount);
+	s_rtcreatecount++;
+	m_renderTargetTextureDx12->SetName(objname);
+
+
 	//if (FAILED(hr)) {
 	//	//作成に失敗。
 	//	return false;
 	//}
 	m_renderTargetTexture.InitFromD3DResource(m_renderTargetTextureDx12);
+	m_renderTargetTextureDx12->Release();
+	m_renderTargetTextureDx12 = nullptr;
+
+
 	return true;
 }
 bool RenderTarget::CreateDepthStencilTexture(
@@ -208,6 +248,9 @@ bool RenderTarget::CreateDepthStencilTexture(
 			"RenderTarget::CreateDepthStencilTexture Error", MB_OK | MB_ICONERROR);
 		abort();
 	}
+
+	m_depthStencilTexture->SetName(L"RenderTarget:CreateDepthStencilTexture:depthbuf");
+
 	//if (FAILED(hr)) {
 	//	//深度ステンシルバッファの作成に失敗。
 	//	return false;

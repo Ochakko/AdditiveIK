@@ -102,6 +102,7 @@ GraphicsEngine::~GraphicsEngine()
 	}
 
 	CloseHandle(m_fenceEvent);
+
 }
 void GraphicsEngine::WaitDraw()
 {
@@ -137,6 +138,8 @@ bool GraphicsEngine::Init(HWND hwnd, UINT frameBufferWidth, UINT frameBufferHeig
 		MessageBox(hwnd, TEXT("D3Dデバイスの作成に失敗しました。"), TEXT("エラー"), MB_OK);
 		return false;
 	}
+
+
 	//コマンドキューの作成。
 	if (!CreateCommandQueue()) {
 		//コマンドキューの作成に失敗した。
@@ -273,6 +276,13 @@ IDXGIFactory4* GraphicsEngine::CreateDXGIFactory()
 		//LiveObjectのダンプが出るが　少なくとも本クラスにおいてunique_ptrのメンバを使っておりその解放は本クラスのデストラクタよりも後になる
 		//よって正確にLiveObjectのダンプを調べることが難しい状態
 		debugController->Release();
+
+		//2024/02/15
+		//AdditiveIK.cppにおいてID3D12DebugDeviceを使用してリークの詳細ダンプをした
+		//DirectXのCreate*関数で作成したオブジェクトにアロケート番号付きの名前をSetNameして調査
+		//ダンプにおいてdebugdevice以外のRefCountが0になった(InRefCountは何か書いてあるが)
+		//メモリリークは解決したようだ
+
 	}
 #endif
 	IDXGIFactory4* factory;
@@ -497,6 +507,9 @@ bool GraphicsEngine::CreateDSVForFrameBuffer( UINT frameBufferWidth, UINT frameB
 		//深度ステンシルバッファの作成に失敗。
 		//return false;
 	}
+
+	m_depthStencilBuffer->SetName(L"GraphicsEngine:CreateDSVForFrameBuffer:depthbuf");
+
 	//ディスクリプタを作成
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_dsvHeap->GetCPUDescriptorHandleForHeapStart();
 

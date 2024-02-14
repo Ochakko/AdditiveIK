@@ -67,6 +67,7 @@ public:
 	virtual ~Sprite();
 
 	void InitParams();
+	void DestroyObjs();
 
 	/// <summary>
 	/// 初期化。

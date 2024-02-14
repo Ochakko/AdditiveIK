@@ -194,6 +194,7 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 			return -1;
 		}
 
+		texbuff->SetName(L"TexElem:CreateTexData:texbuff tga");
 
 		int subresno;
 		for (subresno = 0; subresno < mipChain->GetMetadata().mipLevels; subresno++) {
@@ -223,6 +224,8 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		m_texture = new Texture();
 		if (m_texture) {
 			m_texture->InitFromD3DResource(texbuff);
+			texbuff->Release();
+			texbuff = nullptr;
 		}
 		else {
 			_ASSERT(0);
@@ -258,6 +261,8 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		m_texture = new Texture();
 		if (m_texture) {
 			m_texture->InitFromD3DResource(texture);
+			texture->Release();
+			texture = nullptr;
 		}
 		else {
 			_ASSERT(0);
@@ -336,6 +341,7 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 			return -1;
 		}
 
+		texbuff->SetName(L"TexElem:CreateTexData:texbuff WIC");
 
 		int subresno;
 		for (subresno = 0; subresno < mipChain->GetMetadata().mipLevels; subresno++) {
@@ -369,6 +375,8 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 		m_texture = new Texture();
 		if (m_texture) {
 			m_texture->InitFromD3DResource(texbuff);
+			texbuff->Release();
+			texbuff = nullptr;
 		}
 		else {
 			_ASSERT(0);

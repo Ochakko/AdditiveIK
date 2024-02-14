@@ -18,14 +18,41 @@ namespace myRenderer
 {
 
 
-    RenderingEngine::RenderingEngine()
+    RenderingEngine::RenderingEngine() : 
+    m_shadowMapRenderTarget(), 
+    //m_shadowBlur(),
+    m_deferredLightingCB(),
+    m_copyMainRtToFrameBufferSprite(),
+    m_diferredLightingSprite(),
+    m_zprepassRenderTarget(),
+    m_mainRenderTarget(),
+    //m_mainRTSnapshots(),
+    //m_gBuffer(),
+    m_postEffect()
     {
-        Init();
+        m_initflag = false;
+        //m_zprepassModels.clear();                         // ZPrepassの描画パスで描画されるモデルのリスト
+        //m_shadowmapModels.clear();
+        //m_renderToGBufferModels.clear();                  // Gバッファへの描画パスで描画するモデルのリスト
+        m_forwardRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+        m_instancingRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+        m_forwardRenderSprites.clear();
+        m_forwardRenderFont.clear();
+        m_forwardModelsReserveSize = 0;
     }
 
-
+    RenderingEngine::~RenderingEngine()
+    {
+        DestroyObjs();
+    }
     void RenderingEngine::Init()
     {
+        if (m_initflag) {
+            _ASSERT(0);
+            return;
+        }
+
+
         //m_zprepassModels.clear();                         // ZPrepassの描画パスで描画されるモデルのリスト
         //m_shadowmapModels.clear();
         m_renderToGBufferModels.clear();                  // Gバッファへの描画パスで描画するモデルのリスト
@@ -38,13 +65,40 @@ namespace myRenderer
 
         InitZPrepassRenderTarget();
         InitMainRenderTarget();
-        InitGBuffer();
-        InitMainRTSnapshotRenderTarget();
+        //InitGBuffer();
+        //InitMainRTSnapshotRenderTarget();
         InitCopyMainRenderTargetToFrameBufferSprite();
         InitShadowMapRender();
         InitDeferredLighting();
         m_postEffect.Init(m_mainRenderTarget, m_zprepassRenderTarget);
+
+        m_initflag = true;
     }
+
+
+    void RenderingEngine::DestroyObjs()
+    {
+        m_shadowMapRenderTarget.DestroyObjs();
+        m_zprepassRenderTarget.DestroyObjs();
+        m_mainRenderTarget.DestroyObjs();
+
+        m_copyMainRtToFrameBufferSprite.DestroyObjs();
+        m_diferredLightingSprite.DestroyObjs();
+
+        m_postEffect.DestroyObjs();
+
+        //int rtindex;
+        //for (rtindex = 0; rtindex < (int)EnMainRTSnapshot::enNum; rtindex++) {
+        //    m_mainRTSnapshots[rtindex].DestroyObjs();
+        //}
+        //int gbufindex;
+        //for (gbufindex = 0; gbufindex < enGBufferNum; gbufindex++) {
+        //    m_gBuffer[gbufindex].DestroyObjs();
+        //}
+    }
+
+
+
 
     void RenderingEngine::InitShadowMapRender()
     {
@@ -73,7 +127,7 @@ namespace myRenderer
             clearColor
         );
 
-        g_shadowmapforshader = &m_shadowMapRenderTarget.GetRenderTargetTexture();
+        g_shadowmapforshader = m_shadowMapRenderTarget.GetRenderTargetTexture();
 
 
         //m_shadowBlur.Init(
@@ -96,20 +150,20 @@ namespace myRenderer
         );
 
     }
-    void RenderingEngine::InitMainRTSnapshotRenderTarget()
-    {
-        for (auto& snapshotRt : m_mainRTSnapshots)
-        {
-            snapshotRt.Create(
-                g_graphicsEngine->GetFrameBufferWidth(),
-                g_graphicsEngine->GetFrameBufferHeight(),
-                1,
-                1,
-                DXGI_FORMAT_R8G8B8A8_UNORM,
-                DXGI_FORMAT_UNKNOWN
-            );
-        }
-    }
+    //void RenderingEngine::InitMainRTSnapshotRenderTarget()
+    //{
+    //    for (auto& snapshotRt : m_mainRTSnapshots)
+    //    {
+    //        snapshotRt.Create(
+    //            g_graphicsEngine->GetFrameBufferWidth(),
+    //            g_graphicsEngine->GetFrameBufferHeight(),
+    //            1,
+    //            1,
+    //            DXGI_FORMAT_R8G8B8A8_UNORM,
+    //            DXGI_FORMAT_UNKNOWN
+    //        );
+    //    }
+    //}
 
     void RenderingEngine::InitMainRenderTarget()
     {
@@ -124,67 +178,67 @@ namespace myRenderer
         );
     }
 
-    void RenderingEngine::InitGBuffer()
-    {
-        int frameBuffer_w = g_graphicsEngine->GetFrameBufferWidth();
-        int frameBuffer_h = g_graphicsEngine->GetFrameBufferHeight();
+    //void RenderingEngine::InitGBuffer()
+    //{
+    //    int frameBuffer_w = g_graphicsEngine->GetFrameBufferWidth();
+    //    int frameBuffer_h = g_graphicsEngine->GetFrameBufferHeight();
 
-        // アルベドカラーを出力用のレンダリングターゲットを初期化する
-        m_gBuffer[enGBufferAlbedo].Create(
-            frameBuffer_w,
-            frameBuffer_h,
-            1,
-            1,
-            DXGI_FORMAT_R32G32B32A32_FLOAT,
-            //DXGI_FORMAT_R8G8B8A8_UNORM,//2023/11/18
-            DXGI_FORMAT_D32_FLOAT
-        );
+    //    // アルベドカラーを出力用のレンダリングターゲットを初期化する
+    //    m_gBuffer[enGBufferAlbedo].Create(
+    //        frameBuffer_w,
+    //        frameBuffer_h,
+    //        1,
+    //        1,
+    //        DXGI_FORMAT_R32G32B32A32_FLOAT,
+    //        //DXGI_FORMAT_R8G8B8A8_UNORM,//2023/11/18
+    //        DXGI_FORMAT_D32_FLOAT
+    //    );
 
-        // 法線出力用のレンダリングターゲットを初期化する
-        m_gBuffer[enGBufferNormal].Create(
-            frameBuffer_w,
-            frameBuffer_h,
-            1,
-            1,
-            DXGI_FORMAT_R8G8B8A8_UNORM, //メモリ使用量とメモリ書き込み速度優先で、8bitの符号なし整数バッファを使用する。
-            DXGI_FORMAT_UNKNOWN
-        );
+    //    // 法線出力用のレンダリングターゲットを初期化する
+    //    m_gBuffer[enGBufferNormal].Create(
+    //        frameBuffer_w,
+    //        frameBuffer_h,
+    //        1,
+    //        1,
+    //        DXGI_FORMAT_R8G8B8A8_UNORM, //メモリ使用量とメモリ書き込み速度優先で、8bitの符号なし整数バッファを使用する。
+    //        DXGI_FORMAT_UNKNOWN
+    //    );
 
-        // 金属度と滑らかさマップ出力用のレンダリングターゲットを初期化する
-        m_gBuffer[enGBufferMetalSmooth].Create(
-            frameBuffer_w,
-            frameBuffer_h,
-            1,
-            1,
-            DXGI_FORMAT_R8G8B8A8_UNORM, //メモリ使用量メモリ書き込み速度優先で、8bitの符号なし整数バッファを使用する。。
-            DXGI_FORMAT_UNKNOWN
-        );
+    //    // 金属度と滑らかさマップ出力用のレンダリングターゲットを初期化する
+    //    m_gBuffer[enGBufferMetalSmooth].Create(
+    //        frameBuffer_w,
+    //        frameBuffer_h,
+    //        1,
+    //        1,
+    //        DXGI_FORMAT_R8G8B8A8_UNORM, //メモリ使用量メモリ書き込み速度優先で、8bitの符号なし整数バッファを使用する。。
+    //        DXGI_FORMAT_UNKNOWN
+    //    );
 
-        // ワールド座標出力用のレンダリングターゲットを初期化する
-        m_gBuffer[enGBufferWorldPos].Create(
-            frameBuffer_w,
-            frameBuffer_h,
-            1,
-            1,
-            DXGI_FORMAT_R32G32B32A32_FLOAT,
-            //DXGI_FORMAT_R8G8B8A8_UNORM,//2023/11/18
-            DXGI_FORMAT_UNKNOWN
-        );
-        m_gBuffer[enGBUfferShadowParam].Create(
-            frameBuffer_w,
-            frameBuffer_h,
-            1,
-            1,
-            DXGI_FORMAT_R8G8B8A8_UNORM,
-            DXGI_FORMAT_UNKNOWN
-        );
-    }
+    //    // ワールド座標出力用のレンダリングターゲットを初期化する
+    //    m_gBuffer[enGBufferWorldPos].Create(
+    //        frameBuffer_w,
+    //        frameBuffer_h,
+    //        1,
+    //        1,
+    //        DXGI_FORMAT_R32G32B32A32_FLOAT,
+    //        //DXGI_FORMAT_R8G8B8A8_UNORM,//2023/11/18
+    //        DXGI_FORMAT_UNKNOWN
+    //    );
+    //    m_gBuffer[enGBUfferShadowParam].Create(
+    //        frameBuffer_w,
+    //        frameBuffer_h,
+    //        1,
+    //        1,
+    //        DXGI_FORMAT_R8G8B8A8_UNORM,
+    //        DXGI_FORMAT_UNKNOWN
+    //    );
+    //}
 
     void RenderingEngine::InitCopyMainRenderTargetToFrameBufferSprite()
     {
         SpriteInitData spriteInitData;
         // テクスチャはyBlurRenderTargetのカラーバッファー
-        spriteInitData.m_textures[0] = &m_mainRenderTarget.GetRenderTargetTexture();
+        spriteInitData.m_textures[0] = m_mainRenderTarget.GetRenderTargetTexture();
 
         // レンダリング先がフレームバッファーなので、解像度はフレームバッファーと同じ
         spriteInitData.m_width = g_graphicsEngine->GetFrameBufferWidth();
@@ -508,51 +562,51 @@ namespace myRenderer
        rc->WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
     }
 
-    void RenderingEngine::RenderToGBuffer(RenderContext* rc)
-    {
-        if (!rc) {
-            _ASSERT(0);
-            return;
-        }
-        // レンダリングターゲットをG-Bufferに変更
-        RenderTarget* rts[enGBufferNum] = {
-            &m_gBuffer[enGBufferAlbedo],        // 0番目のレンダリングターゲット
-            &m_gBuffer[enGBufferNormal],        // 1番目のレンダリングターゲット
-            &m_gBuffer[enGBufferWorldPos],      // 2番目のレンダリングターゲット
-            &m_gBuffer[enGBufferMetalSmooth],   // 3番目のレンダリングターゲット
-            &m_gBuffer[enGBUfferShadowParam],   // 4番目のレンダリングターゲット
-        };
+    //void RenderingEngine::RenderToGBuffer(RenderContext* rc)
+    //{
+    //    if (!rc) {
+    //        _ASSERT(0);
+    //        return;
+    //    }
+    //    // レンダリングターゲットをG-Bufferに変更
+    //    RenderTarget* rts[enGBufferNum] = {
+    //        &m_gBuffer[enGBufferAlbedo],        // 0番目のレンダリングターゲット
+    //        &m_gBuffer[enGBufferNormal],        // 1番目のレンダリングターゲット
+    //        &m_gBuffer[enGBufferWorldPos],      // 2番目のレンダリングターゲット
+    //        &m_gBuffer[enGBufferMetalSmooth],   // 3番目のレンダリングターゲット
+    //        &m_gBuffer[enGBUfferShadowParam],   // 4番目のレンダリングターゲット
+    //    };
+    //
+    //    // まず、レンダリングターゲットとして設定できるようになるまで待つ
+    //    rc->WaitUntilToPossibleSetRenderTargets(ARRAYSIZE(rts), rts);
+    //
+    //    // レンダリングターゲットを設定
+    //    rc->SetRenderTargets(ARRAYSIZE(rts), rts);
+    //
+    //    // レンダリングターゲットをクリア
+    //    rc->ClearRenderTargetViews(ARRAYSIZE(rts), rts);
+    //    for (auto& currenderobj : m_renderToGBufferModels)
+    //    {
+    //        //model->Draw(rc);
+    //        RenderPolyMesh(rc, currenderobj);
+    //    }
+    //
+    //    // レンダリングターゲットへの書き込み待ち
+    //    rc->WaitUntilFinishDrawingToRenderTargets(ARRAYSIZE(rts), rts);
+    //}
 
-        // まず、レンダリングターゲットとして設定できるようになるまで待つ
-        rc->WaitUntilToPossibleSetRenderTargets(ARRAYSIZE(rts), rts);
-
-        // レンダリングターゲットを設定
-        rc->SetRenderTargets(ARRAYSIZE(rts), rts);
-
-        // レンダリングターゲットをクリア
-        rc->ClearRenderTargetViews(ARRAYSIZE(rts), rts);
-        for (auto& currenderobj : m_renderToGBufferModels)
-        {
-            //model->Draw(rc);
-            RenderPolyMesh(rc, currenderobj);
-        }
-
-        // レンダリングターゲットへの書き込み待ち
-        rc->WaitUntilFinishDrawingToRenderTargets(ARRAYSIZE(rts), rts);
-    }
-
-    void RenderingEngine::SnapshotMainRenderTarget(RenderContext* rc, EnMainRTSnapshot enSnapshot)
-    {
-        if (!rc) {
-            _ASSERT(0);
-            return;
-        }
-        // メインレンダリングターゲットの内容をスナップショット
-        rc->WaitUntilToPossibleSetRenderTarget(m_mainRTSnapshots[(int)enSnapshot]);
-        rc->SetRenderTargetAndViewport(m_mainRTSnapshots[(int)enSnapshot]);
-        m_copyMainRtToFrameBufferSprite.Draw(rc);
-        rc->WaitUntilFinishDrawingToRenderTarget(m_mainRTSnapshots[(int)enSnapshot]);
-    }
+    //void RenderingEngine::SnapshotMainRenderTarget(RenderContext* rc, EnMainRTSnapshot enSnapshot)
+    //{
+    //    if (!rc) {
+    //        _ASSERT(0);
+    //        return;
+    //    }
+    //    // メインレンダリングターゲットの内容をスナップショット
+    //    rc->WaitUntilToPossibleSetRenderTarget(m_mainRTSnapshots[(int)enSnapshot]);
+    //    rc->SetRenderTargetAndViewport(m_mainRTSnapshots[(int)enSnapshot]);
+    //    m_copyMainRtToFrameBufferSprite.Draw(rc);
+    //    rc->WaitUntilFinishDrawingToRenderTarget(m_mainRTSnapshots[(int)enSnapshot]);
+    //}
 
     void RenderingEngine::DeferredLighting(RenderContext* rc)
     {

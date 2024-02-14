@@ -1,6 +1,8 @@
 ﻿#include "stdafx.h"
 #include "RootSignature.h"
 
+static int s_rscreatecount = 0;
+
 enum {
 	enDescriptorHeap_CB,
 	enDescriptorHeap_SRV,
@@ -19,6 +21,7 @@ bool RootSignature::Init(
 	UINT offsetInDescriptorsFromTableStartUAV
 )
 {
+
 	auto d3dDevice = g_graphicsEngine->GetD3DDevice();
 
 	CD3DX12_DESCRIPTOR_RANGE1 ranges[enNumDescriptorHeap];
@@ -54,6 +57,13 @@ bool RootSignature::Init(
 		//ルートシグネチャの作成に失敗した。
 		return false;
 	}
+
+	WCHAR objname[1024] = { 0L };
+	swprintf_s(objname, 1024, L"RootSignature:Init:rootsignature_%d", s_rscreatecount);
+	s_rscreatecount++;
+	m_rootSignature->SetName(objname);
+
+
 	return true;
 }
 bool RootSignature::Init(

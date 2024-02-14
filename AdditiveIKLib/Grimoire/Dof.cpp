@@ -2,12 +2,38 @@
 #include "Dof.h"
 
 namespace myRenderer {
-    void Dof::InitCombimeBokeImageToSprite(Sprite& combineBokeImageSprite, Texture& bokeTexture, Texture& depthTexture)
+
+    Dof::Dof() : 
+        m_rtVerticalBlur(), 
+        m_rtDiagonalBlur(),
+        m_rtPhomboidBlur(),
+        m_vertDIagonalBlurSprite(),
+        m_phomboidBlurSprite(),
+        m_combineBokeImageSprite()
+    {
+    }
+    Dof::~Dof()
+    {
+        DestroyObjs();
+    }
+
+    void Dof::DestroyObjs()
+    {
+        m_rtVerticalBlur.DestroyObjs();
+        m_rtDiagonalBlur.DestroyObjs();
+        m_rtPhomboidBlur.DestroyObjs();
+
+        m_vertDIagonalBlurSprite.DestroyObjs();
+        m_phomboidBlurSprite.DestroyObjs();
+        m_combineBokeImageSprite.DestroyObjs();
+    }
+
+    void Dof::InitCombimeBokeImageToSprite(Sprite& combineBokeImageSprite, Texture* bokeTexture, Texture* depthTexture)
     {
         SpriteInitData combineBokeImageSpriteInitData;
         //使用するテクスチャは２枚
-        combineBokeImageSpriteInitData.m_textures[0] = &bokeTexture;
-        combineBokeImageSpriteInitData.m_textures[1] = &depthTexture;
+        combineBokeImageSpriteInitData.m_textures[0] = bokeTexture;
+        combineBokeImageSpriteInitData.m_textures[1] = depthTexture;
         //combineBokeImageSpriteInitData.m_width = 1280;
         //combineBokeImageSpriteInitData.m_height = 720;
         combineBokeImageSpriteInitData.m_width = g_graphicsEngine->GetFrameBufferWidth();//2023/11/20
@@ -49,7 +75,7 @@ namespace myRenderer {
 
         // step-2 垂直、対角線ブラーをかけるためのスプライトを初期化
         SpriteInitData vertDiagonalBlurSpriteInitData;
-        vertDiagonalBlurSpriteInitData.m_textures[0] = &mainRenderTarget.GetRenderTargetTexture();
+        vertDiagonalBlurSpriteInitData.m_textures[0] = mainRenderTarget.GetRenderTargetTexture();
         vertDiagonalBlurSpriteInitData.m_width = mainRenderTarget.GetWidth();
         vertDiagonalBlurSpriteInitData.m_height = mainRenderTarget.GetHeight();
         vertDiagonalBlurSpriteInitData.m_fxFilePath = "../Media/shader/preset/hexaBlur.fx";
@@ -63,8 +89,8 @@ namespace myRenderer {
 
         // step-3 六角形ブラーをかけるためのスプライトを初期化
         SpriteInitData phomboidBlurSpriteInitData;
-        phomboidBlurSpriteInitData.m_textures[0] = &m_rtVerticalBlur.GetRenderTargetTexture();
-        phomboidBlurSpriteInitData.m_textures[1] = &m_rtDiagonalBlur.GetRenderTargetTexture();
+        phomboidBlurSpriteInitData.m_textures[0] = m_rtVerticalBlur.GetRenderTargetTexture();
+        phomboidBlurSpriteInitData.m_textures[1] = m_rtDiagonalBlur.GetRenderTargetTexture();
         phomboidBlurSpriteInitData.m_width = mainRenderTarget.GetWidth();
         phomboidBlurSpriteInitData.m_height = mainRenderTarget.GetHeight();
         phomboidBlurSpriteInitData.m_fxFilePath = "../Media/shader/preset/hexaBlur.fx";

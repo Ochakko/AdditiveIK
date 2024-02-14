@@ -215,35 +215,6 @@ private:
 	CPolyMesh4* m_pm4;//外部メモリ、FBXファイルから作成した３Dデータ。
 	CExtLine* m_extline;//外部メモリ、線データ。
 
-	//D3D11_BUFFER_DESC m_BufferDescBone;
-	//D3D11_BUFFER_DESC m_BufferDescNoBone;
-	//D3D11_BUFFER_DESC m_BufferDescInf;
-	//D3D11_BUFFER_DESC m_BufferDescLine;
-
-	//ID3D11InputLayout* m_layoutBoneL0;
-	//ID3D11InputLayout* m_layoutBoneL1;
-	//ID3D11InputLayout* m_layoutBoneL2;
-	//ID3D11InputLayout* m_layoutBoneL3;
-	//ID3D11InputLayout* m_layoutBoneL4;
-	//ID3D11InputLayout* m_layoutBoneL5;
-	//ID3D11InputLayout* m_layoutBoneL6;
-	//ID3D11InputLayout* m_layoutBoneL7;
-	//ID3D11InputLayout* m_layoutBoneL8;
-	//ID3D11InputLayout* m_layoutNoBoneL0;
-	//ID3D11InputLayout* m_layoutNoBoneL1;
-	//ID3D11InputLayout* m_layoutNoBoneL2;
-	//ID3D11InputLayout* m_layoutNoBoneL3;
-	//ID3D11InputLayout* m_layoutNoBoneL4;
-	//ID3D11InputLayout* m_layoutNoBoneL5;
-	//ID3D11InputLayout* m_layoutNoBoneL6;
-	//ID3D11InputLayout* m_layoutNoBoneL7;
-	//ID3D11InputLayout* m_layoutNoBoneL8;
-	//ID3D11InputLayout* m_layoutLine;
-
- //   ID3D11Buffer* m_VB;//表示用頂点バッファ。
-	//ID3D11Buffer* m_InfB;//表示用ボーン影響度バッファ。
-	//ID3D11Buffer* m_IB;//表示用三角のインデックスバッファ。
-
 
 	ID3D12Resource* m_vertexBuffer;		//頂点バッファ。
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;	//頂点バッファビュー。

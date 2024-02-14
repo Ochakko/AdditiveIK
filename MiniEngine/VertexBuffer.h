@@ -7,6 +7,11 @@
 class VertexBuffer {
 		
 public:
+	VertexBuffer() {
+		m_vertexBuffer = nullptr;
+		ZeroMemory(&m_vertexBufferView, sizeof(D3D12_VERTEX_BUFFER_VIEW));
+	};
+
 	/// <summary>
 	/// デストラクタ。
 	/// </summary>
@@ -17,6 +22,9 @@ public:
 	/// <param name="size">頂点バッファのサイズ</param>
 	/// <param name="stride">頂点バッファのストライド。一個の頂点のサイズ</param>
 	void Init(int size, int stride);
+
+	void DestroyObjs();
+
 	/// <summary>
 	/// 頂点データを頂点バッファにコピー。
 	/// </summary>

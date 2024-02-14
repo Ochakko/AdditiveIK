@@ -103,7 +103,7 @@ void GaussianBlur::InitSprites()
 		yBlurSpriteInitData.m_width = m_yBlurRenderTarget.GetWidth();
 		yBlurSpriteInitData.m_height = m_yBlurRenderTarget.GetHeight();
 		//テクスチャは横ブラーをかけたもの。
-		yBlurSpriteInitData.m_textures[0] = &m_xBlurRenderTarget.GetRenderTargetTexture();
+		yBlurSpriteInitData.m_textures[0] = m_xBlurRenderTarget.GetRenderTargetTexture();
 		//描き込むレンダリングターゲットのフォーマットを指定する。
 		yBlurSpriteInitData.m_colorBufferFormat[0] = m_yBlurRenderTarget.GetColorBufferFormat();
 		//ユーザー拡張の定数バッファにブラー用のパラメーターを設定する。

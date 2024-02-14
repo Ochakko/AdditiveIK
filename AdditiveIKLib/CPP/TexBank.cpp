@@ -49,14 +49,16 @@ int CTexBank::DestroyObjs()
 {
 	//Invalidate( INVAL_ALL );
 	//
-	//map<int,CTexElem*>::iterator itr;
-	//for( itr = m_texmap.begin(); itr != m_texmap.end(); itr++ ){
-	//	CTexElem* delte = itr->second;
-	//	if( delte ){
-	//		delete delte;
-	//	}
+	map<int,CTexElem*>::iterator itr;
+	for( itr = m_texmap.begin(); itr != m_texmap.end(); itr++ ){
+		CTexElem* delte = itr->second;
+		if( delte ){
+			delete delte;
+		}
+	}
+	//for (auto& it : m_texmap) {
+	//	it.second.reset();
 	//}
-
 	m_texmap.clear();
 
 	return 0;
@@ -67,7 +69,8 @@ CTexElem* CTexBank::ExistTex( const WCHAR* srcpath, const WCHAR* srcname, int sr
 	auto finditr = m_texmap.end();
 
 	for (auto& it : m_texmap) {
-		CTexElem* curelem = it.second.get();
+		//CTexElem* curelem = it.second.get();
+		CTexElem* curelem = it.second;
 		if (curelem) {
 			int cmpname, cmppath;
 			cmpname = wcscmp(srcname, curelem->GetName());
@@ -147,9 +150,10 @@ int CTexBank::AddTex(const WCHAR* srcpath, const WCHAR* srcname, int srctranspar
 	}
 
 	if (m_texmap.find(newelem->GetID()) == m_texmap.end()) {
-		m_texmap.insert(
-			std::pair<int, TexElemPtr>(newelem->GetID(), newelem)
-		);
+		//m_texmap.insert(
+		//	std::pair<int, TexElemPtr>(newelem->GetID(), newelem)
+		//);
+		m_texmap[newelem->GetID()] = newelem;
 	}
 	else {
 		_ASSERT(0);

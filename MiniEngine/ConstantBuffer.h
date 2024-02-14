@@ -32,6 +32,9 @@ public:
 	/// <param name="size">定数バッファのサイズ。</param>
 	/// <param name="srcData">ソースデータ。nullを指定することも可能。</param>
 	void Init(int size, void* srcData = nullptr);
+
+	void DestroyObjs();
+
 	/// <summary>
 	/// 利用可能なバッファかどうかを判定。
 	/// </summary>

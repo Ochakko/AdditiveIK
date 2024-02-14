@@ -1,16 +1,29 @@
 ﻿#include "stdafx.h"
 #include "VertexBuffer.h"
 
+static int s_vbcreatecount = 0;
 
 VertexBuffer::~VertexBuffer()
+{
+	DestroyObjs();
+}
+void VertexBuffer::DestroyObjs()
 {
 	if (m_vertexBuffer) {
 		m_vertexBuffer->Release();
 		m_vertexBuffer = nullptr;
 	}
 }
+
 void VertexBuffer::Init(int size, int stride)
 {
+
+	if (s_vbcreatecount >= 64) {
+		int dbgflag1 = 1;
+	}
+
+	DestroyObjs();
+
 	auto d3dDevice = g_graphicsEngine->GetD3DDevice();
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(size);
@@ -27,8 +40,12 @@ void VertexBuffer::Init(int size, int stride)
 		abort();
 	}
 
+	WCHAR objname[1024] = { 0L };
+	swprintf_s(objname, 1024, L"VertexBuffer:Init:vertexBuffer_%d", s_vbcreatecount);
+	s_vbcreatecount++;
+	m_vertexBuffer->SetName(objname);
 
-	m_vertexBuffer->SetName(L"VertexBuffer");
+
 	//頂点バッファのビューを作成。
 	m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
 	m_vertexBufferView.SizeInBytes = size;

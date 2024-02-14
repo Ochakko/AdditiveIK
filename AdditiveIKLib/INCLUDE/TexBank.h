@@ -30,7 +30,8 @@ public:
 	CTexElem* GetTexElem( int srcindex ){
 		auto it = m_texmap.find(srcindex);
 		if (it != m_texmap.end()) {
-			return it->second.get();
+			//return it->second.get();
+			return it->second;
 		}
 		else {
 			return nullptr;
@@ -46,9 +47,9 @@ private:
 private:
 	ID3D12Device* m_pdev;
 
-	//std::map<int, CTexElem*> m_texmap;
-	using TexElemPtr = std::unique_ptr<CTexElem>;
-	std::map<int, TexElemPtr> m_texmap;
+	std::map<int, CTexElem*> m_texmap;
+	//using TexElemPtr = std::unique_ptr<CTexElem>;
+	//std::map<int, TexElemPtr> m_texmap;
 
 };
 #endif

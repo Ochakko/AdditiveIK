@@ -1,18 +1,28 @@
 ﻿#include "stdafx.h"
 #include "IndexBuffer.h"
 
-
+static int s_ibcreatecount = 0;
 
 
 IndexBuffer::~IndexBuffer()
+{
+	DestroyObjs();
+}
+void IndexBuffer::DestroyObjs()
 {
 	if (m_indexBuffer) {
 		m_indexBuffer->Release();
 		m_indexBuffer = nullptr;
 	}
 }
+
 void IndexBuffer::Init(int size, int stride)
 {
+	if ((s_ibcreatecount == 38) || (s_ibcreatecount == 39)) {
+		int dbgflag1 = 1;
+	}
+
+
 	if (stride == 2) {
 		m_sizeInBytes = size * 2;
 	}
@@ -34,6 +44,14 @@ void IndexBuffer::Init(int size, int stride)
 			"IndexBuffer::Init Error", MB_OK | MB_ICONERROR);
 		abort();
 	}
+
+
+
+
+	WCHAR objname[1024] = { 0L };
+	swprintf_s(objname, 1024, L"IndexBuffer:Init:indexBuffer_%d", s_ibcreatecount);
+	s_ibcreatecount++;
+	m_indexBuffer->SetName(objname);
 
 
 	//インデックスバッファのビューを作成。

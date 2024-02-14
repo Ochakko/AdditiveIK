@@ -20,7 +20,7 @@ public:
 	ID3D12DescriptorHeap* Get() const;
 	
 	void InitParams();
-
+	void DestroyObjs();
 
 	/// <summary>
 	/// シェーダーリソースをディスクリプタヒープに登録。

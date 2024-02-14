@@ -3,6 +3,28 @@
 
 namespace myRenderer
 {
+    Bloom::Bloom() : 
+    m_luminanceRenderTarget(), m_luminanceSprite(), m_gaussianBlur(), m_finalSprite()
+    {
+    }
+    Bloom::~Bloom()
+    {
+        DestroyObjs();
+    }
+
+    void Bloom::DestroyObjs()
+    {
+        m_luminanceRenderTarget.DestroyObjs();
+
+        m_luminanceSprite.DestroyObjs();
+        m_finalSprite.DestroyObjs();
+
+        int gbindex;
+        for (gbindex = 0; gbindex < 4; gbindex++) {
+            m_gaussianBlur[gbindex].DestroyObjs();
+        }
+    }
+
     void Bloom::Init(RenderTarget& mainRenderTarget)
     {
         m_luminanceRenderTarget.Create(
@@ -27,7 +49,7 @@ namespace myRenderer
             spriteInitData.m_width = mainRenderTarget.GetWidth();
             spriteInitData.m_height = mainRenderTarget.GetHeight();
             // テクスチャはメインレンダリングターゲットのカラーバッファー
-            spriteInitData.m_textures[0] = &mainRenderTarget.GetRenderTargetTexture();
+            spriteInitData.m_textures[0] = mainRenderTarget.GetRenderTargetTexture();
             // 描き込むレンダリングターゲットのフォーマットを指定する
             spriteInitData.m_colorBufferFormat[0] = mainRenderTarget.GetColorBufferFormat();
 
@@ -35,21 +57,21 @@ namespace myRenderer
         }
         //ガウシアンブラーを初期化
         // gaussianBlur[0]は輝度テクスチャにガウシアンブラーをかける
-        m_gaussianBlur[0].Init(&m_luminanceRenderTarget.GetRenderTargetTexture());
+        m_gaussianBlur[0].Init(m_luminanceRenderTarget.GetRenderTargetTexture());
         // gaussianBlur[1]はgaussianBlur[0]のテクスチャにガウシアンブラーをかける
-        m_gaussianBlur[1].Init(&m_gaussianBlur[0].GetBokeTexture());
+        m_gaussianBlur[1].Init(m_gaussianBlur[0].GetBokeTexture());
         // gaussianBlur[2]はgaussianBlur[1]のテクスチャにガウシアンブラーをかける
-        m_gaussianBlur[2].Init(&m_gaussianBlur[1].GetBokeTexture());
+        m_gaussianBlur[2].Init(m_gaussianBlur[1].GetBokeTexture());
         // gaussianBlur[3]はgaussianBlur[2]のテクスチャにガウシアンブラーをかける
-        m_gaussianBlur[3].Init(&m_gaussianBlur[2].GetBokeTexture());
+        m_gaussianBlur[3].Init(m_gaussianBlur[2].GetBokeTexture());
         // 最終合成用のスプライトを初期化する
         {
             SpriteInitData spriteInitData;
             // ボケテクスチャを4枚指定する
-            spriteInitData.m_textures[0] = &m_gaussianBlur[0].GetBokeTexture();
-            spriteInitData.m_textures[1] = &m_gaussianBlur[1].GetBokeTexture();
-            spriteInitData.m_textures[2] = &m_gaussianBlur[2].GetBokeTexture();
-            spriteInitData.m_textures[3] = &m_gaussianBlur[3].GetBokeTexture();
+            spriteInitData.m_textures[0] = m_gaussianBlur[0].GetBokeTexture();
+            spriteInitData.m_textures[1] = m_gaussianBlur[1].GetBokeTexture();
+            spriteInitData.m_textures[2] = m_gaussianBlur[2].GetBokeTexture();
+            spriteInitData.m_textures[3] = m_gaussianBlur[3].GetBokeTexture();
             // 解像度はmainRenderTargetの幅と高さ
             spriteInitData.m_width = mainRenderTarget.GetWidth();
             spriteInitData.m_height = mainRenderTarget.GetHeight();

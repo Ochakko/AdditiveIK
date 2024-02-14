@@ -194,6 +194,8 @@ public:
 	CMQOMaterial();
 	~CMQOMaterial();
 
+	void DestroyObjs();
+
 	int SetParams( int srcno, ChaVector4 srcsceneamb, char* srcchar, int srcleng );
 
 
@@ -372,7 +374,6 @@ public:
 
 private:
 	int InitParams();
-	int DestroyObjs();
 
 	int ConvParamsTo3F();
 	int SetWhiteTexture();

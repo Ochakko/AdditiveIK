@@ -7,6 +7,14 @@
 /// </remarks>
 class IndexBuffer {
 public:
+	IndexBuffer() {
+		m_indexBuffer = nullptr;
+		ZeroMemory(&m_indexBufferView, sizeof(D3D12_INDEX_BUFFER_VIEW));
+		m_count = 0;
+		m_strideInBytes = 0;
+		m_sizeInBytes = 0;
+	};
+
 	/// <summary>
 	/// デストラクタ。
 	/// </summary>
@@ -17,6 +25,9 @@ public:
 	/// <param name="size">インデックスバッファのサイズ。</param>
 	/// <param name="stride">ストライド。</param>
 	void Init(int size, int stride) ;
+
+	void DestroyObjs();
+
 	/// <summary>
 	/// インデックスデータをインデックスバッファにコピー。
 	/// </summary>
@@ -70,7 +81,6 @@ public:
 	{
 		return m_indexBuffer;
 	}
-private:
 private:
 	ID3D12Resource* m_indexBuffer = nullptr;	//インデックスバッファ。
 	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;	//インデックスバッファビュー。

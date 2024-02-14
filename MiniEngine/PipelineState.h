@@ -19,10 +19,17 @@ public:
 	/// </summary>
 	~PipelineState()
 	{
+		DestroyObjs();
+	}
+
+	void DestroyObjs()
+	{
 		if (m_pipelineState) {
 			m_pipelineState->Release();
+			m_pipelineState = nullptr;
 		}
 	}
+
 	/// <summary>
 	/// 初期化。
 	/// </summary>

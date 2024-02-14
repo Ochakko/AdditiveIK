@@ -105,6 +105,7 @@ public:
 	/// </param>
 	//void Update(const Vector3& pos, const Quaternion& rot, const Vector3& scale, const Vector2& pivot = DEFAULT_PIVOT);
 	
+	void DestroyObjs();
 
 	//2023/11/20
 	/// <summary>

@@ -12,9 +12,8 @@ class RenderTarget {
 public:
 	RenderTarget() : m_renderTargetTexture()
 	{
-		
-		m_renderTargetTexture.SetRenderTargetFlag(true);//2023/11/25
-
+		m_initflag = false;
+		//m_renderTargetTexture.SetRenderTargetFlag(true);//2023/11/25
 
 		m_renderTargetTextureDx12 = nullptr;//レンダリングターゲットとなるテクスチャ。
 		m_depthStencilTexture = nullptr;	//深度ステンシルバッファとなるテクスチャ。
@@ -39,6 +38,7 @@ public:
 	/// デストラクタ。
 	/// </summary>
 	~RenderTarget();
+	void DestroyObjs();
 	/// <summary>
 	/// レンダリングターゲットの作成。
 	/// </summary>
@@ -78,9 +78,9 @@ public:
 	/// レンダリングターゲットとなるテクスチャを取得。
 	/// </summary>
 	/// <returns></returns>
-	Texture& GetRenderTargetTexture()
+	Texture* GetRenderTargetTexture()
 	{
-		return m_renderTargetTexture;
+		return &m_renderTargetTexture;
 	}
 	/// <summary>
 	/// デプスステンシルバッファが存在しているか判定
@@ -172,7 +172,10 @@ private:
 	/// <param name="d3dDevice">D3Dデバイス</param>
 	/// <returns>trueが返ってきたら成功。</returns>
 	void CreateDescriptor(ID3D12Device5*& d3dDevice);
+
+
 private:
+	bool m_initflag = false;
 	Texture m_renderTargetTexture;
 	ID3D12Resource* m_renderTargetTextureDx12 = nullptr;//レンダリングターゲットとなるテクスチャ。
 	ID3D12Resource* m_depthStencilTexture = nullptr;	//深度ステンシルバッファとなるテクスチャ。

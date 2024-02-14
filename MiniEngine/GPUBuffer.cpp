@@ -28,6 +28,9 @@ void GPUBuffer::Init(D3D12_RESOURCE_DESC desc)
 			"GPUBuffer::Init Error", MB_OK | MB_ICONERROR);
 		abort();
 	}
+
+	m_buffer->SetName(L"GPUBuffer:Init:buffer");
+
 }
 void GPUBuffer::RegistUnorderAccessView(D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle)
 {

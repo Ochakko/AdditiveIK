@@ -43,7 +43,28 @@
 
     Sprite::~Sprite()
     {
+        DestroyObjs();
     }
+    void Sprite::DestroyObjs()
+    {
+        int texindex;
+        for (texindex = 0; texindex < MAX_TEXTURE; texindex++) {
+            m_textures[texindex].ReleaseTexture();
+        }
+
+        m_vertexBuffer.DestroyObjs();
+        m_indexBuffer.DestroyObjs();
+
+        m_constantBufferGPU.DestroyObjs();
+        m_userExpandConstantBufferGPU.DestroyObjs();
+
+        m_pipelineState.DestroyObjs();
+        m_descriptorHeap.DestroyObjs();
+
+        m_rootSignature.DestroyObjs();
+    }
+
+
     void Sprite::InitTextures(const SpriteInitData& initData)
     {
         //スプライトで使用するテクスチャを準備する。
@@ -182,9 +203,11 @@
         //    indices[3] = 3;
         //}
 
+        m_vertexBuffer.DestroyObjs();
         m_vertexBuffer.Init(sizeof(vertices), sizeof(vertices[0]));
         m_vertexBuffer.Copy(vertices);
 
+        m_indexBuffer.DestroyObjs();
         m_indexBuffer.Init(sizeof(indices), sizeof(indices[0]));
         m_indexBuffer.Copy(indices);
     }
@@ -244,6 +267,11 @@
     }
     void Sprite::InitConstantBuffer(const SpriteInitData& initData)
     {
+        
+        m_constantBufferGPU.DestroyObjs();
+        m_userExpandConstantBufferGPU.DestroyObjs();
+
+
         //定数バッファの初期化。
         m_constantBufferGPU.Init(sizeof(m_constantBufferCPU), nullptr);
         //ユーザー拡張の定数バッファが指定されている。
@@ -257,6 +285,8 @@
     }
     void Sprite::Init(const SpriteInitData& initData, bool srcscreenvertexflag)
     {
+        DestroyObjs();
+
         m_screenvertexflag = srcscreenvertexflag;
 
         m_size.x = static_cast<float>(initData.m_width);

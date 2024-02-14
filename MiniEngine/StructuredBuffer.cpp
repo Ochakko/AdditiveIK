@@ -37,6 +37,7 @@ void StructuredBuffer::Init(int sizeOfElement, int numElement, void* initData)
 			abort();
 		}
 
+		buffer->SetName(L"StructuredBuffer:Init:buffer");
 		
 		//構造化バッファをCPUからアクセス可能な仮想アドレス空間にマッピングする。
 		//マップ、アンマップのオーバーヘッドを軽減するためにはこのインスタンスが生きている間は行わない。

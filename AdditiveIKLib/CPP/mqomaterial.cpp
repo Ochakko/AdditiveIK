@@ -392,7 +392,7 @@ int CMQOMaterial::InitParams()
 	return 0;
 }
 
-int CMQOMaterial::DestroyObjs()
+void CMQOMaterial::DestroyObjs()
 {
 	m_createdescriptorflag = false;
 
@@ -410,6 +410,47 @@ int CMQOMaterial::DestroyObjs()
 		m_convnamenum = 0;
 	}
 
+	int cbindex;
+	for (cbindex = 0; cbindex < REFPOSMAXNUM; cbindex++) {
+		m_commonConstantBuffer[cbindex].DestroyObjs();
+		m_expandConstantBuffer[cbindex].DestroyObjs();
+		m_expandConstantBuffer2[cbindex].DestroyObjs();
+		m_shadowcommonConstantBuffer[cbindex].DestroyObjs();
+		m_shadowexpandConstantBuffer[cbindex].DestroyObjs();
+		m_shadowexpandConstantBuffer2[cbindex].DestroyObjs();
+	}
+
+
+	int shaderindex, refposindex;
+	for (shaderindex = 0; shaderindex < MQOSHADER_MAX; shaderindex++) {
+		for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+			m_opaquePipelineState[shaderindex][refposindex].DestroyObjs();
+			m_transPipelineState[shaderindex][refposindex].DestroyObjs();
+			m_transNoZPipelineState[shaderindex][refposindex].DestroyObjs();
+			m_zalwaysPipelineState[shaderindex][refposindex].DestroyObjs();
+		}
+	}
+	m_ZPreModelPipelineState.DestroyObjs();
+	m_InstancingOpequeTrianglePipelineState.DestroyObjs();
+	m_InstancingtransTrianglePipelineState.DestroyObjs();
+	m_InstancingtransTriangleNoZPipelineState.DestroyObjs();
+	m_InstancingzalwaysTrianglePipelineState.DestroyObjs();
+	m_InstancingOpequeLinePipelineState.DestroyObjs();
+	m_InstancingtransLinePipelineState.DestroyObjs();
+	m_InstancingzalwaysLinePipelineState.DestroyObjs();
+
+
+	int rsindex;
+	for (rsindex = 0; rsindex < REFPOSMAXNUM; rsindex++) {
+		m_descriptorHeap[rsindex].DestroyObjs();
+		m_shadowdescriptorHeap[rsindex].DestroyObjs();
+	}
+	for (rsindex = 0; rsindex < REFPOSMAXNUM; rsindex++) {
+		m_rootSignature[rsindex].DestroyObjs();
+		m_shadowrootSignature[rsindex].DestroyObjs();
+	}
+	m_ZPrerootSignature.DestroyObjs();
+	m_InstancingrootSignature.DestroyObjs();
 
 	//bank管理の外部ポインタ
 	m_albedoMap = nullptr;
@@ -428,8 +469,6 @@ int CMQOMaterial::DestroyObjs()
 	//}
 	m_metalMap = nullptr;
 
-
-	return 0;
 }
 
 int CMQOMaterial::SetName( char* srcchar, int pos, int srcleng, int* stepnum )

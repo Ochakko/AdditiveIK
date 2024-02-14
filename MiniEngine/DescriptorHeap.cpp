@@ -57,6 +57,15 @@ void DescriptorHeap::InitParams()
 
 	m_initflag = true;
 }
+
+void DescriptorHeap::DestroyObjs()
+{
+	if (m_descriptorHeap) {
+		m_descriptorHeap->Release();
+		m_descriptorHeap = nullptr;
+	}
+}
+
 void DescriptorHeap::CommitSamplerHeap()
 {
 	const auto& d3dDevice = g_graphicsEngine->GetD3DDevice();

@@ -17,11 +17,10 @@ public:
 	virtual ~Texture();
 
 	void InitParams() {
-		m_rendertargetflag = false;
+		m_externalreleaseflag = false;
 		m_texture = nullptr;	//テクスチャ。
 		ZeroMemory(&m_textureDesc, sizeof(D3D12_RESOURCE_DESC));	//テクスチャ情報
 	};
-
 	void ReleaseTexture();
 
 	/// <summary>
@@ -108,13 +107,13 @@ public:
 	{
 		return m_textureDesc.Format;
 	}
-	void SetRenderTargetFlag(bool srcflag)//2023/11/25
+	void SetExternalReleaseFlag(bool srcflag)//2023/11/25
 	{
-		m_rendertargetflag = srcflag;
+		m_externalreleaseflag = srcflag;
 	}
-	bool IsRenderTarget()//2023/11/25
+	bool GetExternalReleaseFlag()//2023/11/25
 	{
-		return m_rendertargetflag;
+		return m_externalreleaseflag;
 	}
 private:
 	/// <summary>
@@ -132,7 +131,7 @@ private:
 	void LoadTextureFromMemory(const char* memory, unsigned int size );
 		
 private:
-	bool m_rendertargetflag;
+	bool m_externalreleaseflag = false;
 	ID3D12Resource*	m_texture = nullptr;	//テクスチャ。
 	D3D12_RESOURCE_DESC m_textureDesc;	//テクスチャ情報
 };

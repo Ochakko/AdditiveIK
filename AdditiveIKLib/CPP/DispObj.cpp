@@ -169,6 +169,10 @@ int CDispObj::DestroyObjs()
 		m_indexBuffer->Release();
 	}
 
+	m_InstancingBuffer.DestroyObjs();
+
+
+
 
 	//if (m_layoutBoneL0) {
 	//	m_layoutBoneL0->Release();
@@ -827,6 +831,9 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 				abort();
 			}
 
+			m_indexBuffer->SetName(L"DispOjb:indexBuffer");
+
+
 			//インデックスバッファのビューを作成。
 			m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
 			m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
@@ -875,6 +882,8 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 					"CreateIndexBuffer Error", MB_OK | MB_ICONERROR);
 				abort();
 			}
+
+			m_indexBuffer->SetName(L"DispOjb:indexBuffer");
 
 			//インデックスバッファのビューを作成。
 			m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();

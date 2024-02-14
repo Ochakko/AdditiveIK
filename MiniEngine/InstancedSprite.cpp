@@ -14,8 +14,23 @@
     const Vector2	InstancedSprite::DEFAULT_PIVOT = { 0.5f, 0.5f };
     InstancedSprite::~InstancedSprite()
     {
-
+        DestroyObjs();
     }
+    void InstancedSprite::DestroyObjs()
+    {
+        m_indexBuffer.DestroyObjs();
+        m_vertexBuffer.DestroyObjs();
+        m_possizeBuffer.DestroyObjs();
+
+        m_constantBufferGPU.DestroyObjs();
+        m_userExpandConstantBufferGPU.DestroyObjs();
+
+        m_pipelineState.DestroyObjs();
+        m_descriptorHeap.DestroyObjs();
+
+        m_rootSignature.DestroyObjs();
+    }
+
     void InstancedSprite::InitTextures(const SpriteInitData& initData)
     {
         //スプライトで使用するテクスチャを準備する。

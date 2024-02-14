@@ -131,6 +131,8 @@ void CUndoSprite::DestroySprites()
 
 	int spriteno;
 	for (spriteno = 0; spriteno < 12; spriteno++) {
+		m_sprite[spriteno].DestroyObjs();
+
 		Texture* curtex = m_texture[spriteno];
 		if (curtex) {
 			delete curtex;
