@@ -20,8 +20,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.87</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -30,7 +30,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
@@ -51,8 +51,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.87</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -61,7 +61,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
@@ -82,8 +82,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.87</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -92,7 +92,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
@@ -113,8 +113,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.00</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -123,7 +123,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
@@ -144,8 +144,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.87</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -154,7 +154,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
@@ -175,8 +175,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.87</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -185,7 +185,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
@@ -206,8 +206,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.87</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -216,7 +216,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
@@ -237,8 +237,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.87</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -247,7 +247,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
@@ -268,8 +268,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.87</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -278,7 +278,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
@@ -299,8 +299,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.87</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -309,7 +309,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
@@ -330,8 +330,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.87</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -340,7 +340,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
@@ -361,8 +361,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.87</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -371,7 +371,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
@@ -392,8 +392,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.87</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -402,7 +402,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
@@ -423,8 +423,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.87</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -433,7 +433,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
@@ -454,8 +454,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.87</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -464,7 +464,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
@@ -485,8 +485,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.87</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -495,7 +495,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
@@ -516,8 +516,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.87</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -526,7 +526,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
@@ -547,8 +547,8 @@
     <LightScale8>1.000000</LightScale8>
     <EnableEmission>0</EnableEmission>
     <EmissiveScale>1.000000</EmissiveScale>
-    <ToonHiColorH>0.92</ToonHiColorH>
-    <ToonLowColorH>0.87</ToonLowColorH>
+    <ToonHiColorH>0.85</ToonHiColorH>
+    <ToonLowColorH>0.64</ToonLowColorH>
     <ToonHiAddH>0.00</ToonHiAddH>
     <ToonHiAddS>0.00</ToonHiAddS>
     <ToonHiAddV>0.20</ToonHiAddV>
@@ -557,7 +557,7 @@
     <ToonLowAddS>0.00</ToonLowAddS>
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
-    <ToonLightIndex>0</ToonLightIndex>
+    <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>

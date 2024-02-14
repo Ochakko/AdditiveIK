@@ -122,7 +122,8 @@ sampler g_sampler : register(s0);
 sampler g_sampler_albedo : register(s1);
 sampler g_sampler_normal : register(s2);
 sampler g_sampler_metal : register(s3);
-sampler g_sampler_shadow : register(s4);
+sampler g_sampler_clamp : register(s4); //2024/02/14
+sampler g_sampler_shadow : register(s5);
 
 float4 CalcDiffuseColor(float4 meshnormal, float4 lightdir)
 {
@@ -132,7 +133,7 @@ float4 CalcDiffuseColor(float4 meshnormal, float4 lightdir)
     nl = dot(normaly0, lighty0);
     float toonh = (nl + 1.0f) * 0.5f;
     float2 diffuseuv = { 0.5f, toonh };
-    float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv) * materialdisprate.x;
+    float4 diffusecol = g_diffusetex.Sample(g_sampler_clamp, diffuseuv) * materialdisprate.x;
     
     return diffusecol;
 }
@@ -256,7 +257,8 @@ float4 CalcDiffuseColor(float4 meshnormal, float4 lightdir)
 //#############
 float3 GetNormal(float3 normal, float3 tangent, float3 biNormal, float2 uv1)
 {
-    float3 normalmapNormal = g_normalMap.SampleLevel(g_sampler_normal, uv1, 0.0f).xyz;
+    //float3 normalmapNormal = g_normalMap.SampleLevel(g_sampler_normal, uv1, 0.0f).xyz;
+    float3 normalmapNormal = g_normalMap.SampleLevel(g_sampler_clamp, uv1, 0.0f).xyz;//2024/02/14
     float3 binSpaceNormal = (normalmapNormal * 2.0f) - 1.0f;
    
     float3 newNormal = tangent * binSpaceNormal.x + biNormal * binSpaceNormal.y + normal * binSpaceNormal.z;    

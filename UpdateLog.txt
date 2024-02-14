@@ -5,9 +5,9 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/02/14
-　AdditiveIK 1.0.0.8 RC1(リリース候補1)
+　AdditiveIK 1.0.0.8 RC2(リリース候補2)
 　　1.0.0.7からの変更点
-　　　TOONシェーダ対応
+　　　TOONシェーダ対応(HSV_Toon)
 　　　　NOLIGHTシェーダをTOONシェーダに変更
 　　　　Shaderプレートメニューでマテリアルの名前のボタンを押してToonを選択すると機能
 　　　　TOON用のライトとしてはLightプレートメニューの１番目のライトの向きを使用
@@ -35,6 +35,9 @@ https://github.com/Ochakko/AdditiveIK
 　　　TestフォルダのモデルのShader設定を修正
 　　　　顔には陰が付かないように.
 
+　RC2: HSV_Toonの修正
+　　　色の境目ではない場所に細い筋が表示されていた不具合修正
+　　　Testフォルダのモデルの設定を再修正
 
 
 

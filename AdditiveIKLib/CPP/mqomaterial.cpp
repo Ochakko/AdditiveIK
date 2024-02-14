@@ -1368,7 +1368,7 @@ void CMQOMaterial::InitShadersAndPipelines(
 	}
 
 	//ルートシグネチャを初期化。
-	D3D12_STATIC_SAMPLER_DESC samplerDescArray[5];
+	D3D12_STATIC_SAMPLER_DESC samplerDescArray[6];
 	//デフォルトのサンプラ
 	samplerDescArray[0].Filter = samplerFilter;
 	samplerDescArray[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -1413,20 +1413,28 @@ void CMQOMaterial::InitShadersAndPipelines(
 		samplerDescArray[3].AddressU = GetAddressU_albedo();//2024/01/06
 		samplerDescArray[3].AddressV = GetAddressV_albedo();//2024/01/06
 	}
-	//シャドウマップ用のサンプラ。
+
 	samplerDescArray[4] = samplerDescArray[0];
 	samplerDescArray[4].ShaderRegister = 4;//!!!!!!!!
+	samplerDescArray[4].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	samplerDescArray[4].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	samplerDescArray[4].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+
+
+	//シャドウマップ用のサンプラ。
+	samplerDescArray[5] = samplerDescArray[0];
+	samplerDescArray[5].ShaderRegister = 5;//!!!!!!!!
 	//比較対象の値が小さければ０、大きければ１を返す比較関数を設定する。
-	samplerDescArray[4].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
-	samplerDescArray[4].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER;
-	samplerDescArray[4].MaxAnisotropy = 1;
+	samplerDescArray[5].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+	samplerDescArray[5].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER;
+	samplerDescArray[5].MaxAnisotropy = 1;
 
 
 	int refposindex;
 	for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
 		m_rootSignature[refposindex].Init(
 			samplerDescArray,
-			5,
+			6,
 			numCbv,
 			numSrv,
 			8,
@@ -1435,7 +1443,7 @@ void CMQOMaterial::InitShadersAndPipelines(
 		);
 		m_shadowrootSignature[refposindex].Init(
 			samplerDescArray,
-			5,
+			6,
 			numCbv,
 			numSrv,
 			8,
