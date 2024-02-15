@@ -5,7 +5,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/02/15
-　AdditiveIK 1.0.0.8 RC4(リリース候補4)
+　AdditiveIK 1.0.0.8 RC5(リリース候補5)
 　　1.0.0.7からの変更点
 　　　能動的デストラクトとメモリリーク解消
 　　　　Direct3Dオブジェクトをメンバに持つ自動変数、static変数、global変数の解放を能動的に行った
@@ -14,8 +14,8 @@ https://github.com/Ochakko/AdditiveIK
 　　　　メモリリークは解決したようだ
 　　　TOONシェーダ対応(HSV_Toon)
 　　　　NOLIGHTシェーダをTOONシェーダに変更
-　　　　Shaderプレートメニューでマテリアルの名前のボタンを押してToonを選択すると機能
-　　　　TOON用のライトとしてはLightプレートメニューの１番目のライトの向きを使用
+　　　　Shaderプレートメニューでマテリアル名のボタンを押してToonを選択すると機能
+　　　　TOON用のライトとしてはLightプレートメニューのライトの向きを使用
 　　　　マテリアルの拡散色から自動的にTOONテクスチャを作成しdiffuseMapとしてシェーダで使用
 　　　　設定画面
 　　　　　Shaderプレートメニューで設定
@@ -38,6 +38,16 @@ https://github.com/Ochakko/AdditiveIK
 　　　RefPosの選択ジョイント軌跡表示修正
 　　　　カレントフレームの選択ジョイント位置も軌跡に含めるように.
 　　　TestフォルダのモデルのShader設定を修正
+　　
+
+    ###############################
+　　###  HSV_Toon設定時の注意  ####
+    ###############################
+　　　HSV_ToonにはRGBとHSVの変換計算が関係しています
+　　　H(色相)を計算する際に、RGBが真っ白RGB(1.0, 1.0, 1.0)の場合には0割り算回避計算をする必要があります
+　　　そのためBase色が真っ白の場合にはHのスライダをいじっても表示に反映されないことが多いです
+　　　Base色が真っ白な場合にはまずBaseのSあるいはVをいじってからHを操作すると色を変えることが可能です
+
 
 
 　RC2: HSV_Toonの修正
@@ -48,9 +58,9 @@ https://github.com/Ochakko/AdditiveIK
 　　　DirectXのCreate*関数で作成したオブジェクトにアロケート番号付きの名前をSetNameして調査
 　　　ダンプにおいてdebugdevice以外のRefcountが0になった(IntRefには何か書いてあるが)
 　　　メモリリークは解決したようだ
-　RC4:　HSV_Toonのライトの向きに関する修正
+　RC4: HSV_Toonのライトの向きに関する修正
 　　　Lightプレートメニューで有効にチェックしていないライト(の向きだけ)も選択可能に.
-
+　RC5: ShaderプレートメニューのToonパラメータの数値テキストが見切れていたのを修正.
 
 
 
