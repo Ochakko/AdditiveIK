@@ -86,10 +86,14 @@ struct DirectionalLight
 cbuffer ModelCbMatrix : register(b1)
 {
     uniform int4 lightsnum;
+	//lightsnum.x :有効なライトの数(値をセットしてあるライトの数)
+	//toonlightdir :トゥーンライトインデックス(有効なライトだけ格納したシェーダ定数内のインデックス)
+	//lightsnum.z :シャドウライトインデックス(有効なライトだけ格納したシェーダ定数内のインデックス)    
     DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
     float4 eyePos; // カメラの視点
     float4 specPow; // スペキュラの絞り
-    float4 ambientLight; // 環境光    
+    //float4 ambientLight; // 環境光
+    float4 toonlightdir;
     float4x4 mBoneMat[1000];
 };
 
@@ -454,7 +458,7 @@ SPSInShadowReciever VSMainSkinPBRShadowReciever(SVSIn vsIn, uniform bool hasSkin
 /// </summary>
 float4 PSMainSkinPBR(SPSIn psIn) : SV_Target0
 {
-    float4 diffusecol = CalcDiffuseColor(psIn.normal, directionalLight[lightsnum.y].direction);
+    float4 diffusecol = CalcDiffuseColor(psIn.normal, toonlightdir);
 
     
     //  // 法線を計算
@@ -574,7 +578,7 @@ float4 PSMainSkinPBR(SPSIn psIn) : SV_Target0
     }
 
     // 環境光による底上げ
-    lig += ambientLight.xyz * albedoColor.xyz;
+    //lig += ambientLight.xyz * albedoColor.xyz;
 
     //float4 finalColor;
     //finalColor.xyz = lig;
@@ -593,7 +597,7 @@ float4 PSMainSkinPBRShadowMap(SPSInShadowMap psIn) : SV_Target0
 
 float4 PSMainSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
-    float4 diffusecol = CalcDiffuseColor(psIn.normal, directionalLight[lightsnum.y].direction);
+    float4 diffusecol = CalcDiffuseColor(psIn.normal, toonlightdir);
 
     
     //  // 法線を計算
@@ -713,7 +717,7 @@ float4 PSMainSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     }
 
     // 環境光による底上げ
-    lig += ambientLight.xyz * albedoColor.xyz;
+    //lig += ambientLight.xyz * albedoColor.xyz;
 
     //float4 finalColor;
     //finalColor.xyz = lig;

@@ -1798,9 +1798,10 @@ ChaMatrix               g_mCenterWorld;
 ////#define MAX_LIGHTS 3
 ////CDXUTDirectionWidget g_LightControl[MAX_LIGHTS];
 //CDXUTDirectionWidget g_LightControl[LIGHTNUMMAX];
-ChaVector4 g_lightdirforshader[LIGHTNUMMAX];
-ChaVector4 g_lightdiffuseforshader[LIGHTNUMMAX];
 
+ChaVector4 g_lightdirforshader[LIGHTNUMMAX];//有効なライトだけ格納
+ChaVector4 g_lightdiffuseforshader[LIGHTNUMMAX];//有効なライトだけ格納
+ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わらずオリジナルのインデックスで格納
 
 
 //--------------------------------------------------------------------------------------
@@ -38423,39 +38424,34 @@ int SetLightDirection()
 	int lightindex;
 	int activenum = 0;
 	for (lightindex = 0; lightindex < LIGHTNUMMAX; lightindex++) {
-		if (g_lightEnable[g_lightSlot][lightindex] == true) {
-			if (g_lightDirWithView[g_lightSlot][lightindex] == true) {
-				ChaVector3 nlightdir;
-				ChaVector3Normalize(&nlightdir, &(g_lightDir[g_lightSlot][lightindex]));
+		ChaVector3 nrotdir;
 
-				ChaVector3 rotdir, nrotdir;
-				if (rot180flag == false) {
-					camrotq.Rotate(&rotdir, nlightdir);
-				}
-				else {
-					rotdir = ChaVector3(-nlightdir.x, nlightdir.y, -nlightdir.z);
-				}
-				ChaVector3Normalize(&nrotdir, &rotdir);
-				g_lightdirforshader[activenum] = -ChaVector4(nrotdir, 0.0f);//-lightdir
-				//g_lightdirforshader[lightindex] = -ChaVector4(nrotdir, 0.0f);//-lightdir
+		if (g_lightDirWithView[g_lightSlot][lightindex] == true) {
+			ChaVector3 nlightdir;
+			ChaVector3Normalize(&nlightdir, &(g_lightDir[g_lightSlot][lightindex]));
+
+			ChaVector3 rotdir;
+			if (rot180flag == false) {
+				camrotq.Rotate(&rotdir, nlightdir);
 			}
 			else {
-				ChaVector3 nrotdir;
-				ChaVector3Normalize(&nrotdir, &(g_lightDir[g_lightSlot][lightindex]));
-				g_lightdirforshader[activenum] = -ChaVector4(nrotdir, 0.0f);//-lightdir
-				//g_lightdirforshader[lightindex] = -ChaVector4(nrotdir, 0.0f);//-lightdir
+				rotdir = ChaVector3(-nlightdir.x, nlightdir.y, -nlightdir.z);
 			}
+			ChaVector3Normalize(&nrotdir, &rotdir);
+		}
+		else {
+			ChaVector3Normalize(&nrotdir, &(g_lightDir[g_lightSlot][lightindex]));
+		}
+		ChaVector3 scaleddiffuse;
+		scaleddiffuse = g_lightDiffuse[g_lightSlot][lightindex] * g_lightScale[g_lightSlot][lightindex] * g_fLightScale;
 
-			ChaVector3 scaleddiffuse;
-			scaleddiffuse = g_lightDiffuse[g_lightSlot][lightindex] * g_lightScale[g_lightSlot][lightindex] * g_fLightScale;
+		if (g_lightEnable[g_lightSlot][lightindex] == true) {
+			g_lightdirforshader[activenum] = -ChaVector4(nrotdir, 0.0f);//-lightdir
 			g_lightdiffuseforshader[activenum] = ChaVector4(scaleddiffuse.x, scaleddiffuse.y, scaleddiffuse.z, 1.0f);
-			//g_lightdiffuseforshader[lightindex] = ChaVector4(scaleddiffuse.x, scaleddiffuse.y, scaleddiffuse.z, 1.0f);
-			
 			g_lightNo[activenum] = lightindex;//2023/12/17必要分詰めて格納するので　ShaderのLightScale参照用のライト番号が必要
-			
 			activenum++;
 		}
-
+		g_lightdirforall[lightindex] = -ChaVector4(nrotdir, 0.0f);//-lightdir
 
 		//2023/12/17 最近のシェーダは　pixelshaderについてもuniform変数が使用出来てループ回数に使うことが可能
 		//定数にuniform宣言を追加するだけで出来た

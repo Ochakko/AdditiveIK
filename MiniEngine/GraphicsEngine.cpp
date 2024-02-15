@@ -280,7 +280,7 @@ IDXGIFactory4* GraphicsEngine::CreateDXGIFactory()
 		//2024/02/15
 		//AdditiveIK.cppにおいてID3D12DebugDeviceを使用してリークの詳細ダンプをした
 		//DirectXのCreate*関数で作成したオブジェクトにアロケート番号付きの名前をSetNameして調査
-		//ダンプにおいてdebugdevice以外のRefCountが0になった(InRefCountは何か書いてあるが)
+		//ダンプにおいてdebugdevice以外のRefcountが0になった(IntRefには何か書いてあるが)
 		//メモリリークは解決したようだ
 
 	}

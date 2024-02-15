@@ -105,12 +105,13 @@ struct SConstantBufferLights {
 	DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
 	ChaVector4 eyePos; // カメラの視点
 	ChaVector4 specPow; // スペキュラの絞り
-	ChaVector4 ambientLight; // 環境光
+	//ChaVector4 ambientLight; // 環境光
+	ChaVector4 toonlightdir;
 	void Init() {
 		//ZeroMemory(&lightsnum, sizeof(int) * 4);
-		lightsnum[0] = 1;//DirectionalLightNum
-		lightsnum[1] = 0;//2024/02/14 HSVToon Light Index
-		lightsnum[2] = 0;
+		lightsnum[0] = 1;//[0]:有効なライトの数(値をセットしてあるライトの数)
+		lightsnum[1] = 0;//[1]:トゥーンライトインデックス(有効なライトだけ格納したシェーダ定数内のインデックス)
+		lightsnum[2] = 0;//[2]:シャドウライトインデックス(有効なライトだけ格納したシェーダ定数内のインデックス)
 		lightsnum[3] = 0;
 		int lindex;
 		for (lindex = 0; lindex < NUM_DIRECTIONAL_LIGHT; lindex++) {
@@ -118,7 +119,8 @@ struct SConstantBufferLights {
 		}
 		eyePos.SetZeroVec4(1.0f);
 		specPow.SetZeroVec4(0.0f);
-		ambientLight.SetZeroVec4(1.0f);
+		//ambientLight.SetZeroVec4(1.0f);
+		toonlightdir = ChaVector4(0.0f, 0.0f, -1.0f, 0.0f);
 	};
 };
 

@@ -59,7 +59,8 @@ cbuffer ModelCbMatrix : register(b1)
     DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
     float4 eyePos; // カメラの視点
     float4 specPow; // スペキュラの絞り
-    float4 ambientLight; // 環境光    
+    //float4 ambientLight; // 環境光    
+    float4 toonlightdir;
     float4x4 mBoneMat[1000];
 };
 

@@ -29,6 +29,7 @@
 
 
 //extern CTexBank* g_texbank;
+extern ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わらずオリジナルのインデックスで格納
 
 
 #include "../../MiniEngine/ConstantBuffer.h"
@@ -3016,9 +3017,32 @@ void CMQOMaterial::SetConstLights(SConstantBufferLights* pcbLights)
 		_ASSERT(0);
 		return;
 	}
+
+	int chklightindex;
+	int toonlightindex, toonlightindexInShader;
+	int shadowlightindex, shadowlightindexInShader;
+	toonlightindex = max(0, GetToonLightIndex());
+	toonlightindexInShader = -1;
+	shadowlightindex = max(0, g_shadowmap_lightdir[g_shadowmap_slotno] - 1);
+	shadowlightindexInShader = -1;
+	for (chklightindex = 0; chklightindex < g_nNumActiveLights; chklightindex++) {
+		//######################################################
+		//2024/02/15
+		//toonlightとshadowlightのインデックスを
+		//シェーダ定数内のライト(有効なライトだけ格納)のインデックスに変換
+		//######################################################
+		if (g_lightNo[chklightindex] == toonlightindexInShader) {
+			toonlightindexInShader = chklightindex;
+		}
+		if (g_lightNo[chklightindex] == shadowlightindex) {
+			shadowlightindexInShader = chklightindex;
+		}
+	}
+
 	pcbLights->Init();
 	pcbLights->lightsnum[0] = g_nNumActiveLights;
-	pcbLights->lightsnum[1] = m_hsvtoon.lightindex;//2024/02/14
+	pcbLights->lightsnum[1] = min(g_nNumActiveLights, max(0, toonlightindexInShader));//2024/02/15
+	pcbLights->lightsnum[2] = min(g_nNumActiveLights, max(0, shadowlightindexInShader));//2024/02/15
 	int lightno;
 	for (lightno = 0; lightno < g_nNumActiveLights; lightno++) {//2023/12/17必要分だけ詰めて受け渡し
 	//for (lightno = 0; lightno < LIGHTNUMMAX; lightno++) {
@@ -3031,6 +3055,7 @@ void CMQOMaterial::SetConstLights(SConstantBufferLights* pcbLights)
 	//m_cbLights.directionalLight[0].direction = ChaVector4((camtarget - cameye), 0.0f);//この向きで合っている
 	pcbLights->eyePos = ChaVector4(ChaVector3(g_camera3D->GetPosition()), 0.0f);
 	pcbLights->specPow = ChaVector4(5.0f, 5.0f, 5.0f, 0.0f);
+	pcbLights->toonlightdir = g_lightdirforall[toonlightindex];//2024/02/15
 }
 
 
