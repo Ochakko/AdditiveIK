@@ -2243,7 +2243,7 @@ static void DispProgressCalcLimitedWM();
 static int SetLightDirection();
 
 static int OnRenderModel(RenderContext* pRenderContext);
-static int OnRenderOnlyOneObj(RenderContext* pRenderContext);
+static int OnRenderOnlyOneObj(myRenderer::RenderingEngine* re, RenderContext* rc);
 static int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel);
 static int OnRenderGround(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
 static int OnRenderBoneMark(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
@@ -6106,7 +6106,7 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 
 		}
 		else {
-			//OnRenderOnlyOneObj(pRenderContext);
+			OnRenderOnlyOneObj(re, rc);
 		}
 		
 		//OnRenderUtDialog(fElapsedTime);
@@ -37597,9 +37597,9 @@ int OnRenderModel(RenderContext* pRenderContext)
 	return 0;
 }
 
-int OnRenderOnlyOneObj(RenderContext* pRenderContext)
+int OnRenderOnlyOneObj(myRenderer::RenderingEngine* re, RenderContext* rc)
 {
-	if (!pRenderContext) {
+	if (!re || !rc) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -37638,7 +37638,7 @@ int OnRenderOnlyOneObj(RenderContext* pRenderContext)
 			ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 			int btflag = 0;
 
-			curmodel->RenderTest(withalpha, pRenderContext, g_lightflag, diffusemult, s_onlyoneobjno);
+			curmodel->RenderTest(withalpha, re, g_lightflag, diffusemult, s_onlyoneobjno);
 		}
 	}
 
@@ -52216,7 +52216,7 @@ bool PickAndSelectMeshOfDispGroupDlg()
 		CModel* pickmodel = nullptr;
 		CMQOObject* pickmqoobj = nullptr;
 		CMQOMaterial* pickmaterial = nullptr;
-		pickflag = s_chascene->PickPolyMesh3_Mesh(&tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
+		pickflag = s_chascene->PickPolyMesh3_Mesh(NUMKEYPICK_MQOOBJECT, &tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
 		if (pickflag && pickmodel && pickmqoobj) {
 
 			OnChangeModel(pickmodel);
@@ -52277,7 +52277,7 @@ bool PickAndSelectMaterialOfShaderTypeDlg()
 		CModel* pickmodel = nullptr;
 		CMQOObject* pickmqoobj = nullptr;
 		CMQOMaterial* pickmaterial = nullptr;
-		pickflag = s_chascene->PickPolyMesh3_Mesh(&tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
+		pickflag = s_chascene->PickPolyMesh3_Mesh(NUMKEYPICK_MQOMATERIAL, &tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
 		if (pickflag && pickmodel && pickmaterial) {
 
 			OnChangeModel(pickmodel);
@@ -52885,7 +52885,7 @@ bool DispTipMesh()
 		CModel* pickmodel = nullptr;
 		CMQOObject* pickmqoobj = nullptr;
 		CMQOMaterial* pickmaterial = nullptr;
-		dispfontfortip = s_chascene->PickPolyMesh3_Mesh(&tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
+		dispfontfortip = s_chascene->PickPolyMesh3_Mesh(NUMKEYPICK_MQOOBJECT, &tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
 		if (dispfontfortip && pickmodel && pickmqoobj) {
 			wcscpy_s(modelname, 256, pickmodel->GetFileName());
 			char tmpobjname[256] = { 0 };
@@ -52938,7 +52938,7 @@ bool DispTipMaterial()
 		CModel* pickmodel = nullptr;
 		CMQOObject* pickmqoobj = nullptr;
 		CMQOMaterial* pickmaterial = nullptr;
-		dispfontfortip = s_chascene->PickPolyMesh3_Mesh(&tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
+		dispfontfortip = s_chascene->PickPolyMesh3_Mesh(NUMKEYPICK_MQOMATERIAL, &tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
 		if (dispfontfortip && pickmodel && pickmaterial) {
 			wcscpy_s(modelname, 256, pickmodel->GetFileName());
 			char tmpmaterialname[256] = { 0 };

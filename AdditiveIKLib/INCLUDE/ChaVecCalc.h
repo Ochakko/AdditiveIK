@@ -557,6 +557,13 @@ typedef  struct tag_ui_pickinfo
 }UIPICKINFO;
 
 
+enum {
+	NUMKEYPICK_MQOOBJECT,
+	NUMKEYPICK_MQOMATERIAL,
+	NUMKEYPICK_MAX
+};
+
+
 typedef  struct tag_cpmot
 {
 	int boneno;

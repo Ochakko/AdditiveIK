@@ -256,13 +256,17 @@ int ChaScene::UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, ChaMatri
 	return 0;
 }
 
-bool ChaScene::PickPolyMesh3_Mesh(UIPICKINFO* tmppickinfo, 
+bool ChaScene::PickPolyMesh3_Mesh(int pickkind, UIPICKINFO* tmppickinfo, 
 	CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial)
 {
 	if (!tmppickinfo || !pickmodel || !pickmqoobj || !pickmaterial) {
 		_ASSERT(0);
 		return false;
 	}
+
+	*pickmodel = nullptr;
+	*pickmqoobj = nullptr;
+	*pickmaterial = nullptr;
 
 	vector<myRenderer::RENDEROBJ> pickvec;
 
@@ -306,6 +310,8 @@ bool ChaScene::PickPolyMesh3_Mesh(UIPICKINFO* tmppickinfo,
 
 			int pickvecsize = (int)pickvec.size();
 			int pickindex;
+			CMQOObject* befmqoobj = nullptr;
+			CMQOMaterial* befmqomat = nullptr;
 			for (pickindex = 0; pickindex < pickvecsize; pickindex++) {
 				myRenderer::RENDEROBJ pickobj = pickvec[pickindex];
 				CModel* curmodel = pickobj.pmodel;
@@ -314,24 +320,59 @@ bool ChaScene::PickPolyMesh3_Mesh(UIPICKINFO* tmppickinfo,
 					UIPICKINFO pickinfo = *tmppickinfo;
 					int hitfaceindex = -1;
 					int colli = curmodel->CollisionPolyMesh3_Mouse(&pickinfo, curobj, &hitfaceindex);
-					if (colli != 0) {
+					if ((colli != 0) && (hitfaceindex >= 0)) {
+
+						CMQOObject* chkmqoobj = curobj;
+						CMQOMaterial* chkmqomat = curobj->GetMaterialByFaceIndex(hitfaceindex);
 
 						//g_pickorderは数字キーを押して設定
 						//カメラから何番目(数字キーの数字番目、0は10番目)に近いオブジェクトかを意味する
 						if (g_pickorder > foundorder) {
-							foundorder++;
+							if (pickkind == NUMKEYPICK_MQOOBJECT) {
+								if (chkmqoobj == befmqoobj) {
+									continue;//前回と同じものを見つけた場合はfoundorderを変えずにcontinue.
+								}
+							}
+							else if (pickkind == NUMKEYPICK_MQOMATERIAL) {
+								if (chkmqomat == befmqomat) {
+									continue;//前回と同じものを見つけた場合はfoundorderを変えずにcontinue.
+								}
+							}
+							else {
+								_ASSERT(0);
+							}
+
+							befmqoobj = chkmqoobj;
+							befmqomat = chkmqomat;
+
+							foundorder++;//前回と結果が異なり、かつorderが指定より小さい場合　foundorderを増やしてcontinue.
 							continue;
 						}
-						foundorder++;
+						else {
+							//g_pickorder番目のオブジェクトを返す
 
-						//g_pickorder番目のオブジェクトを返す
-						*pickmodel = curmodel;
-						*pickmqoobj = curobj;
-						int hitmaterialno = -1;
-						*pickmaterial = curobj->GetMaterialByFaceIndex(hitfaceindex);
-						*tmppickinfo = pickinfo;
-
-						return true;
+							if (pickkind == NUMKEYPICK_MQOOBJECT) {
+								if (chkmqoobj != befmqoobj) {
+									*pickmodel = curmodel;
+									*pickmqoobj = chkmqoobj;
+									*pickmaterial = chkmqomat;
+									*tmppickinfo = pickinfo;
+									return true;
+								}
+							}
+							else if (pickkind == NUMKEYPICK_MQOMATERIAL) {
+								if (chkmqomat != befmqomat) {
+									*pickmodel = curmodel;
+									*pickmqoobj = chkmqoobj;
+									*pickmaterial = chkmqomat;
+									*tmppickinfo = pickinfo;
+									return true;
+								}
+							}
+							else {
+								_ASSERT(0);
+							}
+						}
 					}
 				}
 			}

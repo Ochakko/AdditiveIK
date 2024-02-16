@@ -1597,7 +1597,7 @@ void CModel::GetSelectedObjTreeReq(FbxNode* pNode, std::vector<int>& selectedobj
 
 
 
-int CModel::RenderTest(bool withalpha, RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int srcobjno)
+int CModel::RenderTest(bool withalpha, myRenderer::RenderingEngine* re, int lightflag, ChaVector4 diffusemult, int srcobjno)
 {
 
 	if (GetInView() == false) {
@@ -1650,23 +1650,34 @@ int CModel::RenderTest(bool withalpha, RenderContext* pRenderContext, int lightf
 				continue;
 			}
 
-			//if (curobj->GetDispObj()) {
-			//	if (curobj->GetPm3()) {
-			//		CallF(SetShaderConst(curobj, btflag), return 1);
-			//		CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
-			//	}
-			//	else if (curobj->GetPm4()) {
-			//		CallF(SetShaderConst(curobj, btflag), return 1);					
-			//		CallF(curobj->GetDispObj()->RenderNormal(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
-			//	}
-			//	else {
-			//		_ASSERT(0);
-			//	}
-			//}
-			//else if (curobj->GetDispLine()) {
-			//	CallF(curobj->GetDispLine()->RenderLine(withalpha, pRenderContext, diffusemult, materialdisprate), return 1);
-			//}
+			bool forcewithalpha = false;
+			bool calcslotflag = false;
+			bool zcmpalways = false;
+			bool zenable = true;
+			int refposindex = 0;
 
+			myRenderer::RENDEROBJ renderobj;
+			renderobj.Init();
+			renderobj.pmodel = this;
+			renderobj.mqoobj = curobj;
+			renderobj.shadertype = MQOSHADER_TOON;//!!!!!!!!!!! マニピュレータと地面はNOLIGHTで表示
+			renderobj.withalpha = withalpha;
+			renderobj.forcewithalpha = forcewithalpha;
+			renderobj.lightflag = lightflag;
+			renderobj.diffusemult = diffusemult;
+			renderobj.materialdisprate = materialdisprate;
+			renderobj.mWorld = GetWorldMat().TKMatrix();
+			renderobj.calcslotflag = calcslotflag;
+			renderobj.btflag = btflag;
+			renderobj.zcmpalways = zcmpalways;
+			renderobj.zenable = zenable;//2024/02/08
+			renderobj.renderkind = RENDERKIND_NORMAL;
+			renderobj.refposindex = refposindex;//2024/02/06
+
+			vector<myRenderer::RENDEROBJ> rendervec;
+			rendervec.push_back(renderobj);
+
+			re->Add3DModelToForwardRenderPass(rendervec);
 		}
 	}
 
@@ -3583,12 +3594,12 @@ int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, 
 		_ASSERT(0);
 		return 0;
 	}
+	*hitfaceindex = -1;
 
 	ChaVector3 startlocal, dirlocal;
 	CalcMouseLocalRay(pickinfo, &startlocal, &dirlocal);
 	bool excludeinvface = true;
 	int colli = 0;
-	*hitfaceindex = -1;
 	colli = pickobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, excludeinvface, hitfaceindex);
 	return colli;
 

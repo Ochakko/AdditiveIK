@@ -2113,6 +2113,7 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 		_ASSERT(0);
 		return 0;
 	}
+	*hitfaceindex = -1;
 
 	CPolyMesh3* pm3ptr = GetPm3();
 	if (!pm3ptr) {
@@ -2140,6 +2141,10 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 	int vert_count;
 	face_count = pm3ptr->GetFaceNum();
 	vert_count = pm3ptr->GetOptLeng();
+
+	if ((face_count <= 0) || (vert_count < 3)) {
+		return 0;
+	}
 
 	int allowrev;
 	if (excludeinvface) {

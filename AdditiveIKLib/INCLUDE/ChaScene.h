@@ -102,7 +102,7 @@ public:
 		CModel* smodel, bool recstopflag, BPWorld* bpWorld, double srcreccnt,
 		int (*srcStopBtRec)());
 
-	bool PickPolyMesh3_Mesh(UIPICKINFO* tmppickinfo, 
+	bool PickPolyMesh3_Mesh(int pickkind, UIPICKINFO* tmppickinfo, 
 		CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial);
 
 

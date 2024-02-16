@@ -306,7 +306,7 @@ public:
 
 	//DispGroup : test button : exclusive display
 	int SetDispGroupGUI(std::vector<OrgWinGUI::OWP_CheckBoxA*>& checkboxvec, std::vector<CMQOObject*>& mqoobjvec);
-	int RenderTest(bool withalpha, RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int srcobjno);
+	int RenderTest(bool withalpha, myRenderer::RenderingEngine* re, int lightflag, ChaVector4 diffusemult, int srcobjno);
 	int SelectRenderObject(int srcobjno, std::vector<CMQOObject*>& selectedobjvec);
 	void SelectRenderObjectReq(FbxNode* pNode, std::vector<CMQOObject*>& selectedobjvec);
 	int GetSelectedObjTree(int srcobjno, std::vector<int>& selectedobjtree);
