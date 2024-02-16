@@ -58,6 +58,7 @@ class CInfoWindow;
 
 #ifdef ADDITIVEIKLIBGLOBALVAR
 
+int g_pickorder = 1;
 bool g_hdrpbloom = true;
 bool g_freefps = true;
 bool g_zalways = false;
@@ -315,6 +316,7 @@ double g_playingend = 1.0;
 
 #else
 
+extern int g_pickorder;
 extern bool g_hdrpbloom;
 extern bool g_freefps;
 extern bool g_zalways;

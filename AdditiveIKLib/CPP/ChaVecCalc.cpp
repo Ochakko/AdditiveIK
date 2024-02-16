@@ -769,6 +769,7 @@ ChaVector4 ChaVector4::RGB2HSV()
 		}
 		out_v = _max;
 		out_s = _diff / _max;
+
 		rethsv = ChaVector4((float)out_h, (float)out_s, (float)out_v, this->w);
 	}
 

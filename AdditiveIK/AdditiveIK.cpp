@@ -1032,7 +1032,8 @@ static OrgWindow* s_placefolderWnd = 0;
 //#define SHORTCUTTEXTNUM	40
 //#define SHORTCUTTEXTNUM	44
 //#define SHORTCUTTEXTNUM	48
-#define SHORTCUTTEXTNUM	50
+//#define SHORTCUTTEXTNUM	50
+#define SHORTCUTTEXTNUM	52
 static OWP_Label* s_shortcuttext[SHORTCUTTEXTNUM];
 
 
@@ -3394,6 +3395,7 @@ void InitApp()
 	s_guiswflag = true;//true : １段目メニュー内容を右ペインに. false : ２段目メニュー内容を右ペインに
 	s_guiswplateno = 1;
 
+	g_pickorder = 1;//2024/02/16
 	g_hdrpbloom = true;
 	g_freefps = true;
 	g_zalways = false;
@@ -29401,6 +29403,41 @@ int OnFrameKeyboard()
 		}
 
 
+		if ((g_keybuf[VK_NUMPAD1] & 0x80) || (g_keybuf['1'] & 0x80)) {
+			g_pickorder = 1;
+		}
+		else if ((g_keybuf[VK_NUMPAD2] & 0x80) || (g_keybuf['2'] & 0x80)) {
+			g_pickorder = 2;
+		}
+		else if ((g_keybuf[VK_NUMPAD3] & 0x80) || (g_keybuf['3'] & 0x80)) {
+			g_pickorder = 3;
+		}
+		else if ((g_keybuf[VK_NUMPAD4] & 0x80) || (g_keybuf['4'] & 0x80)) {
+			g_pickorder = 4;
+		}
+		else if ((g_keybuf[VK_NUMPAD5] & 0x80) || (g_keybuf['5'] & 0x80)) {
+			g_pickorder = 5;
+		}
+		else if ((g_keybuf[VK_NUMPAD6] & 0x80) || (g_keybuf['6'] & 0x80)) {
+			g_pickorder = 6;
+		}
+		else if ((g_keybuf[VK_NUMPAD7] & 0x80) || (g_keybuf['7'] & 0x80)) {
+			g_pickorder = 7;
+		}
+		else if ((g_keybuf[VK_NUMPAD8] & 0x80) || (g_keybuf['8'] & 0x80)) {
+			g_pickorder = 8;
+		}
+		else if ((g_keybuf[VK_NUMPAD9] & 0x80) || (g_keybuf['9'] & 0x80)) {
+			g_pickorder = 9;
+		}
+		else if ((g_keybuf[VK_NUMPAD0] & 0x80) || (g_keybuf['0'] & 0x80)) {
+			g_pickorder = 10;
+		}
+		else {
+			g_pickorder = 1;
+		}
+
+
 		//end of BoneTwist on MouseWheel 
 		if ((s_tkeyflag != 0) && (s_editmotionflag >= 0) && ((g_keybuf['T'] & 0x80) == 0)) {
 			s_tkeyflag = 0;
@@ -34244,8 +34281,6 @@ int CreatePlaceFolderWnd()
 
 
 		WCHAR shortcuttext[SHORTCUTTEXTNUM][80] = {
-			L" ",
-			L" ",
 			L"ShortCutKey",
 			L" ",
 			L"　Menu",
@@ -34254,9 +34289,9 @@ int CreatePlaceFolderWnd()
 			L"　　V + SpaceKey　：　Change ToolShortCutButtons.",
 			L" ",
 			L"　Joint Selection",
-			
 			L"　　H + LeftArrow or RightArrow　：　Select LeftHand or RightHand.",
 			L"	　　　JointName whitch contain string L_Hand or LeftHand",
+
 			L"	　　　JointName whitch contain string R_Hand or RightHand",
 			L"　　F + LeftArrow or RightArrow　：　Select LeftFoot or RightFoot.",
 			L"	　　　JointName whitch contain string L_Foot or LeftFoot",
@@ -34265,20 +34300,20 @@ int CreatePlaceFolderWnd()
 			L"　　LeftArrow or RightArrow　：　Select joint whitch is at same depth level.",
 			L" ",
 			L"　　UpperArrow or LowerArrow　：　Select parent joint or child joint.",
-			
 			L" ",
 			L" ",
+
 			L"　Edit Motion",
 			L"　　T + MouseWheel　：　Twist motion.",
 			L" ",
-			L"　  <new> Shift + Drag(X or Y or Z) on ScalingMode　：　Scale all axes.",
+			L"　　Shift + Drag(X or Y or Z) on ScalingMode　：　Scale all axes.",
 			L" ",
 			L" ",
 			L"　Timeline",
 			L"　　Ctrl + MouseWheel　：　Move frame selection by 1 frame.",
+			L" ",
+			L" ",
 
-			L" ",
-			L" ",
 			L"　Manipulator",
 			L"　　S + Mouse_R_Drag　：　Change manipulator scale.",
 			L" ",
@@ -34287,9 +34322,9 @@ int CreatePlaceFolderWnd()
 			L"　　Drag on CenterBar　：　Slide starting from clicked position.",
 			L"    LButton DoubleClick :  Set value of clicked position.",
 			L"    RButton DoubleClick :  Undo value limited to 1,000,000 times.",
-
 			L"    Mouse Wheel : Slide per a pixel.",
 			L" ",
+
 			L" ",
 			L"　DispGroupWindow",
 			L"　　RButton on a Element　：　Context Menu for SimilarCheck.",
@@ -34297,7 +34332,13 @@ int CreatePlaceFolderWnd()
 			L" ",
 			L"　OWP_ScrollWindow",
 			L"　　MouseWheel on ScrollBar　：　Scroll Window.",
+			L" ",
+			L" ",
+			L"　Pick on ShaderPlateMenu, DispGroupPlateMenu",
+			
+			L"　　NumKey(1-9) : Pick an object from the camera close to theNumber.",
 			L" "
+
 		};
 
 		int textno;
@@ -34309,7 +34350,8 @@ int CreatePlaceFolderWnd()
 			}
 
 			//red color new line
-			if (textno == 25) {
+			//if (textno == 25) {
+			if (textno == 50) {
 				COLORREF colred = RGB(168, 129, 129);
 				s_shortcuttext[textno]->setTextColor(colred);
 			}

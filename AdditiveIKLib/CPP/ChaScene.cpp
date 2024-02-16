@@ -299,6 +299,8 @@ bool ChaScene::PickPolyMesh3_Mesh(UIPICKINFO* tmppickinfo,
 		//##########################################################
 		//カメラ距離でソートしてから　pickする
 		//##########################################################
+
+		int foundorder = 1;
 		if (!pickvec.empty()) {
 			std::sort(pickvec.begin(), pickvec.end());//カメラ距離でソート
 
@@ -309,13 +311,25 @@ bool ChaScene::PickPolyMesh3_Mesh(UIPICKINFO* tmppickinfo,
 				CModel* curmodel = pickobj.pmodel;
 				CMQOObject* curobj = pickobj.mqoobj;
 				if (curmodel && curobj) {
+					UIPICKINFO pickinfo = *tmppickinfo;
 					int hitfaceindex = -1;
-					int colli = curmodel->CollisionPolyMesh3_Mouse(tmppickinfo, curobj, &hitfaceindex);
+					int colli = curmodel->CollisionPolyMesh3_Mouse(&pickinfo, curobj, &hitfaceindex);
 					if (colli != 0) {
+
+						//g_pickorderは数字キーを押して設定
+						//カメラから何番目(数字キーの数字番目、0は10番目)に近いオブジェクトかを意味する
+						if (g_pickorder > foundorder) {
+							foundorder++;
+							continue;
+						}
+						foundorder++;
+
+						//g_pickorder番目のオブジェクトを返す
 						*pickmodel = curmodel;
 						*pickmqoobj = curobj;
 						int hitmaterialno = -1;
 						*pickmaterial = curobj->GetMaterialByFaceIndex(hitfaceindex);
+						*tmppickinfo = pickinfo;
 
 						return true;
 					}
