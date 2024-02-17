@@ -27270,6 +27270,40 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			}
 		}
 		break;
+		case IDC_CHECK_GRADATION:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_GRADATION);
+			if (ischecked == BST_CHECKED) {
+				hsvtoon.gradationflag = true;
+			}
+			else {
+				hsvtoon.gradationflag = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetToonGradationFlag(hsvtoon.gradationflag);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonGradationFlag(hsvtoon.gradationflag);
+						s_hsvtoonforall.gradationflag = hsvtoon.gradationflag;
+					}
+				}
+			}
+
+			if (curmqomat) {
+				s_toonmqomaterial = curmqomat;
+			}
+			else {
+				s_toonmqomaterial = nullptr;
+			}
+			s_toonparamchange = true;
+		}
+		break;
 
 
 
@@ -40972,7 +41006,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.8 : No.%d : ", s_appcnt);
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.9 : No.%d : ", s_appcnt);
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -49150,7 +49184,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.8 : No.%d : ", s_appcnt);
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.9 : No.%d : ", s_appcnt);
 
 
 	if (s_model && s_chascene) {
@@ -53294,6 +53328,12 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		CheckDlgButton(hDlgWnd, IDC_CHECK_EMISSION, false);
 	}
 
+	if (hsvtoon.gradationflag == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_GRADATION, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_GRADATION, false);
+	}
 
 	return 0;
 }

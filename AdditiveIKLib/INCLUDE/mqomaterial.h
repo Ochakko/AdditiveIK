@@ -166,6 +166,7 @@ typedef struct tag_hsvtoon
 	float lowcolorh;//[0, 1]
 	ChaVector4 hiaddhsv;//H, S, V, alpha
 	ChaVector4 lowaddhsv;//H, S, V, alpha
+	bool gradationflag;
 	void Init() {
 		lightindex = 0;
 		hicolorh = 200.0f / 255.0f;
@@ -173,6 +174,7 @@ typedef struct tag_hsvtoon
 		basehsv = ChaVector4(0.0f, 0.0f, 0.0f, 1.0f);//H, S, V, alpha
 		hiaddhsv = ChaVector4(0.0f, 0.0f, 0.2f, 0.0f);//H, S, V, alpha
 		lowaddhsv = ChaVector4(0.0f, 0.0f, -0.2f, 0.0f);//H, S, V, alpha
+		gradationflag = true;
 	};
 	void InitZero() {
 		lightindex = 0;
@@ -181,6 +183,7 @@ typedef struct tag_hsvtoon
 		basehsv = ChaVector4(0.0f, 0.0f, 0.0f, 1.0f);//H, S, V, alpha
 		hiaddhsv = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);//H, S, V, alpha
 		lowaddhsv = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);//H, S, V, alpha
+		gradationflag = true;
 	};
 	tag_hsvtoon()
 	{
@@ -870,6 +873,14 @@ public:
 	HSVTOON GetHSVToon()
 	{
 		return m_hsvtoon;
+	}
+	void SetToonGradationFlag(bool srcflag)
+	{
+		m_hsvtoon.gradationflag = srcflag;
+	}
+	bool GetToonGradationFlag()
+	{
+		return m_hsvtoon.gradationflag;
 	}
 	void SetToonHiAddrH(float srcval) 
 	{

@@ -333,23 +333,120 @@ int Texture::WriteToonToSubResource(tag_hsvtoon* phsvtoon, ID3D12Resource* srcte
 			for (indexw = 0; indexw < texW; indexw++) {
 				unsigned char* ppix = texturedata + (indexh * texW + indexw) * 4;
 				
-				if ((indexh >= thlow) && (indexh <= thhi)) {
-					*(ppix) = basergba.R;
-					*(ppix + 1) = basergba.G;
-					*(ppix + 2) = basergba.B;
-					*(ppix + 3) = basergba.A;
-				}
-				else if (indexh < thlow) {
-					*(ppix) = lowrgba.R;
-					*(ppix + 1) = lowrgba.G;
-					*(ppix + 2) = lowrgba.B;
-					*(ppix + 3) = lowrgba.A;
+				if (phsvtoon->gradationflag == false) {
+					if ((indexh >= thlow) && (indexh <= thhi)) {
+						*(ppix) = basergba.R;
+						*(ppix + 1) = basergba.G;
+						*(ppix + 2) = basergba.B;
+						*(ppix + 3) = basergba.A;
+					}
+					else if (indexh < thlow) {
+						*(ppix) = lowrgba.R;
+						*(ppix + 1) = lowrgba.G;
+						*(ppix + 2) = lowrgba.B;
+						*(ppix + 3) = lowrgba.A;
+					}
+					else {
+						*(ppix) = hirgba.R;
+						*(ppix + 1) = hirgba.G;
+						*(ppix + 2) = hirgba.B;
+						*(ppix + 3) = hirgba.A;
+					}
 				}
 				else {
-					*(ppix) = hirgba.R;
-					*(ppix + 1) = hirgba.G;
-					*(ppix + 2) = hirgba.B;
-					*(ppix + 3) = hirgba.A;
+					if ((indexh >= thlow) && (indexh <= thhi)) {
+						*(ppix) = basergba.R;
+						*(ppix + 1) = basergba.G;
+						*(ppix + 2) = basergba.B;
+						*(ppix + 3) = basergba.A;
+					}
+					else if (indexh < thlow) {
+						float low2midRate_R;
+						float low2midRate_G;
+						float low2midRate_B;
+						float low2midRate_A;
+						if (thlow != 0) {
+							low2midRate_R = (float)(basergba.R - lowrgba.R) / (float)thlow;
+							low2midRate_G = (float)(basergba.G - lowrgba.G) / (float)thlow;
+							low2midRate_B = (float)(basergba.B - lowrgba.B) / (float)thlow;
+							low2midRate_A = (float)(basergba.A - lowrgba.A) / (float)thlow;
+
+							float tempR, tempG, tempB, tempA;
+							tempR = (float)lowrgba.R + low2midRate_R * (float)indexh;
+							tempG = (float)lowrgba.G + low2midRate_G * (float)indexh;
+							tempB = (float)lowrgba.B + low2midRate_B * (float)indexh;
+							tempA = (float)lowrgba.A + low2midRate_A * (float)indexh;
+							
+							unsigned char setR, setG, setB, setA;
+							setR = (unsigned char)tempR;
+							setR = min(255, setR);
+							setR = max(0, setR);
+							setG = (unsigned char)tempG;
+							setG = min(255, setG);
+							setG = max(0, setG);
+							setB = (unsigned char)tempB;
+							setB = min(255, setB);
+							setB = max(0, setB);
+							setA = (unsigned char)tempA;
+							setA = min(255, setA);
+							setA = max(0, setA);
+
+							*(ppix) = setR;
+							*(ppix + 1) = setG;
+							*(ppix + 2) = setB;
+							*(ppix + 3) = setA;
+						}
+						else {
+							*(ppix) = basergba.R;
+							*(ppix + 1) = basergba.G;
+							*(ppix + 2) = basergba.B;
+							*(ppix + 3) = basergba.A;
+						}
+					}
+					else {
+						float mid2hiRate_R;
+						float mid2hiRate_G;
+						float mid2hiRate_B;
+						float mid2hiRate_A;
+
+						if (thhi != 255) {
+							mid2hiRate_R = (float)(hirgba.R - basergba.R) / (float)(255 - thhi);
+							mid2hiRate_G = (float)(hirgba.G - basergba.G) / (float)(255 - thhi);
+							mid2hiRate_B = (float)(hirgba.B - basergba.B) / (float)(255 - thhi);
+							mid2hiRate_A = (float)(hirgba.A - basergba.A) / (float)(255 - thhi);
+
+							float tempR, tempG, tempB, tempA;
+							tempR = (float)basergba.R + mid2hiRate_R * (float)(indexh - thhi);
+							tempG = (float)basergba.G + mid2hiRate_G * (float)(indexh - thhi);
+							tempB = (float)basergba.B + mid2hiRate_B * (float)(indexh - thhi);
+							tempA = (float)basergba.A + mid2hiRate_A * (float)(indexh - thhi);
+
+							unsigned char setR, setG, setB, setA;
+							setR = (unsigned char)tempR;
+							setR = min(255, setR);
+							setR = max(0, setR);
+							setG = (unsigned char)tempG;
+							setG = min(255, setG);
+							setG = max(0, setG);
+							setB = (unsigned char)tempB;
+							setB = min(255, setB);
+							setB = max(0, setB);
+							setA = (unsigned char)tempA;
+							setA = min(255, setA);
+							setA = max(0, setA);
+
+							*(ppix) = setR;
+							*(ppix + 1) = setG;
+							*(ppix + 2) = setB;
+							*(ppix + 3) = setA;
+						}
+						else {
+							*(ppix) = basergba.R;
+							*(ppix + 1) = basergba.G;
+							*(ppix + 2) = basergba.B;
+							*(ppix + 3) = basergba.A;
+						}
+					}
 				}
 
 				//if (indexh >= thhi) {
