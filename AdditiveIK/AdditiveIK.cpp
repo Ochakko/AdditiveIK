@@ -27276,9 +27276,19 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_GRADATION);
 			if (ischecked == BST_CHECKED) {
 				hsvtoon.gradationflag = true;
+
+				HWND powertoonwnd = GetDlgItem(hDlgWnd, IDC_CHECK_POWERTOON);
+				if (powertoonwnd) {
+					EnableWindow(powertoonwnd, TRUE);
+				}
 			}
 			else {
 				hsvtoon.gradationflag = false;
+
+				HWND powertoonwnd = GetDlgItem(hDlgWnd, IDC_CHECK_POWERTOON);
+				if (powertoonwnd) {
+					EnableWindow(powertoonwnd, FALSE);
+				}
 			}
 
 			if (curmqomat) {
@@ -27291,6 +27301,40 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 					if (setmqomat) {
 						setmqomat->SetToonGradationFlag(hsvtoon.gradationflag);
 						s_hsvtoonforall.gradationflag = hsvtoon.gradationflag;
+					}
+				}
+			}
+
+			if (curmqomat) {
+				s_toonmqomaterial = curmqomat;
+			}
+			else {
+				s_toonmqomaterial = nullptr;
+			}
+			s_toonparamchange = true;
+		}
+		break;
+		case IDC_CHECK_POWERTOON:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_POWERTOON);
+			if (ischecked == BST_CHECKED) {
+				hsvtoon.powertoon = true;
+			}
+			else {
+				hsvtoon.powertoon = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetToonPowerToon(hsvtoon.powertoon);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonPowerToon(hsvtoon.powertoon);
+						s_hsvtoonforall.powertoon = hsvtoon.powertoon;
 					}
 				}
 			}
@@ -53330,9 +53374,26 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 
 	if (hsvtoon.gradationflag == true) {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_GRADATION, true);
+
+		HWND powertoonwnd = GetDlgItem(hDlgWnd, IDC_CHECK_POWERTOON);
+		if (powertoonwnd) {
+			EnableWindow(powertoonwnd, TRUE);
+		}
 	}
 	else {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_GRADATION, false);
+
+		HWND powertoonwnd = GetDlgItem(hDlgWnd, IDC_CHECK_POWERTOON);
+		if (powertoonwnd) {
+			EnableWindow(powertoonwnd, FALSE);
+		}
+	}
+
+	if (hsvtoon.powertoon == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_POWERTOON, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_POWERTOON, false);
 	}
 
 	return 0;

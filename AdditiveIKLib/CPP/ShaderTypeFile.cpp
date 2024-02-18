@@ -136,6 +136,12 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			CallF(Write2File("    <ToonBaseV>%.2f</ToonBaseV>\r\n", hsvtoon.basehsv.z), return 1);
 			CallF(Write2File("    <ToonBaseA>%.2f</ToonBaseA>\r\n", hsvtoon.basehsv.w), return 1);
 
+			//2024/02/18
+			int gradationflag = hsvtoon.gradationflag ? 1 : 0;
+			CallF(Write2File("    <Gradation>%d</Gradation>\r\n", gradationflag), return 1);
+			int powertoon = hsvtoon.powertoon ? 1 : 0;
+			CallF(Write2File("    <PowerToon>%d</PowerToon>\r\n", powertoon), return 1);
+
 
 			CallF(Write2File("  </Material>\r\n"), return 1);
 
@@ -155,7 +161,9 @@ int CShaderTypeFile::WriteFileInfo()
 	//2024/01/30
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1003</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//2024/02/13
-	CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1004</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1004</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//2024/02/18
+	CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1005</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 
 	return 0;
@@ -314,6 +322,25 @@ int CShaderTypeFile::LoadShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 				Read_Float(&materialbuf, "<ToonBaseA>", "</ToonBaseA>\r\n", &(basehsv.w));
 				hsvtoon.basehsv = basehsv;
 
+				//2024/02/18
+				int gradationflag = hsvtoon.gradationflag ? 1 : 0;
+				Read_Int(&materialbuf, "<Gradation>", "</Gradation>\r\n", &gradationflag);
+				if (gradationflag == 1) {
+					hsvtoon.gradationflag = true;
+				}
+				else {
+					hsvtoon.gradationflag = false;
+				}
+
+				//2024/02/18
+				int powertoon = hsvtoon.powertoon ? 1 : 0;
+				Read_Int(&materialbuf, "<PowerToon>", "</PowerToon>\r\n", &powertoon);
+				if (gradationflag == 1) {
+					hsvtoon.powertoon = true;
+				}
+				else {
+					hsvtoon.powertoon = false;
+				}
 
 				curmqomat->SetHSVToon(hsvtoon);
 			}

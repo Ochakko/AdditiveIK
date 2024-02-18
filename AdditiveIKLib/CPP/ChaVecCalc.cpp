@@ -539,6 +539,157 @@ ChaMatrix ChaVector3::MakeScaleMat()
 //	}
 //}
 
+ChaTexRGBA::ChaTexRGBA() {
+	InitParams();
+};
+ChaTexRGBA::ChaTexRGBA(unsigned char srcR, unsigned char srcG, unsigned char srcB, unsigned char srcA) {
+	R = srcR;
+	G = srcG;
+	B = srcB;
+	A = srcA;
+	Clamp();
+};
+ChaTexRGBA::ChaTexRGBA(float srcR, float srcG, float srcB, float srcA) {
+	R = (unsigned char)(srcR * 255.0f);
+	G = (unsigned char)(srcG * 255.0f);
+	B = (unsigned char)(srcB * 255.0f);
+	A = (unsigned char)(srcA * 255.0f);
+	Clamp();
+};
+ChaTexRGBA::ChaTexRGBA(ChaVector4 src) {
+	*this = ChaTexRGBA(src.x, src.y, src.z, src.w);
+};
+ChaTexRGBA::~ChaTexRGBA() {
+};
+
+void ChaTexRGBA::InitParams() {
+	R = 0;
+	G = 0;
+	B = 0;
+	A = 255;
+};
+void ChaTexRGBA::Clamp()
+{
+	R = min(255, R);
+	R = max(0, R);
+
+	G = min(255, G);
+	G = max(0, G);
+
+	B = min(255, B);
+	B = max(0, B);
+
+	A = min(255, A);
+	A = max(0, A);
+};
+
+void ChaTexRGBA::FromHSV(ChaVector4 srchsv) {
+	ChaVector4 calcrgba = srchsv.HSV2RGB();
+	*this = ChaTexRGBA(calcrgba);
+};
+void ChaTexRGBA::FromRGBA(ChaVector4 srcrgba) {
+	*this = ChaTexRGBA(srcrgba);
+};
+
+ChaTexRGBA ChaTexRGBA::operator= (ChaTexRGBA v) { this->R = v.R; this->G = v.G; this->B = v.B; this->A = v.A; return *this; };
+ChaTexRGBA ChaTexRGBA::operator* (float srcw) const {
+	ChaTexRGBA result;
+	result.R = (unsigned char)((float)this->R * srcw + 0.0001f);
+	result.G = (unsigned char)((float)this->G * srcw + 0.0001f);
+	result.B = (unsigned char)((float)this->B * srcw + 0.0001f);
+	result.A = (unsigned char)((float)this->A * srcw + 0.0001f);
+	result.Clamp();
+	return result;
+}
+ChaTexRGBA& ChaTexRGBA::operator*= (float srcw) { *this = *this * srcw; return *this; }
+ChaTexRGBA ChaTexRGBA::operator/ (float srcw) const { 
+	if (srcw != 0.0f) { 
+		ChaTexRGBA result;
+		result.R = (unsigned char)((float)this->R / srcw + 0.0001f);
+		result.G = (unsigned char)((float)this->G / srcw + 0.0001f);
+		result.B = (unsigned char)((float)this->B / srcw + 0.0001f);
+		result.A = (unsigned char)((float)this->A / srcw + 0.0001f);
+		result.Clamp();
+		return result;
+	} 
+	else { 
+		return ChaTexRGBA(0.0f, 0.0f, 0.0f, 0.0f); 
+	} 
+}
+ChaTexRGBA& ChaTexRGBA::operator/= (float srcw) { *this = *this / srcw; return *this; }
+ChaTexRGBA ChaTexRGBA::operator* (double srcw) const { 
+	ChaTexRGBA result;
+	result.R = (unsigned char)((double)this->R * srcw + 0.0001);
+	result.G = (unsigned char)((double)this->G * srcw + 0.0001);
+	result.B = (unsigned char)((double)this->B * srcw + 0.0001);
+	result.A = (unsigned char)((double)this->A * srcw + 0.0001);
+	result.Clamp();
+	return result;
+}
+ChaTexRGBA& ChaTexRGBA::operator*= (double srcw) { 
+	*this = *this * srcw; return *this; 
+}
+ChaTexRGBA ChaTexRGBA::operator/ (double srcw) const { 
+	if (srcw != 0.0f) {
+		ChaTexRGBA result;
+		result.R = (unsigned char)((double)this->R / srcw + 0.0001);
+		result.G = (unsigned char)((double)this->G / srcw + 0.0001);
+		result.B = (unsigned char)((double)this->B / srcw + 0.0001);
+		result.A = (unsigned char)((double)this->A / srcw + 0.0001);
+		result.Clamp();
+		return result;
+	}
+	else {
+		return ChaTexRGBA(0.0f, 0.0f, 0.0f, 0.0f);
+	}
+}
+ChaTexRGBA& ChaTexRGBA::operator/= (double srcw) { *this = *this / srcw; return *this; }
+ChaTexRGBA ChaTexRGBA::operator+ (const ChaTexRGBA& v) const { 
+	ChaTexRGBA result;
+	result.R = R + v.R;
+	result.G = G + v.B;
+	result.B = B + v.B;
+	result.A = A + v.A;
+	result.Clamp();
+	return result;
+}
+ChaTexRGBA& ChaTexRGBA::operator+= (const ChaTexRGBA& v) { *this = *this + v; return *this; }
+ChaTexRGBA ChaTexRGBA::operator- (const ChaTexRGBA& v) const { 
+	ChaTexRGBA result;
+	result.R = R - v.R;
+	result.G = G - v.B;
+	result.B = B - v.B;
+	result.A = A - v.A;
+	result.Clamp();
+	return result;
+}
+ChaTexRGBA& ChaTexRGBA::operator-= (const ChaTexRGBA& v) { *this = *this - v; return *this; }
+ChaTexRGBA ChaTexRGBA::operator* (const ChaTexRGBA& v) const {
+	ChaVector4 param1;
+	param1.x = (float)((double)this->R / 255.0);
+	param1.y = (float)((double)this->G / 255.0);
+	param1.z = (float)((double)this->B / 255.0);
+	param1.w = (float)((double)this->A / 255.0);
+
+	ChaVector4 param2;
+	param2.x = (float)((double)v.R / 255.0);
+	param2.y = (float)((double)v.G / 255.0);
+	param1.z = (float)((double)v.B / 255.0);
+	param1.w = (float)((double)v.A / 255.0);
+
+	ChaVector4 calc1;
+	calc1 = param1 * param2;
+
+	ChaTexRGBA result;
+	result = ChaTexRGBA(calc1.x, calc1.y, calc1.z, calc1.w);
+	result.Clamp();
+
+	return result;
+}
+ChaTexRGBA& ChaTexRGBA::operator*= (const ChaTexRGBA& v) { *this = *this * v; return *this; }
+
+
+
 
 
 ChaVector4::ChaVector4()
@@ -612,6 +763,21 @@ void ChaVector4::Clamp(float srcmin, float srcmax)
 	x = tmpx;
 	y = tmpy;
 	z = tmpz;
+}
+
+void ChaVector4::ClampHSV()
+{
+	x = min(360.0f, x);
+	x = max(0.0f, x);
+
+	y = min(1.0f, y);
+	y = max(0.0f, y);
+	
+	z = min(1.0f, z);
+	z = max(0.0f, z);
+
+	w = min(1.0f, w);
+	w = max(0.0f, w);
 }
 
 int ChaVector4::HSV_Add(ChaVector4 srcadd)
@@ -833,7 +999,14 @@ ChaVector4 ChaVector4::HSV2RGB()
 	return retrgb;
 }
 
-
+void ChaVector4::HSV_Lerp(ChaVector4 befhsv, ChaVector4 afthsv, float t)
+{
+	ChaVector4 diffhsv = afthsv - befhsv;
+	ChaVector4 stephsv = diffhsv * t;
+	ChaVector4 calchsv = befhsv + stephsv;
+	calchsv.ClampHSV();
+	*this = calchsv;
+}
 
 
 ChaPlane::ChaPlane()

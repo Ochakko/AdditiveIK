@@ -268,54 +268,19 @@ int Texture::WriteToonToSubResource(tag_hsvtoon* phsvtoon, ID3D12Resource* srcte
 	texW = (UINT)textureDesc.Width;
 	texH = (UINT)textureDesc.Height;
 
-	ChaVector4 basecolor = phsvtoon->basehsv.HSV2RGB();
+	ChaVector4 basehsv = phsvtoon->basehsv;
+	ChaVector4 hihsv = basehsv + phsvtoon->hiaddhsv;
+	ChaVector4 lowhsv = basehsv + phsvtoon->lowaddhsv;
+	basehsv.ClampHSV();
+	hihsv.ClampHSV();
+	lowhsv.ClampHSV();
 
-	struct TexRGBA {
-		unsigned char R, G, B, A;
-	};
-
-	TexRGBA basergba;
-	{
-		double colR = (double)basecolor.x * 255.0;
-		double colG = (double)basecolor.y * 255.0;
-		double colB = (double)basecolor.z * 255.0;
-		double colA = (double)basecolor.w * 255.0;
-		basergba.R = (unsigned char)(fmax(0.0, fmin(255.0, colR)));
-		basergba.G = (unsigned char)(fmax(0.0, fmin(255.0, colG)));
-		basergba.B = (unsigned char)(fmax(0.0, fmin(255.0, colB)));
-		basergba.A = (unsigned char)(fmax(0.0, fmin(255.0, colA)));
-	}
-
-	TexRGBA hirgba;
-	{
-		ChaVector4 hicol = basecolor;
-		hicol.HSV_Add(phsvtoon->hiaddhsv);
-
-		double colR = (double)hicol.x * 255.0;
-		double colG = (double)hicol.y * 255.0;
-		double colB = (double)hicol.z * 255.0;
-		double colA = (double)hicol.w * 255.0;
-		hirgba.R = (unsigned char)(fmax(0.0, fmin(255.0, colR)));
-		hirgba.G = (unsigned char)(fmax(0.0, fmin(255.0, colG)));
-		hirgba.B = (unsigned char)(fmax(0.0, fmin(255.0, colB)));
-		hirgba.A = (unsigned char)(fmax(0.0, fmin(255.0, colA)));
-	}
-
-	TexRGBA lowrgba;
-	{
-		ChaVector4 lowcol = basecolor;
-		lowcol.HSV_Add(phsvtoon->lowaddhsv);
-
-		double colR = (double)lowcol.x * 255.0;
-		double colG = (double)lowcol.y * 255.0;
-		double colB = (double)lowcol.z * 255.0;
-		double colA = (double)lowcol.w * 255.0;
-		lowrgba.R = (unsigned char)(fmax(0.0, fmin(255.0, colR)));
-		lowrgba.G = (unsigned char)(fmax(0.0, fmin(255.0, colG)));
-		lowrgba.B = (unsigned char)(fmax(0.0, fmin(255.0, colB)));
-		lowrgba.A = (unsigned char)(fmax(0.0, fmin(255.0, colA)));
-	}
-
+	ChaTexRGBA basergba;
+	basergba.FromHSV(basehsv);
+	ChaTexRGBA hirgba;
+	hirgba.FromHSV(hihsv);
+	ChaTexRGBA lowrgba;
+	lowrgba.FromHSV(lowhsv);
 
 	unsigned char* texturedata = (unsigned char*)malloc(sizeof(unsigned char) * texW * texH * 4);
 
@@ -329,6 +294,7 @@ int Texture::WriteToonToSubResource(tag_hsvtoon* phsvtoon, ID3D12Resource* srcte
 		thlow = max(0, thlow);
 
 		UINT indexw, indexh;
+		float t;
 		for (indexh = 0; indexh < texH; indexh++) {
 			for (indexw = 0; indexw < texW; indexw++) {
 				unsigned char* ppix = texturedata + (indexh * texW + indexw) * 4;
@@ -361,91 +327,48 @@ int Texture::WriteToonToSubResource(tag_hsvtoon* phsvtoon, ID3D12Resource* srcte
 						*(ppix + 3) = basergba.A;
 					}
 					else if (indexh < thlow) {
-						float low2midRate_R;
-						float low2midRate_G;
-						float low2midRate_B;
-						float low2midRate_A;
 						if (thlow != 0) {
-							low2midRate_R = (float)(basergba.R - lowrgba.R) / (float)thlow;
-							low2midRate_G = (float)(basergba.G - lowrgba.G) / (float)thlow;
-							low2midRate_B = (float)(basergba.B - lowrgba.B) / (float)thlow;
-							low2midRate_A = (float)(basergba.A - lowrgba.A) / (float)thlow;
-
-							float tempR, tempG, tempB, tempA;
-							tempR = (float)lowrgba.R + low2midRate_R * (float)indexh;
-							tempG = (float)lowrgba.G + low2midRate_G * (float)indexh;
-							tempB = (float)lowrgba.B + low2midRate_B * (float)indexh;
-							tempA = (float)lowrgba.A + low2midRate_A * (float)indexh;
-							
-							unsigned char setR, setG, setB, setA;
-							setR = (unsigned char)tempR;
-							setR = min(255, setR);
-							setR = max(0, setR);
-							setG = (unsigned char)tempG;
-							setG = min(255, setG);
-							setG = max(0, setG);
-							setB = (unsigned char)tempB;
-							setB = min(255, setB);
-							setB = max(0, setB);
-							setA = (unsigned char)tempA;
-							setA = min(255, setA);
-							setA = max(0, setA);
-
-							*(ppix) = setR;
-							*(ppix + 1) = setG;
-							*(ppix + 2) = setB;
-							*(ppix + 3) = setA;
+							t = (float)indexh / (float)thlow;
+							if (phsvtoon->powertoon) {
+								t = t * t * t * t;
+								//t = 1.0 - pow(t, 0.25);
+							}
 						}
 						else {
-							*(ppix) = basergba.R;
-							*(ppix + 1) = basergba.G;
-							*(ppix + 2) = basergba.B;
-							*(ppix + 3) = basergba.A;
+							t = 1.0f;
 						}
+						ChaVector4 calchsv;
+						calchsv.HSV_Lerp(lowhsv, basehsv, t);
+						ChaTexRGBA calctexrgba;
+						calctexrgba.FromHSV(calchsv);
+
+						*(ppix) = calctexrgba.R;
+						*(ppix + 1) = calctexrgba.G;
+						*(ppix + 2) = calctexrgba.B;
+						*(ppix + 3) = calctexrgba.A;
+
 					}
 					else {
-						float mid2hiRate_R;
-						float mid2hiRate_G;
-						float mid2hiRate_B;
-						float mid2hiRate_A;
-
 						if (thhi != 255) {
-							mid2hiRate_R = (float)(hirgba.R - basergba.R) / (float)(255 - thhi);
-							mid2hiRate_G = (float)(hirgba.G - basergba.G) / (float)(255 - thhi);
-							mid2hiRate_B = (float)(hirgba.B - basergba.B) / (float)(255 - thhi);
-							mid2hiRate_A = (float)(hirgba.A - basergba.A) / (float)(255 - thhi);
-
-							float tempR, tempG, tempB, tempA;
-							tempR = (float)basergba.R + mid2hiRate_R * (float)(indexh - thhi);
-							tempG = (float)basergba.G + mid2hiRate_G * (float)(indexh - thhi);
-							tempB = (float)basergba.B + mid2hiRate_B * (float)(indexh - thhi);
-							tempA = (float)basergba.A + mid2hiRate_A * (float)(indexh - thhi);
-
-							unsigned char setR, setG, setB, setA;
-							setR = (unsigned char)tempR;
-							setR = min(255, setR);
-							setR = max(0, setR);
-							setG = (unsigned char)tempG;
-							setG = min(255, setG);
-							setG = max(0, setG);
-							setB = (unsigned char)tempB;
-							setB = min(255, setB);
-							setB = max(0, setB);
-							setA = (unsigned char)tempA;
-							setA = min(255, setA);
-							setA = max(0, setA);
-
-							*(ppix) = setR;
-							*(ppix + 1) = setG;
-							*(ppix + 2) = setB;
-							*(ppix + 3) = setA;
+							t = 1.0f - (float)(255 - indexh) / (float)(255 - thhi);
+							if (phsvtoon->powertoon) {
+								t = t * t;
+								//t = t * t * t * t;
+								//t = pow(t, 0.25);
+							}
 						}
 						else {
-							*(ppix) = basergba.R;
-							*(ppix + 1) = basergba.G;
-							*(ppix + 2) = basergba.B;
-							*(ppix + 3) = basergba.A;
+							t = 0.0f;
 						}
+						ChaVector4 calchsv;
+						calchsv.HSV_Lerp(basehsv, hihsv, t);
+						ChaTexRGBA calctexrgba;
+						calctexrgba.FromHSV(calchsv);
+
+						*(ppix) = calctexrgba.R;
+						*(ppix + 1) = calctexrgba.G;
+						*(ppix + 2) = calctexrgba.B;
+						*(ppix + 3) = calctexrgba.A;
 					}
 				}
 

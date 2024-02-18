@@ -286,6 +286,7 @@ typedef struct tag_befeul
 }BEFEUL;
 
 
+
 class ChaVector4
 {
 public:
@@ -329,8 +330,11 @@ public:
 	int HSV_AddH(float addh);
 	int HSV_AddS(float adds);
 	int HSV_AddV(float addv);
+	void HSV_Lerp(ChaVector4 befhsv, ChaVector4 afthsv, float t);
 	ChaVector4 RGB2HSV();
 	ChaVector4 HSV2RGB();
+
+	void ClampHSV();
 
 
 //#ifdef CONVD3DX11
@@ -345,6 +349,47 @@ public:
 
 };
 
+
+class ChaTexRGBA
+{
+public:
+	ChaTexRGBA();
+	ChaTexRGBA(unsigned char srcR, unsigned char srcG, unsigned char srcB, unsigned char srcA);
+	ChaTexRGBA(float srcR, float srcG, float srcB, float srcA);
+	ChaTexRGBA(ChaVector4 src);
+	~ChaTexRGBA();
+
+	void InitParams();
+	void Clamp();
+	
+	void FromHSV(ChaVector4 srchsv);
+	void FromRGBA(ChaVector4 srcrgba);
+
+	ChaTexRGBA operator= (ChaTexRGBA v);
+	ChaTexRGBA operator* (float srcw) const;
+	ChaTexRGBA& operator*= (float srcw);
+	ChaTexRGBA operator/ (float srcw) const;
+	ChaTexRGBA& operator/= (float srcw);
+	ChaTexRGBA operator* (double srcw) const;
+	ChaTexRGBA& operator*= (double srcw);
+	ChaTexRGBA operator/ (double srcw) const;
+	ChaTexRGBA& operator/= (double srcw);
+	ChaTexRGBA operator+ (const ChaTexRGBA& v) const;
+	ChaTexRGBA& operator+= (const ChaTexRGBA& v);
+	ChaTexRGBA operator- (const ChaTexRGBA& v) const;
+	ChaTexRGBA& operator-= (const ChaTexRGBA& v);
+	ChaTexRGBA operator* (const ChaTexRGBA& v) const;
+	ChaTexRGBA& operator*= (const ChaTexRGBA& v);
+
+	bool operator== (const ChaTexRGBA& v) const { return R == v.R && G == v.G && B == v.B && A == v.A; };
+	bool operator!= (const ChaTexRGBA& v) const { return !(*this == v); };
+
+public:
+	unsigned char R;
+	unsigned char G;
+	unsigned char B;
+	unsigned char A;
+};
 
 class ChaPlane
 {
