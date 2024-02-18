@@ -321,6 +321,7 @@ int CMQOMaterial::InitParams()
 	m_shadertype = -2;//DirectX12描画用のshader //Shaderプレートメニュー用
 	m_metalcoef = 0.250f;//Shaderプレートメニュー用
 	m_smoothcoef = 0.250f;//Shaderプレートメニュー用
+	m_metaladd = 0.0f;
 	int litno;
 	for (litno = 0; litno < LIGHTNUMMAX; litno++) {
 		m_lightscale[litno] = 1.0f;//Shaderプレートメニュー用
@@ -3322,7 +3323,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		else {
 			m_cb[currentrefposindex].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
-		m_cb[currentrefposindex].metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), 0.0f, 0.0f);
+		m_cb[currentrefposindex].metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), GetMetalAdd(), 0.0f);
 		m_cb[currentrefposindex].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_cb[currentrefposindex].shadowmaxz = ChaVector4(
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
@@ -3367,7 +3368,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		else {
 			m_cb[currentrefposindex].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
-		m_cb[currentrefposindex].metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), 0.0f, 0.0f);
+		m_cb[currentrefposindex].metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), GetMetalAdd(), 0.0f);
 		m_cb[currentrefposindex].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_cb[currentrefposindex].shadowmaxz = ChaVector4(
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],

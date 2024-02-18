@@ -261,8 +261,9 @@ float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir)
 //#############
 float3 GetNormal(float3 normal, float3 tangent, float3 biNormal, float2 uv1)
 {
-    //float3 normalmapNormal = g_normalMap.SampleLevel(g_sampler_normal, uv1, 0.0f).xyz;
-    float3 normalmapNormal = g_normalMap.SampleLevel(g_sampler_clamp, uv1, 0.0f).xyz;//2024/02/14
+    float3 normalmapNormal = g_normalMap.Sample(g_sampler_normal, uv1).xyz; //2024/02/18
+    //float3 normalmapNormal = g_normalMap.SampleLevel(g_sampler_normal, uv1, 0.0f).xyz;//2024/02/18 JCityでテストこっちが合っている
+    //float3 normalmapNormal = g_normalMap.SampleLevel(g_sampler_clamp, uv1, 0.0f).xyz;//2024/02/14
     float3 binSpaceNormal = (normalmapNormal * 2.0f) - 1.0f;
    
     float3 newNormal = tangent * binSpaceNormal.x + biNormal * binSpaceNormal.y + normal * binSpaceNormal.z;    
@@ -527,10 +528,10 @@ float4 PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
     float3 specColor = albedoColor.xyz;
 
     // 金属度
-    float metallic = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv).r * metalcoef.x; //!!!!metalcoef
-
+    float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv);
+    float metallic = metaltexcol.r * metalcoef.x + metalcoef.z;//2024/02/18
     // 滑らかさ
-    float smooth = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv).a * metalcoef.y; //!!!!smoothcoef
+    float smooth = metaltexcol.a * metalcoef.y; //!!!!smoothcoef
 
     // 視線に向かって伸びるベクトルを計算する
     float3 toEye = normalize(eyePos.xyz - psIn.worldPos.xyz);
@@ -668,10 +669,10 @@ float4 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     float3 specColor = albedoColor.xyz;
 
     // 金属度
-    float metallic = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv).r * metalcoef.x; //!!!!metalcoef
-
+    float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv);
+    float metallic = metaltexcol.r * metalcoef.x + metalcoef.z; //2024/02/18
     // 滑らかさ
-    float smooth = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv).a * metalcoef.y; //!!!!smoothcoef
+    float smooth = metaltexcol.a * metalcoef.y; //!!!!smoothcoef
 
     // 視線に向かって伸びるベクトルを計算する
     float3 toEye = normalize(eyePos.xyz - psIn.worldPos.xyz);

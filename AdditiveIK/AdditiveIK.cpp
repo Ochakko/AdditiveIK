@@ -26362,7 +26362,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
 				curmqomat->GetName(), 0, wmaterialname, 256);
 			curshadertype = curmqomat->GetShaderType();
-			curmetalcoef = curmqomat->GetMetalCoef();
+			curmetalcoef = curmqomat->GetMetalAdd();
 			cursmoothcoef = curmqomat->GetSmoothCoef();
 			int litno;
 			for (litno = 0; litno < LIGHTNUMMAX; litno++) {
@@ -26381,7 +26381,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 		curmqomat = 0;//全てのマテリアルに対して設定するボタンを押した場合
 		wcscpy_s(wmaterialname, 256, L"(All)");
 		curshadertype = -1;
-		curmetalcoef = 0.250f;
+		curmetalcoef = 0.0f;
 		cursmoothcoef = 0.250f;
 		int litno;
 		for (litno = 0; litno < LIGHTNUMMAX; litno++) {
@@ -26419,18 +26419,18 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			float newmetalcoef = (float)((double)cursliderpos / 100.0);
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"MetalCoef %.2f", newmetalcoef);
+			swprintf_s(strdlg, 256, L"Metal_Add %.2f", newmetalcoef);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_METALCOEF, strdlg);
 
 			if (curmqomat) {
-				curmqomat->SetMetalCoef(newmetalcoef);
+				curmqomat->SetMetalAdd(newmetalcoef);
 			}
 			else {
 				int materialindex2;
 				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
 					if (setmqomat) {
-						setmqomat->SetMetalCoef(newmetalcoef);
+						setmqomat->SetMetalAdd(newmetalcoef);
 					}
 				}
 			}
@@ -53157,7 +53157,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, 
 			curmqomat->GetName(), -1, wmaterialname, 256);
 		curshadertype = curmqomat->GetShaderType();
-		curmetalcoef = curmqomat->GetMetalCoef();
+		curmetalcoef = curmqomat->GetMetalAdd();
 		cursmoothcoef = curmqomat->GetSmoothCoef();
 		int litno;
 		for (litno = 0; litno < LIGHTNUMMAX; litno++) {
@@ -53172,7 +53172,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		//全てのマテリアルに対して設定するボタンを押した場合
 		wcscpy_s(wmaterialname, 256, L"(All)");
 		curshadertype = -1;
-		curmetalcoef = 0.250f;
+		curmetalcoef = 0.0f;
 		cursmoothcoef = 0.250f;
 		int litno;
 		for (litno = 0; litno < LIGHTNUMMAX; litno++) {
@@ -53307,7 +53307,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	SetDlgItemText(hDlgWnd, IDC_MATERIALNAME, strdlg);
 
 
-	swprintf_s(strdlg, 256, L"MetalCoef %.2f", curmetalcoef);
+	swprintf_s(strdlg, 256, L"Metal_Add %.2f", curmetalcoef);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_METALCOEF, strdlg);
 
 	swprintf_s(strdlg, 256, L"SmoothCoef %.2f", cursmoothcoef);

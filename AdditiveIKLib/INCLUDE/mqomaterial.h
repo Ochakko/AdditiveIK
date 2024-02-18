@@ -506,6 +506,12 @@ public:
 	void SetMetalCoef(float srcval) {
 		m_metalcoef = srcval;
 	};
+	float GetMetalAdd() {
+		return m_metaladd;
+	};
+	void SetMetalAdd(float srcval) {
+		m_metaladd = srcval;
+	};
 	float GetSmoothCoef() {
 		return m_smoothcoef;
 	};
@@ -1102,6 +1108,7 @@ private:
 	int m_shader;//mqofile記述のshader
 	int m_shadertype;//DirectX12描画用のshader　//Shaderプレートメニュー用
 	float m_metalcoef;//Shaderプレートメニュー用
+	float m_metaladd;//2024/02/18 Shaderプレートメニュー用
 	float m_smoothcoef;//Shaderプレートメニュー用
 	float m_lightscale[LIGHTNUMMAX];//Shaderプレートメニュー用
 
