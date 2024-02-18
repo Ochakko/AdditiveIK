@@ -129,13 +129,13 @@ sampler g_sampler_metal : register(s3);
 sampler g_sampler_clamp : register(s4); //2024/02/14
 sampler g_sampler_shadow : register(s5);
 
-float4 CalcDiffuseColor(float3 meshnormal, float3 lightdir)
+float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir)
 {
     float3 normaly0 = normalize(float3(meshnormal.x, 0.0f, meshnormal.z));
     float3 lighty0 = normalize(float3(lightdir.x, 0.0f, lightdir.z));
     float nl;
     nl = dot(normaly0, lighty0);
-    float toonh = (nl + 1.0f) * 0.5f;
+    float toonh = (nl + 1.0f) * 0.5f * multiplecoef;
     float2 diffuseuv = { 0.5f, toonh };
     float4 diffusecol = g_diffusetex.Sample(g_sampler_clamp, diffuseuv) * materialdisprate.x;
     
@@ -537,8 +537,6 @@ float4 PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
 
     float3 lig = 0;
     for (int ligNo = 0; ligNo < lightsnum.x; ligNo++)    
-    //for (int ligNo = 0; ligNo < NUM_DIRECTIONAL_LIGHT; ligNo++)
-    //for (int ligNo = 0; ligNo < lightsnum; ligNo++)
     {
         // シンプルなディズニーベースの拡散反射を実装する。
         // フレネル反射を考慮した拡散反射を計算
@@ -548,11 +546,12 @@ float4 PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
         // 正規化Lambert拡散反射を求める
         //float NdotL = saturate(dot(normal, directionalLight[ligNo].direction.xyz));
         //float3 lambertDiffuse = directionalLight[ligNo].color.xyz * NdotL / PI;
-        float4 lambertDiffuse0 = CalcDiffuseColor(normal.xyz, directionalLight[ligNo].direction.xyz);
+        float multiplecoef = diffuseFromFresnel * materialdisprate.x;
+        float4 lambertDiffuse0 = CalcDiffuseColor(multiplecoef, normal.xyz, directionalLight[ligNo].direction.xyz);
         float3 lambertDiffuse1 = lambertDiffuse0.xyz * directionalLight[ligNo].color.xyz;
         
         // 最終的な拡散反射光を計算する
-        float3 diffuse = albedoColor.xyz * diffuseFromFresnel * lambertDiffuse1 * materialdisprate.x;
+        float3 diffuse = albedoColor.xyz * lambertDiffuse1;
 
         // Cook-Torranceモデルを利用した鏡面反射率を計算する
         // Cook-Torranceモデルの鏡面反射率を計算する
@@ -679,8 +678,6 @@ float4 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 
     float3 lig = 0;
     for (int ligNo = 0; ligNo < lightsnum.x; ligNo++)
-    //for (int ligNo = 0; ligNo < NUM_DIRECTIONAL_LIGHT; ligNo++)
-    //for (int ligNo = 0; ligNo < lightsnum; ligNo++)
     {
         // シンプルなディズニーベースの拡散反射を実装する。
         // フレネル反射を考慮した拡散反射を計算
@@ -690,11 +687,12 @@ float4 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
         // 正規化Lambert拡散反射を求める
         //float NdotL = saturate(dot(normal, directionalLight[ligNo].direction.xyz));
         //float3 lambertDiffuse = directionalLight[ligNo].color.xyz * NdotL / PI;
-        float4 lambertDiffuse0 = CalcDiffuseColor(normal.xyz, directionalLight[ligNo].direction.xyz);
+        float multiplecoef = diffuseFromFresnel * materialdisprate.x;
+        float4 lambertDiffuse0 = CalcDiffuseColor(multiplecoef, normal.xyz, directionalLight[ligNo].direction.xyz);
         float3 lambertDiffuse1 = lambertDiffuse0.xyz * directionalLight[ligNo].color.xyz;
         
         // 最終的な拡散反射光を計算する
-        float3 diffuse = albedoColor.xyz * diffuseFromFresnel * lambertDiffuse1 * materialdisprate.x;
+        float3 diffuse = albedoColor.xyz * lambertDiffuse1;
 
         // Cook-Torranceモデルを利用した鏡面反射率を計算する
         // Cook-Torranceモデルの鏡面反射率を計算する
