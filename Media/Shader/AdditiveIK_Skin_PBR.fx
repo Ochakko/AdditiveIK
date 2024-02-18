@@ -122,7 +122,7 @@ sampler g_sampler_metal : register(s3);
 sampler g_sampler_clamp : register(s4); //2024/02/14
 sampler g_sampler_shadow : register(s5);
 
-float4 CalcDiffuseColor(float4 meshnormal, float4 lightdir)
+float4 CalcDiffuseColor(float3 meshnormal, float3 lightdir)
 {
     float3 normaly0 = normalize(float3(meshnormal.x, 0.0f, meshnormal.z));
     float3 lighty0 = normalize(float3(lightdir.x, 0.0f, lightdir.z));
@@ -458,7 +458,7 @@ SPSInShadowReciever VSMainSkinPBRShadowReciever(SVSIn vsIn, uniform bool hasSkin
 /// </summary>
 float4 PSMainSkinPBR(SPSIn psIn) : SV_Target0
 {
-    float4 diffusecol = CalcDiffuseColor(psIn.normal, toonlightdir);
+    //float4 diffusecol = CalcDiffuseColor(psIn.normal, toonlightdir);
 
     
     //  // 法線を計算
@@ -556,11 +556,13 @@ float4 PSMainSkinPBR(SPSIn psIn) : SV_Target0
             normal, directionalLight[ligNo].direction.xyz, toEye);
 
         // 正規化Lambert拡散反射を求める
-        float NdotL = saturate(dot(normal, directionalLight[ligNo].direction.xyz));
-        float3 lambertDiffuse = directionalLight[ligNo].color.xyz * NdotL / PI;
-
+        //float NdotL = saturate(dot(normal, directionalLight[ligNo].direction.xyz));
+        //float3 lambertDiffuse = directionalLight[ligNo].color.xyz * NdotL / PI;
+        float4 lambertDiffuse0 = CalcDiffuseColor(normal.xyz, directionalLight[ligNo].direction.xyz);
+        float3 lambertDiffuse1 = lambertDiffuse0.xyz * directionalLight[ligNo].color.xyz;
+        
         // 最終的な拡散反射光を計算する
-        float3 diffuse = albedoColor.xyz * diffuseFromFresnel * lambertDiffuse * materialdisprate.x;
+        float3 diffuse = albedoColor.xyz * diffuseFromFresnel * lambertDiffuse1 * materialdisprate.x;
 
         // Cook-Torranceモデルを利用した鏡面反射率を計算する
         // Cook-Torranceモデルの鏡面反射率を計算する
@@ -580,11 +582,7 @@ float4 PSMainSkinPBR(SPSIn psIn) : SV_Target0
     // 環境光による底上げ
     //lig += ambientLight.xyz * albedoColor.xyz;
 
-    //float4 finalColor;
-    //finalColor.xyz = lig;
-    //finalColor.w = albedoColor.w;
-    
-    float4 finalColor = emission * materialdisprate.z + float4(lig, albedoColor.w) * diffusecol * psIn.diffusemult;
+    float4 finalColor = emission * materialdisprate.z + float4(lig, albedoColor.w) * psIn.diffusemult;
     return finalColor;
 }
 
@@ -597,7 +595,7 @@ float4 PSMainSkinPBRShadowMap(SPSInShadowMap psIn) : SV_Target0
 
 float4 PSMainSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
-    float4 diffusecol = CalcDiffuseColor(psIn.normal, toonlightdir);
+    //float4 diffusecol = CalcDiffuseColor(psIn.normal, toonlightdir);
 
     
     //  // 法線を計算
@@ -695,11 +693,13 @@ float4 PSMainSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
             normal, directionalLight[ligNo].direction.xyz, toEye);
 
         // 正規化Lambert拡散反射を求める
-        float NdotL = saturate(dot(normal, directionalLight[ligNo].direction.xyz));
-        float3 lambertDiffuse = directionalLight[ligNo].color.xyz * NdotL / PI;
-
+        //float NdotL = saturate(dot(normal, directionalLight[ligNo].direction.xyz));
+        //float3 lambertDiffuse = directionalLight[ligNo].color.xyz * NdotL / PI;
+        float4 lambertDiffuse0 = CalcDiffuseColor(normal.xyz, directionalLight[ligNo].direction.xyz);
+        float3 lambertDiffuse1 = lambertDiffuse0.xyz * directionalLight[ligNo].color.xyz;
+        
         // 最終的な拡散反射光を計算する
-        float3 diffuse = albedoColor.xyz * diffuseFromFresnel * lambertDiffuse * materialdisprate.x;
+        float3 diffuse = albedoColor.xyz * diffuseFromFresnel * lambertDiffuse1 * materialdisprate.x;
 
         // Cook-Torranceモデルを利用した鏡面反射率を計算する
         // Cook-Torranceモデルの鏡面反射率を計算する
@@ -714,6 +714,7 @@ float4 PSMainSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
         // 滑らかさを使って、拡散反射光と鏡面反射光を合成する
         // 滑らかさが高ければ、拡散反射は弱くなる
         lig += diffuse * (1.0f - smooth) + spec;
+
     }
 
     // 環境光による底上げ
@@ -723,7 +724,7 @@ float4 PSMainSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     //finalColor.xyz = lig;
     //finalColor.w = albedoColor.w;
     
-    float4 finalColor = emission * materialdisprate.z + float4(lig, albedoColor.w) * diffusecol * psIn.diffusemult;
+    float4 finalColor = emission * materialdisprate.z + float4(lig, albedoColor.w) * psIn.diffusemult;
 ///////////
 /////////
     // ライトビュースクリーン空間からUV空間に座標変換

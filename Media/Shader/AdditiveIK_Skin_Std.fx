@@ -117,7 +117,7 @@ sampler g_sampler_clamp : register(s4); //2024/02/14
 sampler g_sampler_shadow : register(s5);
 
 
-float4 CalcDiffuseColor(float4 meshnormal, float4 lightdir)
+float4 CalcDiffuseColor(float3 meshnormal, float3 lightdir)
 {
     float3 normaly0 = normalize(float3(meshnormal.x, 0.0f, meshnormal.z));
     float3 lighty0 = normalize(float3(lightdir.x, 0.0f, lightdir.z));
@@ -237,7 +237,7 @@ SPSInShadowReciever VSMainSkinStdShadowReciever(SVSIn vsIn, uniform bool hasSkin
 float4 PSMainSkinStd(SPSIn psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    float4 diffusecol = CalcDiffuseColor(psIn.normal, toonlightdir);
+    //float4 diffusecol = CalcDiffuseColor(psIn.normal, toonlightdir);
      
     float3 wPos = psIn.pos.xyz / psIn.pos.w;
     
@@ -257,13 +257,14 @@ float4 PSMainSkinStd(SPSIn psIn) : SV_Target0
         nl = dot(psIn.normal.xyz, directionalLight[ligNo].direction.xyz);
         h = normalize((directionalLight[ligNo].direction.xyz + eyePos.xyz - wPos) * 0.5f);
         nh = dot(psIn.normal.xyz, h);
-
-        totaldiffuse += directionalLight[ligNo].color.xyz * max(0, dot(psIn.normal.xyz, directionalLight[ligNo].direction.xyz));
+    
+        float4 diffusecol = CalcDiffuseColor(psIn.normal.xyz, directionalLight[ligNo].direction.xyz);
+        totaldiffuse += directionalLight[ligNo].color.xyz * diffusecol.xyz;
         totalspecular += ((nl) < 0) || ((nh) < 0) ? 0 : ((nh) * calcpower);
     }
     float4 totaldiffuse4 = float4(totaldiffuse, 1.0f) * materialdisprate.x;
     float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * 0.125f;//ライト８個で白飛びしないように応急処置1/8=0.125
-    float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
+    float4 pscol = emission * materialdisprate.z + albedocol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
     return pscol;
 }
 
@@ -276,7 +277,7 @@ float4 PSMainSkinStdShadowMap(SPSInShadowMap psIn) : SV_Target0
 float4 PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    float4 diffusecol = CalcDiffuseColor(psIn.normal, toonlightdir);
+    //float4 diffusecol = CalcDiffuseColor(psIn.normal.xyz, toonlightdir.xyz);
      
     float3 wPos = psIn.pos.xyz / psIn.pos.w;
     
@@ -297,13 +298,14 @@ float4 PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
         nl = dot(psIn.normal.xyz, directionalLight[ligNo].direction.xyz);
         h = normalize((directionalLight[ligNo].direction.xyz + eyePos.xyz - wPos) * 0.5f);
         nh = dot(psIn.normal.xyz, h);
-
-        totaldiffuse += directionalLight[ligNo].color.xyz * max(0, dot(psIn.normal.xyz, directionalLight[ligNo].direction.xyz));
+    
+        float4 diffusecol = CalcDiffuseColor(psIn.normal.xyz, directionalLight[ligNo].direction.xyz);
+        totaldiffuse += directionalLight[ligNo].color.xyz * diffusecol.xyz;
         totalspecular += ((nl) < 0) || ((nh) < 0) ? 0 : ((nh) * calcpower);
     }
     float4 totaldiffuse4 = float4(totaldiffuse, 1.0f) * materialdisprate.x;
     float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * 0.125f; //ライト８個で白飛びしないように応急処置1/8=0.125
-    float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
+    float4 pscol = emission * materialdisprate.z + albedocol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
 
 /////////
     // ライトビュースクリーン空間からUV空間に座標変換
@@ -356,7 +358,7 @@ float4 PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 float4 PSMainSkinNoLight(SPSIn psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    float4 diffusecol = CalcDiffuseColor(psIn.normal, toonlightdir);
+    float4 diffusecol = CalcDiffuseColor(psIn.normal.xyz, toonlightdir.xyz);
     float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
     return pscol;
 }
@@ -364,7 +366,7 @@ float4 PSMainSkinNoLight(SPSIn psIn) : SV_Target0
 float4 PSMainSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    float4 diffusecol = CalcDiffuseColor(psIn.normal, toonlightdir);      
+    float4 diffusecol = CalcDiffuseColor(psIn.normal.xyz, toonlightdir.xyz);      
     float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
 //////////
     // ライトビュースクリーン空間からUV空間に座標変換
