@@ -326,7 +326,8 @@ int CMQOMaterial::InitParams()
 	for (litno = 0; litno < LIGHTNUMMAX; litno++) {
 		m_lightscale[litno] = 1.0f;//Shaderプレートメニュー用
 	}
-
+	m_specularcoef = 0.1250f;
+	m_normaly0flag = true;//InitShadersAndPipelines()にてpm4:true, pm3:falseに初期化
 
 	m_vcolflag = 0;
 
@@ -1407,6 +1408,18 @@ void CMQOMaterial::InitShadersAndPipelines(
 		//###############################
 		return;
 	}
+
+
+
+	//2024/02/19 MeshTypeをみて初期化
+	if (vertextype == 0) {
+		SetNormalY0Flag(true);
+	}
+	else {
+		SetNormalY0Flag(false);
+	}
+
+
 
 	//ルートシグネチャを初期化。
 	D3D12_STATIC_SAMPLER_DESC samplerDescArray[6];
@@ -3044,6 +3057,7 @@ void CMQOMaterial::SetConstLights(SConstantBufferLights* pcbLights)
 	pcbLights->lightsnum[0] = g_nNumActiveLights;
 	pcbLights->lightsnum[1] = min(g_nNumActiveLights, max(0, toonlightindexInShader));//2024/02/15
 	pcbLights->lightsnum[2] = min(g_nNumActiveLights, max(0, shadowlightindexInShader));//2024/02/15
+	pcbLights->lightsnum[3] = (GetNormalY0Flag()) ? 1 : 0;//2024/02/19
 	int lightno;
 	for (lightno = 0; lightno < g_nNumActiveLights; lightno++) {//2023/12/17必要分だけ詰めて受け渡し
 	//for (lightno = 0; lightno < LIGHTNUMMAX; lightno++) {
@@ -3323,7 +3337,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		else {
 			m_cb[currentrefposindex].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
-		m_cb[currentrefposindex].metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), GetMetalAdd(), 0.0f);
+		m_cb[currentrefposindex].metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), GetMetalAdd(), GetSpecularCoef());
 		m_cb[currentrefposindex].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_cb[currentrefposindex].shadowmaxz = ChaVector4(
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
@@ -3368,7 +3382,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		else {
 			m_cb[currentrefposindex].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
-		m_cb[currentrefposindex].metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), GetMetalAdd(), 0.0f);
+		m_cb[currentrefposindex].metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), GetMetalAdd(), GetSpecularCoef());
 		m_cb[currentrefposindex].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_cb[currentrefposindex].shadowmaxz = ChaVector4(
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],

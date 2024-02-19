@@ -535,6 +535,20 @@ public:
 			_ASSERT(0);
 		}
 	};
+	void SetSpecularCoef(float srcval) {
+		m_specularcoef = srcval;
+	};
+	float GetSpecularCoef() {
+		return m_specularcoef;
+	};
+	void SetNormalY0Flag(bool srcval) {
+		m_normaly0flag = srcval;
+	};
+	bool GetNormalY0Flag() {
+		return m_normaly0flag;
+	};
+
+
 
 
 	ChaVector4 GetDif4F(){
@@ -1111,6 +1125,8 @@ private:
 	float m_metaladd;//2024/02/18 Shaderプレートメニュー用
 	float m_smoothcoef;//Shaderプレートメニュー用
 	float m_lightscale[LIGHTNUMMAX];//Shaderプレートメニュー用
+	float m_specularcoef;//2024/02/19 Shaderプレートメニュー用
+	bool m_normaly0flag;//2024/02/19 Shaderプレートメニュー用
 
 ////
 	ChaVector4 m_dif4f;

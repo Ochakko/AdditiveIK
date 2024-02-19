@@ -85,6 +85,8 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			bool enableEmission = mqomat->GetEnableEmission();
 			float emissiveScale = mqomat->GetEmissiveScale();
 			HSVTOON hsvtoon = mqomat->GetHSVToon();
+			float specularcoef = mqomat->GetSpecularCoef();
+			bool normaly0flag = mqomat->GetNormalY0Flag();
 
 			int litindex;
 			for (litindex = 0; litindex < 8; litindex++) {
@@ -142,6 +144,11 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			int powertoon = hsvtoon.powertoon ? 1 : 0;
 			CallF(Write2File("    <PowerToon>%d</PowerToon>\r\n", powertoon), return 1);
 
+			//2024/02/19
+			CallF(Write2File("    <SpecularCoef>%.3f</SpecularCoef>\r\n", specularcoef), return 1);
+			int y0flag = normaly0flag ? 1 : 0;
+			CallF(Write2File("    <NormalY0>%d</NormalY0>\r\n", normaly0flag), return 1);
+
 
 			CallF(Write2File("  </Material>\r\n"), return 1);
 
@@ -163,7 +170,9 @@ int CShaderTypeFile::WriteFileInfo()
 	//2024/02/13
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1004</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//2024/02/18
-	CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1005</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1005</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//2024/02/19
+	CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1006</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 
 	return 0;
@@ -266,6 +275,16 @@ int CShaderTypeFile::LoadShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 				Read_Float(&materialbuf, "<EmissiveScale>", "</EmissiveScale>", &emissiveScale);
 				curmqomat->SetEmissiveScale(emissiveScale);
 
+				//2024/02/19
+				float specularcoef = 0.1250f;
+				Read_Float(&materialbuf, "<SpecularCoef>", "</SpecularCoef>", &specularcoef);
+				curmqomat->SetSpecularCoef(specularcoef);
+				int y0flag = 0;
+				Read_Int(&materialbuf, "<NormalY0>", "</NormalY0>", &y0flag);
+				bool normaly0flag;
+				normaly0flag = (y0flag == 1) ? true : false;
+				curmqomat->SetNormalY0Flag(normaly0flag);
+
 
 				//2024/02/13
 				HSVTOON hsvtoon;
@@ -341,6 +360,7 @@ int CShaderTypeFile::LoadShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 				else {
 					hsvtoon.powertoon = false;
 				}
+
 
 				curmqomat->SetHSVToon(hsvtoon);
 			}

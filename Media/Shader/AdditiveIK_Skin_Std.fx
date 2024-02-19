@@ -119,8 +119,8 @@ sampler g_sampler_shadow : register(s5);
 
 float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir)
 {
-    float3 normaly0 = normalize(float3(meshnormal.x, 0.0f, meshnormal.z));
-    float3 lighty0 = normalize(float3(lightdir.x, 0.0f, lightdir.z));
+    float3 normaly0 = (lightsnum[3] == 1) ? normalize(float3(meshnormal.x, 0.0f, meshnormal.z)) : meshnormal;
+    float3 lighty0 = (lightsnum[3] == 1) ? normalize(float3(lightdir.x, 0.0f, lightdir.z)) : lightdir;
     float nl;
     nl = dot(normaly0, lighty0);
     float toonh = (nl + 1.0f) * 0.5f * multiplecoef;
@@ -262,7 +262,7 @@ float4 PSMainSkinStd(SPSIn psIn) : SV_Target0
         totalspecular += ((nl) < 0) || ((nh) < 0) ? 0 : ((nh) * calcpower);
     }
     float4 totaldiffuse4 = float4(totaldiffuse, materialdisprate.x);
-    float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * 0.125f;//ライト８個で白飛びしないように応急処置1/8=0.125
+    float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * metalcoef.w;//ライト８個で白飛びしないように応急処置1/8=0.125
     float4 pscol = emission * materialdisprate.z + albedocol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
     return pscol;
 }
@@ -301,7 +301,7 @@ float4 PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
         totalspecular += ((nl) < 0) || ((nh) < 0) ? 0 : ((nh) * calcpower);
     }
     float4 totaldiffuse4 = float4(totaldiffuse, materialdisprate.x);
-    float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * 0.125f; //ライト８個で白飛びしないように応急処置1/8=0.125
+    float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * metalcoef.w; //ライト８個で白飛びしないように応急処置1/8=0.125
     float4 pscol = emission * materialdisprate.z + albedocol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
 
 /////////

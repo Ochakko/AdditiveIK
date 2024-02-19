@@ -124,8 +124,8 @@ sampler g_sampler_shadow : register(s5);
 
 float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir)
 {
-    float3 normaly0 = normalize(float3(meshnormal.x, 0.0f, meshnormal.z));
-    float3 lighty0 = normalize(float3(lightdir.x, 0.0f, lightdir.z));
+    float3 normaly0 = (lightsnum[3] == 1) ? normalize(float3(meshnormal.x, 0.0f, meshnormal.z)) : meshnormal;
+    float3 lighty0 = (lightsnum[3] == 1) ? normalize(float3(lightdir.x, 0.0f, lightdir.z)) : lightdir;
     float nl;
     nl = dot(normaly0, lighty0);
     float toonh = (nl + 1.0f) * 0.5f * multiplecoef;
@@ -568,7 +568,7 @@ float4 PSMainSkinPBR(SPSIn psIn) : SV_Target0
         // Cook-Torranceモデルの鏡面反射率を計算する
         float3 spec = CookTorranceSpecular(
             directionalLight[ligNo].direction.xyz, toEye, normal, smooth)
-            * directionalLight[ligNo].color.xyz * materialdisprate.y;
+            * directionalLight[ligNo].color.xyz * materialdisprate.y * metalcoef.w;
 
         // 金属度が高ければ、鏡面反射はスペキュラカラー、低ければ白
         // スペキュラカラーの強さを鏡面反射率として扱う
@@ -704,7 +704,7 @@ float4 PSMainSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
         // Cook-Torranceモデルの鏡面反射率を計算する
         float3 spec = CookTorranceSpecular(
             directionalLight[ligNo].direction.xyz, toEye, normal, smooth)
-            * directionalLight[ligNo].color.xyz * materialdisprate.y;
+            * directionalLight[ligNo].color.xyz * materialdisprate.y * metalcoef.w;
 
         // 金属度が高ければ、鏡面反射はスペキュラカラー、低ければ白
         // スペキュラカラーの強さを鏡面反射率として扱う

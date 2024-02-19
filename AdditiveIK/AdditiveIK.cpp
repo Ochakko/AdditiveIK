@@ -26355,6 +26355,8 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 	float curlightscale[LIGHTNUMMAX];
 	bool enableEmission = false;
 	float emissiveScale = 1.0f;
+	float specularcoef = 0.1250f;
+	bool normaly0flag = false;
 	WCHAR wmaterialname[256] = { 0L };
 	if (materialindex >= 0) {
 		curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
@@ -26371,6 +26373,8 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			enableEmission = curmqomat->GetEnableEmission();
 			emissiveScale = curmqomat->GetEmissiveScale();
 			hsvtoon = curmqomat->GetHSVToon();
+			specularcoef = curmqomat->GetSpecularCoef();
+			normaly0flag = curmqomat->GetNormalY0Flag();
 		}
 		else {
 			_ASSERT(0);
@@ -26390,6 +26394,8 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 		enableEmission = false;
 		emissiveScale = 1.0f;
 		hsvtoon = s_hsvtoonforall;
+		specularcoef = 0.1250f;
+		normaly0flag = false;
 	}
 	
 	int lightsliderid[LIGHTNUMMAX] = {
@@ -26489,6 +26495,27 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
 					if (setmqomat) {
 						setmqomat->SetEmissiveScale(newemiscale);
+					}
+				}
+			}
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_SPECULARCOEF) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPECULARCOEF), TBM_GETPOS, 0, 0);
+			float newspcscale = (float)((double)cursliderpos / 200.0);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"SpecularCoef %.3f", newspcscale);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_SPECULARCOEF, strdlg);
+
+			if (curmqomat) {
+				curmqomat->SetSpecularCoef(newspcscale);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetSpecularCoef(newspcscale);
 					}
 				}
 			}
@@ -27265,6 +27292,31 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex9);
 					if (setmqomat) {
 						setmqomat->SetEnableEmission(enableEmission);
+					}
+				}
+			}
+		}
+		break;
+		case IDC_CHECK_NORMALY0:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_NORMALY0);
+			if (ischecked == BST_CHECKED) {
+				normaly0flag = true;
+			}
+			else {
+				normaly0flag = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetNormalY0Flag(normaly0flag);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetNormalY0Flag(normaly0flag);
 					}
 				}
 			}
@@ -53152,6 +53204,8 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	float curlightscale[LIGHTNUMMAX];
 	bool enableEmission = false;
 	float emissiveScale = 1.0f;
+	float specularcoef;
+	bool normaly0flag;
 	HSVTOON hsvtoon;
 	if (curmqomat) {
 		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, 
@@ -53167,6 +53221,8 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		emissiveScale = curmqomat->GetEmissiveScale();
 
 		hsvtoon = curmqomat->GetHSVToon();
+		specularcoef = curmqomat->GetSpecularCoef();
+		normaly0flag = curmqomat->GetNormalY0Flag();
 	}
 	else {
 		//全てのマテリアルに対して設定するボタンを押した場合
@@ -53182,6 +53238,8 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		emissiveScale = 1.0f;
 
 		hsvtoon = s_hsvtoonforall;
+		specularcoef = 0.1250f;
+		normaly0flag = false;
 	}
 
 
@@ -53299,6 +53357,12 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDA), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDA), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
+	sliderpos = (int)(specularcoef * 200.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPECULARCOEF), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPECULARCOEF), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)400);//0.0から2.0
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPECULARCOEF), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+
 	//#####
 	//Text
 	//#####
@@ -53313,6 +53377,8 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	swprintf_s(strdlg, 256, L"SmoothCoef %.2f", cursmoothcoef);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_SMOOTHCOEF, strdlg);
 
+	swprintf_s(strdlg, 256, L"SpecularCoef %.3f", specularcoef);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_SPECULARCOEF, strdlg);
 
 	int litno3;
 	for (litno3 = 0; litno3 < LIGHTNUMMAX; litno3++) {
@@ -53394,6 +53460,13 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	}
 	else {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_POWERTOON, false);
+	}
+
+	if (normaly0flag == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_NORMALY0, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_NORMALY0, false);
 	}
 
 	return 0;
