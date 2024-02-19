@@ -2,6 +2,10 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/02/19
+　README.mdにシェーダまとめの図を追加
+
+
 2024/02/18
 　HSV_Toon改良
 　　ShaderプレートメニューにPowerToonチェックボックスを追加
