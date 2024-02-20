@@ -71,6 +71,13 @@ float g_lodrate2L[CHKINVIEW_LODMAX];
 float g_lodrate3L[CHKINVIEW_LODMAX];
 
 
+float g_thdeg = 181.0f;
+float g_thdeg_endjoint = 159.0f;
+float g_thRoundX = 179.0f;
+float g_thRoundY = 179.0f;
+float g_thRoundZ = 179.0f;
+
+
 bool g_enableshadow = true;
 int g_shadowmap_slotno = 0;
 float g_shadowmap_fov[SHADOWSLOTNUM];
@@ -327,6 +334,14 @@ extern float g_rigmark_alpha;
 
 extern float g_lodrate2L[CHKINVIEW_LODMAX];
 extern float g_lodrate3L[CHKINVIEW_LODMAX];
+
+
+extern float g_thdeg;
+extern float g_thdeg_endjoint;
+extern float g_thRoundX;
+extern float g_thRoundY;
+extern float g_thRoundZ;
+
 
 extern bool g_enableshadow;
 extern int g_shadowmap_slotno;

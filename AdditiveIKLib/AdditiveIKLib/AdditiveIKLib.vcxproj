@@ -244,6 +244,7 @@
     <ClCompile Include="..\CPP\ThreadingSetBtMotion.cpp" />
     <ClCompile Include="..\CPP\ThreadingUpdateMatrix.cpp" />
     <ClCompile Include="..\CPP\ThreadingUpdateTimeline.cpp" />
+    <ClCompile Include="..\CPP\ThresholdFile.cpp" />
     <ClCompile Include="..\CPP\UndoMotion.cpp" />
     <ClCompile Include="..\CPP\XMLIO.cpp" />
   </ItemGroup>
@@ -613,6 +614,7 @@
     <ClInclude Include="..\INCLUDE\ThreadingSetBtMotion.h" />
     <ClInclude Include="..\INCLUDE\ThreadingUpdateMatrix.h" />
     <ClInclude Include="..\INCLUDE\ThreadingUpdateTimeline.h" />
+    <ClInclude Include="..\INCLUDE\ThresholdFile.h" />
     <ClInclude Include="..\INCLUDE\UndoMotion.h" />
     <ClInclude Include="..\INCLUDE\usercoef.h" />
     <ClInclude Include="..\INCLUDE\XMLIO.h" />

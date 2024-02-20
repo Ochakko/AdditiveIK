@@ -3500,8 +3500,8 @@ int CQuaternion::Q2EulXYZusingQ(bool srcunderIKRot, bool srcunderRetarget,
 		//2023/11/06
 		//他の部分が直ったから？　直感的にも適当な値でうまくいった
 		//bvh144_1, bvh144_2をリターゲットして　読み書き読み書きテストOK
-		thdeg = 181.0f;//1.2.0.29
-
+		//thdeg = 181.0f;//1.2.0.29
+		thdeg = g_thdeg;//2024/02/20
 	}
 	else {
 		//thdeg = 180.0f;
@@ -3531,7 +3531,8 @@ int CQuaternion::Q2EulXYZusingQ(bool srcunderIKRot, bool srcunderRetarget,
 		//プログラムとしてはこれ以上は難しい
 		//最後の部分は使う側で角度制限の設定で対応する他にない
 		//つま先のXのmin:-30, max:30(実際にはそんなに動かないが)で　かなり緩和
-		thdeg = 159.0f;//1.2.0.30
+		//thdeg = 159.0f;//1.2.0.30
+		thdeg = g_thdeg_endjoint;//2024/02/20
 	}
 
 	//2023/10/16
@@ -3544,9 +3545,9 @@ int CQuaternion::Q2EulXYZusingQ(bool srcunderIKRot, bool srcunderRetarget,
 	//float throundX = 181.0f;//1.2.0.28
 	//float throundY = 181.0f;//1.2.0.28
 	//float throundZ = 181.0f;//1.2.0.28
-	float throundX = 179.0f;//2023/11/06　bvh144_1も直った　オイラー角の３６０degree段差も直った
-	float throundY = 179.0f;//2023/11/06　bvh144_1も直った　オイラー角の３６０degree段差も直った
-	float throundZ = 179.0f;//2023/11/06　bvh144_1も直った　オイラー角の３６０degree段差も直った
+	//float throundX = 179.0f;//2023/11/06　bvh144_1も直った　オイラー角の３６０degree段差も直った
+	//float throundY = 179.0f;//2023/11/06　bvh144_1も直った　オイラー角の３６０degree段差も直った
+	//float throundZ = 179.0f;//2023/11/06　bvh144_1も直った　オイラー角の３６０degree段差も直った
 
 
 	ChaVector3 validbefeul;//2023/10/14
@@ -3591,10 +3592,10 @@ int CQuaternion::Q2EulXYZusingQ(bool srcunderIKRot, bool srcunderRetarget,
 
 	{
 		if (Euler.z >= 0.0f) {
-			tmpZ0 = Euler.z + 360.0f * chacalcfunc.GetRoundThreshold((validbefeul.z - Euler.z) / 360.0f, throundZ);//オーバー１８０度
+			tmpZ0 = Euler.z + 360.0f * chacalcfunc.GetRoundThreshold((validbefeul.z - Euler.z) / 360.0f, g_thRoundZ);//オーバー１８０度
 		}
 		else {
-			tmpZ0 = Euler.z - 360.0f * chacalcfunc.GetRoundThreshold((Euler.z - validbefeul.z) / 360.0f, throundZ);//オーバー１８０度
+			tmpZ0 = Euler.z - 360.0f * chacalcfunc.GetRoundThreshold((Euler.z - validbefeul.z) / 360.0f, g_thRoundZ);//オーバー１８０度
 		}
 		tmpZ1 = tmpZ0;
 		//if (g_underIKRot == false) {//<--コメントアウトをはずすと　bvh144のリターゲットの太ももが変になる
@@ -3647,10 +3648,10 @@ int CQuaternion::Q2EulXYZusingQ(bool srcunderIKRot, bool srcunderRetarget,
 	{
 
 		if (Euler.y >= 0.0f) {
-			tmpY0 = Euler.y + 360.0f * chacalcfunc.GetRoundThreshold((validbefeul.y - Euler.y) / 360.0f, throundY);//オーバー１８０度
+			tmpY0 = Euler.y + 360.0f * chacalcfunc.GetRoundThreshold((validbefeul.y - Euler.y) / 360.0f, g_thRoundY);//オーバー１８０度
 		}
 		else {
-			tmpY0 = Euler.y - 360.0f * chacalcfunc.GetRoundThreshold((Euler.y - validbefeul.y) / 360.0f, throundY);//オーバー１８０度
+			tmpY0 = Euler.y - 360.0f * chacalcfunc.GetRoundThreshold((Euler.y - validbefeul.y) / 360.0f, g_thRoundY);//オーバー１８０度
 		}
 		tmpY1 = tmpY0;
 		//if (g_underIKRot == false) {//<--コメントアウトをはずすと　bvh144のリターゲットの太ももが変になる
@@ -3704,10 +3705,10 @@ int CQuaternion::Q2EulXYZusingQ(bool srcunderIKRot, bool srcunderRetarget,
 
 	{
 		if (Euler.x >= 0.0f) {
-			tmpX0 = Euler.x + 360.0f * chacalcfunc.GetRoundThreshold((validbefeul.x - Euler.x) / 360.0f, throundX);//オーバー１８０度
+			tmpX0 = Euler.x + 360.0f * chacalcfunc.GetRoundThreshold((validbefeul.x - Euler.x) / 360.0f, g_thRoundX);//オーバー１８０度
 		}
 		else {
-			tmpX0 = Euler.x - 360.0f * chacalcfunc.GetRoundThreshold((Euler.x - validbefeul.x) / 360.0f, throundX);//オーバー１８０度
+			tmpX0 = Euler.x - 360.0f * chacalcfunc.GetRoundThreshold((Euler.x - validbefeul.x) / 360.0f, g_thRoundX);//オーバー１８０度
 		}
 	
 		//2023/02/15

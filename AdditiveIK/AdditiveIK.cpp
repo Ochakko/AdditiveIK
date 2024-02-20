@@ -45,6 +45,7 @@
 #include <MNLFile.h>
 #include <ChooseColorFile.h>
 #include <LightsForEditFile.h>
+#include <ThresholdFile.h>
 #include <ShadowParamsFile.h>
 #include "IniFile.h"
 
@@ -205,6 +206,7 @@ enum {
 enum {
 	SPRETARGETSW_RETARGET,
 	SPRETARGETSW_LIMITEULER,
+	SPRETARGETSW_THRESHOLD,//2024/02/20
 	SPRETARGETSWNUM
 };
 //#define SPRETARGETSWNUM	2
@@ -748,6 +750,11 @@ static ANGLELIMIT s_anglelimitcopy;
 static CBone* s_anglelimitbone = 0;
 static bool s_beflimitdegflag = true;
 static bool s_savelimitdegflag = true;
+
+
+static bool s_dispthreshold = false;
+static HWND s_thresholddlg = 0;
+
 
 
 static HWND s_lightsforeditdlg = 0;
@@ -1511,6 +1518,8 @@ static Texture* s_spritetex78 = 0;
 static Texture* s_spritetex79 = 0;
 static Texture* s_spritetex80 = 0;
 static Texture* s_spritetex81 = 0;
+static Texture* s_spritetex82 = 0;
+static Texture* s_spritetex83 = 0;
 
 
 
@@ -2043,7 +2052,7 @@ static void ShowDampAnimWnd(bool srcflag);
 static void GUIRetargetSetVisible(int srcplateno);
 static void ShowRetargetWnd(bool srcflag);
 static void ShowLimitEulerWnd(bool srcflag);
-
+static void ShowThresholdWnd(bool srcflag);
 
 
 static CInfoWindow* CreateInfoWnd();
@@ -2144,6 +2153,7 @@ LRESULT CALLBACK AboutDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK bvh2FbxBatchDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK RetargetBatchDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK ProgressDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
+LRESULT CALLBACK ThresholdDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 
 
 static int OwnerDrawLightColorBar(HWND hDlgWnd, int lightindex, int idcolorbar);
@@ -2320,6 +2330,8 @@ static int LoadChooseColor();
 static int SaveChooseColor();
 static int LoadLightsForEdit();
 static int SaveLightsForEdit();
+static int LoadThreshold();
+static int SaveThreshold();
 static int LoadShadowParamsFile();
 static int SaveShadowParamsFile();
 
@@ -2359,6 +2371,7 @@ static int DispMotionPanel();
 static int DispCameraPanel();
 //static int DispConvBoneWindow();
 static int DispAngleLimitDlg();
+static int DispThresholdDlg();
 static int DispRotAxisDlg();
 static int DispCustomRigDlg(int rigno);
 static int InvalidateCustomRig(int rigno);
@@ -2383,6 +2396,8 @@ static int AngleLimit2Bone(int limit2boneflag);
 static int AngleLimit2Bone_One(CBone* srconbe);
 static void AngleLimit2Bone_Req(CBone* srcbone, int setbroflag);
 static int AngleLimit2Dlg(HWND hDlgWnd, bool updateonlycheckeul);
+static int Global2ThresholdDlg(HWND hDlgWnd);
+static int ThresholdDlg2Global(HWND hDlgWnd);
 static int InitAngleLimitEditInt(HWND hDlgWnd, int editresid, int srclimit);
 static int InitAngleLimitEditFloat(HWND hDlgWnd, int editresid, float srcfloat);
 static int InitAngleLimitSlider(HWND hDlgWnd, int slresid, int txtresid, int srclimit);
@@ -4563,7 +4578,8 @@ void InitApp()
 		}
 	}
 	LoadLightsForEdit();//ファイルに保存してあるLight情報を g_lightdirとg_ligthdiffuseとg_lightenableとg_lightdirwithviewに読込
-	
+	LoadThreshold();
+
 	g_lightSlot = 0;
 	SetLightDirection();
 
@@ -4686,8 +4702,8 @@ void OnDestroyDevice()
 	SaveIniFile();
 	SaveChooseColor();
 	SaveLightsForEdit();
+	SaveThreshold();
 	SaveShadowParamsFile();
-
 
 	//if (s_updatetimeline) {
 	//	delete s_updatetimeline;
@@ -19282,6 +19298,8 @@ int SetSpRetargetSWParams()
 	s_spretargetsw[SPRETARGETSW_LIMITEULER].dispcenter.x = s_spretargetsw[SPRETARGETSW_RETARGET].dispcenter.x + (int)spgwidth + spgshift;
 	s_spretargetsw[SPRETARGETSW_LIMITEULER].dispcenter.y = s_spretargetsw[SPRETARGETSW_RETARGET].dispcenter.y;
 
+	s_spretargetsw[SPRETARGETSW_THRESHOLD].dispcenter.x = s_spretargetsw[SPRETARGETSW_LIMITEULER].dispcenter.x + (int)spgwidth + spgshift;
+	s_spretargetsw[SPRETARGETSW_THRESHOLD].dispcenter.y = s_spretargetsw[SPRETARGETSW_RETARGET].dispcenter.y;
 
 	int sprcnt;
 	for (sprcnt = 0; sprcnt < SPRETARGETSWNUM; sprcnt++) {
@@ -22847,6 +22865,80 @@ int CreateShadowParamsWnd()
 	return 0;
 }
 
+int DispThresholdDlg()
+{
+	if (s_thresholddlg) {
+		//already opened
+		return 0;
+	}
+	//if (!s_model) {
+	//	return 0;
+	//}
+	//if (s_curboneno < 0) {
+	//	return 0;
+	//}
+	//if (!s_model->GetTopBone()) {
+	//	return 0;
+	//}
+	//if (s_model->GetOldAxisFlagAtLoading() == 1) {
+	//	::DSMessageBox(s_3dwnd, L"Work Only After Setting Of Axis.\nRetry after Saving FBX file.", L"error!!!", MB_OK);
+	//	return 0;
+	//}
+
+
+
+	//s_dseullimitctrls.clear();
+
+	s_thresholddlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_THRESHOLDDLG), g_mainhwnd, (DLGPROC)ThresholdDlgProc);
+	if (!s_thresholddlg) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int windowposx;
+	if (g_4kresolution) {
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
+	}
+	else {
+		windowposx = s_timelinewidth + s_mainwidth;
+	}
+
+	SetParent(s_thresholddlg, g_mainhwnd);
+	SetWindowPos(
+		s_thresholddlg,
+		HWND_TOP,
+		windowposx,
+		s_sidemenuheight,
+		s_sidewidth,
+		s_sideheight,
+		SWP_SHOWWINDOW
+	);
+
+	////s_dseullimitctrls.push_back(IDD_ANGLELIMITDLG);
+	//s_dseullimitctrls.push_back(IDC_BONEAXIS);
+	//s_dseullimitctrls.push_back(IDC_EDIT_XL);
+	//s_dseullimitctrls.push_back(IDC_EDIT_XU);
+	//s_dseullimitctrls.push_back(IDC_EDIT_YL);
+	//s_dseullimitctrls.push_back(IDC_EDIT_YU);
+	//s_dseullimitctrls.push_back(IDC_EDIT_ZL);
+	//s_dseullimitctrls.push_back(IDC_EDIT_ZU);
+	//s_dseullimitctrls.push_back(IDOK);
+
+
+	//::MoveWindow(s_anglelimitdlg, 1200, 32, 450, 858, TRUE);
+	//s_rigidWnd->setSize(WindowSize(450, 858));//880
+	//s_rigidWnd->setPos(WindowPos(1200, 32));
+
+	ShowWindow(s_thresholddlg, SW_SHOW);
+	UpdateWindow(s_thresholddlg);
+
+	//AngleLimit2Bone();
+
+
+	return 0;
+}
+
+
 int DispAngleLimitDlg()
 {
 	s_underanglelimithscroll = 0;
@@ -24104,6 +24196,23 @@ void CheckShadowDirectionButton(HWND hDlgWnd, int srcshadowdir)
 }
 
 
+int Global2ThresholdDlg(HWND hDlgWnd)
+{
+	if (hDlgWnd != 0) {
+		InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_ENDJOINT, Float2Int(g_thdeg_endjoint));
+		InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_NOTENDJOINT, Float2Int(g_thdeg));
+
+		InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_XROUND, Float2Int(g_thRoundX));
+		InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_YROUND, Float2Int(g_thRoundY));
+		InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_ZROUND, Float2Int(g_thRoundZ));
+	}
+	else {
+		_ASSERT(0);
+	}
+
+	return 0;
+}
+
 int AngleLimit2Dlg(HWND hDlgWnd, bool updateonlycheckeul)
 {
 	if (s_anglelimitbone && (hDlgWnd != 0)) {
@@ -24199,6 +24308,70 @@ int AngleLimit2Dlg(HWND hDlgWnd, bool updateonlycheckeul)
 
 	return 0;
 }
+
+int ThresholdDlg2Global(HWND hDlgWnd)
+{
+	int result_thdeg, result_thdeg_endjoint;
+	int result_xround, result_yround, result_zround;
+	int val_thdeg, val_thdeg_endjoint;
+	int val_xround, val_yround, val_zround;
+
+	result_thdeg = 1;
+	result_thdeg_endjoint = 1;
+	result_xround = 1;
+	result_yround = 1;
+	result_zround = 1;
+	val_thdeg = Float2Int(g_thdeg);
+	val_thdeg_endjoint = Float2Int(g_thdeg_endjoint);
+	val_xround = Float2Int(g_thRoundX);
+	val_yround = Float2Int(g_thRoundY);
+	val_zround = Float2Int(g_thRoundZ);
+	bool errorflag = false;
+
+	result_thdeg = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_NOTENDJOINT, &val_thdeg);
+	if (result_thdeg != 0) {
+		::MessageBox(g_mainhwnd, L"ThresholdDlgのNotEndJointの入力値が不正です。", L"入力し直してください。", MB_OK);
+		errorflag = true;
+	}
+	result_thdeg_endjoint = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_ENDJOINT, &val_thdeg_endjoint);
+	if (result_thdeg_endjoint != 0) {
+		::MessageBox(g_mainhwnd, L"ThresholdDlgのEndJointの入力値が不正です。", L"入力し直してください。", MB_OK);
+		errorflag = true;
+	}
+
+
+	result_xround = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_XROUND, &val_xround);
+	if (result_xround != 0) {
+		::MessageBox(g_mainhwnd, L"ThresholdDlgのXRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
+		errorflag = true;
+	}
+	result_yround = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_YROUND, &val_yround);
+	if (result_yround != 0) {
+		::MessageBox(g_mainhwnd, L"ThresholdDlgのYRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
+		errorflag = true;
+	}
+	result_zround = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_ZROUND, &val_zround);
+	if (result_zround != 0) {
+		::MessageBox(g_mainhwnd, L"ThresholdDlgのZRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
+		errorflag = true;
+	}
+
+
+	if (errorflag == false) {
+		g_thdeg = (float)val_thdeg;
+		g_thdeg_endjoint = (float)val_thdeg_endjoint;
+		g_thRoundX = (float)val_xround;
+		g_thRoundY = (float)val_yround;
+		g_thRoundZ = (float)val_zround;
+
+		return 0;
+	}
+	else {
+		return 1;
+	}
+
+}
+
 
 int AngleDlg2AngleLimit(HWND hDlgWnd)//2022/12/05 エラー入力通知ダイアログも出す
 {
@@ -28203,6 +28376,53 @@ LRESULT CALLBACK LightsForEditDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 
 }
 
+LRESULT CALLBACK ThresholdDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+	switch (msg) {
+	case WM_INITDIALOG:
+	{
+		Global2ThresholdDlg(hDlgWnd);
+		return FALSE;
+	}
+	break;
+
+	case WM_COMMAND:
+		switch (LOWORD(wp)) {
+		case IDC_APPLY:
+		{
+			//s_changelimitangleFlag = true;
+			//PrepairUndo();//全フレーム変更の前に全フレーム保存
+
+			ThresholdDlg2Global(hDlgWnd);
+
+			//PrepairUndo();//全フレーム変更後に全フレーム保存
+			//s_changelimitangleFlag = false;
+		}
+		break;
+
+		//case IDOK:
+			//break;
+		case IDCANCEL:
+			//EndDialog(hDlgWnd, IDCANCEL);
+			break;
+		default:
+			return FALSE;
+			break;
+		}
+		break;
+	case WM_CLOSE:
+		if (s_thresholddlg) {
+			DestroyWindow(s_thresholddlg);
+			s_thresholddlg = 0;
+		}
+		break;
+	default:
+		DefWindowProc(hDlgWnd, msg, wp, lp);
+		return FALSE;
+	}
+	return TRUE;
+
+}
 
 LRESULT CALLBACK AngleLimitDlgProc2(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -42463,14 +42683,22 @@ void GUIRetargetSetVisible(int srcplateno)
 	if (srcplateno == 1) {
 		ShowRetargetWnd(true);
 		ShowLimitEulerWnd(false);
+		ShowThresholdWnd(false);
 	}
 	else if (srcplateno == 2) {
 		ShowRetargetWnd(false);
 		ShowLimitEulerWnd(true);
+		ShowThresholdWnd(false);
+	}
+	else if (srcplateno == 3) {
+		ShowRetargetWnd(false);
+		ShowLimitEulerWnd(false);
+		ShowThresholdWnd(true);
 	}
 	else if (srcplateno == -2) {
 		ShowRetargetWnd(false);
 		ShowLimitEulerWnd(false);
+		ShowThresholdWnd(false);
 	}
 	else {
 		_ASSERT(0);
@@ -42786,6 +43014,32 @@ void ShowLimitEulerWnd(bool srcflag)
 		}
 	}
 }
+
+void ShowThresholdWnd(bool srcflag)
+{
+	if (s_model && (s_curboneno >= 0)) {
+		if (s_bpWorld) {
+			if (srcflag == true) {
+				if (s_anglelimitdlg) {
+					DestroyWindow(s_anglelimitdlg);
+					s_anglelimitdlg = 0;
+				}
+
+				DispThresholdDlg();
+
+				s_spretargetsw[SPRETARGETSW_THRESHOLD].state = true;
+			}
+			else {
+				if (s_thresholddlg) {
+					DestroyWindow(s_thresholddlg);
+					s_thresholddlg = 0;
+				}
+				s_spretargetsw[SPRETARGETSW_THRESHOLD].state = false;
+			}
+		}
+	}
+}
+
 
 void ShowGUIDlgDispParams(bool srcflag)
 {
@@ -52004,6 +52258,18 @@ int PickRigBone(UIPICKINFO* ppickinfo, bool forrigtip, int* dstrigno)//default:f
 
 }
 
+
+int LoadThreshold()
+{
+	int result = 0;
+	WCHAR filepath[MAX_PATH] = { 0L };
+	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjThreshold_0.txt", s_temppath);
+
+	CThresholdFile thresholdfile;
+	result = thresholdfile.LoadThresholdFile(filepath);
+	return result;
+}
+
 int LoadLightsForEdit()
 {
 	int result = 0;
@@ -52140,6 +52406,19 @@ int LoadIniFile()
 	inifile.LoadIniFile(inifilepath);
 
 	return 0;
+}
+
+int SaveThreshold()
+{
+	int result = 0;
+	WCHAR filepath[MAX_PATH] = { 0L };
+	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjThreshold_0.txt", s_temppath);
+
+	CThresholdFile thresholdfile;
+	result = thresholdfile.WriteThresholdFile(filepath);
+	_ASSERT(result == 0);
+
+	return result;
 }
 
 int SaveLightsForEdit()
@@ -54856,6 +55135,19 @@ int CreateSprites()
 	spriteinitdata.m_textures[0] = s_spritetex52;
 	s_spretargetsw[SPRETARGETSW_LIMITEULER].spriteOFF.Init(spriteinitdata, screenvertexflag);
 	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Q2EulThreshold140ON.png");
+	s_spritetex82 = new Texture();
+	s_spritetex82->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex82;
+	s_spretargetsw[SPRETARGETSW_THRESHOLD].spriteON.Init(spriteinitdata, screenvertexflag);
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Q2EulThreshold140OFF.png");
+	s_spritetex83 = new Texture();
+	s_spritetex83->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex83;
+	s_spretargetsw[SPRETARGETSW_THRESHOLD].spriteOFF.Init(spriteinitdata, screenvertexflag);
 
 	//{
 	//	int aimno;
@@ -55464,6 +55756,14 @@ void DestroySprites()
 	if (s_spritetex81) {
 		delete s_spritetex81;
 		s_spritetex81 = 0;
+	}
+	if (s_spritetex82) {
+		delete s_spritetex82;
+		s_spritetex82 = 0;
+	}
+	if (s_spritetex83) {
+		delete s_spritetex83;
+		s_spritetex83 = 0;
 	}
 
 	int delindex;
