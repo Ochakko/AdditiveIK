@@ -9871,6 +9871,41 @@ int CModel::SetAllSphrateData(int gid, int rgdindex, float srcval)
 	SetSphrateDataReq(gid, rgdindex, GetTopBone(false), srcval);
 	return 0;
 }
+
+void CModel::SetColiidDataReq(int rgdindex, CBone* srcbone, int srcgroupid, std::vector<int> srccoliids, int srcmyselfflag)
+{
+	if (!srcbone) {
+		return;
+	}
+
+	if (rgdindex < 0) {
+		return;
+	}
+
+	if ((rgdindex >= 0) && (rgdindex < (int)m_rigideleminfo.size())) {
+		if (srcbone && (srcbone->IsSkeleton()) && srcbone->GetParent(false)) {
+			char* filename = m_rigideleminfo[rgdindex].filename;
+			CRigidElem* curre = srcbone->GetParent(false)->GetRigidElemOfMap(filename, srcbone);
+			if (curre) {
+				curre->SetGroupid(srcgroupid);
+				curre->CopyColiids(srccoliids);
+				curre->SetMyselfflag(srcmyselfflag);
+			}
+		}
+	}
+	else {
+		_ASSERT(0);
+	}
+
+	if (srcbone->GetChild(false)) {
+		SetColiidDataReq(rgdindex, srcbone->GetChild(false), srcgroupid, srccoliids, srcmyselfflag);
+	}
+	if (srcbone->GetBrother(false)) {
+		SetColiidDataReq(rgdindex, srcbone->GetBrother(false), srcgroupid, srccoliids, srcmyselfflag);
+	}
+}
+
+
 void CModel::SetSphrateDataReq(int gid, int rgdindex, CBone* srcbone, float srcval)
 {
 	if (!srcbone) {

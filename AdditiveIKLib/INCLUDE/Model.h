@@ -1033,6 +1033,23 @@ public:
 	int SetRefPosFlag(bool srcflag);
 	int SetRefPosFl4x4ToDispObj(int refposindex);
 
+
+	void SetSphrateDataReq(int gid, int rgdindex, CBone* srcbone, float srcval);
+	void SetBoxzrateDataReq(int gid, int rgdindex, CBone* srcbone, float srcval);
+	void SetSkipflagDataReq(int gid, int rgdindex, CBone* srcbone, int srcval);
+	void SetForbidrotDataReq(int gid, int rgdindex, CBone* srcbone, bool srcval);
+	void SetColtypeDataReq(int gid, int rgdindex, CBone* srcbone, int srcval);
+	void SetBtforceDataReq(int rgdindex, CBone* srcbone, bool srcval);
+	void SetDampAnimDataReq(int gid, int rgdindex, CBone* srcbone, float valL, float valA);
+	void SetBtgDataReq(int gid, int reindex, CBone* srcbone, float btg);
+	void SetKDataReq(int gid, int reindex, CBone* srcbone, int srclk, int srcak, float srccuslk, float srccusak);
+	void SetRestDataReq(int gid, int reindex, CBone* srcbone, float rest, float fric);
+	void SetDmpDataReq(int gid, int reindex, CBone* srcbone, float ldmp, float admp);
+	void SetMassDataReq(int gid, int reindex, CBone* srcbone, float srcmass);
+	void SetMassDataByBoneLengReq(int gid, int reindex, CBone* srcbone, float srcmass);
+	void SetColTypeReq(int reindex, CBone* srcbone, int srctype);
+	void SetColiidDataReq(int reindex, CBone* srcbone, int srcgroup, std::vector<int> srccoliids, int srcmyselfflag);
+
 private:
 	int InitParams();
 	int DestroyObjs();
@@ -1159,20 +1176,7 @@ private:
 	void SetImpulseDataReq( int gid, CBone* srcbone, ChaVector3 srcimp );
 	void SetBtImpulseReq( CBone* srcbone );
 	
-	void SetSphrateDataReq(int gid, int rgdindex, CBone* srcbone, float srcval);
-	void SetBoxzrateDataReq(int gid, int rgdindex, CBone* srcbone, float srcval);
-	void SetSkipflagDataReq(int gid, int rgdindex, CBone* srcbone, int srcval);
-	void SetForbidrotDataReq(int gid, int rgdindex, CBone* srcbone, bool srcval);
-	void SetColtypeDataReq(int gid, int rgdindex, CBone* srcbone, int srcval);
-	void SetBtforceDataReq(int rgdindex, CBone* srcbone, bool srcval);
-	void SetDampAnimDataReq( int gid, int rgdindex, CBone* srcbone, float valL, float valA );
-	void SetBtgDataReq( int gid, int reindex, CBone* srcbone, float btg );
-	void SetKDataReq( int gid, int reindex, CBone* srcbone, int srclk, int srcak, float srccuslk, float srccusak );
-	void SetRestDataReq( int gid, int reindex, CBone* srcbone, float rest, float fric );
-	void SetDmpDataReq( int gid, int reindex, CBone* srcbone, float ldmp, float admp );
-	void SetMassDataReq( int gid, int reindex, CBone* srcbone, float srcmass );
-	void SetMassDataByBoneLengReq(int gid, int reindex, CBone* srcbone, float srcmass);
-	void SetColTypeReq(int reindex, CBone* srcbone, int srctype);
+
 
 	//void SetBtKinFlagReq(CBtObject* srcbto, int oncreateflag);
 	//void SetBtGravityReq( CBtObject* srcbto );

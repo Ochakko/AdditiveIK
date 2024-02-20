@@ -329,3 +329,4 @@ void CRigidElem::DestroyRigidElems() {
 	}
 	s_rigidelempool.clear();
 }
+

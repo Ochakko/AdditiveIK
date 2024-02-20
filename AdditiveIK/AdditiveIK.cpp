@@ -1090,6 +1090,34 @@ static OWP_Button* s_gcoliB = 0;
 static OWP_Separator* s_validSeparator = 0;
 static OWP_Button* s_allrigidenableB = 0;
 static OWP_Button* s_allrigiddisableB = 0;
+//2024/02/20
+static OWP_Separator* s_thicknessSeparator = 0;
+static OWP_Separator* s_depthSeparator = 0;
+static OWP_Separator* s_massSeparator = 0;
+static OWP_Separator* s_validSeparator2 = 0;
+static OWP_Separator* s_forbidSeparator2 = 0;
+static OWP_Separator* s_colSeparator2 = 0;
+static OWP_Separator* s_springSeparator = 0;
+static OWP_Separator* s_restitutionSeparator = 0;
+static OWP_Separator* s_dumpingSeparator = 0;
+static OWP_Separator* s_gSeparator = 0;
+static OWP_Separator* s_btforceSeparator2 = 0;
+static OWP_Separator* s_coliidSeparator = 0;
+static OWP_Button* s_thicknessDeeperB = 0;
+static OWP_Button* s_depthDeeperB = 0;
+static OWP_Button* s_massDeeperB = 0;
+static OWP_Button* s_validDeeperB = 0;
+static OWP_Button* s_forbidDeeperB = 0;
+static OWP_Button* s_colDeeperB = 0;
+static OWP_Button* s_springDeeperB = 0;
+static OWP_Button* s_restitutionDeeperB = 0;
+static OWP_Button* s_dumpingDeeperB = 0;
+static OWP_Button* s_gDeeperB = 0;
+static OWP_Button* s_btforceDeeperB = 0;
+static OWP_Button* s_coliidDeeperB = 0;
+
+
+
 
 
 static OWP_Slider* s_lkSlider = 0;
@@ -2159,6 +2187,7 @@ static int CreateTimelineWnd();
 static int CreateLongTimelineWnd();
 static int CreateDmpAnimWnd();
 static int CreateRigidWnd();
+static int DestroyRigidWnd();
 static int CreateSideMenuWnd();
 static int CreateMainMenuAimBarWnd();
 static int CreateImpulseWnd();
@@ -5038,230 +5067,8 @@ void OnDestroyDevice()
 		s_owpLayerTable = 0;
 	}
 
-	if (s_sphrateSlider) {
-		delete s_sphrateSlider;
-		s_sphrateSlider = 0;
-	}
-	if (s_boxzSlider) {
-		delete s_boxzSlider;
-		s_boxzSlider = 0;
-	}
-	if (s_boxzlabel) {
-		delete s_boxzlabel;
-		s_boxzlabel = 0;
-	}
-	if (s_massSlider) {
-		delete s_massSlider;
-		s_massSlider = 0;
-	}
-	if (s_massSLlabel) {
-		delete s_massSLlabel;
-		s_massSLlabel = 0;
-	}
-	//if (s_massSeparator) {
-	//	delete s_massSeparator;
-	//	s_massSeparator = 0;
-	//}
-	//if (s_massSeparator1) {
-	//	delete s_massSeparator1;
-	//	s_massSeparator1 = 0;
-	//}
-	//if (s_massSeparator2) {
-	//	delete s_massSeparator2;
-	//	s_massSeparator2 = 0;
-	//}
-	if (s_massB) {
-		delete s_massB;
-		s_massB = 0;
-	}
-	if (s_thicknessB) {
-		delete s_thicknessB;
-		s_thicknessB = 0;
-	}
-	if (s_depthB) {
-		delete s_depthB;
-		s_depthB = 0;
-	}
-	if (s_massspacelabel) {
-		delete s_massspacelabel;
-		s_massspacelabel = 0;
-	}
-	if (s_namelabel) {
-		delete s_namelabel;
-		s_namelabel = 0;
-	}
-	if (s_lenglabel) {
-		delete s_lenglabel;
-		s_lenglabel = 0;
-	}
-	if (s_skipB) {
-		delete s_skipB;
-		s_skipB = 0;
-	}
-	if (s_rigidskip) {
-		delete s_rigidskip;
-		s_rigidskip = 0;
-	}
-	if (s_forbidSeparator) {
-		delete s_forbidSeparator;
-		s_forbidSeparator = 0;
-	}
-	if (s_forbidB) {
-		delete s_forbidB;
-		s_forbidB = 0;
-	}
-	if (s_forbidrot) {
-		delete s_forbidrot;
-		s_forbidrot = 0;
-	}
 
-	if (s_validSeparator) {
-		delete s_validSeparator;
-		s_validSeparator = 0;
-	}
-	if (s_allrigidenableB) {
-		delete s_allrigidenableB;
-		s_allrigidenableB = 0;
-	}
-	if (s_allrigiddisableB) {
-		delete s_allrigiddisableB;
-		s_allrigiddisableB = 0;
-	}
-
-
-	if (s_shplabel) {
-		delete s_shplabel;
-		s_shplabel = 0;
-	}
-	if (s_colSeparator) {
-		delete s_colSeparator;
-		s_colSeparator = 0;
-	}
-	if (s_colB) {
-		delete s_colB;
-		s_colB = 0;
-	}
-	if (s_colradio) {
-		delete s_colradio;
-		s_colradio = 0;
-	}
-	if (s_lkradio) {
-		delete s_lkradio;
-		s_lkradio = 0;
-	}
-	if (s_lkSlider) {
-		delete s_lkSlider;
-		s_lkSlider = 0;
-	}
-	if (s_lklabel) {
-		delete s_lklabel;
-		s_lklabel = 0;
-	}
-	if (s_akradio) {
-		delete s_akradio;
-		s_akradio = 0;
-	}
-	if (s_akSlider) {
-		delete s_akSlider;
-		s_akSlider = 0;
-	}
-	if (s_aklabel) {
-		delete s_aklabel;
-		s_aklabel = 0;
-	}
-	if (s_restSlider) {
-		delete s_restSlider;
-		s_restSlider = 0;
-	}
-	if (s_restlabel) {
-		delete s_restlabel;
-		s_restlabel = 0;
-	}
-	if (s_fricSlider) {
-		delete s_fricSlider;
-		s_fricSlider = 0;
-	}
-	if (s_friclabel) {
-		delete s_friclabel;
-		s_friclabel = 0;
-	}
-	if (s_ldmpSlider) {
-		delete s_ldmpSlider;
-		s_ldmpSlider = 0;
-	}
-	if (s_admpSlider) {
-		delete s_admpSlider;
-		s_admpSlider = 0;
-	}
-	if (s_kB) {
-		delete s_kB;
-		s_kB = 0;
-	}
-	if (s_restB) {
-		delete s_restB;
-		s_restB = 0;
-	}
-	if (s_ldmplabel) {
-		delete s_ldmplabel;
-		s_ldmplabel = 0;
-	}
-	if (s_admplabel) {
-		delete s_admplabel;
-		s_admplabel = 0;
-	}
-	if (s_dmpB) {
-		delete s_dmpB;
-		s_dmpB = 0;
-	}
-	if (s_groupB) {
-		delete s_groupB;
-		s_groupB = 0;
-	}
-	if (s_gcoliB) {
-		delete s_gcoliB;
-		s_gcoliB = 0;
-	}
-	if (s_btgSlider) {
-		delete s_btgSlider;
-		s_btgSlider = 0;
-	}
-	if (s_btglabel) {
-		delete s_btglabel;
-		s_btglabel = 0;
-	}
-	if (s_btgscSlider) {
-		delete s_btgscSlider;
-		s_btgscSlider = 0;
-	}
-	if (s_btgsclabel) {
-		delete s_btgsclabel;
-		s_btgsclabel = 0;
-	}
-	if (s_btforceSeparator) {
-		delete s_btforceSeparator;
-		s_btforceSeparator = 0;
-	}
-	if (s_btforce) {
-		delete s_btforce;
-		s_btforce = 0;
-	}
-	if (s_btforceB) {
-		delete s_btforceB;
-		s_btforceB = 0;
-	}
-	if (s_groupcheck) {
-		delete s_groupcheck;
-		s_groupcheck = 0;
-	}
-	if (s_btgB) {
-		delete s_btgB;
-		s_btgB = 0;
-	}
-	if (s_rigidWnd) {
-		delete s_rigidWnd;
-		s_rigidWnd = 0;
-	}
-
+	DestroyRigidWnd();
 	DestroyDispGroupWnd();
 	DestroyShaderTypeWnd();
 
@@ -35237,6 +35044,332 @@ int CheckSimilarMenu()
 }
 
 
+int DestroyRigidWnd()
+{
+	if (s_sphrateSlider) {
+		delete s_sphrateSlider;
+		s_sphrateSlider = 0;
+	}
+	if (s_boxzSlider) {
+		delete s_boxzSlider;
+		s_boxzSlider = 0;
+	}
+	if (s_boxzlabel) {
+		delete s_boxzlabel;
+		s_boxzlabel = 0;
+	}
+	if (s_massSlider) {
+		delete s_massSlider;
+		s_massSlider = 0;
+	}
+	if (s_massSLlabel) {
+		delete s_massSLlabel;
+		s_massSLlabel = 0;
+	}
+	//if (s_massSeparator) {
+	//	delete s_massSeparator;
+	//	s_massSeparator = 0;
+	//}
+	//if (s_massSeparator1) {
+	//	delete s_massSeparator1;
+	//	s_massSeparator1 = 0;
+	//}
+	//if (s_massSeparator2) {
+	//	delete s_massSeparator2;
+	//	s_massSeparator2 = 0;
+	//}
+	if (s_massB) {
+		delete s_massB;
+		s_massB = 0;
+	}
+	if (s_thicknessB) {
+		delete s_thicknessB;
+		s_thicknessB = 0;
+	}
+	if (s_depthB) {
+		delete s_depthB;
+		s_depthB = 0;
+	}
+	if (s_massspacelabel) {
+		delete s_massspacelabel;
+		s_massspacelabel = 0;
+	}
+	if (s_namelabel) {
+		delete s_namelabel;
+		s_namelabel = 0;
+	}
+	if (s_lenglabel) {
+		delete s_lenglabel;
+		s_lenglabel = 0;
+	}
+	if (s_skipB) {
+		delete s_skipB;
+		s_skipB = 0;
+	}
+	if (s_rigidskip) {
+		delete s_rigidskip;
+		s_rigidskip = 0;
+	}
+	if (s_forbidSeparator) {
+		delete s_forbidSeparator;
+		s_forbidSeparator = 0;
+	}
+	if (s_forbidB) {
+		delete s_forbidB;
+		s_forbidB = 0;
+	}
+	if (s_forbidrot) {
+		delete s_forbidrot;
+		s_forbidrot = 0;
+	}
+
+	if (s_validSeparator) {
+		delete s_validSeparator;
+		s_validSeparator = 0;
+	}
+	if (s_allrigidenableB) {
+		delete s_allrigidenableB;
+		s_allrigidenableB = 0;
+	}
+	if (s_allrigiddisableB) {
+		delete s_allrigiddisableB;
+		s_allrigiddisableB = 0;
+	}
+
+
+	if (s_shplabel) {
+		delete s_shplabel;
+		s_shplabel = 0;
+	}
+	if (s_colSeparator) {
+		delete s_colSeparator;
+		s_colSeparator = 0;
+	}
+	if (s_colB) {
+		delete s_colB;
+		s_colB = 0;
+	}
+	if (s_colradio) {
+		delete s_colradio;
+		s_colradio = 0;
+	}
+	if (s_lkradio) {
+		delete s_lkradio;
+		s_lkradio = 0;
+	}
+	if (s_lkSlider) {
+		delete s_lkSlider;
+		s_lkSlider = 0;
+	}
+	if (s_lklabel) {
+		delete s_lklabel;
+		s_lklabel = 0;
+	}
+	if (s_akradio) {
+		delete s_akradio;
+		s_akradio = 0;
+	}
+	if (s_akSlider) {
+		delete s_akSlider;
+		s_akSlider = 0;
+	}
+	if (s_aklabel) {
+		delete s_aklabel;
+		s_aklabel = 0;
+	}
+	if (s_restSlider) {
+		delete s_restSlider;
+		s_restSlider = 0;
+	}
+	if (s_restlabel) {
+		delete s_restlabel;
+		s_restlabel = 0;
+	}
+	if (s_fricSlider) {
+		delete s_fricSlider;
+		s_fricSlider = 0;
+	}
+	if (s_friclabel) {
+		delete s_friclabel;
+		s_friclabel = 0;
+	}
+	if (s_ldmpSlider) {
+		delete s_ldmpSlider;
+		s_ldmpSlider = 0;
+	}
+	if (s_admpSlider) {
+		delete s_admpSlider;
+		s_admpSlider = 0;
+	}
+	if (s_kB) {
+		delete s_kB;
+		s_kB = 0;
+	}
+	if (s_restB) {
+		delete s_restB;
+		s_restB = 0;
+	}
+	if (s_ldmplabel) {
+		delete s_ldmplabel;
+		s_ldmplabel = 0;
+	}
+	if (s_admplabel) {
+		delete s_admplabel;
+		s_admplabel = 0;
+	}
+	if (s_dmpB) {
+		delete s_dmpB;
+		s_dmpB = 0;
+	}
+	if (s_groupB) {
+		delete s_groupB;
+		s_groupB = 0;
+	}
+	if (s_gcoliB) {
+		delete s_gcoliB;
+		s_gcoliB = 0;
+	}
+	if (s_btgSlider) {
+		delete s_btgSlider;
+		s_btgSlider = 0;
+	}
+	if (s_btglabel) {
+		delete s_btglabel;
+		s_btglabel = 0;
+	}
+	if (s_btgscSlider) {
+		delete s_btgscSlider;
+		s_btgscSlider = 0;
+	}
+	if (s_btgsclabel) {
+		delete s_btgsclabel;
+		s_btgsclabel = 0;
+	}
+	if (s_btforceSeparator) {
+		delete s_btforceSeparator;
+		s_btforceSeparator = 0;
+	}
+	if (s_btforce) {
+		delete s_btforce;
+		s_btforce = 0;
+	}
+	if (s_btforceB) {
+		delete s_btforceB;
+		s_btforceB = 0;
+	}
+	if (s_groupcheck) {
+		delete s_groupcheck;
+		s_groupcheck = 0;
+	}
+	if (s_btgB) {
+		delete s_btgB;
+		s_btgB = 0;
+	}
+	if (s_rigidWnd) {
+		delete s_rigidWnd;
+		s_rigidWnd = 0;
+	}
+	if (s_thicknessSeparator) {
+		delete s_thicknessSeparator;
+		s_thicknessSeparator = 0;
+	}
+	if (s_depthSeparator) {
+		delete s_depthSeparator;
+		s_depthSeparator = 0;
+	}
+	if (s_massSeparator) {
+		delete s_massSeparator;
+		s_massSeparator = 0;
+	}
+	if (s_validSeparator2) {
+		delete s_validSeparator2;
+		s_validSeparator2 = 0;
+	}
+	if (s_forbidSeparator2) {
+		delete s_forbidSeparator2;
+		s_forbidSeparator2 = 0;
+	}
+	if (s_colSeparator2) {
+		delete s_colSeparator2;
+		s_colSeparator2 = 0;
+	}
+	if (s_springSeparator) {
+		delete s_springSeparator;
+		s_springSeparator = 0;
+	}
+	if (s_restitutionSeparator) {
+		delete s_restitutionSeparator;
+		s_restitutionSeparator = 0;
+	}
+	if (s_dumpingSeparator) {
+		delete s_dumpingSeparator;
+		s_dumpingSeparator = 0;
+	}
+	if (s_gSeparator) {
+		delete s_gSeparator;
+		s_gSeparator = 0;
+	}
+	if (s_btforceSeparator2) {
+		delete s_btforceSeparator2;
+		s_btforceSeparator2 = 0;
+	}
+	if (s_coliidSeparator) {
+		delete s_coliidSeparator;
+		s_coliidSeparator = 0;
+	}
+
+
+	if (s_thicknessDeeperB) {
+		delete s_thicknessDeeperB;
+		s_thicknessDeeperB = 0;
+	}
+	if (s_depthDeeperB) {
+		delete s_depthDeeperB;
+		s_depthDeeperB = 0;
+	}
+	if (s_massDeeperB) {
+		delete s_massDeeperB;
+		s_massDeeperB = 0;
+	}
+	if (s_validDeeperB) {
+		delete s_validDeeperB;
+		s_validDeeperB = 0;
+	}
+	if (s_forbidDeeperB) {
+		delete s_forbidDeeperB;
+		s_forbidDeeperB = 0;
+	}
+	if (s_colDeeperB) {
+		delete s_colDeeperB;
+		s_colDeeperB = 0;
+	}
+	if (s_springDeeperB) {
+		delete s_springDeeperB;
+		s_springDeeperB = 0;
+	}
+	if (s_restitutionDeeperB) {
+		delete s_restitutionDeeperB;
+		s_restitutionDeeperB = 0;
+	}
+	if (s_dumpingDeeperB) {
+		delete s_dumpingDeeperB;
+		s_dumpingDeeperB = 0;
+	}
+	if (s_gDeeperB) {
+		delete s_gDeeperB;
+		s_gDeeperB = 0;
+	}
+	if (s_btforceDeeperB) {
+		delete s_btforceDeeperB;
+		s_btforceDeeperB = 0;
+	}
+	if (s_coliidDeeperB) {
+		delete s_coliidDeeperB;
+		s_coliidDeeperB = 0;
+	}
+
+	return 0;
+}
 
 int DestroyDispGroupWnd()
 {
@@ -35398,6 +35531,132 @@ int CreateRigidWnd()
 
 	if (s_rigidWnd) {
 		bool limitradionamelen = false;
+
+
+		s_thicknessSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
+		if (!s_thicknessSeparator) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_depthSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
+		if (!s_depthSeparator) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_massSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
+		if (!s_massSeparator) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_validSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.5, true);
+		if (!s_validSeparator2) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_forbidSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.5, true);
+		if (!s_forbidSeparator2) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_colSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.5, true);
+		if (!s_colSeparator2) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_springSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
+		if (!s_springSeparator) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_restitutionSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
+		if (!s_restitutionSeparator) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_dumpingSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
+		if (!s_dumpingSeparator) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_gSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
+		if (!s_gSeparator) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_btforceSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.5, true);
+		if (!s_btforceSeparator2) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_coliidSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
+		if (!s_coliidSeparator) {
+			_ASSERT(0);
+			return 1;
+		}
+
+		s_thicknessDeeperB = new OWP_Button(L"ToDeeper");
+		if (!s_thicknessDeeperB) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_depthDeeperB = new OWP_Button(L"ToDeeper");
+		if (!s_depthDeeperB) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_massDeeperB = new OWP_Button(L"ToDeeper");
+		if (!s_massDeeperB) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_validDeeperB = new OWP_Button(L"ToDeeper");
+		if (!s_validDeeperB) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_forbidDeeperB = new OWP_Button(L"ToDeeper");
+		if (!s_forbidDeeperB) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_colDeeperB = new OWP_Button(L"ToDeeper");
+		if (!s_colDeeperB) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_springDeeperB = new OWP_Button(L"ToDeeper");
+		if (!s_springDeeperB) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_restitutionDeeperB = new OWP_Button(L"ToDeeper");
+		if (!s_restitutionDeeperB) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_dumpingDeeperB = new OWP_Button(L"ToDeeper");
+		if (!s_dumpingDeeperB) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_gDeeperB = new OWP_Button(L"ToDeeper");
+		if (!s_gDeeperB) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_btforceDeeperB = new OWP_Button(L"ToDeeper");
+		if (!s_btforceDeeperB) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_coliidDeeperB = new OWP_Button(L"ToDeeper");
+		if (!s_coliidDeeperB) {
+			_ASSERT(0);
+			return 1;
+		}
+
+
+
 
 		s_groupcheck = new OWP_CheckBoxA(L"ToAll_MeansToSetToSameGroupRigids", 0);
 		if (!s_groupcheck) {
@@ -35683,6 +35942,7 @@ int CreateRigidWnd()
 
 		COLORREF colorToAll = RGB(64, 128 + 32, 128 + 32);
 		COLORREF colorValidInvalid = RGB(168, 129, 129);
+		COLORREF colorToDeeper = RGB(24, 126, 176);
 
 		s_groupcheck->setTextColor(colorToAll);
 		s_massB->setTextColor(colorToAll);
@@ -35697,10 +35957,21 @@ int CreateRigidWnd()
 		s_kB->setTextColor(colorToAll);
 		s_restB->setTextColor(colorToAll);
 
-
 		s_rigidskip->setTextColor(colorValidInvalid);
 		s_btforce->setTextColor(colorValidInvalid);
 
+		s_thicknessDeeperB->setTextColor(colorToDeeper);
+		s_depthDeeperB->setTextColor(colorToDeeper);
+		s_massDeeperB->setTextColor(colorToDeeper);
+		s_validDeeperB->setTextColor(colorToDeeper);
+		s_forbidDeeperB->setTextColor(colorToDeeper);
+		s_colDeeperB->setTextColor(colorToDeeper);
+		s_springDeeperB->setTextColor(colorToDeeper);
+		s_restitutionDeeperB->setTextColor(colorToDeeper);
+		s_dumpingDeeperB->setTextColor(colorToDeeper);
+		s_gDeeperB->setTextColor(colorToDeeper);
+		s_btforceDeeperB->setTextColor(colorToDeeper);
+		s_coliidDeeperB->setTextColor(colorToDeeper);
 
 
 		int slw = 350;
@@ -35722,13 +35993,22 @@ int CreateRigidWnd()
 		s_rigidWnd->addParts(*s_groupcheck);
 		s_rigidWnd->addParts(*s_shplabel);
 		s_rigidWnd->addParts(*s_sphrateSlider);
-		s_rigidWnd->addParts(*s_thicknessB);
+		s_rigidWnd->addParts(*s_thicknessSeparator);
+		s_thicknessSeparator->addParts1(*s_thicknessB);
+		s_thicknessSeparator->addParts2(*s_thicknessDeeperB);
+		//s_rigidWnd->addParts(*s_thicknessB);
 		s_rigidWnd->addParts(*s_boxzlabel);
 		s_rigidWnd->addParts(*s_boxzSlider);
-		s_rigidWnd->addParts(*s_depthB);
+		s_rigidWnd->addParts(*s_depthSeparator);
+		s_depthSeparator->addParts1(*s_depthB);
+		s_depthSeparator->addParts2(*s_depthDeeperB);
+		//s_rigidWnd->addParts(*s_depthB);
 		s_rigidWnd->addParts(*s_massSLlabel);
 		s_rigidWnd->addParts(*s_massSlider);
-		s_rigidWnd->addParts(*s_massB);
+		s_rigidWnd->addParts(*s_massSeparator);
+		s_massSeparator->addParts1(*s_massB);
+		s_massSeparator->addParts2(*s_massDeeperB);
+		//s_rigidWnd->addParts(*s_massB);
 
 		////s_rigidWnd->addParts(*s_massB);
 		////s_massB->setColor(64, 128, 128);
@@ -35746,21 +36026,30 @@ int CreateRigidWnd()
 
 		s_rigidWnd->addParts(*s_validSeparator);
 		s_validSeparator->addParts1(*s_rigidskip);
-		s_validSeparator->addParts2(*s_skipB);
-		//s_rigidWnd->addParts(*s_rigidskip);
+		s_validSeparator->addParts2(*s_validSeparator2);
+		s_validSeparator2->addParts1(*s_skipB);
+		s_validSeparator2->addParts2(*s_validDeeperB);
+		//s_validSeparator->addParts2(*s_skipB);
+		////s_rigidWnd->addParts(*s_rigidskip);
 
 		s_rigidWnd->addParts(*s_forbidSeparator);
 		s_forbidSeparator->addParts1(*s_forbidrot);
-		s_forbidSeparator->addParts2(*s_forbidB);
-		//s_rigidWnd->addParts(*s_forbidrot);
-		//s_rigidWnd->addParts(*s_allrigidenableB);
-		//s_rigidWnd->addParts(*s_allrigiddisableB);
+		s_forbidSeparator->addParts2(*s_forbidSeparator2);
+		s_forbidSeparator2->addParts1(*s_forbidB);
+		s_forbidSeparator2->addParts2(*s_forbidDeeperB);
+		//s_forbidSeparator->addParts2(*s_forbidB);
+		////s_rigidWnd->addParts(*s_forbidrot);
+		////s_rigidWnd->addParts(*s_allrigidenableB);
+		////s_rigidWnd->addParts(*s_allrigiddisableB);
 
 
 		s_rigidWnd->addParts(*s_colSeparator);
 		s_colSeparator->addParts1(*s_colradio);
-		s_colSeparator->addParts2(*s_colB);
-		//s_rigidWnd->addParts(*s_colradio);
+		s_colSeparator->addParts2(*s_colSeparator2);
+		s_colSeparator2->addParts1(*s_colB);
+		s_colSeparator2->addParts2(*s_colDeeperB);
+		//s_colSeparator->addParts2(*s_colB);
+		////s_rigidWnd->addParts(*s_colradio);
 
 		s_rigidWnd->addParts(*s_lkradio);
 		s_rigidWnd->addParts(*s_lklabel);
@@ -35768,34 +36057,52 @@ int CreateRigidWnd()
 		s_rigidWnd->addParts(*s_akradio);
 		s_rigidWnd->addParts(*s_aklabel);
 		s_rigidWnd->addParts(*s_akSlider);
-		s_rigidWnd->addParts(*s_kB);
+		s_rigidWnd->addParts(*s_springSeparator);
+		s_springSeparator->addParts1(*s_kB);
+		s_springSeparator->addParts2(*s_springDeeperB);
+		//s_rigidWnd->addParts(*s_kB);
 
 		s_rigidWnd->addParts(*s_restlabel);
 		s_rigidWnd->addParts(*s_restSlider);
 		s_rigidWnd->addParts(*s_friclabel);
 		s_rigidWnd->addParts(*s_fricSlider);
-		s_rigidWnd->addParts(*s_restB);
+		s_rigidWnd->addParts(*s_restitutionSeparator);
+		s_restitutionSeparator->addParts1(*s_restB);
+		s_restitutionSeparator->addParts2(*s_restitutionDeeperB);
+		//s_rigidWnd->addParts(*s_restB);
 
 
 		s_rigidWnd->addParts(*s_ldmplabel);
 		s_rigidWnd->addParts(*s_ldmpSlider);
 		s_rigidWnd->addParts(*s_admplabel);
 		s_rigidWnd->addParts(*s_admpSlider);
-		s_rigidWnd->addParts(*s_dmpB);
+		s_rigidWnd->addParts(*s_dumpingSeparator);
+		s_dumpingSeparator->addParts1(*s_dmpB);
+		s_dumpingSeparator->addParts2(*s_dumpingDeeperB);
+		//s_rigidWnd->addParts(*s_dmpB);
 
 		s_rigidWnd->addParts(*s_btglabel);
 		s_rigidWnd->addParts(*s_btgSlider);
 		s_rigidWnd->addParts(*s_btgsclabel);
 		s_rigidWnd->addParts(*s_btgscSlider);
 
-		s_rigidWnd->addParts(*s_btgB);
+		s_rigidWnd->addParts(*s_gSeparator);
+		s_gSeparator->addParts1(*s_btgB);
+		s_gSeparator->addParts2(*s_gDeeperB);
+		//s_rigidWnd->addParts(*s_btgB);
 
 		//s_rigidWnd->addParts(*s_btforce);
 		s_rigidWnd->addParts(*s_btforceSeparator);
 		s_btforceSeparator->addParts1(*s_btforce);
-		s_btforceSeparator->addParts2(*s_btforceB);
+		s_btforceSeparator->addParts2(*s_btforceSeparator2);
+		s_btforceSeparator2->addParts1(*s_btforceB);
+		s_btforceSeparator2->addParts2(*s_btforceDeeperB);
+		//s_btforceSeparator->addParts2(*s_btforceB);
 
-		s_rigidWnd->addParts(*s_groupB);
+		s_rigidWnd->addParts(*s_coliidSeparator);
+		s_coliidSeparator->addParts1(*s_groupB);
+		s_coliidSeparator->addParts2(*s_coliidDeeperB);
+		//s_rigidWnd->addParts(*s_groupB);
 		s_rigidWnd->addParts(*s_gcoliB);
 		/////////
 		s_dsrigidctrls.push_back(s_namelabel);
@@ -35871,6 +36178,20 @@ int CreateRigidWnd()
 				s_rigidWnd->callRewrite();						//再描画
 			}
 			});
+		s_thicknessDeeperB->setButtonListener([]() {
+			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && s_sphrateSlider) {
+				CBone* curbone = s_model->GetBoneByID(s_curboneno);
+				if (curbone) {
+					CBone* parentbone = curbone->GetParent(false);
+					if (parentbone && parentbone->IsSkeleton()) {
+						float val = (float)s_sphrateSlider->getValue();
+						int gid = -1;
+						s_model->SetSphrateDataReq(gid, s_reindexmap[s_model], curbone, val);
+						s_rigidWnd->callRewrite();						//再描画
+					}
+				}
+			}
+			});
 		s_boxzSlider->setCursorListener([]() {
 			if (s_model && s_rigidWnd) {
 				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
@@ -35883,7 +36204,20 @@ int CreateRigidWnd()
 				s_rigidWnd->callRewrite();						//再描画
 			}
 			});
-
+		s_depthDeeperB->setButtonListener([]() {
+			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && s_boxzSlider) {
+				CBone* curbone = s_model->GetBoneByID(s_curboneno);
+				if (curbone) {
+					CBone* parentbone = curbone->GetParent(false);
+					if (parentbone && parentbone->IsSkeleton()) {
+						float val = (float)s_boxzSlider->getValue();
+						int gid = -1;
+						s_model->SetBoxzrateDataReq(gid, s_reindexmap[s_model], curbone, val);
+						s_rigidWnd->callRewrite();						//再描画
+					}
+				}
+			}
+			});
 		s_massSlider->setCursorListener([]() {
 			if (s_model && s_rigidWnd) {
 				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
@@ -35894,6 +36228,20 @@ int CreateRigidWnd()
 					}
 				}
 				s_rigidWnd->callRewrite();						//再描画
+			}
+			});
+		s_massDeeperB->setButtonListener([]() {
+			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && s_massSlider) {
+				CBone* curbone = s_model->GetBoneByID(s_curboneno);
+				if (curbone) {
+					CBone* parentbone = curbone->GetParent(false);
+					if (parentbone && parentbone->IsSkeleton()) {
+						float val = (float)s_massSlider->getValue();
+						int gid = -1;
+						s_model->SetMassDataReq(gid, s_reindexmap[s_model], curbone, val);
+						s_rigidWnd->callRewrite();						//再描画
+					}
+				}
 			}
 			});
 
@@ -35921,7 +36269,23 @@ int CreateRigidWnd()
 				s_rigidWnd->callRewrite();						//再描画
 			}
 			});
-
+		s_dumpingDeeperB->setButtonListener([]() {
+			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd) {
+				CBone* curbone = s_model->GetBoneByID(s_curboneno);
+				if (curbone) {
+					CBone* parentbone = curbone->GetParent(false);
+					if (parentbone && parentbone->IsSkeleton()) {
+						int gid = -1;
+						if (s_ldmpSlider && s_admpSlider) {
+							float ldmp = (float)s_ldmpSlider->getValue();
+							float admp = (float)s_admpSlider->getValue();
+							s_model->SetDmpDataReq(gid, s_reindexmap[s_model], curbone, ldmp, admp);
+						}
+						s_rigidWnd->callRewrite();						//再描画
+					}
+				}
+			}
+			});
 		s_lkSlider->setCursorListener([]() {
 			if (s_model && s_rigidWnd) {
 				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
@@ -35960,6 +36324,22 @@ int CreateRigidWnd()
 				s_rigidWnd->callRewrite();						//再描画
 			}
 			});
+		s_restitutionDeeperB->setButtonListener([]() {
+			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && 
+				s_restSlider && s_fricSlider) {
+				CBone* curbone = s_model->GetBoneByID(s_curboneno);
+				if (curbone) {
+					CBone* parentbone = curbone->GetParent(false);
+					if (parentbone && parentbone->IsSkeleton()) {
+						float rest = (float)s_restSlider->getValue();
+						float fric = (float)s_fricSlider->getValue();
+						int gid = -1;
+						s_model->SetRestDataReq(gid, s_reindexmap[s_model], curbone, rest, fric);
+						s_rigidWnd->callRewrite();						//再描画
+					}
+				}
+			}
+			});
 		s_fricSlider->setCursorListener([]() {
 			if (s_model && s_rigidWnd) {
 				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
@@ -35978,7 +36358,7 @@ int CreateRigidWnd()
 				if (curre) {
 					if (s_rigidskip) {
 						bool validflag = s_rigidskip->getValue();
-						if (validflag == false) {
+						if (validflag == false) {//!!!!!!!!GUIはValidでデータとしてはSkip
 							curre->SetSkipflag(1);
 						}
 						else {
@@ -35987,6 +36367,21 @@ int CreateRigidWnd()
 					}
 				}
 				s_rigidWnd->callRewrite();						//再描画
+			}
+			});
+		s_validDeeperB->setButtonListener([]() {
+			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && s_rigidskip) {
+				CBone* curbone = s_model->GetBoneByID(s_curboneno);
+				if (curbone) {
+					CBone* parentbone = curbone->GetParent(false);
+					if (parentbone && parentbone->IsSkeleton()) {
+						//int val = s_rigidskip->getValue() ? 1 : 0;
+						int val = s_rigidskip->getValue() ? 0 : 1;//!!!!!!!!GUIはValidでデータとしてはSkip
+						int gid = -1;
+						s_model->SetSkipflagDataReq(gid, s_reindexmap[s_model], curbone, val);
+						s_rigidWnd->callRewrite();						//再描画
+					}
+				}
 			}
 			});
 		s_skipB->setButtonListener([]() {
@@ -36027,6 +36422,20 @@ int CreateRigidWnd()
 					}
 				}
 				s_rigidWnd->callRewrite();						//再描画
+			}
+			});
+		s_forbidDeeperB->setButtonListener([]() {
+			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && s_forbidrot) {
+				CBone* curbone = s_model->GetBoneByID(s_curboneno);
+				if (curbone) {
+					CBone* parentbone = curbone->GetParent(false);
+					if (parentbone && parentbone->IsSkeleton()) {
+						int val = s_forbidrot->getValue() ? 1 : 0;
+						int gid = -1;
+						s_model->SetForbidrotDataReq(gid, s_reindexmap[s_model], curbone, val);
+						s_rigidWnd->callRewrite();						//再描画
+					}
+				}
 			}
 			});
 		s_forbidB->setButtonListener([]() {
@@ -36079,7 +36488,20 @@ int CreateRigidWnd()
 			}
 			s_rigidWnd->callRewrite();						//再描画
 			});
-
+		s_btforceDeeperB->setButtonListener([]() {
+			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && s_btforce) {
+				CBone* curbone = s_model->GetBoneByID(s_curboneno);
+				if (curbone) {
+					CBone* parentbone = curbone->GetParent(false);
+					if (parentbone && parentbone->IsSkeleton()) {
+						int val = s_btforce->getValue() ? 1 : 0;
+						int gid = -1;
+						s_model->SetBtforceDataReq(s_reindexmap[s_model], curbone, val);
+						s_rigidWnd->callRewrite();						//再描画
+					}
+				}
+			}
+			});
 		s_btgSlider->setCursorListener([]() {
 			if (s_model && s_rigidWnd && s_btgSlider) {
 				float btg = (float)s_btgSlider->getValue();
@@ -36101,6 +36523,20 @@ int CreateRigidWnd()
 				s_rigidWnd->callRewrite();						//再描画
 			}
 			});
+		s_gDeeperB->setButtonListener([]() {
+			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && s_btgSlider) {
+				CBone* curbone = s_model->GetBoneByID(s_curboneno);
+				if (curbone) {
+					CBone* parentbone = curbone->GetParent(false);
+					if (parentbone && parentbone->IsSkeleton()) {
+						float val = (float)s_btgSlider->getValue();
+						int gid = -1;
+						s_model->SetBtgDataReq(gid, s_reindexmap[s_model], curbone, val);
+						s_rigidWnd->callRewrite();						//再描画
+					}
+				}
+			}
+			});
 
 		s_colradio->setSelectListener([]() {
 			if (s_model && s_rigidWnd && s_colradio) {
@@ -36110,6 +36546,20 @@ int CreateRigidWnd()
 					curre->SetColtype(val);
 				}
 				s_rigidWnd->callRewrite();						//再描画
+			}
+			});
+		s_colDeeperB->setButtonListener([]() {
+			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && s_colradio) {
+				CBone* curbone = s_model->GetBoneByID(s_curboneno);
+				if (curbone) {
+					CBone* parentbone = curbone->GetParent(false);
+					if (parentbone && parentbone->IsSkeleton()) {
+						int val = s_colradio->getSelectIndex();
+						int gid = -1;
+						s_model->SetColtypeDataReq(gid, s_reindexmap[s_model], curbone, val);
+						s_rigidWnd->callRewrite();						//再描画
+					}
+				}
 			}
 			});
 		s_colB->setButtonListener([]() {
@@ -36138,6 +36588,24 @@ int CreateRigidWnd()
 					curre->SetLKindex(val);
 				}
 				s_rigidWnd->callRewrite();						//再描画
+			}
+			});
+		s_springDeeperB->setButtonListener([]() {
+			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && 
+				s_lkradio && s_akradio && s_lkSlider && s_akSlider) {
+				CBone* curbone = s_model->GetBoneByID(s_curboneno);
+				if (curbone) {
+					CBone* parentbone = curbone->GetParent(false);
+					if (parentbone && parentbone->IsSkeleton()) {
+						int lindex = s_lkradio->getSelectIndex();
+						int aindex = s_akradio->getSelectIndex();
+						float cuslk = (float)s_lkSlider->getValue();
+						float cusak = (float)s_akSlider->getValue();
+						int gid = -1;
+						s_model->SetKDataReq(gid, s_reindexmap[s_model], curbone, lindex, aindex ,cuslk, cusak);
+						s_rigidWnd->callRewrite();						//再描画
+					}
+				}
 			}
 			});
 		s_akradio->setSelectListener([]() {
@@ -36226,6 +36694,28 @@ int CreateRigidWnd()
 					s_undercolidlg = false;
 					s_pcolidlg = 0;
 
+				}
+			}
+			});
+		s_coliidDeeperB->setButtonListener([]() {
+			if (s_model) {
+				CBone* curbone = s_model->GetBoneByID(s_curboneno);
+				if (curbone) {
+					CBone* parentbone = curbone->GetParent(false);
+					if (parentbone && parentbone->IsSkeleton()) {
+						CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
+						if (curre) {
+							int groupid = curre->GetGroupid();
+							int coliidsize = curre->GetColiidsSize();
+							vector<int> coliids;
+							int index1;
+							for (index1 = 0; index1 < coliidsize; index1++) {
+								coliids.push_back(curre->GetColiids(index1));
+							}
+							int myselfflag = curre->GetMyselfflag();
+							s_model->SetColiidDataReq(s_reindexmap[s_model], curbone, groupid, coliids, myselfflag);
+						}
+					}
 				}
 			}
 			});

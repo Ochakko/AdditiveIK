@@ -27,6 +27,8 @@ private:
 	int InitParams();
 	int DestroyObjs();
 
+
+
 public: //accesser
 	int GetColtype(){ return m_coltype; };
 	void SetColtype( int srctype ){ m_coltype = srctype; };
@@ -88,6 +90,7 @@ public: //accesser
 	void CopyColiids(CRigidElem* srcre) { m_coliids = srcre->m_coliids; SetMyselfflag(srcre->GetMyselfflag()); };
 	void CopyColiids( std::vector<int>& srcids ){ m_coliids = srcids; };
 	void CopyColiids2Dstvec( std::vector<int>& dstids ){ dstids = m_coliids; };
+
 
 
 	int GetMyselfflag(){ return m_myselfflag; };
