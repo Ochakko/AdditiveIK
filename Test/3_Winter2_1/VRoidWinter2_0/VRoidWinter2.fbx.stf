@@ -136,12 +136,12 @@
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
     <ToonLightIndex>1</ToonLightIndex>
-    <ToonBaseH>0.00</ToonBaseH>
-    <ToonBaseS>0.00</ToonBaseS>
-    <ToonBaseV>1.00</ToonBaseV>
+    <ToonBaseH>14.00</ToonBaseH>
+    <ToonBaseS>0.06</ToonBaseS>
+    <ToonBaseV>0.68</ToonBaseV>
     <ToonBaseA>1.00</ToonBaseA>
-    <Gradation>0</Gradation>
-    <PowerToon>1</PowerToon>
+    <Gradation>1</Gradation>
+    <PowerToon>0</PowerToon>
     <SpecularCoef>0.125</SpecularCoef>
     <NormalY0>1</NormalY0>
   </Material>
@@ -636,4 +636,4 @@
     <NormalY0>0</NormalY0>
   </Material>
 </SHADERTYPEFILE>
-/SHADERTYPEFILE>
+SHADERTYPEFILE>

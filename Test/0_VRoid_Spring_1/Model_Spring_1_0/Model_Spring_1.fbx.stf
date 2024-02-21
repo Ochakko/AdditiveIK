@@ -138,10 +138,10 @@
     <ToonLightIndex>1</ToonLightIndex>
     <ToonBaseH>25.00</ToonBaseH>
     <ToonBaseS>0.25</ToonBaseS>
-    <ToonBaseV>0.81</ToonBaseV>
+    <ToonBaseV>0.63</ToonBaseV>
     <ToonBaseA>1.00</ToonBaseA>
-    <Gradation>0</Gradation>
-    <PowerToon>1</PowerToon>
+    <Gradation>1</Gradation>
+    <PowerToon>0</PowerToon>
     <SpecularCoef>0.125</SpecularCoef>
     <NormalY0>1</NormalY0>
   </Material>

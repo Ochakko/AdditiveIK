@@ -4,8 +4,8 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
-2024/02/21午後
-　AdditiveIK 1.0.0.9 RC2(リリース候補2)
+2024/02/22
+　AdditiveIK 1.0.0.9 RC3(リリース候補3)
 　　1.0.0.8からの変更点
 　　　不具合修正
 　　　　ノーマルマップを小さく表示するとモアレが出る不具合修正
@@ -34,6 +34,8 @@ https://github.com/Ochakko/AdditiveIK
 　　　　UV0とUV1の切り替えテストのためのUVSet決め打ちコードが残っていたのを修正.　fbxの元のものを読まないと正しく直らないことも有り.
 　　　　ScreenShotフォルダの中身を新しいSSに更新.
 　　　　TestフォルダのモデルのShader設定を更新.　体はStd.　顔だけToonLit2でY0フラグオン.　顔のセンターの法線の具合がStd.で光るので対策.
+　　　RC3:
+　　　　TestフォルダのSpringモデルとWinterモデルの顔シェーダの再調整
 
 
 動画
