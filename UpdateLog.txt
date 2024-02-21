@@ -2,6 +2,13 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2024/02/21
+　【ショート】ピッチャーと棒【モーキャプ】
+　　https://youtu.be/WG7QEvYetJg
+
+　　
+
 2024/02/20
 　Rigidプレートメニューの各項目の右にToDeeperボタンを追加
 　　選択剛体の全ての子供の剛体に対してカレント値を設定するボタン
