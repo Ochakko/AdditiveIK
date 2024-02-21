@@ -5,7 +5,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/02/21午後
-　AdditiveIK 1.0.0.9 RC1(リリース候補1)
+　AdditiveIK 1.0.0.9 RC2(リリース候補2)
 　　1.0.0.8からの変更点
 　　　不具合修正
 　　　　ノーマルマップを小さく表示するとモアレが出る不具合修正
@@ -26,6 +26,14 @@ https://github.com/Ochakko/AdditiveIK
 　　　ドキュメント追加
 　　　　Documsnts/TroubleShooting/0_HowToSettingsAboutShaders.docx
 　　　　Documsnts/TroubleShooting/0_ThresholdSettingForFlipMotionCorrection.docx
+
+　　　RC2: 
+　　　　ウインドウ小モードにおける各種ダイアログの大きさ調整. 見切れすれすれのものが多数あったので対応.
+　　　　Q2Eul_ThreasholdプレートメニューにDefaultValueボタンを追加.　数値が分からなくなった時用.
+　　　　法線マップとメタルマップのサンプラーのフィルターをMIP_POINTに変更. ぼけ過ぎないように.
+　　　　UV0とUV1の切り替えテストのためのUVSet決め打ちコードが残っていたのを修正.　fbxの元のものを読まないと正しく直らないことも有り.
+　　　　ScreenShotフォルダの中身を新しいSSに更新.
+　　　　TestフォルダのモデルのShader設定を更新.　体はStd.　顔だけToonLit2でY0フラグオン.　顔のセンターの法線の具合がStd.で光るので対策.
 
 
 動画

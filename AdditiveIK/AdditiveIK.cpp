@@ -28399,6 +28399,18 @@ LRESULT CALLBACK ThresholdDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			//s_changelimitangleFlag = false;
 		}
 		break;
+		case IDC_DEFAULTVALUE:
+		{
+			g_thdeg = 181.0f;
+			g_thdeg_endjoint = 159.0f;
+			g_thRoundX = 179.0f;
+			g_thRoundY = 179.0f;
+			g_thRoundZ = 179.0f;
+
+			Global2ThresholdDlg(hDlgWnd);
+
+		}
+		break;
 
 		//case IDOK:
 			//break;

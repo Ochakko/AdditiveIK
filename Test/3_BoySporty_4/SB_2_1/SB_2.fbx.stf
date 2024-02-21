@@ -2,7 +2,7 @@
 <SHADERTYPEFILE>
   <FileInfo>
     <kind>ShaderTypeFile</kind>
-    <version>1004</version>
+    <version>1006</version>
     <type>0</type>
   </FileInfo>
   <Material>
@@ -35,6 +35,10 @@
     <ToonBaseS>1.00</ToonBaseS>
     <ToonBaseV>0.80</ToonBaseV>
     <ToonBaseA>1.00</ToonBaseA>
+    <Gradation>1</Gradation>
+    <PowerToon>1</PowerToon>
+    <SpecularCoef>0.125</SpecularCoef>
+    <NormalY0>0</NormalY0>
   </Material>
   <Material>
     <MaterialName>material_2</MaterialName>
@@ -66,5 +70,9 @@
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>1.00</ToonBaseV>
     <ToonBaseA>1.00</ToonBaseA>
+    <Gradation>1</Gradation>
+    <PowerToon>1</PowerToon>
+    <SpecularCoef>0.125</SpecularCoef>
+    <NormalY0>0</NormalY0>
   </Material>
 </SHADERTYPEFILE>

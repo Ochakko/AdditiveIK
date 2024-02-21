@@ -1444,31 +1444,34 @@ void CMQOMaterial::InitShadersAndPipelines(
 	samplerDescArray[1].AddressV = GetAddressV_albedo();//2024/01/06
 
 	samplerDescArray[2] = samplerDescArray[0];
+	samplerDescArray[2].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//2024/02/21 : normalmapは補間無しに
 	samplerDescArray[2].ShaderRegister = 2;//!!!!!!!!
-	if (srcuvnum >= 2) {
+	//if (srcuvnum >= 2) {//2024/02/21　コメントアウト
 		samplerDescArray[2].AddressU = GetAddressU_normal();//2024/01/06
 		samplerDescArray[2].AddressV = GetAddressV_normal();//2024/01/06
-	}
-	else {
-		samplerDescArray[2].AddressU = GetAddressU_albedo();//2024/01/06
-		samplerDescArray[2].AddressV = GetAddressV_albedo();//2024/01/06
-	}
-	//samplerDescArray[2].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	//samplerDescArray[2].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	//samplerDescArray[2].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	//}
+	//else {
+	//	samplerDescArray[2].AddressU = GetAddressU_albedo();//2024/01/06
+	//	samplerDescArray[2].AddressV = GetAddressV_albedo();//2024/01/06
+	//}
+	////samplerDescArray[2].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	////samplerDescArray[2].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	////samplerDescArray[2].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 
 	samplerDescArray[3] = samplerDescArray[0];
+	samplerDescArray[3].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//2024/02/21 : metalmapは補間無しに
 	samplerDescArray[3].ShaderRegister = 3;//!!!!!!!!
-	if (srcuvnum >= 2) {
+	//if (srcuvnum >= 2) {//2024/02/21　コメントアウト
 		samplerDescArray[3].AddressU = GetAddressU_metal();//2024/01/06
 		samplerDescArray[3].AddressV = GetAddressV_metal();//2024/01/06
-	}
-	else {
-		samplerDescArray[3].AddressU = GetAddressU_albedo();//2024/01/06
-		samplerDescArray[3].AddressV = GetAddressV_albedo();//2024/01/06
-	}
+	//}
+	//else {
+	//	samplerDescArray[3].AddressU = GetAddressU_albedo();//2024/01/06
+	//	samplerDescArray[3].AddressV = GetAddressV_albedo();//2024/01/06
+	//}
 
 	samplerDescArray[4] = samplerDescArray[0];
+	samplerDescArray[4].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//2024/02/21 : 補間無しに
 	samplerDescArray[4].ShaderRegister = 4;//!!!!!!!!
 	samplerDescArray[4].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 	samplerDescArray[4].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
