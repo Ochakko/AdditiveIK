@@ -5,7 +5,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/02/22
-　AdditiveIK 1.0.0.9 RC3(リリース候補3)
+　AdditiveIK 1.0.0.9 release
 　　1.0.0.8からの変更点
 　　　不具合修正
 　　　　ノーマルマップを小さく表示するとモアレが出る不具合修正
@@ -36,6 +36,10 @@ https://github.com/Ochakko/AdditiveIK
 　　　　TestフォルダのモデルのShader設定を更新.　体はStd.　顔だけToonLit2でY0フラグオン.　顔のセンターの法線の具合がStd.で光るので対策.
 　　　RC3:
 　　　　TestフォルダのSpringモデルとWinterモデルの顔シェーダの再調整
+　　　release:
+　　　　TestフォルダのSpringモデルとWinterモデルの顔シェーダの再調整
+　　　　(DispAndLimitsプレートメニューのライト倍率(全てのライト対してに掛ける倍率)が違うと見え方がかなり変わるので、設定時にはライト倍率を確認)
+
 
 
 動画
