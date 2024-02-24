@@ -7,6 +7,10 @@ https://github.com/Ochakko/AdditiveIK
 　ドキュメント追加
 　　　　Documsnts/TroubleShooting/0_HowToSetPhysicsOfSkirt.docx
 
+　ピック&セットの不具合修正
+　　DispGroupプレートメニューにおいて、クリックしてもGUI上で選択メッシュが自動選択されないケースがある不具合修正
+　　　選択メッシュをみつけた場合のbreak抜けにより自動選択されないケースがあった
+
 
 
 2024/02/23

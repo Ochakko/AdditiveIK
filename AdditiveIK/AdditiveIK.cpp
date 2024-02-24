@@ -53143,6 +53143,7 @@ bool PickAndSelectMeshOfDispGroupDlg()
 				if (s_groupmqoobjvec[lineno]) {
 					if (s_groupmqoobjvec[lineno] == pickmqoobj) {
 						selectlineindex = lineno;
+						break;
 					}
 				}
 			}
@@ -53204,6 +53205,7 @@ bool PickAndSelectMaterialOfShaderTypeDlg()
 
 					s_shadertypeparamsindex = materialindex + 1;//index==0は全てのマテリアルに設定. それ以外はindex - 1のマテリアルに設定
 					s_shadertypeparamsFlag = true;
+					break;
 				}
 			}
 		}
