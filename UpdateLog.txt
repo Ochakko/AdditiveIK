@@ -2,6 +2,13 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2024/02/24
+　ドキュメント追加
+　　　　Documsnts/TroubleShooting/0_HowToSetPhysicsOfSkirt.docx
+
+
+
 2024/02/23
 　Testフォルダのモデル更新
 　　新しいVRoidのモデルはStdシェーダで表示しても顔の中央に白いラインが出ないので、今後は新しいVRoidのモデルを使用する
