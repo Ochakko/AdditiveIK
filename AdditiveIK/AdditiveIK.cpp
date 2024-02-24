@@ -13697,10 +13697,21 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	ofn.lpstrInitialDir = NULL;
 	//ofn.lpstrTitle = NULL;
 	ofn.lpstrTitle = L"GetFileNameDlg";
-	//ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ALLOWMULTISELECT | OFN_ENABLEHOOK;
-	//ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ALLOWMULTISELECT;
-	ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
-	//ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT | OFN_EXPLORER;
+
+	////ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ALLOWMULTISELECT | OFN_ENABLEHOOK;
+	////ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ALLOWMULTISELECT;
+	//ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	////ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT | OFN_EXPLORER;
+	//##########################################################################
+	//2024/02/24
+	//OFN_EXPLORERを指定してエクスプローラタイプのダイアログにすると
+	//現状のゲームパッド対応コードでは目的のGUIコントロールを取得することが出来なかった
+	//ゲームパッド対応はモーション遷移テストやキャラクターの移動などに限定して使用していく予定
+	//ゲームパッド対応時にもマウスは必要という方針に変更
+	//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
+	//##########################################################################
+	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+
 	ofn.nFileOffset = 0;
 	ofn.nFileExtension = 0;
 	ofn.lpstrDefExt = NULL;
@@ -14088,7 +14099,17 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				//	WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
 				InterlockedExchange(&g_undertrackingRMenu, (LONG)1);
 
-				ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+				//ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+
+				//##########################################################################
+				//2024/02/24
+				//OFN_EXPLORERを指定してエクスプローラタイプのダイアログにすると
+				//現状のゲームパッド対応コードでは目的のGUIコントロールを取得することが出来なかった
+				//ゲームパッド対応はモーション遷移テストやキャラクターの移動などに限定して使用していく予定
+				//ゲームパッド対応時にもマウスは必要という方針に変更
+				//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
+				//##########################################################################
+				ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 
 				//###############################
 				//前回の場所を初期ディレクトリに
@@ -14133,7 +14154,16 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				//	WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
 				InterlockedExchange(&g_undertrackingRMenu, (LONG)1);
 
-				ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+				//ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+				//##########################################################################
+				//2024/02/24
+				//OFN_EXPLORERを指定してエクスプローラタイプのダイアログにすると
+				//現状のゲームパッド対応コードでは目的のGUIコントロールを取得することが出来なかった
+				//ゲームパッド対応はモーション遷移テストやキャラクターの移動などに限定して使用していく予定
+				//ゲームパッド対応時にもマウスは必要という方針に変更
+				//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
+				//##########################################################################
+				ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 
 
 				//###############################
@@ -14179,7 +14209,16 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				//	WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
 				InterlockedExchange(&g_undertrackingRMenu, (LONG)1);
 
-				ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+				//ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+				//##########################################################################
+				//2024/02/24
+				//OFN_EXPLORERを指定してエクスプローラタイプのダイアログにすると
+				//現状のゲームパッド対応コードでは目的のGUIコントロールを取得することが出来なかった
+				//ゲームパッド対応はモーション遷移テストやキャラクターの移動などに限定して使用していく予定
+				//ゲームパッド対応時にもマウスは必要という方針に変更
+				//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
+				//##########################################################################
+				ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 
 
 				//#########################################
@@ -14226,7 +14265,16 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				//	WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
 				InterlockedExchange(&g_undertrackingRMenu, (LONG)1);
 
-				ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+				//ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+				//##########################################################################
+				//2024/02/24
+				//OFN_EXPLORERを指定してエクスプローラタイプのダイアログにすると
+				//現状のゲームパッド対応コードでは目的のGUIコントロールを取得することが出来なかった
+				//ゲームパッド対応はモーション遷移テストやキャラクターの移動などに限定して使用していく予定
+				//ゲームパッド対応時にもマウスは必要という方針に変更
+				//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
+				//##########################################################################
+				ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 
 
 				//#################################
@@ -14274,7 +14322,16 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				//	WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
 				InterlockedExchange(&g_undertrackingRMenu, (LONG)1);
 
-				ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+				//ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+				//##########################################################################
+				//2024/02/24
+				//OFN_EXPLORERを指定してエクスプローラタイプのダイアログにすると
+				//現状のゲームパッド対応コードでは目的のGUIコントロールを取得することが出来なかった
+				//ゲームパッド対応はモーション遷移テストやキャラクターの移動などに限定して使用していく予定
+				//ゲームパッド対応時にもマウスは必要という方針に変更
+				//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
+				//##########################################################################
+				ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 
 
 				//#####################################
@@ -14513,8 +14570,18 @@ LRESULT CALLBACK OpenBvhDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	ofn.nMaxFileTitle = 0;
 	ofn.lpstrInitialDir = NULL;
 	ofn.lpstrTitle = L"GetFileNameDlg";
-	//ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ALLOWMULTISELECT;
-	ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	////ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ALLOWMULTISELECT;
+	//ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	//##########################################################################
+	//2024/02/24
+	//OFN_EXPLORERを指定してエクスプローラタイプのダイアログにすると
+	//現状のゲームパッド対応コードでは目的のGUIコントロールを取得することが出来なかった
+	//ゲームパッド対応はモーション遷移テストやキャラクターの移動などに限定して使用していく予定
+	//ゲームパッド対応時にもマウスは必要という方針に変更
+	//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
+	//##########################################################################
+	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+
 	ofn.nFileOffset = 0;
 	ofn.nFileExtension = 0;
 	ofn.lpstrDefExt = NULL;
@@ -14577,7 +14644,16 @@ LRESULT CALLBACK OpenBvhDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			//	WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
 			InterlockedExchange(&g_undertrackingRMenu, (LONG)1);
 
-			ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+			//ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+			//##########################################################################
+			//2024/02/24
+			//OFN_EXPLORERを指定してエクスプローラタイプのダイアログにすると
+			//現状のゲームパッド対応コードでは目的のGUIコントロールを取得することが出来なかった
+			//ゲームパッド対応はモーション遷移テストやキャラクターの移動などに限定して使用していく予定
+			//ゲームパッド対応時にもマウスは必要という方針に変更
+			//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
+			//##########################################################################
+			ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 
 			if (GetOpenFileNameW(&ofn) == IDOK) {
 				SetDlgItemText(hDlgWnd, IDC_FILEPATH, g_tmpmqopath);
@@ -15148,8 +15224,17 @@ LRESULT CALLBACK SaveGcoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	ofn.nMaxFileTitle = 0;
 	ofn.lpstrInitialDir = NULL;
 	ofn.lpstrTitle = L"GetFileNameDlg";
-	//ofn.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
-	ofn.Flags = OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	////ofn.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+	//ofn.Flags = OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	//##########################################################################
+	//2024/02/24
+	//OFN_EXPLORERを指定してエクスプローラタイプのダイアログにすると
+	//現状のゲームパッド対応コードでは目的のGUIコントロールを取得することが出来なかった
+	//ゲームパッド対応はモーション遷移テストやキャラクターの移動などに限定して使用していく予定
+	//ゲームパッド対応時にもマウスは必要という方針に変更
+	//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
+	//##########################################################################
+	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 	ofn.nFileOffset = 0;
 	ofn.nFileExtension = 0;
 	ofn.lpstrDefExt = L"gco";
@@ -15200,7 +15285,16 @@ LRESULT CALLBACK SaveGcoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			//	WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
 			InterlockedExchange(&g_undertrackingRMenu, (LONG)1);
 
-			ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+			//ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+			//##########################################################################
+			//2024/02/24
+			//OFN_EXPLORERを指定してエクスプローラタイプのダイアログにすると
+			//現状のゲームパッド対応コードでは目的のGUIコントロールを取得することが出来なかった
+			//ゲームパッド対応はモーション遷移テストやキャラクターの移動などに限定して使用していく予定
+			//ゲームパッド対応時にもマウスは必要という方針に変更
+			//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
+			//##########################################################################
+			ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 
 			if (GetOpenFileNameW(&ofn) == IDOK) {
 				buf[0] = 0;
@@ -15263,8 +15357,17 @@ LRESULT CALLBACK SaveImpDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	ofn.nMaxFileTitle = 0;
 	ofn.lpstrInitialDir = NULL;
 	ofn.lpstrTitle = L"GetFileNameDlg";
-	//ofn.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
-	ofn.Flags = OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	////ofn.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+	//ofn.Flags = OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	//##########################################################################
+	//2024/02/24
+	//OFN_EXPLORERを指定してエクスプローラタイプのダイアログにすると
+	//現状のゲームパッド対応コードでは目的のGUIコントロールを取得することが出来なかった
+	//ゲームパッド対応はモーション遷移テストやキャラクターの移動などに限定して使用していく予定
+	//ゲームパッド対応時にもマウスは必要という方針に変更
+	//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
+	//##########################################################################
+	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 	ofn.nFileOffset = 0;
 	ofn.nFileExtension = 0;
 	ofn.lpstrDefExt = L"imp";
@@ -15312,7 +15415,16 @@ LRESULT CALLBACK SaveImpDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			//	WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
 			InterlockedExchange(&g_undertrackingRMenu, (LONG)1);
 
-			ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+			//ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+			//##########################################################################
+			//2024/02/24
+			//OFN_EXPLORERを指定してエクスプローラタイプのダイアログにすると
+			//現状のゲームパッド対応コードでは目的のGUIコントロールを取得することが出来なかった
+			//ゲームパッド対応はモーション遷移テストやキャラクターの移動などに限定して使用していく予定
+			//ゲームパッド対応時にもマウスは必要という方針に変更
+			//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
+			//##########################################################################
+			ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 
 			if (GetOpenFileNameW(&ofn) == IDOK) {
 				buf[0] = 0;
@@ -15376,8 +15488,17 @@ LRESULT CALLBACK SaveREDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	ofn.nMaxFileTitle = 0;
 	ofn.lpstrInitialDir = NULL;
 	ofn.lpstrTitle = L"GetFileNameDlg";
-	//ofn.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
-	ofn.Flags = OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	////ofn.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+	//ofn.Flags = OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	//##########################################################################
+	//2024/02/24
+	//OFN_EXPLORERを指定してエクスプローラタイプのダイアログにすると
+	//現状のゲームパッド対応コードでは目的のGUIコントロールを取得することが出来なかった
+	//ゲームパッド対応はモーション遷移テストやキャラクターの移動などに限定して使用していく予定
+	//ゲームパッド対応時にもマウスは必要という方針に変更
+	//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
+	//##########################################################################
+	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 	ofn.nFileOffset = 0;
 	ofn.nFileExtension = 0;
 	ofn.lpstrDefExt = L"ref";
@@ -15426,7 +15547,16 @@ LRESULT CALLBACK SaveREDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			//	WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
 			InterlockedExchange(&g_undertrackingRMenu, (LONG)1);
 
-			ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+			//ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+			//##########################################################################
+			//2024/02/24
+			//OFN_EXPLORERを指定してエクスプローラタイプのダイアログにすると
+			//現状のゲームパッド対応コードでは目的のGUIコントロールを取得することが出来なかった
+			//ゲームパッド対応はモーション遷移テストやキャラクターの移動などに限定して使用していく予定
+			//ゲームパッド対応時にもマウスは必要という方針に変更
+			//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
+			//##########################################################################
+			ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 
 			if (GetOpenFileNameW(&ofn) == IDOK) {
 				buf[0] = 0;
@@ -15488,8 +15618,17 @@ LRESULT CALLBACK ExportXDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	ofn.nMaxFileTitle = 0;
 	ofn.lpstrInitialDir = NULL;
 	ofn.lpstrTitle = L"GetFileNameDlg";
-	//ofn.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
-	ofn.Flags = OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	////ofn.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+	//ofn.Flags = OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	//##########################################################################
+	//2024/02/24
+	//OFN_EXPLORERを指定してエクスプローラタイプのダイアログにすると
+	//現状のゲームパッド対応コードでは目的のGUIコントロールを取得することが出来なかった
+	//ゲームパッド対応はモーション遷移テストやキャラクターの移動などに限定して使用していく予定
+	//ゲームパッド対応時にもマウスは必要という方針に変更
+	//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
+	//##########################################################################
+	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 	ofn.nFileOffset = 0;
 	ofn.nFileExtension = 0;
 	ofn.lpstrDefExt = NULL;
@@ -15542,7 +15681,16 @@ LRESULT CALLBACK ExportXDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			//	WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
 			InterlockedExchange(&g_undertrackingRMenu, (LONG)1);
 
-			ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+			//ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+			//##########################################################################
+			//2024/02/24
+			//OFN_EXPLORERを指定してエクスプローラタイプのダイアログにすると
+			//現状のゲームパッド対応コードでは目的のGUIコントロールを取得することが出来なかった
+			//ゲームパッド対応はモーション遷移テストやキャラクターの移動などに限定して使用していく予定
+			//ゲームパッド対応時にもマウスは必要という方針に変更
+			//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
+			//##########################################################################
+			ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 
 			if (GetOpenFileNameW(&ofn) == IDOK) {
 				buf[0] = 0;
@@ -17571,8 +17719,17 @@ int SaveRetargetFile()
 	ofn.nMaxFileTitle = 0;
 	ofn.lpstrInitialDir = NULL;
 	ofn.lpstrTitle = L"GetFileNameDlg";
-	//ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ALLOWMULTISELECT;
-	ofn.Flags = OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	////ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ALLOWMULTISELECT;
+	//ofn.Flags = OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	//##########################################################################
+	//2024/02/24
+	//OFN_EXPLORERを指定してエクスプローラタイプのダイアログにすると
+	//現状のゲームパッド対応コードでは目的のGUIコントロールを取得することが出来なかった
+	//ゲームパッド対応はモーション遷移テストやキャラクターの移動などに限定して使用していく予定
+	//ゲームパッド対応時にもマウスは必要という方針に変更
+	//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
+	//##########################################################################
+	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 	ofn.nFileOffset = 0;
 	ofn.nFileExtension = 0;
 	ofn.lpstrDefExt = NULL;
