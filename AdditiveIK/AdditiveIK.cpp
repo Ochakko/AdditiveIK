@@ -107,7 +107,7 @@
 
 
 #include <Windows.h>
-
+#include <winuser.h>
 
 //gdiの中でbyteというstd::byteと被る名前を使うのでusing namespace stdよりも前でinclude
 #include <gdiplus.h>
@@ -2214,13 +2214,16 @@ static void InitTimelineSelection();
 static int CreateLightsWnd();
 static int Lights2Dlg(HWND hDlgWnd);
 static int Lights2DlgEach(HWND hDlgWnd, int lightindex,
-	int iddirx, int iddiry, int iddirz,
+	int iddirx, int iddiry,
 	int idenable, int idwithviewrot, int idslider, int idtextlight);
 static int Dlg2Lights(HWND hDlgWnd, int lightindex);
 static int Dlg2LightsEach(HWND hDlgWnd, int lightindex,
-	int iddirx, int iddiry, int iddirz,
+	int iddirx, int iddiry,
 	int idenable, int idwithviewrot, int idslider);
 static int CheckStr_float(const WCHAR* srcstr);
+static int ConvDir2PolarCoord(float srcdirx, float srcdiry, float srcdirz, float* dstxzdeg, float* dstydeg);
+static int ConvPolarCoord2Dir(float srcxzdeg, float srcydeg, float* dstdirx, float* dstdiry, float* dstdirz);
+
 
 static int CreateGUIDlgDispParams();
 static int CreateGUIDlgBrushes();
@@ -23508,8 +23511,59 @@ int GetAngleLimitEditInt(HWND hDlgWnd, int editresid, int* dstlimit)
 	}
 }
 
+int ConvDir2PolarCoord(float srcdirx, float srcdiry, float srcdirz, float* dstxzdeg, float* dstydeg)
+{
+	if (!dstxzdeg || !dstydeg) {
+		_ASSERT(0);
+		return 1;
+	}
+	ChaVector3 srcdir = ChaVector3(srcdirx, srcdiry, srcdirz);
+	ChaVector3 ndir;
+	ndir.SetZeroVec3();
+	ChaVector3Normalize(&ndir, &srcdir);
+
+	float degy = (float)(-asin(ndir.y) * PAI2DEG);//srcdiry
+	float degxz = (float)(-atan2(ndir.x, ndir.z) * PAI2DEG - 180.0f);//本来はX軸が０度だが、Z軸が０度になるように計算。左回りに。
+	float setdegxz = degxz;
+	if (degxz > 180.0f) {
+		setdegxz -= 360.0f;
+	}
+	else if (degxz < -180.0f) {
+		setdegxz += 360.0f;
+	}
+	*dstxzdeg = setdegxz;
+	*dstydeg = degy;
+
+	return 0;
+}
+int ConvPolarCoord2Dir(float srcxzdeg, float srcydeg, float* dstdirx, float* dstdiry, float* dstdirz)
+{
+	if (!dstdirx || !dstdiry || !dstdirz) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	float diry = (float)sin(srcydeg * DEG2PAI);
+	float dirycos = (float)cos(srcydeg * DEG2PAI);
+	float dirx = (float)sin(srcxzdeg * DEG2PAI) * dirycos;//本来はX軸が０度だが、Z軸が０度になるように計算。左回りに。
+	float dirz = (float)-cos(srcxzdeg * DEG2PAI) * dirycos;//本来はX軸が０度だが、Z軸が０度になるように計算。左回りに。
+
+	ChaVector3 calcdir = ChaVector3(dirx, diry, dirz);
+	ChaVector3 ndir;
+	ndir.SetZeroVec3();
+	ChaVector3Normalize(&ndir, &calcdir);
+
+	*dstdirx = ndir.x;
+	*dstdiry = ndir.y;
+	*dstdirz = ndir.z;
+
+	return 0;
+}
+
+
+
 int Lights2DlgEach(HWND hDlgWnd, int lightindex,
-	int iddirx, int iddiry, int iddirz,
+	int iddirx, int iddiry,
 	int idenable, int idwithviewrot, int idslider, int idtextlight)
 {
 	if (!hDlgWnd) {
@@ -23538,15 +23592,18 @@ int Lights2DlgEach(HWND hDlgWnd, int lightindex,
 	else {
 		CheckDlgButton(hDlgWnd, idwithviewrot, false);
 	}
+
+	float degxz = 0.0f;
+	float degy = 0.0f;
+	ConvDir2PolarCoord(g_lightDir[g_lightSlot][lightindex].x, g_lightDir[g_lightSlot][lightindex].y, g_lightDir[g_lightSlot][lightindex].z,
+		&degxz, &degy);
+
 	WCHAR strdirx[256] = { 0L };
-	swprintf_s(strdirx, 256, L"%.3f", g_lightDir[g_lightSlot][lightindex].x);
+	swprintf_s(strdirx, 256, L"%.4f", degxz);
 	SetDlgItemText(hDlgWnd, iddirx, strdirx);
 	WCHAR strdiry[256] = { 0L };
-	swprintf_s(strdiry, 256, L"%.3f", g_lightDir[g_lightSlot][lightindex].y);
+	swprintf_s(strdiry, 256, L"%.4f", degy);
 	SetDlgItemText(hDlgWnd, iddiry, strdiry);
-	WCHAR strdirz[256] = { 0L };
-	swprintf_s(strdirz, 256, L"%.3f", g_lightDir[g_lightSlot][lightindex].z);
-	SetDlgItemText(hDlgWnd, iddirz, strdirz);
 
 
 	int sliderpos = (int)(g_lightScale[g_lightSlot][lightindex] * 100.0f + 0.0001f);
@@ -23591,7 +23648,7 @@ int Lights2Dlg(HWND hDlgWnd)
 
 
 		int result1 = Lights2DlgEach(hDlgWnd, 0,
-			IDC_LIGHTDIRX1, IDC_LIGHTDIRY1, IDC_LIGHTDIRZ1,
+			IDC_LIGHTDIRX1, IDC_LIGHTDIRY1,
 			IDC_ENABLE1, IDC_WITHVIEWROT1, IDC_SLIDER1, IDC_TEXT_LIGHT1);
 		if (result1 != 0) {
 			_ASSERT(0);
@@ -23599,7 +23656,7 @@ int Lights2Dlg(HWND hDlgWnd)
 		}
 
 		int result2 = Lights2DlgEach(hDlgWnd, 1,
-			IDC_LIGHTDIRX2, IDC_LIGHTDIRY2, IDC_LIGHTDIRZ2,
+			IDC_LIGHTDIRX2, IDC_LIGHTDIRY2,
 			IDC_ENABLE2, IDC_WITHVIEWROT2, IDC_SLIDER2, IDC_TEXT_LIGHT2);
 		if (result2 != 0) {
 			_ASSERT(0);
@@ -23607,7 +23664,7 @@ int Lights2Dlg(HWND hDlgWnd)
 		}
 
 		int result3 = Lights2DlgEach(hDlgWnd, 2,
-			IDC_LIGHTDIRX3, IDC_LIGHTDIRY3, IDC_LIGHTDIRZ3,
+			IDC_LIGHTDIRX3, IDC_LIGHTDIRY3,
 			IDC_ENABLE3, IDC_WITHVIEWROT3, IDC_SLIDER3, IDC_TEXT_LIGHT3);
 		if (result3 != 0) {
 			_ASSERT(0);
@@ -23615,7 +23672,7 @@ int Lights2Dlg(HWND hDlgWnd)
 		}
 
 		int result4 = Lights2DlgEach(hDlgWnd, 3,
-			IDC_LIGHTDIRX4, IDC_LIGHTDIRY4, IDC_LIGHTDIRZ4,
+			IDC_LIGHTDIRX4, IDC_LIGHTDIRY4,
 			IDC_ENABLE4, IDC_WITHVIEWROT4, IDC_SLIDER4, IDC_TEXT_LIGHT4);
 		if (result4 != 0) {
 			_ASSERT(0);
@@ -23623,7 +23680,7 @@ int Lights2Dlg(HWND hDlgWnd)
 		}
 
 		int result5 = Lights2DlgEach(hDlgWnd, 4,
-			IDC_LIGHTDIRX5, IDC_LIGHTDIRY5, IDC_LIGHTDIRZ5,
+			IDC_LIGHTDIRX5, IDC_LIGHTDIRY5,
 			IDC_ENABLE5, IDC_WITHVIEWROT5, IDC_SLIDER5, IDC_TEXT_LIGHT5);
 		if (result5 != 0) {
 			_ASSERT(0);
@@ -23631,7 +23688,7 @@ int Lights2Dlg(HWND hDlgWnd)
 		}
 
 		int result6 = Lights2DlgEach(hDlgWnd, 5,
-			IDC_LIGHTDIRX6, IDC_LIGHTDIRY6, IDC_LIGHTDIRZ6,
+			IDC_LIGHTDIRX6, IDC_LIGHTDIRY6,
 			IDC_ENABLE6, IDC_WITHVIEWROT6, IDC_SLIDER6, IDC_TEXT_LIGHT6);
 		if (result6 != 0) {
 			_ASSERT(0);
@@ -23639,7 +23696,7 @@ int Lights2Dlg(HWND hDlgWnd)
 		}
 
 		int result7 = Lights2DlgEach(hDlgWnd, 6,
-			IDC_LIGHTDIRX7, IDC_LIGHTDIRY7, IDC_LIGHTDIRZ7,
+			IDC_LIGHTDIRX7, IDC_LIGHTDIRY7,
 			IDC_ENABLE7, IDC_WITHVIEWROT7, IDC_SLIDER7, IDC_TEXT_LIGHT7);
 		if (result7 != 0) {
 			_ASSERT(0);
@@ -23647,7 +23704,7 @@ int Lights2Dlg(HWND hDlgWnd)
 		}
 
 		int result8 = Lights2DlgEach(hDlgWnd, 7,
-			IDC_LIGHTDIRX8, IDC_LIGHTDIRY8, IDC_LIGHTDIRZ8,
+			IDC_LIGHTDIRX8, IDC_LIGHTDIRY8,
 			IDC_ENABLE8, IDC_WITHVIEWROT8, IDC_SLIDER8, IDC_TEXT_LIGHT8);
 		if (result8 != 0) {
 			_ASSERT(0);
@@ -23659,7 +23716,7 @@ int Lights2Dlg(HWND hDlgWnd)
 }
 
 int Dlg2LightsEach(HWND hDlgWnd, int lightindex,
-	int iddirx, int iddiry, int iddirz,
+	int iddirx, int iddiry,
 	int idenable, int idwithviewrot, int idslider)
 {
 	if (!hDlgWnd) {
@@ -23677,24 +23734,26 @@ int Dlg2LightsEach(HWND hDlgWnd, int lightindex,
 
 
 
-	WCHAR strdirx[256] = { 0L };
-	GetDlgItemText(hDlgWnd, iddirx, strdirx, 256);
-	WCHAR strdiry[256] = { 0L };
-	GetDlgItemText(hDlgWnd, iddiry, strdiry, 256);
-	WCHAR strdirz[256] = { 0L };
-	GetDlgItemText(hDlgWnd, iddirz, strdirz, 256);
-	int chkx, chky, chkz;
-	chkx = CheckStr_float(strdirx);
-	chky = CheckStr_float(strdiry);
-	chkz = CheckStr_float(strdirz);
-	if ((chkx != 0) || (chky != 0) || (chkz != 0)) {
+	WCHAR strdegxz[256] = { 0L };
+	GetDlgItemText(hDlgWnd, iddirx, strdegxz, 256);
+	WCHAR strdegy[256] = { 0L };
+	GetDlgItemText(hDlgWnd, iddiry, strdegy, 256);
+	int chkx, chky;
+	chkx = CheckStr_float(strdegxz);
+	chky = CheckStr_float(strdegy);
+	if ((chkx != 0) || (chky != 0)) {
 		_ASSERT(0);
 		return 2;//!!!!!! input error
 	}
-	float dirx, diry, dirz;
-	dirx = (float)_wtof(strdirx);
-	diry = (float)_wtof(strdiry);
-	dirz = (float)_wtof(strdirz);
+	float degxz, degy;
+	degxz = (float)_wtof(strdegxz);
+	degy = (float)_wtof(strdegy);
+
+	float dirx = 0.0f;
+	float diry = 0.0f;
+	float dirz = 0.0f;
+	ConvPolarCoord2Dir(degxz, degy, &dirx, &diry, &dirz);
+
 	g_lightDir[g_lightSlot][lightindex] = ChaVector3(dirx, diry, dirz);
 
 	UINT chkenable = IsDlgButtonChecked(hDlgWnd, idenable);
@@ -23752,7 +23811,7 @@ int Dlg2Lights(HWND hDlgWnd, int lightindex)
 		case 0:
 		{
 			int result = Dlg2LightsEach(hDlgWnd, lightindex,
-				IDC_LIGHTDIRX1, IDC_LIGHTDIRY1, IDC_LIGHTDIRZ1,
+				IDC_LIGHTDIRX1, IDC_LIGHTDIRY1,
 				IDC_ENABLE1, IDC_WITHVIEWROT1, IDC_SLIDER1);
 			if (result == 0) {
 				//そのまま
@@ -23777,7 +23836,7 @@ int Dlg2Lights(HWND hDlgWnd, int lightindex)
 		case 1:
 		{
 			int result = Dlg2LightsEach(hDlgWnd, lightindex,
-				IDC_LIGHTDIRX2, IDC_LIGHTDIRY2, IDC_LIGHTDIRZ2,
+				IDC_LIGHTDIRX2, IDC_LIGHTDIRY2,
 				IDC_ENABLE2, IDC_WITHVIEWROT2, IDC_SLIDER2);
 			if (result == 0) {
 				//そのまま
@@ -23802,7 +23861,7 @@ int Dlg2Lights(HWND hDlgWnd, int lightindex)
 		case 2:
 		{
 			int result = Dlg2LightsEach(hDlgWnd, lightindex,
-				IDC_LIGHTDIRX3, IDC_LIGHTDIRY3, IDC_LIGHTDIRZ3,
+				IDC_LIGHTDIRX3, IDC_LIGHTDIRY3,
 				IDC_ENABLE3, IDC_WITHVIEWROT3, IDC_SLIDER3);
 			if (result == 0) {
 				//そのまま
@@ -23827,7 +23886,7 @@ int Dlg2Lights(HWND hDlgWnd, int lightindex)
 		case 3:
 		{
 			int result = Dlg2LightsEach(hDlgWnd, lightindex,
-				IDC_LIGHTDIRX4, IDC_LIGHTDIRY4, IDC_LIGHTDIRZ4,
+				IDC_LIGHTDIRX4, IDC_LIGHTDIRY4,
 				IDC_ENABLE4, IDC_WITHVIEWROT4, IDC_SLIDER4);
 			if (result == 0) {
 				//そのまま
@@ -23852,7 +23911,7 @@ int Dlg2Lights(HWND hDlgWnd, int lightindex)
 		case 4:
 		{
 			int result = Dlg2LightsEach(hDlgWnd, lightindex,
-				IDC_LIGHTDIRX5, IDC_LIGHTDIRY5, IDC_LIGHTDIRZ5,
+				IDC_LIGHTDIRX5, IDC_LIGHTDIRY5,
 				IDC_ENABLE5, IDC_WITHVIEWROT5, IDC_SLIDER5);
 			if (result == 0) {
 				//そのまま
@@ -23877,7 +23936,7 @@ int Dlg2Lights(HWND hDlgWnd, int lightindex)
 		case 5:
 		{
 			int result = Dlg2LightsEach(hDlgWnd, lightindex,
-				IDC_LIGHTDIRX6, IDC_LIGHTDIRY6, IDC_LIGHTDIRZ6,
+				IDC_LIGHTDIRX6, IDC_LIGHTDIRY6,
 				IDC_ENABLE6, IDC_WITHVIEWROT6, IDC_SLIDER6);
 			if (result == 0) {
 				//そのまま
@@ -23902,7 +23961,7 @@ int Dlg2Lights(HWND hDlgWnd, int lightindex)
 		case 6:
 		{
 			int result = Dlg2LightsEach(hDlgWnd, lightindex,
-				IDC_LIGHTDIRX7, IDC_LIGHTDIRY7, IDC_LIGHTDIRZ7,
+				IDC_LIGHTDIRX7, IDC_LIGHTDIRY7,
 				IDC_ENABLE7, IDC_WITHVIEWROT7, IDC_SLIDER7);
 			if (result == 0) {
 				//そのまま
@@ -23927,7 +23986,7 @@ int Dlg2Lights(HWND hDlgWnd, int lightindex)
 		case 7:
 		{
 			int result = Dlg2LightsEach(hDlgWnd, lightindex,
-				IDC_LIGHTDIRX8, IDC_LIGHTDIRY8, IDC_LIGHTDIRZ8,
+				IDC_LIGHTDIRX8, IDC_LIGHTDIRY8,
 				IDC_ENABLE8, IDC_WITHVIEWROT8, IDC_SLIDER8);
 			if (result == 0) {
 				//そのまま
@@ -28123,8 +28182,33 @@ LRESULT CALLBACK LightsForEditDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 	}
 	break;
 
+	//case WM_PAINT:
+	//{
+	// 
+	// 
+	// ユーザがWindowsの設定機能でTheme(テーマ)を変えることでダイアログの背景色を適切に設定するしかないようだ
+	// 例えば　設定-->アクセシビリティ-->コントラストテーマ-->夜空-->適用する
+	//　　　　 アプリ起動時と終了時に　左Alt + 左Shift + PrintScreenでテーマをオンオフ
+	// 
+	// 
+	//	//GetThemeSysColor(
+	//	//	[in] HTHEME hTheme,
+	//	//	[in] int    iColorId
+	//	//);
+	//	//COLORREF bkcol = GetSysColor(COLOR_WINDOW);
+	//	COLORREF bkcol = RGB(0, 0, 0);
+	//	HBRUSH hBrush = CreateSolidBrush(bkcol);
+	//	HDC hdc = GetDC(hDlgWnd);
+	//	SetBkColor(hdc, bkcol);
+	//	//RECT rect;
+	//	//GetClientRect(hDlgWnd, &rect);
+	//	//FillRect(hdc, &rect, hBrush);
+	//	ReleaseDC(hDlgWnd, hdc);
+	//	//DeleteObject(hBrush);
 
-
+	//	DefWindowProc(hDlgWnd, msg, wp, lp);
+	//}
+	//break;
 	case WM_DRAWITEM://オーナードローコントロールの描画 : リソースでカラーバーボタンにオーナードロー属性を設定してある
 		{
 			int result1 = OwnerDrawLightColorBar(hDlgWnd, 0, IDC_COLORBAR11);
@@ -28362,7 +28446,7 @@ LRESULT CALLBACK LightsForEditDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 				SetLightDirection();
 			}
 			break;
-		case IDC_SETLIGHT1:
+		case IDC_SETLIGHT1://ApplyButton
 		{
 			int result1 = Dlg2Lights(hDlgWnd, 0);
 			int result2 = Dlg2Lights(hDlgWnd, 1);
