@@ -2,6 +2,17 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/02/25
+　ドキュメント追加
+　　　　Documsnts/TroubleShooting/0_HowToSetShadowParams.docx
+　
+　シャドウのシャドウカメラ位置の計算を大幅修正
+　　思った通りになっていなかったのを修正
+　　設定の仕方はDocumsnts/TroubleShooting/0_HowToSetShadowParams.docxに記述
+
+
+
+
 
 2024/02/24
 　ドキュメント追加

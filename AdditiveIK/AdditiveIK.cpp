@@ -796,6 +796,7 @@ static std::vector<HISTORYELEM> s_cptfilename;
 static CCopyHistoryDlg s_copyhistorydlg;
 static CDollyHistoryDlg s_dollyhistorydlg;
 
+static bool s_camtargetdisp = false;//カメラターゲット位置にマニピュレータを表示するかどうかのフラグ
 //float g_initcamdist = 10.0f;
 //static float g_projnear = 0.01f;
 //float g_initcamdist = 50.0f;
@@ -1807,6 +1808,7 @@ static void OnArrowKey();//DS関数でキーボードの矢印キーに対応
 static void CalcTotalBound();
 static int SetCameraModel();
 static void SetCamera3DFromEyePos();
+static int ChangeCameraDist(float newcamdist, bool changetargetflag);
 
 //--------------------------------------------------------------------------------------
 // Global variables
@@ -2085,7 +2087,7 @@ static bool DispTipBone();
 
 static int ClearLimitedWM(CModel* srcmodel);
 
-static float CalcSelectScale(CBone* curboneptr);
+static float CalcSelectScale();
 static double CalcRefFrame();
 static void ChangeCurDirFromMameMediaToTest();
 
@@ -2507,6 +2509,7 @@ static int SetSpUndoParams();
 static int SetSpMouseCenterParams();
 static int PickSpAxis(POINT srcpos);
 static int PickSpUndo(POINT srcpos);
+static int PickBone(UIPICKINFO* ppickinfo);
 
 static int SetSpGUISWParams();
 static int PickSpGUISW(POINT srcpos);
@@ -3724,6 +3727,7 @@ void InitApp()
 	s_camtargetOnceflag = 0;
 
 	{
+		s_camtargetdisp = false;
 		s_twistcameraFlag = false;
 		s_rbuttonSelectFlag = false;
 		s_cameraframe = 0.0;
@@ -5925,7 +5929,7 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 
 			OnRenderBoneMark(re, rc);
 
-			if (s_dispselect && s_select) {
+			if ((s_dispselect || s_camtargetdisp) && s_select) {
 				OnRenderSelect(re, rc);
 			}
 
@@ -7299,7 +7303,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 				if ((pickflag == false) && (s_oprigflag == 0)) {
 					if (g_shiftkey == false) {
-						CallF(s_model->PickBone(&s_pickinfo), return 1);
+						CallF(PickBone(&s_pickinfo), return 1);
 					}
 					if (s_pickinfo.pickobjno >= 0) {
 						s_curboneno = s_pickinfo.pickobjno;//!!!!!!!
@@ -7440,8 +7444,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		////#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));//!!!!!!!!!!
 		//////#replacing comment out#g_Camera->SetViewParamsWithUpVec(neweye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));//!!!!!!!!!!
 		ChaVector3 diffv = g_camEye - g_camtargetpos;
-		g_camdist = (float)ChaVector3LengthDbl(&diffv);
-
+		float newcamdist = (float)ChaVector3LengthDbl(&diffv);
+		ChangeCameraDist(newcamdist, false);
 
 		//if (s_model && (s_pickinfo.pickobjno >= 0) && (g_previewFlag == 5)){
 		if (s_model && (g_previewFlag == 5)) {
@@ -12835,7 +12839,7 @@ int refreshModelPanel()
 //}
 
 
-float CalcSelectScale(CBone* curboneptr)
+float CalcSelectScale()
 {
 	if (!s_model) {
 		return 0.0f;
@@ -12896,84 +12900,110 @@ int RenderSelectMark(myRenderer::RenderingEngine* re, RenderContext* pRenderCont
 		return 1;
 	}
 
-	if (s_curboneno < 0) {
-		return 0;
-	}
 	if (!s_model) {
 		return 0;
 	}
-	MOTINFO* curmi = s_model->GetCurMotInfo();
-	if (!curmi) {
-		return 0;
-	}
 
-	CBone* curboneptr = s_model->GetBoneByID(s_curboneno);
-	if (curboneptr) {
-		if (s_onragdollik == 0) {
-			int multworld = 1;
-			//s_selm = curboneptr->CalcManipulatorMatrix(1, multworld, curmi->motid, curmi->curframe);
-			int calccapsuleflag = 0;
-			//s_selm_posture = s_selm;
-			//s_selm_posture = curboneptr->CalcManipulatorPostureMatrix(calccapsuleflag, 0, multworld, 0);
-
-			if (curboneptr && curboneptr->GetParent(false) && curboneptr->GetParent(false)->IsSkeleton()) {
-				curboneptr->GetParent(false)->CalcAxisMatX_Manipulator(g_limitdegflag, g_boneaxis, 0, curboneptr, &s_selm, 0);
-			}
-			else {
-				s_selm.SetIdentity();
-			}
-			s_selm_posture = s_selm;
+	if (s_camtargetdisp == false) {
+		if (s_curboneno < 0) {
+			return 0;
 		}
 
+		MOTINFO* curmi = s_model->GetCurMotInfo();
+		if (!curmi) {
+			return 0;
+		}
 
-		CalcSelectScale(curboneptr);//s_selectscaleにセット
+		CBone* curboneptr = s_model->GetBoneByID(s_curboneno);
+		if (curboneptr) {
+			if (s_onragdollik == 0) {
+				int multworld = 1;
+				//s_selm = curboneptr->CalcManipulatorMatrix(1, multworld, curmi->motid, curmi->curframe);
+				int calccapsuleflag = 0;
+				//s_selm_posture = s_selm;
+				//s_selm_posture = curboneptr->CalcManipulatorPostureMatrix(calccapsuleflag, 0, multworld, 0);
+
+				if (curboneptr && curboneptr->GetParent(false) && curboneptr->GetParent(false)->IsSkeleton()) {
+					curboneptr->GetParent(false)->CalcAxisMatX_Manipulator(g_limitdegflag, g_boneaxis, 0, curboneptr, &s_selm, 0);
+				}
+				else {
+					s_selm.SetIdentity();
+				}
+				s_selm_posture = s_selm;
+			}
+
+
+			CalcSelectScale();//s_selectscaleにセット
+
+			ChaMatrix scalemat;
+			ChaMatrixIdentity(&scalemat);
+			ChaMatrixScaling(&scalemat, s_selectscale, s_selectscale, s_selectscale);
+
+			ChaVector3 bonepos = curboneptr->GetWorldPos(g_limitdegflag, curmi->motid, curmi->curframe);
+
+			//s_selectmat = scalemat * s_selm;
+			//s_selectmat = s_selm;
+			s_selectmat = s_selm * s_model->GetWorldMat();//2023/03/34
+			ChaMatrixNormalizeRot(&s_selectmat);
+			s_selectmat = scalemat * s_selectmat;
+
+			s_selectmat.SetTranslation(bonepos);
+
+			//s_selectmat_posture = scalemat * s_selm_posture;
+			s_selectmat_posture = s_selm_posture;
+			ChaMatrixNormalizeRot(&s_selectmat_posture);
+			s_selectmat_posture = scalemat * s_selectmat_posture;
+
+			s_selectmat_posture.SetTranslation(bonepos);
+
+			if (renderflag) {
+				//g_hmVP->SetMatrix(s_matVP.GetDataPtr());
+
+				//g_hmWorld->SetMatrix(s_selectmat.GetDataPtr());
+				RenderSelectFunc(re);
+
+
+				//g_hmWorld->SetMatrix(s_selectmat_posture.GetDataPtr());
+				if (s_oprigflag == 0) {
+					RenderSelectPostureFunc(re);
+				}
+				else {
+					if (curboneptr == s_customrigbone) {
+					}
+					else {
+						RenderSelectPostureFunc(re);
+					}
+				}
+
+
+				//s_pdev->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
+				//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
+
+			}
+		}
+	}
+	else {
+		//#############################################
+		//2024/02/25
+		//ShadowメニューのCamDistチェックボックスオンのとき
+		//cameraTarget位置にSelectPostureを表示
+		//#############################################
+
+		CalcSelectScale();//s_selectscaleにセット
 
 		ChaMatrix scalemat;
 		ChaMatrixIdentity(&scalemat);
-		ChaMatrixScaling(&scalemat, s_selectscale, s_selectscale, s_selectscale);
+		float adjustmult = 0.5f;
+		ChaMatrixScaling(&scalemat, s_selectscale * adjustmult, s_selectscale * adjustmult, s_selectscale * adjustmult);
 
-		ChaVector3 bonepos = curboneptr->GetWorldPos(g_limitdegflag, curmi->motid, curmi->curframe);
+		s_selm = scalemat;
+		s_selm.SetTranslation(g_camtargetpos);
+		s_selectmat = s_selm;
+		s_selectmat_posture = s_selm;
 
-		//s_selectmat = scalemat * s_selm;
-		//s_selectmat = s_selm;
-		s_selectmat = s_selm * s_model->GetWorldMat();//2023/03/34
-		ChaMatrixNormalizeRot(&s_selectmat);
-		s_selectmat = scalemat * s_selectmat;
-
-		s_selectmat.SetTranslation(bonepos);
-
-		//s_selectmat_posture = scalemat * s_selm_posture;
-		s_selectmat_posture = s_selm_posture;
-		ChaMatrixNormalizeRot(&s_selectmat_posture);
-		s_selectmat_posture = scalemat * s_selectmat_posture;
-
-		s_selectmat_posture.SetTranslation(bonepos);
-
-		if (renderflag) {
-			//g_hmVP->SetMatrix(s_matVP.GetDataPtr());
-
-			//g_hmWorld->SetMatrix(s_selectmat.GetDataPtr());
-			RenderSelectFunc(re);
-
-
-			//g_hmWorld->SetMatrix(s_selectmat_posture.GetDataPtr());
-			if (s_oprigflag == 0) {
-				RenderSelectPostureFunc(re);
-			}
-			else {
-				if (curboneptr == s_customrigbone) {
-				}
-				else {
-					RenderSelectPostureFunc(re);
-				}
-			}
-
-
-			//s_pdev->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
-			//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
-
-		}
+		RenderSelectFunc(re);
 	}
+
 
 	return 0;
 }
@@ -20517,7 +20547,10 @@ int PickSpAxis(POINT srcpos)
 		//preview中は　押さない
 		return 0;
 	}
-
+	if (s_camtargetdisp) {
+		//カメラターゲット位置にマニピュレータ表示時にはpickしない
+		return 0;
+	}
 
 	int startx = s_spaxis[0].dispcenter.x - (int)s_spsize / 2;
 	int endx = startx + (int)s_spsize;
@@ -21742,13 +21775,21 @@ int SetSelectState()
 	}
 
 
-
-	if (s_ikkind == 0) {
-		s_select->SetDispFlag("ringX", 1);
-		s_select->SetDispFlag("ringY", 1);
-		s_select->SetDispFlag("ringZ", 1);
+	if (s_camtargetdisp == false) {
+		if (s_ikkind == 0) {
+			s_select->SetDispFlag("ringX", 1);
+			s_select->SetDispFlag("ringY", 1);
+			s_select->SetDispFlag("ringZ", 1);
+		}
+		else if ((s_ikkind == 1) || (s_ikkind == 2)) {
+			s_select->SetDispFlag("ringX", 0);
+			s_select->SetDispFlag("ringY", 0);
+			s_select->SetDispFlag("ringZ", 0);
+		}
 	}
-	else if ((s_ikkind == 1) || (s_ikkind == 2)) {
+	else {
+		//2024/02/25
+		//ShadowメニューのCamDistチェックボックスオンのとき
 		s_select->SetDispFlag("ringX", 0);
 		s_select->SetDispFlag("ringY", 0);
 		s_select->SetDispFlag("ringZ", 0);
@@ -21791,7 +21832,7 @@ int SetSelectState()
 	else {
 
 		if (g_shiftkey == false) {
-			CallF(s_model->PickBone(&pickinfo), return 1);
+			CallF(PickBone(&pickinfo), return 1);
 		}
 
 		if (pickinfo.pickobjno >= 0) {
@@ -24245,6 +24286,14 @@ int ShadowParams2Dlg(HWND hDlgWnd)
 		CheckDlgButton(hDlgWnd, IDC_CHECK_ENABLESHADOW, false);
 	}
 
+	if (s_camtargetdisp == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_CAMDIST, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_CAMDIST, false);
+	}
+
+
 	//########
 	//EditBox
 	//########
@@ -24276,13 +24325,25 @@ int ShadowParams2Dlg(HWND hDlgWnd)
 	sliderpos = (int)(g_shadowmap_bias[g_shadowmap_slotno] * 10000.0f);
 	//SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)10);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);//2024/01/04 0も可
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)300);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)600);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BIAS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
 	sliderpos = (int)(g_shadowmap_projscale[g_shadowmap_slotno] * 10.0f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PROJSCALE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)1);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PROJSCALE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PROJSCALE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = Float2Int(g_camdist);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)1);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)9999);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+	if (s_camtargetflag != 0) {
+		//ジョイントを注視するフラグが立っている場合にはスライダーを動かせないように
+		EnableWindow(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), FALSE);
+	}
+	else {
+		EnableWindow(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), TRUE);
+	}
 
 
 	//#####
@@ -24299,6 +24360,9 @@ int ShadowParams2Dlg(HWND hDlgWnd)
 
 	swprintf_s(strdlg, 256, L"SceneMult:%.1f", g_shadowmap_projscale[g_shadowmap_slotno]);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_PROJSCALE, strdlg);
+
+	swprintf_s(strdlg, 256, L"CamDist:%.1f", g_camdist);
+	SetDlgItemText(hDlgWnd, IDC_CHECK_CAMDIST, strdlg);
 
 	//#######
 	//Button
@@ -25544,6 +25608,18 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 			}
 		}
 		break;
+		case IDC_CHECK_CAMDIST:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_CAMDIST);
+			if (ischecked == BST_CHECKED) {
+				s_camtargetdisp = true;
+			}
+			else {
+				s_camtargetdisp = false;
+			}
+		}
+		break;
 
 
 		case IDC_SHADOWDIR_1:
@@ -25717,6 +25793,17 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 			swprintf_s(strdlg, 256, L"SceneMult:%.1f", g_shadowmap_projscale[g_shadowmap_slotno]);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_PROJSCALE, strdlg);
 			SetCamera3DFromEyePos();
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), TBM_GETPOS, 0, 0);
+			float newcamdist = (float)cursliderpos;
+
+			ChangeCameraDist(newcamdist, true);
+
+			//IDC_CHECK_CAMDISTのテキストは　ChangeCameraDist()内で変更
+			//WCHAR strdlg[256] = { 0L };
+			//swprintf_s(strdlg, 256, L"CamDist:%.1f", g_camdist);
+			//SetDlgItemText(hDlgWnd, IDC_CHECK_CAMDIST, strdlg);
 		}
 		break;
 
@@ -38842,17 +38929,25 @@ int OnRenderSelect(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 	}
 
 
-	if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-		if (s_select && (s_curboneno >= 0) && (g_previewFlag == 0) && (s_model && s_model->GetModelDisp()) && (g_bonemarkflag != 0)) {//underchecking
-			//SetSelectCol();
-			SetSelectState();
-			RenderSelectMark(re, pRenderContext, 1);
+	if (s_camtargetdisp == false) {
+		if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
+			if (s_select && (s_curboneno >= 0) && (g_previewFlag == 0) && (s_model && s_model->GetModelDisp()) && (g_bonemarkflag != 0)) {//underchecking
+				//SetSelectCol();
+				SetSelectState();
+				RenderSelectMark(re, pRenderContext, 1);
+			}
+		}
+		//else if ((g_previewFlag == 5) && (s_oprigflag == 1)){
+		else if (g_previewFlag == 5) {
+			if (s_select && (s_curboneno >= 0) && (s_model && s_model->GetModelDisp())) {
+				//SetSelectCol();
+				SetSelectState();
+				RenderSelectMark(re, pRenderContext, 1);
+			}
 		}
 	}
-	//else if ((g_previewFlag == 5) && (s_oprigflag == 1)){
-	else if (g_previewFlag == 5) {
-		if (s_select && (s_curboneno >= 0) && (s_model && s_model->GetModelDisp())) {
-			//SetSelectCol();
+	else {
+		if (g_previewFlag == 0) {
 			SetSelectState();
 			RenderSelectMark(re, pRenderContext, 1);
 		}
@@ -40791,7 +40886,7 @@ int BoneRClick(int srcboneno)
 		s_curboneno = -1;//2023/08/28 ジョイント以外を右クリックした場合には　メニューを出さない
 
 		if (s_oprigflag == 0) {
-			CallF(s_model->PickBone(&s_pickinfo), return pickflag);
+			CallF(PickBone(&s_pickinfo), return pickflag);
 			if (s_pickinfo.pickobjno >= 0) {
 				s_curboneno = s_pickinfo.pickobjno;
 				pickflag = 1;
@@ -42890,40 +42985,10 @@ int OnMouseMoveFunc()
 		}
 		deltadist *= g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
 
-		float savecamdist = g_camdist;
+		float newcamdist = g_camdist + deltadist;
 
-		g_camdist += deltadist;
-		//if (g_camdist < 0.0001f) {
-		//	g_camdist = 0.0001f;
-		//}
-		if (g_camdist >= 0.01f) {//2022/10/29 0.0001では近づきすぎたときに固まるので0.01に変更
-			ChaVector3 camvec = g_camEye - g_camtargetpos;
-			ChaVector3Normalize(&camvec, &camvec);
-			g_befcamEye = g_camEye;
-			g_camEye = g_camtargetpos + camvec * g_camdist;
-		}
-		else {
+		ChangeCameraDist(newcamdist, false);
 
-			//2023/03/23
-			//カメラ位置がターゲットに近づきすぎた場合　止めないで　ターゲット位置を視線方向に延長するように
-
-			ChaVector3 camvec2 = g_camtargetpos - g_camEye;
-			ChaVector3Normalize(&camvec2, &camvec2);
-			g_camtargetpos = g_camEye + camvec2 * savecamdist * 3.0f;
-			g_befcamEye = g_camEye;
-			g_camEye = g_camtargetpos - camvec2 * savecamdist * 3.0f;
-
-			g_camdist = savecamdist * 3.0f;
-		}
-
-		//!!!!!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-		//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-
-		//#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-		//#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-		//#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
-
-		SetCamera3DFromEyePos();
 	}
 
 	s_doingflag = false;
@@ -52311,7 +52376,7 @@ ChaMatrix CalcRigMat(CUSTOMRIG* currig, CBone* curbone, int curmotid, double cur
 	//selm.data[MATI_42] = 0.0f;
 	//selm.data[MATI_43] = 0.0f;
 
-	CalcSelectScale(curbone);//s_selectscaleにセット
+	CalcSelectScale();//s_selectscaleにセット
 
 	ChaMatrix scalemat;
 	ChaMatrixIdentity(&scalemat);
@@ -52412,6 +52477,11 @@ int PickRigBone(UIPICKINFO* ppickinfo, bool forrigtip, int* dstrigno)//default:f
 		//プレビュー中はマウスでは選択しない
 		return -1;
 	}
+	if (s_camtargetdisp) {
+		//カメラターゲット位置にマニピュレータ表示時にはpickしない
+		return -1;
+	}
+
 
 	ResetRigModelNum();
 	MOTINFO* curmi = s_model->GetCurMotInfo();
@@ -52561,7 +52631,11 @@ int PickManipulator(UIPICKINFO* ppickinfo, bool pickring)
 		return -1;
 	}
 	if (!s_select) {
-		return 0;
+		return -1;
+	}
+	if (s_camtargetdisp) {
+		//カメラターゲット位置にマニピュレータ表示時にはpickしない
+		return -1;
 	}
 
 	if (s_dispselect) {
@@ -53935,7 +54009,7 @@ bool DispTipBone()
 	bool dispfontfortip = false;
 
 	if (g_shiftkey == false) {
-		s_model->PickBone(&tmppickinfo);
+		PickBone(&tmppickinfo);
 	}
 	if (tmppickinfo.pickobjno >= 0) {
 		int curboneno = tmppickinfo.pickobjno;
@@ -54788,6 +54862,60 @@ void InitRootSignature(RootSignature& rs)
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP);
 }
 
+int ChangeCameraDist(float newcamdist, bool changetargetflag)
+{
+	float savecamdist = g_camdist;
+	g_camdist = newcamdist;
+
+	if (g_camdist >= 0.01f) {//2022/10/29 0.0001では近づきすぎたときに固まるので0.01に変更
+		ChaVector3 camvec = g_camEye - g_camtargetpos;
+		ChaVector3Normalize(&camvec, &camvec);
+
+		if (changetargetflag == false) {//2024/02/25
+			g_befcamEye = g_camEye;
+			g_camEye = g_camtargetpos + camvec * g_camdist;
+		}
+		else {
+			g_befcamtargetpos = g_camtargetpos;
+			g_camtargetpos = g_camEye - camvec * g_camdist;
+		}
+	}
+	else {
+
+		//2023/03/23
+		//カメラ位置がターゲットに近づきすぎた場合　止めないで　ターゲット位置を視線方向に延長するように
+
+		ChaVector3 camvec2 = g_camtargetpos - g_camEye;
+		ChaVector3Normalize(&camvec2, &camvec2);
+
+		g_befcamEye = g_camEye;
+		g_befcamtargetpos = g_camtargetpos;
+
+		if (changetargetflag == false) {//2024/02/25
+			g_camtargetpos = g_camEye + camvec2 * savecamdist * 3.0f;
+			g_camEye = g_camtargetpos - camvec2 * savecamdist * 3.0f;
+		}
+		else {
+			g_camEye = g_camtargetpos + camvec2 * savecamdist * 3.0f;
+			g_camtargetpos = g_camEye - camvec2 * savecamdist * 3.0f;
+		}
+
+		g_camdist = savecamdist * 3.0f;
+	}
+
+	SetCamera3DFromEyePos();
+
+
+	if (s_shadowparamsdlg && s_spdispsw[SPDISPSW_SHADOWPARAMS].state) {
+		WCHAR strdlg[256] = { 0L };
+		swprintf_s(strdlg, 256, L"CamDist:%.1f", g_camdist);
+		SetDlgItemText(s_shadowparamsdlg, IDC_CHECK_CAMDIST, strdlg);
+	}
+
+
+	return 0;
+}
+
 void SetCamera3DFromEyePos()
 {
 	g_camera3D->SetNear(g_projnear);
@@ -54829,54 +54957,35 @@ void SetCamera3DFromEyePos()
 			g_shadowmap_slotno = 0;
 		}
 
-		ChaVector3 ldir;
+		ChaVector3 ldirxz;//2024/02/25 lightの下向き加減とshadowcameraの下向き加減は別に設定するようにしてある
 		if ((g_shadowmap_lightdir[g_shadowmap_slotno] >= 1) && 
 			(g_shadowmap_lightdir[g_shadowmap_slotno] <= 8)) {
-			ChaVector3 dirz = ChaVector3(0.0f, 0.0f, 1.0f);
-			ChaVector3 lightdir0, nlightdir0;
-			lightdir0 = g_camEye - g_camtargetpos;
-			ChaVector3Normalize(&nlightdir0, &lightdir0);
-			bool rot180flag = false;
-			float chkdot180 = ChaVector3Dot(&dirz, &nlightdir0);
-			if (chkdot180 <= -0.9999f) {
-				rot180flag = true;
-			}
-			else {
-				rot180flag = false;
-			}
-			CQuaternion camrotq;
-			camrotq.RotationArc(dirz, nlightdir0);
-
-
-			ChaVector3 nlightdir;
-			ChaVector3Normalize(&nlightdir, &(g_lightDir[g_lightSlot][g_shadowmap_lightdir[g_shadowmap_slotno] - 1]));//2024/01/04 -1
-			ChaVector3 rotdir;
-			if (g_lightDirWithView[g_lightSlot]) {//2024/01/04
-				if (rot180flag == false) {
-					camrotq.Rotate(&rotdir, nlightdir);
-				}
-				else {
-					rotdir = ChaVector3(-nlightdir.x, nlightdir.y, -nlightdir.z);
-				}
-			}
-			else {
-				rotdir = ChaVector3(-nlightdir.x, nlightdir.y, -nlightdir.z);
-			}
-			ChaVector3Normalize(&ldir, &rotdir);
+			ChaVector4 lightdir;
+			lightdir = g_lightdirforall[g_shadowmap_lightdir[g_shadowmap_slotno] - 1];
+			ldirxz = ChaVector3(lightdir.x, 0.0f, lightdir.z);
 		}
 		else {
-			ChaVector3Normalize(&ldir, &(g_lightDir[g_lightSlot][0]));
+			ChaVector4 lightdir;
+			lightdir = g_lightdirforall[0];
+			ldirxz = ChaVector3(lightdir.x, 0.0f, lightdir.z);
 		}
-	
+
 
 		ChaVector3 targetshadow;
 		targetshadow = g_camtargetpos;
 
 		ChaVector3 lpos;
 		//lpos = g_camEye + ldir * (g_shadowmap_distscale * g_shadowmap_projscale);
-		lpos = g_camtargetpos - ldir * (ChaVector3LengthDbl(&camdiff) * 
+		//lpos = g_camtargetpos - ldir * (ChaVector3LengthDbl(&camdiff) *
+		
+		//2024/02/25 lightindex == 0のときldirはtargetからeyeposへの向き よってshadowcameraposはtarget+ldirxz*scale
+		lpos = g_camtargetpos + ldirxz * (ChaVector3LengthDbl(&camdiff) *
 			g_shadowmap_distscale[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno]);
-		lpos.y = targetshadow.y + g_shadowmap_plusup[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
+		//lpos.y = targetshadow.y + g_shadowmap_plusup[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
+
+		//2024/02/25
+		//shadowcameraのyはeyeposの上方
+		lpos.y = g_camEye.y + g_shadowmap_plusup[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
 
 		g_cameraShadow->SetPosition(Vector3(lpos.x, lpos.y, lpos.z));
 		g_cameraShadow->SetTarget(Vector3(targetshadow.x, targetshadow.y, targetshadow.z));
@@ -56523,3 +56632,22 @@ void InitPickInfo(UIPICKINFO* ppickinfo)
 		_ASSERT(0);
 	}
 }
+
+int PickBone(UIPICKINFO* ppickinfo)
+{
+	if (!s_model) {
+		return 0;
+	}
+	if (!ppickinfo) {
+		_ASSERT(0);
+		return 0;
+	}
+	if (s_camtargetdisp) {
+		//カメラターゲット位置にマニピュレータ表示時にはpickしない
+		return 0;
+	}
+
+	return s_model->PickBone(ppickinfo);
+}
+
+
