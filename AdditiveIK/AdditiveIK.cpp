@@ -797,6 +797,7 @@ static CCopyHistoryDlg s_copyhistorydlg;
 static CDollyHistoryDlg s_dollyhistorydlg;
 
 static bool s_camtargetdisp = false;//カメラターゲット位置にマニピュレータを表示するかどうかのフラグ
+static bool s_moveeyepos = false;//s_sidemenu_camdistSlider動作の種類　true:eyeposが動く、false:targetposが動く
 //float g_initcamdist = 10.0f;
 //static float g_projnear = 0.01f;
 //float g_initcamdist = 50.0f;
@@ -928,7 +929,7 @@ static int s_infowinheight = s_2ndposy - s_mainheight - MAINMENUAIMBARH;
 
 static int s_sidemenuwidth = 450;
 //static int s_sidemenuheight = MAINMENUAIMBARH;
-static int s_sidemenuheight = MAINMENUAIMBARH + 12;
+static int s_sidemenuheight = MAINMENUAIMBARH + 16;
 
 static int s_sidewidth = s_sidemenuwidth;
 static int s_sideheight = s_totalwndheight - MAINMENUAIMBARH - s_sidemenuheight - 28;
@@ -1032,6 +1033,7 @@ static OWP_Separator* s_sidemenusp1 = 0;
 static OWP_Separator* s_sidemenusp2 = 0;
 static OWP_CheckBoxA* s_sidemenu_sellock = 0;
 static OWP_CheckBoxA* s_sidemenu_targetdisp = 0;
+static OWP_CheckBoxA* s_sidemenu_moveeyepos = 0;
 static OWP_Slider* s_sidemenu_camdistSlider = 0;
 static bool s_camdistsliderflag = false;
 static float s_camdistsliderval = g_camdist;
@@ -1133,7 +1135,7 @@ static OWP_Button* s_dumpingDeeperB = 0;
 static OWP_Button* s_gDeeperB = 0;
 static OWP_Button* s_btforceDeeperB = 0;
 static OWP_Button* s_coliidDeeperB = 0;
-
+static OWP_Separator* s_coliseparator = 0;
 
 
 
@@ -1818,7 +1820,7 @@ static void OnArrowKey();//DS関数でキーボードの矢印キーに対応
 static void CalcTotalBound();
 static int SetCameraModel();
 static void SetCamera3DFromEyePos();
-static int ChangeCameraDist(float newcamdist, bool changetargetflag);
+static int ChangeCameraDist(float newcamdist, bool calledbyslider);
 
 //--------------------------------------------------------------------------------------
 // Global variables
@@ -3332,7 +3334,7 @@ int CheckResolution()
 					s_toolheight = s_totalwndheight - s_2ndposy - (MAINMENUAIMBARH + 18) * 2 + MAINMENUAIMBARH + 8;
 
 					s_sidemenuwidth = 600;
-					s_sidemenuheight = MAINMENUAIMBARH + 12;
+					s_sidemenuheight = MAINMENUAIMBARH + 16;
 					s_sidewidth = s_sidemenuwidth;
 					s_sideheight = s_totalwndheight - s_sidemenuheight - 28 * 2 - 4;
 
@@ -3422,7 +3424,7 @@ int CheckResolution()
 		s_infowinheight = (s_2ndposy - s_mainheight - MAINMENUAIMBARH);
 
 		s_sidemenuwidth = 450 + 64 - 4;
-		s_sidemenuheight = MAINMENUAIMBARH + 12;
+		s_sidemenuheight = MAINMENUAIMBARH + 16;
 
 		s_sidewidth = s_sidemenuwidth;
 		s_sideheight = s_totalwndheight - MAINMENUAIMBARH - s_sidemenuheight - 28;
@@ -3738,6 +3740,7 @@ void InitApp()
 
 	{
 		s_camtargetdisp = false;
+		s_moveeyepos = false;
 		s_twistcameraFlag = false;
 		s_rbuttonSelectFlag = false;
 		s_cameraframe = 0.0;
@@ -4370,6 +4373,7 @@ void InitApp()
 	s_sidemenusp2 = 0;
 	s_sidemenu_sellock = 0;
 	s_sidemenu_targetdisp = 0;
+	s_sidemenu_moveeyepos = 0;
 	s_sidemenu_camdistSlider = 0;
 	s_camdistsliderflag = false;
 	s_camdistsliderval = g_camdist;
@@ -5151,6 +5155,10 @@ void OnDestroyDevice()
 	if (s_sidemenu_targetdisp) {
 		delete s_sidemenu_targetdisp;
 		s_sidemenu_targetdisp = 0;
+	}
+	if (s_sidemenu_moveeyepos) {
+		delete s_sidemenu_moveeyepos;
+		s_sidemenu_moveeyepos = 0;
 	}
 	if (s_sidemenu_camdistSlider) {
 		delete s_sidemenu_camdistSlider;
@@ -14310,7 +14318,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.9\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.A\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -34635,6 +34643,11 @@ int CreateSideMenuWnd()
 			_ASSERT(0);
 			return 1;
 		}
+		s_sidemenu_moveeyepos = new OWP_CheckBoxA(L"MoveEyePos", s_moveeyepos);
+		if (!s_sidemenu_moveeyepos) {
+			_ASSERT(0);
+			return 1;
+		}
 		g_camdist = (float)fmin(g_camdist, 1000.0);
 		g_camdist = (float)fmax(g_camdist, 1.0);
 		s_sidemenu_camdistSlider = new OWP_Slider(g_camdist, 1000.0, 1.0);
@@ -34651,6 +34664,7 @@ int CreateSideMenuWnd()
 		s_sidemenusp1->addParts2(*s_sidemenu_camdistSlider);
 		s_sidemenusp2->addParts1(*s_sidemenu_sellock);
 		s_sidemenusp2->addParts2(*s_sidemenu_targetdisp);
+		s_sidemenusp2->addParts2(*s_sidemenu_moveeyepos);//２段目 targetdispの下
 
 
 		s_sidemenuWnd->setCloseListener([]() {
@@ -34684,6 +34698,17 @@ int CreateSideMenuWnd()
 				}
 				else {
 					s_camtargetdisp = false;
+				}
+			});
+		}
+		if (s_sidemenu_moveeyepos) {
+			s_sidemenu_moveeyepos->setButtonListener([]() {
+				bool value = s_sidemenu_moveeyepos->getValue();
+				if (value) {
+					s_moveeyepos = true;
+				}
+				else {
+					s_moveeyepos = false;
 				}
 			});
 		}
@@ -35927,6 +35952,10 @@ int DestroyRigidWnd()
 		delete s_coliidDeeperB;
 		s_coliidDeeperB = 0;
 	}
+	if (s_coliseparator) {
+		delete s_coliseparator;
+		s_coliseparator = 0;
+	}
 
 	return 0;
 }
@@ -36092,12 +36121,18 @@ int CreateRigidWnd()
 	if (s_rigidWnd) {
 		bool limitradionamelen = false;
 
-		s_rigidsp0 = new OWP_Separator(s_rigidWnd, true, 0.65, true);
+		s_rigidsp0 = new OWP_Separator(s_rigidWnd, true, 0.5, true);
 		if (!s_rigidsp0) {
 			_ASSERT(0);
 			return 1;
 		}
 		s_rigidWnd->addParts(*s_rigidsp0);
+
+		s_coliseparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
+		if (!s_coliseparator) {
+			_ASSERT(0);
+			return 1;
+		}
 
 		s_thicknessSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
 		if (!s_thicknessSeparator) {
@@ -36494,12 +36529,12 @@ int CreateRigidWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_groupB = new OWP_Button(L"SetRigidGroupIDForConflict");
+		s_groupB = new OWP_Button(L"Conflict");
 		if (!s_groupB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_gcoliB = new OWP_Button(L"SetGroundGroupIDForConflict");
+		s_gcoliB = new OWP_Button(L"GConflict");
 		if (!s_gcoliB) {
 			_ASSERT(0);
 			return 1;
@@ -36672,10 +36707,13 @@ int CreateRigidWnd()
 		//s_btforceSeparator->addParts2(*s_btforceB);
 
 		s_rigidWnd->addParts(*s_coliidSeparator);
-		s_coliidSeparator->addParts1(*s_groupB);
+		//s_coliidSeparator->addParts1(*s_groupB);
+		s_coliidSeparator->addParts1(*s_coliseparator);
 		s_coliidSeparator->addParts2(*s_coliidDeeperB);
+		s_coliseparator->addParts1(*s_groupB);
+		s_coliseparator->addParts2(*s_gcoliB);
 		//s_rigidWnd->addParts(*s_groupB);
-		s_rigidWnd->addParts(*s_gcoliB);
+		//s_rigidWnd->addParts(*s_gcoliB);
 		/////////
 		s_dsrigidctrls.push_back(s_namelabel);
 		s_dsrigidctrls.push_back(s_groupcheck);
@@ -54874,7 +54912,7 @@ void InitRootSignature(RootSignature& rs)
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP);
 }
 
-int ChangeCameraDist(float newcamdist, bool changetargetflag)
+int ChangeCameraDist(float newcamdist, bool calledbyslider)
 {
 	float savecamdist = g_camdist;
 
@@ -54884,7 +54922,7 @@ int ChangeCameraDist(float newcamdist, bool changetargetflag)
 		ChaVector3 camvec = g_camEye - g_camtargetpos;
 		ChaVector3Normalize(&camvec, &camvec);
 
-		if (changetargetflag == false) {//2024/02/25
+		if (s_moveeyepos == true) {//2024/02/26
 			g_befcamEye = g_camEye;
 			g_camEye = g_camtargetpos + camvec * g_camdist;
 		}
@@ -54904,7 +54942,7 @@ int ChangeCameraDist(float newcamdist, bool changetargetflag)
 		g_befcamEye = g_camEye;
 		g_befcamtargetpos = g_camtargetpos;
 
-		if (changetargetflag == false) {//2024/02/25
+		if (s_moveeyepos == true) {//2024/02/26
 			g_camtargetpos = g_camEye + camvec2 * savecamdist * 3.0f;
 			g_camEye = g_camtargetpos - camvec2 * savecamdist * 3.0f;
 		}
@@ -54919,7 +54957,7 @@ int ChangeCameraDist(float newcamdist, bool changetargetflag)
 	SetCamera3DFromEyePos();
 
 
-	if (s_sidemenu_camdistSlider && (changetargetflag == false)) {
+	if (s_sidemenu_camdistSlider && (calledbyslider == false)) {
 		s_sidemenu_camdistSlider->setValue(g_camdist);
 	}
 
