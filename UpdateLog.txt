@@ -2,15 +2,32 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/02/26
+　カメラターゲットに関わるGUIを右ペインの上のウインドウに常駐
+　　Lock2Jointチェックボックス : 選択中のジョイントをカメラの注視点にする
+　　DispTargetチェックボックス : カメラターゲットの位置にマニピュレータを表示する
+　　CamDistスライダー : カメラの視点と注視点の距離を設定する
+
+　　CamDistスライダーで注視点を前後させて、カメラの回転の中心を設定することが可能
+　　
+　マニピュレータ表示修正
+　　回転モードのときにはリングも表示
+　　移動モード、拡縮モードの時には軸だけ表示
+
+　OWP_Sliderの修正
+　　スライダー上のクリック位置からの移動量でスライドする機能の修正
+　　　スライダーがセパレータの右側にある場合に計算が間違っていたのを修正
+
+
+
 2024/02/25
 　ドキュメント追加
-　　　　Documsnts/TroubleShooting/0_HowToSetShadowParams.docx
+　　Documsnts/TroubleShooting/0_HowToSetShadowParams.docx
+　　Documsnts/TroubleShooting/0_Win32DialogHasABlackFrame.docx
 　
 　シャドウのシャドウカメラ位置の計算を大幅修正
 　　思った通りになっていなかったのを修正
 　　設定の仕方はDocumsnts/TroubleShooting/0_HowToSetShadowParams.docxに記述
-
-
 
 
 

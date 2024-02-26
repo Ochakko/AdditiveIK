@@ -4651,9 +4651,12 @@ void s_dummyfunc()
 					//setValue(minValue + (maxValue - minValue) * (float)tmpPos.x / (float)(size.x - AXIS_POS_X - LABEL_SIZE_X));
 
 					{//2023/10/03
+							//int pos1x = pos.x + AXIS_POS_X;
+							//int pos2x = pos.x + size.x - LABEL_SIZE_X;
 							int pos1x = pos.x + AXIS_POS_X;
-							int pos2x = pos.x + size.x - LABEL_SIZE_X;
-							int buttonCenter = pos1x + (int)((value - minValue) * (float)(pos2x - pos1x) / (maxValue - minValue) + 0.5f);
+							int pos2x = pos.x + size.x - AXIS_POS_X - LABEL_SIZE_X;
+							//int buttonCenter = pos1x + (int)((value - minValue) * (float)(pos2x - pos1x) / (maxValue - minValue) + 0.5f);
+							int buttonCenter = (int)((value - minValue) * (float)(pos2x - pos1x) / (maxValue - minValue) + 0.5f);
 							diffclickcenter = e.localX - buttonCenter;//クリック位置の　ボタン中央からのずれ
 					}
 

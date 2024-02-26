@@ -927,7 +927,8 @@ static int s_infowinwidth = s_mainwidth;
 static int s_infowinheight = s_2ndposy - s_mainheight - MAINMENUAIMBARH;
 
 static int s_sidemenuwidth = 450;
-static int s_sidemenuheight = MAINMENUAIMBARH;
+//static int s_sidemenuheight = MAINMENUAIMBARH;
+static int s_sidemenuheight = MAINMENUAIMBARH + 12;
 
 static int s_sidewidth = s_sidemenuwidth;
 static int s_sideheight = s_totalwndheight - MAINMENUAIMBARH - s_sidemenuheight - 28;
@@ -1020,13 +1021,21 @@ static OWP_Slider* s_dmpanimASlider = 0;
 static OWP_Button* s_dmpanimB = 0;
 
 static OrgWindow* s_sidemenuWnd = 0;
-static OWP_Separator* s_sidemenusp = 0;
+//static OWP_Separator* s_sidemenusp = 0;
+//static OWP_Separator* s_sidemenusp1 = 0;
+//static OWP_Separator* s_sidemenusp2 = 0;
+//static OWP_Button* s_sidemenu_rigid = 0;
+//static OWP_Button* s_sidemenu_limiteul = 0;
+//static OWP_Button* s_sidemenu_copyhistory = 0;
+//static OWP_Button* s_sidemenu_retarget = 0;
 static OWP_Separator* s_sidemenusp1 = 0;
 static OWP_Separator* s_sidemenusp2 = 0;
-static OWP_Button* s_sidemenu_rigid = 0;
-static OWP_Button* s_sidemenu_limiteul = 0;
-static OWP_Button* s_sidemenu_copyhistory = 0;
-static OWP_Button* s_sidemenu_retarget = 0;
+static OWP_CheckBoxA* s_sidemenu_sellock = 0;
+static OWP_CheckBoxA* s_sidemenu_targetdisp = 0;
+static OWP_Slider* s_sidemenu_camdistSlider = 0;
+static bool s_camdistsliderflag = false;
+static float s_camdistsliderval = g_camdist;
+
 
 static OrgWindow* s_mainmenuaimbarWnd = 0;
 static OWP_Label* s_mainmenulabel = 0;
@@ -1060,6 +1069,7 @@ static int s_shadertypeparamsindex = -1;//index==0は全てのマテリアルに
 
 
 static OrgWindow* s_rigidWnd = 0;
+static OWP_Separator* s_rigidsp0 = 0;
 static OWP_CheckBoxA* s_groupcheck = 0;
 static OWP_Slider* s_sphrateSlider = 0;
 static OWP_Slider* s_boxzSlider = 0;
@@ -3322,7 +3332,7 @@ int CheckResolution()
 					s_toolheight = s_totalwndheight - s_2ndposy - (MAINMENUAIMBARH + 18) * 2 + MAINMENUAIMBARH + 8;
 
 					s_sidemenuwidth = 600;
-					s_sidemenuheight = MAINMENUAIMBARH;
+					s_sidemenuheight = MAINMENUAIMBARH + 12;
 					s_sidewidth = s_sidemenuwidth;
 					s_sideheight = s_totalwndheight - s_sidemenuheight - 28 * 2 - 4;
 
@@ -3412,7 +3422,7 @@ int CheckResolution()
 		s_infowinheight = (s_2ndposy - s_mainheight - MAINMENUAIMBARH);
 
 		s_sidemenuwidth = 450 + 64 - 4;
-		s_sidemenuheight = MAINMENUAIMBARH;
+		s_sidemenuheight = MAINMENUAIMBARH + 12;
 
 		s_sidewidth = s_sidemenuwidth;
 		s_sideheight = s_totalwndheight - MAINMENUAIMBARH - s_sidemenuheight - 28;
@@ -4356,9 +4366,13 @@ void InitApp()
 	s_owpLTimeline = 0;
 	s_owpEulerGraph = 0;
 	s_LTSeparator = 0;
-	s_sidemenusp = 0;
 	s_sidemenusp1 = 0;
 	s_sidemenusp2 = 0;
+	s_sidemenu_sellock = 0;
+	s_sidemenu_targetdisp = 0;
+	s_sidemenu_camdistSlider = 0;
+	s_camdistsliderflag = false;
+	s_camdistsliderval = g_camdist;
 
 	s_mainmenuaimbarWnd = 0;
 	s_mainmenulabel = 0;
@@ -5122,26 +5136,6 @@ void OnDestroyDevice()
 
 
 
-	if (s_sidemenu_rigid) {
-		delete s_sidemenu_rigid;
-		s_sidemenu_rigid = 0;
-	}
-	if (s_sidemenu_limiteul) {
-		delete s_sidemenu_limiteul;
-		s_sidemenu_limiteul = 0;
-	}
-	if (s_sidemenu_copyhistory) {
-		delete s_sidemenu_copyhistory;
-		s_sidemenu_copyhistory = 0;
-	}
-	if (s_sidemenu_retarget) {
-		delete s_sidemenu_retarget;
-		s_sidemenu_retarget = 0;
-	}
-	if (s_sidemenusp) {
-		delete s_sidemenusp;
-		s_sidemenusp = 0;
-	}
 	if (s_sidemenusp1) {
 		delete s_sidemenusp1;
 		s_sidemenusp1 = 0;
@@ -5150,22 +5144,20 @@ void OnDestroyDevice()
 		delete s_sidemenusp2;
 		s_sidemenusp2 = 0;
 	}
-	if (s_sidemenu_rigid) {
-		delete s_sidemenu_rigid;
-		s_sidemenu_rigid = 0;
+	if (s_sidemenu_sellock) {
+		delete s_sidemenu_sellock;
+		s_sidemenu_sellock = 0;
 	}
-	if (s_sidemenu_limiteul) {
-		delete s_sidemenu_limiteul;
-		s_sidemenu_limiteul = 0;
+	if (s_sidemenu_targetdisp) {
+		delete s_sidemenu_targetdisp;
+		s_sidemenu_targetdisp = 0;
 	}
-	if (s_sidemenu_copyhistory) {
-		delete s_sidemenu_copyhistory;
-		s_sidemenu_copyhistory = 0;
+	if (s_sidemenu_camdistSlider) {
+		delete s_sidemenu_camdistSlider;
+		s_sidemenu_camdistSlider = 0;
 	}
-	if (s_sidemenu_retarget) {
-		delete s_sidemenu_retarget;
-		s_sidemenu_retarget = 0;
-	}
+
+
 	if (s_sidemenuWnd) {
 		delete s_sidemenuWnd;
 		s_sidemenuWnd = 0;
@@ -12993,7 +12985,7 @@ int RenderSelectMark(myRenderer::RenderingEngine* re, RenderContext* pRenderCont
 
 		ChaMatrix scalemat;
 		ChaMatrixIdentity(&scalemat);
-		float adjustmult = 0.5f;
+		float adjustmult = 1.0f;
 		ChaMatrixScaling(&scalemat, s_selectscale * adjustmult, s_selectscale * adjustmult, s_selectscale * adjustmult);
 
 		s_selm = scalemat;
@@ -13002,6 +12994,7 @@ int RenderSelectMark(myRenderer::RenderingEngine* re, RenderContext* pRenderCont
 		s_selectmat_posture = s_selm;
 
 		RenderSelectFunc(re);
+		RenderSelectPostureFunc(re);
 	}
 
 
@@ -21780,11 +21773,17 @@ int SetSelectState()
 			s_select->SetDispFlag("ringX", 1);
 			s_select->SetDispFlag("ringY", 1);
 			s_select->SetDispFlag("ringZ", 1);
+			s_select->SetDispFlag("planeX", 1);
+			s_select->SetDispFlag("planeY", 1);
+			s_select->SetDispFlag("planeZ", 1);
 		}
 		else if ((s_ikkind == 1) || (s_ikkind == 2)) {
 			s_select->SetDispFlag("ringX", 0);
 			s_select->SetDispFlag("ringY", 0);
 			s_select->SetDispFlag("ringZ", 0);
+			s_select->SetDispFlag("planeX", 0);
+			s_select->SetDispFlag("planeY", 0);
+			s_select->SetDispFlag("planeZ", 0);
 		}
 	}
 	else {
@@ -21793,6 +21792,9 @@ int SetSelectState()
 		s_select->SetDispFlag("ringX", 0);
 		s_select->SetDispFlag("ringY", 0);
 		s_select->SetDispFlag("ringZ", 0);
+		s_select->SetDispFlag("planeX", 0);
+		s_select->SetDispFlag("planeY", 0);
+		s_select->SetDispFlag("planeZ", 0);
 	}
 	////////
 	UIPICKINFO pickinfo;
@@ -24286,12 +24288,12 @@ int ShadowParams2Dlg(HWND hDlgWnd)
 		CheckDlgButton(hDlgWnd, IDC_CHECK_ENABLESHADOW, false);
 	}
 
-	if (s_camtargetdisp == true) {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_CAMDIST, true);
-	}
-	else {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_CAMDIST, false);
-	}
+	//if (s_camtargetdisp == true) {
+	//	CheckDlgButton(hDlgWnd, IDC_CHECK_CAMDIST, true);
+	//}
+	//else {
+	//	CheckDlgButton(hDlgWnd, IDC_CHECK_CAMDIST, false);
+	//}
 
 
 	//########
@@ -24333,17 +24335,17 @@ int ShadowParams2Dlg(HWND hDlgWnd)
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PROJSCALE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PROJSCALE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = Float2Int(g_camdist);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)1);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)9999);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-	if (s_camtargetflag != 0) {
-		//ジョイントを注視するフラグが立っている場合にはスライダーを動かせないように
-		EnableWindow(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), FALSE);
-	}
-	else {
-		EnableWindow(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), TRUE);
-	}
+	//sliderpos = Float2Int(g_camdist);
+	//SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)1);
+	//SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)9999);
+	//SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+	//if (s_camtargetflag != 0) {
+	//	//ジョイントを注視するフラグが立っている場合にはスライダーを動かせないように
+	//	EnableWindow(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), FALSE);
+	//}
+	//else {
+	//	EnableWindow(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), TRUE);
+	//}
 
 
 	//#####
@@ -24361,8 +24363,8 @@ int ShadowParams2Dlg(HWND hDlgWnd)
 	swprintf_s(strdlg, 256, L"SceneMult:%.1f", g_shadowmap_projscale[g_shadowmap_slotno]);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_PROJSCALE, strdlg);
 
-	swprintf_s(strdlg, 256, L"CamDist:%.1f", g_camdist);
-	SetDlgItemText(hDlgWnd, IDC_CHECK_CAMDIST, strdlg);
+	//swprintf_s(strdlg, 256, L"CamDist:%.1f", g_camdist);
+	//SetDlgItemText(hDlgWnd, IDC_CHECK_CAMDIST, strdlg);
 
 	//#######
 	//Button
@@ -25608,18 +25610,18 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 			}
 		}
 		break;
-		case IDC_CHECK_CAMDIST:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_CAMDIST);
-			if (ischecked == BST_CHECKED) {
-				s_camtargetdisp = true;
-			}
-			else {
-				s_camtargetdisp = false;
-			}
-		}
-		break;
+		//case IDC_CHECK_CAMDIST:
+		//{
+		//	UINT ischecked = 0;
+		//	ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_CAMDIST);
+		//	if (ischecked == BST_CHECKED) {
+		//		s_camtargetdisp = true;
+		//	}
+		//	else {
+		//		s_camtargetdisp = false;
+		//	}
+		//}
+		//break;
 
 
 		case IDC_SHADOWDIR_1:
@@ -25794,17 +25796,17 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 			SetDlgItemText(hDlgWnd, IDC_STATIC_PROJSCALE, strdlg);
 			SetCamera3DFromEyePos();
 		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), TBM_GETPOS, 0, 0);
-			float newcamdist = (float)cursliderpos;
-
-			ChangeCameraDist(newcamdist, true);
-
-			//IDC_CHECK_CAMDISTのテキストは　ChangeCameraDist()内で変更
-			//WCHAR strdlg[256] = { 0L };
-			//swprintf_s(strdlg, 256, L"CamDist:%.1f", g_camdist);
-			//SetDlgItemText(hDlgWnd, IDC_CHECK_CAMDIST, strdlg);
-		}
+		//else if (GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST) == (HWND)lp) {
+		//	int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_CAMDIST), TBM_GETPOS, 0, 0);
+		//	float newcamdist = (float)cursliderpos;
+		//
+		//	ChangeCameraDist(newcamdist, true);
+		//
+		//	//IDC_CHECK_CAMDISTのテキストは　ChangeCameraDist()内で変更
+		//	//WCHAR strdlg[256] = { 0L };
+		//	//swprintf_s(strdlg, 256, L"CamDist:%.1f", g_camdist);
+		//	//SetDlgItemText(hDlgWnd, IDC_CHECK_CAMDIST, strdlg);
+		//}
 		break;
 
 
@@ -26211,12 +26213,12 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			CheckDlgButton(hDlgWnd, IDC_CHECK_RIGIDMARK, false);
 		}
 
-		if ((bool)s_camtargetflag == true) {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_LOCKTOSEL, true);
-		}
-		else {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_LOCKTOSEL, false);
-		}
+		//if ((bool)s_camtargetflag == true) {
+		//	CheckDlgButton(hDlgWnd, IDC_CHECK_LOCKTOSEL, true);
+		//}
+		//else {
+		//	CheckDlgButton(hDlgWnd, IDC_CHECK_LOCKTOSEL, false);
+		//}
 
 		if (g_preciseOnPreviewToo == true) {
 			CheckDlgButton(hDlgWnd, IDC_CHECK_PRECISE, true);
@@ -31302,6 +31304,14 @@ int OnFrameMouseButton()
 
 int OnFrameToolWnd()
 {
+	if (s_camdistsliderflag) {
+		s_camdistsliderflag = false;
+
+		s_camdistsliderval = (float)fmin(s_camdistsliderval, 1000.0);
+		s_camdistsliderval = (float)fmax(s_camdistsliderval, 0.0);
+
+		ChangeCameraDist(s_camdistsliderval, true);
+	}
 
 	if (s_toonparamchange) {
 		s_toonparamchange = false;
@@ -34585,7 +34595,8 @@ int CreateSideMenuWnd()
 {
 	s_sidemenuWnd = new OrgWindow(
 		0,
-		_T("SideMenuWindow"),		//ウィンドウクラス名
+		//_T("SideMenuWindow"),		//ウィンドウクラス名
+		_T("CameraTargetWindow"),		//ウィンドウクラス名
 		GetModuleHandle(NULL),	//インスタンスハンドル
 								//WindowPos(100, 200),		//位置
 		WindowPos(0, 0),
@@ -34593,7 +34604,8 @@ int CreateSideMenuWnd()
 		//WindowSize(450,680),		//サイズ
 		//WindowSize(450, 760),		//サイズ
 		WindowSize(s_sidemenuwidth, s_sidemenuheight),		//サイズ
-		_T("SideMenu"),	//タイトル
+		//_T("SideMenu"),	//タイトル
+		_T("CameraTarget"),	//タイトル
 		g_mainhwnd,	//親ウィンドウハンドル
 		true,					//表示・非表示状態
 		//70, 50, 70,				//カラー
@@ -34601,104 +34613,88 @@ int CreateSideMenuWnd()
 		true, true);					//サイズ変更の可否
 
 	if (s_sidemenuWnd) {
-		s_sidemenusp = new OWP_Separator(s_sidemenuWnd, true, 0.5, true);
-		if (!s_sidemenusp) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_sidemenuWnd->addParts(*s_sidemenusp);
 
-		s_sidemenusp1 = new OWP_Separator(s_sidemenuWnd, true, 0.5, true);
+
+		s_sidemenusp1 = new OWP_Separator(s_sidemenuWnd, false, 0.5f, true);
 		if (!s_sidemenusp1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_sidemenusp2 = new OWP_Separator(s_sidemenuWnd, true, 0.5, true);
+		s_sidemenusp2 = new OWP_Separator(s_sidemenuWnd, false, 0.5f, true);
 		if (!s_sidemenusp2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_sidemenusp->addParts1(*s_sidemenusp1);
-		s_sidemenusp->addParts2(*s_sidemenusp2);
+		s_sidemenu_sellock = new OWP_CheckBoxA(L"Lock2Joint", s_camtargetflag);
+		if (!s_sidemenu_sellock) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_sidemenu_targetdisp = new OWP_CheckBoxA(L"DispTarget", s_camtargetdisp);
+		if (!s_sidemenu_targetdisp) {
+			_ASSERT(0);
+			return 1;
+		}
+		g_camdist = (float)fmin(g_camdist, 1000.0);
+		g_camdist = (float)fmax(g_camdist, 1.0);
+		s_sidemenu_camdistSlider = new OWP_Slider(g_camdist, 1000.0, 1.0);
+		if (!s_sidemenu_camdistSlider) {
+			_ASSERT(0);
+			return 1;
+		}
+		//s_sidemenu_sellock->setSize(WindowSize((int)(s_sidemenuwidth * 0.25f), (int)s_sidemenuheight));
+		//s_sidemenu_targetdisp->setSize(WindowSize((int)(s_sidemenuwidth * 0.25f), (int)s_sidemenuheight));
+		//s_sidemenu_camdistSlider->setSize(WindowSize((int)(s_sidemenuwidth * 0.5f), (int)s_sidemenuheight));
 
-		s_sidemenu_rigid = new OWP_Button(L"Rigid");
-		if (!s_sidemenu_rigid) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_sidemenu_limiteul = new OWP_Button(L"LimitEul");
-		if (!s_sidemenu_limiteul) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_sidemenu_copyhistory = new OWP_Button(L"CopyHistory");
-		if (!s_sidemenu_copyhistory) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_sidemenu_retarget = new OWP_Button(L"Retarget");
-		if (!s_sidemenu_retarget) {
-			_ASSERT(0);
-			return 1;
-		}
+		s_sidemenuWnd->addParts(*s_sidemenusp1);
+		s_sidemenusp1->addParts1(*s_sidemenusp2);
+		s_sidemenusp1->addParts2(*s_sidemenu_camdistSlider);
+		s_sidemenusp2->addParts1(*s_sidemenu_sellock);
+		s_sidemenusp2->addParts2(*s_sidemenu_targetdisp);
 
-		if (s_sidemenusp1) {
-			if (s_sidemenu_rigid) {
-				s_sidemenusp1->addParts1(*s_sidemenu_rigid);
-			}
-			if (s_sidemenu_limiteul) {
-				s_sidemenusp1->addParts2(*s_sidemenu_limiteul);
-			}
-		}
-		if (s_sidemenusp2) {
-			if (s_sidemenu_copyhistory) {
-				s_sidemenusp2->addParts1(*s_sidemenu_copyhistory);
-			}
-			if (s_sidemenu_retarget) {
-				s_sidemenusp2->addParts2(*s_sidemenu_retarget);
-			}
-		}
 
 		s_sidemenuWnd->setCloseListener([]() {
 			if (s_model) {
 				s_ScloseFlag = true;
 			}
 			});
-		if (s_sidemenu_rigid) {
-			s_sidemenu_rigid->setButtonListener([]() {
-				if (s_model && (s_curboneno >= 0)) {
-					s_platemenukind = SPPLATEMENUKIND_RIGID;
-					GUIMenuSetVisible(s_platemenukind, 1);
-					s_sidemenuWnd->callRewrite();						//再描画
+
+		if (s_sidemenu_sellock) {
+			s_sidemenu_sellock->setButtonListener([]() {
+				bool value = s_sidemenu_sellock->getValue();
+				if (value) {
+					s_camtargetflag = true;
+					if (s_sidemenu_targetdisp) {
+						s_sidemenu_targetdisp->setValue(false);
+					}
 				}
-				});
-		}
-		if (s_sidemenu_limiteul) {
-			s_sidemenu_limiteul->setButtonListener([]() {
-				if (s_model && (s_curboneno >= 0)) {
-					s_platemenukind = SPPLATEMENUKIND_RETARGET;
-					GUIMenuSetVisible(s_platemenukind, 2);
-					s_sidemenuWnd->callRewrite();						//再描画
+				else {
+					s_camtargetflag = false;
 				}
-				});
+			});
 		}
-		if (s_sidemenu_copyhistory) {
-			s_sidemenu_copyhistory->setButtonListener([]() {
-				if (s_model && (s_curboneno >= 0)) {
-					s_selCopyHisotryFlag = true;
-					s_sidemenuWnd->callRewrite();						//再描画
+		if (s_sidemenu_targetdisp) {
+			s_sidemenu_targetdisp->setButtonListener([]() {
+				bool value = s_sidemenu_targetdisp->getValue();
+				if (value) {
+					s_camtargetdisp = true;
+					if (s_sidemenu_sellock) {
+						s_sidemenu_sellock->setValue(false);
+					}
 				}
-				});
-		}
-		if (s_sidemenu_retarget) {
-			s_sidemenu_retarget->setButtonListener([]() {
-				if (s_model && (s_curboneno >= 0)) {
-					s_platemenukind = SPPLATEMENUKIND_RETARGET;
-					GUIMenuSetVisible(s_platemenukind, 1);
-					s_sidemenuWnd->callRewrite();						//再描画
+				else {
+					s_camtargetdisp = false;
 				}
-				});
+			});
 		}
+
+		if (s_sidemenu_camdistSlider) {
+			s_sidemenu_camdistSlider->setCursorListener([]() {
+				s_camdistsliderval = (float)s_sidemenu_camdistSlider->getValue();
+				s_camdistsliderflag = true;
+			});
+		}
+
 
 		int windowposx;
 		if (g_4kresolution) {
@@ -35817,6 +35813,10 @@ int DestroyRigidWnd()
 		delete s_btforceB;
 		s_btforceB = 0;
 	}
+	if (s_rigidsp0) {
+		delete s_rigidsp0;
+		s_rigidsp0 = 0;
+	}
 	if (s_groupcheck) {
 		delete s_groupcheck;
 		s_groupcheck = 0;
@@ -36092,6 +36092,12 @@ int CreateRigidWnd()
 	if (s_rigidWnd) {
 		bool limitradionamelen = false;
 
+		s_rigidsp0 = new OWP_Separator(s_rigidWnd, true, 0.65, true);
+		if (!s_rigidsp0) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_rigidWnd->addParts(*s_rigidsp0);
 
 		s_thicknessSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
 		if (!s_thicknessSeparator) {
@@ -36223,6 +36229,7 @@ int CreateRigidWnd()
 			_ASSERT(0);
 			return 1;
 		}
+
 		s_sphrateSlider = new OWP_Slider(0.6, 20.0, 0.0);
 		if (!s_sphrateSlider) {
 			_ASSERT(0);
@@ -36355,6 +36362,7 @@ int CreateRigidWnd()
 			_ASSERT(0);
 			return 1;
 		}
+
 		s_lenglabel = new OWP_Label(L"BoneLength:*****[m]");
 		if (!s_lenglabel) {
 			_ASSERT(0);
@@ -36549,8 +36557,12 @@ int CreateRigidWnd()
 		s_fricSlider->setSize(WindowSize(slw, 40));
 
 
-		s_rigidWnd->addParts(*s_namelabel);
-		s_rigidWnd->addParts(*s_groupcheck);
+
+		s_rigidsp0->addParts1(*s_namelabel);
+		s_rigidsp0->addParts2(*s_groupcheck);
+		//s_rigidWnd->addParts(*s_namelabel);
+		//s_rigidWnd->addParts(*s_groupcheck);
+
 		s_rigidWnd->addParts(*s_shplabel);
 		s_rigidWnd->addParts(*s_sphrateSlider);
 		s_rigidWnd->addParts(*s_thicknessSeparator);
@@ -54865,6 +54877,7 @@ void InitRootSignature(RootSignature& rs)
 int ChangeCameraDist(float newcamdist, bool changetargetflag)
 {
 	float savecamdist = g_camdist;
+
 	g_camdist = newcamdist;
 
 	if (g_camdist >= 0.01f) {//2022/10/29 0.0001では近づきすぎたときに固まるので0.01に変更
@@ -54906,10 +54919,8 @@ int ChangeCameraDist(float newcamdist, bool changetargetflag)
 	SetCamera3DFromEyePos();
 
 
-	if (s_shadowparamsdlg && s_spdispsw[SPDISPSW_SHADOWPARAMS].state) {
-		WCHAR strdlg[256] = { 0L };
-		swprintf_s(strdlg, 256, L"CamDist:%.1f", g_camdist);
-		SetDlgItemText(s_shadowparamsdlg, IDC_CHECK_CAMDIST, strdlg);
+	if (s_sidemenu_camdistSlider && (changetargetflag == false)) {
+		s_sidemenu_camdistSlider->setValue(g_camdist);
 	}
 
 
