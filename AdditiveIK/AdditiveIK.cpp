@@ -1820,7 +1820,7 @@ static void OnArrowKey();//DS関数でキーボードの矢印キーに対応
 static void CalcTotalBound();
 static int SetCameraModel();
 static void SetCamera3DFromEyePos();
-static int ChangeCameraDist(float newcamdist, bool calledbyslider);
+static int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider);
 
 //--------------------------------------------------------------------------------------
 // Global variables
@@ -2096,6 +2096,7 @@ static bool DispTipRig();
 static bool DispTipMesh();
 static bool DispTipMaterial();
 static bool DispTipBone();
+static bool DispTipSelect();
 
 static int ClearLimitedWM(CModel* srcmodel);
 
@@ -7445,7 +7446,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		//////#replacing comment out#g_Camera->SetViewParamsWithUpVec(neweye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));//!!!!!!!!!!
 		ChaVector3 diffv = g_camEye - g_camtargetpos;
 		float newcamdist = (float)ChaVector3LengthDbl(&diffv);
-		ChangeCameraDist(newcamdist, false);
+		ChangeCameraDist(newcamdist, true, false);
 
 		//if (s_model && (s_pickinfo.pickobjno >= 0) && (g_previewFlag == 5)){
 		if (s_model && (g_previewFlag == 5)) {
@@ -14318,7 +14319,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.A\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.10\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -31318,7 +31319,7 @@ int OnFrameToolWnd()
 		s_camdistsliderval = (float)fmin(s_camdistsliderval, 1000.0);
 		s_camdistsliderval = (float)fmax(s_camdistsliderval, 0.0);
 
-		ChangeCameraDist(s_camdistsliderval, true);
+		ChangeCameraDist(s_camdistsliderval, s_moveeyepos, true);
 	}
 
 	if (s_toonparamchange) {
@@ -43037,7 +43038,7 @@ int OnMouseMoveFunc()
 
 		float newcamdist = g_camdist + deltadist;
 
-		ChangeCameraDist(newcamdist, false);
+		ChangeCameraDist(newcamdist, true, false);
 
 	}
 
@@ -53593,8 +53594,17 @@ int DispToolTip()
 	s_dispfontfortip = false;
 
 
+
+	//2024/02/26 カメラターゲット位置座標表示を最優先で表示
+	if (s_camtargetdisp) {
+		DispTipSelect();
+		s_dispfontfortip = true;
+	}
+
+
+
 	//2024/02/04 画面のスプライトドラッグ検知を最優先に
-	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
+	if ((s_dispfontfortip == false) && s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
 		s_dispfontfortip = DispTipUI();
 	}
 	else if (s_dispfontfortip == false) {
@@ -53621,6 +53631,10 @@ int DispToolTip()
 			s_dispfontfortip = DispTipRig();
 		}
 	}
+
+
+
+
 
 
 	return 0;
@@ -54028,6 +54042,25 @@ bool DispTipUIFrog()
 	}
 
 	return dispfontfortip;
+}
+
+bool DispTipSelect()
+{
+	ChaMatrix wvpmat = s_selectmat * s_matVP;
+	ChaVector3 zeropos = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 screenpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3TransformCoord(&screenpos, &zeropos, &wvpmat);
+
+	float scposx, scposy;
+	scposx = (screenpos.x + 1.0f) * 0.5f * s_mainwidth;
+	scposy = (screenpos.y + 1.0f) * 0.5f * s_mainheight;
+
+
+	s_fontposfortip = Vector2(scposx, scposy);
+	swprintf_s(s_strfortip, 512, L"Target(%.1f, %.1f, %.1f)", s_selectmat.data[MATI_41], s_selectmat.data[MATI_42], s_selectmat.data[MATI_43]);
+
+	return true;
+
 }
 
 bool DispTipBone()
@@ -54912,7 +54945,7 @@ void InitRootSignature(RootSignature& rs)
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP);
 }
 
-int ChangeCameraDist(float newcamdist, bool calledbyslider)
+int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider)
 {
 	float savecamdist = g_camdist;
 
@@ -54922,7 +54955,7 @@ int ChangeCameraDist(float newcamdist, bool calledbyslider)
 		ChaVector3 camvec = g_camEye - g_camtargetpos;
 		ChaVector3Normalize(&camvec, &camvec);
 
-		if (s_moveeyepos == true) {//2024/02/26
+		if (moveeyeposflag == true) {//2024/02/26
 			g_befcamEye = g_camEye;
 			g_camEye = g_camtargetpos + camvec * g_camdist;
 		}
@@ -54942,7 +54975,7 @@ int ChangeCameraDist(float newcamdist, bool calledbyslider)
 		g_befcamEye = g_camEye;
 		g_befcamtargetpos = g_camtargetpos;
 
-		if (s_moveeyepos == true) {//2024/02/26
+		if (moveeyeposflag == true) {//2024/02/26
 			g_camtargetpos = g_camEye + camvec2 * savecamdist * 3.0f;
 			g_camEye = g_camtargetpos - camvec2 * savecamdist * 3.0f;
 		}
@@ -54957,8 +54990,9 @@ int ChangeCameraDist(float newcamdist, bool calledbyslider)
 	SetCamera3DFromEyePos();
 
 
-	if (s_sidemenu_camdistSlider && (calledbyslider == false)) {
+	if (s_sidemenuWnd && s_sidemenu_camdistSlider && (calledbyslider == false)) {
 		s_sidemenu_camdistSlider->setValue(g_camdist);
+		s_sidemenuWnd->callRewrite();
 	}
 
 

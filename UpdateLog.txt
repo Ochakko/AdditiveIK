@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/02/26午後
-　AdditiveIK 1.0.0.10 RC1(リリース候補1)
+　AdditiveIK 1.0.0.10 RC2(リリース候補2)
 　　1.0.0.9からの変更点
 　　　不具合修正
 　　　　シャドウカメラの計算を修正
@@ -28,7 +28,7 @@ https://github.com/Ochakko/AdditiveIK
 
 　　　　カメラターゲットに関わるGUIを右ペインの上のウインドウに常駐
 　　　　　Lock2Jointチェックボックス : 選択中のジョイントをカメラの注視点にする
-　　　　　DispTargetチェックボックス : カメラターゲットの位置にマニピュレータを表示する
+　　　　　DispTargetチェックボックス : カメラターゲットの位置にマニピュレータと位置座標の数値を表示する
 　　　　　CamDistスライダー : カメラの視点と注視点の距離を設定する
 　　　　　MoveEyePosチェックボックス : オフの時スライダー操作時に注視点を移動、オンの時スライダー操作時にカメラ位置を移動.
 　　　　　CamDistスライダーで注視点を前後させて、カメラの回転の中心を設定することが可能
@@ -58,6 +58,7 @@ https://github.com/Ochakko/AdditiveIK
 　　　　　移動モード、拡縮モードの時には軸だけ表示
 
 　　　　ドキュメント追加
+　　　　　Documsnts/TroubleShooting/0_HowToSetPhysicsOfSkirt.docx
 　　　　　Documsnts/TroubleShooting/0_HowToSetShadowParams.docx
 　　　　　Documsnts/TroubleShooting/0_Win32DialogHasABlackFrame.docx
 
@@ -66,7 +67,25 @@ https://github.com/Ochakko/AdditiveIK
 　　　オンにするとスライダー操作時にカメラ位置を移動、オフにするとスライダー操作時に注視点を移動
 　　　MoveEyePosチェックボックスとCamDistスライダーで尺取虫のようにカメラを操作することが可能
 　　　注視点はカメラを回転する場合の回転中心になる
+　　RC2:
+　　　カメラドリースプライトのドラッグが効かなくなっていたのを修正
+　　　CameraTargetウインドウのDispTargetにチェックを入れている間はターゲット位置に座標のツールチップを表示
 
+
+動画
+　　モーキャプ＠夕暮れキッチン
+　　https://youtu.be/pMRaTOw5B38
+
+　 【ショート】ピッチャーと棒【モーキャプ】
+　　https://youtu.be/WG7QEvYetJg
+
+　 【モーキャプ】VRoidでプロのアセットを飛んでみた【編集ツール】
+　  https://youtu.be/R0MsXt8plYg
+
+  ver1.0.0.4以降共通
+　　新機能の使い方まとめ動画
+　 　【DirectX12】AdditiveIK新機能【モーキャプ編集】
+ 　 　https://youtu.be/oKGY62YosSg
 
 
 
@@ -202,21 +221,6 @@ https://github.com/Ochakko/AdditiveIK
 　　　release:
 　　　　TestフォルダのSpringモデルとWinterモデルの顔シェーダの再調整
 　　　　(DispAndLimitsプレートメニューのライト倍率(全てのライト対してに掛ける倍率)が違うと見え方がかなり変わるので、設定時にはライト倍率を確認)
-
-
-
-動画
-　【ショート】ピッチャーと棒【モーキャプ】
-　　https://youtu.be/WG7QEvYetJg
-
-  ver1.0.0.4以降共通
-　　新機能の使い方まとめ動画
-　 　【DirectX12】AdditiveIK新機能【モーキャプ編集】
- 　 　https://youtu.be/oKGY62YosSg
-
-   　使用例動画
-  　　【モーキャプ】VRoidでプロのアセットを飛んでみた【編集ツール】
-　  　　https://youtu.be/R0MsXt8plYg
 
 
 
