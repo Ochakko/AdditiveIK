@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/02/27
-　AdditiveIK 1.0.0.10 RC4(リリース候補4)
+　AdditiveIK 1.0.0.10 release
 　　1.0.0.9からの変更点
 　　　不具合修正
 　　　　シャドウカメラの計算を修正
@@ -95,7 +95,9 @@ https://github.com/Ochakko/AdditiveIK
 　　RC4:
 　　　Testフォルダのモデルの設定ファイルを修正
 　　　　新しいモデルのtboファイル(操作対象ボーン設定ファイル)が未設定だったのを修正
-
+　　release:
+　　　Lightsメニューの角度Yの符号が反転する不具合を修正
+　　　　符号が反転してしまった数値は自動的には直りません
 
 
 動画

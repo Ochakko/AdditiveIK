@@ -23577,7 +23577,8 @@ int ConvDir2PolarCoord(float srcdirx, float srcdiry, float srcdirz, float* dstxz
 	ndir.SetZeroVec3();
 	ChaVector3Normalize(&ndir, &srcdir);
 
-	float degy = (float)(-asin(ndir.y) * PAI2DEG);//srcdiry
+	//float degy = (float)(-asin(ndir.y) * PAI2DEG);//srcdiry
+	float degy = (float)(asin(ndir.y) * PAI2DEG);//srcdiry
 	float degxz = (float)(-atan2(ndir.x, ndir.z) * PAI2DEG - 180.0f);//本来はX軸が０度だが、Z軸が０度になるように計算。左回りに。
 	float setdegxz = degxz;
 	if (degxz > 180.0f) {
