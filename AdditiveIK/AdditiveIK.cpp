@@ -1258,6 +1258,7 @@ static OWP_Button* s_groupsetB = 0;
 static OWP_Button* s_groupgetB = 0;
 static OWP_Button* s_grouponB = 0;
 static OWP_Button* s_groupoffB = 0;
+static OWP_Button* s_groupclearB = 0;
 static OWP_Label* s_grouplabel11 = 0;
 static OWP_Label* s_grouplabel12 = 0;
 static OWP_Label* s_grouplabel21 = 0;
@@ -2263,6 +2264,7 @@ static int CreateDispGroupWnd();
 static int DestroyDispGroupWnd();
 static int CheckSimilarMenu();
 static int CheckSimilarGroup(int opetype);
+static int TrimLeadingAlnum(WCHAR* srcstr, int srclen, WCHAR* dststr, int dstlen, bool secondcallflag);
 
 static int UpdateCameraPosAndTarget();
 
@@ -3787,6 +3789,7 @@ void InitApp()
 		s_groupgetB = 0;
 		s_grouponB = 0;
 		s_groupoffB = 0;
+		s_groupclearB = 0;
 		s_grouplabel11 = 0;
 		s_grouplabel12 = 0;
 		s_grouplabel21 = 0;
@@ -34969,6 +34972,11 @@ int CreateDispGroupWnd()
 			_ASSERT(0);
 			return 1;
 		}
+		s_groupclearB = new OWP_Button(L"Clear");
+		if (!s_groupclearB) {
+			_ASSERT(0);
+			return 1;
+		}
 		s_grouplabel11 = new OWP_Label(L"---------");
 		if (!s_grouplabel11) {
 			_ASSERT(0);
@@ -35117,8 +35125,10 @@ int CreateDispGroupWnd()
 
 		s_groupsp1->addParts1(*s_groupsetB);
 		s_groupsp1->addParts2(*s_groupgetB);
+		s_groupsp1->addParts1(*s_groupclearB);
 		s_groupsp2->addParts1(*s_grouponB);
 		s_groupsp2->addParts2(*s_groupoffB);
+
 		//s_groupsp2->addParts2(*s_grouptestB);
 
 		{//testボタンのラムダ関数
@@ -35235,7 +35245,8 @@ int CreateDispGroupWnd()
 						int lineno1;
 						for (lineno1 = 0; lineno1 < s_grouplinenum; lineno1++) {
 							if (s_groupobjvec[lineno1]) {
-								s_groupobjvec[lineno1]->setValue(false);
+								bool calllistener = false;
+								s_groupobjvec[lineno1]->setValue(false, calllistener);
 							}
 						}
 
@@ -35265,7 +35276,8 @@ int CreateDispGroupWnd()
 								DISPGROUPELEM digelem = digvec[digno];
 								int objno = digelem.objno;
 								if ((objno >= 0) && (objno < s_grouplinenum) && s_groupobjvec[objno]) {
-									s_groupobjvec[objno]->setValue(true);
+									bool calllistener = false;
+									s_groupobjvec[objno]->setValue(true, calllistener);
 								}
 							}
 							if (s_groupWnd) {
@@ -35343,6 +35355,28 @@ int CreateDispGroupWnd()
 			}
 		}
 
+		{//Clearボタン
+			if (s_groupclearB) {
+				s_groupclearB->setButtonListener([]() {
+					HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
+
+					int objno1;
+					for (objno1 = 0; objno1 < s_grouplinenum; objno1++) {
+						if (s_groupobjvec[objno1]) {
+							bool calllistener = false;
+							s_groupobjvec[objno1]->setValue(false, calllistener);
+						}
+					}
+
+					if (oldcursor) {
+						SetCursor(oldcursor);
+					}
+
+				});
+			}
+		}
+
+
 		{//objvecボタン
 
 			//チェックを入れたobjectの子供treeも一緒にチェックを入れる
@@ -35375,7 +35409,8 @@ int CreateDispGroupWnd()
 								for (objindex = 0; objindex < selectedobjnum; objindex++) {
 									int selectedobjno = selectedobjtree[objindex];
 									if ((selectedobjno >= 0) && (selectedobjno < s_grouplinenum) && (selectedobjno != objno1)) {
-										s_groupobjvec[selectedobjno]->setValue(newstate);
+										bool calllistener = false;
+										s_groupobjvec[selectedobjno]->setValue(newstate, calllistener);
 									}
 								}
 
@@ -35422,49 +35457,157 @@ int CreateDispGroupWnd()
 	return 0;
 }
 
+int TrimLeadingAlnum(WCHAR* srcstr, int srclen, WCHAR* dststr, int dstlen, bool secondcallflag)
+{
+	if (!srcstr || !dststr) {
+		_ASSERT(0);
+		return 1;
+	}
+	if ((srclen < 0) || (srclen >= 4098) || (dstlen < 0) || (dstlen >= 4098)) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	*dststr = 0L;
+
+	WCHAR trimstr0[4098];
+	ZeroMemory(trimstr0, sizeof(WCHAR) * 4098);
+
+	int index0;
+	int dstindex = 0;
+	bool starttrim = false;
+	for (index0 = 0; index0 < srclen; index0++) {
+		WCHAR* pchkstr = srcstr + index0;
+		if (starttrim == false) {
+			if (iswalnum(*pchkstr) == 0) {
+				continue;
+			}
+			else {
+				starttrim = true;
+			}
+		}
+		if (starttrim == true) {
+			if (*pchkstr == TEXT('_')) {
+				break;
+			}
+			if (dstindex < dstlen) {
+				trimstr0[dstindex] = *pchkstr;
+				trimstr0[dstindex + 1] = 0L;
+				dstindex++;
+			}
+			else {
+				break;
+			}
+		}
+	}
+
+	if (secondcallflag == false) {//再帰呼び出しは１回まで
+
+		//パターンの先頭がPrefabだった場合には、次のアンダーバーまでをパターンとする
+
+		WCHAR* nextptr = 0L;
+		if (wcscmp(trimstr0, L"Prefab") == 0) {
+			nextptr = wcsstr(srcstr, L"Prefab");
+			if (nextptr) {
+				nextptr += (wcslen(L"Prefab") + 1);//+1 : '_'の分
+			}
+		}
+		else if (wcscmp(trimstr0, L"prefab") == 0) {
+			nextptr = wcsstr(srcstr, L"prefab");
+			if (nextptr) {
+				nextptr += (wcslen(L"prefab") + 1);//+1 : '_'の分
+			}
+		}
+
+		if (nextptr && (*nextptr != 0L)) {
+			WCHAR trimstr1[4098];
+			ZeroMemory(trimstr1, sizeof(WCHAR) * 4098);
+			int result2 = TrimLeadingAlnum(nextptr, (int)wcslen(nextptr), trimstr1, 4098, true);
+			if ((result2 == 0) && (trimstr1[0] != 0L)) {
+				wcscat_s(trimstr0, 4098, L"_");//!!!!!
+				wcscat_s(trimstr0, 4098, trimstr1);
+			}
+		}
+	}
+
+	trimstr0[dstlen - 1] = 0L;
+	wcscpy_s(dststr, dstlen, trimstr0);
+
+	return 0;
+}
+
+
 int CheckSimilarGroup(int opetype)
 {
-	if (s_model && (s_grouplinenum > 0) && 
+	if (!s_model) {
+		return 0;
+	}
+
+	if ((s_grouplinenum > 0) && 
 		(opetype >= 0) && (opetype <= 3) && 
 		(s_checksimilarobjno >= 0) && (s_checksimilarobjno < s_grouplinenum)) {
 		
 		OWP_CheckBoxA* srccheckbox = s_groupobjvec[s_checksimilarobjno];
 		if (srccheckbox) {
-			WCHAR similarname[512] = { 0L };
-			int result = srccheckbox->getName(similarname, 512);
-			if ((result == 0) && (similarname[0] != 0L)) {
-				WCHAR pattern0[512] = { 0L };
+			WCHAR objname[512] = { 0L };
+			int result = srccheckbox->getName(objname, 512);
+			if ((result == 0) && (objname[0] != 0L)) {
+				WCHAR similarpattern[512] = { 0L };
+				int result1 = TrimLeadingAlnum(objname, 512, similarpattern, 512, false);
+				if ((result1 == 0) && (similarpattern[0] != 0L)) {
 
-				WCHAR* patptr0 = wcschr(similarname, TEXT('_'));
-				if (patptr0) {
-					if (patptr0 != similarname) {//2023/10/08 先頭の文字が '_'以外の場合だけ処理する
-						*patptr0 = 0L;
+					int pattern0len = (int)wcslen(similarpattern);
 
-						if ((wcscmp(similarname, L"Prefab") == 0) || (wcscmp(similarname, L"prefab") == 0)) {
+					if ((opetype == 0) || (opetype == 1)) {
+						//#####################
+						//pattern include num
+						//#####################
 
-							//2024/01/19
-							//名前の先頭がPrefab_またはprefab_の場合にはもう１つ後の_までをパターン文字列とする
+						int objno1;
+						for (objno1 = 0; objno1 < s_grouplinenum; objno1++) {
+							if (s_groupobjvec[objno1]) {
+								WCHAR chkname[512] = { 0L };
+								int result1 = s_groupobjvec[objno1]->getName(chkname, 512);
+								if ((result == 0) && (chkname[0] != 0L)) {
+									WCHAR* findptr = wcsstr(chkname, similarpattern);//check if pattern is included
+									if (findptr) {
+										bool calllistener = false;
+										if (opetype == 0) {
+											s_groupobjvec[objno1]->setValue(true, calllistener);
+										}
+										else if (opetype == 1) {
+											s_groupobjvec[objno1]->setValue(false, calllistener);
+										}
+										else {
+											_ASSERT(0);
+											return 1;
+										}
+									}
+								}
+							}
+						}
+					}
+					else if ((opetype == 2) || (opetype == 3)) {
+						//#####################
+						//pattern exclude num
+						//#####################
 
-							WCHAR* patptr1 = wcschr(patptr0 + 1, TEXT('_'));
-							if (patptr1) {
-								*patptr0 = TEXT('_');
-								*patptr1 = 0L;
-								wcscpy_s(pattern0, 512, similarname);
+						bool numflag = true;
+						int findpos = pattern0len - 1;
+						while (numflag && (findpos > 1)) {
+							WCHAR chkwc = similarpattern[findpos];
+							if ((chkwc == TEXT('0')) || (chkwc == TEXT('1')) || (chkwc == TEXT('2')) || (chkwc == TEXT('3')) || (chkwc == TEXT('4')) ||
+								(chkwc == TEXT('5')) || (chkwc == TEXT('6')) || (chkwc == TEXT('7')) || (chkwc == TEXT('8')) || (chkwc == TEXT('9'))) {
+								findpos--;
 							}
 							else {
-								wcscpy_s(pattern0, 512, similarname);
+								numflag = false;
+								break;
 							}
 						}
-						else {
-							wcscpy_s(pattern0, 512, similarname);
-						}
-
-						int pattern0len = (int)wcslen(pattern0);
-
-						if ((opetype == 0) || (opetype == 1)) {
-							//#####################
-							//pattern include num
-							//#####################
+						if ((findpos >= 0) && (findpos < pattern0len)) {
+							similarpattern[findpos + 1] = 0L;
 
 							int objno1;
 							for (objno1 = 0; objno1 < s_grouplinenum; objno1++) {
@@ -35472,13 +35615,14 @@ int CheckSimilarGroup(int opetype)
 									WCHAR chkname[512] = { 0L };
 									int result1 = s_groupobjvec[objno1]->getName(chkname, 512);
 									if ((result == 0) && (chkname[0] != 0L)) {
-										WCHAR* findptr = wcsstr(chkname, pattern0);//check if pattern is included
+										WCHAR* findptr = wcsstr(chkname, similarpattern);//check if pattern is included
 										if (findptr) {
-											if (opetype == 0) {
-												s_groupobjvec[objno1]->setValue(true);
+											bool calllistener = false;
+											if (opetype == 2) {
+												s_groupobjvec[objno1]->setValue(true, calllistener);
 											}
-											else if (opetype == 1) {
-												s_groupobjvec[objno1]->setValue(false);
+											else if (opetype == 3) {
+												s_groupobjvec[objno1]->setValue(false, calllistener);
 											}
 											else {
 												_ASSERT(0);
@@ -35489,62 +35633,17 @@ int CheckSimilarGroup(int opetype)
 								}
 							}
 						}
-						else if ((opetype == 2) || (opetype == 3)) {
-							//#####################
-							//pattern exclude num
-							//#####################
-
-							bool numflag = true;
-							int findpos = pattern0len - 1;
-							while (numflag && (findpos > 1)) {
-								WCHAR chkwc = pattern0[findpos];
-								if ((chkwc == TEXT('0')) || (chkwc == TEXT('1')) || (chkwc == TEXT('2')) || (chkwc == TEXT('3')) || (chkwc == TEXT('4')) ||
-									(chkwc == TEXT('5')) || (chkwc == TEXT('6')) || (chkwc == TEXT('7')) || (chkwc == TEXT('8')) || (chkwc == TEXT('9'))) {
-									findpos--;
-								}
-								else {
-									numflag = false;
-									break;
-								}
-							}
-							if ((findpos >= 0) && (findpos < pattern0len)) {
-								pattern0[findpos + 1] = 0L;
-
-								int objno1;
-								for (objno1 = 0; objno1 < s_grouplinenum; objno1++) {
-									if (s_groupobjvec[objno1]) {
-										WCHAR chkname[512] = { 0L };
-										int result1 = s_groupobjvec[objno1]->getName(chkname, 512);
-										if ((result == 0) && (chkname[0] != 0L)) {
-											WCHAR* findptr = wcsstr(chkname, pattern0);//check if pattern is included
-											if (findptr) {
-												if (opetype == 2) {
-													s_groupobjvec[objno1]->setValue(true);
-												}
-												else if (opetype == 3) {
-													s_groupobjvec[objno1]->setValue(false);
-												}
-												else {
-													_ASSERT(0);
-													return 1;
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-						else {
-							_ASSERT(0);
-							return 1;
-						}
 					}
 					else {
-						//先頭の文字が　'_'　の場合　は操作の対象外
-
+						_ASSERT(0);
+						return 1;
 					}
 				}
 			}
+		}
+		else {
+			_ASSERT(0);
+			return 1;
 		}
 	}
 	else {
@@ -35986,6 +36085,10 @@ int DestroyDispGroupWnd()
 	if (s_groupoffB) {
 		delete s_groupoffB;
 		s_groupoffB = 0;
+	}
+	if (s_groupclearB) {
+		delete s_groupclearB;
+		s_groupclearB = 0;
 	}
 	if (s_grouplabel11) {
 		delete s_grouplabel11;
@@ -54768,10 +54871,11 @@ int ShowCameraDollyDlg()
 
 	std::vector<DOLLYELEM> vecdolly;
 	vecdolly.clear();
+	s_dollyhistorydlg.SetOnShow(true);//2024/02/27 ダイアログを出したときにカメラが動いてしまうのを防止
 	s_dollyhistorydlg.LoadDollyHistory(vecdolly);
 	s_dollyhistorydlg.SetNames(vecdolly);
 	s_dollyhistorydlg.ShowWindow(SW_SHOW);
-
+	//s_dollyhistorydlg.SetOnShow(false);//2024/02/27 この時点ではまだカメラ位置を変えようとしていない　OFFはdollyhistorydlgのOnPaint()で行う
 	return 0;
 }
 

@@ -36,6 +36,7 @@ int CDollyHistoryDlg::DestroyObjs()
 void CDollyHistoryDlg::InitParams()
 {
 	m_createdflag = false;
+	m_onshow = false;
 
 	m_pagenum = 0;
 	m_currentpage = 0;
@@ -289,6 +290,7 @@ int CDollyHistoryDlg::ParamsToDlg()
 
 int CDollyHistoryDlg::SetNames(std::vector<DOLLYELEM>& copyhistory)
 {
+
 	m_dollyhistory = copyhistory;
 
 
@@ -307,6 +309,7 @@ int CDollyHistoryDlg::SetNames(std::vector<DOLLYELEM>& copyhistory)
 	ParamsToDlg();//表示されていないときにはm_hWndがNULLの場合があるのでShowWindowの後でSetNamesを呼ぶ
 
 	m_createdflag = true;
+
 
 	return 0;
 
@@ -500,6 +503,15 @@ LRESULT CDollyHistoryDlg::OnRadio(size_t radioid)
 	if (radioid >= m_namenum) {
 		return 0;
 	}
+
+	if (m_onshow == true) {
+		//2024/02/27
+		//ShowWindow()を呼び出したときにOnRadio*()内でカメラが動いてしまわないようにフラグで回避
+		//ユーザーは　保存したいカメラ位置を決めてからカメラドリーダイアログを出す場合がある　そのときにカメラが動いてしまうと困る
+		//m_onshowのセットはAdditiveIK.cppのShowCameraDollyDlg()で行い　m_onshowのリセットは　OnPaintで行う
+		return 0;
+	}
+
 
 	//OKボタンを押さないでも反映されるように
 	int result = 0;
@@ -899,4 +911,22 @@ int CDollyHistoryDlg::LoadDollyHistory(std::vector<DOLLYELEM>& vecdolly)
 	}
 
 	return 0;
+}
+
+
+LRESULT CDollyHistoryDlg::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	//LRESULT result = DefWindowProcW();
+	bHandled = TRUE;
+	LRESULT result = ::DefWindowProc(m_hWnd, uMsg, wParam, lParam);
+
+
+	//2024/02/27
+	//ShowWindow()を呼び出したときにOnRadio*()内でカメラが動いてしまわないようにフラグで回避
+	//ユーザーは　保存したいカメラ位置を決めてからカメラドリーダイアログを出す場合がある　そのときにカメラが動いてしまうと困る
+	//m_onshowのセットはAdditiveIK.cppのShowCameraDollyDlg()で行い　m_onshowのリセットは　OnPaintで行う
+	SetOnShow(false);
+
+
+	return result;
 }

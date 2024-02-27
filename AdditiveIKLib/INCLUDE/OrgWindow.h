@@ -4186,7 +4186,7 @@ void s_dummyfunc()
 
 		/////////////////////////// Accessor /////////////////////////////
 		//	Accessor : value
-		void setValue(bool _value){
+		void setValue(bool _value, bool calllistener = true){
 			//if (parentWindow) {
 			if ((g_endappflag == 0) && parentWindow && IsWindow(parentWindow->getHWnd())) {
 				value = _value;
@@ -4199,7 +4199,8 @@ void s_dummyfunc()
 				InvalidateRect(parentWindow->getHWnd(), &tmpRect, false);
 
 				//リスナーコール
-				if (this->buttonListener != NULL) {
+				//2024/02/27 プログラムからsetValueを呼び出す場合にはcalllistenerをfalseにして呼び出す　そうしないとsetValueのラムダ関数が再帰する
+				if (calllistener && (this->buttonListener != NULL)) {
 					(this->buttonListener)();
 				}
 			}

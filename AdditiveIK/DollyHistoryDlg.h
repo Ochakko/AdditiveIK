@@ -44,12 +44,15 @@ public:
 	int LoadDollyHistory(std::vector<DOLLYELEM>& vecdolly);
 
 
+
 private:
 
 BEGIN_MSG_MAP(CDollyHistoryDlg)
 	//MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 	MESSAGE_HANDLER(WM_CREATE, OnCreate)
 	MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+	MESSAGE_HANDLER(WM_PAINT, OnPaint)
+
 	//COMMAND_ID_HANDLER(IDOK, OnOK)
 	//COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
 	//COMMAND_ID_HANDLER(IDC_CHECK1, OnCheckMostRecent)
@@ -89,6 +92,7 @@ END_MSG_MAP()
 	//LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	//LRESULT OnOK(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	//LRESULT OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
@@ -138,6 +142,17 @@ END_MSG_MAP()
 
 	int SetDollyElem2Camera(DOLLYELEM srcelem);
 
+public:
+	void SetOnShow(bool srcflag)
+	{
+		m_onshow = srcflag;
+	}
+	bool GetOnShow()
+	{
+		return m_onshow;
+	}
+
+
 private:
 
 /*
@@ -166,6 +181,13 @@ private:
 
 
 	int (*m_UpdateFunc)();
+
+
+	//2024/02/27
+	//ShowWindow()を呼び出したときにOnRadio*()内でカメラが動いてしまわないようにフラグで回避
+	//ユーザーは　保存したいカメラ位置を決めてからカメラドリーダイアログを出す場合がある　そのときにカメラが動いてしまうと困る
+	//m_onshowのセットはAdditiveIK.cppのShowCameraDollyDlg()で行い　m_onshowのリセットは　OnPaintで行う
+	bool m_onshow;
 
 };
 
