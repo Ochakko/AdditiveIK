@@ -2,6 +2,14 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2024/02/29
+　ショートムービー
+　　半回転階段チャレンジ
+　　https://youtu.be/TzlAqf45jIQ
+
+
+
 2024/02/27
 　AdditiveIK 1.0.0.10 release
 　　1.0.0.9からの変更点
