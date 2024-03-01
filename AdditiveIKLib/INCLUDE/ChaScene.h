@@ -68,9 +68,9 @@ public:
 	//	}
 	//};
 
-	int UpdateMatrixModels(bool limitdegflag, ChaMatrix* vpmat, double srcframe);
+	int UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe);
 	int UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, 
-		ChaMatrix* wmat, ChaMatrix* vpmat, double srcframe);
+		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe);
 	int WaitUpdateThreads();
 	int SetBoneMatrixForShader(int btflag, bool calcslotflag);
 	int RenderModels(myRenderer::RenderingEngine* renderringEngine, int lightflag, ChaVector4 diffusemult, int btflag = 0);
@@ -98,7 +98,8 @@ public:
 	int SetMotionFrame(int srcmodelindex, double srcframe);
 	int SetENullTime(int srcmodelindex, double srcframe);
 
-	int UpdateBtFunc(bool limitdegflag, double nextframe, ChaMatrix* pmVP, int loopstartflag,
+	int UpdateBtFunc(bool limitdegflag, double nextframe, 
+		ChaMatrix* pmView, ChaMatrix* pmProj, int loopstartflag,
 		CModel* smodel, bool recstopflag, BPWorld* bpWorld, double srcreccnt,
 		int (*srcStopBtRec)());
 
@@ -115,8 +116,10 @@ private:
 	void SetKinematicToHand(CModel* srcmodel, bool srcflag);
 	void SetKinematicToHandReq(CModel* srcmodel, CBone* srcbone, bool srcflag);
 
-	int Motion2Bt(bool limitdegflag, double nextframe, ChaMatrix* pmVP, int loopstartflag);
-	int SetBtMotion(bool limitdegflag, double nextframe, ChaMatrix* pmVP, CModel* smodel, double srcreccnt);
+	int Motion2Bt(bool limitdegflag, double nextframe, 
+		ChaMatrix* pmView, ChaMatrix* pmProj, int loopstartflag);
+	int SetBtMotion(bool limitdegflag, double nextframe, 
+		ChaMatrix* pmView, ChaMatrix* pmProj, CModel* smodel, double srcreccnt);
 
 
 	int CreateMotion2BtThreads();

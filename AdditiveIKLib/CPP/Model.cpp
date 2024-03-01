@@ -608,6 +608,8 @@ int CModel::InitParams()
 
 	ChaMatrixIdentity( &m_matWorld );
 	ChaMatrixIdentity( &m_matVP );
+	m_matView.SetIdentity();
+	m_matProj.SetIdentity();
 
 	m_curmotinfo = 0;
 
@@ -646,7 +648,7 @@ int CModel::InitParams()
 	m_withoutStrJoint = 0;
 
 	m_bindpose = nullptr;
-
+	m_skyflag = false;
 	return 0;
 }
 
@@ -2147,15 +2149,15 @@ int CModel::MakeDispObj()
 	return 0;
 }
 
-int CModel::Motion2Bt(bool limitdegflag, double nextframe, ChaMatrix* pmVP, int updateslot)
+int CModel::Motion2Bt(bool limitdegflag, double nextframe, ChaMatrix* pmView, ChaMatrix* pmProj, int updateslot)
 {
-	if (!pmVP) {
+	if (!pmView || !pmProj) {
 		_ASSERT(0);
 		return 1;
 	}
 
 	ChaCalcFunc chacalcfunc;
-	chacalcfunc.Motion2Bt(this, limitdegflag, nextframe, pmVP, updateslot);
+	chacalcfunc.Motion2Bt(this, limitdegflag, nextframe, pmView, pmProj, updateslot);
 
 	return 0;
 }
@@ -2229,11 +2231,15 @@ void CModel::Motion2BtReq(CBtObject* srcbto)
 //	return 0;
 //}
 
-int CModel::UpdateMatrix(bool limitdegflag, ChaMatrix* wmat, ChaMatrix* vpmat, bool needwaitfinished, int updateslot) 
+int CModel::UpdateMatrix(bool limitdegflag, 
+	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, 
+	bool needwaitfinished, int updateslot)
 // default : needwaitfinished = false, updateslot = 0
 {
 	m_matWorld = *wmat;
-	m_matVP = *vpmat;
+	m_matView = *vmat;
+	m_matProj = *pmat;
+	m_matVP = m_matView * m_matProj;
 
 	
 	ChkInView();//2023/08/25
@@ -2281,7 +2287,7 @@ int CModel::UpdateMatrix(bool limitdegflag, ChaMatrix* wmat, ChaMatrix* vpmat, b
 			int updatecount;
 			for (updatecount = 0; updatecount < m_creatednum_boneupdatematrix; updatecount++) {
 				CThreadingUpdateMatrix* curupdate = m_boneupdatematrix + updatecount;
-				curupdate->UpdateMatrix(limitdegflag, curmotid, curframe, wmat, vpmat, updateslot);
+				curupdate->UpdateMatrix(limitdegflag, curmotid, curframe, wmat, vmat, pmat, updateslot);
 			}
 
 			if (needwaitfinished) {
@@ -2302,7 +2308,7 @@ int CModel::UpdateMatrix(bool limitdegflag, ChaMatrix* wmat, ChaMatrix* vpmat, b
 			//		curbone->UpdateMatrix( curmotid, curframe, wmat, vpmat );
 			//	}
 			//}
-			UpdateMatrixReq(limitdegflag, GetTopBone(false), curmotid, curframe, wmat, vpmat);
+			UpdateMatrixReq(limitdegflag, GetTopBone(false), curmotid, curframe, wmat, vmat, pmat);
 		}
 	}
 
@@ -2376,19 +2382,20 @@ int CModel::UpdateMatrix(bool limitdegflag, ChaMatrix* wmat, ChaMatrix* vpmat, b
 	return 0;
 }
 
-void CModel::UpdateMatrixReq(bool limitdegflag, CBone* srcbone, int srcmotid, double srcframe, ChaMatrix* wmat, ChaMatrix* vpmat)
+void CModel::UpdateMatrixReq(bool limitdegflag, CBone* srcbone, int srcmotid, double srcframe, 
+	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat)
 {
 	if (srcbone) {
 
 		if (srcbone->IsSkeleton()) {
-			srcbone->UpdateMatrix(limitdegflag, srcmotid, srcframe, wmat, vpmat);
+			srcbone->UpdateMatrix(limitdegflag, srcmotid, srcframe, wmat, vmat, pmat);
 		}
 		
 		if (srcbone->GetChild(false)) {
-			UpdateMatrixReq(limitdegflag, srcbone->GetChild(false), srcmotid, srcframe, wmat, vpmat);
+			UpdateMatrixReq(limitdegflag, srcbone->GetChild(false), srcmotid, srcframe, wmat, vmat, pmat);
 		}
 		if (srcbone->GetBrother(false)) {
-			UpdateMatrixReq(limitdegflag, srcbone->GetBrother(false), srcmotid, srcframe, wmat, vpmat);
+			UpdateMatrixReq(limitdegflag, srcbone->GetBrother(false), srcmotid, srcframe, wmat, vmat, pmat);
 		}
 	}
 }
@@ -2479,10 +2486,12 @@ int CModel::ClearLimitedWM(int srcmotid, double srcframe)
 }
 
 
-int CModel::HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone, ChaMatrix* wmat, ChaMatrix* vpmat)
+int CModel::HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone, ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat)
 {
 	m_matWorld = *wmat;
-	m_matVP = *vpmat;
+	m_matView = *vmat;
+	m_matProj = *pmat;
+	m_matVP = m_matView * m_matProj;
 
 	if (!m_curmotinfo) {
 		return 0;//!!!!!!!!!!!!
@@ -2511,7 +2520,7 @@ int CModel::HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone, ChaMat
 	for (itrbone = vecroute.begin(); itrbone != vecroute.end(); itrbone++) {
 		CBone* curbone = *itrbone;
 		if (curbone) {
-			curbone->UpdateMatrix(limitdegflag, curmotid, curframe, wmat, vpmat);
+			curbone->UpdateMatrix(limitdegflag, curmotid, curframe, wmat, vmat, pmat);
 		}
 	}
 
@@ -8579,15 +8588,17 @@ void CModel::CalcBtAxismatReq( CBone* curbone, int onfirstcreate )
 
 
 int CModel::SetBtMotionOnBt(bool limitdegflag,
-	double srcframe, ChaMatrix* vpmat, int updateslot)
+	double srcframe, ChaMatrix* vmat, ChaMatrix* pmat, int updateslot)
 {
-	if (!vpmat) {
+	if (!vmat || !pmat) {
 		_ASSERT(0);
 		return 1;
 	}
 
 	//m_matWorld = *wmat;//そのまま
-	m_matVP = *vpmat;
+	m_matView = *vmat;
+	m_matProj = *pmat;
+	m_matVP = m_matView * m_matProj;
 
 	if (!m_topbt) {
 		//_ASSERT( 0 );
@@ -8619,7 +8630,7 @@ int CModel::SetBtMotionOnBt(bool limitdegflag,
 		}
 	}
 
-	SetBtMotionReq(limitdegflag, m_topbt, &m_matWorld, vpmat);
+	SetBtMotionReq(limitdegflag, m_topbt, &m_matWorld, vmat, pmat);
 
 	//#########################################################################################
 	//2022/07/09
@@ -8678,10 +8689,12 @@ int CModel::SetBtMotionOnBt(bool limitdegflag,
 
 
 int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag, 
-	double srcframe, ChaMatrix* wmat, ChaMatrix* vpmat )
+	double srcframe, ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat)
 {
 	m_matWorld = *wmat;
-	m_matVP = *vpmat;
+	m_matView = *vmat;
+	m_matProj = *pmat;
+	m_matVP = m_matView * m_matProj;
 
 	if( !m_topbt ){
 		//_ASSERT( 0 );
@@ -8713,7 +8726,7 @@ int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag,
 		}
 	}
 
-	SetBtMotionReq(limitdegflag, m_topbt, wmat, vpmat);
+	SetBtMotionReq(limitdegflag, m_topbt, wmat, vmat, pmat);
 
 	//if (g_previewFlag == 5) {
 	//	//物理IK用
@@ -8975,7 +8988,8 @@ MOTINFO* CModel::GetRgdMorphInfo()
 //}
 
 
-void CModel::SetBtMotionReq(bool limitdegflag, CBtObject* curbto, ChaMatrix* wmat, ChaMatrix* vpmat )
+void CModel::SetBtMotionReq(bool limitdegflag, CBtObject* curbto, 
+	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat)
 {
 	if (!curbto) {
 		return;
@@ -9055,7 +9069,7 @@ void CModel::SetBtMotionReq(bool limitdegflag, CBtObject* curbto, ChaMatrix* wma
 	for( chilno = 0; chilno < curbto->GetChildBtSize(); chilno++ ){
 		CBtObject* chilbto = curbto->GetChildBt( chilno );
 		if( chilbto ){
-			SetBtMotionReq(limitdegflag, chilbto, wmat, vpmat);
+			SetBtMotionReq(limitdegflag, chilbto, wmat, vmat, pmat);
 		}
 	}
 
@@ -13833,7 +13847,7 @@ int CModel::InterpolateBetweenSelection(bool limitdegflag, double srcstartframe,
 	}
 
 
-	UpdateMatrix(limitdegflag, &m_matWorld, &m_matVP);
+	UpdateMatrix(limitdegflag, &m_matWorld, &m_matView, &m_matProj);
 
 	return operatingjointno;
 }
@@ -19191,7 +19205,7 @@ int CModel::SetIKStopFlag()
 int CModel::ChkInView()
 {
 
-	if (wcsstr(GetFileName(), L".mqo") != 0) {
+	if (GetSkyFlag() || (wcsstr(GetFileName(), L".mqo") != 0)) {
 
 		//このアプリにおいては　mqoファイル(マニピュレータや地面格子)はクリッピングしない用途に使用しているので　常に描画するように
 
@@ -19593,7 +19607,7 @@ int CModel::SetLaterTransparentVec(std::vector<std::wstring> srclatervec)
 //
 //}
 
-int CModel::Retarget(CModel* srcbvhmodel, ChaMatrix smatVP,
+int CModel::Retarget(CModel* srcbvhmodel, ChaMatrix smatView, ChaMatrix smatProj,
 	std::map<CBone*, CBone*>& sconvbonemap,
 	int (*srcAddMotionFunc)(const WCHAR* wfilename, double srcmotleng))
 {
@@ -19756,7 +19770,7 @@ int CModel::Retarget(CModel* srcbvhmodel, ChaMatrix smatVP,
 		
 
 		ChaMatrix tmpwm = GetWorldMat();
-		UpdateMatrix(limitdegflag, &tmpwm, &smatVP);
+		UpdateMatrix(limitdegflag, &tmpwm, &smatView, &smatProj);
 
 
 	}

@@ -774,10 +774,10 @@ int CBone::AddChild( CBone* childptr )
 
 
 int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe, 
-	ChaMatrix* wmat, ChaMatrix* vpmat, bool callingbythread, int updateslot)
+	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, bool callingbythread, int updateslot)
 	//default : callingbythread = false, updateslot = 0
 {
-	if (!wmat || !vpmat) {
+	if (!wmat || !vmat || !pmat) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -852,8 +852,9 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 			ChaVector3 jpos = GetJointFPos();
 			ChaVector3TransformCoord(&m_childworld, &jpos, &tmpmat);
-			ChaMatrix wvpmat = tmpmat * *vpmat;
-			ChaVector3TransformCoord(&m_childscreen, &m_childworld, vpmat);//wmatで変換した位置に対して　vp変換
+			ChaMatrix vpmat = *vmat * *pmat;
+			ChaMatrix wvpmat = tmpmat * vpmat;
+			ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);//wmatで変換した位置に対して　vp変換
 		}
 		else {
 			_ASSERT(0);
@@ -879,7 +880,8 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 		else{
 			wmat2 = GetBtMat();// **wmat;
 		}
-		wvpmat = wmat2 * *vpmat;
+		ChaMatrix vpmat = *vmat * *pmat;
+		wvpmat = wmat2 * vpmat;
 
 
 		//ChaVector3TransformCoord(&m_childscreen, &m_childworld, &wvpmat);
@@ -887,7 +889,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 		ChaVector3TransformCoord(&m_childworld, &jpos, &wmat2);
 		
 		//ChaVector3TransformCoord(&m_childworld, &jpos, &(GetBtMat()));
-		ChaVector3TransformCoord(&m_childscreen, &m_childworld, vpmat);
+		ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);
 	}
 
 	m_befupdatetime = srcframe;

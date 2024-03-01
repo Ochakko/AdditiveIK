@@ -170,7 +170,7 @@ void ChaScene::DestroyObjs()
 
 }
 
-int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vpmat, double srcframe)
+int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe)
 {
 	if (g_changeUpdateThreadsNum) {
 		//アップデート用スレッド数を変更中
@@ -194,7 +194,7 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vpmat, double src
 
 				if (curmodel->GetRefPosFlag() == false) {//2024/02/06
 					ChaMatrix wmat = curmodel->GetWorldMat();
-					curmodel->UpdateMatrix(limitdegflag, &wmat, vpmat, needwaitflag, m_updateslot);
+					curmodel->UpdateMatrix(limitdegflag, &wmat, vmat, pmat, needwaitflag, m_updateslot);
 				}
 
 				//2023/11/03
@@ -230,7 +230,7 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vpmat, double src
 	return 0;
 }
 
-int ChaScene::UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, ChaMatrix* wmat, ChaMatrix* vpmat, double srcframe)
+int ChaScene::UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe)
 {
 	if (g_changeUpdateThreadsNum) {
 		//アップデート用スレッド数を変更中
@@ -246,11 +246,11 @@ int ChaScene::UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, ChaMatri
 	bool needwaitflag = true;//!!!!!!!!!!!!
 	if (srcmodel->GetCurMotInfo()) {
 		srcmodel->SetMotionFrame(srcframe);
-		srcmodel->UpdateMatrix(limitdegflag, wmat, vpmat, needwaitflag, m_updateslot);
+		srcmodel->UpdateMatrix(limitdegflag, wmat, vmat, pmat, needwaitflag, m_updateslot);
 	}
 	else {
 		//モーションが無い場合にもChkInViewを呼ぶためにUpdateMatrix呼び出しは必要
-		srcmodel->UpdateMatrix(limitdegflag, wmat, vpmat, needwaitflag, m_updateslot);
+		srcmodel->UpdateMatrix(limitdegflag, wmat, vmat, pmat, needwaitflag, m_updateslot);
 	}
 
 	return 0;
@@ -1331,9 +1331,10 @@ int ChaScene::SetENullTime(int srcmodelindex, double srcframe)
 	return 0;
 }
 
-int ChaScene::Motion2Bt(bool limitdegflag, double nextframe, ChaMatrix* pmVP, int loopstartflag)
+int ChaScene::Motion2Bt(bool limitdegflag, double nextframe, 
+	ChaMatrix* pmView, ChaMatrix* pmProj, int loopstartflag)
 {
-	if (!pmVP) {
+	if (!pmView || !pmProj) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -1344,7 +1345,8 @@ int ChaScene::Motion2Bt(bool limitdegflag, double nextframe, ChaMatrix* pmVP, in
 			int updatecount;
 			for (updatecount = 0; updatecount < m_created_Motion2BtThreadsNum; updatecount++) {
 				CThreadingMotion2Bt* curupdate = m_Motion2BtThreads + updatecount;
-				curupdate->Motion2Bt(limitdegflag, nextframe, pmVP, loopstartflag, m_updateslot);
+				curupdate->Motion2Bt(limitdegflag, nextframe, 
+					pmView, pmProj, loopstartflag, m_updateslot);
 			}
 			WaitMotion2BtFinished();//次に順番に計算することがあるので　待機が必要
 		}
@@ -1380,9 +1382,10 @@ int ChaScene::Motion2Bt(bool limitdegflag, double nextframe, ChaMatrix* pmVP, in
 }
 
 
-int ChaScene::SetBtMotion(bool limitdegflag, double nextframe, ChaMatrix* pmVP, CModel* smodel, double srcreccnt)
+int ChaScene::SetBtMotion(bool limitdegflag, double nextframe, 
+	ChaMatrix* pmView, ChaMatrix* pmProj, CModel* smodel, double srcreccnt)
 {
-	if (!pmVP) {
+	if (!pmView || !pmProj) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -1394,7 +1397,7 @@ int ChaScene::SetBtMotion(bool limitdegflag, double nextframe, ChaMatrix* pmVP, 
 			int updatecount;
 			for (updatecount = 0; updatecount < m_created_SetBtMotionThreadsNum; updatecount++) {
 				CThreadingSetBtMotion* curupdate = m_SetBtMotionThreads + updatecount;
-				curupdate->SetBtMotion(limitdegflag, nextframe, pmVP, smodel, srcreccnt, m_updateslot);
+				curupdate->SetBtMotion(limitdegflag, nextframe, pmView, pmProj, smodel, srcreccnt, m_updateslot);
 			}
 			//WaitSetBtMotionFinished();//レンダー中に計算し　レンダー後に待機するので　コメントアウト
 		}
@@ -1433,18 +1436,19 @@ int ChaScene::SetBtMotion(bool limitdegflag, double nextframe, ChaMatrix* pmVP, 
 }
 
 
-int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe, ChaMatrix* pmVP, int loopstartflag,
+int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe, 
+	ChaMatrix* pmView, ChaMatrix* pmProj, int loopstartflag,
 	CModel* smodel, bool recstopflag, BPWorld* bpWorld, double srcreccnt,
 	int (*srcStopBtRec)())
 {
-	if (!pmVP || !smodel || !bpWorld || !srcStopBtRec) {
+	if (!pmView || !pmProj || !smodel || !bpWorld || !srcStopBtRec) {
 		_ASSERT(0);
 		return 1;
 	}
 
 	m_updateslot = (int)(!(m_updateslot != 0));
 
-	Motion2Bt(limitdegflag, nextframe, pmVP, loopstartflag);//MultiThreading per CModel. Wait threads on return.
+	Motion2Bt(limitdegflag, nextframe, pmView, pmProj, loopstartflag);//MultiThreading per CModel. Wait threads on return.
 
 	if (smodel && (recstopflag == true)) {
 		if (srcStopBtRec) {
@@ -1487,7 +1491,7 @@ int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe, ChaMatrix* pmVP,
 		//	s_reccnt++;
 		//}
 
-		SetBtMotion(limitdegflag, nextframe, pmVP, smodel, srcreccnt);//MultiThreading per CModel, Not Wait threads on return.
+		SetBtMotion(limitdegflag, nextframe, pmView, pmProj, smodel, srcreccnt);//MultiThreading per CModel, Not Wait threads on return.
 
 	}
 

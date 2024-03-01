@@ -71,6 +71,10 @@ struct DirectionalLight
 cbuffer LightCb : register(b1)
 {
     uniform int4 lightsnum;
+   	//lightsnum.x : 有効なライトの数(値をセットしてあるライトの数)
+    //lightsnum.y : lightflag
+    //lightsnum.z : 未使用
+    //lightsnum.w : normalY0flag 
     DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
     float4 eyePos; // カメラの視点
     float4 specPow; // スペキュラの絞り

@@ -23,7 +23,7 @@ public:
 	virtual void DestroyObjs();
 
 	int SetModel(CModel* srcmodel);
-	int SetBtMotion(bool srclimitdegflag, double srcnextframe, ChaMatrix* srcpmVP, CModel* srcsmodel, double srcreccnt, int srcupdateslot);
+	int SetBtMotion(bool srclimitdegflag, double srcnextframe, ChaMatrix* srcpmView, ChaMatrix* srcpmProj, CModel* srcsmodel, double srcreccnt, int srcupdateslot);
 
 private:
 	//static unsigned __stdcall ThreadFuncCaller(LPVOID lpThreadParam);
@@ -42,7 +42,8 @@ private:
 
 	int limitdegflag;
 	double nextframe;
-	ChaMatrix matVP;
+	ChaMatrix matView;
+	ChaMatrix matProj;
 	CModel* smodel;
 	double reccnt;
 	int updateslot;

@@ -92,7 +92,8 @@ public:
 		ChaMatrix oldparentwm, ChaMatrix newparentwm);
 
 
-	int Motion2Bt(CModel* srcmodel, bool limitdegflag, double nextframe, ChaMatrix* pmVP, int updateslot);
+	int Motion2Bt(CModel* srcmodel, bool limitdegflag, double nextframe, 
+		ChaMatrix* pmView, ChaMatrix* pmProj, int updateslot);
 
 
 //##############

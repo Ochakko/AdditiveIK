@@ -167,8 +167,11 @@
 //2024/02/17 先頭に２を付加　最後の２桁は1.0.0.9の9を２桁表現
 //#define MB2VERSION 210009
 
-//2024/02/23 先頭に２を付加　最後の２桁は1.0.0.10
-#define MB2VERSION 210010
+//2024/02/23 先頭に２を付加
+//#define MB2VERSION 210010
+
+//2024/03/02 先頭に２を付加
+#define MB2VERSION 210011
 
 
 CPluginElem::CPluginElem()

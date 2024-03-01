@@ -3028,7 +3028,7 @@ void CMQOMaterial::SetConstShadow(SConstantBufferShadow* pcbShadow)
 }
 
 
-void CMQOMaterial::SetConstLights(SConstantBufferLights* pcbLights)
+void CMQOMaterial::SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBufferLights* pcbLights)
 {
 	if (!pcbLights) {
 		_ASSERT(0);
@@ -3058,8 +3058,10 @@ void CMQOMaterial::SetConstLights(SConstantBufferLights* pcbLights)
 
 	pcbLights->Init();
 	pcbLights->lightsnum[0] = g_nNumActiveLights;
-	pcbLights->lightsnum[1] = min(g_nNumActiveLights, max(0, toonlightindexInShader));//2024/02/15
-	pcbLights->lightsnum[2] = min(g_nNumActiveLights, max(0, shadowlightindexInShader));//2024/02/15
+	//pcbLights->lightsnum[1] = min(g_nNumActiveLights, max(0, toonlightindexInShader));//2024/02/15
+	//pcbLights->lightsnum[2] = min(g_nNumActiveLights, max(0, shadowlightindexInShader));//2024/02/15
+	pcbLights->lightsnum[1] = renderobj.lightflag;//2024/03/02
+	pcbLights->lightsnum[2] = 0;//2024/03/02
 	pcbLights->lightsnum[3] = (GetNormalY0Flag()) ? 1 : 0;//2024/02/19
 	int lightno;
 	for (lightno = 0; lightno < g_nNumActiveLights; lightno++) {//2023/12/17必要分だけ詰めて受け渡し
@@ -3354,7 +3356,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		}
 
 		//if (!GetUpdateLightsFlag(pipelineindex)) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
-			SetConstLights(&(m_cbLights[currentrefposindex]));
+			SetConstLights(renderobj, &(m_cbLights[currentrefposindex]));
 			SetConstShadow(&(m_cbShadow[currentrefposindex]));
 			if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 				m_expandConstantBuffer[currentrefposindex].CopyToVRAM(m_cbLights[currentrefposindex]);
@@ -3402,7 +3404,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		////if (isfirstmaterial) {
 		////if (isfirstmaterial && !GetUpdateFl4x4Flag()) {
 		////if (!renderobj.pmodel->GetUpdateFl4x4Flag()) {
-			SetConstLights(&(m_cbMatrix[currentrefposindex].lights));
+			SetConstLights(renderobj, &(m_cbMatrix[currentrefposindex].lights));
 			if (GetRefPosFlag() == false) {
 				SetFl4x4(renderobj, currentrefposindex);
 			}
@@ -3516,7 +3518,7 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ rende
 			m_shadowcommonConstantBuffer[0].CopyToVRAM(m_cb[0]);
 		}
 		//if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
-			SetConstLights(&(m_cbLights[0]));
+			SetConstLights(renderobj, &(m_cbLights[0]));
 			if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 				m_expandConstantBuffer[0].CopyToVRAM(m_cbLights[0]);
 			}
@@ -3558,7 +3560,7 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ rende
 			//if (isfirstmaterial) {
 			//if (isfirstmaterial && !GetUpdateFl4x4Flag()) {
 			//if (!renderobj.pmodel->GetUpdateFl4x4Flag()) {
-			SetConstLights(&(m_cbMatrix[0].lights));
+			SetConstLights(renderobj, &(m_cbMatrix[0].lights));
 			SetFl4x4(renderobj, 0);
 
 			if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
@@ -3655,7 +3657,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 			m_shadowcommonConstantBuffer[0].CopyToVRAM(m_cb[0]);
 		}
 		//if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
-		SetConstLights(&(m_cbLights[0]));
+		SetConstLights(renderobj, &(m_cbLights[0]));
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_expandConstantBuffer[0].CopyToVRAM(m_cbLights[0]);
 		}
@@ -3697,7 +3699,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 			//if (isfirstmaterial) {
 			//if (isfirstmaterial && !GetUpdateFl4x4Flag()) {
 			//if (!renderobj.pmodel->GetUpdateFl4x4Flag()) {
-		SetConstLights(&(m_cbMatrix[0].lights));
+		SetConstLights(renderobj, &(m_cbMatrix[0].lights));
 		SetFl4x4(renderobj, 0);
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {

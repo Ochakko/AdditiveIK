@@ -110,9 +110,11 @@ struct SConstantBufferLights {
 	void Init() {
 		//ZeroMemory(&lightsnum, sizeof(int) * 4);
 		lightsnum[0] = 1;//[0]:有効なライトの数(値をセットしてあるライトの数)
-		lightsnum[1] = 0;//[1]:トゥーンライトインデックス(有効なライトだけ格納したシェーダ定数内のインデックス)
-		lightsnum[2] = 0;//[2]:シャドウライトインデックス(有効なライトだけ格納したシェーダ定数内のインデックス)
-		lightsnum[3] = 0;
+		//lightsnum[1] = 0;//[1]:トゥーンライトインデックス(有効なライトだけ格納したシェーダ定数内のインデックス)
+		//lightsnum[2] = 0;//[2]:シャドウライトインデックス(有効なライトだけ格納したシェーダ定数内のインデックス)
+		lightsnum[1] = 1;//[1]:renderobj.lightflag
+		lightsnum[2] = 0;//[2]:未使用
+		lightsnum[3] = 0;//[3]:GetNormalY0Flag()
 		int lindex;
 		for (lindex = 0; lindex < NUM_DIRECTIONAL_LIGHT; lindex++) {
 			directionalLight[lindex].Init();
@@ -356,7 +358,7 @@ public:
 
 	void SetFl4x4(myRenderer::RENDEROBJ renderobj, int refposindex);
 	int SetRefPosFl4x4(CModel* srcmodel, int refposindex);
-	void SetConstLights(SConstantBufferLights* pcbLights);
+	void SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBufferLights* pcbLights);
 	void SetConstShadow(SConstantBufferShadow* pcbShadow);
 	void DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 		const Matrix& mView, const Matrix& mProj,

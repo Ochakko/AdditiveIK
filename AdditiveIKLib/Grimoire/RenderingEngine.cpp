@@ -412,7 +412,8 @@ namespace myRenderer
         for (auto& currenderobj : m_forwardRenderModels)
         {
             if (g_enableshadow) {
-                if (currenderobj.renderkind == RENDERKIND_SHADOWMAP) {
+                if (currenderobj.pmodel && (currenderobj.pmodel->GetSkyFlag() == false) && 
+                    (currenderobj.renderkind == RENDERKIND_SHADOWMAP)) {
                     RenderPolyMeshShadowMap(rc, currenderobj);
                 }
             }
@@ -512,7 +513,8 @@ namespace myRenderer
         for (auto& currenderobj : m_forwardRenderModels)
         {
             if (g_enableshadow) {
-                if (currenderobj.renderkind == RENDERKIND_SHADOWMAP) {
+                if (currenderobj.pmodel && (currenderobj.pmodel->GetSkyFlag() == false) && 
+                    (currenderobj.renderkind == RENDERKIND_SHADOWMAP)) {
                     RenderPolyMeshShadowReciever(rc, currenderobj);
                 }
                 else {
@@ -694,6 +696,12 @@ namespace myRenderer
         if (currenderobj.mqoobj) {
             if (currenderobj.mqoobj->GetDispObj()) {
                 if (currenderobj.mqoobj->GetPm3()) {
+
+                    if (currenderobj.pmodel && (currenderobj.pmodel->GetSkyFlag())) {
+                        currenderobj.renderkind = RENDERKIND_NORMAL;
+                        currenderobj.lightflag = 0;
+                    }
+
                     //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
                     currenderobj.mqoobj->GetDispObj()->RenderNormalPM3(rc, currenderobj);
                 }

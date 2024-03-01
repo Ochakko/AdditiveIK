@@ -405,11 +405,13 @@ public:
  * @param (ChaMatrix* vpmat) IN View * Projection変換行列。
  * @return 成功したら０。
  */
-	int UpdateMatrix(bool limitdegflag, ChaMatrix* wmat, ChaMatrix* vpmat, bool needwaitfinished = true, int updateslot = 0);
-	void UpdateMatrixReq(bool limitdegflag, CBone* srcbone, int srcmotid, double srcframe, ChaMatrix* wmat, ChaMatrix* vpmat);
+	int UpdateMatrix(bool limitdegflag, 
+		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, 
+		bool needwaitfinished = true, int updateslot = 0);
+	void UpdateMatrixReq(bool limitdegflag, CBone* srcbone, int srcmotid, double srcframe, ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
 	int ChkInView();
 	//int SwapCurrentMotionPoint();
-	int HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone, ChaMatrix* wmat, ChaMatrix* vpmat);
+	int HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone, ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
 	//int UpdateLimitedWM(int srcmotid, double srcframe);
 	int ClearLimitedWM(int srcmotid, double srcframe);
 	void CopyWorldToLimitedWorldReq(CBone* srcbone, int srcmotid, double srcframe);
@@ -787,9 +789,9 @@ public:
  * @detail bulletシミュレーション時には、CModel::Motion2Bt-->BPWorld::clientMoveAndDisplay-->CModel::SetBtMotionという流れで呼び出す。
  */
 	int SetBtMotion(bool limitdegflag, CBone* srcbone, int rgdollflag, 
-		double srcframe, ChaMatrix* wmat, ChaMatrix* vpmat );
+		double srcframe, ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
 	int SetBtMotionOnBt(bool limitdegflag,
-		double srcframe, ChaMatrix* vpmat, int updateslot);
+		double srcframe, ChaMatrix* vmat, ChaMatrix* pmat, int updateslot);
 
 /**
  * @fn
@@ -854,7 +856,7 @@ public:
 
 	int SetColTypeAll(int reindex, int srctype);
 
-	int Motion2Bt(bool limitdegflag, double nextframe, ChaMatrix* pmVP, int updateslot);
+	int Motion2Bt(bool limitdegflag, double nextframe, ChaMatrix* pmView, ChaMatrix* pmProj, int updateslot);
 	void Motion2BtReq(CBtObject* srcbto);
 
 	//int SetRagdollKinFlag(int selectbone, int physicsmvkind = 0);
@@ -1024,7 +1026,7 @@ public:
 	int SetBefEditMat(bool limitdegflag, CEditRange* erptr, CBone* curbone, int maxlevel);
 	int SetBefEditMatFK(bool limitdegflag, CEditRange* erptr, CBone* curbone);
 
-	int Retarget(CModel* srcbvhmodel, ChaMatrix smatVP,
+	int Retarget(CModel* srcbvhmodel, ChaMatrix smatView, ChaMatrix smatProj,
 		std::map<CBone*, CBone*>& sconvbonemap,
 		int (*srcAddMotionFunc)(const WCHAR* wfilename, double srcmotleng));
 
@@ -1158,7 +1160,7 @@ private:
 
 	void CalcBtAxismatReq( CBone* curbone, int onfirstcreate );
 	void CalcRigidElemReq(CBone* curbone);
-	void SetBtMotionReq(bool limitdegflag, CBtObject* curbto, ChaMatrix* wmat, ChaMatrix* vpmat);
+	void SetBtMotionReq(bool limitdegflag, CBtObject* curbto, ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
 	//void SetBtMotionPostLowerReq(CBtObject* curbto, ChaMatrix* wmat, ChaMatrix* vpmat, int kinematicadjustflag);
 	//void SetBtMotionPostUpperReq(CBtObject* curbto, ChaMatrix* wmat, ChaMatrix* vpmat);
 	//void SetBtMotionMass0BottomUpReq(CBtObject* curbto, ChaMatrix* wmat, ChaMatrix* vpmat);
@@ -1892,7 +1894,18 @@ public: //accesser
 	{
 		return m_matWorld;
 	};
-
+	ChaMatrix GetViewMat()
+	{
+		return m_matView;
+	};
+	ChaMatrix GetProjMat()
+	{
+		return m_matProj;
+	};
+	ChaMatrix GetVPMat()
+	{
+		return m_matVP;
+	};
 
 	int GetFbxComment(char* dstcomment, int dstlen)
 	{
@@ -2474,6 +2487,15 @@ public: //accesser
 		return m_refposflag;
 	}
 
+	void SetSkyFlag(bool srcflag)
+	{
+		m_skyflag = srcflag;
+	}
+	bool GetSkyFlag()
+	{
+		return m_skyflag;
+	}
+
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];
@@ -2577,6 +2599,8 @@ private:
 	bool m_useegpfile;
 
 	ChaMatrix m_matWorld;//ワールド変換行列。
+	ChaMatrix m_matView;
+	ChaMatrix m_matProj;
 	ChaMatrix m_matVP;//View * Projection 変換行列。
 
 	std::map<CMQOObject*, FBXOBJ*> m_fbxobj;//FbxNodeのラッパークラスとCMQOObjectとのmap。
@@ -2668,7 +2692,7 @@ private:
 	INSTANCINGPARAMS m_instancingparams[RIGMULTINDEXMAX];
 
 	bool m_refposflag;
-
+	bool m_skyflag;
 };
 
 #endif

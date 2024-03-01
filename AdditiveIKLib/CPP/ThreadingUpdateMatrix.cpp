@@ -56,7 +56,8 @@ int CThreadingUpdateMatrix::InitParams()
 	//wmat = 0;
 	//vpmat = 0;
 	ChaMatrixIdentity(&wmat);
-	ChaMatrixIdentity(&vpmat);
+	ChaMatrixIdentity(&vmat);
+	ChaMatrixIdentity(&pmat);
 
 	m_limitdegflag = false;
 	updateslot = 0;
@@ -107,7 +108,7 @@ int CThreadingUpdateMatrix::ThreadFunc()
 								CBone* curbone = m_bonevec[bonecount];
 								if (curbone && (g_changeUpdateThreadsNum == false)) {
 									bool callingbythread = true;
-									curbone->UpdateMatrix(m_limitdegflag, motid, frame, &wmat, &vpmat, callingbythread, updateslot);
+									curbone->UpdateMatrix(m_limitdegflag, motid, frame, &wmat, &vmat, &pmat, callingbythread, updateslot);
 								}
 							}
 						}
@@ -157,7 +158,7 @@ int CThreadingUpdateMatrix::ThreadFunc()
 								CBone* curbone = m_bonevec[bonecount];
 								if (curbone && (g_changeUpdateThreadsNum == false)) {
 									bool callingbythread = true;
-									curbone->UpdateMatrix(m_limitdegflag, motid, frame, &wmat, &vpmat, callingbythread, updateslot);
+									curbone->UpdateMatrix(m_limitdegflag, motid, frame, &wmat, &vmat, &pmat, callingbythread, updateslot);
 								}
 							}
 						}
@@ -219,7 +220,7 @@ int CThreadingUpdateMatrix::AddBoneList(CBone* srcbone)
 }
 
 void CThreadingUpdateMatrix::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe, 
-	ChaMatrix* srcwmat, ChaMatrix* srcvpmat, int srcupdateslot)
+	ChaMatrix* srcwmat, ChaMatrix* srcvmat, ChaMatrix* srcpmat, int srcupdateslot)
 	//default : updateslot = 0
 {
 
@@ -240,7 +241,8 @@ void CThreadingUpdateMatrix::UpdateMatrix(bool limitdegflag, int srcmotid, doubl
 		motid = srcmotid;
 		frame = srcframe;
 		wmat = *srcwmat;
-		vpmat = *srcvpmat;
+		vmat = *srcvmat;
+		pmat = *srcpmat;
 		m_limitdegflag = limitdegflag;
 		updateslot = srcupdateslot;
 		LeaveCriticalSection(&m_CritSection);

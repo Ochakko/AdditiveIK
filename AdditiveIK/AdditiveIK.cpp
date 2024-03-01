@@ -946,6 +946,7 @@ static CModel* s_bmark = NULL;
 //static CModel* s_coldisp[ COL_MAX ];
 static CModel* s_ground = NULL;
 static CModel* s_gplane = NULL;
+static CModel* s_sky = NULL;
 
 
 static int s_rigsphere_num;
@@ -972,6 +973,7 @@ static ChaMatrix s_matWorld;//シーン(カメラ)のworldmat. modelのworldmat�
 static ChaMatrix s_matProj;
 static ChaMatrix s_matVP;
 static ChaMatrix s_matView;
+static ChaMatrix s_matSkyProj;
 //static ChaVector3 s_camUpVec = ChaVector3(0.00001f, 1.0f, 0.0f);
 
 static int s_curmotid = -1;
@@ -2310,6 +2312,8 @@ static int OnRenderSelect(myRenderer::RenderingEngine* re, RenderContext* pRende
 static int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
 static int OnRenderFontForTip(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
 static int OnRenderUtDialog(RenderContext* pRenderContext, float fElapsedTime);
+static int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
+
 
 static int PasteMotionPoint(CBone* srcbone, CMotionPoint srcmp, double newframe);
 static int PasteNotMvParMotionPoint(CBone* srcbone, 
@@ -3003,6 +3007,13 @@ INT WINAPI wWinMain(
 
 
 
+	HRESULT hr1 = CoInitialize(NULL);
+	if (FAILED(hr1)) {
+		//すでに初期化済なだけでエラーリターンするのでそのまま続行する
+		//_ASSERT(0);
+		//return 1;
+	}
+
 	g_mainhwnd = CreateMainWindow();
 	if (g_mainhwnd == NULL) {
 		_ASSERT(0);
@@ -3100,6 +3111,30 @@ INT WINAPI wWinMain(
 	renderingEngine.Init();
 
 
+	
+	s_psdk = FbxManager::Create();
+	if (!s_psdk)
+	{
+		_ASSERT(0);
+		return 1;
+	}
+	FbxIOSettings* ios = FbxIOSettings::Create(s_psdk, IOSROOT);
+	s_psdk->SetIOSettings(ios);
+	// Load plugins from the executable directory
+	FbxString lPath = FbxGetApplicationDirectory();
+#if defined(KARCH_ENV_WIN)
+	FbxString lExtension = "dll";
+#elif defined(KARCH_ENV_MACOSX)
+	FbxString lExtension = "dylib";
+#elif defined(KARCH_ENV_LINUX)
+	FbxString lExtension = "so";
+#endif
+	s_psdk->LoadPluginsDirectory(lPath.Buffer(), "dll");
+
+
+
+
+
 	OnCreateDevice();
 
 	CreatePlaceFolderWnd();
@@ -3139,41 +3174,10 @@ INT WINAPI wWinMain(
 
 	//CreateCopyHistoryDlg();//s_modelが出来てから呼ぶ　OnModelMenu()に移動
 
-	//CallF( InitializeSdkObjects(), return 1 );
-
-	s_psdk = FbxManager::Create();
-	if (!s_psdk)
-	{
-		_ASSERT(0);
-		return 1;
-	}
-	FbxIOSettings* ios = FbxIOSettings::Create(s_psdk, IOSROOT);
-	s_psdk->SetIOSettings(ios);
-	// Load plugins from the executable directory
-	FbxString lPath = FbxGetApplicationDirectory();
-#if defined(KARCH_ENV_WIN)
-	FbxString lExtension = "dll";
-#elif defined(KARCH_ENV_MACOSX)
-	FbxString lExtension = "dylib";
-#elif defined(KARCH_ENV_LINUX)
-	FbxString lExtension = "so";
-#endif
-	s_psdk->LoadPluginsDirectory(lPath.Buffer(), "dll");
-
-
 	GUIMenuSetVisible(s_platemenukind, s_platemenuno);
 
 
 	//if (!s_eventhook) {
-	HRESULT hr1 = CoInitialize(NULL);
-	if (FAILED(hr1)) {
-		//すでに初期化済なだけでエラーリターンするのでそのまま続行する
-		//_ASSERT(0);
-		//return 1;
-	}
-
-
-
 	//s_eventhook = SetWinEventHook(
 	//	//EVENT_SYSTEM_DIALOGSTART,
 	//	//EVENT_SYSTEM_DIALOGSTART,
@@ -3216,6 +3220,26 @@ INT WINAPI wWinMain(
 		DispCameraPanel();
 	}
 	
+	{//2024/03/02
+		s_matSkyProj.SetIdentity();
+		g_camera3D->SetNear(100.0f);
+		g_camera3D->SetFar(500000.0f);
+		g_camera3D->SetViewAngle(g_fovy);//2023/12/30
+		Vector3 cameye = Vector3(g_camEye.x, g_camEye.y, g_camEye.z);
+		g_camera3D->SetPosition(cameye);
+		Vector3 target = Vector3(g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
+		g_camera3D->SetTarget(target);
+		g_camera3D->SetUp(Vector3(g_cameraupdir.x, g_cameraupdir.y, g_cameraupdir.z));
+		g_camera3D->SetWidth((float)g_graphicsEngine->GetFrameBufferWidth());//2023/11/20
+		g_camera3D->SetHeight((float)g_graphicsEngine->GetFrameBufferHeight());//2023/11/20
+		g_camera3D->Update();
+		
+		s_matSkyProj = ChaMatrix(g_camera3D->GetProjectionMatrix());
+	}
+
+
+
+
 
 	int dbgcount = 0;
 	while (DispatchWindowMessage())
@@ -3451,6 +3475,13 @@ void InitApp()
 	InitializeCriticalSection(&g_CritSection_FbxSdk);
 
 	InitCommonControls();
+
+	s_matWorld.SetIdentity();
+	s_matProj.SetIdentity();
+	s_matVP.SetIdentity();
+	s_matView.SetIdentity();
+	s_matSkyProj.SetIdentity();
+
 
 
 	//g_materialbank.InitParams();
@@ -3767,6 +3798,7 @@ void InitApp()
 		s_bmark = NULL;
 		s_ground = NULL;
 		s_gplane = NULL;
+		s_sky = NULL;
 	}
 
 
@@ -4923,7 +4955,10 @@ void OnDestroyDevice()
 		delete s_select_posture;
 		s_select_posture = 0;
 	}
-
+	if (s_sky) {
+		delete s_sky;
+		s_sky = NULL;
+	}
 
 	if (s_rigopemark_sphere) {
 		delete s_rigopemark_sphere;
@@ -5943,6 +5978,9 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 			OnRenderOnlyOneObj(re, rc);
 		}
 		
+
+		OnRenderSky(re, rc);
+
 		//OnRenderUtDialog(fElapsedTime);
 
 		if (s_dispsampleui) {//ctrl + 1 (one) key --> toggle
@@ -7436,6 +7474,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					s_ikselectmat.SetTranslationZero();
 				}
 			}
+			else {
+				s_curboneno = -1;
+			}
 		}
 
 
@@ -7616,13 +7657,13 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						0,
 						s_ikcustomrig, s_pickinfo.buttonflag);
 					ChaMatrix tmpwm = s_model->GetWorldMat();
-					s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matVP);
+					s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
 					s_model->RigControlPostRig(g_limitdegflag,
 						0, &s_editrange, s_pickinfo.pickobjno,
 						1,
 						s_ikcustomrig, s_pickinfo.buttonflag);
 					tmpwm = s_model->GetWorldMat();
-					s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matVP);
+					s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
 					s_editmotionflag = s_curboneno;
 
 					if (oldcursor != NULL) {
@@ -12121,7 +12162,7 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 		}
 		s_model->SetMotionFrame(0.0);
 		ChaMatrix tmpwm = s_model->GetWorldMat();
-		s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matVP);
+		s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
 		//ここでAxisMatXの初期化
 		s_model->CreateBtObject(g_limitdegflag, 1);
 		s_model->CalcBtAxismat(2);//2
@@ -13019,7 +13060,7 @@ int RenderSelectFunc(myRenderer::RenderingEngine* re)
 		return 0;
 	}
 
-	s_chascene->UpdateMatrixOneModel(s_select, g_limitdegflag, &s_selectmat, &s_matVP, 0.0);
+	s_chascene->UpdateMatrixOneModel(s_select, g_limitdegflag, &s_selectmat, &s_matView, &s_matProj, 0.0);
 	if (s_dispselect) {
 		int lightflag = 1;
 		//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
@@ -13044,7 +13085,7 @@ int RenderSelectPostureFunc(myRenderer::RenderingEngine* re)
 		return 0;
 	}
 
-	s_chascene->UpdateMatrixOneModel(s_select_posture, g_limitdegflag, &s_selectmat_posture, &s_matVP, 0.0);
+	s_chascene->UpdateMatrixOneModel(s_select_posture, g_limitdegflag, &s_selectmat_posture, &s_matView, &s_matProj, 0.0);
 	if (s_dispselect) {
 		int lightflag = 1;
 		//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -17965,7 +18006,7 @@ int RetargetMotion()
 		return 1;
 	}
 
-	int result = s_convbone_model->Retarget(s_convbone_bvh, s_matVP, s_convbonemap, AddMotion);
+	int result = s_convbone_model->Retarget(s_convbone_bvh, s_matView, s_matProj, s_convbonemap, AddMotion);
 	if (result) {
 		_ASSERT(0);
 		//g_underRetargetFlag = false;
@@ -18335,7 +18376,7 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 					//	}
 					//}
 					ChaMatrix tmpwm = pmodel->GetWorldMat();
-					pmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matVP);
+					pmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
 
 					//curmodel->SetCurrentRigidElem(s_curreindex);//s_curreindexをmodelごとに持つ必要あり！！！reの内容を変えてから呼ぶ
 					//s_curreindex = 1;
@@ -18390,7 +18431,7 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 					//	}
 					//}
 					ChaMatrix tmpwm = pmodel->GetWorldMat();
-					pmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matVP);
+					pmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
 
 
 					//curmodel->SetAllKData(-1, s_rgdindex, 3, 3, 1000.0, 0.1);
@@ -18827,7 +18868,7 @@ int SaveProject()
 			s_owpEulerGraph->setCurrentTime(0.0, false);
 			curmodel->SetMotionFrame(0.0);
 			ChaMatrix tmpwm = curmodel->GetWorldMat();
-			curmodel->UpdateMatrix(g_bakelimiteulonsave, &tmpwm, &s_matVP);
+			curmodel->UpdateMatrix(g_bakelimiteulonsave, &tmpwm, &s_matView, &s_matProj);
 
 			//ここでAxisMatXの初期化
 			curmodel->CreateBtObject(g_bakelimiteulonsave, 1);
@@ -22472,7 +22513,7 @@ int ExportFBXFile()
 	g_previewFlag = 0;
 	s_owpLTimeline->setCurrentTime(0.0, true);
 
-	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matVP, 0.0);
+	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, 0.0);
 	
 	WCHAR filename[MAX_PATH] = { 0L };
 	OPENFILENAME ofn1;
@@ -22530,7 +22571,7 @@ int ExportFBXFile()
 		s_owpLTimeline->setCurrentTime(0.0, true);
 		s_model->SetMotionFrame(0.0);
 		ChaMatrix tmpwm = s_model->GetWorldMat();
-		s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matVP);
+		s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
 
 		//ここでAxisMatXの初期化
 		s_model->CreateBtObject(g_limitdegflag, 1);
@@ -22579,7 +22620,7 @@ int ExportBntFile()
 	g_previewFlag = 0;
 	s_owpLTimeline->setCurrentTime(0.0, true);
 
-	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matVP, 0.0);
+	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, 0.0);
 
 
 
@@ -23179,7 +23220,7 @@ int DispAngleLimitDlg()
 
 	s_dseullimitctrls.clear();
 	ChaMatrix tmpwm = s_model->GetWorldMat();
-	s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matVP);
+	s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
 	Bone2AngleLimit();
 
 	/*
@@ -24815,7 +24856,7 @@ int CopyLimitedWorldToWorld(CModel* srcmodel, bool allframeflag, bool setcursorf
 		if (s_owpLTimeline) {
 			double curframe = s_owpLTimeline->getCurrentTime();
 			srcmodel->SetMotionFrame(curframe);
-			srcmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matVP);
+			srcmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
 		}
 	}
 
@@ -24851,7 +24892,7 @@ int CopyWorldToLimitedWorld(CModel* srcmodel)
 		if (s_owpLTimeline) {
 			double curframe = s_owpLTimeline->getCurrentTime();
 			srcmodel->SetMotionFrame(curframe);
-			srcmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matVP);
+			srcmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
 		}
 	}
 	return 0;
@@ -24886,7 +24927,7 @@ int ApplyNewLimitsToWM(CModel* srcmodel)
 		if (s_owpLTimeline) {
 			double curframe = s_owpLTimeline->getCurrentTime();
 			srcmodel->SetMotionFrame(curframe);
-			srcmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matVP);
+			srcmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
 		}
 	}
 
@@ -24910,14 +24951,14 @@ int ApplyNewLimitsToWMSelected()
 			int curframe;
 			for (curframe = istartframe; curframe <= iendframe; curframe++) {
 				s_model->SetMotionFrame((double)curframe);
-				s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matVP);
+				s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
 			}
 		}
 
 		if (s_owpLTimeline) {
 			double curframe = s_owpLTimeline->getCurrentTime();
 			s_model->SetMotionFrame(curframe);
-			s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matVP);
+			s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
 		}
 	}
 
@@ -30415,7 +30456,7 @@ int OnFramePreviewStop()
 		currenttime = 0.0;
 	}
 	
-	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matVP, currenttime);
+	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, currenttime);
 
 	//s_tum.UpdateMatrix(s_modelindex, &s_matVP);//ブロッキング
 
@@ -30452,7 +30493,7 @@ int OnFramePreviewNormal(double nextframe, double difftime, int endflag, int loo
 	//	g_previewFlag = 0;
 	//}
 
-	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matVP, nextframe);
+	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, nextframe);
 
 #ifndef SKIP_EULERGRAPH__
 	if (s_owpTimeline) {
@@ -30561,7 +30602,8 @@ int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopsta
 
 
 	//2023/11/03 モデル単位マルチスレッド＆ダブルバッファ
-	s_chascene->UpdateBtFunc(g_limitdegflag, nextframe, &s_matVP, loopstartflag, s_model, recstopflag, s_bpWorld, s_reccnt, StopBtRec);
+	s_chascene->UpdateBtFunc(g_limitdegflag, nextframe, 
+		&s_matView, &s_matProj, loopstartflag, s_model, recstopflag, s_bpWorld, s_reccnt, StopBtRec);
 
 
 	//60 x 60 frames limit : 60 sec limit
@@ -31090,7 +31132,7 @@ int OnFrameTimeLineWnd()
 			s_owpLTimeline->setCurrentTime(s_buttonselectstart, false);
 		}
 		if (s_chascene) {
-			s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matVP, s_buttonselectstart);
+			s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, s_buttonselectstart);
 		}
 
 		Bone2AngleLimit();
@@ -31367,6 +31409,9 @@ int OnFrameToolWnd()
 					g_befcamtargetpos = g_camtargetpos;
 					g_camtargetpos = curbone->GetChildWorld();
 				}
+			}
+			else {
+				s_curboneno = -1;
 			}
 		}
 		s_camtargetOnceflag = 0;
@@ -33145,13 +33190,13 @@ int OnFrameUpdateGround()
 
 	if (s_ground) {
 		ChaMatrix tmpwm = s_ground->GetWorldMat();
-		s_ground->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matVP);
+		s_ground->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
 	}
 
 	if (s_gplane && s_bpWorld && s_bpWorld->m_rigidbodyG) {
 		ChaMatrix gpmat = s_inimat;
 		gpmat.data[MATI_42] = s_bpWorld->m_gplaneh;
-		s_gplane->UpdateMatrix(g_limitdegflag, &gpmat, &s_matVP);
+		s_gplane->UpdateMatrix(g_limitdegflag, &gpmat, &s_matView, &s_matProj);
 	}
 	return 0;
 }
@@ -38799,7 +38844,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 
 							s_model->SetMotionFrame(roundingrenderframe);
 							//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
-							s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matVP, roundingrenderframe);
+							s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matView, &s_matProj, roundingrenderframe);
 
 
 							bool calcslotflag;
@@ -38839,7 +38884,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 
 							s_model->SetMotionFrame(currentframe);
 							//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
-							s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matVP, currentframe);
+							s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matView, &s_matProj, currentframe);
 
 							bool calcslotflag;
 							calcslotflag = true;
@@ -38980,6 +39025,51 @@ int OnRenderOnlyOneObj(myRenderer::RenderingEngine* re, RenderContext* rc)
 	return 0;
 }
 
+int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
+{
+	if (!re || !pRenderContext) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	if (!s_chascene) {
+		return 0;
+	}
+
+	if (s_sky) {
+		ChaVector3 vCenter = s_chascene->GetTotalModelBound().center;
+		vCenter.x = g_camEye.x;
+		vCenter.z = g_camEye.z;
+
+		//float fObjectRadius = s_chascene->GetTotalModelBound().r;
+		//if (fObjectRadius < 0.1f) {
+		//	fObjectRadius = 10.0f;
+		//}
+		//fObjectRadius *= 1.25f;
+		//fObjectRadius = (float)fmax(500000.0f, fObjectRadius);//model１体だけ読込の場合にも　カメラがSkyの中に入るように
+		float fObjectRadius = 500000.0f * 0.080f;//fbxの半径が10なので0.1倍より少し小さめ
+
+		ChaMatrix skymat;
+		skymat.SetIdentity();
+		skymat.SetScale(ChaVector3(fObjectRadius, fObjectRadius, fObjectRadius));
+		skymat.SetTranslation(vCenter);
+
+
+		//g_projfarでクリッピングされないようにsky用のprojを使う
+		s_chascene->UpdateMatrixOneModel(s_sky, g_limitdegflag, &skymat, &s_matView, &s_matSkyProj, 0.0);
+		ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		bool forcewithalpha = false;
+		int btflag = 0;
+		bool zcmpalways = false;
+		bool zenable = true;
+		int lightflag = 0;
+		s_chascene->RenderOneModel(s_sky, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);
+	}
+
+	return 0;
+}
+
+
 
 int OnRenderGround(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 {
@@ -39000,7 +39090,7 @@ int OnRenderGround(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		//g_pEffect->SetMatrix(g_hmWorld, &(s_matWorld.D3DX()));
 		ChaMatrix initmat;
 		initmat.SetIdentity();
-		s_chascene->UpdateMatrixOneModel(s_ground, g_limitdegflag, &initmat, &s_matVP, 0.0);
+		s_chascene->UpdateMatrixOneModel(s_ground, g_limitdegflag, &initmat, &s_matView, &s_matProj, 0.0);
 		ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 		bool forcewithalpha = false;
 		int btflag = 0;
@@ -41498,6 +41588,9 @@ void AutoCameraTarget()
 
 			SetCamera3DFromEyePos();
 		}
+		else {
+			s_curboneno = -1;
+		}
 	}
 }
 
@@ -42315,7 +42408,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.10 : No.%d : ", s_appcnt);
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.11 : No.%d : ", s_appcnt);
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -42656,7 +42749,7 @@ void RecalcAxisX_All()
 		}
 		s_model->SetMotionFrame(0.0);
 		ChaMatrix tmpwm = s_model->GetWorldMat();
-		s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matVP);
+		s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
 
 		//ここでAxisMatXの初期化
 		s_model->CreateBtObject(g_limitdegflag, 1);
@@ -42787,12 +42880,12 @@ int OnMouseMoveFunc()
 								0, deltau, 
 								s_ikcustomrig, s_pickinfo.buttonflag);
 							ChaMatrix tmpwm = s_model->GetWorldMat();
-							s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matVP);
+							s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
 							s_model->RigControlUnderRig(g_limitdegflag, 
 								0, &s_editrange, s_pickinfo.pickobjno, 
 								1, deltav, 
 								s_ikcustomrig, s_pickinfo.buttonflag);
-							s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matVP);
+							s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
 							s_editmotionflag = s_curboneno;
 							//s_editmotionflag = 0;//これを０にすると　oprigflag == 1の状態でアンドゥした時に　アンドゥ用の保存が走って　保存が増えて状態が戻らない
 						}
@@ -43063,6 +43156,9 @@ int OnMouseMoveFunc()
 				if (curbone) {
 					g_befcamtargetpos = g_camtargetpos;
 					g_camtargetpos = curbone->GetChildWorld();
+				}
+				else {
+					s_curboneno = -1;
 				}
 			}
 
@@ -50497,7 +50593,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.10 : No.%d : ", s_appcnt);
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.11 : No.%d : ", s_appcnt);
 
 
 	if (s_model && s_chascene) {
@@ -52664,7 +52760,7 @@ int PickRigBone(UIPICKINFO* ppickinfo, bool forrigtip, int* dstrigno)//default:f
 							rigmat = CalcRigMat(&currig, curbone, curmotid, curframe, currig.dispaxis, currig.disporder, currig.posinverse);
 
 							//g_hmWorld->SetMatrix(rigmat.GetDataPtr());
-							currigmodel->UpdateMatrix(g_limitdegflag, &rigmat, &s_matVP);
+							currigmodel->UpdateMatrix(g_limitdegflag, &rigmat, &s_matView, &s_matProj);
 
 
 							int chkboneno = curbone->GetBoneNo();
@@ -56655,7 +56751,26 @@ int OnCreateDevice()
 	}
 	CallF(s_select_posture->LoadMQO(s_pdev, L"..\\Media\\MameMedia\\select_2_posture.mqo", 0, 1.0f, 0), return S_FALSE);
 	//CallF(s_select_posture->MakeDispObj(), return S_FALSE);
-	
+
+
+	s_sky = new CModel();
+	if (!s_sky) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	s_sky->SetSkyFlag(true);//!!!!!!!!!!!! for no clipping
+	FbxScene* pScene = 0;
+	FbxImporter* pImporter = 0;
+	BOOL motioncachebatchflag = FALSE;
+	WCHAR skypath[1024] = { 0L };
+	swprintf_s(skypath, 1024, L"%s..\\Media\\MameMedia\\SkySphere1.fbx", g_basedir);
+	CallF(s_sky->LoadFBX(1, s_pdev, 
+		skypath, L"SkySphere1_1", 1.0f,
+		s_psdk, &pImporter, &pScene, s_forcenewaxis, motioncachebatchflag), return S_FALSE);
+
+
+
 	float rigmult = 1.0f;
 	s_rigopemark_sphere = new CModel();
 	if (!s_rigopemark_sphere) {

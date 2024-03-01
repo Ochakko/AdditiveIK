@@ -92,9 +92,10 @@ struct DirectionalLight
 cbuffer LightCb : register(b1)
 {
     uniform int4 lightsnum;
-	//lightsnum.x :有効なライトの数(値をセットしてあるライトの数)
-	//toonlightdir :トゥーンライトインデックス(有効なライトだけ格納したシェーダ定数内のインデックス)
-	//lightsnum.z :シャドウライトインデックス(有効なライトだけ格納したシェーダ定数内のインデックス)    
+	//lightsnum.x : 有効なライトの数(値をセットしてあるライトの数)
+    //lightsnum.y : lightflag
+    //lightsnum.z : 未使用
+    //lightsnum.w : normalY0flag
     DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
     float4 eyePos; // カメラの視点
     float4 specPow; // スペキュラの絞り
@@ -128,8 +129,8 @@ sampler g_sampler_shadow : register(s5);
 
 float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir)
 {
-    float3 normaly0 = (lightsnum[3] == 1) ? normalize(float3(meshnormal.x, 0.0f, meshnormal.z)) : meshnormal;
-    float3 lighty0 = (lightsnum[3] == 1) ? normalize(float3(lightdir.x, 0.0f, lightdir.z)) : lightdir;
+    float3 normaly0 = (lightsnum.w == 1) ? normalize(float3(meshnormal.x, 0.0f, meshnormal.z)) : meshnormal;
+    float3 lighty0 = (lightsnum.w == 1) ? normalize(float3(lightdir.x, 0.0f, lightdir.z)) : lightdir;
     float nl;
     nl = dot(normaly0, lighty0);
     float toonh = (nl + 1.0f) * 0.5f * multiplecoef;
@@ -347,7 +348,7 @@ float4 PSMainNoSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 float4 PSMainNoSkinNoLight(SPSIn psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    float4 diffusecol = CalcDiffuseColor(1.0f, psIn.normal.xyz, toonlightdir.xyz);
+    float4 diffusecol = (lightsnum.y == 1) ? CalcDiffuseColor(1.0f, psIn.normal.xyz, toonlightdir.xyz) : float4(1.0f, 1.0f, 1.0f, 1.0f);
     float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
     return pscol;
 }
