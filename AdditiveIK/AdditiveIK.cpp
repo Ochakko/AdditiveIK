@@ -5936,6 +5936,9 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 
 		if (s_disponlyoneobj == false) {
 
+			OnRenderSky(re, rc);//透過テクスチャの奥に空がみえるように　空は一番最初に描画する
+
+
 			int lightflag = 1;
 			ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 			int btflag;
@@ -5979,7 +5982,6 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 		}
 		
 
-		OnRenderSky(re, rc);
 
 		//OnRenderUtDialog(fElapsedTime);
 
