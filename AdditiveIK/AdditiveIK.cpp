@@ -2266,7 +2266,7 @@ static int CreateDispGroupWnd();
 static int DestroyDispGroupWnd();
 static int CheckSimilarMenu();
 static int CheckSimilarGroup(int opetype);
-static int TrimLeadingAlnum(WCHAR* srcstr, int srclen, WCHAR* dststr, int dstlen, bool secondcallflag);
+static int TrimLeadingAlnum(bool secondtokenflag, WCHAR* srcstr, int srclen, WCHAR* dststr, int dstlen, bool secondcallflag);
 
 static int UpdateCameraPosAndTarget();
 
@@ -6364,7 +6364,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 		}
 		else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_CHECKSIMILARGROUP)) &&
-			(menuid <= (ID_RMENU_0 + MENUOFFSET_CHECKSIMILARGROUP + 3))) {
+			(menuid <= (ID_RMENU_0 + MENUOFFSET_CHECKSIMILARGROUP + 7))) {
 			if (s_model && s_groupWnd) {
 				int opetype = menuid - (ID_RMENU_0 + MENUOFFSET_CHECKSIMILARGROUP);
 				CheckSimilarGroup(opetype);
@@ -35505,13 +35505,13 @@ int CreateDispGroupWnd()
 	return 0;
 }
 
-int TrimLeadingAlnum(WCHAR* srcstr, int srclen, WCHAR* dststr, int dstlen, bool secondcallflag)
+int TrimLeadingAlnum(bool secondtokenflag, WCHAR* srcstr, int srclen, WCHAR* dststr, int dstlen, bool secondcallflag)
 {
 	if (!srcstr || !dststr) {
 		_ASSERT(0);
 		return 1;
 	}
-	if ((srclen < 0) || (srclen >= 4098) || (dstlen < 0) || (dstlen >= 4098)) {
+	if ((srclen < 0) || (srclen >= 2048) || (dstlen < 0) || (dstlen >= 2048)) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -35519,35 +35519,50 @@ int TrimLeadingAlnum(WCHAR* srcstr, int srclen, WCHAR* dststr, int dstlen, bool 
 
 	*dststr = 0L;
 
-	WCHAR trimstr0[4098];
-	ZeroMemory(trimstr0, sizeof(WCHAR) * 4098);
-
+	WCHAR trimstr0[2048];
+	int tokenloopcount;
+	if (secondtokenflag) {
+		tokenloopcount = 2;
+	}
+	else {
+		tokenloopcount = 1;
+	}
 	int index0;
+	int srcstartindex = 0;
 	int dstindex = 0;
-	bool starttrim = false;
-	for (index0 = 0; index0 < srclen; index0++) {
-		WCHAR* pchkstr = srcstr + index0;
-		if (starttrim == false) {
-			if (iswalnum(*pchkstr) == 0) {
-				continue;
+	int loopindex;
+	for (loopindex = 0; loopindex < tokenloopcount; loopindex++) {
+		ZeroMemory(trimstr0, sizeof(WCHAR) * 2048);
+		dstindex = 0;
+
+		bool starttrim = false;
+		for (index0 = srcstartindex; index0 < srclen; index0++) {
+			WCHAR* pchkstr = srcstr + index0;
+			if (starttrim == false) {
+				if (iswalnum(*pchkstr) == 0) {
+					continue;
+				}
+				else {
+					starttrim = true;
+				}
 			}
-			else {
-				starttrim = true;
+			if (starttrim == true) {
+				if (*pchkstr == TEXT('_')) {
+					srcstartindex = index0 + 1;
+					break;
+				}
+				if (dstindex < (dstlen - 1)) {
+					trimstr0[dstindex] = *pchkstr;
+					trimstr0[dstindex + 1] = 0L;
+					dstindex++;
+				}
+				else {
+					srcstartindex = index0 + 1;
+					break;
+				}
 			}
 		}
-		if (starttrim == true) {
-			if (*pchkstr == TEXT('_')) {
-				break;
-			}
-			if (dstindex < dstlen) {
-				trimstr0[dstindex] = *pchkstr;
-				trimstr0[dstindex + 1] = 0L;
-				dstindex++;
-			}
-			else {
-				break;
-			}
-		}
+		srcstartindex = index0 + 1;
 	}
 
 	if (secondcallflag == false) {//再帰呼び出しは１回まで
@@ -35569,12 +35584,13 @@ int TrimLeadingAlnum(WCHAR* srcstr, int srclen, WCHAR* dststr, int dstlen, bool 
 		}
 
 		if (nextptr && (*nextptr != 0L)) {
-			WCHAR trimstr1[4098];
-			ZeroMemory(trimstr1, sizeof(WCHAR) * 4098);
-			int result2 = TrimLeadingAlnum(nextptr, (int)wcslen(nextptr), trimstr1, 4098, true);
+			bool prefab2ndwordflag = false;
+			WCHAR trimstr1[2048];
+			ZeroMemory(trimstr1, sizeof(WCHAR) * 2048);
+			int result2 = TrimLeadingAlnum(prefab2ndwordflag, nextptr, (int)wcslen(nextptr), trimstr1, 2048, true);
 			if ((result2 == 0) && (trimstr1[0] != 0L)) {
-				wcscat_s(trimstr0, 4098, L"_");//!!!!!
-				wcscat_s(trimstr0, 4098, trimstr1);
+				wcscat_s(trimstr0, 2048, L"_");//!!!!!
+				wcscat_s(trimstr0, 2048, trimstr1);
 			}
 		}
 	}
@@ -35593,7 +35609,7 @@ int CheckSimilarGroup(int opetype)
 	}
 
 	if ((s_grouplinenum > 0) && 
-		(opetype >= 0) && (opetype <= 3) && 
+		(opetype >= 0) && (opetype <= 7) && 
 		(s_checksimilarobjno >= 0) && (s_checksimilarobjno < s_grouplinenum)) {
 		
 		OWP_CheckBoxA* srccheckbox = s_groupobjvec[s_checksimilarobjno];
@@ -35601,13 +35617,21 @@ int CheckSimilarGroup(int opetype)
 			WCHAR objname[512] = { 0L };
 			int result = srccheckbox->getName(objname, 512);
 			if ((result == 0) && (objname[0] != 0L)) {
+				bool secondtokenflag;
+				if (opetype <= 3) {
+					secondtokenflag = false;
+				}
+				else {
+					secondtokenflag = true;
+				}
 				WCHAR similarpattern[512] = { 0L };
-				int result1 = TrimLeadingAlnum(objname, 512, similarpattern, 512, false);
+				int result1 = TrimLeadingAlnum(secondtokenflag, objname, 512, similarpattern, 512, false);
 				if ((result1 == 0) && (similarpattern[0] != 0L)) {
 
 					int pattern0len = (int)wcslen(similarpattern);
 
-					if ((opetype == 0) || (opetype == 1)) {
+					if ((opetype == 0) || (opetype == 1) ||
+						(opetype == 4) || (opetype == 5)) {
 						//#####################
 						//pattern include num
 						//#####################
@@ -35621,10 +35645,10 @@ int CheckSimilarGroup(int opetype)
 									WCHAR* findptr = wcsstr(chkname, similarpattern);//check if pattern is included
 									if (findptr) {
 										bool calllistener = false;
-										if (opetype == 0) {
+										if ((opetype == 0) || (opetype == 4)) {
 											s_groupobjvec[objno1]->setValue(true, calllistener);
 										}
-										else if (opetype == 1) {
+										else if ((opetype == 1) || (opetype == 5)) {
 											s_groupobjvec[objno1]->setValue(false, calllistener);
 										}
 										else {
@@ -35636,7 +35660,8 @@ int CheckSimilarGroup(int opetype)
 							}
 						}
 					}
-					else if ((opetype == 2) || (opetype == 3)) {
+					else if ((opetype == 2) || (opetype == 3) || 
+						(opetype == 6) || (opetype == 7)) {
 						//#####################
 						//pattern exclude num
 						//#####################
@@ -35666,10 +35691,10 @@ int CheckSimilarGroup(int opetype)
 										WCHAR* findptr = wcsstr(chkname, similarpattern);//check if pattern is included
 										if (findptr) {
 											bool calllistener = false;
-											if (opetype == 2) {
+											if ((opetype == 2) || (opetype == 6)) {
 												s_groupobjvec[objno1]->setValue(true, calllistener);
 											}
-											else if (opetype == 3) {
+											else if ((opetype == 3) || (opetype == 7)) {
 												s_groupobjvec[objno1]->setValue(false, calllistener);
 											}
 											else {
@@ -35753,6 +35778,22 @@ int CheckSimilarMenu()
 	wcscpy_s(strmenu, 256, L"SimilarOFF (pattern exclude number)");
 	AppendMenu(submenu, MF_STRING, setmenuid, strmenu);
 
+	//2024/03/02 check 2nd word
+	setmenuid = ID_RMENU_0 + 4 + MENUOFFSET_CHECKSIMILARGROUP;
+	wcscpy_s(strmenu, 256, L"2nd SimilarON (pattern include number)");
+	AppendMenu(submenu, MF_STRING, setmenuid, strmenu);
+
+	setmenuid = ID_RMENU_0 + 5 + MENUOFFSET_CHECKSIMILARGROUP;
+	wcscpy_s(strmenu, 256, L"2nd SimilarOFF (pattern include number)");
+	AppendMenu(submenu, MF_STRING, setmenuid, strmenu);
+
+	setmenuid = ID_RMENU_0 + 6 + MENUOFFSET_CHECKSIMILARGROUP;
+	wcscpy_s(strmenu, 256, L"2nd SimilarON (pattern exclude number)");
+	AppendMenu(submenu, MF_STRING, setmenuid, strmenu);
+
+	setmenuid = ID_RMENU_0 + 7 + MENUOFFSET_CHECKSIMILARGROUP;
+	wcscpy_s(strmenu, 256, L"2nd SimilarOFF (pattern exclude number)");
+	AppendMenu(submenu, MF_STRING, setmenuid, strmenu);
 
 
 	POINT pt;
@@ -56755,6 +56796,7 @@ int OnCreateDevice()
 	//CallF(s_select_posture->MakeDispObj(), return S_FALSE);
 
 
+
 	s_sky = new CModel();
 	if (!s_sky) {
 		_ASSERT(0);
@@ -56766,11 +56808,17 @@ int OnCreateDevice()
 	FbxImporter* pImporter = 0;
 	BOOL motioncachebatchflag = FALSE;
 	WCHAR skypath[1024] = { 0L };
-	swprintf_s(skypath, 1024, L"%s..\\Media\\MameMedia\\SkySphere1.fbx", g_basedir);
+	//swprintf_s(skypath, 1024, L"%s..\\Media\\MameMedia\\SkySphere1.fbx", g_basedir);
+	swprintf_s(skypath, 1024, L"%s..\\Media\\CelestialSphere\\SkySphere1.fbx", g_basedir);//2024/03/02
 	CallF(s_sky->LoadFBX(1, s_pdev, 
 		skypath, L"SkySphere1_1", 1.0f,
 		s_psdk, &pImporter, &pScene, s_forcenewaxis, motioncachebatchflag), return S_FALSE);
 
+
+
+	//2024/03/02
+	//読込場所が変わる場合に　カレントディレクトリ位置を直す必要
+	SetCurrentDirectoryW(g_basedir);
 
 
 	float rigmult = 1.0f;
