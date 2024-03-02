@@ -1178,7 +1178,8 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 		int curoffset = 0;
 		int curtrinum = 0;
 		int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
-		if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0)) {
+		if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0) &&
+			((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (curmat->GetShadowCasterFlag()))) {
 			bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
 
 			if (laterflag == false) {
@@ -1196,7 +1197,8 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 		int laterindex;
 		for (laterindex = 0; laterindex < latermatnum; laterindex++) {
 			LATERMATERIAL latermaterial = renderobj.mqoobj->GetLaterMaterial(laterindex);
-			if (latermaterial.pmaterial) {
+			if (latermaterial.pmaterial &&
+				((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (latermaterial.pmaterial->GetShadowCasterFlag()))) {
 				bool laterflag2 = true;
 				RenderNormalMaterial(rc, renderobj, 
 					laterflag2,
@@ -1518,15 +1520,17 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			return 1;
 		}
 
-		int curnumprim;
-		curnumprim = currb->endface - currb->startface + 1;
+		if ((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (curmat->GetShadowCasterFlag())) {
+			int curnumprim;
+			curnumprim = currb->endface - currb->startface + 1;
 
-		bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
-		if (laterflag == false) {
-			bool laterflag2 = false;
-			int result = RenderNormalPM3Material(
-				rc, renderobj,
-				laterflag2, curmat, currb->startface * 3, curnumprim);
+			bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
+			if (laterflag == false) {
+				bool laterflag2 = false;
+				int result = RenderNormalPM3Material(
+					rc, renderobj,
+					laterflag2, curmat, currb->startface * 3, curnumprim);
+			}
 		}
 	}
 
@@ -1538,7 +1542,8 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		int laterindex;
 		for (laterindex = 0; laterindex < latermatnum; laterindex++) {
 			LATERMATERIAL latermaterial = renderobj.mqoobj->GetLaterMaterial(laterindex);
-			if (latermaterial.pmaterial) {
+			if (latermaterial.pmaterial && 
+				((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (latermaterial.pmaterial->GetShadowCasterFlag()))) {
 				bool laterflag2 = true;
 				RenderNormalPM3Material(
 					rc, renderobj,

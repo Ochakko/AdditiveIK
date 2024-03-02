@@ -1040,6 +1040,14 @@ public:
 	{
 		return m_hsvtoon.lowaddhsv.w;
 	}
+	void SetShadowCasterFlag(bool srcflag)
+	{
+		m_shadowcasterflag = srcflag;
+	}
+	bool GetShadowCasterFlag()
+	{
+		return m_shadowcasterflag;
+	}
 
 public:
 	//###################################################
@@ -1226,6 +1234,7 @@ private:
 	ChaVector4 m_tempdiffusemult;
 
 	HSVTOON m_hsvtoon;
+	bool m_shadowcasterflag;//2024/03/03
 };
 
 

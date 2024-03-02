@@ -3,6 +3,10 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/03/03
+　ShaderプレートメニューにShadowCasterチェックボックス追加
+　　天井や壁や仕切りカーテンなどに対してShadowCasterのチェックをオフにすることで狭い場所にもきれいに影が落ちやすくなった
+
 
 
 2024/03/02

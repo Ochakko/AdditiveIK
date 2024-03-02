@@ -87,6 +87,7 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			HSVTOON hsvtoon = mqomat->GetHSVToon();
 			float specularcoef = mqomat->GetSpecularCoef();
 			bool normaly0flag = mqomat->GetNormalY0Flag();
+			bool shadowcasterflag = mqomat->GetShadowCasterFlag();
 
 			int litindex;
 			for (litindex = 0; litindex < 8; litindex++) {
@@ -148,6 +149,10 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			CallF(Write2File("    <SpecularCoef>%.3f</SpecularCoef>\r\n", specularcoef), return 1);
 			int y0flag = normaly0flag ? 1 : 0;
 			CallF(Write2File("    <NormalY0>%d</NormalY0>\r\n", normaly0flag), return 1);
+
+			//2024/03/03
+			int casterflag = shadowcasterflag ? 1 : 0;
+			CallF(Write2File("    <ShadowCaster>%d</ShadowCaster>\r\n", casterflag), return 1);
 
 
 			CallF(Write2File("  </Material>\r\n"), return 1);
@@ -284,6 +289,14 @@ int CShaderTypeFile::LoadShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 				bool normaly0flag;
 				normaly0flag = (y0flag == 1) ? true : false;
 				curmqomat->SetNormalY0Flag(normaly0flag);
+
+
+				//2024/03/03
+				int casterflag = 1;
+				Read_Int(&materialbuf, "<ShadowCaster>", "</ShadowCaster>", &casterflag);
+				bool shadowcasterflag;
+				shadowcasterflag = (casterflag == 1) ? true : false;
+				curmqomat->SetShadowCasterFlag(shadowcasterflag);
 
 
 				//2024/02/13

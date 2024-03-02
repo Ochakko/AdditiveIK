@@ -26698,6 +26698,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 	float emissiveScale = 1.0f;
 	float specularcoef = 0.1250f;
 	bool normaly0flag = false;
+	bool shadowcasterflag = true;
 	WCHAR wmaterialname[256] = { 0L };
 	if (materialindex >= 0) {
 		curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
@@ -26716,6 +26717,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			hsvtoon = curmqomat->GetHSVToon();
 			specularcoef = curmqomat->GetSpecularCoef();
 			normaly0flag = curmqomat->GetNormalY0Flag();
+			shadowcasterflag = curmqomat->GetShadowCasterFlag();
 		}
 		else {
 			_ASSERT(0);
@@ -26737,6 +26739,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 		hsvtoon = s_hsvtoonforall;
 		specularcoef = 0.1250f;
 		normaly0flag = false;
+		shadowcasterflag = true;
 	}
 	
 	int lightsliderid[LIGHTNUMMAX] = {
@@ -27612,7 +27615,31 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 
 
 
+		case IDC_CHECK_SHADOWCASTER:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_SHADOWCASTER);
+			if (ischecked == BST_CHECKED) {
+				shadowcasterflag = true;
+			}
+			else {
+				shadowcasterflag = false;
+			}
 
+			if (curmqomat) {
+				curmqomat->SetShadowCasterFlag(shadowcasterflag);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetShadowCasterFlag(shadowcasterflag);
+					}
+				}
+			}
+		}
+		break;
 		case IDC_CHECK_EMISSION:
 		{
 			UINT ischecked = 0;
@@ -54630,6 +54657,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	float emissiveScale = 1.0f;
 	float specularcoef;
 	bool normaly0flag;
+	bool shadowcasterflag = true;
 	HSVTOON hsvtoon;
 	if (curmqomat) {
 		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, 
@@ -54647,6 +54675,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		hsvtoon = curmqomat->GetHSVToon();
 		specularcoef = curmqomat->GetSpecularCoef();
 		normaly0flag = curmqomat->GetNormalY0Flag();
+		shadowcasterflag = curmqomat->GetShadowCasterFlag();
 	}
 	else {
 		//全てのマテリアルに対して設定するボタンを押した場合
@@ -54664,6 +54693,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		hsvtoon = s_hsvtoonforall;
 		specularcoef = 0.1250f;
 		normaly0flag = false;
+		shadowcasterflag = true;
 	}
 
 
@@ -54892,6 +54922,14 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	else {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_NORMALY0, false);
 	}
+
+	if (shadowcasterflag == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_SHADOWCASTER, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_SHADOWCASTER, false);
+	}
+
 
 	return 0;
 }

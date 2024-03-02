@@ -392,6 +392,8 @@ int CMQOMaterial::InitParams()
 
 	m_hsvtoon.Init();
 
+	m_shadowcasterflag = true;//2024/03/03
+
 	return 0;
 }
 
