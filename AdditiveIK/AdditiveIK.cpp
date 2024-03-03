@@ -2216,6 +2216,7 @@ static int CreateLongTimelineWnd();
 static int CreateDmpAnimWnd();
 static int CreateRigidWnd();
 static int DestroyRigidWnd();
+static void InitRigidWnd();
 static int CreateSideMenuWnd();
 static int CreateMainMenuAimBarWnd();
 static int CreateImpulseWnd();
@@ -4366,6 +4367,8 @@ void InitApp()
 	CMotionPoint::InitMotionPoints();
 	OrgWinGUI::InitEulKeys();
 	OrgWinGUI::InitKeys();
+
+	InitRigidWnd();//2024/03/03
 
 	s_motmenuindexmap.clear();
 	s_cameramenuindexmap.clear();
@@ -18598,72 +18601,168 @@ int RigidElem2WndParam()
 				float btg = curre->GetBtg();
 				int forbidrot = curre->GetForbidRotFlag();
 
-				s_sphrateSlider->setValue(rate);
-				s_boxzSlider->setValue(boxz);
-				s_massSlider->setValue(mass);
-				s_rigidskip->setValue(skipflag);
-				s_forbidrot->setValue(forbidrot);
-				s_colradio->setSelectIndex(colindex);
-				s_lkradio->setSelectIndex(lkindex);
-				s_akradio->setSelectIndex(akindex);
-				s_ldmpSlider->setValue(ldmp);
-				s_admpSlider->setValue(admp);
-				s_lkSlider->setValue(cuslk);
-				s_akSlider->setValue(cusak);
-				s_restSlider->setValue(rest);
-				s_fricSlider->setValue(fric);
-				s_btgSlider->setValue(btg);
+				if (s_sphrateSlider) {
+					s_sphrateSlider->setValue(rate);
+				}
+				if (s_boxzSlider) {
+					s_boxzSlider->setValue(boxz);
+				}
+				if (s_massSlider) {
+					s_massSlider->setValue(mass);
+				}
+				if (s_rigidskip) {
+					s_rigidskip->setValue(skipflag);
+				}
+				if (s_forbidrot) {
+					s_forbidrot->setValue(forbidrot);
+				}
+				if (s_colradio) {
+					s_colradio->setSelectIndex(colindex);
+				}
+				if (s_lkradio) {
+					s_lkradio->setSelectIndex(lkindex);
+				}
+				if (s_akradio) {
+					s_akradio->setSelectIndex(akindex);
+				}
+				if (s_ldmpSlider) {
+					s_ldmpSlider->setValue(ldmp);
+				}
+				if (s_admpSlider) {
+					s_admpSlider->setValue(admp);
+				}
+				if (s_lkSlider) {
+					s_lkSlider->setValue(cuslk);
+				}
+				if (s_akSlider) {
+					s_akSlider->setValue(cusak);
+				}
+				if (s_restSlider) {
+					s_restSlider->setValue(rest);
+				}
+				if (s_fricSlider) {
+					s_fricSlider->setValue(fric);
+				}
+				if (s_btgSlider) {
+					s_btgSlider->setValue(btg);
+				}
 			}
 			else {
 				//rigid elemが作成されていないとき
-				s_sphrateSlider->setValue(1.0);
-				s_boxzSlider->setValue(1.0);
-				s_massSlider->setValue(1.0);
-				s_rigidskip->setValue(0);
-				s_forbidrot->setValue(0);
-				s_colradio->setSelectIndex(0);
-				s_lkradio->setSelectIndex(0);
-				s_akradio->setSelectIndex(0);
-				s_ldmpSlider->setValue(g_l_dmp);
-				s_admpSlider->setValue(g_a_dmp);
-				s_lkSlider->setValue(g_initcuslk);
-				s_akSlider->setValue(g_initcusak);
-				s_restSlider->setValue(0.0);
-				s_fricSlider->setValue(0.0);
-				s_btgSlider->setValue(9.0);
+				if (s_sphrateSlider) {
+					s_sphrateSlider->setValue(1.0);
+				}
+				if (s_boxzSlider) {
+					s_boxzSlider->setValue(1.0);
+				}
+				if (s_massSlider) {
+					s_massSlider->setValue(1.0);
+				}
+				if (s_rigidskip) {
+					s_rigidskip->setValue(0);
+				}
+				if (s_forbidrot) {
+					s_forbidrot->setValue(0);
+				}
+				if (s_colradio) {
+					s_colradio->setSelectIndex(0);
+				}
+				if (s_lkradio) {
+					s_lkradio->setSelectIndex(0);
+				}
+				if (s_akradio) {
+					s_akradio->setSelectIndex(0);
+				}
+				if (s_ldmpSlider) {
+					s_ldmpSlider->setValue(g_l_dmp);
+				}
+				if (s_admpSlider) {
+					s_admpSlider->setValue(g_a_dmp);
+				}
+				if (s_lkSlider) {
+					s_lkSlider->setValue(g_initcuslk);
+				}
+				if (s_akSlider) {
+					s_akSlider->setValue(g_initcusak);
+				}
+				if (s_restSlider) {
+					s_restSlider->setValue(0.0);
+				}
+				if (s_fricSlider) {
+					s_fricSlider->setValue(0.0);
+				}
+				if (s_btgSlider) {
+					s_btgSlider->setValue(9.0);
+				}
 			}
 		}
 		else {
 			//rigid elemが作成されていないとき
-			s_sphrateSlider->setValue(1.0);
-			s_boxzSlider->setValue(1.0);
-			s_massSlider->setValue(1.0);
-			s_rigidskip->setValue(0);
-			s_forbidrot->setValue(0);
-			s_colradio->setSelectIndex(0);
-			s_lkradio->setSelectIndex(0);
-			s_akradio->setSelectIndex(0);
-			s_ldmpSlider->setValue(g_l_dmp);
-			s_admpSlider->setValue(g_a_dmp);
-			s_lkSlider->setValue(g_initcuslk);
-			s_akSlider->setValue(g_initcusak);
-			s_restSlider->setValue(0.0);
-			s_fricSlider->setValue(0.0);
-			s_btgSlider->setValue(9.0);
+			if (s_sphrateSlider) {
+				s_sphrateSlider->setValue(1.0);
+			}
+			if (s_boxzSlider) {
+				s_boxzSlider->setValue(1.0);
+			}
+			if (s_massSlider) {
+				s_massSlider->setValue(1.0);
+			}
+			if (s_rigidskip) {
+				s_rigidskip->setValue(0);
+			}
+			if (s_forbidrot) {
+				s_forbidrot->setValue(0);
+			}
+			if (s_colradio) {
+				s_colradio->setSelectIndex(0);
+			}
+			if (s_lkradio) {
+				s_lkradio->setSelectIndex(0);
+			}
+			if (s_akradio) {
+				s_akradio->setSelectIndex(0);
+			}
+			if (s_ldmpSlider) {
+				s_ldmpSlider->setValue(g_l_dmp);
+			}
+			if (s_admpSlider) {
+				s_admpSlider->setValue(g_a_dmp);
+			}
+			if (s_lkSlider) {
+				s_lkSlider->setValue(g_initcuslk);
+			}
+			if (s_akSlider) {
+				s_akSlider->setValue(g_initcusak);
+			}
+			if (s_restSlider) {
+				s_restSlider->setValue(0.0);
+			}
+			if (s_fricSlider) {
+				s_fricSlider->setValue(0.0);
+			}
+			if (s_btgSlider) {
+				s_btgSlider->setValue(9.0);
+			}
 		}
-		s_namelabel->setName((WCHAR*)curbone->GetWBoneName());
+		if (s_namelabel) {
+			s_namelabel->setName((WCHAR*)curbone->GetWBoneName());
+		}
 	}
 	else {
-		WCHAR noname[256];
-		wcscpy_s(noname, 256, L"BoneName：not selected");
-		s_namelabel->setName(noname);
+		if (s_namelabel) {
+			WCHAR noname[256];
+			wcscpy_s(noname, 256, L"BoneName：not selected");
+			s_namelabel->setName(noname);
+		}
 	}
-	if (s_model && (s_model->GetNoBoneFlag() == false)) {
+	if (s_model && (s_model->GetNoBoneFlag() == false) && s_btgscSlider) {
 		s_btgscSlider->setValue(s_model->GetBtGScale(s_model->GetCurReIndex()));
 	}
 
-	s_rigidWnd->callRewrite();
 
+	if (s_rigidWnd) {
+		s_rigidWnd->callRewrite();
+	}
 
 
 	//再生中、シミュレーション中への対応。元の状態に戻す。
@@ -18673,7 +18772,6 @@ int RigidElem2WndParam()
 	else {
 		s_model->SetCurrentRigidElem(s_rgdindexmap[s_model]);
 	}
-
 
 
 	return 0;
@@ -26683,6 +26781,9 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 
 	HSVTOON hsvtoon;
 	int materialnum = s_model->GetMQOMaterialSize();
+	materialnum = min(materialnum, MAXMATERIALNUM);//2024/03/03
+
+
 	CMQOMaterial* curmqomat = nullptr;
 	if ((s_shadertypeparamsindex < 0) || (s_shadertypeparamsindex >= (materialnum + 1))) {
 		if (s_shadertypeparamsindex != -1) {
@@ -27371,10 +27472,10 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 						setmqomat->SetShaderType(-1);
 					}
 
-					if (s_shadertypelabel[materialindex5]) {
+					if (s_shadertypelabel[materialindex5 + 1]) {
 						WCHAR strdlg2[256] = { 0L };
 						wcscpy_s(strdlg2, 256, L"AUTO");
-						s_shadertypelabel[materialindex5]->setName(strdlg2);
+						s_shadertypelabel[materialindex5 + 1]->setName(strdlg2);
 					}
 				}
 			}
@@ -27402,10 +27503,10 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 						setmqomat->SetShaderType(MQOSHADER_PBR);
 					}
 
-					if (s_shadertypelabel[materialindex6]) {
+					if (s_shadertypelabel[materialindex6 + 1]) {
 						WCHAR strdlg2[256] = { 0L };
 						wcscpy_s(strdlg2, 256, L"PBR");
-						s_shadertypelabel[materialindex6]->setName(strdlg2);
+						s_shadertypelabel[materialindex6 + 1]->setName(strdlg2);
 					}
 				}
 			}
@@ -27433,10 +27534,10 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 						setmqomat->SetShaderType(MQOSHADER_STD);
 					}
 
-					if (s_shadertypelabel[materialindex7]) {
+					if (s_shadertypelabel[materialindex7 + 1]) {
 						WCHAR strdlg2[256] = { 0L };
 						wcscpy_s(strdlg2, 256, L"STD");
-						s_shadertypelabel[materialindex7]->setName(strdlg2);
+						s_shadertypelabel[materialindex7 + 1]->setName(strdlg2);
 					}
 				}
 			}
@@ -27464,10 +27565,10 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 						setmqomat->SetShaderType(MQOSHADER_TOON);
 					}
 
-					if (s_shadertypelabel[materialindex8]) {
+					if (s_shadertypelabel[materialindex8 + 1]) {
 						WCHAR strdlg2[256] = { 0L };
 						wcscpy_s(strdlg2, 256, L"TOON");
-						s_shadertypelabel[materialindex8]->setName(strdlg2);
+						s_shadertypelabel[materialindex8 + 1]->setName(strdlg2);
 					}
 				}
 			}
@@ -36294,6 +36395,92 @@ int DestroyDispGroupWnd()
 }
 
 
+void InitRigidWnd()
+{
+	s_rigidWnd = NULL;
+
+	s_dsrigidctrls.clear();
+
+	s_sphrateSlider = 0;
+	s_boxzSlider = 0;
+	s_boxzlabel = 0;
+	s_massSlider = 0;
+	s_massSLlabel = 0;
+	s_massB = 0;
+	s_thicknessB = 0;
+	s_depthB = 0;
+	s_massspacelabel = 0;
+	s_namelabel = 0;
+	s_lenglabel = 0;
+	s_skipB = 0;
+	s_rigidskip = 0;
+	s_forbidSeparator = 0;
+	s_forbidB = 0;
+	s_forbidrot = 0;
+	s_validSeparator = 0;
+	s_allrigidenableB = 0;
+	s_allrigiddisableB = 0;
+	s_shplabel = 0;
+	s_colSeparator = 0;
+	s_colB = 0;
+	s_colradio = 0;
+	s_lkradio = 0;
+	s_lkSlider = 0;
+	s_lklabel = 0;
+	s_akradio = 0;
+	s_akSlider = 0;
+	s_aklabel = 0;
+	s_restSlider = 0;
+	s_restlabel = 0;
+	s_fricSlider = 0;
+	s_friclabel = 0;
+	s_ldmpSlider = 0;
+	s_admpSlider = 0;
+	s_kB = 0;
+	s_restB = 0;
+	s_ldmplabel = 0;
+	s_admplabel = 0;
+	s_dmpB = 0;
+	s_groupB = 0;
+	s_gcoliB = 0;
+	s_btgSlider = 0;
+	s_btglabel = 0;
+	s_btgscSlider = 0;
+	s_btgsclabel = 0;
+	s_btforceSeparator = 0;
+	s_btforce = 0;
+	s_btforceB = 0;
+	s_rigidsp0 = 0;
+	s_groupcheck = 0;
+	s_btgB = 0;
+	s_rigidWnd = 0;
+	s_thicknessSeparator = 0;
+	s_depthSeparator = 0;
+	s_massSeparator = 0;
+	s_validSeparator2 = 0;
+	s_forbidSeparator2 = 0;
+	s_colSeparator2 = 0;
+	s_springSeparator = 0;
+	s_restitutionSeparator = 0;
+	s_dumpingSeparator = 0;
+	s_gSeparator = 0;
+	s_btforceSeparator2 = 0;
+	s_coliidSeparator = 0;
+	s_thicknessDeeperB = 0;
+	s_depthDeeperB = 0;
+	s_massDeeperB = 0;
+	s_validDeeperB = 0;
+	s_forbidDeeperB = 0;
+	s_colDeeperB = 0;
+	s_springDeeperB = 0;
+	s_restitutionDeeperB = 0;
+	s_dumpingDeeperB = 0;
+	s_gDeeperB = 0;
+	s_btforceDeeperB = 0;
+	s_coliidDeeperB = 0;
+	s_coliseparator = 0;
+
+}
 
 int CreateRigidWnd()
 {
@@ -37763,6 +37950,13 @@ int CreateShaderTypeWnd()
 	}
 
 	int materialnum = s_model->GetMQOMaterialSize();
+	if ((materialnum <= 0) || (materialnum >= MAXMATERIALNUM)) {
+		//2024/03/03
+		MessageBoxW(s_3dwnd, L"ERROR : MaterialNum Overflow.", L"Can't open dialog for settings.", MB_OK | MB_ICONERROR);
+		return 1;
+	}
+
+
 
 	if (s_shadertypeWnd) {
 		int linedatasize;
@@ -43856,14 +44050,23 @@ void ShowShaderTypeWnd(bool srcflag)
 
 	if (s_model) {
 		if (srcflag == true) {
-			//if (!s_convboneWnd) {
-			CreateShaderTypeWnd();
-			//}
-			if (s_shadertypeWnd) {
-				s_shadertypeWnd->setListenMouse(true);
-				s_shadertypeWnd->setVisible(true);
+			int result = CreateShaderTypeWnd();
+			if (result == 0) {
+				if (s_shadertypeWnd) {
+					s_shadertypeWnd->setListenMouse(true);
+					s_shadertypeWnd->setVisible(true);
+				}
+				s_spdispsw[SPDISPSW_SHADERTYPE].state = true;
 			}
-			s_spdispsw[SPDISPSW_SHADERTYPE].state = true;
+			else {
+				//############################
+				//### ERROR 
+				//### materialnum range error
+				//############################
+				//_ASSERT(0);
+				CloseAllAndDispPlaceFolder();
+				return;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			}
 		}
 		else {
 			if (s_shadertypeWnd) {
@@ -54584,15 +54787,19 @@ int CreateShaderTypeParamsDlg()
 	HWND hDlgWnd = CreateDialogW((HMODULE)GetModuleHandle(NULL),
 		//MAKEINTRESOURCE(IDD_SHADERTYPEDLG2), g_mainhwnd, (DLGPROC)ShaderTypeParamsDlgProc);
 		MAKEINTRESOURCE(IDD_SHADERTYPEDLG2), s_3dwnd, (DLGPROC)ShaderTypeParamsDlgProc);
-	if (hDlgWnd == NULL) {
+	if (hDlgWnd != NULL) {
+		s_shadertypeparamsdlgwnd = hDlgWnd;
+		ShowWindow(s_shadertypeparamsdlgwnd, SW_HIDE);
+		s_shadertypeparamsindex = -1;
+		s_shadertypeparamsFlag = false;
+		return 0;
+	}
+	else {
+		s_shadertypeparamsdlgwnd = NULL;
+		s_shadertypeparamsindex = -1;
+		s_shadertypeparamsFlag = false;
 		return 1;
 	}
-	s_shadertypeparamsdlgwnd = hDlgWnd;
-	ShowWindow(s_shadertypeparamsdlgwnd, SW_HIDE);
-	s_shadertypeparamsindex = -1;
-	s_shadertypeparamsFlag = false;
-
-	return 0;
 }
 
 
@@ -54647,6 +54854,15 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	HWND hDlgWnd = s_shadertypeparamsdlgwnd;
 
 	int materialnum = s_model->GetMQOMaterialSize();
+	if ((materialnum <= 0) || (materialnum >= MAXMATERIALNUM)) {
+		//2024/03/03
+		::MessageBoxW(s_3dwnd, L"ERROR : MaterialNum Overflow.", L"Can't open dialog for settings.",
+			MB_OK | MB_ICONERROR);
+		ShowWindow(s_shadertypeparamsdlgwnd, SW_HIDE);
+		return 1;
+	}
+
+
 	CMQOMaterial* curmqomat = srcmat;
 
 	WCHAR wmaterialname[256] = { 0L };
@@ -54958,17 +55174,25 @@ int ShowShaderTypeParamsDlg()
 	if (s_shadertypeparamsdlgwnd) {
 		if (s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
-			CMQOMaterial* curmqomat = nullptr;
-			if ((s_shadertypeparamsindex >= 0) && (s_shadertypeparamsindex < (materialnum + 1))) {
-				int materialindex = s_shadertypeparamsindex - 1;
-				if (materialindex >= 0) {
-					curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
-				}
-			}
-			SetMaterial2ShaderTypeParamsDlg(curmqomat);
 
-			ShowWindow(s_shadertypeparamsdlgwnd, SW_SHOW);
-			UpdateWindow(s_shadertypeparamsdlgwnd);
+			if ((materialnum > 0) && (materialnum < MAXMATERIALNUM)) {//2024/03/03
+				CMQOMaterial* curmqomat = nullptr;
+				if ((s_shadertypeparamsindex >= 0) && (s_shadertypeparamsindex < (materialnum + 1))) {
+					int materialindex = s_shadertypeparamsindex - 1;
+					if (materialindex >= 0) {
+						curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
+					}
+				}
+				SetMaterial2ShaderTypeParamsDlg(curmqomat);
+
+				ShowWindow(s_shadertypeparamsdlgwnd, SW_SHOW);
+				UpdateWindow(s_shadertypeparamsdlgwnd);
+			}
+			else {
+				//2024/03/03
+				MessageBoxW(s_3dwnd, L"ERROR : MaterialNum Overflow.", L"Can't open dialog for settings.", MB_OK | MB_ICONERROR);
+				ShowWindow(s_shadertypeparamsdlgwnd, SW_HIDE);
+			}
 		}
 	}
 

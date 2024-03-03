@@ -1549,9 +1549,14 @@ namespace OrgWinGUI{
 		OrgWindow *owner= owItr->second;	//ウィンドウ作成元のクラスのインスタンスポインタ
 
 
-		MouseEvent mouseEvent;
-		KeyboardEvent keyboardEvent;
-		POINT tmpPoint;
+		static MouseEvent mouseEvent;
+		static KeyboardEvent keyboardEvent;
+		static POINT tmpPoint;
+		mouseEvent.Init();
+		keyboardEvent.Init();
+		tmpPoint.x = 0;
+		tmpPoint.y = 0;
+
 		switch (message){				//イベント作成
 			case WM_LBUTTONDBLCLK://2023/10/04
 			case WM_RBUTTONDBLCLK://2023/10/04

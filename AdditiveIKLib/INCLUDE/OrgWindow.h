@@ -4525,6 +4525,8 @@ void s_dummyfunc()
 			oldvaluevec.clear();
 			oldvaluevec.push_back(value);
 			oldvalueindex = 0;
+
+			cursorListener = NULL;//2024/03/03
 		}
 
 		//////////////////////////// Method //////////////////////////////
