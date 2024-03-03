@@ -12219,6 +12219,7 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 	s_underselectmodel = true;
 
 	s_customrigbone = 0;
+	s_curboneno = -1;//2024/03/03
 
 	if (s_anglelimitdlg) {
 		s_underanglelimithscroll = 0;

@@ -4772,6 +4772,8 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 
 
 //法線
+	bool quadwarningflag = false;
+
 	int layerNum = pMesh->GetLayerCount();
 	//for ( int i = 0; i < layerNum; ++i ) {
 	for (int i = 0; i < layerNum; i++) {
@@ -4798,14 +4800,24 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 		int facenum0 = pMesh->GetPolygonCount();
 		newobj->SetNormalLeng( facenum0 * 3 );
 		newobj->SetNormal( (ChaVector3*)malloc( sizeof( ChaVector3 ) * (facenum0 * 3) ) );
-		
+
 		int faceno0;
 		for (faceno0 = 0; faceno0 < facenum0; faceno0++) {
 			int vnum = pMesh->GetPolygonSize(faceno0);
 			int vno;
 
 			if (vnum != 3) {
-				_ASSERT(0);
+				//_ASSERT(0);
+				if (quadwarningflag == false) {
+					WCHAR message[1024] = { 0L };
+					swprintf_s(message, 1024, 
+						L"[node:%s] Only support triangles. Normal of faces will be not correct.",
+						wnodename
+					);
+					::MessageBox(NULL, message, L"Not Triangles Warning.", MB_OK | MB_ICONWARNING);
+				}
+				quadwarningflag = true;
+
 				vnum = 3;
 			}
 
