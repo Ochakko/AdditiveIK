@@ -58,7 +58,7 @@ class CInfoWindow;
 
 #ifdef ADDITIVEIKLIBGLOBALVAR
 
-bool g_skydispflag = false;
+bool g_skydispflag = true;
 int g_pickorder = 1;
 bool g_hdrpbloom = true;
 bool g_freefps = true;

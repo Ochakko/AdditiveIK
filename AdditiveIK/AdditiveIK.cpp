@@ -1536,6 +1536,7 @@ static Texture* s_spritetex80 = 0;
 static Texture* s_spritetex81 = 0;
 static Texture* s_spritetex82 = 0;
 static Texture* s_spritetex83 = 0;
+static Texture* s_spritetex84 = 0;
 
 
 
@@ -1588,7 +1589,7 @@ static InstancedSprite s_bcircle;
 static Sprite s_kinsprite;
 static CUndoSprite s_undosprite;
 static CFpsSprite s_fpssprite;
-
+static CSpElem s_spupperbar;
 
 typedef struct tag_modelpanel
 {
@@ -2074,6 +2075,7 @@ static void ShowThresholdWnd(bool srcflag);
 
 static CInfoWindow* CreateInfoWnd();
 static int CreateSprites();
+static void InitSprites();
 static void DestroySprites();
 
 
@@ -2559,6 +2561,8 @@ static int SetSpCameraModeSWParams();
 static int PickSpCameraModeSW(POINT srcpos);
 static int SetSpCameraInheritSWParams();
 static int PickSpCameraInheritSW(POINT srcpos);
+static int SetSpUpperBarParams();
+
 
 static int SetSpRet2PrevParams();
 static bool PickSpFrog(POINT srcpos);
@@ -3225,7 +3229,7 @@ INT WINAPI wWinMain(
 		//s_sky用のprojection行列を１回計算するためにg_camera3Dを使う
 		s_matSkyProj.SetIdentity();
 		g_camera3D->SetNear(100.0f);
-		g_camera3D->SetFar(490000.0f);
+		g_camera3D->SetFar(500000.0f);
 		g_camera3D->SetViewAngle(g_fovy);//2023/12/30
 		Vector3 cameye = Vector3(g_camEye.x, g_camEye.y, g_camEye.z);
 		g_camera3D->SetPosition(cameye);
@@ -3485,6 +3489,7 @@ void InitApp()
 	s_matSkyProj.SetIdentity();
 
 
+	InitSprites();
 
 	//g_materialbank.InitParams();
 
@@ -3493,7 +3498,7 @@ void InitApp()
 	s_guiswflag = true;//true : １段目メニュー内容を右ペインに. false : ２段目メニュー内容を右ペインに
 	s_guiswplateno = 1;
 
-	g_skydispflag = false;
+	g_skydispflag = true;
 
 	g_pickorder = 1;//2024/02/16
 	g_hdrpbloom = true;
@@ -19402,6 +19407,7 @@ int SetSpParams()
 	SetSpRigParams();
 	SetSpCpLW2WParams();
 	SetSpSmoothParams();
+	SetSpUpperBarParams();
 	SetSpLimitEulSWParams();
 	SetSpScrapingSWParams();
 	SetSpConstExeParams();
@@ -20101,7 +20107,9 @@ int SetSpCamParams()
 	//s_spcam[0].dispcenter.x = s_mainwidth - 50 - 10 - (32 + 12) * 3;
 	//s_spcam[0].dispcenter.y = 16 + 10 + (int(spawidth * 1.5f));
 	s_spcam[0].dispcenter.x = s_mainwidth - (int)s_spsize - 10 - (int)s_spsize - 6 - ((int)s_spsize + 6) * 4;
-	s_spcam[0].dispcenter.y = (int)s_spsize / 2 + 10;
+	//s_spcam[0].dispcenter.y = (int)s_spsize / 2 + 10;
+	s_spcam[0].dispcenter.y = (int)s_spsize / 2 + 14;//2024/03/04
+
 
 	//spashift = (int)((float)spashift * ((float)s_mainwidth / 600.0));
 
@@ -20511,6 +20519,25 @@ int SetSpCpLW2WParams()
 
 	return 0;
 
+}
+
+int SetSpUpperBarParams()
+{
+	int spashift = 6;
+	s_spupperbar.dispcenter.x = s_mainwidth / 2;
+	s_spupperbar.dispcenter.y = 0;
+
+	ChaVector3 disppos;
+	disppos.x = (float)(s_spupperbar.dispcenter.x);
+	disppos.y = (float)(s_spupperbar.dispcenter.y);
+	disppos.z = 0.0f;
+	ChaVector2 dispsize = ChaVector2((float)s_mainwidth, 24.0f);
+
+	//CallF(s_spupperbar.sprite->SetPos(disppos), return 1);
+	//CallF(s_spupperbar.sprite->SetSize(dispsize), return 1);
+	s_spupperbar.sprite.UpdateScreen(disppos, dispsize);
+
+	return 0;
 }
 
 int SetSpSmoothParams()
@@ -26535,11 +26562,13 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			if (ischecked == BST_CHECKED) {
 				g_skydispflag = true;
 
-				//天球表示時にfree fpsで描画するとティアリングが起きるので
-				//天球表示をオンにした場合には自動的にfreefpsをオフにする
-				CheckDlgButton(hDlgWnd, IDC_CHECK_FREEFPS, false);
-				g_freefps = false;
-
+				//ティアリング位置に黒いUpperBarを表示してちらつきがみえないようにした
+				//freefpsはここでは操作しないことに
+				// 
+				////天球表示時にfree fpsで描画するとティアリングが起きるので
+				////天球表示をオンにした場合には自動的にfreefpsをオフにする
+				//CheckDlgButton(hDlgWnd, IDC_CHECK_FREEFPS, false);
+				//g_freefps = false;
 			}
 			else {
 				g_skydispflag = false;
@@ -39342,6 +39371,7 @@ int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 		//}
 		//fObjectRadius *= 1.25f;
 		//fObjectRadius = (float)fmax(500000.0f, fObjectRadius);//model１体だけ読込の場合にも　カメラがSkyの中に入るように
+		//float fObjectRadius = 490000.0f * 0.080f;//fbxの半径が10なので0.1倍より少し小さめ
 		float fObjectRadius = 490000.0f * 0.080f;//fbxの半径が10なので0.1倍より少し小さめ
 
 		ChaMatrix skymat;
@@ -39575,6 +39605,15 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 	if (!re || !pRenderContext) {
 		_ASSERT(0);
 		return 1;
+	}
+
+
+	{
+		//2024/03/04
+		myRenderer::RENDERSPRITE rendersprite;
+		rendersprite.Init();
+		rendersprite.psprite = &(s_spupperbar.sprite);
+		re->AddSpriteToForwardRenderPass(rendersprite);
 	}
 
 
@@ -56254,6 +56293,14 @@ int CreateSprites()
 	}
 	
 	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\UpperBar.png");
+	s_spritetex84 = new Texture();
+	s_spritetex84->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex84;
+	s_spupperbar.sprite.Init(spriteinitdata, screenvertexflag);
+
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\img_ret2prev.png");
 	s_spritetex61 = new Texture();
 	s_spritetex61->InitFromWICFile(filepath);
@@ -56391,6 +56438,97 @@ int CreateSprites()
 	s_mousecenteron.sprite.Init(spriteinitdata, screenvertexflag);
 	
 	return 0;
+}
+
+void InitSprites()
+{
+	s_spritetex0 = 0;
+	s_spritetex1 = 0;
+	s_spritetex2 = 0;
+	s_spritetex3 = 0;
+	s_spritetex4 = 0;
+	s_spritetex5 = 0;
+	s_spritetex6 = 0;
+	s_spritetex7 = 0;
+	s_spritetex8 = 0;
+	s_spritetex9 = 0;
+	s_spritetex10 = 0;
+	s_spritetex11 = 0;
+	s_spritetex12 = 0;
+	s_spritetex13 = 0;
+	s_spritetex14 = 0;
+	s_spritetex15 = 0;
+	s_spritetex16 = 0;
+	s_spritetex17 = 0;
+	s_spritetex18 = 0;
+	s_spritetex19 = 0;
+	s_spritetex20 = 0;
+	s_spritetex21 = 0;
+	s_spritetex22 = 0;
+	s_spritetex23 = 0;
+	s_spritetex24 = 0;
+	s_spritetex25 = 0;
+	s_spritetex26 = 0;
+	s_spritetex27 = 0;
+	s_spritetex28 = 0;
+	s_spritetex29 = 0;
+	s_spritetex30 = 0;
+	s_spritetex31 = 0;
+	s_spritetex32 = 0;
+	s_spritetex33 = 0;
+	s_spritetex34 = 0;
+	s_spritetex35 = 0;
+	s_spritetex36 = 0;
+	s_spritetex37 = 0;
+	s_spritetex37_1 = 0;
+	s_spritetex38 = 0;
+	s_spritetex39 = 0;
+	s_spritetex40 = 0;
+	s_spritetex40_1 = 0;
+	s_spritetex41 = 0;
+	s_spritetex42 = 0;
+	s_spritetex43 = 0;
+	s_spritetex44 = 0;
+	s_spritetex45 = 0;
+	s_spritetex46 = 0;
+	s_spritetex47 = 0;
+	s_spritetex48 = 0;
+	s_spritetex49 = 0;
+	s_spritetex50 = 0;
+	s_spritetex51 = 0;
+	s_spritetex52 = 0;
+	s_spritetex53 = 0;
+	s_spritetex54 = 0;
+	s_spritetex55 = 0;
+	s_spritetex56 = 0;
+	s_spritetex57 = 0;
+	s_spritetex58 = 0;
+	s_spritetex59 = 0;
+	s_spritetex60 = 0;
+	s_spritetex61 = 0;
+	s_spritetex62 = 0;
+	s_spritetex63 = 0;
+	s_spritetex64 = 0;
+	s_spritetex65 = 0;
+	s_spritetex66 = 0;
+	s_spritetex67 = 0;
+	s_spritetex68 = 0;
+	s_spritetex69 = 0;
+	s_spritetex70 = 0;
+	s_spritetex71 = 0;
+	s_spritetex72 = 0;
+	s_spritetex73 = 0;
+	s_spritetex74 = 0;
+	s_spritetex75 = 0;
+	s_spritetex76 = 0;
+	s_spritetex77 = 0;
+	s_spritetex78 = 0;
+	s_spritetex79 = 0;
+	s_spritetex80 = 0;
+	s_spritetex81 = 0;
+	s_spritetex82 = 0;
+	s_spritetex83 = 0;
+	s_spritetex84 = 0;
 }
 
 void DestroySprites()
@@ -56751,6 +56889,10 @@ void DestroySprites()
 		delete s_spritetex83;
 		s_spritetex83 = 0;
 	}
+	if (s_spritetex84) {
+		delete s_spritetex84;
+		s_spritetex84 = 0;
+	}
 
 	int delindex;
 	s_spundo[0].DestroyObjs();
@@ -56768,6 +56910,7 @@ void DestroySprites()
 	s_spret2prev2.DestroyObjs();
 	s_spcplw2w.DestroyObjs();
 	s_spsmooth.DestroyObjs();
+	s_spupperbar.DestroyObjs();
 	s_spconstexe.DestroyObjs();
 	s_spconstrefresh.DestroyObjs();
 	s_spcopy.DestroyObjs();
@@ -57105,6 +57248,7 @@ int OnCreateDevice()
 	WCHAR skypath[1024] = { 0L };
 	//swprintf_s(skypath, 1024, L"%s..\\Media\\MameMedia\\SkySphere1.fbx", g_basedir);
 	swprintf_s(skypath, 1024, L"%s..\\Media\\CelestialSphere\\SkySphere1.fbx", g_basedir);//2024/03/02
+	//swprintf_s(skypath, 1024, L"%s..\\Media\\SkyBox\\SkyBox1.fbx", g_basedir);//2024/03/04
 	CallF(s_sky->LoadFBX(1, s_pdev, 
 		skypath, L"SkySphere1_1", 1.0f,
 		s_psdk, &pImporter, &pScene, s_forcenewaxis, motioncachebatchflag), return S_FALSE);
