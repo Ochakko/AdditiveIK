@@ -3222,9 +3222,10 @@ INT WINAPI wWinMain(
 	}
 	
 	{//2024/03/02
+		//s_sky用のprojection行列を１回計算するためにg_camera3Dを使う
 		s_matSkyProj.SetIdentity();
 		g_camera3D->SetNear(100.0f);
-		g_camera3D->SetFar(500000.0f);
+		g_camera3D->SetFar(490000.0f);
 		g_camera3D->SetViewAngle(g_fovy);//2023/12/30
 		Vector3 cameye = Vector3(g_camEye.x, g_camEye.y, g_camEye.z);
 		g_camera3D->SetPosition(cameye);
@@ -3491,6 +3492,8 @@ void InitApp()
 	s_platemenuno = 1;
 	s_guiswflag = true;//true : １段目メニュー内容を右ペインに. false : ２段目メニュー内容を右ペインに
 	s_guiswplateno = 1;
+
+	g_skydispflag = false;
 
 	g_pickorder = 1;//2024/02/16
 	g_hdrpbloom = true;
@@ -5939,8 +5942,9 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 
 		if (s_disponlyoneobj == false) {
 
-			OnRenderSky(re, rc);//透過テクスチャの奥に空がみえるように　空は一番最初に描画する
-
+			if (g_skydispflag) {
+				OnRenderSky(re, rc);//透過テクスチャの奥に空がみえるように　空は一番最初に描画する
+			}
 
 			int lightflag = 1;
 			ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -26410,6 +26414,13 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			CheckDlgButton(hDlgWnd, IDC_CHECK_ZALWAYS, false);
 		}
 
+		if (g_skydispflag == true) {
+			CheckDlgButton(hDlgWnd, IDC_CHECK_SKYDISP, true);
+		}
+		else {
+			CheckDlgButton(hDlgWnd, IDC_CHECK_SKYDISP, false);
+		}
+
 		return FALSE;
 	}
 	break;
@@ -26513,6 +26524,25 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			}
 			else {
 				g_hdrpbloom = false;
+			}
+		}
+		break;
+
+		case IDC_CHECK_SKYDISP:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_SKYDISP);
+			if (ischecked == BST_CHECKED) {
+				g_skydispflag = true;
+
+				//天球表示時にfree fpsで描画するとティアリングが起きるので
+				//天球表示をオンにした場合には自動的にfreefpsをオフにする
+				CheckDlgButton(hDlgWnd, IDC_CHECK_FREEFPS, false);
+				g_freefps = false;
+
+			}
+			else {
+				g_skydispflag = false;
 			}
 		}
 		break;
@@ -39312,7 +39342,7 @@ int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 		//}
 		//fObjectRadius *= 1.25f;
 		//fObjectRadius = (float)fmax(500000.0f, fObjectRadius);//model１体だけ読込の場合にも　カメラがSkyの中に入るように
-		float fObjectRadius = 500000.0f * 0.080f;//fbxの半径が10なので0.1倍より少し小さめ
+		float fObjectRadius = 490000.0f * 0.080f;//fbxの半径が10なので0.1倍より少し小さめ
 
 		ChaMatrix skymat;
 		skymat.SetIdentity();
@@ -39324,8 +39354,10 @@ int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 		s_chascene->UpdateMatrixOneModel(s_sky, g_limitdegflag, &skymat, &s_matView, &s_matSkyProj, 0.0);
 		ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 		bool forcewithalpha = false;
+		//bool forcewithalpha = true;
 		int btflag = 0;
-		bool zcmpalways = false;
+		//bool zcmpalways = false;
+		bool zcmpalways = true;
 		bool zenable = true;
 		int lightflag = 0;
 		s_chascene->RenderOneModel(s_sky, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);

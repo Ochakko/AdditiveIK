@@ -151,9 +151,14 @@ int CFpsSprite::SetParams()
 	float spaheight = 16.0f;
 	int spashift = 1;
 
-	//m_pointR[0].x = 175;
-	m_point[0].x = 180 - (int)spawidth - spashift;
-	m_point[0].y = 15;
+	////m_pointR[0].x = 175;
+	//m_point[0].x = 180 - (int)spawidth - spashift;
+	//m_point[0].y = 15;
+
+	//2024/03/04 上端から少し下げないと表示がちらつく
+	m_point[0].x = 32;
+	m_point[0].y = 40;
+
 
 	m_point[1].x = m_point[0].x + (int)spawidth * 2 + spashift;
 	m_point[1].y = m_point[0].y;
