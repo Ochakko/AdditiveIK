@@ -74,7 +74,7 @@ struct SConstantBuffer {
 	ChaVector4 metalcoef;
 	ChaVector4 materialdisprate;
 	ChaVector4 shadowmaxz;
-	int UVs[4];
+	int UVs[4];//[0]:UVSet, [1]:TilingU, [2]:TilingV
 	void Init() {
 		mWorld.SetIdentity();
 		mView.SetIdentity();
@@ -85,7 +85,10 @@ struct SConstantBuffer {
 		metalcoef = ChaVector4(0.250f, 0.250f, 0.0f, 0.0f);
 		materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 		shadowmaxz = ChaVector4(3000.0f, 0.0010f, 0.0f, 0.0f);
-		ZeroMemory(UVs, sizeof(int) * 4);
+		UVs[0] = 0;
+		UVs[1] = 1;
+		UVs[2] = 1;
+		UVs[3] = 0;
 	};
 };
 
@@ -1048,6 +1051,23 @@ public:
 	{
 		return m_shadowcasterflag;
 	}
+	void SetUVScale(ChaVectorDbl2 srcscale)
+	{
+		m_uvscale = srcscale;
+	}
+	ChaVectorDbl2 GetUVScale()
+	{
+		return m_uvscale;
+	}
+	void SetUVOffset(ChaVectorDbl2 srcoffset)
+	{
+		m_uvoffset = srcoffset;
+	}
+	ChaVectorDbl2 GetUVOffset()
+	{
+		return m_uvoffset;
+	}
+
 
 public:
 	//###################################################
@@ -1172,6 +1192,8 @@ private:
 	D3D12_TEXTURE_ADDRESS_MODE m_addressU_metal;
 	D3D12_TEXTURE_ADDRESS_MODE m_addressV_metal;
 
+	ChaVectorDbl2 m_uvscale;//2024/03/05
+	ChaVectorDbl2 m_uvoffset;//2024/03/05
 
 	PipelineState m_opaquePipelineState[MQOSHADER_MAX][REFPOSMAXNUM];
 	PipelineState m_transPipelineState[MQOSHADER_MAX][REFPOSMAXNUM];
@@ -1235,6 +1257,7 @@ private:
 
 	HSVTOON m_hsvtoon;
 	bool m_shadowcasterflag;//2024/03/03
+	
 };
 
 

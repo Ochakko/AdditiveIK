@@ -5110,6 +5110,9 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 		int dbgflag1 = 1;
 	}
 
+	if ((strstr(tmpname, "Terrain") != 0) || (strstr(tmpname, "terrain") != 0)) {
+		int dbgflag2 = 1;
+	}
 
 	//bool findalbedometal = false;
 	{
@@ -5126,10 +5129,16 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 				{
 					//char* nameptr = (char*)lLayeredTexture->GetName();
 					if (lLayeredTexture->GetName()) {
+						FbxVector2 fbxuvscale = lLayeredTexture->GetUVScaling();
+						ChaVectorDbl2 chauvscale = ChaVectorDbl2(fbxuvscale[0], fbxuvscale[1]);
+						FbxVector2 fbxuvoffset = lLayeredTexture->GetUVTranslation();
+						ChaVectorDbl2 chauvoffset = ChaVectorDbl2(fbxuvoffset[0], fbxuvoffset[1]);
+
 						char tempname[256];
 						strcpy_s(tempname, 256, lLayeredTexture->GetName());
 						SetMaterialTexNames(newmqomat, tempname,
-							lLayeredTexture->GetWrapModeU(), lLayeredTexture->GetWrapModeV());	
+							lLayeredTexture->GetWrapModeU(), lLayeredTexture->GetWrapModeV(),
+							chauvscale, chauvoffset);	
 						break;
 					}
 				}
@@ -5148,10 +5157,16 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 					{
 						char* nameptr = (char*)lTexture->GetFileName();
 						if (nameptr) {
+							FbxVector2 fbxuvscale = lTexture->GetUVScaling();
+							ChaVectorDbl2 chauvscale = ChaVectorDbl2(fbxuvscale[0], fbxuvscale[1]);
+							FbxVector2 fbxuvoffset = lTexture->GetUVTranslation();
+							ChaVectorDbl2 chauvoffset = ChaVectorDbl2(fbxuvoffset[0], fbxuvoffset[1]);
+
 							char tempname[256];
 							strcpy_s(tempname, 256, nameptr);
 							SetMaterialTexNames(newmqomat, tempname,
-								lTexture->GetWrapModeU(), lTexture->GetWrapModeV());
+								lTexture->GetWrapModeU(), lTexture->GetWrapModeV(),
+								chauvscale, chauvoffset);
 						}
 					}
 				}
@@ -5173,10 +5188,16 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 				{
 					//char* nameptr = (char*)lLayeredTexture->GetName();
 					if (lLayeredTexture->GetName()) {
+						FbxVector2 fbxuvscale = lLayeredTexture->GetUVScaling();
+						ChaVectorDbl2 chauvscale = ChaVectorDbl2(fbxuvscale[0], fbxuvscale[1]);
+						FbxVector2 fbxuvoffset = lLayeredTexture->GetUVTranslation();
+						ChaVectorDbl2 chauvoffset = ChaVectorDbl2(fbxuvoffset[0], fbxuvoffset[1]);
+
 						char tempname[256];
 						strcpy_s(tempname, 256, lLayeredTexture->GetName());
 						SetMaterialTexNames(newmqomat, tempname,
-							lLayeredTexture->GetWrapModeU(), lLayeredTexture->GetWrapModeV());
+							lLayeredTexture->GetWrapModeU(), lLayeredTexture->GetWrapModeV(),
+							chauvscale, chauvoffset);
 						break;
 					}
 				}
@@ -5195,10 +5216,16 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 					{
 						char* nameptr = (char*)lTexture->GetFileName();
 						if (nameptr) {
+							FbxVector2 fbxuvscale = lTexture->GetUVScaling();
+							ChaVectorDbl2 chauvscale = ChaVectorDbl2(fbxuvscale[0], fbxuvscale[1]);
+							FbxVector2 fbxuvoffset = lTexture->GetUVTranslation();
+							ChaVectorDbl2 chauvoffset = ChaVectorDbl2(fbxuvoffset[0], fbxuvoffset[1]);
+
 							char tempname[256];
 							strcpy_s(tempname, 256, nameptr);
 							SetMaterialTexNames(newmqomat, tempname,
-								lTexture->GetWrapModeU(), lTexture->GetWrapModeV());
+								lTexture->GetWrapModeU(), lTexture->GetWrapModeV(),
+								chauvscale, chauvoffset);
 						}
 					}
 				}
@@ -5262,7 +5289,8 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 }
 
 int CModel::SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname,
-	FbxTexture::EWrapMode addressU, FbxTexture::EWrapMode addressV)
+	FbxTexture::EWrapMode addressU, FbxTexture::EWrapMode addressV,
+	ChaVectorDbl2 chauvscale, ChaVectorDbl2 chauvoffset)
 {
 	char temptexname[256] = {0};
 
@@ -5349,6 +5377,13 @@ int CModel::SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname,
 	//if (strstr(temptexname, "Glass_A_Base") != 0) {
 	//	int dbgflag1 = 1;
 	//}
+
+
+
+	newmqomat->SetUVScale(chauvscale);//2024/03/05
+	newmqomat->SetUVOffset(chauvoffset);//2024/03/05
+
+
 
 	if ((newmqomat->GetAlbedoTex() && !(newmqomat->GetAlbedoTex()[0])) &&
 		(strstr(temptexname, "albedo") != 0) || (strstr(temptexname, "Albedo") != 0) || 

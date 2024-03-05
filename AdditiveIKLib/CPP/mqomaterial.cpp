@@ -390,6 +390,9 @@ int CMQOMaterial::InitParams()
 	m_addressU_metal = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	m_addressV_metal = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 
+	m_uvscale = ChaVectorDbl2(1.0, 1.0);
+	m_uvoffset = ChaVectorDbl2(0.0, 0.0);
+
 	m_hsvtoon.Init();
 
 	m_shadowcasterflag = true;//2024/03/03
@@ -1451,6 +1454,9 @@ void CMQOMaterial::InitShadersAndPipelines(
 	//if (srcuvnum >= 2) {//2024/02/21　コメントアウト
 		samplerDescArray[2].AddressU = GetAddressU_normal();//2024/01/06
 		samplerDescArray[2].AddressV = GetAddressV_normal();//2024/01/06
+	//samplerDescArray[2].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	//samplerDescArray[2].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	//samplerDescArray[2].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	//}
 	//else {
 	//	samplerDescArray[2].AddressU = GetAddressU_albedo();//2024/01/06
@@ -3318,6 +3324,8 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		m_cb[currentrefposindex].UVs[0] = g_uvset;
+		m_cb[currentrefposindex].UVs[1] = (int)(GetUVScale().x + 0.0001);
+		m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
 		}
@@ -3350,6 +3358,8 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		m_cb[currentrefposindex].UVs[0] = g_uvset;
+		m_cb[currentrefposindex].UVs[1] = (int)(GetUVScale().x + 0.0001);
+		m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
 		}
@@ -3395,6 +3405,8 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		m_cb[currentrefposindex].UVs[0] = g_uvset;
+		m_cb[currentrefposindex].UVs[1] = (int)(GetUVScale().x + 0.0001);
+		m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
 		}

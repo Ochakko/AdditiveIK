@@ -302,9 +302,45 @@ ChaMatrix ChaMatrixInv(ChaMatrix srcmat)
 	return chacalcfunc.ccfChaMatrixInv(srcmat);
 }
 
+//##############
+//ChaVectorDbl2
+//##############
+
+ChaVectorDbl2::ChaVectorDbl2()
+{
+	x = 0.0;
+	y = 0.0;
+}
+
+ChaVectorDbl2::ChaVectorDbl2(double srcx, double srcy)
+{
+	x = srcx;
+	y = srcy;
+}
+
+ChaVectorDbl2::~ChaVectorDbl2()
+{
+
+}
 
 
+ChaVectorDbl2 ChaVectorDbl2::operator= (ChaVectorDbl2 v) { this->x = v.x; this->y = v.y;; return *this; };
+ChaVectorDbl2 ChaVectorDbl2::operator* (double srcw) const { return ChaVectorDbl2(this->x * srcw, this->y * srcw); }
+ChaVectorDbl2& ChaVectorDbl2::operator*= (double srcw) { *this = *this * srcw; return *this; }
+ChaVectorDbl2 ChaVectorDbl2::operator/ (double srcw) const { if (srcw != 0.0f) { return ChaVectorDbl2(this->x / srcw, this->y / srcw); } else { return ChaVectorDbl2(0.0, 0.0); } }
+ChaVectorDbl2& ChaVectorDbl2::operator/= (double srcw) { if (srcw != 0.0f) { *this = *this / srcw; return *this; } else { this->x = 0.0f; this->y = 0.0f; return *this; } }
+ChaVectorDbl2 ChaVectorDbl2::operator+ (const ChaVectorDbl2& v) const { return ChaVectorDbl2(x + v.x, y + v.y); }
+ChaVectorDbl2& ChaVectorDbl2::operator+= (const ChaVectorDbl2& v) { *this = *this + v; return *this; }
+ChaVectorDbl2 ChaVectorDbl2::operator- (const ChaVectorDbl2& v) const { return ChaVectorDbl2(x - v.x, y - v.y); }
+ChaVectorDbl2& ChaVectorDbl2::operator-= (const ChaVectorDbl2& v) { *this = *this - v; return *this; }
+ChaVectorDbl2 ChaVectorDbl2::operator* (const ChaVectorDbl2& v) const { return ChaVectorDbl2(this->x * v.x, this->y * v.y); }
+
+ChaVectorDbl2 ChaVectorDbl2::operator- () const { return *this * -1.0; }
+
+
+//############
 //ChaVector2
+//############
 
 ChaVector2::ChaVector2()
 {
@@ -337,6 +373,10 @@ ChaVector2 ChaVector2::operator+ (const ChaVector2 &v) const { return ChaVector2
 ChaVector2 &ChaVector2::operator+= (const ChaVector2 &v) { *this = *this + v; return *this; }
 ChaVector2 ChaVector2::operator- (const ChaVector2 &v) const { return ChaVector2(x - v.x, y - v.y); }
 ChaVector2 &ChaVector2::operator-= (const ChaVector2 &v) { *this = *this - v; return *this; }
+ChaVector2 ChaVector2::operator* (const ChaVector2 &v) const { return ChaVector2((float)((double)this->x * (double)v.x), (float)((double)this->y * (double)v.y)); }
+
+ChaVector2 ChaVector2::operator+ (const ChaVectorDbl2& v) const { return ChaVector2((float)((double)x + v.x), (float)((double)y + v.y)); }
+ChaVector2 ChaVector2::operator* (const ChaVectorDbl2 &v) const { return ChaVector2((float)((double)this->x * v.x), (float)((double)this->y * v.y)); }
 
 ChaVector2 ChaVector2::operator- () const { return *this * -1.0; }
 

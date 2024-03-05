@@ -26860,6 +26860,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 	float specularcoef = 0.1250f;
 	bool normaly0flag = false;
 	bool shadowcasterflag = true;
+	ChaVectorDbl2 uvscale = ChaVectorDbl2(1.0, 1.0);
 	WCHAR wmaterialname[256] = { 0L };
 	if (materialindex >= 0) {
 		curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
@@ -26879,6 +26880,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			specularcoef = curmqomat->GetSpecularCoef();
 			normaly0flag = curmqomat->GetNormalY0Flag();
 			shadowcasterflag = curmqomat->GetShadowCasterFlag();
+			uvscale = curmqomat->GetUVScale();
 		}
 		else {
 			_ASSERT(0);
@@ -26901,6 +26903,7 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 		specularcoef = 0.1250f;
 		normaly0flag = false;
 		shadowcasterflag = true;
+		uvscale = ChaVectorDbl2(1.0, 1.0);
 	}
 	
 	int lightsliderid[LIGHTNUMMAX] = {
@@ -27021,6 +27024,49 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
 					if (setmqomat) {
 						setmqomat->SetSpecularCoef(newspcscale);
+					}
+				}
+			}
+		}
+
+		else if (GetDlgItem(hDlgWnd, IDC_SL_TILINGU) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGU), TBM_GETPOS, 0, 0);
+			uvscale.x = (double)cursliderpos;
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"Tiling U:%d", cursliderpos);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_TILINGU, strdlg);
+
+			if (curmqomat) {
+				curmqomat->SetUVScale(uvscale);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetUVScale(uvscale);
+					}
+				}
+			}
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SL_TILINGV) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGV), TBM_GETPOS, 0, 0);
+			uvscale.y = (double)cursliderpos;
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"Tiling V:%d", cursliderpos);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_TILINGV, strdlg);
+
+			if (curmqomat) {
+				curmqomat->SetUVScale(uvscale);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetUVScale(uvscale);
 					}
 				}
 			}
@@ -54946,6 +54992,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	float specularcoef;
 	bool normaly0flag;
 	bool shadowcasterflag = true;
+	ChaVectorDbl2 uvscale = ChaVectorDbl2(1.0, 1.0);
 	HSVTOON hsvtoon;
 	if (curmqomat) {
 		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, 
@@ -54964,6 +55011,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		specularcoef = curmqomat->GetSpecularCoef();
 		normaly0flag = curmqomat->GetNormalY0Flag();
 		shadowcasterflag = curmqomat->GetShadowCasterFlag();
+		uvscale = curmqomat->GetUVScale();
 	}
 	else {
 		//全てのマテリアルに対して設定するボタンを押した場合
@@ -54982,6 +55030,7 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		specularcoef = 0.1250f;
 		normaly0flag = false;
 		shadowcasterflag = true;
+		uvscale = ChaVectorDbl2(1.0, 1.0);
 	}
 
 
@@ -55104,6 +55153,15 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPECULARCOEF), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)400);//0.0から2.0
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPECULARCOEF), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
+	sliderpos = (int)(uvscale.x + 0.0001);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGU), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGU), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGU), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(uvscale.y + 0.0001);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGV), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGV), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGV), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
 	//#####
 	//Text
@@ -55169,6 +55227,11 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	swprintf_s(strdlg, 256, L"ToonLow_A:%.2f", hsvtoon.lowaddhsv.w);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDA, strdlg);
 
+
+	swprintf_s(strdlg, 256, L"Tiling U:%d", (int)(uvscale.x + 0.0001));
+	SetDlgItemText(hDlgWnd, IDC_STATIC_TILINGU, strdlg);
+	swprintf_s(strdlg, 256, L"Tiling V:%d", (int)(uvscale.y + 0.0001));
+	SetDlgItemText(hDlgWnd, IDC_STATIC_TILINGV, strdlg);
 
 	//#########
 	//CheckBox

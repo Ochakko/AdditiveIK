@@ -67,7 +67,7 @@ cbuffer ModelCb : register(b0)
     float4 metalcoef;
     float4 materialdisprate;
     float4 shadowmaxz;
-    int4 UVs;    
+    int4 UVs;//x:UVSet, y:TilingU, z:TilingV   
 };
 
 // ディレクションライト
@@ -154,7 +154,9 @@ SPSIn VSMainSkinStd(SVSIn vsIn, uniform bool hasSkin)
     //psIn.pos /= psIn.pos.w;
     
     psIn.normal = normalize(mul(finalmat, vsIn.normal));    
-    psIn.uv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+    float2 orguv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+    psIn.uv.x = orguv.x * (float)UVs.y;
+    psIn.uv.y = orguv.y * (float)UVs.z;
     
     psIn.diffusemult = diffusemult;
     
@@ -224,7 +226,9 @@ SPSInShadowReciever VSMainSkinStdShadowReciever(SVSIn vsIn, uniform bool hasSkin
     psIn.posInLVP.z = length(worldPos.xyz - lightPos.xyz) / shadowmaxz.x;
     
     psIn.normal = normalize(mul(finalmat, vsIn.normal));
-    psIn.uv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+    float2 orguv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+    psIn.uv.x = orguv.x * (float)UVs.y;
+    psIn.uv.y = orguv.y * (float)UVs.z;
 
     psIn.diffusemult = diffusemult;
    

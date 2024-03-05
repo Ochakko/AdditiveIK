@@ -1120,7 +1120,8 @@ private:
 
 	int SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* material );
 	int SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname,
-		FbxTexture::EWrapMode addressU, FbxTexture::EWrapMode addressV);
+		FbxTexture::EWrapMode addressU, FbxTexture::EWrapMode addressV, 
+		ChaVectorDbl2 chauvscale, ChaVectorDbl2 chauvoffset);
 	void CreateFBXBoneReq(FbxScene* pScene, FbxNode* pNode, FbxNode* parnode );
 	//void CreateExtendBoneReq(CBone* srcbone);
 	int GetFBXBone(FbxScene* pScene, FbxNodeAttribute::EType type, FbxNodeAttribute *pAttrib, FbxNode* curnode, FbxNode* parnode );

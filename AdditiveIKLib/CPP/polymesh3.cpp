@@ -792,6 +792,7 @@ int CPolyMesh3::SetOptV(BINORMALDISPV* dispv, int* pleng, int* matnum, CModel* p
 	int beffaceno = 0;
 	N3P* curn3p = 0;
 	N3P* befn3p = 0;
+
 	for( n3 = 0; n3 < (m_facenum * 3); n3++ ){
 		curn3p = m_n3p + n3;
 		curmaterialno = curn3p->perface->materialno;

@@ -3,6 +3,17 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/03/05
+　UVの繰り返し回数設定
+　　ShaderプレートメニューにTilingU, TilingVのスライダーを追加
+　　スライダー設定をリアルタイムでテクスチャの繰り返し回数として適応
+　　Albedoテクスチャ, Normalテクスチャ, Metalテクスチャすべてに影響
+　　fbxファイルのUVScalingに保存して読み込み
+　　UVScalingはMayaとUnityでは現在は無視されているようにみえる
+　　fbxの正式なtiling回数の保存読み込みに関しては不明
+
+
+
 
 2024/03/04
 　Shaderプレートメニュー修正

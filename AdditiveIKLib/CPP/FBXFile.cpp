@@ -2872,6 +2872,17 @@ FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMateri
 	lTexture->SetWrapMode(addressU, addressV);
 
 
+	//2024/03/05
+	{
+		ChaVectorDbl2 chauvscale = mqomat->GetUVScale();
+		ChaVectorDbl2 chauvoffset = mqomat->GetUVOffset();
+		FbxVector2 uvscale = FbxVector2(chauvscale.x, chauvscale.y);
+		FbxVector2 uvoffset = FbxVector2(chauvoffset.x, chauvoffset.y);
+		lTexture->SetUVScaling(uvscale);
+		lTexture->SetUVTranslation(uvoffset);
+	}
+
+
     return lTexture;
 }
 

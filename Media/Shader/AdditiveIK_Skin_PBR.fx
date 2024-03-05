@@ -73,7 +73,7 @@ cbuffer ModelCb : register(b0)
     float4 metalcoef;
     float4 materialdisprate;
     float4 shadowmaxz;
-    int4 UVs;
+    int4 UVs;//x:UVSet, y:TilingU, z:TilingV   
 };
 
 // ディレクションライト
@@ -375,7 +375,11 @@ SPSIn VSMainSkinPBR(SVSIn vsIn, uniform bool hasSkin)
     psIn.worldPos = psIn.pos;
     psIn.pos = mul(mView, psIn.pos);
     psIn.pos = mul(mProj, psIn.pos);
-    psIn.uv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+
+    float2 orguv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+    psIn.uv.x = orguv.x * (float)UVs.y;
+    psIn.uv.y = orguv.y * (float)UVs.z;
+
     psIn.diffusemult = diffusemult;
 
     psIn.normal = normalize(mul(finalmat, vsIn.normal));
@@ -404,7 +408,7 @@ SPSInShadowMap VSMainSkinPBRShadowMap(SVSIn vsIn, uniform bool hasSkin)
     //float4 worldPos = psIn.pos;
     psIn.pos = mul(mView, psIn.pos);
     psIn.pos = mul(mProj, psIn.pos);
-    psIn.uv = vsIn.uv.xy;
+    //psIn.uv = vsIn.uv.xy;
 
     // step-9 頂点のライトから見た深度値と、ライトから見た深度値の2乗を計算する
     psIn.depth.x = length(worldPos.xyz - lightPos.xyz) / shadowmaxz.x;
@@ -435,7 +439,11 @@ SPSInShadowReciever VSMainSkinPBRShadowReciever(SVSIn vsIn, uniform bool hasSkin
     psIn.worldPos = psIn.pos;
     psIn.pos = mul(mView, psIn.pos);
     psIn.pos = mul(mProj, psIn.pos);
-    psIn.uv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+
+    float2 orguv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+    psIn.uv.x = orguv.x * (float)UVs.y;
+    psIn.uv.y = orguv.y * (float)UVs.z;
+
     psIn.diffusemult = diffusemult;
     
     // ライトビュースクリーン空間の座標を計算する

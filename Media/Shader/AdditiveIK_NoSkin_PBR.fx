@@ -81,7 +81,7 @@ cbuffer ModelCb : register(b0)
     float4 metalcoef;
     float4 materialdisprate;
     float4 shadowmaxz;
-    int4 UVs;
+    int4 UVs;//x:UVSet, y:TilingU, z:TilingV   
 };
 
 // ディレクションライト
@@ -263,8 +263,10 @@ float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir)
 float3 GetNormal(float3 normal, float3 tangent, float3 biNormal, float2 uv1)
 {
     float3 normalmapNormal = g_normalMap.Sample(g_sampler_normal, uv1).xyz; //2024/02/18
-    //float3 normalmapNormal = g_normalMap.SampleLevel(g_sampler_normal, uv1, 0.0f).xyz;//2024/02/18 JCityでテストこっちが合っている
-    //float3 normalmapNormal = g_normalMap.SampleLevel(g_sampler_clamp, uv1, 0.0f).xyz;//2024/02/14
+    ////float3 normalmapNormal = g_normalMap.SampleLevel(g_sampler_normal, uv1, 0.0f).xyz;//2024/02/18 JCityでテストこっちが合っている
+    ////float3 normalmapNormal = g_normalMap.SampleLevel(g_sampler_clamp, uv1, 0.0f).xyz;//2024/02/14
+    //float3 normalmapNormal = g_normalMap.Sample(g_sampler_albedo, uv1).xyz; //2024/03/05
+    
     float3 binSpaceNormal = (normalmapNormal * 2.0f) - 1.0f;
    
     float3 newNormal = tangent * binSpaceNormal.x + biNormal * binSpaceNormal.y + normal * binSpaceNormal.z;    
@@ -372,7 +374,11 @@ SPSIn VSMainNoSkinPBR(SVSInWithoutBone vsIn, uniform bool hasSkin)
     psIn.worldPos = psIn.pos;    
     psIn.pos = mul(mView, psIn.pos);    // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos);    // カメラ座標系からスクリーン座標系に変換
-    psIn.uv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+
+    float2 orguv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+    psIn.uv.x = orguv.x * (float)UVs.y;
+    psIn.uv.y = orguv.y * (float)UVs.z;
+
     psIn.diffusemult = diffusemult;
     
     psIn.normal = normalize(mul(mWorld, vsIn.normal));
@@ -392,7 +398,7 @@ SPSInShadowMap VSMainNoSkinPBRShadowMap(SVSInWithoutBone vsIn, uniform bool hasS
     //float4 worldPos = vsIn.pos;
     psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
-    psIn.uv = vsIn.uv.xy;
+    //psIn.uv = vsIn.uv.xy;
 
     psIn.depth.x = length(worldPos.xyz - lightPos.xyz) / shadowmaxz.x;
     //float4 posLVP = mul(mLVP, worldPos);
@@ -410,7 +416,11 @@ SPSInShadowReciever VSMainNoSkinPBRShadowReciever(SVSInWithoutBone vsIn, uniform
     psIn.worldPos = psIn.pos;    
     psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
-    psIn.uv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+    
+    float2 orguv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+    psIn.uv.x = orguv.x * (float)UVs.y;
+    psIn.uv.y = orguv.y * (float)UVs.z;
+    
     psIn.diffusemult = diffusemult;
     
     // ライトビュースクリーン空間の座標を計算する

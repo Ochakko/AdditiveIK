@@ -162,6 +162,41 @@ public:
 
 };
 
+class ChaVectorDbl2
+{
+public:
+
+	ChaVectorDbl2();
+	ChaVectorDbl2(double srcx, double srcy);
+	~ChaVectorDbl2();
+
+	ChaVectorDbl2 operator= (ChaVectorDbl2 v);
+	ChaVectorDbl2 operator* (double srcw) const;
+	ChaVectorDbl2& operator*= (double srcw);
+	ChaVectorDbl2 operator/ (double srcw) const;
+	ChaVectorDbl2& operator/= (double srcw);
+	ChaVectorDbl2 operator+ (const ChaVectorDbl2& v) const;
+	ChaVectorDbl2& operator+= (const ChaVectorDbl2& v);
+	ChaVectorDbl2 operator- (const ChaVectorDbl2& v) const;
+	ChaVectorDbl2& operator-= (const ChaVectorDbl2& v);
+	ChaVectorDbl2 operator* (const ChaVectorDbl2& v) const;
+	//ChaVectorDbl2 &operator*= (const ChaVectorDbl2 &v);
+	//ChaVectorDbl2 operator/ (const ChaVectorDbl2 &q) const;
+	//ChaVectorDbl2 &operator/= (const ChaVectorDbl2 &q);
+	ChaVectorDbl2 operator- () const;
+
+	bool operator== (const ChaVectorDbl2& v) const { return x == v.x && y == v.y; };
+	bool operator!= (const ChaVectorDbl2& v) const { return !(*this == v); };
+
+	//#ifdef CONVD3DX11
+	DirectX::XMFLOAT2 D3DX();
+	//#endif
+
+public:
+	double x;
+	double y;
+
+};
 
 class ChaVector2
 {
@@ -184,7 +219,10 @@ public:
 	ChaVector2 &operator+= (const ChaVector2 &v);
 	ChaVector2 operator- (const ChaVector2 &v) const;
 	ChaVector2 &operator-= (const ChaVector2 &v);
-	//ChaVector2 operator* (const ChaVector2 &v) const;
+	ChaVector2 operator* (const ChaVector2 &v) const;
+
+	ChaVector2 operator+ (const ChaVectorDbl2& v) const;
+	ChaVector2 operator* (const ChaVectorDbl2& v) const;
 	//ChaVector2 &operator*= (const ChaVector2 &v);
 	//ChaVector2 operator/ (const ChaVector2 &q) const;
 	//ChaVector2 &operator/= (const ChaVector2 &q);
@@ -266,6 +304,8 @@ public:
 	float z;
 
 };
+
+
 
 
 typedef struct tag_befeul
