@@ -5079,7 +5079,8 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 			FbxString chkauthor = "OchakkoLab";
 			if (sceneinfo->mAuthor == chkauthor) {
 				FbxString currentrev1 = "rev. 3.1";
-				if (sceneinfo->mRevision != currentrev1) {
+				FbxString currentrev2 = "rev. 3.2";
+				if ((sceneinfo->mRevision != currentrev1) && (sceneinfo->mRevision != currentrev2)) {
 					oldtransparent = true;//!!!!!!!!!!!!!!!!!!!!
 				}
 			}
@@ -9798,6 +9799,24 @@ void CModel::FindBtObjectReq( CBtObject* srcbto, int srcboneno, CBtObject** ppre
 		FindBtObjectReq( chilbto, srcboneno, ppret );
 	}
 }
+
+int CModel::SetLightFlag(bool srcflag)
+{
+	int materialnum = m_materialbank.GetSize();
+	int matindex;
+	for (matindex = 0; matindex < materialnum; matindex++) {
+		CMQOMaterial* curmaterial = m_materialbank.Get(matindex);
+		if (curmaterial) {
+			curmaterial->SetLightingFlag(srcflag);
+		}
+		else {
+			_ASSERT(0);
+		}
+	}
+
+	return 0;
+}
+
 int CModel::SetDispFlag( const char* srcobjname, int srcflag )
 {
 	CMQOObject* curobj = m_objectname[ srcobjname ];

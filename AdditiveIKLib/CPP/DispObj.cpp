@@ -1516,7 +1516,7 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		CMQOMaterial* curmat;
 		curmat = currb->mqomat;
 		if (!curmat) {
-			_ASSERT(0);
+			//_ASSERT(0);
 			return 1;
 		}
 
@@ -1943,7 +1943,9 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 		//rc.SetIndexBuffer(m_indexBufferView);
 
 		//4. ドローコールを実行。
-		rc->DrawIndexedInstanced(curtrinum * 3, renderobj.pmodel->GetInstancingDrawNum());
+		//rc->DrawIndexedInstanced(curtrinum * 3, renderobj.pmodel->GetInstancingDrawNum());
+		rc->DrawIndexedInstanced(curtrinum, renderobj.pmodel->GetInstancingDrawNum());//2024/03/07 curtrinumには既に3を掛けてある
+
 
 	//}
 

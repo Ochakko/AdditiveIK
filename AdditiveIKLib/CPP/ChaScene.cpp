@@ -286,7 +286,7 @@ bool ChaScene::PickPolyMesh3_Mesh(int pickkind, UIPICKINFO* tmppickinfo,
 
 							CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
 							if (curobj && curobj->GetDispObj() && curobj->GetPm3() && curobj->GetVisible()) {
-								
+
 								myRenderer::RENDEROBJ pickobj;
 								pickobj.Init();
 								pickobj.pmodel = curmodel;
@@ -299,11 +299,12 @@ bool ChaScene::PickPolyMesh3_Mesh(int pickkind, UIPICKINFO* tmppickinfo,
 				}
 			}
 		}
+	}
 
-		//##########################################################
-		//カメラ距離でソートしてから　pickする
-		//##########################################################
-
+	//##########################################################
+	//カメラ距離でソートしてから　pickする
+	//##########################################################
+	if (!pickvec.empty()) {
 		int foundorder = 1;
 		if (!pickvec.empty()) {
 			std::sort(pickvec.begin(), pickvec.end());//カメラ距離でソート
@@ -774,7 +775,13 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 							renderobj.Init();
 							renderobj.pmodel = curmodel;
 							renderobj.mqoobj = curobj;
-							renderobj.shadertype = MQOSHADER_TOON;//!!!!!!!!!!! マニピュレータと地面はNOLIGHTで表示
+							if (curmodel->GetSkyFlag() == false) {
+								renderobj.shadertype = MQOSHADER_TOON;//!!!!!!!!!!! マニピュレータと地面はNOLIGHTで表示
+							}
+							else {
+								//2024/03/07
+								renderobj.shadertype = -2;//!!!!!!!!!!! skyのシェーダタイプについては、マテリアルの指定に従う
+							}
 							renderobj.withalpha = withalpha;
 							renderobj.forcewithalpha = forcewithalpha;
 							renderobj.lightflag = lightflag;

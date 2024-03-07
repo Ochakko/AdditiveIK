@@ -359,6 +359,8 @@ public:
 
 
 
+	int DecideShaderIndex(myRenderer::RENDEROBJ renderobj);//2024/03/07
+	bool DecideLightFlag(myRenderer::RENDEROBJ renderobj);//2024/03/07
 	void SetFl4x4(myRenderer::RENDEROBJ renderobj, int refposindex);
 	int SetRefPosFl4x4(CModel* srcmodel, int refposindex);
 	void SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBufferLights* pcbLights);
@@ -1067,7 +1069,13 @@ public:
 	{
 		return m_uvoffset;
 	}
-
+	void SetLightingFlag(bool srcflag) {
+		m_lightingflag = srcflag;
+	}
+	bool GetLightingFlag()
+	{
+		return m_lightingflag;
+	}
 
 public:
 	//###################################################
@@ -1239,6 +1247,15 @@ private:
 	bool m_updatelightsflag[MQOSHADER_MAX * 3];
 
 
+	bool m_settempdiffusemult;
+	ChaVector4 m_tempdiffusemult;
+
+	HSVTOON m_hsvtoon;
+	bool m_shadowcasterflag;//2024/03/03
+
+	bool m_lightingflag;//2024/03/07
+
+
 //以下、クラス外からアクセスしないのでアクセッサー無し。
 	char* m_curtexname;
 
@@ -1251,12 +1268,6 @@ private:
 
 	int m_convnamenum;
 	char** m_ppconvname;
-
-	bool m_settempdiffusemult;
-	ChaVector4 m_tempdiffusemult;
-
-	HSVTOON m_hsvtoon;
-	bool m_shadowcasterflag;//2024/03/03
 	
 };
 

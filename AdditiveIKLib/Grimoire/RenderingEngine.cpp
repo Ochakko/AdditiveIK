@@ -699,7 +699,7 @@ namespace myRenderer
 
                     if (currenderobj.pmodel && (currenderobj.pmodel->GetSkyFlag())) {
                         currenderobj.renderkind = RENDERKIND_NORMAL;
-                        currenderobj.lightflag = 0;
+                        //currenderobj.lightflag = 0;
                     }
 
                     //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);

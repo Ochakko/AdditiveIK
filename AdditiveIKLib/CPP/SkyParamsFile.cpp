@@ -11,7 +11,7 @@
 #include <windows.h>
 #include <crtdbg.h>
 
-#include <ShaderTypeFile.h>
+#include <SkyParamsFile.h>
 
 #include <Model.h>
 #include <MQOObject.h>
@@ -24,30 +24,30 @@
 using namespace std;
 
 
-CShaderTypeFile::CShaderTypeFile()
+CSkyParamsFile::CSkyParamsFile()
 {
 	InitParams();
 }
 
-CShaderTypeFile::~CShaderTypeFile()
+CSkyParamsFile::~CSkyParamsFile()
 {
 	DestroyObjs();
 }
 
-int CShaderTypeFile::InitParams()
+int CSkyParamsFile::InitParams()
 {
 	CXMLIO::InitParams();
 	return 0;
 }
 
-int CShaderTypeFile::DestroyObjs()
+int CSkyParamsFile::DestroyObjs()
 {
 	CXMLIO::DestroyObjs();
 	InitParams();
 	return 0;
 }
 
-int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
+int CSkyParamsFile::WriteSkyParamsFile(WCHAR* filename, CModel* srcmodel)
 {
 	if (!filename || !srcmodel) {
 		_ASSERT(0);
@@ -57,13 +57,13 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 	m_hfile = CreateFile( filename, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
 		FILE_FLAG_SEQUENTIAL_SCAN, NULL );
 	if( m_hfile == INVALID_HANDLE_VALUE ){
-		DbgOut( L"ShaderTypeFile : WriteShaderTypeFile : file open error !!!\n" );
+		DbgOut( L"SkyParamsFile : WriteSkyParamsFile : file open error !!!\n" );
 		_ASSERT( 0 );
 		return 1;
 	}
 
 
-	CallF( Write2File( "<?xml version=\"1.0\" encoding=\"Shift_JIS\"?>\r\n<SHADERTYPEFILE>\r\n" ), return 1 );  
+	CallF( Write2File( "<?xml version=\"1.0\" encoding=\"Shift_JIS\"?>\r\n<SKYPARAMSFILE>\r\n" ), return 1 );  
 	CallF( WriteFileInfo(), return 1 );
 
 	//CallF( Write2File( "  <MotSpeed>%f</MotSpeed>\r\n", srcmotspeed ), return 1 );
@@ -160,37 +160,35 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			CallF(Write2File("    <Lighting>%d</Lighting>\r\n", lightflag), return 1);
 
 
-
 			CallF(Write2File("  </Material>\r\n"), return 1);
+
+
+
+			//#########################
+			//マテリアル1つ分だけ出力する
+			//#########################
+			break;
 
 		}
 	}
 
 
-	CallF( Write2File( "</SHADERTYPEFILE>\r\n" ), return 1 );
+	CallF( Write2File( "</SKYPARAMSFILE>\r\n" ), return 1 );
 
 	return 0;
 }
 
-int CShaderTypeFile::WriteFileInfo()
+int CSkyParamsFile::WriteFileInfo()
 {
-	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
-
-	//2024/01/30
-	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1003</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
-	//2024/02/13
-	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1004</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
-	//2024/02/18
-	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1005</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
-	//2024/02/19
-	CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1006</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//2024/03/07
+	CallF(Write2File("  <FileInfo>\r\n    <kind>SkyParamsFile</kind>\r\n    <version>1006</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 
 	return 0;
 }
 
 
-int CShaderTypeFile::LoadShaderTypeFile(WCHAR* filename, CModel* srcmodel)
+int CSkyParamsFile::LoadSkyParamsFile(WCHAR* filename, CModel* srcmodel)
 {
 	if (!filename || !srcmodel) {
 		_ASSERT(0);
@@ -226,172 +224,169 @@ int CShaderTypeFile::LoadShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 		if (errorval == 0) {
 			char materialname[256] = { 0 };
 			CallF(Read_Str(&materialbuf, "<MaterialName>", "</MaterialName>", materialname, 256), return 1);
-			CMQOMaterial* curmqomat = srcmodel->GetMQOMaterialByName(materialname);
-			if (curmqomat) {
-				int shadertype = -2;
-				Read_Int(&materialbuf, "<ShaderType>", "</ShaderType>", &shadertype);
-				curmqomat->SetShaderType(shadertype);
 
-				float metalcoef = 0.25f;
-				Read_Float(&materialbuf, "<MetalCoef>", "</MetalCoef>", &metalcoef);
-				curmqomat->SetMetalCoef(metalcoef);
+			int shadertype = -2;
+			Read_Int(&materialbuf, "<ShaderType>", "</ShaderType>", &shadertype);
 
-				float smoothcoef = 0.25f;
-				Read_Float(&materialbuf, "<SmoothCoef>", "</SmoothCoef>", &smoothcoef);
-				curmqomat->SetSmoothCoef(smoothcoef);
+			float metalcoef = 0.25f;
+			Read_Float(&materialbuf, "<MetalCoef>", "</MetalCoef>", &metalcoef);
 
-				float lightscale1 = 1.0f;
-				Read_Float(&materialbuf, "<LightScale1>", "</LightScale1>", &lightscale1);
-				curmqomat->SetLightScale(0, lightscale1);
+			float smoothcoef = 0.25f;
+			Read_Float(&materialbuf, "<SmoothCoef>", "</SmoothCoef>", &smoothcoef);
 
-				float lightscale2 = 1.0f;
-				Read_Float(&materialbuf, "<LightScale2>", "</LightScale2>", &lightscale2);
-				curmqomat->SetLightScale(1, lightscale2);
+			float lightscale1 = 1.0f;
+			Read_Float(&materialbuf, "<LightScale1>", "</LightScale1>", &lightscale1);
 
-				float lightscale3 = 1.0f;
-				Read_Float(&materialbuf, "<LightScale3>", "</LightScale3>", &lightscale3);
-				curmqomat->SetLightScale(2, lightscale3);
+			float lightscale2 = 1.0f;
+			Read_Float(&materialbuf, "<LightScale2>", "</LightScale2>", &lightscale2);
 
-				float lightscale4 = 1.0f;
-				Read_Float(&materialbuf, "<LightScale4>", "</LightScale4>", &lightscale4);
-				curmqomat->SetLightScale(3, lightscale4);
+			float lightscale3 = 1.0f;
+			Read_Float(&materialbuf, "<LightScale3>", "</LightScale3>", &lightscale3);
 
-				float lightscale5 = 1.0f;
-				Read_Float(&materialbuf, "<LightScale5>", "</LightScale5>", &lightscale5);
-				curmqomat->SetLightScale(4, lightscale5);
+			float lightscale4 = 1.0f;
+			Read_Float(&materialbuf, "<LightScale4>", "</LightScale4>", &lightscale4);
 
-				float lightscale6 = 1.0f;
-				Read_Float(&materialbuf, "<LightScale6>", "</LightScale6>", &lightscale6);
-				curmqomat->SetLightScale(5, lightscale6);
+			float lightscale5 = 1.0f;
+			Read_Float(&materialbuf, "<LightScale5>", "</LightScale5>", &lightscale5);
 
-				float lightscale7 = 1.0f;
-				Read_Float(&materialbuf, "<LightScale7>", "</LightScale7>", &lightscale7);
-				curmqomat->SetLightScale(6, lightscale7);
+			float lightscale6 = 1.0f;
+			Read_Float(&materialbuf, "<LightScale6>", "</LightScale6>", &lightscale6);
 
-				float lightscale8 = 1.0f;
-				Read_Float(&materialbuf, "<LightScale8>", "</LightScale8>", &lightscale8);
-				curmqomat->SetLightScale(7, lightscale8);
+			float lightscale7 = 1.0f;
+			Read_Float(&materialbuf, "<LightScale7>", "</LightScale7>", &lightscale7);
 
-				int enableEmission = 0;
-				Read_Int(&materialbuf, "<EnableEmission>", "</EnableEmission>", &enableEmission);
-				if (enableEmission == 1) {
-					curmqomat->SetEnableEmission(true);
-				}
-				else {
-					curmqomat->SetEnableEmission(false);
-				}
+			float lightscale8 = 1.0f;
+			Read_Float(&materialbuf, "<LightScale8>", "</LightScale8>", &lightscale8);
+
+			int enableEmission = 0;
+			Read_Int(&materialbuf, "<EnableEmission>", "</EnableEmission>", &enableEmission);
 				
-				//2024/01/30
-				float emissiveScale = 1.0f;
-				Read_Float(&materialbuf, "<EmissiveScale>", "</EmissiveScale>", &emissiveScale);
-				curmqomat->SetEmissiveScale(emissiveScale);
+			float emissiveScale = 1.0f;
+			Read_Float(&materialbuf, "<EmissiveScale>", "</EmissiveScale>", &emissiveScale);
 
-				//2024/02/19
-				float specularcoef = 0.1250f;
-				Read_Float(&materialbuf, "<SpecularCoef>", "</SpecularCoef>", &specularcoef);
-				curmqomat->SetSpecularCoef(specularcoef);
-				int y0flag = 0;
-				Read_Int(&materialbuf, "<NormalY0>", "</NormalY0>", &y0flag);
-				bool normaly0flag;
-				normaly0flag = (y0flag == 1) ? true : false;
-				curmqomat->SetNormalY0Flag(normaly0flag);
+			float specularcoef = 0.1250f;
+			Read_Float(&materialbuf, "<SpecularCoef>", "</SpecularCoef>", &specularcoef);
+			int y0flag = 0;
+			Read_Int(&materialbuf, "<NormalY0>", "</NormalY0>", &y0flag);
+			bool normaly0flag;
+			normaly0flag = (y0flag == 1) ? true : false;
 
+			int casterflag = 1;
+			Read_Int(&materialbuf, "<ShadowCaster>", "</ShadowCaster>", &casterflag);
+			bool shadowcasterflag;
+			shadowcasterflag = (casterflag == 1) ? true : false;
 
-				//2024/03/03
-				int casterflag = 1;
-				Read_Int(&materialbuf, "<ShadowCaster>", "</ShadowCaster>", &casterflag);
-				bool shadowcasterflag;
-				shadowcasterflag = (casterflag == 1) ? true : false;
-				curmqomat->SetShadowCasterFlag(shadowcasterflag);
+			HSVTOON hsvtoon;
+			hsvtoon.Init();
+			float hicolorh = hsvtoon.hicolorh;
+			Read_Float(&materialbuf, "<ToonHiColorH>", "</ToonHiColorH>\r\n", &hicolorh);
+			hsvtoon.hicolorh = hicolorh;
 
+			float lowcolorh = hsvtoon.lowcolorh;
+			Read_Float(&materialbuf, "<ToonLowColorH>", "</ToonLowColorH>\r\n", &lowcolorh);
+			hsvtoon.lowcolorh = lowcolorh;
 
-				//2024/02/13
-				HSVTOON hsvtoon;
-				hsvtoon.Init();
-				float hicolorh = hsvtoon.hicolorh;
-				Read_Float(&materialbuf, "<ToonHiColorH>", "</ToonHiColorH>\r\n", &hicolorh);
-				hsvtoon.hicolorh = hicolorh;
+			float hiaddh = hsvtoon.hiaddhsv.x;
+			Read_Float(&materialbuf, "<ToonHiAddH>", "</ToonHiAddH>\r\n", &hiaddh);
+			hsvtoon.hiaddhsv.x = hiaddh;
 
-				float lowcolorh = hsvtoon.lowcolorh;
-				Read_Float(&materialbuf, "<ToonLowColorH>", "</ToonLowColorH>\r\n", &lowcolorh);
-				hsvtoon.lowcolorh = lowcolorh;
+			float hiadds = hsvtoon.hiaddhsv.y;
+			Read_Float(&materialbuf, "<ToonHiAddS>", "</ToonHiAddS>\r\n", &hiadds);
+			hsvtoon.hiaddhsv.y = hiadds;
 
-				float hiaddh = hsvtoon.hiaddhsv.x;
-				Read_Float(&materialbuf, "<ToonHiAddH>", "</ToonHiAddH>\r\n", &hiaddh);
-				hsvtoon.hiaddhsv.x = hiaddh;
+			float hiaddv = hsvtoon.hiaddhsv.z;
+			Read_Float(&materialbuf, "<ToonHiAddV>", "</ToonHiAddV>\r\n", &hiaddv);
+			hsvtoon.hiaddhsv.z = hiaddv;
 
-				float hiadds = hsvtoon.hiaddhsv.y;
-				Read_Float(&materialbuf, "<ToonHiAddS>", "</ToonHiAddS>\r\n", &hiadds);
-				hsvtoon.hiaddhsv.y = hiadds;
+			float hiadda = hsvtoon.hiaddhsv.w;
+			Read_Float(&materialbuf, "<ToonHiAddA>", "</ToonHiAddA>\r\n", &hiadda);
+			hsvtoon.hiaddhsv.w = hiadda;
 
-				float hiaddv = hsvtoon.hiaddhsv.z;
-				Read_Float(&materialbuf, "<ToonHiAddV>", "</ToonHiAddV>\r\n", &hiaddv);
-				hsvtoon.hiaddhsv.z = hiaddv;
+			float lowaddh = hsvtoon.lowaddhsv.x;
+			Read_Float(&materialbuf, "<ToonLowAddH>", "</ToonLowAddH>\r\n", &lowaddh);
+			hsvtoon.lowaddhsv.x = lowaddh;
 
-				float hiadda = hsvtoon.hiaddhsv.w;
-				Read_Float(&materialbuf, "<ToonHiAddA>", "</ToonHiAddA>\r\n", &hiadda);
-				hsvtoon.hiaddhsv.w = hiadda;
+			float lowadds = hsvtoon.lowaddhsv.y;
+			Read_Float(&materialbuf, "<ToonLowAddS>", "</ToonLowAddS>\r\n", &lowadds);
+			hsvtoon.lowaddhsv.y = lowadds;
 
-				float lowaddh = hsvtoon.lowaddhsv.x;
-				Read_Float(&materialbuf, "<ToonLowAddH>", "</ToonLowAddH>\r\n", &lowaddh);
-				hsvtoon.lowaddhsv.x = lowaddh;
+			float lowaddv = hsvtoon.lowaddhsv.z;
+			Read_Float(&materialbuf, "<ToonLowAddV>", "</ToonLowAddV>\r\n", &lowaddv);
+			hsvtoon.lowaddhsv.z = lowaddv;
 
-				float lowadds = hsvtoon.lowaddhsv.y;
-				Read_Float(&materialbuf, "<ToonLowAddS>", "</ToonLowAddS>\r\n", &lowadds);
-				hsvtoon.lowaddhsv.y = lowadds;
+			float lowadda = hsvtoon.lowaddhsv.w;
+			Read_Float(&materialbuf, "<ToonLowAddA>", "</ToonLowAddA>\r\n", &lowadda);
+			hsvtoon.lowaddhsv.w = lowadda;
 
-				float lowaddv = hsvtoon.lowaddhsv.z;
-				Read_Float(&materialbuf, "<ToonLowAddV>", "</ToonLowAddV>\r\n", &lowaddv);
-				hsvtoon.lowaddhsv.z = lowaddv;
+			//2024/02/14
+			int lightindex = hsvtoon.lightindex;
+			Read_Int(&materialbuf, "<ToonLightIndex>", "</ToonLightIndex>\r\n", &lightindex);
+			hsvtoon.lightindex = lightindex;
 
-				float lowadda = hsvtoon.lowaddhsv.w;
-				Read_Float(&materialbuf, "<ToonLowAddA>", "</ToonLowAddA>\r\n", &lowadda);
-				hsvtoon.lowaddhsv.w = lowadda;
+			//ChaVector4 basehsv = curmqomat->GetDif4F().RGB2HSV();
+			ChaVector4 basehsv = ChaVector4(0.0f, 0.0f, 1.0f, 1.0f);
+			Read_Float(&materialbuf, "<ToonBaseH>", "</ToonBaseH>\r\n", &(basehsv.x));
+			Read_Float(&materialbuf, "<ToonBaseS>", "</ToonBaseS>\r\n", &(basehsv.y));
+			Read_Float(&materialbuf, "<ToonBaseV>", "</ToonBaseV>\r\n", &(basehsv.z));
+			Read_Float(&materialbuf, "<ToonBaseA>", "</ToonBaseA>\r\n", &(basehsv.w));
+			hsvtoon.basehsv = basehsv;
 
-				//2024/02/14
-				int lightindex = hsvtoon.lightindex;
-				Read_Int(&materialbuf, "<ToonLightIndex>", "</ToonLightIndex>\r\n", &lightindex);
-				hsvtoon.lightindex = lightindex;
+			//2024/02/18
+			int gradationflag = hsvtoon.gradationflag ? 1 : 0;
+			Read_Int(&materialbuf, "<Gradation>", "</Gradation>\r\n", &gradationflag);
+			if (gradationflag == 1) {
+				hsvtoon.gradationflag = true;
+			}
+			else {
+				hsvtoon.gradationflag = false;
+			}
 
-				ChaVector4 basehsv = curmqomat->GetDif4F().RGB2HSV();
-				Read_Float(&materialbuf, "<ToonBaseH>", "</ToonBaseH>\r\n", &(basehsv.x));
-				Read_Float(&materialbuf, "<ToonBaseS>", "</ToonBaseS>\r\n", &(basehsv.y));
-				Read_Float(&materialbuf, "<ToonBaseV>", "</ToonBaseV>\r\n", &(basehsv.z));
-				Read_Float(&materialbuf, "<ToonBaseA>", "</ToonBaseA>\r\n", &(basehsv.w));
-				hsvtoon.basehsv = basehsv;
+			//2024/02/18
+			int powertoon = hsvtoon.powertoon ? 1 : 0;
+			Read_Int(&materialbuf, "<PowerToon>", "</PowerToon>\r\n", &powertoon);
+			if (gradationflag == 1) {
+				hsvtoon.powertoon = true;
+			}
+			else {
+				hsvtoon.powertoon = false;
+			}
 
-				//2024/02/18
-				int gradationflag = hsvtoon.gradationflag ? 1 : 0;
-				Read_Int(&materialbuf, "<Gradation>", "</Gradation>\r\n", &gradationflag);
-				if (gradationflag == 1) {
-					hsvtoon.gradationflag = true;
-				}
-				else {
-					hsvtoon.gradationflag = false;
-				}
+			int lightflag = 0;
+			Read_Int(&materialbuf, "<Lighting>", "</Lighting>\r\n", &lightflag);			
 
-				//2024/02/18
-				int powertoon = hsvtoon.powertoon ? 1 : 0;
-				Read_Int(&materialbuf, "<PowerToon>", "</PowerToon>\r\n", &powertoon);
-				if (gradationflag == 1) {
-					hsvtoon.powertoon = true;
-				}
-				else {
-					hsvtoon.powertoon = false;
-				}
-
-				curmqomat->SetHSVToon(hsvtoon);
-
-
-
-				//2024/03/07
-				int lightflag = 1;
-				Read_Int(&materialbuf, "<Lighting>", "</Lighting>\r\n", &lightflag);
-				if (lightflag == 1) {
-					curmqomat->SetLightingFlag(true);
-				}
-				else {
-					curmqomat->SetLightingFlag(false);
+			int materialnum = srcmodel->GetMQOMaterialSize();
+			int mqomatindex;
+			for (mqomatindex = 0; mqomatindex < materialnum; mqomatindex++) {
+				CMQOMaterial* curmqomat = srcmodel->GetMQOMaterialByIndex(mqomatindex);
+				if (curmqomat) {
+					curmqomat->SetShaderType(shadertype);
+					curmqomat->SetMetalCoef(metalcoef);
+					curmqomat->SetSmoothCoef(smoothcoef);
+					curmqomat->SetLightScale(0, lightscale1);
+					curmqomat->SetLightScale(1, lightscale2);
+					curmqomat->SetLightScale(2, lightscale3);
+					curmqomat->SetLightScale(3, lightscale4);
+					curmqomat->SetLightScale(4, lightscale5);
+					curmqomat->SetLightScale(5, lightscale6);
+					curmqomat->SetLightScale(6, lightscale7);
+					curmqomat->SetLightScale(7, lightscale8);
+					if (enableEmission == 1) {
+						curmqomat->SetEnableEmission(true);
+					}
+					else {
+						curmqomat->SetEnableEmission(false);
+					}
+					curmqomat->SetEmissiveScale(emissiveScale);
+					curmqomat->SetSpecularCoef(specularcoef);
+					curmqomat->SetNormalY0Flag(normaly0flag);
+					curmqomat->SetShadowCasterFlag(shadowcasterflag);
+					curmqomat->SetHSVToon(hsvtoon);
+					if (lightflag == 1) {
+						curmqomat->SetLightingFlag(true);
+					}
+					else {
+						curmqomat->SetLightingFlag(false);
+					}
 				}
 
 			}
@@ -402,7 +397,7 @@ int CShaderTypeFile::LoadShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 }
 
 /***
-int CShaderTypeFile::CheckFileVersion( XMLIOBUF* xmlbuf )
+int CSkyParamsFile::CheckFileVersion( XMLIOBUF* xmlbuf )
 {
 	char kind[256];
 	char version[256];
@@ -430,7 +425,7 @@ int CShaderTypeFile::CheckFileVersion( XMLIOBUF* xmlbuf )
 	return 0;
 }
 ***/
-int CShaderTypeFile::ReadProjectInfo( XMLIOBUF* xmlbuf, int* charanumptr )
+int CSkyParamsFile::ReadProjectInfo( XMLIOBUF* xmlbuf, int* charanumptr )
 {
 	//CallF( Read_Int( xmlbuf, "<CharaNum>", "</CharaNum>", charanumptr ), return 1 );
 

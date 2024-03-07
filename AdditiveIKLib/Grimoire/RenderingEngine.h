@@ -67,7 +67,8 @@ namespace myRenderer
             mWorld.SetIdentity();
             withalpha = false;
             forcewithalpha = false;
-            lightflag = 1;
+            //lightflag = 1;
+            lightflag = -1;//2024/03/07
             diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
             materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
             calcslotflag = false;

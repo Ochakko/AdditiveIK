@@ -362,7 +362,7 @@ float4 PSMainNoSkinNoLight(SPSIn psIn) : SV_Target0
 float4 PSMainNoSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    float4 diffusecol = CalcDiffuseColor(1.0f, psIn.normal.xyz, toonlightdir.xyz);
+    float4 diffusecol = (lightsnum.y == 1) ? CalcDiffuseColor(1.0f, psIn.normal.xyz, toonlightdir.xyz) : float4(1.0f, 1.0f, 1.0f, 1.0f);
     float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
 ////////
     // ライトビュースクリーン空間からUV空間に座標変換

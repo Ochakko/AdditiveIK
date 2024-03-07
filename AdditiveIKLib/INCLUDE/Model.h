@@ -823,6 +823,8 @@ public:
  */
 	int SetDispFlag( const char* objname, int flag );
 
+	int SetLightFlag(bool srcflag);
+
 /**
  * @fn
  * FindBtObject

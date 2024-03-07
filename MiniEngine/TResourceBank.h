@@ -99,7 +99,7 @@ public:
 			return m_resourceVec[srcindex];
 		}
 		else {
-			_ASSERT(0);
+			//_ASSERT(0);
 			return 0;
 		}
 

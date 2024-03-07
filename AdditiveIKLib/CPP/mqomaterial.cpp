@@ -396,6 +396,7 @@ int CMQOMaterial::InitParams()
 	m_hsvtoon.Init();
 
 	m_shadowcasterflag = true;//2024/03/03
+	m_lightingflag = true;//2024/03/07
 
 	return 0;
 }
@@ -2359,21 +2360,25 @@ void CMQOMaterial::InitInstancingShaders(
 	}
 }
 
-void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj, int refposindex)
-//default:refposindex = 0
+bool CMQOMaterial::DecideLightFlag(myRenderer::RENDEROBJ renderobj)
 {
-	if (!rc || !renderobj.pmodel || !renderobj.mqoobj) {
-		_ASSERT(0);
-		return;
+	bool lightflag;
+	if (g_lightflag != 0) {
+		if (renderobj.lightflag == -1) {
+			lightflag = GetLightingFlag();
+		}
+		else {
+			lightflag = renderobj.lightflag;
+		}
 	}
+	else {
+		lightflag = false;
+	}
+	return lightflag;
+}
 
-
-	bool withalpha = renderobj.forcewithalpha || renderobj.withalpha;
-	CPolyMesh3* pm3 = nullptr;
-	CPolyMesh4* pm4 = nullptr;
-	pm3 = renderobj.mqoobj->GetPm3();
-	pm4 = renderobj.mqoobj->GetPm4();
-
+int CMQOMaterial::DecideShaderIndex(myRenderer::RENDEROBJ renderobj)
+{
 	//#####################################################################################################
 	//2023/12/05
 	//renderobj.shadertype : MQOSHADER_PBR, MQOSHADER_STD, MOQSHADER_NOLIGHTで指定されたようにパイプラインを設定
@@ -2381,51 +2386,67 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 	//テクスチャが１つも無い場合について迷ったが　STDで描画するとPBRの中で明るすぎて非常に浮く　テクスチャ無しもPBRで描画することに
 	//#####################################################################################################
 
-	int tempshadertype;
-	if (renderobj.shadertype == -2) {//shadertype == -2の場合はマテリアルの設定に従う
-		tempshadertype = GetShaderType();
-	}
-	else {
-		tempshadertype = renderobj.shadertype;
-	}
+	bool withalpha = renderobj.forcewithalpha || renderobj.withalpha;
+	CPolyMesh3* pm3 = nullptr;
+	CPolyMesh4* pm4 = nullptr;
+	pm3 = renderobj.mqoobj->GetPm3();
+	pm4 = renderobj.mqoobj->GetPm4();
 
-	int shadertype;
-	switch(tempshadertype) {
-	case -1:
-	case -2://マテリアルの設定も-2だった場合にはAUTOとみなす
-		if (renderobj.pmodel->GetVRoidJointName()) {
-			//VRoid特有のジョイント名を含み　シェーダタイプがAUTOの場合にはNOLIGHTでトゥーン風味に
-			//NoLight
-			shadertype = MQOSHADER_TOON;
+
+	bool lightflag = DecideLightFlag(renderobj);
+	int shadertype = MQOSHADER_TOON;
+
+	if (lightflag) {
+		int tempshadertype;
+		if (renderobj.shadertype == -2) {//shadertype == -2の場合はマテリアルの設定に従う
+			tempshadertype = GetShaderType();
 		}
 		else {
-			if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
-				(GetNormalTex() && (GetNormalTex())[0]) ||
-				(GetMetalTex() && (GetMetalTex())[0])) {
-				shadertype = MQOSHADER_PBR;
+			tempshadertype = renderobj.shadertype;
+		}
+
+		switch (tempshadertype) {
+		case -1:
+		case -2://マテリアルの設定も-2だった場合にはAUTOとみなす
+			if (renderobj.pmodel->GetVRoidJointName()) {
+				//VRoid特有のジョイント名を含み　シェーダタイプがAUTOの場合にはNOLIGHTでトゥーン風味に
+				//NoLight
+				shadertype = MQOSHADER_TOON;
 			}
 			else {
-				if (pm4) {
-					//NoLight
-					shadertype = MQOSHADER_TOON;
+				if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
+					(GetNormalTex() && (GetNormalTex())[0]) ||
+					(GetMetalTex() && (GetMetalTex())[0])) {
+					shadertype = MQOSHADER_PBR;
 				}
 				else {
-					//Standard
-					shadertype = MQOSHADER_STD;
+					if (pm4) {
+						//NoLight
+						shadertype = MQOSHADER_TOON;
+					}
+					else {
+						//Standard
+						shadertype = MQOSHADER_STD;
+					}
 				}
 			}
+			break;
+		case MQOSHADER_PBR:
+		case MQOSHADER_STD:
+		case MQOSHADER_TOON:
+			shadertype = tempshadertype;
+			break;
+		default:
+			_ASSERT(0);
+			shadertype = MQOSHADER_TOON;
+			break;
 		}
-		break;
-	case MQOSHADER_PBR:
-	case MQOSHADER_STD:
-	case MQOSHADER_TOON:
-		shadertype = tempshadertype;
-		break;
-	default:
-		_ASSERT(0);
-		shadertype = MQOSHADER_TOON;
-		break;
 	}
+	else {
+		//ライティング無しの場合には　シェーダ関数 *NoLight*()で処理
+		shadertype = MQOSHADER_TOON;
+	}
+
 
 
 	int shaderindex = -1;
@@ -2446,7 +2467,7 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 		case RENDERKIND_INSTANCING_LINE://Instancingの場合にはこの関数は呼ばれないはず
 		default:
 			_ASSERT(0);
-			shaderindex = -1;
+			shaderindex = MQOSHADER_TOON;
 			break;
 		}
 		break;
@@ -2466,7 +2487,7 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 		case RENDERKIND_INSTANCING_LINE://Instancingの場合にはこの関数は呼ばれないはず
 		default:
 			_ASSERT(0);
-			shaderindex = -1;
+			shaderindex = MQOSHADER_TOON;
 			break;
 		}
 		break;
@@ -2486,13 +2507,36 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 		case RENDERKIND_INSTANCING_LINE://Instancingの場合にはこの関数は呼ばれないはず
 		default:
 			_ASSERT(0);
-			shaderindex = -1;
+			shaderindex = MQOSHADER_TOON;
 			break;
 		}
 		break;
 	default:
 		break;
 	}
+
+	return shaderindex;
+}
+
+
+void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj, int refposindex)
+//default:refposindex = 0
+{
+	if (!rc || !renderobj.pmodel || !renderobj.mqoobj) {
+		_ASSERT(0);
+		return;
+	}
+
+
+	bool withalpha = renderobj.forcewithalpha || renderobj.withalpha;
+	CPolyMesh3* pm3 = nullptr;
+	CPolyMesh4* pm4 = nullptr;
+	pm3 = renderobj.mqoobj->GetPm3();
+	pm4 = renderobj.mqoobj->GetPm4();
+
+
+	int shaderindex = DecideShaderIndex(renderobj);
+
 
 	int currentrefposindex;
 	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
@@ -2506,7 +2550,6 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 			currentrefposindex = 0;//!!!!!!!!! pm3の場合には　REFPOSは使用しない　REFPOSはスキニングモデルのみに限定(メモリ節約のため)
 		}
 	}
-
 
 	if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 		(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
@@ -3068,7 +3111,10 @@ void CMQOMaterial::SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBuff
 	pcbLights->lightsnum[0] = g_nNumActiveLights;
 	//pcbLights->lightsnum[1] = min(g_nNumActiveLights, max(0, toonlightindexInShader));//2024/02/15
 	//pcbLights->lightsnum[2] = min(g_nNumActiveLights, max(0, shadowlightindexInShader));//2024/02/15
-	pcbLights->lightsnum[1] = renderobj.lightflag;//2024/03/02
+	
+	//pcbLights->lightsnum[1] = renderobj.lightflag;//2024/03/02
+	pcbLights->lightsnum[1] = (DecideLightFlag(renderobj)) ? 1 : 0;//2024/03/07
+
 	pcbLights->lightsnum[2] = 0;//2024/03/02
 	pcbLights->lightsnum[3] = (GetNormalY0Flag()) ? 1 : 0;//2024/02/19
 	int lightno;
@@ -3132,131 +3178,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	//	return;
 	//}
 
-
-	int tempshadertype;
-	if (renderobj.shadertype == -2) {//shadertype == -2の場合はマテリアルの設定に従う
-		tempshadertype = GetShaderType();
-	}
-	else {
-		tempshadertype = renderobj.shadertype;
-	}
-
-	int shadertype;
-	switch (tempshadertype) {
-	case -1:
-	case -2://マテリアルの設定も-2だった場合にはAUTOとみなす
-		if (renderobj.pmodel->GetVRoidJointName()) {
-			//VRoid特有のジョイント名を含み　シェーダタイプがAUTOの場合にはNOLIGHTでトゥーン風味に
-			//NoLight
-			shadertype = MQOSHADER_TOON;
-		}
-		else{
-			if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
-				(GetNormalTex() && (GetNormalTex())[0]) ||
-				(GetMetalTex() && (GetMetalTex())[0])) {
-				shadertype = MQOSHADER_PBR;
-			}
-			else {
-				if (ppm4) {
-					//NoLight
-					shadertype = MQOSHADER_TOON;
-				}
-				else {
-					//Standard
-					shadertype = MQOSHADER_STD;
-				}
-			}
-		}
-		break;
-	case MQOSHADER_PBR:
-	case MQOSHADER_STD:
-	case MQOSHADER_TOON:
-		shadertype = tempshadertype;
-		break;
-	default:
-		_ASSERT(0);
-		shadertype = MQOSHADER_TOON;
-		break;
-	}
-
-
-	int shaderindex = -1;
-	switch (shadertype) {
-	case MQOSHADER_PBR:
-		switch (renderobj.renderkind) {//renderobj.renderkindはCDispObj::Render*()関数内でセット
-		case RENDERKIND_NORMAL:
-			shaderindex = MQOSHADER_PBR;
-			break;
-		case RENDERKIND_SHADOWMAP:
-			shaderindex = MQOSHADER_PBR_SHADOWMAP;
-			break;
-		case RENDERKIND_SHADOWRECIEVER:
-			shaderindex = MQOSHADER_PBR_SHADOWRECIEVER;
-			break;
-		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
-		case RENDERKIND_INSTANCING_TRIANGLE://Instancingの場合にはこの関数は呼ばれないはず
-		case RENDERKIND_INSTANCING_LINE://Instancingの場合にはこの関数は呼ばれないはず
-		default:
-			_ASSERT(0);
-			shaderindex = -1;
-			break;
-		}
-		break;
-	case MQOSHADER_STD:
-		switch (renderobj.renderkind) {//renderobj.renderkindはCDispObj::Render*()関数内でセット
-		case RENDERKIND_NORMAL:
-			shaderindex = MQOSHADER_STD;
-			break;
-		case RENDERKIND_SHADOWMAP:
-			shaderindex = MQOSHADER_STD_SHADOWMAP;
-			break;
-		case RENDERKIND_SHADOWRECIEVER:
-			shaderindex = MQOSHADER_STD_SHADOWRECIEVER;
-			break;
-		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
-		case RENDERKIND_INSTANCING_TRIANGLE://Instancingの場合にはこの関数は呼ばれないはず
-		case RENDERKIND_INSTANCING_LINE://Instancingの場合にはこの関数は呼ばれないはず
-		default:
-			_ASSERT(0);
-			shaderindex = -1;
-			break;
-		}
-		break;
-	case MQOSHADER_TOON:
-		switch (renderobj.renderkind) {//renderobj.renderkindはCDispObj::Render*()関数内でセット
-		case RENDERKIND_NORMAL:
-			shaderindex = MQOSHADER_TOON;
-			break;
-		case RENDERKIND_SHADOWMAP:
-			shaderindex = MQOSHADER_TOON_SHADOWMAP;
-			break;
-		case RENDERKIND_SHADOWRECIEVER:
-			shaderindex = MQOSHADER_TOON_SHADOWRECIEVER;
-			break;
-		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
-		case RENDERKIND_INSTANCING_TRIANGLE://Instancingの場合にはこの関数は呼ばれないはず
-		case RENDERKIND_INSTANCING_LINE://Instancingの場合にはこの関数は呼ばれないはず
-		default:
-			_ASSERT(0);
-			shaderindex = -1;
-			break;
-		}
-		break;
-	default:
-		break;
-	}
-
-
-	//2023/01/02 SetRootSignatureは　BeginRender()で実行しているのでコメントアウト
-	//if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
-	//	(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
-	//	(shaderindex == MQOSHADER_TOON_SHADOWMAP)) {
-	//	rc->SetRootSignature(m_shadowrootSignature);
-	//}
-	//else {
-	//	rc->SetRootSignature(m_rootSignature);
-	//}
-
+	int shaderindex = DecideShaderIndex(renderobj);
 
 	int pipelineindex = 0;//!!!!!!!!!
 
