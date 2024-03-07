@@ -25,6 +25,10 @@ Fig.4 Multiple Model (UnityAsset HQ Retro Farmhouseを読込. model:VRoid).<br>
 ![TopFig5](ScreenShots/SS_FlyingCity_4_2_W800.png "トップ絵5")<br>
 Fig.5 PlayFbxCameraAnim (UnityAsset TheHuntを読込. model:VRoid).<br>
 <br>
+![TopFig6](ScreenShots/FantasyTown_H58S022_1_W800.png "トップ絵6")<br>
+Fig.6 HSV_ToonBasedPBR+Std Shading 
+     (UnityAsset FantasyTownを読込 JAPANESE CITYのテクスチャを適用. model:VRoid).<br>
+<br>
 <br>
 # 免責<br>
 このソフトにより問題が起きたとしてもその責任は持ちません。<br>

@@ -3076,6 +3076,7 @@ INT WINAPI wWinMain(
 	//2K TV or 4K TV. Create*Window()よりも前
 	int chkresult = CheckResolution();
 	if (chkresult != 0) {//大小選択ダイアログでキャンセルボタンを押した場合はアプリ終了
+		OnDestroyDevice();//2024/03/08
 		return 0;
 	}
 
