@@ -39031,7 +39031,10 @@ int CreateShaderTypeWnd()
 	}
 
 	int materialnum = s_model->GetMQOMaterialSize();
-	if ((materialnum <= 0) || (materialnum >= MAXMATERIALNUM)) {
+	if (materialnum == 0) {
+		return 0;
+	}
+	if ((materialnum < 0) || (materialnum >= MAXMATERIALNUM)) {
 		//2024/03/03
 		MessageBoxW(s_3dwnd, L"ERROR : MaterialNum Overflow.", L"Can't open dialog for settings.", MB_OK | MB_ICONERROR);
 		return 1;
@@ -56008,7 +56011,10 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	HWND hDlgWnd = s_shadertypeparamsdlgwnd;
 
 	int materialnum = s_model->GetMQOMaterialSize();
-	if ((materialnum <= 0) || (materialnum >= MAXMATERIALNUM)) {
+	if (materialnum == 0) {
+		return 0;
+	}
+	if ((materialnum < 0) || (materialnum >= MAXMATERIALNUM)) {
 		//2024/03/03
 		::MessageBoxW(s_3dwnd, L"ERROR : MaterialNum Overflow.", L"Can't open dialog for settings.",
 			MB_OK | MB_ICONERROR);
@@ -56285,7 +56291,10 @@ int SetMaterial2SkyParamsDlg(CMQOMaterial* mqomat)
 	HWND hDlgWnd = s_skyparamsdlgwnd;
 
 	int materialnum = s_sky->GetMQOMaterialSize();
-	if ((materialnum <= 0) || (materialnum >= MAXMATERIALNUM)) {
+	if (materialnum == 0) {
+		return 0;
+	}
+	if ((materialnum < 0) || (materialnum >= MAXMATERIALNUM)) {
 		//2024/03/03
 		::MessageBoxW(s_3dwnd, L"ERROR : MaterialNum Overflow.", L"Can't open dialog for settings.",
 			MB_OK | MB_ICONERROR);
@@ -56592,7 +56601,9 @@ int ShowShaderTypeParamsDlg()
 			}
 			else {
 				//2024/03/03
-				MessageBoxW(s_3dwnd, L"ERROR : MaterialNum Overflow.", L"Can't open dialog for settings.", MB_OK | MB_ICONERROR);
+				if (materialnum != 0) {
+					MessageBoxW(s_3dwnd, L"ERROR : MaterialNum Overflow.", L"Can't open dialog for settings.", MB_OK | MB_ICONERROR);
+				}
 				ShowWindow(s_shadertypeparamsdlgwnd, SW_HIDE);
 			}
 		}
@@ -56617,7 +56628,9 @@ int ShowSkyParamsDlg()
 			}
 			else {
 				//2024/03/03
-				MessageBoxW(s_3dwnd, L"ERROR : MaterialNum Overflow.", L"Can't open dialog for settings.", MB_OK | MB_ICONERROR);
+				if (materialnum != 0) {
+					MessageBoxW(s_3dwnd, L"ERROR : MaterialNum Overflow.", L"Can't open dialog for settings.", MB_OK | MB_ICONERROR);
+				}
 				ShowWindow(s_skyparamsdlgwnd, SW_HIDE);
 			}
 		}

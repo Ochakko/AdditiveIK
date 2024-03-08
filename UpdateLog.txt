@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/03/08
-　AdditiveIK 1.0.0.11 RC3(リリース候補3)
+　AdditiveIK 1.0.0.11 RC4(リリース候補4)
 　　1.0.0.10からの変更点
 　　　不具合修正
 　　　　インスタンシング描画修正
@@ -76,9 +76,12 @@ https://github.com/Ochakko/AdditiveIK
 　　　ShaderメニューとDispGroupメニューでPick&Set中にはボーンをピックしないように修正
 　　　　Pick&Set中にクリック位置近くにボーンがある場合に設定が出来なくなっていたため
 　　　fbx読み込み時にUVScaleの最小値を1.0として読み込むように
+　　RC4:
+　　　fbx読み込み時にマテリアルが無い場合にもERROR: MaterialNum Overflowの警告が出ていたのを修正
+　　　　モーションキャプチャのモーションだけのfbxの読み込み時に要らない警告が出ていた
+　　　　今回のバージョン用の修正により起きていた不具合
+
 　　　　
-
-
 
 動画
 　ショート
