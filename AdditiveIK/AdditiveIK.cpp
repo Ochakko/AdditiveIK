@@ -239,17 +239,19 @@ enum {
 
 
 static HSVTOON s_hsvtoonforall;//mqomaterial指定が無い場合の設定内容を保存
+static HSVTOON s_skyhsvtoonforall;//s_skt用の設定内容を保存
 
 
 class CShaderTypeParams
 {
 public:
 	CShaderTypeParams() {
-		InitParams();
+		InitParams(0);
 	};
 	~CShaderTypeParams() {};
 
-	void InitParams() {
+	void InitParams(int kind) {//kind: 0->Shaderプレートメニュー, 1->SkyParamsメニュー
+
 		mqomat = nullptr;//全てのマテリアルに対して設定するボタンを押した場合
 		wcscpy_s(wmaterialname, 256, L"(All)");
 		shadertype = -1;
@@ -262,7 +264,12 @@ public:
 		}
 		enableEmission = false;
 		emissiveScale = 1.0f;
-		hsvtoon = s_hsvtoonforall;
+		if (kind == 0) {
+			hsvtoon = s_hsvtoonforall;
+		}
+		else {
+			hsvtoon = s_skyhsvtoonforall;
+		}
 		specularcoef = 0.1250f;
 		normaly0flag = false;
 		shadowcasterflag = true;
@@ -295,7 +302,7 @@ public:
 			//Material "All"のときにも通る.　エラーではなく通常処理.
 			//_ASSERT(0);
 
-			InitParams();
+			InitParams(0);
 		}
 	};
 
@@ -893,6 +900,8 @@ static float s_fAspectRatio = 1.0f;
 static float s_cammvstep = 100.0f;
 static int s_editmotionflag = -1;
 static int s_tkeyflag = 0;
+static float s_maxcamdist = 5000.0f;
+
 
 static WCHAR s_strcurrent[256] = L"Move To Current Frame";
 static WCHAR s_streditrange[256] = L"Drag Edit Range";
@@ -3580,6 +3589,7 @@ void InitApp()
 	s_matView.SetIdentity();
 	s_matSkyProj.SetIdentity();
 
+	s_maxcamdist = 5000.0f;
 
 	InitSprites();
 
@@ -4225,8 +4235,9 @@ void InitApp()
 	s_toonparamchange = false;
 	s_skytoonparamchange = false;
 	s_hsvtoonforall.Init();
-	s_shadertypeparams.InitParams();
-	s_skyparams.InitParams();
+	s_skyhsvtoonforall.Init();
+	s_shadertypeparams.InitParams(0);
+	s_skyparams.InitParams(1);
 
 	s_temppath[0] = 0L;
 	::GetTempPathW(MAX_PATH, s_temppath);
@@ -10110,7 +10121,7 @@ void CalcTotalBound()
 
 
 	g_projnear = max(0.01f, min(10.0f, fObjectRadius * 0.01f));
-	g_initcamdist = max(0.1f, min(1000.0f, fObjectRadius * 3.0f));
+	g_initcamdist = max(0.1f, min(s_maxcamdist, fObjectRadius * 3.0f));
 	g_projfar = g_initcamdist * 100.0f;
 	//s_fAspectRatio = 1.0f;//ここでは更新しない
 	g_fovy = (float)(PI / 4);
@@ -12024,7 +12035,7 @@ int OnCameraMenu(bool dorefreshflag, int selindex, int saveundoflag)
 		ChaVector3 camdir = ChaVector3(0.0f, 0.0f, 1.0f);
 		s_cameramodel->GetCameraProjParams(cameramotid, &g_projnear, &g_projfar, &g_fovy, &g_camEye, &camdir, &g_cameraupdir);
 
-		g_initcamdist = max(0.1f, min(1000.0f, g_projfar));
+		g_initcamdist = max(0.1f, min(s_maxcamdist, g_projfar));
 		g_camtargetpos = g_camEye + camdir * g_initcamdist;
 
 		ChangeCameraMode(2);//forcemode 反転をセット:0 強制オフ時:1 強制オン時:2
@@ -26953,8 +26964,9 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 
 	int materialindex = s_shadertypeparamsindex - 1;
 	CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
-	s_shadertypeparams.SetMaterial(curmqomat);
-
+	//if (curmqomat) {
+	//	s_shadertypeparams.SetMaterial(curmqomat);//<--設定中にここでリセットされてしまうのでコメントアウト 2024/03/08
+	//}
 
 	int lightsliderid[LIGHTNUMMAX] = {
 		IDC_SL_LITSCALE1, IDC_SL_LITSCALE2, IDC_SL_LITSCALE3, IDC_SL_LITSCALE4,
@@ -28296,7 +28308,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
 					setmqomat->SetToonHiAddrH(s_skyparams.hsvtoon.hicolorh);
-					s_hsvtoonforall.hicolorh = s_skyparams.hsvtoon.hicolorh;
+					s_skyhsvtoonforall.hicolorh = s_skyparams.hsvtoon.hicolorh;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28316,7 +28328,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
 					setmqomat->SetToonLowAddrH(s_skyparams.hsvtoon.lowcolorh);
-					s_hsvtoonforall.lowcolorh = s_skyparams.hsvtoon.lowcolorh;
+					s_skyhsvtoonforall.lowcolorh = s_skyparams.hsvtoon.lowcolorh;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28339,7 +28351,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
 					setmqomat->SetToonBaseH(s_skyparams.hsvtoon.basehsv.x);
-					s_hsvtoonforall.basehsv.x = s_skyparams.hsvtoon.basehsv.x;
+					s_skyhsvtoonforall.basehsv.x = s_skyparams.hsvtoon.basehsv.x;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28359,7 +28371,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
 					setmqomat->SetToonBaseS(s_skyparams.hsvtoon.basehsv.y);
-					s_hsvtoonforall.basehsv.y = s_skyparams.hsvtoon.basehsv.y;
+					s_skyhsvtoonforall.basehsv.y = s_skyparams.hsvtoon.basehsv.y;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {				
@@ -28379,7 +28391,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
 					setmqomat->SetToonBaseV(s_skyparams.hsvtoon.basehsv.z);
-					s_hsvtoonforall.basehsv.z = s_skyparams.hsvtoon.basehsv.z;
+					s_skyhsvtoonforall.basehsv.z = s_skyparams.hsvtoon.basehsv.z;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28399,7 +28411,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
 					setmqomat->SetToonBaseA(s_skyparams.hsvtoon.basehsv.w);
-					s_hsvtoonforall.basehsv.w = s_skyparams.hsvtoon.basehsv.w;
+					s_skyhsvtoonforall.basehsv.w = s_skyparams.hsvtoon.basehsv.w;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28423,7 +28435,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
 					setmqomat->SetToonHiAddH(s_skyparams.hsvtoon.hiaddhsv.x);
-					s_hsvtoonforall.hiaddhsv.x = s_skyparams.hsvtoon.hiaddhsv.x;
+					s_skyhsvtoonforall.hiaddhsv.x = s_skyparams.hsvtoon.hiaddhsv.x;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28443,7 +28455,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
 					setmqomat->SetToonLowAddH(s_skyparams.hsvtoon.lowaddhsv.x);
-					s_hsvtoonforall.lowaddhsv.x = s_skyparams.hsvtoon.lowaddhsv.x;
+					s_skyhsvtoonforall.lowaddhsv.x = s_skyparams.hsvtoon.lowaddhsv.x;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28463,7 +28475,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
 					setmqomat->SetToonHiAddS(s_skyparams.hsvtoon.hiaddhsv.y);
-					s_hsvtoonforall.hiaddhsv.y = s_skyparams.hsvtoon.hiaddhsv.y;
+					s_skyhsvtoonforall.hiaddhsv.y = s_skyparams.hsvtoon.hiaddhsv.y;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28483,7 +28495,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
 					setmqomat->SetToonLowAddS(s_skyparams.hsvtoon.lowaddhsv.y);
-					s_hsvtoonforall.lowaddhsv.y = s_skyparams.hsvtoon.lowaddhsv.y;
+					s_skyhsvtoonforall.lowaddhsv.y = s_skyparams.hsvtoon.lowaddhsv.y;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28503,7 +28515,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
 					setmqomat->SetToonHiAddV(s_skyparams.hsvtoon.hiaddhsv.z);
-					s_hsvtoonforall.hiaddhsv.z = s_skyparams.hsvtoon.hiaddhsv.z;
+					s_skyhsvtoonforall.hiaddhsv.z = s_skyparams.hsvtoon.hiaddhsv.z;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28523,7 +28535,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
 					setmqomat->SetToonLowAddV(s_skyparams.hsvtoon.lowaddhsv.z);
-					s_hsvtoonforall.lowaddhsv.z = s_skyparams.hsvtoon.lowaddhsv.z;
+					s_skyhsvtoonforall.lowaddhsv.z = s_skyparams.hsvtoon.lowaddhsv.z;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28543,7 +28555,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
 					setmqomat->SetToonHiAddA(s_skyparams.hsvtoon.hiaddhsv.w);
-					s_hsvtoonforall.hiaddhsv.w = s_skyparams.hsvtoon.hiaddhsv.w;
+					s_skyhsvtoonforall.hiaddhsv.w = s_skyparams.hsvtoon.hiaddhsv.w;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28563,7 +28575,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
 					setmqomat->SetToonLowAddA(s_skyparams.hsvtoon.lowaddhsv.w);
-					s_hsvtoonforall.lowaddhsv.w = s_skyparams.hsvtoon.lowaddhsv.w;
+					s_skyhsvtoonforall.lowaddhsv.w = s_skyparams.hsvtoon.lowaddhsv.w;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28884,7 +28896,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
 					setmqomat->SetToonGradationFlag(s_skyparams.hsvtoon.gradationflag);
-					s_hsvtoonforall.gradationflag = s_skyparams.hsvtoon.gradationflag;
+					s_skyhsvtoonforall.gradationflag = s_skyparams.hsvtoon.gradationflag;
 				}
 			}
 			s_skytoonparamchange = true;
@@ -28906,7 +28918,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
 					setmqomat->SetToonPowerToon(s_skyparams.hsvtoon.powertoon);
-					s_hsvtoonforall.powertoon = s_skyparams.hsvtoon.powertoon;
+					s_skyhsvtoonforall.powertoon = s_skyparams.hsvtoon.powertoon;
 				}
 			}
 			s_skytoonparamchange = true;
@@ -32537,7 +32549,7 @@ int OnFrameToolWnd()
 	if (s_camdistsliderflag) {
 		s_camdistsliderflag = false;
 
-		s_camdistsliderval = (float)fmin(s_camdistsliderval, 1000.0);
+		s_camdistsliderval = (float)fmin(s_camdistsliderval, s_maxcamdist);
 		s_camdistsliderval = (float)fmax(s_camdistsliderval, 0.0);
 
 		ChangeCameraDist(s_camdistsliderval, s_moveeyepos, true);
@@ -32596,6 +32608,11 @@ int OnFrameToolWnd()
 				if (s_camtargetflag) {
 					g_befcamtargetpos = g_camtargetpos;
 					g_camtargetpos = curbone->GetChildWorld();
+
+					ChaVector3 diffv;
+					diffv = g_camEye - g_camtargetpos;
+					float newcamdist = (float)ChaVector3LengthDbl(&diffv);
+					ChangeCameraDist(newcamdist, false, false);//2024/03/08
 				}
 			}
 			else {
@@ -35892,9 +35909,10 @@ int CreateSideMenuWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		g_camdist = (float)fmin(g_camdist, 1000.0);
+		g_camdist = (float)fmin(g_camdist, s_maxcamdist);
 		g_camdist = (float)fmax(g_camdist, 1.0);
-		s_sidemenu_camdistSlider = new OWP_Slider(g_camdist, 1000.0, 1.0);
+		//s_sidemenu_camdistSlider = new OWP_Slider(g_camdist, 1000.0, 1.0);
+		s_sidemenu_camdistSlider = new OWP_Slider(g_camdist, (double)s_maxcamdist, 1.0);//2024/03/08 maxを1000から5000に変更　TheHuntStreet1でテスト
 		if (!s_sidemenu_camdistSlider) {
 			_ASSERT(0);
 			return 1;
@@ -35922,9 +35940,9 @@ int CreateSideMenuWnd()
 				bool value = s_sidemenu_sellock->getValue();
 				if (value) {
 					s_camtargetflag = true;
-					if (s_sidemenu_targetdisp) {
-						s_sidemenu_targetdisp->setValue(false);
-					}
+					//if (s_sidemenu_targetdisp) {
+					//	s_sidemenu_targetdisp->setValue(false);
+					//}
 				}
 				else {
 					s_camtargetflag = false;
@@ -35936,9 +35954,9 @@ int CreateSideMenuWnd()
 				bool value = s_sidemenu_targetdisp->getValue();
 				if (value) {
 					s_camtargetdisp = true;
-					if (s_sidemenu_sellock) {
-						s_sidemenu_sellock->setValue(false);
-					}
+					//if (s_sidemenu_sellock) {
+					//	s_sidemenu_sellock->setValue(false);
+					//}
 				}
 				else {
 					s_camtargetdisp = false;
@@ -42921,7 +42939,8 @@ void AutoCameraTarget()
 			//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
 			ChaVector3 diffv;
 			diffv = g_camEye - g_camtargetpos;
-			g_camdist = (float)ChaVector3LengthDbl(&diffv);
+			float newcamdist = (float)ChaVector3LengthDbl(&diffv);
+			ChangeCameraDist(newcamdist, false, false);//2024/03/08
 
 			////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
 			////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
@@ -58680,7 +58699,7 @@ int OnCreateDevice()
 	//wcscat_s(initialdir, MAX_PATH, L"..\\Test\\");
 	//SetCurrentDirectoryW(initialdir);
 
-	return 0;
+return 0;
 }
 
 void CloseAllRightPainWindow()
@@ -58775,6 +58794,12 @@ int PickBone(UIPICKINFO* ppickinfo)
 		//カメラターゲット位置にマニピュレータ表示時にはpickしない
 		return 0;
 	}
+
+	if (s_spdispsw[SPDISPSW_DISPGROUP].state || s_spdispsw[SPDISPSW_SHADERTYPE].state){
+		//2024/03/08 Pick&Set中には　ボーンをピックしない
+		return 0;
+	}
+
 
 	return s_model->PickBone(ppickinfo);
 }

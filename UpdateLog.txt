@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/03/08
-　AdditiveIK 1.0.0.11 RC2(リリース候補2)
+　AdditiveIK 1.0.0.11 RC3(リリース候補3)
 　　1.0.0.10からの変更点
 　　　不具合修正
 　　　　インスタンシング描画修正
@@ -21,6 +21,11 @@ https://github.com/Ochakko/AdditiveIK
 
 　　　　起動時のウインドウ大小選択ダイアログでキャンセルしてアプリを終了した場合に
 　　　　　メモリリークしていたのを修正
+
+　　　　法線マップとメタルマップのサンプラー修正
+　　　　　複数アセットで確認したが、albedoとnormalとmetalはセットで切り替えるようだった
+　　　　　normalとmetalのサンプラーにもalbedoのサンプラーを使用することにした
+　　　　　TheHuntStreet1の地面の凸凹が改善した
 
 
 　　　マテリアルごとに影を落とさない設定を可能に
@@ -54,9 +59,24 @@ https://github.com/Ochakko/AdditiveIK
 　　　　UVScalingはMayaとUnityでは現在は無視されているようにみえる
 　　　　fbxの正式なtiling回数の保存読み込みに関しては不明
 
+　　　CameraDistスライダーの最大値を1000から5000に変更
+
+
 　　RC2:
 　　　起動時のウインドウ大小選択ダイアログでキャンセルしてアプリを終了した場合に
 　　　メモリリークしていたのを修正
+　　RC3:
+　　　ShaderプレートメニューのHSVスライダーなどが機能しなくなっていたのを修正
+　　　　DlgProcで設定中に初期化されていたのが原因だった(今回のバージョン用の修正にて出ていた不具合)
+　　　法線マップとメタルマップのサンプラー修正
+　　　　複数アセットで確認したが、albedoとnormalとmetalはセットで切り替えるようだった
+　　　　normalとmetalのサンプラーにもalbedoのサンプラーを使用することにした
+　　　　TheHuntStreet1の地面の凸凹が改善した
+　　　CameraDistスライダーの最大値を1000から5000に変更
+　　　ShaderメニューとDispGroupメニューでPick&Set中にはボーンをピックしないように修正
+　　　　Pick&Set中にクリック位置近くにボーンがある場合に設定が出来なくなっていたため
+　　　fbx読み込み時にUVScaleの最小値を1.0として読み込むように
+　　　　
 
 
 

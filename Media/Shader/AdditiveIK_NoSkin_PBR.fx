@@ -262,10 +262,10 @@ float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir)
 //#############
 float3 GetNormal(float3 normal, float3 tangent, float3 biNormal, float2 uv1)
 {
-    float3 normalmapNormal = g_normalMap.Sample(g_sampler_normal, uv1).xyz; //2024/02/18
+    //float3 normalmapNormal = g_normalMap.Sample(g_sampler_normal, uv1).xyz; //2024/02/18
     ////float3 normalmapNormal = g_normalMap.SampleLevel(g_sampler_normal, uv1, 0.0f).xyz;//2024/02/18 JCityでテストこっちが合っている
     ////float3 normalmapNormal = g_normalMap.SampleLevel(g_sampler_clamp, uv1, 0.0f).xyz;//2024/02/14
-    //float3 normalmapNormal = g_normalMap.Sample(g_sampler_albedo, uv1).xyz; //2024/03/05
+    float3 normalmapNormal = g_normalMap.Sample(g_sampler_albedo, uv1).xyz;//2024/03/08 複数アセットで確認　UVについてはalbedo,normal,metalをセットで切り替えるように
     
     float3 binSpaceNormal = (normalmapNormal * 2.0f) - 1.0f;
    
@@ -539,7 +539,8 @@ float4 PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
     float3 specColor = albedoColor.xyz;
 
     // 金属度
-    float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv);
+    //float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv);
+    float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_albedo, psIn.uv);//2024/03/08 複数アセットで確認　UVについてはalbedo,normal,metalをセットで切り替えるように
     float metallic = metaltexcol.r * metalcoef.x + metalcoef.z;//2024/02/18
     // 滑らかさ
     float smooth = metaltexcol.a * metalcoef.y; //!!!!smoothcoef
@@ -680,7 +681,8 @@ float4 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     float3 specColor = albedoColor.xyz;
 
     // 金属度
-    float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv);
+    //float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv);
+    float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_albedo, psIn.uv);//2024/03/08 複数アセットで確認　UVについてはalbedo,normal,metalをセットで切り替えるように
     float metallic = metaltexcol.r * metalcoef.x + metalcoef.z; //2024/02/18
     // 滑らかさ
     float smooth = metaltexcol.a * metalcoef.y; //!!!!smoothcoef

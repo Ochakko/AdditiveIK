@@ -5131,7 +5131,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 					//char* nameptr = (char*)lLayeredTexture->GetName();
 					if (lLayeredTexture->GetName()) {
 						FbxVector2 fbxuvscale = lLayeredTexture->GetUVScaling();
-						ChaVectorDbl2 chauvscale = ChaVectorDbl2(fbxuvscale[0], fbxuvscale[1]);
+						ChaVectorDbl2 chauvscale = ChaVectorDbl2(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
 						FbxVector2 fbxuvoffset = lLayeredTexture->GetUVTranslation();
 						ChaVectorDbl2 chauvoffset = ChaVectorDbl2(fbxuvoffset[0], fbxuvoffset[1]);
 
@@ -5159,7 +5159,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 						char* nameptr = (char*)lTexture->GetFileName();
 						if (nameptr) {
 							FbxVector2 fbxuvscale = lTexture->GetUVScaling();
-							ChaVectorDbl2 chauvscale = ChaVectorDbl2(fbxuvscale[0], fbxuvscale[1]);
+							ChaVectorDbl2 chauvscale = ChaVectorDbl2(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
 							FbxVector2 fbxuvoffset = lTexture->GetUVTranslation();
 							ChaVectorDbl2 chauvoffset = ChaVectorDbl2(fbxuvoffset[0], fbxuvoffset[1]);
 
@@ -5190,7 +5190,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 					//char* nameptr = (char*)lLayeredTexture->GetName();
 					if (lLayeredTexture->GetName()) {
 						FbxVector2 fbxuvscale = lLayeredTexture->GetUVScaling();
-						ChaVectorDbl2 chauvscale = ChaVectorDbl2(fbxuvscale[0], fbxuvscale[1]);
+						ChaVectorDbl2 chauvscale = ChaVectorDbl2(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
 						FbxVector2 fbxuvoffset = lLayeredTexture->GetUVTranslation();
 						ChaVectorDbl2 chauvoffset = ChaVectorDbl2(fbxuvoffset[0], fbxuvoffset[1]);
 
@@ -5218,7 +5218,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 						char* nameptr = (char*)lTexture->GetFileName();
 						if (nameptr) {
 							FbxVector2 fbxuvscale = lTexture->GetUVScaling();
-							ChaVectorDbl2 chauvscale = ChaVectorDbl2(fbxuvscale[0], fbxuvscale[1]);
+							ChaVectorDbl2 chauvscale = ChaVectorDbl2(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
 							FbxVector2 fbxuvoffset = lTexture->GetUVTranslation();
 							ChaVectorDbl2 chauvoffset = ChaVectorDbl2(fbxuvoffset[0], fbxuvoffset[1]);
 
