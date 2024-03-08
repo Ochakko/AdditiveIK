@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/03/08
-　AdditiveIK 1.0.0.11 RC4(リリース候補4)
+　AdditiveIK 1.0.0.11 release
 　　1.0.0.10からの変更点
 　　　不具合修正
 　　　　インスタンシング描画修正
