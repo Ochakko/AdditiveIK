@@ -3591,6 +3591,11 @@ void InitApp()
 
 	s_maxcamdist = 5000.0f;
 
+	g_pasteScale = true;
+	g_pasteRotation = true;
+	g_pasteTranslation = true;
+
+
 	InitSprites();
 
 	//g_materialbank.InitParams();
@@ -5787,20 +5792,6 @@ int InsertCopyMP(bool limitdegflag, CBone* curbone, double curframe)
 
 	if (curbone && (curbone->IsSkeleton())) {
 
-		/*
-		CMotionPoint* pcurmp = 0;
-		pcurmp = curbone->GetMotionPoint(s_model->GetCurMotInfo()->motid, curframe);
-		if(pcurmp){
-			CPELEM cpelem;
-			ZeroMemory(&cpelem, sizeof(CPELEM));
-			cpelem.bone = curbone;
-			cpelem.mp.SetFrame(curframe);
-			cpelem.mp.SetWorldMat(pcurmp->GetWorldMat());
-			cpelem.mp.SetLocalMatFlag(0);//!!!!!!!!!!
-			s_copymotvec.push_back(cpelem);
-		}
-		*/
-
 		int rotcenterflag1 = 1;
 		ChaMatrix localmat = curbone->CalcLocalScaleRotMat(limitdegflag,
 			rotcenterflag1, s_model->GetCurMotInfo()->motid, curframe);
@@ -5809,34 +5800,8 @@ int InsertCopyMP(bool limitdegflag, CBone* curbone, double curframe)
 		ChaVector3 localscale = curbone->CalcLocalScaleAnim(limitdegflag,
 			s_model->GetCurMotInfo()->motid, curframe);
 
-		localmat.AddTranslation(curanimtra);
+		localmat.AddTranslation(curanimtra);//SetではなくAdd
 
-		////localmat._11 *= localscale.x;
-		////localmat._12 *= localscale.x;
-		////localmat._13 *= localscale.x;
-		////localmat._21 *= localscale.y;
-		////localmat._22 *= localscale.y;
-		////localmat._23 *= localscale.y;
-		////localmat._31 *= localscale.z;
-		////localmat._32 *= localscale.z;
-		////localmat._33 *= localscale.z;
-
-		//ChaMatrix curmat;
-		//ChaMatrix localmat;
-		//curmat = curbone->GetWorldMat(limitdegflag,
-		//	s_model->GetCurMotInfo()->motid, roundingframe, 0);
-		//ChaMatrix parmat, invparmat;
-		//ChaMatrixIdentity(&parmat);
-		//ChaMatrixIdentity(&invparmat);
-		//if (curbone->GetParent()) {
-		//	parmat = curbone->GetParent()->GetWorldMat(limitdegflag, 
-		//		s_model->GetCurMotInfo()->motid, roundingframe, 0);
-		//	invparmat = ChaMatrixInv(parmat);
-		//	localmat = curmat * invparmat;
-		//}
-		//else {
-		//	localmat = curmat;
-		//}
 
 
 		CPELEM2 cpelem;
@@ -43772,7 +43737,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.11 : No.%d : ", s_appcnt);
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.12 : No.%d : ", s_appcnt);
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -51966,7 +51931,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.11 : No.%d : ", s_appcnt);
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.12 : No.%d : ", s_appcnt);
 
 
 	if (s_model && s_chascene) {

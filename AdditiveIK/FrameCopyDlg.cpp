@@ -238,6 +238,32 @@ int CFrameCopyDlg::ExecuteOnOK()
 		}
 	}
 
+
+
+	UINT chkenable1 = IsDlgButtonChecked(IDC_CHECK_PASTESCALE);
+	if (chkenable1 == BST_CHECKED) {
+		g_pasteScale = true;
+	}
+	else {
+		g_pasteScale = false;
+	}
+	UINT chkenable2 = IsDlgButtonChecked(IDC_CHECK_PASTEROTATION);
+	if (chkenable2 == BST_CHECKED) {
+		g_pasteRotation = true;
+	}
+	else {
+		g_pasteRotation = false;
+	}
+	UINT chkenable3 = IsDlgButtonChecked(IDC_CHECK_PASTETRANSLATION);
+	if (chkenable3 == BST_CHECKED) {
+		g_pasteTranslation = true;
+	}
+	else {
+		g_pasteTranslation = false;
+	}
+
+
+
 	return 0;
 }
 
@@ -477,6 +503,28 @@ int CFrameCopyDlg::ParamsToDlg()
 			return 1;
 		}
 	}
+
+
+	if (g_pasteScale == true) {
+		CheckDlgButton(IDC_CHECK_PASTESCALE, true);
+	}
+	else {
+		CheckDlgButton(IDC_CHECK_PASTESCALE, false);
+	}
+	if (g_pasteRotation == true) {
+		CheckDlgButton(IDC_CHECK_PASTEROTATION, true);
+	}
+	else {
+		CheckDlgButton(IDC_CHECK_PASTEROTATION, false);
+	}
+	if (g_pasteTranslation == true) {
+		CheckDlgButton(IDC_CHECK_PASTETRANSLATION, true);
+	}
+	else {
+		CheckDlgButton(IDC_CHECK_PASTETRANSLATION, false);
+	}
+
+
 
 	return 0;
 }

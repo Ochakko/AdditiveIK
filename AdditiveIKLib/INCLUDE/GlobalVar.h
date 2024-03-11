@@ -63,6 +63,11 @@ int g_pickorder = 1;
 bool g_hdrpbloom = true;
 bool g_freefps = true;
 bool g_zalways = false;
+
+bool g_pasteScale = true;
+bool g_pasteRotation = true;
+bool g_pasteTranslation = true;
+
 int g_uvset = 0;
 float g_bonemark_bright = 1.0f;
 float g_rigidmark_alpha = 0.75f;
@@ -329,6 +334,11 @@ extern int g_pickorder;
 extern bool g_hdrpbloom;
 extern bool g_freefps;
 extern bool g_zalways;
+
+extern bool g_pasteScale;
+extern bool g_pasteRotation;
+extern bool g_pasteTranslation;
+
 extern int g_uvset;
 extern float g_bonemark_bright;
 extern float g_rigidmark_alpha;

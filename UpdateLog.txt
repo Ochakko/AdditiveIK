@@ -2,6 +2,16 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2024/03/11
+　操作対象ボーン設定ダイアログに機能追加
+　　ペーストショートカットボタンを右クリックで出る操作対象ボーン設定ダイアログに機能追加
+　　PasteScale, PasteRotation, PasteTranslationの３つのチェックボックスを追加
+　　スケール(拡大縮小)、ローテーション(回転)、トランスレーション(移動)の中の必要なものだけチェックしてペースト
+　　SRT３つの組み合わせも可能
+　
+
+
 2024/03/08
 　AdditiveIK 1.0.0.11 release
 　　1.0.0.10からの変更点

@@ -5982,18 +5982,70 @@ int CBone::PasteMotionPoint(bool limitdegflag, int srcmotid, double srcframe, CM
 	CMotionPoint* newmp = 0;
 	newmp = GetMotionPoint(srcmotid, roundingframe);
 	if (newmp){
-		//ChaMatrix setmat = GetWorldMat(srcmotid, roundingframe, &srcmp);
-		ChaMatrix localmat = srcmp.GetWorldMat();//2023/02/05 コピー情報はunlimitedの方に入っている
+		ChaMatrix befrotmat, aftrotmat;
+		befrotmat.SetIdentity();
+		aftrotmat.SetIdentity();
+		befrotmat.SetTranslation(-GetJointFPos());
+		aftrotmat.SetTranslation(GetJointFPos());
+
+
+		ChaMatrix orgwm = GetWorldMat(limitdegflag, srcmotid, roundingframe, newmp);
+		ChaMatrix orglocalmat;
+		if (GetParent(false)) {
+			ChaMatrix parentwm;
+			parentwm = GetParent(false)->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+			orglocalmat = orgwm * ChaMatrixInv(parentwm);
+		}
+		else {
+			orglocalmat = orgwm;
+		}
+		ChaMatrix orgLocalS, orgLocalR, orgLocalT, orgLocalTAnim;
+		GetSRTandTraAnim(orglocalmat, GetNodeMat(), &orgLocalS, &orgLocalR, &orgLocalT, &orgLocalTAnim);
+
+
+		ChaMatrix copylocalmat = srcmp.GetWorldMat();//localがセットされている
+		ChaMatrix copyLocalS, copyLocalR, copyLocalT, copyLocalTAnim;
+		GetSRTandTraAnim(copylocalmat, GetNodeMat(), &copyLocalS, &copyLocalR, &copyLocalT, &copyLocalTAnim);
+
+
+
+		ChaMatrix setLocalS, setLocalR, setLocalTAnim;
+		setLocalS.SetIdentity();
+		setLocalR.SetIdentity();
+		setLocalTAnim.SetIdentity();
+
+		//2024/03/11 S, R, T毎にペースト可能に
+		if (g_pasteScale) {
+			setLocalS = copyLocalS;
+		}
+		else {
+			setLocalS = orgLocalS;
+		}
+		if (g_pasteRotation) {
+			setLocalR = copyLocalR;
+		}
+		else {
+			setLocalR = orgLocalR;
+		}
+		if (g_pasteTranslation) {
+			setLocalTAnim = copyLocalTAnim;
+		}
+		else {
+			setLocalTAnim = orgLocalTAnim;
+		}
+		ChaMatrix setlocalmat;
+		setlocalmat = befrotmat * setLocalS * setLocalR * aftrotmat * setLocalTAnim;
+
 
 		ChaMatrix setmat;
 		setmat.SetIdentity();
 		if (GetParent(false)){
 			ChaMatrix parentwm;
 			parentwm = GetParent(false)->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
-			setmat = localmat * parentwm;//copy情報はローカルなのでグロバールにする
+			setmat = setlocalmat * parentwm;//copy情報はローカルなのでグロバールにする
 		}
 		else {
-			setmat = localmat;
+			setmat = setlocalmat;
 		}
 
 		//bool directsetflag = false;
