@@ -1417,6 +1417,7 @@ static bool s_delallmodelFlag = false;
 static bool s_changeupdatethreadsFlag = false;
 static bool s_newmotFlag = false;
 static bool s_delcurmotFlag = false;
+static bool s_jumpinterpolateFlag = false;
 static bool s_interpolateFlag = false;
 static int s_interpolateState = 0;
 static int s_skipJointMark = 0;
@@ -1628,6 +1629,7 @@ static Texture* s_spritetex81 = 0;
 static Texture* s_spritetex82 = 0;
 static Texture* s_spritetex83 = 0;
 static Texture* s_spritetex84 = 0;
+static Texture* s_spritetex85 = 0;
 
 
 
@@ -1652,6 +1654,7 @@ static CSpElem s_spsymcopy;
 static CSpElem s_sppaste;
 static CSpElem s_spcopyhistory;
 static CSpElem s_spinterpolate;
+static CSpElem s_spjumpinterpolate;
 static CSpElem s_spinit;
 static CSpElem s_spscaleinit;
 static CSpElem s_spproperty;
@@ -2715,6 +2718,7 @@ static void InsertCopyMPReq(bool limitdegflag, CBone* curbone, double curframe);
 static int InsertSymMP(bool limitdegflag, CBone* curbone, double curframe, int symrootmode);
 static void InsertSymMPReq(bool limitdegflag, CBone* curbone, double curframe, int symrootmode);
 
+static int JumpInterpolateFromTool();
 static int InterpolateFromTool();
 static int FilterFromTool();
 static int InitMpFromTool();
@@ -4202,6 +4206,7 @@ void InitApp()
 	s_constexeFlag = false;
 	s_constrefreshFlag = false;
 	//s_filternodlg = false;
+	s_jumpinterpolateFlag = false;
 	s_interpolateFlag = false;
 	s_interpolateState = 0;
 	s_skipJointMark = 0;
@@ -7299,10 +7304,21 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				pickflag = true;
 			}
 
-			if ((pickflag == false) && (PickSpInterpolate(ptCursor) != 0)) {
+			int pickinterpolate = 0;
+			if ((pickflag == false) && ((pickinterpolate = PickSpInterpolate(ptCursor)) != 0)) {
 				if (s_model) {
-					if (s_interpolateFlag == false) {
-						s_interpolateFlag = true;
+					if (pickinterpolate == 1) {
+						if (s_interpolateFlag == false) {
+							s_interpolateFlag = true;
+						}
+					}
+					else if (pickinterpolate == 2) {
+						if (s_jumpinterpolateFlag == false) {
+							s_jumpinterpolateFlag = true;
+						}
+					}
+					else {
+						_ASSERT(0);
 					}
 				}
 				pickflag = true;
@@ -20107,7 +20123,8 @@ int SetSpRet2PrevParams()
 	{
 
 		int spgshift = 6;
-		s_spret2prev2.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 4;
+		//s_spret2prev2.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 4;
+		s_spret2prev2.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 5;//2024/03/11
 		s_spret2prev2.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
 
 
@@ -20369,18 +20386,36 @@ int SetSpCopyHistoryParams()
 int SetSpInterpolateParams()
 {
 	int spgshift = 6;
-	s_spinterpolate.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 3;
-	s_spinterpolate.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
 
-	ChaVector3 disppos;
-	disppos.x = (float)(s_spinterpolate.dispcenter.x);
-	disppos.y = (float)(s_spinterpolate.dispcenter.y);
-	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+	//interpolate
+	{
+		s_spinterpolate.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 3;
+		s_spinterpolate.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
 
-	//CallF(s_spinterpolate.sprite->SetPos(disppos), return 1);
-	//CallF(s_spinterpolate.sprite->SetSize(dispsize), return 1);
-	s_spinterpolate.sprite.UpdateScreen(disppos, dispsize);
+		ChaVector3 disppos;
+		disppos.x = (float)(s_spinterpolate.dispcenter.x);
+		disppos.y = (float)(s_spinterpolate.dispcenter.y);
+		disppos.z = 0.0f;
+		ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+
+		s_spinterpolate.sprite.UpdateScreen(disppos, dispsize);
+	}
+
+
+	//jump interpolate
+	{
+		s_spjumpinterpolate.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 4;
+		s_spjumpinterpolate.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+
+		ChaVector3 disppos;
+		disppos.x = (float)(s_spjumpinterpolate.dispcenter.x);
+		disppos.y = (float)(s_spjumpinterpolate.dispcenter.y);
+		disppos.z = 0.0f;
+		ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+
+		s_spjumpinterpolate.sprite.UpdateScreen(disppos, dispsize);
+	}
+
 
 	return 0;
 
@@ -21733,16 +21768,30 @@ int PickSpInterpolate(POINT srcpos)
 		return 0;
 	}
 
-	int starty = s_spinterpolate.dispcenter.y - (int)s_spsizeSmall / 2;
-	int endy = starty + (int)s_spsizeSmall;
+	{
+		int starty = s_spinterpolate.dispcenter.y - (int)s_spsizeSmall / 2;
+		int endy = starty + (int)s_spsizeSmall;
+		if ((srcpos.y >= starty) && (srcpos.y <= endy)) {
+			int startx = s_spinterpolate.dispcenter.x - (int)s_spsizeSmall / 2;
+			int endx = startx + (int)s_spsizeSmall;
 
-	//SPRIG_INACTIVEとSPRIG_ACTIVEは同じ位置なので当たり判定は１回で良い
-	if ((srcpos.y >= starty) && (srcpos.y <= endy)) {
-		int startx = s_spinterpolate.dispcenter.x - (int)s_spsizeSmall / 2;
-		int endx = startx + (int)s_spsizeSmall;
+			if ((srcpos.x >= startx) && (srcpos.x <= endx)) {
+				pickflag = 1;
+			}
+		}
+	}
 
-		if ((srcpos.x >= startx) && (srcpos.x <= endx)) {
-			pickflag = 1;
+
+	if (pickflag == 0) {
+		int starty = s_spjumpinterpolate.dispcenter.y - (int)s_spsizeSmall / 2;
+		int endy = starty + (int)s_spsizeSmall;
+		if ((srcpos.y >= starty) && (srcpos.y <= endy)) {
+			int startx = s_spjumpinterpolate.dispcenter.x - (int)s_spsizeSmall / 2;
+			int endx = startx + (int)s_spsizeSmall;
+
+			if ((srcpos.x >= startx) && (srcpos.x <= endx)) {
+				pickflag = 2;
+			}
 		}
 	}
 
@@ -32843,6 +32892,14 @@ int OnFrameToolWnd()
 		s_interpolateFlag = false;
 	}
 
+	if (s_jumpinterpolateFlag) {
+		if (s_model && s_owpTimeline && s_owpLTimeline && s_model->GetCurMotInfo()) {
+			JumpInterpolateFromTool();
+		}
+		s_jumpinterpolateFlag = false;
+	}
+
+
 
 	if ((s_opedelmodelcnt >= 0) && (s_underdelmodel == true)) {
 		int modelcnt = s_opedelmodelcnt;
@@ -41058,6 +41115,15 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					//s_spinterpolate.sprite.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
+					rendersprite.psprite = &(s_spjumpinterpolate.sprite);
+					re->AddSpriteToForwardRenderPass(rendersprite);
+				}
+
+				{
+					//Interpolate
+					//s_spinterpolate.sprite.DrawScreen(pRenderContext);
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
 					rendersprite.psprite = &(s_spinterpolate.sprite);
 					re->AddSpriteToForwardRenderPass(rendersprite);
 				}
@@ -41397,6 +41463,108 @@ int FilterFromTool()
 	rmenu->Destroy();
 	delete rmenu;
 	InterlockedExchange(&g_undertrackingRMenu, (LONG)0);
+
+	return 0;
+}
+
+int JumpInterpolateFromTool()
+{
+	if (!s_chascene) {
+		return 0;
+	}
+	int modelnum = s_chascene->GetModelNum();
+	if (modelnum <= 0) {
+		return 0;
+	}
+	if (s_curboneno < 0) {
+		return 0;
+	}
+	if (!s_model) {
+		return 0;
+	}
+	if (!s_owpTimeline || !s_owpLTimeline) {
+		return 0;
+	}
+	MOTINFO* mi = s_model->GetCurMotInfo();
+	if (!mi) {
+		return 0;
+	}
+
+	double roundingstart, roundingend;
+	roundingstart = RoundingTime(g_motionbrush_startframe);
+	roundingend = RoundingTime(g_motionbrush_endframe);
+	double frameleng;
+	frameleng = roundingend - roundingstart;
+
+	if (frameleng < 4.0) {
+		::MessageBox(s_3dwnd, L"フレーム範囲長５フレーム以上で動作します.選択し直してリトライしてください.", L"動作条件に満たないフレーム長です",
+			MB_OK | MB_ICONINFORMATION);
+		return 0;
+	}
+
+	CBone* hipsbone = 0;
+	s_model->GetHipsBoneReq(s_model->GetTopBone(false), &hipsbone);
+	if (hipsbone) {
+		ChaVector3 hipsjointpos;
+		hipsjointpos = hipsbone->GetJointFPos();
+
+		//##############################
+		//hipsなのでローカルと同じように計算
+		//##############################
+		ChaMatrix startmat, endmat;
+		startmat = hipsbone->GetWorldMat(g_limitdegflag, mi->motid, roundingstart, 0);
+		endmat = hipsbone->GetWorldMat(g_limitdegflag, mi->motid, roundingend, 0);
+		ChaMatrix startS, startR, startT, startTAnim;
+		ChaMatrix endS, endR, endT, endTAnim;
+		GetSRTandTraAnim(startmat, hipsbone->GetNodeMat(), &startS, &startR, &startT, &startTAnim);
+		GetSRTandTraAnim(endmat, hipsbone->GetNodeMat(), &endS, &endR, &endT, &endTAnim);
+
+		//#########################
+		//TAnimだけに着目して計算する
+		//#########################
+
+		double gravity = -9.8 / 15.0;//後でgravity設定用のモードレスダイアログを出す予定
+
+
+		//上部でframeleng < 4の場合を除外している
+		double vecx, vecz;
+		vecx = (double)(endTAnim.data[MATI_41] - startTAnim.data[MATI_41]) / frameleng;
+		vecz = (double)(endTAnim.data[MATI_43] - startTAnim.data[MATI_43]) / frameleng;
+		double vecy0;
+		vecy0 = (endTAnim.data[MATI_42] - startTAnim.data[MATI_42]) / frameleng - 0.5 * gravity * frameleng;
+
+		double calcframe;
+		for (calcframe = (roundingstart + 1.0); calcframe <= (roundingend - 1.0); calcframe++)
+		{
+			ChaMatrix mat1;
+			mat1 = hipsbone->GetWorldMat(g_limitdegflag, mi->motid, calcframe, 0);
+			ChaMatrix S1, R1, T1, TAnim1;
+			GetSRTandTraAnim(mat1, hipsbone->GetNodeMat(), &S1, &R1, &T1, &TAnim1);
+
+			double difft = calcframe - roundingstart;
+			ChaVector3 newtanim = ChaVector3(0.0f, 0.0f, 0.0f);
+			newtanim.x = (float)((double)startTAnim.data[MATI_41] + vecx * difft);
+			newtanim.z = (float)((double)startTAnim.data[MATI_43] + vecz * difft);
+			newtanim.y = (float)((double)startTAnim.data[MATI_42] + vecy0 * difft + 0.5 * gravity * difft * difft);
+			ChaMatrix newTAnimMat;
+			newTAnimMat.SetIdentity();
+			newTAnimMat.SetTranslation(newtanim);
+
+			ChaMatrix befrotmat, aftrotmat;
+			befrotmat.SetIdentity();
+			aftrotmat.SetIdentity();
+			befrotmat.SetTranslation(-hipsbone->GetJointFPos());
+			aftrotmat.SetTranslation(hipsbone->GetJointFPos());
+
+			ChaMatrix newhipsmat;
+			newhipsmat = befrotmat * S1 * R1 * aftrotmat * newTAnimMat;
+
+			//hipsbone->SetWorldMat(g_limitdegflag, mi->motid, calcframe, newhipsmat, 0);
+			hipsbone->UpdateCurrentWM(g_limitdegflag, mi->motid, calcframe, newhipsmat);
+		}
+
+		PrepairUndo();
+	}
 
 	return 0;
 }
@@ -55182,11 +55350,13 @@ int DispToolTip()
 
 
 	//2024/02/04 画面のスプライトドラッグ検知を最優先に
-	if ((s_dispfontfortip == false) && s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
-		s_dispfontfortip = DispTipUI();
-	}
-	else if (s_dispfontfortip == false) {
-		s_dispfontfortip = DispTipUIFrog();
+	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
+		if ((s_dispfontfortip == false)) {
+			s_dispfontfortip = DispTipUI();
+		}
+		if (s_dispfontfortip == false) {
+			s_dispfontfortip = DispTipUIFrog();
+		}
 	}
 
 
@@ -55194,7 +55364,7 @@ int DispToolTip()
 		//DispGroupプレートメニュー選択時　メッシュ名を表示
 		s_dispfontfortip = DispTipMesh();
 	}
-	else if ((s_dispfontfortip == false) && s_spdispsw[SPDISPSW_SHADERTYPE].state) {
+	if ((s_dispfontfortip == false) && s_spdispsw[SPDISPSW_SHADERTYPE].state) {
 		//Shaderプレートメニュー選択時　マテリアル名を表示
 		s_dispfontfortip = DispTipMaterial();
 	}
@@ -55444,11 +55614,22 @@ bool DispTipUI()
 	}
 	else if (s_toolspritemode == 1) {//ToolShortCut : 1
 		if (dispfontfortip == false) {
-			if (PickSpInterpolate(ptCursor) != 0) {
+			int pickinterpolate = 0;
+			if ((pickinterpolate = PickSpInterpolate(ptCursor)) != 0) {
 				if (s_model) {
-					dispfontfortip = true;
-					wcscpy_s(sz512, 512, L"Interpolate Motion");
-					//CreateToolTip(ptCursor, s_strfortip);
+					if (pickinterpolate == 1) {
+						dispfontfortip = true;
+						wcscpy_s(sz512, 512, L"Interpolate Motion");
+						//CreateToolTip(ptCursor, s_strfortip);
+					}
+					else if (pickinterpolate == 2) {
+						dispfontfortip = true;
+						wcscpy_s(sz512, 512, L"Jump Interpolate HipsLoc");
+						//CreateToolTip(ptCursor, s_strfortip);
+					}
+					else {
+						_ASSERT(0);
+					}
 				}
 			}
 		}
@@ -57706,6 +57887,14 @@ int CreateSprites()
 
 
 	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\JumpInterpolation_1.png");
+	s_spritetex85 = new Texture();
+	s_spritetex85->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex85;
+	s_spjumpinterpolate.sprite.Init(spriteinitdata, screenvertexflag);
+
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\InterpolateButton.png");
 	s_spritetex71 = new Texture();
 	s_spritetex71->InitFromWICFile(filepath);
@@ -57862,6 +58051,7 @@ void InitSprites()
 	s_spritetex82 = 0;
 	s_spritetex83 = 0;
 	s_spritetex84 = 0;
+	s_spritetex85 = 0;
 }
 
 void DestroySprites()
@@ -58226,6 +58416,10 @@ void DestroySprites()
 		delete s_spritetex84;
 		s_spritetex84 = 0;
 	}
+	if (s_spritetex85) {
+		delete s_spritetex85;
+		s_spritetex85 = 0;
+	}
 
 	int delindex;
 	s_spundo[0].DestroyObjs();
@@ -58250,6 +58444,7 @@ void DestroySprites()
 	s_spsymcopy.DestroyObjs();
 	s_sppaste.DestroyObjs();
 	s_spcopyhistory.DestroyObjs();
+	s_spjumpinterpolate.DestroyObjs();
 	s_spinterpolate.DestroyObjs();
 	s_spinit.DestroyObjs();
 	s_spscaleinit.DestroyObjs();
