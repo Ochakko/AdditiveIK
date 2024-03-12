@@ -774,7 +774,7 @@ int CBone::AddChild( CBone* childptr )
 
 
 int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe, 
-	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, bool callingbythread, int updateslot)
+	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, bool callingbythread)//, int updateslot)
 	//default : callingbythread = false, updateslot = 0
 {
 	if (!wmat || !vmat || !pmat) {
@@ -787,15 +787,6 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 	if (GetParModel() && (GetParModel()->GetInView() == false)) {
 		return 0;
 	}
-
-	if (updateslot >= 2) {
-		m_updateslot = updateslot - 2;
-	}
-	else {
-		m_updateslot = updateslot;
-	}
-
-	
 
 
 	//2023/01/18 注意書修正
@@ -872,8 +863,6 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 		}
 
 		//if (updateslot >= 2) {
-		//  //Render処理中に書き込むと余計に乱れて難しくなるのでコメントアウト
-		// 
 		//	//2024/03/12 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
 		//	int otherslot = (int)(!(m_updateslot != 0));
 		//	m_curmp[otherslot].SetWorldMat(m_curmp[m_updateslot].GetWorldMat());
@@ -887,8 +876,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 
 		if (m_parmodel && (m_parmodel->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
-			//bool settobothflag = true;//2023/11/04 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
-			bool settobothflag = false;//2023/03/12
+			bool settobothflag = true;//2023/11/04 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
 			SetBtMat(GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot])), settobothflag);
 		}
 	}
@@ -898,10 +886,10 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 		ChaMatrix wmat2, wvpmat;
 		if (GetParent(true)){
-			wmat2 = GetParent(true)->GetBtMat();// **wmat;
+			wmat2 = GetParent(true)->GetBtMat(true);// **wmat;
 		}
 		else{
-			wmat2 = GetBtMat();// **wmat;
+			wmat2 = GetBtMat(true);// **wmat;
 		}
 		ChaMatrix vpmat = *vmat * *pmat;
 		wvpmat = wmat2 * vpmat;
@@ -2530,7 +2518,8 @@ int CBone::CalcRigidElemParams(bool setinstancescale, CBone* childbone, int sets
 		//	childbone->SetNodeMat(bmmat);//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		//}
 
-		bool calcslotflag = true;
+		//bool calcslotflag = true;
+		bool calcslotflag = false;
 		childbone->SetBtMat(childbone->GetCurMp(calcslotflag).GetWorldMat());//!!!!!!!!!!!!!btmatの初期値
 	}
 
@@ -3700,8 +3689,8 @@ int CBone::CalcBtLocalInfo(CMotionPoint* pdstmp)
 		ChaMatrix parentbtmat;
 		ChaMatrix currentbtmat;
 		ChaMatrix localbtmat;
-		parentbtmat = GetParent(false)->GetBtMat();
-		currentbtmat = GetBtMat();
+		parentbtmat = GetParent(false)->GetBtMat(true);
+		currentbtmat = GetBtMat(true);
 		localbtmat = currentbtmat * ChaMatrixInv(parentbtmat);
 
 		setmp.CalcQandTra(localbtmat, this);
@@ -3721,7 +3710,7 @@ int CBone::CalcBtLocalInfo(CMotionPoint* pdstmp)
 	else {
 		CMotionPoint setmp;
 		ChaMatrix localbtmat;
-		localbtmat = GetBtMat();
+		localbtmat = GetBtMat(true);
 
 		setmp.CalcQandTra(localbtmat, this);
 
@@ -5201,7 +5190,7 @@ ANGLELIMIT CBone::GetAngleLimit(bool limitdegflag, int getchkflag)
 			MOTINFO* curmi = m_parmodel->GetCurMotInfo();
 			if (curmi) {
 				int curmotid = curmi->motid;
-				int curframe = IntTime(curmi->curframe);
+				int curframe = IntTime(m_parmodel->GetCurrentFrame());
 
 				ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
 				ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
@@ -5313,7 +5302,7 @@ void CBone::SetAngleLimit(bool limitdegflag, ANGLELIMIT srclimit)
 			int curmotid;
 			double curframe;
 			curmotid = curmi->motid;
-			curframe = curmi->curframe;
+			curframe = GetParModel()->GetCurrentFrame();
 
 			limiteul = GetLocalEul(limitdegflag, curmotid, curframe, 0);
 		}
@@ -5539,7 +5528,7 @@ ChaMatrix CBone::GetCurrentWorldMat(bool multmodelwm)
 		curmi = GetParModel()->GetCurMotInfo();
 		if (curmi) {
 			int curmotid = curmi->motid;
-			double curframe = curmi->curframe;
+			double curframe = GetParModel()->GetCurrentFrame();
 
 			ChaMatrix newworldmat;
 			ChaMatrixIdentity(&newworldmat);
@@ -8928,7 +8917,7 @@ void CBone::SetIKTargetFlag(bool srcflag)
 				CMotionPoint curmp = GetCurMp();
 
 				//2023/03/24 model座標系：modelのworldmatを打ち消す
-				ChaMatrix curwm = GetWorldMat(g_limitdegflag, curmi->motid, curmi->curframe, &curmp) * ChaMatrixInv(GetParModel()->GetWorldMat());
+				ChaMatrix curwm = GetWorldMat(g_limitdegflag, curmi->motid, GetParModel()->GetCurrentFrame(), &curmp) * ChaMatrixInv(GetParModel()->GetWorldMat());
 				
 				ChaVector3 jointpos0, jointpos1;
 				jointpos0 = GetJointFPos();

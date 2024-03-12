@@ -2934,7 +2934,7 @@ void ChaCalcFunc::UpdateParentWMReq(CBone* srcbone, bool limitdegflag, bool setb
 }
 
 int ChaCalcFunc::Motion2Bt(CModel* srcmodel, bool limitdegflag, double nextframe, 
-	ChaMatrix* pmView, ChaMatrix* pmProj, int updateslot)
+	ChaMatrix* pmView, ChaMatrix* pmProj)//, int updateslot)
 {
 	if (!srcmodel) {
 		_ASSERT(0);
@@ -2946,7 +2946,7 @@ int ChaCalcFunc::Motion2Bt(CModel* srcmodel, bool limitdegflag, double nextframe
 	}
 
 	ChaMatrix mW = srcmodel->GetWorldMat();
-	srcmodel->UpdateMatrix(limitdegflag, &mW, pmView, pmProj, true, updateslot);
+	srcmodel->UpdateMatrix(limitdegflag, &mW, pmView, pmProj, true);//, updateslot);
 
 
 	if (!srcmodel->GetTopBt()) {

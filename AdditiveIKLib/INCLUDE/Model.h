@@ -407,8 +407,10 @@ public:
  */
 	int UpdateMatrix(bool limitdegflag, 
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, 
-		bool needwaitfinished = true, int updateslot = 0);
+		bool needwaitfinished = true);// , int updateslot = 0);
 	void UpdateMatrixReq(bool limitdegflag, CBone* srcbone, int srcmotid, double srcframe, ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
+	void SetUpdateSlotReq(CBone* srcbone, int srcslot);
+
 	int ChkInView();
 	//int SwapCurrentMotionPoint();
 	int HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone, ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
@@ -484,7 +486,7 @@ public:
  * @param (double* dstframe) OUT 再生フレームがセットされる。
  * @return 成功したら０。
  */
-	int GetMotionFrame( double* dstframe );
+	int GetMotionFrame(double* dstframe);
 	int GetMotionName(int srcmotid, int dstnamelen, char* dstname);
 
 /**
@@ -791,7 +793,7 @@ public:
 	int SetBtMotion(bool limitdegflag, CBone* srcbone, int rgdollflag, 
 		double srcframe, ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
 	int SetBtMotionOnBt(bool limitdegflag,
-		double srcframe, ChaMatrix* vmat, ChaMatrix* pmat, int updateslot);
+		double srcframe, ChaMatrix* vmat, ChaMatrix* pmat);// , int updateslot);
 
 /**
  * @fn
@@ -858,7 +860,7 @@ public:
 
 	int SetColTypeAll(int reindex, int srctype);
 
-	int Motion2Bt(bool limitdegflag, double nextframe, ChaMatrix* pmView, ChaMatrix* pmProj, int updateslot);
+	int Motion2Bt(bool limitdegflag, double nextframe, ChaMatrix* pmView, ChaMatrix* pmProj);// , int updateslot);
 	void Motion2BtReq(CBtObject* srcbto);
 
 	//int SetRagdollKinFlag(int selectbone, int physicsmvkind = 0);
@@ -2498,6 +2500,15 @@ public: //accesser
 	{
 		return m_skyflag;
 	}
+	void SetUpdateSlot(int srcslot)
+	{
+		m_updateslot = srcslot;
+	}
+	int GetUpdateSlot()
+	{
+		return m_updateslot;
+	}
+
 
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
@@ -2696,6 +2707,8 @@ private:
 
 	bool m_refposflag;
 	bool m_skyflag;
+
+	int m_updateslot;
 };
 
 #endif

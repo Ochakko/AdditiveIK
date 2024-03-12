@@ -3396,6 +3396,9 @@ INT WINAPI wWinMain(
 			//SetWindowText(g_mainhwnd, strmaintitle);
 
 			if (g_underWriteFbx == false) {//2024/02/10
+
+				s_chascene->SetUpdateSlot();//2023/03/13
+
 				//ドキュメント更新
 				int loopstartflag = 0;
 				OnUserFrameMove(s_fTime, s_fElapsedTime, &loopstartflag);
@@ -6117,8 +6120,8 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 					s_model->SetRefPosFlag(false);
 				}
 			}
-			//bool calcslotflag = false;
-			bool calcslotflag = true;
+			bool calcslotflag = false;
+			//bool calcslotflag = true;
 			s_chascene->SetBoneMatrixForShader(btflag, calcslotflag);
 			s_chascene->RenderModels(re, lightflag, diffusemult, btflag);
 			if (s_model && s_sprefpos.state) {
@@ -13161,7 +13164,7 @@ int RenderSelectMark(myRenderer::RenderingEngine* re, RenderContext* pRenderCont
 			ChaMatrixIdentity(&scalemat);
 			ChaMatrixScaling(&scalemat, s_selectscale, s_selectscale, s_selectscale);
 
-			ChaVector3 bonepos = curboneptr->GetWorldPos(g_limitdegflag, curmi->motid, curmi->curframe);
+			ChaVector3 bonepos = curboneptr->GetWorldPos(g_limitdegflag, curmi->motid, s_model->GetCurrentFrame());
 
 			//s_selectmat = scalemat * s_selm;
 			//s_selectmat = s_selm;
@@ -13452,7 +13455,7 @@ int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderCon
 	MOTINFO* curmi = s_model->GetCurMotInfo();
 	if (curmi) {
 		int curmotid = curmi->motid;
-		double curframe = curmi->curframe;
+		double curframe = s_model->GetCurrentFrame();
 
 		std::map<int, CBone*>::iterator itrbone;
 		for (itrbone = s_model->GetBoneListBegin(); itrbone != s_model->GetBoneListEnd(); itrbone++) {
@@ -18706,13 +18709,13 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 				//}
 
 
-				if (pmodel->GetRgdMorphIndex() >= 0) {
-					MOTINFO* morphmi = pmodel->GetRgdMorphInfo();
-					if (morphmi) {
-						//morphmi->curframe = 0.0;
-						morphmi->curframe = s_btstartframe;
-					}
-				}
+				//if (pmodel->GetRgdMorphIndex() >= 0) {
+				//	MOTINFO* morphmi = pmodel->GetRgdMorphInfo();
+				//	if (morphmi) {
+				//		//morphmi->curframe = 0.0;
+				//		morphmi->curframe = s_btstartframe;
+				//	}
+				//}
 
 			}
 		}
@@ -40449,7 +40452,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 			MOTINFO* curmi = s_model->GetCurMotInfo();
 			if (curmi) {
 				int curmotid = curmi->motid;
-				double currentframe = curmi->curframe;
+				double currentframe = s_model->GetCurrentFrame();
 				CBone* curbone = s_model->GetBoneByID(s_curboneno);
 				if (curbone) {
 					std::vector<ChaVector3> vecbonepos;
@@ -40499,7 +40502,8 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 
 
 							bool calcslotflag;
-							calcslotflag = true;
+							//calcslotflag = true;
+							calcslotflag = false;
 							s_model->SetShaderConst(btflag1, calcslotflag);
 							s_model->SetRefPosFl4x4ToDispObj(refposindex);
 
@@ -40538,7 +40542,8 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 							s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matView, &s_matProj, currentframe);
 
 							bool calcslotflag;
-							calcslotflag = true;
+							//calcslotflag = true;
+							calcslotflag = false;
 							s_model->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
 							s_model->SetRefPosFl4x4ToDispObj(refposindex);
 
@@ -54524,7 +54529,7 @@ int PickRigBone(UIPICKINFO* ppickinfo, bool forrigtip, int* dstrigno)//default:f
 	MOTINFO* curmi = s_model->GetCurMotInfo();
 	if (curmi) {
 		int curmotid = curmi->motid;
-		double curframe = curmi->curframe;
+		double curframe = s_model->GetCurrentFrame();
 
 		std::map<int, CBone*>::iterator itrbone;
 		for (itrbone = s_model->GetBoneListBegin(); itrbone != s_model->GetBoneListEnd(); itrbone++) {

@@ -591,7 +591,7 @@ typedef struct tag_motinfo
 	int fbxanimno;//fbxファイルの中で何番目のモーションとして読み込んだか　0から始まる番号
 	bool cameramotion;
 
-	tag_motinfo() {
+	void Init() {
 		ZeroMemory(motname, sizeof(char) * 256);
 		ZeroMemory(wfilename, sizeof(WCHAR) * MAX_PATH);
 		ZeroMemory(engmotname, sizeof(char) * 256);
@@ -602,6 +602,10 @@ typedef struct tag_motinfo
 		loopflag = 0;
 		fbxanimno = -1;
 		cameramotion = false;
+	};
+
+	tag_motinfo() {
+		Init();
 	};
 }MOTINFO;
 

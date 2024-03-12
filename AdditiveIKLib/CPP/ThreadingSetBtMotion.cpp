@@ -59,7 +59,7 @@ int CThreadingSetBtMotion::InitParams()
 	matProj.SetIdentity();
 	smodel = 0;
 	reccnt = 0.0;
-	updateslot = 0;
+	//updateslot = 0;
 
 	return 0;
 }
@@ -104,7 +104,7 @@ int CThreadingSetBtMotion::ThreadFunc()
 					if (m_model && (m_model->GetBtCnt() != 0)) {
 						if (m_model->GetCurMotInfo()) {
 
-							m_model->SetBtMotionOnBt(limitdegflag, nextframe, &matView, &matProj, updateslot);
+							m_model->SetBtMotionOnBt(limitdegflag, nextframe, &matView, &matProj);//, updateslot);
 
 							//60 x 60 frames limit : 60 sec limit
 							if ((m_model == smodel) && (smodel->GetBtCnt() > 0) && (reccnt < MAXPHYSIKRECCNT)) {
@@ -116,7 +116,7 @@ int CThreadingSetBtMotion::ThreadFunc()
 						else {
 							//モーションが無い場合にもChkInViewを呼ぶためにUpdateMatrix呼び出しは必要
 							ChaMatrix tmpwm = m_model->GetWorldMat();
-							m_model->UpdateMatrix(limitdegflag, &tmpwm, &matView, &matProj, updateslot);
+							m_model->UpdateMatrix(limitdegflag, &tmpwm, &matView, &matProj);//, updateslot);
 						}
 					}
 
@@ -163,7 +163,7 @@ int CThreadingSetBtMotion::ThreadFunc()
 						EnterCriticalSection(&m_CritSection);
 						if (m_model->GetCurMotInfo()) {
 
-							m_model->SetBtMotionOnBt(limitdegflag, nextframe, &matView, &matProj, updateslot);
+							m_model->SetBtMotionOnBt(limitdegflag, nextframe, &matView, &matProj);//, updateslot);
 
 							//60 x 60 frames limit : 60 sec limit
 							if ((m_model == smodel) && (smodel->GetBtCnt() > 0) && (reccnt < MAXPHYSIKRECCNT)) {
@@ -175,7 +175,7 @@ int CThreadingSetBtMotion::ThreadFunc()
 						else {
 							//モーションが無い場合にもChkInViewを呼ぶためにUpdateMatrix呼び出しは必要
 							ChaMatrix tmpwm = m_model->GetWorldMat();
-							m_model->UpdateMatrix(limitdegflag, &tmpwm, &matView, &matProj, updateslot);
+							m_model->UpdateMatrix(limitdegflag, &tmpwm, &matView, &matProj);//, updateslot);
 						}
 						InterlockedExchange(&m_start_state, 0L);
 						LeaveCriticalSection(&m_CritSection);
@@ -225,7 +225,7 @@ int CThreadingSetBtMotion::SetModel(CModel* srcmodel)
 
 int CThreadingSetBtMotion::SetBtMotion(bool srclimitdegflag, double srcnextframe,
 	ChaMatrix* srcpmView, ChaMatrix* srcpmProj,
-	CModel* srcsmodel, double srcreccnt, int srcupdateslot)
+	CModel* srcsmodel, double srcreccnt)//, int srcupdateslot)
 {
 	if (!m_model || !srcpmView || !srcpmProj) {
 		return 1;
@@ -245,7 +245,7 @@ int CThreadingSetBtMotion::SetBtMotion(bool srclimitdegflag, double srcnextframe
 	matProj = *srcpmProj;
 	smodel = srcsmodel;
 	reccnt = srcreccnt;
-	updateslot = srcupdateslot;
+	//updateslot = srcupdateslot;
 
 	LeaveCriticalSection(&m_CritSection);
 	InterlockedExchange(&m_start_state, 1L);

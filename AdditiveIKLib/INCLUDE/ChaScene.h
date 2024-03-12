@@ -68,6 +68,7 @@ public:
 	//	}
 	//};
 
+	void SetUpdateSlot();
 	int UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe, int loopstartflag);
 	int UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, 
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe);

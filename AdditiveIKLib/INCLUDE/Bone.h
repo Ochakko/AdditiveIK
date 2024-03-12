@@ -136,7 +136,7 @@ public:
  * @detail 指定モーションの指定時間の姿勢を計算する。グローバルな姿勢の計算である。
  */
 	int UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe, 
-		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, bool callingbythread = false, int updateslot = 0);
+		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, bool callingbythread = false);// , int updateslot = 0);
 	//int SwapCurrentMotionPoint();
 
 
@@ -856,22 +856,18 @@ public: //accesser
 
 
 	CMotionPoint GetCurMp(bool calcslotflag = false) {
-		//if (calcslotflag == false) {
-		//	//計算済のm_curmpを取得する場合
-		//	int renderslot = (int)(!(m_updateslot != 0));
-		//	return m_curmp[renderslot];
-		//}
-		//else {
-		//	//姿勢の計算中にGetCurMpする場合
-		//	return m_curmp[m_updateslot];
-		//}
-		
-		return m_curmp[0];//2024/03/12 DX11のときはRender中にも計算した方が効果的だったが　DX12ではFreeFps時にどこがブロッキングするのかよく分からないので処理ごとに待つことにした
-
+		if (calcslotflag == false) {
+			//計算済のm_curmpを取得する場合
+			int renderslot = (int)(!(m_updateslot != 0));
+			return m_curmp[renderslot];
+		}
+		else {
+			//姿勢の計算中にGetCurMpする場合
+			return m_curmp[m_updateslot];
+		}
 	};
 	void SetCurMp( CMotionPoint srcmp ){ 
-		//m_curmp[m_updateslot] = srcmp; 
-		m_curmp[0] = srcmp;//2024/03/12 DX11のときはRender中にも計算した方が効果的だったが　DX12ではFreeFps時にどこがブロッキングするのかよく分からないので処理ごとに待つことにした
+		m_curmp[m_updateslot] = srcmp; 
 	};
 
 	//CMotionPoint GetBefMp(){ return m_befmp; };
@@ -1288,18 +1284,15 @@ public: //accesser
 	//ChaMatrix GetBefBtMat(){ return m_befbtmat; };
 	//void SetBefBtMat(ChaMatrix srcmat){ m_befbtmat = srcmat; };
 	ChaMatrix GetBtMat(bool calcslotflag = false){
-		//if (calcslotflag == false) {
-		//	//計算済のm_curmpを取得する場合
-		//	int renderslot = (int)(!(m_updateslot != 0));
-		//	return m_btmat[renderslot];
-		//}
-		//else {
-		//	//姿勢の計算中にGetCurMpする場合
-		//	return m_btmat[m_updateslot];
-		//}
-
-		return m_btmat[0];//2024/03/12 DX11のときはRender中にも計算した方が効果的だったが　DX12ではFreeFps時にどこがブロッキングするのかよく分からないので処理ごとに待つことにした
-
+		if (calcslotflag == false) {
+			//計算済のm_curmpを取得する場合
+			int renderslot = (int)(!(m_updateslot != 0));
+			return m_btmat[renderslot];
+		}
+		else {
+			//姿勢の計算中にGetCurMpする場合
+			return m_btmat[m_updateslot];
+		}
 	};
 	//ChaMatrix GetInvBtMat(){ ChaMatrix retmat; ChaMatrixInverse(&retmat, NULL, &m_btmat); return retmat; };
 	void SetBtMat(ChaMatrix srcmat, bool settobothflag = false){
@@ -1307,15 +1300,13 @@ public: //accesser
 		////	SetBefBtMat(m_btmat[m_updateslot]);
 		//////}
 
-		//if (settobothflag == false) {
-		//	m_btmat[m_updateslot] = srcmat;
-		//}
-		//else {
-		//	m_btmat[0] = srcmat;
-		//	m_btmat[1] = srcmat;
-		//}
-
-		m_btmat[0] = srcmat;//2024/03/12 DX11のときはRender中にも計算した方が効果的だったが　DX12ではFreeFps時にどこがブロッキングするのかよく分からないので処理ごとに待つことにした		
+		if (settobothflag == false) {
+			m_btmat[m_updateslot] = srcmat;
+		}
+		else {
+			m_btmat[0] = srcmat;
+			m_btmat[1] = srcmat;
+		}
 	};
 	void SetBtEul(ChaVector3 srceul) {
 		m_bteul = srceul;
@@ -1732,6 +1723,16 @@ public: //accesser
 	{
 		return m_matrixindex;
 	}
+
+	void SetUpdateSlot(int srcslot)
+	{
+		m_updateslot = srcslot;
+	}
+	int GetUpdateSlot()
+	{
+		return m_updateslot;
+	}
+
 
 public:
 	CRITICAL_SECTION m_CritSection_GetBefNext;

@@ -170,6 +170,22 @@ void ChaScene::DestroyObjs()
 
 }
 
+void ChaScene::SetUpdateSlot()
+{
+	m_updateslot = (int)(!(m_updateslot != 0));
+
+	if (!m_modelindex.empty()) {
+		int modelnum = (int)m_modelindex.size();
+		int modelindex;
+		for (modelindex = 0; modelindex < modelnum; modelindex++) {
+			CModel* curmodel = m_modelindex[modelindex].modelptr;
+			if (curmodel) {
+				curmodel->SetUpdateSlotReq(curmodel->GetTopBone(false), m_updateslot);
+			}
+		}
+	}
+}
+
 int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe, int loopstartflag)
 {
 	if (g_changeUpdateThreadsNum) {
@@ -178,17 +194,6 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* 
 	}
 
 	if (!m_modelindex.empty()) {
-
-		//m_updateslot = (int)(!(m_updateslot != 0));
-		m_updateslot = 0;//2024/03/12 DX11のときはRender中にも計算した方が効果的だったが　DX12ではFreeFps時にどこがブロッキングするのかよく分からないので処理ごとに待つことにした
-		int updateslot;
-		//if (loopstartflag == 0) {
-			updateslot = m_updateslot;
-		//}
-		//else {
-		//	updateslot = m_updateslot + 2;//loopstart時のマーク
-		//}
-
 
 		//m_totalupdatethreadsnum = 0;
 
@@ -204,7 +209,7 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* 
 
 				if (curmodel->GetRefPosFlag() == false) {//2024/02/06
 					ChaMatrix wmat = curmodel->GetWorldMat();
-					curmodel->UpdateMatrix(limitdegflag, &wmat, vmat, pmat, needwaitflag, updateslot);
+					curmodel->UpdateMatrix(limitdegflag, &wmat, vmat, pmat, needwaitflag);// , updateslot);
 				}
 
 				//2023/11/03
@@ -235,10 +240,6 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* 
 		//}
 
 
-		//2024/03/12 DX11のときはRender中にも計算した方が効果的だったが　DX12ではFreeFps時にどこがブロッキングするのかよく分からないので処理ごとに待つことにした
-		WaitForUpdateMatrixModels();
-
-
 	}
 
 	return 0;
@@ -260,11 +261,11 @@ int ChaScene::UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, ChaMatri
 	bool needwaitflag = true;//!!!!!!!!!!!!
 	if (srcmodel->GetCurMotInfo()) {
 		srcmodel->SetMotionFrame(srcframe);
-		srcmodel->UpdateMatrix(limitdegflag, wmat, vmat, pmat, needwaitflag, m_updateslot);
+		srcmodel->UpdateMatrix(limitdegflag, wmat, vmat, pmat, needwaitflag);// , m_updateslot);
 	}
 	else {
 		//モーションが無い場合にもChkInViewを呼ぶためにUpdateMatrix呼び出しは必要
-		srcmodel->UpdateMatrix(limitdegflag, wmat, vmat, pmat, needwaitflag, m_updateslot);
+		srcmodel->UpdateMatrix(limitdegflag, wmat, vmat, pmat, needwaitflag);//, m_updateslot);
 	}
 
 	return 0;
@@ -411,18 +412,8 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 		return 0;
 	}
 
-	//2023/11/09
-	//マウスホイールで　ロングタイムラインのフレームを移動する際に
-	//前フレーム以前のゴーストがみえないように calcslotflag = trueを SetShaderConst()に渡す
 	bool calcslotflag;
-	//if (g_previewFlag == 0) {
-	//	calcslotflag = true;
-	//}
-	//else {
-	//	calcslotflag = false;
-	//}
-	calcslotflag = true;//2024/03/12 DX11のときはRender中にも計算した方が効果的だったが　DX12ではFreeFps時にどこがブロッキングするのかよく分からないので処理ごとに待つことにした
-
+	calcslotflag = false;
 
 
 	//####################################################################################
@@ -596,9 +587,6 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 
 
 
-		//2024/03/12 DX11のときはRender中にも計算した方が効果的だったが　DX12ではFreeFps時にどこがブロッキングするのかよく分からないので処理ごとに待つことにした
-
-
 		//#########################################################################################################################
 		//2023/11/01
 		//姿勢データをダブルバッファ化した
@@ -694,18 +682,8 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 	CModel* curmodel = srcmodel;
 
 
-	//2023/11/09
-	//マウスホイールで　ロングタイムラインのフレームを移動する際に
-	//前フレーム以前のゴーストがみえないように calcslotflag = trueを SetShaderConst()に渡す
 	bool calcslotflag;
-	//if (g_previewFlag == 0) {
-	//	calcslotflag = true;
-	//}
-	//else {
-	//	calcslotflag = false;
-	//}
-	calcslotflag = true;//2024/03/12 DX11のときはRender中にも計算した方が効果的だったが　DX12ではFreeFps時にどこがブロッキングするのかよく分からないので処理ごとに待つことにした
-
+	calcslotflag = false;
 
 
 	//####################################################################################
@@ -860,18 +838,8 @@ int ChaScene::RenderInstancingModel(CModel* srcmodel, bool forcewithalpha,
 	CModel* curmodel = srcmodel;
 
 
-	//2023/11/09
-	//マウスホイールで　ロングタイムラインのフレームを移動する際に
-	//前フレーム以前のゴーストがみえないように calcslotflag = trueを SetShaderConst()に渡す
 	bool calcslotflag;
-	//if (g_previewFlag == 0) {
-	//	calcslotflag = true;
-	//}
-	//else {
-	//	calcslotflag = false;
-	//}
-	calcslotflag = true;//2024/03/12 DX11のときはRender中にも計算した方が効果的だったが　DX12ではFreeFps時にどこがブロッキングするのかよく分からないので処理ごとに待つことにした
-
+	calcslotflag = false;
 
 
 	//####################################################################################
@@ -1377,7 +1345,7 @@ int ChaScene::Motion2Bt(bool limitdegflag, double nextframe,
 			for (updatecount = 0; updatecount < m_created_Motion2BtThreadsNum; updatecount++) {
 				CThreadingMotion2Bt* curupdate = m_Motion2BtThreads + updatecount;
 				curupdate->Motion2Bt(limitdegflag, nextframe, 
-					pmView, pmProj, loopstartflag, m_updateslot);
+					pmView, pmProj, loopstartflag);//, m_updateslot);
 			}
 			WaitMotion2BtFinished();//次に順番に計算することがあるので　待機が必要
 		}
@@ -1428,7 +1396,7 @@ int ChaScene::SetBtMotion(bool limitdegflag, double nextframe,
 			int updatecount;
 			for (updatecount = 0; updatecount < m_created_SetBtMotionThreadsNum; updatecount++) {
 				CThreadingSetBtMotion* curupdate = m_SetBtMotionThreads + updatecount;
-				curupdate->SetBtMotion(limitdegflag, nextframe, pmView, pmProj, smodel, srcreccnt, m_updateslot);
+				curupdate->SetBtMotion(limitdegflag, nextframe, pmView, pmProj, smodel, srcreccnt);//, m_updateslot);
 			}
 			//WaitSetBtMotionFinished();//レンダー中に計算し　レンダー後に待機するので　コメントアウト
 		}
@@ -1476,9 +1444,6 @@ int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe,
 		_ASSERT(0);
 		return 1;
 	}
-
-	//m_updateslot = (int)(!(m_updateslot != 0));
-	m_updateslot = 0;//2024/03/12 DX11のときはRender中にも計算した方が効果的だったが　DX12ではFreeFps時にどこがブロッキングするのかよく分からないので処理ごとに待つことにした
 
 
 	Motion2Bt(limitdegflag, nextframe, pmView, pmProj, loopstartflag);//MultiThreading per CModel. Wait threads on return.

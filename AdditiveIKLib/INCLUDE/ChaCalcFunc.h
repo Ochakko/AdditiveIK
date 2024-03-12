@@ -93,7 +93,7 @@ public:
 
 
 	int Motion2Bt(CModel* srcmodel, bool limitdegflag, double nextframe, 
-		ChaMatrix* pmView, ChaMatrix* pmProj, int updateslot);
+		ChaMatrix* pmView, ChaMatrix* pmProj);//, int updateslot);
 
 
 //##############

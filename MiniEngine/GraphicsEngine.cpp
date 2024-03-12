@@ -627,10 +627,10 @@ void GraphicsEngine::EndRender(ChaScene* srcchascene)
 
 	//m_directXTKGfxMemroy->GarbageCollect();
 
-	//if (srcchascene) {
-	//	//UpdateMatrixスレッド終了待ち
-	//	srcchascene->WaitForUpdateMatrixModels();
-	//}
+	if (srcchascene) {
+		//UpdateMatrixスレッド終了待ち
+		srcchascene->WaitForUpdateMatrixModels();
+	}
 
 	//描画完了待ち。
 	WaitDraw();

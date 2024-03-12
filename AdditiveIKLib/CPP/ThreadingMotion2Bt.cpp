@@ -58,7 +58,7 @@ int CThreadingMotion2Bt::InitParams()
 	matView.SetIdentity();
 	matProj.SetIdentity();
 	loopstartflag = 0;
-	updateslot = 0;
+	//updateslot = 0;
 
 	return 0;
 }
@@ -105,7 +105,7 @@ int CThreadingMotion2Bt::ThreadFunc()
 						}
 						else {
 							if (m_model->GetCurMotInfo()) {
-								m_model->Motion2Bt(limitdegflag, nextframe, &matView, &matProj, updateslot);
+								m_model->Motion2Bt(limitdegflag, nextframe, &matView, &matProj);//, updateslot);
 							}
 							m_model->PlusPlusBtCnt();
 						}
@@ -158,7 +158,7 @@ int CThreadingMotion2Bt::ThreadFunc()
 						}
 						else {
 							if (m_model->GetCurMotInfo()) {
-								m_model->Motion2Bt(limitdegflag, nextframe, &matView, &matProj, updateslot);
+								m_model->Motion2Bt(limitdegflag, nextframe, &matView, &matProj);//, updateslot);
 							}
 							m_model->PlusPlusBtCnt();
 						}
@@ -210,7 +210,7 @@ int CThreadingMotion2Bt::SetModel(CModel* srcmodel)
 
 int CThreadingMotion2Bt::Motion2Bt(bool srclimitdegflag, double srcnextframe, 
 	ChaMatrix* srcpmView, ChaMatrix* srcpmProj, 
-	int srcloopstartflag, int srcupdateslot)
+	int srcloopstartflag)//, int srcupdateslot)
 {
 	if (!m_model || !srcpmView || !srcpmProj) {
 		return 1;
@@ -230,7 +230,7 @@ int CThreadingMotion2Bt::Motion2Bt(bool srclimitdegflag, double srcnextframe,
 		matView = *srcpmView;
 		matProj = *srcpmProj;
 		loopstartflag = srcloopstartflag;
-		updateslot = srcupdateslot;
+		//updateslot = srcupdateslot;
 
 		LeaveCriticalSection(&m_CritSection);
 		InterlockedExchange(&m_start_state, 1L);

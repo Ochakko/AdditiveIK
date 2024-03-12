@@ -1163,7 +1163,7 @@ int CBtObject::SetBtMotion(bool limitdegflag, ChaMatrix curtraanim)
 	localmat = befpivotmat * xlocalrotmat * aftpivotmat * curtraanim;
 	ChaMatrix parentbtmat;
 	if (m_bone->GetParent(false) && m_bone->GetParent(false)->IsSkeleton()) {
-		parentbtmat = m_bone->GetParent(false)->GetBtMat();
+		parentbtmat = m_bone->GetParent(false)->GetBtMat(true);
 	}
 	else {
 		parentbtmat.SetIdentity();
