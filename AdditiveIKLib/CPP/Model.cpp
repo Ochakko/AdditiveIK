@@ -1653,7 +1653,8 @@ int CModel::RenderTest(bool withalpha, myRenderer::RenderingEngine* re, int ligh
 			}
 
 			bool forcewithalpha = false;
-			bool calcslotflag = false;
+			//bool calcslotflag = false;
+			bool calcslotflag = true;
 			bool zcmpalways = false;
 			bool zenable = true;
 			int refposindex = 0;

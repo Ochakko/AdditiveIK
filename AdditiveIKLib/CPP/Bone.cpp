@@ -788,7 +788,14 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 		return 0;
 	}
 
-	m_updateslot = updateslot;
+	if (updateslot >= 2) {
+		m_updateslot = updateslot - 2;
+	}
+	else {
+		m_updateslot = updateslot;
+	}
+
+	
 
 
 	//2023/01/18 注意書修正
@@ -813,9 +820,9 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 			//###################################
 			//補間のためにroundingframeではない
 			//###################################
-			CallF(CalcFBXMotion(limitdegflag, srcmotid, srcframe, &(m_curmp[updateslot]), &existflag), return 1);
+			CallF(CalcFBXMotion(limitdegflag, srcmotid, srcframe, &(m_curmp[m_updateslot]), &existflag), return 1);
 			//newworldmat = m_curmp.GetWorldMat();// **wmat;
-			newworldmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[updateslot]));
+			newworldmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot]));
 
 			//2023/02/03
 			//計算済を取得して補間するだけなので　m_curmp以外にはセットしない
@@ -838,16 +845,16 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 		//2023/02/02
 		//modelのworldmatが掛かっていないアニメ姿勢も保存　GetCurrent..., CalcCurrent...用
-			m_curmp[updateslot].SetAnimMat(newworldmat);
+			m_curmp[m_updateslot].SetAnimMat(newworldmat);
 
 
 		//modelのworldmatを掛ける
 			//skinmeshの変換の際にはシェーダーでg_hmWorldは掛けない　すでにg_hmWorldが掛かっている必要有
 			ChaMatrix tmpmat = newworldmat * *wmat; // !!!!!!!!!!!!!!!!!!!!!!!!!!!
-			SetWorldMat(limitdegflag, srcmotid, roundingframe, tmpmat, &(m_curmp[updateslot]));//roundingframe!!!!
+			SetWorldMat(limitdegflag, srcmotid, roundingframe, tmpmat, &(m_curmp[m_updateslot]));//roundingframe!!!!
 
 			if (limitdegflag == true) {
-				m_curmp[updateslot].SetCalcLimitedWM(2);
+				m_curmp[m_updateslot].SetCalcLimitedWM(2);
 			}
 
 			ChaVector3 jpos = GetJointFPos();
@@ -858,15 +865,31 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 		}
 		else {
 			_ASSERT(0);
-			m_curmp[updateslot].InitParams();
-			m_curmp[updateslot].SetWorldMat(*wmat);
-			m_curmp[updateslot].SetFrame(roundingframe);
-			SetWorldMat(limitdegflag, srcmotid, roundingframe, *wmat, &(m_curmp[updateslot]));//roundingframe!!!!
+			m_curmp[m_updateslot].InitParams();
+			m_curmp[m_updateslot].SetWorldMat(*wmat);
+			m_curmp[m_updateslot].SetFrame(roundingframe);
+			SetWorldMat(limitdegflag, srcmotid, roundingframe, *wmat, &(m_curmp[m_updateslot]));//roundingframe!!!!
 		}
 
+		//if (updateslot >= 2) {
+		//  //Render処理中に書き込むと余計に乱れて難しくなるのでコメントアウト
+		// 
+		//	//2024/03/12 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
+		//	int otherslot = (int)(!(m_updateslot != 0));
+		//	m_curmp[otherslot].SetWorldMat(m_curmp[m_updateslot].GetWorldMat());
+		//	m_curmp[otherslot].SetLimitedWM(m_curmp[m_updateslot].GetLimitedWM());
+		//	m_curmp[otherslot].SetAnimMat(m_curmp[m_updateslot].GetAnimMat());
+		//	m_curmp[otherslot].SetFrame(m_curmp[m_updateslot].GetFrame());
+		//	if (limitdegflag == true) {
+		//		m_curmp[otherslot].SetCalcLimitedWM(2);
+		//	}
+		//}
+
+
 		if (m_parmodel && (m_parmodel->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
-			bool settobothflag = true;//2023/11/04 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
-			SetBtMat(GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[updateslot])), settobothflag);
+			//bool settobothflag = true;//2023/11/04 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
+			bool settobothflag = false;//2023/03/12
+			SetBtMat(GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot])), settobothflag);
 		}
 	}
 	else{

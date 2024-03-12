@@ -2137,8 +2137,9 @@ static int OnPluginClose();
 //##########################
 LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static HWND Create3DWnd(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd);
-static void OnUserFrameMove(double fTime, float fElapsedTime);
-static void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fTime, float fElapsedTime);
+static void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag);
+static void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, 
+	double fTime, float fElapsedTime, int loopstartflag);
 
 //################
 //GUI Plate Menu
@@ -3396,10 +3397,11 @@ INT WINAPI wWinMain(
 
 			if (g_underWriteFbx == false) {//2024/02/10
 				//ドキュメント更新
-				OnUserFrameMove(s_fTime, s_fElapsedTime);
+				int loopstartflag = 0;
+				OnUserFrameMove(s_fTime, s_fElapsedTime, &loopstartflag);
 
 				//ビュー更新
-				OnFrameRender(&renderingEngine, &renderContext, s_fTime, s_fElapsedTime);
+				OnFrameRender(&renderingEngine, &renderContext, s_fTime, s_fElapsedTime, loopstartflag);
 
 				if (g_infownd && (dbgcount < 60)) {
 					g_infownd->UpdateWindow();//起動時に白くなる不具合に対して　応急処置
@@ -5606,11 +5608,15 @@ void OnDestroyDevice()
 }
 
 
-void OnUserFrameMove(double fTime, float fElapsedTime)
+void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 {
 
 	static double savetime = 0.0;
 	static int capcnt = 0;
+
+	if (ploopstartflag) {
+		*ploopstartflag = 0;
+	}
 
 	//if (g_bvh2fbxbatchflag || g_motioncachebatchflag || g_retargetbatchflag) {
 	//if((InterlockedAdd(&g_bvh2fbxbatchflag, 0) != 0) || (InterlockedAdd(&g_motioncachebatchflag, 0) != 0) || (InterlockedAdd(&g_retargetbatchflag, 0) != 0)){
@@ -5700,6 +5706,10 @@ void OnUserFrameMove(double fTime, float fElapsedTime)
 		int endflag = 0;
 		int loopstartflag = 0;
 		OnFrameProcessTime(difftime, &nextframe, &endflag, &loopstartflag);
+		if (ploopstartflag) {
+			*ploopstartflag = loopstartflag;
+		}
+
 
 
 		//#############
@@ -6018,7 +6028,8 @@ void OnRenderNowLoading()
 
 }
 
-void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fTime, float fElapsedTime)
+void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, 
+	double fTime, float fElapsedTime, int loopstartflag)
 {
 	if (!re || !rc) {
 		_ASSERT(0);
@@ -6106,7 +6117,8 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 					s_model->SetRefPosFlag(false);
 				}
 			}
-			bool calcslotflag = false;
+			//bool calcslotflag = false;
+			bool calcslotflag = true;
 			s_chascene->SetBoneMatrixForShader(btflag, calcslotflag);
 			s_chascene->RenderModels(re, lightflag, diffusemult, btflag);
 			if (s_model && s_sprefpos.state) {
@@ -22828,7 +22840,8 @@ int ExportFBXFile()
 	g_previewFlag = 0;
 	s_owpLTimeline->setCurrentTime(0.0, true);
 
-	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, 0.0);
+	int loopstartflag = 1;
+	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, 0.0, loopstartflag);
 	
 	WCHAR filename[MAX_PATH] = { 0L };
 	OPENFILENAME ofn1;
@@ -22935,7 +22948,8 @@ int ExportBntFile()
 	g_previewFlag = 0;
 	s_owpLTimeline->setCurrentTime(0.0, true);
 
-	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, 0.0);
+	int loopstartflag = 1;
+	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, 0.0, loopstartflag);
 
 
 
@@ -31788,7 +31802,8 @@ int OnFramePreviewStop()
 		currenttime = 0.0;
 	}
 	
-	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, currenttime);
+	int loopstartflag = 1;
+	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, currenttime, loopstartflag);
 
 	//s_tum.UpdateMatrix(s_modelindex, &s_matVP);//ブロッキング
 
@@ -31825,7 +31840,7 @@ int OnFramePreviewNormal(double nextframe, double difftime, int endflag, int loo
 	//	g_previewFlag = 0;
 	//}
 
-	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, nextframe);
+	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, nextframe, loopstartflag);
 
 #ifndef SKIP_EULERGRAPH__
 	if (s_owpTimeline) {
@@ -32464,7 +32479,8 @@ int OnFrameTimeLineWnd()
 			s_owpLTimeline->setCurrentTime(s_buttonselectstart, false);
 		}
 		if (s_chascene) {
-			s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, s_buttonselectstart);
+			int loopstartflag = 1;
+			s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, s_buttonselectstart, loopstartflag);
 		}
 
 		Bone2AngleLimit();

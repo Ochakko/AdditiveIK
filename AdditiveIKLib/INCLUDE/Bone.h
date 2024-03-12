@@ -856,17 +856,23 @@ public: //accesser
 
 
 	CMotionPoint GetCurMp(bool calcslotflag = false) {
-		if (calcslotflag == false) {
-			//計算済のm_curmpを取得する場合
-			int renderslot = (int)(!(m_updateslot != 0));
-			return m_curmp[renderslot];
-		}
-		else {
-			//姿勢の計算中にGetCurMpする場合
-			return m_curmp[m_updateslot];
-		}
+		//if (calcslotflag == false) {
+		//	//計算済のm_curmpを取得する場合
+		//	int renderslot = (int)(!(m_updateslot != 0));
+		//	return m_curmp[renderslot];
+		//}
+		//else {
+		//	//姿勢の計算中にGetCurMpする場合
+		//	return m_curmp[m_updateslot];
+		//}
+		
+		return m_curmp[0];//2024/03/12 DX11のときはRender中にも計算した方が効果的だったが　DX12ではFreeFps時にどこがブロッキングするのかよく分からないので処理ごとに待つことにした
+
 	};
-	void SetCurMp( CMotionPoint srcmp ){ m_curmp[m_updateslot] = srcmp; };
+	void SetCurMp( CMotionPoint srcmp ){ 
+		//m_curmp[m_updateslot] = srcmp; 
+		m_curmp[0] = srcmp;//2024/03/12 DX11のときはRender中にも計算した方が効果的だったが　DX12ではFreeFps時にどこがブロッキングするのかよく分からないので処理ごとに待つことにした
+	};
 
 	//CMotionPoint GetBefMp(){ return m_befmp; };
 	//void SetBefMp(CMotionPoint srcmp){ m_befmp = srcmp; };
@@ -1282,30 +1288,34 @@ public: //accesser
 	//ChaMatrix GetBefBtMat(){ return m_befbtmat; };
 	//void SetBefBtMat(ChaMatrix srcmat){ m_befbtmat = srcmat; };
 	ChaMatrix GetBtMat(bool calcslotflag = false){
-		if (calcslotflag == false) {
-			//計算済のm_curmpを取得する場合
-			int renderslot = (int)(!(m_updateslot != 0));
-			return m_btmat[renderslot];
-		}
-		else {
-			//姿勢の計算中にGetCurMpする場合
-			return m_btmat[m_updateslot];
-		}
+		//if (calcslotflag == false) {
+		//	//計算済のm_curmpを取得する場合
+		//	int renderslot = (int)(!(m_updateslot != 0));
+		//	return m_btmat[renderslot];
+		//}
+		//else {
+		//	//姿勢の計算中にGetCurMpする場合
+		//	return m_btmat[m_updateslot];
+		//}
+
+		return m_btmat[0];//2024/03/12 DX11のときはRender中にも計算した方が効果的だったが　DX12ではFreeFps時にどこがブロッキングするのかよく分からないので処理ごとに待つことにした
+
 	};
 	//ChaMatrix GetInvBtMat(){ ChaMatrix retmat; ChaMatrixInverse(&retmat, NULL, &m_btmat); return retmat; };
 	void SetBtMat(ChaMatrix srcmat, bool settobothflag = false){
-		////if (GetBtFlag() == 0){
-		//	SetBefBtMat(m_btmat[m_updateslot]);
-		////}
+		//////if (GetBtFlag() == 0){
+		////	SetBefBtMat(m_btmat[m_updateslot]);
+		//////}
 
-		if (settobothflag == false) {
-			m_btmat[m_updateslot] = srcmat;
-		}
-		else {
-			m_btmat[0] = srcmat;
-			m_btmat[1] = srcmat;
-		}
-		
+		//if (settobothflag == false) {
+		//	m_btmat[m_updateslot] = srcmat;
+		//}
+		//else {
+		//	m_btmat[0] = srcmat;
+		//	m_btmat[1] = srcmat;
+		//}
+
+		m_btmat[0] = srcmat;//2024/03/12 DX11のときはRender中にも計算した方が効果的だったが　DX12ではFreeFps時にどこがブロッキングするのかよく分からないので処理ごとに待つことにした		
 	};
 	void SetBtEul(ChaVector3 srceul) {
 		m_bteul = srceul;
