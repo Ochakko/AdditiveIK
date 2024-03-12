@@ -617,7 +617,7 @@ static RECT s_rcsidemenuwnd;
 static RECT s_rcrigidwnd;
 static RECT s_rcshadertypewnd;
 static RECT s_rcinfownd;
-static RECT s_rcmainmenuaimbarwnd;
+static RECT s_rctopsliderswnd;
 static RECT s_rcmodelpanel;
 static RECT s_rcmotionpanel;
 static RECT s_rccamerapanel;
@@ -985,23 +985,23 @@ static int s_filterindex = 1;
 static HMENU	s_cursubmenu = 0;
 
 
-#define MAINMENUAIMBARH		32
-
+//#define TOPSLIDERSWNDH		32
+#define TOPSLIDERSWNDH		40
 
 static int s_totalwndwidth = (1216 + 450);
 static int s_totalwndheight = 950;
 static int s_2ndposy = 600;
 
 static int s_mainwidth = 800;
-static int s_mainheight = (520 - MAINMENUAIMBARH);
+static int s_mainheight = (520 - TOPSLIDERSWNDH);
 static int s_bufwidth = 800;
-static int s_bufheight = (520 - MAINMENUAIMBARH);
+static int s_bufheight = (520 - TOPSLIDERSWNDH);
 
 static int s_timelinewidth = 400;
-static int s_timelineheight = s_2ndposy - MAINMENUAIMBARH;
+static int s_timelineheight = s_2ndposy - TOPSLIDERSWNDH;
 
 static int s_longtimelinewidth = 970;
-static int s_longtimelineheight = s_totalwndheight - s_2ndposy - MAINMENUAIMBARH - 18;
+static int s_longtimelineheight = s_totalwndheight - s_2ndposy - TOPSLIDERSWNDH - 18;
 
 static int s_toolwidth = 230;
 static int s_toolheight = 290;
@@ -1015,14 +1015,14 @@ static int s_camerawindowwidth = 400;
 static int s_camerawindowheight = 300;
 
 static int s_infowinwidth = s_mainwidth;
-static int s_infowinheight = s_2ndposy - s_mainheight - MAINMENUAIMBARH;
+static int s_infowinheight = s_2ndposy - s_mainheight - TOPSLIDERSWNDH;
 
 static int s_sidemenuwidth = 450;
-//static int s_sidemenuheight = MAINMENUAIMBARH;
-static int s_sidemenuheight = MAINMENUAIMBARH + 16;
+//static int s_sidemenuheight = TOPSLIDERSWNDH;
+static int s_sidemenuheight = TOPSLIDERSWNDH + 16;
 
 static int s_sidewidth = s_sidemenuwidth;
-static int s_sideheight = s_totalwndheight - MAINMENUAIMBARH - s_sidemenuheight - 28;
+static int s_sideheight = s_totalwndheight - TOPSLIDERSWNDH - s_sidemenuheight - 28;
 
 static int s_guibarX0 = 120;
 
@@ -1131,8 +1131,13 @@ static bool s_camdistsliderflag = false;
 static float s_camdistsliderval = g_camdist;
 
 
-static OrgWindow* s_mainmenuaimbarWnd = 0;
-static OWP_Label* s_mainmenulabel = 0;
+static OrgWindow* s_topSlidersWnd = 0;
+static OWP_Separator* s_topSlidersSeparator1 = 0;
+static OWP_Separator* s_topSlidersSeparator2 = 0;
+static OWP_Slider* s_owpEditRateSlider = 0;
+static OWP_Slider* s_owpSpeedSlider = 0;
+static OWP_Slider* s_owpTopPosSlider = 0;
+//static OWP_Label* s_mainmenulabel = 0;
 
 
 static OrgWindow* s_placefolderWnd = 0;
@@ -1449,6 +1454,12 @@ static int s_checksimilarobjno = 0;
 static int s_calclimitedwmState = 0;
 
 static bool s_EcursorFlag = false;			// カーソル移動フラグ
+
+static bool s_topslidersEditRateFlag = false;
+static bool s_topslidersSpeedFlag = false;
+static bool s_topslidersTopPosFlag = false;
+
+
 
 
 static CMQOMaterial* s_toonmqomaterial = nullptr;//toonスライダーを離した後の処理用
@@ -2322,7 +2333,7 @@ static int CreateRigidWnd();
 static int DestroyRigidWnd();
 static void InitRigidWnd();
 static int CreateSideMenuWnd();
-static int CreateMainMenuAimBarWnd();
+static int CreateTopSlidersWnd();
 static int CreateImpulseWnd();
 static int CreateGPlaneWnd();
 static int CreateToolWnd();
@@ -3262,7 +3273,7 @@ INT WINAPI wWinMain(
 	CreateLayerWnd();
 	CreateInfoWnd();
 	CreateSideMenuWnd();
-	CreateMainMenuAimBarWnd();
+	CreateTopSlidersWnd();
 
 	CreateLightsWnd();
 	CreateGUIDlgDispParams();
@@ -3423,7 +3434,7 @@ int CheckResolution()
 
 	/*
 	//基準とする大きさ　mainwindowの大きさ
-	(1216 + 450) * 2, (950 - MAINMENUAIMBARH) * 2
+	(1216 + 450) * 2, (950 - TOPSLIDERSWNDH) * 2
 	*/
 
 
@@ -3440,7 +3451,7 @@ int CheckResolution()
 		if (desktopwnd) {
 			RECT desktoprect;
 			::GetClientRect(desktopwnd, &desktoprect);
-			if ((desktoprect.right >= (s_totalwndwidth * 2)) && (desktoprect.bottom >= ((s_totalwndheight - MAINMENUAIMBARH) * 2))) {
+			if ((desktoprect.right >= (s_totalwndwidth * 2)) && (desktoprect.bottom >= ((s_totalwndheight - TOPSLIDERSWNDH) * 2))) {
 
 				CSelectLSDlg dlg;
 				int dlgret = (int)dlg.DoModal();
@@ -3464,27 +3475,27 @@ int CheckResolution()
 					s_spsidemargin = 60.0f;
 
 					s_totalwndwidth = (1216 + 450) * 2;
-					s_totalwndheight = (950 - MAINMENUAIMBARH) * 2;
+					s_totalwndheight = (950 - TOPSLIDERSWNDH) * 2;
 					s_2ndposy = 600 * 2;
 
 
 					//s_timelinewidth = 400 * 2;
 					//s_timelinewidth = s_toolwidth;
 					s_timelinewidth = 600;
-					s_timelineheight = s_2ndposy - MAINMENUAIMBARH;
+					s_timelineheight = s_2ndposy - TOPSLIDERSWNDH;
 
 					s_toolwidth = 400;
-					s_toolheight = s_totalwndheight - s_2ndposy - (MAINMENUAIMBARH + 18) * 2 + MAINMENUAIMBARH + 8;
+					s_toolheight = s_totalwndheight - s_2ndposy - (TOPSLIDERSWNDH + 18) * 2 + TOPSLIDERSWNDH + 8;
 
 					s_sidemenuwidth = 600;
-					s_sidemenuheight = MAINMENUAIMBARH + 16;
+					s_sidemenuheight = TOPSLIDERSWNDH + 16;
 					s_sidewidth = s_sidemenuwidth;
 					s_sideheight = s_totalwndheight - s_sidemenuheight - 28 * 2 - 4;
 
 					//s_mainwidth = 800 * 2 + 340 + 450 - 64 + 60 - s_modelwindowwidth;
 					//s_mainwidth = s_totalwndwidth - s_timelinewidth - s_modelwindowwidth - s_sidewidth - cXFrame * 2 - cXborder * 8;
 					s_mainwidth = s_totalwndwidth - s_timelinewidth - s_modelwindowwidth - s_sidewidth - 16;
-					s_mainheight = (520 * 2 - MAINMENUAIMBARH);
+					s_mainheight = (520 * 2 - TOPSLIDERSWNDH);
 					
 					//s_bufwidth = (800 * 2);
 					//s_bufwidth = 800 * 2 + 340 + 450 - 64 + 60 - s_modelwindowwidth;
@@ -3495,11 +3506,11 @@ int CheckResolution()
 					//s_longtimelinewidth = 970 * 2;
 					//s_longtimelinewidth = s_mainwidth + s_modelwindowwidth;
 					s_longtimelinewidth = s_totalwndwidth - s_toolwidth - s_sidewidth - 16;
-					//s_longtimelineheight = (s_totalwndheight - s_2ndposy - MAINMENUAIMBARH - 18) * 2;
-					s_longtimelineheight = s_totalwndheight - s_2ndposy - (MAINMENUAIMBARH + 18) * 2 + MAINMENUAIMBARH + 8;
+					//s_longtimelineheight = (s_totalwndheight - s_2ndposy - TOPSLIDERSWNDH - 18) * 2;
+					s_longtimelineheight = s_totalwndheight - s_2ndposy - (TOPSLIDERSWNDH + 18) * 2 + TOPSLIDERSWNDH + 8;
 
 					s_infowinwidth = s_mainwidth;
-					s_infowinheight = (s_2ndposy - s_mainheight - MAINMENUAIMBARH);
+					s_infowinheight = (s_2ndposy - s_mainheight - TOPSLIDERSWNDH);
 
 
 					s_modelwindowheight = 460;
@@ -3547,30 +3558,30 @@ int CheckResolution()
 
 		s_toolwidth = 230;
 		//s_toolheight = 290;
-		s_toolheight = s_totalwndheight - s_2ndposy - MAINMENUAIMBARH - 28;
+		s_toolheight = s_totalwndheight - s_2ndposy - TOPSLIDERSWNDH - 28;
 
 		s_mainwidth = 800 - 64;
-		s_mainheight = (520 - MAINMENUAIMBARH);
+		s_mainheight = (520 - TOPSLIDERSWNDH);
 
 		s_bufwidth = 800 - 64;
-		s_bufheight = (520 - MAINMENUAIMBARH);
+		s_bufheight = (520 - TOPSLIDERSWNDH);
 
 
 		s_timelinewidth = 400;
-		s_timelineheight = s_2ndposy - MAINMENUAIMBARH;
+		s_timelineheight = s_2ndposy - TOPSLIDERSWNDH;
 
 		s_longtimelinewidth = 970 - 64;
 		s_longtimelineheight = s_toolheight;
 
 
 		s_infowinwidth = s_mainwidth;
-		s_infowinheight = (s_2ndposy - s_mainheight - MAINMENUAIMBARH);
+		s_infowinheight = (s_2ndposy - s_mainheight - TOPSLIDERSWNDH);
 
 		s_sidemenuwidth = 450 + 64 - 4;
-		s_sidemenuheight = MAINMENUAIMBARH + 16;
+		s_sidemenuheight = TOPSLIDERSWNDH + 16;
 
 		s_sidewidth = s_sidemenuwidth;
-		s_sideheight = s_totalwndheight - MAINMENUAIMBARH - s_sidemenuheight - 28;
+		s_sideheight = s_totalwndheight - TOPSLIDERSWNDH - s_sidemenuheight - 28;
 
 		s_guibarX0 = 120;
 
@@ -3605,6 +3616,7 @@ void InitApp()
 	g_pasteTranslation = true;
 
 	g_jumpgravity = 65;
+
 
 	InitSprites();
 
@@ -3771,9 +3783,9 @@ void InitApp()
 	// ここでs_mainwidth, s_mainheightを初期化してはいけない
 	//########################################################################
 	//s_mainwidth = 800;
-	//s_mainheight = (520 - MAINMENUAIMBARH);
+	//s_mainheight = (520 - TOPSLIDERSWNDH);
 	//s_bufwidth = 800;
-	//s_bufheight = (520 - MAINMENUAIMBARH);
+	//s_bufheight = (520 - TOPSLIDERSWNDH);
 
 	//{
 	//	g_hRenderBoneL0 = 0;
@@ -4247,6 +4259,10 @@ void InitApp()
 	s_scaleAllInitFlag = false;
 	s_checksimilarFlag = false;
 	s_checksimilarobjno = 0;
+	s_topslidersEditRateFlag = false;
+	s_topslidersSpeedFlag = false;
+	s_topslidersTopPosFlag = false;
+
 
 	s_toonmqomaterial = nullptr;
 	s_toonparamchange = false;
@@ -4360,10 +4376,10 @@ void InitApp()
 	s_rcinfownd.left = 0;
 	s_rcinfownd.bottom = 0;
 	s_rcinfownd.right = 0;
-	s_rcmainmenuaimbarwnd.top = 0;
-	s_rcmainmenuaimbarwnd.left = 0;
-	s_rcmainmenuaimbarwnd.bottom = 0;
-	s_rcmainmenuaimbarwnd.right = 0;
+	s_rctopsliderswnd.top = 0;
+	s_rctopsliderswnd.left = 0;
+	s_rctopsliderswnd.bottom = 0;
+	s_rctopsliderswnd.right = 0;
 	s_rcmodelpanel.top = 0;
 	s_rcmodelpanel.left = 0;
 	s_rcmodelpanel.bottom = 0;
@@ -4548,8 +4564,13 @@ void InitApp()
 	s_camdistsliderflag = false;
 	s_camdistsliderval = g_camdist;
 
-	s_mainmenuaimbarWnd = 0;
-	s_mainmenulabel = 0;
+	s_topSlidersWnd = 0;
+	s_topSlidersSeparator1 = 0;
+	s_topSlidersSeparator2 = 0;
+	s_owpEditRateSlider = 0;
+	s_owpSpeedSlider = 0;
+	s_owpTopPosSlider = 0;
+	//s_mainmenulabel = 0;
 
 	s_toolWnd = 0;
 	s_toolSeparator = 0;
@@ -5356,14 +5377,35 @@ void OnDestroyDevice()
 		s_sidemenuWnd = 0;
 	}
 
-	if (s_mainmenuaimbarWnd) {
-		delete s_mainmenuaimbarWnd;
-		s_mainmenuaimbarWnd = 0;
+	if (s_topSlidersWnd) {
+		delete s_topSlidersWnd;
+		s_topSlidersWnd = 0;
 	}
-	if (s_mainmenulabel) {
-		delete s_mainmenulabel;
-		s_mainmenulabel = 0;
+	if (s_owpEditRateSlider) {
+		delete s_owpEditRateSlider;
+		s_owpEditRateSlider = 0;
 	}
+	if (s_owpSpeedSlider) {
+		delete s_owpSpeedSlider;
+		s_owpSpeedSlider = 0;
+	}
+	if (s_owpTopPosSlider) {
+		delete s_owpTopPosSlider;
+		s_owpTopPosSlider = 0;
+	}
+	if (s_topSlidersSeparator1) {
+		delete s_topSlidersSeparator1;
+		s_topSlidersSeparator1 = 0;
+	}
+	if (s_topSlidersSeparator2) {
+		delete s_topSlidersSeparator2;
+		s_topSlidersSeparator2 = 0;
+	}
+
+	//if (s_mainmenulabel) {
+	//	delete s_mainmenulabel;
+	//	s_mainmenulabel = 0;
+	//}
 
 
 	if (s_dmpgroupcheck) {
@@ -6210,7 +6252,7 @@ void PrepairUndo()
 
 			//2023/10/27 1.2.0.27 RC5 : s_LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
 			s_model->SaveUndoMotion(s_LimitDegCheckBoxFlag, g_limitdegflag, s_curboneno, s_curbaseno,
-				&s_editrange, (double)g_applyrate, brushstate, allframeflag);
+				&s_editrange, g_applyrate, brushstate, allframeflag);
 
 			SetCursor(oldcursor);//カーソルを元に戻す
 
@@ -16055,7 +16097,7 @@ int CreateModelPanel()
 
 	if (g_4kresolution) {
 		//4Kの場合には　位置固定フレームに埋め込み
-		s_modelpanelpos = WindowPos(s_timelinewidth, MAINMENUAIMBARH);
+		s_modelpanelpos = WindowPos(s_timelinewidth, TOPSLIDERSWNDH);
 	}
 	else if (s_firstmodelpanelpos) {
 		RECT wnd3drect;
@@ -16074,7 +16116,7 @@ int CreateModelPanel()
 		istopmost,
 		clsname,		//ウィンドウクラス名
 		GetModuleHandle(NULL),	//インスタンスハンドル
-		//WindowPos(s_toolwidth, MAINMENUAIMBARH),		//位置
+		//WindowPos(s_toolwidth, TOPSLIDERSWNDH),		//位置
 		s_modelpanelpos,
 		WindowSize(s_modelwindowwidth, s_modelwindowheight),	//サイズ
 		L"ModelPanel",	//タイトル
@@ -16308,7 +16350,7 @@ int CreateModelPanel()
 
 		//if (s_firstmodelpanelpos) {
 		//	if (g_4kresolution) {
-		//		s_modelpanelpos = WindowPos(s_toolwidth, MAINMENUAIMBARH);
+		//		s_modelpanelpos = WindowPos(s_toolwidth, TOPSLIDERSWNDH);
 		//	}
 		//	else {
 		//		RECT wnd3drect;
@@ -16442,7 +16484,7 @@ int CreateCameraPanel()
 
 	if (g_4kresolution) {
 		//4Kの場合には　位置固定フレームに埋め込み
-		s_camerapanelpos = WindowPos(s_timelinewidth, MAINMENUAIMBARH + s_modelwindowheight + s_motionwindowheight);
+		s_camerapanelpos = WindowPos(s_timelinewidth, TOPSLIDERSWNDH + s_modelwindowheight + s_motionwindowheight);
 	}
 	else if (s_firstcamerapanelpos) {
 		RECT wnd3drect;
@@ -16764,7 +16806,7 @@ int CreateMotionPanel()
 
 	if (g_4kresolution) {
 		//4Kの場合には　位置固定フレームに埋め込み
-		s_motionpanelpos = WindowPos(s_timelinewidth, MAINMENUAIMBARH + s_modelwindowheight);
+		s_motionpanelpos = WindowPos(s_timelinewidth, TOPSLIDERSWNDH + s_modelwindowheight);
 	}
 	else if (s_firstmotionpanelpos) {
 		RECT wnd3drect;
@@ -19502,7 +19544,7 @@ int SetSpParams()
 {
 	SetSpSel3DParams();
 	SetSpAimBarParams();
-	SetSpMenuAimBarParams();//CreateMainMenuAimBarWndよりも後
+	SetSpMenuAimBarParams();//CreateTopSlidersWndよりも後
 	SetSpAxisParams();
 	SetSpUndoParams();
 	SetSpGUISWParams();
@@ -19637,12 +19679,12 @@ int SetSpDispSWParams()
 	//s_spdispsw[SPDISPSW_LIGHTS].dispcenter.y = 486;
 
 
-	//s_spdispsw[SPDISPSW_LIGHTS].dispcenter.y = 486 - MAINMENUAIMBARH;
+	//s_spdispsw[SPDISPSW_LIGHTS].dispcenter.y = 486 - TOPSLIDERSWNDH;
 	if (g_4kresolution) {
-		s_spdispsw[SPDISPSW_LIGHTS].dispcenter.y = 486 * 2 - MAINMENUAIMBARH + 32;
+		s_spdispsw[SPDISPSW_LIGHTS].dispcenter.y = 486 * 2 - TOPSLIDERSWNDH + 32;
 	}
 	else {
-		s_spdispsw[SPDISPSW_LIGHTS].dispcenter.y = 486 - MAINMENUAIMBARH;
+		s_spdispsw[SPDISPSW_LIGHTS].dispcenter.y = 486 - TOPSLIDERSWNDH;
 	}
 
 
@@ -19691,12 +19733,12 @@ int SetSpRigidSWParams()
 	//s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].dispcenter.y = 486;
 
 
-	//s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].dispcenter.y = 486 - MAINMENUAIMBARH;
+	//s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].dispcenter.y = 486 - TOPSLIDERSWNDH;
 	if (g_4kresolution) {
-		s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].dispcenter.y = 486 * 2 - MAINMENUAIMBARH + 32;
+		s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].dispcenter.y = 486 * 2 - TOPSLIDERSWNDH + 32;
 	}
 	else {
-		s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].dispcenter.y = 486 - MAINMENUAIMBARH;
+		s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].dispcenter.y = 486 - TOPSLIDERSWNDH;
 	}
 
 
@@ -19741,12 +19783,12 @@ int SetSpRetargetSWParams()
 	s_spretargetsw[SPRETARGETSW_RETARGET].dispcenter.x = s_guibarX0;
 
 
-	//s_spretargetsw[SPRETARGETSW_RETARGET].dispcenter.y = 486 - MAINMENUAIMBARH;
+	//s_spretargetsw[SPRETARGETSW_RETARGET].dispcenter.y = 486 - TOPSLIDERSWNDH;
 	if (g_4kresolution) {
-		s_spretargetsw[SPRETARGETSW_RETARGET].dispcenter.y = 486 * 2 - MAINMENUAIMBARH + 32;
+		s_spretargetsw[SPRETARGETSW_RETARGET].dispcenter.y = 486 * 2 - TOPSLIDERSWNDH + 32;
 	}
 	else {
-		s_spretargetsw[SPRETARGETSW_RETARGET].dispcenter.y = 486 - MAINMENUAIMBARH;
+		s_spretargetsw[SPRETARGETSW_RETARGET].dispcenter.y = 486 - TOPSLIDERSWNDH;
 	}
 
 
@@ -19806,8 +19848,8 @@ int SetSpMenuAimBarParams()
 	//			point2.y = rc.bottom;
 	//			::ClientToScreen(g_mainhwnd, &point1);
 	//			::ClientToScreen(g_mainhwnd, &point2);
-	//			//::ScreenToClient(s_mainmenuaimbarWnd->getHWnd(), &point1);
-	//			//::ScreenToClient(s_mainmenuaimbarWnd->getHWnd(), &point2);
+	//			//::ScreenToClient(s_topSlidersWnd->getHWnd(), &point1);
+	//			//::ScreenToClient(s_topSlidersWnd->getHWnd(), &point2);
 
 	//			s_spmenuaimbar[menuno].dispcenter.x = point1.x;//screen pos!!!!!!!!!!!
 	//			s_spmenuaimbar[menuno].dispcenter.y = 16;
@@ -19853,12 +19895,12 @@ int SetSpAimBarParams()
 	////s_spaimbar[SPAIMBAR_1].dispcenter.y = 486 + (28 / 2) + (6 / 2);
 
 
-	////s_spaimbar[SPAIMBAR_1].dispcenter.y = 486 + (28 / 2) + (6 / 2) - MAINMENUAIMBARH;
+	////s_spaimbar[SPAIMBAR_1].dispcenter.y = 486 + (28 / 2) + (6 / 2) - TOPSLIDERSWNDH;
 	//if (g_4kresolution) {
-	//	s_spaimbar[SPAIMBAR_1].dispcenter.y = 486 * 2 - MAINMENUAIMBARH + 32 + 16 + 4;
+	//	s_spaimbar[SPAIMBAR_1].dispcenter.y = 486 * 2 - TOPSLIDERSWNDH + 32 + 16 + 4;
 	//}
 	//else {
-	//	s_spaimbar[SPAIMBAR_1].dispcenter.y = 486 + (28 / 2) + (6 / 2) - MAINMENUAIMBARH;
+	//	s_spaimbar[SPAIMBAR_1].dispcenter.y = 486 + (28 / 2) + (6 / 2) - TOPSLIDERSWNDH;
 	//}
 
 
@@ -20115,10 +20157,10 @@ int SetSpRet2PrevParams()
 		s_spret2prev.dispcenter.x = s_guibarX0 - 70 - (LONG)(16.0f + 8.0f);
 		//s_spret2prev.dispcenter.y = 486;
 		if (g_4kresolution) {
-			s_spret2prev.dispcenter.y = 486 * 2 - MAINMENUAIMBARH + 32;
+			s_spret2prev.dispcenter.y = 486 * 2 - TOPSLIDERSWNDH + 32;
 		}
 		else {
-			s_spret2prev.dispcenter.y = 486 - MAINMENUAIMBARH;
+			s_spret2prev.dispcenter.y = 486 - TOPSLIDERSWNDH;
 		}
 
 		ChaVector3 disppos;
@@ -20164,12 +20206,12 @@ int SetSpGUISWParams()
 	s_spguisw[SPGUISW_CAMERA_AND_IK].dispcenter.x = s_guibarX0;
 	//s_spguisw[SPGUISW_CAMERA_AND_IK].dispcenter.y = 486;
 
-	//s_spguisw[SPGUISW_CAMERA_AND_IK].dispcenter.y = 486 * s_winsizemult - MAINMENUAIMBARH;
+	//s_spguisw[SPGUISW_CAMERA_AND_IK].dispcenter.y = 486 * s_winsizemult - TOPSLIDERSWNDH;
 	if (g_4kresolution) {
-		s_spguisw[SPGUISW_CAMERA_AND_IK].dispcenter.y = 486 * 2 - MAINMENUAIMBARH + 32 - Float2Int(spgheight) - spgshift;
+		s_spguisw[SPGUISW_CAMERA_AND_IK].dispcenter.y = 486 * 2 - TOPSLIDERSWNDH + 32 - Float2Int(spgheight) - spgshift;
 	}
 	else {
-		s_spguisw[SPGUISW_CAMERA_AND_IK].dispcenter.y = 486 - MAINMENUAIMBARH - Float2Int(spgheight) - spgshift;
+		s_spguisw[SPGUISW_CAMERA_AND_IK].dispcenter.y = 486 - TOPSLIDERSWNDH - Float2Int(spgheight) - spgshift;
 	}
 
 	s_spguisw[SPGUISW_DISP_AND_LIMITS].dispcenter.x = s_spguisw[SPGUISW_CAMERA_AND_IK].dispcenter.x + (int)spgwidth + spgshift;
@@ -22595,7 +22637,7 @@ int CreateMotionBrush(double srcstart, double srcend, bool onrefreshflag)
 	//s_editrangeを更新
 	s_buttonselectstart = g_motionbrush_startframe;
 	s_buttonselectend = g_motionbrush_endframe;
-	CEditRange::SetApplyRate((double)g_applyrate);
+	CEditRange::SetApplyRate(g_applyrate);
 	OnTimeLineButtonSelectFromSelectStartEnd(s_buttonselecttothelast);
 
 
@@ -26692,6 +26734,12 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 
 			s_model->SetTmpMotSpeed((float)g_dspeed);
 			OnSetMotSpeed();
+
+
+			if (s_topSlidersWnd && s_owpSpeedSlider) {
+				s_owpSpeedSlider->setValue(g_dspeed, false);
+				s_topSlidersWnd->callRewrite();//再描画
+			}
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_GETPOS, 0, 0);
@@ -26700,6 +26748,12 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			WCHAR strdlg[256] = { 0L };
 			swprintf_s(strdlg, 256, L"EditRate %.1f", g_physicsmvrate);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_EDITRATE, strdlg);
+
+			if (s_topSlidersWnd && s_owpEditRateSlider) {
+				s_owpEditRateSlider->setValue(g_physicsmvrate, false);
+				s_topSlidersWnd->callRewrite();//再描画
+			}
+
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_GETPOS, 0, 0);
@@ -29096,23 +29150,23 @@ int Brushes2Dlg(HWND hDlgWnd)
 	//#######
 	//Slider
 	//#######
-	int sliderpos = g_applyrate;
+	int sliderpos = (int)(g_applyrate * 10.0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)1000);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
 	sliderpos = g_brushrepeats;
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)1);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-	CEditRange::SetApplyRate((double)g_applyrate);
+	CEditRange::SetApplyRate(g_applyrate);
 	double applyframe = s_editrange.GetApplyFrame();
 
 	//#####
 	//Text
 	//#####
 	WCHAR strdlg[256] = { 0L };
-	swprintf_s(strdlg, 256, L"TopPos %d%% : %d", g_applyrate, IntTime(applyframe));
+	swprintf_s(strdlg, 256, L"TopPos %.1f%% : %d", g_applyrate, IntTime(applyframe));
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TOPPOS, strdlg);
 
 	swprintf_s(strdlg, 256, L"Brush Repeats : %d", g_brushrepeats);
@@ -29158,7 +29212,7 @@ LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	case WM_HSCROLL:
 		if (GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS), TBM_GETPOS, 0, 0);
-			g_applyrate = cursliderpos;
+			g_applyrate = (double)(cursliderpos / 10);
 
 
 			//2024/01/11 以下５行　内容を修正してUpdateTopPosText()に移動
@@ -29168,6 +29222,11 @@ LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			//swprintf_s(strdlg, 256, L"TopPos %d%% : %d", g_applyrate, IntTime(applyframe));
 			//SetDlgItemText(hDlgWnd, IDC_STATIC_TOPPOS, strdlg);
 
+
+			if (s_topSlidersWnd && s_owpTopPosSlider) {
+				s_owpTopPosSlider->setValue(g_applyrate, false);
+				s_topSlidersWnd->callRewrite();//再描画
+			}
 
 			if (s_editmotionflag < 0) {//IK中でないとき
 				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
@@ -31361,7 +31420,7 @@ int OnFrameUtCheckBox()
 	static int save_brushmirrorVflag = g_brushmirrorVflag;
 	static int save_ifmirrorVDiv2flag = g_ifmirrorVDiv2flag;
 	static int save_brushrepeats = g_brushrepeats;
-	static int save_applyrate = g_applyrate;
+	static double save_applyrate = g_applyrate;
 	static int save_brushmethod = g_motionbrush_method;//2024/02/02
 
 	////g_applyendflag = (int)s_ApplyEndCheckBox->GetChecked();
@@ -32374,7 +32433,7 @@ int OnFrameTimeLineWnd()
 				s_buttonselectend = s_buttonselectstart;
 			}
 			//g_applyrate = g_SampleUI.GetSlider(IDC_SL_APPLYRATE)->GetValue();
-			CEditRange::SetApplyRate((double)g_applyrate);
+			CEditRange::SetApplyRate(g_applyrate);
 			OnTimeLineButtonSelectFromSelectStartEnd(0);
 			OnTimeLineSelectFromSelectedKey();
 			DisplayApplyRateText();
@@ -32426,7 +32485,7 @@ int OnFrameTimeLineWnd()
 			s_selectKeyInfoList.clear();
 			s_selectKeyInfoList = s_owpLTimeline->getSelectedKey();
 			s_editrange.SetRange(s_selectKeyInfoList, s_owpLTimeline->getCurrentTime());
-			CEditRange::SetApplyRate((double)g_applyrate);
+			CEditRange::SetApplyRate(g_applyrate);
 			s_buttonselectstart = s_editrange.GetStartFrame();
 			s_buttonselectend = s_editrange.GetEndFrame();
 
@@ -32454,7 +32513,7 @@ int OnFrameTimeLineWnd()
 				if (s_owpLTimeline) {
 					//s_editmotionflag = s_curboneno;
 					s_editrange.SetRange(s_owpLTimeline->getSelectedKey(), s_owpLTimeline->getCurrentTime());
-					CEditRange::SetApplyRate((double)g_applyrate);
+					CEditRange::SetApplyRate(g_applyrate);
 
 					if (s_undoredoFromPlayerButton == false) {
 						PrepairUndo();//LTimelineの選択後かつ編集前の保存を想定
@@ -32632,6 +32691,68 @@ int OnFrameMouseButton()
 
 int OnFrameToolWnd()
 {
+
+	if (s_topslidersEditRateFlag) {
+		if (s_topSlidersWnd && s_owpEditRateSlider) {
+			float val = (float)s_owpEditRateSlider->getValue();
+			g_physicsmvrate = val;
+			s_topSlidersWnd->callRewrite();//再描画
+
+			if (s_guidlg[GUIDLG_DISP_AND_LIMITS] && 
+				GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_SLIDER_EDITRATE) && 
+				GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_STATIC_EDITRATE)) {
+				SendMessage(GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_SLIDER_EDITRATE), 
+					TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(int)((double)g_physicsmvrate * 10.0));
+
+				//text
+				WCHAR strdlg[256] = { 0L };
+				swprintf_s(strdlg, 256, L"EditRate %.1f", g_physicsmvrate);
+				SetDlgItemText(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_STATIC_EDITRATE, strdlg);
+			}
+		}
+	}
+	if (s_topslidersSpeedFlag) {
+		if (s_topSlidersWnd && s_owpSpeedSlider) {
+			double val = s_owpSpeedSlider->getValue();
+			g_dspeed = val;
+			if (s_guidlg[GUIDLG_DISP_AND_LIMITS]) {
+				HWND speedwnd = GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_SLIDER_SPEED);
+				if (speedwnd && IsWindow(speedwnd)) {
+					SendMessage(speedwnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(int)(g_dspeed * 100.0));
+				}
+
+				//text
+				WCHAR strdlg[256] = { 0L };
+				swprintf_s(strdlg, 256, L"Speed %.2f", g_dspeed);
+				SetDlgItemText(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_STATIC_SPEED, strdlg);
+			}
+			OnSetMotSpeed();
+			s_topSlidersWnd->callRewrite();//再描画
+		}
+		s_topslidersSpeedFlag = false;
+	}
+
+	if (s_topslidersTopPosFlag) {
+		if (s_topSlidersWnd && s_owpTopPosSlider) {
+			double val = s_owpTopPosSlider->getValue();
+			g_applyrate = val;
+			
+			if (s_editmotionflag < 0) {//IK中でないとき
+				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
+				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
+					_ASSERT(0);
+					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+					PostQuitMessage(result);
+				}
+				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
+			}			
+			s_topSlidersWnd->callRewrite();//再描画
+		}
+
+		s_topslidersTopPosFlag = false;
+	}
+
+
 	if (s_camdistsliderflag) {
 		s_camdistsliderflag = false;
 
@@ -33221,7 +33342,7 @@ int OnFrameToolWnd()
 			if (s_model && s_model->GetCurMotInfo()) {
 				if (s_owpTimeline && s_owpLTimeline) {
 					s_editrange.SetRange(s_owpLTimeline->getSelectedKey(), s_owpLTimeline->getCurrentTime());
-					CEditRange::SetApplyRate((double)g_applyrate);
+					CEditRange::SetApplyRate(g_applyrate);
 					s_editrange.GetRange(&keynum, &startframe, &endframe, &applyframe);
 				}
 			}
@@ -34371,13 +34492,20 @@ int OnSpriteUndo()
 
 
 			//注意：applyrateはbrushstateには入っていない
-			g_applyrate = (int)tmpapplyrate;
-			CEditRange::SetApplyRate((double)g_applyrate);
+			g_applyrate = tmpapplyrate;
+			CEditRange::SetApplyRate(g_applyrate);
 
 			OnTimeLineButtonSelectFromSelectStartEnd(0);
 			SetShowPosTime();//CreateMotionBrushより前で呼ばないと　TopPosを変えた後のUndoRedoで　描画がずれることがある
 
 			DisplayApplyRateText();			
+
+
+			if (s_topSlidersWnd && s_owpTopPosSlider) {
+				s_owpTopPosSlider->setValue(g_applyrate, false);
+				s_topSlidersWnd->callRewrite();
+			}
+
 
 			int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 			if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
@@ -34791,7 +34919,7 @@ int CreateUtDialog()
 //	int iX0;
 //
 //	if (g_4kresolution) {
-//		//iY = s_mainheight - (520 - MAINMENUAIMBARH);
+//		//iY = s_mainheight - (520 - TOPSLIDERSWNDH);
 //		//iY = s_mainheight - 210 - addh - 10;
 //		//iY = s_mainheight - 210 - 10;
 //
@@ -34990,7 +35118,7 @@ int CreateUtDialog()
 //	s_dsutguiid0.push_back(IDC_TRAROT);
 //
 //	if (g_4kresolution) {
-//		//iY = s_mainheight - (520 - MAINMENUAIMBARH);
+//		//iY = s_mainheight - (520 - TOPSLIDERSWNDH);
 //		//iY = s_mainheight - 210 - 3 * addh - 10;
 //		//iY = s_mainheight - 210 - 4 * addh - 10;
 //
@@ -35342,7 +35470,7 @@ int CreateUtDialog()
 int CreateTimelineWnd()
 {
 
-	s_rctreewnd.top = MAINMENUAIMBARH;
+	s_rctreewnd.top = TOPSLIDERSWNDH;
 	s_rctreewnd.left = 0;
 
 
@@ -35352,7 +35480,7 @@ int CreateTimelineWnd()
 		GetModuleHandle(NULL),	//インスタンスハンドル
 		//WindowPos(0, 0),		//位置
 		//WindowSize(400, 600),	//サイズ
-		WindowPos(0, MAINMENUAIMBARH),		//位置
+		WindowPos(0, TOPSLIDERSWNDH),		//位置
 		WindowSize(s_timelinewidth, s_timelineheight),	//サイズ 
 		//WindowSize(150,540),	//サイズ
 		L"TimeLine",				//タイトル
@@ -35886,70 +36014,128 @@ int CreateDmpAnimWnd()
 	return 0;
 }
 
-int CreateMainMenuAimBarWnd()
+int CreateTopSlidersWnd()
 {
 
+	WCHAR sliderinfo[1024] = { 0L };
 	int windowposx;
 	if (g_4kresolution) {
 		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
+
+		//ウインドウタイトルをスライダーの説明として使う　スペースキーで適当に位置を合わせる
+		wcscpy_s(sliderinfo, 1024, L"Slider1 : EditRate,                                                                                               \
+Slier2 : Speed,                                                                                                    \
+Slider3 : TopPos");
+
 	}
 	else {
 		windowposx = s_timelinewidth + s_mainwidth;
+
+		//ウインドウタイトルをスライダーの説明として使う　スペースキーで適当に位置を合わせる
+		wcscpy_s(sliderinfo, 1024, L"Slider1 : EditRate,                              \
+Slier2 : Speed,                                 \
+Slider3 : TopPos");
 	}
 
-
-	s_mainmenuaimbarWnd = new OrgWindow(
+	s_topSlidersWnd = new OrgWindow(
 		0,
-		_T("MainMenuAimBarWnd"),		//ウィンドウクラス名
+		_T("TopSlidersWnd"),		//ウィンドウクラス名
 		GetModuleHandle(NULL),	//インスタンスハンドル
 								//WindowPos(100, 200),		//位置
 		WindowPos(0, 0),
 		//WindowSize(450,880),		//サイズ
 		//WindowSize(450,680),		//サイズ
 		//WindowSize(450, 760),		//サイズ
-		WindowSize(windowposx, MAINMENUAIMBARH),		//サイズ
-		_T("MainMenuAimBarWnd"),	//タイトル
+		WindowSize(windowposx, TOPSLIDERSWNDH),		//サイズ
+		//_T("TopSlidersWnd"),	//タイトル
+		sliderinfo,
 		g_mainhwnd,	//親ウィンドウハンドル
 		true,					//表示・非表示状態
 		//70, 50, 70,				//カラー
 		0, 0, 0,				//カラー
 		true, true);					//サイズ変更の可否
 
-	if (s_mainmenuaimbarWnd) {
+	if (s_topSlidersWnd) {
 		//s_sidemenuWnd->setCloseListener([]() { s_ScloseFlag = true; });
 
-		s_mainmenuaimbarWnd->setBlackTheme();
-		s_mainmenulabel = new OWP_Label(L".");
-		if (s_mainmenulabel) {
-			s_mainmenuaimbarWnd->addParts(*s_mainmenulabel);
-
-			//450, 32
-			s_rcmainmenuaimbarwnd.top = 0;
-			s_rcmainmenuaimbarwnd.left = 0;
-			s_rcmainmenuaimbarwnd.bottom = MAINMENUAIMBARH;
-
-			s_mainmenuaimbarWnd->setPos(WindowPos(0, 0));
-			//if (g_4kresolution) {
-			//	s_mainmenuaimbarWnd->setSize(WindowSize(1200 * 2, MAINMENUAIMBARH));
-			//	s_rcmainmenuaimbarwnd.right = 1200 * 2;
-			//}
-			//else {
-			//	s_mainmenuaimbarWnd->setSize(WindowSize(1200, MAINMENUAIMBARH));
-			//	s_rcmainmenuaimbarwnd.right = 1200;
-			//}
-			s_mainmenuaimbarWnd->setSize(WindowSize(windowposx, MAINMENUAIMBARH));
-			s_rcmainmenuaimbarwnd.right = windowposx;
-
-			//１クリック目問題対応
-			s_mainmenuaimbarWnd->refreshPosAndSize();//2022/09/20
-
-
-			s_mainmenuaimbarWnd->callRewrite();						//再描画
-		}
-		else {
+		s_topSlidersWnd->setBlackTheme();
+		s_topSlidersSeparator1 = new OWP_Separator(s_topSlidersWnd, false, 0.5, true);
+		if (!s_topSlidersSeparator1) {
 			_ASSERT(0);
 			return 1;
 		}
+		s_topSlidersSeparator2 = new OWP_Separator(s_topSlidersWnd, false, 0.5, true);
+		if (!s_topSlidersSeparator2) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_owpEditRateSlider = new OWP_Slider(g_physicsmvrate, 50.0, 0.0);
+		if (!s_owpEditRateSlider) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_owpSpeedSlider = new OWP_Slider(g_dspeed, 7.0, 0.0);
+		if (!s_owpSpeedSlider) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_owpTopPosSlider = new OWP_Slider(g_applyrate, 100.0, 0.0);
+		if (!s_owpTopPosSlider) {
+			_ASSERT(0);
+			return 1;
+		}
+
+		s_topSlidersWnd->addParts(*s_topSlidersSeparator1);
+		s_topSlidersSeparator1->addParts1(*s_topSlidersSeparator2);
+		s_topSlidersSeparator1->addParts2(*s_owpTopPosSlider);
+		s_topSlidersSeparator2->addParts1(*s_owpEditRateSlider);
+		s_topSlidersSeparator2->addParts2(*s_owpSpeedSlider);
+
+
+		if (s_owpTopPosSlider) {
+			s_owpTopPosSlider->setCursorListener([]() {
+				if (s_topslidersTopPosFlag == false) {
+					s_topslidersTopPosFlag = true;
+				}
+			});
+			s_owpTopPosSlider->setLUpListener([]() {
+				if (s_utApplyRateFlag == false) {
+					//#################################################
+					//ReleasedCaptureのときに　PrepairUndo用のフラグを立てる
+					//#################################################
+					s_utApplyRateFlag = true;//PrepairUndo();//保存はOnFrameUtCheckBoxにて
+				}
+			});
+		}
+		if (s_owpEditRateSlider) {
+			s_owpEditRateSlider->setCursorListener([]() {
+				if (s_topslidersEditRateFlag == false) {
+					s_topslidersEditRateFlag = true;
+				}
+				});
+		}
+		if (s_owpSpeedSlider) {
+			s_owpSpeedSlider->setCursorListener([]() {
+				if (s_topslidersSpeedFlag == false) {
+					s_topslidersSpeedFlag = true;
+				}
+				});
+		}
+
+
+		//450, 32
+		s_rctopsliderswnd.top = 0;
+		s_rctopsliderswnd.left = 0;
+		s_rctopsliderswnd.bottom = TOPSLIDERSWNDH;
+
+		s_topSlidersWnd->setPos(WindowPos(0, 0));
+		s_topSlidersWnd->setSize(WindowSize(windowposx, TOPSLIDERSWNDH));
+		s_rctopsliderswnd.right = windowposx;
+
+		//１クリック目問題対応
+		s_topSlidersWnd->refreshPosAndSize();//2022/09/20
+
+		s_topSlidersWnd->callRewrite();						//再描画
 	}
 	else {
 		_ASSERT(0);
@@ -40841,14 +41027,14 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		//	}
 		//}
 		//{
-		//	if (s_mainmenuaimbarWnd) {
-		//		s_mainmenuaimbarWnd->callRewrite();
+		//	if (s_topSlidersWnd) {
+		//		s_topSlidersWnd->callRewrite();
 		//	}
 
 
 		//	//int spgcnt;
 		//	//for (spgcnt = 0; spgcnt < SPMENU_MAX; spgcnt++) {
-		//	//	//MainMenuAimBarWndの背景色は、非選択時に茶色、選択時にオレンジ。オレンジはspriteONの色。よってスプライト表示のオンとオフを入れ替える。
+		//	//	//TopSlidersWndの背景色は、非選択時に茶色、選択時にオレンジ。オレンジはspriteONの色。よってスプライト表示のオンとオフを入れ替える。
 		//	//	if (s_spmenuaimbar[spgcnt].state) {
 		//	//		if (s_spmenuaimbar[spgcnt].spriteOFF) {//ONのときにOFF色
 		//	//			s_spmenuaimbar[spgcnt].spriteOFF.DrawScreen(pRenderContext);
@@ -43203,7 +43389,7 @@ int OnTimeLineSelectFromSelectedKey()
 	if (s_model && s_model->GetCurMotInfo()) {
 		if (s_owpTimeline && s_owpLTimeline && s_owpEulerGraph) {
 			s_editrange.SetRange(s_owpLTimeline->getSelectedKey(), s_owpLTimeline->getCurrentTime());
-			CEditRange::SetApplyRate((double)g_applyrate);
+			CEditRange::SetApplyRate(g_applyrate);
 
 			int keynum;
 			double startframe, endframe, applyframe;
@@ -43382,7 +43568,7 @@ int OnTimeLineMButtonDown(bool ctrlshiftflag)
 			if (s_owpLTimeline) {
 				s_editmotionflag = s_curboneno;
 				s_editrange.SetRange(s_owpLTimeline->getSelectedKey(), s_owpLTimeline->getCurrentTime());
-				CEditRange::SetApplyRate((double)g_applyrate);
+				CEditRange::SetApplyRate(g_applyrate);
 				PrepairUndo();//LTimelineの選択後かつ編集前の保存を想定
 			}
 		}
@@ -44093,13 +44279,13 @@ HWND Create3DWnd(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine,
 	if (g_4kresolution) {
 		rc = InitGame(hInstance, hPrevInstance, lpCmdLine, nShowCmd, TEXT("AdditiveIK"),
 			g_mainhwnd,
-			s_timelinewidth + s_modelwindowwidth, MAINMENUAIMBARH,
+			s_timelinewidth + s_modelwindowwidth, TOPSLIDERSWNDH,
 			s_mainwidth, s_mainheight);
 	}
 	else {
 		rc = InitGame(hInstance, hPrevInstance, lpCmdLine, nShowCmd, TEXT("AdditiveIK"),
 			g_mainhwnd,
-			s_timelinewidth, MAINMENUAIMBARH,
+			s_timelinewidth, TOPSLIDERSWNDH,
 			s_mainwidth, s_mainheight);
 	}
 
@@ -44121,14 +44307,14 @@ HWND Create3DWnd(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine,
 	//	//hr = DXUTCreateWindow(L"AdditiveIK", 0, 0, 0, s_toolwidth + s_modelwindowwidth, 0);
 	//	hr = DXUTCreateWindow(L"AdditiveIK", g_mainhwnd, (HINSTANCE)GetModuleHandle(NULL),
 	//		0, 0,
-	//		(s_timelinewidth + s_modelwindowwidth), MAINMENUAIMBARH,
+	//		(s_timelinewidth + s_modelwindowwidth), TOPSLIDERSWNDH,
 	//		s_mainwidth, s_mainheight);
 	//}
 	//else {
 	//	//hr = DXUTCreateWindow(L"AdditiveIK", 0, 0, 0, s_timelinewidth, 0);
 	//	hr = DXUTCreateWindow(L"AdditiveIK", g_mainhwnd, (HINSTANCE)GetModuleHandle(NULL),
 	//		0, 0, 
-	//		s_timelinewidth, MAINMENUAIMBARH,
+	//		s_timelinewidth, TOPSLIDERSWNDH,
 	//		s_mainwidth, s_mainheight);
 	//}
 
@@ -44190,18 +44376,18 @@ HWND Create3DWnd(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine,
 	//::MoveWindow(s_3dwnd, 400, 0, winrect.right - winrect.left, winrect.bottom - winrect.top, TRUE);
 	//::MoveWindow(s_3dwnd, 400, 0, s_mainwidth, s_mainheight, TRUE);
 	if (g_4kresolution) {
-		::MoveWindow(s_3dwnd, s_timelinewidth + s_modelwindowwidth, MAINMENUAIMBARH, s_mainwidth, s_mainheight, TRUE);
+		::MoveWindow(s_3dwnd, s_timelinewidth + s_modelwindowwidth, TOPSLIDERSWNDH, s_mainwidth, s_mainheight, TRUE);
 		//::SetWindowPos(s_3dwnd, HWND_NOTOPMOST, 
-		//	s_toolwidth + s_modelwindowwidth, MAINMENUAIMBARH, s_mainwidth, s_mainheight, SWP_NOSIZE);
+		//	s_toolwidth + s_modelwindowwidth, TOPSLIDERSWNDH, s_mainwidth, s_mainheight, SWP_NOSIZE);
 	}
 	else {
-		::MoveWindow(s_3dwnd, s_timelinewidth, MAINMENUAIMBARH, s_mainwidth, s_mainheight, TRUE);
+		::MoveWindow(s_3dwnd, s_timelinewidth, TOPSLIDERSWNDH, s_mainwidth, s_mainheight, TRUE);
 		//::SetWindowPos(s_3dwnd, HWND_NOTOPMOST, 
-		//	s_timelinewidth, MAINMENUAIMBARH, s_mainwidth, s_mainheight, SWP_NOSIZE);
+		//	s_timelinewidth, TOPSLIDERSWNDH, s_mainwidth, s_mainheight, SWP_NOSIZE);
 	}
 
-	s_rc3dwnd.top = MAINMENUAIMBARH;
-	s_rc3dwnd.bottom = (s_mainheight + MAINMENUAIMBARH);
+	s_rc3dwnd.top = TOPSLIDERSWNDH;
+	s_rc3dwnd.bottom = (s_mainheight + TOPSLIDERSWNDH);
 	//s_rc3dwnd.left = 0;
 	//s_rc3dwnd.right = s_mainwidth;
 	s_rc3dwnd.left = s_timelinewidth + s_modelwindowwidth;
@@ -44230,11 +44416,11 @@ CInfoWindow* CreateInfoWnd()
 	int cxframe = GetSystemMetrics(SM_CXFRAME);
 	int cyframe = GetSystemMetrics(SM_CYFRAME);
 
-	//s_rcinfownd.top = s_mainheight + 3 * cyframe + MAINMENUAIMBARH;
+	//s_rcinfownd.top = s_mainheight + 3 * cyframe + TOPSLIDERSWNDH;
 	//s_rcinfownd.bottom = (s_infowinheight + 2 * cyframe);
 	//s_rcinfownd.right = s_infowinwidth;
 	//s_rcinfownd.left = 400;
-	s_rcinfownd.top = s_mainheight + MAINMENUAIMBARH;
+	s_rcinfownd.top = s_mainheight + TOPSLIDERSWNDH;
 	s_rcinfownd.bottom = s_rcinfownd.top + s_infowinheight + 2 * cyframe;
 	s_rcinfownd.right = s_infowinwidth;
 	s_rcinfownd.left = 400;
@@ -44247,14 +44433,14 @@ CInfoWindow* CreateInfoWnd()
 		int ret;
 		//if (g_4kresolution) {
 		//	ret = newinfownd->CreateInfoWindow(g_mainhwnd,
-		//		400 * 2, s_mainheight + 3 * cyframe + MAINMENUAIMBARH,
+		//		400 * 2, s_mainheight + 3 * cyframe + TOPSLIDERSWNDH,
 		//		s_infowinwidth, s_infowinheight + 2 * cyframe);
 
 		//	s_rcinfownd.left = 400 * 2;
 		//}
 		//else {
 		//	ret = newinfownd->CreateInfoWindow(g_mainhwnd,
-		//		400, s_mainheight + 3 * cyframe + MAINMENUAIMBARH,
+		//		400, s_mainheight + 3 * cyframe + TOPSLIDERSWNDH,
 		//		s_infowinwidth, s_infowinheight + 2 * cyframe);
 
 		//	s_rcinfownd.left = 400;
@@ -44262,16 +44448,16 @@ CInfoWindow* CreateInfoWnd()
 
 		if (g_4kresolution) {
 			ret = newinfownd->CreateInfoWindow(g_mainhwnd,
-				//s_timelinewidth + s_modelwindowwidth, s_mainheight + 3 * cyframe + MAINMENUAIMBARH,
-				s_timelinewidth + s_modelwindowwidth, s_mainheight + MAINMENUAIMBARH,
+				//s_timelinewidth + s_modelwindowwidth, s_mainheight + 3 * cyframe + TOPSLIDERSWNDH,
+				s_timelinewidth + s_modelwindowwidth, s_mainheight + TOPSLIDERSWNDH,
 				s_infowinwidth, s_infowinheight + 2 * cyframe);
 
 			s_rcinfownd.left = s_timelinewidth;
 		}
 		else {
 			ret = newinfownd->CreateInfoWindow(g_mainhwnd,
-				//s_timelinewidth, s_mainheight + 3 * cyframe + MAINMENUAIMBARH,
-				s_timelinewidth, s_mainheight + MAINMENUAIMBARH,
+				//s_timelinewidth, s_mainheight + 3 * cyframe + TOPSLIDERSWNDH,
+				s_timelinewidth, s_mainheight + TOPSLIDERSWNDH,
 				s_infowinwidth, s_infowinheight + 2 * cyframe);
 
 			s_rcinfownd.left = s_timelinewidth;
@@ -46264,8 +46450,8 @@ void DSR1ButtonSelectCurrentBone()
 
 	//	::SetWindowPos(s_3dwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
 
-	//	if (s_mainmenuaimbarWnd) {
-	//		s_mainmenuaimbarWnd->setBackGroundColor(false);
+	//	if (s_topSlidersWnd) {
+	//		s_topSlidersWnd->setBackGroundColor(false);
 	//	}
 
 	//	if (s_timelineWnd) {
@@ -46360,19 +46546,19 @@ void SelectNextWindow(int nextwndid)
 	else {
 		tmpsidewnd = 0;
 	}
-	HWND tmpmainmenuaimbarwnd = 0;
-	if (s_mainmenuaimbarWnd) {
-		tmpmainmenuaimbarwnd = s_mainmenuaimbarWnd->getHWnd();
+	HWND tmptopsliderswnd = 0;
+	if (s_topSlidersWnd) {
+		tmptopsliderswnd = s_topSlidersWnd->getHWnd();
 	}
 	else {
-		tmpmainmenuaimbarwnd = 0;
+		tmptopsliderswnd = 0;
 	}
 
 
 	HWND hwnds[MB3D_WND_MAX];
 	ZeroMemory(hwnds, sizeof(HWND) * MB3D_WND_MAX);
 	//hwnds[MB3D_WND_MAIN] = g_mainhwnd;
-	hwnds[MB3D_WND_MAIN] = tmpmainmenuaimbarwnd;
+	hwnds[MB3D_WND_MAIN] = tmptopsliderswnd;
 	hwnds[MB3D_WND_3D] = s_3dwnd;
 	hwnds[MB3D_WND_TREE] = tmptlwnd;
 	hwnds[MB3D_WND_TOOL] = tmptoolwnd;
@@ -46421,8 +46607,8 @@ void SelectNextWindow(int nextwndid)
 
 			//::SetWindowPos(hwnds[0], HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
 			::SetWindowPos(g_mainhwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-			if (s_mainmenuaimbarWnd) {
-				s_mainmenuaimbarWnd->setBackGroundColor(true);
+			if (s_topSlidersWnd) {
+				s_topSlidersWnd->setBackGroundColor(true);
 			}
 
 			if (s_timelineWnd) {
@@ -46448,8 +46634,8 @@ void SelectNextWindow(int nextwndid)
 
 			::SetWindowPos(hwnds[1], HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
 
-			if (s_mainmenuaimbarWnd) {
-				s_mainmenuaimbarWnd->setBackGroundColor(false);
+			if (s_topSlidersWnd) {
+				s_topSlidersWnd->setBackGroundColor(false);
 			}
 
 
@@ -46470,8 +46656,8 @@ void SelectNextWindow(int nextwndid)
 			//::SetClassLongPtr(hwnds[1], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
 			//::SetClassLongPtr(hwnds[0], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
 
-			if (s_mainmenuaimbarWnd) {
-				s_mainmenuaimbarWnd->setBackGroundColor(false);
+			if (s_topSlidersWnd) {
+				s_topSlidersWnd->setBackGroundColor(false);
 			}
 
 			if (s_timelineWnd) {
@@ -46492,8 +46678,8 @@ void SelectNextWindow(int nextwndid)
 			//::SetClassLongPtr(hwnds[1], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
 			//::SetClassLongPtr(hwnds[0], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
 
-			if (s_mainmenuaimbarWnd) {
-				s_mainmenuaimbarWnd->setBackGroundColor(false);
+			if (s_topSlidersWnd) {
+				s_topSlidersWnd->setBackGroundColor(false);
 			}
 
 			if (s_timelineWnd) {
@@ -46514,8 +46700,8 @@ void SelectNextWindow(int nextwndid)
 			//::SetClassLongPtr(hwnds[1], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
 			//::SetClassLongPtr(hwnds[0], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
 
-			if (s_mainmenuaimbarWnd) {
-				s_mainmenuaimbarWnd->setBackGroundColor(false);
+			if (s_topSlidersWnd) {
+				s_topSlidersWnd->setBackGroundColor(false);
 			}
 
 			if (s_timelineWnd) {
@@ -46536,8 +46722,8 @@ void SelectNextWindow(int nextwndid)
 			//::SetClassLongPtr(hwnds[1], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
 			//::SetClassLongPtr(hwnds[0], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
 
-			if (s_mainmenuaimbarWnd) {
-				s_mainmenuaimbarWnd->setBackGroundColor(false);
+			if (s_topSlidersWnd) {
+				s_topSlidersWnd->setBackGroundColor(false);
 			}
 
 			if (s_timelineWnd) {
@@ -49381,7 +49567,7 @@ void DSAxisRMainMenuBar()
 	//	}
 
 
-	//	SelectNextWindow(MB3D_WND_MAIN);//MainMenuAimBarWndをハイライト
+	//	SelectNextWindow(MB3D_WND_MAIN);//TopSlidersWndをハイライト
 
 
 	//	g_currentsubmenuid = nextsubmenuid;
@@ -51693,7 +51879,7 @@ void DSAimBarOK()
 	//					::SendMessage(caphwnd, WM_LBUTTONUP, MK_LBUTTON, caplparam);
 	//				}
 
-	//				//MainMenuAimBar
+	//				//TopSliders
 	//				if ((s_currentwndid == MB3D_WND_MAIN) && s_cursubmenu && (g_currentsubmenuid >= 0) && (g_currentsubmenuid < SPMENU_MAX)) {
 	//					//SelectNextWindow(MB3D_WND_3D);//続いて　O button を押したときにメニューが開かないように。//プレート選択時に該当ウインドウをハイライトするようにしたので必要ない。
 	//					InterlockedExchange(&g_undertrackingRMenu, (LONG)1);
@@ -52102,8 +52288,8 @@ void OrgWindowListenMouse(bool srcflag)
 	if (s_sidemenuWnd) {
 		s_sidemenuWnd->setListenMouse(srcflag);
 	}
-	if (s_mainmenuaimbarWnd) {
-		s_mainmenuaimbarWnd->setListenMouse(srcflag);
+	if (s_topSlidersWnd) {
+		s_topSlidersWnd->setListenMouse(srcflag);
 	}
 	if (s_placefolderWnd) {
 		s_placefolderWnd->setListenMouse(srcflag);
@@ -59042,7 +59228,7 @@ int UpdateTopPosText()
 		HWND toppostext = GetDlgItem(s_guidlg[GUIDLG_BRUSHPARAMS], IDC_STATIC_TOPPOS);
 		if (topposslider || toppostext) {
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"TopPos %d%% : %d", g_applyrate, IntTime(g_motionbrush_applyframe));
+			swprintf_s(strdlg, 256, L"TopPos %.1f%% : %d", g_applyrate, IntTime(g_motionbrush_applyframe));
 			SetDlgItemText(s_guidlg[GUIDLG_BRUSHPARAMS], IDC_STATIC_TOPPOS, strdlg);
 		}
 	}

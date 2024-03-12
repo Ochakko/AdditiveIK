@@ -298,7 +298,7 @@ double						g_dspeed = 1.0;
 
 float g_ikfirst = 1.0f;
 float g_ikrate = 1.0f;
-int g_applyrate = 50;
+double g_applyrate = 50.0;
 int g_refposstep = 10;
 int g_refalpha = 50;
 //float g_physicsmvrate = 1.0f;
@@ -551,7 +551,7 @@ extern double						g_dspeed;
 
 extern float g_ikfirst;
 extern float g_ikrate;
-extern int g_applyrate;
+extern double g_applyrate;
 extern int g_refposstep;
 extern int g_refalpha;
 extern float g_physicsmvrate;

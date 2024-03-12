@@ -4527,6 +4527,7 @@ void s_dummyfunc()
 			oldvalueindex = 0;
 
 			cursorListener = NULL;//2024/03/03
+			lupListener = NULL;//2024/03/12
 		}
 
 		//////////////////////////// Method //////////////////////////////
@@ -4738,6 +4739,13 @@ void s_dummyfunc()
 		virtual void onLButtonUp(const MouseEvent& e){
 			drag=false;
 			saveUndoValue(value);
+
+			//if (!listenmouse) {
+			//	return;//!!!!!!!!!!!!!!!!
+			//}
+			if (this->lupListener != NULL) {
+				(this->lupListener)();//2024/03/12 for undo
+			}
 		}
 		//	Method : マウス移動イベント受信
 		virtual void onMouseMove(const MouseEvent& e){
@@ -4825,7 +4833,7 @@ void s_dummyfunc()
 		double getValue() const{
 			return value;
 		}
-		void setValue(double _value){
+		void setValue(double _value, bool calllistener = true){
 			value= min(max(_value,minValue),maxValue);
 
 			//リスナーコール
@@ -4883,11 +4891,15 @@ void s_dummyfunc()
 		void setCursorListener(std::function<void()> listener){
 			this->cursorListener= listener;
 		}
+		void setLUpListener(std::function<void()> listener) {
+			this->lupListener = listener;
+		}
 
 	private:
 		////////////////////////// MemberVar /////////////////////////////
 		double maxValue,minValue,value;
 		std::function<void()> cursorListener;
+		std::function<void()> lupListener;
 
 		bool drag;
 
