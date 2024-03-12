@@ -731,6 +731,7 @@ static HWND s_motpropdlghwnd = 0;
 //static HWND s_cameradollydlgwnd = 0;
 static HWND s_materialratedlgwnd = 0;
 static HWND s_modelworldmatdlgwnd = 0;
+static HWND s_jumpgravitydlgwnd = 0;
 static HWND s_shadertypeparamsdlgwnd = 0;
 static HWND s_skyparamsdlgwnd = 0;
 static HWND s_savechadlghwnd = 0;
@@ -1426,6 +1427,7 @@ static bool s_scaleAllInitFlag = false;
 static bool s_cameradollyFlag = false;
 static bool s_materialrateFlag = false;
 static bool s_modelworldmatFlag = false;
+static bool s_jumpgravityFlag = false;
 
 static bool s_firstkeyFlag = false;
 static bool s_lastkeyFlag = false;
@@ -2213,7 +2215,8 @@ static int SetModel2MaterialRateDlg(CModel* srcmodel);
 static int CreateModelWorldMatWnd();
 static int SetModel2ModelWorldMatDlg(CModel* srcmodel);
 static int ShowModelWorldMatDlg();
-
+static int CreateJumpGravityWnd();
+static int ShowJumpGravityDlg();
 
 //static void CheckShaderTypeButton(HWND hDlgWnd, int srcshadertype);//DispAndLimitプレートメニュー用
 
@@ -2248,6 +2251,7 @@ LRESULT CALLBACK MotPropDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK CameraDollyDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK MaterialRateDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ModelWorldMatDlgProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK JumpGravityDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK SkyParamsDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK OpenBvhDlgProc(HWND, UINT, WPARAM, LPARAM);
@@ -3277,6 +3281,7 @@ INT WINAPI wWinMain(
 	}
 	CreateMaterialRateWnd();
 	CreateModelWorldMatWnd();
+	CreateJumpGravityWnd();
 	CreateShaderTypeParamsDlg();
 	CreateSkyParamsDlg();
 
@@ -3599,6 +3604,7 @@ void InitApp()
 	g_pasteRotation = true;
 	g_pasteTranslation = true;
 
+	g_jumpgravity = 65;
 
 	InitSprites();
 
@@ -3996,6 +4002,7 @@ void InitApp()
 	s_cameradollyFlag = false;
 	s_materialrateFlag = false;
 	s_modelworldmatFlag = false;
+	s_jumpgravityFlag = false;
 
 	g_zpreflag = false;
 	g_zcmpalways = false;
@@ -4818,6 +4825,7 @@ void InitApp()
 	//s_cameradollydlgwnd = 0;
 	s_materialratedlgwnd = 0;
 	s_modelworldmatdlgwnd = 0;
+	s_jumpgravitydlgwnd = 0;
 	s_shadertypeparamsdlgwnd = 0;
 	s_skyparamsdlgwnd = 0;
 
@@ -5030,6 +5038,10 @@ void OnDestroyDevice()
 	if (s_modelworldmatdlgwnd) {
 		DestroyWindow(s_modelworldmatdlgwnd);
 		s_modelworldmatdlgwnd = 0;
+	}
+	if (s_jumpgravitydlgwnd) {
+		DestroyWindow(s_jumpgravitydlgwnd);
+		s_jumpgravitydlgwnd = 0;
 	}
 	if (s_shadertypeparamsdlgwnd) {
 		DestroyWindow(s_shadertypeparamsdlgwnd);
@@ -25421,6 +25433,66 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 
 }
 
+LRESULT CALLBACK JumpGravityDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+	WCHAR strval[256] = { 0L };
+
+	switch (msg) {
+	case WM_INITDIALOG:
+	{
+		SetDlgPosDesktopCenter(hDlgWnd, HWND_TOPMOST);
+
+		swprintf_s(strval, 256, L"Gravity for Jump Interpolation : %.2f", (double)g_jumpgravity * 0.01);
+		SetDlgItemTextW(hDlgWnd, IDC_STATIC_JUMPGRAVITY, strval);
+
+		int sliderpos = g_jumpgravity;
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_JUMPGRAVITY), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)10);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_JUMPGRAVITY), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)300);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_JUMPGRAVITY), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+		s_jumpgravitydlgwnd = hDlgWnd;
+
+		return FALSE;
+	}
+	break;
+
+	case WM_HSCROLL:
+		if (GetDlgItem(hDlgWnd, IDC_SLIDER_JUMPGRAVITY) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_JUMPGRAVITY), TBM_GETPOS, 0, 0);
+			g_jumpgravity = cursliderpos;
+
+			swprintf_s(strval, 256, L"Gravity for Jump Interpolation : %.2f", (double)g_jumpgravity * 0.01);
+			SetDlgItemTextW(hDlgWnd, IDC_STATIC_JUMPGRAVITY, strval);
+		}
+	break;
+
+	case WM_COMMAND:
+		switch (LOWORD(wp)) {
+		case IDOK:
+			ShowWindow(hDlgWnd, SW_HIDE);
+			break;
+		case IDCANCEL:
+			ShowWindow(hDlgWnd, SW_HIDE);
+			break;
+
+		case IDC_RECALCJUMPINTERPOLATION://再計算ボタン
+			s_jumpinterpolateFlag = true;
+			break;
+
+		default:
+			return FALSE;
+		}
+		break;
+	case WM_CLOSE:
+		ShowWindow(hDlgWnd, SW_HIDE);
+		break;
+	default:
+		DefWindowProc(hDlgWnd, msg, wp, lp);
+		return FALSE;
+	}
+	return TRUE;
+
+}
 
 LRESULT CALLBACK MaterialRateDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -32869,6 +32941,11 @@ int OnFrameToolWnd()
 		}
 		s_modelworldmatFlag = false;
 	}
+	if (s_jumpgravityFlag) {
+		ShowJumpGravityDlg();
+		s_jumpgravityFlag = false;
+	}
+
 	if (s_shadertypeparamsFlag) {
 		s_shadertypeparamsFlag = false;
 		if (s_model) {
@@ -32894,6 +32971,7 @@ int OnFrameToolWnd()
 
 	if (s_jumpinterpolateFlag) {
 		if (s_model && s_owpTimeline && s_owpLTimeline && s_model->GetCurMotInfo()) {
+			s_jumpgravityFlag = true;//<-- gravity設定モードレスダイアログ表示トリガー
 			JumpInterpolateFromTool();
 		}
 		s_jumpinterpolateFlag = false;
@@ -41523,8 +41601,8 @@ int JumpInterpolateFromTool()
 		//TAnimだけに着目して計算する
 		//#########################
 
-		double gravity = -9.8 / 15.0;//後でgravity設定用のモードレスダイアログを出す予定
-
+		//double gravity = -9.8 / 15.0;//後でgravity設定用のモードレスダイアログを出す予定
+		double gravity = (double)g_jumpgravity * -0.01;
 
 		//上部でframeleng < 4の場合を除外している
 		double vecx, vecz;
@@ -56062,6 +56140,20 @@ int CreateModelWorldMatWnd()
 	return 0;
 }
 
+int CreateJumpGravityWnd()
+{
+
+	HWND hDlgWnd = CreateDialogW((HMODULE)GetModuleHandle(NULL),
+		MAKEINTRESOURCE(IDD_JUMPGRAVITYDlg), s_3dwnd, (DLGPROC)JumpGravityDlgProc);
+	if (hDlgWnd == NULL) {
+		return 1;
+	}
+	s_jumpgravitydlgwnd = hDlgWnd;
+	ShowWindow(s_jumpgravitydlgwnd, SW_HIDE);
+
+	return 0;
+}
+
 int CreateShaderTypeParamsDlg()
 {
 
@@ -56724,6 +56816,20 @@ int ShowModelWorldMatDlg()
 
 	return 0;
 }
+
+int ShowJumpGravityDlg()
+{
+
+	if (s_jumpgravitydlgwnd) {
+		if (s_model) {
+			ShowWindow(s_jumpgravitydlgwnd, SW_SHOW);
+			UpdateWindow(s_jumpgravitydlgwnd);
+		}
+	}
+
+	return 0;
+}
+
 
 int ShowShaderTypeParamsDlg()
 {
