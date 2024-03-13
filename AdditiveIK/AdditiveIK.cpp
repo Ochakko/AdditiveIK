@@ -31631,6 +31631,13 @@ int OnFrameProcessTime(double difftime, double* pnextframe, int* pendflag, int* 
 		return 1;
 	}
 
+	
+	if (s_model && s_model->GetCurMotInfo()) {
+		//プレビューしていなくてもセット必要
+		s_model->SetRenderSlotFrame(s_model->GetCurrentFrame());//2024/03/13 変更前に保存　RenderBoneMarkで使用
+	}
+
+
 	if (g_previewFlag != 0) {
 		if (s_model && s_model->GetCurMotInfo()) {
 			if (s_savepreviewFlag == 0) {

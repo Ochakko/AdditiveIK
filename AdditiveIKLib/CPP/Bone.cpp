@@ -2384,7 +2384,7 @@ int CBone::CalcAxisMatZ_aft(ChaVector3 curpos, ChaVector3 childpos, ChaMatrix* d
 //	return 0;
 //}
 
-int CBone::CalcRigidElemParams(bool setinstancescale, CBone* childbone, int setstartflag )
+int CBone::CalcRigidElemParams(bool setinstancescale, CBone* childbone, int setstartflag, bool calcslotflag)
 {
 	
 	ChaMatrix retmat;
@@ -2518,8 +2518,8 @@ int CBone::CalcRigidElemParams(bool setinstancescale, CBone* childbone, int sets
 		//	childbone->SetNodeMat(bmmat);//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		//}
 
-		//bool calcslotflag = true;
-		bool calcslotflag = false;
+		////bool calcslotflag = true;
+		//bool calcslotflag = false;
 		childbone->SetBtMat(childbone->GetCurMp(calcslotflag).GetWorldMat());//!!!!!!!!!!!!!btmatの初期値
 	}
 
@@ -5528,7 +5528,8 @@ ChaMatrix CBone::GetCurrentWorldMat(bool multmodelwm)
 		curmi = GetParModel()->GetCurMotInfo();
 		if (curmi) {
 			int curmotid = curmi->motid;
-			double curframe = GetParModel()->GetCurrentFrame();
+			//double curframe = GetParModel()->GetCurrentFrame();
+			double curframe = GetParModel()->GetRenderSlotFrame();//2024/03/13 マニピュレータは表示に合わせることにした
 
 			ChaMatrix newworldmat;
 			ChaMatrixIdentity(&newworldmat);

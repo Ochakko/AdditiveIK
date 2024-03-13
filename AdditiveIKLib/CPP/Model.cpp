@@ -3134,6 +3134,7 @@ int CModel::SetCurrentMotion( int srcmotid )
 		//ResetMotionCache();
 
 		m_curmotinfo->curframe = 1.0;
+		m_curmotinfo->befframe = 1.0;
 
 		//if ((m_curmotinfo->fbxanimno >= 0) && GetScene()) {
 		//	FbxAnimStack* lCurrentAnimationStack = m_pscene->FindMember<FbxAnimStack>(mAnimStackNameArray[m_curmotinfo->fbxanimno]->Buffer());
@@ -7226,7 +7227,8 @@ int CModel::RenderBoneMark(myRenderer::RenderingEngine* re,
 	curmi = GetCurMotInfo();
 	if (curmi) {
 		curmotid = curmi->motid;
-		roundingframe = RoundingTime(GetCurrentFrame());
+		//roundingframe = RoundingTime(GetCurrentFrame());
+		roundingframe = RoundingTime(GetRenderSlotFrame());//2024/03/13
 	}
 	else {
 		return 0;
@@ -7469,7 +7471,8 @@ void CModel::RenderCapsuleReq(CBtObject* srcbto, myRenderer::RenderingEngine* re
 					//################################################################################
 
 					bool setinstancescale = true;
-					srcbone->CalcRigidElemParams(setinstancescale, childbone, 0);//形状データのスケールのために呼ぶ。
+					bool calcslotflag = false;
+					srcbone->CalcRigidElemParams(setinstancescale, childbone, 0, calcslotflag);//形状データのスケールのために呼ぶ。
 					//srcbto->SetCapsuleBtMotion(curre);
 
 					ChaMatrix tmpcapmat = curre->GetCapsulematForColiShape(limitdegflag, 0);//2023/01/18
@@ -8555,43 +8558,42 @@ void CModel::CreateBtObjectReq(bool limitdegflag, CBtObject* parbt, CBone* notus
 	}
 }
 
-
-void CModel::CalcRigidElem()
-{
-	CalcRigidElemReq(GetTopBone(false));
-}
-
-
-void CModel::CalcRigidElemReq(CBone* curbone)
-{
-	if (!curbone) {
-		return;
-	}
-
-	int onfirstcreate = 1;
-	bool setinstancescale = false;
-
-
-	//int setstartflag;
-	//if (onfirstcreate != 0) {
-		if ((curbone->IsSkeleton()) && curbone->GetParent(false) && 
-			(curbone->GetParent(false)->IsSkeleton() || curbone->IsHipsBone())) {//childがhipsの場合は parentはeNullも可
-
-			curbone->GetParent(false)->CalcRigidElemParams(setinstancescale, curbone, onfirstcreate);//firstflag 1
-		}
-		////curbone->SetStartMat2( curbone->GetCurMp().GetWorldMat() );
-		//curbone->SetStartMat2(curbone->GetCurrentZeroFrameMat(0));
-	//}
-
-	if (curbone->GetChild(false)) {
-		CalcRigidElemReq(curbone->GetChild(false));
-	}
-	if (curbone->GetBrother(false)) {
-		CalcRigidElemReq(curbone->GetBrother(false));
-	}
-
-
-}
+//void CModel::CalcRigidElem()
+//{
+//	CalcRigidElemReq(GetTopBone(false));
+//}
+//
+//
+//void CModel::CalcRigidElemReq(CBone* curbone)
+//{
+//	if (!curbone) {
+//		return;
+//	}
+//
+//	int onfirstcreate = 1;
+//	bool setinstancescale = false;
+//
+//
+//	//int setstartflag;
+//	//if (onfirstcreate != 0) {
+//		if ((curbone->IsSkeleton()) && curbone->GetParent(false) && 
+//			(curbone->GetParent(false)->IsSkeleton() || curbone->IsHipsBone())) {//childがhipsの場合は parentはeNullも可
+//
+//			curbone->GetParent(false)->CalcRigidElemParams(setinstancescale, curbone, onfirstcreate);//firstflag 1
+//		}
+//		////curbone->SetStartMat2( curbone->GetCurMp().GetWorldMat() );
+//		//curbone->SetStartMat2(curbone->GetCurrentZeroFrameMat(0));
+//	//}
+//
+//	if (curbone->GetChild(false)) {
+//		CalcRigidElemReq(curbone->GetChild(false));
+//	}
+//	if (curbone->GetBrother(false)) {
+//		CalcRigidElemReq(curbone->GetBrother(false));
+//	}
+//
+//
+//}
 
 int CModel::CalcRigidElemParamsOnBt()
 {
@@ -8611,7 +8613,8 @@ int CModel::CalcRigidElemParamsOnBt()
 		if (boneptr && boneptr->GetParent(false) && (boneptr->IsSkeleton())) {
 			CRigidElem* curre = boneptr->GetParent(false)->GetRigidElem(boneptr);
 			if (curre) {
-				boneptr->GetParent(false)->CalcRigidElemParams(setinstancescale, boneptr, firstflag);
+				bool calcslotflag = true;
+				boneptr->GetParent(false)->CalcRigidElemParams(setinstancescale, boneptr, firstflag, calcslotflag);
 			}
 		}
 	}
@@ -8639,8 +8642,8 @@ void CModel::CalcBtAxismatReq( CBone* curbone, int onfirstcreate )
 	if( onfirstcreate != 0 ){
 		if ((curbone->IsSkeleton()) && curbone->GetParent(false) &&
 			(curbone->GetParent(false)->IsSkeleton() || curbone->IsHipsBone())) {//childがhipsの場合は parentはeNullも可
-
-			curbone->GetParent(false)->CalcRigidElemParams(setinstancescale, curbone, onfirstcreate);//firstflag 1
+			bool calcslotflag = true;
+			curbone->GetParent(false)->CalcRigidElemParams(setinstancescale, curbone, onfirstcreate, calcslotflag);//firstflag 1
 		}
 		////curbone->SetStartMat2( curbone->GetCurMp().GetWorldMat() );
 		//curbone->SetStartMat2(curbone->GetCurrentZeroFrameMat(0));
@@ -19404,6 +19407,25 @@ double CModel::GetCurrentFrame()
 		return 1.0;
 	}
 }
+
+void CModel::SetRenderSlotFrame(double srcframe)
+{
+	//RenderBoneMark()で　表示に合わせた剛体位置を表示するために使用
+	if (m_curmotinfo) {
+		m_curmotinfo->befframe = max(0.0, min((m_curmotinfo->frameleng - 1.0), srcframe));;
+	}
+}
+double CModel::GetRenderSlotFrame()
+{
+	if (m_curmotinfo) {
+		return m_curmotinfo->befframe;
+	}
+	else {
+		return 1.0f;
+	}
+}
+
+
 
 int CModel::SetLODNum()
 {

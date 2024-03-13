@@ -231,7 +231,7 @@ public:
  * @return 成功したら0を返す。
  * @detail 剛体をボーンの位置に表示するために、剛体表示用の形状をスケールするために呼ぶ。剛体はボーンの子供ジョイントと１対１で対応するため、指定にchildboneを使う。
  */
-	int CalcRigidElemParams(bool setinstancescale, CBone* childbone, int setstartflag );
+	int CalcRigidElemParams(bool setinstancescale, CBone* childbone, int setstartflag, bool calcslotflag);
 
 /**
  * @fn

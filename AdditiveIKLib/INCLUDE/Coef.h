@@ -586,6 +586,7 @@ typedef struct tag_motinfo
 	int motid;
 	double frameleng;
 	double curframe;
+	double befframe;
 	double speed;
 	int loopflag;
 	int fbxanimno;//fbxファイルの中で何番目のモーションとして読み込んだか　0から始まる番号
@@ -598,6 +599,7 @@ typedef struct tag_motinfo
 		motid = 0;
 		frameleng = 0.0;
 		curframe = 0.0;
+		befframe = 0.0;
 		speed = 1.0;
 		loopflag = 0;
 		fbxanimno = -1;

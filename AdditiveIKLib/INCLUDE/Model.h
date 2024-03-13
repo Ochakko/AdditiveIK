@@ -486,7 +486,17 @@ public:
  * @param (double* dstframe) OUT 再生フレームがセットされる。
  * @return 成功したら０。
  */
+
+	//#######################################################################################
+	//GetMotionFrame, GetCurrentFrame, GetCurrentMotionFrameは同じ結果を返す　リファクタリング候補
+	//#######################################################################################
 	int GetMotionFrame(double* dstframe);
+	double GetCurrentFrame();
+	double GetCurrentMotionFrame();
+
+	void SetRenderSlotFrame(double srcframe);
+	double GetRenderSlotFrame();
+
 	int GetMotionName(int srcmotid, int dstnamelen, char* dstname);
 
 /**
@@ -925,7 +935,7 @@ public:
 	int BulletSimulationStart();
 	int ApplyBtToMotion(bool limitdegflag);
 	void CalcBtAxismat(int onfirstcreate);
-	void CalcRigidElem();
+	//void CalcRigidElem();
 	int CalcRigidElemParamsOnBt();
 	void SetBtKinFlagReq(CBtObject* srcbto, int oncreateflag);
 	void SetKinematicFlagReq(CBtObject* srcbto);
@@ -1164,7 +1174,7 @@ private:
 	void CreateBtObjectReq(bool limitdegflag, CBtObject* parbt, CBone* parentbone, CBone* curbone);
 
 	void CalcBtAxismatReq( CBone* curbone, int onfirstcreate );
-	void CalcRigidElemReq(CBone* curbone);
+	//void CalcRigidElemReq(CBone* curbone);
 	void SetBtMotionReq(bool limitdegflag, CBtObject* curbto, ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
 	//void SetBtMotionPostLowerReq(CBtObject* curbto, ChaMatrix* wmat, ChaMatrix* vpmat, int kinematicadjustflag);
 	//void SetBtMotionPostUpperReq(CBtObject* curbto, ChaMatrix* wmat, ChaMatrix* vpmat);
@@ -1308,7 +1318,6 @@ public: //accesser
 	};
 
 	int GetCurrentMotID();
-	double GetCurrentFrame();
 
 	const WCHAR* GetFileName(){ return m_filename; };
 	const WCHAR* GetDirName(){ return m_dirname; };
@@ -1583,7 +1592,6 @@ public: //accesser
 
 
 	int GetCurrentMotion();
-	double GetCurrentMotionFrame();
 
 	MOTINFO* GetCurMotInfo(){
 		if (GetNoBoneFlag() == false) {
