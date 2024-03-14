@@ -26,7 +26,7 @@ struct SVSIn
 struct SPSInZPrepass
 {
     float4 pos : SV_POSITION; //座標。
-    float3 depth : TEXCOORD0; //深度値。xにはプロジェクション空間、yにはカメラ空間での正規化されたZ値、zにはカメラ空間でのZ値
+    float4 depth : TEXCOORD0; //深度値。xにはプロジェクション空間、yにはカメラ空間での正規化されたZ値、zにはカメラ空間でのZ値
 };
 
 ///////////////////////////////////////////
@@ -83,13 +83,15 @@ SPSInZPrepass VSMainZPrepass(SVSIn vsIn, uniform bool hasSkin)
         finalmat += (addmat * bw[i]);
     }
 	psIn.pos = mul(finalmat, vsIn.pos);
+
+    float4 distvec = psIn.pos / psIn.pos.w - eyePos;
+    psIn.depth.z = length(distvec.xyz);// / 2000.0f;
     
     psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
-    psIn.depth.z = psIn.pos.z;
     psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
     psIn.depth.x = psIn.pos.z / psIn.pos.w;
     psIn.depth.y = saturate(psIn.pos.w / 1000.0f);
-    
+    psIn.depth.w = 1.0f;
     
     //2021/01/20 TEST offset z
     ////psIn.pos.xyz /= psIn.pos.w;

@@ -369,6 +369,9 @@ namespace myRenderer
         /// <param name="rc">レンダリングコンテキスト</param>
         void ForwardRendering(RenderContext* rc);
 
+        void SpriteRendering(RenderContext* rc);
+
+
         /// <summary>
         /// メインレンダリングターゲットを初期化
         /// </summary>

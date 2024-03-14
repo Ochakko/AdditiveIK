@@ -1427,12 +1427,15 @@ int CDispObj::RenderZPrePm4(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 			//#####################################################
 			//半透明はZバッファに書き込まないように　ZPrepass処理をスキップ
 			//#####################################################
-			if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
-				continue;
-			}
-			if (renderobj.withalpha || renderobj.forcewithalpha) {
-				continue;
-			}
+			//#####################################################################################################
+			//2024/03/15 GroupNo == 1以外は全部半透明扱いなのでスキップするとZPreが機能しない　よって半透明時も描画することにした
+			//#####################################################################################################
+			//if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
+			//	continue;
+			//}
+			//if (renderobj.withalpha || renderobj.forcewithalpha) {
+			//	continue;
+			//}
 
 			Matrix mView, mProj;
 			//mView = g_camera3D->GetViewMatrix(false);
@@ -1766,12 +1769,15 @@ int CDispObj::RenderZPrePm3(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 		//#####################################################
 		//半透明はZバッファに書き込まないように　ZPrepass処理をスキップ
 		//#####################################################
-		if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
-			continue;
-		}
-		if (renderobj.withalpha || renderobj.forcewithalpha) {
-			continue;
-		}
+		//#####################################################################################################
+		//2024/03/15 GroupNo == 1以外は全部半透明扱いなのでスキップするとZPreが機能しない　よって半透明時も描画することにした
+		//#####################################################################################################
+		//if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
+		//	continue;
+		//}
+		//if (renderobj.withalpha || renderobj.forcewithalpha) {
+		//	continue;
+		//}
 
 
 		Matrix mView, mProj;

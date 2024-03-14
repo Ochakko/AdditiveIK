@@ -90,6 +90,11 @@ public:
 	{
 		return m_depthStencilTexture;
 	}
+	ID3D12Resource* GetDepthStencilTexture()
+	{
+		return m_depthStencilTexture;
+	}
+
 	/// <summary>
 	/// レンダリングターゲットの幅を取得。
 	/// </summary>

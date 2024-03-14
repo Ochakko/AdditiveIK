@@ -1970,7 +1970,6 @@ void CMQOMaterial::InitZPrePipelineState(int vertextype, const std::array<DXGI_F
 
 		m_ZPreModelPipelineState.Init(psoDesc);
 
-
 	}
 
 }

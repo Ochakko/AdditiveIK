@@ -3482,8 +3482,8 @@ int CheckResolution()
 								
 				if (selectL == TRUE) {
 					g_4kresolution = true;//!!!!!!!!!!!!!!!!
-					//g_zpreflag = true;//2023/12/30 4Kのときだけtrue
-					g_zpreflag = false;//2024/02/14
+					g_zpreflag = true;//2023/12/30 4Kのときだけtrue
+					//g_zpreflag = false;//2024/02/14
 
 					s_modelwindowwidth = 400;
 					s_motionwindowwidth = s_modelwindowwidth;
@@ -3553,7 +3553,8 @@ int CheckResolution()
 
 
 	if (!g_4kresolution) {
-		g_zpreflag = false;
+		//g_zpreflag = false;
+		g_zpreflag = true;
 
 
 		//s_spsize = 38.0f;
@@ -4041,7 +4042,8 @@ void InitApp()
 	s_modelworldmatFlag = false;
 	s_jumpgravityFlag = false;
 
-	g_zpreflag = false;
+	//g_zpreflag = false;
+	g_zpreflag = true;
 	g_zcmpalways = false;
 	g_lightflag = 1;
 

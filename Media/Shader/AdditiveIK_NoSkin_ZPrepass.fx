@@ -1,3 +1,12 @@
+///////////////////////////////////////////////////
+// 定数
+///////////////////////////////////////////////////
+//static const int NUM_DIRECTIONAL_LIGHT = 4; // ディレクションライトの本数
+static const int NUM_DIRECTIONAL_LIGHT = 8; // ディレクションライトの本数
+static const float PI = 3.1415926f; // π
+//static const float POW = 15.0;
+//static const float POW = 0.2f;
+static const float POW = 5.0f;
 ///////////////////////////////////////////
 // 構造体
 ///////////////////////////////////////////
@@ -14,7 +23,7 @@ struct SVSIn
 struct SPSInZPrepass
 {
     float4 pos : SV_POSITION; //座標。
-    float3 depth : TEXCOORD0; //深度値。xにはプロジェクション空間、yにはカメラ空間での正規化されたZ値、zにはカメラ空間でのZ値
+    float4 depth : TEXCOORD0; //深度値。xにはプロジェクション空間、yにはカメラ空間での正規化されたZ値、zにはカメラ空間でのZ値
 };
 
 ///////////////////////////////////////////
@@ -35,6 +44,26 @@ cbuffer ModelCb : register(b0)
     int4 UVs;
 };
 
+
+struct DirectionalLight
+{
+    float4 direction; // ライトの方向
+    float4 color; // ライトの色
+};
+
+cbuffer LightCb : register(b1)
+{
+    uniform int4 lightsnum;
+    DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
+    float4 eyePos; // カメラの視点
+    float4 specPow; // スペキュラの絞り
+    //float4 ambientLight; // 環境光    
+    float4 toonlightdir;
+    float4 vFog;
+    float4 vFogColor;
+};
+
+
 //########
 //シェーダ
 //########
@@ -43,12 +72,15 @@ SPSInZPrepass VSMainZPrepass(SVSIn vsIn, uniform bool hasSkin)
     SPSInZPrepass psIn;
 
     psIn.pos = mul(mWorld, vsIn.pos); // モデルの頂点をワールド座標系に変換
+
+    float4 distvec = psIn.pos / psIn.pos.w - eyePos;
+    psIn.depth.z = length(distvec.xyz);// / 2000.0f;
+
     psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
-    psIn.depth.z = psIn.pos.z;
     psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
     psIn.depth.x = psIn.pos.z / psIn.pos.w;
     psIn.depth.y = saturate(psIn.pos.w / 1000.0f);
-    
+    psIn.depth.w = 1.0f;
     //2021/01/20 TEST offset z
     ////psIn.pos.xyz /= psIn.pos.w;
     ////psIn.pos.w = 1.0f;

@@ -17,7 +17,12 @@ namespace myRenderer {
             return;
         }
 
+        //m_bloom.Render(rc, mainRenderTarget);
+        //m_dof.Render(rc, mainRenderTarget);
+
+
         m_bloom.Render(rc, mainRenderTarget);
         m_dof.Render(rc, mainRenderTarget);
+
     }
 }

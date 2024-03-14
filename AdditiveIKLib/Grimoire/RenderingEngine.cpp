@@ -139,6 +139,8 @@ namespace myRenderer
 
     void RenderingEngine::InitZPrepassRenderTarget()
     {
+        //float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
         m_zprepassRenderTarget.Create(
             g_graphicsEngine->GetFrameBufferWidth(),
             g_graphicsEngine->GetFrameBufferHeight(),
@@ -146,7 +148,8 @@ namespace myRenderer
             1,
             DXGI_FORMAT_R32G32B32A32_FLOAT,
             //DXGI_FORMAT_R32G32_FLOAT,
-            DXGI_FORMAT_D32_FLOAT
+            DXGI_FORMAT_D32_FLOAT,
+            clearColor
         );
 
     }
@@ -352,9 +355,10 @@ namespace myRenderer
         //2Kモードでは遮蔽面積が小さいために　ZPrepassのコストの方が大きくなり遅くなる
         //ZPrepassは4Kモードの場合だけ呼び出すことに.
         //if (g_4kresolution) {
-        if (g_zpreflag) {//2023/12/09 DispAndLimitsメニューのオプションに.
+        //if (g_zpreflag) {//2023/12/09 DispAndLimitsメニューのオプションに.
+        //2024/03/15 ZPrepassオフの場合にもクリアが必要
             ZPrepass(rc);
-        }
+        //}
         
 
         // G-Bufferへのレンダリング
@@ -373,6 +377,11 @@ namespace myRenderer
             // ポストエフェクトを実行
             m_postEffect.Render(rc, m_mainRenderTarget);
         }
+
+
+        SpriteRendering(rc);//m_postEffectよりも後で
+
+
 
         // メインレンダリングターゲットの内容をフレームバッファにコピー
         CopyMainRenderTargetToFrameBuffer(rc);
@@ -438,17 +447,25 @@ namespace myRenderer
         // まず、レンダリングターゲットとして設定できるようになるまで待つ
         rc->WaitUntilToPossibleSetRenderTarget(m_zprepassRenderTarget);
 
-        // レンダリングターゲットを設定
-        rc->SetRenderTargetAndViewport(m_zprepassRenderTarget);
+        rc->SetRenderTarget(
+            m_zprepassRenderTarget.GetRTVCpuDescriptorHandle(),
+            m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
+        );
+        const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        rc->ClearRenderTargetView(m_zprepassRenderTarget.GetRTVCpuDescriptorHandle(), clearColor);
 
-        // レンダリングターゲットをクリア
-        rc->ClearRenderTargetView(m_zprepassRenderTarget);
+        ////前のパスで異なるviewportを設定した場合にはviewportの設定し直しが必要
+        rc->SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
+        rc->ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
 
-        //for (auto& currenderobj : m_zprepassModels)
-        for (auto& currenderobj : m_forwardRenderModels)
-        {
-            //model->Draw(rc);
-            RenderPolyMeshZPre(rc, currenderobj);
+
+        if (g_zpreflag) {
+            //for (auto& currenderobj : m_zprepassModels)
+            for (auto& currenderobj : m_forwardRenderModels)
+            {
+                //model->Draw(rc);
+                RenderPolyMeshZPre(rc, currenderobj);
+            }
         }
 
         rc->WaitUntilFinishDrawingToRenderTarget(m_zprepassRenderTarget);
@@ -469,46 +486,9 @@ namespace myRenderer
         const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
         rc->ClearRenderTargetView(m_mainRenderTarget.GetRTVCpuDescriptorHandle(), clearColor);
 
-
-        //rc.SetRenderTarget(
-        //    m_mainRenderTarget.GetRTVCpuDescriptorHandle(),
-        //    //m_gBuffer[enGBufferAlbedo].GetDSVCpuDescriptorHandle()
-        //    //m_mainRenderTarget.GetDSVCpuDescriptorHandle()//!!!!!!!!!!!!!!!!!!!!!!!!! NULL
-        //    m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
-        //);
-
-
-
-
-        ////rc.WaitUntilToPossibleSetRenderTarget();
-        //rc->SetRenderTarget(
-        //    g_graphicsEngine->GetCurrentFrameBuffuerRTV(),
-        //    //g_graphicsEngine->GetCurrentFrameBuffuerDSV()
-        //    m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
-        //);
-        ////前のパスで異なるviewportを設定した場合にはviewportの設定し直しが必要
+        //////前のパスで異なるviewportを設定した場合にはviewportの設定し直しが必要
         rc->SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
-        ////if (g_4kresolution == false) {
-        if (!g_zpreflag) {
-            //2023/12/05
-            //2Kモードの場合には　ZPrepassを実行しないために　ここでZBufferをクリア
-            //2023/12/09 ZPrepassは　DispAndLimitsメニューのオプションに.
-            rc->ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
-        }
 
-
-
-
-        //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
-        //// レンダリングターゲットを設定
-        //rc.SetRenderTargetAndViewport(m_mainRenderTarget);
-
-
-        //rc.WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
-        //rc.SetRenderTarget(
-        //    m_mainRenderTarget.GetRTVCpuDescriptorHandle(),
-        //    m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()//ZPrePass Z Buffer !!!!
-        //);
 
         for (auto& currenderobj : m_forwardRenderModels)
         {
@@ -530,6 +510,28 @@ namespace myRenderer
         {
             RenderPolyMeshInstancing(rc, currenderobjinsta);
         }
+
+
+        // メインレンダリングターゲットへの書き込み終了待ち
+       rc->WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
+    }
+
+
+    void RenderingEngine::SpriteRendering(RenderContext* rc)
+    {
+        if (!rc) {
+            _ASSERT(0);
+            return;
+        }
+        rc->WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
+        rc->SetRenderTarget(
+            m_mainRenderTarget.GetRTVCpuDescriptorHandle(),
+            //m_gBuffer[enGBufferAlbedo].GetDSVCpuDescriptorHandle()
+            m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
+        );
+        //////前のパスで異なるviewportを設定した場合にはviewportの設定し直しが必要
+        rc->SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
+
 
         //Sprite (ScreenVertexMode)
         for (auto& currendersprite : m_forwardRenderSprites)
@@ -553,16 +555,17 @@ namespace myRenderer
         {
             if (currenderfont.pfont && (currenderfont.strfont[0] != 0L)) {
                 currenderfont.pfont->Begin(rc);
-                currenderfont.pfont->Draw(currenderfont.strfont, 
-                    currenderfont.disppos, currenderfont.color, 
+                currenderfont.pfont->Draw(currenderfont.strfont,
+                    currenderfont.disppos, currenderfont.color,
                     currenderfont.rotation, currenderfont.scale, currenderfont.pivot);
                 currenderfont.pfont->End(rc);
             }
         }
 
         // メインレンダリングターゲットへの書き込み終了待ち
-       rc->WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
+        rc->WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
     }
+
 
     //void RenderingEngine::RenderToGBuffer(RenderContext* rc)
     //{
@@ -766,14 +769,10 @@ namespace myRenderer
                     //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
                     currenderobj.mqoobj->GetDispObj()->RenderZPrePm3(rc, currenderobj);
                 }
-
-                //小さい画面では遮蔽される面積が小さいので　ボーン変形のコストの方が高いことがある
-                //背景のZPrepassだけにするためにPm4のZPrepassはコメントアウト
-                //else if (currenderobj.mqoobj->GetPm4()) {
-                //    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                //    currenderobj.mqoobj->GetDispObj()->RenderZPrePm4(rc, currenderobj);
-                //}
-
+                else if (currenderobj.mqoobj->GetPm4()) {
+                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+                    currenderobj.mqoobj->GetDispObj()->RenderZPrePm4(rc, currenderobj);
+                }
             }
             if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
                 //################################

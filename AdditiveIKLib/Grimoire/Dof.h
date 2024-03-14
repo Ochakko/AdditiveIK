@@ -22,6 +22,7 @@ namespace myRenderer {
         void DestroyObjs();
     private:
         void InitCombimeBokeImageToSprite(Sprite& combineBokeImageSprite, Texture* bokeTexture, Texture* depthTexture);
+        
     private:
         RenderTarget m_rtVerticalBlur;		//垂直ブラーをかけるためのレンダリングターゲット
         RenderTarget m_rtDiagonalBlur;		//対角線ブラーをかけるためのレンダリングターゲット

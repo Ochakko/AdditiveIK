@@ -36,10 +36,15 @@ namespace myRenderer {
         combineBokeImageSpriteInitData.m_textures[1] = depthTexture;
         //combineBokeImageSpriteInitData.m_width = 1280;
         //combineBokeImageSpriteInitData.m_height = 720;
-        combineBokeImageSpriteInitData.m_width = g_graphicsEngine->GetFrameBufferWidth();//2023/11/20
-        combineBokeImageSpriteInitData.m_height = g_graphicsEngine->GetFrameBufferHeight();//2023/11/20
+        //combineBokeImageSpriteInitData.m_width = g_graphicsEngine->GetFrameBufferWidth();//2023/11/20
+        //combineBokeImageSpriteInitData.m_height = g_graphicsEngine->GetFrameBufferHeight();//2023/11/20
+        combineBokeImageSpriteInitData.m_width = bokeTexture->GetWidth();//2024/03/15
+        combineBokeImageSpriteInitData.m_height = bokeTexture->GetHeight();//2024/03/15
         combineBokeImageSpriteInitData.m_fxFilePath = "../Media/shader/preset/dof.fx";
-        combineBokeImageSpriteInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        combineBokeImageSpriteInitData.m_vsEntryPointFunc = "VSMain";
+        combineBokeImageSpriteInitData.m_psEntryPoinFunc = "PSMain";
+        //combineBokeImageSpriteInitData.m_colorBufferFormat[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        //combineBokeImageSpriteInitData.m_colorBufferFormat[1] = DXGI_FORMAT_R32G32B32A32_FLOAT;
         // 距離を利用してボケ画像をアルファブレンディングするので、半透明合成モードにする
         combineBokeImageSpriteInitData.m_alphaBlendMode = AlphaBlendMode_Trans;
         // 初期化オブジェクトを利用してスプライトを初期化する

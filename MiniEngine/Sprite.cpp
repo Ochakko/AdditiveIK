@@ -122,7 +122,8 @@
     {
         if (m_textureExternal[0] != nullptr) {
             //外部のテクスチャが指定されている。
-            for (int texNo = 0; texNo < m_numTexture; texNo++) {
+            int texNo = 0;
+            for (texNo = 0; texNo < m_numTexture; texNo++) {
                 m_descriptorHeap.RegistShaderResource(texNo, *m_textureExternal[texNo]);
             }
         }
