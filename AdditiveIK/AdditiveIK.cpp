@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "stdafx.h"
+#include "stdafx.h"
 
 #include "useatl.h"
 
@@ -49,6 +50,7 @@
 #include <ThresholdFile.h>
 #include <ShadowParamsFile.h>
 #include <SkyParamsFile.h>
+#include <FogParamsFile.h>
 #include "IniFile.h"
 
 
@@ -734,6 +736,7 @@ static HWND s_modelworldmatdlgwnd = 0;
 static HWND s_jumpgravitydlgwnd = 0;
 static HWND s_shadertypeparamsdlgwnd = 0;
 static HWND s_skyparamsdlgwnd = 0;
+static HWND s_fogparamsdlgwnd = 0;
 static HWND s_savechadlghwnd = 0;
 static HWND s_bvhdlghwnd = 0;
 static HWND s_saveredlghwnd = 0;
@@ -1166,6 +1169,7 @@ static OWP_Label* s_lightscalelabel[MAXMATERIALNUM + 1];//+1は見出しの分
 static bool s_shadertypeparamsFlag = false;
 static int s_shadertypeparamsindex = -1;//index==0は全てのマテリアルに設定. それ以外はindex - 1のマテリアルに設定
 static bool s_skyparamsFlag = false;
+static bool s_fogparamsFlag = false;
 
 
 static OrgWindow* s_rigidWnd = 0;
@@ -2246,11 +2250,15 @@ static void DestroyShaderTypeWnd();//OWPの方
 static int CreateShaderTypeParamsDlg();//params設定用　OWPでは無い方
 static int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat);//params設定用　OWPでは無い方
 static int ShowShaderTypeParamsDlg();//params設定用　OWPでは無い方
+static void CheckShaderTypeParamsButton(HWND hDlgWnd, int srcshadertype);//params設定用　OWPでは無い方
+static void CheckToonLightButton(HWND hDlgWnd, int srclightindex);
 static int CreateSkyParamsDlg();//params設定用　OWPでは無い方
 static int SetMaterial2SkyParamsDlg(CMQOMaterial* srcmat);//params設定用　OWPでは無い方
 static int ShowSkyParamsDlg();//params設定用　OWPでは無い方
-static void CheckShaderTypeParamsButton(HWND hDlgWnd, int srcshadertype);//params設定用　OWPでは無い方
-static void CheckToonLightButton(HWND hDlgWnd, int srclightindex);
+static int CreateFogParamsDlg();//params設定用　OWPでは無い方
+static int Set2FogParamsDlg();//params設定用　OWPでは無い方
+static int ShowFogParamsDlg();//params設定用　OWPでは無い方
+static void CheckFogKindParamsButton(HWND hDlgWnd, int srckind);
 
 
 
@@ -2266,6 +2274,7 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK JumpGravityDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK SkyParamsDlgProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK FogParamsDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK OpenBvhDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK SaveChaDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK ExportXDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
@@ -2293,6 +2302,8 @@ LRESULT CALLBACK ThresholdDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 static int OwnerDrawLightColorBar(HWND hDlgWnd, int lightindex, int idcolorbar);
 static int ChooseLightColorBar(HWND hDlgWnd, int lightindex, int idcolorbar);
 
+static int OwnerDrawFogColorBar(HWND hDlgWnd, int lightindex, int idcolorbar);
+static int ChooseFogColorBar(HWND hDlgWnd, int lightindex, int idcolorbar);
 
 
 
@@ -2477,6 +2488,8 @@ static int LoadShadowParamsFile();
 static int SaveShadowParamsFile();
 static int LoadSkyParamsFile();
 static int SaveSkyParamsFile();
+static int LoadFogParamsFile();
+static int SaveFogParamsFile();
 
 static int OpenFile();
 static int BVH2FBX();
@@ -3260,6 +3273,7 @@ INT WINAPI wWinMain(
 
 	OnCreateDevice();
 	LoadSkyParamsFile();//s_skyを作成した後で呼ぶ
+	LoadFogParamsFile();//s_skyを作成した後で呼ぶ
 
 
 	CreatePlaceFolderWnd();
@@ -3296,6 +3310,7 @@ INT WINAPI wWinMain(
 	CreateJumpGravityWnd();
 	CreateShaderTypeParamsDlg();
 	CreateSkyParamsDlg();
+	CreateFogParamsDlg();
 
 
 
@@ -3607,6 +3622,10 @@ void InitApp()
 	InitializeCriticalSection(&g_CritSection_FbxSdk);
 
 	InitCommonControls();
+
+
+	g_fogparams.InitParams();
+
 
 	s_matWorld.SetIdentity();
 	s_matProj.SetIdentity();
@@ -3986,6 +4005,7 @@ void InitApp()
 		s_shadertypeparamsFlag = false;
 		s_shadertypeparamsindex = -1;//index==0は全てのマテリアルに設定. それ以外はindex - 1のマテリアルに設定
 		s_skyparamsFlag = false;
+		s_fogparamsFlag = false;
 
 		s_shadertypeWnd = 0;
 		s_SCshadertype = 0;
@@ -4854,6 +4874,7 @@ void InitApp()
 	s_jumpgravitydlgwnd = 0;
 	s_shadertypeparamsdlgwnd = 0;
 	s_skyparamsdlgwnd = 0;
+	s_fogparamsdlgwnd = 0;
 
 
 	{
@@ -4929,6 +4950,7 @@ void OnDestroyDevice()
 	SaveThreshold();
 	SaveShadowParamsFile();
 	SaveSkyParamsFile();
+	SaveFogParamsFile();
 
 	//if (s_updatetimeline) {
 	//	delete s_updatetimeline;
@@ -5076,6 +5098,10 @@ void OnDestroyDevice()
 	if (s_skyparamsdlgwnd) {
 		DestroyWindow(s_skyparamsdlgwnd);
 		s_skyparamsdlgwnd = 0;
+	}
+	if (s_fogparamsdlgwnd) {
+		DestroyWindow(s_fogparamsdlgwnd);
+		s_fogparamsdlgwnd = 0;
 	}
 
 	CloseDbgFile();
@@ -7000,10 +7026,12 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			break;
 			case ID_SETTINGS:
 			{
-				//CSettingsDlg dlg;
-				//dlg.DoModal();
-
 				s_skyparamsFlag = true;
+			}
+			break;
+			case ID_FOG:
+			{
+				s_fogparamsFlag = true;
 			}
 			break;
 
@@ -25672,6 +25700,51 @@ int OwnerDrawLightColorBar(HWND hDlgWnd, int lightindex, int idcolorbar)
 	return 0;
 }
 
+int OwnerDrawFogColorBar(HWND hDlgWnd, int fogkind, int idcolorbar)
+{
+	if (!hDlgWnd) {
+		_ASSERT(0);
+		return 1;
+	}
+	if ((fogkind <= 0) || (fogkind > 2)) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	ChaVector4 fogcolor;
+	if (fogkind == 1) {
+		fogcolor = g_fogparams.GetDistColor();
+	}
+	else if (fogkind == 2) {
+		fogcolor = g_fogparams.GetHeightColor();
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+	unsigned char ur, ug, ub;
+	ur = (unsigned char)(fogcolor.x * 255.0f + 0.0001f);
+	ur = min(255, max(0, ur));
+	ug = (unsigned char)(fogcolor.y * 255.0f + 0.0001f);
+	ug = min(255, max(0, ug));
+	ub = (unsigned char)(fogcolor.z * 255.0f + 0.0001f);
+	ub = min(255, max(0, ub));
+
+	COLORREF col;
+	col = RGB(ur, ug, ub);
+
+	HBRUSH hBrush = CreateSolidBrush(col);
+	HWND hwnd = GetDlgItem(hDlgWnd, idcolorbar);
+	HDC hdc = GetDC(hwnd);
+	RECT rect;
+	GetClientRect(hwnd, &rect);
+	FillRect(hdc, &rect, hBrush);
+	ReleaseDC(hwnd, hdc);
+	DeleteObject(hBrush);
+
+	return 0;
+}
+
 int ChooseLightColorBar(HWND hDlgWnd, int lightindex, int idcolorbar)
 {
 	if (!hDlgWnd) {
@@ -25712,6 +25785,76 @@ int ChooseLightColorBar(HWND hDlgWnd, int lightindex, int idcolorbar)
 
 	return 0;
 }
+
+
+
+int ChooseFogColorBar(HWND hDlgWnd, int fogkind, int idcolorbar)
+{
+	if (!hDlgWnd) {
+		_ASSERT(0);
+		return 1;
+	}
+	if ((fogkind <= 0) || (fogkind > 2)) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	ChaVector4 fogcolor;
+	if (fogkind == 1) {
+		fogcolor = g_fogparams.GetDistColor();
+	}
+	else if (fogkind == 2) {
+		fogcolor = g_fogparams.GetHeightColor();
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+	unsigned char ur, ug, ub;
+	ur = (unsigned char)(fogcolor.x * 255.0f + 0.0001f);
+	ur = min(255, max(0, ur));
+	ug = (unsigned char)(fogcolor.y * 255.0f + 0.0001f);
+	ug = min(255, max(0, ug));
+	ub = (unsigned char)(fogcolor.z * 255.0f + 0.0001f);
+	ub = min(255, max(0, ub));
+
+	COLORREF colrgb;
+	colrgb = RGB(ur, ug, ub);
+	int dlgret = s_coldlg.Choose(hDlgWnd, &colrgb);
+	if (dlgret == 1) {
+		float fr, fg, fb;
+		fr = (float)((double)GetRValue(colrgb) / 255.0);
+		fr = min(1.0f, fr);
+		fr = max(0.0f, fr);
+		fg = (float)((double)GetGValue(colrgb) / 255.0);
+		fg = min(1.0f, fg);
+		fg = max(0.0f, fg);
+		fb = (float)((double)GetBValue(colrgb) / 255.0);
+		fb = min(1.0f, fb);
+		fb = max(0.0f, fb);
+
+		if (fogkind == 1) {
+			g_fogparams.SetDistColor(ChaVector4(fr, fg, fb, 1.0f));
+		}
+		else if (fogkind == 2) {
+			g_fogparams.SetHeightColor(ChaVector4(fr, fg, fb, 1.0f));
+		}
+		else {
+			_ASSERT(0);
+			return 1;
+		}
+
+		HWND ctrlwnd = GetDlgItem(hDlgWnd, idcolorbar);
+		RECT rect;
+		GetClientRect(ctrlwnd, &rect);
+		InvalidateRect(ctrlwnd, &rect, true);
+	}
+
+	return 0;
+}
+
+
+
 LRESULT CALLBACK LaterTransparentDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
 
@@ -26326,6 +26469,34 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 //		break;
 //	}
 //}
+
+void CheckFogKindParamsButton(HWND hDlgWnd, int srckind)
+{
+	switch (srckind) {
+	case 0:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_NO_FOG), BM_SETSTATE, TRUE, 0);//!!!!!!
+		SendMessage(GetDlgItem(hDlgWnd, IDC_DIST_FOG), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_HEIGHT_FOG), BM_SETSTATE, FALSE, 0);
+		break;
+	case 1:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_NO_FOG), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_DIST_FOG), BM_SETSTATE, TRUE, 0);//!!!!!!
+		SendMessage(GetDlgItem(hDlgWnd, IDC_HEIGHT_FOG), BM_SETSTATE, FALSE, 0);
+		break;
+	case 2:
+		SendMessage(GetDlgItem(hDlgWnd, IDC_NO_FOG), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_DIST_FOG), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_HEIGHT_FOG), BM_SETSTATE, TRUE, 0);//!!!!!!
+		break;
+	default:
+		_ASSERT(0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_NO_FOG), BM_SETSTATE, TRUE, 0);//!!!!!!
+		SendMessage(GetDlgItem(hDlgWnd, IDC_DIST_FOG), BM_SETSTATE, FALSE, 0);
+		SendMessage(GetDlgItem(hDlgWnd, IDC_HEIGHT_FOG), BM_SETSTATE, FALSE, 0);
+		break;
+	}
+}
+
 
 void CheckShaderTypeParamsButton(HWND hDlgWnd, int srcshadertype)
 {
@@ -28531,7 +28702,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 					s_skyhsvtoonforall.basehsv.y = s_skyparams.hsvtoon.basehsv.y;
 				}
 			}
-			if (LOWORD(wp) == SB_ENDSCROLL) {				
+			if (LOWORD(wp) == SB_ENDSCROLL) {
 				s_skytoonparamchange = true;
 			}
 		}
@@ -29084,6 +29255,167 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 
 
+
+		case IDOK:
+		case IDCANCEL:
+			//EndDialog(hDlgWnd, IDCANCEL);
+			//s_shadertypeparamsFlag = false;
+			ShowWindow(hDlgWnd, SW_HIDE);
+
+			//2023/12/30 以下２行　ここで呼び出すと２回目にSW_SHOWしても表示されないことがあるので　コメントアウト
+			// WindowProcを回す必要があるため
+			//s_shadertypeparamsindex = -1;
+			//s_shadertypeparamsFlag = false;
+			break;
+		default:
+			return FALSE;
+			break;
+		}
+		break;
+	case WM_CLOSE:
+		//s_shadertypeparamsFlag = false;
+		ShowWindow(hDlgWnd, SW_HIDE);
+
+		//2023/12/30 以下２行　ここで呼び出すと２回目にSW_SHOWしても表示されないことがあるので　コメントアウト
+		// WindowProcを回す必要があるため
+		//s_shadertypeparamsindex = -1;
+		//s_shadertypeparamsFlag = false;
+		break;
+	default:
+		DefWindowProc(hDlgWnd, msg, wp, lp);
+		return FALSE;
+	}
+	return TRUE;
+
+}
+
+LRESULT CALLBACK FogParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+
+	if (!s_fogparamsdlgwnd) {
+		s_fogparamsdlgwnd = hDlgWnd;//条件リターンより前でセット
+	}
+
+	switch (msg) {
+	case WM_INITDIALOG:
+	{
+		Set2FogParamsDlg();
+		return FALSE;
+	}
+	break;
+
+	case WM_DRAWITEM://オーナードローコントロールの描画 : リソースでカラーバーボタンにオーナードロー属性を設定してある
+	{
+		int result1 = OwnerDrawFogColorBar(hDlgWnd, 1, IDC_DISTFOG_COLOR);
+		if (result1 != 0) {
+			_ASSERT(0);
+		}
+		int result2 = OwnerDrawFogColorBar(hDlgWnd, 2, IDC_HEIGHTFOG_COLOR);
+		if (result2 != 0) {
+			_ASSERT(0);
+		}
+	}
+	//DefWindowProc(hDlgWnd, msg, wp, lp);
+	break;
+
+	case WM_HSCROLL:
+		if (GetDlgItem(hDlgWnd, IDC_SLIDER_DISTFOGRATE) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_DISTFOGRATE), TBM_GETPOS, 0, 0);
+			float newrate = (float)((double)cursliderpos / 100.0);
+			g_fogparams.SetDistRate(newrate);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"%.2f", g_fogparams.GetDistRate());
+			SetDlgItemText(hDlgWnd, IDC_TEXT_DISTFOGRATE, strdlg);
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_HEIGHTFOG_RATE) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_HEIGHTFOG_RATE), TBM_GETPOS, 0, 0);
+			float newrate = (float)((double)cursliderpos / 100.0);
+			g_fogparams.SetHeightRate(newrate);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"%.2f", g_fogparams.GetHeightRate());
+			SetDlgItemText(hDlgWnd, IDC_TEXT_HEIGHTFOGRATE, strdlg);
+		}
+		break;
+
+	case WM_COMMAND:
+
+		switch (LOWORD(wp)) {
+
+		case IDC_DISTFOG_COLOR:
+		{
+			int result = ChooseFogColorBar(hDlgWnd, 1, IDC_DISTFOG_COLOR);
+			if (result != 0) {
+				_ASSERT(0);
+			}
+		}
+		break;
+		case IDC_HEIGHTFOG_COLOR:
+		{
+			int result = ChooseFogColorBar(hDlgWnd, 2, IDC_HEIGHTFOG_COLOR);
+			if (result != 0) {
+				_ASSERT(0);
+			}
+		}
+		break;
+
+
+		case IDC_NO_FOG:
+		{
+			CheckFogKindParamsButton(hDlgWnd, 0);
+			g_fogparams.SetFogKind(0);
+		}
+		break;
+		case IDC_DIST_FOG:
+		{
+			CheckFogKindParamsButton(hDlgWnd, 1);
+			g_fogparams.SetFogKind(1);
+		}
+		break;
+		case IDC_HEIGHT_FOG:
+		{
+			CheckFogKindParamsButton(hDlgWnd, 2);
+			g_fogparams.SetFogKind(2);
+		}
+		break;
+
+	
+		case IDC_APPLYFOG:
+		{
+			WCHAR streditbox[256] = { 0L };
+			float tempeditvalue;
+
+
+			GetDlgItemText(hDlgWnd, IDC_DISTFOG_NEAR, streditbox, 256);
+			tempeditvalue = (float)_wtof(streditbox);
+			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
+				g_fogparams.SetDistNear(tempeditvalue);
+			}
+			else {
+				::MessageBox(hDlgWnd, L"invalid editbox value : Near", L"Invalid Value", MB_OK);
+			}
+			GetDlgItemText(hDlgWnd, IDC_DISTFOG_FAR, streditbox, 256);
+			tempeditvalue = (float)_wtof(streditbox);
+			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
+				g_fogparams.SetDistFar(tempeditvalue);
+			}
+			else {
+				::MessageBox(hDlgWnd, L"invalid editbox value : Far", L"Invalid Value", MB_OK);
+			}
+
+
+			GetDlgItemText(hDlgWnd, IDC_HEIGHTFOG_MAXH, streditbox, 256);
+			tempeditvalue = (float)_wtof(streditbox);
+			if ((tempeditvalue >= -500000.0f) && (tempeditvalue <= 500000.0f)) {
+				g_fogparams.SetHeightHigh(tempeditvalue);
+			}
+			else {
+				::MessageBox(hDlgWnd, L"invalid editbox value : Max Height", L"Invalid Value", MB_OK);
+			}
+
+		}
+		break;
 
 		case IDOK:
 		case IDCANCEL:
@@ -33107,6 +33439,10 @@ int OnFrameToolWnd()
 		if (s_sky) {
 			ShowSkyParamsDlg();
 		}
+	}
+	if (s_fogparamsFlag) {
+		s_fogparamsFlag = false;
+		ShowFogParamsDlg();
 	}
 
 	if (s_interpolateFlag) {
@@ -44030,10 +44366,12 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			break;
 			case ID_SETTINGS:
 			{
-				//CSettingsDlg dlg;
-				//dlg.DoModal();
-
 				s_skyparamsFlag = true;
+			}
+			break;
+			case ID_FOG:
+			{
+				s_fogparamsFlag = true;
 			}
 			break;
 
@@ -54692,7 +55030,18 @@ int LoadSkyParamsFile()
 		return 1;
 	}
 }
+int LoadFogParamsFile()
+{
+	int result = 0;
 
+	WCHAR filepath[MAX_PATH] = { 0L };
+	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjFogParams_0.txt", s_temppath);
+
+	CFogParamsFile fogparamsfile;
+	result = fogparamsfile.LoadFogParamsFile(filepath);
+
+	return result;
+}
 
 int PickManipulator(UIPICKINFO* ppickinfo, bool pickring)
 {
@@ -54867,6 +55216,20 @@ int SaveSkyParamsFile()
 		return 1;
 	}
 }
+int SaveFogParamsFile()
+{
+	int result = 0;
+
+	WCHAR filepath[MAX_PATH] = { 0L };
+	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjFogParams_0.txt", s_temppath);
+
+	CFogParamsFile fogparamsfile;
+	result = fogparamsfile.WriteFogParamsFile(filepath);
+	_ASSERT(result == 0);
+
+	return result;
+}
+
 
 int SaveChooseColor()
 {
@@ -56411,6 +56774,23 @@ int CreateSkyParamsDlg()
 		return 1;
 	}
 }
+int CreateFogParamsDlg()
+{
+
+	HWND hDlgWnd = CreateDialogW((HMODULE)GetModuleHandle(NULL),
+		MAKEINTRESOURCE(IDD_FOGPARAMSDLG), s_3dwnd, (DLGPROC)FogParamsDlgProc);
+	if (hDlgWnd != NULL) {
+		s_fogparamsdlgwnd = hDlgWnd;
+		ShowWindow(s_fogparamsdlgwnd, SW_HIDE);
+		s_fogparamsFlag = false;
+		return 0;
+	}
+	else {
+		s_fogparamsdlgwnd = NULL;
+		s_fogparamsFlag = false;
+		return 1;
+	}
+}
 
 int SetModel2ModelWorldMatDlg(CModel* srcmodel)
 {
@@ -57015,6 +57395,55 @@ int SetMaterial2SkyParamsDlg(CMQOMaterial* mqomat)
 }
 
 
+int Set2FogParamsDlg()
+{
+	HWND hDlgWnd = s_fogparamsdlgwnd;
+
+	//#######
+	//Button
+	//#######
+	CheckFogKindParamsButton(hDlgWnd, g_fogparams.GetFogKind());
+
+	//#######
+	//Slider
+	//#######
+	int sliderpos = (int)(g_fogparams.GetDistRate() * 100.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_DISTFOGRATE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_DISTFOGRATE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_DISTFOGRATE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(g_fogparams.GetHeightRate() * 100.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_HEIGHTFOG_RATE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_HEIGHTFOG_RATE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_HEIGHTFOG_RATE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	//#####
+	//Text
+	//#####
+	WCHAR strdlg[256] = { 0L };
+	swprintf_s(strdlg, 256, L"%.2f", g_fogparams.GetDistRate());
+	SetDlgItemText(hDlgWnd, IDC_TEXT_DISTFOGRATE, strdlg);
+
+	swprintf_s(strdlg, 256, L"%.2f", g_fogparams.GetHeightRate());
+	SetDlgItemText(hDlgWnd, IDC_TEXT_HEIGHTFOGRATE, strdlg);
+
+	swprintf_s(strdlg, 256, L"%.1f", g_fogparams.GetDistNear());
+	SetDlgItemText(hDlgWnd, IDC_DISTFOG_NEAR, strdlg);
+	swprintf_s(strdlg, 256, L"%.1f", g_fogparams.GetDistFar());
+	SetDlgItemText(hDlgWnd, IDC_DISTFOG_FAR, strdlg);
+
+	swprintf_s(strdlg, 256, L"0.0");
+	SetDlgItemText(hDlgWnd, IDC_HEIGHTFOG_MINH, strdlg);
+	EnableWindow(GetDlgItem(hDlgWnd, IDC_HEIGHTFOG_MINH), FALSE);//!!!!!! 0.0固定
+	swprintf_s(strdlg, 256, L"%.1f", g_fogparams.GetHeightHigh());
+	SetDlgItemText(hDlgWnd, IDC_HEIGHTFOG_MAXH, strdlg);
+
+
+	return 0;
+}
+
+
+
 int ShowModelWorldMatDlg()
 {
 
@@ -57100,6 +57529,18 @@ int ShowSkyParamsDlg()
 				ShowWindow(s_skyparamsdlgwnd, SW_HIDE);
 			}
 		}
+	}
+
+	return 0;
+}
+int ShowFogParamsDlg()
+{
+
+	if (s_fogparamsdlgwnd) {
+		Set2FogParamsDlg();
+
+		ShowWindow(s_fogparamsdlgwnd, SW_SHOW);
+		UpdateWindow(s_fogparamsdlgwnd);
 	}
 
 	return 0;

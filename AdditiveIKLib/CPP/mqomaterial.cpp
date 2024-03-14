@@ -3130,6 +3130,48 @@ void CMQOMaterial::SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBuff
 	pcbLights->eyePos = ChaVector4(ChaVector3(g_camera3D->GetPosition()), 0.0f);
 	pcbLights->specPow = ChaVector4(5.0f, 5.0f, 5.0f, 0.0f);
 	pcbLights->toonlightdir = g_lightdirforall[toonlightindex];//2024/02/15
+
+
+	int fogkind = g_fogparams.GetFogKind();
+	pcbLights->fog.w = (float)fogkind;
+	if (fogkind == 0) {
+		//########
+		//no fog
+		//########
+
+		//set dummy value
+		pcbLights->fogcolor = g_fogparams.GetDistColor();
+		pcbLights->fog.x = g_fogparams.GetDistNear();
+		pcbLights->fog.y = g_fogparams.GetDistFar();
+		pcbLights->fog.z = g_fogparams.GetDistRate();
+	}
+	else if (fogkind == 1) {
+		//#########
+		//dist fog
+		//#########
+		pcbLights->fogcolor = g_fogparams.GetDistColor();
+		pcbLights->fog.x = g_fogparams.GetDistNear();
+		pcbLights->fog.y = g_fogparams.GetDistFar();
+		pcbLights->fog.z = g_fogparams.GetDistRate();
+	}
+	else if (fogkind == 2) {
+		//###########
+		//height fog
+		//###########
+		pcbLights->fogcolor = g_fogparams.GetHeightColor();
+		pcbLights->fog.x = 0.0f;
+		pcbLights->fog.y = g_fogparams.GetHeightHigh();
+		pcbLights->fog.z = g_fogparams.GetHeightRate();
+	}
+	else {
+		_ASSERT(0);
+
+		//set dummy value
+		pcbLights->fogcolor = g_fogparams.GetDistColor();
+		pcbLights->fog.x = g_fogparams.GetDistNear();
+		pcbLights->fog.y = g_fogparams.GetDistFar();
+		pcbLights->fog.z = g_fogparams.GetDistRate();
+	}
 }
 
 

@@ -1112,6 +1112,95 @@ private:
 	double m_distfromcamera;
 };
 
+class CFogParams
+{
+public:
+	CFogParams() {
+		InitParams();
+	};
+	~CFogParams() {
+		DestroyObjs();
+	};
+
+	void InitParams() {
+		m_fogkind = 0;
+
+		m_distcolor = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		m_distparams = ChaVector3(10.0f, 10000.0f, 0.6f);
+
+		m_heightcolor = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		m_heightparams = ChaVector3(0.0f, 140.0f, 0.6f);
+	};
+
+private:
+	void DestroyObjs() {
+	};
+
+public:
+	void SetFogKind(int srckind) {
+		m_fogkind = srckind;
+	};
+	int GetFogKind() {
+		return m_fogkind;
+	};
+
+
+	void SetDistColor(ChaVector4 srcval) {
+		m_distcolor = srcval;
+	}
+	ChaVector4 GetDistColor() {
+		return m_distcolor;
+	};
+	void SetDistNear(float srcval) {
+		m_distparams.x = srcval;
+	};
+	float GetDistNear() {
+		return m_distparams.x;
+	};
+	void SetDistFar(float srcval) {
+		m_distparams.y = srcval;
+	};
+	float GetDistFar() {
+		return m_distparams.y;
+	};
+	void SetDistRate(float srcval) {
+		m_distparams.z = srcval;
+	};
+	float GetDistRate() {
+		return m_distparams.z;
+	};
+
+
+	void SetHeightColor(ChaVector4 srcval) {
+		m_heightcolor = srcval;
+	}
+	ChaVector4 GetHeightColor() {
+		return m_heightcolor;
+	};
+	void SetHeightHigh(float srcval) {
+		m_heightparams.y = srcval;
+	};
+	float GetHeightHigh() {
+		return m_heightparams.y;
+	}
+	void SetHeightRate(float srcval) {
+		m_heightparams.z = srcval;
+	};
+	float GetHeightRate() {
+		return m_heightparams.z;
+	};
+
+private:
+	int m_fogkind;//0:no fog, 1:dist fog, 2:height fog
+
+	ChaVector4 m_distcolor;
+	ChaVector3 m_distparams;
+
+	ChaVector4 m_heightcolor;
+	ChaVector3 m_heightparams;
+};
+
+
 #endif
 
 

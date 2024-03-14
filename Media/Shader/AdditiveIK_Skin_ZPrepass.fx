@@ -61,6 +61,8 @@ cbuffer ModelCbMatrix : register(b1)
     float4 specPow; // スペキュラの絞り
     //float4 ambientLight; // 環境光    
     float4 toonlightdir;
+    float4 vFog;
+    float4 vFogColor;    
     float4x4 mBoneMat[1000];
 };
 

@@ -110,6 +110,8 @@ struct SConstantBufferLights {
 	ChaVector4 specPow; // スペキュラの絞り
 	//ChaVector4 ambientLight; // 環境光
 	ChaVector4 toonlightdir;
+	ChaVector4 fog;
+	ChaVector4 fogcolor;
 	void Init() {
 		//ZeroMemory(&lightsnum, sizeof(int) * 4);
 		lightsnum[0] = 1;//[0]:有効なライトの数(値をセットしてあるライトの数)
@@ -126,6 +128,8 @@ struct SConstantBufferLights {
 		specPow.SetZeroVec4(0.0f);
 		//ambientLight.SetZeroVec4(1.0f);
 		toonlightdir = ChaVector4(0.0f, 0.0f, -1.0f, 0.0f);
+		fog = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
+		fogcolor = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	};
 };
 

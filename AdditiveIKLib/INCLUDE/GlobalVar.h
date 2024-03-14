@@ -58,6 +58,7 @@ class CInfoWindow;
 
 #ifdef ADDITIVEIKLIBGLOBALVAR
 
+CFogParams g_fogparams;
 bool g_skydispflag = true;
 int g_pickorder = 1;
 bool g_hdrpbloom = true;
@@ -330,7 +331,7 @@ double g_playingend = 1.0;
 
 
 #else
-
+extern CFogParams g_fogparams;
 extern bool g_skydispflag;
 extern int g_pickorder;
 extern bool g_hdrpbloom;

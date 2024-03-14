@@ -73,6 +73,7 @@
     <ClCompile Include="..\CPP\ShadowParamsFile.cpp" />
     <ClCompile Include="..\CPP\ThresholdFile.cpp" />
     <ClCompile Include="..\CPP\SkyParamsFile.cpp" />
+    <ClCompile Include="..\CPP\FogParamsFile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\BTSRC\BulletCollision\CollisionDispatch\SphereTriangleDetector.h" />
@@ -1037,6 +1038,7 @@
     <ClInclude Include="..\INCLUDE\ShadowParamsFile.h" />
     <ClInclude Include="..\INCLUDE\ThresholdFile.h" />
     <ClInclude Include="..\INCLUDE\SkyParamsFile.h" />
+    <ClInclude Include="..\INCLUDE\FogParamsFile.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\BTSRC\BulletInverseDynamics\premake4.lua">

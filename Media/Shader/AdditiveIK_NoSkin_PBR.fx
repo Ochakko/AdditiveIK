@@ -37,6 +37,7 @@ struct SPSIn
     float2 uv : TEXCOORD0; // uv座標
     float4 worldPos : TEXCOORD1; // ワールド空間でのピクセルの座標
     float4 diffusemult : TEXCOORD2;
+    float Fog : FOG;    
 };
 
 struct SPSInExtLine
@@ -63,7 +64,15 @@ struct SPSInShadowReciever
     float4 diffusemult : TEXCOORD2;
     
     // ライトビュースクリーン空間での座標を追加
-    float4 posInLVP : TEXCOORD3; // ライトビュースクリーン空間でのピクセルの座標    
+    float4 posInLVP : TEXCOORD3; // ライトビュースクリーン空間でのピクセルの座標  
+    float Fog : FOG;    
+};
+
+
+struct SPSOut
+{
+    float4 color : COLOR0;
+    //float4 specular : SPECULAR0;
 };
 
 ///////////////////////////////////////////
@@ -104,6 +113,8 @@ cbuffer LightCb : register(b1)
     float4 specPow; // スペキュラの絞り
     //float4 ambientLight; // 環境光
     float4 toonlightdir;
+    float4 vFog;
+    float4 vFogColor;
 };
 
 // step-8 影用のパラメータにアクセスする定数バッファーを定義
@@ -129,6 +140,30 @@ sampler g_sampler_normal : register(s2);
 sampler g_sampler_metal : register(s3);
 sampler g_sampler_clamp : register(s4); //2024/02/14
 sampler g_sampler_shadow : register(s5);
+
+
+
+float CalcVSFog(float4 worldpos)
+{
+    worldpos /= worldpos.w;
+    float4 fogpos = worldpos - eyePos;
+    float fogy = worldpos.y / vFog.y;
+    float fog = (vFog.w < 1.1f) ? (vFog.z * length(fogpos.xyz) / (vFog.y - vFog.x)) : (vFog.z - vFog.z * fogy * fogy);
+    //psIn.Fog = (vFog.y - psIn.pos.z / psIn.pos.w) / (vFog.y - vFog.x);
+
+    return fog;
+}
+SPSOut CalcPSFog(float4 pscol, float fog)
+{
+    SPSOut psOut;
+    float3 fogcolor = vFogColor.xyz;
+    float fograte = max(0.0f, min(1.0f, fog));
+    float3 outcolor = lerp(pscol.xyz, fogcolor, fograte);
+    psOut.color = float4(outcolor, pscol.w);
+    return psOut;
+}
+
+
 
 float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir)
 {
@@ -371,6 +406,7 @@ SPSIn VSMainNoSkinPBR(SVSInWithoutBone vsIn, uniform bool hasSkin)
     SPSIn psIn;
 
     psIn.pos = mul(mWorld, vsIn.pos);   // モデルの頂点をワールド座標系に変換
+    psIn.Fog = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
     psIn.worldPos = psIn.pos;    
     psIn.pos = mul(mView, psIn.pos);    // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos);    // カメラ座標系からスクリーン座標系に変換
@@ -413,6 +449,7 @@ SPSInShadowReciever VSMainNoSkinPBRShadowReciever(SVSInWithoutBone vsIn, uniform
     SPSInShadowReciever psIn;
 
     psIn.pos = mul(mWorld, vsIn.pos); // モデルの頂点をワールド座標系に変換
+    psIn.Fog = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
     psIn.worldPos = psIn.pos;    
     psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
@@ -458,7 +495,7 @@ SPSInExtLine VSMainExtLine(SVSInExtLine vsIn, uniform bool hasSkin)
 /// <summary>
 /// モデル用のピクセルシェーダーのエントリーポイント
 /// </summary>
-float4 PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
+SPSOut PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
 {
     //float4 diffusecol = CalcDiffuseColor(psIn.normal, toonlightdir);
 
@@ -590,8 +627,9 @@ float4 PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
     //finalColor.w = albedoColor.w;
     
     float4 finalColor = emission * materialdisprate.z + float4(lig, albedoColor.w) * psIn.diffusemult;
-    return finalColor;
+    //return finalColor;
 
+    return CalcPSFog(finalColor, psIn.Fog);
 }
 
 float4 PSMainNoSkinPBRShadowMap(SPSInShadowMap psIn) : SV_Target0
@@ -600,7 +638,7 @@ float4 PSMainNoSkinPBRShadowMap(SPSInShadowMap psIn) : SV_Target0
 }
 
 
-float4 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
+SPSOut PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
     //float4 diffusecol = CalcDiffuseColor(psIn.normal, toonlightdir);
 
@@ -777,8 +815,10 @@ float4 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     //}
 
     
-    return finalColor;
+    //return finalColor;
  
+    return CalcPSFog(finalColor, psIn.Fog);
+
 }
 
 

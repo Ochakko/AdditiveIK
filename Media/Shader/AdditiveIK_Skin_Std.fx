@@ -30,6 +30,7 @@ struct SPSIn
     float4 normal       : NORMAL;    
     float2 uv           : TEXCOORD0;
     float4 diffusemult : TEXCOORD1;
+    float Fog : FOG;
 };
 
 struct SPSInShadowMap
@@ -49,8 +50,14 @@ struct SPSInShadowReciever
     
     // ライトビュースクリーン空間での座標を追加
     float4 posInLVP : TEXCOORD2; // ライトビュースクリーン空間でのピクセルの座標
+    float Fog : FOG;
 };
 
+struct SPSOut
+{
+    float4 color : COLOR0;
+    //float4 specular : SPECULAR0;
+};
 
 ///////////////////////////////////////////
 // 定数バッファー
@@ -89,6 +96,8 @@ cbuffer ModelCbMatrix : register(b1)
     float4 specPow; // スペキュラの絞り
     //float4 ambientLight; // 環境光
     float4 toonlightdir;
+    float4 vFog;
+    float4 vFogColor;
     float4x4 mBoneMat[1000];
 };
 
@@ -117,6 +126,25 @@ sampler g_sampler_metal : register(s3);
 sampler g_sampler_clamp : register(s4); //2024/02/14
 sampler g_sampler_shadow : register(s5);
 
+float CalcVSFog(float4 worldpos)
+{
+    worldpos /= worldpos.w;
+    float4 fogpos = worldpos - eyePos;
+    float fogy = worldpos.y / vFog.y;
+    float fog = (vFog.w < 1.1f) ? (vFog.z * length(fogpos.xyz) / (vFog.y - vFog.x)) : (vFog.z - vFog.z * fogy * fogy);
+    //psIn.Fog = (vFog.y - psIn.pos.z / psIn.pos.w) / (vFog.y - vFog.x);
+
+    return fog;
+}
+SPSOut CalcPSFog(float4 pscol, float fog)
+{
+    SPSOut psOut;
+    float3 fogcolor = vFogColor.xyz;
+    float fograte = max(0.0f, min(1.0f, fog));
+    float3 outcolor = lerp(pscol.xyz, fogcolor, fograte);
+    psOut.color = float4(outcolor, pscol.w);
+    return psOut;
+}
 
 float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir)
 {
@@ -149,6 +177,7 @@ SPSIn VSMainSkinStd(SVSIn vsIn, uniform bool hasSkin)
     }
 	
     psIn.pos = mul(finalmat, vsIn.pos);
+    psIn.Fog = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
     psIn.pos = mul(mView, psIn.pos);
     psIn.pos = mul(mProj, psIn.pos);
     //psIn.pos /= psIn.pos.w;
@@ -213,6 +242,7 @@ SPSInShadowReciever VSMainSkinStdShadowReciever(SVSIn vsIn, uniform bool hasSkin
     }
 	
     float4 worldPos = mul(finalmat, vsIn.pos);
+    psIn.Fog = (vFog.w > 0.1f) ? CalcVSFog(worldPos) : 0.0f;
     worldPos /= worldPos.w;
     psIn.pos = mul(mView, worldPos);    
     psIn.pos = mul(mProj, psIn.pos);
@@ -239,7 +269,7 @@ SPSInShadowReciever VSMainSkinStdShadowReciever(SVSIn vsIn, uniform bool hasSkin
 /// モデル用のピクセルシェーダーのエントリーポイント
 /// </summary>
 
-float4 PSMainSkinStd(SPSIn psIn) : SV_Target0
+SPSOut PSMainSkinStd(SPSIn psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
     //float4 diffusecol = CalcDiffuseColor(psIn.normal, toonlightdir);
@@ -269,7 +299,9 @@ float4 PSMainSkinStd(SPSIn psIn) : SV_Target0
     float4 totaldiffuse4 = float4(totaldiffuse, materialdisprate.x);
     float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * metalcoef.w;//ライト８個で白飛びしないように応急処置1/8=0.125
     float4 pscol = emission * materialdisprate.z + albedocol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
-    return pscol;
+    //return pscol;
+    
+    return CalcPSFog(pscol, psIn.Fog);
 }
 
 float4 PSMainSkinStdShadowMap(SPSInShadowMap psIn) : SV_Target0
@@ -278,7 +310,7 @@ float4 PSMainSkinStdShadowMap(SPSInShadowMap psIn) : SV_Target0
 }
 
 
-float4 PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
+SPSOut PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
     //float4 diffusecol = CalcDiffuseColor(psIn.normal.xyz, toonlightdir.xyz);
@@ -352,21 +384,28 @@ float4 PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     //    }
     //}
 
-    return pscol;
+   // return pscol;
+    
+    return CalcPSFog(pscol, psIn.Fog);
+    
 }
 
 
 
-float4 PSMainSkinNoLight(SPSIn psIn) : SV_Target0
+SPSOut PSMainSkinNoLight(SPSIn psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
     //float4 diffusecol = CalcDiffuseColor(1.0f, psIn.normal.xyz, toonlightdir.xyz);
     float4 diffusecol = (lightsnum.y == 1) ? CalcDiffuseColor(1.0f, psIn.normal.xyz, toonlightdir.xyz) : float4(1.0f, 1.0f, 1.0f, 1.0f);
     float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
-    return pscol;
+    //return pscol;
+    
+    
+    return CalcPSFog(pscol, psIn.Fog);
+    
 }
 
-float4 PSMainSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
+SPSOut PSMainSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
     float4 diffusecol = CalcDiffuseColor(1.0f, psIn.normal.xyz, toonlightdir.xyz);      
@@ -419,6 +458,8 @@ float4 PSMainSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     
     
     
-    return pscol;
+    //return pscol;
+
+    return CalcPSFog(pscol, psIn.Fog);
 }
 
