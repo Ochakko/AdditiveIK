@@ -6,6 +6,8 @@ cbuffer cb : register(b0)
 {
     float4x4 mvp;       // MVP行列
     float4 mulColor;    // 乗算カラー
+    float4 params;
+    float4 dofparams; //x:dofstart, y:dofend (深度値dofparams.xからボケが始まり、深度値dofparams.yで最大のボケ具合になる。)
 };
 
 struct VSInput
@@ -45,25 +47,26 @@ float4 PSMain(PSInput In) : SV_Target0
 {
     // step-12 ボケ画像描き込み用のピクセルシェーダーを実装。
     // カメラ空間での深度値をサンプリング。
-    //float4 depth = depthTexture.Sample(Sampler, In.uv);
     float4 prezdepth = prezdepthTexture.Sample(Sampler, In.uv);
-    // カメラ空間での深度値が200以下ならピクセルキル 
-    //      -> ボケ画像を描きこまない。
-    //clip( depth - 500.0f);
 
-    //float threshold = 1000.0f / 2000.0f;
-    float threshold = 3000.0f;
-    clip(prezdepth.z - threshold);
+    // カメラ空間での深度値がdofparams.x以下ならピクセルキル 
+    //      -> ボケ画像を描きこまない。
+    //clip(prezdepth.z - dofparams.x);
+    //float testth = 1.0f / 2000.0f;
+    //float testth = 0.5f;
+    //float testth = 500.0f / 2000.0f;
+    clip(prezdepth.z - dofparams.x);
 
   
     // ボケ画像をサンプリング。
-    float4 boke = bokeTexture.Sample( Sampler, In.uv );
+    float4 boke = bokeTexture.Sample(Sampler, In.uv);
+
     // 深度値から不透明度を計算する。
-    // 深度値200からボケが始まり、深度値500で最大のボケ具合になる。
-    //  -> つまり、深度値500で不透明度が1になる。
-    //boke.a = min( 1.0f, ( depth - 500.0f ) / 1000.0f );
-    
-    boke.a = min(1.0f, max(0.0f, (prezdepth.z - threshold) / threshold));
+    // 深度値dofparams.xからボケが始まり、深度値dofparams.yで最大のボケ具合になる。
+    //  -> つまり、深度値dofparams.yで不透明度が1になる。
+    boke.a = min(1.0f, max(0.0f, ((prezdepth.z - dofparams.x) / (dofparams.y - dofparams.x))));
+    //boke.a = min(1.0f, max(0.0f, ((prezdepth.z - testth) / testth)));
+
     
     // ボケ画像を出力。
     return boke;

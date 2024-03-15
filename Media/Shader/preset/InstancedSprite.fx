@@ -3,6 +3,7 @@ cbuffer cb : register(b0)
     float4x4 mvp;       // MVP行列
     float4 mulColor;    // 乗算カラー
     float4 params;
+    float4 dofparams;
 };
 
 struct VSInput

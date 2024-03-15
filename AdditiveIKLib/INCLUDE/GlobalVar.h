@@ -59,6 +59,8 @@ class CInfoWindow;
 #ifdef ADDITIVEIKLIBGLOBALVAR
 
 CFogParams g_fogparams;
+ChaVector4 g_dofparams = ChaVector4(3000.0f, 5000.0f, 0.0f, 0.0f);
+bool g_skydofflag = false;
 bool g_skydispflag = true;
 int g_pickorder = 1;
 bool g_hdrpbloom = true;
@@ -332,6 +334,8 @@ double g_playingend = 1.0;
 
 #else
 extern CFogParams g_fogparams;
+extern ChaVector4 g_dofparams;
+extern bool g_skydofflag;
 extern bool g_skydispflag;
 extern int g_pickorder;
 extern bool g_hdrpbloom;

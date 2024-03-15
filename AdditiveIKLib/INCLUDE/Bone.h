@@ -489,7 +489,7 @@ public:
 
 
 	//補間有り : 覚え方メモ：　計算済(Calclated)のLimitedWMを補間する関数として始まり　その後　未計算時にも対応した
-	ChaMatrix GetCurrentWorldMat(bool multmodelwm);
+	ChaMatrix GetCurrentWorldMat(bool multmodelwm, bool calcslotflag);
 	//ChaMatrix GetCurrentLimitedWorldMat();
 	//int GetCalclatedLimitedWM(int srcmotid, double srcframe, ChaMatrix* plimitedworldmat, CMotionPoint** pporgbefmp = 0, int callingstate = 0);
 

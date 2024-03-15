@@ -154,6 +154,7 @@ private:
 		Matrix mvp;
 		Vector4 mulColor;
 		Vector4 screenParam;
+		Vector4 dofparams;
 	};
 	LocalConstantBuffer m_constantBufferCPU;	//CPU側の定数バッファ。
 	ConstantBuffer		m_constantBufferGPU;	//GPU側の定数バッファ。

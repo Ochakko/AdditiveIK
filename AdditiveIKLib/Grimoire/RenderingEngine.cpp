@@ -463,8 +463,12 @@ namespace myRenderer
             //for (auto& currenderobj : m_zprepassModels)
             for (auto& currenderobj : m_forwardRenderModels)
             {
-                //model->Draw(rc);
-                RenderPolyMeshZPre(rc, currenderobj);
+                //2024/03/15
+                //天球をぼかすと　背景の無いシーンで　カメラ距離に関わらずキャラクターがボケてしまう
+                //背景の無いシーンではg_skydofflagをfalseにし、　背景のあるシーンでtrueにする
+                if ((g_skydofflag == true) || (currenderobj.pmodel->GetSkyFlag() == false)) {
+                    RenderPolyMeshZPre(rc, currenderobj);
+                }
             }
         }
 

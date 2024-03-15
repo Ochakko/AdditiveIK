@@ -2764,7 +2764,8 @@ int CModel::SetShaderConst(int btflag, bool calcslotflag)
 
 	MOTINFO* curmi = 0;
 	int curmotid;
-	double curframe;
+	//double curframe;
+	double renderslotframe;
 	curmi = GetCurMotInfo();
 	if (!curmi) {
 		//_ASSERT(0);
@@ -2772,7 +2773,8 @@ int CModel::SetShaderConst(int btflag, bool calcslotflag)
 	}
 
 	curmotid = curmi->motid;
-	curframe = RoundingTime(GetCurrentFrame());
+	//curframe = RoundingTime(GetCurrentFrame());
+	renderslotframe = RoundingTime(GetRenderSlotFrame());
 
 	int setclcnt = 0;
 
@@ -2791,7 +2793,7 @@ int CModel::SetShaderConst(int btflag, bool calcslotflag)
 				//CMotionPoint tmpmp = curbone->GetCurMp();
 				if (btflag == 0) {
 					//set4x4[matrixindex] = tmpmp.GetWorldMat();
-					clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
+					clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, renderslotframe, &curmp);
 					MoveMemory(&(m_setfl4x4[16 * matrixindex]),
 						clustermat.GetDataPtr(), sizeof(float) * 16);
 				}
@@ -2811,7 +2813,7 @@ int CModel::SetShaderConst(int btflag, bool calcslotflag)
 				}
 				else {
 					//set4x4[matrixindex] = tmpmp.GetWorldMat();
-					clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, curframe, &curmp);
+					clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, renderslotframe, &curmp);
 					MoveMemory(&(m_setfl4x4[16 * matrixindex]),
 						clustermat.GetDataPtr(), sizeof(float) * 16);
 				}
@@ -3711,11 +3713,11 @@ int CModel::TransformBone( int winx, int winy, int srcboneno, ChaVector3* worldp
 		if (g_previewFlag != 5){
 			if (curbone->GetParent(false) && curbone->GetParent(false)->IsSkeleton()) {
 				//mW = curbone->GetParent()->GetCurMp().GetWorldMat();
-				mW = curbone->GetParent(false)->GetCurrentWorldMat(true);
+				mW = curbone->GetParent(false)->GetCurrentWorldMat(true, true);
 			}
 			else {
 				//mW = curbone->GetCurMp().GetWorldMat();
-				mW = curbone->GetCurrentWorldMat(true);
+				mW = curbone->GetCurrentWorldMat(true, true);
 			}
 		}
 		else{
@@ -8613,7 +8615,8 @@ int CModel::CalcRigidElemParamsOnBt()
 		if (boneptr && boneptr->GetParent(false) && (boneptr->IsSkeleton())) {
 			CRigidElem* curre = boneptr->GetParent(false)->GetRigidElem(boneptr);
 			if (curre) {
-				bool calcslotflag = true;
+				//bool calcslotflag = true;
+				bool calcslotflag = false;//2024/03/15 Motion2Bt()から呼ばれる場合　参照すべきcurmpは前回の結果
 				boneptr->GetParent(false)->CalcRigidElemParams(setinstancescale, boneptr, firstflag, calcslotflag);
 			}
 		}
@@ -9092,14 +9095,14 @@ void CModel::SetBtMotionReq(bool limitdegflag, CBtObject* curbto,
 
 				//ChaMatrix curwm = curbone->GetWorldMat(curmotid, curframe);
 				//ChaMatrix curwm = curbone->GetCurMp().GetWorldMat();
-				curwm = curbone->GetCurrentWorldMat(true);
+				curwm = curbone->GetCurrentWorldMat(true, true);
 
 				ChaMatrix parentwm;
 				parentwm.SetIdentity();
 				if (curbone->GetParent(false)) {
 					//parentwm = curbone->GetParent()->GetWorldMat(curmotid, curframe);
 					//parentwm = curbone->GetParent()->GetCurMp().GetWorldMat();
-					parentwm = curbone->GetParent(false)->GetCurrentWorldMat(true);
+					parentwm = curbone->GetParent(false)->GetCurrentWorldMat(true, true);
 				}
 				else {
 					parentwm.SetIdentity();
