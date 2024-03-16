@@ -7,6 +7,7 @@ https://github.com/Ochakko/AdditiveIK
 　　MOTINFO構造体のポインタへのアクセスはCModelからに限定し、他からのアクセスに対しては値を返すように.
 　　Get,Set用の関数を追加
 
+　README.mdに新しいスクリーンショットを追加
 
 
 2024/03/15
