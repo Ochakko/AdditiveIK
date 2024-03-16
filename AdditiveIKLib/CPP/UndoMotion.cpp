@@ -125,12 +125,11 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 		return 2;
 	}
 
-	MOTINFO* curmi = pmodel->GetCurMotInfo();
-	if( !curmi ){
+	if(!pmodel->ExistCurrentMotion()){
 		return 2;
 	}
 
-	if( pmodel->GetCurMotInfo()->motid < 0 ){
+	if( pmodel->GetCurMotInfo().motid <= 0 ){
 		return 2;
 	}
 	//if( pmodel->GetBoneListSize()<= 0 ){
@@ -155,7 +154,7 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 
 	//ClearData();
 
-	int curmotid = curmi->motid;
+	int curmotid = pmodel->GetCurrentMotID();
 
 	if (LimitDegCheckBoxFlag == false) {//2023/10/27 1.2.0.27 RC5 : LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
 
@@ -178,7 +177,7 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 				double roundingstartframe, roundingendframe;
 				if (allframeflag == true) {
 					roundingstartframe = 1.0;
-					roundingendframe = RoundingTime(curmi->frameleng) - 1.0;
+					roundingendframe = RoundingTime(pmodel->GetCurrentMaxFrame());
 				}
 				else {
 					roundingstartframe = RoundingTime(srcer->GetStartFrame());
@@ -338,7 +337,8 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 		}
 	}
 ***/
-	::MoveMemory( &m_savemotinfo, pmodel->GetCurMotInfo(), sizeof( MOTINFO ) );
+	MOTINFO curmi = pmodel->GetCurMotInfo();
+	::MoveMemory(&m_savemotinfo, &curmi, sizeof(MOTINFO));
 
 	m_curboneno = curboneno;
 	m_curbaseno = curbaseno;
@@ -398,8 +398,8 @@ int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel, int* curbonen
 	*dstbrushstate = m_brushstate;
 
 	int setmotid = m_savemotinfo.motid;
-	MOTINFO* chkmotinfo = pmodel->GetMotInfo( setmotid );
-	if( !chkmotinfo ){
+	MOTINFO chkmotinfo = pmodel->GetMotInfo( setmotid );
+	if(chkmotinfo.motid <= 0){
 		_ASSERT( 0 );
 		SetValidFlag(0);//!!!!!!!!!!!!!!!
 		return 1;
@@ -488,7 +488,7 @@ int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel, int* curbonen
 
 
 	//モーションが短くなった場合に対応
-	double oldleng = chkmotinfo->frameleng;
+	double oldleng = chkmotinfo.frameleng;
 	double newleng = m_savemotinfo.frameleng;
 	if (oldleng > newleng) {
 		map<int, CBone*>::iterator itrbone2;
@@ -501,8 +501,9 @@ int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel, int* curbonen
 	}
 
 
-	MoveMemory( chkmotinfo, &m_savemotinfo, sizeof( MOTINFO ) );
-	pmodel->SetCurMotInfo( chkmotinfo );
+	//MoveMemory( chkmotinfo, &m_savemotinfo, sizeof( MOTINFO ) );
+	//pmodel->SetCurMotInfo( chkmotinfo );
+	pmodel->SetMotInfo(setmotid, m_savemotinfo);
 
 
 	*curboneno = m_curboneno;

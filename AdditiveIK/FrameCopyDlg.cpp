@@ -821,7 +821,7 @@ int CFrameCopyDlg::WriteTBOFile()
 	if (!m_model) {
 		return 0;
 	}
-	if (!m_model->GetCurMotInfo()) {
+	if (!m_model->ExistCurrentMotion()) {
 		return 0;
 	}
 
@@ -1052,7 +1052,7 @@ bool CFrameCopyDlg::LoadTBOFile()
 		_ASSERT(0);
 		return false;
 	}
-	if (!m_model->GetCurMotInfo()) {
+	if (!m_model->ExistCurrentMotion()) {
 		_ASSERT(0);
 		return false;
 	}

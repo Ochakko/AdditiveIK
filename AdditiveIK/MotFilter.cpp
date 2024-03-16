@@ -284,9 +284,9 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 		int bufleng = frameleng + m_filtersize * 2;//サンプリングは両端にm_fitersize分余計に
 
 		int motionleng;
-		MOTINFO* curmi = srcmodel->GetMotInfo(srcmotid);
-		if (curmi) {
-			motionleng = IntTime(curmi->frameleng);
+		MOTINFO curmi = srcmodel->GetMotInfo(srcmotid);
+		if (curmi.motid > 0) {
+			motionleng = IntTime(curmi.frameleng);
 		}
 		else {
 			motionleng = frameleng;

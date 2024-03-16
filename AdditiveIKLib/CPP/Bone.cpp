@@ -1703,7 +1703,7 @@ float CBone::CalcAxisMatX_Manipulator(bool limitdegflag, int srcboneaxis, int bi
 		return 0.0f;
 	}
 	double curframe;
-	curframe = GetParModel()->GetCurrentMotionFrame();
+	curframe = GetParModel()->GetCurrentFrame();
 	if (curframe < 0.0) {
 		_ASSERT(0);
 		ChaMatrix inimat;
@@ -5186,11 +5186,10 @@ ANGLELIMIT CBone::GetAngleLimit(bool limitdegflag, int getchkflag)
 		////cureul = CalcLocalEulXYZ(m_anglelimit.boneaxiskind, curmotid, curframe, BEFEUL_BEFFRAME);
 		//cureul = CalcCurrentLocalEulXYZ(m_anglelimit.boneaxiskind, curmotid, curframe, BEFEUL_BEFFRAME);
 
-		if (m_parmodel) {
-			MOTINFO* curmi = m_parmodel->GetCurMotInfo();
-			if (curmi) {
-				int curmotid = curmi->motid;
-				int curframe = IntTime(m_parmodel->GetCurrentFrame());
+		if (GetParModel()) {
+			if (GetParModel()->ExistCurrentMotion()) {
+				int curmotid = GetParModel()->GetCurrentMotID();
+				int curframe = IntTime(GetParModel()->GetCurrentFrame());
 
 				ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
 				ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
@@ -5204,7 +5203,7 @@ ANGLELIMIT CBone::GetAngleLimit(bool limitdegflag, int getchkflag)
 					//	neweul = cureul;
 					//}
 					
-					neweul = GetLocalEul(limitdegflag, m_curmotid, curframe, 0);
+					neweul = GetLocalEul(limitdegflag, curmotid, curframe, 0);
 
 				}
 				else {
@@ -5296,16 +5295,13 @@ void CBone::SetAngleLimit(bool limitdegflag, ANGLELIMIT srclimit)
 	//	limiteul = neweul;
 	//}
 
-	if (GetParModel()) {
-		MOTINFO* curmi = GetParModel()->GetCurMotInfo();
-		if (curmi) {
-			int curmotid;
-			double curframe;
-			curmotid = curmi->motid;
-			curframe = GetParModel()->GetCurrentFrame();
+	if (GetParModel() && GetParModel()->ExistCurrentMotion()) {
+		int curmotid;
+		double curframe;
+		curmotid = GetParModel()->GetCurrentMotID();
+		curframe = GetParModel()->GetCurrentFrame();
 
-			limiteul = GetLocalEul(limitdegflag, curmotid, curframe, 0);
-		}
+		limiteul = GetLocalEul(limitdegflag, curmotid, curframe, 0);
 	}
 
 	m_anglelimit.chkeul[AXIS_X] = limiteul.x;
@@ -5525,11 +5521,8 @@ ChaMatrix CBone::GetCurrentWorldMat(bool multmodelwm, bool calcslotflag)
 
 	MOTINFO* curmi = 0;
 	if (GetParModel()) {
-		curmi = GetParModel()->GetCurMotInfo();
-		if (curmi) {
-			int curmotid = curmi->motid;
-			//double curframe = GetParModel()->GetCurrentFrame();
-			//double curframe = GetParModel()->GetRenderSlotFrame();//2024/03/13 マニピュレータは表示に合わせることにした
+		if (GetParModel()->ExistCurrentMotion()) {
+			int curmotid = GetParModel()->GetCurrentMotID();
 
 			double curframe;
 			if (calcslotflag == true) {//2024/03/15
@@ -7861,68 +7854,64 @@ int CBone::AdditiveCurrentToAngleLimit()
 	}
 
 
-	if (m_parmodel) {
-		MOTINFO* curmi = m_parmodel->GetCurMotInfo();
-		if (curmi) {
-			int curmotid = curmi->motid;
-			double frameleng = curmi->frameleng;
-			double curframe;
+	if (GetParModel() && GetParModel()->ExistCurrentMotion()) {
+		int curmotid = GetParModel()->GetCurrentMotID();
+		double frameleng = GetParModel()->GetCurrentMotLeng();
+		double curframe;
 
-			ChaVector3 calceul;
-			float cureul[3];
-			float maxeul[3] = { -FLT_MAX, -FLT_MAX, -FLT_MAX };//必ず更新されるようにMIN(-MAX)
-			float mineul[3] = { FLT_MAX, FLT_MAX, FLT_MAX };//必ず更新されるようにMAX
-			for (curframe = 1.0; curframe < frameleng; curframe += 1.0) {
-				//calceul = CalcLocalEulXYZ(-1, curmotid, curframe, BEFEUL_BEFFRAME, 0);
+		ChaVector3 calceul;
+		float cureul[3];
+		float maxeul[3] = { -FLT_MAX, -FLT_MAX, -FLT_MAX };//必ず更新されるようにMIN(-MAX)
+		float mineul[3] = { FLT_MAX, FLT_MAX, FLT_MAX };//必ず更新されるようにMAX
+		for (curframe = 1.0; curframe < frameleng; curframe += 1.0) {
+			//calceul = CalcLocalEulXYZ(-1, curmotid, curframe, BEFEUL_BEFFRAME, 0);
 
-				//2023/01/28
-				//currentもparentも　制限角度無しで計算する必要有
-				//calceul = GetUnlimitedLocalEul(curmotid, curframe);
-				bool limitdegflag = false;
-				calceul = GetLocalEul(limitdegflag, curmotid, curframe, 0);
-				//calceul = CalcLocalEulXYZ(limitdegflag, -1, curmotid, curframe, BEFEUL_BEFFRAME);
+			//2023/01/28
+			//currentもparentも　制限角度無しで計算する必要有
+			//calceul = GetUnlimitedLocalEul(curmotid, curframe);
+			bool limitdegflag = false;
+			calceul = GetLocalEul(limitdegflag, curmotid, curframe, 0);
+			//calceul = CalcLocalEulXYZ(limitdegflag, -1, curmotid, curframe, BEFEUL_BEFFRAME);
 
-				cureul[0] = calceul.x;
-				cureul[1] = calceul.y;
-				cureul[2] = calceul.z;
+			cureul[0] = calceul.x;
+			cureul[1] = calceul.y;
+			cureul[2] = calceul.z;
 
-				int axiskind;
-				for (axiskind = 0; axiskind < 3; axiskind++) {
-					if (cureul[axiskind] > maxeul[axiskind]) {
-						maxeul[axiskind] = cureul[axiskind];
-					}
-					if (cureul[axiskind] < mineul[axiskind]) {
-						mineul[axiskind] = cureul[axiskind];
-					}
+			int axiskind;
+			for (axiskind = 0; axiskind < 3; axiskind++) {
+				if (cureul[axiskind] > maxeul[axiskind]) {
+					maxeul[axiskind] = cureul[axiskind];
+				}
+				if (cureul[axiskind] < mineul[axiskind]) {
+					mineul[axiskind] = cureul[axiskind];
 				}
 			}
+		}
 
-			int axiskind2;
-			for (axiskind2 = 0; axiskind2 < 3; axiskind2++) {
-				//m_anglelimit.upper[axiskind2] = (int)(maxeul[axiskind2] + 0.0001f);
-				//m_anglelimit.lower[axiskind2] = (int)(mineul[axiskind2] + 0.0001f);
+		int axiskind2;
+		for (axiskind2 = 0; axiskind2 < 3; axiskind2++) {
+			//m_anglelimit.upper[axiskind2] = (int)(maxeul[axiskind2] + 0.0001f);
+			//m_anglelimit.lower[axiskind2] = (int)(mineul[axiskind2] + 0.0001f);
 
-				//2023/01/28
-				//実角度ギリギリをintに丸めて制限をかけると　可動部分が制限に引っ掛かることがあったので対応
-				float tempmax, tempmin;
-				tempmax = maxeul[axiskind2] + 2.0f;//正か負かによらずmaxに足すのが正しい
-				tempmin = mineul[axiskind2] - 2.0f;//正か負かによらずminから引くのが正しい
-				//
-				//丸めには正負が関係する
-				if (tempmax > 0.0f) {
-					m_anglelimit.upper[axiskind2] = (int)(tempmax + 0.0001f);
-				}
-				else {
-					m_anglelimit.upper[axiskind2] = (int)(tempmax - 0.0001f);
-				}
-				if (tempmin > 0.0f) {
-					m_anglelimit.lower[axiskind2] = (int)(tempmin + 0.0001f);
-				}
-				else {
-					m_anglelimit.lower[axiskind2] = (int)(tempmin - 0.0001f);
-				}
+			//2023/01/28
+			//実角度ギリギリをintに丸めて制限をかけると　可動部分が制限に引っ掛かることがあったので対応
+			float tempmax, tempmin;
+			tempmax = maxeul[axiskind2] + 2.0f;//正か負かによらずmaxに足すのが正しい
+			tempmin = mineul[axiskind2] - 2.0f;//正か負かによらずminから引くのが正しい
+			//
+			//丸めには正負が関係する
+			if (tempmax > 0.0f) {
+				m_anglelimit.upper[axiskind2] = (int)(tempmax + 0.0001f);
 			}
-
+			else {
+				m_anglelimit.upper[axiskind2] = (int)(tempmax - 0.0001f);
+			}
+			if (tempmin > 0.0f) {
+				m_anglelimit.lower[axiskind2] = (int)(tempmin + 0.0001f);
+			}
+			else {
+				m_anglelimit.lower[axiskind2] = (int)(tempmin - 0.0001f);
+			}
 		}
 	}
 
@@ -7957,52 +7946,54 @@ int CBone::AdditiveAllMotionsToAngleLimit()
 	}
 
 
-	if (m_parmodel) {
+	if (GetParModel()) {
 
 		float maxeul[3] = { -FLT_MAX, -FLT_MAX, -FLT_MAX };//必ず更新されるようにMIN(-MAX)
 		float mineul[3] = { FLT_MAX, FLT_MAX, FLT_MAX };//必ず更新されるようにMAX
 
-		int motionnum = m_parmodel->GetMotInfoSize();
+		int motionnum = GetParModel()->GetMotInfoSize();
 		if (motionnum >= 1) {
-			std::map<int, MOTINFO*>::iterator itrmi;
-			for (itrmi = m_parmodel->GetMotInfoBegin(); itrmi != m_parmodel->GetMotInfoEnd(); itrmi++) {
-				MOTINFO* curmi = itrmi->second;
-				if (curmi) {
-					int curmotid = curmi->motid;
-					double frameleng = curmi->frameleng;
-					double curframe;
+			int minum;
+			int miindex;
+			minum = GetParModel()->GetMotInfoSize();
+			for (miindex = 0; miindex < minum; miindex++) {
+				MOTINFO curmi = GetParModel()->GetMotInfoByIndex(miindex);
 
-					ChaVector3 calceul;
-					float cureul[3];
+				int curmotid = curmi.motid;
+				double frameleng = curmi.frameleng;
+				double curframe;
 
-					for (curframe = 1.0; curframe < frameleng; curframe += 1.0) {
-						//calceul = CalcLocalEulXYZ(-1, curmotid, curframe, BEFEUL_BEFFRAME, 0);
+				ChaVector3 calceul;
+				float cureul[3];
 
-						//2023/01/28
-						//currentもparentも　制限角度無しで計算する必要有
-						//calceul = GetUnlimitedLocalEul(curmotid, curframe);
-						bool limitdegflag = false;
-						calceul = GetLocalEul(limitdegflag, curmotid, curframe, 0);
-						//calceul = CalcLocalEulXYZ(limitdegflag, -1, curmotid, curframe, BEFEUL_BEFFRAME);
+				for (curframe = 1.0; curframe < frameleng; curframe += 1.0) {
+					//calceul = CalcLocalEulXYZ(-1, curmotid, curframe, BEFEUL_BEFFRAME, 0);
+
+					//2023/01/28
+					//currentもparentも　制限角度無しで計算する必要有
+					//calceul = GetUnlimitedLocalEul(curmotid, curframe);
+					bool limitdegflag = false;
+					calceul = GetLocalEul(limitdegflag, curmotid, curframe, 0);
+					//calceul = CalcLocalEulXYZ(limitdegflag, -1, curmotid, curframe, BEFEUL_BEFFRAME);
 
 
-						cureul[0] = calceul.x;
-						cureul[1] = calceul.y;
-						cureul[2] = calceul.z;
+					cureul[0] = calceul.x;
+					cureul[1] = calceul.y;
+					cureul[2] = calceul.z;
 
-						int axiskind;
-						for (axiskind = 0; axiskind < 3; axiskind++) {
-							if (cureul[axiskind] > maxeul[axiskind]) {
-								maxeul[axiskind] = cureul[axiskind];
-							}
-							if (cureul[axiskind] < mineul[axiskind]) {
-								mineul[axiskind] = cureul[axiskind];
-							}
+					int axiskind;
+					for (axiskind = 0; axiskind < 3; axiskind++) {
+						if (cureul[axiskind] > maxeul[axiskind]) {
+							maxeul[axiskind] = cureul[axiskind];
+						}
+						if (cureul[axiskind] < mineul[axiskind]) {
+							mineul[axiskind] = cureul[axiskind];
 						}
 					}
-
 				}
+
 			}
+
 
 			int axiskind2;
 			for (axiskind2 = 0; axiskind2 < 3; axiskind2++) {
@@ -8922,12 +8913,12 @@ void CBone::SetIKTargetFlag(bool srcflag)
 
 	if (srcflag == true) {
 		if (GetParModel()) {
-			MOTINFO* curmi = GetParModel()->GetCurMotInfo();
-			if (curmi) {
+			if (GetParModel()->ExistCurrentMotion()) {
 				CMotionPoint curmp = GetCurMp();
 
 				//2023/03/24 model座標系：modelのworldmatを打ち消す
-				ChaMatrix curwm = GetWorldMat(g_limitdegflag, curmi->motid, GetParModel()->GetCurrentFrame(), &curmp) * ChaMatrixInv(GetParModel()->GetWorldMat());
+				ChaMatrix curwm = GetWorldMat(g_limitdegflag, 
+					GetParModel()->GetCurrentMotID(), GetParModel()->GetCurrentFrame(), &curmp) * ChaMatrixInv(GetParModel()->GetWorldMat());
 				
 				ChaVector3 jointpos0, jointpos1;
 				jointpos0 = GetJointFPos();

@@ -102,7 +102,7 @@ int CThreadingSetBtMotion::ThreadFunc()
 
 					//if (m_model && (m_model->GetInView() == true)) {
 					if (m_model && (m_model->GetBtCnt() != 0)) {
-						if (m_model->GetCurMotInfo()) {
+						if (m_model->ExistCurrentMotion()) {
 
 							m_model->SetBtMotionOnBt(limitdegflag, nextframe, &matView, &matProj);//, updateslot);
 
@@ -161,7 +161,7 @@ int CThreadingSetBtMotion::ThreadFunc()
 				{
 					if (m_model && (m_model->GetBtCnt() != 0)) {
 						EnterCriticalSection(&m_CritSection);
-						if (m_model->GetCurMotInfo()) {
+						if (m_model->ExistCurrentMotion()) {
 
 							m_model->SetBtMotionOnBt(limitdegflag, nextframe, &matView, &matProj);//, updateslot);
 

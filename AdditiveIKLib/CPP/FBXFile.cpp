@@ -87,13 +87,13 @@ typedef struct tag_animinfo
 	int motid;
 	int orgindex;
 	int maxframe;
-	char* engmotname;
+	char engmotname[256];
 	FbxAnimLayer* animlayer;
 	tag_animinfo() {
 		motid = 0;
 		orgindex = 0;
 		maxframe = 0;
-		engmotname = 0;
+		ZeroMemory(engmotname, sizeof(char) * 256);
 		animlayer = 0;
 	};
 }ANIMINFO;
@@ -3450,16 +3450,16 @@ void AnimateSkeleton(bool limitdegflag, FbxScene* pScene, CModel* pmodel)
 	s_ainum = motionnum;
 
 	int aino = 0;
-	map<int, MOTINFO*>::iterator itrmi;
-	for( itrmi = pmodel->GetMotInfoBegin(); itrmi != pmodel->GetMotInfoEnd(); itrmi++ ){
-		MOTINFO* curmi = itrmi->second;
-		if (curmi) {
-			(s_ai + aino)->motid = curmi->motid;
-			(s_ai + aino)->orgindex = aino;
-			(s_ai + aino)->maxframe = (int)(curmi->frameleng - 1.0);
-			(s_ai + aino)->engmotname = curmi->engmotname;
-			aino++;
-		}
+	int minum;
+	int miindex;
+	minum = s_model->GetMotInfoSize();
+	for (miindex = 0; miindex < minum; miindex++) {
+		MOTINFO curmi = s_model->GetMotInfoByIndex(miindex);
+		(s_ai + aino)->motid = curmi.motid;
+		(s_ai + aino)->orgindex = aino;
+		(s_ai + aino)->maxframe = (int)(curmi.frameleng - 1.0);
+		strcpy_s((s_ai + aino)->engmotname, 256, curmi.engmotname);
+		aino++;
 	}
 
 	if (motionnum != aino) {
@@ -5996,9 +5996,8 @@ int SaveCurrentMotionID(CModel* curmodel)
 		return 1;
 	}
 
-	MOTINFO* curmi = curmodel->GetCurMotInfo();
-	if (curmi) {
-		s_zeroframemotid = curmi->motid;
+	if (curmodel->ExistCurrentMotion()) {
+		s_zeroframemotid = curmodel->GetCurrentMotID();
 	}
 	else {
 		//_ASSERT(0);

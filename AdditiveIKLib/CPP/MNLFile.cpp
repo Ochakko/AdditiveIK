@@ -72,18 +72,12 @@ int CMNLFile::WriteMNLFile(WCHAR* strpath, CModel* srcmodel)
 
 	//CallF( Write2File( "  <MotSpeed>%f</MotSpeed>\r\n", srcmotspeed ), return 1 );
 
-	int mnum = (int)m_model->GetMotInfoSize();
-	int mwcnt = 0;
-	std::map<int, MOTINFO*>::iterator itrmi;
-	for (itrmi = m_model->GetMotInfoBegin(); itrmi != m_model->GetMotInfoEnd(); itrmi++) {
-		MOTINFO* pmi = itrmi->second;
-		if (pmi) {
-			char* mname = pmi->motname;
-
-			CallF(WriteMNEntry(mwcnt, mname), return 1);
-
-			mwcnt++;
-		}
+	int minum;
+	int miindex;
+	minum = m_model->GetMotInfoSize();
+	for (miindex = 0; miindex < minum; miindex++) {
+		MOTINFO curmi = m_model->GetMotInfoByIndex(miindex);
+		CallF(WriteMNEntry(miindex, curmi), return 1);
 	}
 
 	CallF( Write2File( "</MNL>\r\n" ), return 1 );
@@ -103,11 +97,11 @@ int CMNLFile::WriteFileInfo()
 	return 0;
 }
 
-int CMNLFile::WriteMNEntry(int srccnt, char* srcname)
+int CMNLFile::WriteMNEntry(int srccnt, MOTINFO curmi)
 {
 	CallF( Write2File( "  <MNEntry>\r\n" ), return 1 );
 	CallF( Write2File( "    <Index>%d</Index>\r\n", srccnt ), return 1 );
-	CallF( Write2File( "    <Name>%s</Name>\r\n", srcname ), return 1 );
+	CallF( Write2File( "    <Name>%s</Name>\r\n", curmi.motname ), return 1 );
 	CallF( Write2File( "  </MNEntry>\r\n" ), return 1 );
 
 	return 0;
@@ -203,8 +197,8 @@ int CMNLFile::ReadMNEntry( int motionnum, int motioncnt, XMLIOBUF* xmlbuf )
 		return 1;
 	}
 
-
-	if (index < 0) {
+	int minum = m_model->GetMotInfoSize();
+	if ((index < 0) || (index >= minum)) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -241,21 +235,8 @@ int CMNLFile::ReadMNEntry( int motionnum, int motioncnt, XMLIOBUF* xmlbuf )
 	}
 
 
-	int dstmiindex = 0;
-	std::map<int, MOTINFO*>::iterator itrmi;
-	for (itrmi = m_model->GetMotInfoBegin(); itrmi != m_model->GetMotInfoEnd(); itrmi++) {
-		if (index == dstmiindex) {
-			break;
-		}
-		dstmiindex++;
-	}
-	if (itrmi != m_model->GetMotInfoEnd()) {
-		MOTINFO* pmi = itrmi->second;
-		if (pmi) {
-			strcpy_s(pmi->motname, 256, changename);
-			strcpy_s(pmi->engmotname, 256, changename);
-		}
-	}
+	m_model->SetMotInfoMotNameByIndex(index, changename);
+	m_model->SetMotInfoEngMotNameByIndex(index, changename);
 
 	return 0;
 }

@@ -406,25 +406,30 @@ int CBntFile::WriteBntIndex( int* srcindex, int indexnum )
 
 int CBntFile::WriteOneMotion(bool limitdegflag, CModel* srcmodel )
 {
-	if(	!srcmodel->GetCurMotInfo() ){
+	if(!srcmodel->ExistCurrentMotion()){
 		_ASSERT( 0 );
 		return 1;
 	}
 
+	MOTINFO curmi = srcmodel->GetCurMotInfo();
+	if (curmi.motid <= 0) {
+		_ASSERT(0);
+		return 1;
+	}
 
 	int motionnum = 1;
 	CallF( WriteVoid2File( (void*)&motionnum, sizeof( int ) ), return 1 );
 
 	BNTMOTHEADER motheader;
 	ZeroMemory( &motheader, sizeof( BNTMOTHEADER ) );
-	strcpy_s( motheader.motname, 256, srcmodel->GetCurMotInfo()->motname );
-	motheader.frameleng = (int)srcmodel->GetCurMotInfo()->frameleng;
+	strcpy_s( motheader.motname, 256, curmi.motname );
+	motheader.frameleng = IntTime(curmi.frameleng);
 	motheader.bonenum = srcmodel->GetBoneListSize();
 	CallF( WriteVoid2File( (void*)&motheader, sizeof( BNTMOTHEADER ) ), return 1 );
 
 	int bonecnt = 0;
 	WriteMotionPointsReq(limitdegflag, 
-		srcmodel->GetTopBone(false), srcmodel->GetCurMotInfo()->motid, motheader.frameleng, &bonecnt );
+		srcmodel->GetTopBone(false), curmi.motid, motheader.frameleng, &bonecnt );
 	if( bonecnt != motheader.bonenum ){
 		_ASSERT( 0 );
 		return 1;

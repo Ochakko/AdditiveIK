@@ -3181,10 +3181,9 @@ void CMQOMaterial::SetFl4x4(myRenderer::RENDEROBJ renderobj, int refposindex)
 		MOTINFO* curmi = 0;
 		int curmotid;
 		//double curframe;
-		curmi = renderobj.pmodel->GetCurMotInfo();
-
-		if (renderobj.pmodel->GetTopBone() && (renderobj.pmodel->GetNoBoneFlag() == false) && curmi) {
-			curmotid = curmi->motid;
+		if (renderobj.pmodel->GetTopBone() && (renderobj.pmodel->GetNoBoneFlag() == false) && 
+			renderobj.pmodel->ExistCurrentMotion()) {
+			curmotid = renderobj.pmodel->GetCurrentMotID();
 			if (curmotid > 0) {
 				SetBoneMatrix(renderobj, refposindex);//CModel::SetShaderConst()でセットしたマトリックス配列をコピーするだけ
 			}
@@ -3700,8 +3699,8 @@ void CMQOMaterial::SetBoneMatrix(myRenderer::RENDEROBJ renderobj, int refposinde
 		_ASSERT(0);
 		return;
 	}
-	MOTINFO* curmi = renderobj.pmodel->GetCurMotInfo();
-	if (renderobj.pmodel->GetTopBone() && (renderobj.pmodel->GetNoBoneFlag() == false) && curmi) {
+	if (renderobj.pmodel->GetTopBone() && (renderobj.pmodel->GetNoBoneFlag() == false) && 
+		renderobj.pmodel->ExistCurrentMotion()) {
 		//CModel::SetShaderConst()でセットしたマトリックス配列をコピーするだけ
 		renderobj.pmodel->GetBoneMatrix(m_cbMatrix[refposindex].setfl4x4, MAXBONENUM);
 	}

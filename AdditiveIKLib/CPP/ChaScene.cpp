@@ -203,7 +203,7 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* 
 		for (modelindex = 0; modelindex < modelnum; modelindex++) {
 			CModel* curmodel = m_modelindex[modelindex].modelptr;
 			if (curmodel) {
-				if (curmodel->GetCurMotInfo()) {
+				if (curmodel->ExistCurrentMotion()) {
 					curmodel->SetMotionFrame(srcframe);//refposの場合にも必要
 				}
 
@@ -259,7 +259,7 @@ int ChaScene::UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, ChaMatri
 	////m_totalupdatethreadsnum = 0;
 
 	bool needwaitflag = true;//!!!!!!!!!!!!
-	if (srcmodel->GetCurMotInfo()) {
+	if (srcmodel->ExistCurrentMotion()) {
 		srcmodel->SetMotionFrame(srcframe);
 		srcmodel->UpdateMatrix(limitdegflag, wmat, vmat, pmat, needwaitflag);// , m_updateslot);
 	}
@@ -1297,7 +1297,7 @@ int ChaScene::SetMotionFrame(int srcmodelindex, double srcframe)
 		size_t modelno;
 		size_t modelnum = GetModelNum();
 		for (modelno = 0; modelno < modelnum; modelno++) {
-			if (m_modelindex[modelno].modelptr->GetCurMotInfo()) {
+			if (m_modelindex[modelno].modelptr->ExistCurrentMotion()) {
 				m_modelindex[modelno].modelptr->SetMotionFrame(srcframe);
 			}
 		}

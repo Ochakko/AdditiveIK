@@ -104,7 +104,7 @@ int CThreadingMotion2Bt::ThreadFunc()
 							m_model->ZeroBtCnt();
 						}
 						else {
-							if (m_model->GetCurMotInfo()) {
+							if (m_model->ExistCurrentMotion()) {
 								m_model->Motion2Bt(limitdegflag, nextframe, &matView, &matProj);//, updateslot);
 							}
 							m_model->PlusPlusBtCnt();
@@ -157,7 +157,7 @@ int CThreadingMotion2Bt::ThreadFunc()
 							m_model->ZeroBtCnt();
 						}
 						else {
-							if (m_model->GetCurMotInfo()) {
+							if (m_model->ExistCurrentMotion()) {
 								m_model->Motion2Bt(limitdegflag, nextframe, &matView, &matProj);//, updateslot);
 							}
 							m_model->PlusPlusBtCnt();

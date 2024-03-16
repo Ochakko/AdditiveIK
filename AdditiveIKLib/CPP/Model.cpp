@@ -1772,11 +1772,10 @@ MODELBOUND CModel::CalcBoneBound()
 
 			//ボーンの初期位置は全て０の場合があるので、０フレームのアニメ付きのボーン位置を計算する
 			ChaVector3 fpos0 = curbone->GetJointFPos();
-			MOTINFO* mi = GetCurMotInfo();
 			ChaVector3 fpos = fpos0;
-			if (mi) {
+			if (ExistCurrentMotion()) {
 				ChaMatrix curwmat;
-				CMotionPoint* curmp = curbone->GetMotionPoint(mi->motid, 0.0);
+				CMotionPoint* curmp = curbone->GetMotionPoint(GetCurrentMotID(), 0.0);
 				if (curmp) {
 					curwmat = curmp->GetWorldMat();
 				}
@@ -2167,12 +2166,8 @@ int CModel::Motion2Bt(bool limitdegflag, double nextframe, ChaMatrix* pmView, Ch
 void CModel::Motion2BtReq(CBtObject* srcbto)
 {
 	//if( srcbto->GetBone() && (srcbto->GetBone()->GetBtKinFlag() == 1) ){
-	if (srcbto->GetBone()){
-		MOTINFO* curmi = GetCurMotInfo();
-		if (curmi) {
-			srcbto->Motion2Bt(this, curmi->motid, GetCurrentFrame());
-		}
-		
+	if (srcbto->GetBone() && ExistCurrentMotion()){
+		srcbto->Motion2Bt(this, GetCurrentMotID(), GetCurrentFrame());
 	}
 
 	int chilnum = srcbto->GetChildBtSize();
@@ -2268,7 +2263,7 @@ int CModel::UpdateMatrix(bool limitdegflag,
 	}
 
 
-	if( !m_curmotinfo ){
+	if(!ExistCurrentMotion()){
 		return 0;//!!!!!!!!!!!!
 	}
 
@@ -2281,7 +2276,7 @@ int CModel::UpdateMatrix(bool limitdegflag,
 	//	m_topbone->InitAddLimitQAll();
 	//}
 
-	int curmotid = m_curmotinfo->motid;
+	int curmotid = GetCurrentMotID();
 	double curframe = GetCurrentFrame();
 
 
@@ -2513,7 +2508,7 @@ int CModel::HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone, ChaMat
 	m_matProj = *pmat;
 	m_matVP = m_matView * m_matProj;
 
-	if (!m_curmotinfo) {
+	if (!ExistCurrentMotion()) {
 		return 0;//!!!!!!!!!!!!
 	}
 
@@ -2533,7 +2528,7 @@ int CModel::HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone, ChaMat
 	}
 	std::reverse(vecroute.begin(), vecroute.end());
 
-	int curmotid = m_curmotinfo->motid;
+	int curmotid = GetCurrentMotID();
 	double curframe = GetCurrentFrame();
 
 	std::vector<CBone*>::iterator itrbone;
@@ -2764,17 +2759,14 @@ int CModel::SetShaderConst(int btflag, bool calcslotflag)
 
 	MOTINFO* curmi = 0;
 	int curmotid;
-	//double curframe;
-	double renderslotframe;
-	curmi = GetCurMotInfo();
-	if (!curmi) {
+	double opeframe;
+	if (!ExistCurrentMotion()) {
 		//_ASSERT(0);
 		return 0;
 	}
 
-	curmotid = curmi->motid;
-	//curframe = RoundingTime(GetCurrentFrame());
-	renderslotframe = RoundingTime(GetRenderSlotFrame());
+	curmotid = GetCurrentMotID();
+	opeframe = GetOpeFrame(calcslotflag);
 
 	int setclcnt = 0;
 
@@ -2793,7 +2785,7 @@ int CModel::SetShaderConst(int btflag, bool calcslotflag)
 				//CMotionPoint tmpmp = curbone->GetCurMp();
 				if (btflag == 0) {
 					//set4x4[matrixindex] = tmpmp.GetWorldMat();
-					clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, renderslotframe, &curmp);
+					clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, opeframe, &curmp);
 					MoveMemory(&(m_setfl4x4[16 * matrixindex]),
 						clustermat.GetDataPtr(), sizeof(float) * 16);
 				}
@@ -2813,7 +2805,7 @@ int CModel::SetShaderConst(int btflag, bool calcslotflag)
 				}
 				else {
 					//set4x4[matrixindex] = tmpmp.GetWorldMat();
-					clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, renderslotframe, &curmp);
+					clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, opeframe, &curmp);
 					MoveMemory(&(m_setfl4x4[16 * matrixindex]),
 						clustermat.GetDataPtr(), sizeof(float) * 16);
 				}
@@ -3103,7 +3095,7 @@ int CModel::SetCurrentMotion( int srcmotid )
 	//}
 
 	//m_curmotinfo = m_motinfo[ srcmotid - 1 ];//idは１から
-	m_curmotinfo = GetMotInfo(srcmotid);//2021/08/26 eraseすることがあるのでindex = motid - 1とは限らない
+	m_curmotinfo = GetMotInfoPtr(srcmotid);//2021/08/26 eraseすることがあるのでindex = motid - 1とは限らない
 	if( !m_curmotinfo ){
 		_ASSERT( 0 );
 		return 1;
@@ -3170,7 +3162,7 @@ int CModel::SetMotionFrame(double srcframe)
 }
 int CModel::SetMotionFrame(int srcmotid, double srcframe)
 {
-	MOTINFO* curmi = GetMotInfo(srcmotid);
+	MOTINFO* curmi = GetMotInfoPtr(srcmotid);
 	if (curmi) {
 		curmi->curframe = max(0.0, min((curmi->frameleng - 1.0), srcframe));
 	}
@@ -3200,7 +3192,7 @@ int CModel::GetMotionName(int srcmotid, int dstnamelen, char* dstname)
 		return 1;
 	}
 
-	MOTINFO* curmi = GetMotInfo(srcmotid);
+	MOTINFO* curmi = GetMotInfoPtr(srcmotid);
 	if (curmi) {
 		strcpy_s(dstname, dstnamelen, curmi->motname);
 		return 0;
@@ -3212,17 +3204,17 @@ int CModel::GetMotionName(int srcmotid, int dstnamelen, char* dstname)
 
 }
 
-int CModel::GetMotionFrame(double* dstframe)
-{
-	if( !m_curmotinfo ){
-		_ASSERT( 0 );
-		return 1;
-	}
-
-	*dstframe = GetCurrentFrame();
-
-	return 0;
-}
+//int CModel::GetMotionFrame(double* dstframe)
+//{
+//	if( !m_curmotinfo ){
+//		_ASSERT( 0 );
+//		return 1;
+//	}
+//
+//	*dstframe = GetCurrentFrame();
+//
+//	return 0;
+//}
 int CModel::SetMotionSpeed( double srcspeed )
 {
 	if( !m_curmotinfo ){
@@ -3236,7 +3228,7 @@ int CModel::SetMotionSpeed( double srcspeed )
 }
 int CModel::SetMotionSpeed(int srcmotid, double srcspeed)
 {
-	MOTINFO* curmi = GetMotInfo(srcmotid);
+	MOTINFO* curmi = GetMotInfoPtr(srcmotid);
 	if (curmi) {
 		curmi->speed = srcspeed;
 	}
@@ -3763,7 +3755,7 @@ int CModel::TransformBone( int winx, int winy, int srcboneno, ChaVector3* worldp
 int CModel::ChangeMotFrameLeng( int motid, double srcleng )
 {
 	//MOTINFO* dstmi = m_motinfo[ motid - 1 ];//idは１から
-	MOTINFO* dstmi = GetMotInfo(motid);//2021/08/26 eraseすることがあるのでindex = motid - 1とは限らない
+	MOTINFO* dstmi = GetMotInfoPtr(motid);//2021/08/26 eraseすることがあるのでindex = motid - 1とは限らない
 	if( dstmi ){
 		double befleng = dstmi->frameleng;
 
@@ -3792,23 +3784,25 @@ int CModel::AdvanceTime( int onefps, CEditRange srcrange, int previewflag, doubl
 	*loopstartflag = 0;
 
 	int loopflag = 0;
-	MOTINFO* curmotinfo;
+	MOTINFO curmotinfo;
+	curmotinfo.Init();
 	if( srcmotid >= 0 ){
 		//curmotinfo = m_motinfo[ srcmotid - 1];//idは１から
 		curmotinfo = GetMotInfo(srcmotid);//2021/08/26 eraseすることがあるのでindex = motid - 1とは限らない
 		loopflag = 0;
 	}else{
-		curmotinfo = m_curmotinfo;
-		loopflag = curmotinfo->loopflag;
+		//わざとsrcmotidに-1をセットして呼び出した場合は　カレントモーションに対する処理をする
+		curmotinfo = GetCurMotInfo();
+		loopflag = curmotinfo.loopflag;
 	}
 
-	if( !curmotinfo ){
+	if(curmotinfo.motid <= 0){
 		return 0;
 	}
 
 
 	double curspeed, curframe;
-	curspeed = curmotinfo->speed;
+	curspeed = curmotinfo.speed;
 	curframe = GetCurrentFrame();
 
 	double nextframe;
@@ -3820,7 +3814,7 @@ int CModel::AdvanceTime( int onefps, CEditRange srcrange, int previewflag, doubl
 	rangeend = srcrange.GetEndFrame();
 	if (rangestart == rangeend){
 		rangestart = 1.0;
-		rangeend = curmotinfo->frameleng - 1.0;
+		rangeend = curmotinfo.frameleng - 1.0;
 	}
 
 	rangestart = max(1.0, rangestart);
@@ -6097,7 +6091,7 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 			//}
 
 
-			MOTINFO* pmotinfo = GetMotInfo(curmotid);
+			MOTINFO* pmotinfo = GetMotInfoPtr(curmotid);
 			if (pmotinfo) {
 				pmotinfo->fbxanimno = animno;//SetCurrentMotion時に　SetCurrentAnimLayer()と　SetCurrentAnimationStack()するために保存
 			}
@@ -6130,9 +6124,9 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 			int animno0 = 0;
 			int cameramotionid = GetCameraMotionId();
 			if (cameramotionid >= 1) {
-				MOTINFO* motinfo = GetMotInfo(cameramotionid);
-				if (motinfo) {
-					animno0 = motinfo->fbxanimno;
+				MOTINFO motinfo = GetMotInfo(cameramotionid);
+				if (motinfo.motid > 0) {
+					animno0 = motinfo.fbxanimno;
 				}
 				else {
 					_ASSERT(0);
@@ -6685,9 +6679,9 @@ void CModel::CreateIndexedMotionPointReq(CBone* srcbone, int srcmotid, double sr
 
 int CModel::PreLoadCameraFbxAnim(int srcmotid)
 {
-	MOTINFO* curmi = GetMotInfo(srcmotid);
-	if (curmi && curmi->cameramotion) {
-		double animlen = curmi->frameleng;
+	MOTINFO curmi = GetMotInfo(srcmotid);
+	if ((curmi.motid > 0) && curmi.cameramotion) {
+		double animlen = curmi.frameleng;
 
 
 		map<int, CBone*>::iterator itrbone;
@@ -6696,7 +6690,7 @@ int CModel::PreLoadCameraFbxAnim(int srcmotid)
 
 			if (srcbone && srcbone->IsCamera()) {
 
-				if (strcmp(curmi->motname, srcbone->GetBoneName()) == 0) {
+				if (strcmp(curmi.motname, srcbone->GetBoneName()) == 0) {
 					//#######################################################
 					//MotionNameとBoneNameが同じ場合だけ　それらを対応付ける
 					//#######################################################
@@ -6714,9 +6708,9 @@ int CModel::PreLoadCameraFbxAnim(int srcmotid)
 
 int CModel::PostLoadFbxAnim(FbxAnimLayer* mCurrentAnimLayer, int srcmotid)
 {
-	MOTINFO* curmi = GetMotInfo(srcmotid);
-	if (curmi) {
-		double animlen = curmi->frameleng;
+	MOTINFO curmi = GetMotInfo(srcmotid);
+	if (curmi.motid > 0) {
+		double animlen = curmi.frameleng;
 
 		PostLoadFbxAnimReq(mCurrentAnimLayer, srcmotid, animlen, GetTopBone(false));
 	}
@@ -7223,12 +7217,10 @@ int CModel::RenderBoneMark(myRenderer::RenderingEngine* re,
 	}
 
 
-	MOTINFO* curmi = 0;
 	int curmotid;
 	double roundingframe;
-	curmi = GetCurMotInfo();
-	if (curmi) {
-		curmotid = curmi->motid;
+	if (ExistCurrentMotion()) {
+		curmotid = GetCurrentMotID();
 		//roundingframe = RoundingTime(GetCurrentFrame());
 		roundingframe = RoundingTime(GetRenderSlotFrame());//2024/03/13
 	}
@@ -7403,12 +7395,10 @@ int CModel::RenderBoneCircleOne(bool limitdegflag, RenderContext* pRenderContext
 		return 0;
 	}
 
-	MOTINFO* curmi = 0;
 	int curmotid;
 	double roundingframe;
-	curmi = GetCurMotInfo();
-	if (curmi) {
-		curmotid = curmi->motid;
+	if (ExistCurrentMotion()) {
+		curmotid = GetCurrentMotID();
 		roundingframe = RoundingTime(GetCurrentFrame());
 	}
 	else {
@@ -8527,10 +8517,8 @@ void CModel::CreateBtObjectReq(bool limitdegflag, CBtObject* parbt, CBone* notus
 
 					int curmotid;
 					double curframe;
-					MOTINFO* curmi;
-					curmi = GetCurMotInfo();
-					if (curmi) {
-						curmotid = curmi->motid;
+					if (ExistCurrentMotion()) {
+						curmotid = GetCurrentMotID();
 						curframe = RoundingTime(GetCurrentFrame());
 						CallF(newbto->CreateObject(limitdegflag, curmotid, curframe, parbt, parentbone->GetParent(false), parentbone, curbone), return);
 					}
@@ -8681,12 +8669,12 @@ int CModel::SetBtMotionOnBt(bool limitdegflag,
 	if (!m_btWorld) {
 		return 0;
 	}
-	if (!m_curmotinfo) {
+	if (!ExistCurrentMotion()) {
 		_ASSERT(0);
 		return 0;//!!!!!!!!!!!!
 	}
 
-	int curmotid = m_curmotinfo->motid;
+	int curmotid = GetCurrentMotID();
 	double curframe = GetCurrentFrame();
 
 	ChaMatrix inimat;
@@ -8779,12 +8767,12 @@ int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag,
 	if (!m_btWorld){
 		return 0;
 	}
-	if( !m_curmotinfo ){
+	if( !ExistCurrentMotion() ){
 		_ASSERT( 0 );
 		return 0;//!!!!!!!!!!!!
 	}
 
-	int curmotid = m_curmotinfo->motid;
+	int curmotid = GetCurrentMotID();
 	double curframe = GetCurrentFrame();
 
 	ChaMatrix inimat;
@@ -9073,8 +9061,8 @@ void CModel::SetBtMotionReq(bool limitdegflag, CBtObject* curbto,
 		return;
 	}
 
-	if (m_curmotinfo) {
-		int curmotid = m_curmotinfo->motid;
+	if (ExistCurrentMotion()) {
+		int curmotid = GetCurrentMotID();
 		double curframe = GetCurrentFrame();//curframe : 時間補間有り
 
 		if ((curbto->GetTopFlag() == 0) && curbto->GetBone()) {
@@ -11050,6 +11038,10 @@ void CModel::ResetBtReq( CBtObject* curbto )
 
 int CModel::SetBefEditMat(bool limitdegflag, CEditRange* erptr, CBone* curbone, int maxlevel )
 {
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+
 	int levelcnt0 = 0;
 	while( curbone && ((maxlevel == 0) || (levelcnt0 < (maxlevel+1))) )
 	{
@@ -11060,10 +11052,11 @@ int CModel::SetBefEditMat(bool limitdegflag, CEditRange* erptr, CBone* curbone, 
 			double curframe;
 			for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
 				CMotionPoint* editmp = 0;
-				editmp = curbone->GetMotionPoint(m_curmotinfo->motid, curframe);
+				int curmotid = GetCurrentMotID();
+				editmp = curbone->GetMotionPoint(curmotid, curframe);
 				if (editmp) {
 					if (g_previewFlag != 5) {
-						editmp->SetBefEditMat(curbone->GetWorldMat(limitdegflag, m_curmotinfo->motid, curframe, editmp));
+						editmp->SetBefEditMat(curbone->GetWorldMat(limitdegflag, curmotid, curframe, editmp));
 					}
 					else {
 						editmp->SetBefEditMat(curbone->GetBtMat());
@@ -11082,7 +11075,7 @@ int CModel::SetBefEditMat(bool limitdegflag, CEditRange* erptr, CBone* curbone, 
 
 int CModel::SetBefEditMatFK(bool limitdegflag, CEditRange* erptr, CBone* curbone)
 {
-	if (curbone && curbone->IsSkeleton()){
+	if (ExistCurrentMotion() && curbone && curbone->IsSkeleton()){
 
 		int keynum;
 		double startframe, endframe, applyframe;
@@ -11091,9 +11084,10 @@ int CModel::SetBefEditMatFK(bool limitdegflag, CEditRange* erptr, CBone* curbone
 		for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0){
 
 			CMotionPoint* editmp = 0;
-			editmp = curbone->GetMotionPoint(m_curmotinfo->motid, curframe);
+			int curmotid = GetCurrentMotID();
+			editmp = curbone->GetMotionPoint(curmotid, curframe);
 			if (editmp){
-				editmp->SetBefEditMat(curbone->GetWorldMat(limitdegflag, m_curmotinfo->motid, curframe, editmp));
+				editmp->SetBefEditMat(curbone->GetWorldMat(limitdegflag, curmotid, curframe, editmp));
 			}
 			else{
 				_ASSERT(0);
@@ -11126,6 +11120,11 @@ int CModel::CalcAxisAndRotForIKRotate(int limitdegflag,
 		return 1;
 	}
 
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int curmotid = GetCurrentMotID();
+
 	ChaMatrix invmodelwm;
 	invmodelwm = ChaMatrixInv(GetWorldMat());
 	ChaVector3 modelcamtarget, modelcameye;
@@ -11139,10 +11138,10 @@ int CModel::CalcAxisAndRotForIKRotate(int limitdegflag,
 	ChaVector3 modelparentpos, modelchildpos;
 	{
 		ChaVector3 parentworld, childworld;
-		parentworld = parentbone->GetWorldPos(limitdegflag, m_curmotinfo->motid, curframe);
+		parentworld = parentbone->GetWorldPos(limitdegflag, curmotid, curframe);
 		ChaVector3TransformCoord(&modelparentpos, &parentworld, &invmodelwm);
 
-		ChaMatrix parentmat = firstbone->GetParent(false)->GetWorldMat(limitdegflag, m_curmotinfo->motid, curframe, 0);// *GetWorldMat();
+		ChaMatrix parentmat = firstbone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, curframe, 0);// *GetWorldMat();
 		ChaVector3 tmpfirstfpos = firstbone->GetJointFPos();
 		ChaVector3TransformCoord(&modelchildpos, &tmpfirstfpos, &parentmat);
 	}
@@ -11192,6 +11191,11 @@ int CModel::CalcAxisAndRotForIKRotateVert(int limitdegflag,
 		return 1;
 	}
 
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int curmotid = GetCurrentMotID();
+
 	ChaVector3 ikaxis = g_camtargetpos - g_camEye;
 	ChaVector3Normalize(&ikaxis, &ikaxis);
 
@@ -11199,8 +11203,8 @@ int CModel::CalcAxisAndRotForIKRotateVert(int limitdegflag,
 	parworld = ChaVector3(0.0f, 0.0f, 0.0f);
 	chilworld = ChaVector3(0.0f, 0.0f, 0.0f);
 	{
-		parworld = parentbone->GetWorldPos(limitdegflag, m_curmotinfo->motid, curframe);
-		ChaMatrix parworldmat = firstbone->GetParent(false)->GetWorldMat(limitdegflag, m_curmotinfo->motid, curframe, 0);// *GetWorldMat();
+		parworld = parentbone->GetWorldPos(limitdegflag, curmotid, curframe);
+		ChaMatrix parworldmat = firstbone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, curframe, 0);// *GetWorldMat();
 		ChaVector3 tmpfirstfpos = firstbone->GetJointFPos();
 		ChaVector3TransformCoord(&chilworld, &tmpfirstfpos, &parworldmat);
 	}
@@ -11318,6 +11322,13 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 		return -1;
 	}
 
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
+
+
 	bool ishipsjoint = false;
 	if (firstbone->GetParent(false)) {
 		ishipsjoint = firstbone->GetParent(false)->IsHipsBone();
@@ -11399,14 +11410,14 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 					//parentbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
 					// 
 					//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-					parentbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe);
+					parentbone->SaveSRT(limitdegflag, curmotid, startframe);
 
 					//2023/01/22 : topposスライダーの位置のフレーム(３D表示中のフレーム)において　
 					//制限角度により　回転出来ない場合は　リターンする
 					//if (g_limitdegflag != 0) {
 					if ((limitdegflag != false) && (g_wallscrapingikflag == 0)) {//2023/01/23
 						//2023/01/28 IK時は　GetBtForce()チェックはしない　BtForce == 1でも角度制限する
-						int ismovable = IsMovableRot(limitdegflag, m_curmotinfo->motid, applyframe, applyframe,
+						int ismovable = IsMovableRot(limitdegflag, curmotid, applyframe, applyframe,
 							rotq0, parentbone, parentbone);
 						if (ismovable == 0) {
 							////g_underIKRot = false;//2023/01/14 parent limited or not
@@ -11431,7 +11442,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 							keyno, 
 							parentbone, parentbone,
-							m_curmotinfo->motid, curframe, startframe, applyframe,
+							curmotid, curframe, startframe, applyframe,
 							rotq0, keynum1flag, postflag, fromiktarget);
 
 						keyno++;
@@ -11443,7 +11454,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 							0, 
 							parentbone, parentbone,
-							m_curmotinfo->motid, GetCurrentFrame(), startframe, applyframe,
+							curmotid, GetCurrentFrame(), startframe, applyframe,
 							rotq0, keynum1flag, postflag, fromiktarget);
 					}
 
@@ -11456,8 +11467,8 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 
 					//parentboneのrotqを保存
 					IKROTREC currotrec;
-					currotrec.applyframemat = parentbone->GetWorldMat(limitdegflag, m_curmotinfo->motid, applyframe, 0);
-					currotrec.applyframeeul = parentbone->GetLocalEul(limitdegflag, m_curmotinfo->motid, applyframe, 0);
+					currotrec.applyframemat = parentbone->GetWorldMat(limitdegflag, curmotid, applyframe, 0);
+					currotrec.applyframeeul = parentbone->GetLocalEul(limitdegflag, curmotid, applyframe, 0);
 					currotrec.rotq = rotq0;
 					currotrec.targetpos = targetpos;
 					currotrec.lessthanthflag = false;
@@ -11466,8 +11477,8 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 					if (g_applyendflag == 1) {
 						//curmotinfo->curframeから最後までcurmotinfo->curframeの姿勢を適用
 						int tolast;
-						for (tolast = (int)GetCurrentFrame() + 1; tolast < m_curmotinfo->frameleng; tolast++) {
-							(m_bonelist[0])->PasteRotReq(limitdegflag, m_curmotinfo->motid, GetCurrentFrame(), tolast);
+						for (tolast = (int)GetCurrentFrame() + 1; tolast < curframeleng; tolast++) {
+							(m_bonelist[0])->PasteRotReq(limitdegflag, curmotid, GetCurrentFrame(), tolast);
 						}
 					}
 				}
@@ -11479,8 +11490,8 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 					rotq0.SetAxisAndRot(rotaxis2, rotrad2);
 
 					IKROTREC currotrec;
-					currotrec.applyframemat = parentbone->GetWorldMat(limitdegflag, m_curmotinfo->motid, applyframe, 0);
-					currotrec.applyframeeul = parentbone->GetLocalEul(limitdegflag, m_curmotinfo->motid, applyframe, 0);
+					currotrec.applyframemat = parentbone->GetWorldMat(limitdegflag, curmotid, applyframe, 0);
+					currotrec.applyframeeul = parentbone->GetLocalEul(limitdegflag, curmotid, applyframe, 0);
 					currotrec.rotq = rotq0;
 					currotrec.targetpos = targetpos;
 					currotrec.lessthanthflag = true;//!!!!!!!!!!!
@@ -11505,7 +11516,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 
 		//絶対モードの場合
 		if ((calccnt == (calcnum - 1)) && g_absikflag && lastpar) {
-			chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastpar, m_curmotinfo->motid);
+			chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastpar, curmotid);
 		}
 	}
 
@@ -11536,6 +11547,11 @@ int CModel::IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
 		return -1;
 	}
 
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
 
 	bool ishipsjoint = false;
 	if (firstbone->GetParent(false)) {
@@ -11617,7 +11633,7 @@ int CModel::IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
 						//parentbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
 						// 
 						//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-						parentbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe);
+						parentbone->SaveSRT(limitdegflag, curmotid, startframe);
 
 
 						if (lessthanthflag == false) {
@@ -11635,7 +11651,7 @@ int CModel::IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
 										curupdate->IKRotateOneFrame(this, limitdegflag, erptr,
 											keyno,
 											parentbone, parentbone,
-											m_curmotinfo->motid, startframe, applyframe,
+											curmotid, startframe, applyframe,
 											rotq0, keynum1flag, postflag, fromiktarget);
 									}
 									WaitPostIKFinished();
@@ -11686,8 +11702,8 @@ int CModel::IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
 				if (g_applyendflag == 1) {
 					//curmotinfo->curframeから最後までcurmotinfo->curframeの姿勢を適用
 					int tolast;
-					for (tolast = (int)GetCurrentFrame() + 1; tolast < m_curmotinfo->frameleng; tolast++) {
-						(m_bonelist[0])->PasteRotReq(limitdegflag, m_curmotinfo->motid, GetCurrentFrame(), tolast);
+					for (tolast = (int)GetCurrentFrame() + 1; tolast < curframeleng; tolast++) {
+						(m_bonelist[0])->PasteRotReq(limitdegflag, curmotid, GetCurrentFrame(), tolast);
 					}
 				}
 			}
@@ -11710,14 +11726,14 @@ int CModel::IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
 		for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
 			if (curframe != applyframe) {
 				bool postflag = true;
-				chacalcfunc.IKTargetVec(this, limitdegflag, erptr, m_curmotinfo->motid, curframe, postflag);
+				chacalcfunc.IKTargetVec(this, limitdegflag, erptr, curmotid, curframe, postflag);
 			}
 		}
 	}
 
 	//絶対モードの場合
 	if ((calccnt == (calcnum - 1)) && g_absikflag && lastpar) {
-		chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastpar, m_curmotinfo->motid);
+		chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastpar, curmotid);
 	}
 
 
@@ -11746,6 +11762,12 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 	if (firstbone->IsNotSkeleton()) {
 		return -1;
 	}
+
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
 
 
 	bool ishipsjoint = false;
@@ -11837,7 +11859,7 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 					//parentbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
 					// 
 					//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-					parentbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe);
+					parentbone->SaveSRT(limitdegflag, curmotid, startframe);
 
 
 					//2023/01/22 : topposスライダーの位置のフレーム(３D表示中のフレーム)において　
@@ -11845,7 +11867,7 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 					//if (g_limitdegflag != 0) {
 					if ((limitdegflag != false) && (g_wallscrapingikflag == 0)) {//2023/01/23
 						//2023/01/28 IK時は　GetBtForce()チェックはしない　BtForce == 1でも角度制限する
-						int ismovable = IsMovableRot(limitdegflag, m_curmotinfo->motid, applyframe, applyframe,
+						int ismovable = IsMovableRot(limitdegflag, curmotid, applyframe, applyframe,
 							rotq0, parentbone, parentbone);
 						if (ismovable == 0) {
 							//g_underIKRot = false;//2023/01/14 parent limited or not
@@ -11870,7 +11892,7 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 							chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 								keyno, 
 								parentbone, parentbone, 
-								m_curmotinfo->motid, curframe, startframe, applyframe,
+								curmotid, curframe, startframe, applyframe,
 								rotq0, keynum1flag, postflag, fromiktarget);
 
 							keyno++;
@@ -11883,7 +11905,7 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 						chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 							0, 
 							parentbone, parentbone,
-							m_curmotinfo->motid, GetCurrentFrame(), startframe, applyframe,
+							curmotid, GetCurrentFrame(), startframe, applyframe,
 							rotq0, keynum1flag, postflag, fromiktarget);
 					}
 
@@ -11891,8 +11913,8 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 					if (g_applyendflag == 1) {
 						//curmotinfo->curframeから最後までcurmotinfo->curframeの姿勢を適用
 						int tolast;
-						for (tolast = (int)GetCurrentFrame() + 1; tolast < m_curmotinfo->frameleng; tolast++) {
-							(m_bonelist[0])->PasteRotReq(limitdegflag, m_curmotinfo->motid, GetCurrentFrame(), tolast);
+						for (tolast = (int)GetCurrentFrame() + 1; tolast < curframeleng; tolast++) {
+							(m_bonelist[0])->PasteRotReq(limitdegflag, curmotid, GetCurrentFrame(), tolast);
 						}
 					}
 				}
@@ -11920,7 +11942,7 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 
 		//絶対モードの場合
 		if( (calccnt == (calcnum - 1)) && g_absikflag && lastpar ){
-			chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastpar, m_curmotinfo->motid);
+			chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastpar, curmotid);
 		}
 	}
 
@@ -13137,9 +13159,11 @@ int CModel::RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, int s
 	}
 	depthcnt++;
 
-	if (!m_curmotinfo){
+	if (!ExistCurrentMotion()) {
 		return 0;
 	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
 
 
 	//rigからrigを呼ぶので　再入禁止には別手段が必要
@@ -13306,7 +13330,7 @@ int CModel::RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, int s
 							//curbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
 							// 
 							//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-							curbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe);
+							curbone->SaveSRT(limitdegflag, curmotid, startframe);
 
 
 							//2023/01/23 : Rigの場合は　回転できなくても処理を継続
@@ -13336,7 +13360,7 @@ int CModel::RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, int s
 									if (aplybone && (g_pseudolocalflag == 1)) {
 										bool calcaplyflag = true;
 										chacalcfunc.CalcQForRot(limitdegflag, calcaplyflag,
-											m_curmotinfo->motid, curframe, applyframe, localq,
+											curmotid, curframe, applyframe, localq,
 											curbone, aplybone,
 											&qForRot, &qForHipsRot);
 									}
@@ -13376,23 +13400,23 @@ int CModel::RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, int s
 											qForHipsRot.Slerp2(endq, 1.0 - changerate, &curqForHipsRot);
 
 											curbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
-												infooutflag, 0, m_curmotinfo->motid, curframe, 
+												infooutflag, 0, curmotid, curframe, 
 												curqForRot, curqForHipsRot, fromiktarget);
 										}
 										else{
 											curbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
-												infooutflag, 0, m_curmotinfo->motid, curframe, 
+												infooutflag, 0, curmotid, curframe, 
 												qForRot, qForHipsRot, fromiktarget);
 										}
 									}
 									else{
 										if (keyno == 0){
 											curbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
-												infooutflag, 0, m_curmotinfo->motid, curframe, 
+												infooutflag, 0, curmotid, curframe, 
 												qForRot, qForHipsRot, fromiktarget);
 										}
 										else{
-											curbone->SetAbsMatReq(limitdegflag, 0, m_curmotinfo->motid, curframe, firstframe);
+											curbone->SetAbsMatReq(limitdegflag, 0, curmotid, curframe, firstframe);
 										}
 									}
 									keyno++;
@@ -13404,16 +13428,16 @@ int CModel::RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, int s
 								qForRot = localq;
 								qForHipsRot = localq;
 								curbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
-									infooutflag, 0, m_curmotinfo->motid, GetCurrentFrame(),
+									infooutflag, 0, curmotid, GetCurrentFrame(),
 									qForRot, qForHipsRot, fromiktarget);
 							}
 							if (g_applyendflag == 1){
 								//curmotinfo->curframeから最後までcurmotinfo->curframeの姿勢を適用
 								if (GetTopBone(false)){
 									int tolast;
-									for (tolast = (int)GetCurrentFrame() + 1; tolast < (int)m_curmotinfo->frameleng; tolast++){
+									for (tolast = (int)GetCurrentFrame() + 1; tolast < curframeleng; tolast++){
 										//(m_bonelist[0])->PasteRotReq(m_curmotinfo->motid, m_curmotinfo->curframe, tolast);
-										GetTopBone(false)->PasteRotReq(limitdegflag, m_curmotinfo->motid, GetCurrentFrame(), tolast);
+										GetTopBone(false)->PasteRotReq(limitdegflag, curmotid, GetCurrentFrame(), tolast);
 									}
 								}
 							}
@@ -13457,9 +13481,11 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 	}
 	depthcnt++;
 
-	if (!m_curmotinfo) {
-		return -1;
+	if (!ExistCurrentMotion()) {
+		return 0;
 	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
 
 
 	//rigからrigを呼ぶので　再入禁止には別手段が必要
@@ -13601,7 +13627,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 						//curbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
 						// 
 						//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-						curbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe);
+						curbone->SaveSRT(limitdegflag, curmotid, startframe);
 
 						int ismovable2 = 1;
 						if (keynum >= 2) {
@@ -13613,7 +13639,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 							ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 								keyno, 
 								curbone, aplybone,
-								m_curmotinfo->motid, curframe, startframe, applyframe,
+								curmotid, curframe, startframe, applyframe,
 								localq, keynum1flag, postflag, fromiktarget);
 
 						}
@@ -13624,7 +13650,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 							ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 								0, 
 								curbone, aplybone,
-								m_curmotinfo->motid, GetCurrentFrame(), startframe, applyframe,
+								curmotid, GetCurrentFrame(), startframe, applyframe,
 								localq, keynum1flag, postflag, fromiktarget);
 						}
 
@@ -13654,8 +13680,8 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 							//curmotinfo->curframeから最後までcurmotinfo->curframeの姿勢を適用
 							if (GetTopBone(false)) {
 								int tolast;
-								for (tolast = (int)GetCurrentFrame() + 1; tolast < (int)m_curmotinfo->frameleng; tolast++) {
-									GetTopBone(false)->PasteRotReq(limitdegflag, m_curmotinfo->motid, GetCurrentFrame(), tolast);
+								for (tolast = (int)GetCurrentFrame() + 1; tolast < curframeleng; tolast++) {
+									GetTopBone(false)->PasteRotReq(limitdegflag, curmotid, GetCurrentFrame(), tolast);
 								}
 							}
 						}
@@ -13712,9 +13738,11 @@ int CModel::RigControlPostRig(bool limitdegflag, int depthcnt,
 	}
 	depthcnt++;
 
-	if (!m_curmotinfo) {
+	if (!ExistCurrentMotion()) {
 		return 0;
 	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
 
 
 	//rigからrigを呼ぶので　再入禁止には別手段が必要
@@ -13827,7 +13855,7 @@ int CModel::RigControlPostRig(bool limitdegflag, int depthcnt,
 						//curbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
 						// 
 						//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-						curbone->SaveSRT(limitdegflag, m_curmotinfo->motid, roundingstartframe);
+						curbone->SaveSRT(limitdegflag, curmotid, roundingstartframe);
 
 						//2023/01/23 : Rigの場合は　回転できなくても処理を継続
 						
@@ -13846,7 +13874,7 @@ int CModel::RigControlPostRig(bool limitdegflag, int depthcnt,
 										curupdate->IKRotateOneFrame(this, limitdegflag, erptr,
 											keyno,
 											curbone, aplybone,
-											m_curmotinfo->motid, startframe, applyframe,
+											curmotid, startframe, applyframe,
 											localq, keynum1flag, postflag, fromiktarget);
 									}
 									WaitPostIKFinished();
@@ -13859,8 +13887,8 @@ int CModel::RigControlPostRig(bool limitdegflag, int depthcnt,
 							//curmotinfo->curframeから最後までcurmotinfo->curframeの姿勢を適用
 							if (GetTopBone(false)) {
 								int tolast;
-								for (tolast = (int)GetCurrentFrame() + 1; tolast < (int)m_curmotinfo->frameleng; tolast++) {
-									GetTopBone(false)->PasteRotReq(limitdegflag, m_curmotinfo->motid, GetCurrentFrame(), tolast);
+								for (tolast = (int)GetCurrentFrame() + 1; tolast < curframeleng; tolast++) {
+									GetTopBone(false)->PasteRotReq(limitdegflag, curmotid, GetCurrentFrame(), tolast);
 								}
 							}
 						}
@@ -13879,7 +13907,7 @@ int CModel::RigControlPostRig(bool limitdegflag, int depthcnt,
 		for (curframe = roundingstartframe; curframe <= roundingendframe; curframe += 1.0) {
 			if (curframe != roundingapplyframe) {
 				bool postflag = true;
-				chacalcfunc.IKTargetVec(this, limitdegflag, erptr, m_curmotinfo->motid, curframe, postflag);
+				chacalcfunc.IKTargetVec(this, limitdegflag, erptr, curmotid, curframe, postflag);
 			}
 		}
 	}
@@ -13902,7 +13930,7 @@ int CModel::InterpolateBetweenSelection(bool limitdegflag, double srcstartframe,
 
 	int operatingjointno = -1;
 
-	if (!GetCurMotInfo()){
+	if (!ExistCurrentMotion()){
 		return operatingjointno;
 	}
 
@@ -13957,7 +13985,7 @@ void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone,
 	if ((srcstartframe < 0.0) || (srcendframe < 0.0) || (srcendframe <= srcstartframe)){
 		return;
 	}
-	if (!GetCurMotInfo()){
+	if (!ExistCurrentMotion()){
 		return;
 	}
 
@@ -13966,7 +13994,7 @@ void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone,
 
 	if (srcbone){
 		if (srcbone->IsSkeleton()) {
-			int curmotid = GetCurMotInfo()->motid;
+			int curmotid = GetCurMotInfo().motid;
 			CMotionPoint startmp, endmp;
 			srcbone->CalcLocalInfo(limitdegflag, curmotid, roundingstartframe, &startmp);
 			srcbone->CalcLocalInfo(limitdegflag, curmotid, roundingendframe, &endmp);
@@ -14362,7 +14390,7 @@ int CModel::IsMovableRot(bool limitdegflag, int srcmotid, double srcframe, doubl
 	CQuaternion qForHipsRot;
 	bool calcaplyflag = true;
 	chacalcfunc.CalcQForRot(limitdegflag, calcaplyflag,
-		m_curmotinfo->motid, roundingframe, roundingapplyframe, srcaddrot,
+		srcmotid, roundingframe, roundingapplyframe, srcaddrot,
 		srcrotbone, srcaplybone,
 		&qForRot, &qForHipsRot);
 
@@ -14404,9 +14432,11 @@ int CModel::IKRotateAxisDeltaUnderIK(
 
 	ChaCalcFunc chacalcfunc;
 
-	if (!m_curmotinfo) {
+	if (!ExistCurrentMotion()) {
 		return 0;
 	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
 
 	SetIKTargetVec();
 
@@ -14559,7 +14589,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 				//aplybone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
 				// 
 				//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-				aplybone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe);
+				aplybone->SaveSRT(limitdegflag, curmotid, startframe);
 
 
 				//2023/01/22 : topposスライダーの位置のフレーム(３D表示中のフレーム)において　
@@ -14567,7 +14597,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 				//if (g_limitdegflag != false) {
 				if ((limitdegflag != false) && (g_wallscrapingikflag == 0)) {//2023/01/23
 					//2023/01/28 IK時は　GetBtForce()チェックはしない　BtForce == 1でも角度制限する
-					int ismovable = IsMovableRot(limitdegflag, m_curmotinfo->motid, applyframe, applyframe, localq, aplybone, aplybone);
+					int ismovable = IsMovableRot(limitdegflag, curmotid, applyframe, applyframe, localq, aplybone, aplybone);
 					if (ismovable == 0) {
 						////g_underIKRot = false;//2023/01/14 parent limited or not
 						//if (editboneforret) {
@@ -14598,7 +14628,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 					ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 						keyno, 
 						aplybone, aplybone,
-						m_curmotinfo->motid, curframe, startframe, applyframe,
+						curmotid, curframe, startframe, applyframe,
 						localq, keynum1flag, postflag, fromiktarget);
 
 					keyno++;
@@ -14615,7 +14645,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 					ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 						0, 
 						aplybone, aplybone,
-						m_curmotinfo->motid, GetCurrentFrame(), startframe, applyframe,
+						curmotid, GetCurrentFrame(), startframe, applyframe,
 						localq, keynum1flag, false, fromiktarget);
 				}
 
@@ -14637,17 +14667,17 @@ int CModel::IKRotateAxisDeltaUnderIK(
 					//curmotinfo->curframeから最後までcurmotinfo->curframeの姿勢を適用
 					if (GetTopBone(false)) {
 						int tolast;
-						for (tolast = (int)GetCurrentFrame() + 1; tolast < (int)m_curmotinfo->frameleng; tolast++) {
+						for (tolast = (int)GetCurrentFrame() + 1; tolast < curframeleng; tolast++) {
 							//(m_bonelist[0])->PasteRotReq(m_curmotinfo->motid, m_curmotinfo->curframe, tolast);
-							GetTopBone(false)->PasteRotReq(limitdegflag, m_curmotinfo->motid, GetCurrentFrame(), tolast);
+							GetTopBone(false)->PasteRotReq(limitdegflag, curmotid, GetCurrentFrame(), tolast);
 						}
 					}
 				}
 
 				////parentboneのrotqを保存
 				IKROTREC currotrec;
-				currotrec.applyframemat = aplybone->GetWorldMat(limitdegflag, m_curmotinfo->motid, applyframe, 0);
-				currotrec.applyframeeul = aplybone->GetLocalEul(limitdegflag, m_curmotinfo->motid, applyframe, 0);
+				currotrec.applyframemat = aplybone->GetWorldMat(limitdegflag, curmotid, applyframe, 0);
+				currotrec.applyframeeul = aplybone->GetLocalEul(limitdegflag, curmotid, applyframe, 0);
 				currotrec.rotq = localq;
 				currotrec.targetpos = ChaVector3(0.0f, 0.0f, 0.0f);
 				currotrec.lessthanthflag = false;
@@ -14657,8 +14687,8 @@ int CModel::IKRotateAxisDeltaUnderIK(
 				//rotqの回転角度が1e-4より小さい場合
 				//ウェイトが小さいフレームにおいても　IKTargetが走るように記録する必要がある
 				IKROTREC currotrec;
-				currotrec.applyframemat = aplybone->GetWorldMat(limitdegflag, m_curmotinfo->motid, applyframe, 0);
-				currotrec.applyframeeul = aplybone->GetLocalEul(limitdegflag, m_curmotinfo->motid, applyframe, 0);
+				currotrec.applyframemat = aplybone->GetWorldMat(limitdegflag, curmotid, applyframe, 0);
+				currotrec.applyframeeul = aplybone->GetLocalEul(limitdegflag, curmotid, applyframe, 0);
 				currotrec.rotq = localq;
 				currotrec.targetpos = ChaVector3(0.0f, 0.0f, 0.0f);
 				currotrec.lessthanthflag = true;//!!!!!!!!!!!
@@ -14680,7 +14710,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 
 		//絶対モードの場合
 		if ((calccnt == (calcnum - 1)) && g_absikflag && lastbone) {
-			chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastbone, m_curmotinfo->motid);
+			chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastbone, curmotid);
 		}
 	}
 
@@ -14701,9 +14731,11 @@ int CModel::IKRotateAxisDeltaPostIK(
 {
 	ChaCalcFunc chacalcfunc;
 
-	if (!m_curmotinfo) {
+	if (!ExistCurrentMotion()) {
 		return 0;
 	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
 
 	ChaMatrix dummyparentwm;
 	dummyparentwm.SetIdentity();
@@ -14816,7 +14848,7 @@ int CModel::IKRotateAxisDeltaPostIK(
 					//aplybone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
 					// 
 					//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-					aplybone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe);
+					aplybone->SaveSRT(limitdegflag, curmotid, startframe);
 
 					if (lessthanthflag == false) {
 						if (keynum >= 2) {
@@ -14833,7 +14865,7 @@ int CModel::IKRotateAxisDeltaPostIK(
 									curupdate->IKRotateOneFrame(this, limitdegflag, erptr,
 										keyno,
 										aplybone, aplybone,
-										m_curmotinfo->motid, startframe, applyframe,
+										curmotid, startframe, applyframe,
 										localq, keynum1flag, postflag, fromiktarget);
 								}
 								WaitPostIKFinished();
@@ -14905,9 +14937,9 @@ int CModel::IKRotateAxisDeltaPostIK(
 			//curmotinfo->curframeから最後までcurmotinfo->curframeの姿勢を適用
 			if (GetTopBone(false)) {
 				int tolast;
-				for (tolast = (int)GetCurrentFrame() + 1; tolast < (int)m_curmotinfo->frameleng; tolast++) {
+				for (tolast = (int)GetCurrentFrame() + 1; tolast < curframeleng; tolast++) {
 					//(m_bonelist[0])->PasteRotReq(m_curmotinfo->motid, m_curmotinfo->curframe, tolast);
-					GetTopBone(false)->PasteRotReq(limitdegflag, m_curmotinfo->motid, GetCurrentFrame(), tolast);
+					GetTopBone(false)->PasteRotReq(limitdegflag, curmotid, GetCurrentFrame(), tolast);
 				}
 			}
 		}
@@ -14917,7 +14949,7 @@ int CModel::IKRotateAxisDeltaPostIK(
 		for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
 			if (curframe != applyframe) {
 				bool postflag = true;
-				chacalcfunc.IKTargetVec(this, limitdegflag, erptr, m_curmotinfo->motid, curframe, postflag);
+				chacalcfunc.IKTargetVec(this, limitdegflag, erptr, curmotid, curframe, postflag);
 			}
 		}
 
@@ -14926,7 +14958,7 @@ int CModel::IKRotateAxisDeltaPostIK(
 
 	//絶対モードの場合
 	if ((calccnt == (calcnum - 1)) && g_absikflag && lastbone) {
-		chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastbone, m_curmotinfo->motid);
+		chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastbone, curmotid);
 	}
 
 	//g_underIKRot = false;//2023/01/14 parent limited or not
@@ -14953,9 +14985,11 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind
 
 	ChaCalcFunc chacalcfunc;
 
-	if (!m_curmotinfo){
+	if (!ExistCurrentMotion()) {
 		return 0;
 	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
 
 	ChaMatrix dummyparentwm;
 	dummyparentwm.SetIdentity();
@@ -15103,7 +15137,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind
 			//aplybone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
 			// 
 			//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-			aplybone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe);
+			aplybone->SaveSRT(limitdegflag, curmotid, startframe);
 
 
 			//2023/01/22 : topposスライダーの位置のフレーム(３D表示中のフレーム)において　
@@ -15111,7 +15145,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind
 			//if (g_limitdegflag != false) {
 			if ((limitdegflag != false) && (g_wallscrapingikflag == 0)) {//2023/01/23
 				//2023/01/28 IK時は　GetBtForce()チェックはしない　BtForce == 1でも角度制限する
-				int ismovable = IsMovableRot(limitdegflag, m_curmotinfo->motid, applyframe, applyframe, localq, aplybone, aplybone);
+				int ismovable = IsMovableRot(limitdegflag, curmotid, applyframe, applyframe, localq, aplybone, aplybone);
 				if (ismovable == 0) {
 					////g_underIKRot = false;//2023/01/14 parent limited or not
 					//if (editboneforret) {
@@ -15141,7 +15175,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind
 					chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 						keyno, 
 						aplybone, aplybone,
-						m_curmotinfo->motid, curframe, startframe, applyframe,
+						curmotid, curframe, startframe, applyframe,
 						localq, keynum1flag, postflag, fromiktarget);
 
 					keyno++;
@@ -15158,7 +15192,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind
 				chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 					0, 
 					aplybone, aplybone,
-					m_curmotinfo->motid, GetCurrentFrame(), startframe, applyframe,
+					curmotid, GetCurrentFrame(), startframe, applyframe,
 					localq, keynum1flag, postflag, fromiktarget);
 			}
 
@@ -15167,9 +15201,9 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind
 				//curmotinfo->curframeから最後までcurmotinfo->curframeの姿勢を適用
 				if (GetTopBone(false)){
 					int tolast;
-					for (tolast = (int)GetCurrentFrame() + 1; tolast < (int)m_curmotinfo->frameleng; tolast++){
+					for (tolast = (int)GetCurrentFrame() + 1; tolast < curframeleng; tolast++){
 						//(m_bonelist[0])->PasteRotReq(m_curmotinfo->motid, m_curmotinfo->curframe, tolast);
-						GetTopBone(false)->PasteRotReq(limitdegflag, m_curmotinfo->motid, GetCurrentFrame(), tolast);
+						GetTopBone(false)->PasteRotReq(limitdegflag, curmotid, GetCurrentFrame(), tolast);
 					}
 				}
 			}
@@ -15182,7 +15216,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind
 
 		//絶対モードの場合
 		if ((calccnt == (calcnum - 1)) && g_absikflag && lastbone){
-			chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastbone, m_curmotinfo->motid);
+			chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastbone, curmotid);
 		}
 	}
 
@@ -15426,10 +15460,11 @@ int CModel::FKBoneTraAxis(bool limitdegflag, int onlyoneflag, CEditRange* erptr,
 		return 0;
 	}
 
-	if (!m_curmotinfo) {
-		_ASSERT(0);
+	if (!ExistCurrentMotion()) {
 		return 0;
 	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
 
 	ChaVector3 basevec;
 	ChaVector3 vecx(1.0f, 0.0f, 0.0f);
@@ -15454,7 +15489,7 @@ int CModel::FKBoneTraAxis(bool limitdegflag, int onlyoneflag, CEditRange* erptr,
 	ChaVector3 addtra;
 	addtra = basevec * delta;
 
-	chacalcfunc.FKBoneTra(this, limitdegflag, 0, erptr, srcboneno, m_curmotinfo->motid, addtra);
+	chacalcfunc.FKBoneTra(this, limitdegflag, 0, erptr, srcboneno, curmotid, addtra);
 
 	return 0;
 }
@@ -15479,6 +15514,12 @@ int CModel::FKBoneTraUnderFK(
 	if (firstbone->IsNotSkeleton()) {
 		return 1;
 	}
+
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
 
 
 	SetIKTargetVec();
@@ -15516,17 +15557,17 @@ int CModel::FKBoneTraUnderFK(
 			if (g_absikflag == 0) {
 				if (g_slerpoffflag == 0) {
 					translation = addtra * (float)changerate;
-					curbone->AddBoneTraReq(limitdegflag, 0, m_curmotinfo->motid, curframe, translation, dummyparentwm, dummyparentwm);
+					curbone->AddBoneTraReq(limitdegflag, 0, curmotid, curframe, translation, dummyparentwm, dummyparentwm);
 				}
 				else {
 					translation = addtra;
-					curbone->AddBoneTraReq(limitdegflag, 0, m_curmotinfo->motid, curframe, translation, dummyparentwm, dummyparentwm);
+					curbone->AddBoneTraReq(limitdegflag, 0, curmotid, curframe, translation, dummyparentwm, dummyparentwm);
 				}
 			}
 			else {
 				if (keyno == 0) {
 					translation = addtra;
-					curbone->AddBoneTraReq(limitdegflag, 0, m_curmotinfo->motid, curframe, translation, dummyparentwm, dummyparentwm);
+					curbone->AddBoneTraReq(limitdegflag, 0, curmotid, curframe, translation, dummyparentwm, dummyparentwm);
 				}
 				//else {
 				//	curbone->SetAbsMatReq(limitdegflag, 0, m_curmotinfo->motid, curframe, firstframe);
@@ -15534,7 +15575,7 @@ int CModel::FKBoneTraUnderFK(
 			}
 
 			bool postflag = false;
-			chacalcfunc.IKTargetVec(this, limitdegflag, erptr, m_curmotinfo->motid, curframe, postflag);
+			chacalcfunc.IKTargetVec(this, limitdegflag, erptr, curmotid, curframe, postflag);
 
 
 			keyno++;
@@ -15543,10 +15584,10 @@ int CModel::FKBoneTraUnderFK(
 	}
 	else {
 		translation = addtra;
-		curbone->AddBoneTraReq(limitdegflag, 0, m_curmotinfo->motid, startframe, translation, dummyparentwm, dummyparentwm);
+		curbone->AddBoneTraReq(limitdegflag, 0, curmotid, startframe, translation, dummyparentwm, dummyparentwm);
 
 		bool postflag = false;
-		chacalcfunc.IKTargetVec(this, limitdegflag, erptr, m_curmotinfo->motid, startframe, postflag);
+		chacalcfunc.IKTargetVec(this, limitdegflag, erptr, curmotid, startframe, postflag);
 
 	}
 
@@ -15579,6 +15620,13 @@ int CModel::FKBoneTraPostFK(
 	if (firstbone->IsNotSkeleton()) {
 		return 1;
 	}
+
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
+
 
 	CBone* curbone = firstbone;
 	SetBefEditMatFK(limitdegflag, erptr, curbone);
@@ -15613,7 +15661,7 @@ int CModel::FKBoneTraPostFK(
 					for (updatecount = 0; updatecount < POSTFKTRA_THREADSNUM; updatecount++) {
 						CThreadingFKTra* curupdate = m_FKTraThreads + updatecount;
 						curupdate->FKBoneTraOneFrame(this, limitdegflag, erptr,
-							curbone->GetBoneNo(), m_curmotinfo->motid, translation);
+							curbone->GetBoneNo(), curmotid, translation);
 					}
 					WaitFKTraFinished();
 				}
@@ -15630,7 +15678,7 @@ int CModel::FKBoneTraPostFK(
 	for (curframe = RoundingTime(startframe); curframe <= RoundingTime(endframe); curframe += 1.0) {
 		if (curframe != RoundingTime(applyframe)) {
 			bool postflag = true;
-			chacalcfunc.IKTargetVec(this, limitdegflag, erptr, m_curmotinfo->motid, curframe, postflag);
+			chacalcfunc.IKTargetVec(this, limitdegflag, erptr, curmotid, curframe, postflag);
 		}
 	}
 
@@ -15721,6 +15769,12 @@ int CModel::PosConstraintExecuteFromButton(bool limitdegflag, CEditRange* erptr)
 		return 1;
 	}
 
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
+
 	if (m_curmotinfo) {
 		SetIKTargetVec();
 		int keynum;
@@ -15731,7 +15785,7 @@ int CModel::PosConstraintExecuteFromButton(bool limitdegflag, CEditRange* erptr)
 			bool postflag = true;
 			int calccount;
 			for (calccount = 0; calccount < 1; calccount++) {//IKTargetVecでも複数回計算している
-				chacalcfunc.IKTargetVec(this, limitdegflag, erptr, m_curmotinfo->motid, curframe, postflag);
+				chacalcfunc.IKTargetVec(this, limitdegflag, erptr, curmotid, curframe, postflag);
 			}
 		}
 	}
@@ -15876,6 +15930,12 @@ int CModel::FKBoneScale(bool limitdegflag, int onlyoneflag, CEditRange* erptr, i
 		return 1;
 	}
 
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
+
 
 	//モーションブラシの0から1のウェイトを掛ける準備
 	ChaVector3 scalediffvec;
@@ -15938,24 +15998,24 @@ int CModel::FKBoneScale(bool limitdegflag, int onlyoneflag, CEditRange* erptr, i
 					//curtra = (1.0 - currate2) * addtra;
 
 					curbone->AddBoneScaleReq(limitdegflag, 0, 
-						m_curmotinfo->motid, RoundingTime(curframe), 
+						curmotid, RoundingTime(curframe), 
 						curscale, dummyparentwm, dummyparentwm);
 				}
 				else {
 					curbone->AddBoneScaleReq(limitdegflag, 0, 
-						m_curmotinfo->motid, RoundingTime(curframe),
+						curmotid, RoundingTime(curframe),
 						scalevec, dummyparentwm, dummyparentwm);
 				}
 			}
 			else {
 				if (keyno == 0) {
 					curbone->AddBoneScaleReq(limitdegflag, 0, 
-						m_curmotinfo->motid, RoundingTime(curframe),
+						curmotid, RoundingTime(curframe),
 						scalevec, dummyparentwm, dummyparentwm);
 				}
 				else {
 					curbone->SetAbsMatReq(limitdegflag, 0, 
-						m_curmotinfo->motid, RoundingTime(curframe), firstframe);
+						curmotid, RoundingTime(curframe), firstframe);
 				}
 			}
 			keyno++;
@@ -15964,7 +16024,7 @@ int CModel::FKBoneScale(bool limitdegflag, int onlyoneflag, CEditRange* erptr, i
 	}
 	else {
 		curbone->AddBoneScaleReq(limitdegflag, 0, 
-			m_curmotinfo->motid, RoundingTime(startframe), 
+			curmotid, RoundingTime(startframe), 
 			scalevec, dummyparentwm, dummyparentwm);
 	}
 
@@ -16211,9 +16271,16 @@ int CModel::AddBoneMotMark( OWP_Timeline* owpTimeline, int curboneno, int curlin
 		_ASSERT( 0 );
 		return 1;
 	}
+
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
+
 	CBone* curbone = m_bonelist[ curboneno ];
 	if( curbone && (curbone->IsSkeleton())){
-		curbone->AddBoneMotMark( m_curmotinfo->motid, owpTimeline, curlineno, startframe, endframe, flag );
+		curbone->AddBoneMotMark( curmotid, owpTimeline, curlineno, startframe, endframe, flag );
 	}
 
 	return 0;
@@ -16277,8 +16344,13 @@ float CModel::GetFbxTargetWeight(FbxNode* pbaseNode, FbxMesh* pbaseMesh, std::st
 
 int CModel::SetFirstFrameBonePos(HINFO* phinfo, CBone* srchipsbone)
 {
-	int motid = m_curmotinfo->motid;
-	if (motid < 0){
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
+
+	if (curmotid <= 0){
 		_ASSERT(0);
 		return 0;
 	}
@@ -16288,10 +16360,10 @@ int CModel::SetFirstFrameBonePos(HINFO* phinfo, CBone* srchipsbone)
 	}
 
 	if (srchipsbone) {
-		SetFirstFrameBonePosReq(srchipsbone, motid, phinfo);
+		SetFirstFrameBonePosReq(srchipsbone, curmotid, phinfo);
 	}
 	else {
-		SetFirstFrameBonePosReq(GetTopBone(false), motid, phinfo);
+		SetFirstFrameBonePosReq(GetTopBone(false), curmotid, phinfo);
 	}
 	
 
@@ -16893,8 +16965,10 @@ void CModel::ApplyBtToMotionReq(bool limitdegflag, CBone* srcbone)
 	if (!srcbone)
 		return;
 
-	if (!m_curmotinfo)
+	if (!ExistCurrentMotion()) {
 		return;
+	}
+	int curmotid = GetCurrentMotID();
 
 	if (srcbone->IsSkeleton()){
 		ChaMatrix btmat;
@@ -16925,7 +16999,7 @@ void CModel::ApplyBtToMotionReq(bool limitdegflag, CBone* srcbone)
 		int onlycheck = 0;
 		bool fromiktarget = false;
 		srcbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, 0, 
-			m_curmotinfo->motid, GetCurrentFrame(), setmat,
+			curmotid, GetCurrentFrame(), setmat,
 			onlycheck, fromiktarget);
 
 	}
@@ -17078,8 +17152,7 @@ void CModel::PhysIKRecReq(bool limitdegflag, CBone* srcbone, double srcrectime)
 	}
 
 	if (srcbone->IsSkeleton()) {
-		MOTINFO* curmi = GetCurMotInfo();
-		if (!curmi) {
+		if (!ExistCurrentMotion()) {
 			return;
 		}
 
@@ -17183,8 +17256,7 @@ void CModel::ApplyPhysIkRecReq(bool limitdegflag, CBone* srcbone, double srcfram
 	double roundingframe = RoundingTime(srcframe);
 
 	if (srcbone->IsSkeleton()) {
-		MOTINFO* curmi = GetCurMotInfo();
-		if (!curmi)
+		if (!ExistCurrentMotion())
 			return;
 
 
@@ -17229,11 +17301,12 @@ void CModel::ApplyPhysIkRecReq(bool limitdegflag, CBone* srcbone, double srcfram
 
 
 			if (foundrecdata0 && foundrecdata) {
-				ChaMatrix worldmat0 = btbone->GetWorldMat(limitdegflag, curmi->motid, RoundingTime(g_motionbrush_applyframe), 0);//or srcframe
+				int curmotid = GetCurrentMotID();
+				ChaMatrix worldmat0 = btbone->GetWorldMat(limitdegflag, curmotid, RoundingTime(g_motionbrush_applyframe), 0);//or srcframe
 				ChaMatrix btmat0 = recdata0.btmat * ChaMatrixInv(GetWorldMat());//カレントボーンのApplyFrameにおけるドラッグ時間ゼロの姿勢
 				ChaMatrix btmat = recdata.btmat * ChaMatrixInv(GetWorldMat());//カレントボーンのApplyFrameにおけるドラッグ時間カレントの姿勢
 
-				ChaMatrix curworldmat = btbone->GetWorldMat(limitdegflag, curmi->motid, roundingframe, 0);
+				ChaMatrix curworldmat = btbone->GetWorldMat(limitdegflag, curmotid, roundingframe, 0);
 
 
 				//#######################################################################################
@@ -17306,7 +17379,7 @@ void CModel::ApplyPhysIkRecReq(bool limitdegflag, CBone* srcbone, double srcfram
 					int onlycheck = 0;
 					bool fromiktarget = false;
 					btbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, 0,
-						curmi->motid, roundingframe, setmat,
+						curmotid, roundingframe, setmat,
 						onlycheck, fromiktarget);
 				}
 				else {
@@ -17315,13 +17388,13 @@ void CModel::ApplyPhysIkRecReq(bool limitdegflag, CBone* srcbone, double srcfram
 					bool fromiktarget = false;
 					ChaMatrix parsetmat;
 					if (btbone->GetParent(false) && btbone->GetParent(false)->IsSkeleton()) {
-						parsetmat = btbone->GetParent(false)->GetWorldMat(limitdegflag, curmi->motid, roundingframe, 0);//limited????
+						parsetmat = btbone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, roundingframe, 0);//limited????
 					}
 					else {
 						parsetmat = setmat;
 					}
 					btbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, 0,
-						curmi->motid, roundingframe, parsetmat,
+						curmotid, roundingframe, parsetmat,
 						onlycheck, fromiktarget);
 					//btbone->SetWorldMat(1, curmi->motid, roundingframe, parsetmat);
 				}
@@ -17391,10 +17464,10 @@ int CModel::CopyWorldToLimitedWorld()
 		return 0;
 	}
 
-	MOTINFO* curmi = GetCurMotInfo();
-	if (curmi) {
-
-		SetCopyW2LWFrame(RoundingTime(1.0), RoundingTime(curmi->frameleng - 1.0));//2023/10/20
+	if (ExistCurrentMotion()) {
+		int curmotid = GetCurrentMotID();
+		double maxframe = RoundingTime(GetCurrentMaxFrame());
+		SetCopyW2LWFrame(RoundingTime(1.0), maxframe);//2023/10/20
 
 		if (m_CopyW2LWThreads) {
 
@@ -17404,7 +17477,7 @@ int CModel::CopyWorldToLimitedWorld()
 			int updatecount;
 			for (updatecount = 0; updatecount < COPYW2LW_THREADSNUM; updatecount++) {
 				CThreadingCopyW2LW* curupdate = m_CopyW2LWThreads + updatecount;
-				curupdate->CopyWorldToLimitedWorld(GetTopBone(false), curmi->motid, 1.0, RoundingTime(curmi->frameleng - 1.0));
+				curupdate->CopyWorldToLimitedWorld(GetTopBone(false), curmotid, 1.0, maxframe);
 			}
 			WaitCopyW2LWFinished();
 
@@ -17416,7 +17489,7 @@ int CModel::CopyWorldToLimitedWorld()
 		//unlimtedの計算
 		//2023/10/21 CopyW2LWは前フレーム姿勢を考慮していないマルチスレッド　CalcBoneEul()で前フレーム考慮マルチスレッドによる後処理
 		//CopyW2LWとCalcBoneEulはセットで呼び出す
-		CalcBoneEul(false, curmi->motid);
+		CalcBoneEul(false, curmotid);
 
 	}
 
@@ -17427,10 +17500,9 @@ int CModel::CopyWorldToLimitedWorld()
 int CModel::AdditiveCurrentToAngleLimit(CBone* srcbone)
 {
 
-	MOTINFO* curmi = GetCurMotInfo();
-	if (curmi) {
+	if (ExistCurrentMotion()) {
 		bool calclimitdegflag = false;
-		CalcBoneEul(calclimitdegflag, curmi->motid);
+		CalcBoneEul(calclimitdegflag, GetCurrentMotID());
 
 		if (!srcbone) {
 			map<int, CBone*>::iterator itrbone;
@@ -17457,10 +17529,9 @@ int CModel::AdditiveCurrentToAngleLimit(CBone* srcbone)
 
 int CModel::AdditiveAllMotionsToAngleLimit()
 {
-	MOTINFO* curmi = GetCurMotInfo();
-	if (curmi) {
+	if (ExistCurrentMotion()) {
 		bool calclimitdegflag = false;
-		CalcBoneEul(calclimitdegflag, curmi->motid);
+		CalcBoneEul(calclimitdegflag, GetCurrentMotID());
 
 		map<int, CBone*>::iterator itrbone;
 		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
@@ -18660,8 +18731,8 @@ int CModel::InitMpFrame(bool limitdegflag, int srcmotid, CBone* srcbone, double 
 
 	//g_underInitMp = true;//!!!!!!!!!!!!!!!!!!
 	
-	MOTINFO* curmi = GetMotInfo(srcmotid);
-	if (curmi) {
+	MOTINFO curmi = GetMotInfo(srcmotid);
+	if (curmi.motid > 0) {
 		double startframe = RoundingTime(srcstartframe);
 		double endframe = RoundingTime(srcendframe);
 		
@@ -19231,21 +19302,21 @@ void CModel::SetCameraMotionId(int srcid)
 {
 	m_cameramotionid = srcid;
 
-	MOTINFO* camerami = GetMotInfo(srcid);
-	if (camerami) {
+	MOTINFO camerami = GetMotInfo(srcid);
+	if (camerami.motid > 0) {
 		map<int, CBone*>::iterator itrbone;
 		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 			CBone* curbone = itrbone->second;
 			if (curbone) {
-				if (curbone->IsCamera() || (curbone->IsNull() && (strcmp(curbone->GetBoneName(), camerami->motname) == 0))) {
-					curbone->SetCurrentMotion(srcid, camerami->frameleng);
+				if (curbone->IsCamera() || (curbone->IsNull() && (strcmp(curbone->GetBoneName(), camerami.motname) == 0))) {
+					curbone->SetCurrentMotion(srcid, camerami.frameleng);
 				}
 			}
 		}
 		//ResetMotionCache();
 
-		if ((camerami->fbxanimno >= 0) && GetScene()) {
-			FbxAnimStack* lCurrentAnimationStack = GetScene()->FindMember<FbxAnimStack>(mAnimStackNameArray[camerami->fbxanimno]->Buffer());
+		if ((camerami.fbxanimno >= 0) && GetScene()) {
+			FbxAnimStack* lCurrentAnimationStack = GetScene()->FindMember<FbxAnimStack>(mAnimStackNameArray[camerami.fbxanimno]->Buffer());
 			if (lCurrentAnimationStack != NULL) {
 				FbxAnimLayer* mCurrentAnimLayer;
 				mCurrentAnimLayer = lCurrentAnimationStack->GetMember<FbxAnimLayer>();
@@ -19269,10 +19340,10 @@ int CModel::GetCurrentMotion()
 		return -1;
 	}
 }
-double CModel::GetCurrentMotionFrame()
-{
-	return GetCurrentFrame();
-}
+//double CModel::GetCurrentMotionFrame()
+//{
+//	return GetCurrentFrame();
+//}
 
 //2023/07/21
 int CModel::SetIKStopFlag()
@@ -19391,7 +19462,7 @@ int CModel::ChkInView()
 
 int CModel::GetCurrentMotID()
 {
-	MOTINFO* curmi = GetCurMotInfo();
+	MOTINFO* curmi = GetCurMotInfoPtr();
 	if (curmi) {
 		return curmi->motid;
 	}
@@ -19399,15 +19470,77 @@ int CModel::GetCurrentMotID()
 		return 0;
 	}
 }
+double CModel::GetCurrentMotLeng()
+{
+	MOTINFO* curmi = GetCurMotInfoPtr();
+	if (curmi) {
+		return curmi->frameleng;
+	}
+	else {
+		return 0.0;
+	}
+}
+double CModel::GetCurrentMaxFrame()
+{
+	//return (motleng - 1.0)
+
+	double frameleng;
+	frameleng = GetCurrentMotLeng();
+	if (frameleng >= 1.0) {
+		return (frameleng - 1.0);
+	}
+	else {
+		return 0.0;
+	}
+}
 
 double CModel::GetCurrentFrame()
 {
-	MOTINFO* curmi = GetCurMotInfo();
+	MOTINFO* curmi = GetCurMotInfoPtr();
 	if (curmi) {
 		return curmi->curframe;
 	}
 	else {
 		return 1.0;
+	}
+}
+
+bool CModel::ExistCurrentMotion()
+{
+	MOTINFO* curmi = GetCurMotInfoPtr();
+	if (curmi) {
+		int curmotid;
+		double frameleng;
+		curmotid = curmi->motid;
+		frameleng = curmi->frameleng;
+		if ((curmotid > 0) && (frameleng > 0.0)) {
+			return true;
+		}
+		else {
+			_ASSERT(0);
+			return false;
+		}
+	}
+	else {
+		return false;
+	}
+}
+
+int CModel::GetCurrentMotName(char* dstname, int dstleng)
+{
+	if (!dstname || (dstleng <= 0) || (dstleng >= 10000)) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	MOTINFO* curmi = GetCurMotInfoPtr();
+	if (curmi) {
+		strcpy_s(dstname, dstleng, curmi->motname);
+		return 0;
+	}
+	else {
+
+		return 1;
 	}
 }
 
@@ -19428,7 +19561,17 @@ double CModel::GetRenderSlotFrame()
 	}
 }
 
+double CModel::GetOpeFrame(bool calcslotflag)
+{
+	//calcslotflagに応じて　GetCurrentFrame() or GetRenderSlotFrame()を返す
 
+	if (calcslotflag == false) {
+		return GetCurrentFrame();
+	}
+	else {
+		return GetRenderSlotFrame();
+	}
+}
 
 int CModel::SetLODNum()
 {
@@ -19742,19 +19885,21 @@ int CModel::Retarget(CModel* srcbvhmodel, ChaMatrix smatView, ChaMatrix smatProj
 	//############################################################
 	//2023/08/14 : bvh側の全モーションに関してリターゲットループ
 	//############################################################
-	std::map<int, MOTINFO*>::iterator itrbvhmi;
-	for (itrbvhmi = srcbvhmodel->GetMotInfoBegin(); itrbvhmi != srcbvhmodel->GetMotInfoEnd(); itrbvhmi++) {
-		MOTINFO* bvhmi = itrbvhmi->second;
-		if (!bvhmi) {
+	int bvhminum;
+	int bvhmiindex;
+	bvhminum = srcbvhmodel->GetMotInfoSize();
+	for (bvhmiindex = 0; bvhmiindex < bvhminum; bvhmiindex++) {
+		MOTINFO bvhmi = srcbvhmodel->GetMotInfoByIndex(bvhmiindex);
+		if ((bvhmi.motid <= 0) || (bvhmi.frameleng <= 0.0)) {
 			//::MessageBox(NULL, L"motion of bvh is not found error.", L"error!!!", MB_OK);
 			//g_underRetargetFlag = false;
 			//return 1;
 			continue;
 		}
 
-		double motleng = bvhmi->frameleng;//2022/11/01
+		double motleng = bvhmi.frameleng;//2022/11/01
 		//double motleng = bvhmi->frameleng - 1.0;//2021/10/13
-		int bvhmotid = bvhmi->motid;//motion側のmotid
+		int bvhmotid = bvhmi.motid;//motion側のmotid
 		srcbvhmodel->SetCurrentMotion(bvhmotid);
 
 
@@ -19764,9 +19909,10 @@ int CModel::Retarget(CModel* srcbvhmodel, ChaMatrix smatView, ChaMatrix smatProj
 		//(srcInitCurMotionFunc)(0, 0);//CModel::AddMotionで初期化することにしたのでコメントアウト　2022/08/28
 
 
-		MOTINFO* modelmi = GetCurMotInfo();
-		CBone* modelbone;
-		if (modelmi) {
+		CBone* modelbone = 0;
+		int modelmotid = 0;
+		if (ExistCurrentMotion()) {
+			modelmotid = GetCurrentMotID();
 			CBone* modeltopbone = GetTopBone();
 			CBone* modelhipsbone = 0;
 			if (!modeltopbone) {
@@ -19872,11 +20018,9 @@ int CModel::Retarget(CModel* srcbvhmodel, ChaMatrix smatView, ChaMatrix smatProj
 		// マルチスレッドの後処理
 		//前フレーム考慮のオイラー角計算
 		//###############################
-		if (modelmi) {
-			SetUnderRetarget(false);//!!!!!!!!!!!!
-			CalcBoneEul(limitdegflag, modelmi->motid);
-			SetUnderRetarget(true);//!!!!!!!!!!!!
-		}
+		SetUnderRetarget(false);//!!!!!!!!!!!!
+		CalcBoneEul(limitdegflag, modelmotid);
+		SetUnderRetarget(true);//!!!!!!!!!!!!
 		
 
 		ChaMatrix tmpwm = GetWorldMat();

@@ -487,18 +487,22 @@ public:
  * @return 成功したら０。
  */
 
-	//#######################################################################################
-	//GetMotionFrame, GetCurrentFrame, GetCurrentMotionFrameは同じ結果を返す　リファクタリング候補
-	//#######################################################################################
-	int GetMotionFrame(double* dstframe);
 	double GetCurrentFrame();
-	double GetCurrentMotionFrame();
 
 	void SetRenderSlotFrame(double srcframe);
 	double GetRenderSlotFrame();
 
+	double GetOpeFrame(bool calcslotflag);//calcslotflagに応じて　GetCurrentFrame() or GetRenderSlotFrame()を返す
+
 	int GetMotionName(int srcmotid, int dstnamelen, char* dstname);
 
+	int GetCurrentMotID();
+	double GetCurrentMotLeng();
+	double GetCurrentMaxFrame();//return (motleng - 1.0)
+
+	int GetCurrentMotName(char* dstname, int dstleng);
+	bool ExistCurrentMotion();
+	
 /**
  * @fn
  * SetMotionSpeed
@@ -1287,6 +1291,45 @@ private:
 
 	void SetBoneMatrixIndexReq(CBone* srcbone, int* pcount);
 
+
+	MOTINFO* GetCurMotInfoPtr() {
+		//#####################
+		//for private function
+		//#####################
+
+		if (GetNoBoneFlag() == false) {
+			return m_curmotinfo;
+		}
+		else {
+			return 0;
+		}
+	};
+	MOTINFO* GetMotInfoPtr(int srcid) {//motidは1から
+
+		//#####################
+		//for private function
+		//#####################
+
+		if (GetNoBoneFlag() == false) {
+			//DeleteMotion時に要素をeraseするのでid - 1が配列のインデックスになるとは限らない//2021/08/26
+			int miindex;
+			miindex = MotionID2Index(srcid);
+			if (miindex >= 0) {
+				return m_motinfo[miindex];
+			}
+			else {
+				_ASSERT(0);
+				return 0;
+			}
+		}
+		else {
+			_ASSERT(0);
+			return 0;
+		}
+	};
+
+
+
 public: //accesser
 	FbxManager* GetFBXSDK(){
 		return m_psdk;
@@ -1317,7 +1360,6 @@ public: //accesser
 		m_inshadow = srcflag;
 	};
 
-	int GetCurrentMotID();
 
 	const WCHAR* GetFileName(){ return m_filename; };
 	const WCHAR* GetDirName(){ return m_dirname; };
@@ -1565,40 +1607,206 @@ public: //accesser
 			return 0;
 		}
 	};
-	MOTINFO* GetMotInfo( int srcid ){//motidは1から
+	MOTINFO GetMotInfoByIndex(int srcindex)//by array index
+	{
+		if ((srcindex >= 0) && (srcindex < GetMotInfoSize())) {
+			if (m_motinfo[srcindex]) {
+				return *m_motinfo[srcindex];
+			}
+			else {
+				//_ASSERT(0);
+				//abort();//abortしないで　呼び出し側でmotid > 0チェックをすることにした
+				MOTINFO dummymi;
+				dummymi.Init();
+				return dummymi;
+			}
+		}
+		else {
+			//_ASSERT(0);
+			//abort();//abortしないで　呼び出し側でmotid > 0チェックをすることにした
+			MOTINFO dummymi;
+			dummymi.Init();
+			return dummymi;
+		}
+	}
+	MOTINFO GetMotInfo(int srcid){//motidは1から
 		//return m_motinfo[srcid - 1];
 
 		if (GetNoBoneFlag() == false) {
 			//DeleteMotion時に要素をeraseするのでid - 1が配列のインデックスになるとは限らない//2021/08/26
 			int miindex;
 			miindex = MotionID2Index(srcid);
-			if (miindex >= 0) {
-				return m_motinfo[miindex];
+			if ((miindex >= 0) && m_motinfo[miindex]) {
+				return *m_motinfo[miindex];
 			}
 			else {
-				return 0;
+				//_ASSERT(0);
+				//abort();//abortしないで　呼び出し側でmotid > 0チェックをすることにした
+				MOTINFO dummymi;
+				dummymi.Init();
+				return dummymi;
 			}
 		}
 		else {
-			return 0;
+			//_ASSERT(0);
+			//abort();//abortしないで　呼び出し側でmotid > 0チェックをすることにした
+			MOTINFO dummymi;
+			dummymi.Init();
+			return dummymi;
 		}
 	};
-	std::map<int,MOTINFO*>::iterator GetMotInfoBegin(){
-		return m_motinfo.begin();
-	};
-	std::map<int,MOTINFO*>::iterator GetMotInfoEnd(){
-		return m_motinfo.end();
-	};
+
+	int SetMotInfo(int srcid, MOTINFO srcmi)
+	{
+		if (GetNoBoneFlag() == false) {
+			//DeleteMotion時に要素をeraseするのでid - 1が配列のインデックスになるとは限らない//2021/08/26
+			int miindex;
+			miindex = MotionID2Index(srcid);
+			if ((miindex >= 0) && m_motinfo[miindex]) {
+				MoveMemory(m_motinfo[miindex], &srcmi, sizeof(MOTINFO));
+				return 0;
+			}
+			else {
+				_ASSERT(0);
+				abort();
+				return 1;
+			}
+		}
+		else {
+			_ASSERT(0);
+			abort();//!!!!!!!!!!!!!!!!
+			return 1;
+		}
+	}
+	int SetMotInfoCurFrameByIndex(int srcindex, double srcval)
+	{
+		if ((srcindex >= 0) && (srcindex < GetMotInfoSize())) {
+			if (m_motinfo[srcindex]) {
+				m_motinfo[srcindex]->curframe = srcval;
+				return 0;
+			}
+			else {
+				_ASSERT(0);
+				abort();//!!!!!!!!!!!!!!!!
+				return 1;
+			}
+		}
+		else {
+			_ASSERT(0);
+			abort();//!!!!!!!!!!!!!!!!
+			return 1;
+		}
+	}
+	int SetMotInfoFrameLengByIndex(int srcindex, double srcval)
+	{
+		if ((srcindex >= 0) && (srcindex < GetMotInfoSize())) {
+			if (m_motinfo[srcindex]) {
+				m_motinfo[srcindex]->frameleng = srcval;
+				return 0;
+			}
+			else {
+				_ASSERT(0);
+				abort();//!!!!!!!!!!!!!!!!
+				return 1;
+			}
+		}
+		else {
+			_ASSERT(0);
+			abort();//!!!!!!!!!!!!!!!!
+			return 1;
+		}
+	}
+	int SetMotInfoMotNameByIndex(int srcindex, char* srcname)
+	{
+		if (!srcname) {
+			_ASSERT(0);
+			return 1;
+		}
+		if ((srcindex >= 0) && (srcindex < GetMotInfoSize())) {
+			if (m_motinfo[srcindex]) {
+				strcpy_s(m_motinfo[srcindex]->motname, 256, srcname);
+				return 0;
+			}
+			else {
+				_ASSERT(0);
+				abort();//!!!!!!!!!!!!!!!!
+				return 1;
+			}
+		}
+		else {
+			_ASSERT(0);
+			abort();//!!!!!!!!!!!!!!!!
+			return 1;
+		}
+	}
+	int SetMotInfoEngMotNameByIndex(int srcindex, char* srcname)
+	{
+		if (!srcname) {
+			_ASSERT(0);
+			return 1;
+		}
+		if ((srcindex >= 0) && (srcindex < GetMotInfoSize())) {
+			if (m_motinfo[srcindex]) {
+				strcpy_s(m_motinfo[srcindex]->engmotname, 256, srcname);
+				return 0;
+			}
+			else {
+				_ASSERT(0);
+				abort();//!!!!!!!!!!!!!!!!
+				return 1;
+			}
+		}
+		else {
+			_ASSERT(0);
+			abort();//!!!!!!!!!!!!!!!!
+			return 1;
+		}
+	}
+	int SetMotInfoLoopFlagByIndex(int srcindex, int srcloopflag)
+	{
+		if ((srcindex >= 0) && (srcindex < GetMotInfoSize())) {
+			if (m_motinfo[srcindex]) {
+				m_motinfo[srcindex]->loopflag = srcloopflag;
+				return 0;
+			}
+			else {
+				_ASSERT(0);
+				abort();//!!!!!!!!!!!!!!!!
+				return 1;
+			}
+		}
+		else {
+			_ASSERT(0);
+			abort();//!!!!!!!!!!!!!!!!
+			return 1;
+		}
+	}
+
+	//std::map<int,MOTINFO*>::iterator GetMotInfoBegin(){
+	//	return m_motinfo.begin();
+	//};
+	//std::map<int,MOTINFO*>::iterator GetMotInfoEnd(){
+	//	return m_motinfo.end();
+	//};
 
 
 	int GetCurrentMotion();
 
-	MOTINFO* GetCurMotInfo(){
+	MOTINFO GetCurMotInfo(){
 		if (GetNoBoneFlag() == false) {
-			return m_curmotinfo;
+			if (m_curmotinfo) {
+				return *m_curmotinfo;
+			}
+			else {
+				MOTINFO dummymi;
+				dummymi.Init();
+				return dummymi;
+			}
 		}
 		else {
-			return 0;
+			MOTINFO dummymi;
+			dummymi.Init();
+			return dummymi;
 		}
 	};
 	void SetCurMotInfo( MOTINFO* srcinfo ){
@@ -1606,28 +1814,31 @@ public: //accesser
 			m_curmotinfo = srcinfo;
 		}
 	};
-	MOTINFO* GetFirstValidMotInfo()
+	MOTINFO GetFirstValidMotInfo()
 	{
 		if (GetNoBoneFlag() == false) {
-			MOTINFO* retmi = 0;
+			MOTINFO retmi;
+			retmi.Init();
 			std::map<int, MOTINFO*>::iterator itrmi;
 			for (itrmi = m_motinfo.begin(); itrmi != m_motinfo.end(); itrmi++) {
 				MOTINFO* curmi = itrmi->second;
 				if (curmi) {//NULLではないとき
-					retmi = curmi;
+					retmi = *curmi;
 					break;
 				}
 			}
 			return retmi;
 		}
 		else {
-			return 0;
+			MOTINFO dummymi;
+			dummymi.Init();
+			return dummymi;
 		}
 	};
 
 
 	void SetCameraMotion(int srcmotid) {
-		MOTINFO* curmi = GetMotInfo(srcmotid);
+		MOTINFO* curmi = GetMotInfoPtr(srcmotid);
 		if (curmi) {
 			curmi->cameramotion = true;
 		}
@@ -1636,7 +1847,7 @@ public: //accesser
 		}
 	};
 	bool IsCameraMotion(int srcmotid) {
-		MOTINFO* curmi = GetMotInfo(srcmotid);
+		MOTINFO* curmi = GetMotInfoPtr(srcmotid);
 		if (curmi && curmi->cameramotion) {
 			return true;
 		}
@@ -1686,7 +1897,7 @@ public: //accesser
 			}
 			else {
 				//not camera
-				_ASSERT(0);
+				//_ASSERT(0);
 				return 0;
 			}
 		}

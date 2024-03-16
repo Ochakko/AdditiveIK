@@ -170,14 +170,14 @@ int WriteLIMFileHeader(LIMHEADER* dstlimh, HANDLE hfile, CModel* srcmodel,
 	}
 	s_model = srcmodel;
 
-	MOTINFO* curmi = srcmodel->GetMotInfo(srcmotid);
-	if (!curmi) {
+	MOTINFO curmi = srcmodel->GetMotInfo(srcmotid);
+	if (curmi.motid <= 0) {
 		_ASSERT(0);
 		return 1;
 	}
 
 	int framenum;
-	framenum = (int)curmi->frameleng;
+	framenum = IntTime(curmi.frameleng);
 	if (framenum <= 0) {
 		_ASSERT(0);
 		return 1;
@@ -382,14 +382,14 @@ bool LoadLIMFile(CModel* pmodel, WCHAR* pfilename, char* fbxdate, int animno, in
 	}
 	*newmotid = motid;
 
-	MOTINFO* newmi = pmodel->GetMotInfo(motid);
-	if (!newmi) {
+	MOTINFO newmi = pmodel->GetMotInfo(motid);
+	if (newmi.motid <= 0) {
 		_ASSERT(0);
 		CloseHandle(hfile);
 		free(newbuf);
 		return false;
 	}
-	if ((int)(newmi->frameleng + 0.0001) != limheader.framenum) {
+	if (IntTime(newmi.frameleng) != limheader.framenum) {
 		_ASSERT(0);
 		CloseHandle(hfile);
 		free(newbuf);

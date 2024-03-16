@@ -99,10 +99,11 @@ int CThreadingCalcEul::ThreadFunc()
 							for (bonecount = 0; bonecount < bonenum; bonecount++) {
 								CBone* curbone = m_bonevec[bonecount];
 								if (curbone) {
-									MOTINFO* mi = m_model->GetMotInfo(motid);
-									if (mi) {
+									MOTINFO mi = m_model->GetMotInfo(motid);
+									if (mi.motid > 0) {
 										ChaCalcFunc chacalcfunc;
-										chacalcfunc.CalcBoneEulOne(m_model, m_limitdegflag, curbone, mi->motid, 0.0, mi->frameleng - 1.0);
+										chacalcfunc.CalcBoneEulOne(m_model, m_limitdegflag, curbone, 
+											mi.motid, 0.0, mi.frameleng - 1.0);
 									}
 								}
 							}
@@ -152,10 +153,11 @@ int CThreadingCalcEul::ThreadFunc()
 							for (bonecount = 0; bonecount < bonenum; bonecount++) {
 								CBone* curbone = m_bonevec[bonecount];
 								if (curbone) {
-									MOTINFO* mi = m_model->GetMotInfo(motid);
-									if (mi) {
+									MOTINFO mi = m_model->GetMotInfo(motid);
+									if (mi.motid > 0) {
 										ChaCalcFunc chacalcfunc;
-										chacalcfunc.CalcBoneEulOne(m_model, m_limitdegflag, curbone, mi->motid, 0.0, mi->frameleng - 1.0);
+										chacalcfunc.CalcBoneEulOne(m_model, m_limitdegflag, curbone, 
+											mi.motid, 0.0, mi.frameleng - 1.0);
 									}
 								}
 							}

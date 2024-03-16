@@ -1670,9 +1670,9 @@ int ChaCalcFunc::CalcBoneEul(CModel* srcmodel, bool limitdegflag, int srcmotid)
 		for (itrbone = srcmodel->GetBoneListBegin(); itrbone != srcmodel->GetBoneListEnd(); itrbone++) {
 			CBone* curbone = itrbone->second;
 			if (curbone) {
-				MOTINFO* mi = srcmodel->GetMotInfo(srcmotid);
-				if (mi) {
-					CalcBoneEulOne(srcmodel, limitdegflag, curbone, mi->motid, 0.0, mi->frameleng - 1.0);
+				MOTINFO curmi = srcmodel->GetMotInfo(srcmotid);
+				if (curmi.motid > 0) {
+					CalcBoneEulOne(srcmodel, limitdegflag, curbone, curmi.motid, 0.0, curmi.frameleng - 1.0);
 				}
 			}
 		}
@@ -3057,21 +3057,19 @@ int ChaCalcFunc::ConvBoneRotation(CModel* srcmodel, CModel* srcbvhmodel, int sel
 
 	double roundingframe = RoundingTime(srcframe);
 
-	MOTINFO* bvhmi;
 	int bvhmotid;
-	bvhmi = srcbvhmodel->GetCurMotInfo();
-	if (!bvhmi) {
+	if (!srcbvhmodel->ExistCurrentMotion()) {
 		_ASSERT(0);
 		return 1;
 	}
-	bvhmotid = bvhmi->motid;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	bvhmotid = srcbvhmodel->GetCurrentMotID();//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 	bool onaddmotion = true;//for getbychain
 	CMotionPoint* bvhmp = 0;
 	if (bvhbone) {
 		//bvhmp = bvhbone->GetCurMp();
-		bvhmp = bvhbone->GetMotionPoint(bvhmi->motid, roundingframe);
+		bvhmp = bvhbone->GetMotionPoint(bvhmotid, roundingframe);
 		if (!bvhmp) {
 			_ASSERT(0);
 			return 0;
@@ -3083,9 +3081,8 @@ int ChaCalcFunc::ConvBoneRotation(CModel* srcmodel, CModel* srcbvhmodel, int sel
 	}
 
 
-	MOTINFO* modelmi = srcmodel->GetCurMotInfo();
-	if (modelmi) {
-		int modelmotid = modelmi->motid;
+	if (srcmodel->ExistCurrentMotion()) {
+		int modelmotid = srcmodel->GetCurrentMotID();
 		CMotionPoint modelmp;
 		CMotionPoint* pmodelmp = 0;
 		pmodelmp = srcbone->GetMotionPoint(modelmotid, roundingframe, onaddmotion);
@@ -3505,32 +3502,31 @@ int ChaCalcFunc::FKRotate(CModel* srcmodel, bool limitdegflag, bool onretarget, 
 		return 1;
 	}
 
-	MOTINFO* curmi = srcmodel->GetCurMotInfo();
-	if (!curmi) {
+	if (!srcmodel->ExistCurrentMotion()) {
 		_ASSERT(0);
 		return 1;
 	}
 
-
+	int curmotid = srcmodel->GetCurrentMotID();
 	double roundingframe = RoundingTime(srcframe);
 
 	bool onaddmotion = true;//for getbychain
 	CBone* parentbone = curbone->GetParent(false);
 	CMotionPoint* parmp = 0;
 	if (parentbone && parentbone->IsSkeleton()) {
-		parmp = parentbone->GetMotionPoint(curmi->motid, roundingframe, onaddmotion);
+		parmp = parentbone->GetMotionPoint(curmotid, roundingframe, onaddmotion);
 	}
 
 	if (reqflag == 1) {
 		ChaMatrix dummyparentwm;
 		dummyparentwm.SetIdentity();
 		bool infooutflag = true;
-		curbone->RotBoneQReq(limitdegflag, infooutflag, 0, curmi->motid, roundingframe, rotq, dummyparentwm, dummyparentwm,
+		curbone->RotBoneQReq(limitdegflag, infooutflag, 0, curmotid, roundingframe, rotq, dummyparentwm, dummyparentwm,
 			bvhbone, traanim);// , setmatflag, psetmat, onretarget);
 	}
 	else if (bvhbone) {
 		ChaMatrix setmat = bvhbone->GetTmpMat();
-		curbone->RotBoneQOne(limitdegflag, parentbone, parmp, curmi->motid, roundingframe, setmat);
+		curbone->RotBoneQOne(limitdegflag, parentbone, parmp, curmotid, roundingframe, setmat);
 	}
 
 	return curbone->GetBoneNo();
@@ -3801,15 +3797,15 @@ int ChaCalcFunc::InitMP(CBone* srcbone, bool limitdegflag, int srcmotid, double 
 	////CMotionPoint* firstmp = GetMotionPoint(1, 0.0);//motid == 1は１つ目のモーション
 
 	int firstmotid = 1;
-	MOTINFO* firstmi = srcbone->GetParModel()->GetFirstValidMotInfo();//１つ目のモーションを削除済の場合に対応
-	if (!firstmi) {
+	MOTINFO firstmi = srcbone->GetParModel()->GetFirstValidMotInfo();//１つ目のモーションを削除済の場合に対応
+	if (firstmi.motid <= 0) {
 		//MotionPointが無い場合にもいても　想定している使い方として　MOTINFOはAddされた状態でRetargetは呼ばれる
 		//よってここを通る場合は　想定外エラー
 		_ASSERT(0);
 		return 1;
 	}
 	else {
-		firstmotid = firstmi->motid;
+		firstmotid = firstmi.motid;
 	}
 
 	CMotionPoint* curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);

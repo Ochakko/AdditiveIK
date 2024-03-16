@@ -207,7 +207,7 @@ int CFpsSprite::DrawScreen(RenderContext* rc, int srcfps)
 	}
 
 	if ((srcfps < 0) || (srcfps >= FPSDISPMAX)) {
-		_ASSERT(0);
+		//_ASSERT(0);
 		return 1;
 	}
 

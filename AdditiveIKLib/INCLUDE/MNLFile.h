@@ -27,7 +27,7 @@ private:
 	virtual int DestroyObjs();
 
 	int WriteFileInfo();
-	int WriteMNEntry(int mcnt, char* srcname);
+	int WriteMNEntry(int mcnt, MOTINFO curmi);
 
 	//int CheckFileVersion( XMLIOBUF* xmliobuf );
 	int ReadFileInfo( XMLIOBUF* xmliobuf, int* charanumptr );

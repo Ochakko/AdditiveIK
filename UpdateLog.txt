@@ -2,6 +2,11 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/03/16
+　MOTINFO構造体へのアクセスをカプセル化
+　　MOTINFO構造体のポインタへのアクセスはCModelからに限定し、他からのアクセスに対しては値を返すように.
+　　Get,Set用の関数を追加
+
 
 
 2024/03/15
@@ -17,8 +22,6 @@ https://github.com/Ochakko/AdditiveIK
 
 　2024/3/13の修正で物理シミュ時にエンドジョイントの表示フレームが他のジョイントの表示フレームとずれていた
 　　修正済
-
-
 
 
 2024/03/14
