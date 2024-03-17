@@ -3669,6 +3669,7 @@ void InitApp()
 
 	g_pickorder = 1;//2024/02/16
 	g_hdrpbloom = true;
+	g_alphablending = true;
 	g_freefps = true;
 	g_zalways = false;
 	s_befftime = 0.0;
@@ -26897,6 +26898,13 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			CheckDlgButton(hDlgWnd, IDC_CHECK_SKYDISP, false);
 		}
 
+		if (g_alphablending == true) {
+			CheckDlgButton(hDlgWnd, IDC_AlphaBlending, true);
+		}
+		else {
+			CheckDlgButton(hDlgWnd, IDC_AlphaBlending, false);
+		}
+
 		return FALSE;
 	}
 	break;
@@ -27033,6 +27041,19 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			}
 			else {
 				g_skydispflag = false;
+			}
+		}
+		break;
+
+		case IDC_AlphaBlending:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_AlphaBlending);
+			if (ischecked == BST_CHECKED) {
+				g_alphablending = true;
+			}
+			else {
+				g_alphablending = false;
 			}
 		}
 		break;
@@ -41377,13 +41398,13 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 	}
 
 
-	{
-		//2024/03/04
-		myRenderer::RENDERSPRITE rendersprite;
-		rendersprite.Init();
-		rendersprite.psprite = &(s_spupperbar.sprite);
-		re->AddSpriteToForwardRenderPass(rendersprite);
-	}
+	//{
+	//	//2024/03/04
+	//	myRenderer::RENDERSPRITE rendersprite;
+	//	rendersprite.Init();
+	//	rendersprite.psprite = &(s_spupperbar.sprite);
+	//	re->AddSpriteToForwardRenderPass(rendersprite);
+	//}
 
 
 	if (!s_model) {

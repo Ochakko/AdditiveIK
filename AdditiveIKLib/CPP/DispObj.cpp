@@ -1265,23 +1265,34 @@ int CDispObj::RenderNormalMaterial(RenderContext* rc, myRenderer::RENDEROBJ rend
 	//diffuse.Clamp(0.0f, 1.0f);
 
 	bool opeflag = false;
-	if (renderobj.withalpha && renderobj.forcewithalpha) {
-		opeflag = true;
-	}
-	else {
-		if (laterflag && renderobj.withalpha) {
+	bool withalpha = renderobj.withalpha || renderobj.forcewithalpha;
+	if (laterflag) {
+		//laterflag == trueのときは　withalpha == trueのときだけ描画
+		if (withalpha) {
 			opeflag = true;
 		}
 		else {
-			if (renderobj.withalpha == false) {//2023/09/24
-				if ((curmat->GetTransparent() == 0) && (diffuse.w > 0.99999f)) {
-					opeflag = true;
-				}
-				else {
-					opeflag = false;
-				}
+			opeflag = false;
+		}
+	}
+	else {
+		if (withalpha == false) {
+			//不透明だけを描画
+			if (diffuse.w > 0.99999f) {
+				opeflag = true;
 			}
 			else {
+				opeflag = false;
+			}
+		}
+		else {
+			//ここを通るのは　(renderobj.withalpha == true) || (renderobj.forcewithalpha == true)
+			if (renderobj.forcewithalpha) {
+				//renderobj.forcewithalpha == trueのときは　1passでオブジェクト全部を描画するのでopeflag = true
+				opeflag = true;
+			}
+			else {
+				//renderobj.withalpha == trueのときは　2passの内の1passで半透明だけを描画
 				if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
 					opeflag = true;
 				}
@@ -1369,7 +1380,6 @@ int CDispObj::RenderNormalMaterial(RenderContext* rc, myRenderer::RENDEROBJ rend
 	curmat->DrawCommon(rc, renderobj, mView, mProj, renderobj.refposindex);
 	int hasskin = 1;
 	bool isline = false;
-	bool withalpha = (renderobj.withalpha || renderobj.forcewithalpha);
 	curmat->BeginRender(rc, renderobj, renderobj.refposindex);
 	//4. ドローコールを実行。
 	rc->DrawIndexed(curtrinum * 3, curoffset);
@@ -1605,23 +1615,34 @@ int CDispObj::RenderNormalPM3Material(RenderContext* rc, myRenderer::RENDEROBJ r
 
 
 	bool opeflag = false;
-	if (renderobj.withalpha && renderobj.forcewithalpha) {
-		opeflag = true;
-	}
-	else {
-		if (renderobj.withalpha && laterflag) {
+	bool withalpha = renderobj.withalpha || renderobj.forcewithalpha;
+	if (laterflag) {
+		//laterflag == trueのときは　withalpha == trueのときだけ描画
+		if (withalpha) {
 			opeflag = true;
 		}
 		else {
-			if (renderobj.withalpha == false) {//2023/09/24
-				if ((curmat->GetTransparent() == 0) && (diffuse.w > 0.99999f)) {
-					opeflag = true;
-				}
-				else {
-					opeflag = false;
-				}
+			opeflag = false;
+		}
+	}
+	else {
+		if (withalpha == false) {
+			//不透明だけを描画
+			if (diffuse.w > 0.99999f) {
+				opeflag = true;
 			}
 			else {
+				opeflag = false;
+			}
+		}
+		else {
+			//ここを通るのは　(renderobj.withalpha == true) || (renderobj.forcewithalpha == true)
+			if (renderobj.forcewithalpha) {
+				//renderobj.forcewithalpha == trueのときは　1passでオブジェクト全部を描画するのでopeflag = true
+				opeflag = true;
+			}
+			else {
+				//renderobj.withalpha == trueのときは　2passの内の1passで半透明だけを描画
 				if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
 					opeflag = true;
 				}
@@ -1631,6 +1652,7 @@ int CDispObj::RenderNormalPM3Material(RenderContext* rc, myRenderer::RENDEROBJ r
 			}
 		}
 	}
+
 	if (opeflag == false) {
 		return 0;
 	}
@@ -1704,7 +1726,6 @@ int CDispObj::RenderNormalPM3Material(RenderContext* rc, myRenderer::RENDEROBJ r
 
 	int hasskin = 0;
 	bool isline = false;
-	bool withalpha = (renderobj.withalpha || renderobj.forcewithalpha);
 	curmat->BeginRender(rc, renderobj, refposindex);
 
 	//rc.SetDescriptorHeap(m_descriptorHeap);

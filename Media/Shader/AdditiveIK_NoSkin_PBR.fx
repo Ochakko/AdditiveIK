@@ -599,6 +599,7 @@ SPSOut PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
     // 視線に向かって伸びるベクトルを計算する
     float3 toEye = normalize(eyePos.xyz - psIn.worldPos.xyz);
 
+    float totalalpha = 0.0f;
     float3 lig = 0;
     for (int ligNo = 0; ligNo < lightsnum.x; ligNo++)    
     {
@@ -630,7 +631,8 @@ SPSOut PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
         // 滑らかさを使って、拡散反射光と鏡面反射光を合成する
         // 滑らかさが高ければ、拡散反射は弱くなる
         lig += diffuse * (1.0f - smooth) + spec;
-
+        totalalpha += lambertDiffuse0.w;
+ 
     }
 
     // 環境光による底上げ
@@ -640,8 +642,10 @@ SPSOut PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
     //finalColor.xyz = lig;
     //finalColor.w = albedoColor.w;
     
-    float4 finalColor = emission * materialdisprate.z + float4(lig, albedoColor.w) * psIn.diffusemult;
+    float diffusew = (lightsnum.x != 0) ? (albedoColor.w * totalalpha / (float) lightsnum.x) : albedoColor.w;
+    float4 finalColor = emission * materialdisprate.z + float4(lig, diffusew) * psIn.diffusemult;
     //return finalColor;
+    //finalColor.w = albedoColor.w * psIn.diffusemult.w * materialdisprate.x;
 
     return CalcPSFog(finalColor, psIn.Fog);
 }
@@ -754,6 +758,7 @@ SPSOut PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     // 視線に向かって伸びるベクトルを計算する
     float3 toEye = normalize(eyePos.xyz - psIn.worldPos.xyz);
 
+    float totalalpha = 0.0f;
     float3 lig = 0;
     for (int ligNo = 0; ligNo < lightsnum.x; ligNo++)
     {
@@ -785,6 +790,7 @@ SPSOut PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
         // 滑らかさを使って、拡散反射光と鏡面反射光を合成する
         // 滑らかさが高ければ、拡散反射は弱くなる
         lig += diffuse * (1.0f - smooth) + spec;
+        totalalpha += lambertDiffuse0.w;
     }
 
     // 環境光による底上げ
@@ -794,7 +800,8 @@ SPSOut PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     //finalColor.xyz = lig;
     //finalColor.w = albedoColor.w;
     
-    float4 finalColor = emission * materialdisprate.z + float4(lig, albedoColor.w) * psIn.diffusemult;
+    float diffusew = (lightsnum.x != 0) ? (albedoColor.w * totalalpha / (float) lightsnum.x) : albedoColor.w;
+    float4 finalColor = emission * materialdisprate.z + float4(lig, diffusew) * psIn.diffusemult;
 
 /////////
     //// ライトビュースクリーン空間からUV空間に座標変換
@@ -806,7 +813,8 @@ SPSOut PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     float zInLVP = psIn.posInLVP.z;
     float2 shadowValue = g_shadowMap.Sample(g_sampler_shadow, shadowMapUV).xy;
     finalColor.xyz *= ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f) && ((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? shadowmaxz.z : 1.0f;
-     
+    //finalColor.w = albedoColor.w * psIn.diffusemult.w * materialdisprate.x;
+    
     //if ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) &&
     //    (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f))
     //{

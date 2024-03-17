@@ -287,6 +287,7 @@ SPSOut PSMainSkinStd(SPSIn psIn) : SV_Target0
     
     float3 totaldiffuse = float3(0, 0, 0);
     float3 totalspecular = float3(0, 0, 0);
+    float totalalpha = 0.0f;    
     float calcpower = POW * 0.05f; //!!!!!!!!!!!
     float3 lig = 0;
     for (int ligNo = 0; ligNo < lightsnum.x; ligNo++)
@@ -304,12 +305,15 @@ SPSOut PSMainSkinStd(SPSIn psIn) : SV_Target0
         float4 diffusecol = CalcDiffuseColor(multiplecoef, psIn.normal.xyz, directionalLight[ligNo].direction.xyz);
         totaldiffuse += directionalLight[ligNo].color.xyz * diffusecol.xyz;
         totalspecular += ((nl) < 0) || ((nh) < 0) ? 0 : ((nh) * calcpower);
+        totalalpha += diffusecol.w;
     }
-    float4 totaldiffuse4 = float4(totaldiffuse, materialdisprate.x);
+    float4 totaldiffuse4 = float4(totaldiffuse, 1.0f);
+    totaldiffuse4.w = (lightsnum.x != 0) ? (totalalpha / (float) lightsnum.x) : 1.0f;
     float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * metalcoef.w;//ライト８個で白飛びしないように応急処置1/8=0.125
     float4 pscol = emission * materialdisprate.z + albedocol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
     //return pscol;
-    
+    //pscol.w = albedocol.w * psIn.diffusemult.w * materialdisprate.x;
+   
     return CalcPSFog(pscol, psIn.Fog);
 }
 
@@ -338,6 +342,7 @@ SPSOut PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     
     float3 totaldiffuse = float3(0, 0, 0);
     float3 totalspecular = float3(0, 0, 0);
+    float totalalpha = 0.0f;
     float calcpower = POW * 0.05f; //!!!!!!!!!!!
     float3 lig = 0;
     for (int ligNo = 0; ligNo < lightsnum.x; ligNo++)
@@ -355,8 +360,10 @@ SPSOut PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
         float4 diffusecol = CalcDiffuseColor(multiplecoef, psIn.normal.xyz, directionalLight[ligNo].direction.xyz);
         totaldiffuse += directionalLight[ligNo].color.xyz * diffusecol.xyz;
         totalspecular += ((nl) < 0) || ((nh) < 0) ? 0 : ((nh) * calcpower);
+        totalalpha += diffusecol.w;
     }
-    float4 totaldiffuse4 = float4(totaldiffuse, materialdisprate.x);
+    float4 totaldiffuse4 = float4(totaldiffuse, 1.0f);
+    totaldiffuse4.w = (lightsnum.x != 0) ? (totalalpha / (float) lightsnum.x) : 1.0f;
     float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * metalcoef.w; //ライト８個で白飛びしないように応急処置1/8=0.125
     float4 pscol = emission * materialdisprate.z + albedocol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
 
@@ -370,7 +377,7 @@ SPSOut PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     float zInLVP = psIn.posInLVP.z;
     float2 shadowValue = g_shadowMap.Sample(g_sampler_shadow, shadowMapUV).xy;
     pscol.xyz *= ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f) && ((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? shadowmaxz.z : 1.0f;
-
+ 
     
     //if ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f)
     //    && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f))
@@ -426,7 +433,8 @@ SPSOut PSMainSkinNoLight(SPSIn psIn) : SV_Target0
     float4 diffusecol = (lightsnum.y == 1) ? CalcDiffuseColor(1.0f, psIn.normal.xyz, toonlightdir.xyz) : float4(1.0f, 1.0f, 1.0f, 1.0f);
     float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
     //return pscol;
-    
+    //pscol.w = albedocol.w * psIn.diffusemult.w * materialdisprate.x;
+   
     
     return CalcPSFog(pscol, psIn.Fog);
     
@@ -456,6 +464,7 @@ SPSOut PSMainSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     float zInLVP = psIn.posInLVP.z;
     float2 shadowValue = g_shadowMap.Sample(g_sampler_shadow, shadowMapUV).xy;
     pscol.xyz *= ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f) && ((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? shadowmaxz.z : 1.0f;
+    //pscol.w = albedocol.w * psIn.diffusemult.w * materialdisprate.x;
 
     //if (shadowMapUV.x > 0.0f && shadowMapUV.x < 1.0f
     //    && shadowMapUV.y > 0.0f && shadowMapUV.y < 1.0f)

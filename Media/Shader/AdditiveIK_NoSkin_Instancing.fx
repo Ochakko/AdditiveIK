@@ -162,6 +162,8 @@ float4 PSMainNoSkinInstancingNoLight(SPSIn psIn) : SV_Target0
     //return texcol;
       
     float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
+    //pscol.w = albedocol.w * psIn.diffusemult.w * materialdisprate.x;
+    
     return pscol;
 }
 

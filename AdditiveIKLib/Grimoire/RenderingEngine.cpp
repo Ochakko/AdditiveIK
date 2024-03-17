@@ -490,8 +490,17 @@ namespace myRenderer
         const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
         rc->ClearRenderTargetView(m_mainRenderTarget.GetRTVCpuDescriptorHandle(), clearColor);
 
+
         //////前のパスで異なるviewportを設定した場合にはviewportの設定し直しが必要
         rc->SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
+
+        if ((g_alphablending == true) && (g_zpreflag == true)) {
+            //2024/03/17
+            //g_zpreflagがtrueの場合にはzpreにすでにZが書き込まれている
+            //その場合にalphablendingするためには、ここでzpreをもう一度クリアする必要がある
+            //そうしないとすでに書き込まれているZより奥のメッシュが書き込まれないためにブレンドされないことがある
+            rc->ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
+        }
 
 
         for (auto& currenderobj : m_forwardRenderModels)
