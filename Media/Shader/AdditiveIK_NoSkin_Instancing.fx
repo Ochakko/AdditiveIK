@@ -137,10 +137,14 @@ SPSIn VSMainNoSkinInstancing(SVSInInstancing vsIn, uniform bool hasSkin)
     //psIn.pos = mul(mWorld, vsIn.pos);//剛体のscalematが入っている
     psIn.pos = mul(scalepos, wmat);
     psIn.pos = mul(psIn.pos, vpmat);
-    psIn.uv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
     psIn.diffusemult = diffusemult * vsIn.material;
     
     psIn.normal = normalize(mul(wmat, vsIn.normal));
+
+    float2 orguv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+    psIn.uv.x = orguv.x * (float) UVs.y;
+    psIn.uv.y = orguv.y * (float) UVs.z;
+
     
     return psIn;
 }
@@ -150,6 +154,8 @@ float4 PSMainNoSkinInstancingNoLight(SPSIn psIn) : SV_Target0
     // 普通にテクスチャを
     //return g_texture.Sample(g_sampler, psIn.uv);
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
+    clip(albedocol.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
+
     float2 diffuseuv = { 0.5f, 0.5f };
     float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv) * materialdisprate.x;
     //texcol.w = 1.0f;

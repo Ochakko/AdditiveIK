@@ -441,6 +441,11 @@ SPSInShadowMap VSMainNoSkinPBRShadowMap(SVSInWithoutBone vsIn, uniform bool hasS
     //psIn.depth.x = posLVP.z / posLVP.w;
     psIn.depth.y = psIn.depth.x * psIn.depth.x;
  
+    float2 orguv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+    psIn.uv.x = orguv.x * (float) UVs.y;
+    psIn.uv.y = orguv.y * (float) UVs.z;
+   
+    
     return psIn;
 }
 
@@ -565,12 +570,21 @@ SPSOut PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
     //#########
     //7-2
     //#########
-      // 法線を計算
-    float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, psIn.uv);
-
     // アルベドカラー、スペキュラカラー、金属度、滑らかさをサンプリングする。
     // アルベドカラー（拡散反射光）
     float4 albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv); // * diffusecol;
+    clip(albedoColor.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
+    //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
+    //{
+    //    //フォグを最大濃度で使用する機会は少ないので　ifの分かえって遅くなる　よってコメントアウト
+    //    SPSOut fogtest;
+    //    fogtest.color = float4(vFogColor.xyz, albedoColor.w);
+    //    return fogtest;
+    //}
+    
+      // 法線を計算
+    float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, psIn.uv);
+
 
     // スペキュラカラーはアルベドカラーと同じにする。
     float3 specColor = albedoColor.xyz;
@@ -634,6 +648,9 @@ SPSOut PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
 
 float4 PSMainNoSkinPBRShadowMap(SPSInShadowMap psIn) : SV_Target0
 {
+    float4 albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv); // * diffusecol;
+    clip(albedoColor.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
+    
     return float4(psIn.depth.x, psIn.depth.y, 0.0f, 1.0f);
 }
 
@@ -708,12 +725,21 @@ SPSOut PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     //#########
     //7-2
     //#########
-      // 法線を計算
-    float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, psIn.uv);
-
     // アルベドカラー、スペキュラカラー、金属度、滑らかさをサンプリングする。
     // アルベドカラー（拡散反射光）
     float4 albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv); // * diffusecol;
+    clip(albedoColor.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
+    //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
+    //{
+    //    //フォグを最大濃度で使用する機会は少ないので　ifの分かえって遅くなる　よってコメントアウト
+    //    SPSOut fogtest;
+    //    fogtest.color = float4(vFogColor.xyz, albedoColor.w);
+    //    return fogtest;
+    //}
+
+      // 法線を計算
+    float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, psIn.uv);
+
 
     // スペキュラカラーはアルベドカラーと同じにする。
     float3 specColor = albedoColor.xyz;

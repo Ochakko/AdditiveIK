@@ -27,6 +27,7 @@ struct SPSInZPrepass
 {
     float4 pos : SV_POSITION; //座標。
     float4 depth : POSITION1; //深度値。xにはプロジェクション空間、yにはカメラ空間での正規化されたZ値、zにはカメラ空間でのZ値
+    float2 uv : TEXCOORD0;
 };
 
 ///////////////////////////////////////////
@@ -66,6 +67,24 @@ cbuffer ModelCbMatrix : register(b1)
     float4x4 mBoneMat[1000];
 };
 
+///////////////////////////////////////////
+// シェーダーリソース
+///////////////////////////////////////////
+// モデルテクスチャ
+Texture2D<float4> g_diffusetex : register(t0);
+Texture2D<float4> g_albedo : register(t1); // アルベドマップ
+Texture2D<float4> g_normalMap : register(t2); // 法線マップ
+Texture2D<float4> g_metallicSmoothMap : register(t3); // メタリックスムースマップ。rにメタリック、aにスムース
+Texture2D<float4> g_shadowMap : register(t4);
+// サンプラーステート
+sampler g_sampler : register(s0);
+sampler g_sampler_albedo : register(s1);
+sampler g_sampler_normal : register(s2);
+sampler g_sampler_metal : register(s3);
+sampler g_sampler_clamp : register(s4); //2024/02/14
+sampler g_sampler_shadow : register(s5);
+
+
 //########
 //シェーダ
 //########
@@ -93,16 +112,18 @@ SPSInZPrepass VSMainZPrepass(SVSIn vsIn, uniform bool hasSkin)
     psIn.depth.y = saturate(psIn.pos.w / 1000.0f);
     psIn.depth.w = 1.0f;
     
-    //2021/01/20 TEST offset z
-    ////psIn.pos.xyz /= psIn.pos.w;
-    ////psIn.pos.w = 1.0f;
-    //psIn.pos.z += shadowmaxz.y;
+    float2 orguv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+    psIn.uv.x = orguv.x * (float) UVs.y;
+    psIn.uv.y = orguv.y * (float) UVs.z;
     
     return psIn;
 }
 
 float4 PSMainZPrepass(SPSInZPrepass psIn) : SV_Target0
 {
+    float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
+    clip(albedocol.w - 0.0314f);//2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
+    
     return float4(psIn.depth.x, psIn.depth.y, psIn.depth.z, 1.0f);
 }
 

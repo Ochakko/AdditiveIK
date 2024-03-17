@@ -3507,7 +3507,7 @@ int CheckResolution()
 					s_spsidemargin = 60.0f;
 
 					s_totalwndwidth = (1216 + 450) * 2;
-					s_totalwndheight = (950 - TOPSLIDERSWNDH) * 2;
+					s_totalwndheight = (950 - TOPSLIDERSWNDH) * 2 + 8;
 					s_2ndposy = 600 * 2;
 
 
@@ -3517,7 +3517,7 @@ int CheckResolution()
 					s_timelineheight = s_2ndposy - TOPSLIDERSWNDH;
 
 					s_toolwidth = 400;
-					s_toolheight = s_totalwndheight - s_2ndposy - (TOPSLIDERSWNDH + 18) * 2 + TOPSLIDERSWNDH + 8;
+					s_toolheight = s_totalwndheight - s_2ndposy - (TOPSLIDERSWNDH + 18) * 2 + TOPSLIDERSWNDH + 8 + 8;
 
 					s_sidemenuwidth = 600;
 					s_sidemenuheight = TOPSLIDERSWNDH + 16;
@@ -3539,7 +3539,7 @@ int CheckResolution()
 					//s_longtimelinewidth = s_mainwidth + s_modelwindowwidth;
 					s_longtimelinewidth = s_totalwndwidth - s_toolwidth - s_sidewidth - 16;
 					//s_longtimelineheight = (s_totalwndheight - s_2ndposy - TOPSLIDERSWNDH - 18) * 2;
-					s_longtimelineheight = s_totalwndheight - s_2ndposy - (TOPSLIDERSWNDH + 18) * 2 + TOPSLIDERSWNDH + 8;
+					s_longtimelineheight = s_toolheight;
 
 					s_infowinwidth = s_mainwidth;
 					s_infowinheight = (s_2ndposy - s_mainheight - TOPSLIDERSWNDH);
@@ -3576,7 +3576,7 @@ int CheckResolution()
 		s_spsidemargin = 35.0f;
 
 		s_totalwndwidth = (1216 + 450);
-		s_totalwndheight = 950;
+		s_totalwndheight = 950 + 8;
 		s_2ndposy = 600;
 
 		s_modelwindowwidth = 400;
@@ -3591,7 +3591,7 @@ int CheckResolution()
 
 		s_toolwidth = 230;
 		//s_toolheight = 290;
-		s_toolheight = s_totalwndheight - s_2ndposy - TOPSLIDERSWNDH - 28;
+		s_toolheight = s_totalwndheight - s_2ndposy - TOPSLIDERSWNDH - 28 + 8;
 
 		s_mainwidth = 800 - 64;
 		s_mainheight = (520 - TOPSLIDERSWNDH);
@@ -3610,11 +3610,11 @@ int CheckResolution()
 		s_infowinwidth = s_mainwidth;
 		s_infowinheight = (s_2ndposy - s_mainheight - TOPSLIDERSWNDH);
 
-		s_sidemenuwidth = 450 + 64 - 4;
+		s_sidemenuwidth = 450 + 64 - 4 + 4;
 		s_sidemenuheight = TOPSLIDERSWNDH + 16;
 
 		s_sidewidth = s_sidemenuwidth;
-		s_sideheight = s_totalwndheight - TOPSLIDERSWNDH - s_sidemenuheight - 28;
+		s_sideheight = s_totalwndheight - TOPSLIDERSWNDH - s_sidemenuheight - 28 + 8;
 
 		s_guibarX0 = 120;
 
@@ -12120,8 +12120,8 @@ int OnCameraMenu(bool dorefreshflag, int selindex, int saveundoflag)
 	//}
 
 
-	MOTINFO* camerami = s_cameramodel->GetCameraMotInfoByCameraIndex(selindex);
-	if (!camerami) {
+	MOTINFO camerami = s_cameramodel->GetCameraMotInfoByCameraIndex(selindex);
+	if (camerami.motid <= 0) {
 		//s_curmotid = -1;
 		SetMainWindowTitle();
 		s_underselectcamera = false;
@@ -12132,7 +12132,7 @@ int OnCameraMenu(bool dorefreshflag, int selindex, int saveundoflag)
 	}
 
 
-	int cameramotid = camerami->motid;
+	int cameramotid = camerami.motid;
 	s_cameramodel->SetCameraMotionId(cameramotid);
 
 
@@ -16716,9 +16716,9 @@ int CreateCameraPanel()
 						if ((s_underdelmodel == false) && (s_opedelmodelcnt < 0) && //Model削除と同時は禁止
 							!s_underdelmotion && s_model && (s_model->GetCameraMotInfoSize() >= 2)) {//全部消すときはメインメニューから
 
-							MOTINFO* camerami = s_model->GetCameraMotInfoByCameraIndex(delmenuindex);
-							if (camerami) {
-								int delmotid = camerami->motid;
+							MOTINFO camerami = s_model->GetCameraMotInfoByCameraIndex(delmenuindex);
+							if (camerami.motid > 0) {
+								int delmotid = camerami.motid;
 								int deleteindex = s_model->MotionID2Index(delmotid);
 								if (deleteindex >= 0) {
 									s_opedelmotioncnt = deleteindex;

@@ -212,6 +212,11 @@ SPSInShadowMap VSMainNoSkinStdShadowMap(SVSInWithoutBone vsIn, uniform bool hasS
     //psIn.depth.x = posLVP.z / posLVP.w;
     psIn.depth.y = psIn.depth.x * psIn.depth.x;
         
+    
+    float2 orguv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+    psIn.uv.x = orguv.x * (float) UVs.y;
+    psIn.uv.y = orguv.y * (float) UVs.z;
+    
     return psIn;
 }
 
@@ -267,12 +272,16 @@ SPSInExtLine VSMainExtLine(SVSInExtLine vsIn, uniform bool hasSkin)
 SPSOut PSMainNoSkinStd(SPSIn psIn) : SV_Target0
 {
     // 普通にテクスチャを
-    //return g_texture.Sample(g_sampler, psIn.uv);
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    //float2 diffuseuv = { 0.5f, 0.5f };
-    //float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv);
-    //texcol.w = 1.0f;
-    //return texcol;
+    clip(albedocol.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
+    //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
+    //{
+    //    //フォグを最大濃度で使用する機会は少ないので　ifの分かえって遅くなる　よってコメントアウト
+    //    SPSOut fogtest;
+    //    fogtest.color = float4(vFogColor.xyz, albedocol.w);
+    //    return fogtest;
+    //}
+
      
     float3 wPos = psIn.pos.xyz / psIn.pos.w;
     
@@ -306,14 +315,23 @@ SPSOut PSMainNoSkinStd(SPSIn psIn) : SV_Target0
 
 float4 PSMainNoSkinStdShadowMap(SPSInShadowMap psIn) : SV_Target0
 {
+    float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
+    clip(albedocol.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
+    
     return float4(psIn.depth.x, psIn.depth.y, 0.0f, 1.0f);
 }
 
 SPSOut PSMainNoSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    //float2 diffuseuv = { 0.5f, 0.5f };
-    //float4 diffusecol = CalcDiffuseColor(psIn.normal, toonlightdir);
+    clip(albedocol.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
+    //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
+    //{
+    //    //フォグを最大濃度で使用する機会は少ないので　ifの分かえって遅くなる　よってコメントアウト
+    //    SPSOut fogtest;
+    //    fogtest.color = float4(vFogColor.xyz, albedocol.w);
+    //    return fogtest;
+    //}
      
     float3 wPos = psIn.pos.xyz / psIn.pos.w;
     
@@ -392,6 +410,15 @@ SPSOut PSMainNoSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 SPSOut PSMainNoSkinNoLight(SPSIn psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
+    clip(albedocol.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
+    //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
+    //{
+    //    //フォグを最大濃度で使用する機会は少ないので　ifの分かえって遅くなる　よってコメントアウト
+    //    SPSOut fogtest;
+    //    fogtest.color = float4(vFogColor.xyz, albedocol.w);
+    //    return fogtest;
+    //}
+
     float4 diffusecol = (lightsnum.y == 1) ? CalcDiffuseColor(1.0f, psIn.normal.xyz, toonlightdir.xyz) : float4(1.0f, 1.0f, 1.0f, 1.0f);
     float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
     //return pscol;
@@ -402,6 +429,15 @@ SPSOut PSMainNoSkinNoLight(SPSIn psIn) : SV_Target0
 SPSOut PSMainNoSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
+    clip(albedocol.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
+    //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
+    //{
+    //    //フォグを最大濃度で使用する機会は少ないので　ifの分かえって遅くなる　よってコメントアウト
+    //    SPSOut fogtest;
+    //    fogtest.color = float4(vFogColor.xyz, albedocol.w);
+    //    return fogtest;
+    //}
+
     float4 diffusecol = (lightsnum.y == 1) ? CalcDiffuseColor(1.0f, psIn.normal.xyz, toonlightdir.xyz) : float4(1.0f, 1.0f, 1.0f, 1.0f);
     float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
 ////////

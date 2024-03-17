@@ -1870,15 +1870,16 @@ public: //accesser
 		}
 		return retsize;
 	};
-	MOTINFO* GetCameraMotInfoByCameraIndex(int srcindex) {//番目のカメラモーション
-		MOTINFO* retmi = 0;
+	MOTINFO GetCameraMotInfoByCameraIndex(int srcindex) {//番目のカメラモーション
+		MOTINFO retmi;
+		retmi.Init();
 		int count = 0;
 		std::map<int, MOTINFO*>::iterator itrmi;
 		for (itrmi = m_motinfo.begin(); itrmi != m_motinfo.end(); itrmi++) {
 			MOTINFO* chkmi = itrmi->second;
 			if (chkmi && chkmi->cameramotion) {
 				if (count == srcindex) {
-					retmi = chkmi;
+					retmi = *chkmi;
 					break;
 				}
 				count++;//cameraのときだけカウントを増やす
@@ -1886,25 +1887,26 @@ public: //accesser
 		}
 		return retmi;
 	};
-	MOTINFO* GetCameraMotInfoByMotId(int srcmotid) {//カメラモーション
+	MOTINFO GetCameraMotInfoByMotId(int srcmotid) {//カメラモーション
 		//DeleteMotion時に要素をeraseするのでid - 1が配列のインデックスになるとは限らない//2021/08/26
+		MOTINFO retmi;
+		retmi.Init();
 		int miindex;
 		miindex = MotionID2Index(srcmotid);
 		if (miindex >= 0) {
 			MOTINFO* chkmi = m_motinfo[miindex];
 			if (chkmi && chkmi->cameramotion) {
-				return chkmi;
+				retmi = *chkmi;
 			}
 			else {
 				//not camera
 				//_ASSERT(0);
-				return 0;
 			}
 		}
 		else {
 			//invalid id
-			return 0;
 		}
+		return retmi;
 	};
 
 
