@@ -1185,7 +1185,7 @@ int CMQOMaterial::AddConvName( char** ppname )
 	return 0;
 }
 
-void CMQOMaterial::InitZPreShadersAndPipelines(
+int CMQOMaterial::InitZPreShadersAndPipelines(
 	int vertextype,
 	const char* fxFilePath,
 	const char* vsEntryPointFunc,
@@ -1202,7 +1202,7 @@ void CMQOMaterial::InitZPreShadersAndPipelines(
 	//############################################
 
 	if ((vertextype != 0) && (vertextype != 1)) {
-		return;
+		return 0;
 	}
 
 	if (m_initprezpipelineflag) {
@@ -1210,7 +1210,7 @@ void CMQOMaterial::InitZPreShadersAndPipelines(
 		//###############################
 		//既に初期化済の場合は　すぐにリターン
 		//###############################
-		return;
+		return 0;
 	}
 
 
@@ -1251,16 +1251,22 @@ void CMQOMaterial::InitZPreShadersAndPipelines(
 
 	if (fxFilePath != nullptr && strlen(fxFilePath) > 0) {
 		//シェーダーを初期化。
-		InitZPreShaders(fxFilePath, vsEntryPointFunc, psEntryPointFunc);
+		int result;
+		result = InitZPreShaders(fxFilePath, vsEntryPointFunc, psEntryPointFunc);
+		if (result != 0) {
+			m_initprezpipelineflag = false;
+			return 1;
+		}
 		//パイプラインステートを初期化。
 		InitZPrePipelineState(vertextype, colorBufferFormat);
 	}
 
 	m_initprezpipelineflag = true;
+	return 0;
 }
 
 
-void CMQOMaterial::InitInstancingShadersAndPipelines(
+int CMQOMaterial::InitInstancingShadersAndPipelines(
 	int vertextype,
 	const char* fxFilePath,
 	const char* vsEntryPointFunc,
@@ -1277,7 +1283,7 @@ void CMQOMaterial::InitInstancingShadersAndPipelines(
 	//############################################
 
 	if ((vertextype != 0) && (vertextype != 1)) {
-		return;
+		return 0;
 	}
 
 	if (m_initInstancingpipelineflag) {
@@ -1285,7 +1291,7 @@ void CMQOMaterial::InitInstancingShadersAndPipelines(
 			//###############################
 			//既に初期化済の場合は　すぐにリターン
 			//###############################
-		return;
+		return 0;
 	}
 
 
@@ -1326,16 +1332,22 @@ void CMQOMaterial::InitInstancingShadersAndPipelines(
 
 	if (fxFilePath != nullptr && strlen(fxFilePath) > 0) {
 		//シェーダーを初期化。
-		InitInstancingShaders(fxFilePath, vsEntryPointFunc, psEntryPointFunc);
+		int result;
+		result = InitInstancingShaders(fxFilePath, vsEntryPointFunc, psEntryPointFunc);
+		if (result != 0) {
+			m_initInstancingpipelineflag = false;
+			return 1;
+		}
 		//パイプラインステートを初期化。
 		InitInstancingPipelineState(vertextype, colorBufferFormat);
 	}
 
 	m_initInstancingpipelineflag = true;
+	return 0;
 }
 
 
-void CMQOMaterial::InitShadersAndPipelines(
+int CMQOMaterial::InitShadersAndPipelines(
 	int srcuvnum,
 	int vertextype,
 	const char* fxPBRPath,
@@ -1390,7 +1402,7 @@ void CMQOMaterial::InitShadersAndPipelines(
 		
 		_ASSERT(0);
 		abort();
-		return;
+		return 1;
 	}
 
 	if ((strlen(fxPBRPath) <= 0) || (strlen(fxStdPath) <= 0) || (strlen(fxNoLightPath) <= 0) ||
@@ -1405,14 +1417,14 @@ void CMQOMaterial::InitShadersAndPipelines(
 		
 		_ASSERT(0);
 		abort();
-		return;
+		return 1;
 	}
 
 	if (m_initpipelineflag) {
 		//###############################
 		//既に初期化済の場合は　すぐにリターン
 		//###############################
-		return;
+		return 0;
 	}
 
 
@@ -1520,7 +1532,8 @@ void CMQOMaterial::InitShadersAndPipelines(
 
 
 	//シェーダーを初期化。
-	InitShaders(
+	int result;
+	result = InitShaders(
 		fxPBRPath,
 		fxStdPath,
 		fxNoLightPath,
@@ -1549,11 +1562,16 @@ void CMQOMaterial::InitShadersAndPipelines(
 		psNoLightShadowMapFunc,
 		psNoLightShadowRecieverFunc
 	);
+	if (result != 0) {
+		m_initpipelineflag = false;
+		return 1;
+	}
 
 	//パイプラインステートを初期化。
 	InitPipelineState(vertextype, colorBufferFormat);
 
 	m_initpipelineflag = true;
+	return 0;
 }
 
 
@@ -2157,7 +2175,7 @@ void CMQOMaterial::InitInstancingPipelineState(int vertextype, const std::array<
 	}
 }
 
-void CMQOMaterial::InitShaders(
+int CMQOMaterial::InitShaders(
 	const char* fxPBRPath,
 	const char* fxStdPath,
 	const char* fxNoLightPath,
@@ -2190,42 +2208,80 @@ void CMQOMaterial::InitShaders(
 //###########
 //PBRシェーダ
 //###########
+	int result = 0;
+
 	m_vsMQOShader[MQOSHADER_PBR] = g_engine->GetShaderFromBank(fxPBRPath, vsPBRFunc);
 	if (m_vsMQOShader[MQOSHADER_PBR] == nullptr) {
 		m_vsMQOShader[MQOSHADER_PBR] = new Shader;
-		m_vsMQOShader[MQOSHADER_PBR]->LoadVS(fxPBRPath, vsPBRFunc);
+		if (!m_vsMQOShader[MQOSHADER_PBR]) {
+			return 1;
+		}
+		result = m_vsMQOShader[MQOSHADER_PBR]->LoadVS(fxPBRPath, vsPBRFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxPBRPath, vsPBRFunc, m_vsMQOShader[MQOSHADER_PBR]);
 	}
 	m_psMQOShader[MQOSHADER_PBR] = g_engine->GetShaderFromBank(fxPBRPath, psPBRFunc);
 	if (m_psMQOShader[MQOSHADER_PBR] == nullptr) {
 		m_psMQOShader[MQOSHADER_PBR] = new Shader;
-		m_psMQOShader[MQOSHADER_PBR]->LoadPS(fxPBRPath, psPBRFunc);
+		if (!m_psMQOShader[MQOSHADER_PBR]) {
+			return 1;
+		}
+		result = m_psMQOShader[MQOSHADER_PBR]->LoadPS(fxPBRPath, psPBRFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxPBRPath, psPBRFunc, m_psMQOShader[MQOSHADER_PBR]);
 	}
 
 	m_vsMQOShader[MQOSHADER_PBR_SHADOWMAP] = g_engine->GetShaderFromBank(fxPBRPath, vsPBRShadowMapFunc);
 	if (m_vsMQOShader[MQOSHADER_PBR_SHADOWMAP] == nullptr) {
-		m_vsMQOShader[MQOSHADER_PBR_SHADOWMAP] = new Shader;
-		m_vsMQOShader[MQOSHADER_PBR_SHADOWMAP]->LoadVS(fxPBRPath, vsPBRShadowMapFunc);
+		m_vsMQOShader[MQOSHADER_PBR_SHADOWMAP] = new Shader;//!!!!!! 2024/03/17
+		if (!m_vsMQOShader[MQOSHADER_PBR_SHADOWMAP]) {
+			return 1;
+		}
+		result = m_vsMQOShader[MQOSHADER_PBR_SHADOWMAP]->LoadVS(fxPBRPath, vsPBRShadowMapFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxPBRPath, vsPBRShadowMapFunc, m_vsMQOShader[MQOSHADER_PBR_SHADOWMAP]);
 	}
 	m_psMQOShader[MQOSHADER_PBR_SHADOWMAP] = g_engine->GetShaderFromBank(fxPBRPath, psPBRShadowMapFunc);
 	if (m_psMQOShader[MQOSHADER_PBR_SHADOWMAP] == nullptr) {
 		m_psMQOShader[MQOSHADER_PBR_SHADOWMAP] = new Shader;
-		m_psMQOShader[MQOSHADER_PBR_SHADOWMAP]->LoadPS(fxPBRPath, psPBRShadowMapFunc);
+		if (!m_psMQOShader[MQOSHADER_PBR_SHADOWMAP]) {
+			return 1;
+		}
+		result = m_psMQOShader[MQOSHADER_PBR_SHADOWMAP]->LoadPS(fxPBRPath, psPBRShadowMapFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxPBRPath, psPBRShadowMapFunc, m_psMQOShader[MQOSHADER_PBR_SHADOWMAP]);
 	}
 
 	m_vsMQOShader[MQOSHADER_PBR_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxPBRPath, vsPBRShadowRecieverFunc);
 	if (m_vsMQOShader[MQOSHADER_PBR_SHADOWRECIEVER] == nullptr) {
 		m_vsMQOShader[MQOSHADER_PBR_SHADOWRECIEVER] = new Shader;
-		m_vsMQOShader[MQOSHADER_PBR_SHADOWRECIEVER]->LoadVS(fxPBRPath, vsPBRShadowRecieverFunc);
+		if (!m_vsMQOShader[MQOSHADER_PBR_SHADOWRECIEVER]) {
+			return 1;
+		}
+		result = m_vsMQOShader[MQOSHADER_PBR_SHADOWRECIEVER]->LoadVS(fxPBRPath, vsPBRShadowRecieverFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxPBRPath, vsPBRShadowRecieverFunc, m_vsMQOShader[MQOSHADER_PBR_SHADOWRECIEVER]);
 	}
 	m_psMQOShader[MQOSHADER_PBR_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxPBRPath, psPBRShadowRecieverFunc);
 	if (m_psMQOShader[MQOSHADER_PBR_SHADOWRECIEVER] == nullptr) {
 		m_psMQOShader[MQOSHADER_PBR_SHADOWRECIEVER] = new Shader;
-		m_psMQOShader[MQOSHADER_PBR_SHADOWRECIEVER]->LoadPS(fxPBRPath, psPBRShadowRecieverFunc);
+		if (!m_psMQOShader[MQOSHADER_PBR_SHADOWRECIEVER]) {
+			return 1;
+		}
+		result = m_psMQOShader[MQOSHADER_PBR_SHADOWRECIEVER]->LoadPS(fxPBRPath, psPBRShadowRecieverFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxPBRPath, psPBRShadowRecieverFunc, m_psMQOShader[MQOSHADER_PBR_SHADOWRECIEVER]);
 	}
 
@@ -2235,39 +2291,75 @@ void CMQOMaterial::InitShaders(
 	m_vsMQOShader[MQOSHADER_STD] = g_engine->GetShaderFromBank(fxStdPath, vsStdFunc);
 	if (m_vsMQOShader[MQOSHADER_STD] == nullptr) {
 		m_vsMQOShader[MQOSHADER_STD] = new Shader;
-		m_vsMQOShader[MQOSHADER_STD]->LoadVS(fxStdPath, vsStdFunc);
+		if (!m_vsMQOShader[MQOSHADER_STD]) {
+			return 1;
+		}
+		result = m_vsMQOShader[MQOSHADER_STD]->LoadVS(fxStdPath, vsStdFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxStdPath, vsStdFunc, m_vsMQOShader[MQOSHADER_STD]);
 	}
 	m_psMQOShader[MQOSHADER_STD] = g_engine->GetShaderFromBank(fxStdPath, psStdFunc);
 	if (m_psMQOShader[MQOSHADER_STD] == nullptr) {
 		m_psMQOShader[MQOSHADER_STD] = new Shader;
-		m_psMQOShader[MQOSHADER_STD]->LoadPS(fxStdPath, psStdFunc);
+		if (!m_psMQOShader[MQOSHADER_STD]) {
+			return 1;
+		}
+		result = m_psMQOShader[MQOSHADER_STD]->LoadPS(fxStdPath, psStdFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxStdPath, psStdFunc, m_psMQOShader[MQOSHADER_STD]);
 	}
 
 	m_vsMQOShader[MQOSHADER_STD_SHADOWMAP] = g_engine->GetShaderFromBank(fxStdPath, vsStdShadowMapFunc);
 	if (m_vsMQOShader[MQOSHADER_STD_SHADOWMAP] == nullptr) {
 		m_vsMQOShader[MQOSHADER_STD_SHADOWMAP] = new Shader;
-		m_vsMQOShader[MQOSHADER_STD_SHADOWMAP]->LoadVS(fxStdPath, vsStdShadowMapFunc);
+		if (!m_vsMQOShader[MQOSHADER_STD_SHADOWMAP]) {
+			return 1;
+		}
+		result = m_vsMQOShader[MQOSHADER_STD_SHADOWMAP]->LoadVS(fxStdPath, vsStdShadowMapFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxStdPath, vsStdShadowMapFunc, m_vsMQOShader[MQOSHADER_STD_SHADOWMAP]);
 	}
 	m_psMQOShader[MQOSHADER_STD_SHADOWMAP] = g_engine->GetShaderFromBank(fxStdPath, psStdShadowMapFunc);
 	if (m_psMQOShader[MQOSHADER_STD_SHADOWMAP] == nullptr) {
 		m_psMQOShader[MQOSHADER_STD_SHADOWMAP] = new Shader;
-		m_psMQOShader[MQOSHADER_STD_SHADOWMAP]->LoadPS(fxStdPath, psStdShadowMapFunc);
+		if (!m_psMQOShader[MQOSHADER_STD_SHADOWMAP]) {
+			return 1;
+		}
+		result = m_psMQOShader[MQOSHADER_STD_SHADOWMAP]->LoadPS(fxStdPath, psStdShadowMapFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxStdPath, psStdShadowMapFunc, m_psMQOShader[MQOSHADER_STD_SHADOWMAP]);
 	}
 
 	m_vsMQOShader[MQOSHADER_STD_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxStdPath, vsStdShadowRecieverFunc);
 	if (m_vsMQOShader[MQOSHADER_STD_SHADOWRECIEVER] == nullptr) {
 		m_vsMQOShader[MQOSHADER_STD_SHADOWRECIEVER] = new Shader;
-		m_vsMQOShader[MQOSHADER_STD_SHADOWRECIEVER]->LoadVS(fxStdPath, vsStdShadowRecieverFunc);
+		if (!m_vsMQOShader[MQOSHADER_STD_SHADOWRECIEVER]) {
+			return 1;
+		}
+		result = m_vsMQOShader[MQOSHADER_STD_SHADOWRECIEVER]->LoadVS(fxStdPath, vsStdShadowRecieverFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxStdPath, vsStdShadowRecieverFunc, m_vsMQOShader[MQOSHADER_STD_SHADOWRECIEVER]);
 	}
 	m_psMQOShader[MQOSHADER_STD_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxStdPath, psStdShadowRecieverFunc);
 	if (m_psMQOShader[MQOSHADER_STD_SHADOWRECIEVER] == nullptr) {
 		m_psMQOShader[MQOSHADER_STD_SHADOWRECIEVER] = new Shader;
-		m_psMQOShader[MQOSHADER_STD_SHADOWRECIEVER]->LoadPS(fxStdPath, psStdShadowRecieverFunc);
+		if (!m_psMQOShader[MQOSHADER_STD_SHADOWRECIEVER]) {
+			return 1;
+		}
+		result = m_psMQOShader[MQOSHADER_STD_SHADOWRECIEVER]->LoadPS(fxStdPath, psStdShadowRecieverFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxStdPath, psStdShadowRecieverFunc, m_psMQOShader[MQOSHADER_STD_SHADOWRECIEVER]);
 	}
 
@@ -2277,86 +2369,155 @@ void CMQOMaterial::InitShaders(
 	m_vsMQOShader[MQOSHADER_TOON] = g_engine->GetShaderFromBank(fxNoLightPath, vsNoLightFunc);
 	if (m_vsMQOShader[MQOSHADER_TOON] == nullptr) {
 		m_vsMQOShader[MQOSHADER_TOON] = new Shader;
-		m_vsMQOShader[MQOSHADER_TOON]->LoadVS(fxNoLightPath, vsNoLightFunc);
+		if (!m_vsMQOShader[MQOSHADER_TOON]) {
+			return 1;
+		}
+		result = m_vsMQOShader[MQOSHADER_TOON]->LoadVS(fxNoLightPath, vsNoLightFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxNoLightPath, vsNoLightFunc, m_vsMQOShader[MQOSHADER_TOON]);
 	}
 	m_psMQOShader[MQOSHADER_TOON] = g_engine->GetShaderFromBank(fxNoLightPath, psNoLightFunc);
 	if (m_psMQOShader[MQOSHADER_TOON] == nullptr) {
 		m_psMQOShader[MQOSHADER_TOON] = new Shader;
-		m_psMQOShader[MQOSHADER_TOON]->LoadPS(fxNoLightPath, psNoLightFunc);
+		if (!m_psMQOShader[MQOSHADER_TOON]) {
+			return 1;
+		}
+		result = m_psMQOShader[MQOSHADER_TOON]->LoadPS(fxNoLightPath, psNoLightFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxNoLightPath, psNoLightFunc, m_psMQOShader[MQOSHADER_TOON]);
 	}
 
 	m_vsMQOShader[MQOSHADER_TOON_SHADOWMAP] = g_engine->GetShaderFromBank(fxNoLightPath, vsNoLightShadowMapFunc);
 	if (m_vsMQOShader[MQOSHADER_TOON_SHADOWMAP] == nullptr) {
 		m_vsMQOShader[MQOSHADER_TOON_SHADOWMAP] = new Shader;
-		m_vsMQOShader[MQOSHADER_TOON_SHADOWMAP]->LoadVS(fxNoLightPath, vsNoLightShadowMapFunc);
+		if (!m_vsMQOShader[MQOSHADER_TOON_SHADOWMAP]) {
+			return 1;
+		}
+		result = m_vsMQOShader[MQOSHADER_TOON_SHADOWMAP]->LoadVS(fxNoLightPath, vsNoLightShadowMapFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxNoLightPath, vsNoLightShadowMapFunc, m_vsMQOShader[MQOSHADER_TOON_SHADOWMAP]);
 	}
 	m_psMQOShader[MQOSHADER_TOON_SHADOWMAP] = g_engine->GetShaderFromBank(fxNoLightPath, psNoLightShadowMapFunc);
 	if (m_psMQOShader[MQOSHADER_TOON_SHADOWMAP] == nullptr) {
 		m_psMQOShader[MQOSHADER_TOON_SHADOWMAP] = new Shader;
-		m_psMQOShader[MQOSHADER_TOON_SHADOWMAP]->LoadPS(fxNoLightPath, psNoLightShadowMapFunc);
+		if (!m_psMQOShader[MQOSHADER_TOON_SHADOWMAP]) {
+			return 1;
+		}
+		result = m_psMQOShader[MQOSHADER_TOON_SHADOWMAP]->LoadPS(fxNoLightPath, psNoLightShadowMapFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxNoLightPath, psNoLightShadowMapFunc, m_psMQOShader[MQOSHADER_TOON_SHADOWMAP]);
 	}
 
 	m_vsMQOShader[MQOSHADER_TOON_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxNoLightPath, vsNoLightShadowRecieverFunc);
 	if (m_vsMQOShader[MQOSHADER_TOON_SHADOWRECIEVER] == nullptr) {
 		m_vsMQOShader[MQOSHADER_TOON_SHADOWRECIEVER] = new Shader;
-		m_vsMQOShader[MQOSHADER_TOON_SHADOWRECIEVER]->LoadVS(fxNoLightPath, vsNoLightShadowRecieverFunc);
+		if (!m_vsMQOShader[MQOSHADER_TOON_SHADOWRECIEVER]) {
+			return 1;
+		}
+		result = m_vsMQOShader[MQOSHADER_TOON_SHADOWRECIEVER]->LoadVS(fxNoLightPath, vsNoLightShadowRecieverFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxNoLightPath, vsNoLightShadowRecieverFunc, m_vsMQOShader[MQOSHADER_TOON_SHADOWRECIEVER]);
 	}
 	m_psMQOShader[MQOSHADER_TOON_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxNoLightPath, psNoLightShadowRecieverFunc);
 	if (m_psMQOShader[MQOSHADER_TOON_SHADOWRECIEVER] == nullptr) {
 		m_psMQOShader[MQOSHADER_TOON_SHADOWRECIEVER] = new Shader;
-		m_psMQOShader[MQOSHADER_TOON_SHADOWRECIEVER]->LoadPS(fxNoLightPath, psNoLightShadowRecieverFunc);
+		if (!m_psMQOShader[MQOSHADER_TOON_SHADOWRECIEVER]) {
+			return 1;
+		}
+		result = m_psMQOShader[MQOSHADER_TOON_SHADOWRECIEVER]->LoadPS(fxNoLightPath, psNoLightShadowRecieverFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxNoLightPath, psNoLightShadowRecieverFunc, m_psMQOShader[MQOSHADER_TOON_SHADOWRECIEVER]);
 	}
 
+
+	return 0;
 }
 
-void CMQOMaterial::InitZPreShaders(
+int CMQOMaterial::InitZPreShaders(
 	const char* fxFilePath,
 	const char* vsEntryPointFunc,
 	const char* psEntryPointFunc
 )
 {
+	int result = 0;
 	//スキンなしモデル用のシェーダーをロードする。
 	m_vsZPreModel = g_engine->GetShaderFromBank(fxFilePath, vsEntryPointFunc);
 	if (m_vsZPreModel == nullptr) {
 		m_vsZPreModel = new Shader;
-		m_vsZPreModel->LoadVS(fxFilePath, vsEntryPointFunc);
+		if (!m_vsZPreModel) {
+			return 1;
+		}
+		result = m_vsZPreModel->LoadVS(fxFilePath, vsEntryPointFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxFilePath, vsEntryPointFunc, m_vsZPreModel);
 	}
 
 	m_psZPreModel = g_engine->GetShaderFromBank(fxFilePath, psEntryPointFunc);
 	if (m_psZPreModel == nullptr) {
 		m_psZPreModel = new Shader;
-		m_psZPreModel->LoadPS(fxFilePath, psEntryPointFunc);
+		if (!m_psZPreModel) {
+			return 1;
+		}
+		result = m_psZPreModel->LoadPS(fxFilePath, psEntryPointFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxFilePath, psEntryPointFunc, m_psZPreModel);
 	}
+
+	return 0;
 }
 
-void CMQOMaterial::InitInstancingShaders(
+int CMQOMaterial::InitInstancingShaders(
 	const char* fxFilePath,
 	const char* vsEntryPointFunc,
 	const char* psEntryPointFunc
 )
 {
+	int result = 0;
+
 	//スキンなしモデル用のシェーダーをロードする。
 	m_vsInstancingModel = g_engine->GetShaderFromBank(fxFilePath, vsEntryPointFunc);
 	if (m_vsInstancingModel == nullptr) {
 		m_vsInstancingModel = new Shader;
-		m_vsInstancingModel->LoadVS(fxFilePath, vsEntryPointFunc);
+		if (!m_vsInstancingModel) {
+			return 1;
+		}
+		result = m_vsInstancingModel->LoadVS(fxFilePath, vsEntryPointFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxFilePath, vsEntryPointFunc, m_vsInstancingModel);
 	}
 
 	m_psInstancingModel = g_engine->GetShaderFromBank(fxFilePath, psEntryPointFunc);
 	if (m_psInstancingModel == nullptr) {
 		m_psInstancingModel = new Shader;
-		m_psInstancingModel->LoadPS(fxFilePath, psEntryPointFunc);
+		if (!m_psInstancingModel) {
+			return 1;
+		}
+		result = m_psInstancingModel->LoadPS(fxFilePath, psEntryPointFunc);
+		if (result != 0) {
+			return 1;
+		}
 		g_engine->RegistShaderToBank(fxFilePath, psEntryPointFunc, m_psInstancingModel);
 	}
+
+	return 0;
 }
 
 bool CMQOMaterial::DecideLightFlag(myRenderer::RENDEROBJ renderobj)

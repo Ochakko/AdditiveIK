@@ -256,7 +256,7 @@ public:
 	int CreateDecl(ID3D12Device* pdev, int objecttype);
 	void CreateDescriptorHeaps(int objecttype);
 
-	void InitShadersAndPipelines(
+	int InitShadersAndPipelines(
 		int srcuvnum,
 		int vertextype,
 		const char* fxPBRPath,
@@ -295,7 +295,7 @@ public:
 		D3D12_FILTER samplerFilter);
 
 	void InitPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
-	void InitShaders(
+	int InitShaders(
 		const char* fxPBRPath,
 		const char* fxStdPath,
 		const char* fxNoLightPath,
@@ -326,7 +326,7 @@ public:
 	);
 
 
-	void InitZPreShadersAndPipelines(
+	int InitZPreShadersAndPipelines(
 		int vertextype,
 		const char* fxFilePath,
 		const char* vsEntryPointFunc,
@@ -338,13 +338,13 @@ public:
 		UINT offsetInDescriptorsFromTableStartSRV,
 		D3D12_FILTER samplerFilter);
 	void InitZPrePipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
-	void InitZPreShaders(const char* fxFilePath,
+	int InitZPreShaders(const char* fxFilePath,
 		const char* vsEntryPointFunc,
 		const char* psEntryPointFunc
 	);
 
 
-	void InitInstancingShadersAndPipelines(
+	int InitInstancingShadersAndPipelines(
 		int vertextype,
 		const char* fxFilePath,
 		const char* vsEntryPointFunc,
@@ -356,7 +356,7 @@ public:
 		UINT offsetInDescriptorsFromTableStartSRV,
 		D3D12_FILTER samplerFilter);
 	void InitInstancingPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
-	void InitInstancingShaders(const char* fxFilePath,
+	int InitInstancingShaders(const char* fxFilePath,
 		const char* vsEntryPointFunc,
 		const char* psEntryPointFunc
 	);

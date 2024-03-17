@@ -34,7 +34,7 @@ Shader::~Shader()
 }
 
 
-void Shader::Load(const char* filePath, const char* entryFuncName, const char* shaderModel)
+int Shader::Load(const char* filePath, const char* entryFuncName, const char* shaderModel)
 {
 	ID3DBlob* errorBlob;
 #ifdef _DEBUG
@@ -59,24 +59,34 @@ void Shader::Load(const char* filePath, const char* entryFuncName, const char* s
 			static char errorMessage[10 * 1024];
 			sprintf_s(errorMessage, "filePath : %ws, %s", wfxFilePath, (char*)errorBlob->GetBufferPointer());
 			MessageBoxA(NULL, errorMessage, "シェーダーコンパイルエラー", MB_OK);
-			return;
 		}
+
+		m_isInited = false;
 	}
-	m_isInited = true;
+	else {
+
+		m_isInited = true;
+	}
+	
+	//2024/03/17 シェーダーコンパイルに失敗した場合には　エラーとして1を返すように
+	//エラー時は呼び出し側でアプリを終了させる
+	int retval;
+	retval = (FAILED(hr)) ? 1 : 0;
+	return retval;
 }
-void Shader::LoadPS(const char* filePath, const char* entryFuncName)
+int Shader::LoadPS(const char* filePath, const char* entryFuncName)
 {
-	Load(filePath, entryFuncName, g_psShaderModelName);
+	return Load(filePath, entryFuncName, g_psShaderModelName);
 }
-void Shader::LoadVS(const char* filePath, const char* entryFuncName)
+int Shader::LoadVS(const char* filePath, const char* entryFuncName)
 {
 	SetCurrentDirectoryW(g_basedir);
-	Load(filePath, entryFuncName, g_vsShaderModelName);
+	return Load(filePath, entryFuncName, g_vsShaderModelName);
 }
-void Shader::LoadCS(const char* filePath, const char* entryFuncName)
+int Shader::LoadCS(const char* filePath, const char* entryFuncName)
 {
 	SetCurrentDirectoryW(g_basedir);
-	Load(filePath, entryFuncName, g_csShaderModelName);
+	return Load(filePath, entryFuncName, g_csShaderModelName);
 }
 //void Shader::LoadRaytracing(const wchar_t* filePath)
 //{

@@ -311,7 +311,8 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, in
 		if (curmat) {
 			curmat->CreateDecl(pdev, vertextype);
 
-			curmat->InitShadersAndPipelines(
+			int result1;
+			result1 = curmat->InitShadersAndPipelines(
 				srcuvnum,
 				vertextype,
 				"../Media/Shader/AdditiveIK_NoSkin_PBR.fx",//fx NoSkin PBR
@@ -360,6 +361,10 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, in
 				0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
 				D3D12_FILTER_MIN_MAG_MIP_LINEAR
 			);
+			if (result1 != 0) {
+				_ASSERT(0);
+				std::abort();//2024/03/17 シェーダコンパイル失敗時にはabort()する
+			}
 
 			//if ((curmat->GetAlbedoTex() && !(curmat->GetAlbedoTex())[0]) ||
 			//	(curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) ||
@@ -370,8 +375,8 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, in
 			//else {
 			//	//Standard
 			//}
-
-			curmat->InitZPreShadersAndPipelines(
+			int result2;
+			result2 = curmat->InitZPreShadersAndPipelines(
 				vertextype,
 				"../Media/Shader/AdditiveIK_NoSkin_ZPrepass.fx",
 				"VSMainZPrepass",
@@ -383,9 +388,13 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, in
 				0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
 				D3D12_FILTER_MIN_MAG_MIP_LINEAR
 			);
+			if (result2 != 0) {
+				_ASSERT(0);
+				std::abort();//2024/03/17 シェーダコンパイル失敗時にはabort()する
+			}
 
-
-			curmat->InitInstancingShadersAndPipelines(
+			int result3;
+			result3 = curmat->InitInstancingShadersAndPipelines(
 				vertextype,
 				"../Media/Shader/AdditiveIK_NoSkin_Instancing.fx",
 				"VSMainNoSkinInstancing",
@@ -397,7 +406,10 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, in
 				0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
 				D3D12_FILTER_MIN_MAG_MIP_LINEAR
 			);
-
+			if (result3 != 0) {
+				_ASSERT(0);
+				std::abort();//2024/03/17 シェーダコンパイル失敗時にはabort()する
+			}
 
 			rootindex++;
 		}
@@ -444,7 +456,8 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, in
 
 				curmat->CreateDecl(pdev, vertextype);
 
-				curmat->InitShadersAndPipelines(
+				int result1;
+				result1 = curmat->InitShadersAndPipelines(
 					srcuvnum,
 					vertextype,
 					"../Media/Shader/AdditiveIK_Skin_PBR.fx",//fx Skin PBR
@@ -493,6 +506,10 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, in
 					0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
 					D3D12_FILTER_MIN_MAG_MIP_LINEAR
 				);
+				if (result1 != 0) {
+					_ASSERT(0);
+					std::abort();//2024/03/17 シェーダコンパイル失敗時にはabort()する
+				}
 
 				//if ((curmat->GetAlbedoTex() && !(curmat->GetAlbedoTex())[0]) ||
 				//	(curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) ||
@@ -505,7 +522,8 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, in
 				////	//Standard
 				//}
 
-				curmat->InitZPreShadersAndPipelines(
+				int result2;
+				result2 = curmat->InitZPreShadersAndPipelines(
 					vertextype,
 					"../Media/Shader/AdditiveIK_Skin_ZPrepass.fx",
 					"VSMainZPrepass",
@@ -517,6 +535,10 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, in
 					0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
 					D3D12_FILTER_MIN_MAG_MIP_LINEAR
 				);
+				if (result2 != 0) {
+					_ASSERT(0);
+					std::abort();//2024/03/17 シェーダコンパイル失敗時にはabort()する
+				}
 
 
 				rootindex++;
@@ -562,7 +584,8 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 
 		curmat->CreateDecl(pdev, vertextype);
 
-		curmat->InitShadersAndPipelines(
+		int result1;
+		result1 = curmat->InitShadersAndPipelines(
 			0,
 			vertextype,
 			"../Media/Shader/AdditiveIK_NoSkin_Std.fx",
@@ -601,6 +624,10 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 			0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
 			D3D12_FILTER_MIN_MAG_MIP_LINEAR
 		);
+		if (result1 != 0) {
+			_ASSERT(0);
+			std::abort();//2024/03/17 シェーダコンパイル失敗時にはabort()する
+		}
 
 		rootindex++;
 	}
