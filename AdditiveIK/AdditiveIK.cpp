@@ -163,6 +163,7 @@ enum {//２段目プレートメニュー行の種類
 	SPPLATEMENUKIND_DISP,//2023/08/07
 	SPPLATEMENUKIND_RIGID,
 	SPPLATEMENUKIND_RETARGET,
+	SPPLATEMENUKIND_EFFECT,//2024/03/18
 	SPPLATEMENUKINDNUM
 };
 enum {//１段目のプレート種類
@@ -215,6 +216,17 @@ enum {
 	SPRETARGETSWNUM
 };
 //#define SPRETARGETSWNUM	2
+
+
+//2024/03/18
+//２段目メニューのSPPLATEMENUKIND_EFFECT行のプレート
+enum {
+	SPEFFECTSW_SKY,
+	SPEFFECTSW_FOG,
+	SPEFFECTSW_DOF,
+	SPEFFECTSWNUM
+};
+
 
 enum {
 	SPAIMBAR_1,
@@ -1651,7 +1663,12 @@ static Texture* s_spritetex82 = 0;
 static Texture* s_spritetex83 = 0;
 static Texture* s_spritetex84 = 0;
 static Texture* s_spritetex85 = 0;
-
+static Texture* s_spritetex86 = 0;
+static Texture* s_spritetex87 = 0;
+static Texture* s_spritetex88 = 0;
+static Texture* s_spritetex89 = 0;
+static Texture* s_spritetex90 = 0;
+static Texture* s_spritetex91 = 0;
 
 
 static int s_toolspritemode = 0;
@@ -1687,6 +1704,7 @@ static CSpGUISW s_spguisw[SPGUISWNUM];
 static CSpGUISW s_spdispsw[SPDISPSWNUM];
 static CSpGUISW s_sprigidsw[SPRIGIDSWNUM];
 static CSpGUISW s_spretargetsw[SPRETARGETSWNUM];
+static CSpGUISW s_speffectsw[SPEFFECTSWNUM];
 static bool s_firstmoveaimbar = true;
 //static CSpGUISW s_spaimbar[SPAIMBARNUM];
 //static CSpGUISW s_spmenuaimbar[SPMENU_MAX];
@@ -2187,6 +2205,10 @@ static void GUIRetargetSetVisible(int srcplateno);
 static void ShowRetargetWnd(bool srcflag);
 static void ShowLimitEulerWnd(bool srcflag);
 static void ShowThresholdWnd(bool srcflag);
+static void GUIEffectSetVisible(int srcplateno);
+static void ShowSkyWnd(bool srcflag);
+static void ShowFogWnd(bool srcflag);
+static void ShowDofWnd(bool srcflag);
 
 
 static CInfoWindow* CreateInfoWnd();
@@ -2258,14 +2280,11 @@ static void CheckShaderTypeParamsButton(HWND hDlgWnd, int srcshadertype);//param
 static void CheckToonLightButton(HWND hDlgWnd, int srclightindex);
 static int CreateSkyParamsDlg();//params設定用　OWPでは無い方
 static int SetMaterial2SkyParamsDlg(CMQOMaterial* srcmat);//params設定用　OWPでは無い方
-static int ShowSkyParamsDlg();//params設定用　OWPでは無い方
 static int CreateFogParamsDlg();//params設定用　OWPでは無い方
 static int Set2FogParamsDlg();//params設定用　OWPでは無い方
-static int ShowFogParamsDlg();//params設定用　OWPでは無い方
 static void CheckFogKindParamsButton(HWND hDlgWnd, int srckind);
 static int CreateDofParamsDlg();//params設定用　OWPでは無い方
 static int Set2DofParamsDlg();//params設定用　OWPでは無い方
-static int ShowDofParamsDlg();//params設定用　OWPでは無い方
 
 
 
@@ -2678,8 +2697,10 @@ static int SetSpDispSWParams();
 static int PickSpDispSW(POINT srcpos);
 static int SetSpRigidSWParams();
 static int PickSpRigidSW(POINT srcpos);
-static int PickSpRetargetSW(POINT srcpos);
 static int SetSpRetargetSWParams();
+static int PickSpRetargetSW(POINT srcpos);
+static int SetSpEffectSWParams();
+static int PickSpEffectSW(POINT srcpos);
 static int SetSpCamParams();
 static int PickSpCam(POINT srcpos);
 static int SetSpRigParams();
@@ -19623,6 +19644,7 @@ int SetSpParams()
 	SetSpDispSWParams();
 	SetSpRigidSWParams();
 	SetSpRetargetSWParams();
+	SetSpEffectSWParams();
 	SetSpCamParams();
 	SetSpRigParams();
 	SetSpCpLW2WParams();
@@ -19887,6 +19909,54 @@ int SetSpRetargetSWParams()
 	return 0;
 
 }
+
+int SetSpEffectSWParams()
+{
+
+
+	//float spgwidth = 140.0f;
+	float spgwidth = 124.0f;
+	float spgheight = 28.0f;
+	int spgshift = 6;
+	s_speffectsw[SPEFFECTSW_SKY].dispcenter.x = s_guibarX0;
+
+
+	//s_speffectsw[SPRETARGETSW_RETARGET].dispcenter.y = 486 - TOPSLIDERSWNDH;
+	if (g_4kresolution) {
+		s_speffectsw[SPEFFECTSW_SKY].dispcenter.y = 486 * 2 - TOPSLIDERSWNDH + 32;
+	}
+	else {
+		s_speffectsw[SPEFFECTSW_SKY].dispcenter.y = 486 - TOPSLIDERSWNDH;
+	}
+
+
+	s_speffectsw[SPEFFECTSW_FOG].dispcenter.x = s_speffectsw[SPEFFECTSW_SKY].dispcenter.x + (int)spgwidth + spgshift;
+	s_speffectsw[SPEFFECTSW_FOG].dispcenter.y = s_speffectsw[SPEFFECTSW_SKY].dispcenter.y;
+
+	s_speffectsw[SPEFFECTSW_DOF].dispcenter.x = s_speffectsw[SPEFFECTSW_FOG].dispcenter.x + (int)spgwidth + spgshift;
+	s_speffectsw[SPEFFECTSW_DOF].dispcenter.y = s_speffectsw[SPEFFECTSW_FOG].dispcenter.y;
+
+	int sprcnt;
+	for (sprcnt = 0; sprcnt < SPEFFECTSWNUM; sprcnt++) {
+		ChaVector3 disppos;
+		disppos.x = (float)(s_speffectsw[sprcnt].dispcenter.x);
+		disppos.y = (float)(s_speffectsw[sprcnt].dispcenter.y);
+		disppos.z = 0.0f;
+		ChaVector2 dispsize = ChaVector2(spgwidth, spgheight);
+
+		//CallF(s_speffectsw[sprcnt].spriteON->SetPos(disppos), return 1);
+		//CallF(s_speffectsw[sprcnt].spriteON->SetSize(dispsize), return 1);
+		s_speffectsw[sprcnt].spriteON.UpdateScreen(disppos, dispsize);
+		//CallF(s_speffectsw[sprcnt].spriteOFF->SetPos(disppos), return 1);
+		//CallF(s_speffectsw[sprcnt].spriteOFF->SetSize(dispsize), return 1);
+		s_speffectsw[sprcnt].spriteOFF.UpdateScreen(disppos, dispsize);
+	}
+
+	return 0;
+
+}
+
+
 
 int SetSpMenuAimBarParams()
 {
@@ -21178,6 +21248,47 @@ int PickSpRetargetSW(POINT srcpos)
 	}
 	return kind;
 }
+
+int PickSpEffectSW(POINT srcpos)
+{
+	int kind = 0;
+
+	//if (g_previewFlag == 5){
+	//	return 0;
+	//}
+
+
+	//ret2prev
+	bool pickfrog = PickSpFrog(srcpos);
+	if (pickfrog == true) {
+		kind = -2;
+	}
+
+
+	//speffectsw
+	if (kind == 0) {
+		int starty = s_speffectsw[SPEFFECTSW_SKY].dispcenter.y - 14;
+		int endy = starty + 28;
+
+
+		if ((srcpos.y >= starty) && (srcpos.y <= endy)) {
+			int sprcnt;
+			for (sprcnt = 0; sprcnt < SPEFFECTSWNUM; sprcnt++) {
+
+				int startx = s_speffectsw[sprcnt].dispcenter.x - 70;
+				int endx = startx + 124 + 6;
+
+				if ((srcpos.x >= startx) && (srcpos.x <= endx)) {
+					kind = sprcnt + 1;
+					return kind;
+				}
+			}
+		}
+	}
+	return kind;
+}
+
+
 
 int PickSpIkModeSW(POINT srcpos)
 {
@@ -33558,16 +33669,19 @@ int OnFrameToolWnd()
 	if (s_skyparamsFlag) {
 		s_skyparamsFlag = false;
 		if (s_sky) {
-			ShowSkyParamsDlg();
+			s_platemenukind = SPPLATEMENUKIND_EFFECT;
+			GUIMenuSetVisible(s_platemenukind, 1);
 		}
 	}
 	if (s_fogparamsFlag) {
 		s_fogparamsFlag = false;
-		ShowFogParamsDlg();
+		s_platemenukind = SPPLATEMENUKIND_EFFECT;
+		GUIMenuSetVisible(s_platemenukind, 2);
 	}
 	if (s_dofparamsFlag) {
 		s_dofparamsFlag = false;
-		ShowDofParamsDlg();
+		s_platemenukind = SPPLATEMENUKIND_EFFECT;
+		GUIMenuSetVisible(s_platemenukind, 3);
 	}
 
 	if (s_interpolateFlag) {
@@ -41471,6 +41585,9 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		case SPPLATEMENUKIND_RETARGET:
 			platenomax = SPRETARGETSWNUM;
 			break;
+		case SPPLATEMENUKIND_EFFECT:
+			platenomax = SPEFFECTSWNUM;
+			break;
 		default:
 			platenomax = 0;
 			break;
@@ -41662,6 +41779,24 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spretargetsw[sprcnt].spriteOFF);
+					re->AddSpriteToForwardRenderPass(rendersprite);
+				}
+			}
+		}
+		else if (s_platemenukind == SPPLATEMENUKIND_EFFECT) {
+
+			int sprcnt;
+			for (sprcnt = 0; sprcnt < SPEFFECTSWNUM; sprcnt++) {
+				if (s_speffectsw[sprcnt].state) {
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_speffectsw[sprcnt].spriteON);
+					re->AddSpriteToForwardRenderPass(rendersprite);
+				}
+				else {
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = &(s_speffectsw[sprcnt].spriteOFF);
 					re->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
@@ -45517,6 +45652,34 @@ void GUIRetargetSetVisible(int srcplateno)
 	}
 }
 
+void GUIEffectSetVisible(int srcplateno)
+{
+	if (srcplateno == 1) {
+		ShowSkyWnd(true);
+		ShowFogWnd(false);
+		ShowDofWnd(false);
+	}
+	else if (srcplateno == 2) {
+		ShowSkyWnd(false);
+		ShowFogWnd(true);
+		ShowDofWnd(false);
+	}
+	else if (srcplateno == 3) {
+		ShowSkyWnd(false);
+		ShowFogWnd(false);
+		ShowDofWnd(true);
+	}
+	else if (srcplateno == -2) {
+		ShowSkyWnd(false);
+		ShowFogWnd(false);
+		ShowDofWnd(false);
+	}
+	else {
+		_ASSERT(0);
+	}
+}
+
+
 void GUIDispSetVisible(int srcplateno)
 {
 	if (srcplateno == 1) {
@@ -46183,7 +46346,7 @@ void GUIMenuSetVisible(int srcmenukind, int srcplateno)
 {
 	CloseAllRightPainWindow();
 
-	if ((srcmenukind >= SPPLATEMENUKIND_DISP) && (srcmenukind <= SPPLATEMENUKIND_RETARGET)) {
+	if ((srcmenukind >= SPPLATEMENUKIND_DISP) && (srcmenukind <= SPPLATEMENUKIND_EFFECT)) {
 		//#####################
 		//プレートメニュー更新
 		//#####################
@@ -46275,6 +46438,19 @@ void GUIMenuSetVisible(int srcmenukind, int srcplateno)
 					SelectNextWindow(MB3D_WND_SIDE);
 				}
 				break;
+			case SPPLATEMENUKIND_EFFECT:
+				if ((srcplateno >= 1) && (srcplateno <= SPEFFECTSWNUM)) {
+					if (s_customrigdlg) {
+						DestroyWindow(s_customrigdlg);
+						s_customrigdlg = 0;
+					}
+					if (s_placefolderWnd) {
+						s_placefolderWnd->setVisible(false);
+					}
+					GUIEffectSetVisible(srcplateno);
+					SelectNextWindow(MB3D_WND_SIDE);
+				}
+				break;
 			default:
 				break;
 			}
@@ -46312,7 +46488,10 @@ void ChangeToNextPlateMenuKind(int srcmenukind, int srcmenuno)
 			nextplateno = 1;//最初のプレート
 		}
 		else if (srcmenukind == SPPLATEMENUKIND_RETARGET) {
-			//nextmenukind = SPPLATEMENUKIND_GUI;
+			nextmenukind = SPPLATEMENUKIND_EFFECT;
+			nextplateno = 1;//最初のプレート
+		}
+		else if (srcmenukind == SPPLATEMENUKIND_EFFECT) {
 			nextmenukind = SPPLATEMENUKIND_DISP;
 			nextplateno = 1;//最初のプレート
 		}
@@ -46381,6 +46560,13 @@ void ChangeToNextPlateMenuPlate(int srcmenukind, int srcmenuno)
 				nextplateno = 1;//最初のプレート
 			}
 		}
+		else if (currentkind == SPPLATEMENUKIND_EFFECT) {
+			nextmenukind = SPPLATEMENUKIND_EFFECT;
+			nextplateno = currentplate + 1;//次のプレート
+			if (nextplateno > SPEFFECTSWNUM) {
+				nextplateno = 1;//最初のプレート
+			}
+		}
 	}
 	else {
 		_ASSERT(0);
@@ -46411,7 +46597,8 @@ bool GUIGetNextMenu(POINT ptCursor, int srcmenukind, int* dstmenukind, int* dstp
 		int pickdispplateno = 0;
 		int pickrigidplateno = 0;
 		int pickretargetplateno = 0;
-	
+		int pickeffectplateno = 0;
+
 		//if (srcmenukind == SPPLATEMENUKIND_GUI) {
 		// 
 		//１段目は常時表示　常時クリック可能
@@ -46464,14 +46651,30 @@ bool GUIGetNextMenu(POINT ptCursor, int srcmenukind, int* dstmenukind, int* dstp
 			else if (srcmenukind == SPPLATEMENUKIND_RETARGET) {
 				pickretargetplateno = PickSpRetargetSW(ptCursor);//カエルボタンを押したときは -2
 				if (pickretargetplateno == -2) {
-					//nextmenukind = SPPLATEMENUKIND_GUI;
-					nextmenukind = SPPLATEMENUKIND_DISP;
+					nextmenukind = SPPLATEMENUKIND_EFFECT;
 					nextplateno = 1;//最初のプレート
 					pickflag = true;
 				}
 				else if (pickretargetplateno != 0) {
 					nextmenukind = srcmenukind;
 					nextplateno = pickretargetplateno;
+					pickflag = true;
+				}
+				else {
+					nextmenukind = -1;
+					nextplateno = 1;
+				}
+			}
+			else if (srcmenukind == SPPLATEMENUKIND_EFFECT) {
+				pickeffectplateno = PickSpEffectSW(ptCursor);//カエルボタンを押したときは -2
+				if (pickeffectplateno == -2) {
+					nextmenukind = SPPLATEMENUKIND_DISP;
+					nextplateno = 1;//最初のプレート
+					pickflag = true;
+				}
+				else if (pickeffectplateno != 0) {
+					nextmenukind = srcmenukind;
+					nextplateno = pickeffectplateno;
 					pickflag = true;
 				}
 				else {
@@ -47426,6 +47629,9 @@ void DSSelectWindowAndCtrl()
 				else if (s_platemenukind == SPPLATEMENUKIND_RETARGET) {
 					SelectNextWindow(MB3D_WND_SIDE);
 				}
+				else if (s_platemenukind == SPPLATEMENUKIND_EFFECT) {
+					SelectNextWindow(MB3D_WND_SIDE);
+				}
 				else {
 					_ASSERT(0);
 				}
@@ -47474,6 +47680,11 @@ void DSSelectWindowAndCtrl()
 				}
 				else if (platemenukind == SPPLATEMENUKIND_RETARGET) {
 					if (nextaimbarno >= SPRETARGETSWNUM) {
+						nextaimbarno = 0;
+					}
+				}
+				else if (platemenukind == SPPLATEMENUKIND_EFFECT) {
+					if (nextaimbarno >= SPEFFECTSWNUM) {
 						nextaimbarno = 0;
 					}
 				}
@@ -52693,6 +52904,23 @@ void ChangeMouseSetCapture()
 					}
 				}
 			}
+			else if (s_platemenukind == SPPLATEMENUKIND_EFFECT) {
+				if (s_platemenuno == (SPEFFECTSW_SKY + 1)) {
+					if (s_skyparamsdlgwnd) {
+						SetCapture(s_skyparamsdlgwnd);
+					}
+				}
+				else if (s_platemenuno == (SPEFFECTSW_FOG + 1)) {
+					if (s_fogparamsdlgwnd) {
+						SetCapture(s_fogparamsdlgwnd);
+					}
+				}
+				else if (s_platemenuno == (SPEFFECTSW_DOF + 1)) {
+					if (s_dofparamsdlgwnd) {
+						SetCapture(s_dofparamsdlgwnd);
+					}
+				}
+			}
 			break;
 		case 7:
 			if (g_infownd) {
@@ -56915,6 +57143,26 @@ int CreateFogParamsDlg()
 		MAKEINTRESOURCE(IDD_FOGPARAMSDLG), s_3dwnd, (DLGPROC)FogParamsDlgProc);
 	if (hDlgWnd != NULL) {
 		s_fogparamsdlgwnd = hDlgWnd;
+
+		int windowposx;
+		if (g_4kresolution) {
+			windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
+		}
+		else {
+			windowposx = s_timelinewidth + s_mainwidth;
+		}
+
+		SetParent(s_fogparamsdlgwnd, g_mainhwnd);
+		SetWindowPos(
+			s_fogparamsdlgwnd,
+			HWND_TOP,
+			windowposx,
+			s_sidemenuheight,
+			s_sidewidth,
+			s_sideheight,
+			SWP_SHOWWINDOW
+		);
+
 		ShowWindow(s_fogparamsdlgwnd, SW_HIDE);
 		s_fogparamsFlag = false;
 		return 0;
@@ -56932,6 +57180,26 @@ int CreateDofParamsDlg()
 		MAKEINTRESOURCE(IDD_DOFPARAMSDLG), s_3dwnd, (DLGPROC)DofParamsDlgProc);
 	if (hDlgWnd != NULL) {
 		s_dofparamsdlgwnd = hDlgWnd;
+
+		int windowposx;
+		if (g_4kresolution) {
+			windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
+		}
+		else {
+			windowposx = s_timelinewidth + s_mainwidth;
+		}
+
+		SetParent(s_dofparamsdlgwnd, g_mainhwnd);
+		SetWindowPos(
+			s_dofparamsdlgwnd,
+			HWND_TOP,
+			windowposx,
+			s_sidemenuheight,
+			s_sidewidth,
+			s_sideheight,
+			SWP_SHOWWINDOW
+		);
+
 		ShowWindow(s_dofparamsdlgwnd, SW_HIDE);
 		s_dofparamsFlag = false;
 		return 0;
@@ -57684,55 +57952,70 @@ int ShowShaderTypeParamsDlg()
 	return 0;
 }
 
-int ShowSkyParamsDlg()
+void ShowSkyWnd(bool srcflag)
 {
-
-	if (s_skyparamsdlgwnd) {
+	if (s_skyparamsdlgwnd != 0) {
 		if (s_sky) {
-			int materialnum = s_sky->GetMQOMaterialSize();
+			if (srcflag == true) {
+				int materialnum = s_sky->GetMQOMaterialSize();
 
-			if ((materialnum > 0) && (materialnum < MAXMATERIALNUM)) {//2024/03/03
-				CMQOMaterial* mqomat = s_sky->GetMQOMaterialByIndex(0);
-				SetMaterial2SkyParamsDlg(mqomat);
+				if ((materialnum > 0) && (materialnum < MAXMATERIALNUM)) {//2024/03/03
+					CMQOMaterial* mqomat = s_sky->GetMQOMaterialByIndex(0);
+					SetMaterial2SkyParamsDlg(mqomat);
 
-				ShowWindow(s_skyparamsdlgwnd, SW_SHOW);
-				UpdateWindow(s_skyparamsdlgwnd);
+					ShowWindow(s_skyparamsdlgwnd, SW_SHOW);
+					UpdateWindow(s_skyparamsdlgwnd);
+				}
+				else {
+					//2024/03/03
+					if (materialnum != 0) {
+						MessageBoxW(s_3dwnd, L"ERROR : MaterialNum Overflow.", L"Can't open dialog for settings.", MB_OK | MB_ICONERROR);
+					}
+					ShowWindow(s_skyparamsdlgwnd, SW_HIDE);
+				}
 			}
 			else {
-				//2024/03/03
-				if (materialnum != 0) {
-					MessageBoxW(s_3dwnd, L"ERROR : MaterialNum Overflow.", L"Can't open dialog for settings.", MB_OK | MB_ICONERROR);
-				}
 				ShowWindow(s_skyparamsdlgwnd, SW_HIDE);
+				UpdateWindow(s_skyparamsdlgwnd);
 			}
 		}
 	}
+	s_speffectsw[SPEFFECTSW_SKY].state = srcflag;
 
-	return 0;
 }
-int ShowFogParamsDlg()
+void ShowFogWnd(bool srcflag)
 {
 
 	if (s_fogparamsdlgwnd) {
-		Set2FogParamsDlg();
+		if (srcflag) {
+			Set2FogParamsDlg();
 
-		ShowWindow(s_fogparamsdlgwnd, SW_SHOW);
-		UpdateWindow(s_fogparamsdlgwnd);
+			ShowWindow(s_fogparamsdlgwnd, SW_SHOW);
+			UpdateWindow(s_fogparamsdlgwnd);
+		}
+		else {
+			ShowWindow(s_fogparamsdlgwnd, SW_HIDE);
+			UpdateWindow(s_fogparamsdlgwnd);
+		}
 	}
-
-	return 0;
+	s_speffectsw[SPEFFECTSW_FOG].state = srcflag;
 }
-int ShowDofParamsDlg()
+void ShowDofWnd(bool srcflag)
 {
 
 	if (s_dofparamsdlgwnd) {
-		Set2DofParamsDlg();
+		if (srcflag) {
+			Set2DofParamsDlg();
 
-		ShowWindow(s_dofparamsdlgwnd, SW_SHOW);
-		UpdateWindow(s_dofparamsdlgwnd);
+			ShowWindow(s_dofparamsdlgwnd, SW_SHOW);
+			UpdateWindow(s_dofparamsdlgwnd);
+		}
+		else {
+			ShowWindow(s_dofparamsdlgwnd, SW_HIDE);
+			UpdateWindow(s_dofparamsdlgwnd);
+		}
 	}
-
-	return 0;
+	s_speffectsw[SPEFFECTSW_DOF].state = srcflag;
 }
 
 
@@ -58638,6 +58921,50 @@ int CreateSprites()
 	spriteinitdata.m_textures[0] = s_spritetex83;
 	s_spretargetsw[SPRETARGETSW_THRESHOLD].spriteOFF.Init(spriteinitdata, screenvertexflag);
 
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Sky140ON.png");
+	s_spritetex86 = new Texture();
+	s_spritetex86->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex86;
+	s_speffectsw[SPEFFECTSW_SKY].spriteON.Init(spriteinitdata, screenvertexflag);
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Sky140OFF.png");
+	s_spritetex87 = new Texture();
+	s_spritetex87->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex87;
+	s_speffectsw[SPEFFECTSW_SKY].spriteOFF.Init(spriteinitdata, screenvertexflag);
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Fog140ON.png");
+	s_spritetex88 = new Texture();
+	s_spritetex88->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex88;
+	s_speffectsw[SPEFFECTSW_FOG].spriteON.Init(spriteinitdata, screenvertexflag);
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Fog140OFF.png");
+	s_spritetex89 = new Texture();
+	s_spritetex89->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex89;
+	s_speffectsw[SPEFFECTSW_FOG].spriteOFF.Init(spriteinitdata, screenvertexflag);
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_DOF140ON.png");
+	s_spritetex90 = new Texture();
+	s_spritetex90->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex90;
+	s_speffectsw[SPEFFECTSW_DOF].spriteON.Init(spriteinitdata, screenvertexflag);
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_DOF140OFF.png");
+	s_spritetex91 = new Texture();
+	s_spritetex91->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex91;
+	s_speffectsw[SPEFFECTSW_DOF].spriteOFF.Init(spriteinitdata, screenvertexflag);
+
+
+
 	//{
 	//	int aimno;
 	//	for (aimno = 0; aimno < SPAIMBARNUM; aimno++) {
@@ -59002,6 +59329,12 @@ void InitSprites()
 	s_spritetex83 = 0;
 	s_spritetex84 = 0;
 	s_spritetex85 = 0;
+	s_spritetex86 = 0;
+	s_spritetex87 = 0;
+	s_spritetex88 = 0;
+	s_spritetex89 = 0;
+	s_spritetex90 = 0;
+	s_spritetex91 = 0;
 }
 
 void DestroySprites()
@@ -59370,6 +59703,30 @@ void DestroySprites()
 		delete s_spritetex85;
 		s_spritetex85 = 0;
 	}
+	if (s_spritetex86) {
+		delete s_spritetex86;
+		s_spritetex86 = 0;
+	}
+	if (s_spritetex87) {
+		delete s_spritetex87;
+		s_spritetex87 = 0;
+	}
+	if (s_spritetex88) {
+		delete s_spritetex88;
+		s_spritetex88 = 0;
+	}
+	if (s_spritetex89) {
+		delete s_spritetex89;
+		s_spritetex89 = 0;
+	}
+	if (s_spritetex90) {
+		delete s_spritetex90;
+		s_spritetex90 = 0;
+	}
+	if (s_spritetex91) {
+		delete s_spritetex91;
+		s_spritetex91 = 0;
+	}
 
 	int delindex;
 	s_spundo[0].DestroyObjs();
@@ -59414,6 +59771,9 @@ void DestroySprites()
 	}
 	for (delindex = 0; delindex < SPRETARGETSWNUM; delindex++) {
 		s_spretargetsw[delindex].DestroyObjs();
+	}
+	for (delindex = 0; delindex < SPEFFECTSWNUM; delindex++) {
+		s_speffectsw[delindex].DestroyObjs();
 	}
 	s_spsel3d.DestroyObjs();
 	s_spmousehere.DestroyObjs();
@@ -59855,6 +60215,7 @@ void CloseAllRightPainWindow()
 	//platemenuのwindowを閉じる
 	GUIRigidSetVisible(-2);
 	GUIRetargetSetVisible(-2);
+	GUIEffectSetVisible(-2);
 	GUIDispSetVisible(-2);
 	CloseTheFirstRowGUI();
 
