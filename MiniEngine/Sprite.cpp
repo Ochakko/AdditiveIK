@@ -418,10 +418,10 @@
         //m_constantBufferCPU.screenParam.w = viewport.Height;//2023/11/18 tmp set
         m_constantBufferCPU.screenParam.z = (float)screenW;//2023/11/21
         m_constantBufferCPU.screenParam.w = (float)screenH;//2023/11/21
-        m_constantBufferCPU.dofparams.x = g_dofparams.x;
-        m_constantBufferCPU.dofparams.y = g_dofparams.y;
-        m_constantBufferCPU.dofparams.z = g_dofparams.z;
-        m_constantBufferCPU.dofparams.w = g_dofparams.w;
+        m_constantBufferCPU.dofparams.x = g_dofparams[g_dofindex].x;
+        m_constantBufferCPU.dofparams.y = g_dofparams[g_dofindex].y;
+        m_constantBufferCPU.dofparams.z = g_dofparams[g_dofindex].z;
+        m_constantBufferCPU.dofparams.w = g_dofparams[g_dofindex].w;
 
 
         //定数バッファを更新。
@@ -477,10 +477,10 @@
         //m_constantBufferCPU.screenParam.w = 488;//2023/11/18 tmp set
         m_constantBufferCPU.screenParam.z = viewport.Width;//2023/11/18 tmp set
         m_constantBufferCPU.screenParam.w = viewport.Height;//2023/11/18 tmp set
-        m_constantBufferCPU.dofparams.x = g_dofparams.x;
-        m_constantBufferCPU.dofparams.y = g_dofparams.y;
-        m_constantBufferCPU.dofparams.z = g_dofparams.z;
-        m_constantBufferCPU.dofparams.w = g_dofparams.w;
+        m_constantBufferCPU.dofparams.x = g_dofparams[g_dofindex].x;
+        m_constantBufferCPU.dofparams.y = g_dofparams[g_dofindex].y;
+        m_constantBufferCPU.dofparams.z = g_dofparams[g_dofindex].z;
+        m_constantBufferCPU.dofparams.w = g_dofparams[g_dofindex].w;
 
 
         //定数バッファを更新。

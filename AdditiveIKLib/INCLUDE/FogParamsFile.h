@@ -16,8 +16,8 @@ public:
 	CFogParamsFile();
 	virtual ~CFogParamsFile();
 
-	int WriteFogParamsFile(WCHAR* filepath);
-	int LoadFogParamsFile(WCHAR* filepath);
+	int WriteFogParamsFile(WCHAR* filepath, int srcindex);
+	int LoadFogParamsFile(WCHAR* filepath, int srcindex);
 
 private:
 	virtual int InitParams();

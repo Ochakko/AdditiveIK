@@ -3292,7 +3292,7 @@ void CMQOMaterial::SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBuff
 	pcbLights->toonlightdir = g_lightdirforall[toonlightindex];//2024/02/15
 
 
-	int fogkind = g_fogparams.GetFogKind();
+	int fogkind = g_fogparams[g_fogindex].GetFogKind();
 	pcbLights->fog.w = (float)fogkind;
 	if (fogkind == 0) {
 		//########
@@ -3300,37 +3300,37 @@ void CMQOMaterial::SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBuff
 		//########
 
 		//set dummy value
-		pcbLights->fogcolor = g_fogparams.GetDistColor();
-		pcbLights->fog.x = g_fogparams.GetDistNear();
-		pcbLights->fog.y = g_fogparams.GetDistFar();
-		pcbLights->fog.z = g_fogparams.GetDistRate();
+		pcbLights->fogcolor = g_fogparams[g_fogindex].GetDistColor();
+		pcbLights->fog.x = g_fogparams[g_fogindex].GetDistNear();
+		pcbLights->fog.y = g_fogparams[g_fogindex].GetDistFar();
+		pcbLights->fog.z = g_fogparams[g_fogindex].GetDistRate();
 	}
 	else if (fogkind == 1) {
 		//#########
 		//dist fog
 		//#########
-		pcbLights->fogcolor = g_fogparams.GetDistColor();
-		pcbLights->fog.x = g_fogparams.GetDistNear();
-		pcbLights->fog.y = g_fogparams.GetDistFar();
-		pcbLights->fog.z = g_fogparams.GetDistRate();
+		pcbLights->fogcolor = g_fogparams[g_fogindex].GetDistColor();
+		pcbLights->fog.x = g_fogparams[g_fogindex].GetDistNear();
+		pcbLights->fog.y = g_fogparams[g_fogindex].GetDistFar();
+		pcbLights->fog.z = g_fogparams[g_fogindex].GetDistRate();
 	}
 	else if (fogkind == 2) {
 		//###########
 		//height fog
 		//###########
-		pcbLights->fogcolor = g_fogparams.GetHeightColor();
+		pcbLights->fogcolor = g_fogparams[g_fogindex].GetHeightColor();
 		pcbLights->fog.x = 0.0f;
-		pcbLights->fog.y = g_fogparams.GetHeightHigh();
-		pcbLights->fog.z = g_fogparams.GetHeightRate();
+		pcbLights->fog.y = g_fogparams[g_fogindex].GetHeightHigh();
+		pcbLights->fog.z = g_fogparams[g_fogindex].GetHeightRate();
 	}
 	else {
 		_ASSERT(0);
 
 		//set dummy value
-		pcbLights->fogcolor = g_fogparams.GetDistColor();
-		pcbLights->fog.x = g_fogparams.GetDistNear();
-		pcbLights->fog.y = g_fogparams.GetDistFar();
-		pcbLights->fog.z = g_fogparams.GetDistRate();
+		pcbLights->fogcolor = g_fogparams[g_fogindex].GetDistColor();
+		pcbLights->fog.x = g_fogparams[g_fogindex].GetDistNear();
+		pcbLights->fog.y = g_fogparams[g_fogindex].GetDistFar();
+		pcbLights->fog.z = g_fogparams[g_fogindex].GetDistRate();
 	}
 }
 

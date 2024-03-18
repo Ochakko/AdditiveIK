@@ -35,6 +35,9 @@ class CMQOMaterial;
 //#define SHADOWMAP_FAR	(2000.0f * SHADOWMAP_PROJSCALE)
 //#define SHADOWMAP_BIAS	0.0010f
 #define SHADOWSLOTNUM	8
+#define SKYSLOTNUM	8
+#define FOGSLOTNUM	8
+#define DOFSLOTNUM	8
 
 
 //バウンダリー簡易クリッピング計算用　大きいほど見切れないが重くなる
@@ -308,6 +311,7 @@ enum {
 	BONEAXIS_BINDPOSE = 3,
 	BONEAXIS_MAX
 };
+
 
 
 typedef struct tag_anglelimmit

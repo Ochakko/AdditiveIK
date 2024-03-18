@@ -181,7 +181,7 @@ typedef struct tag_hsvtoon
 		lightindex = 0;
 		hicolorh = 200.0f / 255.0f;
 		lowcolorh = 138.0f / 255.0f;
-		basehsv = ChaVector4(0.0f, 0.0f, 0.0f, 1.0f);//H, S, V, alpha
+		basehsv = ChaVector4(0.0f, 0.0f, 1.0f, 1.0f);//H, S, V, alpha
 		hiaddhsv = ChaVector4(0.0f, 0.0f, 0.2f, 0.0f);//H, S, V, alpha
 		lowaddhsv = ChaVector4(0.0f, 0.0f, -0.2f, 0.0f);//H, S, V, alpha
 		gradationflag = true;
@@ -191,7 +191,7 @@ typedef struct tag_hsvtoon
 		lightindex = 0;
 		hicolorh = 200.0f / 255.0f;
 		lowcolorh = 138.0f / 255.0f;
-		basehsv = ChaVector4(0.0f, 0.0f, 0.0f, 1.0f);//H, S, V, alpha
+		basehsv = ChaVector4(0.0f, 0.0f, 1.0f, 1.0f);//H, S, V, alpha
 		hiaddhsv = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);//H, S, V, alpha
 		lowaddhsv = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);//H, S, V, alpha
 		gradationflag = true;
@@ -202,8 +202,6 @@ typedef struct tag_hsvtoon
 		Init();
 	};
 }HSVTOON;
-
-
 
 class CMQOMaterial
 {
@@ -1275,5 +1273,86 @@ private:
 	
 };
 
+
+class CShaderTypeParams
+{
+public:
+	CShaderTypeParams() {
+		HSVTOON initoon;
+		initoon.Init();
+		InitParams(initoon);
+	};
+	~CShaderTypeParams() {};
+
+	void InitParams(HSVTOON srctoon) {
+
+		hsvtoon = srctoon;
+
+		mqomat = nullptr;//全てのマテリアルに対して設定するボタンを押した場合
+		wcscpy_s(wmaterialname, 256, L"(All)");
+		shadertype = -1;
+		lightingmat = true;
+		metalcoef = 0.0f;
+		smoothcoef = 0.250f;
+		int litno;
+		for (litno = 0; litno < LIGHTNUMMAX; litno++) {
+			lightscale[litno] = 1.0f;
+		}
+		enableEmission = false;
+		emissiveScale = 1.0f;
+		specularcoef = 0.1250f;
+		normaly0flag = false;
+		shadowcasterflag = true;
+		uvscale = ChaVectorDbl2(1.0, 1.0);
+	};
+
+	void SetMaterial(CMQOMaterial* srcmqomat) {
+		if (srcmqomat) {
+			mqomat = srcmqomat;
+
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
+				srcmqomat->GetName(), -1, wmaterialname, 256);
+			shadertype = srcmqomat->GetShaderType();
+			lightingmat = srcmqomat->GetLightingFlag();
+			metalcoef = srcmqomat->GetMetalAdd();
+			smoothcoef = srcmqomat->GetSmoothCoef();
+			int litno;
+			for (litno = 0; litno < LIGHTNUMMAX; litno++) {
+				lightscale[litno] = srcmqomat->GetLightScale(litno);
+			}
+			enableEmission = srcmqomat->GetEnableEmission();
+			emissiveScale = srcmqomat->GetEmissiveScale();
+			hsvtoon = srcmqomat->GetHSVToon();
+			specularcoef = srcmqomat->GetSpecularCoef();
+			normaly0flag = srcmqomat->GetNormalY0Flag();
+			shadowcasterflag = srcmqomat->GetShadowCasterFlag();
+			uvscale = srcmqomat->GetUVScale();
+		}
+		else {
+			//Material "All"のときにも通る.　エラーではなく通常処理.
+			//_ASSERT(0);
+
+			HSVTOON initoon;
+			initoon.Init();
+			InitParams(initoon);
+		}
+	};
+
+public:
+	CMQOMaterial* mqomat;
+	int shadertype;
+	bool lightingmat;
+	float metalcoef;
+	float smoothcoef;
+	float lightscale[LIGHTNUMMAX];
+	bool enableEmission = false;
+	float emissiveScale = 1.0f;
+	float specularcoef = 0.1250f;
+	bool normaly0flag = false;
+	bool shadowcasterflag = true;
+	ChaVectorDbl2 uvscale;// = ChaVectorDbl2(1.0, 1.0);
+	WCHAR wmaterialname[256];// = { 0L };
+	HSVTOON hsvtoon;
+};
 
 #endif

@@ -1,5 +1,8 @@
 ﻿#include "stdafx.h"
 #include "PostEffect.h"
+
+#include <GlobalVar.h>
+
 namespace myRenderer {
     void PostEffect::Init(RenderTarget& mainRenderTarget, RenderTarget& zprepassRenderTarget)
     {
@@ -20,9 +23,11 @@ namespace myRenderer {
         //m_bloom.Render(rc, mainRenderTarget);
         //m_dof.Render(rc, mainRenderTarget);
 
-
-        m_bloom.Render(rc, mainRenderTarget);
-        m_dof.Render(rc, mainRenderTarget);
-
+        if (g_hdrpbloom) {
+            m_bloom.Render(rc, mainRenderTarget);
+        }
+        if (g_zpreflag) {
+            m_dof.Render(rc, mainRenderTarget);
+        }
     }
 }

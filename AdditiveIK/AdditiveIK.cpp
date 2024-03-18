@@ -257,86 +257,6 @@ static HSVTOON s_hsvtoonforall;//mqomaterial指定が無い場合の設定内容
 static HSVTOON s_skyhsvtoonforall;//s_skt用の設定内容を保存
 
 
-class CShaderTypeParams
-{
-public:
-	CShaderTypeParams() {
-		InitParams(0);
-	};
-	~CShaderTypeParams() {};
-
-	void InitParams(int kind) {//kind: 0->Shaderプレートメニュー, 1->SkyParamsメニュー
-
-		mqomat = nullptr;//全てのマテリアルに対して設定するボタンを押した場合
-		wcscpy_s(wmaterialname, 256, L"(All)");
-		shadertype = -1;
-		lightingmat = true;
-		metalcoef = 0.0f;
-		smoothcoef = 0.250f;
-		int litno;
-		for (litno = 0; litno < LIGHTNUMMAX; litno++) {
-			lightscale[litno] = 1.0f;
-		}
-		enableEmission = false;
-		emissiveScale = 1.0f;
-		if (kind == 0) {
-			hsvtoon = s_hsvtoonforall;
-		}
-		else {
-			hsvtoon = s_skyhsvtoonforall;
-		}
-		specularcoef = 0.1250f;
-		normaly0flag = false;
-		shadowcasterflag = true;
-		uvscale = ChaVectorDbl2(1.0, 1.0);
-	};
-	
-	void SetMaterial(CMQOMaterial* srcmqomat) {
-		if (srcmqomat) {
-			mqomat = srcmqomat;
-
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
-				srcmqomat->GetName(), -1, wmaterialname, 256);
-			shadertype = srcmqomat->GetShaderType();
-			lightingmat = srcmqomat->GetLightingFlag();
-			metalcoef = srcmqomat->GetMetalAdd();
-			smoothcoef = srcmqomat->GetSmoothCoef();
-			int litno;
-			for (litno = 0; litno < LIGHTNUMMAX; litno++) {
-				lightscale[litno] = srcmqomat->GetLightScale(litno);
-			}
-			enableEmission = srcmqomat->GetEnableEmission();
-			emissiveScale = srcmqomat->GetEmissiveScale();
-			hsvtoon = srcmqomat->GetHSVToon();
-			specularcoef = srcmqomat->GetSpecularCoef();
-			normaly0flag = srcmqomat->GetNormalY0Flag();
-			shadowcasterflag = srcmqomat->GetShadowCasterFlag();
-			uvscale = srcmqomat->GetUVScale();
-		}
-		else {
-			//Material "All"のときにも通る.　エラーではなく通常処理.
-			//_ASSERT(0);
-
-			InitParams(0);
-		}
-	};
-
-public:
-	CMQOMaterial* mqomat;
-	int shadertype;
-	bool lightingmat;
-	float metalcoef;
-	float smoothcoef;
-	float lightscale[LIGHTNUMMAX];
-	bool enableEmission = false;
-	float emissiveScale = 1.0f;
-	float specularcoef = 0.1250f;
-	bool normaly0flag = false;
-	bool shadowcasterflag = true;
-	ChaVectorDbl2 uvscale;// = ChaVectorDbl2(1.0, 1.0);
-	WCHAR wmaterialname[256];// = { 0L };
-	HSVTOON hsvtoon;
-};
 
 //typedef struct tag_spaxis
 //{
@@ -1486,7 +1406,7 @@ static CMQOMaterial* s_toonmqomaterial = nullptr;//toonスライダーを離し�
 static bool s_toonparamchange = false;//toonスライダーを離した後の処理用
 static CShaderTypeParams s_shadertypeparams;
 static bool s_skytoonparamchange = false;//toonスライダーを離した後の処理用
-static CShaderTypeParams s_skyparams;
+static CShaderTypeParams s_skyparams[SKYSLOTNUM];
 
 static bool s_timelineRUpFlag = false;
 static bool s_timelinembuttonFlag = false;
@@ -2279,7 +2199,8 @@ static int ShowShaderTypeParamsDlg();//params設定用　OWPでは無い方
 static void CheckShaderTypeParamsButton(HWND hDlgWnd, int srcshadertype);//params設定用　OWPでは無い方
 static void CheckToonLightButton(HWND hDlgWnd, int srclightindex);
 static int CreateSkyParamsDlg();//params設定用　OWPでは無い方
-static int SetMaterial2SkyParamsDlg(CMQOMaterial* srcmat);//params設定用　OWPでは無い方
+static int SetMaterial2SkyParamsDlg();//params設定用　OWPでは無い方
+static int SetSkyParamsToSky(CShaderTypeParams srcparams);
 static int CreateFogParamsDlg();//params設定用　OWPでは無い方
 static int Set2FogParamsDlg();//params設定用　OWPでは無い方
 static void CheckFogKindParamsButton(HWND hDlgWnd, int srckind);
@@ -3657,10 +3578,19 @@ void InitApp()
 
 	InitCommonControls();
 
+	int fogindex;
+	for (fogindex = 0; fogindex < FOGSLOTNUM; fogindex++) {
+		g_fogparams[fogindex].InitParams();
+	}
+	g_fogindex = 0;
+	
+	int dofindex;
+	for (dofindex = 0; dofindex < DOFSLOTNUM; dofindex++) {
+		g_dofparams[dofindex] = ChaVector4(3000.0f, 5000.0f, 0.0f, 0.0f);
+		g_skydofflag[dofindex] = false;
+	}
+	g_dofindex = 0;
 
-	g_fogparams.InitParams();
-	g_dofparams = ChaVector4(3000.0f, 5000.0f, 0.0f, 0.0f);
-	g_skydofflag = false;
 
 	s_matWorld.SetIdentity();
 	s_matProj.SetIdentity();
@@ -4332,8 +4262,15 @@ void InitApp()
 	s_skytoonparamchange = false;
 	s_hsvtoonforall.Init();
 	s_skyhsvtoonforall.Init();
-	s_shadertypeparams.InitParams(0);
-	s_skyparams.InitParams(1);
+	s_shadertypeparams.InitParams(s_hsvtoonforall);
+	g_skyindex = 0;
+	int skyindex;
+	for (skyindex = 0; skyindex < SKYSLOTNUM; skyindex++) {
+		s_skyparams[skyindex].InitParams(s_skyhsvtoonforall);
+	}
+
+
+
 
 	s_temppath[0] = 0L;
 	::GetTempPathW(MAX_PATH, s_temppath);
@@ -14619,7 +14556,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.11\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.12\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -25840,13 +25777,18 @@ int OwnerDrawFogColorBar(HWND hDlgWnd, int fogkind, int idcolorbar)
 		_ASSERT(0);
 		return 1;
 	}
+	if ((g_fogindex < 0) || (g_fogindex >= FOGSLOTNUM)) {
+		_ASSERT(0);
+		return 1;
+	}
+
 
 	ChaVector4 fogcolor;
 	if (fogkind == 1) {
-		fogcolor = g_fogparams.GetDistColor();
+		fogcolor = g_fogparams[g_fogindex].GetDistColor();
 	}
 	else if (fogkind == 2) {
-		fogcolor = g_fogparams.GetHeightColor();
+		fogcolor = g_fogparams[g_fogindex].GetHeightColor();
 	}
 	else {
 		_ASSERT(0);
@@ -25928,13 +25870,17 @@ int ChooseFogColorBar(HWND hDlgWnd, int fogkind, int idcolorbar)
 		_ASSERT(0);
 		return 1;
 	}
+	if ((g_fogindex < 0) || (g_fogindex >= FOGSLOTNUM)) {
+		_ASSERT(0);
+		return 1;
+	}
 
 	ChaVector4 fogcolor;
 	if (fogkind == 1) {
-		fogcolor = g_fogparams.GetDistColor();
+		fogcolor = g_fogparams[g_fogindex].GetDistColor();
 	}
 	else if (fogkind == 2) {
-		fogcolor = g_fogparams.GetHeightColor();
+		fogcolor = g_fogparams[g_fogindex].GetHeightColor();
 	}
 	else {
 		_ASSERT(0);
@@ -25964,10 +25910,10 @@ int ChooseFogColorBar(HWND hDlgWnd, int fogkind, int idcolorbar)
 		fb = max(0.0f, fb);
 
 		if (fogkind == 1) {
-			g_fogparams.SetDistColor(ChaVector4(fr, fg, fb, 1.0f));
+			g_fogparams[g_fogindex].SetDistColor(ChaVector4(fr, fg, fb, 1.0f));
 		}
 		else if (fogkind == 2) {
-			g_fogparams.SetHeightColor(ChaVector4(fr, fg, fb, 1.0f));
+			g_fogparams[g_fogindex].SetHeightColor(ChaVector4(fr, fg, fb, 1.0f));
 		}
 		else {
 			_ASSERT(0);
@@ -26441,7 +26387,7 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 			break;
 
 		//##########
-		//COMBO BOX
+		//COMBOBOX
 		//##########
 		case IDC_COMBO_SLOT:
 			if (HIWORD(wp) == CBN_SELCHANGE) {
@@ -26463,7 +26409,6 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 					_ASSERT(0);
 					return false;
 				}
-
 			}
 			break;
 
@@ -28615,6 +28560,10 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	if (!s_sky) {
 		return DefWindowProc(hDlgWnd, msg, wp, lp);
 	}
+	if ((g_skyindex < 0) || (g_skyindex >= SKYSLOTNUM)) {
+		_ASSERT(0);
+		return DefWindowProc(hDlgWnd, msg, wp, lp);
+	}
 
 	int materialnum = s_sky->GetMQOMaterialSize();
 	materialnum = min(materialnum, MAXMATERIALNUM);//2024/03/03
@@ -28644,7 +28593,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	switch (msg) {
 	case WM_INITDIALOG:
 	{
-		SetMaterial2SkyParamsDlg(curmqomat);
+		SetMaterial2SkyParamsDlg();
 		return FALSE;
 	}
 	break;
@@ -28657,7 +28606,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		if (GetDlgItem(hDlgWnd, IDC_SLIDER_METALCOEF) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_METALCOEF), TBM_GETPOS, 0, 0);
 			float newmetalcoef = (float)((double)cursliderpos / 100.0);
-			s_skyparams.metalcoef = newmetalcoef;
+			s_skyparams[g_skyindex].metalcoef = newmetalcoef;
 
 			WCHAR strdlg[256] = { 0L };
 			swprintf_s(strdlg, 256, L"Metal_Add %.2f", newmetalcoef);
@@ -28682,7 +28631,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_SMOOTHCOEF) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SMOOTHCOEF), TBM_GETPOS, 0, 0);
 			float newsmoothcoef = (float)((double)cursliderpos / 100.0);
-			s_skyparams.smoothcoef = newsmoothcoef;
+			s_skyparams[g_skyindex].smoothcoef = newsmoothcoef;
 
 			WCHAR strdlg[256] = { 0L };
 			swprintf_s(strdlg, 256, L"SmoothCoef %.2f", newsmoothcoef);
@@ -28707,7 +28656,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		else if (GetDlgItem(hDlgWnd, IDC_SL_EMISCALE) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_EMISCALE), TBM_GETPOS, 0, 0);
 			float newemiscale = (float)((double)cursliderpos / 100.0);
-			s_skyparams.emissiveScale = newemiscale;
+			s_skyparams[g_skyindex].emissiveScale = newemiscale;
 
 			WCHAR strdlg[256] = { 0L };
 			swprintf_s(strdlg, 256, L"Emission:%.2f", newemiscale);
@@ -28724,7 +28673,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_SPECULARCOEF) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPECULARCOEF), TBM_GETPOS, 0, 0);
 			float newspcscale = (float)((double)cursliderpos / 200.0);
-			s_skyparams.specularcoef = newspcscale;
+			s_skyparams[g_skyindex].specularcoef = newspcscale;
 
 			WCHAR strdlg[256] = { 0L };
 			swprintf_s(strdlg, 256, L"SpecularCoef %.3f", newspcscale);
@@ -28741,7 +28690,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		else if (GetDlgItem(hDlgWnd, IDC_SL_TILINGU) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGU), TBM_GETPOS, 0, 0);
-			s_skyparams.uvscale.x = (double)cursliderpos;
+			s_skyparams[g_skyindex].uvscale.x = (double)cursliderpos;
 
 			WCHAR strdlg[256] = { 0L };
 			swprintf_s(strdlg, 256, L"Tiling U:%d", cursliderpos);
@@ -28751,13 +28700,13 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetUVScale(s_skyparams.uvscale);
+					setmqomat->SetUVScale(s_skyparams[g_skyindex].uvscale);
 				}
 			}
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SL_TILINGV) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGV), TBM_GETPOS, 0, 0);
-			s_skyparams.uvscale.y = (double)cursliderpos;
+			s_skyparams[g_skyindex].uvscale.y = (double)cursliderpos;
 
 			WCHAR strdlg[256] = { 0L };
 			swprintf_s(strdlg, 256, L"Tiling V:%d", cursliderpos);
@@ -28767,7 +28716,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetUVScale(s_skyparams.uvscale);
+					setmqomat->SetUVScale(s_skyparams[g_skyindex].uvscale);
 				}
 			}
 		}
@@ -28775,18 +28724,18 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDR) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDR), TBM_GETPOS, 0, 0);
-			s_skyparams.hsvtoon.hicolorh = (float)((double)cursliderpos / 100.0);
+			s_skyparams[g_skyindex].hsvtoon.hicolorh = (float)((double)cursliderpos / 100.0);
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"ToonHiAddr:%.2f", s_skyparams.hsvtoon.hicolorh);
+			swprintf_s(strdlg, 256, L"ToonHiAddr:%.2f", s_skyparams[g_skyindex].hsvtoon.hicolorh);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDR, strdlg);
 
 			int materialindex2;
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetToonHiAddrH(s_skyparams.hsvtoon.hicolorh);
-					s_skyhsvtoonforall.hicolorh = s_skyparams.hsvtoon.hicolorh;
+					setmqomat->SetToonHiAddrH(s_skyparams[g_skyindex].hsvtoon.hicolorh);
+					s_skyhsvtoonforall.hicolorh = s_skyparams[g_skyindex].hsvtoon.hicolorh;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28795,18 +28744,18 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDR) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDR), TBM_GETPOS, 0, 0);
-			s_skyparams.hsvtoon.lowcolorh = (float)((double)cursliderpos / 100.0);
+			s_skyparams[g_skyindex].hsvtoon.lowcolorh = (float)((double)cursliderpos / 100.0);
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"ToonLowAddr:%.2f", s_skyparams.hsvtoon.lowcolorh);
+			swprintf_s(strdlg, 256, L"ToonLowAddr:%.2f", s_skyparams[g_skyindex].hsvtoon.lowcolorh);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDR, strdlg);
 
 			int materialindex2;
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetToonLowAddrH(s_skyparams.hsvtoon.lowcolorh);
-					s_skyhsvtoonforall.lowcolorh = s_skyparams.hsvtoon.lowcolorh;
+					setmqomat->SetToonLowAddrH(s_skyparams[g_skyindex].hsvtoon.lowcolorh);
+					s_skyhsvtoonforall.lowcolorh = s_skyparams[g_skyindex].hsvtoon.lowcolorh;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28818,18 +28767,18 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONBASEH) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEH), TBM_GETPOS, 0, 0);
-			s_skyparams.hsvtoon.basehsv.x = (float)cursliderpos;
+			s_skyparams[g_skyindex].hsvtoon.basehsv.x = (float)cursliderpos;
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"ToonBase_H:%.1f", s_skyparams.hsvtoon.basehsv.x);
+			swprintf_s(strdlg, 256, L"ToonBase_H:%.1f", s_skyparams[g_skyindex].hsvtoon.basehsv.x);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONBASEH, strdlg);
 
 			int materialindex2;
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetToonBaseH(s_skyparams.hsvtoon.basehsv.x);
-					s_skyhsvtoonforall.basehsv.x = s_skyparams.hsvtoon.basehsv.x;
+					setmqomat->SetToonBaseH(s_skyparams[g_skyindex].hsvtoon.basehsv.x);
+					s_skyhsvtoonforall.basehsv.x = s_skyparams[g_skyindex].hsvtoon.basehsv.x;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28838,18 +28787,18 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONBASES) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASES), TBM_GETPOS, 0, 0);
-			s_skyparams.hsvtoon.basehsv.y = (float)cursliderpos * 0.01f;
+			s_skyparams[g_skyindex].hsvtoon.basehsv.y = (float)cursliderpos * 0.01f;
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"ToonBase_S:%.2f", s_skyparams.hsvtoon.basehsv.y);
+			swprintf_s(strdlg, 256, L"ToonBase_S:%.2f", s_skyparams[g_skyindex].hsvtoon.basehsv.y);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONBASES, strdlg);
 
 			int materialindex2;
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetToonBaseS(s_skyparams.hsvtoon.basehsv.y);
-					s_skyhsvtoonforall.basehsv.y = s_skyparams.hsvtoon.basehsv.y;
+					setmqomat->SetToonBaseS(s_skyparams[g_skyindex].hsvtoon.basehsv.y);
+					s_skyhsvtoonforall.basehsv.y = s_skyparams[g_skyindex].hsvtoon.basehsv.y;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28858,18 +28807,18 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONBASEV) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEV), TBM_GETPOS, 0, 0);
-			s_skyparams.hsvtoon.basehsv.z = (float)cursliderpos * 0.01f;
+			s_skyparams[g_skyindex].hsvtoon.basehsv.z = (float)cursliderpos * 0.01f;
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"ToonHi_V:%.2f", s_skyparams.hsvtoon.basehsv.z);
+			swprintf_s(strdlg, 256, L"ToonHi_V:%.2f", s_skyparams[g_skyindex].hsvtoon.basehsv.z);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONBASEV, strdlg);
 
 			int materialindex2;
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetToonBaseV(s_skyparams.hsvtoon.basehsv.z);
-					s_skyhsvtoonforall.basehsv.z = s_skyparams.hsvtoon.basehsv.z;
+					setmqomat->SetToonBaseV(s_skyparams[g_skyindex].hsvtoon.basehsv.z);
+					s_skyhsvtoonforall.basehsv.z = s_skyparams[g_skyindex].hsvtoon.basehsv.z;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28878,18 +28827,18 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONBASEA) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEA), TBM_GETPOS, 0, 0);
-			s_skyparams.hsvtoon.basehsv.w = (float)cursliderpos * 0.01f;
+			s_skyparams[g_skyindex].hsvtoon.basehsv.w = (float)cursliderpos * 0.01f;
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"ToonBase_A:%.2f", s_skyparams.hsvtoon.basehsv.w);
+			swprintf_s(strdlg, 256, L"ToonBase_A:%.2f", s_skyparams[g_skyindex].hsvtoon.basehsv.w);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONBASEA, strdlg);
 
 			int materialindex2;
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetToonBaseA(s_skyparams.hsvtoon.basehsv.w);
-					s_skyhsvtoonforall.basehsv.w = s_skyparams.hsvtoon.basehsv.w;
+					setmqomat->SetToonBaseA(s_skyparams[g_skyindex].hsvtoon.basehsv.w);
+					s_skyhsvtoonforall.basehsv.w = s_skyparams[g_skyindex].hsvtoon.basehsv.w;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28902,18 +28851,18 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDH) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDH), TBM_GETPOS, 0, 0);
-			s_skyparams.hsvtoon.hiaddhsv.x = (float)((double)cursliderpos - 360.0);
+			s_skyparams[g_skyindex].hsvtoon.hiaddhsv.x = (float)((double)cursliderpos - 360.0);
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"ToonHi_H:%.1f", s_skyparams.hsvtoon.hiaddhsv.x);
+			swprintf_s(strdlg, 256, L"ToonHi_H:%.1f", s_skyparams[g_skyindex].hsvtoon.hiaddhsv.x);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDH, strdlg);
 
 			int materialindex2;
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetToonHiAddH(s_skyparams.hsvtoon.hiaddhsv.x);
-					s_skyhsvtoonforall.hiaddhsv.x = s_skyparams.hsvtoon.hiaddhsv.x;
+					setmqomat->SetToonHiAddH(s_skyparams[g_skyindex].hsvtoon.hiaddhsv.x);
+					s_skyhsvtoonforall.hiaddhsv.x = s_skyparams[g_skyindex].hsvtoon.hiaddhsv.x;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28922,18 +28871,18 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDH) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDH), TBM_GETPOS, 0, 0);
-			s_skyparams.hsvtoon.lowaddhsv.x = (float)((double)cursliderpos - 360.0);
+			s_skyparams[g_skyindex].hsvtoon.lowaddhsv.x = (float)((double)cursliderpos - 360.0);
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"ToonLow_H:%.1f", s_skyparams.hsvtoon.lowaddhsv.x);
+			swprintf_s(strdlg, 256, L"ToonLow_H:%.1f", s_skyparams[g_skyindex].hsvtoon.lowaddhsv.x);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDH, strdlg);
 
 			int materialindex2;
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetToonLowAddH(s_skyparams.hsvtoon.lowaddhsv.x);
-					s_skyhsvtoonforall.lowaddhsv.x = s_skyparams.hsvtoon.lowaddhsv.x;
+					setmqomat->SetToonLowAddH(s_skyparams[g_skyindex].hsvtoon.lowaddhsv.x);
+					s_skyhsvtoonforall.lowaddhsv.x = s_skyparams[g_skyindex].hsvtoon.lowaddhsv.x;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28942,18 +28891,18 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDS) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDS), TBM_GETPOS, 0, 0);
-			s_skyparams.hsvtoon.hiaddhsv.y = (float)((double)cursliderpos - 100.0) * 0.01f;
+			s_skyparams[g_skyindex].hsvtoon.hiaddhsv.y = (float)((double)cursliderpos - 100.0) * 0.01f;
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"ToonHi_S:%.2f", s_skyparams.hsvtoon.hiaddhsv.y);
+			swprintf_s(strdlg, 256, L"ToonHi_S:%.2f", s_skyparams[g_skyindex].hsvtoon.hiaddhsv.y);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDS, strdlg);
 
 			int materialindex2;
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetToonHiAddS(s_skyparams.hsvtoon.hiaddhsv.y);
-					s_skyhsvtoonforall.hiaddhsv.y = s_skyparams.hsvtoon.hiaddhsv.y;
+					setmqomat->SetToonHiAddS(s_skyparams[g_skyindex].hsvtoon.hiaddhsv.y);
+					s_skyhsvtoonforall.hiaddhsv.y = s_skyparams[g_skyindex].hsvtoon.hiaddhsv.y;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28962,18 +28911,18 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDS) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDS), TBM_GETPOS, 0, 0);
-			s_skyparams.hsvtoon.lowaddhsv.y = (float)((double)cursliderpos - 100.0) * 0.01f;
+			s_skyparams[g_skyindex].hsvtoon.lowaddhsv.y = (float)((double)cursliderpos - 100.0) * 0.01f;
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"ToonLow_S:%.2f", s_skyparams.hsvtoon.lowaddhsv.y);
+			swprintf_s(strdlg, 256, L"ToonLow_S:%.2f", s_skyparams[g_skyindex].hsvtoon.lowaddhsv.y);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDS, strdlg);
 
 			int materialindex2;
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetToonLowAddS(s_skyparams.hsvtoon.lowaddhsv.y);
-					s_skyhsvtoonforall.lowaddhsv.y = s_skyparams.hsvtoon.lowaddhsv.y;
+					setmqomat->SetToonLowAddS(s_skyparams[g_skyindex].hsvtoon.lowaddhsv.y);
+					s_skyhsvtoonforall.lowaddhsv.y = s_skyparams[g_skyindex].hsvtoon.lowaddhsv.y;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -28982,18 +28931,18 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDV) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDV), TBM_GETPOS, 0, 0);
-			s_skyparams.hsvtoon.hiaddhsv.z = (float)((double)cursliderpos - 100.0) * 0.01f;
+			s_skyparams[g_skyindex].hsvtoon.hiaddhsv.z = (float)((double)cursliderpos - 100.0) * 0.01f;
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"ToonHi_V:%.2f", s_skyparams.hsvtoon.hiaddhsv.z);
+			swprintf_s(strdlg, 256, L"ToonHi_V:%.2f", s_skyparams[g_skyindex].hsvtoon.hiaddhsv.z);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDV, strdlg);
 
 			int materialindex2;
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetToonHiAddV(s_skyparams.hsvtoon.hiaddhsv.z);
-					s_skyhsvtoonforall.hiaddhsv.z = s_skyparams.hsvtoon.hiaddhsv.z;
+					setmqomat->SetToonHiAddV(s_skyparams[g_skyindex].hsvtoon.hiaddhsv.z);
+					s_skyhsvtoonforall.hiaddhsv.z = s_skyparams[g_skyindex].hsvtoon.hiaddhsv.z;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -29002,18 +28951,18 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDV) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDV), TBM_GETPOS, 0, 0);
-			s_skyparams.hsvtoon.lowaddhsv.z = (float)((double)cursliderpos - 100.0) * 0.01f;
+			s_skyparams[g_skyindex].hsvtoon.lowaddhsv.z = (float)((double)cursliderpos - 100.0) * 0.01f;
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"ToonLow_V:%.2f", s_skyparams.hsvtoon.lowaddhsv.z);
+			swprintf_s(strdlg, 256, L"ToonLow_V:%.2f", s_skyparams[g_skyindex].hsvtoon.lowaddhsv.z);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDV, strdlg);
 
 			int materialindex2;
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetToonLowAddV(s_skyparams.hsvtoon.lowaddhsv.z);
-					s_skyhsvtoonforall.lowaddhsv.z = s_skyparams.hsvtoon.lowaddhsv.z;
+					setmqomat->SetToonLowAddV(s_skyparams[g_skyindex].hsvtoon.lowaddhsv.z);
+					s_skyhsvtoonforall.lowaddhsv.z = s_skyparams[g_skyindex].hsvtoon.lowaddhsv.z;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -29022,18 +28971,18 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDA) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDA), TBM_GETPOS, 0, 0);
-			s_skyparams.hsvtoon.hiaddhsv.w = (float)((double)cursliderpos - 100.0) * 0.01f;
+			s_skyparams[g_skyindex].hsvtoon.hiaddhsv.w = (float)((double)cursliderpos - 100.0) * 0.01f;
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"ToonHi_A:%.2f", s_skyparams.hsvtoon.hiaddhsv.w);
+			swprintf_s(strdlg, 256, L"ToonHi_A:%.2f", s_skyparams[g_skyindex].hsvtoon.hiaddhsv.w);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDA, strdlg);
 
 			int materialindex2;
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetToonHiAddA(s_skyparams.hsvtoon.hiaddhsv.w);
-					s_skyhsvtoonforall.hiaddhsv.w = s_skyparams.hsvtoon.hiaddhsv.w;
+					setmqomat->SetToonHiAddA(s_skyparams[g_skyindex].hsvtoon.hiaddhsv.w);
+					s_skyhsvtoonforall.hiaddhsv.w = s_skyparams[g_skyindex].hsvtoon.hiaddhsv.w;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -29042,18 +28991,18 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDA) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDA), TBM_GETPOS, 0, 0);
-			s_skyparams.hsvtoon.lowaddhsv.w = (float)((double)cursliderpos - 100.0) * 0.01f;
+			s_skyparams[g_skyindex].hsvtoon.lowaddhsv.w = (float)((double)cursliderpos - 100.0) * 0.01f;
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"ToonLOW_A:%.2f", s_skyparams.hsvtoon.lowaddhsv.w);
+			swprintf_s(strdlg, 256, L"ToonLOW_A:%.2f", s_skyparams[g_skyindex].hsvtoon.lowaddhsv.w);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDA, strdlg);
 
 			int materialindex2;
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetToonLowAddA(s_skyparams.hsvtoon.lowaddhsv.w);
-					s_skyhsvtoonforall.lowaddhsv.w = s_skyparams.hsvtoon.lowaddhsv.w;
+					setmqomat->SetToonLowAddA(s_skyparams[g_skyindex].hsvtoon.lowaddhsv.w);
+					s_skyhsvtoonforall.lowaddhsv.w = s_skyparams[g_skyindex].hsvtoon.lowaddhsv.w;
 				}
 			}
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -29073,7 +29022,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				if ((litwnd != NULL) && (litwnd == (HWND)lp)) {
 					int cursliderpos = (int)SendMessage(litwnd, TBM_GETPOS, 0, 0);
 					float newlitscale = (float)((double)cursliderpos / 100.0);
-					s_skyparams.lightscale[litno4] = newlitscale;
+					s_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
 
 					WCHAR strdlg[256] = { 0L };
 					swprintf_s(strdlg, 256, L"LightScale%d %.2f", (litno4 + 1), newlitscale);
@@ -29095,10 +29044,40 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		switch (LOWORD(wp)) {
 
+		//#########
+		//ComboBox
+		//#########
+		case IDC_COMBO_SLOTS:
+			if (HIWORD(wp) == CBN_SELCHANGE) {
+				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_SLOTS);
+				if (combownd != NULL) {
+					int combono;
+					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
+					if ((combono >= 0) && (combono < SKYSLOTNUM)) {
+						g_skyindex = combono;
+						SetMaterial2SkyParamsDlg();
+						SetSkyParamsToSky(s_skyparams[g_skyindex]);
+					}
+					else {
+						_ASSERT(0);
+						return false;
+					}
+				}
+				else {
+					_ASSERT(0);
+					return false;
+				}
 
+			}
+			break;
+
+		//#######
+		//Button
+		//#######
 		case IDC_SHADER_AUTO2:
 		{
 			CheckShaderTypeParamsButton(hDlgWnd, -1);
+			s_skyparams[g_skyindex].shadertype = -1;
 			int materialindex5;
 			for (materialindex5 = 0; materialindex5 < materialnum; materialindex5++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex5);
@@ -29111,7 +29090,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		case IDC_SHADER_PBR2:
 		{
 			CheckShaderTypeParamsButton(hDlgWnd, MQOSHADER_PBR);
-			s_skyparams.shadertype = MQOSHADER_PBR;
+			s_skyparams[g_skyindex].shadertype = MQOSHADER_PBR;
 
 			int materialindex6;
 			for (materialindex6 = 0; materialindex6 < materialnum; materialindex6++) {
@@ -29125,7 +29104,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		case IDC_SHADER_STD2:
 		{
 			CheckShaderTypeParamsButton(hDlgWnd, MQOSHADER_STD);
-			s_skyparams.shadertype = MQOSHADER_STD;
+			s_skyparams[g_skyindex].shadertype = MQOSHADER_STD;
 
 			int materialindex7;
 			for (materialindex7 = 0; materialindex7 < materialnum; materialindex7++) {
@@ -29139,7 +29118,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		case IDC_SHADER_NOLIGHT2:
 		{
 			CheckShaderTypeParamsButton(hDlgWnd, MQOSHADER_TOON);
-			s_skyparams.shadertype = MQOSHADER_TOON;
+			s_skyparams[g_skyindex].shadertype = MQOSHADER_TOON;
 
 			int materialindex8;
 			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
@@ -29156,7 +29135,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		case IDC_TOONLIGHT1:
 		{
 			CheckToonLightButton(hDlgWnd, 0);
-			s_skyparams.hsvtoon.lightindex = 0;
+			s_skyparams[g_skyindex].hsvtoon.lightindex = 0;
 
 			int materialindex8;
 			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
@@ -29170,7 +29149,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		case IDC_TOONLIGHT2:
 		{
 			CheckToonLightButton(hDlgWnd, 1);
-			s_skyparams.hsvtoon.lightindex = 1;
+			s_skyparams[g_skyindex].hsvtoon.lightindex = 1;
 
 			int materialindex8;
 			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
@@ -29184,7 +29163,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		case IDC_TOONLIGHT3:
 		{
 			CheckToonLightButton(hDlgWnd, 2);
-			s_skyparams.hsvtoon.lightindex = 2;
+			s_skyparams[g_skyindex].hsvtoon.lightindex = 2;
 
 			int materialindex8;
 			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
@@ -29198,7 +29177,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		case IDC_TOONLIGHT4:
 		{
 			CheckToonLightButton(hDlgWnd, 3);
-			s_skyparams.hsvtoon.lightindex = 3;
+			s_skyparams[g_skyindex].hsvtoon.lightindex = 3;
 
 			int materialindex8;
 			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
@@ -29212,7 +29191,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		case IDC_TOONLIGHT5:
 		{
 			CheckToonLightButton(hDlgWnd, 4);
-			s_skyparams.hsvtoon.lightindex = 4;
+			s_skyparams[g_skyindex].hsvtoon.lightindex = 4;
 
 			int materialindex8;
 			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
@@ -29226,7 +29205,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		case IDC_TOONLIGHT6:
 		{
 			CheckToonLightButton(hDlgWnd, 5);
-			s_skyparams.hsvtoon.lightindex = 5;
+			s_skyparams[g_skyindex].hsvtoon.lightindex = 5;
 
 			int materialindex8;
 			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
@@ -29240,7 +29219,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		case IDC_TOONLIGHT7:
 		{
 			CheckToonLightButton(hDlgWnd, 6);
-			s_skyparams.hsvtoon.lightindex = 6;
+			s_skyparams[g_skyindex].hsvtoon.lightindex = 6;
 
 			int materialindex8;
 			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
@@ -29254,7 +29233,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		case IDC_TOONLIGHT8:
 		{
 			CheckToonLightButton(hDlgWnd, 7);
-			s_skyparams.hsvtoon.lightindex = 7;
+			s_skyparams[g_skyindex].hsvtoon.lightindex = 7;
 
 			int materialindex8;
 			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
@@ -29273,17 +29252,17 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			UINT ischecked = 0;
 			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_LIGHTINGMAT);
 			if (ischecked == BST_CHECKED) {
-				s_skyparams.lightingmat = true;
+				s_skyparams[g_skyindex].lightingmat = true;
 			}
 			else {
-				s_skyparams.lightingmat = false;
+				s_skyparams[g_skyindex].lightingmat = false;
 			}
 
 			int materialindex9;
 			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex9);
 				if (setmqomat) {
-					setmqomat->SetLightingFlag(s_skyparams.lightingmat);
+					setmqomat->SetLightingFlag(s_skyparams[g_skyindex].lightingmat);
 				}
 			}
 		}
@@ -29293,17 +29272,17 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			UINT ischecked = 0;
 			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_SHADOWCASTER);
 			if (ischecked == BST_CHECKED) {
-				s_skyparams.shadowcasterflag = true;
+				s_skyparams[g_skyindex].shadowcasterflag = true;
 			}
 			else {
-				s_skyparams.shadowcasterflag = false;
+				s_skyparams[g_skyindex].shadowcasterflag = false;
 			}
 
 			int materialindex9;
 			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex9);
 				if (setmqomat) {
-					setmqomat->SetShadowCasterFlag(s_skyparams.shadowcasterflag);
+					setmqomat->SetShadowCasterFlag(s_skyparams[g_skyindex].shadowcasterflag);
 				}
 			}
 		}
@@ -29313,17 +29292,17 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			UINT ischecked = 0;
 			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_EMISSION);
 			if (ischecked == BST_CHECKED) {
-				s_skyparams.enableEmission = true;
+				s_skyparams[g_skyindex].enableEmission = true;
 			}
 			else {
-				s_skyparams.enableEmission = false;
+				s_skyparams[g_skyindex].enableEmission = false;
 			}
 
 			int materialindex9;
 			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex9);
 				if (setmqomat) {
-					setmqomat->SetEnableEmission(s_skyparams.enableEmission);
+					setmqomat->SetEnableEmission(s_skyparams[g_skyindex].enableEmission);
 				}
 			}
 		}
@@ -29333,17 +29312,17 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			UINT ischecked = 0;
 			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_NORMALY0);
 			if (ischecked == BST_CHECKED) {
-				s_skyparams.normaly0flag = true;
+				s_skyparams[g_skyindex].normaly0flag = true;
 			}
 			else {
-				s_skyparams.normaly0flag = false;
+				s_skyparams[g_skyindex].normaly0flag = false;
 			}
 
 			int materialindex9;
 			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex9);
 				if (setmqomat) {
-					setmqomat->SetNormalY0Flag(s_skyparams.normaly0flag);
+					setmqomat->SetNormalY0Flag(s_skyparams[g_skyindex].normaly0flag);
 				}
 			}
 		}
@@ -29353,7 +29332,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			UINT ischecked = 0;
 			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_GRADATION);
 			if (ischecked == BST_CHECKED) {
-				s_skyparams.hsvtoon.gradationflag = true;
+				s_skyparams[g_skyindex].hsvtoon.gradationflag = true;
 
 				HWND powertoonwnd = GetDlgItem(hDlgWnd, IDC_CHECK_POWERTOON);
 				if (powertoonwnd) {
@@ -29361,7 +29340,7 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				}
 			}
 			else {
-				s_skyparams.hsvtoon.gradationflag = false;
+				s_skyparams[g_skyindex].hsvtoon.gradationflag = false;
 
 				HWND powertoonwnd = GetDlgItem(hDlgWnd, IDC_CHECK_POWERTOON);
 				if (powertoonwnd) {
@@ -29373,8 +29352,8 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetToonGradationFlag(s_skyparams.hsvtoon.gradationflag);
-					s_skyhsvtoonforall.gradationflag = s_skyparams.hsvtoon.gradationflag;
+					setmqomat->SetToonGradationFlag(s_skyparams[g_skyindex].hsvtoon.gradationflag);
+					s_skyhsvtoonforall.gradationflag = s_skyparams[g_skyindex].hsvtoon.gradationflag;
 				}
 			}
 			s_skytoonparamchange = true;
@@ -29385,18 +29364,18 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			UINT ischecked = 0;
 			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_POWERTOON);
 			if (ischecked == BST_CHECKED) {
-				s_skyparams.hsvtoon.powertoon = true;
+				s_skyparams[g_skyindex].hsvtoon.powertoon = true;
 			}
 			else {
-				s_skyparams.hsvtoon.powertoon = false;
+				s_skyparams[g_skyindex].hsvtoon.powertoon = false;
 			}
 
 			int materialindex2;
 			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
 				if (setmqomat) {
-					setmqomat->SetToonPowerToon(s_skyparams.hsvtoon.powertoon);
-					s_skyhsvtoonforall.powertoon = s_skyparams.hsvtoon.powertoon;
+					setmqomat->SetToonPowerToon(s_skyparams[g_skyindex].hsvtoon.powertoon);
+					s_skyhsvtoonforall.powertoon = s_skyparams[g_skyindex].hsvtoon.powertoon;
 				}
 			}
 			s_skytoonparamchange = true;
@@ -29446,6 +29425,12 @@ LRESULT CALLBACK FogParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		s_fogparamsdlgwnd = hDlgWnd;//条件リターンより前でセット
 	}
 
+	if ((g_fogindex < 0) || (g_fogindex >= FOGSLOTNUM)) {
+		_ASSERT(0);
+		return DefWindowProc(hDlgWnd, msg, wp, lp);
+	}
+
+
 	switch (msg) {
 	case WM_INITDIALOG:
 	{
@@ -29472,19 +29457,19 @@ LRESULT CALLBACK FogParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		if (GetDlgItem(hDlgWnd, IDC_SLIDER_DISTFOGRATE) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_DISTFOGRATE), TBM_GETPOS, 0, 0);
 			float newrate = (float)((double)cursliderpos / 100.0);
-			g_fogparams.SetDistRate(newrate);
+			g_fogparams[g_fogindex].SetDistRate(newrate);
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"%.2f", g_fogparams.GetDistRate());
+			swprintf_s(strdlg, 256, L"%.2f", g_fogparams[g_fogindex].GetDistRate());
 			SetDlgItemText(hDlgWnd, IDC_TEXT_DISTFOGRATE, strdlg);
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_HEIGHTFOG_RATE) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_HEIGHTFOG_RATE), TBM_GETPOS, 0, 0);
 			float newrate = (float)((double)cursliderpos / 100.0);
-			g_fogparams.SetHeightRate(newrate);
+			g_fogparams[g_fogindex].SetHeightRate(newrate);
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"%.2f", g_fogparams.GetHeightRate());
+			swprintf_s(strdlg, 256, L"%.2f", g_fogparams[g_fogindex].GetHeightRate());
 			SetDlgItemText(hDlgWnd, IDC_TEXT_HEIGHTFOGRATE, strdlg);
 		}
 		break;
@@ -29492,6 +29477,31 @@ LRESULT CALLBACK FogParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	case WM_COMMAND:
 
 		switch (LOWORD(wp)) {
+
+		//##########
+		//COMBOBOX
+		//##########
+		case IDC_COMBO_SLOTS:
+			if (HIWORD(wp) == CBN_SELCHANGE) {
+				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_SLOTS);
+				if (combownd != NULL) {
+					int combono;
+					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
+					if ((combono >= 0) && (combono < FOGSLOTNUM)) {
+						g_fogindex = combono;
+						Set2FogParamsDlg();
+					}
+					else {
+						_ASSERT(0);
+						return false;
+					}
+				}
+				else {
+					_ASSERT(0);
+					return false;
+				}
+			}
+		break;
 
 		case IDC_DISTFOG_COLOR:
 		{
@@ -29514,19 +29524,19 @@ LRESULT CALLBACK FogParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		case IDC_NO_FOG:
 		{
 			CheckFogKindParamsButton(hDlgWnd, 0);
-			g_fogparams.SetFogKind(0);
+			g_fogparams[g_fogindex].SetFogKind(0);
 		}
 		break;
 		case IDC_DIST_FOG:
 		{
 			CheckFogKindParamsButton(hDlgWnd, 1);
-			g_fogparams.SetFogKind(1);
+			g_fogparams[g_fogindex].SetFogKind(1);
 		}
 		break;
 		case IDC_HEIGHT_FOG:
 		{
 			CheckFogKindParamsButton(hDlgWnd, 2);
-			g_fogparams.SetFogKind(2);
+			g_fogparams[g_fogindex].SetFogKind(2);
 		}
 		break;
 
@@ -29540,7 +29550,7 @@ LRESULT CALLBACK FogParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			GetDlgItemText(hDlgWnd, IDC_DISTFOG_NEAR, streditbox, 256);
 			tempeditvalue = (float)_wtof(streditbox);
 			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-				g_fogparams.SetDistNear(tempeditvalue);
+				g_fogparams[g_fogindex].SetDistNear(tempeditvalue);
 			}
 			else {
 				::MessageBox(hDlgWnd, L"invalid editbox value : Near", L"Invalid Value", MB_OK);
@@ -29548,7 +29558,7 @@ LRESULT CALLBACK FogParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			GetDlgItemText(hDlgWnd, IDC_DISTFOG_FAR, streditbox, 256);
 			tempeditvalue = (float)_wtof(streditbox);
 			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-				g_fogparams.SetDistFar(tempeditvalue);
+				g_fogparams[g_fogindex].SetDistFar(tempeditvalue);
 			}
 			else {
 				::MessageBox(hDlgWnd, L"invalid editbox value : Far", L"Invalid Value", MB_OK);
@@ -29558,7 +29568,7 @@ LRESULT CALLBACK FogParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			GetDlgItemText(hDlgWnd, IDC_HEIGHTFOG_MAXH, streditbox, 256);
 			tempeditvalue = (float)_wtof(streditbox);
 			if ((tempeditvalue >= -500000.0f) && (tempeditvalue <= 500000.0f)) {
-				g_fogparams.SetHeightHigh(tempeditvalue);
+				g_fogparams[g_fogindex].SetHeightHigh(tempeditvalue);
 			}
 			else {
 				::MessageBox(hDlgWnd, L"invalid editbox value : Max Height", L"Invalid Value", MB_OK);
@@ -29607,6 +29617,12 @@ LRESULT CALLBACK DofParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		s_dofparamsdlgwnd = hDlgWnd;//条件リターンより前でセット
 	}
 
+	if ((g_dofindex < 0) || (g_dofindex >= DOFSLOTNUM)) {
+		_ASSERT(0);
+		return DefWindowProc(hDlgWnd, msg, wp, lp);
+	}
+
+
 	switch (msg) {
 	case WM_INITDIALOG:
 	{
@@ -29623,15 +29639,42 @@ LRESULT CALLBACK DofParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		switch (LOWORD(wp)) {
 
+		//##########
+		//COMBOBOX
+		//##########
+		case IDC_COMBO_SLOTS:
+			if (HIWORD(wp) == CBN_SELCHANGE) {
+				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_SLOTS);
+				if (combownd != NULL) {
+					int combono;
+					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
+					if ((combono >= 0) && (combono < DOFSLOTNUM)) {
+						g_dofindex = combono;
+						Set2DofParamsDlg();
+					}
+					else {
+						_ASSERT(0);
+						return false;
+					}
+				}
+				else {
+					_ASSERT(0);
+					return false;
+				}
+			}
+		break;
+
+
+
 		case IDC_CHECK_SKYDOF:
 		{
 			UINT ischecked = 0;
 			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_SKYDOF);
 			if (ischecked == BST_CHECKED) {
-				g_skydofflag = true;
+				g_skydofflag[g_dofindex] = true;
 			}
 			else {
-				g_skydofflag = false;
+				g_skydofflag[g_dofindex] = false;
 			}
 		}
 		break;
@@ -29646,7 +29689,7 @@ LRESULT CALLBACK DofParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			GetDlgItemText(hDlgWnd, IDC_DOF_NEAR, streditbox, 256);
 			tempeditvalue = (float)_wtof(streditbox);
 			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-				g_dofparams.x = tempeditvalue;
+				g_dofparams[g_dofindex].x = tempeditvalue;
 			}
 			else {
 				::MessageBox(hDlgWnd, L"invalid editbox value : Near", L"Invalid Value", MB_OK);
@@ -29654,7 +29697,7 @@ LRESULT CALLBACK DofParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			GetDlgItemText(hDlgWnd, IDC_DOF_FAR, streditbox, 256);
 			tempeditvalue = (float)_wtof(streditbox);
 			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-				g_dofparams.y = tempeditvalue;
+				g_dofparams[g_dofindex].y = tempeditvalue;
 			}
 			else {
 				::MessageBox(hDlgWnd, L"invalid editbox value : Far", L"Invalid Value", MB_OK);
@@ -41512,13 +41555,13 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 	}
 
 
-	//{
-	//	//2024/03/04
-	//	myRenderer::RENDERSPRITE rendersprite;
-	//	rendersprite.Init();
-	//	rendersprite.psprite = &(s_spupperbar.sprite);
-	//	re->AddSpriteToForwardRenderPass(rendersprite);
-	//}
+	{
+		//2024/03/04
+		myRenderer::RENDERSPRITE rendersprite;
+		rendersprite.Init();
+		rendersprite.psprite = &(s_spupperbar.sprite);
+		re->AddSpriteToForwardRenderPass(rendersprite);
+	}
 
 
 	if (!s_model) {
@@ -55354,13 +55397,22 @@ int LoadSkyParamsFile()
 	int result = 0;
 
 	if (s_sky) {
-		WCHAR filepath[MAX_PATH] = { 0L };
-		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjSkyParams_0.txt", s_temppath);
+		int slotindex;
+		for (slotindex = 0; slotindex < SKYSLOTNUM; slotindex++) {
+			WCHAR filepath[MAX_PATH] = { 0L };
+			swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjSkyParams_%d.txt", s_temppath, slotindex);
 
-		CSkyParamsFile skyparamsfile;
-		result = skyparamsfile.LoadSkyParamsFile(filepath, s_sky);
-
-		s_skytoonparamchange = true;//to remake toon texture
+			CSkyParamsFile skyparamsfile;
+			result += skyparamsfile.LoadSkyParamsFile(filepath, &(s_skyparams[slotindex]));
+			_ASSERT(result == 0);
+		}
+		if ((g_skyindex >= 0) && (g_skyindex < SKYSLOTNUM)) {
+			SetSkyParamsToSky(s_skyparams[g_skyindex]);
+		}
+		else {
+			g_skyindex = 0;
+			SetSkyParamsToSky(s_skyparams[0]);
+		}
 
 		return result;
 	}
@@ -55373,11 +55425,18 @@ int LoadFogParamsFile()
 {
 	int result = 0;
 
-	WCHAR filepath[MAX_PATH] = { 0L };
-	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjFogParams_0.txt", s_temppath);
+	int slotindex;
+	for (slotindex = 0; slotindex < FOGSLOTNUM; slotindex++) {
+		WCHAR filepath[MAX_PATH] = { 0L };
+		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjFogParams_%d.txt", s_temppath, slotindex);
 
-	CFogParamsFile fogparamsfile;
-	result = fogparamsfile.LoadFogParamsFile(filepath);
+		CFogParamsFile fogparamsfile;
+		result += fogparamsfile.LoadFogParamsFile(filepath, slotindex);
+	}
+	if ((g_fogindex < 0) || (g_fogindex >= FOGSLOTNUM)) {
+		g_fogindex = 0;
+	}
+
 
 	return result;
 }
@@ -55385,11 +55444,17 @@ int LoadDofParamsFile()
 {
 	int result = 0;
 
-	WCHAR filepath[MAX_PATH] = { 0L };
-	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjDofParams_0.txt", s_temppath);
+	int slotindex;
+	for (slotindex = 0; slotindex < DOFSLOTNUM; slotindex++) {
+		WCHAR filepath[MAX_PATH] = { 0L };
+		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjDofParams_%d.txt", s_temppath, slotindex);
 
-	CDofParamsFile fogparamsfile;
-	result = fogparamsfile.LoadDofParamsFile(filepath);
+		CDofParamsFile fogparamsfile;
+		result += fogparamsfile.LoadDofParamsFile(filepath, slotindex);
+	}
+	if ((g_dofindex < 0) || (g_dofindex >= DOFSLOTNUM)) {
+		g_dofindex = 0;
+	}
 
 	return result;
 }
@@ -55555,12 +55620,15 @@ int SaveSkyParamsFile()
 	int result = 0;
 
 	if (s_sky) {
-		WCHAR filepath[MAX_PATH] = { 0L };
-		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjSkyParams_0.txt", s_temppath);
+		int slotindex;
+		for (slotindex = 0; slotindex < SKYSLOTNUM; slotindex++) {
+			WCHAR filepath[MAX_PATH] = { 0L };
+			swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjSkyParams_%d.txt", s_temppath, slotindex);
 
-		CSkyParamsFile skyparamsfile;
-		result = skyparamsfile.WriteSkyParamsFile(filepath, s_sky);
-		_ASSERT(result == 0);
+			CSkyParamsFile skyparamsfile;
+			result += skyparamsfile.WriteSkyParamsFile(filepath, s_skyparams[slotindex], slotindex);
+			_ASSERT(result == 0);
+		}
 
 		return result;
 	}
@@ -55573,25 +55641,30 @@ int SaveFogParamsFile()
 {
 	int result = 0;
 
-	WCHAR filepath[MAX_PATH] = { 0L };
-	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjFogParams_0.txt", s_temppath);
+	int slotindex;
+	for (slotindex = 0; slotindex < FOGSLOTNUM; slotindex++) {
+		WCHAR filepath[MAX_PATH] = { 0L };
+		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjFogParams_%d.txt", s_temppath, slotindex);
 
-	CFogParamsFile fogparamsfile;
-	result = fogparamsfile.WriteFogParamsFile(filepath);
-	_ASSERT(result == 0);
-
+		CFogParamsFile fogparamsfile;
+		result += fogparamsfile.WriteFogParamsFile(filepath, slotindex);
+		_ASSERT(result == 0);
+	}
 	return result;
 }
 int SaveDofParamsFile()
 {
 	int result = 0;
 
-	WCHAR filepath[MAX_PATH] = { 0L };
-	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjDofParams_0.txt", s_temppath);
+	int slotindex;
+	for (slotindex = 0; slotindex < DOFSLOTNUM; slotindex++) {
+		WCHAR filepath[MAX_PATH] = { 0L };
+		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjDofParams_%d.txt", s_temppath, slotindex);
 
-	CDofParamsFile fogparamsfile;
-	result = fogparamsfile.WriteDofParamsFile(filepath);
-	_ASSERT(result == 0);
+		CDofParamsFile fogparamsfile;
+		result = fogparamsfile.WriteDofParamsFile(filepath, slotindex);
+		_ASSERT(result == 0);
+	}
 
 	return result;
 }
@@ -57126,6 +57199,29 @@ int CreateSkyParamsDlg()
 		MAKEINTRESOURCE(IDD_SKYPARAMS), s_3dwnd, (DLGPROC)SkyParamsDlgProc);
 	if (hDlgWnd != NULL) {
 		s_skyparamsdlgwnd = hDlgWnd;
+
+		RECT dlgrect;
+		GetWindowRect(g_mainhwnd, &dlgrect);
+		int windowposx;
+		if (g_4kresolution) {
+			windowposx = dlgrect.left + s_totalwndwidth * 3 / 4;
+		}
+		else {
+			windowposx = dlgrect.left + s_totalwndwidth / 2 + 50;
+		}
+
+		//SetParent(s_skyparamsdlgwnd, g_mainhwnd);
+		SetWindowPos(
+			s_skyparamsdlgwnd,
+			HWND_TOP,
+			windowposx,
+			dlgrect.top,
+			0,
+			0,
+			SWP_NOSIZE
+		);
+
+		//SetParent(s_skyparamsdlgwnd, g_mainhwnd);
 		ShowWindow(s_skyparamsdlgwnd, SW_HIDE);
 		s_skyparamsFlag = false;
 		return 0;
@@ -57533,7 +57629,62 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	return 0;
 }
 
-int SetMaterial2SkyParamsDlg(CMQOMaterial* mqomat)
+int SetSkyParamsToSky(CShaderTypeParams srcparams)
+{
+	if (!s_sky) {
+		_ASSERT(0);
+		return 1;
+	}
+	int materialnum = s_sky->GetMQOMaterialSize();
+	if (materialnum == 0) {
+		return 0;
+	}
+
+	int materialindex2;
+	for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+		CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
+		if (setmqomat) {
+			setmqomat->SetMetalAdd(srcparams.metalcoef);
+			setmqomat->SetSmoothCoef(srcparams.smoothcoef);
+			setmqomat->SetEmissiveScale(srcparams.emissiveScale);
+			setmqomat->SetSpecularCoef(srcparams.specularcoef);
+			setmqomat->SetUVScale(srcparams.uvscale);
+			setmqomat->SetHSVToon(srcparams.hsvtoon);
+			//setmqomat->SetToonHiAddrH(srcparams.hsvtoon.hicolorh);
+			//setmqomat->SetToonLowAddrH(srcparams.hsvtoon.lowcolorh);
+			//setmqomat->SetToonBaseH(srcparams.hsvtoon.basehsv.x);
+			//setmqomat->SetToonBaseS(srcparams.hsvtoon.basehsv.y);
+			//setmqomat->SetToonBaseV(srcparams.hsvtoon.basehsv.z);
+			//setmqomat->SetToonBaseA(srcparams.hsvtoon.basehsv.w);
+			//setmqomat->SetToonHiAddH(srcparams.hsvtoon.hiaddhsv.x);
+			//setmqomat->SetToonLowAddH(srcparams.hsvtoon.lowaddhsv.x);
+			//setmqomat->SetToonHiAddS(srcparams.hsvtoon.hiaddhsv.y);
+			//setmqomat->SetToonLowAddS(srcparams.hsvtoon.lowaddhsv.y);
+			//setmqomat->SetToonHiAddV(srcparams.hsvtoon.hiaddhsv.z);
+			//setmqomat->SetToonLowAddV(srcparams.hsvtoon.lowaddhsv.z);
+			//setmqomat->SetToonHiAddA(srcparams.hsvtoon.hiaddhsv.w);
+			//setmqomat->SetToonLowAddA(srcparams.hsvtoon.lowaddhsv.w);
+			//setmqomat->SetToonLightIndex(srcparams.hsvtoon.lightindex);
+			int litno4;
+			for (litno4 = 0; litno4 < LIGHTNUMMAX; litno4++) {
+				setmqomat->SetLightScale(litno4, srcparams.lightscale[litno4]);
+			}
+			setmqomat->SetShaderType(srcparams.shadertype);
+			setmqomat->SetLightingFlag(srcparams.lightingmat);
+			setmqomat->SetShadowCasterFlag(srcparams.shadowcasterflag);
+			setmqomat->SetEnableEmission(srcparams.enableEmission);
+			setmqomat->SetNormalY0Flag(srcparams.normaly0flag);
+			setmqomat->SetToonGradationFlag(srcparams.hsvtoon.gradationflag);
+			setmqomat->SetToonPowerToon(srcparams.hsvtoon.powertoon);
+		}
+	}
+
+	s_skytoonparamchange = true;//to remake toon texture
+
+	return 0;
+}
+
+int SetMaterial2SkyParamsDlg()
 {
 	if (!s_sky) {
 		_ASSERT(0);
@@ -57552,8 +57703,14 @@ int SetMaterial2SkyParamsDlg(CMQOMaterial* mqomat)
 		ShowWindow(s_skyparamsdlgwnd, SW_HIDE);
 		return 1;
 	}
+	if ((g_skyindex < 0) || (g_skyindex >= SKYSLOTNUM)) {
+		::MessageBoxW(s_3dwnd, L"ERROR : SlotNo Overflow.", L"Can't open dialog for settings.",
+			MB_OK | MB_ICONERROR);
+		ShowWindow(s_skyparamsdlgwnd, SW_HIDE);
+		return 1;
+	}
 
-	s_skyparams.SetMaterial(mqomat);
+	//s_skyparams.SetMaterial(mqomat);//起動時に保存ファイルが無かった時だけmqomatからセットすることにしたのでコメントアウト
 
 
 	int lightsliderid[LIGHTNUMMAX] = {
@@ -57565,121 +57722,139 @@ int SetMaterial2SkyParamsDlg(CMQOMaterial* mqomat)
 		IDC_STATIC_LIGHTSCALE5, IDC_STATIC_LIGHTSCALE6, IDC_STATIC_LIGHTSCALE7, IDC_STATIC_LIGHTSCALE8
 	};
 
+	//#########
+	//ComboBox
+	//#########
+	HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_SLOTS);
+	if (combownd != NULL) {
+		SendMessage(combownd, CB_RESETCONTENT, 0, 0);
+		int slotno;
+		for (slotno = 0; slotno < SKYSLOTNUM; slotno++) {
+			WCHAR strcombo[256];
+			swprintf_s(strcombo, 256, L"slot:%d", slotno);
+			SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)strcombo);
+		}
+		::SendMessage(combownd, CB_SETCURSEL, (WPARAM)g_skyindex, 0);
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
 
 	//#######
 	//Button
 	//#######
-	CheckShaderTypeParamsButton(hDlgWnd, s_skyparams.shadertype);
-	CheckToonLightButton(hDlgWnd, s_skyparams.hsvtoon.lightindex);
+	CheckShaderTypeParamsButton(hDlgWnd, s_skyparams[g_skyindex].shadertype);
+	CheckToonLightButton(hDlgWnd, s_skyparams[g_skyindex].hsvtoon.lightindex);
 
 	//#######
 	//Slider
 	//#######
-	int sliderpos = (int)(s_skyparams.metalcoef * 100.0f);
+	int sliderpos = (int)(s_skyparams[g_skyindex].metalcoef * 100.0f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_METALCOEF), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_METALCOEF), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_METALCOEF), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(s_skyparams.smoothcoef * 100.0f);
+	sliderpos = (int)(s_skyparams[g_skyindex].smoothcoef * 100.0f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SMOOTHCOEF), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SMOOTHCOEF), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SMOOTHCOEF), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
 	int litno2;
 	for (litno2 = 0; litno2 < LIGHTNUMMAX; litno2++) {
-		sliderpos = (int)(s_skyparams.lightscale[litno2] * 100.0f);;
+		sliderpos = (int)(s_skyparams[g_skyindex].lightscale[litno2] * 100.0f);;
 		SendMessage(GetDlgItem(hDlgWnd, lightsliderid[litno2]), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 		SendMessage(GetDlgItem(hDlgWnd, lightsliderid[litno2]), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)500);
 		SendMessage(GetDlgItem(hDlgWnd, lightsliderid[litno2]), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 	}
 
-	sliderpos = (int)(s_skyparams.emissiveScale * 100.0f);
+	sliderpos = (int)(s_skyparams[g_skyindex].emissiveScale * 100.0f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_EMISCALE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_EMISCALE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_EMISCALE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(s_skyparams.hsvtoon.hicolorh * 100.0f);
+	sliderpos = (int)(s_skyparams[g_skyindex].hsvtoon.hicolorh * 100.0f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDR), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDR), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDR), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(s_skyparams.hsvtoon.lowcolorh * 100.0f);
+	sliderpos = (int)(s_skyparams[g_skyindex].hsvtoon.lowcolorh * 100.0f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDR), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDR), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDR), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
 
-	sliderpos = (int)(s_skyparams.hsvtoon.basehsv.x);
+	sliderpos = (int)(s_skyparams[g_skyindex].hsvtoon.basehsv.x);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEH), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEH), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)360);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEH), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(s_skyparams.hsvtoon.basehsv.y * 100.0f);
+	sliderpos = (int)(s_skyparams[g_skyindex].hsvtoon.basehsv.y * 100.0f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASES), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASES), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASES), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(s_skyparams.hsvtoon.basehsv.z * 100.0f);
+	sliderpos = (int)(s_skyparams[g_skyindex].hsvtoon.basehsv.z * 100.0f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEV), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEV), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEV), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(s_skyparams.hsvtoon.basehsv.w * 100.0f);
+	sliderpos = (int)(s_skyparams[g_skyindex].hsvtoon.basehsv.w * 100.0f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEA), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEA), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEA), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(s_skyparams.hsvtoon.hiaddhsv.x + 360);
+	sliderpos = (int)(s_skyparams[g_skyindex].hsvtoon.hiaddhsv.x + 360);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDH), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDH), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)720);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDH), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(s_skyparams.hsvtoon.lowaddhsv.x + 360);
+	sliderpos = (int)(s_skyparams[g_skyindex].hsvtoon.lowaddhsv.x + 360);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDH), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDH), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)720);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDH), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(s_skyparams.hsvtoon.hiaddhsv.y * 100.0f) + 100;
+	sliderpos = (int)(s_skyparams[g_skyindex].hsvtoon.hiaddhsv.y * 100.0f) + 100;
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(s_skyparams.hsvtoon.lowaddhsv.y * 100.0f) + 100;
+	sliderpos = (int)(s_skyparams[g_skyindex].hsvtoon.lowaddhsv.y * 100.0f) + 100;
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(s_skyparams.hsvtoon.hiaddhsv.z * 100.0f) + 100;
+	sliderpos = (int)(s_skyparams[g_skyindex].hsvtoon.hiaddhsv.z * 100.0f) + 100;
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDV), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDV), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDV), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(s_skyparams.hsvtoon.lowaddhsv.z * 100.0f) + 100;
+	sliderpos = (int)(s_skyparams[g_skyindex].hsvtoon.lowaddhsv.z * 100.0f) + 100;
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDV), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDV), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDV), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(s_skyparams.hsvtoon.hiaddhsv.w * 100.0f) + 100;
+	sliderpos = (int)(s_skyparams[g_skyindex].hsvtoon.hiaddhsv.w * 100.0f) + 100;
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDA), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDA), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDA), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(s_skyparams.hsvtoon.lowaddhsv.w * 100.0f) + 100;
+	sliderpos = (int)(s_skyparams[g_skyindex].hsvtoon.lowaddhsv.w * 100.0f) + 100;
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDA), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDA), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDA), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(s_skyparams.specularcoef * 200.0f);
+	sliderpos = (int)(s_skyparams[g_skyindex].specularcoef * 200.0f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPECULARCOEF), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPECULARCOEF), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)400);//0.0から2.0
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPECULARCOEF), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(s_skyparams.uvscale.x + 0.0001);
+	sliderpos = (int)(s_skyparams[g_skyindex].uvscale.x + 0.0001);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGU), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGU), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGU), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(s_skyparams.uvscale.y + 0.0001);
+	sliderpos = (int)(s_skyparams[g_skyindex].uvscale.y + 0.0001);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGV), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGV), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGV), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
@@ -57693,79 +57868,79 @@ int SetMaterial2SkyParamsDlg(CMQOMaterial* mqomat)
 	SetDlgItemText(hDlgWnd, IDC_MATERIALNAME, strdlg);
 
 
-	swprintf_s(strdlg, 256, L"Metal_Add %.2f", s_skyparams.metalcoef);
+	swprintf_s(strdlg, 256, L"Metal_Add %.2f", s_skyparams[g_skyindex].metalcoef);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_METALCOEF, strdlg);
 
-	swprintf_s(strdlg, 256, L"SmoothCoef %.2f", s_skyparams.smoothcoef);
+	swprintf_s(strdlg, 256, L"SmoothCoef %.2f", s_skyparams[g_skyindex].smoothcoef);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_SMOOTHCOEF, strdlg);
 
-	swprintf_s(strdlg, 256, L"SpecularCoef %.3f", s_skyparams.specularcoef);
+	swprintf_s(strdlg, 256, L"SpecularCoef %.3f", s_skyparams[g_skyindex].specularcoef);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_SPECULARCOEF, strdlg);
 
 	int litno3;
 	for (litno3 = 0; litno3 < LIGHTNUMMAX; litno3++) {
-		swprintf_s(strdlg, 256, L"LightScale%d %.2f", (litno3 + 1), s_skyparams.lightscale[litno3]);
+		swprintf_s(strdlg, 256, L"LightScale%d %.2f", (litno3 + 1), s_skyparams[g_skyindex].lightscale[litno3]);
 		SetDlgItemText(hDlgWnd, lighttextid[litno3], strdlg);
 	}
 
-	swprintf_s(strdlg, 256, L"Emission:%.2f", s_skyparams.emissiveScale);
+	swprintf_s(strdlg, 256, L"Emission:%.2f", s_skyparams[g_skyindex].emissiveScale);
 	SetDlgItemText(hDlgWnd, IDC_CHECK_EMISSION, strdlg);
 
-	swprintf_s(strdlg, 256, L"ToonHiAddr:%.2f", s_skyparams.hsvtoon.hicolorh);
+	swprintf_s(strdlg, 256, L"ToonHiAddr:%.2f", s_skyparams[g_skyindex].hsvtoon.hicolorh);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDR, strdlg);
 
-	swprintf_s(strdlg, 256, L"ToonLowAddr:%.2f", s_skyparams.hsvtoon.lowcolorh);
+	swprintf_s(strdlg, 256, L"ToonLowAddr:%.2f", s_skyparams[g_skyindex].hsvtoon.lowcolorh);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDR, strdlg);
 
-	swprintf_s(strdlg, 256, L"ToonBase_H:%.1f", s_skyparams.hsvtoon.basehsv.x);
+	swprintf_s(strdlg, 256, L"ToonBase_H:%.1f", s_skyparams[g_skyindex].hsvtoon.basehsv.x);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONBASEH, strdlg);
 
-	swprintf_s(strdlg, 256, L"ToonBase_S:%.2f", s_skyparams.hsvtoon.basehsv.y);
+	swprintf_s(strdlg, 256, L"ToonBase_S:%.2f", s_skyparams[g_skyindex].hsvtoon.basehsv.y);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONBASES, strdlg);
 
-	swprintf_s(strdlg, 256, L"ToonBase_V:%.2f", s_skyparams.hsvtoon.basehsv.z);
+	swprintf_s(strdlg, 256, L"ToonBase_V:%.2f", s_skyparams[g_skyindex].hsvtoon.basehsv.z);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONBASEV, strdlg);
 
-	swprintf_s(strdlg, 256, L"ToonBase_A:%.2f", s_skyparams.hsvtoon.basehsv.w);
+	swprintf_s(strdlg, 256, L"ToonBase_A:%.2f", s_skyparams[g_skyindex].hsvtoon.basehsv.w);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONBASEA, strdlg);
 
-	swprintf_s(strdlg, 256, L"ToonHi_H:%.1f", s_skyparams.hsvtoon.hiaddhsv.x);
+	swprintf_s(strdlg, 256, L"ToonHi_H:%.1f", s_skyparams[g_skyindex].hsvtoon.hiaddhsv.x);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDH, strdlg);
-	swprintf_s(strdlg, 256, L"ToonLow_H:%.1f", s_skyparams.hsvtoon.lowaddhsv.x);
+	swprintf_s(strdlg, 256, L"ToonLow_H:%.1f", s_skyparams[g_skyindex].hsvtoon.lowaddhsv.x);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDH, strdlg);
 
-	swprintf_s(strdlg, 256, L"ToonHi_S:%.2f", s_skyparams.hsvtoon.hiaddhsv.y);
+	swprintf_s(strdlg, 256, L"ToonHi_S:%.2f", s_skyparams[g_skyindex].hsvtoon.hiaddhsv.y);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDS, strdlg);
-	swprintf_s(strdlg, 256, L"ToonLow_S:%.2f", s_skyparams.hsvtoon.lowaddhsv.y);
+	swprintf_s(strdlg, 256, L"ToonLow_S:%.2f", s_skyparams[g_skyindex].hsvtoon.lowaddhsv.y);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDS, strdlg);
 
-	swprintf_s(strdlg, 256, L"ToonHi_V:%.2f", s_skyparams.hsvtoon.hiaddhsv.z);
+	swprintf_s(strdlg, 256, L"ToonHi_V:%.2f", s_skyparams[g_skyindex].hsvtoon.hiaddhsv.z);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDV, strdlg);
-	swprintf_s(strdlg, 256, L"ToonLow_V:%.2f", s_skyparams.hsvtoon.lowaddhsv.z);
+	swprintf_s(strdlg, 256, L"ToonLow_V:%.2f", s_skyparams[g_skyindex].hsvtoon.lowaddhsv.z);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDV, strdlg);
 
-	swprintf_s(strdlg, 256, L"ToonHi_A:%.2f", s_skyparams.hsvtoon.hiaddhsv.w);
+	swprintf_s(strdlg, 256, L"ToonHi_A:%.2f", s_skyparams[g_skyindex].hsvtoon.hiaddhsv.w);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDA, strdlg);
-	swprintf_s(strdlg, 256, L"ToonLow_A:%.2f", s_skyparams.hsvtoon.lowaddhsv.w);
+	swprintf_s(strdlg, 256, L"ToonLow_A:%.2f", s_skyparams[g_skyindex].hsvtoon.lowaddhsv.w);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDA, strdlg);
 
 
-	swprintf_s(strdlg, 256, L"Tiling U:%d", (int)(s_skyparams.uvscale.x + 0.0001));
+	swprintf_s(strdlg, 256, L"Tiling U:%d", (int)(s_skyparams[g_skyindex].uvscale.x + 0.0001));
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TILINGU, strdlg);
-	swprintf_s(strdlg, 256, L"Tiling V:%d", (int)(s_skyparams.uvscale.y + 0.0001));
+	swprintf_s(strdlg, 256, L"Tiling V:%d", (int)(s_skyparams[g_skyindex].uvscale.y + 0.0001));
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TILINGV, strdlg);
 
 	//#########
 	//CheckBox
 	//#########
-	if ((bool)s_skyparams.enableEmission == true) {
+	if ((bool)s_skyparams[g_skyindex].enableEmission == true) {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_EMISSION, true);
 	}
 	else {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_EMISSION, false);
 	}
 
-	if (s_skyparams.hsvtoon.gradationflag == true) {
+	if (s_skyparams[g_skyindex].hsvtoon.gradationflag == true) {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_GRADATION, true);
 
 		HWND powertoonwnd = GetDlgItem(hDlgWnd, IDC_CHECK_POWERTOON);
@@ -57782,28 +57957,28 @@ int SetMaterial2SkyParamsDlg(CMQOMaterial* mqomat)
 		}
 	}
 
-	if (s_skyparams.hsvtoon.powertoon == true) {
+	if (s_skyparams[g_skyindex].hsvtoon.powertoon == true) {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_POWERTOON, true);
 	}
 	else {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_POWERTOON, false);
 	}
 
-	if (s_skyparams.normaly0flag == true) {
+	if (s_skyparams[g_skyindex].normaly0flag == true) {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_NORMALY0, true);
 	}
 	else {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_NORMALY0, false);
 	}
 
-	if (s_skyparams.shadowcasterflag == true) {
+	if (s_skyparams[g_skyindex].shadowcasterflag == true) {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_SHADOWCASTER, true);
 	}
 	else {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_SHADOWCASTER, false);
 	}
 
-	if (s_skyparams.lightingmat == true) {
+	if (s_skyparams[g_skyindex].lightingmat == true) {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_LIGHTINGMAT, true);
 	}
 	else {
@@ -57818,20 +57993,44 @@ int Set2FogParamsDlg()
 {
 	HWND hDlgWnd = s_fogparamsdlgwnd;
 
+	if ((g_fogindex < 0) || (g_fogindex >= FOGSLOTNUM)) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	//#########
+	//ComboBox
+	//#########
+	HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_SLOTS);
+	if (combownd != NULL) {
+		SendMessage(combownd, CB_RESETCONTENT, 0, 0);
+		int slotno;
+		for (slotno = 0; slotno < FOGSLOTNUM; slotno++) {
+			WCHAR strcombo[256];
+			swprintf_s(strcombo, 256, L"slot:%d", slotno);
+			SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)strcombo);
+		}
+		::SendMessage(combownd, CB_SETCURSEL, (WPARAM)g_fogindex, 0);
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+
 	//#######
 	//Button
 	//#######
-	CheckFogKindParamsButton(hDlgWnd, g_fogparams.GetFogKind());
+	CheckFogKindParamsButton(hDlgWnd, g_fogparams[g_fogindex].GetFogKind());
 
 	//#######
 	//Slider
 	//#######
-	int sliderpos = (int)(g_fogparams.GetDistRate() * 100.0f);
+	int sliderpos = (int)(g_fogparams[g_fogindex].GetDistRate() * 100.0f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_DISTFOGRATE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_DISTFOGRATE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_DISTFOGRATE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(g_fogparams.GetHeightRate() * 100.0f);
+	sliderpos = (int)(g_fogparams[g_fogindex].GetHeightRate() * 100.0f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_HEIGHTFOG_RATE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_HEIGHTFOG_RATE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_HEIGHTFOG_RATE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
@@ -57840,22 +58039,34 @@ int Set2FogParamsDlg()
 	//Text
 	//#####
 	WCHAR strdlg[256] = { 0L };
-	swprintf_s(strdlg, 256, L"%.2f", g_fogparams.GetDistRate());
+	swprintf_s(strdlg, 256, L"%.2f", g_fogparams[g_fogindex].GetDistRate());
 	SetDlgItemText(hDlgWnd, IDC_TEXT_DISTFOGRATE, strdlg);
 
-	swprintf_s(strdlg, 256, L"%.2f", g_fogparams.GetHeightRate());
+	swprintf_s(strdlg, 256, L"%.2f", g_fogparams[g_fogindex].GetHeightRate());
 	SetDlgItemText(hDlgWnd, IDC_TEXT_HEIGHTFOGRATE, strdlg);
 
-	swprintf_s(strdlg, 256, L"%.1f", g_fogparams.GetDistNear());
+	swprintf_s(strdlg, 256, L"%.1f", g_fogparams[g_fogindex].GetDistNear());
 	SetDlgItemText(hDlgWnd, IDC_DISTFOG_NEAR, strdlg);
-	swprintf_s(strdlg, 256, L"%.1f", g_fogparams.GetDistFar());
+	swprintf_s(strdlg, 256, L"%.1f", g_fogparams[g_fogindex].GetDistFar());
 	SetDlgItemText(hDlgWnd, IDC_DISTFOG_FAR, strdlg);
 
 	swprintf_s(strdlg, 256, L"0.0");
 	SetDlgItemText(hDlgWnd, IDC_HEIGHTFOG_MINH, strdlg);
 	EnableWindow(GetDlgItem(hDlgWnd, IDC_HEIGHTFOG_MINH), FALSE);//!!!!!! 0.0固定
-	swprintf_s(strdlg, 256, L"%.1f", g_fogparams.GetHeightHigh());
+	swprintf_s(strdlg, 256, L"%.1f", g_fogparams[g_fogindex].GetHeightHigh());
 	SetDlgItemText(hDlgWnd, IDC_HEIGHTFOG_MAXH, strdlg);
+
+	//##########
+	//ColorBar
+	//##########
+	int result1 = OwnerDrawFogColorBar(hDlgWnd, 1, IDC_DISTFOG_COLOR);
+	if (result1 != 0) {
+		_ASSERT(0);
+	}
+	int result2 = OwnerDrawFogColorBar(hDlgWnd, 2, IDC_HEIGHTFOG_COLOR);
+	if (result2 != 0) {
+		_ASSERT(0);
+	}
 
 
 	return 0;
@@ -57865,20 +58076,45 @@ int Set2DofParamsDlg()
 {
 	HWND hDlgWnd = s_dofparamsdlgwnd;
 
+	if ((g_dofindex < 0) || (g_dofindex >= DOFSLOTNUM)) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	//#########
+	//ComboBox
+	//#########
+	HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_SLOTS);
+	if (combownd != NULL) {
+		SendMessage(combownd, CB_RESETCONTENT, 0, 0);
+		int slotno;
+		for (slotno = 0; slotno < DOFSLOTNUM; slotno++) {
+			WCHAR strcombo[256];
+			swprintf_s(strcombo, 256, L"slot:%d", slotno);
+			SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)strcombo);
+		}
+		::SendMessage(combownd, CB_SETCURSEL, (WPARAM)g_dofindex, 0);
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+
+
 	//#####
 	//Text
 	//#####
 	WCHAR strdlg[256] = { 0L };
-	swprintf_s(strdlg, 256, L"%.2f", g_dofparams.x);
+	swprintf_s(strdlg, 256, L"%.2f", g_dofparams[g_dofindex].x);
 	SetDlgItemText(hDlgWnd, IDC_DOF_NEAR, strdlg);
 
-	swprintf_s(strdlg, 256, L"%.2f", g_dofparams.y);
+	swprintf_s(strdlg, 256, L"%.2f", g_dofparams[g_dofindex].y);
 	SetDlgItemText(hDlgWnd, IDC_DOF_FAR, strdlg);
 
 	//#########
 	//CheckBox
 	//#########
-	if (g_skydofflag == true) {
+	if (g_skydofflag[g_dofindex] == true) {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_SKYDOF, true);
 	}
 	else {
@@ -57960,8 +58196,7 @@ void ShowSkyWnd(bool srcflag)
 				int materialnum = s_sky->GetMQOMaterialSize();
 
 				if ((materialnum > 0) && (materialnum < MAXMATERIALNUM)) {//2024/03/03
-					CMQOMaterial* mqomat = s_sky->GetMQOMaterialByIndex(0);
-					SetMaterial2SkyParamsDlg(mqomat);
+					SetMaterial2SkyParamsDlg();
 
 					ShowWindow(s_skyparamsdlgwnd, SW_SHOW);
 					UpdateWindow(s_skyparamsdlgwnd);

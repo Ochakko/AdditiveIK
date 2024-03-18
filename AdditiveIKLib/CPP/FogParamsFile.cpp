@@ -50,12 +50,17 @@ int CFogParamsFile::DestroyObjs()
 	return 0;
 }
 
-int CFogParamsFile::WriteFogParamsFile(WCHAR* filename)
+int CFogParamsFile::WriteFogParamsFile(WCHAR* filename, int srcindex)
 {
 	if (!filename) {
 		_ASSERT(0);
 		return 1;
 	}
+	if ((srcindex < 0) || (srcindex >= FOGSLOTNUM)) {
+		_ASSERT(0);
+		return 1;
+	}
+
 
 	m_hfile = CreateFile( filename, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
 		FILE_FLAG_SEQUENTIAL_SCAN, NULL );
@@ -76,24 +81,24 @@ int CFogParamsFile::WriteFogParamsFile(WCHAR* filename)
 
 
 
-	CallF(Write2File("  <FogKind>%d</FogKind>\r\n", g_fogparams.GetFogKind()), return 1);
+	CallF(Write2File("  <FogKind>%d</FogKind>\r\n", g_fogparams[srcindex].GetFogKind()), return 1);
 
-	CallF(Write2File("  <DistColorR>%.4f</DistColorR>\r\n", g_fogparams.GetDistColor().x), return 1);
-	CallF(Write2File("  <DistColorG>%.4f</DistColorG>\r\n", g_fogparams.GetDistColor().y), return 1);
-	CallF(Write2File("  <DistColorB>%.4f</DistColorB>\r\n", g_fogparams.GetDistColor().z), return 1);
+	CallF(Write2File("  <DistColorR>%.4f</DistColorR>\r\n", g_fogparams[srcindex].GetDistColor().x), return 1);
+	CallF(Write2File("  <DistColorG>%.4f</DistColorG>\r\n", g_fogparams[srcindex].GetDistColor().y), return 1);
+	CallF(Write2File("  <DistColorB>%.4f</DistColorB>\r\n", g_fogparams[srcindex].GetDistColor().z), return 1);
 
-	CallF(Write2File("  <DistNear>%.1f</DistNear>\r\n", g_fogparams.GetDistNear()), return 1);
-	CallF(Write2File("  <DistFar>%.1f</DistFar>\r\n", g_fogparams.GetDistFar()), return 1);
-	CallF(Write2File("  <DistRate>%.2f</DistRate>\r\n", g_fogparams.GetDistRate()), return 1);
+	CallF(Write2File("  <DistNear>%.1f</DistNear>\r\n", g_fogparams[srcindex].GetDistNear()), return 1);
+	CallF(Write2File("  <DistFar>%.1f</DistFar>\r\n", g_fogparams[srcindex].GetDistFar()), return 1);
+	CallF(Write2File("  <DistRate>%.2f</DistRate>\r\n", g_fogparams[srcindex].GetDistRate()), return 1);
 
 
 
-	CallF(Write2File("  <HeightColorR>%.4f</HeightColorR>\r\n", g_fogparams.GetHeightColor().x), return 1);
-	CallF(Write2File("  <HeightColorG>%.4f</HeightColorG>\r\n", g_fogparams.GetHeightColor().y), return 1);
-	CallF(Write2File("  <HeightColorB>%.4f</HeightColorB>\r\n", g_fogparams.GetHeightColor().z), return 1);
+	CallF(Write2File("  <HeightColorR>%.4f</HeightColorR>\r\n", g_fogparams[srcindex].GetHeightColor().x), return 1);
+	CallF(Write2File("  <HeightColorG>%.4f</HeightColorG>\r\n", g_fogparams[srcindex].GetHeightColor().y), return 1);
+	CallF(Write2File("  <HeightColorB>%.4f</HeightColorB>\r\n", g_fogparams[srcindex].GetHeightColor().z), return 1);
 
-	CallF(Write2File("  <HeightMaxH>%.1f</HeightMaxH>\r\n", g_fogparams.GetHeightHigh()), return 1);
-	CallF(Write2File("  <HeightRate>%.2f</HeightRate>\r\n", g_fogparams.GetHeightRate()), return 1);
+	CallF(Write2File("  <HeightMaxH>%.1f</HeightMaxH>\r\n", g_fogparams[srcindex].GetHeightHigh()), return 1);
+	CallF(Write2File("  <HeightRate>%.2f</HeightRate>\r\n", g_fogparams[srcindex].GetHeightRate()), return 1);
 
 
 
@@ -113,12 +118,17 @@ int CFogParamsFile::WriteFileInfo()
 }
 
 
-int CFogParamsFile::LoadFogParamsFile(WCHAR* filename)
+int CFogParamsFile::LoadFogParamsFile(WCHAR* filename, int srcindex)
 {
 	if (!filename) {
 		_ASSERT(0);
 		return 1;
 	}
+	if ((srcindex < 0) || (srcindex >= FOGSLOTNUM)) {
+		_ASSERT(0);
+		return 1;
+	}
+
 
 	m_hfile = CreateFile( filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
 		FILE_FLAG_SEQUENTIAL_SCAN, NULL );
@@ -140,45 +150,46 @@ int CFogParamsFile::LoadFogParamsFile(WCHAR* filename)
 	//m_motspeed = 1.0f;
 	//Read_Float( &m_xmliobuf, "<MotSpeed>", "</MotSpeed>", &m_motspeed );
 
-	int fogkind = g_fogparams.GetFogKind();
+	int fogkind = g_fogparams[srcindex].GetFogKind();
 	Read_Int(&m_xmliobuf, "<FogKind>", "</FogKind>", &fogkind);
-	g_fogparams.SetFogKind(fogkind);
+	g_fogparams[srcindex].SetFogKind(fogkind);
 
-	float distR = g_fogparams.GetDistColor().x;
+	float distR = g_fogparams[srcindex].GetDistColor().x;
 	Read_Float(&m_xmliobuf, "<DistColorR>", "</DistColorR>", &distR);
-	float distG = g_fogparams.GetDistColor().y;
+	float distG = g_fogparams[srcindex].GetDistColor().y;
 	Read_Float(&m_xmliobuf, "<DistColorG>", "</DistColorG>", &distG);
-	float distB = g_fogparams.GetDistColor().z;
+	float distB = g_fogparams[srcindex].GetDistColor().z;
 	Read_Float(&m_xmliobuf, "<DistColorB>", "</DistColorB>", &distB);
-	g_fogparams.SetDistColor(ChaVector4(distR, distG, distB, 1.0f));
+	g_fogparams[srcindex].SetDistColor(ChaVector4(distR, distG, distB, 1.0f));
 
-	float distnear = g_fogparams.GetDistNear();
+	float distnear = g_fogparams[srcindex].GetDistNear();
 	Read_Float(&m_xmliobuf, "<DistNear>", "</DistNear>", &distnear);
-	float distfar = g_fogparams.GetDistFar();
+	g_fogparams[srcindex].SetDistNear(distnear);
+	float distfar = g_fogparams[srcindex].GetDistFar();
 	Read_Float(&m_xmliobuf, "<DistFar>", "</DistFar>", &distfar);
-	float distrate = g_fogparams.GetDistRate();
+	g_fogparams[srcindex].SetDistFar(distfar);
+	float distrate = g_fogparams[srcindex].GetDistRate();
 	Read_Float(&m_xmliobuf, "<DistRate>", "</DistRate>", &distrate);
+	g_fogparams[srcindex].SetDistRate(distrate);
 
 
-
-
-	float heightR = g_fogparams.GetHeightColor().x;
+	float heightR = g_fogparams[srcindex].GetHeightColor().x;
 	Read_Float(&m_xmliobuf, "<HeightColorR>", "</HeightColorR>", &heightR);
-	float heightG = g_fogparams.GetHeightColor().y;
+	float heightG = g_fogparams[srcindex].GetHeightColor().y;
 	Read_Float(&m_xmliobuf, "<HeightColorG>", "</HeightColorG>", &heightG);
-	float heightB = g_fogparams.GetHeightColor().z;
+	float heightB = g_fogparams[srcindex].GetHeightColor().z;
 	Read_Float(&m_xmliobuf, "<HeightColorB>", "</HeightColorB>", &heightB);
-	g_fogparams.SetHeightColor(ChaVector4(heightR, heightG, heightB, 1.0f));
+	g_fogparams[srcindex].SetHeightColor(ChaVector4(heightR, heightG, heightB, 1.0f));
 
 
 
-	float heightmaxh = g_fogparams.GetHeightHigh();
+	float heightmaxh = g_fogparams[srcindex].GetHeightHigh();
 	Read_Float(&m_xmliobuf, "<HeightMaxH>", "</HeightMaxH>", &heightmaxh);
-	g_fogparams.SetHeightHigh(heightmaxh);
+	g_fogparams[srcindex].SetHeightHigh(heightmaxh);
 
-	float heightrate = g_fogparams.GetHeightRate();
+	float heightrate = g_fogparams[srcindex].GetHeightRate();
 	Read_Float(&m_xmliobuf, "<HeightRate>", "</HeightRate>", &heightrate);
-	g_fogparams.SetHeightRate(heightrate);
+	g_fogparams[srcindex].SetHeightRate(heightrate);
 
 	return 0;
 }

@@ -373,7 +373,7 @@ namespace myRenderer
         // フォワードレンダリング
         ForwardRendering(rc);
 
-        if (g_hdrpbloom) {
+        if (g_zpreflag || g_hdrpbloom) {//zpreはDOFのため
             // ポストエフェクトを実行
             m_postEffect.Render(rc, m_mainRenderTarget);
         }
@@ -466,7 +466,7 @@ namespace myRenderer
                 //2024/03/15
                 //天球をぼかすと　背景の無いシーンで　カメラ距離に関わらずキャラクターがボケてしまう
                 //背景の無いシーンではg_skydofflagをfalseにし、　背景のあるシーンでtrueにする
-                if ((g_skydofflag == true) || (currenderobj.pmodel->GetSkyFlag() == false)) {
+                if ((g_skydofflag[g_dofindex] == true) || (currenderobj.pmodel->GetSkyFlag() == false)) {
                     RenderPolyMeshZPre(rc, currenderobj);
                 }
             }

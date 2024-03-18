@@ -10,14 +10,16 @@
 #include <string>
 #include <map>
 
+#include <MQOMaterial.h>
+
 class CSkyParamsFile : public CXMLIO
 {
 public:
 	CSkyParamsFile();
 	virtual ~CSkyParamsFile();
 
-	int WriteSkyParamsFile(WCHAR* filepath, CModel* srcmodel);
-	int LoadSkyParamsFile(WCHAR* filepath, CModel* srcmodel);
+	int WriteSkyParamsFile(WCHAR* filepath, CShaderTypeParams srcparams, int srcindex);
+	int LoadSkyParamsFile(WCHAR* filepath, CShaderTypeParams* dstparams);
 
 private:
 	virtual int InitParams();

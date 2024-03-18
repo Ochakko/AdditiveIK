@@ -50,9 +50,13 @@ int CDofParamsFile::DestroyObjs()
 	return 0;
 }
 
-int CDofParamsFile::WriteDofParamsFile(WCHAR* filename)
+int CDofParamsFile::WriteDofParamsFile(WCHAR* filename, int srcindex)
 {
 	if (!filename) {
+		_ASSERT(0);
+		return 1;
+	}
+	if ((srcindex < 0) || (srcindex >= DOFSLOTNUM)) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -74,10 +78,10 @@ int CDofParamsFile::WriteDofParamsFile(WCHAR* filename)
 	//ZeroMemory( mprojname, sizeof( char ) * 256 );
 	//WideCharToMultiByte( CP_ACP, 0, projname, -1, mprojname, 256, NULL, NULL );
 
-	CallF(Write2File("  <DofNear>%.1f</DofNear>\r\n", g_dofparams.x), return 1);
-	CallF(Write2File("  <DofFar>%.1f</DofFar>\r\n", g_dofparams.y), return 1);
+	CallF(Write2File("  <DofNear>%.1f</DofNear>\r\n", g_dofparams[srcindex].x), return 1);
+	CallF(Write2File("  <DofFar>%.1f</DofFar>\r\n", g_dofparams[srcindex].y), return 1);
 
-	int skydofflag = (g_skydofflag == true) ? 1 : 0;
+	int skydofflag = (g_skydofflag[srcindex] == true) ? 1 : 0;
 	CallF(Write2File("  <SkyDof>%d</SkyDof>\r\n", skydofflag), return 1);
 
 
@@ -96,12 +100,17 @@ int CDofParamsFile::WriteFileInfo()
 }
 
 
-int CDofParamsFile::LoadDofParamsFile(WCHAR* filename)
+int CDofParamsFile::LoadDofParamsFile(WCHAR* filename, int srcindex)
 {
 	if (!filename) {
 		_ASSERT(0);
 		return 1;
 	}
+	if ((srcindex < 0) || (srcindex >= DOFSLOTNUM)) {
+		_ASSERT(0);
+		return 1;
+	}
+
 
 	m_hfile = CreateFile( filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
 		FILE_FLAG_SEQUENTIAL_SCAN, NULL );
@@ -126,17 +135,17 @@ int CDofParamsFile::LoadDofParamsFile(WCHAR* filename)
 
 
 
-	float dofnear = g_dofparams.x;
+	float dofnear = g_dofparams[srcindex].x;
 	Read_Float(&m_xmliobuf, "<DofNear>", "</DofNear>", &dofnear);
-	g_dofparams.x = dofnear;
+	g_dofparams[srcindex].x = dofnear;
 
-	float doffar = g_dofparams.y;
+	float doffar = g_dofparams[srcindex].y;
 	Read_Float(&m_xmliobuf, "<DofFar>", "</DofFar>", &doffar);
-	g_dofparams.y = doffar;
+	g_dofparams[srcindex].y = doffar;
 
-	int skydofflag = (g_skydofflag == true) ? 1 : 0;
+	int skydofflag = (g_skydofflag[srcindex] == true) ? 1 : 0;
 	Read_Int(&m_xmliobuf, "<SkyDof>", "</SkyDof>", &skydofflag);
-	g_skydofflag = (skydofflag == 1) ? true : false;
+	g_skydofflag[srcindex] = (skydofflag == 1) ? true : false;
 
 
 	return 0;

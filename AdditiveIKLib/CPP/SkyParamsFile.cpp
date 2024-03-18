@@ -47,9 +47,9 @@ int CSkyParamsFile::DestroyObjs()
 	return 0;
 }
 
-int CSkyParamsFile::WriteSkyParamsFile(WCHAR* filename, CModel* srcmodel)
+int CSkyParamsFile::WriteSkyParamsFile(WCHAR* filename, CShaderTypeParams srcparams, int srcindex)
 {
-	if (!filename || !srcmodel) {
+	if (!filename) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -71,106 +71,75 @@ int CSkyParamsFile::WriteSkyParamsFile(WCHAR* filename, CModel* srcmodel)
 	//ZeroMemory( mprojname, sizeof( char ) * 256 );
 	//WideCharToMultiByte( CP_ACP, 0, projname, -1, mprojname, 256, NULL, NULL );
 
-	int materialnum = srcmodel->GetMQOMaterialSize();
-	int mqomatindex;
-	for (mqomatindex = 0; mqomatindex < materialnum; mqomatindex++) {
-		CMQOMaterial* mqomat = srcmodel->GetMQOMaterialByIndex(mqomatindex);
-		if (mqomat) {
-			char materialname[256] = { 0 };
-			strcpy_s(materialname, 256, mqomat->GetName());
-			int shadertype = mqomat->GetShaderType();
-			float metalcoef = mqomat->GetMetalCoef();
-			float smoothcoef = mqomat->GetSmoothCoef();
-			float lightscale[8];
-			bool enableEmission = mqomat->GetEnableEmission();
-			float emissiveScale = mqomat->GetEmissiveScale();
-			HSVTOON hsvtoon = mqomat->GetHSVToon();
-			float specularcoef = mqomat->GetSpecularCoef();
-			bool normaly0flag = mqomat->GetNormalY0Flag();
-			bool shadowcasterflag = mqomat->GetShadowCasterFlag();
-			bool lightingflag = mqomat->GetLightingFlag();
-
-			int litindex;
-			for (litindex = 0; litindex < 8; litindex++) {
-				lightscale[litindex] = mqomat->GetLightScale(litindex);
-			}
-
-			CallF(Write2File("  <Material>\r\n"), return 1);
-
-			CallF(Write2File("    <MaterialName>%s</MaterialName>\r\n", materialname), return 1);
-			CallF(Write2File("    <ShaderType>%d</ShaderType>\r\n", shadertype), return 1);
-			CallF(Write2File("    <MetalCoef>%f</MetalCoef>\r\n", metalcoef), return 1);
-			CallF(Write2File("    <SmoothCoef>%f</SmoothCoef>\r\n", smoothcoef), return 1);
-
-			CallF(Write2File("    <LightScale1>%f</LightScale1>\r\n", lightscale[0]), return 1);
-			CallF(Write2File("    <LightScale2>%f</LightScale2>\r\n", lightscale[1]), return 1);
-			CallF(Write2File("    <LightScale3>%f</LightScale3>\r\n", lightscale[2]), return 1);
-			CallF(Write2File("    <LightScale4>%f</LightScale4>\r\n", lightscale[3]), return 1);
-			CallF(Write2File("    <LightScale5>%f</LightScale5>\r\n", lightscale[4]), return 1);
-			CallF(Write2File("    <LightScale6>%f</LightScale6>\r\n", lightscale[5]), return 1);
-			CallF(Write2File("    <LightScale7>%f</LightScale7>\r\n", lightscale[6]), return 1);
-			CallF(Write2File("    <LightScale8>%f</LightScale8>\r\n", lightscale[7]), return 1);
-
-			if (enableEmission) {
-				CallF(Write2File("    <EnableEmission>1</EnableEmission>\r\n"), return 1);
-			}
-			else {
-				CallF(Write2File("    <EnableEmission>0</EnableEmission>\r\n"), return 1);
-			}
-
-			//2024/01/30
-			CallF(Write2File("    <EmissiveScale>%f</EmissiveScale>\r\n", emissiveScale), return 1);
-
-			//2024/02/13
-			CallF(Write2File("    <ToonHiColorH>%.2f</ToonHiColorH>\r\n", hsvtoon.hicolorh), return 1);
-			CallF(Write2File("    <ToonLowColorH>%.2f</ToonLowColorH>\r\n", hsvtoon.lowcolorh), return 1);
-			CallF(Write2File("    <ToonHiAddH>%.2f</ToonHiAddH>\r\n", hsvtoon.hiaddhsv.x), return 1);
-			CallF(Write2File("    <ToonHiAddS>%.2f</ToonHiAddS>\r\n", hsvtoon.hiaddhsv.y), return 1);
-			CallF(Write2File("    <ToonHiAddV>%.2f</ToonHiAddV>\r\n", hsvtoon.hiaddhsv.z), return 1);
-			CallF(Write2File("    <ToonHiAddA>%.2f</ToonHiAddA>\r\n", hsvtoon.hiaddhsv.w), return 1);
-			CallF(Write2File("    <ToonLowAddH>%.2f</ToonLowAddH>\r\n", hsvtoon.lowaddhsv.x), return 1);
-			CallF(Write2File("    <ToonLowAddS>%.2f</ToonLowAddS>\r\n", hsvtoon.lowaddhsv.y), return 1);
-			CallF(Write2File("    <ToonLowAddV>%.2f</ToonLowAddV>\r\n", hsvtoon.lowaddhsv.z), return 1);
-			CallF(Write2File("    <ToonLowAddA>%.2f</ToonLowAddA>\r\n", hsvtoon.lowaddhsv.w), return 1);
-
-			//2024/02/14
-			CallF(Write2File("    <ToonLightIndex>%d</ToonLightIndex>\r\n", hsvtoon.lightindex), return 1);
-			CallF(Write2File("    <ToonBaseH>%.2f</ToonBaseH>\r\n", hsvtoon.basehsv.x), return 1);
-			CallF(Write2File("    <ToonBaseS>%.2f</ToonBaseS>\r\n", hsvtoon.basehsv.y), return 1);
-			CallF(Write2File("    <ToonBaseV>%.2f</ToonBaseV>\r\n", hsvtoon.basehsv.z), return 1);
-			CallF(Write2File("    <ToonBaseA>%.2f</ToonBaseA>\r\n", hsvtoon.basehsv.w), return 1);
-
-			//2024/02/18
-			int gradationflag = hsvtoon.gradationflag ? 1 : 0;
-			CallF(Write2File("    <Gradation>%d</Gradation>\r\n", gradationflag), return 1);
-			int powertoon = hsvtoon.powertoon ? 1 : 0;
-			CallF(Write2File("    <PowerToon>%d</PowerToon>\r\n", powertoon), return 1);
-
-			//2024/02/19
-			CallF(Write2File("    <SpecularCoef>%.3f</SpecularCoef>\r\n", specularcoef), return 1);
-			int y0flag = normaly0flag ? 1 : 0;
-			CallF(Write2File("    <NormalY0>%d</NormalY0>\r\n", normaly0flag), return 1);
-
-			//2024/03/03
-			int casterflag = shadowcasterflag ? 1 : 0;
-			CallF(Write2File("    <ShadowCaster>%d</ShadowCaster>\r\n", casterflag), return 1);
-
-			//2024/03/07
-			int lightflag = lightingflag ? 1 : 0;
-			CallF(Write2File("    <Lighting>%d</Lighting>\r\n", lightflag), return 1);
 
 
-			CallF(Write2File("  </Material>\r\n"), return 1);
+	CallF(Write2File("  <Material>\r\n"), return 1);
 
+	CallF(Write2File("    <MaterialName>%s</MaterialName>\r\n", srcparams.wmaterialname), return 1);
+	CallF(Write2File("    <ShaderType>%d</ShaderType>\r\n", srcparams.shadertype), return 1);
+	CallF(Write2File("    <MetalCoef>%f</MetalCoef>\r\n", srcparams.metalcoef), return 1);
+	CallF(Write2File("    <SmoothCoef>%f</SmoothCoef>\r\n", srcparams.smoothcoef), return 1);
 
+	CallF(Write2File("    <LightScale1>%f</LightScale1>\r\n", srcparams.lightscale[0]), return 1);
+	CallF(Write2File("    <LightScale2>%f</LightScale2>\r\n", srcparams.lightscale[1]), return 1);
+	CallF(Write2File("    <LightScale3>%f</LightScale3>\r\n", srcparams.lightscale[2]), return 1);
+	CallF(Write2File("    <LightScale4>%f</LightScale4>\r\n", srcparams.lightscale[3]), return 1);
+	CallF(Write2File("    <LightScale5>%f</LightScale5>\r\n", srcparams.lightscale[4]), return 1);
+	CallF(Write2File("    <LightScale6>%f</LightScale6>\r\n", srcparams.lightscale[5]), return 1);
+	CallF(Write2File("    <LightScale7>%f</LightScale7>\r\n", srcparams.lightscale[6]), return 1);
+	CallF(Write2File("    <LightScale8>%f</LightScale8>\r\n", srcparams.lightscale[7]), return 1);
 
-			//#########################
-			//マテリアル1つ分だけ出力する
-			//#########################
-			break;
-
-		}
+	if (srcparams.enableEmission) {
+		CallF(Write2File("    <EnableEmission>1</EnableEmission>\r\n"), return 1);
 	}
+	else {
+		CallF(Write2File("    <EnableEmission>0</EnableEmission>\r\n"), return 1);
+	}
+
+	//2024/01/30
+	CallF(Write2File("    <EmissiveScale>%f</EmissiveScale>\r\n", srcparams.emissiveScale), return 1);
+
+	//2024/02/13
+	CallF(Write2File("    <ToonHiColorH>%.2f</ToonHiColorH>\r\n", srcparams.hsvtoon.hicolorh), return 1);
+	CallF(Write2File("    <ToonLowColorH>%.2f</ToonLowColorH>\r\n", srcparams.hsvtoon.lowcolorh), return 1);
+	CallF(Write2File("    <ToonHiAddH>%.2f</ToonHiAddH>\r\n", srcparams.hsvtoon.hiaddhsv.x), return 1);
+	CallF(Write2File("    <ToonHiAddS>%.2f</ToonHiAddS>\r\n", srcparams.hsvtoon.hiaddhsv.y), return 1);
+	CallF(Write2File("    <ToonHiAddV>%.2f</ToonHiAddV>\r\n", srcparams.hsvtoon.hiaddhsv.z), return 1);
+	CallF(Write2File("    <ToonHiAddA>%.2f</ToonHiAddA>\r\n", srcparams.hsvtoon.hiaddhsv.w), return 1);
+	CallF(Write2File("    <ToonLowAddH>%.2f</ToonLowAddH>\r\n", srcparams.hsvtoon.lowaddhsv.x), return 1);
+	CallF(Write2File("    <ToonLowAddS>%.2f</ToonLowAddS>\r\n", srcparams.hsvtoon.lowaddhsv.y), return 1);
+	CallF(Write2File("    <ToonLowAddV>%.2f</ToonLowAddV>\r\n", srcparams.hsvtoon.lowaddhsv.z), return 1);
+	CallF(Write2File("    <ToonLowAddA>%.2f</ToonLowAddA>\r\n", srcparams.hsvtoon.lowaddhsv.w), return 1);
+
+	//2024/02/14
+	CallF(Write2File("    <ToonLightIndex>%d</ToonLightIndex>\r\n", srcparams.hsvtoon.lightindex), return 1);
+	CallF(Write2File("    <ToonBaseH>%.2f</ToonBaseH>\r\n", srcparams.hsvtoon.basehsv.x), return 1);
+	CallF(Write2File("    <ToonBaseS>%.2f</ToonBaseS>\r\n", srcparams.hsvtoon.basehsv.y), return 1);
+	CallF(Write2File("    <ToonBaseV>%.2f</ToonBaseV>\r\n", srcparams.hsvtoon.basehsv.z), return 1);
+	CallF(Write2File("    <ToonBaseA>%.2f</ToonBaseA>\r\n", srcparams.hsvtoon.basehsv.w), return 1);
+
+	//2024/02/18
+	int gradationflag = srcparams.hsvtoon.gradationflag ? 1 : 0;
+	CallF(Write2File("    <Gradation>%d</Gradation>\r\n", gradationflag), return 1);
+	int powertoon = srcparams.hsvtoon.powertoon ? 1 : 0;
+	CallF(Write2File("    <PowerToon>%d</PowerToon>\r\n", powertoon), return 1);
+
+	//2024/02/19
+	CallF(Write2File("    <SpecularCoef>%.3f</SpecularCoef>\r\n", srcparams.specularcoef), return 1);
+	int y0flag = srcparams.normaly0flag ? 1 : 0;
+	CallF(Write2File("    <NormalY0>%d</NormalY0>\r\n", y0flag), return 1);
+
+	//2024/03/03
+	int casterflag = srcparams.shadowcasterflag ? 1 : 0;
+	CallF(Write2File("    <ShadowCaster>%d</ShadowCaster>\r\n", casterflag), return 1);
+
+	//2024/03/07
+	int lightflag = srcparams.lightingmat ? 1 : 0;
+	CallF(Write2File("    <Lighting>%d</Lighting>\r\n", lightflag), return 1);
+
+
+	CallF(Write2File("  </Material>\r\n"), return 1);
+
 
 
 	CallF( Write2File( "</SKYPARAMSFILE>\r\n" ), return 1 );
@@ -188,9 +157,9 @@ int CSkyParamsFile::WriteFileInfo()
 }
 
 
-int CSkyParamsFile::LoadSkyParamsFile(WCHAR* filename, CModel* srcmodel)
+int CSkyParamsFile::LoadSkyParamsFile(WCHAR* filename, CShaderTypeParams* dstparams)
 {
-	if (!filename || !srcmodel) {
+	if (!filename || !dstparams) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -354,41 +323,37 @@ int CSkyParamsFile::LoadSkyParamsFile(WCHAR* filename, CModel* srcmodel)
 			int lightflag = 0;
 			Read_Int(&materialbuf, "<Lighting>", "</Lighting>\r\n", &lightflag);			
 
-			int materialnum = srcmodel->GetMQOMaterialSize();
-			int mqomatindex;
-			for (mqomatindex = 0; mqomatindex < materialnum; mqomatindex++) {
-				CMQOMaterial* curmqomat = srcmodel->GetMQOMaterialByIndex(mqomatindex);
-				if (curmqomat) {
-					curmqomat->SetShaderType(shadertype);
-					curmqomat->SetMetalCoef(metalcoef);
-					curmqomat->SetSmoothCoef(smoothcoef);
-					curmqomat->SetLightScale(0, lightscale1);
-					curmqomat->SetLightScale(1, lightscale2);
-					curmqomat->SetLightScale(2, lightscale3);
-					curmqomat->SetLightScale(3, lightscale4);
-					curmqomat->SetLightScale(4, lightscale5);
-					curmqomat->SetLightScale(5, lightscale6);
-					curmqomat->SetLightScale(6, lightscale7);
-					curmqomat->SetLightScale(7, lightscale8);
-					if (enableEmission == 1) {
-						curmqomat->SetEnableEmission(true);
-					}
-					else {
-						curmqomat->SetEnableEmission(false);
-					}
-					curmqomat->SetEmissiveScale(emissiveScale);
-					curmqomat->SetSpecularCoef(specularcoef);
-					curmqomat->SetNormalY0Flag(normaly0flag);
-					curmqomat->SetShadowCasterFlag(shadowcasterflag);
-					curmqomat->SetHSVToon(hsvtoon);
-					if (lightflag == 1) {
-						curmqomat->SetLightingFlag(true);
-					}
-					else {
-						curmqomat->SetLightingFlag(false);
-					}
-				}
 
+
+
+
+			dstparams->shadertype = shadertype;
+			dstparams->metalcoef = metalcoef;
+			dstparams->smoothcoef = smoothcoef;
+			dstparams->lightscale[0] = lightscale1;
+			dstparams->lightscale[1] = lightscale2;
+			dstparams->lightscale[2] = lightscale3;
+			dstparams->lightscale[3] = lightscale4;
+			dstparams->lightscale[4] = lightscale5;
+			dstparams->lightscale[5] = lightscale6;
+			dstparams->lightscale[6] = lightscale7;
+			dstparams->lightscale[7] = lightscale8;
+			if (enableEmission == 1) {
+				dstparams->enableEmission = true;
+			}
+			else {
+				dstparams->enableEmission = false;
+			}
+			dstparams->emissiveScale = emissiveScale;
+			dstparams->specularcoef = specularcoef;
+			dstparams->normaly0flag = normaly0flag;
+			dstparams->shadowcasterflag = shadowcasterflag;
+			dstparams->hsvtoon = hsvtoon;
+			if (lightflag == 1) {
+				dstparams->lightingmat = true;
+			}
+			else {
+				dstparams->lightingmat = false;
 			}
 		}		
 	}

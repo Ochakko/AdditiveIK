@@ -16,8 +16,8 @@ public:
 	CDofParamsFile();
 	virtual ~CDofParamsFile();
 
-	int WriteDofParamsFile(WCHAR* filepath);
-	int LoadDofParamsFile(WCHAR* filepath);
+	int WriteDofParamsFile(WCHAR* filepath, int srcindex);
+	int LoadDofParamsFile(WCHAR* filepath, int srcindex);
 
 private:
 	virtual int InitParams();
