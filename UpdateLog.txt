@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/03/19
-　AdditiveIK 1.0.0.12 RC2(リリース候補2)
+　AdditiveIK 1.0.0.12 RC3(リリース候補3)
 　　1.0.0.11からの変更点
 　　　不具合修正
 　　　　マルチスレッド処理修正
@@ -71,6 +71,13 @@ https://github.com/Ochakko/AdditiveIK
 　　RC2 : 
 　　　　ScreenShotsフォルダに1.0.0.12の新機能に関するスクリーンショットを追加
 　　　　追記：Documents/TroubleShooting/0_HowToSetShadowParams.docx　　　
+　　RC3 : 
+　　　　Sky,Fog,DOFダイアログがメインメニューバーの表示(disp)を操作しても出ないことがあった不具合修正
+　　　　　プレートメニューからは出ていたが、メインメニューバーからは出ないことがあった
+　　　　　プレートメニュー、メインメニューバー両方から表示できるように修正
+　　　　README.mdで参照していた画像のリンク切れ修正
+　　　　　RC2での整理の際に消し過ぎていたのを復活
+
 
 
 動画

@@ -33713,17 +33713,23 @@ int OnFrameToolWnd()
 		s_skyparamsFlag = false;
 		if (s_sky) {
 			s_platemenukind = SPPLATEMENUKIND_EFFECT;
+			s_platemenuno = 1;
+			s_guiswflag = false;//2段目メニューを右ペインに表示するときfalse
 			GUIMenuSetVisible(s_platemenukind, 1);
 		}
 	}
 	if (s_fogparamsFlag) {
 		s_fogparamsFlag = false;
 		s_platemenukind = SPPLATEMENUKIND_EFFECT;
+		s_platemenuno = 2;
+		s_guiswflag = false;//2段目メニューを右ペインに表示するときfalse
 		GUIMenuSetVisible(s_platemenukind, 2);
 	}
 	if (s_dofparamsFlag) {
 		s_dofparamsFlag = false;
 		s_platemenukind = SPPLATEMENUKIND_EFFECT;
+		s_platemenuno = 3;
+		s_guiswflag = false;//2段目メニューを右ペインに表示するときfalse
 		GUIMenuSetVisible(s_platemenukind, 3);
 	}
 
