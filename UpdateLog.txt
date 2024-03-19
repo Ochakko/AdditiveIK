@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/03/19
-　AdditiveIK 1.0.0.12 RC1(リリース候補1)
+　AdditiveIK 1.0.0.12 RC2(リリース候補2)
 　　1.0.0.11からの変更点
 　　　不具合修正
 　　　　マルチスレッド処理修正
@@ -27,9 +27,10 @@ https://github.com/Ochakko/AdditiveIK
 　　　　Hipsジャンプ補間ボタンを追加
 　　　　上段カエルボタンを押したときに、補間ボタンの左隣にジャンプ補間ボタンを追加
 　　　　選択フレーム範囲の最初フレームと最後フレームのHipsの移動アニメを放物線で補間する
+　　　　最後のフレームでちょうど着地するように機能
 　　　　ボタンを押したときに、ジャンプ補間用の重力設定ダイアログ(再計算ボタン付き)を表示
 
-　　　いつでも使うスライダーを常駐
+　　　常用スライダーを常駐
 　　　　アプリ上部に常駐スライダーを追加
 　　　　EditRateスライダー、Speedスライダー、TopPosスライダーを常駐ウインドウに配置していつでも操作可能に
 　　　　TopPosスライダーの横幅が長くなったのでブラシのピーク位置の設定精度が上がった(長い分、目盛りが細かくなった)
@@ -52,14 +53,24 @@ https://github.com/Ochakko/AdditiveIK
 　　　　ピクセルシェーダ内でテクスチャのアルファが0x08より小さい場合に書き込みをスキップ
 　　　　書き込みスキップ時はZバッファにも描画されないのでテクスチャ抜きが綺麗に.
 　　　
-　　　Shaderプレートメニューのマテリアルのアルファスライダーが機能するように.
+　　　シェーディングアルファ
 　　　　BaseAのスライダーでマテリアルの透明度を設定可能
-　　　　HiA,LowAも設定可能 : 光の当たり方によってアルファ(透明度)を徐々に変化させることが可能
+　　　　HiA,LowAも設定可能
+　　　　マテリアルごとに
+　　　　光の当たり方(シェーディング)によってアルファ(透明度)を徐々に変化させることが可能
 
 　　　DispAndLimitsプレートメニューにAlphaBlendingチェックボックスを追加
 　　　　アルファテストだけのアルファ抜き表示の時はオフ、ブレンドしたい場合にオン
 　　　　オンにした場合にはZバッファのクリア１回分処理が増える
 
+　　　ドキュメント追記
+　　　　Documents/TroubleShooting/0_HowToSetShadowParams.docx
+　　　　
+
+
+　　RC2 : 
+　　　　ScreenShotsフォルダに1.0.0.12の新機能に関するスクリーンショットを追加
+　　　　追記：Documents/TroubleShooting/0_HowToSetShadowParams.docx　　　
 
 
 動画
@@ -400,9 +411,9 @@ https://github.com/Ochakko/AdditiveIK
 　　　　メッシュ名のチェックマークをクリアするボタン
 
 　　　ドキュメント追加
-　　　　Documsnts/TroubleShooting/0_HowToSetPhysicsOfSkirt.docx
-　　　　Documsnts/TroubleShooting/0_HowToSetShadowParams.docx
-　　　　Documsnts/TroubleShooting/0_Win32DialogHasABlackFrame.docx
+　　　　Documents/TroubleShooting/0_HowToSetPhysicsOfSkirt.docx
+　　　　Documents/TroubleShooting/0_HowToSetShadowParams.docx
+　　　　Documents/TroubleShooting/0_Win32DialogHasABlackFrame.docx
 
 　　RC1: 
 　　　右ペイン上部のカメラターゲットウインドウにMoveEyePosチェックボックスを追加
