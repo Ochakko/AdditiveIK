@@ -41123,8 +41123,8 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 
 
 							bool calcslotflag;
-							//calcslotflag = true;
-							calcslotflag = false;
+							calcslotflag = true;//2024/03/20
+							//calcslotflag = false;
 							s_model->SetShaderConst(btflag1, calcslotflag);
 							s_model->SetRefPosFl4x4ToDispObj(refposindex);
 
@@ -41163,8 +41163,8 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 							s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matView, &s_matProj, currentframe);
 
 							bool calcslotflag;
-							//calcslotflag = true;
-							calcslotflag = false;
+							calcslotflag = true;//2024/03/20
+							//calcslotflag = false;
 							s_model->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
 							s_model->SetRefPosFl4x4ToDispObj(refposindex);
 

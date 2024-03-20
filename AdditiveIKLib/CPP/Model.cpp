@@ -19565,7 +19565,8 @@ double CModel::GetOpeFrame(bool calcslotflag)
 {
 	//calcslotflagに応じて　GetCurrentFrame() or GetRenderSlotFrame()を返す
 
-	if (calcslotflag == false) {
+	//if (calcslotflag == false) {
+	if (calcslotflag == true) {//2024/03/20
 		return GetCurrentFrame();
 	}
 	else {

@@ -2,8 +2,8 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
-2024/03/19
-　AdditiveIK 1.0.0.12 RC3(リリース候補3)
+2024/03/20
+　AdditiveIK 1.0.0.12 RC4(リリース候補4)
 　　1.0.0.11からの変更点
 　　　不具合修正
 　　　　マルチスレッド処理修正
@@ -77,6 +77,11 @@ https://github.com/Ochakko/AdditiveIK
 　　　　　プレートメニュー、メインメニューバー両方から表示できるように修正
 　　　　README.mdで参照していた画像のリンク切れ修正
 　　　　　RC2での整理の際に消し過ぎていたのを復活
+　　RC4 :
+　　　　マルチスレッドスロット番号処理に不具合があったので修正
+　　　　　表示にだけ影響
+　　　　　RefPosが表示されない不具合から発覚して修正
+ 
 
 
 
