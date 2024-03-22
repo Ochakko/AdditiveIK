@@ -52,7 +52,7 @@ cbuffer ModelCb : register(b0)
     float4x4 mView;
     float4x4 mProj;
     float4 diffusemult;
-    float4 ambient;
+    float4 ambient0;//ambient0.wはAlphaTestの閾値
     float4 emission;
     float4 metalcoef;
     float4 materialdisprate;
@@ -154,7 +154,6 @@ float4 PSMainNoSkinInstancingNoLight(SPSIn psIn) : SV_Target0
     // 普通にテクスチャを
     //return g_texture.Sample(g_sampler, psIn.uv);
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    clip(albedocol.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
 
     float2 diffuseuv = { 0.5f, 0.5f };
     float4 diffusecol = g_diffusetex.Sample(g_sampler_albedo, diffuseuv) * materialdisprate.x;
@@ -163,6 +162,7 @@ float4 PSMainNoSkinInstancingNoLight(SPSIn psIn) : SV_Target0
       
     float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
     //pscol.w = albedocol.w * psIn.diffusemult.w * materialdisprate.x;
+    clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
     
     return pscol;
 }

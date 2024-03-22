@@ -82,7 +82,7 @@ cbuffer ModelCb : register(b0)
     float4x4 mView;
     float4x4 mProj;
     float4 diffusemult;
-    float4 ambient;
+    float4 ambient0;//ambient0.wはAlphaTestの閾値
     float4 emission;
     float4 metalcoef;
     float4 materialdisprate;
@@ -273,7 +273,6 @@ SPSOut PSMainNoSkinStd(SPSIn psIn) : SV_Target0
 {
     // 普通にテクスチャを
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    clip(albedocol.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
     //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
     //{
     //    //フォグを最大濃度で使用する機会は少ないので　ifの分かえって遅くなる　よってコメントアウト
@@ -311,14 +310,15 @@ SPSOut PSMainNoSkinStd(SPSIn psIn) : SV_Target0
     totaldiffuse4.w = (lightsnum.x != 0) ? (totalalpha / (float) lightsnum.x) : 1.0f;
     float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * metalcoef.w; //ライト８個で白飛びしないように応急処置1/8=0.125
     float4 pscol = emission * materialdisprate.z + albedocol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
-   
+    clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
+
     return CalcPSFog(pscol, psIn.Fog);
 }
 
 float4 PSMainNoSkinStdShadowMap(SPSInShadowMap psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    clip(albedocol.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
+    clip(albedocol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
     
     return float4(psIn.depth.x, psIn.depth.y, 0.0f, 1.0f);
 }
@@ -326,7 +326,6 @@ float4 PSMainNoSkinStdShadowMap(SPSInShadowMap psIn) : SV_Target0
 SPSOut PSMainNoSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    clip(albedocol.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
     //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
     //{
     //    //フォグを最大濃度で使用する機会は少ないので　ifの分かえって遅くなる　よってコメントアウト
@@ -374,6 +373,7 @@ SPSOut PSMainNoSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     float zInLVP = psIn.posInLVP.z;
     float2 shadowValue = g_shadowMap.Sample(g_sampler_shadow, shadowMapUV).xy;
     pscol.xyz *= ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f) && ((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? shadowmaxz.z : 1.0f;
+    clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
 
     //if ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f)
     //    && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f))
@@ -415,7 +415,6 @@ SPSOut PSMainNoSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 SPSOut PSMainNoSkinNoLight(SPSIn psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    clip(albedocol.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
     //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
     //{
     //    //フォグを最大濃度で使用する機会は少ないので　ifの分かえって遅くなる　よってコメントアウト
@@ -427,6 +426,7 @@ SPSOut PSMainNoSkinNoLight(SPSIn psIn) : SV_Target0
     float4 diffusecol = (lightsnum.y == 1) ? CalcDiffuseColor(1.0f, psIn.normal.xyz, toonlightdir.xyz) : float4(1.0f, 1.0f, 1.0f, 1.0f);
     float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
     //return pscol;
+    clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
     
     return CalcPSFog(pscol, psIn.Fog);
 }
@@ -434,7 +434,6 @@ SPSOut PSMainNoSkinNoLight(SPSIn psIn) : SV_Target0
 SPSOut PSMainNoSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    clip(albedocol.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
     //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
     //{
     //    //フォグを最大濃度で使用する機会は少ないので　ifの分かえって遅くなる　よってコメントアウト
@@ -455,6 +454,7 @@ SPSOut PSMainNoSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     float zInLVP = psIn.posInLVP.z;
     float2 shadowValue = g_shadowMap.Sample(g_sampler_shadow, shadowMapUV).xy;
     pscol.xyz *= ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f) && ((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? shadowmaxz.z : 1.0f;
+    clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
 
     //if ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f)
     //    && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f))

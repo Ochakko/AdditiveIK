@@ -28006,6 +28006,27 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 		}
 
 
+		else if (GetDlgItem(hDlgWnd, IDC_SL_ALPHATEST) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_ALPHATEST), TBM_GETPOS, 0, 0);
+			s_shadertypeparams.alphatest = (double)cursliderpos / 255.0;
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"AlphaTest:%d", cursliderpos);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_ALPHATEST, strdlg);
+
+			if (curmqomat) {
+				curmqomat->SetAlphaTestClipVal(s_shadertypeparams.alphatest);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetAlphaTestClipVal(s_shadertypeparams.alphatest);
+					}
+				}
+			}
+		}
 
 
 
@@ -44835,7 +44856,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.12 : No.%d : ", s_appcnt);
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.13 : No.%d : ", s_appcnt);
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -53122,7 +53143,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.12 : No.%d : ", s_appcnt);
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.13 : No.%d : ", s_appcnt);
 
 
 	if (s_model && s_chascene) {
@@ -57507,6 +57528,12 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGV), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGV), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
+	sliderpos = (int)((double)s_shadertypeparams.alphatest * 255.0 + 0.0001);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_ALPHATEST), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_ALPHATEST), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)255);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SL_ALPHATEST), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+
 	//#####
 	//Text
 	//#####
@@ -57571,11 +57598,14 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	swprintf_s(strdlg, 256, L"ToonLow_A:%.2f", s_shadertypeparams.hsvtoon.lowaddhsv.w);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDA, strdlg);
 
-
 	swprintf_s(strdlg, 256, L"Tiling U:%d", (int)(s_shadertypeparams.uvscale.x + 0.0001));
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TILINGU, strdlg);
 	swprintf_s(strdlg, 256, L"Tiling V:%d", (int)(s_shadertypeparams.uvscale.y + 0.0001));
 	SetDlgItemText(hDlgWnd, IDC_STATIC_TILINGV, strdlg);
+
+	swprintf_s(strdlg, 256, L"AlphaTest:%d", (int)(s_shadertypeparams.alphatest * 255.0 + 0.0001));
+	SetDlgItemText(hDlgWnd, IDC_STATIC_ALPHATEST, strdlg);
+
 
 	//#########
 	//CheckBox

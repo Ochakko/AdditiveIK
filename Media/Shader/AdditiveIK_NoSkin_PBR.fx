@@ -85,7 +85,7 @@ cbuffer ModelCb : register(b0)
     float4x4 mView;
     float4x4 mProj;
     float4 diffusemult;
-    float4 ambient;
+    float4 ambient0;//ambient0.wはAlphaTestの閾値
     float4 emission;
     float4 metalcoef;
     float4 materialdisprate;
@@ -573,7 +573,6 @@ SPSOut PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
     // アルベドカラー、スペキュラカラー、金属度、滑らかさをサンプリングする。
     // アルベドカラー（拡散反射光）
     float4 albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv); // * diffusecol;
-    clip(albedoColor.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
     //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
     //{
     //    //フォグを最大濃度で使用する機会は少ないので　ifの分かえって遅くなる　よってコメントアウト
@@ -646,6 +645,7 @@ SPSOut PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
     float4 finalColor = emission * materialdisprate.z + float4(lig, diffusew) * psIn.diffusemult;
     //return finalColor;
     //finalColor.w = albedoColor.w * psIn.diffusemult.w * materialdisprate.x;
+    clip(finalColor.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
 
     return CalcPSFog(finalColor, psIn.Fog);
 }
@@ -653,7 +653,7 @@ SPSOut PSMainNoSkinPBR(SPSIn psIn) : SV_Target0
 float4 PSMainNoSkinPBRShadowMap(SPSInShadowMap psIn) : SV_Target0
 {
     float4 albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv); // * diffusecol;
-    clip(albedoColor.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
+    clip(albedoColor.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
     
     return float4(psIn.depth.x, psIn.depth.y, 0.0f, 1.0f);
 }
@@ -732,7 +732,6 @@ SPSOut PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     // アルベドカラー、スペキュラカラー、金属度、滑らかさをサンプリングする。
     // アルベドカラー（拡散反射光）
     float4 albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv); // * diffusecol;
-    clip(albedoColor.w - 0.0314f); //2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
     //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
     //{
     //    //フォグを最大濃度で使用する機会は少ないので　ifの分かえって遅くなる　よってコメントアウト
@@ -814,6 +813,7 @@ SPSOut PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     float2 shadowValue = g_shadowMap.Sample(g_sampler_shadow, shadowMapUV).xy;
     finalColor.xyz *= ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f) && ((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? shadowmaxz.z : 1.0f;
     //finalColor.w = albedoColor.w * psIn.diffusemult.w * materialdisprate.x;
+    clip(finalColor.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
     
     //if ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) &&
     //    (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f))

@@ -40,7 +40,7 @@ cbuffer ModelCb : register(b0)
     float4x4 mView;
     float4x4 mProj;
     float4 diffusemult;
-    float4 ambient;
+    float4 ambient0;//ambient0.wはAlphaTestの閾値
     float4 emission;
     float4 metalcoef;
     float4 materialdisprate;
@@ -122,7 +122,7 @@ SPSInZPrepass VSMainZPrepass(SVSIn vsIn, uniform bool hasSkin)
 float4 PSMainZPrepass(SPSInZPrepass psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    clip(albedocol.w - 0.0314f);//2024/03/17 アルファテスト　0x08より小さいアルファは書き込まない
+    clip(albedocol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
     
     return float4(psIn.depth.x, psIn.depth.y, psIn.depth.z, 1.0f);
 }

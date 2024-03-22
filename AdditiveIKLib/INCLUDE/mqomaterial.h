@@ -69,7 +69,7 @@ struct SConstantBuffer {
 	Matrix mView;		//ビュー行列。
 	Matrix mProj;		//プロジェクション行列。
 	ChaVector4 diffusemult;
-	ChaVector4 ambient;
+	ChaVector4 ambient;//2024/03/22 ambient.wはAlphaTestClipValとして使う
 	ChaVector4 emission;
 	ChaVector4 metalcoef;
 	ChaVector4 materialdisprate;
@@ -80,8 +80,8 @@ struct SConstantBuffer {
 		mView.SetIdentity();
 		mProj.SetIdentity();
 		diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		ambient = ChaVector4(0.2f, 0.2f, 0.2f, 1.0f);
-		emission = ChaVector4(0.0f, 0.0f, 0.0f, 1.0f);
+		ambient = ChaVector4(0.2f, 0.2f, 0.2f, 0.0f);
+		emission = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
 		metalcoef = ChaVector4(0.250f, 0.250f, 0.0f, 0.0f);
 		materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 		shadowmaxz = ChaVector4(3000.0f, 0.0010f, 0.0f, 0.0f);
@@ -1078,6 +1078,14 @@ public:
 	{
 		return m_lightingflag;
 	}
+	void SetAlphaTestClipVal(double srcval)
+	{
+		m_alphatestclipval = srcval;
+	}
+	double GetAlphaTestClipVal()
+	{
+		return m_alphatestclipval;
+	}
 
 public:
 	//###################################################
@@ -1256,7 +1264,7 @@ private:
 	bool m_shadowcasterflag;//2024/03/03
 
 	bool m_lightingflag;//2024/03/07
-
+	double m_alphatestclipval;//2024/03/22
 
 //以下、クラス外からアクセスしないのでアクセッサー無し。
 	char* m_curtexname;
@@ -1304,6 +1312,7 @@ public:
 		normaly0flag = false;
 		shadowcasterflag = true;
 		uvscale = ChaVectorDbl2(1.0, 1.0);
+		alphatest = (8.0 / 255.0);
 	};
 
 	void SetMaterial(CMQOMaterial* srcmqomat) {
@@ -1327,6 +1336,7 @@ public:
 			normaly0flag = srcmqomat->GetNormalY0Flag();
 			shadowcasterflag = srcmqomat->GetShadowCasterFlag();
 			uvscale = srcmqomat->GetUVScale();
+			alphatest = srcmqomat->GetAlphaTestClipVal();
 		}
 		else {
 			//Material "All"のときにも通る.　エラーではなく通常処理.
@@ -1353,6 +1363,7 @@ public:
 	ChaVectorDbl2 uvscale;// = ChaVectorDbl2(1.0, 1.0);
 	WCHAR wmaterialname[256];// = { 0L };
 	HSVTOON hsvtoon;
+	double alphatest;//2024/03/22
 };
 
 #endif

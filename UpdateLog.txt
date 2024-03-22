@@ -2,6 +2,18 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/03/22
+　アルファテストの閾値を設定可能に.
+　　ShaderプレートメニューにAlphaTestスライダーを追加
+　　1.0.0.12ではAlbgedoTextureのアルファだけで判定していたが、AlbedoTextureAlpha x DiffuseTextureAlphaで判定.
+
+　RefPosのときだけ半透明がブレンドされない件を調査
+　　描画前にソートしていないことが原因
+　　後で対応予定
+
+
+
+
 2024/03/20
 　AdditiveIK 1.0.0.12 release
 　　1.0.0.11からの変更点

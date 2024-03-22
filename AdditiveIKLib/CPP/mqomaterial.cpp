@@ -398,6 +398,8 @@ int CMQOMaterial::InitParams()
 	m_shadowcasterflag = true;//2024/03/03
 	m_lightingflag = true;//2024/03/07
 
+	m_alphatestclipval = (8.0 / 255.0);//2024/03/22
+
 	return 0;
 }
 
@@ -3468,7 +3470,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		else {
 			m_cb[currentrefposindex].diffusemult = renderobj.diffusemult;
 		}
-		m_cb[currentrefposindex].ambient = ChaVector4(GetAmb3F(), 0.0f);
+		m_cb[currentrefposindex].ambient = ChaVector4(GetAmb3F(), (float)GetAlphaTestClipVal());
 		if (GetEnableEmission()) {
 			m_cb[currentrefposindex].emission = ChaVector4(GetEmi3F() * GetEmissiveScale(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
@@ -3515,7 +3517,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		else {
 			m_cb[currentrefposindex].diffusemult = renderobj.diffusemult;
 		}
-		m_cb[currentrefposindex].ambient = ChaVector4(GetAmb3F(), 0.0f);
+		m_cb[currentrefposindex].ambient = ChaVector4(GetAmb3F(), (float)GetAlphaTestClipVal());
 		if (GetEnableEmission()) {
 			m_cb[currentrefposindex].emission = ChaVector4(GetEmi3F() * GetEmissiveScale(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
@@ -3636,7 +3638,7 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ rende
 		else {
 			m_cb[0].diffusemult = renderobj.diffusemult;
 		}
-		m_cb[0].ambient = ChaVector4(GetAmb3F(), 0.0f);
+		m_cb[0].ambient = ChaVector4(GetAmb3F(), (float)GetAlphaTestClipVal());
 		if (GetEnableEmission()) {
 			m_cb[0].emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
@@ -3675,7 +3677,7 @@ void CMQOMaterial::ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ rende
 		else {
 			m_cb[0].diffusemult = renderobj.diffusemult;
 		}
-		m_cb[0].ambient = ChaVector4(GetAmb3F(), 0.0f);
+		m_cb[0].ambient = ChaVector4(GetAmb3F(), (float)GetAlphaTestClipVal());
 		if (GetEnableEmission()) {
 			m_cb[0].emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
@@ -3775,7 +3777,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		else {
 			m_cb[0].diffusemult = renderobj.diffusemult;
 		}
-		m_cb[0].ambient = ChaVector4(GetAmb3F(), 0.0f);
+		m_cb[0].ambient = ChaVector4(GetAmb3F(), (float)GetAlphaTestClipVal());
 		if (GetEnableEmission()) {
 			m_cb[0].emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
@@ -3814,7 +3816,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		else {
 			m_cb[0].diffusemult = renderobj.diffusemult;
 		}
-		m_cb[0].ambient = ChaVector4(GetAmb3F(), 0.0f);
+		m_cb[0].ambient = ChaVector4(GetAmb3F(), (float)GetAlphaTestClipVal());
 		if (GetEnableEmission()) {
 			m_cb[0].emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}

@@ -89,6 +89,7 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			bool normaly0flag = mqomat->GetNormalY0Flag();
 			bool shadowcasterflag = mqomat->GetShadowCasterFlag();
 			bool lightingflag = mqomat->GetLightingFlag();
+			float alphatestclipval = (float)mqomat->GetAlphaTestClipVal();
 
 			int litindex;
 			for (litindex = 0; litindex < 8; litindex++) {
@@ -101,6 +102,9 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			CallF(Write2File("    <ShaderType>%d</ShaderType>\r\n", shadertype), return 1);
 			CallF(Write2File("    <MetalCoef>%f</MetalCoef>\r\n", metalcoef), return 1);
 			CallF(Write2File("    <SmoothCoef>%f</SmoothCoef>\r\n", smoothcoef), return 1);
+
+			//2024/03/22
+			CallF(Write2File("    <AlphaTestClipVal>%f</AlphaTestClipVal>\r\n", alphatestclipval), return 1);
 
 			CallF(Write2File("    <LightScale1>%f</LightScale1>\r\n", lightscale[0]), return 1);
 			CallF(Write2File("    <LightScale2>%f</LightScale2>\r\n", lightscale[1]), return 1);
@@ -239,6 +243,13 @@ int CShaderTypeFile::LoadShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 				float smoothcoef = 0.25f;
 				Read_Float(&materialbuf, "<SmoothCoef>", "</SmoothCoef>", &smoothcoef);
 				curmqomat->SetSmoothCoef(smoothcoef);
+
+
+				//2024/03/22
+				float alphatestclipval = (float)(8.0 / 255.0);
+				Read_Float(&materialbuf, "<AlphaTestClipVal>", "</AlphaTestClipVal>", &alphatestclipval);
+				curmqomat->SetAlphaTestClipVal(alphatestclipval);
+
 
 				float lightscale1 = 1.0f;
 				Read_Float(&materialbuf, "<LightScale1>", "</LightScale1>", &lightscale1);
