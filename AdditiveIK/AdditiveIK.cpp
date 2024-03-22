@@ -1087,7 +1087,8 @@ static OrgWindow* s_placefolderWnd = 0;
 //#define SHORTCUTTEXTNUM	48
 //#define SHORTCUTTEXTNUM	50
 //#define SHORTCUTTEXTNUM	52
-#define SHORTCUTTEXTNUM	46
+//#define SHORTCUTTEXTNUM	46
+#define SHORTCUTTEXTNUM	49
 static OWP_Label* s_shortcuttext[SHORTCUTTEXTNUM];
 
 
@@ -1471,18 +1472,6 @@ static int s_editrangesetindex = 0;
 static CEditRange s_previewrange;
 
 
-
-//ID_RMENU_0を足して使う
-#define MENUOFFSET_SETCONVBONEMODEL		(100)
-#define MENUOFFSET_SETCONVBONEBVH		(MENUOFFSET_SETCONVBONEMODEL + 100)
-#define MENUOFFSET_SETCONVBONE			(MENUOFFSET_SETCONVBONEBVH + 100)
-//#define MENUOFFSET_SETCONVBONE			(MENUOFFSET_SETCONVBONEBVH + 500)
-#define MENUOFFSET_INITMPFROMTOOL		(MENUOFFSET_SETCONVBONE + MAXBONENUM)
-
-#define MENUOFFSET_GETSYMROOTMODE		(MENUOFFSET_INITMPFROMTOOL + 100)
-#define MENUOFFSET_INTERPOLATEFROMTOOL		(MENUOFFSET_GETSYMROOTMODE + 30)
-#define MENUOFFSET_FILTERFROMTOOL		(MENUOFFSET_INTERPOLATEFROMTOOL + 30)
-#define MENUOFFSET_CHECKSIMILARGROUP		(MENUOFFSET_FILTERFROMTOOL + 30)
 
 
 
@@ -1918,7 +1907,23 @@ ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わら�
 //--------------------------------------------------------------------------------------
 
 
+//ID_RMENU_0を足して使う
+#define MENUOFFSET_SETCONVBONEMODEL		(100)
+#define MENUOFFSET_SETCONVBONEBVH		(MENUOFFSET_SETCONVBONEMODEL + 100)
+#define MENUOFFSET_SETCONVBONE			(MENUOFFSET_SETCONVBONEBVH + 100)
+//#define MENUOFFSET_SETCONVBONE			(MENUOFFSET_SETCONVBONEBVH + 500)
+#define MENUOFFSET_INITMPFROMTOOL		(MENUOFFSET_SETCONVBONE + MAXBONENUM)
+
+#define MENUOFFSET_GETSYMROOTMODE		(MENUOFFSET_INITMPFROMTOOL + 100)
+#define MENUOFFSET_INTERPOLATEFROMTOOL		(MENUOFFSET_GETSYMROOTMODE + 30)
+#define MENUOFFSET_FILTERFROMTOOL		(MENUOFFSET_INTERPOLATEFROMTOOL + 30)
+#define MENUOFFSET_CHECKSIMILARGROUP		(MENUOFFSET_FILTERFROMTOOL + 30)
+
+
 //
+#define MENUOFFSET_BRUSHESCONTEXTMENU		19500
+//2024/03/23 MENUOFFSET_BRUSHESCONTEXTMENU から　(MENUOFFSET_BRUSHESCONTEXTMENU + MAXPLUGIN)まで使用
+
 
 #define MENUOFFSET_BONERCLICK		20000
 //################################################
@@ -2482,6 +2487,7 @@ static int DispRotAxisDlg();
 static int DispCustomRigDlg(int rigno);
 static int InvalidateCustomRig(int rigno);
 static int BoneRClick(int srcboneno);
+static int BrushesContextMenu();
 
 static int DisplayApplyRateText();
 
@@ -6626,6 +6632,37 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		}
 
 
+		else if ((menuid >= (MENUOFFSET_BRUSHESCONTEXTMENU)) && (menuid < (MENUOFFSET_BRUSHESCONTEXTMENU + MAXPLUGIN))) {
+			if (s_model) {
+				int subid = menuid - MENUOFFSET_BRUSHESCONTEXTMENU;
+				if (s_model->ExistCurrentMotion()) {
+					if (s_plugin && ((s_plugin + subid)->validflag == 1)) {
+						g_motionbrush_method = (s_plugin + subid)->menuid;
+
+						if (s_editmotionflag < 0) {//IK中でないとき
+							int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
+							if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
+								_ASSERT(0);
+								::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+								PostQuitMessage(result);
+							}
+							s_utBrushMethodFlag = true;//PrepairUndo();//保存はOnFrameUtCheckBoxにて
+						}
+					}
+					else {
+						_ASSERT(0);
+					}
+
+					if (s_guidlg[GUIDLG_BRUSHPARAMS]) {
+						HWND combownd = GetDlgItem(s_guidlg[GUIDLG_BRUSHPARAMS], IDC_COMBO_BRUSHES);
+						if (combownd != NULL) {
+							::SendMessage(combownd, CB_SETCURSEL, (WPARAM)subid, 0);
+						}
+					}
+				}
+			}
+		}
+
 		else if (menuid == (ID_RMENU_COPY + MENUOFFSET_BONERCLICK)) {
 			if (s_copyFlag == false) {
 				s_copyFlag = true;
@@ -8084,6 +8121,13 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					doneflag = true;
 				}
 			}
+
+			if (doneflag == false) {
+				BrushesContextMenu();
+				doneflag = true;
+			}
+
+
 		}
 	}
 	else if (uMsg == WM_RBUTTONDBLCLK) {
@@ -37036,8 +37080,11 @@ int CreatePlaceFolderWnd()
 			L" ",
 			L"　　UpperArrow or LowerArrow　：　Select parent joint or child joint.",
 			L" ",
-			L"　Edit Motion",
+			L"　Brush Selection",
 
+			L"　　RClick in the margin of 3DWnd　：　Select Brush.",
+			L" ",
+			L"　Edit Motion",
 			L"　　T + MouseWheel　：　Twist motion.",
 			L" ",
 			L"　　Shift + Drag(X or Y or Z) on ScalingMode　：　Scale all axes.",
@@ -37045,10 +37092,10 @@ int CreatePlaceFolderWnd()
 			L" ",
 			L"　Timeline",
 			L"　　Ctrl + MouseWheel　：　Move frame selection by 1 frame.",
+			
 			L" ",
 			L"　Manipulator",
 			L"　　S + Mouse_R_Drag　：　Change manipulator scale.",
-
 			L" ",
 			L"　OWP_Slider",
 			L"　　Drag on CenterBar　：　Slide starting from clicked position.",
@@ -37056,10 +37103,10 @@ int CreatePlaceFolderWnd()
 			L"    RButton DoubleClick :  Undo value limited to 1,000,000 times.",
 			L"    Mouse Wheel : Slide per a pixel.",
 			L" ",
+			
 			L"　DispGroupWindow",
 			L"　　RButton on a Element　：　Context Menu for SimilarCheck.",
 			L" ",
-			
 			L"　OWP_ScrollWindow",
 			L"　　MouseWheel on ScrollBar　：　Scroll Window.",
 			L" ",
@@ -37078,11 +37125,11 @@ int CreatePlaceFolderWnd()
 			}
 		
 			//red color new line
-			////if (textno == 25) {
-			//if (textno == 50) {
-			//	COLORREF colred = RGB(168, 129, 129);
-			//	s_shortcuttext[textno]->setTextColor(colred);
-			//}
+			//if (textno == 25) {
+			if ((textno == 19) || (textno == 20)) {
+				COLORREF colred = RGB(168, 129, 129);
+				s_shortcuttext[textno]->setTextColor(colred);
+			}
 		}
 
 
@@ -43531,6 +43578,87 @@ LRESULT CALLBACK CustomRigDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	return TRUE;
 
 }
+
+int BrushesContextMenu()
+{
+	if (!s_model) {
+		return 0;
+	}
+	if (!s_model->GetTopBone()) {
+		return 0;
+	}
+
+	HWND parwnd;
+	parwnd = s_3dwnd;
+
+	CRMenuMain* rmenu;
+	rmenu = new CRMenuMain(IDR_RMENU);
+	if (!rmenu) {
+		return 0;
+	}
+	int ret;
+	ret = rmenu->Create(parwnd, MENUOFFSET_BRUSHESCONTEXTMENU);
+	if (ret) {
+		return 0;
+	}
+
+	HMENU submenu = rmenu->GetSubMenu();
+
+	CRMenuMain* rsubmenu[MAXPLUGIN];
+	ZeroMemory(rsubmenu, sizeof(CRMenuMain*) * MAXPLUGIN);
+
+
+	int menunum;
+	menunum = GetMenuItemCount(submenu);
+	int menuno;
+	for (menuno = 0; menuno < menunum; menuno++)
+	{
+		RemoveMenu(submenu, 0, MF_BYPOSITION);
+	}
+
+
+	int currentpluginno = 0;
+	int pluginno;
+	int addindex = 0;
+	for (pluginno = 0; pluginno < MAXPLUGIN; pluginno++) {
+		if ((s_plugin + pluginno)->validflag == 1) {
+			WCHAR strmenu[256];
+			swprintf_s(strmenu, 256, (s_plugin + pluginno)->pluginname);
+
+			AppendMenu(submenu, MF_STRING,
+				(MENUOFFSET_BRUSHESCONTEXTMENU + pluginno),
+				strmenu);
+		}
+	}
+
+
+	POINT pt;
+	GetCursorPos(&pt);
+	//::ScreenToClient(parwnd, &pt);
+
+	s_cursubmenu = rmenu->GetSubMenu();
+
+	InterlockedExchange(&g_undertrackingRMenu, (LONG)1);
+	int currigno = -1;
+	int menuid;
+	menuid = rmenu->TrackPopupMenu(pt);
+
+
+	for (pluginno = 0; pluginno < MAXPLUGIN; pluginno++) {
+		CRMenuMain* curmenu = rsubmenu[pluginno];
+		if (curmenu) {
+			curmenu->Destroy();
+			delete curmenu;
+		}
+	}
+
+	rmenu->Destroy();
+	delete rmenu;
+	InterlockedExchange(&g_undertrackingRMenu, (LONG)0);
+
+	return 0;
+}
+
 
 int BoneRClick(int srcboneno)
 {
