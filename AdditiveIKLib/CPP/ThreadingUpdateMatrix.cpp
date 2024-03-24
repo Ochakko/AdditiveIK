@@ -61,6 +61,7 @@ int CThreadingUpdateMatrix::InitParams()
 
 	m_limitdegflag = false;
 	//updateslot = 0;
+	m_refposindex = 0;
 
 	return 0;
 }
@@ -99,7 +100,7 @@ int CThreadingUpdateMatrix::ThreadFunc()
 			if (InterlockedAdd(&m_start_state, 0) == 1) {//計算開始命令をキャッチ
 				if (InterlockedAdd(&m_exit_state, 0) != 1) {//スレッドが終了していない場合
 
-					if (m_model && (m_model->GetInView() == true)) {
+					if (m_model && (m_model->GetInView(m_refposindex) == true)) {
 						//EnterCriticalSection(&m_CritSection);//再入防止 呼び出し側で処理終了を待つので不要
 						if (!m_bonevec.empty()) {
 							int bonenum = (int)m_bonevec.size();
@@ -108,7 +109,8 @@ int CThreadingUpdateMatrix::ThreadFunc()
 								CBone* curbone = m_bonevec[bonecount];
 								if (curbone && (g_changeUpdateThreadsNum == false)) {
 									bool callingbythread = true;
-									curbone->UpdateMatrix(m_limitdegflag, motid, frame, &wmat, &vmat, &pmat, callingbythread);// , updateslot);
+									curbone->UpdateMatrix(m_limitdegflag, motid, frame, &wmat, &vmat, &pmat, 
+										callingbythread, m_refposindex);// , updateslot);
 								}
 							}
 						}
@@ -149,7 +151,7 @@ int CThreadingUpdateMatrix::ThreadFunc()
 					// Event object was signaled
 				case WAIT_OBJECT_0:
 				{
-					if (m_model && (m_model->GetInView() == true)) {
+					if (m_model && (m_model->GetInView(m_refposindex) == true)) {
 						EnterCriticalSection(&m_CritSection);
 						if (!m_bonevec.empty()) {
 							int bonenum = (int)m_bonevec.size();
@@ -158,7 +160,8 @@ int CThreadingUpdateMatrix::ThreadFunc()
 								CBone* curbone = m_bonevec[bonecount];
 								if (curbone && (g_changeUpdateThreadsNum == false)) {
 									bool callingbythread = true;
-									curbone->UpdateMatrix(m_limitdegflag, motid, frame, &wmat, &vmat, &pmat, callingbythread);// , updateslot);
+									curbone->UpdateMatrix(m_limitdegflag, motid, frame, &wmat, &vmat, &pmat, 
+										callingbythread, m_refposindex);// , updateslot);
 								}
 							}
 						}
@@ -220,17 +223,22 @@ int CThreadingUpdateMatrix::AddBoneList(CBone* srcbone)
 }
 
 void CThreadingUpdateMatrix::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe, 
-	ChaMatrix* srcwmat, ChaMatrix* srcvmat, ChaMatrix* srcpmat)// , int srcupdateslot)
+	ChaMatrix* srcwmat, ChaMatrix* srcvmat, ChaMatrix* srcpmat,
+	int refposindex)// , int srcupdateslot)
 	//default : updateslot = 0
 {
 
 	if (!m_model) {
 		return;
 	}
-	if (m_model && (m_model->GetInView() == false)) {
+	if (m_model && (m_model->GetInView(refposindex) == false)) {
 		return;
 	}
 
+	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+		_ASSERT(0);
+		return;
+	}
 
 	//####################################################################
 	//## g_limitdegflag == true　の場合にはローカルの計算だけ並列化
@@ -244,6 +252,7 @@ void CThreadingUpdateMatrix::UpdateMatrix(bool limitdegflag, int srcmotid, doubl
 		vmat = *srcvmat;
 		pmat = *srcpmat;
 		m_limitdegflag = limitdegflag;
+		m_refposindex = refposindex;
 		//updateslot = srcupdateslot;
 		LeaveCriticalSection(&m_CritSection);
 		InterlockedExchange(&m_start_state, 1L);

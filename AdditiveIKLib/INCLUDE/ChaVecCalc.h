@@ -1071,6 +1071,8 @@ public:
 	ChaFrustumInfo();
 	~ChaFrustumInfo();
 
+	void InitParams();
+
 	//int UpdateFrustum(ChaMatrix matVP);
 	int ChkInView(int srclodnum, int srclodno, MODELBOUND srcmb, ChaMatrix matWorld);
 
@@ -1094,10 +1096,6 @@ public:
 		return m_distfromcamera;
 	};
 
-
-private:
-	void InitParams();
-	//int GetFootOnPlane(int srcplaneindex, ChaVector3 srcpos);
 
 private:
 	bool m_visible;

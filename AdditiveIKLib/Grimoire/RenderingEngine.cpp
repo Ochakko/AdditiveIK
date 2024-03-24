@@ -494,7 +494,7 @@ namespace myRenderer
         //////前のパスで異なるviewportを設定した場合にはviewportの設定し直しが必要
         rc->SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
 
-        if ((g_alphablending == true) && (g_zpreflag == true)) {
+        if ((g_alphablending || g_refposflag) && g_zpreflag) {
             //2024/03/17
             //g_zpreflagがtrueの場合にはzpreにすでにZが書き込まれている
             //その場合にalphablendingするためには、ここでzpreをもう一度クリアする必要がある

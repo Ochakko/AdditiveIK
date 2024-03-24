@@ -270,6 +270,12 @@ void CMQOObject::InitParams()
 
 	m_cancelshadow = false;
 
+	int index0;
+	for (index0 = 0; index0 < REFPOSMAXNUM; index0++) {
+		m_frustum[index0].InitParams();
+	}
+
+
 //	next = 0;
 }
 
@@ -2544,8 +2550,14 @@ int CMQOObject::SetShapeVert( char* nameptr, int vno, ChaVector3 srcv )
 	return 0;
 }
 
-int CMQOObject::ChkInView(ChaMatrix matWorld, ChaMatrix matVP)
+int CMQOObject::ChkInView(ChaMatrix matWorld, ChaMatrix matVP, int refposindex)
 {
+
+	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+		_ASSERT(0);
+		return 1;
+	}
+
 	MODELBOUND srcmb;
 	srcmb.Init();
 	ChaMatrix chkmatworld;
@@ -2598,9 +2610,9 @@ int CMQOObject::ChkInView(ChaMatrix matWorld, ChaMatrix matVP)
 		if (m_extline) {
 			//2023/10/07
 			//extlineは　視野内とする
-			m_frustum.SetVisible(true);
+			m_frustum[refposindex].SetVisible(true);
 
-			m_frustum.SetInShadow(false);
+			m_frustum[refposindex].SetInShadow(false);
 			return 0;//!!!!!!
 		}
 		else {
@@ -2624,37 +2636,57 @@ int CMQOObject::ChkInView(ChaMatrix matWorld, ChaMatrix matVP)
 		lodno = CHKINVIEW_LOD2;
 	}
 
-	m_frustum.ChkInView(GetLODNum(), lodno, srcmb, chkmatworld);
+	m_frustum[refposindex].ChkInView(GetLODNum(), lodno, srcmb, chkmatworld);
 
 	return 0;
 }
 
-bool CMQOObject::GetVisible()
+bool CMQOObject::GetVisible(int refposindex)
 {
+	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+		_ASSERT(0);
+		return false;
+	}
+
 	bool userflag = GetDispFlag();
 	if (userflag == false) {
 		return false;//ユーザーが非表示と指定している場合　非表示
 	}
 	else {
-		return m_frustum.GetVisible();//ChkInView()による視錐体判定結果
+		return m_frustum[refposindex].GetVisible();//ChkInView()による視錐体判定結果
 	}
 }
-bool CMQOObject::GetInShadow()
+bool CMQOObject::GetInShadow(int refposindex)
 {
+	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+		_ASSERT(0);
+		return false;
+	}
+
 	bool userflag = GetDispFlag();
 	if (userflag == false) {
 		return false;//ユーザーが非表示と指定している場合　非表示
 	}
 	else {
-		return m_frustum.GetInShadow();//ChkInView()による視錐体判定結果
+		return m_frustum[refposindex].GetInShadow();//ChkInView()による視錐体判定結果
 	}
 }
 
-void CMQOObject::SetInView(bool srcflag) {
-	m_frustum.SetVisible(srcflag);
+void CMQOObject::SetInView(bool srcflag, int refposindex) {
+	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+		_ASSERT(0);
+		return;
+	}
+
+	m_frustum[refposindex].SetVisible(srcflag);
 }
-void CMQOObject::SetInShadow(bool srcflag) {
-	m_frustum.SetInShadow(srcflag);
+void CMQOObject::SetInShadow(bool srcflag, int refposindex) {
+	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+		_ASSERT(0);
+		return;
+	}
+
+	m_frustum[refposindex].SetInShadow(srcflag);
 }
 
 CBone* CMQOObject::GetHipsBone()

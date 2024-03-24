@@ -100,7 +100,7 @@ int CThreadingRetarget::ThreadFunc()
 			if (InterlockedAdd(&m_start_state, 0) == 1) {//計算開始命令をキャッチ
 				if (InterlockedAdd(&m_exit_state, 0) != 1) {//スレッドが終了していない場合
 
-					if (m_model && (m_model->GetInView() == true)) {
+					if (m_model && (m_model->GetInView(0) == true)) {
 						//EnterCriticalSection(&m_CritSection);//再入防止 呼び出し側で処理終了を待つので不要
 						if (!m_framenovec.empty() && !sconvbonemap.empty()) {
 							int framenum = (int)m_framenovec.size();
@@ -151,7 +151,7 @@ int CThreadingRetarget::ThreadFunc()
 					// Event object was signaled
 				case WAIT_OBJECT_0:
 				{
-					if (m_model && (m_model->GetInView() == true)) {
+					if (m_model && (m_model->GetInView(0) == true)) {
 						EnterCriticalSection(&m_CritSection);
 						if (!m_framenovec.empty() && !sconvbonemap.empty()) {
 							int framenum = (int)m_framenovec.size();

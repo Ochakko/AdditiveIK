@@ -220,7 +220,7 @@ void CThreadingInitMp::InitMPReq(bool srclimitdegflag, CBone* srcbone, int srcmo
 	if (!m_model) {
 		return;
 	}
-	if (m_model && (m_model->GetInView() == false)) {
+	if (m_model && (m_model->GetInView(0) == false)) {
 		return;
 	}
 

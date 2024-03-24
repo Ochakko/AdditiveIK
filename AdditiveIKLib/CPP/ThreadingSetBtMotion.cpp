@@ -116,7 +116,7 @@ int CThreadingSetBtMotion::ThreadFunc()
 						else {
 							//モーションが無い場合にもChkInViewを呼ぶためにUpdateMatrix呼び出しは必要
 							ChaMatrix tmpwm = m_model->GetWorldMat();
-							m_model->UpdateMatrix(limitdegflag, &tmpwm, &matView, &matProj);//, updateslot);
+							m_model->UpdateMatrix(limitdegflag, &tmpwm, &matView, &matProj, true, 0);//, updateslot);
 						}
 					}
 
@@ -175,7 +175,7 @@ int CThreadingSetBtMotion::ThreadFunc()
 						else {
 							//モーションが無い場合にもChkInViewを呼ぶためにUpdateMatrix呼び出しは必要
 							ChaMatrix tmpwm = m_model->GetWorldMat();
-							m_model->UpdateMatrix(limitdegflag, &tmpwm, &matView, &matProj);//, updateslot);
+							m_model->UpdateMatrix(limitdegflag, &tmpwm, &matView, &matProj, true, 0);//, updateslot);
 						}
 						InterlockedExchange(&m_start_state, 0L);
 						LeaveCriticalSection(&m_CritSection);

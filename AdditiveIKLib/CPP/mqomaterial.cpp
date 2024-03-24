@@ -441,7 +441,9 @@ void CMQOMaterial::DestroyObjs()
 			m_zalwaysPipelineState[shaderindex][refposindex].DestroyObjs();
 		}
 	}
-	m_ZPreModelPipelineState.DestroyObjs();
+	for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+		m_ZPreModelPipelineState[refposindex].DestroyObjs();
+	}
 	m_InstancingOpequeTrianglePipelineState.DestroyObjs();
 	m_InstancingtransTrianglePipelineState.DestroyObjs();
 	m_InstancingtransTriangleNoZPipelineState.DestroyObjs();
@@ -458,9 +460,9 @@ void CMQOMaterial::DestroyObjs()
 	}
 	for (rsindex = 0; rsindex < REFPOSMAXNUM; rsindex++) {
 		m_rootSignature[rsindex].DestroyObjs();
+		m_ZPrerootSignature[rsindex].DestroyObjs();
 		m_shadowrootSignature[rsindex].DestroyObjs();
 	}
-	m_ZPrerootSignature.DestroyObjs();
 	m_InstancingrootSignature.DestroyObjs();
 
 	//bank管理の外部ポインタ
@@ -1241,15 +1243,18 @@ int CMQOMaterial::InitZPreShadersAndPipelines(
 	samplerDescArray[1].MaxAnisotropy = 1;
 	samplerDescArray[1].ShaderRegister = 1;//!!!!!!!!!
 
-	m_ZPrerootSignature.Init(
-		samplerDescArray,
-		2,
-		numCbv,
-		numSrv,
-		8,
-		offsetInDescriptorsFromTableStartCB,
-		offsetInDescriptorsFromTableStartSRV
-	);
+	int refposindex;
+	for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+		m_ZPrerootSignature[refposindex].Init(
+			samplerDescArray,
+			2,
+			numCbv,
+			numSrv,
+			8,
+			offsetInDescriptorsFromTableStartCB,
+			offsetInDescriptorsFromTableStartSRV
+		);
+	}
 
 	if (fxFilePath != nullptr && strlen(fxFilePath) > 0) {
 		//シェーダーを初期化。
@@ -1918,10 +1923,8 @@ void CMQOMaterial::InitZPrePipelineState(int vertextype, const std::array<DXGI_F
 	};
 
 
-
 	{
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
-		psoDesc.pRootSignature = m_ZPrerootSignature.Get();
 
 		//2023/12/01 シェーダのエントリ関数として　skin有無を切り替えることはあるが　頂点フォーマットはvertextypeによって決める
 		if (vertextype == 0) {//pm4
@@ -1988,8 +1991,11 @@ void CMQOMaterial::InitZPrePipelineState(int vertextype, const std::array<DXGI_F
 		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 		psoDesc.SampleDesc.Count = 1;
 
-		m_ZPreModelPipelineState.Init(psoDesc);
-
+		int refposindex;
+		for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+			psoDesc.pRootSignature = m_ZPrerootSignature[refposindex].Get();
+			m_ZPreModelPipelineState[refposindex].Init(psoDesc);
+		}
 	}
 
 }
@@ -2624,7 +2630,9 @@ int CMQOMaterial::DecideShaderIndex(myRenderer::RENDEROBJ renderobj)
 		case RENDERKIND_SHADOWRECIEVER:
 			shaderindex = MQOSHADER_PBR_SHADOWRECIEVER;
 			break;
-		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_ZPREPASS:
+			shaderindex = MQOSHADER_TOON;
+			break;
 		case RENDERKIND_INSTANCING_TRIANGLE://Instancingの場合にはこの関数は呼ばれないはず
 		case RENDERKIND_INSTANCING_LINE://Instancingの場合にはこの関数は呼ばれないはず
 		default:
@@ -2644,7 +2652,9 @@ int CMQOMaterial::DecideShaderIndex(myRenderer::RENDEROBJ renderobj)
 		case RENDERKIND_SHADOWRECIEVER:
 			shaderindex = MQOSHADER_STD_SHADOWRECIEVER;
 			break;
-		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_ZPREPASS:
+			shaderindex = MQOSHADER_TOON;
+			break;
 		case RENDERKIND_INSTANCING_TRIANGLE://Instancingの場合にはこの関数は呼ばれないはず
 		case RENDERKIND_INSTANCING_LINE://Instancingの場合にはこの関数は呼ばれないはず
 		default:
@@ -2664,7 +2674,9 @@ int CMQOMaterial::DecideShaderIndex(myRenderer::RENDEROBJ renderobj)
 		case RENDERKIND_SHADOWRECIEVER:
 			shaderindex = MQOSHADER_TOON_SHADOWRECIEVER;
 			break;
-		case RENDERKIND_ZPREPASS://ZPrepassの場合にはこの関数は呼ばれないはず
+		case RENDERKIND_ZPREPASS:
+			shaderindex = MQOSHADER_TOON;
+			break;
 		case RENDERKIND_INSTANCING_TRIANGLE://Instancingの場合にはこの関数は呼ばれないはず
 		case RENDERKIND_INSTANCING_LINE://Instancingの場合にはこの関数は呼ばれないはず
 		default:
@@ -2765,15 +2777,35 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 	}
 }
 
-void CMQOMaterial::ZPreBeginRender(RenderContext* rc)
+void CMQOMaterial::ZPreBeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj, int refposindex)
 {
 	if (!rc) {
 		_ASSERT(0);
 		return;
 	}
-	rc->SetRootSignature(m_ZPrerootSignature);
-	rc->SetPipelineState(m_ZPreModelPipelineState);
-	rc->SetDescriptorHeap(m_descriptorHeap[0]);
+	CPolyMesh3* pm3 = nullptr;
+	CPolyMesh4* pm4 = nullptr;
+	pm3 = renderobj.mqoobj->GetPm3();
+	pm4 = renderobj.mqoobj->GetPm4();
+
+
+	int currentrefposindex;
+	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+		currentrefposindex = 0;
+	}
+	else {
+		if (pm4) {
+			currentrefposindex = refposindex;
+		}
+		else {
+			currentrefposindex = 0;//!!!!!!!!! pm3の場合には　REFPOSは使用しない　REFPOSはスキニングモデルのみに限定(メモリ節約のため)
+		}
+	}
+
+
+	rc->SetRootSignature(m_ZPrerootSignature[currentrefposindex]);
+	rc->SetPipelineState(m_ZPreModelPipelineState[currentrefposindex]);
+	rc->SetDescriptorHeap(m_descriptorHeap[currentrefposindex]);
 }
 
 void CMQOMaterial::InstancingBeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
@@ -3165,7 +3197,7 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 			srvNo += NUM_SRV_ONE_MATERIAL;
 
 			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
-				m_descriptorHeap[refposindex].RegistConstantBuffer(cbNo, m_commonConstantBuffer[0]);
+				m_descriptorHeap[refposindex].RegistConstantBuffer(cbNo, m_commonConstantBuffer[refposindex]);
 			}
 			//if (m_expandConstantBuffer.IsValid()) {
 			//	m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
@@ -3199,7 +3231,7 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 			srvNo += NUM_SRV_ONE_MATERIAL;
 			
 			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
-				m_shadowdescriptorHeap[refposindex].RegistConstantBuffer(cbNo, m_shadowcommonConstantBuffer[0]);
+				m_shadowdescriptorHeap[refposindex].RegistConstantBuffer(cbNo, m_shadowcommonConstantBuffer[refposindex]);
 			}
 			//if (m_expandConstantBuffer.IsValid()) {
 			//	m_shadowdescriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
@@ -3577,143 +3609,6 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	//}
 }
 
-void CMQOMaterial::ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
-	const Matrix& mView, const Matrix& mProj)
-{
-	if (!rc || !renderobj.mqoobj || !renderobj.pmodel) {
-		_ASSERT(0);
-		return;
-	}
-
-	CPolyMesh4* ppm4 = renderobj.mqoobj->GetPm4();
-	CPolyMesh3* ppm3 = renderobj.mqoobj->GetPm3();
-	CExtLine* pextline = renderobj.mqoobj->GetExtLine();
-	CDispObj* pdispline = renderobj.mqoobj->GetDispLine();
-
-	//if (pdispline && pextline) {
-	//	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
-	//}
-	//else if (ppm3 || ppm4) {
-	//	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//}
-	//else {
-	//	_ASSERT(0);
-	//	return;
-	//}
-
-
-	if ((g_shadowmap_slotno < 0) || (g_shadowmap_slotno >= SHADOWSLOTNUM)) {
-		_ASSERT(0);
-		g_shadowmap_slotno = 0;
-	}
-
-
-	////定数バッファを更新する。
-	if (pdispline && pextline) {
-		m_cb[0].mWorld = renderobj.mWorld;
-		m_cb[0].mView = mView;
-		m_cb[0].mProj = mProj;
-		//m_cb.diffusemult = renderobj.diffusemult;
-		m_cb[0].diffusemult = pextline->GetColor();
-		m_cb[0].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
-		m_cb[0].shadowmaxz = ChaVector4(
-			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
-			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
-		m_cb[0].UVs[0] = g_uvset;
-		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
-			m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);
-		}
-		else {
-			m_shadowcommonConstantBuffer[0].CopyToVRAM(m_cb[0]);
-		}
-	}
-	else if (ppm3) {
-		m_cb[0].mWorld = renderobj.mWorld;
-		m_cb[0].mView = mView;
-		m_cb[0].mProj = mProj;
-		//m_cb.diffusemult = renderobj.diffusemult;
-		if (GetTempDiffuseMultFlag()) {
-			m_cb[0].diffusemult = GetTempDiffuseMult();
-		}
-		else {
-			m_cb[0].diffusemult = renderobj.diffusemult;
-		}
-		m_cb[0].ambient = ChaVector4(GetAmb3F(), (float)GetAlphaTestClipVal());
-		if (GetEnableEmission()) {
-			m_cb[0].emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
-		}
-		else {
-			m_cb[0].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
-		}
-		m_cb[0].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
-		m_cb[0].shadowmaxz = ChaVector4(
-			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
-			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
-		m_cb[0].UVs[0] = g_uvset;
-		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
-			m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);
-		}
-		else {
-			m_shadowcommonConstantBuffer[0].CopyToVRAM(m_cb[0]);
-		}
-		//if (!GetUpdateLightsFlag()) {//2023/12/04 ZAlwaysパイプライン描画のマニピュレータ表示がちらつくのでコメントアウト　パイプライン毎のフラグにすれば使える？
-			SetConstLights(renderobj, &(m_cbLights[0]));
-			if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
-				m_expandConstantBuffer[0].CopyToVRAM(m_cbLights[0]);
-			}
-			else {
-				m_shadowexpandConstantBuffer[0].CopyToVRAM(m_cbLights[0]);
-			}
-			//SetUpdateLightsFlag();
-		//}
-	}
-	else if (ppm4) {
-		m_cb[0].mWorld = renderobj.mWorld;
-		m_cb[0].mView = mView;
-		m_cb[0].mProj = mProj;
-		if (GetTempDiffuseMultFlag()) {
-			m_cb[0].diffusemult = GetTempDiffuseMult() * renderobj.diffusemult;
-		}
-		else {
-			m_cb[0].diffusemult = renderobj.diffusemult;
-		}
-		m_cb[0].ambient = ChaVector4(GetAmb3F(), (float)GetAlphaTestClipVal());
-		if (GetEnableEmission()) {
-			m_cb[0].emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
-		}
-		else {
-			m_cb[0].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
-		}
-		m_cb[0].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
-		m_cb[0].shadowmaxz = ChaVector4(
-			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
-			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
-		m_cb[0].UVs[0] = g_uvset;
-		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
-			m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);
-		}
-		else {
-			m_shadowcommonConstantBuffer[0].CopyToVRAM(m_cb[0]);
-		}
-		//if (!GetUpdateFl4x4Flag()) {//2023/12/01
-			//if (isfirstmaterial) {
-			//if (isfirstmaterial && !GetUpdateFl4x4Flag()) {
-			//if (!renderobj.pmodel->GetUpdateFl4x4Flag()) {
-			SetConstLights(renderobj, &(m_cbMatrix[0].lights));
-			SetFl4x4(renderobj, 0);
-
-			if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
-				m_expandConstantBuffer[0].CopyToVRAM(m_cbMatrix[0]);
-			}
-			else {
-				m_shadowexpandConstantBuffer[0].CopyToVRAM(m_cbMatrix[0]);
-			}
-			renderobj.pmodel->SetUpdateFl4x4Flag();
-			//SetUpdateFl4x4Flag();
-		//}
-
-	}
-}
 
 void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 	const Matrix& mView, const Matrix& mProj,

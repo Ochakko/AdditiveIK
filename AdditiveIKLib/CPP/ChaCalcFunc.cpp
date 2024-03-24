@@ -2946,7 +2946,7 @@ int ChaCalcFunc::Motion2Bt(CModel* srcmodel, bool limitdegflag, double nextframe
 	}
 
 	ChaMatrix mW = srcmodel->GetWorldMat();
-	srcmodel->UpdateMatrix(limitdegflag, &mW, pmView, pmProj, true);//, updateslot);
+	srcmodel->UpdateMatrix(limitdegflag, &mW, pmView, pmProj, true, 0);//, updateslot);
 
 
 	if (!srcmodel->GetTopBt()) {

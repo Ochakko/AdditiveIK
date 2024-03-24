@@ -134,7 +134,7 @@ public:
 
 	void DestroySystemDispObj();
 
-	int ChkInView(ChaMatrix matWorld, ChaMatrix matVP);
+	int ChkInView(ChaMatrix matWorld, ChaMatrix matVP, int refposindex);
 
 	CBone* GetHipsBone();
 
@@ -174,10 +174,10 @@ private:
 
 public:
 	//accesser
-	bool GetVisible();//chkinview
-	bool GetInShadow();//chkinview
-	void SetInView(bool srcflag);//chkinview
-	void SetInShadow(bool srcflag);//chkinview
+	bool GetVisible(int refposindex);//chkinview
+	bool GetInShadow(int refposindex);//chkinview
+	void SetInView(bool srcflag, int refposindex);//chkinview
+	void SetInShadow(bool srcflag, int refposindex);//chkinview
 
 	int GetObjFrom(){
 		return m_objfrom;
@@ -436,9 +436,13 @@ public:
 		return m_getuvnum;
 	}
 
-	double GetDistFromCamera()
+	double GetDistFromCamera(int refposindex)
 	{
-		return m_frustum.GetDistFromCamera();
+		if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+			_ASSERT(0);
+			return FLT_MAX;
+		}
+		return m_frustum[refposindex].GetDistFromCamera();
 	}
 
 	void SetCancelShadow(bool srcflag)
@@ -491,7 +495,7 @@ private:
 
 	FbxNode* m_pnode;
 
-	ChaFrustumInfo m_frustum;
+	ChaFrustumInfo m_frustum[REFPOSMAXNUM];
 	bool m_cancelshadow;
 
 

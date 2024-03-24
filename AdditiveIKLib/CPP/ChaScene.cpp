@@ -145,7 +145,8 @@ void ChaScene::InitParams()
 	m_created_Motion2BtThreadsNum = 0;
 	m_created_SetBtMotionThreadsNum = 0;
 
-
+	m_refpos_opaque.clear();
+	m_refpos_transparent.clear();
 }
 void ChaScene::DestroyObjs()
 {
@@ -209,7 +210,7 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* 
 
 				if (curmodel->GetRefPosFlag() == false) {//2024/02/06
 					ChaMatrix wmat = curmodel->GetWorldMat();
-					curmodel->UpdateMatrix(limitdegflag, &wmat, vmat, pmat, needwaitflag);// , updateslot);
+					curmodel->UpdateMatrix(limitdegflag, &wmat, vmat, pmat, needwaitflag, 0);// , updateslot);
 				}
 
 				//2023/11/03
@@ -245,7 +246,9 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* 
 	return 0;
 }
 
-int ChaScene::UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe)
+int ChaScene::UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, 
+	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, 
+	double srcframe, int refposindex)
 {
 	if (g_changeUpdateThreadsNum) {
 		//アップデート用スレッド数を変更中
@@ -261,11 +264,11 @@ int ChaScene::UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, ChaMatri
 	bool needwaitflag = true;//!!!!!!!!!!!!
 	if (srcmodel->ExistCurrentMotion()) {
 		srcmodel->SetMotionFrame(srcframe);
-		srcmodel->UpdateMatrix(limitdegflag, wmat, vmat, pmat, needwaitflag);// , m_updateslot);
+		srcmodel->UpdateMatrix(limitdegflag, wmat, vmat, pmat, needwaitflag, refposindex);// , m_updateslot);
 	}
 	else {
 		//モーションが無い場合にもChkInViewを呼ぶためにUpdateMatrix呼び出しは必要
-		srcmodel->UpdateMatrix(limitdegflag, wmat, vmat, pmat, needwaitflag);//, m_updateslot);
+		srcmodel->UpdateMatrix(limitdegflag, wmat, vmat, pmat, needwaitflag, refposindex);//, m_updateslot);
 	}
 
 	return 0;
@@ -293,14 +296,14 @@ bool ChaScene::PickPolyMesh3_Mesh(int pickkind, UIPICKINFO* tmppickinfo,
 			for (modelindex = 0; modelindex < modelnum; modelindex++) {
 
 				CModel* curmodel = m_modelindex[modelindex].modelptr;
-				if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView()) {
+				if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView(0)) {
 					if (!(curmodel->DispGroupEmpty(groupindex)) && curmodel->GetDispGroupON(groupindex)) {
 						int elemnum = curmodel->GetDispGroupSize(groupindex);
 						int elemno;
 						for (elemno = 0; elemno < elemnum; elemno++) {
 
 							CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
-							if (curobj && curobj->GetDispObj() && curobj->GetPm3() && curobj->GetVisible()) {
+							if (curobj && curobj->GetDispObj() && curobj->GetPm3() && curobj->GetVisible(0)) {
 
 								myRenderer::RENDEROBJ pickobj;
 								pickobj.Init();
@@ -478,7 +481,7 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 
 					CModel* curmodel = m_modelindex[modelindex].modelptr;
 					if (curmodel && (curmodel->GetRefPosFlag() == false) && 
-						curmodel->GetModelDisp() && curmodel->GetInView()) {
+						curmodel->GetModelDisp() && curmodel->GetInView(0)) {
 					//if (curmodel && curmodel->GetModelDisp()) {
 
 						ChaVector4 materialdisprate = curmodel->GetMaterialDispRate();
@@ -491,7 +494,7 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 
 								CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
 
- 								if (curobj && (curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible()) {
+ 								if (curobj && (curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(0)) {
 								//if (curobj) {
 
 								
@@ -545,7 +548,7 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 									//renderingEngine->Add3DModelToZPrepass(renderobj);
 									
 									if (g_enableshadow) {
-										if ((curmodel->GetInShadow()) && (curobj->GetInShadow()) &&
+										if ((curmodel->GetInShadow(0)) && (curobj->GetInShadow(0)) &&
 											//(withalpha == false) && (forcewithalpha == false)) {
 											(curobj->GetCancelShadow() == false)) {
 											//renderingEngine->Add3DModelToRenderToShadowMap(renderobj);
@@ -583,9 +586,10 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 					renderingEngine->Add3DModelToForwardRenderPass(rendervec);
 				}
 			}
+
+			
+			RenderRefPos(renderingEngine, (renderindex == 0));//2024/03/24
 		}
-
-
 
 		//#########################################################################################################################
 		//2023/11/01
@@ -619,6 +623,8 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 		//	//プレビュー中以外のときには同期する(UpdaetMatrixModelsの終わりで終了待機)　Render()においてはcalcslotflag=trueで描画
 		//}
 	}
+
+	ResetRefPos();//2024/03/24
 
 
 
@@ -722,7 +728,7 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 
 			rendervec.clear();//!!!!!!!!!!!!!!!
 
-			if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView()) {
+			if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView(0)) {
 				//if (curmodel && curmodel->GetModelDisp()) {
 
 				ChaVector4 materialdisprate = curmodel->GetMaterialDispRate();
@@ -735,7 +741,7 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 
 						CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
 
-						if (curobj && (curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible()) {
+						if (curobj && (curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(0)) {
 							//if (curobj) {
 
 
@@ -887,7 +893,7 @@ int ChaScene::RenderInstancingModel(CModel* srcmodel, bool forcewithalpha,
 
 						CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
 
-						if (curobj && (curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible()) {
+						if (curobj && (curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(0)) {
 							//if (curobj) {
 
 
@@ -946,6 +952,178 @@ int ChaScene::RenderInstancingModel(CModel* srcmodel, bool forcewithalpha,
 			}
 		}
 	}
+
+	return 0;
+}
+
+
+int ChaScene::ResetRefPos()
+{
+	m_refpos_opaque.clear();
+	m_refpos_transparent.clear();
+	return 0;
+}
+
+int ChaScene::AddToRefPos(CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine* renderingEngine,
+	int lightflag, ChaVector4 diffusemult, int btflag,
+	bool zcmpalways, bool zenable,
+	int refposindex)
+{
+
+	if (!renderingEngine) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	if (g_changeUpdateThreadsNum) {
+		//アップデート用スレッド数を変更中
+		return 0;
+	}
+
+	if (!srcmodel) {
+		return 0;
+	}
+	CModel* curmodel = srcmodel;
+
+
+	bool calcslotflag;
+	calcslotflag = false;
+
+	vector<myRenderer::RENDEROBJ> rendervec;
+
+	int renderindex;
+	//int renderslot = (int)(!(m_updateslot != 0));
+	for (renderindex = 0; renderindex < 2; renderindex++) {
+
+		bool withalpha;
+		if (renderindex == 0) {
+			withalpha = false;
+		}
+		else {
+			withalpha = true;
+		}
+
+		if ((forcewithalpha == true) && (renderindex == 0)) {
+			continue;
+		}
+
+
+		int groupindex;
+		for (groupindex = 0; groupindex < MAXDISPGROUPNUM; groupindex++) {
+
+			rendervec.clear();//!!!!!!!!!!!!!!!
+
+			if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView(refposindex)) {
+				//if (curmodel && curmodel->GetModelDisp()) {
+
+				ChaVector4 materialdisprate = curmodel->GetMaterialDispRate();
+
+				if (!(curmodel->DispGroupEmpty(groupindex)) && curmodel->GetDispGroupON(groupindex)) {
+
+					int elemnum = curmodel->GetDispGroupSize(groupindex);
+					int elemno;
+					for (elemno = 0; elemno < elemnum; elemno++) {
+
+						CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
+
+						if (curobj && (curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(refposindex)) {
+							//if (curobj) {
+
+
+							if (curobj->GetDispLine()) {
+								int dbgflag1 = 1;
+							}
+
+
+							if (forcewithalpha == true && renderindex == 1) {
+								//強制的に半透明として描画
+							}
+							else {
+								bool found_noalpha = false;
+								bool found_alpha = false;
+								int result = curobj->IncludeTransparent(diffusemult.w, &found_noalpha, &found_alpha);//2023/09/24
+								if (result == 1) {
+									_ASSERT(0);
+									return 1;
+								}
+								else if (result == 2) {
+									continue;
+								}
+
+								if ((withalpha == false) && (found_noalpha == false)) {
+									//不透明描画時　１つも不透明がなければ　レンダースキップ
+									continue;
+								}
+								if ((withalpha == true) && (found_alpha == false)) {
+									//半透明描画時　１つも半透明がなければ　レンダースキップ
+									continue;
+								}
+							}
+
+							//m_renderingEngine->Add3DModelToZPrepass(curobj);
+							//m_renderingEngine->Add3DModelToRenderGBufferPass(curobj);
+							myRenderer::RENDEROBJ renderobj;
+							renderobj.Init();
+							renderobj.pmodel = curmodel;
+							renderobj.mqoobj = curobj;
+							if (curmodel->GetSkyFlag() == false) {
+								renderobj.shadertype = MQOSHADER_TOON;//!!!!!!!!!!! マニピュレータと地面はNOLIGHTで表示
+							}
+							else {
+								//2024/03/07
+								renderobj.shadertype = -2;//!!!!!!!!!!! skyのシェーダタイプについては、マテリアルの指定に従う
+							}
+							renderobj.withalpha = withalpha;
+							renderobj.forcewithalpha = forcewithalpha;
+							renderobj.lightflag = lightflag;
+							renderobj.diffusemult = diffusemult;
+							renderobj.materialdisprate = materialdisprate;
+							renderobj.mWorld = curmodel->GetWorldMat().TKMatrix();
+							renderobj.calcslotflag = calcslotflag;
+							renderobj.btflag = btflag;
+							renderobj.zcmpalways = zcmpalways;
+							renderobj.zenable = zenable;//2024/02/08
+							//renderingEngine->Add3DModelToForwardRenderPass(renderobj);
+
+							renderobj.renderkind = RENDERKIND_NORMAL;
+							renderobj.refposindex = refposindex;//2024/02/06
+							
+							
+							//rendervec.push_back(renderobj);
+							
+							if (renderindex == 0) {
+								m_refpos_opaque.push_back(renderobj);
+							}
+							else {
+								m_refpos_transparent.push_back(renderobj);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+int ChaScene::RenderRefPos(myRenderer::RenderingEngine* renderingEngine, bool opaqueflag)
+{
+	if (opaqueflag) {
+		if (!m_refpos_opaque.empty()) {
+			std::sort(m_refpos_opaque.begin(), m_refpos_opaque.end());//カメラ距離でソート
+			//不透明は近くから順に描画
+			renderingEngine->Add3DModelToForwardRenderPass(m_refpos_opaque);
+		}
+	}
+	else {
+		if (!m_refpos_transparent.empty()) {
+			std::sort(m_refpos_transparent.begin(), m_refpos_transparent.end());//カメラ距離でソート
+			std::reverse(m_refpos_transparent.begin(), m_refpos_transparent.end());//半透明は遠くから順番に描画
+			renderingEngine->Add3DModelToForwardRenderPass(m_refpos_transparent);
+		}
+	}
+
 
 	return 0;
 }
@@ -1663,3 +1841,8 @@ int ChaScene::SetBoneMatrixForShader(int btflag, bool calcslotflag)
 	}
 	return 0;
 }
+
+
+
+
+

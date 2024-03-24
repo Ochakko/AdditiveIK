@@ -484,9 +484,13 @@ CModel::~CModel()
 }
 int CModel::InitParams()
 {
-	m_inview = false;
-	m_befinview = false;
-	m_inshadow = false;
+	int index1;
+	for (index1 = 0; index1 < REFPOSMAXNUM; index1++) {
+		m_inview[index1] = false;
+		m_befinview[index1] = false;
+		m_inshadow[index1] = false;
+	}
+
 	m_bound.Init();
 
 	m_refposflag = false;
@@ -1432,81 +1436,81 @@ int CModel::CreateMaterialTexture()
 
 
 
-int CModel::OnRender(bool withalpha, 
-	RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int btflag, bool calcslotflag )
-{
-
-	if (GetInView() == false) {
-		return 0;
-	}
-
-
-	ChaVector4 materialdisprate = GetMaterialDispRate();
-
-	//map<int,CMQOObject*>::iterator itr;
-	//for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
-	//	CMQOObject* curobj = itr->second;
-	int groupindex;
-	for(groupindex = 0; groupindex < MAXDISPGROUPNUM; groupindex++){
-
-		if ((m_dispgroupON[groupindex] == true) && !(m_dispgroup[groupindex].empty())) {
-
-			int elemnum = (int)m_dispgroup[groupindex].size();
-			int elemno;
-			for (elemno = 0; elemno < elemnum; elemno++) {
-
-				CMQOObject* curobj = (m_dispgroup[groupindex])[elemno].mqoobject;
-
-				if (curobj && curobj->GetVisible()) {
-
-					//if (curobj->GetDispLine()) {
-					//	int dbgflag1 = 1;
-					//}
-
-
-					bool found_noalpha = false;
-					bool found_alpha = false;
-					int result = curobj->IncludeTransparent(diffusemult.w, &found_noalpha, &found_alpha);//2023/09/24
-					if (result == 1) {
-						_ASSERT(0);
-						return 1;
-					}
-					else if (result == 2) {
-						continue;
-					}
-
-					if ((withalpha == false) && (found_noalpha == false)) {
-						//不透明描画時　１つも不透明がなければ　レンダースキップ
-						continue;
-					}
-					if ((withalpha == true) && (found_alpha == false)) {
-						//半透明描画時　１つも半透明がなければ　レンダースキップ
-						continue;
-					}
-
-					//if (curobj->GetDispObj()) {
-					//	if (curobj->GetPm3()) {
-					//		CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-					//		CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
-					//	}
-					//	else if (curobj->GetPm4()) {
-					//		CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-					//		CallF(curobj->GetDispObj()->RenderNormal(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
-					//	}
-					//	else {
-					//		_ASSERT(0);
-					//	}
-					//}
-					//else if (curobj->GetDispLine()) {
-					//	CallF(curobj->GetDispLine()->RenderLine(withalpha, pRenderContext, diffusemult, materialdisprate), return 1);
-					//}
-				}
-			}
-		}
-	}
-
-	return 0;
-}
+//int CModel::OnRender(bool withalpha, 
+//	RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int btflag, bool calcslotflag )
+//{
+//
+//	if (GetInView() == false) {
+//		return 0;
+//	}
+//
+//
+//	ChaVector4 materialdisprate = GetMaterialDispRate();
+//
+//	//map<int,CMQOObject*>::iterator itr;
+//	//for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
+//	//	CMQOObject* curobj = itr->second;
+//	int groupindex;
+//	for(groupindex = 0; groupindex < MAXDISPGROUPNUM; groupindex++){
+//
+//		if ((m_dispgroupON[groupindex] == true) && !(m_dispgroup[groupindex].empty())) {
+//
+//			int elemnum = (int)m_dispgroup[groupindex].size();
+//			int elemno;
+//			for (elemno = 0; elemno < elemnum; elemno++) {
+//
+//				CMQOObject* curobj = (m_dispgroup[groupindex])[elemno].mqoobject;
+//
+//				if (curobj && curobj->GetVisible()) {
+//
+//					//if (curobj->GetDispLine()) {
+//					//	int dbgflag1 = 1;
+//					//}
+//
+//
+//					bool found_noalpha = false;
+//					bool found_alpha = false;
+//					int result = curobj->IncludeTransparent(diffusemult.w, &found_noalpha, &found_alpha);//2023/09/24
+//					if (result == 1) {
+//						_ASSERT(0);
+//						return 1;
+//					}
+//					else if (result == 2) {
+//						continue;
+//					}
+//
+//					if ((withalpha == false) && (found_noalpha == false)) {
+//						//不透明描画時　１つも不透明がなければ　レンダースキップ
+//						continue;
+//					}
+//					if ((withalpha == true) && (found_alpha == false)) {
+//						//半透明描画時　１つも半透明がなければ　レンダースキップ
+//						continue;
+//					}
+//
+//					//if (curobj->GetDispObj()) {
+//					//	if (curobj->GetPm3()) {
+//					//		CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+//					//		CallF(curobj->GetDispObj()->RenderNormalPM3(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
+//					//	}
+//					//	else if (curobj->GetPm4()) {
+//					//		CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+//					//		CallF(curobj->GetDispObj()->RenderNormal(withalpha, pRenderContext, lightflag, diffusemult, materialdisprate, curobj), return 1);
+//					//	}
+//					//	else {
+//					//		_ASSERT(0);
+//					//	}
+//					//}
+//					//else if (curobj->GetDispLine()) {
+//					//	CallF(curobj->GetDispLine()->RenderLine(withalpha, pRenderContext, diffusemult, materialdisprate), return 1);
+//					//}
+//				}
+//			}
+//		}
+//	}
+//
+//	return 0;
+//}
 
 
 int CModel::SelectRenderObject(int srcobjno, std::vector<CMQOObject*>& selectedobjvec)
@@ -1603,7 +1607,7 @@ void CModel::GetSelectedObjTreeReq(FbxNode* pNode, std::vector<int>& selectedobj
 int CModel::RenderTest(bool withalpha, myRenderer::RenderingEngine* re, int lightflag, ChaVector4 diffusemult, int srcobjno)
 {
 
-	if (GetInView() == false) {
+	if (GetInView(0) == false) {
 		return 0;
 	}
 
@@ -1631,7 +1635,7 @@ int CModel::RenderTest(bool withalpha, myRenderer::RenderingEngine* re, int ligh
 
 		CMQOObject* curobj = selectedobjvec[selectedno];
 
-		if (curobj && curobj->GetVisible()) {
+		if (curobj && curobj->GetVisible(0)) {
 
 			bool found_noalpha = false;
 			bool found_alpha = false;
@@ -2248,7 +2252,7 @@ void CModel::SetUpdateSlotReq(CBone* srcbone, int srcslot)
 
 int CModel::UpdateMatrix(bool limitdegflag, 
 	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, 
-	bool needwaitfinished)//, int updateslot)
+	bool needwaitfinished, int refposindex)//, int updateslot)
 // default : needwaitfinished = false, updateslot = 0
 {
 	m_matWorld = *wmat;
@@ -2257,8 +2261,8 @@ int CModel::UpdateMatrix(bool limitdegflag,
 	m_matVP = m_matView * m_matProj;
 
 	
-	ChkInView();//2023/08/25
-	if (GetInView() == false) {
+	ChkInView(refposindex);//2023/08/25 //2024/03/24
+	if (GetInView(refposindex) == false) {
 		return 0;
 	}
 
@@ -2302,7 +2306,7 @@ int CModel::UpdateMatrix(bool limitdegflag,
 			int updatecount;
 			for (updatecount = 0; updatecount < m_creatednum_boneupdatematrix; updatecount++) {
 				CThreadingUpdateMatrix* curupdate = m_boneupdatematrix + updatecount;
-				curupdate->UpdateMatrix(limitdegflag, curmotid, curframe, wmat, vmat, pmat);// , updateslot);
+				curupdate->UpdateMatrix(limitdegflag, curmotid, curframe, wmat, vmat, pmat, refposindex);// , updateslot);
 			}
 
 			if (needwaitfinished) {
@@ -2323,7 +2327,7 @@ int CModel::UpdateMatrix(bool limitdegflag,
 			//		curbone->UpdateMatrix( curmotid, curframe, wmat, vpmat );
 			//	}
 			//}
-			UpdateMatrixReq(limitdegflag, GetTopBone(false), curmotid, curframe, wmat, vmat, pmat);
+			UpdateMatrixReq(limitdegflag, GetTopBone(false), curmotid, curframe, wmat, vmat, pmat, refposindex);
 		}
 	}
 
@@ -2398,19 +2402,21 @@ int CModel::UpdateMatrix(bool limitdegflag,
 }
 
 void CModel::UpdateMatrixReq(bool limitdegflag, CBone* srcbone, int srcmotid, double srcframe, 
-	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat)
+	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat,
+	int refposindex)
 {
 	if (srcbone) {
 
 		if (srcbone->IsSkeleton()) {
-			srcbone->UpdateMatrix(limitdegflag, srcmotid, srcframe, wmat, vmat, pmat);
+			bool calledbythread = false;
+			srcbone->UpdateMatrix(limitdegflag, srcmotid, srcframe, wmat, vmat, pmat, calledbythread, refposindex);
 		}
 		
 		if (srcbone->GetChild(false)) {
-			UpdateMatrixReq(limitdegflag, srcbone->GetChild(false), srcmotid, srcframe, wmat, vmat, pmat);
+			UpdateMatrixReq(limitdegflag, srcbone->GetChild(false), srcmotid, srcframe, wmat, vmat, pmat, refposindex);
 		}
 		if (srcbone->GetBrother(false)) {
-			UpdateMatrixReq(limitdegflag, srcbone->GetBrother(false), srcmotid, srcframe, wmat, vmat, pmat);
+			UpdateMatrixReq(limitdegflag, srcbone->GetBrother(false), srcmotid, srcframe, wmat, vmat, pmat, refposindex);
 		}
 	}
 }
@@ -2501,7 +2507,9 @@ int CModel::ClearLimitedWM(int srcmotid, double srcframe)
 }
 
 
-int CModel::HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone, ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat)
+int CModel::HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone, 
+	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat,
+	int refposindex)
 {
 	m_matWorld = *wmat;
 	m_matView = *vmat;
@@ -2535,7 +2543,8 @@ int CModel::HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone, ChaMat
 	for (itrbone = vecroute.begin(); itrbone != vecroute.end(); itrbone++) {
 		CBone* curbone = *itrbone;
 		if (curbone) {
-			curbone->UpdateMatrix(limitdegflag, curmotid, curframe, wmat, vmat, pmat);
+			bool calledbythread = false;
+			curbone->UpdateMatrix(limitdegflag, curmotid, curframe, wmat, vmat, pmat, calledbythread, refposindex);
 		}
 	}
 
@@ -7212,7 +7221,7 @@ int CModel::RenderBoneMark(myRenderer::RenderingEngine* re,
 		return 0;
 	}
 
-	if (GetInView() == false) {
+	if (GetInView(0) == false) {
 		return 0;
 	}
 
@@ -13971,7 +13980,7 @@ int CModel::InterpolateBetweenSelection(bool limitdegflag, double srcstartframe,
 	}
 
 
-	UpdateMatrix(limitdegflag, &m_matWorld, &m_matView, &m_matProj);
+	UpdateMatrix(limitdegflag, &m_matWorld, &m_matView, &m_matProj, true, 0);
 
 	return operatingjointno;
 }
@@ -19364,21 +19373,21 @@ int CModel::SetIKStopFlag()
 	return 0;
 }
 
-int CModel::ChkInView()
+int CModel::ChkInView(int refposindex)
 {
 
 	if (GetSkyFlag() || (wcsstr(GetFileName(), L".mqo") != 0)) {
 
 		//このアプリにおいては　mqoファイル(マニピュレータや地面格子)はクリッピングしない用途に使用しているので　常に描画するように
 
-		SetInView(true);
-		SetInShadow(false);
+		SetInView(true, refposindex);
+		SetInShadow(false, refposindex);
 
 		map<int, CMQOObject*>::iterator itr;
 		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 			CMQOObject* curobj = itr->second;
 			if (curobj) {
-				curobj->SetInView(true);
+				curobj->SetInView(true, refposindex);
 			}
 		}
 	}
@@ -19386,14 +19395,14 @@ int CModel::ChkInView()
 
 		//bvhにはメッシュが無いが　UpdateMatrixを実行するためにInViewである必要
 
-		SetInView(true);
-		SetInShadow(false);
+		SetInView(true, refposindex);
+		SetInShadow(false, refposindex);
 
 		map<int, CMQOObject*>::iterator itr;
 		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 			CMQOObject* curobj = itr->second;
 			if (curobj) {
-				curobj->SetInView(true);
+				curobj->SetInView(true, refposindex);
 			}
 		}
 	}
@@ -19431,11 +19440,11 @@ int CModel::ChkInView()
 			CMQOObject* curobj = itr->second;
 			if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
 				//curobj->ChkInView(m_matWorld, m_matVP);
-				curobj->ChkInView(m_matWorld, m_matVP);
-				if (curobj->GetVisible()) {
+				curobj->ChkInView(m_matWorld, m_matVP, refposindex);
+				if (curobj->GetVisible(refposindex)) {
 					inviewnum++;
 				}
-				if (curobj->GetInShadow()) {
+				if (curobj->GetInShadow(refposindex)) {
 					inshadownum++;
 				}
 				objnum++;
@@ -19443,16 +19452,16 @@ int CModel::ChkInView()
 		}
 
 		if (inviewnum != 0) {
-			SetInView(true);//メッシュ１つでも視野内にある場合には　モデルとして視野内のマークをする
+			SetInView(true, refposindex);//メッシュ１つでも視野内にある場合には　モデルとして視野内のマークをする
 		}
 		else {
-			SetInView(false);//全てのメッシュが視野外の場合　モデルとして視野外のマークをする
+			SetInView(false, refposindex);//全てのメッシュが視野外の場合　モデルとして視野外のマークをする
 		}
 		if (inshadownum != 0) {
-			SetInShadow(true);
+			SetInShadow(true, refposindex);
 		}
 		else {
-			SetInShadow(false);
+			SetInShadow(false, refposindex);
 		}
 	}
 
@@ -20025,7 +20034,7 @@ int CModel::Retarget(CModel* srcbvhmodel, ChaMatrix smatView, ChaMatrix smatProj
 		
 
 		ChaMatrix tmpwm = GetWorldMat();
-		UpdateMatrix(limitdegflag, &tmpwm, &smatView, &smatProj);
+		UpdateMatrix(limitdegflag, &tmpwm, &smatView, &smatProj, true, 0);
 
 
 	}

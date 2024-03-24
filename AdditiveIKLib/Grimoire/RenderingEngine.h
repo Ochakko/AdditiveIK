@@ -39,11 +39,19 @@ namespace myRenderer
             if (!mqoobj) {
                 return false;
             }
-            double srcdist = mqoobj->GetDistFromCamera();
+            if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+                _ASSERT(0);
+                return false;
+            }
+            double srcdist = mqoobj->GetDistFromCamera(refposindex);
             if (!right.mqoobj) {
                 return true;
             }
-            double cmpdist = right.mqoobj->GetDistFromCamera();
+            if ((right.refposindex < 0) || (right.refposindex >= REFPOSMAXNUM)) {
+                _ASSERT(0);
+                return false;
+            }
+            double cmpdist = right.mqoobj->GetDistFromCamera(right.refposindex);
 
             double diffdist = srcdist - cmpdist;
             if (diffdist < 0) {

@@ -23,6 +23,9 @@
 //#include "../../AdditiveIKLib/Grimoire/ModelRender.h"
 //#include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
 
+#include <vector>
+
+
 class CModel;
 class BPWorld;
 class CThreadingMotion2Bt;
@@ -71,18 +74,26 @@ public:
 	void SetUpdateSlot();
 	int UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe, int loopstartflag);
 	int UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, 
-		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe);
+		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe, int refposindex);
 	int WaitUpdateThreads();
 	int SetBoneMatrixForShader(int btflag, bool calcslotflag);
-	int RenderModels(myRenderer::RenderingEngine* renderringEngine, int lightflag, ChaVector4 diffusemult, int btflag = 0);
+	int RenderModels(myRenderer::RenderingEngine* Engine, int lightflag, ChaVector4 diffusemult, int btflag = 0);
 	void WaitForUpdateMatrixModels();
-	int RenderOneModel(CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine* renderringEngine, 
+	int RenderOneModel(CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine* renderingEngine, 
 		int lightflag, ChaVector4 diffusemult, int btflag, 
 		bool zcmpalways, bool zenable,
 		int refposindex = 0);
-	int RenderInstancingModel(CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine* renderringEngine,
+	int RenderInstancingModel(CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine* renderingEngine,
 		int lightflag, ChaVector4 diffusemult, int btflag, 
 		bool zcmpalways, bool zenable, int renderkind);
+
+
+	int ResetRefPos();
+	int AddToRefPos(CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine* renderingEngine,
+		int lightflag, ChaVector4 diffusemult, int btflag,
+		bool zcmpalways, bool zenable,
+		int refposindex);
+	int RenderRefPos(myRenderer::RenderingEngine* renderingEngine, bool opaqueflag);
 
 
 	CModel* GetTheLastCameraModel();
@@ -291,6 +302,11 @@ private:
 	CThreadingSetBtMotion* m_SetBtMotionThreads;//モデル数分配列
 	int m_created_Motion2BtThreadsNum;
 	int m_created_SetBtMotionThreadsNum;
+
+
+	std::vector<myRenderer::RENDEROBJ> m_refpos_opaque;
+	std::vector<myRenderer::RENDEROBJ> m_refpos_transparent;
+
 
 	//myRenderer::RenderingEngine* m_renderingEngine;
 

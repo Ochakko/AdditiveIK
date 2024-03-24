@@ -691,7 +691,7 @@ namespace OrgWinGUI{
 		CModel* currentmodel = GetCurrentModel();
 		if (currentmodel) {
 			bool noboneflag = currentmodel->GetNoBoneFlag();
-			bool inviewflag = currentmodel->GetInView();
+			bool inviewflag = currentmodel->GetInView(0);
 
 			if ((noboneflag == false) && (inviewflag == true)) {
 				if (lineData.size() >= 4) {//X, Y, Z, Brush

@@ -774,7 +774,8 @@ int CBone::AddChild( CBone* childptr )
 
 
 int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe, 
-	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, bool callingbythread)//, int updateslot)
+	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, 
+	bool callingbythread, int refposindex)//, int updateslot)
 	//default : callingbythread = false, updateslot = 0
 {
 	if (!wmat || !vmat || !pmat) {
@@ -784,7 +785,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 
 	//2023/08/26
-	if (GetParModel() && (GetParModel()->GetInView() == false)) {
+	if (GetParModel() && (GetParModel()->GetInView(refposindex) == false)) {
 		return 0;
 	}
 

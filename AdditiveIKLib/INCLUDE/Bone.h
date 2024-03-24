@@ -136,7 +136,8 @@ public:
  * @detail 指定モーションの指定時間の姿勢を計算する。グローバルな姿勢の計算である。
  */
 	int UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe, 
-		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, bool callingbythread = false);// , int updateslot = 0);
+		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, 
+		bool callingbythread, int refposindex);// , int updateslot = 0);
 	//int SwapCurrentMotionPoint();
 
 

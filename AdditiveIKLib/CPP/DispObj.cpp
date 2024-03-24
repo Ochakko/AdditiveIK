@@ -1480,8 +1480,9 @@ int CDispObj::RenderZPrePm4(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 			mView = renderobj.pmodel->GetViewMat().TKMatrix();//2024/03/02
 			mProj = renderobj.pmodel->GetProjMat().TKMatrix();//2024/03/02
 			//定数バッファの設定、更新など描画の共通処理を実行する。
-			curmat->ZPreDrawCommon(rc, renderobj, mView, mProj);
-			curmat->ZPreBeginRender(rc);
+			//curmat->ZPreDrawCommon(rc, renderobj, mView, mProj, renderobj.refposindex);
+			curmat->DrawCommon(rc, renderobj, mView, mProj, renderobj.refposindex);
+			curmat->ZPreBeginRender(rc, renderobj, renderobj.refposindex);
 
 			//4. ドローコールを実行。
 			rc->DrawIndexed(curtrinum * 3, curoffset);
@@ -1834,8 +1835,9 @@ int CDispObj::RenderZPrePm3(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 		mView = renderobj.pmodel->GetViewMat().TKMatrix();//2024/03/02
 		mProj = renderobj.pmodel->GetProjMat().TKMatrix();//2024/03/02
 		//定数バッファの設定、更新など描画の共通処理を実行する。
-		curmat->ZPreDrawCommon(rc, renderobj, mView, mProj);
-		curmat->ZPreBeginRender(rc);
+		//curmat->ZPreDrawCommon(rc, renderobj, mView, mProj, renderobj.refposindex);
+		curmat->DrawCommon(rc, renderobj, mView, mProj, renderobj.refposindex);
+		curmat->ZPreBeginRender(rc, renderobj, renderobj.refposindex);
 
 		//rc.SetDescriptorHeap(m_descriptorHeap);
 

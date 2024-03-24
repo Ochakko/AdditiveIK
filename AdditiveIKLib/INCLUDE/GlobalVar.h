@@ -66,6 +66,8 @@ bool g_skydofflag[DOFSLOTNUM];
 bool g_skydispflag = true;
 int g_skyindex = 0;
 
+bool g_refposflag = false;
+
 int g_pickorder = 1;
 bool g_hdrpbloom = true;
 bool g_alphablending = true;
@@ -345,6 +347,8 @@ extern ChaVector4 g_dofparams[DOFSLOTNUM];
 extern bool g_skydofflag[DOFSLOTNUM];
 extern bool g_skydispflag;
 extern int g_skyindex;
+
+extern bool g_refposflag;
 
 extern int g_pickorder;
 extern bool g_hdrpbloom;

@@ -369,12 +369,13 @@ public:
 	void SetConstShadow(SConstantBufferShadow* pcbShadow);
 	void DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 		const Matrix& mView, const Matrix& mProj,
-		int refposindex = 0);
+		int refposindex);
 	void BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj, 
-		int refposindex = 0);
-	void ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
-		const Matrix& mView, const Matrix& mProj);
-	void ZPreBeginRender(RenderContext* rc);
+		int refposindex);
+	//void ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
+	//	const Matrix& mView, const Matrix& mProj,
+	//	int refposindex);
+	void ZPreBeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj, int refposindex);
 	void InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 		const Matrix& mView, const Matrix& mProj,
 		bool isfirstmaterial = false);
@@ -1231,8 +1232,8 @@ private:
 	//Shader* m_psModel = nullptr;					//モデル用のピクセルシェーダー。
 
 
-	RootSignature m_ZPrerootSignature;					//ZPreルートシグネチャ。
-	PipelineState m_ZPreModelPipelineState;		//ZPreモデル用のパイプラインステート。
+	RootSignature m_ZPrerootSignature[REFPOSMAXNUM];					//ZPreルートシグネチャ。
+	PipelineState m_ZPreModelPipelineState[REFPOSMAXNUM];		//ZPreモデル用のパイプラインステート。
 	Shader* m_vsZPreModel = nullptr;				//ZPreモデル用の頂点シェーダー。
 	Shader* m_psZPreModel = nullptr;					//ZPreモデル用のピクセルシェーダー。
 

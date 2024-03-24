@@ -4275,7 +4275,7 @@ void InitApp()
 		s_skyparams[skyindex].InitParams(s_skyhsvtoonforall);
 	}
 
-
+	g_refposflag = false;
 
 
 	s_temppath[0] = 0L;
@@ -5659,7 +5659,7 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		OnFrameToolWnd();
 
 		if (s_model) {
-			if (s_model->GetBefInView() != s_model->GetInView()) {
+			if (s_model->GetBefInView(0) != s_model->GetInView(0)) {
 				if (s_owpEulerGraph) {
 					//2023/08/27 オイラーグラフの表示非表示の条件が変わった場合には　再描画
 					//オイラーグラフのdraw()は OrgWindow.cppにある
@@ -5815,7 +5815,7 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		
 
 		if (s_model) {
-			if (s_model->GetBefInView() != s_model->GetInView()) {
+			if (s_model->GetBefInView(0) != s_model->GetInView(0)) {
 				if (s_owpEulerGraph) {
 					//2023/08/27 オイラーグラフの表示非表示の条件が変わった場合には　再描画
 					//オイラーグラフのdraw()は OrgWindow.cppにある
@@ -6130,18 +6130,20 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 			if (s_model) {
 				if (s_sprefpos.state) {
 					s_model->SetRefPosFlag(true);
+					g_refposflag = true;
 				}
 				else {
 					s_model->SetRefPosFlag(false);
+					g_refposflag = false;
 				}
 			}
 			bool calcslotflag = false;
 			//bool calcslotflag = true;
 			s_chascene->SetBoneMatrixForShader(btflag, calcslotflag);
-			s_chascene->RenderModels(re, lightflag, diffusemult, btflag);
 			if (s_model && s_sprefpos.state) {
 				OnRenderRefPos(re, s_model);
 			}
+			s_chascene->RenderModels(re, lightflag, diffusemult, btflag);
 
 
 			if (s_ground) {
@@ -7888,13 +7890,13 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						0,
 						s_ikcustomrig, s_pickinfo.buttonflag);
 					ChaMatrix tmpwm = s_model->GetWorldMat();
-					s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
+					s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 					s_model->RigControlPostRig(g_limitdegflag,
 						0, &s_editrange, s_pickinfo.pickobjno,
 						1,
 						s_ikcustomrig, s_pickinfo.buttonflag);
 					tmpwm = s_model->GetWorldMat();
-					s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
+					s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 					s_editmotionflag = s_curboneno;
 
 					if (oldcursor != NULL) {
@@ -12400,7 +12402,7 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 		}
 		s_model->SetMotionFrame(0.0);
 		ChaMatrix tmpwm = s_model->GetWorldMat();
-		s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
+		s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 		//ここでAxisMatXの初期化
 		s_model->CreateBtObject(g_limitdegflag, 1);
 		s_model->CalcBtAxismat(2);//2
@@ -13298,7 +13300,7 @@ int RenderSelectFunc(myRenderer::RenderingEngine* re)
 		return 0;
 	}
 
-	s_chascene->UpdateMatrixOneModel(s_select, g_limitdegflag, &s_selectmat, &s_matView, &s_matProj, 0.0);
+	s_chascene->UpdateMatrixOneModel(s_select, g_limitdegflag, &s_selectmat, &s_matView, &s_matProj, 0.0, 0);
 	if (s_dispselect) {
 		int lightflag = 1;
 		//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
@@ -13323,7 +13325,7 @@ int RenderSelectPostureFunc(myRenderer::RenderingEngine* re)
 		return 0;
 	}
 
-	s_chascene->UpdateMatrixOneModel(s_select_posture, g_limitdegflag, &s_selectmat_posture, &s_matView, &s_matProj, 0.0);
+	s_chascene->UpdateMatrixOneModel(s_select_posture, g_limitdegflag, &s_selectmat_posture, &s_matView, &s_matProj, 0.0, 0);
 	if (s_dispselect) {
 		int lightflag = 1;
 		//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -18612,7 +18614,7 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 					//	}
 					//}
 					ChaMatrix tmpwm = pmodel->GetWorldMat();
-					pmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
+					pmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 
 					//curmodel->SetCurrentRigidElem(s_curreindex);//s_curreindexをmodelごとに持つ必要あり！！！reの内容を変えてから呼ぶ
 					//s_curreindex = 1;
@@ -18667,7 +18669,7 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 					//	}
 					//}
 					ChaMatrix tmpwm = pmodel->GetWorldMat();
-					pmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
+					pmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 
 
 					//curmodel->SetAllKData(-1, s_rgdindex, 3, 3, 1000.0, 0.1);
@@ -19199,7 +19201,7 @@ int SaveProject()
 			s_owpEulerGraph->setCurrentTime(0.0, false);
 			curmodel->SetMotionFrame(0.0);
 			ChaMatrix tmpwm = curmodel->GetWorldMat();
-			curmodel->UpdateMatrix(g_bakelimiteulonsave, &tmpwm, &s_matView, &s_matProj);
+			curmodel->UpdateMatrix(g_bakelimiteulonsave, &tmpwm, &s_matView, &s_matProj, true, 0);
 
 			//ここでAxisMatXの初期化
 			curmodel->CreateBtObject(g_bakelimiteulonsave, 1);
@@ -23049,7 +23051,7 @@ int ExportFBXFile()
 		s_owpLTimeline->setCurrentTime(0.0, true);
 		s_model->SetMotionFrame(0.0);
 		ChaMatrix tmpwm = s_model->GetWorldMat();
-		s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
+		s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 
 		//ここでAxisMatXの初期化
 		s_model->CreateBtObject(g_limitdegflag, 1);
@@ -23699,7 +23701,7 @@ int DispAngleLimitDlg()
 
 	s_dseullimitctrls.clear();
 	ChaMatrix tmpwm = s_model->GetWorldMat();
-	s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
+	s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 	Bone2AngleLimit();
 
 	/*
@@ -25329,7 +25331,7 @@ int CopyLimitedWorldToWorld(CModel* srcmodel, bool allframeflag, bool setcursorf
 		if (s_owpLTimeline) {
 			double curframe = s_owpLTimeline->getCurrentTime();
 			srcmodel->SetMotionFrame(curframe);
-			srcmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
+			srcmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 		}
 	}
 
@@ -25365,7 +25367,7 @@ int CopyWorldToLimitedWorld(CModel* srcmodel)
 		if (s_owpLTimeline) {
 			double curframe = s_owpLTimeline->getCurrentTime();
 			srcmodel->SetMotionFrame(curframe);
-			srcmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
+			srcmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 		}
 	}
 	return 0;
@@ -25399,7 +25401,7 @@ int ApplyNewLimitsToWM(CModel* srcmodel)
 		if (s_owpLTimeline) {
 			double curframe = s_owpLTimeline->getCurrentTime();
 			srcmodel->SetMotionFrame(curframe);
-			srcmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
+			srcmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 		}
 	}
 
@@ -25422,14 +25424,14 @@ int ApplyNewLimitsToWMSelected()
 			int curframe;
 			for (curframe = istartframe; curframe <= iendframe; curframe++) {
 				s_model->SetMotionFrame((double)curframe);
-				s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
+				s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 			}
 		}
 
 		if (s_owpLTimeline) {
 			double curframe = s_owpLTimeline->getCurrentTime();
 			s_model->SetMotionFrame(curframe);
-			s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
+			s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 		}
 	}
 
@@ -35342,13 +35344,13 @@ int OnFrameUpdateGround()
 
 	if (s_ground) {
 		ChaMatrix tmpwm = s_ground->GetWorldMat();
-		s_ground->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
+		s_ground->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 	}
 
 	if (s_gplane && s_bpWorld && s_bpWorld->m_rigidbodyG) {
 		ChaMatrix gpmat = s_inimat;
 		gpmat.data[MATI_42] = s_bpWorld->m_gplaneh;
-		s_gplane->UpdateMatrix(g_limitdegflag, &gpmat, &s_matView, &s_matProj);
+		s_gplane->UpdateMatrix(g_limitdegflag, &gpmat, &s_matView, &s_matProj, true, 0);
 	}
 	return 0;
 }
@@ -41121,7 +41123,7 @@ s_layerWnd->setVisible(false);
 
 int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 {
-	if (!re || !curmodel) {
+	if (!re || !curmodel || !s_chascene) {
 		return 0;
 	}
 
@@ -41144,6 +41146,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 				double currentframe = s_model->GetCurrentFrame();
 				CBone* curbone = s_model->GetBoneByID(s_curboneno);
 				if (curbone) {
+
 					std::vector<ChaVector3> vecbonepos;
 					vecbonepos.clear();
 					ChaVector3 curbonepos;
@@ -41160,64 +41163,61 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 					bool addcurrentjointpos = false;
 					int refposindex = 0;
 					double renderframe, roundingrenderframe;
-					for (renderframe = roundingstartframe; renderframe <= (roundingendframe + 0.5); renderframe += renderstep) {
-						if ((refposindex >= 0) && (refposindex < REFPOSMAXNUM)) {
-							roundingrenderframe = RoundingTime(renderframe);
+					for (refposindex = 0; refposindex <= divnum; refposindex++) {
+						renderframe = roundingstartframe + renderstep * (double)refposindex;
+						roundingrenderframe = RoundingTime(renderframe);
 
-							if ((addcurrentjointpos == false) && (roundingrenderframe >= currentframe)) {
-								double roundingcurrentframe = RoundingTime(currentframe);
-								s_model->SetMotionFrame(roundingcurrentframe);
-								ChaVector3 tmpfpos = curbone->GetJointFPos();
-								ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingcurrentframe, 0) * modelwm;
-								ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
-								vecbonepos.push_back(curbonepos);
-								addcurrentjointpos = true;
-							}
-							s_model->SetMotionFrame(roundingrenderframe);
+						if ((addcurrentjointpos == false) && (roundingrenderframe >= currentframe)) {
+							double roundingcurrentframe = RoundingTime(currentframe);
+							s_model->SetMotionFrame(roundingcurrentframe);
 							ChaVector3 tmpfpos = curbone->GetJointFPos();
-							ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingrenderframe, 0) * modelwm;
+							ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingcurrentframe, 0) * modelwm;
 							ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
 							vecbonepos.push_back(curbonepos);
-
-
-							//int lightflag = 0;//!!!!!!!透けるために必要!!!!!!!!!
-
-							//refframeのポーズを表示
-							int btflag1 = 0;
-
-							s_model->SetMotionFrame(roundingrenderframe);
-							//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
-							s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matView, &s_matProj, roundingrenderframe);
-
-
-							bool calcslotflag;
-							calcslotflag = true;//2024/03/20
-							//calcslotflag = false;
-							s_model->SetShaderConst(btflag1, calcslotflag);
-							s_model->SetRefPosFl4x4ToDispObj(refposindex);
-
-							//カレントフレームから離れるほど　透明度を薄くする
-							//const double refstartalpha = 0.80f;
-							//double renderalpha0 = (renderleng - fabs(currentframe - renderframe)) / renderleng;
-							////2024/02/08 int g_refalpha (0から100) : DispAndLimitsプレートメニューのRefPosAlphaスライダー
-							//double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
-							//ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, (float)renderalpha);
-							const double refstartalpha = (double)g_refalpha * 0.01f;
-							ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, (float)refstartalpha);
-
-							int lightflag = 0;
-							bool forcewithalpha = true;
-							int btflag = 0;
-							bool zcmpalways = false;
-							bool zenable = false;
-							s_chascene->RenderOneModel(s_model, forcewithalpha, re,
-								lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
-
-							refposindex++;
+							addcurrentjointpos = true;
 						}
-						else {
-							break;
-						}
+						s_model->SetMotionFrame(roundingrenderframe);
+						ChaVector3 tmpfpos = curbone->GetJointFPos();
+						ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingrenderframe, 0) * modelwm;
+						ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
+						vecbonepos.push_back(curbonepos);
+
+
+						//int lightflag = 0;//!!!!!!!透けるために必要!!!!!!!!!
+
+						//refframeのポーズを表示
+						int btflag1 = 0;
+
+						s_model->SetMotionFrame(roundingrenderframe);
+						//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
+						s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matView, &s_matProj,
+							roundingrenderframe, refposindex);
+
+
+						bool calcslotflag;
+						calcslotflag = true;//2024/03/20
+						//calcslotflag = false;
+						s_model->SetShaderConst(btflag1, calcslotflag);
+						s_model->SetRefPosFl4x4ToDispObj(refposindex);
+
+						//カレントフレームから離れるほど　透明度を薄くする
+						//const double refstartalpha = 0.80f;
+						//double renderalpha0 = (renderleng - fabs(currentframe - renderframe)) / renderleng;
+						////2024/02/08 int g_refalpha (0から100) : DispAndLimitsプレートメニューのRefPosAlphaスライダー
+						//double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
+						//ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, (float)renderalpha);
+						const double refstartalpha = (double)g_refalpha * 0.01f;
+						ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, (float)refstartalpha);
+
+						int lightflag = 0;
+						bool forcewithalpha = true;
+						int btflag = 0;
+						bool zcmpalways = true;
+						bool zenable = true;
+						//s_chascene->RenderOneModel(s_model, forcewithalpha, re,
+						//	lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
+						s_chascene->AddToRefPos(s_model, forcewithalpha, re,
+							lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
 
 					}
 
@@ -41228,7 +41228,8 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 
 							s_model->SetMotionFrame(currentframe);
 							//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
-							s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matView, &s_matProj, currentframe);
+							s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matView, &s_matProj,
+								currentframe, refposindex);
 
 							bool calcslotflag;
 							calcslotflag = true;//2024/03/20
@@ -41244,12 +41245,18 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 							//bool zcmpalways = false;
 							bool zcmpalways = g_zalways;//2024/02/08 DispAndLimitsプレートメニューのチェックボックス
 							bool zenable = true;
-							s_chascene->RenderOneModel(s_model, forcewithalpha, re,
+							//s_chascene->RenderOneModel(s_model, forcewithalpha, re,
+							//	lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
+
+							s_chascene->AddToRefPos(s_model, forcewithalpha, re,
 								lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
 
 							refposindex++;
 						}
 					}
+
+					//s_chascene->RenderRefPos(re);//RenderModelsで一緒にレンダー
+
 
 					{
 						//render arrow : selected bone : befpos --> aftpos arrow
@@ -41264,6 +41271,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 							//	pRenderContext, s_bcircle, s_curboneno);
 						}
 					}
+
 
 				}
 			}
@@ -41402,7 +41410,7 @@ int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 
 
 		//g_projfarでクリッピングされないようにsky用のprojを使う
-		s_chascene->UpdateMatrixOneModel(s_sky, g_limitdegflag, &skymat, &s_matView, &s_matSkyProj, 0.0);
+		s_chascene->UpdateMatrixOneModel(s_sky, g_limitdegflag, &skymat, &s_matView, &s_matSkyProj, 0.0, 0);
 		ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 		bool forcewithalpha = false;
 		//bool forcewithalpha = true;
@@ -41438,7 +41446,7 @@ int OnRenderGround(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		//g_pEffect->SetMatrix(g_hmWorld, &(s_matWorld.D3DX()));
 		ChaMatrix initmat;
 		initmat.SetIdentity();
-		s_chascene->UpdateMatrixOneModel(s_ground, g_limitdegflag, &initmat, &s_matView, &s_matProj, 0.0);
+		s_chascene->UpdateMatrixOneModel(s_ground, g_limitdegflag, &initmat, &s_matView, &s_matProj, 0.0, 0);
 		ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 		bool forcewithalpha = false;
 		int btflag = 0;
@@ -45325,7 +45333,7 @@ void RecalcAxisX_All()
 		}
 		s_model->SetMotionFrame(0.0);
 		ChaMatrix tmpwm = s_model->GetWorldMat();
-		s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
+		s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 
 		//ここでAxisMatXの初期化
 		s_model->CreateBtObject(g_limitdegflag, 1);
@@ -45456,12 +45464,12 @@ int OnMouseMoveFunc()
 								0, deltau, 
 								s_ikcustomrig, s_pickinfo.buttonflag);
 							ChaMatrix tmpwm = s_model->GetWorldMat();
-							s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
+							s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 							s_model->RigControlUnderRig(g_limitdegflag, 
 								0, &s_editrange, s_pickinfo.pickobjno, 
 								1, deltav, 
 								s_ikcustomrig, s_pickinfo.buttonflag);
-							s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj);
+							s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 							s_editmotionflag = s_curboneno;
 							//s_editmotionflag = 0;//これを０にすると　oprigflag == 1の状態でアンドゥした時に　アンドゥ用の保存が走って　保存が増えて状態が戻らない
 						}
@@ -55433,7 +55441,7 @@ int PickRigBone(UIPICKINFO* ppickinfo, bool forrigtip, int* dstrigno)//default:f
 							rigmat = CalcRigMat(&currig, curbone, curmotid, curframe, currig.dispaxis, currig.disporder, currig.posinverse);
 
 							//g_hmWorld->SetMatrix(rigmat.GetDataPtr());
-							currigmodel->UpdateMatrix(g_limitdegflag, &rigmat, &s_matView, &s_matProj);
+							currigmodel->UpdateMatrix(g_limitdegflag, &rigmat, &s_matView, &s_matProj, true, 0);
 
 
 							int chkboneno = curbone->GetBoneNo();

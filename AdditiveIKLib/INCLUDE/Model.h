@@ -295,7 +295,7 @@ public:
  * @param (int btflag = 0) IN bulletのシミュレーション中であるかどうかのフラグ。
  * @return 成功したら０。
  */
-	int OnRender(bool withalpha, RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int btflag = 0, bool calcslotflag = false );
+	//int OnRender(bool withalpha, RenderContext* pRenderContext, int lightflag, ChaVector4 diffusemult, int btflag = 0, bool calcslotflag = false );
 
 	int RenderRefArrow(bool limitdegflag, 
 		myRenderer::RenderingEngine* re, ChaScene* srcchascene, ChaMatrix matVP,
@@ -407,13 +407,17 @@ public:
  */
 	int UpdateMatrix(bool limitdegflag, 
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, 
-		bool needwaitfinished = true);// , int updateslot = 0);
-	void UpdateMatrixReq(bool limitdegflag, CBone* srcbone, int srcmotid, double srcframe, ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
+		bool needwaitfinished, int refposindex);// , int updateslot = 0);
+	void UpdateMatrixReq(bool limitdegflag, CBone* srcbone, int srcmotid, double srcframe, 
+		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat,
+		int refposindex);
 	void SetUpdateSlotReq(CBone* srcbone, int srcslot);
 
-	int ChkInView();
+	int ChkInView(int refposindex);
 	//int SwapCurrentMotionPoint();
-	int HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone, ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
+	int HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone, 
+		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat,
+		int refposindex);
 	//int UpdateLimitedWM(int srcmotid, double srcframe);
 	int ClearLimitedWM(int srcmotid, double srcframe);
 	void CopyWorldToLimitedWorldReq(CBone* srcbone, int srcmotid, double srcframe);
@@ -1343,21 +1347,46 @@ public: //accesser
 	float GetLoadMult(){ return m_loadmult; };
 	void SetLoadMult( float srcmult ){ m_loadmult = srcmult; };
 
-	bool GetInView() {
-		return m_inview;
+	bool GetInView(int refposindex) {
+		if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+			return false;
+		}
+		else {
+			return m_inview[refposindex];
+		}
 	};
-	bool GetBefInView() {
-		return m_befinview;
+	bool GetBefInView(int refposindex) {
+		if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+			return false;
+		}
+		else {
+			return m_befinview[refposindex];
+		}
 	};
-	void SetInView(bool srcflag) {
-		m_befinview = m_inview;
-		m_inview = srcflag;
+	void SetInView(bool srcflag, int refposindex) {
+		if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+			return;
+		}
+		else {
+			m_befinview[refposindex] = m_inview[refposindex];
+			m_inview[refposindex] = srcflag;
+		}
 	};
-	bool GetInShadow() {
-		return m_inshadow;
+	bool GetInShadow(int refposindex) {
+		if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+			return false;
+		}
+		else {
+			return m_inshadow[refposindex];
+		}
 	};
-	void SetInShadow(bool srcflag) {
-		m_inshadow = srcflag;
+	void SetInShadow(bool srcflag, int refposindex) {
+		if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+			return;
+		}
+		else {
+			m_inshadow[refposindex] = srcflag;
+		}
 	};
 
 
@@ -2742,9 +2771,9 @@ public:
 	CRITICAL_SECTION m_CritSection_Node;
 
 private:
-	bool m_inview;
-	bool m_befinview;
-	bool m_inshadow;
+	bool m_inview[REFPOSMAXNUM];
+	bool m_befinview[REFPOSMAXNUM];
+	bool m_inshadow[REFPOSMAXNUM];
 	ChaFrustumInfo m_frustum;
 	MODELBOUND m_bound;
 
