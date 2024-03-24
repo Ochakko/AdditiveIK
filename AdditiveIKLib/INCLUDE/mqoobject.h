@@ -237,23 +237,11 @@ public:
 		m_facebuf = srcbuf;
 	};
 
-	CPolyMesh3* GetPm3(){
-		return m_pm3;
-	};
-	void SetPm3( CPolyMesh3* srcval ){
-		m_pm3 = srcval;
-	};
-
-	CPolyMesh4* GetPm4(){
-		return m_pm4;
-	};
-	void SetPm4( CPolyMesh4* srcval ){
-		m_pm4 = srcval;
-	};
-
-	CExtLine* GetExtLine(){
-		return m_extline;
-	};
+	CPolyMesh3* GetPm3();
+	void SetPm3( CPolyMesh3* srcval );
+	CPolyMesh4* GetPm4();
+	void SetPm4( CPolyMesh4* srcval );
+	CExtLine* GetExtLine();
 
 	CDispObj* GetDispObj(){
 		return m_dispobj;

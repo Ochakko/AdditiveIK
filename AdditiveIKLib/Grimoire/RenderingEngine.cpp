@@ -373,7 +373,9 @@ namespace myRenderer
         // フォワードレンダリング
         ForwardRendering(rc);
 
-        if (g_zpreflag || g_hdrpbloom) {//zpreはDOFのため
+
+        //2024/03/24 RefPosオンの時はDOFはオフ　RefPosオン時にDOFをオンにするとオブジェクトの境界部分にボケない不透明の三角が多数出来る
+        if ((g_zpreflag && !g_refposflag) || g_hdrpbloom) {//zpreはDOFのため
             // ポストエフェクトを実行
             m_postEffect.Render(rc, m_mainRenderTarget);
         }
@@ -459,7 +461,8 @@ namespace myRenderer
         rc->ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
 
 
-        if (g_zpreflag) {
+        //2024/03/24 RefPosオンの時はDOFはオフ　RefPosオン時にDOFをオンにするとオブジェクトの境界部分にボケない不透明の三角が多数出来る
+        if (g_zpreflag && !g_refposflag) {
             //for (auto& currenderobj : m_zprepassModels)
             for (auto& currenderobj : m_forwardRenderModels)
             {
@@ -726,7 +729,7 @@ namespace myRenderer
                     currenderobj.mqoobj->GetDispObj()->RenderNormal(rc, currenderobj);
                 }
             }
-            if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
+            else if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
                 //################################
                 //GetDispObj()ではなくGetDispLine()
                 //################################
@@ -754,7 +757,7 @@ namespace myRenderer
                     _ASSERT(0);//not support
                 }
             }
-            if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
+            else if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
                 //################################
                 //GetDispObj()ではなくGetDispLine()
                 //################################
@@ -787,7 +790,7 @@ namespace myRenderer
                     currenderobj.mqoobj->GetDispObj()->RenderZPrePm4(rc, currenderobj);
                 }
             }
-            if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
+            else if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
                 //################################
                 //GetDispObj()ではなくGetDispLine()
                 //################################
@@ -807,15 +810,15 @@ namespace myRenderer
         if (currenderobj.mqoobj) {
             if (currenderobj.mqoobj->GetDispObj()) {
                 if (currenderobj.mqoobj->GetPm3()) {
-                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                    currenderobj.mqoobj->GetDispObj()->RenderShadowMapPM3(rc, currenderobj);
+                    if (currenderobj.pmodel->GetSkyFlag() == false) {
+                        currenderobj.mqoobj->GetDispObj()->RenderShadowMapPM3(rc, currenderobj);
+                    }
                 }
                 else if (currenderobj.mqoobj->GetPm4()) {
-                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
                     currenderobj.mqoobj->GetDispObj()->RenderShadowMap(rc, currenderobj);
                 }
             }
-            //if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
+            //else if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
             //    //################################
             //    //GetDispObj()ではなくGetDispLine()
             //    //################################
@@ -842,10 +845,11 @@ namespace myRenderer
                     currenderobj.mqoobj->GetDispObj()->RenderShadowReciever(rc, currenderobj);
                 }
             }
-            if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
+            else if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
                 //################################
                 //GetDispObj()ではなくGetDispLine()
                 //################################
+                currenderobj.renderkind = RENDERKIND_NORMAL;
                 currenderobj.mqoobj->GetDispLine()->RenderLine(rc, currenderobj);
             }
         }

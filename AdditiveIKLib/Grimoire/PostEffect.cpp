@@ -26,7 +26,9 @@ namespace myRenderer {
         if (g_hdrpbloom) {
             m_bloom.Render(rc, mainRenderTarget);
         }
-        if (g_zpreflag) {
+
+        //2024/03/24 RefPosオンの時はDOFはオフ　RefPosオン時にDOFをオンにするとオブジェクトの境界部分にボケない不透明の三角が多数出来る
+        if (g_zpreflag && !g_refposflag) {
             m_dof.Render(rc, mainRenderTarget);
         }
     }

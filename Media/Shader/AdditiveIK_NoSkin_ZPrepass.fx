@@ -109,8 +109,12 @@ SPSInZPrepass VSMainZPrepass(SVSIn vsIn, uniform bool hasSkin)
 float4 PSMainZPrepass(SPSInZPrepass psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    clip(albedocol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
+
+    float2 diffuseuv = { 0.5f, 0.5f }; //処理を軽くするために簡略計算
+    float4 diffusecol = g_diffusetex.Sample(g_sampler_clamp, diffuseuv) * materialdisprate.x;
     
+    clip((albedocol.w * diffusecol.w) - ambient0.w); //2024/03/24 アルファテスト　ambient.w * diffuseco.wより小さいアルファは書き込まない
+
     return float4(psIn.depth.x, psIn.depth.y, psIn.depth.z, 1.0f);
 }
 

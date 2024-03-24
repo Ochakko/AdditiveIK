@@ -2050,6 +2050,7 @@ int CDispObj::RenderLine(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 	//rc.SetIndexBuffer(m_indexBufferView);
 
 	renderobj.renderkind = RENDERKIND_NORMAL;//2023/12/11
+	renderobj.shadertype = MQOSHADER_TOON;//2024/03/24
 
 	int curnumprim;
 	curnumprim = m_extline->GetLineNum();

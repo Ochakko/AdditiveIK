@@ -1219,35 +1219,78 @@ int CMQOMaterial::InitZPreShadersAndPipelines(
 
 
 	//ルートシグネチャを初期化。
-	D3D12_STATIC_SAMPLER_DESC samplerDescArray[2];
+	D3D12_STATIC_SAMPLER_DESC samplerDescArray[6];
 	//デフォルトのサンプラ
 	samplerDescArray[0].Filter = samplerFilter;
-	samplerDescArray[0].AddressU = GetAddressU_albedo();//2024/01/06
-	samplerDescArray[0].AddressV = GetAddressV_albedo();//2024/01/06
-	samplerDescArray[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	samplerDescArray[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDescArray[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDescArray[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	samplerDescArray[0].MipLODBias = 0;
 	samplerDescArray[0].MaxAnisotropy = 0;
 	samplerDescArray[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 	samplerDescArray[0].BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
 	samplerDescArray[0].MinLOD = 0.0f;
 	samplerDescArray[0].MaxLOD = D3D12_FLOAT32_MAX;
-	samplerDescArray[0].ShaderRegister = 0;//!!!!!!!!!
+	samplerDescArray[0].ShaderRegister = 0;//!!!!!!!!
 	samplerDescArray[0].RegisterSpace = 0;
 	samplerDescArray[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	//シャドウマップ用のサンプラ。
 	samplerDescArray[1] = samplerDescArray[0];
+	samplerDescArray[1].ShaderRegister = 1;//!!!!!!!!
+	samplerDescArray[1].AddressU = GetAddressU_albedo();//2024/01/06
+	samplerDescArray[1].AddressV = GetAddressV_albedo();//2024/01/06
+
+	samplerDescArray[2] = samplerDescArray[0];
+	samplerDescArray[2].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//2024/02/21 : normalmapは補間無しに
+	samplerDescArray[2].ShaderRegister = 2;//!!!!!!!!
+	//if (srcuvnum >= 2) {//2024/02/21　コメントアウト
+	samplerDescArray[2].AddressU = GetAddressU_normal();//2024/01/06
+	samplerDescArray[2].AddressV = GetAddressV_normal();//2024/01/06
+	//samplerDescArray[2].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	//samplerDescArray[2].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	//samplerDescArray[2].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	//}
+	//else {
+	//	samplerDescArray[2].AddressU = GetAddressU_albedo();//2024/01/06
+	//	samplerDescArray[2].AddressV = GetAddressV_albedo();//2024/01/06
+	//}
+	////samplerDescArray[2].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	////samplerDescArray[2].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	////samplerDescArray[2].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+
+	samplerDescArray[3] = samplerDescArray[0];
+	samplerDescArray[3].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//2024/02/21 : metalmapは補間無しに
+	samplerDescArray[3].ShaderRegister = 3;//!!!!!!!!
+	//if (srcuvnum >= 2) {//2024/02/21　コメントアウト
+	samplerDescArray[3].AddressU = GetAddressU_metal();//2024/01/06
+	samplerDescArray[3].AddressV = GetAddressV_metal();//2024/01/06
+	//}
+	//else {
+	//	samplerDescArray[3].AddressU = GetAddressU_albedo();//2024/01/06
+	//	samplerDescArray[3].AddressV = GetAddressV_albedo();//2024/01/06
+	//}
+
+	samplerDescArray[4] = samplerDescArray[0];
+	samplerDescArray[4].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//2024/02/21 : 補間無しに
+	samplerDescArray[4].ShaderRegister = 4;//!!!!!!!!
+	samplerDescArray[4].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	samplerDescArray[4].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	samplerDescArray[4].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+
+
+	//シャドウマップ用のサンプラ。
+	samplerDescArray[5] = samplerDescArray[0];
+	samplerDescArray[5].ShaderRegister = 5;//!!!!!!!!
 	//比較対象の値が小さければ０、大きければ１を返す比較関数を設定する。
-	samplerDescArray[1].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
-	samplerDescArray[1].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER;
-	samplerDescArray[1].MaxAnisotropy = 1;
-	samplerDescArray[1].ShaderRegister = 1;//!!!!!!!!!
+	samplerDescArray[5].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+	samplerDescArray[5].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER;
+	samplerDescArray[5].MaxAnisotropy = 1;
 
 	int refposindex;
 	for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
 		m_ZPrerootSignature[refposindex].Init(
 			samplerDescArray,
-			2,
+			6,
 			numCbv,
 			numSrv,
 			8,
@@ -1303,33 +1346,76 @@ int CMQOMaterial::InitInstancingShadersAndPipelines(
 
 
 	//ルートシグネチャを初期化。
-	D3D12_STATIC_SAMPLER_DESC samplerDescArray[2];
+	D3D12_STATIC_SAMPLER_DESC samplerDescArray[6];
 	//デフォルトのサンプラ
 	samplerDescArray[0].Filter = samplerFilter;
-	samplerDescArray[0].AddressU = GetAddressU_albedo();//2024/01/06
-	samplerDescArray[0].AddressV = GetAddressV_albedo();//2024/01/06
-	samplerDescArray[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	samplerDescArray[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDescArray[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDescArray[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	samplerDescArray[0].MipLODBias = 0;
 	samplerDescArray[0].MaxAnisotropy = 0;
 	samplerDescArray[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 	samplerDescArray[0].BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
 	samplerDescArray[0].MinLOD = 0.0f;
 	samplerDescArray[0].MaxLOD = D3D12_FLOAT32_MAX;
-	samplerDescArray[0].ShaderRegister = 0;//!!!!!!!!!
+	samplerDescArray[0].ShaderRegister = 0;//!!!!!!!!
 	samplerDescArray[0].RegisterSpace = 0;
 	samplerDescArray[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	//シャドウマップ用のサンプラ。
 	samplerDescArray[1] = samplerDescArray[0];
+	samplerDescArray[1].ShaderRegister = 1;//!!!!!!!!
+	samplerDescArray[1].AddressU = GetAddressU_albedo();//2024/01/06
+	samplerDescArray[1].AddressV = GetAddressV_albedo();//2024/01/06
+
+	samplerDescArray[2] = samplerDescArray[0];
+	samplerDescArray[2].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//2024/02/21 : normalmapは補間無しに
+	samplerDescArray[2].ShaderRegister = 2;//!!!!!!!!
+	//if (srcuvnum >= 2) {//2024/02/21　コメントアウト
+	samplerDescArray[2].AddressU = GetAddressU_normal();//2024/01/06
+	samplerDescArray[2].AddressV = GetAddressV_normal();//2024/01/06
+	//samplerDescArray[2].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	//samplerDescArray[2].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	//samplerDescArray[2].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	//}
+	//else {
+	//	samplerDescArray[2].AddressU = GetAddressU_albedo();//2024/01/06
+	//	samplerDescArray[2].AddressV = GetAddressV_albedo();//2024/01/06
+	//}
+	////samplerDescArray[2].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	////samplerDescArray[2].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	////samplerDescArray[2].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+
+	samplerDescArray[3] = samplerDescArray[0];
+	samplerDescArray[3].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//2024/02/21 : metalmapは補間無しに
+	samplerDescArray[3].ShaderRegister = 3;//!!!!!!!!
+	//if (srcuvnum >= 2) {//2024/02/21　コメントアウト
+	samplerDescArray[3].AddressU = GetAddressU_metal();//2024/01/06
+	samplerDescArray[3].AddressV = GetAddressV_metal();//2024/01/06
+	//}
+	//else {
+	//	samplerDescArray[3].AddressU = GetAddressU_albedo();//2024/01/06
+	//	samplerDescArray[3].AddressV = GetAddressV_albedo();//2024/01/06
+	//}
+
+	samplerDescArray[4] = samplerDescArray[0];
+	samplerDescArray[4].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//2024/02/21 : 補間無しに
+	samplerDescArray[4].ShaderRegister = 4;//!!!!!!!!
+	samplerDescArray[4].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	samplerDescArray[4].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	samplerDescArray[4].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+
+
+	//シャドウマップ用のサンプラ。
+	samplerDescArray[5] = samplerDescArray[0];
+	samplerDescArray[5].ShaderRegister = 5;//!!!!!!!!
 	//比較対象の値が小さければ０、大きければ１を返す比較関数を設定する。
-	samplerDescArray[1].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
-	samplerDescArray[1].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER;
-	samplerDescArray[1].MaxAnisotropy = 1;
-	samplerDescArray[1].ShaderRegister = 1;//!!!!!!!!!
+	samplerDescArray[5].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+	samplerDescArray[5].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER;
+	samplerDescArray[5].MaxAnisotropy = 1;
 
 	m_InstancingrootSignature.Init(
 		samplerDescArray,
-		2,
+		6,
 		numCbv,
 		numSrv,
 		8,
@@ -3476,6 +3562,13 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].mProj = mProj;
 		//m_cb.diffusemult = renderobj.diffusemult;
 		m_cb[currentrefposindex].diffusemult = pextline->GetColor();
+		m_cb[currentrefposindex].ambient = ChaVector4(GetAmb3F(), (float)GetAlphaTestClipVal());
+		if (GetEnableEmission()) {
+			m_cb[currentrefposindex].emission = ChaVector4(GetEmi3F() * GetEmissiveScale(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+		}
+		else {
+			m_cb[currentrefposindex].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+		}
 		m_cb[currentrefposindex].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_cb[currentrefposindex].shadowmaxz = ChaVector4(
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
@@ -3483,12 +3576,9 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].UVs[0] = g_uvset;
 		m_cb[currentrefposindex].UVs[1] = (int)(GetUVScale().x + 0.0001);
 		m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);
-		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
-			m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
-		}
-		else {
-			m_shadowcommonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
-		}
+		
+		m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
+
 	}
 	else if (ppm3) {
 		m_cb[currentrefposindex].Init();
@@ -3649,17 +3739,19 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].mProj = mProj;
 		//m_cb.diffusemult = renderobj.diffusemult;
 		m_cb[0].diffusemult = pextline->GetColor();
+		m_cb[0].ambient = ChaVector4(GetAmb3F(), (float)GetAlphaTestClipVal());
+		if (GetEnableEmission()) {
+			m_cb[0].emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+		}
+		else {
+			m_cb[0].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+		}
 		m_cb[0].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 		m_cb[0].shadowmaxz = ChaVector4(
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		m_cb[0].UVs[0] = g_uvset;
-		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
-			m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);
-		}
-		else {
-			m_shadowcommonConstantBuffer[0].CopyToVRAM(m_cb[0]);
-		}
+		m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);
 	}
 	else if (ppm3) {
 		m_cb[0].mWorld = renderobj.mWorld;//未使用

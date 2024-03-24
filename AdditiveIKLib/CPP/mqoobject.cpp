@@ -3006,3 +3006,32 @@ CMQOMaterial* CMQOObject::GetOnLoadMaterialByName(const char* srcname) {
 	return retmqomat;
 };
 
+CPolyMesh3* CMQOObject::GetPm3() {
+	if (m_pm3 && (m_pm3->GetFaceNum() > 0)) {
+		return m_pm3;
+	}
+	else {
+		return nullptr;
+	}
+};
+void CMQOObject::SetPm3(CPolyMesh3* srcval) {
+	m_pm3 = srcval;
+};
+
+CPolyMesh4* CMQOObject::GetPm4() {
+	if (m_pm4 && (m_pm4->GetFaceNum() > 0)) {
+		return m_pm4;
+	}
+	else {
+		return nullptr;
+	}
+};
+void CMQOObject::SetPm4(CPolyMesh4* srcval) {
+	m_pm4 = srcval;
+};
+
+CExtLine* CMQOObject::GetExtLine() {
+	return m_extline;
+};
+
+

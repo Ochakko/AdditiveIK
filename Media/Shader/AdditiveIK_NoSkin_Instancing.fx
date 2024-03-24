@@ -104,7 +104,8 @@ sampler g_sampler : register(s0);
 sampler g_sampler_albedo : register(s1);
 sampler g_sampler_normal : register(s2);
 sampler g_sampler_metal : register(s3);
-sampler g_sampler_shadow : register(s4);
+sampler g_sampler_clamp : register(s4); //2024/02/14
+sampler g_sampler_shadow : register(s5);
 
 
 /// <summary>
