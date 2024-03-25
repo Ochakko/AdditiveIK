@@ -56,6 +56,7 @@ CMQOMaterial::CMQOMaterial() :
 	m_shadowrootSignature(), //2023/12/14
 	m_ZPrerootSignature(), //2023/12/05
 	m_ZPreModelPipelineState(), //2023/12/05
+	m_ZPreModelSkyPipelineState(), //2024/03/25
 	m_InstancingrootSignature(), //2024/01/11
 	m_InstancingOpequeTrianglePipelineState(),//2024/02/08
 	m_InstancingtransTrianglePipelineState(),//2024/02/08
@@ -443,6 +444,7 @@ void CMQOMaterial::DestroyObjs()
 	}
 	for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
 		m_ZPreModelPipelineState[refposindex].DestroyObjs();
+		m_ZPreModelSkyPipelineState[refposindex].DestroyObjs();
 	}
 	m_InstancingOpequeTrianglePipelineState.DestroyObjs();
 	m_InstancingtransTrianglePipelineState.DestroyObjs();
@@ -2047,6 +2049,7 @@ void CMQOMaterial::InitZPrePipelineState(int vertextype, const std::array<DXGI_F
 		////2023/11/18
 		//psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
 
+
 		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 #ifdef TK_ENABLE_ALPHA_TO_COVERAGE
 		psoDesc.BlendState.AlphaToCoverageEnable = TRUE;
@@ -2082,8 +2085,15 @@ void CMQOMaterial::InitZPrePipelineState(int vertextype, const std::array<DXGI_F
 			psoDesc.pRootSignature = m_ZPrerootSignature[refposindex].Get();
 			m_ZPreModelPipelineState[refposindex].Init(psoDesc);
 		}
-	}
 
+
+		psoDesc.DepthStencilState.DepthEnable = FALSE;
+		//psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+			psoDesc.pRootSignature = m_ZPrerootSignature[refposindex].Get();
+			m_ZPreModelSkyPipelineState[refposindex].Init(psoDesc);//!!!!!!!!!!!!! for sky
+		}
+	}
 }
 
 void CMQOMaterial::InitInstancingPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
@@ -2890,7 +2900,12 @@ void CMQOMaterial::ZPreBeginRender(RenderContext* rc, myRenderer::RENDEROBJ rend
 
 
 	rc->SetRootSignature(m_ZPrerootSignature[currentrefposindex]);
-	rc->SetPipelineState(m_ZPreModelPipelineState[currentrefposindex]);
+	if (renderobj.pmodel && !renderobj.pmodel->GetSkyFlag()) {
+		rc->SetPipelineState(m_ZPreModelPipelineState[currentrefposindex]);
+	}
+	else {
+		rc->SetPipelineState(m_ZPreModelSkyPipelineState[currentrefposindex]);
+	}
 	rc->SetDescriptorHeap(m_descriptorHeap[currentrefposindex]);
 }
 
@@ -3576,7 +3591,9 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].UVs[0] = g_uvset;
 		m_cb[currentrefposindex].UVs[1] = (int)(GetUVScale().x + 0.0001);
 		m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);
-		
+		m_cb[currentrefposindex].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
+		m_cb[currentrefposindex].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
+
 		m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
 
 	}
@@ -3607,6 +3624,9 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].UVs[0] = g_uvset;
 		m_cb[currentrefposindex].UVs[1] = (int)(GetUVScale().x + 0.0001);
 		m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);
+		m_cb[currentrefposindex].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
+		m_cb[currentrefposindex].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
+
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
 		}
@@ -3654,6 +3674,9 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].UVs[0] = g_uvset;
 		m_cb[currentrefposindex].UVs[1] = (int)(GetUVScale().x + 0.0001);
 		m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);
+		m_cb[currentrefposindex].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
+		m_cb[currentrefposindex].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
+
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
 		}
@@ -3751,6 +3774,9 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		m_cb[0].UVs[0] = g_uvset;
+		m_cb[0].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
+		m_cb[0].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
+
 		m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);
 	}
 	else if (ppm3) {
@@ -3776,6 +3802,9 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		m_cb[0].UVs[0] = g_uvset;
+		m_cb[0].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
+		m_cb[0].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
+
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);
 		}
@@ -3815,6 +3844,9 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		m_cb[0].UVs[0] = g_uvset;
+		m_cb[0].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
+		m_cb[0].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
+
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);
 		}

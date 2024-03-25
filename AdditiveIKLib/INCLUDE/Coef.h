@@ -40,6 +40,9 @@ class CMQOMaterial;
 #define DOFSLOTNUM	8
 
 
+#define ZPRE_ZMAX	250000.0f
+
+
 //バウンダリー簡易クリッピング計算用　大きいほど見切れないが重くなる
 #define CHKINVIEW_BACKPOSCOEF	1.0f
 

@@ -108,7 +108,10 @@ namespace myRenderer {
 
         InitCombimeBokeImageToSprite(
             m_combineBokeImageSprite,                     // 初期化されるスプライト
+            
             m_rtPhomboidBlur.GetRenderTargetTexture(),    // ボケテクスチャ
+            //m_rtDiagonalBlur.GetRenderTargetTexture(),  //<--六角ブラーをスキップする場合
+
             zprepassRenderTarget.GetRenderTargetTexture()  // 深度テクスチャ
         );
 

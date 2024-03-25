@@ -75,6 +75,7 @@ struct SConstantBuffer {
 	ChaVector4 materialdisprate;
 	ChaVector4 shadowmaxz;
 	int UVs[4];//[0]:UVSet, [1]:TilingU, [2]:TilingV
+	int Flags[4];//[0]:skyflag, [1]:groundflag
 	void Init() {
 		mWorld.SetIdentity();
 		mView.SetIdentity();
@@ -89,6 +90,10 @@ struct SConstantBuffer {
 		UVs[1] = 1;
 		UVs[2] = 1;
 		UVs[3] = 0;
+		Flags[0] = 0;
+		Flags[1] = 0;
+		Flags[2] = 0;
+		Flags[3] = 0;
 	};
 };
 
@@ -1234,6 +1239,7 @@ private:
 
 	RootSignature m_ZPrerootSignature[REFPOSMAXNUM];					//ZPreルートシグネチャ。
 	PipelineState m_ZPreModelPipelineState[REFPOSMAXNUM];		//ZPreモデル用のパイプラインステート。
+	PipelineState m_ZPreModelSkyPipelineState[REFPOSMAXNUM];	//ZPreモデルSky用のパイプラインステート。
 	Shader* m_vsZPreModel = nullptr;				//ZPreモデル用の頂点シェーダー。
 	Shader* m_psZPreModel = nullptr;					//ZPreモデル用のピクセルシェーダー。
 

@@ -654,6 +654,8 @@ int CModel::InitParams()
 
 	m_bindpose = nullptr;
 	m_skyflag = false;
+	m_groundflag = false;
+
 	return 0;
 }
 
@@ -1707,35 +1709,40 @@ int CModel::GetModelBound( MODELBOUND* dstb )
 	map<int,CMQOObject*>::iterator itr;
 	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
 		CMQOObject* curobj = itr->second;
-		if( curobj->GetPm3() ){
-			//curobj->GetPm3()->CalcBound();//MakeDispObj()に移動　ここでは既にpointbufなどが削除された後
-			if( calcflag == 0 ){
-				mb = curobj->GetPm3()->GetBound();
-			}else{
-				addmb = curobj->GetPm3()->GetBound();
-				AddModelBound( &mb, &addmb );
+		if (curobj && !curobj->IsND()) {
+			if (curobj->GetPm3()) {
+				//curobj->GetPm3()->CalcBound();//MakeDispObj()に移動　ここでは既にpointbufなどが削除された後
+				if (calcflag == 0) {
+					mb = curobj->GetPm3()->GetBound();
+				}
+				else {
+					addmb = curobj->GetPm3()->GetBound();
+					AddModelBound(&mb, &addmb);
+				}
+				calcflag++;
 			}
-			calcflag++;
-		}
-		if( curobj->GetPm4() ){
-			//curobj->GetPm4()->CalcBound();//MakeDispObj()に移動　ここでは既にpointbufなどが削除された後
-			if( calcflag == 0 ){
-				mb = curobj->GetPm4()->GetBound();
-			}else{
-				addmb = curobj->GetPm4()->GetBound();
-				AddModelBound( &mb, &addmb );
+			if (curobj->GetPm4()) {
+				//curobj->GetPm4()->CalcBound();//MakeDispObj()に移動　ここでは既にpointbufなどが削除された後
+				if (calcflag == 0) {
+					mb = curobj->GetPm4()->GetBound();
+				}
+				else {
+					addmb = curobj->GetPm4()->GetBound();
+					AddModelBound(&mb, &addmb);
+				}
+				calcflag++;
 			}
-			calcflag++;
-		}
-		if( curobj->GetExtLine() ){
-			//curobj->GetExtLine()->CalcBound();//MakeDispObj()に移動　ここでは既にpointbufなどが削除された後
-			if( calcflag == 0 ){
-				mb = curobj->GetExtLine()->GetBound();
-			}else{
-				addmb = curobj->GetExtLine()->GetBound();
-				AddModelBound( &mb, &addmb );
+			if (curobj->GetExtLine()) {
+				//curobj->GetExtLine()->CalcBound();//MakeDispObj()に移動　ここでは既にpointbufなどが削除された後
+				if (calcflag == 0) {
+					mb = curobj->GetExtLine()->GetBound();
+				}
+				else {
+					addmb = curobj->GetExtLine()->GetBound();
+					AddModelBound(&mb, &addmb);
+				}
+				calcflag++;
 			}
-			calcflag++;
 		}
 	}
 
@@ -19390,6 +19397,8 @@ int CModel::ChkInView(int refposindex)
 				curobj->SetInView(true, refposindex);
 			}
 		}
+
+		SetDistChkInView(0.01f, refposindex);//2024/03/25
 	}
 	else if (m_object.empty() || (GetFromBvhFlag())) {
 
@@ -19405,6 +19414,8 @@ int CModel::ChkInView(int refposindex)
 				curobj->SetInView(true, refposindex);
 			}
 		}
+
+		SetDistChkInView(0.01f, refposindex);//2024/03/25
 	}
 	else {
 
@@ -19432,36 +19443,54 @@ int CModel::ChkInView(int refposindex)
 		// hipsのworldmatをm_matWorldに掛けて判定することにより
 		// モーションでの全体移動に対応
 		//###############################################################
-		int objnum = 0;
-		int inviewnum = 0;
-		int inshadownum = 0;
-		map<int, CMQOObject*>::iterator itr;
-		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-			CMQOObject* curobj = itr->second;
-			if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
-				//curobj->ChkInView(m_matWorld, m_matVP);
-				curobj->ChkInView(m_matWorld, m_matVP, refposindex);
-				if (curobj->GetVisible(refposindex)) {
-					inviewnum++;
+
+		if (GetSkyFlag() == false) {
+			int objnum = 0;
+			int inviewnum = 0;
+			int inshadownum = 0;
+			map<int, CMQOObject*>::iterator itr;
+			for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+				CMQOObject* curobj = itr->second;
+				if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
+					//curobj->ChkInView(m_matWorld, m_matVP);
+					curobj->ChkInView(m_matWorld, m_matVP, refposindex);
+					if (curobj->GetVisible(refposindex)) {
+						inviewnum++;
+					}
+					if (curobj->GetInShadow(refposindex)) {
+						inshadownum++;
+					}
+					objnum++;
 				}
-				if (curobj->GetInShadow(refposindex)) {
-					inshadownum++;
-				}
-				objnum++;
+			}
+
+			if (inviewnum != 0) {
+				SetInView(true, refposindex);//メッシュ１つでも視野内にある場合には　モデルとして視野内のマークをする
+			}
+			else {
+				SetInView(false, refposindex);//全てのメッシュが視野外の場合　モデルとして視野外のマークをする
+			}
+			if (inshadownum != 0) {
+				SetInShadow(true, refposindex);
+			}
+			else {
+				SetInShadow(false, refposindex);
 			}
 		}
+		else {
+			//skyは視野内の一番遠く
 
-		if (inviewnum != 0) {
-			SetInView(true, refposindex);//メッシュ１つでも視野内にある場合には　モデルとして視野内のマークをする
-		}
-		else {
-			SetInView(false, refposindex);//全てのメッシュが視野外の場合　モデルとして視野外のマークをする
-		}
-		if (inshadownum != 0) {
-			SetInShadow(true, refposindex);
-		}
-		else {
+			SetInView(true, refposindex);
 			SetInShadow(false, refposindex);
+
+			map<int, CMQOObject*>::iterator itr;
+			for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+				CMQOObject* curobj = itr->second;
+				if (curobj) {
+					curobj->SetInView(true, refposindex);
+				}
+			}
+			SetDistChkInView(0.0f, refposindex);//2024/03/25 skyは不透明描画時にソートする際に一番最初になるように
 		}
 	}
 
@@ -20206,3 +20235,19 @@ int CModel::RemakeHSVToonTexture(CMQOMaterial* srcmqomat)
 	return 0;
 }
 
+void CModel::SetDistChkInView(float srcval, int refposindex)
+{
+	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+		return;
+	}
+	else {
+		map<int, CMQOObject*>::iterator itr;
+		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+			CMQOObject* curobj = itr->second;
+			if (curobj) {
+				curobj->SetDistFromCamera(srcval, refposindex);
+			}
+		}
+	}
+
+}

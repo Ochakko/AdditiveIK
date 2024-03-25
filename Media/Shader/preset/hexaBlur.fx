@@ -2,13 +2,14 @@
  *@brief 六角形ブラー
  */
 
-// ブラーをかけるテクスチャの幅
-//static const float BLUR_TEX_W = 1280.0f;
-static const float BLUR_TEX_W = 736.0f;
+//// ブラーをかけるテクスチャの幅
+////static const float BLUR_TEX_W = 1280.0f;
+//static const float BLUR_TEX_W = 736.0f;
 
-// ブラーをかけるテクスチャの高さ
-//static const float BLUR_TEX_H = 720.0f;
-static const float BLUR_TEX_H = 488.0f;
+//// ブラーをかけるテクスチャの高さ
+////static const float BLUR_TEX_H = 720.0f;
+//static const float BLUR_TEX_H = 488.0f;
+
 
 // ブラー半径。この数値を大きくすると六角形ボケが大きくなる
 static const float BLUR_RADIUS = 8.0f;
@@ -27,10 +28,11 @@ struct PSInput
 
 cbuffer cb : register(b0)
 {
-    float4x4 mvp;       // MVP行列
-    float4 mulColor;    // 乗算カラー
+    float4x4 mvp; // MVP行列
+    float4 mulColor; // 乗算カラー
+    float4 params;//z:TextureWidth, w:TextureHeight
+    float4 dofparams; //x:dofstart, y:dofend (深度値dofparams.xからボケが始まり、深度値dofparams.yで最大のボケ具合になる。)
 };
-
 // step-6  垂直、対角線ブラーの出力構造体を定義
 struct PSOutput
 {
@@ -68,7 +70,8 @@ PSOutput PSVerticalDiagonalBlur(PSInput pIn)
     float blurStepLen = BLUR_RADIUS / 4.0f;
 
     // step-8 垂直方向のUVオフセットを計算
-    float2 uvOffset = float2(0.0f, 1.0f / BLUR_TEX_H);
+    //float2 uvOffset = float2(0.0f, 1.0f / BLUR_TEX_H);
+    float2 uvOffset = float2(0.0f, 1.0f / params.w);
     uvOffset *= blurStepLen;
 
     // step-9 垂直方向にカラーをサンプリングして平均する
@@ -92,8 +95,10 @@ PSOutput PSVerticalDiagonalBlur(PSInput pIn)
     psOut.color_0 /= 4.0f;
 
     // step-10 対角線方向のuvオフセットを計算
-    uvOffset.x = 0.86602f / BLUR_TEX_W;
-    uvOffset.y = -0.5f / BLUR_TEX_H;
+    //uvOffset.x = 0.86602f / BLUR_TEX_W;
+    //uvOffset.y = -0.5f / BLUR_TEX_H;
+    uvOffset.x = 0.86602f / params.z;
+    uvOffset.y = -0.5f / params.w;    
     uvOffset *= blurStepLen;
 
     // step-11 対角線方向にカラーをサンプリングして平均化する
@@ -132,8 +137,10 @@ float4 PSRhomboidBlur(PSInput pIn) : SV_Target0
 
     // step-12 左斜め下方向へのUVオフセットを計算する
     float2 uvOffset;
-    uvOffset.x = 0.86602f / BLUR_TEX_W;
-    uvOffset.y = -0.5f / BLUR_TEX_H;
+    //uvOffset.x = 0.86602f / BLUR_TEX_W;
+    //uvOffset.y = -0.5f / BLUR_TEX_H;
+    uvOffset.x = 0.86602f / params.z;
+    uvOffset.y = -0.5f / params.w;    
     uvOffset *= blurStepLen;
 
     // step-13 左斜め下方向にカラーをサンプリングする
@@ -150,7 +157,8 @@ float4 PSRhomboidBlur(PSInput pIn) : SV_Target0
         g_sampler, pIn.uv + uvOffset * 4);
 
     // step-14 右斜め下方向へのUVオフセットを計算する
-    uvOffset.x = -0.86602f / BLUR_TEX_W * blurStepLen;
+    //uvOffset.x = -0.86602f / BLUR_TEX_W * blurStepLen;
+    uvOffset.x = -0.86602f / params.z * blurStepLen;
 
     // step-15 右斜め下方向にカラーをサンプリングする
     color += blurTexture_1.Sample(

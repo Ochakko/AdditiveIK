@@ -46,6 +46,7 @@ cbuffer ModelCb : register(b0)
     float4 materialdisprate;
     float4 shadowmaxz;
     int4 UVs;
+    int4 Flags1; //x:skyflag, y:groundflag
 };
 // ディレクションライト
 struct DirectionalLight
@@ -105,7 +106,8 @@ SPSInZPrepass VSMainZPrepass(SVSIn vsIn, uniform bool hasSkin)
 
     float3 distvec = (psIn.pos.xyz / psIn.pos.w) - eyePos.xyz;
     psIn.depth.z = length(distvec);
-    psIn.depth.z = clamp(psIn.depth.z, 0.0f, 250000.0f);
+    //psIn.depth.z = (Flags1.x == 0) ? clamp(psIn.depth.z, 0.0f, 250000.0f) : 2500000.0f;//sky->最大値
+    //psIn.depth.z = (Flags1.y == 0) ? psIn.depth.z : 0.0f;//ground->最小値
     
     psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換

@@ -1388,6 +1388,7 @@ public: //accesser
 			m_inshadow[refposindex] = srcflag;
 		}
 	};
+	void SetDistChkInView(float srcval, int refposindex);
 
 
 	const WCHAR* GetFileName(){ return m_filename; };
@@ -2750,6 +2751,16 @@ public: //accesser
 	{
 		return m_skyflag;
 	}
+	void SetGroundFlag(bool srcflag)
+	{
+		m_groundflag = srcflag;
+	}
+	bool GetGroundFlag()
+	{
+		return m_groundflag;
+	}
+
+
 	void SetUpdateSlot(int srcslot)
 	{
 		m_updateslot = srcslot;
@@ -2957,6 +2968,7 @@ private:
 
 	bool m_refposflag;
 	bool m_skyflag;
+	bool m_groundflag;
 
 	int m_updateslot;
 };

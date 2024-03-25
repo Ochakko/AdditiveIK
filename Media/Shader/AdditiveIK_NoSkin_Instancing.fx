@@ -58,6 +58,7 @@ cbuffer ModelCb : register(b0)
     float4 materialdisprate;
     float4 shadowmaxz;
     int4 UVs;
+    int4 Flags1; //x:skyflag, y:groundflag
 };
 
 // ディレクションライト

@@ -41412,12 +41412,11 @@ int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 		//g_projfarでクリッピングされないようにsky用のprojを使う
 		s_chascene->UpdateMatrixOneModel(s_sky, g_limitdegflag, &skymat, &s_matView, &s_matSkyProj, 0.0, 0);
 		ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		bool forcewithalpha = false;
+		bool forcewithalpha = false;//2024/03/25 skyは一番最初に描画するために不透明である必要
 		//bool forcewithalpha = true;
 		int btflag = 0;
-		//bool zcmpalways = false;
-		bool zcmpalways = true;
-		//bool zenable = true;
+		bool zcmpalways = false;
+		//bool zcmpalways = true;
 		bool zenable = false;//2024/03/25 上書き可能な背景として描画するのでZは書き込まない
 		int lightflag = -1;
 		s_chascene->RenderOneModel(s_sky, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);
@@ -60571,7 +60570,8 @@ int OnCreateDevice()
 	}
 	CallF(s_ground->LoadMQO(s_pdev, L"..\\Media\\MameMedia\\ground2.mqo", 0, 1.0f, 0), return S_FALSE);
 	//CallF(s_ground->MakeDispObj(), return S_FALSE);
-	
+	s_ground->SetGroundFlag(true);
+
 	s_gplane = new CModel();
 	if (!s_gplane) {
 		_ASSERT(0);

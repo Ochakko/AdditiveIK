@@ -173,6 +173,19 @@ private:
 	//int SetXInfluenceArray( CInfBone* ibptr, int vnum, int boneserino, DWORD* vertices, float* weights, int infnum, DWORD* setnumptr );
 
 public:
+	bool IsND() {
+		//名前が_NDで始まるオブジェクトは、影響度設定用のダミーメッシュ　表示しないために判定関数を用意
+		char cmpstr[5];
+		ZeroMemory(cmpstr, sizeof(char) * 5);
+		strncpy_s(cmpstr, 5, GetName(), 3);
+		if (strncmp(cmpstr, "_ND", 3) == 0) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
 	//accesser
 	bool GetVisible(int refposindex);//chkinview
 	bool GetInShadow(int refposindex);//chkinview
@@ -424,6 +437,14 @@ public:
 		return m_getuvnum;
 	}
 
+	void SetDistFromCamera(float srcval, int refposindex)
+	{
+		if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+			_ASSERT(0);
+			return;
+		}
+		m_frustum[refposindex].SetDistFromCamera(srcval);
+	}
 	double GetDistFromCamera(int refposindex)
 	{
 		if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {

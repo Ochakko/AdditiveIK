@@ -494,7 +494,8 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 
 								CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
 
- 								if (curobj && (curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(0)) {
+ 								if (curobj && !curobj->IsND() && 
+									(curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(0)) {
 								//if (curobj) {
 
 								
@@ -741,7 +742,8 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 
 						CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
 
-						if (curobj && (curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(0)) {
+						if (curobj && !curobj->IsND() && 
+							(curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(0)) {
 							//if (curobj) {
 
 
@@ -893,7 +895,8 @@ int ChaScene::RenderInstancingModel(CModel* srcmodel, bool forcewithalpha,
 
 						CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
 
-						if (curobj && (curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(0)) {
+						if (curobj && !curobj->IsND() && 
+							(curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(0)) {
 							//if (curobj) {
 
 
@@ -1027,7 +1030,8 @@ int ChaScene::AddToRefPos(CModel* srcmodel, bool forcewithalpha, myRenderer::Ren
 
 						CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
 
-						if (curobj && (curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(refposindex)) {
+						if (curobj && !curobj->IsND() &&
+							(curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(refposindex)) {
 							//if (curobj) {
 
 

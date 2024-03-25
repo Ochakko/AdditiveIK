@@ -375,7 +375,8 @@ namespace myRenderer
 
 
         //2024/03/24 RefPosオンの時はDOFはオフ　RefPosオン時にDOFをオンにするとオブジェクトの境界部分にボケない不透明の三角が多数出来る
-        if ((g_zpreflag && !g_refposflag) || g_hdrpbloom) {//zpreはDOFのため
+        //if ((g_zpreflag && !g_refposflag) || g_hdrpbloom) {//zpreはDOFのため
+        if (g_zpreflag || g_hdrpbloom) {//zpreはDOFのため
             // ポストエフェクトを実行
             m_postEffect.Render(rc, m_mainRenderTarget);
         }
@@ -453,8 +454,26 @@ namespace myRenderer
             m_zprepassRenderTarget.GetRTVCpuDescriptorHandle(),
             m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
         );
-        const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        //const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+        float clearColor[4];
+        if (g_skydofflag[g_dofindex] == true) {
+            //#################################################
+            //2024/03/25 SkyDOFはZMAXでサーフェスを初期化すれば良い
+            //#################################################
+            clearColor[0] = ZPRE_ZMAX;
+            clearColor[1] = ZPRE_ZMAX;
+            clearColor[2] = ZPRE_ZMAX;
+            clearColor[3] = 1.0f;
+        }
+        else {
+            clearColor[0] = 0.0f;
+            clearColor[1] = 0.0f;
+            clearColor[2] = 0.0f;
+            clearColor[3] = 1.0f;
+        }
         rc->ClearRenderTargetView(m_zprepassRenderTarget.GetRTVCpuDescriptorHandle(), clearColor);
+
 
         ////前のパスで異なるviewportを設定した場合にはviewportの設定し直しが必要
         rc->SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
@@ -462,16 +481,26 @@ namespace myRenderer
 
 
         //2024/03/24 RefPosオンの時はDOFはオフ　RefPosオン時にDOFをオンにするとオブジェクトの境界部分にボケない不透明の三角が多数出来る
-        if (g_zpreflag && !g_refposflag) {
+        //if (g_zpreflag && !g_refposflag) {
+        if (g_zpreflag) {
             //for (auto& currenderobj : m_zprepassModels)
             for (auto& currenderobj : m_forwardRenderModels)
             {
                 //2024/03/15
                 //天球をぼかすと　背景の無いシーンで　カメラ距離に関わらずキャラクターがボケてしまう
                 //背景の無いシーンではg_skydofflagをfalseにし、　背景のあるシーンでtrueにする
-                if ((g_skydofflag[g_dofindex] == true) || (currenderobj.pmodel->GetSkyFlag() == false)) {
+                //if ((g_skydofflag[g_dofindex] == true) || (currenderobj.pmodel->GetSkyFlag() == false) &&
+                //    !currenderobj.pmodel->GetGroundFlag()) {
+                //    RenderPolyMeshZPre(rc, currenderobj);
+                //}
+
+
+                if (currenderobj.pmodel->GetSkyFlag() == false) {
+                    //2024/03/25
+                    //Skyオブジェクト自体のZは不要になった　サーフェスをZMAXで初期化することにした
                     RenderPolyMeshZPre(rc, currenderobj);
                 }
+
             }
         }
 
@@ -497,7 +526,8 @@ namespace myRenderer
         //////前のパスで異なるviewportを設定した場合にはviewportの設定し直しが必要
         rc->SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
 
-        if ((g_alphablending || g_refposflag) && g_zpreflag) {
+        //if ((g_alphablending || g_refposflag) && g_zpreflag) {
+        if (g_alphablending && g_zpreflag) {
             //2024/03/17
             //g_zpreflagがtrueの場合にはzpreにすでにZが書き込まれている
             //その場合にalphablendingするためには、ここでzpreをもう一度クリアする必要がある
@@ -780,6 +810,18 @@ namespace myRenderer
         //ZPrepassは4Kモードの場合だけ呼び出すことに.
 
         if (currenderobj.mqoobj) {
+
+            //############################################
+            //2024/03/25
+            //ForwardRendering用に設定して呼び出されているので
+            //ZPreepass用にcurrenderobjを調整
+            //############################################
+            currenderobj.zenable = true;
+            currenderobj.zcmpalways = false;
+            currenderobj.renderkind = RENDERKIND_ZPREPASS;
+            currenderobj.shadertype = MQOSHADER_TOON;
+
+
             if (currenderobj.mqoobj->GetDispObj()) {
                 if (currenderobj.mqoobj->GetPm3()) {
                     //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);

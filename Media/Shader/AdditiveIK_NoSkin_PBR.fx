@@ -90,7 +90,8 @@ cbuffer ModelCb : register(b0)
     float4 metalcoef;
     float4 materialdisprate;
     float4 shadowmaxz;
-    int4 UVs;//x:UVSet, y:TilingU, z:TilingV   
+    int4 UVs;//x:UVSet, y:TilingU, z:TilingV
+    int4 Flags1; //x:skyflag, y:groundflag
 };
 
 // ディレクションライト

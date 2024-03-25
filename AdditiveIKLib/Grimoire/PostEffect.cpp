@@ -28,7 +28,8 @@ namespace myRenderer {
         }
 
         //2024/03/24 RefPosオンの時はDOFはオフ　RefPosオン時にDOFをオンにするとオブジェクトの境界部分にボケない不透明の三角が多数出来る
-        if (g_zpreflag && !g_refposflag) {
+        //if (g_zpreflag && !g_refposflag) {
+        if (g_zpreflag) {
             m_dof.Render(rc, mainRenderTarget);
         }
     }
