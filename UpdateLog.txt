@@ -2,6 +2,13 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2024/03/25
+　README.mdのスクリーンショット(説明付き)を更新　
+
+
+
+
 2024/03/24
 　RefPosのときだけ半透明がブレンドされない不具合を修正
 　　refpos時にもカメラからの距離でソートして描画

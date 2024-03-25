@@ -137,12 +137,10 @@ namespace myRenderer {
         // レンダリングターゲットへの書き込み終了待ち
         rc->WaitUntilFinishDrawingToRenderTargets(2, blurRts);
 
-        //step-5 六角形ブラーをかける
+        ////step-5 六角形ブラーをかける
         rc->WaitUntilToPossibleSetRenderTarget(m_rtPhomboidBlur);
         rc->SetRenderTargetAndViewport(m_rtPhomboidBlur);
-
         m_phomboidBlurSprite.Draw(rc);
-
         // レンダリングターゲットへの書き込み終了待ち
         rc->WaitUntilFinishDrawingToRenderTarget(m_rtPhomboidBlur);
 

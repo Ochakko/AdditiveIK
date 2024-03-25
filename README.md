@@ -16,8 +16,10 @@ Fig.1 ver1.0.0.9以降のシェーダまとめの図 (model:VRoid).<br>
 ![TopFig2](ScreenShots/AdditiveIK_To1001_SS1_800.png "トップ絵2")<br>
 Fig.2 ScreenShot of this Application(OnLargeWindowMode).<br>
 <br>
-![TopFig3](ScreenShots/AdditiveIK_To1001_HDRPBloom_1.png "トップ絵3")<br>
-Fig.3 HDRP Bloom (UnityAsset JapaneseCityを読込. model:VRoid).<br>
+![TopFig3](ScreenShots/AdditiveIK_To10013_ShadingAlphaAlphaTest_Annotaion.png "トップ絵3")<br>
+Fig.3 ShadingAlpha with AlphaTest　(UnityAsset TheHuntを読込. model:VRoid<br>
+　　　ShadingAlpha:ライトの当たり方に応じてリアルタイム透明度変化<br>
+　　　AlphaTest:指定透明度よりも小さい透明度の描画をスキップ).<br>
 <br>
 ![TopFig4](ScreenShots/AdditiveIK_1003_PracKick_2_W800.png "トップ絵4")<br>
 Fig.4 Multiple Model (UnityAsset HQ Retro Farmhouseを読込. model:VRoid).<br>

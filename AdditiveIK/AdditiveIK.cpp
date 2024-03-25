@@ -41417,7 +41417,8 @@ int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 		int btflag = 0;
 		//bool zcmpalways = false;
 		bool zcmpalways = true;
-		bool zenable = true;
+		//bool zenable = true;
+		bool zenable = false;//2024/03/25 上書き可能な背景として描画するのでZは書き込まない
 		int lightflag = -1;
 		s_chascene->RenderOneModel(s_sky, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);
 	}

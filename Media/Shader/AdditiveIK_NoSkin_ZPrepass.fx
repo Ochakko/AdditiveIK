@@ -92,6 +92,7 @@ SPSInZPrepass VSMainZPrepass(SVSIn vsIn, uniform bool hasSkin)
 
     float3 distvec = (psIn.pos.xyz / psIn.pos.w) - eyePos.xyz;
     psIn.depth.z = length(distvec);
+    psIn.depth.z = clamp(psIn.depth.z, 0.0f, 250000.0f);
     
     psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
