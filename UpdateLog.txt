@@ -2,8 +2,8 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
-2024/03/26
-　AdditiveIK 1.0.0.13 RC1(リリース候補1)
+2024/03/27
+　AdditiveIK 1.0.0.13 RC2(リリース候補2)
 　　1.0.0.12からの変更点
 　　　不具合修正
 　　　　DepthOfField(DOF)の修正
@@ -34,7 +34,10 @@ https://github.com/Ochakko/AdditiveIK
 　　　　オイラーグラフのオイラー数値表示の並びに、選択中のブラシ名も表示
 
 
-
+　　RC2:
+　　　TestフォルダにBoySporty_2モデルを追加
+　　　　新しいVRoidでモデルを出力し直して復活
+　　　　顔のシェーディングが直った
 
 
 動画
