@@ -140,7 +140,13 @@ namespace myRenderer
     void RenderingEngine::InitZPrepassRenderTarget()
     {
         //float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-        float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+        float clearColor[4];// = { 0.0f, 0.0f, 0.0f, 1.0f };
+        clearColor[0] = ZPRE_ZMAX;
+        clearColor[1] = ZPRE_ZMAX;
+        clearColor[2] = ZPRE_ZMAX;
+        clearColor[3] = 1.0f;
+
         m_zprepassRenderTarget.Create(
             g_graphicsEngine->GetFrameBufferWidth(),
             g_graphicsEngine->GetFrameBufferHeight(),

@@ -763,6 +763,17 @@ namespace OrgWinGUI{
 				TextOut(hdcM->hDC,
 					pos.x + LABEL_SIZE_X + startx, starty + 3 * stepy,
 					strtipZ, (int)_tcslen(strtipZ));
+
+
+				//2024/03/26
+				TCHAR strtipName[MAX_PATH];
+				_stprintf_s(strtipName, MAX_PATH, _T("Brush : %s"), g_brushname);
+				//hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
+				//SetTextColor(hdcM->hDC, RGB(240, 240, 240));
+				TextOut(hdcM->hDC,
+					pos.x + LABEL_SIZE_X + startx, starty + 4 * stepy,
+					strtipName, (int)_tcslen(strtipName));
+
 			}
 
 		}

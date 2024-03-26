@@ -58,6 +58,7 @@ class CInfoWindow;
 
 #ifdef ADDITIVEIKLIBGLOBALVAR
 
+WCHAR g_brushname[MAX_PATH] = { 0 };
 int g_fogindex = 0;
 CFogParams g_fogparams[FOGSLOTNUM];
 int g_dofindex = 0;
@@ -340,6 +341,7 @@ double g_playingend = 1.0;
 
 
 #else
+extern WCHAR g_brushname[MAX_PATH];
 extern int g_fogindex;
 extern CFogParams g_fogparams[FOGSLOTNUM];
 extern int g_dofindex;

@@ -2724,7 +2724,7 @@ static int SetLTimelineMark(int curboneno);
 static int SetTimelineMark();
 static int CreateMotionBrush(double srcstart, double srcend, bool onrefreshflag);
 static int UpdateTopPosText();
-
+static int SetBrushName();
 
 static int ExportBntFile();
 
@@ -3583,6 +3583,11 @@ void InitApp()
 	InitializeCriticalSection(&g_CritSection_FbxSdk);
 
 	InitCommonControls();
+
+
+	ZeroMemory(g_brushname, sizeof(WCHAR) * MAX_PATH);
+	wcscpy_s(g_brushname, MAX_PATH, L"Brush None Yet.");
+
 
 	int fogindex;
 	for (fogindex = 0; fogindex < FOGSLOTNUM; fogindex++) {
@@ -22660,6 +22665,10 @@ int CreateMotionBrush(double srcstart, double srcend, bool onrefreshflag)
 	double startframe, endframe;
 	//s_editrange.GetRange(&keynum, &startframe, &endframe);
 
+
+	SetBrushName();//2024/03/26
+
+
 	if (!s_model) {
 		//return -1;
 		return 2;//2023/10/05 
@@ -22831,6 +22840,23 @@ int CreateMotionBrush(double srcstart, double srcend, bool onrefreshflag)
 	return ret;
 }
 
+int SetBrushName()
+{
+
+	ZeroMemory(g_brushname, sizeof(WCHAR) * MAX_PATH);
+	wcscpy_s(g_brushname, MAX_PATH, L"Brush None Yet.");
+
+	int pluginno;
+	for (pluginno = 0; pluginno < MAXPLUGIN; pluginno++) {
+		if ((s_plugin + pluginno)->menuid == g_motionbrush_method) {
+			if ((s_plugin + pluginno)->validflag == 1) {
+				wcscpy_s(g_brushname, MAX_PATH, (s_plugin + pluginno)->pluginname);
+			}
+			break;
+		}
+	}
+	return 0;
+}
 
 int SetTimelineMark()
 {
