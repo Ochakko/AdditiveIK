@@ -2094,11 +2094,11 @@ void s_dummyfunc()
 			partsAreaPos1=  pos;
 			int scrollbarwidth = 20;
 			if( divideSide ){
-				partsAreaPos2=  pos+ WindowPos(centerPos+1+LINE_MARGIN, 0);
+				partsAreaPos2=  pos + WindowPos(centerPos+1+LINE_MARGIN, 0);
 				partsAreaSize1= WindowSize( centerPos-LINE_MARGIN, size.y);
 				partsAreaSize2= WindowSize( size.x-centerPos-LINE_MARGIN-1, size.y);
 			}else{
-				partsAreaPos2=  pos+ WindowPos(0, centerPos+1+LINE_MARGIN);
+				partsAreaPos2=  pos + WindowPos(0, centerPos+1+LINE_MARGIN);
 				partsAreaSize1= WindowSize( size.x, centerPos-LINE_MARGIN);
 				partsAreaSize2= WindowSize( size.x, size.y-centerPos-LINE_MARGIN-1);
 			}
@@ -2180,19 +2180,17 @@ void s_dummyfunc()
 			std::list<OrgWindowParts*>::iterator plItr;
 			for (plItr = partsList1.begin(); plItr != partsList1.end(); plItr++) {
 				if (*plItr) {
-					WindowPos chkpos = (*plItr)->getPos();
-					WindowSize chksize = (*plItr)->getSize();
-					//############################################################
-					//2023/10/04 マウス位置が子供ウインドウ内部にある場合だけ処理
-					//############################################################
-					if ((e.localX >= chkpos.x) && (e.localX <= (chkpos.x + chksize.x)) &&
-						(e.localY >= chkpos.y) && (e.localY <= (chkpos.y + chksize.y))) {
+					WindowSize partsSize = (*plItr)->getSize();
+					int tmpPosX = e.localX + pos.x - (*plItr)->getPos().x;
+					int tmpPosY = e.localY + pos.y - (*plItr)->getPos().y;
+					if ((0 <= tmpPosX) && (tmpPosX < partsSize.x) &&
+						(0 <= tmpPosY) && (tmpPosY < partsSize.y)) {
 
 						MouseEvent mouseEvent;
 						mouseEvent.globalX = e.globalX;
 						mouseEvent.globalY = e.globalY;
-						mouseEvent.localX = e.localX + pos.x - (*plItr)->getPos().x;
-						mouseEvent.localY = e.localY + pos.y - (*plItr)->getPos().y;
+						mouseEvent.localX = tmpPosX;
+						mouseEvent.localY = tmpPosY;
 						mouseEvent.altKey = e.altKey;
 						mouseEvent.shiftKey = e.shiftKey;
 						mouseEvent.ctrlKey = e.ctrlKey;
@@ -2205,18 +2203,16 @@ void s_dummyfunc()
 			std::list<OrgWindowParts*>::iterator plItr2;
 			for (plItr2 = partsList2.begin(); plItr2 != partsList2.end(); plItr2++) {
 				if (*plItr2) {
-					WindowPos chkpos = (*plItr2)->getPos();
-					WindowSize chksize = (*plItr2)->getSize();
-					//############################################################
-					//2023/10/04 マウス位置が子供ウインドウ内部にある場合だけ処理
-					//############################################################
-					if ((e.localX >= chkpos.x) && (e.localX <= (chkpos.x + chksize.x)) &&
-						(e.localY >= chkpos.y) && (e.localY <= (chkpos.y + chksize.y))) {
+					WindowSize partsSize = (*plItr2)->getSize();
+					int tmpPosX = e.localX + pos.x - (*plItr2)->getPos().x;
+					int tmpPosY = e.localY + pos.y - (*plItr2)->getPos().y;
+					if ((0 <= tmpPosX) && (tmpPosX < partsSize.x) &&
+						(0 <= tmpPosY) && (tmpPosY < partsSize.y)) {
 						MouseEvent mouseEvent;
 						mouseEvent.globalX = e.globalX;
 						mouseEvent.globalY = e.globalY;
-						mouseEvent.localX = e.localX + pos.x - (*plItr2)->getPos().x;
-						mouseEvent.localY = e.localY + pos.y - (*plItr2)->getPos().y;
+						mouseEvent.localX = tmpPosX;
+						mouseEvent.localY = tmpPosY;
 						mouseEvent.altKey = e.altKey;
 						mouseEvent.shiftKey = e.shiftKey;
 						mouseEvent.ctrlKey = e.ctrlKey;
@@ -2233,19 +2229,17 @@ void s_dummyfunc()
 			std::list<OrgWindowParts*>::iterator plItr;
 			for (plItr = partsList1.begin(); plItr != partsList1.end(); plItr++) {
 				if (*plItr) {
-					WindowPos chkpos = (*plItr)->getPos();
-					WindowSize chksize = (*plItr)->getSize();
-					//############################################################
-					//2023/10/04 マウス位置が子供ウインドウ内部にある場合だけ処理
-					//############################################################
-					if ((e.localX >= chkpos.x) && (e.localX <= (chkpos.x + chksize.x)) &&
-						(e.localY >= chkpos.y) && (e.localY <= (chkpos.y + chksize.y))) {
+					WindowSize partsSize = (*plItr)->getSize();
+					int tmpPosX = e.localX + pos.x - (*plItr)->getPos().x;
+					int tmpPosY = e.localY + pos.y - (*plItr)->getPos().y;
+					if ((0 <= tmpPosX) && (tmpPosX < partsSize.x) &&
+						(0 <= tmpPosY) && (tmpPosY < partsSize.y)) {
 
 						MouseEvent mouseEvent;
 						mouseEvent.globalX = e.globalX;
 						mouseEvent.globalY = e.globalY;
-						mouseEvent.localX = e.localX + pos.x - (*plItr)->getPos().x;
-						mouseEvent.localY = e.localY + pos.y - (*plItr)->getPos().y;
+						mouseEvent.localX = tmpPosX;
+						mouseEvent.localY = tmpPosY;
 						mouseEvent.altKey = e.altKey;
 						mouseEvent.shiftKey = e.shiftKey;
 						mouseEvent.ctrlKey = e.ctrlKey;
@@ -2258,18 +2252,17 @@ void s_dummyfunc()
 			std::list<OrgWindowParts*>::iterator plItr2;
 			for (plItr2 = partsList2.begin(); plItr2 != partsList2.end(); plItr2++) {
 				if (*plItr2) {
-					WindowPos chkpos = (*plItr2)->getPos();
-					WindowSize chksize = (*plItr2)->getSize();
-					//############################################################
-					//2023/10/04 マウス位置が子供ウインドウ内部にある場合だけ処理
-					//############################################################
-					if ((e.localX >= chkpos.x) && (e.localX <= (chkpos.x + chksize.x)) &&
-						(e.localY >= chkpos.y) && (e.localY <= (chkpos.y + chksize.y))) {
+					WindowSize partsSize = (*plItr2)->getSize();
+					int tmpPosX = e.localX + pos.x - (*plItr2)->getPos().x;
+					int tmpPosY = e.localY + pos.y - (*plItr2)->getPos().y;
+					if ((0 <= tmpPosX) && (tmpPosX < partsSize.x) &&
+						(0 <= tmpPosY) && (tmpPosY < partsSize.y)) {
+
 						MouseEvent mouseEvent;
 						mouseEvent.globalX = e.globalX;
 						mouseEvent.globalY = e.globalY;
-						mouseEvent.localX = e.localX + pos.x - (*plItr2)->getPos().x;
-						mouseEvent.localY = e.localY + pos.y - (*plItr2)->getPos().y;
+						mouseEvent.localX = tmpPosX;
+						mouseEvent.localY = tmpPosY;
 						mouseEvent.altKey = e.altKey;
 						mouseEvent.shiftKey = e.shiftKey;
 						mouseEvent.ctrlKey = e.ctrlKey;
@@ -4655,10 +4648,10 @@ void s_dummyfunc()
 					//setValue(minValue + (maxValue - minValue) * (float)tmpPos.x / (float)(size.x - AXIS_POS_X - LABEL_SIZE_X));
 
 					{//2023/10/03
-							//int pos1x = pos.x + AXIS_POS_X;
-							//int pos2x = pos.x + size.x - LABEL_SIZE_X;
 							int pos1x = pos.x + AXIS_POS_X;
-							int pos2x = pos.x + size.x - AXIS_POS_X - LABEL_SIZE_X;
+							int pos2x = pos.x + size.x - LABEL_SIZE_X;
+							//int pos1x = pos.x + AXIS_POS_X;
+							//int pos2x = pos.x + size.x - AXIS_POS_X - LABEL_SIZE_X;
 							//int buttonCenter = pos1x + (int)((value - minValue) * (float)(pos2x - pos1x) / (maxValue - minValue) + 0.5f);
 							int buttonCenter = (int)((value - minValue) * (float)(pos2x - pos1x) / (maxValue - minValue) + 0.5f);
 							diffclickcenter = e.localX - buttonCenter;//クリック位置の　ボタン中央からのずれ
@@ -4751,7 +4744,8 @@ void s_dummyfunc()
 		virtual void onMouseMove(const MouseEvent& e){
 			if ((g_endappflag == 0) && parentWindow && IsWindow(parentWindow->getHWnd())) {
 
-				WindowPos tmpPos = WindowPos(e.localX, e.localY) - WindowPos(AXIS_POS_X, size.y / 2);
+				//WindowPos tmpPos = WindowPos(e.localX, e.localY) - WindowPos(AXIS_POS_X, size.y / 2);
+				WindowPos tmpPos = WindowPos(e.localX, e.localY);//2024/03/28 マウスクリック位置をそのまま
 				if (drag) {
 
 					//setValue(minValue + (maxValue - minValue) * (float)tmpPos.x / (float)(size.x - AXIS_POS_X - LABEL_SIZE_X));
