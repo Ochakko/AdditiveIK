@@ -6195,7 +6195,7 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 
 
 	//レンダリングエンジンを実行
-	re->Execute(rc);
+	re->Execute(rc, s_chascene);
 	// レンダリング終了
 	g_engine->EndFrame(s_chascene);
 
@@ -13310,7 +13310,8 @@ int RenderSelectFunc(myRenderer::RenderingEngine* re)
 		int lightflag = 1;
 		//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
 		//ChaVector4 diffusemult = ChaVector4(0.6f, 0.6f, 0.6f, 0.3f);
-		ChaVector4 diffusemult = ChaVector4(0.6f, 0.6f, 0.6f, 1.0f);
+		//ChaVector4 diffusemult = ChaVector4(0.6f, 0.6f, 0.6f, 1.0f);
+		ChaVector4 diffusemult = ChaVector4(0.6f, 0.6f, 0.6f, 0.6f);
 		bool forcewithalpha = true;
 		int btflag = 0;
 		bool zcmpalways = true;
@@ -13563,22 +13564,22 @@ int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderCon
 		bool zenable = true;
 
 		if (s_rigsphere_num > 0) {
-			s_chascene->RenderInstancingModel(s_rigopemark_sphere, forcewithalpha, re, lightflag, diffusemult, btflag, 
+			s_chascene->RenderInstancingModel(s_rigopemark_sphere, forcewithalpha, lightflag, diffusemult, btflag, 
 				zcmpalways, zenable,
 				RENDERKIND_INSTANCING_LINE);
 		}
 		if (s_rigringX_num > 0) {
-			s_chascene->RenderInstancingModel(s_rigopemark_ringX, forcewithalpha, re, lightflag, diffusemult, btflag, 
+			s_chascene->RenderInstancingModel(s_rigopemark_ringX, forcewithalpha, lightflag, diffusemult, btflag, 
 				zcmpalways, zenable,
 				RENDERKIND_INSTANCING_LINE);
 		}
 		if (s_rigringY_num > 0) {
-			s_chascene->RenderInstancingModel(s_rigopemark_ringY, forcewithalpha, re, lightflag, diffusemult, btflag, 
+			s_chascene->RenderInstancingModel(s_rigopemark_ringY, forcewithalpha, lightflag, diffusemult, btflag, 
 				zcmpalways, zenable,
 				RENDERKIND_INSTANCING_LINE);
 		}
 		if (s_rigringZ_num > 0) {
-			s_chascene->RenderInstancingModel(s_rigopemark_ringZ, forcewithalpha, re, lightflag, diffusemult, btflag, 
+			s_chascene->RenderInstancingModel(s_rigopemark_ringZ, forcewithalpha, lightflag, diffusemult, btflag, 
 				zcmpalways, zenable,
 				RENDERKIND_INSTANCING_LINE);
 		}
@@ -41399,7 +41400,7 @@ int OnRenderOnlyOneObj(myRenderer::RenderingEngine* re, RenderContext* rc)
 			ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 			int btflag = 0;
 
-			curmodel->RenderTest(withalpha, re, g_lightflag, diffusemult, s_onlyoneobjno);
+			curmodel->RenderTest(withalpha, s_chascene, g_lightflag, diffusemult, s_onlyoneobjno);
 		}
 	}
 
@@ -41521,8 +41522,7 @@ int OnRenderBoneMark(myRenderer::RenderingEngine* re, RenderContext* rc)
 			//if ((g_previewFlag != 1) && (g_previewFlag != -1) && (g_previewFlag != 4)){
 			if (s_model && s_model->GetModelDisp()) {
 				//if (s_ikkind >= 3){
-				s_model->RenderBoneMark(re,
-					g_limitdegflag, &s_bcircle,
+				s_model->RenderBoneMark(g_limitdegflag, &s_bcircle,
 					s_curboneno, s_chascene, s_matVP);
 
 				//}
@@ -41595,7 +41595,7 @@ int OnRenderSelect(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 
 int OnRenderFontForTip(myRenderer::RenderingEngine* re, RenderContext* rc)
 {
-	if (!re || !rc) {
+	if (!re || !rc || !s_chascene) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -41648,7 +41648,7 @@ int OnRenderFontForTip(myRenderer::RenderingEngine* re, RenderContext* rc)
 		renderfont.rotation = 0.0f;
 		renderfont.scale = fontscale;
 		renderfont.pivot = fontpivot;
-		re->AddFontToForwardRenderPass(renderfont);
+		s_chascene->AddFontToForwardRenderPass(renderfont);
 	}
 
 	//s_dispfontfortip = false;
@@ -41659,7 +41659,7 @@ int OnRenderFontForTip(myRenderer::RenderingEngine* re, RenderContext* rc)
 
 int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 {
-	if (!re || !pRenderContext) {
+	if (!re || !pRenderContext || !s_chascene) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -41670,7 +41670,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		myRenderer::RENDERSPRITE rendersprite;
 		rendersprite.Init();
 		rendersprite.psprite = &(s_spupperbar.sprite);
-		re->AddSpriteToForwardRenderPass(rendersprite);
+		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
 
 
@@ -41686,7 +41686,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		rendersprite.Init();
 		rendersprite.pfpssprite = &s_fpssprite;
 		rendersprite.userint1 = dispfps;
-		re->AddSpriteToForwardRenderPass(rendersprite);
+		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
 
 	////Undoの読み込みポイントW と書き込みポイントR を表示
@@ -41698,7 +41698,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		rendersprite.pundosprite = &s_undosprite;
 		rendersprite.userint1 = s_model->GetCurrentUndoR();
 		rendersprite.userint2 = s_model->GetCurrentUndoW();
-		re->AddSpriteToForwardRenderPass(rendersprite);
+		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
 
 
@@ -41707,7 +41707,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 	myRenderer::RENDERSPRITE rendersprite;
 	rendersprite.Init();
 	rendersprite.psprite = &(s_spret2prev.sprite);
-	re->AddSpriteToForwardRenderPass(rendersprite);
+	s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 
 
 	//Mouse Middle Button Mark
@@ -41716,7 +41716,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		myRenderer::RENDERSPRITE rendersprite;
 		rendersprite.Init();
 		rendersprite.psprite = &(s_mousecenteron.sprite);
-		re->AddSpriteToForwardRenderPass(rendersprite);
+		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
 
 	//aimbar
@@ -41752,14 +41752,14 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spsel3d.spriteON);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 			else {
 				//s_spsel3d.spriteOFF.DrawScreen(pRenderContext);
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spsel3d.spriteOFF);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 		//{
@@ -41825,14 +41825,14 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 						myRenderer::RENDERSPRITE rendersprite;
 						rendersprite.Init();
 						rendersprite.psprite = &(s_spguisw[spgcnt].spriteON);
-						re->AddSpriteToForwardRenderPass(rendersprite);
+						s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 					}
 					else {
 						//s_spguisw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
 						myRenderer::RENDERSPRITE rendersprite;
 						rendersprite.Init();
 						rendersprite.psprite = &(s_spguisw[spgcnt].spriteOFF);
-						re->AddSpriteToForwardRenderPass(rendersprite);
+						s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 					}
 				}
 			}
@@ -41848,7 +41848,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spguisw[spgcnt].spriteOFF);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 
@@ -41858,14 +41858,14 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spguisw[SPGUISW_CAMERA_AND_IK].spriteON);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 			else {
 				//s_spguisw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spguisw[SPGUISW_CAMERA_AND_IK].spriteOFF);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 		}
@@ -41882,14 +41882,14 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spdispsw[spgcnt].spriteON);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				else {
 					//s_spdispsw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spdispsw[spgcnt].spriteOFF);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
 		}
@@ -41904,14 +41904,14 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_sprigidsw[spgcnt].spriteON);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				else {
 					//s_sprigidsw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_sprigidsw[spgcnt].spriteOFF);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
 		}
@@ -41925,14 +41925,14 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spretargetsw[sprcnt].spriteON);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				else {
 					//s_spretargetsw[sprcnt].spriteOFF.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spretargetsw[sprcnt].spriteOFF);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
 		}
@@ -41944,13 +41944,13 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_speffectsw[sprcnt].spriteON);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				else {
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_speffectsw[sprcnt].spriteOFF);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
 		}
@@ -41968,7 +41968,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spaxis[spacnt].sprite);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			//IK Mode
@@ -41979,14 +41979,14 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spikmodesw[spgcnt].spriteON);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				else {
 					//s_spikmodesw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spikmodesw[spgcnt].spriteOFF);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
 
@@ -41996,14 +41996,14 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_sprefpos.spriteON);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 			else {
 				//s_sprefpos.spriteOFF.DrawScreen(pRenderContext);
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_sprefpos.spriteOFF);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			//limiteulsw
@@ -42012,14 +42012,14 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_splimiteul.spriteON);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 			else {
 				//s_splimiteul.spriteOFF.DrawScreen(pRenderContext);
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_splimiteul.spriteOFF);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			//scrapingsw
@@ -42028,14 +42028,14 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spscraping.spriteON);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 			else {
 				//s_spscraping.spriteOFF.DrawScreen(pRenderContext);
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spscraping.spriteOFF);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			{
@@ -42044,7 +42044,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spcplw2w.sprite);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 
@@ -42055,7 +42055,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spundo[spucnt].sprite);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			//Rig switch
@@ -42064,7 +42064,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_sprig[s_oprigflag].sprite);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			{
@@ -42073,7 +42073,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spsmooth.sprite);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			{
@@ -42082,7 +42082,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spconstexe.sprite);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			{
@@ -42091,7 +42091,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spconstrefresh.sprite);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			{
@@ -42099,7 +42099,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spret2prev2.sprite);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 
@@ -42110,7 +42110,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spcopy.sprite);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 
 				{
@@ -42119,7 +42119,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spsymcopy.sprite);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 
 				{
@@ -42128,7 +42128,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_sppaste.sprite);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 
 				{
@@ -42137,7 +42137,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spcopyhistory.sprite);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
 			else if (s_toolspritemode == 1) {
@@ -42147,7 +42147,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spjumpinterpolate.sprite);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 
 				{
@@ -42156,7 +42156,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spinterpolate.sprite);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 
 				{
@@ -42165,7 +42165,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spinit.sprite);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				{
 					//ScaleInit
@@ -42173,7 +42173,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spscaleinit.sprite);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				{
 					//Property
@@ -42181,7 +42181,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spproperty.sprite);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
 			else if (s_toolspritemode == 2) {
@@ -42191,7 +42191,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spzeroframe.sprite);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				{
 					//CameraDolly
@@ -42199,7 +42199,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spcameradolly.sprite);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 
 				}
 				{
@@ -42208,7 +42208,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spmodelposdir.sprite);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 
 				}
 				{
@@ -42217,7 +42217,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = &(s_spmaterialrate.sprite);
-					re->AddSpriteToForwardRenderPass(rendersprite);
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
 			else {
@@ -42233,7 +42233,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 			myRenderer::RENDERSPRITE rendersprite;
 			rendersprite.Init();
 			rendersprite.psprite = &(s_spcam[spccnt].sprite);
-			re->AddSpriteToForwardRenderPass(rendersprite);
+			s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 		}
 		//cameramode
 		if (s_spcameramode.state == true) {
@@ -42241,14 +42241,14 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 			myRenderer::RENDERSPRITE rendersprite;
 			rendersprite.Init();
 			rendersprite.psprite = &(s_spcameramode.spriteON);
-			re->AddSpriteToForwardRenderPass(rendersprite);
+			s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 		}
 		else {
 			//s_spcameramode.spriteOFF.DrawScreen(pRenderContext);
 			myRenderer::RENDERSPRITE rendersprite;
 			rendersprite.Init();
 			rendersprite.psprite = &(s_spcameramode.spriteOFF);
-			re->AddSpriteToForwardRenderPass(rendersprite);
+			s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 		}
 		//camerainherit
 		if (g_cameraanimmode != 0) {
@@ -42257,21 +42257,21 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spcamerainherit.sprite1);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 			else if (s_spcamerainherit.mode == 1) {
 				//s_spcamerainherit.sprite2.DrawScreen(pRenderContext);
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spcamerainherit.sprite2);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 			else if (s_spcamerainherit.mode == 2) {
 				//s_spcamerainherit.sprite3.DrawScreen(pRenderContext);
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spcamerainherit.sprite3);
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 	}
@@ -42284,7 +42284,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		myRenderer::RENDERSPRITE rendersprite;
 		rendersprite.Init();
 		rendersprite.psprite = &(s_spmousehere.sprite);
-		re->AddSpriteToForwardRenderPass(rendersprite);
+		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
 
 
@@ -45020,7 +45020,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.13 : No.%d : ", s_appcnt);
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.14 : No.%d : ", s_appcnt);
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -53307,7 +53307,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.13 : No.%d : ", s_appcnt);
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.14 : No.%d : ", s_appcnt);
 
 
 	if (s_model && s_chascene) {

@@ -13,6 +13,8 @@ class Sprite;
 class InstancedSprite;
 class CFpsSprite;
 class CUndoSprite;
+class ChaScene;
+class CModel;
 
 namespace myRenderer
 {
@@ -33,26 +35,39 @@ namespace myRenderer
         bool zcmpalways;
         bool zenable;
         int refposindex;
-
+        bool skyflag;
 
         bool operator< (const tag_renderobj& right) const {//sort用
-            if (!mqoobj) {
+            if (!mqoobj || !pmodel) {
                 return false;
             }
             if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
                 _ASSERT(0);
                 return false;
             }
-            double srcdist = mqoobj->GetDistFromCamera(refposindex);
-            if (!right.mqoobj) {
+            double srcdist;
+            if (skyflag) {
+                srcdist = 500000.0f;//sort, reverse処理後にskyが最初に来るように
+            }
+            else {
+                srcdist = mqoobj->GetDistFromCamera(refposindex);
+            }
+            
+            if (!right.mqoobj || !right.pmodel) {
                 return true;
             }
             if ((right.refposindex < 0) || (right.refposindex >= REFPOSMAXNUM)) {
                 _ASSERT(0);
                 return false;
             }
-            double cmpdist = right.mqoobj->GetDistFromCamera(right.refposindex);
-
+            double cmpdist;
+            if (right.skyflag) {
+                cmpdist = 500000.0f;//sort, reverse処理後にskyが最初に来るように
+            }
+            else {
+                cmpdist = right.mqoobj->GetDistFromCamera(right.refposindex);
+            }
+            
             double diffdist = srcdist - cmpdist;
             if (diffdist < 0) {
                 return true;
@@ -84,6 +99,7 @@ namespace myRenderer
             zcmpalways = false;
             zenable = true;
             refposindex = 0;
+            skyflag = false;
         };
 
         tag_renderobj()
@@ -241,49 +257,50 @@ namespace myRenderer
         /// フォワードレンダリングの描画パスにモデルを追加
         /// </summary>
         /// <param name="model"></param>
-        //void Add3DModelToForwardRenderPass(Model& model)
+        ////void Add3DModelToForwardRenderPass(Model& model)
+        ////{
+        ////    m_forwardRenderModels.push_back(&model);
+        ////}
+        //void Add3DModelToForwardRenderPass(std::vector<RENDEROBJ>& rendervec)
         //{
-        //    m_forwardRenderModels.push_back(&model);
+        //    //m_forwardRenderModels.push_back(renderobj);
+        //
+        //    size_t srcsize = m_forwardRenderModels.size();
+        //    size_t addsize = rendervec.size();
+        //    size_t newsize = srcsize + addsize;
+        //
+        //    if ((newsize > 0) && (newsize > m_forwardModelsReserveSize)) {
+        //        m_forwardRenderModels.reserve(newsize);
+        //        m_forwardModelsReserveSize = newsize;
+        //    }
+        //
+        //    ////std::copy(rendervec.begin(), rendervec.end(), std::back_inserter(m_forwardRenderModels));
+        //
+        //    //size_t addno;
+        //    //for (addno = 0; addno < addsize; addno++) {
+        //    //    m_forwardRenderModels[srcsize + addno] = rendervec[addno];
+        //    //}
+        //
+        //    size_t addno;
+        //    for (addno = 0; addno < addsize; addno++) {
+        //        m_forwardRenderModels.push_back(rendervec[addno]);
+        //    }
+        //
         //}
-        void Add3DModelToForwardRenderPass(std::vector<RENDEROBJ>& rendervec)
-        {
-            //m_forwardRenderModels.push_back(renderobj);
-
-            size_t srcsize = m_forwardRenderModels.size();
-            size_t addsize = rendervec.size();
-            size_t newsize = srcsize + addsize;
-
-            if ((newsize > 0) && (newsize > m_forwardModelsReserveSize)) {
-                m_forwardRenderModels.reserve(newsize);
-                m_forwardModelsReserveSize = newsize;
-            }
-
-            ////std::copy(rendervec.begin(), rendervec.end(), std::back_inserter(m_forwardRenderModels));
-
-            //size_t addno;
-            //for (addno = 0; addno < addsize; addno++) {
-            //    m_forwardRenderModels[srcsize + addno] = rendervec[addno];
-            //}
-
-            size_t addno;
-            for (addno = 0; addno < addsize; addno++) {
-                m_forwardRenderModels.push_back(rendervec[addno]);
-            }
-
-        }
-        void Add3DModelToInstancingRenderPass(RENDEROBJ renderobj)
-        {
-            m_instancingRenderModels.push_back(renderobj);
-        }
-
-        void AddSpriteToForwardRenderPass(RENDERSPRITE rendersprite)
-        {
-            m_forwardRenderSprites.push_back(rendersprite);
-        }
-        void AddFontToForwardRenderPass(RENDERFONT renderfont)
-        {
-            m_forwardRenderFont.push_back(renderfont);
-        }
+        //void Add3DModelToInstancingRenderPass(RENDEROBJ renderobj)
+        //{
+        //    m_instancingRenderModels.push_back(renderobj);
+        //}
+        //
+        //void AddSpriteToForwardRenderPass(RENDERSPRITE rendersprite)
+        //{
+        //    m_forwardRenderSprites.push_back(rendersprite);
+        //}
+        //void AddFontToForwardRenderPass(RENDERFONT renderfont)
+        //{
+        //    m_forwardRenderFont.push_back(renderfont);
+        //}
+        
 
         /// <summary>
         /// ZPrepassで作成された深度テクスチャを取得
@@ -316,7 +333,7 @@ namespace myRenderer
         /// レンダリングパイプラインを実行
         /// </summary>
         /// <param name="rc">レンダリングコンテキスト。</param>
-        void Execute(RenderContext* rc);
+        void Execute(RenderContext* rc, ChaScene* srcchascene);
 
         /// <summary>
         /// ディレクションライトのパラメータを設定
@@ -345,13 +362,13 @@ namespace myRenderer
         /// シャドウマップに描画
         /// </summary>
         /// <param name="rc">レンダリングコンテキスト</param>
-        void RenderToShadowMap(RenderContext* rc);
+        void RenderToShadowMap(RenderContext* rc, ChaScene* srcchascene);
 
         /// <summary>
         /// ZPrepass
         /// </summary>
         /// <param name="rc">レンダリングコンテキスト</param>
-        void ZPrepass(RenderContext* rc);
+        void ZPrepass(RenderContext* rc, ChaScene* srcchascene);
 
         /// <summary>
         /// G-Bufferへの描画
@@ -375,9 +392,9 @@ namespace myRenderer
         /// フォワードレンダリング
         /// </summary>
         /// <param name="rc">レンダリングコンテキスト</param>
-        void ForwardRendering(RenderContext* rc);
+        void ForwardRendering(RenderContext* rc, ChaScene* srcchascene);
 
-        void SpriteRendering(RenderContext* rc);
+        void SpriteRendering(RenderContext* rc, ChaScene* srcchascene);
 
 
         /// <summary>
@@ -456,11 +473,16 @@ namespace myRenderer
         ////std::vector< Model* > m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
         //std::vector<RENDEROBJ> m_zprepassModels;                         // ZPrepassの描画パスで描画されるモデルのリスト
         //std::vector<RENDEROBJ> m_shadowmapModels;
-        std::vector<RENDEROBJ> m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
-        std::vector<RENDEROBJ> m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
-        size_t m_forwardModelsReserveSize;
-        std::vector<RENDEROBJ> m_instancingRenderModels;                    // インスタンシングレンダリングの描画パスで描画されるモデルのリスト
-        std::vector<RENDERSPRITE> m_forwardRenderSprites;
-        std::vector<RENDERFONT> m_forwardRenderFont;
+        
+        
+        //############################################################################
+        //2024/03/29 ChaSceneへ移動　RenderingEngineからの参照はChaSceneのアクセス関数を使う
+        //############################################################################
+        //std::vector<RENDEROBJ> m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
+        //std::vector<RENDEROBJ> m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+        //size_t m_forwardModelsReserveSize;
+        //std::vector<RENDEROBJ> m_instancingRenderModels;                    // インスタンシングレンダリングの描画パスで描画されるモデルのリスト
+        //std::vector<RENDERSPRITE> m_forwardRenderSprites;
+        //std::vector<RENDERFONT> m_forwardRenderFont;
     };
 }

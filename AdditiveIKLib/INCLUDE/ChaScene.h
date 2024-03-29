@@ -83,7 +83,7 @@ public:
 		int lightflag, ChaVector4 diffusemult, int btflag, 
 		bool zcmpalways, bool zenable,
 		int refposindex = 0);
-	int RenderInstancingModel(CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine* renderingEngine,
+	int RenderInstancingModel(CModel* srcmodel, bool forcewithalpha,
 		int lightflag, ChaVector4 diffusemult, int btflag, 
 		bool zcmpalways, bool zenable, int renderkind);
 
@@ -289,6 +289,123 @@ public:
 	//	m_renderingEngine = prenderingEngine;
 	//}
 
+	void ClearRenderObjs()
+	{
+		//m_shadowmapModels.clear();
+		//m_renderToGBufferModels.clear();
+		m_forwardRenderModels.clear();
+		m_instancingRenderModels.clear();
+		//m_zprepassModels.clear();
+		m_forwardRenderSprites.clear();
+		m_forwardRenderFont.clear();
+
+		m_forwardModelsReserveSize = 0;
+
+		ResetRefPos();
+	};
+
+
+	void Add3DModelToForwardRenderPass(std::vector<myRenderer::RENDEROBJ>& rendervec)
+	{
+		//m_forwardRenderModels.push_back(renderobj);
+
+		size_t srcsize = m_forwardRenderModels.size();
+		size_t addsize = rendervec.size();
+		size_t newsize = srcsize + addsize;
+
+		if ((newsize > 0) && (newsize > m_forwardModelsReserveSize)) {
+			m_forwardRenderModels.reserve(newsize);
+			m_forwardModelsReserveSize = newsize;
+		}
+
+		////std::copy(rendervec.begin(), rendervec.end(), std::back_inserter(m_forwardRenderModels));
+
+		//size_t addno;
+		//for (addno = 0; addno < addsize; addno++) {
+		//    m_forwardRenderModels[srcsize + addno] = rendervec[addno];
+		//}
+
+		size_t addno;
+		for (addno = 0; addno < addsize; addno++) {
+			m_forwardRenderModels.push_back(rendervec[addno]);
+		}
+
+	};
+	void Add3DModelToInstancingRenderPass(myRenderer::RENDEROBJ renderobj)
+	{
+	    m_instancingRenderModels.push_back(renderobj);
+	};
+	void AddSpriteToForwardRenderPass(myRenderer::RENDERSPRITE rendersprite)
+	{
+		m_forwardRenderSprites.push_back(rendersprite);
+	};
+	void AddFontToForwardRenderPass(myRenderer::RENDERFONT renderfont)
+	{
+		m_forwardRenderFont.push_back(renderfont);
+	};
+
+
+
+
+	int GetForwardRenderObjNum()
+	{
+		return (int)m_forwardRenderModels.size();
+	};
+	myRenderer::RENDEROBJ GetForwardRenderObj(int srcindex)
+	{
+		myRenderer::RENDEROBJ retobj;
+		retobj.Init();
+		if ((srcindex >= 0) && (srcindex < GetForwardRenderObjNum())) {
+			retobj = m_forwardRenderModels[srcindex];
+		}
+		return retobj;
+	};
+
+
+
+	int GetInstancingRenderObjNum()
+	{
+		return (int)m_instancingRenderModels.size();
+	};
+	myRenderer::RENDEROBJ GetInstancingRenderObj(int srcindex)
+	{
+		myRenderer::RENDEROBJ retobj;
+		retobj.Init();
+		if ((srcindex >= 0) && (srcindex < GetInstancingRenderObjNum())) {
+			retobj = m_instancingRenderModels[srcindex];
+		}
+		return retobj;
+	};
+
+	int GetSpriteRenderObjNum()
+	{
+		return (int)m_forwardRenderSprites.size();
+	};
+	myRenderer::RENDERSPRITE GetSpriteRenderObj(int srcindex)
+	{
+		myRenderer::RENDERSPRITE retobj;
+		retobj.Init();
+		if ((srcindex >= 0) && (srcindex < GetSpriteRenderObjNum())) {
+			retobj = m_forwardRenderSprites[srcindex];
+		}
+		return retobj;
+	};
+
+	int GetFontRenderObjNum()
+	{
+		return (int)m_forwardRenderFont.size();
+	};
+	myRenderer::RENDERFONT GetFontRenderObj(int srcindex)
+	{
+		myRenderer::RENDERFONT retobj;
+		retobj.Init();
+		if ((srcindex >= 0) && (srcindex < GetFontRenderObjNum())) {
+			retobj = m_forwardRenderFont[srcindex];
+		}
+		return retobj;
+	};
+
+
 private:
 	std::vector<MODELELEM> m_modelindex;
 	MODELBOUND	m_totalmb;
@@ -303,6 +420,12 @@ private:
 	int m_created_Motion2BtThreadsNum;
 	int m_created_SetBtMotionThreadsNum;
 
+	//std::vector<RENDEROBJ> m_renderToGBufferModels;                  // Gバッファへの描画パスで描画するモデルのリスト
+	std::vector<myRenderer::RENDEROBJ> m_forwardRenderModels;                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+	size_t m_forwardModelsReserveSize;
+	std::vector<myRenderer::RENDEROBJ> m_instancingRenderModels;                    // インスタンシングレンダリングの描画パスで描画されるモデルのリスト
+	std::vector<myRenderer::RENDERSPRITE> m_forwardRenderSprites;
+	std::vector<myRenderer::RENDERFONT> m_forwardRenderFont;
 
 	std::vector<myRenderer::RENDEROBJ> m_refpos_opaque;
 	std::vector<myRenderer::RENDEROBJ> m_refpos_transparent;

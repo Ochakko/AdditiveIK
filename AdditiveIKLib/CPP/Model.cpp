@@ -53,6 +53,8 @@
 #include <EngName.h>
 
 #include <RigidElem.h>
+#include <ChaScene.h>
+
 
 #include <string>
 
@@ -1606,8 +1608,12 @@ void CModel::GetSelectedObjTreeReq(FbxNode* pNode, std::vector<int>& selectedobj
 
 
 
-int CModel::RenderTest(bool withalpha, myRenderer::RenderingEngine* re, int lightflag, ChaVector4 diffusemult, int srcobjno)
+int CModel::RenderTest(bool withalpha, ChaScene* srcchascene, int lightflag, ChaVector4 diffusemult, int srcobjno)
 {
+	if (!srcchascene) {
+		_ASSERT(0);
+		return 1;
+	}
 
 	if (GetInView(0) == false) {
 		return 0;
@@ -1687,7 +1693,7 @@ int CModel::RenderTest(bool withalpha, myRenderer::RenderingEngine* re, int ligh
 			vector<myRenderer::RENDEROBJ> rendervec;
 			rendervec.push_back(renderobj);
 
-			re->Add3DModelToForwardRenderPass(rendervec);
+			srcchascene->Add3DModelToForwardRenderPass(rendervec);
 		}
 	}
 
@@ -7214,11 +7220,10 @@ int CModel::RenderRefArrow(bool limitdegflag,
 
 
 
-int CModel::RenderBoneMark(myRenderer::RenderingEngine* re,
-	bool limitdegflag, InstancedSprite* bcircleptr,
+int CModel::RenderBoneMark(bool limitdegflag, InstancedSprite* bcircleptr,
 	int selboneno, ChaScene* srcchascene, ChaMatrix srcmatVP)
 {
-	if (!re || !bcircleptr || !srcchascene) {
+	if (!bcircleptr || !srcchascene) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -7281,10 +7286,10 @@ int CModel::RenderBoneMark(myRenderer::RenderingEngine* re,
 		ResetBoneMarkInstanceScale();
 
 		//RenderCapsuleReq(limitdegflag, rc, m_topbt);
-		RenderCapsuleReq(m_topbt, re, limitdegflag,
+		RenderCapsuleReq(m_topbt, limitdegflag,
 			selboneno, srcchascene, srcmatVP);
 
-		CBone::RenderColDisp(srcchascene, re);
+		CBone::RenderColDisp(srcchascene);
 	}
 
 
@@ -7371,7 +7376,7 @@ int CModel::RenderBoneMark(myRenderer::RenderingEngine* re,
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.pinstancedsprite = bcircleptr;
-				re->AddSpriteToForwardRenderPass(rendersprite);
+				srcchascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 	}
@@ -7449,10 +7454,10 @@ int CModel::RenderBoneCircleOne(bool limitdegflag, RenderContext* pRenderContext
 	return 0;
 }
 
-void CModel::RenderCapsuleReq(CBtObject* srcbto, myRenderer::RenderingEngine* re, bool limitdegflag,
+void CModel::RenderCapsuleReq(CBtObject* srcbto, bool limitdegflag,
 	int selboneno, ChaScene* srcchascene, ChaMatrix srcmatVP)
 {
-	if (!re || !srcbto || !srcchascene) {
+	if (!srcbto || !srcchascene) {
 		return;
 	}
 
@@ -7504,7 +7509,7 @@ void CModel::RenderCapsuleReq(CBtObject* srcbto, myRenderer::RenderingEngine* re
 	int childno;
 	for (childno = 0; childno < srcbto->GetChildBtSize(); childno++){
 		CBtObject* childbto = srcbto->GetChildBt(childno);
-		RenderCapsuleReq(childbto, re, limitdegflag,
+		RenderCapsuleReq(childbto, limitdegflag,
 			selboneno, srcchascene, srcmatVP);
 	}
 
@@ -19397,8 +19402,12 @@ int CModel::ChkInView(int refposindex)
 				curobj->SetInView(true, refposindex);
 			}
 		}
-
-		SetDistChkInView(0.01f, refposindex);//2024/03/25
+		if (GetSkyFlag()) {
+			SetDistChkInView(500000.0f, refposindex);
+		}
+		else {
+			SetDistChkInView(0.01f, refposindex);//2024/03/25
+		}
 	}
 	else if (m_object.empty() || (GetFromBvhFlag())) {
 

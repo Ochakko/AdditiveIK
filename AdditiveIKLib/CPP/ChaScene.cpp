@@ -145,8 +145,7 @@ void ChaScene::InitParams()
 	m_created_Motion2BtThreadsNum = 0;
 	m_created_SetBtMotionThreadsNum = 0;
 
-	m_refpos_opaque.clear();
-	m_refpos_transparent.clear();
+	ClearRenderObjs();
 }
 void ChaScene::DestroyObjs()
 {
@@ -465,7 +464,10 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 			int groupindex;
 			for (groupindex = 0; groupindex < MAXDISPGROUPNUM; groupindex++) {
 
+				int rendervecReservedSize = 64;
+				int rendervecSize = 0;
 				rendervec.clear();//!!!!!!!!!!!
+				rendervec.reserve(rendervecReservedSize);
 
 				if (groupindex >= 1) {
 					forcewithalpha = true;
@@ -489,6 +491,13 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 						if (!(curmodel->DispGroupEmpty(groupindex)) && curmodel->GetDispGroupON(groupindex)) {
 
 							int elemnum = curmodel->GetDispGroupSize(groupindex);
+
+							rendervecSize += elemnum;
+							if (rendervecSize > rendervecReservedSize) {
+								rendervecReservedSize *= 2;
+								rendervec.reserve(rendervecReservedSize);
+							}
+
 							int elemno;
 							for (elemno = 0; elemno < elemnum; elemno++) {
 
@@ -545,6 +554,12 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 									renderobj.mWorld = curmodel->GetWorldMat().TKMatrix();
 									renderobj.calcslotflag = calcslotflag;
 									renderobj.btflag = btflag;
+									if (curmodel->GetSkyFlag()) {
+										renderobj.skyflag = true;
+									}
+									else {
+										renderobj.skyflag = false;
+									}
 
 									//renderingEngine->Add3DModelToZPrepass(renderobj);
 									
@@ -553,42 +568,37 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 											//(withalpha == false) && (forcewithalpha == false)) {
 											(curobj->GetCancelShadow() == false)) {
 											//renderingEngine->Add3DModelToRenderToShadowMap(renderobj);
-
-											renderobj.renderkind = RENDERKIND_SHADOWMAP;
-											rendervec.push_back(renderobj);
+											renderobj.renderkind = RENDERKIND_SHADOWMAP;											
 										}
 										else {
 											//renderingEngine->Add3DModelToForwardRenderPass(renderobj);
 											renderobj.renderkind = RENDERKIND_NORMAL;
-											rendervec.push_back(renderobj);
 										}
 									}
 									else {
 										//renderingEngine->Add3DModelToForwardRenderPass(renderobj);
-
 										renderobj.renderkind = RENDERKIND_NORMAL;
-										rendervec.push_back(renderobj);
 									}
+
+									rendervec.push_back(renderobj);
 								}
 							}
 						}
 					}
 				}
 
-				//##########################################################
-				//2024/01/20
-				//dispgroup毎に　カメラ距離でソートしてから　renderingEngineに渡す
-				//##########################################################
+				//#################################################################
+				//2024/03/30 不透明と半透明と混在で　遠くから描画することで色がブレンドする
+				//#################################################################
 				if (!rendervec.empty()) {
-					std::sort(rendervec.begin(), rendervec.end());//カメラ距離でソート
-					if (groupindex != 0) {
-						std::reverse(rendervec.begin(), rendervec.end());//半透明は遠くから順番に描画
-					}//不透明は近くから順に描画
-					renderingEngine->Add3DModelToForwardRenderPass(rendervec);
+					std::sort(rendervec.begin(), rendervec.end());//カメラ距離でソート 近い順に並ぶ
+					std::reverse(rendervec.begin(), rendervec.end());//半透明は遠くから順番に描画 遠い順に並ぶ
+					Add3DModelToForwardRenderPass(rendervec);
 				}
+
+
 			}
 
-			
 			RenderRefPos(renderingEngine, (renderindex == 0));//2024/03/24
 		}
 
@@ -624,13 +634,6 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 		//	//プレビュー中以外のときには同期する(UpdaetMatrixModelsの終わりで終了待機)　Render()においてはcalcslotflag=trueで描画
 		//}
 	}
-
-	ResetRefPos();//2024/03/24
-
-
-
-
-
 
 	return 0;
 }
@@ -705,7 +708,7 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 	//		model1のgroup1-->model2のgorup1-->model1のgroup2-->model2のgroup2--> ...
 	//####################################################################################
 
-	vector<myRenderer::RENDEROBJ> rendervec;
+	//vector<myRenderer::RENDEROBJ> rendervec;
 
 	int renderindex;
 	//int renderslot = (int)(!(m_updateslot != 0));
@@ -727,7 +730,7 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 		int groupindex;
 		for (groupindex = 0; groupindex < MAXDISPGROUPNUM; groupindex++) {
 
-			rendervec.clear();//!!!!!!!!!!!!!!!
+			//rendervec.clear();//!!!!!!!!!!!!!!!
 
 			if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView(0)) {
 				//if (curmodel && curmodel->GetModelDisp()) {
@@ -804,19 +807,27 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 
 							renderobj.renderkind = RENDERKIND_NORMAL;
 							renderobj.refposindex = refposindex;//2024/02/06
-							rendervec.push_back(renderobj);
+							if (curmodel->GetSkyFlag()) {
+								renderobj.skyflag = true;
+							}
+							else {
+								renderobj.skyflag = false;
+							}
+
+
+							m_forwardRenderModels.push_back(renderobj);
 						}
 					}
 				}
 			}
 
-			if (!rendervec.empty()) {
-				//std::sort(rendervec.begin(), rendervec.end());//カメラ距離でソート
-				//if (groupindex != 0) {
-				//	std::reverse(rendervec.begin(), rendervec.end());//半透明は遠くから順番に描画
-				//}
-				renderingEngine->Add3DModelToForwardRenderPass(rendervec);
-			}
+			//if (!rendervec.empty()) {
+			//	//std::sort(rendervec.begin(), rendervec.end());//カメラ距離でソート
+			////	//if (groupindex != 0) {
+			//	//	std::reverse(rendervec.begin(), rendervec.end());//半透明は遠くから順番に描画
+			//	//}
+			//	Add3DModelToForwardRenderPass(rendervec);
+			//}
 		}
 	}
 
@@ -824,17 +835,10 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 }
 
 int ChaScene::RenderInstancingModel(CModel* srcmodel, bool forcewithalpha,
-	myRenderer::RenderingEngine* renderingEngine,
 	int lightflag, ChaVector4 diffusemult, int btflag, 
 	bool zcmpalways, bool zenable,
 	int renderkind)
 {
-	if (!renderingEngine) {
-		_ASSERT(0);
-		return 1;
-	}
-
-
 	if (g_changeUpdateThreadsNum) {
 		//アップデート用スレッド数を変更中
 		return 0;
@@ -948,7 +952,8 @@ int ChaScene::RenderInstancingModel(CModel* srcmodel, bool forcewithalpha,
 							renderobj.btflag = btflag;
 							renderobj.zcmpalways = zcmpalways;
 							renderobj.zenable = zenable;//2024/02/08
-							renderingEngine->Add3DModelToInstancingRenderPass(renderobj);
+							//Add3DModelToInstancingRenderPass(renderobj);
+							m_instancingRenderModels.push_back(renderobj);
 						}
 					}
 				}
@@ -1117,14 +1122,14 @@ int ChaScene::RenderRefPos(myRenderer::RenderingEngine* renderingEngine, bool op
 		if (!m_refpos_opaque.empty()) {
 			std::sort(m_refpos_opaque.begin(), m_refpos_opaque.end());//カメラ距離でソート
 			//不透明は近くから順に描画
-			renderingEngine->Add3DModelToForwardRenderPass(m_refpos_opaque);
+			Add3DModelToForwardRenderPass(m_refpos_opaque);
 		}
 	}
 	else {
 		if (!m_refpos_transparent.empty()) {
 			std::sort(m_refpos_transparent.begin(), m_refpos_transparent.end());//カメラ距離でソート
 			std::reverse(m_refpos_transparent.begin(), m_refpos_transparent.end());//半透明は遠くから順番に描画
-			renderingEngine->Add3DModelToForwardRenderPass(m_refpos_transparent);
+			Add3DModelToForwardRenderPass(m_refpos_transparent);
 		}
 	}
 

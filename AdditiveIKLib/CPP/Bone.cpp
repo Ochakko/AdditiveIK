@@ -584,7 +584,7 @@ void CBone::ResetRefPosMarkInstancingParams()//static function
 	s_refposmarkgetnum = 0;
 }
 
-void CBone::RenderColDisp(ChaScene* srcchascene, myRenderer::RenderingEngine* re)//static function
+void CBone::RenderColDisp(ChaScene* srcchascene)//static function
 {
 	int lightflag = 0;
 	ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, g_rigidmark_alpha);//2024/01/12 alpha
@@ -595,25 +595,25 @@ void CBone::RenderColDisp(ChaScene* srcchascene, myRenderer::RenderingEngine* re
 
 	if (s_coldisp[COL_CONE_INDEX] && (s_coldisp[COL_CONE_INDEX]->GetInstancingDrawNum() > 0)) {
 		srcchascene->RenderInstancingModel(s_coldisp[COL_CONE_INDEX],
-			forcewithalpha, re, lightflag, diffusemult, btflag, 
+			forcewithalpha, lightflag, diffusemult, btflag, 
 			zcmpalways, zenable,
 			RENDERKIND_INSTANCING_LINE);
 	}
 	if (s_coldisp[COL_CAPSULE_INDEX] && (s_coldisp[COL_CAPSULE_INDEX]->GetInstancingDrawNum() > 0)) {
 		srcchascene->RenderInstancingModel(s_coldisp[COL_CAPSULE_INDEX],
-			forcewithalpha, re, lightflag, diffusemult, btflag, 
+			forcewithalpha, lightflag, diffusemult, btflag, 
 			zcmpalways, zenable,
 			RENDERKIND_INSTANCING_LINE);
 	}
 	if (s_coldisp[COL_SPHERE_INDEX] && (s_coldisp[COL_SPHERE_INDEX]->GetInstancingDrawNum() > 0)) {
 		srcchascene->RenderInstancingModel(s_coldisp[COL_SPHERE_INDEX],
-			forcewithalpha, re, lightflag, diffusemult, btflag, 
+			forcewithalpha, lightflag, diffusemult, btflag, 
 			zcmpalways, zenable,
 			RENDERKIND_INSTANCING_LINE);
 	}
 	if (s_coldisp[COL_BOX_INDEX] && (s_coldisp[COL_BOX_INDEX]->GetInstancingDrawNum() > 0)) {
 		srcchascene->RenderInstancingModel(s_coldisp[COL_BOX_INDEX],
-			forcewithalpha, re, lightflag, diffusemult, btflag, 
+			forcewithalpha, lightflag, diffusemult, btflag, 
 			zcmpalways, zenable,
 			RENDERKIND_INSTANCING_LINE);
 	}
@@ -630,7 +630,7 @@ void CBone::RenderRefPosMark(ChaScene* srcchascene, myRenderer::RenderingEngine*
 
 	if (s_refposmark && (s_refposmark->GetInstancingDrawNum() > 0)) {
 		srcchascene->RenderInstancingModel(s_refposmark,
-			forcewithalpha, re, lightflag, diffusemult, btflag, 
+			forcewithalpha, lightflag, diffusemult, btflag, 
 			zcmpalways, zenable, RENDERKIND_INSTANCING_TRIANGLE);
 	}
 }

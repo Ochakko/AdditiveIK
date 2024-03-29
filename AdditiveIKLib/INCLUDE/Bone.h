@@ -70,7 +70,7 @@ public:
 	static void InitColDisp();
 	static void DestroyColDisp();
 	static void ResetColDispInstancingParams();
-	static void RenderColDisp(ChaScene* srcchascene, myRenderer::RenderingEngine* re);
+	static void RenderColDisp(ChaScene* srcchascene);
 	static void ResetRefPosMarkInstancingParams();
 	static void RenderRefPosMark(ChaScene* srcchascene, myRenderer::RenderingEngine* re, 
 		ChaVector4 diffusemult);

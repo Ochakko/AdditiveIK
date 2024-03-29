@@ -306,7 +306,7 @@ public:
 
 	//DispGroup : test button : exclusive display
 	int SetDispGroupGUI(std::vector<OrgWinGUI::OWP_CheckBoxA*>& checkboxvec, std::vector<CMQOObject*>& mqoobjvec);
-	int RenderTest(bool withalpha, myRenderer::RenderingEngine* re, int lightflag, ChaVector4 diffusemult, int srcobjno);
+	int RenderTest(bool withalpha, ChaScene* srcchascene, int lightflag, ChaVector4 diffusemult, int srcobjno);
 	int SelectRenderObject(int srcobjno, std::vector<CMQOObject*>& selectedobjvec);
 	void SelectRenderObjectReq(FbxNode* pNode, std::vector<CMQOObject*>& selectedobjvec);
 	int GetSelectedObjTree(int srcobjno, std::vector<int>& selectedobjtree);
@@ -328,8 +328,7 @@ public:
  * @param (int skiptopbonemark) IN 一番親からのボーンを表示しないフラグ。
  * @return 成功したら０。
  */
-	int RenderBoneMark(myRenderer::RenderingEngine* re,
-		bool limitdegflag, InstancedSprite* bcircleptr,
+	int RenderBoneMark(bool limitdegflag, InstancedSprite* bcircleptr,
 		int selboneno, ChaScene* srcchascene, ChaMatrix srcmatVP);
 	void ResetBoneMarkInstanceScale();
 
@@ -338,7 +337,7 @@ public:
 
 
 	//void RenderCapsuleReq(bool limitdegflag, RenderContext* pRenderContext, CBtObject* srcbto);
-	void RenderCapsuleReq(CBtObject* srcbt, myRenderer::RenderingEngine* re, bool limitdegflag,
+	void RenderCapsuleReq(CBtObject* srcbt, bool limitdegflag,
 		int selboneno, ChaScene* srcchascene, ChaMatrix srcmatVP);
 	void ResetDispObjScale();
 

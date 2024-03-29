@@ -4,6 +4,7 @@
 #include <mqoobject.h>
 #include <DispObj.h>
 #include <GlobalVar.h>
+#include <ChaScene.h>
 
 #include "../../MiniEngine/InstancedSprite.h"
 #include "../../AdditiveIK/FpsSprite.h"
@@ -31,14 +32,14 @@ namespace myRenderer
     m_postEffect()
     {
         m_initflag = false;
-        //m_zprepassModels.clear();                         // ZPrepassの描画パスで描画されるモデルのリスト
-        //m_shadowmapModels.clear();
-        //m_renderToGBufferModels.clear();                  // Gバッファへの描画パスで描画するモデルのリスト
-        m_forwardRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
-        m_instancingRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
-        m_forwardRenderSprites.clear();
-        m_forwardRenderFont.clear();
-        m_forwardModelsReserveSize = 0;
+        ////m_zprepassModels.clear();                         // ZPrepassの描画パスで描画されるモデルのリスト
+        ////m_shadowmapModels.clear();
+        ////m_renderToGBufferModels.clear();                  // Gバッファへの描画パスで描画するモデルのリスト
+        //m_forwardRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+        //m_instancingRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+        //m_forwardRenderSprites.clear();
+        //m_forwardRenderFont.clear();
+        //m_forwardModelsReserveSize = 0;
     }
 
     RenderingEngine::~RenderingEngine()
@@ -53,14 +54,14 @@ namespace myRenderer
         }
 
 
-        //m_zprepassModels.clear();                         // ZPrepassの描画パスで描画されるモデルのリスト
-        //m_shadowmapModels.clear();
-        m_renderToGBufferModels.clear();                  // Gバッファへの描画パスで描画するモデルのリスト
-        m_forwardRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
-        m_instancingRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
-        m_forwardRenderSprites.clear();
-        m_forwardRenderFont.clear();
-        m_forwardModelsReserveSize = 0;
+        ////m_zprepassModels.clear();                         // ZPrepassの描画パスで描画されるモデルのリスト
+        ////m_shadowmapModels.clear();
+        //m_renderToGBufferModels.clear();                  // Gバッファへの描画パスで描画するモデルのリスト
+        //m_forwardRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+        //m_instancingRenderModels.clear();                    // フォワードレンダリングの描画パスで描画されるモデルのリスト
+        //m_forwardRenderSprites.clear();
+        //m_forwardRenderFont.clear();
+        //m_forwardModelsReserveSize = 0;
 
 
         InitZPrepassRenderTarget();
@@ -335,9 +336,9 @@ namespace myRenderer
         //m_diferredLightingSprite.Init(spriteInitData);
     }
 
-    void RenderingEngine::Execute(RenderContext* rc)
+    void RenderingEngine::Execute(RenderContext* rc, ChaScene* srcchascene)
     {
-        if (!rc) {
+        if (!rc || !srcchascene) {
             _ASSERT(0);
             return;
         }
@@ -351,7 +352,7 @@ namespace myRenderer
 
         // シャドウマップへの描画
         if (g_enableshadow) {
-            RenderToShadowMap(rc);
+            RenderToShadowMap(rc, srcchascene);
         }
         
 
@@ -363,7 +364,7 @@ namespace myRenderer
         //if (g_4kresolution) {
         //if (g_zpreflag) {//2023/12/09 DispAndLimitsメニューのオプションに.
         //2024/03/15 ZPrepassオフの場合にもクリアが必要
-            ZPrepass(rc);
+            ZPrepass(rc, srcchascene);
         //}
         
 
@@ -377,7 +378,7 @@ namespace myRenderer
         //SnapshotMainRenderTarget(rc, EnMainRTSnapshot::enDrawnOpacity);
 
         // フォワードレンダリング
-        ForwardRendering(rc);
+        ForwardRendering(rc, srcchascene);
 
 
         //2024/03/24 RefPosオンの時はDOFはオフ　RefPosオン時にDOFをオンにするとオブジェクトの境界部分にボケない不透明の三角が多数出来る
@@ -388,7 +389,7 @@ namespace myRenderer
         }
 
 
-        SpriteRendering(rc);//m_postEffectよりも後で
+        SpriteRendering(rc, srcchascene);//m_postEffectよりも後で
 
 
 
@@ -396,18 +397,12 @@ namespace myRenderer
         CopyMainRenderTargetToFrameBuffer(rc);
 
         // 登録されている3Dモデルをクリア
-        //m_shadowmapModels.clear();
-        m_renderToGBufferModels.clear();
-        m_forwardRenderModels.clear();
-        m_instancingRenderModels.clear();
-        //m_zprepassModels.clear();
-        m_forwardRenderSprites.clear();
-        m_forwardRenderFont.clear();
+        srcchascene->ClearRenderObjs();
     }
 
-    void RenderingEngine::RenderToShadowMap(RenderContext* rc)
+    void RenderingEngine::RenderToShadowMap(RenderContext* rc, ChaScene* srcchascene)
     {
-        if (!rc) {
+        if (!rc || !srcchascene) {
             _ASSERT(0);
             return;
         }
@@ -427,16 +422,18 @@ namespace myRenderer
         rc->ClearRenderTargetView(m_shadowMapRenderTarget);
 
         // 影モデルを描画
-        for (auto& currenderobj : m_forwardRenderModels)
-        {
-            if (g_enableshadow) {
-                if (currenderobj.pmodel && (currenderobj.pmodel->GetSkyFlag() == false) && 
+        if (g_enableshadow) {
+            int rendernum = srcchascene->GetForwardRenderObjNum();
+            int renderindex;
+            for (renderindex = 0; renderindex < rendernum; renderindex++) {
+                RENDEROBJ currenderobj = srcchascene->GetForwardRenderObj(renderindex);
+                if (currenderobj.pmodel && (currenderobj.pmodel->GetSkyFlag() == false) &&
+                    currenderobj.mqoobj &&
                     (currenderobj.renderkind == RENDERKIND_SHADOWMAP)) {
                     RenderPolyMeshShadowMap(rc, currenderobj);
                 }
             }
         }
-
 
         // 書き込み完了待ち
         rc->WaitUntilFinishDrawingToRenderTarget(m_shadowMapRenderTarget);
@@ -446,7 +443,7 @@ namespace myRenderer
 
     }
 
-    void RenderingEngine::ZPrepass(RenderContext* rc)
+    void RenderingEngine::ZPrepass(RenderContext* rc, ChaScene* srcchascene)
     {
         if (!rc) {
             _ASSERT(0);
@@ -489,31 +486,23 @@ namespace myRenderer
         //2024/03/24 RefPosオンの時はDOFはオフ　RefPosオン時にDOFをオンにするとオブジェクトの境界部分にボケない不透明の三角が多数出来る
         //if (g_zpreflag && !g_refposflag) {
         if (g_zpreflag) {
-            //for (auto& currenderobj : m_zprepassModels)
-            for (auto& currenderobj : m_forwardRenderModels)
-            {
-                //2024/03/15
-                //天球をぼかすと　背景の無いシーンで　カメラ距離に関わらずキャラクターがボケてしまう
-                //背景の無いシーンではg_skydofflagをfalseにし、　背景のあるシーンでtrueにする
-                //if ((g_skydofflag[g_dofindex] == true) || (currenderobj.pmodel->GetSkyFlag() == false) &&
-                //    !currenderobj.pmodel->GetGroundFlag()) {
-                //    RenderPolyMeshZPre(rc, currenderobj);
-                //}
-
-
-                if (currenderobj.pmodel->GetSkyFlag() == false) {
+            int rendernum = srcchascene->GetForwardRenderObjNum();
+            int renderindex;
+            for (renderindex = 0; renderindex < rendernum; renderindex++) {
+                RENDEROBJ currenderobj = srcchascene->GetForwardRenderObj(renderindex);
+                if (currenderobj.pmodel && (currenderobj.pmodel->GetSkyFlag() == false) &&
+                    currenderobj.mqoobj) {
                     //2024/03/25
                     //Skyオブジェクト自体のZは不要になった　サーフェスをZMAXで初期化することにした
                     RenderPolyMeshZPre(rc, currenderobj);
                 }
-
             }
         }
 
         rc->WaitUntilFinishDrawingToRenderTarget(m_zprepassRenderTarget);
     }
 
-    void RenderingEngine::ForwardRendering(RenderContext* rc)
+    void RenderingEngine::ForwardRendering(RenderContext* rc, ChaScene* srcchascene)
     {
         if (!rc) {
             _ASSERT(0);
@@ -541,35 +530,41 @@ namespace myRenderer
             rc->ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
         }
 
-
-        for (auto& currenderobj : m_forwardRenderModels)
-        {
-            if (g_enableshadow) {
-                if (currenderobj.pmodel && (currenderobj.pmodel->GetSkyFlag() == false) && 
-                    (currenderobj.renderkind == RENDERKIND_SHADOWMAP)) {
-                    RenderPolyMeshShadowReciever(rc, currenderobj);
+        int rendernum = srcchascene->GetForwardRenderObjNum();
+        int renderindex;
+        for (renderindex = 0; renderindex < rendernum; renderindex++) {
+            RENDEROBJ currenderobj = srcchascene->GetForwardRenderObj(renderindex);
+            if (currenderobj.pmodel && currenderobj.mqoobj) {
+                if (g_enableshadow) {
+                    if ((currenderobj.pmodel->GetSkyFlag() == false) &&
+                        (currenderobj.renderkind == RENDERKIND_SHADOWMAP)) {
+                        RenderPolyMeshShadowReciever(rc, currenderobj);
+                    }
+                    else {
+                        RenderPolyMesh(rc, currenderobj);
+                    }
                 }
                 else {
                     RenderPolyMesh(rc, currenderobj);
                 }
             }
-            else {
-                RenderPolyMesh(rc, currenderobj);
+        }
+
+        int rendernum2 = srcchascene->GetInstancingRenderObjNum();
+        int renderindex2;
+        for (renderindex2 = 0; renderindex2 < rendernum2; renderindex2++) {
+            RENDEROBJ currenderobjinsta = srcchascene->GetInstancingRenderObj(renderindex2);
+            if (currenderobjinsta.pmodel && currenderobjinsta.mqoobj) {
+                RenderPolyMeshInstancing(rc, currenderobjinsta);
             }
         }
-
-        for (auto& currenderobjinsta : m_instancingRenderModels)
-        {
-            RenderPolyMeshInstancing(rc, currenderobjinsta);
-        }
-
 
         // メインレンダリングターゲットへの書き込み終了待ち
        rc->WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
     }
 
 
-    void RenderingEngine::SpriteRendering(RenderContext* rc)
+    void RenderingEngine::SpriteRendering(RenderContext* rc, ChaScene* srcchascene)
     {
         if (!rc) {
             _ASSERT(0);
@@ -585,9 +580,10 @@ namespace myRenderer
         rc->SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
 
 
-        //Sprite (ScreenVertexMode)
-        for (auto& currendersprite : m_forwardRenderSprites)
-        {
+        int rendernum = srcchascene->GetSpriteRenderObjNum();
+        int renderindex;
+        for (renderindex = 0; renderindex < rendernum; renderindex++) {
+            RENDERSPRITE currendersprite = srcchascene->GetSpriteRenderObj(renderindex);
             if (currendersprite.psprite) {
                 currendersprite.psprite->DrawScreen(rc);
             }
@@ -603,8 +599,10 @@ namespace myRenderer
         }
 
         //Font : MiniEngine
-        for (auto& currenderfont : m_forwardRenderFont)
-        {
+        int rendernum2 = srcchascene->GetFontRenderObjNum();
+        int renderindex2;
+        for (renderindex2 = 0; renderindex2 < rendernum2; renderindex2++) {
+            RENDERFONT currenderfont = srcchascene->GetFontRenderObj(renderindex2);
             if (currenderfont.pfont && (currenderfont.strfont[0] != 0L)) {
                 currenderfont.pfont->Begin(rc);
                 currenderfont.pfont->Draw(currenderfont.strfont,
