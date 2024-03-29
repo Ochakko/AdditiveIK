@@ -13519,7 +13519,8 @@ int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderCon
 	int rendercount = 0;
 	if (s_model->ExistCurrentMotion()) {
 		int curmotid = s_model->GetCurrentMotID();
-		double curframe = s_model->GetCurrentFrame();
+		//double curframe = s_model->GetCurrentFrame();
+		double renderframe = s_model->GetRenderSlotFrame();//2024/03/29 表示用スロットのフレーム
 
 		std::map<int, CBone*>::iterator itrbone;
 		for (itrbone = s_model->GetBoneListBegin(); itrbone != s_model->GetBoneListEnd(); itrbone++) {
@@ -13537,7 +13538,8 @@ int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderCon
 						if (currigmodel && (instancingno >= 0) && (instancingno < RIGMULTINDEXMAX)) {
 							ChaMatrix rigmat;
 							ChaMatrixIdentity(&rigmat);
-							rigmat = CalcRigMat(&currig, curbone, curmotid, curframe, currig.dispaxis, currig.disporder, currig.posinverse);
+							//rigmat = CalcRigMat(&currig, curbone, curmotid, curframe, currig.dispaxis, currig.disporder, currig.posinverse);
+							rigmat = CalcRigMat(&currig, curbone, curmotid, renderframe, currig.dispaxis, currig.disporder, currig.posinverse);//2024/03/29 renderframe
 
 							//currigmodel->UpdateMatrix(g_limitdegflag, &rigmat, &s_matVP);
 							currigmodel->SetInstancingParams(instancingno, rigmat, s_matVP, rigmaterial);
