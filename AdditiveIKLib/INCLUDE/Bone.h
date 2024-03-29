@@ -249,6 +249,7 @@ public:
 	float CalcAxisMatX_Manipulator(bool limitdegflag, int srcboneaxis, int bindflag,
 		CBone* childbone, ChaMatrix* dstmat, int setstartflag);//ボーン軸がX軸
 	float CalcAxisMatX_RigidBody(bool limitdegflag, bool dir2xflag, int bindflag, 
+		bool calcslotflag,
 		CBone* childbone, ChaMatrix* dstmat, int setstartflag);//カプセルデータX軸向き
 	float CalcAxisMatX_NodeMat(CBone* childbone, ChaMatrix* dstmat);
 

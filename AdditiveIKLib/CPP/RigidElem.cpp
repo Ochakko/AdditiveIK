@@ -142,7 +142,8 @@ float CRigidElem::GetBoneLeng()
 
 }
 
-ChaMatrix CRigidElem::GetCapsulematForColiShape(bool limitdegflag, int calczeroframe, int multworld)//default of multworld = 1
+ChaMatrix CRigidElem::GetCapsulematForColiShape(bool limitdegflag, int calczeroframe, 
+	bool calcslotflag, int multworld)//default of multworld = 1
 {
 	//######################################################################################
 	//2023/01/18
@@ -154,7 +155,9 @@ ChaMatrix CRigidElem::GetCapsulematForColiShape(bool limitdegflag, int calczerof
 
 	if (m_endbone && m_endbone->GetParent(false)) {
 		bool dir2xflag = true;
-		m_endbone->GetParent(false)->CalcAxisMatX_RigidBody(limitdegflag, dir2xflag, 0, m_endbone, &retmat, calczeroframe);
+		m_endbone->GetParent(false)->CalcAxisMatX_RigidBody(limitdegflag, dir2xflag, 0, 
+			calcslotflag,
+			m_endbone, &retmat, calczeroframe);
 	}
 	else {
 		retmat.SetIdentity();

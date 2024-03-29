@@ -1986,7 +1986,9 @@ float CBone::CalcAxisMatX_NodeMat(CBone* childbone, ChaMatrix* dstmat)
 
 }
 
-float CBone::CalcAxisMatX_RigidBody(bool limitdegflag, bool dir2xflag, int bindflag, CBone* childbone, ChaMatrix* dstmat, int setstartflag)
+float CBone::CalcAxisMatX_RigidBody(bool limitdegflag, bool dir2xflag, int bindflag, 
+	bool calcslotflag,
+	CBone* childbone, ChaMatrix* dstmat, int setstartflag)
 {
 	//#############################################################################################
 	//2022/11/03
@@ -2044,9 +2046,11 @@ float CBone::CalcAxisMatX_RigidBody(bool limitdegflag, bool dir2xflag, int bindf
 	else {
 		if ((g_previewFlag != 5) && (g_previewFlag != 4)) {
 			ChaMatrix tmpzerofm = GetNodeMat() * GetCurrentZeroFrameMat(limitdegflag, 1);
-			ChaMatrix tmplimwm = GetNodeMat() * GetCurrentWorldMat(true, true);
+			//ChaMatrix tmplimwm = GetNodeMat() * GetCurrentWorldMat(true, true);
+			ChaMatrix tmplimwm = GetNodeMat() * GetCurrentWorldMat(true, calcslotflag);
 			ChaMatrix tmpchildzerofm = childbone->GetNodeMat() * childbone->GetCurrentZeroFrameMat(limitdegflag, 1);
-			ChaMatrix tmpchildlimwm = childbone->GetNodeMat() * childbone->GetCurrentWorldMat(true, true);
+			//ChaMatrix tmpchildlimwm = childbone->GetNodeMat() * childbone->GetCurrentWorldMat(true, true);
+			ChaMatrix tmpchildlimwm = childbone->GetNodeMat() * childbone->GetCurrentWorldMat(true, calcslotflag);
 
 			if (setstartflag == 1) {
 				ChaVector3TransformCoord(&aftbonepos, &zeropos, &tmpzerofm);
@@ -2063,9 +2067,11 @@ float CBone::CalcAxisMatX_RigidBody(bool limitdegflag, bool dir2xflag, int bindf
 		}
 		else {
 			ChaMatrix tmpzerofm = GetNodeMat() * GetCurrentZeroFrameMat(limitdegflag, 1);
-			ChaMatrix tmpbtmat = GetNodeMat() * GetBtMat(true);
+			//ChaMatrix tmpbtmat = GetNodeMat() * GetBtMat(true);
+			ChaMatrix tmpbtmat = GetNodeMat() * GetBtMat(calcslotflag);
 			ChaMatrix tmpchildzerofm = childbone->GetNodeMat() * childbone->GetCurrentZeroFrameMat(limitdegflag, 1);
-			ChaMatrix tmpchildbtmat = childbone->GetNodeMat() * childbone->GetBtMat(true);
+			//ChaMatrix tmpchildbtmat = childbone->GetNodeMat() * childbone->GetBtMat(true);
+			ChaMatrix tmpchildbtmat = childbone->GetNodeMat() * childbone->GetBtMat(calcslotflag);
 			if (setstartflag == 1) {
 				ChaVector3TransformCoord(&aftbonepos, &zeropos, &tmpzerofm);
 				ChaVector3TransformCoord(&aftchildpos, &zeropos, &tmpchildzerofm);

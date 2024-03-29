@@ -7483,7 +7483,7 @@ void CModel::RenderCapsuleReq(CBtObject* srcbto, myRenderer::RenderingEngine* re
 					srcbone->CalcRigidElemParams(setinstancescale, childbone, 0, calcslotflag);//形状データのスケールのために呼ぶ。
 					//srcbto->SetCapsuleBtMotion(curre);
 
-					ChaMatrix tmpcapmat = curre->GetCapsulematForColiShape(limitdegflag, 0);//2023/01/18
+					ChaMatrix tmpcapmat = curre->GetCapsulematForColiShape(limitdegflag, 0, calcslotflag);//2023/01/18 //2024/03/29 calcslotflag
 					//curcoldisp->UpdateMatrix(limitdegflag, &tmpcapmat, &m_matVP);
 
 					ChaVector4 difmult;
