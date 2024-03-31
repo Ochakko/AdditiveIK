@@ -5634,6 +5634,7 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 {
 
 	static double savetime = 0.0;
+	static double savetooltiptime = 0.0;
 	static int capcnt = 0;
 
 	if (ploopstartflag) {
@@ -5676,10 +5677,16 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 	}
 	else {
 
+
+
+
 		//if ((UnderDragOperation_R() == false) && (UnderDragOperation_L() == false) && ((s_tooltipdispcount % 6) == 0)) {
-		if ((UnderDragOperation_R() == false) && (UnderDragOperation_L() == false)) {
+		if ((UnderDragOperation_R() == false) && (UnderDragOperation_L() == false) &&
+			((fTime - savetooltiptime) >= 0.1)) {
 			//マウスがUtDialogのコントロールの上を通るとSetCaptureが生じるのでIK中は非表示にする
 			DispToolTip();
+
+			savetooltiptime = fTime;
 		}
 		s_tooltipdispcount++;
 

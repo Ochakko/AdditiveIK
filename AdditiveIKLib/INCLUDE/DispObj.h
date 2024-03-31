@@ -20,11 +20,6 @@ class DescriptorHeap;//ディスクリプタヒープ。
 struct CSVertexWithBone
 {
 	float pos[4];
-	float normal[4];
-	float tangent[4];
-	float biNormalL[4];
-	float uv[4];
-	float projpos[4];
 	float bweight[4];
 	int bindices[4];
 };
@@ -32,21 +27,8 @@ struct CSVertexWithBone
 struct CSVertexWithoutBone
 {
 	float pos[4];
-	float normal[4];
-	float tangent[4];
-	float biNormalL[4];
-	float uv[4];
-	float projpos[4];
 };
 
-//struct CSVertexOutput
-//{
-//	float worldpos[4];
-//	float normal[4]; // 法線
-//	float tangent[4];
-//	float biNormal[4];
-//	//float projpos[4];
-//};
 
 struct CSConstantBufferWithoutBone {
 	int mVertexNum[4];

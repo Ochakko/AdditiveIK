@@ -15,21 +15,11 @@ static const float POW = 5.0f;
 struct CSInputData
 {
     float4 pos;
-    float4 normal;
-    float4 tangent;
-    float4 biNormal;
-    float4 uv;
-    float4 projpos;
 };
 
 struct CSOutputData
 {
     float4 pos;
-    float4 normal;
-    float4 tangent;
-    float4 biNormal;
-    float4 uv;
-    float4 projpos;
 };
 
 
@@ -57,7 +47,8 @@ RWStructuredBuffer<CSOutputData> g_outputData : register(u0);
 //[numthreads(128, 1, 1)]
 //[numthreads(1, 1, 1)]
 //[numthreads(4, 1, 1)]
-[numthreads(8, 1, 1)]
+//[numthreads(8, 1, 1)]
+[numthreads(16, 1, 1)]
 void CSMain(uint3 DTid : SV_DispatchThreadID)
 {
     int dataIndex = DTid.x;
@@ -65,13 +56,8 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
         return;
   
     g_outputData[dataIndex].pos = mul(mWorld, g_inputData[dataIndex].pos); // モデルの頂点をワールド座標系に変換    
-    g_outputData[dataIndex].normal = normalize(mul(mWorld, g_inputData[dataIndex].normal));
-    g_outputData[dataIndex].tangent = normalize(mul(mWorld, g_inputData[dataIndex].tangent));
-    g_outputData[dataIndex].biNormal = normalize(mul(mWorld, g_inputData[dataIndex].biNormal));
    
-    g_outputData[dataIndex].projpos = mul(mView, g_outputData[dataIndex].pos);
-    g_outputData[dataIndex].projpos = mul(mProj, g_outputData[dataIndex].projpos);
-    
-    g_outputData[dataIndex].uv = g_inputData[dataIndex].uv;    
+    //g_outputData[dataIndex].projpos = mul(mView, g_outputData[dataIndex].pos);
+    //g_outputData[dataIndex].projpos = mul(mProj, g_outputData[dataIndex].projpos);    
 }
 

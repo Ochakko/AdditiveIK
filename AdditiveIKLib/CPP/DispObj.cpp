@@ -49,7 +49,8 @@
 #include <iterator>
 
 
-#define CSTHREADNUM	8
+//#define CSTHREADNUM	8
+#define CSTHREADNUM	16
 
 
 using namespace std;
@@ -987,22 +988,33 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 		m_vertexBuffer->Map(0, nullptr, (void**)&m_vertexMap);
 		if (m_pm3) {
 			memcpy(m_vertexMap, pm3v, m_vertexBufferView.SizeInBytes);
-			memcpy(m_csvertexwithoutbone, pm3v, m_vertexBufferView.SizeInBytes);
+
+
+			//memcpy(m_csvertexwithoutbone, pm3v, m_vertexBufferView.SizeInBytes);
+			DWORD vno;
+			for (vno = 0; vno < (DWORD)pmvleng; vno++) {
+				uint8_t* pcsdest = (uint8_t*)m_csvertexwithoutbone + vno * sizeof(CSVertexWithoutBone);
+				BINORMALDISPV* curv = pm3v + vno;
+
+				memcpy(pcsdest, curv, sizeof(ChaVector4));//posだけコピー
+			}
+
 		}
 		else if (m_pm4) {
 			DWORD vno;
 			for (vno = 0; vno < (DWORD)pmvleng; vno++) {
-				uint8_t* pdest = m_vertexMap + vno * stride;
-				uint8_t* pcsdest = (uint8_t*)m_csvertexwithbone + vno * stride;
+				uint8_t* pdest = m_vertexMap + vno * (sizeof(BINORMALDISPV) + sizeof(PM3INF));
+				uint8_t* pcsdest = (uint8_t*)m_csvertexwithbone + vno * sizeof(CSVertexWithBone);
+				
 				BINORMALDISPV* curv = pm4v + vno;
 				PM3INF* curinf = pmib + vno;
 
 
 				memcpy(pdest, curv, sizeof(BINORMALDISPV));
-				memcpy(pcsdest, curv, sizeof(BINORMALDISPV));
-
 				memcpy(pdest + sizeof(BINORMALDISPV), curinf, sizeof(PM3INF));
-				memcpy(pcsdest + sizeof(BINORMALDISPV), curinf, sizeof(PM3INF));
+
+				memcpy(pcsdest, curv, sizeof(ChaVector4));//posをコピー
+				memcpy(pcsdest + sizeof(ChaVector4), curinf, sizeof(PM3INF));//bweightとbindicesをコピー
 			}
 			//memcpy(pData, pmv, m_vertexBufferView.SizeInBytes);
 
@@ -1408,24 +1420,30 @@ int CDispObj::CopyCSDeform()
 	// 
 	//#####################################################################
 
-	if (m_pm3) {
-		if (m_vertexMap) {
-			CSVertexWithoutBone* outputData = (CSVertexWithoutBone*)m_outputSB.GetResourceOnCPU();
-			if (outputData) {
-				int optvleng = m_pm3->GetOptLeng();
-				memcpy(m_vertexMap, outputData, (sizeof(BINORMALDISPV) * optvleng));
-			}
-		}
-	}
-	else if (m_pm4) {
-		if (m_vertexMap) {
-			CSVertexWithBone* outputData = (CSVertexWithBone*)m_outputSB.GetResourceOnCPU();
-			if (outputData) {
-				int optvleng = m_pm4->GetOptLeng();
-				memcpy(m_vertexMap, outputData, ((sizeof(BINORMALDISPV) + sizeof(PM3INF)) * optvleng));
-			}
-		}
-	}
+	//#################################################
+	//2024/03/31　その２
+	//メモリレイアウトをPickに必要なposだけにした
+	//頂点バッファへのコピーは想定から外したのでコメントアウト
+	//#################################################
+
+	//if (m_pm3) {
+	//	if (m_vertexMap) {
+	//		CSVertexWithoutBone* outputData = (CSVertexWithoutBone*)m_outputSB.GetResourceOnCPU();
+	//		if (outputData) {
+	//			int optvleng = m_pm3->GetOptLeng();
+	//			memcpy(m_vertexMap, outputData, (sizeof(BINORMALDISPV) * optvleng));
+	//		}
+	//	}
+	//}
+	//else if (m_pm4) {
+	//	if (m_vertexMap) {
+	//		CSVertexWithBone* outputData = (CSVertexWithBone*)m_outputSB.GetResourceOnCPU();
+	//		if (outputData) {
+	//			int optvleng = m_pm4->GetOptLeng();
+	//			memcpy(m_vertexMap, outputData, ((sizeof(BINORMALDISPV) + sizeof(PM3INF)) * optvleng));
+	//		}
+	//	}
+	//}
 
 	return 0;
 }
@@ -2482,37 +2500,30 @@ int CDispObj::GetDeformedDispV(int srcvertindex, BINORMALDISPV* dstv)
 {
 	if (!dstv) {
 		_ASSERT(0);
-		return 1;
+		return 1;//error
 	}
 
-
 	if (m_pm4) {
-		int vertnum = m_pm4->GetOptLeng();
-		if ((srcvertindex < 0) || (srcvertindex >= vertnum)) {
+		if ((srcvertindex < 0) || (srcvertindex >= m_csvertexnum)) {
 			_ASSERT(0);
-			return 1;
+			return 1;//error
 		}
 
 		CSVertexWithBone* outputData = (CSVertexWithBone*)m_outputSB.GetResourceOnCPU();
 		if (outputData) {
 			CSVertexWithBone* currentoutput = outputData + srcvertindex;
-
-			//####################
-			//位置以外のコピーは省略
-			//####################
 			dstv->pos = ChaVector4(currentoutput->pos[0], currentoutput->pos[1], currentoutput->pos[2], currentoutput->pos[3]);
-			dstv->projpos = ChaVector4(currentoutput->projpos[0], currentoutput->projpos[1], currentoutput->projpos[2], currentoutput->projpos[3]);
 		}
 		else {
 			_ASSERT(0);
-			return 1;
+			return 1;//error
 		}
 	}
 	else {
-		return 1;
+		return 1;//error
 	}
 
-	return 0;
+	return 0;//success
 }
 
 
