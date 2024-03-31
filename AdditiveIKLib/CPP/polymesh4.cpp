@@ -93,6 +93,12 @@ void CPolyMesh4::DestroyObjs()
 {
 
 	DestroySystemDispObj();
+
+	if (m_dispindex) {
+		free(m_dispindex);
+		m_dispindex = 0;
+	}
+
 }
 
 void CPolyMesh4::DestroySystemDispObj()
@@ -106,10 +112,10 @@ void CPolyMesh4::DestroySystemDispObj()
 		free(m_dispv);
 		m_dispv = 0;
 	}
-	if (m_dispindex) {
-		free(m_dispindex);
-		m_dispindex = 0;
-	}
+	//if (m_dispindex) {//<----Pick“–‚½‚è”»’è‚ÅŽg—p‚·‚é‚Ì‚Åíœ‚µ‚È‚¢
+	//	free(m_dispindex);
+	//	m_dispindex = 0;
+	//}
 
 	if (m_orgindex) {
 		free(m_orgindex);

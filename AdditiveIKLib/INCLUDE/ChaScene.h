@@ -72,6 +72,7 @@ public:
 	//};
 
 	void SetUpdateSlot();
+	void ResetCSFirstDispatchFlag();
 	int UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe, int loopstartflag);
 	int UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, 
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe, int refposindex);
@@ -115,9 +116,10 @@ public:
 		CModel* smodel, bool recstopflag, BPWorld* bpWorld, double srcreccnt,
 		int (*srcStopBtRec)());
 
-	bool PickPolyMesh3_Mesh(int pickkind, UIPICKINFO* tmppickinfo,
+	bool PickPolyMesh(int pickkind, UIPICKINFO* tmppickinfo,
 		CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial);
 
+	int CopyCSDeform();
 
 private:
 	void InitParams();

@@ -48,6 +48,10 @@
 #include <iostream>
 #include <iterator>
 
+
+#define CSTHREADNUM	8
+
+
 using namespace std;
 /*
 extern ID3D11DepthStencilState *g_pDSStateZCmp;
@@ -96,7 +100,36 @@ extern int	g_nNumActiveLights;
 extern bool g_zcmpalways;
 
 
-CDispObj::CDispObj(){
+static void InitRootSignature(RootSignature& rs);
+static void InitPipelineState(RootSignature& rs, PipelineState& pipelineState, Shader& cs);
+// ルートシグネチャの初期化
+void InitRootSignature(RootSignature& rs)
+{
+	rs.Init(D3D12_FILTER_MIN_MAG_MIP_LINEAR,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP);
+}
+void InitPipelineState(RootSignature& rs, PipelineState& pipelineState, Shader& cs)
+{
+	// パイプラインステートを作成
+	D3D12_COMPUTE_PIPELINE_STATE_DESC  psoDesc = { 0 };
+	psoDesc.pRootSignature = rs.Get();
+	psoDesc.CS = CD3DX12_SHADER_BYTECODE(cs.GetCompiledBlob());
+	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	psoDesc.NodeMask = 0;
+
+	pipelineState.Init(psoDesc);
+}
+
+
+
+
+CDispObj::CDispObj() : 
+	m_CSrootSignature(), m_CSPipelineState(),
+	m_CSdescriptorHeap(), m_cbWithoutBone(), m_cbWithBone(),
+	m_inputSB(), m_outputSB()
+{
 	InitParams();
 }
 CDispObj::~CDispObj()
@@ -108,6 +141,17 @@ int CDispObj::InitParams()
 	m_tmpindexLH = 0;
 
 	ResetScaleInstancing();
+
+	m_csvertexwithbone = nullptr;
+	m_csvertexwithoutbone = nullptr;
+	m_csvertexwithboneOutPut = nullptr;
+	m_csvertexwithoutboneOutPut = nullptr;
+	//m_csvertexoutput = nullptr;
+	m_csvertexnum = 0;
+	m_cscreatevertexnum = 0;
+	m_csModel = nullptr;
+	m_cbWithoutBoneCPU.Init();
+	m_cbWithBoneCPU.Init();
 
 	//ZeroMemory(&m_BufferDescBone, sizeof(D3D11_BUFFER_DESC));
 	//ZeroMemory(&m_BufferDescNoBone, sizeof(D3D11_BUFFER_DESC));
@@ -146,6 +190,7 @@ int CDispObj::InitParams()
 
 	m_vertexBuffer = nullptr;		//頂点バッファ。
 	ZeroMemory(&m_vertexBufferView, sizeof(D3D12_VERTEX_BUFFER_VIEW));	//頂点バッファビュー。
+	m_vertexMap = nullptr;
 
 	m_indexBuffer = nullptr;	//インデックスバッファ。
 	ZeroMemory(&m_indexBufferView, sizeof(D3D12_INDEX_BUFFER_VIEW));	//インデックスバッファビュー。
@@ -172,6 +217,32 @@ int CDispObj::DestroyObjs()
 	m_InstancingBuffer.DestroyObjs();
 
 
+
+	if (m_csvertexwithbone) {
+		free(m_csvertexwithbone);
+		m_csvertexwithbone = nullptr;
+	}
+	if (m_csvertexwithoutbone) {
+		free(m_csvertexwithoutbone);
+		m_csvertexwithoutbone = nullptr;
+	}
+	if (m_csvertexwithboneOutPut) {
+		free(m_csvertexwithboneOutPut);
+		m_csvertexwithboneOutPut = nullptr;
+	}
+	if (m_csvertexwithoutboneOutPut) {
+		free(m_csvertexwithoutboneOutPut);
+		m_csvertexwithoutboneOutPut = nullptr;
+	}
+	//if (m_csvertexoutput) {
+	//	free(m_csvertexoutput);
+	//	m_csvertexoutput = nullptr;
+	//}
+	m_cbWithoutBone.DestroyObjs();
+	m_cbWithBone.DestroyObjs();
+	m_CSrootSignature.DestroyObjs();;					//CSルートシグネチャ。
+	m_CSPipelineState.DestroyObjs();;		//CSモデル用のパイプラインステート。
+	m_CSdescriptorHeap.DestroyObjs();;
 
 
 	//if (m_layoutBoneL0) {
@@ -415,6 +486,32 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, in
 		}
 	}
 
+
+
+	
+	m_csModel = g_engine->GetShaderFromBank("../Media/Shader/AdditiveIK_NoSkin_Deform.fx", "CSMain");
+	if (m_csModel == nullptr) {
+		m_csModel = new Shader;
+		if (!m_csModel) {
+			return 1;
+		}
+		int result = m_csModel->LoadCS("../Media/Shader/AdditiveIK_NoSkin_Deform.fx", "CSMain");
+		if (result != 0) {
+			return 1;
+		}
+		g_engine->RegistShaderToBank("../Media/Shader/AdditiveIK_NoSkin_Deform.fx", "CSMain", 
+			m_csModel);
+	}
+	InitRootSignature(m_CSrootSignature);
+	InitPipelineState(m_CSrootSignature, m_CSPipelineState, *m_csModel);
+	m_inputSB.Init(sizeof(CSVertexWithoutBone), m_cscreatevertexnum, m_csvertexwithoutbone);
+	m_outputSB.Init(sizeof(CSVertexWithoutBone), m_cscreatevertexnum, m_csvertexwithoutboneOutPut);
+	m_CSdescriptorHeap.RegistShaderResource(0, m_inputSB);
+	m_CSdescriptorHeap.RegistUnorderAccessResource(0, m_outputSB);
+	m_cbWithoutBone.Init(sizeof(CSConstantBufferWithoutBone), nullptr);
+	m_CSdescriptorHeap.RegistConstantBuffer(0, m_cbWithoutBone);
+	m_CSdescriptorHeap.Commit();
+
 	return 0;
 }
 int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, int srcuvnum)
@@ -545,6 +642,33 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, in
 			}
 		}
 	}
+
+
+	m_csModel = g_engine->GetShaderFromBank("../Media/Shader/AdditiveIK_Skin_Deform.fx", "CSMain");
+	if (m_csModel == nullptr) {
+		m_csModel = new Shader;
+		if (!m_csModel) {
+			return 1;
+		}
+		int result = m_csModel->LoadCS("../Media/Shader/AdditiveIK_Skin_Deform.fx", "CSMain");
+		if (result != 0) {
+			return 1;
+		}
+		g_engine->RegistShaderToBank("../Media/Shader/AdditiveIK_Skin_Deform.fx", "CSMain",
+			m_csModel);
+	}
+	InitRootSignature(m_CSrootSignature);
+	InitPipelineState(m_CSrootSignature, m_CSPipelineState, *m_csModel);
+	m_inputSB.Init(sizeof(CSVertexWithBone), m_cscreatevertexnum, m_csvertexwithbone);
+	m_outputSB.Init(sizeof(CSVertexWithBone), m_cscreatevertexnum, m_csvertexwithboneOutPut);
+	//m_outputSB.Init(sizeof(CSVertexOutput), m_csvertexnum, m_csvertexoutput);
+	m_CSdescriptorHeap.RegistShaderResource(0, m_inputSB);
+	m_CSdescriptorHeap.RegistUnorderAccessResource(0, m_outputSB);
+	m_cbWithBone.Init(sizeof(CSConstantBufferWithBone), nullptr);
+	m_CSdescriptorHeap.RegistConstantBuffer(0, m_cbWithBone);
+	m_CSdescriptorHeap.Commit();
+
+
 
 	return 0;
 }
@@ -744,6 +868,12 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 
 		stride = sizeof(BINORMALDISPV);
 		vbsize = pmvleng * stride;
+
+		//m_csvertexnum = (pmvleng + 3) & ~3;
+		//m_csvertexnum = (pmvleng + 7) & ~7;
+		//m_csvertexnum = (pmvleng + 15) & ~15;
+		m_csvertexnum = pmvleng;
+		m_cscreatevertexnum = (pmvleng + (CSTHREADNUM - 1)) & ~(CSTHREADNUM - 1);
 	}
 	else if (m_pm4) {
 		elemleng = sizeof(BINORMALDISPV);
@@ -757,6 +887,12 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 
 
 		vbsize = pmvleng * stride;
+
+		//m_csvertexnum = (pmvleng + 3) & ~3;
+		//m_csvertexnum = (pmvleng + 7) & ~7;
+		//m_csvertexnum = (pmvleng + 15) & ~15;
+		m_csvertexnum = pmvleng;
+		m_cscreatevertexnum = (pmvleng + (CSTHREADNUM - 1)) & ~(CSTHREADNUM - 1);
 	}
 	else if (m_extline) {
 		pmvleng = m_extline->GetLineNum() * 2;
@@ -768,11 +904,49 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 
 		stride = sizeof(EXTLINEV);
 		vbsize = pmvleng * stride;
+
+		//m_csvertexnum = (pmvleng + 3) & ~3;
+		//m_csvertexnum = (pmvleng + 7) & ~7;
+		//m_csvertexnum = (pmvleng + 15) & ~15;
+		m_csvertexnum = pmvleng;
+		m_cscreatevertexnum = (pmvleng + (CSTHREADNUM - 1)) & ~(CSTHREADNUM - 1);
 	}
 	else {
 		_ASSERT(0);
 		return 1;
 	}
+
+	if (m_pm3) {
+		m_csvertexwithoutbone = (CSVertexWithoutBone*)malloc(sizeof(CSVertexWithoutBone) * m_cscreatevertexnum);
+		if (!m_csvertexwithoutbone) {
+			_ASSERT(0);
+			return 1;
+		}
+		ZeroMemory(m_csvertexwithoutbone, sizeof(CSVertexWithoutBone) * m_cscreatevertexnum);
+
+		m_csvertexwithoutboneOutPut = (CSVertexWithoutBone*)malloc(sizeof(CSVertexWithoutBone) * m_cscreatevertexnum);
+		if (!m_csvertexwithoutboneOutPut) {
+			_ASSERT(0);
+			return 1;
+		}
+		ZeroMemory(m_csvertexwithoutboneOutPut, sizeof(CSVertexWithoutBone) * m_cscreatevertexnum);
+	}
+	else if (m_pm4) {
+		m_csvertexwithbone = (CSVertexWithBone*)malloc(sizeof(CSVertexWithBone) * m_cscreatevertexnum);
+		if (!m_csvertexwithbone) {
+			_ASSERT(0);
+			return 1;
+		}
+		ZeroMemory(m_csvertexwithbone, sizeof(CSVertexWithBone) * m_cscreatevertexnum);
+
+		m_csvertexwithboneOutPut = (CSVertexWithBone*)malloc(sizeof(CSVertexWithBone) * m_cscreatevertexnum);
+		if (!m_csvertexwithboneOutPut) {
+			_ASSERT(0);
+			return 1;
+		}
+		ZeroMemory(m_csvertexwithboneOutPut, sizeof(CSVertexWithBone) * m_cscreatevertexnum);
+	}
+
 
 
 //###########
@@ -806,27 +980,35 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 		m_InstancingBuffer.Init((sizeof(INSTANCINGPARAMS) * RIGMULTINDEXMAX), sizeof(INSTANCINGPARAMS));
 
 
+
+
 		//頂点バッファをコピー.
-		uint8_t* pData;
-		m_vertexBuffer->Map(0, nullptr, (void**)&pData);
+		//uint8_t* pData;
+		m_vertexBuffer->Map(0, nullptr, (void**)&m_vertexMap);
 		if (m_pm3) {
-			memcpy(pData, pm3v, m_vertexBufferView.SizeInBytes);
+			memcpy(m_vertexMap, pm3v, m_vertexBufferView.SizeInBytes);
+			memcpy(m_csvertexwithoutbone, pm3v, m_vertexBufferView.SizeInBytes);
 		}
 		else if (m_pm4) {
 			DWORD vno;
 			for (vno = 0; vno < (DWORD)pmvleng; vno++) {
-				uint8_t* pdest = pData + vno * stride;
+				uint8_t* pdest = m_vertexMap + vno * stride;
+				uint8_t* pcsdest = (uint8_t*)m_csvertexwithbone + vno * stride;
 				BINORMALDISPV* curv = pm4v + vno;
 				PM3INF* curinf = pmib + vno;
 
+
 				memcpy(pdest, curv, sizeof(BINORMALDISPV));
+				memcpy(pcsdest, curv, sizeof(BINORMALDISPV));
+
 				memcpy(pdest + sizeof(BINORMALDISPV), curinf, sizeof(PM3INF));
+				memcpy(pcsdest + sizeof(BINORMALDISPV), curinf, sizeof(PM3INF));
 			}
 			//memcpy(pData, pmv, m_vertexBufferView.SizeInBytes);
 
 		}
 		else if (m_extline) {
-			memcpy(pData, plinev, m_vertexBufferView.SizeInBytes);
+			memcpy(m_vertexMap, plinev, m_vertexBufferView.SizeInBytes);
 		}
 		else {
 			_ASSERT(0);
@@ -930,6 +1112,7 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 			//m_indexBuffer->Unmap(0, nullptr);
 		}
 	}
+
 
 
 
@@ -1137,6 +1320,114 @@ int CDispObj::RenderShadowRecieverPM3(RenderContext* rc, myRenderer::RENDEROBJ r
 	}
 	renderobj.renderkind = RENDERKIND_SHADOWRECIEVER;
 	return RenderNormalPM3(rc, renderobj);
+}
+
+int CDispObj::ComputeDeform(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
+{
+
+	//#####################################################################
+	//2024/03/31メモ
+	//ComputeDeform()とCopyCSDeform()を呼び出してシェーダでそのまま値をセットして
+	//頂点データを計算して正しい結果を確かめた
+	//実行速度はTest/1009_1のモデルで110fpsだったのが55fpsになった
+	//実行速度の面で通常の描画には使わない
+	//シェーダも元に戻した
+	// 
+	//DispGroup, Shaderプレートメニューを選択中にメッシュをPickするときに使用する
+	// 
+	//#####################################################################
+
+
+	if (!rc || !renderobj.pmodel || !renderobj.mqoobj) {
+		_ASSERT(0);
+		return 0;
+	}
+
+
+	Matrix mWorld, mView, mProj;
+	mWorld = renderobj.mWorld;
+	//if ((renderobj.renderkind != RENDERKIND_SHADOWMAP)) {
+		mView = renderobj.pmodel->GetViewMat().TKMatrix();//2024/03/02
+		mProj = renderobj.pmodel->GetProjMat().TKMatrix();//2024/03/02
+	//}
+	//else {
+	//	//for shadow
+	//	mView = g_cameraShadow->GetViewMatrix(false);
+	//	mProj = g_cameraShadow->GetProjectionMatrix();
+	//}
+
+
+	if (m_pm3) {
+		//m_cbWithoutBoneCPU.Init();
+		//m_cbWithoutBoneCPU.mVertexNum[0] = m_csvertexnum;
+		//m_cbWithoutBoneCPU.mWorld = mWorld;
+		//m_cbWithoutBoneCPU.mView = mView;
+		//m_cbWithoutBoneCPU.mProj = mProj;
+		//m_cbWithoutBone.CopyToVRAM(&m_cbWithoutBoneCPU);
+		//
+		//rc->SetComputeRootSignature(m_CSrootSignature);
+		//rc->SetPipelineState(m_CSPipelineState);
+		//rc->SetComputeDescriptorHeap(m_CSdescriptorHeap);
+		//rc->Dispatch((m_cscreatevertexnum / CSTHREADNUM), 1, 1);
+	}
+	else if (m_pm4) {
+		m_cbWithBoneCPU.Init();
+		m_cbWithBoneCPU.mVertexNum[0] = m_csvertexnum;
+		m_cbWithBoneCPU.mWorld = mWorld;
+		m_cbWithBoneCPU.mView = mView;
+		m_cbWithBoneCPU.mProj = mProj;
+		if (renderobj.pmodel->GetTopBone() && (renderobj.pmodel->GetNoBoneFlag() == false) &&
+			renderobj.pmodel->ExistCurrentMotion()) { // && renderobj.pmodel->GetCSFirstDispatchFlag()) {
+			//CModel::SetShaderConst()でセットしたマトリックス配列をコピーするだけ
+			renderobj.pmodel->GetBoneMatrix(m_cbWithBoneCPU.setfl4x4, MAXBONENUM);
+		}
+		m_cbWithBone.CopyToVRAM(&m_cbWithBoneCPU);
+
+		rc->SetComputeRootSignature(m_CSrootSignature);
+		rc->SetPipelineState(m_CSPipelineState);
+		rc->SetComputeDescriptorHeap(m_CSdescriptorHeap);
+		rc->Dispatch((m_cscreatevertexnum / CSTHREADNUM), 1, 1);
+
+		//renderobj.pmodel->SetCSFirstDispatchFlag(false);
+	}
+
+	return 0;
+}
+
+int CDispObj::CopyCSDeform()
+{
+	//#####################################################################
+	//2024/03/31メモ
+	//ComputeDeform()とCopyCSDeform()を呼び出してシェーダでそのまま値をセットして
+	//頂点データを計算して正しい結果を確かめた
+	//実行速度はTest/1009_1のモデルで110fpsだったのが55fpsになった
+	//実行速度の面で通常の描画には使わない
+	//シェーダも元に戻した
+	// 
+	//DispGroup, Shaderプレートメニューを選択中にメッシュをPickするときに使用する
+	// 
+	//#####################################################################
+
+	if (m_pm3) {
+		if (m_vertexMap) {
+			CSVertexWithoutBone* outputData = (CSVertexWithoutBone*)m_outputSB.GetResourceOnCPU();
+			if (outputData) {
+				int optvleng = m_pm3->GetOptLeng();
+				memcpy(m_vertexMap, outputData, (sizeof(BINORMALDISPV) * optvleng));
+			}
+		}
+	}
+	else if (m_pm4) {
+		if (m_vertexMap) {
+			CSVertexWithBone* outputData = (CSVertexWithBone*)m_outputSB.GetResourceOnCPU();
+			if (outputData) {
+				int optvleng = m_pm4->GetOptLeng();
+				memcpy(m_vertexMap, outputData, ((sizeof(BINORMALDISPV) + sizeof(PM3INF)) * optvleng));
+			}
+		}
+	}
+
+	return 0;
 }
 
 int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
@@ -2185,6 +2476,43 @@ SCALEINSTANCING* CDispObj::GetScaleInstancing()
 int CDispObj::GetScaleInstancingNum()
 {
 	return m_scaleinstancenum;
+}
+
+int CDispObj::GetDeformedDispV(int srcvertindex, BINORMALDISPV* dstv)
+{
+	if (!dstv) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	if (m_pm4) {
+		int vertnum = m_pm4->GetOptLeng();
+		if ((srcvertindex < 0) || (srcvertindex >= vertnum)) {
+			_ASSERT(0);
+			return 1;
+		}
+
+		CSVertexWithBone* outputData = (CSVertexWithBone*)m_outputSB.GetResourceOnCPU();
+		if (outputData) {
+			CSVertexWithBone* currentoutput = outputData + srcvertindex;
+
+			//####################
+			//位置以外のコピーは省略
+			//####################
+			dstv->pos = ChaVector4(currentoutput->pos[0], currentoutput->pos[1], currentoutput->pos[2], currentoutput->pos[3]);
+			dstv->projpos = ChaVector4(currentoutput->projpos[0], currentoutput->projpos[1], currentoutput->projpos[2], currentoutput->projpos[3]);
+		}
+		else {
+			_ASSERT(0);
+			return 1;
+		}
+	}
+	else {
+		return 1;
+	}
+
+	return 0;
 }
 
 

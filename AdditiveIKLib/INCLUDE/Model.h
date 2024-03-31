@@ -726,6 +726,7 @@ public:
 	int CollisionNoBoneObj_Mouse(UIPICKINFO* pickinfo, const char* objnameptr, bool excludeinvface);
 
 	int CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex);
+	int CollisionPolyMesh4_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex);
 
 /**
  * @fn
@@ -1117,6 +1118,7 @@ private:
 
 	void SetSelectFlagReq( CBone* boneptr, int broflag );
 	int CalcMouseLocalRay( UIPICKINFO* pickinfo, ChaVector3* startptr, ChaVector3* dirptr );
+	int CalcMouseGlobalRay(UIPICKINFO* pickinfo, ChaVector3* startptr, ChaVector3* dirptr);
 	//CBone* GetCalcRootBone( CBone* firstbone, int maxlevel );
 	//void CalcXTransformMatrixReq( CBone* srcbone, ChaMatrix parenttra, float mult );
 
@@ -2769,6 +2771,14 @@ public: //accesser
 		return m_updateslot;
 	}
 
+	void SetCSFirstDispatchFlag(bool srcflag)
+	{
+		m_csfirstdispatchflag = srcflag;
+	}
+	bool GetCSFirstDispatchFlag()
+	{
+		return m_csfirstdispatchflag;
+	}
 
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
@@ -2788,6 +2798,9 @@ private:
 	MODELBOUND m_bound;
 
 	bool m_updatefl4x4flag;
+	bool m_csfirstdispatchflag;
+
+
 
 	int m_vrmtexcount;
 

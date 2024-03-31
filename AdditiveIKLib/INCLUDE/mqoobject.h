@@ -108,6 +108,8 @@ public:
 		bool excludeinvface);
 	int CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirlocal,
 		bool excludeinvface, int* hitfaceindex);
+	int CollisionGlobal_Ray_Pm4(ChaVector3 startglobal, ChaVector3 dirglobal,
+		bool excludeinvface, int* hitfaceindex);
 
 	//int MakeXBoneno2wno( int arrayleng, int* boneno2wno, int* infnumptr );
 	//int GetSkinMeshHeader( int leng, int* maxpervert, int* maxperface );

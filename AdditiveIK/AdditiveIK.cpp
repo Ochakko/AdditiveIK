@@ -3373,6 +3373,7 @@ INT WINAPI wWinMain(
 			if (g_underWriteFbx == false) {//2024/02/10
 
 				s_chascene->SetUpdateSlot();//2023/03/13
+				//s_chascene->ResetCSFirstDispatchFlag();
 
 				//ドキュメント更新
 				int loopstartflag = 0;
@@ -4281,7 +4282,7 @@ void InitApp()
 	}
 
 	g_refposflag = false;
-
+	g_pickmeshflag = false;
 
 	s_temppath[0] = 0L;
 	::GetTempPathW(MAX_PATH, s_temppath);
@@ -5854,6 +5855,14 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 
 
 		//s_tum.WaitUpdateMatrix();
+
+
+		if (s_spdispsw[SPDISPSW_DISPGROUP].state || s_spdispsw[SPDISPSW_SHADERTYPE].state) {
+			g_pickmeshflag = true;
+		}
+		else {
+			g_pickmeshflag = false;
+		}
 	}
 
 	s_savepreviewFlag = g_previewFlag;
@@ -6199,7 +6208,9 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 	// レンダリング終了
 	g_engine->EndFrame(s_chascene);
 
-	
+	//s_chascene->CopyCSDeform();
+	s_chascene->ClearRenderObjs();//CopyCSDeform()よりも後で呼ぶ
+
 
 }
 
@@ -56520,7 +56531,7 @@ bool PickAndSelectMeshOfDispGroupDlg()
 		CModel* pickmodel = nullptr;
 		CMQOObject* pickmqoobj = nullptr;
 		CMQOMaterial* pickmaterial = nullptr;
-		pickflag = s_chascene->PickPolyMesh3_Mesh(NUMKEYPICK_MQOOBJECT, &tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
+		pickflag = s_chascene->PickPolyMesh(NUMKEYPICK_MQOOBJECT, &tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
 		if (pickflag && pickmodel && pickmqoobj) {
 
 			OnChangeModel(pickmodel);
@@ -56582,7 +56593,7 @@ bool PickAndSelectMaterialOfShaderTypeDlg()
 		CModel* pickmodel = nullptr;
 		CMQOObject* pickmqoobj = nullptr;
 		CMQOMaterial* pickmaterial = nullptr;
-		pickflag = s_chascene->PickPolyMesh3_Mesh(NUMKEYPICK_MQOMATERIAL, &tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
+		pickflag = s_chascene->PickPolyMesh(NUMKEYPICK_MQOMATERIAL, &tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
 		if (pickflag && pickmodel && pickmaterial) {
 
 			OnChangeModel(pickmodel);
@@ -56610,6 +56621,10 @@ bool PickAndSelectMaterialOfShaderTypeDlg()
 
 int DispToolTip()
 {
+
+	s_dispfontfortip = false;
+
+
 	if (!s_model) {
 		return 0;
 	}
@@ -56617,10 +56632,6 @@ int DispToolTip()
 	if (g_previewFlag != 0) {
 		return 0;
 	}
-
-	s_dispfontfortip = false;
-
-
 
 	//2024/02/26 カメラターゲット位置座標表示を最優先で表示
 	if (s_camtargetdisp) {
@@ -57236,7 +57247,7 @@ bool DispTipMesh()
 		CModel* pickmodel = nullptr;
 		CMQOObject* pickmqoobj = nullptr;
 		CMQOMaterial* pickmaterial = nullptr;
-		dispfontfortip = s_chascene->PickPolyMesh3_Mesh(NUMKEYPICK_MQOOBJECT, &tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
+		dispfontfortip = s_chascene->PickPolyMesh(NUMKEYPICK_MQOOBJECT, &tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
 		if (dispfontfortip && pickmodel && pickmqoobj) {
 			wcscpy_s(modelname, 256, pickmodel->GetFileName());
 			char tmpobjname[256] = { 0 };
@@ -57289,7 +57300,7 @@ bool DispTipMaterial()
 		CModel* pickmodel = nullptr;
 		CMQOObject* pickmqoobj = nullptr;
 		CMQOMaterial* pickmaterial = nullptr;
-		dispfontfortip = s_chascene->PickPolyMesh3_Mesh(NUMKEYPICK_MQOMATERIAL, &tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
+		dispfontfortip = s_chascene->PickPolyMesh(NUMKEYPICK_MQOMATERIAL, &tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
 		if (dispfontfortip && pickmodel && pickmaterial) {
 			wcscpy_s(modelname, 256, pickmodel->GetFileName());
 			char tmpmaterialname[256] = { 0 };

@@ -790,6 +790,7 @@ typedef struct tag_binormaldispv
 	ChaVector4		tangent;
 	ChaVector4		binormal;
 	ChaVector2		uv[2];
+	ChaVector4		projpos;
 	tag_binormaldispv() {
 		pos.x = 0.0f;
 		pos.y = 0.0f;
@@ -811,6 +812,10 @@ typedef struct tag_binormaldispv
 		uv[0].y = 0.0f;
 		uv[1].x = 0.0f;
 		uv[1].y = 0.0f;
+		projpos.x = 0.0f;
+		projpos.y = 0.0f;
+		projpos.z = 0.0f;
+		projpos.w = 1.0f;
 	};
 }BINORMALDISPV;
 

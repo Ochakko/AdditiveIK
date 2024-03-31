@@ -19,6 +19,7 @@ struct SVSInInstancing
     float4 tangent : TANGENT;
     float4 biNormal : BINORMAL; 
     float4 uv       : TEXCOORD0;
+    float4 projpos : POSITIONT;    
     float4 wmat0 : TEXCOORD1;
     float4 wmat1 : TEXCOORD2;
     float4 wmat2 : TEXCOORD3;

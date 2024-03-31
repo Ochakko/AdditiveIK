@@ -348,8 +348,10 @@ namespace myRenderer
         ////rc.ClearDepthStencilView(m_mainRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);//mainRenderTargetにはDepthBufferは無い　NULL
         //rc.ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
 
-
-
+        if (g_pickmeshflag) {
+            ComputeDeform(rc, srcchascene);
+        }
+        
         // シャドウマップへの描画
         if (g_enableshadow) {
             RenderToShadowMap(rc, srcchascene);
@@ -396,8 +398,9 @@ namespace myRenderer
         // メインレンダリングターゲットの内容をフレームバッファにコピー
         CopyMainRenderTargetToFrameBuffer(rc);
 
+
         // 登録されている3Dモデルをクリア
-        srcchascene->ClearRenderObjs();
+        //srcchascene->ClearRenderObjs();//2024/03/30 AdditiveIK.cppのEndFrame(),CopyCSDeform()より呼び出しより後で呼ぶことに
     }
 
     void RenderingEngine::RenderToShadowMap(RenderContext* rc, ChaScene* srcchascene)
@@ -443,9 +446,42 @@ namespace myRenderer
 
     }
 
+
+    void RenderingEngine::ComputeDeform(RenderContext* rc, ChaScene* srcchascene)
+    {
+        if (!rc || !srcchascene) {
+            _ASSERT(0);
+            return;
+        }
+
+        int rendernum = srcchascene->GetForwardRenderObjNum();
+        int renderindex;
+        for (renderindex = 0; renderindex < rendernum; renderindex++) {
+            RENDEROBJ currenderobj = srcchascene->GetForwardRenderObj(renderindex);
+            if (currenderobj.pmodel && currenderobj.mqoobj) {
+
+                if (currenderobj.mqoobj->GetDispObj()) {
+                    if (currenderobj.mqoobj->GetPm3()) {
+                        //currenderobj.mqoobj->GetDispObj()->ComputeDeform(rc, currenderobj);
+                    }
+                    else if (currenderobj.mqoobj->GetPm4()) {
+                        currenderobj.mqoobj->GetDispObj()->ComputeDeform(rc, currenderobj);
+                    }
+                }
+                else if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
+                    //################################
+                    //GetDispObj()ではなくGetDispLine()
+                    //################################
+                }
+            }
+        }
+    }
+
+
+
     void RenderingEngine::ZPrepass(RenderContext* rc, ChaScene* srcchascene)
     {
-        if (!rc) {
+        if (!rc || !srcchascene) {
             _ASSERT(0);
             return;
         }
@@ -504,7 +540,7 @@ namespace myRenderer
 
     void RenderingEngine::ForwardRendering(RenderContext* rc, ChaScene* srcchascene)
     {
-        if (!rc) {
+        if (!rc || !srcchascene) {
             _ASSERT(0);
             return;
         }
@@ -566,7 +602,7 @@ namespace myRenderer
 
     void RenderingEngine::SpriteRendering(RenderContext* rc, ChaScene* srcchascene)
     {
-        if (!rc) {
+        if (!rc || !srcchascene) {
             _ASSERT(0);
             return;
         }

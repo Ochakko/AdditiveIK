@@ -68,6 +68,7 @@ bool g_skydispflag = true;
 int g_skyindex = 0;
 
 bool g_refposflag = false;
+bool g_pickmeshflag = false;
 
 int g_pickorder = 1;
 bool g_hdrpbloom = true;
@@ -351,6 +352,7 @@ extern bool g_skydispflag;
 extern int g_skyindex;
 
 extern bool g_refposflag;
+extern bool g_pickmeshflag;
 
 extern int g_pickorder;
 extern bool g_hdrpbloom;

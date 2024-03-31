@@ -18,6 +18,7 @@ struct SVSIn
     float4 tangent : TANGENT;
     float4 biNormal : BINORMAL;
     float4 uv : TEXCOORD0;
+    float4 projpos : POSITIONT;    
 };
 
 struct SPSInZPrepass

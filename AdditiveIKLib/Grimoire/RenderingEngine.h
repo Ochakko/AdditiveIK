@@ -364,6 +364,9 @@ namespace myRenderer
         /// <param name="rc">レンダリングコンテキスト</param>
         void RenderToShadowMap(RenderContext* rc, ChaScene* srcchascene);
 
+
+        void ComputeDeform(RenderContext* rc, ChaScene* srcchascene);
+
         /// <summary>
         /// ZPrepass
         /// </summary>

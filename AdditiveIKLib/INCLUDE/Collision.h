@@ -29,6 +29,10 @@
 		BINORMALDISPV* pointbuf, ChaVector3 startpos, ChaVector3 dir,
 		float justval, int* justptr);
 
+	int ChkRay(int allowrev, 
+		BINORMALDISPV p0, BINORMALDISPV p1, BINORMALDISPV p2, 
+		ChaVector3 startpos, ChaVector3 dir,
+		float justval, int* justptr);
 
 /**
  * @fn
@@ -49,6 +53,11 @@
 
 	extern int ChkRay(int allowrev, int i1, int i2, int i3,
 		BINORMALDISPV* pointbuf, ChaVector3 startpos, ChaVector3 dir,
+		float justval, int* justptr);
+
+	extern int ChkRay(int allowrev,
+		BINORMALDISPV p0, BINORMALDISPV p1, BINORMALDISPV p2,
+		ChaVector3 startpos, ChaVector3 dir,
 		float justval, int* justptr);
 
 

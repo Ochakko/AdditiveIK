@@ -19,6 +19,7 @@ struct SVSIn
     float4 tangent : TANGENT;
     float4 biNormal : BINORMAL;        
     float4 uv : TEXCOORD0;
+    float4 projpos : POSITIONT;    
     float4 bweight : BLENDWEIGHT;
     int4 bindices : BLENDINDICES;
 };
@@ -167,14 +168,10 @@ SPSIn VSMainSkinStd(SVSIn vsIn, uniform bool hasSkin)
 {
     SPSIn psIn;
 
-    //float4 wPos;
-    int bi[4] = { vsIn.bindices.r, vsIn.bindices.g, vsIn.bindices.b, vsIn.bindices.a };
-    float bw[4] = { vsIn.bweight.x, vsIn.bweight.y, vsIn.bweight.z, vsIn.bweight.w };
     matrix finalmat = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     for (int i = 0; i < 4; i++)
     {
-        matrix addmat = mBoneMat[bi[i]];
-        finalmat += (addmat * bw[i]);
+        finalmat += (mBoneMat[vsIn.bindices[i]] * vsIn.bweight[i]);
     }
 	
     psIn.pos = mul(finalmat, vsIn.pos);
@@ -197,14 +194,10 @@ SPSInShadowMap VSMainSkinStdShadowMap(SVSIn vsIn, uniform bool hasSkin)
 {
     SPSInShadowMap psIn;
 
-    //float4 wPos;
-    int bi[4] = { vsIn.bindices.r, vsIn.bindices.g, vsIn.bindices.b, vsIn.bindices.a };
-    float bw[4] = { vsIn.bweight.x, vsIn.bweight.y, vsIn.bweight.z, vsIn.bweight.w };
     matrix finalmat = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     for (int i = 0; i < 4; i++)
     {
-        matrix addmat = mBoneMat[bi[i]];
-        finalmat += (addmat * bw[i]);
+        finalmat += (mBoneMat[vsIn.bindices[i]] * vsIn.bweight[i]);
     }
 	
     psIn.pos = mul(finalmat, vsIn.pos);
@@ -234,14 +227,10 @@ SPSInShadowReciever VSMainSkinStdShadowReciever(SVSIn vsIn, uniform bool hasSkin
 {
     SPSInShadowReciever psIn;
 
-    //float4 wPos;
-    int bi[4] = { vsIn.bindices.r, vsIn.bindices.g, vsIn.bindices.b, vsIn.bindices.a };
-    float bw[4] = { vsIn.bweight.x, vsIn.bweight.y, vsIn.bweight.z, vsIn.bweight.w };
     matrix finalmat = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     for (int i = 0; i < 4; i++)
     {
-        matrix addmat = mBoneMat[bi[i]];
-        finalmat += (addmat * bw[i]);
+        finalmat += (mBoneMat[vsIn.bindices[i]] * vsIn.bweight[i]);
     }
 	
     float4 worldPos = mul(finalmat, vsIn.pos);

@@ -186,6 +186,22 @@ void ChaScene::SetUpdateSlot()
 	}
 }
 
+void ChaScene::ResetCSFirstDispatchFlag()
+{
+	if (!m_modelindex.empty()) {
+		int modelnum = (int)m_modelindex.size();
+		int modelindex;
+		for (modelindex = 0; modelindex < modelnum; modelindex++) {
+			CModel* curmodel = m_modelindex[modelindex].modelptr;
+			if (curmodel) {
+				curmodel->SetCSFirstDispatchFlag(true);
+			}
+		}
+	}
+}
+
+
+
 int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe, int loopstartflag)
 {
 	if (g_changeUpdateThreadsNum) {
@@ -273,7 +289,7 @@ int ChaScene::UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag,
 	return 0;
 }
 
-bool ChaScene::PickPolyMesh3_Mesh(int pickkind, UIPICKINFO* tmppickinfo, 
+bool ChaScene::PickPolyMesh(int pickkind, UIPICKINFO* tmppickinfo, 
 	CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial)
 {
 	if (!tmppickinfo || !pickmodel || !pickmqoobj || !pickmaterial) {
@@ -302,7 +318,8 @@ bool ChaScene::PickPolyMesh3_Mesh(int pickkind, UIPICKINFO* tmppickinfo,
 						for (elemno = 0; elemno < elemnum; elemno++) {
 
 							CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
-							if (curobj && curobj->GetDispObj() && curobj->GetPm3() && curobj->GetVisible(0)) {
+							if (curobj && curobj->GetDispObj() && (curobj->GetPm3() || curobj->GetPm4()) && 
+								curobj->GetVisible(0)) {
 
 								myRenderer::RENDEROBJ pickobj;
 								pickobj.Init();
@@ -337,7 +354,16 @@ bool ChaScene::PickPolyMesh3_Mesh(int pickkind, UIPICKINFO* tmppickinfo,
 				if (curmodel && curobj) {
 					UIPICKINFO pickinfo = *tmppickinfo;
 					int hitfaceindex = -1;
-					int colli = curmodel->CollisionPolyMesh3_Mouse(&pickinfo, curobj, &hitfaceindex);
+					int colli = 0;
+					if (curobj->GetPm3()) {
+						colli = curmodel->CollisionPolyMesh3_Mouse(&pickinfo, curobj, &hitfaceindex);
+					}
+					else if (curobj->GetPm4()) {
+						colli = curmodel->CollisionPolyMesh4_Mouse(&pickinfo, curobj, &hitfaceindex);
+					}
+					else {
+						colli = 0;
+					}
 					if ((colli != 0) && (hitfaceindex >= 0)) {
 
 						CMQOObject* chkmqoobj = curobj;
@@ -1852,6 +1878,31 @@ int ChaScene::SetBoneMatrixForShader(int btflag, bool calcslotflag)
 }
 
 
+int ChaScene::CopyCSDeform()
+{
+	int rendernum = GetForwardRenderObjNum();
+	int renderindex;
+	for (renderindex = 0; renderindex < rendernum; renderindex++) {
+		myRenderer::RENDEROBJ currenderobj = GetForwardRenderObj(renderindex);
+		if (currenderobj.pmodel && currenderobj.mqoobj) {
+
+			if (currenderobj.mqoobj->GetDispObj()) {
+				if (currenderobj.mqoobj->GetPm3()) {
+					currenderobj.mqoobj->GetDispObj()->CopyCSDeform();
+				}
+				else if (currenderobj.mqoobj->GetPm4()) {
+					currenderobj.mqoobj->GetDispObj()->CopyCSDeform();
+				}
+			}
+			else if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
+				//################################
+				//GetDispObj()ではなくGetDispLine()
+				//################################
+			}
+		}
+	}
+	return 0;
+}
 
 
 

@@ -498,6 +498,9 @@ int CModel::InitParams()
 	m_refposflag = false;
 	m_updateslot = 0;
 
+	m_csfirstdispatchflag = true;
+
+
 	m_instancingnum = 0;
 	m_instancingdrawnum = 0;
 	ZeroMemory(m_instancingparams, sizeof(INSTANCINGPARAMS) * RIGMULTINDEXMAX);
@@ -3651,6 +3654,30 @@ int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, 
 
 }
 
+int CModel::CollisionPolyMesh4_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex)
+{
+	//当たったら１、当たらなかったら０を返す。エラーも０を返す。
+
+	if (!pickinfo || !pickobj || !hitfaceindex) {
+		_ASSERT(0);
+		return 0;
+	}
+	*hitfaceindex = -1;
+
+	ChaVector3 startglobal, dirglobal;
+	CalcMouseGlobalRay(pickinfo, &startglobal, &dirglobal);
+	//startglobal = g_camEye;
+	//dirglobal = g_camtargetpos - g_camEye;
+	//ChaVector3Normalize(&dirglobal, &dirglobal);
+
+	bool excludeinvface = true;
+	int colli = 0;
+	colli = pickobj->CollisionGlobal_Ray_Pm4(startglobal, dirglobal, excludeinvface, hitfaceindex);
+	return colli;
+
+}
+
+
 
 int CModel::CollisionNoBoneObj_Mouse( UIPICKINFO* pickinfo, const char* objnameptr, 
 	bool excludeinvface)
@@ -3699,6 +3726,34 @@ int CModel::CalcMouseLocalRay( UIPICKINFO* pickinfo, ChaVector3* startptr, ChaVe
 
 	return 0;
 }
+
+int CModel::CalcMouseGlobalRay(UIPICKINFO* pickinfo, ChaVector3* startptr, ChaVector3* dirptr)
+{
+	ChaVector3 startsc, endsc;
+	float rayx, rayy;
+	rayx = (float)pickinfo->clickpos.x / ((float)pickinfo->winx / 2.0f) - 1.0f;
+	rayy = 1.0f - (float)pickinfo->clickpos.y / ((float)pickinfo->winy / 2.0f);
+
+	startsc = ChaVector3(rayx, rayy, 0.0f);
+	endsc = ChaVector3(rayx, rayy, 1.0f);
+
+	ChaMatrix invmVP;
+	invmVP = ChaMatrixInv(m_matVP);
+
+	ChaVector3 startglobal, endglobal;
+
+	ChaVector3TransformCoord(&startglobal, &startsc, &invmVP);
+	ChaVector3TransformCoord(&endglobal, &endsc, &invmVP);
+
+	ChaVector3 dirglobal = endglobal - startglobal;
+	ChaVector3Normalize(&dirglobal, &dirglobal);
+
+	*startptr = startglobal;
+	*dirptr = dirglobal;
+
+	return 0;
+}
+
 
 //CBone* CModel::GetCalcRootBone( CBone* firstbone, int maxlevel )
 //{

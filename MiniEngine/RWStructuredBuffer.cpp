@@ -22,7 +22,9 @@ void RWStructuredBuffer::Init(int sizeOfElement, int numElement, void* initData)
 	auto device = g_graphicsEngine->GetD3DDevice();
 	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(m_sizeOfElement * m_numElement);
 	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-	int bufferNo = 0;
+
+
+	int bufferNo = 0;//!!!!!!!!!!!
 
 	D3D12_HEAP_PROPERTIES prop{};
 	prop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
@@ -31,34 +33,40 @@ void RWStructuredBuffer::Init(int sizeOfElement, int numElement, void* initData)
 	prop.Type = D3D12_HEAP_TYPE_CUSTOM;
 	prop.VisibleNodeMask = 1;
 
-	for (auto& buffer : m_buffersOnGPU) {
+	//for (auto& buffer : m_buffersOnGPU) {
 		HRESULT hrrwsb0 = device->CreateCommittedResource(
 			&prop,
 			D3D12_HEAP_FLAG_NONE,
 			&desc,
 			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
 			nullptr,
-			IID_PPV_ARGS(&buffer)
+			//IID_PPV_ARGS(&buffer)
+			IID_PPV_ARGS(&(m_buffersOnGPU[0]))
 		);
-		if (FAILED(hrrwsb0) || !buffer) {
+		//if (FAILED(hrrwsb0) || !buffer) {
+		if (FAILED(hrrwsb0) || !m_buffersOnGPU[0]) {
 			::MessageBoxA(NULL, "may not have enough videomemory? App must exit.",
 				"RWStructuredBuffer::Init Error", MB_OK | MB_ICONERROR);
 			abort();
 		}
 
-		buffer->SetName(L"RWStructuredBuffer:Init:buffer");
+		//buffer->SetName(L"RWStructuredBuffer:Init:buffer");
+		m_buffersOnGPU[0]->SetName(L"RWStructuredBuffer:Init:buffer");
+
 
 		//構造化バッファをCPUからアクセス可能な仮想アドレス空間にマッピングする。
 		//マップ、アンマップのオーバーヘッドを軽減するためにはこのインスタンスが生きている間は行わない。
 		{
 			CD3DX12_RANGE readRange(0, 0);        //     intend to read from this resource on the CPU.
-			buffer->Map(0, &readRange, reinterpret_cast<void**>(&m_buffersOnCPU[bufferNo]));
+			//buffer->Map(0, &readRange, reinterpret_cast<void**>(&m_buffersOnCPU[bufferNo]));
+			m_buffersOnGPU[0]->Map(0, &readRange, reinterpret_cast<void**>(&m_buffersOnCPU[0]));
 		}
 		if (initData != nullptr) {
-			memcpy(m_buffersOnCPU[bufferNo], initData, m_sizeOfElement * m_numElement);
+			//memcpy(m_buffersOnCPU[bufferNo], initData, m_sizeOfElement * m_numElement);
+			memcpy(m_buffersOnCPU[0], initData, m_sizeOfElement * m_numElement);
 		}
-		bufferNo++;
-	}
+		//bufferNo++;
+	//}
 	m_isInited = true;
 }
 void RWStructuredBuffer::Init(const VertexBuffer& vb, bool isUpdateByCPU )
@@ -71,14 +79,18 @@ void RWStructuredBuffer::Init(const VertexBuffer& vb, bool isUpdateByCPU )
 	}
 	else {
 		
-		for (auto& gpuBuffer : m_buffersOnGPU) {
-			gpuBuffer = vb.GetID3DResourceAddress();
-			gpuBuffer->AddRef();
-		}
-		//CPUからは変更できないのでマップしない。
-		for (auto& cpuBuffer : m_buffersOnCPU) {
-			cpuBuffer = nullptr;
-		}
+		//for (auto& gpuBuffer : m_buffersOnGPU) {
+		//	gpuBuffer = vb.GetID3DResourceAddress();
+		//	gpuBuffer->AddRef();
+		//}
+		m_buffersOnGPU[0] = vb.GetID3DResourceAddress();
+		m_buffersOnGPU[0]->AddRef();
+
+		////CPUからは変更できないのでマップしない。
+		//for (auto& cpuBuffer : m_buffersOnCPU) {
+		//	cpuBuffer = nullptr;
+		//}
+		m_buffersOnCPU[0] = nullptr;
 	}
 	m_isInited = true;
 }
@@ -92,14 +104,19 @@ void RWStructuredBuffer::Init(const IndexBuffer& ib, bool isUpdateByCPU)
 	}
 	else {
 
-		for (auto& gpuBuffer : m_buffersOnGPU) {
-			gpuBuffer = ib.GetID3DResourceAddress();
-			gpuBuffer->AddRef();
-		}
-		//CPUからは変更できないのでマップしない。
-		for (auto& cpuBuffer : m_buffersOnCPU) {
-			cpuBuffer = nullptr;
-		}
+		//for (auto& gpuBuffer : m_buffersOnGPU) {
+		//	gpuBuffer = ib.GetID3DResourceAddress();
+		//	gpuBuffer->AddRef();
+		//}
+		m_buffersOnGPU[0] = ib.GetID3DResourceAddress();
+		m_buffersOnGPU[0]->AddRef();
+
+		////CPUからは変更できないのでマップしない。
+		//for (auto& cpuBuffer : m_buffersOnCPU) {
+		//	cpuBuffer = nullptr;
+		//}
+		m_buffersOnCPU[0] = nullptr;
+
 	}
 	m_isInited = true;
 }
@@ -114,11 +131,16 @@ ID3D12Resource* RWStructuredBuffer::GetD3DResoruce()
 /// <returns></returns>
 void* RWStructuredBuffer::GetResourceOnCPU()
 {
-	auto backBufferIndex = g_graphicsEngine->GetBackBufferIndex();
+	//auto backBufferIndex = g_graphicsEngine->GetBackBufferIndex();
+	int backBufferIndex = 0;
 	return m_buffersOnCPU[backBufferIndex];
 }
 void RWStructuredBuffer::RegistUnorderAccessView(D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle, int bufferNo)
 {
+
+	bufferNo = 0;//!!!!!!!! 上書き固定
+
+
 	if (!m_isInited) {
 		return;
 	}
@@ -138,6 +160,9 @@ void RWStructuredBuffer::RegistUnorderAccessView(D3D12_CPU_DESCRIPTOR_HANDLE des
 }
 void RWStructuredBuffer::RegistShaderResourceView(D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle, int bufferNo)
 {
+	bufferNo = 0;//!!!!!!!! 上書き固定
+
+
 	if (!m_isInited) {
 		return;
 	}
