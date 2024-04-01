@@ -75,6 +75,7 @@
     <ClCompile Include="..\CPP\SkyParamsFile.cpp" />
     <ClCompile Include="..\CPP\FogParamsFile.cpp" />
     <ClCompile Include="..\CPP\DofParamsFile.cpp" />
+    <ClCompile Include="..\CPP\CSDeform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\BTSRC\BulletCollision\CollisionDispatch\SphereTriangleDetector.h" />
@@ -1041,6 +1042,7 @@
     <ClInclude Include="..\INCLUDE\SkyParamsFile.h" />
     <ClInclude Include="..\INCLUDE\FogParamsFile.h" />
     <ClInclude Include="..\INCLUDE\DofParamsFile.h" />
+    <ClInclude Include="..\INCLUDE\CSDeform.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\BTSRC\BulletInverseDynamics\premake4.lua">

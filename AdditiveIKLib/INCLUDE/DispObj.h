@@ -11,66 +11,11 @@ class CMQOMaterial;
 class CPolyMesh3;
 class CPolyMesh4;
 class CExtLine;
-
+class CSDeform;
 
 class ConstantBuffer;//メッシュ共通の定数バッファ。
 class StructuredBuffer;//ボーン行列の構造化バッファ。
 class DescriptorHeap;//ディスクリプタヒープ。
-
-struct CSVertexWithBone
-{
-	float pos[4];
-	float bweight[4];
-	int bindices[4];
-};
-
-struct CSVertexWithoutBone
-{
-	float pos[4];
-};
-
-
-struct CSConstantBufferWithoutBone {
-	int mVertexNum[4];
-	Matrix mWorld;		//ワールド行列。
-	Matrix mView;		//ビュー行列。
-	Matrix mProj;		//プロジェクション行列。
-	void Init() {
-		mVertexNum[0] = 0;
-		mVertexNum[1] = 0;
-		mVertexNum[2] = 0;
-		mVertexNum[3] = 0;
-
-		mWorld.SetIdentity();
-		mView.SetIdentity();
-		mProj.SetIdentity();
-	};
-};
-
-
-struct CSConstantBufferWithBone {
-	int mVertexNum[4];
-	Matrix mWorld;		//ワールド行列。
-	Matrix mView;		//ビュー行列。
-	Matrix mProj;		//プロジェクション行列。
-	float setfl4x4[16 * MAXBONENUM];//ボーンの姿勢マトリックス
-	void Init() {
-		mVertexNum[0] = 0;
-		mVertexNum[1] = 0;
-		mVertexNum[2] = 0;
-		mVertexNum[3] = 0;
-
-		mWorld.SetIdentity();
-		mView.SetIdentity();
-		mProj.SetIdentity();
-		ZeroMemory(setfl4x4, sizeof(float) * 16 * MAXBONENUM);
-	};
-};
-
-
-
-
-
 
 class CDispObj
 {
@@ -135,11 +80,7 @@ public:
 	 * @param (ChaVector4 diffusemult) IN ディフューズ色に掛け算する比率。
 	 * @return 成功したら０。
 	 */
-	int ComputeDeform(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
-	int CopyCSDeform();
-
 	int RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
-
 	int RenderNormalMaterial(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 		bool laterflag, CMQOMaterial* rmaterial, int curoffset, int curtrinum, bool isfirstmaterial);
 
@@ -154,7 +95,6 @@ public:
 	 * @detail FBXデータは１オブジェクトにつき１マテリアル(材質)だが、メタセコイアデータは１オブジェクトに複数マテリアルが設定されていることが多い。
 	 */
 	int RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
-
 	int RenderNormalPM3Material(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 		bool lasterflag, CMQOMaterial* rmaterial,
 		int curoffset, int curtrinum);
@@ -196,6 +136,9 @@ public:
 	 * @return 成功したら０。
 	 */
 	int CopyDispV(CPolyMesh3* pm3);
+
+	int ComputeDeform(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
+	int CopyCSDeform();
 
 	void ResetScaleInstancing();
 	void SetScale(ChaVector3 srcscale, ChaVector3 srcoffset);
@@ -285,23 +228,7 @@ private:
 	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;	//インデックスバッファビュー。
 
 
-	CSVertexWithBone* m_csvertexwithbone;
-	CSVertexWithoutBone* m_csvertexwithoutbone;
-	CSVertexWithBone* m_csvertexwithboneOutPut;
-	CSVertexWithoutBone* m_csvertexwithoutboneOutPut;
-	//CSVertexOutput* m_csvertexoutput;
-	int m_csvertexnum;
-	int m_cscreatevertexnum;
-	StructuredBuffer m_inputSB;
-	RWStructuredBuffer m_outputSB;
-	RootSignature m_CSrootSignature;					//CSルートシグネチャ。
-	PipelineState m_CSPipelineState;		//CSモデル用のパイプラインステート。
-	Shader* m_csModel = nullptr;				//CSモデル用の頂点シェーダー。
-	DescriptorHeap m_CSdescriptorHeap;
-	ConstantBuffer m_cbWithoutBone;
-	ConstantBuffer m_cbWithBone;
-	CSConstantBufferWithoutBone m_cbWithoutBoneCPU;
-	CSConstantBufferWithBone m_cbWithBoneCPU;
+	CSDeform* m_csdeform;//ComputeShader for Deform
 
 
 	////Shaderのポイントはnewした場合もShaderBankに格納する
