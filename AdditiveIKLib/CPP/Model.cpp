@@ -3634,29 +3634,11 @@ void CModel::SetSelectFlagReq( CBone* boneptr, int broflag )
 	}
 }
 
-
-int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex)
+int CModel::CollisionPolyMesh_Mouse(RenderContext* rc, UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex)
 {
 	//当たったら１、当たらなかったら０を返す。エラーも０を返す。
-
-	if (!pickinfo || !pickobj || !hitfaceindex) {
-		_ASSERT(0);
-		return 0;
-	}
-	*hitfaceindex = -1;
-
-	ChaVector3 startlocal, dirlocal;
-	CalcMouseLocalRay(pickinfo, &startlocal, &dirlocal);
-	bool excludeinvface = true;
-	int colli = 0;
-	colli = pickobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, excludeinvface, hitfaceindex);
-	return colli;
-
-}
-
-int CModel::CollisionPolyMesh4_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex)
-{
-	//当たったら１、当たらなかったら０を返す。エラーも０を返す。
+	
+	//ComputeShader版　polymesh3, polymesh4両方OK
 
 	if (!pickinfo || !pickobj || !hitfaceindex) {
 		_ASSERT(0);
@@ -3666,23 +3648,36 @@ int CModel::CollisionPolyMesh4_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, 
 
 	ChaVector3 startglobal, dirglobal;
 	CalcMouseGlobalRay(pickinfo, &startglobal, &dirglobal);
-	//startglobal = g_camEye;
-	//dirglobal = g_camtargetpos - g_camEye;
-	//ChaVector3Normalize(&dirglobal, &dirglobal);
-
 	bool excludeinvface = true;
 	int colli = 0;
-	colli = pickobj->CollisionGlobal_Ray_Pm4(startglobal, dirglobal, excludeinvface, hitfaceindex);
+	colli = pickobj->CollisionGlobal_Ray_Pm(rc, startglobal, dirglobal, excludeinvface, hitfaceindex);
 	return colli;
 
 }
 
+int CModel::GetResultOfPickRay(CMQOObject* pickobj, int* hitfaceindex)
+{
+	//当たったら１、当たらなかったら０を返す。エラーも０を返す。
 
+	//ComputeShader版　polymesh3, polymesh4両方OK
+
+	if (!pickobj || !hitfaceindex) {
+		_ASSERT(0);
+		return 0;
+	}
+	*hitfaceindex = -1;
+
+	int colli = 0;
+	colli = pickobj->GetResultOfPickRay(hitfaceindex);
+	return colli;
+
+}
 
 int CModel::CollisionNoBoneObj_Mouse( UIPICKINFO* pickinfo, const char* objnameptr, 
 	bool excludeinvface)
 {
 	//当たったら１、当たらなかったら０を返す。エラーも０を返す。
+	//マニピュレータピック用
 
 	CMQOObject* curobj = m_objectname[ objnameptr ];
 	if( !curobj ){

@@ -289,7 +289,8 @@ int ChaScene::UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag,
 	return 0;
 }
 
-bool ChaScene::PickPolyMesh(int pickkind, UIPICKINFO* tmppickinfo, 
+bool ChaScene::PickPolyMesh(int pickkind, RenderContext* rc, 
+	UIPICKINFO* tmppickinfo,
 	CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial)
 {
 	if (!tmppickinfo || !pickmodel || !pickmqoobj || !pickmaterial) {
@@ -355,11 +356,144 @@ bool ChaScene::PickPolyMesh(int pickkind, UIPICKINFO* tmppickinfo,
 					UIPICKINFO pickinfo = *tmppickinfo;
 					int hitfaceindex = -1;
 					int colli = 0;
-					if (curobj->GetPm3()) {
-						colli = curmodel->CollisionPolyMesh3_Mouse(&pickinfo, curobj, &hitfaceindex);
+					if (curobj->GetPm3() || curobj->GetPm4()) {
+						colli = curmodel->CollisionPolyMesh_Mouse(rc, &pickinfo, curobj, &hitfaceindex);
 					}
-					else if (curobj->GetPm4()) {
-						colli = curmodel->CollisionPolyMesh4_Mouse(&pickinfo, curobj, &hitfaceindex);
+					else {
+						colli = 0;
+					}
+
+					
+					
+					//#####################################################################################
+					//2024/04/02 CollisionPolyMesh_Mouse()はコンピュートシェーダによる実装になった
+					//EndFrame()まで結果は分からない　EndFrame()より後でGetResultOfPickRay()で結果をチェックする
+					//#####################################################################################
+
+
+
+					//if ((colli != 0) && (hitfaceindex >= 0)) {
+					//
+					//	CMQOObject* chkmqoobj = curobj;
+					//	CMQOMaterial* chkmqomat = curobj->GetMaterialByFaceIndex(hitfaceindex);
+					//
+					//	//g_pickorderは数字キーを押して設定
+					//	//カメラから何番目(数字キーの数字番目、0は10番目)に近いオブジェクトかを意味する
+					//	if (g_pickorder > foundorder) {
+					//		if (pickkind == NUMKEYPICK_MQOOBJECT) {
+					//			if (chkmqoobj == befmqoobj) {
+					//				continue;//前回と同じものを見つけた場合はfoundorderを変えずにcontinue.
+					//			}
+					//		}
+					//		else if (pickkind == NUMKEYPICK_MQOMATERIAL) {
+					//			if (chkmqomat == befmqomat) {
+					//				continue;//前回と同じものを見つけた場合はfoundorderを変えずにcontinue.
+					//			}
+					//		}
+					//		else {
+					//			_ASSERT(0);
+					//		}
+					//
+					//		befmqoobj = chkmqoobj;
+					//		befmqomat = chkmqomat;
+					//
+					//		foundorder++;//前回と結果が異なり、かつorderが指定より小さい場合　foundorderを増やしてcontinue.
+					//		continue;
+					//	}
+					//	else {
+					//		//g_pickorder番目のオブジェクトを返す
+					//
+					//		if (pickkind == NUMKEYPICK_MQOOBJECT) {
+					//			if (chkmqoobj != befmqoobj) {
+					//				*pickmodel = curmodel;
+					//				*pickmqoobj = chkmqoobj;
+					//				*pickmaterial = chkmqomat;
+					//				*tmppickinfo = pickinfo;
+					//				return true;
+					//			}
+					//		}
+					//		else if (pickkind == NUMKEYPICK_MQOMATERIAL) {
+					//			if (chkmqomat != befmqomat) {
+					//				*pickmodel = curmodel;
+					//				*pickmqoobj = chkmqoobj;
+					//				*pickmaterial = chkmqomat;
+					//				*tmppickinfo = pickinfo;
+					//				return true;
+					//			}
+					//		}
+					//		else {
+					//			_ASSERT(0);
+					//		}
+					//	}
+					//}
+				}
+			}
+		}
+	}
+
+	return false;
+
+}
+
+bool ChaScene::GetResultOfPickRay(int pickkind,
+	CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial)
+{
+
+	vector<myRenderer::RENDEROBJ> pickvec;
+
+	if (!m_modelindex.empty()) {
+		int modelnum = (int)m_modelindex.size();
+		int modelindex;
+		int groupindex;
+		for (groupindex = 0; groupindex < MAXDISPGROUPNUM; groupindex++) {
+			for (modelindex = 0; modelindex < modelnum; modelindex++) {
+
+				CModel* curmodel = m_modelindex[modelindex].modelptr;
+				if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView(0)) {
+					if (!(curmodel->DispGroupEmpty(groupindex)) && curmodel->GetDispGroupON(groupindex)) {
+						int elemnum = curmodel->GetDispGroupSize(groupindex);
+						int elemno;
+						for (elemno = 0; elemno < elemnum; elemno++) {
+
+							CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
+							if (curobj && curobj->GetDispObj() && (curobj->GetPm3() || curobj->GetPm4()) &&
+								curobj->GetVisible(0)) {
+
+								myRenderer::RENDEROBJ pickobj;
+								pickobj.Init();
+								pickobj.pmodel = curmodel;
+								pickobj.mqoobj = curobj;
+
+								pickvec.push_back(pickobj);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	//##########################################################
+	//カメラ距離でソートしてから　pickする
+	//##########################################################
+	if (!pickvec.empty()) {
+		int foundorder = 1;
+		if (!pickvec.empty()) {
+			std::sort(pickvec.begin(), pickvec.end());//カメラ距離でソート
+
+			int pickvecsize = (int)pickvec.size();
+			int pickindex;
+			CMQOObject* befmqoobj = nullptr;
+			CMQOMaterial* befmqomat = nullptr;
+			for (pickindex = 0; pickindex < pickvecsize; pickindex++) {
+				myRenderer::RENDEROBJ pickobj = pickvec[pickindex];
+				CModel* curmodel = pickobj.pmodel;
+				CMQOObject* curobj = pickobj.mqoobj;
+				if (curmodel && curobj) {
+					int hitfaceindex = -1;
+					int colli = 0;
+					if (curobj->GetPm3() || curobj->GetPm4()) {
+						colli = curobj->GetResultOfPickRay(&hitfaceindex);
 					}
 					else {
 						colli = 0;
@@ -400,7 +534,7 @@ bool ChaScene::PickPolyMesh(int pickkind, UIPICKINFO* tmppickinfo,
 									*pickmodel = curmodel;
 									*pickmqoobj = chkmqoobj;
 									*pickmaterial = chkmqomat;
-									*tmppickinfo = pickinfo;
+									//*tmppickinfo = pickinfo;
 									return true;
 								}
 							}
@@ -409,7 +543,7 @@ bool ChaScene::PickPolyMesh(int pickkind, UIPICKINFO* tmppickinfo,
 									*pickmodel = curmodel;
 									*pickmqoobj = chkmqoobj;
 									*pickmaterial = chkmqomat;
-									*tmppickinfo = pickinfo;
+									//*tmppickinfo = pickinfo;
 									return true;
 								}
 							}
@@ -423,8 +557,8 @@ bool ChaScene::PickPolyMesh(int pickkind, UIPICKINFO* tmppickinfo,
 		}
 	}
 
-	return false;
 
+	return false;
 }
 
 

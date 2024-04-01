@@ -2044,6 +2044,9 @@ int CMQOObject::GetFaceInMaterial( int matno, CMQOFace** ppface, int arrayleng, 
 int CMQOObject::CollisionLocal_Ray(ChaVector3 startlocal, ChaVector3 dirlocal, 
 	bool excludeinvface)
 {
+
+	//マニピュレータピック用
+
 	int face_count;
 	int vert_count;
 	ChaVector3* pointptr;
@@ -2115,6 +2118,9 @@ int CMQOObject::CollisionLocal_Ray(ChaVector3 startlocal, ChaVector3 dirlocal,
 int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirlocal,
 	bool excludeinvface, int* hitfaceindex)
 {
+ 
+ //CPU計算　polymesh3用
+ 
 	if (!hitfaceindex) {
 		_ASSERT(0);
 		return 0;
@@ -2186,17 +2192,19 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 	return 0;
 }
 
-int CMQOObject::CollisionGlobal_Ray_Pm4(ChaVector3 startglobal, ChaVector3 dirglobal,
+int CMQOObject::CollisionGlobal_Ray_Pm(RenderContext* rc, ChaVector3 startglobal, ChaVector3 dirglobal,
 	bool excludeinvface, int* hitfaceindex)
 {
+	//ComputeShader版　polymesh3, polymesh4両方OK
+
 	if (!hitfaceindex) {
 		_ASSERT(0);
 		return 0;
 	}
 	*hitfaceindex = -1;
 
-	CPolyMesh4* pm4ptr = GetPm4();
-	if (!pm4ptr) {
+	if (!GetPm4() && !GetPm3()) {
+		_ASSERT(0);
 		return 0;
 	}
 
@@ -2206,63 +2214,32 @@ int CMQOObject::CollisionGlobal_Ray_Pm4(ChaVector3 startglobal, ChaVector3 dirgl
 		return 0;
 	}
 
-	int* dispindex = pm4ptr->GetDispIndex();
-	if (!dispindex) {
+	return dispobj->PickRay(rc, startglobal, dirglobal, excludeinvface, hitfaceindex);
+}
+
+int CMQOObject::GetResultOfPickRay(int* hitfaceindex)
+{
+	//ComputeShader版　polymesh3, polymesh4両方OK
+
+	if (!hitfaceindex) {
+		_ASSERT(0);
+		return 0;
+	}
+	*hitfaceindex = -1;
+
+	if (!GetPm4() && !GetPm3()) {
 		_ASSERT(0);
 		return 0;
 	}
 
-	int face_count;
-	int vert_count;
-	face_count = pm4ptr->GetFaceNum();
-	vert_count = pm4ptr->GetOptLeng();
-
-	if ((face_count <= 0) || (vert_count < 3)) {
+	CDispObj* dispobj = GetDispObj();
+	if (!dispobj) {
+		_ASSERT(0);
 		return 0;
 	}
 
-	int allowrev;
-	if (excludeinvface) {
-		allowrev = 0;
-	}
-	else {
-		allowrev = 1;
-	}
-
-	int fno;
-	int hitflag;
-	int justflag;
-	//float justval = 0.01f;
-	float justval = 0.0001f;//2024/03/31 Test/1009_1モデルのpickでjustvalの誤動作(大きく外れているのに当たった)をしたので値を小さくした
-	for (fno = 0; fno < face_count; fno++) {
-		hitflag = 0;
-		justflag = 0;
-
-		int index0, index1, index2;
-		index0 = *(dispindex + fno * 3);
-		index1 = *(dispindex + fno * 3 + 1);
-		index2 = *(dispindex + fno * 3 + 2);
-
-		BINORMALDISPV v0, v1, v2;
-		int result0, result1, result2;
-		result0 = dispobj->GetDeformedDispV(index0, &v0);
-		result1 = dispobj->GetDeformedDispV(index1, &v1);
-		result2 = dispobj->GetDeformedDispV(index2, &v2);
-		if ((result0 == 0) && (result1 == 0) && (result2 == 0)) {
-			hitflag = ChkRay(allowrev,
-				v0, v1, v2,
-				startglobal, dirglobal, justval, &justflag);
-			if (hitflag || justflag) {
-				*hitfaceindex = fno;
-				return 1;
-			}
-		}
-	}
-
-	return 0;
+	return dispobj->GetResultOfPickRay(hitfaceindex);
 }
-
-
 
 int CMQOObject::AddInfBone( int srcboneno, int srcvno, float srcweight, int isadditive )
 {

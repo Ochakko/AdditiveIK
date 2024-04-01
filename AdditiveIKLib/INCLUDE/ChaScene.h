@@ -116,8 +116,11 @@ public:
 		CModel* smodel, bool recstopflag, BPWorld* bpWorld, double srcreccnt,
 		int (*srcStopBtRec)());
 
-	bool PickPolyMesh(int pickkind, UIPICKINFO* tmppickinfo,
+	bool PickPolyMesh(int pickkind, RenderContext* rc, UIPICKINFO* tmppickinfo,
 		CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial);
+	bool GetResultOfPickRay(int pickkind,
+		CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial);
+
 
 	int CopyCSDeform();
 
@@ -363,8 +366,6 @@ public:
 		return retobj;
 	};
 
-
-
 	int GetInstancingRenderObjNum()
 	{
 		return (int)m_instancingRenderModels.size();
@@ -431,7 +432,6 @@ private:
 
 	std::vector<myRenderer::RENDEROBJ> m_refpos_opaque;
 	std::vector<myRenderer::RENDEROBJ> m_refpos_transparent;
-
 
 	//myRenderer::RenderingEngine* m_renderingEngine;
 

@@ -462,7 +462,7 @@ namespace myRenderer
 
                 if (currenderobj.mqoobj->GetDispObj()) {
                     if (currenderobj.mqoobj->GetPm3()) {
-                        //currenderobj.mqoobj->GetDispObj()->ComputeDeform(rc, currenderobj);
+                        currenderobj.mqoobj->GetDispObj()->ComputeDeform(rc, currenderobj);
                     }
                     else if (currenderobj.mqoobj->GetPm4()) {
                         currenderobj.mqoobj->GetDispObj()->ComputeDeform(rc, currenderobj);

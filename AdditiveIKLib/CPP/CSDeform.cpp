@@ -49,8 +49,11 @@
 #include <iterator>
 
 
-//#define CSTHREADNUM	8
-#define CSTHREADNUM	16
+
+//変える場合は *_Deform.fx, *_Pick.fxの中の　[numthreads(16, 1, 1)]の行の16の部分も変える必要有
+//#define CSTHREADNUM	16
+#define CSTHREADNUM	4
+
 
 
 using namespace std;
@@ -83,7 +86,10 @@ void InitCSPipelineState(RootSignature& rs, PipelineState& pipelineState, Shader
 CSDeform::CSDeform() : 
 	m_CSrootSignature(), m_CSPipelineState(),
 	m_CSdescriptorHeap(), m_cbWithoutBone(), m_cbWithBone(),
-	m_inputSB(), m_outputSB()
+	m_inputSB(), m_outputSB(),
+	m_CSPickrootSignature(), m_CSPickPipelineState(),
+	m_CSPickdescriptorHeap(), m_cbPick(),
+	m_inputIndicesSB(), m_outputPickSB()
 {
 	InitParams();
 }
@@ -103,16 +109,28 @@ int CSDeform::InitParams()
 	m_cbWithoutBoneCPU.Init();
 	m_cbWithBoneCPU.Init();
 
-	m_pdev = 0;
+	//#########
+	//for pick
+	//#########
+	m_pickstate = 0;//0:inital, 1:DispatchCS, 2:GetResult
+	m_csindices = nullptr;
+	m_cspickOutPut = nullptr;
+	m_cspickOutPut_save = nullptr;
+	m_csfacenum = 0;
+	m_cscreatefacenum = 0;
+	m_csPick = nullptr;
+	m_cbPickCPU.Init();
+
+
+	m_pdev = 0;//外部メモリ
 	m_pm3 = 0;//外部メモリ
-	m_pm4 = 0;
-	m_extline = 0;
+	m_pm4 = 0;//外部メモリ
+	m_extline = 0;//外部メモリ
 
 	return 0;
 }
 int CSDeform::DestroyObjs()
 {
-
 	if (m_csvertexwithbone) {
 		free(m_csvertexwithbone);
 		m_csvertexwithbone = nullptr;
@@ -135,6 +153,26 @@ int CSDeform::DestroyObjs()
 	m_CSPipelineState.DestroyObjs();
 	m_CSdescriptorHeap.DestroyObjs();
 
+
+	//#########
+	//for pick
+	//#########
+	if (m_csindices) {
+		free(m_csindices);
+		m_csindices = nullptr;
+	}
+	if (m_cspickOutPut) {
+		free(m_cspickOutPut);
+		m_cspickOutPut = nullptr;
+	}
+	if (m_cspickOutPut_save) {
+		free(m_cspickOutPut_save);
+		m_cspickOutPut_save = nullptr;
+	}
+	m_cbPick.DestroyObjs();
+	m_CSPickrootSignature.DestroyObjs();
+	m_CSPickPipelineState.DestroyObjs();
+	m_CSPickdescriptorHeap.DestroyObjs();
 
 	return 0;
 }
@@ -167,10 +205,12 @@ int CSDeform::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3)
 	if (m_csModel == nullptr) {
 		m_csModel = new Shader;
 		if (!m_csModel) {
+			_ASSERT(0);
 			return 1;
 		}
 		int result = m_csModel->LoadCS("../Media/Shader/AdditiveIK_NoSkin_Deform.fx", "CSMain");
 		if (result != 0) {
+			_ASSERT(0);
 			return 1;
 		}
 		g_engine->RegistShaderToBank("../Media/Shader/AdditiveIK_NoSkin_Deform.fx", "CSMain", 
@@ -185,6 +225,38 @@ int CSDeform::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3)
 	m_cbWithoutBone.Init(sizeof(CSConstantBufferWithoutBone), nullptr);
 	m_CSdescriptorHeap.RegistConstantBuffer(0, m_cbWithoutBone);
 	m_CSdescriptorHeap.Commit();
+
+
+	//##########
+	//for pick
+	//##########
+	m_csPick = g_engine->GetShaderFromBank("../Media/Shader/AdditiveIK_NoSkin_Pick.fx", "CSMain");
+	if (m_csPick == nullptr) {
+		m_csPick = new Shader;
+		if (!m_csPick) {
+			_ASSERT(0);
+			return 1;
+		}
+		int result = m_csPick->LoadCS("../Media/Shader/AdditiveIK_NoSkin_Pick.fx", "CSMain");
+		if (result != 0) {
+			_ASSERT(0);
+			return 1;
+		}
+		g_engine->RegistShaderToBank("../Media/Shader/AdditiveIK_NoSkin_Pick.fx", "CSMain",
+			m_csPick);
+	}
+	InitCSRootSignature(m_CSPickrootSignature);
+	InitCSPipelineState(m_CSPickrootSignature, m_CSPickPipelineState, *m_csPick);
+	//m_inputSB.Init(sizeof(CSVertexWithoutBone), m_cscreatevertexnum, m_csvertexwithoutbone);
+	//m_outputSB.Init(sizeof(CSVertexWithoutBone), m_cscreatevertexnum, m_csvertexwithoutboneOutPut);
+	m_inputIndicesSB.Init(sizeof(CSIndices), m_cscreatefacenum, m_csindices);
+	m_outputPickSB.Init(sizeof(CSPickResult), m_cscreatefacenum, m_cspickOutPut);
+	m_CSPickdescriptorHeap.RegistShaderResource(0, m_inputIndicesSB);
+	m_CSPickdescriptorHeap.RegistUnorderAccessResource(0, m_outputSB);
+	m_CSPickdescriptorHeap.RegistUnorderAccessResource(1, m_outputPickSB);
+	m_cbPick.Init(sizeof(CSConstantBufferPick), nullptr);
+	m_CSPickdescriptorHeap.RegistConstantBuffer(0, m_cbPick);
+	m_CSPickdescriptorHeap.Commit();
 
 	return 0;
 }
@@ -215,10 +287,12 @@ int CSDeform::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4)
 	if (m_csModel == nullptr) {
 		m_csModel = new Shader;
 		if (!m_csModel) {
+			_ASSERT(0);
 			return 1;
 		}
 		int result = m_csModel->LoadCS("../Media/Shader/AdditiveIK_Skin_Deform.fx", "CSMain");
 		if (result != 0) {
+			_ASSERT(0);
 			return 1;
 		}
 		g_engine->RegistShaderToBank("../Media/Shader/AdditiveIK_Skin_Deform.fx", "CSMain",
@@ -236,6 +310,34 @@ int CSDeform::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4)
 	m_CSdescriptorHeap.Commit();
 
 
+	//##########
+	//for pick
+	//##########
+	m_csPick = g_engine->GetShaderFromBank("../Media/Shader/AdditiveIK_Skin_Pick.fx", "CSMain");
+	if (m_csPick == nullptr) {
+		m_csPick = new Shader;
+		if (!m_csPick) {
+			_ASSERT(0);
+			return 1;
+		}
+		int result = m_csPick->LoadCS("../Media/Shader/AdditiveIK_Skin_Pick.fx", "CSMain");
+		if (result != 0) {
+			_ASSERT(0);
+			return 1;
+		}
+		g_engine->RegistShaderToBank("../Media/Shader/AdditiveIK_Skin_Pick.fx", "CSMain",
+			m_csPick);
+	}
+	InitCSRootSignature(m_CSPickrootSignature);
+	InitCSPipelineState(m_CSPickrootSignature, m_CSPickPipelineState, *m_csPick);
+	m_inputIndicesSB.Init(sizeof(CSIndices), m_cscreatefacenum, m_csindices);
+	m_outputPickSB.Init(sizeof(CSPickResult), m_cscreatefacenum, m_cspickOutPut);
+	m_CSPickdescriptorHeap.RegistShaderResource(0, m_inputIndicesSB);
+	m_CSPickdescriptorHeap.RegistUnorderAccessResource(0, m_outputSB);
+	m_CSPickdescriptorHeap.RegistUnorderAccessResource(1, m_outputPickSB);
+	m_cbPick.Init(sizeof(CSConstantBufferPick), nullptr);
+	m_CSPickdescriptorHeap.RegistConstantBuffer(0, m_cbPick);
+	m_CSPickdescriptorHeap.Commit();
 
 	return 0;
 }
@@ -296,6 +398,8 @@ int CSDeform::CreateIOBuffers(ID3D12Device* pdev)
 		//m_csvertexnum = (pmvleng + 15) & ~15;
 		m_csvertexnum = pmvleng;
 		m_cscreatevertexnum = (pmvleng + (CSTHREADNUM - 1)) & ~(CSTHREADNUM - 1);
+		m_csfacenum = pmfleng;
+		m_cscreatefacenum = (pmfleng + (CSTHREADNUM - 1)) & ~(CSTHREADNUM - 1);
 	}
 	else if (m_pm4) {
 		elemleng = sizeof(BINORMALDISPV);
@@ -315,6 +419,8 @@ int CSDeform::CreateIOBuffers(ID3D12Device* pdev)
 		//m_csvertexnum = (pmvleng + 15) & ~15;
 		m_csvertexnum = pmvleng;
 		m_cscreatevertexnum = (pmvleng + (CSTHREADNUM - 1)) & ~(CSTHREADNUM - 1);
+		m_csfacenum = pmfleng;
+		m_cscreatefacenum = (pmfleng + (CSTHREADNUM - 1)) & ~(CSTHREADNUM - 1);
 	}
 	else if (m_extline) {
 		pmvleng = m_extline->GetLineNum() * 2;
@@ -332,6 +438,8 @@ int CSDeform::CreateIOBuffers(ID3D12Device* pdev)
 		//m_csvertexnum = (pmvleng + 15) & ~15;
 		m_csvertexnum = pmvleng;
 		m_cscreatevertexnum = (pmvleng + (CSTHREADNUM - 1)) & ~(CSTHREADNUM - 1);
+		m_csfacenum = pmfleng;
+		m_cscreatefacenum = (pmfleng + (CSTHREADNUM - 1)) & ~(CSTHREADNUM - 1);
 	}
 	else {
 		_ASSERT(0);
@@ -369,7 +477,29 @@ int CSDeform::CreateIOBuffers(ID3D12Device* pdev)
 		ZeroMemory(m_csvertexwithboneOutPut, sizeof(CSVertexWithBone) * m_cscreatevertexnum);
 	}
 
+	if (m_pm3 || m_pm4) {
+		m_csindices = (CSIndices*)malloc(sizeof(CSIndices) * m_cscreatefacenum);
+		if (!m_csindices) {
+			_ASSERT(0);
+			return 1;
+		}
+		ZeroMemory(m_csindices, sizeof(CSIndices) * m_cscreatefacenum);
 
+		m_cspickOutPut = (CSPickResult*)malloc(sizeof(CSPickResult) * m_cscreatefacenum);
+		if (!m_cspickOutPut) {
+			_ASSERT(0);
+			return 1;
+		}
+		ZeroMemory(m_cspickOutPut, sizeof(CSPickResult)* m_cscreatefacenum);
+
+		m_cspickOutPut_save = (CSPickResult*)malloc(sizeof(CSPickResult) * m_cscreatefacenum);
+		if (!m_cspickOutPut_save) {
+			_ASSERT(0);
+			return 1;
+		}
+		ZeroMemory(m_cspickOutPut_save, sizeof(CSPickResult) * m_cscreatefacenum);
+
+	}
 
 //################
 //頂点バッファコピー
@@ -404,6 +534,26 @@ int CSDeform::CreateIOBuffers(ID3D12Device* pdev)
 		}
 	}
 
+//#######################
+//インデックスバッファコピー
+//#######################
+
+	int* pindex = 0;
+	if (m_pm3) {
+		pindex = m_pm3->GetDispIndex();
+	}
+	else if (m_pm4) {
+		pindex = m_pm4->GetDispIndex();
+	}
+	if (pindex) {
+		int faceindex;
+		for (faceindex = 0; faceindex < m_csfacenum; faceindex++) {
+			(m_csindices + faceindex)->index[0] = *(pindex + faceindex * 3);
+			(m_csindices + faceindex)->index[1] = *(pindex + faceindex * 3 + 1);
+			(m_csindices + faceindex)->index[2] = *(pindex + faceindex * 3 + 2);
+			(m_csindices + faceindex)->index[3] = 0;
+		}
+	}
 
 	return 0;
 }
@@ -520,4 +670,142 @@ int CSDeform::GetDeformedDispV(int srcvertindex, BINORMALDISPV* dstv)
 	return 0;//success
 }
 
+
+int CSDeform::PickRay(RenderContext* rc, ChaVector3 startglobal, ChaVector3 dirglobal,
+	bool excludeinvface, int* hitfaceindex)
+{
+	if (!rc || !hitfaceindex) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	*hitfaceindex = -1;
+
+	if (m_pm3 || m_pm4) {
+		m_cbPickCPU.Init();
+		//int mBufferSize[4];//0:vertexnum, 1:facenum, 2:indicesnum, 3:未使用0
+		//float mStartglobal[4];//start point of PickRay
+		//float mDirglobal[4];//direction of PickRay
+		//int mFlags[4];//0:excludeinvface, 1-3:未使用0
+
+		m_cbPickCPU.mBufferSize[0] = m_csvertexnum;
+		m_cbPickCPU.mBufferSize[1] = m_csfacenum;
+		m_cbPickCPU.mBufferSize[2] = m_csfacenum * 3;
+		m_cbPickCPU.mBufferSize[3] = 0;
+		m_cbPickCPU.mStartglobal[0] = startglobal.x;
+		m_cbPickCPU.mStartglobal[1] = startglobal.y;
+		m_cbPickCPU.mStartglobal[2] = startglobal.z;
+		m_cbPickCPU.mStartglobal[3] = 0.0f;
+		m_cbPickCPU.mDirglobal[0] = dirglobal.x;
+		m_cbPickCPU.mDirglobal[1] = dirglobal.y;
+		m_cbPickCPU.mDirglobal[2] = dirglobal.z;
+		m_cbPickCPU.mDirglobal[3] = 0.0f;
+		m_cbPickCPU.mFlags[0] = excludeinvface ? 0 : 1;//exclusiveinv --> allowinv
+		m_cbPickCPU.mFlags[1] = 0;
+		m_cbPickCPU.mFlags[2] = 0;
+		m_cbPickCPU.mFlags[3] = 0;
+		m_cbPick.CopyToVRAM(&m_cbPickCPU);
+
+
+		//結果を初期化
+		//ZeroMemory(m_cspickOutPut, sizeof(CSPickResult) * m_cscreatefacenum);
+		//memcpy(m_outputPickSB.GetResourceOnCPU(), m_cspickOutPut, sizeof(CSPickResult) * m_cscreatefacenum);
+
+
+		rc->SetComputeRootSignature(m_CSPickrootSignature);
+		rc->SetPipelineState(m_CSPickPipelineState);
+		rc->SetComputeDescriptorHeap(m_CSPickdescriptorHeap);
+		rc->Dispatch((m_cscreatefacenum / CSTHREADNUM), 1, 1);
+		//rc->Dispatch(m_cscreatefacenum, 1, 1);
+		//rc->Dispatch(m_csfacenum, 1, 1);
+
+		//#############################################
+		//結果はrc->EndFrame()より後にならないと分からない
+		// EndFrame()より後でGetResultOfPickRay()を呼ぶ
+		//#############################################
+
+		m_pickstate = 1;
+	}
+
+	return 0;
+}
+
+int CSDeform::GetResultOfPickRay(int* hitfaceindex)
+{
+	if (!hitfaceindex) {
+		_ASSERT(0);
+		return 0;
+	}
+	*hitfaceindex = -1;
+
+	if (m_pickstate != 1) {
+		return 0;
+	}
+
+	CSPickResult* outputData = (CSPickResult*)m_outputPickSB.GetResourceOnCPU();
+	if (outputData) {
+		//memcpy(m_cspickOutPut_save, outputData, sizeof(CSPickResult) * m_csfacenum);//まとめてコピーしてから
+		int chkfaceindex;
+		for (chkfaceindex = 0; chkfaceindex < m_csfacenum; chkfaceindex++) {
+			int hitflag = (outputData + chkfaceindex)->result[0];
+			int justflag = (outputData + chkfaceindex)->result[1];
+			int hitface = (outputData + chkfaceindex)->result[2];
+			if ((hitflag == 1) && (hitface >= 0)) {
+				//当たりをみつけた場合
+				*hitfaceindex = hitface;
+				m_pickstate = 2;
+				return 1;//!!!!!!!!!!!!!!
+			}
+
+
+			//if ((outputData + chkfaceindex)->dbginfo[0] != 0) {
+			//	int dbgflag1 = 1;
+			//}
+			//if ((outputData + chkfaceindex)->dbginfo[1] != 0) {
+			//	int dbgflag1 = 1;
+			//}
+			//if ((outputData + chkfaceindex)->dbginfo[2] != 0) {
+			//	int dbgflag1 = 1;
+			//}
+			//if ((outputData + chkfaceindex)->dbginfo[3] != 0) {
+			//	int dbgflag1 = 1;
+			//}
+			//
+			//
+			//if ((outputData + chkfaceindex)->result[3] == 0) {
+			//	int dbgflag1 = 1;
+			//}
+			//if ((outputData + chkfaceindex)->result[3] == 1) {
+			//	int dbgflag1 = 1;
+			//}
+			//if ((outputData + chkfaceindex)->result[3] == 2) {
+			//	int dbgflag1 = 1;
+			//}
+			//if ((outputData + chkfaceindex)->result[3] == 3) {
+			//	int dbgflag1 = 1;
+			//}
+			//if ((outputData + chkfaceindex)->result[3] == 4) {
+			//	int dbgflag1 = 1;
+			//}
+			//if ((outputData + chkfaceindex)->result[3] == 5) {
+			//	int dbgflag1 = 1;
+			//}
+			//if ((outputData + chkfaceindex)->result[3] == 6) {
+			//	int dbgflag1 = 1;
+			//}
+			//if (((outputData + chkfaceindex)->result[3] > 0) ||
+			//	((outputData + chkfaceindex)->result[3] > 6)) {
+			//	int dbgflag1 = 1;
+			//}
+		}
+	}
+	else {
+		_ASSERT(0);
+	}
+
+	m_pickstate = 2;
+
+	return 0;
+
+}
 

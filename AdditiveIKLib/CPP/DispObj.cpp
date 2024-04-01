@@ -100,31 +100,6 @@ extern bool g_zcmpalways;
 
 
 
-static void InitCSRootSignature(RootSignature& rs);
-static void InitCSPipelineState(RootSignature& rs, PipelineState& pipelineState, Shader& cs);
-void InitCSRootSignature(RootSignature& rs)
-{
-	// CSルートシグネチャの初期化
-	rs.Init(D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP);
-}
-void InitCSPipelineState(RootSignature& rs, PipelineState& pipelineState, Shader& cs)
-{
-	// CSパイプラインステートを作成
-	D3D12_COMPUTE_PIPELINE_STATE_DESC  psoDesc = { 0 };
-	psoDesc.pRootSignature = rs.Get();
-	psoDesc.CS = CD3DX12_SHADER_BYTECODE(cs.GetCompiledBlob());
-	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
-	psoDesc.NodeMask = 0;
-
-	pipelineState.Init(psoDesc);
-}
-
-
-
-
 CDispObj::CDispObj() 
 {
 	InitParams();
@@ -1094,6 +1069,29 @@ int CDispObj::CopyCSDeform()
 	//return m_csdeform->CopyCSDeform();
 	return 0;
 }
+
+int CDispObj::PickRay(RenderContext* rc, ChaVector3 startglobal, ChaVector3 dirglobal,
+	bool excludeinvface, int* hitfaceindex)
+{
+	if (!m_csdeform || !rc || !hitfaceindex) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	return m_csdeform->PickRay(rc, startglobal, dirglobal, excludeinvface, hitfaceindex);
+}
+
+int CDispObj::GetResultOfPickRay(int* hitfaceindex)
+{
+	if (!m_csdeform || !hitfaceindex) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	return m_csdeform->GetResultOfPickRay(hitfaceindex);
+}
+
+
 
 int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 {

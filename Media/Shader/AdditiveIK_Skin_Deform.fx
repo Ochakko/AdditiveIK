@@ -48,9 +48,9 @@ RWStructuredBuffer<CSOutputData> g_outputData : register(u0);
 
 //[numthreads(128, 1, 1)]
 //[numthreads(1, 1, 1)]
-//[numthreads(4, 1, 1)]
+[numthreads(4, 1, 1)]
 //[numthreads(8, 1, 1)]
-[numthreads(16, 1, 1)]
+//numthreads(16, 1, 1)]
 void CSMain(uint3 DTid : SV_DispatchThreadID)
 {
     int dataIndex = DTid.x;

@@ -723,10 +723,14 @@ public:
  * @param (char* objnameptr) IN 調べたいオブジェクトの名前を指定する。
  * @return ２D位置にオブジェクトがあれば１、無ければ０を返す。
  */
+
+	//マニピュレータピック用
 	int CollisionNoBoneObj_Mouse(UIPICKINFO* pickinfo, const char* objnameptr, bool excludeinvface);
 
-	int CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex);
-	int CollisionPolyMesh4_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex);
+
+	//ComputeShader版　polymesh3, polymesh4両方OK
+	int CollisionPolyMesh_Mouse(RenderContext* rc, UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex);
+	int GetResultOfPickRay(CMQOObject* pickobj, int* hitfaceindex);
 
 /**
  * @fn

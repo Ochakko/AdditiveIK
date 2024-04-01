@@ -28,6 +28,16 @@ struct CSVertexWithoutBone
 	float pos[4];
 };
 
+struct CSIndices
+{
+	int index[4];//[0]-[2]:IndexOfTriangle, [3]:not use
+};
+
+struct CSPickResult
+{
+	int result[4];//[0]:hitflag, [1]:justflag, [2]:hitfaceno, [3]:未使用0
+	int dbginfo[4];
+};
 
 struct CSConstantBufferWithoutBone {
 	int mVertexNum[4];
@@ -67,9 +77,18 @@ struct CSConstantBufferWithBone {
 };
 
 
-
-
-
+struct CSConstantBufferPick {
+	int mBufferSize[4];//0:vertexnum, 1:facenum, 2:indicesnum, 3:未使用0
+	float mStartglobal[4];//start point of PickRay
+	float mDirglobal[4];//direction of PickRay
+	int mFlags[4];//0:excludeinvface, 1-3:未使用0
+	void Init() {
+		ZeroMemory(mBufferSize, sizeof(int) * 4);
+		ZeroMemory(mStartglobal, sizeof(float) * 4);
+		ZeroMemory(mDirglobal, sizeof(float) * 4);
+		ZeroMemory(mFlags, sizeof(int) * 4);
+	};
+};
 
 class CSDeform
 {
@@ -87,6 +106,10 @@ public:
 	int CopyCSDeform();
 
 
+	int PickRay(RenderContext* rc, ChaVector3 startglobal, ChaVector3 dirglobal,
+		bool excludeinvface, int* hitfaceindex);
+	int GetResultOfPickRay(int* hitfaceindex);
+
 	int GetDeformedDispV(int srcvertindex, BINORMALDISPV* dstv);
 
 private:
@@ -101,24 +124,50 @@ private:
 	CPolyMesh4* m_pm4;//外部メモリ、FBXファイルから作成した３Dデータ。
 	CExtLine* m_extline;//外部メモリ、線データ。
 
+	//###########
+	//for Deform
+	//###########
+	RootSignature m_CSrootSignature;
+	PipelineState m_CSPipelineState;
 
 	CSVertexWithBone* m_csvertexwithbone;
 	CSVertexWithoutBone* m_csvertexwithoutbone;
 	CSVertexWithBone* m_csvertexwithboneOutPut;
 	CSVertexWithoutBone* m_csvertexwithoutboneOutPut;
+
 	int m_csvertexnum;
 	int m_cscreatevertexnum;
+
 	StructuredBuffer m_inputSB;
 	RWStructuredBuffer m_outputSB;
-	RootSignature m_CSrootSignature;					//CSルートシグネチャ。
-	PipelineState m_CSPipelineState;		//CSモデル用のパイプラインステート。
-	Shader* m_csModel = nullptr;				//CSモデル用の頂点シェーダー。
-	DescriptorHeap m_CSdescriptorHeap;
+	Shader* m_csModel = nullptr;
+
 	ConstantBuffer m_cbWithoutBone;
 	ConstantBuffer m_cbWithBone;
 	CSConstantBufferWithoutBone m_cbWithoutBoneCPU;
 	CSConstantBufferWithBone m_cbWithBoneCPU;
+	DescriptorHeap m_CSdescriptorHeap;
 
+	//#########
+	//for pick
+	//#########
+	int m_pickstate;//0:inital, 1:DispatchCS, 2:GetResult
+	RootSignature m_CSPickrootSignature;//for pick
+	PipelineState m_CSPickPipelineState;//for pick
+
+	CSIndices* m_csindices;//for pick length:createfacenum
+	CSPickResult* m_cspickOutPut;//for pick
+	CSPickResult* m_cspickOutPut_save;//for pick
+	int m_csfacenum;//for pick
+	int m_cscreatefacenum;//for pick
+
+	StructuredBuffer m_inputIndicesSB;//for pick
+	RWStructuredBuffer m_outputPickSB;//for pick length:createfacenum 
+	Shader* m_csPick = nullptr;//for pick
+
+	ConstantBuffer m_cbPick;//for pick
+	CSConstantBufferPick m_cbPickCPU;//for pick
+	DescriptorHeap m_CSPickdescriptorHeap;//for pick
 
 };
 

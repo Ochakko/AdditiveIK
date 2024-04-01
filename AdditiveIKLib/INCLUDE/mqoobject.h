@@ -104,12 +104,21 @@ public:
 	int GetMaterialNoInUse( int* noptr, int arrayleng, int* getnumptr );
 	CMQOMaterial* GetMaterialByFaceIndex(int srcfaceindex);
 	int GetFaceInMaterial( int matno, CMQOFace** ppface, int arrayleng, int* getnumptr );
+
+	//マニピュレータピック用
 	int CollisionLocal_Ray(ChaVector3 startlocal, ChaVector3 dirlocal, 
 		bool excludeinvface);
+
+	//ComputeShader版　polymesh3, polymesh4両方OK
+	int CollisionGlobal_Ray_Pm(RenderContext* rc, ChaVector3 startglobal, ChaVector3 dirglobal,
+		bool excludeinvface, int* hitfaceindex);
+	int GetResultOfPickRay(int* hitfaceindex);
+
+
+	//CPU計算　polymesh3用
 	int CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirlocal,
 		bool excludeinvface, int* hitfaceindex);
-	int CollisionGlobal_Ray_Pm4(ChaVector3 startglobal, ChaVector3 dirglobal,
-		bool excludeinvface, int* hitfaceindex);
+
 
 	//int MakeXBoneno2wno( int arrayleng, int* boneno2wno, int* infnumptr );
 	//int GetSkinMeshHeader( int leng, int* maxpervert, int* maxperface );
