@@ -289,7 +289,7 @@ int ChaScene::UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag,
 	return 0;
 }
 
-bool ChaScene::PickPolyMesh(int pickkind, RenderContext* rc, 
+bool ChaScene::PickPolyMesh(int pickkind, 
 	UIPICKINFO* tmppickinfo,
 	CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial)
 {
@@ -357,75 +357,66 @@ bool ChaScene::PickPolyMesh(int pickkind, RenderContext* rc,
 					int hitfaceindex = -1;
 					int colli = 0;
 					if (curobj->GetPm3() || curobj->GetPm4()) {
-						colli = curmodel->CollisionPolyMesh_Mouse(rc, &pickinfo, curobj, &hitfaceindex);
+						colli = curmodel->CollisionPolyMesh_Mouse(&pickinfo, curobj, &hitfaceindex);
 					}
 					else {
 						colli = 0;
 					}
 
+					if ((colli != 0) && (hitfaceindex >= 0)) {
 					
+						CMQOObject* chkmqoobj = curobj;
+						CMQOMaterial* chkmqomat = curobj->GetMaterialByFaceIndex(hitfaceindex);
 					
-					//#####################################################################################
-					//2024/04/02 CollisionPolyMesh_Mouse()はコンピュートシェーダによる実装になった
-					//EndFrame()まで結果は分からない　EndFrame()より後でGetResultOfPickRay()で結果をチェックする
-					//#####################################################################################
-
-
-
-					//if ((colli != 0) && (hitfaceindex >= 0)) {
-					//
-					//	CMQOObject* chkmqoobj = curobj;
-					//	CMQOMaterial* chkmqomat = curobj->GetMaterialByFaceIndex(hitfaceindex);
-					//
-					//	//g_pickorderは数字キーを押して設定
-					//	//カメラから何番目(数字キーの数字番目、0は10番目)に近いオブジェクトかを意味する
-					//	if (g_pickorder > foundorder) {
-					//		if (pickkind == NUMKEYPICK_MQOOBJECT) {
-					//			if (chkmqoobj == befmqoobj) {
-					//				continue;//前回と同じものを見つけた場合はfoundorderを変えずにcontinue.
-					//			}
-					//		}
-					//		else if (pickkind == NUMKEYPICK_MQOMATERIAL) {
-					//			if (chkmqomat == befmqomat) {
-					//				continue;//前回と同じものを見つけた場合はfoundorderを変えずにcontinue.
-					//			}
-					//		}
-					//		else {
-					//			_ASSERT(0);
-					//		}
-					//
-					//		befmqoobj = chkmqoobj;
-					//		befmqomat = chkmqomat;
-					//
-					//		foundorder++;//前回と結果が異なり、かつorderが指定より小さい場合　foundorderを増やしてcontinue.
-					//		continue;
-					//	}
-					//	else {
-					//		//g_pickorder番目のオブジェクトを返す
-					//
-					//		if (pickkind == NUMKEYPICK_MQOOBJECT) {
-					//			if (chkmqoobj != befmqoobj) {
-					//				*pickmodel = curmodel;
-					//				*pickmqoobj = chkmqoobj;
-					//				*pickmaterial = chkmqomat;
-					//				*tmppickinfo = pickinfo;
-					//				return true;
-					//			}
-					//		}
-					//		else if (pickkind == NUMKEYPICK_MQOMATERIAL) {
-					//			if (chkmqomat != befmqomat) {
-					//				*pickmodel = curmodel;
-					//				*pickmqoobj = chkmqoobj;
-					//				*pickmaterial = chkmqomat;
-					//				*tmppickinfo = pickinfo;
-					//				return true;
-					//			}
-					//		}
-					//		else {
-					//			_ASSERT(0);
-					//		}
-					//	}
-					//}
+						//g_pickorderは数字キーを押して設定
+						//カメラから何番目(数字キーの数字番目、0は10番目)に近いオブジェクトかを意味する
+						if (g_pickorder > foundorder) {
+							if (pickkind == NUMKEYPICK_MQOOBJECT) {
+								if (chkmqoobj == befmqoobj) {
+									continue;//前回と同じものを見つけた場合はfoundorderを変えずにcontinue.
+								}
+							}
+							else if (pickkind == NUMKEYPICK_MQOMATERIAL) {
+								if (chkmqomat == befmqomat) {
+									continue;//前回と同じものを見つけた場合はfoundorderを変えずにcontinue.
+								}
+							}
+							else {
+								_ASSERT(0);
+							}
+					
+							befmqoobj = chkmqoobj;
+							befmqomat = chkmqomat;
+					
+							foundorder++;//前回と結果が異なり、かつorderが指定より小さい場合　foundorderを増やしてcontinue.
+							continue;
+						}
+						else {
+							//g_pickorder番目のオブジェクトを返す
+					
+							if (pickkind == NUMKEYPICK_MQOOBJECT) {
+								if (chkmqoobj != befmqoobj) {
+									*pickmodel = curmodel;
+									*pickmqoobj = chkmqoobj;
+									*pickmaterial = chkmqomat;
+									*tmppickinfo = pickinfo;
+									return true;
+								}
+							}
+							else if (pickkind == NUMKEYPICK_MQOMATERIAL) {
+								if (chkmqomat != befmqomat) {
+									*pickmodel = curmodel;
+									*pickmqoobj = chkmqoobj;
+									*pickmaterial = chkmqomat;
+									*tmppickinfo = pickinfo;
+									return true;
+								}
+							}
+							else {
+								_ASSERT(0);
+							}
+						}
+					}
 				}
 			}
 		}

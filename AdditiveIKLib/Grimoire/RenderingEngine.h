@@ -365,7 +365,7 @@ namespace myRenderer
         void RenderToShadowMap(RenderContext* rc, ChaScene* srcchascene);
 
 
-        void ComputeDeform(RenderContext* rc, ChaScene* srcchascene);
+        void ComputeDeform(ChaScene* srcchascene);
 
         /// <summary>
         /// ZPrepass

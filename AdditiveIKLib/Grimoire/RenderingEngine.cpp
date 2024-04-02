@@ -349,7 +349,7 @@ namespace myRenderer
         //rc.ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
 
         if (g_pickmeshflag) {
-            ComputeDeform(rc, srcchascene);
+            ComputeDeform(srcchascene);
         }
         
         // シャドウマップへの描画
@@ -447,9 +447,9 @@ namespace myRenderer
     }
 
 
-    void RenderingEngine::ComputeDeform(RenderContext* rc, ChaScene* srcchascene)
+    void RenderingEngine::ComputeDeform(ChaScene* srcchascene)
     {
-        if (!rc || !srcchascene) {
+        if (!srcchascene) {
             _ASSERT(0);
             return;
         }
@@ -462,10 +462,10 @@ namespace myRenderer
 
                 if (currenderobj.mqoobj->GetDispObj()) {
                     if (currenderobj.mqoobj->GetPm3()) {
-                        currenderobj.mqoobj->GetDispObj()->ComputeDeform(rc, currenderobj);
+                        currenderobj.mqoobj->GetDispObj()->ComputeDeform(currenderobj);
                     }
                     else if (currenderobj.mqoobj->GetPm4()) {
-                        currenderobj.mqoobj->GetDispObj()->ComputeDeform(rc, currenderobj);
+                        currenderobj.mqoobj->GetDispObj()->ComputeDeform(currenderobj);
                     }
                 }
                 else if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
@@ -937,6 +937,8 @@ namespace myRenderer
         }
     }
 
-
 }
+
+
+
 

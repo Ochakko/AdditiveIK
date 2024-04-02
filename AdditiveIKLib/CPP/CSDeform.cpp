@@ -40,6 +40,7 @@
 #include "../../MiniEngine/StructuredBuffer.h"
 #include "../../MiniEngine/DescriptorHeap.h"
 //#include "../../MiniEngine/Material.h"
+#include "../../MiniEngine/IMCompute.h"
 
 
 
@@ -99,6 +100,11 @@ CSDeform::~CSDeform()
 }
 int CSDeform::InitParams()
 {
+	m_IMDeform = nullptr;
+	m_IMPick = nullptr;
+	m_workingDeform = false;
+	m_workingPick = false;
+
 	m_csvertexwithbone = nullptr;
 	m_csvertexwithoutbone = nullptr;
 	m_csvertexwithboneOutPut = nullptr;
@@ -131,6 +137,16 @@ int CSDeform::InitParams()
 }
 int CSDeform::DestroyObjs()
 {
+	if (m_IMDeform) {
+		delete m_IMDeform;
+		m_IMDeform = nullptr;
+	}
+	if (m_IMPick) {
+		delete m_IMPick;
+		m_IMPick = nullptr;
+	}
+
+
 	if (m_csvertexwithbone) {
 		free(m_csvertexwithbone);
 		m_csvertexwithbone = nullptr;
@@ -177,6 +193,34 @@ int CSDeform::DestroyObjs()
 	return 0;
 }
 
+int CSDeform::CreateIMCompute(ID3D12Device* pdev)
+{
+	m_IMDeform = new IMCompute();
+	if (!m_IMDeform) {
+		_ASSERT(0);
+		return 1;
+	}
+	m_IMPick = new IMCompute();
+	if (!m_IMPick) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+
+	int result1 = m_IMDeform->Init(pdev);
+	if (result1 != 0) {
+		_ASSERT(0);
+		return 1;
+	}
+	int result2 = m_IMPick->Init(pdev);
+	if (result2 != 0) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	return 0;
+}
 
 int CSDeform::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3)
 {
@@ -185,6 +229,8 @@ int CSDeform::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3)
 	m_pdev = pdev;
 	m_pm3 = pm3;
 
+
+	CallF(CreateIMCompute(pdev), return 1);
 	CallF(CreateIOBuffers(pdev), return 1);
 
 
@@ -267,6 +313,7 @@ int CSDeform::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4)
 	m_pdev = pdev;
 	m_pm4 = pm4;
 
+	CallF(CreateIMCompute(pdev), return 1);
 	CallF(CreateIOBuffers(pdev), return 1);
 
 	std::array<DXGI_FORMAT, MAX_RENDERING_TARGET> colorBufferFormat = {
@@ -559,10 +606,16 @@ int CSDeform::CreateIOBuffers(ID3D12Device* pdev)
 }
 
 
-int CSDeform::ComputeDeform(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
+int CSDeform::ComputeDeform(myRenderer::RENDEROBJ renderobj)
 {
-	if (!rc || !renderobj.pmodel || !renderobj.mqoobj) {
+	if (m_workingDeform) {
+		return 0;
+	}
+	m_workingDeform = true;
+
+	if (!m_IMDeform || !renderobj.pmodel || !renderobj.mqoobj) {
 		_ASSERT(0);
+		m_workingDeform = false;
 		return 0;
 	}
 
@@ -587,10 +640,11 @@ int CSDeform::ComputeDeform(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 		m_cbWithoutBoneCPU.mProj = mProj;
 		m_cbWithoutBone.CopyToVRAM(&m_cbWithoutBoneCPU);
 		
-		rc->SetComputeRootSignature(m_CSrootSignature);
-		rc->SetPipelineState(m_CSPipelineState);
-		rc->SetComputeDescriptorHeap(m_CSdescriptorHeap);
-		rc->Dispatch((m_cscreatevertexnum / CSTHREADNUM), 1, 1);
+		m_IMDeform->Reset(m_CSPipelineState.Get());
+		m_IMDeform->SetComputeRootSignature(m_CSrootSignature);
+		m_IMDeform->SetPipelineState(m_CSPipelineState);
+		m_IMDeform->SetComputeDescriptorHeap(m_CSdescriptorHeap);
+		m_IMDeform->IMExecute((m_cscreatevertexnum / CSTHREADNUM), 1, 1);
 	}
 	else if (m_pm4) {
 		m_cbWithBoneCPU.Init();
@@ -605,13 +659,16 @@ int CSDeform::ComputeDeform(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 		}
 		m_cbWithBone.CopyToVRAM(&m_cbWithBoneCPU);
 
-		rc->SetComputeRootSignature(m_CSrootSignature);
-		rc->SetPipelineState(m_CSPipelineState);
-		rc->SetComputeDescriptorHeap(m_CSdescriptorHeap);
-		rc->Dispatch((m_cscreatevertexnum / CSTHREADNUM), 1, 1);
+		m_IMDeform->Reset(m_CSPipelineState.Get());
+		m_IMDeform->SetComputeRootSignature(m_CSrootSignature);
+		m_IMDeform->SetPipelineState(m_CSPipelineState);
+		m_IMDeform->SetComputeDescriptorHeap(m_CSdescriptorHeap);
+		m_IMDeform->IMExecute((m_cscreatevertexnum / CSTHREADNUM), 1, 1);
 
 		//renderobj.pmodel->SetCSFirstDispatchFlag(false);
 	}
+
+	m_workingDeform = false;
 
 	return 0;
 }
@@ -671,11 +728,17 @@ int CSDeform::GetDeformedDispV(int srcvertindex, BINORMALDISPV* dstv)
 }
 
 
-int CSDeform::PickRay(RenderContext* rc, ChaVector3 startglobal, ChaVector3 dirglobal,
+int CSDeform::PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
 	bool excludeinvface, int* hitfaceindex)
 {
-	if (!rc || !hitfaceindex) {
+	if (m_workingPick) {
+		return GetResultOfPickRay(hitfaceindex);
+	}
+	m_workingPick = true;
+
+	if (!m_IMPick || !hitfaceindex) {
 		_ASSERT(0);
+		m_workingPick = false;
 		return 0;
 	}
 
@@ -711,13 +774,11 @@ int CSDeform::PickRay(RenderContext* rc, ChaVector3 startglobal, ChaVector3 dirg
 		//ZeroMemory(m_cspickOutPut, sizeof(CSPickResult) * m_cscreatefacenum);
 		//memcpy(m_outputPickSB.GetResourceOnCPU(), m_cspickOutPut, sizeof(CSPickResult) * m_cscreatefacenum);
 
-
-		rc->SetComputeRootSignature(m_CSPickrootSignature);
-		rc->SetPipelineState(m_CSPickPipelineState);
-		rc->SetComputeDescriptorHeap(m_CSPickdescriptorHeap);
-		rc->Dispatch((m_cscreatefacenum / CSTHREADNUM), 1, 1);
-		//rc->Dispatch(m_cscreatefacenum, 1, 1);
-		//rc->Dispatch(m_csfacenum, 1, 1);
+		m_IMPick->Reset(m_CSPickPipelineState.Get());
+		m_IMPick->SetComputeRootSignature(m_CSPickrootSignature);
+		m_IMPick->SetPipelineState(m_CSPickPipelineState);
+		m_IMPick->SetComputeDescriptorHeap(m_CSPickdescriptorHeap);
+		m_IMPick->IMExecute((m_cscreatefacenum / CSTHREADNUM), 1, 1);
 
 		//#############################################
 		//結果はrc->EndFrame()より後にならないと分からない
@@ -727,7 +788,9 @@ int CSDeform::PickRay(RenderContext* rc, ChaVector3 startglobal, ChaVector3 dirg
 		m_pickstate = 1;
 	}
 
-	return 0;
+	m_workingPick = false;
+
+	return GetResultOfPickRay(hitfaceindex);
 }
 
 int CSDeform::GetResultOfPickRay(int* hitfaceindex)

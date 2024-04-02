@@ -729,7 +729,7 @@ public:
 
 
 	//ComputeShader版　polymesh3, polymesh4両方OK
-	int CollisionPolyMesh_Mouse(RenderContext* rc, UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex);
+	int CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex);
 	int GetResultOfPickRay(CMQOObject* pickobj, int* hitfaceindex);
 
 /**

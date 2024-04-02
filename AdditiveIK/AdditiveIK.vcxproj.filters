@@ -240,6 +240,9 @@
     <ClInclude Include="..\MiniEngine\InstancedSprite.h">
       <Filter>MiniEngine</Filter>
     </ClInclude>
+    <ClInclude Include="..\MiniEngine\IMCompute.h">
+      <Filter>MiniEngine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AdditiveIK.cpp">
@@ -393,6 +396,9 @@
       <Filter>DXUTmisc</Filter>
     </ClCompile>
     <ClCompile Include="..\MiniEngine\InstancedSprite.cpp">
+      <Filter>MiniEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MiniEngine\IMCompute.cpp">
       <Filter>MiniEngine</Filter>
     </ClCompile>
   </ItemGroup>

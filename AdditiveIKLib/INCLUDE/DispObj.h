@@ -137,9 +137,9 @@ public:
 	 */
 	int CopyDispV(CPolyMesh3* pm3);
 
-	int ComputeDeform(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
+	int ComputeDeform(myRenderer::RENDEROBJ renderobj);
 	int CopyCSDeform();
-	int PickRay(RenderContext* rc, ChaVector3 startglobal, ChaVector3 dirglobal,
+	int PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
 		bool excludeinvface, int* hitfaceindex);
 	int GetResultOfPickRay(int* hitfaceindex);
 

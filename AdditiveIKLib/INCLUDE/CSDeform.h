@@ -10,7 +10,7 @@ class CMQOMaterial;
 class CPolyMesh3;
 class CPolyMesh4;
 class CExtLine;
-
+class IMCompute;
 
 class ConstantBuffer;//メッシュ共通の定数バッファ。
 class StructuredBuffer;//ボーン行列の構造化バッファ。
@@ -102,11 +102,11 @@ public:
 	int CreateDispObj(ID3D12Device* pdev, CExtLine* extline);
 	int CreateIOBuffers(ID3D12Device* pdev);
 
-	int ComputeDeform(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
+	int ComputeDeform(myRenderer::RENDEROBJ renderobj);
 	int CopyCSDeform();
 
 
-	int PickRay(RenderContext* rc, ChaVector3 startglobal, ChaVector3 dirglobal,
+	int PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
 		bool excludeinvface, int* hitfaceindex);
 	int GetResultOfPickRay(int* hitfaceindex);
 
@@ -116,13 +116,20 @@ private:
 
 	int InitParams();
 	int DestroyObjs();
-
+	int CreateIMCompute(ID3D12Device* pdev);
 
 private:
 	ID3D12Device* m_pdev;//外部メモリ、Direct3Dのデバイス。
 	CPolyMesh3* m_pm3;//外部メモリ、メタセコイアファイルから作成した３Dデータ。
 	CPolyMesh4* m_pm4;//外部メモリ、FBXファイルから作成した３Dデータ。
 	CExtLine* m_extline;//外部メモリ、線データ。
+
+
+	bool m_workingDeform;
+	bool m_workingPick;
+	IMCompute* m_IMDeform;
+	IMCompute* m_IMPick;
+
 
 	//###########
 	//for Deform

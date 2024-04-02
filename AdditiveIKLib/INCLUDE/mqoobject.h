@@ -110,7 +110,7 @@ public:
 		bool excludeinvface);
 
 	//ComputeShader版　polymesh3, polymesh4両方OK
-	int CollisionGlobal_Ray_Pm(RenderContext* rc, ChaVector3 startglobal, ChaVector3 dirglobal,
+	int CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglobal,
 		bool excludeinvface, int* hitfaceindex);
 	int GetResultOfPickRay(int* hitfaceindex);
 

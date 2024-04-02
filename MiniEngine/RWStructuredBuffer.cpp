@@ -38,7 +38,8 @@ void RWStructuredBuffer::Init(int sizeOfElement, int numElement, void* initData)
 			&prop,
 			D3D12_HEAP_FLAG_NONE,
 			&desc,
-			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+			//D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+			D3D12_RESOURCE_STATE_COMMON,//2024/04/02 debugビルドにてD3D12_RESOURCE_STATE_UNORDERED_ACCESSではなく *_COMMONを使うと警告が出るので
 			nullptr,
 			//IID_PPV_ARGS(&buffer)
 			IID_PPV_ARGS(&(m_buffersOnGPU[0]))

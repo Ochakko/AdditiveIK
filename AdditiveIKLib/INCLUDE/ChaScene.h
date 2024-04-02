@@ -116,7 +116,7 @@ public:
 		CModel* smodel, bool recstopflag, BPWorld* bpWorld, double srcreccnt,
 		int (*srcStopBtRec)());
 
-	bool PickPolyMesh(int pickkind, RenderContext* rc, UIPICKINFO* tmppickinfo,
+	bool PickPolyMesh(int pickkind, UIPICKINFO* tmppickinfo,
 		CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial);
 	bool GetResultOfPickRay(int pickkind,
 		CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial);

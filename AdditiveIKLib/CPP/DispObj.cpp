@@ -1049,14 +1049,14 @@ int CDispObj::RenderShadowRecieverPM3(RenderContext* rc, myRenderer::RENDEROBJ r
 	return RenderNormalPM3(rc, renderobj);
 }
 
-int CDispObj::ComputeDeform(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
+int CDispObj::ComputeDeform(myRenderer::RENDEROBJ renderobj)
 {
-	if (!m_csdeform || !rc || !renderobj.pmodel || !renderobj.mqoobj) {
+	if (!m_csdeform || !renderobj.pmodel || !renderobj.mqoobj) {
 		_ASSERT(0);
 		return 0;
 	}
 
-	return m_csdeform->ComputeDeform(rc, renderobj);
+	return m_csdeform->ComputeDeform(renderobj);
 }
 
 int CDispObj::CopyCSDeform()
@@ -1070,15 +1070,15 @@ int CDispObj::CopyCSDeform()
 	return 0;
 }
 
-int CDispObj::PickRay(RenderContext* rc, ChaVector3 startglobal, ChaVector3 dirglobal,
+int CDispObj::PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
 	bool excludeinvface, int* hitfaceindex)
 {
-	if (!m_csdeform || !rc || !hitfaceindex) {
+	if (!m_csdeform || !hitfaceindex) {
 		_ASSERT(0);
 		return 0;
 	}
 
-	return m_csdeform->PickRay(rc, startglobal, dirglobal, excludeinvface, hitfaceindex);
+	return m_csdeform->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex);
 }
 
 int CDispObj::GetResultOfPickRay(int* hitfaceindex)
@@ -1382,6 +1382,7 @@ int CDispObj::RenderZPrePm4(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 	////定数バッファの設定、更新など描画の共通処理を実行する。
 	//DrawCommon(rc, renderobj, mView, mProj);
 
+	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	//##################################################################################
 	//2023/12/04　メモ
@@ -1724,6 +1725,8 @@ int CDispObj::RenderZPrePm3(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 	//if (m_descriptorHeap.Get() == nullptr) {
 	//	return 0;
 	//}
+
+	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	//##################################################################################
 	//2023/12/04　メモ

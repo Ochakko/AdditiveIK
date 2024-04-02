@@ -2192,7 +2192,7 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 	return 0;
 }
 
-int CMQOObject::CollisionGlobal_Ray_Pm(RenderContext* rc, ChaVector3 startglobal, ChaVector3 dirglobal,
+int CMQOObject::CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglobal,
 	bool excludeinvface, int* hitfaceindex)
 {
 	//ComputeShader版　polymesh3, polymesh4両方OK
@@ -2214,7 +2214,7 @@ int CMQOObject::CollisionGlobal_Ray_Pm(RenderContext* rc, ChaVector3 startglobal
 		return 0;
 	}
 
-	return dispobj->PickRay(rc, startglobal, dirglobal, excludeinvface, hitfaceindex);
+	return dispobj->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex);
 }
 
 int CMQOObject::GetResultOfPickRay(int* hitfaceindex)

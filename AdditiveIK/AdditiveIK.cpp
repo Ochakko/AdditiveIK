@@ -128,6 +128,9 @@
 #include "../MiniEngine/Sprite.h"
 #include "../MiniEngine/font/Font.h"
 #include "../MiniEngine/TResourceBank.h"
+#include "../MiniEngine/IMCompute.h"
+
+
 
 #include "DXUTmisc/DXUTmisc.h"
 
@@ -2173,8 +2176,8 @@ static int CreateTipRig(CBone* currigbone, int currigno, POINT ptCursor);
 static bool DispTipUI();
 static bool DispTipUIFrog();
 static bool DispTipRig();
-static void DispTipMesh();
-static void DispTipMaterial();
+static bool DispTipMesh();
+static bool DispTipMaterial();
 static bool DispTipBone();
 static bool DispTipSelect();
 
@@ -5148,8 +5151,6 @@ void OnDestroyDevice()
 
 
 
-
-
 	//if (s_undosprite) {
 	//	delete s_undosprite;
 	//	s_undosprite = 0;
@@ -5220,6 +5221,7 @@ void OnDestroyDevice()
 		delete g_texbank;
 		g_texbank = 0;
 	}
+
 
 	if (s_mainmenu) {
 		DestroyMenu(s_mainmenu);
@@ -5615,6 +5617,7 @@ void OnDestroyDevice()
 	CBone::DestroyColDisp();
 	CBone::DestroyBones();
 	CRigidElem::DestroyRigidElems();
+	IMCompute::DestroyStaticMem();//全てのCModel削除の後で呼ぶ
 
 	DestroyEulKeys();
 	DestroyKeys();
@@ -6215,8 +6218,8 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 			OnRenderSprite(re, rc);
 		}
 
-		if ((UnderDragOperation_R() == false) && (UnderDragOperation_L() == false)) {// &&
-			//((fTime - savetooltiptime) >= 0.032)) {
+		if ((UnderDragOperation_R() == false) && (UnderDragOperation_L() == false) &&
+			((fTime - savetooltiptime) >= 0.032)) {
 			//マウスがUtDialogのコントロールの上を通るとSetCaptureが生じるのでIK中は非表示にする
 			DispToolTip();
 			savetooltiptime = fTime;
@@ -6251,7 +6254,7 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 	//s_chascene->CopyCSDeform();
 	s_chascene->ClearRenderObjs();//CopyCSDeform()よりも後で呼ぶ
 
-	s_dispPickfortip = GetResultOfPickRay();//EndFrame()よりも後で呼ぶ
+	//s_dispPickfortip = GetResultOfPickRay();//EndFrame()よりも後で呼ぶ
 
 
 }
@@ -7743,7 +7746,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		//ChaMatrixIdentity(&s_ikselectmat);
 		if (s_model && (s_curboneno >= 0)) {
 			curbone = s_model->GetBoneByID(s_curboneno);
-			_ASSERT(curbone);
+			//_ASSERT(curbone);//<-- ジョイント以外クリックで普通に通る場所　コメントアウト
 			if (curbone) {
 				s_saveboneno = s_curboneno;
 
@@ -56550,8 +56553,8 @@ bool PickAndSelectMeshOfDispGroupDlg()
 	}
 
 	if (s_dispPickfortip && s_spdispsw[SPDISPSW_DISPGROUP].state) {
-		if (s_pickmodel && s_pickmqoobj && 
-			((s_pickmodel != s_befselectmodel) || (s_pickmqoobj != s_befselectmqoobj))) {
+		if (s_pickmodel && s_pickmqoobj) {// &&
+			//((s_pickmodel != s_befselectmodel) || (s_pickmqoobj != s_befselectmqoobj))) {
 
 			s_befselectmodel = s_pickmodel;
 			s_befselectmqoobj = s_pickmqoobj;
@@ -56593,8 +56596,8 @@ bool PickAndSelectMaterialOfShaderTypeDlg()
 	}
 
 	if (s_dispPickfortip && s_spdispsw[SPDISPSW_SHADERTYPE].state) {
-		if (s_pickmodel && s_pickmaterial &&
-			((s_pickmodel != s_befselectmodel) || (s_pickmaterial != s_befselectmaterial))) {
+		if (s_pickmodel && s_pickmaterial) {// &&
+			//((s_pickmodel != s_befselectmodel) || (s_pickmaterial != s_befselectmaterial))) {
 
 			s_befselectmodel = s_pickmodel;
 			s_befselectmqoobj = s_pickmqoobj;
@@ -56626,7 +56629,7 @@ bool PickAndSelectMaterialOfShaderTypeDlg()
 int DispToolTip()
 {
 
-	s_dispfontfortip = false;//GetResultOfPickRayで初期化する
+	s_dispfontfortip = false;
 
 
 	if (!s_model) {
@@ -56658,11 +56661,11 @@ int DispToolTip()
 
 	if ((s_dispfontfortip == false) && s_spdispsw[SPDISPSW_DISPGROUP].state) {
 		//DispGroupプレートメニュー選択時　メッシュ名を表示
-		DispTipMesh();
+		s_dispPickfortip = DispTipMesh();
 	}
 	else if ((s_dispfontfortip == false) && s_spdispsw[SPDISPSW_SHADERTYPE].state) {
 		//Shaderプレートメニュー選択時　マテリアル名を表示
-		DispTipMaterial();
+		s_dispPickfortip = DispTipMaterial();
 	}
 	else if(!s_spdispsw[SPDISPSW_DISPGROUP].state && !s_spdispsw[SPDISPSW_SHADERTYPE].state){
 		//DispTipMeshとDispTipMaterialの結果はrc->EndFrame()より後で分かる
@@ -57211,14 +57214,14 @@ bool DispTipRig()
 	return false;
 }
 
-void DispTipMesh()
+bool DispTipMesh()
 {
 	if (!s_model) {
-		return;
+		return false;
 	}
 
 	if (!s_chascene) {
-		return;
+		return false;
 	}
 
 	UIPICKINFO tmppickinfo;
@@ -57228,6 +57231,7 @@ void DispTipMesh()
 	GetCursorPos(&ptCursor);
 	::ScreenToClient(s_3dwnd, &ptCursor);
 	tmppickinfo.mousepos = ptCursor;
+	s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
 
 	tmppickinfo.clickpos = ptCursor;
 	tmppickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
@@ -57238,43 +57242,45 @@ void DispTipMesh()
 	tmppickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
 	tmppickinfo.pickrange = PICKRANGE;
 
+	bool pickflag = false;
+
 	if (g_previewFlag == 0) {
-		//WCHAR modelname[256] = { 0L };
-		//WCHAR objname[256] = { 0L };
-		//WCHAR materialname[256] = { 0L };
-		CModel* pickmodel = nullptr;
-		CMQOObject* pickmqoobj = nullptr;
-		CMQOMaterial* pickmaterial = nullptr;
-		RenderContext rc = g_graphicsEngine->GetRenderContext();
-		s_chascene->PickPolyMesh(NUMKEYPICK_MQOOBJECT, &rc, &tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
+		WCHAR modelname[256] = { 0L };
+		WCHAR objname[256] = { 0L };
+		WCHAR materialname[256] = { 0L };
+		s_pickmodel = nullptr;
+		s_pickmqoobj = nullptr;
+		s_pickmaterial = nullptr;
+		pickflag = s_chascene->PickPolyMesh(NUMKEYPICK_MQOOBJECT, &tmppickinfo, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial);
 
-		//#####################################################################################
-		//2024/04/02 CollisionPolyMesh_Mouse()はコンピュートシェーダによる実装になった
-		//EndFrame()まで結果は分からない　EndFrame()より後でGetResultOfPickRay()で結果をチェックする
-		//#####################################################################################
+		if (pickflag && s_pickmodel && s_pickmqoobj) {
+			s_befpickmodel = s_pickmodel;
+			s_befpickmqoobj = s_pickmqoobj;
 
+			wcscpy_s(modelname, 256, s_pickmodel->GetFileName());
+			char tmpobjname[256] = { 0 };
+			strcpy_s(tmpobjname, 256, s_pickmqoobj->GetName());
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, tmpobjname, 256, objname, 256);
 
-		//if (dispfontfortip && pickmodel && pickmqoobj) {
-		//	wcscpy_s(modelname, 256, pickmodel->GetFileName());
-		//	char tmpobjname[256] = { 0 };
-		//	strcpy_s(tmpobjname, 256, pickmqoobj->GetName());
-		//	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, tmpobjname, 256, objname, 256);
-
-		//	swprintf_s(s_strfortip, 512, L"Mesh:%s:%s", modelname, objname);
-		//	s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
-		//}
+			WCHAR tmptip[512] = { 0L };
+			swprintf_s(tmptip, 512, L"Mesh:%s:%s", modelname, objname);
+			if (wcscmp(s_strfortip, tmptip) != 0) {
+				wcscpy_s(s_strfortip, 512, tmptip);
+			}
+		}
 	}
 
+	return pickflag;
 }
 
-void DispTipMaterial()
+bool DispTipMaterial()
 {
 	if (!s_model) {
-		return;
+		return false;
 	}
 
 	if (!s_chascene) {
-		return;
+		return false;
 	}
 
 	UIPICKINFO tmppickinfo;
@@ -57284,6 +57290,7 @@ void DispTipMaterial()
 	GetCursorPos(&ptCursor);
 	::ScreenToClient(s_3dwnd, &ptCursor);
 	tmppickinfo.mousepos = ptCursor;
+	s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
 
 	tmppickinfo.clickpos = ptCursor;
 	tmppickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
@@ -57294,33 +57301,34 @@ void DispTipMaterial()
 	tmppickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
 	tmppickinfo.pickrange = PICKRANGE;
 
-
+	bool pickflag = false;
 
 	if (g_previewFlag == 0) {
-		//WCHAR modelname[256] = { 0L };
-		//WCHAR objname[256] = { 0L };
-		//WCHAR materialname[256] = { 0L };
-		CModel* pickmodel = nullptr;
-		CMQOObject* pickmqoobj = nullptr;
-		CMQOMaterial* pickmaterial = nullptr;
-		RenderContext rc = g_graphicsEngine->GetRenderContext();
-		s_chascene->PickPolyMesh(NUMKEYPICK_MQOMATERIAL, &rc, &tmppickinfo, &pickmodel, &pickmqoobj, &pickmaterial);
+		WCHAR modelname[256] = { 0L };
+		WCHAR objname[256] = { 0L };
+		WCHAR materialname[256] = { 0L };
+		s_pickmodel = nullptr;
+		s_pickmqoobj = nullptr;
+		s_pickmaterial = nullptr;
+		pickflag = s_chascene->PickPolyMesh(NUMKEYPICK_MQOMATERIAL, &tmppickinfo, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial);
 
-		//#####################################################################################
-		//2024/04/02 CollisionPolyMesh_Mouse()はコンピュートシェーダによる実装になった
-		//EndFrame()まで結果は分からない　EndFrame()より後でGetResultOfPickRay()で結果をチェックする
-		//#####################################################################################
+		if (pickflag && s_pickmodel && s_pickmaterial) {
+			s_befpickmodel = s_pickmodel;
+			s_befpickmaterial = s_pickmaterial;
 
-		//if (dispfontfortip && pickmodel && pickmaterial) {
-		//	wcscpy_s(modelname, 256, pickmodel->GetFileName());
-		//	char tmpmaterialname[256] = { 0 };
-		//	strcpy_s(tmpmaterialname, 256, pickmaterial->GetName());
-		//	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, tmpmaterialname, 256, materialname, 256);
-		//
-		//	swprintf_s(s_strfortip, 512, L"Material:%s:%s", modelname, materialname);
-		//	s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
-		//}
+			wcscpy_s(modelname, 256, s_pickmodel->GetFileName());
+			char tmpmaterialname[256] = { 0 };
+			strcpy_s(tmpmaterialname, 256, s_pickmaterial->GetName());
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, tmpmaterialname, 256, materialname, 256);
+			WCHAR tmptip[512] = { 0L };
+			swprintf_s(tmptip, 512, L"Material:%s:%s", modelname, materialname);
+			if (wcscmp(s_strfortip, tmptip) != 0) {
+				wcscpy_s(s_strfortip, 512, tmptip);
+			}
+		}
 	}
+
+	return pickflag;
 }
 
 
@@ -60387,6 +60395,9 @@ int OnCreateDevice()
 	
 	//CallF(GetShaderHandle(), return S_FALSE);
 	
+	CallF(IMCompute::InitStaticMem(s_pdev), return 1);
+
+
 
 	if (!g_texbank) {
 		g_texbank = new CTexBank(s_pdev);

@@ -3634,7 +3634,7 @@ void CModel::SetSelectFlagReq( CBone* boneptr, int broflag )
 	}
 }
 
-int CModel::CollisionPolyMesh_Mouse(RenderContext* rc, UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex)
+int CModel::CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex)
 {
 	//当たったら１、当たらなかったら０を返す。エラーも０を返す。
 	
@@ -3650,7 +3650,7 @@ int CModel::CollisionPolyMesh_Mouse(RenderContext* rc, UIPICKINFO* pickinfo, CMQ
 	CalcMouseGlobalRay(pickinfo, &startglobal, &dirglobal);
 	bool excludeinvface = true;
 	int colli = 0;
-	colli = pickobj->CollisionGlobal_Ray_Pm(rc, startglobal, dirglobal, excludeinvface, hitfaceindex);
+	colli = pickobj->CollisionGlobal_Ray_Pm(startglobal, dirglobal, excludeinvface, hitfaceindex);
 	return colli;
 
 }
