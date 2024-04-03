@@ -14,11 +14,9 @@ IMCompute::IMCompute()
 	m_fence = nullptr;
 	m_fenceValue = 0;
 
-	ZeroMemory(&m_currentViewport, sizeof(D3D12_VIEWPORT));				//現在のビューポート。
 	ZeroMemory(m_descriptorHeaps, sizeof(ID3D12DescriptorHeap*) * MAX_DESCRIPTOR_HEAP);
 	ZeroMemory(m_constantBuffers, sizeof(ConstantBuffer*) * MAX_CONSTANT_BUFFER);
 	ZeroMemory(m_shaderResources, sizeof(Texture*) * MAX_SHADER_RESOURCE);
-	m_scratchResourceList.clear();
 
 };
 
@@ -145,6 +143,11 @@ void IMCompute::IMExecute(UINT ThreadGroupCountX, UINT ThreadGroupCountY, UINT T
 	}
 
 
+
+	//#####################################################################################
+	//Reset(), SetComputeRootSignature(), SetPipelineState(), SetComputeDescriptorHeap()を
+	//この関数を呼び出す前に呼び出す必要有
+	//#####################################################################################
 	////コマンドのリセット
 	//allo->Reset();
 	//list->Reset(allo, nullptr);
@@ -154,6 +157,9 @@ void IMCompute::IMExecute(UINT ThreadGroupCountX, UINT ThreadGroupCountY, UINT T
 	//list->SetDescriptorHeaps(1, &h);
 	//auto handle = heap->GetGPUDescriptorHandleForHeapStart();
 	//list->SetComputeRootDescriptorTable(0, handle);
+
+
+
 
 	//コンピュートシェーダーの実行(今回は256個のスレッドグループを指定)
 	Dispatch(ThreadGroupCountX, ThreadGroupCountY, ThreadGroupCountZ);
@@ -189,22 +195,6 @@ void IMCompute::WaitDraw()
 }
 
 
-void IMCompute::SetDescriptorHeap(DescriptorHeap& descHeap)
-{
-	m_descriptorHeaps[0] = descHeap.Get();
-	m_commandList->SetDescriptorHeaps(1, m_descriptorHeaps);
-	
-	//ディスクリプタテーブルに登録する。
-	if (descHeap.IsRegistConstantBuffer()) {
-		SetGraphicsRootDescriptorTable(0, descHeap.GetConstantBufferGpuDescriptorStartHandle());
-	}
-	if (descHeap.IsRegistShaderResource()) {
-		SetGraphicsRootDescriptorTable(1, descHeap.GetShaderResourceGpuDescriptorStartHandle());
-	}
-	if (descHeap.IsRegistUavResource()) {
-		SetGraphicsRootDescriptorTable(2, descHeap.GetUavResourceGpuDescriptorStartHandle());
-	}
-}
 void IMCompute::SetComputeDescriptorHeap(DescriptorHeap& descHeap)
 {
 	m_descriptorHeaps[0] = descHeap.Get();
@@ -221,83 +211,4 @@ void IMCompute::SetComputeDescriptorHeap(DescriptorHeap& descHeap)
 		SetComputeRootDescriptorTable(2, descHeap.GetUavResourceGpuDescriptorStartHandle());
 	}
 }
-void IMCompute::WaitUntilFinishDrawingToRenderTarget(RenderTarget& renderTarget)
-{
-	WaitUntilFinishDrawingToRenderTarget(renderTarget.GetRenderTargetTexture()->Get());
-}
-void IMCompute::WaitUntilToPossibleSetRenderTarget(RenderTarget& renderTarget)
-{
-	WaitUntilToPossibleSetRenderTarget(renderTarget.GetRenderTargetTexture()->Get());
-}
-void IMCompute::WaitUntilToPossibleSetRenderTargets(int numRt, RenderTarget* renderTargets[])
-{
-	for (int i = 0; i < numRt; i++) {
-		WaitUntilToPossibleSetRenderTarget(*renderTargets[i]);
-	}
-}
-void IMCompute::WaitUntilFinishDrawingToRenderTargets(int numRt, RenderTarget* renderTargets[])
-{
-	for (int i = 0; i < numRt; i++) {
-		WaitUntilFinishDrawingToRenderTarget(*renderTargets[i]);
-	}
-}
-void IMCompute::SetRenderTargets(UINT numRT, RenderTarget* renderTargets[])
-{
-	//d
-	D3D12_CPU_DESCRIPTOR_HANDLE rtDSHandleTbl[32];
-	::ZeroMemory(&(rtDSHandleTbl[0]), sizeof(D3D12_CPU_DESCRIPTOR_HANDLE) * 32);//2023/11/13
 
-	//int rtNo = 0;//2023/11/13 comment out
-	for( UINT rtNo = 0; rtNo < numRT; rtNo++){
-		rtDSHandleTbl[rtNo] = renderTargets[rtNo]->GetRTVCpuDescriptorHandle();
-	}
-	if (renderTargets[0]->IsExsitDepthStencilBuffer()) {
-		//深度バッファがある。
-		D3D12_CPU_DESCRIPTOR_HANDLE dsDS = renderTargets[0]->GetDSVCpuDescriptorHandle();
-		m_commandList->OMSetRenderTargets(numRT, rtDSHandleTbl, FALSE, &dsDS);
-	}
-	else {
-		//深度バッファがない。
-		m_commandList->OMSetRenderTargets(numRT, rtDSHandleTbl, FALSE, nullptr);
-	}
-
-}
-void IMCompute::SetRenderTargetAndViewport(RenderTarget& renderTarget)
-{
-	D3D12_VIEWPORT viewport;
-	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
-	viewport.Width = static_cast<float>(renderTarget.GetWidth());
-	viewport.Height = static_cast<float>(renderTarget.GetHeight());
-	viewport.MinDepth = D3D12_MIN_DEPTH;
-	viewport.MaxDepth = D3D12_MAX_DEPTH;
-	SetViewportAndScissor(viewport);
-	
-	SetRenderTarget(renderTarget);
-}
-void IMCompute::SetRenderTargetsAndViewport(UINT numRT, RenderTarget* renderTargets[])
-{
-	D3D12_VIEWPORT viewport;
-	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
-	viewport.Width = static_cast<float>(renderTargets[0]->GetWidth());
-	viewport.Height = static_cast<float>(renderTargets[0]->GetHeight());
-	viewport.MinDepth = D3D12_MIN_DEPTH;
-	viewport.MaxDepth = D3D12_MAX_DEPTH;
-	SetViewportAndScissor(viewport);
-	SetRenderTargets(numRT, renderTargets);
-}
-void IMCompute::ClearRenderTargetViews(int numRt, RenderTarget* renderTargets[])
-{
-	if (renderTargets[0]->IsExsitDepthStencilBuffer()) {
-		//深度バッファがある。
-		ClearDepthStencilView(renderTargets[0]->GetDSVCpuDescriptorHandle(), renderTargets[0]->GetDSVClearValue());
-	}
-	for (int i = 0; i < numRt; i++) {
-		ClearRenderTargetView(renderTargets[i]->GetRTVCpuDescriptorHandle(), renderTargets[i]->GetRTVClearColor());
-	}
-}
-//void IMCompute::SetPipelineState(raytracing::PSO& pso)
-//{
-//	m_commandList->SetPipelineState1(pso.Get());
-//}

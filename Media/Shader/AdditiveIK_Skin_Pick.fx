@@ -50,7 +50,7 @@ StructuredBuffer<CSIndices_PickSkined> g_inputIndices_PickSkined : register(t0);
 // 入力にアクセスするための変数
 RWStructuredBuffer<CSInputData_PickSkined> g_inputVertex_PickSkined : register(u0);
 // 出力先にアクセスするための変数
-RWStructuredBuffer<CSOutputData_PickSkined> g_output_PickSkined : register(u1);
+RWStructuredBuffer<CSOutputData_PickSkined> g_output_PickSkined : register(u1);//要素数1
 
 
 //[numthreads(16, 1, 1)]
@@ -61,17 +61,26 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     if (faceIndex >= mBufferSize[1])//facenoチェック
         return;
     
+    //当りが既にみつかっていたばあいにはすぐにリターン
+    if ((g_output_PickSkined[0].result[0] != 0) || (g_output_PickSkined[0].result[1] != 0))
+        return;
+    
+
+    //########################################################################################
+    //当りがみつからずにリターンする場合にはresultには値をセットしない　並列実行で当りマークが消されないように
+    //########################################################################################
+    
+        
     g_output_PickSkined[0].dbginfo[0] = 999;
-    g_output_PickSkined[faceIndex].result = int4(0, 0, -1, 0);//init results
         
    
     int index1 = g_inputIndices_PickSkined[faceIndex].index[0];
     int index2 = g_inputIndices_PickSkined[faceIndex].index[1];
     int index3 = g_inputIndices_PickSkined[faceIndex].index[2];
     
-    g_output_PickSkined[faceIndex].dbginfo[1] = index1;
-    g_output_PickSkined[faceIndex].dbginfo[2] = index2;
-    g_output_PickSkined[faceIndex].dbginfo[3] = index3;
+    g_output_PickSkined[0].dbginfo[1] = index1;
+    g_output_PickSkined[0].dbginfo[2] = index2;
+    g_output_PickSkined[0].dbginfo[3] = index3;
     
     
     float3 point1 = g_inputVertex_PickSkined[index1].pos.xyz;
@@ -97,15 +106,13 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     float dotface = dot(abc, ev);
     if (dotface == 0.0f)
     {
-        g_output_PickSkined[faceIndex].result[0] = 0;
-        g_output_PickSkined[faceIndex].dbginfo[0] = 1;
+        g_output_PickSkined[0].dbginfo[0] = 1;
         return;
     }
     if ((mFlags[0] == 0) && (dotface < 0.0f))
     {
 		//裏面は当たらない
-        g_output_PickSkined[faceIndex].result[0] = 0;
-        g_output_PickSkined[faceIndex].dbginfo[0] = 2;
+        g_output_PickSkined[0].dbginfo[0] = 2;
         return;
     }
 
@@ -113,14 +120,13 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     k = -((dot(abc, v1) + d) / dot(abc, ev));
     if (abs(k) <= JUSTVAL)
     {
-        g_output_PickSkined[faceIndex].result[1] = 1; //justval !!!
-        g_output_PickSkined[faceIndex].result[2] = faceIndex;
-        g_output_PickSkined[faceIndex].dbginfo[0] = 3;            
+        g_output_PickSkined[0].result[1] = 1; //justval !!!
+        g_output_PickSkined[0].result[2] = faceIndex;
+        g_output_PickSkined[0].dbginfo[0] = 3;            
         return;
     }
     if (k < 0.0f)
     {
-        g_output_PickSkined[faceIndex].result[0] = 0;
         return;
     }
     
@@ -152,10 +158,10 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     if ((abs(dota) < 0.05f) && (abs(dotb) < 0.05f) && (abs(dotc) < 0.05f))//zero
     {
         //(*justptr)++;
-        g_output_PickSkined[faceIndex].result[0] = 1;
-        g_output_PickSkined[faceIndex].result[1] = 1;
-        g_output_PickSkined[faceIndex].result[2] = faceIndex;
-        g_output_PickSkined[faceIndex].dbginfo[0] = 4;                
+        g_output_PickSkined[0].result[0] = 1;
+        g_output_PickSkined[0].result[1] = 1;
+        g_output_PickSkined[0].result[2] = faceIndex;
+        g_output_PickSkined[0].dbginfo[0] = 4;                
         return;
     }
 
@@ -163,16 +169,15 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 		((dota >= 0.50f) && (dotb >= 0.50f) && (dotc >= 0.50f))
         )
     {
-        g_output_PickSkined[faceIndex].result[0] = 1;
-        g_output_PickSkined[faceIndex].result[1] = 0;
-        g_output_PickSkined[faceIndex].result[2] = faceIndex;
-        g_output_PickSkined[faceIndex].dbginfo[0] = 5;
+        g_output_PickSkined[0].result[0] = 1;
+        g_output_PickSkined[0].result[1] = 0;
+        g_output_PickSkined[0].result[2] = faceIndex;
+        g_output_PickSkined[0].dbginfo[0] = 5;
         return;
     }
     else
     {
-        g_output_PickSkined[faceIndex].result[0] = 0;
-        g_output_PickSkined[faceIndex].dbginfo[0] = 6;                
+        g_output_PickSkined[0].dbginfo[0] = 6;                
         return;
     }
 }

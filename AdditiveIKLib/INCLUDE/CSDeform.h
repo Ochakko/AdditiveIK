@@ -37,6 +37,16 @@ struct CSPickResult
 {
 	int result[4];//[0]:hitflag, [1]:justflag, [2]:hitfaceno, [3]:未使用0
 	int dbginfo[4];
+	void Init() {
+		result[0] = 0;
+		result[1] = 0;
+		result[2] = 0;
+		result[3] = 0;
+		dbginfo[0] = 0;
+		dbginfo[1] = 0;
+		dbginfo[2] = 0;
+		dbginfo[3] = 0;
+	};
 };
 
 struct CSConstantBufferWithoutBone {
@@ -163,13 +173,13 @@ private:
 	PipelineState m_CSPickPipelineState;//for pick
 
 	CSIndices* m_csindices;//for pick length:createfacenum
-	CSPickResult* m_cspickOutPut;//for pick
-	CSPickResult* m_cspickOutPut_save;//for pick
+	CSPickResult m_cspickOutPut1;//for pick 要素数1
+	CSPickResult m_cspickOutPut1_save;//for pick 要素数1
 	int m_csfacenum;//for pick
 	int m_cscreatefacenum;//for pick
 
 	StructuredBuffer m_inputIndicesSB;//for pick
-	RWStructuredBuffer m_outputPickSB;//for pick length:createfacenum 
+	RWStructuredBuffer m_outputPickSB1;//for pick length:1 要素数1
 	Shader* m_csPick = nullptr;//for pick
 
 	ConstantBuffer m_cbPick;//for pick

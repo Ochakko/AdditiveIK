@@ -90,7 +90,7 @@ CSDeform::CSDeform() :
 	m_inputSB(), m_outputSB(),
 	m_CSPickrootSignature(), m_CSPickPipelineState(),
 	m_CSPickdescriptorHeap(), m_cbPick(),
-	m_inputIndicesSB(), m_outputPickSB()
+	m_inputIndicesSB(), m_outputPickSB1()
 {
 	InitParams();
 }
@@ -120,8 +120,8 @@ int CSDeform::InitParams()
 	//#########
 	m_pickstate = 0;//0:inital, 1:DispatchCS, 2:GetResult
 	m_csindices = nullptr;
-	m_cspickOutPut = nullptr;
-	m_cspickOutPut_save = nullptr;
+	m_cspickOutPut1.Init();
+	m_cspickOutPut1_save.Init();
 	m_csfacenum = 0;
 	m_cscreatefacenum = 0;
 	m_csPick = nullptr;
@@ -177,14 +177,14 @@ int CSDeform::DestroyObjs()
 		free(m_csindices);
 		m_csindices = nullptr;
 	}
-	if (m_cspickOutPut) {
-		free(m_cspickOutPut);
-		m_cspickOutPut = nullptr;
-	}
-	if (m_cspickOutPut_save) {
-		free(m_cspickOutPut_save);
-		m_cspickOutPut_save = nullptr;
-	}
+	//if (m_cspickOutPut) {
+	//	free(m_cspickOutPut);
+	//	m_cspickOutPut = nullptr;
+	//}
+	//if (m_cspickOutPut_save) {
+	//	free(m_cspickOutPut_save);
+	//	m_cspickOutPut_save = nullptr;
+	//}
 	m_cbPick.DestroyObjs();
 	m_CSPickrootSignature.DestroyObjs();
 	m_CSPickPipelineState.DestroyObjs();
@@ -296,10 +296,10 @@ int CSDeform::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3)
 	//m_inputSB.Init(sizeof(CSVertexWithoutBone), m_cscreatevertexnum, m_csvertexwithoutbone);
 	//m_outputSB.Init(sizeof(CSVertexWithoutBone), m_cscreatevertexnum, m_csvertexwithoutboneOutPut);
 	m_inputIndicesSB.Init(sizeof(CSIndices), m_cscreatefacenum, m_csindices);
-	m_outputPickSB.Init(sizeof(CSPickResult), m_cscreatefacenum, m_cspickOutPut);
+	m_outputPickSB1.Init(sizeof(CSPickResult), 1, &m_cspickOutPut1);
 	m_CSPickdescriptorHeap.RegistShaderResource(0, m_inputIndicesSB);
-	m_CSPickdescriptorHeap.RegistUnorderAccessResource(0, m_outputSB);
-	m_CSPickdescriptorHeap.RegistUnorderAccessResource(1, m_outputPickSB);
+	m_CSPickdescriptorHeap.RegistUnorderAccessResource(0, m_outputSB);//<--IMDeformの実行結果を入力
+	m_CSPickdescriptorHeap.RegistUnorderAccessResource(1, m_outputPickSB1);
 	m_cbPick.Init(sizeof(CSConstantBufferPick), nullptr);
 	m_CSPickdescriptorHeap.RegistConstantBuffer(0, m_cbPick);
 	m_CSPickdescriptorHeap.Commit();
@@ -378,10 +378,10 @@ int CSDeform::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4)
 	InitCSRootSignature(m_CSPickrootSignature);
 	InitCSPipelineState(m_CSPickrootSignature, m_CSPickPipelineState, *m_csPick);
 	m_inputIndicesSB.Init(sizeof(CSIndices), m_cscreatefacenum, m_csindices);
-	m_outputPickSB.Init(sizeof(CSPickResult), m_cscreatefacenum, m_cspickOutPut);
+	m_outputPickSB1.Init(sizeof(CSPickResult), 1, &m_cspickOutPut1);
 	m_CSPickdescriptorHeap.RegistShaderResource(0, m_inputIndicesSB);
-	m_CSPickdescriptorHeap.RegistUnorderAccessResource(0, m_outputSB);
-	m_CSPickdescriptorHeap.RegistUnorderAccessResource(1, m_outputPickSB);
+	m_CSPickdescriptorHeap.RegistUnorderAccessResource(0, m_outputSB);//<--IMDeformの実行結果を入力
+	m_CSPickdescriptorHeap.RegistUnorderAccessResource(1, m_outputPickSB1);
 	m_cbPick.Init(sizeof(CSConstantBufferPick), nullptr);
 	m_CSPickdescriptorHeap.RegistConstantBuffer(0, m_cbPick);
 	m_CSPickdescriptorHeap.Commit();
@@ -532,20 +532,22 @@ int CSDeform::CreateIOBuffers(ID3D12Device* pdev)
 		}
 		ZeroMemory(m_csindices, sizeof(CSIndices) * m_cscreatefacenum);
 
-		m_cspickOutPut = (CSPickResult*)malloc(sizeof(CSPickResult) * m_cscreatefacenum);
-		if (!m_cspickOutPut) {
-			_ASSERT(0);
-			return 1;
-		}
-		ZeroMemory(m_cspickOutPut, sizeof(CSPickResult)* m_cscreatefacenum);
+		//m_cspickOutPut = (CSPickResult*)malloc(sizeof(CSPickResult) * m_cscreatefacenum);
+		//if (!m_cspickOutPut) {
+		//	_ASSERT(0);
+		//	return 1;
+		//}
+		//ZeroMemory(m_cspickOutPut, sizeof(CSPickResult)* m_cscreatefacenum);
 
-		m_cspickOutPut_save = (CSPickResult*)malloc(sizeof(CSPickResult) * m_cscreatefacenum);
-		if (!m_cspickOutPut_save) {
-			_ASSERT(0);
-			return 1;
-		}
-		ZeroMemory(m_cspickOutPut_save, sizeof(CSPickResult) * m_cscreatefacenum);
+		//m_cspickOutPut_save = (CSPickResult*)malloc(sizeof(CSPickResult) * m_cscreatefacenum);
+		//if (!m_cspickOutPut_save) {
+		//	_ASSERT(0);
+		//	return 1;
+		//}
+		//ZeroMemory(m_cspickOutPut_save, sizeof(CSPickResult) * m_cscreatefacenum);
 
+		m_cspickOutPut1.Init();
+		m_cspickOutPut1_save.Init();
 	}
 
 //################
@@ -771,8 +773,17 @@ int CSDeform::PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
 
 
 		//結果を初期化
-		//ZeroMemory(m_cspickOutPut, sizeof(CSPickResult) * m_cscreatefacenum);
-		//memcpy(m_outputPickSB.GetResourceOnCPU(), m_cspickOutPut, sizeof(CSPickResult) * m_cscreatefacenum);
+		CSPickResult* outputData = (CSPickResult*)m_outputPickSB1.GetResourceOnCPU();//要素数1
+		if (outputData) {
+			outputData->result[0] = 0;
+			outputData->result[1] = 0;
+			outputData->result[2] = 0;
+			outputData->result[3] = 0;
+			outputData->dbginfo[0] = 0;
+			outputData->dbginfo[1] = 0;
+			outputData->dbginfo[2] = 0;
+			outputData->dbginfo[3] = 0;
+		}
 
 		m_IMPick->Reset(m_CSPickPipelineState.Get());
 		m_IMPick->SetComputeRootSignature(m_CSPickrootSignature);
@@ -790,6 +801,13 @@ int CSDeform::PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
 
 	m_workingPick = false;
 
+	//計算結果はすぐにコピーしておく
+	CSPickResult* outputData1 = (CSPickResult*)m_outputPickSB1.GetResourceOnCPU();//要素数1
+	if (outputData1) {
+		m_cspickOutPut1_save = *outputData1;
+	}
+
+
 	return GetResultOfPickRay(hitfaceindex);
 }
 
@@ -805,70 +823,17 @@ int CSDeform::GetResultOfPickRay(int* hitfaceindex)
 		return 0;
 	}
 
-	CSPickResult* outputData = (CSPickResult*)m_outputPickSB.GetResourceOnCPU();
-	if (outputData) {
-		//memcpy(m_cspickOutPut_save, outputData, sizeof(CSPickResult) * m_csfacenum);//まとめてコピーしてから
-		int chkfaceindex;
-		for (chkfaceindex = 0; chkfaceindex < m_csfacenum; chkfaceindex++) {
-			int hitflag = (outputData + chkfaceindex)->result[0];
-			int justflag = (outputData + chkfaceindex)->result[1];
-			int hitface = (outputData + chkfaceindex)->result[2];
-			if ((hitflag == 1) && (hitface >= 0)) {
-				//当たりをみつけた場合
-				*hitfaceindex = hitface;
-				m_pickstate = 2;
-				return 1;//!!!!!!!!!!!!!!
-			}
-
-
-			//if ((outputData + chkfaceindex)->dbginfo[0] != 0) {
-			//	int dbgflag1 = 1;
-			//}
-			//if ((outputData + chkfaceindex)->dbginfo[1] != 0) {
-			//	int dbgflag1 = 1;
-			//}
-			//if ((outputData + chkfaceindex)->dbginfo[2] != 0) {
-			//	int dbgflag1 = 1;
-			//}
-			//if ((outputData + chkfaceindex)->dbginfo[3] != 0) {
-			//	int dbgflag1 = 1;
-			//}
-			//
-			//
-			//if ((outputData + chkfaceindex)->result[3] == 0) {
-			//	int dbgflag1 = 1;
-			//}
-			//if ((outputData + chkfaceindex)->result[3] == 1) {
-			//	int dbgflag1 = 1;
-			//}
-			//if ((outputData + chkfaceindex)->result[3] == 2) {
-			//	int dbgflag1 = 1;
-			//}
-			//if ((outputData + chkfaceindex)->result[3] == 3) {
-			//	int dbgflag1 = 1;
-			//}
-			//if ((outputData + chkfaceindex)->result[3] == 4) {
-			//	int dbgflag1 = 1;
-			//}
-			//if ((outputData + chkfaceindex)->result[3] == 5) {
-			//	int dbgflag1 = 1;
-			//}
-			//if ((outputData + chkfaceindex)->result[3] == 6) {
-			//	int dbgflag1 = 1;
-			//}
-			//if (((outputData + chkfaceindex)->result[3] > 0) ||
-			//	((outputData + chkfaceindex)->result[3] > 6)) {
-			//	int dbgflag1 = 1;
-			//}
-		}
-	}
-	else {
-		_ASSERT(0);
+	int hitflag = m_cspickOutPut1_save.result[0];//要素数1
+	int justflag = m_cspickOutPut1_save.result[1];//要素数1
+	int hitface = m_cspickOutPut1_save.result[2];//要素数1
+	if ((hitflag == 1) && (hitface >= 0)) {
+		//当たりをみつけた場合
+		*hitfaceindex = hitface;
+		m_pickstate = 2;
+		return 1;//!!!!!!!!!!!!!!
 	}
 
 	m_pickstate = 2;
-
 	return 0;
-
 }
 
