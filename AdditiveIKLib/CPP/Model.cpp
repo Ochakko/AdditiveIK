@@ -1180,7 +1180,7 @@ _ASSERT(m_bonelist[0]);
 	int matrixindex = 0;
 	SetBoneMatrixIndexReq(GetTopBone(false), &matrixindex);//2023/11/30
 
-
+	size_t debugcount = 0;
 	ChaMatrix offsetmat;
 	ChaMatrixIdentity( &offsetmat );
 	offsetmat.SetScale(ChaVector3(srcmult, srcmult, srcmult));
@@ -1188,6 +1188,9 @@ _ASSERT(m_bonelist[0]);
 	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
 		CMQOObject* curobj = itr->second;
 		if( curobj ){
+			
+			debugcount++;
+
 			CallF( curobj->MultMat( offsetmat ), return 1 );
 			CallF( curobj->MultVertex(), return 1; );
 
@@ -3638,7 +3641,7 @@ int CModel::CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, i
 {
 	//当たったら１、当たらなかったら０を返す。エラーも０を返す。
 	
-	//ComputeShader版　polymesh3, polymesh4両方OK
+	//ComputeShader版　polymesh4用
 
 	if (!pickinfo || !pickobj || !hitfaceindex) {
 		_ASSERT(0);
@@ -3654,6 +3657,29 @@ int CModel::CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, i
 	return colli;
 
 }
+
+int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex)
+{
+	//当たったら１、当たらなかったら０を返す。エラーも０を返す。
+
+	//CPU版　polymesh3用
+
+	if (!pickinfo || !pickobj || !hitfaceindex) {
+		_ASSERT(0);
+		return 0;
+	}
+	*hitfaceindex = -1;
+
+	ChaVector3 startlocal, dirlocal;
+	CalcMouseLocalRay(pickinfo, &startlocal, &dirlocal);
+	bool excludeinvface = true;
+	int colli = 0;
+	colli = pickobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, excludeinvface, hitfaceindex);
+	return colli;
+
+}
+
+
 
 int CModel::GetResultOfPickRay(CMQOObject* pickobj, int* hitfaceindex)
 {

@@ -106,6 +106,42 @@ namespace myRenderer
         {
             Init();
         };
+
+        double GetDistFromCamera() {
+            if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+                _ASSERT(0);
+                return 500000.0f;
+            }
+            double srcdist;
+            if (skyflag) {
+                srcdist = 500000.0f;//sort, reverse処理後にskyが最初に来るように
+            }
+            else {
+                if (mqoobj) {
+                    srcdist = mqoobj->GetDistFromCamera(refposindex);
+                }
+                else {
+                    srcdist = 500000.0f;
+                }
+            }
+            return srcdist;
+        };
+        bool GetPickOpeFlag(double srcprojfar, double srcpickdistrate) {
+            //pick最大距離より近い場合だけpickを行う(trueを返す)
+            bool pickopeflag = false;
+            if (srcpickdistrate >= 0.99999) {
+                pickopeflag = true;
+            }
+            else {
+                if (GetDistFromCamera() <= (srcprojfar * srcpickdistrate)) {
+                    pickopeflag = true;
+                }
+                else {
+                    pickopeflag = false;
+                }
+            }
+            return pickopeflag;
+        };
     }RENDEROBJ;
 
     typedef struct tag_rendersprite {

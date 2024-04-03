@@ -352,11 +352,17 @@ bool ChaScene::PickPolyMesh(int pickkind,
 				myRenderer::RENDEROBJ pickobj = pickvec[pickindex];
 				CModel* curmodel = pickobj.pmodel;
 				CMQOObject* curobj = pickobj.mqoobj;
-				if (curmodel && curobj) {
+
+				if (pickobj.GetPickOpeFlag(g_projfar, g_pickdistrate) && curmodel && curobj) {
 					UIPICKINFO pickinfo = *tmppickinfo;
 					int hitfaceindex = -1;
 					int colli = 0;
-					if (curobj->GetPm3() || curobj->GetPm4()) {
+					if (curobj->GetPm3()) {
+						//CPU版
+						colli = curmodel->CollisionPolyMesh3_Mouse(&pickinfo, curobj, &hitfaceindex);
+					}
+					else if (curobj->GetPm4()) {
+						//GPU版
 						colli = curmodel->CollisionPolyMesh_Mouse(&pickinfo, curobj, &hitfaceindex);
 					}
 					else {

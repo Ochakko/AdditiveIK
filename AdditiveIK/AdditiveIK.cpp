@@ -3610,6 +3610,10 @@ void InitApp()
 	s_befselectmqoobj = nullptr;
 	s_befselectmaterial = nullptr;
 
+	g_pickorder = 1;//2024/02/16
+	g_pickmeshflag = false;
+	g_pickdistrate = 0.5;
+
 	ZeroMemory(g_brushname, sizeof(WCHAR) * MAX_PATH);
 	wcscpy_s(g_brushname, MAX_PATH, L"Brush None Yet.");
 
@@ -3654,7 +3658,6 @@ void InitApp()
 
 	g_skydispflag = true;
 
-	g_pickorder = 1;//2024/02/16
 	g_hdrpbloom = true;
 	g_alphablending = true;
 	g_freefps = true;
@@ -4307,7 +4310,6 @@ void InitApp()
 	}
 
 	g_refposflag = false;
-	g_pickmeshflag = false;
 
 	s_temppath[0] = 0L;
 	::GetTempPathW(MAX_PATH, s_temppath);
@@ -24840,6 +24842,11 @@ int LODParams2Dlg(HWND hDlgWnd)
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_3L_LOD2), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_3L_LOD2), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
+	sliderpos = (int)(g_pickdistrate * 100.0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PICKDIST), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PICKDIST), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PICKDIST), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
 	//#####
 	//Text
 	//#####
@@ -24859,6 +24866,8 @@ int LODParams2Dlg(HWND hDlgWnd)
 	swprintf_s(strdlg, 256, L"LOD2:%.2f", g_lodrate3L[CHKINVIEW_LOD2]);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_3L_LOD2, strdlg);
 
+	swprintf_s(strdlg, 256, L"pickDist:%.2f", g_pickdistrate);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_PICKDIST, strdlg);
 
 	return 0;
 }
@@ -30398,6 +30407,14 @@ LRESULT CALLBACK GUILODDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			WCHAR strdlg[256] = { 0L };
 			swprintf_s(strdlg, 256, L"LOD2:%.2f", g_lodrate3L[CHKINVIEW_LOD2]);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_3L_LOD2, strdlg);
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_PICKDIST) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PICKDIST), TBM_GETPOS, 0, 0);
+			g_pickdistrate = (double)cursliderpos / 100.0;
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"pickDist:%.2f", g_pickdistrate);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_PICKDIST, strdlg);
 		}
 
 

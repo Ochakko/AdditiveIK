@@ -68,9 +68,11 @@ bool g_skydispflag = true;
 int g_skyindex = 0;
 
 bool g_refposflag = false;
-bool g_pickmeshflag = false;
 
+bool g_pickmeshflag = false;
 int g_pickorder = 1;
+double g_pickdistrate = 0.5;
+
 bool g_hdrpbloom = true;
 bool g_alphablending = true;
 bool g_freefps = true;
@@ -352,9 +354,11 @@ extern bool g_skydispflag;
 extern int g_skyindex;
 
 extern bool g_refposflag;
-extern bool g_pickmeshflag;
 
+extern bool g_pickmeshflag;
 extern int g_pickorder;
+extern double g_pickdistrate;
+
 extern bool g_hdrpbloom;
 extern bool g_alphablending;
 extern bool g_freefps;

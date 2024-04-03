@@ -107,7 +107,6 @@ class CMQOMaterial;
 #define REFPOSMAXNUM	4
 
 
-
 // * 100だとOpenFile()関数のスタックサイズが大きすぎて警告が出るので * 32に変更
 //#define MULTIPATH	(MAX_PATH * 100)
 #define MULTIPATH	(MAX_PATH * 32)

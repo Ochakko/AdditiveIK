@@ -458,11 +458,14 @@ namespace myRenderer
         int renderindex;
         for (renderindex = 0; renderindex < rendernum; renderindex++) {
             RENDEROBJ currenderobj = srcchascene->GetForwardRenderObj(renderindex);
-            if (currenderobj.pmodel && currenderobj.mqoobj) {
 
+            if (currenderobj.GetPickOpeFlag(g_projfar, g_pickdistrate) && currenderobj.pmodel && currenderobj.mqoobj) {
                 if (currenderobj.mqoobj->GetDispObj()) {
                     if (currenderobj.mqoobj->GetPm3()) {
-                        currenderobj.mqoobj->GetDispObj()->ComputeDeform(currenderobj);
+                        
+                        //2024/04/03 ビデオメモリ不足でTheHuntが読めなくなったので　pm3についてはComputeDeformしないで済むように
+                        
+                        //currenderobj.mqoobj->GetDispObj()->ComputeDeform(currenderobj);
                     }
                     else if (currenderobj.mqoobj->GetPm4()) {
                         currenderobj.mqoobj->GetDispObj()->ComputeDeform(currenderobj);

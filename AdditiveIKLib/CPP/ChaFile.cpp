@@ -146,6 +146,7 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 	CallF(Write2File("  <ProjFov>%.3f</ProjFov>\r\n", g_fovy * 180.0f / (float)PI), return 1);
 	CallF(Write2File("  <ProjNear>%.3f</ProjNear>\r\n", g_projnear), return 1);
 	CallF(Write2File("  <ProjFar>%.3f</ProjFar>\r\n", g_projfar), return 1);
+	CallF(Write2File("  <PickDistRate>%.2f</PickDistRate>\r\n", g_pickdistrate), return 1);
 
 	CallF(Write2File("  <2L_LOD0>%.2f</2L_LOD0>\r\n", g_lodrate2L[CHKINVIEW_LOD0]), return 1);
 	CallF(Write2File("  <2L_LOD1>%.2f</2L_LOD1>\r\n", g_lodrate2L[CHKINVIEW_LOD1]), return 1);
@@ -175,7 +176,9 @@ int CChaFile::WriteFileInfo()
 	//version 1003 : 2023/03/24 1.2.0.17 RC3
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>ChatCats3D_ProjectFile</kind>\r\n    <version>1003</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1004 : 2023/07/21 1.2.0.23へ向けて
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1005</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1005</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1006 : 2024/04/03 1.0.0.14へ向けて  <PickDistRate>追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1006</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -606,6 +609,13 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 		//g_projfar = tempfar;
 		getfar = true;//ReadCharaより後でセット
 	}
+	bool getpickdist = false;
+	float temppickdist = (float)g_pickdistrate;
+	result = Read_Float(&m_xmliobuf, "<PickDistRate>", "</PickDistRate>", &temppickdist);
+	if (result == 0) {
+		//g_projnear = tempnear;
+		getpickdist = true;//ReadCharaより後でセット
+	}
 
 	float templod = 0.01f;
 	result = Read_Float(&m_xmliobuf, "<2L_LOD0>", "</2L_LOD0>", &templod);
@@ -651,7 +661,9 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	if (getfar) {
 		g_projfar = tempfar;
 	}
-
+	if (getpickdist) {
+		g_pickdistrate = temppickdist;
+	}
 
 
 	m_xmliobuf.pos = 0;

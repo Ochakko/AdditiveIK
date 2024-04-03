@@ -110,7 +110,7 @@ public:
 	int CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3);
 	int CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4);
 	int CreateDispObj(ID3D12Device* pdev, CExtLine* extline);
-	int CreateIOBuffers(ID3D12Device* pdev);
+	int CreateIOBuffers(ID3D12Device* pdev, int vertextype);
 
 	int ComputeDeform(myRenderer::RENDEROBJ renderobj);
 	int CopyCSDeform();

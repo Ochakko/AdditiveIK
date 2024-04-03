@@ -10,7 +10,17 @@ https://github.com/Ochakko/AdditiveIK
 　IMComputeの使わないメンバを削除
 　　コンピュートシェーダ即時実行専用に
 
+　ビデオメモリ使用量の最適化
+　　TheHuntやMountEnvironmentのような大きめのステージ読み込み時にビデオメモリが足りないエラーが出たので最適化
+　　Deformコンピュートシェーダはスキンメッシュに対してのみ行う
+　　Pickコンピュートシェーダはスキンメッシュに対してだけ行う
+　　背景メッシュのPickについては無変換の座標に対してCPUで行う
+　　以前読めていたステージは読み込んでもメモリ不足エラーにならないように.
 
+　ProjAndLODプレートメニューにPickDistスライダーを追加
+　　PickDistRate x ProjectionFarの距離より遠いメッシュに対してはPick処理をスキップ
+　　PickDist 0.0でPick全スキップ、PickDist 1.0で視野内全メッシュに対してPick
+　
 
 
 2024/04/02
