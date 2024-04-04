@@ -348,10 +348,13 @@ namespace myRenderer
         ////rc.ClearDepthStencilView(m_mainRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);//mainRenderTargetにはDepthBufferは無い　NULL
         //rc.ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
 
-        if (g_pickmeshflag) {
-            ComputeDeform(srcchascene);
-        }
+
+        //2024/04/04 ComputeDeformはPickPolyMeshを使う時だけ呼び出すことにした
+        //if (g_pickmeshflag) {
+        //    ComputeDeform(srcchascene);
+        //}
         
+
         // シャドウマップへの描画
         if (g_enableshadow) {
             RenderToShadowMap(rc, srcchascene);

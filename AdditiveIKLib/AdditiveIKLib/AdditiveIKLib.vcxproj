@@ -188,6 +188,7 @@
     <ClCompile Include="..\CPP\ChooseColorFile.cpp" />
     <ClCompile Include="..\CPP\ColDlg.cpp" />
     <ClCompile Include="..\CPP\Collision.cpp" />
+    <ClCompile Include="..\CPP\CSChkInView.cpp" />
     <ClCompile Include="..\CPP\CSDeform.cpp" />
     <ClCompile Include="..\CPP\dbg.cpp" />
     <ClCompile Include="..\CPP\DispGroupFile.cpp" />
@@ -568,6 +569,7 @@
     <ClInclude Include="..\INCLUDE\ColDlg.h" />
     <ClInclude Include="..\INCLUDE\Collision.h" />
     <ClInclude Include="..\INCLUDE\ConstraintElem.h" />
+    <ClInclude Include="..\INCLUDE\CSChkInView.h" />
     <ClInclude Include="..\INCLUDE\CSDeform.h" />
     <ClInclude Include="..\INCLUDE\dbg.h" />
     <ClInclude Include="..\INCLUDE\DispGroupFile.h" />

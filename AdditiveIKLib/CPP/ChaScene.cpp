@@ -363,6 +363,10 @@ bool ChaScene::PickPolyMesh(int pickkind,
 					}
 					else if (curobj->GetPm4()) {
 						//GPU版
+						if (curobj->GetDispObj()) {
+							//座標変換　ボーン変形　即時実行のコンピュータシェーダ
+							curobj->GetDispObj()->ComputeDeform(pickobj);
+						}
 						colli = curmodel->CollisionPolyMesh_Mouse(&pickinfo, curobj, &hitfaceindex);
 					}
 					else {

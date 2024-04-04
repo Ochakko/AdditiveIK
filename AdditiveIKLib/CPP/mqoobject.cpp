@@ -3089,4 +3089,17 @@ CExtLine* CMQOObject::GetExtLine() {
 	return m_extline;
 };
 
+MODELBOUND CMQOObject::GetBound()
+{
+	MODELBOUND retmb;
+	retmb.Init();
+	if (m_pm3) {
+		retmb = m_pm3->GetBound();
+	}
+	else if (m_pm4) {
+		retmb = m_pm4->GetBound();
+	}
+	return retmb;
+}
+
 

@@ -52,6 +52,7 @@ class CThreadingCopyW2LW;
 class CThreadingRetarget;
 class CThreadingInitMp;
 class CNodeOnLoad;
+class CSChkInView;
 
 typedef struct funcmpparams
 {
@@ -1087,6 +1088,11 @@ private:
 
 	MODELBOUND CalcBoneBound();
 	int AddModelBound( MODELBOUND* mb, MODELBOUND* addmb );
+	int CreateChkInView();
+	ChaMatrix GetMatrixForChkInView(ChaMatrix matWorld);
+	void GetFrustumPlanes(ChaMatrix _vp, float* planes);
+	void GetFrustumCorners(ChaMatrix vp, float* points);
+
 
 	//int AddMotionPointAll(int srcmotid, double animleng);
 
@@ -2990,6 +2996,9 @@ private:
 	bool m_groundflag;
 
 	int m_updateslot;
+
+	CSChkInView* m_chkinview;
+
 };
 
 #endif

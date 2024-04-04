@@ -54,7 +54,7 @@
 
 #include <RigidElem.h>
 #include <ChaScene.h>
-
+#include <CSChkInView.h>
 
 #include <string>
 
@@ -494,6 +494,7 @@ int CModel::InitParams()
 	}
 
 	m_bound.Init();
+	m_chkinview = nullptr;
 
 	m_refposflag = false;
 	m_updateslot = 0;
@@ -714,6 +715,10 @@ int CModel::DestroyObjs()
 	//この後処理を忘れると　カメラアニメ(CAMERANODE)１つ当り240バイトメモリリーク
 	m_camerafbx.DestroyObjs();
 
+	if (m_chkinview) {
+		delete m_chkinview;
+		m_chkinview = nullptr;
+	}
 
 
 	InitParams();
@@ -895,6 +900,9 @@ int CModel::LoadMQO( ID3D12Device* pdev, const WCHAR* wfile, const WCHAR* modelf
 	CallF(MakeDispObj(), return 1);
 
 	MakeLaterMaterial();
+
+	int chkret = CreateChkInView();
+	_ASSERT(chkret == 0);
 
 	return 0;
 }
@@ -1278,6 +1286,9 @@ _ASSERT(m_bonelist[0]);
 
 		MakeLaterMaterial();//*.cha経由で読み込まれる場合は　ChaFile.cpp内でLaterTransparentタグ読み込み後に　MakeLaterMaterial()が改めて呼ばれる
 		SetLODNum();
+
+		int chkret = CreateChkInView();
+		_ASSERT(chkret == 0);
 
 		_ASSERT(m_bonelist[0]);
 
@@ -19463,6 +19474,11 @@ int CModel::SetIKStopFlag()
 
 int CModel::ChkInView(int refposindex)
 {
+	if (!m_chkinview || !g_cameraShadow) {
+		_ASSERT(0);
+		return 0;
+	}
+
 
 	if (GetSkyFlag() || (wcsstr(GetFileName(), L".mqo") != 0)) {
 
@@ -19503,33 +19519,75 @@ int CModel::ChkInView(int refposindex)
 		SetDistChkInView(0.01f, refposindex);//2024/03/25
 	}
 	else {
-
-		////###########################################
-		////モデル全体のバウンダリーで　まずは粗く判定
-		////###########################################
-		// モデルには非スキンメッシュとスキンメッシュが混在している
-		// 非スキンメッシュの判定はm_matWorldで行い
-		// スキンメッシュの判定は　hipsworld * m_matWorldで行う
-		// まとめて１回では判定できない
-		// よってコメントアウト
-		//m_frustum.ChkInView(m_bound, m_matWorld);
-		//if (m_frustum.GetVisible() == false) {
-		//	SetInView(false);//!!!!!!!!!!!!!!!!!!
-		//	return 0;
-		//}
-
-
-		//###############################################################
-		//モデル全体が視野内に掛かっている場合　メッシュごとに判定をする
-		// 
-		// CMQOObject::ChkInView()内で
-		// スキンメッシュ(CPolyMesh4)の場合
-		// clusterの最初のボーンを親方向へさかのぼりhipsを探す
-		// hipsのworldmatをm_matWorldに掛けて判定することにより
-		// モーションでの全体移動に対応
-		//###############################################################
-
 		if (GetSkyFlag() == false) {
+/*
+	int mBufferSize[4];//[0]:bsnum
+	Matrix mWorld;		//ワールド行列。
+	float camEye[4];
+	float camDir[4];
+	float params1[4];//[0]:BACKPOSCOEF, [1]:g_fovy, [2]:g_projfar, [3]:g_projnear
+	float lodrate2L[4];
+	float lodrate3L[4];
+	float shadowPos[4];
+	float shadowDir[4];
+	float shadowparams1[4];//[0]:shadowfov, [1]:shadowmaxdist(g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno])
+	float frustumPlanes[6][4];
+	float frustumCorners[8][4];
+	float shadowPlanes[6][4];
+	float shadowCorners[8][4];
+*/
+			CSConstantBufferChkInView cb;
+			cb.Init();
+			cb.mWorld = GetMatrixForChkInView(m_matWorld).TKMatrix();
+			cb.camEye[0] = g_camEye.x;
+			cb.camEye[1] = g_camEye.y;
+			cb.camEye[2] = g_camEye.z;
+			cb.camEye[3] = 1.0f;
+			ChaVector3 camdir = g_camtargetpos - g_camEye;
+			ChaVector3Normalize(&camdir, &camdir);
+			cb.params1[0] = CHKINVIEW_BACKPOSCOEF;
+			cb.params1[1] = (float)cos(g_fovy * 0.85f);
+			cb.params1[2] = g_projfar;
+			cb.params1[3] = g_projnear;
+			cb.lodrate2L[0] = g_lodrate2L[0];
+			cb.lodrate2L[1] = g_lodrate2L[1];
+			cb.lodrate2L[2] = g_lodrate2L[2];
+			cb.lodrate2L[3] = 1.0f;
+			cb.lodrate3L[0] = g_lodrate3L[0];
+			cb.lodrate3L[1] = g_lodrate3L[1];
+			cb.lodrate3L[2] = g_lodrate3L[2];
+			cb.lodrate3L[3] = 1.0f;
+
+			ChaVector3 lightpos;
+			if (g_cameraShadow) {
+				lightpos = ChaVector3(g_cameraShadow->GetPosition());
+			}
+			else {
+				lightpos = g_camEye;
+			}
+			cb.shadowPos[0] = lightpos.x;
+			cb.shadowPos[1] = lightpos.y;
+			cb.shadowPos[2] = lightpos.z;
+			cb.shadowPos[3] = 1.0f;
+			cb.shadowparams1[0] = (float)cos(g_shadowmap_fov[g_shadowmap_slotno]);
+			cb.shadowparams1[1] = g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
+	
+			GetFrustumPlanes(m_matVP, &(cb.frustumPlanes[0][0]));
+			GetFrustumCorners(m_matVP, &(cb.frustumCorners[0][0]));
+
+			Matrix shadowvp;
+			shadowvp = g_cameraShadow->GetViewProjectionMatrix();
+			ChaMatrix chashadowvp = ChaMatrix(shadowvp);
+			GetFrustumPlanes(chashadowvp, &(cb.shadowPlanes[0][0]));
+			GetFrustumCorners(chashadowvp, &(cb.shadowCorners[0][0]));
+
+			//#######################
+			//コンピュートシェーダで実行
+			//#######################
+			m_chkinview->ComputeChkInView(cb);
+
+
+
 			int objnum = 0;
 			int inviewnum = 0;
 			int inshadownum = 0;
@@ -19537,8 +19595,28 @@ int CModel::ChkInView(int refposindex)
 			for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 				CMQOObject* curobj = itr->second;
 				if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
-					//curobj->ChkInView(m_matWorld, m_matVP);
-					curobj->ChkInView(m_matWorld, m_matVP, refposindex);
+
+
+					//##################################
+					//コンピュートシェーダによる計算結果を取得
+					//##################################
+					CSInView csresult = m_chkinview->GetResultOfChkInView(curobj->GetName());
+
+
+					if (csresult.inview[0] == 1) {
+						curobj->SetInView(true, refposindex);
+					}
+					else {
+						curobj->SetInView(false, refposindex);
+					}
+					if (csresult.inview[1] == 1) {
+						curobj->SetInShadow(true, refposindex);
+					}
+					else {
+						curobj->SetInShadow(false, refposindex);
+					}
+
+
 					if (curobj->GetVisible(refposindex)) {
 						inviewnum++;
 					}
@@ -19582,6 +19660,129 @@ int CModel::ChkInView(int refposindex)
 
 	return 0;
 }
+
+
+//int CModel::ChkInView(int refposindex)
+//{
+//
+//	if (GetSkyFlag() || (wcsstr(GetFileName(), L".mqo") != 0)) {
+//
+//		//このアプリにおいては　mqoファイル(マニピュレータや地面格子)はクリッピングしない用途に使用しているので　常に描画するように
+//
+//		SetInView(true, refposindex);
+//		SetInShadow(false, refposindex);
+//
+//		map<int, CMQOObject*>::iterator itr;
+//		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+//			CMQOObject* curobj = itr->second;
+//			if (curobj) {
+//				curobj->SetInView(true, refposindex);
+//			}
+//		}
+//		if (GetSkyFlag()) {
+//			SetDistChkInView(500000.0f, refposindex);
+//		}
+//		else {
+//			SetDistChkInView(0.01f, refposindex);//2024/03/25
+//		}
+//	}
+//	else if (m_object.empty() || (GetFromBvhFlag())) {
+//
+//		//bvhにはメッシュが無いが　UpdateMatrixを実行するためにInViewである必要
+//
+//		SetInView(true, refposindex);
+//		SetInShadow(false, refposindex);
+//
+//		map<int, CMQOObject*>::iterator itr;
+//		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+//			CMQOObject* curobj = itr->second;
+//			if (curobj) {
+//				curobj->SetInView(true, refposindex);
+//			}
+//		}
+//
+//		SetDistChkInView(0.01f, refposindex);//2024/03/25
+//	}
+//	else {
+//
+//		////###########################################
+//		////モデル全体のバウンダリーで　まずは粗く判定
+//		////###########################################
+//		// モデルには非スキンメッシュとスキンメッシュが混在している
+//		// 非スキンメッシュの判定はm_matWorldで行い
+//		// スキンメッシュの判定は　hipsworld * m_matWorldで行う
+//		// まとめて１回では判定できない
+//		// よってコメントアウト
+//		//m_frustum.ChkInView(m_bound, m_matWorld);
+//		//if (m_frustum.GetVisible() == false) {
+//		//	SetInView(false);//!!!!!!!!!!!!!!!!!!
+//		//	return 0;
+//		//}
+//
+//
+//		//###############################################################
+//		//モデル全体が視野内に掛かっている場合　メッシュごとに判定をする
+//		// 
+//		// CMQOObject::ChkInView()内で
+//		// スキンメッシュ(CPolyMesh4)の場合
+//		// clusterの最初のボーンを親方向へさかのぼりhipsを探す
+//		// hipsのworldmatをm_matWorldに掛けて判定することにより
+//		// モーションでの全体移動に対応
+//		//###############################################################
+//
+//		if (GetSkyFlag() == false) {
+//			int objnum = 0;
+//			int inviewnum = 0;
+//			int inshadownum = 0;
+//			map<int, CMQOObject*>::iterator itr;
+//			for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+//				CMQOObject* curobj = itr->second;
+//				if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
+//					//curobj->ChkInView(m_matWorld, m_matVP);
+//					curobj->ChkInView(m_matWorld, m_matVP, refposindex);
+//					if (curobj->GetVisible(refposindex)) {
+//						inviewnum++;
+//					}
+//					if (curobj->GetInShadow(refposindex)) {
+//						inshadownum++;
+//					}
+//					objnum++;
+//				}
+//			}
+//
+//			if (inviewnum != 0) {
+//				SetInView(true, refposindex);//メッシュ１つでも視野内にある場合には　モデルとして視野内のマークをする
+//			}
+//			else {
+//				SetInView(false, refposindex);//全てのメッシュが視野外の場合　モデルとして視野外のマークをする
+//			}
+//			if (inshadownum != 0) {
+//				SetInShadow(true, refposindex);
+//			}
+//			else {
+//				SetInShadow(false, refposindex);
+//			}
+//		}
+//		else {
+//			//skyは視野内の一番遠く
+//
+//			SetInView(true, refposindex);
+//			SetInShadow(false, refposindex);
+//
+//			map<int, CMQOObject*>::iterator itr;
+//			for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+//				CMQOObject* curobj = itr->second;
+//				if (curobj) {
+//					curobj->SetInView(true, refposindex);
+//				}
+//			}
+//			SetDistChkInView(0.0f, refposindex);//2024/03/25 skyは不透明描画時にソートする際に一番最初になるように
+//		}
+//	}
+//
+//
+//	return 0;
+//}
 
 int CModel::GetCurrentMotID()
 {
@@ -20335,4 +20536,225 @@ void CModel::SetDistChkInView(float srcval, int refposindex)
 		}
 	}
 
+}
+
+
+int CModel::CreateChkInView()
+{
+	m_chkinview = new CSChkInView();
+	if (!m_chkinview) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	if (GetSkyFlag() || (wcsstr(GetFileName(), L".mqo") != 0)) {
+
+		//このアプリにおいては　mqoファイル(マニピュレータや地面格子)はクリッピングしない用途に使用しているので　常に描画するように
+
+		map<int, CMQOObject*>::iterator itr;
+		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+			CMQOObject* curobj = itr->second;
+			if (curobj) {
+				MODELBOUND mb;
+				mb.Init();
+				int forceinview = 1;
+				int forceinshadow = 0;
+				m_chkinview->AddBoundary(curobj->GetName(), mb, 1, forceinview, forceinshadow);
+			}
+		}
+		CallF(m_chkinview->CreateDispObj(m_pdev), return 1);
+	}
+	else if (m_object.empty() || (GetFromBvhFlag())) {
+
+		//bvhにはメッシュが無いが　UpdateMatrixを実行するためにInViewである必要
+
+		map<int, CMQOObject*>::iterator itr;
+		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+			CMQOObject* curobj = itr->second;
+			if (curobj) {
+				MODELBOUND mb;
+				mb.Init();
+				int forceinview = 1;
+				int forceinshadow = 0;
+				m_chkinview->AddBoundary(curobj->GetName(), mb, 1, forceinview, forceinshadow);
+			}
+		}
+		CallF(m_chkinview->CreateDispObj(m_pdev), return 1);
+	}
+	else {
+
+		////###########################################
+		////モデル全体のバウンダリーで　まずは粗く判定
+		////###########################################
+		// モデルには非スキンメッシュとスキンメッシュが混在している
+		// 非スキンメッシュの判定はm_matWorldで行い
+		// スキンメッシュの判定は　hipsworld * m_matWorldで行う
+		// まとめて１回では判定できない
+		// よってコメントアウト
+		//m_frustum.ChkInView(m_bound, m_matWorld);
+		//if (m_frustum.GetVisible() == false) {
+		//	SetInView(false);//!!!!!!!!!!!!!!!!!!
+		//	return 0;
+		//}
+
+
+		//###############################################################
+		//モデル全体が視野内に掛かっている場合　メッシュごとに判定をする
+		// 
+		// CMQOObject::ChkInView()内で
+		// スキンメッシュ(CPolyMesh4)の場合
+		// clusterの最初のボーンを親方向へさかのぼりhipsを探す
+		// hipsのworldmatをm_matWorldに掛けて判定することにより
+		// モーションでの全体移動に対応
+		//###############################################################
+
+		if (GetSkyFlag() == false) {
+			map<int, CMQOObject*>::iterator itr;
+			for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+				CMQOObject* curobj = itr->second;
+				if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
+					MODELBOUND mb;
+					mb.Init();
+					mb = curobj->GetBound();
+					int forceinview = -1;
+					int forceinshadow = -1;
+					m_chkinview->AddBoundary(curobj->GetName(), mb, curobj->GetLODNum(), forceinview, forceinshadow);
+				}
+			}
+			CallF(m_chkinview->CreateDispObj(m_pdev), return 1);
+		}
+		else {
+			//skyは視野内の一番遠く
+
+			map<int, CMQOObject*>::iterator itr;
+			for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+				CMQOObject* curobj = itr->second;
+				if (curobj) {
+					MODELBOUND mb;
+					mb.Init();
+					int forceinview = 1;
+					int forceinshadow = 0;
+					m_chkinview->AddBoundary(curobj->GetName(), mb, 1, forceinview, forceinshadow);
+				}
+			}
+			CallF(m_chkinview->CreateDispObj(m_pdev), return 1);
+		}
+	}
+
+	return 0;
+}
+
+ChaMatrix CModel::GetMatrixForChkInView(ChaMatrix matWorld)
+{
+	ChaMatrix chkmatworld;
+	chkmatworld.SetIdentity();
+
+	if (GetBoneForMotionSize() == 0) {
+		chkmatworld = matWorld;
+	}
+	else {
+		CBone* hipsbone = nullptr;
+		GetHipsBoneReq(GetTopBone(), &hipsbone);
+		if (hipsbone) {
+			int currentmotid = GetCurrentMotID();
+			if (currentmotid > 0) {
+				double roundingframe = (double)((int)GetCurrentFrame());
+				ChaMatrix hipsworld = hipsbone->GetWorldMat(g_limitdegflag, currentmotid, roundingframe, 0);
+				chkmatworld = hipsworld * matWorld;
+			}
+			else {
+				chkmatworld = matWorld;
+			}
+		}
+		else {
+			chkmatworld = matWorld;
+		}
+	}
+
+	return chkmatworld;
+}
+
+
+void CModel::GetFrustumPlanes(ChaMatrix vp, float* planes)
+{
+	if (!planes) {
+		_ASSERT(0);
+		return;
+	}
+
+	//vp.transpose();
+
+	//ChaVector4 vright = ChaVector4(vp.data[MATI_11], vp.data[MATI_12], vp.data[MATI_13], vp.data[MATI_14]);
+	//ChaVector4 vup = ChaVector4(vp.data[MATI_21], vp.data[MATI_22], vp.data[MATI_23], vp.data[MATI_24]);
+	//ChaVector4 vforward = ChaVector4(vp.data[MATI_31], vp.data[MATI_32], vp.data[MATI_33], vp.data[MATI_34]);
+	//ChaVector4 vpos = ChaVector4(vp.data[MATI_41], vp.data[MATI_42], vp.data[MATI_43], vp.data[MATI_44]);
+
+	ChaVector4 vright = ChaVector4(vp.data[MATI_11], vp.data[MATI_21], vp.data[MATI_31], vp.data[MATI_41]);
+	ChaVector4 vup = ChaVector4(vp.data[MATI_12], vp.data[MATI_22], vp.data[MATI_32], vp.data[MATI_42]);
+	ChaVector4 vforward = ChaVector4(vp.data[MATI_13], vp.data[MATI_23], vp.data[MATI_33], vp.data[MATI_43]);
+	ChaVector4 vpos = ChaVector4(vp.data[MATI_14], vp.data[MATI_24], vp.data[MATI_34], vp.data[MATI_44]);
+
+
+	ChaVector4 planes0 = vpos + vright;		// left
+	ChaVector4 planes1 = vpos - vright;		// right
+	ChaVector4 planes2 = vpos + vup;			// bottom
+	ChaVector4 planes3 = vpos - vup;			// top
+	ChaVector4 planes4 = vforward;			// near
+	ChaVector4 planes5 = vpos - vforward;	// far
+
+	*(planes) = planes0.x;
+	*(planes + 1) = planes0.y;
+	*(planes + 2) = planes0.z;
+	*(planes + 3) = planes0.w;
+
+	*(planes + 4) = planes1.x;
+	*(planes + 4 + 1) = planes1.y;
+	*(planes + 4 + 2) = planes1.z;
+	*(planes + 4 + 3) = planes1.w;
+
+	*(planes + 8) = planes2.x;
+	*(planes + 8 + 1) = planes2.y;
+	*(planes + 8 + 2) = planes2.z;
+	*(planes + 8 + 3) = planes2.w;
+
+	*(planes + 12) = planes3.x;
+	*(planes + 12 + 1) = planes3.y;
+	*(planes + 12 + 2) = planes3.z;
+	*(planes + 12 + 3) = planes3.w;
+
+	*(planes + 16) = planes4.x;
+	*(planes + 16 + 1) = planes4.y;
+	*(planes + 16 + 2) = planes4.z;
+	*(planes + 16 + 3) = planes4.w;
+
+	*(planes + 20) = planes5.x;
+	*(planes + 20 + 1) = planes5.y;
+	*(planes + 20 + 2) = planes5.z;
+	*(planes + 20 + 3) = planes5.w;
+
+}
+
+void CModel::GetFrustumCorners(ChaMatrix vp, float* points)
+{
+	ChaVector3 corners[] = {
+		ChaVector3(-1.0f, -1.0f, -1.0f),
+		ChaVector3(1.0f, -1.0f, -1.0f),
+		ChaVector3(1.0f,  1.0f, -1.0f),
+		ChaVector3(-1.0f,  1.0f, -1.0f),
+		ChaVector3(-1.0f, -1.0f,  1.0f),
+		ChaVector3(1.0f, -1.0f,  1.0f),
+		ChaVector3(1.0f,  1.0f,  1.0f),
+		ChaVector3(-1.0f,  1.0f,  1.0f) };
+
+	ChaMatrix invVP = ChaMatrixInv(vp);
+
+	for (int i = 0; i < 8; i++)
+	{
+		ChaVector3 q;
+		ChaVector3TransformCoord(&q, &(corners[i]), &invVP);
+		*(points + 4 * i) = q.x;
+		*(points + 4 * i + 1) = q.y;
+		*(points + 4 * i + 2) = q.z;
+		*(points + 4 * i + 3) = 1.0f;
+	}
 }

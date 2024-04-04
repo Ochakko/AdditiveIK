@@ -76,6 +76,7 @@
     <ClCompile Include="..\CPP\FogParamsFile.cpp" />
     <ClCompile Include="..\CPP\DofParamsFile.cpp" />
     <ClCompile Include="..\CPP\CSDeform.cpp" />
+    <ClCompile Include="..\CPP\CSChkInView.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\BTSRC\BulletCollision\CollisionDispatch\SphereTriangleDetector.h" />
@@ -1043,6 +1044,7 @@
     <ClInclude Include="..\INCLUDE\FogParamsFile.h" />
     <ClInclude Include="..\INCLUDE\DofParamsFile.h" />
     <ClInclude Include="..\INCLUDE\CSDeform.h" />
+    <ClInclude Include="..\INCLUDE\CSChkInView.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\BTSRC\BulletInverseDynamics\premake4.lua">

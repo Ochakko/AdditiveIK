@@ -4,6 +4,19 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/04/04
+　ChkInViewをコンピュートシェーダで実行
+　　シェーダリソース数が増えすぎないようにCModelに１つCSChkInViewクラスを作成して実行
+　　視錐体で計算.(今までは境界球計算していた)
+　　多少高速化(ChkInView処理よりもDOFの処理の方が重いのでDOFをオフにして比べると効果が分かり易い)
+
+　ComputeDeformコンピュートシェーダの実行頻度変更
+　　現在はまだPickのときにしかDefrom結果を使わないので、DeformはPickのときだけ実行するように修正
+
+
+
+
+
 2024/04/03
 　Pickシェーダの出力要素数を1にして最適化
 
@@ -21,7 +34,6 @@ https://github.com/Ochakko/AdditiveIK
 　　PickDistRate x ProjectionFarの距離より遠いメッシュに対してはPick処理をスキップ
 　　PickDist 0.0でPick全スキップ、PickDist 1.0で視野内全メッシュに対してPick
 　
-
 
 2024/04/02
 　座標変換だけではなくPick処理本体もコンピュートシェーダ化

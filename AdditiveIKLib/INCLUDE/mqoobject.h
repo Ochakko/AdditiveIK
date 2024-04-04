@@ -159,6 +159,8 @@ public:
 	int MakeLaterMaterial(std::vector<std::string> latername);
 	bool ExistInLaterMaterial(CMQOMaterial* srcmat);
 
+	MODELBOUND GetBound();
+
 private:
 	void InitParams();
 
