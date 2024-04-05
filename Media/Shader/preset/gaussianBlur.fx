@@ -78,29 +78,31 @@ PS_BlurInput VSXBlur(VSInput In)
     // 基準テクセルのUV座標を記録
     float2 tex = In.uv;
 
+    float divTexSizeX = 1.0f / texSize.x;
+    
     // 基準テクセルからU座標を+1テクセルずらすためのオフセットを計算する
-    Out.tex0.xy = float2(1.0f / texSize.x, 0.0f);
+    Out.tex0.xy = float2(divTexSizeX, 0.0f);
 
     // 基準テクセルからU座標を+3テクセルずらすためのオフセットを計算する
-    Out.tex1.xy = float2(3.0f / texSize.x, 0.0f);
+    Out.tex1.xy = float2(3.0f * divTexSizeX, 0.0f);
 
     // 基準テクセルからU座標を+5テクセルずらすためのオフセットを計算する
-    Out.tex2.xy = float2(5.0f / texSize.x, 0.0f);
+    Out.tex2.xy = float2(5.0f * divTexSizeX, 0.0f);
 
     // 基準テクセルからU座標を+7テクセルずらすためのオフセットを計算する
-    Out.tex3.xy = float2(7.0f / texSize.x, 0.0f);
+    Out.tex3.xy = float2(7.0f * divTexSizeX, 0.0f);
 
     // 基準テクセルからU座標を+9テクセルずらすためのオフセットを計算する
-    Out.tex4.xy = float2(9.0f / texSize.x, 0.0f);
+    Out.tex4.xy = float2(9.0f * divTexSizeX, 0.0f);
 
     // 基準テクセルからU座標を+11テクセルずらすためのオフセットを計算する
-    Out.tex5.xy = float2(11.0f / texSize.x, 0.0f);
+    Out.tex5.xy = float2(11.0f * divTexSizeX, 0.0f);
 
     // 基準テクセルからU座標を+13テクセルずらすためのオフセットを計算する
-    Out.tex6.xy = float2(13.0f / texSize.x, 0.0f);
+    Out.tex6.xy = float2(13.0f * divTexSizeX, 0.0f);
 
     // 基準テクセルからU座標を+15テクセルずらすためのオフセットを計算する
-    Out.tex7.xy = float2(15.0f / texSize.x, 0.0f);
+    Out.tex7.xy = float2(15.0f * divTexSizeX, 0.0f);
 
     // オフセットに-1を掛けてマイナス方向のオフセットも計算する
     Out.tex0.zw = Out.tex0.xy * -1.0f;
@@ -146,29 +148,31 @@ PS_BlurInput VSYBlur(VSInput In)
     // 基準テクセルのUV座標を記録
     float2 tex = In.uv;
 
+    float divTexSizeY = 1.0f / texSize.y;
+    
     // 基準テクセルからV座標を+1テクセルずらすためのオフセットを計算する
-    Out.tex0.xy = float2(0.0f, 1.0f / texSize.y);
+    Out.tex0.xy = float2(0.0f, divTexSizeY);
 
     // 基準テクセルからV座標を+3テクセルずらすためのオフセットを計算する
-    Out.tex1.xy = float2(0.0f, 3.0f / texSize.y);
+    Out.tex1.xy = float2(0.0f, 3.0f * divTexSizeY);
 
     // 基準テクセルからV座標を+5テクセルずらすためのオフセットを計算する
-    Out.tex2.xy = float2(0.0f, 5.0f / texSize.y);
+    Out.tex2.xy = float2(0.0f, 5.0f * divTexSizeY);
 
     // 基準テクセルからV座標を+7テクセルずらすためのオフセットを計算する
-    Out.tex3.xy = float2(0.0f, 7.0f / texSize.y);
+    Out.tex3.xy = float2(0.0f, 7.0f * divTexSizeY);
 
     // 基準テクセルからV座標を+9テクセルずらすためのオフセットを計算する
-    Out.tex4.xy = float2(0.0f, 9.0f / texSize.y);
+    Out.tex4.xy = float2(0.0f, 9.0f * divTexSizeY);
 
     // 基準テクセルからV座標を+11テクセルずらすためのオフセットを計算する
-    Out.tex5.xy = float2(0.0f, 11.0f / texSize.y);
+    Out.tex5.xy = float2(0.0f, 11.0f * divTexSizeY);
 
     // 基準テクセルからV座標を+13テクセルずらすためのオフセットを計算する
-    Out.tex6.xy = float2(0.0f, 13.0f / texSize.y);
+    Out.tex6.xy = float2(0.0f, 13.0f * divTexSizeY);
 
     // 基準テクセルからV座標を+15テクセルずらすためのオフセットを計算する
-    Out.tex7.xy = float2(0.0f, 15.0f / texSize.y);
+    Out.tex7.xy = float2(0.0f, 15.0f * divTexSizeY);
 
     // オフセットに-1を掛けてマイナス方向のオフセットも計算する
     Out.tex0.zw = Out.tex0.xy * -1.0f;

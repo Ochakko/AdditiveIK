@@ -433,9 +433,15 @@ namespace myRenderer
             int renderindex;
             for (renderindex = 0; renderindex < rendernum; renderindex++) {
                 RENDEROBJ currenderobj = srcchascene->GetForwardRenderObj(renderindex);
-                if (currenderobj.pmodel && (currenderobj.pmodel->GetSkyFlag() == false) &&
-                    currenderobj.mqoobj &&
-                    (currenderobj.renderkind == RENDERKIND_SHADOWMAP)) {
+
+                //ChaScene::RenderModels()内にて
+                //RENDERKIND_SHADOWMAPの場合にはGetInShadow(0)とGetCancelShadow()はチェック済
+                if ((currenderobj.renderkind == RENDERKIND_SHADOWMAP) &&
+                    currenderobj.pmodel && 
+                    (currenderobj.pmodel->GetSkyFlag() == false) &&
+                    currenderobj.mqoobj && 
+                    currenderobj.mqoobj->GetDispObj()) {
+
                     RenderPolyMeshShadowMap(rc, currenderobj);
                 }
             }
@@ -572,23 +578,29 @@ namespace myRenderer
             rc->ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
         }
 
+
         int rendernum = srcchascene->GetForwardRenderObjNum();
         int renderindex;
         for (renderindex = 0; renderindex < rendernum; renderindex++) {
             RENDEROBJ currenderobj = srcchascene->GetForwardRenderObj(renderindex);
-            if (currenderobj.pmodel && currenderobj.mqoobj) {
-                if (g_enableshadow) {
-                    if ((currenderobj.pmodel->GetSkyFlag() == false) &&
-                        (currenderobj.renderkind == RENDERKIND_SHADOWMAP)) {
-                        RenderPolyMeshShadowReciever(rc, currenderobj);
-                    }
-                    else {
-                        RenderPolyMesh(rc, currenderobj);
-                    }
+            if (g_enableshadow) {
+                //ChaScene::RenderModels()内にて
+                //RENDERKIND_SHADOWMAPの場合にはGetInShadow(0)とGetCancelShadow()はチェック済
+                if ((currenderobj.renderkind == RENDERKIND_SHADOWMAP) &&
+                    currenderobj.pmodel && 
+                    (currenderobj.pmodel->GetSkyFlag() == false) &&
+                    currenderobj.mqoobj && 
+                    currenderobj.mqoobj->GetDispObj()) {
+
+                    RenderPolyMeshShadowReciever(rc, currenderobj);
                 }
-                else {
+                else if(currenderobj.pmodel && currenderobj.mqoobj){
+
                     RenderPolyMesh(rc, currenderobj);
                 }
+            }
+            else {
+                RenderPolyMesh(rc, currenderobj);
             }
         }
 
@@ -895,23 +907,15 @@ namespace myRenderer
             return;
         }
 
-        if (currenderobj.mqoobj) {
-            if (currenderobj.mqoobj->GetDispObj()) {
-                if (currenderobj.mqoobj->GetPm3()) {
-                    if (currenderobj.pmodel->GetSkyFlag() == false) {
-                        currenderobj.mqoobj->GetDispObj()->RenderShadowMapPM3(rc, currenderobj);
-                    }
-                }
-                else if (currenderobj.mqoobj->GetPm4()) {
-                    currenderobj.mqoobj->GetDispObj()->RenderShadowMap(rc, currenderobj);
-                }
+        //GetSkyFlag(), GetInShadow()などは呼び出し側でチェック済
+
+        if (currenderobj.pmodel && currenderobj.mqoobj && currenderobj.mqoobj->GetDispObj()) {
+            if (currenderobj.mqoobj->GetPm3()) {
+                currenderobj.mqoobj->GetDispObj()->RenderShadowMapPM3(rc, currenderobj);
             }
-            //else if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
-            //    //################################
-            //    //GetDispObj()ではなくGetDispLine()
-            //    //################################
-            //    currenderobj.mqoobj->GetDispLine()->RenderLine(rc, currenderobj);
-            //}
+            else if (currenderobj.mqoobj->GetPm4()) {
+                currenderobj.mqoobj->GetDispObj()->RenderShadowMap(rc, currenderobj);
+            }
         }
     }
 
@@ -921,6 +925,10 @@ namespace myRenderer
             _ASSERT(0);
             return;
         }
+
+
+        //GetSkyFlag(), GetInShadow()などは呼び出し側でチェック済
+
 
         if (currenderobj.mqoobj) {
             if (currenderobj.mqoobj->GetDispObj()) {

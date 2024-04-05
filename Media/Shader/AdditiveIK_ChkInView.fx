@@ -68,20 +68,10 @@ int isBoxInFrustum(float4 bbmin, float4 bbmax)
         r += (dot(frustumPlanes[i], float4(bbmin.x, bbmax.y, bbmax.z, 1.0f)) < 0.f) ? 1 : 0;
         r += (dot(frustumPlanes[i], float4(bbmax.x, bbmax.y, bbmax.z, 1.0f)) < 0.f) ? 1 : 0;
                 
-        //r += (dot(frustumPlanes[i], float4(bbmin.x, bbmin.y, bbmin.z, 0.0f)) < 0.f) ? 1 : 0;
-        //r += (dot(frustumPlanes[i], float4(bbmax.x, bbmin.y, bbmin.z, 0.0f)) < 0.f) ? 1 : 0;
-        //r += (dot(frustumPlanes[i], float4(bbmin.x, bbmax.y, bbmin.z, 0.0f)) < 0.f) ? 1 : 0;
-        //r += (dot(frustumPlanes[i], float4(bbmax.x, bbmax.y, bbmin.z, 0.0f)) < 0.f) ? 1 : 0;
-        //r += (dot(frustumPlanes[i], float4(bbmin.x, bbmin.y, bbmax.z, 0.0f)) < 0.f) ? 1 : 0;
-        //r += (dot(frustumPlanes[i], float4(bbmax.x, bbmin.y, bbmax.z, 0.0f)) < 0.f) ? 1 : 0;
-        //r += (dot(frustumPlanes[i], float4(bbmin.x, bbmax.y, bbmax.z, 0.0f)) < 0.f) ? 1 : 0;
-        //r += (dot(frustumPlanes[i], float4(bbmax.x, bbmax.y, bbmax.z, 0.0f)) < 0.f) ? 1 : 0;
- 
-        
         if (r == 8)
             return 0;
     }
-
+        
     int r = 0;
     r = 0;
     for (int a = 0; a < 8; a++)
@@ -131,19 +121,10 @@ int isBoxInShadow(float4 bbmin, float4 bbmax)
         r += (dot(shadowPlanes[i], float4(bbmin.x, bbmax.y, bbmax.z, 1.0f)) < 0.f) ? 1 : 0;
         r += (dot(shadowPlanes[i], float4(bbmax.x, bbmax.y, bbmax.z, 1.0f)) < 0.f) ? 1 : 0;
 
-        //r += (dot(shadowPlanes[i], float4(bbmin.x, bbmin.y, bbmin.z, 0.0f)) < 0.f) ? 1 : 0;
-        //r += (dot(shadowPlanes[i], float4(bbmax.x, bbmin.y, bbmin.z, 0.0f)) < 0.f) ? 1 : 0;
-        //r += (dot(shadowPlanes[i], float4(bbmin.x, bbmax.y, bbmin.z, 0.0f)) < 0.f) ? 1 : 0;
-        //r += (dot(shadowPlanes[i], float4(bbmax.x, bbmax.y, bbmin.z, 0.0f)) < 0.f) ? 1 : 0;
-        //r += (dot(shadowPlanes[i], float4(bbmin.x, bbmin.y, bbmax.z, 0.0f)) < 0.f) ? 1 : 0;
-        //r += (dot(shadowPlanes[i], float4(bbmax.x, bbmin.y, bbmax.z, 0.0f)) < 0.f) ? 1 : 0;
-        //r += (dot(shadowPlanes[i], float4(bbmin.x, bbmax.y, bbmax.z, 0.0f)) < 0.f) ? 1 : 0;
-        //r += (dot(shadowPlanes[i], float4(bbmax.x, bbmax.y, bbmax.z, 0.0f)) < 0.f) ? 1 : 0;
-
         if (r == 8)
             return 0;
     }
-
+        
     int r = 0;
     r = 0;
     for (int a = 0; a < 8; a++)
@@ -175,7 +156,7 @@ int isBoxInShadow(float4 bbmin, float4 bbmax)
         r += ((shadowCorners[f].z < bbmin.z) ? 1 : 0);
     if (r == 8)
         return 0;
-
+    
     return 1;
 }
 
@@ -216,14 +197,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
         else if (srclodno == 0)
         {
             lod_mindist = 0.0f;
-            if (srclodnum == 3)
-            { //3段階LOD
-                lod_maxdist = params1.z * lodrate3L[srclodno];
-            }
-            else
-            { //2段階LOD
-                lod_maxdist = params1.z * lodrate2L[srclodno];
-            }
+            lod_maxdist = (srclodnum == 3) ? (params1.z * lodrate3L[srclodno]) : (params1.z * lodrate2L[srclodno]);
         }
         else if ((srclodno == 1) || (srclodno == 2))
         {
@@ -248,14 +222,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
         int lodinview;
         if (srclodno >= 0)
         {
-            if ((dist_cam2obj < lod_maxdist) && (dist_cam2obj >= lod_mindist))
-            {
-                lodinview = 1;
-            }
-            else
-            {
-                lodinview = 0;
-            }
+            lodinview = ((dist_cam2obj < lod_maxdist) && (dist_cam2obj >= lod_mindist)) ? 1 : 0;
         }
         else
         {
@@ -264,15 +231,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 	//##################
 	//LODがvisible && 
 	//##################
-        if ((lodinview == 1) && (inFrustum == 1))
-        //if (inFrustum == 1)
-        {
-            g_outputData[dataIndex].inview[0] = 1;
-        }
-        else
-        {
-            g_outputData[dataIndex].inview[0] = 0;
-        }
+        g_outputData[dataIndex].inview[0] = ((lodinview == 1) && (inFrustum == 1)) ? 1 : 0;
         g_outputData[dataIndex].dist[0] = dist_cam2obj;
     }
     else
@@ -291,16 +250,8 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 		//#####################################################################
 		//視野内の場合には　シャドウマップがシャドウ射影範囲に入っているかどうかの判定をする
 		//#####################################################################
-
             int inShadow = isBoxInShadow(g_inputData[dataIndex].bbmin, g_inputData[dataIndex].bbmax);
-            if (inShadow == 1)
-            {
-                g_outputData[dataIndex].inview[1] = 1;
-            }
-            else
-            {
-                g_outputData[dataIndex].inview[1] = 0;
-            }
+            g_outputData[dataIndex].inview[1] = (inShadow == 1) ? 1 : 0;
         }
         else
         {

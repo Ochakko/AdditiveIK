@@ -68,15 +68,15 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     //########################################################################################
     
     
-    g_output_PickNoBone[0].dbginfo[0] = 999;
+    //g_output_PickNoBone[0].dbginfo[0] = 999;
         
     int index1 = g_inputIndices_PickNoBone[faceIndex].index[0];
     int index2 = g_inputIndices_PickNoBone[faceIndex].index[1];
     int index3 = g_inputIndices_PickNoBone[faceIndex].index[2];
     
-    g_output_PickNoBone[0].dbginfo[1] = index1;
-    g_output_PickNoBone[0].dbginfo[2] = index2;
-    g_output_PickNoBone[0].dbginfo[3] = index3;
+    //g_output_PickNoBone[0].dbginfo[1] = index1;
+    //g_output_PickNoBone[0].dbginfo[2] = index2;
+    //g_output_PickNoBone[0].dbginfo[3] = index3;
     
     
     float3 point1 = g_inputVertex_PickNoBone[index1].pos.xyz;
@@ -102,13 +102,13 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     float dotface = dot(abc, ev);
     if (dotface == 0.0f)
     {
-        g_output_PickNoBone[0].dbginfo[0] = 1;
+        //g_output_PickNoBone[0].dbginfo[0] = 1;
         return;
     }
     if ((mFlags[0] == 0) && (dotface < 0.0f))
     {
 		//裏面は当たらない
-        g_output_PickNoBone[0].dbginfo[0] = 2;
+        //g_output_PickNoBone[0].dbginfo[0] = 2;
         return;
     }
 
@@ -118,7 +118,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     {
         g_output_PickNoBone[0].result[1] = 1; //justval !!!
         g_output_PickNoBone[0].result[2] = faceIndex;        
-        g_output_PickNoBone[0].dbginfo[0] = 3;
+        //g_output_PickNoBone[0].dbginfo[0] = 3;
         return;
     }
     if (k < 0.0f)
@@ -157,7 +157,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
         g_output_PickNoBone[0].result[0] = 1;
         g_output_PickNoBone[0].result[1] = 1;
         g_output_PickNoBone[0].result[2] = faceIndex;
-        g_output_PickNoBone[0].dbginfo[0] = 4;
+        //g_output_PickNoBone[0].dbginfo[0] = 4;
         return;
     }
 
@@ -168,12 +168,12 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
         g_output_PickNoBone[0].result[0] = 1;
         g_output_PickNoBone[0].result[1] = 0;
         g_output_PickNoBone[0].result[2] = faceIndex;
-        g_output_PickNoBone[0].dbginfo[0] = 5;
+        //g_output_PickNoBone[0].dbginfo[0] = 5;
         return;
     }
     else
     {
-        g_output_PickNoBone[0].dbginfo[0] = 6;
+        //g_output_PickNoBone[0].dbginfo[0] = 6;
         return;
     }
 }

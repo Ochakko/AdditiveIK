@@ -57,6 +57,7 @@ struct DirectionalLight
 cbuffer LightCb : register(b1)
 {
     uniform int4 lightsnum;
+    float4 divlights; //x:(1/lightsnum)    
     DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
     float4 eyePos; // カメラの視点
     float4 specPow; // スペキュラの絞り
@@ -93,15 +94,15 @@ SPSInZPrepass VSMainZPrepass(SVSIn vsIn, uniform bool hasSkin)
     psIn.pos = mul(mWorld, vsIn.pos); // モデルの頂点をワールド座標系に変換
 
     float3 distvec = (psIn.pos.xyz / psIn.pos.w) - eyePos.xyz;
-    psIn.depth.z = length(distvec);
-    //psIn.depth.z = (Flags1.x == 0) ? clamp(psIn.depth.z, 0.0f, 250000.0f) : 2500000.0f; //sky->最大値
-    //psIn.depth.z = (Flags1.y == 0) ? psIn.depth.z : 0.0f; //ground->最小値
+    psIn.depth.xyz = length(distvec); //2024/04/05 xyz全部同じ値
+    psIn.depth.w = 1.0f; //自動的にwで割られても良いように
     
     psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
-    psIn.depth.x = psIn.pos.z / psIn.pos.w;
-    psIn.depth.y = saturate(psIn.pos.w / 1000.0f);
-    psIn.depth.w = 1.0f;
+
+    //psIn.depth.x = psIn.pos.z / psIn.pos.w;
+    //psIn.depth.y = saturate(psIn.pos.w / 1000.0f);
+    //psIn.depth.w = 1.0f;
 
     float2 orguv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
     psIn.uv.x = orguv.x * (float) UVs.y;
@@ -117,7 +118,7 @@ float4 PSMainZPrepass(SPSInZPrepass psIn) : SV_Target0
     float2 diffuseuv = { 0.5f, 0.5f }; //処理を軽くするために簡略計算
     float4 diffusecol = g_diffusetex.Sample(g_sampler_clamp, diffuseuv) * materialdisprate.x;
     
-    clip((albedocol.w * diffusecol.w) - ambient0.w); //2024/03/24 アルファテスト　ambient.w * diffuseco.wより小さいアルファは書き込まない
+    clip((albedocol.w * diffusecol.w) - ambient0.w); //2024/03/24 アルファテスト　ambient.w * diffusecol.wより小さいアルファは書き込まない
 
     return float4(psIn.depth.x, psIn.depth.y, psIn.depth.z, 1.0f);
 }

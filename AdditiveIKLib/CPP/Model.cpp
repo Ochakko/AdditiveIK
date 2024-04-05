@@ -104,6 +104,9 @@ using namespace std;
 //extern TResourceBank<CMQOMaterial> g_materialbank;
 
 
+static bool s_workingChkinView = false;
+
+
 ////######################################
 //// Custom stream 
 //
@@ -19474,8 +19477,20 @@ int CModel::SetIKStopFlag()
 
 int CModel::ChkInView(int refposindex)
 {
+	if (s_workingChkinView) {
+		//2024/04/06
+		//重いアセットを読み込んで物理シミュをオンにした場合に
+		//ChkInViewが再入すると方々で原因が分かりづらいエラーが出た
+		//IMComputeは即時実行用であり、複数同時実行できない仕様
+		//ChkInViewは再入禁止
+		return 0;
+	}
+	s_workingChkinView = true;
+
+
 	if (!m_chkinview || !g_cameraShadow) {
 		_ASSERT(0);
+		s_workingChkinView = false;
 		return 0;
 	}
 
@@ -19536,9 +19551,11 @@ int CModel::ChkInView(int refposindex)
 	float shadowPlanes[6][4];
 	float shadowCorners[8][4];
 */
+			ChaMatrix chkMatWorld = GetMatrixForChkInView(m_matWorld);
+
 			CSConstantBufferChkInView cb;
 			cb.Init();
-			cb.mWorld = GetMatrixForChkInView(m_matWorld).TKMatrix();
+			cb.mWorld = chkMatWorld.TKMatrix();
 			cb.camEye[0] = g_camEye.x;
 			cb.camEye[1] = g_camEye.y;
 			cb.camEye[2] = g_camEye.z;
@@ -19572,8 +19589,9 @@ int CModel::ChkInView(int refposindex)
 			cb.shadowparams1[0] = (float)cos(g_shadowmap_fov[g_shadowmap_slotno]);
 			cb.shadowparams1[1] = g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
 	
-			GetFrustumPlanes(m_matVP, &(cb.frustumPlanes[0][0]));
-			GetFrustumCorners(m_matVP, &(cb.frustumCorners[0][0]));
+			ChaMatrix mWVP = chkMatWorld * m_matVP;
+			GetFrustumPlanes(mWVP, &(cb.frustumPlanes[0][0]));
+			GetFrustumCorners(mWVP, &(cb.frustumCorners[0][0]));
 
 			Matrix shadowvp;
 			shadowvp = g_cameraShadow->GetViewProjectionMatrix();
@@ -19605,24 +19623,19 @@ int CModel::ChkInView(int refposindex)
 
 					if (csresult.inview[0] == 1) {
 						curobj->SetInView(true, refposindex);
+						inviewnum++;//!!!!!
 					}
 					else {
 						curobj->SetInView(false, refposindex);
 					}
 					if (csresult.inview[1] == 1) {
 						curobj->SetInShadow(true, refposindex);
+						inshadownum++;//!!!!!
 					}
 					else {
 						curobj->SetInShadow(false, refposindex);
 					}
 
-
-					if (curobj->GetVisible(refposindex)) {
-						inviewnum++;
-					}
-					if (curobj->GetInShadow(refposindex)) {
-						inshadownum++;
-					}
 					objnum++;
 				}
 			}
@@ -19657,7 +19670,7 @@ int CModel::ChkInView(int refposindex)
 		}
 	}
 
-
+	s_workingChkinView = false;
 	return 0;
 }
 
@@ -20618,6 +20631,11 @@ int CModel::CreateChkInView()
 					mb = curobj->GetBound();
 					int forceinview = -1;
 					int forceinshadow = -1;
+					if (!curobj->GetPm3() && !curobj->GetPm4()) {
+						//extlineはInViewでshadow無し
+						forceinview = 1;
+						forceinshadow = 0;
+					}
 					m_chkinview->AddBoundary(curobj, mb, curobj->GetLODNum(), forceinview, forceinshadow);
 				}
 			}

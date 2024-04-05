@@ -70,7 +70,7 @@ float4 PSBloomFinal(PSInput In) : SV_Target0
     combineColor += g_bokeTexture_1.Sample(Sampler, In.uv);
     combineColor += g_bokeTexture_2.Sample(Sampler, In.uv);
     combineColor += g_bokeTexture_3.Sample(Sampler, In.uv);
-    combineColor /= 4.0f;
+    combineColor *= 0.25f;
     combineColor.a = 1.0f;
     return combineColor;
 }

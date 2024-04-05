@@ -416,12 +416,19 @@
         //m_constantBufferCPU.screenParam.w = 488;//2023/11/18 tmp set
         //m_constantBufferCPU.screenParam.z = viewport.Width;//2023/11/18 tmp set
         //m_constantBufferCPU.screenParam.w = viewport.Height;//2023/11/18 tmp set
-        m_constantBufferCPU.screenParam.z = (float)screenW;//2023/11/21
-        m_constantBufferCPU.screenParam.w = (float)screenH;//2023/11/21
+        m_constantBufferCPU.screenParam.z = 1.0f / (float)screenW;//2023/11/21 2024/04/06(1/W)
+        m_constantBufferCPU.screenParam.w = 1.0f / (float)screenH;//2023/11/21 2024/04/06(1/H)
         m_constantBufferCPU.dofparams.x = g_dofparams[g_dofindex].x;
         m_constantBufferCPU.dofparams.y = g_dofparams[g_dofindex].y;
-        m_constantBufferCPU.dofparams.z = g_dofparams[g_dofindex].z;
-        m_constantBufferCPU.dofparams.w = g_dofparams[g_dofindex].w;
+        if (fabs(g_dofparams[g_dofindex].y - g_dofparams[g_dofindex].x) >= 1e-4) {
+            m_constantBufferCPU.dofparams.z = 1.0f / (g_dofparams[g_dofindex].y - g_dofparams[g_dofindex].x);
+        }
+        else {
+            m_constantBufferCPU.dofparams.z = 0.0f;
+        }
+        m_constantBufferCPU.dofparams.w = 0.0f;
+        //m_constantBufferCPU.dofparams.z = g_dofparams[g_dofindex].z;
+        //m_constantBufferCPU.dofparams.w = g_dofparams[g_dofindex].w;
 
 
         //定数バッファを更新。
@@ -475,12 +482,19 @@
         //m_constantBufferCPU.screenParam.w = s_mainheight;
         //m_constantBufferCPU.screenParam.z = 736;//2023/11/18 tmp set
         //m_constantBufferCPU.screenParam.w = 488;//2023/11/18 tmp set
-        m_constantBufferCPU.screenParam.z = viewport.Width;//2023/11/18 tmp set
-        m_constantBufferCPU.screenParam.w = viewport.Height;//2023/11/18 tmp set
+        m_constantBufferCPU.screenParam.z = 1.0f / viewport.Width;//2023/11/18 tmp set 2024/04/06(1/W)
+        m_constantBufferCPU.screenParam.w = 1.0f / viewport.Height;//2023/11/18 tmp set 2024/04/06(1/H)
         m_constantBufferCPU.dofparams.x = g_dofparams[g_dofindex].x;
         m_constantBufferCPU.dofparams.y = g_dofparams[g_dofindex].y;
-        m_constantBufferCPU.dofparams.z = g_dofparams[g_dofindex].z;
-        m_constantBufferCPU.dofparams.w = g_dofparams[g_dofindex].w;
+        if (fabs(g_dofparams[g_dofindex].y - g_dofparams[g_dofindex].x) >= 1e-4) {
+            m_constantBufferCPU.dofparams.z = 1.0f / (g_dofparams[g_dofindex].y - g_dofparams[g_dofindex].x);
+        }
+        else {
+            m_constantBufferCPU.dofparams.z = 0.0f;
+        }
+        m_constantBufferCPU.dofparams.w = 0.0f;
+        //m_constantBufferCPU.dofparams.z = g_dofparams[g_dofindex].z;
+        //m_constantBufferCPU.dofparams.w = g_dofparams[g_dofindex].w;
 
 
         //定数バッファを更新。

@@ -55,6 +55,8 @@ void VertexBuffer::Copy(void* srcVertices)
 {
 	uint8_t* pData;
 	m_vertexBuffer->Map(0, nullptr, (void**)&pData);
-	memcpy(pData, srcVertices, m_vertexBufferView.SizeInBytes);
-	m_vertexBuffer->Unmap(0, nullptr);
+	if (pData) {
+		memcpy(pData, srcVertices, m_vertexBufferView.SizeInBytes);
+		m_vertexBuffer->Unmap(0, nullptr);
+	}
 }

@@ -12,11 +12,11 @@
   <ProjFov>45.000</ProjFov>
   <ProjNear>100.000</ProjNear>
   <ProjFar>4000.000</ProjFar>
-  <2L_LOD0>0.20</2L_LOD0>
-  <2L_LOD1>0.00</2L_LOD1>
-  <3L_LOD0>0.17</3L_LOD0>
-  <3L_LOD1>0.00</3L_LOD1>
-  <3L_LOD2>0.00</3L_LOD2>
+  <2L_LOD0>0.05</2L_LOD0>
+  <2L_LOD1>1.00</2L_LOD1>
+  <3L_LOD0>0.05</3L_LOD0>
+  <3L_LOD1>0.17</3L_LOD1>
+  <3L_LOD2>1.00</3L_LOD2>
   <Chara>
     <ModelFolder>Spring2_0</ModelFolder>
     <ModelFile>Spring2.fbx</ModelFile>

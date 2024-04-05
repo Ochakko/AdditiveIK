@@ -31,13 +31,12 @@ struct SPSIn
     float4 normal       : NORMAL;    
     float2 uv           : TEXCOORD0;
     float4 diffusemult : TEXCOORD1;
-    float Fog : FOG;
+    float4 FogAndOther : TEXCOORD2; //x:Fog
 };
 
 struct SPSInShadowMap
 {
     float4 pos : SV_POSITION;
-    float4 normal : NORMAL;
     float2 uv : TEXCOORD0;
     float2 depth : TEXCOORD1; // ライト空間での座標
 };
@@ -51,7 +50,7 @@ struct SPSInShadowReciever
     
     // ライトビュースクリーン空間での座標を追加
     float4 posInLVP : TEXCOORD2; // ライトビュースクリーン空間でのピクセルの座標
-    float Fog : FOG;
+    float4 FogAndOther : TEXCOORD3; //x:Fog
 };
 
 struct SPSOut
@@ -74,7 +73,7 @@ cbuffer ModelCb : register(b0)
     float4 emission;
     float4 metalcoef;
     float4 materialdisprate;
-    float4 shadowmaxz;
+    float4 shadowmaxz; //x:(1/shadowfar), y:shadowbias
     int4 UVs;//x:UVSet, y:TilingU, z:TilingV   
     int4 Flags1; //x:skyflag, y:groundflag
 };
@@ -93,12 +92,13 @@ cbuffer ModelCbMatrix : register(b1)
     //lightsnum.y : lightflag
     //lightsnum.z : 未使用
     //lightsnum.w : normalY0flag
+    float4 divlights; //x:(1/lightsnum)
     DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
     float4 eyePos; // カメラの視点
     float4 specPow; // スペキュラの絞り
     //float4 ambientLight; // 環境光
     float4 toonlightdir;
-    float4 vFog;
+    float4 vFog; //distfog{x:1/(far - near), y:1/far, z:rate}, hieghtfog{x:0.0, y:1/maxheight, z:rate}
     float4 vFogColor;
     float4x4 mBoneMat[1000];
 };
@@ -132,10 +132,8 @@ float CalcVSFog(float4 worldpos)
 {
     worldpos /= worldpos.w;
     float4 fogpos = worldpos - eyePos;
-    float fogy = worldpos.y / vFog.y;
-    float fog = (vFog.w < 1.1f) ? (vFog.z * length(fogpos.xyz) / (vFog.y - vFog.x)) : (vFog.z - vFog.z * fogy * fogy);
-    //psIn.Fog = (vFog.y - psIn.pos.z / psIn.pos.w) / (vFog.y - vFog.x);
-
+    float fogy = worldpos.y * vFog.y;
+    float fog = (vFog.w < 1.1f) ? (vFog.z * length(fogpos.xyz) * vFog.x) : (vFog.z - vFog.z * fogy * fogy);
     return fog;
 }
 SPSOut CalcPSFog(float4 pscol, float fog)
@@ -175,7 +173,7 @@ SPSIn VSMainSkinStd(SVSIn vsIn, uniform bool hasSkin)
     }
 	
     psIn.pos = mul(finalmat, vsIn.pos);
-    psIn.Fog = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
+    psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
     psIn.pos = mul(mView, psIn.pos);
     psIn.pos = mul(mProj, psIn.pos);
     //psIn.pos /= psIn.pos.w;
@@ -208,7 +206,7 @@ SPSInShadowMap VSMainSkinStdShadowMap(SVSIn vsIn, uniform bool hasSkin)
     //psIn.pos /= psIn.pos.w;
     
     // step-9 頂点のライトから見た深度値と、ライトから見た深度値の2乗を計算する
-    psIn.depth.x = length(worldPos.xyz - lightPos.xyz) / shadowmaxz.x;
+    psIn.depth.x = length(worldPos.xyz - lightPos.xyz) * shadowmaxz.x;
     //float4 posLVP = mul(mLVP, worldPos);
     //psIn.depth.x = posLVP.z / posLVP.w;
     psIn.depth.y = psIn.depth.x * psIn.depth.x;
@@ -234,7 +232,7 @@ SPSInShadowReciever VSMainSkinStdShadowReciever(SVSIn vsIn, uniform bool hasSkin
     }
 	
     float4 worldPos = mul(finalmat, vsIn.pos);
-    psIn.Fog = (vFog.w > 0.1f) ? CalcVSFog(worldPos) : 0.0f;
+    psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(worldPos) : 0.0f;
     worldPos /= worldPos.w;
     psIn.pos = mul(mView, worldPos);    
     psIn.pos = mul(mProj, psIn.pos);
@@ -245,7 +243,7 @@ SPSInShadowReciever VSMainSkinStdShadowReciever(SVSIn vsIn, uniform bool hasSkin
     //psIn.posInLVP.xy = psIn.pos.xy;
     //psIn.posInLVP.w = psIn.pos.w;    
     // step-12 頂点のライトから見た深度値を計算する
-    psIn.posInLVP.z = length(worldPos.xyz - lightPos.xyz) / shadowmaxz.x;
+    psIn.posInLVP.z = length(worldPos.xyz - lightPos.xyz) * shadowmaxz.x;
     
     psIn.normal = normalize(mul(finalmat, vsIn.normal));
     float2 orguv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
@@ -297,14 +295,14 @@ SPSOut PSMainSkinStd(SPSIn psIn) : SV_Target0
         totalalpha += diffusecol.w;
     }
     float4 totaldiffuse4 = float4(totaldiffuse, 1.0f);
-    totaldiffuse4.w = (lightsnum.x != 0) ? (totalalpha / (float) lightsnum.x) : 1.0f;
+    totaldiffuse4.w = (lightsnum.x != 0) ? (totalalpha * divlights.x) : 1.0f;
     float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * metalcoef.w;//ライト８個で白飛びしないように応急処置1/8=0.125
     float4 pscol = emission * materialdisprate.z + albedocol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
     //return pscol;
     //pscol.w = albedocol.w * psIn.diffusemult.w * materialdisprate.x;
     clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
 
-    return CalcPSFog(pscol, psIn.Fog);
+    return CalcPSFog(pscol, psIn.FogAndOther.x);
 }
 
 float4 PSMainSkinStdShadowMap(SPSInShadowMap psIn) : SV_Target0
@@ -352,7 +350,7 @@ SPSOut PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
         totalalpha += diffusecol.w;
     }
     float4 totaldiffuse4 = float4(totaldiffuse, 1.0f);
-    totaldiffuse4.w = (lightsnum.x != 0) ? (totalalpha / (float) lightsnum.x) : 1.0f;
+    totaldiffuse4.w = (lightsnum.x != 0) ? (totalalpha * divlights.x) : 1.0f;
     float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * metalcoef.w; //ライト８個で白飛びしないように応急処置1/8=0.125
     float4 pscol = emission * materialdisprate.z + albedocol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
 
@@ -402,7 +400,7 @@ SPSOut PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 
    // return pscol;
     
-    return CalcPSFog(pscol, psIn.Fog);
+    return CalcPSFog(pscol, psIn.FogAndOther.x);
     
 }
 
@@ -426,7 +424,7 @@ SPSOut PSMainSkinNoLight(SPSIn psIn) : SV_Target0
     clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
   
     
-    return CalcPSFog(pscol, psIn.Fog);
+    return CalcPSFog(pscol, psIn.FogAndOther.x);
     
 }
 
@@ -495,6 +493,6 @@ SPSOut PSMainSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     
     //return pscol;
 
-    return CalcPSFog(pscol, psIn.Fog);
+    return CalcPSFog(pscol, psIn.FogAndOther.x);
 }
 

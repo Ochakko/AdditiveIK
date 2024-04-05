@@ -59,9 +59,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     
     matrix finalmat = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     for (int i = 0; i < 4; i++)
-    {
         finalmat += (mBoneMat[g_inputData[dataIndex].bindices[i]] * g_inputData[dataIndex].bweight[i]);
-    }
         
     g_outputData[dataIndex].pos = mul(finalmat, g_inputData[dataIndex].pos);    
     //g_outputData[dataIndex].projpos = mul(mView, g_outputData[dataIndex].pos);

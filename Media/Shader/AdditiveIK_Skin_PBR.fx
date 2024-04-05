@@ -34,13 +34,12 @@ struct SPSIn
     float2 uv : TEXCOORD0; // uv座標
     float4 worldPos : TEXCOORD1; // ワールド空間でのピクセルの座標
     float4 diffusemult : TEXCOORD2;
-    float Fog : FOG;    
+    float4 FogAndOther : TEXCOORD3; //x:Fog
 };
 
 struct SPSInShadowMap
 {
     float4 pos : SV_POSITION;
-    float4 normal : NORMAL;
     float2 uv : TEXCOORD0;
     float2 depth : TEXCOORD1; // ライト空間での座標
 };
@@ -58,7 +57,7 @@ struct SPSInShadowReciever
   
     // ライトビュースクリーン空間での座標を追加
     float4 posInLVP : TEXCOORD3; // ライトビュースクリーン空間でのピクセルの座標        
-    float Fog : FOG;    
+    float4 FogAndOther : TEXCOORD4; //x:Fog
 };
 
 struct SPSOut
@@ -82,7 +81,7 @@ cbuffer ModelCb : register(b0)
     float4 emission;
     float4 metalcoef;
     float4 materialdisprate;
-    float4 shadowmaxz;
+    float4 shadowmaxz; //x:(1/shadowfar), y:shadowbias
     int4 UVs;//x:UVSet, y:TilingU, z:TilingV   
     int4 Flags1; //x:skyflag, y:groundflag
 };
@@ -101,12 +100,13 @@ cbuffer ModelCbMatrix : register(b1)
     //lightsnum.y : lightflag
     //lightsnum.z : 未使用
     //lightsnum.w : normalY0flag
+    float4 divlights; //x:(1/lightsnum)    
     DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
     float4 eyePos; // カメラの視点
     float4 specPow; // スペキュラの絞り
     //float4 ambientLight; // 環境光
     float4 toonlightdir;
-    float4 vFog;
+    float4 vFog; //distfog{x:1/(far - near), y:1/far, z:rate}, hieghtfog{x:0.0, y:1/maxheight, z:rate}
     float4 vFogColor;
     float4x4 mBoneMat[1000];
 };
@@ -141,10 +141,8 @@ float CalcVSFog(float4 worldpos)
 {
     worldpos /= worldpos.w;
     float4 fogpos = worldpos - eyePos;
-    float fogy = worldpos.y / vFog.y;
-    float fog = (vFog.w < 1.1f) ? (vFog.z * length(fogpos.xyz) / (vFog.y - vFog.x)) : (vFog.z - vFog.z * fogy * fogy);
-    //psIn.Fog = (vFog.y - psIn.pos.z / psIn.pos.w) / (vFog.y - vFog.x);
-
+    float fogy = worldpos.y * vFog.y;
+    float fog = (vFog.w < 1.1f) ? (vFog.z * length(fogpos.xyz) * vFog.x) : (vFog.z - vFog.z * fogy * fogy);
     return fog;
 }
 SPSOut CalcPSFog(float4 pscol, float fog)
@@ -406,7 +404,7 @@ SPSIn VSMainSkinPBR(SVSIn vsIn, uniform bool hasSkin)
     }
 	
     psIn.pos = mul(finalmat, vsIn.pos);
-    psIn.Fog = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
+    psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
     psIn.worldPos = psIn.pos;
     psIn.pos = mul(mView, psIn.pos);
     psIn.pos = mul(mProj, psIn.pos);
@@ -442,7 +440,7 @@ SPSInShadowMap VSMainSkinPBRShadowMap(SVSIn vsIn, uniform bool hasSkin)
     //psIn.uv = vsIn.uv.xy;
 
     // step-9 頂点のライトから見た深度値と、ライトから見た深度値の2乗を計算する
-    psIn.depth.x = length(worldPos.xyz - lightPos.xyz) / shadowmaxz.x;
+    psIn.depth.x = length(worldPos.xyz - lightPos.xyz) * shadowmaxz.x;
     //float4 posLVP = mul(mLVP, worldPos);
     //psIn.depth.x = posLVP.z / posLVP.w;    
     psIn.depth.y = psIn.depth.x * psIn.depth.x;
@@ -468,7 +466,7 @@ SPSInShadowReciever VSMainSkinPBRShadowReciever(SVSIn vsIn, uniform bool hasSkin
     }
 	
     psIn.pos = mul(finalmat, vsIn.pos);
-    psIn.Fog = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
+    psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
     psIn.worldPos = psIn.pos;
     psIn.pos = mul(mView, psIn.pos);
     psIn.pos = mul(mProj, psIn.pos);
@@ -485,7 +483,7 @@ SPSInShadowReciever VSMainSkinPBRShadowReciever(SVSIn vsIn, uniform bool hasSkin
     //psIn.posInLVP.xy = psIn.pos.xy;
     //psIn.posInLVP.w = psIn.pos.w;    
     // step-12 頂点のライトから見た深度値を計算する
-    psIn.posInLVP.z = length(psIn.worldPos.xyz - lightPos.xyz) / shadowmaxz.x;
+    psIn.posInLVP.z = length(psIn.worldPos.xyz - lightPos.xyz) * shadowmaxz.x;
         
     psIn.normal = normalize(mul(finalmat, vsIn.normal));
     psIn.tangent = normalize(mul(finalmat, vsIn.tangent));
@@ -638,13 +636,13 @@ SPSOut PSMainSkinPBR(SPSIn psIn) : SV_Target0
 
     // 環境光による底上げ
     //lig += ambientLight.xyz * albedoColor.xyz;
-    float diffusew = (lightsnum.x != 0) ? (albedoColor.w * totalalpha / (float) lightsnum.x) : albedoColor.w;
+    float diffusew = (lightsnum.x != 0) ? (albedoColor.w * totalalpha * divlights.x) : albedoColor.w;
     float4 finalColor = emission * materialdisprate.z + float4(lig, diffusew) * psIn.diffusemult;
     //return finalColor;
     //finalColor.w = albedoColor.w * psIn.diffusemult.w * materialdisprate.x;
     clip(finalColor.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
     
-    return CalcPSFog(finalColor, psIn.Fog);
+    return CalcPSFog(finalColor, psIn.FogAndOther.x);
         
 }
 
@@ -798,7 +796,7 @@ SPSOut PSMainSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     //finalColor.xyz = lig;
     //finalColor.w = albedoColor.w;
     
-    float diffusew = (lightsnum.x != 0) ? (albedoColor.w * totalalpha / (float) lightsnum.x) : albedoColor.w;
+    float diffusew = (lightsnum.x != 0) ? (albedoColor.w * totalalpha * divlights.x) : albedoColor.w;
     float4 finalColor = emission * materialdisprate.z + float4(lig, diffusew) * psIn.diffusemult;
 ///////////
 /////////
@@ -847,7 +845,7 @@ SPSOut PSMainSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 
     //return finalColor;
     
-    return CalcPSFog(finalColor, psIn.Fog);
+    return CalcPSFog(finalColor, psIn.FogAndOther.x);
     
  
 }

@@ -7,7 +7,7 @@ cbuffer cb : register(b0)
     float4x4 mvp;       // MVP行列
     float4 mulColor;    // 乗算カラー
     float4 params;//z:TextureWidth, w:TextureHeight
-    float4 dofparams; //x:dofstart, y:dofend (深度値dofparams.xからボケが始まり、深度値dofparams.yで最大のボケ具合になる。)
+    float4 dofparams; //x:dofstart, y:dofend, z:(1/(dofend - dofstart)) (深度値dofparams.xからボケが始まり、深度値dofparams.yで最大のボケ具合になる。)
 };
 
 struct VSInput

@@ -3424,9 +3424,9 @@ void CMQOMaterial::SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBuff
 	
 	//pcbLights->lightsnum[1] = renderobj.lightflag;//2024/03/02
 	pcbLights->lightsnum[1] = (DecideLightFlag(renderobj)) ? 1 : 0;//2024/03/07
-
 	pcbLights->lightsnum[2] = 0;//2024/03/02
 	pcbLights->lightsnum[3] = (GetNormalY0Flag()) ? 1 : 0;//2024/02/19
+	pcbLights->divlights[0] = (pcbLights->lightsnum[0] != 0) ? (1.0f / (float)pcbLights->lightsnum[0]) : 0.0f;
 	int lightno;
 	for (lightno = 0; lightno < g_nNumActiveLights; lightno++) {//2023/12/17必要分だけ詰めて受け渡し
 	//for (lightno = 0; lightno < LIGHTNUMMAX; lightno++) {
@@ -3451,8 +3451,18 @@ void CMQOMaterial::SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBuff
 
 		//set dummy value
 		pcbLights->fogcolor = g_fogparams[g_fogindex].GetDistColor();
-		pcbLights->fog.x = g_fogparams[g_fogindex].GetDistNear();
-		pcbLights->fog.y = g_fogparams[g_fogindex].GetDistFar();
+		if (fabs(g_fogparams[g_fogindex].GetDistFar() - g_fogparams[g_fogindex].GetDistNear()) >= 1e-4) {
+			pcbLights->fog.x = 1.0f / (g_fogparams[g_fogindex].GetDistFar() - g_fogparams[g_fogindex].GetDistNear());
+		}
+		else {
+			pcbLights->fog.x = 0.0f;
+		}
+		if (fabs(g_fogparams[g_fogindex].GetDistFar()) >= 1e-4) {
+			pcbLights->fog.y = 1.0f / g_fogparams[g_fogindex].GetDistFar();
+		}
+		else {
+			pcbLights->fog.y = 0.0f;
+		}
 		pcbLights->fog.z = g_fogparams[g_fogindex].GetDistRate();
 	}
 	else if (fogkind == 1) {
@@ -3460,8 +3470,18 @@ void CMQOMaterial::SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBuff
 		//dist fog
 		//#########
 		pcbLights->fogcolor = g_fogparams[g_fogindex].GetDistColor();
-		pcbLights->fog.x = g_fogparams[g_fogindex].GetDistNear();
-		pcbLights->fog.y = g_fogparams[g_fogindex].GetDistFar();
+		if (fabs(g_fogparams[g_fogindex].GetDistFar() - g_fogparams[g_fogindex].GetDistNear()) >= 1e-4) {
+			pcbLights->fog.x = 1.0f / (g_fogparams[g_fogindex].GetDistFar() - g_fogparams[g_fogindex].GetDistNear());
+		}
+		else {
+			pcbLights->fog.x = 0.0f;
+		}
+		if (fabs(g_fogparams[g_fogindex].GetDistFar()) >= 1e-4) {
+			pcbLights->fog.y = 1.0f / g_fogparams[g_fogindex].GetDistFar();
+		}
+		else {
+			pcbLights->fog.y = 0.0f;
+		}
 		pcbLights->fog.z = g_fogparams[g_fogindex].GetDistRate();
 	}
 	else if (fogkind == 2) {
@@ -3470,7 +3490,12 @@ void CMQOMaterial::SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBuff
 		//###########
 		pcbLights->fogcolor = g_fogparams[g_fogindex].GetHeightColor();
 		pcbLights->fog.x = 0.0f;
-		pcbLights->fog.y = g_fogparams[g_fogindex].GetHeightHigh();
+		if (fabs(g_fogparams[g_fogindex].GetDistFar()) >= 1e-4) {
+			pcbLights->fog.y = 1.0f / g_fogparams[g_fogindex].GetHeightHigh();
+		}
+		else {
+			pcbLights->fog.y = 0.0f;
+		}
 		pcbLights->fog.z = g_fogparams[g_fogindex].GetHeightRate();
 	}
 	else {
@@ -3478,8 +3503,18 @@ void CMQOMaterial::SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBuff
 
 		//set dummy value
 		pcbLights->fogcolor = g_fogparams[g_fogindex].GetDistColor();
-		pcbLights->fog.x = g_fogparams[g_fogindex].GetDistNear();
-		pcbLights->fog.y = g_fogparams[g_fogindex].GetDistFar();
+		if (fabs(g_fogparams[g_fogindex].GetDistFar() - g_fogparams[g_fogindex].GetDistNear()) >= 1e-4) {
+			pcbLights->fog.x = 1.0f / (g_fogparams[g_fogindex].GetDistFar() - g_fogparams[g_fogindex].GetDistNear());
+		}
+		else {
+			pcbLights->fog.x = 0.0f;
+		}
+		if (fabs(g_fogparams[g_fogindex].GetDistFar()) >= 1e-4) {
+			pcbLights->fog.y = 1.0f / g_fogparams[g_fogindex].GetDistFar();
+		}
+		else {
+			pcbLights->fog.y = 0.0f;
+		}
 		pcbLights->fog.z = g_fogparams[g_fogindex].GetDistRate();
 	}
 }
@@ -3600,9 +3635,19 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			m_cb[currentrefposindex].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
 		m_cb[currentrefposindex].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
+		
+		float shadowfar = g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
+		float divshadowfar;
+		if (fabs(shadowfar) >= 1e-4) {
+			divshadowfar = 1.0f / shadowfar;
+		}
+		else {
+			divshadowfar = 0.0f;
+		}
 		m_cb[currentrefposindex].shadowmaxz = ChaVector4(
-			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
+			divshadowfar,
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
+
 		m_cb[currentrefposindex].UVs[0] = g_uvset;
 		m_cb[currentrefposindex].UVs[1] = (int)(GetUVScale().x + 0.0001);
 		m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);
@@ -3633,9 +3678,19 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		}
 		m_cb[currentrefposindex].metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), GetMetalAdd(), GetSpecularCoef());
 		m_cb[currentrefposindex].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
+
+		float shadowfar = g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
+		float divshadowfar;
+		if (fabs(shadowfar) >= 1e-4) {
+			divshadowfar = 1.0f / shadowfar;
+		}
+		else {
+			divshadowfar = 0.0f;
+		}
 		m_cb[currentrefposindex].shadowmaxz = ChaVector4(
-			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
+			divshadowfar,
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
+
 		m_cb[currentrefposindex].UVs[0] = g_uvset;
 		m_cb[currentrefposindex].UVs[1] = (int)(GetUVScale().x + 0.0001);
 		m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);
@@ -3683,9 +3738,19 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		}
 		m_cb[currentrefposindex].metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), GetMetalAdd(), GetSpecularCoef());
 		m_cb[currentrefposindex].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
+
+		float shadowfar = g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
+		float divshadowfar;
+		if (fabs(shadowfar) >= 1e-4) {
+			divshadowfar = 1.0f / shadowfar;
+		}
+		else {
+			divshadowfar = 0.0f;
+		}
 		m_cb[currentrefposindex].shadowmaxz = ChaVector4(
-			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
+			divshadowfar,
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
+
 		m_cb[currentrefposindex].UVs[0] = g_uvset;
 		m_cb[currentrefposindex].UVs[1] = (int)(GetUVScale().x + 0.0001);
 		m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);

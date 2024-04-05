@@ -110,6 +110,7 @@ struct DirectionalLight
 #define NUM_DIRECTIONAL_LIGHT 8
 struct SConstantBufferLights {
 	int lightsnum[4];
+	float divlights[4];//[0]:(1/lightsnum[0])
 	DirectionalLight directionalLight[NUM_DIRECTIONAL_LIGHT];
 	ChaVector4 eyePos; // カメラの視点
 	ChaVector4 specPow; // スペキュラの絞り
@@ -123,8 +124,13 @@ struct SConstantBufferLights {
 		//lightsnum[1] = 0;//[1]:トゥーンライトインデックス(有効なライトだけ格納したシェーダ定数内のインデックス)
 		//lightsnum[2] = 0;//[2]:シャドウライトインデックス(有効なライトだけ格納したシェーダ定数内のインデックス)
 		lightsnum[1] = 1;//[1]:renderobj.lightflag
-		lightsnum[2] = 0;//[2]:未使用
+		lightsnum[2] = 0;//未使用
 		lightsnum[3] = 0;//[3]:GetNormalY0Flag()
+		divlights[0] = 0.0f;
+		divlights[1] = 0.0f;
+		divlights[2] = 0.0f;
+		divlights[3] = 0.0f;
+
 		int lindex;
 		for (lindex = 0; lindex < NUM_DIRECTIONAL_LIGHT; lindex++) {
 			directionalLight[lindex].Init();

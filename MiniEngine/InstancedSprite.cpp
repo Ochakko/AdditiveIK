@@ -443,7 +443,7 @@
             UINT screenW, screenH;
             screenW = g_graphicsEngine->GetFrameBufferWidth();
             screenH = g_graphicsEngine->GetFrameBufferHeight();
-            m_possize[instanceno].WH = ChaVector2((float)screenW, (float)screenH);
+            m_possize[instanceno].WH = ChaVector2((1.0f / (float)screenW), (1.0f / (float)screenH));
 
             if (instanceno >= m_instancenum) {
                 m_instancenum = instanceno + 1;//!!!!!!!!!!!
