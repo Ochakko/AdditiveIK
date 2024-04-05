@@ -19600,7 +19600,7 @@ int CModel::ChkInView(int refposindex)
 					//##################################
 					//コンピュートシェーダによる計算結果を取得
 					//##################################
-					CSInView csresult = m_chkinview->GetResultOfChkInView(curobj->GetName());
+					CSInView csresult = m_chkinview->GetResultOfChkInView(curobj);
 
 
 					if (csresult.inview[0] == 1) {
@@ -20559,7 +20559,7 @@ int CModel::CreateChkInView()
 				mb.Init();
 				int forceinview = 1;
 				int forceinshadow = 0;
-				m_chkinview->AddBoundary(curobj->GetName(), mb, 1, forceinview, forceinshadow);
+				m_chkinview->AddBoundary(curobj, mb, 1, forceinview, forceinshadow);
 			}
 		}
 		CallF(m_chkinview->CreateDispObj(m_pdev), return 1);
@@ -20576,7 +20576,7 @@ int CModel::CreateChkInView()
 				mb.Init();
 				int forceinview = 1;
 				int forceinshadow = 0;
-				m_chkinview->AddBoundary(curobj->GetName(), mb, 1, forceinview, forceinshadow);
+				m_chkinview->AddBoundary(curobj, mb, 1, forceinview, forceinshadow);
 			}
 		}
 		CallF(m_chkinview->CreateDispObj(m_pdev), return 1);
@@ -20618,7 +20618,7 @@ int CModel::CreateChkInView()
 					mb = curobj->GetBound();
 					int forceinview = -1;
 					int forceinshadow = -1;
-					m_chkinview->AddBoundary(curobj->GetName(), mb, curobj->GetLODNum(), forceinview, forceinshadow);
+					m_chkinview->AddBoundary(curobj, mb, curobj->GetLODNum(), forceinview, forceinshadow);
 				}
 			}
 			CallF(m_chkinview->CreateDispObj(m_pdev), return 1);
@@ -20634,7 +20634,7 @@ int CModel::CreateChkInView()
 					mb.Init();
 					int forceinview = 1;
 					int forceinshadow = 0;
-					m_chkinview->AddBoundary(curobj->GetName(), mb, 1, forceinview, forceinshadow);
+					m_chkinview->AddBoundary(curobj, mb, 1, forceinview, forceinshadow);
 				}
 			}
 			CallF(m_chkinview->CreateDispObj(m_pdev), return 1);

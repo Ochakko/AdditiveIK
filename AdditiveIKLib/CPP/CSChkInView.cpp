@@ -133,10 +133,10 @@ int CSChkInView::DestroyObjs()
 	return 0;
 }
 
-int CSChkInView::AddBoundary(const char* srcname, MODELBOUND srcmb, 
+int CSChkInView::AddBoundary(CMQOObject* srcobj, MODELBOUND srcmb, 
 	int srclodnum, int forceinview, int forceinshadow)
 {
-	if (!srcname) {
+	if (!srcobj) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -145,14 +145,21 @@ int CSChkInView::AddBoundary(const char* srcname, MODELBOUND srcmb,
 	csbs.Init();
 
 	int lodno = -1;
-	if (strstr(srcname, "LOD0") != 0) {
-		lodno = CHKINVIEW_LOD0;
+	const char* pname = srcobj->GetName();
+	if (pname && (*pname != 0)) {
+		if (strstr(pname, "LOD0") != 0) {
+			lodno = CHKINVIEW_LOD0;
+		}
+		else if (strstr(pname, "LOD1") != 0) {
+			lodno = CHKINVIEW_LOD1;
+		}
+		else if (strstr(pname, "LOD2") != 0) {
+			lodno = CHKINVIEW_LOD2;
+		}
 	}
-	else if (strstr(srcname, "LOD1") != 0) {
-		lodno = CHKINVIEW_LOD1;
-	}
-	else if (strstr(srcname, "LOD2") != 0) {
-		lodno = CHKINVIEW_LOD2;
+	else {
+		_ASSERT(0);
+		return 1;
 	}
 
 	csbs.bs[0] = srcmb.center.x;
@@ -186,7 +193,7 @@ int CSChkInView::AddBoundary(const char* srcname, MODELBOUND srcmb,
 	
 	int bsvecsize = (int)m_bsvec.size();
 	int bsindex = bsvecsize - 1;
-	m_indexmap[srcname] = bsindex;
+	m_indexmap[srcobj] = bsindex;
 
 
 	return 0;
@@ -320,16 +327,22 @@ int CSChkInView::ComputeChkInView(CSConstantBufferChkInView srccb)
 	return 0;
 }
 
-CSInView CSChkInView::GetResultOfChkInView(const char* srcname)
+CSInView CSChkInView::GetResultOfChkInView(CMQOObject* srcobj)
 {
 	CSInView retresult;
 	retresult.Init();
 
-	CSInView* outputData = (CSInView*)m_outputChkInViewSB.GetResourceOnCPU();
-	if (outputData) {
-		int dataIndex = m_indexmap[srcname];
-		if ((dataIndex >= 0) && (dataIndex < m_csbsnum)) {
-			retresult = *(outputData + dataIndex);
+	if (srcobj) {
+		CSInView* outputData = (CSInView*)m_outputChkInViewSB.GetResourceOnCPU();
+		if (outputData) {
+			int dataIndex = m_indexmap[srcobj];
+			if ((dataIndex >= 0) && (dataIndex < m_csbsnum)) {
+				retresult = *(outputData + dataIndex);
+			}
+			else {
+				_ASSERT(0);
+				retresult.Init();
+			}
 		}
 		else {
 			_ASSERT(0);
@@ -337,6 +350,7 @@ CSInView CSChkInView::GetResultOfChkInView(const char* srcname)
 		}
 	}
 	else {
+		_ASSERT(0);
 		retresult.Init();
 	}
 

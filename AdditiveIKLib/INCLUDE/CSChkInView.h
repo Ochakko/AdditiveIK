@@ -111,12 +111,12 @@ public:
 	CSChkInView();
 	~CSChkInView();
 
-	int AddBoundary(const char* srcname, MODELBOUND srcmb, 
+	int AddBoundary(CMQOObject* srcobj, MODELBOUND srcmb, 
 		int srclodnum, int forceinview, int forceinshadow);
 	int CreateDispObj(ID3D12Device* pdev);
 
 	int ComputeChkInView(CSConstantBufferChkInView srccb);
-	CSInView GetResultOfChkInView(const char* srcname);
+	CSInView GetResultOfChkInView(CMQOObject* srcobj);
 
 private:
 	int InitParams();
@@ -127,7 +127,7 @@ private:
 private:
 	ID3D12Device* m_pdev;//外部メモリ、Direct3Dのデバイス。
 
-	std::map<std::string, int> m_indexmap;//objname-->bufferindex
+	std::map<CMQOObject*, int> m_indexmap;//mqoobject-->bufferindex
 	std::vector<CSBSphere> m_bsvec;
 
 	bool m_workingChkInView;
