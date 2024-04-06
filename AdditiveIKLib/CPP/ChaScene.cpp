@@ -1688,6 +1688,24 @@ int ChaScene::Motion2Bt(bool limitdegflag, double nextframe,
 
 	if (!m_modelindex.empty()) {
 
+		//2024/04/06
+		// スレッドから呼び出されたCModel::Motion2Bt()からCModel::UpdateMatrixを呼び出していた
+		// CModel::UpdateMatrixのChkInViewを複数スレッドから同時に呼び出すことは出来ない
+		// CModel::UpdateMatrixのChkInViewをマルチスレッド呼び出しすると即時実行コンピュートシェーダ関連のメモリエラーで落ちる
+		//(CBone::UpdateMatrixはコンテクスト限定でマルチスレッド可能)
+		//CModel::Motion2Bt()からのCModel::UpdateMatrix呼び出しをやめて、ここでCModel::UpdateMatrixを呼び出して済ませることに
+		int modelnum = (int)m_modelindex.size();
+		int modelindex;
+		for (modelindex = 0; modelindex < modelnum; modelindex++) {
+			CModel* curmodel = m_modelindex[modelindex].modelptr;
+			if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
+				ChaMatrix wmat = curmodel->GetWorldMat();
+				bool needwait = true;
+				int refposindex = 0;
+				curmodel->UpdateMatrix(limitdegflag, &wmat, pmView, pmProj, needwait, refposindex);
+			}
+		}
+
 		if (m_Motion2BtThreads) {
 			int updatecount;
 			for (updatecount = 0; updatecount < m_created_Motion2BtThreadsNum; updatecount++) {

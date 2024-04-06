@@ -5,7 +5,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/04/06
-　AdditiveIK 1.0.0.14 RC4(リリース候補4)
+　AdditiveIK 1.0.0.14 RC5(リリース候補5)
 　　1.0.0.13からの変更点
 　　　コンピュートシェーダー対応
 　　　　CPU処理とGPU処理を同期して使うことが出来るようにコンピュートシェーダを即時実行するためのクラスを新規
@@ -44,6 +44,11 @@ https://github.com/Ochakko/AdditiveIK
 　　RC4:
 　　　ジャンプ補間と物理ベイクのアンドゥリドゥに関する修正
 　　　　オイラーグラフの更新も追加
+　　RC5:
+　　　複数モデルに対して同時に物理シミュを実行するとChkInViewへの再入が起きてエラーになる不具合を修正
+　　　　CModel::UpdateMatrixをSetBtMotion(), Motion2Bt()の外に出してCModel::UpdateMatrixをシングルスレッドから呼び出すことで
+　　　　CModel::ChkInViewへの再入が起こらないようにした
+
 
 
 動画

@@ -2945,8 +2945,16 @@ int ChaCalcFunc::Motion2Bt(CModel* srcmodel, bool limitdegflag, double nextframe
 		return 1;
 	}
 
-	ChaMatrix mW = srcmodel->GetWorldMat();
-	srcmodel->UpdateMatrix(limitdegflag, &mW, pmView, pmProj, true, 0);//, updateslot);
+
+	//2024/04/06
+	// スレッドから呼び出されたCModel::Motion2Bt()からCModel::UpdateMatrixを呼び出していた
+	// CModel::UpdateMatrixのChkInViewを複数スレッドから同時に呼び出すことは出来ない
+	// CModel::UpdateMatrixのChkInViewをマルチスレッド呼び出しすると即時実行コンピュートシェーダ関連のメモリエラーで落ちる
+	//(CBone::UpdateMatrixはコンテクスト限定でマルチスレッド可能)
+	//CModel::Motion2Bt()からのCModel::UpdateMatrix呼び出しをやめて、ChaSceneの呼び出し元でCModel::UpdateMatrixを呼び出して済ませることに
+	//
+	//ChaMatrix mW = srcmodel->GetWorldMat();
+	//srcmodel->UpdateMatrix(limitdegflag, &mW, pmView, pmProj, true, 0);//, updateslot);
 
 
 	if (!srcmodel->GetTopBt()) {
@@ -2968,11 +2976,7 @@ int ChaCalcFunc::Motion2Bt(CModel* srcmodel, bool limitdegflag, double nextframe
 	//	}
 	//}
 
-
 	return 0;
-
-
-
 }
 
 
