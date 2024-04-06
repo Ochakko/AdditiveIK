@@ -32758,6 +32758,7 @@ int StopBtRec()
 {
 	StopBt();
 	s_model->ApplyPhysIkRec(g_limitdegflag);
+	refreshEulerGraph();
 	PrepairUndo();//物理REC用保存
 	g_btsimurecflag = false;
 
@@ -42668,6 +42669,7 @@ int JumpInterpolateFromTool()
 			hipsbone->UpdateCurrentWM(g_limitdegflag, curmotid, calcframe, newhipsmat);
 		}
 
+		refreshEulerGraph();
 		PrepairUndo();
 	}
 
