@@ -173,9 +173,12 @@ int CThreadingSetBtMotion::ThreadFunc()
 							}
 						}
 						else {
+							//2024/04/06　CModel::UpdateMatrixのChkInViewを複数スレッドから同時に呼び出すことは出来ない
+							//モーションが無い場合については呼び出し元のシングルスレッドで済ませることに
+
 							//モーションが無い場合にもChkInViewを呼ぶためにUpdateMatrix呼び出しは必要
-							ChaMatrix tmpwm = m_model->GetWorldMat();
-							m_model->UpdateMatrix(limitdegflag, &tmpwm, &matView, &matProj, true, 0);//, updateslot);
+							//ChaMatrix tmpwm = m_model->GetWorldMat();
+							//m_model->UpdateMatrix(limitdegflag, &tmpwm, &matView, &matProj, true, 0);//, updateslot);
 						}
 						InterlockedExchange(&m_start_state, 0L);
 						LeaveCriticalSection(&m_CritSection);

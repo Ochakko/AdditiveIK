@@ -5,7 +5,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/04/06
-　AdditiveIK 1.0.0.14 RC2(リリース候補2)
+　AdditiveIK 1.0.0.14 RC3(リリース候補3)
 　　1.0.0.13からの変更点
 　　　コンピュートシェーダー対応
 　　　　CPU処理とGPU処理を同期して使うことが出来るようにコンピュートシェーダを即時実行するためのクラスを新規
@@ -38,7 +38,9 @@ https://github.com/Ochakko/AdditiveIK
 　　　重いアセットで物理シミュをするとエラー終了する不具合を修正
 　　　　IMComputeを実行する関数は実行中再入禁止(仕様として再入できない)
 　　　　再入してエラーになるときの症状としては、コマンドリストリセットエラー、リソースバッファMapエラーなど原因が分かりずらかった
-
+　　RC3:
+　　　RC2で修正したChkInView再入禁止問題について更に修正
+　　　　CModel::UpdateMatrixの呼び出し方を修正することによりCModel::ChkInViewに再入するような呼び出しがされないようにした
 
 
 

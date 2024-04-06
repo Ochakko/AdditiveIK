@@ -19479,10 +19479,13 @@ int CModel::ChkInView(int refposindex)
 {
 	if (s_workingChkinView) {
 		//2024/04/06
-		//重いアセットを読み込んで物理シミュをオンにした場合に
-		//ChkInViewが再入すると方々で原因が分かりづらいエラーが出た
 		//IMComputeは即時実行用であり、複数同時実行できない仕様
 		//ChkInViewは再入禁止
+		//
+		//CBone::UpdateMatrixはコンテクスト限定マルチスレッド可能だが
+		//CModel::UpdateMatrixはChkInViewを呼び出すのでマルチスレッド不可
+		//CModel::UpdataMatrixはシングルスレッド部分から呼び出すことにした
+		//ここは実行時に通らなくなった
 		return 0;
 	}
 	s_workingChkinView = true;

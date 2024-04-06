@@ -1739,6 +1739,23 @@ int ChaScene::SetBtMotion(bool limitdegflag, double nextframe,
 
 
 	if (!m_modelindex.empty()) {
+		//2024/04/06
+		// モーションが無いモデルの場合にはcurupdate->SetBtMotionからCModel::UpdateMatrixだけを呼び出していた
+		// CModel::UpdateMatrixのChkInViewを複数スレッドから同時に呼び出すことは出来ない
+		// CModel::UpdateMatrixのChkInViewをマルチスレッド呼び出しすると即時実行コンピュートシェーダ関連のメモリエラーで落ちる
+		//(CBone::UpdateMatrixはコンテクスト限定でマルチスレッド可能)
+		//モーションが無い場合については呼び出し元のシングルスレッドでCModel::UpdateMatrixを呼び出して済ませることに
+		int modelnum = (int)m_modelindex.size();
+		int modelindex;
+		for (modelindex = 0; modelindex < modelnum; modelindex++) {
+			CModel* curmodel = m_modelindex[modelindex].modelptr;
+			if (curmodel && (curmodel->ExistCurrentMotion() == false)) {
+				ChaMatrix wmat = curmodel->GetWorldMat();
+				bool needwait = true;
+				int refposindex = 0;
+				curmodel->UpdateMatrix(limitdegflag, &wmat, pmView, pmProj, needwait, refposindex);
+			}
+		}
 
 		if (m_SetBtMotionThreads) {
 			int updatecount;
