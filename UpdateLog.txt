@@ -5,7 +5,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/04/06
-　AdditiveIK 1.0.0.14 RC5(リリース候補5)
+　AdditiveIK 1.0.0.14 RC6(リリース候補6)
 　　1.0.0.13からの変更点
 　　　コンピュートシェーダー対応
 　　　　CPU処理とGPU処理を同期して使うことが出来るようにコンピュートシェーダを即時実行するためのクラスを新規
@@ -48,6 +48,11 @@ https://github.com/Ochakko/AdditiveIK
 　　　複数モデルに対して同時に物理シミュを実行するとChkInViewへの再入が起きてエラーになる不具合を修正
 　　　　CModel::UpdateMatrixをSetBtMotion(), Motion2Bt()の外に出してCModel::UpdateMatrixをシングルスレッドから呼び出すことで
 　　　　CModel::ChkInViewへの再入が起こらないようにした
+　　RC6:
+　　　メッシュの無いfbx(モーションだけのRokokoのfbxなど)を読み込もうとするとエラーになる不具合を修正
+　　　　ChkInViewコンピュートシェーダ実行用のオブジェクト作成でエラーになっていた
+　　　　メッシュが無い場合はChkInView実行用オブジェクト作成をスキップ
+
 
 
 

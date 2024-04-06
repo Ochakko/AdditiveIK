@@ -20584,18 +20584,22 @@ int CModel::CreateChkInView()
 
 		//bvhにはメッシュが無いが　UpdateMatrixを実行するためにInViewである必要
 
-		map<int, CMQOObject*>::iterator itr;
-		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-			CMQOObject* curobj = itr->second;
-			if (curobj) {
-				MODELBOUND mb;
-				mb.Init();
-				int forceinview = 1;
-				int forceinshadow = 0;
-				m_chkinview->AddBoundary(curobj, mb, 1, forceinview, forceinshadow);
-			}
-		}
-		CallF(m_chkinview->CreateDispObj(m_pdev), return 1);
+
+		//2024/04/07 メッシュが無い場合はBoundaryも無いので実行用バッファは作成しない
+
+
+		//map<int, CMQOObject*>::iterator itr;
+		//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+		//	CMQOObject* curobj = itr->second;
+		//	if (curobj) {
+		//		MODELBOUND mb;
+		//		mb.Init();
+		//		int forceinview = 1;
+		//		int forceinshadow = 0;
+		//		m_chkinview->AddBoundary(curobj, mb, 1, forceinview, forceinshadow);
+		//	}
+		//}
+		//CallF(m_chkinview->CreateDispObj(m_pdev), return 1);
 	}
 	else {
 

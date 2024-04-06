@@ -224,6 +224,12 @@ int CSChkInView::CreateDispObj(ID3D12Device* pdev)
 	m_pdev = pdev;
 
 
+	if (m_bsvec.size() == 0) {
+		//2024/04/07
+		return 0;
+	}
+
+
 	CallF(CreateIOBuffers(), return 1);
 	CallF(CreateIMCompute(pdev), return 1);
 
@@ -306,8 +312,10 @@ int CSChkInView::ComputeChkInView(CSConstantBufferChkInView srccb)
 	}
 	m_workingChkInView = true;
 
-	if (!m_IMChkInView) {
-		_ASSERT(0);
+	//if (!m_IMChkInView) {
+	if (!m_IMChkInView || (m_csbsnum <= 0) || (m_cscreatebsnum <= 0)) {
+		//Meshが１つも無いモデルの場合にここを通る可能性有
+		//_ASSERT(0);
 		m_workingChkInView = false;
 		return 0;
 	}
@@ -331,13 +339,22 @@ CSInView CSChkInView::GetResultOfChkInView(CMQOObject* srcobj)
 {
 	CSInView retresult;
 	retresult.Init();
-
-	if (srcobj) {
-		CSInView* outputData = (CSInView*)m_outputChkInViewSB.GetResourceOnCPU();
-		if (outputData) {
-			int dataIndex = m_indexmap[srcobj];
-			if ((dataIndex >= 0) && (dataIndex < m_csbsnum)) {
-				retresult = *(outputData + dataIndex);
+	if (!m_IMChkInView || (m_csbsnum <= 0) || (m_cscreatebsnum <= 0)) {
+		//Meshが１つも無いモデルの場合にここを通る可能性有
+		retresult.Init();
+	}
+	else {
+		if (srcobj) {
+			CSInView* outputData = (CSInView*)m_outputChkInViewSB.GetResourceOnCPU();
+			if (outputData) {
+				int dataIndex = m_indexmap[srcobj];
+				if ((dataIndex >= 0) && (dataIndex < m_csbsnum)) {
+					retresult = *(outputData + dataIndex);
+				}
+				else {
+					_ASSERT(0);
+					retresult.Init();
+				}
 			}
 			else {
 				_ASSERT(0);
@@ -348,10 +365,6 @@ CSInView CSChkInView::GetResultOfChkInView(CMQOObject* srcobj)
 			_ASSERT(0);
 			retresult.Init();
 		}
-	}
-	else {
-		_ASSERT(0);
-		retresult.Init();
 	}
 
 	return retresult;
