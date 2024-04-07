@@ -4,8 +4,8 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
-2024/04/06
-　AdditiveIK 1.0.0.14 RC6(リリース候補6)
+2024/04/07
+　AdditiveIK 1.0.0.14 release
 　　1.0.0.13からの変更点
 　　　コンピュートシェーダー対応
 　　　　CPU処理とGPU処理を同期して使うことが出来るようにコンピュートシェーダを即時実行するためのクラスを新規
