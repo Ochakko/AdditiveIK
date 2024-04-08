@@ -175,9 +175,10 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, in
 
 
 	std::array<DXGI_FORMAT, MAX_RENDERING_TARGET> colorBufferFormat = {
-		DXGI_FORMAT_R32G32B32A32_FLOAT,
+		DXGI_FORMAT_R32G32B32A32_FLOAT,//for SV_Target0
+		DXGI_FORMAT_R32G32B32A32_FLOAT,//for SV_Target1
 		//DXGI_FORMAT_R8G8B8A8_UNORM,
-		DXGI_FORMAT_UNKNOWN,
+		//DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
@@ -326,9 +327,10 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, in
 	CallF( CreateVBandIB(pdev), return 1 );
 
 	std::array<DXGI_FORMAT, MAX_RENDERING_TARGET> colorBufferFormat = {
-		DXGI_FORMAT_R32G32B32A32_FLOAT,
+		DXGI_FORMAT_R32G32B32A32_FLOAT,//for SV_Target0
+		DXGI_FORMAT_R32G32B32A32_FLOAT,//for SV_Target1
 		//DXGI_FORMAT_R8G8B8A8_UNORM,
-		DXGI_FORMAT_UNKNOWN,
+		//DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
@@ -468,9 +470,10 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 
 
 	std::array<DXGI_FORMAT, MAX_RENDERING_TARGET> colorBufferFormat = {
-		DXGI_FORMAT_R32G32B32A32_FLOAT,
+		DXGI_FORMAT_R32G32B32A32_FLOAT,//for SV_Target0
+		DXGI_FORMAT_R32G32B32A32_FLOAT,//for SV_Target1
 		//DXGI_FORMAT_R8G8B8A8_UNORM,
-		DXGI_FORMAT_UNKNOWN,
+		//DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
@@ -1400,8 +1403,10 @@ int CDispObj::RenderZPrePm4(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 	renderobj.renderkind = RENDERKIND_ZPREPASS;//2023/12/11
 
 	bool isfirstmaterial = true;
-	int materialcnt;
-	for (materialcnt = 0; materialcnt < materialnum; materialcnt++) {
+	//int materialcnt;
+	//for (materialcnt = 0; materialcnt < materialnum; materialcnt++) {
+	int materialcnt = 0;
+
 		CMQOMaterial* curmat = NULL;
 		int curoffset = 0;
 		int curtrinum = 0;
@@ -1440,9 +1445,12 @@ int CDispObj::RenderZPrePm4(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 			curmat->ZPreBeginRender(rc, renderobj, renderobj.refposindex);
 
 			//4. ドローコールを実行。
-			rc->DrawIndexed(curtrinum * 3, curoffset);
+			//rc->DrawIndexed(curtrinum * 3, curoffset);
+
+			int totaltrinum = renderobj.mqoobj->GetPm4()->GetFaceNum();
+			rc->DrawIndexed(totaltrinum * 3, 0);
 		}
-	}
+	//}
 
 	return 0;
 }
@@ -1747,8 +1755,9 @@ int CDispObj::RenderZPrePm3(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 	//マテリアルごとにドロー。
 
 	//HRESULT hr;
-	int blno;
-	for (blno = 0; blno < m_pm3->GetOptMatNum(); blno++) {
+	//int blno;
+	//for (blno = 0; blno < m_pm3->GetOptMatNum(); blno++) {
+	int blno = 0;
 		MATERIALBLOCK* currb = m_pm3->GetMatBlock() + blno;
 
 		CMQOMaterial* curmat;
@@ -1758,9 +1767,9 @@ int CDispObj::RenderZPrePm3(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 			return 1;
 		}
 
-		int curtrinum;
-		curtrinum = currb->endface - currb->startface + 1;
-		int curoffset = currb->startface * 3;
+		//int curtrinum;
+		//curtrinum = currb->endface - currb->startface + 1;
+		//int curoffset = currb->startface * 3;
 
 		ChaVector4 diffuse;
 		ChaVector4 curdif4f = curmat->GetDif4F();
@@ -1804,9 +1813,11 @@ int CDispObj::RenderZPrePm3(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 		//rc.SetIndexBuffer(m_indexBufferView);
 
 		//4. ドローコールを実行。
-		rc->DrawIndexed(curtrinum * 3, curoffset);
+		//rc->DrawIndexed(curtrinum * 3, curoffset);
+		int totaltrinum = renderobj.mqoobj->GetPm3()->GetFaceNum();
+		rc->DrawIndexed(totaltrinum * 3, 0);
 
-	}
+	//}
 
 	return 0;
 }

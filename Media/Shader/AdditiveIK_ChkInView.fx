@@ -201,16 +201,18 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
         }
         else if ((srclodno == 1) || (srclodno == 2))
         {
-            if (srclodnum == 3)
-            { //3段階LOD
-                lod_mindist = params1.z * lodrate3L[srclodno - 1];
-                lod_maxdist = params1.z * lodrate3L[srclodno];
-            }
-            else
-            { //2段階LOD
-                lod_mindist = params1.z * lodrate2L[srclodno - 1];
-                lod_maxdist = params1.z * lodrate2L[srclodno];
-            }
+            lod_mindist = (srclodnum == 3) ? (params1.z * lodrate3L[srclodno - 1]) : (params1.z * lodrate2L[srclodno]);
+            lod_maxdist = (srclodnum == 3) ? (params1.z * lodrate3L[srclodno]) : (params1.z * lodrate2L[srclodno]);
+            //if (srclodnum == 3)
+            //{ //3段階LOD
+            //    lod_mindist = params1.z * lodrate3L[srclodno - 1];
+            //    lod_maxdist = params1.z * lodrate3L[srclodno];
+            //}
+            //else
+            //{ //2段階LOD
+            //    lod_mindist = params1.z * lodrate2L[srclodno - 1];
+            //    lod_maxdist = params1.z * lodrate2L[srclodno];
+            //}
         }
         else
         {

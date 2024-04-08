@@ -92,7 +92,7 @@ PSOutput PSVerticalDiagonalBlur(PSInput pIn)
         g_sampler, pIn.uv + uvOffset * 4);
 
     // 平均化
-    psOut.color_0 /= 4.0f;
+    psOut.color_0 *= 0.25f;
 
     // step-10 対角線方向のuvオフセットを計算
     //uvOffset.x = 0.86602f / BLUR_TEX_W;
@@ -115,11 +115,11 @@ PSOutput PSVerticalDiagonalBlur(PSInput pIn)
         g_sampler, pIn.uv + uvOffset * 4);
 
     psOut.color_1 += srcColor;
-    psOut.color_1 /= 5.0f;
+    psOut.color_1 *= 0.2f;
 
     // 垂直方向に平均化
     psOut.color_1 += psOut.color_0;
-    psOut.color_1 /= 2.0f;
+    psOut.color_1 *= 0.5f;
 
     return psOut;
 }
@@ -133,7 +133,7 @@ Texture2D<float4> blurTexture_1 : register(t1); // ブラーテクスチャ_1。1パス目で
 float4 PSRhomboidBlur(PSInput pIn) : SV_Target0
 {
     // ブラーステップの長さを求める
-    float blurStepLen = BLUR_RADIUS / 4.0f;
+    float blurStepLen = BLUR_RADIUS * 0.25f;
 
     // step-12 左斜め下方向へのUVオフセットを計算する
     float2 uvOffset;
@@ -177,7 +177,8 @@ float4 PSRhomboidBlur(PSInput pIn) : SV_Target0
         g_sampler, pIn.uv + uvOffset * 4);
 
     // step-16 平均化
-    color /= 9.0f;
-
+    //color /= 9.0f;
+    color *= 0.111111f;
+    
     return color;
 }

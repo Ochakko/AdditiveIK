@@ -3437,7 +3437,8 @@ void CMQOMaterial::SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBuff
 	//ChaVector3 cameye = ChaVector3(g_camera3D->GetPosition());
 	//ChaVector3 camtarget = ChaVector3(g_camera3D->GetTarget());
 	//m_cbLights.directionalLight[0].direction = ChaVector4((camtarget - cameye), 0.0f);//この向きで合っている
-	pcbLights->eyePos = ChaVector4(ChaVector3(g_camera3D->GetPosition()), 0.0f);
+	//pcbLights->eyePos = ChaVector4(ChaVector3(g_camera3D->GetPosition()), 0.0f);
+	pcbLights->eyePos = ChaVector4(g_camEye, 1.0f);
 	pcbLights->specPow = ChaVector4(5.0f, 5.0f, 5.0f, 0.0f);
 	pcbLights->toonlightdir = g_lightdirforall[toonlightindex];//2024/02/15
 

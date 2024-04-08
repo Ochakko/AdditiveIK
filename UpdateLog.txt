@@ -4,6 +4,14 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/04/09
+　DOF表示の高速化
+　　DOFをオンにした時の表示速度が約1.5倍速(DOFオフの時とほぼ同じ)に.
+
+
+
+
+
 2024/04/07
 　AdditiveIK 1.0.0.14 release
 　　1.0.0.13からの変更点

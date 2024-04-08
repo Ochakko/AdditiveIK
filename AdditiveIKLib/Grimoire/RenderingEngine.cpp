@@ -155,7 +155,8 @@ namespace myRenderer
             1,
             DXGI_FORMAT_R32G32B32A32_FLOAT,
             //DXGI_FORMAT_R32G32_FLOAT,
-            DXGI_FORMAT_D32_FLOAT,
+            //DXGI_FORMAT_D32_FLOAT,
+            DXGI_FORMAT_UNKNOWN,//2024/04/09 mainRenderTargetのDepthを使うことにしたのでここはZ無しに
             clearColor
         );
 
@@ -184,7 +185,8 @@ namespace myRenderer
             1,
             DXGI_FORMAT_R32G32B32A32_FLOAT,
             //DXGI_FORMAT_R8G8B8A8_UNORM,//2023/11/18
-            DXGI_FORMAT_UNKNOWN
+            //DXGI_FORMAT_UNKNOWN
+            DXGI_FORMAT_D32_FLOAT//2024/04/08 UNKNOWN-->D32へ変更　ZPrepassのZではなくmainRenderTargetのZを使う
         );
     }
 
@@ -361,16 +363,16 @@ namespace myRenderer
         }
         
 
-        // ZPrepass
-        //2023/12/05
-        //4Kモードでは重いシーンで効果があった
-        //2Kモードでは遮蔽面積が小さいために　ZPrepassのコストの方が大きくなり遅くなる
-        //ZPrepassは4Kモードの場合だけ呼び出すことに.
-        //if (g_4kresolution) {
-        //if (g_zpreflag) {//2023/12/09 DispAndLimitsメニューのオプションに.
-        //2024/03/15 ZPrepassオフの場合にもクリアが必要
-            ZPrepass(rc, srcchascene);
-        //}
+        //// ZPrepass
+        ////2023/12/05
+        ////4Kモードでは重いシーンで効果があった
+        ////2Kモードでは遮蔽面積が小さいために　ZPrepassのコストの方が大きくなり遅くなる
+        ////ZPrepassは4Kモードの場合だけ呼び出すことに.
+        ////if (g_4kresolution) {
+        ////if (g_zpreflag) {//2023/12/09 DispAndLimitsメニューのオプションに.
+        ////2024/03/15 ZPrepassオフの場合にもクリアが必要
+        //    ZPrepass(rc, srcchascene);
+        ////}
         
 
         // G-Bufferへのレンダリング
@@ -493,61 +495,61 @@ namespace myRenderer
 
     void RenderingEngine::ZPrepass(RenderContext* rc, ChaScene* srcchascene)
     {
-        if (!rc || !srcchascene) {
-            _ASSERT(0);
-            return;
-        }
+    //    if (!rc || !srcchascene) {
+    //        _ASSERT(0);
+    //        return;
+    //    }
 
-        // まず、レンダリングターゲットとして設定できるようになるまで待つ
-        rc->WaitUntilToPossibleSetRenderTarget(m_zprepassRenderTarget);
+    //    // まず、レンダリングターゲットとして設定できるようになるまで待つ
+    //    rc->WaitUntilToPossibleSetRenderTarget(m_zprepassRenderTarget);
 
-        rc->SetRenderTarget(
-            m_zprepassRenderTarget.GetRTVCpuDescriptorHandle(),
-            m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
-        );
-        //const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    //    rc->SetRenderTarget(
+    //        m_zprepassRenderTarget.GetRTVCpuDescriptorHandle(),
+    //        m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
+    //    );
+    //    //const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-        float clearColor[4];
-        if (g_skydofflag[g_dofindex] == true) {
-            //#################################################
-            //2024/03/25 SkyDOFはZMAXでサーフェスを初期化すれば良い
-            //#################################################
-            clearColor[0] = ZPRE_ZMAX;
-            clearColor[1] = ZPRE_ZMAX;
-            clearColor[2] = ZPRE_ZMAX;
-            clearColor[3] = 1.0f;
-        }
-        else {
-            clearColor[0] = 0.0f;
-            clearColor[1] = 0.0f;
-            clearColor[2] = 0.0f;
-            clearColor[3] = 1.0f;
-        }
-        rc->ClearRenderTargetView(m_zprepassRenderTarget.GetRTVCpuDescriptorHandle(), clearColor);
-
-
-        ////前のパスで異なるviewportを設定した場合にはviewportの設定し直しが必要
-        rc->SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
-        rc->ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
+    //    float clearColor[4];
+    //    if (g_skydofflag[g_dofindex] == true) {
+    //        //#################################################
+    //        //2024/03/25 SkyDOFはZMAXでサーフェスを初期化すれば良い
+    //        //#################################################
+    //        clearColor[0] = ZPRE_ZMAX;
+    //        clearColor[1] = ZPRE_ZMAX;
+    //        clearColor[2] = ZPRE_ZMAX;
+    //        clearColor[3] = 1.0f;
+    //    }
+    //    else {
+    //        clearColor[0] = 0.0f;
+    //        clearColor[1] = 0.0f;
+    //        clearColor[2] = 0.0f;
+    //        clearColor[3] = 1.0f;
+    //    }
+    //    rc->ClearRenderTargetView(m_zprepassRenderTarget.GetRTVCpuDescriptorHandle(), clearColor);
 
 
-        //2024/03/24 RefPosオンの時はDOFはオフ　RefPosオン時にDOFをオンにするとオブジェクトの境界部分にボケない不透明の三角が多数出来る
-        //if (g_zpreflag && !g_refposflag) {
-        if (g_zpreflag) {
-            int rendernum = srcchascene->GetForwardRenderObjNum();
-            int renderindex;
-            for (renderindex = 0; renderindex < rendernum; renderindex++) {
-                RENDEROBJ currenderobj = srcchascene->GetForwardRenderObj(renderindex);
-                if (currenderobj.pmodel && (currenderobj.pmodel->GetSkyFlag() == false) &&
-                    currenderobj.mqoobj) {
-                    //2024/03/25
-                    //Skyオブジェクト自体のZは不要になった　サーフェスをZMAXで初期化することにした
-                    RenderPolyMeshZPre(rc, currenderobj);
-                }
-            }
-        }
+    //    ////前のパスで異なるviewportを設定した場合にはviewportの設定し直しが必要
+    //    rc->SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
+    //    rc->ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
 
-        rc->WaitUntilFinishDrawingToRenderTarget(m_zprepassRenderTarget);
+
+    //    //2024/03/24 RefPosオンの時はDOFはオフ　RefPosオン時にDOFをオンにするとオブジェクトの境界部分にボケない不透明の三角が多数出来る
+    //    //if (g_zpreflag && !g_refposflag) {
+    //    if (g_zpreflag) {
+    //        int rendernum = srcchascene->GetForwardRenderObjNum();
+    //        int renderindex;
+    //        for (renderindex = 0; renderindex < rendernum; renderindex++) {
+    //            RENDEROBJ currenderobj = srcchascene->GetForwardRenderObj(renderindex);
+    //            if (currenderobj.pmodel && (currenderobj.pmodel->GetSkyFlag() == false) &&
+    //                currenderobj.mqoobj) {
+    //                //2024/03/25
+    //                //Skyオブジェクト自体のZは不要になった　サーフェスをZMAXで初期化することにした
+    //                RenderPolyMeshZPre(rc, currenderobj);
+    //            }
+    //        }
+    //    }
+    //
+    //    rc->WaitUntilFinishDrawingToRenderTarget(m_zprepassRenderTarget);
     }
 
     void RenderingEngine::ForwardRendering(RenderContext* rc, ChaScene* srcchascene)
@@ -556,27 +558,55 @@ namespace myRenderer
             _ASSERT(0);
             return;
         }
-        rc->WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
-        rc->SetRenderTarget(
-            m_mainRenderTarget.GetRTVCpuDescriptorHandle(),
-            //m_gBuffer[enGBufferAlbedo].GetDSVCpuDescriptorHandle()
-            m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
-        );
-        const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-        rc->ClearRenderTargetView(m_mainRenderTarget.GetRTVCpuDescriptorHandle(), clearColor);
+
+        //rc->WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
+        //rc->SetRenderTarget(
+        //    m_mainRenderTarget.GetRTVCpuDescriptorHandle(),
+        //    //m_gBuffer[enGBufferAlbedo].GetDSVCpuDescriptorHandle()
+        //    m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
+        //);
+        //const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        //rc->ClearRenderTargetView(m_mainRenderTarget.GetRTVCpuDescriptorHandle(), clearColor);
+        ////////前のパスで異なるviewportを設定した場合にはviewportの設定し直しが必要
+        //rc->SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
+        ////if ((g_alphablending || g_refposflag) && g_zpreflag) {
+        //if (g_alphablending && g_zpreflag) {
+        //    //2024/03/17
+        //    //g_zpreflagがtrueの場合にはzpreにすでにZが書き込まれている
+        //    //その場合にalphablendingするためには、ここでzpreをもう一度クリアする必要がある
+        //    //そうしないとすでに書き込まれているZより奥のメッシュが書き込まれないためにブレンドされないことがある
+        //    rc->ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
+        //}
 
 
-        //////前のパスで異なるviewportを設定した場合にはviewportの設定し直しが必要
+
+        //#################################################
+        //2024/04/08 ZPrepassと通常レンダーを同時に２つ出力する
+        //頂点変換処理が１回で済むのでDOFオン時の表示が高速化
+        //#################################################
+        RenderTarget* forwardRts[] = {
+            &m_mainRenderTarget,
+            &m_zprepassRenderTarget
+        };
+        //レンダリングターゲットとして利用できるまで待つ
+        rc->WaitUntilToPossibleSetRenderTargets(2, forwardRts);
+        //レンダリングターゲットを設定
+        rc->SetRenderTargetsAndViewport(2, forwardRts);
+        //rc->SetRenderTargets(2, forwardRts);
         rc->SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
+        // レンダリングターゲットをクリア
+        rc->ClearRenderTargetViews(2, forwardRts);
+        //float clearColor[4];
+        ////clearColor[0] = ZPRE_ZMAX;
+        ////clearColor[1] = ZPRE_ZMAX;
+        ////clearColor[2] = ZPRE_ZMAX;
+        //clearColor[0] = 0.0f;
+        //clearColor[1] = 0.0f;
+        //clearColor[2] = 0.0f;
+        //clearColor[3] = 1.0f;
+        //rc->ClearRenderTargetView(m_zprepassRenderTarget.GetRTVCpuDescriptorHandle(), clearColor);
 
-        //if ((g_alphablending || g_refposflag) && g_zpreflag) {
-        if (g_alphablending && g_zpreflag) {
-            //2024/03/17
-            //g_zpreflagがtrueの場合にはzpreにすでにZが書き込まれている
-            //その場合にalphablendingするためには、ここでzpreをもう一度クリアする必要がある
-            //そうしないとすでに書き込まれているZより奥のメッシュが書き込まれないためにブレンドされないことがある
-            rc->ClearDepthStencilView(m_zprepassRenderTarget.GetDSVCpuDescriptorHandle(), 1.0f);
-        }
+
 
 
         int rendernum = srcchascene->GetForwardRenderObjNum();
@@ -614,7 +644,12 @@ namespace myRenderer
         }
 
         // メインレンダリングターゲットへの書き込み終了待ち
-       rc->WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
+        //rc->WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
+
+        // レンダリングターゲットへの書き込み終了待ち
+        rc->WaitUntilFinishDrawingToRenderTargets(2, forwardRts);
+
+
     }
 
 
@@ -625,11 +660,12 @@ namespace myRenderer
             return;
         }
         rc->WaitUntilToPossibleSetRenderTarget(m_mainRenderTarget);
-        rc->SetRenderTarget(
-            m_mainRenderTarget.GetRTVCpuDescriptorHandle(),
-            //m_gBuffer[enGBufferAlbedo].GetDSVCpuDescriptorHandle()
-            m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
-        );
+        //rc->SetRenderTarget(
+        //    m_mainRenderTarget.GetRTVCpuDescriptorHandle(),
+        //    //m_gBuffer[enGBufferAlbedo].GetDSVCpuDescriptorHandle()
+        //    m_zprepassRenderTarget.GetDSVCpuDescriptorHandle()
+        //);
+        rc->SetRenderTarget(m_mainRenderTarget);
         //////前のパスで異なるviewportを設定した場合にはviewportの設定し直しが必要
         rc->SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
 
@@ -862,41 +898,41 @@ namespace myRenderer
             return;
         }
 
-        //2023/12/05
-        //4Kモードでは重いシーンで効果があった
-        //2Kモードでは遮蔽面積が小さいために　ZPrepassのコストの方が大きくなり遅くなる
-        //ZPrepassは4Kモードの場合だけ呼び出すことに.
-
-        if (currenderobj.mqoobj) {
-
-            //############################################
-            //2024/03/25
-            //ForwardRendering用に設定して呼び出されているので
-            //ZPreepass用にcurrenderobjを調整
-            //############################################
-            currenderobj.zenable = true;
-            currenderobj.zcmpalways = false;
-            currenderobj.renderkind = RENDERKIND_ZPREPASS;
-            currenderobj.shadertype = MQOSHADER_TOON;
-
-
-            if (currenderobj.mqoobj->GetDispObj()) {
-                if (currenderobj.mqoobj->GetPm3()) {
-                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                    currenderobj.mqoobj->GetDispObj()->RenderZPrePm3(rc, currenderobj);
-                }
-                else if (currenderobj.mqoobj->GetPm4()) {
-                    //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
-                    currenderobj.mqoobj->GetDispObj()->RenderZPrePm4(rc, currenderobj);
-                }
-            }
-            else if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
-                //################################
-                //GetDispObj()ではなくGetDispLine()
-                //################################
-                //currenderobj.mqoobj->GetDispLine()->RenderLine(rc, currenderobj);
-            }
-        }
+        ////2023/12/05
+        ////4Kモードでは重いシーンで効果があった
+        ////2Kモードでは遮蔽面積が小さいために　ZPrepassのコストの方が大きくなり遅くなる
+        ////ZPrepassは4Kモードの場合だけ呼び出すことに.
+        //
+        //if (currenderobj.mqoobj) {
+        //
+        //    //############################################
+        //    //2024/03/25
+        //    //ForwardRendering用に設定して呼び出されているので
+        //    //ZPreepass用にcurrenderobjを調整
+        //    //############################################
+        //    currenderobj.zenable = true;
+        //    currenderobj.zcmpalways = false;
+        //    currenderobj.renderkind = RENDERKIND_ZPREPASS;
+        //    currenderobj.shadertype = MQOSHADER_TOON;
+        //
+        //
+        //    if (currenderobj.mqoobj->GetDispObj()) {
+        //        if (currenderobj.mqoobj->GetPm3()) {
+        //            //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+        //            currenderobj.mqoobj->GetDispObj()->RenderZPrePm3(rc, currenderobj);
+        //        }
+        //        else if (currenderobj.mqoobj->GetPm4()) {
+        //            //CallF(SetShaderConst(curobj, btflag, calcslotflag), return 1);
+        //            currenderobj.mqoobj->GetDispObj()->RenderZPrePm4(rc, currenderobj);
+        //        }
+        //    }
+        //    else if (currenderobj.mqoobj->GetDispLine() && currenderobj.mqoobj->GetExtLine()) {
+        //        //################################
+        //        //GetDispObj()ではなくGetDispLine()
+        //        //################################
+        //        //currenderobj.mqoobj->GetDispLine()->RenderLine(rc, currenderobj);
+        //    }
+        //}
     }
 
 

@@ -64,7 +64,8 @@ float4 PSMain(PSInput In) : SV_Target0
     // 深度値から不透明度を計算する。
     // 深度値dofparams.xからボケが始まり、深度値dofparams.yで最大のボケ具合になる。
     //  -> つまり、深度値dofparams.yで不透明度が1になる。
-    boke.a = min(1.0f, max(0.0f, ((prezdepth.z - dofparams.x) / (dofparams.y - dofparams.x))));
+    boke.a = min(1.0f, max(0.0f, ((prezdepth.z - dofparams.x) * dofparams.z)));
+    //boke.a = min(1.0f, max(0.0f, ((prezdepth.z - dofparams.x) / (dofparams.y - dofparams.x))));
     //boke.a = min(1.0f, max(0.0f, ((prezdepth.z - testth) / testth)));
 
     

@@ -32,6 +32,7 @@ struct SPSIn
     float2 uv           : TEXCOORD0;
     float4 diffusemult : TEXCOORD1;
     float4 FogAndOther : TEXCOORD2; //x:Fog
+    float4 depth : TEXCOORD3;
 };
 
 struct SPSInShadowMap
@@ -51,13 +52,25 @@ struct SPSInShadowReciever
     // ライトビュースクリーン空間での座標を追加
     float4 posInLVP : TEXCOORD2; // ライトビュースクリーン空間でのピクセルの座標
     float4 FogAndOther : TEXCOORD3; //x:Fog
+    float4 depth : TEXCOORD4;
 };
 
-struct SPSOut
+struct SPSOut0
 {
-    float4 color : COLOR0;
-    //float4 specular : SPECULAR0;
+    float4 color_0 : SV_Target0;
 };
+struct SPSOut1
+{
+    float4 color_1 : SV_Target1;
+};
+struct SPSOut2
+{
+    float4 color_0 : SV_Target0;
+    float4 color_1 : SV_Target1;
+};
+
+
+
 
 ///////////////////////////////////////////
 // 定数バッファー
@@ -136,15 +149,14 @@ float CalcVSFog(float4 worldpos)
     float fog = (vFog.w < 1.1f) ? (vFog.z * length(fogpos.xyz) * vFog.x) : (vFog.z - vFog.z * fogy * fogy);
     return fog;
 }
-SPSOut CalcPSFog(float4 pscol, float fog)
+float4 CalcPSFog(float4 pscol, float fog)
 {
-    SPSOut psOut;
     float3 fogcolor = vFogColor.xyz;
     float fograte = max(0.0f, min(1.0f, fog));
     float3 outcolor = lerp(pscol.xyz, fogcolor, fograte);
-    psOut.color = float4(outcolor, pscol.w);
-    return psOut;
+    return float4(outcolor, pscol.w);
 }
+
 
 float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir)
 {
@@ -173,6 +185,11 @@ SPSIn VSMainSkinStd(SVSIn vsIn, uniform bool hasSkin)
     }
 	
     psIn.pos = mul(finalmat, vsIn.pos);
+    
+    float3 distvec = (psIn.pos.xyz / psIn.pos.w) - eyePos.xyz;
+    psIn.depth.xyz = (Flags1.x == 0) ? length(distvec) : 490000.0f;
+    psIn.depth.w = 1.0f; //自動的にwで割られても良いように
+    
     psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
     psIn.pos = mul(mView, psIn.pos);
     psIn.pos = mul(mProj, psIn.pos);
@@ -232,6 +249,11 @@ SPSInShadowReciever VSMainSkinStdShadowReciever(SVSIn vsIn, uniform bool hasSkin
     }
 	
     float4 worldPos = mul(finalmat, vsIn.pos);
+    
+    float3 distvec = (worldPos.xyz / worldPos.w) - eyePos.xyz;
+    psIn.depth.xyz = (Flags1.x == 0) ? length(distvec) : 490000.0f;
+    psIn.depth.w = 1.0f; //自動的にwで割られても良いように
+    
     psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(worldPos) : 0.0f;
     worldPos /= worldPos.w;
     psIn.pos = mul(mView, worldPos);    
@@ -259,7 +281,7 @@ SPSInShadowReciever VSMainSkinStdShadowReciever(SVSIn vsIn, uniform bool hasSkin
 /// モデル用のピクセルシェーダーのエントリーポイント
 /// </summary>
 
-SPSOut PSMainSkinStd(SPSIn psIn) : SV_Target0
+SPSOut2 PSMainSkinStd(SPSIn psIn) : SV_Target
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
     //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
@@ -298,11 +320,13 @@ SPSOut PSMainSkinStd(SPSIn psIn) : SV_Target0
     totaldiffuse4.w = (lightsnum.x != 0) ? (totalalpha * divlights.x) : 1.0f;
     float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * metalcoef.w;//ライト８個で白飛びしないように応急処置1/8=0.125
     float4 pscol = emission * materialdisprate.z + albedocol * psIn.diffusemult * totaldiffuse4 + totalspecular4;
-    //return pscol;
-    //pscol.w = albedocol.w * psIn.diffusemult.w * materialdisprate.x;
     clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
+    //pscol.w = ((pscol.w - ambient0.w) > 0.0f) ? pscol.w : 0.0f;
 
-    return CalcPSFog(pscol, psIn.FogAndOther.x);
+    SPSOut2 psOut;
+    psOut.color_0 = CalcPSFog(pscol, psIn.FogAndOther.x);
+    psOut.color_1 = psIn.depth;
+    return psOut;
 }
 
 float4 PSMainSkinStdShadowMap(SPSInShadowMap psIn) : SV_Target0
@@ -314,7 +338,7 @@ float4 PSMainSkinStdShadowMap(SPSInShadowMap psIn) : SV_Target0
 }
 
 
-SPSOut PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
+SPSOut2 PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
     //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
@@ -365,6 +389,7 @@ SPSOut PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     float2 shadowValue = g_shadowMap.Sample(g_sampler_shadow, shadowMapUV).xy;
     pscol.xyz *= ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f) && ((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? shadowmaxz.z : 1.0f;
     clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
+    //pscol.w = ((pscol.w - ambient0.w) > 0.0f) ? pscol.w : 0.0f;
 
     
     //if ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f)
@@ -400,13 +425,15 @@ SPSOut PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target0
 
    // return pscol;
     
-    return CalcPSFog(pscol, psIn.FogAndOther.x);
-    
+    SPSOut2 psOut;
+    psOut.color_0 = CalcPSFog(pscol, psIn.FogAndOther.x);
+    psOut.color_1 = psIn.depth;
+    return psOut;
 }
 
 
 
-SPSOut PSMainSkinNoLight(SPSIn psIn) : SV_Target0
+SPSOut2 PSMainSkinNoLight(SPSIn psIn) : SV_Target
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
     //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
@@ -419,16 +446,17 @@ SPSOut PSMainSkinNoLight(SPSIn psIn) : SV_Target0
 
     float4 diffusecol = (lightsnum.y == 1) ? CalcDiffuseColor(1.0f, psIn.normal.xyz, toonlightdir.xyz) : float4(1.0f, 1.0f, 1.0f, 1.0f);
     float4 pscol = emission * materialdisprate.z + albedocol * diffusecol * psIn.diffusemult;
-    //return pscol;
-    //pscol.w = albedocol.w * psIn.diffusemult.w * materialdisprate.x;
     clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
+    //pscol.w = ((pscol.w - ambient0.w) > 0.0f) ? pscol.w : 0.0f;
   
     
-    return CalcPSFog(pscol, psIn.FogAndOther.x);
-    
+    SPSOut2 psOut;
+    psOut.color_0 = CalcPSFog(pscol, psIn.FogAndOther.x);
+    psOut.color_1 = psIn.depth;
+    return psOut;
 }
 
-SPSOut PSMainSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
+SPSOut2 PSMainSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
     //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
@@ -451,8 +479,8 @@ SPSOut PSMainSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     float zInLVP = psIn.posInLVP.z;
     float2 shadowValue = g_shadowMap.Sample(g_sampler_shadow, shadowMapUV).xy;
     pscol.xyz *= ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f) && ((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? shadowmaxz.z : 1.0f;
-    //pscol.w = albedocol.w * psIn.diffusemult.w * materialdisprate.x;
     clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
+    //pscol.w = ((pscol.w - ambient0.w) > 0.0f) ? pscol.w : 0.0f;
 
     //if (shadowMapUV.x > 0.0f && shadowMapUV.x < 1.0f
     //    && shadowMapUV.y > 0.0f && shadowMapUV.y < 1.0f)
@@ -493,6 +521,9 @@ SPSOut PSMainSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target0
     
     //return pscol;
 
-    return CalcPSFog(pscol, psIn.FogAndOther.x);
+    SPSOut2 psOut;
+    psOut.color_0 = CalcPSFog(pscol, psIn.FogAndOther.x);
+    psOut.color_1 = psIn.depth;
+    return psOut;
 }
 

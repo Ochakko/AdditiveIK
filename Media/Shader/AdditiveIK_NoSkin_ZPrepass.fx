@@ -24,8 +24,8 @@ struct SVSIn
 struct SPSInZPrepass
 {
     float4 pos : SV_POSITION; //座標。
-    float4 depth : POSITION1; //深度値。xにはプロジェクション空間、yにはカメラ空間での正規化されたZ値、zにはカメラ空間でのZ値
-    float2 uv : TEXCOORD0;
+    float4 depth : TEXCOORD0; //深度値。world空間におけるカメラからの距離　w割り算が必要ないのでTEXCOORD
+    float2 uv : TEXCOORD1;
 };
 
 ///////////////////////////////////////////
