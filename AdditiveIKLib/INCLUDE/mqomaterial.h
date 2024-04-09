@@ -85,7 +85,7 @@ struct SConstantBuffer {
 		emission = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
 		metalcoef = ChaVector4(0.250f, 0.250f, 0.0f, 0.0f);
 		materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		shadowmaxz = ChaVector4(3000.0f, 0.0010f, 0.0f, 0.0f);
+		shadowmaxz = ChaVector4(1.0f/3000.0f, 0.0010f, 0.0f, 0.0f);
 		UVs[0] = 0;
 		UVs[1] = 1;
 		UVs[2] = 1;

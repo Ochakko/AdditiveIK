@@ -1023,6 +1023,67 @@ int CDispObj::RenderShadowMap(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	}
 	renderobj.renderkind = RENDERKIND_SHADOWMAP;
 	return RenderNormal(rc, renderobj);
+
+
+
+	//renderobj.renderkind = RENDERKIND_SHADOWMAP;
+	//renderobj.shadertype = MQOSHADER_TOON;
+	//renderobj.forcewithalpha = false;
+	//renderobj.withalpha = false;
+	//renderobj.lightflag = false;
+
+	//if (!rc) {
+	//	_ASSERT(0);
+	//	return 1;
+	//}
+	//
+	//if (!m_pm4) {
+	//	_ASSERT(0);
+	//	return 0;
+	//}
+	//
+	//int materialnum = m_pm4->GetDispMaterialNum();
+	//if (materialnum <= 0) {
+	//	_ASSERT(0);
+	//	return 0;
+	//}
+	//
+	//int totaltrinum = m_pm4->GetFaceNum();
+	//if (totaltrinum > 0) {
+	//	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//
+	//	//1. 頂点バッファを設定。
+	//	rc->SetVertexBuffer(m_vertexBufferView);
+	//	//3. インデックスバッファを設定。
+	//	rc->SetIndexBuffer(m_indexBufferView);
+	//
+	//
+	//	//###############################
+	//	//### 最初のマテリアルで全部描画する
+	//	//###############################
+	//	int materialcnt = 0;
+	//	CMQOMaterial* curmat = NULL;
+	//	int curoffset = 0;
+	//	int curtrinum = 0;
+	//	int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
+	//	if ((result0 == 0) && (curmat != NULL) && curmat->GetShadowCasterFlag()) {
+	//
+	//		Matrix mView, mProj;
+	//		//for shadow
+	//		mView = g_cameraShadow->GetViewMatrix(false);
+	//		mProj = g_cameraShadow->GetProjectionMatrix();
+	//
+	//		//定数バッファの設定、更新など描画の共通処理を実行する。
+	//		int refposindex = 0;//!!!!!!!!!
+	//		curmat->DrawCommon(rc, renderobj, mView, mProj, refposindex);
+	//		curmat->BeginRender(rc, renderobj, refposindex);
+	//		//4. ドローコールを実行。
+	//		//rc->DrawIndexed(curtrinum * 3, curoffset);
+	//		rc->DrawIndexed(totaltrinum * 3, 0);
+	//	}
+	//}
+
+	return 0;
 }
 int CDispObj::RenderShadowMapPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 {
@@ -1032,6 +1093,64 @@ int CDispObj::RenderShadowMapPM3(RenderContext* rc, myRenderer::RENDEROBJ render
 	}
 	renderobj.renderkind = RENDERKIND_SHADOWMAP;
 	return RenderNormalPM3(rc, renderobj);
+
+	
+	//renderobj.renderkind = RENDERKIND_SHADOWMAP;
+	//renderobj.shadertype = MQOSHADER_TOON;
+	//renderobj.forcewithalpha = false;
+	//renderobj.withalpha = false;
+	//renderobj.lightflag = false;
+	//
+	//if (!rc || !renderobj.pmodel || !renderobj.mqoobj) {
+	//	_ASSERT(0);
+	//	return 0;
+	//}
+	//
+	//if (!m_pm3) {
+	//	return 0;
+	//}
+	//if (m_pm3->GetCreateOptFlag() == 0) {
+	//	return 0;
+	//}
+	//
+	//int totaltrinum = m_pm3->GetFaceNum();
+	//if (totaltrinum > 0) {
+	//	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//
+	//	//1. 頂点バッファを設定。
+	//	rc->SetVertexBuffer(m_vertexBufferView);
+	//	//3. インデックスバッファを設定。
+	//	rc->SetIndexBuffer(m_indexBufferView);
+	//
+	//
+	////###############################
+	////### 最初のマテリアルで全部描画する
+	////###############################
+	//	int blno = 0;
+	//	MATERIALBLOCK* currb = m_pm3->GetMatBlock() + blno;
+	//	CMQOMaterial* curmat;
+	//	curmat = currb->mqomat;
+	//	if (!curmat) {
+	//		//_ASSERT(0);
+	//		return 1;
+	//	}
+	//
+	//	if (curmat->GetShadowCasterFlag()) {
+	//		Matrix mView, mProj;
+	//		//for shadow
+	//		mView = g_cameraShadow->GetViewMatrix(false);
+	//		mProj = g_cameraShadow->GetProjectionMatrix();
+	//
+	//		//定数バッファの設定、更新など描画の共通処理を実行する。
+	//		int refposindex = 0;//!!!!!!!!!
+	//		curmat->DrawCommon(rc, renderobj, mView, mProj, refposindex);
+	//		curmat->BeginRender(rc, renderobj, refposindex);
+	//
+	//		//4. ドローコールを実行。
+	//		rc->DrawIndexed(totaltrinum * 3, 0);
+	//	}
+	//}
+	//return 0;
 }
 int CDispObj::RenderShadowReciever(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 {

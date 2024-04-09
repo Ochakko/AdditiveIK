@@ -19598,9 +19598,9 @@ int CModel::ChkInView(int refposindex)
 
 			Matrix shadowvp;
 			shadowvp = g_cameraShadow->GetViewProjectionMatrix();
-			ChaMatrix chashadowvp = ChaMatrix(shadowvp);
-			GetFrustumPlanes(chashadowvp, &(cb.shadowPlanes[0][0]));
-			GetFrustumCorners(chashadowvp, &(cb.shadowCorners[0][0]));
+			ChaMatrix chashadowwvp = chkMatWorld * ChaMatrix(shadowvp);//2024/04/09 chkMatWorld * 
+			GetFrustumPlanes(chashadowwvp, &(cb.shadowPlanes[0][0]));
+			GetFrustumCorners(chashadowwvp, &(cb.shadowCorners[0][0]));
 
 			//#######################
 			//コンピュートシェーダで実行

@@ -3851,8 +3851,16 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 			m_cb[0].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
 		m_cb[0].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
+		float shadowfar = g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
+		float divshadowfar;
+		if (fabs(shadowfar) >= 1e-4) {
+			divshadowfar = 1.0f / shadowfar;
+		}
+		else {
+			divshadowfar = 0.0f;
+		}
 		m_cb[0].shadowmaxz = ChaVector4(
-			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
+			divshadowfar,
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		m_cb[0].UVs[0] = g_uvset;
 		m_cb[0].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
@@ -3879,8 +3887,16 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 			m_cb[0].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
 		m_cb[0].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
+		float shadowfar = g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
+		float divshadowfar;
+		if (fabs(shadowfar) >= 1e-4) {
+			divshadowfar = 1.0f / shadowfar;
+		}
+		else {
+			divshadowfar = 0.0f;
+		}
 		m_cb[0].shadowmaxz = ChaVector4(
-			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
+			divshadowfar,
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		m_cb[0].UVs[0] = g_uvset;
 		m_cb[0].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
@@ -3921,8 +3937,16 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 			m_cb[0].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
 		m_cb[0].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
+		float shadowfar = g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
+		float divshadowfar;
+		if (fabs(shadowfar) >= 1e-4) {
+			divshadowfar = 1.0f / shadowfar;
+		}
+		else {
+			divshadowfar = 0.0f;
+		}
 		m_cb[0].shadowmaxz = ChaVector4(
-			g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno],
+			divshadowfar,
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		m_cb[0].UVs[0] = g_uvset;
 		m_cb[0].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
