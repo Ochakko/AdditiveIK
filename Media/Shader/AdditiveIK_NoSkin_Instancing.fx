@@ -42,6 +42,19 @@ struct SPSIn
     float4 diffusemult  : TEXCOORD1;
 };
 
+struct SPSOut0
+{
+    float4 color_0 : SV_Target0;
+};
+struct SPSOut1
+{
+    float4 color_1 : SV_Target1;
+};
+struct SPSOut2
+{
+    float4 color_0 : SV_Target0;
+    float4 color_1 : SV_Target1;
+};
 
 ///////////////////////////////////////////
 // 定数バッファー
@@ -59,7 +72,7 @@ cbuffer ModelCb : register(b0)
     float4 materialdisprate;
     float4 shadowmaxz;
     int4 UVs;
-    int4 Flags1; //x:skyflag, y:groundflag
+    int4 Flags1; //x:skyflag, y:groundflag, z:skydofflag
 };
 
 // ディレクションライト
@@ -152,7 +165,7 @@ SPSIn VSMainNoSkinInstancing(SVSInInstancing vsIn, uniform bool hasSkin)
     return psIn;
 }
 
-float4 PSMainNoSkinInstancingNoLight(SPSIn psIn) : SV_Target0
+SPSOut2 PSMainNoSkinInstancingNoLight(SPSIn psIn) : SV_Target
 {
     // 普通にテクスチャを
     //return g_texture.Sample(g_sampler, psIn.uv);
@@ -167,6 +180,9 @@ float4 PSMainNoSkinInstancingNoLight(SPSIn psIn) : SV_Target0
     //pscol.w = albedocol.w * psIn.diffusemult.w * materialdisprate.x;
     clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
     
-    return pscol;
+    SPSOut2 psOut;
+    psOut.color_0 = pscol;
+    psOut.color_1 = float4(0.0f, 0.0f, 0.0f, 0.0f);//DOFでボケないように0.0をセット
+    return psOut;
 }
 

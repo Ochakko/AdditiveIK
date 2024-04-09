@@ -358,9 +358,9 @@ namespace myRenderer
         
 
         // シャドウマップへの描画
-        if (g_enableshadow) {
-            RenderToShadowMap(rc, srcchascene);
-        }
+		if (g_enableshadow) {
+			RenderToShadowMap(rc, srcchascene);
+		}
         
 
         //// ZPrepass
@@ -593,21 +593,9 @@ namespace myRenderer
         //レンダリングターゲットを設定
         rc->SetRenderTargetsAndViewport(2, forwardRts);
         //rc->SetRenderTargets(2, forwardRts);
-        rc->SetViewportAndScissor(g_graphicsEngine->GetFrameBufferViewport());
+        rc->SetViewportAndScissor2(g_graphicsEngine->GetFrameBufferViewport());//2024/04/09 2つ同じものをセット
         // レンダリングターゲットをクリア
         rc->ClearRenderTargetViews(2, forwardRts);
-        //float clearColor[4];
-        ////clearColor[0] = ZPRE_ZMAX;
-        ////clearColor[1] = ZPRE_ZMAX;
-        ////clearColor[2] = ZPRE_ZMAX;
-        //clearColor[0] = 0.0f;
-        //clearColor[1] = 0.0f;
-        //clearColor[2] = 0.0f;
-        //clearColor[3] = 1.0f;
-        //rc->ClearRenderTargetView(m_zprepassRenderTarget.GetRTVCpuDescriptorHandle(), clearColor);
-
-
-
 
         int rendernum = srcchascene->GetForwardRenderObjNum();
         int renderindex;
@@ -643,12 +631,8 @@ namespace myRenderer
             }
         }
 
-        // メインレンダリングターゲットへの書き込み終了待ち
-        //rc->WaitUntilFinishDrawingToRenderTarget(m_mainRenderTarget);
-
         // レンダリングターゲットへの書き込み終了待ち
         rc->WaitUntilFinishDrawingToRenderTargets(2, forwardRts);
-
 
     }
 

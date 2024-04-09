@@ -1823,10 +1823,23 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 			(shaderindex == MQOSHADER_TOON_SHADOWMAP) ||
 			(shaderindex == MQOSHADER_STD_SHADOWMAP)
 			) {
-			//2023/12/11 ShadowMap
-			psoDesc.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
-			//psoDesc.RTVFormats[0] = DXGI_FORMAT_R32G32_FLOAT;
-			numRenderTarget = 1;
+			////2023/12/11 ShadowMap
+			//psoDesc.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			////psoDesc.RTVFormats[0] = DXGI_FORMAT_R32G32_FLOAT;
+			//numRenderTarget = 1;
+
+			//##################################################################################################
+			//2024/04/09 マルチレンダーターゲットを導入後、以下のようにしないと警告が出る
+			//MRTを使わないPixelShaderであっても、同じfxファイル内のPSがMRTを使っている場合には、PSOに複数MRTをセットしておく
+			//##################################################################################################
+			for (auto& format : colorBufferFormat) {
+				if (format == DXGI_FORMAT_UNKNOWN) {
+					//フォーマットが指定されていない場所が来たら終わり。
+					break;
+				}
+				psoDesc.RTVFormats[numRenderTarget] = colorBufferFormat[numRenderTarget];
+				numRenderTarget++;
+			}
 		}
 		//else if (
 		//	(shaderindex == MQOSHADER_PBR_SHADOWRECIEVER) ||
@@ -3654,6 +3667,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);
 		m_cb[currentrefposindex].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
+		m_cb[currentrefposindex].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 
 		m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
 
@@ -3697,6 +3711,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);
 		m_cb[currentrefposindex].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
+		m_cb[currentrefposindex].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
@@ -3757,6 +3772,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);
 		m_cb[currentrefposindex].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
+		m_cb[currentrefposindex].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
@@ -3865,6 +3881,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].UVs[0] = g_uvset;
 		m_cb[0].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
 		m_cb[0].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
+		m_cb[0].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 
 		m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);
 	}
@@ -3901,6 +3918,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].UVs[0] = g_uvset;
 		m_cb[0].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
 		m_cb[0].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
+		m_cb[0].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);
@@ -3951,6 +3969,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].UVs[0] = g_uvset;
 		m_cb[0].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
 		m_cb[0].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
+		m_cb[0].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);

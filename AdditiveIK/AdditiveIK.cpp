@@ -23899,6 +23899,7 @@ int Bone2AngleLimit()
 		}
 	}
 	else {
+		//モーションの無いfbxに対してプレビューボタンを押すとここを通る
 		_ASSERT(0);
 		s_anglelimit.Init();
 	}

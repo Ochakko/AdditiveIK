@@ -44,6 +44,7 @@ struct SPSInShadowMap
     float4 pos : SV_POSITION;
     float2 uv : TEXCOORD0;
     float2 depth : TEXCOORD1; // ライト空間での座標
+    //float4 zpredepth : TEXCOORD2;
 };
 
 
@@ -105,7 +106,7 @@ cbuffer ModelCb : register(b0)
     float4 materialdisprate;
     float4 shadowmaxz; //x:(1/shadowfar), y:shadowbias
     int4 UVs;//x:UVSet, y:TilingU, z:TilingV   
-    int4 Flags1; //x:skyflag, y:groundflag
+    int4 Flags1; //x:skyflag, y:groundflag, z:skydofflag
 };
 
 // ディレクションライト
@@ -199,7 +200,8 @@ SPSIn VSMainNoSkinStd(SVSInWithoutBone vsIn, uniform bool hasSkin)
     psIn.pos = mul(mWorld, vsIn.pos);   // モデルの頂点をワールド座標系に変換
     
     float3 distvec = (psIn.pos.xyz / psIn.pos.w) - eyePos.xyz;
-    psIn.depth.xyz = (Flags1.x == 0) ? length(distvec) : 490000.0f;
+    float skyvalue = (Flags1.z == 1) ? 490000.0f : 0.0f;//skydof ? skydofON : skydofOFF
+    psIn.depth.xyz = (Flags1.x == 0) ? length(distvec) : skyvalue;// !skymesh ? dist : skyvalue
     psIn.depth.w = 1.0f; //自動的にwで割られても良いように
     
     psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
@@ -223,6 +225,11 @@ SPSInShadowMap VSMainNoSkinStdShadowMap(SVSInWithoutBone vsIn, uniform bool hasS
 
     psIn.pos = mul(mWorld, vsIn.pos); // モデルの頂点をワールド座標系に変換
     float4 worldPos = psIn.pos / psIn.pos.w;
+    
+    //float3 distvec = worldPos.xyz - eyePos.xyz;
+    //psIn.zpredepth.xyz = (Flags1.x == 0) ? length(distvec) : 490000.0f;
+    //psIn.zpredepth.w = 1.0f; //自動的にwで割られても良いように
+    
     //float4 worldPos = psIn.pos;
     psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
@@ -248,7 +255,8 @@ SPSInShadowReciever VSMainNoSkinStdShadowReciever(SVSInWithoutBone vsIn, uniform
     float4 worldPos = mul(mWorld, vsIn.pos);
     
     float3 distvec = (worldPos.xyz / worldPos.w) - eyePos.xyz;
-    psIn.depth.xyz = (Flags1.x == 0) ? length(distvec) : 490000.0f;
+    float skyvalue = (Flags1.z == 1) ? 490000.0f : 0.0f; //skydof ? skydofON : skydofOFF
+    psIn.depth.xyz = (Flags1.x == 0) ? length(distvec) : skyvalue; // !skymesh ? dist : skyvalue
     psIn.depth.w = 1.0f; //自動的にwで割られても良いように
     
     psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(worldPos) : 0.0f;
@@ -346,12 +354,14 @@ SPSOut2 PSMainNoSkinStd(SPSIn psIn) : SV_Target
     return psOut;
 }
 
-float4 PSMainNoSkinStdShadowMap(SPSInShadowMap psIn) : SV_Target0
+SPSOut0 PSMainNoSkinStdShadowMap(SPSInShadowMap psIn) : SV_Target0
 {
     float4 albedocol = g_albedo.Sample(g_sampler_albedo, psIn.uv);
     clip(albedocol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
     
-    return float4(psIn.depth.x, psIn.depth.y, 0.0f, 1.0f);
+    SPSOut0 psOut;
+    psOut.color_0 = float4(psIn.depth.x, psIn.depth.y, 0.0f, 1.0f);
+    return psOut;
 }
 
 SPSOut2 PSMainNoSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target

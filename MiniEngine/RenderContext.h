@@ -105,6 +105,27 @@ public:
 		m_commandList->RSSetViewports(1, &viewport);
 		m_currentViewport = viewport;
 	}
+	void SetViewportAndScissor2(D3D12_VIEWPORT& viewport)
+	{
+		//###########################################
+		//2024/04/09
+		//MultiRenderTarget用
+		//同じビューポートとScissorRectを２つセットする
+		//###########################################
+
+		//シザリング矩形も設定する。
+		D3D12_RECT scissorRect;
+		scissorRect.bottom = static_cast<LONG>(viewport.Height);
+		scissorRect.top = 0;
+		scissorRect.left = 0;
+		scissorRect.right = static_cast<LONG>(viewport.Width);
+		SetScissorRect2(scissorRect);
+
+		D3D12_VIEWPORT setvps[2] = { viewport, viewport };
+		m_commandList->RSSetViewports(2, setvps);//2, 
+		m_currentViewport = viewport;
+	}
+
 	/// <summary>
 	/// ビューポートを取得。
 	/// </summary>
@@ -120,6 +141,16 @@ public:
 	void SetScissorRect(D3D12_RECT& rect)
 	{
 		m_commandList->RSSetScissorRects(1, &rect);
+	}
+	void SetScissorRect2(D3D12_RECT& rect)
+	{
+		//##############################
+		//2024/04/09
+		//マルチレンダーターゲット用
+		//同じScissorRectを２つセットする
+		//##############################
+		D3D12_RECT setsrs[2] = { rect, rect };
+		m_commandList->RSSetScissorRects(2, setsrs);
 	}
 
 	/// <summary>
