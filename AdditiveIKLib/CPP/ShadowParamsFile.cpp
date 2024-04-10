@@ -92,6 +92,12 @@ int CShadowParamsFile::WriteShadowParamsFile(const WCHAR* srcfilepath)
 	else {
 		CallF(Write2File("    <ShadowEnable>0</ShadowEnable>\r\n"), return 1);
 	}
+	if (g_VSMflag) {
+		CallF(Write2File("    <VarianceShadowMaps>1</VarianceShadowMaps>\r\n"), return 1);
+	}
+	else {
+		CallF(Write2File("    <VarianceShadowMaps>0</VarianceShadowMaps>\r\n"), return 1);
+	}
 
 	char strshadowtag[9][256] = {
 		"ShadowMapFov",
@@ -176,7 +182,10 @@ int CShadowParamsFile::WriteFileInfo()
 
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShadowParamsFile</kind>\r\n    <version>1001</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//2023/08/18 To12024 : Add <TotalScale>%.3f</TotalScale> and <Scale>%.3f</Scale>
-	CallF(Write2File("  <FileInfo>\r\n    <kind>ShadowParamsFile</kind>\r\n    <version>1002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShadowParamsFile</kind>\r\n    <version>1002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+
+	//2024/04/10 Add Tag of SoftShadow
+	CallF(Write2File("  <FileInfo>\r\n    <kind>ShadowParamsFile</kind>\r\n    <version>1003</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	return 0;
 }
@@ -224,6 +233,7 @@ int CShadowParamsFile::LoadShadowParamsFile(const WCHAR* srcfilepath)
 	float shadowmap_plusright = 1.0f;
 	int shadowmap_lightdir = 1;
 	int shadowenable = 1;
+	int softshadow = 0;
 
 	int result;
 	m_xmliobuf.pos = 0;
@@ -239,6 +249,16 @@ int CShadowParamsFile::LoadShadowParamsFile(const WCHAR* srcfilepath)
 		}
 	}
 
+	result = Read_Int(&m_xmliobuf, "<VarianceShadowMaps>", "</VarianceShadowMaps>",
+		&softshadow);
+	if (result == 0) {
+		if (softshadow == 1) {
+			g_VSMflag = true;
+		}
+		else {
+			g_VSMflag = false;
+		}
+	}
 
 	char strshadowtag[9][256] = {
 		"ShadowMapFov",

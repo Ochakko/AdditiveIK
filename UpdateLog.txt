@@ -4,6 +4,16 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/04/10
+　VarianceShadowMaps(分散シャドウマップ)導入
+　　ShadowプレートメニューにVarianceShadowMapsチェックボックスを追加
+　　深度情報の差分から光が当たる確率を求めて陰色割合を決める方法
+　　影の色が(変化して)ソフトになりノイズも減るようです
+　　調整法としては、VSMをオンにする場合には自動で影の濃さが変わるのでcolor値は小さめも有, ノイズも確率的に減るのでbias値も小さく.
+
+
+
+
 2024/04/09
 　DOF表示の高速化
 　　DOFをオンにした時の表示速度が約1.5倍速(DOFオフの時とほぼ同じ)に.
@@ -20,8 +30,6 @@ https://github.com/Ochakko/AdditiveIK
 
 　DOFプレートメニューのSkyDofのオンオフが機能するように.
 　　DOF表示の高速化の修正でSkyDofがダイアログのチェックに関わらず常にオンになっていたのを修正
-
-
 
 
 

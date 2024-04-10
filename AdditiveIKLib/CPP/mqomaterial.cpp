@@ -3668,6 +3668,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
+		m_cb[currentrefposindex].Flags[3] = g_VSMflag ? 1 : 0;
 
 		m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
 
@@ -3712,6 +3713,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
+		m_cb[currentrefposindex].Flags[3] = g_VSMflag ? 1 : 0;
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
@@ -3773,6 +3775,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
+		m_cb[currentrefposindex].Flags[3] = g_VSMflag ? 1 : 0;
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
@@ -3882,6 +3885,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
 		m_cb[0].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[0].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
+		m_cb[0].Flags[3] = g_VSMflag ? 1 : 0;
 
 		m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);
 	}
@@ -3919,6 +3923,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
 		m_cb[0].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[0].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
+		m_cb[0].Flags[3] = g_VSMflag ? 1 : 0;
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);
@@ -3970,6 +3975,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
 		m_cb[0].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[0].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
+		m_cb[0].Flags[3] = g_VSMflag ? 1 : 0;
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);

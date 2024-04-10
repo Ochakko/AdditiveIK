@@ -89,7 +89,7 @@ cbuffer ModelCb : register(b0)
     float4 materialdisprate;
     float4 shadowmaxz; //x:(1/shadowfar), y:shadowbias
     int4 UVs;//x:UVSet, y:TilingU, z:TilingV   
-    int4 Flags1; //x:skyflag, y:groundflag, z:skydofflag
+    int4 Flags1; //x:skyflag, y:groundflag, z:skydofflag, w:VSM
 };
 
 // ディレクションライト
@@ -230,7 +230,7 @@ SPSInShadowMap VSMainSkinStdShadowMap(SVSIn vsIn, uniform bool hasSkin)
     //psIn.pos /= psIn.pos.w;
     
     // step-9 頂点のライトから見た深度値と、ライトから見た深度値の2乗を計算する
-    psIn.depth.x = length(worldPos.xyz - lightPos.xyz) * shadowmaxz.x;
+    psIn.depth.x = min(1.0f, (length(worldPos.xyz - lightPos.xyz) * shadowmaxz.x));
     //float4 posLVP = mul(mLVP, worldPos);
     //psIn.depth.x = posLVP.z / posLVP.w;
     psIn.depth.y = psIn.depth.x * psIn.depth.x;
@@ -273,7 +273,7 @@ SPSInShadowReciever VSMainSkinStdShadowReciever(SVSIn vsIn, uniform bool hasSkin
     //psIn.posInLVP.xy = psIn.pos.xy;
     //psIn.posInLVP.w = psIn.pos.w;    
     // step-12 頂点のライトから見た深度値を計算する
-    psIn.posInLVP.z = length(worldPos.xyz - lightPos.xyz) * shadowmaxz.x;
+    psIn.posInLVP.z = min(1.0f, length(worldPos.xyz - lightPos.xyz) * shadowmaxz.x);
     
     psIn.normal = normalize(mul(finalmat, vsIn.normal));
     float2 orguv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
@@ -397,43 +397,45 @@ SPSOut2 PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target
     // ライトビュースクリーン空間でのZ値を計算する
     float zInLVP = psIn.posInLVP.z;
     float2 shadowValue = g_shadowMap.Sample(g_sampler_shadow, shadowMapUV).xy;
-    pscol.xyz *= ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f) && ((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? shadowmaxz.z : 1.0f;
+    if ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f)
+        && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f))
+    {
+        if (Flags1.w == 0)
+        {
+            pscol.xyz *= (((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? shadowmaxz.z : 1.0f;
+        }
+        else
+        {
+    //###########
+    //2024/04/10
+    //Variance Shadow Maps　分散シャドウマップ
+    //###########                        
+        // まずこのピクセルが遮蔽されているか調べる。これは通常のデプスシャドウと同じ
+            if (((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f))
+            {
+            // 遮蔽されているなら、チェビシェフの不等式を利用して光が当たる確率を求める
+                float depth_sq = shadowValue.x * shadowValue.x;
+
+            // このグループの分散具合を求める
+            // 分散が大きいほど、varianceの数値は大きくなる
+                float variance = min(max(shadowValue.y - depth_sq, 0.0001f), 1.0f);
+
+            // このピクセルのライトから見た深度値とシャドウマップの平均の深度値の差を求める
+                float md = zInLVP - shadowValue.x;
+
+            // 光が届く確率を求める
+                float lit_factor = variance / (variance + md * md);
+
+            // シャドウカラーを求める
+                float3 shadowColor = pscol.xyz * shadowmaxz.z;
+
+            // 光が当たる確率を使って通常カラーとシャドウカラーを線形補完
+                pscol.xyz = lerp(shadowColor, pscol.xyz, lit_factor);
+            }
+        }
+    }
+
     clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
-    //pscol.w = ((pscol.w - ambient0.w) > 0.0f) ? pscol.w : 0.0f;
-
-    
-    //if ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f)
-    //    && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f))
-    //{
-    //    // step-13 シャドウレシーバーに影を落とす
-    //    // シャドウマップから値をサンプリング
-    //    float2 shadowValue = g_shadowMap.Sample(g_sampler, shadowMapUV).xy;
-
-    //    // まずこのピクセルが遮蔽されているか調べる。これは通常のデプスシャドウと同じ
-    //    if ((zInLVP > shadowValue.r) && (zInLVP <= 1.0f))
-    //    {
-    //        // 遮蔽されているなら、チェビシェフの不等式を利用して光が当たる確率を求める
-    //        float depth_sq = shadowValue.x * shadowValue.x;
-
-    //        // このグループの分散具合を求める
-    //        // 分散が大きいほど、varianceの数値は大きくなる
-    //        float variance = min(max(shadowValue.y - depth_sq, 0.0001f), 1.0f);
-
-    //        // このピクセルのライトから見た深度値とシャドウマップの平均の深度値の差を求める
-    //        float md = zInLVP - shadowValue.x;
-
-    //        // 光が届く確率を求める
-    //        float lit_factor = variance / (variance + md * md);
-
-    //        // シャドウカラーを求める
-    //        float3 shadowColor = pscol.xyz * 0.5f;
-
-    //        // 光が当たる確率を使って通常カラーとシャドウカラーを線形補完
-    //        pscol.xyz = lerp(shadowColor, pscol.xyz, lit_factor);
-    //    }
-    //}
-
-   // return pscol;
     
     SPSOut2 psOut;
     psOut.color_0 = CalcPSFog(pscol, psIn.FogAndOther.x);
@@ -488,48 +490,47 @@ SPSOut2 PSMainSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target
     // ライトビュースクリーン空間でのZ値を計算する
     float zInLVP = psIn.posInLVP.z;
     float2 shadowValue = g_shadowMap.Sample(g_sampler_shadow, shadowMapUV).xy;
-    pscol.xyz *= ((shadowMapUV.x > 0.0f) && (shadowMapUV.x < 1.0f) && (shadowMapUV.y > 0.0f) && (shadowMapUV.y < 1.0f) && ((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? shadowmaxz.z : 1.0f;
+
+    if (shadowMapUV.x > 0.0f && shadowMapUV.x < 1.0f
+        && shadowMapUV.y > 0.0f && shadowMapUV.y < 1.0f)
+    {
+        if (Flags1.w == 0)
+        {
+            pscol.xyz *= (((zInLVP - shadowmaxz.y) > shadowValue.r) && (zInLVP <= 1.0f)) ? shadowmaxz.z : 1.0f;
+        }
+        else
+        {
+    //###########
+    //2024/04/10
+    //Variance Shadow Maps　分散シャドウマップ
+    //###########                        
+        // まずこのピクセルが遮蔽されているか調べる。これは通常のデプスシャドウと同じ
+            if ((zInLVP - shadowmaxz.y) > shadowValue.r && zInLVP <= 1.0f)
+            {
+            // 遮蔽されているなら、チェビシェフの不等式を利用して光が当たる確率を求める
+                float depth_sq = shadowValue.x * shadowValue.x;
+
+            // このグループの分散具合を求める
+            // 分散が大きいほど、varianceの数値は大きくなる
+                float variance = min(max(shadowValue.y - depth_sq, 0.0001f), 1.0f);
+
+            // このピクセルのライトから見た深度値とシャドウマップの平均の深度値の差を求める
+                float md = zInLVP - shadowValue.x;
+
+            // 光が届く確率を求める
+                float lit_factor = variance / (variance + md * md);
+
+            // シャドウカラーを求める
+                float3 shadowColor = pscol.xyz * shadowmaxz.z;
+
+            // 光が当たる確率を使って通常カラーとシャドウカラーを線形補完
+                pscol.xyz = lerp(shadowColor, pscol.xyz, lit_factor);
+            }
+        }
+    }
+    
+    
     clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
-    //pscol.w = ((pscol.w - ambient0.w) > 0.0f) ? pscol.w : 0.0f;
-
-    //if (shadowMapUV.x > 0.0f && shadowMapUV.x < 1.0f
-    //    && shadowMapUV.y > 0.0f && shadowMapUV.y < 1.0f)
-    //{
-    //    // step-13 シャドウレシーバーに影を落とす
-    //    // シャドウマップから値をサンプリング
-    //    float2 shadowValue = g_shadowMap.Sample(g_sampler, shadowMapUV).xy;
-
-    //    // まずこのピクセルが遮蔽されているか調べる。これは通常のデプスシャドウと同じ
-    //    if (zInLVP > shadowValue.r && zInLVP <= 1.0f)
-    //    {
-    //        //// 遮蔽されているなら、チェビシェフの不等式を利用して光が当たる確率を求める
-    //        //float depth_sq = shadowValue.x * shadowValue.x;
-
-    //        //// このグループの分散具合を求める
-    //        //// 分散が大きいほど、varianceの数値は大きくなる
-    //        //float variance = min(max(shadowValue.y - depth_sq, 0.0001f), 1.0f);
-
-    //        //// このピクセルのライトから見た深度値とシャドウマップの平均の深度値の差を求める
-    //        //float md = zInLVP - shadowValue.x;
-
-    //        //// 光が届く確率を求める
-    //        //float lit_factor = variance / (variance + md * md);
-
-    //        //// シャドウカラーを求める
-    //        //float3 shadowColor = pscol.xyz * 0.5f;
-
-    //        //// 光が当たる確率を使って通常カラーとシャドウカラーを線形補完
-    //        //pscol.xyz = lerp(shadowColor, pscol.xyz, lit_factor);
-            
-    //        pscol.xyz = float3(0.0f, 0.0f, 0.0f);
-
-    //    }
-    //}
-    
-    
-    
-    
-    //return pscol;
 
     SPSOut2 psOut;
     psOut.color_0 = CalcPSFog(pscol, psIn.FogAndOther.x);

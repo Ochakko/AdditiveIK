@@ -75,7 +75,7 @@ struct SConstantBuffer {
 	ChaVector4 materialdisprate;
 	ChaVector4 shadowmaxz;
 	int UVs[4];//[0]:UVSet, [1]:TilingU, [2]:TilingV
-	int Flags[4];//[0]:skyflag, [1]:groundflag, [2]:skydofflag
+	int Flags[4];//[0]:skyflag, [1]:groundflag, [2]:skydofflag, [3]:VarianceShadowMaps
 	void Init() {
 		mWorld.SetIdentity();
 		mView.SetIdentity();

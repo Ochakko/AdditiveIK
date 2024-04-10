@@ -3777,6 +3777,7 @@ void InitApp()
 
 	{
 		g_enableshadow = true;
+		g_VSMflag = false;
 		g_shadowmapforshader = nullptr;
 		g_shadowmap_slotno = 0;
 		int slotno;
@@ -24909,11 +24910,18 @@ int ShadowParams2Dlg(HWND hDlgWnd)
 	//#########
 	//CheckBox
 	//#########
-	if ((bool)g_enableshadow == true) {
+	if (g_enableshadow == true) {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_ENABLESHADOW, true);
 	}
 	else {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_ENABLESHADOW, false);
+	}
+
+	if (g_VSMflag == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_SOFTSHADOW, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_SOFTSHADOW, false);
 	}
 
 	//if (s_camtargetdisp == true) {
@@ -26416,6 +26424,18 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 			}
 			else {
 				g_enableshadow = false;
+			}
+		}
+		break;
+		case IDC_CHECK_SOFTSHADOW:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_SOFTSHADOW);
+			if (ischecked == BST_CHECKED) {
+				g_VSMflag = true;
+			}
+			else {
+				g_VSMflag = false;
 			}
 		}
 		break;
