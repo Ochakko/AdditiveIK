@@ -98,6 +98,12 @@ int CShadowParamsFile::WriteShadowParamsFile(const WCHAR* srcfilepath)
 	else {
 		CallF(Write2File("    <VarianceShadowMaps>0</VarianceShadowMaps>\r\n"), return 1);
 	}
+	if (g_blurShadow) {
+		CallF(Write2File("    <BlurShadow>1</BlurShadow>\r\n"), return 1);
+	}
+	else {
+		CallF(Write2File("    <BlurShadow>0</BlurShadow>\r\n"), return 1);
+	}
 
 	char strshadowtag[9][256] = {
 		"ShadowMapFov",
@@ -184,8 +190,12 @@ int CShadowParamsFile::WriteFileInfo()
 	//2023/08/18 To12024 : Add <TotalScale>%.3f</TotalScale> and <Scale>%.3f</Scale>
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShadowParamsFile</kind>\r\n    <version>1002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
-	//2024/04/10 Add Tag of SoftShadow
-	CallF(Write2File("  <FileInfo>\r\n    <kind>ShadowParamsFile</kind>\r\n    <version>1003</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//2024/04/10 Add Tag of VarianceShadowMaps
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShadowParamsFile</kind>\r\n    <version>1003</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+
+	//2024/04/10 Add Tag of BlurShadow
+	CallF(Write2File("  <FileInfo>\r\n    <kind>ShadowParamsFile</kind>\r\n    <version>1004</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+
 
 	return 0;
 }
@@ -234,6 +244,7 @@ int CShadowParamsFile::LoadShadowParamsFile(const WCHAR* srcfilepath)
 	int shadowmap_lightdir = 1;
 	int shadowenable = 1;
 	int softshadow = 0;
+	int blurshadow = 1;
 
 	int result;
 	m_xmliobuf.pos = 0;
@@ -257,6 +268,17 @@ int CShadowParamsFile::LoadShadowParamsFile(const WCHAR* srcfilepath)
 		}
 		else {
 			g_VSMflag = false;
+		}
+	}
+
+	result = Read_Int(&m_xmliobuf, "<BlurShadow>", "</BlurShadow>",
+		&blurshadow);
+	if (result == 0) {
+		if (blurshadow == 1) {
+			g_blurShadow = true;
+		}
+		else {
+			g_blurShadow = false;
 		}
 	}
 

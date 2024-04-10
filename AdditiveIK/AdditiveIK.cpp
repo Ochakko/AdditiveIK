@@ -3777,7 +3777,8 @@ void InitApp()
 
 	{
 		g_enableshadow = true;
-		g_VSMflag = false;
+		g_VSMflag = true;
+		g_blurShadow = true;
 		g_shadowmapforshader = nullptr;
 		g_shadowmap_slotno = 0;
 		int slotno;
@@ -24922,6 +24923,13 @@ int ShadowParams2Dlg(HWND hDlgWnd)
 	}
 	else {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_SOFTSHADOW, false);
+	}
+
+	if (g_blurShadow == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_BLURSHADOW, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_BLURSHADOW, false);
 	}
 
 	//if (s_camtargetdisp == true) {

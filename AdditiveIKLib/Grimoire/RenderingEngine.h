@@ -497,7 +497,7 @@ namespace myRenderer
 
         //shadow::ShadowMapRender m_shadowMapRenders[NUM_DEFERRED_LIGHTING_DIRECTIONAL_LIGHT];	//シャドウマップへの描画処理
         RenderTarget m_shadowMapRenderTarget;//2023/12/10
-        //GaussianBlur m_shadowBlur;//2023/12/10
+        GaussianBlur m_shadowBlur;
         SDeferredLightingCB m_deferredLightingCB;   // ディファードライティング用の定数バッファ
         Sprite m_copyMainRtToFrameBufferSprite;     // メインレンダリングターゲットをフレームバッファにコピーするためのスプライト
         Sprite m_diferredLightingSprite;            // ディファードライティングを行うためのスプライト

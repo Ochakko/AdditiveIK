@@ -101,7 +101,8 @@ float g_thRoundZ = 179.0f;
 
 
 bool g_enableshadow = true;
-bool g_VSMflag = false;
+bool g_VSMflag = true;
+bool g_blurShadow = true;
 int g_shadowmap_slotno = 0;
 float g_shadowmap_fov[SHADOWSLOTNUM];
 float g_shadowmap_projscale[SHADOWSLOTNUM];
@@ -389,6 +390,7 @@ extern float g_thRoundZ;
 
 extern bool g_enableshadow;
 extern bool g_VSMflag;
+extern bool g_blurShadow;
 extern int g_shadowmap_slotno;
 extern float g_shadowmap_fov[SHADOWSLOTNUM];
 extern float g_shadowmap_projscale[SHADOWSLOTNUM];

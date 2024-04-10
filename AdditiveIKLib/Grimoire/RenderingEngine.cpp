@@ -21,7 +21,7 @@ namespace myRenderer
 
     RenderingEngine::RenderingEngine() : 
     m_shadowMapRenderTarget(), 
-    //m_shadowBlur(),
+    m_shadowBlur(),
     m_deferredLightingCB(),
     m_copyMainRtToFrameBufferSprite(),
     m_diferredLightingSprite(),
@@ -88,6 +88,8 @@ namespace myRenderer
 
         m_postEffect.DestroyObjs();
 
+        m_shadowBlur.DestroyObjs();
+
         //int rtindex;
         //for (rtindex = 0; rtindex < (int)EnMainRTSnapshot::enNum; rtindex++) {
         //    m_mainRTSnapshots[rtindex].DestroyObjs();
@@ -128,14 +130,12 @@ namespace myRenderer
             clearColor
         );
 
-        g_shadowmapforshader = m_shadowMapRenderTarget.GetRenderTargetTexture();
 
+        //g_shadowmapforshader = m_shadowMapRenderTarget.GetRenderTargetTexture();
 
-        //m_shadowBlur.Init(
-        //    &m_shadowMapRenderTarget.GetRenderTargetTexture() // ぼかすテクスチャはシャドウマップのテクスチャ
-        //);
-        //g_shadowmapforshader = &m_shadowBlur.GetBokeTexture();
-
+        //ぼかすテクスチャはシャドウマップのテクスチャ
+        m_shadowBlur.Init(m_shadowMapRenderTarget.GetRenderTargetTexture());
+        g_shadowmapforshader = m_shadowBlur.GetBokeTexture();
     }
 
     void RenderingEngine::InitZPrepassRenderTarget()
@@ -452,9 +452,11 @@ namespace myRenderer
         // 書き込み完了待ち
         rc->WaitUntilFinishDrawingToRenderTarget(m_shadowMapRenderTarget);
 
-        // step-7 シャドウマップをぼかすためのガウシアンブラーを実行する
-        //m_shadowBlur.ExecuteOnGPU(rc, 5.0f);
 
+        //if (g_blurShadow) {//g_shadowmapforshaderにボケテクスチャをセットしているのでフラグに関わらずblurを実行
+            //step-7 シャドウマップをぼかすためのガウシアンブラーを実行する
+            m_shadowBlur.ExecuteOnGPU(rc, 2.0f);
+        //}
     }
 
 
