@@ -363,6 +363,7 @@ namespace myRenderer
 		}
         
 
+        //2024/04/11メモ　ZPrepass処理は通常レンダー時に同時に処理することにしたのでバッファは必要だが独自レンダー関数呼び出しは不要
         //// ZPrepass
         ////2023/12/05
         ////4Kモードでは重いシーンで効果があった
@@ -453,10 +454,12 @@ namespace myRenderer
         rc->WaitUntilFinishDrawingToRenderTarget(m_shadowMapRenderTarget);
 
 
-        //if (g_blurShadow) {//g_shadowmapforshaderにボケテクスチャをセットしているのでフラグに関わらずblurを実行
-            //step-7 シャドウマップをぼかすためのガウシアンブラーを実行する
+        if (g_enableshadow) {
+            //if (g_blurShadow) {//g_shadowmapforshaderにボケテクスチャをセットしているのでフラグに関わらずblurを実行
+                //step-7 シャドウマップをぼかすためのガウシアンブラーを実行する
             m_shadowBlur.ExecuteOnGPU(rc, 2.0f);
-        //}
+            //}
+        }
     }
 
 
@@ -497,6 +500,10 @@ namespace myRenderer
 
     void RenderingEngine::ZPrepass(RenderContext* rc, ChaScene* srcchascene)
     {
+
+    //2024/04/11メモ　ZPrepass処理は通常レンダー時に同時に処理することにしたのでバッファは必要だが独自レンダー関数呼び出しは不要
+
+
     //    if (!rc || !srcchascene) {
     //        _ASSERT(0);
     //        return;
@@ -879,11 +886,14 @@ namespace myRenderer
 
     void RenderingEngine::RenderPolyMeshZPre(RenderContext* rc, RENDEROBJ currenderobj)
     {
-        if (!rc) {
-            _ASSERT(0);
-            return;
-        }
 
+        //2024/04/11メモ　ZPrepass処理は通常レンダー時に同時に処理することにしたのでバッファは必要だが独自レンダー関数呼び出しは不要
+
+
+        //if (!rc) {
+        //    _ASSERT(0);
+        //    return;
+        //}
         ////2023/12/05
         ////4Kモードでは重いシーンで効果があった
         ////2Kモードでは遮蔽面積が小さいために　ZPrepassのコストの方が大きくなり遅くなる

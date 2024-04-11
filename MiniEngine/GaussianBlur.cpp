@@ -1,6 +1,6 @@
 ﻿#include "stdafx.h"
 #include "GaussianBlur.h"
-
+#include <GlobalVar.h>
 
 void GaussianBlur::Init(Texture* originalTexture)
 {
@@ -116,14 +116,36 @@ void GaussianBlur::InitSprites()
 }
 void GaussianBlur::UpdateWeightsTable(float blurPower)
 {
-	float total = 0;
-	for (int i = 0; i < NUM_WEIGHTS; i++) {
-		m_weights[i] = expf(-0.5f * (float)(i * i) / blurPower);
-		total += 2.0f * m_weights[i];
+	if (g_blurShadow) {
 
+		//#########
+		//ボカシ有り
+		//#########
+
+		float total = 0;
+		for (int i = 0; i < NUM_WEIGHTS; i++) {
+			m_weights[i] = expf(-0.5f * (float)(i * i) / blurPower);
+			total += 2.0f * m_weights[i];
+
+		}
+		// 規格化
+		for (int i = 0; i < NUM_WEIGHTS; i++) {
+			m_weights[i] /= total;
+		}
 	}
-	// 規格化
-	for (int i = 0; i < NUM_WEIGHTS; i++) {
-		m_weights[i] /= total;
+	else {
+
+		//######################################################################################
+		//2024/04/11
+		//ボカシ無し
+		//ただしボカシ無しの場合にもExecuteOnGPU実行により
+		//テクスチャサイズが縦横1/2になる. そしてシャドウレシーバで元のサイズにマッピングされる(拡大される). 
+		//なので縮小拡大の効果で少しボケる
+		//######################################################################################
+
+		m_weights[0] = 0.5f;
+		for (int i = 1; i < NUM_WEIGHTS; i++) {
+			m_weights[i] = 0.0f;
+		}
 	}
 }

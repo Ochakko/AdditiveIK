@@ -256,32 +256,23 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, in
 				std::abort();//2024/03/17 シェーダコンパイル失敗時にはabort()する
 			}
 
-			//if ((curmat->GetAlbedoTex() && !(curmat->GetAlbedoTex())[0]) ||
-			//	(curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) ||
-			//	(curmat->GetMetalTex() && (curmat->GetMetalTex())[0])) {
-			////if (curmat->GetAlbedoTex()[0]) {
-			//	//PBR
+			//int result2;
+			//result2 = curmat->InitZPreShadersAndPipelines(
+			//	vertextype,
+			//	"../Media/Shader/AdditiveIK_NoSkin_ZPrepass.fx",
+			//	"VSMainZPrepass",
+			//	"PSMainZPrepass",
+			//	colorBufferFormat,
+			//	curmat->NUM_SRV_ONE_MATERIAL,
+			//	curmat->NUM_CBV_ONE_MATERIAL,
+			//	0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
+			//	0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
+			//	D3D12_FILTER_MIN_MAG_MIP_LINEAR
+			//);
+			//if (result2 != 0) {
+			//	_ASSERT(0);
+			//	std::abort();//2024/03/17 シェーダコンパイル失敗時にはabort()する
 			//}
-			//else {
-			//	//Standard
-			//}
-			int result2;
-			result2 = curmat->InitZPreShadersAndPipelines(
-				vertextype,
-				"../Media/Shader/AdditiveIK_NoSkin_ZPrepass.fx",
-				"VSMainZPrepass",
-				"PSMainZPrepass",
-				colorBufferFormat,
-				curmat->NUM_SRV_ONE_MATERIAL,
-				curmat->NUM_CBV_ONE_MATERIAL,
-				0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
-				0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
-				D3D12_FILTER_MIN_MAG_MIP_LINEAR
-			);
-			if (result2 != 0) {
-				_ASSERT(0);
-				std::abort();//2024/03/17 シェーダコンパイル失敗時にはabort()する
-			}
 
 			int result3;
 			result3 = curmat->InitInstancingShadersAndPipelines(
@@ -410,34 +401,24 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, in
 					std::abort();//2024/03/17 シェーダコンパイル失敗時にはabort()する
 				}
 
-				//if ((curmat->GetAlbedoTex() && !(curmat->GetAlbedoTex())[0]) ||
-				//	(curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) ||
-				//	(curmat->GetMetalTex() && (curmat->GetMetalTex())[0])) {
-				////if (curmat->GetNormalTex() && (curmat->GetNormalTex())[0]) {
-				////if (curmat->GetAlbedoTex()[0]) {
-				//	//PBR
-				//}
-				//else {
-				////	//Standard
-				//}
 
-				int result2;
-				result2 = curmat->InitZPreShadersAndPipelines(
-					vertextype,
-					"../Media/Shader/AdditiveIK_Skin_ZPrepass.fx",
-					"VSMainZPrepass",
-					"PSMainZPrepass",
-					colorBufferFormat,
-					curmat->NUM_SRV_ONE_MATERIAL,
-					curmat->NUM_CBV_ONE_MATERIAL,
-					0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
-					0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
-					D3D12_FILTER_MIN_MAG_MIP_LINEAR
-				);
-				if (result2 != 0) {
-					_ASSERT(0);
-					std::abort();//2024/03/17 シェーダコンパイル失敗時にはabort()する
-				}
+				//int result2;
+				//result2 = curmat->InitZPreShadersAndPipelines(
+				//	vertextype,
+				//	"../Media/Shader/AdditiveIK_Skin_ZPrepass.fx",
+				//	"VSMainZPrepass",
+				//	"PSMainZPrepass",
+				//	colorBufferFormat,
+				//	curmat->NUM_SRV_ONE_MATERIAL,
+				//	curmat->NUM_CBV_ONE_MATERIAL,
+				//	0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
+				//	0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
+				//	D3D12_FILTER_MIN_MAG_MIP_LINEAR
+				//);
+				//if (result2 != 0) {
+				//	_ASSERT(0);
+				//	std::abort();//2024/03/17 シェーダコンパイル失敗時にはabort()する
+				//}
 
 
 				rootindex++;
@@ -1467,112 +1448,112 @@ int CDispObj::RenderNormalMaterial(RenderContext* rc, myRenderer::RENDEROBJ rend
 }
 
 
-int CDispObj::RenderZPrePm4(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
-{
-
-	if (!rc || !renderobj.pmodel || !renderobj.mqoobj) {
-		_ASSERT(0);
-		return 0;
-	}
-
-	// Only PM4
-	if (!m_pm4) {
-		_ASSERT(0);
-		return 0;
-	}
-
-	//#################################################
-	//DescriptorHeapが作成されてない場合は　すぐにリターン
-	//#################################################
-	//if (m_createdescriptorflag == false) {
-	//	return 0;
-	//}
-	//if (m_descriptorHeap.Get() == nullptr) {
-	//	int dbgflag1 = 1;
-	//	return 0;
-	//}
-
-	int materialnum = m_pm4->GetDispMaterialNum();
-	if (materialnum <= 0) {
-		_ASSERT(0);
-		return 0;
-	}
-
-	//Matrix mView, mProj;
-	//mView = g_camera3D->GetViewMatrix(false);
-	//mProj = g_camera3D->GetProjectionMatrix();
-	////定数バッファの設定、更新など描画の共通処理を実行する。
-	//DrawCommon(rc, renderobj, mView, mProj);
-
-	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	//##################################################################################
-	//2023/12/04　メモ
-	//SetVertexBufferとSetIndexBufferの呼び出し位置について
-	//マテリアルループに入るここで呼び出せば良いようだ
-	//マテリアルが思い通りに設定されない場合などに
-	//原因を探しながら　度々マテリアルループの中に移動するが
-	//SetVertexBufferとSetIndexBufferの呼び出し位置の問題で無いことが分かるとこの場所に戻している
-	//##################################################################################
-	//1. 頂点バッファを設定。
-	rc->SetVertexBuffer(m_vertexBufferView);
-	//3. インデックスバッファを設定。
-	rc->SetIndexBuffer(m_indexBufferView);
-
-	renderobj.renderkind = RENDERKIND_ZPREPASS;//2023/12/11
-
-	bool isfirstmaterial = true;
-	//int materialcnt;
-	//for (materialcnt = 0; materialcnt < materialnum; materialcnt++) {
-	int materialcnt = 0;
-
-		CMQOMaterial* curmat = NULL;
-		int curoffset = 0;
-		int curtrinum = 0;
-		int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
-		if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0)) {
-			ChaVector4 diffuse;
-			ChaVector4 curdif4f = curmat->GetDif4F();
-			diffuse.w = curdif4f.w * renderobj.diffusemult.w;
-			diffuse.x = curdif4f.x * renderobj.diffusemult.x * renderobj.materialdisprate.x;
-			diffuse.y = curdif4f.y * renderobj.diffusemult.y * renderobj.materialdisprate.x;
-			diffuse.z = curdif4f.z * renderobj.diffusemult.z * renderobj.materialdisprate.x;
-			//diffuse.Clamp(0.0f, 1.0f);
-
-
-			//#####################################################
-			//半透明はZバッファに書き込まないように　ZPrepass処理をスキップ
-			//#####################################################
-			//#####################################################################################################
-			//2024/03/15 GroupNo == 1以外は全部半透明扱いなのでスキップするとZPreが機能しない　よって半透明時も描画することにした
-			//#####################################################################################################
-			//if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
-			//	continue;
-			//}
-			//if (renderobj.withalpha || renderobj.forcewithalpha) {
-			//	continue;
-			//}
-
-			Matrix mView, mProj;
-			//mView = g_camera3D->GetViewMatrix(false);
-			//mProj = g_camera3D->GetProjectionMatrix();
-			mView = renderobj.pmodel->GetViewMat().TKMatrix();//2024/03/02
-			mProj = renderobj.pmodel->GetProjMat().TKMatrix();//2024/03/02
-			//定数バッファの設定、更新など描画の共通処理を実行する。
-			//curmat->ZPreDrawCommon(rc, renderobj, mView, mProj, renderobj.refposindex);
-			curmat->DrawCommon(rc, renderobj, mView, mProj, renderobj.refposindex);
-			curmat->ZPreBeginRender(rc, renderobj, renderobj.refposindex);
-
-			//4. ドローコールを実行。
-			//rc->DrawIndexed(curtrinum * 3, curoffset);
-
-			int totaltrinum = renderobj.mqoobj->GetPm4()->GetFaceNum();
-			rc->DrawIndexed(totaltrinum * 3, 0);
-		}
-	//}
-
-	return 0;
-}
+//int CDispObj::RenderZPrePm4(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
+//{
+//
+//	if (!rc || !renderobj.pmodel || !renderobj.mqoobj) {
+//		_ASSERT(0);
+//		return 0;
+//	}
+//
+//	// Only PM4
+//	if (!m_pm4) {
+//		_ASSERT(0);
+//		return 0;
+//	}
+//
+//	//#################################################
+//	//DescriptorHeapが作成されてない場合は　すぐにリターン
+//	//#################################################
+//	//if (m_createdescriptorflag == false) {
+//	//	return 0;
+//	//}
+//	//if (m_descriptorHeap.Get() == nullptr) {
+//	//	int dbgflag1 = 1;
+//	//	return 0;
+//	//}
+//
+//	int materialnum = m_pm4->GetDispMaterialNum();
+//	if (materialnum <= 0) {
+//		_ASSERT(0);
+//		return 0;
+//	}
+//
+//	//Matrix mView, mProj;
+//	//mView = g_camera3D->GetViewMatrix(false);
+//	//mProj = g_camera3D->GetProjectionMatrix();
+//	////定数バッファの設定、更新など描画の共通処理を実行する。
+//	//DrawCommon(rc, renderobj, mView, mProj);
+//
+//	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+//
+//	//##################################################################################
+//	//2023/12/04　メモ
+//	//SetVertexBufferとSetIndexBufferの呼び出し位置について
+//	//マテリアルループに入るここで呼び出せば良いようだ
+//	//マテリアルが思い通りに設定されない場合などに
+//	//原因を探しながら　度々マテリアルループの中に移動するが
+//	//SetVertexBufferとSetIndexBufferの呼び出し位置の問題で無いことが分かるとこの場所に戻している
+//	//##################################################################################
+//	//1. 頂点バッファを設定。
+//	rc->SetVertexBuffer(m_vertexBufferView);
+//	//3. インデックスバッファを設定。
+//	rc->SetIndexBuffer(m_indexBufferView);
+//
+//	renderobj.renderkind = RENDERKIND_ZPREPASS;//2023/12/11
+//
+//	bool isfirstmaterial = true;
+//	//int materialcnt;
+//	//for (materialcnt = 0; materialcnt < materialnum; materialcnt++) {
+//	int materialcnt = 0;
+//
+//		CMQOMaterial* curmat = NULL;
+//		int curoffset = 0;
+//		int curtrinum = 0;
+//		int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
+//		if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0)) {
+//			ChaVector4 diffuse;
+//			ChaVector4 curdif4f = curmat->GetDif4F();
+//			diffuse.w = curdif4f.w * renderobj.diffusemult.w;
+//			diffuse.x = curdif4f.x * renderobj.diffusemult.x * renderobj.materialdisprate.x;
+//			diffuse.y = curdif4f.y * renderobj.diffusemult.y * renderobj.materialdisprate.x;
+//			diffuse.z = curdif4f.z * renderobj.diffusemult.z * renderobj.materialdisprate.x;
+//			//diffuse.Clamp(0.0f, 1.0f);
+//
+//
+//			//#####################################################
+//			//半透明はZバッファに書き込まないように　ZPrepass処理をスキップ
+//			//#####################################################
+//			//#####################################################################################################
+//			//2024/03/15 GroupNo == 1以外は全部半透明扱いなのでスキップするとZPreが機能しない　よって半透明時も描画することにした
+//			//#####################################################################################################
+//			//if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
+//			//	continue;
+//			//}
+//			//if (renderobj.withalpha || renderobj.forcewithalpha) {
+//			//	continue;
+//			//}
+//
+//			Matrix mView, mProj;
+//			//mView = g_camera3D->GetViewMatrix(false);
+//			//mProj = g_camera3D->GetProjectionMatrix();
+//			mView = renderobj.pmodel->GetViewMat().TKMatrix();//2024/03/02
+//			mProj = renderobj.pmodel->GetProjMat().TKMatrix();//2024/03/02
+//			//定数バッファの設定、更新など描画の共通処理を実行する。
+//			//curmat->ZPreDrawCommon(rc, renderobj, mView, mProj, renderobj.refposindex);
+//			curmat->DrawCommon(rc, renderobj, mView, mProj, renderobj.refposindex);
+//			curmat->ZPreBeginRender(rc, renderobj, renderobj.refposindex);
+//
+//			//4. ドローコールを実行。
+//			//rc->DrawIndexed(curtrinum * 3, curoffset);
+//
+//			int totaltrinum = renderobj.mqoobj->GetPm4()->GetFaceNum();
+//			rc->DrawIndexed(totaltrinum * 3, 0);
+//		}
+//	//}
+//
+//	return 0;
+//}
 
 
 
@@ -1828,118 +1809,118 @@ int CDispObj::RenderNormalPM3Material(RenderContext* rc, myRenderer::RENDEROBJ r
 }
 
 
-int CDispObj::RenderZPrePm3(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
-{
-	if (!rc || !renderobj.pmodel || !renderobj.mqoobj) {
-		_ASSERT(0);
-		return 0;
-	}
-
-
-	if (!m_pm3) {
-		return 0;
-	}
-	if (m_pm3->GetCreateOptFlag() == 0) {
-		return 0;
-	}
-
-	//#################################################
-	//DescriptorHeapが作成されてない場合は　すぐにリターン
-	//#################################################
-	//if (m_createdescriptorflag == false) {
-	//	return 0;
-	//}
-	//if (m_descriptorHeap.Get() == nullptr) {
-	//	return 0;
-	//}
-
-	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	//##################################################################################
-	//2023/12/04　メモ
-	//SetVertexBufferとSetIndexBufferの呼び出し位置について
-	//マテリアルループに入るここで呼び出せば良いようだ
-	//マテリアルが思い通りに設定されない場合などに
-	//原因を探しながら　度々マテリアルループの中に移動するが
-	//SetVertexBufferとSetIndexBufferの呼び出し位置の問題で無いことが分かるとこの場所に戻している
-	//##################################################################################
-	//1. 頂点バッファを設定。
-	rc->SetVertexBuffer(m_vertexBufferView);
-	//3. インデックスバッファを設定。
-	rc->SetIndexBuffer(m_indexBufferView);
-
-
-	renderobj.renderkind = RENDERKIND_ZPREPASS;//2023/12/11
-
-	//マテリアルごとにドロー。
-
-	//HRESULT hr;
-	//int blno;
-	//for (blno = 0; blno < m_pm3->GetOptMatNum(); blno++) {
-	int blno = 0;
-		MATERIALBLOCK* currb = m_pm3->GetMatBlock() + blno;
-
-		CMQOMaterial* curmat;
-		curmat = currb->mqomat;
-		if (!curmat) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		//int curtrinum;
-		//curtrinum = currb->endface - currb->startface + 1;
-		//int curoffset = currb->startface * 3;
-
-		ChaVector4 diffuse;
-		ChaVector4 curdif4f = curmat->GetDif4F();
-		diffuse.w = curdif4f.w * renderobj.diffusemult.w;
-		diffuse.x = curdif4f.x * renderobj.diffusemult.x * renderobj.materialdisprate.x;
-		diffuse.y = curdif4f.y * renderobj.diffusemult.y * renderobj.materialdisprate.x;
-		diffuse.z = curdif4f.z * renderobj.diffusemult.z * renderobj.materialdisprate.x;
-		//diffuse.Clamp(0.0f, 1.0f);
-
-
-
-		//#####################################################
-		//半透明はZバッファに書き込まないように　ZPrepass処理をスキップ
-		//#####################################################
-		//#####################################################################################################
-		//2024/03/15 GroupNo == 1以外は全部半透明扱いなのでスキップするとZPreが機能しない　よって半透明時も描画することにした
-		//#####################################################################################################
-		//if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
-		//	continue;
-		//}
-		//if (renderobj.withalpha || renderobj.forcewithalpha) {
-		//	continue;
-		//}
-
-
-		Matrix mView, mProj;
-		//mView = g_camera3D->GetViewMatrix(false);
-		//mProj = g_camera3D->GetProjectionMatrix();
-		mView = renderobj.pmodel->GetViewMat().TKMatrix();//2024/03/02
-		mProj = renderobj.pmodel->GetProjMat().TKMatrix();//2024/03/02
-		//定数バッファの設定、更新など描画の共通処理を実行する。
-		//curmat->ZPreDrawCommon(rc, renderobj, mView, mProj, renderobj.refposindex);
-		curmat->DrawCommon(rc, renderobj, mView, mProj, renderobj.refposindex);
-		curmat->ZPreBeginRender(rc, renderobj, renderobj.refposindex);
-
-		//rc.SetDescriptorHeap(m_descriptorHeap);
-
-		////1. 頂点バッファを設定。
-		//rc.SetVertexBuffer(m_vertexBufferView);
-		////3. インデックスバッファを設定。
-		//rc.SetIndexBuffer(m_indexBufferView);
-
-		//4. ドローコールを実行。
-		//rc->DrawIndexed(curtrinum * 3, curoffset);
-		int totaltrinum = renderobj.mqoobj->GetPm3()->GetFaceNum();
-		rc->DrawIndexed(totaltrinum * 3, 0);
-
-	//}
-
-	return 0;
-}
+//int CDispObj::RenderZPrePm3(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
+//{
+//	if (!rc || !renderobj.pmodel || !renderobj.mqoobj) {
+//		_ASSERT(0);
+//		return 0;
+//	}
+//
+//
+//	if (!m_pm3) {
+//		return 0;
+//	}
+//	if (m_pm3->GetCreateOptFlag() == 0) {
+//		return 0;
+//	}
+//
+//	//#################################################
+//	//DescriptorHeapが作成されてない場合は　すぐにリターン
+//	//#################################################
+//	//if (m_createdescriptorflag == false) {
+//	//	return 0;
+//	//}
+//	//if (m_descriptorHeap.Get() == nullptr) {
+//	//	return 0;
+//	//}
+//
+//	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+//
+//	//##################################################################################
+//	//2023/12/04　メモ
+//	//SetVertexBufferとSetIndexBufferの呼び出し位置について
+//	//マテリアルループに入るここで呼び出せば良いようだ
+//	//マテリアルが思い通りに設定されない場合などに
+//	//原因を探しながら　度々マテリアルループの中に移動するが
+//	//SetVertexBufferとSetIndexBufferの呼び出し位置の問題で無いことが分かるとこの場所に戻している
+//	//##################################################################################
+//	//1. 頂点バッファを設定。
+//	rc->SetVertexBuffer(m_vertexBufferView);
+//	//3. インデックスバッファを設定。
+//	rc->SetIndexBuffer(m_indexBufferView);
+//
+//
+//	renderobj.renderkind = RENDERKIND_ZPREPASS;//2023/12/11
+//
+//	//マテリアルごとにドロー。
+//
+//	//HRESULT hr;
+//	//int blno;
+//	//for (blno = 0; blno < m_pm3->GetOptMatNum(); blno++) {
+//	int blno = 0;
+//		MATERIALBLOCK* currb = m_pm3->GetMatBlock() + blno;
+//
+//		CMQOMaterial* curmat;
+//		curmat = currb->mqomat;
+//		if (!curmat) {
+//			_ASSERT(0);
+//			return 1;
+//		}
+//
+//		//int curtrinum;
+//		//curtrinum = currb->endface - currb->startface + 1;
+//		//int curoffset = currb->startface * 3;
+//
+//		ChaVector4 diffuse;
+//		ChaVector4 curdif4f = curmat->GetDif4F();
+//		diffuse.w = curdif4f.w * renderobj.diffusemult.w;
+//		diffuse.x = curdif4f.x * renderobj.diffusemult.x * renderobj.materialdisprate.x;
+//		diffuse.y = curdif4f.y * renderobj.diffusemult.y * renderobj.materialdisprate.x;
+//		diffuse.z = curdif4f.z * renderobj.diffusemult.z * renderobj.materialdisprate.x;
+//		//diffuse.Clamp(0.0f, 1.0f);
+//
+//
+//
+//		//#####################################################
+//		//半透明はZバッファに書き込まないように　ZPrepass処理をスキップ
+//		//#####################################################
+//		//#####################################################################################################
+//		//2024/03/15 GroupNo == 1以外は全部半透明扱いなのでスキップするとZPreが機能しない　よって半透明時も描画することにした
+//		//#####################################################################################################
+//		//if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
+//		//	continue;
+//		//}
+//		//if (renderobj.withalpha || renderobj.forcewithalpha) {
+//		//	continue;
+//		//}
+//
+//
+//		Matrix mView, mProj;
+//		//mView = g_camera3D->GetViewMatrix(false);
+//		//mProj = g_camera3D->GetProjectionMatrix();
+//		mView = renderobj.pmodel->GetViewMat().TKMatrix();//2024/03/02
+//		mProj = renderobj.pmodel->GetProjMat().TKMatrix();//2024/03/02
+//		//定数バッファの設定、更新など描画の共通処理を実行する。
+//		//curmat->ZPreDrawCommon(rc, renderobj, mView, mProj, renderobj.refposindex);
+//		curmat->DrawCommon(rc, renderobj, mView, mProj, renderobj.refposindex);
+//		curmat->ZPreBeginRender(rc, renderobj, renderobj.refposindex);
+//
+//		//rc.SetDescriptorHeap(m_descriptorHeap);
+//
+//		////1. 頂点バッファを設定。
+//		//rc.SetVertexBuffer(m_vertexBufferView);
+//		////3. インデックスバッファを設定。
+//		//rc.SetIndexBuffer(m_indexBufferView);
+//
+//		//4. ドローコールを実行。
+//		//rc->DrawIndexed(curtrinum * 3, curoffset);
+//		int totaltrinum = renderobj.mqoobj->GetPm3()->GetFaceNum();
+//		rc->DrawIndexed(totaltrinum * 3, 0);
+//
+//	//}
+//
+//	return 0;
+//}
 
 
 

@@ -54,9 +54,9 @@ CMQOMaterial::CMQOMaterial() :
 	m_cb(), m_cbMatrix(), m_cbLights(), m_cbShadow(), //2023/12/01 //2023/12/02 //2023/12/10
 	m_rootSignature(), //2023/12/01
 	m_shadowrootSignature(), //2023/12/14
-	m_ZPrerootSignature(), //2023/12/05
-	m_ZPreModelPipelineState(), //2023/12/05
-	m_ZPreModelSkyPipelineState(), //2024/03/25
+	//m_ZPrerootSignature(), //2023/12/05
+	//m_ZPreModelPipelineState(), //2023/12/05
+	//m_ZPreModelSkyPipelineState(), //2024/03/25
 	m_InstancingrootSignature(), //2024/01/11
 	m_InstancingOpequeTrianglePipelineState(),//2024/02/08
 	m_InstancingtransTrianglePipelineState(),//2024/02/08
@@ -442,10 +442,10 @@ void CMQOMaterial::DestroyObjs()
 			m_zalwaysPipelineState[shaderindex][refposindex].DestroyObjs();
 		}
 	}
-	for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
-		m_ZPreModelPipelineState[refposindex].DestroyObjs();
-		m_ZPreModelSkyPipelineState[refposindex].DestroyObjs();
-	}
+	//for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+	//	m_ZPreModelPipelineState[refposindex].DestroyObjs();
+	//	m_ZPreModelSkyPipelineState[refposindex].DestroyObjs();
+	//}
 	m_InstancingOpequeTrianglePipelineState.DestroyObjs();
 	m_InstancingtransTrianglePipelineState.DestroyObjs();
 	m_InstancingtransTriangleNoZPipelineState.DestroyObjs();
@@ -462,7 +462,7 @@ void CMQOMaterial::DestroyObjs()
 	}
 	for (rsindex = 0; rsindex < REFPOSMAXNUM; rsindex++) {
 		m_rootSignature[rsindex].DestroyObjs();
-		m_ZPrerootSignature[rsindex].DestroyObjs();
+		//m_ZPrerootSignature[rsindex].DestroyObjs();
 		m_shadowrootSignature[rsindex].DestroyObjs();
 	}
 	m_InstancingrootSignature.DestroyObjs();
@@ -1191,131 +1191,131 @@ int CMQOMaterial::AddConvName( char** ppname )
 	return 0;
 }
 
-int CMQOMaterial::InitZPreShadersAndPipelines(
-	int vertextype,
-	const char* fxFilePath,
-	const char* vsEntryPointFunc,
-	const char* psEntryPointFunc,
-	const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat,
-	int numSrv,
-	int numCbv,
-	UINT offsetInDescriptorsFromTableStartCB,
-	UINT offsetInDescriptorsFromTableStartSRV,
-	D3D12_FILTER samplerFilter)
-{
-	//############################################
-	// vertextype : 0-->pm4, 1-->pm3, 2-->extline
-	//############################################
-
-	if ((vertextype != 0) && (vertextype != 1)) {
-		return 0;
-	}
-
-	if (m_initprezpipelineflag) {
-	//if (m_initpipelineflag) {
-		//###############################
-		//既に初期化済の場合は　すぐにリターン
-		//###############################
-		return 0;
-	}
-
-
-	//ルートシグネチャを初期化。
-	D3D12_STATIC_SAMPLER_DESC samplerDescArray[6];
-	//デフォルトのサンプラ
-	samplerDescArray[0].Filter = samplerFilter;
-	samplerDescArray[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	samplerDescArray[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	samplerDescArray[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	samplerDescArray[0].MipLODBias = 0;
-	samplerDescArray[0].MaxAnisotropy = 0;
-	samplerDescArray[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-	samplerDescArray[0].BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
-	samplerDescArray[0].MinLOD = 0.0f;
-	samplerDescArray[0].MaxLOD = D3D12_FLOAT32_MAX;
-	samplerDescArray[0].ShaderRegister = 0;//!!!!!!!!
-	samplerDescArray[0].RegisterSpace = 0;
-	samplerDescArray[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-	samplerDescArray[1] = samplerDescArray[0];
-	samplerDescArray[1].ShaderRegister = 1;//!!!!!!!!
-	samplerDescArray[1].AddressU = GetAddressU_albedo();//2024/01/06
-	samplerDescArray[1].AddressV = GetAddressV_albedo();//2024/01/06
-
-	samplerDescArray[2] = samplerDescArray[0];
-	samplerDescArray[2].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//2024/02/21 : normalmapは補間無しに
-	samplerDescArray[2].ShaderRegister = 2;//!!!!!!!!
-	//if (srcuvnum >= 2) {//2024/02/21　コメントアウト
-	samplerDescArray[2].AddressU = GetAddressU_normal();//2024/01/06
-	samplerDescArray[2].AddressV = GetAddressV_normal();//2024/01/06
-	//samplerDescArray[2].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	//samplerDescArray[2].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	//samplerDescArray[2].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	//}
-	//else {
-	//	samplerDescArray[2].AddressU = GetAddressU_albedo();//2024/01/06
-	//	samplerDescArray[2].AddressV = GetAddressV_albedo();//2024/01/06
-	//}
-	////samplerDescArray[2].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	////samplerDescArray[2].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	////samplerDescArray[2].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-
-	samplerDescArray[3] = samplerDescArray[0];
-	samplerDescArray[3].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//2024/02/21 : metalmapは補間無しに
-	samplerDescArray[3].ShaderRegister = 3;//!!!!!!!!
-	//if (srcuvnum >= 2) {//2024/02/21　コメントアウト
-	samplerDescArray[3].AddressU = GetAddressU_metal();//2024/01/06
-	samplerDescArray[3].AddressV = GetAddressV_metal();//2024/01/06
-	//}
-	//else {
-	//	samplerDescArray[3].AddressU = GetAddressU_albedo();//2024/01/06
-	//	samplerDescArray[3].AddressV = GetAddressV_albedo();//2024/01/06
-	//}
-
-	samplerDescArray[4] = samplerDescArray[0];
-	samplerDescArray[4].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//2024/02/21 : 補間無しに
-	samplerDescArray[4].ShaderRegister = 4;//!!!!!!!!
-	samplerDescArray[4].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	samplerDescArray[4].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	samplerDescArray[4].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-
-
-	//シャドウマップ用のサンプラ。
-	samplerDescArray[5] = samplerDescArray[0];
-	samplerDescArray[5].ShaderRegister = 5;//!!!!!!!!
-	//比較対象の値が小さければ０、大きければ１を返す比較関数を設定する。
-	samplerDescArray[5].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
-	samplerDescArray[5].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER;
-	samplerDescArray[5].MaxAnisotropy = 1;
-
-	int refposindex;
-	for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
-		m_ZPrerootSignature[refposindex].Init(
-			samplerDescArray,
-			6,
-			numCbv,
-			numSrv,
-			8,
-			offsetInDescriptorsFromTableStartCB,
-			offsetInDescriptorsFromTableStartSRV
-		);
-	}
-
-	if (fxFilePath != nullptr && strlen(fxFilePath) > 0) {
-		//シェーダーを初期化。
-		int result;
-		result = InitZPreShaders(fxFilePath, vsEntryPointFunc, psEntryPointFunc);
-		if (result != 0) {
-			m_initprezpipelineflag = false;
-			return 1;
-		}
-		//パイプラインステートを初期化。
-		InitZPrePipelineState(vertextype, colorBufferFormat);
-	}
-
-	m_initprezpipelineflag = true;
-	return 0;
-}
+//int CMQOMaterial::InitZPreShadersAndPipelines(
+//	int vertextype,
+//	const char* fxFilePath,
+//	const char* vsEntryPointFunc,
+//	const char* psEntryPointFunc,
+//	const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat,
+//	int numSrv,
+//	int numCbv,
+//	UINT offsetInDescriptorsFromTableStartCB,
+//	UINT offsetInDescriptorsFromTableStartSRV,
+//	D3D12_FILTER samplerFilter)
+//{
+//	//############################################
+//	// vertextype : 0-->pm4, 1-->pm3, 2-->extline
+//	//############################################
+//
+//	if ((vertextype != 0) && (vertextype != 1)) {
+//		return 0;
+//	}
+//
+//	if (m_initprezpipelineflag) {
+//	//if (m_initpipelineflag) {
+//		//###############################
+//		//既に初期化済の場合は　すぐにリターン
+//		//###############################
+//		return 0;
+//	}
+//
+//
+//	//ルートシグネチャを初期化。
+//	D3D12_STATIC_SAMPLER_DESC samplerDescArray[6];
+//	//デフォルトのサンプラ
+//	samplerDescArray[0].Filter = samplerFilter;
+//	samplerDescArray[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+//	samplerDescArray[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+//	samplerDescArray[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+//	samplerDescArray[0].MipLODBias = 0;
+//	samplerDescArray[0].MaxAnisotropy = 0;
+//	samplerDescArray[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+//	samplerDescArray[0].BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+//	samplerDescArray[0].MinLOD = 0.0f;
+//	samplerDescArray[0].MaxLOD = D3D12_FLOAT32_MAX;
+//	samplerDescArray[0].ShaderRegister = 0;//!!!!!!!!
+//	samplerDescArray[0].RegisterSpace = 0;
+//	samplerDescArray[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+//
+//	samplerDescArray[1] = samplerDescArray[0];
+//	samplerDescArray[1].ShaderRegister = 1;//!!!!!!!!
+//	samplerDescArray[1].AddressU = GetAddressU_albedo();//2024/01/06
+//	samplerDescArray[1].AddressV = GetAddressV_albedo();//2024/01/06
+//
+//	samplerDescArray[2] = samplerDescArray[0];
+//	samplerDescArray[2].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//2024/02/21 : normalmapは補間無しに
+//	samplerDescArray[2].ShaderRegister = 2;//!!!!!!!!
+//	//if (srcuvnum >= 2) {//2024/02/21　コメントアウト
+//	samplerDescArray[2].AddressU = GetAddressU_normal();//2024/01/06
+//	samplerDescArray[2].AddressV = GetAddressV_normal();//2024/01/06
+//	//samplerDescArray[2].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+//	//samplerDescArray[2].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+//	//samplerDescArray[2].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+//	//}
+//	//else {
+//	//	samplerDescArray[2].AddressU = GetAddressU_albedo();//2024/01/06
+//	//	samplerDescArray[2].AddressV = GetAddressV_albedo();//2024/01/06
+//	//}
+//	////samplerDescArray[2].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+//	////samplerDescArray[2].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+//	////samplerDescArray[2].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+//
+//	samplerDescArray[3] = samplerDescArray[0];
+//	samplerDescArray[3].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//2024/02/21 : metalmapは補間無しに
+//	samplerDescArray[3].ShaderRegister = 3;//!!!!!!!!
+//	//if (srcuvnum >= 2) {//2024/02/21　コメントアウト
+//	samplerDescArray[3].AddressU = GetAddressU_metal();//2024/01/06
+//	samplerDescArray[3].AddressV = GetAddressV_metal();//2024/01/06
+//	//}
+//	//else {
+//	//	samplerDescArray[3].AddressU = GetAddressU_albedo();//2024/01/06
+//	//	samplerDescArray[3].AddressV = GetAddressV_albedo();//2024/01/06
+//	//}
+//
+//	samplerDescArray[4] = samplerDescArray[0];
+//	samplerDescArray[4].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//2024/02/21 : 補間無しに
+//	samplerDescArray[4].ShaderRegister = 4;//!!!!!!!!
+//	samplerDescArray[4].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+//	samplerDescArray[4].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+//	samplerDescArray[4].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+//
+//
+//	//シャドウマップ用のサンプラ。
+//	samplerDescArray[5] = samplerDescArray[0];
+//	samplerDescArray[5].ShaderRegister = 5;//!!!!!!!!
+//	//比較対象の値が小さければ０、大きければ１を返す比較関数を設定する。
+//	samplerDescArray[5].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+//	samplerDescArray[5].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER;
+//	samplerDescArray[5].MaxAnisotropy = 1;
+//
+//	int refposindex;
+//	for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+//		m_ZPrerootSignature[refposindex].Init(
+//			samplerDescArray,
+//			6,
+//			numCbv,
+//			numSrv,
+//			8,
+//			offsetInDescriptorsFromTableStartCB,
+//			offsetInDescriptorsFromTableStartSRV
+//		);
+//	}
+//
+//	if (fxFilePath != nullptr && strlen(fxFilePath) > 0) {
+//		//シェーダーを初期化。
+//		int result;
+//		result = InitZPreShaders(fxFilePath, vsEntryPointFunc, psEntryPointFunc);
+//		if (result != 0) {
+//			m_initprezpipelineflag = false;
+//			return 1;
+//		}
+//		//パイプラインステートを初期化。
+//		InitZPrePipelineState(vertextype, colorBufferFormat);
+//	}
+//
+//	m_initprezpipelineflag = true;
+//	return 0;
+//}
 
 
 int CMQOMaterial::InitInstancingShadersAndPipelines(
@@ -1963,163 +1963,163 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 	}
 }
 
-void CMQOMaterial::InitZPrePipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
-{
-
-
-	//############################################
-	// vertextype : 0-->pm4, 1-->pm3, 2-->extline
-	//############################################
-
-	if ((vertextype != 0) && (vertextype != 1)) {
-		return;
-	}
-
-	// 頂点レイアウトを定義する。
-	//パイプラインステートを作成。
-	D3D12_INPUT_ELEMENT_DESC inputElementDescsWithBone[] =
-	{
-		//型：BINORMALDISPV + PM3INF
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "POSITIONT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{ "BLENDWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-	};
-	D3D12_INPUT_ELEMENT_DESC inputElementDescsWithoutBone[] =
-	{
-		//型：BINORMALDISPV
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "POSITIONT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-	};
-	D3D12_INPUT_ELEMENT_DESC inputElementDescsExtLine[] =
-	{
-		//型：ExtLine
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-	};
-
-
-	{
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
-
-		//2023/12/01 シェーダのエントリ関数として　skin有無を切り替えることはあるが　頂点フォーマットはvertextypeによって決める
-		if (vertextype == 0) {//pm4
-			psoDesc.InputLayout = { inputElementDescsWithBone, _countof(inputElementDescsWithBone) };//!!! WithBone
-		}
-		else if (vertextype == 1) {//pm3
-			psoDesc.InputLayout = { inputElementDescsWithoutBone, _countof(inputElementDescsWithoutBone) };
-		}
-		//else if (vertextype == 2) {//extline
-		//	psoDesc.InputLayout = { inputElementDescsExtLine, _countof(inputElementDescsExtLine) };
-		//}
-		else {
-			_ASSERT(0);
-			abort();
-		}
-		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsZPreModel->GetCompiledBlob());//!!!!!!!!! Skin 
-		psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psZPreModel->GetCompiledBlob());
-		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-
-		if (vertextype != 2) {
-#ifdef SAMPLE_11
-			// 背面を描画していないと影がおかしくなるため、
-			// シャドウのサンプルのみカリングをオフにする。
-			// 本来はアプリ側からカリングモードを渡すのがいいのだけど、
-			// 書籍に記載しているコードに追記がいるので、エンジン側で吸収する。
-			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-#else
-			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-#endif
-		}
-		else {
-			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-		}
-		////2023/11/18
-		//psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-
-
-		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-#ifdef TK_ENABLE_ALPHA_TO_COVERAGE
-		psoDesc.BlendState.AlphaToCoverageEnable = TRUE;
-#endif
-		psoDesc.DepthStencilState.DepthEnable = TRUE;
-		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-		psoDesc.DepthStencilState.StencilEnable = FALSE;
-		psoDesc.SampleMask = UINT_MAX;
-		if (vertextype != 2) {
-			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		}
-		else {
-			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
-		}
-
-		int numRenderTarget = 0;
-		for (auto& format : colorBufferFormat) {
-			if (format == DXGI_FORMAT_UNKNOWN) {
-				//フォーマットが指定されていない場所が来たら終わり。
-				break;
-			}
-			psoDesc.RTVFormats[numRenderTarget] = colorBufferFormat[numRenderTarget];
-			numRenderTarget++;
-		}
-
-		psoDesc.NumRenderTargets = numRenderTarget;
-		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-		psoDesc.SampleDesc.Count = 1;
-
-		int refposindex;
-		for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
-			psoDesc.pRootSignature = m_ZPrerootSignature[refposindex].Get();
-			m_ZPreModelPipelineState[refposindex].Init(psoDesc);
-		}
-
-
-		psoDesc.DepthStencilState.DepthEnable = FALSE;
-		//psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-		for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
-			psoDesc.pRootSignature = m_ZPrerootSignature[refposindex].Get();
-			m_ZPreModelSkyPipelineState[refposindex].Init(psoDesc);//!!!!!!!!!!!!! for sky
-		}
-	}
-}
+//void CMQOMaterial::InitZPrePipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
+//{
+//
+//
+//	//############################################
+//	// vertextype : 0-->pm4, 1-->pm3, 2-->extline
+//	//############################################
+//
+//	if ((vertextype != 0) && (vertextype != 1)) {
+//		return;
+//	}
+//
+//	// 頂点レイアウトを定義する。
+//	//パイプラインステートを作成。
+//	D3D12_INPUT_ELEMENT_DESC inputElementDescsWithBone[] =
+//	{
+//		//型：BINORMALDISPV + PM3INF
+//		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+//			D3D12_APPEND_ALIGNED_ELEMENT,
+//			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+//		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+//			D3D12_APPEND_ALIGNED_ELEMENT,
+//			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+//		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+//			D3D12_APPEND_ALIGNED_ELEMENT,
+//			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+//		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+//			D3D12_APPEND_ALIGNED_ELEMENT,
+//			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+//		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+//			D3D12_APPEND_ALIGNED_ELEMENT,
+//			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+//		{ "POSITIONT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+//			D3D12_APPEND_ALIGNED_ELEMENT,
+//			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+//		{ "BLENDWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+//			D3D12_APPEND_ALIGNED_ELEMENT,
+//			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+//		{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0,
+//			D3D12_APPEND_ALIGNED_ELEMENT,
+//			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+//	};
+//	D3D12_INPUT_ELEMENT_DESC inputElementDescsWithoutBone[] =
+//	{
+//		//型：BINORMALDISPV
+//		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+//			D3D12_APPEND_ALIGNED_ELEMENT,
+//			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+//		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+//			D3D12_APPEND_ALIGNED_ELEMENT,
+//			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+//		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+//			D3D12_APPEND_ALIGNED_ELEMENT,
+//			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+//		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+//			D3D12_APPEND_ALIGNED_ELEMENT,
+//			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+//		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+//			D3D12_APPEND_ALIGNED_ELEMENT,
+//			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+//		{ "POSITIONT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+//			D3D12_APPEND_ALIGNED_ELEMENT,
+//			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+//	};
+//	D3D12_INPUT_ELEMENT_DESC inputElementDescsExtLine[] =
+//	{
+//		//型：ExtLine
+//		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+//			D3D12_APPEND_ALIGNED_ELEMENT,
+//			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+//	};
+//
+//
+//	{
+//		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0 };
+//
+//		//2023/12/01 シェーダのエントリ関数として　skin有無を切り替えることはあるが　頂点フォーマットはvertextypeによって決める
+//		if (vertextype == 0) {//pm4
+//			psoDesc.InputLayout = { inputElementDescsWithBone, _countof(inputElementDescsWithBone) };//!!! WithBone
+//		}
+//		else if (vertextype == 1) {//pm3
+//			psoDesc.InputLayout = { inputElementDescsWithoutBone, _countof(inputElementDescsWithoutBone) };
+//		}
+//		//else if (vertextype == 2) {//extline
+//		//	psoDesc.InputLayout = { inputElementDescsExtLine, _countof(inputElementDescsExtLine) };
+//		//}
+//		else {
+//			_ASSERT(0);
+//			abort();
+//		}
+//		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsZPreModel->GetCompiledBlob());//!!!!!!!!! Skin 
+//		psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psZPreModel->GetCompiledBlob());
+//		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+//
+//		if (vertextype != 2) {
+//#ifdef SAMPLE_11
+//			// 背面を描画していないと影がおかしくなるため、
+//			// シャドウのサンプルのみカリングをオフにする。
+//			// 本来はアプリ側からカリングモードを渡すのがいいのだけど、
+//			// 書籍に記載しているコードに追記がいるので、エンジン側で吸収する。
+//			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+//#else
+//			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+//#endif
+//		}
+//		else {
+//			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+//		}
+//		////2023/11/18
+//		//psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+//
+//
+//		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+//#ifdef TK_ENABLE_ALPHA_TO_COVERAGE
+//		psoDesc.BlendState.AlphaToCoverageEnable = TRUE;
+//#endif
+//		psoDesc.DepthStencilState.DepthEnable = TRUE;
+//		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+//		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+//		psoDesc.DepthStencilState.StencilEnable = FALSE;
+//		psoDesc.SampleMask = UINT_MAX;
+//		if (vertextype != 2) {
+//			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+//		}
+//		else {
+//			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+//		}
+//
+//		int numRenderTarget = 0;
+//		for (auto& format : colorBufferFormat) {
+//			if (format == DXGI_FORMAT_UNKNOWN) {
+//				//フォーマットが指定されていない場所が来たら終わり。
+//				break;
+//			}
+//			psoDesc.RTVFormats[numRenderTarget] = colorBufferFormat[numRenderTarget];
+//			numRenderTarget++;
+//		}
+//
+//		psoDesc.NumRenderTargets = numRenderTarget;
+//		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+//		psoDesc.SampleDesc.Count = 1;
+//
+//		int refposindex;
+//		for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+//			psoDesc.pRootSignature = m_ZPrerootSignature[refposindex].Get();
+//			m_ZPreModelPipelineState[refposindex].Init(psoDesc);
+//		}
+//
+//
+//		psoDesc.DepthStencilState.DepthEnable = FALSE;
+//		//psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+//		for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+//			psoDesc.pRootSignature = m_ZPrerootSignature[refposindex].Get();
+//			m_ZPreModelSkyPipelineState[refposindex].Init(psoDesc);//!!!!!!!!!!!!! for sky
+//		}
+//	}
+//}
 
 void CMQOMaterial::InitInstancingPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
 {
@@ -2577,42 +2577,42 @@ int CMQOMaterial::InitShaders(
 	return 0;
 }
 
-int CMQOMaterial::InitZPreShaders(
-	const char* fxFilePath,
-	const char* vsEntryPointFunc,
-	const char* psEntryPointFunc
-)
-{
-	int result = 0;
-	//スキンなしモデル用のシェーダーをロードする。
-	m_vsZPreModel = g_engine->GetShaderFromBank(fxFilePath, vsEntryPointFunc);
-	if (m_vsZPreModel == nullptr) {
-		m_vsZPreModel = new Shader;
-		if (!m_vsZPreModel) {
-			return 1;
-		}
-		result = m_vsZPreModel->LoadVS(fxFilePath, vsEntryPointFunc);
-		if (result != 0) {
-			return 1;
-		}
-		g_engine->RegistShaderToBank(fxFilePath, vsEntryPointFunc, m_vsZPreModel);
-	}
-
-	m_psZPreModel = g_engine->GetShaderFromBank(fxFilePath, psEntryPointFunc);
-	if (m_psZPreModel == nullptr) {
-		m_psZPreModel = new Shader;
-		if (!m_psZPreModel) {
-			return 1;
-		}
-		result = m_psZPreModel->LoadPS(fxFilePath, psEntryPointFunc);
-		if (result != 0) {
-			return 1;
-		}
-		g_engine->RegistShaderToBank(fxFilePath, psEntryPointFunc, m_psZPreModel);
-	}
-
-	return 0;
-}
+//int CMQOMaterial::InitZPreShaders(
+//	const char* fxFilePath,
+//	const char* vsEntryPointFunc,
+//	const char* psEntryPointFunc
+//)
+//{
+//	int result = 0;
+//	//スキンなしモデル用のシェーダーをロードする。
+//	m_vsZPreModel = g_engine->GetShaderFromBank(fxFilePath, vsEntryPointFunc);
+//	if (m_vsZPreModel == nullptr) {
+//		m_vsZPreModel = new Shader;
+//		if (!m_vsZPreModel) {
+//			return 1;
+//		}
+//		result = m_vsZPreModel->LoadVS(fxFilePath, vsEntryPointFunc);
+//		if (result != 0) {
+//			return 1;
+//		}
+//		g_engine->RegistShaderToBank(fxFilePath, vsEntryPointFunc, m_vsZPreModel);
+//	}
+//
+//	m_psZPreModel = g_engine->GetShaderFromBank(fxFilePath, psEntryPointFunc);
+//	if (m_psZPreModel == nullptr) {
+//		m_psZPreModel = new Shader;
+//		if (!m_psZPreModel) {
+//			return 1;
+//		}
+//		result = m_psZPreModel->LoadPS(fxFilePath, psEntryPointFunc);
+//		if (result != 0) {
+//			return 1;
+//		}
+//		g_engine->RegistShaderToBank(fxFilePath, psEntryPointFunc, m_psZPreModel);
+//	}
+//
+//	return 0;
+//}
 
 int CMQOMaterial::InitInstancingShaders(
 	const char* fxFilePath,
@@ -2901,42 +2901,42 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 	}
 }
 
-void CMQOMaterial::ZPreBeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj, int refposindex)
-{
-	if (!rc) {
-		_ASSERT(0);
-		return;
-	}
-	CPolyMesh3* pm3 = nullptr;
-	CPolyMesh4* pm4 = nullptr;
-	pm3 = renderobj.mqoobj->GetPm3();
-	pm4 = renderobj.mqoobj->GetPm4();
-
-
-	int currentrefposindex;
-	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
-		currentrefposindex = 0;
-	}
-	else {
-		if (pm4) {
-			currentrefposindex = refposindex;
-		}
-		else {
-			currentrefposindex = 0;//!!!!!!!!! pm3の場合には　REFPOSは使用しない　REFPOSはスキニングモデルのみに限定(メモリ節約のため)
-		}
-	}
-
-
-	rc->SetRootSignature(m_ZPrerootSignature[currentrefposindex]);
-	if (renderobj.pmodel && !renderobj.pmodel->GetSkyFlag()) {
-		rc->SetPipelineState(m_ZPreModelPipelineState[currentrefposindex]);
-	}
-	else {
-		rc->SetPipelineState(m_ZPreModelSkyPipelineState[currentrefposindex]);
-	}
-	rc->SetDescriptorHeap(m_descriptorHeap[currentrefposindex]);
-}
-
+//void CMQOMaterial::ZPreBeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj, int refposindex)
+//{
+//	if (!rc) {
+//		_ASSERT(0);
+//		return;
+//	}
+//	CPolyMesh3* pm3 = nullptr;
+//	CPolyMesh4* pm4 = nullptr;
+//	pm3 = renderobj.mqoobj->GetPm3();
+//	pm4 = renderobj.mqoobj->GetPm4();
+//
+//
+//	int currentrefposindex;
+//	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+//		currentrefposindex = 0;
+//	}
+//	else {
+//		if (pm4) {
+//			currentrefposindex = refposindex;
+//		}
+//		else {
+//			currentrefposindex = 0;//!!!!!!!!! pm3の場合には　REFPOSは使用しない　REFPOSはスキニングモデルのみに限定(メモリ節約のため)
+//		}
+//	}
+//
+//
+//	rc->SetRootSignature(m_ZPrerootSignature[currentrefposindex]);
+//	if (renderobj.pmodel && !renderobj.pmodel->GetSkyFlag()) {
+//		rc->SetPipelineState(m_ZPreModelPipelineState[currentrefposindex]);
+//	}
+//	else {
+//		rc->SetPipelineState(m_ZPreModelSkyPipelineState[currentrefposindex]);
+//	}
+//	rc->SetDescriptorHeap(m_descriptorHeap[currentrefposindex]);
+//}
+//
 void CMQOMaterial::InstancingBeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 {
 	if (!rc) {

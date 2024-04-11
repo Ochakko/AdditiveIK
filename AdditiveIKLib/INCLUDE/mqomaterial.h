@@ -335,22 +335,22 @@ public:
 	);
 
 
-	int InitZPreShadersAndPipelines(
-		int vertextype,
-		const char* fxFilePath,
-		const char* vsEntryPointFunc,
-		const char* psEntryPointFunc,
-		const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat,
-		int numSrv,
-		int numCbv,
-		UINT offsetInDescriptorsFromTableStartCB,
-		UINT offsetInDescriptorsFromTableStartSRV,
-		D3D12_FILTER samplerFilter);
-	void InitZPrePipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
-	int InitZPreShaders(const char* fxFilePath,
-		const char* vsEntryPointFunc,
-		const char* psEntryPointFunc
-	);
+	//int InitZPreShadersAndPipelines(
+	//	int vertextype,
+	//	const char* fxFilePath,
+	//	const char* vsEntryPointFunc,
+	//	const char* psEntryPointFunc,
+	//	const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat,
+	//	int numSrv,
+	//	int numCbv,
+	//	UINT offsetInDescriptorsFromTableStartCB,
+	//	UINT offsetInDescriptorsFromTableStartSRV,
+	//	D3D12_FILTER samplerFilter);
+	//void InitZPrePipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
+	//int InitZPreShaders(const char* fxFilePath,
+	//	const char* vsEntryPointFunc,
+	//	const char* psEntryPointFunc
+	//);
 
 
 	int InitInstancingShadersAndPipelines(
@@ -383,10 +383,10 @@ public:
 		int refposindex);
 	void BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj, 
 		int refposindex);
-	//void ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
-	//	const Matrix& mView, const Matrix& mProj,
-	//	int refposindex);
-	void ZPreBeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj, int refposindex);
+	////void ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
+	////	const Matrix& mView, const Matrix& mProj,
+	////	int refposindex);
+	//void ZPreBeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj, int refposindex);
 	void InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 		const Matrix& mView, const Matrix& mProj,
 		bool isfirstmaterial = false);
@@ -1243,11 +1243,11 @@ private:
 	//Shader* m_psModel = nullptr;					//モデル用のピクセルシェーダー。
 
 
-	RootSignature m_ZPrerootSignature[REFPOSMAXNUM];					//ZPreルートシグネチャ。
-	PipelineState m_ZPreModelPipelineState[REFPOSMAXNUM];		//ZPreモデル用のパイプラインステート。
-	PipelineState m_ZPreModelSkyPipelineState[REFPOSMAXNUM];	//ZPreモデルSky用のパイプラインステート。
-	Shader* m_vsZPreModel = nullptr;				//ZPreモデル用の頂点シェーダー。
-	Shader* m_psZPreModel = nullptr;					//ZPreモデル用のピクセルシェーダー。
+	//RootSignature m_ZPrerootSignature[REFPOSMAXNUM];					//ZPreルートシグネチャ。
+	//PipelineState m_ZPreModelPipelineState[REFPOSMAXNUM];		//ZPreモデル用のパイプラインステート。
+	//PipelineState m_ZPreModelSkyPipelineState[REFPOSMAXNUM];	//ZPreモデルSky用のパイプラインステート。
+	//Shader* m_vsZPreModel = nullptr;				//ZPreモデル用の頂点シェーダー。
+	//Shader* m_psZPreModel = nullptr;					//ZPreモデル用のピクセルシェーダー。
 
 	RootSignature m_InstancingrootSignature;
 	PipelineState m_InstancingOpequeTrianglePipelineState;

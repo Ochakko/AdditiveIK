@@ -2,6 +2,34 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/04/11
+　AdditiveIK 1.0.0.15 RC1(リリース候補1)
+　　1.0.0.14からの変更点
+　　　不具合修正
+　　　　モデルが全体移動している場合にシャドウが表示されていなかった不具合を修正
+　　　　ChkInViewにおけるシャドウカメラ変換行列がモデル全体移動に対応していなかった
+　　　
+　　　DOF表示の高速化
+　　　　被写界深度(DOF)をオンにした時の表示速度がDOFをオフにしたときの表示速度と同じくらいにまで高速化
+
+　　　シャドウ品質の改善
+　　　　シャドウの品質改善とはシャドウのギザギザ表示を解消すること
+　　　　ShadowプレートメニューにVarianceShadowMapsチェックボックスとBlurShadowチェックボックスを追加
+　　　　VarianceShadowMaps(分散シャドウマップ)とは
+　　　　　シャドウの深度情報の差分から影かどうかの分散(確率用語)を計算して影の色を決める方法
+　　　　BlurShadowは
+　　　　　ガウシアンによるボカシを掛ける機能でオフにしている場合にも縮小拡大効果によりボカシを適用して品質向上
+
+　
+
+動画
+  ver1.0.0.4以降共通
+　　新機能の使い方まとめ動画
+　 　【DirectX12】AdditiveIK新機能【モーキャプ編集】
+ 　 　https://youtu.be/oKGY62YosSg
+
+
+
 
 
 2024/04/10
@@ -84,17 +112,6 @@ https://github.com/Ochakko/AdditiveIK
 　　　メッシュの無いfbx(モーションだけのRokokoのfbxなど)を読み込もうとするとエラーになる不具合を修正
 　　　　ChkInViewコンピュートシェーダ実行用のオブジェクト作成でエラーになっていた
 　　　　メッシュが無い場合はChkInView実行用オブジェクト作成をスキップ
-
-
-
-
-動画
-  ver1.0.0.4以降共通
-　　新機能の使い方まとめ動画
-　 　【DirectX12】AdditiveIK新機能【モーキャプ編集】
- 　 　https://youtu.be/oKGY62YosSg
-
-
 
 
 

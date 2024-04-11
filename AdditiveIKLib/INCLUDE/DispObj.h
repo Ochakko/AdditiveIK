@@ -99,8 +99,8 @@ public:
 		bool lasterflag, CMQOMaterial* rmaterial,
 		int curoffset, int curtrinum);
 
-	int RenderZPrePm4(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
-	int RenderZPrePm3(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
+	//int RenderZPrePm4(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
+	//int RenderZPrePm3(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
 
 	int RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
 

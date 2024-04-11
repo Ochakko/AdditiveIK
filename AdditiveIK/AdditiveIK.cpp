@@ -14673,7 +14673,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.14\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.15\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -24926,10 +24926,10 @@ int ShadowParams2Dlg(HWND hDlgWnd)
 	}
 
 	if (g_blurShadow == true) {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_BLURSHADOW, true);
+		CheckDlgButton(hDlgWnd, IDC_CHECK_BLURSHADOW2, true);
 	}
 	else {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_BLURSHADOW, false);
+		CheckDlgButton(hDlgWnd, IDC_CHECK_BLURSHADOW2, false);
 	}
 
 	//if (s_camtargetdisp == true) {
@@ -26444,6 +26444,18 @@ LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 			}
 			else {
 				g_VSMflag = false;
+			}
+		}
+		break;
+		case IDC_CHECK_BLURSHADOW2:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_BLURSHADOW2);
+			if (ischecked == BST_CHECKED) {
+				g_blurShadow = true;
+			}
+			else {
+				g_blurShadow = false;
 			}
 		}
 		break;
