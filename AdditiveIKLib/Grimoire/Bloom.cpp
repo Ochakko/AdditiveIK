@@ -107,10 +107,11 @@ namespace myRenderer
         rc->WaitUntilFinishDrawingToRenderTarget(m_luminanceRenderTarget);
 
         // ガウシアンブラーを4回実行する
-        m_gaussianBlur[0].ExecuteOnGPU(rc, 10);
-        m_gaussianBlur[1].ExecuteOnGPU(rc, 10);
-        m_gaussianBlur[2].ExecuteOnGPU(rc, 10);
-        m_gaussianBlur[3].ExecuteOnGPU(rc, 10);
+        bool blurflag = true;
+        m_gaussianBlur[0].ExecuteOnGPU(rc, 10, blurflag);
+        m_gaussianBlur[1].ExecuteOnGPU(rc, 10, blurflag);
+        m_gaussianBlur[2].ExecuteOnGPU(rc, 10, blurflag);
+        m_gaussianBlur[3].ExecuteOnGPU(rc, 10, blurflag);
 
         // 4枚のボケ画像を合成してメインレンダリングターゲットに加算合成
         // レンダリングターゲットとして利用できるまで待つ

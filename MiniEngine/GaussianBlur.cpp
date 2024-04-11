@@ -13,7 +13,7 @@ void GaussianBlur::Init(Texture* originalTexture)
 }
 
 
-void GaussianBlur::ExecuteOnGPU(RenderContext* rc, float blurPower)
+void GaussianBlur::ExecuteOnGPU(RenderContext* rc, float blurPower, bool blurflag)
 {
 	if (!rc) {
 		_ASSERT(0);
@@ -21,7 +21,7 @@ void GaussianBlur::ExecuteOnGPU(RenderContext* rc, float blurPower)
 	}
 
 	//重みテーブルを更新する。
-	UpdateWeightsTable(blurPower);
+	UpdateWeightsTable(blurPower, blurflag);
 
 	//横ブラーを実行。
 	//レンダリングターゲットとして利用できるようになるまでwaitを入れる。
@@ -114,9 +114,9 @@ void GaussianBlur::InitSprites()
 		m_yBlurSprite.Init(yBlurSpriteInitData);
 	}
 }
-void GaussianBlur::UpdateWeightsTable(float blurPower)
+void GaussianBlur::UpdateWeightsTable(float blurPower, bool blurflag)
 {
-	if (g_blurShadow) {
+	if (blurflag) {
 
 		//#########
 		//ボカシ有り

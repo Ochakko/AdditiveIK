@@ -457,7 +457,7 @@ namespace myRenderer
         if (g_enableshadow) {
             //if (g_blurShadow) {//g_shadowmapforshaderにボケテクスチャをセットしているのでフラグに関わらずblurを実行
                 //step-7 シャドウマップをぼかすためのガウシアンブラーを実行する
-            m_shadowBlur.ExecuteOnGPU(rc, 2.0f);
+            m_shadowBlur.ExecuteOnGPU(rc, 2.0f, g_blurShadow);
             //}
         }
     }

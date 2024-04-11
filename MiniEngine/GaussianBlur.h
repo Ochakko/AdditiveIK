@@ -42,7 +42,7 @@ public:
 	/// </remarks>
 	/// <param name="rc">レンダリングターゲット</param>
 	/// <param name="blurPower">ブラーの強さ。値が大きいほどボケが強くなる。</param>
-	void ExecuteOnGPU(RenderContext* rc, float blurPower);
+	void ExecuteOnGPU(RenderContext* rc, float blurPower, bool blurflag);
 	/// <summary>
 	/// ボケテクスチャを取得。
 	/// </summary>
@@ -63,9 +63,11 @@ private:
 	/// <summary>
 	/// 重みテーブルを更新する。
 	/// </summary>
-	void UpdateWeightsTable(float blurPower);
+	void UpdateWeightsTable(float blurPower, bool blurflag);
 private:
-	enum { NUM_WEIGHTS = 8 };				//重みの数。
+	//enum { NUM_WEIGHTS = 8 };				//重みの数。
+	enum { NUM_WEIGHTS = 4 };				//重みの数。 2024/04/11表示の重み的に8から4へ変更
+
 	float m_weights[NUM_WEIGHTS];			//重みテーブル。
 	Texture* m_originalTexture = nullptr;	//オリジナルテクスチャ。
 	RenderTarget m_xBlurRenderTarget;		//横ボケ画像を描画するレンダリングターゲット。
