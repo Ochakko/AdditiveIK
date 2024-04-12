@@ -8859,6 +8859,12 @@ int CModel::SetBtMotionOnBt(bool limitdegflag,
 		}
 	}
 
+	if (limitdegflag == true) {
+		//制限角度計算はPhysIKRec()よりも前に処理する必要がある
+		//よってSetBtMotionOnBt()の最後に処理を行う
+		LimitBtMatReq(limitdegflag, GetTopBone(false));
+	}
+
 	return 0;
 }
 
@@ -9043,6 +9049,26 @@ int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag,
 	}
 	*/
 	return 0;
+}
+
+void CModel::LimitBtMatReq(bool limitdegflag, CBone* srcbone)
+{
+	if (srcbone) {
+
+		if ((srcbone->GetChild(false)) &&
+			//((srcbone->GetBtKinFlag() == 0) || (srcbone->GetTmpKinematic() == false))) {
+			(srcbone->GetBtKinFlag() == 0)) {
+			ChaMatrix curbtmat = srcbone->GetBtMat(true);
+			srcbone->SetBtMatLimited(limitdegflag, false, curbtmat);
+		}
+
+		if (srcbone->GetChild(false)) {
+			LimitBtMatReq(limitdegflag, srcbone->GetChild(false));
+		}
+		if (srcbone->GetBrother(false)) {
+			LimitBtMatReq(limitdegflag, srcbone->GetBrother(false));
+		}
+	}
 }
 
 

@@ -1123,6 +1123,12 @@ int CBtObject::SetBtMotion(bool limitdegflag, ChaMatrix curtraanim)
 		return 0;
 	}
 
+
+	ChaMatrix savebtmat = m_bone->GetBtMat(true);
+	ChaVector3 savebteul = m_bone->GetBtEul();
+
+
+
 	ChaVector3 orgpos, orgchildpos, aftpos, aftchildpos;
 	ChaMatrix zerowm;
 	orgpos = m_bone->GetJointFPos();
@@ -1202,8 +1208,9 @@ int CBtObject::SetBtMotion(bool limitdegflag, ChaMatrix curtraanim)
 	if ((m_bone->GetBtFlag() == 0) &&
 		((m_bone->GetBtKinFlag() == 0) || (m_bone->GetTmpKinematic() == false))) {
 		////m_bone->SetBtMat(m_bone->GetStartMat2() * diffxworld);
+
 		m_bone->SetBtMat(setwm);
-		m_bone->SetBtEul(cureul);
+		m_bone->SetBtEul(cureul);		
 		m_bone->SetBtFlag(1);
 	}
 

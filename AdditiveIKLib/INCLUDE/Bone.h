@@ -476,6 +476,7 @@ public:
 	int SetWorldMat(bool limitdegflag, int srcmotid, double srcframe, ChaMatrix srcmat, CMotionPoint* srcmp);
 	int SetWorldMat(bool limitdegflag, bool directsetflag, bool infooutflag, int setchildflag, 
 		int srcmotid, double srcframe, ChaMatrix srcmat, int onlycheck, bool fromiktarget);
+	int SetBtMatLimited(bool limitdegflag, bool directsetflag, ChaMatrix srcmat);
 	int SetWorldMatFromEul(bool limitdegflag, int inittraflag, int setchildflag, ChaMatrix befwm, ChaVector3 srceul, int srcmotid, double srcframe, int initscaleflag = 0);
 	int SetWorldMatFromEulAndScaleAndTra(bool limitdegflag, int inittraflag, int setchildflag, ChaMatrix befwm, ChaVector3 srceul, ChaVector3 srcscale, ChaVector3 srctra, int srcmotid, double srcframe);
 	int SetWorldMatFromEulAndTra(bool limitdegflag, int setchildflag, ChaMatrix befwm, ChaVector3 srceul, ChaVector3 srctra, int srcmotid, double srcframe);

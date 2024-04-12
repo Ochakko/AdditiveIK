@@ -2,6 +2,16 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2024/04/12
+　LimitEulスプライトスイッチオンの時に物理にも角度制限
+　　物理のパラメータを緩くしてから制限が効いていなかった
+　　bulletphysicsの処理の後で自前の角度制限を実施
+　　制限角度の設定はLimitEulerプレートメニューで.
+
+
+
+
 2024/04/12
 　AdditiveIK 1.0.0.15 release
 　　1.0.0.14からの変更点

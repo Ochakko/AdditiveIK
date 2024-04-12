@@ -5108,6 +5108,13 @@ int CBone::SetWorldMat(bool limitdegflag, bool directsetflag,
 		infooutflag, setchildflag,
 		srcmotid, srcframe, srcmat, onlycheck, fromiktarget);
 }
+int CBone::SetBtMatLimited(bool limitdegflag, bool directsetflag, ChaMatrix srcmat)
+{
+	ChaCalcFunc chacalcfunc;
+	return chacalcfunc.SetBtMatLimited(this, limitdegflag, directsetflag, srcmat);
+}
+
+
 
 int CBone::ChkMovableEul(ChaVector3 srceul)
 {

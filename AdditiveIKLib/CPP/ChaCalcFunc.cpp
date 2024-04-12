@@ -2179,6 +2179,223 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, bool directsetfl
 	return ismovable;
 }
 
+int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directsetflag, ChaMatrix srcmat)
+{
+	if (!srcbone) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	//2023/04/28
+	if (srcbone->IsNotSkeleton()) {
+		return 0;
+	}
+
+	int ismovable = 0;
+
+
+	//変更前を保存
+	ChaMatrix saveworldmat;
+	ChaVector3 saveeul;
+	saveworldmat = srcbone->GetBtMat(false);//レンダーフレームのbtmat
+	saveeul = srcbone->GetBtEul();
+
+
+	ChaMatrix beflocalmat;
+	ChaMatrix newlocalmat;
+	beflocalmat.SetIdentity();
+	newlocalmat.SetIdentity();
+	if (srcbone->GetParent(false)) {
+		//eNullもアニメーション可能
+		//GetENullMatrixを修正してCalcEnullMatReqで計算するようにしたところが2023/06/26から変わったところ
+		//SetWorldMat()時には　回転計算用のローカル行列取得時に　parenetがeNullの場合関してもGetWorldMat[invNode * CalcENullMat]を使用
+		//Fbx回転計算時には　CalcLocalEulXYZ()内にて　parentがeNullの場合　invNode * CalcENullMatを使用
+		//Fbx移動計算時には　CalcFbxLocalMatrix内にて　parentがeNullの場合　GetENullMatrixを使用
+
+		ChaMatrix befparentwm;
+		befparentwm = srcbone->GetParent(false)->GetBtMat(false);
+		beflocalmat = saveworldmat * ChaMatrixInv(befparentwm);
+
+		ChaMatrix newparentwm;
+		newparentwm = srcbone->GetParent(false)->GetBtMat(true);
+		newlocalmat = srcmat * ChaMatrixInv(newparentwm);
+	}
+	else {
+		beflocalmat = saveworldmat;
+		newlocalmat = srcmat;
+	}
+
+	//calc bef SRT
+	ChaMatrix befsmat, befrmat, beftmat, beftanimmat;
+	befsmat.SetIdentity();
+	befrmat.SetIdentity();
+	beftmat.SetIdentity();
+	beftanimmat.SetIdentity();
+	GetSRTandTraAnim(beflocalmat, srcbone->GetNodeMat(), &befsmat, &befrmat, &beftmat, &beftanimmat);
+
+
+	//calc new SRT
+	ChaMatrix newsmat, newrmat, newtmat, newtanimmat;
+	newsmat.SetIdentity();
+	newrmat.SetIdentity();
+	newtmat.SetIdentity();
+	newtanimmat.SetIdentity();
+	GetSRTandTraAnim(newlocalmat, srcbone->GetNodeMat(), &newsmat, &newrmat, &newtmat, &newtanimmat);
+
+	////calc new eul
+	//srcbone->SetWorldMat(limitdegflag, srcmotid, roundingframe, srcmat, curmp);//tmp time
+	//ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
+	//neweul = srcbone->CalcLocalEulXYZ(limitdegflag, -1, srcmotid, roundingframe, BEFEUL_BEFFRAME);
+
+	ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
+	CQuaternion eulq = srcmat.GetRotQ();
+	{
+		CBone* parentbone = srcbone->GetParent(false);
+		int isfirstbone = 0;
+		int isendbone = 0;
+
+		if (parentbone && parentbone->IsSkeleton()) {
+			isfirstbone = 0;
+		}
+		else {
+			isfirstbone = 1;
+		}
+		if (srcbone->GetChild(false) && srcbone->GetChild(false)->IsSkeleton()) {
+			if (srcbone->GetChild(false)->GetChild(false) && srcbone->GetChild(false)->GetChild(false)->IsSkeleton()) {
+				isendbone = 0;
+			}
+			else {
+				isendbone = 1;
+			}
+		}
+		else {
+			isendbone = 1;
+		}
+		//int notmodify180flag = srcbone->GetNotModify180Flag(srcmotid, roundingframe);
+		int notmodify180flag = 1;//!!!!!!!!!!!!!!!
+		CQuaternion axisq;
+		axisq.RotationMatrix(srcbone->GetNodeMat());
+		BEFEUL befeul;
+		befeul.Init();
+		befeul.befframeeul = saveeul;
+		befeul.currentframeeul = saveeul;
+		eulq.Q2EulXYZusingQ(true, false, &axisq, befeul, &neweul, isfirstbone, isendbone, notmodify180flag);
+	}
+
+	if (limitdegflag == true) {
+		ismovable = srcbone->ChkMovableEul(neweul);
+	}
+	else {
+		ismovable = 1;
+	}
+
+	if (directsetflag) {
+		srcbone->SetBtMat(srcmat);
+		srcbone->SetBtEul(neweul);
+	}
+	else {
+		if (ismovable == 1) {
+			ChaMatrix setlocalrotmat = eulq.MakeRotMatX();
+			ChaMatrix setlocalmat;
+			bool sflag = true;
+			bool tanimflag = true;
+
+			//ChaMatrix inittanim;
+			//inittanim.SetIdentity();
+
+			//setlocalmat = ChaMatrixFromSRTraAnim(sflag, tanimflag, srcbone->GetNodeMat(), &befsmat, &setlocalrotmat, &beftanimmat);
+			setlocalmat = ChaMatrixFromSRTraAnim(sflag, tanimflag, srcbone->GetNodeMat(), &befsmat, &setlocalrotmat, &newtanimmat);
+			//setlocalmat = ChaMatrixFromSRTraAnim(sflag, tanimflag, srcbone->GetNodeMat(), &befsmat, &setlocalrotmat, &inittanim);
+
+			ChaMatrix setmat;
+			if (srcbone->GetParent(false)) {
+				setmat = setlocalmat * srcbone->GetParent(false)->GetBtMat(true);
+			}
+			else {
+				setmat = setlocalmat;
+			}
+
+			srcbone->SetBtMat(setmat);
+			srcbone->SetBtEul(neweul);
+			ChaMatrix dummyparentwm;
+			if (srcbone->GetParent(false)) {
+				dummyparentwm = srcbone->GetBtMat(true);
+			}
+			else {
+				dummyparentwm.SetIdentity();
+			}
+			srcbone->UpdateParentWMReq(limitdegflag, false, 0, 0.0, dummyparentwm, dummyparentwm);
+		}
+		else {
+			//{//壁すり処理をする
+			//	//############################################
+			//	//　遊び付きリミテッドIK
+			//	//############################################
+				ChaVector3 limiteul;
+				limiteul = srcbone->LimitEul(neweul);
+				CQuaternion setq;
+				setq.SetRotationXYZ(0, limiteul);
+				ChaMatrix setlocalrotmat = setq.MakeRotMatX();
+				ChaMatrix setlocalmat;
+				bool sflag = true;
+				bool tanimflag = true;
+				//setlocalmat = ChaMatrixFromSRTraAnim(sflag, tanimflag, srcbone->GetNodeMat(), &befsmat, &setlocalrotmat, &beftanimmat);
+				setlocalmat = ChaMatrixFromSRTraAnim(sflag, tanimflag, srcbone->GetNodeMat(), &befsmat, &setlocalrotmat, &newtanimmat);
+
+				ChaMatrix setmat;
+				if (srcbone->GetParent(false)) {
+					setmat = setlocalmat * srcbone->GetParent(false)->GetBtMat(true);
+				}
+				else {
+					setmat = setlocalmat;
+				}
+
+				srcbone->SetBtMat(setmat);
+				srcbone->SetBtEul(limiteul);
+				ChaMatrix dummyparentwm;
+				if (srcbone->GetParent(false)) {
+					dummyparentwm = srcbone->GetBtMat(true);
+				}
+				else {
+					dummyparentwm.SetIdentity();
+				}
+				srcbone->UpdateParentWMReq(limitdegflag, false, 0, 0.0, dummyparentwm, dummyparentwm);
+				//}
+			//else 
+			{
+				//if (g_underIKRot == true) {
+				//if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderIKRot()) {
+				//srcbone->SetBtMat(saveworldmat);
+				//srcbone->SetBtEul(saveeul);
+
+				//}
+				//else {
+				//	ChaVector3 limiteul;
+				//	//############################################################################################################
+				//	//2023/10/25
+				//	//角度制限により動かさない場合にbefeul.befframeeulを使うので　ApplyNewLimitsToWM()はマルチスレッド化出来ない
+				//	//############################################################################################################
+				//	BEFEUL befeul = srcbone->GetBefEul(limitdegflag, srcmotid, roundingframe);
+				//	limiteul = befeul.befframeeul;//befframeeulをlimiteulとして使用する
+
+				//	int inittraflag0 = 0;
+				//	//子ジョイントへの波及は　SetWorldMatFromEulAndScaleAndTra内でしている
+				//	srcbone->SetWorldMatFromEulAndScaleAndTra(limitdegflag, inittraflag0, setchildflag,
+				//		saveworldmat, limiteul, befscalevec, ChaMatrixTraVec(newtanimmat), srcmotid, roundingframe);//setchildflag有り!!!!
+				//	//srcbone->SetLocalEul(limitdegflag, srcmotid, roundingframe, limiteul, curmp);//<---SetWorldMatFromEulAnd...内でする
+				//	if (limitdegflag == true) {
+				//		curmp->SetCalcLimitedWM(2);
+				//	}
+				//}
+			}
+		}
+	}
+
+	return ismovable;
+}
+
+
+
 int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag,
 	int srcmotid, double srcframe, ChaMatrix srcmat, CMotionPoint* srcmp)//default : srcmp = 0
 {
@@ -2850,19 +3067,24 @@ void ChaCalcFunc::UpdateCurrentWM(CBone* srcbone, bool limitdegflag, int srcmoti
 	//	befparentwm.SetIdentity();
 	//}
 
-	bool directsetflag = true;//directset !!!
-	bool infooutflag = false;
-	int setchildflag = 0;
-	int onlycheck = 0;
-	bool fromiktarget = false;
-	srcbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, setchildflag,
-		srcmotid, roundingframe, newwm, onlycheck, fromiktarget);
+	if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
+		bool directsetflag = true;//directset !!!
+		bool infooutflag = false;
+		int setchildflag = 0;
+		int onlycheck = 0;
+		bool fromiktarget = false;
+		srcbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, setchildflag,
+			srcmotid, roundingframe, newwm, onlycheck, fromiktarget);
 
-	CMotionPoint* curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
-	if (curmp) {
-		curmp->SetAbsMat(srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp));
+		CMotionPoint* curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
+		if (curmp) {
+			curmp->SetAbsMat(srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp));
+		}
 	}
-
+	else {
+		bool directsetflag = true;
+		srcbone->SetBtMatLimited(limitdegflag, directsetflag, newwm);
+	}
 
 	if (srcbone->GetChild(false)) {
 		bool setbroflag2 = true;
@@ -2893,22 +3115,31 @@ void ChaCalcFunc::UpdateParentWMReq(CBone* srcbone, bool limitdegflag, bool setb
 	currentnewwm.SetIdentity();
 
 	if (srcbone->IsSkeleton() || srcbone->IsCamera()) {//2023/05/23
-		currentbefwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
-		currentnewwm = currentbefwm * ChaMatrixInv(oldparentwm) * newparentwm;
+		if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
+			currentbefwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+			currentnewwm = currentbefwm * ChaMatrixInv(oldparentwm) * newparentwm;
 
+			bool directsetflag = true;//directset !!!
+			bool infooutflag = false;
+			int setchildflag = 0;
+			int onlycheck = 0;
+			bool fromiktarget = false;
+			srcbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, setchildflag,
+				srcmotid, roundingframe, currentnewwm, onlycheck, fromiktarget);
 
-		bool directsetflag = true;//directset !!!
-		bool infooutflag = false;
-		int setchildflag = 0;
-		int onlycheck = 0;
-		bool fromiktarget = false;
-		srcbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, setchildflag,
-			srcmotid, roundingframe, currentnewwm, onlycheck, fromiktarget);
-
-		CMotionPoint* curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
-		if (curmp) {
-			curmp->SetAbsMat(srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp));
+			CMotionPoint* curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
+			if (curmp) {
+				curmp->SetAbsMat(srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp));
+			}
 		}
+		else {
+			currentbefwm = srcbone->GetBtMat(true);
+			currentnewwm = currentbefwm * ChaMatrixInv(oldparentwm) * newparentwm;
+
+			bool directsetflag = true;
+			srcbone->SetBtMatLimited(limitdegflag, directsetflag, currentnewwm);
+		}
+
 	}
 	else if (srcbone->IsNull()) {
 		currentbefwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
