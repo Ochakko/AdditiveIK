@@ -2,8 +2,8 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
-2024/04/11
-　AdditiveIK 1.0.0.15 RC1(リリース候補1)
+2024/04/12
+　AdditiveIK 1.0.0.15 release
 　　1.0.0.14からの変更点
 　　　不具合修正
 　　　　モデルが全体移動している場合にシャドウが表示されていなかった不具合を修正
@@ -26,6 +26,11 @@ https://github.com/Ochakko/AdditiveIK
 　　　　ボケ過ぎないように.
 　　　　ガウシアンブラーの計算ノード数(8 x 2)を半分(4 x 2)に. 
 　
+　　release:
+　　　LODの２段階目のメッシュが表示されなくなっていた不具合(1.0.0.15へ向けての修正時に生じた不具合)を修正
+　　　ChkInViewのコンピュートシェーダの記述ミス
+
+
 
 動画
   ver1.0.0.4以降共通

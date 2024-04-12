@@ -201,7 +201,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
         }
         else if ((srclodno == 1) || (srclodno == 2))
         {
-            lod_mindist = (srclodnum == 3) ? (params1.z * lodrate3L[srclodno - 1]) : (params1.z * lodrate2L[srclodno]);
+            lod_mindist = (srclodnum == 3) ? (params1.z * lodrate3L[srclodno - 1]) : (params1.z * lodrate2L[srclodno - 1]);
             lod_maxdist = (srclodnum == 3) ? (params1.z * lodrate3L[srclodno]) : (params1.z * lodrate2L[srclodno]);
             //if (srclodnum == 3)
             //{ //3段階LOD
