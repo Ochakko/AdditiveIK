@@ -2179,8 +2179,14 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, bool directsetfl
 	return ismovable;
 }
 
-int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directsetflag, ChaMatrix srcmat)
+int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directsetflag, bool setchildflag, ChaMatrix srcmat)
 {
+	//2024/04/13メモ
+	//物理を柔らかく揺らすために剛体の結合を柔らかく設定した
+	//剛体の接続を柔らかく設定した影響で物理の角度制限が効かなくなっていた
+	//よって一度は取り下げたが自前の角度制限を物理に対しても適用することにした
+
+
 	if (!srcbone) {
 		_ASSERT(0);
 		return 1;
@@ -2292,6 +2298,17 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 	if (directsetflag) {
 		srcbone->SetBtMat(srcmat);
 		srcbone->SetBtEul(neweul);
+
+		if (setchildflag) {
+			ChaMatrix dummyparentwm;
+			if (srcbone->GetParent(false)) {
+				dummyparentwm = srcbone->GetBtMat(true);
+			}
+			else {
+				dummyparentwm.SetIdentity();
+			}
+			srcbone->UpdateParentWMReq(limitdegflag, false, 0, 0.0, dummyparentwm, dummyparentwm);
+		}
 	}
 	else {
 		if (ismovable == 1) {
@@ -2317,24 +2334,33 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 
 			srcbone->SetBtMat(setmat);
 			srcbone->SetBtEul(neweul);
-			ChaMatrix dummyparentwm;
-			if (srcbone->GetParent(false)) {
-				dummyparentwm = srcbone->GetBtMat(true);
+
+			if (setchildflag) {
+				ChaMatrix dummyparentwm;
+				if (srcbone->GetParent(false)) {
+					dummyparentwm = srcbone->GetBtMat(true);
+				}
+				else {
+					dummyparentwm.SetIdentity();
+				}
+				srcbone->UpdateParentWMReq(limitdegflag, false, 0, 0.0, dummyparentwm, dummyparentwm);
 			}
-			else {
-				dummyparentwm.SetIdentity();
-			}
-			srcbone->UpdateParentWMReq(limitdegflag, false, 0, 0.0, dummyparentwm, dummyparentwm);
 		}
 		else {
-			//{//壁すり処理をする
+			//{//制限値を越えている場合　
+			// 　壁すり処理をする
 			//	//############################################
 			//	//　遊び付きリミテッドIK
 			//	//############################################
 				ChaVector3 limiteul;
 				limiteul = srcbone->LimitEul(neweul);
-				CQuaternion setq;
-				setq.SetRotationXYZ(0, limiteul);
+				CQuaternion limitq;
+				limitq.SetRotationXYZ(0, limiteul);
+				CQuaternion setq = CQuaternion(limitq);
+				//setq.Slerp(eulq, 100, 50);
+				//setq.Slerp(eulq, 100, 25);//制限値と設定候補値の間を内分(1:3)して(制限値より1/4だけ候補値側にオーバーする)設定値とする
+				setq.Slerp(eulq, 100, g_limitrate);//LimitEulerプレートメニューのlimit rate for physicsのスライダー値(%)
+
 				ChaMatrix setlocalrotmat = setq.MakeRotMatX();
 				ChaMatrix setlocalmat;
 				bool sflag = true;
@@ -2350,16 +2376,22 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 					setmat = setlocalmat;
 				}
 
-				srcbone->SetBtMat(setmat);
-				srcbone->SetBtEul(limiteul);
-				ChaMatrix dummyparentwm;
-				if (srcbone->GetParent(false)) {
-					dummyparentwm = srcbone->GetBtMat(true);
+				//srcbone->SetBtMat(setmat);
+				//srcbone->SetBtEul(limiteul);//!!!!!! Slerpで異なる値になっている
+				bool directsetflag2 = true;
+				bool setchildflag2 = false;
+				srcbone->SetBtMatLimited(limitdegflag, directsetflag2, setchildflag2, setmat);
+
+				if (setchildflag) {
+					ChaMatrix dummyparentwm;
+					if (srcbone->GetParent(false)) {
+						dummyparentwm = srcbone->GetBtMat(true);
+					}
+					else {
+						dummyparentwm.SetIdentity();
+					}
+					srcbone->UpdateParentWMReq(limitdegflag, false, 0, 0.0, dummyparentwm, dummyparentwm);
 				}
-				else {
-					dummyparentwm.SetIdentity();
-				}
-				srcbone->UpdateParentWMReq(limitdegflag, false, 0, 0.0, dummyparentwm, dummyparentwm);
 				//}
 			//else 
 			{
@@ -2367,8 +2399,61 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 				//if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderIKRot()) {
 				//srcbone->SetBtMat(saveworldmat);
 				//srcbone->SetBtEul(saveeul);
-
+				//
+				//if (setchildflag) {
+				//	ChaMatrix dummyparentwm;
+				//	if (srcbone->GetParent(false)) {
+				//		dummyparentwm = srcbone->GetBtMat(true);
+				//	}
+				//	else {
+				//		dummyparentwm.SetIdentity();
+				//	}
+				//	srcbone->UpdateParentWMReq(limitdegflag, false, 0, 0.0, dummyparentwm, dummyparentwm);
 				//}
+				//}
+				
+
+				//CQuaternion saveq;
+				//saveq.SetRotationXYZ(0, saveeul);
+				//CQuaternion setq = CQuaternion(saveq);
+				////setq.Slerp(eulq, 100, 50);
+				//setq.Slerp(eulq, 100, 25);
+
+				//ChaMatrix setlocalrotmat = setq.MakeRotMatX();
+				//ChaMatrix setlocalmat;
+				//bool sflag = true;
+				//bool tanimflag = true;
+				////setlocalmat = ChaMatrixFromSRTraAnim(sflag, tanimflag, srcbone->GetNodeMat(), &befsmat, &setlocalrotmat, &beftanimmat);
+				//setlocalmat = ChaMatrixFromSRTraAnim(sflag, tanimflag, srcbone->GetNodeMat(), &befsmat, &setlocalrotmat, &newtanimmat);
+
+				//ChaMatrix setmat;
+				//if (srcbone->GetParent(false)) {
+				//	setmat = setlocalmat * srcbone->GetParent(false)->GetBtMat(true);
+				//}
+				//else {
+				//	setmat = setlocalmat;
+				//}
+
+				////srcbone->SetBtMat(setmat);
+				////srcbone->SetBtEul(limiteul);//!!!!!! Slerpで異なる値になっている
+				//bool directsetflag2 = true;
+				//bool setchildflag2 = false;
+				//srcbone->SetBtMatLimited(limitdegflag, directsetflag2, setchildflag2, setmat);
+
+				//if (setchildflag) {
+				//	ChaMatrix dummyparentwm;
+				//	if (srcbone->GetParent(false)) {
+				//		dummyparentwm = srcbone->GetBtMat(true);
+				//	}
+				//	else {
+				//		dummyparentwm.SetIdentity();
+				//	}
+				//	srcbone->UpdateParentWMReq(limitdegflag, false, 0, 0.0, dummyparentwm, dummyparentwm);
+				//}
+
+
+
+
 				//else {
 				//	ChaVector3 limiteul;
 				//	//############################################################################################################
@@ -3083,7 +3168,8 @@ void ChaCalcFunc::UpdateCurrentWM(CBone* srcbone, bool limitdegflag, int srcmoti
 	}
 	else {
 		bool directsetflag = true;
-		srcbone->SetBtMatLimited(limitdegflag, directsetflag, newwm);
+		bool setchildflag = false;//この後ろの部分でUpdateParentWMReqを明示的に呼び出すので、ここのsetchildflagはfalse
+		srcbone->SetBtMatLimited(limitdegflag, directsetflag, setchildflag, newwm);
 	}
 
 	if (srcbone->GetChild(false)) {
@@ -3137,7 +3223,8 @@ void ChaCalcFunc::UpdateParentWMReq(CBone* srcbone, bool limitdegflag, bool setb
 			currentnewwm = currentbefwm * ChaMatrixInv(oldparentwm) * newparentwm;
 
 			bool directsetflag = true;
-			srcbone->SetBtMatLimited(limitdegflag, directsetflag, currentnewwm);
+			bool setchildflag = false;//この後ろの部分でUpdateParentWMReqを明示的に呼び出すので、ここのsetchildflagはfalse
+			srcbone->SetBtMatLimited(limitdegflag, directsetflag, setchildflag, currentnewwm);
 		}
 
 	}

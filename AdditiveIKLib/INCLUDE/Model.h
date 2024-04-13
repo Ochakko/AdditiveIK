@@ -820,7 +820,7 @@ public:
 		double srcframe, ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
 	int SetBtMotionOnBt(bool limitdegflag,
 		double srcframe, ChaMatrix* vmat, ChaMatrix* pmat);// , int updateslot);
-	void LimitBtMatReq(bool limitdegflag, CBone* srcbone);
+	void LimitBtMatReq(bool limitdegflag, bool setchildflag, CBone* srcbone);
 /**
  * @fn
  * SetBtImpulse

@@ -4129,6 +4129,7 @@ void InitApp()
 
 	//g_wmatDirectSetFlag = false;
 	g_limitdegflag = false;
+	g_limitrate = 25;
 	s_beflimitdegflag = g_limitdegflag;
 	s_savelimitdegflag = g_limitdegflag;
 
@@ -25168,6 +25169,15 @@ int AngleLimit2Dlg(HWND hDlgWnd, bool updateonlycheckeul)
 
 			InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_ZL, s_anglelimit.lower[AXIS_Z]);
 			InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_ZU, s_anglelimit.upper[AXIS_Z]);
+
+
+			int sliderpos = g_limitrate;
+			SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIMITRATE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+			SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIMITRATE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+			SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIMITRATE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+			WCHAR strrate[256] = { 0L };
+			swprintf_s(strrate, 256, L"rate : %d", g_limitrate);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_LIMITRATE, strrate);
 		}
 
 
@@ -31481,6 +31491,18 @@ LRESULT CALLBACK AngleLimitDlgProc2(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp
 			break;
 		}
 		break;
+
+	case WM_HSCROLL:
+		if (GetDlgItem(hDlgWnd, IDC_SLIDER_LIMITRATE) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIMITRATE), TBM_GETPOS, 0, 0);
+			g_limitrate = cursliderpos;
+
+			WCHAR strval[256] = { 0L };
+			swprintf_s(strval, 256, L"rate : %d", g_limitrate);
+			SetDlgItemTextW(hDlgWnd, IDC_STATIC_LIMITRATE, strval);
+		}
+		break;
+
 	case WM_CLOSE:
 		if (s_anglelimitdlg) {
 			s_underanglelimithscroll = 0;

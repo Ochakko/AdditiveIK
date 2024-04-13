@@ -8860,9 +8860,15 @@ int CModel::SetBtMotionOnBt(bool limitdegflag,
 	}
 
 	if (limitdegflag == true) {
+		//2024/04/13メモ
+		//物理を柔らかく揺らすために剛体の結合を柔らかく設定した
+		//剛体の接続を柔らかく設定した影響で物理の角度制限が効かなくなっていた
+		//よって一度は取り下げたが自前の角度制限を物理に対しても適用することにした
+		// 
 		//制限角度計算はPhysIKRec()よりも前に処理する必要がある
 		//よってSetBtMotionOnBt()の最後に処理を行う
-		LimitBtMatReq(limitdegflag, GetTopBone(false));
+		bool setchildflag = true;
+		LimitBtMatReq(limitdegflag, setchildflag, GetTopBone(false));
 	}
 
 	return 0;
@@ -9051,22 +9057,28 @@ int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag,
 	return 0;
 }
 
-void CModel::LimitBtMatReq(bool limitdegflag, CBone* srcbone)
+void CModel::LimitBtMatReq(bool limitdegflag, bool setchildflag, CBone* srcbone)
 {
+	//2024/04/13メモ
+	//物理を柔らかく揺らすために剛体の結合を柔らかく設定した
+	//剛体の接続を柔らかく設定した影響で物理の角度制限が効かなくなっていた
+	//よって一度は取り下げたが自前の角度制限を物理に対しても適用することにした
+
 	if (srcbone) {
 
 		if ((srcbone->GetChild(false)) &&
 			//((srcbone->GetBtKinFlag() == 0) || (srcbone->GetTmpKinematic() == false))) {
 			(srcbone->GetBtKinFlag() == 0)) {
 			ChaMatrix curbtmat = srcbone->GetBtMat(true);
-			srcbone->SetBtMatLimited(limitdegflag, false, curbtmat);
+			bool directsetflag = false;
+			srcbone->SetBtMatLimited(limitdegflag, directsetflag, setchildflag, curbtmat);
 		}
 
 		if (srcbone->GetChild(false)) {
-			LimitBtMatReq(limitdegflag, srcbone->GetChild(false));
+			LimitBtMatReq(limitdegflag, setchildflag, srcbone->GetChild(false));
 		}
 		if (srcbone->GetBrother(false)) {
-			LimitBtMatReq(limitdegflag, srcbone->GetBrother(false));
+			LimitBtMatReq(limitdegflag, setchildflag, srcbone->GetBrother(false));
 		}
 	}
 }

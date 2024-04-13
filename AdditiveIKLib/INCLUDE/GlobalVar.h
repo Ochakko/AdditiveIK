@@ -194,6 +194,7 @@ bool g_undereditrange = false;
 
 //bool g_limitdegflag = true;
 bool g_limitdegflag = false;
+int g_limitrate = 25;
 //bool g_wmatDirectSetFlag = false;
 //bool g_underRetargetFlag = false;
 
@@ -466,6 +467,7 @@ extern bool g_underselecttolast;
 extern bool g_undereditrange;
 
 extern bool g_limitdegflag;
+extern int g_limitrate;
 //extern bool g_wmatDirectSetFlag;
 //extern bool g_underRetargetFlag;
 

@@ -5108,10 +5108,10 @@ int CBone::SetWorldMat(bool limitdegflag, bool directsetflag,
 		infooutflag, setchildflag,
 		srcmotid, srcframe, srcmat, onlycheck, fromiktarget);
 }
-int CBone::SetBtMatLimited(bool limitdegflag, bool directsetflag, ChaMatrix srcmat)
+int CBone::SetBtMatLimited(bool limitdegflag, bool directsetflag, bool setchildflag, ChaMatrix srcmat)
 {
 	ChaCalcFunc chacalcfunc;
-	return chacalcfunc.SetBtMatLimited(this, limitdegflag, directsetflag, srcmat);
+	return chacalcfunc.SetBtMatLimited(this, limitdegflag, directsetflag, setchildflag, srcmat);
 }
 
 
