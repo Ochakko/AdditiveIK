@@ -2307,15 +2307,15 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 	}
 	else {
 		if (ismovable == 1) {
-			//制限角度で止まっている部分との差が大きい場合のために
-			//前回の結果と補間して少し滑らかにする
 			CQuaternion saveq;
 			saveq.RotationMatrix(beflocalmat);
 			//saveq.SetRotationXYZ(&axisq, saveeul);
 			CQuaternion calcq1 = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
 			//calcq1 = saveq.Slerp(eulq, 100, 50);
 			//calcq1 = saveq.Slerp(eulq, 100, g_limitrate);
-			calcq1 = saveq.Slerp(eulq, 100, 90);
+			//calcq1 = saveq.Slerp(eulq, 100, 90);
+			//calcq1 = saveq.Slerp(eulq, 100, g_limitrate);//制限がきつい(limitrateが小さい)ときに差が大きいと仮定して　そのときにsaveq寄りになるように-->スカートが戻り切らずに止まった
+			calcq1 = eulq;
 
 			ChaMatrix setlocalrotmat = calcq1.MakeRotMatX();
 			ChaMatrix setlocalmat;
@@ -2370,8 +2370,11 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 				//saveq.SetRotationXYZ(&axisq, saveeul);
 				CQuaternion calcq1 = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
 				calcq1 = limitq.Slerp(eulq, 100, g_limitrate);//LimitEulerプレートメニューのlimit rate for physicsのスライダー値(%)
+				
 				CQuaternion calcq2 = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
-				calcq2 = calcq1.Slerp(saveq, 100, g_limitrate);
+				////calcq2 = calcq1.Slerp(saveq, 100, g_limitrate);
+				//calcq2 = calcq1.Slerp(saveq, 100, 50);
+				calcq2 = calcq1;
 
 				ChaMatrix setlocalrotmat = calcq2.MakeRotMatX();
 				ChaMatrix setlocalmat;
@@ -3152,12 +3155,27 @@ void ChaCalcFunc::UpdateCurrentWM(CBone* srcbone, bool limitdegflag, int srcmoti
 
 
 	ChaMatrix befwm;
+	ChaMatrix currentlocalmat;
 	befwm.SetIdentity();
 	if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
 		befwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+		if (srcbone->GetParent(false)) {
+			ChaMatrix parentwm = srcbone->GetParent(false)->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+			currentlocalmat = newwm * ChaMatrixInv(parentwm);
+		}
+		else {
+			currentlocalmat = newwm;
+		}
 	}
 	else {
 		befwm = srcbone->GetBtMat(true);
+		if (srcbone->GetParent(false)) {
+			ChaMatrix parentwm = srcbone->GetParent(false)->GetBtMat(true);
+			currentlocalmat = newwm * ChaMatrixInv(parentwm);
+		}
+		else {
+			currentlocalmat = newwm;
+		}
 	}
 	//ChaMatrix befparentwm;
 	//befparentwm.SetIdentity();
@@ -3217,7 +3235,8 @@ void ChaCalcFunc::UpdateCurrentWM(CBone* srcbone, bool limitdegflag, int srcmoti
 		befeul.currentframeeul = saveeul;
 		ChaVector3 seteul = ChaVector3(0.0f, 0.0f, 0.0f);
 		CQuaternion setq;
-		setq.RotationMatrix(newwm);
+		//setq.RotationMatrix(newwm);//global !!!!
+		setq.RotationMatrix(currentlocalmat);//local !!!!
 		setq.Q2EulXYZusingQ(true, false, &axisq, befeul, &seteul, isfirstbone, isendbone, notmodify180flag);
 
 		srcbone->SetBtMat(newwm);

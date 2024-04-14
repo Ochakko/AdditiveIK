@@ -4129,7 +4129,7 @@ void InitApp()
 
 	//g_wmatDirectSetFlag = false;
 	g_limitdegflag = false;
-	g_limitrate = 25;
+	g_limitrate = 15;
 	s_beflimitdegflag = g_limitdegflag;
 	s_savelimitdegflag = g_limitdegflag;
 
