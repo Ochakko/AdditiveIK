@@ -2511,14 +2511,14 @@ void CQuaternion::RotationMatrix(ChaMatrix srcmat)
 	double S, trace;
 
 	trace = (double)m[0][0] + (double)m[1][1] + (double)m[2][2] + 1.0;
-	if (trace > 0.0f)
+	if (trace > 0.0)
 	{
 		tmpq.x = (float)(((double)m[1][2] - (double)m[2][1]) / (2.0 * sqrt(trace)));
 		tmpq.y = (float)(((double)m[2][0] - (double)m[0][2]) / (2.0 * sqrt(trace)));
 		tmpq.z = (float)(((double)m[0][1] - (double)m[1][0]) / (2.0 * sqrt(trace)));
 		tmpq.w = (float)(sqrt(trace) / 2.0);
 		*this = tmpq;
-		return;
+		return;//!!!!!!!!!!!!!!!!!!!!!!!!!
 	}
 	maxi = 0;
 	maxdiag = m[0][0];

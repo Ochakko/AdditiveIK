@@ -4146,7 +4146,7 @@ ChaVector3 CBone::CalcLocalEulXYZ(bool limitdegflag, int axiskind,
 //}
 
 
-ChaMatrix CBone::CalcLocalRotMatFromEul(ChaVector3 srceul, int srcmotid, double srcframe)
+ChaMatrix CBone::CalcLocalRotMatFromEul(ChaVector3 srceul)
 {
 	CQuaternion noderot;
 	//CQuaternion invnoderot;
@@ -4778,7 +4778,7 @@ ChaMatrix CBone::CalcWorldMatFromEul(bool limitdegflag, int inittraflag, int set
 	GetSRTandTraAnim(oldlocalmat, GetNodeMat(), &cursmat, &currmat, &curtmat, &curtanimmat);
 
 
-	ChaMatrix newlocalrotmat = CalcLocalRotMatFromEul(srceul, srcmotid, roundingframe);
+	ChaMatrix newlocalrotmat = CalcLocalRotMatFromEul(srceul);
 	ChaMatrix newlocalmat;
 	bool sflag = (initscaleflag == 0);
 	bool tanimflag = (inittraflag == 0);
@@ -5040,7 +5040,7 @@ int CBone::SetWorldMatFromEulAndTra(bool limitdegflag, int setchildflag,
 		parnodemat = GetParent(false)->GetNodeMat();
 	}
 
-	ChaMatrix newlocalrotmat = CalcLocalRotMatFromEul(srceul, srcmotid, roundingframe);
+	ChaMatrix newlocalrotmat = CalcLocalRotMatFromEul(srceul);
 
 	ChaMatrix cursmat, currmat, curtmat, curtanimmat;
 	GetSRTandTraAnim((curwm * ChaMatrixInv(parmat)), GetNodeMat(), &cursmat, &currmat, &curtmat, &curtanimmat);

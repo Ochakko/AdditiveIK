@@ -2201,9 +2201,8 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 
 
 	//変更前を保存
-	ChaMatrix saveworldmat;
 	ChaVector3 saveeul;
-	saveworldmat = srcbone->GetBtMat(false);//レンダーフレームのbtmat
+	ChaMatrix saveworldmat = srcbone->GetBtMat(false);//レンダーフレームのbtmat
 	saveeul = srcbone->GetBtEul();
 
 
@@ -2253,12 +2252,16 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 	//ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
 	//neweul = srcbone->CalcLocalEulXYZ(limitdegflag, -1, srcmotid, roundingframe, BEFEUL_BEFFRAME);
 
+	CQuaternion axisq;
+	axisq.RotationMatrix(srcbone->GetNodeMat());
 	ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
-	CQuaternion eulq = srcmat.GetRotQ();
+	CQuaternion eulq;
+	//eulq.RotationMatrix(srcmat);//<--- global !!!
+	eulq.RotationMatrix(newlocalmat);//local !!!
+	int isfirstbone = 0;
+	int isendbone = 0;
 	{
 		CBone* parentbone = srcbone->GetParent(false);
-		int isfirstbone = 0;
-		int isendbone = 0;
 
 		if (parentbone && parentbone->IsSkeleton()) {
 			isfirstbone = 0;
@@ -2278,9 +2281,8 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 			isendbone = 1;
 		}
 		//int notmodify180flag = srcbone->GetNotModify180Flag(srcmotid, roundingframe);
-		int notmodify180flag = 1;//!!!!!!!!!!!!!!!
-		CQuaternion axisq;
-		axisq.RotationMatrix(srcbone->GetNodeMat());
+		//int notmodify180flag = 1;//!!!!!!!!!!!!!!!
+		int notmodify180flag = 0;//!!!!!!!!!!!!!!!
 		BEFEUL befeul;
 		befeul.Init();
 		befeul.befframeeul = saveeul;
@@ -2296,33 +2298,31 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 	}
 
 	if (directsetflag) {
-		srcbone->SetBtMat(srcmat);
-		srcbone->SetBtEul(neweul);
-
-		if (setchildflag) {
-			ChaMatrix dummyparentwm;
-			if (srcbone->GetParent(false)) {
-				dummyparentwm = srcbone->GetBtMat(true);
-			}
-			else {
-				dummyparentwm.SetIdentity();
-			}
-			srcbone->UpdateParentWMReq(limitdegflag, false, 0, 0.0, dummyparentwm, dummyparentwm);
+		if (setchildflag == false) {
+			srcbone->SetBtMat(srcmat);
+			srcbone->SetBtEul(neweul);
+		}else{
+			srcbone->UpdateCurrentWM(limitdegflag, 0, 0.0, srcmat);
 		}
 	}
 	else {
 		if (ismovable == 1) {
-			ChaMatrix setlocalrotmat = eulq.MakeRotMatX();
+			//制限角度で止まっている部分との差が大きい場合のために
+			//前回の結果と補間して少し滑らかにする
+			CQuaternion saveq;
+			saveq.RotationMatrix(beflocalmat);
+			//saveq.SetRotationXYZ(&axisq, saveeul);
+			CQuaternion calcq1 = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
+			//calcq1 = saveq.Slerp(eulq, 100, 50);
+			//calcq1 = saveq.Slerp(eulq, 100, g_limitrate);
+			calcq1 = saveq.Slerp(eulq, 100, 90);
+
+			ChaMatrix setlocalrotmat = calcq1.MakeRotMatX();
 			ChaMatrix setlocalmat;
 			bool sflag = true;
 			bool tanimflag = true;
-
-			//ChaMatrix inittanim;
-			//inittanim.SetIdentity();
-
 			//setlocalmat = ChaMatrixFromSRTraAnim(sflag, tanimflag, srcbone->GetNodeMat(), &befsmat, &setlocalrotmat, &beftanimmat);
 			setlocalmat = ChaMatrixFromSRTraAnim(sflag, tanimflag, srcbone->GetNodeMat(), &befsmat, &setlocalrotmat, &newtanimmat);
-			//setlocalmat = ChaMatrixFromSRTraAnim(sflag, tanimflag, srcbone->GetNodeMat(), &befsmat, &setlocalrotmat, &inittanim);
 
 			ChaMatrix setmat;
 			if (srcbone->GetParent(false)) {
@@ -2332,19 +2332,28 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 				setmat = setlocalmat;
 			}
 
-			srcbone->SetBtMat(setmat);
-			srcbone->SetBtEul(neweul);
-
-			if (setchildflag) {
-				ChaMatrix dummyparentwm;
-				if (srcbone->GetParent(false)) {
-					dummyparentwm = srcbone->GetBtMat(true);
-				}
-				else {
-					dummyparentwm.SetIdentity();
-				}
-				srcbone->UpdateParentWMReq(limitdegflag, false, 0, 0.0, dummyparentwm, dummyparentwm);
+			if (setchildflag == false) {
+				srcbone->SetBtMat(setmat);
+				int notmodify180flag3 = 0;//!!!!!!!!!!!!!!!
+				BEFEUL befeul3;
+				befeul3.Init();
+				befeul3.befframeeul = saveeul;
+				befeul3.currentframeeul = saveeul;
+				ChaVector3 seteul = ChaVector3(0.0f, 0.0f, 0.0f);
+				calcq1.Q2EulXYZusingQ(true, false, &axisq, befeul3, &seteul, isfirstbone, isendbone, notmodify180flag3);
+				srcbone->SetBtEul(seteul);
 			}
+			else {
+				srcbone->UpdateCurrentWM(limitdegflag, 0, 0.0, setmat);
+			}
+
+			//if (setchildflag == false) {
+			//	srcbone->SetBtMat(setmat);
+			//	srcbone->SetBtEul(neweul);
+			//}
+			//else {
+			//	srcbone->UpdateCurrentWM(limitdegflag, 0, 0.0, setmat);
+			//}
 		}
 		else {
 			//{//制限値を越えている場合　
@@ -2355,16 +2364,20 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 				ChaVector3 limiteul;
 				limiteul = srcbone->LimitEul(neweul);
 				CQuaternion limitq;
-				limitq.SetRotationXYZ(0, limiteul);
-				CQuaternion setq = CQuaternion(limitq);
-				//setq.Slerp(eulq, 100, 50);
-				//setq.Slerp(eulq, 100, 25);//制限値と設定候補値の間を内分(1:3)して(制限値より1/4だけ候補値側にオーバーする)設定値とする
-				setq.Slerp(eulq, 100, g_limitrate);//LimitEulerプレートメニューのlimit rate for physicsのスライダー値(%)
+				limitq.SetRotationXYZ(&axisq, limiteul);
+				CQuaternion saveq;
+				saveq.RotationMatrix(beflocalmat);
+				//saveq.SetRotationXYZ(&axisq, saveeul);
+				CQuaternion calcq1 = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
+				calcq1 = limitq.Slerp(eulq, 100, g_limitrate);//LimitEulerプレートメニューのlimit rate for physicsのスライダー値(%)
+				CQuaternion calcq2 = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
+				calcq2 = calcq1.Slerp(saveq, 100, g_limitrate);
 
-				ChaMatrix setlocalrotmat = setq.MakeRotMatX();
+				ChaMatrix setlocalrotmat = calcq2.MakeRotMatX();
 				ChaMatrix setlocalmat;
 				bool sflag = true;
 				bool tanimflag = true;
+
 				//setlocalmat = ChaMatrixFromSRTraAnim(sflag, tanimflag, srcbone->GetNodeMat(), &befsmat, &setlocalrotmat, &beftanimmat);
 				setlocalmat = ChaMatrixFromSRTraAnim(sflag, tanimflag, srcbone->GetNodeMat(), &befsmat, &setlocalrotmat, &newtanimmat);
 
@@ -2376,22 +2389,21 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 					setmat = setlocalmat;
 				}
 
-				//srcbone->SetBtMat(setmat);
-				//srcbone->SetBtEul(limiteul);//!!!!!! Slerpで異なる値になっている
-				bool directsetflag2 = true;
-				bool setchildflag2 = false;
-				srcbone->SetBtMatLimited(limitdegflag, directsetflag2, setchildflag2, setmat);
-
-				if (setchildflag) {
-					ChaMatrix dummyparentwm;
-					if (srcbone->GetParent(false)) {
-						dummyparentwm = srcbone->GetBtMat(true);
-					}
-					else {
-						dummyparentwm.SetIdentity();
-					}
-					srcbone->UpdateParentWMReq(limitdegflag, false, 0, 0.0, dummyparentwm, dummyparentwm);
+				if (setchildflag == false) {
+					srcbone->SetBtMat(setmat);
+					int notmodify180flag3 = 0;//!!!!!!!!!!!!!!!
+					BEFEUL befeul3;
+					befeul3.Init();
+					befeul3.befframeeul = saveeul;
+					befeul3.currentframeeul = saveeul;
+					ChaVector3 seteul = ChaVector3(0.0f, 0.0f, 0.0f);
+					calcq2.Q2EulXYZusingQ(true, false, &axisq, befeul3, &seteul, isfirstbone, isendbone, notmodify180flag3);
+					srcbone->SetBtEul(seteul);
 				}
+				else {
+					srcbone->UpdateCurrentWM(limitdegflag, 0, 0.0, setmat);
+				}
+
 				//}
 			//else 
 			{
@@ -2574,7 +2586,7 @@ int ChaCalcFunc::SetWorldMatFromEulAndScaleAndTra(CBone* srcbone, bool limitdegf
 	//GetSRTandTraAnim(curlocalmat, GetNodeMat(), &cursmat, &currmat, &curtmat, &curtanimmat);
 
 
-	ChaMatrix newlocalrotmat = srcbone->CalcLocalRotMatFromEul(srceul, srcmotid, roundingframe);
+	ChaMatrix newlocalrotmat = srcbone->CalcLocalRotMatFromEul(srceul);
 	ChaMatrix newlocalmat;
 	bool sflag = true;
 	bool tanimflag = (inittraflag == 0);
@@ -3141,8 +3153,12 @@ void ChaCalcFunc::UpdateCurrentWM(CBone* srcbone, bool limitdegflag, int srcmoti
 
 	ChaMatrix befwm;
 	befwm.SetIdentity();
-	befwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
-
+	if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
+		befwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+	}
+	else {
+		befwm = srcbone->GetBtMat(true);
+	}
 	//ChaMatrix befparentwm;
 	//befparentwm.SetIdentity();
 	//if (GetParent(false)) {
@@ -3167,9 +3183,45 @@ void ChaCalcFunc::UpdateCurrentWM(CBone* srcbone, bool limitdegflag, int srcmoti
 		}
 	}
 	else {
-		bool directsetflag = true;
-		bool setchildflag = false;//この後ろの部分でUpdateParentWMReqを明示的に呼び出すので、ここのsetchildflagはfalse
-		srcbone->SetBtMatLimited(limitdegflag, directsetflag, setchildflag, newwm);
+		//bool directsetflag = true;
+		//bool setchildflag = false;//この後ろの部分でUpdateParentWMReqを明示的に呼び出すので、ここのsetchildflagはfalse
+		//srcbone->SetBtMatLimited(limitdegflag, directsetflag, setchildflag, newwm);
+
+		int isfirstbone, isendbone;
+		int notmodify180flag = 0;//!!!!!!!!!!!!!!!
+		CBone* parentbone = srcbone->GetParent(false);
+		if (parentbone && parentbone->IsSkeleton()) {
+			isfirstbone = 0;
+		}
+		else {
+			isfirstbone = 1;
+		}
+		if (srcbone->GetChild(false) && srcbone->GetChild(false)->IsSkeleton()) {
+			if (srcbone->GetChild(false)->GetChild(false) && srcbone->GetChild(false)->GetChild(false)->IsSkeleton()) {
+				isendbone = 0;
+			}
+			else {
+				isendbone = 1;
+			}
+		}
+		else {
+			isendbone = 1;
+		}
+
+		CQuaternion axisq;
+		axisq.RotationMatrix(srcbone->GetNodeMat());
+		ChaVector3 saveeul = srcbone->GetBtEul();
+		BEFEUL befeul;
+		befeul.Init();
+		befeul.befframeeul = saveeul;
+		befeul.currentframeeul = saveeul;
+		ChaVector3 seteul = ChaVector3(0.0f, 0.0f, 0.0f);
+		CQuaternion setq;
+		setq.RotationMatrix(newwm);
+		setq.Q2EulXYZusingQ(true, false, &axisq, befeul, &seteul, isfirstbone, isendbone, notmodify180flag);
+
+		srcbone->SetBtMat(newwm);
+		srcbone->SetBtEul(seteul);
 	}
 
 	if (srcbone->GetChild(false)) {

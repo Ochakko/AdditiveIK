@@ -457,7 +457,7 @@ public:
 	//ChaVector3 CalcLocalLimitedEulXYZ(int srcmotid, double srcframe);
 	//ChaVector3 CalcCurrentLocalEulXYZ(int axiskind, tag_befeulkind befeulkind, ChaVector3* directbefeul = 0);
 	//ChaVector3 CalcBtLocalEulXYZ(int axiskind, tag_befeulkind befeulkind, ChaVector3* directbefeul = 0);
-	ChaMatrix CalcLocalRotMatFromEul(ChaVector3 srceul, int srcmotid, double srcframe);
+	ChaMatrix CalcLocalRotMatFromEul(ChaVector3 srceul);
 	//ChaMatrix CalcCurrentLocalRotMatFromEul(ChaVector3 srceul);
 	//ChaVector3 CalcLocalEulAndSetLimitedEul(int srcmotid, double srcframe);
 
