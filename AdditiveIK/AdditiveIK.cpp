@@ -1156,6 +1156,9 @@ static OWP_Button* s_allrigiddisableB = 0;
 static OWP_Separator* s_thicknessSeparator = 0;
 static OWP_Separator* s_depthSeparator = 0;
 static OWP_Separator* s_massSeparator = 0;
+static OWP_Separator* s_thicknessSeparator2 = 0;
+static OWP_Separator* s_depthSeparator2 = 0;
+static OWP_Separator* s_massSeparator2 = 0;
 static OWP_Separator* s_validSeparator2 = 0;
 static OWP_Separator* s_forbidSeparator2 = 0;
 static OWP_Separator* s_colSeparator2 = 0;
@@ -4129,7 +4132,8 @@ void InitApp()
 
 	//g_wmatDirectSetFlag = false;
 	g_limitdegflag = false;
-	g_limitrate = 15;
+	//g_limitrate = 15;
+	g_limitrate = 85;//2024/04/15 limitrateが実質FreeRateになっていたので修正　新しいlimitrate = (100 - 古いlimitrate)
 	s_beflimitdegflag = g_limitdegflag;
 	s_savelimitdegflag = g_limitdegflag;
 
@@ -38431,6 +38435,18 @@ int DestroyRigidWnd()
 		delete s_massSeparator;
 		s_massSeparator = 0;
 	}
+	if (s_thicknessSeparator2) {
+		delete s_thicknessSeparator2;
+		s_thicknessSeparator2 = 0;
+	}
+	if (s_depthSeparator2) {
+		delete s_depthSeparator2;
+		s_depthSeparator2 = 0;
+	}
+	if (s_massSeparator2) {
+		delete s_massSeparator2;
+		s_massSeparator2 = 0;
+	}
 	if (s_validSeparator2) {
 		delete s_validSeparator2;
 		s_validSeparator2 = 0;
@@ -38704,6 +38720,9 @@ void InitRigidWnd()
 	s_thicknessSeparator = 0;
 	s_depthSeparator = 0;
 	s_massSeparator = 0;
+	s_thicknessSeparator2 = 0;
+	s_depthSeparator2 = 0;
+	s_massSeparator2 = 0;
 	s_validSeparator2 = 0;
 	s_forbidSeparator2 = 0;
 	s_colSeparator2 = 0;
@@ -38804,6 +38823,23 @@ int CreateRigidWnd()
 			_ASSERT(0);
 			return 1;
 		}
+		s_thicknessSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.15, true);
+		if (!s_thicknessSeparator2) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_depthSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.15, true);
+		if (!s_depthSeparator2) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_massSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.15, true);
+		if (!s_massSeparator2) {
+			_ASSERT(0);
+			return 1;
+		}
+
+
 		s_validSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.5, true);
 		if (!s_validSeparator2) {
 			_ASSERT(0);
@@ -38995,7 +39031,8 @@ int CreateRigidWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_btgscSlider = new OWP_Slider(10.0, 100.0, 0.0);
+		//s_btgscSlider = new OWP_Slider(10.0, 100.0, 0.0);
+		s_btgscSlider = new OWP_Slider(10.0, 200.0, 0.0);//2024/04/15 200.0
 		if (!s_btgscSlider) {
 			_ASSERT(0);
 			return 1;
@@ -39125,7 +39162,8 @@ int CreateRigidWnd()
 		//s_akSlider = new OWP_Slider(g_initcusak, 30.0f, 0.0f);//300
 		//s_akSlider = new OWP_Slider(g_initcusak, 3000.0f, 30.0f);//300
 		//s_akSlider = new OWP_Slider(g_initcusak, 3000.0f, 10.0f);//300 ver10024
-		s_akSlider = new OWP_Slider(g_initcusak, 3000.0f, 2.0f);//2022/07/19
+		//s_akSlider = new OWP_Slider(g_initcusak, 3000.0f, 2.0f);//2022/07/19
+		s_akSlider = new OWP_Slider(g_initcusak, 500.0f, 0.0f);//2024/04/15 柔らかい設定へシフト　硬い設定が必要になった場合にはScaleSliderを追加して対応予定
 		if (!s_akSlider) {
 			_ASSERT(0);
 			return 1;
@@ -39253,20 +39291,25 @@ int CreateRigidWnd()
 		//s_rigidWnd->addParts(*s_namelabel);
 		//s_rigidWnd->addParts(*s_groupcheck);
 
-		s_rigidWnd->addParts(*s_shplabel);
-		s_rigidWnd->addParts(*s_sphrateSlider);
+		s_rigidWnd->addParts(*s_thicknessSeparator2);
+		s_thicknessSeparator2->addParts1(*s_shplabel);
+		s_thicknessSeparator2->addParts2(*s_sphrateSlider);
 		s_rigidWnd->addParts(*s_thicknessSeparator);
 		s_thicknessSeparator->addParts1(*s_thicknessB);
 		s_thicknessSeparator->addParts2(*s_thicknessDeeperB);
 		//s_rigidWnd->addParts(*s_thicknessB);
-		s_rigidWnd->addParts(*s_boxzlabel);
-		s_rigidWnd->addParts(*s_boxzSlider);
+
+		s_rigidWnd->addParts(*s_depthSeparator2);
+		s_depthSeparator2->addParts1(*s_boxzlabel);
+		s_depthSeparator2->addParts2(*s_boxzSlider);
 		s_rigidWnd->addParts(*s_depthSeparator);
 		s_depthSeparator->addParts1(*s_depthB);
 		s_depthSeparator->addParts2(*s_depthDeeperB);
 		//s_rigidWnd->addParts(*s_depthB);
-		s_rigidWnd->addParts(*s_massSLlabel);
-		s_rigidWnd->addParts(*s_massSlider);
+
+		s_rigidWnd->addParts(*s_massSeparator2);
+		s_massSeparator2->addParts1(*s_massSLlabel);
+		s_massSeparator2->addParts2(*s_massSlider);
 		s_rigidWnd->addParts(*s_massSeparator);
 		s_massSeparator->addParts1(*s_massB);
 		s_massSeparator->addParts2(*s_massDeeperB);

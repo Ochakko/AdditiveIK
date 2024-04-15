@@ -194,7 +194,8 @@ bool g_undereditrange = false;
 
 //bool g_limitdegflag = true;
 bool g_limitdegflag = false;
-int g_limitrate = 15;
+//int g_limitrate = 15;
+int g_limitrate = 85;//2024/04/15 limitrate‚ªÀ¿FreeRate‚É‚È‚Á‚Ä‚¢‚½‚Ì‚ÅC³@V‚µ‚¢limitrate = (100 - ŒÃ‚¢limitrate)
 //bool g_wmatDirectSetFlag = false;
 //bool g_underRetargetFlag = false;
 
@@ -214,13 +215,14 @@ float g_projfar = g_initcamdist * 100.0f;
 
 
 float g_l_kval[3] = { 1.0f, powf(10.0f, 2.61f), 2000.0f };//
-float g_a_kval[3] = { 0.1f, powf(10.0f, 0.3f), 70.0f };//
+float g_a_kval[3] = { 0.1f, powf(10.0f, 0.3f), 70.0f };
 //float g_a_kval[3] = { 0.0f, 0.5f, 1.0f };//2023/01/18
 float g_initcuslk = 1e2;
 //float g_initcuslk = 2000.0f;
 //float g_initcuslk = 100.0f;
 //float g_initcusak = 70.0f;
-float g_initcusak = 0.5f;
+//float g_initcusak = 0.5f;
+float g_initcusak = 0.10f;
 
 
 //float g_l_dmp = 0.75f;

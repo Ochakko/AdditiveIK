@@ -4834,6 +4834,8 @@ void s_dummyfunc()
 			if(this->cursorListener!=NULL){
 				(this->cursorListener)();
 			}
+			
+			callRewrite();//2024/04/15
 		}
 		void saveUndoValue(double savevalue)
 		{

@@ -2369,8 +2369,9 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 				saveq.RotationMatrix(beflocalmat);
 				//saveq.SetRotationXYZ(&axisq, saveeul);
 				CQuaternion calcq1 = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
-				calcq1 = limitq.Slerp(eulq, 100, g_limitrate);//LimitEulerプレートメニューのlimit rate for physicsのスライダー値(%)
-				
+				//calcq1 = limitq.Slerp(eulq, 100, g_limitrate);//LimitEulerプレートメニューのlimit rate for physicsのスライダー値(%)
+				calcq1 = eulq.Slerp(limitq, 100, g_limitrate);//2024/04/15 limitrateが実質FreeRateになっていたので修正　新しいlimitrate = (100 - 古いlimitrate)
+
 				CQuaternion calcq2 = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
 				////calcq2 = calcq1.Slerp(saveq, 100, g_limitrate);
 				//calcq2 = calcq1.Slerp(saveq, 100, 50);
