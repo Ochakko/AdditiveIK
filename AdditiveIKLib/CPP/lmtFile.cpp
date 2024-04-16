@@ -94,7 +94,8 @@ int CLmtFile::WriteLmtFile( WCHAR* strpath, CModel* srcmodel, char* fbxcomment )
 	CallF( Write2File( "<?xml version=\"1.0\" encoding=\"Shift_JIS\"?>\r\n<Lmt>\r\n" ), return 1 );  
 	//CallF( Write2File( "    <FileInfo>1001-01</FileInfo>\r\n" ), return 1 );
 	//CallF(Write2File("    <FileInfo>1001-02</FileInfo>\r\n"), return 1);//2021/06/08
-	CallF(Write2File("    <FileInfo>1001-03</FileInfo>\r\n"), return 1);//2022/12/18
+	//CallF(Write2File("    <FileInfo>1001-03</FileInfo>\r\n"), return 1);//2022/12/18
+	CallF(Write2File("    <FileInfo>1001-04</FileInfo>\r\n"), return 1);//2024/04/17
 	CallF(Write2File("    <FileComment>%s</FileComment>\r\n", fbxcomment), return 1);//2021/06/08
 
 	//WriteLmtReq(g_limitdegflag, m_model->GetTopBone(false));//g_limitdegflagはlimitangleのchk値用
@@ -210,6 +211,9 @@ int CLmtFile::WriteLmt(bool limitdegflag, CBone* srcbone )
 	CallF(Write2File("      <Upper_Z>%d</Upper_Z>\r\n", anglelimit.upper[2]), return 1);
 	//CallF(Write2File("      <Apply_Z>%d</Apply_Z>\r\n", (int)anglelimit.applyeul[2]), return 1);
 	//CallF(Write2File("      <Chk_Z>%f</Chk_Z>\r\n", (int)anglelimit.chkeul.x), return 1);
+
+	CallF(Write2File("      <LimitRate>%d</LimitRate>\r\n", anglelimit.limitrate), return 1);
+
 
 	CallF( Write2File( "  </Bone>\r\n" ), return 1);
 
@@ -461,6 +465,16 @@ int CLmtFile::ReadBone(bool limitdegflag, XMLIOBUF* xmliobuf, CModel* srcmodel)
 		m_anglelimit.upper[2] = tmpint;
 	//}
 	m_anglelimit.applyeul[2] = 0;
+
+
+
+	//LimitRateタグが無い場合もエラーにはしない
+	tmpint = 85;
+	Read_Int(xmliobuf, "<LimitRate>", "</LimitRate>", &tmpint);
+	if ((tmpint >= 0) && (tmpint <= 100)) {
+		m_anglelimit.limitrate = tmpint;
+	}
+
 
 
 	m_anglelimit.chkeul[AXIS_X] = 0.0f;

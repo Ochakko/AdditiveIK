@@ -2525,6 +2525,7 @@ static int Bone2AngleLimit();
 static int AngleLimit2Bone(int limit2boneflag);
 static int AngleLimit2Bone_One(CBone* srconbe);
 static void AngleLimit2Bone_Req(CBone* srcbone, int setbroflag);
+static void LimitRate2Bone_Req(CBone* srcbone, int setbroflag);
 static int AngleLimit2Dlg(HWND hDlgWnd, bool updateonlycheckeul);
 static int Global2ThresholdDlg(HWND hDlgWnd);
 static int ThresholdDlg2Global(HWND hDlgWnd);
@@ -4132,8 +4133,13 @@ void InitApp()
 
 	//g_wmatDirectSetFlag = false;
 	g_limitdegflag = false;
+	
+
+	//2024/04/17 limitrateは構造体ANGLELIMITのメンバにしてCBone::m_anglelimitでボーンごとに管理することにした
 	//g_limitrate = 15;
-	g_limitrate = 85;//2024/04/15 limitrateが実質FreeRateになっていたので修正　新しいlimitrate = (100 - 古いlimitrate)
+	//g_limitrate = 85;//2024/04/15 limitrateが実質FreeRateになっていたので修正　新しいlimitrate = (100 - 古いlimitrate)
+	
+	
 	s_beflimitdegflag = g_limitdegflag;
 	s_savelimitdegflag = g_limitdegflag;
 
@@ -14678,7 +14684,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.15\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.16\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -23949,8 +23955,22 @@ void AngleLimit2Bone_Req(CBone* srcbone, int setbroflag)
 			int newsetbroflag = 1;
 			AngleLimit2Bone_Req(srcbone->GetChild(false), newsetbroflag);
 		}
-		if ((setbroflag) && (srcbone->GetBrother(false))) {
+		if ((setbroflag != 0) && (srcbone->GetBrother(false) != nullptr)) {
 			AngleLimit2Bone_Req(srcbone->GetBrother(false), setbroflag);
+		}
+	}
+}
+void LimitRate2Bone_Req(CBone* srcbone, int setbroflag)
+{
+	if (srcbone) {
+
+		srcbone->SetLimitRate(s_anglelimit.limitrate);
+
+		if (srcbone->GetChild(false)) {
+			LimitRate2Bone_Req(srcbone->GetChild(false), 1);
+		}
+		if ((setbroflag != 0) && (srcbone->GetBrother(false) != nullptr)) {
+			LimitRate2Bone_Req(srcbone->GetBrother(false), setbroflag);
 		}
 	}
 }
@@ -25175,12 +25195,12 @@ int AngleLimit2Dlg(HWND hDlgWnd, bool updateonlycheckeul)
 			InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_ZU, s_anglelimit.upper[AXIS_Z]);
 
 
-			int sliderpos = g_limitrate;
+			int sliderpos = s_anglelimit.limitrate;
 			SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIMITRATE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 			SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIMITRATE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 			SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIMITRATE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 			WCHAR strrate[256] = { 0L };
-			swprintf_s(strrate, 256, L"rate : %d", g_limitrate);
+			swprintf_s(strrate, 256, L"rate : %d", s_anglelimit.limitrate);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_LIMITRATE, strrate);
 		}
 
@@ -31104,6 +31124,22 @@ LRESULT CALLBACK AngleLimitDlgProc2(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp
 			s_changelimitangleFlag = false;
 		}
 		break;
+		case IDC_APPLYDEEPER_LIMITRATE:
+		{
+			if (s_anglelimitbone && s_anglelimitdlg) {
+				LimitRate2Bone_Req(s_anglelimitbone, 0);
+			}
+			//PrepairUndo();
+		}
+		break;
+		case IDC_APPLYALL_LIMITRATE:
+		{
+			if (s_anglelimitbone && s_anglelimitdlg) {
+				LimitRate2Bone_Req(s_model->GetTopBone(false), 1);
+			}
+			//PrepairUndo();
+		}
+		break;
 
 		case IDC_BUTTON1:
 		{
@@ -31499,11 +31535,22 @@ LRESULT CALLBACK AngleLimitDlgProc2(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp
 	case WM_HSCROLL:
 		if (GetDlgItem(hDlgWnd, IDC_SLIDER_LIMITRATE) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIMITRATE), TBM_GETPOS, 0, 0);
-			g_limitrate = cursliderpos;
+			s_anglelimit.limitrate = cursliderpos;
+
+			if (s_anglelimitbone) {
+				s_anglelimitbone->SetLimitRate(s_anglelimit.limitrate);
+			}
 
 			WCHAR strval[256] = { 0L };
-			swprintf_s(strval, 256, L"rate : %d", g_limitrate);
+			swprintf_s(strval, 256, L"rate : %d", s_anglelimit.limitrate);
 			SetDlgItemTextW(hDlgWnd, IDC_STATIC_LIMITRATE, strval);
+
+			//if (LOWORD(wp) == SB_ENDSCROLL) {
+			//	//#################################################
+			//	//ReleasedCaptureのときに　PrepairUndo用のフラグを立てる
+			//	//#################################################
+			//	s_***Flag = true;//PrepairUndo();//保存はOnFrameUtCheckBoxにて
+			//}
 		}
 		break;
 

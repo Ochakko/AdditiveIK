@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Shift_JIS"?>
 <Lmt>
-    <FileInfo>1001-03</FileInfo>
-    <FileComment>CommentForEGP_20240327005905</FileComment>
+    <FileInfo>1001-04</FileInfo>
+    <FileComment>CommentForEGP_20240417065004</FileComment>
   <Bone>
     <Name>J_Bip_C_Hips</Name>
     <BoneAxisType>Current</BoneAxisType>
@@ -14,6 +14,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_C_Spine</Name>
@@ -27,6 +28,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_C_Chest</Name>
@@ -40,6 +42,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_C_UpperChest</Name>
@@ -53,6 +56,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_L_Bust1</Name>
@@ -66,6 +70,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_L_Bust2</Name>
@@ -79,6 +84,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_R_Bust1</Name>
@@ -92,6 +98,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_R_Bust2</Name>
@@ -105,6 +112,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_C_Neck</Name>
@@ -118,6 +126,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_C_Head</Name>
@@ -125,12 +134,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Adj_L_FaceEye</Name>
@@ -138,12 +148,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Adj_R_FaceEye</Name>
@@ -151,12 +162,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair1_01</Name>
@@ -164,12 +176,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair2_01</Name>
@@ -177,12 +190,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair3_01</Name>
@@ -190,12 +204,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair1_02</Name>
@@ -203,12 +218,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair2_02</Name>
@@ -216,12 +232,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair3_02</Name>
@@ -229,12 +246,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair1_03</Name>
@@ -242,12 +260,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair2_03</Name>
@@ -255,12 +274,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair3_03</Name>
@@ -268,12 +288,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair1_04</Name>
@@ -281,12 +302,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair2_04</Name>
@@ -294,12 +316,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair3_04</Name>
@@ -307,12 +330,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair1_05</Name>
@@ -320,12 +344,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair2_05</Name>
@@ -333,12 +358,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair3_05</Name>
@@ -346,12 +372,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair1_06</Name>
@@ -359,12 +386,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair2_06</Name>
@@ -372,12 +400,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair3_06</Name>
@@ -385,12 +414,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair1_07</Name>
@@ -398,12 +428,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair2_07</Name>
@@ -411,12 +442,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair3_07</Name>
@@ -424,12 +456,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair1_08</Name>
@@ -437,12 +470,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair2_08</Name>
@@ -450,12 +484,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair3_08</Name>
@@ -463,12 +498,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair1_09</Name>
@@ -476,12 +512,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair2_09</Name>
@@ -489,12 +526,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair3_09</Name>
@@ -502,12 +540,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair1_10</Name>
@@ -515,12 +554,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair2_10</Name>
@@ -528,12 +568,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair3_10</Name>
@@ -541,12 +582,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair1_11</Name>
@@ -554,12 +596,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair2_11</Name>
@@ -567,12 +610,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair3_11</Name>
@@ -580,12 +624,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair4_11</Name>
@@ -593,12 +638,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_Hair5_11</Name>
@@ -606,12 +652,13 @@
       <Via180_X>0</Via180_X>
       <Via180_Y>0</Via180_Y>
       <Via180_Z>0</Via180_Z>
-      <Lower_X>-180</Lower_X>
-      <Upper_X>180</Upper_X>
-      <Lower_Y>-180</Lower_Y>
-      <Upper_Y>180</Upper_Y>
-      <Lower_Z>-180</Lower_Z>
-      <Upper_Z>180</Upper_Z>
+      <Lower_X>-15</Lower_X>
+      <Upper_X>15</Upper_X>
+      <Lower_Y>-15</Lower_Y>
+      <Upper_Y>15</Upper_Y>
+      <Lower_Z>-15</Lower_Z>
+      <Upper_Z>15</Upper_Z>
+      <LimitRate>39</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Shoulder</Name>
@@ -625,6 +672,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_UpperArm</Name>
@@ -638,6 +686,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_L_TopsUpperArmInside_01</Name>
@@ -651,6 +700,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_L_TopsUpperArmInside_end_01</Name>
@@ -664,6 +714,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_L_TopsUpperArmOutside_01</Name>
@@ -677,6 +728,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_L_TopsUpperArmOutside_end_01</Name>
@@ -690,6 +742,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_LowerArm</Name>
@@ -703,6 +756,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Hand</Name>
@@ -716,6 +770,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Index1</Name>
@@ -729,6 +784,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Index2</Name>
@@ -742,6 +798,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Index3</Name>
@@ -755,6 +812,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Little1</Name>
@@ -768,6 +826,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Little2</Name>
@@ -781,6 +840,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Little3</Name>
@@ -794,6 +854,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Middle1</Name>
@@ -807,6 +868,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Middle2</Name>
@@ -820,6 +882,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Middle3</Name>
@@ -833,6 +896,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Ring1</Name>
@@ -846,6 +910,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Ring2</Name>
@@ -859,6 +924,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Ring3</Name>
@@ -872,6 +938,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Thumb1</Name>
@@ -885,6 +952,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Thumb2</Name>
@@ -898,6 +966,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Thumb3</Name>
@@ -911,6 +980,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Shoulder</Name>
@@ -924,6 +994,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_UpperArm</Name>
@@ -937,6 +1008,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_R_TopsUpperArmInside_01</Name>
@@ -950,6 +1022,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_R_TopsUpperArmInside_end_01</Name>
@@ -963,6 +1036,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_R_TopsUpperArmOutside_01</Name>
@@ -976,6 +1050,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_R_TopsUpperArmOutside_end_01</Name>
@@ -989,6 +1064,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_LowerArm</Name>
@@ -1002,6 +1078,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Hand</Name>
@@ -1015,6 +1092,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Index1</Name>
@@ -1028,6 +1106,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Index2</Name>
@@ -1041,6 +1120,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Index3</Name>
@@ -1054,6 +1134,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Little1</Name>
@@ -1067,6 +1148,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Little2</Name>
@@ -1080,6 +1162,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Little3</Name>
@@ -1093,6 +1176,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Middle1</Name>
@@ -1106,6 +1190,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Middle2</Name>
@@ -1119,6 +1204,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Middle3</Name>
@@ -1132,6 +1218,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Ring1</Name>
@@ -1145,6 +1232,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Ring2</Name>
@@ -1158,6 +1246,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Ring3</Name>
@@ -1171,6 +1260,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Thumb1</Name>
@@ -1184,6 +1274,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Thumb2</Name>
@@ -1197,6 +1288,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Thumb3</Name>
@@ -1210,6 +1302,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_UpperLeg</Name>
@@ -1223,6 +1316,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_L_TopsUpperLegBack_01</Name>
@@ -1236,6 +1330,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_R_TopsUpperLegBack_end_01</Name>
@@ -1249,6 +1344,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_L_TopsUpperLegFront_01</Name>
@@ -1262,6 +1358,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_L_TopsUpperLegFront_end_01</Name>
@@ -1275,6 +1372,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_L_TopsUpperLegSide_01</Name>
@@ -1288,6 +1386,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_L_TopsUpperLegSide_end_01</Name>
@@ -1301,6 +1400,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_LowerLeg</Name>
@@ -1314,6 +1414,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_Foot</Name>
@@ -1327,6 +1428,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_L_ToeBase</Name>
@@ -1340,6 +1442,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_UpperLeg</Name>
@@ -1353,6 +1456,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_R_TopsUpperLegBack_01</Name>
@@ -1366,6 +1470,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_R_TopsUpperLegBack_end_1_01</Name>
@@ -1379,6 +1484,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_R_TopsUpperLegFront_01</Name>
@@ -1392,6 +1498,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_R_TopsUpperLegFront_end_01</Name>
@@ -1405,6 +1512,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_R_TopsUpperLegSide_01</Name>
@@ -1418,6 +1526,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Sec_R_TopsUpperLegSide_end_01</Name>
@@ -1431,6 +1540,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_LowerLeg</Name>
@@ -1444,6 +1554,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_Foot</Name>
@@ -1457,6 +1568,7 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
   <Bone>
     <Name>J_Bip_R_ToeBase</Name>
@@ -1470,5 +1582,6 @@
       <Upper_Y>180</Upper_Y>
       <Lower_Z>-180</Lower_Z>
       <Upper_Z>180</Upper_Z>
+      <LimitRate>85</LimitRate>
   </Bone>
 </Lmt>

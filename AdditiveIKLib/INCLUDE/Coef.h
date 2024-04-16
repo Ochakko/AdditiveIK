@@ -316,7 +316,7 @@ enum {
 
 
 
-typedef struct tag_anglelimmit
+typedef struct tag_anglelimit
 {
 	int limitoff[AXIS_MAX];
 	int via180flag[AXIS_MAX];// if flag is 1, movable range is "lower --> -180(+180) --> upper"
@@ -330,6 +330,8 @@ typedef struct tag_anglelimmit
 	bool applyeul[AXIS_MAX];
 	float chkeul[AXIS_MAX];
 
+	int limitrate;//2024/04/17 PhysicalAngleLimit
+
 	void Init()
 	{
 		ZeroMemory(limitoff, sizeof(int) * AXIS_MAX);
@@ -342,9 +344,10 @@ typedef struct tag_anglelimmit
 			applyeul[axisno] = false;
 			chkeul[axisno] = 0.0f;
 		}
+		limitrate = 85;
 	};
 
-	tag_anglelimmit() {
+	tag_anglelimit() {
 		Init();
 	};
 }ANGLELIMIT;

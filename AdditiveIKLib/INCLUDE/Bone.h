@@ -1258,6 +1258,12 @@ public: //accesser
 
 	ANGLELIMIT GetAngleLimit(bool limitdegflag, int getchkflag);
 	void SetAngleLimit(bool limitdegflag, ANGLELIMIT srclimit);
+	int GetLimitRate() {
+		return m_anglelimit.limitrate;
+	};
+	void SetLimitRate(int srcrate) {
+		m_anglelimit.limitrate = srcrate;
+	};
 
 	int GetFreeCustomRigNo();
 	CUSTOMRIG GetFreeCustomRig();

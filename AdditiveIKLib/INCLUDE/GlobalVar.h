@@ -194,8 +194,13 @@ bool g_undereditrange = false;
 
 //bool g_limitdegflag = true;
 bool g_limitdegflag = false;
+
+
+//2024/04/17 limitrateは構造体ANGLELIMITのメンバにしてCBone::m_anglelimitでボーンごとに管理することにした
 //int g_limitrate = 15;
-int g_limitrate = 85;//2024/04/15 limitrateが実質FreeRateになっていたので修正　新しいlimitrate = (100 - 古いlimitrate)
+//int g_limitrate = 85;//2024/04/15 limitrateが実質FreeRateになっていたので修正　新しいlimitrate = (100 - 古いlimitrate)
+
+
 //bool g_wmatDirectSetFlag = false;
 //bool g_underRetargetFlag = false;
 
@@ -469,7 +474,11 @@ extern bool g_underselecttolast;
 extern bool g_undereditrange;
 
 extern bool g_limitdegflag;
-extern int g_limitrate;
+
+
+//2024/04/17 limitrateは構造体ANGLELIMITのメンバにしてCBone::m_anglelimitでボーンごとに管理することにした
+//extern int g_limitrate;
+
 //extern bool g_wmatDirectSetFlag;
 //extern bool g_underRetargetFlag;
 

@@ -675,18 +675,18 @@ int CBone::InitCustomRig()
 
 void CBone::InitAngleLimit()
 {
+	m_anglelimit.Init();
 
-
-	m_anglelimit.boneaxiskind = BONEAXIS_CURRENT;
-
-	int axiskind;
-	for (axiskind = AXIS_X; axiskind < AXIS_MAX; axiskind++) {
-		m_anglelimit.limitoff[axiskind] = 0;
-		m_anglelimit.via180flag[axiskind] = 0;
-		m_anglelimit.lower[axiskind] = -180;
-		m_anglelimit.upper[axiskind] = 180;
-	}
-	SetAngleLimitOff();
+	//m_anglelimit.boneaxiskind = BONEAXIS_CURRENT;
+	//
+	//int axiskind;
+	//for (axiskind = AXIS_X; axiskind < AXIS_MAX; axiskind++) {
+	//	m_anglelimit.limitoff[axiskind] = 0;
+	//	m_anglelimit.via180flag[axiskind] = 0;
+	//	m_anglelimit.lower[axiskind] = -180;
+	//	m_anglelimit.upper[axiskind] = 180;
+	//}
+	//SetAngleLimitOff();
 
 }
 void CBone::SetAngleLimitOff()
