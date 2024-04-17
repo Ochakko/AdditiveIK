@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <math.h>
@@ -107,7 +107,7 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 		int bret;
 		bret = CreateDirectory( m_newdirname, NULL );
 		if( bret == 0 ){
-			::MessageBox( NULL, L"ƒfƒBƒŒƒNƒgƒŠ‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½B\n‘‚«‚İ‹Ö~ƒfƒBƒŒƒNƒgƒŠ‚Ì‰Â”\«‚ª‚ ‚è‚Ü‚·B\n•Û‘¶êŠ‚ğ•Ï‚¦‚ÄÄs‚µ‚Ä‚İ‚Ä‚­‚¾‚³‚¢B", L"ƒGƒ‰[", MB_OK );
+			::MessageBox( NULL, L"ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸã€‚\næ›¸ãè¾¼ã¿ç¦æ­¢ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®å¯èƒ½æ€§ãŒã‚ã‚Šã¾ã™ã€‚\nä¿å­˜å ´æ‰€ã‚’å¤‰ãˆã¦å†è©¦è¡Œã—ã¦ã¿ã¦ãã ã•ã„ã€‚", L"ã‚¨ãƒ©ãƒ¼", MB_OK );
 			_ASSERT( 0 );
 			return 1;
 		}
@@ -146,7 +146,13 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 	CallF(Write2File("  <ProjFov>%.3f</ProjFov>\r\n", g_fovy * 180.0f / (float)PI), return 1);
 	CallF(Write2File("  <ProjNear>%.3f</ProjNear>\r\n", g_projnear), return 1);
 	CallF(Write2File("  <ProjFar>%.3f</ProjFar>\r\n", g_projfar), return 1);
+
 	CallF(Write2File("  <PickDistRate>%.2f</PickDistRate>\r\n", g_pickdistrate), return 1);
+	CallF(Write2File("  <EditRate>%.3f</EditRate>\r\n", g_physicsmvrate), return 1);
+	CallF(Write2File("  <PlayingSpeed>%.3f</PlayingSpeed>\r\n", g_dspeed), return 1);
+	CallF(Write2File("  <PhysicalLimitScale>%.3f</PhysicalLimitScale>\r\n", g_physicalLimitScale), return 1);
+	CallF(Write2File("  <CameraDist>%.3f</CameraDist>\r\n", g_camdist), return 1);
+
 
 	CallF(Write2File("  <2L_LOD0>%.2f</2L_LOD0>\r\n", g_lodrate2L[CHKINVIEW_LOD0]), return 1);
 	CallF(Write2File("  <2L_LOD1>%.2f</2L_LOD1>\r\n", g_lodrate2L[CHKINVIEW_LOD1]), return 1);
@@ -154,6 +160,8 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 	CallF(Write2File("  <3L_LOD0>%.2f</3L_LOD0>\r\n", g_lodrate3L[CHKINVIEW_LOD0]), return 1);
 	CallF(Write2File("  <3L_LOD1>%.2f</3L_LOD1>\r\n", g_lodrate3L[CHKINVIEW_LOD1]), return 1);
 	CallF(Write2File("  <3L_LOD2>%.2f</3L_LOD2>\r\n", g_lodrate3L[CHKINVIEW_LOD2]), return 1);
+
+
 
 	int modelnum = (int)m_modelindex.size();
 	int modelcnt;
@@ -175,10 +183,12 @@ int CChaFile::WriteFileInfo()
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>ChatCats3D_ProjectFile</kind>\r\n    <version>1002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1003 : 2023/03/24 1.2.0.17 RC3
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>ChatCats3D_ProjectFile</kind>\r\n    <version>1003</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
-	//version 1004 : 2023/07/21 1.2.0.23‚ÖŒü‚¯‚Ä
+	//version 1004 : 2023/07/21 1.2.0.23ã¸å‘ã‘ã¦
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1005</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
-	//version 1006 : 2024/04/03 1.0.0.14‚ÖŒü‚¯‚Ä  <PickDistRate>’Ç‰Á
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1006</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1006 : 2024/04/03 1.0.0.14ã¸å‘ã‘ã¦  <PickDistRate>è¿½åŠ 
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1006</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1007 : 2024/04/17 1.0.0.14ã¸å‘ã‘ã¦  <EditRate>, <PlayingSpeed>, <PhysicalLimitScale>, <CameraDist>è¿½åŠ 
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1007</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -292,7 +302,7 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, m
 		int bret;
 		bret = CreateDirectory( charafolder, NULL );
 		if( bret == 0 ){
-			::MessageBox(NULL, L"ƒfƒBƒŒƒNƒgƒŠ‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½B\n‘‚«‚İ‹Ö~ƒfƒBƒŒƒNƒgƒŠ‚Ì‰Â”\«‚ª‚ ‚è‚Ü‚·B\n•Û‘¶êŠ‚ğ•Ï‚¦‚ÄÄs‚µ‚Ä‚İ‚Ä‚­‚¾‚³‚¢B", L"ƒGƒ‰[", MB_OK);
+			::MessageBox(NULL, L"ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸã€‚\næ›¸ãè¾¼ã¿ç¦æ­¢ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®å¯èƒ½æ€§ãŒã‚ã‚Šã¾ã™ã€‚\nä¿å­˜å ´æ‰€ã‚’å¤‰ãˆã¦å†è©¦è¡Œã—ã¦ã¿ã¦ãã ã•ã„ã€‚", L"ã‚¨ãƒ©ãƒ¼", MB_OK);
 			_ASSERT( 0 );
 			return 1;
 		}
@@ -357,7 +367,7 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, m
 
 
 	/***
-	//mqoƒtƒ@ƒCƒ‹‚Ìê‡‚ÌƒeƒNƒXƒ`ƒƒ
+	//mqoãƒ•ã‚¡ã‚¤ãƒ«ã®å ´åˆã®ãƒ†ã‚¯ã‚¹ãƒãƒ£
 	map<int, CMQOMaterial*>::iterator itrmat;
 	for( itrmat = curmodel->m_material.begin(); itrmat != curmodel->m_material.end(); itrmat++ ){
 		CMQOMaterial* curmqomat = itrmat->second;
@@ -386,7 +396,7 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, m
 		WCHAR srcpath[MAX_PATH] = { 0L };
 		WCHAR dstpath[MAX_PATH] = { 0L };
 		//################################
-		//FBXƒtƒ@ƒCƒ‹‚Ìê‡‚ÌƒeƒNƒXƒ`ƒƒ
+		//FBXãƒ•ã‚¡ã‚¤ãƒ«ã®å ´åˆã®ãƒ†ã‚¯ã‚¹ãƒãƒ£
 		//################################
 
 
@@ -592,7 +602,7 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	result = Read_Float(&m_xmliobuf, "<ProjFov>", "</ProjFov>", &tempfovy);
 	if (result == 0) {
 		//g_fovy = tempfovy * (float)PI / 180.0f;
-		getfov = true;//ReadChara‚æ‚èŒã‚ÅƒZƒbƒg
+		getfov = true;//ReadCharaã‚ˆã‚Šå¾Œã§ã‚»ãƒƒãƒˆ
 	}
 
 	bool getnear = false;
@@ -600,22 +610,50 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	result = Read_Float(&m_xmliobuf, "<ProjNear>", "</ProjNear>", &tempnear);
 	if (result == 0) {
 		//g_projnear = tempnear;
-		getnear = true;//ReadChara‚æ‚èŒã‚ÅƒZƒbƒg
+		getnear = true;//ReadCharaã‚ˆã‚Šå¾Œã§ã‚»ãƒƒãƒˆ
 	}
 	bool getfar = false;
 	float tempfar = 3000.0f;
 	result = Read_Float(&m_xmliobuf, "<ProjFar>", "</ProjFar>", &tempfar);
 	if (result == 0) {
 		//g_projfar = tempfar;
-		getfar = true;//ReadChara‚æ‚èŒã‚ÅƒZƒbƒg
+		getfar = true;//ReadCharaã‚ˆã‚Šå¾Œã§ã‚»ãƒƒãƒˆ
 	}
 	bool getpickdist = false;
 	float temppickdist = (float)g_pickdistrate;
 	result = Read_Float(&m_xmliobuf, "<PickDistRate>", "</PickDistRate>", &temppickdist);
 	if (result == 0) {
 		//g_projnear = tempnear;
-		getpickdist = true;//ReadChara‚æ‚èŒã‚ÅƒZƒbƒg
+		getpickdist = true;//ReadCharaã‚ˆã‚Šå¾Œã§ã‚»ãƒƒãƒˆ
 	}
+
+
+	bool geteditrate = false;
+	float tempeditrate = (float)g_physicsmvrate;
+	result = Read_Float(&m_xmliobuf, "<EditRate>", "</EditRate>", &tempeditrate);
+	if (result == 0) {
+		geteditrate = true;//ReadCharaã‚ˆã‚Šå¾Œã§ã‚»ãƒƒãƒˆ
+	}
+	bool getplayingspeed = false;
+	float tempplayingspeed = (float)g_dspeed;
+	result = Read_Float(&m_xmliobuf, "<PlayingSpeed>", "</PlayingSpeed>", &tempplayingspeed);
+	if (result == 0) {
+		getplayingspeed = true;//ReadCharaã‚ˆã‚Šå¾Œã§ã‚»ãƒƒãƒˆ
+	}
+	bool getlimitscale = false;
+	float templimitscale = (float)g_physicalLimitScale;
+	result = Read_Float(&m_xmliobuf, "<PhysicalLimitScale>", "</PhysicalLimitScale>", &templimitscale);
+	if (result == 0) {
+		getlimitscale = true;//ReadCharaã‚ˆã‚Šå¾Œã§ã‚»ãƒƒãƒˆ
+	}
+	bool getcameradist = false;
+	float tempcameradist = (float)g_camdist;
+	result = Read_Float(&m_xmliobuf, "<CameraDist>", "</CameraDist>", &tempcameradist);
+	if (result == 0) {
+		getcameradist = true;//ReadCharaã‚ˆã‚Šå¾Œã§ã‚»ãƒƒãƒˆ
+	}
+
+
 
 	float templod = 0.01f;
 	result = Read_Float(&m_xmliobuf, "<2L_LOD0>", "</2L_LOD0>", &templod);
@@ -651,7 +689,7 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	}
 
 
-	//ReadChara‚æ‚èŒã‚ÅƒZƒbƒg
+	//ReadCharaã‚ˆã‚Šå¾Œã§ã‚»ãƒƒãƒˆ
 	if (getfov) {
 		g_fovy = tempfovy * (float)PI / 180.0f;
 	}
@@ -662,7 +700,19 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 		g_projfar = tempfar;
 	}
 	if (getpickdist) {
-		g_pickdistrate = temppickdist;
+		g_pickdistrate = (double)temppickdist;
+	}
+	if (geteditrate) {
+		g_physicsmvrate = tempeditrate;
+	}
+	if (getplayingspeed) {
+		g_dspeed = (double)tempplayingspeed;
+	}
+	if (getlimitscale) {
+		g_physicalLimitScale = (double)templimitscale;
+	}
+	if (getcameradist) {
+		g_camdist = tempcameradist;
 	}
 
 
@@ -761,17 +811,17 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt, XMLIOBUF*
 	CallF( Read_Str( xmlbuf, "<ModelFolder>", "</ModelFolder>", modelfolder, MAX_PATH ), return 1 );
 	CallF( Read_Str( xmlbuf, "<ModelFile>", "</ModelFile>", filename, MAX_PATH ), return 1 );
 
-	//modelpos‚Í•K{‚Å‚Í‚È‚¢
+	//modelposã¯å¿…é ˆã§ã¯ãªã„
 	Read_Float(xmlbuf, "<ModelPositionX>", "</ModelPositionX>", &posx);
 	Read_Float(xmlbuf, "<ModelPositionY>", "</ModelPositionY>", &posy);
 	Read_Float(xmlbuf, "<ModelPositionZ>", "</ModelPositionZ>", &posz);
 
-	//modelrotation‚Í•K{‚Å‚Í‚È‚¢
+	//modelrotationã¯å¿…é ˆã§ã¯ãªã„
 	Read_Float(xmlbuf, "<ModelRotationX>", "</ModelRotationX>", &rotx);
 	Read_Float(xmlbuf, "<ModelRotationY>", "</ModelRotationY>", &roty);
 	Read_Float(xmlbuf, "<ModelRotationZ>", "</ModelRotationZ>", &rotz);
 
-	//DispRate‚Í•K{‚Å‚Í‚È‚¢
+	//DispRateã¯å¿…é ˆã§ã¯ãªã„
 	ChaVector4 materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	Read_Float(xmlbuf, "<DiffuseDispRate>", "</DiffuseDispRate>", &materialdisprate.x);
 	Read_Float(xmlbuf, "<SpecularDispRate>", "</SpecularDispRate>", &materialdisprate.y);
@@ -800,7 +850,7 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt, XMLIOBUF*
 	{
 		XMLIOBUF custombuf;
 		ZeroMemory(&custombuf, sizeof(XMLIOBUF));
-		int errorno1 = SetXmlIOBuf(xmlbuf, "<CustomIKStopName>", "</CustomIKStopName>", &custombuf, 0);//‚±‚Ìƒ^ƒO‚ª‚ ‚éê‡‚É‚Í@V‚µ‚¢ƒtƒ@ƒCƒ‹‚Æ‚İ‚È‚·
+		int errorno1 = SetXmlIOBuf(xmlbuf, "<CustomIKStopName>", "</CustomIKStopName>", &custombuf, 0);//ã“ã®ã‚¿ã‚°ãŒã‚ã‚‹å ´åˆã«ã¯ã€€æ–°ã—ã„ãƒ•ã‚¡ã‚¤ãƒ«ã¨ã¿ãªã™
 		if (errorno1 == 0) {
 			bool findikstopname = true;
 			while (findikstopname) {
@@ -821,7 +871,7 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt, XMLIOBUF*
 			}
 		}
 		else {
-			//ŒÃ‚¢ƒtƒ@ƒCƒ‹‚É‚Í@IKStopNameƒ^ƒOƒGƒ“ƒgƒŠ[‚Í–³‚¢@ƒfƒtƒHƒ‹ƒgİ’è‚·‚é
+			//å¤ã„ãƒ•ã‚¡ã‚¤ãƒ«ã«ã¯ã€€IKStopNameã‚¿ã‚°ã‚¨ãƒ³ãƒˆãƒªãƒ¼ã¯ç„¡ã„ã€€ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆè¨­å®šã™ã‚‹
 			ikstopname.push_back("Shoulder");
 			ikstopname.push_back("UpperLeg");
 		}
@@ -867,8 +917,8 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt, XMLIOBUF*
 	}
 	
 	
-	int skipdefref = (int)(refnum != 0);//default_ref.ref‚ª–³‚¢ê‡‚ÉCModel::LoadFBX‚Ådefault_ref.ref‚ğì‚é‚½‚ß‚Ìƒtƒ‰ƒO
-	//int skipdefref = 0;//CModel::LoadFBX‚ÅCreateRigidElemReq‚ğŒÄ‚Ô•K—v‚ª‚ ‚éBFBX‚¾‚¯“Ç‚İ‚ñ‚Å‚¢‚éó‘Ô‚Ådefault_ref‚ª•K—vB
+	int skipdefref = (int)(refnum != 0);//default_ref.refãŒç„¡ã„å ´åˆã«CModel::LoadFBXã§default_ref.refã‚’ä½œã‚‹ãŸã‚ã®ãƒ•ãƒ©ã‚°
+	//int skipdefref = 0;//CModel::LoadFBXã§CreateRigidElemReqã‚’å‘¼ã¶å¿…è¦ãŒã‚ã‚‹ã€‚FBXã ã‘èª­ã¿è¾¼ã‚“ã§ã„ã‚‹çŠ¶æ…‹ã§default_refãŒå¿…è¦ã€‚
 	CModel* newmodel = 0;
 	bool callfromcha = true;
 	newmodel = (this->m_FbxFunc)( callfromcha, (characnt == (charanum - 1)), skipdefref, inittimeline, ikstopname );
@@ -934,7 +984,7 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt, XMLIOBUF*
 			MultiByteToWideChar( CP_ACP, MB_PRECOMPOSED, reffile, MAX_PATH, wreffile, MAX_PATH );
 			swprintf_s( g_tmpmqopath, MULTIPATH, L"%s\\%s\\%s", m_wloaddir, wmodelfolder, wreffile );
 
-			if (refcnt >= 1) {//refcnt == 0 ‚Ì‚P‚Â‚Ì‚ß‚Ìrefƒtƒ@ƒCƒ‹default_ref.ref‚Ím_FBXFunc‚Å“Ç‚İ‚Ş
+			if (refcnt >= 1) {//refcnt == 0 ã®ï¼‘ã¤ã®ã‚ã®refãƒ•ã‚¡ã‚¤ãƒ«default_ref.refã¯m_FBXFuncã§èª­ã¿è¾¼ã‚€
 				int chkret;
 				chkret = (this->m_RefFunc)();
 				if ((chkret != 0) && (chkret != 2)) {
@@ -973,7 +1023,7 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt, XMLIOBUF*
 	CallF( (this->m_MorphMenu)( morphindex ), return 1 );
 	CallF( (this->m_ImpMenu)( 0 ), return 1 );
 
-	newmodel->CreateBtObject(limitdegflag, 1);//‰‰ñ
+	newmodel->CreateBtObject(limitdegflag, 1);//åˆå›
 	//newmodel->CalcBoneEul(-1);//
 
 

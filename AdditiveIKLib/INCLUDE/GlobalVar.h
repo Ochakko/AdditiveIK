@@ -1,4 +1,4 @@
-#ifndef GLOBALVARH
+ï»¿#ifndef GLOBALVARH
 #define GLOBALVARH
 
 #include <Windows.h>
@@ -177,11 +177,11 @@ int	g_numthread = 3;
 
 //double g_btcalccnt = 3.0;
 //double g_btcalccnt = 1.0;//2023/01/18
-//double g_btcalccnt = 2.0;//2023/01/21 : Main.cpp InitApp()“à‚ÅƒZƒbƒg‚µ’¼‚µ‚Ä‚¢‚é‚Ì‚Å’ˆÓ
+//double g_btcalccnt = 2.0;//2023/01/21 : Main.cpp InitApp()å†…ã§ã‚»ãƒƒãƒˆã—ç›´ã—ã¦ã„ã‚‹ã®ã§æ³¨æ„
 
 
-//2023/11/04 •¨—ƒ_ƒuƒ‹ƒoƒbƒtƒ@‰»‚Å•\¦‘¬“x‚ª‘¬‚­‚È‚Á‚½‚Ì‚Å@2‚¾‚Á‚½’l‚ğ1‚É•ÏX
-//Main.cpp InitApp()“à‚ÅƒZƒbƒg‚µ’¼‚µ‚Ä‚¢‚é‚Ì‚Å’ˆÓ
+//2023/11/04 ç‰©ç†ãƒ€ãƒ–ãƒ«ãƒãƒƒãƒ•ã‚¡åŒ–ã§è¡¨ç¤ºé€Ÿåº¦ãŒé€Ÿããªã£ãŸã®ã§ã€€2ã ã£ãŸå€¤ã‚’1ã«å¤‰æ›´
+//Main.cpp InitApp()å†…ã§ã‚»ãƒƒãƒˆã—ç›´ã—ã¦ã„ã‚‹ã®ã§æ³¨æ„
 double g_btcalccnt = 1.0;
 
 
@@ -196,10 +196,10 @@ bool g_undereditrange = false;
 bool g_limitdegflag = false;
 
 
-//2024/04/17 limitrate‚Í\‘¢‘ÌANGLELIMIT‚Ìƒƒ“ƒo‚É‚µ‚ÄCBone::m_anglelimit‚Åƒ{[ƒ“‚²‚Æ‚ÉŠÇ—‚·‚é‚±‚Æ‚É‚µ‚½
+//2024/04/17 limitrateã¯æ§‹é€ ä½“ANGLELIMITã®ãƒ¡ãƒ³ãƒã«ã—ã¦CBone::m_anglelimitã§ãƒœãƒ¼ãƒ³ã”ã¨ã«ç®¡ç†ã™ã‚‹ã“ã¨ã«ã—ãŸ
 //int g_limitrate = 15;
-//int g_limitrate = 85;//2024/04/15 limitrate‚ªÀ¿FreeRate‚É‚È‚Á‚Ä‚¢‚½‚Ì‚ÅC³@V‚µ‚¢limitrate = (100 - ŒÃ‚¢limitrate)
-
+//int g_limitrate = 85;//2024/04/15 limitrateãŒå®Ÿè³ªFreeRateã«ãªã£ã¦ã„ãŸã®ã§ä¿®æ­£ã€€æ–°ã—ã„limitrate = (100 - å¤ã„limitrate)
+double g_physicalLimitScale = 1.0;//å…¨ã¦ã®CBoneã®limitrateã«æ›ã‘ã‚‹ã‚¹ã‚±ãƒ¼ãƒ«
 
 //bool g_wmatDirectSetFlag = false;
 //bool g_underRetargetFlag = false;
@@ -236,8 +236,8 @@ float g_initcusak = 0.10f;
 float g_l_dmp = 0.50f;
 float g_a_dmp = 0.50f;
 
-//int g_shadertype = -1;//ƒ}ƒeƒŠƒAƒ‹–ˆ‚Éİ’è‚·‚é‚±‚Æ‚É
-int g_previewFlag = 0;			// ƒvƒŒƒrƒ…[ƒtƒ‰ƒO
+//int g_shadertype = -1;//ãƒãƒ†ãƒªã‚¢ãƒ«æ¯ã«è¨­å®šã™ã‚‹ã“ã¨ã«
+int g_previewFlag = 0;			// ãƒ—ãƒ¬ãƒ“ãƒ¥ãƒ¼ãƒ•ãƒ©ã‚°
 int g_cameraanimmode = 0;//0: OFF, 1:ON, 2:ON and RootMotionOption ON
 int g_cameraInheritMode = CAMERA_INHERIT_ALL;
 
@@ -476,8 +476,11 @@ extern bool g_undereditrange;
 extern bool g_limitdegflag;
 
 
-//2024/04/17 limitrate‚Í\‘¢‘ÌANGLELIMIT‚Ìƒƒ“ƒo‚É‚µ‚ÄCBone::m_anglelimit‚Åƒ{[ƒ“‚²‚Æ‚ÉŠÇ—‚·‚é‚±‚Æ‚É‚µ‚½
+//2024/04/17 limitrateã¯æ§‹é€ ä½“ANGLELIMITã®ãƒ¡ãƒ³ãƒã«ã—ã¦CBone::m_anglelimitã§ãƒœãƒ¼ãƒ³ã”ã¨ã«ç®¡ç†ã™ã‚‹ã“ã¨ã«ã—ãŸ
 //extern int g_limitrate;
+extern double g_physicalLimitScale;//å…¨ã¦ã®CBoneã®limitrateã«æ›ã‘ã‚‹ã‚¹ã‚±ãƒ¼ãƒ«
+
+
 
 //extern bool g_wmatDirectSetFlag;
 //extern bool g_underRetargetFlag;
@@ -511,8 +514,8 @@ extern float g_initcusak;
 extern float g_l_dmp;
 extern float g_a_dmp;
 
-//extern int g_shadertype;////ƒ}ƒeƒŠƒAƒ‹–ˆ‚Éİ’è‚·‚é‚±‚Æ‚É
-extern int g_previewFlag;			// ƒvƒŒƒrƒ…[ƒtƒ‰ƒO
+//extern int g_shadertype;////ãƒãƒ†ãƒªã‚¢ãƒ«æ¯ã«è¨­å®šã™ã‚‹ã“ã¨ã«
+extern int g_previewFlag;			// ãƒ—ãƒ¬ãƒ“ãƒ¥ãƒ¼ãƒ•ãƒ©ã‚°
 extern int g_cameraanimmode;//0: OFF, 1:ON, 2:ON and RootMotionOption ON
 extern int g_cameraInheritMode;
 

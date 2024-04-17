@@ -2343,6 +2343,7 @@ static int ConvPolarCoord2Dir(float srcxzdeg, float srcydeg, float* dstdirx, flo
 
 
 static int CreateGUIDlgDispParams();
+static int DispParams2Dlg(HWND hDlgWnd);
 static int CreateGUIDlgBrushes();
 static int Brushes2Dlg(HWND hDlgWnd);
 static int CreateGUIDlgBullet();
@@ -2433,6 +2434,7 @@ static int ChangeCameraInherit();
 static int InitCurMotion(int selectflag, double expandmotion);
 
 static int OpenChaFile();
+static int PostOpenChaFile();//2024/04/17 常駐スライダーなどに読込値を反映する
 CModel* OpenMQOFile();
 CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname);
 static int OpenREFile();
@@ -4138,7 +4140,8 @@ void InitApp()
 	//2024/04/17 limitrateは構造体ANGLELIMITのメンバにしてCBone::m_anglelimitでボーンごとに管理することにした
 	//g_limitrate = 15;
 	//g_limitrate = 85;//2024/04/15 limitrateが実質FreeRateになっていたので修正　新しいlimitrate = (100 - 古いlimitrate)
-	
+	g_physicalLimitScale = 1.0;//全てのCBoneのlimitrateに掛けるスケール
+
 	
 	s_beflimitdegflag = g_limitdegflag;
 	s_savelimitdegflag = g_limitdegflag;
@@ -19526,6 +19529,35 @@ LRESULT CALLBACK SaveChaDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 }
 
+int PostOpenChaFile()
+{
+	//2024/04/17 常駐スライダーなどにchaファイル読込値を反映する
+
+	if (s_owpEditRateSlider) {
+		s_owpEditRateSlider->setValue(g_physicsmvrate, false);
+	}
+	if (s_owpSpeedSlider) {
+		s_owpSpeedSlider->setValue(g_dspeed, false);
+	}
+	
+	
+	ChangeCameraDist(g_camdist , s_moveeyepos, false);
+
+
+	if (s_guidlg[GUIDLG_DISP_AND_LIMITS]) {
+		HWND limitratewnd = GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_SLIDER_PHYSICALLIMITSCALE);
+		if (limitratewnd != NULL) {
+			int sliderpos = (int)(g_physicalLimitScale * 100.0f);
+			SendMessage(limitratewnd, TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+			SendMessage(limitratewnd, TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
+			SendMessage(limitratewnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+		}
+	}
+
+	return 0;
+}
+
+
 int OpenChaFile()
 {
 
@@ -19642,6 +19674,8 @@ int OpenChaFile()
 	}
 	//OnAddMotion(s_model->GetCurMotInfo()->motid);
 
+	PostOpenChaFile();//2024/04/17 常駐スライダーなどにchaファイル読込値を反映する
+
 	SetCursor(oldcursor);
 
 
@@ -19670,13 +19704,17 @@ int OnSetMotSpeed()
 
 
 	//スライダーからspeedの値を取得
-	if (s_guidlg[GUIDLG_DISP_AND_LIMITS]) {
-		HWND speedwnd = GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_SLIDER_SPEED);
-		if (speedwnd && IsWindow(speedwnd)) {
-			int cursliderpos = (int)SendMessage(speedwnd, TBM_GETPOS, 0, 0);
-			g_dspeed = (float)((double)cursliderpos / 100.0);
-		}
+	if (s_topSlidersWnd && s_owpSpeedSlider) {
+		double val = s_owpSpeedSlider->getValue();
+		g_dspeed = val;
 	}
+	//if (s_guidlg[GUIDLG_DISP_AND_LIMITS]) {
+	//	HWND speedwnd = GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_SLIDER_SPEED);
+	//	if (speedwnd && IsWindow(speedwnd)) {
+	//		int cursliderpos = (int)SendMessage(speedwnd, TBM_GETPOS, 0, 0);
+	//		g_dspeed = (float)((double)cursliderpos / 100.0);
+	//	}
+	//}
 
 
 	////SetMotionSpeed() : モーションごとのスピード
@@ -26934,6 +26972,258 @@ static void CheckToonLightButton(HWND hDlgWnd, int lightindex)
 }
 
 
+int DispParams2Dlg(HWND hDlgWnd)
+{
+	//#######
+	//Button
+	//#######
+	// //マテリアル毎に設定することに
+	//CheckShaderTypeButton(hDlgWnd, g_shadertype);
+
+
+	//#######
+	//Slider
+	//#######
+	int sliderpos = (int)(g_fLightScale * 10.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIGHTS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIGHTS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIGHTS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = g_UpdateMatrixThreads;
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_UPDATETHREADS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)1);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_UPDATETHREADS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)8);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_UPDATETHREADS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	//sliderpos = (int)(g_dspeed * 100.0f);
+	//SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	//SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)700);
+	//SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(g_physicsmvrate * 10.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)500);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(g_bonemark_bright * 100.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(g_rigidmark_alpha * 100.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(g_rigmark_alpha * 100.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)g_refalpha;
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	sliderpos = (int)(g_physicalLimitScale * 100.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PHYSICALLIMITSCALE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PHYSICALLIMITSCALE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PHYSICALLIMITSCALE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+	//#####
+	//Text
+	//#####
+	WCHAR strdlg[256] = { 0L };
+	swprintf_s(strdlg, 256, L"Enable Lights %.1f", g_fLightScale);
+	SetDlgItemText(hDlgWnd, IDC_CHECK_LIGHTS, strdlg);
+
+	swprintf_s(strdlg, 256, L"Update Threads %d", g_UpdateMatrixThreads);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_UPDATETHREADS, strdlg);
+
+	//swprintf_s(strdlg, 256, L"Speed %.2f", g_dspeed);
+	//SetDlgItemText(hDlgWnd, IDC_STATIC_SPEED, strdlg);
+
+	swprintf_s(strdlg, 256, L"EditRate %.1f", g_physicsmvrate);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_EDITRATE, strdlg);
+
+	swprintf_s(strdlg, 256, L"RefPosAlpha %d", g_refalpha);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_REFPOSALPHA, strdlg);
+
+	swprintf_s(strdlg, 256, L"PhysicalLimitScale %.2f", g_physicalLimitScale);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_PHYSICALLIMITSCALE, strdlg);
+
+
+	//#########
+	//ComboBox
+	//#########
+	HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_IKLEVELS);
+	if (combownd != NULL) {
+		SendMessage(combownd, CB_RESETCONTENT, 0, 0);
+		int slotno;
+		for (slotno = 0; slotno < 15; slotno++) {
+			WCHAR strcombo[256];
+			swprintf_s(strcombo, 256, L"%d", (slotno + 1));
+			SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)strcombo);
+		}
+		::SendMessage(combownd, CB_SETCURSEL, (WPARAM)(g_iklevel - 1), 0);
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+
+	combownd = GetDlgItem(hDlgWnd, IDC_COMBO_AXISKIND);
+	if (combownd != NULL) {
+		SendMessage(combownd, CB_RESETCONTENT, 0, 0);
+
+		WCHAR straxis[256];
+		ULONG boneaxisindex;
+		swprintf_s(straxis, 256, L"Current");
+		boneaxisindex = BONEAXIS_CURRENT;
+		SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)straxis);
+		swprintf_s(straxis, 256, L"Parent");
+		boneaxisindex = BONEAXIS_PARENT;
+		SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)straxis);
+		swprintf_s(straxis, 256, L"Global");
+		boneaxisindex = BONEAXIS_GLOBAL;
+		SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)straxis);
+		swprintf_s(straxis, 256, L"BindPose");
+		boneaxisindex = BONEAXIS_BINDPOSE;
+		SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)straxis);
+		SendMessage(combownd, CB_SETCURSEL, (WPARAM)g_boneaxis, 0);
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	combownd = GetDlgItem(hDlgWnd, IDC_COMBO_UVSET);
+	if (combownd != NULL) {
+		SendMessage(combownd, CB_RESETCONTENT, 0, 0);
+
+		WCHAR struvset[256];
+		ULONG uvindex;
+		swprintf_s(struvset, 256, L"UVSet0");
+		uvindex = BONEAXIS_CURRENT;
+		SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)struvset);
+		swprintf_s(struvset, 256, L"UVSet1");
+		uvindex = BONEAXIS_PARENT;
+		SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)struvset);
+		SendMessage(combownd, CB_SETCURSEL, (WPARAM)g_uvset, 0);
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	//#########
+	//CheckBox
+	//#########
+	if (g_hdrpbloom == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_BLOOM, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_BLOOM, false);
+	}
+
+	if (g_freefps == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_FREEFPS, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_FREEFPS, false);
+	}
+
+	if ((bool)g_lightflag == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_LIGHTS, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_LIGHTS, false);
+	}
+
+	if (g_HighRpmMode == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_HIGHRPM, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_HIGHRPM, false);
+	}
+
+	if ((bool)g_bonemarkflag == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_DISPBONE, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_DISPBONE, false);
+	}
+
+	if ((bool)g_rigidmarkflag == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_RIGIDMARK, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_RIGIDMARK, false);
+	}
+
+	//if ((bool)s_camtargetflag == true) {
+	//	CheckDlgButton(hDlgWnd, IDC_CHECK_LOCKTOSEL, true);
+	//}
+	//else {
+	//	CheckDlgButton(hDlgWnd, IDC_CHECK_LOCKTOSEL, false);
+	//}
+
+	if (g_preciseOnPreviewToo == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_PRECISE, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_PRECISE, false);
+	}
+
+	if (g_x180flag == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_X180, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_X180, false);
+	}
+
+	if (g_rotatetanim == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_TROT, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_TROT, false);
+	}
+
+	if (g_zpreflag == true) {
+		CheckDlgButton(hDlgWnd, IDC_ZPREPASS, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_ZPREPASS, false);
+	}
+
+	if (g_zalways == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_ZALWAYS, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_ZALWAYS, false);
+	}
+
+	if (g_skydispflag == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_SKYDISP, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_SKYDISP, false);
+	}
+
+	if (g_alphablending == true) {
+		CheckDlgButton(hDlgWnd, IDC_AlphaBlending, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_AlphaBlending, false);
+	}
+
+	return 0;
+}
+
+
 LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
 	switch (msg) {
@@ -26942,242 +27232,7 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		//Lights2Dlg(hDlgWnd);
 		//EnableWindow(GetDlgItem(hDlgWnd, IDC_RESETLIM_CURRENT), FALSE);
 
-		//#######
-		//Button
-		//#######
-		// //マテリアル毎に設定することに
-		//CheckShaderTypeButton(hDlgWnd, g_shadertype);
-
-
-		//#######
-		//Slider
-		//#######
-		int sliderpos = (int)(g_fLightScale * 10.0f);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIGHTS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIGHTS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIGHTS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-		sliderpos = g_UpdateMatrixThreads;
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_UPDATETHREADS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)1);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_UPDATETHREADS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)8);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_UPDATETHREADS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-		sliderpos = (int)(g_dspeed * 100.0f);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)700);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-		sliderpos = (int)(g_physicsmvrate * 10.0f);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)500);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-		sliderpos = (int)(g_bonemark_bright * 100.0f);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-		sliderpos = (int)(g_rigidmark_alpha * 100.0f);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-		sliderpos = (int)(g_rigmark_alpha * 100.0f);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-		sliderpos = (int)g_refalpha;
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-		//#####
-		//Text
-		//#####
-		WCHAR strdlg[256] = { 0L };
-		swprintf_s(strdlg, 256, L"Enable Lights %.1f", g_fLightScale);
-		SetDlgItemText(hDlgWnd, IDC_CHECK_LIGHTS, strdlg);
-
-		swprintf_s(strdlg, 256, L"Update Threads %d", g_UpdateMatrixThreads);
-		SetDlgItemText(hDlgWnd, IDC_STATIC_UPDATETHREADS, strdlg);
-
-		swprintf_s(strdlg, 256, L"Speed %.2f", g_dspeed);
-		SetDlgItemText(hDlgWnd, IDC_STATIC_SPEED, strdlg);
-
-		swprintf_s(strdlg, 256, L"EditRate %.1f", g_physicsmvrate);
-		SetDlgItemText(hDlgWnd, IDC_STATIC_EDITRATE, strdlg);
-
-		swprintf_s(strdlg, 256, L"RefPosAlpha %d", g_refalpha);
-		SetDlgItemText(hDlgWnd, IDC_STATIC_REFPOSALPHA, strdlg);
-
-		//#########
-		//ComboBox
-		//#########
-		HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_IKLEVELS);
-		if (combownd != NULL) {
-			SendMessage(combownd, CB_RESETCONTENT, 0, 0);
-			int slotno;
-			for (slotno = 0; slotno < 15; slotno++) {
-				WCHAR strcombo[256];
-				swprintf_s(strcombo, 256, L"%d", (slotno + 1));
-				SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)strcombo);
-			}
-			::SendMessage(combownd, CB_SETCURSEL, (WPARAM)(g_iklevel - 1), 0);
-		}
-		else {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-
-		combownd = GetDlgItem(hDlgWnd, IDC_COMBO_AXISKIND);
-		if (combownd != NULL) {
-			SendMessage(combownd, CB_RESETCONTENT, 0, 0);
-
-			WCHAR straxis[256];
-			ULONG boneaxisindex;
-			swprintf_s(straxis, 256, L"Current");
-			boneaxisindex = BONEAXIS_CURRENT;
-			SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)straxis);
-			swprintf_s(straxis, 256, L"Parent");
-			boneaxisindex = BONEAXIS_PARENT;
-			SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)straxis);
-			swprintf_s(straxis, 256, L"Global");
-			boneaxisindex = BONEAXIS_GLOBAL;
-			SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)straxis);
-			swprintf_s(straxis, 256, L"BindPose");
-			boneaxisindex = BONEAXIS_BINDPOSE;
-			SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)straxis);
-			SendMessage(combownd, CB_SETCURSEL, (WPARAM)g_boneaxis, 0);
-		}
-		else {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		combownd = GetDlgItem(hDlgWnd, IDC_COMBO_UVSET);
-		if (combownd != NULL) {
-			SendMessage(combownd, CB_RESETCONTENT, 0, 0);
-
-			WCHAR struvset[256];
-			ULONG uvindex;
-			swprintf_s(struvset, 256, L"UVSet0");
-			uvindex = BONEAXIS_CURRENT;
-			SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)struvset);
-			swprintf_s(struvset, 256, L"UVSet1");
-			uvindex = BONEAXIS_PARENT;
-			SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)struvset);
-			SendMessage(combownd, CB_SETCURSEL, (WPARAM)g_uvset, 0);
-		}
-		else {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		//#########
-		//CheckBox
-		//#########
-		if (g_hdrpbloom == true) {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_BLOOM, true);
-		}
-		else {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_BLOOM, false);
-		}
-
-		if (g_freefps == true) {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_FREEFPS, true);
-		}
-		else {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_FREEFPS, false);
-		}
-
-		if ((bool)g_lightflag == true) {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_LIGHTS, true);
-		}
-		else {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_LIGHTS, false);
-		}
-
-		if (g_HighRpmMode == true) {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_HIGHRPM, true);
-		}
-		else {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_HIGHRPM, false);
-		}
-
-		if ((bool)g_bonemarkflag == true) {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_DISPBONE, true);
-		}
-		else {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_DISPBONE, false);
-		}
-
-		if ((bool)g_rigidmarkflag == true) {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_RIGIDMARK, true);
-		}
-		else {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_RIGIDMARK, false);
-		}
-
-		//if ((bool)s_camtargetflag == true) {
-		//	CheckDlgButton(hDlgWnd, IDC_CHECK_LOCKTOSEL, true);
-		//}
-		//else {
-		//	CheckDlgButton(hDlgWnd, IDC_CHECK_LOCKTOSEL, false);
-		//}
-
-		if (g_preciseOnPreviewToo == true) {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_PRECISE, true);
-		}
-		else {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_PRECISE, false);
-		}
-
-		if (g_x180flag == true) {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_X180, true);
-		}
-		else {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_X180, false);
-		}
-
-		if (g_rotatetanim == true) {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_TROT, true);
-		}
-		else {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_TROT, false);
-		}
-
-		if (g_zpreflag == true) {
-			CheckDlgButton(hDlgWnd, IDC_ZPREPASS, true);
-		}
-		else {
-			CheckDlgButton(hDlgWnd, IDC_ZPREPASS, false);
-		}
-
-		if (g_zalways == true) {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_ZALWAYS, true);
-		}
-		else {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_ZALWAYS, false);
-		}
-
-		if (g_skydispflag == true) {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_SKYDISP, true);
-		}
-		else {
-			CheckDlgButton(hDlgWnd, IDC_CHECK_SKYDISP, false);
-		}
-
-		if (g_alphablending == true) {
-			CheckDlgButton(hDlgWnd, IDC_AlphaBlending, true);
-		}
-		else {
-			CheckDlgButton(hDlgWnd, IDC_AlphaBlending, false);
-		}
+		DispParams2Dlg(hDlgWnd);
 
 		return FALSE;
 	}
@@ -27212,23 +27267,23 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			}
 
 		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_GETPOS, 0, 0);
-			g_dspeed = (float)((double)cursliderpos / 100.0);
-
-			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"Speed %.2f", g_dspeed);
-			SetDlgItemText(hDlgWnd, IDC_STATIC_SPEED, strdlg);
-
-			s_model->SetTmpMotSpeed((float)g_dspeed);
-			OnSetMotSpeed();
-
-
-			if (s_topSlidersWnd && s_owpSpeedSlider) {
-				s_owpSpeedSlider->setValue(g_dspeed, false);
-				s_topSlidersWnd->callRewrite();//再描画
-			}
-		}
+		//else if (GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED) == (HWND)lp) {
+		//	int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_GETPOS, 0, 0);
+		//	g_dspeed = (float)((double)cursliderpos / 100.0);
+		//
+		//	WCHAR strdlg[256] = { 0L };
+		//	swprintf_s(strdlg, 256, L"Speed %.2f", g_dspeed);
+		//	SetDlgItemText(hDlgWnd, IDC_STATIC_SPEED, strdlg);
+		//
+		//	s_model->SetTmpMotSpeed((float)g_dspeed);
+		//	OnSetMotSpeed();
+		//
+		//
+		//	if (s_topSlidersWnd && s_owpSpeedSlider) {
+		//		s_owpSpeedSlider->setValue(g_dspeed, false);
+		//		s_topSlidersWnd->callRewrite();//再描画
+		//	}
+		//}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_GETPOS, 0, 0);
 			g_physicsmvrate = (float)((double)cursliderpos / 10.0);
@@ -27262,6 +27317,14 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			WCHAR strdlg[256] = { 0L };
 			swprintf_s(strdlg, 256, L"RefPosAlpha %d", g_refalpha);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_REFPOSALPHA, strdlg);
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_PHYSICALLIMITSCALE) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PHYSICALLIMITSCALE), TBM_GETPOS, 0, 0);
+			g_physicalLimitScale = (float)((double)cursliderpos / 100.0);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"PhysicalLimitScale %.2f", g_physicalLimitScale);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_PHYSICALLIMITSCALE, strdlg);
 		}
 
 	break;
@@ -33636,19 +33699,19 @@ int OnFrameToolWnd()
 	}
 	if (s_topslidersSpeedFlag) {
 		if (s_topSlidersWnd && s_owpSpeedSlider) {
-			double val = s_owpSpeedSlider->getValue();
-			g_dspeed = val;
-			if (s_guidlg[GUIDLG_DISP_AND_LIMITS]) {
-				HWND speedwnd = GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_SLIDER_SPEED);
-				if (speedwnd && IsWindow(speedwnd)) {
-					SendMessage(speedwnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(int)(g_dspeed * 100.0));
-				}
-
-				//text
-				WCHAR strdlg[256] = { 0L };
-				swprintf_s(strdlg, 256, L"Speed %.2f", g_dspeed);
-				SetDlgItemText(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_STATIC_SPEED, strdlg);
-			}
+			//double val = s_owpSpeedSlider->getValue();
+			//g_dspeed = val;
+			//if (s_guidlg[GUIDLG_DISP_AND_LIMITS]) {
+			//	HWND speedwnd = GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_SLIDER_SPEED);
+			//	if (speedwnd && IsWindow(speedwnd)) {
+			//		SendMessage(speedwnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(int)(g_dspeed * 100.0));
+			//	}
+			//
+			//	//text
+			//	WCHAR strdlg[256] = { 0L };
+			//	swprintf_s(strdlg, 256, L"Speed %.2f", g_dspeed);
+			//	SetDlgItemText(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_STATIC_SPEED, strdlg);
+			//}
 			OnSetMotSpeed();
 			s_topSlidersWnd->callRewrite();//再描画
 		}
@@ -46485,6 +46548,7 @@ void ShowGUIDlgDispParams(bool srcflag)
 {
 	if (s_guidlg[GUIDLG_DISP_AND_LIMITS] != 0) {
 		if (srcflag == true) {
+			DispParams2Dlg(s_guidlg[GUIDLG_DISP_AND_LIMITS]);//2024/04/17 chaファイルを読み込んで変化している可能性があるので、GUIを設定し直
 			ShowWindow(s_guidlg[GUIDLG_DISP_AND_LIMITS], SW_SHOW);
 			UpdateWindow(s_guidlg[GUIDLG_DISP_AND_LIMITS]);
 		}
