@@ -4,7 +4,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/04/18
-　AdditiveIK 1.0.0.16 RC4(リリース候補4)
+　AdditiveIK 1.0.0.16 release
 　　1.0.0.15からの変更点
 　　　不具合修正
 　　　　CameraDist常駐スライダーをホイールで動かした際に描画が更新されていなかったのを修正
