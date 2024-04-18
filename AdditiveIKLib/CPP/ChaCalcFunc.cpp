@@ -528,9 +528,9 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, CEditRange
 		ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
 			infooutflag, 0, srcmotid, curframe, curqForRot, curqForHipsRot, fromiktarget);
 
-		//bool infooutflag = true;
-		//parentbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
-		//	infooutflag, 0, srcmotid, curframe, qForRot, qForHipsRot, fromiktarget);
+		////bool infooutflag = true;
+		////parentbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
+		////	infooutflag, 0, srcmotid, curframe, qForRot, qForHipsRot, fromiktarget);
 
 	}
 	else if (keynum1flag) {

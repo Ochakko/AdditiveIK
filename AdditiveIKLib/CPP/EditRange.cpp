@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <math.h>
@@ -15,11 +15,13 @@
 
 #include <EditRange.h>
 
+#include <GlobalVar.h>
+
 using namespace std;
 
 
 
-double CEditRange::s_applyrate = 100.0;
+//double CEditRange::s_applyrate = 100.0;
 
 
 CEditRange::CEditRange()
@@ -118,14 +120,14 @@ int CEditRange::GetRange( int* numptr, double* startptr, double* endptr, double*
 	//	offset = 1.0;
 	//}
 
-	if (s_applyrate == 0.0) {
+	if (g_applyrate == 0.0) {
 		m_applyframe = m_startframe;
 	}
-	else if (s_applyrate == 100.0) {
+	else if (g_applyrate == 100.0) {
 		m_applyframe = m_endframe;
 	}
 	else {
-		m_applyframe = (double)((int)(m_startframe + (m_endframe - m_startframe) * (s_applyrate / 100.0)));
+		m_applyframe = (double)((int)(m_startframe + (m_endframe - m_startframe) * (g_applyrate / 100.0)));
 	}
 	
 	*applyptr = m_applyframe;
@@ -135,7 +137,7 @@ int CEditRange::GetRange( int* numptr, double* startptr, double* endptr, double*
 
 CEditRange CEditRange::operator= (CEditRange srcrange)
 {
-	//m_setflag‚Æm_setcnt‚Í‚±‚±‚Å‚ÍƒRƒs[‚µ‚È‚¢B
+	//m_setflagã¨m_setcntã¯ã“ã“ã§ã¯ã‚³ãƒ”ãƒ¼ã—ãªã„ã€‚
 
 	m_ki = srcrange.m_ki;
 	m_keynum = srcrange.m_keynum;

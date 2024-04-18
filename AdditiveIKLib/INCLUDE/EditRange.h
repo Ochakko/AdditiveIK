@@ -1,4 +1,4 @@
-#ifndef EDITRANGEH
+ï»¿#ifndef EDITRANGEH
 #define EDITRANGEH
 
 #include <list>
@@ -11,34 +11,34 @@ public:
 /**
  * @fn
  * CEditRange
- * @breaf ƒRƒ“ƒXƒgƒ‰ƒNƒ^
- * @return ‚È‚µB
+ * @breaf ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+ * @return ãªã—ã€‚
  */
 	CEditRange();
 
 /**
  * @fn
  * ~CEditRange
- * @breaf ƒfƒXƒgƒ‰ƒNƒ^
- * @return ‚È‚µB
+ * @breaf ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+ * @return ãªã—ã€‚
  */
 	~CEditRange();
 
 /**
  * @fn
  * Clear
- * @breaf ƒƒ“ƒo‚ğƒŠƒZƒbƒg‚·‚éB
- * @return ¬Œ÷‚µ‚½‚ç‚OB
+ * @breaf ãƒ¡ãƒ³ãƒã‚’ãƒªã‚»ãƒƒãƒˆã™ã‚‹ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
  */
 	int Clear();
 
 /**
  * @fn
  * SetRange
- * @breaf •ÒW”ÍˆÍ‚ğƒZƒbƒg‚·‚éB
- * @param (std::list<KeyInfo> srcki) IN •ÒW‚µ‚½ƒL[‚ª‹L˜^‚³‚ê‚½ƒŠƒXƒgB
- * @param (double srcframe) IN ‚PƒtƒŒ[ƒ€‚Ì‚İ‚Ì•ÒW‚É‚Í‚»‚ÌƒtƒŒ[ƒ€B
- * @return ¬Œ÷‚µ‚½‚ç‚OB
+ * @breaf ç·¨é›†ç¯„å›²ã‚’ã‚»ãƒƒãƒˆã™ã‚‹ã€‚
+ * @param (std::list<KeyInfo> srcki) IN ç·¨é›†ã—ãŸã‚­ãƒ¼ãŒè¨˜éŒ²ã•ã‚ŒãŸãƒªã‚¹ãƒˆã€‚
+ * @param (double srcframe) IN ï¼‘ãƒ•ãƒ¬ãƒ¼ãƒ ã®ã¿ã®ç·¨é›†æ™‚ã«ã¯ãã®ãƒ•ãƒ¬ãƒ¼ãƒ ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
  */
 	int SetRange( std::list<KeyInfo> srcki, double srcframe );
 
@@ -48,24 +48,24 @@ public:
 /**
  * @fn
  * GetRange
- * @breaf •ÒW”ÍˆÍî•ñ‚ğæ“¾‚·‚éB
- * @param (int* numptr) OUT •ÒW”ÍˆÍ‚ÌƒL[‚Ì”B
- * @param (double* startptr) OUT@•ÒW”ÍˆÍ‚ÌŠJnƒtƒŒ[ƒ€B
- * @param (double* endptr) OUT •ÒW”ÍˆÍ‚ÌI—¹ƒtƒŒ[ƒ€B
- * @return ¬Œ÷‚µ‚½‚ç‚OB
+ * @breaf ç·¨é›†ç¯„å›²æƒ…å ±ã‚’å–å¾—ã™ã‚‹ã€‚
+ * @param (int* numptr) OUT ç·¨é›†ç¯„å›²ã®ã‚­ãƒ¼ã®æ•°ã€‚
+ * @param (double* startptr) OUTã€€ç·¨é›†ç¯„å›²ã®é–‹å§‹ãƒ•ãƒ¬ãƒ¼ãƒ ã€‚
+ * @param (double* endptr) OUT ç·¨é›†ç¯„å›²ã®çµ‚äº†ãƒ•ãƒ¬ãƒ¼ãƒ ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
  */
 	int GetRange( int* numptr, double* startptr, double* endptr );
 
 /**
  * @fn
  * GetRange
- * @breaf •ÒW”ÍˆÍî•ñ‚ğæ“¾‚·‚éB
- * @param (int* numptr) OUT •ÒW”ÍˆÍ‚ÌƒL[‚Ì”B
- * @param (double* startptr) OUT@•ÒW”ÍˆÍ‚ÌŠJnƒtƒŒ[ƒ€B
- * @param (double* endptr) OUT •ÒW”ÍˆÍ‚ÌI—¹ƒtƒŒ[ƒ€B
- * @param (double* applyptr) OUT p¨“K—pƒtƒŒ[ƒ€B
- * @return ¬Œ÷‚µ‚½‚ç‚OB
- * @detail ‘I‘ğ”ÍˆÍ‚ÌŠJnˆÊ’u‚©‚ç‰½“‚ÌˆÊ’u‚Ép¨‚ğ“K—p‚·‚é‚©‚Ìî•ñ‚©‚çAp¨“K—pƒtƒŒ[ƒ€‚ÌŒvZ‚às‚¤B
+ * @breaf ç·¨é›†ç¯„å›²æƒ…å ±ã‚’å–å¾—ã™ã‚‹ã€‚
+ * @param (int* numptr) OUT ç·¨é›†ç¯„å›²ã®ã‚­ãƒ¼ã®æ•°ã€‚
+ * @param (double* startptr) OUTã€€ç·¨é›†ç¯„å›²ã®é–‹å§‹ãƒ•ãƒ¬ãƒ¼ãƒ ã€‚
+ * @param (double* endptr) OUT ç·¨é›†ç¯„å›²ã®çµ‚äº†ãƒ•ãƒ¬ãƒ¼ãƒ ã€‚
+ * @param (double* applyptr) OUT å§¿å‹¢é©ç”¨ãƒ•ãƒ¬ãƒ¼ãƒ ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
+ * @detail é¸æŠç¯„å›²ã®é–‹å§‹ä½ç½®ã‹ã‚‰ä½•ï¼…ã®ä½ç½®ã«å§¿å‹¢ã‚’é©ç”¨ã™ã‚‹ã‹ã®æƒ…å ±ã‹ã‚‰ã€å§¿å‹¢é©ç”¨ãƒ•ãƒ¬ãƒ¼ãƒ ã®è¨ˆç®—ã‚‚è¡Œã†ã€‚
  */
 	int GetRange( int* numptr, double* startptr, double* endptr, double* applyptr );
 
@@ -107,25 +107,25 @@ public:
 	void SetSetFlag(int srcflag){ m_setflag = srcflag; };
 	void SetSetCnt(int srccnt){ m_setcnt = srccnt; };
 
-	static void SetApplyRate(double srcrate){
-		s_applyrate = srcrate; 
-	};
+	//static void SetApplyRate(double srcrate){
+	//	s_applyrate = srcrate; 
+	//};
 
 private:
 
 /**
 * @fn
 * InitParams
-* @breaf ƒƒ“ƒo‚Ì‰Šú‰»B
-* @return ‚OB
+* @breaf ãƒ¡ãƒ³ãƒã®åˆæœŸåŒ–ã€‚
+* @return ï¼ã€‚
 */
 	int InitParams();
 
 /**
  * @fn
  * DestroyObjs
- * @breaf ƒAƒƒP[ƒg‚µ‚½ƒƒ‚ƒŠ‚ğŠJ•ú‚·‚éB
- * @return ‚OB
+ * @breaf ã‚¢ãƒ­ã‚±ãƒ¼ãƒˆã—ãŸãƒ¡ãƒ¢ãƒªã‚’é–‹æ”¾ã™ã‚‹ã€‚
+ * @return ï¼ã€‚
  */
 	int DestroyObjs();
 
@@ -133,13 +133,16 @@ private:
 private:
 	int m_setflag;
 	int m_setcnt;
-	std::list<KeyInfo> m_ki;//•ÒW”ÍˆÍ‚ÌƒL[‚Ìî•ñ
+	std::list<KeyInfo> m_ki;//ç·¨é›†ç¯„å›²ã®ã‚­ãƒ¼ã®æƒ…å ±
 	int m_keynum;
 	double m_startframe;
 	double m_endframe;
-	double m_applyframe;//p¨“K—pƒtƒŒ[ƒ€B
+	double m_applyframe;//å§¿å‹¢é©ç”¨ãƒ•ãƒ¬ãƒ¼ãƒ ã€‚
 
-	static double s_applyrate;//p¨“K—pƒtƒŒ[ƒ€‚ª‘I‘ğ”ÍˆÍ‚ÌŠJnˆÊ’u‚©‚ç‰½“‚Ì‚Æ‚±‚ë‚É‚ ‚é‚©B
+
+	//2024/04/18 g_applyrateã¨s_applyrateã®ï¼’ã‹æ‰€ã§ç®¡ç†ã—ã¦ã„ã¦å•é¡ŒãŒèµ·ããŸã®ã§ã€€g_applyrateã‚’ä½¿ã†ã“ã¨ã«
+	//static double s_applyrate;//å§¿å‹¢é©ç”¨ãƒ•ãƒ¬ãƒ¼ãƒ ãŒé¸æŠç¯„å›²ã®é–‹å§‹ä½ç½®ã‹ã‚‰ä½•ï¼…ã®ã¨ã“ã‚ã«ã‚ã‚‹ã‹ã€‚
+
 };
 
 #endif

@@ -22925,7 +22925,7 @@ int CreateMotionBrush(double srcstart, double srcend, bool onrefreshflag)
 	//s_editrangeを更新
 	s_buttonselectstart = g_motionbrush_startframe;
 	s_buttonselectend = g_motionbrush_endframe;
-	CEditRange::SetApplyRate(g_applyrate);
+	//CEditRange::SetApplyRate(g_applyrate);
 	OnTimeLineButtonSelectFromSelectStartEnd(s_buttonselecttothelast);
 
 
@@ -30099,7 +30099,7 @@ int Brushes2Dlg(HWND hDlgWnd)
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)1);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-	CEditRange::SetApplyRate(g_applyrate);
+	//CEditRange::SetApplyRate(g_applyrate);
 	double applyframe = s_editrange.GetApplyFrame();
 
 	//#####
@@ -33418,7 +33418,7 @@ int OnFrameTimeLineWnd()
 				s_buttonselectend = s_buttonselectstart;
 			}
 			//g_applyrate = g_SampleUI.GetSlider(IDC_SL_APPLYRATE)->GetValue();
-			CEditRange::SetApplyRate(g_applyrate);
+			//CEditRange::SetApplyRate(g_applyrate);
 			OnTimeLineButtonSelectFromSelectStartEnd(0);
 			OnTimeLineSelectFromSelectedKey();
 			DisplayApplyRateText();
@@ -33471,7 +33471,7 @@ int OnFrameTimeLineWnd()
 			s_selectKeyInfoList.clear();
 			s_selectKeyInfoList = s_owpLTimeline->getSelectedKey();
 			s_editrange.SetRange(s_selectKeyInfoList, s_owpLTimeline->getCurrentTime());
-			CEditRange::SetApplyRate(g_applyrate);
+			//CEditRange::SetApplyRate(g_applyrate);
 			s_buttonselectstart = s_editrange.GetStartFrame();
 			s_buttonselectend = s_editrange.GetEndFrame();
 
@@ -33499,7 +33499,7 @@ int OnFrameTimeLineWnd()
 				if (s_owpLTimeline) {
 					//s_editmotionflag = s_curboneno;
 					s_editrange.SetRange(s_owpLTimeline->getSelectedKey(), s_owpLTimeline->getCurrentTime());
-					CEditRange::SetApplyRate(g_applyrate);
+					//CEditRange::SetApplyRate(g_applyrate);
 
 					if (s_undoredoFromPlayerButton == false) {
 						PrepairUndo();//LTimelineの選択後かつ編集前の保存を想定
@@ -34342,7 +34342,7 @@ int OnFrameToolWnd()
 			if (s_model) {
 				if (s_owpTimeline && s_owpLTimeline) {
 					s_editrange.SetRange(s_owpLTimeline->getSelectedKey(), s_owpLTimeline->getCurrentTime());
-					CEditRange::SetApplyRate(g_applyrate);
+					//CEditRange::SetApplyRate(g_applyrate);
 					s_editrange.GetRange(&keynum, &startframe, &endframe, &applyframe);
 				}
 			}
@@ -35491,7 +35491,7 @@ int OnSpriteUndo()
 
 			//注意：applyrateはbrushstateには入っていない
 			g_applyrate = tmpapplyrate;
-			CEditRange::SetApplyRate(g_applyrate);
+			//CEditRange::SetApplyRate(g_applyrate);
 
 			OnTimeLineButtonSelectFromSelectStartEnd(0);
 			SetShowPosTime();//CreateMotionBrushより前で呼ばないと　TopPosを変えた後のUndoRedoで　描画がずれることがある
@@ -36252,7 +36252,7 @@ int CreateUtDialog()
 //		g_SampleUI.AddSlider(IDC_SL_APPLYRATE, startx, iY += (18 + 2), 100, ctrlh, 0, 100, g_applyrate);
 //		s_ui_slapplyrate = g_SampleUI.GetControl(IDC_SL_APPLYRATE);
 //		_ASSERT(s_ui_slapplyrate);
-//		CEditRange::SetApplyRate(g_applyrate);
+//		//CEditRange::SetApplyRate(g_applyrate);
 //		s_dsutgui1.push_back(s_ui_slapplyrate);
 //		s_dsutguiid1.push_back(IDC_SL_APPLYRATE);
 //
@@ -44527,7 +44527,7 @@ int OnTimeLineSelectFromSelectedKey()
 	if (s_model && s_model->ExistCurrentMotion()) {
 		if (s_owpTimeline && s_owpLTimeline && s_owpEulerGraph) {
 			s_editrange.SetRange(s_owpLTimeline->getSelectedKey(), s_owpLTimeline->getCurrentTime());
-			CEditRange::SetApplyRate(g_applyrate);
+			//CEditRange::SetApplyRate(g_applyrate);
 
 			int keynum;
 			double startframe, endframe, applyframe;
@@ -44706,7 +44706,7 @@ int OnTimeLineMButtonDown(bool ctrlshiftflag)
 			if (s_owpLTimeline) {
 				s_editmotionflag = s_curboneno;
 				s_editrange.SetRange(s_owpLTimeline->getSelectedKey(), s_owpLTimeline->getCurrentTime());
-				CEditRange::SetApplyRate(g_applyrate);
+				//CEditRange::SetApplyRate(g_applyrate);
 				PrepairUndo();//LTimelineの選択後かつ編集前の保存を想定
 			}
 		}
