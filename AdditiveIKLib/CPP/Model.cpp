@@ -13779,35 +13779,30 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 
 						int ismovable2 = 1;
 
-						//#############################################################################
-						//2024/04/18 keynum1flag=falseの場合のIKRotateOneFrameはIKRotate用にqの補正が入る
-						//UnderRigの場合には１フレーム計算で良いので複数フレーム選択していてもkynum1flagで計算
-						//(1009_5の167フレーム目の足の青いRIG(NODEZ)の回転軸がkeynum1flag=falseだとX回転になる
-						// IKRotateはchild軸でparentが回転、Rigはchild軸でchildが回転、qの補正はIKRotate用)
-						//#############################################################################
-						
-						//if (keynum >= 2) {
-						//	int keyno = 0;
-						//	double curframe = applyframe;//!!!!!!
-						//	bool keynum1flag = false;
-						//	bool postflag = false;
-						//	bool fromiktarget = false;
-						//	ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
-						//		keyno, 
-						//		curbone, aplybone,
-						//		curmotid, curframe, startframe, applyframe,
-						//		localq, keynum1flag, postflag, fromiktarget);
-						//}
-						//else {
+						if (keynum >= 2) {
+							int keyno = 0;
+							double curframe = applyframe;//!!!!!!
+							bool keynum1flag = false;
+							bool postflag = false;
+							bool fromiktarget = false;
+							ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
+								keyno, 
+								//curbone, aplybone,
+								curbone, curbone,//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
+								curmotid, curframe, startframe, applyframe,
+								localq, keynum1flag, postflag, fromiktarget);
+						}
+						else {
 							bool keynum1flag = true;
 							bool postflag = false;
 							bool fromiktarget = false;
 							ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
 								0, 
-								curbone, aplybone,
+								//curbone, aplybone,
+								curbone, curbone,//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
 								curmotid, GetCurrentFrame(), startframe, applyframe,
 								localq, keynum1flag, postflag, fromiktarget);
-						//}
+						}
 
 
 						//2023/03/04 制限角度に引っ掛かった場合には　やめて　次のジョイントの回転へ
@@ -14028,7 +14023,8 @@ int CModel::RigControlPostRig(bool limitdegflag, int depthcnt,
 										CThreadingPostIK* curupdate = m_PostIKThreads + updatecount;
 										curupdate->IKRotateOneFrame(this, limitdegflag, erptr,
 											keyno,
-											curbone, aplybone,
+											//curbone, aplybone,
+											curbone, curbone,//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
 											curmotid, startframe, applyframe,
 											localq, keynum1flag, postflag, fromiktarget);
 									}

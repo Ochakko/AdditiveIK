@@ -4,7 +4,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/04/18
-　AdditiveIK 1.0.0.16 RC3(リリース候補3)
+　AdditiveIK 1.0.0.16 RC4(リリース候補4)
 　　1.0.0.15からの変更点
 　　　不具合修正
 　　　　CameraDist常駐スライダーをホイールで動かした際に描画が更新されていなかったのを修正
@@ -68,6 +68,11 @@ https://github.com/Ochakko/AdditiveIK
 　　　EditRangeの修正
 　　　　ブラシピーク位置をg_applyrateとCEditRange::s_applyrateと２か所で管理していて問題が出たので、g_applyrateだけで管理するように修正
 
+　　RC4:
+　　　Rigの修正
+　　　　更に修正
+　　　　ブラシピーク位置以外のリグ回転も正常に.
+　　　　Rig回転時はapplybone引数にcurboneを渡して解決
 
 
 動画
