@@ -3685,14 +3685,20 @@ void InitApp()
 	g_boneaxis = BONEAXIS_CURRENT;
 
 
-	g_lodrate2L[CHKINVIEW_LOD0] = 0.05f;//rate * projfar.  distance of clipping
+	g_lodrate2L[CHKINVIEW_LOD0] = 0.01f;//rate * projfar.  distance of clipping
 	g_lodrate2L[CHKINVIEW_LOD1] = 1.0f;
 	g_lodrate2L[CHKINVIEW_LOD2] = 1.0f;
+	g_lodrate2L[CHKINVIEW_LOD3] = 1.0f;
 
-	g_lodrate3L[CHKINVIEW_LOD0] = 0.05f;//rate * projfar.  distance of clipping
+	g_lodrate3L[CHKINVIEW_LOD0] = 0.01f;//rate * projfar.  distance of clipping
 	g_lodrate3L[CHKINVIEW_LOD1] = 0.15f;
 	g_lodrate3L[CHKINVIEW_LOD2] = 1.0f;
+	g_lodrate3L[CHKINVIEW_LOD3] = 1.0f;
 
+	g_lodrate4L[CHKINVIEW_LOD0] = 0.01f;//rate * projfar.  distance of clipping
+	g_lodrate4L[CHKINVIEW_LOD1] = 0.15f;
+	g_lodrate4L[CHKINVIEW_LOD2] = 0.5f;
+	g_lodrate4L[CHKINVIEW_LOD3] = 1.0f;
 
 	{
 		s_spritetex0 = 0;
@@ -19558,7 +19564,8 @@ int PostOpenChaFile()
 	}
 
 
-	if (s_chascene) {
+	if (s_chascene && 
+		((g_boneaxis < BONEAXIS_CURRENT) || (g_boneaxis > BONEAXIS_BINDPOSE))) {//g_boneaxisがchafileで設定されなかった場合
 		//2024/04/22
 		s_chascene->InitializeBoneAxis();
 	}
@@ -24921,6 +24928,24 @@ int LODParams2Dlg(HWND hDlgWnd)
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_3L_LOD2), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_3L_LOD2), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
+	sliderpos = (int)(g_lodrate4L[CHKINVIEW_LOD0] * 100.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD0), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD0), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD0), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+	sliderpos = (int)(g_lodrate4L[CHKINVIEW_LOD1] * 100.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD1), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD1), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD1), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+	sliderpos = (int)(g_lodrate4L[CHKINVIEW_LOD2] * 100.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD2), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD2), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD2), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+	sliderpos = (int)(g_lodrate4L[CHKINVIEW_LOD3] * 100.0f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD3), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD3), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD3), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
+
 	sliderpos = (int)(g_pickdistrate * 100.0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PICKDIST), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PICKDIST), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
@@ -24944,6 +24969,16 @@ int LODParams2Dlg(HWND hDlgWnd)
 	SetDlgItemText(hDlgWnd, IDC_STATIC_3L_LOD1, strdlg);
 	swprintf_s(strdlg, 256, L"LOD2:%.2f", g_lodrate3L[CHKINVIEW_LOD2]);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_3L_LOD2, strdlg);
+
+	swprintf_s(strdlg, 256, L"LOD0:%.2f", g_lodrate4L[CHKINVIEW_LOD0]);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_4L_LOD0, strdlg);
+	swprintf_s(strdlg, 256, L"LOD1:%.2f", g_lodrate4L[CHKINVIEW_LOD1]);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_4L_LOD1, strdlg);
+	swprintf_s(strdlg, 256, L"LOD2:%.2f", g_lodrate4L[CHKINVIEW_LOD2]);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_4L_LOD2, strdlg);
+	swprintf_s(strdlg, 256, L"LOD3:%.2f", g_lodrate4L[CHKINVIEW_LOD3]);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_4L_LOD3, strdlg);
+
 
 	swprintf_s(strdlg, 256, L"pickDist:%.2f", g_pickdistrate);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_PICKDIST, strdlg);
@@ -30559,6 +30594,43 @@ LRESULT CALLBACK GUILODDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			swprintf_s(strdlg, 256, L"LOD2:%.2f", g_lodrate3L[CHKINVIEW_LOD2]);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_3L_LOD2, strdlg);
 		}
+
+
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD0) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD0), TBM_GETPOS, 0, 0);
+			g_lodrate4L[CHKINVIEW_LOD0] = (float)((double)cursliderpos / 100.0);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"LOD0:%.2f", g_lodrate4L[CHKINVIEW_LOD0]);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_4L_LOD0, strdlg);
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD1) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD1), TBM_GETPOS, 0, 0);
+			g_lodrate4L[CHKINVIEW_LOD1] = (float)((double)cursliderpos / 100.0);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"LOD1:%.2f", g_lodrate4L[CHKINVIEW_LOD1]);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_4L_LOD1, strdlg);
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD2) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD2), TBM_GETPOS, 0, 0);
+			g_lodrate4L[CHKINVIEW_LOD2] = (float)((double)cursliderpos / 100.0);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"LOD2:%.2f", g_lodrate4L[CHKINVIEW_LOD2]);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_4L_LOD2, strdlg);
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD3) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_4L_LOD3), TBM_GETPOS, 0, 0);
+			g_lodrate4L[CHKINVIEW_LOD3] = (float)((double)cursliderpos / 100.0);
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"LOD3:%.2f", g_lodrate4L[CHKINVIEW_LOD3]);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_4L_LOD3, strdlg);
+		}
+
+
+
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_PICKDIST) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PICKDIST), TBM_GETPOS, 0, 0);
 			g_pickdistrate = (double)cursliderpos / 100.0;

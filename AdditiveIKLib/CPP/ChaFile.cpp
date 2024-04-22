@@ -153,6 +153,8 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 	CallF(Write2File("  <PhysicalLimitScale>%.3f</PhysicalLimitScale>\r\n", g_physicalLimitScale), return 1);
 	CallF(Write2File("  <CameraDist>%.3f</CameraDist>\r\n", g_camdist), return 1);
 
+	CallF(Write2File("  <BoneAxis>%d</BoneAxis>\r\n", g_boneaxis), return 1);
+
 
 	CallF(Write2File("  <2L_LOD0>%.2f</2L_LOD0>\r\n", g_lodrate2L[CHKINVIEW_LOD0]), return 1);
 	CallF(Write2File("  <2L_LOD1>%.2f</2L_LOD1>\r\n", g_lodrate2L[CHKINVIEW_LOD1]), return 1);
@@ -161,6 +163,10 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 	CallF(Write2File("  <3L_LOD1>%.2f</3L_LOD1>\r\n", g_lodrate3L[CHKINVIEW_LOD1]), return 1);
 	CallF(Write2File("  <3L_LOD2>%.2f</3L_LOD2>\r\n", g_lodrate3L[CHKINVIEW_LOD2]), return 1);
 
+	CallF(Write2File("  <4L_LOD0>%.2f</4L_LOD0>\r\n", g_lodrate4L[CHKINVIEW_LOD0]), return 1);
+	CallF(Write2File("  <4L_LOD1>%.2f</4L_LOD1>\r\n", g_lodrate4L[CHKINVIEW_LOD1]), return 1);
+	CallF(Write2File("  <4L_LOD2>%.2f</4L_LOD2>\r\n", g_lodrate4L[CHKINVIEW_LOD2]), return 1);
+	CallF(Write2File("  <4L_LOD2>%.2f</4L_LOD3>\r\n", g_lodrate4L[CHKINVIEW_LOD3]), return 1);
 
 
 	int modelnum = (int)m_modelindex.size();
@@ -187,8 +193,10 @@ int CChaFile::WriteFileInfo()
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1005</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1006 : 2024/04/03 1.0.0.14へ向けて  <PickDistRate>追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1006</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
-	//version 1007 : 2024/04/17 1.0.0.14へ向けて  <EditRate>, <PlayingSpeed>, <PhysicalLimitScale>, <CameraDist>追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1007</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1007 : 2024/04/17 1.0.0.16へ向けて  <EditRate>, <PlayingSpeed>, <PhysicalLimitScale>, <CameraDist>追加
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1007</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1008 : 2024/04/22 1.0.0.17へ向けて  <4L_LOD*>, <BoneAxis>追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1008</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -653,6 +661,12 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 		getcameradist = true;//ReadCharaより後でセット
 	}
 
+	//bool getboneaxis = false;//getしなかった場合にもtempboneaxisをセットする
+	int tempboneaxis = -1;//BoneAxisタグが無かった場合には-1をセットしてAdditiveIK.cppのPostOpenChaFile()に処理を委ねる
+	result = Read_Int(&m_xmliobuf, "<BoneAxis>", "</BoneAxis>", &tempboneaxis);
+	//if (result == 0) {
+	//	getboneaxis = true;//ReadCharaより後でセット
+	//}
 
 
 	float templod = 0.01f;
@@ -676,6 +690,23 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	result = Read_Float(&m_xmliobuf, "<3L_LOD2>", "</3L_LOD2>", &templod);
 	if (result == 0) {
 		g_lodrate3L[CHKINVIEW_LOD2] = templod;
+	}
+
+	result = Read_Float(&m_xmliobuf, "<4L_LOD0>", "</4L_LOD0>", &templod);
+	if (result == 0) {
+		g_lodrate4L[CHKINVIEW_LOD0] = templod;
+	}
+	result = Read_Float(&m_xmliobuf, "<4L_LOD1>", "</4L_LOD1>", &templod);
+	if (result == 0) {
+		g_lodrate4L[CHKINVIEW_LOD1] = templod;
+	}
+	result = Read_Float(&m_xmliobuf, "<4L_LOD2>", "</4L_LOD2>", &templod);
+	if (result == 0) {
+		g_lodrate4L[CHKINVIEW_LOD2] = templod;
+	}
+	result = Read_Float(&m_xmliobuf, "<4L_LOD2>", "</4L_LOD3>", &templod);
+	if (result == 0) {
+		g_lodrate4L[CHKINVIEW_LOD3] = templod;
 	}
 
 
@@ -714,6 +745,11 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	if (getcameradist) {
 		g_camdist = tempcameradist;
 	}
+
+
+	//BoneAxisタグが無かった場合にもtempboneaxis(-1)をセットしてAdditiveIK.cppのPostOpenChaFile()に処理を委ねる
+	g_boneaxis = tempboneaxis;
+
 
 
 	m_xmliobuf.pos = 0;

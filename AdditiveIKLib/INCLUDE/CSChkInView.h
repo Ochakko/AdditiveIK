@@ -67,6 +67,7 @@ struct CSConstantBufferChkInView {
 	float params1[4];//[0]:BACKPOSCOEF, [1]:cos(g_fovy * 0.85), [2]:g_projfar, [3]:g_projnear
 	float lodrate2L[4];
 	float lodrate3L[4];
+	float lodrate4L[4];//2024/04/22
 	float shadowPos[4];
 	float shadowparams1[4];//[0]:cos(shadowfov), [1]:shadowmaxdist(g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno])
 	float frustumPlanes[6][4];
@@ -90,9 +91,13 @@ struct CSConstantBufferChkInView {
 		lodrate2L[2] = 1.0f;
 		lodrate2L[3] = 1.0f;
 		lodrate3L[0] = 0.1f;
-		lodrate3L[1] = 0.25f;
+		lodrate3L[1] = 0.15f;
 		lodrate3L[2] = 1.0f;
 		lodrate3L[3] = 1.0f;
+		lodrate4L[0] = 0.1f;
+		lodrate4L[1] = 0.15f;
+		lodrate4L[2] = 0.5f;
+		lodrate4L[3] = 1.0f;
 		ZeroMemory(shadowPos, sizeof(float) * 4);
 		shadowparams1[0] = 45.0f;
 		shadowparams1[1] = 5000.0f;

@@ -4,29 +4,35 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/04/22
-　ボーン軸の種類の初期値を修正
-　　VRoidから変換したfbxを読み込んだ場合には
-　　　ボーンの軸としてBONEAXIS_BINDPOSEを指定
+　プロジェクトファイル(*.cha)ファイルにDispAndLimitsレートメニューのBoneAxisを保存
+　　chaファイルにBoneAxisタグが存在しない場合(古いchaファイルの場合)、１つでもVRoidモデルがあればボーン軸としてBONEAXIS_BINDPOSEを設定
+
+　　モデル読み込み後は、DispAndLimitsプレートメニューのAxisKindコンボボックスにて軸の種類を設定可能
+
+　　BONEAXIS_BINDPOSEについて
+　　　VRoidやバインドポーズとしてボーンの向きが設定されているfbxファイル用
 　　　オイラーグラフの軸とIK回転の軸(マニピュレータ軸)とボーンの軸が一致する
-　　　VRoidの場合にはバインドポーズとしてボーン軸が設定されているのでBONEAXIS_BINDPOSEの方が使いやすい
-　　　(Rigの軸指定の種類のNODE*とも一致するようになる)
-　　その他の場合としてRokDeBone2から読み込んだfbxを想定しボーン軸としてBONEAXIS_CURRENTを指定
-　　　ボーン軸としてBONEAXIS_CURRENTを指定すると
-　　　RokDeBone2のようにバインドポーズとしてグローバル軸が設定されている場合に
-　　　IK操作をボーン軸で行うことが可能　しかしオイラーグラフの軸とマニピュレータ軸は一致しない
+　　　Rigの軸指定の種類のNODE*とも一致するようになる
+　　BONEAXIS_CURRENTについて
+　　　RokDeBone2出力のfbxやバインドポーズとしてグローバル軸が設定されているfbxファイル用
+　　　IK操作をボーン軸で行うことが可能
+　　　しかしオイラーグラフの軸とマニピュレータ軸は一致しない
 　　オイラーグラフの軸は常にBONEAXIS_BINDPOSE(今まで通り)
 　　(今まではVRoid読み込み時にもBONEAXIS_CURRENTを指定していたので、オイラーグラフの軸とマニピュレータの軸が表示上異なっていた)
 
-　４段階LODの４段階目のメッシュをとりあえず非表示に
-　　現時点では２段階LODと３段階LODにしか対応していない
-　　４段階LODを読み込むと４段階目のメッシュが常に表示されてしまうので応急処置
-　　後で４段階LODにも対応予定
 
-
-　chaファイル読み込み時には、１つでもVRoidモデルがあればボーン軸としてBONEAXIS_BINDPOSEを設定
+　４段階LODに対応
 
 　右クリックによるブラシ選択時にジョイント選択が初期化されてしまっていたのを修正
 　　右クリックによるブラシ選択時にジョイント選択を復元
+
+
+　ドキュメント追加
+　　Documents/TroubleShooting/WhyTheDispAndLimitsPlateMenuAlsoHasASliderForTheSameItem.docx
+　　(なぜ同じ項目についてのスライダーがDispAndLimitsプレートメニューにも存在するのかについて)
+
+
+
 
 
 

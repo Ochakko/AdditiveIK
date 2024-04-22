@@ -5430,150 +5430,156 @@ ChaFrustumInfo::~ChaFrustumInfo()
 
 int ChaFrustumInfo::ChkInView(int srclodnum, int srclodno, MODELBOUND srcmb, ChaMatrix matWorld)
 {
-	//###################################
-	//視錐体より　軽くて　まあまあの精度
-	//###################################
-
-	ChaVector3 tracenter;
-	ChaVector3TransformCoord(&tracenter, &(srcmb.center), &matWorld);
-	//tracenter = srcmb.center;
-
-	{
-		ChaVector3 camdir = g_camtargetpos - g_camEye;
-		ChaVector3Normalize(&camdir, &camdir);
+	//#######################################################
+	//AdditiveIK 1.0.0.14にて
+	//コンピュートシェーダによる視錐体判定に移行したのでコメントアウト
+	//#######################################################
 
 
-		ChaVector3 cam2obj = tracenter - g_camEye;
-		float dist_cam2obj = (float)ChaVector3LengthDbl(&cam2obj);
+	////###################################
+	////視錐体より　軽くて　まあまあの精度
+	////###################################
 
-		ChaVector3 backpos = g_camEye - camdir * srcmb.r * CHKINVIEW_BACKPOSCOEF;//!!!!!!!!!!!
-		ChaVector3 back2obj = tracenter - backpos;
-		ChaVector3Normalize(&back2obj, &back2obj);
-		float dot = ChaVector3Dot(&camdir, &back2obj);
+	//ChaVector3 tracenter;
+	//ChaVector3TransformCoord(&tracenter, &(srcmb.center), &matWorld);
+	////tracenter = srcmb.center;
 
-		//float dotclip = (float)cos(g_fovy);
-		float dotclip = (float)cos(g_fovy * 0.85f);//2023/12/30 backposの分　狭くて済むはず
-
-
-
-		//############################
-		//LODがvisibleかどうかチェック
-		//############################
-		float lod_mindist = 0.0f;
-		float lod_maxdist = g_projfar;
-		switch (srclodno) {
-		case -1:
-			//LOD無し
-			lod_mindist = 0.0f;
-			lod_maxdist = g_projfar;
-			break;
-		case CHKINVIEW_LOD0:
-			lod_mindist = 0.0f;
-			if (srclodnum == 3) {//3段階LOD
-				lod_maxdist = g_projfar * g_lodrate3L[srclodno];
-			}
-			else {//2段階LOD
-				lod_maxdist = g_projfar * g_lodrate2L[srclodno];
-			}
-			break;
-		case CHKINVIEW_LOD1:
-		case CHKINVIEW_LOD2:
-			if (srclodnum == 3) {//3段階LOD
-				lod_mindist = g_projfar * g_lodrate3L[srclodno - 1];
-				lod_maxdist = g_projfar * g_lodrate3L[srclodno];
-			}
-			else {//2段階LOD
-				lod_mindist = g_projfar * g_lodrate2L[srclodno - 1];
-				lod_maxdist = g_projfar * g_lodrate2L[srclodno];
-			}
-			break;
-		default:
-			_ASSERT(0);
-			//LOD無し
-			lod_mindist = g_projnear;
-			lod_maxdist = g_projfar;
-			break;
-		}
-		bool lodinview;
-		if (srclodno >= 0) {
-			if ((dist_cam2obj < lod_maxdist) && (dist_cam2obj >= lod_mindist)) {
-				lodinview = true;
-			}
-			else {
-				lodinview = false;
-			}
-		}
-		else {
-			lodinview = true;
-		}
+	//{
+	//	ChaVector3 camdir = g_camtargetpos - g_camEye;
+	//	ChaVector3Normalize(&camdir, &camdir);
 
 
-		//##################
-		//LODがvisible && 
-		//##################
-		if (lodinview && (dot >= dotclip) &&
-			(dist_cam2obj < (g_projfar + srcmb.r))) {
-			SetVisible(true);
-		}
-		else {
-			SetVisible(false);
-		}
-		SetDistFromCamera(dist_cam2obj);//2024/01/19
+	//	ChaVector3 cam2obj = tracenter - g_camEye;
+	//	float dist_cam2obj = (float)ChaVector3LengthDbl(&cam2obj);
 
-	}
+	//	ChaVector3 backpos = g_camEye - camdir * srcmb.r * CHKINVIEW_BACKPOSCOEF;//!!!!!!!!!!!
+	//	ChaVector3 back2obj = tracenter - backpos;
+	//	ChaVector3Normalize(&back2obj, &back2obj);
+	//	float dot = ChaVector3Dot(&camdir, &back2obj);
 
-	if (GetVisible()) {
-		//#####################################################################
-		//視野内の場合には　シャドウマップがシャドウ射影範囲に入っているかどうかの判定をする
-		//#####################################################################
+	//	//float dotclip = (float)cos(g_fovy);
+	//	float dotclip = (float)cos(g_fovy * 0.85f);//2023/12/30 backposの分　狭くて済むはず
 
-		if ((g_shadowmap_slotno < 0) || (g_shadowmap_slotno >= SHADOWSLOTNUM)) {
-			_ASSERT(0);
-			g_shadowmap_slotno = 0;
-		}
 
-		ChaVector3 lightpos;
-		ChaVector3 lighttarget;
-		if (g_cameraShadow) {
-			lightpos = ChaVector3(g_cameraShadow->GetPosition());
-			lighttarget = ChaVector3(g_cameraShadow->GetTarget());
-		}
-		else {
-			lightpos = g_camEye;
-			lighttarget = g_camtargetpos;
-		}
 
-		ChaVector3 camdir = lighttarget - lightpos;
-		ChaVector3Normalize(&camdir, &camdir);
+	//	//############################
+	//	//LODがvisibleかどうかチェック
+	//	//############################
+	//	float lod_mindist = 0.0f;
+	//	float lod_maxdist = g_projfar;
+	//	switch (srclodno) {
+	//	case -1:
+	//		//LOD無し
+	//		lod_mindist = 0.0f;
+	//		lod_maxdist = g_projfar;
+	//		break;
+	//	case CHKINVIEW_LOD0:
+	//		lod_mindist = 0.0f;
+	//		if (srclodnum == 3) {//3段階LOD
+	//			lod_maxdist = g_projfar * g_lodrate3L[srclodno];
+	//		}
+	//		else {//2段階LOD
+	//			lod_maxdist = g_projfar * g_lodrate2L[srclodno];
+	//		}
+	//		break;
+	//	case CHKINVIEW_LOD1:
+	//	case CHKINVIEW_LOD2:
+	//		if (srclodnum == 3) {//3段階LOD
+	//			lod_mindist = g_projfar * g_lodrate3L[srclodno - 1];
+	//			lod_maxdist = g_projfar * g_lodrate3L[srclodno];
+	//		}
+	//		else {//2段階LOD
+	//			lod_mindist = g_projfar * g_lodrate2L[srclodno - 1];
+	//			lod_maxdist = g_projfar * g_lodrate2L[srclodno];
+	//		}
+	//		break;
+	//	default:
+	//		_ASSERT(0);
+	//		//LOD無し
+	//		lod_mindist = g_projnear;
+	//		lod_maxdist = g_projfar;
+	//		break;
+	//	}
+	//	bool lodinview;
+	//	if (srclodno >= 0) {
+	//		if ((dist_cam2obj < lod_maxdist) && (dist_cam2obj >= lod_mindist)) {
+	//			lodinview = true;
+	//		}
+	//		else {
+	//			lodinview = false;
+	//		}
+	//	}
+	//	else {
+	//		lodinview = true;
+	//	}
 
-		ChaVector3 cam2obj = tracenter - lightpos;
-		float dist_cam2obj = (float)ChaVector3LengthDbl(&cam2obj);
 
-		ChaVector3 backpos = lightpos - camdir * srcmb.r * CHKINVIEW_BACKPOSCOEF;//!!!!!!!!!!!
-		ChaVector3 back2obj = tracenter - backpos;
-		ChaVector3Normalize(&back2obj, &back2obj);
-		float dot = ChaVector3Dot(&camdir, &back2obj);
+	//	//##################
+	//	//LODがvisible && 
+	//	//##################
+	//	if (lodinview && (dot >= dotclip) &&
+	//		(dist_cam2obj < (g_projfar + srcmb.r))) {
+	//		SetVisible(true);
+	//	}
+	//	else {
+	//		SetVisible(false);
+	//	}
+	//	SetDistFromCamera(dist_cam2obj);//2024/01/19
 
-		float dotclip = (float)cos(g_shadowmap_fov[g_shadowmap_slotno]);
+	//}
 
-		float mindist = 0.0f;//g_shadowmap_near[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
-		float maxdist = g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
+	//if (GetVisible()) {
+	//	//#####################################################################
+	//	//視野内の場合には　シャドウマップがシャドウ射影範囲に入っているかどうかの判定をする
+	//	//#####################################################################
 
-		if ((dot >= dotclip) && 
-			(dist_cam2obj < (maxdist + srcmb.r)) && (dist_cam2obj >= mindist)) {
-			SetInShadow(true);
-		}
-		else {
-			SetInShadow(false);
-		}
-	}
-	else {
-		//#####################
-		//視野外は　シャドウ領域外
-		//#####################
+	//	if ((g_shadowmap_slotno < 0) || (g_shadowmap_slotno >= SHADOWSLOTNUM)) {
+	//		_ASSERT(0);
+	//		g_shadowmap_slotno = 0;
+	//	}
 
-		SetInShadow(false);
-	}
+	//	ChaVector3 lightpos;
+	//	ChaVector3 lighttarget;
+	//	if (g_cameraShadow) {
+	//		lightpos = ChaVector3(g_cameraShadow->GetPosition());
+	//		lighttarget = ChaVector3(g_cameraShadow->GetTarget());
+	//	}
+	//	else {
+	//		lightpos = g_camEye;
+	//		lighttarget = g_camtargetpos;
+	//	}
+
+	//	ChaVector3 camdir = lighttarget - lightpos;
+	//	ChaVector3Normalize(&camdir, &camdir);
+
+	//	ChaVector3 cam2obj = tracenter - lightpos;
+	//	float dist_cam2obj = (float)ChaVector3LengthDbl(&cam2obj);
+
+	//	ChaVector3 backpos = lightpos - camdir * srcmb.r * CHKINVIEW_BACKPOSCOEF;//!!!!!!!!!!!
+	//	ChaVector3 back2obj = tracenter - backpos;
+	//	ChaVector3Normalize(&back2obj, &back2obj);
+	//	float dot = ChaVector3Dot(&camdir, &back2obj);
+
+	//	float dotclip = (float)cos(g_shadowmap_fov[g_shadowmap_slotno]);
+
+	//	float mindist = 0.0f;//g_shadowmap_near[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
+	//	float maxdist = g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
+
+	//	if ((dot >= dotclip) && 
+	//		(dist_cam2obj < (maxdist + srcmb.r)) && (dist_cam2obj >= mindist)) {
+	//		SetInShadow(true);
+	//	}
+	//	else {
+	//		SetInShadow(false);
+	//	}
+	//}
+	//else {
+	//	//#####################
+	//	//視野外は　シャドウ領域外
+	//	//#####################
+
+	//	SetInShadow(false);
+	//}
 
 
 	return 0;

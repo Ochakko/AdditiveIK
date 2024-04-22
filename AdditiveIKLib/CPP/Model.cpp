@@ -19629,12 +19629,16 @@ int CModel::ChkInView(int refposindex)
 			cb.params1[3] = g_projnear;
 			cb.lodrate2L[0] = g_lodrate2L[0];
 			cb.lodrate2L[1] = g_lodrate2L[1];
-			cb.lodrate2L[2] = g_lodrate2L[2];
+			cb.lodrate2L[2] = 1.0f;
 			cb.lodrate2L[3] = 1.0f;
 			cb.lodrate3L[0] = g_lodrate3L[0];
 			cb.lodrate3L[1] = g_lodrate3L[1];
 			cb.lodrate3L[2] = g_lodrate3L[2];
 			cb.lodrate3L[3] = 1.0f;
+			cb.lodrate4L[0] = g_lodrate4L[0];
+			cb.lodrate4L[1] = g_lodrate4L[1];
+			cb.lodrate4L[2] = g_lodrate4L[2];
+			cb.lodrate4L[3] = g_lodrate4L[3];
 
 			ChaVector3 lightpos;
 			if (g_cameraShadow) {
@@ -19974,9 +19978,9 @@ double CModel::GetOpeFrame(bool calcslotflag)
 
 int CModel::SetLODNum()
 {
-	//################################################################
-	//LODが2Levelsなのか3Levelsなのかを調べて　LODGroupにLODNumをセットする
-	//################################################################
+	//#######################################################################
+	//LODが2Levelsなのか3Levelsなのか4Levelsを調べて　LODGroupにLODNumをセットする
+	//#######################################################################
 
 	map<int, CMQOObject*>::iterator itr;
 	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
@@ -19988,6 +19992,7 @@ int CModel::SetLODNum()
 
 			const char* plod1 = strstr(objname, "LOD1");
 			const char* plod2 = strstr(objname, "LOD2");
+			const char* plod3 = strstr(objname, "LOD3");//2024/04/22
 			if ((plod1 != 0) && ((plod1 - objname) >= 1)) {
 				size_t headlen = (size_t)(plod1 - objname - 1);
 				strncpy_s(headname, 256, objname, headlen);
@@ -20001,6 +20006,13 @@ int CModel::SetLODNum()
 				*(headname + headlen) = 0;
 
 				SetLODNum((const char*)headname, 3);
+			}
+			else if ((plod3 != 0) && ((plod3 - objname) >= 1)) {
+				size_t headlen = (size_t)(plod3 - objname - 1);
+				strncpy_s(headname, 256, objname, headlen);
+				*(headname + headlen) = 0;
+
+				SetLODNum((const char*)headname, 4);//2024/04/22
 			}
 		}
 	}

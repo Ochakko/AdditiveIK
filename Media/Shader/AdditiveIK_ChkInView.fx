@@ -40,6 +40,7 @@ cbuffer ChkInViewCb : register(b0)
     float4 params1; //[0]:BACKPOSCOEF, [1]:cos(g_fovy * 0.85), [2]:g_projfar, [3]:g_projnear
     float4 lodrate2L;
     float4 lodrate3L;
+    float4 lodrate4L;
     float4 shadowPos;
     float4 shadowparams1; //[0]:cos(shadowfov), [1]:shadowmaxdist(g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno])
     float4 frustumPlanes[6];
@@ -197,22 +198,48 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
         else if (srclodno == 0)
         {
             lod_mindist = 0.0f;
-            lod_maxdist = (srclodnum == 3) ? (params1.z * lodrate3L[srclodno]) : (params1.z * lodrate2L[srclodno]);
+            //lod_maxdist = (srclodnum == 3) ? (params1.z * lodrate3L[srclodno]) : (params1.z * lodrate2L[srclodno]);
+
+            if (srclodnum == 2)
+            {
+                //2段階LOD
+                lod_maxdist = params1.z * lodrate2L[srclodno];
+            }
+            else if (srclodnum == 3)
+            {
+                //3段階LOD
+                lod_maxdist = params1.z * lodrate3L[srclodno];
+
+            }
+            else
+            {
+                //4段階LOD
+                lod_maxdist = params1.z * lodrate4L[srclodno];
+            }         
         }
-        else if ((srclodno == 1) || (srclodno == 2))
+        else if ((srclodno >= 1) && (srclodno <= 3))
         {
-            lod_mindist = (srclodnum == 3) ? (params1.z * lodrate3L[srclodno - 1]) : (params1.z * lodrate2L[srclodno - 1]);
-            lod_maxdist = (srclodnum == 3) ? (params1.z * lodrate3L[srclodno]) : (params1.z * lodrate2L[srclodno]);
-            //if (srclodnum == 3)
-            //{ //3段階LOD
-            //    lod_mindist = params1.z * lodrate3L[srclodno - 1];
-            //    lod_maxdist = params1.z * lodrate3L[srclodno];
-            //}
-            //else
-            //{ //2段階LOD
-            //    lod_mindist = params1.z * lodrate2L[srclodno - 1];
-            //    lod_maxdist = params1.z * lodrate2L[srclodno];
-            //}
+            //lod_mindist = (srclodnum == 3) ? (params1.z * lodrate3L[srclodno - 1]) : (params1.z * lodrate2L[srclodno - 1]);
+            //lod_maxdist = (srclodnum == 3) ? (params1.z * lodrate3L[srclodno]) : (params1.z * lodrate2L[srclodno]);
+
+            if (srclodnum == 2)
+            {
+                //2段階LOD
+                lod_mindist = params1.z * lodrate2L[srclodno - 1];
+                lod_maxdist = params1.z * lodrate2L[srclodno];
+            }
+            else if (srclodnum == 3)
+            {
+                //3段階LOD
+                lod_mindist = params1.z * lodrate3L[srclodno - 1];
+                lod_maxdist = params1.z * lodrate3L[srclodno];
+            }
+            else
+            {
+                //4段階LOD
+                lod_mindist = params1.z * lodrate4L[srclodno - 1];
+                lod_maxdist = params1.z * lodrate4L[srclodno];                
+            }
         }
         else
         {
@@ -222,14 +249,9 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
         }
  
         int lodinview;
-        if ((srclodno >= 0) && (srclodno <= 2))
+        if ((srclodno >= 0) && (srclodno <= 3))
         {
             lodinview = ((dist_cam2obj < lod_maxdist) && (dist_cam2obj >= lod_mindist)) ? 1 : 0;
-        }
-        else if (srclodno >= 3)
-        {
-            //2024/04/20 ４段階LODの４段階目は現時点においては未対応　非表示に
-            lodinview = 0;
         }
         else
         {

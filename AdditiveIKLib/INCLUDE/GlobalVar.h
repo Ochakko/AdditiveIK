@@ -91,6 +91,7 @@ float g_rigmark_alpha = 0.75f;
 
 float g_lodrate2L[CHKINVIEW_LODMAX];
 float g_lodrate3L[CHKINVIEW_LODMAX];
+float g_lodrate4L[CHKINVIEW_LODMAX];
 
 
 float g_thdeg = 181.0f;
@@ -387,6 +388,7 @@ extern float g_rigmark_alpha;
 
 extern float g_lodrate2L[CHKINVIEW_LODMAX];
 extern float g_lodrate3L[CHKINVIEW_LODMAX];
+extern float g_lodrate4L[CHKINVIEW_LODMAX];
 
 
 extern float g_thdeg;
