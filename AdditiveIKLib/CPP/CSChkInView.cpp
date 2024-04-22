@@ -156,6 +156,9 @@ int CSChkInView::AddBoundary(CMQOObject* srcobj, MODELBOUND srcmb,
 		else if (strstr(pname, "LOD2") != 0) {
 			lodno = CHKINVIEW_LOD2;
 		}
+		else if (strstr(pname, "LOD3") != 0) {
+			lodno = CHKINVIEW_LOD3;//2024/04/20 ４段階LODは現時点では未対応　シェーダで非表示にする
+		}
 	}
 	else {
 		_ASSERT(0);

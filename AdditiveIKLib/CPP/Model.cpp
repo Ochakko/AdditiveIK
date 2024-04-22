@@ -1315,6 +1315,24 @@ _ASSERT(m_bonelist[0]);
 			}
 		}
 
+
+
+		if (GetVRoidJointName()) {
+			//2024/04/22 ボーンの軸としてBONEAXIS_BINDPOSEを指定することにより
+			//オイラーグラフの軸とIK回転の軸とボーンの軸が一致する
+			//VRoidの場合にはバインドポーズとしてボーン軸が設定されているのでBONEAXIS_BINDPOSEの方が使いやすい
+			//(Rigの軸指定の種類のNODE*とも一致するようになる)
+			g_boneaxis = BONEAXIS_BINDPOSE;
+		}
+		else {
+			//2024/04/22 ボーン軸としてBONEAXIS_CURRENTを指定すると
+			//RokDeBone2のようにバインドポーズとしてグローバル軸が設定されている場合に
+			//IK操作をボーン軸で行うことが可能
+			g_boneaxis = BONEAXIS_CURRENT;
+		}
+
+
+
 		m_rigideleminfo.clear();
 		m_impinfo.clear();
 

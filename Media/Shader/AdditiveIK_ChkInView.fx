@@ -222,9 +222,14 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
         }
  
         int lodinview;
-        if (srclodno >= 0)
+        if ((srclodno >= 0) && (srclodno <= 2))
         {
             lodinview = ((dist_cam2obj < lod_maxdist) && (dist_cam2obj >= lod_mindist)) ? 1 : 0;
+        }
+        else if (srclodno >= 3)
+        {
+            //2024/04/20 ４段階LODの４段階目は現時点においては未対応　非表示に
+            lodinview = 0;
         }
         else
         {
