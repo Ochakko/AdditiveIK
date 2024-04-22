@@ -124,6 +124,8 @@ public:
 
 	int CopyCSDeform();
 
+	int InitializeBoneAxis();
+
 private:
 	void InitParams();
 	void DestroyObjs();

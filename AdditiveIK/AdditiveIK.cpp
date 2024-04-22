@@ -6721,6 +6721,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				int subid = menuid - MENUOFFSET_BRUSHESCONTEXTMENU;
 				if (s_model->ExistCurrentMotion()) {
 					if (s_plugin && ((s_plugin + subid)->validflag == 1)) {
+
+						RollbackCurBoneNo();//2024/04/22 右クリックで初期化されてしまったジョイント選択を復元
+
 						g_motionbrush_method = (s_plugin + subid)->menuid;
 
 						if (s_editmotionflag < 0) {//IK中でないとき
@@ -19553,6 +19556,13 @@ int PostOpenChaFile()
 			SendMessage(limitratewnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 		}
 	}
+
+
+	if (s_chascene) {
+		//2024/04/22
+		s_chascene->InitializeBoneAxis();
+	}
+
 
 	return 0;
 }
