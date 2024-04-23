@@ -229,7 +229,7 @@ float g_initcuslk = 1e2;
 //float g_initcusak = 70.0f;
 //float g_initcusak = 0.5f;
 float g_initcusak = 0.10f;
-
+float g_akscale = 1.0f;//2024/04/23 全ての剛体の回転バネ定数に対するスケール
 
 //float g_l_dmp = 0.75f;
 //float g_a_dmp = 0.50f;
@@ -508,7 +508,7 @@ extern float g_initcuslk;
 //float g_initcuslk = 2000.0f;
 //float g_initcuslk = 100.0f;
 extern float g_initcusak;
-
+extern float g_akscale;//全ての剛体の回転バネ定数に対するスケール
 
 //float g_l_dmp = 0.75f;
 //float g_a_dmp = 0.50f;

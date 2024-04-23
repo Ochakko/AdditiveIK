@@ -3,22 +3,41 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/04/23
+　物理回転バネ定数全体をスケールするスライダーをDispAndLimitsプレートメニューに追加
+　　EditScaleスライダーはアプリ上部の常駐スライダーと冗長なので取り除いて、新たにAngleSpringScaleスライダーを追加　
+
+　ドキュメントに追記
+　　物理回転バネ定数全体スケールについての記述を追加
+　　Documents/TroubleShooting/WhyTheDispAndLimitsPlateMenuAlsoHasASliderForTheSameItem.docx
+
+　UpdateLog.txtの2024/04/22の軸の種類の説明を修正
+
+
+
+
 2024/04/22
 　プロジェクトファイル(*.cha)ファイルにDispAndLimitsレートメニューのBoneAxisを保存
-　　chaファイルにBoneAxisタグが存在しない場合(古いchaファイルの場合)、１つでもVRoidモデルがあればボーン軸としてBONEAXIS_BINDPOSEを設定
+　　chaファイルにBoneAxisタグが存在しない場合(古いchaファイルの場合)、１つでもVRoidモデルがあればボーン軸種類としてBONEAXIS_BINDPOSEを設定
 
-　　モデル読み込み後は、DispAndLimitsプレートメニューのAxisKindコンボボックスにて軸の種類を設定可能
+　　モデル読み込み後は、DispAndLimitsプレートメニューのAxisKindコンボボックスにてボーン軸の種類を設定可能
 
-　　BONEAXIS_BINDPOSEについて
+　　軸の種類BONEAXIS_BINDPOSEについて
 　　　VRoidやバインドポーズとしてボーンの向きが設定されているfbxファイル用
 　　　オイラーグラフの軸とIK回転の軸(マニピュレータ軸)とボーンの軸が一致する
 　　　Rigの軸指定の種類のNODE*とも一致するようになる
-　　BONEAXIS_CURRENTについて
+　　軸の種類BONEAXIS_CURRENTについて
 　　　RokDeBone2出力のfbxやバインドポーズとしてグローバル軸が設定されているfbxファイル用
 　　　IK操作をボーン軸で行うことが可能
 　　　しかしオイラーグラフの軸とマニピュレータ軸は一致しない
-　　オイラーグラフの軸は常にBONEAXIS_BINDPOSE(今まで通り)
+　　オイラーグラフの軸の種類は常にBONEAXIS_BINDPOSE(今まで通り)
 　　(今まではVRoid読み込み時にもBONEAXIS_CURRENTを指定していたので、オイラーグラフの軸とマニピュレータの軸が表示上異なっていた)
+
+　　追記
+　　　軸の種類の違いにより、マニピュレータ軸とグラフの軸が一致しないことがありますが、それは表現方法の違いであり同一の姿勢を示しています。
+　　　軸の種類の違いとは、どこから角度を測るかという違いであり、保持している元データとしては同一です。
+
+
 
 
 　４段階LODに対応

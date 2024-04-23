@@ -10734,6 +10734,7 @@ void CModel::SetRestDataReq( int gid, int reindex, CBone* srcbone, float rest, f
 	}
 }
 
+
 int CModel::SetAllKData( int gid, int reindex, int srclk, int srcak, float srccuslk, float srccusak )
 {
 	if(!GetTopBone()){

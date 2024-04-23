@@ -2074,7 +2074,7 @@ int ChaScene::CopyCSDeform()
 	return 0;
 }
 
-int ChaScene::InitializeBoneAxis()
+int ChaScene::InitializeBoneAxisKind()
 {
 	bool existvroid = false;
 	vector<MODELELEM>::iterator itrmodel;
@@ -2101,6 +2101,25 @@ int ChaScene::InitializeBoneAxis()
 		//RokDeBone2のようにバインドポーズとしてグローバル軸が設定されている場合に
 		//IK操作をボーン軸で行うことが可能
 		g_boneaxis = BONEAXIS_CURRENT;
+	}
+
+	return 0;
+}
+
+
+int ChaScene::ChangeAngleSpringScale()
+{
+
+	//2024/04/23
+	//全ての剛体の回転バネ定数に対するスケールをbulletphysicsに反映させるために
+	//CreateBtObjectを呼び出す
+
+	vector<MODELELEM>::iterator itrmodel;
+	for (itrmodel = m_modelindex.begin(); itrmodel != m_modelindex.end(); itrmodel++) {
+		CModel* curmodel = itrmodel->modelptr;
+		if (curmodel) {
+			curmodel->CreateBtObject(g_limitdegflag, 1);
+		}
 	}
 
 	return 0;

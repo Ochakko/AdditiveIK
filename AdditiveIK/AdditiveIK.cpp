@@ -1406,6 +1406,7 @@ static bool s_topslidersEditRateFlag = false;
 static bool s_topslidersSpeedFlag = false;
 static bool s_topslidersTopPosFlag = false;
 
+static bool s_changeAngleSpringScaleFlag = false;
 
 
 
@@ -3700,6 +3701,23 @@ void InitApp()
 	g_lodrate4L[CHKINVIEW_LOD2] = 0.5f;
 	g_lodrate4L[CHKINVIEW_LOD3] = 1.0f;
 
+
+	{
+		g_l_kval[0] = 1.0f;
+		g_l_kval[1] = powf(10.0f, 2.61f);
+		g_l_kval[2] = 2000.0f;
+		g_a_kval[0] = 0.1f;
+		g_a_kval[1] = powf(10.0f, 0.3f);
+		g_a_kval[2] = 70.0f;
+		g_initcuslk = 1e2;
+		g_initcusak = 0.10f;
+		g_l_dmp = 0.50f;
+		g_a_dmp = 0.50f;
+
+		g_akscale = 1.0f;//2024/04/23 全ての剛体の回転バネ定数に対するスケール
+	}
+
+
 	{
 		s_spritetex0 = 0;
 		s_spritetex1 = 0;
@@ -4320,6 +4338,7 @@ void InitApp()
 	s_topslidersEditRateFlag = false;
 	s_topslidersSpeedFlag = false;
 	s_topslidersTopPosFlag = false;
+	s_changeAngleSpringScaleFlag = false;
 
 
 	s_toonmqomaterial = nullptr;
@@ -19567,7 +19586,7 @@ int PostOpenChaFile()
 	if (s_chascene && 
 		((g_boneaxis < BONEAXIS_CURRENT) || (g_boneaxis > BONEAXIS_BINDPOSE))) {//g_boneaxisがchafileで設定されなかった場合
 		//2024/04/22
-		s_chascene->InitializeBoneAxis();
+		s_chascene->InitializeBoneAxisKind();
 	}
 
 
@@ -27044,10 +27063,10 @@ int DispParams2Dlg(HWND hDlgWnd)
 	//SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)700);
 	//SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
-	sliderpos = (int)(g_physicsmvrate * 10.0f);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)500);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+	sliderpos = (int)(g_akscale * 10.0f + 0.001f);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_AKSCALE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_AKSCALE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_AKSCALE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
 	sliderpos = (int)(g_bonemark_bright * 100.0f);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
@@ -27087,8 +27106,11 @@ int DispParams2Dlg(HWND hDlgWnd)
 	//swprintf_s(strdlg, 256, L"Speed %.2f", g_dspeed);
 	//SetDlgItemText(hDlgWnd, IDC_STATIC_SPEED, strdlg);
 
-	swprintf_s(strdlg, 256, L"EditRate %.1f", g_physicsmvrate);
-	SetDlgItemText(hDlgWnd, IDC_STATIC_EDITRATE, strdlg);
+	//swprintf_s(strdlg, 256, L"EditRate %.1f", g_physicsmvrate);
+	//SetDlgItemText(hDlgWnd, IDC_STATIC_EDITRATE, strdlg);
+
+	swprintf_s(strdlg, 256, L"AngleSpringScale %.1f", g_akscale);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_AKSCALE, strdlg);
 
 	swprintf_s(strdlg, 256, L"RefPosAlpha %d", g_refalpha);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_REFPOSALPHA, strdlg);
@@ -27329,19 +27351,17 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		//		s_topSlidersWnd->callRewrite();//再描画
 		//	}
 		//}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_EDITRATE), TBM_GETPOS, 0, 0);
-			g_physicsmvrate = (float)((double)cursliderpos / 10.0);
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_AKSCALE) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_AKSCALE), TBM_GETPOS, 0, 0);
+			g_akscale = (float)((double)cursliderpos / 10.0);
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"EditRate %.1f", g_physicsmvrate);
-			SetDlgItemText(hDlgWnd, IDC_STATIC_EDITRATE, strdlg);
-
-			if (s_topSlidersWnd && s_owpEditRateSlider) {
-				s_owpEditRateSlider->setValue(g_physicsmvrate, false);
-				s_topSlidersWnd->callRewrite();//再描画
+			swprintf_s(strdlg, 256, L"AngleSpringScale %.1f", g_akscale);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_AKSCALE, strdlg);
+			
+			if (LOWORD(wp) == SB_ENDSCROLL) {
+				s_changeAngleSpringScaleFlag = true;
 			}
-
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK) == (HWND)lp) {
 			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_GETPOS, 0, 0);
@@ -32582,6 +32602,12 @@ int OnFrameUtCheckBox()
 		//g_SampleUI.GetSlider(IDC_SL_UMTHREADS)->SetEnabled(true);//!!!!!!!!!
 	}
 
+	if (s_changeAngleSpringScaleFlag) {
+		if (s_chascene) {
+			s_chascene->ChangeAngleSpringScale();
+		}
+		s_changeAngleSpringScaleFlag = false;
+	}
 
 	if (s_utBrushRepeatsFlag) {//値が変わって　かつ　マウスアップのとき
 		//WCHAR sz[100] = { 0L };
@@ -33766,17 +33792,17 @@ int OnFrameToolWnd()
 			g_physicsmvrate = val;
 			s_topSlidersWnd->callRewrite();//再描画
 
-			if (s_guidlg[GUIDLG_DISP_AND_LIMITS] && 
-				GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_SLIDER_EDITRATE) && 
-				GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_STATIC_EDITRATE)) {
-				SendMessage(GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_SLIDER_EDITRATE), 
-					TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(int)((double)g_physicsmvrate * 10.0));
-
-				//text
-				WCHAR strdlg[256] = { 0L };
-				swprintf_s(strdlg, 256, L"EditRate %.1f", g_physicsmvrate);
-				SetDlgItemText(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_STATIC_EDITRATE, strdlg);
-			}
+			//if (s_guidlg[GUIDLG_DISP_AND_LIMITS] && 
+			//	GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_SLIDER_EDITRATE) && 
+			//	GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_STATIC_EDITRATE)) {
+			//	SendMessage(GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_SLIDER_EDITRATE), 
+			//		TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(int)((double)g_physicsmvrate * 10.0));
+			//
+			//	//text
+			//	WCHAR strdlg[256] = { 0L };
+			//	swprintf_s(strdlg, 256, L"EditRate %.1f", g_physicsmvrate);
+			//	SetDlgItemText(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_STATIC_EDITRATE, strdlg);
+			//}
 		}
 	}
 	if (s_topslidersSpeedFlag) {

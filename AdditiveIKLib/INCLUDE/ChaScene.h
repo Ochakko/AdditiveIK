@@ -124,7 +124,8 @@ public:
 
 	int CopyCSDeform();
 
-	int InitializeBoneAxis();
+	int InitializeBoneAxisKind();
+	int ChangeAngleSpringScale();
 
 private:
 	void InitParams();

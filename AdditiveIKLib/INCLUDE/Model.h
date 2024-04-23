@@ -865,7 +865,6 @@ public:
 
 	//int FillUpEmptyMotion(int motid);
 
-
 	int SetAllSphrateData(int gid, int rgdindex, float srcval);
 	int SetAllBoxzrateData(int gid, int rgdindex, float srcval);
 	int SetAllSkipflagData(int gid, int rgdindex, int srcval);
