@@ -9,9 +9,18 @@ https://github.com/Ochakko/AdditiveIK
 
 　ドキュメントに追記
 　　物理回転バネ定数全体スケールについての記述を追加
+　　設定画面のスクリーンショットを追加
 　　Documents/TroubleShooting/WhyTheDispAndLimitsPlateMenuAlsoHasASliderForTheSameItem.docx
 
 　UpdateLog.txtの2024/04/22の軸の種類の説明を修正
+
+　RigidParamsプレートメニューのForbidRot(回転禁止)設定も自前の制限で復活
+　　剛体は親ジョイントと子供ジョイントをつなぐ線分をベースに作成されますが、ForbidRot回転禁止は子供ジョイントに設定します.
+　　回転禁止にチェックが入っている剛体は、前のフレームの姿勢へと制限
+
+　自前の角度制限が動いたのでBulletPhysics側の角度制限はfree状態に設定
+
+　DispAndLimitsプレートメニューのAngleSpringScaleスライダーの値もプロジェクトファイル(*.cha)に保存
 
 
 

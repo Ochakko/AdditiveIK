@@ -152,6 +152,7 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 	CallF(Write2File("  <PlayingSpeed>%.3f</PlayingSpeed>\r\n", g_dspeed), return 1);
 	CallF(Write2File("  <PhysicalLimitScale>%.3f</PhysicalLimitScale>\r\n", g_physicalLimitScale), return 1);
 	CallF(Write2File("  <CameraDist>%.3f</CameraDist>\r\n", g_camdist), return 1);
+	CallF(Write2File("  <AKScale>%.3f</AKScale>\r\n", g_akscale), return 1);
 
 	CallF(Write2File("  <BoneAxis>%d</BoneAxis>\r\n", g_boneaxis), return 1);
 
@@ -196,7 +197,9 @@ int CChaFile::WriteFileInfo()
 	//version 1007 : 2024/04/17 1.0.0.16へ向けて  <EditRate>, <PlayingSpeed>, <PhysicalLimitScale>, <CameraDist>追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1007</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1008 : 2024/04/22 1.0.0.17へ向けて  <4L_LOD*>, <BoneAxis>追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1008</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1008</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1009 : 2024/04/23 1.0.0.17へ向けて  <AKScale>追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1009</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -660,6 +663,12 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	if (result == 0) {
 		getcameradist = true;//ReadCharaより後でセット
 	}
+	bool getakscale = false;
+	float tempakscale = (float)g_akscale;
+	result = Read_Float(&m_xmliobuf, "<AKScale>", "</AKScale>", &tempakscale);
+	if (result == 0) {
+		getakscale = true;//ReadCharaより後でセット
+	}
 
 	//bool getboneaxis = false;//getしなかった場合にもtempboneaxisをセットする
 	int tempboneaxis = -1;//BoneAxisタグが無かった場合には-1をセットしてAdditiveIK.cppのPostOpenChaFile()に処理を委ねる
@@ -745,7 +754,9 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	if (getcameradist) {
 		g_camdist = tempcameradist;
 	}
-
+	if (getakscale) {
+		g_akscale = tempakscale;
+	}
 
 	//BoneAxisタグが無かった場合にもtempboneaxis(-1)をセットしてAdditiveIK.cppのPostOpenChaFile()に処理を委ねる
 	g_boneaxis = tempboneaxis;

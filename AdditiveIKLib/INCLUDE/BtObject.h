@@ -1,4 +1,4 @@
-#ifndef BTOBJECTH
+ï»¿#ifndef BTOBJECTH
 #define BTOBJECTH
 
 //#include <d3dx9.h>
@@ -26,18 +26,18 @@ public:
 /**
  * @fn
  * CBtObject
- * @breaf CBtObject‚ÌƒRƒ“ƒXƒgƒ‰ƒNƒ^
- * @param (CBtObject* parbt) IN e‚ÌCBtObject‚Ö‚Ìƒ|ƒCƒ“ƒ^B
- * @param (btDynamicsWorld* btWorld) IN bullet‚ÌbtDynamicsWorld‚Ö‚Ìƒ|ƒCƒ“ƒ^B
- * @return ‚È‚µB
+ * @breaf CBtObjectã®ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+ * @param (CBtObject* parbt) IN è¦ªã®CBtObjectã¸ã®ãƒã‚¤ãƒ³ã‚¿ã€‚
+ * @param (btDynamicsWorld* btWorld) IN bulletã®btDynamicsWorldã¸ã®ãƒã‚¤ãƒ³ã‚¿ã€‚
+ * @return ãªã—ã€‚
  */
 	CBtObject( CBtObject* parbt, btDynamicsWorld* btWorld );
 
 /**
  * @fn
  * ~CBtObject
- * @breaf CBtObject‚ÌƒfƒXƒgƒ‰ƒNƒ^B
- * @return ‚È‚µB
+ * @breaf CBtObjectã®ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã€‚
+ * @return ãªã—ã€‚
  */
 	~CBtObject();
 
@@ -45,12 +45,12 @@ public:
 /**
  * @fn
  * CreateObject
- * @breaf bullet‚Ì„‘ÌƒIƒuƒWƒFƒNƒg‚ğì¬‚µİ’è‚·‚éB
- * @param (CBtObject* parbt) IN e‚ÌCBtObject‚Ö‚Ìƒ|ƒCƒ“ƒ^B
- * @param (CBone* parentbone) IN „‘Ì‚Ìe‘¤‚Ìƒ{[ƒ“‚Ì‚»‚Ì‚Ü‚½e‚Ìƒ{[ƒ“B
- * @param (CBone* curbone) IN „‘Ì‚Ìe‘¤‚Ìƒ{[ƒ“B
- * @param (CBone* childbone) IN „‘Ì‚Ìq‹Ÿ‘¤‚Ìƒ{[ƒ“B
- * @return ¬Œ÷‚µ‚½‚ç‚OB
+ * @breaf bulletã®å‰›ä½“ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ä½œæˆã—è¨­å®šã™ã‚‹ã€‚
+ * @param (CBtObject* parbt) IN è¦ªã®CBtObjectã¸ã®ãƒã‚¤ãƒ³ã‚¿ã€‚
+ * @param (CBone* parentbone) IN å‰›ä½“ã®è¦ªå´ã®ãƒœãƒ¼ãƒ³ã®ãã®ã¾ãŸè¦ªã®ãƒœãƒ¼ãƒ³ã€‚
+ * @param (CBone* curbone) IN å‰›ä½“ã®è¦ªå´ã®ãƒœãƒ¼ãƒ³ã€‚
+ * @param (CBone* childbone) IN å‰›ä½“ã®å­ä¾›å´ã®ãƒœãƒ¼ãƒ³ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
  */
 	int CreateObject(bool limitdegflag, int srcmotid, double srcframe, 
 		CBtObject* parbt, CBone* parentbone, CBone* curbone, CBone* childbone);
@@ -58,8 +58,8 @@ public:
 /**
  * @fn
  * CreateBtConstraint
- * @breaf ‚±‚Ì„‘Ì‚ÆÚ‘±‚·‚é„‘Ì‚Æ‚ÌŠÔ‚ÌƒRƒ“ƒXƒgƒŒƒCƒ“ƒg‚ğì¬‚·‚éB
- * @return ¬Œ÷‚µ‚½‚ç‚OB
+ * @breaf ã“ã®å‰›ä½“ã¨æ¥ç¶šã™ã‚‹å‰›ä½“ã¨ã®é–“ã®ã‚³ãƒ³ã‚¹ãƒˆãƒ¬ã‚¤ãƒ³ãƒˆã‚’ä½œæˆã™ã‚‹ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
  */
 	int CreateBtConstraint(bool limitdegflag);
 
@@ -67,8 +67,8 @@ public:
 /**
  * @fn
  * SetBtMotion
- * @breaf „‘ÌƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚Ìs—ñ‚©‚çƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ““K—pŒã‚Ìs—ñ‚ğŒvZ‚·‚éB
- * @return ¬Œ÷‚µ‚½‚ç‚OB
+ * @breaf å‰›ä½“ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ã®è¡Œåˆ—ã‹ã‚‰ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³é©ç”¨å¾Œã®è¡Œåˆ—ã‚’è¨ˆç®—ã™ã‚‹ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
  */
 	int SetBtMotion(bool limitdegflag, ChaMatrix curtraanim);
 
@@ -79,9 +79,9 @@ public:
 /**
  * @fn
  * Motion2Bt
- * @breaf „‘ÌƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚Ì‚½‚ß‚Ìİ’è‚ğ‚·‚éBŠù‘¶ƒ‚[ƒVƒ‡ƒ“‚©‚ç‚Ì•Ï‰»•ª‚ğƒXƒ^[ƒg‚Ìs—ñ‚ÉŠ|‚¯‚éB
- * @return ¬Œ÷‚µ‚½‚ç‚OB
- * @detail Motion2Bt‚ğŒÄ‚ñ‚Å‚©‚çSetBtMotion‚ğŒÄ‚ÔB
+ * @breaf å‰›ä½“ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ã®ãŸã‚ã®è¨­å®šã‚’ã™ã‚‹ã€‚æ—¢å­˜ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ã‹ã‚‰ã®å¤‰åŒ–åˆ†ã‚’ã‚¹ã‚¿ãƒ¼ãƒˆæ™‚ã®è¡Œåˆ—ã«æ›ã‘ã‚‹ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
+ * @detail Motion2Btã‚’å‘¼ã‚“ã§ã‹ã‚‰SetBtMotionã‚’å‘¼ã¶ã€‚
  */
 	int Motion2Bt(CModel* srcmodel, int srcmotid, double srcframe);
 
@@ -92,10 +92,10 @@ public:
 /**
  * @fn
  * AddChild
- * @breaf „‘Ì‚ÌŠK‘w\‘¢‚ğİ’è‚·‚éB
- * @param (CBtObject* addbt) IN q‹Ÿ‚É‚·‚éCBtObject‚Ö‚Ìƒ|ƒCƒ“ƒ^B
- * @return ¬Œ÷‚µ‚½‚ç‚OB
- * @detail q‹Ÿ‚Ì”z—ñ‚É‰Á‚¦‚é‚¾‚¯Bbro‚Í–³‚¢B
+ * @breaf å‰›ä½“ã®éšå±¤æ§‹é€ ã‚’è¨­å®šã™ã‚‹ã€‚
+ * @param (CBtObject* addbt) IN å­ä¾›ã«ã™ã‚‹CBtObjectã¸ã®ãƒã‚¤ãƒ³ã‚¿ã€‚
+ * @return æˆåŠŸã—ãŸã‚‰ï¼ã€‚
+ * @detail å­ä¾›ã®é…åˆ—ã«åŠ ãˆã‚‹ã ã‘ã€‚broã¯ç„¡ã„ã€‚
  */
 	int AddChild(CBtObject* addbt);
 
@@ -114,27 +114,27 @@ private:
 /**
  * @fn
  * InitParams
- * @breaf ƒƒ“ƒo‚ğ‰Šú‰»‚·‚éB
- * @return ‚O‚ğ•Ô‚·B
+ * @breaf ãƒ¡ãƒ³ãƒã‚’åˆæœŸåŒ–ã™ã‚‹ã€‚
+ * @return ï¼ã‚’è¿”ã™ã€‚
  */
 	int InitParams();
 
 /**
  * @fn
  * DestroyObjs
- * @breaf ƒAƒƒP[ƒg‚µ‚½ƒƒ‚ƒŠ‚ğŠJ•ú‚·‚éB
- * @return ‚O‚ğ•Ô‚·B
+ * @breaf ã‚¢ãƒ­ã‚±ãƒ¼ãƒˆã—ãŸãƒ¡ãƒ¢ãƒªã‚’é–‹æ”¾ã™ã‚‹ã€‚
+ * @return ï¼ã‚’è¿”ã™ã€‚
  */
 	int DestroyObjs();
 
 /**
  * @fn
  * localCreateRigidBody
- * @breaf bullet‚ÌRigidBody‚ğì¬‚·‚éBCreateObject‚©‚çŒÄ‚Î‚ê‚éB
- * @param (CRigidElem* curre) IN „‘Ìİ’èƒpƒ‰ƒ[ƒ^ƒNƒ‰ƒXCRigidElem‚Ö‚Ìƒ|ƒCƒ“ƒ^B
- * @param (const btTransform& startTransform) IN „‘Ì‚ğ‰ŠúˆÊ’u‚Éİ’è‚·‚é‚½‚ß‚Ì•ÏŠ·s—ñB
- * @param (btCollisionShape* shape) IN „‘Ì‚Ì‚ ‚½‚è”»’è—pƒIƒuƒWƒFƒNƒgB
- * @return ì¬‚µ‚½btRigidBody‚Ö‚Ìƒ|ƒCƒ“ƒ^B
+ * @breaf bulletã®RigidBodyã‚’ä½œæˆã™ã‚‹ã€‚CreateObjectã‹ã‚‰å‘¼ã°ã‚Œã‚‹ã€‚
+ * @param (CRigidElem* curre) IN å‰›ä½“è¨­å®šãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚¯ãƒ©ã‚¹CRigidElemã¸ã®ãƒã‚¤ãƒ³ã‚¿ã€‚
+ * @param (const btTransform& startTransform) IN å‰›ä½“ã‚’åˆæœŸä½ç½®ã«è¨­å®šã™ã‚‹ãŸã‚ã®å¤‰æ›è¡Œåˆ—ã€‚
+ * @param (btCollisionShape* shape) IN å‰›ä½“ã®ã‚ãŸã‚Šåˆ¤å®šç”¨ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã€‚
+ * @return ä½œæˆã—ãŸbtRigidBodyã¸ã®ãƒã‚¤ãƒ³ã‚¿ã€‚
  */
 	btRigidBody* localCreateRigidBody( CRigidElem* curre, const btTransform& startTransform, btCollisionShape* shape, btVector3 localInertia = btVector3(0.0, 0.0, 0.0));
 
@@ -143,13 +143,13 @@ private:
 /**
  * @fn
  * CalcConstraintTransform
- * @breaf ƒRƒ“ƒXƒgƒŒƒCƒ“ƒg‚ğ‰ŠúˆÊ’u‚É’u‚­‚½‚ß‚Ì•ÏŠ·s—ñ‚ğŒvZ‚·‚éB
- * @param (int chilflag) IN „‘Ì‚Ìe‘¤‚Ìê‡‚Í‚OAq‹Ÿ‘¤‚Ìê‡‚Í‚PD
- * @param (CRigidElem* curre) IN „‘Ìƒpƒ‰ƒ[ƒ^B
- * @param (CBtObject* curbto) IN ©•ª©gA‚Ü‚½‚Íq‹Ÿ‘¤‚Ì„‘ÌƒIƒuƒWƒFƒNƒgB
- * @param (btTransform& dstmat) OUT •ÏŠ·s—ñB
- * @return –ß‚è’l‚Ìà–¾
- * @detail e‘¤‚ÌƒRƒ“ƒXƒgƒŒƒCƒ“ƒg‚Æq‹Ÿ‘¤‚ÌƒRƒ“ƒXƒgƒŒƒCƒ“ƒg‚Æ•ÊX‚É—¼•ûŒÄ‚Ño‚·B
+ * @breaf ã‚³ãƒ³ã‚¹ãƒˆãƒ¬ã‚¤ãƒ³ãƒˆã‚’åˆæœŸä½ç½®ã«ç½®ããŸã‚ã®å¤‰æ›è¡Œåˆ—ã‚’è¨ˆç®—ã™ã‚‹ã€‚
+ * @param (int chilflag) IN å‰›ä½“ã®è¦ªå´ã®å ´åˆã¯ï¼ã€å­ä¾›å´ã®å ´åˆã¯ï¼‘ï¼
+ * @param (CRigidElem* curre) IN å‰›ä½“ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã€‚
+ * @param (CBtObject* curbto) IN è‡ªåˆ†è‡ªèº«ã€ã¾ãŸã¯å­ä¾›å´ã®å‰›ä½“ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã€‚
+ * @param (btTransform& dstmat) OUT å¤‰æ›è¡Œåˆ—ã€‚
+ * @return æˆ»ã‚Šå€¤ã®èª¬æ˜
+ * @detail è¦ªå´ã®ã‚³ãƒ³ã‚¹ãƒˆãƒ¬ã‚¤ãƒ³ãƒˆã¨å­ä¾›å´ã®ã‚³ãƒ³ã‚¹ãƒˆãƒ¬ã‚¤ãƒ³ãƒˆã¨åˆ¥ã€…ã«ä¸¡æ–¹å‘¼ã³å‡ºã™ã€‚
  */
 	int CalcConstraintTransform( int chilflag, CRigidElem* curre, CBtObject* curbto, btTransform& dstmat, int setstartflag = 1 );
 
@@ -229,7 +229,7 @@ public: //accesser
 
 
 	btMatrix3x3 GetFirstTransformMat(){
-		return 	m_firstTransformMat;//bto->GetRigidBody()‚ÌCreateBtObject‚ÌWorldTransform->getBasis
+		return 	m_firstTransformMat;//bto->GetRigidBody()ã®CreateBtObjectæ™‚ã®WorldTransform->getBasis
 	};
 	ChaMatrix GetFirstTransformMatX(){
 		return m_firstTransformMatX;
@@ -276,8 +276,8 @@ public: //accesser
 	};
 
 	btGeneric6DofSpringConstraint* FindConstraint(CBone* srcchildbone, CBone* srcchildendbone){
-		//ƒRƒ“ƒXƒgƒŒƒCƒ“ƒgs—ñ‚Íq‹Ÿ‚ÌBtObject‚Ìm_bone‚Æm_endbone‚ÌƒxƒNƒgƒ‹‚ÉˆË‘¶‚µ‚Ä‚¢‚éB
-		//‚Â‚Ü‚èƒRƒ“ƒXƒgƒŒƒCƒ“ƒg‚ğæ“¾‚·‚éê‡‚Í‚Ü‚¸q‹ŸBto‚ğ‚Á‚Ä‚¢‚éƒNƒ‰ƒX(this)‚ÉƒAƒNƒZƒX‚µ‚ÄAChildBto‚Ìm_bone‚Æm_endbone‚É‘Š“–‚·‚éƒ{[ƒ“‚ğw’è‚µ‚Äæ“¾‚·‚éB
+		//ã‚³ãƒ³ã‚¹ãƒˆãƒ¬ã‚¤ãƒ³ãƒˆè¡Œåˆ—ã¯å­ä¾›ã®BtObjectã®m_boneã¨m_endboneã®ãƒ™ã‚¯ãƒˆãƒ«ã«ä¾å­˜ã—ã¦ã„ã‚‹ã€‚
+		//ã¤ã¾ã‚Šã‚³ãƒ³ã‚¹ãƒˆãƒ¬ã‚¤ãƒ³ãƒˆã‚’å–å¾—ã™ã‚‹å ´åˆã¯ã¾ãšå­ä¾›Btoã‚’æŒã£ã¦ã„ã‚‹ã‚¯ãƒ©ã‚¹(this)ã«ã‚¢ã‚¯ã‚»ã‚¹ã—ã¦ã€ChildBtoã®m_boneã¨m_endboneã«ç›¸å½“ã™ã‚‹ãƒœãƒ¼ãƒ³ã‚’æŒ‡å®šã—ã¦å–å¾—ã™ã‚‹ã€‚
 
 		int num = GetConstraintSize();
 		int conno;
@@ -305,47 +305,47 @@ private:
 	int m_topflag;
 	float m_boneleng;
 
-	ChaMatrix m_transmat;//Y²•½s‚È„‘Ì‚ğƒ{[ƒ“‚É‡‚í‚¹‚é‚½‚ß‚Ì•ÏŠ·s—ñB
-	ChaMatrix m_par2cen;//parent to center‚ÌƒxƒNƒgƒ‹B
-	ChaMatrix m_cen2parY;//center to parent‚ÌƒxƒNƒgƒ‹B„‘Ì‚Ì‰Šúó‘Ô‚ªY²‚É•½s‚Æ‰¼’èB
-	//ChaMatrix m_xworld;//bullet‚Ì„‘Ì‚Éİ’è‚³‚ê‚½•ÏŠ·s—ñB
+	ChaMatrix m_transmat;//Yè»¸å¹³è¡Œãªå‰›ä½“ã‚’ãƒœãƒ¼ãƒ³ã«åˆã‚ã›ã‚‹ãŸã‚ã®å¤‰æ›è¡Œåˆ—ã€‚
+	ChaMatrix m_par2cen;//parent to centerã®ãƒ™ã‚¯ãƒˆãƒ«ã€‚
+	ChaMatrix m_cen2parY;//center to parentã®ãƒ™ã‚¯ãƒˆãƒ«ã€‚å‰›ä½“ã®åˆæœŸçŠ¶æ…‹ãŒYè»¸ã«å¹³è¡Œã¨ä»®å®šã€‚
+	//ChaMatrix m_xworld;//bulletã®å‰›ä½“ã«è¨­å®šã•ã‚ŒãŸå¤‰æ›è¡Œåˆ—ã€‚
 
-	CBone* m_bone;//„‘Ì‚Ìe‘¤‚Ìƒ{[ƒ“
-	CBone* m_parentbone;//m_bone‚Ìe‚Ìƒ{[ƒ“
-	CBone* m_endbone;//„‘Ì‚Ìq‹Ÿ‘¤‚Ìƒ{[ƒ“
+	CBone* m_bone;//å‰›ä½“ã®è¦ªå´ã®ãƒœãƒ¼ãƒ³
+	CBone* m_parentbone;//m_boneã®è¦ªã®ãƒœãƒ¼ãƒ³
+	CBone* m_endbone;//å‰›ä½“ã®å­ä¾›å´ã®ãƒœãƒ¼ãƒ³
 
 
-	//btCollisionShape* m_colshape;//bullet‚Ì‚ ‚½‚è”»’èŒ`óƒf[ƒ^B
+	//btCollisionShape* m_colshape;//bulletã®ã‚ãŸã‚Šåˆ¤å®šå½¢çŠ¶ãƒ‡ãƒ¼ã‚¿ã€‚
 	btCompoundShape* m_colshape;
-	btRigidBody* m_rigidbody;//ƒuƒŒƒbƒg‚Ì„‘Ìƒf[ƒ^B	
-	std::vector<CONSTRAINTELEM> m_constraint;//this‚Æq‹Ÿ‚ÌBtObject‚ğ‚Â‚È‚®ƒRƒ“ƒXƒgƒŒƒCƒ“ƒg‚ÌvectorB
+	btRigidBody* m_rigidbody;//ãƒ–ãƒ¬ãƒƒãƒˆã®å‰›ä½“ãƒ‡ãƒ¼ã‚¿ã€‚	
+	std::vector<CONSTRAINTELEM> m_constraint;//thisã¨å­ä¾›ã®BtObjectã‚’ã¤ãªãã‚³ãƒ³ã‚¹ãƒˆãƒ¬ã‚¤ãƒ³ãƒˆã®vectorã€‚
 	
-	btCollisionShape* m_gz_colshape;//bullet‚Ì‚ ‚½‚è”»’èŒ`óƒf[ƒ^B
-	btRigidBody* m_gz_rigidbody;//ƒuƒŒƒbƒg‚Ì„‘Ìƒf[ƒ^B	
-	std::vector<CONSTRAINTELEM> m_gz_vecconstraint;//this‚Æq‹Ÿ‚ÌBtObject‚Æ¿—Êƒ[ƒ„‘Ì‚ğ‚Â‚È‚®ƒRƒ“ƒXƒgƒŒƒCƒ“ƒg‚ÌvectorB
+	btCollisionShape* m_gz_colshape;//bulletã®ã‚ãŸã‚Šåˆ¤å®šå½¢çŠ¶ãƒ‡ãƒ¼ã‚¿ã€‚
+	btRigidBody* m_gz_rigidbody;//ãƒ–ãƒ¬ãƒƒãƒˆã®å‰›ä½“ãƒ‡ãƒ¼ã‚¿ã€‚	
+	std::vector<CONSTRAINTELEM> m_gz_vecconstraint;//thisã¨å­ä¾›ã®BtObjectã¨è³ªé‡ã‚¼ãƒ­å‰›ä½“ã‚’ã¤ãªãã‚³ãƒ³ã‚¹ãƒˆãƒ¬ã‚¤ãƒ³ãƒˆã®vectorã€‚
 
 
 
-	CBtObject* m_parbt;//e‚ÌCBtObject
-	std::vector<CBtObject*> m_chilbt;//q‹Ÿ‚ÌCBtObject
+	CBtObject* m_parbt;//è¦ªã®CBtObject
+	std::vector<CBtObject*> m_chilbt;//å­ä¾›ã®CBtObject
 
-	float m_constzrad;//Constraint‚Ì²‚ÌŒX‚«(Z²)
-	int m_connectflag;//bunki„‘Ì‚Æ“¯ˆÊ’u‚Ì„‘Ì‚ğ‚Â‚È‚¢‚¾‚©‚Ç‚¤‚©‚Ìƒtƒ‰ƒOB
+	float m_constzrad;//Constraintã®è»¸ã®å‚¾ã(Zè»¸)
+	int m_connectflag;//bunkiå‰›ä½“ã¨åŒä½ç½®ã®å‰›ä½“ã‚’ã¤ãªã„ã ã‹ã©ã†ã‹ã®ãƒ•ãƒ©ã‚°ã€‚
 
-	btVector3 m_curpivot;//„‘Ì‚Ìe‘¤‚Ìx“_
-	btVector3 m_chilpivot;//„‘Ì‚Ìq‹Ÿ‘¤‚Ìx“_
+	btVector3 m_curpivot;//å‰›ä½“ã®è¦ªå´ã®æ”¯ç‚¹
+	btVector3 m_chilpivot;//å‰›ä½“ã®å­ä¾›å´ã®æ”¯ç‚¹
 
-	btTransform m_FrameA;//„‘Ìİ’è‚ÌA‘¤•ÏŠ·s—ñB
-	btTransform m_FrameB;//„‘Ìİ’è‚ÌB‘¤•ÏŠ·s—ñB
+	btTransform m_FrameA;//å‰›ä½“è¨­å®šæ™‚ã®Aå´å¤‰æ›è¡Œåˆ—ã€‚
+	btTransform m_FrameB;//å‰›ä½“è¨­å®šæ™‚ã®Bå´å¤‰æ›è¡Œåˆ—ã€‚
 
-	btMatrix3x3 m_firstTransformMat;//bto->GetRigidBody()‚ÌCreateBtObject‚ÌWorldTransform->getBasis
+	btMatrix3x3 m_firstTransformMat;//bto->GetRigidBody()ã®CreateBtObjectæ™‚ã®WorldTransform->getBasis
 	ChaMatrix m_firstTransformMatX;
 	btTransform m_firstTransform;
 
 
-	ChaVector3 m_btpos;//Motion2Bt‚ÅŒvZ‚µ‚½„‘Ì‚ÌˆÊ’u
+	ChaVector3 m_btpos;//Motion2Btã§è¨ˆç®—ã—ãŸå‰›ä½“ã®ä½ç½®
 
-	CQuaternion m_btq;//CreateObject‚Åİ’è‚µ‚½„‘Ì‚Ì‰Šú‚ÌŒü‚«
+	CQuaternion m_btq;//CreateObjectã§è¨­å®šã—ãŸå‰›ä½“ã®åˆæœŸã®å‘ã
 };
 
 

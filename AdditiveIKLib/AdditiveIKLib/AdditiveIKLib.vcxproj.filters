@@ -60,9 +60,6 @@
     <ClCompile Include="..\CPP\ThreadingUpdateTimeline.cpp" />
     <ClCompile Include="..\CPP\UndoMotion.cpp" />
     <ClCompile Include="..\CPP\XMLIO.cpp" />
-    <ClCompile Include="..\CPP\BtObject.cpp">
-      <Filter>BPHeaders</Filter>
-    </ClCompile>
     <ClCompile Include="..\BTSRC\clew\clew.c">
       <Filter>BPHeaders</Filter>
     </ClCompile>
@@ -77,6 +74,7 @@
     <ClCompile Include="..\CPP\DofParamsFile.cpp" />
     <ClCompile Include="..\CPP\CSDeform.cpp" />
     <ClCompile Include="..\CPP\CSChkInView.cpp" />
+    <ClCompile Include="..\CPP\BtObject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\BTSRC\BulletCollision\CollisionDispatch\SphereTriangleDetector.h" />
@@ -701,9 +699,6 @@
     <ClInclude Include="..\BTSRC\BulletDynamics\ConstraintSolver\btNNCGConstraintSolver.h">
       <Filter>BPHeaders</Filter>
     </ClInclude>
-    <ClInclude Include="..\INCLUDE\BtObject.h">
-      <Filter>BPHeaders</Filter>
-    </ClInclude>
     <ClInclude Include="..\BTSRC\BulletCollision\CollisionShapes\btOptimizedBvh.h">
       <Filter>BPHeaders</Filter>
     </ClInclude>
@@ -1045,6 +1040,7 @@
     <ClInclude Include="..\INCLUDE\DofParamsFile.h" />
     <ClInclude Include="..\INCLUDE\CSDeform.h" />
     <ClInclude Include="..\INCLUDE\CSChkInView.h" />
+    <ClInclude Include="..\INCLUDE\BtObject.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\BTSRC\BulletInverseDynamics\premake4.lua">
