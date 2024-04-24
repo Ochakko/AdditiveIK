@@ -172,7 +172,7 @@ enum {//２段目プレートメニュー行の種類
 enum {//１段目のプレート種類
 	SPGUISW_CAMERA_AND_IK,
 	SPGUISW_DISP_AND_LIMITS,
-	SPGUISW_BRUSHPARAMS,
+	//SPGUISW_BRUSHPARAMS,
 	SPGUISW_BULLETPHYSICS,
 	SPGUISW_PROJ_AND_LOD,
 	SPGUISWNUM
@@ -182,7 +182,7 @@ enum {//１段目のプレート種類
 enum {//１段目のメニュープッシュで出る右ペインダイアログの種類
 	//DLG_CAMERA_AND_IK,//<--ダイアログではなく画面上スプライト
 	GUIDLG_DISP_AND_LIMITS,
-	GUIDLG_BRUSHPARAMS,
+	//GUIDLG_BRUSHPARAMS,
 	GUIDLG_BULLETPHYSICS,
 	GUIDLG_PROJ_AND_LOD,
 	GUIDLGNUM
@@ -1076,8 +1076,13 @@ static OWP_Separator* s_topSlidersSeparator1 = 0;
 static OWP_Separator* s_topSlidersSeparator2 = 0;
 static OWP_Slider* s_owpEditRateSlider = 0;
 static OWP_Slider* s_owpSpeedSlider = 0;
-static OWP_Slider* s_owpTopPosSlider = 0;
+//static OWP_Slider* s_owpTopPosSlider = 0;
 //static OWP_Label* s_mainmenulabel = 0;
+static OWP_Separator* s_topSlidersSeparator3 = 0;
+static OWP_Separator* s_topSlidersSeparator4 = 0;
+static OWP_Slider* s_owpBrushRepeatsSlider = 0;
+static OWP_CheckBoxA* s_owpBrushMirrorU = 0;
+static OWP_CheckBoxA* s_owpBrushMirrorV = 0;
 
 
 static OrgWindow* s_placefolderWnd = 0;
@@ -1091,7 +1096,8 @@ static OrgWindow* s_placefolderWnd = 0;
 //#define SHORTCUTTEXTNUM	50
 //#define SHORTCUTTEXTNUM	52
 //#define SHORTCUTTEXTNUM	46
-#define SHORTCUTTEXTNUM	49
+//#define SHORTCUTTEXTNUM	49
+#define SHORTCUTTEXTNUM	50
 static OWP_Label* s_shortcuttext[SHORTCUTTEXTNUM];
 
 
@@ -1350,6 +1356,7 @@ static bool s_undersymcopyFlag = false;
 static bool s_cutFlag = false;			// カットフラグ
 static bool s_pasteFlag = false;			// ペーストフラグ
 static bool s_cursorFlag = false;			// カーソル移動フラグ
+static bool s_LTimelineApplyFrameFlag = false;
 static bool s_selectFlag = false;			// キー選択フラグ
 static bool s_keyShiftFlag = false;		// キー移動フラグ
 static bool s_deleteFlag = false;		// キー削除フラグ
@@ -1405,8 +1412,13 @@ static bool s_EcursorFlag = false;			// カーソル移動フラグ
 static bool s_topslidersEditRateFlag = false;
 static bool s_topslidersSpeedFlag = false;
 static bool s_topslidersTopPosFlag = false;
+static bool s_topslidersBrushRepeatsFlag = false;
+static bool s_topslidersBrushMirrorUFlag = false;
+static bool s_topslidersBrushMirrorVFlag = false;
+
 
 static bool s_changeAngleSpringScaleFlag = false;
+
 
 
 
@@ -2110,7 +2122,7 @@ static void ChangeToNextPlateMenuPlate(int srcmenukind, int srcmenuno);
 static void GUISetVisible(int srcplateno);
 static void GUISetVisible_CameraAndIK();
 static void GUISetVisible_DispAndLimits();
-static void GUISetVisible_BrushParams();
+//static void GUISetVisible_BrushParams();
 static void GUISetVisible_Bullet();
 static void GUISetVisible_LOD();
 static void GUISetVisible_AimBar();
@@ -2118,7 +2130,7 @@ static void GUIDispSetVisible(int srcplateno);
 
 static void ShowLightsWnd(bool srcflag);
 static void ShowGUIDlgDispParams(bool srcflag);
-static void ShowGUIDlgBrushes(bool srcflag);
+//static void ShowGUIDlgBrushes(bool srcflag);
 static void ShowGUIDlgBullet(bool srcflag);
 static void ShowGUIDlgLOD(bool srcflag);
 static void CloseAllRightPainWindow();
@@ -2318,6 +2330,7 @@ static int DestroyRigidWnd();
 static void InitRigidWnd();
 static int CreateSideMenuWnd();
 static int CreateTopSlidersWnd();
+static int Params2TopSlidersWnd();
 static int CreateImpulseWnd();
 static int CreateGPlaneWnd();
 static int CreateToolWnd();
@@ -2345,7 +2358,7 @@ static int ConvPolarCoord2Dir(float srcxzdeg, float srcydeg, float* dstdirx, flo
 
 static int CreateGUIDlgDispParams();
 static int DispParams2Dlg(HWND hDlgWnd);
-static int CreateGUIDlgBrushes();
+//static int CreateGUIDlgBrushes();
 static int Brushes2Dlg(HWND hDlgWnd);
 static int CreateGUIDlgBullet();
 static int CreateGUIDlgLOD();
@@ -3276,7 +3289,7 @@ INT WINAPI wWinMain(
 
 	CreateLightsWnd();
 	CreateGUIDlgDispParams();
-	CreateGUIDlgBrushes();
+	//CreateGUIDlgBrushes();
 	CreateGUIDlgBullet();
 	CreateGUIDlgLOD();
 
@@ -4286,6 +4299,7 @@ void InitApp()
 	s_cutFlag = false;			// カットフラグ
 	s_pasteFlag = false;			// ペーストフラグ
 	s_cursorFlag = false;			// カーソル移動フラグ
+	s_LTimelineApplyFrameFlag = false;
 	s_selectFlag = false;			// キー選択フラグ
 	s_keyShiftFlag = false;		// キー移動フラグ
 	s_deleteFlag = false;		// キー削除フラグ
@@ -4338,7 +4352,11 @@ void InitApp()
 	s_topslidersEditRateFlag = false;
 	s_topslidersSpeedFlag = false;
 	s_topslidersTopPosFlag = false;
+	s_topslidersBrushRepeatsFlag = false;
+	s_topslidersBrushMirrorUFlag = false;
+	s_topslidersBrushMirrorVFlag = false;
 	s_changeAngleSpringScaleFlag = false;
+
 
 
 	s_toonmqomaterial = nullptr;
@@ -4652,8 +4670,14 @@ void InitApp()
 	s_topSlidersSeparator2 = 0;
 	s_owpEditRateSlider = 0;
 	s_owpSpeedSlider = 0;
-	s_owpTopPosSlider = 0;
+	//s_owpTopPosSlider = 0;
 	//s_mainmenulabel = 0;
+	s_topSlidersSeparator3 = 0;
+	s_topSlidersSeparator4 = 0;
+	s_owpBrushRepeatsSlider = 0;
+	s_owpBrushMirrorU = 0;
+	s_owpBrushMirrorV = 0;
+
 
 	s_toolWnd = 0;
 	s_toolSeparator = 0;
@@ -5483,10 +5507,10 @@ void OnDestroyDevice()
 		delete s_owpSpeedSlider;
 		s_owpSpeedSlider = 0;
 	}
-	if (s_owpTopPosSlider) {
-		delete s_owpTopPosSlider;
-		s_owpTopPosSlider = 0;
-	}
+	//if (s_owpTopPosSlider) {
+	//	delete s_owpTopPosSlider;
+	//	s_owpTopPosSlider = 0;
+	//}
 	if (s_topSlidersSeparator1) {
 		delete s_topSlidersSeparator1;
 		s_topSlidersSeparator1 = 0;
@@ -5495,6 +5519,28 @@ void OnDestroyDevice()
 		delete s_topSlidersSeparator2;
 		s_topSlidersSeparator2 = 0;
 	}
+	if (s_topSlidersSeparator3) {
+		delete s_topSlidersSeparator3;
+		s_topSlidersSeparator3 = 0;
+	}
+	if (s_topSlidersSeparator4) {
+		delete s_topSlidersSeparator4;
+		s_topSlidersSeparator4 = 0;
+	}
+	if (s_owpBrushRepeatsSlider) {
+		delete s_owpBrushRepeatsSlider;
+		s_owpBrushRepeatsSlider = 0;
+	}
+	if (s_owpBrushMirrorU) {
+		delete s_owpBrushMirrorU;
+		s_owpBrushMirrorU = 0;
+	}
+	if (s_owpBrushMirrorV) {
+		delete s_owpBrushMirrorV;
+		s_owpBrushMirrorV = 0;
+	}
+
+
 
 	//if (s_mainmenulabel) {
 	//	delete s_mainmenulabel;
@@ -6765,12 +6811,12 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						_ASSERT(0);
 					}
 
-					if (s_guidlg[GUIDLG_BRUSHPARAMS]) {
-						HWND combownd = GetDlgItem(s_guidlg[GUIDLG_BRUSHPARAMS], IDC_COMBO_BRUSHES);
-						if (combownd != NULL) {
-							::SendMessage(combownd, CB_SETCURSEL, (WPARAM)subid, 0);
-						}
-					}
+					//if (s_guidlg[GUIDLG_BRUSHPARAMS]) {
+					//	HWND combownd = GetDlgItem(s_guidlg[GUIDLG_BRUSHPARAMS], IDC_COMBO_BRUSHES);
+					//	if (combownd != NULL) {
+					//		::SendMessage(combownd, CB_SETCURSEL, (WPARAM)subid, 0);
+					//	}
+					//}
 				}
 			}
 		}
@@ -8387,6 +8433,11 @@ int RollbackCurBoneNo()
 {
 	if ((s_curboneno < 0) && (s_saveboneno >= 0)) {
 		s_curboneno = s_saveboneno;
+
+		if (s_owpTimeline) {
+			//2024/04/24
+			s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], false);
+		}
 	}
 	return 0;
 }
@@ -11068,6 +11119,28 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 									s_timelinewheelFlag = false;
 									s_timelineshowposFlag = true;
 								}
+							}
+						}
+						});
+					s_owpLTimeline->setMouseRDownListener([]() {
+						if (s_model) {
+							if (!s_LTimelineApplyFrameFlag) {
+								s_LTimelineApplyFrameFlag = true;
+							}
+						}
+						});
+					s_owpLTimeline->setMouseRUpListener([]() {
+						if (s_model) {
+							//if (!s_LTimelineApplyFrameFlag) {
+							//	s_LTimelineApplyFrameFlag = true;
+							//}
+							s_utApplyRateFlag = true;//g_applyrateのUNDOトリガー
+						}
+						});
+					s_owpLTimeline->setMouseRMoveListener([]() {
+						if (s_model) {
+							if (!s_LTimelineApplyFrameFlag) {
+								s_LTimelineApplyFrameFlag = true;
 							}
 						}
 						});
@@ -20496,10 +20569,11 @@ int SetSpGUISWParams()
 	s_spguisw[SPGUISW_DISP_AND_LIMITS].dispcenter.x = s_spguisw[SPGUISW_CAMERA_AND_IK].dispcenter.x + (int)spgwidth + spgshift;
 	s_spguisw[SPGUISW_DISP_AND_LIMITS].dispcenter.y = s_spguisw[SPGUISW_CAMERA_AND_IK].dispcenter.y;
 
-	s_spguisw[SPGUISW_BRUSHPARAMS].dispcenter.x = s_spguisw[SPGUISW_DISP_AND_LIMITS].dispcenter.x + (int)spgwidth + spgshift;
-	s_spguisw[SPGUISW_BRUSHPARAMS].dispcenter.y = s_spguisw[SPGUISW_CAMERA_AND_IK].dispcenter.y;
+	//s_spguisw[SPGUISW_BRUSHPARAMS].dispcenter.x = s_spguisw[SPGUISW_DISP_AND_LIMITS].dispcenter.x + (int)spgwidth + spgshift;
+	//s_spguisw[SPGUISW_BRUSHPARAMS].dispcenter.y = s_spguisw[SPGUISW_CAMERA_AND_IK].dispcenter.y;
 
-	s_spguisw[SPGUISW_BULLETPHYSICS].dispcenter.x = s_spguisw[SPGUISW_BRUSHPARAMS].dispcenter.x + (int)spgwidth + spgshift;
+	//s_spguisw[SPGUISW_BULLETPHYSICS].dispcenter.x = s_spguisw[SPGUISW_BRUSHPARAMS].dispcenter.x + (int)spgwidth + spgshift;
+	s_spguisw[SPGUISW_BULLETPHYSICS].dispcenter.x = s_spguisw[SPGUISW_DISP_AND_LIMITS].dispcenter.x + (int)spgwidth + spgshift;
 	s_spguisw[SPGUISW_BULLETPHYSICS].dispcenter.y = s_spguisw[SPGUISW_CAMERA_AND_IK].dispcenter.y;
 
 	s_spguisw[SPGUISW_PROJ_AND_LOD].dispcenter.x = s_spguisw[SPGUISW_BULLETPHYSICS].dispcenter.x + (int)spgwidth + spgshift;
@@ -21683,13 +21757,13 @@ int PickSpGUISW(POINT srcpos)
 					case 1:
 						kind = (SPGUISW_DISP_AND_LIMITS + 2);
 						break;
+					//case 2:
+					//	kind = (SPGUISW_BRUSHPARAMS + 2);
+					//	break;
 					case 2:
-						kind = (SPGUISW_BRUSHPARAMS + 2);
-						break;
-					case 3:
 						kind = (SPGUISW_BULLETPHYSICS + 2);
 						break;
-					case 4:
+					case 3:
 						kind = (SPGUISW_PROJ_AND_LOD + 2);
 						break;
 					default:
@@ -22905,7 +22979,8 @@ int CreateMotionBrush(double srcstart, double srcend, bool onrefreshflag)
 			(g_motionbrush_endframe >= g_motionbrush_startframe) && (g_motionbrush_endframe < 1e5) &&
 			(g_motionbrush_applyframe >= g_motionbrush_startframe) && (g_motionbrush_applyframe <= g_motionbrush_endframe) &&
 			(g_motionbrush_frameleng > g_motionbrush_endframe) && (g_motionbrush_frameleng < 1e5) &&
-			(g_brushrepeats >= 1) && (g_brushrepeats <= 10) &&
+			//(g_brushrepeats >= 1) && (g_brushrepeats <= 10) &&
+			(g_brushrepeats >= 1) && (g_brushrepeats <= 100) && //2024/04/24 repeatsmax 100
 			tempvalue) {
 
 			int pluginno;
@@ -23484,42 +23559,42 @@ int CreateGUIDlgDispParams()
 	return 0;
 
 }
-int CreateGUIDlgBrushes()
-{
-	if (s_guidlg[GUIDLG_BRUSHPARAMS]) {
-		//already opened
-		return 0;
-	}
-
-	s_guidlg[GUIDLG_BRUSHPARAMS] = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_GUIBRUSHESDLG), g_mainhwnd, (DLGPROC)GUIBrushesDlgProc);
-	if (!s_guidlg[GUIDLG_BRUSHPARAMS]) {
-		_ASSERT(0);
-		return 1;
-	}
-
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-	SetParent(s_guidlg[GUIDLG_BRUSHPARAMS], g_mainhwnd);
-	SetWindowPos(
-		s_guidlg[GUIDLG_BRUSHPARAMS],
-		HWND_TOP,
-		windowposx,
-		s_sidemenuheight,
-		s_sidewidth,
-		s_sideheight,
-		SWP_SHOWWINDOW
-	);
-
-	ShowWindow(s_guidlg[GUIDLG_BRUSHPARAMS], SW_HIDE);
-	return 0;
-
-}
+//int CreateGUIDlgBrushes()
+//{
+//	if (s_guidlg[GUIDLG_BRUSHPARAMS]) {
+//		//already opened
+//		return 0;
+//	}
+//
+//	s_guidlg[GUIDLG_BRUSHPARAMS] = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_GUIBRUSHESDLG), g_mainhwnd, (DLGPROC)GUIBrushesDlgProc);
+//	if (!s_guidlg[GUIDLG_BRUSHPARAMS]) {
+//		_ASSERT(0);
+//		return 1;
+//	}
+//
+//	int windowposx;
+//	if (g_4kresolution) {
+//		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
+//	}
+//	else {
+//		windowposx = s_timelinewidth + s_mainwidth;
+//	}
+//
+//	SetParent(s_guidlg[GUIDLG_BRUSHPARAMS], g_mainhwnd);
+//	SetWindowPos(
+//		s_guidlg[GUIDLG_BRUSHPARAMS],
+//		HWND_TOP,
+//		windowposx,
+//		s_sidemenuheight,
+//		s_sidewidth,
+//		s_sideheight,
+//		SWP_SHOWWINDOW
+//	);
+//
+//	ShowWindow(s_guidlg[GUIDLG_BRUSHPARAMS], SW_HIDE);
+//	return 0;
+//
+//}
 int CreateGUIDlgBullet()
 {
 	if (s_guidlg[GUIDLG_BULLETPHYSICS]) {
@@ -30196,218 +30271,218 @@ int Brushes2Dlg(HWND hDlgWnd)
 	return 0;
 }
 
-LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
-{
-	switch (msg) {
-	case WM_INITDIALOG:
-	{
-		//Lights2Dlg(hDlgWnd);
-		//EnableWindow(GetDlgItem(hDlgWnd, IDC_RESETLIM_CURRENT), FALSE);
-
-		Brushes2Dlg(hDlgWnd);
-
-		return FALSE;
-	}
-	break;
-
-	case WM_DRAWITEM://オーナードローコントロールの描画 : リソースでカラーバーボタンにオーナードロー属性を設定してある
-		//DefWindowProc(hDlgWnd, msg, wp, lp);
-		break;
-
-	case WM_HSCROLL:
-		if (GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS), TBM_GETPOS, 0, 0);
-			g_applyrate = (double)(cursliderpos / 10);
-
-
-			//2024/01/11 以下５行　内容を修正してUpdateTopPosText()に移動
-			//CEditRange::SetApplyRate((double)g_applyrate);
-			//double applyframe = s_editrange.GetApplyFrame();
-			//WCHAR strdlg[256] = { 0L };
-			//swprintf_s(strdlg, 256, L"TopPos %d%% : %d", g_applyrate, IntTime(applyframe));
-			//SetDlgItemText(hDlgWnd, IDC_STATIC_TOPPOS, strdlg);
-
-
-			if (s_topSlidersWnd && s_owpTopPosSlider) {
-				s_owpTopPosSlider->setValue(g_applyrate, false);
-				s_topSlidersWnd->callRewrite();//再描画
-			}
-
-			if (s_editmotionflag < 0) {//IK中でないとき
-				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
-				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
-					_ASSERT(0);
-					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
-					PostQuitMessage(result);
-				}
-				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
-
-				if (LOWORD(wp) == SB_ENDSCROLL) {
-					//#################################################
-					//ReleasedCaptureのときに　PrepairUndo用のフラグを立てる
-					//#################################################
-					s_utApplyRateFlag = true;//PrepairUndo();//保存はOnFrameUtCheckBoxにて
-				}
-			}
-		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_GETPOS, 0, 0);
-			g_brushrepeats = cursliderpos;
-
-			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"Brush Repeats : %d", g_brushrepeats);
-			SetDlgItemText(hDlgWnd, IDC_STATIC_DLG_BRUSHREPEATS, strdlg);
-
-			if (s_editmotionflag < 0) {//IK中でないとき
-				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
-				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
-					_ASSERT(0);
-					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
-					PostQuitMessage(result);
-				}
-				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
-
-				if (LOWORD(wp) == SB_ENDSCROLL) {
-					//#################################################
-					//ReleasedCaptureのときに　PrepairUndo用のフラグを立てる
-					//#################################################
-					s_utBrushRepeatsFlag = true;//PrepairUndo();//保存はOnFrameUtCheckBoxにて
-				}
-			}
-		}
-
-		break;
-
-	//#########################################################################################
-	//子供コントロールのWM_NOTIFYが来ないので　マウスを放したときの処理は　WM_HSCROLLのSB_ENDSCROLLで処理
-	//#########################################################################################
-	//case WM_NOTIFY:
-	//{
-	//	LPNMHDR nmhdr = reinterpret_cast<LPNMHDR>(lp);
-	//	//if (nmhdr->code == TRBN_THUMBPOSCHANGING) //&& (nmhdr->hwndFrom == hSlider))
-	//	//{
-	//		NMTRBTHUMBPOSCHANGING* nmtrb = reinterpret_cast<NMTRBTHUMBPOSCHANGING*>(lp);
-	//		switch (nmtrb->nReason)
-	//		{
-	//		case TB_ENDTRACK:
-	//break;
-	case WM_COMMAND:
-
-		switch (LOWORD(wp)) {
-
-		case IDC_COMBO_BRUSHES:
-			if (HIWORD(wp) == CBN_SELCHANGE) {
-				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_BRUSHES);
-				if (combownd != NULL) {
-					int combono;
-					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
-					if ((combono != CB_ERR) && (combono >= 0) && (combono < MAXPLUGIN)) {
-						if ((s_plugin + combono)->validflag == 1) {
-							g_motionbrush_method = (s_plugin + combono)->menuid;
-
-							if (s_editmotionflag < 0) {//IK中でないとき
-								int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
-								if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
-									_ASSERT(0);
-									::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
-									PostQuitMessage(result);
-								}
-								s_utBrushMethodFlag = true;//PrepairUndo();//保存はOnFrameUtCheckBoxにて
-							}
-						}
-						else {
-							_ASSERT(0);
-						}
-					}
-					else {
-						_ASSERT(0);
-					}
-				}
-				else {
-					_ASSERT(0);
-					return false;
-				}
-				//RECT clientrect;
-				//GetClientRect(hDlgWnd, &clientrect);
-				//InvalidateRect(hDlgWnd, &clientrect, TRUE);
-			}
-			break;
-
-		case IDC_CHECK_BRUSHU:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_BRUSHU);
-			if (ischecked == BST_CHECKED) {
-				g_brushmirrorUflag = 1;
-			}
-			else {
-				g_brushmirrorUflag = 0;
-			}
-			if (s_editmotionflag < 0) {//IK中でないとき
-				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
-				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
-					_ASSERT(0);
-					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
-					PostQuitMessage(result);
-				}
-				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
-			}
-
-			//##################
-			//For PrepairUndo()
-			//##################
-			s_BrushMirrorUCheckBoxFlag = true;//UTDialogの
-		}
-		break;
-		case IDC_CHECK_BRUSHV:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_BRUSHV);
-			if (ischecked == BST_CHECKED) {
-				g_brushmirrorVflag = 1;
-			}
-			else {
-				g_brushmirrorVflag = 0;
-			}
-			if (s_editmotionflag < 0) {//IK中でないとき
-				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
-				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
-					_ASSERT(0);
-					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
-					PostQuitMessage(result);
-				}
-				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
-			}
-
-			//##################
-			//For PrepairUndo()
-			//##################
-			s_BrushMirrorVCheckBoxFlag = true;//UTDialogの
-		}
-		break;
-
-
-
-
-		case IDCANCEL:
-			//EndDialog(hDlgWnd, IDCANCEL);
-			break;
-		default:
-			return FALSE;
-			break;
-		}
-		break;
-	case WM_CLOSE:
-		if (s_guidlg[GUIDLG_BRUSHPARAMS]) {
-			ShowGUIDlgBrushes(false);
-		}
-		break;
-	default:
-		DefWindowProc(hDlgWnd, msg, wp, lp);
-		return FALSE;
-	}
-	return TRUE;
-}
+//LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
+//{
+//	switch (msg) {
+//	case WM_INITDIALOG:
+//	{
+//		//Lights2Dlg(hDlgWnd);
+//		//EnableWindow(GetDlgItem(hDlgWnd, IDC_RESETLIM_CURRENT), FALSE);
+//
+//		Brushes2Dlg(hDlgWnd);
+//
+//		return FALSE;
+//	}
+//	break;
+//
+//	case WM_DRAWITEM://オーナードローコントロールの描画 : リソースでカラーバーボタンにオーナードロー属性を設定してある
+//		//DefWindowProc(hDlgWnd, msg, wp, lp);
+//		break;
+//
+//	case WM_HSCROLL:
+//		if (GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS) == (HWND)lp) {
+//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS), TBM_GETPOS, 0, 0);
+//			g_applyrate = (double)(cursliderpos / 10);
+//
+//
+//			//2024/01/11 以下５行　内容を修正してUpdateTopPosText()に移動
+//			//CEditRange::SetApplyRate((double)g_applyrate);
+//			//double applyframe = s_editrange.GetApplyFrame();
+//			//WCHAR strdlg[256] = { 0L };
+//			//swprintf_s(strdlg, 256, L"TopPos %d%% : %d", g_applyrate, IntTime(applyframe));
+//			//SetDlgItemText(hDlgWnd, IDC_STATIC_TOPPOS, strdlg);
+//
+//
+//			//if (s_topSlidersWnd && s_owpTopPosSlider) {
+//			//	s_owpTopPosSlider->setValue(g_applyrate, false);
+//			//	s_topSlidersWnd->callRewrite();//再描画
+//			//}
+//
+//			if (s_editmotionflag < 0) {//IK中でないとき
+//				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
+//				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
+//					_ASSERT(0);
+//					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+//					PostQuitMessage(result);
+//				}
+//				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
+//
+//				if (LOWORD(wp) == SB_ENDSCROLL) {
+//					//#################################################
+//					//ReleasedCaptureのときに　PrepairUndo用のフラグを立てる
+//					//#################################################
+//					s_utApplyRateFlag = true;//PrepairUndo();//保存はOnFrameUtCheckBoxにて
+//				}
+//			}
+//		}
+//		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS) == (HWND)lp) {
+//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_GETPOS, 0, 0);
+//			g_brushrepeats = cursliderpos;
+//
+//			WCHAR strdlg[256] = { 0L };
+//			swprintf_s(strdlg, 256, L"Brush Repeats : %d", g_brushrepeats);
+//			SetDlgItemText(hDlgWnd, IDC_STATIC_DLG_BRUSHREPEATS, strdlg);
+//
+//			if (s_editmotionflag < 0) {//IK中でないとき
+//				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
+//				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
+//					_ASSERT(0);
+//					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+//					PostQuitMessage(result);
+//				}
+//				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
+//
+//				if (LOWORD(wp) == SB_ENDSCROLL) {
+//					//#################################################
+//					//ReleasedCaptureのときに　PrepairUndo用のフラグを立てる
+//					//#################################################
+//					s_utBrushRepeatsFlag = true;//PrepairUndo();//保存はOnFrameUtCheckBoxにて
+//				}
+//			}
+//		}
+//
+//		break;
+//
+//	//#########################################################################################
+//	//子供コントロールのWM_NOTIFYが来ないので　マウスを放したときの処理は　WM_HSCROLLのSB_ENDSCROLLで処理
+//	//#########################################################################################
+//	//case WM_NOTIFY:
+//	//{
+//	//	LPNMHDR nmhdr = reinterpret_cast<LPNMHDR>(lp);
+//	//	//if (nmhdr->code == TRBN_THUMBPOSCHANGING) //&& (nmhdr->hwndFrom == hSlider))
+//	//	//{
+//	//		NMTRBTHUMBPOSCHANGING* nmtrb = reinterpret_cast<NMTRBTHUMBPOSCHANGING*>(lp);
+//	//		switch (nmtrb->nReason)
+//	//		{
+//	//		case TB_ENDTRACK:
+//	//break;
+//	case WM_COMMAND:
+//
+//		switch (LOWORD(wp)) {
+//
+//		case IDC_COMBO_BRUSHES:
+//			if (HIWORD(wp) == CBN_SELCHANGE) {
+//				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_BRUSHES);
+//				if (combownd != NULL) {
+//					int combono;
+//					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
+//					if ((combono != CB_ERR) && (combono >= 0) && (combono < MAXPLUGIN)) {
+//						if ((s_plugin + combono)->validflag == 1) {
+//							g_motionbrush_method = (s_plugin + combono)->menuid;
+//
+//							if (s_editmotionflag < 0) {//IK中でないとき
+//								int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
+//								if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
+//									_ASSERT(0);
+//									::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+//									PostQuitMessage(result);
+//								}
+//								s_utBrushMethodFlag = true;//PrepairUndo();//保存はOnFrameUtCheckBoxにて
+//							}
+//						}
+//						else {
+//							_ASSERT(0);
+//						}
+//					}
+//					else {
+//						_ASSERT(0);
+//					}
+//				}
+//				else {
+//					_ASSERT(0);
+//					return false;
+//				}
+//				//RECT clientrect;
+//				//GetClientRect(hDlgWnd, &clientrect);
+//				//InvalidateRect(hDlgWnd, &clientrect, TRUE);
+//			}
+//			break;
+//
+//		case IDC_CHECK_BRUSHU:
+//		{
+//			UINT ischecked = 0;
+//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_BRUSHU);
+//			if (ischecked == BST_CHECKED) {
+//				g_brushmirrorUflag = 1;
+//			}
+//			else {
+//				g_brushmirrorUflag = 0;
+//			}
+//			if (s_editmotionflag < 0) {//IK中でないとき
+//				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
+//				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
+//					_ASSERT(0);
+//					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+//					PostQuitMessage(result);
+//				}
+//				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
+//			}
+//
+//			//##################
+//			//For PrepairUndo()
+//			//##################
+//			s_BrushMirrorUCheckBoxFlag = true;//UTDialogの
+//		}
+//		break;
+//		case IDC_CHECK_BRUSHV:
+//		{
+//			UINT ischecked = 0;
+//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_BRUSHV);
+//			if (ischecked == BST_CHECKED) {
+//				g_brushmirrorVflag = 1;
+//			}
+//			else {
+//				g_brushmirrorVflag = 0;
+//			}
+//			if (s_editmotionflag < 0) {//IK中でないとき
+//				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
+//				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
+//					_ASSERT(0);
+//					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+//					PostQuitMessage(result);
+//				}
+//				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
+//			}
+//
+//			//##################
+//			//For PrepairUndo()
+//			//##################
+//			s_BrushMirrorVCheckBoxFlag = true;//UTDialogの
+//		}
+//		break;
+//
+//
+//
+//
+//		case IDCANCEL:
+//			//EndDialog(hDlgWnd, IDCANCEL);
+//			break;
+//		default:
+//			return FALSE;
+//			break;
+//		}
+//		break;
+//	case WM_CLOSE:
+//		if (s_guidlg[GUIDLG_BRUSHPARAMS]) {
+//			ShowGUIDlgBrushes(false);
+//		}
+//		break;
+//	default:
+//		DefWindowProc(hDlgWnd, msg, wp, lp);
+//		return FALSE;
+//	}
+//	return TRUE;
+//}
 LRESULT CALLBACK GUIBulletDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
 	switch (msg) {
@@ -32050,11 +32125,12 @@ int ChangeCurrentBone()
 				PrepairUndo();
 			}
 
-
+			s_saveboneno = curbone->GetBoneNo();//2024/04/24
 			s_befbone = curbone;
 			s_befmodel = s_model;
 		}
 		else {
+			s_saveboneno = -1;//2024/04/24
 			s_befbone = 0;
 			s_befmodel = s_model;
 		}
@@ -33572,6 +33648,82 @@ int OnFrameTimeLineWnd()
 		s_cursorFlag = false;
 	}
 
+	if (s_LTimelineApplyFrameFlag) {
+		s_LTimelineApplyFrameFlag = false;
+
+		if (s_owpLTimeline && s_owpEulerGraph && s_owpTimeline) {
+			double currenttime = s_owpLTimeline->getCurrentTime();
+			s_owpTimeline->setCurrentTime(currenttime, false);
+			s_owpEulerGraph->setCurrentTime(currenttime, false);//eulergraphとshowpostimeも同期
+
+			g_motionbrush_applyframe = currenttime;
+			if (g_motionbrush_startframe != g_motionbrush_endframe) {
+				g_applyrate = (g_motionbrush_applyframe - g_motionbrush_startframe) * 100.0 / (g_motionbrush_endframe - g_motionbrush_startframe);;
+			}
+			else {
+				g_applyrate = 50.0;
+			}
+
+			if (s_editmotionflag < 0) {//IK中でないとき
+				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
+				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
+					_ASSERT(0);
+					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+					PostQuitMessage(result);
+				}
+			}
+		}
+	}
+
+	if (s_topslidersBrushRepeatsFlag) {
+		s_topslidersBrushRepeatsFlag = false;
+
+		if (s_editmotionflag < 0) {//IK中でないとき
+			int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
+			if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
+				_ASSERT(0);
+				::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+				PostQuitMessage(result);
+			}
+		}
+	}
+	if (s_topslidersBrushMirrorUFlag) {
+		s_topslidersBrushMirrorUFlag = false;
+
+		if (s_editmotionflag < 0) {//IK中でないとき
+			int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
+			if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
+				_ASSERT(0);
+				::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+				PostQuitMessage(result);
+			}
+			//PrepairUndo();//保存はOnFrameUtCheckBoxにて
+		}
+
+		//##################
+		//For PrepairUndo()
+		//##################
+		s_BrushMirrorUCheckBoxFlag = true;//UTDialogの
+	}
+	if (s_topslidersBrushMirrorVFlag) {
+		s_topslidersBrushMirrorVFlag = false;
+
+		if (s_editmotionflag < 0) {//IK中でないとき
+			int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
+			if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
+				_ASSERT(0);
+				::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+				PostQuitMessage(result);
+			}
+			//PrepairUndo();//保存はOnFrameUtCheckBoxにて
+		}
+
+		//##################
+		//For PrepairUndo()
+		//##################
+		s_BrushMirrorVCheckBoxFlag = true;//UTDialogの
+	}
+
 
 	//selectFlagは　タイムライン選択範囲が１フレームでも変わるとtrueになる
 	if (s_selectFlag) {//selectFlagとLupFlagは本来は別物　しかしLupのときだけ処理するものがある
@@ -33826,25 +33978,25 @@ int OnFrameToolWnd()
 		s_topslidersSpeedFlag = false;
 	}
 
-	if (s_topslidersTopPosFlag) {
-		if (s_topSlidersWnd && s_owpTopPosSlider) {
-			double val = s_owpTopPosSlider->getValue();
-			g_applyrate = val;
-			
-			if (s_editmotionflag < 0) {//IK中でないとき
-				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
-				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
-					_ASSERT(0);
-					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
-					PostQuitMessage(result);
-				}
-				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
-			}			
-			s_topSlidersWnd->callRewrite();//再描画
-		}
-
-		s_topslidersTopPosFlag = false;
-	}
+	//if (s_topslidersTopPosFlag) {
+	//	if (s_topSlidersWnd && s_owpTopPosSlider) {
+	//		double val = s_owpTopPosSlider->getValue();
+	//		g_applyrate = val;
+	//		
+	//		if (s_editmotionflag < 0) {//IK中でないとき
+	//			int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
+	//			if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
+	//				_ASSERT(0);
+	//				::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+	//				PostQuitMessage(result);
+	//			}
+	//			//PrepairUndo();//保存はOnFrameUtCheckBoxにて
+	//		}			
+	//		s_topSlidersWnd->callRewrite();//再描画
+	//	}
+	//
+	//	s_topslidersTopPosFlag = false;
+	//}
 
 
 	if (s_camdistsliderflag) {
@@ -35607,10 +35759,10 @@ int OnSpriteUndo()
 			DisplayApplyRateText();			
 
 
-			if (s_topSlidersWnd && s_owpTopPosSlider) {
-				s_owpTopPosSlider->setValue(g_applyrate, false);
-				s_topSlidersWnd->callRewrite();
-			}
+			//if (s_topSlidersWnd && s_owpTopPosSlider) {
+			//	s_owpTopPosSlider->setValue(g_applyrate, false);
+			//	s_topSlidersWnd->callRewrite();
+			//}
 
 
 			int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
@@ -35664,6 +35816,8 @@ int OnSpriteUndo()
 			//s_selectFlag = true;
 			//s_LupFlag = true;
 		}
+
+		Params2TopSlidersWnd();//2024/04/24
 	}
 
 
@@ -37120,6 +37274,27 @@ int CreateDmpAnimWnd()
 	return 0;
 }
 
+int Params2TopSlidersWnd()
+{
+
+	if (s_owpEditRateSlider) {
+		s_owpEditRateSlider->setValue(g_physicsmvrate, false);
+	}
+	if (s_owpSpeedSlider) {
+		s_owpSpeedSlider->setValue(g_dspeed, false);
+	}
+	if (s_owpBrushRepeatsSlider) {
+		s_owpBrushRepeatsSlider->setValue((double)g_brushrepeats, false);
+	}
+	if (s_owpBrushMirrorU) {
+		s_owpBrushMirrorU->setValue((g_brushmirrorUflag == 1), false);
+	}
+	if (s_owpBrushMirrorV) {
+		s_owpBrushMirrorV->setValue((g_brushmirrorVflag == 1), false);
+	}
+	return 0;
+}
+
 int CreateTopSlidersWnd()
 {
 
@@ -37175,6 +37350,17 @@ Slider3 : TopPos");
 			_ASSERT(0);
 			return 1;
 		}
+		s_topSlidersSeparator3 = new OWP_Separator(s_topSlidersWnd, false, 0.30, true);
+		if (!s_topSlidersSeparator3) {
+
+			_ASSERT(0);
+			return 1;
+		}
+		s_topSlidersSeparator4 = new OWP_Separator(s_topSlidersWnd, false, 0.5, true);
+		if (!s_topSlidersSeparator4) {
+			_ASSERT(0);
+			return 1;
+		}
 		s_owpEditRateSlider = new OWP_Slider(g_physicsmvrate, 50.0, 0.0);
 		if (!s_owpEditRateSlider) {
 			_ASSERT(0);
@@ -37185,32 +37371,96 @@ Slider3 : TopPos");
 			_ASSERT(0);
 			return 1;
 		}
-		s_owpTopPosSlider = new OWP_Slider(g_applyrate, 100.0, 0.0);
-		if (!s_owpTopPosSlider) {
+		//s_owpTopPosSlider = new OWP_Slider(g_applyrate, 100.0, 0.0);
+		//if (!s_owpTopPosSlider) {
+		//	_ASSERT(0);
+		//	return 1;
+		//}
+		s_owpBrushRepeatsSlider = new OWP_Slider((double)g_brushrepeats, 10.0, 1.0);
+		if (!s_owpBrushRepeatsSlider) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_owpBrushMirrorU = new OWP_CheckBoxA(L"Brush U", (g_brushmirrorUflag == 1));
+		if (!s_owpBrushMirrorU) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_owpBrushMirrorV = new OWP_CheckBoxA(L"Brush V", (g_brushmirrorVflag == 1));
+		if (!s_owpBrushMirrorV) {
 			_ASSERT(0);
 			return 1;
 		}
 
+
+
 		s_topSlidersWnd->addParts(*s_topSlidersSeparator1);
 		s_topSlidersSeparator1->addParts1(*s_topSlidersSeparator2);
-		s_topSlidersSeparator1->addParts2(*s_owpTopPosSlider);
+		//s_topSlidersSeparator1->addParts2(*s_owpTopPosSlider);
+		s_topSlidersSeparator1->addParts2(*s_topSlidersSeparator3);
 		s_topSlidersSeparator2->addParts1(*s_owpEditRateSlider);
 		s_topSlidersSeparator2->addParts2(*s_owpSpeedSlider);
+		s_topSlidersSeparator3->addParts1(*s_topSlidersSeparator4);
+		s_topSlidersSeparator3->addParts2(*s_owpBrushRepeatsSlider);
+		s_topSlidersSeparator4->addParts1(*s_owpBrushMirrorU);
+		s_topSlidersSeparator4->addParts2(*s_owpBrushMirrorV);
 
+		//if (s_owpTopPosSlider) {
+		//	s_owpTopPosSlider->setCursorListener([]() {
+		//		if (s_topslidersTopPosFlag == false) {
+		//			s_topslidersTopPosFlag = true;
+		//		}
+		//	});
+		//	s_owpTopPosSlider->setLUpListener([]() {
+		//		if (s_utApplyRateFlag == false) {
+		//			//#################################################
+		//			//ReleasedCaptureのときに　PrepairUndo用のフラグを立てる
+		//			//#################################################
+		//			s_utApplyRateFlag = true;//PrepairUndo();//保存はOnFrameUtCheckBoxにて
+		//		}
+		//	});
+		//}
 
-		if (s_owpTopPosSlider) {
-			s_owpTopPosSlider->setCursorListener([]() {
-				if (s_topslidersTopPosFlag == false) {
-					s_topslidersTopPosFlag = true;
+		if (s_owpBrushRepeatsSlider) {
+			s_owpBrushRepeatsSlider->setCursorListener([]() {
+				g_brushrepeats = (int)(s_owpBrushRepeatsSlider->getValue() + 0.0001);//整数
+				if (!s_topslidersBrushRepeatsFlag) {
+					s_topslidersBrushRepeatsFlag = true;
 				}
 			});
-			s_owpTopPosSlider->setLUpListener([]() {
-				if (s_utApplyRateFlag == false) {
+			s_owpBrushRepeatsSlider->setLUpListener([]() {
+				g_brushrepeats = (int)(s_owpBrushRepeatsSlider->getValue() + 0.0001);
+				s_owpBrushRepeatsSlider->setValue((double)g_brushrepeats, false);//整数
+				if (s_utBrushRepeatsFlag == false) {
 					//#################################################
 					//ReleasedCaptureのときに　PrepairUndo用のフラグを立てる
 					//#################################################
-					s_utApplyRateFlag = true;//PrepairUndo();//保存はOnFrameUtCheckBoxにて
+					s_utBrushRepeatsFlag = true;//PrepairUndo();//保存はOnFrameUtCheckBoxにて
 				}
+			});
+		}
+		if (s_owpBrushMirrorU) {
+			s_owpBrushMirrorU->setButtonListener([]() {
+				bool value = s_owpBrushMirrorU->getValue();
+				if (value) {
+					g_brushmirrorUflag = 1;
+				}
+				else {
+					g_brushmirrorUflag = 0;
+				}
+				s_topslidersBrushMirrorUFlag = true;
+			});
+		}
+		if (s_owpBrushMirrorV) {
+			s_owpBrushMirrorV->setButtonListener([]() {
+				bool value = s_owpBrushMirrorV->getValue();
+				if (value) {
+					g_brushmirrorVflag = 1;
+				}
+				else {
+					g_brushmirrorVflag = 0;
+				}
+				s_topslidersBrushMirrorVFlag = true;
 			});
 		}
 		if (s_owpEditRateSlider) {
@@ -37227,6 +37477,14 @@ Slider3 : TopPos");
 				}
 				});
 		}
+
+
+
+		//2024/04/24 正しい配置のために必要
+		s_topSlidersSeparator3->autoResize();//separator4よりも前で
+		s_topSlidersSeparator4->autoResize();
+		s_topSlidersSeparator2->autoResize();
+		s_topSlidersSeparator1->autoResize();
 
 
 		//450, 32
@@ -37476,6 +37734,7 @@ int CreatePlaceFolderWnd()
 			L"　Brush Selection",
 
 			L"　　RClick in the margin of 3DWnd　：　Select Brush.",
+			L"　　RClick in the EulerGraph　：　Set TopPos of BrushShape.",
 			L" ",
 			L"　Edit Motion",
 			L"　　T + MouseWheel　：　Twist motion.",
@@ -37484,8 +37743,8 @@ int CreatePlaceFolderWnd()
 			L" ",
 			L" ",
 			L"　Timeline",
-			L"　　Ctrl + MouseWheel　：　Move frame selection by 1 frame.",
 			
+			L"　　Ctrl + MouseWheel　：　Move frame selection by 1 frame.",
 			L" ",
 			L"　Manipulator",
 			L"　　S + Mouse_R_Drag　：　Change manipulator scale.",
@@ -37495,8 +37754,8 @@ int CreatePlaceFolderWnd()
 			L"    LButton DoubleClick :  Set value of clicked position.",
 			L"    RButton DoubleClick :  Undo value limited to 1,000,000 times.",
 			L"    Mouse Wheel : Slide per a pixel.",
-			L" ",
 			
+			L" ",
 			L"　DispGroupWindow",
 			L"　　RButton on a Element　：　Context Menu for SimilarCheck.",
 			L" ",
@@ -37519,7 +37778,8 @@ int CreatePlaceFolderWnd()
 		
 			//red color new line
 			//if (textno == 25) {
-			if ((textno == 19) || (textno == 20)) {
+			//if ((textno == 19) || (textno == 20)) {
+			if (textno == 21) {
 				COLORREF colred = RGB(168, 129, 129);
 				s_shortcuttext[textno]->setTextColor(colred);
 			}
@@ -46417,13 +46677,13 @@ void GUISetVisible(int srcplateno)
 	else if (srcplateno == 3) {
 		GUISetVisible_DispAndLimits();
 	}
+	//else if (srcplateno == 4) {
+	//	GUISetVisible_BrushParams();
+	//}
 	else if (srcplateno == 4) {
-		GUISetVisible_BrushParams();
-	}
-	else if (srcplateno == 5) {
 		GUISetVisible_Bullet();
 	}
-	else if (srcplateno == 6) {
+	else if (srcplateno == 5) {
 		GUISetVisible_LOD();
 	}
 	else {
@@ -46488,7 +46748,7 @@ void GUISetVisible_CameraAndIK()
 
 	//SPGUISWの他のものが全てOFFの場合　placefolderWndを表示
 	if ((s_spguisw[SPGUISW_DISP_AND_LIMITS].state == false) &&
-		(s_spguisw[SPGUISW_BRUSHPARAMS].state == false) &&
+		//(s_spguisw[SPGUISW_BRUSHPARAMS].state == false) &&
 		(s_spguisw[SPGUISW_BULLETPHYSICS].state == false) &&
 		(s_spguisw[SPGUISW_PROJ_AND_LOD].state == false)) {
 		if (s_placefolderWnd) {
@@ -46508,32 +46768,32 @@ void GUISetVisible_DispAndLimits()
 	//選択プレートをオンにする
 	s_spguisw[SPGUISW_DISP_AND_LIMITS].state = true;
 	ShowGUIDlgDispParams(true);
-	ShowGUIDlgBrushes(false);
+	//ShowGUIDlgBrushes(false);
 	ShowGUIDlgBullet(false);
 	ShowGUIDlgLOD(false);
 	if (s_placefolderWnd) {
 		s_placefolderWnd->setVisible(false);
 	}
 }
-void GUISetVisible_BrushParams()
-{
-	//CameraAndIK以外は　いったん全部オフにする
-	int plateno;
-	for (plateno = SPGUISW_DISP_AND_LIMITS; plateno < SPGUISWNUM; plateno++) {
-		s_spguisw[plateno].state = false;
-	}
-
-	//選択プレートをオンにする
-	s_spguisw[SPGUISW_BRUSHPARAMS].state = true;
-	ShowGUIDlgDispParams(false);
-	ShowGUIDlgBrushes(true);
-	ShowGUIDlgBullet(false);
-	ShowGUIDlgLOD(false);
-	if (s_placefolderWnd) {
-		s_placefolderWnd->setVisible(false);
-	}
-
-}
+//void GUISetVisible_BrushParams()
+//{
+//	//CameraAndIK以外は　いったん全部オフにする
+//	int plateno;
+//	for (plateno = SPGUISW_DISP_AND_LIMITS; plateno < SPGUISWNUM; plateno++) {
+//		s_spguisw[plateno].state = false;
+//	}
+//
+//	//選択プレートをオンにする
+//	s_spguisw[SPGUISW_BRUSHPARAMS].state = true;
+//	ShowGUIDlgDispParams(false);
+//	ShowGUIDlgBrushes(true);
+//	ShowGUIDlgBullet(false);
+//	ShowGUIDlgLOD(false);
+//	if (s_placefolderWnd) {
+//		s_placefolderWnd->setVisible(false);
+//	}
+//
+//}
 void GUISetVisible_Bullet()
 {
 	//CameraAndIK以外は　いったん全部オフにする
@@ -46545,7 +46805,7 @@ void GUISetVisible_Bullet()
 	//選択プレートをオンにする
 	s_spguisw[SPGUISW_BULLETPHYSICS].state = true;
 	ShowGUIDlgDispParams(false);
-	ShowGUIDlgBrushes(false);
+	//ShowGUIDlgBrushes(false);
 	ShowGUIDlgBullet(true);
 	ShowGUIDlgLOD(false);
 	if (s_placefolderWnd) {
@@ -46564,7 +46824,7 @@ void GUISetVisible_LOD()
 	//選択プレートをオンにする
 	s_spguisw[SPGUISW_PROJ_AND_LOD].state = true;
 	ShowGUIDlgDispParams(false);
-	ShowGUIDlgBrushes(false);
+	//ShowGUIDlgBrushes(false);
 	ShowGUIDlgBullet(false);
 	ShowGUIDlgLOD(true);
 	if (s_placefolderWnd) {
@@ -46668,22 +46928,22 @@ void ShowGUIDlgDispParams(bool srcflag)
 
 	s_spguisw[SPGUISW_DISP_AND_LIMITS].state = srcflag;
 }
-void ShowGUIDlgBrushes(bool srcflag)
-{
-	if (s_guidlg[GUIDLG_BRUSHPARAMS] != 0) {
-		if (srcflag == true) {
-			ShowWindow(s_guidlg[GUIDLG_BRUSHPARAMS], SW_SHOW);
-			DisplayApplyRateText();//2024/02/02
-			UpdateWindow(s_guidlg[GUIDLG_BRUSHPARAMS]);
-		}
-		else {
-			ShowWindow(s_guidlg[GUIDLG_BRUSHPARAMS], SW_HIDE);
-			UpdateWindow(s_guidlg[GUIDLG_BRUSHPARAMS]);
-		}
-	}
-
-	s_spguisw[SPGUISW_BRUSHPARAMS].state = srcflag;
-}
+//void ShowGUIDlgBrushes(bool srcflag)
+//{
+//	if (s_guidlg[GUIDLG_BRUSHPARAMS] != 0) {
+//		if (srcflag == true) {
+//			ShowWindow(s_guidlg[GUIDLG_BRUSHPARAMS], SW_SHOW);
+//			DisplayApplyRateText();//2024/02/02
+//			UpdateWindow(s_guidlg[GUIDLG_BRUSHPARAMS]);
+//		}
+//		else {
+//			ShowWindow(s_guidlg[GUIDLG_BRUSHPARAMS], SW_HIDE);
+//			UpdateWindow(s_guidlg[GUIDLG_BRUSHPARAMS]);
+//		}
+//	}
+//
+//	s_spguisw[SPGUISW_BRUSHPARAMS].state = srcflag;
+//}
 void ShowGUIDlgBullet(bool srcflag)
 {
 	if (s_guidlg[GUIDLG_BULLETPHYSICS] != 0) {
@@ -56482,23 +56742,23 @@ void RollbackBrushState(BRUSHSTATE srcbrushstate)
 
 int DisplayApplyRateText()
 {
-	//if (s_spguisw[SPGUISW_BRUSHPARAMS].state) {
-	//	CDXUTSlider* pslider = g_SampleUI.GetSlider(IDC_SL_APPLYRATE);
-	//	if (pslider) {
-	//		pslider->SetValue(g_applyrate);
-	//		CDXUTStatic* pstatic = g_SampleUI.GetStatic(IDC_STATIC_APPLYRATE);
-	//		if (pstatic) {
-	//			WCHAR sz[100] = { 0L };
-	//			swprintf_s(sz, 100, L"TopPos:%d%%:%d", g_applyrate, (int)(s_editrange.GetApplyFrame()));
-	//			g_SampleUI.GetStatic(IDC_STATIC_APPLYRATE)->SetText(sz);
-	//		}
-	//	}
-	//}
+	////if (s_spguisw[SPGUISW_BRUSHPARAMS].state) {
+	////	CDXUTSlider* pslider = g_SampleUI.GetSlider(IDC_SL_APPLYRATE);
+	////	if (pslider) {
+	////		pslider->SetValue(g_applyrate);
+	////		CDXUTStatic* pstatic = g_SampleUI.GetStatic(IDC_STATIC_APPLYRATE);
+	////		if (pstatic) {
+	////			WCHAR sz[100] = { 0L };
+	////			swprintf_s(sz, 100, L"TopPos:%d%%:%d", g_applyrate, (int)(s_editrange.GetApplyFrame()));
+	////			g_SampleUI.GetStatic(IDC_STATIC_APPLYRATE)->SetText(sz);
+	////		}
+	////	}
+	////}
 
-	
-	if ((s_guidlg[GUIDLG_BRUSHPARAMS] != 0) && s_spguisw[SPGUISW_BRUSHPARAMS].state) {
-		Brushes2Dlg(s_guidlg[GUIDLG_BRUSHPARAMS]);//2024/02/02
-	}
+	//
+	//if ((s_guidlg[GUIDLG_BRUSHPARAMS] != 0) && s_spguisw[SPGUISW_BRUSHPARAMS].state) {
+	//	Brushes2Dlg(s_guidlg[GUIDLG_BRUSHPARAMS]);//2024/02/02
+	//}
 
 	return 0;
 }
@@ -59503,12 +59763,12 @@ int CreateSprites()
 	spriteinitdata.m_textures[0] = s_spritetex26;
 	s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteON.Init(spriteinitdata, screenvertexflag);
 	
-	wcscpy_s(filepath, MAX_PATH, mpath);
-	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_BrushParams140ON.png");
-	s_spritetex27 = new Texture();
-	s_spritetex27->InitFromWICFile(filepath);
-	spriteinitdata.m_textures[0] = s_spritetex27;
-	s_spguisw[SPGUISW_BRUSHPARAMS].spriteON.Init(spriteinitdata, screenvertexflag);
+	//wcscpy_s(filepath, MAX_PATH, mpath);
+	//wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_BrushParams140ON.png");
+	//s_spritetex27 = new Texture();
+	//s_spritetex27->InitFromWICFile(filepath);
+	//spriteinitdata.m_textures[0] = s_spritetex27;
+	//s_spguisw[SPGUISW_BRUSHPARAMS].spriteON.Init(spriteinitdata, screenvertexflag);
 	
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_BulletPhysics140ON.png");
@@ -59539,12 +59799,12 @@ int CreateSprites()
 	spriteinitdata.m_textures[0] = s_spritetex31;
 	s_spguisw[SPGUISW_DISP_AND_LIMITS].spriteOFF.Init(spriteinitdata, screenvertexflag);
 	
-	wcscpy_s(filepath, MAX_PATH, mpath);
-	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_BrushParams140OFF.png");
-	s_spritetex32 = new Texture();
-	s_spritetex32->InitFromWICFile(filepath);
-	spriteinitdata.m_textures[0] = s_spritetex32;
-	s_spguisw[SPGUISW_BRUSHPARAMS].spriteOFF.Init(spriteinitdata, screenvertexflag);
+	//wcscpy_s(filepath, MAX_PATH, mpath);
+	//wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_BrushParams140OFF.png");
+	//s_spritetex32 = new Texture();
+	//s_spritetex32->InitFromWICFile(filepath);
+	//spriteinitdata.m_textures[0] = s_spritetex32;
+	//s_spguisw[SPGUISW_BRUSHPARAMS].spriteOFF.Init(spriteinitdata, screenvertexflag);
 	
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_BulletPhysics140OFF.png");
@@ -61047,23 +61307,23 @@ void CloseAllAndDispPlaceFolder()
 void CloseTheFirstRowGUI()
 {
 	ShowGUIDlgDispParams(false);
-	ShowGUIDlgBrushes(false);
+	//ShowGUIDlgBrushes(false);
 	ShowGUIDlgBullet(false);
 	ShowGUIDlgLOD(false);
 }
 
 int UpdateTopPosText()
 {
-	//BrushesウインドウのTopPosスライダーの　フレーム番号表示を更新
-	if (s_guidlg[GUIDLG_BRUSHPARAMS]) {
-		HWND topposslider = GetDlgItem(s_guidlg[GUIDLG_BRUSHPARAMS], IDC_SLIDER_TOPPOS);
-		HWND toppostext = GetDlgItem(s_guidlg[GUIDLG_BRUSHPARAMS], IDC_STATIC_TOPPOS);
-		if (topposslider || toppostext) {
-			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"TopPos %.1f%% : %d", g_applyrate, IntTime(g_motionbrush_applyframe));
-			SetDlgItemText(s_guidlg[GUIDLG_BRUSHPARAMS], IDC_STATIC_TOPPOS, strdlg);
-		}
-	}
+	////BrushesウインドウのTopPosスライダーの　フレーム番号表示を更新
+	//if (s_guidlg[GUIDLG_BRUSHPARAMS]) {
+	//	HWND topposslider = GetDlgItem(s_guidlg[GUIDLG_BRUSHPARAMS], IDC_SLIDER_TOPPOS);
+	//	HWND toppostext = GetDlgItem(s_guidlg[GUIDLG_BRUSHPARAMS], IDC_STATIC_TOPPOS);
+	//	if (topposslider || toppostext) {
+	//		WCHAR strdlg[256] = { 0L };
+	//		swprintf_s(strdlg, 256, L"TopPos %.1f%% : %d", g_applyrate, IntTime(g_motionbrush_applyframe));
+	//		SetDlgItemText(s_guidlg[GUIDLG_BRUSHPARAMS], IDC_STATIC_TOPPOS, strdlg);
+	//	}
+	//}
 	return 0;
 }
 

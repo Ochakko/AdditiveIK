@@ -62,6 +62,9 @@ extern bool g_4kresolution;
 
 extern double g_motionbrush_startframe;
 extern double g_motionbrush_endframe;
+extern double g_motionbrush_applyframe;
+extern double g_applyrate;
+
 extern int g_previewFlag;
 
 extern double g_playingstart;
@@ -4934,6 +4937,8 @@ void s_dummyfunc()
 			mouseMDownListener = NULL;
 			mouseWheelListener = NULL;
 			mouseRUpListener = NULL;
+			mouseRDownListener = NULL;
+			mouseRMoveListener = NULL;
 
 			//keyShiftListener = [this](){
 			//	shiftKeyTime(getShiftKeyTime());
@@ -4965,6 +4970,7 @@ void s_dummyfunc()
 			dragTime= false;
 			dragScrollBarLabel= false;
 			dragScrollBarTime= false;
+			dragApplyFrameTime = false;
 			dragSelect= false;
 			dragShift= false;
 			wheeldelta = 0;
@@ -5754,7 +5760,7 @@ void s_dummyfunc()
 			}
 		}
 		virtual void onRButtonDown(const MouseEvent& e){
-			selectClear(true);
+			//selectClear(true);
 
 			if (!canMouseControll) return;
 			if (g_underselecttolast) return;
@@ -5777,63 +5783,29 @@ void s_dummyfunc()
 				//dragLabel = true;
 			}
 
-			/*
-			//時間軸目盛り
-			if (x1 - 2 <= e.localX && e.localX<x2
-				&& y0 <= e.localY && e.localY<y2){
-				setCurrentTime(showPos_time + (double)(e.localX - x1) / timeSize);
 
-				dragTime = true;
+			////時間軸目盛り
+			if (!dragApplyFrameTime) {
+				if (((x1 - 2) <= e.localX) && (e.localX < x2) &&
+					(y0 <= e.localY) && (e.localY < y2)) {
+					double newtime = showPos_time + (double)(e.localX - x1) / timeSize;
+					newtime = fmin(g_motionbrush_endframe, newtime);
+					newtime = fmax(g_motionbrush_startframe, newtime);
+					setCurrentTime(newtime, true);
+			
+					dragApplyFrameTime = true;
+			
+					if (this->mouseRDownListener != NULL) {
+						(this->mouseRDownListener)();
+					}
+				}
 			}
+
 
 			{//ドラッグでの範囲選択
 				dragSelectTime1 = currentTime;
 				dragSelectLine1 = currentLine;
 			}
-
-			//時間軸スクロールバー
-			if (x1 <= e.localX && e.localX<x2
-				&& y2 <= e.localY && e.localY<y3){
-				int xx0 = MARGIN + LABEL_SIZE_X;
-				int xx1 = size.x - MARGIN - SCROLL_BAR_WIDTH;
-
-				double showTimeLength = ((double)(xx1 - xx0 - 3)) / timeSize;
-				if (showTimeLength<maxTime){
-					double barSize = ((double)(xx1 - xx0 - 4))*showTimeLength / maxTime;
-
-					int movableX = xx1 - xx0 - (int)barSize;
-					int movableXStart = xx0 + (int)barSize / 2;
-
-					setShowPosTime(((double)(e.localX - movableXStart))*(maxTime - showTimeLength) / (double)movableX);
-
-					dragScrollBarTime = true;
-				}
-			}
-
-			//ラベルスクロールバー
-			if (x2 <= e.localX && e.localX<x3
-				&& y1 <= e.localY && e.localY<y2){
-				int yy0 = MARGIN + AXIS_SIZE_Y;
-				int yy1 = size.y - MARGIN - SCROLL_BAR_WIDTH + 1;
-
-				int showLineNum = (size.y - SCROLL_BAR_WIDTH - AXIS_SIZE_Y - MARGIN * 2) / (LABEL_SIZE_Y - 1);
-				if (showLineNum<(int)lineData.size()){
-					int barSize = (yy1 - yy0 - 4)*showLineNum / (int)lineData.size();
-
-					int movableY = yy1 - yy0 - barSize;
-					int movableYStart = yy0 + barSize / 2;
-
-					setShowPosLine((e.localY - movableYStart)*((int)lineData.size() - showLineNum) / movableY);
-
-					dragScrollBarLabel = true;
-				}
-			}
-
-			//Ctrl+ドラッグによるキー移動
-			if (e.ctrlKey && !dragScrollBarTime && !dragScrollBarLabel){
-				dragShift = true;
-			}
-			*/
 		}
 		///	Method : 左マウスボタンアップイベント受信
 		virtual void onRButtonUp(const MouseEvent& e){
@@ -5849,6 +5821,7 @@ void s_dummyfunc()
 					dragTime = false;
 					dragScrollBarLabel = false;
 					dragScrollBarTime = false;
+					dragApplyFrameTime = false;
 					dragSelect = false;
 					dragShift = false;
 
@@ -5882,11 +5855,14 @@ void s_dummyfunc()
 					ghostShiftTime = 0.0;
 				}
 				*/
+
+
 				//ドラッグフラグを初期化
 				dragLabel = false;
 				dragTime = false;
 				dragScrollBarLabel = false;
 				dragScrollBarTime = false;
+				dragApplyFrameTime = false;
 				dragSelect = false;
 				dragShift = false;
 
@@ -5930,17 +5906,26 @@ void s_dummyfunc()
 			}
 
 			//時間軸目盛り
-			if(dragTime){
+			//if (dragTime) {
+			if(dragTime || dragApplyFrameTime){//2024/04/23
 				double oldTime= currentTime;
-				setCurrentTime( showPos_time+ (double)(e.localX-x1)/timeSize, true );
+				double newtime = showPos_time + (double)(e.localX - x1) / timeSize;
+				if (dragApplyFrameTime) {
+					newtime = fmin(g_motionbrush_endframe, newtime);
+					newtime = fmax(g_motionbrush_startframe, newtime);
+				}
+				setCurrentTime(newtime, true);
 				if( oldTime!=currentTime ){
 					callCursorListener= true;
 				}
 			}
 
 			//カーソルリスナーコール
-			if( callCursorListener && this->cursorListener!=NULL ){
+			if(callCursorListener && (this->cursorListener!=NULL)){
 				(this->cursorListener)();
+			}
+			if (callCursorListener && dragApplyFrameTime && (this->mouseRMoveListener != NULL)) {
+				(this->mouseRMoveListener)();
 			}
 
 			//Ctrl+ドラッグでのキー移動
@@ -5966,7 +5951,7 @@ void s_dummyfunc()
 			}
 
 			//時間軸スクロールバー
-			if( dragScrollBarTime ){
+			if(dragScrollBarTime && !dragApplyFrameTime){
 				int xx0= MARGIN+LABEL_SIZE_X;
 				int xx1= size.x-MARGIN-SCROLL_BAR_WIDTH;
 
@@ -6247,6 +6232,12 @@ void s_dummyfunc()
 		void setMouseRUpListener(std::function<void()> listener){
 			this->mouseRUpListener = listener;
 		}
+		void setMouseRDownListener(std::function<void()> listener) {
+			this->mouseRDownListener = listener;
+		}
+		void setMouseRMoveListener(std::function<void()> listener) {
+			this->mouseRMoveListener = listener;
+		}
 
 
 		KeyInfo ExistKey( int srcline, double srctime )
@@ -6283,6 +6274,8 @@ void s_dummyfunc()
 		std::function<void()> mouseMDownListener;
 		std::function<void()> mouseWheelListener;
 		std::function<void()> mouseRUpListener;
+		std::function<void()> mouseRDownListener;
+		std::function<void()> mouseRMoveListener;
 		std::function<void(const KeyInfo&)> keyDeleteListener;
 
 		bool dispkeyflag;
@@ -6466,6 +6459,7 @@ void s_dummyfunc()
 				int x0= posX;
 				int x1= posX+parent->LABEL_SIZE_X;
 				int x2= posX+width;
+				int y00 = posY - parent->LABEL_SIZE_Y;
 				int y0= posY;
 				int y1= posY+parent->LABEL_SIZE_Y;
 				if( highLight ){
@@ -6602,9 +6596,14 @@ void s_dummyfunc()
 										//hdcM->setPenAndBrush(NULL, RGB(255, 128, 128));
 										hdcM->setPenAndBrush(NULL, RGB(64, 128, 255));//AO
 										Rectangle(hdcM->hDC, max(xx0 + 1, x1), y0 + 1, min(xx1 - 1, x2), y1 - 1);
-										//hdcM->setPenAndBrush(NULL, RGB(min(baseR + 20, 255), min(baseG + 20, 255), min(baseB + 20, 255)));//四角の中身を黒く抜くときはこの２行
-										//Rectangle(hdcM->hDC, max(xx0 + 2, x1), y0 + 2, min(xx1 - 2, x2), y1 - 2);
 
+
+										if (IsEqualRoundingTime(key[i]->time, g_motionbrush_applyframe)) {
+											//2024/04/23
+											//rightbutton draggable mark of applyframe 
+											hdcM->setPenAndBrush(NULL, RGB(255, 128, 128));
+											Rectangle(hdcM->hDC, max(xx0 + 1, x1), y00 + 1, min(xx1 - 1, x2), y0 - 1);
+										}
 									}
 									else {
 										hdcM->setPenAndBrush(NULL, RGB(240, 240, 240));
@@ -7082,6 +7081,7 @@ void s_dummyfunc()
 		bool dragTime;
 		bool dragScrollBarLabel;
 		bool dragScrollBarTime;
+		bool dragApplyFrameTime;//2024/04/23 RightButtonDrag
 
 		bool dragSelect;		//ドラッグでの範囲選択
 		double dragSelectTime1,dragSelectTime2;
@@ -8022,79 +8022,88 @@ void s_dummyfunc()
 			int y2 = size.y - MARGIN - SCROLL_BAR_WIDTH;
 			int y3 = size.y - MARGIN;
 
-			//ラベル
-			bool callCursorListener = false;
-			if (dragLabel) {
-				int oldLine = currentLine;
-				setCurrentLine(showPos_line + (e.localY - y1) / (LABEL_SIZE_Y - 1), true);
-				if (oldLine != currentLine) {
-					callCursorListener = true;
-				}
-			}
 
-			//時間軸目盛り
-			if (dragTime) {
-				double oldTime = currentTime;
-				setCurrentTime(showPos_time + (double)(e.localX - x1) / timeSize, true);
-				if (oldTime != currentTime) {
-					callCursorListener = true;
-				}
-			}
+			//#####################################################################
+			//2024/04/24
+			//親ウインドウパーツのTimeLineと処理が重複する
+			//RButtonDown-->MouseMoveのときに時間がブラシ区間でクランプせずにずれてしまう
+			//よってコメントアウト
+			//#####################################################################
 
-			//カーソルリスナーコール
-			if (callCursorListener && (this->cursorListener != NULL)) {
-				(this->cursorListener)();
-			}
 
-			//Ctrl+ドラッグでのキー移動
-			if (dragShift) {
-				ghostShiftTime = currentTime - dragSelectTime1;
-			}
+			////ラベル
+			//bool callCursorListener = false;
+			//if (dragLabel) {
+			//	int oldLine = currentLine;
+			//	setCurrentLine(showPos_line + (e.localY - y1) / (LABEL_SIZE_Y - 1), true);
+			//	if (oldLine != currentLine) {
+			//		callCursorListener = true;
+			//	}
+			//}
 
-			//ドラッグでの範囲選択
-			if (!dragShift && (dragSelect || dragLabel || dragTime) && !dragScrollBarLabel && !dragScrollBarTime) {
-				dragSelect = true;
-				dragSelectTime2 = currentTime;
-				dragSelectLine2 = currentLine;
-			}
+			////時間軸目盛り
+			//if (dragTime) {
+			//	double oldTime = currentTime;
+			//	setCurrentTime(showPos_time + (double)(e.localX - x1) / timeSize, true);
+			//	if (oldTime != currentTime) {
+			//		callCursorListener = true;
+			//	}
+			//}
 
-			//ドラッグ選択範囲内のキーを選択状態にする
-			if (dragSelect) {
-				selectClear(true);
-				for (int i = min(dragSelectLine1, dragSelectLine2);
-					i <= max(dragSelectLine1, dragSelectLine2) && i<(signed int)lineData.size(); i++) {
-					lineData[i]->selectKey(min(dragSelectTime1, dragSelectTime2),
-						max(dragSelectTime1, dragSelectTime2));
-				}
-			}
+			////カーソルリスナーコール
+			//if (callCursorListener && (this->cursorListener != NULL)) {
+			//	(this->cursorListener)();
+			//}
 
-			//時間軸スクロールバー
-			if (dragScrollBarTime) {
-				int xx0 = MARGIN + LABEL_SIZE_X;
-				int xx1 = size.x - MARGIN - SCROLL_BAR_WIDTH;
+			////Ctrl+ドラッグでのキー移動
+			//if (dragShift) {
+			//	ghostShiftTime = currentTime - dragSelectTime1;
+			//}
 
-				double showTimeLength = ((double)(xx1 - xx0 - 3)) / timeSize;
-				double barSize = ((double)(xx1 - xx0 - 4))*showTimeLength / maxTime;
+			////ドラッグでの範囲選択
+			//if (!dragShift && (dragSelect || dragLabel || dragTime) && !dragScrollBarLabel && !dragScrollBarTime) {
+			//	dragSelect = true;
+			//	dragSelectTime2 = currentTime;
+			//	dragSelectLine2 = currentLine;
+			//}
 
-				int movableX = xx1 - xx0 - (int)barSize;
-				int movableXStart = xx0 + (int)barSize / 2;
+			////ドラッグ選択範囲内のキーを選択状態にする
+			//if (dragSelect) {
+			//	selectClear(true);
+			//	for (int i = min(dragSelectLine1, dragSelectLine2);
+			//		i <= max(dragSelectLine1, dragSelectLine2) && i<(signed int)lineData.size(); i++) {
+			//		lineData[i]->selectKey(min(dragSelectTime1, dragSelectTime2),
+			//			max(dragSelectTime1, dragSelectTime2));
+			//	}
+			//}
 
-				setShowPosTime(((double)(e.localX - movableXStart))*(maxTime - showTimeLength) / (double)movableX);
-			}
+			////時間軸スクロールバー
+			//if (dragScrollBarTime) {
+			//	int xx0 = MARGIN + LABEL_SIZE_X;
+			//	int xx1 = size.x - MARGIN - SCROLL_BAR_WIDTH;
 
-			//ラベルスクロールバー
-			if (dragScrollBarLabel) {
-				int yy0 = MARGIN + AXIS_SIZE_Y;
-				int yy1 = size.y - MARGIN - SCROLL_BAR_WIDTH + 1;
+			//	double showTimeLength = ((double)(xx1 - xx0 - 3)) / timeSize;
+			//	double barSize = ((double)(xx1 - xx0 - 4))*showTimeLength / maxTime;
 
-				int showLineNum = (size.y - SCROLL_BAR_WIDTH - AXIS_SIZE_Y - MARGIN * 2) / (LABEL_SIZE_Y - 1);
-				int barSize = (yy1 - yy0 - 4)*showLineNum / (int)lineData.size();
+			//	int movableX = xx1 - xx0 - (int)barSize;
+			//	int movableXStart = xx0 + (int)barSize / 2;
 
-				int movableY = yy1 - yy0 - barSize;
-				int movableYStart = yy0 + barSize / 2;
+			//	setShowPosTime(((double)(e.localX - movableXStart))*(maxTime - showTimeLength) / (double)movableX);
+			//}
 
-				setShowPosLine((e.localY - movableYStart)*((int)lineData.size() - showLineNum) / movableY);
-			}
+			////ラベルスクロールバー
+			//if (dragScrollBarLabel) {
+			//	int yy0 = MARGIN + AXIS_SIZE_Y;
+			//	int yy1 = size.y - MARGIN - SCROLL_BAR_WIDTH + 1;
+
+			//	int showLineNum = (size.y - SCROLL_BAR_WIDTH - AXIS_SIZE_Y - MARGIN * 2) / (LABEL_SIZE_Y - 1);
+			//	int barSize = (yy1 - yy0 - 4)*showLineNum / (int)lineData.size();
+
+			//	int movableY = yy1 - yy0 - barSize;
+			//	int movableYStart = yy0 + barSize / 2;
+
+			//	setShowPosLine((e.localY - movableYStart)*((int)lineData.size() - showLineNum) / movableY);
+			//}
 		}
 		virtual void onMButtonDown(const MouseEvent& e) {
 			if (!canMouseControll) return;

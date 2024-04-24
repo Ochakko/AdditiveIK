@@ -102,7 +102,8 @@ MBPLUGIN_EXPORT int MBCreateMotionBrush(double srcstartframe, double srcendframe
 	if ((srcstartframe >= 0.0) && (srcstartframe < 1e5) && (srcendframe >= srcstartframe) && (srcendframe < 1e5) &&
 		(srcapplyframe >= srcstartframe) && (srcapplyframe <= srcendframe) &&
 		(srcframeleng > srcendframe) && (srcframeleng < 1e5) && 
-		(srcrepeats >= 1) && (srcrepeats <= 10) &&
+		//(srcrepeats >= 1) && (srcrepeats <= 10) &&
+		(srcrepeats >= 1) && (srcrepeats <= 100) && //2024/04/24 repeats max 100
 		dstvalue) {
 
 		//rounding value
