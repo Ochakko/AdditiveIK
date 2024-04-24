@@ -14788,7 +14788,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.16\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.17\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -37376,7 +37376,7 @@ int CreateTopSlidersWnd()
 		//	_ASSERT(0);
 		//	return 1;
 		//}
-		s_owpBrushRepeatsSlider = new OWP_Slider((double)g_brushrepeats, 10.0, 1.0);
+		s_owpBrushRepeatsSlider = new OWP_Slider((double)g_brushrepeats, 100.0, 1.0);
 		if (!s_owpBrushRepeatsSlider) {
 			_ASSERT(0);
 			return 1;
