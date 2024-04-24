@@ -4,15 +4,15 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/04/24
-　AdditiveIK 1.0.0.17 RC1(リリース候補1)
+　AdditiveIK 1.0.0.17 RC2(リリース候補2)
 　　1.0.0.16からの変更点
 　　　不具合修正
 　　　　右クリックによるブラシ選択時にジョイント選択が初期化されてしまっていたのを修正
 　　　　　右クリックによるブラシ選択時にジョイント選択を復元
 　　　　　左ペインのジョイント階層ツリーからジョイントを選択した場合にも対応
 
-
-　　　プロジェクトファイル(*.cha)ファイルにDispAndLimitsレートメニューのBoneAxisを保存
+　　　VRoid読込時マニピュレータとグラフの軸が一致
+　　　　プロジェクトファイル(*.cha)ファイルにDispAndLimitsレートメニューのBoneAxisを保存
 　　　　chaファイルにBoneAxisタグが存在しない場合(古いchaファイルの場合)、１つでもVRoidモデルがあればボーン軸種類としてBONEAXIS_BINDPOSEを設定
 　　　　モデル読み込み後は、DispAndLimitsプレートメニューのAxisKindコンボボックスにてボーン軸の種類を設定可能
 　　　　軸の種類BONEAXIS_BINDPOSEについて
@@ -59,6 +59,10 @@ https://github.com/Ochakko/AdditiveIK
 　　　ドキュメント追加
 　　　　Documents/TroubleShooting/WhyTheDispAndLimitsPlateMenuAlsoHasASliderForTheSameItem.docx
 　　　　(なぜ同じ項目についてのスライダーがDispAndLimitsプレートメニューにも存在するのかについて)
+
+　RC2:
+　　上部常駐スライダーの見出し文を修正
+　　PlaceFolderWindowのShortCutKey一覧に追加した文を修正
 
 
 

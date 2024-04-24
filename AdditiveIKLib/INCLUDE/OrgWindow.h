@@ -787,8 +787,8 @@ void s_dummyfunc()
 			szclassName= new TCHAR[256];
 			_tcscpy_s(szclassName,256,_szclassName);
 			hWndParent= _hWndParent;
-			title= new TCHAR[256];
-			_tcscpy_s(title,256,_title);
+			title= new TCHAR[2048];
+			_tcscpy_s(title, 2048,_title);
 			baseR= _baseR;
 			baseG= _baseG;
 			baseB= _baseB;

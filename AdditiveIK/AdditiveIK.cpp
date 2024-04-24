@@ -37298,24 +37298,24 @@ int Params2TopSlidersWnd()
 int CreateTopSlidersWnd()
 {
 
-	WCHAR sliderinfo[1024] = { 0L };
+	WCHAR sliderinfo[2048] = { 0L };
 	int windowposx;
 	if (g_4kresolution) {
 		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 
 		//ウインドウタイトルをスライダーの説明として使う　スペースキーで適当に位置を合わせる
-		wcscpy_s(sliderinfo, 1024, L"Slider1 : EditRate,                                                                                               \
-Slier2 : Speed,                                                                                                    \
-Slider3 : TopPos");
+		wcscpy_s(sliderinfo, 2048, L"Slider1 : EditRate,                                                                                               \
+       Slier2 : Speed,                                                                                                    \
+                                                                  Slider3 : BrushRepeats");
 
 	}
 	else {
 		windowposx = s_timelinewidth + s_mainwidth;
 
 		//ウインドウタイトルをスライダーの説明として使う　スペースキーで適当に位置を合わせる
-		wcscpy_s(sliderinfo, 1024, L"Slider1 : EditRate,                              \
-Slier2 : Speed,                                 \
-Slider3 : TopPos");
+		wcscpy_s(sliderinfo, 2048, L"Slider1 : EditRate,                              \
+   Slier2 : Speed,                                 \
+                                   Slider3 : BrushRepeats");
 	}
 
 	s_topSlidersWnd = new OrgWindow(
@@ -37710,7 +37710,7 @@ int CreatePlaceFolderWnd()
 		//}
 
 
-		WCHAR shortcuttext[SHORTCUTTEXTNUM][80] = {
+		WCHAR shortcuttext[SHORTCUTTEXTNUM][90] = {
 			L"ShortCutKey",
 			L" ",
 			L"　Menu",
@@ -37734,7 +37734,7 @@ int CreatePlaceFolderWnd()
 			L"　Brush Selection",
 
 			L"　　RClick in the margin of 3DWnd　：　Select Brush.",
-			L"　　RClick in the EulerGraph　：　Set TopPos of BrushShape.",
+			L"　　RClick or RDrag in the Timeline of EulerGraph　：　Set TopPos of BrushShape.",
 			L" ",
 			L"　Edit Motion",
 			L"　　T + MouseWheel　：　Twist motion.",
