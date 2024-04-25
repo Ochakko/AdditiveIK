@@ -3,8 +3,8 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
-2024/04/24
-　AdditiveIK 1.0.0.17 RC4(リリース候補4)
+2024/04/26
+　AdditiveIK 1.0.0.17 release
 　　1.0.0.16からの変更点
 　　　不具合修正
 　　　　右クリックによるブラシ選択時にジョイント選択が初期化されてしまっていたのを修正
