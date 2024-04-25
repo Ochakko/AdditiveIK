@@ -4,7 +4,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/04/24
-　AdditiveIK 1.0.0.17 RC3(リリース候補3)
+　AdditiveIK 1.0.0.17 RC4(リリース候補4)
 　　1.0.0.16からの変更点
 　　　不具合修正
 　　　　右クリックによるブラシ選択時にジョイント選択が初期化されてしまっていたのを修正
@@ -42,6 +42,9 @@ https://github.com/Ochakko/AdditiveIK
 
 　　　４段階LODに対応
 
+　　　視野内判定高速化
+　　　　シェーダ修正
+
 　　　物理回転バネ定数全体をスケールするスライダーをDispAndLimitsプレートメニューに追加
 　　　　EditScaleスライダーはアプリ上部の常駐スライダーと冗長なので取り除いて、新たにAngleSpringScaleスライダーを追加　
 
@@ -66,6 +69,10 @@ https://github.com/Ochakko/AdditiveIK
 　RC3:
 　　プロジェクトオープンダイアログのTestフォルダへのパスが1.0.0.16になっていたのを1.0.0.17に修正.
 　　上部常駐BrushRepeatsスライダーの最大値を100に.
+　RC4:
+　　CSChkInView高速化
+　　　シェーダAdditiveIK_ChkInView.fx内のif文を配列参照に置き換えて高速化
+
 
 
 

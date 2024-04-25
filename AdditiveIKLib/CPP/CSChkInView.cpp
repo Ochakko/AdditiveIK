@@ -144,7 +144,8 @@ int CSChkInView::AddBoundary(CMQOObject* srcobj, MODELBOUND srcmb,
 	CSBSphere csbs;
 	csbs.Init();
 
-	int lodno = -1;
+	//int lodno = -1;
+	int lodno = CHKINVIEW_LOD0;//2024/04/25 lodmindist, lodmaxdistを配列参照することにしたので、LODが無い場合にもLOD0を使用
 	const char* pname = srcobj->GetName();
 	if (pname && (*pname != 0)) {
 		if (strstr(pname, "LOD0") != 0) {
@@ -180,8 +181,16 @@ int CSChkInView::AddBoundary(CMQOObject* srcobj, MODELBOUND srcmb,
 	csbs.bbmax[2] = srcmb.max.z;
 	csbs.bbmax[3] = 1.0f;
 
-	csbs.lodno[0] = srclodnum;
+	int lodnumindex = srclodnum - 1;//!!!! index !!!!
+	lodnumindex = max(0, lodnumindex);
+	lodnumindex = min(3, lodnumindex);
+	csbs.lodno[0] = lodnumindex;//!!!! index !!!!
+
+	int setlodno = lodno;
+	setlodno = max(0, setlodno);
+	setlodno = min(3, setlodno);
 	csbs.lodno[1] = lodno;
+
 
 	if (forceinview != -1) {
 		csbs.forceresult[0] = 1;

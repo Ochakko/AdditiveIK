@@ -19628,18 +19628,48 @@ int CModel::ChkInView(int refposindex)
 			cb.params1[1] = (float)cos(g_fovy * 0.85f);
 			cb.params1[2] = g_projfar;
 			cb.params1[3] = g_projnear;
-			cb.lodrate2L[0] = g_lodrate2L[0];
-			cb.lodrate2L[1] = g_lodrate2L[1];
-			cb.lodrate2L[2] = 1.0f;
-			cb.lodrate2L[3] = 1.0f;
-			cb.lodrate3L[0] = g_lodrate3L[0];
-			cb.lodrate3L[1] = g_lodrate3L[1];
-			cb.lodrate3L[2] = g_lodrate3L[2];
-			cb.lodrate3L[3] = 1.0f;
-			cb.lodrate4L[0] = g_lodrate4L[0];
-			cb.lodrate4L[1] = g_lodrate4L[1];
-			cb.lodrate4L[2] = g_lodrate4L[2];
-			cb.lodrate4L[3] = g_lodrate4L[3];
+			//cb.lodrate2L[0] = g_lodrate2L[0];
+			//cb.lodrate2L[1] = g_lodrate2L[1];
+			//cb.lodrate2L[2] = 1.0f;
+			//cb.lodrate2L[3] = 1.0f;
+			//cb.lodrate3L[0] = g_lodrate3L[0];
+			//cb.lodrate3L[1] = g_lodrate3L[1];
+			//cb.lodrate3L[2] = g_lodrate3L[2];
+			//cb.lodrate3L[3] = 1.0f;
+			//cb.lodrate4L[0] = g_lodrate4L[0];
+			//cb.lodrate4L[1] = g_lodrate4L[1];
+			//cb.lodrate4L[2] = g_lodrate4L[2];
+			//cb.lodrate4L[3] = g_lodrate4L[3];
+
+
+			//##########################################################################
+			//2024/04/25 シェーダーでif文を実行すると重いので　あらかじめ配列に計算結果を入れておく
+			//##########################################################################
+			cb.lodmindist[0][0] = 0.0f;                      //lod無し　mindist
+			cb.lodmaxdist[0][0] = g_projfar;                 //lod無し　maxdist
+			
+			cb.lodmindist[1][0] = 0.0f;                      //num:2levels lod:1 mindist
+			cb.lodmaxdist[1][0] = g_lodrate2L[0] * g_projfar;//num:2levels lod:1 maxdist
+			cb.lodmindist[1][1] = g_lodrate2L[0] * g_projfar;//num:2levels lod:2 mindist
+			cb.lodmaxdist[1][1] = g_lodrate2L[1] * g_projfar;//num:2levels lod:2 maxdist
+
+			cb.lodmindist[2][0] = 0.0f;                      //num:3levels lod1 mindist
+			cb.lodmaxdist[2][0] = g_lodrate3L[0] * g_projfar;//num:3levels lod1 maxdist
+			cb.lodmindist[2][1] = g_lodrate3L[0] * g_projfar;//num:3levels lod:2 mindist
+			cb.lodmaxdist[2][1] = g_lodrate3L[1] * g_projfar;//num:3levels lod:2 maxdist
+			cb.lodmindist[2][2] = g_lodrate3L[1] * g_projfar;//num:3levels lod:3 mindist
+			cb.lodmaxdist[2][2] = g_lodrate3L[2] * g_projfar;//num:3levels lod:3 maxdist
+
+			cb.lodmindist[3][0] = 0.0f;                      //num:4levels lod1 mindist
+			cb.lodmaxdist[3][0] = g_lodrate4L[0] * g_projfar;//num:4levels lod1 maxdist
+			cb.lodmaxdist[3][0] = g_lodrate4L[0] * g_projfar;//num:4levels lod1 maxdist
+			cb.lodmindist[3][1] = g_lodrate4L[0] * g_projfar;//num:4levels lod:2 mindist
+			cb.lodmaxdist[3][1] = g_lodrate4L[1] * g_projfar;//num:4levels lod:2 maxdist
+			cb.lodmindist[3][2] = g_lodrate4L[1] * g_projfar;//num:4levels lod:3 mindist
+			cb.lodmaxdist[3][2] = g_lodrate4L[2] * g_projfar;//num:4levels lod:3 maxdist
+			cb.lodmindist[3][3] = g_lodrate4L[2] * g_projfar;//num:4levels lod:3 mindist
+			cb.lodmaxdist[3][3] = g_lodrate4L[3] * g_projfar;//num:4levels lod:3 maxdist
+
 
 			ChaVector3 lightpos;
 			if (g_cameraShadow) {

@@ -24,7 +24,7 @@ struct CSBSphere
 	float bs[4];//[0]-[2]:centerpos, [3]:r
 	float bbmin[4];//bbox min
 	float bbmax[4];//bbox max
-	int lodno[4];//[0]:lodnum, [1]:lodno, [2]-[3]:未使用
+	int lodno[4];//[0]:lodnumindex (lodnum - 1), [1]:lodno, [2]-[3]:未使用
 	int forceresult[4]; //[0]:forceInView, [1]:forceInViewValue, [2]:forceInShadow, [3]:forceInShadowValue
 	void Init() {
 		bs[0] = 0.0f;
@@ -65,9 +65,11 @@ struct CSConstantBufferChkInView {
 	Matrix mWorld;		//ワールド行列。
 	float camEye[4];
 	float params1[4];//[0]:BACKPOSCOEF, [1]:cos(g_fovy * 0.85), [2]:g_projfar, [3]:g_projnear
-	float lodrate2L[4];
-	float lodrate3L[4];
-	float lodrate4L[4];//2024/04/22
+	//float lodrate2L[4];
+	//float lodrate3L[4];
+	//float lodrate4L[4];//2024/04/22
+	float lodmindist[4][4];//2024/04/25 lodmindist[lodnum][lodno]
+	float lodmaxdist[4][4];//2024/04/25 lodmaxdist[lodnum][lodno]
 	float shadowPos[4];
 	float shadowparams1[4];//[0]:cos(shadowfov), [1]:shadowmaxdist(g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno])
 	float frustumPlanes[6][4];
@@ -86,18 +88,21 @@ struct CSConstantBufferChkInView {
 		params1[1] = 45.0f;
 		params1[2] = 5000.0f;
 		params1[3] = 10.0f;
-		lodrate2L[0] = 0.1f;
-		lodrate2L[1] = 1.0f;
-		lodrate2L[2] = 1.0f;
-		lodrate2L[3] = 1.0f;
-		lodrate3L[0] = 0.1f;
-		lodrate3L[1] = 0.15f;
-		lodrate3L[2] = 1.0f;
-		lodrate3L[3] = 1.0f;
-		lodrate4L[0] = 0.1f;
-		lodrate4L[1] = 0.15f;
-		lodrate4L[2] = 0.5f;
-		lodrate4L[3] = 1.0f;
+		//lodrate2L[0] = 0.1f;
+		//lodrate2L[1] = 1.0f;
+		//lodrate2L[2] = 1.0f;
+		//lodrate2L[3] = 1.0f;
+		//lodrate3L[0] = 0.1f;
+		//lodrate3L[1] = 0.15f;
+		//lodrate3L[2] = 1.0f;
+		//lodrate3L[3] = 1.0f;
+		//lodrate4L[0] = 0.1f;
+		//lodrate4L[1] = 0.15f;
+		//lodrate4L[2] = 0.5f;
+		//lodrate4L[3] = 1.0f;
+		ZeroMemory(lodmindist, sizeof(float) * 4 * 4);
+		ZeroMemory(lodmaxdist, sizeof(float) * 4 * 4);
+
 		ZeroMemory(shadowPos, sizeof(float) * 4);
 		shadowparams1[0] = 45.0f;
 		shadowparams1[1] = 5000.0f;
