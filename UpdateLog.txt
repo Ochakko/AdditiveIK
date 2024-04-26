@@ -15,6 +15,15 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+　ショートムービー
+　　ジャンプ中にくるりと回ります
+　　https://youtu.be/6wveLqMbsYA
+
+　README.mdのExplaining Movieにショートムービーリンク追加
+
+
+
+
 
 2024/04/26
 　AdditiveIK 1.0.0.17 release

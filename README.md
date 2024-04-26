@@ -241,6 +241,8 @@ Smooth平滑化<br>
 
 [Usage Example 2024/04/19](https://youtu.be/S-2ycgp_xM4 "Usage example1")<br>
 
+[Usage Example 2024/04/26](https://youtu.be/6wveLqMbsYA "Usage example2")<br>
+
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")
 <br>
