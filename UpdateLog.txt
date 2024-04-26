@@ -2,6 +2,19 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/04/26
+　ジャンプ中の前転にも対応
+　　IK回転操作時にDispAndLimitsプレートメニューのRotateTranslationにチェックを入れると移動成分も回転
+　　RotateTranslationにチェックを入れない場合は移動はそのままで回転だけ行う
+　　以前のバージョンにおいては、Hipsだけ特別扱いをしていてHipsの場合は強制的にRotateTranslationチェック状態と同じ処理だった
+　　ジャンプ中に前転する場合などHipsにおいてもHips以外と同様にRotateTranslationによる場合分けが必要だった
+　　よってHipsに対してもRotateTranslationチェックの有無で場合分けをした
+
+　全バネ定数スケールスライダーを移動バネに対しても適用
+　　DispAndLimitsプレートメニューのSpringScaleスライダー操作時に回転バネだけでなく移動バネもスケールするように修正
+
+
+
 
 2024/04/26
 　AdditiveIK 1.0.0.17 release

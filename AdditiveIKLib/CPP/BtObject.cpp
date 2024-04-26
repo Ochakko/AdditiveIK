@@ -650,10 +650,10 @@ DbgOut( L"CreateBtConstraint (bef) : curbto %s---%s, chilbto %s---%s\r\n",
 				*/
 				for (dofid = 0; dofid < 3; dofid++) {
 					if (l_kindex <= 2) {
-						dofC->setStiffness(dofid, g_l_kval[l_kindex]);
+						dofC->setStiffness(dofid, (g_l_kval[l_kindex] * g_akscale));//2024/04/26 * g_akscale
 					}
 					else {
-						dofC->setStiffness(dofid, l_cusk);
+						dofC->setStiffness(dofid, (l_cusk * g_akscale));//2024/04/26 * g_akscale
 					}
 					//dofC->setStiffness(dofid, 1.0e12);
 					if (g_previewFlag != 5){
