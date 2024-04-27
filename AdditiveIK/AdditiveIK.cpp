@@ -28877,6 +28877,31 @@ LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPAR
 			}
 		}
 		break;
+		case IDC_CHECK_DISTORTION:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_DISTORTION);
+			if (ischecked == BST_CHECKED) {
+				s_shadertypeparams.distortionflag = true;
+			}
+			else {
+				s_shadertypeparams.distortionflag = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetDistortionFlag(s_shadertypeparams.distortionflag);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetDistortionFlag(s_shadertypeparams.distortionflag);
+					}
+				}
+			}
+		}
+		break;
 		case IDC_CHECK_GRADATION:
 		{
 			UINT ischecked = 0;
@@ -29765,6 +29790,26 @@ LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex9);
 				if (setmqomat) {
 					setmqomat->SetNormalY0Flag(s_skyparams[g_skyindex].normaly0flag);
+				}
+			}
+		}
+		break;
+		case IDC_CHECK_DISTORTION:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_DISTORTION);
+			if (ischecked == BST_CHECKED) {
+				s_skyparams[g_skyindex].distortionflag = true;
+			}
+			else {
+				s_skyparams[g_skyindex].distortionflag = false;
+			}
+
+			int materialindex9;
+			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex9);
+				if (setmqomat) {
+					setmqomat->SetDistortionFlag(s_skyparams[g_skyindex].distortionflag);
 				}
 			}
 		}
@@ -58460,6 +58505,13 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		CheckDlgButton(hDlgWnd, IDC_CHECK_LIGHTINGMAT, false);
 	}
 
+	if (s_shadertypeparams.distortionflag == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_DISTORTION, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_DISTORTION, false);
+	}
+
 	return 0;
 }
 
@@ -58818,6 +58870,14 @@ int SetMaterial2SkyParamsDlg()
 	else {
 		CheckDlgButton(hDlgWnd, IDC_CHECK_LIGHTINGMAT, false);
 	}
+
+	if (s_skyparams[g_skyindex].distortionflag == true) {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_DISTORTION, true);
+	}
+	else {
+		CheckDlgButton(hDlgWnd, IDC_CHECK_DISTORTION, false);
+	}
+
 
 	return 0;
 }

@@ -103,8 +103,9 @@ cbuffer ModelCb : register(b0)
     float4 metalcoef;
     float4 materialdisprate;
     float4 shadowmaxz;//x:(1/shadowfar), y:shadowbias
-    int4 UVs;//x:UVSet, y:TilingU, z:TilingV
+    int4 UVs; //x:UVSet, y:TilingU, z:TilingV, w:distortionFlag   
     int4 Flags1; //x:skyflag, y:groundflag, z:skydofflag, w:VSM
+    float4 time1; //2024/04/27
 };
 
 // ディレクションライト
@@ -530,87 +531,34 @@ SPSInExtLine VSMainExtLine(SVSInExtLine vsIn, uniform bool hasSkin)
 /// </summary>
 SPSOut2 PSMainNoSkinPBR(SPSIn psIn) : SV_Target
 {
-    //float4 diffusecol = CalcDiffuseColor(psIn.normal, toonlightdir);
 
-    
-    //  // 法線を計算
-    //float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, psIn.uv);
-
-    //// アルベドカラー、スペキュラカラー、金属度、滑らかさをサンプリングする。
-    //// アルベドカラー（拡散反射光）
-    //float4 albedoColor = g_albedo.Sample(g_sampler, psIn.uv);
-
-    //// スペキュラカラーはアルベドカラーと同じにする。
-    //float3 specColor = albedoColor.xyz;
-
-    //// 金属度
-    //float metallic = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).r;
-
-    //// 滑らかさ
-    //float smooth = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).a;
-
-    //// 視線に向かって伸びるベクトルを計算する
-    //float3 toEye = normalize(eyePos.xyz - psIn.worldPos.xyz);
-
-    //float3 lig = 0;
-    //for (int ligNo = 0; ligNo < NUM_DIRECTIONAL_LIGHT; ligNo++)
-    //{
-    //    // シンプルなディズニーベースの拡散反射を実装する。
-    //    // フレネル反射を考慮した拡散反射を計算
-    //    float diffuseFromFresnel = CalcDiffuseFromFresnel(
-    //        normal, directionalLight[ligNo].direction.xyz, toEye);
-
-    //    // 正規化Lambert拡散反射を求める
-    //    float NdotL = saturate(dot(normal, directionalLight[ligNo].direction.xyz));
-    //    float3 lambertDiffuse = directionalLight[ligNo].color.xyz * NdotL / PI;
-
-    //    // 最終的な拡散反射光を計算する
-    //    float3 diffuse = albedoColor.xyz * diffuseFromFresnel * lambertDiffuse;
-
-    //    // Cook-Torranceモデルを利用した鏡面反射率を計算する
-    //    // Cook-Torranceモデルの鏡面反射率を計算する
-    //    float3 spec = CookTorranceSpecular(
-    //        directionalLight[ligNo].direction.xyz, toEye, normal, smooth)
-    //        * directionalLight[ligNo].color.xyz;
-
-    //    // 金属度が高ければ、鏡面反射はスペキュラカラー、低ければ白
-    //    // スペキュラカラーの強さを鏡面反射率として扱う
-    //    spec *= lerp(float3(1.0f, 1.0f, 1.0f), specColor, metallic);
-
-    //    // 滑らかさを使って、拡散反射光と鏡面反射光を合成する
-    //    // 滑らかさが高ければ、拡散反射は弱くなる
-    //    lig += diffuse * (1.0f - smooth) + spec;
-    //}
-
-    //// 環境光による底上げ
-    //lig += ambientLight.xyz * albedoColor.xyz;
-
-    ////float4 finalColor = 1.0f;
-    ////finalColor.xyz = lig;
-    ////return finalColor;
-    
-    //float4 finalColor = float4(lig, albedoColor.w) * diffusecol;
-    //return finalColor;
-    ////float4 finalColor = albedoColor;
-    ////float4 finalColor = float4(g_normalMap.Sample(g_sampler, psIn.uv).xyz, 1.0f);    
-    
-    
-    //#########
-    //7-2
-    //#########
     // アルベドカラー、スペキュラカラー、金属度、滑らかさをサンプリングする。
     // アルベドカラー（拡散反射光）
-    float4 albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv); // * diffusecol;
-    //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
-    //{
-    //    //フォグを最大濃度で使用する機会は少ないので　ifの分かえって遅くなる　よってコメントアウト
-    //    SPSOut fogtest;
-    //    fogtest.color = float4(vFogColor.xyz, albedoColor.w);
-    //    return fogtest;
-    //}
-    
+    float4 albedoColor;
+    float2 normaluv;
+    if (UVs.w == 0)
+    {
+        albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv);
+        normaluv = psIn.uv;
+    }
+    else
+    {
+        float2 grabuv = psIn.pos.xy / psIn.pos.w;
+        //float2 grabuv = psIn.uv;
+        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.2f)).rg * 2.0f - 1.0f;
+        float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.1f)).gb * 2.0f - 1.0f;
+        //float2 distortionuv = g_albedo.Sample(g_sampler_albedo, (grabuv + time1.x * 0.1f)).gb * 2.0f - 1.0f;
+        normaluv = psIn.uv + distortionuv;
+        albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
+   
+        ////float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.2f)).rg * 2.0f - 1.0f;
+        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (psIn.uv + time1.x * 0.05f)).gb * 2.0f - 1.0f;
+        //float2 grabuv = psIn.pos.xy / psIn.pos.w;
+        //normaluv = grabuv + distortionuv;
+        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);        
+    }
       // 法線を計算
-    float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, psIn.uv);
+    float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, normaluv);
 
 
     // スペキュラカラーはアルベドカラーと同じにする。
@@ -694,87 +642,34 @@ SPSOut0 PSMainNoSkinPBRShadowMap(SPSInShadowMap psIn) : SV_Target0
 
 SPSOut2 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target
 {
-    //float4 diffusecol = CalcDiffuseColor(psIn.normal, toonlightdir);
 
-    
-    //  // 法線を計算
-    //float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, psIn.uv);
-
-    //// アルベドカラー、スペキュラカラー、金属度、滑らかさをサンプリングする。
-    //// アルベドカラー（拡散反射光）
-    //float4 albedoColor = g_albedo.Sample(g_sampler, psIn.uv);
-
-    //// スペキュラカラーはアルベドカラーと同じにする。
-    //float3 specColor = albedoColor.xyz;
-
-    //// 金属度
-    //float metallic = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).r;
-
-    //// 滑らかさ
-    //float smooth = g_metallicSmoothMap.Sample(g_sampler, psIn.uv).a;
-
-    //// 視線に向かって伸びるベクトルを計算する
-    //float3 toEye = normalize(eyePos.xyz - psIn.worldPos.xyz);
-
-    //float3 lig = 0;
-    //for (int ligNo = 0; ligNo < NUM_DIRECTIONAL_LIGHT; ligNo++)
-    //{
-    //    // シンプルなディズニーベースの拡散反射を実装する。
-    //    // フレネル反射を考慮した拡散反射を計算
-    //    float diffuseFromFresnel = CalcDiffuseFromFresnel(
-    //        normal, directionalLight[ligNo].direction.xyz, toEye);
-
-    //    // 正規化Lambert拡散反射を求める
-    //    float NdotL = saturate(dot(normal, directionalLight[ligNo].direction.xyz));
-    //    float3 lambertDiffuse = directionalLight[ligNo].color.xyz * NdotL / PI;
-
-    //    // 最終的な拡散反射光を計算する
-    //    float3 diffuse = albedoColor.xyz * diffuseFromFresnel * lambertDiffuse;
-
-    //    // Cook-Torranceモデルを利用した鏡面反射率を計算する
-    //    // Cook-Torranceモデルの鏡面反射率を計算する
-    //    float3 spec = CookTorranceSpecular(
-    //        directionalLight[ligNo].direction.xyz, toEye, normal, smooth)
-    //        * directionalLight[ligNo].color.xyz;
-
-    //    // 金属度が高ければ、鏡面反射はスペキュラカラー、低ければ白
-    //    // スペキュラカラーの強さを鏡面反射率として扱う
-    //    spec *= lerp(float3(1.0f, 1.0f, 1.0f), specColor, metallic);
-
-    //    // 滑らかさを使って、拡散反射光と鏡面反射光を合成する
-    //    // 滑らかさが高ければ、拡散反射は弱くなる
-    //    lig += diffuse * (1.0f - smooth) + spec;
-    //}
-
-    //// 環境光による底上げ
-    //lig += ambientLight.xyz * albedoColor.xyz;
-
-    ////float4 finalColor = 1.0f;
-    ////finalColor.xyz = lig;
-    ////return finalColor;
-    
-    //float4 finalColor = float4(lig, albedoColor.w) * diffusecol;
-    //return finalColor;
-    ////float4 finalColor = albedoColor;
-    ////float4 finalColor = float4(g_normalMap.Sample(g_sampler, psIn.uv).xyz, 1.0f);    
-    
-    
-    //#########
-    //7-2
-    //#########
     // アルベドカラー、スペキュラカラー、金属度、滑らかさをサンプリングする。
     // アルベドカラー（拡散反射光）
-    float4 albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv); // * diffusecol;
-    //if (psIn.Fog >= 0.98f)//2024/03/17 フォグテスト フォグ濃度0.98以上の場合はフォグ色を表示してリターン
-    //{
-    //    //フォグを最大濃度で使用する機会は少ないので　ifの分かえって遅くなる　よってコメントアウト
-    //    SPSOut fogtest;
-    //    fogtest.color = float4(vFogColor.xyz, albedoColor.w);
-    //    return fogtest;
-    //}
-
+    float4 albedoColor;
+    float2 normaluv;
+    if (UVs.w == 0)
+    {
+        albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv);
+        normaluv = psIn.uv;
+    }
+    else
+    {
+        float2 grabuv = psIn.pos.xy / psIn.pos.w;
+        //float2 grabuv = psIn.uv;
+        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.2f)).rg * 2.0f - 1.0f;
+        float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.1f)).gb * 2.0f - 1.0f;
+        //float2 distortionuv = g_albedo.Sample(g_sampler_albedo, (grabuv + time1.x * 0.1f)).gb * 2.0f - 1.0f;
+        normaluv = psIn.uv + distortionuv;
+        albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
+        
+        ////float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.2f)).rg * 2.0f - 1.0f;
+        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (psIn.uv + time1.x * 0.05f)).gb * 2.0f - 1.0f;
+        //float2 grabuv = psIn.pos.xy / psIn.pos.w;
+        //normaluv = grabuv + distortionuv;
+        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);        
+    }
       // 法線を計算
-    float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, psIn.uv);
+    float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, normaluv);
 
 
     // スペキュラカラーはアルベドカラーと同じにする。

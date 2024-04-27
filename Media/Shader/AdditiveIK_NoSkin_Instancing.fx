@@ -66,13 +66,14 @@ cbuffer ModelCb : register(b0)
     float4x4 mView;
     float4x4 mProj;
     float4 diffusemult;
-    float4 ambient0;//ambient0.wはAlphaTestの閾値
+    float4 ambient0; //ambient0.wはAlphaTestの閾値
     float4 emission;
     float4 metalcoef;
     float4 materialdisprate;
-    float4 shadowmaxz;
-    int4 UVs;
-    int4 Flags1; //x:skyflag, y:groundflag, z:skydofflag
+    float4 shadowmaxz; //x:(1/shadowfar), y:shadowbias
+    int4 UVs; //x:UVSet, y:TilingU, z:TilingV, w:distortionFlag   
+    int4 Flags1; //x:skyflag, y:groundflag, z:skydofflag, w:VSM
+    float4 time1; //2024/04/27
 };
 
 // ディレクションライト

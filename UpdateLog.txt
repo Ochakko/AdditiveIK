@@ -2,6 +2,15 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/04/28
+　ShaderプレートメニューにDistortion(PBR,NoSkin)チェックボックスを追加
+　　水面(計算負荷の低い)を想定した機能
+　　法線マップをディストーションとしても使用
+　　ディストーション専用のテクスチャが必要かどうかテストしてから決める予定
+　　DistortionFlag設定はまだファイルに保存していない
+　　
+
+
 2024/04/26
 　ジャンプ中の前転にも対応
 　　IK回転操作時にDispAndLimitsプレートメニューのRotateTranslationにチェックを入れると移動成分も回転

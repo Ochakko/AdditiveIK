@@ -27,6 +27,7 @@
 #include <polymesh4.h>
 #include <ExtLine.h>
 
+#include "../../AdditiveIK/DXUTmisc/DXUTmisc.h"
 
 //extern CTexBank* g_texbank;
 extern ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わらずオリジナルのインデックスで格納
@@ -329,6 +330,7 @@ int CMQOMaterial::InitParams()
 	}
 	m_specularcoef = 0.1250f;
 	m_normaly0flag = true;//InitShadersAndPipelines()にてpm4:true, pm3:falseに初期化
+	m_distortionflag = false;
 
 	m_vcolflag = 0;
 
@@ -3665,11 +3667,14 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].UVs[0] = g_uvset;
 		m_cb[currentrefposindex].UVs[1] = (int)(GetUVScale().x + 0.0001);
 		m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);
+		m_cb[currentrefposindex].UVs[3] = (GetDistortionFlag()) ? 1 : 0;
 		m_cb[currentrefposindex].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 		m_cb[currentrefposindex].Flags[3] = g_VSMflag ? 1 : 0;
-
+		if (DXUTGetGlobalTimer()) {
+			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
+		}
 		m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
 
 	}
@@ -3710,10 +3715,14 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].UVs[0] = g_uvset;
 		m_cb[currentrefposindex].UVs[1] = (int)(GetUVScale().x + 0.0001);
 		m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);
+		m_cb[currentrefposindex].UVs[3] = (GetDistortionFlag()) ? 1 : 0;
 		m_cb[currentrefposindex].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 		m_cb[currentrefposindex].Flags[3] = g_VSMflag ? 1 : 0;
+		if (DXUTGetGlobalTimer()) {
+			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
+		}
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
@@ -3772,10 +3781,14 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].UVs[0] = g_uvset;
 		m_cb[currentrefposindex].UVs[1] = (int)(GetUVScale().x + 0.0001);
 		m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);
+		m_cb[currentrefposindex].UVs[3] = (GetDistortionFlag()) ? 1 : 0;
 		m_cb[currentrefposindex].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 		m_cb[currentrefposindex].Flags[3] = g_VSMflag ? 1 : 0;
+		if (DXUTGetGlobalTimer()) {
+			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
+		}
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
@@ -3886,6 +3899,10 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[0].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 		m_cb[0].Flags[3] = g_VSMflag ? 1 : 0;
+		if (DXUTGetGlobalTimer()) {
+			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
+		}
+
 
 		m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);
 	}
@@ -3924,6 +3941,9 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[0].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 		m_cb[0].Flags[3] = g_VSMflag ? 1 : 0;
+		if (DXUTGetGlobalTimer()) {
+			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
+		}
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);
@@ -3976,6 +3996,10 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[0].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 		m_cb[0].Flags[3] = g_VSMflag ? 1 : 0;
+		if (DXUTGetGlobalTimer()) {
+			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
+		}
+
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);

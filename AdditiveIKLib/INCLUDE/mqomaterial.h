@@ -74,8 +74,9 @@ struct SConstantBuffer {
 	ChaVector4 metalcoef;
 	ChaVector4 materialdisprate;
 	ChaVector4 shadowmaxz;
-	int UVs[4];//[0]:UVSet, [1]:TilingU, [2]:TilingV
+	int UVs[4];//[0]:UVSet, [1]:TilingU, [2]:TilingV, [3]:distortionFlag
 	int Flags[4];//[0]:skyflag, [1]:groundflag, [2]:skydofflag, [3]:VarianceShadowMaps
+	ChaVector4 time;//2024/04/27
 	void Init() {
 		mWorld.SetIdentity();
 		mView.SetIdentity();
@@ -94,6 +95,7 @@ struct SConstantBuffer {
 		Flags[1] = 0;
 		Flags[2] = 0;
 		Flags[3] = 0;
+		time.SetZeroVec4(0.0f);
 	};
 };
 
@@ -568,8 +570,12 @@ public:
 	bool GetNormalY0Flag() {
 		return m_normaly0flag;
 	};
-
-
+	void SetDistortionFlag(bool srcval) {
+		m_distortionflag = srcval;
+	}
+	bool GetDistortionFlag() {
+		return m_distortionflag;
+	}
 
 
 	ChaVector4 GetDif4F(){
@@ -1187,6 +1193,7 @@ private:
 	float m_lightscale[LIGHTNUMMAX];//Shaderプレートメニュー用
 	float m_specularcoef;//2024/02/19 Shaderプレートメニュー用
 	bool m_normaly0flag;//2024/02/19 Shaderプレートメニュー用
+	bool m_distortionflag;//2024/04/27 Shaderプレートメニュー用
 
 ////
 	ChaVector4 m_dif4f;
@@ -1326,6 +1333,7 @@ public:
 		shadowcasterflag = true;
 		uvscale = ChaVectorDbl2(1.0, 1.0);
 		alphatest = (8.0 / 255.0);
+		distortionflag = false;
 	};
 
 	void SetMaterial(CMQOMaterial* srcmqomat) {
@@ -1350,6 +1358,7 @@ public:
 			shadowcasterflag = srcmqomat->GetShadowCasterFlag();
 			uvscale = srcmqomat->GetUVScale();
 			alphatest = srcmqomat->GetAlphaTestClipVal();
+			distortionflag = srcmqomat->GetDistortionFlag();
 		}
 		else {
 			//Material "All"のときにも通る.　エラーではなく通常処理.
@@ -1377,6 +1386,7 @@ public:
 	WCHAR wmaterialname[256];// = { 0L };
 	HSVTOON hsvtoon;
 	double alphatest;//2024/03/22
+	bool distortionflag = false;//2024/04/27
 };
 
 #endif
