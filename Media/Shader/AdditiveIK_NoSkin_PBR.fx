@@ -159,6 +159,15 @@ sampler g_sampler_shadow : register(s5);
 
 
 
+float fractSin11(float x)
+{
+    return frac(1000.0 * sin(x));
+}
+float fractSin21(float2 xy)
+{
+    return frac(sin(dot(xy, float2(12.9898, 78.233))) * 43758.5453123);
+}
+
 float CalcVSFog(float4 worldpos)
 {
     worldpos /= worldpos.w;
@@ -544,12 +553,37 @@ SPSOut2 PSMainNoSkinPBR(SPSIn psIn) : SV_Target
     else
     {
         float2 grabuv = psIn.pos.xy / psIn.pos.w;
-        //float2 grabuv = psIn.uv;
-        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.2f)).rg * 2.0f - 1.0f;
-        float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.1f)).gb * 2.0f - 1.0f;
-        //float2 distortionuv = g_albedo.Sample(g_sampler_albedo, (grabuv + time1.x * 0.1f)).gb * 2.0f - 1.0f;
+        float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + sin(time1.x * 0.5f))).gb * 2.0f - 1.0f;
         normaluv = psIn.uv + distortionuv;
         albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
+        
+        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, psIn.uv).gb * 2.0f - 1.0f;
+        ////float2 fracuv = fractSin21(float2(time1.x, time1.x * 0.8649));
+        //float2 fracuv = sin(time1.x * 0.5f);
+        //normaluv = psIn.uv + distortionuv * fracuv;
+        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
+        
+        //float2 grabuv = psIn.pos.xy / psIn.pos.w;
+        //float2 timeuv = grabuv + time1.x;
+        //float2 fracuv = fractSin21(timeuv);
+        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, fracuv).gb * 2.0f - 1.0f;
+        //normaluv = psIn.uv + distortionuv;
+        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
+        
+        //float2 grabuv = psIn.pos.xy / psIn.pos.w;
+        //float2 timeuv = grabuv + time1.x;
+        //float2 fracuv = fractSin21(timeuv);
+        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, fracuv).gb * 2.0f - 1.0f;
+        //normaluv = psIn.uv + distortionuv;
+        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
+                
+        //float2 grabuv = psIn.pos.xy / psIn.pos.w;
+        ////float2 grabuv = psIn.uv;
+        ////float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.2f)).rg * 2.0f - 1.0f;
+        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.1f)).gb * 2.0f - 1.0f;
+        ////float2 distortionuv = g_albedo.Sample(g_sampler_albedo, (grabuv + time1.x * 0.1f)).gb * 2.0f - 1.0f;
+        //normaluv = psIn.uv + distortionuv;
+        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
    
         ////float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.2f)).rg * 2.0f - 1.0f;
         //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (psIn.uv + time1.x * 0.05f)).gb * 2.0f - 1.0f;
@@ -566,7 +600,8 @@ SPSOut2 PSMainNoSkinPBR(SPSIn psIn) : SV_Target
 
     // 金属度
     //float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv);
-    float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_albedo, psIn.uv);//2024/03/08 複数アセットで確認　UVについてはalbedo,normal,metalをセットで切り替えるように
+    //float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_albedo, psIn.uv);//2024/03/08 複数アセットで確認　UVについてはalbedo,normal,metalをセットで切り替えるように
+    float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_albedo, normaluv); //2024/04/28 normaluv
     float metallic = metaltexcol.r * metalcoef.x + metalcoef.z;//2024/02/18
     // 滑らかさ
     float smooth = metaltexcol.a * metalcoef.y; //!!!!smoothcoef
@@ -655,12 +690,31 @@ SPSOut2 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target
     else
     {
         float2 grabuv = psIn.pos.xy / psIn.pos.w;
-        //float2 grabuv = psIn.uv;
-        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.2f)).rg * 2.0f - 1.0f;
-        float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.1f)).gb * 2.0f - 1.0f;
-        //float2 distortionuv = g_albedo.Sample(g_sampler_albedo, (grabuv + time1.x * 0.1f)).gb * 2.0f - 1.0f;
+        float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + sin(time1.x * 0.5f))).gb * 2.0f - 1.0f;
         normaluv = psIn.uv + distortionuv;
         albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
+        
+        //ライティングが変わるが凸凹が固定している
+        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, psIn.uv).gb * 2.0f - 1.0f;
+        ////float2 fracuv = fractSin21(float2(time1.x, time1.x * 0.8649));
+        //float2 fracuv = sin(time1.x * 0.5f);
+        //normaluv = psIn.uv + distortionuv * fracuv;
+        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
+        
+        //float2 grabuv = psIn.pos.xy / psIn.pos.w;
+        //float2 timeuv = grabuv + time1.x;
+        //float2 fracuv = fractSin21(timeuv);
+        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, fracuv).gb * 2.0f - 1.0f;
+        //normaluv = psIn.uv + distortionuv;
+        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
+                
+        //float2 grabuv = psIn.pos.xy / psIn.pos.w;
+        ////float2 grabuv = psIn.uv;
+        ////float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.2f)).rg * 2.0f - 1.0f;
+        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.1f)).gb * 2.0f - 1.0f;
+        ////float2 distortionuv = g_albedo.Sample(g_sampler_albedo, (grabuv + time1.x * 0.1f)).gb * 2.0f - 1.0f;
+        //normaluv = psIn.uv + distortionuv;
+        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
         
         ////float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.2f)).rg * 2.0f - 1.0f;
         //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (psIn.uv + time1.x * 0.05f)).gb * 2.0f - 1.0f;
@@ -677,7 +731,8 @@ SPSOut2 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target
 
     // 金属度
     //float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv);
-    float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_albedo, psIn.uv);//2024/03/08 複数アセットで確認　UVについてはalbedo,normal,metalをセットで切り替えるように
+    //float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_albedo, psIn.uv);//2024/03/08 複数アセットで確認　UVについてはalbedo,normal,metalをセットで切り替えるように
+    float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_albedo, normaluv); //2024/04/28 normaluv
     float metallic = metaltexcol.r * metalcoef.x + metalcoef.z; //2024/02/18
     // 滑らかさ
     float smooth = metaltexcol.a * metalcoef.y; //!!!!smoothcoef

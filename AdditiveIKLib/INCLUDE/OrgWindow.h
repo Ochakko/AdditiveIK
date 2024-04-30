@@ -4834,7 +4834,7 @@ void s_dummyfunc()
 			value= min(max(_value,minValue),maxValue);
 
 			//リスナーコール
-			if(this->cursorListener!=NULL){
+			if((this->cursorListener!=NULL) && (calllistener == true)){
 				(this->cursorListener)();
 			}
 			
