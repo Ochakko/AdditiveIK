@@ -2517,16 +2517,20 @@ void s_dummyfunc()
 		}
 		/// Method : 仕切り線に触れているかどうか取得
 		bool isMouseOnHandle(const MouseEvent& e) const{
-			int centerPos= getCenterLinePos();
-			if( ((centerPos - LINE_MARGIN) <= (divideSide ? e.localX : e.localY))
-			 && ((divideSide ? e.localX : e.localY) <= (centerPos + LINE_MARGIN)) ){
-
-				int centerPos2= (divideSide?size.y:size.x)/2;
-				if( ((centerPos2 - HANDLE_SIZE / 2) <= (divideSide ? e.localY : e.localX))
-				 && ((divideSide ? e.localY : e.localX) <= (centerPos2 + HANDLE_SIZE / 2)) ){
-					return true;
-				}
-			}
+			
+			//2024/04/30
+			//何回も誤操作でボタンが重なって直らなかったので、とりあえずコメントアウト
+			
+			//int centerPos= getCenterLinePos();
+			//if( ((centerPos - LINE_MARGIN) <= (divideSide ? e.localX : e.localY))
+			// && ((divideSide ? e.localX : e.localY) <= (centerPos + LINE_MARGIN)) ){
+			//
+			//	int centerPos2= (divideSide?size.y:size.x)/2;
+			//	if( ((centerPos2 - HANDLE_SIZE / 2) <= (divideSide ? e.localY : e.localX))
+			//	 && ((divideSide ? e.localY : e.localX) <= (centerPos2 + HANDLE_SIZE / 2)) ){
+			//		return true;
+			//	}
+			//}
 			return false;
 		}
 		/// Method : マウス位置に仕切り線を移動

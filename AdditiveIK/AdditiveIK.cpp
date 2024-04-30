@@ -60136,7 +60136,7 @@ int CreateShaderTypeParamsDlg()
 
 	if (s_st_paramsWnd) {
 		bool limitradionamelen = true;
-		double separaterate = 0.24;
+		double separaterate = 0.26;
 
 
 		s_st_namesp = new OWP_Separator(s_st_paramsWnd, true, 0.2, true);
@@ -60503,7 +60503,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonbaseHlabel = new OWP_Label(L"ToonBaseH");
+		s_st_toonbaseHlabel = new OWP_Label(L"BaseH");
 		if (!s_st_toonbaseHlabel) {
 			_ASSERT(0);
 			return 1;
@@ -60513,7 +60513,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonbaseSlabel = new OWP_Label(L"ToonBaseS");
+		s_st_toonbaseSlabel = new OWP_Label(L"BaseS");
 		if (!s_st_toonbaseSlabel) {
 			_ASSERT(0);
 			return 1;
@@ -60538,7 +60538,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonbaseVlabel = new OWP_Label(L"ToonBaseV");
+		s_st_toonbaseVlabel = new OWP_Label(L"BaseV");
 		if (!s_st_toonbaseVlabel) {
 			_ASSERT(0);
 			return 1;
@@ -60548,7 +60548,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonbaseAlabel = new OWP_Label(L"ToonBaseA");
+		s_st_toonbaseAlabel = new OWP_Label(L"BaseA");
 		if (!s_st_toonbaseAlabel) {
 			_ASSERT(0);
 			return 1;
@@ -60575,7 +60575,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonhiHlabel = new OWP_Label(L"ToonHiH");
+		s_st_toonhiHlabel = new OWP_Label(L"HighH");
 		if (!s_st_toonhiHlabel) {
 			_ASSERT(0);
 			return 1;
@@ -60585,7 +60585,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonhiSlabel = new OWP_Label(L"ToonHiS");
+		s_st_toonhiSlabel = new OWP_Label(L"HighS");
 		if (!s_st_toonhiSlabel) {
 			_ASSERT(0);
 			return 1;
@@ -60610,7 +60610,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonhiVlabel = new OWP_Label(L"ToonHiV");
+		s_st_toonhiVlabel = new OWP_Label(L"HighV");
 		if (!s_st_toonhiVlabel) {
 			_ASSERT(0);
 			return 1;
@@ -60620,7 +60620,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonhiAlabel = new OWP_Label(L"ToonHiA");
+		s_st_toonhiAlabel = new OWP_Label(L"HighA");
 		if (!s_st_toonhiAlabel) {
 			_ASSERT(0);
 			return 1;
@@ -60647,7 +60647,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonlowHlabel = new OWP_Label(L"ToonLowH");
+		s_st_toonlowHlabel = new OWP_Label(L"LowH");
 		if (!s_st_toonlowHlabel) {
 			_ASSERT(0);
 			return 1;
@@ -60657,7 +60657,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonlowSlabel = new OWP_Label(L"ToonLowS");
+		s_st_toonlowSlabel = new OWP_Label(L"LowS");
 		if (!s_st_toonlowSlabel) {
 			_ASSERT(0);
 			return 1;
@@ -60682,7 +60682,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonlowVlabel = new OWP_Label(L"ToonLowV");
+		s_st_toonlowVlabel = new OWP_Label(L"LowV");
 		if (!s_st_toonlowVlabel) {
 			_ASSERT(0);
 			return 1;
@@ -60692,7 +60692,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonlowAlabel = new OWP_Label(L"ToonLowA");
+		s_st_toonlowAlabel = new OWP_Label(L"LowA");
 		if (!s_st_toonlowAlabel) {
 			_ASSERT(0);
 			return 1;
@@ -63336,7 +63336,7 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonbaseHlabel = new OWP_Label(L"ToonBaseH");
+		s_skyst_toonbaseHlabel = new OWP_Label(L"BaseH");
 		if (!s_skyst_toonbaseHlabel) {
 			_ASSERT(0);
 			return 1;
@@ -63346,7 +63346,7 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonbaseSlabel = new OWP_Label(L"ToonBaseS");
+		s_skyst_toonbaseSlabel = new OWP_Label(L"BaseS");
 		if (!s_skyst_toonbaseSlabel) {
 			_ASSERT(0);
 			return 1;
@@ -63371,7 +63371,7 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonbaseVlabel = new OWP_Label(L"ToonBaseV");
+		s_skyst_toonbaseVlabel = new OWP_Label(L"BaseV");
 		if (!s_skyst_toonbaseVlabel) {
 			_ASSERT(0);
 			return 1;
@@ -63381,7 +63381,7 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonbaseAlabel = new OWP_Label(L"ToonBaseA");
+		s_skyst_toonbaseAlabel = new OWP_Label(L"BaseA");
 		if (!s_skyst_toonbaseAlabel) {
 			_ASSERT(0);
 			return 1;
@@ -63408,7 +63408,7 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonhiHlabel = new OWP_Label(L"ToonHiH");
+		s_skyst_toonhiHlabel = new OWP_Label(L"HighH");
 		if (!s_skyst_toonhiHlabel) {
 			_ASSERT(0);
 			return 1;
@@ -63418,7 +63418,7 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonhiSlabel = new OWP_Label(L"ToonHiS");
+		s_skyst_toonhiSlabel = new OWP_Label(L"HighS");
 		if (!s_skyst_toonhiSlabel) {
 			_ASSERT(0);
 			return 1;
@@ -63443,7 +63443,7 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonhiVlabel = new OWP_Label(L"ToonHiV");
+		s_skyst_toonhiVlabel = new OWP_Label(L"HighV");
 		if (!s_skyst_toonhiVlabel) {
 			_ASSERT(0);
 			return 1;
@@ -63453,7 +63453,7 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonhiAlabel = new OWP_Label(L"ToonHiA");
+		s_skyst_toonhiAlabel = new OWP_Label(L"HighA");
 		if (!s_skyst_toonhiAlabel) {
 			_ASSERT(0);
 			return 1;
@@ -63480,7 +63480,7 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonlowHlabel = new OWP_Label(L"ToonLowH");
+		s_skyst_toonlowHlabel = new OWP_Label(L"LowH");
 		if (!s_skyst_toonlowHlabel) {
 			_ASSERT(0);
 			return 1;
@@ -63490,7 +63490,7 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonlowSlabel = new OWP_Label(L"ToonLowS");
+		s_skyst_toonlowSlabel = new OWP_Label(L"LowS");
 		if (!s_skyst_toonlowSlabel) {
 			_ASSERT(0);
 			return 1;
@@ -63515,7 +63515,7 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonlowVlabel = new OWP_Label(L"ToonLowV");
+		s_skyst_toonlowVlabel = new OWP_Label(L"LowV");
 		if (!s_skyst_toonlowVlabel) {
 			_ASSERT(0);
 			return 1;
@@ -63525,7 +63525,7 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonlowAlabel = new OWP_Label(L"ToonLowA");
+		s_skyst_toonlowAlabel = new OWP_Label(L"LowA");
 		if (!s_skyst_toonlowAlabel) {
 			_ASSERT(0);
 			return 1;
@@ -64437,6 +64437,13 @@ int CreateSkyParamsDlg()
 		s_skyst_paramsWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
 
 		//１クリック目問題対応
+		s_skyst_slotsp1_0->autoResize();//_1, _2よりも前で
+		s_skyst_slotsp1_1->autoResize();
+		s_skyst_slotsp1_2->autoResize();
+		s_skyst_slotsp2_0->autoResize();//_1, _2よりも前で
+		s_skyst_slotsp2_1->autoResize();
+		s_skyst_slotsp2_2->autoResize();
+
 		s_skyst_paramsWnd->refreshPosAndSize();//2022/09/20
 
 
@@ -64479,9 +64486,12 @@ int OnFrameSkyParamsDlg()
 		if ((s_skyst_slotindex >= 0) && (s_skyst_slotindex < 8)) {
 			g_skyindex = s_skyst_slotindex;
 
-			CMQOMaterial* curmqomat = nullptr;
-			curmqomat = s_sky->GetMQOMaterialByIndex(0);
-			SetMaterial2SkyParamsDlg(curmqomat);
+			SetSkyParamsToSky(s_skyparams[g_skyindex]);
+			if (s_sky) {
+				CMQOMaterial* curmqomat = nullptr;
+				curmqomat = s_sky->GetMQOMaterialByIndex(0);
+				SetMaterial2SkyParamsDlg(curmqomat);
+			}
 		}
 		else {
 			_ASSERT(0);
@@ -66451,7 +66461,7 @@ int SetMaterial2SkyParamsDlg(CMQOMaterial* srcmat)
 		//}
 		
 		WCHAR strslotno[256] = { 0L };
-		swprintf_s(strslotno, 256, L"Sky : Slot%d", g_skyindex);
+		swprintf_s(strslotno, 256, L"Sky : Slot%d", (g_skyindex + 1));
 		s_skyst_namelabel->setName(strslotno);
 	}
 
