@@ -4,7 +4,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/05/01
-　AdditiveIK 1.0.0.18 RC1(リリース候補1)
+　AdditiveIK 1.0.0.18 release
 　　1.0.0.17からの変更点
 　　　不具合修正
 　　　　OWP_SliderのsetValueにリスナーを呼ばないフラグを渡してもリスナーが呼ばれていた不具合を修正
