@@ -90,6 +90,13 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			bool shadowcasterflag = mqomat->GetShadowCasterFlag();
 			bool lightingflag = mqomat->GetLightingFlag();
 			float alphatestclipval = (float)mqomat->GetAlphaTestClipVal();
+			bool distortionflag = mqomat->GetDistortionFlag();//2024/05/01
+			double distortionscale = mqomat->GetDistortionScale();//2024/05/01
+			int riverorsea = mqomat->GetRiverOrSea();//2024/05/01 0:river, 1:sea
+			//ChaVector2 seacenter = mqomat->GetSeaCenter();//2024/05/01 UV
+			ChaVector2 riverdir = mqomat->GetRiverDir();//2024/05/01 UV
+			double riverflowrate = mqomat->GetRiverFlowRate();//2024/05/01 velocity
+			int distortionmaptype = mqomat->GetDistortionMapType();//2024/05/01 0:rg, 1:rb, 2:gb
 
 			int litindex;
 			for (litindex = 0; litindex < 8; litindex++) {
@@ -164,6 +171,23 @@ int CShaderTypeFile::WriteShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 			CallF(Write2File("    <Lighting>%d</Lighting>\r\n", lightflag), return 1);
 
 
+			//2024/05/01
+			//bool distortionflag = false;//2024/04/27
+			//double distortionscale;//2024/05/01
+			//int riverorsea;//2024/05/01 0:river, 1:sea
+			////ChaVector2 seacenter;//2024/05/01 UV
+			//ChaVector2 riverdir;//2024/05/01 UV
+			//double riverflowrate;//2024/05/01 velocity
+			//int distortionmaptype;//2024/05/01 0:rg, 1:rb, 2:gb
+			int distortionflagval = distortionflag ? 1 : 0;
+			CallF(Write2File("    <SimpleWater>%d</SimpleWater>\r\n", distortionflagval), return 1);
+			CallF(Write2File("    <DistortionScale>%.3f</DistortionScale>\r\n", distortionscale), return 1);
+			CallF(Write2File("    <RiverOrSea>%d</RiverOrSea>\r\n", riverorsea), return 1);
+			CallF(Write2File("    <RiverDirU>%.3f</RiverDirU>\r\n", riverdir.x), return 1);
+			CallF(Write2File("    <RiverDirV>%.3f</RiverDirV>\r\n", riverdir.y), return 1);
+			CallF(Write2File("    <RiverFlowRate>%.3f</RiverFlowRate>\r\n", riverflowrate), return 1);
+			CallF(Write2File("    <DistortionMapType>%d</DistortionMapType>\r\n", distortionmaptype), return 1);
+
 
 			CallF(Write2File("  </Material>\r\n"), return 1);
 
@@ -187,7 +211,9 @@ int CShaderTypeFile::WriteFileInfo()
 	//2024/02/18
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1005</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//2024/02/19
-	CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1006</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1006</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//2024/05/01 distortion(SimpleWater)ä÷òAÇÃì«Ç›èëÇ´Çí«â¡
+	CallF(Write2File("  <FileInfo>\r\n    <kind>ShaderTypeFile</kind>\r\n    <version>1007</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 
 	return 0;
@@ -320,60 +346,60 @@ int CShaderTypeFile::LoadShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 				HSVTOON hsvtoon;
 				hsvtoon.Init();
 				float hicolorh = hsvtoon.hicolorh;
-				Read_Float(&materialbuf, "<ToonHiColorH>", "</ToonHiColorH>\r\n", &hicolorh);
+				Read_Float(&materialbuf, "<ToonHiColorH>", "</ToonHiColorH>", &hicolorh);
 				hsvtoon.hicolorh = hicolorh;
 
 				float lowcolorh = hsvtoon.lowcolorh;
-				Read_Float(&materialbuf, "<ToonLowColorH>", "</ToonLowColorH>\r\n", &lowcolorh);
+				Read_Float(&materialbuf, "<ToonLowColorH>", "</ToonLowColorH>", &lowcolorh);
 				hsvtoon.lowcolorh = lowcolorh;
 
 				float hiaddh = hsvtoon.hiaddhsv.x;
-				Read_Float(&materialbuf, "<ToonHiAddH>", "</ToonHiAddH>\r\n", &hiaddh);
+				Read_Float(&materialbuf, "<ToonHiAddH>", "</ToonHiAddH>", &hiaddh);
 				hsvtoon.hiaddhsv.x = hiaddh;
 
 				float hiadds = hsvtoon.hiaddhsv.y;
-				Read_Float(&materialbuf, "<ToonHiAddS>", "</ToonHiAddS>\r\n", &hiadds);
+				Read_Float(&materialbuf, "<ToonHiAddS>", "</ToonHiAddS>", &hiadds);
 				hsvtoon.hiaddhsv.y = hiadds;
 
 				float hiaddv = hsvtoon.hiaddhsv.z;
-				Read_Float(&materialbuf, "<ToonHiAddV>", "</ToonHiAddV>\r\n", &hiaddv);
+				Read_Float(&materialbuf, "<ToonHiAddV>", "</ToonHiAddV>", &hiaddv);
 				hsvtoon.hiaddhsv.z = hiaddv;
 
 				float hiadda = hsvtoon.hiaddhsv.w;
-				Read_Float(&materialbuf, "<ToonHiAddA>", "</ToonHiAddA>\r\n", &hiadda);
+				Read_Float(&materialbuf, "<ToonHiAddA>", "</ToonHiAddA>", &hiadda);
 				hsvtoon.hiaddhsv.w = hiadda;
 
 				float lowaddh = hsvtoon.lowaddhsv.x;
-				Read_Float(&materialbuf, "<ToonLowAddH>", "</ToonLowAddH>\r\n", &lowaddh);
+				Read_Float(&materialbuf, "<ToonLowAddH>", "</ToonLowAddH>", &lowaddh);
 				hsvtoon.lowaddhsv.x = lowaddh;
 
 				float lowadds = hsvtoon.lowaddhsv.y;
-				Read_Float(&materialbuf, "<ToonLowAddS>", "</ToonLowAddS>\r\n", &lowadds);
+				Read_Float(&materialbuf, "<ToonLowAddS>", "</ToonLowAddS>", &lowadds);
 				hsvtoon.lowaddhsv.y = lowadds;
 
 				float lowaddv = hsvtoon.lowaddhsv.z;
-				Read_Float(&materialbuf, "<ToonLowAddV>", "</ToonLowAddV>\r\n", &lowaddv);
+				Read_Float(&materialbuf, "<ToonLowAddV>", "</ToonLowAddV>", &lowaddv);
 				hsvtoon.lowaddhsv.z = lowaddv;
 
 				float lowadda = hsvtoon.lowaddhsv.w;
-				Read_Float(&materialbuf, "<ToonLowAddA>", "</ToonLowAddA>\r\n", &lowadda);
+				Read_Float(&materialbuf, "<ToonLowAddA>", "</ToonLowAddA>", &lowadda);
 				hsvtoon.lowaddhsv.w = lowadda;
 
 				//2024/02/14
 				int lightindex = hsvtoon.lightindex;
-				Read_Int(&materialbuf, "<ToonLightIndex>", "</ToonLightIndex>\r\n", &lightindex);
+				Read_Int(&materialbuf, "<ToonLightIndex>", "</ToonLightIndex>", &lightindex);
 				hsvtoon.lightindex = lightindex;
 
 				ChaVector4 basehsv = curmqomat->GetDif4F().RGB2HSV();
-				Read_Float(&materialbuf, "<ToonBaseH>", "</ToonBaseH>\r\n", &(basehsv.x));
-				Read_Float(&materialbuf, "<ToonBaseS>", "</ToonBaseS>\r\n", &(basehsv.y));
-				Read_Float(&materialbuf, "<ToonBaseV>", "</ToonBaseV>\r\n", &(basehsv.z));
-				Read_Float(&materialbuf, "<ToonBaseA>", "</ToonBaseA>\r\n", &(basehsv.w));
+				Read_Float(&materialbuf, "<ToonBaseH>", "</ToonBaseH>", &(basehsv.x));
+				Read_Float(&materialbuf, "<ToonBaseS>", "</ToonBaseS>", &(basehsv.y));
+				Read_Float(&materialbuf, "<ToonBaseV>", "</ToonBaseV>", &(basehsv.z));
+				Read_Float(&materialbuf, "<ToonBaseA>", "</ToonBaseA>", &(basehsv.w));
 				hsvtoon.basehsv = basehsv;
 
 				//2024/02/18
 				int gradationflag = hsvtoon.gradationflag ? 1 : 0;
-				Read_Int(&materialbuf, "<Gradation>", "</Gradation>\r\n", &gradationflag);
+				Read_Int(&materialbuf, "<Gradation>", "</Gradation>", &gradationflag);
 				if (gradationflag == 1) {
 					hsvtoon.gradationflag = true;
 				}
@@ -383,7 +409,7 @@ int CShaderTypeFile::LoadShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 
 				//2024/02/18
 				int powertoon = hsvtoon.powertoon ? 1 : 0;
-				Read_Int(&materialbuf, "<PowerToon>", "</PowerToon>\r\n", &powertoon);
+				Read_Int(&materialbuf, "<PowerToon>", "</PowerToon>", &powertoon);
 				if (gradationflag == 1) {
 					hsvtoon.powertoon = true;
 				}
@@ -397,13 +423,53 @@ int CShaderTypeFile::LoadShaderTypeFile(WCHAR* filename, CModel* srcmodel)
 
 				//2024/03/07
 				int lightflag = 1;
-				Read_Int(&materialbuf, "<Lighting>", "</Lighting>\r\n", &lightflag);
+				Read_Int(&materialbuf, "<Lighting>", "</Lighting>", &lightflag);
 				if (lightflag == 1) {
 					curmqomat->SetLightingFlag(true);
 				}
 				else {
 					curmqomat->SetLightingFlag(false);
 				}
+
+
+				//2024/05/01
+				//bool distortionflag = false;//2024/04/27
+				//double distortionscale;//2024/05/01
+				//int riverorsea;//2024/05/01 0:river, 1:sea
+				////ChaVector2 seacenter;//2024/05/01 UV
+				//ChaVector2 riverdir;//2024/05/01 UV
+				//double riverflowrate;//2024/05/01 velocity
+				//int distortionmaptype;//2024/05/01 0:rg, 1:rb, 2:gb
+				int distortionflagval = curmqomat->GetDistortionFlag() ? 1 : 0;
+				Read_Int(&materialbuf, "<SimpleWater>", "</SimpleWater>", &distortionflagval);
+				if (distortionflagval == 1) {
+					curmqomat->SetDistortionFlag(true);
+				}
+				else {
+					curmqomat->SetDistortionFlag(false);
+				}
+
+				float distortionscale = (float)curmqomat->GetDistortionScale();
+				Read_Float(&materialbuf, "<DistortionScale>", "</DistortionScale>", &distortionscale);
+				curmqomat->SetDistortionScale((double)distortionscale);
+
+				int riverorsea = curmqomat->GetRiverOrSea();
+				Read_Int(&materialbuf, "<RiverOrSea>", "</RiverOrSea>", &riverorsea);
+				curmqomat->SetRiverOrSea(riverorsea);
+
+				float riverdirx = curmqomat->GetRiverDir().x;
+				Read_Float(&materialbuf, "<RiverDirU>", "</RiverDirU>", &riverdirx);
+				float riverdiry = curmqomat->GetRiverDir().y; 
+				Read_Float(&materialbuf, "<RiverDirV>", "</RiverDirV>", &riverdiry);
+				curmqomat->SetRiverDir(ChaVector2(riverdirx, riverdiry));
+
+				float riverflowrate = (float)curmqomat->GetRiverFlowRate();
+				Read_Float(&materialbuf, "<RiverFlowRate>", "</RiverFlowRate>", &riverflowrate);
+				curmqomat->SetRiverFlowRate((double)riverflowrate);
+
+				int distortionmaptype = curmqomat->GetDistortionMapType();
+				Read_Int(&materialbuf, "<DistortionMapType>", "</DistortionMapType>", &distortionmaptype);
+				curmqomat->SetDistortionMapType(distortionmaptype);
 
 			}
 		}		

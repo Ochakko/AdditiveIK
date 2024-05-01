@@ -98,6 +98,9 @@ cbuffer ModelCb : register(b0)
     int4 UVs; //x:UVSet, y:TilingU, z:TilingV, w:distortionFlag   
     int4 Flags1; //x:skyflag, y:groundflag, z:skydofflag, w:VSM
     float4 time1; //2024/04/27
+    int4 distortiontype; //[0]:riverorsea(0:river,1:sea), [1]:maptype(0:rg,1:rb,2:gb)
+    float4 distortionscale; //x:distortionscale, y:riverflowrate
+    float4 distortioncenter; //xy:seacenter, zw:riverdir    
 };
 
 // ディレクションライト

@@ -15660,7 +15660,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.17\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.18\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -60773,7 +60773,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_distortionchk = new OWP_CheckBoxA(L"distortion", 0);
+		s_st_distortionchk = new OWP_CheckBoxA(L"SimpleWater(PBR,NoSkin)", 0);
 		if (!s_st_distortionchk) {
 			_ASSERT(0);
 			return 1;
@@ -60835,7 +60835,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_riverdirlabel = new OWP_Label(L"SeaCenterUV");
+		s_st_riverdirlabel = new OWP_Label(L"FlowDirUV");
 		if (!s_st_riverdirlabel) {
 			_ASSERT(0);
 			return 1;
@@ -60857,12 +60857,12 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_flowratelabel = new OWP_Label(L"SeaCenterUV");
+		s_st_flowratelabel = new OWP_Label(L"FlowRate");
 		if (!s_st_flowratelabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_flowrateslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_st_flowrateslider = new OWP_Slider(1.0, 2.0, -2.0);
 		if (!s_st_flowrateslider) {
 			_ASSERT(0);
 			return 1;
@@ -61024,7 +61024,7 @@ int CreateShaderTypeParamsDlg()
 		s_st_distortionsp1->addParts1(*s_st_distortionscalelabel);
 		s_st_distortionsp1->addParts2(*s_st_distortionscaleslider);
 
-		//s_st_paramsWnd->addParts(*s_st_riverradio);
+		s_st_paramsWnd->addParts(*s_st_riverradio);
 
 		//s_st_paramsWnd->addParts(*s_st_seacentersp0);
 		//s_st_seacentersp0->addParts1(*s_st_seacenterlabel);
@@ -61032,18 +61032,18 @@ int CreateShaderTypeParamsDlg()
 		//s_st_seacentersp1->addParts1(*s_st_seacenterUslider);
 		//s_st_seacentersp1->addParts2(*s_st_seacenterVslider);
 
-		//s_st_paramsWnd->addParts(*s_st_riverdirsp0);
-		//s_st_riverdirsp0->addParts1(*s_st_riverdirlabel);
-		//s_st_riverdirsp0->addParts2(*s_st_riverdirsp1);
-		//s_st_riverdirsp1->addParts1(*s_st_riverdirUslider);
-		//s_st_riverdirsp1->addParts2(*s_st_riverdirVslider);
+		s_st_paramsWnd->addParts(*s_st_riverdirsp0);
+		s_st_riverdirsp0->addParts1(*s_st_riverdirlabel);
+		s_st_riverdirsp0->addParts2(*s_st_riverdirsp1);
+		s_st_riverdirsp1->addParts1(*s_st_riverdirUslider);
+		s_st_riverdirsp1->addParts2(*s_st_riverdirVslider);
 
 
-		//s_st_paramsWnd->addParts(*s_st_flowratesp0);
-		//s_st_flowratesp0->addParts1(*s_st_flowratelabel);
-		//s_st_flowratesp0->addParts2(*s_st_flowrateslider);
+		s_st_paramsWnd->addParts(*s_st_flowratesp0);
+		s_st_flowratesp0->addParts1(*s_st_flowratelabel);
+		s_st_flowratesp0->addParts2(*s_st_flowrateslider);
 
-		//s_st_paramsWnd->addParts(*s_st_distortionmapradio);
+		s_st_paramsWnd->addParts(*s_st_distortionmapradio);
 
 
 
@@ -61505,66 +61505,66 @@ int CreateShaderTypeParamsDlg()
 			});
 		}
 
-		//if (s_st_riverradio) {
-		//	s_st_riverradio->setSelectListener([]() {
-		//		s_st_riverradioFlag = true; 			
-		//		if (s_st_paramsWnd) {
-		//			s_st_paramsWnd->callRewrite();//再描画
-		//		}
-		//	});
-		//}
+		if (s_st_riverradio) {
+			s_st_riverradio->setSelectListener([]() {
+				s_st_riverradioFlag = true; 			
+				if (s_st_paramsWnd) {
+					s_st_paramsWnd->callRewrite();//再描画
+				}
+			});
+		}
 
-		//if (s_st_seacenterUslider) {
-		//	s_st_seacenterUslider->setCursorListener([]() {
-		//		s_st_seacenterUsliderFlag = true; 			
-		//		if (s_st_paramsWnd) {
-		//			s_st_paramsWnd->callRewrite();//再描画
-		//		}
-		//	});
-		//}
-		//if (s_st_seacenterVslider) {
-		//	s_st_seacenterVslider->setCursorListener([]() {
-		//		s_st_seacenterVsliderFlag = true; 			
-		//		if (s_st_paramsWnd) {
-		//			s_st_paramsWnd->callRewrite();//再描画
-		//		}
-		//	});
-		//}
+		if (s_st_seacenterUslider) {
+			s_st_seacenterUslider->setCursorListener([]() {
+				s_st_seacenterUsliderFlag = true; 			
+				if (s_st_paramsWnd) {
+					s_st_paramsWnd->callRewrite();//再描画
+				}
+			});
+		}
+		if (s_st_seacenterVslider) {
+			s_st_seacenterVslider->setCursorListener([]() {
+				s_st_seacenterVsliderFlag = true; 			
+				if (s_st_paramsWnd) {
+					s_st_paramsWnd->callRewrite();//再描画
+				}
+			});
+		}
 
-		//if (s_st_riverdirUslider) {
-		//	s_st_riverdirUslider->setCursorListener([]() {
-		//		s_st_riverdirUsliderFlag = true; 			
-		//		if (s_st_paramsWnd) {
-		//			s_st_paramsWnd->callRewrite();//再描画
-		//		}
-		//	});
-		//}
-		//if (s_st_riverdirVslider) {
-		//	s_st_riverdirVslider->setCursorListener([]() {
-		//		s_st_riverdirVsliderFlag = true; 			
-		//		if (s_st_paramsWnd) {
-		//			s_st_paramsWnd->callRewrite();//再描画
-		//		}
-		//	});
-		//}
+		if (s_st_riverdirUslider) {
+			s_st_riverdirUslider->setCursorListener([]() {
+				s_st_riverdirUsliderFlag = true; 			
+				if (s_st_paramsWnd) {
+					s_st_paramsWnd->callRewrite();//再描画
+				}
+			});
+		}
+		if (s_st_riverdirVslider) {
+			s_st_riverdirVslider->setCursorListener([]() {
+				s_st_riverdirVsliderFlag = true; 			
+				if (s_st_paramsWnd) {
+					s_st_paramsWnd->callRewrite();//再描画
+				}
+			});
+		}
 
-		//if (s_st_flowrateslider) {
-		//	s_st_flowrateslider->setCursorListener([]() {
-		//		s_st_flowratesliderFlag = true; 			
-		//		if (s_st_paramsWnd) {
-		//			s_st_paramsWnd->callRewrite();//再描画
-		//		}
-		//	});
-		//}
+		if (s_st_flowrateslider) {
+			s_st_flowrateslider->setCursorListener([]() {
+				s_st_flowratesliderFlag = true; 			
+				if (s_st_paramsWnd) {
+					s_st_paramsWnd->callRewrite();//再描画
+				}
+			});
+		}
 
-		//if (s_st_distortionmapradio) {
-		//	s_st_distortionmapradio->setSelectListener([]() {
-		//		s_st_distortionmapradioFlag = true;
-		//		if (s_st_paramsWnd) {
-		//			s_st_paramsWnd->callRewrite();//再描画
-		//		}
-		//	});
-		//}
+		if (s_st_distortionmapradio) {
+			s_st_distortionmapradio->setSelectListener([]() {
+				s_st_distortionmapradioFlag = true;
+				if (s_st_paramsWnd) {
+					s_st_paramsWnd->callRewrite();//再描画
+				}
+			});
+		}
 		
 		
 
@@ -62832,27 +62832,216 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 	}
 	if (s_st_distortionscalesliderFlag) {
 		s_st_distortionscalesliderFlag = false;
+
+		if (s_st_distortionscaleslider && s_model) {
+			int materialnum = s_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = s_shadertypeparamsindex - 1;
+			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
+
+			double newvalue = s_st_distortionscaleslider->getValue();
+			s_shadertypeparams.distortionscale = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetDistortionScale(s_shadertypeparams.distortionscale);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetDistortionScale(s_shadertypeparams.distortionscale);
+					}
+				}
+			}
+		}
 	}
 	if (s_st_riverradioFlag) {
 		s_st_riverradioFlag = false;
+
+		if (s_st_riverradio && s_model) {
+			int materialnum = s_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = s_shadertypeparamsindex - 1;
+			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
+
+			int riverorsea = s_st_riverradio->getSelectIndex();
+			s_shadertypeparams.riverorsea = riverorsea;
+
+			if (curmqomat) {
+				curmqomat->SetRiverOrSea(riverorsea);
+			}
+			else {
+				int materialindex8;
+				for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex8);
+					if (setmqomat) {
+						setmqomat->SetRiverOrSea(riverorsea);
+					}
+				}
+			}
+		}
 	}
 	if (s_st_seacenterUsliderFlag) {
 		s_st_seacenterUsliderFlag = false;
+
+		if (s_st_seacenterUslider && s_st_seacenterVslider && s_model) {
+			int materialnum = s_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = s_shadertypeparamsindex - 1;
+			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
+
+			float newvalueU = (float)s_st_seacenterUslider->getValue();
+			float newvalueV = (float)s_st_seacenterVslider->getValue();
+			s_shadertypeparams.seacenter = ChaVector2(newvalueU, newvalueV);
+
+			if (curmqomat) {
+				curmqomat->SetSeaCenter(s_shadertypeparams.seacenter);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetSeaCenter(s_shadertypeparams.seacenter);
+					}
+				}
+			}
+		}
 	}
 	if (s_st_seacenterVsliderFlag) {
 		s_st_seacenterVsliderFlag = false;
+
+		if (s_st_seacenterUslider && s_st_seacenterVslider && s_model) {
+			int materialnum = s_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = s_shadertypeparamsindex - 1;
+			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
+
+			float newvalueU = (float)s_st_seacenterUslider->getValue();
+			float newvalueV = (float)s_st_seacenterVslider->getValue();
+			s_shadertypeparams.seacenter = ChaVector2(newvalueU, newvalueV);
+
+			if (curmqomat) {
+				curmqomat->SetSeaCenter(s_shadertypeparams.seacenter);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetSeaCenter(s_shadertypeparams.seacenter);
+					}
+				}
+			}
+		}
 	}
 	if (s_st_riverdirUsliderFlag) {
 		s_st_riverdirUsliderFlag = false;
+
+		if (s_st_riverdirUslider && s_st_riverdirVslider && s_model) {
+			int materialnum = s_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = s_shadertypeparamsindex - 1;
+			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
+
+			float newvalueU = (float)s_st_riverdirUslider->getValue();
+			float newvalueV = (float)s_st_riverdirVslider->getValue();
+			s_shadertypeparams.riverdir = ChaVector2(newvalueU, newvalueV);
+
+			if (curmqomat) {
+				curmqomat->SetRiverDir(s_shadertypeparams.riverdir);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetRiverDir(s_shadertypeparams.riverdir);
+					}
+				}
+			}
+		}
 	}
 	if (s_st_riverdirVsliderFlag) {
 		s_st_riverdirVsliderFlag = false;
+
+		if (s_st_riverdirUslider && s_st_riverdirVslider && s_model) {
+			int materialnum = s_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = s_shadertypeparamsindex - 1;
+			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
+
+			float newvalueU = (float)s_st_riverdirUslider->getValue();
+			float newvalueV = (float)s_st_riverdirVslider->getValue();
+			s_shadertypeparams.riverdir = ChaVector2(newvalueU, newvalueV);
+
+			if (curmqomat) {
+				curmqomat->SetRiverDir(s_shadertypeparams.riverdir);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetRiverDir(s_shadertypeparams.riverdir);
+					}
+				}
+			}
+		}
 	}
 	if (s_st_flowratesliderFlag) {
 		s_st_flowratesliderFlag = false;
+
+		if (s_st_flowrateslider && s_model) {
+			int materialnum = s_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = s_shadertypeparamsindex - 1;
+			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
+
+			double newvalue = s_st_flowrateslider->getValue();
+			s_shadertypeparams.riverflowrate = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetRiverFlowRate(s_shadertypeparams.riverflowrate);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetRiverFlowRate(s_shadertypeparams.riverflowrate);
+					}
+				}
+			}
+		}
+
 	}
 	if (s_st_distortionmapradioFlag) {
 		s_st_distortionmapradioFlag = false;
+
+		if (s_st_distortionmapradio && s_model) {
+			int materialnum = s_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = s_shadertypeparamsindex - 1;
+			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
+
+			int maptype = s_st_distortionmapradio->getSelectIndex();
+			s_shadertypeparams.distortionmaptype = maptype;
+
+			if (curmqomat) {
+				curmqomat->SetDistortionMapType(maptype);
+			}
+			else {
+				int materialindex8;
+				for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
+					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex8);
+					if (setmqomat) {
+						setmqomat->SetDistortionMapType(maptype);
+					}
+				}
+			}
+		}
 	}
 
 	return 0;
@@ -63695,7 +63884,7 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_flowrateslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_skyst_flowrateslider = new OWP_Slider(1.0, 2.0, -2.0);
 		if (!s_skyst_flowrateslider) {
 			_ASSERT(0);
 			return 1;
@@ -65872,6 +66061,26 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 		}
 	}
 
+	if (s_st_riverradio) {
+		if ((s_shadertypeparams.riverorsea >= 0) && (s_shadertypeparams.riverorsea <= 1)) {
+			s_st_riverradio->setSelectIndex(s_shadertypeparams.riverorsea);
+		}
+		else {
+			_ASSERT(0);
+			s_st_riverradio->setSelectIndex(0);
+		}
+	}
+
+	if (s_st_distortionmapradio) {
+		if ((s_shadertypeparams.distortionmaptype >= 0) && (s_shadertypeparams.distortionmaptype <= 2)) {
+			s_st_distortionmapradio->setSelectIndex(s_shadertypeparams.distortionmaptype);
+		}
+		else {
+			_ASSERT(0);
+			s_st_distortionmapradio->setSelectIndex(0);
+		}
+	}
+
 
 	//#######
 	//Slider
@@ -65973,6 +66182,25 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 
 	if (s_st_alphatestslider) {
 		s_st_alphatestslider->setValue(s_shadertypeparams.alphatest, false);
+	}
+
+	if (s_st_distortionscaleslider) {
+		s_st_distortionscaleslider->setValue(s_shadertypeparams.distortionscale, false);
+	}
+	if (s_st_seacenterUslider) {
+		s_st_seacenterUslider->setValue(s_shadertypeparams.seacenter.x, false);
+	}
+	if (s_st_seacenterVslider) {
+		s_st_seacenterVslider->setValue(s_shadertypeparams.seacenter.y, false);
+	}
+	if (s_st_riverdirUslider) {
+		s_st_riverdirUslider->setValue(s_shadertypeparams.riverdir.x, false);
+	}
+	if (s_st_riverdirVslider) {
+		s_st_riverdirVslider->setValue(s_shadertypeparams.riverdir.y, false);
+	}
+	if (s_st_flowrateslider) {
+		s_st_flowrateslider->setValue(s_shadertypeparams.riverflowrate, false);
 	}
 
 

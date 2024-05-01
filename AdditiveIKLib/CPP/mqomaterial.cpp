@@ -330,7 +330,16 @@ int CMQOMaterial::InitParams()
 	}
 	m_specularcoef = 0.1250f;
 	m_normaly0flag = true;//InitShadersAndPipelines()にてpm4:true, pm3:falseに初期化
+	
+	
 	m_distortionflag = false;
+	m_distortionscale = 1.0;//2024/05/01
+	m_riverorsea = 0;//2024/05/01 0:river, 1:sea
+	m_seacenter = ChaVector2(0.5f, 0.5f);//2024/05/01 UV
+	m_riverdir = ChaVector2(0.0f, 1.0f);//2024/05/01 UV
+	m_riverflowrate = 1.0;//2024/05/01 velocity
+	m_distortionmaptype = 1;//2024/05/01 0:rg, 1:rb, 2:gb
+
 
 	m_vcolflag = 0;
 
@@ -3675,6 +3684,16 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		if (DXUTGetGlobalTimer()) {
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
+		m_cb[currentrefposindex].distortiontype[0] = GetRiverOrSea();
+		m_cb[currentrefposindex].distortiontype[1] = GetDistortionMapType();
+		m_cb[currentrefposindex].distortiontype[2] = 0;
+		m_cb[currentrefposindex].distortiontype[3] = 0;
+		m_cb[currentrefposindex].distortionscale = ChaVector4((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
+		m_cb[currentrefposindex].distortioncenter.x = GetSeaCenter().x;
+		m_cb[currentrefposindex].distortioncenter.y = GetSeaCenter().y;
+		m_cb[currentrefposindex].distortioncenter.z = GetRiverDir().x;
+		m_cb[currentrefposindex].distortioncenter.w = GetRiverDir().y;
+
 		m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
 
 	}
@@ -3723,6 +3742,16 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		if (DXUTGetGlobalTimer()) {
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
+		m_cb[currentrefposindex].distortiontype[0] = GetRiverOrSea();
+		m_cb[currentrefposindex].distortiontype[1] = GetDistortionMapType();
+		m_cb[currentrefposindex].distortiontype[2] = 0;
+		m_cb[currentrefposindex].distortiontype[3] = 0;
+		m_cb[currentrefposindex].distortionscale = ChaVector4((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
+		m_cb[currentrefposindex].distortioncenter.x = GetSeaCenter().x;
+		m_cb[currentrefposindex].distortioncenter.y = GetSeaCenter().y;
+		m_cb[currentrefposindex].distortioncenter.z = GetRiverDir().x;
+		m_cb[currentrefposindex].distortioncenter.w = GetRiverDir().y;
+
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
@@ -3789,6 +3818,16 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		if (DXUTGetGlobalTimer()) {
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
+		m_cb[currentrefposindex].distortiontype[0] = GetRiverOrSea();
+		m_cb[currentrefposindex].distortiontype[1] = GetDistortionMapType();
+		m_cb[currentrefposindex].distortiontype[2] = 0;
+		m_cb[currentrefposindex].distortiontype[3] = 0;
+		m_cb[currentrefposindex].distortionscale = ChaVector4((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
+		m_cb[currentrefposindex].distortioncenter.x = GetSeaCenter().x;
+		m_cb[currentrefposindex].distortioncenter.y = GetSeaCenter().y;
+		m_cb[currentrefposindex].distortioncenter.z = GetRiverDir().x;
+		m_cb[currentrefposindex].distortioncenter.w = GetRiverDir().y;
+
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[currentrefposindex].CopyToVRAM(m_cb[currentrefposindex]);
@@ -3902,7 +3941,15 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		if (DXUTGetGlobalTimer()) {
 			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
-
+		m_cb[0].distortiontype[0] = GetRiverOrSea();
+		m_cb[0].distortiontype[1] = GetDistortionMapType();
+		m_cb[0].distortiontype[2] = 0;
+		m_cb[0].distortiontype[3] = 0;
+		m_cb[0].distortionscale = ChaVector4((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
+		m_cb[0].distortioncenter.x = GetSeaCenter().x;
+		m_cb[0].distortioncenter.y = GetSeaCenter().y;
+		m_cb[0].distortioncenter.z = GetRiverDir().x;
+		m_cb[0].distortioncenter.w = GetRiverDir().y;
 
 		m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);
 	}
@@ -3944,6 +3991,15 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		if (DXUTGetGlobalTimer()) {
 			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
+		m_cb[0].distortiontype[0] = GetRiverOrSea();
+		m_cb[0].distortiontype[1] = GetDistortionMapType();
+		m_cb[0].distortiontype[2] = 0;
+		m_cb[0].distortiontype[3] = 0;
+		m_cb[0].distortionscale = ChaVector4((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
+		m_cb[0].distortioncenter.x = GetSeaCenter().x;
+		m_cb[0].distortioncenter.y = GetSeaCenter().y;
+		m_cb[0].distortioncenter.z = GetRiverDir().x;
+		m_cb[0].distortioncenter.w = GetRiverDir().y;
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[0].CopyToVRAM(m_cb[0]);
@@ -3999,6 +4055,15 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		if (DXUTGetGlobalTimer()) {
 			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
+		m_cb[0].distortiontype[0] = GetRiverOrSea();
+		m_cb[0].distortiontype[1] = GetDistortionMapType();
+		m_cb[0].distortiontype[2] = 0;
+		m_cb[0].distortiontype[3] = 0;
+		m_cb[0].distortionscale = ChaVector4((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
+		m_cb[0].distortioncenter.x = GetSeaCenter().x;
+		m_cb[0].distortioncenter.y = GetSeaCenter().y;
+		m_cb[0].distortioncenter.z = GetRiverDir().x;
+		m_cb[0].distortioncenter.w = GetRiverDir().y;
 
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {

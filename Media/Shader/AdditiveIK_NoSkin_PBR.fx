@@ -106,6 +106,9 @@ cbuffer ModelCb : register(b0)
     int4 UVs; //x:UVSet, y:TilingU, z:TilingV, w:distortionFlag   
     int4 Flags1; //x:skyflag, y:groundflag, z:skydofflag, w:VSM
     float4 time1; //2024/04/27
+    int4 distortiontype; //[0]:riverorsea(0:river,1:sea), [1]:maptype(0:rg,1:rb,2:gb)
+    float4 distortionscale; //x:distortionscale, y:riverflowrate
+    float4 distortioncenter; //xy:seacenter, zw:riverdir    
 };
 
 // ディレクションライト
@@ -552,44 +555,30 @@ SPSOut2 PSMainNoSkinPBR(SPSIn psIn) : SV_Target
     }
     else
     {
+        //int4 distortiontype; //[0]:riverorsea(0:river,1:sea), [1]:maptype(0:rg,1:rb,2:gb)
+        //float4 distortionscale; //x:distortionscale, y:riverflowrate
+        //float4 distortioncenter; //xy:seacenter, zw:riverdir  
         float2 grabuv = psIn.pos.xy / psIn.pos.w;
-        float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + sin(time1.x * 0.5f))).gb * 2.0f - 1.0f;
-        normaluv = psIn.uv + distortionuv;
+        float3 distortionuv4;
+        //float2 flowuv = (distortiontype.x == 0) ? (distortioncenter.zw * time1.x * distortionscale.y) : ((grabuv - distortioncenter.xy) * time1.x * distortionscale.y);
+        float2 flowuv = (distortiontype.x == 0) ? (distortioncenter.zw * time1.x * distortionscale.y) : (distortioncenter.zw * sin(time1.x) * distortionscale.y);
+        distortionuv4 = g_normalMap.Sample(g_sampler_albedo, (grabuv + flowuv)) * 2.0f - 1.0f;
+
+        float2 distortionuv2;
+        if (distortiontype.y == 0)
+        {
+            distortionuv2 = distortionuv4.rg;
+        }
+        else if (distortiontype.y == 1)
+        {
+            distortionuv2 = distortionuv4.rb;
+        }
+        else
+        {
+            distortionuv2 = distortionuv4.gb;
+        }
+        normaluv = psIn.uv + distortionuv2 * distortionscale.x;
         albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
-        
-        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, psIn.uv).gb * 2.0f - 1.0f;
-        ////float2 fracuv = fractSin21(float2(time1.x, time1.x * 0.8649));
-        //float2 fracuv = sin(time1.x * 0.5f);
-        //normaluv = psIn.uv + distortionuv * fracuv;
-        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
-        
-        //float2 grabuv = psIn.pos.xy / psIn.pos.w;
-        //float2 timeuv = grabuv + time1.x;
-        //float2 fracuv = fractSin21(timeuv);
-        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, fracuv).gb * 2.0f - 1.0f;
-        //normaluv = psIn.uv + distortionuv;
-        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
-        
-        //float2 grabuv = psIn.pos.xy / psIn.pos.w;
-        //float2 timeuv = grabuv + time1.x;
-        //float2 fracuv = fractSin21(timeuv);
-        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, fracuv).gb * 2.0f - 1.0f;
-        //normaluv = psIn.uv + distortionuv;
-        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
-                
-        //float2 grabuv = psIn.pos.xy / psIn.pos.w;
-        ////float2 grabuv = psIn.uv;
-        ////float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.2f)).rg * 2.0f - 1.0f;
-        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.1f)).gb * 2.0f - 1.0f;
-        ////float2 distortionuv = g_albedo.Sample(g_sampler_albedo, (grabuv + time1.x * 0.1f)).gb * 2.0f - 1.0f;
-        //normaluv = psIn.uv + distortionuv;
-        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
-   
-        ////float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.2f)).rg * 2.0f - 1.0f;
-        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (psIn.uv + time1.x * 0.05f)).gb * 2.0f - 1.0f;
-        //float2 grabuv = psIn.pos.xy / psIn.pos.w;
-        //normaluv = grabuv + distortionuv;
-        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);        
     }
       // 法線を計算
     float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, normaluv);
@@ -689,38 +678,30 @@ SPSOut2 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target
     }
     else
     {
+        //int4 distortiontype; //[0]:riverorsea(0:river,1:sea), [1]:maptype(0:rg,1:rb,2:gb)
+        //float4 distortionscale; //x:distortionscale, y:riverflowrate
+        //float4 distortioncenter; //xy:seacenter, zw:riverdir  
         float2 grabuv = psIn.pos.xy / psIn.pos.w;
-        float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + sin(time1.x * 0.5f))).gb * 2.0f - 1.0f;
-        normaluv = psIn.uv + distortionuv;
+        float3 distortionuv4;
+        //float2 flowuv = (distortiontype.x == 0) ? (distortioncenter.zw * time1.x * distortionscale.y) : ((grabuv - distortioncenter.xy) * time1.x * distortionscale.y);
+        float2 flowuv = (distortiontype.x == 0) ? (distortioncenter.zw * time1.x * distortionscale.y) : (distortioncenter.zw * sin(time1.x) * distortionscale.y);
+        distortionuv4 = g_normalMap.Sample(g_sampler_albedo, (grabuv + flowuv)) * 2.0f - 1.0f;
+
+        float2 distortionuv2;
+        if (distortiontype.y == 0)
+        {
+            distortionuv2 = distortionuv4.rg;
+        }
+        else if (distortiontype.y == 1)
+        {
+            distortionuv2 = distortionuv4.rb;
+        }
+        else
+        {
+            distortionuv2 = distortionuv4.gb;
+        }
+        normaluv = psIn.uv + distortionuv2 * distortionscale.x;
         albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
-        
-        //ライティングが変わるが凸凹が固定している
-        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, psIn.uv).gb * 2.0f - 1.0f;
-        ////float2 fracuv = fractSin21(float2(time1.x, time1.x * 0.8649));
-        //float2 fracuv = sin(time1.x * 0.5f);
-        //normaluv = psIn.uv + distortionuv * fracuv;
-        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
-        
-        //float2 grabuv = psIn.pos.xy / psIn.pos.w;
-        //float2 timeuv = grabuv + time1.x;
-        //float2 fracuv = fractSin21(timeuv);
-        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, fracuv).gb * 2.0f - 1.0f;
-        //normaluv = psIn.uv + distortionuv;
-        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
-                
-        //float2 grabuv = psIn.pos.xy / psIn.pos.w;
-        ////float2 grabuv = psIn.uv;
-        ////float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.2f)).rg * 2.0f - 1.0f;
-        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.1f)).gb * 2.0f - 1.0f;
-        ////float2 distortionuv = g_albedo.Sample(g_sampler_albedo, (grabuv + time1.x * 0.1f)).gb * 2.0f - 1.0f;
-        //normaluv = psIn.uv + distortionuv;
-        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
-        
-        ////float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (grabuv + time1.x * 0.2f)).rg * 2.0f - 1.0f;
-        //float2 distortionuv = g_normalMap.Sample(g_sampler_albedo, (psIn.uv + time1.x * 0.05f)).gb * 2.0f - 1.0f;
-        //float2 grabuv = psIn.pos.xy / psIn.pos.w;
-        //normaluv = grabuv + distortionuv;
-        //albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);        
     }
       // 法線を計算
     float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, normaluv);

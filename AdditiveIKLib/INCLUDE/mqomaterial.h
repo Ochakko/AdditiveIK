@@ -64,6 +64,14 @@ enum {//renderobj.renderkind
 	RENDERKIND_MAX
 };
 
+
+//double m_distortionscale;//2024/05/01
+//int m_riverorsea;//2024/05/01 0:river, 1:sea
+//ChaVector2 m_seacenter;//2024/05/01 UV
+//ChaVector2 m_riverdir;//2024/05/01 UV
+//double m_riverflowrate;//2024/05/01 velocity
+//int m_distortionmaptype;//2024/05/01 0:rg, 1:rb, 2:gb
+
 struct SConstantBuffer {
 	Matrix mWorld;		//ワールド行列。
 	Matrix mView;		//ビュー行列。
@@ -77,6 +85,10 @@ struct SConstantBuffer {
 	int UVs[4];//[0]:UVSet, [1]:TilingU, [2]:TilingV, [3]:distortionFlag
 	int Flags[4];//[0]:skyflag, [1]:groundflag, [2]:skydofflag, [3]:VarianceShadowMaps
 	ChaVector4 time;//2024/04/27
+	int distortiontype[4];//[0]:riverorsea(0:river,1:sea), [1]:maptype(0:rg,1:rb,2:gb)
+	ChaVector4 distortionscale;//x:distortionscale, y:riverflowrate
+	ChaVector4 distortioncenter;//xy:seacenter, zw:riverdir
+
 	void Init() {
 		mWorld.SetIdentity();
 		mView.SetIdentity();
@@ -96,6 +108,12 @@ struct SConstantBuffer {
 		Flags[2] = 0;
 		Flags[3] = 0;
 		time.SetZeroVec4(0.0f);
+		distortiontype[0] = 0;
+		distortiontype[1] = 1;
+		distortiontype[2] = 0;
+		distortiontype[3] = 0;
+		distortionscale = ChaVector4(1.0f, 1.0f, 0.0f, 0.0f);
+		distortioncenter = ChaVector4(0.5f, 0.5f, 0.0f, 1.0f);
 	};
 };
 
@@ -575,6 +593,53 @@ public:
 	}
 	bool GetDistortionFlag() {
 		return m_distortionflag;
+	}
+	void SetDistortionScale(double srcval) {
+		m_distortionscale = srcval;
+	}
+	double GetDistortionScale()
+	{
+		return m_distortionscale;
+	}
+	void SetRiverOrSea(int srcval) {
+		if ((srcval >= 0) && (srcval <= 1)) {
+			m_riverorsea = srcval;
+		}
+		else {
+			_ASSERT(0);
+		}
+	}
+	int GetRiverOrSea() {
+		return m_riverorsea;
+	}
+	void SetSeaCenter(ChaVector2 srcval) {
+		m_seacenter = srcval;
+	}
+	ChaVector2 GetSeaCenter() {
+		return m_seacenter;
+	}
+	void SetRiverDir(ChaVector2 srcval) {
+		m_riverdir = srcval;
+	}
+	ChaVector2 GetRiverDir() {
+		return m_riverdir;
+	}
+	void SetRiverFlowRate(double srcval) {
+		m_riverflowrate = srcval;
+	}
+	double GetRiverFlowRate() {
+		return m_riverflowrate;
+	}
+	void SetDistortionMapType(int srcval) {
+		if ((srcval >= 0) && (srcval <= 2)) {
+			m_distortionmaptype = srcval;
+		}
+		else {
+			_ASSERT(0);
+		}
+	}
+	int GetDistortionMapType() {
+		return m_distortionmaptype;
 	}
 
 
@@ -1193,7 +1258,15 @@ private:
 	float m_lightscale[LIGHTNUMMAX];//Shaderプレートメニュー用
 	float m_specularcoef;//2024/02/19 Shaderプレートメニュー用
 	bool m_normaly0flag;//2024/02/19 Shaderプレートメニュー用
+
 	bool m_distortionflag;//2024/04/27 Shaderプレートメニュー用
+	double m_distortionscale;//2024/05/01
+	int m_riverorsea;//2024/05/01 0:river, 1:sea
+	ChaVector2 m_seacenter;//2024/05/01 UV
+	ChaVector2 m_riverdir;//2024/05/01 UV
+	double m_riverflowrate;//2024/05/01 velocity
+	int m_distortionmaptype;//2024/05/01 0:rg, 1:rb, 2:gb
+
 
 ////
 	ChaVector4 m_dif4f;
@@ -1334,6 +1407,12 @@ public:
 		uvscale = ChaVectorDbl2(1.0, 1.0);
 		alphatest = (8.0 / 255.0);
 		distortionflag = false;
+		distortionscale = 1.0;//2024/05/01
+		riverorsea = 0;//2024/05/01 0:river, 1:sea
+		seacenter = ChaVector2(0.5f, 0.5f);//2024/05/01 UV
+		riverdir = ChaVector2(0.0f, 1.0f);//2024/05/01 UV
+		riverflowrate = 1.0f;//2024/05/01 velocity
+		distortionmaptype = 1;//2024/05/01 0:rg, 1:rb, 2:gb
 	};
 
 	void SetMaterial(CMQOMaterial* srcmqomat) {
@@ -1359,6 +1438,13 @@ public:
 			uvscale = srcmqomat->GetUVScale();
 			alphatest = srcmqomat->GetAlphaTestClipVal();
 			distortionflag = srcmqomat->GetDistortionFlag();
+
+			distortionscale = srcmqomat->GetDistortionScale();//2024/05/01
+			riverorsea = srcmqomat->GetRiverOrSea();//2024/05/01 0:river, 1:sea
+			seacenter = srcmqomat->GetSeaCenter();//2024/05/01 UV
+			riverdir = srcmqomat->GetRiverDir();//2024/05/01 UV
+			riverflowrate = srcmqomat->GetRiverFlowRate();//2024/05/01 velocity
+			distortionmaptype = srcmqomat->GetDistortionMapType();//2024/05/01 0:rg, 1:rb, 2:gb
 		}
 		else {
 			//Material "All"のときにも通る.　エラーではなく通常処理.
@@ -1387,6 +1473,12 @@ public:
 	HSVTOON hsvtoon;
 	double alphatest;//2024/03/22
 	bool distortionflag = false;//2024/04/27
+	double distortionscale;//2024/05/01
+	int riverorsea;//2024/05/01 0:river, 1:sea
+	ChaVector2 seacenter;//2024/05/01 UV
+	ChaVector2 riverdir;//2024/05/01 UV
+	double riverflowrate;//2024/05/01 velocity
+	int distortionmaptype;//2024/05/01 0:rg, 1:rb, 2:gb
 };
 
 #endif
