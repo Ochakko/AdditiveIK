@@ -17378,7 +17378,7 @@ int CreateModelPanel()
 
 			s_modelpanel.modelindex = s_curmodelmenuindex;
 			if (s_modelpanel.radiobutton) {
-				s_modelpanel.radiobutton->setSelectIndex(s_modelpanel.modelindex);
+				s_modelpanel.radiobutton->setSelectIndex(s_modelpanel.modelindex, false);
 			}
 
 			//s_modelpanel.scroll->inView(s_modelpanel.modelindex);
@@ -17739,7 +17739,7 @@ int CreateCameraPanel()
 						int cameramotindex = s_model->MotionID2CameraIndex(cameramotid);
 						if (cameramotindex >= 0) {
 							s_cameramenuindexmap[s_model] = cameramotindex;
-							s_camerapanel.radiobutton->setSelectIndex(cameramotindex);//!!!!
+							s_camerapanel.radiobutton->setSelectIndex(cameramotindex, false);//!!!!
 						}
 					}
 				}
@@ -18053,7 +18053,7 @@ int CreateMotionPanel()
 			//s_motionpanel.radiobutton->setSelectIndex(0);
 			if (s_model) {
 				if (s_motionpanel.radiobutton) {
-					s_motionpanel.radiobutton->setSelectIndex(s_motmenuindexmap[s_model]);//!!!!
+					s_motionpanel.radiobutton->setSelectIndex(s_motmenuindexmap[s_model], false);//!!!!
 				}
 				//s_motionpanel.scroll->inView(s_motmenuindexmap[s_model]);
 				if (s_motionpanel.scroll) {
@@ -19871,7 +19871,7 @@ int RigidElem2WndParam()
 		CBone* parentbone = curbone->GetParent(false);
 		if (parentbone && parentbone->IsSkeleton()) {
 			int kinflag = parentbone->GetBtForce();
-			s_btforce->setValue((bool)kinflag);
+			s_btforce->setValue((bool)kinflag, false);
 
 			CRigidElem* curre = parentbone->GetRigidElem(curbone);
 			if (curre) {
@@ -19892,146 +19892,146 @@ int RigidElem2WndParam()
 				int forbidrot = curre->GetForbidRotFlag();
 
 				if (s_sphrateSlider) {
-					s_sphrateSlider->setValue(rate);
+					s_sphrateSlider->setValue(rate, false);
 				}
 				if (s_boxzSlider) {
-					s_boxzSlider->setValue(boxz);
+					s_boxzSlider->setValue(boxz, false);
 				}
 				if (s_massSlider) {
-					s_massSlider->setValue(mass);
+					s_massSlider->setValue(mass, false);
 				}
 				if (s_rigidskip) {
-					s_rigidskip->setValue(skipflag);
+					s_rigidskip->setValue(skipflag, false);
 				}
 				if (s_forbidrot) {
-					s_forbidrot->setValue(forbidrot);
+					s_forbidrot->setValue(forbidrot, false);
 				}
 				if (s_colradio) {
-					s_colradio->setSelectIndex(colindex);
+					s_colradio->setSelectIndex(colindex, false);
 				}
 				if (s_lkradio) {
-					s_lkradio->setSelectIndex(lkindex);
+					s_lkradio->setSelectIndex(lkindex, false);
 				}
 				if (s_akradio) {
-					s_akradio->setSelectIndex(akindex);
+					s_akradio->setSelectIndex(akindex, false);
 				}
 				if (s_ldmpSlider) {
-					s_ldmpSlider->setValue(ldmp);
+					s_ldmpSlider->setValue(ldmp, false);
 				}
 				if (s_admpSlider) {
-					s_admpSlider->setValue(admp);
+					s_admpSlider->setValue(admp, false);
 				}
 				if (s_lkSlider) {
-					s_lkSlider->setValue(cuslk);
+					s_lkSlider->setValue(cuslk, false);
 				}
 				if (s_akSlider) {
-					s_akSlider->setValue(cusak);
+					s_akSlider->setValue(cusak, false);
 				}
 				if (s_restSlider) {
-					s_restSlider->setValue(rest);
+					s_restSlider->setValue(rest, false);
 				}
 				if (s_fricSlider) {
-					s_fricSlider->setValue(fric);
+					s_fricSlider->setValue(fric, false);
 				}
 				if (s_btgSlider) {
-					s_btgSlider->setValue(btg);
+					s_btgSlider->setValue(btg, false);
 				}
 			}
 			else {
 				//rigid elemが作成されていないとき
 				if (s_sphrateSlider) {
-					s_sphrateSlider->setValue(1.0);
+					s_sphrateSlider->setValue(1.0, false);
 				}
 				if (s_boxzSlider) {
-					s_boxzSlider->setValue(1.0);
+					s_boxzSlider->setValue(1.0, false);
 				}
 				if (s_massSlider) {
-					s_massSlider->setValue(1.0);
+					s_massSlider->setValue(1.0, false);
 				}
 				if (s_rigidskip) {
-					s_rigidskip->setValue(0);
+					s_rigidskip->setValue(0, false);
 				}
 				if (s_forbidrot) {
-					s_forbidrot->setValue(0);
+					s_forbidrot->setValue(0, false);
 				}
 				if (s_colradio) {
-					s_colradio->setSelectIndex(0);
+					s_colradio->setSelectIndex(0, false);
 				}
 				if (s_lkradio) {
-					s_lkradio->setSelectIndex(0);
+					s_lkradio->setSelectIndex(0, false);
 				}
 				if (s_akradio) {
-					s_akradio->setSelectIndex(0);
+					s_akradio->setSelectIndex(0, false);
 				}
 				if (s_ldmpSlider) {
-					s_ldmpSlider->setValue(g_l_dmp);
+					s_ldmpSlider->setValue(g_l_dmp, false);
 				}
 				if (s_admpSlider) {
-					s_admpSlider->setValue(g_a_dmp);
+					s_admpSlider->setValue(g_a_dmp, false);
 				}
 				if (s_lkSlider) {
-					s_lkSlider->setValue(g_initcuslk);
+					s_lkSlider->setValue(g_initcuslk, false);
 				}
 				if (s_akSlider) {
-					s_akSlider->setValue(g_initcusak);
+					s_akSlider->setValue(g_initcusak, false);
 				}
 				if (s_restSlider) {
-					s_restSlider->setValue(0.0);
+					s_restSlider->setValue(0.0, false);
 				}
 				if (s_fricSlider) {
-					s_fricSlider->setValue(0.0);
+					s_fricSlider->setValue(0.0, false);
 				}
 				if (s_btgSlider) {
-					s_btgSlider->setValue(9.0);
+					s_btgSlider->setValue(9.0, false);
 				}
 			}
 		}
 		else {
 			//rigid elemが作成されていないとき
 			if (s_sphrateSlider) {
-				s_sphrateSlider->setValue(1.0);
+				s_sphrateSlider->setValue(1.0, false);
 			}
 			if (s_boxzSlider) {
-				s_boxzSlider->setValue(1.0);
+				s_boxzSlider->setValue(1.0, false);
 			}
 			if (s_massSlider) {
-				s_massSlider->setValue(1.0);
+				s_massSlider->setValue(1.0, false);
 			}
 			if (s_rigidskip) {
-				s_rigidskip->setValue(0);
+				s_rigidskip->setValue(0, false);
 			}
 			if (s_forbidrot) {
-				s_forbidrot->setValue(0);
+				s_forbidrot->setValue(0, false);
 			}
 			if (s_colradio) {
-				s_colradio->setSelectIndex(0);
+				s_colradio->setSelectIndex(0, false);
 			}
 			if (s_lkradio) {
-				s_lkradio->setSelectIndex(0);
+				s_lkradio->setSelectIndex(0, false);
 			}
 			if (s_akradio) {
-				s_akradio->setSelectIndex(0);
+				s_akradio->setSelectIndex(0, false);
 			}
 			if (s_ldmpSlider) {
-				s_ldmpSlider->setValue(g_l_dmp);
+				s_ldmpSlider->setValue(g_l_dmp, false);
 			}
 			if (s_admpSlider) {
-				s_admpSlider->setValue(g_a_dmp);
+				s_admpSlider->setValue(g_a_dmp, false);
 			}
 			if (s_lkSlider) {
-				s_lkSlider->setValue(g_initcuslk);
+				s_lkSlider->setValue(g_initcuslk, false);
 			}
 			if (s_akSlider) {
-				s_akSlider->setValue(g_initcusak);
+				s_akSlider->setValue(g_initcusak, false);
 			}
 			if (s_restSlider) {
-				s_restSlider->setValue(0.0);
+				s_restSlider->setValue(0.0, false);
 			}
 			if (s_fricSlider) {
-				s_fricSlider->setValue(0.0);
+				s_fricSlider->setValue(0.0, false);
 			}
 			if (s_btgSlider) {
-				s_btgSlider->setValue(9.0);
+				s_btgSlider->setValue(9.0, false);
 			}
 		}
 		if (s_namelabel) {
@@ -20046,7 +20046,7 @@ int RigidElem2WndParam()
 		}
 	}
 	if (s_model && (s_model->GetNoBoneFlag() == false) && s_btgscSlider) {
-		s_btgscSlider->setValue(s_model->GetBtGScale(s_model->GetCurReIndex()));
+		s_btgscSlider->setValue(s_model->GetBtGScale(s_model->GetCurReIndex()), false);
 	}
 
 
@@ -20139,16 +20139,16 @@ int SetImpWndParams()
 			}
 
 			if (s_impzSlider) {
-				s_impzSlider->setValue(setimp.z);
+				s_impzSlider->setValue(setimp.z, false);
 			}
 			if (s_impySlider) {
-				s_impySlider->setValue(setimp.y);
+				s_impySlider->setValue(setimp.y, false);
 			}
 			if (s_impxSlider) {
-				s_impxSlider->setValue(setimp.x);
+				s_impxSlider->setValue(setimp.x, false);
 			}
 			if (s_impscaleSlider) {
-				s_impscaleSlider->setValue(g_impscale);
+				s_impscaleSlider->setValue(g_impscale, false);
 			}
 		}
 	}
@@ -20179,10 +20179,10 @@ int SetDmpWndParams()
 			CRigidElem* curre = parentbone->GetRigidElemOfMap(filename, curbone);
 			if (curre) {
 				if (s_dmpanimLSlider) {
-					s_dmpanimLSlider->setValue(curre->GetDampanimL());
+					s_dmpanimLSlider->setValue(curre->GetDampanimL(), false);
 				}
 				if (s_dmpanimASlider) {
-					s_dmpanimASlider->setValue(curre->GetDampanimA());
+					s_dmpanimASlider->setValue(curre->GetDampanimA(), false);
 				}
 			}
 		}
@@ -20201,23 +20201,23 @@ int SetGpWndParams()
 	}
 
 	if (s_ghSlider) {
-		s_ghSlider->setValue(s_bpWorld->m_gplaneh);
+		s_ghSlider->setValue(s_bpWorld->m_gplaneh, false);
 	}
 	if (s_gsizexSlider) {
-		s_gsizexSlider->setValue(s_bpWorld->m_gplanesize.x);
+		s_gsizexSlider->setValue(s_bpWorld->m_gplanesize.x, false);
 	}
 	if (s_gsizezSlider) {
-		s_gsizezSlider->setValue(s_bpWorld->m_gplanesize.y);
+		s_gsizezSlider->setValue(s_bpWorld->m_gplanesize.y, false);
 	}
 	if (s_gpdisp) {
-		s_gpdisp->setValue((bool)s_bpWorld->m_gplanedisp);
+		s_gpdisp->setValue((bool)s_bpWorld->m_gplanedisp, false);
 	}
 
 	if (s_grestSlider) {
-		s_grestSlider->setValue(s_bpWorld->m_restitution);
+		s_grestSlider->setValue(s_bpWorld->m_restitution, false);
 	}
 	if (s_gfricSlider) {
-		s_gfricSlider->setValue(s_bpWorld->m_friction);
+		s_gfricSlider->setValue(s_bpWorld->m_friction, false);
 	}
 
 	s_gpWnd->callRewrite();
@@ -28056,7 +28056,7 @@ int DispParams2Dlg(HWND hDlgWnd)
 	//swprintf_s(strdlg, 256, L"EditRate %.1f", g_physicsmvrate);
 	//SetDlgItemText(hDlgWnd, IDC_STATIC_EDITRATE, strdlg);
 
-	swprintf_s(strdlg, 256, L"AngleSpringScale %.1f", g_akscale);
+	swprintf_s(strdlg, 256, L"SpringScale %.1f", g_akscale);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_AKSCALE, strdlg);
 
 	swprintf_s(strdlg, 256, L"RefPosAlpha %d", g_refalpha);
@@ -28303,7 +28303,7 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			g_akscale = (float)((double)cursliderpos / 10.0);
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"AngleSpringScale %.1f", g_akscale);
+			swprintf_s(strdlg, 256, L"SpringScale %.1f", g_akscale);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_AKSCALE, strdlg);
 			
 			if (LOWORD(wp) == SB_ENDSCROLL) {
@@ -39005,7 +39005,7 @@ int CreateDispGroupWnd()
 							int groupindex2;
 							for (groupindex2 = 0; groupindex2 < MAXDISPGROUPNUM; groupindex2++) {
 								if ((groupindex2 != groupindex) && s_groupselect[groupindex2]) {
-									s_groupselect[groupindex2]->setValue(false);
+									s_groupselect[groupindex2]->setValue(false, false);
 								}
 							}
 						}
@@ -47776,7 +47776,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.18 : No.%d : ", s_appcnt);
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.19 : No.%d : ", s_appcnt);
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -56069,7 +56069,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.18 : No.%d : ", s_appcnt);
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.19 : No.%d : ", s_appcnt);
 
 
 	if (s_model && s_chascene) {
@@ -60783,7 +60783,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_distortionscaleslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_st_distortionscaleslider = new OWP_Slider(1.0, 10.0, 0.0);
 		if (!s_st_distortionscaleslider) {
 			_ASSERT(0);
 			return 1;
@@ -60862,7 +60862,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_flowrateslider = new OWP_Slider(1.0, 2.0, -2.0);
+		s_st_flowrateslider = new OWP_Slider(1.0, 4.0, -4.0);
 		if (!s_st_flowrateslider) {
 			_ASSERT(0);
 			return 1;
@@ -66033,51 +66033,51 @@ int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat)
 	if (s_st_shadertyperadio) {
 		switch (s_shadertypeparams.shadertype) {
 		case -1:
-			s_st_shadertyperadio->setSelectIndex(0);
+			s_st_shadertyperadio->setSelectIndex(0, false);
 			break;
 		case MQOSHADER_PBR://case 0
-			s_st_shadertyperadio->setSelectIndex(1);
+			s_st_shadertyperadio->setSelectIndex(1, false);
 			break;
 		case MQOSHADER_STD://case 1
-			s_st_shadertyperadio->setSelectIndex(2);
+			s_st_shadertyperadio->setSelectIndex(2, false);
 			break;
 		case MQOSHADER_TOON://case 2
-			s_st_shadertyperadio->setSelectIndex(3);
+			s_st_shadertyperadio->setSelectIndex(3, false);
 			break;
 		default:
 			_ASSERT(0);
-			s_st_shadertyperadio->setSelectIndex(0);
+			s_st_shadertyperadio->setSelectIndex(0, false);
 			break;
 		}
 	}
 	
 	if (s_st_toonlitradio) {
 		if ((s_shadertypeparams.hsvtoon.lightindex >= 0) && (s_shadertypeparams.hsvtoon.lightindex <= 7)) {
-			s_st_toonlitradio->setSelectIndex(s_shadertypeparams.hsvtoon.lightindex);
+			s_st_toonlitradio->setSelectIndex(s_shadertypeparams.hsvtoon.lightindex, false);
 		}
 		else {
 			_ASSERT(0);
-			s_st_toonlitradio->setSelectIndex(0);
+			s_st_toonlitradio->setSelectIndex(0, false);
 		}
 	}
 
 	if (s_st_riverradio) {
 		if ((s_shadertypeparams.riverorsea >= 0) && (s_shadertypeparams.riverorsea <= 1)) {
-			s_st_riverradio->setSelectIndex(s_shadertypeparams.riverorsea);
+			s_st_riverradio->setSelectIndex(s_shadertypeparams.riverorsea, false);
 		}
 		else {
 			_ASSERT(0);
-			s_st_riverradio->setSelectIndex(0);
+			s_st_riverradio->setSelectIndex(0, false);
 		}
 	}
 
 	if (s_st_distortionmapradio) {
 		if ((s_shadertypeparams.distortionmaptype >= 0) && (s_shadertypeparams.distortionmaptype <= 2)) {
-			s_st_distortionmapradio->setSelectIndex(s_shadertypeparams.distortionmaptype);
+			s_st_distortionmapradio->setSelectIndex(s_shadertypeparams.distortionmaptype, false);
 		}
 		else {
 			_ASSERT(0);
-			s_st_distortionmapradio->setSelectIndex(0);
+			s_st_distortionmapradio->setSelectIndex(0, false);
 		}
 	}
 
@@ -66699,31 +66699,31 @@ int SetMaterial2SkyParamsDlg(CMQOMaterial* srcmat)
 	if (s_skyst_shadertyperadio) {
 		switch (s_skyparams[g_skyindex].shadertype) {
 		case -1:
-			s_skyst_shadertyperadio->setSelectIndex(0);
+			s_skyst_shadertyperadio->setSelectIndex(0, false);
 			break;
 		case MQOSHADER_PBR://case 0
-			s_skyst_shadertyperadio->setSelectIndex(1);
+			s_skyst_shadertyperadio->setSelectIndex(1, false);
 			break;
 		case MQOSHADER_STD://case 1
-			s_skyst_shadertyperadio->setSelectIndex(2);
+			s_skyst_shadertyperadio->setSelectIndex(2, false);
 			break;
 		case MQOSHADER_TOON://case 2
-			s_skyst_shadertyperadio->setSelectIndex(3);
+			s_skyst_shadertyperadio->setSelectIndex(3, false);
 			break;
 		default:
 			_ASSERT(0);
-			s_skyst_shadertyperadio->setSelectIndex(0);
+			s_skyst_shadertyperadio->setSelectIndex(0, false);
 			break;
 		}
 	}
 
 	if (s_skyst_toonlitradio) {
 		if ((s_skyparams[g_skyindex].hsvtoon.lightindex >= 0) && (s_skyparams[g_skyindex].hsvtoon.lightindex <= 7)) {
-			s_skyst_toonlitradio->setSelectIndex(s_skyparams[g_skyindex].hsvtoon.lightindex);
+			s_skyst_toonlitradio->setSelectIndex(s_skyparams[g_skyindex].hsvtoon.lightindex, false);
 		}
 		else {
 			_ASSERT(0);
-			s_skyst_toonlitradio->setSelectIndex(0);
+			s_skyst_toonlitradio->setSelectIndex(0, false);
 		}
 	}
 
@@ -67479,6 +67479,8 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider)
 			g_camtargetpos = g_camEye - camvec2 * savecamdist * 3.0f;
 		}
 
+
+
 		g_camdist = savecamdist * 3.0f;
 	}
 
@@ -67486,7 +67488,7 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider)
 
 
 	if (s_sidemenuWnd && s_sidemenu_camdistSlider && (calledbyslider == false)) {
-		s_sidemenu_camdistSlider->setValue(g_camdist);
+		s_sidemenu_camdistSlider->setValue(g_camdist, false);
 		s_sidemenuWnd->callRewrite();
 	}
 

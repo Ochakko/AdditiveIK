@@ -558,8 +558,13 @@ SPSOut2 PSMainNoSkinPBR(SPSIn psIn) : SV_Target
         //int4 distortiontype; //[0]:riverorsea(0:river,1:sea), [1]:maptype(0:rg,1:rb,2:gb)
         //float4 distortionscale; //x:distortionscale, y:riverflowrate
         //float4 distortioncenter; //xy:seacenter, zw:riverdir  
+        
         float2 grabuv = psIn.pos.xy / psIn.pos.w;
-        float3 distortionuv4;
+        //float2 grabuv = psIn.pos.xy;//<--セマンティクスがPOSITIONなのでこちらの方が正しい気もするが　ビジュアルの問題で　上述の　/ pos.wを採用　オプション化の可能性有
+        grabuv *= float2(0.5f, -0.5f);
+        grabuv += float2(0.5f, 0.5f);
+
+        float4 distortionuv4;
         //float2 flowuv = (distortiontype.x == 0) ? (distortioncenter.zw * time1.x * distortionscale.y) : ((grabuv - distortioncenter.xy) * time1.x * distortionscale.y);
         float2 flowuv = (distortiontype.x == 0) ? (distortioncenter.zw * time1.x * distortionscale.y) : (distortioncenter.zw * sin(time1.x) * distortionscale.y);
         distortionuv4 = g_normalMap.Sample(g_sampler_albedo, (grabuv + flowuv)) * 2.0f - 1.0f;
@@ -681,8 +686,13 @@ SPSOut2 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target
         //int4 distortiontype; //[0]:riverorsea(0:river,1:sea), [1]:maptype(0:rg,1:rb,2:gb)
         //float4 distortionscale; //x:distortionscale, y:riverflowrate
         //float4 distortioncenter; //xy:seacenter, zw:riverdir  
+
         float2 grabuv = psIn.pos.xy / psIn.pos.w;
-        float3 distortionuv4;
+        //float2 grabuv = psIn.pos.xy;//<--セマンティクスがPOSITIONなのでこちらの方が正しい気もするが　ビジュアルの問題で　上述の　/ pos.wを採用　オプション化の可能性有
+        grabuv *= float2(0.5f, -0.5f);
+        grabuv += float2(0.5f, 0.5f);
+
+        float4 distortionuv4;
         //float2 flowuv = (distortiontype.x == 0) ? (distortioncenter.zw * time1.x * distortionscale.y) : ((grabuv - distortioncenter.xy) * time1.x * distortionscale.y);
         float2 flowuv = (distortiontype.x == 0) ? (distortioncenter.zw * time1.x * distortionscale.y) : (distortioncenter.zw * sin(time1.x) * distortionscale.y);
         distortionuv4 = g_normalMap.Sample(g_sampler_albedo, (grabuv + flowuv)) * 2.0f - 1.0f;

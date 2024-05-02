@@ -3,6 +3,24 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/05/02
+　不具合修正
+　　OWP GUIの初期設定時にcallListenerフラグがfalseになっていなかった箇所がまだあったので修正
+　　　剛体パラメータGUI初期化時にフラグ指定が無かった
+　　　OWP_RadioButtonのsetSelectIndex()にはcallListenerフラグ引数が無かった
+　　　GUI初期化時にオブジェクトに対してデフォルト値が設定されていたものがまだあった
+　　　cameraDistの保存値が機能するようになった
+
+
+　SimpleWaterに関するGUIの最大値最小値を調整
+
+　SimpleWaterのUVを修正
+
+
+
+
+
+
 2024/05/01
 　AdditiveIK 1.0.0.18 release
 　　1.0.0.17からの変更点

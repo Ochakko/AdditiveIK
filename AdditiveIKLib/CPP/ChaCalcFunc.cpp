@@ -887,7 +887,7 @@ int ChaCalcFunc::RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int* onlyc
 	//####################################################################################################
 
 
-	if ((ishipsjoint == true) && g_rotatetanim) {//2024/04/26 && g_rotateanim
+	if ((ishipsjoint == true) && g_rotatetanim) {//2024/04/26 && g_rotatetanim
 
 		//############
 		//Hips Joint

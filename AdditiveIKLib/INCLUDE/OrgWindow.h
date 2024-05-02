@@ -4471,14 +4471,14 @@ void s_dummyfunc()
 
 		/////////////////////////// Accessor /////////////////////////////
 		//	Accessor : selectIndex
-		void setSelectIndex(int value){
+		void setSelectIndex(int value, bool callListener = true){
 			value= max(0, min(value,(int)nameList.size()-1));
 			//現在設定されている値と異なる値をセットした時にだけ変更する
 			if( selectIndex!=value ){
 				selectIndex= value;
 
 				//リスナーコール
-				if(this->selectListener!=NULL){
+				if(callListener && (this->selectListener!=NULL)){//2024/05/02 callListenerフラグ追加
 					(this->selectListener)();
 				}
 
