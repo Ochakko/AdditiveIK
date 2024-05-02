@@ -391,6 +391,7 @@ int CBone::InitParams()
 
 	ChaMatrixIdentity(&(m_btmat[0]));
 	ChaMatrixIdentity(&(m_btmat[1]));
+	m_isbtmovable = true;
 	//ChaMatrixIdentity(&(m_befbtmat[0]));
 	//ChaMatrixIdentity(&(m_befbtmat[1]));
 	m_setbtflag = 0;

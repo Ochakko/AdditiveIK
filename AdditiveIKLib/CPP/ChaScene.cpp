@@ -181,6 +181,7 @@ void ChaScene::SetUpdateSlot()
 			CModel* curmodel = m_modelindex[modelindex].modelptr;
 			if (curmodel) {
 				curmodel->SetUpdateSlotReq(curmodel->GetTopBone(false), m_updateslot);
+				curmodel->ResetBtMovableReq(curmodel->GetTopBone(false));
 			}
 		}
 	}
@@ -1678,7 +1679,8 @@ int ChaScene::SetENullTime(int srcmodelindex, double srcframe)
 	return 0;
 }
 
-int ChaScene::Motion2Bt(bool limitdegflag, double nextframe, 
+int ChaScene::Motion2Bt(bool secondcall, bool limitdegflag, bool updatematrixflag, 
+	double nextframe, 
 	ChaMatrix* pmView, ChaMatrix* pmProj, int loopstartflag)
 {
 	if (!pmView || !pmProj) {
@@ -1688,21 +1690,35 @@ int ChaScene::Motion2Bt(bool limitdegflag, double nextframe,
 
 	if (!m_modelindex.empty()) {
 
-		//2024/04/06
-		// スレッドから呼び出されたCModel::Motion2Bt()からCModel::UpdateMatrixを呼び出していた
-		// CModel::UpdateMatrixのChkInViewを複数スレッドから同時に呼び出すことは出来ない
-		// CModel::UpdateMatrixのChkInViewをマルチスレッド呼び出しすると即時実行コンピュートシェーダ関連のメモリエラーで落ちる
-		//(CBone::UpdateMatrixはコンテクスト限定でマルチスレッド可能)
-		//CModel::Motion2Bt()からのCModel::UpdateMatrix呼び出しをやめて、ここでCModel::UpdateMatrixを呼び出して済ませることに
-		int modelnum = (int)m_modelindex.size();
-		int modelindex;
-		for (modelindex = 0; modelindex < modelnum; modelindex++) {
-			CModel* curmodel = m_modelindex[modelindex].modelptr;
-			if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
-				ChaMatrix wmat = curmodel->GetWorldMat();
-				bool needwait = true;
-				int refposindex = 0;
-				curmodel->UpdateMatrix(limitdegflag, &wmat, pmView, pmProj, needwait, refposindex);
+		if (updatematrixflag) {//2024/05/02 LimitEulオンのSetBtMotionの後で呼ぶMotion2Bt呼び出しでは　updatematrixflag = false
+			//2024/04/06
+			// スレッドから呼び出されたCModel::Motion2Bt()からCModel::UpdateMatrixを呼び出していた
+			// CModel::UpdateMatrixのChkInViewを複数スレッドから同時に呼び出すことは出来ない
+			// CModel::UpdateMatrixのChkInViewをマルチスレッド呼び出しすると即時実行コンピュートシェーダ関連のメモリエラーで落ちる
+			//(CBone::UpdateMatrixはコンテクスト限定でマルチスレッド可能)
+			//CModel::Motion2Bt()からのCModel::UpdateMatrix呼び出しをやめて、ここでCModel::UpdateMatrixを呼び出して済ませることに
+			int modelnum = (int)m_modelindex.size();
+			int modelindex;
+			for (modelindex = 0; modelindex < modelnum; modelindex++) {
+				CModel* curmodel = m_modelindex[modelindex].modelptr;
+				if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
+					ChaMatrix wmat = curmodel->GetWorldMat();
+					bool needwait = true;
+					int refposindex = 0;
+					curmodel->UpdateMatrix(limitdegflag, &wmat, pmView, pmProj, needwait, refposindex);
+				}
+			}
+		}
+
+
+		{
+			int modelnum = (int)m_modelindex.size();
+			int modelindex;
+			for (modelindex = 0; modelindex < modelnum; modelindex++) {
+				CModel* curmodel = m_modelindex[modelindex].modelptr;
+				if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
+					curmodel->SetSecondCallOfMotion2Bt(secondcall);
+				}
 			}
 		}
 
@@ -1782,6 +1798,11 @@ int ChaScene::SetBtMotion(bool limitdegflag, double nextframe,
 				curupdate->SetBtMotion(limitdegflag, nextframe, pmView, pmProj, smodel, srcreccnt);//, m_updateslot);
 			}
 			//WaitSetBtMotionFinished();//レンダー中に計算し　レンダー後に待機するので　コメントアウト
+
+			if (limitdegflag) {
+				WaitSetBtMotionFinished();//2024/05/02 LimitEulオンの時には　この処理の後にも処理をするので同期する必要がある
+			}
+
 		}
 
 
@@ -1828,8 +1849,10 @@ int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe,
 		return 1;
 	}
 
-
-	Motion2Bt(limitdegflag, nextframe, pmView, pmProj, loopstartflag);//MultiThreading per CModel. Wait threads on return.
+	bool secondcall = false;
+	bool updatematrixflag = true;
+	Motion2Bt(secondcall, limitdegflag, updatematrixflag, 
+		nextframe, pmView, pmProj, loopstartflag);//MultiThreading per CModel. Wait threads on return.
 
 	if (smodel && (recstopflag == true)) {
 		if (srcStopBtRec) {
@@ -1873,6 +1896,14 @@ int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe,
 		//}
 
 		SetBtMotion(limitdegflag, nextframe, pmView, pmProj, smodel, srcreccnt);//MultiThreading per CModel, Not Wait threads on return.
+
+
+		if (limitdegflag) {
+			bool secondcall = true;
+			bool updatematrixflag2 = false;
+			Motion2Bt(secondcall, limitdegflag, updatematrixflag2,
+				nextframe, pmView, pmProj, loopstartflag);//MultiThreading per CModel. Wait threads on return.
+		}
 
 	}
 

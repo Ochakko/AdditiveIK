@@ -1741,7 +1741,12 @@ public: //accesser
 	{
 		return m_updateslot;
 	}
-
+	void SetBtMovable(bool srcflag) {
+		m_isbtmovable = srcflag;
+	}
+	bool IsBtMovable() {
+		return m_isbtmovable;
+	}
 
 public:
 	CRITICAL_SECTION m_CritSection_GetBefNext;
@@ -1838,6 +1843,7 @@ private:
 	//CQuaternion m_addlimitq;
 
 	ChaMatrix m_btmat[2];
+	bool m_isbtmovable;//2024/05/02
 	//ChaMatrix m_befbtmat[2];
 	int m_setbtflag;
 	ChaVector3 m_bteul;

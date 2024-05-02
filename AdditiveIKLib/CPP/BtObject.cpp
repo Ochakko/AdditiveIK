@@ -1074,6 +1074,10 @@ int CBtObject::Motion2Bt(CModel* srcmodel, int srcmotid, double srcframe)
 	if( !m_rigidbody ){
 		return 0;
 	}
+	if (!srcmodel) {
+		_ASSERT(0);
+		return 0;
+	}
 
 	if( !m_rigidbody->getMotionState() ){
 		_ASSERT( 0 );
@@ -1089,14 +1093,16 @@ int CBtObject::Motion2Bt(CModel* srcmodel, int srcmotid, double srcframe)
 
 	//srcframe : 時間補間有り
 	GetBone()->CalcNewBtMat(srcmodel, GetEndBone(), &newrotmat, &newrigidpos);
-	SetPosture2Bt(newrotmat, newrigidpos);
+	SetPosture2Bt(srcmodel->GetSecondCallOfMotion2Bt(), GetBone()->IsBtMovable(), GetBone()->GetLimitRate(), 
+		newrotmat, newrigidpos);
 
 
 	return 0;
 }
 
 //int constraintupdateflag = 1
-int CBtObject::SetPosture2Bt(ChaMatrix srcmat, ChaVector3 srcrigidcenter, int constraintupdateflag)
+int CBtObject::SetPosture2Bt(bool secondcall, bool btmovable, int limitrate,
+	ChaMatrix srcmat, ChaVector3 srcrigidcenter, int constraintupdateflag)
 {
 	CQuaternion tmpq;
 	tmpq.RotationMatrix(srcmat);
@@ -1108,8 +1114,46 @@ int CBtObject::SetPosture2Bt(ChaMatrix srcmat, ChaVector3 srcrigidcenter, int co
 	worldtra.setOrigin(btVector3(srcrigidcenter.x, srcrigidcenter.y, srcrigidcenter.z));
 
 	m_rigidbody->getMotionState()->setWorldTransform(worldtra);
-
 	m_btpos = ChaVector3(srcrigidcenter.x, srcrigidcenter.y, srcrigidcenter.z);
+
+
+	//if (secondcall) {
+	//	//2024/05/02 LimitEulオンの時　SetBtMotion()の後にもう一度Motion2Bt()を呼び出す
+	//	//その際にismovable==falseならVelocityを減速
+	//	float multipleV = 1.0f;
+	//	if (btmovable == false) {
+	//		multipleV = (float)g_physicalMovableRate * 0.010f;
+	//	}
+	//	else {
+	//		multipleV = (float)(100 - limitrate) * 0.010f;
+	//	}
+	//	btVector3 angularV = m_rigidbody->getAngularVelocity() * multipleV;
+	//	btVector3 interpolationAngularV = m_rigidbody->getInterpolationAngularVelocity() * multipleV;
+	//	//btVector3 linearV = m_rigidbody->getLinearVelocity() * multipleV;
+	//	//btVector3 interpolationLinearV = m_rigidbody->getInterpolationLinearVelocity() * multipleV;
+	//
+	//	//m_rigidbody->setAngularVelocity(angularV);
+	//	////m_rigidbody->setLinearVelocity(linearV);
+	//	//m_rigidbody->setInterpolationAngularVelocity(interpolationAngularV);
+	//	////m_rigidbody->setInterpolationLinearVelocity(interpolationLinearV);
+	//
+	//}
+
+	if (secondcall) {
+		//2024/05/02 LimitEulオンの時　SetBtMotion()の後にもう一度Motion2Bt()を呼び出す
+		//その際にVelocityを0セット
+		m_rigidbody->setAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
+		//m_rigidbody->setLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
+		m_rigidbody->setInterpolationAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
+		//m_rigidbody->setInterpolationLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
+
+		m_rigidbody->setPushVelocity(btVector3(0.0f, 0.0f, 0.0f));
+		
+		if (btmovable == false) {
+			m_rigidbody->setTurnVelocity(btVector3(0.0f, 0.0f, 0.0f));//<--これを呼ぶとスカートが元に戻る際のパタパタカクカクが無くなった
+		}
+	}
+
 
 	//constraintのFrameA, FrameBの更新
 	//if (constraintupdateflag == 1) {

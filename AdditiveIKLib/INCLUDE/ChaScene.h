@@ -136,7 +136,7 @@ private:
 	void SetKinematicToHand(CModel* srcmodel, bool srcflag);
 	void SetKinematicToHandReq(CModel* srcmodel, CBone* srcbone, bool srcflag);
 
-	int Motion2Bt(bool limitdegflag, double nextframe, 
+	int Motion2Bt(bool secondcall, bool limitdegflag, bool updatematrixflag, double nextframe, 
 		ChaMatrix* pmView, ChaMatrix* pmProj, int loopstartflag);
 	int SetBtMotion(bool limitdegflag, double nextframe, 
 		ChaMatrix* pmView, ChaMatrix* pmProj, CModel* smodel, double srcreccnt);

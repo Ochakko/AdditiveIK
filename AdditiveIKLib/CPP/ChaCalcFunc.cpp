@@ -2315,6 +2315,9 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 	}
 	else {
 		if (ismovable == 1) {
+
+			srcbone->SetBtMovable(true);//2024/05/02
+
 			//ChaMatrix setlocalrotmat = eulq.MakeRotMatX();
 
 			//####################################################################################################
@@ -2375,6 +2378,9 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 			//}
 		}
 		else if (ismovable == 0) {
+
+			srcbone->SetBtMovable(false);//2024/05/02
+
 			//制限値を越えている場合　
 			// 　壁すり処理をする
 			//	//############################################
@@ -2434,6 +2440,9 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 			}
 		}
 		else if(ismovable == 2) {
+
+			srcbone->SetBtMovable(false);//2024/05/02
+
 			//###############################################
 			//2024/04/23
 			//回転禁止フラグが設定されている場合

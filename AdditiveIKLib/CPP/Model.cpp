@@ -665,6 +665,8 @@ int CModel::InitParams()
 	m_skyflag = false;
 	m_groundflag = false;
 
+	m_secondCallOfMotion2Bt = false;
+
 	return 0;
 }
 
@@ -20882,5 +20884,20 @@ void CModel::GetFrustumCorners(ChaMatrix vp, float* points)
 		*(points + 4 * i + 1) = q.y;
 		*(points + 4 * i + 2) = q.z;
 		*(points + 4 * i + 3) = 1.0f;
+	}
+}
+
+void CModel::ResetBtMovableReq(CBone* srcbone)
+{
+	if (srcbone) {
+
+		srcbone->SetBtMovable(true);
+
+		if (srcbone->GetChild(false)) {
+			ResetBtMovableReq(srcbone->GetChild(false));
+		}
+		if (srcbone->GetBrother(false)) {
+			ResetBtMovableReq(srcbone->GetBrother(false));
+		}
 	}
 }

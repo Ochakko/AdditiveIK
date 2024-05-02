@@ -2,7 +2,7 @@
 <SHADERTYPEFILE>
   <FileInfo>
     <kind>ShaderTypeFile</kind>
-    <version>1006</version>
+    <version>1007</version>
     <type>0</type>
   </FileInfo>
   <Material>
@@ -42,6 +42,13 @@
     <NormalY0>0</NormalY0>
     <ShadowCaster>1</ShadowCaster>
     <Lighting>1</Lighting>
+    <SimpleWater>0</SimpleWater>
+    <DistortionScale>1.000</DistortionScale>
+    <RiverOrSea>0</RiverOrSea>
+    <RiverDirU>0.000</RiverDirU>
+    <RiverDirV>1.000</RiverDirV>
+    <RiverFlowRate>1.000</RiverFlowRate>
+    <DistortionMapType>1</DistortionMapType>
   </Material>
   <Material>
     <MaterialName>N00_000_00_EyeIris_00_EYE__Instance_</MaterialName>
@@ -80,6 +87,13 @@
     <NormalY0>0</NormalY0>
     <ShadowCaster>1</ShadowCaster>
     <Lighting>1</Lighting>
+    <SimpleWater>0</SimpleWater>
+    <DistortionScale>1.000</DistortionScale>
+    <RiverOrSea>0</RiverOrSea>
+    <RiverDirU>0.000</RiverDirU>
+    <RiverDirV>1.000</RiverDirV>
+    <RiverFlowRate>1.000</RiverFlowRate>
+    <DistortionMapType>1</DistortionMapType>
   </Material>
   <Material>
     <MaterialName>N00_000_00_EyeHighlight_00_EYE__Instance_</MaterialName>
@@ -118,6 +132,13 @@
     <NormalY0>0</NormalY0>
     <ShadowCaster>1</ShadowCaster>
     <Lighting>1</Lighting>
+    <SimpleWater>0</SimpleWater>
+    <DistortionScale>1.000</DistortionScale>
+    <RiverOrSea>0</RiverOrSea>
+    <RiverDirU>0.000</RiverDirU>
+    <RiverDirV>1.000</RiverDirV>
+    <RiverFlowRate>1.000</RiverFlowRate>
+    <DistortionMapType>1</DistortionMapType>
   </Material>
   <Material>
     <MaterialName>N00_000_00_Face_00_SKIN__Instance_</MaterialName>
@@ -156,6 +177,13 @@
     <NormalY0>1</NormalY0>
     <ShadowCaster>1</ShadowCaster>
     <Lighting>1</Lighting>
+    <SimpleWater>0</SimpleWater>
+    <DistortionScale>1.000</DistortionScale>
+    <RiverOrSea>0</RiverOrSea>
+    <RiverDirU>0.000</RiverDirU>
+    <RiverDirV>1.000</RiverDirV>
+    <RiverFlowRate>1.000</RiverFlowRate>
+    <DistortionMapType>1</DistortionMapType>
   </Material>
   <Material>
     <MaterialName>N00_000_00_EyeWhite_00_EYE__Instance_</MaterialName>
@@ -194,6 +222,13 @@
     <NormalY0>0</NormalY0>
     <ShadowCaster>1</ShadowCaster>
     <Lighting>1</Lighting>
+    <SimpleWater>0</SimpleWater>
+    <DistortionScale>1.000</DistortionScale>
+    <RiverOrSea>0</RiverOrSea>
+    <RiverDirU>0.000</RiverDirU>
+    <RiverDirV>1.000</RiverDirV>
+    <RiverFlowRate>1.000</RiverFlowRate>
+    <DistortionMapType>1</DistortionMapType>
   </Material>
   <Material>
     <MaterialName>N00_000_00_FaceBrow_00_FACE__Instance_</MaterialName>
@@ -232,6 +267,13 @@
     <NormalY0>0</NormalY0>
     <ShadowCaster>1</ShadowCaster>
     <Lighting>1</Lighting>
+    <SimpleWater>0</SimpleWater>
+    <DistortionScale>1.000</DistortionScale>
+    <RiverOrSea>0</RiverOrSea>
+    <RiverDirU>0.000</RiverDirU>
+    <RiverDirV>1.000</RiverDirV>
+    <RiverFlowRate>1.000</RiverFlowRate>
+    <DistortionMapType>1</DistortionMapType>
   </Material>
   <Material>
     <MaterialName>N00_000_00_FaceEyeline_00_FACE__Instance_</MaterialName>
@@ -270,6 +312,13 @@
     <NormalY0>0</NormalY0>
     <ShadowCaster>1</ShadowCaster>
     <Lighting>1</Lighting>
+    <SimpleWater>0</SimpleWater>
+    <DistortionScale>1.000</DistortionScale>
+    <RiverOrSea>0</RiverOrSea>
+    <RiverDirU>0.000</RiverDirU>
+    <RiverDirV>1.000</RiverDirV>
+    <RiverFlowRate>1.000</RiverFlowRate>
+    <DistortionMapType>1</DistortionMapType>
   </Material>
   <Material>
     <MaterialName>N00_000_00_Body_00_SKIN__Instance_</MaterialName>
@@ -308,6 +357,13 @@
     <NormalY0>0</NormalY0>
     <ShadowCaster>1</ShadowCaster>
     <Lighting>1</Lighting>
+    <SimpleWater>0</SimpleWater>
+    <DistortionScale>1.000</DistortionScale>
+    <RiverOrSea>0</RiverOrSea>
+    <RiverDirU>0.000</RiverDirU>
+    <RiverDirV>1.000</RiverDirV>
+    <RiverFlowRate>1.000</RiverFlowRate>
+    <DistortionMapType>1</DistortionMapType>
   </Material>
   <Material>
     <MaterialName>N00_002_03_Tops_01_CLOTH__Instance_</MaterialName>
@@ -346,6 +402,13 @@
     <NormalY0>0</NormalY0>
     <ShadowCaster>1</ShadowCaster>
     <Lighting>1</Lighting>
+    <SimpleWater>0</SimpleWater>
+    <DistortionScale>1.000</DistortionScale>
+    <RiverOrSea>0</RiverOrSea>
+    <RiverDirU>0.000</RiverDirU>
+    <RiverDirV>1.000</RiverDirV>
+    <RiverFlowRate>1.000</RiverFlowRate>
+    <DistortionMapType>1</DistortionMapType>
   </Material>
   <Material>
     <MaterialName>N00_004_01_Shoes_01_CLOTH__Instance_</MaterialName>
@@ -384,6 +447,13 @@
     <NormalY0>0</NormalY0>
     <ShadowCaster>1</ShadowCaster>
     <Lighting>1</Lighting>
+    <SimpleWater>0</SimpleWater>
+    <DistortionScale>1.000</DistortionScale>
+    <RiverOrSea>0</RiverOrSea>
+    <RiverDirU>0.000</RiverDirU>
+    <RiverDirV>1.000</RiverDirV>
+    <RiverFlowRate>1.000</RiverFlowRate>
+    <DistortionMapType>1</DistortionMapType>
   </Material>
   <Material>
     <MaterialName>N00_007_01_Tops_01_CLOTH__Instance_</MaterialName>
@@ -422,6 +492,13 @@
     <NormalY0>0</NormalY0>
     <ShadowCaster>1</ShadowCaster>
     <Lighting>1</Lighting>
+    <SimpleWater>0</SimpleWater>
+    <DistortionScale>1.000</DistortionScale>
+    <RiverOrSea>0</RiverOrSea>
+    <RiverDirU>0.000</RiverDirU>
+    <RiverDirV>1.000</RiverDirV>
+    <RiverFlowRate>1.000</RiverFlowRate>
+    <DistortionMapType>1</DistortionMapType>
   </Material>
   <Material>
     <MaterialName>N00_000_00_HairBack_00_HAIR__Instance_</MaterialName>
@@ -460,6 +537,13 @@
     <NormalY0>0</NormalY0>
     <ShadowCaster>1</ShadowCaster>
     <Lighting>1</Lighting>
+    <SimpleWater>0</SimpleWater>
+    <DistortionScale>1.000</DistortionScale>
+    <RiverOrSea>0</RiverOrSea>
+    <RiverDirU>0.000</RiverDirU>
+    <RiverDirV>1.000</RiverDirV>
+    <RiverFlowRate>1.000</RiverFlowRate>
+    <DistortionMapType>1</DistortionMapType>
   </Material>
   <Material>
     <MaterialName>N00_000_Hair_00_HAIR__Instance_</MaterialName>
@@ -498,5 +582,12 @@
     <NormalY0>0</NormalY0>
     <ShadowCaster>1</ShadowCaster>
     <Lighting>1</Lighting>
+    <SimpleWater>0</SimpleWater>
+    <DistortionScale>1.000</DistortionScale>
+    <RiverOrSea>0</RiverOrSea>
+    <RiverDirU>0.000</RiverDirU>
+    <RiverDirV>1.000</RiverDirV>
+    <RiverFlowRate>1.000</RiverFlowRate>
+    <DistortionMapType>1</DistortionMapType>
   </Material>
 </SHADERTYPEFILE>

@@ -2782,6 +2782,7 @@ public: //accesser
 	{
 		return m_updateslot;
 	}
+	void ResetBtMovableReq(CBone* srcbone);
 
 	void SetCSFirstDispatchFlag(bool srcflag)
 	{
@@ -2791,6 +2792,14 @@ public: //accesser
 	{
 		return m_csfirstdispatchflag;
 	}
+
+	void SetSecondCallOfMotion2Bt(bool secondcall) {
+		m_secondCallOfMotion2Bt = secondcall;
+	}
+	bool GetSecondCallOfMotion2Bt() {
+		return m_secondCallOfMotion2Bt;
+	}
+
 
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
@@ -2997,6 +3006,8 @@ private:
 	int m_updateslot;
 
 	CSChkInView* m_chkinview;
+
+	bool m_secondCallOfMotion2Bt;
 
 };
 

@@ -85,7 +85,8 @@ public:
  */
 	int Motion2Bt(CModel* srcmodel, int srcmotid, double srcframe);
 
-	int SetPosture2Bt(ChaMatrix srcmat, ChaVector3 srcrigidcenter, int constraintupdateflag = 1);
+	int SetPosture2Bt(bool secondcall, bool btmovable, int limitrate,
+		ChaMatrix srcmat, ChaVector3 srcrigidcenter, int constraintupdateflag = 1);
 
 	void RecalcConstraintFrameAB();
 
