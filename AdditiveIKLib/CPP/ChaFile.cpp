@@ -151,6 +151,7 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 	CallF(Write2File("  <EditRate>%.3f</EditRate>\r\n", g_physicsmvrate), return 1);
 	CallF(Write2File("  <PlayingSpeed>%.3f</PlayingSpeed>\r\n", g_dspeed), return 1);
 	CallF(Write2File("  <PhysicalLimitScale>%.3f</PhysicalLimitScale>\r\n", g_physicalLimitScale), return 1);
+	CallF(Write2File("  <BtMovableRate>%d</BtMovableRate>\r\n", g_physicalMovableRate), return 1);
 	CallF(Write2File("  <CameraDist>%.3f</CameraDist>\r\n", g_camdist), return 1);
 	CallF(Write2File("  <AKScale>%.3f</AKScale>\r\n", g_akscale), return 1);
 
@@ -199,7 +200,9 @@ int CChaFile::WriteFileInfo()
 	//version 1008 : 2024/04/22 1.0.0.17へ向けて  <4L_LOD*>, <BoneAxis>追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1008</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1009 : 2024/04/23 1.0.0.17へ向けて  <AKScale>追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1009</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1009</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1010 : 2024/05/02 1.0.0.19へ向けて  <BtMovableRate>追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1010</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -657,6 +660,13 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	if (result == 0) {
 		getlimitscale = true;//ReadCharaより後でセット
 	}
+	bool getmovablerate = false;
+	int tempmovablerate = g_physicalMovableRate;
+	result = Read_Int(&m_xmliobuf, "<BtMovableRate>", "</BtMovableRate>", &tempmovablerate);//2024/05/02
+	if (result == 0) {
+		getmovablerate = true;//ReadCharaより後でセット
+	}
+
 	bool getcameradist = false;
 	float tempcameradist = (float)g_camdist;
 	result = Read_Float(&m_xmliobuf, "<CameraDist>", "</CameraDist>", &tempcameradist);
@@ -750,6 +760,9 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	}
 	if (getlimitscale) {
 		g_physicalLimitScale = (double)templimitscale;
+	}
+	if (getmovablerate) {
+		g_physicalMovableRate = tempmovablerate;//2024/05/02
 	}
 	if (getcameradist) {
 		g_camdist = tempcameradist;

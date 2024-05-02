@@ -2324,14 +2324,14 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 			//90fpsでうまくいくように設定したものを30fpsで再生した場合に　"以前は"　パタパタカクカクが目立った
 			//今回の修正結果をテストしてみたところ　90fps時よりもLimitRateを大きく設定することと上記２５％補間により　パタパタ緩和
 			//
-			//1.0.0.19へ向けて調整していく
+			//上記２５％の部分をDispAndLimitsメニューのスライダーで設定：g_physicalMovableRate
 			//####################################################################################################
 
 			CQuaternion saveq;
 			saveq.RotationMatrix(beflocalmat);
 			CQuaternion calcq1 = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
 			//calcq1 = eulq.Slerp(saveq, 100, 50);
-			calcq1 = saveq.Slerp(eulq, 100, 25);
+			calcq1 = saveq.Slerp(eulq, 100, g_physicalMovableRate);//DispAndLimitsのスライダー設定値g_physicalMovableRate％
 			ChaMatrix setlocalrotmat = calcq1.MakeRotMatX();
 
 			ChaMatrix setlocalmat;

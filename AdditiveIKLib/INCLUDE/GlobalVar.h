@@ -201,6 +201,7 @@ bool g_limitdegflag = false;
 //int g_limitrate = 15;
 //int g_limitrate = 85;//2024/04/15 limitrateが実質FreeRateになっていたので修正　新しいlimitrate = (100 - 古いlimitrate)
 double g_physicalLimitScale = 1.0;//全てのCBoneのlimitrateに掛けるスケール
+int g_physicalMovableRate = 25;//2024/05/02 LimitEulオンで物理シミュをする場合の　制限角度内における動作変化率％
 
 //bool g_wmatDirectSetFlag = false;
 //bool g_underRetargetFlag = false;
@@ -481,6 +482,7 @@ extern bool g_limitdegflag;
 //2024/04/17 limitrateは構造体ANGLELIMITのメンバにしてCBone::m_anglelimitでボーンごとに管理することにした
 //extern int g_limitrate;
 extern double g_physicalLimitScale;//全てのCBoneのlimitrateに掛けるスケール
+extern int g_physicalMovableRate;//2024/05/02 LimitEulオンで物理シミュをする場合の　制限角度内における動作変化率％
 
 
 

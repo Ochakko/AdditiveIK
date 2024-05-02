@@ -5045,6 +5045,7 @@ void InitApp()
 	//g_limitrate = 15;
 	//g_limitrate = 85;//2024/04/15 limitrateが実質FreeRateになっていたので修正　新しいlimitrate = (100 - 古いlimitrate)
 	g_physicalLimitScale = 1.0;//全てのCBoneのlimitrateに掛けるスケール
+	g_physicalMovableRate = 25;//2024/05/02 LimitEulオンで物理シミュをする場合の　制限角度内における動作変化率％
 
 	
 	s_beflimitdegflag = g_limitdegflag;
@@ -20518,6 +20519,8 @@ int PostOpenChaFile()
 
 
 	if (s_guidlg[GUIDLG_DISP_AND_LIMITS]) {
+		WCHAR strdlg[256] = { 0L };
+
 		HWND limitratewnd = GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_SLIDER_PHYSICALLIMITSCALE);
 		if (limitratewnd != NULL) {
 			int sliderpos = (int)(g_physicalLimitScale * 100.0f);
@@ -20525,6 +20528,19 @@ int PostOpenChaFile()
 			SendMessage(limitratewnd, TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
 			SendMessage(limitratewnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 		}
+		swprintf_s(strdlg, 256, L"PhysicalLimitScale %.2f", g_physicalLimitScale);
+		SetDlgItemText(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_STATIC_PHYSICALLIMITSCALE, strdlg);
+
+
+		HWND movableratewnd = GetDlgItem(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_SLIDER_MOVABLERATE);
+		if (movableratewnd != NULL) {
+			int sliderpos = g_physicalMovableRate;
+			SendMessage(movableratewnd, TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+			SendMessage(movableratewnd, TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
+			SendMessage(movableratewnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+		}
+		swprintf_s(strdlg, 256, L"BtMovableRate %d", g_physicalMovableRate);
+		SetDlgItemText(s_guidlg[GUIDLG_DISP_AND_LIMITS], IDC_STATIC_MOVABLERATE, strdlg);
 	}
 
 
@@ -28040,6 +28056,11 @@ int DispParams2Dlg(HWND hDlgWnd)
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PHYSICALLIMITSCALE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
 	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PHYSICALLIMITSCALE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 
+	sliderpos = g_physicalMovableRate;
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_MOVABLERATE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_MOVABLERATE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
+	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_MOVABLERATE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+
 	//#####
 	//Text
 	//#####
@@ -28065,6 +28086,8 @@ int DispParams2Dlg(HWND hDlgWnd)
 	swprintf_s(strdlg, 256, L"PhysicalLimitScale %.2f", g_physicalLimitScale);
 	SetDlgItemText(hDlgWnd, IDC_STATIC_PHYSICALLIMITSCALE, strdlg);
 
+	swprintf_s(strdlg, 256, L"BtMovableRate %d", g_physicalMovableRate);
+	SetDlgItemText(hDlgWnd, IDC_STATIC_MOVABLERATE, strdlg);
 
 	//#########
 	//ComboBox
@@ -28337,6 +28360,14 @@ LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			WCHAR strdlg[256] = { 0L };
 			swprintf_s(strdlg, 256, L"PhysicalLimitScale %.2f", g_physicalLimitScale);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_PHYSICALLIMITSCALE, strdlg);
+		}
+		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_MOVABLERATE) == (HWND)lp) {
+			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_MOVABLERATE), TBM_GETPOS, 0, 0);
+			g_physicalMovableRate = cursliderpos;
+
+			WCHAR strdlg[256] = { 0L };
+			swprintf_s(strdlg, 256, L"BtMovableRate %d", g_physicalMovableRate);
+			SetDlgItemText(hDlgWnd, IDC_STATIC_MOVABLERATE, strdlg);
 		}
 
 	break;
