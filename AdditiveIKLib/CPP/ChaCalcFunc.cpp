@@ -2315,7 +2315,25 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 	}
 	else {
 		if (ismovable == 1) {
-			ChaMatrix setlocalrotmat = eulq.MakeRotMatX();
+			//ChaMatrix setlocalrotmat = eulq.MakeRotMatX();
+
+			//####################################################################################################
+			//2024/05/02
+			//LimitEul時にはismovable == 1の場合にも25%(%は後でGUIで設定可能に)の変化量に抑えて　パタパタするのを緩和してみる
+			// 
+			//90fpsでうまくいくように設定したものを30fpsで再生した場合に　"以前は"　パタパタカクカクが目立った
+			//今回の修正結果をテストしてみたところ　90fps時よりもLimitRateを大きく設定することと上記２５％補間により　パタパタ緩和
+			//
+			//1.0.0.19へ向けて調整していく
+			//####################################################################################################
+
+			CQuaternion saveq;
+			saveq.RotationMatrix(beflocalmat);
+			CQuaternion calcq1 = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
+			//calcq1 = eulq.Slerp(saveq, 100, 50);
+			calcq1 = saveq.Slerp(eulq, 100, 25);
+			ChaMatrix setlocalrotmat = calcq1.MakeRotMatX();
+
 			ChaMatrix setlocalmat;
 			bool sflag = true;
 			bool tanimflag = true;
@@ -2338,7 +2356,10 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 				befeul3.befframeeul = saveeul;
 				befeul3.currentframeeul = saveeul;
 				ChaVector3 seteul = ChaVector3(0.0f, 0.0f, 0.0f);
-				eulq.Q2EulXYZusingQ(true, false, &axisq, befeul3, &seteul, isfirstbone, isendbone, notmodify180flag3);
+				
+				//eulq.Q2EulXYZusingQ(true, false, &axisq, befeul3, &seteul, isfirstbone, isendbone, notmodify180flag3);
+				calcq1.Q2EulXYZusingQ(true, false, &axisq, befeul3, &seteul, isfirstbone, isendbone, notmodify180flag3);
+
 				srcbone->SetBtEul(seteul);
 			}
 			else {
