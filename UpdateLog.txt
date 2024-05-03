@@ -15,6 +15,12 @@ https://github.com/Ochakko/AdditiveIK
 　　　スカートに関してパタパタする感じも無くなり足が突き抜けることも無くなった
 　　　引き続きテストしながら調整していく
 
+　　更にテストしてみた結果
+　　　制限角度、RimitRateスライダー、PhysicalLimitScaleスライダー、BtMovableRateスライダーで大抵調整可能
+　　　速い動きに対応可能にするためにPhysicalLimitScaleの初期値は0、BtMovableRateの初期値は100に設定した
+　　　PhysicalLimitScaleを0、BtMovableRateを100に設定しても制限角度を越えるとフラグが立って速度設定が変わる
+　　　速度設定が重要だったという現時点での結論
+
 
 
 
