@@ -15,8 +15,8 @@
   <PickDistRate>0.50</PickDistRate>
   <EditRate>0.300</EditRate>
   <PlayingSpeed>1.000</PlayingSpeed>
-  <PhysicalLimitScale>1.000</PhysicalLimitScale>
-  <BtMovableRate>25</BtMovableRate>
+  <PhysicalLimitScale>0.000</PhysicalLimitScale>
+  <BtMovableRate>100</BtMovableRate>
   <CameraDist>329.720</CameraDist>
   <AKScale>1.000</AKScale>
   <BoneAxis>3</BoneAxis>
@@ -28,7 +28,7 @@
   <4L_LOD0>0.01</4L_LOD0>
   <4L_LOD1>0.15</4L_LOD1>
   <4L_LOD2>0.50</4L_LOD2>
-  <4L_LOD2>1.00</4L_LOD3>
+  <4L_LOD2>0.50</4L_LOD3>
   <Chara>
     <ModelFolder>Spring2_0</ModelFolder>
     <ModelFile>Spring2.fbx</ModelFile>
@@ -56,8 +56,9 @@
     <RGDMORPH>0</RGDMORPH>
     <CURRE>0</CURRE>
     <RGD>0</RGD>
-    <RefNum>1</RefNum>
+    <RefNum>2</RefNum>
     <RefFile>default_ref.ref</RefFile>
+    <RefFile>ForRapidMove.ref</RefFile>
     <ImpNum>1</ImpNum>
     <ImpFile>default_imp.imp</ImpFile>
   </Chara>
