@@ -1120,22 +1120,46 @@ int CBtObject::SetPosture2Bt(bool secondcall, bool btmovable, int limitrate,
 	if (secondcall) {
 		//2024/05/02 LimitEulオンの時　SetBtMotion()の後にもう一度Motion2Bt()を呼び出す
 		//その際に Velocityを0セット
+		// 
+		//2024/05/04 Velocityを０にしないでスケールしてセット
 
-		m_rigidbody->setAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
-		m_rigidbody->setInterpolationAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
-		m_rigidbody->setPushVelocity(btVector3(0.0f, 0.0f, 0.0f));
-
-		if (btmovable == false) {
-			//制限角度を越えた場合 TurnVも0
-			//(制限角度内の場合には持ち上がったスカートが戻るためにTurnVは0にしない)
-			m_rigidbody->setTurnVelocity(btVector3(0.0f, 0.0f, 0.0f));
+		float multipleV;
+		if (btmovable == true) {
+			//制限角度内の場合
+			multipleV = (float)g_physicalVeloScale;//BulletPhysicsプレートメニューのVScaleOnLimitEulスライダー
 		}
-		//else{
-		//	//制限角度内の場合　戻り減速
-		//	float multipleV = (float)g_physicalMovableRate * 0.010f;
-		//	btVector3 turnV = m_rigidbody->getTurnVelocity() * multipleV;
-		//	m_rigidbody->setTurnVelocity(turnV);
+		else {
+			//制限角度外の場合
+			multipleV = 0.10f;
+		}
+
+		btVector3 angularV = m_rigidbody->getAngularVelocity() * multipleV;
+		btVector3 interpolationAngularV = m_rigidbody->getInterpolationAngularVelocity() * multipleV;
+		btVector3 pushV = m_rigidbody->getPushVelocity() * multipleV;
+		btVector3 turnV = m_rigidbody->getTurnVelocity() * multipleV;
+
+		m_rigidbody->setAngularVelocity(angularV);
+		m_rigidbody->setInterpolationAngularVelocity(interpolationAngularV);
+		m_rigidbody->setPushVelocity(pushV);
+		m_rigidbody->setTurnVelocity(turnV);
+
+
+
+		//m_rigidbody->setAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
+		//m_rigidbody->setInterpolationAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
+		//m_rigidbody->setPushVelocity(btVector3(0.0f, 0.0f, 0.0f));
+
+		//if (btmovable == false) {
+		//	//制限角度を越えた場合 TurnVも0
+		//	//(制限角度内の場合には持ち上がったスカートが戻るためにTurnVは0にしない)
+		//	m_rigidbody->setTurnVelocity(btVector3(0.0f, 0.0f, 0.0f));
 		//}
+		////else{
+		////	//制限角度内の場合　戻り減速
+		////	float multipleV = (float)g_physicalMovableRate * 0.010f;
+		////	btVector3 turnV = m_rigidbody->getTurnVelocity() * multipleV;
+		////	m_rigidbody->setTurnVelocity(turnV);
+		////}
 
 		//if (btmovable == false) {
 		//	//制限角度を越えた場合　速度0

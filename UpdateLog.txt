@@ -2,6 +2,19 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/05/04
+　DispAndLimitsプレートメニューの中のBulletPhysics関連のスライダーをBulletPhysicsプレートメニューに移動
+
+　更に物理角度制限修正
+　　角度制限時に剛体の速度を０にはしないで
+　　BulletPhysicsプレートメニューのVScaleOnLimitEulスライダーの設定値で
+　　元の速度をスケールしてセットするように修正
+　　角度制限時の物理シミュのダイナミック具合の調整が可能(スカート突き抜けが起きない程度に値を小さくする必要はある)
+
+　ドキュメント修正
+　　Documents/TroubleShooting/WhyTheDispAndLimitsPlateMenuAlsoHasASliderForTheSameItem.docx
+
+
 
 2024/05/03
 　更に物理角度制限修正

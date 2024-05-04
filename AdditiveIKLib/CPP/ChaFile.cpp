@@ -154,6 +154,7 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 	CallF(Write2File("  <BtMovableRate>%d</BtMovableRate>\r\n", g_physicalMovableRate), return 1);
 	CallF(Write2File("  <CameraDist>%.3f</CameraDist>\r\n", g_camdist), return 1);
 	CallF(Write2File("  <AKScale>%.3f</AKScale>\r\n", g_akscale), return 1);
+	CallF(Write2File("  <BtVScaleOnLimitEul>%.3f</BtVScaleOnLimitEul>\r\n", g_physicalVeloScale), return 1);
 
 	CallF(Write2File("  <BoneAxis>%d</BoneAxis>\r\n", g_boneaxis), return 1);
 
@@ -202,7 +203,9 @@ int CChaFile::WriteFileInfo()
 	//version 1009 : 2024/04/23 1.0.0.17へ向けて  <AKScale>追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1009</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1010 : 2024/05/02 1.0.0.19へ向けて  <BtMovableRate>追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1010</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1010</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1011 : 2024/05/04 1.0.0.19へ向けて  <BtVScaleOnLimitEul>追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1011</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -666,6 +669,13 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	if (result == 0) {
 		getmovablerate = true;//ReadCharaより後でセット
 	}
+	bool getveloscale = false;
+	float tempveloscale = (float)g_physicalVeloScale;
+	result = Read_Float(&m_xmliobuf, "<BtVScaleOnLimitEul>", "</BtVScaleOnLimitEul>", &tempveloscale);
+	if (result == 0) {
+		getveloscale = true;//ReadCharaより後でセット
+	}
+
 
 	bool getcameradist = false;
 	float tempcameradist = (float)g_camdist;
@@ -763,6 +773,9 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	}
 	if (getmovablerate) {
 		g_physicalMovableRate = tempmovablerate;//2024/05/02
+	}
+	if (getveloscale) {
+		g_physicalVeloScale = (double)tempveloscale;//2024/05/04
 	}
 	if (getcameradist) {
 		g_camdist = tempcameradist;

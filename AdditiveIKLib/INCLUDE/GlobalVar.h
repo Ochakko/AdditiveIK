@@ -204,6 +204,7 @@ bool g_limitdegflag = false;
 //int g_physicalMovableRate = 25;//2024/05/02 LimitEulオンで物理シミュをする場合の　制限角度内における動作変化率％
 double g_physicalLimitScale = 0.0;//全てのCBoneのlimitrateに掛けるスケール limitを0に設定しても制限角度を越えるとフラグが立って速度設定が変わる
 int g_physicalMovableRate = 100;//2024/05/02 LimitEulオンで物理シミュをする場合の　制限角度内における動作変化率％
+double g_physicalVeloScale = 0.20;//2024/05/04 LimitEulオンで物理シミュする場合の　剛体速度スケール
 
 //bool g_wmatDirectSetFlag = false;
 //bool g_underRetargetFlag = false;
@@ -485,7 +486,7 @@ extern bool g_limitdegflag;
 //extern int g_limitrate;
 extern double g_physicalLimitScale;//全てのCBoneのlimitrateに掛けるスケール
 extern int g_physicalMovableRate;//2024/05/02 LimitEulオンで物理シミュをする場合の　制限角度内における動作変化率％
-
+extern double g_physicalVeloScale;//2024/05/04 LimitEulオンで物理シミュする場合の　剛体速度スケール
 
 
 //extern bool g_wmatDirectSetFlag;
