@@ -239,9 +239,9 @@ Smooth平滑化<br>
 # Explaining Movie
 [Movie About New Feature](https://youtu.be/oKGY62YosSg "About New Feature1")<br>
 
-[Usage Example 2024/04/19](https://youtu.be/S-2ycgp_xM4 "Usage example1")<br>
+[ジャンプ中にくるりと回ります 2024/04/26](https://youtu.be/6wveLqMbsYA "Usage example1")<br>
 
-[Usage Example 2024/04/26](https://youtu.be/6wveLqMbsYA "Usage example2")<br>
+[限界越えたら0.1倍速で動きます 2024/05/04](https://youtu.be/ufPtA-CxVKU "Usage example2")<br>
 
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")

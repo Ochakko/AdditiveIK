@@ -15,6 +15,13 @@ https://github.com/Ochakko/AdditiveIK
 　　Documents/TroubleShooting/WhyTheDispAndLimitsPlateMenuAlsoHasASliderForTheSameItem.docx
 
 
+　ショートムービー
+　　限界越えたら0.1倍速で動きます
+　　https://youtu.be/ufPtA-CxVKU
+
+
+
+
 
 2024/05/03
 　更に物理角度制限修正
