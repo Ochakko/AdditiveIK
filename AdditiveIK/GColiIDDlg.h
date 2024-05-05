@@ -21,7 +21,8 @@ class CGColiIDDlg :
 	public CAxDialogImpl<CGColiIDDlg>
 {
 public:
-	CGColiIDDlg( std::vector<int>& srcids, int srcmyself );
+	//CGColiIDDlg( std::vector<int>& srcids, int srcmyself );
+	CGColiIDDlg(std::vector<int>& srcids);
 	~CGColiIDDlg();
 
 	enum { IDD = IDD_GCOLIIDDLG };
@@ -81,7 +82,7 @@ private:
 public:
 	int m_groupid;
 	std::vector<int> m_coliids;
-	int m_myself;
+	//int m_myself;
 };
 
 #endif //__GColiIDDlg_H_

@@ -41488,8 +41488,8 @@ int CreateRigidWnd()
 							for (index1 = 0; index1 < coliidsize; index1++) {
 								coliids.push_back(curre->GetColiids(index1));
 							}
-							int myselfflag = curre->GetMyselfflag();
-							s_model->SetColiidDataReq(s_reindexmap[s_model], curbone, groupid, coliids, myselfflag);
+							//int myselfflag = curre->GetMyselfflag();
+							s_model->SetColiidDataReq(s_reindexmap[s_model], curbone, groupid, coliids);// , myselfflag);
 						}
 					}
 				}
@@ -41498,14 +41498,15 @@ int CreateRigidWnd()
 		s_gcoliB->setButtonListener([]() {
 			if (s_model) {
 				if (s_bpWorld) {
-					CGColiIDDlg dlg(s_bpWorld->m_coliids, s_bpWorld->m_myselfflag);
+					//CGColiIDDlg dlg(s_bpWorld->m_coliids, s_bpWorld->m_myselfflag);
+					CGColiIDDlg dlg(s_bpWorld->m_coliids);
 					s_pgcolidlg = &dlg;
 					s_undergcolidlg = true;
 
 					int dlgret = (int)dlg.DoModal();
 					if (dlgret == IDOK) {
 						s_bpWorld->m_coliids = dlg.m_coliids;
-						s_bpWorld->m_myselfflag = dlg.m_myself;
+						//s_bpWorld->m_myselfflag = dlg.m_myself;
 						s_bpWorld->RemakeG();
 					}
 

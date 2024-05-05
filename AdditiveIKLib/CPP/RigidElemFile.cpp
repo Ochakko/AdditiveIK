@@ -88,7 +88,8 @@ int CRigidElemFile::WriteRigidElemFile( WCHAR* strpath, CModel* srcmodel, int re
 
 
 	CallF( Write2File( "<?xml version=\"1.0\" encoding=\"Shift_JIS\"?>\r\n<RIGIDELEM>\r\n" ), return 1 );  
-	CallF( Write2File( "    <FileInfo>1001-01</FileInfo>\r\n" ), return 1 );
+	//CallF( Write2File( "    <FileInfo>1001-01</FileInfo>\r\n" ), return 1 );
+	CallF(Write2File("    <FileInfo>1002-01</FileInfo>\r\n"), return 1);//2024/05/05 GROUP-->GROUPIDS
 
 	CallF( Write2File( "    <SCBTG>%f</SCBTG>\r\n", m_btgscale ), return 1 );
 
@@ -181,8 +182,18 @@ int CRigidElemFile::WriteRE( CBone* srcbone )
 				CallF(Write2File("      <DMPANIMA>%f</DMPANIMA>\r\n", curre->GetDampanimA()), return 1);
 
 
-				CallF(Write2File("      <GROUP>%d</GROUP>\r\n", curre->GetGroupid()), return 1);
-				CallF(Write2File("      <MYSELF>%d</MYSELF>\r\n", curre->GetMyselfflag()), return 1);
+				//CallF(Write2File("      <GROUP>%d</GROUP>\r\n", curre->GetGroupid()), return 1);
+				//CallF(Write2File("      <MYSELF>%d</MYSELF>\r\n", curre->GetMyselfflag()), return 1);
+
+				vector<int> groupids;
+				curre->GroupIdVec(groupids);
+				int gidnum = (int)groupids.size();
+				CallF(Write2File("      <GROUPIDNUM>%d</GROUPIDNUM>\r\n", gidnum), return 1);
+				int gino;
+				for (gino = 0; gino < gidnum; gino++) {
+					CallF(Write2File("      <GROUPID>%d</GROUPID>\r\n", groupids[gino]), return 1);
+				}
+
 
 				int idnum = curre->GetColiidsSize();
 				CallF(Write2File("      <COLIIDNUM>%d</COLIIDNUM>\r\n", idnum), return 1);
@@ -434,13 +445,68 @@ int CRigidElemFile::ReadRE( XMLIOBUF* xmlbuf, CBone* curbone )
 	int gid = 0;
 	int retgid = Read_Int( xmlbuf, "<GROUP>", "</GROUP>", &gid );
 	if( retgid ){
-		gid = 2;
+		//gid = 2;
+		//vector<int> groupids;
+		//curre->GroupIdVec(groupids);
+		//int gidnum = groupids.size();
+		//CallF(Write2File("      <GROUPIDNUM>%d</GROUPIDNUM>\r\n", gidnum), return 1);
+		//int gino;
+		//for (gino = 0; gino < gidnum; gino++) {
+		//	CallF(Write2File("      <GROUPID>%d</GROUPID>\r\n", groupids[gino]), return 1);
+		//}
+		int idnum = 0;
+		vector<int> tmpids;
+		tmpids.clear();
+		int retidnum = Read_Int(xmlbuf, "<GROUPIDNUM>", "</GROUPIDNUM>", &idnum);
+		if (retidnum) {
+			gid = 1;
+			idnum = 1;
+			tmpids.push_back(1);//!!!!!!!! defaultで地面と当たる
+		}
+		else {	
+			int ino;
+			for (ino = 0; ino < idnum; ino++) {
+				XMLIOBUF idbuf;
+				ZeroMemory(&idbuf, sizeof(XMLIOBUF));
+				int ret;
+				ret = SetXmlIOBuf(xmlbuf, "<GROUPID>", "</GROUPID>", &idbuf, 0);
+				if (ret == 0) {
+					int id = 0;
+					int retid = Read_Int(&idbuf, "<GROUPID>", "</GROUPID>", &id);
+					if (retid) {
+						_ASSERT(0);
+						return 1;
+					}
+					tmpids.push_back(id);
+
+				}
+				else {
+					_ASSERT(0);
+					break;
+				}
+			}
+		}
+
+		
+		int ino;
+		for (ino = 0; ino < idnum; ino++) {
+			if ((tmpids[ino] - 1) >= 0) {
+				int curid = 1 << (tmpids[ino] - 1);
+				gid |= curid;
+			}
+		}
+
+
 	}
+
+
 	int myself = 0;
 	int retmyself = Read_Int( xmlbuf, "<MYSELF>", "</MYSELF>", &myself );
-	if( retmyself ){
-		myself = 1;
-	}
+	//if( retmyself ){
+	//	myself = 1;
+	//}
+
+
 	int idnum = 0;
 	int retidnum = Read_Int( xmlbuf, "<COLIIDNUM>", "</COLIIDNUM>", &idnum );
 	if( retidnum ){
@@ -474,6 +540,27 @@ int CRigidElemFile::ReadRE( XMLIOBUF* xmlbuf, CBone* curbone )
 		idnum = 1;
 		tmpids.push_back( 1 );
 	}
+
+
+	//2024/05/05
+	//間違ったGUIでうまくいっていた場合(ビットシフト数とシフト後の値が同じ場合)を推測して　限定的だが互換をとる
+	if ((retmyself == 0) && (myself == 1) && ((gid == 1) || (gid == 2))) {
+		bool foundgid = false;
+		int idindex;
+		for (idindex = 0; idindex < (int)tmpids.size(); idindex++) {
+			int currentid = tmpids[idindex];
+			if (currentid == gid) {
+				foundgid = true;
+				break;
+			}
+		}
+
+		if (foundgid == false) {
+			tmpids.push_back(gid);
+			idnum = (int)tmpids.size();
+		}
+	}
+
 
 
 	float rest = 0.0f;
@@ -515,7 +602,7 @@ int CRigidElemFile::ReadRE( XMLIOBUF* xmlbuf, CBone* curbone )
 
 				curre->SetGroupid(gid);
 				curre->CopyColiids(tmpids);
-				curre->SetMyselfflag(myself);
+				//curre->SetMyselfflag(myself);
 
 				curre->SetRestitution(rest);
 				curre->SetFriction(fric);

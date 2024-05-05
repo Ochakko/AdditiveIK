@@ -203,13 +203,16 @@ btRigidBody* CBtObject::localCreateRigidBody( CRigidElem* curre, const btTransfo
 		int coliid;
 		if (g_previewFlag == 5){
 			s_cnt++;
-			myid = s_cnt;//!!!!!!!!!!!!!!!!!!!!!
-			coliid = 65536;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			//myid = s_cnt;//!!!!!!!!!!!!!!!!!!!!!
+			myid = 1;
+			coliid = 1;
 		}
 		else{
 			myid = curre->GetGroupid();
 			coliid = curre->GetColiID();
 		}
+
+
 		m_btWorld->addRigidBody(body, myid, coliid);
 	}
 	else{
@@ -227,13 +230,18 @@ btRigidBody* CBtObject::localCreateRigidBody( CRigidElem* curre, const btTransfo
 
 		body->setRestitution(0.0);
 		body->setFriction(1.0);
-		//body->setDamping(0.3, 0.6);
+		////body->setDamping(0.3, 0.6);
 
-		//int myid = 999;
-		//int coliid = 0;
+		////int myid = 999;
+		////int coliid = 0;
 		s_cnt++;
-		int myid = s_cnt;//!!!!!!!!!!!!!!!!!!!!!
-		int coliid = 65536;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		//int myid = s_cnt;//!!!!!!!!!!!!!!!!!!!!!
+		//int coliid = 65536;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+		//2024/05/05
+		int myid = 1;
+		int coliid = 0;
+
 		m_btWorld->addRigidBody(body, myid, coliid);
 
 	}

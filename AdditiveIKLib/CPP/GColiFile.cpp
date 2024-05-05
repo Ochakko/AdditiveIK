@@ -81,7 +81,7 @@ int CGColiFile::WriteColiID()
 {
 
 	CallF( Write2File( "    <GROUP>%d</GROUP>\r\n", m_bpw->m_groupid ), return 1);
-	CallF( Write2File( "    <MYSELF>%d</MYSELF>\r\n", m_bpw->m_myselfflag ), return 1);
+	//CallF( Write2File( "    <MYSELF>%d</MYSELF>\r\n", m_bpw->m_myselfflag ), return 1);
 
 	int idnum = (int)m_bpw->m_coliids.size();
 	CallF( Write2File( "    <COLIIDNUM>%d</COLIIDNUM>\r\n", idnum ), return 1);
@@ -148,11 +148,13 @@ int CGColiFile::ReadColiID( XMLIOBUF* xmlbuf )
 	if( retgid ){
 		gid = 1;
 	}
-	int myself = 0;
-	int retmyself = Read_Int( xmlbuf, "<MYSELF>", "</MYSELF>", &myself );
-	if( retmyself ){
-		myself = 1;
-	}
+
+	//int myself = 0;
+	//int retmyself = Read_Int( xmlbuf, "<MYSELF>", "</MYSELF>", &myself );
+	//if( retmyself ){
+	//	myself = 1;
+	//}
+
 	int idnum = 0;
 	int retidnum = Read_Int( xmlbuf, "<COLIIDNUM>", "</COLIIDNUM>", &idnum );
 	if( retidnum ){
@@ -207,7 +209,7 @@ int CGColiFile::ReadColiID( XMLIOBUF* xmlbuf )
 	_ASSERT( m_bpw );
 	if (m_bpw) {
 		m_bpw->m_groupid = gid;
-		m_bpw->m_myselfflag = myself;
+		//m_bpw->m_myselfflag = myself;
 		m_bpw->m_coliids = tmpids;
 
 		m_bpw->m_gplaneh = gh;

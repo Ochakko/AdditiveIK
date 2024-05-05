@@ -10139,7 +10139,8 @@ int CModel::SetAllSphrateData(int gid, int rgdindex, float srcval)
 	return 0;
 }
 
-void CModel::SetColiidDataReq(int rgdindex, CBone* srcbone, int srcgroupid, std::vector<int> srccoliids, int srcmyselfflag)
+//void CModel::SetColiidDataReq(int rgdindex, CBone* srcbone, int srcgroupid, std::vector<int> srccoliids, int srcmyselfflag)
+void CModel::SetColiidDataReq(int rgdindex, CBone* srcbone, int srcgroupid, std::vector<int> srccoliids)
 {
 	if (!srcbone) {
 		return;
@@ -10156,7 +10157,7 @@ void CModel::SetColiidDataReq(int rgdindex, CBone* srcbone, int srcgroupid, std:
 			if (curre) {
 				curre->SetGroupid(srcgroupid);
 				curre->CopyColiids(srccoliids);
-				curre->SetMyselfflag(srcmyselfflag);
+				//curre->SetMyselfflag(srcmyselfflag);
 			}
 		}
 	}
@@ -10165,10 +10166,10 @@ void CModel::SetColiidDataReq(int rgdindex, CBone* srcbone, int srcgroupid, std:
 	}
 
 	if (srcbone->GetChild(false)) {
-		SetColiidDataReq(rgdindex, srcbone->GetChild(false), srcgroupid, srccoliids, srcmyselfflag);
+		SetColiidDataReq(rgdindex, srcbone->GetChild(false), srcgroupid, srccoliids);// , srcmyselfflag);
 	}
 	if (srcbone->GetBrother(false)) {
-		SetColiidDataReq(rgdindex, srcbone->GetBrother(false), srcgroupid, srccoliids, srcmyselfflag);
+		SetColiidDataReq(rgdindex, srcbone->GetBrother(false), srcgroupid, srccoliids);//, srcmyselfflag);
 	}
 }
 

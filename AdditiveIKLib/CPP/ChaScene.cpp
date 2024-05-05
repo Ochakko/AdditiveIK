@@ -1899,9 +1899,9 @@ int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe,
 
 
 		if (limitdegflag) {
-			bool secondcall = true;
+			bool secondcall2 = true;
 			bool updatematrixflag2 = false;
-			Motion2Bt(secondcall, limitdegflag, updatematrixflag2,
+			Motion2Bt(secondcall2, limitdegflag, updatematrixflag2,
 				nextframe, pmView, pmProj, loopstartflag);//MultiThreading per CModel. Wait threads on return.
 		}
 

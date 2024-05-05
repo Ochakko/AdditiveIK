@@ -1079,7 +1079,8 @@ public:
 	void SetMassDataReq(int gid, int reindex, CBone* srcbone, float srcmass);
 	void SetMassDataByBoneLengReq(int gid, int reindex, CBone* srcbone, float srcmass);
 	void SetColTypeReq(int reindex, CBone* srcbone, int srctype);
-	void SetColiidDataReq(int reindex, CBone* srcbone, int srcgroup, std::vector<int> srccoliids, int srcmyselfflag);
+	//void SetColiidDataReq(int reindex, CBone* srcbone, int srcgroup, std::vector<int> srccoliids, int srcmyselfflag);
+	void SetColiidDataReq(int reindex, CBone* srcbone, int srcgroup, std::vector<int> srccoliids);
 
 private:
 	int InitParams();

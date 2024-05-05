@@ -83,18 +83,33 @@ public: //accesser
 
 	int GetGroupid(){ return m_groupid; };
 	void SetGroupid( int srcid ){ m_groupid = srcid; };
+	void GroupIdVec(std::vector<int>& groupids) {
+		groupids.clear();
+		int bitindex;
+		for (bitindex = 0; bitindex < COLIGROUPNUM; bitindex++) {
+			DWORD mask = 1 << bitindex;
+			int bitval = m_groupid & mask;
+			if (bitval != 0) {
+				int addid = bitindex + 1;
+				groupids.push_back(addid);
+			}
+		}
+	}
+
+
 
 	int GetColiidsSize(){ return (int)m_coliids.size(); };
 	int GetColiids( int srcindex ){ return m_coliids[ srcindex ]; };
 	void PushBackColiids( int srcid ){ m_coliids.push_back( srcid ); };
-	void CopyColiids(CRigidElem* srcre) { m_coliids = srcre->m_coliids; SetMyselfflag(srcre->GetMyselfflag()); };
+	//void CopyColiids(CRigidElem* srcre) { m_coliids = srcre->m_coliids; SetMyselfflag(srcre->GetMyselfflag()); };
+	void CopyColiids(CRigidElem* srcre) { m_coliids = srcre->m_coliids; };
 	void CopyColiids( std::vector<int>& srcids ){ m_coliids = srcids; };
 	void CopyColiids2Dstvec( std::vector<int>& dstids ){ dstids = m_coliids; };
 
 
 
-	int GetMyselfflag(){ return m_myselfflag; };
-	void SetMyselfflag( int srcflag ){ m_myselfflag = srcflag; };
+	//int GetMyselfflag(){ return m_myselfflag; };
+	//void SetMyselfflag( int srcflag ){ m_myselfflag = srcflag; };
 
 	float GetRestitution(){ return m_restitution; };
 	void SetRestitution( float srcval ){ m_restitution = srcval; };
@@ -186,7 +201,7 @@ private:
 
 	int m_groupid;//コリジョン用　自分のグループID
 	std::vector<int> m_coliids;//コリジョン用　衝突判定するグループIDの配列
-	int m_myselfflag;//コリジョン用　自分と衝突判定するかどうかのフラグ
+	//int m_myselfflag;//コリジョン用　自分と衝突判定するかどうかのフラグ
 
 	float m_restitution;
 	float m_friction;

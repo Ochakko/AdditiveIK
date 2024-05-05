@@ -21,11 +21,12 @@ extern void OnDSUpdate();
 /////////////////////////////////////////////////////////////////////////////
 // CGColiIDDlg
 
-CGColiIDDlg::CGColiIDDlg( std::vector<int>& srcids, int srcmyself )
+//CGColiIDDlg::CGColiIDDlg( std::vector<int>& srcids, int srcmyself )
+CGColiIDDlg::CGColiIDDlg(std::vector<int>& srcids)
 {
 	InitParams();
 	m_coliids = srcids;
-	m_myself = srcmyself;
+	//m_myself = srcmyself;
 }
 
 CGColiIDDlg::~CGColiIDDlg()
@@ -104,11 +105,11 @@ LRESULT CGColiIDDlg::OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 
 int CGColiIDDlg::ParamsToDlg()
 {
-	if( m_myself ){
-		m_dlg_wnd.CheckDlgButton( IDC_MYSELF, BST_CHECKED );
-	}else{
-		m_dlg_wnd.CheckDlgButton( IDC_MYSELF, BST_UNCHECKED );
-	}
+	//if( m_myself ){
+	//	m_dlg_wnd.CheckDlgButton( IDC_MYSELF, BST_CHECKED );
+	//}else{
+	//	m_dlg_wnd.CheckDlgButton( IDC_MYSELF, BST_UNCHECKED );
+	//}
 
 	int ret;
 	ret = InitList();

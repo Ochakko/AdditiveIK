@@ -2,6 +2,19 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/05/05
+　不具合修正
+　　剛体の当たり判定設定が誤解を招くGUIだったのを修正
+　　　RigidParamsプレートメニューのConflict, GConflictダイアログ修正
+　　　以前のGUIはビットシフトの足し算結果とビットのインデックスとが混在していた
+　　　GUIによる設定方法をビットのインデックス(何番目のビットか)に統一
+　　　グループ番号のビットインデックス(複数可)が 当たり対象のビットインデックス(複数可)の中に１つでも含まれてる場合に 当たり判定が有効になる
+　　　自分自身と当たり判定するチェックボックスは廃止
+
+
+
+
+
 2024/05/04
 　DispAndLimitsプレートメニューの中のBulletPhysics関連のスライダーをBulletPhysicsプレートメニューに移動
 

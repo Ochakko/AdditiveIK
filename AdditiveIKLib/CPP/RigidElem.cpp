@@ -87,7 +87,7 @@ int CRigidElem::InitParams()
 	m_groupid = 2;
 	m_coliids.clear();
 	m_coliids.push_back( 1 );
-	m_myselfflag = 1;
+	//m_myselfflag = 1;
 
 	m_restitution = 0.5f;
 	m_friction = 0.5f;
@@ -109,14 +109,16 @@ int CRigidElem::GetColiID()
 	int idnum = (int)m_coliids.size();
 	int ino;
 	for( ino = 0; ino < idnum; ino++ ){
-		int curid = 1 << (m_coliids[ ino ] - 1);
-		retid |= curid;
+		if ((m_coliids[ino] - 1) >= 0) {
+			int curid = 1 << (m_coliids[ino] - 1);
+			retid |= curid;
+		}
 	}
 
-	if( m_myselfflag == 1 ){
-		int curid = 1 << (m_groupid - 1);
-		retid |= curid;
-	}
+	//if(GetMyselfflag() == 1) {
+	//	int curid = 1 << max(1, (m_groupid - 1));
+	//	retid |= curid;
+	//}
 
 	return retid;
 }
