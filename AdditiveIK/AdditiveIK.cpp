@@ -1,6 +1,4 @@
 ﻿#include "stdafx.h"
-#include "stdafx.h"
-#include "stdafx.h"
 
 #include "useatl.h"
 
@@ -15661,7 +15659,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.18\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.19\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -16613,7 +16611,7 @@ LRESULT CALLBACK SaveGcoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	//ゲームパッド対応時にもマウスは必要という方針に変更
 	//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
 	//##########################################################################
-	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 	ofn.nFileOffset = 0;
 	ofn.nFileExtension = 0;
 	ofn.lpstrDefExt = L"gco";
@@ -16673,10 +16671,10 @@ LRESULT CALLBACK SaveGcoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			//ゲームパッド対応時にもマウスは必要という方針に変更
 			//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
 			//##########################################################################
-			ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+			ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 
 			if (GetOpenFileNameW(&ofn) == IDOK) {
-				buf[0] = 0;
+				//buf[0] = 0;
 				SetDlgItemText(hDlgWnd, IDC_FILENAME, buf);
 				buf[MAX_PATH - 1] = 0;
 			}
@@ -16746,7 +16744,7 @@ LRESULT CALLBACK SaveImpDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	//ゲームパッド対応時にもマウスは必要という方針に変更
 	//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
 	//##########################################################################
-	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 	ofn.nFileOffset = 0;
 	ofn.nFileExtension = 0;
 	ofn.lpstrDefExt = L"imp";
@@ -16803,10 +16801,10 @@ LRESULT CALLBACK SaveImpDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			//ゲームパッド対応時にもマウスは必要という方針に変更
 			//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
 			//##########################################################################
-			ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+			ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 
 			if (GetOpenFileNameW(&ofn) == IDOK) {
-				buf[0] = 0;
+				//buf[0] = 0;
 				SetDlgItemText(hDlgWnd, IDC_FILENAME, buf);
 				buf[MAX_PATH - 1] = 0;
 			}
@@ -16877,7 +16875,7 @@ LRESULT CALLBACK SaveREDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	//ゲームパッド対応時にもマウスは必要という方針に変更
 	//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
 	//##########################################################################
-	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 	ofn.nFileOffset = 0;
 	ofn.nFileExtension = 0;
 	ofn.lpstrDefExt = L"ref";
@@ -16935,10 +16933,10 @@ LRESULT CALLBACK SaveREDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			//ゲームパッド対応時にもマウスは必要という方針に変更
 			//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
 			//##########################################################################
-			ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+			ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 
 			if (GetOpenFileNameW(&ofn) == IDOK) {
-				buf[0] = 0;
+				//buf[0] = 0;
 				SetDlgItemText(hDlgWnd, IDC_FILENAME, buf);
 				buf[MAX_PATH - 1] = 0;
 			}
@@ -17007,7 +17005,7 @@ LRESULT CALLBACK ExportXDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	//ゲームパッド対応時にもマウスは必要という方針に変更
 	//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
 	//##########################################################################
-	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 	ofn.nFileOffset = 0;
 	ofn.nFileExtension = 0;
 	ofn.lpstrDefExt = NULL;
@@ -17069,10 +17067,10 @@ LRESULT CALLBACK ExportXDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			//ゲームパッド対応時にもマウスは必要という方針に変更
 			//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
 			//##########################################################################
-			ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+			ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 
 			if (GetOpenFileNameW(&ofn) == IDOK) {
-				buf[0] = 0;
+				//buf[0] = 0;
 				SetDlgItemText(hDlgWnd, IDC_FILEPATH, buf);
 				buf[MAX_PATH - 1] = 0;
 			}
@@ -19105,7 +19103,7 @@ int SaveRetargetFile()
 	//ゲームパッド対応時にもマウスは必要という方針に変更
 	//2024/02/24時点では一時的にゲームパッド対応コードをコメントアウトしている
 	//##########################################################################
-	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
+	ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_ENABLESIZING | OFN_ALLOWMULTISELECT;
 	ofn.nFileOffset = 0;
 	ofn.nFileExtension = 0;
 	ofn.lpstrDefExt = NULL;

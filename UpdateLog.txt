@@ -2,6 +2,59 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/05/06
+　AdditiveIK 1.0.0.19 RC1(リリース候補1)
+　　1.0.0.18からの変更点
+　　　不具合修正
+　　　　剛体の衝突判定設定が誤解を招くGUIだったのを修正
+　　　　　RigidParamsプレートメニューのConflict, GConflictダイアログ修正
+　　　　　以前のGUIはビットシフトの足し算結果とビットのインデックスとが混在していた
+　　　　　GUIによる設定方法をビットのインデックス(何番目のビットか)に統一
+　　　　　グループ番号のビットインデックス(複数可)が 衝突対象のビットインデックス(複数可)の中に１つでも含まれてる場合に 衝突当たり判定が有効になる
+　　　　　自分自身と当たり判定するチェックボックスは廃止
+　　　　
+　　　　GUI初期化時にオブジェクトに対してデフォルト値が設定されてしまうことがあった不具合修正
+　　　　　OWP GUIの初期設定時にcallListenerフラグがfalseになっていなかった箇所がまだあったので修正
+　　　　　剛体パラメータGUI初期化時にフラグ指定が無かった
+　　　　　OWP_RadioButtonのsetSelectIndex()にはcallListenerフラグ引数が無かった
+　　　　　cameraDistの保存値が機能するようになった
+　　　　
+　　　　File-->Saveメニューでプロジェクト以外の個別ファイル保存を選択した場合に、存在しないファイル名を指定できなかった不具合を修正
+
+　　　　File-->Saveメニューでプロジェクト以外の個別ファイル保存を選択した場合に、パス名がセットされない不具合を修正
+
+
+　　パタパタカクカクしない物理角度制限
+　　　制限角度を越えた場合にフラグを立てて制限自体は剛体速度をスケールすることにより行った
+　　　
+　　DispAndLimitsプレートメニューの中のBulletPhysics関連のスライダーをBulletPhysicsプレートメニューに移動
+　　　
+
+　　Test/1009_5フォルダの設定を更新
+　　　通常の設定(default_ref.ref)とスカートを少し持ち上げておく設定(ForRapidMove.ref)の２種類用意
+　　　メインメニューバーの剛体設定選択メニュー(Select Rigid Menu)で切り替える
+
+　　ドキュメント追加
+　　　Documents/TroubleShooting/0_AboutSetingsOfBulletPhysicsSimuAfterVer10019.docx
+　　　ver1.0.0.19以降における物理設定について
+
+　　ドキュメント修正
+　　　Documents/TroubleShooting/WhyTheDispAndLimitsPlateMenuAlsoHasASliderForTheSameItem.docx
+　　　なぜ同じ項目に対するスライダーGUIが複数存在するかについて
+
+
+
+
+　ショートムービー
+　　限界越えたら0.1倍速で動きます
+　　https://youtu.be/ufPtA-CxVKU
+
+
+
+
+
+
+
 2024/05/05
 　不具合修正
 　　剛体の当たり判定設定が誤解を招くGUIだったのを修正
