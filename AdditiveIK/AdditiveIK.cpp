@@ -20526,7 +20526,7 @@ int PostOpenChaFile()
 			SendMessage(limitratewnd, TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
 			SendMessage(limitratewnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 		}
-		swprintf_s(strdlg, 256, L"PhysicalLimitScale %.2f", g_physicalLimitScale);
+		swprintf_s(strdlg, 256, L"LimitRateScale %.2f", g_physicalLimitScale);
 		SetDlgItemText(s_guidlg[GUIDLG_BULLETPHYSICS], IDC_STATIC_PHYSICALLIMITSCALE, strdlg);
 
 
@@ -20559,7 +20559,7 @@ int PostOpenChaFile()
 			SendMessage(vscalewnd, TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
 			SendMessage(vscalewnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
 		}
-		swprintf_s(strdlg, 256, L"VScaleOnLimitEul %.2f", g_physicalVeloScale);
+		swprintf_s(strdlg, 256, L"RigidSpeed %.2f", g_physicalVeloScale);
 		SetDlgItemText(s_guidlg[GUIDLG_BULLETPHYSICS], IDC_STATIC_VELOSCALE, strdlg);
 	}
 
@@ -31452,7 +31452,7 @@ LRESULT CALLBACK GUIBulletDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		swprintf_s(strdlg, 256, L"Position Correcting Rate : %.3f", g_erp);
 		SetDlgItemText(hDlgWnd, IDC_STATIC_DLG_ERP, strdlg);
 
-		swprintf_s(strdlg, 256, L"PhysicalLimitScale %.2f", g_physicalLimitScale);
+		swprintf_s(strdlg, 256, L"LimitRateScale %.2f", g_physicalLimitScale);
 		SetDlgItemText(hDlgWnd, IDC_STATIC_PHYSICALLIMITSCALE, strdlg);
 
 		swprintf_s(strdlg, 256, L"BtMovableRate %d", g_physicalMovableRate);
@@ -31461,7 +31461,7 @@ LRESULT CALLBACK GUIBulletDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		swprintf_s(strdlg, 256, L"SpringScale %.1f", g_akscale);
 		SetDlgItemText(hDlgWnd, IDC_STATIC_AKSCALE, strdlg);
 
-		swprintf_s(strdlg, 256, L"VScaleOnLimitEul %.2f", g_physicalVeloScale);
+		swprintf_s(strdlg, 256, L"RigidSpeed %.2f", g_physicalVeloScale);
 		SetDlgItemText(hDlgWnd, IDC_STATIC_VELOSCALE, strdlg);
 
 		return FALSE;
@@ -31494,7 +31494,7 @@ LRESULT CALLBACK GUIBulletDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			g_physicalLimitScale = (float)((double)cursliderpos / 100.0);
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"PhysicalLimitScale %.2f", g_physicalLimitScale);
+			swprintf_s(strdlg, 256, L"LimitRateScale %.2f", g_physicalLimitScale);
 			SetDlgItemText(hDlgWnd, IDC_STATIC_PHYSICALLIMITSCALE, strdlg);
 		}
 		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_MOVABLERATE) == (HWND)lp) {
@@ -31522,7 +31522,7 @@ LRESULT CALLBACK GUIBulletDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			g_physicalVeloScale = (double)cursliderpos * 0.010;
 
 			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"VScaleOnLimitEul %.2f", g_physicalVeloScale);
+			swprintf_s(strdlg, 256, L"RigidSpeed %.2f", g_physicalVeloScale);
 			SetDlgItemText(s_guidlg[GUIDLG_BULLETPHYSICS], IDC_STATIC_VELOSCALE, strdlg);
 		}
 

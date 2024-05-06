@@ -130,7 +130,7 @@ int CGColiIDDlg::InitCombo()
 		//int curid = m_coliids[ ino ];
 		int curid = ino + 1;
 		ZeroMemory( tempchar, sizeof( WCHAR ) * 256 );
-		swprintf_s( tempchar, 256, L"%02d", curid );
+		swprintf_s( tempchar, 256, L"bit_%02d", curid );
 
 		m_combo2_wnd.SendMessage( CB_ADDSTRING, 0, (LPARAM)tempchar );
 		m_combo2_wnd.SendMessage( CB_SETITEMDATA, setno, (LPARAM)curid );
@@ -152,7 +152,7 @@ int CGColiIDDlg::InitList()
 	for( ino = 0; ino < (int)m_coliids.size(); ino++ ){
 		int curid = m_coliids[ ino ];
 		ZeroMemory( tempchar, sizeof( WCHAR ) * 256 );
-		swprintf_s( tempchar, 256, L"%02d", curid );
+		swprintf_s( tempchar, 256, L"bit_%02d", curid );
 
 		m_list_wnd.SendMessage( LB_ADDSTRING, 0, (LPARAM)tempchar );
 		m_list_wnd.SendMessage( LB_SETITEMDATA, ino, curid );

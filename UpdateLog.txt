@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/05/06
-　AdditiveIK 1.0.0.19 RC1(リリース候補1)
+　AdditiveIK 1.0.0.19 RC2(リリース候補2)
 　　1.0.0.18からの変更点
 　　　不具合修正
 　　　　剛体の衝突判定設定が誤解を招くGUIだったのを修正
@@ -42,6 +42,15 @@ https://github.com/Ochakko/AdditiveIK
 　　　Documents/TroubleShooting/WhyTheDispAndLimitsPlateMenuAlsoHasASliderForTheSameItem.docx
 　　　なぜ同じ項目に対するスライダーGUIが複数存在するかについて
 
+
+
+　RC2:
+　　BulletPhysicsメニューのダイアログ文言修正
+　　　"PhysicalLimitScale" --> "LimitRateScale"
+　　　"VScaleOnLimitEul" --> "RigidSpeed"
+　　　0_AboutSetingsOfBulletPhysicsSimuAfterVer10019.docx中の表記も修正
+　　ColiIDDlg中の表記修正
+　　　"bit%02d" --> "bit_%02d"
 
 
 
