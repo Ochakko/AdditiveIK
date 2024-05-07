@@ -2,8 +2,8 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
-2024/05/06
-　AdditiveIK 1.0.0.19 RC2(リリース候補2)
+2024/05/07
+　AdditiveIK 1.0.0.19 release
 　　1.0.0.18からの変更点
 　　　不具合修正
 　　　　剛体の衝突判定設定が誤解を招くGUIだったのを修正
