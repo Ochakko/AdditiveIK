@@ -117,9 +117,9 @@ public:
 		int (*srcStopBtRec)());
 
 	bool PickPolyMesh(int pickkind, UIPICKINFO* tmppickinfo,
-		CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial);
+		CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial, ChaVector3* pickhitpos);
 	bool GetResultOfPickRay(int pickkind,
-		CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial);
+		CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial, ChaVector3* pickhitpos);
 
 
 	int CopyCSDeform();

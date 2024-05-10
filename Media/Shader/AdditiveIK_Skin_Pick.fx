@@ -30,6 +30,7 @@ struct CSOutputData_PickSkined
 {
     int4 result;//0:hitflag, 1:justflag, 2:hitfaceno, 3:未使用0
     int4 dbginfo;//0:return code, 1:index1, 2:index2, 3:index3
+    float4 hitpos;
 };
 
 ///////////////////////////////////////////
@@ -133,6 +134,11 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     float3 q;
     q = v1 + ev * k;
 
+    g_output_PickSkined[0].hitpos.x = q.x;
+    g_output_PickSkined[0].hitpos.y = q.y;
+    g_output_PickSkined[0].hitpos.z = q.z;
+    g_output_PickSkined[0].hitpos.w = 1.0f;
+    
     float3 g0, g1, cA, cB, cC;
 
     g1 = point2 - point1;

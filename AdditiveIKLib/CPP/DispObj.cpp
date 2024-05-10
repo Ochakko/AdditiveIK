@@ -1174,24 +1174,24 @@ int CDispObj::CopyCSDeform()
 }
 
 int CDispObj::PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
-	bool excludeinvface, int* hitfaceindex)
+	bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos)
 {
-	if (!m_csdeform || !hitfaceindex) {
+	if (!m_csdeform || !hitfaceindex || !dsthitpos) {
 		_ASSERT(0);
 		return 0;
 	}
 
-	return m_csdeform->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex);
+	return m_csdeform->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex, dsthitpos);
 }
 
-int CDispObj::GetResultOfPickRay(int* hitfaceindex)
+int CDispObj::GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos)
 {
-	if (!m_csdeform || !hitfaceindex) {
+	if (!m_csdeform || !hitfaceindex || !dsthitpos) {
 		_ASSERT(0);
 		return 0;
 	}
 
-	return m_csdeform->GetResultOfPickRay(hitfaceindex);
+	return m_csdeform->GetResultOfPickRay(hitfaceindex, dsthitpos);
 }
 
 

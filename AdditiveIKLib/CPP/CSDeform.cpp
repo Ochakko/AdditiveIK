@@ -718,10 +718,10 @@ int CSDeform::GetDeformedDispV(int srcvertindex, BINORMALDISPV* dstv)
 
 
 int CSDeform::PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
-	bool excludeinvface, int* hitfaceindex)
+	bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos)
 {
 	if (m_workingPick) {
-		return GetResultOfPickRay(hitfaceindex);
+		return GetResultOfPickRay(hitfaceindex, dsthitpos);
 	}
 	m_workingPick = true;
 
@@ -732,6 +732,7 @@ int CSDeform::PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
 	}
 
 	*hitfaceindex = -1;
+	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
 
 	//if (m_pm3 || m_pm4) {
 	if (m_pm4) {
@@ -763,14 +764,7 @@ int CSDeform::PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
 		//結果を初期化
 		CSPickResult* outputData = (CSPickResult*)m_outputPickSB1.GetResourceOnCPU();//要素数1
 		if (outputData) {
-			outputData->result[0] = 0;
-			outputData->result[1] = 0;
-			outputData->result[2] = 0;
-			outputData->result[3] = 0;
-			outputData->dbginfo[0] = 0;
-			outputData->dbginfo[1] = 0;
-			outputData->dbginfo[2] = 0;
-			outputData->dbginfo[3] = 0;
+			outputData->Init();
 		}
 
 		m_IMPick->Reset(m_CSPickPipelineState.Get());
@@ -796,16 +790,17 @@ int CSDeform::PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
 	}
 
 
-	return GetResultOfPickRay(hitfaceindex);
+	return GetResultOfPickRay(hitfaceindex, dsthitpos);
 }
 
-int CSDeform::GetResultOfPickRay(int* hitfaceindex)
+int CSDeform::GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos)
 {
-	if (!hitfaceindex) {
+	if (!hitfaceindex || !dsthitpos) {
 		_ASSERT(0);
 		return 0;
 	}
 	*hitfaceindex = -1;
+	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
 
 	if (m_pickstate != 1) {
 		return 0;
@@ -817,6 +812,9 @@ int CSDeform::GetResultOfPickRay(int* hitfaceindex)
 	if ((hitflag == 1) && (hitface >= 0)) {
 		//当たりをみつけた場合
 		*hitfaceindex = hitface;
+		dsthitpos->x = m_cspickOutPut1_save.hitpos[0];
+		dsthitpos->y = m_cspickOutPut1_save.hitpos[1];
+		dsthitpos->z = m_cspickOutPut1_save.hitpos[2];
 		m_pickstate = 2;
 		return 1;//!!!!!!!!!!!!!!
 	}

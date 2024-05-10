@@ -37,6 +37,7 @@ struct CSPickResult
 {
 	int result[4];//[0]:hitflag, [1]:justflag, [2]:hitfaceno, [3]:未使用0
 	int dbginfo[4];
+	float hitpos[4];
 	void Init() {
 		result[0] = 0;
 		result[1] = 0;
@@ -46,6 +47,11 @@ struct CSPickResult
 		dbginfo[1] = 0;
 		dbginfo[2] = 0;
 		dbginfo[3] = 0;
+
+		hitpos[0] = 0.0f;
+		hitpos[1] = 0.0f;
+		hitpos[2] = 0.0f;
+		hitpos[3] = 0.0f;
 	};
 };
 
@@ -117,8 +123,8 @@ public:
 
 
 	int PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
-		bool excludeinvface, int* hitfaceindex);
-	int GetResultOfPickRay(int* hitfaceindex);
+		bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos);
+	int GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos);
 
 	int GetDeformedDispV(int srcvertindex, BINORMALDISPV* dstv);
 

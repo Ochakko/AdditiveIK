@@ -111,8 +111,15 @@ int ChkRay( int allowrev, int i1, int i2, int i3,
 
 int ChkRay(int allowrev, int i1, int i2, int i3,
 	BINORMALDISPV* pointbuf, ChaVector3 startpos, ChaVector3 dir,
-	float justval, int* justptr)
+	float justval, int* justptr, ChaVector3* dsthitpos)
 {
+	if (!pointbuf || !justptr || !dsthitpos) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+
 	ChaVector3 v1;
 	v1 = startpos;
 
@@ -159,6 +166,8 @@ int ChkRay(int allowrev, int i1, int i2, int i3,
 
 	ChaVector3 q;
 	q = v1 + e * k;
+
+	*dsthitpos = q;//!!!!!!!!!
 
 	ChaVector3 g0, g1, cA, cB, cC;
 

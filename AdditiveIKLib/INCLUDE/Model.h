@@ -729,11 +729,11 @@ public:
 	int CollisionNoBoneObj_Mouse(UIPICKINFO* pickinfo, const char* objnameptr, bool excludeinvface);
 
 	//ComputeShader版　polymesh4
-	int CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex);
-	int GetResultOfPickRay(CMQOObject* pickobj, int* hitfaceindex);
+	int CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex, ChaVector3* dsthitpos);
+	int GetResultOfPickRay(CMQOObject* pickobj, int* hitfaceindex, ChaVector3* dsthitpos);
 
 	//CPU版　polymesh3
-	int CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex);
+	int CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex, ChaVector3* dsthitpos);
 
 
 /**

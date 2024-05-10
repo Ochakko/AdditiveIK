@@ -1878,6 +1878,9 @@ static bool s_dispconvbone = false;
 
 static bool s_Ldispmw = true;
 
+static bool s_dispmodelworldmat = false;
+static bool s_pickmodelworldmat = false;
+
 static double s_keyShiftTime = 0.0;			// キー移動量
 static list<KeyInfo> s_copyKeyInfoList;	// コピーされたキー情報リスト
 
@@ -2606,6 +2609,8 @@ static CMQOMaterial* s_pickmaterial = nullptr;
 static CModel* s_befpickmodel = nullptr;
 static CMQOObject* s_befpickmqoobj = nullptr;
 static CMQOMaterial* s_befpickmaterial = nullptr;
+static ChaVector3 s_pickhitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+
 static CModel* s_befselectmodel = nullptr;
 static CMQOObject* s_befselectmqoobj = nullptr;
 static CMQOMaterial* s_befselectmaterial = nullptr;
@@ -2639,6 +2644,7 @@ static int SetModel2MaterialRateDlg(CModel* srcmodel);
 static int CreateModelWorldMatWnd();
 static int SetModel2ModelWorldMatDlg(CModel* srcmodel);
 static int ShowModelWorldMatDlg();
+static int GetModelWorldMat(ChaVector3* dstpos, ChaVector3* dstrot);
 static int CreateJumpGravityWnd();
 static int ShowJumpGravityDlg();
 
@@ -3067,6 +3073,7 @@ static int SetCamera6Angle();
 
 static bool PickAndSelectMeshOfDispGroupDlg();
 static bool PickAndSelectMaterialOfShaderTypeDlg();
+static bool PickAndPut();
 
 
 
@@ -4065,6 +4072,8 @@ void InitApp()
 	s_befpickmodel = nullptr;
 	s_befpickmqoobj = nullptr;
 	s_befpickmaterial = nullptr;
+	s_pickhitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+
 	s_befselectmodel = nullptr;
 	s_befselectmqoobj = nullptr;
 	s_befselectmaterial = nullptr;
@@ -5132,6 +5141,8 @@ void InitApp()
 	s_dispselect = true;
 	//s_displightarrow = true;
 	s_dispconvbone = false;
+	s_dispmodelworldmat = false;
+	s_pickmodelworldmat = false;
 
 	s_oprigflag = 0;
 
@@ -6852,7 +6863,8 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		//s_tum.WaitUpdateMatrix();
 
 
-		if (s_spdispsw[SPDISPSW_DISPGROUP].state || s_spdispsw[SPDISPSW_SHADERTYPE].state) {
+		if (s_spdispsw[SPDISPSW_DISPGROUP].state || s_spdispsw[SPDISPSW_SHADERTYPE].state || 
+			(s_dispmodelworldmat && s_pickmodelworldmat)) {//2024/05/11 ModelWorldMatダイアログのPick&Setチェック時も
 			g_pickmeshflag = true;
 		}
 		else {
@@ -8696,11 +8708,16 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 
 				//2024/02/04 カメラ操作などのためのpickよりも後で
-				if ((pickflag == false) && s_spdispsw[SPDISPSW_DISPGROUP].state) {
-					pickflag = PickAndSelectMeshOfDispGroupDlg();
+				if ((pickflag == false) && s_dispmodelworldmat && s_pickmodelworldmat) {
+					pickflag = PickAndPut();
 				}
-				if ((pickflag == false) && s_spdispsw[SPDISPSW_SHADERTYPE].state) {
-					pickflag = PickAndSelectMaterialOfShaderTypeDlg();
+				else {
+					if ((pickflag == false) && s_spdispsw[SPDISPSW_DISPGROUP].state) {
+						pickflag = PickAndSelectMeshOfDispGroupDlg();
+					}
+					if ((pickflag == false) && s_spdispsw[SPDISPSW_SHADERTYPE].state) {
+						pickflag = PickAndSelectMaterialOfShaderTypeDlg();
+					}
 				}
 			}
 			else {
@@ -26724,6 +26741,76 @@ int UpdateAfterEditAngleLimit(int limit2boneflag, bool setcursorflag)//default :
 	return 0;
 }
 
+int GetModelWorldMat(ChaVector3* dstpos, ChaVector3* dstrot)
+{
+	if (!dstpos || !dstrot) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (!s_modelworldmatdlgwnd) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (!s_model) {
+		return 1;
+	}
+
+	HWND hDlgWnd = s_modelworldmatdlgwnd;
+
+	ChaVector3 tmppos = s_model->GetModelPosition();
+	ChaVector3 tmprot = s_model->GetModelRotation();
+	WCHAR strval[256] = { 0L };
+	float value = 0.0f;
+
+	if (s_model) {
+		tmppos = s_model->GetModelPosition();
+		tmprot = s_model->GetModelRotation();
+		const float maxvalue = 100000.0f;
+		const float minvalue = -maxvalue;
+		const float maxvalue2 = 10000.0f;
+		const float minvalue2 = -maxvalue;
+
+		GetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONX, strval, 256);
+		value = (float)_wtof(strval);
+		if ((value >= minvalue) && (value <= maxvalue)) {
+			tmppos.x = value;
+		}
+		GetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONY, strval, 256);
+		value = (float)_wtof(strval);
+		if ((value >= minvalue) && (value <= maxvalue)) {
+			tmppos.y = value;
+		}
+		GetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONZ, strval, 256);
+		value = (float)_wtof(strval);
+		if ((value >= minvalue) && (value <= maxvalue)) {
+			tmppos.z = value;
+		}
+
+		GetDlgItemTextW(hDlgWnd, IDC_EDIT_ROTATIONX, strval, 256);
+		value = (float)_wtof(strval);
+		if ((value >= minvalue) && (value <= maxvalue)) {
+			tmprot.x = value;
+		}
+		GetDlgItemTextW(hDlgWnd, IDC_EDIT_ROTATIONY, strval, 256);
+		value = (float)_wtof(strval);
+		if ((value >= minvalue) && (value <= maxvalue)) {
+			tmprot.y = value;
+		}
+		GetDlgItemTextW(hDlgWnd, IDC_EDIT_ROTATIONZ, strval, 256);
+		value = (float)_wtof(strval);
+		if ((value >= minvalue) && (value <= maxvalue)) {
+			tmprot.z = value;
+		}
+
+
+		*dstpos = tmppos;
+		*dstrot = tmprot;
+	}
+
+	return 0;
+}
+
+
 LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
 	WCHAR strval[256] = { 0L };
@@ -26754,6 +26841,12 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			swprintf_s(strval, 256, L"%.3f", tmprot.z);
 			SetDlgItemTextW(hDlgWnd, IDC_EDIT_ROTATIONZ, strval);
 
+			if (s_pickmodelworldmat == true) {
+				CheckDlgButton(hDlgWnd, IDC_CHECK_PICKANDSET, true);
+			}
+			else {
+				CheckDlgButton(hDlgWnd, IDC_CHECK_PICKANDSET, false);
+			}
 		}
 
 		//RECT dlgrect;
@@ -26769,10 +26862,26 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		switch (LOWORD(wp)) {
 		case IDOK:
 			ShowWindow(hDlgWnd, SW_HIDE);
+			s_dispmodelworldmat = false;
 			break;
 		case IDCANCEL:
 			ShowWindow(hDlgWnd, SW_HIDE);
+			s_dispmodelworldmat = false;
 			break;
+
+		case IDC_CHECK_PICKANDSET:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_PICKANDSET);
+			if (ischecked == BST_CHECKED) {
+				s_pickmodelworldmat = true;
+			}
+			else {
+				s_pickmodelworldmat = false;
+			}
+		}
+		break;
+
 
 		case IDC_TOCAMERAPOS:
 		{
@@ -26803,52 +26912,14 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 
 		case IDC_APPLYMODELWORLDMAT:
 		{
-			if (s_model) {
-				tmppos = s_model->GetModelPosition();
-				tmprot = s_model->GetModelRotation();
-				const float maxvalue = 100000.0f;
-				const float minvalue = -maxvalue;
-				const float maxvalue2 = 10000.0f;
-				const float minvalue2 = -maxvalue;
-
-				GetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONX, strval, 256);
-				value = (float)_wtof(strval);
-				if ((value >= minvalue) && (value <= maxvalue)) {
-					tmppos.x = value;
-				}
-				GetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONY, strval, 256);
-				value = (float)_wtof(strval);
-				if ((value >= minvalue) && (value <= maxvalue)) {
-					tmppos.y = value;
-				}
-				GetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONZ, strval, 256);
-				value = (float)_wtof(strval);
-				if ((value >= minvalue) && (value <= maxvalue)) {
-					tmppos.z = value;
-				}
-
-				GetDlgItemTextW(hDlgWnd, IDC_EDIT_ROTATIONX, strval, 256);
-				value = (float)_wtof(strval);
-				if ((value >= minvalue) && (value <= maxvalue)) {
-					tmprot.x = value;
-				}
-				GetDlgItemTextW(hDlgWnd, IDC_EDIT_ROTATIONY, strval, 256);
-				value = (float)_wtof(strval);
-				if ((value >= minvalue) && (value <= maxvalue)) {
-					tmprot.y = value;
-				}
-				GetDlgItemTextW(hDlgWnd, IDC_EDIT_ROTATIONZ, strval, 256);
-				value = (float)_wtof(strval);
-				if ((value >= minvalue) && (value <= maxvalue)) {
-					tmprot.z = value;
-				}
-
-
+			ChaVector3 tmppos = s_model->GetModelPosition();
+			ChaVector3 tmprot = s_model->GetModelRotation();
+			int result = GetModelWorldMat(&tmppos, &tmprot);
+			if (result == 0) {
 				s_model->SetModelPosition(tmppos);
 				s_model->SetModelRotation(tmprot);
 				s_model->CalcModelWorldMatOnLoad();
 			}
-
 		}
 		break;
 		default:
@@ -26857,6 +26928,7 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		break;
 	case WM_CLOSE:
 		ShowWindow(hDlgWnd, SW_HIDE);
+		s_dispmodelworldmat = false;
 		break;
 	default:
 		DefWindowProc(hDlgWnd, msg, wp, lp);
@@ -47848,7 +47920,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.19 : No.%d : ", s_appcnt);
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.20 : No.%d : ", s_appcnt);
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -56141,7 +56213,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.19 : No.%d : ", s_appcnt);
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.20 : No.%d : ", s_appcnt);
 
 
 	if (s_model && s_chascene) {
@@ -59364,6 +59436,56 @@ bool PickAndSelectMeshOfDispGroupDlg()
 
 	return s_dispPickfortip;
 }
+
+bool PickAndPut()
+{
+	//上段カエルボタンの行のModelWorldMatショートカットボタンを押して出すダイアログで
+	//Pick&Setにチェックを入れた場合は　マウスクリック位置にモデルを配置する
+
+	if (!s_model) {
+		return false;
+	}
+	if (g_previewFlag != 0) {
+		return false;
+	}
+	if (!s_chascene) {
+		return false;
+	}
+
+	if (s_dispmodelworldmat && s_pickmodelworldmat) {
+		if (s_pickmodel && s_pickmqoobj) {// &&
+			//((s_pickmodel != s_befselectmodel) || (s_pickmqoobj != s_befselectmqoobj))) {
+
+			s_befselectmodel = s_pickmodel;
+			s_befselectmqoobj = s_pickmqoobj;
+			s_befselectmaterial = s_pickmaterial;
+
+
+			//pickでhitした座標をダイアログにセット
+			if (s_modelworldmatdlgwnd != NULL) {
+				WCHAR strval[256] = { 0L };
+				swprintf_s(strval, 256, L"%.3f", s_pickhitpos.x);
+				SetDlgItemTextW(s_modelworldmatdlgwnd, IDC_EDIT_POSITIONX, strval);
+				swprintf_s(strval, 256, L"%.3f", s_pickhitpos.y);
+				SetDlgItemTextW(s_modelworldmatdlgwnd, IDC_EDIT_POSITIONY, strval);
+				swprintf_s(strval, 256, L"%.3f", s_pickhitpos.z);
+				SetDlgItemTextW(s_modelworldmatdlgwnd, IDC_EDIT_POSITIONZ, strval);
+			}
+
+			ChaVector3 tmppos = s_model->GetModelPosition();
+			ChaVector3 tmprot = s_model->GetModelRotation();
+			int result = GetModelWorldMat(&tmppos, &tmprot);//向きはダイアログにセットされている向きを使用
+			if (result == 0) {
+				s_model->SetModelPosition(s_pickhitpos);//tmpposではなくs_pickhitpos
+				s_model->SetModelRotation(tmprot);
+				s_model->CalcModelWorldMatOnLoad();
+			}
+		}
+	}
+
+	return s_dispPickfortip;
+}
+
 bool PickAndSelectMaterialOfShaderTypeDlg()
 {
 	if (!s_model) {
@@ -59436,8 +59558,11 @@ int DispToolTip()
 		}
 	}
 
-
-	if ((s_dispfontfortip == false) && s_spdispsw[SPDISPSW_DISPGROUP].state) {
+	if (s_dispmodelworldmat && s_pickmodelworldmat) {
+		//ModelWorldMatダイアログ表示かつPickAndSetにチェックしている場合　メッシュ名を表示
+		s_dispPickfortip = DispTipMesh();
+	}
+	else if ((s_dispfontfortip == false) && s_spdispsw[SPDISPSW_DISPGROUP].state) {
 		//DispGroupプレートメニュー選択時　メッシュ名を表示
 		s_dispPickfortip = DispTipMesh();
 	}
@@ -60029,7 +60154,7 @@ bool DispTipMesh()
 		s_pickmodel = nullptr;
 		s_pickmqoobj = nullptr;
 		s_pickmaterial = nullptr;
-		pickflag = s_chascene->PickPolyMesh(NUMKEYPICK_MQOOBJECT, &tmppickinfo, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial);
+		pickflag = s_chascene->PickPolyMesh(NUMKEYPICK_MQOOBJECT, &tmppickinfo, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial, &s_pickhitpos);
 
 		if (pickflag && s_pickmodel && s_pickmqoobj) {
 			s_befpickmodel = s_pickmodel;
@@ -60088,7 +60213,7 @@ bool DispTipMaterial()
 		s_pickmodel = nullptr;
 		s_pickmqoobj = nullptr;
 		s_pickmaterial = nullptr;
-		pickflag = s_chascene->PickPolyMesh(NUMKEYPICK_MQOMATERIAL, &tmppickinfo, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial);
+		pickflag = s_chascene->PickPolyMesh(NUMKEYPICK_MQOMATERIAL, &tmppickinfo, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial, &s_pickhitpos);
 
 		if (pickflag && s_pickmodel && s_pickmaterial) {
 			s_befpickmodel = s_pickmodel;
@@ -60144,6 +60269,8 @@ int CreateModelWorldMatWnd()
 	}
 	s_modelworldmatdlgwnd = hDlgWnd;
 	ShowWindow(s_modelworldmatdlgwnd, SW_HIDE);
+	s_dispmodelworldmat = false;
+	s_pickmodelworldmat = false;
 
 	return 0;
 }
@@ -67127,7 +67254,7 @@ int ShowModelWorldMatDlg()
 
 			ShowWindow(s_modelworldmatdlgwnd, SW_SHOW);
 			UpdateWindow(s_modelworldmatdlgwnd);
-
+			s_dispmodelworldmat = true;
 		}
 	}
 
@@ -69561,7 +69688,7 @@ bool GetResultOfPickRay()
 	int pickkind;
 	if (s_spdispsw[SPDISPSW_DISPGROUP].state) {
 		pickkind = NUMKEYPICK_MQOOBJECT;
-		dispPickfortip = s_chascene->GetResultOfPickRay(pickkind, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial);
+		dispPickfortip = s_chascene->GetResultOfPickRay(pickkind, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial, &s_pickhitpos);
 		if (dispPickfortip &&
 			s_pickmodel && s_pickmqoobj) {// &&
 			//((s_pickmodel != s_befpickmodel) || (s_pickmqoobj != s_befpickmqoobj))) {
@@ -69584,7 +69711,7 @@ bool GetResultOfPickRay()
 	}
 	else if (s_spdispsw[SPDISPSW_SHADERTYPE].state) {
 		pickkind = NUMKEYPICK_MQOMATERIAL;
-		dispPickfortip = s_chascene->GetResultOfPickRay(pickkind, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial);
+		dispPickfortip = s_chascene->GetResultOfPickRay(pickkind, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial, &s_pickhitpos);
 
 		if (dispPickfortip &&
 			s_pickmodel && s_pickmaterial) {// &&

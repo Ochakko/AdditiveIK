@@ -3671,64 +3671,67 @@ void CModel::SetSelectFlagReq( CBone* boneptr, int broflag )
 	}
 }
 
-int CModel::CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex)
+int CModel::CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex, ChaVector3* dsthitpos)
 {
 	//当たったら１、当たらなかったら０を返す。エラーも０を返す。
-	
+
 	//ComputeShader版　polymesh4用
 
-	if (!pickinfo || !pickobj || !hitfaceindex) {
+	if (!pickinfo || !pickobj || !hitfaceindex || !dsthitpos) {
 		_ASSERT(0);
 		return 0;
 	}
 	*hitfaceindex = -1;
+	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
 
 	ChaVector3 startglobal, dirglobal;
 	CalcMouseGlobalRay(pickinfo, &startglobal, &dirglobal);
 	bool excludeinvface = true;
 	int colli = 0;
-	colli = pickobj->CollisionGlobal_Ray_Pm(startglobal, dirglobal, excludeinvface, hitfaceindex);
+	colli = pickobj->CollisionGlobal_Ray_Pm(startglobal, dirglobal, excludeinvface, hitfaceindex, dsthitpos);
 	return colli;
 
 }
 
-int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex)
+int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex, ChaVector3* dsthitpos)
 {
 	//当たったら１、当たらなかったら０を返す。エラーも０を返す。
 
 	//CPU版　polymesh3用
 
-	if (!pickinfo || !pickobj || !hitfaceindex) {
+	if (!pickinfo || !pickobj || !hitfaceindex || !dsthitpos) {
 		_ASSERT(0);
 		return 0;
 	}
 	*hitfaceindex = -1;
+	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
 
 	ChaVector3 startlocal, dirlocal;
 	CalcMouseLocalRay(pickinfo, &startlocal, &dirlocal);
 	bool excludeinvface = true;
 	int colli = 0;
-	colli = pickobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, excludeinvface, hitfaceindex);
+	colli = pickobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, excludeinvface, hitfaceindex, dsthitpos);
 	return colli;
 
 }
 
 
 
-int CModel::GetResultOfPickRay(CMQOObject* pickobj, int* hitfaceindex)
+int CModel::GetResultOfPickRay(CMQOObject* pickobj, int* hitfaceindex, ChaVector3* dsthitpos)
 {
 	//当たったら１、当たらなかったら０を返す。エラーも０を返す。
 
 	//ComputeShader版　polymesh3, polymesh4両方OK
 
-	if (!pickobj || !hitfaceindex) {
+	if (!pickobj || !hitfaceindex || !dsthitpos) {
 		_ASSERT(0);
 		return 0;
 	}
 	*hitfaceindex = -1;
+	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
 
 	int colli = 0;
-	colli = pickobj->GetResultOfPickRay(hitfaceindex);
+	colli = pickobj->GetResultOfPickRay(hitfaceindex, dsthitpos);
 	return colli;
 
 }

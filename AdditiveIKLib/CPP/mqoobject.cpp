@@ -2116,16 +2116,17 @@ int CMQOObject::CollisionLocal_Ray(ChaVector3 startlocal, ChaVector3 dirlocal,
 }
 
 int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirlocal,
-	bool excludeinvface, int* hitfaceindex)
+	bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos)
 {
  
  //CPU計算　polymesh3用
  
-	if (!hitfaceindex) {
+	if (!hitfaceindex || !dsthitpos) {
 		_ASSERT(0);
 		return 0;
 	}
 	*hitfaceindex = -1;
+	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
 
 	CPolyMesh3* pm3ptr = GetPm3();
 	if (!pm3ptr) {
@@ -2182,7 +2183,7 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 
 		hitflag = ChkRay(allowrev, 
 			index0, index1, index2,
-			dispv, startlocal, dirlocal, justval, &justflag);
+			dispv, startlocal, dirlocal, justval, &justflag, dsthitpos);
 		if (hitflag || justflag) {
 			*hitfaceindex = fno;
 			return 1;
@@ -2193,15 +2194,16 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 }
 
 int CMQOObject::CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglobal,
-	bool excludeinvface, int* hitfaceindex)
+	bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos)
 {
 	//ComputeShader版　polymesh3, polymesh4両方OK
 
-	if (!hitfaceindex) {
+	if (!hitfaceindex || !dsthitpos) {
 		_ASSERT(0);
 		return 0;
 	}
 	*hitfaceindex = -1;
+	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
 
 	if (!GetPm4() && !GetPm3()) {
 		_ASSERT(0);
@@ -2214,18 +2216,19 @@ int CMQOObject::CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglo
 		return 0;
 	}
 
-	return dispobj->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex);
+	return dispobj->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex, dsthitpos);
 }
 
-int CMQOObject::GetResultOfPickRay(int* hitfaceindex)
+int CMQOObject::GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos)
 {
 	//ComputeShader版　polymesh3, polymesh4両方OK
 
-	if (!hitfaceindex) {
+	if (!hitfaceindex || !dsthitpos) {
 		_ASSERT(0);
 		return 0;
 	}
 	*hitfaceindex = -1;
+	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
 
 	if (!GetPm4() && !GetPm3()) {
 		_ASSERT(0);
@@ -2238,7 +2241,7 @@ int CMQOObject::GetResultOfPickRay(int* hitfaceindex)
 		return 0;
 	}
 
-	return dispobj->GetResultOfPickRay(hitfaceindex);
+	return dispobj->GetResultOfPickRay(hitfaceindex, dsthitpos);
 }
 
 int CMQOObject::AddInfBone( int srcboneno, int srcvno, float srcweight, int isadditive )

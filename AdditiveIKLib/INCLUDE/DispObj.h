@@ -140,8 +140,8 @@ public:
 	int ComputeDeform(myRenderer::RENDEROBJ renderobj);
 	int CopyCSDeform();
 	int PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
-		bool excludeinvface, int* hitfaceindex);
-	int GetResultOfPickRay(int* hitfaceindex);
+		bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos);
+	int GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos);
 
 
 	void ResetScaleInstancing();

@@ -111,13 +111,13 @@ public:
 
 	//ComputeShader版　polymesh3, polymesh4両方OK
 	int CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglobal,
-		bool excludeinvface, int* hitfaceindex);
-	int GetResultOfPickRay(int* hitfaceindex);
+		bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos);
+	int GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos);
 
 
 	//CPU計算　polymesh3用
 	int CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirlocal,
-		bool excludeinvface, int* hitfaceindex);
+		bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos);
 
 
 	//int MakeXBoneno2wno( int arrayleng, int* boneno2wno, int* infnumptr );

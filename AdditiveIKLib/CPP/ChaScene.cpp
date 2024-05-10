@@ -292,9 +292,9 @@ int ChaScene::UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag,
 
 bool ChaScene::PickPolyMesh(int pickkind, 
 	UIPICKINFO* tmppickinfo,
-	CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial)
+	CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial, ChaVector3* pickhitpos)
 {
-	if (!tmppickinfo || !pickmodel || !pickmqoobj || !pickmaterial) {
+	if (!tmppickinfo || !pickmodel || !pickmqoobj || !pickmaterial || !pickhitpos) {
 		_ASSERT(0);
 		return false;
 	}
@@ -302,6 +302,7 @@ bool ChaScene::PickPolyMesh(int pickkind,
 	*pickmodel = nullptr;
 	*pickmqoobj = nullptr;
 	*pickmaterial = nullptr;
+	*pickhitpos = ChaVector3(0.0f, 0.0f, 0.0f);
 
 	vector<myRenderer::RENDEROBJ> pickvec;
 
@@ -353,6 +354,7 @@ bool ChaScene::PickPolyMesh(int pickkind,
 				myRenderer::RENDEROBJ pickobj = pickvec[pickindex];
 				CModel* curmodel = pickobj.pmodel;
 				CMQOObject* curobj = pickobj.mqoobj;
+				ChaVector3 curhitpos = ChaVector3(0.0f, 0.0f, 0.0f);
 
 				if (pickobj.GetPickOpeFlag(g_projfar, g_pickdistrate) && curmodel && curobj) {
 					UIPICKINFO pickinfo = *tmppickinfo;
@@ -360,7 +362,7 @@ bool ChaScene::PickPolyMesh(int pickkind,
 					int colli = 0;
 					if (curobj->GetPm3()) {
 						//CPU版
-						colli = curmodel->CollisionPolyMesh3_Mouse(&pickinfo, curobj, &hitfaceindex);
+						colli = curmodel->CollisionPolyMesh3_Mouse(&pickinfo, curobj, &hitfaceindex, &curhitpos);
 					}
 					else if (curobj->GetPm4()) {
 						//GPU版
@@ -368,7 +370,7 @@ bool ChaScene::PickPolyMesh(int pickkind,
 							//座標変換　ボーン変形　即時実行のコンピュータシェーダ
 							curobj->GetDispObj()->ComputeDeform(pickobj);
 						}
-						colli = curmodel->CollisionPolyMesh_Mouse(&pickinfo, curobj, &hitfaceindex);
+						colli = curmodel->CollisionPolyMesh_Mouse(&pickinfo, curobj, &hitfaceindex, &curhitpos);
 					}
 					else {
 						colli = 0;
@@ -411,6 +413,7 @@ bool ChaScene::PickPolyMesh(int pickkind,
 									*pickmqoobj = chkmqoobj;
 									*pickmaterial = chkmqomat;
 									*tmppickinfo = pickinfo;
+									*pickhitpos = curhitpos;
 									return true;
 								}
 							}
@@ -420,6 +423,7 @@ bool ChaScene::PickPolyMesh(int pickkind,
 									*pickmqoobj = chkmqoobj;
 									*pickmaterial = chkmqomat;
 									*tmppickinfo = pickinfo;
+									*pickhitpos = curhitpos;
 									return true;
 								}
 							}
@@ -438,8 +442,12 @@ bool ChaScene::PickPolyMesh(int pickkind,
 }
 
 bool ChaScene::GetResultOfPickRay(int pickkind,
-	CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial)
+	CModel** pickmodel, CMQOObject** pickmqoobj, CMQOMaterial** pickmaterial, ChaVector3* pickhitpos)
 {
+	if (!pickmodel || !pickmqoobj || !pickmaterial || !pickhitpos) {
+		_ASSERT(0);
+		return false;
+	}
 
 	vector<myRenderer::RENDEROBJ> pickvec;
 
@@ -491,11 +499,12 @@ bool ChaScene::GetResultOfPickRay(int pickkind,
 				myRenderer::RENDEROBJ pickobj = pickvec[pickindex];
 				CModel* curmodel = pickobj.pmodel;
 				CMQOObject* curobj = pickobj.mqoobj;
+				ChaVector3 curhitpos = ChaVector3(0.0f, 0.0f, 0.0f);
 				if (curmodel && curobj) {
 					int hitfaceindex = -1;
 					int colli = 0;
 					if (curobj->GetPm3() || curobj->GetPm4()) {
-						colli = curobj->GetResultOfPickRay(&hitfaceindex);
+						colli = curobj->GetResultOfPickRay(&hitfaceindex, &curhitpos);
 					}
 					else {
 						colli = 0;
@@ -537,6 +546,7 @@ bool ChaScene::GetResultOfPickRay(int pickkind,
 									*pickmqoobj = chkmqoobj;
 									*pickmaterial = chkmqomat;
 									//*tmppickinfo = pickinfo;
+									*pickhitpos = curhitpos;
 									return true;
 								}
 							}
@@ -546,6 +556,7 @@ bool ChaScene::GetResultOfPickRay(int pickkind,
 									*pickmqoobj = chkmqoobj;
 									*pickmaterial = chkmqomat;
 									//*tmppickinfo = pickinfo;
+									*pickhitpos = curhitpos;
 									return true;
 								}
 							}
