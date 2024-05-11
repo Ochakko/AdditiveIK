@@ -90,7 +90,9 @@ int CChaFile::DestroyObjs()
 }
 
 int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, WCHAR* projname, 
-	std::vector<MODELELEM>& srcmodelindex, float srcmotspeed, map<CModel*, CFrameCopyDlg*> srcselbonedlgmap)
+	std::vector<MODELELEM>& srcmodelindex, float srcmotspeed, 
+	map<CModel*, CFrameCopyDlg*> srcselbonedlgmap,
+	std::vector<ChaMatrix> srcgrassmat)
 {
 	m_modelindex = srcmodelindex;
 	m_mode = XMLIO_WRITE;
@@ -176,7 +178,7 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 	int modelcnt;
 	for( modelcnt = 0; modelcnt < modelnum; modelcnt++ ){
 		MODELELEM curme = m_modelindex[ modelcnt ];
-		CallF(WriteChara(limitdegflag, &curme, projname, srcselbonedlgmap), return 1 );
+		CallF(WriteChara(limitdegflag, &curme, projname, srcselbonedlgmap, srcgrassmat), return 1 );
 	}
 
 	CallF( Write2File( "</CHA>\r\n" ), return 1 );
@@ -205,7 +207,9 @@ int CChaFile::WriteFileInfo()
 	//version 1010 : 2024/05/02 1.0.0.19へ向けて  <BtMovableRate>追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1010</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1011 : 2024/05/04 1.0.0.19へ向けて  <BtVScaleOnLimitEul>追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1011</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1011</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1012 : 2024/05/12 1.0.0.20へ向けて  <GrassFlag>, <GrassMat>追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1012</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -215,7 +219,9 @@ int CChaFile::WriteFileInfo()
 	return 0;
 }
 
-int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, map<CModel*, CFrameCopyDlg*> srcselbonedlgmap)
+int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, 
+	map<CModel*, CFrameCopyDlg*> srcselbonedlgmap,
+	std::vector<ChaMatrix> srcgrassmat)
 {
 	if (!srcme || !projname) {
 		_ASSERT(0);
@@ -234,11 +240,34 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, m
 
 	WideCharToMultiByte( CP_ACP, 0, curmodel->GetFileName(), -1, filename, MAX_PATH, NULL, NULL );
 	WideCharToMultiByte( CP_ACP, 0, curmodel->GetModelFolder(), -1, modelfolder, MAX_PATH, NULL, NULL );
+	CallF( Write2File("  <Chara>\r\n" ), return 1 );
+	CallF(Write2File("    <ModelFolder>%s</ModelFolder>\r\n", modelfolder ), return 1 );
+	CallF(Write2File("    <ModelFile>%s</ModelFile>\r\n", filename ), return 1 );
+	CallF(Write2File("    <ModelMult>%f</ModelMult>\r\n", curmodel->GetLoadMult() ), return 1 );
 
-	CallF( Write2File( "  <Chara>\r\n" ), return 1 );
-	CallF( Write2File( "    <ModelFolder>%s</ModelFolder>\r\n", modelfolder ), return 1 );
-	CallF( Write2File( "    <ModelFile>%s</ModelFile>\r\n", filename ), return 1 );
-	CallF( Write2File( "    <ModelMult>%f</ModelMult>\r\n", curmodel->GetLoadMult() ), return 1 );
+	if (curmodel->GetGrassFlag()) {
+		CallF(Write2File("    <GrassFlag>1</GrassFlag>\r\n"), return 1);
+	}
+	else {
+		CallF(Write2File("    <GrassFlag>0</GrassFlag>\r\n"), return 1);
+	}
+
+	if (curmodel->GetGrassFlag()) {
+		int grassnum = (int)srcgrassmat.size();
+		int grassindex;
+		for (grassindex = 0; grassindex < grassnum; grassindex++) {
+			if (grassindex < GRASSINDEXMAX) {
+				ChaMatrix grassmat = srcgrassmat[grassindex];
+				CallF(Write2File("    <GrassMat>%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f</GrassMat>\r\n",
+					grassmat.data[MATI_11], grassmat.data[MATI_12], grassmat.data[MATI_13], grassmat.data[MATI_14],
+					grassmat.data[MATI_21], grassmat.data[MATI_22], grassmat.data[MATI_23], grassmat.data[MATI_24],
+					grassmat.data[MATI_31], grassmat.data[MATI_32], grassmat.data[MATI_33], grassmat.data[MATI_34],
+					grassmat.data[MATI_41], grassmat.data[MATI_42], grassmat.data[MATI_43], grassmat.data[MATI_44]
+				), return 1);
+			}
+		}
+	}
+
 
 	CallF(Write2File("    <ModelPositionX>%f</ModelPositionX>\r\n", curmodel->GetModelPosition().x), return 1);
 	CallF(Write2File("    <ModelPositionY>%f</ModelPositionY>\r\n", curmodel->GetModelPosition().y), return 1);
@@ -549,11 +578,12 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, m
 }
 
 int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath, 
-	CModel* (*srcfbxfunc)( bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname ),
+	CModel* (*srcfbxfunc)( bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname, bool srcgrassflag),
 	int (*srcReffunc)(), int (*srcImpFunc)(), int (*srcGcoFunc)(),
 	int (*srcReMenu)( int selindex1, int callbymenu1 ), 
 	int (*srcRgdMenu)( int selindex2, int callbymenu2 ), 
-	int (*srcMorphMenu)( int selindex3 ), int (*srcImpMenu)( int selindex4 ) )
+	int (*srcMorphMenu)( int selindex3 ), int (*srcImpMenu)( int selindex4 ),
+	std::vector<ChaMatrix>& dstgrassmat)
 {
 	m_mode = XMLIO_LOAD;
 	m_FbxFunc = srcfbxfunc;
@@ -745,7 +775,7 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 		XMLIOBUF charabuf;
 		ZeroMemory( &charabuf, sizeof( XMLIOBUF ) );
 		CallF( SetXmlIOBuf( &m_xmliobuf, "<Chara>", "</Chara>", &charabuf ), return 1 );
-		CallF( ReadChara(limitdegflag, charanum, characnt, &charabuf), return 1 );
+		CallF(ReadChara(limitdegflag, charanum, characnt, dstgrassmat, &charabuf), return 1 );
 	}
 
 
@@ -836,7 +866,7 @@ int CChaFile::ReadProjectInfo( XMLIOBUF* xmlbuf, int* charanumptr )
 
 	return 0;
 }
-int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt, XMLIOBUF* xmlbuf)
+int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt, std::vector<ChaMatrix>& dstgrassmat, XMLIOBUF* xmlbuf)
 {
 /***
 	CallF( Write2File( "  <Chara>\r\n" ), return 1 );
@@ -884,6 +914,37 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt, XMLIOBUF*
 	CallF( Read_Str( xmlbuf, "<ModelFolder>", "</ModelFolder>", modelfolder, MAX_PATH ), return 1 );
 	CallF( Read_Str( xmlbuf, "<ModelFile>", "</ModelFile>", filename, MAX_PATH ), return 1 );
 
+	CallF(Read_Float(xmlbuf, "<ModelMult>", "</ModelMult>", &modelmult), return 1);
+
+	int grassflag = 0;
+	std::vector<ChaMatrix> grassmatvec;
+	Read_Int(xmlbuf, "<GrassFlag>", "</GrassFlag>", &grassflag);
+	if (grassflag == 1) {
+		ChaMatrix grassmat;
+		grassmat.SetIdentity();
+		int result0 = 0;
+		while (result0 == 0) {
+			XMLIOBUF grassmatbuf;
+			ZeroMemory(&grassmatbuf, sizeof(XMLIOBUF));
+			int delpatflag = 0;
+			int errorno = SetXmlIOBuf(xmlbuf, "<GrassMat>", "</GrassMat>", &grassmatbuf, delpatflag);
+			
+			if (errorno == 0) {
+				result0 = Read_Matrix(xmlbuf, "<GrassMat>", "</GrassMat>", &grassmat);
+				if (result0 == 0) {
+					grassmatvec.push_back(grassmat);
+				}
+				else {
+					break;
+				}
+			}
+			else {
+				break;
+			}
+		}
+	}
+
+
 	//modelposは必須ではない
 	Read_Float(xmlbuf, "<ModelPositionX>", "</ModelPositionX>", &posx);
 	Read_Float(xmlbuf, "<ModelPositionY>", "</ModelPositionY>", &posy);
@@ -900,9 +961,6 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt, XMLIOBUF*
 	Read_Float(xmlbuf, "<SpecularDispRate>", "</SpecularDispRate>", &materialdisprate.y);
 	Read_Float(xmlbuf, "<EmissiveDispRate>", "</EmissiveDispRate>", &materialdisprate.z);
 	Read_Float(xmlbuf, "<AmbientDispRate>", "</AmbientDispRate>", &materialdisprate.w);
-
-
-	CallF( Read_Float( xmlbuf, "<ModelMult>", "</ModelMult>", &modelmult ), return 1 );
 
 	CallF( Read_Int( xmlbuf, "<CURRE>", "</CURRE>", &curre ), return 1 );
 	CallF( Read_Int( xmlbuf, "<RGD>", "</RGD>", &rgd ), return 1 );
@@ -994,7 +1052,7 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt, XMLIOBUF*
 	//int skipdefref = 0;//CModel::LoadFBXでCreateRigidElemReqを呼ぶ必要がある。FBXだけ読み込んでいる状態でdefault_refが必要。
 	CModel* newmodel = 0;
 	bool callfromcha = true;
-	newmodel = (this->m_FbxFunc)( callfromcha, (characnt == (charanum - 1)), skipdefref, inittimeline, ikstopname );
+	newmodel = (this->m_FbxFunc)( callfromcha, (characnt == (charanum - 1)), skipdefref, inittimeline, ikstopname, (grassflag == 1) );
 	
 	if (!newmodel) {
 		_ASSERT(0);
@@ -1003,6 +1061,10 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt, XMLIOBUF*
 
 	
 	//newmodel->m_tmpmotspeed = m_motspeed;
+	newmodel->SetGrassFlag(grassflag == 1);
+	if (grassflag == 1) {
+		dstgrassmat = grassmatvec;
+	}
 
 	newmodel->SetModelPosition(ChaVector3(posx, posy, posz));
 	newmodel->SetModelRotation(ChaVector3(rotx, roty, rotz));

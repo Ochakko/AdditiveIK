@@ -100,6 +100,7 @@ class CMQOMaterial;
 //#define RIGMULTINDEXMAX	12	
 //#define RIGMULTINDEXMAX	24
 #define RIGMULTINDEXMAX	256
+#define GRASSINDEXMAX	(RIGMULTINDEXMAX)
 
 
 //2024/02/10 大きいfbx(TheHuntCity)+VRoidを読み込んでもメモリ不足にならない程度にREFPOSMAXNUMを小さくした

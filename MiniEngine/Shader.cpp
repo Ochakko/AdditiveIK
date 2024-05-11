@@ -36,7 +36,7 @@ Shader::~Shader()
 
 int Shader::Load(const char* filePath, const char* entryFuncName, const char* shaderModel)
 {
-	ID3DBlob* errorBlob;
+	ID3DBlob* errorBlob = nullptr;
 #ifdef _DEBUG
 	// Enable better shader debugging with the graphics debugging tools.
 	UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -76,6 +76,7 @@ int Shader::Load(const char* filePath, const char* entryFuncName, const char* sh
 }
 int Shader::LoadPS(const char* filePath, const char* entryFuncName)
 {
+	SetCurrentDirectoryW(g_basedir);
 	return Load(filePath, entryFuncName, g_psShaderModelName);
 }
 int Shader::LoadVS(const char* filePath, const char* entryFuncName)

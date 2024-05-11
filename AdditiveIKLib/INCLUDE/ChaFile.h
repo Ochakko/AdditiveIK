@@ -21,24 +21,29 @@ public:
 	virtual ~CChaFile();
 
 	int WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, WCHAR* projname, 
-		std::vector<MODELELEM>& srcmodelindex, float srcmotspeed, std::map<CModel*, CFrameCopyDlg*> srcselbonedlgmap);
+		std::vector<MODELELEM>& srcmodelindex, float srcmotspeed, 
+		std::map<CModel*, CFrameCopyDlg*> srcselbonedlgmap,
+		std::vector<ChaMatrix> srcgrassmat);
 	int LoadChaFile(bool limitdegflag, WCHAR* strpath, 
-		CModel* (*srcfbxfunc)( bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname ),
+		CModel* (*srcfbxfunc)( bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname, bool srcgrassflag ),
 		int (*srcReffunc)(), int (*srcImpFunc)(), int (*srcGcoFunc)(),
 		int (*srcReMenu)( int selindex1, int callbymenu1 ), 
 		int (*srcRgdMenu)( int selindex2, int callbymenu2 ), 
-		int (*srcMorphMenu)( int selindex3 ), int (*srcImpMenu)( int selindex4 ) );
+		int (*srcMorphMenu)( int selindex3 ), int (*srcImpMenu)( int selindex4 ),
+		std::vector<ChaMatrix>& dstgrassmat);
 
 private:
 	virtual int InitParams();
 	virtual int DestroyObjs();
 
 	int WriteFileInfo();
-	int WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, std::map<CModel*, CFrameCopyDlg*> srcselbonedlgmap);
+	int WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, 
+		std::map<CModel*, CFrameCopyDlg*> srcselbonedlgmap,
+		std::vector<ChaMatrix> srcgrassmat);
 
 	//int CheckFileVersion( XMLIOBUF* xmliobuf );
 	int ReadProjectInfo( XMLIOBUF* xmliobuf, int* charanumptr );
-	int ReadChara(bool limitdegflag, int charanum, int characnt, XMLIOBUF* xmliobuf);
+	int ReadChara(bool limitdegflag, int charanum, int characnt, std::vector<ChaMatrix>& dstgrassmat, XMLIOBUF* xmliobuf);
 	//int ReadMotion( XMLIOBUF* xmliobuf, WCHAR* modelfolder, CModel* modelptr );
 	int ReadWall(XMLIOBUF* xmliobuf);
 
@@ -52,7 +57,7 @@ private:
 	char m_mloaddir[MAX_PATH];
 
 
-	CModel* (*m_FbxFunc)(bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname );
+	CModel* (*m_FbxFunc)(bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname, bool srcgrassflag);
 	int (*m_RefFunc)();
 	int (*m_ImpFunc)();
 	int (*m_GcoFunc)();

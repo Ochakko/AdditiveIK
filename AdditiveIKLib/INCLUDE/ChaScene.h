@@ -101,7 +101,7 @@ public:
 	int CalcTotalModelBound();
 	const WCHAR* GetModelFileName(int srcmodelindex);
 
-	int DelModel(int srcmodelindex);
+	int DelModel(int srcmodelindex, bool* isgrass);
 	int DelAllModel();
 
 	int StopBt();

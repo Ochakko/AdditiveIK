@@ -964,7 +964,7 @@ int CMQOObject::MakeExtLine(CModel* srcmodel)
 	return 0;
 }
 
-int CMQOObject::MakeDispObj( ID3D12Device* pdev, int hasbone )
+int CMQOObject::MakeDispObj(ID3D12Device* pdev, int hasbone, bool grassflag)
 {
 	if (m_dispobj) {
 		delete m_dispobj;
@@ -990,7 +990,7 @@ int CMQOObject::MakeDispObj( ID3D12Device* pdev, int hasbone )
 			_ASSERT(0);
 			return 1;
 		}
-		CallF(m_dispobj->CreateDispObj(pdev, m_pm3, hasbone, GetUVNum()), return 1);
+		CallF(m_dispobj->CreateDispObj(pdev, m_pm3, hasbone, GetUVNum(), grassflag), return 1);
 
 		m_pm3->CalcBound();
 

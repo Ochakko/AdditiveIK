@@ -351,7 +351,11 @@ public:
  * @param (MODELBOUND* dstb) OUT バウンダリーデータ（モデルを囲い込む最小範囲データ）がセットされる。
  * @return 成功したら０。
  */
-	int GetModelBound( MODELBOUND* dstb );
+	int GetModelBound( MODELBOUND* dstb );//計算する　非常に重い
+	MODELBOUND GetCalclatedModelBound() {
+		return m_bound;
+	}
+
 
 /**
  * @fn
@@ -2757,6 +2761,14 @@ public: //accesser
 		return m_refposflag;
 	}
 
+	void SetGrassFlag(bool srcflag)
+	{
+		m_grassflag = srcflag;
+	}
+	bool GetGrassFlag()
+	{
+		return m_grassflag;
+	}
 	void SetSkyFlag(bool srcflag)
 	{
 		m_skyflag = srcflag;
@@ -3003,6 +3015,7 @@ private:
 	bool m_refposflag;
 	bool m_skyflag;
 	bool m_groundflag;
+	bool m_grassflag;
 
 	int m_updateslot;
 

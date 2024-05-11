@@ -921,6 +921,7 @@ static HMENU	s_remenu = 0;
 static HMENU	s_rgdmenu = 0;
 static HMENU	s_impmenu = 0;
 static int s_filterindex = 1;
+static bool s_grassflag = false;
 static HMENU	s_cursubmenu = 0;
 
 
@@ -976,6 +977,9 @@ static CModel* s_bmark = NULL;
 static CModel* s_ground = NULL;
 static CModel* s_gplane = NULL;
 static CModel* s_sky = NULL;
+
+static CModel* s_grass = NULL;
+static std::vector<ChaMatrix> s_grassmat;
 
 
 static int s_rigsphere_num;
@@ -1880,6 +1884,7 @@ static bool s_Ldispmw = true;
 
 static bool s_dispmodelworldmat = false;
 static bool s_pickmodelworldmat = false;
+//static bool s_putgrassflag = false;
 
 static double s_keyShiftTime = 0.0;			// キー移動量
 static list<KeyInfo> s_copyKeyInfoList;	// コピーされたキー情報リスト
@@ -2892,7 +2897,7 @@ static int InitCurMotion(int selectflag, double expandmotion);
 static int OpenChaFile();
 static int PostOpenChaFile();//2024/04/17 常駐スライダーなどに読込値を反映する
 CModel* OpenMQOFile();
-CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname);
+CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname, bool srcgrassflag);
 static int OpenREFile();
 static int OpenImpFile();
 static int OpenGcoFile();
@@ -3032,7 +3037,7 @@ static int RenderSelectFunc(myRenderer::RenderingEngine* re);
 static int RenderSelectPostureFunc(myRenderer::RenderingEngine* re);
 static int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
 static int SetSelectState();
-
+static int RenderGrass(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
 
 static void ResetRigModelNum();
 static CModel* GetCurRigModel(CUSTOMRIG currig, int* pinstanceno, ChaVector4* prigmat);
@@ -4066,6 +4071,9 @@ void InitApp()
 
 	InitCommonControls();
 
+	s_filterindex = 1;
+	s_grassflag = false;
+
 	s_pickmodel = nullptr;
 	s_pickmqoobj = nullptr;
 	s_pickmaterial = nullptr;
@@ -4360,7 +4368,7 @@ void InitApp()
 	g_shiftkey = false;
 	g_ctrlshiftkeyformb = false;//ForMiddleButton
 	s_skey = false;
-
+	
 	//////check
 	//WCHAR strchk[256] = { 0L };
 	//swprintf_s(strchk, 256, L"NULL == %p\nINVALID_HANDLE_VALUE == %p", NULL, INVALID_HANDLE_VALUE);
@@ -4391,6 +4399,8 @@ void InitApp()
 		s_ringyellowmat = ChaVector4(1.0f, 1.0f, 0.0f, 1.0f);
 	}
 
+	s_grass = nullptr;
+	s_grassmat.clear();
 
 	s_rigopemark_sphere = nullptr;
 	s_rigopemark_ringX = nullptr;
@@ -5143,6 +5153,7 @@ void InitApp()
 	s_dispconvbone = false;
 	s_dispmodelworldmat = false;
 	s_pickmodelworldmat = false;
+	//s_putgrassflag = false;
 
 	s_oprigflag = 0;
 
@@ -6096,9 +6107,10 @@ void OnDestroyDevice()
 
 	if (s_chascene) {
 		delete s_chascene;
-		s_chascene = 0;
+		s_chascene = nullptr;
 	}
-	s_model = 0;
+	s_model = nullptr;
+	s_grass = nullptr;//s_grassはChaSceneのデストラクタで破棄される
 
 
 
@@ -6122,8 +6134,14 @@ void OnDestroyDevice()
 	}
 	if (s_sky) {
 		delete s_sky;
-		s_sky = NULL;
+		s_sky = nullptr;
 	}
+
+	//s_grassはChaSceneのデストラクタで破棄される
+	//if (s_grass) {
+	//	delete s_grass;
+	//	s_grass = nullptr;
+	//}
 
 	if (s_rigopemark_sphere) {
 		delete s_rigopemark_sphere;
@@ -7171,6 +7189,11 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 
 			if (s_ground) {
 				OnRenderGround(re, rc);//メッシュではなくラインオブジェクト
+			}
+
+			if (s_grass) {
+				//2024/05/11
+				RenderGrass(re, rc);
 			}
 
 			OnRenderBoneMark(re, rc);
@@ -10288,7 +10311,8 @@ int RetargetFile(char* fbxpath)
 		CModel* newmodel = 0;
 		std::vector<std::string> ikstopname;
 		ikstopname.clear();
-		newmodel = OpenFBXFile(false, false, 0, 1, ikstopname);
+		bool grassflag = false;
+		newmodel = OpenFBXFile(false, false, 0, 1, ikstopname, grassflag);
 		if (newmodel) {
 			//s_model = s_convbone_model_batch;
 
@@ -10881,12 +10905,14 @@ int OpenFile()
 
 	int dlgret;
 	s_filterindex = 1;
+	s_grassflag = false;
 	dlgret = (int)DialogBoxW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_OPENMQODLG),
 		s_3dwnd, (DLGPROC)OpenMqoDlgProc);
 	if ((dlgret != IDOK) || (g_tmpmqopath[0] == 0L)) {
 		s_nowloading = false;
 		return 0;
 	}
+
 
 	//WCHAR savepath[MULTIPATH];//stack size warning
 	WCHAR* tmpsavepath = new WCHAR[MULTIPATH];
@@ -10940,7 +10966,7 @@ int OpenFile()
 			}
 			std::vector<std::string> ikstopname;
 			ikstopname.clear();
-			newmodel = OpenFBXFile(false, true, 0, 1, ikstopname);
+			newmodel = OpenFBXFile(false, true, 0, 1, ikstopname, s_grassflag);
 			if (newmodel) {
 				result = 0;
 			}
@@ -11021,7 +11047,7 @@ int OpenFile()
 
 				std::vector<std::string> ikstopname;
 				ikstopname.clear();
-				newmodel = OpenFBXFile(false, true, 0, 1, ikstopname);
+				newmodel = OpenFBXFile(false, true, 0, 1, ikstopname, s_grassflag);
 				if (newmodel) {
 					result = 0;
 				}
@@ -11252,7 +11278,7 @@ void CalcTotalBound()
 	SetCameraModel();
 
 	if (s_chascene) {
-		s_chascene->CalcTotalModelBound();
+		s_chascene->CalcTotalModelBound();//計算する　重い
 	}
 
 
@@ -11303,10 +11329,12 @@ void CalcTotalBound()
 }
 
 
-CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname)
+CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname, bool srcgrassflag)
 {
 	static int s_dbgcnt = 0;
 	s_dbgcnt++;
+
+	s_grassflag = srcgrassflag;
 
 	//RenderContext* pRenderContext = DXUTGetD3D11DeviceContext();
 
@@ -11393,6 +11421,14 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	}
 	newmodel->SetLoadingMotionCount(0);//2022/11/01
 
+
+	if (s_grassflag) {
+		//2024/05/11
+		newmodel->SetGrassFlag(true);
+		newmodel->SetInstancingNum(GRASSINDEXMAX);
+	}
+
+
 	if (s_nowloading && s_3dwnd) {
 		OnRenderNowLoading();
 	}
@@ -11414,7 +11450,27 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 		return 0;
 	}
 	else {
-		s_model = newmodel;
+		if (s_grassflag == false) {
+			s_model = newmodel;
+		}
+		else {
+
+			//##################################################
+			//Grass
+			//grassはRenderModels()とは別レンダー(RenderGrass())
+			//##################################################
+
+			if (s_grass) {
+				delete s_grass;
+				s_grass = nullptr;
+			}
+			s_grass = newmodel;
+			s_model = newmodel;
+			//MODELBOUND mb;
+			//s_grass->GetModelBound(&mb);//計算する　重い CModel::m_boundにセットされる
+			//return s_grass;//!!!!!!!!!!!!!!!!!!!!
+		}
+		
 	}
 
 	if (callfromcha == true) {
@@ -14065,8 +14121,12 @@ int OnDelModel(int delmenuindex, bool ondelbutton)//default : ondelbutton == fal
 		return 0;
 	}
 
-
-	s_chascene->DelModel(delmenuindex);
+	bool isgrass = false;
+	s_chascene->DelModel(delmenuindex, &isgrass);
+	if (isgrass) {
+		s_grass = nullptr;
+		s_grassmat.clear();
+	}
 
 	SetCameraModel();
 
@@ -14127,6 +14187,10 @@ int OnDelAllModel()
 	s_cameramenuindexmap.clear();
 	s_lineno2boneno.clear();
 	s_boneno2lineno.clear();
+
+	s_grass = nullptr;
+	s_grassmat.clear();
+
 
 	OnModelMenu(true, -1, 0);
 
@@ -14203,7 +14267,8 @@ float CalcSelectScale()
 	}
 
 	MODELBOUND mb;
-	s_model->GetModelBound(&mb);
+	//s_model->GetModelBound(&mb);//計算する　非常に重い
+	mb = s_model->GetCalclatedModelBound();
 	double modelr = (double)mb.r;
 
 	s_selectscale = max(0.01f, min(2.0f, (float)(modelr * 0.0020)));//2023/05/19
@@ -14561,6 +14626,43 @@ CModel* GetCurRigModel(CUSTOMRIG currig, int* pinstanceno, ChaVector4* prigmat)
 		return 0;
 	}
 
+}
+
+int RenderGrass(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
+{
+	if (!pRenderContext) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (!s_grass) {
+		return 0;
+	}
+
+	s_grass->ResetInstancingParams();
+
+	int grassnum = (int)s_grassmat.size();
+	int grassindex;
+	for (grassindex = 0; grassindex < grassnum; grassindex++) {
+		if (grassindex < GRASSINDEXMAX) {
+			ChaVector4 grassmaterial = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+			s_grass->SetInstancingParams(grassindex, s_grassmat[grassindex], s_matVP, grassmaterial);
+		}
+	}
+
+	int lightflag = 1;
+	ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	bool forcewithalpha = true;
+	int btflag = 0;
+	bool zcmpalways = false;
+	bool zenable = true;
+
+	if (grassnum > 0) {
+		s_chascene->RenderInstancingModel(s_grass, forcewithalpha, lightflag, diffusemult, btflag,
+			zcmpalways, zenable,
+			RENDERKIND_INSTANCING_TRIANGLE);
+	}
+
+	return 0;
 }
 
 int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
@@ -15477,7 +15579,17 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			return TRUE;
 			break;
 
-
+		case IDC_CHECK_GRASS:
+		{
+			UINT ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_GRASS);
+			if (ischecked == BST_CHECKED) {
+				s_grassflag = true;
+			}
+			else {
+				s_grassflag = false;
+			}
+		}
+		break;
 
 		case IDC_REFMQO:
 		{
@@ -15804,6 +15916,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				SendMessage(GetDlgItem(hDlgWnd, IDC_FILTER_CHA), BM_SETSTATE, FALSE, 0);
 				SendMessage(GetDlgItem(hDlgWnd, IDC_FILTER_FBX), BM_SETSTATE, TRUE, 0);
 				SendMessage(GetDlgItem(hDlgWnd, IDC_FILTER_RTG), BM_SETSTATE, FALSE, 0);
+
 				s_filter_cha = 2;
 
 				if (s_filterindex == 5) {
@@ -20292,7 +20405,7 @@ int SaveProject()
 	s_chascene->GetModelIndex(writemodelindex);
 	CChaFile chafile;
 	int result = chafile.WriteChaFile(g_bakelimiteulonsave, s_bpWorld, s_projectdir, s_projectname,
-		writemodelindex, (float)g_dspeed, s_selbonedlgmap);
+		writemodelindex, (float)g_dspeed, s_selbonedlgmap, s_grassmat);
 	if (result) {
 		::MessageBox(g_mainhwnd, L"保存に失敗しました。", L"Error", MB_OK);
 		if (oldcursor) {
@@ -20700,7 +20813,8 @@ int OpenChaFile()
 	CChaFile chafile;
 	int ret = chafile.LoadChaFile(g_limitdegflag, g_tmpmqopath,
 		OpenFBXFile, OpenREFile, OpenImpFile, OpenGcoFile,
-		OnREMenu, OnRgdMenu, OnRgdMorphMenu, OnImpMenu);
+		OnREMenu, OnRgdMenu, OnRgdMorphMenu, OnImpMenu,
+		s_grassmat);
 	if (ret == 1) {
 		_ASSERT(0);
 		SetCursor(oldcursor);
@@ -26847,6 +26961,14 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			else {
 				CheckDlgButton(hDlgWnd, IDC_CHECK_PICKANDSET, false);
 			}
+
+			//if (s_putgrassflag == true) {
+			//	CheckDlgButton(hDlgWnd, IDC_CHECK_PUTGRASS, true);
+			//}
+			//else {
+			//	CheckDlgButton(hDlgWnd, IDC_CHECK_PUTGRASS, false);
+			//}
+
 		}
 
 		//RECT dlgrect;
@@ -26882,6 +27004,18 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		}
 		break;
 
+		//case IDC_CHECK_PUTGRASS:
+		//{
+		//	UINT ischecked = 0;
+		//	ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_PUTGRASS);
+		//	if (ischecked == BST_CHECKED) {
+		//		s_putgrassflag = true;
+		//	}
+		//	else {
+		//		s_putgrassflag = false;
+		//	}
+		//}
+		//break;
 
 		case IDC_TOCAMERAPOS:
 		{
@@ -59472,13 +59606,46 @@ bool PickAndPut()
 				SetDlgItemTextW(s_modelworldmatdlgwnd, IDC_EDIT_POSITIONZ, strval);
 			}
 
-			ChaVector3 tmppos = s_model->GetModelPosition();
-			ChaVector3 tmprot = s_model->GetModelRotation();
+
+			if (s_model->GetGrassFlag()) {
+				int grassnum = (int)s_grassmat.size();
+				if (grassnum >= GRASSINDEXMAX) {//2024/05/11現在GRASSINDEXMAXはRIGINDEXMAXと同じで256
+					::MessageBox(s_modelworldmatdlgwnd, L"草のインスタンス数は２５６個までです。", L"これ以上追加できません。", MB_OK);
+					return false;
+				}
+			}
+
+			ChaVector3 tmppos = ChaVector3(0.0f, 0.0f, 0.0f);
+			ChaVector3 tmprot = ChaVector3(0.0f, 0.0f, 0.0f);
 			int result = GetModelWorldMat(&tmppos, &tmprot);//向きはダイアログにセットされている向きを使用
 			if (result == 0) {
-				s_model->SetModelPosition(s_pickhitpos);//tmpposではなくs_pickhitpos
-				s_model->SetModelRotation(tmprot);
-				s_model->CalcModelWorldMatOnLoad();
+				if (s_model->GetGrassFlag() == false) {
+					s_model->SetModelPosition(s_pickhitpos);//tmpposではなくs_pickhitpos
+					s_model->SetModelRotation(tmprot);
+					s_model->CalcModelWorldMatOnLoad();
+				}
+				else {
+					s_grass->SetModelPosition(s_pickhitpos);//tmpposではなくs_pickhitpos
+					s_grass->SetModelRotation(tmprot);
+					s_grass->CalcModelWorldMatOnLoad();
+
+					ChaMatrix scalemat;
+					scalemat.SetIdentity();
+					ChaMatrix rotmat;
+					rotmat.SetIdentity();
+					rotmat.SetXYZRotation(0, tmprot);
+					ChaMatrix tramat;
+					tramat.SetIdentity();
+					tramat.SetTranslation(s_pickhitpos);
+					ChaMatrix modelnodemat;
+					modelnodemat.SetIdentity();
+
+					ChaMatrix grassmat;
+					grassmat.SetIdentity();
+					grassmat = ChaMatrixFromSRT(true, true, modelnodemat, &scalemat, &rotmat, &tramat);
+
+					s_grassmat.push_back(grassmat);
+				}
 			}
 		}
 	}

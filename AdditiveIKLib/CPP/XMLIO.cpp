@@ -470,6 +470,196 @@ int CXMLIO::Read_Q( XMLIOBUF* xmliobuf, const char* startpat, const char* endpat
 
 	return 0;
 }
+
+int CXMLIO::Read_Matrix(XMLIOBUF* xmliobuf, const char* startpat, const char* endpat, ChaMatrix* dstmat)
+{
+	if (!xmliobuf || !startpat || !endpat || !dstmat) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	int ret;
+	char* startptr;
+	startptr = strstr(xmliobuf->buf + xmliobuf->pos, startpat);
+	if (!startptr) {
+		_ASSERT(0);
+		return 1;
+	}
+	char* endptr;
+	endptr = strstr(xmliobuf->buf + xmliobuf->pos, endpat);
+	if (!endptr || (endptr <= startptr)) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int endpatpos;
+	endpatpos = (int)(endptr - xmliobuf->buf);
+	if ((endpatpos <= 0) || (endpatpos >= (int)xmliobuf->bufleng)) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	size_t startpatlen = strlen(startpat);//bufにstartpatが含まれていることは確定している
+	char* srcchar = startptr + startpatlen;
+	int srcleng = (int)(endptr - srcchar);
+	if ((srcleng <= 0) || (srcleng >= 256)) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	float _11, _12, _13, _14;
+	float _21, _22, _23, _24;
+	float _31, _32, _33, _34;
+	float _41, _42, _43, _44;
+
+	int srcpos = 0;
+	int stepnum = 0;
+	_11 = 0.0f;
+	ret = GetFloat(&_11, srcchar, srcpos, srcleng, &stepnum);
+	if (ret) {
+		_ASSERT(0);
+		return 1;
+	}
+	srcpos += stepnum;
+	stepnum = 0;
+	_12 = 0.0f;
+	ret = GetFloat(&_12, srcchar, srcpos, srcleng, &stepnum);
+	if (ret) {
+		_ASSERT(0);
+		return 1;
+	}
+	srcpos += stepnum;
+	stepnum = 0;
+	_13 = 0.0f;
+	ret = GetFloat(&_13, srcchar, srcpos, srcleng, &stepnum);
+	if (ret) {
+		_ASSERT(0);
+		return 1;
+	}
+	srcpos += stepnum;
+	stepnum = 0;
+	_14 = 0.0f;
+	ret = GetFloat(&_14, srcchar, srcpos, srcleng, &stepnum);
+	if (ret) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	srcpos += stepnum;
+	stepnum = 0;
+	_21 = 0.0f;
+	ret = GetFloat(&_21, srcchar, srcpos, srcleng, &stepnum);
+	if (ret) {
+		_ASSERT(0);
+		return 1;
+	}
+	srcpos += stepnum;
+	stepnum = 0;
+	_22 = 0.0f;
+	ret = GetFloat(&_22, srcchar, srcpos, srcleng, &stepnum);
+	if (ret) {
+		_ASSERT(0);
+		return 1;
+	}
+	srcpos += stepnum;
+	stepnum = 0;
+	_23 = 0.0f;
+	ret = GetFloat(&_23, srcchar, srcpos, srcleng, &stepnum);
+	if (ret) {
+		_ASSERT(0);
+		return 1;
+	}
+	srcpos += stepnum;
+	stepnum = 0;
+	_24 = 0.0f;
+	ret = GetFloat(&_24, srcchar, srcpos, srcleng, &stepnum);
+	if (ret) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	srcpos += stepnum;
+	stepnum = 0;
+	_31 = 0.0f;
+	ret = GetFloat(&_31, srcchar, srcpos, srcleng, &stepnum);
+	if (ret) {
+		_ASSERT(0);
+		return 1;
+	}
+	srcpos += stepnum;
+	stepnum = 0;
+	_32 = 0.0f;
+	ret = GetFloat(&_32, srcchar, srcpos, srcleng, &stepnum);
+	if (ret) {
+		_ASSERT(0);
+		return 1;
+	}
+	srcpos += stepnum;
+	stepnum = 0;
+	_33 = 0.0f;
+	ret = GetFloat(&_33, srcchar, srcpos, srcleng, &stepnum);
+	if (ret) {
+		_ASSERT(0);
+		return 1;
+	}
+	srcpos += stepnum;
+	stepnum = 0;
+	_34 = 0.0f;
+	ret = GetFloat(&_34, srcchar, srcpos, srcleng, &stepnum);
+	if (ret) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	srcpos += stepnum;
+	stepnum = 0;
+	_41 = 0.0f;
+	ret = GetFloat(&_41, srcchar, srcpos, srcleng, &stepnum);
+	if (ret) {
+		_ASSERT(0);
+		return 1;
+	}
+	srcpos += stepnum;
+	stepnum = 0;
+	_42 = 0.0f;
+	ret = GetFloat(&_42, srcchar, srcpos, srcleng, &stepnum);
+	if (ret) {
+		_ASSERT(0);
+		return 1;
+	}
+	srcpos += stepnum;
+	stepnum = 0;
+	_43 = 0.0f;
+	ret = GetFloat(&_43, srcchar, srcpos, srcleng, &stepnum);
+	if (ret) {
+		_ASSERT(0);
+		return 1;
+	}
+	srcpos += stepnum;
+	stepnum = 0;
+	_44 = 0.0f;
+	ret = GetFloat(&_44, srcchar, srcpos, srcleng, &stepnum);
+	if (ret) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	*dstmat = ChaMatrix(
+		_11, _12, _13, _14,
+		_21, _22, _23, _24,
+		_31, _32, _33, _34,
+		_41, _42, _43, _44
+	);
+
+	return 0;
+
+
+}
+
+
+
 int CXMLIO::Read_Str( XMLIOBUF* xmliobuf, const char* startpat, const char* endpat, char* dststr, int arrayleng )
 {
 	if (!xmliobuf || !startpat || !endpat || !dststr) {

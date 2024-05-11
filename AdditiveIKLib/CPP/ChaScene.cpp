@@ -656,7 +656,7 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 
 					CModel* curmodel = m_modelindex[modelindex].modelptr;
 					if (curmodel && (curmodel->GetRefPosFlag() == false) && 
-						curmodel->GetModelDisp() && curmodel->GetInView(0)) {
+						curmodel->GetModelDisp() && curmodel->GetInView(0) && (curmodel->GetGrassFlag() == false)) {//Grassは別レンダー
 					//if (curmodel && curmodel->GetModelDisp()) {
 
 						ChaVector4 materialdisprate = curmodel->GetMaterialDispRate();
@@ -1392,7 +1392,7 @@ int ChaScene::CalcTotalModelBound()
 		CModel* curmodel = itrmodel->modelptr;
 		if (curmodel) {
 			MODELBOUND mb;
-			curmodel->GetModelBound(&mb);
+			curmodel->GetModelBound(&mb);//計算する　重い
 			if (mb.r != 0.0f) {
 				AddModelBound(&m_totalmb, &mb);
 			}
@@ -1458,8 +1458,14 @@ const WCHAR* ChaScene::GetModelFileName(int srcmodelindex)
 }
 
 
-int ChaScene::DelModel(int srcmodelindex)
+int ChaScene::DelModel(int srcmodelindex, bool* isgrass)
 {
+	if (!isgrass) {
+		_ASSERT(0);
+		return 1;
+	}
+	*isgrass = false;
+
 	if (m_modelindex.empty()) {
 		return 0;
 	}
@@ -1468,6 +1474,14 @@ int ChaScene::DelModel(int srcmodelindex)
 		CModel* delmodel;
 		delmodel = GetModel(srcmodelindex);
 		if (delmodel) {
+
+			if (delmodel->GetGrassFlag()) {
+				*isgrass = true;
+			}
+			else {
+				*isgrass = false;
+			}
+
 
 			std::vector<MODELELEM> tmpvec;
 			std::vector<MODELELEM>::iterator itrmodel;

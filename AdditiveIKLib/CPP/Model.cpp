@@ -664,6 +664,7 @@ int CModel::InitParams()
 	m_bindpose = nullptr;
 	m_skyflag = false;
 	m_groundflag = false;
+	m_grassflag = false;
 
 	m_secondCallOfMotion2Bt = false;
 
@@ -1246,7 +1247,7 @@ _ASSERT(m_bonelist[0]);
 						//MakeDispObj内で　不要メモリ削除
 						//PolyMesh4は マウスとの当たり判定をしない前提で不要メモリを削除
 						//PolyMesh3は　fbxfileflagがtrue --> マウスとの当たり判定をしない前提で不要メモリを削除
-						CallF(curobj->MakeDispObj(m_pdev, hasbone), return 1);
+						CallF(curobj->MakeDispObj(m_pdev, hasbone, GetGrassFlag()), return 1);
 
 					}
 				}
@@ -2200,7 +2201,7 @@ int CModel::MakeDispObj()
 				hasbone = 0;
 			}
 
-			CallF( curobj->MakeDispObj( m_pdev, hasbone ), return 1 );
+			CallF( curobj->MakeDispObj(m_pdev, hasbone, GetGrassFlag()), return 1 );
 		}
 	}
 

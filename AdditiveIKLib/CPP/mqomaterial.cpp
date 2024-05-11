@@ -3681,9 +3681,14 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 		m_cb[currentrefposindex].Flags[3] = g_VSMflag ? 1 : 0;
+		m_cb[currentrefposindex].Flags2[0] = (renderobj.pmodel->GetGrassFlag()) ? 1 : 0;
 		if (DXUTGetGlobalTimer()) {
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
+		MODELBOUND modelbb;
+		modelbb.Init();
+		modelbb = renderobj.pmodel->GetCalclatedModelBound();
+		m_cb[currentrefposindex].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
 		m_cb[currentrefposindex].distortiontype[0] = GetRiverOrSea();
 		m_cb[currentrefposindex].distortiontype[1] = GetDistortionMapType();
 		m_cb[currentrefposindex].distortiontype[2] = 0;
@@ -3739,9 +3744,14 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 		m_cb[currentrefposindex].Flags[3] = g_VSMflag ? 1 : 0;
+		m_cb[currentrefposindex].Flags2[0] = (renderobj.pmodel->GetGrassFlag()) ? 1 : 0;
 		if (DXUTGetGlobalTimer()) {
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
+		MODELBOUND modelbb;
+		modelbb.Init();
+		modelbb = renderobj.pmodel->GetCalclatedModelBound();
+		m_cb[currentrefposindex].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
 		m_cb[currentrefposindex].distortiontype[0] = GetRiverOrSea();
 		m_cb[currentrefposindex].distortiontype[1] = GetDistortionMapType();
 		m_cb[currentrefposindex].distortiontype[2] = 0;
@@ -3815,9 +3825,14 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[currentrefposindex].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 		m_cb[currentrefposindex].Flags[3] = g_VSMflag ? 1 : 0;
+		m_cb[currentrefposindex].Flags2[0] = (renderobj.pmodel->GetGrassFlag()) ? 1 : 0;
 		if (DXUTGetGlobalTimer()) {
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
+		MODELBOUND modelbb;
+		modelbb.Init();
+		modelbb = renderobj.pmodel->GetCalclatedModelBound();
+		m_cb[currentrefposindex].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
 		m_cb[currentrefposindex].distortiontype[0] = GetRiverOrSea();
 		m_cb[currentrefposindex].distortiontype[1] = GetDistortionMapType();
 		m_cb[currentrefposindex].distortiontype[2] = 0;
@@ -3938,9 +3953,14 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[0].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 		m_cb[0].Flags[3] = g_VSMflag ? 1 : 0;
+		m_cb[0].Flags2[0] = (renderobj.pmodel->GetGrassFlag()) ? 1 : 0;
 		if (DXUTGetGlobalTimer()) {
 			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
+		MODELBOUND modelbb;
+		modelbb.Init();
+		modelbb = renderobj.pmodel->GetCalclatedModelBound();
+		m_cb[0].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
 		m_cb[0].distortiontype[0] = GetRiverOrSea();
 		m_cb[0].distortiontype[1] = GetDistortionMapType();
 		m_cb[0].distortiontype[2] = 0;
@@ -3988,9 +4008,14 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[0].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 		m_cb[0].Flags[3] = g_VSMflag ? 1 : 0;
+		m_cb[0].Flags2[0] = (renderobj.pmodel->GetGrassFlag()) ? 1 : 0;
 		if (DXUTGetGlobalTimer()) {
 			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
+		MODELBOUND modelbb;
+		modelbb.Init();
+		modelbb = renderobj.pmodel->GetCalclatedModelBound();
+		m_cb[0].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
 		m_cb[0].distortiontype[0] = GetRiverOrSea();
 		m_cb[0].distortiontype[1] = GetDistortionMapType();
 		m_cb[0].distortiontype[2] = 0;
@@ -4052,9 +4077,14 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
 		m_cb[0].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 		m_cb[0].Flags[3] = g_VSMflag ? 1 : 0;
+		m_cb[0].Flags2[0] = (renderobj.pmodel->GetGrassFlag()) ? 1 : 0;
 		if (DXUTGetGlobalTimer()) {
 			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
+		MODELBOUND modelbb;
+		modelbb.Init();
+		modelbb = renderobj.pmodel->GetCalclatedModelBound();
+		m_cb[0].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
 		m_cb[0].distortiontype[0] = GetRiverOrSea();
 		m_cb[0].distortiontype[1] = GetDistortionMapType();
 		m_cb[0].distortiontype[2] = 0;

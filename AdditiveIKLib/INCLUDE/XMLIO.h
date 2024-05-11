@@ -30,6 +30,7 @@ protected:
 	int Read_Float( XMLIOBUF* xmliobuf, const char* startpat, const char* endpat, float* dstfloat );
 	int Read_Vec3( XMLIOBUF* xmliobuf, const char* startpat, const char* endpat, ChaVector3* dstvec );
 	int Read_Q( XMLIOBUF* xmliobuf, const char* startpat, const char* endpat, CQuaternion* dstq );
+	int Read_Matrix(XMLIOBUF* xmliobuf, const char* startpat, const char* endpat, ChaMatrix* dstmat);
 	int Read_Str( XMLIOBUF* xmliobuf, const char* startpat, const char* endpat, char* dststr, int arrayleng );
 
 	int GetInt( int* dstint, char* srcchar, int pos, int srcleng, int* stepnum );

@@ -162,7 +162,7 @@ int CDispObj::DestroyObjs()
 }
 
 
-int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, int srcuvnum)
+int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, int srcuvnum, bool grassflag)
 {
 	DestroyObjs();
 
@@ -201,7 +201,7 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, in
 		if (curmat) {
 			curmat->CreateDecl(pdev, vertextype);
 
-			int result1;
+			int result1 = 0;
 			result1 = curmat->InitShadersAndPipelines(
 				srcuvnum,
 				vertextype,
@@ -274,19 +274,35 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, in
 			//	std::abort();//2024/03/17 シェーダコンパイル失敗時にはabort()する
 			//}
 
-			int result3;
-			result3 = curmat->InitInstancingShadersAndPipelines(
-				vertextype,
-				"../Media/Shader/AdditiveIK_NoSkin_Instancing.fx",
-				"VSMainNoSkinInstancing",
-				"PSMainNoSkinInstancingNoLight",
-				colorBufferFormat,
-				curmat->NUM_SRV_ONE_MATERIAL,
-				curmat->NUM_CBV_ONE_MATERIAL,
-				0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
-				0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
-				D3D12_FILTER_MIN_MAG_MIP_LINEAR
-			);
+			int result3 = 0;
+			if (grassflag == false) {
+				result3 = curmat->InitInstancingShadersAndPipelines(
+					vertextype,
+					"../Media/Shader/AdditiveIK_NoSkin_Instancing.fx",
+					"VSMainNoSkinInstancing",
+					"PSMainNoSkinInstancingNoLight",// not grass
+					colorBufferFormat,
+					curmat->NUM_SRV_ONE_MATERIAL,
+					curmat->NUM_CBV_ONE_MATERIAL,
+					0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
+					0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
+					D3D12_FILTER_MIN_MAG_MIP_LINEAR
+				);
+			}
+			else {
+				result3 = curmat->InitInstancingShadersAndPipelines(
+					vertextype,
+					"../Media/Shader/AdditiveIK_NoSkin_Instancing.fx",
+					"VSMainNoSkinInstancing",
+					"PSMainNoSkinInstancingGrass",// Grass
+					colorBufferFormat,
+					curmat->NUM_SRV_ONE_MATERIAL,
+					curmat->NUM_CBV_ONE_MATERIAL,
+					0, //curmat->NUM_CBV_ONE_MATERIAL * rootindex,//offset
+					0, //curmat->NUM_SRV_ONE_MATERIAL * rootindex,//offset
+					D3D12_FILTER_MIN_MAG_MIP_LINEAR
+				);
+			}
 			if (result3 != 0) {
 				_ASSERT(0);
 				std::abort();//2024/03/17 シェーダコンパイル失敗時にはabort()する

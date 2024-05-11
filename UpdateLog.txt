@@ -2,6 +2,18 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2024/05/12
+　草(grass)に対応
+　　fbx読み込み時にload fbx as grassにチェックを入れるとインスタンシング表示の草として読み込み
+　　モデルパネルで草を選び、上段カエルボタンの行のModelWorldMatショートカットボタンのPick&Setオプションで草を配置
+　　現在草は１種類で草のインスタンスは２５６個まで
+
+　　後ほど、草の種類を増やせるようにする予定
+
+
+
+
 2024/05/11
 　上段カエルボタンの行のModelWorldMatショートカットボタンを押して出すダイアログで
 　　Pick&Set(with NumKey)にチェックを入れた場合は　マウスクリック位置に選択中のモデルを配置
