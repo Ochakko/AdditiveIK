@@ -3686,9 +3686,14 @@ int CModel::CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, i
 
 	ChaVector3 startglobal, dirglobal;
 	CalcMouseGlobalRay(pickinfo, &startglobal, &dirglobal);
+
+	ChaVector3 startlocal, dirlocal;
+	CalcMouseLocalRay(pickinfo, &startlocal, &dirlocal);
+
 	bool excludeinvface = true;
 	int colli = 0;
-	colli = pickobj->CollisionGlobal_Ray_Pm(startglobal, dirglobal, excludeinvface, hitfaceindex, dsthitpos);
+	colli = pickobj->CollisionGlobal_Ray_Pm(startglobal, dirglobal, startlocal, dirlocal,
+		excludeinvface, hitfaceindex, dsthitpos);
 	return colli;
 
 }

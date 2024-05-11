@@ -2115,6 +2115,96 @@ int CMQOObject::CollisionLocal_Ray(ChaVector3 startlocal, ChaVector3 dirlocal,
 	return 0;
 }
 
+
+int CMQOObject::CollisionLocal_Ray_BB(ChaVector3 startlocal, ChaVector3 dirlocal)
+{
+	MODELBOUND objbb = GetBound();
+
+	ChaVector3 points[8];
+	points[0] = ChaVector3(objbb.min.x, objbb.min.y, objbb.min.z);
+	points[1] = ChaVector3(objbb.max.x, objbb.min.y, objbb.min.z);
+	points[2] = ChaVector3(objbb.min.x, objbb.max.y, objbb.min.z);
+	points[3] = ChaVector3(objbb.max.x, objbb.max.y, objbb.min.z);
+	points[4] = ChaVector3(objbb.min.x, objbb.min.y, objbb.max.z);
+	points[5] = ChaVector3(objbb.max.x, objbb.min.y, objbb.max.z);
+	points[6] = ChaVector3(objbb.min.x, objbb.max.y, objbb.max.z);
+	points[7] = ChaVector3(objbb.max.x, objbb.max.y, objbb.max.z);
+
+	//面の向きは考慮せずにセット
+	int indices[12 * 3];
+	indices[0] = 0;//前面1
+	indices[1] = 1;
+	indices[2] = 2;
+	indices[3] = 2;//前面2
+	indices[4] = 1;
+	indices[5] = 3;
+
+	indices[6] = 4;//後ろ面1
+	indices[7] = 5;
+	indices[8] = 6;
+	indices[9] = 6;//後ろ面2
+	indices[10] = 5;
+	indices[11] = 7;
+
+	indices[12] = 2;//上面1
+	indices[13] = 3;
+	indices[14] = 6;
+	indices[15] = 6;//上面2
+	indices[16] = 3;
+	indices[17] = 7;
+
+	indices[18] = 0;//下面1
+	indices[19] = 1;
+	indices[20] = 4;
+	indices[21] = 4;//下面2
+	indices[22] = 1;
+	indices[23] = 5;
+
+	indices[24] = 0;//左面1
+	indices[25] = 2;
+	indices[26] = 4;
+	indices[27] = 4;//左面2
+	indices[28] = 2;
+	indices[29] = 6;
+
+	indices[30] = 1;//右面1
+	indices[31] = 3;
+	indices[32] = 5;
+	indices[33] = 5;//右面2
+	indices[34] = 3;
+	indices[35] = 7;
+
+	int allowrev = 1;
+	int hitflag;
+	int justflag;
+	//float justval = 0.01f;
+	float justval = 0.0001f;//2024/03/31 Test/1009_1モデルのpickでjustvalの誤動作(大きく外れているのに当たった)をしたので値を小さくした
+
+	int faceindex;
+	for (faceindex = 0; faceindex < 12; faceindex++) {
+
+		int index0 = indices[faceindex * 3];
+		int index1 = indices[faceindex * 3 + 1];
+		int index2 = indices[faceindex * 3 + 2];
+
+		justflag = 0;
+		hitflag = 0;
+		hitflag = ChkRay(allowrev,
+			index0, index1, index2,
+			points, startlocal, dirlocal, justval, &justflag);
+		if (hitflag || justflag) {
+			return 1;
+		}
+	}
+
+
+	int dbgflag1 = 1;
+
+	return 0;
+
+}
+
+
 int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirlocal,
 	bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos)
 {
@@ -2150,6 +2240,8 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 		return 0;
 	}
 
+
+
 	int face_count;
 	int vert_count;
 	face_count = pm3ptr->GetFaceNum();
@@ -2158,6 +2250,18 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 	if ((face_count <= 0) || (vert_count < 3)) {
 		return 0;
 	}
+
+
+	if (face_count > (int)(12 * 1.5)) {//バウンダリーの面数 x 1.5より面数が多い場合だけ　バウンダリーで予備判定
+		//2024/05/11
+		//まずはバウンダリーで粗く判定
+		int collibb = CollisionLocal_Ray_BB(startlocal, dirlocal);
+		if (collibb == 0) {
+			return 0;
+		}
+	}
+
+
 
 	int allowrev;
 	if (excludeinvface) {
@@ -2194,6 +2298,7 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 }
 
 int CMQOObject::CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglobal,
+	ChaVector3 startlocal, ChaVector3 dirlocal,
 	bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos)
 {
 	//ComputeShader版　polymesh3, polymesh4両方OK
@@ -2215,6 +2320,28 @@ int CMQOObject::CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglo
 		_ASSERT(0);
 		return 0;
 	}
+
+	int face_count;
+	if (GetPm4()) {
+		face_count = GetPm4()->GetFaceNum();
+	}
+	else if (GetPm3()) {
+		face_count = GetPm3()->GetFaceNum();
+	}
+	else {
+		_ASSERT(0);
+		face_count = 0;
+		return 0;
+	}
+	if (face_count > (int)(12 * 1.5)) {//バウンダリーの面数 x 1.5より面数が多い場合だけ　バウンダリーで予備判定
+		//2024/05/11
+		//まずはバウンダリーで粗く判定
+		int collibb = CollisionLocal_Ray_BB(startlocal, dirlocal);
+		if (collibb == 0) {
+			return 0;
+		}
+	}
+
 
 	return dispobj->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex, dsthitpos);
 }
