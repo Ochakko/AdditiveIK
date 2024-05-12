@@ -3,6 +3,13 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/05/13
+　ショートムービー
+　　クリック位置に草が生えるんです
+　　https://youtu.be/_-YDEyL16G8
+
+
+
 2024/05/12
 　草(grass)に対応
 　　fbx読み込み時にload fbx as grassにチェックを入れるとインスタンシング表示の草として読み込み

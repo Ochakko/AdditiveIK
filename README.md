@@ -243,6 +243,8 @@ Smooth平滑化<br>
 
 [限界越えたら0.1倍速で動きます 2024/05/04](https://youtu.be/ufPtA-CxVKU "Usage example2")<br>
 
+[クリック位置に草が生えるんです 2024/05/13](https://youtu.be/_-YDEyL16G8 "Usage example3")<br>
+
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")
 <br>
