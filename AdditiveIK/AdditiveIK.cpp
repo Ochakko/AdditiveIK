@@ -18,6 +18,7 @@
 #include <Bone.h>
 //#include <MySprite.h>
 #include <mqoobject.h>
+#include <GrassElem.h>
 
 //#include <OrgWindow.h>
 //InfoWindowでOrgWindowをincludeしている
@@ -978,8 +979,7 @@ static CModel* s_ground = NULL;
 static CModel* s_gplane = NULL;
 static CModel* s_sky = NULL;
 
-static CModel* s_grass = NULL;
-static std::vector<ChaMatrix> s_grassmat;
+static std::vector<CGrassElem*> s_grassElemVec;
 
 
 static int s_rigsphere_num;
@@ -3242,6 +3242,8 @@ static bool FindAtTheLast(std::wstring const& strsource, std::wstring const& str
 static int ChangeUpdateMatrixThreads();
 static int FindModelIndex(CModel* srcmodel);
 
+static CGrassElem* FindGrassElem(CModel* srcmodel);
+
 
 static std::wstring ReplaceString
 (
@@ -4399,8 +4401,7 @@ void InitApp()
 		s_ringyellowmat = ChaVector4(1.0f, 1.0f, 0.0f, 1.0f);
 	}
 
-	s_grass = nullptr;
-	s_grassmat.clear();
+	s_grassElemVec.clear();
 
 	s_rigopemark_sphere = nullptr;
 	s_rigopemark_ringX = nullptr;
@@ -6110,8 +6111,17 @@ void OnDestroyDevice()
 		s_chascene = nullptr;
 	}
 	s_model = nullptr;
-	s_grass = nullptr;//s_grassはChaSceneのデストラクタで破棄される
 
+
+	int grasselemnum = (int)s_grassElemVec.size();
+	int grasselemindex;
+	for (grasselemindex = 0; grasselemindex < grasselemnum; grasselemindex++) {
+		CGrassElem* delgrasselem = s_grassElemVec[grasselemindex];
+		if (delgrasselem) {
+			delete delgrasselem;//delgrasselem->m_grassはChaSceneのデストラクタで破棄される
+		}
+	}
+	s_grassElemVec.clear();
 
 
 	//if (s_undosprite) {
@@ -7191,7 +7201,7 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 				OnRenderGround(re, rc);//メッシュではなくラインオブジェクト
 			}
 
-			if (s_grass) {
+			if (!s_grassElemVec.empty()) {
 				//2024/05/11
 				RenderGrass(re, rc);
 			}
@@ -11450,27 +11460,17 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 		return 0;
 	}
 	else {
-		if (s_grassflag == false) {
-			s_model = newmodel;
-		}
-		else {
+		s_model = newmodel;
 
-			//##################################################
-			//Grass
-			//grassはRenderModels()とは別レンダー(RenderGrass())
-			//##################################################
-
-			if (s_grass) {
-				delete s_grass;
-				s_grass = nullptr;
+		if (callfromcha == false) {//chaファイル読込時にはChaFile内でCGrassElemを作成してセットする
+			CGrassElem* newgrasselem = new CGrassElem(newmodel);
+			if (!newgrasselem) {
+				_ASSERT(0);
+				abort();
+				return 0;
 			}
-			s_grass = newmodel;
-			s_model = newmodel;
-			//MODELBOUND mb;
-			//s_grass->GetModelBound(&mb);//計算する　重い CModel::m_boundにセットされる
-			//return s_grass;//!!!!!!!!!!!!!!!!!!!!
+			s_grassElemVec.push_back(newgrasselem);
 		}
-		
 	}
 
 	if (callfromcha == true) {
@@ -14121,12 +14121,7 @@ int OnDelModel(int delmenuindex, bool ondelbutton)//default : ondelbutton == fal
 		return 0;
 	}
 
-	bool isgrass = false;
-	s_chascene->DelModel(delmenuindex, &isgrass);
-	if (isgrass) {
-		s_grass = nullptr;
-		s_grassmat.clear();
-	}
+	s_chascene->DelModel(delmenuindex, s_grassElemVec);
 
 	SetCameraModel();
 
@@ -14188,8 +14183,7 @@ int OnDelAllModel()
 	s_lineno2boneno.clear();
 	s_boneno2lineno.clear();
 
-	s_grass = nullptr;
-	s_grassmat.clear();
+	s_grassElemVec.clear();
 
 
 	OnModelMenu(true, -1, 0);
@@ -14634,32 +14628,18 @@ int RenderGrass(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 		_ASSERT(0);
 		return 1;
 	}
-	if (!s_grass) {
+	if (s_grassElemVec.empty()) {
 		return 0;
 	}
 
-	s_grass->ResetInstancingParams();
-
-	int grassnum = (int)s_grassmat.size();
-	int grassindex;
-	for (grassindex = 0; grassindex < grassnum; grassindex++) {
-		if (grassindex < GRASSINDEXMAX) {
-			ChaVector4 grassmaterial = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-			s_grass->SetInstancingParams(grassindex, s_grassmat[grassindex], s_matVP, grassmaterial);
+	int grasselemnum = (int)s_grassElemVec.size();
+	int grasselemindex;
+	for (grasselemindex = 0; grasselemindex < grasselemnum; grasselemindex++) {
+		CGrassElem* curgrasselem = s_grassElemVec[grasselemindex];
+		if (curgrasselem) {
+			curgrasselem->SetInstancingParams(s_matVP);
+			curgrasselem->RenderInstancingModel(s_chascene);
 		}
-	}
-
-	int lightflag = 1;
-	ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-	bool forcewithalpha = true;
-	int btflag = 0;
-	bool zcmpalways = false;
-	bool zenable = true;
-
-	if (grassnum > 0) {
-		s_chascene->RenderInstancingModel(s_grass, forcewithalpha, lightflag, diffusemult, btflag,
-			zcmpalways, zenable,
-			RENDERKIND_INSTANCING_TRIANGLE);
 	}
 
 	return 0;
@@ -20405,7 +20385,7 @@ int SaveProject()
 	s_chascene->GetModelIndex(writemodelindex);
 	CChaFile chafile;
 	int result = chafile.WriteChaFile(g_bakelimiteulonsave, s_bpWorld, s_projectdir, s_projectname,
-		writemodelindex, (float)g_dspeed, s_selbonedlgmap, s_grassmat);
+		writemodelindex, (float)g_dspeed, s_selbonedlgmap, s_grassElemVec);
 	if (result) {
 		::MessageBox(g_mainhwnd, L"保存に失敗しました。", L"Error", MB_OK);
 		if (oldcursor) {
@@ -20814,7 +20794,7 @@ int OpenChaFile()
 	int ret = chafile.LoadChaFile(g_limitdegflag, g_tmpmqopath,
 		OpenFBXFile, OpenREFile, OpenImpFile, OpenGcoFile,
 		OnREMenu, OnRgdMenu, OnRgdMorphMenu, OnImpMenu,
-		s_grassmat);
+		s_grassElemVec);
 	if (ret == 1) {
 		_ASSERT(0);
 		SetCursor(oldcursor);
@@ -59069,6 +59049,28 @@ int FindModelIndex(CModel* srcmodel)
 	return -1;
 }
 
+CGrassElem* FindGrassElem(CModel* srcmodel)
+{
+	CGrassElem* retgrasselem = nullptr;
+	
+	if (srcmodel->GetGrassFlag() == false) {
+		return nullptr;
+	}
+
+	int grasselemnum = (int)s_grassElemVec.size();
+	int grasselemindex;
+	for (grasselemindex = 0; grasselemindex < grasselemnum; grasselemindex++) {
+		CGrassElem* curgrasselem = s_grassElemVec[grasselemindex];
+		if (curgrasselem && curgrasselem->GetGrass() && (curgrasselem->GetGrass() == srcmodel)) {
+			retgrasselem = curgrasselem;
+			break;
+		}
+	}
+	return retgrasselem;
+}
+
+
+
 void RollbackBrushState(BRUSHSTATE srcbrushstate)
 {
 	g_brushmirrorUflag = srcbrushstate.brushmirrorUflag;
@@ -59606,9 +59608,10 @@ bool PickAndPut()
 				SetDlgItemTextW(s_modelworldmatdlgwnd, IDC_EDIT_POSITIONZ, strval);
 			}
 
+			CGrassElem* curgrasselem = FindGrassElem(s_model);
 
-			if (s_model->GetGrassFlag()) {
-				int grassnum = (int)s_grassmat.size();
+			if (curgrasselem) {
+				int grassnum = curgrasselem->GetGrassNum();
 				if (grassnum >= GRASSINDEXMAX) {//2024/05/11現在GRASSINDEXMAXはRIGINDEXMAXと同じで256
 					::MessageBox(s_modelworldmatdlgwnd, L"草のインスタンス数は２５６個までです。", L"これ以上追加できません。", MB_OK);
 					return false;
@@ -59619,32 +59622,34 @@ bool PickAndPut()
 			ChaVector3 tmprot = ChaVector3(0.0f, 0.0f, 0.0f);
 			int result = GetModelWorldMat(&tmppos, &tmprot);//向きはダイアログにセットされている向きを使用
 			if (result == 0) {
-				if (s_model->GetGrassFlag() == false) {
+				if (!curgrasselem) {
 					s_model->SetModelPosition(s_pickhitpos);//tmpposではなくs_pickhitpos
 					s_model->SetModelRotation(tmprot);
 					s_model->CalcModelWorldMatOnLoad();
 				}
 				else {
-					s_grass->SetModelPosition(s_pickhitpos);//tmpposではなくs_pickhitpos
-					s_grass->SetModelRotation(tmprot);
-					s_grass->CalcModelWorldMatOnLoad();
+					if (curgrasselem->GetGrass()) {
+						curgrasselem->GetGrass()->SetModelPosition(s_pickhitpos);//tmpposではなくs_pickhitpos
+						curgrasselem->GetGrass()->SetModelRotation(tmprot);
+						curgrasselem->GetGrass()->CalcModelWorldMatOnLoad();
 
-					ChaMatrix scalemat;
-					scalemat.SetIdentity();
-					ChaMatrix rotmat;
-					rotmat.SetIdentity();
-					rotmat.SetXYZRotation(0, tmprot);
-					ChaMatrix tramat;
-					tramat.SetIdentity();
-					tramat.SetTranslation(s_pickhitpos);
-					ChaMatrix modelnodemat;
-					modelnodemat.SetIdentity();
+						ChaMatrix scalemat;
+						scalemat.SetIdentity();
+						ChaMatrix rotmat;
+						rotmat.SetIdentity();
+						rotmat.SetXYZRotation(0, tmprot);
+						ChaMatrix tramat;
+						tramat.SetIdentity();
+						tramat.SetTranslation(s_pickhitpos);
+						ChaMatrix modelnodemat;
+						modelnodemat.SetIdentity();
 
-					ChaMatrix grassmat;
-					grassmat.SetIdentity();
-					grassmat = ChaMatrixFromSRT(true, true, modelnodemat, &scalemat, &rotmat, &tramat);
+						ChaMatrix grassmat;
+						grassmat.SetIdentity();
+						grassmat = ChaMatrixFromSRT(true, true, modelnodemat, &scalemat, &rotmat, &tramat);
 
-					s_grassmat.push_back(grassmat);
+						curgrasselem->AddGrassMat(grassmat);
+					}
 				}
 			}
 		}

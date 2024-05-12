@@ -18,6 +18,7 @@
 
 #include <UndoMotion.h>
 #include <CameraFbx.h>
+#include <GrassElem.h>
 
 #include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
 //#include "../../AdditiveIKLib/Grimoire/ModelRender.h"
@@ -101,7 +102,7 @@ public:
 	int CalcTotalModelBound();
 	const WCHAR* GetModelFileName(int srcmodelindex);
 
-	int DelModel(int srcmodelindex, bool* isgrass);
+	int DelModel(int srcmodelindex, std::vector<CGrassElem*>& grasselemvec);
 	int DelAllModel();
 
 	int StopBt();

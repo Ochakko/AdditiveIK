@@ -31,6 +31,7 @@ struct SVSInInstancing
     float4 material : COLOR0;
     float4 scaleinsta : TEXCOORD9;
     float4 offsetinsta : TEXCOORD10;
+    float4 bendvec : TEXCOORD11;//2024/05/12
 };
 
 // ピクセルシェーダーへの入力
@@ -195,9 +196,12 @@ SPSIn VSMainNoSkinInstancing(SVSInInstancing vsIn, uniform bool hasSkin)
     
     if (Flags2.x == 1)
     {
-        float bendval = ((vsIn.pos.y >= (bbsize.y * 0.5f))) ? (vsIn.pos.y / bbsize.y - 0.5f) : 0.0f;
-        float xgrassshift = sin(time1) * bendval * bendval * bbsize.x * 0.5f;
-        psIn.pos.x += xgrassshift;
+        float bendval = ((vsIn.pos.y >= (bbsize.y * 0.5f))) ? (vsIn.pos.y / bbsize.y) : 0.0f;
+        //float xgrassshift = sin(time1) * bendval * bendval * bbsize.x * 0.5f;
+        float maxshift = min(7.5f, bbsize.x);
+        float xgrassshift = sin(time1) * bendval * bendval * maxshift;
+        //psIn.pos.x += xgrassshift;
+        psIn.pos.xyz += vsIn.bendvec.xyz * xgrassshift * psIn.pos.w;//bendvec : 2024/05/12
     }
     
     float3 distvec = (psIn.pos.xyz / psIn.pos.w) - eyePos.xyz;

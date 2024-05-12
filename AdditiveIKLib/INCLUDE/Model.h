@@ -177,6 +177,7 @@ typedef struct tag_instancingparams
 	ChaVector4 diffusemult;
 	ChaVector4 scale;
 	ChaVector4 scaleoffset;
+	ChaVector4 bendvec;
 	void Init()
 	{
 		ZeroMemory(wmat, sizeof(float) * 16);
@@ -184,6 +185,7 @@ typedef struct tag_instancingparams
 		diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 		scale = ChaVector4(1.0f, 1.0f, 1.0f, 0.0f);
 		scaleoffset = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
+		bendvec = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
 	};
 	tag_instancingparams() {
 		Init();
@@ -2730,6 +2732,11 @@ public: //accesser
 			MoveMemory(&(params.wmat[0]), srcwmat.GetDataPtr(), sizeof(float) * 16);
 			MoveMemory(&(params.vpmat[0]), srcvpmat.GetDataPtr(), sizeof(float) * 16);
 			params.diffusemult = srcdiffusemult;
+
+
+			//2024/05/12 bendvec 草をカメラ横方向に揺らすためのベクトル
+			Matrix cammat = g_camera3D->GetViewMatrixInv();
+			params.bendvec = ChaVector4(cammat._11, cammat._12, cammat._13, 0.0f);
 
 			m_instancingparams[m_instancingdrawnum] = params;
 			m_instancingdrawnum++;

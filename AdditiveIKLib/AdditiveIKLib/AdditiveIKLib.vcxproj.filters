@@ -75,6 +75,7 @@
     <ClCompile Include="..\CPP\CSDeform.cpp" />
     <ClCompile Include="..\CPP\CSChkInView.cpp" />
     <ClCompile Include="..\CPP\BtObject.cpp" />
+    <ClCompile Include="..\CPP\GrassElem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\BTSRC\BulletCollision\CollisionDispatch\SphereTriangleDetector.h" />
@@ -1041,6 +1042,7 @@
     <ClInclude Include="..\INCLUDE\CSDeform.h" />
     <ClInclude Include="..\INCLUDE\CSChkInView.h" />
     <ClInclude Include="..\INCLUDE\BtObject.h" />
+    <ClInclude Include="..\INCLUDE\GrassElem.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\BTSRC\BulletInverseDynamics\premake4.lua">

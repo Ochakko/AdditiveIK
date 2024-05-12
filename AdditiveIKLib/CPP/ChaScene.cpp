@@ -1458,14 +1458,8 @@ const WCHAR* ChaScene::GetModelFileName(int srcmodelindex)
 }
 
 
-int ChaScene::DelModel(int srcmodelindex, bool* isgrass)
+int ChaScene::DelModel(int srcmodelindex, std::vector<CGrassElem*>& grasselemvec)
 {
-	if (!isgrass) {
-		_ASSERT(0);
-		return 1;
-	}
-	*isgrass = false;
-
 	if (m_modelindex.empty()) {
 		return 0;
 	}
@@ -1475,12 +1469,19 @@ int ChaScene::DelModel(int srcmodelindex, bool* isgrass)
 		delmodel = GetModel(srcmodelindex);
 		if (delmodel) {
 
+			std::vector<CGrassElem*> newgrasselemvec;
 			if (delmodel->GetGrassFlag()) {
-				*isgrass = true;
+				std::vector<CGrassElem*>::iterator itrgrass;
+				for (itrgrass = grasselemvec.begin(); itrgrass != grasselemvec.end(); itrgrass++) {
+					CGrassElem* curgrass = *itrgrass;
+					if (curgrass) {
+						if (curgrass->GetGrass() != delmodel) {
+							newgrasselemvec.push_back(curgrass);
+						}
+					}
+				}
 			}
-			else {
-				*isgrass = false;
-			}
+			grasselemvec = newgrasselemvec;
 
 
 			std::vector<MODELELEM> tmpvec;
