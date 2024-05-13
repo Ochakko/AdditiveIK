@@ -32,6 +32,9 @@ public:
 	int SetInstancingParams(ChaMatrix matVP);
 	int RenderInstancingModel(ChaScene* srcchascene);
 
+	int AddGrassPosition(ChaVector3 srcpos, ChaVector3 srcdir);
+	int RemoveGrassPosition(ChaVector3 srcpos, float removedistance);
+
 private:
 	void InitParams();
 	void DestroyObjs();

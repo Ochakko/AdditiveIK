@@ -1478,6 +1478,9 @@ int ChaScene::DelModel(int srcmodelindex, std::vector<CGrassElem*>& grasselemvec
 						if (curgrass->GetGrass() != delmodel) {
 							newgrasselemvec.push_back(curgrass);
 						}
+						else {
+							delete curgrass;//2024/05/13
+						}
 					}
 				}
 			}

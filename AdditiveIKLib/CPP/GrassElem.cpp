@@ -98,3 +98,60 @@ int CGrassElem::RenderInstancingModel(ChaScene* srcchascene)
 
 	return 0;
 }
+
+
+int CGrassElem::AddGrassPosition(ChaVector3 srcpos, ChaVector3 srcdir)
+{
+	if (!GetGrass()) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	GetGrass()->SetModelPosition(srcpos);
+	GetGrass()->SetModelRotation(srcdir);
+	GetGrass()->CalcModelWorldMatOnLoad();
+
+	ChaMatrix scalemat;
+	scalemat.SetIdentity();
+	ChaMatrix rotmat;
+	rotmat.SetIdentity();
+	rotmat.SetXYZRotation(0, srcdir);
+	ChaMatrix tramat;
+	tramat.SetIdentity();
+	tramat.SetTranslation(srcpos);
+	ChaMatrix modelnodemat;
+	modelnodemat.SetIdentity();
+
+	ChaMatrix grassmat;
+	grassmat.SetIdentity();
+	grassmat = ChaMatrixFromSRT(true, true, modelnodemat, &scalemat, &rotmat, &tramat);
+
+	AddGrassMat(grassmat);
+
+	return 0;
+}
+
+int CGrassElem::RemoveGrassPosition(ChaVector3 srcpos, float removedistance)
+{
+	if (!GetGrass()) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	std::vector<ChaMatrix> newgrassmat;
+	int grassnum = GetGrassNum();
+	int grassindex;
+	for (grassindex = 0; grassindex < grassnum; grassindex++) {
+		ChaMatrix chkmat = GetGrassMat(grassindex);
+		ChaVector3 chkpos = ChaMatrixTraVec(chkmat);
+		ChaVector3 diffpos = srcpos - chkpos;
+		float chkdistance = (float)ChaVector3LengthDbl(&diffpos);
+		if (chkdistance > removedistance) {
+			newgrassmat.push_back(chkmat);
+		}
+	}
+
+	m_grassmat = newgrassmat;
+
+	return 0;
+}

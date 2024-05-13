@@ -1884,6 +1884,8 @@ static bool s_Ldispmw = true;
 
 static bool s_dispmodelworldmat = false;
 static bool s_pickmodelworldmat = false;
+static bool s_removegrassflag = false;
+static float s_removegrassdistance = 50.0f;
 //static bool s_putgrassflag = false;
 
 static double s_keyShiftTime = 0.0;			// キー移動量
@@ -2650,6 +2652,7 @@ static int CreateModelWorldMatWnd();
 static int SetModel2ModelWorldMatDlg(CModel* srcmodel);
 static int ShowModelWorldMatDlg();
 static int GetModelWorldMat(ChaVector3* dstpos, ChaVector3* dstrot);
+static int SetModelWorldMat();
 static int CreateJumpGravityWnd();
 static int ShowJumpGravityDlg();
 
@@ -3038,6 +3041,7 @@ static int RenderSelectPostureFunc(myRenderer::RenderingEngine* re);
 static int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
 static int SetSelectState();
 static int RenderGrass(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
+static void DestroyGrassElem();
 
 static void ResetRigModelNum();
 static CModel* GetCurRigModel(CUSTOMRIG currig, int* pinstanceno, ChaVector4* prigmat);
@@ -5154,6 +5158,8 @@ void InitApp()
 	s_dispconvbone = false;
 	s_dispmodelworldmat = false;
 	s_pickmodelworldmat = false;
+	s_removegrassflag = false;
+	s_removegrassdistance = 50.0f;
 	//s_putgrassflag = false;
 
 	s_oprigflag = 0;
@@ -6113,15 +6119,7 @@ void OnDestroyDevice()
 	s_model = nullptr;
 
 
-	int grasselemnum = (int)s_grassElemVec.size();
-	int grasselemindex;
-	for (grasselemindex = 0; grasselemindex < grasselemnum; grasselemindex++) {
-		CGrassElem* delgrasselem = s_grassElemVec[grasselemindex];
-		if (delgrasselem) {
-			delete delgrasselem;//delgrasselem->m_grassはChaSceneのデストラクタで破棄される
-		}
-	}
-	s_grassElemVec.clear();
+	DestroyGrassElem();
 
 
 	//if (s_undosprite) {
@@ -14183,8 +14181,7 @@ int OnDelAllModel()
 	s_lineno2boneno.clear();
 	s_boneno2lineno.clear();
 
-	s_grassElemVec.clear();
-
+	DestroyGrassElem();//2024/05/13
 
 	OnModelMenu(true, -1, 0);
 
@@ -15768,7 +15765,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.19\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.20\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -26918,37 +26915,7 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		SetDlgPosDesktopCenter(hDlgWnd, HWND_TOPMOST);
 
 		if (s_model) {
-			tmppos = s_model->GetModelPosition();
-			tmprot = s_model->GetModelRotation();
-
-			swprintf_s(strval, 256, L"%.3f", tmppos.x);
-			SetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONX, strval);
-			swprintf_s(strval, 256, L"%.3f", tmppos.y);
-			SetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONY, strval);
-			swprintf_s(strval, 256, L"%.3f", tmppos.z);
-			SetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONZ, strval);
-
-			swprintf_s(strval, 256, L"%.3f", tmprot.x);
-			SetDlgItemTextW(hDlgWnd, IDC_EDIT_ROTATIONX, strval);
-			swprintf_s(strval, 256, L"%.3f", tmprot.y);
-			SetDlgItemTextW(hDlgWnd, IDC_EDIT_ROTATIONY, strval);
-			swprintf_s(strval, 256, L"%.3f", tmprot.z);
-			SetDlgItemTextW(hDlgWnd, IDC_EDIT_ROTATIONZ, strval);
-
-			if (s_pickmodelworldmat == true) {
-				CheckDlgButton(hDlgWnd, IDC_CHECK_PICKANDSET, true);
-			}
-			else {
-				CheckDlgButton(hDlgWnd, IDC_CHECK_PICKANDSET, false);
-			}
-
-			//if (s_putgrassflag == true) {
-			//	CheckDlgButton(hDlgWnd, IDC_CHECK_PUTGRASS, true);
-			//}
-			//else {
-			//	CheckDlgButton(hDlgWnd, IDC_CHECK_PUTGRASS, false);
-			//}
-
+			SetModel2ModelWorldMatDlg(s_model);
 		}
 
 		//RECT dlgrect;
@@ -26984,6 +26951,19 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		}
 		break;
 
+		case IDC_CHECK_REMOVEPOS:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_REMOVEPOS);
+			if (ischecked == BST_CHECKED) {
+				s_removegrassflag = true;
+			}
+			else {
+				s_removegrassflag = false;
+			}
+		}
+		break;
+
 		//case IDC_CHECK_PUTGRASS:
 		//{
 		//	UINT ischecked = 0;
@@ -27006,8 +26986,7 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			swprintf_s(strval, 256, L"%.3f", g_camEye.z);
 			SetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONZ, strval);
 
-			s_model->SetModelPosition(g_camEye);
-			s_model->CalcModelWorldMatOnLoad();
+			SetModelWorldMat();
 		}
 			break;
 		case IDC_TOCAMERATARGET:
@@ -27019,21 +26998,13 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			swprintf_s(strval, 256, L"%.3f", g_camtargetpos.z);
 			SetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONZ, strval);
 
-			s_model->SetModelPosition(g_camtargetpos);
-			s_model->CalcModelWorldMatOnLoad();
+			SetModelWorldMat();
 		}
 			break;
 
 		case IDC_APPLYMODELWORLDMAT:
 		{
-			ChaVector3 tmppos = s_model->GetModelPosition();
-			ChaVector3 tmprot = s_model->GetModelRotation();
-			int result = GetModelWorldMat(&tmppos, &tmprot);
-			if (result == 0) {
-				s_model->SetModelPosition(tmppos);
-				s_model->SetModelRotation(tmprot);
-				s_model->CalcModelWorldMatOnLoad();
-			}
+			SetModelWorldMat();
 		}
 		break;
 		default:
@@ -59573,6 +59544,48 @@ bool PickAndSelectMeshOfDispGroupDlg()
 	return s_dispPickfortip;
 }
 
+int SetModelWorldMat()
+{
+	CGrassElem* curgrasselem = FindGrassElem(s_model);
+
+	if (curgrasselem) {
+		int grassnum = curgrasselem->GetGrassNum();
+		if (grassnum >= GRASSINDEXMAX) {//2024/05/11現在GRASSINDEXMAXはRIGINDEXMAXと同じで256
+			::MessageBox(s_modelworldmatdlgwnd, L"草のインスタンス数は２５６個までです。", L"これ以上追加できません。", MB_OK);
+			return 1;
+		}
+	}
+
+	ChaVector3 tmppos = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 tmprot = ChaVector3(0.0f, 0.0f, 0.0f);
+	int result = GetModelWorldMat(&tmppos, &tmprot);//向きはダイアログにセットされている向きを使用
+	if (result == 0) {
+		if (!curgrasselem) {
+			s_model->SetModelPosition(s_pickhitpos);//tmpposではなくs_pickhitpos
+			s_model->SetModelRotation(tmprot);
+			s_model->CalcModelWorldMatOnLoad();
+		}
+		else {
+			if (s_removegrassflag == false) {
+				curgrasselem->AddGrassPosition(s_pickhitpos, tmprot);
+			}
+			else {
+				if (s_modelworldmatdlgwnd) {
+					WCHAR strval[256] = { 0L };
+					GetDlgItemTextW(s_modelworldmatdlgwnd, IDC_EDIT_REMOVEDISTANCE, strval, 256);
+					float value = (float)_wtof(strval);
+					if (value >= 0.0f) {
+						s_removegrassdistance = value;
+					}
+				}
+				curgrasselem->RemoveGrassPosition(s_pickhitpos, s_removegrassdistance);
+			}
+		}
+	}
+
+	return 0;
+}
+
 bool PickAndPut()
 {
 	//上段カエルボタンの行のModelWorldMatショートカットボタンを押して出すダイアログで
@@ -59608,50 +59621,7 @@ bool PickAndPut()
 				SetDlgItemTextW(s_modelworldmatdlgwnd, IDC_EDIT_POSITIONZ, strval);
 			}
 
-			CGrassElem* curgrasselem = FindGrassElem(s_model);
-
-			if (curgrasselem) {
-				int grassnum = curgrasselem->GetGrassNum();
-				if (grassnum >= GRASSINDEXMAX) {//2024/05/11現在GRASSINDEXMAXはRIGINDEXMAXと同じで256
-					::MessageBox(s_modelworldmatdlgwnd, L"草のインスタンス数は２５６個までです。", L"これ以上追加できません。", MB_OK);
-					return false;
-				}
-			}
-
-			ChaVector3 tmppos = ChaVector3(0.0f, 0.0f, 0.0f);
-			ChaVector3 tmprot = ChaVector3(0.0f, 0.0f, 0.0f);
-			int result = GetModelWorldMat(&tmppos, &tmprot);//向きはダイアログにセットされている向きを使用
-			if (result == 0) {
-				if (!curgrasselem) {
-					s_model->SetModelPosition(s_pickhitpos);//tmpposではなくs_pickhitpos
-					s_model->SetModelRotation(tmprot);
-					s_model->CalcModelWorldMatOnLoad();
-				}
-				else {
-					if (curgrasselem->GetGrass()) {
-						curgrasselem->GetGrass()->SetModelPosition(s_pickhitpos);//tmpposではなくs_pickhitpos
-						curgrasselem->GetGrass()->SetModelRotation(tmprot);
-						curgrasselem->GetGrass()->CalcModelWorldMatOnLoad();
-
-						ChaMatrix scalemat;
-						scalemat.SetIdentity();
-						ChaMatrix rotmat;
-						rotmat.SetIdentity();
-						rotmat.SetXYZRotation(0, tmprot);
-						ChaMatrix tramat;
-						tramat.SetIdentity();
-						tramat.SetTranslation(s_pickhitpos);
-						ChaMatrix modelnodemat;
-						modelnodemat.SetIdentity();
-
-						ChaMatrix grassmat;
-						grassmat.SetIdentity();
-						grassmat = ChaMatrixFromSRT(true, true, modelnodemat, &scalemat, &rotmat, &tramat);
-
-						curgrasselem->AddGrassMat(grassmat);
-					}
-				}
-			}
+			SetModelWorldMat();
 		}
 	}
 
@@ -66347,6 +66317,23 @@ int SetModel2ModelWorldMatDlg(CModel* srcmodel)
 		swprintf_s(strval, 256, L"%.3f", tmprot.z);
 		SetDlgItemTextW(s_modelworldmatdlgwnd, IDC_EDIT_ROTATIONZ, strval);
 
+		swprintf_s(strval, 256, L"%.3f", s_removegrassdistance);
+		SetDlgItemTextW(s_modelworldmatdlgwnd, IDC_EDIT_REMOVEDISTANCE, strval);
+
+		if (s_pickmodelworldmat == true) {
+			CheckDlgButton(s_modelworldmatdlgwnd, IDC_CHECK_PICKANDSET, true);
+		}
+		else {
+			CheckDlgButton(s_modelworldmatdlgwnd, IDC_CHECK_PICKANDSET, false);
+		}
+
+		if (s_removegrassflag == true) {
+			CheckDlgButton(s_modelworldmatdlgwnd, IDC_CHECK_REMOVEPOS, true);
+		}
+		else {
+			CheckDlgButton(s_modelworldmatdlgwnd, IDC_CHECK_REMOVEPOS, false);
+		}
+
 	}
 
 	return 0;
@@ -69909,4 +69896,17 @@ bool GetResultOfPickRay()
 	}
 	
 	return dispPickfortip;
+}
+
+void DestroyGrassElem()
+{
+	int grasselemnum = (int)s_grassElemVec.size();
+	int grasselemindex;
+	for (grasselemindex = 0; grasselemindex < grasselemnum; grasselemindex++) {
+		CGrassElem* delgrasselem = s_grassElemVec[grasselemindex];
+		if (delgrasselem) {
+			delete delgrasselem;//delgrasselem->m_grassはChaSceneのデストラクタで破棄される
+		}
+	}
+	s_grassElemVec.clear();
 }
