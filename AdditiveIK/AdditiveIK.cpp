@@ -59548,7 +59548,7 @@ int SetModelWorldMat()
 {
 	CGrassElem* curgrasselem = FindGrassElem(s_model);
 
-	if (curgrasselem) {
+	if (curgrasselem && (s_removegrassflag == false)) {
 		int grassnum = curgrasselem->GetGrassNum();
 		if (grassnum >= GRASSINDEXMAX) {//2024/05/11現在GRASSINDEXMAXはRIGINDEXMAXと同じで256
 			::MessageBox(s_modelworldmatdlgwnd, L"草のインスタンス数は２５６個までです。", L"これ以上追加できません。", MB_OK);
