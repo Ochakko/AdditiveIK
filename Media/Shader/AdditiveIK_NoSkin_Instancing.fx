@@ -311,6 +311,8 @@ float4 PSMainNoSkinInstancingGrass(SPSIn psIn) : SV_Target
     //psOut.color_1 = psIn.depth;
     //return psOut;
     
+    pscol = CalcPSFog(pscol, psIn.FogAndOther.x);
+    
     return pscol;
 }
 

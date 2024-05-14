@@ -19607,8 +19607,27 @@ int CModel::ChkInView(int refposindex)
 
 		SetDistChkInView(0.01f, refposindex);//2024/03/25
 	}
+	else if (GetGrassFlag()) {
+
+		//2024/05/14
+		//草はインスタンシング表示で　位置情報がCModelには無い
+		//草はローポリゴンでインスタンシング表示は軽い
+		//１つずつ視野内判定しても速くならない可能性が高い(後で確認する必要があるが)
+		//とりあえずは　草は全て視野内として描画する
+
+		SetInView(true, refposindex);
+		SetInShadow(false, refposindex);
+
+		map<int, CMQOObject*>::iterator itr;
+		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+			CMQOObject* curobj = itr->second;
+			if (curobj) {
+				curobj->SetInView(true, refposindex);
+			}
+		}
+		SetDistChkInView(0.01f, refposindex);
+	}
 	else {
-		if (GetSkyFlag() == false) {
 /*
 	int mBufferSize[4];//[0]:bsnum
 	Matrix mWorld;		//ワールド行列。
@@ -19625,156 +19644,140 @@ int CModel::ChkInView(int refposindex)
 	float shadowPlanes[6][4];
 	float shadowCorners[8][4];
 */
-			ChaMatrix chkMatWorld = GetMatrixForChkInView(m_matWorld);
+		ChaMatrix chkMatWorld = GetMatrixForChkInView(m_matWorld);
 
-			CSConstantBufferChkInView cb;
-			cb.Init();
-			cb.mWorld = chkMatWorld.TKMatrix();
-			cb.camEye[0] = g_camEye.x;
-			cb.camEye[1] = g_camEye.y;
-			cb.camEye[2] = g_camEye.z;
-			cb.camEye[3] = 1.0f;
-			ChaVector3 camdir = g_camtargetpos - g_camEye;
-			ChaVector3Normalize(&camdir, &camdir);
-			cb.params1[0] = CHKINVIEW_BACKPOSCOEF;
-			cb.params1[1] = (float)cos(g_fovy * 0.85f);
-			cb.params1[2] = g_projfar;
-			cb.params1[3] = g_projnear;
-			//cb.lodrate2L[0] = g_lodrate2L[0];
-			//cb.lodrate2L[1] = g_lodrate2L[1];
-			//cb.lodrate2L[2] = 1.0f;
-			//cb.lodrate2L[3] = 1.0f;
-			//cb.lodrate3L[0] = g_lodrate3L[0];
-			//cb.lodrate3L[1] = g_lodrate3L[1];
-			//cb.lodrate3L[2] = g_lodrate3L[2];
-			//cb.lodrate3L[3] = 1.0f;
-			//cb.lodrate4L[0] = g_lodrate4L[0];
-			//cb.lodrate4L[1] = g_lodrate4L[1];
-			//cb.lodrate4L[2] = g_lodrate4L[2];
-			//cb.lodrate4L[3] = g_lodrate4L[3];
+		CSConstantBufferChkInView cb;
+		cb.Init();
+		cb.mWorld = chkMatWorld.TKMatrix();
+		cb.camEye[0] = g_camEye.x;
+		cb.camEye[1] = g_camEye.y;
+		cb.camEye[2] = g_camEye.z;
+		cb.camEye[3] = 1.0f;
+		ChaVector3 camdir = g_camtargetpos - g_camEye;
+		ChaVector3Normalize(&camdir, &camdir);
+		cb.params1[0] = CHKINVIEW_BACKPOSCOEF;
+		cb.params1[1] = (float)cos(g_fovy * 0.85f);
+		cb.params1[2] = g_projfar;
+		cb.params1[3] = g_projnear;
+		//cb.lodrate2L[0] = g_lodrate2L[0];
+		//cb.lodrate2L[1] = g_lodrate2L[1];
+		//cb.lodrate2L[2] = 1.0f;
+		//cb.lodrate2L[3] = 1.0f;
+		//cb.lodrate3L[0] = g_lodrate3L[0];
+		//cb.lodrate3L[1] = g_lodrate3L[1];
+		//cb.lodrate3L[2] = g_lodrate3L[2];
+		//cb.lodrate3L[3] = 1.0f;
+		//cb.lodrate4L[0] = g_lodrate4L[0];
+		//cb.lodrate4L[1] = g_lodrate4L[1];
+		//cb.lodrate4L[2] = g_lodrate4L[2];
+		//cb.lodrate4L[3] = g_lodrate4L[3];
 
 
-			//##########################################################################
-			//2024/04/25 シェーダーでif文を実行すると重いので　あらかじめ配列に計算結果を入れておく
-			//##########################################################################
-			cb.lodmindist[0][0] = 0.0f;                      //lod無し　mindist
-			cb.lodmaxdist[0][0] = g_projfar;                 //lod無し　maxdist
+		//##########################################################################
+		//2024/04/25 シェーダーでif文を実行すると重いので　あらかじめ配列に計算結果を入れておく
+		//##########################################################################
+		cb.lodmindist[0][0] = 0.0f;                      //lod無し　mindist
+		cb.lodmaxdist[0][0] = g_projfar;                 //lod無し　maxdist
 			
-			cb.lodmindist[1][0] = 0.0f;                      //num:2levels lod:1 mindist
-			cb.lodmaxdist[1][0] = g_lodrate2L[0] * g_projfar;//num:2levels lod:1 maxdist
-			cb.lodmindist[1][1] = g_lodrate2L[0] * g_projfar;//num:2levels lod:2 mindist
-			cb.lodmaxdist[1][1] = g_lodrate2L[1] * g_projfar;//num:2levels lod:2 maxdist
+		cb.lodmindist[1][0] = 0.0f;                      //num:2levels lod:1 mindist
+		cb.lodmaxdist[1][0] = g_lodrate2L[0] * g_projfar;//num:2levels lod:1 maxdist
+		cb.lodmindist[1][1] = g_lodrate2L[0] * g_projfar;//num:2levels lod:2 mindist
+		cb.lodmaxdist[1][1] = g_lodrate2L[1] * g_projfar;//num:2levels lod:2 maxdist
 
-			cb.lodmindist[2][0] = 0.0f;                      //num:3levels lod1 mindist
-			cb.lodmaxdist[2][0] = g_lodrate3L[0] * g_projfar;//num:3levels lod1 maxdist
-			cb.lodmindist[2][1] = g_lodrate3L[0] * g_projfar;//num:3levels lod:2 mindist
-			cb.lodmaxdist[2][1] = g_lodrate3L[1] * g_projfar;//num:3levels lod:2 maxdist
-			cb.lodmindist[2][2] = g_lodrate3L[1] * g_projfar;//num:3levels lod:3 mindist
-			cb.lodmaxdist[2][2] = g_lodrate3L[2] * g_projfar;//num:3levels lod:3 maxdist
+		cb.lodmindist[2][0] = 0.0f;                      //num:3levels lod1 mindist
+		cb.lodmaxdist[2][0] = g_lodrate3L[0] * g_projfar;//num:3levels lod1 maxdist
+		cb.lodmindist[2][1] = g_lodrate3L[0] * g_projfar;//num:3levels lod:2 mindist
+		cb.lodmaxdist[2][1] = g_lodrate3L[1] * g_projfar;//num:3levels lod:2 maxdist
+		cb.lodmindist[2][2] = g_lodrate3L[1] * g_projfar;//num:3levels lod:3 mindist
+		cb.lodmaxdist[2][2] = g_lodrate3L[2] * g_projfar;//num:3levels lod:3 maxdist
 
-			cb.lodmindist[3][0] = 0.0f;                      //num:4levels lod1 mindist
-			cb.lodmaxdist[3][0] = g_lodrate4L[0] * g_projfar;//num:4levels lod1 maxdist
-			cb.lodmaxdist[3][0] = g_lodrate4L[0] * g_projfar;//num:4levels lod1 maxdist
-			cb.lodmindist[3][1] = g_lodrate4L[0] * g_projfar;//num:4levels lod:2 mindist
-			cb.lodmaxdist[3][1] = g_lodrate4L[1] * g_projfar;//num:4levels lod:2 maxdist
-			cb.lodmindist[3][2] = g_lodrate4L[1] * g_projfar;//num:4levels lod:3 mindist
-			cb.lodmaxdist[3][2] = g_lodrate4L[2] * g_projfar;//num:4levels lod:3 maxdist
-			cb.lodmindist[3][3] = g_lodrate4L[2] * g_projfar;//num:4levels lod:3 mindist
-			cb.lodmaxdist[3][3] = g_lodrate4L[3] * g_projfar;//num:4levels lod:3 maxdist
-
-
-			ChaVector3 lightpos;
-			if (g_cameraShadow) {
-				lightpos = ChaVector3(g_cameraShadow->GetPosition());
-			}
-			else {
-				lightpos = g_camEye;
-			}
-			cb.shadowPos[0] = lightpos.x;
-			cb.shadowPos[1] = lightpos.y;
-			cb.shadowPos[2] = lightpos.z;
-			cb.shadowPos[3] = 1.0f;
-			cb.shadowparams1[0] = (float)cos(g_shadowmap_fov[g_shadowmap_slotno]);
-			cb.shadowparams1[1] = g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
-	
-			ChaMatrix mWVP = chkMatWorld * m_matVP;
-			GetFrustumPlanes(mWVP, &(cb.frustumPlanes[0][0]));
-			GetFrustumCorners(mWVP, &(cb.frustumCorners[0][0]));
-
-			Matrix shadowvp;
-			shadowvp = g_cameraShadow->GetViewProjectionMatrix();
-			ChaMatrix chashadowwvp = chkMatWorld * ChaMatrix(shadowvp);//2024/04/09 chkMatWorld * 
-			GetFrustumPlanes(chashadowwvp, &(cb.shadowPlanes[0][0]));
-			GetFrustumCorners(chashadowwvp, &(cb.shadowCorners[0][0]));
-
-			//#######################
-			//コンピュートシェーダで実行
-			//#######################
-			m_chkinview->ComputeChkInView(cb);
+		cb.lodmindist[3][0] = 0.0f;                      //num:4levels lod1 mindist
+		cb.lodmaxdist[3][0] = g_lodrate4L[0] * g_projfar;//num:4levels lod1 maxdist
+		cb.lodmaxdist[3][0] = g_lodrate4L[0] * g_projfar;//num:4levels lod1 maxdist
+		cb.lodmindist[3][1] = g_lodrate4L[0] * g_projfar;//num:4levels lod:2 mindist
+		cb.lodmaxdist[3][1] = g_lodrate4L[1] * g_projfar;//num:4levels lod:2 maxdist
+		cb.lodmindist[3][2] = g_lodrate4L[1] * g_projfar;//num:4levels lod:3 mindist
+		cb.lodmaxdist[3][2] = g_lodrate4L[2] * g_projfar;//num:4levels lod:3 maxdist
+		cb.lodmindist[3][3] = g_lodrate4L[2] * g_projfar;//num:4levels lod:3 mindist
+		cb.lodmaxdist[3][3] = g_lodrate4L[3] * g_projfar;//num:4levels lod:3 maxdist
 
 
-
-			int objnum = 0;
-			int inviewnum = 0;
-			int inshadownum = 0;
-			map<int, CMQOObject*>::iterator itr;
-			for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-				CMQOObject* curobj = itr->second;
-				if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
-
-
-					//##################################
-					//コンピュートシェーダによる計算結果を取得
-					//##################################
-					CSInView csresult = m_chkinview->GetResultOfChkInView(curobj);
-
-
-					if (csresult.inview[0] == 1) {
-						curobj->SetInView(true, refposindex);
-						inviewnum++;//!!!!!
-					}
-					else {
-						curobj->SetInView(false, refposindex);
-					}
-					if (csresult.inview[1] == 1) {
-						curobj->SetInShadow(true, refposindex);
-						inshadownum++;//!!!!!
-					}
-					else {
-						curobj->SetInShadow(false, refposindex);
-					}
-
-					objnum++;
-				}
-			}
-
-			if (inviewnum != 0) {
-				SetInView(true, refposindex);//メッシュ１つでも視野内にある場合には　モデルとして視野内のマークをする
-			}
-			else {
-				SetInView(false, refposindex);//全てのメッシュが視野外の場合　モデルとして視野外のマークをする
-			}
-			if (inshadownum != 0) {
-				SetInShadow(true, refposindex);
-			}
-			else {
-				SetInShadow(false, refposindex);
-			}
+		ChaVector3 lightpos;
+		if (g_cameraShadow) {
+			lightpos = ChaVector3(g_cameraShadow->GetPosition());
 		}
 		else {
-			//skyは視野内の一番遠く
+			lightpos = g_camEye;
+		}
+		cb.shadowPos[0] = lightpos.x;
+		cb.shadowPos[1] = lightpos.y;
+		cb.shadowPos[2] = lightpos.z;
+		cb.shadowPos[3] = 1.0f;
+		cb.shadowparams1[0] = (float)cos(g_shadowmap_fov[g_shadowmap_slotno]);
+		cb.shadowparams1[1] = g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
+	
+		ChaMatrix mWVP = chkMatWorld * m_matVP;
+		GetFrustumPlanes(mWVP, &(cb.frustumPlanes[0][0]));
+		GetFrustumCorners(mWVP, &(cb.frustumCorners[0][0]));
 
-			SetInView(true, refposindex);
-			SetInShadow(false, refposindex);
+		Matrix shadowvp;
+		shadowvp = g_cameraShadow->GetViewProjectionMatrix();
+		ChaMatrix chashadowwvp = chkMatWorld * ChaMatrix(shadowvp);//2024/04/09 chkMatWorld * 
+		GetFrustumPlanes(chashadowwvp, &(cb.shadowPlanes[0][0]));
+		GetFrustumCorners(chashadowwvp, &(cb.shadowCorners[0][0]));
 
-			map<int, CMQOObject*>::iterator itr;
-			for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-				CMQOObject* curobj = itr->second;
-				if (curobj) {
+		//#######################
+		//コンピュートシェーダで実行
+		//#######################
+		m_chkinview->ComputeChkInView(cb);
+
+
+
+		int objnum = 0;
+		int inviewnum = 0;
+		int inshadownum = 0;
+		map<int, CMQOObject*>::iterator itr;
+		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+			CMQOObject* curobj = itr->second;
+			if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
+
+
+				//##################################
+				//コンピュートシェーダによる計算結果を取得
+				//##################################
+				CSInView csresult = m_chkinview->GetResultOfChkInView(curobj);
+
+
+				if (csresult.inview[0] == 1) {
 					curobj->SetInView(true, refposindex);
+					inviewnum++;//!!!!!
 				}
+				else {
+					curobj->SetInView(false, refposindex);
+				}
+				if (csresult.inview[1] == 1) {
+					curobj->SetInShadow(true, refposindex);
+					inshadownum++;//!!!!!
+				}
+				else {
+					curobj->SetInShadow(false, refposindex);
+				}
+
+				objnum++;
 			}
-			SetDistChkInView(0.0f, refposindex);//2024/03/25 skyは不透明描画時にソートする際に一番最初になるように
+		}
+
+		if (inviewnum != 0) {
+			SetInView(true, refposindex);//メッシュ１つでも視野内にある場合には　モデルとして視野内のマークをする
+		}
+		else {
+			SetInView(false, refposindex);//全てのメッシュが視野外の場合　モデルとして視野外のマークをする
+		}
+		if (inshadownum != 0) {
+			SetInShadow(true, refposindex);
+		}
+		else {
+			SetInShadow(false, refposindex);
 		}
 	}
 
