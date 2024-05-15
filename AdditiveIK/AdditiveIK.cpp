@@ -11460,7 +11460,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	else {
 		s_model = newmodel;
 
-		if (callfromcha == false) {//chaファイル読込時にはChaFile内でCGrassElemを作成してセットする
+		if (srcgrassflag && (callfromcha == false)) {//chaファイル読込時にはChaFile内でCGrassElemを作成してセットする
 			CGrassElem* newgrasselem = new CGrassElem(newmodel);
 			if (!newgrasselem) {
 				_ASSERT(0);
@@ -15765,7 +15765,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.20\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.21\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -48005,7 +48005,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.20 : No.%d : ", s_appcnt);
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.21 : No.%d : ", s_appcnt);
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -56298,7 +56298,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.20 : No.%d : ", s_appcnt);
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.21 : No.%d : ", s_appcnt);
 
 
 	if (s_model && s_chascene) {

@@ -2678,7 +2678,8 @@ int CModel::ComputeShapeDeformation(FbxNode* pNode, FbxMesh* pMesh, FbxTime& pTi
 }
 ***/
 
-int CModel::GetFBXShape( FbxMesh* pMesh, CMQOObject* curobj, FbxAnimLayer* panimlayer, double animleng, FbxTime starttime, FbxTime timestep )
+//int CModel::GetFBXShape( FbxMesh* pMesh, CMQOObject* curobj, FbxAnimLayer* panimlayer, double animleng, FbxTime starttime, FbxTime timestep )
+int CModel::GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj)//2024/05/16 morphAnimは別関数で
 {
 	int lVertexCount = pMesh->GetControlPointsCount();
 	if( lVertexCount != curobj->GetVertex() ){
@@ -2698,22 +2699,22 @@ int CModel::GetFBXShape( FbxMesh* pMesh, CMQOObject* curobj, FbxAnimLayer* panim
 			FbxBlendShapeChannel* lChannel = lBlendShape->GetBlendShapeChannel(lChannelIndex);
 			if(lChannel)
 			{
-				FbxTime curtime = starttime;
-				double framecnt;
-				for( framecnt = 0.0; framecnt < animleng; framecnt+=1.0 ){
-					FbxAnimCurve* lFCurve;
-					double lWeight = 0.0;
-					lFCurve = pMesh->GetShapeChannel(lBlendShapeIndex, lChannelIndex, panimlayer);
-					if (lFCurve){
-						lWeight = lFCurve->Evaluate( curtime );
-					}else{
-						curtime += timestep;
-						continue;
-					}
-					if( lWeight == 0.0 ){
-						curtime += timestep;
-						continue;
-					}
+				//FbxTime curtime = starttime;
+				//double framecnt;
+				//for( framecnt = 0.0; framecnt < animleng; framecnt+=1.0 ){
+				//	FbxAnimCurve* lFCurve;
+				//	double lWeight = 0.0;
+				//	lFCurve = pMesh->GetShapeChannel(lBlendShapeIndex, lChannelIndex, panimlayer);
+				//	if (lFCurve){
+				//		lWeight = lFCurve->Evaluate( curtime );
+				//	}else{
+				//		curtime += timestep;
+				//		continue;
+				//	}
+				//	if( lWeight == 0.0 ){
+				//		curtime += timestep;
+				//		continue;
+				//	}
 						
 					int lShapeIndex = 0;
 					FbxShape* lShape = NULL;
@@ -2739,8 +2740,8 @@ int CModel::GetFBXShape( FbxMesh* pMesh, CMQOObject* curobj, FbxAnimLayer* panim
 							}						
 						}
 					}
-					curtime += timestep;
-				}
+				//	curtime += timestep;
+				//}
 			}//If lChannel is validf
 		}//For each blend shape channel
 	}//For each blend shape deformer
@@ -4316,6 +4317,12 @@ int CModel::CreateFBXMeshReq( FbxNode* pNode)
 					if (shapecnt > 0){
 						sprintf_s(mes, 256, "%s, shapecnt %d", pNode->GetName(), shapecnt);
 						//MessageBoxA(NULL, mes, "check", MB_OK);
+
+						//int resultshape = GetFBXShape(pNode->GetMesh(), newobj);
+						//if (resultshape) {
+						//	_ASSERT(0);
+						//	return 0;
+						//}
 					}
 				}
 				break;
@@ -4385,7 +4392,8 @@ int CModel::CreateFBXShape( FbxAnimLayer* panimlayer, double animleng, FbxTime s
 			if (curmesh && curobj) {
 				int shapecnt = curmesh->GetShapeCount();
 				if (shapecnt > 0) {
-					CallF(GetFBXShape((FbxMesh*)curmesh, curobj, panimlayer, animleng, starttime, timestep), return 1);
+					//CallF(GetFBXShape((FbxMesh*)curmesh, curobj, panimlayer, animleng, starttime, timestep), return 1);
+					CallF(GetFBXShape((FbxMesh*)curmesh, curobj), return 1);
 				}
 			}
 		}

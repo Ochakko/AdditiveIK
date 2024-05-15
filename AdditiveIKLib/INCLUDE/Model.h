@@ -1156,7 +1156,8 @@ private:
 	ChaMatrix CalcGlobalMeshMat(FbxNode* pNode, double srctime);
 	ChaMatrix CalcLocalMeshMat(FbxNode* pNode, double srctime);
 	void CalcMeshMatReq(FbxNode* pNode, double srctime, ChaMatrix* pmeshmat);
-	int GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj, FbxAnimLayer* panimlayer, double animleng, FbxTime starttime, FbxTime timestep );
+	//int GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj, FbxAnimLayer* panimlayer, double animleng, FbxTime starttime, FbxTime timestep );
+	int GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj);//2024/05/16 morphAnimは別関数で
 	//int ComputeShapeDeformation(FbxNode* pNode, FbxMesh* pMesh, FbxTime& pTime, FbxAnimLayer * pAnimLayer, CMQOObject* curobj, char* takename );
 	//int ComputeShapeDeformation2(FbxNode* pNode, FbxMesh* pMesh, FbxTime& pTime, FbxAnimLayer * pAnimLayer, CMQOObject* curobj, char* takename );
 
