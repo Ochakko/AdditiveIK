@@ -3,8 +3,8 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
-2024/05/14
-　AdditiveIK 1.0.0.20 RC3(リリース候補3)
+2024/05/15
+　AdditiveIK 1.0.0.20 release
 　　1.0.0.19からの変更点
 　　　Pick&Setの高速化
 　　　　詳細判定の前にバウンダリーで粗く判定
