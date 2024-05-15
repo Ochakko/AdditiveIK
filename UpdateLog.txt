@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/05/16
-　AdditiveIK 1.0.0.21 RC1(リリース候補1)
+　AdditiveIK 1.0.0.21 release
 　　1.0.0.20からの変更点
 　　　不具合修正
 　　　　chaファイル以外から読み込んだfbxが全て草として扱われてしまう不具合を修正
