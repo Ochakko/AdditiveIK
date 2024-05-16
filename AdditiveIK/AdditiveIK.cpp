@@ -3508,6 +3508,11 @@ INT WINAPI wWinMain(
 	//_CrtSetBreakAlloc(105698);
 	//_CrtSetBreakAlloc(105694);
 
+	//_CrtSetBreakAlloc(2719566);
+	//_CrtSetBreakAlloc(2547422);
+	//_CrtSetBreakAlloc(2540616);
+
+
 	SetBaseDir();
 
 	LoadIniFile();
@@ -6599,7 +6604,7 @@ void OnDestroyDevice()
 	//DestroySdkObjects();
 
 
-	DestroySavedScene();//2024/02/10
+	//DestroySavedScene();//2024/02/10
 
 
 	if (s_psdk) {
@@ -11567,7 +11572,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	}
 
 	//CallF( s_model->LoadFBXAnim( s_psdk, pImporter, pScene, OnAddMotion ), return 0 );
-	CallF(s_model->LoadFBXAnim(s_psdk, pImporter, pScene, NULL, motioncachebatchflag), return 0);
+	CallF(s_model->LoadFBXAnim(s_psdk, pScene, NULL, motioncachebatchflag), return 0);
 	//if( (int)s_modelindex.size() >= 2 )
 	//	_ASSERT( 0 );
 
@@ -48005,7 +48010,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.21 : No.%d : ", s_appcnt);
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.22 : No.%d : ", s_appcnt);
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -56298,7 +56303,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.21 : No.%d : ", s_appcnt);
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.22 : No.%d : ", s_appcnt);
 
 
 	if (s_model && s_chascene) {

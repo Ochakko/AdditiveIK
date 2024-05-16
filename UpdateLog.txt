@@ -1,6 +1,16 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2024/05/17
+　BlendShape(モーフ)対応開始
+　　まずはBlendShapeが設定されているVRoid(fbx)の読み込みと書き出し
+　　読み込んで書き出してもBlendShape情報が失われなくなった
+　　VRoid(fbx)のFaceの57個のShapeの内、目と口にモーションを付けたものを読み書きテストOK(Maya2024で読込再生確認)
+
+　　BlendShapeの再生と編集はまだ出来ない
+
+
+
 
 2024/05/16
 　AdditiveIK 1.0.0.21 release

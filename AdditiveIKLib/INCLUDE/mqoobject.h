@@ -382,6 +382,16 @@ public:
 	void GetShapeVert2( std::map<std::string,ChaVector3*>& dstmap ){
 		dstmap = m_shapevert;
 	};
+	std::string GetShapeName(int srcindex) {
+		int namenum = (int)m_shapenamevec.size();
+		if ((srcindex >= 0) && (srcindex < namenum)) {
+			return m_shapenamevec[srcindex];
+		}
+		else {
+			_ASSERT(0);
+			return "error";
+		}
+	}
 
 	ChaMatrix GetMeshMat()
 	{
@@ -516,6 +526,7 @@ private:
 
 	std::map<std::string,int> m_findshape;
 	std::map<std::string,ChaVector3*> m_shapevert;
+	std::vector<std::string> m_shapenamevec;
 
 	FbxNode* m_pnode;
 

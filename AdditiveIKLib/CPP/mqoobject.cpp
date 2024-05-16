@@ -160,11 +160,6 @@ void CMQOObject::DestroySystemDispObj()
 		m_uvbuf1 = 0;
 	}
 
-	if (m_mpoint) {
-		free(m_mpoint);
-		m_mpoint = 0;
-	}
-
 }
 
 
@@ -179,8 +174,14 @@ int CMQOObject::DestroyShapeObj()
 	}
 	m_shapevert.clear();
 	m_shapeweight.clear();
-
+	m_shapenamevec.clear();
 	m_findshape.clear();
+
+
+	if (m_mpoint) {
+		free(m_mpoint);
+		m_mpoint = 0;
+	}
 
 	return 0;
 }
@@ -275,6 +276,10 @@ void CMQOObject::InitParams()
 		m_frustum[index0].InitParams();
 	}
 
+	m_shapevert.clear();
+	m_shapeweight.clear();
+	m_shapenamevec.clear();
+	m_findshape.clear();
 
 //	next = 0;
 }
@@ -2679,14 +2684,23 @@ int CMQOObject::SetShapeWeight( char* nameptr, float srcweight )
 
 int CMQOObject::AddShapeName( char* nameptr )
 {
-	if( !m_mpoint ){
-		m_mpoint = (ChaVector3*)malloc( sizeof( ChaVector3 ) * m_vertex );
-		if( !m_mpoint ){
-			_ASSERT( 0 );
+	if (!nameptr) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	if (!m_mpoint) {
+		//合成結果をCPUで保持していた頃のメモリ
+		m_mpoint = (ChaVector3*)malloc(sizeof(ChaVector3) * m_vertex);
+		if (!m_mpoint) {
+			_ASSERT(0);
 			return 1;
 		}
-		ZeroMemory( m_mpoint, sizeof( ChaVector3 ) * m_vertex );
+		ZeroMemory(m_mpoint, sizeof(ChaVector3) * m_vertex);
 	}
+
+
+	m_shapenamevec.push_back(nameptr);
 
 	map<string,int>::iterator itrfind;
 	itrfind = m_findshape.find( nameptr );

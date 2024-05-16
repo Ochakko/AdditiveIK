@@ -73,11 +73,13 @@ typedef struct tag_blsinfo
 	FbxNode* basenode;
 	CMQOObject* base;
 	string targetname;
+	string channelname;
 	tag_blsinfo() : blsindex() {
 		//blsindex.Init();
 		basenode = 0;
 		base = 0;
 		targetname.clear();
+		channelname.clear();
 	};
 }BLSINFO;
 static map<int, BLSINFO> s_blsinfo;
@@ -131,7 +133,8 @@ static int s_bvhjointnum = 0;
 static int s_firstoutmot;
 
 //static void CreateSaveNode2BoneReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* ploadnode, FbxNode* parentskelnode);
-static void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* pmodel, FbxNode* psavenode, CNodeOnLoad* ploadnode);
+static void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* pmodel, 
+	FbxNode* psavenode, CNodeOnLoad* ploadnode, BLSINDEX* blsindex);
 static int CopyNodePosture(FbxNode* srcnode, FbxNode* psavenode);
 static void CreateSkinMeshReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* pmodel, FbxNode* psavenode, CNodeOnLoad* ploadnode);
 
@@ -151,7 +154,8 @@ static bool SaveScene(FbxManager* pSdkManager, FbxDocument* pScene, const char* 
 
 static bool CreateScene(bool limitdegflag, FbxManager* pSdkManager, FbxScene* pScene, CModel* pmodel, char* fbxdate );
 static bool CreateBVHScene(FbxManager* pSdkManager, FbxScene* pScene, char* fbxdate );
-static FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene, CModel* pmodel, CMQOObject* curobj, FbxNode* lNode, FbxNode* srcnode);
+static FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene, CModel* pmodel, CMQOObject* curobj, 
+	FbxNode* lNode, FbxNode* srcnode, BLSINDEX* blsindex);
 static int CreateFbxMaterial(FbxManager* pSdkManager, FbxScene* pScene, FbxNode* lNode, 
 	FbxMesh* lLoadMesh, FbxMesh* lMesh, 
 	CModel* pmodel, CMQOObject* curobj);
@@ -195,8 +199,9 @@ static FbxTexture*  CreateTexture( FbxManager* pSdkManager, CModel* srcmodel, CM
 
 static int ExistBoneInInf( int boneno, CMQOObject* srcobj, int* dstclusterno );
 
-static int MapShapesOnMesh( FbxScene* pScene, FbxNode* pNode, CModel* pmodel, CMQOObject* curobj, BLSINDEX* blsindex );
-static int MapTargetShape( FbxBlendShapeChannel* lBlendShapeChannel, FbxScene* pScene, CMQOObject* curobj, ChaVector3* targetv, int targetcnt );
+static int MapShapesOnMesh( FbxScene* pScene, FbxNode* lNode, FbxNode* srcnode, CModel* pmodel, CMQOObject* curobj, BLSINDEX* blsindex );
+static int MapTargetShape( FbxBlendShapeChannel* lBlendShapeChannel, FbxScene* pScene, 
+	CMQOObject* curobj, ChaVector3* targetv, string targetname, int targetcnt );
 
 static void CreateDummyInfDataReq(CFBXBone* fbxbone, FbxManager*& pSdkManager, FbxScene*& pScene, FbxNode* lMesh, FbxSkin* lSkin, CBone** ppsetbone, int* bonecnt);
 static FbxNode* CreateDummyFbxMesh(FbxManager* pSdkManager, FbxScene* pScene, CBone** ppsetbone);
@@ -510,6 +515,10 @@ int WriteFBXFile(bool limitdegflag, FbxManager* psdk, CModel* pmodel, char* pfil
 		s_fbxbone = 0;
 	}
 
+	if (lScene) {
+		lScene->Destroy(true);
+		lScene = nullptr;
+	}
 
 	g_underWriteFbx = false;
 
@@ -839,7 +848,8 @@ int CopyNodePosture(FbxNode* srcnode, FbxNode* psavenode)
 }
 
 
-void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* pmodel, FbxNode* psaveparentnode, CNodeOnLoad* ploadnode)
+void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* pmodel, 
+	FbxNode* psaveparentnode, CNodeOnLoad* ploadnode, BLSINDEX* blsindex)
 {
 	if (!pSdkManager || !pScene || !pmodel || !ploadnode) {
 		_ASSERT(0);
@@ -930,7 +940,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 
 				CMQOObject* curobj = ploadnode->GetMqoObject();
 				if (curobj) {
-					CreateFbxMesh(pSdkManager, pScene, pmodel, curobj, psavenode, srcnode);
+					CreateFbxMesh(pSdkManager, pScene, pmodel, curobj, psavenode, srcnode, blsindex);
 				}
 			}
 			break;
@@ -1235,6 +1245,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			break;
 			case FbxNodeAttribute::eShape:
 			{
+				//2024/05/16　BlendShapeはここを通らなかった　eMesh書き出し時に書き出すことに
 				psavenode = FbxNode::Create(pScene, nodename);
 				if (!psavenode) {
 					_ASSERT(0);
@@ -1413,7 +1424,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 			if (ploadchild) {
 				FbxNode* pChildOnLoad = ploadchild->GetNode();
 				if (pChildOnLoad) {
-					CreateAndCopyFbxNodeReq(pSdkManager, pScene, pmodel, psavenode, ploadchild);					
+					CreateAndCopyFbxNodeReq(pSdkManager, pScene, pmodel, psavenode, ploadchild, blsindex);					
 				}
 			}
 		}
@@ -1770,7 +1781,10 @@ bool CreateScene(bool limitdegflag, FbxManager* pSdkManager, FbxScene* pScene, C
 	//	////lRootNode->AddChild(rootonload->GetNode());
 	//}
 
-	CreateAndCopyFbxNodeReq(pSdkManager, pScene, pmodel, lRootNode, pmodel->GetNodeOnLoad());
+	BLSINDEX blsindex;
+	ZeroMemory(&blsindex, sizeof(BLSINDEX));
+	s_blsinfo.clear();
+	CreateAndCopyFbxNodeReq(pSdkManager, pScene, pmodel, lRootNode, pmodel->GetNodeOnLoad(), &blsindex);
 
 
 	//s_firsttopbone = lRootNode->GetChild(0);//rootの最初の子供
@@ -1784,7 +1798,7 @@ bool CreateScene(bool limitdegflag, FbxManager* pSdkManager, FbxScene* pScene, C
 
 
 	AnimateSkeleton(limitdegflag, pScene, pmodel);
-	//AnimateMorph(pScene, pmodel);
+	AnimateMorph(pScene, pmodel);
 
 	//if (pmodel && (pmodel->GetFromNoBindPoseFlag() == false)) {
 	if (pmodel && ((pmodel->GetHasBindPose() != 0) && (pmodel->GetFromNoBindPoseFlag() == false))) {//2023/05/11
@@ -1972,33 +1986,63 @@ bool CreateScene(bool limitdegflag, FbxManager* pSdkManager, FbxScene* pScene, C
 
 //void MapBoxShape(FbxScene* pScene, FbxBlendShapeChannel* lBlendShapeChannel)
 //int MapTargetShape( FbxBlendShapeChannel* lBlendShapeChannel, FbxScene* pScene, CMQOObject* curobj, CMQOObject* curtarget, MATERIALBLOCK* pmb, int mbno )
-int MapTargetShape( FbxBlendShapeChannel* lBlendShapeChannel, FbxScene* pScene, CMQOObject* curobj, ChaVector3* targetv, int targetcnt )
+int MapTargetShape( FbxBlendShapeChannel* lBlendShapeChannel, FbxScene* pScene, 
+	CMQOObject* curobj, ChaVector3* targetv, string targetname, int targetcnt )
 {
 	char shapename[256]={0};
-	char tmpname[256] = { 0 };
-	strcpy_s(tmpname, 256, curobj->GetEngName());
-	char* underbar = strchr(tmpname, '_');
-	if (underbar) {
-		*underbar = 0;
-		sprintf_s(shapename, 256, "SHAPE_%s_%d", tmpname, targetcnt);
+	//char tmpname[256] = { 0 };
+	//strcpy_s(tmpname, 256, curobj->GetEngName());
+	//char* underbar = strchr(tmpname, '_');
+	//if (underbar) {
+	//	*underbar = 0;
+	//	sprintf_s(shapename, 256, "SHAPE_%s_%d", tmpname, targetcnt);
+	//}
+	//else {
+	//	sprintf_s(shapename, 256, "SHAPE_%s_%d", curobj->GetEngName(), targetcnt);
+	//}
+
+	strcpy_s(shapename, 256, targetname.c_str());
+
+	//if (strcmp(shapename, "Fcl_ALL_Angry") == 0) {
+	//	int dbgflag1 = 1;
+	//}
+	//if (strcmp(shapename, "Fcl_ALL_Fun") == 0) {
+	//	int dbgflag2 = 1;
+	//}
+	
+
+	FbxShape* lShape = FbxShape::Create(pScene,shapename);
+	
+	//CPolyMesh4* basepm4 = curobj->GetPm4();
+	//_ASSERT( basepm4 );
+	//int shapevertnum = basepm4->GetFaceNum() * 3;
+
+
+	int shapevertnum = 0;
+	if (curobj->GetPm4()) {
+		shapevertnum = curobj->GetPm4()->GetOrgPointNum();//2024/05/16
+	}
+	else if (curobj->GetPm3()) {
+		shapevertnum = curobj->GetPm3()->GetOrgPointNum();//2024/05/16
 	}
 	else {
-		sprintf_s(shapename, 256, "SHAPE_%s_%d", curobj->GetEngName(), targetcnt);
+		_ASSERT(0);
+		return 1;
 	}
-    FbxShape* lShape = FbxShape::Create(pScene,shapename);
 
-	CPolyMesh4* basepm4 = curobj->GetPm4();
-	_ASSERT( basepm4 );
-
-	int shapevertnum = basepm4->GetFaceNum() * 3;
-	lShape->InitControlPoints( shapevertnum );
+	lShape->InitControlPoints(shapevertnum);
+	lShape->InitBinormals();
+	lShape->InitNormals();
+	lShape->InitTangents();
     FbxVector4* lVector4 = lShape->GetControlPoints();
 
 	int shapevno;
 	for( shapevno = 0; shapevno < shapevertnum; shapevno++ ){
-		int orgvno = *( basepm4->GetDispIndex() + shapevno );
+		//int orgvno = *( basepm4->GetDispIndex() + shapevno );
+		//ChaVector3 shapev = *( targetv + orgvno );
 
-		ChaVector3 shapev = *( targetv + orgvno );
+		ChaVector3 shapev = *(targetv + shapevno);//2024/05/16
+
 		lVector4[ shapevno ].Set( shapev.x, shapev.y, shapev.z, 1.0 );
 	}
 	lBlendShapeChannel->AddTargetShape(lShape);
@@ -2006,73 +2050,149 @@ int MapTargetShape( FbxBlendShapeChannel* lBlendShapeChannel, FbxScene* pScene, 
 }
 
 
-int MapShapesOnMesh( FbxScene* pScene, FbxNode* pNode, CModel* pmodel, CMQOObject* curobj, BLSINDEX* blsindex )
+int MapShapesOnMesh(FbxScene* pScene, FbxNode* lNode, FbxNode* srcnode, CModel* pmodel, CMQOObject* curobj, BLSINDEX* blsindex)
 {
-	char blsname[256] = {0};
+	char blsname[256] = { 0 };
 	int mbno = 0;//mqoでつかう
 
-	char tmpname[256] = { 0 };
-	strcpy_s(tmpname, 256, curobj->GetEngName());
-	char* underbar = strchr(tmpname, '_');
-	if (underbar) {
-		*underbar = 0;
-		sprintf_s(blsname, 256, "BLS_%s_%d", tmpname, mbno);
-	}
-	else {
-		sprintf_s(blsname, 256, "BLS_%s_%d", curobj->GetEngName(), mbno);
-	}
+	//char tmpname[256] = { 0 };
+	//strcpy_s(tmpname, 256, curobj->GetEngName());
+	//char* underbar = strchr(tmpname, '_');
+	//if (underbar) {
+	//	*underbar = 0;
+	//	sprintf_s(blsname, 256, "BLS_%s_%d", tmpname, mbno);
+	//}
+	//else {
+	//	sprintf_s(blsname, 256, "BLS_%s_%d", curobj->GetEngName(), mbno);
+	//}
 	//sprintf_s( blsname, 256, "BLS_%s_%d", curobj->GetEngName(), mbno );
-	FbxBlendShape* lBlendShape = FbxBlendShape::Create(pScene, blsname);
 
-	(blsindex->channelno) = 0;
-
-	int targetcnt = 0;
-	map<string,ChaVector3*> tmpmap;
-	curobj->GetShapeVert2( tmpmap );
-	map<string,ChaVector3*>::iterator itrshapev;
-	for( itrshapev = tmpmap.begin(); itrshapev != tmpmap.end(); itrshapev++ ){
-		string targetname = itrshapev->first;
-		ChaVector3* curv = itrshapev->second;
-		if( curv ){
-			string curshapename = itrshapev->first;
-
-			char blscname[256] = {0};
-			strcpy_s( blscname, 256, curshapename.c_str() );
-			FbxBlendShapeChannel* lBlendShapeChannel = FbxBlendShapeChannel::Create(pScene,blscname);
-			MapTargetShape( lBlendShapeChannel, pScene, curobj, curv, targetcnt );
-			lBlendShape->AddBlendShapeChannel(lBlendShapeChannel);
+	strcpy_s(blsname, 256, curobj->GetEngName());
 
 
-			BLSINFO blsinfo;
-			ZeroMemory( &blsinfo, sizeof( BLSINFO ) );
+	FbxBlendShape* srcBlendShape = (FbxBlendShape*)srcnode->GetMesh()->GetDeformer(0, FbxDeformer::eBlendShape);
+	if (srcBlendShape) {
 
-			blsinfo.blsindex = *blsindex;
-			blsinfo.base = curobj;
-			blsinfo.targetname = targetname;
-			blsinfo.basenode = pNode;
+		//FbxBlendShape* lBlendShape = FbxBlendShape::Create(pScene, blsname);
+		FbxBlendShape* lBlendShape = FbxBlendShape::Create(lNode, blsname);
 
-			s_blsinfo[ blsindex->serialno ] = blsinfo;
+		(blsindex->channelno) = 0;
 
-			(blsindex->channelno)++;
-			(blsindex->serialno)++;
+		
+		int targetcnt = 0;
+		map<string, ChaVector3*> tmpmap;
+		curobj->GetShapeVert2(tmpmap);
+		int targetnum = (int)tmpmap.size();
+		for (targetcnt = 0; targetcnt < targetnum; targetcnt++) {//mapはアルファベットソートされるのでvectorのGetShapeNameの順番でループする
+			string targetname = curobj->GetShapeName(targetcnt);
+			ChaVector3* curv = tmpmap[targetname];
+			if (curv) {
+				FbxBlendShapeChannel* srcChannel = srcBlendShape->GetBlendShapeChannel(blsindex->channelno);
+				char channelname[256] = { 0 };
+				strcpy_s(channelname, 256, srcChannel->GetName());
 
-			targetcnt++;
+
+				FbxBlendShapeChannel* lBlendShapeChannel = FbxBlendShapeChannel::Create(pScene, channelname);
+				lBlendShape->AddBlendShapeChannel(lBlendShapeChannel);
+
+				MapTargetShape(lBlendShapeChannel, pScene, curobj, curv, targetname, targetcnt);
+
+				BLSINFO blsinfo;
+				ZeroMemory(&blsinfo, sizeof(BLSINFO));
+
+				blsinfo.blsindex = *blsindex;
+				blsinfo.base = curobj;
+				blsinfo.targetname = targetname;
+				blsinfo.channelname = channelname;
+				blsinfo.basenode = srcnode;//load側のノードにモーションが入っている
+
+				s_blsinfo[blsindex->serialno] = blsinfo;
+
+				(blsindex->channelno)++;
+				(blsindex->serialno)++;
+
+			}
 		}
+
+		FbxGeometry* lGeometry = lNode->GetGeometry();
+		lGeometry->AddDeformer(lBlendShape);
 	}
 
-
-	FbxGeometry* lGeometry = pNode->GetGeometry();
-	lGeometry->AddDeformer(lBlendShape);
 	return 0;
 };
 
+
+//int MapShapesOnMesh( FbxScene* pScene, FbxNode* pNode, CModel* pmodel, CMQOObject* curobj, BLSINDEX* blsindex )
+//{
+//	char blsname[256] = {0};
+//	int mbno = 0;//mqoでつかう
+//
+//	//char tmpname[256] = { 0 };
+//	//strcpy_s(tmpname, 256, curobj->GetEngName());
+//	//char* underbar = strchr(tmpname, '_');
+//	//if (underbar) {
+//	//	*underbar = 0;
+//	//	sprintf_s(blsname, 256, "BLS_%s_%d", tmpname, mbno);
+//	//}
+//	//else {
+//	//	sprintf_s(blsname, 256, "BLS_%s_%d", curobj->GetEngName(), mbno);
+//	//}
+//	//sprintf_s( blsname, 256, "BLS_%s_%d", curobj->GetEngName(), mbno );
+//
+//	strcpy_s(blsname, 256, curobj->GetEngName());
+//	FbxBlendShape* lBlendShape = FbxBlendShape::Create(pScene, blsname);
+//
+//	(blsindex->channelno) = 0;
+//
+//	int targetcnt = 0;
+//	map<string,ChaVector3*> tmpmap;
+//	curobj->GetShapeVert2( tmpmap );
+//	map<string,ChaVector3*>::iterator itrshapev;
+//	for( itrshapev = tmpmap.begin(); itrshapev != tmpmap.end(); itrshapev++ ){
+//		string targetname = itrshapev->first;
+//		ChaVector3* curv = itrshapev->second;
+//		if( curv ){
+//			//string curshapename = itrshapev->first;
+//			//char blscname[256] = {0};
+//			//strcpy_s( blscname, 256, curshapename.c_str() );
+//			//FbxBlendShapeChannel* lBlendShapeChannel = FbxBlendShapeChannel::Create(pScene,blscname);
+//
+//			FbxBlendShapeChannel* lBlendShapeChannel = FbxBlendShapeChannel::Create(pScene, targetname.c_str());
+//
+//			MapTargetShape(lBlendShapeChannel, pScene, curobj, curv, targetname, targetcnt);
+//			lBlendShape->AddBlendShapeChannel(lBlendShapeChannel);
+//
+//
+//			BLSINFO blsinfo;
+//			ZeroMemory( &blsinfo, sizeof( BLSINFO ) );
+//
+//			blsinfo.blsindex = *blsindex;
+//			blsinfo.base = curobj;
+//			blsinfo.targetname = targetname;
+//			blsinfo.basenode = pNode;
+//
+//			s_blsinfo[ blsindex->serialno ] = blsinfo;
+//
+//			(blsindex->channelno)++;
+//			(blsindex->serialno)++;
+//
+//			targetcnt++;
+//		}
+//	}
+//
+//
+//	FbxGeometry* lGeometry = pNode->GetGeometry();
+//	lGeometry->AddDeformer(lBlendShape);
+//	return 0;
+//};
+
 FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene, 
 	CModel* pmodel, CMQOObject* curobj, 
-	FbxNode* lNode, FbxNode* srcnode)
+	FbxNode* lNode, FbxNode* srcnode, BLSINDEX* blsindex)
 {
 	
 	if (!pSdkManager || !pScene || !pmodel || 
-		!curobj || !lNode ||!srcnode) {
+		!curobj || !lNode ||!srcnode || !blsindex) {
 		_ASSERT(0);
 		return lNode;
 	}
@@ -2316,8 +2436,15 @@ FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene,
 
 	}
 
-
 	lNode->SetNodeAttribute(lSaveMesh);
+
+
+	//2024/05/16 BlendShape
+	if (!(curobj->EmptyFindShape())) {
+		MapShapesOnMesh(pScene, lNode, srcnode, pmodel, curobj, blsindex);
+	}
+
+
 
 
 	return lNode;
@@ -4272,6 +4399,7 @@ int ExistBoneInInf( int boneno, CMQOObject* srcobj, int* dstclusterno )
 
 int AnimateMorph(FbxScene* pScene, CModel* pmodel)
 {
+	FbxString lAnimStackName;
     FbxTime lTime;
     int lKeyIndex = 0;
 
@@ -4287,50 +4415,74 @@ int AnimateMorph(FbxScene* pScene, CModel* pmodel)
 //	double timescale = 300.0;
 
 	int aino;
-	for( aino = 0; aino < s_ainum; aino++ ){
+	for (aino = 0; aino < s_ainum; aino++) {
 
 		ANIMINFO* curai = s_ai + aino;
 		int curmotid = curai->motid;
 		int maxframe = curai->maxframe;
 
-		FbxAnimStack * lCurrentAnimationStack = pmodel->GetScene()->FindMember<FbxAnimStack>(pmodel->GetAnimStackName( curai->orgindex )->Buffer());
-		if (lCurrentAnimationStack == NULL){
-			_ASSERT( 0 );
-			return 1;
-		}
-		//pmodel->GetScene()->GetEvaluator()->SetContext(lCurrentAnimationStack);
-		pmodel->GetScene()->SetCurrentAnimationStack(lCurrentAnimationStack);
 
+		lAnimStackName = curai->engmotname;
+
+		//###########################################################################
+		//FbxAnimStack, FbxAnimLayerはボーンモーション書き出し時に作成してs_aiに格納してある
+		//###########################################################################
+
+		//char layername[256];
+		//sprintf_s(layername, 256, "%sLayer%d", lAnimStackName.Buffer(), aino);//2021/08/26 GetBuffer()
+		//FbxAnimStack* lAnimStack = FbxAnimStack::Create(pScene, lAnimStackName);
+		//FbxAnimLayer* lAnimLayer = FbxAnimLayer::Create(pScene, layername);
+		////pmodel->GetScene()->GetEvaluator()->SetContext(lCurrentAnimationStack);
+		//pmodel->GetScene()->SetCurrentAnimationStack(lAnimStack);
+		//curai->animlayer = lAnimLayer;
+		////lAnimStack->AddMember(lAnimLayer);
+		//lAnimStack->AddMember(lAnimLayer);
+
+
+		pmodel->SetCurrentMotion(curmotid);
+		if (pmodel->IsCameraMotion(curmotid)) {//2023/06/21
+			pmodel->SetCameraMotionId(curmotid);
+		}
 
 
 		FbxAnimLayer* ldstAnimLayer = curai->animlayer;
 		map<int, BLSINFO>::iterator itrblsinfo;
 		for( itrblsinfo = s_blsinfo.begin(); itrblsinfo != s_blsinfo.end(); itrblsinfo++ ){
 			BLSINFO curinfo = itrblsinfo->second;
-			FbxGeometry* lAttribute = (FbxGeometry*)(curinfo.basenode)->GetNodeAttribute();
-			FbxAnimCurve* lCurve = lAttribute->GetShapeChannel(0, curinfo.blsindex.channelno, ldstAnimLayer, true);
-			if (lCurve)
-			{
-				lCurve->KeyModifyBegin();
+			FbxMesh* srcMesh = curinfo.basenode->GetMesh();//load側にモーションがセットしてある
+			CMQOObject* baseobj = curinfo.base;
+			//if (baseobj && !baseobj->EmptyFindShape()) {
+			if (baseobj) {
+				FbxNode* savenode = s_loadnode2savenode[curinfo.basenode];
+				if (savenode) {
+					FbxGeometry* lAttribute = (FbxGeometry*)(savenode)->GetNodeAttribute();
+					FbxAnimCurve* lCurve = lAttribute->GetShapeChannel(0, curinfo.blsindex.channelno, ldstAnimLayer, true);
+					if (lCurve)
+					{
+						lCurve->KeyModifyBegin();
 
-				int frameno;
-				for( frameno = 0; frameno <= maxframe; frameno++ ){
-					double dframe = (double)frameno;
-					float curweight = pmodel->GetTargetWeight( curmotid, dframe, timescale, curinfo.base, curinfo.targetname );
+						int frameno;
+						for (frameno = 0; frameno <= maxframe; frameno++) {
+							double dframe = (double)frameno;
+							//float curweight = pmodel->GetTargetWeight( curmotid, dframe, timescale, curinfo.base, curinfo.targetname );
+							float curweight = pmodel->GetTargetWeight(
+								curmotid, dframe, timescale, curinfo.base, curinfo.channelname, curinfo.blsindex.channelno, srcMesh);
 
-					lTime.SetSecondDouble( dframe / timescale);
-					lKeyIndex = lCurve->KeyAdd(lTime);
-					lCurve->KeySetValue(lKeyIndex, curweight);
-					lCurve->KeySetInterpolation(lKeyIndex, FbxAnimCurveDef::eInterpolationLinear);
+							lTime.SetSecondDouble(dframe / timescale);
+							lKeyIndex = lCurve->KeyAdd(lTime);
+							lCurve->KeySetValue(lKeyIndex, curweight);
+							lCurve->KeySetInterpolation(lKeyIndex, FbxAnimCurveDef::eInterpolationLinear);
 
-//if( aino == 0 ){
-//	WCHAR wtargetname[256]={0L};
-//	MultiByteToWideChar( CP_ACP, MB_PRECOMPOSED, (char*)curinfo.targetname.c_str(), 256, wtargetname, 256 );
-//	DbgOut( L"weight check !!! : target %s, frame %f, weight %f\r\n",
-//		wtargetname, dframe, curweight );
-//}
+							//if( aino == 0 ){
+							//	WCHAR wtargetname[256]={0L};
+							//	MultiByteToWideChar( CP_ACP, MB_PRECOMPOSED, (char*)curinfo.targetname.c_str(), 256, wtargetname, 256 );
+							//	DbgOut( L"weight check !!! : target %s, frame %f, weight %f\r\n",
+							//		wtargetname, dframe, curweight );
+							//}
+						}
+						lCurve->KeyModifyEnd();
+					}
 				}
-				lCurve->KeyModifyEnd();
 			}
 		}
 	}
@@ -6082,16 +6234,16 @@ void FindClusterBySkeletonReq(CNodeOnLoad* pnodeonload, FbxNode* pskeleton, FbxC
 	}
 }
 
-void DestroySavedScene()
-{
-	size_t savednum = s_savedscenevec.size();
-	size_t savedindex;
-	for (savedindex = 0; savedindex < savednum; savedindex++) {
-		FbxScene* lScene = s_savedscenevec[savedindex];
-		if (lScene) {
-			lScene->Destroy(true);
-			lScene = 0;
-		}
-	}
-	s_savedscenevec.clear();
-}
+//void DestroySavedScene()
+//{
+//	size_t savednum = s_savedscenevec.size();
+//	size_t savedindex;
+//	for (savedindex = 0; savedindex < savednum; savedindex++) {
+//		FbxScene* lScene = s_savedscenevec[savedindex];
+//		if (lScene) {
+//			lScene->Destroy(true);
+//			lScene = 0;
+//		}
+//	}
+//	s_savedscenevec.clear();
+//}

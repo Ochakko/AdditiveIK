@@ -285,7 +285,7 @@ public:
  * @return 成功したら０。
  * @detail LoadFBX呼び出しが成功した後でこの関数を呼び出す。
  */
-	int LoadFBXAnim( FbxManager* psdk, FbxImporter* pimporter, FbxScene* pscene, int (*tlfunc)( int srcmotid ), BOOL motioncachebatchflag);
+	int LoadFBXAnim( FbxManager* psdk, FbxScene* pscene, int (*tlfunc)( int srcmotid ), BOOL motioncachebatchflag);
 
 
 /**
@@ -923,8 +923,10 @@ public:
 	int MotionID2Index( int motid );
 	int MotionID2CameraIndex(int motid);
 	FbxAnimLayer* GetAnimLayer( int motid );
-	float GetTargetWeight( int motid, double dframe, double timescale, CMQOObject* baseobj, std::string targetname );
-
+	//float GetTargetWeight( int motid, double dframe, double timescale, CMQOObject* baseobj, std::string targetname );
+	float GetTargetWeight(
+		int motid, double dframe, double timescale,
+		CMQOObject* baseobj, std::string channelname, int channelindex, FbxMesh* srcMesh);
 
 	int SetFirstFrameBonePos(HINFO* phinfo, CBone* srchipsbone = 0);
 
@@ -1183,7 +1185,8 @@ private:
 
 	int DestroyFBXSDK();
 	int GetShapeWeight(FbxNode* pNode, FbxMesh* pMesh, FbxTime& pTime, FbxAnimLayer * pAnimLayer, CMQOObject* curobj );
-	float GetFbxTargetWeight(FbxNode* pbaseNode, FbxMesh* pbaseMesh, std::string targetname, FbxTime& pTime, FbxAnimLayer * pAnimLayer, CMQOObject* baseobj );
+	float GetFbxTargetWeight(FbxMesh* srcMesh, std::string channelname, int channelindex, FbxTime& pTime,
+		FbxAnimLayer * pAnimLayer, CMQOObject* baseobj );
 	
 	int SetDefaultBonePos(FbxScene* pScene);
 
