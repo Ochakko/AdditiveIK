@@ -1,6 +1,21 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2024/05/18
+　BlendShape(モーフ)対応の続き
+　　モーフアニメの再生が可能
+　　　とりあえずCPU処理で再生してみた
+　　　
+　　モーフアニメを自前のデータに読み込んでアニメ再生時と書き出し時に参照
+
+
+
+　　モーフアニメの編集はまだ出来ない
+
+
+
+
+
 2024/05/17
 　BlendShape(モーフ)対応開始
 　　まずはBlendShapeが設定されているVRoid(fbx)の読み込みと書き出し

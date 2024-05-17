@@ -2387,6 +2387,15 @@ int CModel::UpdateMatrix(bool limitdegflag,
 
 
 
+	map<int, CMQOObject*>::iterator itrobj;
+	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+		CMQOObject* curobj = itrobj->second;
+		_ASSERT(curobj);
+		if (!(curobj->EmptyShape())) {
+			CallF(curobj->UpdateMorphWeight(curmotid, IntTime(curframe)), return 1);
+			CallF(curobj->UpdateMorphBuffer(), return 1);
+		}
+	}
 
 
 
@@ -2444,7 +2453,7 @@ int CModel::UpdateMatrix(bool limitdegflag,
 	for( itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++ ){
 		CMQOObject* curobj = itrobj->second;
 		_ASSERT( curobj );
-		if( !(curobj->EmptyFindShape()) ){
+		if( !(curobj->EmptyShape()) ){
 			GetShapeWeight( m_fbxobj[curobj].node, m_fbxobj[curobj].mesh, lTime, mCurrentAnimLayer, curobj );
 
 			CallF( curobj->UpdateMorphBuffer(), return 1 );
@@ -2678,7 +2687,91 @@ int CModel::ComputeShapeDeformation(FbxNode* pNode, FbxMesh* pMesh, FbxTime& pTi
 }
 ***/
 
-//int CModel::GetFBXShape( FbxMesh* pMesh, CMQOObject* curobj, FbxAnimLayer* panimlayer, double animleng, FbxTime starttime, FbxTime timestep )
+
+float CModel::GetTargetWeight(
+	int motid, double srcframe, double srctimescale,
+	CMQOObject* srcbaseobj, std::string channelname, int channelindex,
+	FbxMesh* srcMesh)
+{
+
+	FbxAnimLayer* srcanimlayer = GetAnimLayer(motid);
+	if (!srcanimlayer || !srcbaseobj) {
+		return 0.0f;
+	}
+
+
+	return srcbaseobj->GetShapeAnimWeight(motid, IntTime(srcframe), channelindex);
+
+
+	//FbxTime lTime;
+	//lTime.SetSecondDouble(srcframe / srctimescale);
+	//return GetFbxTargetWeight(srcMesh, channelname, channelindex, lTime, srcanimlayer, srcbaseobj);
+	////return 1.0f;
+}
+
+float CModel::GetFbxTargetWeight(FbxMesh* srcMesh, std::string channelname, int channelindex, 
+	FbxTime& pTime, FbxAnimLayer* pAnimLayer, CMQOObject* baseobj)
+{
+	if (!srcMesh || !pAnimLayer || !baseobj) {
+		_ASSERT(0);
+		return 0.0f;
+	}
+
+	int lVertexCount = srcMesh->GetControlPointsCount();
+	if (lVertexCount != baseobj->GetVertex()) {
+		_ASSERT(0);
+		return 0.0f;
+	}
+
+	int lBlendShapeDeformerCount = srcMesh->GetDeformerCount(FbxDeformer::eBlendShape);
+	//for(int lBlendShapeIndex = 0; lBlendShapeIndex<lBlendShapeDeformerCount; ++lBlendShapeIndex)
+	int lBlendShapeIndex = 0;
+	{
+		FbxBlendShape* lBlendShape = (FbxBlendShape*)srcMesh->GetDeformer(lBlendShapeIndex, FbxDeformer::eBlendShape);
+		if (lBlendShape) {
+			//int lBlendShapeChannelCount = lBlendShape->GetBlendShapeChannelCount();
+			//for (int lChannelIndex = 0; lChannelIndex < lBlendShapeChannelCount; lChannelIndex++)
+			//{
+				//FbxBlendShapeChannel* lChannel = lBlendShape->GetBlendShapeChannel(lChannelIndex);
+			FbxBlendShapeChannel* lChannel = lBlendShape->GetBlendShapeChannel(channelindex);
+			if (lChannel)
+			{
+				//const char* nameptr = lChannel->GetName();
+				int cmp0;
+				cmp0 = strcmp(lChannel->GetName(), channelname.c_str());
+				if (cmp0 == 0) {
+					FbxAnimCurve* lFCurve;
+					double lWeight = 0.0;
+					//lFCurve = srcMesh->GetShapeChannel(lBlendShapeIndex, lChannelIndex, pAnimLayer);
+					lFCurve = srcMesh->GetShapeChannel(lBlendShapeIndex, channelindex, pAnimLayer);
+					if (lFCurve) {
+						lWeight = lFCurve->Evaluate(pTime);
+					}
+					else {
+						lWeight = 0.0;
+					}
+
+					if (lWeight != 0.0) {
+						int dbgflag1 = 1;
+					}
+
+					return (float)lWeight;
+				}
+			}//If lChannel is valid
+			else {
+				int dbgflag2 = 1;
+			}
+			//}//For each blend shape channel
+		}
+		else {
+			int dbgflag3 = 1;
+		}
+	}//For each blend shape deformer
+
+	return 0.0f;
+
+}
+
 int CModel::GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj)//2024/05/16 morphAnimは別関数で
 {
 	int lVertexCount = pMesh->GetControlPointsCount();
@@ -2699,53 +2792,32 @@ int CModel::GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj)//2024/05/16 morphAni
 			FbxBlendShapeChannel* lChannel = lBlendShape->GetBlendShapeChannel(lChannelIndex);
 			if(lChannel)
 			{
-				//FbxTime curtime = starttime;
-				//double framecnt;
-				//for( framecnt = 0.0; framecnt < animleng; framecnt+=1.0 ){
-				//	FbxAnimCurve* lFCurve;
-				//	double lWeight = 0.0;
-				//	lFCurve = pMesh->GetShapeChannel(lBlendShapeIndex, lChannelIndex, panimlayer);
-				//	if (lFCurve){
-				//		lWeight = lFCurve->Evaluate( curtime );
-				//	}else{
-				//		curtime += timestep;
-				//		continue;
-				//	}
-				//	if( lWeight == 0.0 ){
-				//		curtime += timestep;
-				//		continue;
-				//	}
-						
-					int lShapeIndex = 0;
-					FbxShape* lShape = NULL;
-					lShape = lChannel->GetTargetShape(lShapeIndex);//lShapeIndex+1ではない！！！！！！！！！！！！！！！！
-					if(lShape)
-					{	
-						char shapename[256] = { 0 };
-						strcpy_s(shapename, 256, lShape->GetName());
+				int lShapeIndex = 0;
+				FbxShape* lShape = NULL;
+				lShape = lChannel->GetTargetShape(lShapeIndex);//lShapeIndex+1ではない！！！！！！！！！！！！！！！！
+				if(lShape)
+				{	
+					char shapename[256] = { 0 };
+					strcpy_s(shapename, 256, lShape->GetName());
 
+					int existshape = 0;
+					existshape = curobj->ExistShape(shapename);
+					if( existshape == 0 ){
 
-						//const char* nameptr = lChannel->GetName();
-						int existshape = 0;
-						existshape = curobj->ExistShape(shapename);
-						if( existshape == 0 ){
+						curobj->AddShapeName(shapename);
 
-							curobj->AddShapeName(shapename);
-
-							FbxVector4* shapev = lShape->GetControlPoints();
-							_ASSERT( shapev );
-							for (int j = 0; j < lVertexCount; j++)
-							{
-								ChaVector3 xv;
-								xv.x = (float)shapev[j][0];
-								xv.y = (float)shapev[j][1];
-								xv.z = (float)shapev[j][2];
-								curobj->SetShapeVert(shapename, j, xv);
-							}						
-						}
+						FbxVector4* shapev = lShape->GetControlPoints();
+						_ASSERT( shapev );
+						for (int j = 0; j < lVertexCount; j++)
+						{
+							ChaVector3 xv;
+							xv.x = (float)shapev[j][0];
+							xv.y = (float)shapev[j][1];
+							xv.z = (float)shapev[j][2];
+							curobj->SetShapeVert(shapename, j, xv);
+						}						
 					}
-				//	curtime += timestep;
-				//}
+				}
 			}//If lChannel is validf
 		}//For each blend shape channel
 	}//For each blend shape deformer
@@ -2753,63 +2825,108 @@ int CModel::GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj)//2024/05/16 morphAni
 	return 0;
 }
 
-// Deform the vertex array with the shapes contained in the mesh.
-int CModel::GetShapeWeight(FbxNode* pNode, FbxMesh* pMesh, FbxTime& pTime, FbxAnimLayer * pAnimLayer, CMQOObject* curobj )
+void CModel::GetFBXShapeAnimReq(CNodeOnLoad* nodeonload, FbxAnimLayer* panimlayer, int curmotid, double animleng, int* perrorcount)
 {
-    int lVertexCount = pMesh->GetControlPointsCount();
-	if( lVertexCount != curobj->GetVertex() ){
-		_ASSERT( 0 );
+	if (nodeonload && panimlayer && (animleng > 0) && perrorcount) {
+		FbxNode* pNode = nodeonload->GetNode();
+		CMQOObject* pmqoobj = nodeonload->GetMqoObject();
+		if (pNode && pmqoobj && !pmqoobj->EmptyShape()) {
+			FbxMesh* pMesh = pNode->GetMesh();
+			if (pMesh) {
+				int result1 = GetFBXShapeAnim(pMesh, pmqoobj, panimlayer, curmotid, animleng);
+				if (result1 != 0) {
+					_ASSERT(0);
+					(*perrorcount)++;
+				}
+			}
+		}
+
+		int childnum = nodeonload->GetChildNum();
+		int childno;
+		for (childno = 0; childno < childnum; childno++) {
+			CNodeOnLoad* pchild = nodeonload->GetChild(childno);
+			if (pchild) {
+				GetFBXShapeAnimReq(pchild, panimlayer, curmotid, animleng, perrorcount);
+			}
+		}
+	}
+}
+
+
+int CModel::GetFBXShapeAnim(FbxMesh* pMesh, CMQOObject* curobj, FbxAnimLayer* pAnimLayer, int curmotid, double animleng)
+{
+	int lVertexCount = pMesh->GetControlPointsCount();
+	if (lVertexCount != curobj->GetVertex()) {
+		_ASSERT(0);
 		return 1;
 	}
 
-	curobj->InitShapeWeight();
 
 	int lBlendShapeDeformerCount = pMesh->GetDeformerCount(FbxDeformer::eBlendShape);
-	for(int lBlendShapeIndex = 0; lBlendShapeIndex<lBlendShapeDeformerCount; ++lBlendShapeIndex)
+	for (int lBlendShapeIndex = 0; lBlendShapeIndex < lBlendShapeDeformerCount; ++lBlendShapeIndex)
 	{
 		FbxBlendShape* lBlendShape = (FbxBlendShape*)pMesh->GetDeformer(lBlendShapeIndex, FbxDeformer::eBlendShape);
 		int lBlendShapeChannelCount = lBlendShape->GetBlendShapeChannelCount();
-		for(int lChannelIndex = 0; lChannelIndex<lBlendShapeChannelCount; lChannelIndex++)
+		for (int lChannelIndex = 0; lChannelIndex < lBlendShapeChannelCount; lChannelIndex++)
 		{
 			FbxBlendShapeChannel* lChannel = lBlendShape->GetBlendShapeChannel(lChannelIndex);
-			if(lChannel)
+			if (lChannel)
 			{
 
-				//const char* nameptr = lChannel->GetName();
-				// Get the percentage of influence of the shape.
-				FbxAnimCurve* lFCurve;
-				double lWeight = 0.0;
-				lFCurve = pMesh->GetShapeChannel(lBlendShapeIndex, lChannelIndex, pAnimLayer);
-				if (lFCurve){
-					lWeight = lFCurve->Evaluate(pTime);
-				}else{
-					continue;
-				}
-
-				if( lWeight == 0.0 ){
-					continue;
-				}
-
-				//Find which shape should we use according to the weight.
-				int lShapeCount = lChannel->GetTargetShapeCount();
-				double* lFullWeights = lChannel->GetTargetShapeFullWeights();
-				for(int lShapeIndex = 0; lShapeIndex < lShapeCount; lShapeIndex++)
+				int lShapeIndex = 0;
+				FbxShape* lShape = NULL;
+				lShape = lChannel->GetTargetShape(lShapeIndex);//lShapeIndex+1ではない！！！！！！！！！！！！！！！！
+				if (lShape)
 				{
-					FbxShape* lShape = NULL;
-					lShape = lChannel->GetTargetShape(lShapeIndex);//lShapeIndex+1ではない！！！！！！！！！！！！！！！！
-					if(lShape)
-					{	
-						char tmpname[512];
-						strcpy_s(tmpname, 512, lChannel->GetName());
-						curobj->SetShapeWeight( tmpname, (float)lWeight );
+					char shapename[256] = { 0 };
+					strcpy_s(shapename, 256, lShape->GetName());
+
+
+					curobj->DestroyShapeAnim(shapename, curmotid);
+
+
+					int existshape = 0;
+					existshape = curobj->ExistShape(shapename);
+					if (existshape == 1) {
+						int result1 = curobj->AddShapeAnim(shapename, curmotid, IntTime(animleng));
+						if (result1 != 0) {
+							_ASSERT(0);
+							abort();
+						}
+
+						FbxAnimCurve* lFCurve;
+						double lWeight = 0.0;
+						lFCurve = pMesh->GetShapeChannel(lBlendShapeIndex, lChannelIndex, pAnimLayer);
+						if (lFCurve) {
+							int framecnt;
+							for (framecnt = 0; framecnt < animleng; framecnt++) {
+								double timescale = 30.0;
+								FbxTime lTime;
+								lTime.SetSecondDouble((double)framecnt / timescale);
+								lWeight = lFCurve->Evaluate(lTime);
+
+								int result2 = curobj->SetShapeAnim(shapename, curmotid, framecnt, (float)lWeight);
+								if (result2 != 0) {
+									_ASSERT(0);
+									abort();
+								}
+							}
+						}
+						else {
+							//_ASSERT(0);
+							int dbgflag1 = 1;
+						}
+
 					}
-				}//For each target shape
+				}
 			}//If lChannel is valid
 		}//For each blend shape channel
 	}//For each blend shape deformer
 
 	return 0;
+
 }
+
 
 
 int CModel::SetShaderConst(int btflag, bool calcslotflag)
@@ -4391,25 +4508,7 @@ int CModel::CreateFBXMeshReq( FbxNode* pNode)
 	return 0;
 }
 
-int CModel::CreateFBXShape( FbxAnimLayer* panimlayer, double animleng, FbxTime starttime, FbxTime timestep )
-{
-	map<CMQOObject*,FBXOBJ*>::iterator itrobjindex;
-	for( itrobjindex = m_fbxobj.begin(); itrobjindex != m_fbxobj.end(); itrobjindex++ ){
-		FBXOBJ* curfbxobj = itrobjindex->second;
-		if (curfbxobj) {
-			const FbxMesh* curmesh = curfbxobj->mesh;
-			CMQOObject* curobj = itrobjindex->first;
-			if (curmesh && curobj) {
-				int shapecnt = curmesh->GetShapeCount();
-				if (shapecnt > 0) {
-					//CallF(GetFBXShape((FbxMesh*)curmesh, curobj, panimlayer, animleng, starttime, timestep), return 1);
-					CallF(GetFBXShape((FbxMesh*)curmesh, curobj), return 1);
-				}
-			}
-		}
-	}
-	return 0;
-}
+
 
 ChaMatrix CModel::CalcLocalMeshMat(FbxNode* pNode, double srctime)
 {
@@ -6236,6 +6335,16 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 			}
 			else {
 			}
+
+
+			int errorcount2 = 0;
+			GetFBXShapeAnimReq(GetNodeOnLoad(), mCurrentAnimLayer, curmotid, animleng, &errorcount2);
+			if (errorcount2 != 0) {
+				_ASSERT(0);
+				abort();
+			}
+
+
 			//if (animno == (lAnimStackCount - 1)) {//2023/11/04 anim loopを出たところに引っ越し
 			//	DestroyLoadFbxAnim();
 			//}
@@ -9051,6 +9160,15 @@ int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag,
 		}
 	}
 
+	map<int, CMQOObject*>::iterator itrobj;
+	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+		CMQOObject* curobj = itrobj->second;
+		_ASSERT(curobj);
+		if (!(curobj->EmptyShape())) {
+			CallF(curobj->UpdateMorphWeight(curmotid, IntTime(curframe)), return 1);
+			CallF(curobj->UpdateMorphBuffer(), return 1);
+		}
+	}
 
 
 	//if (g_previewFlag == 5){
@@ -9097,7 +9215,7 @@ int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag,
 			for( itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++ ){
 				CMQOObject* curobj = itrobj->second;
 				_ASSERT( curobj );
-				if( !(curobj->EmptyFindShape()) ){
+				if( !(curobj->EmptyShape()) ){
 					GetShapeWeight( m_fbxobj[curobj].node, m_fbxobj[curobj].mesh, lTime, mCurrentAnimLayer, curobj );
 					CallF( curobj->UpdateMorphBuffer(), return 1 );
 				}
@@ -16490,80 +16608,6 @@ int CModel::AddBoneMotMark( OWP_Timeline* owpTimeline, int curboneno, int curlin
 	return 0;
 }
 
-float CModel::GetTargetWeight(
-	int motid, double srcframe, double srctimescale,
-	CMQOObject* srcbaseobj, std::string channelname, int channelindex,
-	FbxMesh* srcMesh)
-{
-
-	FbxAnimLayer* srcanimlayer = GetAnimLayer(motid);
-	if (!srcanimlayer) {
-		return 0.0f;
-	}
-
-	FbxTime lTime;
-	lTime.SetSecondDouble( srcframe / srctimescale );
-
-	return GetFbxTargetWeight(srcMesh, channelname, channelindex, lTime, srcanimlayer, srcbaseobj );
-	//return 1.0f;
-}
-
-float CModel::GetFbxTargetWeight(FbxMesh* srcMesh, std::string channelname, int channelindex, FbxTime& pTime, FbxAnimLayer * pAnimLayer, CMQOObject* baseobj )
-{
-    int lVertexCount = srcMesh->GetControlPointsCount();
-	if( lVertexCount != baseobj->GetVertex() ){
-		_ASSERT( 0 );
-		return 0.0f;
-	}
-
-	int lBlendShapeDeformerCount = srcMesh->GetDeformerCount(FbxDeformer::eBlendShape);
-	//for(int lBlendShapeIndex = 0; lBlendShapeIndex<lBlendShapeDeformerCount; ++lBlendShapeIndex)
-	int lBlendShapeIndex = 0;
-	{
-		FbxBlendShape* lBlendShape = (FbxBlendShape*)srcMesh->GetDeformer(lBlendShapeIndex, FbxDeformer::eBlendShape);
-		if (lBlendShape) {
-			//int lBlendShapeChannelCount = lBlendShape->GetBlendShapeChannelCount();
-			//for (int lChannelIndex = 0; lChannelIndex < lBlendShapeChannelCount; lChannelIndex++)
-			//{
-				//FbxBlendShapeChannel* lChannel = lBlendShape->GetBlendShapeChannel(lChannelIndex);
-				FbxBlendShapeChannel* lChannel = lBlendShape->GetBlendShapeChannel(channelindex);
-				if (lChannel)
-				{
-					//const char* nameptr = lChannel->GetName();
-					int cmp0;
-					cmp0 = strcmp(lChannel->GetName(), channelname.c_str());
-					if (cmp0 == 0) {
-						FbxAnimCurve* lFCurve;
-						double lWeight = 0.0;
-						//lFCurve = srcMesh->GetShapeChannel(lBlendShapeIndex, lChannelIndex, pAnimLayer);
-						lFCurve = srcMesh->GetShapeChannel(lBlendShapeIndex, channelindex, pAnimLayer);
-						if (lFCurve) {
-							lWeight = lFCurve->Evaluate(pTime);
-						}
-						else {
-							lWeight = 0.0;
-						}
-
-						if (lWeight != 0.0) {
-							int dbgflag1 = 1;
-						}
-
-						return (float)lWeight;
-					}
-				}//If lChannel is valid
-				else {
-					int dbgflag2 = 1;
-				}
-			//}//For each blend shape channel
-		}
-		else {
-			int dbgflag3 = 1;
-		}
-	}//For each blend shape deformer
-
-	return 0.0f;
-
-}
 
 int CModel::SetFirstFrameBonePos(HINFO* phinfo, CBone* srchipsbone)
 {

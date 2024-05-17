@@ -103,7 +103,7 @@ typedef  struct tag_n3p
 }N3P;//n*3
 */
 
-	DestroySystemDispObj();
+	DestroySystemDispObj(true);
 	if (m_dispv) {
 		free(m_dispv);
 		m_dispv = 0;
@@ -127,7 +127,7 @@ typedef  struct tag_n3p
 	InitParams();
 }
 
-void CPolyMesh3::DestroySystemDispObj()
+void CPolyMesh3::DestroySystemDispObj(bool emptyshape)
 {
 	if (m_n3p) {
 		delete[] m_n3p;
@@ -1057,6 +1057,25 @@ int CPolyMesh3::IncludeTransparent(CMQOObject* srcobj, float alphamult, bool* pf
 
 	*pfound_noalpha = found_noalpha;
 	*pfound_alpha = found_alpha;
+
+	return 0;
+}
+
+
+int CPolyMesh3::UpdateMorphBuffer(ChaVector3* mpoint)
+{
+	if (!m_dispv) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int vno;
+	for (vno = 0; vno < (m_facenum * 3); vno++) {
+		int curindex = *(m_dispindex + vno);
+		BINORMALDISPV* curv = m_dispv + vno;
+
+		curv->pos = ChaVector4((mpoint + curindex)->x, (mpoint + curindex)->y, (mpoint + curindex)->z, 1.0f);
+	}
 
 	return 0;
 }

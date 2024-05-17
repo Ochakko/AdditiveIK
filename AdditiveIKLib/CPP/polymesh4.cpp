@@ -92,7 +92,7 @@ void CPolyMesh4::InitParams()
 void CPolyMesh4::DestroyObjs()
 {
 
-	DestroySystemDispObj();
+	DestroySystemDispObj(true);
 
 	if (m_dispindex) {
 		free(m_dispindex);
@@ -101,14 +101,14 @@ void CPolyMesh4::DestroyObjs()
 
 }
 
-void CPolyMesh4::DestroySystemDispObj()
+void CPolyMesh4::DestroySystemDispObj(bool emptyshape)
 {
 	if (m_triface) {
 		delete[] m_triface;
 		m_triface = 0;
 	}
 
-	if (m_dispv) {
+	if (m_dispv && emptyshape) {//blend shapeÇ™ãÛÇ≈ÇÕñ≥Ç¢èÍçáÇÕè¡Ç≥Ç»Ç¢
 		free(m_dispv);
 		m_dispv = 0;
 	}
@@ -117,7 +117,7 @@ void CPolyMesh4::DestroySystemDispObj()
 	//	m_dispindex = 0;
 	//}
 
-	if (m_orgindex) {
+	if (m_orgindex && emptyshape) {//blend shapeÇ™ãÛÇ≈ÇÕñ≥Ç¢èÍçáÇÕè¡Ç≥Ç»Ç¢
 		free(m_orgindex);
 		m_orgindex = 0;
 	}
@@ -700,13 +700,27 @@ int CPolyMesh4::UpdateMorphBuffer( ChaVector3* mpoint )
 		return 1;
 	}
 
-	int vno;
-	for( vno = 0; vno < (m_facenum * 3); vno++ ){
-		int curindex = *(m_orgindex + vno);
-		BINORMALDISPV* curv = m_dispv + vno;
+	int fno;
+	for (fno = 0; fno < GetFaceNum(); fno++) {
+		int dstindex0 = *(m_orgindex + fno * 3);
+		int dstindex1 = *(m_orgindex + fno * 3 + 2);//!!!!îΩëŒé¸ÇË
+		int dstindex2 = *(m_orgindex + fno * 3 + 1);//!!!!îΩëŒé¸ÇË
+		BINORMALDISPV* curv0 = m_dispv + fno * 3;
+		BINORMALDISPV* curv1 = m_dispv + fno * 3 + 1;
+		BINORMALDISPV* curv2 = m_dispv + fno * 3 + 2;
 
-		curv->pos = ChaVector4( (mpoint + curindex)->x, (mpoint + curindex)->y, (mpoint + curindex)->z, 1.0f );
+		curv0->pos = ChaVector4((mpoint + dstindex0)->x, (mpoint + dstindex0)->y, (mpoint + dstindex0)->z, 1.0f);
+		curv1->pos = ChaVector4((mpoint + dstindex1)->x, (mpoint + dstindex1)->y, (mpoint + dstindex1)->z, 1.0f);
+		curv2->pos = ChaVector4((mpoint + dstindex2)->x, (mpoint + dstindex2)->y, (mpoint + dstindex2)->z, 1.0f);
 	}
+
+	//int vno;
+	//for( vno = 0; vno < (m_facenum * 3); vno++ ){
+	//	int curindex = *(m_orgindex + vno);
+	//	BINORMALDISPV* curv = m_dispv + vno;
+	//
+	//	curv->pos = ChaVector4( (mpoint + curindex)->x, (mpoint + curindex)->y, (mpoint + curindex)->z, 1.0f );
+	//}
 
 	return 0;
 }

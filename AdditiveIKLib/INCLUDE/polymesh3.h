@@ -39,9 +39,10 @@ public:
 
 	int MultScale( ChaVector3 srcscale, ChaVector3 srctra );
 
-	void DestroySystemDispObj();
+	void DestroySystemDispObj(bool emptyshape);
 
 	int IncludeTransparent(CMQOObject* srcobj, float alphamult, bool* pfound_noalpha, bool* pfound_alpha);
+	int UpdateMorphBuffer(ChaVector3* mpoint);
 
 private:
 	void InitParams();

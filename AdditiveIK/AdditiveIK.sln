@@ -54,10 +54,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DirectXTK12", "..\MiniEngine\DirectXTK\DirectXTK_Desktop_2022_Win10.vcxproj", "{3E0E8608-CD9B-4C76-AF33-29CA38F2C9F0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AdditiveIKLib", "AdditiveIKLib", "{783B42CD-E34E-42A4-81F6-F7B186D0DF4B}"
-	ProjectSection(SolutionItems) = preProject
-		..\AdditiveIKLib\CPP\ShaderTypeFile.cpp = ..\AdditiveIKLib\CPP\ShaderTypeFile.cpp
-		..\AdditiveIKLib\INCLUDE\ShaderTypeFile.h = ..\AdditiveIKLib\INCLUDE\ShaderTypeFile.h
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AdditiveIKLib", "..\AdditiveIKLib\AdditiveIKLib\AdditiveIKLib.vcxproj", "{381D22C0-053F-437F-A4AB-3B57CB413001}"
 	ProjectSection(ProjectDependencies) = postProject

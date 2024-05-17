@@ -923,10 +923,6 @@ public:
 	int MotionID2Index( int motid );
 	int MotionID2CameraIndex(int motid);
 	FbxAnimLayer* GetAnimLayer( int motid );
-	//float GetTargetWeight( int motid, double dframe, double timescale, CMQOObject* baseobj, std::string targetname );
-	float GetTargetWeight(
-		int motid, double dframe, double timescale,
-		CMQOObject* baseobj, std::string channelname, int channelindex, FbxMesh* srcMesh);
 
 	int SetFirstFrameBonePos(HINFO* phinfo, CBone* srchipsbone = 0);
 
@@ -1090,6 +1086,17 @@ public:
 	//void SetColiidDataReq(int reindex, CBone* srcbone, int srcgroup, std::vector<int> srccoliids, int srcmyselfflag);
 	void SetColiidDataReq(int reindex, CBone* srcbone, int srcgroup, std::vector<int> srccoliids);
 
+
+
+	//Get OrgFbx BlendShapeWieght : public Caller
+	float GetTargetWeight(
+		int motid, double dframe, double timescale,
+		CMQOObject* baseobj, std::string channelname, int channelindex, FbxMesh* srcMesh);
+	////Get OrgFbx BlendShapeWieght : private Function
+	//float GetFbxTargetWeight(FbxMesh* srcMesh, std::string channelname, int channelindex, FbxTime& pTime,
+	//	FbxAnimLayer* pAnimLayer, CMQOObject* baseobj);
+
+
 private:
 	int InitParams();
 	int DestroyObjs();
@@ -1147,7 +1154,6 @@ private:
 	//int InitFBXManager( FbxManager** ppSdkManager, FbxImporter** ppImporter, FbxScene** ppScene, char* utfname );
 	void CreateFBXCameraReq(FbxNode* pNode);
 	int CreateFBXMeshReq(FbxNode* pNode);
-	int CreateFBXShape( FbxAnimLayer* panimlayer, double animleng, FbxTime starttime, FbxTime timestep );
 	void CreateNodeOnLoadReq(CNodeOnLoad* newnodeonload);
 	void DestroyNodeOnLoadReq(CNodeOnLoad* delnodeonload);
 
@@ -1159,7 +1165,24 @@ private:
 	ChaMatrix CalcLocalMeshMat(FbxNode* pNode, double srctime);
 	void CalcMeshMatReq(FbxNode* pNode, double srctime, ChaMatrix* pmeshmat);
 	//int GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj, FbxAnimLayer* panimlayer, double animleng, FbxTime starttime, FbxTime timestep );
-	int GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj);//2024/05/16 morphAnimは別関数で
+
+	//Loading Fbx BlendShape
+	int GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj);
+
+	//Loading Fbx BlendShapeAnim
+	void GetFBXShapeAnimReq(CNodeOnLoad* srcnodeonload, FbxAnimLayer* panimlayer, int curmotid, double animleng, int* perrorcount);
+	int GetFBXShapeAnim(FbxMesh* pMesh, CMQOObject* curobj, FbxAnimLayer* panimlayer, int curmotid, double animleng);
+
+	////Get OrgFbx BlendShapeWieght : public Caller
+	//float GetTargetWeight(
+	//	int motid, double dframe, double timescale,
+	//	CMQOObject* baseobj, std::string channelname, int channelindex, FbxMesh* srcMesh);
+
+	//Get OrgFbx BlendShapeWieght : private Function
+	float GetFbxTargetWeight(FbxMesh* srcMesh, std::string channelname, int channelindex, FbxTime& pTime,
+		FbxAnimLayer* pAnimLayer, CMQOObject* baseobj);
+
+
 	//int ComputeShapeDeformation(FbxNode* pNode, FbxMesh* pMesh, FbxTime& pTime, FbxAnimLayer * pAnimLayer, CMQOObject* curobj, char* takename );
 	//int ComputeShapeDeformation2(FbxNode* pNode, FbxMesh* pMesh, FbxTime& pTime, FbxAnimLayer * pAnimLayer, CMQOObject* curobj, char* takename );
 
@@ -1184,9 +1207,6 @@ private:
 
 
 	int DestroyFBXSDK();
-	int GetShapeWeight(FbxNode* pNode, FbxMesh* pMesh, FbxTime& pTime, FbxAnimLayer * pAnimLayer, CMQOObject* curobj );
-	float GetFbxTargetWeight(FbxMesh* srcMesh, std::string channelname, int channelindex, FbxTime& pTime,
-		FbxAnimLayer * pAnimLayer, CMQOObject* baseobj );
 	
 	int SetDefaultBonePos(FbxScene* pScene);
 

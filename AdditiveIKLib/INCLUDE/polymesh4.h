@@ -40,7 +40,7 @@ public:
 	int DumpInfBone( CMQOObject* srcobj, std::map<int,CBone*>& srcbonelist );
 	//int SetPm3InfNoSkin( ID3D12Device* pdev, CMQOObject* srcobj, int clusterno, std::map<int,CBone*>& srcbonelist );
 
-	void DestroySystemDispObj();
+	void DestroySystemDispObj(bool emptyshape);
 
 private:
 	void InitParams();

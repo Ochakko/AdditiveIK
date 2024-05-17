@@ -68,6 +68,10 @@ CMQOObject::~CMQOObject()
 
 	DestroySystemDispObj();
 
+	if (m_pointbuf) {
+		free(m_pointbuf);
+		m_pointbuf = 0;
+	}
 
 	if( m_pm3 ){
 		delete m_pm3;
@@ -94,7 +98,7 @@ CMQOObject::~CMQOObject()
 
 
 	DestroyShapeObj();
-
+	DestroyShapeAnim();
 
 	//########
 	//bank管理
@@ -112,9 +116,11 @@ CMQOObject::~CMQOObject()
 
 void CMQOObject::DestroySystemDispObj()
 {
-	if (m_pointbuf) {
-		free(m_pointbuf);
-		m_pointbuf = 0;
+	if (EmptyShape()) {//blend shapeの場合は消さない
+		if (m_pointbuf) {
+			free(m_pointbuf);
+			m_pointbuf = 0;
+		}
 	}
 
 	if (m_facebuf) {
@@ -173,9 +179,8 @@ int CMQOObject::DestroyShapeObj()
 		}
 	}
 	m_shapevert.clear();
-	m_shapeweight.clear();
+	m_shapeweightvec.clear();
 	m_shapenamevec.clear();
-	m_findshape.clear();
 
 
 	if (m_mpoint) {
@@ -185,7 +190,51 @@ int CMQOObject::DestroyShapeObj()
 
 	return 0;
 }
+int CMQOObject::DestroyShapeAnim()
+{
+	map<string, map<int, float*>>::iterator itrshapeanim;
+	for (itrshapeanim = m_shapeanim2.begin(); itrshapeanim != m_shapeanim2.end(); itrshapeanim++) {
+		map<int, float*>::iterator itrshapeanim2;
+		for (itrshapeanim2 = itrshapeanim->second.begin(); itrshapeanim2 != itrshapeanim->second.end(); itrshapeanim2++) {
+			if (itrshapeanim2->second) {
+				free(itrshapeanim2->second);
+			}
+		}
+	}
 
+	m_shapeanim2.clear();
+	m_shapeanimleng2.clear();
+
+
+	return 0;
+}
+
+int CMQOObject::DestroyShapeAnim(char* srcname, int srcmotid)
+{
+	if (!srcname || (srcmotid <= 0)) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	map<string, map<int, float*>>::iterator itrshapeanim;
+	itrshapeanim = m_shapeanim2.find(srcname);
+	if (itrshapeanim != m_shapeanim2.end()) {
+		if (itrshapeanim->second.find(srcmotid) != itrshapeanim->second.end()) {
+			if (itrshapeanim->second.find(srcmotid)->second) {
+				free(itrshapeanim->second.find(srcmotid)->second);
+				itrshapeanim->second.find(srcmotid)->second = nullptr;
+			}
+		}
+	}
+
+	map<int, int>::iterator itranimleng;
+	itranimleng = m_shapeanimleng2.find(srcmotid);
+	if (itranimleng != m_shapeanimleng2.end()) {
+		itranimleng->second = 0;
+	}
+
+	return 0;
+}
 
 void CMQOObject::InitParams()
 {
@@ -257,10 +306,12 @@ void CMQOObject::InitParams()
 	m_uvbuf = 0;
 	m_uvbuf1 = 0;
 
+	m_shapenamevec.clear();
 	m_shapevert.clear();
-	m_shapeweight.clear();
+	m_shapeanim2.clear();
+	m_shapeanimleng2.clear();
+	m_shapeweightvec.clear();
 	m_mpoint = 0;
-	m_findshape.clear();
 
 	m_meshmat.SetIdentity();
 
@@ -275,11 +326,6 @@ void CMQOObject::InitParams()
 	for (index0 = 0; index0 < REFPOSMAXNUM; index0++) {
 		m_frustum[index0].InitParams();
 	}
-
-	m_shapevert.clear();
-	m_shapeweight.clear();
-	m_shapenamevec.clear();
-	m_findshape.clear();
 
 //	next = 0;
 }
@@ -1002,7 +1048,7 @@ int CMQOObject::MakeDispObj(ID3D12Device* pdev, int hasbone, bool grassflag)
 		if (m_pm3->GetFbxFileFlag()) {//mqoから読み込んだ場合はPickRay()で使うのでDestroyしない
 			DestroySystemDispObj();
 		}
-		m_pm3->DestroySystemDispObj();
+		m_pm3->DestroySystemDispObj(EmptyShape());
 
 
 
@@ -1022,7 +1068,7 @@ int CMQOObject::MakeDispObj(ID3D12Device* pdev, int hasbone, bool grassflag)
 		m_pm4->CalcBound();
 
 		DestroySystemDispObj();
-		m_pm4->DestroySystemDispObj();
+		m_pm4->DestroySystemDispObj(EmptyShape());
 
 	}
 	else if(m_extline){
@@ -2432,53 +2478,78 @@ int CMQOObject::NormalizeInfBone()
 	return 0;
 }
 
+int CMQOObject::UpdateMorphWeight(int srcmotid, int framecnt)
+{
+	if (EmptyShape()) {
+		return 0;
+	}
+
+	int shapenum = GetShapeNameNum();
+	ChaVector3 diffpoint;
+	int channelindex;
+	for (channelindex = 0; channelindex < shapenum; channelindex++) {
+		int error1 = 0;
+		string curname = GetShapeName(channelindex, &error1);
+		if (error1 == 0) {
+			float channelweight = GetShapeAnimWeight(srcmotid, framecnt, channelindex);
+			SetShapeWeight(channelindex, channelweight);
+		}
+	}
+	return 0;
+}
+
+
 int CMQOObject::UpdateMorphBuffer()
 {
-	if( !m_pm4 || !m_mpoint || !m_dispobj) {
+	if( (!m_pm4 && !m_pm3) || !m_mpoint || !m_dispobj) {
 		_ASSERT( 0 );
 		return 1;
 	}
 
-	if( m_findshape.empty() ){
-		_ASSERT( 0 );
+	if(EmptyShape()){
 		return 0;
 	}
 
 	MoveMemory( m_mpoint, m_pointbuf, sizeof( ChaVector3 ) * m_vertex );
 
+	int shapenum = GetShapeNameNum();
 	ChaVector3 diffpoint;
-	map<string,float>::iterator itrweight;
-	for( itrweight = m_shapeweight.begin(); itrweight != m_shapeweight.end(); itrweight++ ){
-		string curname = itrweight->first;
-
-//WCHAR wcurname[256]={0L};
-//WCHAR wobjname[256]={0L};
-//ZeroMemory( wcurname, sizeof( WCHAR ) * 256 );
-//MultiByteToWideChar( CP_ACP, MB_PRECOMPOSED, (char*)curname.c_str(), 256, wcurname, 256 );
-//ZeroMemory( wobjname, sizeof( WCHAR ) * 256 );
-//MultiByteToWideChar( CP_ACP, MB_PRECOMPOSED, (char*)m_name, 256, wobjname, 256 );
-//DbgOut( L"updatemorph : objname %s, targetname %s, weight %f\r\n",
-//	   wobjname, wcurname, itrweight->second );
-
-		ChaVector3* curshape = m_shapevert[ curname ];
-		if( curshape ){
-			float curweight = itrweight->second * 0.01f;
-			if( curweight != 0.0f ){
-				int vno;
-				for( vno = 0; vno < m_vertex; vno++ ){
-					ChaVector3 targetv = *( curshape + vno );
-					ChaVector3 orgv = *(m_pointbuf + vno);
-					diffpoint = (targetv - orgv) * curweight;
-					*(m_mpoint + vno) += diffpoint;
+	int channelindex;
+	for (channelindex = 0; channelindex < shapenum; channelindex++) {
+		int error1 = 0;
+		string curname = GetShapeName(channelindex, &error1);
+		if (error1 == 0) {
+			ChaVector3* curshape = m_shapevert[curname];
+			if (curshape) {
+				float curweight = m_shapeweightvec[channelindex] * 0.01f;
+				if (curweight != 0.0f) {
+					int vno;
+					for (vno = 0; vno < m_vertex; vno++) {
+						ChaVector3 targetv = *(curshape + vno);
+						ChaVector3 orgv = *(m_pointbuf + vno);
+						diffpoint = (targetv - orgv) * curweight;
+						*(m_mpoint + vno) += diffpoint;
+					}
 				}
 			}
-		}else{
-			_ASSERT( 0 );
+			else {
+				_ASSERT(0);
+			}
+		}
+		else {
+			_ASSERT(0);
 		}
 	}
 
-	CallF( m_pm4->UpdateMorphBuffer( m_mpoint ), return 1 );
-	CallF(m_dispobj->CopyDispV(m_pm4), return 1);
+	if (m_pm4) {
+		CallF(m_pm4->UpdateMorphBuffer(m_mpoint), return 1);
+		CallF(m_dispobj->CopyDispV(m_pm4), return 1);
+
+	}
+	else if (m_pm3) {
+		CallF(m_pm3->UpdateMorphBuffer(m_mpoint), return 1);
+		CallF(m_dispobj->CopyDispV(m_pm3), return 1);
+	}
 
 	return 0;
 }
@@ -2672,13 +2743,30 @@ int CMQOObject::MultScale( ChaVector3 srcscale, ChaVector3 srctra )
 
 int CMQOObject::InitShapeWeight()
 {
-	m_shapeweight.clear();
+	m_shapeweightvec.clear();
 	return 0;
 }
 
-int CMQOObject::SetShapeWeight( char* nameptr, float srcweight )
+int CMQOObject::SetShapeWeight(int channelindex, float srcweight)
 {
-	m_shapeweight[ nameptr ] = srcweight;
+	if (channelindex < 0) {
+		_ASSERT(0);
+		return 1;
+	}
+	int weightsize = (int)m_shapeweightvec.size();
+	if (channelindex >= weightsize) {
+		if (channelindex == weightsize) {
+			m_shapeweightvec.push_back(srcweight);
+		}
+		else {
+			_ASSERT(0);
+			return 1;
+		}
+	}
+	else {
+		m_shapeweightvec[channelindex] = srcweight;
+	}
+	
 	return 0;
 }
 
@@ -2699,55 +2787,68 @@ int CMQOObject::AddShapeName( char* nameptr )
 		ZeroMemory(m_mpoint, sizeof(ChaVector3) * m_vertex);
 	}
 
-	string setname = nameptr;
 
-	bool existname = false;
-	vector<string>::iterator itrfindname;
-	for (itrfindname = m_shapenamevec.begin(); itrfindname != m_shapenamevec.end(); itrfindname++) {
-		if (*itrfindname == setname) {
-			existname = true;
-			break;
-		}
-	}
+	bool existname = ExistShape(nameptr);
 	if (existname) {
 		return 0;
 	}
+	string setname = nameptr;
+	m_shapenamevec.push_back(setname);
 
-	m_shapenamevec.push_back(nameptr);
-
-	map<string,int>::iterator itrfind;
-	itrfind = m_findshape.find( nameptr );
-	if( itrfind == m_findshape.end() ){
-		m_findshape[ nameptr ] = 1;
-
-		ChaVector3* newshape = (ChaVector3*)malloc( sizeof( ChaVector3 ) * m_vertex );
-		if( !newshape ){
-			_ASSERT( 0 );
-			return 1;
-		}
-		ZeroMemory( newshape, sizeof( ChaVector3 ) * m_vertex );
-
-		m_shapevert[ nameptr ] = newshape;
-
+	ChaVector3* newshape = (ChaVector3*)malloc( sizeof( ChaVector3 ) * m_vertex );
+	if( !newshape ){
+		_ASSERT( 0 );
+		return 1;
 	}
+	ZeroMemory(newshape, sizeof( ChaVector3 ) * m_vertex);
+	m_shapevert[nameptr] = newshape;
+
 	return 0;
 }
 
-int CMQOObject::ExistShape( char* nameptr )
+int CMQOObject::AddShapeAnim(char* nameptr, int srcmotid, int animleng)
 {
-	int findflag = 0;
-
-	map<string,int>::iterator itrfind;
-	itrfind = m_findshape.find( nameptr );
-	if( itrfind != m_findshape.end() ){
+	if (!nameptr || (srcmotid <= 0) || (animleng <= 0)) {
+		_ASSERT(0);
 		return 1;
-	}else{
-		return 0;
 	}
+	m_shapeanimleng2[srcmotid] = animleng;
+
+	bool existname = ExistShape(nameptr);
+	if (!existname) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	float* newshapeanim = (float*)malloc(sizeof(float) * animleng);
+	if (!newshapeanim) {
+		_ASSERT(0);
+		return 1;
+	}
+	ZeroMemory(newshapeanim, sizeof(float) * animleng);
+	map<string, map<int, float*>>::iterator itrshapeanim;
+	itrshapeanim = m_shapeanim2.find(nameptr);
+	if (itrshapeanim != m_shapeanim2.end()) {
+		itrshapeanim->second[srcmotid] = newshapeanim;
+	}
+	else {
+		map<int, float*> newanim;
+		newanim[srcmotid] = newshapeanim;
+		m_shapeanim2[nameptr] = newanim;
+	}
+
+	return 0;
 }
+
+
 
 int CMQOObject::SetShapeVert( char* nameptr, int vno, ChaVector3 srcv )
 {
+	if (!nameptr) {
+		_ASSERT(0);
+		return 1;
+	}
+
 	ChaVector3* curshape = m_shapevert[ nameptr ];
 	if( curshape ){
 		if( (vno < 0) || (vno >= m_vertex) ){
@@ -2757,9 +2858,108 @@ int CMQOObject::SetShapeVert( char* nameptr, int vno, ChaVector3 srcv )
 		*(curshape + vno) = srcv;
 	}else{
 		_ASSERT( 0 );
+		return 1;
 	}
 
 	return 0;
+}
+
+int CMQOObject::SetShapeAnim(char* nameptr, int srcmotid, int framecnt, float lWeight)
+{
+	if (!nameptr || (srcmotid <= 0) || (framecnt < 0)) {
+		_ASSERT(0);
+		return 1;
+	}
+	bool existname = ExistShape(nameptr);
+	if (!existname) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	map<int, int>::iterator itranimleng;
+	itranimleng = m_shapeanimleng2.find(srcmotid);
+	if (itranimleng == m_shapeanimleng2.end()) {
+		_ASSERT(0);
+		return 1;
+	}
+	int animleng = itranimleng->second;
+	if ((animleng <= 0) && (framecnt >= animleng)) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	map<string, map<int, float*>>::iterator itrshapeanim;
+	itrshapeanim = m_shapeanim2.find(nameptr);
+	if (itrshapeanim != m_shapeanim2.end()) {
+		map<int, float*>::iterator itrshapeanim2;
+		itrshapeanim2 = itrshapeanim->second.find(srcmotid);
+		if (itrshapeanim2 != itrshapeanim->second.end()) {
+			if (itrshapeanim2->second) {
+				*(itrshapeanim2->second + framecnt) = lWeight;
+			}
+		}
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+
+	return 0;
+}
+
+float CMQOObject::GetShapeAnimWeight(int srcmotid, int framecnt, int channelindex)
+{
+	if ((srcmotid <= 0) || (framecnt < 0) || (channelindex < 0)) {
+		_ASSERT(0);
+		return 0.0f;
+	}
+	int shapenum = GetShapeNameNum();
+	if (channelindex >= shapenum) {
+		_ASSERT(0);
+		return 0.0f;
+	}
+
+	int errorname = 0;
+	string shapename = GetShapeName(channelindex, &errorname);
+	if (errorname != 0) {
+		_ASSERT(0);
+		return 0.0f;
+	}
+
+	map<int, int>::iterator itranimleng;
+	itranimleng = m_shapeanimleng2.find(srcmotid);
+	if (itranimleng == m_shapeanimleng2.end()) {
+		_ASSERT(0);
+		return 0.0f;
+	}
+	int animleng = itranimleng->second;
+	if ((animleng <= 0) && (framecnt >= animleng)) {
+		_ASSERT(0);
+		return 0.0f;
+	}
+
+	map<string, map<int, float*>>::iterator itrshapeanim;
+	itrshapeanim = m_shapeanim2.find(shapename);
+	if (itrshapeanim != m_shapeanim2.end()) {
+		map<int, float*>::iterator itrshapeanim2;
+		itrshapeanim2 = itrshapeanim->second.find(srcmotid);
+		if (itrshapeanim2 != itrshapeanim->second.end()) {
+			if (itrshapeanim2->second) {
+				return *(itrshapeanim2->second + framecnt);
+			}
+			else {
+				return 0.0f;
+			}
+		}
+		else {
+			return 0.0f;
+		}
+	}
+	else {
+		_ASSERT(0);
+		return 0.0f;
+	}
 }
 
 int CMQOObject::ChkInView(ChaMatrix matWorld, ChaMatrix matVP, int refposindex)

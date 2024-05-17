@@ -2200,6 +2200,43 @@ int CDispObj::CopyDispV( CPolyMesh4* pm4 )
 	////m_InfB->Unmap();
 
 
+
+	if (m_pm4) {
+
+		UINT elemleng, infleng;
+
+		infleng = sizeof(PM3INF);
+
+		int pmvleng, pmfleng;
+		PM3INF* pmib = 0;
+		BINORMALDISPV* pm3v = 0;
+		BINORMALDISPV* pm4v = 0;
+		EXTLINEV* plinev = 0;
+		DWORD vbsize;
+		DWORD stride;
+
+		elemleng = sizeof(BINORMALDISPV);
+		pmvleng = m_pm4->GetOptLeng();
+		pmfleng = m_pm4->GetFaceNum();
+		pmib = m_pm4->GetPm3Inf();
+		pm4v = m_pm4->GetPm3Disp();
+		stride = sizeof(BINORMALDISPV) + sizeof(PM3INF);
+		vbsize = pmvleng * stride;
+
+		if (m_vertexMap && pm4v) {
+			DWORD vno;
+			for (vno = 0; vno < (DWORD)pmvleng; vno++) {
+				uint8_t* pdest = m_vertexMap + vno * (sizeof(BINORMALDISPV) + sizeof(PM3INF));
+
+				BINORMALDISPV* curv = pm4v + vno;
+				//PM3INF* curinf = pmib + vno;
+
+				memcpy(pdest, curv, sizeof(BINORMALDISPV));
+				//memcpy(pdest + sizeof(BINORMALDISPV), curinf, sizeof(PM3INF));
+			}
+		}
+	}
+
 	return 0;
 }
 
@@ -2224,6 +2261,34 @@ int CDispObj::CopyDispV( CPolyMesh3* pm3 )
 	////memcpy( pv, m_pm3->GetDispV(), sizeof( PM3DISPV ) * m_pm3->GetOptLeng() );
 
 	////m_VB->Unmap();
+
+	if (m_pm3) {
+
+		UINT elemleng, infleng;
+
+		infleng = sizeof(PM3INF);
+
+		int pmvleng, pmfleng;
+		PM3INF* pmib = 0;
+		BINORMALDISPV* pm3v = 0;
+		BINORMALDISPV* pm4v = 0;
+		EXTLINEV* plinev = 0;
+		DWORD vbsize;
+		DWORD stride;
+
+		elemleng = sizeof(BINORMALDISPV);
+		pmvleng = m_pm3->GetOptLeng();
+		pmfleng = m_pm3->GetFaceNum();
+		pmib = 0;
+		pm3v = m_pm3->GetDispV();
+
+		stride = sizeof(BINORMALDISPV);
+		vbsize = pmvleng * stride;
+
+		if (m_vertexMap && pm3v) {
+			memcpy(m_vertexMap, pm3v, m_vertexBufferView.SizeInBytes);
+		}
+	}
 
 	return 0;
 }

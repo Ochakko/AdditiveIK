@@ -1,150 +1,225 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\CPP\BVHelem.cpp" />
-    <ClCompile Include="..\CPP\BVHFile.cpp" />
-    <ClCompile Include="..\CPP\CameraFbx.cpp" />
-    <ClCompile Include="..\CPP\ChaCalcFunc.cpp" />
-    <ClCompile Include="..\CPP\ChaFile.cpp" />
     <ClCompile Include="..\CPP\ChaScene.cpp" />
-    <ClCompile Include="..\CPP\ChaVecCalc.cpp" />
-    <ClCompile Include="..\CPP\ChooseColorFile.cpp" />
-    <ClCompile Include="..\CPP\ColDlg.cpp" />
-    <ClCompile Include="..\CPP\Collision.cpp" />
-    <ClCompile Include="..\CPP\dbg.cpp" />
-    <ClCompile Include="..\CPP\DispGroupFile.cpp" />
-    <ClCompile Include="..\CPP\DispObj.cpp" />
-    <ClCompile Include="..\CPP\EditRange.cpp" />
-    <ClCompile Include="..\CPP\EngName.cpp" />
-    <ClCompile Include="..\CPP\ExtLine.cpp" />
-    <ClCompile Include="..\CPP\FBXBone.cpp" />
-    <ClCompile Include="..\CPP\FBXFile.cpp" />
-    <ClCompile Include="..\CPP\GColiFile.cpp" />
-    <ClCompile Include="..\CPP\GetMaterial.cpp" />
-    <ClCompile Include="..\CPP\ImpFile.cpp" />
-    <ClCompile Include="..\CPP\InfBone.cpp" />
-    <ClCompile Include="..\CPP\InfoWindow.cpp" />
-    <ClCompile Include="..\CPP\LightsForEditFile.cpp" />
-    <ClCompile Include="..\CPP\LIMFile.cpp" />
-    <ClCompile Include="..\CPP\lmtFile.cpp" />
-    <ClCompile Include="..\CPP\MNLFile.cpp" />
-    <ClCompile Include="..\CPP\Model.cpp" />
-    <ClCompile Include="..\CPP\MotionPoint.cpp" />
-    <ClCompile Include="..\CPP\mqoface.cpp" />
-    <ClCompile Include="..\CPP\mqofile.cpp" />
-    <ClCompile Include="..\CPP\mqomaterial.cpp" />
-    <ClCompile Include="..\CPP\mqoobject.cpp" />
-    <ClCompile Include="..\CPP\MySprite.cpp" />
-    <ClCompile Include="..\CPP\NodeOnLoad.cpp" />
-    <ClCompile Include="..\CPP\OrgWindow.cpp" />
-    <ClCompile Include="..\CPP\polymesh3.cpp" />
-    <ClCompile Include="..\CPP\polymesh4.cpp" />
-    <ClCompile Include="..\CPP\RetargetFile.cpp" />
-    <ClCompile Include="..\CPP\RigFile.cpp" />
-    <ClCompile Include="..\CPP\RigidElem.cpp" />
-    <ClCompile Include="..\CPP\RigidElemFile.cpp" />
     <ClCompile Include="..\CPP\stdafx.cpp" />
-    <ClCompile Include="..\CPP\TexBank.cpp" />
-    <ClCompile Include="..\CPP\TexElem.cpp" />
-    <ClCompile Include="..\CPP\ThreadingBase.cpp" />
-    <ClCompile Include="..\CPP\ThreadingMotion2Bt.cpp" />
-    <ClCompile Include="..\CPP\ThreadingCalcEul.cpp" />
-    <ClCompile Include="..\CPP\ThreadingCopyW2LW.cpp" />
-    <ClCompile Include="..\CPP\ThreadingFKTra.cpp" />
-    <ClCompile Include="..\CPP\ThreadingInitMp.cpp" />
-    <ClCompile Include="..\CPP\ThreadingLoadFbx.cpp" />
-    <ClCompile Include="..\CPP\ThreadingPostIK.cpp" />
-    <ClCompile Include="..\CPP\ThreadingRetarget.cpp" />
-    <ClCompile Include="..\CPP\ThreadingSetBtMotion.cpp" />
-    <ClCompile Include="..\CPP\ThreadingUpdateMatrix.cpp" />
-    <ClCompile Include="..\CPP\ThreadingUpdateTimeline.cpp" />
-    <ClCompile Include="..\CPP\UndoMotion.cpp" />
-    <ClCompile Include="..\CPP\XMLIO.cpp" />
     <ClCompile Include="..\BTSRC\clew\clew.c">
       <Filter>BPHeaders</Filter>
     </ClCompile>
-    <ClCompile Include="..\CPP\BntFile.cpp" />
-    <ClCompile Include="..\CPP\Bone.cpp" />
-    <ClCompile Include="..\BTMANAGER\BPWorld.cpp" />
-    <ClCompile Include="..\CPP\ShaderTypeFile.cpp" />
-    <ClCompile Include="..\CPP\ShadowParamsFile.cpp" />
-    <ClCompile Include="..\CPP\ThresholdFile.cpp" />
-    <ClCompile Include="..\CPP\SkyParamsFile.cpp" />
-    <ClCompile Include="..\CPP\FogParamsFile.cpp" />
-    <ClCompile Include="..\CPP\DofParamsFile.cpp" />
-    <ClCompile Include="..\CPP\CSDeform.cpp" />
-    <ClCompile Include="..\CPP\CSChkInView.cpp" />
-    <ClCompile Include="..\CPP\BtObject.cpp" />
-    <ClCompile Include="..\CPP\GrassElem.cpp" />
+    <ClCompile Include="..\CPP\BntFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ChooseColorFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\DispGroupFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\DofParamsFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\FogParamsFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\GColiFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\LightsForEditFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\LIMFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\lmtFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\MNLFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\RetargetFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\RigidElemFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ShaderTypeFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ShadowParamsFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\SkyParamsFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ThresholdFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\XMLIO.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\BTMANAGER\BPWorld.cpp">
+      <Filter>BTSRC</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ThreadingBase.cpp">
+      <Filter>Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ThreadingCalcEul.cpp">
+      <Filter>Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ThreadingCopyW2LW.cpp">
+      <Filter>Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ThreadingFKTra.cpp">
+      <Filter>Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ThreadingInitMp.cpp">
+      <Filter>Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ThreadingLoadFbx.cpp">
+      <Filter>Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ThreadingMotion2Bt.cpp">
+      <Filter>Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ThreadingPostIK.cpp">
+      <Filter>Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ThreadingRetarget.cpp">
+      <Filter>Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ThreadingSetBtMotion.cpp">
+      <Filter>Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ThreadingUpdateMatrix.cpp">
+      <Filter>Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ThreadingUpdateTimeline.cpp">
+      <Filter>Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ChaFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\CSChkInView.cpp">
+      <Filter>ComputeShader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\CSDeform.cpp">
+      <Filter>ComputeShader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\RigFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\mqoface.cpp">
+      <Filter>ForMQO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\mqofile.cpp">
+      <Filter>ForMQO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\mqomaterial.cpp">
+      <Filter>ForMQO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\mqoobject.cpp">
+      <Filter>ForMQO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\BVHFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\BVHelem.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ImpFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\TexBank.cpp">
+      <Filter>ForTexture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\TexElem.cpp">
+      <Filter>ForTexture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\MySprite.cpp">
+      <Filter>ForTexture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\FBXBone.cpp">
+      <Filter>ForFbx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\FBXFile.cpp">
+      <Filter>ForFbx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\BtObject.cpp">
+      <Filter>BtRigid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\RigidElem.cpp">
+      <Filter>BtRigid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\CameraFbx.cpp">
+      <Filter>ForFbx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ChaVecCalc.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\Collision.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ChaCalcFunc.cpp">
+      <Filter>Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\OrgWindow.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\InfoWindow.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\DispObj.cpp">
+      <Filter>RenderDX12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\Model.cpp">
+      <Filter>Model_Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\polymesh3.cpp">
+      <Filter>Model_Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\polymesh4.cpp">
+      <Filter>Model_Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ExtLine.cpp">
+      <Filter>Model_Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\Bone.cpp">
+      <Filter>BoneMotion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\MotionPoint.cpp">
+      <Filter>BoneMotion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\InfBone.cpp">
+      <Filter>BoneMotion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\GrassElem.cpp">
+      <Filter>Model_Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\EditRange.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ColDlg.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\NodeOnLoad.cpp">
+      <Filter>ForFbx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\GetMaterial.cpp">
+      <Filter>ForMQO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\EngName.cpp">
+      <Filter>misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\dbg.cpp">
+      <Filter>misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\UndoMotion.cpp">
+      <Filter>Undo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\BTSRC\BulletCollision\CollisionDispatch\SphereTriangleDetector.h" />
-    <ClInclude Include="..\BTSRC\BulletSoftBody\DeformableBodyInplaceSolverIslandCallback.h" />
-    <ClInclude Include="..\examples\MultiThreadedDemo\CommonRigidBodyMTBase.h" />
-    <ClInclude Include="..\INCLUDE\BVHelem.h" />
-    <ClInclude Include="..\INCLUDE\BVHFile.h" />
-    <ClInclude Include="..\INCLUDE\CameraFbx.h" />
-    <ClInclude Include="..\INCLUDE\ChaCalcFunc.h" />
-    <ClInclude Include="..\INCLUDE\ChaFile.h" />
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
-    <ClInclude Include="..\INCLUDE\ChaVecCalc.h" />
-    <ClInclude Include="..\INCLUDE\ChooseColorFile.h" />
-    <ClInclude Include="..\INCLUDE\Coef.h" />
-    <ClInclude Include="..\INCLUDE\coef_r.h" />
-    <ClInclude Include="..\INCLUDE\ColDlg.h" />
-    <ClInclude Include="..\INCLUDE\Collision.h" />
-    <ClInclude Include="..\INCLUDE\ConstraintElem.h" />
-    <ClInclude Include="..\INCLUDE\dbg.h" />
-    <ClInclude Include="..\INCLUDE\DispGroupFile.h" />
-    <ClInclude Include="..\INCLUDE\DispObj.h" />
-    <ClInclude Include="..\INCLUDE\EditRange.h" />
-    <ClInclude Include="..\INCLUDE\EngName.h" />
-    <ClInclude Include="..\INCLUDE\ExtLine.h" />
-    <ClInclude Include="..\INCLUDE\FBXBone.h" />
-    <ClInclude Include="..\INCLUDE\FBXFile.h" />
-    <ClInclude Include="..\INCLUDE\GColiFile.h" />
-    <ClInclude Include="..\INCLUDE\GetMaterial.h" />
-    <ClInclude Include="..\INCLUDE\GlobalVar.h" />
-    <ClInclude Include="..\INCLUDE\ImpFile.h" />
-    <ClInclude Include="..\INCLUDE\InfBone.h" />
-    <ClInclude Include="..\INCLUDE\InfoWindow.h" />
-    <ClInclude Include="..\INCLUDE\LightsForEditFile.h" />
-    <ClInclude Include="..\INCLUDE\LIMFile.h" />
-    <ClInclude Include="..\INCLUDE\lmtFile.h" />
-    <ClInclude Include="..\INCLUDE\MNLFile.h" />
-    <ClInclude Include="..\INCLUDE\Model.h" />
-    <ClInclude Include="..\INCLUDE\MotionPoint.h" />
-    <ClInclude Include="..\INCLUDE\mqoface.h" />
-    <ClInclude Include="..\INCLUDE\mqofile.h" />
-    <ClInclude Include="..\INCLUDE\mqomaterial.h" />
-    <ClInclude Include="..\INCLUDE\mqoobject.h" />
-    <ClInclude Include="..\INCLUDE\MySprite.h" />
-    <ClInclude Include="..\INCLUDE\NodeOnLoad.h" />
-    <ClInclude Include="..\INCLUDE\OrgWindow.h" />
-    <ClInclude Include="..\INCLUDE\polymesh3.h" />
-    <ClInclude Include="..\INCLUDE\polymesh4.h" />
-    <ClInclude Include="..\INCLUDE\RetargetFile.h" />
-    <ClInclude Include="..\INCLUDE\RigFile.h" />
-    <ClInclude Include="..\INCLUDE\RigidElem.h" />
-    <ClInclude Include="..\INCLUDE\RigidElemFile.h" />
     <ClInclude Include="..\INCLUDE\stdafx.h" />
-    <ClInclude Include="..\INCLUDE\TexBank.h" />
-    <ClInclude Include="..\INCLUDE\TexElem.h" />
-    <ClInclude Include="..\INCLUDE\ThreadingBase.h" />
-    <ClInclude Include="..\INCLUDE\ThreadingCalcEul.h" />
-    <ClInclude Include="..\INCLUDE\ThreadingCopyW2LW.h" />
-    <ClInclude Include="..\INCLUDE\ThreadingFKTra.h" />
-    <ClInclude Include="..\INCLUDE\ThreadingInitMp.h" />
-    <ClInclude Include="..\INCLUDE\ThreadingLoadFbx.h" />
-    <ClInclude Include="..\INCLUDE\ThreadingMotion2Bt.h" />
-    <ClInclude Include="..\INCLUDE\ThreadingPostIK.h" />
-    <ClInclude Include="..\INCLUDE\ThreadingRetarget.h" />
-    <ClInclude Include="..\INCLUDE\ThreadingSetBtMotion.h" />
-    <ClInclude Include="..\INCLUDE\ThreadingUpdateMatrix.h" />
-    <ClInclude Include="..\INCLUDE\ThreadingUpdateTimeline.h" />
-    <ClInclude Include="..\INCLUDE\UndoMotion.h" />
-    <ClInclude Include="..\INCLUDE\usercoef.h" />
-    <ClInclude Include="..\INCLUDE\XMLIO.h" />
     <ClInclude Include="..\BTSRC\Bullet3Common\b3AlignedAllocator.h">
       <Filter>BPHeaders</Filter>
     </ClInclude>
@@ -1030,19 +1105,240 @@
     <ClInclude Include="..\BTSRC\BulletInverseDynamics\details\MultiBodyTreeInitCache.hpp">
       <Filter>BPHeaders</Filter>
     </ClInclude>
-    <ClInclude Include="..\INCLUDE\BntFile.h" />
-    <ClInclude Include="..\INCLUDE\Bone.h" />
-    <ClInclude Include="..\BTMANAGER\BPWorld.h" />
-    <ClInclude Include="..\INCLUDE\ShaderTypeFile.h" />
-    <ClInclude Include="..\INCLUDE\ShadowParamsFile.h" />
-    <ClInclude Include="..\INCLUDE\ThresholdFile.h" />
-    <ClInclude Include="..\INCLUDE\SkyParamsFile.h" />
-    <ClInclude Include="..\INCLUDE\FogParamsFile.h" />
-    <ClInclude Include="..\INCLUDE\DofParamsFile.h" />
-    <ClInclude Include="..\INCLUDE\CSDeform.h" />
-    <ClInclude Include="..\INCLUDE\CSChkInView.h" />
-    <ClInclude Include="..\INCLUDE\BtObject.h" />
-    <ClInclude Include="..\INCLUDE\GrassElem.h" />
+    <ClInclude Include="..\examples\MultiThreadedDemo\CommonRigidBodyMTBase.h">
+      <Filter>BTSRC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\BTSRC\BulletSoftBody\DeformableBodyInplaceSolverIslandCallback.h">
+      <Filter>BTSRC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\BTSRC\BulletCollision\CollisionDispatch\SphereTriangleDetector.h">
+      <Filter>BTSRC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\BntFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ChooseColorFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\DispGroupFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\DofParamsFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\FogParamsFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\GColiFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\LightsForEditFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\LIMFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\lmtFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\MNLFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\RetargetFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\RigidElemFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ShaderTypeFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ShadowParamsFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\SkyParamsFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ThresholdFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\XMLIO.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\BTMANAGER\BPWorld.h">
+      <Filter>BTSRC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ThreadingBase.h">
+      <Filter>Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ThreadingCalcEul.h">
+      <Filter>Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ThreadingCopyW2LW.h">
+      <Filter>Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ThreadingFKTra.h">
+      <Filter>Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ThreadingInitMp.h">
+      <Filter>Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ThreadingLoadFbx.h">
+      <Filter>Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ThreadingMotion2Bt.h">
+      <Filter>Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ThreadingPostIK.h">
+      <Filter>Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ThreadingRetarget.h">
+      <Filter>Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ThreadingSetBtMotion.h">
+      <Filter>Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ThreadingUpdateMatrix.h">
+      <Filter>Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ThreadingUpdateTimeline.h">
+      <Filter>Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ChaFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\CSChkInView.h">
+      <Filter>ComputeShader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\CSDeform.h">
+      <Filter>ComputeShader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\RigFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\mqoface.h">
+      <Filter>ForMQO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\mqofile.h">
+      <Filter>ForMQO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\mqomaterial.h">
+      <Filter>ForMQO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\mqoobject.h">
+      <Filter>ForMQO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\BVHFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\BVHelem.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ImpFile.h">
+      <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\TexBank.h">
+      <Filter>ForTexture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\TexElem.h">
+      <Filter>ForTexture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\MySprite.h">
+      <Filter>ForTexture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\FBXBone.h">
+      <Filter>ForFbx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\FBXFile.h">
+      <Filter>ForFbx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\BtObject.h">
+      <Filter>BtRigid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\RigidElem.h">
+      <Filter>BtRigid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\CameraFbx.h">
+      <Filter>ForFbx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ChaVecCalc.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\Collision.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ChaCalcFunc.h">
+      <Filter>Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\Coef.h">
+      <Filter>CoefAndVar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\coef_r.h">
+      <Filter>CoefAndVar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\usercoef.h">
+      <Filter>CoefAndVar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\GlobalVar.h">
+      <Filter>CoefAndVar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\OrgWindow.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\InfoWindow.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\DispObj.h">
+      <Filter>RenderDX12</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\Model.h">
+      <Filter>Model_Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\polymesh3.h">
+      <Filter>Model_Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\polymesh4.h">
+      <Filter>Model_Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ExtLine.h">
+      <Filter>Model_Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\Bone.h">
+      <Filter>BoneMotion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\MotionPoint.h">
+      <Filter>BoneMotion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\InfBone.h">
+      <Filter>BoneMotion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\GrassElem.h">
+      <Filter>Model_Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\EditRange.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ColDlg.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\NodeOnLoad.h">
+      <Filter>ForFbx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\GetMaterial.h">
+      <Filter>ForMQO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ConstraintElem.h">
+      <Filter>BtRigid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\EngName.h">
+      <Filter>misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\dbg.h">
+      <Filter>misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\UndoMotion.h">
+      <Filter>Undo</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\BTSRC\BulletInverseDynamics\premake4.lua">
@@ -1072,6 +1368,54 @@
   <ItemGroup>
     <Filter Include="BPHeaders">
       <UniqueIdentifier>{32c16be7-31f2-45b9-ad49-d7039ac69e5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BTSRC">
+      <UniqueIdentifier>{e1579503-542c-41e0-9e5a-3dd0d2cc9b00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FileIO">
+      <UniqueIdentifier>{bf5623fd-dee3-4266-987a-aed5cd8a7b98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Threading">
+      <UniqueIdentifier>{6ac875b2-9d76-47c2-9a7b-e040e556fb52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ComputeShader">
+      <UniqueIdentifier>{2aa5d5b4-7ab1-4fd7-9f91-6b198a4d1549}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ForMQO">
+      <UniqueIdentifier>{bee3fbc8-8e7e-4be0-9c31-f1bb822d476c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ForTexture">
+      <UniqueIdentifier>{e7867ad8-f1f4-430f-a954-e8db1c6bf42b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ForFbx">
+      <UniqueIdentifier>{4ce1b86c-c217-41eb-89a0-373e8f8da55f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BtRigid">
+      <UniqueIdentifier>{38896eb3-977a-4e5e-bc4e-3bf47761fd17}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Math">
+      <UniqueIdentifier>{0bf1cea0-49c5-4a98-9663-06e44a687f6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CoefAndVar">
+      <UniqueIdentifier>{dbfa59e5-4ea5-483d-b2a3-a7ee61700f48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI">
+      <UniqueIdentifier>{928fcf59-815e-4427-842d-097b40c74a8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderDX12">
+      <UniqueIdentifier>{e0e07df7-dc9f-4b3c-bf4e-be0f1ab5f8aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Model_Mesh">
+      <UniqueIdentifier>{9e73e8e0-1b48-4b80-ad87-4d176f5100d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BoneMotion">
+      <UniqueIdentifier>{9815eac6-8517-467f-b649-565570a6845e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="misc">
+      <UniqueIdentifier>{6ebffe57-2d4c-47d7-804b-24af19fcb7b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Undo">
+      <UniqueIdentifier>{66d1311c-70fd-4ef0-ae3d-e7e34183a9dc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

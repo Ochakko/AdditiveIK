@@ -128,6 +128,7 @@ public:
 
 	int AddInfBone( int srcboneno, int srcvno, float srcweight, int isadditive );
 	int NormalizeInfBone();
+	int UpdateMorphWeight(int srcmotid, int framecnt);
 	int UpdateMorphBuffer();
 
 	int ScaleBtCapsule(bool setinstancescale, CRigidElem* reptr, float boneleng, int srctype, float* lengptr );
@@ -138,12 +139,14 @@ public:
 	int MultScale( ChaVector3 srcscale, ChaVector3 srctra );
 
 	int DestroyShapeObj();
-	int InitShapeWeight();
-	int SetShapeWeight( char* nameptr, float srcweight );
-	int AddShapeName( char* nameptr );
-
-	int ExistShape( char* nameptr );
-	int SetShapeVert( char* nameptr, int vno, ChaVector3 srcv );
+	int DestroyShapeAnim();
+	int DestroyShapeAnim(char* srcname, int srcmotid);
+	int AddShapeName(char* nameptr);
+	int SetShapeVert(char* nameptr, int vno, ChaVector3 srcv);
+	int AddShapeAnim(char* nameptr, int srcmotid, int animleng);
+	int SetShapeAnim(char* nameptr, int srcmotid, int framecnt, float lWeight);
+	int InitShapeWeight();//補間計算結果
+	int SetShapeWeight(int channelindex, float srcweight);//補間計算結果
 
 	void DestroySystemDispObj();
 
@@ -162,6 +165,8 @@ public:
 	bool ExistInLaterMaterial(CMQOMaterial* srcmat);
 
 	MODELBOUND GetBound();
+
+	float GetShapeAnimWeight(int srcmotid, int framecnt, int channelindex);
 
 private:
 	void InitParams();
@@ -365,18 +370,28 @@ public:
 		m_cluster.push_back( srcval );
 	};
 
-	BOOL EmptyFindShape(){
-		return m_findshape.empty();
+	bool EmptyShape(){
+		return m_shapenamevec.empty();
 	};
-
-	int FindShape( std::string srcname ){
-		std::map<std::string,int>::iterator itrfind;
-		itrfind = m_findshape.find( srcname );
-		if( itrfind != m_findshape.end() ){
-			return itrfind->second;
-		}else{
-			return -1;
+	int GetShapeNameNum() {
+		int namenum = (int)m_shapenamevec.size();
+		return namenum;
+	};
+	bool ExistShape(char* nameptr){
+		if (!nameptr) {
+			return false;
 		}
+		bool existname = false;
+		std::string cmpname = nameptr;
+
+		std::vector<std::string>::iterator itrfindname;
+		for (itrfindname = m_shapenamevec.begin(); itrfindname != m_shapenamevec.end(); itrfindname++) {
+			if (*itrfindname == cmpname) {
+				existname = true;
+				break;
+			}
+		}
+		return existname;
 	};
 
 	//void GetShapeVert2( std::map<std::string,ChaVector3*>& dstmap ){
@@ -394,17 +409,20 @@ public:
 		}
 	};
 	
-	int GetShapeNameNum() {
-		int namenum = (int)m_shapenamevec.size();
-		return namenum;
-	};
-	std::string GetShapeName(int srcindex) {
+	std::string GetShapeName(int srcindex, int* perror) {
+		if (!perror) {
+			_ASSERT(0);
+			return "error";
+		}
+
 		int namenum = (int)m_shapenamevec.size();
 		if ((srcindex >= 0) && (srcindex < namenum)) {
+			*perror = 0;
 			return m_shapenamevec[srcindex];
 		}
 		else {
 			_ASSERT(0);
+			*perror = 1;
 			return "error";
 		}
 	};
@@ -540,9 +558,10 @@ private:
 
 	std::vector<CBone*> m_cluster;//中身のCBone*は外部メモリ
 
-	std::map<std::string,int> m_findshape;
-	std::map<std::string,ChaVector3*> m_shapevert;
 	std::vector<std::string> m_shapenamevec;
+	std::map<std::string,ChaVector3*> m_shapevert;
+	std::map<std::string, std::map<int,float*>> m_shapeanim2;//複数アニメ対応
+	std::map<int,int> m_shapeanimleng2;//複数アニメ対応
 
 	FbxNode* m_pnode;
 
@@ -586,7 +605,8 @@ private:
 	ChaMatrix m_multmat;
 	//std::map<std::string, CMQOMaterial*> m_namematerial;
 	int m_shapenum;
-	std::map<std::string,float> m_shapeweight;
+	//std::map<std::string,float> m_shapeweight;
+	std::vector<float> m_shapeweightvec;//[channelindex]
 	ChaVector3* m_mpoint;
 
 
