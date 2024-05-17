@@ -379,8 +379,24 @@ public:
 		}
 	};
 
-	void GetShapeVert2( std::map<std::string,ChaVector3*>& dstmap ){
-		dstmap = m_shapevert;
+	//void GetShapeVert2( std::map<std::string,ChaVector3*>& dstmap ){
+	//	dstmap = m_shapevert;
+	//};
+
+	ChaVector3* GetShapeVert(std::string srcname) {
+		std::map<std::string, ChaVector3*>::iterator itrfind;
+		itrfind = m_shapevert.find(srcname);
+		if (itrfind != m_shapevert.end()) {
+			return itrfind->second;
+		}
+		else {
+			return nullptr;
+		}
+	};
+	
+	int GetShapeNameNum() {
+		int namenum = (int)m_shapenamevec.size();
+		return namenum;
 	};
 	std::string GetShapeName(int srcindex) {
 		int namenum = (int)m_shapenamevec.size();
@@ -391,25 +407,25 @@ public:
 			_ASSERT(0);
 			return "error";
 		}
-	}
+	};
 
 	ChaMatrix GetMeshMat()
 	{
 		return m_meshmat;
-	}
+	};
 	void SetMeshMat(ChaMatrix srcmat)
 	{
 		m_meshmat = srcmat;
-	}
+	};
 
 	int GetDbgCount()
 	{
 		return m_dbgcount;
-	}
+	};
 	void SetDbgCount(int srccount)
 	{
 		m_dbgcount = srccount;
-	}
+	};
 
 	FbxNode* GetFbxNode()
 	{

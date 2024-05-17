@@ -60,11 +60,13 @@ typedef struct tag_blsindex
 	int serialno;
 	int blendshapeno;
 	int channelno;
-
-	tag_blsindex() {
+	void Init() {
 		serialno = 0;
 		blendshapeno = 0;
 		channelno = 0;
+	};
+	tag_blsindex() {
+		Init();
 	};
 }BLSINDEX;
 typedef struct tag_blsinfo
@@ -72,14 +74,31 @@ typedef struct tag_blsinfo
 	BLSINDEX blsindex;
 	FbxNode* basenode;
 	CMQOObject* base;
-	string targetname;
-	string channelname;
-	tag_blsinfo() : blsindex() {
-		//blsindex.Init();
+	//string targetname;
+	//string channelname;
+	char targetname[256];
+	char channelname[256];
+	void Init() {
+		blsindex.Init();
 		basenode = 0;
 		base = 0;
-		targetname.clear();
-		channelname.clear();
+		//targetname.clear();
+		//channelname.clear();
+		ZeroMemory(targetname, sizeof(char) * 256);
+		ZeroMemory(channelname, sizeof(char) * 256);
+	};
+	tag_blsinfo() {
+		Init();
+	};
+	void SetTargetName(const char* srcname) {
+		if (srcname) {
+			strcpy_s(targetname, 256, srcname);
+		}
+	};
+	void SetChannelName(const char* srcname) {
+		if (srcname) {
+			strcpy_s(channelname, 256, srcname);
+		}
 	};
 }BLSINFO;
 static map<int, BLSINFO> s_blsinfo;
@@ -442,6 +461,7 @@ int BVH2FBXFile(FbxManager* psdk, CBVHFile* pbvhfile, char* pfilename, char* fbx
 		lScene->Destroy(true);
 		lScene = 0;
 	}
+	s_blsinfo.clear();
 
 	s_bvhflag = 0;
 	g_underWriteFbx = false;
@@ -519,6 +539,7 @@ int WriteFBXFile(bool limitdegflag, FbxManager* psdk, CModel* pmodel, char* pfil
 		lScene->Destroy(true);
 		lScene = nullptr;
 	}
+	s_blsinfo.clear();
 
 	g_underWriteFbx = false;
 
@@ -871,8 +892,21 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 		}
 
 
+		//if (strstr(nodename, "Fcl_ALL_Angry") != 0) {
+		//	int dbgflag1 = 1;
+		//}
+
+
 		FbxNodeAttribute* srcattr = srcnode->GetNodeAttribute();
 		if (srcattr) {
+
+			//char attrname[256] = { 0 };
+			//strcpy_s(attrname, srcattr->GetName());
+			//if (strstr(attrname, "Fcl_ALL_Angry") != 0) {
+			//	int dbgflag1 = 1;
+			//}
+
+
 			FbxNodeAttribute::EType type = srcattr->GetAttributeType();
 
 			/*
@@ -1782,7 +1816,7 @@ bool CreateScene(bool limitdegflag, FbxManager* pSdkManager, FbxScene* pScene, C
 	//}
 
 	BLSINDEX blsindex;
-	ZeroMemory(&blsindex, sizeof(BLSINDEX));
+	blsindex.Init();
 	s_blsinfo.clear();
 	CreateAndCopyFbxNodeReq(pSdkManager, pScene, pmodel, lRootNode, pmodel->GetNodeOnLoad(), &blsindex);
 
@@ -2010,9 +2044,20 @@ int MapTargetShape( FbxBlendShapeChannel* lBlendShapeChannel, FbxScene* pScene,
 	//	int dbgflag2 = 1;
 	//}
 	
+	FbxShape* lShape = lBlendShapeChannel->GetTargetShape(targetcnt);
+	if (lShape) {
+		//既に作成済
+		_ASSERT(0);
+		return 0;
+	}
+	else {
+		lShape = FbxShape::Create(pScene, shapename);
+		if (!lShape) {
+			_ASSERT(0);
+			abort();
+		}
+	}
 
-	FbxShape* lShape = FbxShape::Create(pScene,shapename);
-	
 	//CPolyMesh4* basepm4 = curobj->GetPm4();
 	//_ASSERT( basepm4 );
 	//int shapevertnum = basepm4->GetFaceNum() * 3;
@@ -2045,7 +2090,9 @@ int MapTargetShape( FbxBlendShapeChannel* lBlendShapeChannel, FbxScene* pScene,
 
 		lVector4[ shapevno ].Set( shapev.x, shapev.y, shapev.z, 1.0 );
 	}
+
 	lBlendShapeChannel->AddTargetShape(lShape);
+
 	return 0;
 }
 
@@ -2072,38 +2119,53 @@ int MapShapesOnMesh(FbxScene* pScene, FbxNode* lNode, FbxNode* srcnode, CModel* 
 
 	FbxBlendShape* srcBlendShape = (FbxBlendShape*)srcnode->GetMesh()->GetDeformer(0, FbxDeformer::eBlendShape);
 	if (srcBlendShape) {
-
-		//FbxBlendShape* lBlendShape = FbxBlendShape::Create(pScene, blsname);
-		FbxBlendShape* lBlendShape = FbxBlendShape::Create(lNode, blsname);
+		FbxBlendShape* lBlendShape = (FbxBlendShape*)lNode->GetMesh()->GetDeformer(0, FbxDeformer::eBlendShape);
+		if (lBlendShape) {
+			//既に作成済
+			_ASSERT(0);
+			return 0;
+		}
+		lBlendShape = FbxBlendShape::Create(pScene, blsname);
+		if (!lBlendShape) {
+			_ASSERT(0);
+			abort();
+		}
 
 		(blsindex->channelno) = 0;
 
 		
 		int targetcnt = 0;
-		map<string, ChaVector3*> tmpmap;
-		curobj->GetShapeVert2(tmpmap);
-		int targetnum = (int)tmpmap.size();
+		int targetnum = curobj->GetShapeNameNum();
 		for (targetcnt = 0; targetcnt < targetnum; targetcnt++) {//mapはアルファベットソートされるのでvectorのGetShapeNameの順番でループする
 			string targetname = curobj->GetShapeName(targetcnt);
-			ChaVector3* curv = tmpmap[targetname];
+			ChaVector3* curv = curobj->GetShapeVert(targetname);
 			if (curv) {
 				FbxBlendShapeChannel* srcChannel = srcBlendShape->GetBlendShapeChannel(blsindex->channelno);
 				char channelname[256] = { 0 };
 				strcpy_s(channelname, 256, srcChannel->GetName());
 
-
-				FbxBlendShapeChannel* lBlendShapeChannel = FbxBlendShapeChannel::Create(pScene, channelname);
+				FbxBlendShapeChannel* lBlendShapeChannel = lBlendShape->GetBlendShapeChannel(targetcnt);
+				if (lBlendShapeChannel) {
+					//既に作成済
+					_ASSERT(0);
+					continue;
+				}
+				lBlendShapeChannel = FbxBlendShapeChannel::Create(pScene, channelname);
+				if (!lBlendShapeChannel) {
+					_ASSERT(0);
+					abort();
+				}
 				lBlendShape->AddBlendShapeChannel(lBlendShapeChannel);
 
 				MapTargetShape(lBlendShapeChannel, pScene, curobj, curv, targetname, targetcnt);
 
 				BLSINFO blsinfo;
-				ZeroMemory(&blsinfo, sizeof(BLSINFO));
+				blsinfo.Init();
 
 				blsinfo.blsindex = *blsindex;
 				blsinfo.base = curobj;
-				blsinfo.targetname = targetname;
-				blsinfo.channelname = channelname;
+				blsinfo.SetTargetName(targetname.c_str());
+				blsinfo.SetChannelName(channelname);
 				blsinfo.basenode = srcnode;//load側のノードにモーションが入っている
 
 				s_blsinfo[blsindex->serialno] = blsinfo;
@@ -2115,7 +2177,13 @@ int MapShapesOnMesh(FbxScene* pScene, FbxNode* lNode, FbxNode* srcnode, CModel* 
 		}
 
 		FbxGeometry* lGeometry = lNode->GetGeometry();
-		lGeometry->AddDeformer(lBlendShape);
+		if (lGeometry) {
+			lGeometry->AddDeformer(lBlendShape);
+		}
+		else {
+			_ASSERT(0);
+			abort();
+		}
 	}
 
 	return 0;
@@ -4449,6 +4517,7 @@ int AnimateMorph(FbxScene* pScene, CModel* pmodel)
 		map<int, BLSINFO>::iterator itrblsinfo;
 		for( itrblsinfo = s_blsinfo.begin(); itrblsinfo != s_blsinfo.end(); itrblsinfo++ ){
 			BLSINFO curinfo = itrblsinfo->second;
+			string strchannelname = curinfo.channelname;
 			FbxMesh* srcMesh = curinfo.basenode->GetMesh();//load側にモーションがセットしてある
 			CMQOObject* baseobj = curinfo.base;
 			//if (baseobj && !baseobj->EmptyFindShape()) {
@@ -4466,7 +4535,7 @@ int AnimateMorph(FbxScene* pScene, CModel* pmodel)
 							double dframe = (double)frameno;
 							//float curweight = pmodel->GetTargetWeight( curmotid, dframe, timescale, curinfo.base, curinfo.targetname );
 							float curweight = pmodel->GetTargetWeight(
-								curmotid, dframe, timescale, curinfo.base, curinfo.channelname, curinfo.blsindex.channelno, srcMesh);
+								curmotid, dframe, timescale, curinfo.base, strchannelname, curinfo.blsindex.channelno, srcMesh);
 
 							lTime.SetSecondDouble(dframe / timescale);
 							lKeyIndex = lCurve->KeyAdd(lTime);
@@ -6234,16 +6303,17 @@ void FindClusterBySkeletonReq(CNodeOnLoad* pnodeonload, FbxNode* pskeleton, FbxC
 	}
 }
 
-//void DestroySavedScene()
-//{
-//	size_t savednum = s_savedscenevec.size();
-//	size_t savedindex;
-//	for (savedindex = 0; savedindex < savednum; savedindex++) {
-//		FbxScene* lScene = s_savedscenevec[savedindex];
-//		if (lScene) {
-//			lScene->Destroy(true);
-//			lScene = 0;
-//		}
-//	}
-//	s_savedscenevec.clear();
-//}
+void DestroySavedScene()
+{
+	size_t savednum = s_savedscenevec.size();
+	size_t savedindex;
+	for (savedindex = 0; savedindex < savednum; savedindex++) {
+		FbxScene* lScene = s_savedscenevec[savedindex];
+		if (lScene) {
+			lScene->Destroy(true);
+			lScene = 0;
+		}
+	}
+	s_savedscenevec.clear();
+  s_blsinfo.clear();
+}

@@ -3505,12 +3505,6 @@ INT WINAPI wWinMain(
 //_CrtSetBreakAlloc(65234);
 //_CrtSetBreakAlloc(1526483);
 
-	//_CrtSetBreakAlloc(105698);
-	//_CrtSetBreakAlloc(105694);
-
-	//_CrtSetBreakAlloc(2719566);
-	//_CrtSetBreakAlloc(2547422);
-	//_CrtSetBreakAlloc(2540616);
 
 
 	SetBaseDir();

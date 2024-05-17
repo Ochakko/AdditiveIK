@@ -11,6 +11,15 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+　FBX SDKのバージョンを2020.3.4から2020.3.7へアップ
+
+　BlendShapeが設定されているfbxを読み込んで保存した場合にメモリリークしていたのを修正
+　　std::stringをメンバーに持つ構造体に対してZeroMemoryしていたのが原因だった
+　　問題が起きた構造体にも初期化関数を追加
+
+
+
+
 
 2024/05/16
 　AdditiveIK 1.0.0.21 release

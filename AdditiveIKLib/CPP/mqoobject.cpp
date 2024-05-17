@@ -2699,6 +2699,19 @@ int CMQOObject::AddShapeName( char* nameptr )
 		ZeroMemory(m_mpoint, sizeof(ChaVector3) * m_vertex);
 	}
 
+	string setname = nameptr;
+
+	bool existname = false;
+	vector<string>::iterator itrfindname;
+	for (itrfindname = m_shapenamevec.begin(); itrfindname != m_shapenamevec.end(); itrfindname++) {
+		if (*itrfindname == setname) {
+			existname = true;
+			break;
+		}
+	}
+	if (existname) {
+		return 0;
+	}
 
 	m_shapenamevec.push_back(nameptr);
 
