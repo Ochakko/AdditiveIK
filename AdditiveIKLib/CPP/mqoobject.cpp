@@ -2510,7 +2510,17 @@ int CMQOObject::UpdateMorphBuffer()
 		return 0;
 	}
 
-	MoveMemory( m_mpoint, m_pointbuf, sizeof( ChaVector3 ) * m_vertex );
+	//###############################################################################################################################
+	//2024/05/18
+	//頂点のブレンド計算をシェーダー化してみたが
+	//並列化するとちらつき、１スレッド化するとCPUよりも遅かった
+	//並列化でちらつくのは、計算前にoutputの初期化が必要なことと、計算中に同じ変数に値を足していく必要があるからだと思われる
+	//CPUよりも遅かったのは、出力サイズが大きく、結果取得の際にGPU-->CPUへの転送が多いことも遅い理由だと思われる
+	//新しいDirectX12にはGPU-->CPUへの転送を速くするオプションが追加されたらしいので、そのオプションを試すときにまたシェーダ化の再トライをする可能性あり
+	//以上のような理由から　とりあえず　この箇所については　シェーダ化しないで　CPU計算のままにする
+	//###############################################################################################################################
+
+	MoveMemory( m_mpoint, m_pointbuf, sizeof( ChaVector3 ) * m_vertex );//ベース形状で初期化
 
 	int shapenum = GetShapeNameNum();
 	ChaVector3 diffpoint;
@@ -2528,7 +2538,7 @@ int CMQOObject::UpdateMorphBuffer()
 						ChaVector3 targetv = *(curshape + vno);
 						ChaVector3 orgv = *(m_pointbuf + vno);
 						diffpoint = (targetv - orgv) * curweight;
-						*(m_mpoint + vno) += diffpoint;
+						*(m_mpoint + vno) += diffpoint;//結果に加算
 					}
 				}
 			}

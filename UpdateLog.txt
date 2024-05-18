@@ -1,6 +1,14 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+
+2024/05/19
+　BlendShape(モーフ)対応の続き
+   ボーン無しモーフ付きfbxのモーフアニメ再生に対応
+
+　
+
+
 2024/05/18
 　BlendShape(モーフ)対応の続き
 　　モーフアニメの再生が可能
@@ -11,8 +19,6 @@ https://github.com/Ochakko/AdditiveIK
 
 
 　　モーフアニメの編集はまだ出来ない
-
-
 
 
 

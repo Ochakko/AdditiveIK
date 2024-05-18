@@ -11666,7 +11666,8 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 
 	//Handle a model not has motion.
 	int motnum = s_model->GetMotInfoSize();
-	if ((motnum == 0) && (s_model->GetNoBoneFlag() == false)) {
+	//if ((motnum == 0) && (s_model->GetNoBoneFlag() == false)) {
+	if (motnum == 0) {
 		CallF(AddMotion(0), return 0);//モーション無しfbxを読み込んだ場合のInitMP呼び出しでモーションポイント作成
 		if (s_chascene) {
 			s_chascene->SetTimelineArray(mindex, s_tlarray);
@@ -11931,9 +11932,9 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 	EnterCriticalSection(&s_CritSection_LTimeline);
 
 	//EraseKeyList();
-	//if (s_model && s_model->GetBoneListSize() > 0) {
-	if (s_model && (s_model->GetBoneForMotionSize() > 0)) {
-
+	////if (s_model && s_model->GetBoneListSize() > 0) {
+	//if (s_model && (s_model->GetBoneForMotionSize() > 0)) {
+	if (s_model) {
 		if (!s_owpTimeline) {
 			//OWP_Timeline* owpTimeline = 0;
 			//タイムラインのGUIパーツを生成
@@ -13087,9 +13088,9 @@ int AddMotion(const WCHAR* wfilename, double srcmotleng)
 	if (!s_model) {
 		return 0;
 	}
-	if (s_model->GetNoBoneFlag() == true) {
-		return 0;
-	}
+	//if (s_model->GetNoBoneFlag() == true) {
+	//	return 0;
+	//}
 
 
 	int motnum = (int)s_tlarray.size();

@@ -104,6 +104,10 @@ typedef  struct tag_n3p
 */
 
 	DestroySystemDispObj(true);
+	if (m_n3p) {
+		delete[] m_n3p;
+		m_n3p = 0;
+	}
 	if (m_dispv) {
 		free(m_dispv);
 		m_dispv = 0;
@@ -129,9 +133,11 @@ typedef  struct tag_n3p
 
 void CPolyMesh3::DestroySystemDispObj(bool emptyshape)
 {
-	if (m_n3p) {
-		delete[] m_n3p;
-		m_n3p = 0;
+	if (emptyshape) {
+		if (m_n3p) {
+			delete[] m_n3p;
+			m_n3p = 0;
+		}
 	}
 
 	//pick‚ÅŽg—p‚·‚é‚±‚Æ‚É‚µ‚½‚Ì‚Å‚±‚±‚Å‚Í”jŠü‚µ‚È‚¢
@@ -1069,12 +1075,55 @@ int CPolyMesh3::UpdateMorphBuffer(ChaVector3* mpoint)
 		return 1;
 	}
 
-	int vno;
-	for (vno = 0; vno < (m_facenum * 3); vno++) {
-		int curindex = *(m_dispindex + vno);
-		BINORMALDISPV* curv = m_dispv + vno;
+	//int vno;
+	//for (vno = 0; vno < (m_facenum * 3); vno++) {
+	//	int curindex = *(m_dispindex + vno);
+	//	BINORMALDISPV* curv = m_dispv + vno;
+	//
+	//	curv->pos = ChaVector4((mpoint + curindex)->x, (mpoint + curindex)->y, (mpoint + curindex)->z, 1.0f);
+	//}
 
-		curv->pos = ChaVector4((mpoint + curindex)->x, (mpoint + curindex)->y, (mpoint + curindex)->z, 1.0f);
+	//int fno;
+	//for (fno = 0; fno < GetFaceNum(); fno++) {
+	//	int dstindex0, dstindex1, dstindex2;
+
+	//	if (m_fbxfileflag == true) {
+	//		dstindex0 = *(m_dispindex + fno * 3 + 2);//!!!!”½‘ÎŽü‚è
+	//		dstindex1 = *(m_dispindex + fno * 3 + 1);//!!!!”½‘ÎŽü‚è
+	//		dstindex2 = *(m_dispindex + fno * 3);//!!!!”½‘ÎŽü‚è
+	//	}
+	//	else {
+	//		dstindex0 = *(m_dispindex + fno * 3);
+	//		dstindex1 = *(m_dispindex + fno * 3 + 1);
+	//		dstindex2 = *(m_dispindex + fno * 3 + 2);
+	//	}
+	//	BINORMALDISPV* curv0 = m_dispv + fno * 3;
+	//	BINORMALDISPV* curv1 = m_dispv + fno * 3 + 1;
+	//	BINORMALDISPV* curv2 = m_dispv + fno * 3 + 2;
+
+	//	curv0->pos = ChaVector4((mpoint + dstindex0)->x, (mpoint + dstindex0)->y, (mpoint + dstindex0)->z, 1.0f);
+	//	curv1->pos = ChaVector4((mpoint + dstindex1)->x, (mpoint + dstindex1)->y, (mpoint + dstindex1)->z, 1.0f);
+	//	curv2->pos = ChaVector4((mpoint + dstindex2)->x, (mpoint + dstindex2)->y, (mpoint + dstindex2)->z, 1.0f);
+	//}
+
+
+	int n3;
+	int setno = 0;
+	int curfaceno = 0;
+	int curtrino = 0;
+	N3P* curn3p = 0;
+	for (n3 = 0; n3 < (m_facenum * 3); n3++) {
+		curn3p = m_n3p + n3;
+		curfaceno = n3 / 3;
+		curtrino = n3 - curfaceno * 3;
+
+		BINORMALDISPV* curv = m_dispv + setno;
+		curv->pos.x = (mpoint + curn3p->pervert->vno)->x;
+		curv->pos.y = (mpoint + curn3p->pervert->vno)->y;
+		curv->pos.z = (mpoint + curn3p->pervert->vno)->z;
+		curv->pos.w = 1.0f;
+
+		setno++;
 	}
 
 	return 0;

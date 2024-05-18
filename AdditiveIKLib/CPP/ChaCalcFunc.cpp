@@ -804,7 +804,7 @@ int ChaCalcFunc::RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int* onlyc
 
 	CMotionPoint* curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
 	if (!curmp) {
-		_ASSERT(0);
+		//_ASSERT(0);
 		return 0;
 	}
 

@@ -1344,13 +1344,14 @@ private:
 		//#####################
 		//for private function
 		//#####################
-
-		if (GetNoBoneFlag() == false) {
+		
+		//モーフアニメがあるかもしれないのでボーンが無くても処理をする
+		//if (GetNoBoneFlag() == false) {
 			return m_curmotinfo;
-		}
-		else {
-			return 0;
-		}
+		//}
+		//else {
+		//	return 0;
+		//}
 	};
 	MOTINFO* GetMotInfoPtr(int srcid) {//motidは1から
 
@@ -1358,7 +1359,8 @@ private:
 		//for private function
 		//#####################
 
-		if (GetNoBoneFlag() == false) {
+		//モーフアニメがあるかもしれないのでボーンが無くても処理をする
+		//if (GetNoBoneFlag() == false) {
 			//DeleteMotion時に要素をeraseするのでid - 1が配列のインデックスになるとは限らない//2021/08/26
 			int miindex;
 			miindex = MotionID2Index(srcid);
@@ -1369,11 +1371,11 @@ private:
 				_ASSERT(0);
 				return 0;
 			}
-		}
-		else {
-			_ASSERT(0);
-			return 0;
-		}
+		//}
+		//else {
+		//	_ASSERT(0);
+		//	return 0;
+		//}
 	};
 
 
@@ -1674,12 +1676,12 @@ public: //accesser
 	};
 
 	int GetMotInfoSize(){
-		if (GetNoBoneFlag() == false) {
+		//if (GetNoBoneFlag() == false) {
 			return (int)m_motinfo.size();
-		}
-		else {
-			return 0;
-		}
+		//}
+		//else {
+		//	return 0;
+		//}
 	};
 	MOTINFO GetMotInfoByIndex(int srcindex)//by array index
 	{
@@ -1706,7 +1708,7 @@ public: //accesser
 	MOTINFO GetMotInfo(int srcid){//motidは1から
 		//return m_motinfo[srcid - 1];
 
-		if (GetNoBoneFlag() == false) {
+		//if (GetNoBoneFlag() == false) {
 			//DeleteMotion時に要素をeraseするのでid - 1が配列のインデックスになるとは限らない//2021/08/26
 			int miindex;
 			miindex = MotionID2Index(srcid);
@@ -1720,19 +1722,19 @@ public: //accesser
 				dummymi.Init();
 				return dummymi;
 			}
-		}
-		else {
-			//_ASSERT(0);
-			//abort();//abortしないで　呼び出し側でmotid > 0チェックをすることにした
-			MOTINFO dummymi;
-			dummymi.Init();
-			return dummymi;
-		}
+		//}
+		//else {
+		//	//_ASSERT(0);
+		//	//abort();//abortしないで　呼び出し側でmotid > 0チェックをすることにした
+		//	MOTINFO dummymi;
+		//	dummymi.Init();
+		//	return dummymi;
+		//}
 	};
 
 	int SetMotInfo(int srcid, MOTINFO srcmi)
 	{
-		if (GetNoBoneFlag() == false) {
+		//if (GetNoBoneFlag() == false) {
 			//DeleteMotion時に要素をeraseするのでid - 1が配列のインデックスになるとは限らない//2021/08/26
 			int miindex;
 			miindex = MotionID2Index(srcid);
@@ -1745,12 +1747,12 @@ public: //accesser
 				abort();
 				return 1;
 			}
-		}
-		else {
-			_ASSERT(0);
-			abort();//!!!!!!!!!!!!!!!!
-			return 1;
-		}
+		//}
+		//else {
+		//	_ASSERT(0);
+		//	abort();//!!!!!!!!!!!!!!!!
+		//	return 1;
+		//}
 	}
 	int SetMotInfoCurFrameByIndex(int srcindex, double srcval)
 	{
@@ -1867,7 +1869,7 @@ public: //accesser
 	int GetCurrentMotion();
 
 	MOTINFO GetCurMotInfo(){
-		if (GetNoBoneFlag() == false) {
+		//if (GetNoBoneFlag() == false) {
 			if (m_curmotinfo) {
 				return *m_curmotinfo;
 			}
@@ -1876,12 +1878,12 @@ public: //accesser
 				dummymi.Init();
 				return dummymi;
 			}
-		}
-		else {
-			MOTINFO dummymi;
-			dummymi.Init();
-			return dummymi;
-		}
+		//}
+		//else {
+		//	MOTINFO dummymi;
+		//	dummymi.Init();
+		//	return dummymi;
+		//}
 	};
 	void SetCurMotInfo( MOTINFO* srcinfo ){
 		if (m_curmotinfo) {
@@ -1890,7 +1892,7 @@ public: //accesser
 	};
 	MOTINFO GetFirstValidMotInfo()
 	{
-		if (GetNoBoneFlag() == false) {
+		//if (GetNoBoneFlag() == false) {
 			MOTINFO retmi;
 			retmi.Init();
 			std::map<int, MOTINFO*>::iterator itrmi;
@@ -1902,12 +1904,12 @@ public: //accesser
 				}
 			}
 			return retmi;
-		}
-		else {
-			MOTINFO dummymi;
-			dummymi.Init();
-			return dummymi;
-		}
+		//}
+		//else {
+		//	MOTINFO dummymi;
+		//	dummymi.Init();
+		//	return dummymi;
+		//}
 	};
 
 

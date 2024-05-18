@@ -1383,9 +1383,10 @@ int CModel::LoadFBXAnim( FbxManager* psdk, FbxScene* pscene, int (*tlfunc)( int 
 		return 0;
 	}
 
-	if(!GetTopBone() || GetNoBoneFlag()){
-		return 0;
-	}
+	//モーフアニメがあるかもしれないのでリターンしない
+	//if(!GetTopBone() || GetNoBoneFlag()){
+	//	return 0;
+	//}
 
 
 	this->m_tlFunc = tlfunc;//未使用
@@ -2325,9 +2326,11 @@ int CModel::UpdateMatrix(bool limitdegflag,
 		return 0;//!!!!!!!!!!!!
 	}
 
-	if (GetBoneForMotionSize() <= 0) {
-		return 0;
-	}
+
+	//morphアニメがあるかもしれないので、ボーンが無くてもリターンしない
+	//if (GetBoneForMotionSize() <= 0) {
+	//	return 0;
+	//}
 
 
 	//if (m_topbone) {
@@ -2905,6 +2908,10 @@ int CModel::GetFBXShapeAnim(FbxMesh* pMesh, CMQOObject* curobj, FbxAnimLayer* pA
 								lTime.SetSecondDouble((double)framecnt / timescale);
 								lWeight = lFCurve->Evaluate(lTime);
 
+								if (lWeight != 0.0) {
+									int dbgflag0 = 1;
+								}
+
 								int result2 = curobj->SetShapeAnim(shapename, curmotid, framecnt, (float)lWeight);
 								if (result2 != 0) {
 									_ASSERT(0);
@@ -3157,9 +3164,10 @@ int CModel::AddMotion(const char* srcname, const WCHAR* wfilename, double srclen
 	//int leng = (int)strlen(srcname);
 
 
-	if (GetNoBoneFlag() == true) {
-		return 0;
-	}
+	//モーフアニメがあるかもしれないのでリターンしない
+	//if (GetNoBoneFlag() == true) {
+	//	return 0;
+	//}
 
 
 
@@ -3260,7 +3268,9 @@ int CModel::AddMotion(const char* srcname, const WCHAR* wfilename, double srclen
 		int errorcount = 0;
 		CreateIndexedMotionPointReq(GetTopBone(false), newid, srcleng, &errorcount);//2022/10/30
 		if (errorcount != 0) {
-			_ASSERT(0);
+			if (GetBoneForMotionSize() > 1) {
+				_ASSERT(0);
+			}
 		}
 	}
 
@@ -3332,7 +3342,10 @@ int CModel::SetMotionFrame(double srcframe)
 {
 	if( !m_curmotinfo ){
 		if (GetNoBoneFlag()) {
-			return 0;//エラーではない　ボーンが無いだけ
+			//return 0;//エラーではない　ボーンが無いだけ
+			//エラーの可能性がある
+			_ASSERT(0);
+			return 1;
 		}
 		else {
 			//エラーの可能性がある
@@ -6132,9 +6145,10 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 	DbgOut( L"FBX anim num %d\r\n", lAnimStackCount );
 
 
-	if (GetNoBoneFlag() == true) {
-		return 0;
-	}
+	//モーフアニメがあるかもしれないのでリターンしない
+	//if (GetNoBoneFlag() == true) {
+	//	return 0;
+	//}
 
 	if( lAnimStackCount <= 0 ){
 		//_ASSERT( 0 );
@@ -6300,42 +6314,45 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 			//	}
 			//}
 
-			//マルチスレッド読み込み
-			//if ((m_LoadFbxAnim != NULL) && (m_bonelist.size() >= (LOADFBXANIMTHREAD * 4))) {
-			if ((m_LoadFbxAnim != NULL) && (m_bonelist.size() >= 1)) {
-				int loadcount;
-				for (loadcount = 0; loadcount < m_creatednum_loadfbxanim; loadcount++) {
-					CThreadingLoadFbx* curload = m_LoadFbxAnim + loadcount;
-					//curload->LoadFbxAnim(animno, curmotid, (animleng - 1));
-					curload->LoadFbxAnim(animno, curmotid, animleng);//2022/10/21 : 最終フレームのモーションフレーム無し問題対応
+
+			if (GetNoBoneFlag() == false) {
+
+				//マルチスレッド読み込み
+				//if ((m_LoadFbxAnim != NULL) && (m_bonelist.size() >= (LOADFBXANIMTHREAD * 4))) {
+				if ((m_LoadFbxAnim != NULL) && (m_bonelist.size() >= 1)) {
+					int loadcount;
+					for (loadcount = 0; loadcount < m_creatednum_loadfbxanim; loadcount++) {
+						CThreadingLoadFbx* curload = m_LoadFbxAnim + loadcount;
+						//curload->LoadFbxAnim(animno, curmotid, (animleng - 1));
+						curload->LoadFbxAnim(animno, curmotid, animleng);//2022/10/21 : 最終フレームのモーションフレーム無し問題対応
+					}
+
+					WaitLoadFbxAnimFinished();//読み込み終了待ち
+
+
+					//#### 2022/11/01 ###########################################################################
+					//CBone::GetFbxAnimがlocalではなくglobal計算になったので　Post処理は不要になった
+					//CBone::SetFirstMot()は　CBone::GetFbxAnimに移動　SetLocalMatは都度計算するのでここでは不要
+					//ローカルオイラー角情報は　必要時に　Main.cppのrefreshEulerGraph()で計算される　
+					//###########################################################################################
+
+					//#### 2023/01/31 ####################################################################
+					//読み込み時にLocalEulとLimitedLocalEulの初期化をするべきなので　復活
+					//####################################################################################
+					PostLoadFbxAnim(mCurrentAnimLayer, curmotid);//並列化出来なかった計算をする
+
+
+					//2023/02/11
+					int errorcount = 0;
+					CreateIndexedMotionPointReq(GetTopBone(false), curmotid, animleng, &errorcount);
+					if (errorcount != 0) {
+						_ASSERT(0);
+					}
+
 				}
-
-				WaitLoadFbxAnimFinished();//読み込み終了待ち
-
-
-				//#### 2022/11/01 ###########################################################################
-				//CBone::GetFbxAnimがlocalではなくglobal計算になったので　Post処理は不要になった
-				//CBone::SetFirstMot()は　CBone::GetFbxAnimに移動　SetLocalMatは都度計算するのでここでは不要
-				//ローカルオイラー角情報は　必要時に　Main.cppのrefreshEulerGraph()で計算される　
-				//###########################################################################################
-
-				//#### 2023/01/31 ####################################################################
-				//読み込み時にLocalEulとLimitedLocalEulの初期化をするべきなので　復活
-				//####################################################################################
-				PostLoadFbxAnim(mCurrentAnimLayer, curmotid);//並列化出来なかった計算をする
-
-
-				//2023/02/11
-				int errorcount = 0;
-				CreateIndexedMotionPointReq(GetTopBone(false), curmotid, animleng, &errorcount);
-				if (errorcount != 0) {
-					_ASSERT(0);
+				else {
 				}
-
 			}
-			else {
-			}
-
 
 			int errorcount2 = 0;
 			GetFBXShapeAnimReq(GetNodeOnLoad(), mCurrentAnimLayer, curmotid, animleng, &errorcount2);
@@ -9050,115 +9067,124 @@ int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag,
 	if (!m_btWorld){
 		return 0;
 	}
-	if( !ExistCurrentMotion() ){
-		_ASSERT( 0 );
-		return 0;//!!!!!!!!!!!!
-	}
+
+	//morphアニメがあるかもしれないので、ボーンが無くてもリターンしない
+	//if( !ExistCurrentMotion() ){
+	//	_ASSERT( 0 );
+	//	return 0;//!!!!!!!!!!!!
+	//}
 
 	int curmotid = GetCurrentMotID();
 	double curframe = GetCurrentFrame();
 
-	ChaMatrix inimat;
-	ChaMatrixIdentity( &inimat );
-	CQuaternion iniq;
-	iniq.SetParams( 1.0f, 0.0f, 0.0f, 0.0f );
 
-	map<int, CBone*>::iterator itrbone;
-	for( itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++ ){
-		CBone* curbone = itrbone->second;
-		if(curbone){
-			//CMotionPoint curmp = curbone->GetCurMp();
-			curbone->SetBtFlag( 0 );
-			//curbone->SetCurMp( curmp );
+	if (GetNoBoneFlag() == false) {
+		ChaMatrix inimat;
+		ChaMatrixIdentity(&inimat);
+		CQuaternion iniq;
+		iniq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+
+
+
+		map<int, CBone*>::iterator itrbone;
+		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
+			CBone* curbone = itrbone->second;
+			if (curbone) {
+				//CMotionPoint curmp = curbone->GetCurMp();
+				curbone->SetBtFlag(0);
+				//curbone->SetCurMp( curmp );
+			}
 		}
-	}
 
-	SetBtMotionReq(limitdegflag, m_topbt, wmat, vmat, pmat);
+		SetBtMotionReq(limitdegflag, m_topbt, wmat, vmat, pmat);
 
-	//if (g_previewFlag == 5) {
-	//	//物理IK用
-	//	
-	//	//SetBtMotionPostReq(m_topbt, wmat, vpmat);
-	//	if (srcbone && srcbone->GetParent()) {
-	//		CBtObject* startbto = srcbone->GetParent()->GetBtObject(srcbone);
-	//		SetBtMotionPostLowerReq(startbto, wmat, vpmat, 1);//kinematicadjust = 0
-	//		SetBtMotionPostUpperReq(startbto, wmat, vpmat);
-	//		//SetBtMotionPostLowerReq(m_topbt, wmat, vpmat, 0);//mass0adjust = 0
-	//		SetBtMotionMass0BottomUpReq(m_topbt, wmat, vpmat);//for mass0
-	//		SetBtMotionPostLowerReq(m_topbt, wmat, vpmat, 0);//kinematicadjust = 0
+		//if (g_previewFlag == 5) {
+		//	//物理IK用
+		//	
+		//	//SetBtMotionPostReq(m_topbt, wmat, vpmat);
+		//	if (srcbone && srcbone->GetParent()) {
+		//		CBtObject* startbto = srcbone->GetParent()->GetBtObject(srcbone);
+		//		SetBtMotionPostLowerReq(startbto, wmat, vpmat, 1);//kinematicadjust = 0
+		//		SetBtMotionPostUpperReq(startbto, wmat, vpmat);
+		//		//SetBtMotionPostLowerReq(m_topbt, wmat, vpmat, 0);//mass0adjust = 0
+		//		SetBtMotionMass0BottomUpReq(m_topbt, wmat, vpmat);//for mass0
+		//		SetBtMotionPostLowerReq(m_topbt, wmat, vpmat, 0);//kinematicadjust = 0
 
-	//		FindAndSetKinematicReq(m_topbt, wmat, vpmat);//Kinematicとそうでないところの境目を探してみつかったらLowerReqで親行列をセットする。
+		//		FindAndSetKinematicReq(m_topbt, wmat, vpmat);//Kinematicとそうでないところの境目を探してみつかったらLowerReqで親行列をセットする。
 
-	//		//InitBtMatTraAnimReq(m_topbt);//2022/12/15 comment out
+		//		//InitBtMatTraAnimReq(m_topbt);//2022/12/15 comment out
 
-	//		
-	//		BtMat2BtObjReq(m_topbt, wmat, vpmat);
-	//		//RecalcConstraintFrameABReq(m_topbt);
+		//		
+		//		BtMat2BtObjReq(m_topbt, wmat, vpmat);
+		//		//RecalcConstraintFrameABReq(m_topbt);
 
-	//		m_physicsikcnt++;
-	//	}
-	//}
-	//else {
-	//	//if (srcbone && srcbone->GetParent()) {
-	//	//	RecalcConstraintFrameABReq(m_topbt);
-	//	//}
-	//}
+		//		m_physicsikcnt++;
+		//	}
+		//}
+		//else {
+		//	//if (srcbone && srcbone->GetParent()) {
+		//	//	RecalcConstraintFrameABReq(m_topbt);
+		//	//}
+		//}
 
 
-	//#########################################################################################
-	//2022/07/09
-	// endjointが頂点に影響度を持つ場合、物理時に動かないendjointに頂点が引っ張られる不具合解消
-	//2022/07/11
-	// SetShaderConstから本関数SetBtMotionに処理を移動。
-	//#########################################################################################
+		//#########################################################################################
+		//2022/07/09
+		// endjointが頂点に影響度を持つ場合、物理時に動かないendjointに頂点が引っ張られる不具合解消
+		//2022/07/11
+		// SetShaderConstから本関数SetBtMotionに処理を移動。
+		//#########################################################################################
 
-	double roundingframe = RoundingTime(curframe);
+		double roundingframe = RoundingTime(curframe);
 
-	map<int, CBone*>::iterator itrbone2;
-	for (itrbone2 = m_bonelist.begin(); itrbone2 != m_bonelist.end(); itrbone2++) {
-		CBone* curbone2 = itrbone2->second;
-		if (curbone2 && (curbone2->IsSkeleton())) {
-			if ((curbone2->GetChild(false) == NULL) || (curbone2->GetChild(false)->IsNull())) {//2023/05/09 eNullの場合も
-				if (curbone2->GetParent(false)) {
-					//2023/05/09
-					//Kinematic == falseの場合だけ　BtMatはセットされている
-					//Kinematic == trueの場合には　BtMatはセットされていない
+		map<int, CBone*>::iterator itrbone2;
+		for (itrbone2 = m_bonelist.begin(); itrbone2 != m_bonelist.end(); itrbone2++) {
+			CBone* curbone2 = itrbone2->second;
+			if (curbone2 && (curbone2->IsSkeleton())) {
+				if ((curbone2->GetChild(false) == NULL) || (curbone2->GetChild(false)->IsNull())) {//2023/05/09 eNullの場合も
+					if (curbone2->GetParent(false)) {
+						//2023/05/09
+						//Kinematic == falseの場合だけ　BtMatはセットされている
+						//Kinematic == trueの場合には　BtMatはセットされていない
 
-					if ((curbone2->GetParent(false)->GetBtKinFlag() != 0) || 
-						(curbone2->GetParent(false)->GetTmpKinematic() == true)) {
+						if ((curbone2->GetParent(false)->GetBtKinFlag() != 0) ||
+							(curbone2->GetParent(false)->GetTmpKinematic() == true)) {
 
-						//parentがkinematicの場合　worldmat, limitedworldmatをセット
-						bool calcslotflag = true;
-						//bool calcslotflag = false;
-						CMotionPoint tmpmp2 = curbone2->GetParent(false)->GetCurMp(calcslotflag);//motid, curframeを参照してもうなくいかない。GetCurMpを使う。
-						if (limitdegflag == false) {
-							curbone2->SetBtMat(tmpmp2.GetWorldMat());
+							//parentがkinematicの場合　worldmat, limitedworldmatをセット
+							bool calcslotflag = true;
+							//bool calcslotflag = false;
+							CMotionPoint tmpmp2 = curbone2->GetParent(false)->GetCurMp(calcslotflag);//motid, curframeを参照してもうなくいかない。GetCurMpを使う。
+							if (limitdegflag == false) {
+								curbone2->SetBtMat(tmpmp2.GetWorldMat());
+							}
+							else {
+								curbone2->SetBtMat(tmpmp2.GetLimitedWM());
+							}
+
 						}
 						else {
-							curbone2->SetBtMat(tmpmp2.GetLimitedWM());
+							//parentが　simuの場合　btmatをセット
+							curbone2->SetBtMat(curbone2->GetParent(false)->GetBtMat(true));
 						}
-								
 					}
 					else {
-						//parentが　simuの場合　btmatをセット
-						curbone2->SetBtMat(curbone2->GetParent(false)->GetBtMat(true));
-					}
-				}
-				else {
-					bool calcslotflag = true;
-					//bool calcslotflag = false;
-					CMotionPoint tmpmp4 = curbone2->GetCurMp(calcslotflag);//motid, curframeを参照してもうなくいかない。GetCurMpを使う。
-					//curbone2->SetBtMat(tmpmp4.GetWorldMat());
-					if (limitdegflag == false) {
-						curbone2->SetBtMat(tmpmp4.GetWorldMat());
-					}
-					else {
-						curbone2->SetBtMat(tmpmp4.GetLimitedWM());
+						bool calcslotflag = true;
+						//bool calcslotflag = false;
+						CMotionPoint tmpmp4 = curbone2->GetCurMp(calcslotflag);//motid, curframeを参照してもうなくいかない。GetCurMpを使う。
+						//curbone2->SetBtMat(tmpmp4.GetWorldMat());
+						if (limitdegflag == false) {
+							curbone2->SetBtMat(tmpmp4.GetWorldMat());
+						}
+						else {
+							curbone2->SetBtMat(tmpmp4.GetLimitedWM());
+						}
 					}
 				}
 			}
 		}
 	}
+
+
 
 	map<int, CMQOObject*>::iterator itrobj;
 	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
@@ -11645,6 +11671,10 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 	if (!ExistCurrentMotion()) {
 		return 0;
 	}
+	if (GetNoBoneFlag()) {
+		return 0;
+	}
+
 	int curmotid = GetCurrentMotID();
 	int curframeleng = IntTime(GetCurrentMotLeng());
 
@@ -11870,6 +11900,10 @@ int CModel::IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
 	if (!ExistCurrentMotion()) {
 		return 0;
 	}
+	if (GetNoBoneFlag()) {
+		return 0;
+	}
+
 	int curmotid = GetCurrentMotID();
 	int curframeleng = IntTime(GetCurrentMotLeng());
 
@@ -14757,6 +14791,10 @@ int CModel::IKRotateAxisDeltaUnderIK(
 	if (!ExistCurrentMotion()) {
 		return 0;
 	}
+	if (GetNoBoneFlag()) {
+		return 0;
+	}
+
 	int curmotid = GetCurrentMotID();
 	int curframeleng = IntTime(GetCurrentMotLeng());
 
@@ -15056,6 +15094,10 @@ int CModel::IKRotateAxisDeltaPostIK(
 	if (!ExistCurrentMotion()) {
 		return 0;
 	}
+	if (GetNoBoneFlag()) {
+		return 0;
+	}
+
 	int curmotid = GetCurrentMotID();
 	int curframeleng = IntTime(GetCurrentMotLeng());
 
