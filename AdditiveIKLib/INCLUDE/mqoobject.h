@@ -147,6 +147,7 @@ public:
 	int SetShapeAnim(char* nameptr, int srcmotid, int framecnt, float lWeight);
 	int InitShapeWeight();//補間計算結果
 	int SetShapeWeight(int channelindex, float srcweight);//補間計算結果
+	int SetShapeAnimWeight(int channelindex, int srcmotid, int framecnt, float srcweight);
 
 	void DestroySystemDispObj();
 

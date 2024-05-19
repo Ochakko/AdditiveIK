@@ -2885,12 +2885,17 @@ int CModel::GetFBXShapeAnim(FbxMesh* pMesh, CMQOObject* curobj, FbxAnimLayer* pA
 					strcpy_s(shapename, 256, lShape->GetName());
 
 
-					curobj->DestroyShapeAnim(shapename, curmotid);
+					curobj->DestroyShapeAnim(shapename, curmotid);//!!!!!!!!!!!!
 
 
 					int existshape = 0;
 					existshape = curobj->ExistShape(shapename);
 					if (existshape == 1) {
+
+						//####################################################
+						//AddShapeAnim()はAddMotion()で実行済だが、
+						//上記でDestroyShapeAnimしているので、AddShapeAnim()を呼ぶ
+						//####################################################
 						int result1 = curobj->AddShapeAnim(shapename, curmotid, IntTime(animleng));
 						if (result1 != 0) {
 							_ASSERT(0);
@@ -3272,7 +3277,41 @@ int CModel::AddMotion(const char* srcname, const WCHAR* wfilename, double srclen
 				_ASSERT(0);
 			}
 		}
+
 	}
+
+
+	//#########################
+	//BlendShape
+	// anim格納用のデータ作成だけ
+	//#########################
+	map<int, CMQOObject*>::iterator itrobj;
+	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+		CMQOObject* curobj = itrobj->second;
+		_ASSERT(curobj);
+		if (!(curobj->EmptyShape())) {
+			int shapenum = curobj->GetShapeNameNum();
+			int shapeindex;
+			for (shapeindex = 0; shapeindex < shapenum; shapeindex++) {
+				int error0 = 0;
+				string strshapename = curobj->GetShapeName(shapeindex, &error0);
+				if (error0 == 0) {
+					char shapename[256] = { 0 };
+					strcpy_s(shapename, 256, strshapename.c_str());
+					int result1 = curobj->AddShapeAnim(shapename, newid, IntTime(srcleng));
+					if (result1 != 0) {
+						_ASSERT(0);
+						abort();
+					}
+				}
+				else {
+					_ASSERT(0);
+					abort();
+				}
+			}
+		}
+	}
+
 
 	*dstid = newid;
 
@@ -4376,7 +4415,7 @@ int CModel::CreateFBXMeshReq( FbxNode* pNode)
 		FbxNodeAttribute::EType type = (FbxNodeAttribute::EType)(pAttrib->GetAttributeType());
         //FbxGeometryConverter lConverter(pNode->GetFbxManager());
 
-		char mes[256];
+		//char mes[256];
 
 		int shapecnt;
 		CMQOObject* newobj = 0;
@@ -4449,9 +4488,13 @@ int CModel::CreateFBXMeshReq( FbxNode* pNode)
 				if (newobj){
 					shapecnt = pNode->GetMesh()->GetShapeCount();
 					if (shapecnt > 0){
-						sprintf_s(mes, 256, "%s, shapecnt %d", pNode->GetName(), shapecnt);
-						MessageBoxA(NULL, mes, "check", MB_OK);
+						//sprintf_s(mes, 256, "%s, shapecnt %d", pNode->GetName(), shapecnt);
+						//MessageBoxA(NULL, mes, "check", MB_OK);
 
+
+						//###########
+						//BlendShape
+						//###########
 						int resultshape = GetFBXShape(pNode->GetMesh(), newobj);
 						if (resultshape) {
 							_ASSERT(0);
@@ -11879,6 +11922,50 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 		return srcboneno;
 	}
 
+}
+
+int CModel::OnBlendWeightChanged(CEditRange* erptr, CMQOObject* srcmqoobj, int channelindex, float srcvalue)
+{
+	if (!erptr || !srcmqoobj) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	if (srcmqoobj->EmptyShape()) {
+		return 0;
+	}
+
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
+
+	int keynum;
+	double startframe0, endframe0;
+	double startframe, endframe, applyframe;
+	erptr->GetRange(&keynum, &startframe0, &endframe0, &applyframe);
+	startframe = startframe0;
+	endframe = endframe0;
+
+	if (keynum == 1) {
+		return 0;
+	}
+
+	int framecnt;
+	for (framecnt = IntTime(startframe); framecnt < IntTime(endframe); framecnt++) {
+		if (framecnt != IntTime(applyframe)) {
+			double changerate;
+			changerate = (double)(*(g_motionbrush_value + framecnt));
+			float setvalue = (float)(changerate * (double)srcvalue);
+
+			int result0 = srcmqoobj->SetShapeAnimWeight(channelindex,
+				curmotid, framecnt, setvalue);
+			if (result0 != 0) {
+				_ASSERT(0);
+				return 1;
+			}
+		}
+	}
+
+	return 0;
 }
 
 int CModel::IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
@@ -20303,6 +20390,34 @@ void CModel::CreateObjno2DigElemReq(FbxNode* pNode, int* pobjno, int depth)
 			}
 		}
 	}
+}
+
+int CModel::SetBlendShapeGUI(std::vector<CBlendShapeElem>& blendshapeelem)
+{
+	blendshapeelem.clear();
+
+	map<int, CMQOObject*>::iterator itrobj;
+	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+		CMQOObject* curobj = itrobj->second;
+		_ASSERT(curobj);
+		if (!(curobj->EmptyShape())) {
+			CBlendShapeElem addelem;
+			addelem.Init();
+
+			int channelnum = curobj->GetShapeNameNum();
+			int channelindex;
+			for (channelindex = 0; channelindex < channelnum; channelindex++) {
+				int result0 = addelem.SetBlendShape(this, curobj, channelindex);
+				if (result0 != 0) {
+					_ASSERT(0);
+					return 1;
+				}
+				blendshapeelem.push_back(addelem);
+			}
+		}
+	}
+
+	return 0;
 }
 
 int CModel::SetDispGroupGUI(std::vector<OrgWinGUI::OWP_CheckBoxA*>& checkboxvec,

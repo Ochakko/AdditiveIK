@@ -174,6 +174,7 @@ enum {//１段目のプレート種類
 	//SPGUISW_BRUSHPARAMS,
 	SPGUISW_BULLETPHYSICS,
 	SPGUISW_PROJ_AND_LOD,
+	SPGUISW_BLENDSHAPE,//2024/05/19
 	SPGUISWNUM
 };
 //#define SPGUISWNUM	5
@@ -184,6 +185,7 @@ enum {//１段目のメニュープッシュで出る右ペインダイアログ
 	//GUIDLG_BRUSHPARAMS,
 	GUIDLG_BULLETPHYSICS,
 	GUIDLG_PROJ_AND_LOD,
+	GUIDLG_BLENDSHAPE,//2024/05/19 場所は確保するがs_guidlg[GUIDLG_BLENDSHAPE]はnullptr　ダイアログはOrgWindow
 	GUIDLGNUM
 };
 
@@ -381,7 +383,8 @@ public:
 	Sprite sprite2;
 	Sprite sprite3;
 	POINT dispcenter;
-}SPGUISW3;
+};
+
 
 //#define FPSSAVENUM 100
 #define FPSSAVENUM 120
@@ -1755,6 +1758,19 @@ static bool s_disponlyoneobj = false;//for test button of groupWnd
 static int s_onlyoneobjno = -1;//for test button of groupWnd
 
 
+static OrgWindow* s_blendshapeWnd = 0;
+static OWP_ScrollWnd* s_blendshapeSCWnd = 0;
+static OWP_Separator* s_blendshapesp0 = 0;
+static OWP_CheckBoxA* s_blendshapeadditive = 0;
+static std::vector<OWP_Label*> s_blendshapeLabel;
+static std::vector<OWP_Slider*> s_blendshapeSlider;
+static std::vector<CBlendShapeElem> s_blendshapeelemvec;
+static int s_blendshapelinenum = 0;
+static bool s_blendshapeUnderEdit = false;
+static bool s_blendshapePostEdit = false;
+static int s_blendshapeOpeIndex = 0;
+static float s_blendshapeBefore = 0.0f;
+static float s_blendshapeAfter = 0.0f;
 
 
 static bool s_closeFlag = false;			// 終了フラグ
@@ -1764,6 +1780,7 @@ static bool s_closemodelFlag = false;
 static bool s_closecameraFlag = false;
 static bool s_closemotionFlag = false;
 static bool s_closeconvboneFlag = false;
+static bool s_closeblendshapeFlag = false;
 static bool s_DcloseFlag = false;
 static bool s_RcloseFlag = false;
 static bool s_ScloseFlag = false;
@@ -2033,6 +2050,8 @@ static Texture* s_spritetex88 = 0;
 static Texture* s_spritetex89 = 0;
 static Texture* s_spritetex90 = 0;
 static Texture* s_spritetex91 = 0;
+static Texture* s_spritetex92 = 0;
+static Texture* s_spritetex93 = 0;
 
 
 static int s_toolspritemode = 0;
@@ -2561,6 +2580,7 @@ static void GUISetVisible_DispAndLimits();
 //static void GUISetVisible_BrushParams();
 static void GUISetVisible_Bullet();
 static void GUISetVisible_LOD();
+void GUISetVisible_BlendShape();
 static void GUISetVisible_AimBar();
 static void GUIDispSetVisible(int srcplateno);
 
@@ -2569,6 +2589,7 @@ static void ShowGUIDlgDispParams(bool srcflag);
 //static void ShowGUIDlgBrushes(bool srcflag);
 static void ShowGUIDlgBullet(bool srcflag);
 static void ShowGUIDlgLOD(bool srcflag);
+static void ShowGUIDlgBlendShape(bool srcflag);
 static void CloseAllRightPainWindow();
 static void CloseAllAndDispPlaceFolder();
 static void CloseTheFirstRowGUI();
@@ -2832,6 +2853,11 @@ static int CheckSimilarMenu();
 static int CheckSimilarGroup(int opetype);
 static int TrimLeadingAlnum(bool secondtokenflag, WCHAR* srcstr, int srclen, WCHAR* dststr, int dstlen, bool secondcallflag);
 
+static int CreateBlendShapeWnd();
+static int DestroyBlendShapeWnd();
+static int BlendShapeAnim2Dlg();
+static int OnFrameBlendShape();
+
 static int UpdateCameraPosAndTarget();
 
 
@@ -2858,6 +2884,7 @@ static int OnFrameBatchThread();
 //static int OnFrame();
 static int OnFrameUpdateGround();
 static int OnFrameInitBtWorld();
+
 int StopBtRec();
 static int ToggleRig();
 //static void UpdateBtSimu(double nextframe, CModel* curmodel);
@@ -3505,6 +3532,7 @@ INT WINAPI wWinMain(
 //_CrtSetBreakAlloc(65234);
 //_CrtSetBreakAlloc(1526483);
 
+	//_CrtSetBreakAlloc(32639);
 
 
 	SetBaseDir();
@@ -3745,8 +3773,10 @@ INT WINAPI wWinMain(
 	//CreateGUIDlgBrushes();
 	CreateGUIDlgBullet();
 	CreateGUIDlgLOD();
+	
 
 	CreateDispGroupWnd();
+	CreateBlendShapeWnd();
 	//CreateLaterTransparentWnd();//s_modelが設定されてから作成する
 
 	if (s_dollyhistorydlg.GetCreatedFlag() == false) {
@@ -4513,6 +4543,24 @@ void InitApp()
 		s_onlyoneobjno = -1;//for test button of groupWnd
 	}
 
+	{
+		s_blendshapeWnd = 0;
+		s_blendshapeSCWnd = 0;
+		s_blendshapesp0 = 0;
+		s_blendshapeadditive = 0;
+		s_blendshapeLabel.clear();
+		s_blendshapeSlider.clear();
+		s_blendshapeelemvec.clear();
+		s_blendshapelinenum = 0;
+
+		g_blendshapeAddtiveMode = false;
+		s_blendshapeBefore = 0.0f;
+		s_blendshapeAfter = 0.0f;
+		s_blendshapeOpeIndex = 0;
+		s_blendshapeUnderEdit = false;
+		s_blendshapePostEdit = false;
+	}
+
 
 	{
 		s_shadertypeparamsFlag = false;
@@ -5171,6 +5219,7 @@ void InitApp()
 	s_closemotionFlag = false;
 	s_closecameraFlag = false;
 	s_closeconvboneFlag = false;
+	s_closeblendshapeFlag = false;
 	s_DcloseFlag = false;
 	s_RcloseFlag = false;
 	s_ScloseFlag = false;
@@ -6341,6 +6390,7 @@ void OnDestroyDevice()
 
 	DestroyRigidWnd();
 	DestroyDispGroupWnd();
+	DestroyBlendShapeWnd();
 	DestroyShaderTypeWnd();
 	DestroyShaderTypeParamsDlg();
 	DestroySkyParamsDlg();
@@ -21595,6 +21645,9 @@ int SetSpGUISWParams()
 	s_spguisw[SPGUISW_PROJ_AND_LOD].dispcenter.x = s_spguisw[SPGUISW_BULLETPHYSICS].dispcenter.x + (int)spgwidth + spgshift;
 	s_spguisw[SPGUISW_PROJ_AND_LOD].dispcenter.y = s_spguisw[SPGUISW_CAMERA_AND_IK].dispcenter.y;
 
+	s_spguisw[SPGUISW_BLENDSHAPE].dispcenter.x = s_spguisw[SPGUISW_PROJ_AND_LOD].dispcenter.x + (int)spgwidth + spgshift;
+	s_spguisw[SPGUISW_BLENDSHAPE].dispcenter.y = s_spguisw[SPGUISW_CAMERA_AND_IK].dispcenter.y;
+
 	int spgcnt;
 	for (spgcnt = 0; spgcnt < SPGUISWNUM; spgcnt++) {
 		ChaVector3 disppos;
@@ -22781,6 +22834,9 @@ int PickSpGUISW(POINT srcpos)
 						break;
 					case 3:
 						kind = (SPGUISW_PROJ_AND_LOD + 2);
+						break;
+					case 4:
+						kind = (SPGUISW_BLENDSHAPE + 2);
 						break;
 					default:
 						kind = 1;
@@ -34513,6 +34569,13 @@ int OnFrameCloseFlag()
 {
 	// 終了フラグを確認
 
+	if (s_closeblendshapeFlag) {
+		s_closeblendshapeFlag = false;
+		if (s_blendshapeWnd) {
+			s_blendshapeWnd->setVisible(0);
+		}
+	}
+
 	if (s_closeFlag) {
 		s_closeFlag = false;
 		s_dispmw = false;
@@ -35096,6 +35159,8 @@ int OnFrameMouseButton()
 
 int OnFrameToolWnd()
 {
+
+	OnFrameBlendShape();
 
 	if (s_topslidersEditRateFlag) {
 		if (s_topSlidersWnd && s_owpEditRateSlider) {
@@ -39508,6 +39573,277 @@ int CreateDispGroupWnd()
 	return 0;
 }
 
+int BlendShapeAnim2Dlg()
+{
+	if (!s_model) {
+		return 0;
+	}
+	if (!s_blendshapeWnd) {
+		return 0;
+	}
+	if (s_spguisw[SPGUISW_BLENDSHAPE].state != true) {
+		return 0;
+	}
+	if (s_model->ExistCurrentMotion() != true) {
+		return 0;
+	}
+
+	int blendelemnum = (int)s_blendshapeelemvec.size();
+	int blendelemindex;
+	for (blendelemindex = 0; blendelemindex < blendelemnum; blendelemindex++) {
+		CBlendShapeElem blendelem = s_blendshapeelemvec[blendelemindex];
+		if (blendelem.validflag && blendelem.model && blendelem.mqoobj) {
+			int curmotid = blendelem.model->GetCurrentMotID();
+			double curframe = blendelem.model->GetCurrentFrame();
+			float value = blendelem.mqoobj->GetShapeAnimWeight(curmotid, IntTime(curframe), blendelem.channelindex);
+
+			int slidernum = (int)s_blendshapeSlider.size();
+			if ((blendelemindex >= 0) && (blendelemindex < slidernum) && s_blendshapeSlider[blendelemindex]) {
+				s_blendshapeSlider[blendelemindex]->setValue(value, false);
+			}
+		}
+	}
+	return 0;
+}
+int CreateBlendShapeWnd()
+{
+
+
+	if (!s_model) {
+		return 0;
+	}
+
+	DestroyBlendShapeWnd();
+
+
+	int windowposx;
+	if (g_4kresolution) {
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
+	}
+	else {
+		windowposx = s_timelinewidth + s_mainwidth;
+	}
+
+	s_blendshapeWnd = new OrgWindow(
+		0,
+		_T("BlendShapeWindow"),		//ウィンドウクラス名
+		GetModuleHandle(NULL),	//インスタンスハンドル
+		WindowPos(windowposx, s_sidemenuheight),
+		WindowSize(s_sidewidth, s_sideheight),		//サイズ
+		_T("BlendShapeWindow"),	//タイトル
+		g_mainhwnd,	//親ウィンドウハンドル
+		true,					//表示・非表示状態
+		//70, 50, 70,				//カラー
+		0, 0, 0,				//カラー
+		true, true);					//サイズ変更の可否
+
+	if (s_blendshapeWnd) {
+
+		s_guidlg[GUIDLG_BLENDSHAPE] = s_blendshapeWnd->getHWnd();
+
+		s_blendshapeWnd->setSizeMin(WindowSize(150, 150));		// 最小サイズを設定
+
+/*
+static OrgWindow* s_blendshapeWnd = 0;
+static OWP_ScrollWnd* s_blendshapeSCWnd = 0;
+static OWP_Separator* s_blendshapesp0 = 0;
+static std::vector<OWP_Label*> s_blendshapeLabel;
+static std::vector<OWP_Slider*> s_blendshapeSlider;
+static std::vector<CBlendShapeElem> s_blendshapeelemvec;
+static int s_blendshapelinenum = 0;
+*/
+
+		s_blendshapeLabel.clear();
+		s_blendshapeSlider.clear();
+		s_blendshapeelemvec.clear();
+
+		int result = s_model->SetBlendShapeGUI(s_blendshapeelemvec);
+		if (result != 0) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_blendshapelinenum = (int)s_blendshapeelemvec.size();
+
+		if (s_blendshapelinenum <= 0) {
+			return 0;
+		}
+
+		double centerrate;
+		int linedatasize;
+		if (g_4kresolution) {
+			centerrate = (double)3 / (double)140;
+			//linedatasize = max(140, linenum + 12);
+			//linedatasize = max(106, (linenum + 12));
+			linedatasize = (int)((double)s_blendshapelinenum * 2.0 * 1.2);
+		}
+		else {
+			centerrate = (double)3 / (double)70;
+			//linedatasize = max(70, linenum + 12);
+			//linedatasize = max(54, (linenum + 12));
+			linedatasize = (int)((double)s_blendshapelinenum * 2.0 * 1.2);
+		}
+		//centerrate = 1.0 / (double)linedatasize;
+
+
+		//スクロールウインドウ		
+		s_blendshapeSCWnd = new OWP_ScrollWnd(L"BlendShapeScWnd", true);
+		if (!s_blendshapeSCWnd) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_blendshapeSCWnd->setLineDataSize(linedatasize);//!!!!!!!!!!!!!
+		s_blendshapeWnd->addParts(*s_blendshapeSCWnd);
+
+
+		s_blendshapesp0 = new OWP_Separator(s_blendshapeWnd, false, centerrate, false, s_blendshapeSCWnd);
+		if (!s_blendshapesp0) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_blendshapeSCWnd->addParts(*s_blendshapesp0);
+
+		s_blendshapeadditive = new OWP_CheckBoxA(L"AdditiveMode", g_blendshapeAddtiveMode);
+		if (!s_blendshapeadditive) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_blendshapeadditive->setActive(false);//!!!!!!!!!!!!!!!!!!
+		s_blendshapesp0->addParts1(*s_blendshapeadditive);
+
+
+		int lineno;
+		for (lineno = 0; lineno < s_blendshapelinenum; lineno++) {
+			CBlendShapeElem curblendshape = s_blendshapeelemvec[lineno];
+			if (curblendshape.validflag) {
+				OWP_Label* newlabel = new OWP_Label(curblendshape.targetname);
+				if (!newlabel) {
+					_ASSERT(0);
+					return 1;
+				}
+				s_blendshapeLabel.push_back(newlabel);
+
+				OWP_Slider* newslider = new OWP_Slider(0.0, 100.0, 0.0);
+				if (!newslider) {
+					_ASSERT(0);
+					return 1;
+				}
+				s_blendshapeSlider.push_back(newslider);
+			}
+			else {
+				_ASSERT(0);
+				return 1;
+			}
+		}
+
+		{
+			int labelnum = (int)s_blendshapeLabel.size();
+			int slidernum = (int)s_blendshapeSlider.size();
+			if (labelnum == slidernum) {
+				int guino;
+				for (guino = 0; guino < labelnum; guino++) {
+					OWP_Label* addlabel = s_blendshapeLabel[guino];
+					OWP_Slider* addslider = s_blendshapeSlider[guino];
+					if (!addlabel || !addslider) {
+						_ASSERT(0);
+						return 1;
+					}
+					s_blendshapesp0->addParts2(*addlabel);
+					s_blendshapesp0->addParts2(*addslider);
+				}
+			}
+			else {
+				_ASSERT(0);
+				return 1;
+			}
+		}
+
+		s_blendshapeWnd->setCloseListener([]() {
+			s_closeblendshapeFlag = true;
+		});
+
+		{
+			int lineno;
+			for (lineno = 0; lineno < s_blendshapelinenum; lineno++) {
+				CBlendShapeElem curblendshape = s_blendshapeelemvec[lineno];
+				if (curblendshape.validflag) {
+					if (s_blendshapeSlider[lineno]) {
+						s_blendshapeSlider[lineno]->setCursorListener([lineno]() {
+							OWP_Slider* thisslider = s_blendshapeSlider[lineno];
+							if (s_model && s_blendshapeWnd && thisslider) {
+								CBlendShapeElem curblendshape = s_blendshapeelemvec[lineno];
+								if (curblendshape.validflag && curblendshape.mqoobj) {
+									float value = (float)thisslider->getValue();
+									//int curmotid = s_model->GetCurrentMotID();
+									//double curframe = s_model->GetCurrentFrame();
+									//curblendshape.mqoobj->SetShapeAnimWeight(curblendshape.channelindex, 
+									//	curmotid, IntTime(curframe), value);
+
+									s_blendshapeOpeIndex = lineno;
+									s_blendshapeAfter = value;
+									s_blendshapeUnderEdit = true;
+								}
+								s_blendshapeWnd->callRewrite();						//再描画
+							}
+						});
+
+						s_blendshapeSlider[lineno]->setLUpListener([lineno]() {
+							OWP_Slider* thisslider = s_blendshapeSlider[lineno];
+							if (s_model && s_blendshapeWnd && thisslider) {
+								CBlendShapeElem curblendshape = s_blendshapeelemvec[lineno];
+								if (curblendshape.validflag && curblendshape.mqoobj) {
+									float value = (float)thisslider->getValue();
+									s_blendshapeOpeIndex = lineno;
+									s_blendshapeAfter = value;
+									s_blendshapePostEdit = true;
+								}
+								s_blendshapeWnd->callRewrite();						//再描画
+							}
+							});
+
+
+						s_blendshapeBefore = 0.0f;
+
+
+
+					}
+				}
+				else {
+					_ASSERT(0);
+					return 1;
+				}
+			}
+		}
+
+
+
+		////autoResizeしないと　チェックボックス４段目以下が反応なかった
+		s_blendshapeSCWnd->autoResize();
+		s_blendshapesp0->autoResize();
+		//
+		//s_blendshapeWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
+		//s_blendshapeWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
+		////１クリック目問題対応
+		//s_blendshapeWnd->refreshPosAndSize();
+		//s_blendshapeWnd->autoResizeAllParts();
+		//s_blendshapeWnd->setVisible(false);
+
+
+
+		s_blendshapeWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
+		s_blendshapeWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
+		//１クリック目問題対応
+		s_blendshapeWnd->refreshPosAndSize();
+		s_blendshapeWnd->callRewrite();//再描画
+		s_blendshapeWnd->setVisible(false);
+
+
+	}
+
+
+	return 0;
+}
+
+
 int TrimLeadingAlnum(bool secondtokenflag, WCHAR* srcstr, int srclen, WCHAR* dststr, int dstlen, bool secondcallflag)
 {
 	if (!srcstr || !dststr) {
@@ -40159,6 +40495,68 @@ int DestroyRigidWnd()
 	if (s_coliseparator) {
 		delete s_coliseparator;
 		s_coliseparator = 0;
+	}
+
+	return 0;
+}
+
+int DestroyBlendShapeWnd()
+{
+
+	s_guidlg[GUIDLG_BLENDSHAPE] = 0;
+
+
+	if (s_blendshapeWnd) {
+		//s_blendshapeWnd->setListenMouse(false);
+		s_blendshapeWnd->setVisible(false);
+	}
+	if (s_blendshapeSCWnd) {
+		delete s_blendshapeSCWnd;
+		s_blendshapeSCWnd = 0;
+	}
+	if (s_blendshapesp0) {
+		delete s_blendshapesp0;
+		s_blendshapesp0 = 0;
+	}
+	if (s_blendshapeadditive) {
+		delete s_blendshapeadditive;
+		s_blendshapeadditive = 0;
+	}
+
+	int labelnum = (int)s_blendshapeLabel.size();
+	int labelindex;
+	for (labelindex = 0; labelindex < labelnum; labelindex++) {
+		OWP_Label* dellabel = s_blendshapeLabel[labelindex];
+		if (dellabel) {
+			delete dellabel;
+		}
+	}
+	s_blendshapeLabel.clear();
+
+	int slidernum = (int)s_blendshapeSlider.size();
+	int sliderindex;
+	for (sliderindex = 0; sliderindex < slidernum; sliderindex++) {
+		OWP_Slider* delslider = s_blendshapeSlider[sliderindex];
+		if (delslider) {
+			delete delslider;
+		}
+	}
+	s_blendshapeSlider.clear();
+
+	s_blendshapeelemvec.clear();
+
+	s_blendshapelinenum = 0;
+
+	s_blendshapeOpeIndex = 0;
+	s_blendshapeBefore = 0.0f;
+	s_blendshapeAfter = 0.0f;
+	s_blendshapeUnderEdit = false;
+	s_blendshapePostEdit = false;
+
+
+	if (s_blendshapeWnd) {
+		delete s_blendshapeWnd;
+		s_blendshapeWnd = 0;
 	}
 
 	return 0;
@@ -49009,6 +49407,9 @@ void GUISetVisible(int srcplateno)
 	else if (srcplateno == 5) {
 		GUISetVisible_LOD();
 	}
+	else if (srcplateno == 6) {
+		GUISetVisible_BlendShape();
+	}
 	else {
 		_ASSERT(0);
 	}
@@ -49073,7 +49474,8 @@ void GUISetVisible_CameraAndIK()
 	if ((s_spguisw[SPGUISW_DISP_AND_LIMITS].state == false) &&
 		//(s_spguisw[SPGUISW_BRUSHPARAMS].state == false) &&
 		(s_spguisw[SPGUISW_BULLETPHYSICS].state == false) &&
-		(s_spguisw[SPGUISW_PROJ_AND_LOD].state == false)) {
+		(s_spguisw[SPGUISW_PROJ_AND_LOD].state == false) && 
+		(s_spguisw[SPGUISW_BLENDSHAPE].state == false)) {
 		if (s_placefolderWnd) {
 			s_placefolderWnd->setVisible(true);
 		}
@@ -49094,6 +49496,7 @@ void GUISetVisible_DispAndLimits()
 	//ShowGUIDlgBrushes(false);
 	ShowGUIDlgBullet(false);
 	ShowGUIDlgLOD(false);
+	ShowGUIDlgBlendShape(false);
 	if (s_placefolderWnd) {
 		s_placefolderWnd->setVisible(false);
 	}
@@ -49131,6 +49534,7 @@ void GUISetVisible_Bullet()
 	//ShowGUIDlgBrushes(false);
 	ShowGUIDlgBullet(true);
 	ShowGUIDlgLOD(false);
+	ShowGUIDlgBlendShape(false);
 	if (s_placefolderWnd) {
 		s_placefolderWnd->setVisible(false);
 	}
@@ -49150,6 +49554,26 @@ void GUISetVisible_LOD()
 	//ShowGUIDlgBrushes(false);
 	ShowGUIDlgBullet(false);
 	ShowGUIDlgLOD(true);
+	ShowGUIDlgBlendShape(false);
+	if (s_placefolderWnd) {
+		s_placefolderWnd->setVisible(false);
+	}
+}
+void GUISetVisible_BlendShape()
+{
+	//CameraAndIK以外は　いったん全部オフにする
+	int plateno;
+	for (plateno = SPGUISW_DISP_AND_LIMITS; plateno < SPGUISWNUM; plateno++) {
+		s_spguisw[plateno].state = false;
+	}
+
+	//選択プレートをオンにする
+	s_spguisw[SPGUISW_BLENDSHAPE].state = true;
+	ShowGUIDlgDispParams(false);
+	//ShowGUIDlgBrushes(false);
+	ShowGUIDlgBullet(false);
+	ShowGUIDlgLOD(false);
+	ShowGUIDlgBlendShape(true);
 	if (s_placefolderWnd) {
 		s_placefolderWnd->setVisible(false);
 	}
@@ -49297,6 +49721,26 @@ void ShowGUIDlgLOD(bool srcflag)
 	}
 
 	s_spguisw[SPGUISW_PROJ_AND_LOD].state = srcflag;
+}
+void ShowGUIDlgBlendShape(bool srcflag)
+{
+	if (srcflag == true) {
+		CreateBlendShapeWnd();
+
+		if (s_blendshapeWnd) {
+			s_blendshapeWnd->setListenMouse(true);
+			s_blendshapeWnd->setVisible(true);
+		}
+	}
+	else {
+		//DestroyBlendShapeWnd();
+		if (s_blendshapeWnd) {
+			s_blendshapeWnd->setListenMouse(false);
+			s_blendshapeWnd->setVisible(false);
+		}
+	}
+
+	s_spguisw[SPGUISW_BLENDSHAPE].state = srcflag;
 }
 
 
@@ -56064,7 +56508,7 @@ void ChangeMouseSetCapture()
 			//		SetCapture(g_mainhwnd);
 			//	}
 			//}
-			//else 
+			//else
 			if (s_platemenukind == SPPLATEMENUKIND_DISP) {
 				if (s_platemenuno == (SPDISPSW_LIGHTS + 1)) {
 					if (s_lightsforeditdlg) {
@@ -61931,6 +62375,46 @@ int CreateShaderTypeParamsDlg()
 		_ASSERT(0);
 		return 1;
 	}
+
+	return 0;
+}
+
+int OnFrameBlendShape()
+{
+	if (s_blendshapeUnderEdit) {
+		s_blendshapeUnderEdit = false;
+
+		if ((s_blendshapeOpeIndex >= 0) && (s_blendshapeOpeIndex < (int)s_blendshapeelemvec.size())) {
+			CBlendShapeElem blendshapeelem = s_blendshapeelemvec[s_blendshapeOpeIndex];
+			if (blendshapeelem.validflag && blendshapeelem.model && blendshapeelem.mqoobj) {
+				int curmotid = s_model->GetCurrentMotID();
+				double curframe = s_model->GetCurrentFrame();
+				blendshapeelem.mqoobj->SetShapeAnimWeight(blendshapeelem.channelindex,
+					curmotid, IntTime(curframe), s_blendshapeAfter);
+			}
+		}
+	}
+	if (s_blendshapePostEdit) {
+		s_blendshapePostEdit = false;
+		if (s_model) {
+			//s_blendshapeAfter = value;
+
+			if ((s_blendshapeOpeIndex >= 0) && (s_blendshapeOpeIndex < (int)s_blendshapeelemvec.size())) {
+				CBlendShapeElem blendshapeelem = s_blendshapeelemvec[s_blendshapeOpeIndex];
+				if (blendshapeelem.validflag && blendshapeelem.model && blendshapeelem.mqoobj) {
+					int result1 = blendshapeelem.model->OnBlendWeightChanged(&s_editrange,
+						blendshapeelem.mqoobj, s_blendshapeOpeIndex, s_blendshapeAfter);
+					if (result1 != 0) {
+						_ASSERT(0);
+					}
+				}
+			}
+		}
+	}
+
+
+
+	BlendShapeAnim2Dlg();//valueの変更操作よりも後で呼ぶ
 
 	return 0;
 }
@@ -68245,6 +68729,13 @@ int CreateSprites()
 	spriteinitdata.m_textures[0] = s_spritetex29;
 	s_spguisw[SPGUISW_PROJ_AND_LOD].spriteON.Init(spriteinitdata, screenvertexflag);
 	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_BlendShape140ON.png");
+	s_spritetex92 = new Texture();
+	s_spritetex92->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex92;
+	s_spguisw[SPGUISW_BLENDSHAPE].spriteON.Init(spriteinitdata, screenvertexflag);
+
 
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_CameraAndIK140OFF.png");
@@ -68280,7 +68771,14 @@ int CreateSprites()
 	s_spritetex34->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex34;
 	s_spguisw[SPGUISW_PROJ_AND_LOD].spriteOFF.Init(spriteinitdata, screenvertexflag);
-	
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_BlendShape140OFF.png");
+	s_spritetex93 = new Texture();
+	s_spritetex93->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex93;
+	s_spguisw[SPGUISW_BLENDSHAPE].spriteOFF.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Lights140ON.png");
 	s_spritetex35 = new Texture();
@@ -68865,6 +69363,8 @@ void InitSprites()
 	s_spritetex89 = 0;
 	s_spritetex90 = 0;
 	s_spritetex91 = 0;
+	s_spritetex92 = 0;
+	s_spritetex93 = 0;
 }
 
 void DestroySprites()
@@ -69256,6 +69756,14 @@ void DestroySprites()
 	if (s_spritetex91) {
 		delete s_spritetex91;
 		s_spritetex91 = 0;
+	}
+	if (s_spritetex92) {
+		delete s_spritetex92;
+		s_spritetex92 = 0;
+	}
+	if (s_spritetex93) {
+		delete s_spritetex93;
+		s_spritetex93 = 0;
 	}
 
 	int delindex;
@@ -69772,6 +70280,7 @@ void CloseTheFirstRowGUI()
 	//ShowGUIDlgBrushes(false);
 	ShowGUIDlgBullet(false);
 	ShowGUIDlgLOD(false);
+	ShowGUIDlgBlendShape(false);
 }
 
 int UpdateTopPosText()
@@ -69910,3 +70419,5 @@ void DestroyGrassElem()
 	}
 	s_grassElemVec.clear();
 }
+
+

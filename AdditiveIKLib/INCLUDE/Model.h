@@ -192,6 +192,56 @@ typedef struct tag_instancingparams
 	};
 }INSTANCINGPARAMS;
 
+class CBlendShapeElem
+{
+public:
+	CBlendShapeElem() {
+		Init();
+	};
+	~CBlendShapeElem() {
+		Init();
+	};
+	int SetBlendShape(CModel* srcmodel, CMQOObject* srcmqoobj, int srcchannelindex) {
+		if (!srcmodel || !srcmqoobj || (srcchannelindex < 0)) {
+			_ASSERT(0);
+			validflag = false;
+			return 1;
+		}
+		model = srcmodel;
+		mqoobj = srcmqoobj;
+		channelindex = srcchannelindex;
+
+		int error0 = 0;
+		std::string strshapename = mqoobj->GetShapeName(channelindex, &error0);
+		if (error0 != 0) {
+			_ASSERT(0);
+			validflag = false;
+			return 1;
+		}
+
+		char shapename[256] = { 0 };
+		strcpy_s(shapename, 256, strshapename.c_str());
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, shapename, -1, targetname, 256);
+
+		validflag = true;
+		return 0;
+	};
+
+	void Init() {
+		validflag = false;
+		model = nullptr;
+		mqoobj = nullptr;
+		ZeroMemory(targetname, sizeof(WCHAR) * 256);
+		channelindex = 0;
+	};
+
+public:
+	bool validflag;
+	CModel* model;
+	CMQOObject* mqoobj;
+	WCHAR targetname[256];
+	int channelindex;
+};
 
 
 #define MAXPHYSIKRECCNT		(60 * 60)
@@ -315,11 +365,13 @@ public:
 	int GetSelectedObjTree(int srcobjno, std::vector<int>& selectedobjtree);
 	void GetSelectedObjTreeReq(FbxNode* pNode, std::vector<int>& selectedobjtree);
 
-
 	int CreateObjno2DigElem();
 	void CreateObjno2DigElemReq(FbxNode* pNode, int* pobjno, int depth);
 	int MakeDispGroupForRender();
 	int RemakeHSVToonTexture(CMQOMaterial* srcmqomat);
+
+	int SetBlendShapeGUI(std::vector<CBlendShapeElem>& blendshapeelem);
+	
 /**
  * @fn
  * RenderBoneMark
@@ -581,6 +633,8 @@ public:
 		int srcboneno, ChaVector3 targetpos, int maxlevel);
 	int IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
 		int srcboneno, int maxlevel);
+
+	int OnBlendWeightChanged(CEditRange* erptr, CMQOObject* srcmqoobj, int channelindex, float srcvalue);
 
 
 	void ClearIKRotRec();
@@ -3057,5 +3111,7 @@ private:
 	bool m_secondCallOfMotion2Bt;
 
 };
+
+
 
 #endif

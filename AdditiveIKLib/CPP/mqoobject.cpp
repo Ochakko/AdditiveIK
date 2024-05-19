@@ -2757,6 +2757,7 @@ int CMQOObject::InitShapeWeight()
 	return 0;
 }
 
+
 int CMQOObject::SetShapeWeight(int channelindex, float srcweight)
 {
 	if (channelindex < 0) {
@@ -2917,6 +2918,63 @@ int CMQOObject::SetShapeAnim(char* nameptr, int srcmotid, int framecnt, float lW
 
 	return 0;
 }
+
+int CMQOObject::SetShapeAnimWeight(int channelindex, int srcmotid, int framecnt, float srcweight)
+{
+	if ((srcmotid <= 0) || (framecnt < 0) || (channelindex < 0)) {
+		_ASSERT(0);
+		return 1;
+	}
+	int shapenum = GetShapeNameNum();
+	if (channelindex >= shapenum) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int errorname = 0;
+	string shapename = GetShapeName(channelindex, &errorname);
+	if (errorname != 0) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	map<int, int>::iterator itranimleng;
+	itranimleng = m_shapeanimleng2.find(srcmotid);
+	if (itranimleng == m_shapeanimleng2.end()) {
+		_ASSERT(0);
+		return 1;
+	}
+	int animleng = itranimleng->second;
+	if ((animleng <= 0) && (framecnt >= animleng)) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	map<string, map<int, float*>>::iterator itrshapeanim;
+	itrshapeanim = m_shapeanim2.find(shapename);
+	if (itrshapeanim != m_shapeanim2.end()) {
+		map<int, float*>::iterator itrshapeanim2;
+		itrshapeanim2 = itrshapeanim->second.find(srcmotid);
+		if (itrshapeanim2 != itrshapeanim->second.end()) {
+			if (itrshapeanim2->second) {
+				*(itrshapeanim2->second + framecnt) = srcweight;
+			}
+			else {
+				return 1;
+			}
+		}
+		else {
+			return 1;
+		}
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+
+	return 0;
+}
+
 
 float CMQOObject::GetShapeAnimWeight(int srcmotid, int framecnt, int channelindex)
 {

@@ -2565,6 +2565,8 @@ void s_dummyfunc()
 				std::list<OrgWindowParts*>::iterator plItr;
 				for(plItr = partsList1.begin(); plItr != partsList1.end(); plItr++ ){
 					if (*plItr) {
+						(*plItr)->setDoneFlag(false);
+
 						WindowSize partsSize = (*plItr)->getSize();
 						int tmpPosX = e.localX + pos.x - (*plItr)->getPos().x;
 						int tmpPosY = e.localY + pos.y - (*plItr)->getPos().y;
@@ -2586,6 +2588,7 @@ void s_dummyfunc()
 							else {
 								(*plItr)->onRButtonDown(mouseEvent);
 							}
+							(*plItr)->setDoneFlag(true);
 							return;
 						}
 					}
@@ -2597,6 +2600,8 @@ void s_dummyfunc()
 				std::list<OrgWindowParts*>::iterator plItr2;
 				for (plItr2 = partsList2.begin(); plItr2 != partsList2.end(); plItr2++) {
 					if (*plItr2) {
+						(*plItr2)->setDoneFlag(false);
+
 						WindowSize partsSize = (*plItr2)->getSize();
 						int tmpPosX = e.localX + pos.x - (*plItr2)->getPos().x;
 						int tmpPosY = e.localY + pos.y - (*plItr2)->getPos().y;
@@ -2618,6 +2623,7 @@ void s_dummyfunc()
 							else {
 								(*plItr2)->onRButtonDown(mouseEvent);
 							}
+							(*plItr2)->setDoneFlag(true);
 							return;
 						}
 					}
@@ -2639,7 +2645,7 @@ void s_dummyfunc()
 			std::list<OrgWindowParts*>::iterator plItr;
 			for (plItr = partsList1.begin(); plItr != partsList1.end(); plItr++) {
 
-				if (*plItr) {
+				if (*plItr && (*plItr)->getDoneFlag()) {
 					MouseEvent mouseEvent;
 					mouseEvent.globalX = e.globalX;
 					mouseEvent.globalY = e.globalY;
@@ -2655,11 +2661,12 @@ void s_dummyfunc()
 					else {
 						(*plItr)->onRButtonUp(mouseEvent);
 					}
+					(*plItr)->setDoneFlag(false);
 				}
 			}
 			std::list<OrgWindowParts*>::iterator plItr2;
 			for (plItr2 = partsList2.begin(); plItr2 != partsList2.end(); plItr2++) {
-				if (*plItr2) {
+				if (*plItr2 && (*plItr2)->getDoneFlag()) {
 					MouseEvent mouseEvent;
 					mouseEvent.globalX = e.globalX;
 					mouseEvent.globalY = e.globalY;
@@ -2675,6 +2682,7 @@ void s_dummyfunc()
 					else {
 						(*plItr2)->onRButtonUp(mouseEvent);
 					}
+					(*plItr2)->setDoneFlag(false);
 				}
 			}
 		}
@@ -4528,6 +4536,7 @@ void s_dummyfunc()
 
 			cursorListener = NULL;//2024/03/03
 			lupListener = NULL;//2024/03/12
+			ldownListener = NULL;//2024/05/19
 		}
 
 		//////////////////////////// Method //////////////////////////////
@@ -4672,6 +4681,11 @@ void s_dummyfunc()
 					tmpRect.right = pos.x + size.x - 1;
 					tmpRect.bottom = pos.y + size.y - 1;
 					InvalidateRect(parentWindow->getHWnd(), &tmpRect, false);
+
+
+					if (this->ldownListener != NULL) {
+						(this->ldownListener)();//2024/03/12 for undo
+					}
 
 				}
 			}
@@ -4897,12 +4911,16 @@ void s_dummyfunc()
 		void setLUpListener(std::function<void()> listener) {
 			this->lupListener = listener;
 		}
+		void setLDownListener(std::function<void()> listener) {
+			this->ldownListener = listener;
+		}
 
 	private:
 		////////////////////////// MemberVar /////////////////////////////
 		double maxValue,minValue,value;
 		std::function<void()> cursorListener;
 		std::function<void()> lupListener;
+		std::function<void()> ldownListener;
 
 		bool drag;
 
@@ -10679,30 +10697,98 @@ void s_dummyfunc()
 			std::list<OrgWindowParts*>::iterator plItr;
 			for (plItr = partsList.begin(); plItr != partsList.end(); plItr++){
 				if (*plItr) {
+					(*plItr)->setDoneFlag(false);
+
 					WindowSize partsSize = (*plItr)->getSize();
 					int tmpPosX = e.localX + pos.x - (*plItr)->getPos().x;
 					int tmpPosY = e.localY + pos.y - (*plItr)->getPos().y;
+					if ((0 <= tmpPosX) && (tmpPosX < partsSize.x) &&
+						(0 <= tmpPosY) && (tmpPosY < partsSize.y)) {
 
-					MouseEvent mouseEvent;
-					mouseEvent.globalX = e.globalX;
-					mouseEvent.globalY = e.globalY;
-					mouseEvent.localX = tmpPosX;
-					mouseEvent.localY = tmpPosY;
-					mouseEvent.altKey = e.altKey;
-					mouseEvent.shiftKey = e.shiftKey;
-					mouseEvent.ctrlKey = e.ctrlKey;
+						MouseEvent mouseEvent;
+						mouseEvent.globalX = e.globalX;
+						mouseEvent.globalY = e.globalY;
+						mouseEvent.localX = tmpPosX;
+						mouseEvent.localY = tmpPosY;
+						mouseEvent.altKey = e.altKey;
+						mouseEvent.shiftKey = e.shiftKey;
+						mouseEvent.ctrlKey = e.ctrlKey;
+						mouseEvent.wheeldelta = e.wheeldelta;
 
-					(*plItr)->onLButtonDown(mouseEvent);
+						(*plItr)->onLButtonDown(mouseEvent);
+						(*plItr)->setDoneFlag(true);
+					}
 				}
 			}
 
 		}
 		//	Method : 左マウスボタン ダブルクリックイベント受信
 		virtual void onLButtonDBLCLK(const MouseEvent& e) {//2023/10/04
+			//内部パーツ
+			std::list<OrgWindowParts*>::iterator plItr;
+			for (plItr = partsList.begin(); plItr != partsList.end(); plItr++) {
+				if (*plItr) {
+					WindowSize partsSize = (*plItr)->getSize();
+					int tmpPosX = e.localX + pos.x - (*plItr)->getPos().x;
+					int tmpPosY = e.localY + pos.y - (*plItr)->getPos().y;
+					if ((0 <= tmpPosX) && (tmpPosX < partsSize.x) &&
+						(0 <= tmpPosY) && (tmpPosY < partsSize.y)) {
+
+						MouseEvent mouseEvent;
+						mouseEvent.globalX = e.globalX;
+						mouseEvent.globalY = e.globalY;
+						mouseEvent.localX = tmpPosX;
+						mouseEvent.localY = tmpPosY;
+						mouseEvent.altKey = e.altKey;
+						mouseEvent.shiftKey = e.shiftKey;
+						mouseEvent.ctrlKey = e.ctrlKey;
+						mouseEvent.wheeldelta = e.wheeldelta;
+
+						(*plItr)->onLButtonDBLCLK(mouseEvent);
+					}
+					(*plItr)->setDoneFlag(false);
+				}
+			}
+
+			//再描画要求
+			if (rewriteOnChange) {
+				callRewrite();
+			}
 		}
 		//	Method : 右マウスボタン ダブルクリックイベント受信
 		virtual void onRButtonDBLCLK(const MouseEvent& e) {//2023/10/04
 			int dbgflag1 = 1;
+
+			//内部パーツ
+			std::list<OrgWindowParts*>::iterator plItr;
+			for (plItr = partsList.begin(); plItr != partsList.end(); plItr++) {
+				if (*plItr) {
+					WindowSize partsSize = (*plItr)->getSize();
+					int tmpPosX = e.localX + pos.x - (*plItr)->getPos().x;
+					int tmpPosY = e.localY + pos.y - (*plItr)->getPos().y;
+					if ((0 <= tmpPosX) && (tmpPosX < partsSize.x) &&
+						(0 <= tmpPosY) && (tmpPosY < partsSize.y)) {
+
+						MouseEvent mouseEvent;
+						mouseEvent.globalX = e.globalX;
+						mouseEvent.globalY = e.globalY;
+						mouseEvent.localX = tmpPosX;
+						mouseEvent.localY = tmpPosY;
+						mouseEvent.altKey = e.altKey;
+						mouseEvent.shiftKey = e.shiftKey;
+						mouseEvent.ctrlKey = e.ctrlKey;
+						mouseEvent.wheeldelta = e.wheeldelta;
+
+						(*plItr)->onRButtonDBLCLK(mouseEvent);
+					}
+					(*plItr)->setDoneFlag(false);
+				}
+			}
+
+			//再描画要求
+			if (rewriteOnChange) {
+				callRewrite();
+			}
 		}
 
 
@@ -10721,7 +10807,7 @@ void s_dummyfunc()
 			//内部パーツ
 			std::list<OrgWindowParts*>::iterator plItr;
 			for (plItr = partsList.begin(); plItr != partsList.end(); plItr++){
-				if (*plItr) {
+				if (*plItr && (*plItr)->getDoneFlag()) {
 					WindowSize partsSize = (*plItr)->getSize();
 					int tmpPosX = e.localX + pos.x - (*plItr)->getPos().x;
 					int tmpPosY = e.localY + pos.y - (*plItr)->getPos().y;
@@ -10734,8 +10820,10 @@ void s_dummyfunc()
 					mouseEvent.altKey = e.altKey;
 					mouseEvent.shiftKey = e.shiftKey;
 					mouseEvent.ctrlKey = e.ctrlKey;
+					mouseEvent.wheeldelta = e.wheeldelta;
 
 					(*plItr)->onLButtonUp(mouseEvent);
+					(*plItr)->setDoneFlag(false);
 				}
 			}
 
@@ -10766,8 +10854,37 @@ void s_dummyfunc()
 
 			}
 
-
 			autoResize();
+
+			//内部パーツ
+			std::list<OrgWindowParts*>::iterator plItr;
+			for (plItr = partsList.begin(); plItr != partsList.end(); plItr++) {
+				if (*plItr && (*plItr)->getDoneFlag()) {
+					WindowSize partsSize = (*plItr)->getSize();
+					int tmpPosX = e.localX + pos.x - (*plItr)->getPos().x;
+					int tmpPosY = e.localY + pos.y - (*plItr)->getPos().y;
+					//if ((0 <= tmpPosX) && (tmpPosX < partsSize.x) &&
+					//	(0 <= tmpPosY) && (tmpPosY < partsSize.y)) {
+
+						MouseEvent mouseEvent;
+						mouseEvent.globalX = e.globalX;
+						mouseEvent.globalY = e.globalY;
+						mouseEvent.localX = tmpPosX;
+						mouseEvent.localY = tmpPosY;
+						mouseEvent.altKey = e.altKey;
+						mouseEvent.shiftKey = e.shiftKey;
+						mouseEvent.ctrlKey = e.ctrlKey;
+						mouseEvent.wheeldelta = e.wheeldelta;
+
+						(*plItr)->onMouseMove(mouseEvent);
+					//}
+				}
+			}
+
+			//再描画要求
+			if (rewriteOnChange) {
+				callRewrite();
+			}
 
 		}
 		///	Method : 右マウスボタンダウンイベント受信
@@ -10781,25 +10898,65 @@ void s_dummyfunc()
 					WindowSize partsSize = (*plItr)->getSize();
 					int tmpPosX = e.localX + pos.x - (*plItr)->getPos().x;
 					int tmpPosY = e.localY + pos.y - (*plItr)->getPos().y;
+					if ((0 <= tmpPosX) && (tmpPosX < partsSize.x) &&
+						(0 <= tmpPosY) && (tmpPosY < partsSize.y)) {
 
-					MouseEvent mouseEvent;
-					mouseEvent.globalX = e.globalX;
-					mouseEvent.globalY = e.globalY;
-					mouseEvent.localX = tmpPosX;
-					mouseEvent.localY = tmpPosY;
-					mouseEvent.altKey = e.altKey;
-					mouseEvent.shiftKey = e.shiftKey;
-					mouseEvent.ctrlKey = e.ctrlKey;
+						MouseEvent mouseEvent;
+						mouseEvent.globalX = e.globalX;
+						mouseEvent.globalY = e.globalY;
+						mouseEvent.localX = tmpPosX;
+						mouseEvent.localY = tmpPosY;
+						mouseEvent.altKey = e.altKey;
+						mouseEvent.shiftKey = e.shiftKey;
+						mouseEvent.ctrlKey = e.ctrlKey;
+						mouseEvent.wheeldelta = e.wheeldelta;
 
-					(*plItr)->onRButtonDown(mouseEvent);
+						(*plItr)->onRButtonDown(mouseEvent);
+					}
 				}
 			}
+			//再描画要求
+			if (rewriteOnChange) {
+				callRewrite();
+			}
+
 		}
 		///	Method : 右マウスボタンアップイベント受信
 		void onRButtonUp(const MouseEvent& e){
 			if (!canMouseControll) return;
 
 			mouseRBtnOnIndex = -1;
+
+
+			//内部パーツ
+			std::list<OrgWindowParts*>::iterator plItr;
+			for (plItr = partsList.begin(); plItr != partsList.end(); plItr++) {
+				if (*plItr) {
+					WindowSize partsSize = (*plItr)->getSize();
+					int tmpPosX = e.localX + pos.x - (*plItr)->getPos().x;
+					int tmpPosY = e.localY + pos.y - (*plItr)->getPos().y;
+					if ((0 <= tmpPosX) && (tmpPosX < partsSize.x) &&
+						(0 <= tmpPosY) && (tmpPosY < partsSize.y)) {
+
+						MouseEvent mouseEvent;
+						mouseEvent.globalX = e.globalX;
+						mouseEvent.globalY = e.globalY;
+						mouseEvent.localX = tmpPosX;
+						mouseEvent.localY = tmpPosY;
+						mouseEvent.altKey = e.altKey;
+						mouseEvent.shiftKey = e.shiftKey;
+						mouseEvent.ctrlKey = e.ctrlKey;
+						mouseEvent.wheeldelta = e.wheeldelta;
+
+						(*plItr)->onRButtonUp(mouseEvent);
+					}
+				}
+			}
+			//再描画要求
+			if (rewriteOnChange) {
+				callRewrite();
+			}
+
 		}
 
 		virtual void onMouseWheel(const MouseEvent& e) {
