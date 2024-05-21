@@ -484,9 +484,17 @@ void s_dummyfunc()
 
 			isplayerbutton = false;
 			lrbuttondone = false;
+			debugflag = false;
 		}
 		OrgWindowParts( const OrgWindowParts& a ){
 			operator=(a);
+		}
+
+		bool getDbgFlag() {
+			return debugflag;
+		}
+		void setDbgFlag(bool srcflag) {
+			debugflag = srcflag;
 		}
 
 		bool getActive()
@@ -693,6 +701,8 @@ void s_dummyfunc()
 		bool isradiobutton;
 		bool isseparator;
 		bool lrbuttondone;
+
+		bool debugflag;
 		//////////////////////////// Method //////////////////////////////
 		//	Method : 親ウィンドウに登録
 		void _registmember( OrgWindow *_parentWindow,
@@ -2061,82 +2071,7 @@ void s_dummyfunc()
 
 
 		/// Method : 自動サイズ設定
-		virtual void autoResize(){
-			//パーツエリアの位置とサイズを設定
-			int onelineheight = 16;
-			int centerPos= getCenterLinePos();
-
-
-			//only1line == trueの際にはセパレータ自体の最小サイズを決める
-			if (only1line == true) {
-				int sizey1 = 0;
-				int sizey2 = 0;
-				std::list<OrgWindowParts*>::iterator itr;
-				for ( itr = partsList1.begin(); itr != partsList1.end(); itr++) {
-					if (*itr) {
-						(*itr)->autoResize();
-						WindowSize befsize = (*itr)->getSize();
-						sizey1 += (*itr)->getSize().y;
-					}
-				}
-				std::list<OrgWindowParts*>::iterator itr2;
-				for (itr2 = partsList2.begin(); itr2 != partsList2.end(); itr2++) {
-					if (*itr2) {
-						(*itr2)->autoResize();
-						WindowSize befsize = (*itr2)->getSize();
-						sizey2 += (*itr2)->getSize().y;
-					}
-				}
-				size.y = max(sizey1, sizey2);
-				if (size.y == 0) {
-					size.y = 15;
-				}
-			}
-
-
-			partsAreaPos1=  pos;
-			int scrollbarwidth = 20;
-			if( divideSide ){
-				partsAreaPos2=  pos + WindowPos(centerPos+1+LINE_MARGIN, 0);
-				partsAreaSize1= WindowSize( centerPos-LINE_MARGIN, size.y);
-				partsAreaSize2= WindowSize( size.x-centerPos-LINE_MARGIN-1, size.y);
-			}else{
-				partsAreaPos2=  pos + WindowPos(0, centerPos+1+LINE_MARGIN);
-				partsAreaSize1= WindowSize( size.x, centerPos-LINE_MARGIN);
-				partsAreaSize2= WindowSize( size.x, size.y-centerPos-LINE_MARGIN-1);
-			}
-			currentPartsSizeY1= 0;
-			currentPartsSizeY2= 0;
-
-			//全ての内部パーツの位置とサイズを自動設定
-			std::list<OrgWindowParts*>::iterator itr;
-			for (itr = partsList1.begin(); itr != partsList1.end(); itr++) {
-				if (*itr) {
-					(*itr)->autoResize();//!!!!!!!!!!!!
-					WindowSize befsize = (*itr)->getSize();
-					(*itr)->setPos(WindowPos(partsAreaPos1.x, partsAreaPos1.y + currentPartsSizeY1));
-					//(*itr)->setSize( WindowSize( partsAreaSize1.x, partsAreaSize1.y-currentPartsSizeY1 ) );
-					(*itr)->setSize(WindowSize(partsAreaSize1.x, befsize.y));
-					//(*itr)->autoResize();//befsizeよりも前に移動
-
-					//currentPartsSizeY1+= (*itr)->getSize().y+1;
-					currentPartsSizeY1 += (*itr)->getSize().y;
-				}
-			}
-			std::list<OrgWindowParts*>::iterator itr2;
-			for (itr2 = partsList2.begin(); itr2 != partsList2.end(); itr2++) {
-				if (*itr2) {
-					WindowSize befsize = (*itr2)->getSize();
-					(*itr2)->setPos(WindowPos(partsAreaPos2.x, partsAreaPos2.y + currentPartsSizeY2));
-					//(*itr2)->setSize( WindowSize( partsAreaSize2.x, partsAreaSize2.y-currentPartsSizeY2 ) );
-					(*itr2)->setSize(WindowSize(partsAreaSize2.x, befsize.y));
-					//(*itr2)->autoResize();//befsizeよりも前に移動
-
-					//currentPartsSizeY2+= (*itr2)->getSize().y+1;
-					currentPartsSizeY2 += (*itr2)->getSize().y;
-				}
-			}
-		}
+		virtual void autoResize();
 		///	Method : 描画
 		virtual void draw();
 		//void draw(){
@@ -2507,13 +2442,19 @@ void s_dummyfunc()
 		static const int HANDLE_MARK_SIZE= 6;
 
 		/// Method : 仕切り線の位置を取得
-		int getCenterLinePos() const{
+		int getCenterLinePos() const {
 			int divval = divideSide ? size.x : size.y;
 			int divpos = divideSide ? pos.x : pos.y;
-
 			int centerPos= (int)(centerRate*(double)divval);
 			centerPos= max(1, min(centerPos, divval-2));
 			return centerPos;
+
+			//int divval = divideSide ? size.x : (size.y - partsAreaPos1.y);
+			//int divpos = divideSide ? pos.x : pos.y;
+			//int centerPos0 = (int)(centerRate * (double)divval);
+			//centerPos0 = max(1, min(centerPos0, divval - 2));
+			//int centerPos = divideSide ? centerPos0 : (centerPos0 + partsAreaPos1.y);
+			//return centerPos;
 		}
 		/// Method : 仕切り線に触れているかどうか取得
 		bool isMouseOnHandle(const MouseEvent& e) const{
@@ -2545,90 +2486,92 @@ void s_dummyfunc()
 		void onLRButtonDown(const MouseEvent& e, bool lButton){
 
 			//仕切り線ドラッグで移動
-			if( isMouseOnHandle(e) ){
+			if (isMouseOnHandle(e)) {
 
-				if( canShift && lButton ){
-					shiftDrag= true;
+				if (canShift && lButton) {
+					shiftDrag = true;
 					//カーソル変更
-					if( divideSide ){
-						SetCursor((HCURSOR)LoadImage(NULL, IDC_SIZEWE,IMAGE_CURSOR,
-													 NULL, NULL,LR_DEFAULTCOLOR | LR_SHARED));
-					}else{
-						SetCursor((HCURSOR)LoadImage(NULL, IDC_SIZENS,IMAGE_CURSOR,
-													 NULL, NULL,LR_DEFAULTCOLOR | LR_SHARED));
+					if (divideSide) {
+						SetCursor((HCURSOR)LoadImage(NULL, IDC_SIZEWE, IMAGE_CURSOR,
+							NULL, NULL, LR_DEFAULTCOLOR | LR_SHARED));
+					}
+					else {
+						SetCursor((HCURSOR)LoadImage(NULL, IDC_SIZENS, IMAGE_CURSOR,
+							NULL, NULL, LR_DEFAULTCOLOR | LR_SHARED));
 					}
 				}
-
+			}
+			else {
 			//内部パーツ1
-			}else if( (divideSide ? e.localX : e.localY) <= getCenterLinePos() ){
+			//}else if( (divideSide ? e.localX : e.localY) <= getCenterLinePos() ){
+				{
+					std::list<OrgWindowParts*>::iterator plItr;
+					for (plItr = partsList1.begin(); plItr != partsList1.end(); plItr++) {
+						if (*plItr) {
+							(*plItr)->setDoneFlag(false);
 
-				std::list<OrgWindowParts*>::iterator plItr;
-				for(plItr = partsList1.begin(); plItr != partsList1.end(); plItr++ ){
-					if (*plItr) {
-						(*plItr)->setDoneFlag(false);
+							WindowSize partsSize = (*plItr)->getSize();
+							int tmpPosX = e.localX + pos.x - (*plItr)->getPos().x;
+							int tmpPosY = e.localY + pos.y - (*plItr)->getPos().y;
+							if ((0 <= tmpPosX) && (tmpPosX < partsSize.x) &&
+								(0 <= tmpPosY) && (tmpPosY < partsSize.y)) {
 
-						WindowSize partsSize = (*plItr)->getSize();
-						int tmpPosX = e.localX + pos.x - (*plItr)->getPos().x;
-						int tmpPosY = e.localY + pos.y - (*plItr)->getPos().y;
-						if ((0 <= tmpPosX) && (tmpPosX < partsSize.x) &&
-							(0 <= tmpPosY) && (tmpPosY < partsSize.y)) {
+								MouseEvent mouseEvent;
+								mouseEvent.globalX = e.globalX;
+								mouseEvent.globalY = e.globalY;
+								mouseEvent.localX = tmpPosX;
+								mouseEvent.localY = tmpPosY;
+								mouseEvent.altKey = e.altKey;
+								mouseEvent.shiftKey = e.shiftKey;
+								mouseEvent.ctrlKey = e.ctrlKey;
 
-							MouseEvent mouseEvent;
-							mouseEvent.globalX = e.globalX;
-							mouseEvent.globalY = e.globalY;
-							mouseEvent.localX = tmpPosX;
-							mouseEvent.localY = tmpPosY;
-							mouseEvent.altKey = e.altKey;
-							mouseEvent.shiftKey = e.shiftKey;
-							mouseEvent.ctrlKey = e.ctrlKey;
-
-							if (lButton) {
-								(*plItr)->onLButtonDown(mouseEvent);
+								if (lButton) {
+									(*plItr)->onLButtonDown(mouseEvent);
+								}
+								else {
+									(*plItr)->onRButtonDown(mouseEvent);
+								}
+								(*plItr)->setDoneFlag(true);
+								return;
 							}
-							else {
-								(*plItr)->onRButtonDown(mouseEvent);
-							}
-							(*plItr)->setDoneFlag(true);
-							return;
 						}
 					}
 				}
-
 			//内部パーツ2
-			}else{
+			//}else{
+				{
+					std::list<OrgWindowParts*>::iterator plItr2;
+					for (plItr2 = partsList2.begin(); plItr2 != partsList2.end(); plItr2++) {
+						if (*plItr2) {
+							(*plItr2)->setDoneFlag(false);
 
-				std::list<OrgWindowParts*>::iterator plItr2;
-				for (plItr2 = partsList2.begin(); plItr2 != partsList2.end(); plItr2++) {
-					if (*plItr2) {
-						(*plItr2)->setDoneFlag(false);
+							WindowSize partsSize = (*plItr2)->getSize();
+							int tmpPosX = e.localX + pos.x - (*plItr2)->getPos().x;
+							int tmpPosY = e.localY + pos.y - (*plItr2)->getPos().y;
+							if ((0 <= tmpPosX) && (tmpPosX < partsSize.x) &&
+								(0 <= tmpPosY) && (tmpPosY < partsSize.y)) {
 
-						WindowSize partsSize = (*plItr2)->getSize();
-						int tmpPosX = e.localX + pos.x - (*plItr2)->getPos().x;
-						int tmpPosY = e.localY + pos.y - (*plItr2)->getPos().y;
-						if ((0 <= tmpPosX) && (tmpPosX < partsSize.x) &&
-							(0 <= tmpPosY) && (tmpPosY < partsSize.y)) {
+								MouseEvent mouseEvent;
+								mouseEvent.globalX = e.globalX;
+								mouseEvent.globalY = e.globalY;
+								mouseEvent.localX = tmpPosX;
+								mouseEvent.localY = tmpPosY;
+								mouseEvent.altKey = e.altKey;
+								mouseEvent.shiftKey = e.shiftKey;
+								mouseEvent.ctrlKey = e.ctrlKey;
 
-							MouseEvent mouseEvent;
-							mouseEvent.globalX = e.globalX;
-							mouseEvent.globalY = e.globalY;
-							mouseEvent.localX = tmpPosX;
-							mouseEvent.localY = tmpPosY;
-							mouseEvent.altKey = e.altKey;
-							mouseEvent.shiftKey = e.shiftKey;
-							mouseEvent.ctrlKey = e.ctrlKey;
-
-							if (lButton) {
-								(*plItr2)->onLButtonDown(mouseEvent);
+								if (lButton) {
+									(*plItr2)->onLButtonDown(mouseEvent);
+								}
+								else {
+									(*plItr2)->onRButtonDown(mouseEvent);
+								}
+								(*plItr2)->setDoneFlag(true);
+								return;
 							}
-							else {
-								(*plItr2)->onRButtonDown(mouseEvent);
-							}
-							(*plItr2)->setDoneFlag(true);
-							return;
 						}
 					}
 				}
-
 			}
 
 		}
@@ -7196,7 +7139,7 @@ void s_dummyfunc()
 			}
 
 			eultip = ChaVector3(0.0f, 0.0f, 0.0f);
-
+			inBlendShapeMode = false;
 		}
 		~OWP_EulerGraph() {
 			selectAll(true);
@@ -8461,7 +8404,14 @@ void s_dummyfunc()
 		{
 			return eultip;
 		}
-
+		void setInBlendShapeMode(bool srcflag)
+		{
+			inBlendShapeMode = srcflag;
+		}
+		bool getInBlendShapeMode()
+		{
+			return inBlendShapeMode;
+		}
 	private:
 		////////////////////////// MemberVar /////////////////////////////
 		double maxTime, currentTime, showPos_time, showPos_width;
@@ -8482,6 +8432,7 @@ void s_dummyfunc()
 		double dispoffset;
 		CModel* currentmodel;
 		ChaVector3 eultip;//カレントのオイラー角を　グラフ上に表示するため　値をMain.cppでセットする
+		bool inBlendShapeMode;
 
 		//行データクラス-------------
 		public : class EulLineData {

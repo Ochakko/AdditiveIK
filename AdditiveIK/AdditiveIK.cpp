@@ -1758,6 +1758,7 @@ static bool s_disponlyoneobj = false;//for test button of groupWnd
 static int s_onlyoneobjno = -1;//for test button of groupWnd
 
 
+static bool InBlendShapeMode(CModel** ppmodel, CMQOObject** ppmqoobj, int* pchannelindex);
 static OrgWindow* s_blendshapeWnd = 0;
 static OWP_ScrollWnd* s_blendshapeSCWnd = 0;
 static OWP_Separator* s_blendshapesp0 = 0;
@@ -12232,80 +12233,22 @@ int UpdateEditedEuler()
 	int eultiptime = (int)(s_owpEulerGraph->getCurrentTime() + 0.0001);
 
 
-	//選択状態がない場合にはtopboneのオイラーグラフを表示する。
-	if (s_curboneno < 0) {
-		CBone* topbone = s_model->GetTopBone();
-		if (topbone) {
-			s_curboneno = topbone->GetBoneNo();
-		}
-	}
-
-
-	CBone* opebone = s_model->GetBoneByID(s_curboneno);
-	if (opebone) {
-		CBone* parentbone = opebone->GetParent(false);
-		if (s_ikkind == 0) {
-			//ikkind がROT(0)の場合はIK　それ以外のMV, SCALEの場合にはFK
-			if (parentbone && parentbone->IsSkeleton()) {
-				opebone = parentbone;
-			}
-		}
+	CModel* pmodel = 0;
+	CMQOObject* pmqoobj = 0;
+	int channelindex = -1;
+	bool blendshapemode;
+	blendshapemode = InBlendShapeMode(&pmodel, &pmqoobj, &channelindex);
+	if (blendshapemode) {
+		s_owpEulerGraph->setInBlendShapeMode(true);
 
 		int curtime;
-		float minval = 0.0f;
-		float maxval = 0.0f;
-		int minfirstflag, maxfirstflag;
-		bool isset = false;
+		float minval = -100.0;
+		float maxval = 100.0;
 
-		//refreshEulerGraphは全範囲でminとmaxを設定。UpdateEditedEulerはstartframeからendframeまで。
-		s_owpEulerGraph->getEulMinMax(&isset, &minval, &maxval);
-		if (isset == true) {
-			minfirstflag = 0;
-			maxfirstflag = 0;
-		}
-		else {
-			minfirstflag = 1;
-			maxfirstflag = 1;
-		}
-		//minfirstflag = 1;
-		//maxfirstflag = 1;
-
-
-		//s_buttonselectstart = s_editrange.GetStartFrame();
-		//s_buttonselectend = s_editrange.GetEndFrame();
-
-		int startframe, endframe, frameleng;
-		////if (g_previewFlag == 0) {
-		////	startframe = s_buttonselectstart;
-		////	endframe = s_buttonselectend;
-		////}
-		////else {
-		//	if (s_model->GetCurMotInfo()) {
-		//		double frameleng = s_model->GetCurMotInfo()->frameleng;
-		//		double currenttime = s_owpEulerGraph->getCurrentTime();
-
-		//		double startoffset;
-		//		double endoffset;
-		//		if (g_4kresolution) {
-		//			startoffset = 150.0;
-		//			endoffset = 260.0;
-		//		}
-		//		else {
-		//			startoffset = 50.0;
-		//			endoffset = 80.0;
-		//		}
-
-		//		startframe = max(0, (currenttime - startoffset));
-		//		endframe = min(frameleng, (startframe + endoffset));
-		//	}
-		//	else {
-		//		startframe = s_buttonselectstart;
-		//		endframe = s_buttonselectend;
-		//	}
-		////}
-
+		int curmotid = pmodel->GetCurrentMotID();
 		MOTINFO curmi = s_model->GetCurMotInfo();
 		if (curmi.motid > 0) {
+			int startframe, endframe, frameleng;
 			frameleng = IntTime(curmi.frameleng);
 			startframe = IntTime(s_owpLTimeline->getShowPosTime());
 			endframe = (int)(min(frameleng, startframe + s_owpEulerGraph->getShowposWidth()));
@@ -12313,83 +12256,17 @@ int UpdateEditedEuler()
 			int firstframe;
 			firstframe = max((startframe - 1), 0);
 
-			ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
-			int ret;
-			ret = s_owpEulerGraph->getEuler((double)firstframe, &befeul);
-			if (ret) {
-				befeul = ChaVector3(0.0f, 0.0f, 0.0f);
-			}
-
 			for (curtime = startframe; curtime <= endframe; curtime++) {
-				const WCHAR* wbonename = opebone->GetWBoneName();
-				ChaVector3 orgeul = ChaVector3(0.0f, 0.0f, 0.0f);
-				ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
-				//cureul = opebone->CalcFBXEul(curmi->motid, (double)curtime, &befeul);
-				//befeul = cureul;//!!!!!!!
-
-				CMotionPoint* curmp = opebone->GetMotionPoint(curmi.motid, (double)curtime);
-				if (curmp) {
-					if (s_ikkind == 0) {//回転
-						//opebone->GetWorldMat(curmi->motid, (double)curtime, 0, &cureul);
-						cureul = opebone->GetLocalEul(g_limitdegflag, curmi.motid, (double)curtime, 0);
-					}
-					else if (s_ikkind == 1) {//移動
-						cureul = opebone->CalcLocalTraAnim(g_limitdegflag, curmi.motid, (double)curtime);
-					}
-					else if (s_ikkind == 2) {//スケール
-						cureul = opebone->CalcLocalScaleAnim(g_limitdegflag, curmi.motid, (double)curtime);
-					}
-				}
-				else {
-					cureul.x = 0.0;
-					cureul.y = 0.0;
-					cureul.z = 0.0;
-					//befeul = cureul;//!!!!!!!
-				}
-				if ((curtime == 0.0) || (curtime == 1.0) || IsValidNewEul(cureul, befeul)) {
-					befeul = cureul;
-				}
+				float currentvalue = pmqoobj->GetShapeAnimWeight(curmotid, curtime, channelindex);
 
 				bool needCallRewrite = false;
-				s_owpEulerGraph->setKey(needCallRewrite, _T("X"), (double)curtime, cureul.x);
-				s_owpEulerGraph->setKey(needCallRewrite, _T("Y"), (double)curtime, cureul.y);
-				s_owpEulerGraph->setKey(needCallRewrite, _T("Z"), (double)curtime, cureul.z);
-
+				s_owpEulerGraph->setKey(needCallRewrite, _T("X"), (double)curtime, currentvalue);
 
 				//2023/10/13
 				if (curtime == eultiptime) {
-					s_owpEulerGraph->setEulTip(cureul);
+					ChaVector3 eultip = ChaVector3(currentvalue, 0.0f, 0.0f);
+					s_owpEulerGraph->setEulTip(eultip);
 				}
-
-
-				if (minfirstflag == 1) {
-					minval = min(cureul.z, min(cureul.x, cureul.y));
-					minfirstflag = 0;
-				}
-				if (minval > cureul.x) {
-					minval = cureul.x;
-				}
-				if (minval > cureul.y) {
-					minval = cureul.y;
-				}
-				if (minval > cureul.z) {
-					minval = cureul.z;
-				}
-
-				if (maxfirstflag == 1) {
-					maxval = max(cureul.z, max(cureul.x, cureul.y));
-					maxfirstflag = 0;
-				}
-				if (maxval < cureul.x) {
-					maxval = cureul.x;
-				}
-				if (maxval < cureul.y) {
-					maxval = cureul.y;
-				}
-				if (maxval < cureul.z) {
-					maxval = cureul.z;
-				}
-
 			}
 
 			s_owpEulerGraph->setEulMinMax(s_ikkind, minval, maxval);
@@ -12425,138 +12302,138 @@ int UpdateEditedEuler()
 					s_owpEulerGraph->setKey(needCallRewrite, _T("S"), (double)scaleindex, curscalevalue);//setkey
 				}
 
-
 			}
 
 			//_ASSERT(0);
 			s_owpEulerGraph->callRewrite();
 			//s_owpEulerGraph->draw();
 		}
+
 	}
-
-	return 0;
-}
-
-int refreshEulerGraph()
-{
-	//オイラーグラフのキーを作成しなおさない場合はUpdateEditedEuler()
+	else {
+		s_owpEulerGraph->setInBlendShapeMode(false);
 
 
-	if (s_owpEulerGraph) {
-		s_owpEulerGraph->SetCurrentModel(s_model);
-	}
-
-	if (!s_model || !s_owpLTimeline || !s_owpEulerGraph) {
-		return 0;
-	}
-
-	//if (s_model && (s_model->GetLoadedFlag() == false)) {
-	//	return;
-	//}
-
-	if (!s_model->ExistCurrentMotion()) {
-		return 0;
-	}
-
-
-	//2023/10/13
-	int eultiptime = (int)(s_owpEulerGraph->getCurrentTime() + 0.0001);
-
-
-	if (s_model) {
-
-		int frameleng = IntTime(s_model->GetCurrentMaxFrame());
-
-		//if (!g_motionbrush_value || (g_motionbrush_frameleng != frameleng)) {
-		int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
-		if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
-			_ASSERT(0);
-			::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
-			PostQuitMessage(result);
+		//選択状態がない場合にはtopboneのオイラーグラフを表示する。
+		if (s_curboneno < 0) {
+			CBone* topbone = s_model->GetTopBone();
+			if (topbone) {
+				s_curboneno = topbone->GetBoneNo();
+			}
 		}
-		//}
-
-		//int result = CreateMotionBrush(0, (double)(frameleng - 1), true);
-		//_ASSERT(result == 0);
-
-		s_owpEulerGraph->setDispScale(1.0);//倍率初期化
-		s_owpEulerGraph->setDispOffset(0.0);//位置オフセット
-
-		s_owpEulerGraph->deleteKey();
-		s_owpEulerGraph->deleteLine();
-
-		s_owpEulerGraph->newLine(0, 0, _T("X"));
-		s_owpEulerGraph->newLine(0, 0, _T("Y"));
-		s_owpEulerGraph->newLine(0, 0, _T("Z"));
-		s_owpEulerGraph->newLine(0, 0, _T("S"));
-
-		//s_owpLTimeline->setMaxTime( s_model->m_curmotinfo->frameleng - 1.0 );
-		s_owpEulerGraph->setMaxTime(s_model->GetCurrentMaxFrame());//左端の１マスを選んだ状態がフレーム０を選んだ状態だから　-1 しない。
-
-
-
-		if (s_model && (s_curboneno >= 0)) {
-			CBone* opebone = s_model->GetBoneByID(s_curboneno);
-			if (opebone) {
-				CBone* parentbone = opebone->GetParent(false);
-				if (s_ikkind == 0) {
-					//ikkind がROT(0)の場合はIK　それ以外のMV, SCALEの場合にはFK
-					if (parentbone && parentbone->IsSkeleton()) {
-						opebone = parentbone;
-					}
+		CBone* opebone = s_model->GetBoneByID(s_curboneno);
+		if (opebone) {
+			CBone* parentbone = opebone->GetParent(false);
+			if (s_ikkind == 0) {
+				//ikkind がROT(0)の場合はIK　それ以外のMV, SCALEの場合にはFK
+				if (parentbone && parentbone->IsSkeleton()) {
+					opebone = parentbone;
 				}
+			}
 
-				int curtime;
-				float minval = 0.0;
-				float maxval = 0.0;
-				int minfirstflag = 1;
-				int maxfirstflag = 1;
+			int curtime;
+			float minval = 0.0f;
+			float maxval = 0.0f;
+			int minfirstflag, maxfirstflag;
+			bool isset = false;
 
-				double firstframe = 0.0;
+			//refreshEulerGraphは全範囲でminとmaxを設定。UpdateEditedEulerはstartframeからendframeまで。
+			s_owpEulerGraph->getEulMinMax(&isset, &minval, &maxval);
+			if (isset == true) {
+				minfirstflag = 0;
+				maxfirstflag = 0;
+			}
+			else {
+				minfirstflag = 1;
+				maxfirstflag = 1;
+			}
+			//minfirstflag = 1;
+			//maxfirstflag = 1;
+
+
+			//s_buttonselectstart = s_editrange.GetStartFrame();
+			//s_buttonselectend = s_editrange.GetEndFrame();
+
+			int startframe, endframe, frameleng;
+			////if (g_previewFlag == 0) {
+			////	startframe = s_buttonselectstart;
+			////	endframe = s_buttonselectend;
+			////}
+			////else {
+			//	if (s_model->GetCurMotInfo()) {
+			//		double frameleng = s_model->GetCurMotInfo()->frameleng;
+			//		double currenttime = s_owpEulerGraph->getCurrentTime();
+
+			//		double startoffset;
+			//		double endoffset;
+			//		if (g_4kresolution) {
+			//			startoffset = 150.0;
+			//			endoffset = 260.0;
+			//		}
+			//		else {
+			//			startoffset = 50.0;
+			//			endoffset = 80.0;
+			//		}
+
+			//		startframe = max(0, (currenttime - startoffset));
+			//		endframe = min(frameleng, (startframe + endoffset));
+			//	}
+			//	else {
+			//		startframe = s_buttonselectstart;
+			//		endframe = s_buttonselectend;
+			//	}
+			////}
+
+			MOTINFO curmi = s_model->GetCurMotInfo();
+			if (curmi.motid > 0) {
+				frameleng = IntTime(curmi.frameleng);
+				startframe = IntTime(s_owpLTimeline->getShowPosTime());
+				endframe = (int)(min(frameleng, startframe + s_owpEulerGraph->getShowposWidth()));
+
+				int firstframe;
+				firstframe = max((startframe - 1), 0);
+
 				ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
 				int ret;
-				ret = s_owpEulerGraph->getEuler(firstframe, &befeul);
+				ret = s_owpEulerGraph->getEuler((double)firstframe, &befeul);
 				if (ret) {
 					befeul = ChaVector3(0.0f, 0.0f, 0.0f);
 				}
-				for (curtime = 0; curtime < frameleng; curtime++) {
+
+				for (curtime = startframe; curtime <= endframe; curtime++) {
 					const WCHAR* wbonename = opebone->GetWBoneName();
 					ChaVector3 orgeul = ChaVector3(0.0f, 0.0f, 0.0f);
 					ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
 					//cureul = opebone->CalcFBXEul(curmi->motid, (double)curtime, &befeul);
 					//befeul = cureul;//!!!!!!!
 
-					CMotionPoint* curmp = opebone->GetMotionPoint(s_model->GetCurrentMotID(), (double)curtime);
+					CMotionPoint* curmp = opebone->GetMotionPoint(curmi.motid, (double)curtime);
 					if (curmp) {
 						if (s_ikkind == 0) {//回転
 							//opebone->GetWorldMat(curmi->motid, (double)curtime, 0, &cureul);
-							cureul = opebone->GetLocalEul(g_limitdegflag,
-								s_model->GetCurrentMotID(), (double)curtime, 0);
+							cureul = opebone->GetLocalEul(g_limitdegflag, curmi.motid, (double)curtime, 0);
 						}
 						else if (s_ikkind == 1) {//移動
-							cureul = opebone->CalcLocalTraAnim(g_limitdegflag,
-								s_model->GetCurrentMotID(), (double)curtime);
+							cureul = opebone->CalcLocalTraAnim(g_limitdegflag, curmi.motid, (double)curtime);
 						}
 						else if (s_ikkind == 2) {//スケール
-							cureul = opebone->CalcLocalScaleAnim(g_limitdegflag,
-								s_model->GetCurrentMotID(), (double)curtime);
+							cureul = opebone->CalcLocalScaleAnim(g_limitdegflag, curmi.motid, (double)curtime);
 						}
 					}
 					else {
 						cureul.x = 0.0;
 						cureul.y = 0.0;
 						cureul.z = 0.0;
-						//befeul = cureul;
+						//befeul = cureul;//!!!!!!!
 					}
 					if ((curtime == 0.0) || (curtime == 1.0) || IsValidNewEul(cureul, befeul)) {
 						befeul = cureul;
 					}
 
 					bool needCallRewrite = false;
-					s_owpEulerGraph->newKey(needCallRewrite, _T("X"), (double)curtime, cureul.x);
-					s_owpEulerGraph->newKey(needCallRewrite, _T("Y"), (double)curtime, cureul.y);
-					s_owpEulerGraph->newKey(needCallRewrite, _T("Z"), (double)curtime, cureul.z);
-					//s_owpEulerGraph->newKey(_T("S"), (double)curtime, 0.0);
+					s_owpEulerGraph->setKey(needCallRewrite, _T("X"), (double)curtime, cureul.x);
+					s_owpEulerGraph->setKey(needCallRewrite, _T("Y"), (double)curtime, cureul.y);
+					s_owpEulerGraph->setKey(needCallRewrite, _T("Z"), (double)curtime, cureul.z);
 
 
 					//2023/10/13
@@ -12611,27 +12488,299 @@ int refreshEulerGraph()
 						scalemax = maxval + 10.0;
 					}
 
-
 					unsigned int scaleindex;
-					for (scaleindex = 0; scaleindex < (unsigned int)frameleng; scaleindex++) {
+					//for (scaleindex = 0; scaleindex < curmi->frameleng; scaleindex++) {
+					for (scaleindex = (unsigned int)startframe; scaleindex <= (unsigned int)endframe; scaleindex++) {
+
 						double curscalevalue;
-						//if ((scaleindex >= (unsigned int)g_motionbrush_startframe) && (scaleindex <= (unsigned int)g_motionbrush_endframe) && (scaleindex < (unsigned int)g_motionbrush_frameleng)) {
-						curscalevalue = (double)(*(g_motionbrush_value + scaleindex));// *(scalemax - scalemin) + scalemin;
-						curscalevalue = (curscalevalue * 0.5 + 0.5) * (scalemax - scalemin) + scalemin;
-						//}
-						//else {
-						//	curscalevalue = 0.0;// *(scalemax - scalemin) + scalemin;
-						//	curscalevalue = (curscalevalue * 0.5 + 0.5) * (scalemax - scalemin) + scalemin;
-						//}
+						if ((scaleindex >= (unsigned int)g_motionbrush_startframe) && (scaleindex <= (unsigned int)g_motionbrush_endframe) && (scaleindex < (unsigned int)g_motionbrush_frameleng)) {
+							curscalevalue = (double)(*(g_motionbrush_value + scaleindex));// *(scalemax - scalemin) + scalemin;
+							curscalevalue = (curscalevalue * 0.5 + 0.5) * (scalemax - scalemin) + scalemin;
+						}
+						else {
+							curscalevalue = 0.0;// *(scalemax - scalemin) + scalemin;
+							curscalevalue = (curscalevalue * 0.5 + 0.5) * (scalemax - scalemin) + scalemin;
+						}
 						bool needCallRewrite = false;
-						s_owpEulerGraph->newKey(needCallRewrite, _T("S"), (double)scaleindex, curscalevalue);//newkey
+						s_owpEulerGraph->setKey(needCallRewrite, _T("S"), (double)scaleindex, curscalevalue);//setkey
 					}
+
+
 				}
 
+				//_ASSERT(0);
 				s_owpEulerGraph->callRewrite();
+				//s_owpEulerGraph->draw();
 			}
 		}
+	}
 
+	return 0;
+}
+
+int refreshEulerGraph()
+{
+	//オイラーグラフのキーを作成しなおさない場合はUpdateEditedEuler()
+
+
+	if (s_owpEulerGraph) {
+		s_owpEulerGraph->SetCurrentModel(s_model);
+	}
+
+	if (!s_model || !s_owpLTimeline || !s_owpEulerGraph) {
+		return 0;
+	}
+
+	//if (s_model && (s_model->GetLoadedFlag() == false)) {
+	//	return;
+	//}
+
+	if (!s_model->ExistCurrentMotion()) {
+		return 0;
+	}
+
+
+	//2023/10/13
+	int eultiptime = (int)(s_owpEulerGraph->getCurrentTime() + 0.0001);
+
+
+	if (s_model) {
+
+		int frameleng = IntTime(s_model->GetCurrentMaxFrame());
+
+		//if (!g_motionbrush_value || (g_motionbrush_frameleng != frameleng)) {
+		int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
+		if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
+			_ASSERT(0);
+			::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+			PostQuitMessage(result);
+		}
+		//}
+
+		//int result = CreateMotionBrush(0, (double)(frameleng - 1), true);
+		//_ASSERT(result == 0);
+
+		s_owpEulerGraph->setDispScale(1.0);//倍率初期化
+		s_owpEulerGraph->setDispOffset(0.0);//位置オフセット
+
+		s_owpEulerGraph->deleteKey();
+		s_owpEulerGraph->deleteLine();
+
+
+		CModel* pmodel = 0;
+		CMQOObject* pmqoobj = 0;
+		int channelindex = -1;
+		bool blendshapemode;
+		blendshapemode = InBlendShapeMode(&pmodel, &pmqoobj, &channelindex);
+		if (blendshapemode) {
+			s_owpEulerGraph->setInBlendShapeMode(true);
+			s_owpEulerGraph->newLine(0, 0, _T("X"));
+			s_owpEulerGraph->newLine(0, 0, _T("S"));
+			//s_owpLTimeline->setMaxTime( s_model->m_curmotinfo->frameleng - 1.0 );
+			s_owpEulerGraph->setMaxTime(s_model->GetCurrentMaxFrame());//左端の１マスを選んだ状態がフレーム０を選んだ状態だから　-1 しない。
+
+
+			int curtime;
+			float minval = -100.0;
+			float maxval = 100.0;
+
+			int curmotid = pmodel->GetCurrentMotID();
+
+			for (curtime = 0; curtime < frameleng; curtime++) {
+				float currentvalue = pmqoobj->GetShapeAnimWeight(curmotid, curtime, channelindex);
+
+				bool needCallRewrite = false;
+				s_owpEulerGraph->newKey(needCallRewrite, _T("X"), (double)curtime, currentvalue);
+
+				//2023/10/13
+				if (curtime == eultiptime) {
+					ChaVector3 eultip = ChaVector3(currentvalue, 0.0f, 0.0f);
+					s_owpEulerGraph->setEulTip(eultip);
+				}
+			}
+
+			s_owpEulerGraph->setEulMinMax(s_ikkind, minval, maxval);
+
+			if (g_motionbrush_value) {
+
+				double scalemin, scalemax;
+				if (minval != maxval) {
+					scalemin = minval;
+					scalemax = maxval;
+				}
+				else {
+					//Eulerが全て０　例えば全フレームを選択してツールの姿勢初期化を実行した後など
+					//仮のminとmaxを指定
+					scalemin = minval;
+					scalemax = maxval + 10.0;
+				}
+
+
+				unsigned int scaleindex;
+				for (scaleindex = 0; scaleindex < (unsigned int)frameleng; scaleindex++) {
+					double curscalevalue;
+					//if ((scaleindex >= (unsigned int)g_motionbrush_startframe) && (scaleindex <= (unsigned int)g_motionbrush_endframe) && (scaleindex < (unsigned int)g_motionbrush_frameleng)) {
+					curscalevalue = (double)(*(g_motionbrush_value + scaleindex));// *(scalemax - scalemin) + scalemin;
+					curscalevalue = (curscalevalue * 0.5 + 0.5) * (scalemax - scalemin) + scalemin;
+					//}
+					//else {
+					//	curscalevalue = 0.0;// *(scalemax - scalemin) + scalemin;
+					//	curscalevalue = (curscalevalue * 0.5 + 0.5) * (scalemax - scalemin) + scalemin;
+					//}
+					bool needCallRewrite = false;
+					s_owpEulerGraph->newKey(needCallRewrite, _T("S"), (double)scaleindex, curscalevalue);//newkey
+				}
+			}
+
+			s_owpEulerGraph->callRewrite();
+		}
+		else {
+
+			s_owpEulerGraph->setInBlendShapeMode(false);
+			s_owpEulerGraph->newLine(0, 0, _T("X"));
+			s_owpEulerGraph->newLine(0, 0, _T("Y"));
+			s_owpEulerGraph->newLine(0, 0, _T("Z"));
+			s_owpEulerGraph->newLine(0, 0, _T("S"));
+			//s_owpLTimeline->setMaxTime( s_model->m_curmotinfo->frameleng - 1.0 );
+			s_owpEulerGraph->setMaxTime(s_model->GetCurrentMaxFrame());//左端の１マスを選んだ状態がフレーム０を選んだ状態だから　-1 しない。
+
+			if (s_model && (s_curboneno >= 0)) {
+				CBone* opebone = s_model->GetBoneByID(s_curboneno);
+				if (opebone) {
+					CBone* parentbone = opebone->GetParent(false);
+					if (s_ikkind == 0) {
+						//ikkind がROT(0)の場合はIK　それ以外のMV, SCALEの場合にはFK
+						if (parentbone && parentbone->IsSkeleton()) {
+							opebone = parentbone;
+						}
+					}
+
+					int curtime;
+					float minval = 0.0;
+					float maxval = 0.0;
+					int minfirstflag = 1;
+					int maxfirstflag = 1;
+
+					double firstframe = 0.0;
+					ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+					int ret;
+					ret = s_owpEulerGraph->getEuler(firstframe, &befeul);
+					if (ret) {
+						befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+					}
+					for (curtime = 0; curtime < frameleng; curtime++) {
+						const WCHAR* wbonename = opebone->GetWBoneName();
+						ChaVector3 orgeul = ChaVector3(0.0f, 0.0f, 0.0f);
+						ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+						//cureul = opebone->CalcFBXEul(curmi->motid, (double)curtime, &befeul);
+						//befeul = cureul;//!!!!!!!
+
+						CMotionPoint* curmp = opebone->GetMotionPoint(s_model->GetCurrentMotID(), (double)curtime);
+						if (curmp) {
+							if (s_ikkind == 0) {//回転
+								//opebone->GetWorldMat(curmi->motid, (double)curtime, 0, &cureul);
+								cureul = opebone->GetLocalEul(g_limitdegflag,
+									s_model->GetCurrentMotID(), (double)curtime, 0);
+							}
+							else if (s_ikkind == 1) {//移動
+								cureul = opebone->CalcLocalTraAnim(g_limitdegflag,
+									s_model->GetCurrentMotID(), (double)curtime);
+							}
+							else if (s_ikkind == 2) {//スケール
+								cureul = opebone->CalcLocalScaleAnim(g_limitdegflag,
+									s_model->GetCurrentMotID(), (double)curtime);
+							}
+						}
+						else {
+							cureul.x = 0.0;
+							cureul.y = 0.0;
+							cureul.z = 0.0;
+							//befeul = cureul;
+						}
+						if ((curtime == 0.0) || (curtime == 1.0) || IsValidNewEul(cureul, befeul)) {
+							befeul = cureul;
+						}
+
+						bool needCallRewrite = false;
+						s_owpEulerGraph->newKey(needCallRewrite, _T("X"), (double)curtime, cureul.x);
+						s_owpEulerGraph->newKey(needCallRewrite, _T("Y"), (double)curtime, cureul.y);
+						s_owpEulerGraph->newKey(needCallRewrite, _T("Z"), (double)curtime, cureul.z);
+						//s_owpEulerGraph->newKey(_T("S"), (double)curtime, 0.0);
+
+
+						//2023/10/13
+						if (curtime == eultiptime) {
+							s_owpEulerGraph->setEulTip(cureul);
+						}
+
+
+						if (minfirstflag == 1) {
+							minval = min(cureul.z, min(cureul.x, cureul.y));
+							minfirstflag = 0;
+						}
+						if (minval > cureul.x) {
+							minval = cureul.x;
+						}
+						if (minval > cureul.y) {
+							minval = cureul.y;
+						}
+						if (minval > cureul.z) {
+							minval = cureul.z;
+						}
+
+						if (maxfirstflag == 1) {
+							maxval = max(cureul.z, max(cureul.x, cureul.y));
+							maxfirstflag = 0;
+						}
+						if (maxval < cureul.x) {
+							maxval = cureul.x;
+						}
+						if (maxval < cureul.y) {
+							maxval = cureul.y;
+						}
+						if (maxval < cureul.z) {
+							maxval = cureul.z;
+						}
+
+					}
+
+					s_owpEulerGraph->setEulMinMax(s_ikkind, minval, maxval);
+
+					if (g_motionbrush_value) {
+
+						double scalemin, scalemax;
+						if (minval != maxval) {
+							scalemin = minval;
+							scalemax = maxval;
+						}
+						else {
+							//Eulerが全て０　例えば全フレームを選択してツールの姿勢初期化を実行した後など
+							//仮のminとmaxを指定
+							scalemin = minval;
+							scalemax = maxval + 10.0;
+						}
+
+
+						unsigned int scaleindex;
+						for (scaleindex = 0; scaleindex < (unsigned int)frameleng; scaleindex++) {
+							double curscalevalue;
+							//if ((scaleindex >= (unsigned int)g_motionbrush_startframe) && (scaleindex <= (unsigned int)g_motionbrush_endframe) && (scaleindex < (unsigned int)g_motionbrush_frameleng)) {
+							curscalevalue = (double)(*(g_motionbrush_value + scaleindex));// *(scalemax - scalemin) + scalemin;
+							curscalevalue = (curscalevalue * 0.5 + 0.5) * (scalemax - scalemin) + scalemin;
+							//}
+							//else {
+							//	curscalevalue = 0.0;// *(scalemax - scalemin) + scalemin;
+							//	curscalevalue = (curscalevalue * 0.5 + 0.5) * (scalemax - scalemin) + scalemin;
+							//}
+							bool needCallRewrite = false;
+							s_owpEulerGraph->newKey(needCallRewrite, _T("S"), (double)scaleindex, curscalevalue);//newkey
+						}
+					}
+
+					s_owpEulerGraph->callRewrite();
+				}
+			}
+		}
 		//s_owpEulerGraph->setCurrentTime(0.0, false);
 
 	}
@@ -15815,7 +15964,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.21\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.22\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -18515,7 +18664,8 @@ int CreateConvBoneWnd()
 			return 1;
 		}
 
-		s_convbonesp = new OWP_Separator(s_convboneWnd, false, 0.5, true, s_convboneSCWnd);									// セパレータ1（境界線による横方向2分割）
+		//s_convbonesp = new OWP_Separator(s_convboneWnd, false, 0.5, true, s_convboneSCWnd);// セパレータ1（境界線による横方向2分割）
+		s_convbonesp = new OWP_Separator(s_convboneWnd, true, 0.5, true, s_convboneSCWnd);// セパレータ1（境界線による横方向2分割）
 		if (!s_convbonesp) {
 			_ASSERT(0);
 			return 1;
@@ -24249,50 +24399,79 @@ int SetLTimelineMark(int curboneno)
 	if (g_previewFlag != 0) {
 		return 0;
 	}
+	if (!s_model || !s_owpTimeline || !s_owpLTimeline) {
+		return 0;
+	}
 
-	if ((curboneno >= 0) && s_model && s_owpTimeline && s_owpLTimeline) {
-		CBone* opebone = s_model->GetBoneByID(curboneno);
-		if (opebone) {
-			CBone* parentbone = opebone->GetParent(false);
-			if (s_ikkind == 0) {
-				//ikkind がROT(0)の場合はIK　それ以外のMV, SCALEの場合にはFK
-				if (parentbone && parentbone->IsSkeleton()) {
-					opebone = parentbone;
-				}
-			}
 
-			int opeboneno = opebone->GetBoneNo();
-			if (opeboneno >= 0) {
-				int curlineno = s_boneno2lineno[opeboneno];
-				if (curlineno >= 0) {
-					//s_owpLTimeline->deleteLine(2);
+	CModel* pmodel = 0;
+	CMQOObject* pmqoobj = 0;
+	int channelindex = -1;
+	bool blendshapemode;
+	blendshapemode = InBlendShapeMode(&pmodel, &pmqoobj, &channelindex);
+	if (blendshapemode) {
+		int error0 = 0;
+		string shapename = pmqoobj->GetShapeName(channelindex, &error0);
 
-					WCHAR markname[256] = { 0L };
-					////swprintf_s( markname, 256, L"Mark:%s", opebone->GetWBoneName() );
-					if (g_limitdegflag == true) {
-						swprintf_s(markname, 256, L"[L] : %s", opebone->GetWBoneName());
+		WCHAR markname[256] = { 0L };
+		if (error0 == 0) {
+			WCHAR wshapename[256] = { 0L };
+			ZeroMemory(wshapename, sizeof(WCHAR) * 256);
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, shapename.c_str(), -1, wshapename, 256);
+			swprintf_s(markname, 256, L"[BS] : %s", wshapename);
+		}
+		else {
+			wcscpy_s(markname, 256, L"[BS] : Unknown BlendShape");
+		}
+		if (s_owpPlayerButton) {
+			s_owpPlayerButton->setJointName(markname);//2023/01/08
+		}
+	}
+	else {
+		if (curboneno >= 0) {
+			CBone* opebone = s_model->GetBoneByID(curboneno);
+			if (opebone) {
+				CBone* parentbone = opebone->GetParent(false);
+				if (s_ikkind == 0) {
+					//ikkind がROT(0)の場合はIK　それ以外のMV, SCALEの場合にはFK
+					if (parentbone && parentbone->IsSkeleton()) {
+						opebone = parentbone;
 					}
-					else {
-						swprintf_s(markname, 256, L"[W] : %s", opebone->GetWBoneName());
-					}
-
-					//s_owpLTimeline->newLine(0, 0, markname, RGB(168, 129, 129));
-
-					if (s_owpPlayerButton) {
-						s_owpPlayerButton->setJointName(markname);//2023/01/08
-					}
-
-					//if (s_owpTimeline && s_owpLTimeline) {
-					//	double frame;
-					//	for (frame = 0.0; frame < s_model->GetCurMotInfo()->frameleng; frame += 1.0) {
-					//		KeyInfo chkki = s_owpTimeline->ExistKey(curlineno, frame);
-					//		if (chkki.lineIndex >= 0) {
-					//			s_owpLTimeline->newKey(markname, frame, 0);
-					//		}
-					//	}
-					//}
 				}
 
+				int opeboneno = opebone->GetBoneNo();
+				if (opeboneno >= 0) {
+					int curlineno = s_boneno2lineno[opeboneno];
+					if (curlineno >= 0) {
+						//s_owpLTimeline->deleteLine(2);
+
+						WCHAR markname[256] = { 0L };
+						////swprintf_s( markname, 256, L"Mark:%s", opebone->GetWBoneName() );
+						if (g_limitdegflag == true) {
+							swprintf_s(markname, 256, L"[L] : %s", opebone->GetWBoneName());
+						}
+						else {
+							swprintf_s(markname, 256, L"[W] : %s", opebone->GetWBoneName());
+						}
+
+						//s_owpLTimeline->newLine(0, 0, markname, RGB(168, 129, 129));
+
+						if (s_owpPlayerButton) {
+							s_owpPlayerButton->setJointName(markname);//2023/01/08
+						}
+
+						//if (s_owpTimeline && s_owpLTimeline) {
+						//	double frame;
+						//	for (frame = 0.0; frame < s_model->GetCurMotInfo()->frameleng; frame += 1.0) {
+						//		KeyInfo chkki = s_owpTimeline->ExistKey(curlineno, frame);
+						//		if (chkki.lineIndex >= 0) {
+						//			s_owpLTimeline->newKey(markname, frame, 0);
+						//		}
+						//	}
+						//}
+					}
+
+				}
 			}
 		}
 	}
@@ -38702,14 +38881,39 @@ int CreateTopSlidersWnd()
 		s_rctopsliderswnd.left = 0;
 		s_rctopsliderswnd.bottom = TOPSLIDERSWNDH;
 
-		s_topSlidersWnd->setPos(WindowPos(0, 0));
 		s_topSlidersWnd->setSize(WindowSize(windowposx, TOPSLIDERSWNDH));
-		s_rctopsliderswnd.right = windowposx;
-
+		s_topSlidersWnd->setPos(WindowPos(0, 0));
 		//１クリック目問題対応
 		s_topSlidersWnd->refreshPosAndSize();//2022/09/20
+		s_topSlidersWnd->autoResizeAllParts();
 
+		//if (s_owpBrushRepeatsSlider) {
+		//	WindowPos tmppos = s_owpBrushRepeatsSlider->getPos();
+		//	s_owpBrushRepeatsSlider->setPos(WindowPos(tmppos.x, 16));
+		//}
+		//if (s_owpBrushMirrorU) {
+		//	WindowPos tmppos = s_owpBrushMirrorU->getPos();
+		//	s_owpBrushMirrorU->setPos(WindowPos(tmppos.x, 16));
+		//}
+		//if (s_owpBrushMirrorV) {
+		//	WindowPos tmppos = s_owpBrushMirrorV->getPos();
+		//	s_owpBrushMirrorV->setPos(WindowPos(tmppos.x, 16));
+		//}
+		//if (s_owpEditRateSlider) {
+		//	WindowPos tmppos = s_owpEditRateSlider->getPos();
+		//	s_owpEditRateSlider->setPos(WindowPos(tmppos.x, 16));
+		//}
+		//if (s_owpSpeedSlider) {
+		//	WindowPos tmppos = s_owpSpeedSlider->getPos();
+		//	s_owpSpeedSlider->setPos(WindowPos(tmppos.x, 16));
+		//}
+
+
+		s_topSlidersWnd->setVisible(true);
 		s_topSlidersWnd->callRewrite();						//再描画
+
+		s_rctopsliderswnd.right = windowposx;
+
 	}
 	else {
 		_ASSERT(0);
@@ -39166,7 +39370,8 @@ int CreateDispGroupWnd()
 
 
 		
-		s_groupsp0 = new OWP_Separator(s_groupWnd, false, centerrate, false);//上段と下段を格納
+		//s_groupsp0 = new OWP_Separator(s_groupWnd, false, centerrate, false);//上段と下段を格納
+		s_groupsp0 = new OWP_Separator(s_groupWnd, true, centerrate, false);//上段と下段を格納
 		if (!s_groupsp0) {
 			_ASSERT(0);
 			return 1;
@@ -39175,7 +39380,8 @@ int CreateDispGroupWnd()
 		s_groupWnd->addParts(*s_groupsp0);
 		
 
-		s_groupsp = new OWP_Separator(s_groupWnd, false, 0.5, true);//ウインドウ上段部分用
+		//s_groupsp = new OWP_Separator(s_groupWnd, false, 0.5, true);//ウインドウ上段部分用
+		s_groupsp = new OWP_Separator(s_groupWnd, true, 0.5, true);//ウインドウ上段部分用
 		if (!s_groupsp) {
 			_ASSERT(0);
 			return 1;
@@ -39184,7 +39390,8 @@ int CreateDispGroupWnd()
 
 
 		s_groupsp0->addParts2(*s_groupSCWnd);
-		s_groupsp3 = new OWP_Separator(s_groupWnd, false, 0.8, true, s_groupSCWnd);//parent : s_groupSCWnd　下段　objチェックボックスとtestボタン用
+		//s_groupsp3 = new OWP_Separator(s_groupWnd, false, 0.8, true, s_groupSCWnd);//parent : s_groupSCWnd　下段　objチェックボックスとtestボタン用
+		s_groupsp3 = new OWP_Separator(s_groupWnd, true, 0.8, true, s_groupSCWnd);//parent : s_groupSCWnd　下段　objチェックボックスとtestボタン用
 		if (!s_groupsp3) {
 			_ASSERT(0);
 			return 1;
@@ -39204,14 +39411,16 @@ int CreateDispGroupWnd()
 		}
 
 
-		s_groupsp1 = new OWP_Separator(s_groupWnd, false, 0.5, true);//上段　グループ番号チェックボックス用
+		//s_groupsp1 = new OWP_Separator(s_groupWnd, false, 0.5, true);//上段　グループ番号チェックボックス用
+		s_groupsp1 = new OWP_Separator(s_groupWnd, true, 0.5, true);//上段　グループ番号チェックボックス用
 		if (!s_groupsp1) {
 			_ASSERT(0);
 			return 1;
 		}
 		s_groupsp->addParts1(*s_groupsp1);
 
-		s_groupsp2 = new OWP_Separator(s_groupWnd, false, 0.5, true);//上段　グループ番号チェックボックス用
+		//s_groupsp2 = new OWP_Separator(s_groupWnd, false, 0.5, true);//上段　グループ番号チェックボックス用
+		s_groupsp2 = new OWP_Separator(s_groupWnd, true, 0.5, true);//上段　グループ番号チェックボックス用
 		if (!s_groupsp2) {
 			_ASSERT(0);
 			return 1;
@@ -39553,12 +39762,12 @@ int CreateDispGroupWnd()
 
 
 		//autoResizeしないと　チェックボックス４段目以下が反応なかった
-		s_groupSCWnd->autoResize();
-		s_groupsp3->autoResize();
-		s_groupsp1->autoResize();
-		s_groupsp2->autoResize();
-		s_groupsp->autoResize();
-		s_groupsp0->autoResize();
+		//s_groupSCWnd->autoResize();
+		//s_groupsp3->autoResize();
+		//s_groupsp1->autoResize();
+		//s_groupsp2->autoResize();
+		//s_groupsp->autoResize();
+		//s_groupsp0->autoResize();
 
 		s_groupWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
 		s_groupWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
@@ -39674,13 +39883,13 @@ static int s_blendshapelinenum = 0;
 			centerrate = (double)3 / (double)140;
 			//linedatasize = max(140, linenum + 12);
 			//linedatasize = max(106, (linenum + 12));
-			linedatasize = (int)((double)s_blendshapelinenum * 2.0 * 1.2);
+			linedatasize = (int)((double)s_blendshapelinenum * 2.0 * 1.25);
 		}
 		else {
 			centerrate = (double)3 / (double)70;
 			//linedatasize = max(70, linenum + 12);
 			//linedatasize = max(54, (linenum + 12));
-			linedatasize = (int)((double)s_blendshapelinenum * 2.0 * 1.2);
+			linedatasize = (int)((double)s_blendshapelinenum * 2.0 * 1.25);
 		}
 		//centerrate = 1.0 / (double)linedatasize;
 
@@ -39695,7 +39904,8 @@ static int s_blendshapelinenum = 0;
 		s_blendshapeWnd->addParts(*s_blendshapeSCWnd);
 
 
-		s_blendshapesp0 = new OWP_Separator(s_blendshapeWnd, false, centerrate, false, s_blendshapeSCWnd);
+		//s_blendshapesp0 = new OWP_Separator(s_blendshapeWnd, false, centerrate, false, s_blendshapeSCWnd);
+		s_blendshapesp0 = new OWP_Separator(s_blendshapeWnd, true, centerrate, false, s_blendshapeSCWnd);
 		if (!s_blendshapesp0) {
 			_ASSERT(0);
 			return 1;
@@ -39786,6 +39996,19 @@ static int s_blendshapelinenum = 0;
 							}
 						});
 
+						s_blendshapeSlider[lineno]->setLDownListener([lineno]() {
+							OWP_Slider* thisslider = s_blendshapeSlider[lineno];
+							if (s_model && s_blendshapeWnd && thisslider) {
+								CBlendShapeElem curblendshape = s_blendshapeelemvec[lineno];
+								if (curblendshape.validflag && curblendshape.mqoobj) {
+									float value = (float)thisslider->getValue();
+									s_blendshapeBefore = value;//!!!!!!!!
+								}
+								s_blendshapeWnd->callRewrite();						//再描画
+							}
+						});
+
+
 						s_blendshapeSlider[lineno]->setLUpListener([lineno]() {
 							OWP_Slider* thisslider = s_blendshapeSlider[lineno];
 							if (s_model && s_blendshapeWnd && thisslider) {
@@ -39798,10 +40021,10 @@ static int s_blendshapelinenum = 0;
 								}
 								s_blendshapeWnd->callRewrite();						//再描画
 							}
-							});
+						});
 
 
-						s_blendshapeBefore = 0.0f;
+						//s_blendshapeBefore = 0.0f;
 
 
 
@@ -39817,25 +40040,15 @@ static int s_blendshapelinenum = 0;
 
 
 		////autoResizeしないと　チェックボックス４段目以下が反応なかった
-		s_blendshapeSCWnd->autoResize();
 		s_blendshapesp0->autoResize();
-		//
-		//s_blendshapeWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
-		//s_blendshapeWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
-		////１クリック目問題対応
-		//s_blendshapeWnd->refreshPosAndSize();
-		//s_blendshapeWnd->autoResizeAllParts();
-		//s_blendshapeWnd->setVisible(false);
-
-
-
+		s_blendshapeSCWnd->autoResize();
+		
 		s_blendshapeWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
 		s_blendshapeWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
 		//１クリック目問題対応
 		s_blendshapeWnd->refreshPosAndSize();
-		s_blendshapeWnd->callRewrite();//再描画
+		s_blendshapeWnd->autoResizeAllParts();
 		s_blendshapeWnd->setVisible(false);
-
 
 	}
 
@@ -49731,6 +49944,7 @@ void ShowGUIDlgBlendShape(bool srcflag)
 			s_blendshapeWnd->setListenMouse(true);
 			s_blendshapeWnd->setVisible(true);
 		}
+		refreshEulerGraph();
 	}
 	else {
 		//DestroyBlendShapeWnd();
@@ -49738,6 +49952,7 @@ void ShowGUIDlgBlendShape(bool srcflag)
 			s_blendshapeWnd->setListenMouse(false);
 			s_blendshapeWnd->setVisible(false);
 		}
+		refreshEulerGraph();
 	}
 
 	s_spguisw[SPGUISW_BLENDSHAPE].state = srcflag;
@@ -62381,7 +62596,7 @@ int CreateShaderTypeParamsDlg()
 
 int OnFrameBlendShape()
 {
-	if (s_blendshapeUnderEdit) {
+	if (s_blendshapeUnderEdit) {//スライダードラッグ中処理
 		s_blendshapeUnderEdit = false;
 
 		if ((s_blendshapeOpeIndex >= 0) && (s_blendshapeOpeIndex < (int)s_blendshapeelemvec.size())) {
@@ -62391,27 +62606,33 @@ int OnFrameBlendShape()
 				double curframe = s_model->GetCurrentFrame();
 				blendshapeelem.mqoobj->SetShapeAnimWeight(blendshapeelem.channelindex,
 					curmotid, IntTime(curframe), s_blendshapeAfter);
+
+				SetLTimelineMark(s_curboneno);//playerbuttonのshape名更新
+				UpdateEditedEuler();
 			}
 		}
 	}
-	if (s_blendshapePostEdit) {
+	if (s_blendshapePostEdit) {//スライダードラッグ終了処理
 		s_blendshapePostEdit = false;
 		if (s_model) {
-			//s_blendshapeAfter = value;
-
 			if ((s_blendshapeOpeIndex >= 0) && (s_blendshapeOpeIndex < (int)s_blendshapeelemvec.size())) {
 				CBlendShapeElem blendshapeelem = s_blendshapeelemvec[s_blendshapeOpeIndex];
 				if (blendshapeelem.validflag && blendshapeelem.model && blendshapeelem.mqoobj) {
-					int result1 = blendshapeelem.model->OnBlendWeightChanged(&s_editrange,
-						blendshapeelem.mqoobj, s_blendshapeOpeIndex, s_blendshapeAfter);
-					if (result1 != 0) {
-						_ASSERT(0);
+
+					if (fabs(s_blendshapeAfter - s_blendshapeBefore) >= 0.020f) {//クリックしただけのときに処理が走らないように、ある程度値が変化した時だけ処理
+						int result1 = blendshapeelem.model->OnBlendWeightChanged(&s_editrange,
+							blendshapeelem.mqoobj, s_blendshapeOpeIndex, s_blendshapeAfter);
+						if (result1 != 0) {
+							_ASSERT(0);
+						}
 					}
+
+					SetLTimelineMark(s_curboneno);//playerbuttonのshape名更新
+					UpdateEditedEuler();
 				}
 			}
 		}
 	}
-
 
 
 	BlendShapeAnim2Dlg();//valueの変更操作よりも後で呼ぶ
@@ -70420,4 +70641,39 @@ void DestroyGrassElem()
 	s_grassElemVec.clear();
 }
 
+bool InBlendShapeMode(CModel** ppmodel, CMQOObject** ppmqoobj, int* pchannelindex)
+{
+	if (!ppmodel || !ppmqoobj || !pchannelindex) {
+		return false;
+	}
+
+	*ppmodel = 0;
+	*ppmqoobj = 0;
+	*pchannelindex = -1;
+
+	if (s_blendshapeWnd && s_spguisw[SPGUISW_BLENDSHAPE].state &&
+		!s_blendshapeelemvec.empty() && (s_blendshapeOpeIndex >= 0)) {
+
+		int blendshapenum = (int)s_blendshapeelemvec.size();
+		if ((s_blendshapeOpeIndex >= 0) && (s_blendshapeOpeIndex < blendshapenum)) {
+			CBlendShapeElem blendshape = s_blendshapeelemvec[s_blendshapeOpeIndex];
+			if (blendshape.validflag && blendshape.model && blendshape.mqoobj) {
+				*ppmodel = blendshape.model;
+				*ppmqoobj = blendshape.mqoobj;
+				*pchannelindex = s_blendshapeOpeIndex;
+
+				return true;//!!!!!!!!!!!!
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			return false;
+		}
+	}
+	else {
+		return false;
+	}
+}
 

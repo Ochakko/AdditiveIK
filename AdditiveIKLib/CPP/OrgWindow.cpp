@@ -144,6 +144,96 @@ namespace OrgWinGUI{
 		
 	}
 
+	void OWP_Separator::autoResize() {
+		//パーツエリアの位置とサイズを設定
+		int onelineheight = 16;
+		int centerPos = getCenterLinePos();
+
+
+		//only1line == trueの際にはセパレータ自体の最小サイズを決める
+		if (only1line == true) {
+			int sizey1 = 0;
+			int sizey2 = 0;
+			std::list<OrgWindowParts*>::iterator itr;
+			for (itr = partsList1.begin(); itr != partsList1.end(); itr++) {
+				if (*itr) {
+					(*itr)->autoResize();
+					WindowSize befsize = (*itr)->getSize();
+					sizey1 += (*itr)->getSize().y;
+				}
+			}
+			std::list<OrgWindowParts*>::iterator itr2;
+			for (itr2 = partsList2.begin(); itr2 != partsList2.end(); itr2++) {
+				if (*itr2) {
+					(*itr2)->autoResize();
+					WindowSize befsize = (*itr2)->getSize();
+					sizey2 += (*itr2)->getSize().y;
+				}
+			}
+			if (divideSide) {
+				size.y = max(sizey1, sizey2);
+			}
+			else {
+				size.y = sizey1 + sizey2;
+			}
+			
+			if (size.y == 0) {
+				size.y = 15;
+			}
+
+			if (getParentScrollWnd()) {
+				//応急処置　window titleの分
+				size.y += getParentScrollWnd()->getPartsAreaPos().y;
+			}
+		}
+
+
+		partsAreaPos1 = pos;
+		int scrollbarwidth = 20;
+		if (divideSide) {
+			partsAreaPos2 = pos + WindowPos(centerPos + 1 + LINE_MARGIN, 0);
+			partsAreaSize1 = WindowSize(centerPos - LINE_MARGIN, size.y);
+			partsAreaSize2 = WindowSize(size.x - centerPos - LINE_MARGIN - 1, size.y);
+		}
+		else {
+			partsAreaPos2 = pos + WindowPos(0, centerPos + 1 + LINE_MARGIN);
+			partsAreaSize1 = WindowSize(size.x, centerPos - LINE_MARGIN);
+			partsAreaSize2 = WindowSize(size.x, size.y - centerPos - LINE_MARGIN - 1);
+		}
+		currentPartsSizeY1 = 0;
+		currentPartsSizeY2 = 0;
+
+		//全ての内部パーツの位置とサイズを自動設定
+		std::list<OrgWindowParts*>::iterator itr;
+		for (itr = partsList1.begin(); itr != partsList1.end(); itr++) {
+			if (*itr) {
+				(*itr)->autoResize();//!!!!!!!!!!!!
+				WindowSize befsize = (*itr)->getSize();
+				(*itr)->setPos(WindowPos(partsAreaPos1.x, partsAreaPos1.y + currentPartsSizeY1));
+				//(*itr)->setSize( WindowSize( partsAreaSize1.x, partsAreaSize1.y-currentPartsSizeY1 ) );
+				(*itr)->setSize(WindowSize(partsAreaSize1.x, befsize.y));
+				//(*itr)->autoResize();//befsizeよりも前に移動
+
+				//currentPartsSizeY1+= (*itr)->getSize().y+1;
+				currentPartsSizeY1 += (*itr)->getSize().y;
+			}
+		}
+		std::list<OrgWindowParts*>::iterator itr2;
+		for (itr2 = partsList2.begin(); itr2 != partsList2.end(); itr2++) {
+			if (*itr2) {
+				(*itr2)->autoResize();//!!!!!!!!!!!!
+				WindowSize befsize = (*itr2)->getSize();
+				(*itr2)->setPos(WindowPos(partsAreaPos2.x, partsAreaPos2.y + currentPartsSizeY2));
+				//(*itr2)->setSize( WindowSize( partsAreaSize2.x, partsAreaSize2.y-currentPartsSizeY2 ) );
+				(*itr2)->setSize(WindowSize(partsAreaSize2.x, befsize.y));
+				//(*itr2)->autoResize();//befsizeよりも前に移動
+
+				//currentPartsSizeY2+= (*itr2)->getSize().y+1;
+				currentPartsSizeY2 += (*itr2)->getSize().y;
+			}
+		}
+	}
+
 	void OWP_Separator::draw() {
 		if (!hdcM) {
 			return;
@@ -690,11 +780,9 @@ namespace OrgWinGUI{
 
 		CModel* currentmodel = GetCurrentModel();
 		if (currentmodel) {
-			bool noboneflag = currentmodel->GetNoBoneFlag();
-			bool inviewflag = currentmodel->GetInView(0);
 
-			if ((noboneflag == false) && (inviewflag == true)) {
-				if (lineData.size() >= 4) {//X, Y, Z, Brush
+			if (inBlendShapeMode) {
+				if (lineData.size() >= 2) {//X, Brush
 
 					int drawnum = min((int)lineData.size(), showLineNum);
 
@@ -712,7 +800,30 @@ namespace OrgWinGUI{
 				}
 			}
 			else {
-				int dbgflag1 = 1;
+				bool noboneflag = currentmodel->GetNoBoneFlag();
+				bool inviewflag = currentmodel->GetInView(0);
+
+				if ((noboneflag == false) && (inviewflag == true)) {
+					if (lineData.size() >= 4) {//X, Y, Z, Brush
+
+						int drawnum = min((int)lineData.size(), showLineNum);
+
+						for (int i = 0; i < drawnum; i++) {
+							bool highLight = false;
+							////if (i == currentLine) highLight = true;
+							lineData[i]->draw(hdcM,
+								pos.x + MARGIN,
+								//pos.y + MARGIN + AXIS_SIZE_Y + j*(LABEL_SIZE_Y - 1),
+								//pos.y + MARGIN + AXIS_SIZE_Y,
+								pos.y,
+								size.x - SCROLL_BAR_WIDTH - MARGIN * 2,
+								timeSize, showPos_time, highLight);
+						}
+					}
+				}
+				else {
+					int dbgflag1 = 1;
+				}
 			}
 
 
@@ -740,31 +851,41 @@ namespace OrgWinGUI{
 					pos.x + LABEL_SIZE_X + startx, starty,
 					strtipFrame, (int)_tcslen(strtipFrame));
 
-				TCHAR strtipX[256];
-				_stprintf_s(strtipX, 256, _T("X : %.2f"), eultip.x);
-				//hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
-				//SetTextColor(hdcM->hDC, RGB(240, 240, 240));
-				TextOut(hdcM->hDC,
-					pos.x + LABEL_SIZE_X + startx, starty + stepy,
-					strtipX, (int)_tcslen(strtipX));
+				if (inBlendShapeMode) {
+					TCHAR strtipX[256];
+					_stprintf_s(strtipX, 256, _T("Blend : %.2f"), eultip.x);
+					//hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
+					//SetTextColor(hdcM->hDC, RGB(240, 240, 240));
+					TextOut(hdcM->hDC,
+						pos.x + LABEL_SIZE_X + startx, starty + stepy,
+						strtipX, (int)_tcslen(strtipX));
+				}
+				else {
+					TCHAR strtipX[256];
+					_stprintf_s(strtipX, 256, _T("X : %.2f"), eultip.x);
+					//hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
+					//SetTextColor(hdcM->hDC, RGB(240, 240, 240));
+					TextOut(hdcM->hDC,
+						pos.x + LABEL_SIZE_X + startx, starty + stepy,
+						strtipX, (int)_tcslen(strtipX));
 
-				TCHAR strtipY[256];
-				_stprintf_s(strtipY, 256, _T("Y : %.2f"), eultip.y);
-				//hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
-				//SetTextColor(hdcM->hDC, RGB(240, 240, 240));
-				TextOut(hdcM->hDC,
-					pos.x + LABEL_SIZE_X + startx, starty + 2 * stepy,
-					strtipY, (int)_tcslen(strtipY));
+					TCHAR strtipY[256];
+					_stprintf_s(strtipY, 256, _T("Y : %.2f"), eultip.y);
+					//hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
+					//SetTextColor(hdcM->hDC, RGB(240, 240, 240));
+					TextOut(hdcM->hDC,
+						pos.x + LABEL_SIZE_X + startx, starty + 2 * stepy,
+						strtipY, (int)_tcslen(strtipY));
 
-				TCHAR strtipZ[256];
-				_stprintf_s(strtipZ, 256, _T("Z : %.2f"), eultip.z);
-				//hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
-				//SetTextColor(hdcM->hDC, RGB(240, 240, 240));
-				TextOut(hdcM->hDC,
-					pos.x + LABEL_SIZE_X + startx, starty + 3 * stepy,
-					strtipZ, (int)_tcslen(strtipZ));
-
-
+					TCHAR strtipZ[256];
+					_stprintf_s(strtipZ, 256, _T("Z : %.2f"), eultip.z);
+					//hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
+					//SetTextColor(hdcM->hDC, RGB(240, 240, 240));
+					TextOut(hdcM->hDC,
+						pos.x + LABEL_SIZE_X + startx, starty + 3 * stepy,
+						strtipZ, (int)_tcslen(strtipZ));
+				}
+				
 				//2024/03/26
 				TCHAR strtipName[MAX_PATH];
 				_stprintf_s(strtipName, MAX_PATH, _T("Brush : %s"), g_brushname);
@@ -1587,6 +1708,7 @@ namespace OrgWinGUI{
 				mouseEvent.globalY= (int)tmpPoint.y;
 				mouseEvent.localX= mouseEvent.globalX - owner->pos.x;
 				mouseEvent.localY= mouseEvent.globalY - owner->pos.y;
+				keyboardEvent.keyCode = (int)(unsigned int)wParam;
 				mouseEvent.shiftKey= GetKeyState(VK_SHIFT)<0;
 				mouseEvent.ctrlKey= GetKeyState(VK_CONTROL)<0;
 				mouseEvent.altKey= GetKeyState(VK_MENU)<0;
@@ -1594,6 +1716,12 @@ namespace OrgWinGUI{
 				break;
 			case WM_KEYDOWN:
 			case WM_KEYUP:
+				GetCursorPos(&tmpPoint);
+
+				mouseEvent.globalX = (int)tmpPoint.x;
+				mouseEvent.globalY = (int)tmpPoint.y;
+				mouseEvent.localX = mouseEvent.globalX - owner->pos.x;
+				mouseEvent.localY = mouseEvent.globalY - owner->pos.y;
 				keyboardEvent.keyCode= (int)(unsigned int)wParam;
 				keyboardEvent.shiftKey= GetKeyState(VK_SHIFT)<0;
 				keyboardEvent.ctrlKey= GetKeyState(VK_CONTROL)<0;
