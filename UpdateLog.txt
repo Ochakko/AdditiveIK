@@ -2,7 +2,7 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 2024/05/23
-　AdditiveIK 1.0.0.22 RC2(リリース候補2)
+　AdditiveIK 1.0.0.22 RC3(リリース候補3)
 　　1.0.0.21からの変更点
 　　　BlendShapeアニメ(モーフアニメ)対応
 　　　　BlendShapeプレートメニューで右ペインに設定ウインドウ
@@ -36,7 +36,10 @@ https://github.com/Ochakko/AdditiveIK
 　　　複数モデルを読み込んでいる場合のモデル切り替え時にBlendShapeウインドウの内容も切り替え
 　　　OWP_SeparatorのautoResizeを修正
 　　　Model'sPosAndDirショートカットボタンで出るダイアログのApplyボタンが入力位置に対して効かなくなっていたのを修正
-　　　
+　　
+　　RC3:
+　　　RC2にてスライダーとラベルの高さを合わせるために、OrgWindow名前空間のテキストの高さを15から20に変更していた
+　　　方々でGUIの見切れが発生したのでテキストの高さの規定値を15に戻して必要に応じて20にするように.
 
 
 

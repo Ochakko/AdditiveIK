@@ -189,7 +189,7 @@ namespace OrgWinGUI{
 
 
 		partsAreaPos1 = pos;
-		int scrollbarwidth = 20;
+		//int scrollbarwidth = 20;
 		if (divideSide) {
 			partsAreaPos2 = pos + WindowPos(centerPos + 1 + LINE_MARGIN, 0);
 			partsAreaSize1 = WindowSize(centerPos - LINE_MARGIN, size.y);

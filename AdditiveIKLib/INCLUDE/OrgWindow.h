@@ -3126,7 +3126,7 @@ void s_dummyfunc()
 	class OWP_Label : public OrgWindowParts{
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_Label(const TCHAR *_name, int _labelheight = 20 ) : OrgWindowParts() {
+		OWP_Label(const TCHAR *_name, int _labelheight = 15 ) : OrgWindowParts() {
 			name = new TCHAR[256];
 			if (_name) {
 				size_t tclen = _tcslen(_name);
@@ -3261,7 +3261,7 @@ void s_dummyfunc()
 		////////////////////////// MemberVar /////////////////////////////
 		TCHAR *name;
 
-		int SIZE_Y= 20;
+		int SIZE_Y= 15;
 		static const int NAME_POS_X= 5;
 	};
 
@@ -3454,7 +3454,7 @@ void s_dummyfunc()
 		bool buttonPush;
 		std::function<void()> buttonListener;
 
-		static const int SIZE_Y= 20;
+		static const int SIZE_Y= 15;
 		static const int BOX_POS_X= 3;
 		static const int BOX_WIDTH= 10;
 
@@ -3504,7 +3504,7 @@ void s_dummyfunc()
 			}
 			else {
 				//BOX_WIDTHとSIZE_Yは setButtonSizeでも変更出来る
-				//BOX_WIDTH = 20;
+				//BOX_WIDTH = 15;
 				//SIZE_Y = 24;
 				BOX_WIDTH = 26;
 				SIZE_Y = 30;
@@ -4206,7 +4206,7 @@ void s_dummyfunc()
 		std::function<void()> buttonListener;
 		std::function<void()> contextmenuListener;//右クリック用リスナー
 
-		static const int SIZE_Y= 20;
+		static const int SIZE_Y= 15;
 		static const int BOX_POS_X= 3;
 		static const int BOX_WIDTH= 10;
 	};
@@ -4477,7 +4477,7 @@ void s_dummyfunc()
 
 		std::vector< std::basic_string<TCHAR> > nameList;
 
-		static const int SIZE_Y= 20;
+		static const int SIZE_Y= 15;
 		static const int BOX_POS_X= 3;
 		static const int BOX_WIDTH= 10;
 	};
@@ -4979,7 +4979,7 @@ void s_dummyfunc()
 				LABEL_SIZE_Y = 22;
 			}
 			else {
-				LABEL_SIZE_Y = 20;
+				LABEL_SIZE_Y = 15;
 			}
 
 			heightwheel = _heightwheel;//高さ方向にホイールスクロールするかどうか
@@ -7044,8 +7044,8 @@ void s_dummyfunc()
 		double ghostShiftTime;
 
 
-		//static const int LABEL_SIZE_Y= 20;
-		int LABEL_SIZE_Y= 20;
+		//static const int LABEL_SIZE_Y= 15;
+		int LABEL_SIZE_Y= 15;
 		//static const int LABEL_SIZE_X= 75;
 		//static const int LABEL_SIZE_X= 250;
 
@@ -7055,9 +7055,9 @@ void s_dummyfunc()
 		bool shortlabel = false;
 
 
-		static const int AXIS_SIZE_Y= 20;
+		static const int AXIS_SIZE_Y= 15;
 		//static const int SCROLL_BAR_WIDTH= 10;
-		static const int SCROLL_BAR_WIDTH = 20;
+		static const int SCROLL_BAR_WIDTH = 15;
 		static const int MARGIN= 3;
 		double timeSize;
 		bool allowSameTimeKey;
@@ -9582,7 +9582,7 @@ void s_dummyfunc()
 		//static const int GRAPH_SIZE_Y = 170;
 		int GRAPH_SIZE_Y;//constructorでセット
 		
-		static const int LABEL_SIZE_Y = 20;
+		static const int LABEL_SIZE_Y = 15;
 		//static const int LABEL_SIZE_X= 75;
 		//static const int LABEL_SIZE_X= 250;
 		
@@ -9591,9 +9591,9 @@ void s_dummyfunc()
 		static const int LABEL_SIZE_X = 135;//2023/01/08 owp_timelineのshortlabelと合わせる
 
 
-		static const int AXIS_SIZE_Y = 20;
+		static const int AXIS_SIZE_Y = 15;
 		//static const int SCROLL_BAR_WIDTH = 10;
-		static const int SCROLL_BAR_WIDTH = 20;
+		static const int SCROLL_BAR_WIDTH = 15;
 		static const int MARGIN = 3;
 		static const int DOT_SIZE_X = 3;
 		static const int DOT_SIZE_Y = 3;
@@ -10426,7 +10426,7 @@ void s_dummyfunc()
 		};
 		std::vector<LineData*> lineData;
 
-		static const int LABEL_SIZE_Y= 20;
+		static const int LABEL_SIZE_Y= 15;
 		static const int SCROLL_BAR_WIDTH= 10;
 		static const int MARGIN= 3;
 		static const int NAME_POS_X= 5;
@@ -11066,9 +11066,9 @@ void s_dummyfunc()
 
 		int lineDatasize;
 		
-		static const int LABEL_SIZE_Y = 20;
+		static const int LABEL_SIZE_Y = 15;
 		//static const int SCROLL_BAR_WIDTH = 10;
-		static const int SCROLL_BAR_WIDTH = 20;
+		static const int SCROLL_BAR_WIDTH = 15;
 		static const int MARGIN = 3;
 		static const int NAME_POS_X = 5;
 
@@ -11093,10 +11093,10 @@ void s_dummyfunc()
 		bool canClose;
 		std::function<void()> openListener;
 
-		static const int SIZE_CLOSE_Y = 20;
+		static const int SIZE_CLOSE_Y = 15;
 		static const int BOX_POS_X = 3;
 		//static const int BOX_WIDTH = 10;
-		static const int BOX_WIDTH = 20;
+		static const int BOX_WIDTH = 15;
 		static const int NAME_POS_X1 = 5;
 		static const int NAME_POS_X2 = 3;
 
