@@ -68,6 +68,7 @@ bool g_skydispflag = true;
 int g_skyindex = 0;
 
 bool g_blendshapeAddtiveMode = false;
+double g_blendshapedist = 1.0f;
 
 bool g_refposflag = false;
 
@@ -371,6 +372,7 @@ extern bool g_skydispflag;
 extern int g_skyindex;
 
 extern bool g_blendshapeAddtiveMode;
+extern double g_blendshapedist;
 
 extern bool g_refposflag;
 

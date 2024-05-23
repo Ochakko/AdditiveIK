@@ -154,20 +154,20 @@ namespace OrgWinGUI{
 		if (only1line == true) {
 			int sizey1 = 0;
 			int sizey2 = 0;
-			std::list<OrgWindowParts*>::iterator itr;
-			for (itr = partsList1.begin(); itr != partsList1.end(); itr++) {
-				if (*itr) {
-					(*itr)->autoResize();
-					WindowSize befsize = (*itr)->getSize();
-					sizey1 += (*itr)->getSize().y;
+			std::list<OrgWindowParts*>::iterator itr00;
+			for (itr00 = partsList1.begin(); itr00 != partsList1.end(); itr00++) {
+				if (*itr00) {
+					(*itr00)->autoResize();
+					WindowSize befsize = (*itr00)->getSize();
+					sizey1 += (*itr00)->getSize().y;
 				}
 			}
-			std::list<OrgWindowParts*>::iterator itr2;
-			for (itr2 = partsList2.begin(); itr2 != partsList2.end(); itr2++) {
-				if (*itr2) {
-					(*itr2)->autoResize();
-					WindowSize befsize = (*itr2)->getSize();
-					sizey2 += (*itr2)->getSize().y;
+			std::list<OrgWindowParts*>::iterator itr01;
+			for (itr01 = partsList2.begin(); itr01 != partsList2.end(); itr01++) {
+				if (*itr01) {
+					(*itr01)->autoResize();
+					WindowSize befsize = (*itr01)->getSize();
+					sizey2 += (*itr01)->getSize().y;
 				}
 			}
 			if (divideSide) {
@@ -181,10 +181,10 @@ namespace OrgWinGUI{
 				size.y = 15;
 			}
 
-			if (getParentScrollWnd()) {
-				//応急処置　window titleの分
-				size.y += getParentScrollWnd()->getPartsAreaPos().y;
-			}
+			//if (getParentScrollWnd()) {
+			//	//応急処置　window titleの分
+			//	size.y += getParentScrollWnd()->getPartsAreaPos().y;
+			//}
 		}
 
 
@@ -199,6 +199,11 @@ namespace OrgWinGUI{
 			partsAreaPos2 = pos + WindowPos(0, centerPos + 1 + LINE_MARGIN);
 			partsAreaSize1 = WindowSize(size.x, centerPos - LINE_MARGIN);
 			partsAreaSize2 = WindowSize(size.x, size.y - centerPos - LINE_MARGIN - 1);
+
+			//sizey1, sizey2をonly1line==false時に適用すると
+			//GUIパーツをaddしていないでGDI表示している場合に不具合が出る　例えばLongTimeLineの表示がされなくなる
+			//partsAreaSize1 = WindowSize(size.x, sizey1);
+			//partsAreaSize2 = WindowSize(size.x, sizey2);
 		}
 		currentPartsSizeY1 = 0;
 		currentPartsSizeY2 = 0;
@@ -211,7 +216,14 @@ namespace OrgWinGUI{
 				WindowSize befsize = (*itr)->getSize();
 				(*itr)->setPos(WindowPos(partsAreaPos1.x, partsAreaPos1.y + currentPartsSizeY1));
 				//(*itr)->setSize( WindowSize( partsAreaSize1.x, partsAreaSize1.y-currentPartsSizeY1 ) );
-				(*itr)->setSize(WindowSize(partsAreaSize1.x, befsize.y));
+				if ((*itr)->getIsSeparator()) {
+					OWP_Separator* pseparator = (OWP_Separator*)(*itr);
+					(*itr)->setSize(WindowSize(partsAreaSize1.x, pseparator->getPartsAreaSize1().y));
+				}
+				else {
+					(*itr)->setSize(WindowSize(partsAreaSize1.x, befsize.y));
+				}
+				
 				//(*itr)->autoResize();//befsizeよりも前に移動
 
 				//currentPartsSizeY1+= (*itr)->getSize().y+1;
@@ -225,7 +237,14 @@ namespace OrgWinGUI{
 				WindowSize befsize = (*itr2)->getSize();
 				(*itr2)->setPos(WindowPos(partsAreaPos2.x, partsAreaPos2.y + currentPartsSizeY2));
 				//(*itr2)->setSize( WindowSize( partsAreaSize2.x, partsAreaSize2.y-currentPartsSizeY2 ) );
-				(*itr2)->setSize(WindowSize(partsAreaSize2.x, befsize.y));
+				//(*itr2)->setSize(WindowSize(partsAreaSize2.x, befsize.y));
+				if ((*itr2)->getIsSeparator()) {
+					OWP_Separator* pseparator = (OWP_Separator*)(*itr2);
+					(*itr2)->setSize(WindowSize(partsAreaSize2.x, pseparator->getPartsAreaSize2().y));
+				}
+				else {
+					(*itr2)->setSize(WindowSize(partsAreaSize2.x, befsize.y));
+				}
 				//(*itr2)->autoResize();//befsizeよりも前に移動
 
 				//currentPartsSizeY2+= (*itr2)->getSize().y+1;
@@ -328,6 +347,7 @@ namespace OrgWinGUI{
 					WindowPos clientpos = (*itr2)->getPos();
 					WindowSize clientsize = (*itr2)->getSize();
 
+
 					if ((*itr2)->getIsRadioButton() || (*itr2)->getIsSeparator()) {//2023/10/15
 						//OWP_RadioButtonとOWP_Separatorについては　WindowPartsとしては１つ　エリアが包含していれば良い
 						//パーツの下がエリアの始まりよりも下　かつ　パーツの上がエリアの終わりよりも上
@@ -335,14 +355,24 @@ namespace OrgWinGUI{
 							(*itr2)->draw();
 						}
 					}
-					else if ((clientpos.y >= hoststarty) && (clientpos.y <= hostendy)) {//2023/09/19
-						(*itr2)->draw();
-					}
 					else {
-						//スクロールで見切れた場合は描画しない
-						if (clientpos.y > hostendy) {
-							break;//!!!!! 後続のpartsのYは更に大きいはずなので　高速化のために処理を終了
+						if ((*itr2)->getIsRadioButton() || (*itr2)->getIsSeparator()) {//2023/10/15
+							//OWP_RadioButtonとOWP_Separatorについては　WindowPartsとしては１つ　エリアが包含していれば良い
+							//パーツの下がエリアの始まりよりも下　かつ　パーツの上がエリアの終わりよりも上
+							if (((clientpos.y + clientsize.y) >= hoststarty) && (clientpos.y <= hostendy)) {
+								(*itr2)->draw();
+							}
 						}
+						else if ((clientpos.y >= hoststarty) && (clientpos.y <= hostendy)) {//2023/09/19
+							(*itr2)->draw();
+						}
+						else {
+							//スクロールで見切れた場合は描画しない
+							if (clientpos.y > hostendy) {
+								break;//!!!!! 後続のpartsのYは更に大きいはずなので　高速化のために処理を終了
+							}
+						}
+
 					}
 				}
 			}
@@ -382,6 +412,70 @@ namespace OrgWinGUI{
 		}
 
 
+	}
+
+	void OWP_ScrollWnd::draw() {
+		if (!hdcM) {
+			return;
+		}
+
+		drawEdge();
+
+
+		int hoststartx;
+		int hostendx;
+		int hoststarty;
+		int hostendy;
+		hoststartx = getPartsAreaPos().x;
+		hostendx = getPartsAreaPos().x + getSize().x;
+		hoststarty = getPartsAreaPos().y;
+		hostendy = getPartsAreaPos().y + getSize().y;
+
+		//全ての内部パーツを描画
+		if (open) {
+			std::list<OrgWindowParts*>::iterator itr;
+			for (itr = partsList.begin(); itr != partsList.end(); itr++) {
+				if (*itr) {
+					//(*itr)->draw();
+
+					WindowPos clientpos = (*itr)->getPos();
+					WindowSize clientsize = (*itr)->getSize();
+					if ((*itr)->getIsRadioButton() || (*itr)->getIsSeparator()) {//2023/10/15
+						//OWP_RadioButtonとOWP_Separatorについては　WindowPartsとしては１つ　エリアが包含していれば良い
+						//パーツの下がエリアの始まりよりも下　かつ　パーツの上がエリアの終わりよりも上
+						if (((clientpos.y + clientsize.y) >= hoststarty) && (clientpos.y <= hostendy)) {
+							(*itr)->draw();
+						}
+					}
+					else if ((clientpos.y >= hoststarty) && (clientpos.y <= hostendy)) {
+						(*itr)->draw();
+					}
+				}
+			}
+		}
+
+		int showLineNum = (size.y) / (LABEL_SIZE_Y);
+
+		{//ラベルスクロールバー
+			int x0 = pos.x + size.x - SCROLL_BAR_WIDTH - 1;
+			int x1 = x0 + SCROLL_BAR_WIDTH + 1;
+			int y0 = pos.y;
+			int y1 = pos.y + size.y;
+
+			//枠
+			//hdcM->setPenAndBrush(RGB(min(baseColor.r + 20, 255), min(baseColor.g + 20, 255), min(baseColor.b + 20, 255)), NULL);
+			hdcM->setPenAndBrush(RGB(240, 240, 240), NULL);
+			Rectangle(hdcM->hDC, x0, y0, x1, y1);
+
+			//中身
+			int barSize = (y1 - y0 - 4) * showLineNum / lineDatasize;
+			int barStart = (y1 - y0 - 4) * showPosLine / lineDatasize;
+			if (showLineNum < lineDatasize) {
+				//hdcM->setPenAndBrush(NULL, RGB(min(baseColor.r + 20, 255), min(baseColor.g + 20, 255), min(baseColor.b + 20, 255)));
+				hdcM->setPenAndBrush(NULL, RGB(240, 240, 240));
+				Rectangle(hdcM->hDC, x0 + 2, y0 + 2 + barStart, x1 - 2, y0 + 2 + barStart + barSize + 1);
+			}
+		}
 	}
 
 	void OWP_Timeline::LineData::callRewrite()

@@ -2522,6 +2522,7 @@ int CMQOObject::UpdateMorphBuffer()
 
 	MoveMemory( m_mpoint, m_pointbuf, sizeof( ChaVector3 ) * m_vertex );//ベース形状で初期化
 
+	bool dirtyflag = false;//!!!!!!!
 	int shapenum = GetShapeNameNum();
 	ChaVector3 diffpoint;
 	int channelindex;
@@ -2540,6 +2541,7 @@ int CMQOObject::UpdateMorphBuffer()
 						diffpoint = (targetv - orgv) * curweight;
 						*(m_mpoint + vno) += diffpoint;//結果に加算
 					}
+					dirtyflag = true;//!!!!!!!
 				}
 			}
 			else {
@@ -2551,14 +2553,16 @@ int CMQOObject::UpdateMorphBuffer()
 		}
 	}
 
-	if (m_pm4) {
-		CallF(m_pm4->UpdateMorphBuffer(m_mpoint), return 1);
-		CallF(m_dispobj->CopyDispV(m_pm4), return 1);
+	if (dirtyflag) {//0.0以外のweightが１つでもあれば　頂点バッファを更新
+		if (m_pm4) {
+			CallF(m_pm4->UpdateMorphBuffer(m_mpoint), return 1);
+			CallF(m_dispobj->CopyDispV(m_pm4), return 1);
 
-	}
-	else if (m_pm3) {
-		CallF(m_pm3->UpdateMorphBuffer(m_mpoint), return 1);
-		CallF(m_dispobj->CopyDispV(m_pm3), return 1);
+		}
+		else if (m_pm3) {
+			CallF(m_pm3->UpdateMorphBuffer(m_mpoint), return 1);
+			CallF(m_dispobj->CopyDispV(m_pm3), return 1);
+		}
 	}
 
 	return 0;

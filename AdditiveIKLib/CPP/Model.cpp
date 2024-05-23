@@ -495,6 +495,7 @@ int CModel::InitParams()
 		m_befinview[index1] = false;
 		m_inshadow[index1] = false;
 	}
+	m_inmorph = true;
 
 	m_bound.Init();
 	m_chkinview = nullptr;
@@ -2389,14 +2390,16 @@ int CModel::UpdateMatrix(bool limitdegflag,
 	}
 
 
-
-	map<int, CMQOObject*>::iterator itrobj;
-	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
-		CMQOObject* curobj = itrobj->second;
-		_ASSERT(curobj);
-		if (!(curobj->EmptyShape())) {
-			CallF(curobj->UpdateMorphWeight(curmotid, IntTime(curframe)), return 1);
-			CallF(curobj->UpdateMorphBuffer(), return 1);
+	if (GetInMorph()) {
+		//2024/05/22 BlendShapeプレートメニューのblendshapeDistスライダーによる指定距離内の場合にモーフ再生
+		map<int, CMQOObject*>::iterator itrobj;
+		for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+			CMQOObject* curobj = itrobj->second;
+			_ASSERT(curobj);
+			if (!(curobj->EmptyShape())) {
+				CallF(curobj->UpdateMorphWeight(curmotid, IntTime(curframe)), return 1);
+				CallF(curobj->UpdateMorphBuffer(), return 1);
+			}
 		}
 	}
 
@@ -9228,17 +9231,18 @@ int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag,
 	}
 
 
-
-	map<int, CMQOObject*>::iterator itrobj;
-	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
-		CMQOObject* curobj = itrobj->second;
-		_ASSERT(curobj);
-		if (!(curobj->EmptyShape())) {
-			CallF(curobj->UpdateMorphWeight(curmotid, IntTime(curframe)), return 1);
-			CallF(curobj->UpdateMorphBuffer(), return 1);
+	if (GetInMorph()) {
+		//2024/05/22 BlendShapeプレートメニューのblendshapeDistスライダーによる指定距離内の場合にモーフ再生
+		map<int, CMQOObject*>::iterator itrobj;
+		for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+			CMQOObject* curobj = itrobj->second;
+			_ASSERT(curobj);
+			if (!(curobj->EmptyShape())) {
+				CallF(curobj->UpdateMorphWeight(curmotid, IntTime(curframe)), return 1);
+				CallF(curobj->UpdateMorphBuffer(), return 1);
+			}
 		}
 	}
-
 
 	//if (g_previewFlag == 5){
 	//	if (m_topbt){
@@ -19803,6 +19807,8 @@ int CModel::ChkInView(int refposindex)
 		else {
 			SetDistChkInView(0.01f, refposindex);//2024/03/25
 		}
+
+		SetInMorph(false);
 	}
 	else if (m_object.empty() || (GetFromBvhFlag())) {
 
@@ -19820,6 +19826,8 @@ int CModel::ChkInView(int refposindex)
 		}
 
 		SetDistChkInView(0.01f, refposindex);//2024/03/25
+
+		SetInMorph(false);
 	}
 	else if (GetGrassFlag()) {
 
@@ -19840,6 +19848,8 @@ int CModel::ChkInView(int refposindex)
 			}
 		}
 		SetDistChkInView(0.01f, refposindex);
+
+		SetInMorph(false);
 	}
 	else {
 /*
@@ -19983,9 +19993,21 @@ int CModel::ChkInView(int refposindex)
 
 		if (inviewnum != 0) {
 			SetInView(true, refposindex);//メッシュ１つでも視野内にある場合には　モデルとして視野内のマークをする
+
+			ChaVector3 cam2model = ChaMatrixTraVec(m_matWorld) - g_camEye;
+			double distcam2model = ChaVector3LengthDbl(&cam2model);
+			double distthreshold = g_projfar * g_blendshapedist;
+			if (distcam2model <= distthreshold) {
+				SetInMorph(true);
+			}
+			else {
+				SetInMorph(false);
+			}
 		}
 		else {
 			SetInView(false, refposindex);//全てのメッシュが視野外の場合　モデルとして視野外のマークをする
+
+			SetInMorph(false);
 		}
 		if (inshadownum != 0) {
 			SetInShadow(true, refposindex);
@@ -19994,6 +20016,10 @@ int CModel::ChkInView(int refposindex)
 			SetInShadow(false, refposindex);
 		}
 	}
+
+
+
+
 
 	s_workingChkinView = false;
 	return 0;

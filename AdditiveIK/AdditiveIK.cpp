@@ -1762,7 +1762,13 @@ static bool InBlendShapeMode(CModel** ppmodel, CMQOObject** ppmqoobj, int* pchan
 static OrgWindow* s_blendshapeWnd = 0;
 static OWP_ScrollWnd* s_blendshapeSCWnd = 0;
 static OWP_Separator* s_blendshapesp0 = 0;
+static OWP_Separator* s_blendshapesp1 = 0;
 static OWP_CheckBoxA* s_blendshapeadditive = 0;
+static OWP_Label* s_blendshapemodelname = 0;
+static OWP_Label* s_blendshapeemptyLabel = 0;
+static OWP_Separator* s_blendshapedistsp = 0;
+static OWP_Label* s_blendshapedistLabel = 0;
+static OWP_Slider* s_blendshapedistSlider = 0;
 static std::vector<OWP_Label*> s_blendshapeLabel;
 static std::vector<OWP_Slider*> s_blendshapeSlider;
 static std::vector<CBlendShapeElem> s_blendshapeelemvec;
@@ -4548,13 +4554,21 @@ void InitApp()
 		s_blendshapeWnd = 0;
 		s_blendshapeSCWnd = 0;
 		s_blendshapesp0 = 0;
+		s_blendshapesp1 = 0;
 		s_blendshapeadditive = 0;
+		s_blendshapemodelname = 0;
+		s_blendshapeemptyLabel = 0;
+		s_blendshapedistsp = 0;
+		s_blendshapedistLabel = 0;
+		s_blendshapedistSlider = 0;
+
 		s_blendshapeLabel.clear();
 		s_blendshapeSlider.clear();
 		s_blendshapeelemvec.clear();
 		s_blendshapelinenum = 0;
 
 		g_blendshapeAddtiveMode = false;
+		g_blendshapedist = 1.0f;
 		s_blendshapeBefore = 0.0f;
 		s_blendshapeAfter = 0.0f;
 		s_blendshapeOpeIndex = 0;
@@ -13837,7 +13851,7 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		ShowLaterTransparentWnd(s_spdispsw[SPDISPSW_LATERTRANSPARENT].state);
 		ShowShaderTypeWnd(s_spdispsw[SPDISPSW_SHADERTYPE].state);
 		ShowShadowParamsWnd(s_spdispsw[SPDISPSW_SHADOWPARAMS].state);
-
+		ShowGUIDlgBlendShape(s_spguisw[SPGUISW_BLENDSHAPE].state);
 
 		s_underselectmodel = false;
 		return 0;//!!!!!!!!!
@@ -13869,7 +13883,7 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		ShowLaterTransparentWnd(s_spdispsw[SPDISPSW_LATERTRANSPARENT].state);
 		ShowShaderTypeWnd(s_spdispsw[SPDISPSW_SHADERTYPE].state);
 		ShowShadowParamsWnd(s_spdispsw[SPDISPSW_SHADOWPARAMS].state);
-
+		ShowGUIDlgBlendShape(s_spguisw[SPGUISW_BLENDSHAPE].state);
 
 		s_underselectmodel = false;
 		return 0;//!!!!!!!!!!!!!!!!!!!
@@ -13911,6 +13925,7 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 			ShowLaterTransparentWnd(s_spdispsw[SPDISPSW_LATERTRANSPARENT].state);
 			ShowShaderTypeWnd(s_spdispsw[SPDISPSW_SHADERTYPE].state);
 			ShowShadowParamsWnd(s_spdispsw[SPDISPSW_SHADOWPARAMS].state);
+			ShowGUIDlgBlendShape(s_spguisw[SPGUISW_BLENDSHAPE].state);
 
 			OnAnimMenu(dorefreshtl, s_motmenuindexmap[s_model]);
 		}
@@ -39880,16 +39895,18 @@ static int s_blendshapelinenum = 0;
 		double centerrate;
 		int linedatasize;
 		if (g_4kresolution) {
-			centerrate = (double)3 / (double)140;
+			//centerrate = (double)3 / (double)140;
+			centerrate = (double)7 / (double)140;
 			//linedatasize = max(140, linenum + 12);
 			//linedatasize = max(106, (linenum + 12));
-			linedatasize = (int)((double)s_blendshapelinenum * 2.0 * 1.25);
+			linedatasize = (int)((double)s_blendshapelinenum * 1.25);
 		}
 		else {
-			centerrate = (double)3 / (double)70;
+			//centerrate = (double)3 / (double)70;
+			centerrate = (double)7 / (double)70;
 			//linedatasize = max(70, linenum + 12);
 			//linedatasize = max(54, (linenum + 12));
-			linedatasize = (int)((double)s_blendshapelinenum * 2.0 * 1.25);
+			linedatasize = (int)((double)s_blendshapelinenum * 1.25);
 		}
 		//centerrate = 1.0 / (double)linedatasize;
 
@@ -39901,16 +39918,53 @@ static int s_blendshapelinenum = 0;
 			return 1;
 		}
 		s_blendshapeSCWnd->setLineDataSize(linedatasize);//!!!!!!!!!!!!!
-		s_blendshapeWnd->addParts(*s_blendshapeSCWnd);
+		//s_blendshapeWnd->addParts(*s_blendshapeSCWnd);
 
 
 		//s_blendshapesp0 = new OWP_Separator(s_blendshapeWnd, false, centerrate, false, s_blendshapeSCWnd);
-		s_blendshapesp0 = new OWP_Separator(s_blendshapeWnd, true, centerrate, false, s_blendshapeSCWnd);
+		s_blendshapesp0 = new OWP_Separator(s_blendshapeWnd, true, centerrate, false);
 		if (!s_blendshapesp0) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_blendshapeSCWnd->addParts(*s_blendshapesp0);
+		//s_blendshapeSCWnd->addParts(*s_blendshapesp0);
+
+		s_blendshapesp1 = new OWP_Separator(s_blendshapeWnd, true, 0.3, true, s_blendshapeSCWnd);
+		if (!s_blendshapesp0) {
+			_ASSERT(0);
+			return 1;
+		}
+
+
+		s_blendshapemodelname = new OWP_Label(s_model->GetFileName());
+		if (!s_blendshapemodelname) {
+			_ASSERT(0);
+			return 1;
+		}
+
+		s_blendshapedistsp = new OWP_Separator(s_blendshapeWnd, false, 0.3, true);
+		if (!s_blendshapedistsp) {
+			_ASSERT(0);
+			return 1;
+		}
+
+		s_blendshapeemptyLabel = new OWP_Label(L"          ");
+		if (!s_blendshapeemptyLabel) {
+			_ASSERT(0);
+			return 0;
+		}
+
+		s_blendshapedistLabel = new OWP_Label(L"MorphDist");
+		if (!s_blendshapedistLabel) {
+			_ASSERT(0);
+			return 1;
+		}
+
+		s_blendshapedistSlider = new OWP_Slider(g_blendshapedist, 1.0, 0.0);
+		if (!s_blendshapedistSlider) {
+			_ASSERT(0);
+			return 1;
+		}
 
 		s_blendshapeadditive = new OWP_CheckBoxA(L"AdditiveMode", g_blendshapeAddtiveMode);
 		if (!s_blendshapeadditive) {
@@ -39918,26 +39972,43 @@ static int s_blendshapelinenum = 0;
 			return 1;
 		}
 		s_blendshapeadditive->setActive(false);//!!!!!!!!!!!!!!!!!!
-		s_blendshapesp0->addParts1(*s_blendshapeadditive);
 
 
+
+		s_blendshapeWnd->addParts(*s_blendshapesp0);
+
+		s_blendshapesp0->addParts1(*s_blendshapemodelname);
+		s_blendshapesp0->addParts1(*s_blendshapeemptyLabel);
+		s_blendshapesp0->addParts1(*s_blendshapedistsp);
+		s_blendshapedistsp->addParts1(*s_blendshapedistLabel);
+		s_blendshapedistsp->addParts2(*s_blendshapedistSlider);
+		//s_blendshapesp0->addParts1(*s_blendshapeadditive);
+
+		s_blendshapesp0->addParts2(*s_blendshapeSCWnd);
+		s_blendshapeSCWnd->addParts(*s_blendshapesp1);
+
+
+		
 		int lineno;
 		for (lineno = 0; lineno < s_blendshapelinenum; lineno++) {
 			CBlendShapeElem curblendshape = s_blendshapeelemvec[lineno];
 			if (curblendshape.validflag) {
-				OWP_Label* newlabel = new OWP_Label(curblendshape.targetname);
-				if (!newlabel) {
-					_ASSERT(0);
-					return 1;
-				}
-				s_blendshapeLabel.push_back(newlabel);
-
 				OWP_Slider* newslider = new OWP_Slider(0.0, 100.0, 0.0);
 				if (!newslider) {
 					_ASSERT(0);
 					return 1;
 				}
 				s_blendshapeSlider.push_back(newslider);
+
+				//WindowSize slidersize = newslider->getSize();//autoResize()が走るまでsizeは(0,0)
+				int sliderheight = 20;
+				OWP_Label* newlabel = new OWP_Label(curblendshape.targetname, sliderheight);//左右カラムの高さ合わせ
+				if (!newlabel) {
+					_ASSERT(0);
+					return 1;
+				}
+				s_blendshapeLabel.push_back(newlabel);
+
 			}
 			else {
 				_ASSERT(0);
@@ -39957,8 +40028,8 @@ static int s_blendshapelinenum = 0;
 						_ASSERT(0);
 						return 1;
 					}
-					s_blendshapesp0->addParts2(*addlabel);
-					s_blendshapesp0->addParts2(*addslider);
+					s_blendshapesp1->addParts1(*addlabel);
+					s_blendshapesp1->addParts2(*addslider);
 				}
 			}
 			else {
@@ -39970,6 +40041,17 @@ static int s_blendshapelinenum = 0;
 		s_blendshapeWnd->setCloseListener([]() {
 			s_closeblendshapeFlag = true;
 		});
+
+
+		if (s_blendshapedistSlider) {
+			s_blendshapedistSlider->setCursorListener([]() {
+				if (s_model && s_blendshapeWnd && s_blendshapedistSlider) {
+					g_blendshapedist = s_blendshapedistSlider->getValue();
+
+					s_blendshapeWnd->callRewrite();						//再描画
+				}
+			});
+		}
 
 		{
 			int lineno;
@@ -40040,8 +40122,10 @@ static int s_blendshapelinenum = 0;
 
 
 		////autoResizeしないと　チェックボックス４段目以下が反応なかった
-		s_blendshapesp0->autoResize();
 		s_blendshapeSCWnd->autoResize();
+		s_blendshapedistsp->autoResize();
+		s_blendshapesp1->autoResize();
+		s_blendshapesp0->autoResize();
 		
 		s_blendshapeWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
 		s_blendshapeWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
@@ -40050,6 +40134,11 @@ static int s_blendshapelinenum = 0;
 		s_blendshapeWnd->autoResizeAllParts();
 		s_blendshapeWnd->setVisible(false);
 
+		//#######
+		//for dbg
+		//#######
+		//WindowSize dbgsize = s_blendshapeSlider[0]->getSize();
+		//int dbgflag1 = 1;
 	}
 
 
@@ -40731,10 +40820,35 @@ int DestroyBlendShapeWnd()
 		delete s_blendshapesp0;
 		s_blendshapesp0 = 0;
 	}
+	if (s_blendshapesp1) {
+		delete s_blendshapesp1;
+		s_blendshapesp1 = 0;
+	}
 	if (s_blendshapeadditive) {
 		delete s_blendshapeadditive;
 		s_blendshapeadditive = 0;
 	}
+	if (s_blendshapemodelname) {
+		delete s_blendshapemodelname;
+		s_blendshapemodelname = 0;
+	}
+	if (s_blendshapeemptyLabel) {
+		delete s_blendshapeemptyLabel;
+		s_blendshapeemptyLabel = 0;
+	}
+	if (s_blendshapedistSlider) {
+		delete s_blendshapedistSlider;
+		s_blendshapedistSlider = 0;
+	}
+	if (s_blendshapedistLabel) {
+		delete s_blendshapedistLabel;
+		s_blendshapedistLabel = 0;
+	}
+	if (s_blendshapedistsp) {
+		delete s_blendshapedistsp;
+		s_blendshapedistsp = 0;
+	}
+
 
 	int labelnum = (int)s_blendshapeLabel.size();
 	int labelindex;
@@ -60220,13 +60334,23 @@ int SetModelWorldMat()
 	int result = GetModelWorldMat(&tmppos, &tmprot);//向きはダイアログにセットされている向きを使用
 	if (result == 0) {
 		if (!curgrasselem) {
-			s_model->SetModelPosition(s_pickhitpos);//tmpposではなくs_pickhitpos
+			if (s_pickmodelworldmat) {
+				s_model->SetModelPosition(s_pickhitpos);//tmpposではなくs_pickhitpos
+			}
+			else {
+				s_model->SetModelPosition(tmppos);
+			}
 			s_model->SetModelRotation(tmprot);
 			s_model->CalcModelWorldMatOnLoad();
 		}
 		else {
 			if (s_removegrassflag == false) {
-				curgrasselem->AddGrassPosition(s_pickhitpos, tmprot);
+				if (s_pickmodelworldmat) {
+					curgrasselem->AddGrassPosition(s_pickhitpos, tmprot);
+				}
+				else {
+					curgrasselem->AddGrassPosition(tmppos, tmprot);
+				}
 			}
 			else {
 				if (s_modelworldmatdlgwnd) {
@@ -60237,7 +60361,12 @@ int SetModelWorldMat()
 						s_removegrassdistance = value;
 					}
 				}
-				curgrasselem->RemoveGrassPosition(s_pickhitpos, s_removegrassdistance);
+				if (s_pickmodelworldmat) {
+					curgrasselem->RemoveGrassPosition(s_pickhitpos, s_removegrassdistance);
+				}
+				else {
+					curgrasselem->RemoveGrassPosition(tmppos, s_removegrassdistance);
+				}
 			}
 		}
 	}

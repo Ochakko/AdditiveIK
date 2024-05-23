@@ -2421,6 +2421,23 @@ void s_dummyfunc()
 			return parentScrollWnd;
 		}
 
+		bool getDivideSide() {
+			return divideSide;
+		}
+		WindowPos getPartsAreaPos1() {
+			return partsAreaPos1;
+		}
+		WindowPos getPartsAreaPos2() {
+			return partsAreaPos2;
+		}
+		WindowSize getPartsAreaSize1() {
+			return partsAreaSize1;
+		}
+		WindowSize getPartsAreaSize2() {
+			return partsAreaSize2;
+		}
+
+
 	private:
 		////////////////////////// MemberVar /////////////////////////////
 		int currentPartsSizeY1;
@@ -2446,7 +2463,13 @@ void s_dummyfunc()
 			int divval = divideSide ? size.x : size.y;
 			int divpos = divideSide ? pos.x : pos.y;
 			int centerPos= (int)(centerRate*(double)divval);
-			centerPos= max(1, min(centerPos, divval-2));
+			if (divideSide) {
+				centerPos = max(1, min(centerPos, divval - 2));
+			}
+			else {
+				centerPos = max(1, min(centerPos + 15, divval - 2));//縦分割時にはセンターに１行分空白を作る
+			}
+			
 			return centerPos;
 
 			//int divval = divideSide ? size.x : (size.y - partsAreaPos1.y);
@@ -3103,7 +3126,7 @@ void s_dummyfunc()
 	class OWP_Label : public OrgWindowParts{
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_Label(const TCHAR *_name ) : OrgWindowParts() {
+		OWP_Label(const TCHAR *_name, int _labelheight = 20 ) : OrgWindowParts() {
 			name = new TCHAR[256];
 			if (_name) {
 				size_t tclen = _tcslen(_name);
@@ -3122,6 +3145,8 @@ void s_dummyfunc()
 					_tcscpy_s(name, 256, TEXT("NoName"));
 				}
 			}
+			SIZE_Y = max(SIZE_Y, _labelheight);//2024/05/22
+
 		}
 		~OWP_Label(){
 			delete[] name;
@@ -3236,7 +3261,7 @@ void s_dummyfunc()
 		////////////////////////// MemberVar /////////////////////////////
 		TCHAR *name;
 
-		static const int SIZE_Y= 15;
+		int SIZE_Y= 20;
 		static const int NAME_POS_X= 5;
 	};
 
@@ -3429,7 +3454,7 @@ void s_dummyfunc()
 		bool buttonPush;
 		std::function<void()> buttonListener;
 
-		static const int SIZE_Y= 15;
+		static const int SIZE_Y= 20;
 		static const int BOX_POS_X= 3;
 		static const int BOX_WIDTH= 10;
 
@@ -4181,7 +4206,7 @@ void s_dummyfunc()
 		std::function<void()> buttonListener;
 		std::function<void()> contextmenuListener;//右クリック用リスナー
 
-		static const int SIZE_Y= 15;
+		static const int SIZE_Y= 20;
 		static const int BOX_POS_X= 3;
 		static const int BOX_WIDTH= 10;
 	};
@@ -4452,7 +4477,7 @@ void s_dummyfunc()
 
 		std::vector< std::basic_string<TCHAR> > nameList;
 
-		static const int SIZE_Y= 15;
+		static const int SIZE_Y= 20;
 		static const int BOX_POS_X= 3;
 		static const int BOX_WIDTH= 10;
 	};
@@ -4954,7 +4979,7 @@ void s_dummyfunc()
 				LABEL_SIZE_Y = 22;
 			}
 			else {
-				LABEL_SIZE_Y = 15;
+				LABEL_SIZE_Y = 20;
 			}
 
 			heightwheel = _heightwheel;//高さ方向にホイールスクロールするかどうか
@@ -7019,8 +7044,8 @@ void s_dummyfunc()
 		double ghostShiftTime;
 
 
-		//static const int LABEL_SIZE_Y= 15;
-		int LABEL_SIZE_Y= 15;
+		//static const int LABEL_SIZE_Y= 20;
+		int LABEL_SIZE_Y= 20;
 		//static const int LABEL_SIZE_X= 75;
 		//static const int LABEL_SIZE_X= 250;
 
@@ -7030,7 +7055,7 @@ void s_dummyfunc()
 		bool shortlabel = false;
 
 
-		static const int AXIS_SIZE_Y= 15;
+		static const int AXIS_SIZE_Y= 20;
 		//static const int SCROLL_BAR_WIDTH= 10;
 		static const int SCROLL_BAR_WIDTH = 20;
 		static const int MARGIN= 3;
@@ -9566,7 +9591,7 @@ void s_dummyfunc()
 		static const int LABEL_SIZE_X = 135;//2023/01/08 owp_timelineのshortlabelと合わせる
 
 
-		static const int AXIS_SIZE_Y = 15;
+		static const int AXIS_SIZE_Y = 20;
 		//static const int SCROLL_BAR_WIDTH = 10;
 		static const int SCROLL_BAR_WIDTH = 20;
 		static const int MARGIN = 3;
@@ -10401,7 +10426,7 @@ void s_dummyfunc()
 		};
 		std::vector<LineData*> lineData;
 
-		static const int LABEL_SIZE_Y= 15;
+		static const int LABEL_SIZE_Y= 20;
 		static const int SCROLL_BAR_WIDTH= 10;
 		static const int MARGIN= 3;
 		static const int NAME_POS_X= 5;
@@ -10572,49 +10597,14 @@ void s_dummyfunc()
 			//else{
 			//	size.y = SIZE_CLOSE_Y;
 			//}
+
+
+				
 		}
 		
 		//	Method : 描画
-		virtual void draw(){
-			if (!hdcM) {
-				return;
-			}
+		virtual void draw();
 
-			drawEdge();
-
-			//全ての内部パーツを描画
-			if (open){
-				std::list<OrgWindowParts*>::iterator itr;
-				for (itr = partsList.begin(); itr != partsList.end(); itr++){
-					if (*itr) {
-						(*itr)->draw();
-					}
-				}
-			}
-
-			int showLineNum = (size.y) / (LABEL_SIZE_Y);
-
-			{//ラベルスクロールバー
-				int x0 = pos.x + size.x - SCROLL_BAR_WIDTH - 1;
-				int x1 = x0 + SCROLL_BAR_WIDTH + 1;
-				int y0 = pos.y;
-				int y1 = pos.y + size.y;
-
-				//枠
-				//hdcM->setPenAndBrush(RGB(min(baseColor.r + 20, 255), min(baseColor.g + 20, 255), min(baseColor.b + 20, 255)), NULL);
-				hdcM->setPenAndBrush(RGB(240, 240, 240), NULL);
-				Rectangle(hdcM->hDC, x0, y0, x1, y1);
-
-				//中身
-				int barSize = (y1 - y0 - 4)*showLineNum / lineDatasize;
-				int barStart = (y1 - y0 - 4)*showPosLine / lineDatasize;
-				if (showLineNum < lineDatasize){
-					//hdcM->setPenAndBrush(NULL, RGB(min(baseColor.r + 20, 255), min(baseColor.g + 20, 255), min(baseColor.b + 20, 255)));
-					hdcM->setPenAndBrush(NULL, RGB(240, 240, 240));
-					Rectangle(hdcM->hDC, x0 + 2, y0 + 2 + barStart, x1 - 2, y0 + 2 + barStart + barSize + 1);
-				}
-			}
-		}
 		void onLButtonDown(const MouseEvent& e){
 			if (!canMouseControll) return;
 
@@ -11064,7 +11054,6 @@ void s_dummyfunc()
 			return partsAreaPos;
 		}
 
-
 	private:
 		////////////////////////// MemberVar /////////////////////////////
 		int currentLine, showPosLine;
@@ -11077,7 +11066,7 @@ void s_dummyfunc()
 
 		int lineDatasize;
 		
-		static const int LABEL_SIZE_Y = 15;
+		static const int LABEL_SIZE_Y = 20;
 		//static const int SCROLL_BAR_WIDTH = 10;
 		static const int SCROLL_BAR_WIDTH = 20;
 		static const int MARGIN = 3;
@@ -11104,7 +11093,7 @@ void s_dummyfunc()
 		bool canClose;
 		std::function<void()> openListener;
 
-		static const int SIZE_CLOSE_Y = 15;
+		static const int SIZE_CLOSE_Y = 20;
 		static const int BOX_POS_X = 3;
 		//static const int BOX_WIDTH = 10;
 		static const int BOX_WIDTH = 20;

@@ -1447,6 +1447,13 @@ public: //accesser
 	float GetLoadMult(){ return m_loadmult; };
 	void SetLoadMult( float srcmult ){ m_loadmult = srcmult; };
 
+	void SetInMorph(bool srcflag) {
+		m_inmorph = srcflag;
+	};
+	bool GetInMorph() {
+		return m_inmorph;
+	};
+
 	bool GetInView(int refposindex) {
 		if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
 			return false;
@@ -2915,6 +2922,7 @@ private:
 	bool m_inview[REFPOSMAXNUM];
 	bool m_befinview[REFPOSMAXNUM];
 	bool m_inshadow[REFPOSMAXNUM];
+	bool m_inmorph;
 	ChaFrustumInfo m_frustum;
 	MODELBOUND m_bound;
 
