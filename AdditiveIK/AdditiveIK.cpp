@@ -12077,7 +12077,7 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 
 		if (s_LtimelineWnd && s_owpPlayerButton) {
 			if (!s_LTSeparator) {
-				s_LTSeparator = new OWP_Separator(s_LtimelineWnd, false, 0.38, false);
+				s_LTSeparator = new OWP_Separator(s_LtimelineWnd, false, 0.38, false);//LongTimelineは登録GUIによるサイズ計算はしない(GDI描画)　contentsSize引数はfalse
 				s_LtimelineWnd->addParts(*s_LTSeparator);
 
 				if (s_owpLTimeline) {
@@ -18019,7 +18019,7 @@ int CreateCameraPanel()
 			s_camerapanel.panel->setPos(s_camerapanelpos);
 			s_camerapanel.scroll->setPos(WindowPos(0, 30));
 
-			s_camerapanel.separator = new OWP_Separator(s_camerapanel.panel, false, 0.8, true, s_camerapanel.scroll);									// セパレータ1（境界線による横方向2分割）
+			s_camerapanel.separator = new OWP_Separator(s_camerapanel.panel, true, 0.8, true, s_camerapanel.scroll);									// セパレータ1（境界線による横方向2分割）
 			if (!s_camerapanel.separator) {
 				_ASSERT(0);
 				return 1;
@@ -18310,7 +18310,7 @@ int CreateMotionPanel()
 
 
 		if (s_model) {
-			s_motionpanel.separator = new OWP_Separator(s_motionpanel.panel, false, 0.8, true, s_motionpanel.scroll);// セパレータ1（境界線による横方向2分割）
+			s_motionpanel.separator = new OWP_Separator(s_motionpanel.panel, true, 0.8, true, s_motionpanel.scroll);// セパレータ1（境界線による横方向2分割）
 			if (!s_motionpanel.separator) {
 				_ASSERT(0);
 				return 1;
@@ -38744,23 +38744,23 @@ int CreateTopSlidersWnd()
 		//s_sidemenuWnd->setCloseListener([]() { s_ScloseFlag = true; });
 
 		s_topSlidersWnd->setBlackTheme();
-		s_topSlidersSeparator1 = new OWP_Separator(s_topSlidersWnd, false, 0.5, true);
+		s_topSlidersSeparator1 = new OWP_Separator(s_topSlidersWnd, true, 0.5, true);
 		if (!s_topSlidersSeparator1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_topSlidersSeparator2 = new OWP_Separator(s_topSlidersWnd, false, 0.5, true);
+		s_topSlidersSeparator2 = new OWP_Separator(s_topSlidersWnd, true, 0.5, true);
 		if (!s_topSlidersSeparator2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_topSlidersSeparator3 = new OWP_Separator(s_topSlidersWnd, false, 0.30, true);
+		s_topSlidersSeparator3 = new OWP_Separator(s_topSlidersWnd, true, 0.30, true);
 		if (!s_topSlidersSeparator3) {
 
 			_ASSERT(0);
 			return 1;
 		}
-		s_topSlidersSeparator4 = new OWP_Separator(s_topSlidersWnd, false, 0.5, true);
+		s_topSlidersSeparator4 = new OWP_Separator(s_topSlidersWnd, true, 0.5, true);
 		if (!s_topSlidersSeparator4) {
 			_ASSERT(0);
 			return 1;
@@ -38963,12 +38963,12 @@ int CreateSideMenuWnd()
 	if (s_sidemenuWnd) {
 
 
-		s_sidemenusp1 = new OWP_Separator(s_sidemenuWnd, false, 0.5f, true);
+		s_sidemenusp1 = new OWP_Separator(s_sidemenuWnd, true, 0.5f, true);
 		if (!s_sidemenusp1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_sidemenusp2 = new OWP_Separator(s_sidemenuWnd, false, 0.5f, true);
+		s_sidemenusp2 = new OWP_Separator(s_sidemenuWnd, true, 0.5f, true);
 		if (!s_sidemenusp2) {
 			_ASSERT(0);
 			return 1;
@@ -39942,7 +39942,7 @@ static int s_blendshapelinenum = 0;
 			return 1;
 		}
 
-		s_blendshapedistsp = new OWP_Separator(s_blendshapeWnd, false, 0.3, true);
+		s_blendshapedistsp = new OWP_Separator(s_blendshapeWnd, true, 0.3, true);
 		if (!s_blendshapedistsp) {
 			_ASSERT(0);
 			return 1;
@@ -43790,7 +43790,7 @@ int CreateShaderTypeWnd()
 
 		//s_shadersp1 = new OWP_Separator(s_shadertypeWnd, false, 0.75, true);
 		//s_shadersp1 = new OWP_Separator(s_shadertypeWnd, false, 0.75, true, s_SCshadertype);//2023/12/22
-		s_shadersp1 = new OWP_Separator(s_shadertypeWnd, true, 0.75, true, s_SCshadertype);//2024/05/25 only1line true
+		s_shadersp1 = new OWP_Separator(s_shadertypeWnd, true, 0.75, true, s_SCshadertype);//2024/05/25 contentsSize true
 		if (!s_shadersp1) {
 			_ASSERT(0);
 			return 1;

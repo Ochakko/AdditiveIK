@@ -1986,7 +1986,7 @@ void s_dummyfunc()
 	class OWP_Separator : public OrgWindowParts{
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_Separator(OrgWindow* _parentWindow, bool _only1line, double _centerRate = 0.5, bool _divideSide = true, OWP_ScrollWnd* _parentScrollWnd = 0) : OrgWindowParts() {
+		OWP_Separator(OrgWindow* _parentWindow, bool _contentsSize, double _centerRate = 0.5, bool _divideSide = true, OWP_ScrollWnd* _parentScrollWnd = 0) : OrgWindowParts() {
 			parentWindow = _parentWindow;
 			currentPartsSizeY1= 0;
 			currentPartsSizeY2= 0;
@@ -2000,7 +2000,7 @@ void s_dummyfunc()
 			partsList1.clear();
 			partsList2.clear();
 
-			only1line = _only1line;
+			contentsSize = _contentsSize;
 			parentScrollWnd = _parentScrollWnd;//2023/09/19
 
 			setIsSeparator(true);
@@ -2451,7 +2451,7 @@ void s_dummyfunc()
 		bool divideSide;
 		bool shiftDrag;
 			
-		bool only1line;
+		bool contentsSize;
 		OWP_ScrollWnd* parentScrollWnd;//2023/09/19
 
 		static const int LINE_MARGIN= 1;

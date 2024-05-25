@@ -150,8 +150,8 @@ namespace OrgWinGUI{
 		int centerPos = getCenterLinePos();
 
 
-		//only1line == trueの際にはセパレータ自体の最小サイズを決める
-		if (only1line == true) {
+		//contentsSize == trueの際にはセパレータ自体の最小サイズを決める
+		if (contentsSize == true) {
 			int sizey1 = 0;
 			int sizey2 = 0;
 			std::list<OrgWindowParts*>::iterator itr00;
@@ -200,7 +200,7 @@ namespace OrgWinGUI{
 			partsAreaSize1 = WindowSize(size.x, centerPos - LINE_MARGIN);
 			partsAreaSize2 = WindowSize(size.x, size.y - centerPos - LINE_MARGIN - 1);
 
-			//sizey1, sizey2をonly1line==false時に適用すると
+			//sizey1, sizey2をcontentsSize==false時に適用すると
 			//GUIパーツをaddしていないでGDI表示している場合に不具合が出る　例えばLongTimeLineの表示がされなくなる
 			//partsAreaSize1 = WindowSize(size.x, sizey1);
 			//partsAreaSize2 = WindowSize(size.x, sizey2);
