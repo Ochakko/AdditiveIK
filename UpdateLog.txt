@@ -2,7 +2,7 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 2024/05/25
-　AdditiveIK 1.0.0.22 RC4(リリース候補4)
+　AdditiveIK 1.0.0.22 RC5(リリース候補5)
 　　1.0.0.21からの変更点
 　　　BlendShapeアニメ(モーフアニメ)対応
 　　　　BlendShapeプレートメニューで右ペインに設定ウインドウ
@@ -46,6 +46,9 @@ https://github.com/Ochakko/AdditiveIK
 　　　　キーが存在しないノードに関してFbxNode::Evaluate*の結果にnanが含まれてしまうようだった
 　　　　カーブの有無で判定して回避しようとしたがまだうまくいかず時間切れ、FbxSdkのバージョンを元に戻して解決
 　　　　(注意)ロールバックする際には、exeと同じフォルダのlibfbxsdk.dllも2020.3.4に戻す必要有
+　　　　
+　　RC5:
+　　　Shaperプレートメニューのウインドウをスクロールした下の方のボタンが押せないことがあったのを修正
 
 
 

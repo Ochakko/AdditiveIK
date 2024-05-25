@@ -43789,7 +43789,8 @@ int CreateShaderTypeWnd()
 
 
 		//s_shadersp1 = new OWP_Separator(s_shadertypeWnd, false, 0.75, true);
-		s_shadersp1 = new OWP_Separator(s_shadertypeWnd, false, 0.75, true, s_SCshadertype);//2023/12/22
+		//s_shadersp1 = new OWP_Separator(s_shadertypeWnd, false, 0.75, true, s_SCshadertype);//2023/12/22
+		s_shadersp1 = new OWP_Separator(s_shadertypeWnd, true, 0.75, true, s_SCshadertype);//2024/05/25 only1line true
 		if (!s_shadersp1) {
 			_ASSERT(0);
 			return 1;
