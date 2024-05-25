@@ -50054,6 +50054,7 @@ void ShowGUIDlgBlendShape(bool srcflag)
 {
 	if (srcflag == true) {
 		CreateBlendShapeWnd();
+		BlendShapeAnim2Dlg();
 
 		if (s_blendshapeWnd) {
 			s_blendshapeWnd->setListenMouse(true);

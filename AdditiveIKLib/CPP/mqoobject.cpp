@@ -180,6 +180,7 @@ int CMQOObject::DestroyShapeObj()
 	}
 	m_shapevert.clear();
 	m_shapeweightvec.clear();
+	m_shapeweightvecBef.clear();
 	m_shapenamevec.clear();
 
 
@@ -311,6 +312,7 @@ void CMQOObject::InitParams()
 	m_shapeanim2.clear();
 	m_shapeanimleng2.clear();
 	m_shapeweightvec.clear();
+	m_shapeweightvecBef.clear();
 	m_mpoint = 0;
 
 	m_meshmat.SetIdentity();
@@ -2533,6 +2535,7 @@ int CMQOObject::UpdateMorphBuffer()
 			ChaVector3* curshape = m_shapevert[curname];
 			if (curshape) {
 				float curweight = m_shapeweightvec[channelindex] * 0.01f;
+				float befweight = m_shapeweightvecBef[channelindex] * 0.01f;
 				if (curweight != 0.0f) {
 					int vno;
 					for (vno = 0; vno < m_vertex; vno++) {
@@ -2541,8 +2544,14 @@ int CMQOObject::UpdateMorphBuffer()
 						diffpoint = (targetv - orgv) * curweight;
 						*(m_mpoint + vno) += diffpoint;//結果に加算
 					}
+				}
+				if (fabs(curweight - befweight) >= 1e-3) {
+					//2024/05/26
+					//変化したかどうかをチェック
+					//0.0以外から0.0へと変化した場合にも頂点バッファを更新する必要有
 					dirtyflag = true;//!!!!!!!
 				}
+
 			}
 			else {
 				_ASSERT(0);
@@ -2553,7 +2562,7 @@ int CMQOObject::UpdateMorphBuffer()
 		}
 	}
 
-	if (dirtyflag) {//0.0以外のweightが１つでもあれば　頂点バッファを更新
+	if (dirtyflag) {//変化したweightが１つでもあれば　頂点バッファを更新
 		if (m_pm4) {
 			CallF(m_pm4->UpdateMorphBuffer(m_mpoint), return 1);
 			CallF(m_dispobj->CopyDispV(m_pm4), return 1);
@@ -2758,6 +2767,7 @@ int CMQOObject::MultScale( ChaVector3 srcscale, ChaVector3 srctra )
 int CMQOObject::InitShapeWeight()
 {
 	m_shapeweightvec.clear();
+	m_shapeweightvecBef.clear();
 	return 0;
 }
 
@@ -2772,6 +2782,7 @@ int CMQOObject::SetShapeWeight(int channelindex, float srcweight)
 	if (channelindex >= weightsize) {
 		if (channelindex == weightsize) {
 			m_shapeweightvec.push_back(srcweight);
+			SetShapeWeightBef(channelindex, srcweight);
 		}
 		else {
 			_ASSERT(0);
@@ -2779,12 +2790,35 @@ int CMQOObject::SetShapeWeight(int channelindex, float srcweight)
 		}
 	}
 	else {
+		float saveweight = m_shapeweightvec[channelindex];
 		m_shapeweightvec[channelindex] = srcweight;
+		SetShapeWeightBef(channelindex, saveweight);
 	}
 	
 	return 0;
 }
+int CMQOObject::SetShapeWeightBef(int channelindex, float srcweight)
+{
+	if (channelindex < 0) {
+		_ASSERT(0);
+		return 1;
+	}
+	int weightsize = (int)m_shapeweightvecBef.size();
+	if (channelindex >= weightsize) {
+		if (channelindex == weightsize) {
+			m_shapeweightvecBef.push_back(srcweight);
+		}
+		else {
+			_ASSERT(0);
+			return 1;
+		}
+	}
+	else {
+		m_shapeweightvecBef[channelindex] = srcweight;
+	}
 
+	return 0;
+}
 int CMQOObject::AddShapeName( char* nameptr )
 {
 	if (!nameptr) {

@@ -1,8 +1,8 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
-2024/05/25
-　AdditiveIK 1.0.0.22 RC6(リリース候補6)
+2024/05/26
+　AdditiveIK 1.0.0.22 RC7(リリース候補7)
 　　1.0.0.21からの変更点
 　　　BlendShapeアニメ(モーフアニメ)対応
 　　　　BlendShapeプレートメニューで右ペインに設定ウインドウ
@@ -66,6 +66,11 @@ https://github.com/Ochakko/AdditiveIK
 
 　　　Testフォルダのモデル更新
 　　　　1009_5フォルダのモデルをBlendShape設定済のVRoidに
+
+　　RC7:
+　　　BlendShapeアニメ再生の修正
+　　　　ブレンド率0.0のフレームに移動した場合に頂点の内容が変化しない不具合を修正.
+　　　　バッファ更新のトリガーはブレンド率0.0かどうかのフラグではなくてブレンド率が変化したかどうかのフラグに.
 
 
 

@@ -147,6 +147,7 @@ public:
 	int SetShapeAnim(char* nameptr, int srcmotid, int framecnt, float lWeight);
 	int InitShapeWeight();//補間計算結果
 	int SetShapeWeight(int channelindex, float srcweight);//補間計算結果
+	int SetShapeWeightBef(int channelindex, float srcweight);//補間計算結果
 	int SetShapeAnimWeight(int channelindex, int srcmotid, int framecnt, float srcweight);
 
 	void DestroySystemDispObj();
@@ -608,6 +609,7 @@ private:
 	int m_shapenum;
 	//std::map<std::string,float> m_shapeweight;
 	std::vector<float> m_shapeweightvec;//[channelindex]
+	std::vector<float> m_shapeweightvecBef;//[channelindex]
 	ChaVector3* m_mpoint;
 
 
