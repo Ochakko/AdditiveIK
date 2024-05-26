@@ -95,7 +95,7 @@ int CThreadingLoadFbx::ThreadFunc()
 
 				//EnterCriticalSection(&m_CritSection);//呼び出し側で処理終了を待つので不要
 				if (m_model) {
-					if ((m_bonenum >= 0) || (m_bonenum <= MAXLOADFBXANIMBONE)) {
+					if ((m_bonenum > 0) || (m_bonenum <= MAXLOADFBXANIMBONE)) {
 						//CBone* firstbone = m_bonelist[0];
 						//bool callingbythread = true;
 						//firstbone->GetFBXAnim(bvhflag, m_bonelist, m_nodelist, m_bonenum, m_animno, m_motid, m_animleng, callingbythread);
@@ -144,7 +144,7 @@ int CThreadingLoadFbx::ThreadFunc()
 		//	{
 		//		EnterCriticalSection(&m_CritSection);
 		//		if (m_model) {
-		//			if ((m_bonenum >= 0) || (m_bonenum <= MAXLOADFBXANIMBONE)) {
+		//			if ((m_bonenum > 0) || (m_bonenum <= MAXLOADFBXANIMBONE)) {
 		//				int bonecount;
 		//				for (bonecount = 0; bonecount < m_bonenum; bonecount++) {
 		//					CBone* curbone = m_bonelist[bonecount];

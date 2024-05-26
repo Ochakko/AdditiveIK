@@ -6202,8 +6202,9 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 	}
 	else {
 
-
-		CreateLoadFbxAnim(pScene);
+		if (GetNoBoneFlag() == false) {
+			CreateLoadFbxAnim(pScene);
+		}
 		//#### 2022/11/01 ################################################
 		//この時点において　m_bonelistにはCBone*がセットされている 
 		//LoadFbx()内で　CBone::SetFbxNodeOnLoadするようにした
@@ -6229,7 +6230,7 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 
 
 			FbxAnimStack* lCurrentAnimationStack = m_pscene->FindMember<FbxAnimStack>(mAnimStackNameArray[animno]->Buffer());
-			if (lCurrentAnimationStack == NULL) {
+			if ((lCurrentAnimationStack == NULL) && (GetNoBoneFlag() == false)) {
 				_ASSERT(0);
 				DestroyLoadFbxAnim();
 				return 1;
@@ -6436,7 +6437,9 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 			//}
 		}
 
-		DestroyLoadFbxAnim();
+		if (GetNoBoneFlag() == false) {
+			DestroyLoadFbxAnim();
+		}
 
 
 		////読み込みが終わったら最初のモーションをセットしておく
@@ -17978,8 +17981,9 @@ int CModel::CreateLoadFbxAnim(FbxScene* pscene)
 	Sleep(100);
 
 
-	if (m_bonelist[0] == NULL) {
-		_ASSERT(0);
+	//if (m_bonelist[0] == NULL) {
+	if (GetNoBoneFlag()) {
+		//_ASSERT(0);
 		return 1;
 	}
 

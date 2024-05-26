@@ -2,7 +2,7 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 2024/05/26
-　AdditiveIK 1.0.0.22 RC8(リリース候補8)
+　AdditiveIK 1.0.0.22 RC9(リリース候補9)
 　　1.0.0.21からの変更点
 　　　BlendShapeアニメ(モーフアニメ)対応
 　　　　BlendShapeプレートメニューで右ペインに設定ウインドウ
@@ -79,6 +79,12 @@ https://github.com/Ochakko/AdditiveIK
 　　　草の表示の不具合修正
 　　　　草のRefPos、草のボーンマーク、草のマニピュレータを表示しようとして潜在的エラーが生じていたのを修正
 　　　　草のLODについては応急処置としてLOD0だけを表示
+
+　　RC9:
+　　　ボーンが１つもないfbx読み込みがエラーで落ちる不具合を修正
+　　　　1.0.0.22準備中の不具合
+　　　　ボーンが無くてもBlendShape(モーフ)アニメを読むためにアニメ読み込み関数を呼ぶようにしたが
+　　　　ボーンアニメ読み込み部分をスキップできていなかった
 
 
 
