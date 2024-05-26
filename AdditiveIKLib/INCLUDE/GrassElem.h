@@ -46,6 +46,8 @@ public:
 	void ClearGrassMat() {
 		m_grassmat.clear();
 	};
+	int ResetInstancingParams();
+
 	int GetGrassNum() {
 		int grassnum = (int)m_grassmat.size();
 		return grassnum;

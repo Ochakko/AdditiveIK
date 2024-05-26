@@ -1955,6 +1955,12 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 		return 0;
 	}
 
+	int instancingdrawnum = renderobj.pmodel->GetInstancingDrawNum();
+	if ((instancingdrawnum <= 0) || (instancingdrawnum > GRASSINDEXMAX)) {
+		return 0;
+	}
+
+
 	//#################################################
 	//DescriptorHeapが作成されてない場合は　すぐにリターン
 	//#################################################
@@ -1982,12 +1988,13 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 	//m_InstancingBufferはメッシュと同じ単位。
 	//スケール情報にメッシュのスケールを格納する。
 	//#####################################################
+
 	INSTANCINGPARAMS* pinstancingparams = renderobj.pmodel->GetInstancingParams();
 	SCALEINSTANCING* pscale = GetScaleInstancing();
 	if (pinstancingparams && pscale) {
 		int instanceno;
-		for (instanceno = 0; instanceno < RIGMULTINDEXMAX; instanceno++) {
-			INSTANCINGPARAMS* curparams = renderobj.pmodel->GetInstancingParams() + instanceno;
+		for (instanceno = 0; instanceno < GRASSINDEXMAX; instanceno++) {
+			INSTANCINGPARAMS* curparams = pinstancingparams + instanceno;
 			SCALEINSTANCING* curscale = GetScaleInstancing() + instanceno;
 			curparams->scale = curscale->scale;
 			curparams->scaleoffset = curscale->offset;

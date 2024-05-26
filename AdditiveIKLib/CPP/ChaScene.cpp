@@ -219,7 +219,7 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* 
 		int modelindex;
 		for (modelindex = 0; modelindex < modelnum; modelindex++) {
 			CModel* curmodel = m_modelindex[modelindex].modelptr;
-			if (curmodel) {
+			if (curmodel && (curmodel->GetGrassFlag() == false)) {
 				if (curmodel->ExistCurrentMotion()) {
 					curmodel->SetMotionFrame(srcframe);//refposの場合にも必要
 				}

@@ -19837,14 +19837,23 @@ int CModel::ChkInView(int refposindex)
 		//１つずつ視野内判定しても速くならない可能性が高い(後で確認する必要があるが)
 		//とりあえずは　草は全て視野内として描画する
 
-		SetInView(true, refposindex);
-		SetInShadow(false, refposindex);
+		int refposindexZero = 0;
+
+		SetInView(true, refposindexZero);
+		SetInShadow(false, refposindexZero);
 
 		map<int, CMQOObject*>::iterator itr;
 		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 			CMQOObject* curobj = itr->second;
 			if (curobj) {
-				curobj->SetInView(true, refposindex);
+				if ((strstr(curobj->GetName(), "LOD1") != 0) ||
+					(strstr(curobj->GetName(), "LOD2") != 0) ||
+					(strstr(curobj->GetName(), "LOD3") != 0)) {
+					curobj->SetInView(false, refposindexZero);
+				}
+				else {
+					curobj->SetInView(true, refposindexZero);
+				}
 			}
 		}
 		SetDistChkInView(0.01f, refposindex);

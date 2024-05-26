@@ -14844,10 +14844,23 @@ int RenderGrass(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 	}
 
 	int grasselemnum = (int)s_grassElemVec.size();
+
 	int grasselemindex;
 	for (grasselemindex = 0; grasselemindex < grasselemnum; grasselemindex++) {
 		CGrassElem* curgrasselem = s_grassElemVec[grasselemindex];
-		if (curgrasselem) {
+		if (curgrasselem && curgrasselem->GetGrass()) {
+			//１つのモデルに複数メッシュがある場合でも　１つのモデルに対して１回リセット
+			curgrasselem->ResetInstancingParams();
+		}
+	}
+
+	for (grasselemindex = 0; grasselemindex < grasselemnum; grasselemindex++) {
+		CGrassElem* curgrasselem = s_grassElemVec[grasselemindex];
+		if (curgrasselem && curgrasselem->GetGrass()) {
+			ChaMatrix tmpwm = curgrasselem->GetGrass()->GetWorldMat();
+			curgrasselem->GetGrass()->UpdateMatrix(false,
+				&tmpwm, &s_matView, &s_matProj, true, 0);
+
 			curgrasselem->SetInstancingParams(s_matVP);
 			curgrasselem->RenderInstancingModel(s_chascene);
 		}
@@ -44867,7 +44880,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 	}
 
 	if (s_sprefpos.state) {
-		if (curmodel == s_model) {
+		if ((curmodel == s_model) && (curmodel->GetGrassFlag() == false)) {
 
 			//int keynum;
 			//double startframe, endframe, applyframe;
@@ -45090,7 +45103,9 @@ int OnRenderOnlyOneObj(myRenderer::RenderingEngine* re, RenderContext* rc)
 	if (!s_model) {
 		return 0;
 	}
-
+	if (s_model->GetGrassFlag()) {
+		return 0;
+	}
 
 	int rendercount;
 	for (rendercount = 0; rendercount < 2; rendercount++) {
@@ -45226,6 +45241,10 @@ int OnRenderBoneMark(myRenderer::RenderingEngine* re, RenderContext* rc)
 		return 0;
 	}
 
+	if (s_model->GetGrassFlag()) {
+		return 0;
+	}
+
 	if (g_bonemarkflag || g_rigidmarkflag) {
 
 		//if (s_allmodelbone == false) {
@@ -45267,6 +45286,12 @@ int OnRenderSelect(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		return 1;
 	}
 
+	if (!s_model) {
+		return 0;
+	}
+	if (s_model->GetGrassFlag()) {
+		return 0;
+	}
 
 	if (s_camtargetdisp == false) {
 		if ((g_previewFlag != 4) && (g_previewFlag != 5)) {

@@ -190,6 +190,12 @@ typedef struct tag_instancingparams
 	tag_instancingparams() {
 		Init();
 	};
+	void SetWMat(ChaMatrix srcmat) {
+		MoveMemory(wmat, srcmat.data, sizeof(float) * 16);
+	};
+	void SetVPMat(ChaMatrix srcmat) {
+		MoveMemory(vpmat, srcmat.data, sizeof(float) * 16);
+	};
 }INSTANCINGPARAMS;
 
 class CBlendShapeElem
@@ -2815,14 +2821,19 @@ public: //accesser
 
 			INSTANCINGPARAMS params;
 			params.Init();
-
-			MoveMemory(&(params.wmat[0]), srcwmat.GetDataPtr(), sizeof(float) * 16);
-			MoveMemory(&(params.vpmat[0]), srcvpmat.GetDataPtr(), sizeof(float) * 16);
+			params.SetWMat(srcwmat);
+			params.SetVPMat(srcvpmat);
 			params.diffusemult = srcdiffusemult;
 
 
 			//2024/05/12 bendvec 草をカメラ横方向に揺らすためのベクトル
-			Matrix cammat = g_camera3D->GetViewMatrixInv();
+			Matrix cammat;
+			if (g_camera3D) {
+				cammat = g_camera3D->GetViewMatrixInv();
+			}
+			else {
+				cammat.SetIdentity();
+			}
 			params.bendvec = ChaVector4(cammat._11, cammat._12, cammat._13, 0.0f);
 
 			m_instancingparams[m_instancingdrawnum] = params;

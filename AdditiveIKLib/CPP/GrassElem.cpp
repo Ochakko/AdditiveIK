@@ -50,14 +50,22 @@ void CGrassElem::DestroyObjs()
 	InitParams();
 }
 
+int CGrassElem::ResetInstancingParams()
+{
+	if (GetGrass()) {
+		GetGrass()->ResetInstancingParams();
+	}
+	else {
+		_ASSERT(0);
+	}
+	return 0;
+}
 int CGrassElem::SetInstancingParams(ChaMatrix matVP)
 {
 	if (!GetGrass()) {
 		_ASSERT(0);
 		return 1;
 	}
-
-	GetGrass()->ResetInstancingParams();
 
 	int grassnum = GetGrassNum();
 	int grassindex;
