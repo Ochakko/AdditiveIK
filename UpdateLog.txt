@@ -2,7 +2,7 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 2024/05/26
-　AdditiveIK 1.0.0.22 RC9(リリース候補9)
+　AdditiveIK 1.0.0.22 release
 　　1.0.0.21からの変更点
 　　　BlendShapeアニメ(モーフアニメ)対応
 　　　　BlendShapeプレートメニューで右ペインに設定ウインドウ
