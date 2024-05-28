@@ -1,6 +1,16 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+
+
+
+2024/05/28
+　ショートムービー
+　　あ、来た、こっちこっち
+　　https://youtu.be/vQkHzFg4SjU
+
+
+
 2024/05/26
 　AdditiveIK 1.0.0.22 release
 　　1.0.0.21からの変更点
