@@ -128,6 +128,8 @@ public:
 	int InitializeBoneAxisKind();
 	int ChangeAngleSpringScale();
 
+	int SetRefPosFlag(CModel* srcmodel);
+
 private:
 	void InitParams();
 	void DestroyObjs();

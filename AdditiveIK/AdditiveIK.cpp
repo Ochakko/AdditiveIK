@@ -7242,11 +7242,13 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 
 			if (s_model) {
 				if (s_sprefpos.state) {
-					s_model->SetRefPosFlag(true);
+					//s_model->SetRefPosFlag(true);
+					s_chascene->SetRefPosFlag(s_model);//s_modelにtrue, 他のモデルにfalse
 					g_refposflag = true;
 				}
 				else {
-					s_model->SetRefPosFlag(false);
+					//s_model->SetRefPosFlag(false);
+					s_chascene->SetRefPosFlag(nullptr);
 					g_refposflag = false;
 				}
 			}
@@ -39959,7 +39961,8 @@ static int s_blendshapelinenum = 0;
 		}
 		//s_blendshapeSCWnd->addParts(*s_blendshapesp0);
 
-		s_blendshapesp1 = new OWP_Separator(s_blendshapeWnd, true, 0.3, true, s_blendshapeSCWnd);
+		//s_blendshapesp1 = new OWP_Separator(s_blendshapeWnd, true, 0.3, true, s_blendshapeSCWnd);
+		s_blendshapesp1 = new OWP_Separator(s_blendshapeWnd, true, 0.38, true, s_blendshapeSCWnd);
 		if (!s_blendshapesp0) {
 			_ASSERT(0);
 			return 1;
@@ -40031,8 +40034,23 @@ static int s_blendshapelinenum = 0;
 				s_blendshapeSlider.push_back(newslider);
 
 				//WindowSize slidersize = newslider->getSize();//autoResize()が走るまでsizeは(0,0)
+				
+				WCHAR strlabel[512] = { 0 };
+				if (curblendshape.mqoobj && curblendshape.mqoobj->GetName() && curblendshape.targetname) {
+					char mqoobjname[256] = { 0 };
+					WCHAR wmqoobjname[256] = { 0L };
+					strcpy_s(mqoobjname, 256, curblendshape.mqoobj->GetName());
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
+						mqoobjname, -1, wmqoobjname, 256);
+					swprintf_s(strlabel, 512, L"%s:%s",
+						wmqoobjname, curblendshape.targetname);
+				}
+				else {
+					wcscpy_s(strlabel, 256, L"Unknown Name");
+				}
+
 				int sliderheight = 20;
-				OWP_Label* newlabel = new OWP_Label(curblendshape.targetname, sliderheight);//左右カラムの高さ合わせ
+				OWP_Label* newlabel = new OWP_Label(strlabel, sliderheight);//左右カラムの高さ合わせ
 				if (!newlabel) {
 					_ASSERT(0);
 					return 1;

@@ -2196,3 +2196,24 @@ int ChaScene::ChangeAngleSpringScale()
 	return 0;
 }
 
+int ChaScene::SetRefPosFlag(CModel* srcmodel)
+{
+	//2024/05/29
+	//srcmodelに対してtrue, 他のモデルに対してfalseを設定
+	//srcmodel == nulptrの場合には全てのモデルに対してfalseを設定
+
+	vector<MODELELEM>::iterator itrmodel;
+	for (itrmodel = m_modelindex.begin(); itrmodel != m_modelindex.end(); itrmodel++) {
+		CModel* curmodel = itrmodel->modelptr;
+		if (curmodel) {
+			if (srcmodel && (curmodel == srcmodel)) {
+				curmodel->SetRefPosFlag(true);
+			}
+			else {
+				curmodel->SetRefPosFlag(false);
+			}
+		}
+	}
+	return 0;
+}
+
