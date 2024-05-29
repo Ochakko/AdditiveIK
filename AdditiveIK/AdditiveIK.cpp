@@ -11360,8 +11360,17 @@ void CalcTotalBound()
 
 	FLOAT fObjectRadius;
 	if (s_chascene) {
-		g_vCenter = s_chascene->GetTotalModelBound().center;
-		fObjectRadius = s_chascene->GetTotalModelBound().r;
+		MODELBOUND totalmb;
+		totalmb.Init();
+		totalmb = s_chascene->GetTotalModelBound();
+		if (totalmb.IsValid()) {
+			g_vCenter = totalmb.center;
+			fObjectRadius = totalmb.r;
+		}
+		else {
+			g_vCenter = ChaVector3(0.0f, 0.0f, 0.0f);
+			fObjectRadius = 10.0f;
+		}
 	}
 	else {
 		_ASSERT(0);
@@ -14472,10 +14481,18 @@ float CalcSelectScale()
 	}
 
 	MODELBOUND mb;
+	mb.Init();
 	//s_model->GetModelBound(&mb);//計算する　非常に重い
 	mb = s_model->GetCalclatedModelBound();
-	double modelr = (double)mb.r;
+	double modelr;
+	if (mb.IsValid()) {
+		modelr = (double)mb.r;
 
+	}
+	else {
+		modelr = 10.0;
+	}
+	
 	s_selectscale = max(0.01f, min(2.0f, (float)(modelr * 0.0020)));//2023/05/19
 	if (s_oprigflag == 1) {
 		s_selectscale *= 0.125f;
@@ -45144,9 +45161,18 @@ int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 	}
 
 	if (s_sky) {
-		ChaVector3 vCenter = s_chascene->GetTotalModelBound().center;
-		vCenter.x = g_camEye.x;
-		vCenter.z = g_camEye.z;
+		MODELBOUND totalmb;
+		totalmb.Init();
+		totalmb = s_chascene->GetTotalModelBound();
+		ChaVector3 vCenter;
+		if (totalmb.IsValid()) {
+			vCenter = totalmb.center;
+			vCenter.x = g_camEye.x;
+			vCenter.z = g_camEye.z;
+		}
+		else {
+			vCenter = ChaVector3(g_camEye.x, 0.0f, g_camEye.z);
+		}
 
 		//float fObjectRadius = s_chascene->GetTotalModelBound().r;
 		//if (fObjectRadius < 0.1f) {

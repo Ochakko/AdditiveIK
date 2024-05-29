@@ -3693,7 +3693,12 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		MODELBOUND modelbb;
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
-		m_cb[currentrefposindex].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+		if (modelbb.IsValid()) {
+			m_cb[currentrefposindex].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+		}
+		else {
+			m_cb[currentrefposindex].bbsize = ChaVector4(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
+		}
 		m_cb[currentrefposindex].distortiontype[0] = GetRiverOrSea();
 		m_cb[currentrefposindex].distortiontype[1] = GetDistortionMapType();
 		m_cb[currentrefposindex].distortiontype[2] = 0;
@@ -3756,7 +3761,12 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		MODELBOUND modelbb;
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
-		m_cb[currentrefposindex].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+		if (modelbb.IsValid()) {
+			m_cb[currentrefposindex].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+		}
+		else {
+			m_cb[currentrefposindex].bbsize = ChaVector4(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
+		}
 		m_cb[currentrefposindex].distortiontype[0] = GetRiverOrSea();
 		m_cb[currentrefposindex].distortiontype[1] = GetDistortionMapType();
 		m_cb[currentrefposindex].distortiontype[2] = 0;
@@ -3837,7 +3847,12 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		MODELBOUND modelbb;
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
-		m_cb[currentrefposindex].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+		if (modelbb.IsValid()) {
+			m_cb[currentrefposindex].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+		}
+		else {
+			m_cb[currentrefposindex].bbsize = ChaVector4(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
+		}
 		m_cb[currentrefposindex].distortiontype[0] = GetRiverOrSea();
 		m_cb[currentrefposindex].distortiontype[1] = GetDistortionMapType();
 		m_cb[currentrefposindex].distortiontype[2] = 0;
@@ -3965,7 +3980,12 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		MODELBOUND modelbb;
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
-		m_cb[0].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+		if (modelbb.IsValid()) {
+			m_cb[0].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+		}
+		else {
+			m_cb[0].bbsize = ChaVector4(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
+		}
 		m_cb[0].distortiontype[0] = GetRiverOrSea();
 		m_cb[0].distortiontype[1] = GetDistortionMapType();
 		m_cb[0].distortiontype[2] = 0;
@@ -4020,7 +4040,12 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		MODELBOUND modelbb;
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
-		m_cb[0].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+		if (modelbb.IsValid()) {
+			m_cb[0].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+		}
+		else {
+			m_cb[0].bbsize = ChaVector4(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
+		}
 		m_cb[0].distortiontype[0] = GetRiverOrSea();
 		m_cb[0].distortiontype[1] = GetDistortionMapType();
 		m_cb[0].distortiontype[2] = 0;
@@ -4089,7 +4114,12 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		MODELBOUND modelbb;
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
-		m_cb[0].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+		if (modelbb.IsValid()) {
+			m_cb[0].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+		}
+		else {
+			m_cb[0].bbsize = ChaVector4(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
+		}
 		m_cb[0].distortiontype[0] = GetRiverOrSea();
 		m_cb[0].distortiontype[1] = GetDistortionMapType();
 		m_cb[0].distortiontype[2] = 0;

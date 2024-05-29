@@ -1752,7 +1752,9 @@ int CModel::GetModelBound( MODELBOUND* dstb )
 {
 	MODELBOUND mb;
 	MODELBOUND addmb;
-	::ZeroMemory( &mb, sizeof( MODELBOUND ) );
+	//::ZeroMemory(&mb, sizeof(MODELBOUND));
+	mb.Init();
+	addmb.Init();
 
 	int calcflag = 0;
 	map<int,CMQOObject*>::iterator itr;
@@ -1816,7 +1818,8 @@ int CModel::GetModelBound( MODELBOUND* dstb )
 MODELBOUND CModel::CalcBoneBound()
 {
 	MODELBOUND mb;
-	::ZeroMemory(&mb, sizeof(MODELBOUND));
+	//::ZeroMemory(&mb, sizeof(MODELBOUND));
+	mb.Init();
 
 	ChaVector3 min = ChaVector3(0.0f, 0.0f, 0.0f);
 	ChaVector3 max = ChaVector3(0.0f, 0.0f, 0.0f);
@@ -1885,11 +1888,24 @@ MODELBOUND CModel::CalcBoneBound()
 	mb.center = center;
 	mb.r = r;
 
+	if (firstflag) {
+		mb.SetIsValid(true);
+	}
+
 	return mb;
 }
 
 int CModel::AddModelBound( MODELBOUND* mb, MODELBOUND* addmb )
 {
+	if (!mb || !addmb) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	if (addmb->IsValid() == false) {
+		return 0;
+	}
+
 	ChaVector3 newmin = mb->min;
 	ChaVector3 newmax = mb->max;
 
@@ -1920,6 +1936,8 @@ int CModel::AddModelBound( MODELBOUND* mb, MODELBOUND* addmb )
 	ChaVector3 diff;
 	diff = mb->center - newmin;
 	mb->r = (float)ChaVector3LengthDbl( &diff );
+
+	mb->SetIsValid(true);
 
 	return 0;
 }

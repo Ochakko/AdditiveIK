@@ -2172,6 +2172,9 @@ int CMQOObject::CollisionLocal_Ray(ChaVector3 startlocal, ChaVector3 dirlocal,
 int CMQOObject::CollisionLocal_Ray_BB(ChaVector3 startlocal, ChaVector3 dirlocal)
 {
 	MODELBOUND objbb = GetBound();
+	if (objbb.IsValid() == false) {
+		return 0;//バウンダリーが無い場合には当たらない
+	}
 
 	ChaVector3 points[8];
 	points[0] = ChaVector3(objbb.min.x, objbb.min.y, objbb.min.z);
@@ -3070,6 +3073,15 @@ float CMQOObject::GetShapeAnimWeight(int srcmotid, int framecnt, int channelinde
 
 int CMQOObject::ChkInView(ChaMatrix matWorld, ChaMatrix matVP, int refposindex)
 {
+
+
+
+
+
+	//##############################################
+	//コンピュートシェーダに移行したのでこの関数は現在未使用
+	//##############################################
+
 
 	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
 		_ASSERT(0);

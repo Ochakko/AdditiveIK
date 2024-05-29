@@ -82,7 +82,8 @@ void CPolyMesh4::InitParams()
 	m_fbxindex = 0;
 
 	ZeroMemory( &chkalpha, sizeof( CHKALPHA ) );
-	ZeroMemory( &m_bound, sizeof( MODELBOUND ) );
+	//ZeroMemory( &m_bound, sizeof( MODELBOUND ) );
+	m_bound.Init();
 
 	m_dirtyflag = 0;
 	m_lastvalidvno = 0;
@@ -520,17 +521,21 @@ typedef struct tag_modelbaund
 }MODELBAUND;
 ***/
 
-	m_bound.min = ChaVector3(FLT_MAX, FLT_MAX, FLT_MAX);
-	m_bound.max = ChaVector3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-	m_bound.center = ChaVector3(0.0f, 0.0f, 0.0f);
-	m_bound.r = 1.0f;
+	//m_bound.min = ChaVector3(FLT_MAX, FLT_MAX, FLT_MAX);
+	//m_bound.max = ChaVector3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+	//m_bound.center = ChaVector3(0.0f, 0.0f, 0.0f);
+	//m_bound.r = 1.0f;
 
+	m_bound.Init();
 
 	if( (m_orgpointnum == 0) || (m_facenum == 0) ){
 		m_bound.min = ChaVector3(0.0f, 0.0f, 0.0f);
 		m_bound.max = ChaVector3(0.0f, 0.0f, 0.0f);
 		m_bound.center = ChaVector3(0.0f, 0.0f, 0.0f);
 		m_bound.r = 1.0f;
+
+		m_bound.SetIsValid(false);//!!!!!!!!!!!!!!!
+
 		return 0;
 	}
 
@@ -538,6 +543,7 @@ typedef struct tag_modelbaund
 	//m_bound.min = *m_pointbuf;
 	//m_bound.max = *m_pointbuf;
 
+	bool setflag = false;
 	int vno;
 	for( vno = 0; vno < m_orgpointnum; vno++ ){
 		ChaVector3 curv = *( m_pointbuf + vno );
@@ -561,6 +567,8 @@ typedef struct tag_modelbaund
 		if( m_bound.max.z < curv.z ){
 			m_bound.max.z = curv.z;
 		}
+
+		setflag = true;
 	}
 
 	m_bound.center = ( m_bound.min + m_bound.max ) * 0.5f;
@@ -568,6 +576,8 @@ typedef struct tag_modelbaund
 	ChaVector3 diff;
 	diff = m_bound.center - m_bound.min;
 	m_bound.r = (float)ChaVector3LengthDbl( &diff );
+
+	m_bound.SetIsValid(setflag);
 
 	return 0;
 }

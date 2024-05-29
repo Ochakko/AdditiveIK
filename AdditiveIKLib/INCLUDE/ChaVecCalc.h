@@ -839,16 +839,24 @@ typedef  struct tag_modelbound
 	ChaVector3 max;
 	ChaVector3 center;
 	float		r;
+	bool validflag;
 
 	void Init()
 	{
 		min = ChaVector3(FLT_MAX, FLT_MAX, FLT_MAX);
 		max = ChaVector3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 		center.SetZeroVec3();
-		r = 1.0f;
+		validflag = false;
+		r = 0.0f;
 	};
 	tag_modelbound() {
 		Init();
+	};
+	void SetIsValid(bool srcflag) {
+		validflag = srcflag;
+	};
+	bool IsValid() {
+		return validflag;
 	};
 }MODELBOUND;
 

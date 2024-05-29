@@ -50,6 +50,8 @@ int CExtLine::InitParams()
 
 	m_material = nullptr;
 
+	m_bound.Init();
+
 	return 0;
 }
 int CExtLine::DestroyObjs()
@@ -179,6 +181,8 @@ int CExtLine::CalcBound()
 		m_bound.max = ChaVector3( 0.0f, 0.0f, 0.0f );
 		m_bound.center = ChaVector3( 0.0f, 0.0f, 0.0f );
 		m_bound.r = 0.0f;
+		
+		m_bound.SetIsValid(false);//!!!!!!!!!!!!
 		return 0;
 	}
 
@@ -186,6 +190,7 @@ int CExtLine::CalcBound()
 	m_bound.min = *m_pointptr;
 	m_bound.max = *m_pointptr;
 
+	bool setflag = false;
 	int vno;
 	for( vno = 1; vno < m_pointnum; vno++ ){
 		ChaVector3 curv = *( m_pointptr + vno );
@@ -209,6 +214,7 @@ int CExtLine::CalcBound()
 		if( m_bound.max.z < curv.z ){
 			m_bound.max.z = curv.z;
 		}
+		setflag = true;
 	}
 
 	m_bound.center = ( m_bound.min + m_bound.max ) * 0.5f;
@@ -216,6 +222,8 @@ int CExtLine::CalcBound()
 	ChaVector3 diff;
 	diff = m_bound.center - m_bound.min;
 	m_bound.r = (float)ChaVector3LengthDbl( &diff );
+
+	m_bound.SetIsValid(setflag);
 
 	return 0;
 }

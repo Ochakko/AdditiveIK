@@ -130,10 +130,10 @@ void ChaScene::InitParams()
 	ClearModelIndex();
 
 	m_totalmb.Init();
-	m_totalmb.center = ChaVector3(0.0f, 0.0f, 0.0f);
-	m_totalmb.max = ChaVector3(5.0f, 5.0f, 5.0f);
-	m_totalmb.min = ChaVector3(-5.0f, -5.0f, -5.0f);
-	m_totalmb.r = (float)ChaVector3LengthDbl(&m_totalmb.max);
+	//m_totalmb.center = ChaVector3(0.0f, 0.0f, 0.0f);
+	//m_totalmb.max = ChaVector3(5.0f, 5.0f, 5.0f);
+	//m_totalmb.min = ChaVector3(-5.0f, -5.0f, -5.0f);
+	//m_totalmb.r = (float)ChaVector3LengthDbl(&m_totalmb.max);
 
 	m_curmodelmenuindex = -1;
 
@@ -1392,8 +1392,9 @@ int ChaScene::CalcTotalModelBound()
 		CModel* curmodel = itrmodel->modelptr;
 		if (curmodel) {
 			MODELBOUND mb;
+			mb.Init();
 			curmodel->GetModelBound(&mb);//計算する　重い
-			if (mb.r != 0.0f) {
+			if ((mb.r != 0.0f) &&  mb.IsValid()) {
 				AddModelBound(&m_totalmb, &mb);
 			}
 		}
@@ -1404,6 +1405,14 @@ int ChaScene::CalcTotalModelBound()
 
 int ChaScene::AddModelBound(MODELBOUND* mb, MODELBOUND* addmb)
 {
+	if (!mb || !addmb) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (addmb->IsValid() == false) {
+		return 0;
+	}
+
 	ChaVector3 newmin = mb->min;
 	ChaVector3 newmax = mb->max;
 
@@ -1434,6 +1443,8 @@ int ChaScene::AddModelBound(MODELBOUND* mb, MODELBOUND* addmb)
 	ChaVector3 diff;
 	diff = mb->center - newmin;
 	mb->r = (float)ChaVector3LengthDbl(&diff);
+
+	mb->SetIsValid(true);
 
 	return 0;
 }
