@@ -68,6 +68,7 @@
 
 #include <BopFile.h>
 #include <BtObject.h>
+#include <FbxMisc.h>
 
 #include <collision.h>
 #include <EditRange.h>
@@ -495,7 +496,7 @@ int CModel::InitParams()
 		m_befinview[index1] = false;
 		m_inshadow[index1] = false;
 	}
-	m_inmorph = true;
+	m_inmorph = false;
 
 	m_bound.Init();
 	m_chkinview = nullptr;
@@ -1797,7 +1798,7 @@ int CModel::GetModelBound( MODELBOUND* dstb )
 		}
 	}
 
-	if (GetTopBone()) {
+	if (GetTopBone() && (calcflag == 0)) {//メッシュが無いときだけボーンのバウンダリを使用
 		if (calcflag == 0) {
 			mb = CalcBoneBound();
 		}
@@ -1821,8 +1822,10 @@ MODELBOUND CModel::CalcBoneBound()
 	//::ZeroMemory(&mb, sizeof(MODELBOUND));
 	mb.Init();
 
-	ChaVector3 min = ChaVector3(0.0f, 0.0f, 0.0f);
-	ChaVector3 max = ChaVector3(0.0f, 0.0f, 0.0f);
+	//ChaVector3 min = ChaVector3(0.0f, 0.0f, 0.0f);
+	//ChaVector3 max = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 min = ChaVector3(FLT_MAX, FLT_MAX, FLT_MAX);
+	ChaVector3 max = ChaVector3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 	ChaVector3 center = ChaVector3(0.0f, 0.0f, 0.0f);
 	float r = 0.0f;
 
@@ -1888,7 +1891,7 @@ MODELBOUND CModel::CalcBoneBound()
 	mb.center = center;
 	mb.r = r;
 
-	if (firstflag) {
+	if (!firstflag) {
 		mb.SetIsValid(true);
 	}
 
@@ -2799,6 +2802,9 @@ float CModel::GetFbxTargetWeight(FbxMesh* srcMesh, std::string channelname, int 
 int CModel::GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj)//2024/05/16 morphAnimは別関数で
 {
 	int lVertexCount = pMesh->GetControlPointsCount();
+	if (lVertexCount <= 0) {
+		return 0;
+	}
 	if( lVertexCount != curobj->GetVertex() ){
 		_ASSERT( 0 );
 		return 1;
@@ -2827,19 +2833,38 @@ int CModel::GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj)//2024/05/16 morphAni
 					int existshape = 0;
 					existshape = curobj->ExistShape(shapename);
 					if( existshape == 0 ){
-
-						curobj->AddShapeName(shapename);
-
 						FbxVector4* shapev = lShape->GetControlPoints();
-						_ASSERT( shapev );
-						for (int j = 0; j < lVertexCount; j++)
-						{
-							ChaVector3 xv;
-							xv.x = (float)shapev[j][0];
-							xv.y = (float)shapev[j][1];
-							xv.z = (float)shapev[j][2];
-							curobj->SetShapeVert(shapename, j, xv);
-						}						
+						if (shapev) {
+							int shapevertnum = lShape->GetControlPointsCount();
+							if (shapevertnum == lVertexCount) {
+								curobj->AddShapeName(shapename);
+
+								for (int j = 0; j < lVertexCount; j++)
+								{
+									ChaVector3 xv;
+									xv.x = (float)shapev[j][0];
+									xv.y = (float)shapev[j][1];
+									xv.z = (float)shapev[j][2];
+									curobj->SetShapeVert(shapename, j, xv);
+								}
+							}
+							else {
+								char errormsg[1024] = { 0 };
+								sprintf_s(errormsg, 1024, "shape:%s, mismatch vnum : (%d-%d)",
+									shapename, lVertexCount, shapevertnum);
+								::MessageBoxA(NULL, errormsg, "Error", MB_OK | MB_ICONERROR);
+								_ASSERT(0);
+								abort();
+							}
+						}
+						else {
+							char errormsg[1024] = { 0 };
+							sprintf_s(errormsg, 1024, "shape:%s, fbxshape null error",
+								shapename);
+							::MessageBoxA(NULL, errormsg, "Error", MB_OK | MB_ICONERROR);
+							_ASSERT(0);
+							abort();
+						}
 					}
 				}
 			}//If lChannel is validf
@@ -3359,6 +3384,7 @@ int CModel::SetCurrentMotion( int srcmotid )
 		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 			CBone* curbone = itrbone->second;
 			if (curbone){
+				//if (curbone->IsSkeleton() || curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
 				if (curbone->IsSkeleton()) {
 					curbone->SetCurrentMotion(srcmotid, m_curmotinfo->frameleng);
 				}
@@ -6311,8 +6337,6 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 			DbgOut(L"FBX anim %d, animleng %lf\r\n", animno, animleng);
 
 
-
-
 			//######################################################################################
 			//### AddMotion() : MotInfo, AddMotionPoint, CreateIndexedMotionPoint #################
 			//######################################################################################
@@ -6321,6 +6345,10 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 			AddMotion(mAnimStackNameArray[animno]->Buffer(), 0, animleng, &curmotid);//2022/10/21 : animleng - 1だと最終フレームにモーションポイントが出来ない
 
 
+			SetHasMotionCurveReq(mCurrentAnimLayer, GetTopBone(false), curmotid);
+
+
+			bool cameraanimflag = false;
 			//2023/05/23
 			if ((strstr(chkanimname, "camera") != 0) || (strstr(chkanimname, "Camera") != 0)) {
 
@@ -6332,6 +6360,8 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 
 				PreLoadCameraFbxAnim(curmotid);
 				SetCameraMotionId(curmotid);
+
+				cameraanimflag = true;
 			}
 
 
@@ -6411,7 +6441,8 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 					int errorcount = 0;
 					CreateIndexedMotionPointReq(GetTopBone(false), curmotid, animleng, &errorcount);
 					if (errorcount != 0) {
-						_ASSERT(0);
+						//_ASSERT(0);
+						int dbgflag1 = 1;
 					}
 
 				}
@@ -6425,7 +6456,6 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 				_ASSERT(0);
 				abort();
 			}
-
 
 			//if (animno == (lAnimStackCount - 1)) {//2023/11/04 anim loopを出たところに引っ越し
 			//	DestroyLoadFbxAnim();
@@ -6443,7 +6473,6 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 			//	//2022/11/01 Comment out
 			//	//CallF(CreateFBXShape(mCurrentAnimLayer, animleng, mStart, mFrameTime2), return 1);//2022/10/21 : 最終フレームのモーションフレーム無し問題対応
 			//}
-
 
 			MOTINFO* pmotinfo = GetMotInfoPtr(curmotid);
 			if (pmotinfo) {
@@ -6502,11 +6531,20 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 			SetCurrentAnimLayer(mCurrentAnimLayer);
 			pScene->SetCurrentAnimationStack(lCurrentAnimationStack);
 		}
-
-
 	}
 
-	
+
+	//ボーンモーション読込ループでカメラアニメを読み込むと
+	//ボーンモーションでカメラノードの姿勢が上書きされることがあるので
+	//ループを抜けてからまとめて読み込む
+	map<int, MOTINFO*>::iterator itrmi;
+	for (itrmi = m_motinfo.begin(); itrmi != m_motinfo.end(); itrmi++) {
+		MOTINFO* miptr = itrmi->second;
+		if (miptr && miptr->cameramotion) {
+			GetFBXCameraAnim(miptr->motid, miptr->frameleng);
+		}
+	}
+
 
 	return 0;
 }
@@ -6539,7 +6577,8 @@ void CModel::CreateIndexedMotionPointReq(CBone* srcbone, int srcmotid, double sr
 	GetMotionName(srcmotid, 256, motionname);
 
 	//if (srcbone->IsSkeleton() || srcbone->IsCamera() || (srcbone->IsNull() && strcmp(srcbone->GetBoneName(), motionname) == 0)) {
-	if (srcbone->IsSkeleton() || srcbone->IsCamera()) {
+	if (srcbone->IsSkeleton() || srcbone->IsCamera() || srcbone->IsNullAndChildIsCamera()) {
+	//if (srcbone->IsSkeleton()) {
 		int result;
 		result = srcbone->CreateIndexedMotionPoint(srcmotid, srcanimleng);
 		//_ASSERT(result == 0);
@@ -7089,7 +7128,9 @@ void CModel::PostLoadFbxAnimReq(FbxAnimLayer* mCurrentAnimLayer, int srcmotid, d
 					//#############
 
 					//CCameraFbx::PostLoadFbxAnim()でのmotidとCAMERANODE*の対応表エントリーよりも後で呼ぶ
-					if (srcbone->IsSkeleton() || (srcbone->IsCamera() && IsCameraMotion(srcmotid))) {
+					if (srcbone->IsSkeleton()) {// || 
+						//(srcbone->HasMotionCurve(srcmotid) && srcbone->IsCamera() && IsCameraMotion(srcmotid)) ||
+						//(srcbone->HasMotionCurve(srcmotid) && srcbone->IsNullAndChildIsCamera() && IsCameraMotion(srcmotid))) {
 						bool limitdegflag = false;
 						ChaVector3 cureul = srcbone->CalcFBXEulXYZ(limitdegflag, srcmotid, curframe);
 						curmp->SetLocalEul(cureul);
@@ -7100,42 +7141,6 @@ void CModel::PostLoadFbxAnimReq(FbxAnimLayer* mCurrentAnimLayer, int srcmotid, d
 			}
 		}
 
-	
-		FbxNode* pNode = FindNodeByBone(srcbone);
-		if (pNode) {
-			if (mCurrentAnimLayer) {
-				const char* strChannel;
-				strChannel = FBXSDK_CURVENODE_COMPONENT_X;//X成分でチェック
-
-				//移動のカーブがあるかどうか
-				FbxAnimCurve* lCurveT;
-				bool createflag = false;
-				lCurveT = pNode->LclTranslation.GetCurve(mCurrentAnimLayer, strChannel, createflag);
-				if (lCurveT) {
-					srcbone->SetHasMotionCurve(srcmotid, true);
-				}
-				else {
-					//回転のカーブがあるかどうか
-					FbxAnimCurve* lCurveR;
-					lCurveR = pNode->LclRotation.GetCurve(mCurrentAnimLayer, strChannel, createflag);
-					if (lCurveR) {
-						srcbone->SetHasMotionCurve(srcmotid, true);
-					}
-					else {
-						srcbone->SetHasMotionCurve(srcmotid, false);
-					}
-				}
-			}
-			else {
-				srcbone->SetHasMotionCurve(srcmotid, false);
-			}
-		}
-		else {
-			srcbone->SetHasMotionCurve(srcmotid, false);
-		}
-
-
-
 
 		if (srcbone->GetChild(false)) {
 			PostLoadFbxAnimReq(mCurrentAnimLayer, srcmotid, animlen, srcbone->GetChild(false));
@@ -7143,6 +7148,47 @@ void CModel::PostLoadFbxAnimReq(FbxAnimLayer* mCurrentAnimLayer, int srcmotid, d
 		if (srcbone->GetBrother(false)) {
 			PostLoadFbxAnimReq(mCurrentAnimLayer, srcmotid, animlen, srcbone->GetBrother(false));
 		}
+	}
+}
+
+void CModel::SetHasMotionCurveReq(FbxAnimLayer* mCurrentAnimLayer, CBone* srcbone, int srcmotid)
+{
+	if (srcbone && mCurrentAnimLayer) {
+		FbxNode* pNode = FindNodeByBone(srcbone);
+		if (pNode) {
+			const char* strChannel;
+			strChannel = FBXSDK_CURVENODE_COMPONENT_X;//X成分でチェック
+
+			//移動のカーブがあるかどうか
+			FbxAnimCurve* lCurveT;
+			bool createflag = false;
+			lCurveT = pNode->LclTranslation.GetCurve(mCurrentAnimLayer, strChannel, createflag);
+			if (lCurveT) {
+				srcbone->SetHasMotionCurve(srcmotid, true);
+			}
+			else {
+				//回転のカーブがあるかどうか
+				FbxAnimCurve* lCurveR;
+				lCurveR = pNode->LclRotation.GetCurve(mCurrentAnimLayer, strChannel, createflag);
+				if (lCurveR) {
+					srcbone->SetHasMotionCurve(srcmotid, true);
+				}
+				else {
+					srcbone->SetHasMotionCurve(srcmotid, false);
+				}
+			}
+		}
+		else {
+			srcbone->SetHasMotionCurve(srcmotid, false);
+		}
+
+		if (srcbone->GetChild(false)) {
+			SetHasMotionCurveReq(mCurrentAnimLayer, srcbone->GetChild(false), srcmotid);
+		}
+		if (srcbone->GetBrother(false)) {
+			SetHasMotionCurveReq(mCurrentAnimLayer, srcbone->GetBrother(false), srcmotid);
+		}
+
 	}
 }
 
@@ -18035,7 +18081,13 @@ int CModel::CreateLoadFbxAnim(FbxScene* pscene)
 
 	for (bonecount = 0; bonecount < bonenum; bonecount++) {
 		CBone* curbone = m_bonelist[bonecount];
-		if (curbone && (curbone->IsSkeleton() || curbone->IsCamera())) {
+		FbxNode* pNode = FindNodeByBone(curbone);
+
+
+		//カメラとカメラを子供に持つeNullについては、AddMotionPointする目的で対象に加える
+		//ボーンモーション読込時にカメラもAddMotionPointしておかないと
+		//カメラアニメ読込時のAddMotionの際にmotoidとm_motionkey.size()の比較でエラーになる
+		if (curbone && (curbone->IsSkeleton() || curbone->IsCamera() || (pNode && IsNullAndChildIsCameraNode(pNode)))) {
 			FbxNode* curnode = curbone->GetFbxNodeOnLoad();
 			if (curnode) {
 				CThreadingLoadFbx* curupdate = m_LoadFbxAnim + threadcount;
@@ -19572,7 +19624,53 @@ CBone* CModel::FindBoneByNode(FbxNode* srcnode)
 //
 //}
 
-ChaMatrix CModel::GetCameraTransformMat(int cameramotid, double nextframe, int inheritmode, bool multInvNodeMat)
+int CModel::GetFBXCameraAnim(int cameramotid, double animleng)
+{
+	if (!m_camerafbx.IsLoaded()) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	SetCameraMotionId(cameramotid);
+
+	CAMERANODE* curcn = m_camerafbx.GetCameraNode(cameramotid);
+	if (!curcn) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	double framecnt;
+	for (framecnt = 0.0; framecnt < animleng; framecnt += 1.0) {
+		bool calcbynode = true;
+		bool setmotionpoint = true;
+		ChaMatrix cameramat = GetCameraTransformMat(cameramotid, framecnt, CAMERA_INHERIT_ALL, 
+			calcbynode, setmotionpoint);
+	}
+
+	//int result;
+	//result = curcn->pbone->CreateIndexedMotionPoint(cameramotid, animleng);
+	//if (result != 0) {
+	//	_ASSERT(0);
+	//	return 1;
+	//}
+
+	return 0;
+}
+
+
+CAMERANODE* CModel::GetCAMERANODE(int cameramotid)
+{
+	if (!m_camerafbx.IsLoaded()) {
+		_ASSERT(0);
+		return nullptr;
+	}
+
+	return m_camerafbx.GetCameraNode(cameramotid);
+}
+
+ChaMatrix CModel::GetCameraTransformMat(int cameramotid, double nextframe, int inheritmode, 
+	bool calcbynode, bool setmotionpoint)
 {
 	ChaMatrix retmat;
 
@@ -19582,7 +19680,8 @@ ChaMatrix CModel::GetCameraTransformMat(int cameramotid, double nextframe, int i
 		return retmat;
 	}
 
-	return m_camerafbx.GetCameraTransformMat(cameramotid, nextframe, inheritmode, multInvNodeMat);
+	return m_camerafbx.GetCameraTransformMat(cameramotid, nextframe, inheritmode, 
+		calcbynode, setmotionpoint);
 
 }
 
@@ -20982,18 +21081,18 @@ int CModel::CreateChkInView()
 
 		//このアプリにおいては　mqoファイル(マニピュレータや地面格子)はクリッピングしない用途に使用しているので　常に描画するように
 
-		map<int, CMQOObject*>::iterator itr;
-		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-			CMQOObject* curobj = itr->second;
-			if (curobj) {
-				MODELBOUND mb;
-				mb.Init();
-				int forceinview = 1;
-				int forceinshadow = 0;
-				m_chkinview->AddBoundary(curobj, mb, 1, forceinview, forceinshadow);
-			}
-		}
-		CallF(m_chkinview->CreateDispObj(m_pdev), return 1);
+		//map<int, CMQOObject*>::iterator itr;
+		//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+		//	CMQOObject* curobj = itr->second;
+		//	if (curobj) {
+		//		MODELBOUND mb;
+		//		mb.Init();
+		//		int forceinview = 1;
+		//		int forceinshadow = 0;
+		//		m_chkinview->AddBoundary(curobj, mb, 1, forceinview, forceinshadow);
+		//	}
+		//}
+		//CallF(m_chkinview->CreateDispObj(m_pdev), return 1);
 	}
 	else if (m_object.empty() || (GetFromBvhFlag())) {
 
@@ -21043,42 +21142,25 @@ int CModel::CreateChkInView()
 		// モーションでの全体移動に対応
 		//###############################################################
 
-		if (GetSkyFlag() == false) {
-			map<int, CMQOObject*>::iterator itr;
-			for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-				CMQOObject* curobj = itr->second;
-				if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
-					MODELBOUND mb;
-					mb.Init();
-					mb = curobj->GetBound();
-					int forceinview = -1;
-					int forceinshadow = -1;
-					if (!curobj->GetPm3() && !curobj->GetPm4()) {
-						//extlineはInViewでshadow無し
-						forceinview = 1;
-						forceinshadow = 0;
-					}
-					m_chkinview->AddBoundary(curobj, mb, curobj->GetLODNum(), forceinview, forceinshadow);
+		map<int, CMQOObject*>::iterator itr;
+		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+			CMQOObject* curobj = itr->second;
+			//if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
+			if (curobj && curobj->GetDispObj()) {
+				MODELBOUND mb;
+				mb.Init();
+				mb = curobj->GetBound();
+				int forceinview = -1;
+				int forceinshadow = -1;
+				if (!curobj->GetPm3() && !curobj->GetPm4()) {
+					//extlineはInViewでshadow無し
+					forceinview = 1;
+					forceinshadow = 0;
 				}
+				m_chkinview->AddBoundary(curobj, mb, curobj->GetLODNum(), forceinview, forceinshadow);
 			}
-			CallF(m_chkinview->CreateDispObj(m_pdev), return 1);
 		}
-		else {
-			//skyは視野内の一番遠く
-
-			map<int, CMQOObject*>::iterator itr;
-			for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-				CMQOObject* curobj = itr->second;
-				if (curobj) {
-					MODELBOUND mb;
-					mb.Init();
-					int forceinview = 1;
-					int forceinshadow = 0;
-					m_chkinview->AddBoundary(curobj, mb, 1, forceinview, forceinshadow);
-				}
-			}
-			CallF(m_chkinview->CreateDispObj(m_pdev), return 1);
-		}
+		CallF(m_chkinview->CreateDispObj(m_pdev), return 1);
 	}
 
 	return 0;
@@ -21212,4 +21294,48 @@ void CModel::ResetBtMovableReq(CBone* srcbone)
 			ResetBtMovableReq(srcbone->GetBrother(false));
 		}
 	}
+}
+
+int CModel::GetChildCameraBoneAndNode(CBone* enullbone, CBone** ppbone, FbxNode** ppnode)
+{
+	if (!enullbone || !ppbone || !ppnode) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	*ppbone = nullptr;
+	*ppnode = nullptr;
+
+
+	FbxNode* enullnode = enullbone->GetFbxNodeOnLoad();
+	if (!enullnode) {
+		return 1;
+	}
+
+	int childNodeNum;
+	childNodeNum = enullnode->GetChildCount();
+	for (int i = 0; i < childNodeNum; i++)
+	{
+		FbxNode* pChild = enullnode->GetChild(i);  // 子ノードを取得
+		if (pChild) {
+			FbxNodeAttribute* pAttrib2 = pChild->GetNodeAttribute();
+			if (pAttrib2) {
+				FbxNodeAttribute::EType type2 = (FbxNodeAttribute::EType)(pAttrib2->GetAttributeType());
+				if (type2 == FbxNodeAttribute::eCamera) {
+					*ppnode = pChild;
+					CBone* cameraanimbone = FindBoneByNode(pChild);
+					if (cameraanimbone) {
+						*ppbone = cameraanimbone;
+						return 0;//!!!!!!!!!!!!!!
+					}
+					else {
+						return 1;
+					}
+				}
+			}
+		}
+	}
+
+	return 1;//子供のcameraがみつからなかった場合は　return 1
+
 }

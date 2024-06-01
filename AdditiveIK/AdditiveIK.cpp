@@ -4113,6 +4113,22 @@ void InitApp()
 
 	InitCommonControls();
 
+	{
+		g_camEye = ChaVector3(0.0f, 0.0f, 0.0f);
+		g_camtargetpos = ChaVector3(0.0f, 0.0f, 0.0f);
+		g_befcamEye = ChaVector3(0.0f, 0.0f, 0.0f);
+		g_befcamtargetpos = ChaVector3(0.0f, 0.0f, 0.0f);
+		g_cameraupdir = ChaVector3(0.0f, 1.0f, 0.0f);
+		g_camdist = 50.0f;
+		g_initcamdist = 50.0f;
+		g_fovy = (float)(PI / 4.0);
+		g_projnear = 0.01f;
+		g_projfar = g_initcamdist * 100.0f;
+	
+		g_vCenter = ChaVector3(0.0f, 0.0f, 0.0f);
+	}
+
+
 	s_filterindex = 1;
 	s_grassflag = false;
 

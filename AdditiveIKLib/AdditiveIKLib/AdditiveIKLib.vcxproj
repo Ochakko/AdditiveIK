@@ -199,6 +199,7 @@
     <ClCompile Include="..\CPP\ExtLine.cpp" />
     <ClCompile Include="..\CPP\FBXBone.cpp" />
     <ClCompile Include="..\CPP\FBXFile.cpp" />
+    <ClCompile Include="..\CPP\FbxMisc.cpp" />
     <ClCompile Include="..\CPP\FogParamsFile.cpp" />
     <ClCompile Include="..\CPP\GColiFile.cpp" />
     <ClCompile Include="..\CPP\GetMaterial.cpp" />
@@ -581,6 +582,7 @@
     <ClInclude Include="..\INCLUDE\ExtLine.h" />
     <ClInclude Include="..\INCLUDE\FBXBone.h" />
     <ClInclude Include="..\INCLUDE\FBXFile.h" />
+    <ClInclude Include="..\INCLUDE\FbxMisc.h" />
     <ClInclude Include="..\INCLUDE\FogParamsFile.h" />
     <ClInclude Include="..\INCLUDE\GColiFile.h" />
     <ClInclude Include="..\INCLUDE\GetMaterial.h" />

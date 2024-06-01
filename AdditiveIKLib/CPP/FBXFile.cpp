@@ -34,6 +34,7 @@
 #include <bvhfile.h>
 
 #include <NodeOnLoad.h>
+#include <FbxMisc.h>
 
 #include <GlobalVar.h>
 
@@ -223,7 +224,7 @@ static FbxNode* CreateDummyFbxMesh(FbxManager* pSdkManager, FbxScene* pScene, CB
 static void LinkDummyMeshToSkeleton(CFBXBone* fbxbone, FbxSkin* lSkin, FbxScene* pScene, FbxNode* pMesh, int* bonecnt);
 
 
-static int CalcLocalNodeMat(CModel* pmodel, CBone* curbone, ChaMatrix* dstnodemat, ChaMatrix* dstnodeanimmat);//pNode = pmodel->GetBoneNode(curbone)を内部で使用
+static int CalcLocalNodeMat(int srcmotid, CModel* pmodel, CBone* curbone, ChaMatrix* dstnodemat, ChaMatrix* dstnodeanimmat);//pNode = pmodel->GetBoneNode(curbone)を内部で使用
 static void GetBindMatrixNodeOnLoad(CModel* pmodel, CFBXBone* fbxbone, FbxAMatrix& lMatrix);
 
 static int WriteFBXAnimTra(bool limitdegflag, CFBXBone* fbxbone, FbxAnimLayer* lAnimLayer, int curmotid, int maxframe, int axiskind);
@@ -732,11 +733,12 @@ int CopyNodePosture(FbxNode* srcnode, FbxNode* psavenode)
 	//Enullノードの子供のCancel2Modeで正常に再生可能なカメラアニメ保存読み込みで検証したところ
 	//Lcl*.Get()を保存するとアニメが変質したが　EvaluateLocal*を保存すると変質しなかった
 	//#########################################################################################
-	FbxTime fbxtime;
-	fbxtime.SetSecondDouble(0.0);
-	fbxLclPos = srcnode->EvaluateLocalTranslation(fbxtime, FbxNode::eSourcePivot, true, true);//Bone.cpp SaveFbxNodePosture()と合わせる
-	fbxLclRot = srcnode->EvaluateLocalRotation(fbxtime, FbxNode::eSourcePivot, true, true);
-	fbxLclScl = srcnode->EvaluateLocalScaling(fbxtime, FbxNode::eSourcePivot, true, true);
+	FbxTime fbxtime0;
+	fbxtime0.SetSecondDouble(0.0);
+	fbxLclPos = srcnode->EvaluateLocalTranslation(fbxtime0, FbxNode::eSourcePivot, true, true);//Bone.cpp SaveFbxNodePosture()と合わせる
+	fbxLclRot = srcnode->EvaluateLocalRotation(fbxtime0, FbxNode::eSourcePivot, true, true);
+	fbxLclScl = srcnode->EvaluateLocalScaling(fbxtime0, FbxNode::eSourcePivot, true, true);
+
 	//fbxLclPos = srcnode->LclTranslation.Get();
 	//fbxLclRot = srcnode->LclRotation.Get();
 	//fbxLclScl = srcnode->LclScaling.Get();
@@ -786,7 +788,8 @@ int CopyNodePosture(FbxNode* srcnode, FbxNode* psavenode)
 		//#####################################################
 		//eMesh, eNullはそのままのRotationOrderで保存
 		//#####################################################
-		int orgrotationorder = (int)rotationorder;
+		int orgrotationorder = IntRotationOrder(rotationorder);
+
 		psavenode->SetRotationOrder(FbxNode::eSourcePivot, rotationorder);
 		psavenode->SetRotationOrder(FbxNode::eDestinationPivot, rotationorder);
 
@@ -3767,9 +3770,12 @@ void AnimateBoneReq(bool limitdegflag, FbxNode* pNode, FbxAnimLayer* lAnimLayer,
 				int dbgflag = 1;
 			}
 
-			if (curmotid != curbone->GetParModel()->GetCameraMotionId()) {
+			MOTINFO curmotinfo = curbone->GetParModel()->GetMotInfo(curmotid);
+
+			//if (curmotid != curbone->GetParModel()->GetCameraMotionId()) {
+			if (curmotinfo.cameramotion == false) {
 				//通常モーション
-				if (curbone->IsSkeleton()) {
+				if (curbone->IsSkeleton() || curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_X);
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Y);
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Z);
@@ -3785,8 +3791,13 @@ void AnimateBoneReq(bool limitdegflag, FbxNode* pNode, FbxAnimLayer* lAnimLayer,
 			}
 			else {
 				//カメラモーション
-				if (curbone->HasMotionCurve(curmotid) && 
-					(curbone->IsCamera() || curbone->IsNull())) {
+
+				//MOTINFO camerami = curbone->GetParModel()->GetMotInfo(curmotid);
+
+				//if (curbone->HasMotionCurve(curmotid) && 
+				//	(curbone->IsCamera() || curbone->IsNull())) {
+				//if (curbone->IsCamera() || (curbone->IsNull() && (strcmp(curbone->GetBoneName(), camerami.motname) == 0))) {
+				if (curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_X);
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Y);
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Z);
@@ -4063,7 +4074,7 @@ void WriteBindPoseReq(CModel* pmodel, FbxNode* pNode, FbxPose* srcbindpose, FbxP
 }
 
 
-int CalcLocalNodeMat(CModel* pmodel, CBone* curbone, ChaMatrix* dstnodemat, ChaMatrix* dstnodeanimmat)//pNode = pmodel->GetBoneNode(curbone)を内部で使用
+int CalcLocalNodeMat(int srcmotid, CModel* pmodel, CBone* curbone, ChaMatrix* dstnodemat, ChaMatrix* dstnodeanimmat)//pNode = pmodel->GetBoneNode(curbone)を内部で使用
 {
 	//parentにSetNodeMat()されていることが前提
 	//Reqで呼び出す
@@ -4080,9 +4091,9 @@ int CalcLocalNodeMat(CModel* pmodel, CBone* curbone, ChaMatrix* dstnodemat, ChaM
 	FbxNode* pNode = pmodel->GetBoneNode(curbone);
 	if (pNode) {
 
-		curbone->SaveFbxNodePosture(pNode);//2023/02/16
+		curbone->SaveFbxNodePosture(srcmotid, pNode);//2023/02/16
 		bool bindposeflag = true;//!!!!! 2023/07/06
-		curbone->CalcLocalNodePosture(bindposeflag, pNode, 0.0, dstnodemat, dstnodeanimmat);
+		curbone->CalcLocalNodePosture(bindposeflag, pNode, srcmotid, 0.0, dstnodemat, dstnodeanimmat);
 
 		//curbone->SetLocalNodeMat(*dstnodemat);
 		//curbone->SetLocalNodeAnimMat(*dstnodeanimmat);
@@ -5357,7 +5368,7 @@ int WriteFBXAnimTra(bool limitdegflag, CFBXBone* fbxbone, FbxAnimLayer* lAnimLay
 		for (frameno = 0; frameno <= maxframe; frameno++){
 			lTime.SetSecondDouble((double)frameno / timescale);
 
-			fbxtra = curbone->CalcFBXTra(limitdegflag, curmotid, frameno);			
+			fbxtra = curbone->CalcFBXTra(limitdegflag, curmotid, (double)frameno);
 			
 			lKeyIndex = lCurve->KeyAdd(lTime);
 			switch (axiskind){
@@ -5430,7 +5441,7 @@ int WriteFBXAnimRot(bool limitdegflag, CFBXBone* fbxbone, FbxAnimLayer* lAnimLay
 		lCurve->KeyModifyBegin();
 		
 		for (frameno = 0; frameno <= maxframe; frameno++){
-			cureul = curbone->CalcFBXEulXYZ(limitdegflag, curmotid, frameno);
+			cureul = curbone->CalcFBXEulXYZ(limitdegflag, curmotid, (double)frameno);
 					
 			lTime.SetSecondDouble((double)frameno / timescale);
 			lKeyIndex = lCurve->KeyAdd(lTime);
@@ -5506,7 +5517,7 @@ int WriteFBXAnimScale(bool limitdegflag, CFBXBone* fbxbone, FbxAnimLayer* lAnimL
 		lCurve->KeyModifyBegin();
 		for (frameno = 0; frameno <= maxframe; frameno++) {
 			//cureul = curbone->CalcFBXEul(curmotid, frameno, &befeul);
-			cureul = curbone->CalcFbxScaleAnim(limitdegflag, curmotid, frameno);
+			cureul = curbone->CalcFbxScaleAnim(limitdegflag, curmotid, (double)frameno);
 			lTime.SetSecondDouble((double)frameno / timescale);
 			lKeyIndex = lCurve->KeyAdd(lTime);
 
@@ -5986,9 +5997,9 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 		//bindposeを計算から求める
 		//########################
 		if (pNode) {
-
+			int firstmotid = pmodel->GetFirstValidMotInfo().motid;
 			ChaMatrix localnodemat, localnodeanimmat;
-			CalcLocalNodeMat(pmodel, curbone, &localnodemat, &localnodeanimmat);//2022/12/21 support prerot postrot ...etc.
+			CalcLocalNodeMat(firstmotid, pmodel, curbone, &localnodemat, &localnodeanimmat);//2022/12/21 support prerot postrot ...etc.
 			ChaMatrix parentnodemat, parentnodeanimmat;
 			parentnodemat.SetIdentity();
 			parentnodeanimmat.SetIdentity();

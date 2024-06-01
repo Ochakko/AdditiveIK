@@ -128,6 +128,8 @@ typedef  struct tag_n3p
 	//	delete [] m_infbone;
 	//	m_infbone = 0;
 	//}
+	m_mqoface = 0;//ŠO•”ƒƒ‚ƒŠ
+	m_pointbuf = 0;//ŠO•”ƒƒ‚ƒŠ
 
 	InitParams();
 }
@@ -151,7 +153,7 @@ void CPolyMesh3::DestroySystemDispObj(bool emptyshape)
 	//	m_dispindex = 0;
 	//}
 
-	if (GetFbxFileFlag()) {
+	if (GetFbxFileFlag() && emptyshape) {
 		//###############################################
 		//CMQOObject::DestroySystemDispObj()‚ªŒÄ‚Î‚ê‚½Œã
 		//###############################################
@@ -874,6 +876,7 @@ int CPolyMesh3::SetOptV(BINORMALDISPV* dispv, int* pleng, int* matnum, CModel* p
 
 
 				//*( m_dispindex + setno ) = setno;
+
 
 				if (m_fbxfileflag == true) {
 					//2023/07/29 ”½‘Îü‚è

@@ -108,6 +108,9 @@ int CThreadingLoadFbx::ThreadFunc()
 							if (curbone && curnode) {
 								curbone->GetFBXAnim(curnode, m_animno, m_motid, m_animleng, callingbythread);
 							}
+							else {
+								int dbgflag1 = 1;
+							}
 						}
 					}
 				}

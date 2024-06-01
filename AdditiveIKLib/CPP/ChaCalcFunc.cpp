@@ -20,6 +20,7 @@
 #include <EditRange.h>
 #include <RIgidElem.h>
 #include <Collision.h>
+#include <FbxMisc.h>
 
 #define DBGH
 #include <dbg.h>
@@ -156,9 +157,6 @@ int ChaCalcFunc::ModifyEuler360(ChaVector3* eulerA, ChaVector3* eulerB, int notm
 	//		tmpZ0 += 180.0f;
 	//	}
 	//}
-
-
-	return 0;
 
 	return 0;
 }
@@ -1906,20 +1904,39 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 		//カメラの場合
 		//########################
 
-		if (srcbone->GetParModel() && srcbone->GetParModel()->IsCameraLoaded()) {
+		cureul = ChaVector3(0.0f, 0.0f, 0.0f);
 
-			EnterCriticalSection(&g_CritSection_FbxSdk);
-			cureul = srcbone->GetParModel()->CalcCameraFbxEulXYZ(srcmotid, roundingframe);
-			//####  rotorder注意  #####
-			LeaveCriticalSection(&g_CritSection_FbxSdk);
-			cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+		//CMotionPoint* curmp = 0;
+		//curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
+		//if (curmp) {
+		//
+		//	EFbxRotationOrder rotationorder;
+		//	srcbone->GetFbxNodeOnLoad()->GetRotationOrder(FbxNode::eSourcePivot, rotationorder);
+		//
+		//	ChaMatrix localmat = curmp->GetLocalMat();
+		//	eulq = ChaMatrix2Q(localmat);
+		//	eulq.Q2EulXYZusingMat(
+		//		IntRotationOrder(rotationorder),
+		//		0,
+		//		ChaVector3(0.0f, 0.0f, 0.0f), &cureul, 0, 0, 1);
+		//}
+		//else {
+		//	cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+		//}
 
-		}
-		else {
-			_ASSERT(0);
-			cureul = ChaVector3(0.0f, 0.0f, 0.0f);
-		}
-
+		//if (srcbone->GetParModel() && srcbone->GetParModel()->IsCameraLoaded()) {
+		//
+		//	EnterCriticalSection(&g_CritSection_FbxSdk);
+		//	cureul = srcbone->GetParModel()->CalcCameraFbxEulXYZ(srcmotid, roundingframe);
+		//	//####  rotorder注意  #####
+		//	LeaveCriticalSection(&g_CritSection_FbxSdk);
+		//	//cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+		//
+		//}
+		//else {
+		//	_ASSERT(0);
+		//	cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+		//}
 	}
 	else if (srcbone->IsNull()) {
 
@@ -1927,18 +1944,74 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 		//eNullの場合
 		//###########
 
-		if (srcbone->GetFbxNodeOnLoad()) {
-			EnterCriticalSection(&g_CritSection_FbxSdk);
-			FbxTime fbxtime;
-			fbxtime.SetSecondDouble(roundingframe / 30.0);
-			FbxVector4 orgfbxeul = srcbone->GetFbxNodeOnLoad()->EvaluateLocalRotation(fbxtime, FbxNode::eSourcePivot, true, true);
-			cureul = ChaVector3(orgfbxeul, false);
-			//####  rotorder注意  #####
-			LeaveCriticalSection(&g_CritSection_FbxSdk);
-			return cureul;
+		if (srcbone->IsNullAndChildIsCamera()) {
+
+			//##############################
+			//子供にeCameraを持つeNullの場合
+			//##############################
+
+			CMotionPoint* curmp = 0;
+			curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
+			if (curmp) {
+				
+				EFbxRotationOrder rotationorder;
+				srcbone->GetFbxNodeOnLoad()->GetRotationOrder(FbxNode::eSourcePivot, rotationorder);
+
+				ChaMatrix localmat = curmp->GetLocalMat();
+				eulq = ChaMatrix2Q(localmat);
+				eulq.Q2EulXYZusingMat(
+					IntRotationOrder(rotationorder),
+					0,
+					ChaVector3(0.0f, 0.0f, 0.0f), &cureul, 0, 0, 1);
+			}
+			else {
+				cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+			}
+
+
+			//CMotionPoint* curmp = 0;
+			//curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
+			//if (curmp) {
+			//	
+			//	EFbxRotationOrder rotationorder;
+			//	srcbone->GetFbxNodeOnLoad()->GetRotationOrder(FbxNode::eSourcePivot, rotationorder);
+			//	int orgrotationorder = IntRotationOrder(rotationorder);
+			//
+			//	FbxTime fbxtime;
+			//	fbxtime.SetSecondDouble(roundingframe / 30.0);
+			//	FbxAMatrix fbxlocalmat;
+			//	fbxlocalmat = srcbone->GetFbxNodeOnLoad()->EvaluateLocalTransform(fbxtime, FbxNode::eSourcePivot, true, true);
+			//	ChaMatrix localmat = ChaMatrixFromFbxAMatrix(fbxlocalmat);
+			//	eulq = ChaMatrix2Q(localmat);
+			//	eulq.Q2EulXYZusingMat(orgrotationorder, 
+			//		//&axisq, 
+			//		0,
+			//		ChaVector3(0.0f, 0.0f, 0.0f), &cureul, 0, 0, 1);
+			//
+			//}
+			//else {
+			//	cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+			//}
 		}
 		else {
-			return cureul;
+
+			//##############################
+			//子供にeCameraを持たないeNullの場合
+			//##############################
+
+			if (srcbone->GetFbxNodeOnLoad()) {
+				EnterCriticalSection(&g_CritSection_FbxSdk);
+				FbxTime fbxtime;
+				fbxtime.SetSecondDouble(roundingframe / 30.0);
+				FbxVector4 orgfbxeul = srcbone->GetFbxNodeOnLoad()->EvaluateLocalRotation(fbxtime, FbxNode::eSourcePivot, true, true);
+				cureul = ChaVector3(orgfbxeul, false);
+				//####  rotorder注意  #####
+				LeaveCriticalSection(&g_CritSection_FbxSdk);
+				return cureul;
+			}
+			else {
+				return cureul;
+			}
 		}
 	}
 	else {
@@ -2725,7 +2798,42 @@ ChaMatrix ChaCalcFunc::GetWorldMat(CBone* srcbone, bool limitdegflag,
 
 		//2023/06/27
 		//CalcLocalEulXYZ()の検証で　ParentがeNullのときには　parentwmはIdentityにするべきだったので　それに合わせる
-		curmat.SetIdentity();
+		//curmat.SetIdentity();
+
+		if (srcmp) {
+			if (limitdegflag == false) {
+				curmat = srcmp->GetWorldMat();
+				if (dsteul) {
+					*dsteul = srcmp->GetLocalEul();
+				}
+			}
+			else {
+				curmat = srcmp->GetLimitedWM();
+				if (dsteul) {
+					*dsteul = srcmp->GetLimitedLocalEul();
+				}
+			}
+		}
+		else {
+			CMotionPoint* curmp;
+			curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
+			if (curmp) {
+				if (limitdegflag == false) {
+					curmat = curmp->GetWorldMat();
+					if (dsteul) {
+						*dsteul = curmp->GetLocalEul();
+					}
+				}
+				else {
+					curmat = curmp->GetLimitedWM();
+					if (dsteul) {
+						*dsteul = curmp->GetLimitedLocalEul();
+					}
+				}
+			}else{
+				curmat.SetIdentity();	
+			}
+		}
 		return curmat;
 	}
 	else if (srcbone->IsCamera()) {
@@ -2738,7 +2846,40 @@ ChaMatrix ChaCalcFunc::GetWorldMat(CBone* srcbone, bool limitdegflag,
 		//LeaveCriticalSection(&g_CritSection_FbxSdk);
 		//return retmat;
 
-		curmat.SetIdentity();
+		if (srcmp) {
+			if (limitdegflag == false) {
+				curmat = srcmp->GetWorldMat();
+				if (dsteul) {
+					*dsteul = srcmp->GetLocalEul();
+				}
+			}
+			else {
+				curmat = srcmp->GetLimitedWM();
+				if (dsteul) {
+					*dsteul = srcmp->GetLimitedLocalEul();
+				}
+			}
+		}
+		else {
+			CMotionPoint* curmp;
+			curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
+			if (curmp) {
+				if (limitdegflag == false) {
+					curmat = curmp->GetWorldMat();
+					if (dsteul) {
+						*dsteul = curmp->GetLocalEul();
+					}
+				}
+				else {
+					curmat = curmp->GetLimitedWM();
+					if (dsteul) {
+						*dsteul = curmp->GetLimitedLocalEul();
+					}
+				}
+			}else{
+				curmat.SetIdentity();	
+			}
+		}
 		return curmat;
 	}
 	else if (srcbone->IsSkeleton()) {
@@ -2772,6 +2913,8 @@ ChaMatrix ChaCalcFunc::GetWorldMat(CBone* srcbone, bool limitdegflag,
 						*dsteul = curmp->GetLimitedLocalEul();
 					}
 				}
+			}else{
+				curmat.SetIdentity();	
 			}
 		}
 		return curmat;
@@ -4194,7 +4337,8 @@ int ChaCalcFunc::InitMP(CBone* srcbone, bool limitdegflag, int srcmotid, double 
 		return 0;
 	}
 	//2023/04/28
-	if (srcbone->IsNotSkeleton()) {
+	//if (srcbone->IsNotSkeleton()) {
+	if (srcbone->IsNotSkeleton() && !srcbone->IsNullAndChildIsCamera() && srcbone->IsNotCamera()) {
 		return 0;
 	}
 
@@ -4272,7 +4416,8 @@ int ChaCalcFunc::InitMP(CBone* srcbone, bool limitdegflag, int srcmotid, double 
 			//set matforinit 2023/05/15
 			//###############
 			//if (srcbone->GetParModel()->GetLoadingMotionCount() <= 1) {
-			if (srcbone->IsNotSkeleton() && (srcbone->GetParModel()->GetLoadingMotionCount() <= 1)) {//2023/10/23 skeleton以外の場合
+			if (srcbone->HasMotionCurve(srcmotid) &&//2024/05/24
+				srcbone->IsNotSkeleton() && (srcbone->GetParModel()->GetLoadingMotionCount() <= 1)) {//2023/10/23 skeleton以外の場合
 				FbxNode* pNode = srcbone->GetFbxNodeOnLoad();
 				if (pNode) {
 

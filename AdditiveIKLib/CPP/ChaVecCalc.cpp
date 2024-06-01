@@ -3275,7 +3275,7 @@ int CQuaternion::Q2EulXYZusingMat(int rotorder, CQuaternion* axisq, ChaVector3 b
 	double alpha, beta, gamma;
 	double cosbeta;
 
-	if (rotorder == 0) {
+	if (rotorder == ROTORDER_XYZ) {
 		//:#xyz
 		gamma = atan2(m01, m00);
 		beta = asin(-m02);
@@ -3295,7 +3295,7 @@ int CQuaternion::Q2EulXYZusingMat(int rotorder, CQuaternion* axisq, ChaVector3 b
 		y = beta;
 		z = gamma;
 	}
-	else if(rotorder == 1) {
+	else if(rotorder == ROTORDER_YZX) {
 		//:#yzx
 		gamma = atan2(m12, m11);
 		beta = asin(-m10);
@@ -3315,7 +3315,7 @@ int CQuaternion::Q2EulXYZusingMat(int rotorder, CQuaternion* axisq, ChaVector3 b
 		y = alpha;
 		z = beta;
 	}
-	else if (rotorder == 2) {
+	else if (rotorder == ROTORDER_ZXY) {
 		//#zxy
 		gamma = atan2(m20, m22);
 		beta = asin(-m21);
@@ -3335,7 +3335,7 @@ int CQuaternion::Q2EulXYZusingMat(int rotorder, CQuaternion* axisq, ChaVector3 b
 		y = gamma;
 		z = alpha;
 	}
-	else if (rotorder == 3) {
+	else if (rotorder == ROTORDER_XZY) {
 		//#xzy
 		gamma = atan2(-m02, m00);
 		beta = asin(m01);
@@ -3355,7 +3355,7 @@ int CQuaternion::Q2EulXYZusingMat(int rotorder, CQuaternion* axisq, ChaVector3 b
 		y = gamma;
 		z = beta;
 	}
-	else if (rotorder == 4) {
+	else if (rotorder == ROTORDER_YXZ) {
 		//#yxz
 		gamma = atan2(-m10, m11);
 		beta = asin(m12);
@@ -3375,7 +3375,7 @@ int CQuaternion::Q2EulXYZusingMat(int rotorder, CQuaternion* axisq, ChaVector3 b
 		y = alpha;
 		z = gamma;
 	}
-	else if (rotorder == 5) {
+	else if (rotorder == ROTORDER_ZYX) {
 		//#zyx
 		gamma = atan2(-m21, m22);
 		beta = asin(m20);

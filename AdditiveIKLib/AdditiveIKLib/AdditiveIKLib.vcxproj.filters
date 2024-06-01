@@ -216,6 +216,9 @@
     <ClCompile Include="..\CPP\UndoMotion.cpp">
       <Filter>Undo</Filter>
     </ClCompile>
+    <ClCompile Include="..\CPP\FbxMisc.cpp">
+      <Filter>ForFbx</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
@@ -1338,6 +1341,9 @@
     </ClInclude>
     <ClInclude Include="..\INCLUDE\UndoMotion.h">
       <Filter>Undo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\FbxMisc.h">
+      <Filter>ForFbx</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

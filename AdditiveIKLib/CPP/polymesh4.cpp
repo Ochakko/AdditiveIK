@@ -99,20 +99,28 @@ void CPolyMesh4::DestroyObjs()
 		free(m_dispindex);
 		m_dispindex = 0;
 	}
-
-}
-
-void CPolyMesh4::DestroySystemDispObj(bool emptyshape)
-{
 	if (m_triface) {
 		delete[] m_triface;
 		m_triface = 0;
 	}
 
+}
+
+void CPolyMesh4::DestroySystemDispObj(bool emptyshape)
+{
+
 	if (m_dispv && emptyshape) {//blend shapeÇ™ãÛÇ≈ÇÕñ≥Ç¢èÍçáÇÕè¡Ç≥Ç»Ç¢
 		free(m_dispv);
 		m_dispv = 0;
 	}
+
+	if (m_triface && emptyshape) {
+		delete[] m_triface;
+		m_triface = 0;
+	}
+
+
+
 	//if (m_dispindex) {//<----PickìñÇΩÇËîªíËÇ≈égópÇ∑ÇÈÇÃÇ≈çÌèúÇµÇ»Ç¢
 	//	free(m_dispindex);
 	//	m_dispindex = 0;
@@ -525,7 +533,6 @@ typedef struct tag_modelbaund
 	//m_bound.max = ChaVector3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 	//m_bound.center = ChaVector3(0.0f, 0.0f, 0.0f);
 	//m_bound.r = 1.0f;
-
 	m_bound.Init();
 
 	if( (m_orgpointnum == 0) || (m_facenum == 0) ){

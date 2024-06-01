@@ -1105,10 +1105,11 @@ public:
 	int GetCameraAnimParams(double nextframe, double camdist, ChaVector3* pEyePos, ChaVector3* pTargetPos, ChaVector3* pcamupvec, ChaMatrix* protmat, int inheritmode);
 	int GetCameraProjParams(int cameramotid, float* pprojnear, float* pprojfar, float* pfovy, ChaVector3* pcampos, ChaVector3* pcamdir, ChaVector3* pcamupvec);
 	ChaVector3 CalcCameraFbxEulXYZ(int cameramotid, double srcframe);
-	ChaMatrix GetCameraTransformMat(int cameramotid, double nextframe, int inheritmode, bool multInvNodeMat);
+	ChaMatrix GetCameraTransformMat(int cameramotid, double nextframe, int inheritmode, 
+		bool calcbynode, bool setmotionpoint);
 
 	ChaVector3 GetCameraAdjustPos(int cameramotid);
-
+	CAMERANODE* GetCAMERANODE(int cameramotid);
 
 	int SetIKStopFlag();
 
@@ -1156,6 +1157,8 @@ public:
 	//float GetFbxTargetWeight(FbxMesh* srcMesh, std::string channelname, int channelindex, FbxTime& pTime,
 	//	FbxAnimLayer* pAnimLayer, CMQOObject* baseobj);
 
+	int GetChildCameraBoneAndNode(CBone* enullbone, CBone** ppbone, FbxNode** ppnode);
+
 
 private:
 	int InitParams();
@@ -1185,6 +1188,7 @@ private:
 	int PostLoadFbxAnim(FbxAnimLayer* mCurrentAnimLayer, int srcmotid);
 	void PostLoadFbxAnimReq(FbxAnimLayer* mCurrentAnimLayer, int srcmotid, double animlen, CBone* srcbone);
 	int PreLoadCameraFbxAnim(int srcmotid);
+	void SetHasMotionCurveReq(FbxAnimLayer* mCurrentAnimLayer, CBone* srcbone, int srcmotid);
 
 
 	//void MakeBoneReq( CBone* parentbone, CMQOFace* curface, ChaVector3* pointptr, int broflag, int* errcntptr );
@@ -1232,6 +1236,9 @@ private:
 	//Loading Fbx BlendShapeAnim
 	void GetFBXShapeAnimReq(CNodeOnLoad* srcnodeonload, FbxAnimLayer* panimlayer, int curmotid, double animleng, int* perrorcount);
 	int GetFBXShapeAnim(FbxMesh* pMesh, CMQOObject* curobj, FbxAnimLayer* panimlayer, int curmotid, double animleng);
+
+	int GetFBXCameraAnim(int curmotid, double animleng);
+
 
 	////Get OrgFbx BlendShapeWieght : public Caller
 	//float GetTargetWeight(

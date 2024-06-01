@@ -141,6 +141,12 @@ int CSChkInView::AddBoundary(CMQOObject* srcobj, MODELBOUND srcmb,
 		return 1;
 	}
 	
+	if (srcmb.IsValid() == false) {
+		//バウンダリー未設定については　計算用データに加えない
+		return 0;
+	}
+
+
 	CSBSphere csbs;
 	csbs.Init();
 
@@ -166,34 +172,21 @@ int CSChkInView::AddBoundary(CMQOObject* srcobj, MODELBOUND srcmb,
 		return 1;
 	}
 
-	MODELBOUND setmb;
-	setmb.Init();
-	if (srcmb.IsValid()) {
-		setmb = srcmb;
-	}
-	else {
-		//スキップせずに計算するので、nanなどにならない明らかに視野外判定されるような値を入れておく
-		float dummymaxval = 490000.0f;
-		setmb.min = ChaVector3(dummymaxval, dummymaxval, dummymaxval);
-		setmb.max = ChaVector3(-dummymaxval, -dummymaxval, -dummymaxval);
-		setmb.center = ChaVector3(0.0f, 0.0f, 0.0f);
-		setmb.r = 0.0f;
-	}
+	
 
+	csbs.bs[0] = srcmb.center.x;
+	csbs.bs[1] = srcmb.center.y;
+	csbs.bs[2] = srcmb.center.z;
+	csbs.bs[3] = srcmb.r;
 
-	csbs.bs[0] = setmb.center.x;
-	csbs.bs[1] = setmb.center.y;
-	csbs.bs[2] = setmb.center.z;
-	csbs.bs[3] = setmb.r;
-
-	csbs.bbmin[0] = setmb.min.x;
-	csbs.bbmin[1] = setmb.min.y;
-	csbs.bbmin[2] = setmb.min.z;
+	csbs.bbmin[0] = srcmb.min.x;
+	csbs.bbmin[1] = srcmb.min.y;
+	csbs.bbmin[2] = srcmb.min.z;
 	csbs.bbmin[3] = 1.0f;
 
-	csbs.bbmax[0] = setmb.max.x;
-	csbs.bbmax[1] = setmb.max.y;
-	csbs.bbmax[2] = setmb.max.z;
+	csbs.bbmax[0] = srcmb.max.x;
+	csbs.bbmax[1] = srcmb.max.y;
+	csbs.bbmax[2] = srcmb.max.z;
 	csbs.bbmax[3] = 1.0f;
 
 	int lodnumindex = srclodnum - 1;//!!!! index !!!!
@@ -207,24 +200,12 @@ int CSChkInView::AddBoundary(CMQOObject* srcobj, MODELBOUND srcmb,
 	csbs.lodno[1] = lodno;
 
 	if (forceinview != -1) {//validflag==falseのMODELBOUNDを渡してforceinview指定することがあるのでmb.IsValidより外側のif
-		if (srcmb.IsValid()) {
-			csbs.forceresult[0] = 1;
-			csbs.forceresult[1] = forceinview;
-		}
-		else {
-			csbs.forceresult[0] = 1;
-			csbs.forceresult[1] = 0;//強制視野外セット
-		}
+		csbs.forceresult[0] = 1;
+		csbs.forceresult[1] = forceinview;
 	}
 	if (forceinshadow != -1) {//validflag==falseのMODELBOUNDを渡してforceinshadow指定することがあるのでmb.IsValidより外側のif
-		if (srcmb.IsValid()) {
-			csbs.forceresult[2] = 1;
-			csbs.forceresult[3] = forceinshadow;
-		}
-		else {
-			csbs.forceresult[2] = 1;
-			csbs.forceresult[3] = 0;//強制シャドウ外セット
-		}
+		csbs.forceresult[2] = 1;
+		csbs.forceresult[3] = forceinshadow;
 	}
 
 	m_bsvec.push_back(csbs);
@@ -385,12 +366,20 @@ CSInView CSChkInView::GetResultOfChkInView(CMQOObject* srcobj)
 		if (srcobj) {
 			CSInView* outputData = (CSInView*)m_outputChkInViewSB.GetResourceOnCPU();
 			if (outputData) {
-				int dataIndex = m_indexmap[srcobj];
-				if ((dataIndex >= 0) && (dataIndex < m_csbsnum)) {
-					retresult = *(outputData + dataIndex);
+				map<CMQOObject*, int>::iterator itrindex;
+				itrindex = m_indexmap.find(srcobj);
+				if (itrindex != m_indexmap.end()) {
+					int dataIndex = itrindex->second;
+					if ((dataIndex >= 0) && (dataIndex < m_csbsnum)) {
+						retresult = *(outputData + dataIndex);
+					}
+					else {
+						_ASSERT(0);
+						retresult.Init();
+					}
 				}
 				else {
-					_ASSERT(0);
+					//boundaryのIsValid==falseのときには　エントリーは無い
 					retresult.Init();
 				}
 			}

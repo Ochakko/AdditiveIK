@@ -70,8 +70,8 @@ public:
 	//ChaMatrix GetInvWorldMat(){ ChaMatrix invmat; ChaMatrixInverse(&invmat, NULL, &m_worldmat); return invmat; };
 
 
-	ChaMatrix GetLocalMat() { return m_localmat; };
-	void SetLocalMat(ChaMatrix srcmat) { m_localmat = srcmat; };
+	ChaMatrix GetLocalMat() { return m_localmat; };//CameraAnimのeNullとeCameraノードのローカル姿勢を保存、書き出しに使う
+	void SetLocalMat(ChaMatrix srcmat) { m_localmat = srcmat; };//CameraAnimのeNullとeCameraノードのローカル姿勢を保存、書き出しに使う
 
 //btmat, btflagはCBoneに移動
 	//ChaMatrix GetBefBtMat();
@@ -118,11 +118,11 @@ public:
 	};
 	int GetLocalMatFlag()
 	{
-		return m_localmatflag;
+		return m_localmatflag;//CopyAndPaste時にworldmatにlocalmatをセットしていることを示すフラグ
 	};
 	void SetLocalMatFlag(int srcflag)
 	{
-		m_localmatflag = srcflag;
+		m_localmatflag = srcflag;//CopyAndPaste時にworldmatにlocalmatをセットしていることを示すフラグ
 	};
 
 	int GetUseFlag()
@@ -261,7 +261,7 @@ private:
 
 	int m_undovalidflag;
 	double m_frame;
-	int m_localmatflag;
+	int m_localmatflag;//CopyAndPaste時にworldmatにlocalmatをセットしていることを示すフラグ
 	//ChaVector3 m_eul;
 	ChaVector3 m_tra;
 	//ChaVector3 m_firstframetra;
@@ -272,7 +272,7 @@ private:
 	ChaVector3 m_scale;//2024/01/31
 
 	ChaMatrix m_worldmat;//ワールド変換と親の影響を受けたマトリックス
-	ChaMatrix m_localmat;//local matrix
+	ChaMatrix m_localmat;//local matrix : CameraAnimのeNullとeCameraノードのローカル姿勢を保存、書き出しに使う
 	
 	//2023/02/02
 	//CBone::m_curmp,CBone::GetCurMp()用　モデルのworldmatが掛かっていないアニメ姿勢

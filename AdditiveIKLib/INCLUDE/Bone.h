@@ -563,6 +563,13 @@ public:
 
 	//int Adjust180Deg(int srcmotid, double srcleng);
 
+
+	//############################################################################
+	//cameraの親のeNullのthisに対して呼び出す
+	// GetFbxAnim()からも呼び出す　つまり　子供のcameraに対する処理よりも前に呼び出すから
+	//############################################################################
+	ChaMatrix GetFbxCameraWorldMat(int cameramotid, double nextframe);
+
 private:
 
 /**
@@ -1137,6 +1144,8 @@ public: //accesser
 	CModel* GetParModel(){ return m_parmodel; };
 	//void SetParModel( CModel* srcpar ){ m_parmodel = srcpar; };//parmodelごとのm_bonenoに注意！！！
 
+
+
 	bool IsNull()
 	{
 		return (GetType() == FBXBONE_NULL);
@@ -1145,6 +1154,17 @@ public: //accesser
 	{
 		return (GetType() != FBXBONE_NULL);
 	}
+	bool IsNullAndChildIsCamera()
+	{
+		if (IsNull() &&
+			GetChild(false) && GetChild(false)->IsCamera()) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
 	bool IsSkeleton()
 	{
 		return (GetType() == FBXBONE_SKELETON);
@@ -1252,7 +1272,7 @@ public: //accesser
 
 	//ChaMatrix GetENullMatrix(double srctime);
 	//void CalcEnullMatReq(double srctime, ChaMatrix* plocalnodemat, ChaMatrix* plocalnodeanimmat);//parent方向へ計算
-	ChaMatrix GetTransformMat(double srctime, bool forceanimflag);
+	ChaMatrix GetTransformMat(int srcmotid, double srctime, bool forceanimflag);
 	ChaMatrix CalcFbxLocalMatrix(bool limitdegflag, int srcmotid, double srcframe);
 
 
@@ -1497,10 +1517,10 @@ public: //accesser
 
 	//2023/02/16
 	//fbxの初期姿勢のジョイントの向きを書き出すために追加
-	void SaveFbxNodePosture(FbxNode* pNode);
+	void SaveFbxNodePosture(int srcmotid, FbxNode* pNode);
 	//void RestoreFbxNodePosture(FbxNode* pNode);
-	int CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, double srcframe, ChaMatrix* plocalnodemat, ChaMatrix* plocalnodeanimmat);
-	void CalcNodePostureReq(bool bindposeflag, FbxNode* pNode, double srcframe, ChaMatrix* plocalnodemat, ChaMatrix* plocalnodeanimmat);
+	int CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, int srcmotid, double srcframe, ChaMatrix* plocalnodemat, ChaMatrix* plocalnodeanimmat);
+	void CalcNodePostureReq(bool bindposeflag, FbxNode* pNode, int srcmotid, double srcframe, ChaMatrix* plocalnodemat, ChaMatrix* plocalnodeanimmat);
 
 
 	void ClearIKRotRec()

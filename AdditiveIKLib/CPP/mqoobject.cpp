@@ -72,6 +72,10 @@ CMQOObject::~CMQOObject()
 		free(m_pointbuf);
 		m_pointbuf = 0;
 	}
+	if (m_facebuf) {
+		delete[] m_facebuf;
+		m_facebuf = 0;
+	}
 
 	if( m_pm3 ){
 		delete m_pm3;
@@ -121,11 +125,11 @@ void CMQOObject::DestroySystemDispObj()
 			free(m_pointbuf);
 			m_pointbuf = 0;
 		}
-	}
 
-	if (m_facebuf) {
-		delete[] m_facebuf;
-		m_facebuf = 0;
+		if (m_facebuf) {
+			delete[] m_facebuf;
+			m_facebuf = 0;
+		}
 	}
 
 	if (m_colorbuf) {

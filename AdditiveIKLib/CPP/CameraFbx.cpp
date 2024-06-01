@@ -335,13 +335,16 @@ ChaMatrix CCameraFbx::GetCameraNodeMat(int cameramotid)
 }
 
 
-ChaMatrix CCameraFbx::GetCameraTransformMat(int cameramotid, double nextframe, int inheritmode, bool multInvNodeMat)
+ChaMatrix CCameraFbx::GetCameraTransformMat(int cameramotid, double nextframe, int inheritmode, 
+	bool calcbynode, bool setmotionpoint)
 {
 	//InvNodeMatが掛かっていない　wmではなくtransformmat
 
 
 	ChaMatrix transformmat;
 	transformmat.SetIdentity();
+
+	double roundingframe = RoundingTime(nextframe);
 
 	if (!IsLoaded()) {
 		transformmat.SetIdentity();
@@ -366,7 +369,7 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(int cameramotid, double nextframe, i
 	//m_time = roundingframe;
 	
 	//2024/01/31 NotRoundingTime
-	m_time = nextframe;
+	m_time = roundingframe;
 
 	FbxTime fbxtime;
 	fbxtime.SetSecondDouble(m_time / 30.0);
@@ -374,89 +377,133 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(int cameramotid, double nextframe, i
 
 	FbxNode* cameranode = curcamera->pnode;//IsValid()で非Nullチェック済
 	CBone* camerabone = curcamera->pbone;//IsValid()で非Nullチェック済
+	if (!camerabone->GetParent(false)) {
+		_ASSERT(0);
+		transformmat.SetIdentity();
+		return transformmat;
+	}
 
+	if (calcbynode == false) {
 
-	ChaMatrix localnodemat, localnodeanimmat;
-	localnodemat.SetIdentity();
-	localnodeanimmat.SetIdentity();
-	bool bindposeflag = false;
-	//camerabone->CalcLocalNodePosture(bindposeflag, 0, roundingframe, &localnodemat, &localnodeanimmat);
-	camerabone->CalcLocalNodePosture(bindposeflag, 0, nextframe, &localnodemat, &localnodeanimmat);
+		//########################
+		//読込格納済のモーションを返す
+		//########################
 
-	ChaMatrix parentGlobalNodeMat, parentLocalNodeMat;
-	parentGlobalNodeMat.SetIdentity();
-	parentLocalNodeMat.SetIdentity();
-	if (camerabone->GetParent(false) && camerabone->GetParent(false)->IsNull()) {
-		//camerabone->GetParent(false)->CalcLocalNodePosture(0, 0.0, &parentlocalnodemat, &parentlocalnodeanimmat);
+		ChaMatrix cameramat;
+		cameramat.SetIdentity();
 
+		CMotionPoint* curmp;
+		curmp = camerabone->GetMotionPoint(cameramotid, roundingframe);
+		if (curmp) {
+			cameramat = curmp->GetWorldMat();
+		}
+		else {
+			_ASSERT(0);
+			cameramat.SetIdentity();
+		}
 
-
-		//eNullノードのアニメーションに対応するために　timeはroundingframe
-		//camerabone->GetParent(false)->CalcLocalNodePosture(0, roundingframe, &parentlocalnodemat, &parentlocalnodeanimmat);
-
-		ChaMatrix tmpParentLocalNodeAnimMat;
-		tmpParentLocalNodeAnimMat.SetIdentity();
-		//camerabone->GetParent(false)->CalcLocalNodePosture(bindposeflag, 0, roundingframe, &parentLocalNodeMat, &tmpParentLocalNodeAnimMat);
-		camerabone->GetParent(false)->CalcLocalNodePosture(bindposeflag, 0, nextframe, &parentLocalNodeMat, &tmpParentLocalNodeAnimMat);
-
-
-		////parentGlobalNodeMat = camerabone->GetParent(false)->GetENullMatrix(roundingframe);//global
-		//parentGlobalNodeMat = camerabone->GetParent(false)->GetTransformMat(roundingframe, true);//global
-		parentGlobalNodeMat = camerabone->GetParent(false)->GetTransformMat(nextframe, true);//global
+		return cameramat;
 	}
 	else {
+
+		//#####################################
+		//fbxのモーションを返す 必要に応じて格納する
+		//#####################################
+
+		ChaMatrix localnodemat, localnodeanimmat;
+		localnodemat.SetIdentity();
+		localnodeanimmat.SetIdentity();
+		bool bindposeflag = false;
+		camerabone->CalcLocalNodePosture(bindposeflag, 0, cameramotid, roundingframe, &localnodemat, &localnodeanimmat);
+
+		ChaMatrix parentGlobalNodeMat, parentLocalNodeMat, parentLocalNodeAnimMat;
 		parentGlobalNodeMat.SetIdentity();
 		parentLocalNodeMat.SetIdentity();
+		parentLocalNodeAnimMat.SetIdentity();
+		if (camerabone->GetParent(false) && camerabone->GetParent(false)->IsNull()) {
+			//eNullノードのアニメーションに対応するために　timeはroundingframe
+			camerabone->GetParent(false)->CalcLocalNodePosture(bindposeflag, 0, cameramotid, roundingframe, &parentLocalNodeMat, &parentLocalNodeAnimMat);
+
+			////parentGlobalNodeMat = camerabone->GetParent(false)->GetENullMatrix(roundingframe);//global
+			parentGlobalNodeMat = camerabone->GetParent(false)->GetTransformMat(cameramotid, roundingframe, true);//global
+		}
+		else {
+			parentGlobalNodeMat.SetIdentity();
+			parentLocalNodeMat.SetIdentity();
+		}
+
+		ChaVector3 nodepos = ChaMatrixTraVec(camerabone->GetNodeMat());
+
+		ChaMatrix adjusttra;
+		adjusttra.SetIdentity();
+		adjusttra.SetTranslation(curcamera->adjustpos);
+
+
+		switch (inheritmode) {
+		case CAMERA_INHERIT_ALL:
+			//transformmat = nodemat * cammat;
+			transformmat = localnodeanimmat * parentGlobalNodeMat;//ParentRot有り
+			break;
+
+		case CAMERA_INHERIT_CANCEL_NULL1:
+			//transformmat = nodemat * cammat * ChaMatrixInv(rootmat);
+			transformmat = localnodeanimmat;//前 ##########
+			break;
+
+		case CAMERA_INHERIT_CANCEL_NULL2:
+			//################################################################################################
+			//UnityにおいてはRootMotionチェックオン. Mayaにおいてはトランスフォームの継承チェックオフ　に相当
+			//################################################################################################
+			//transformmat = cammat * ChaMatrixInv(lcltramat) * ChaMatrixInv(rootmat);
+			//transformmat = localnodeanimmat * adjusttra * parentLocalNodeMat;//###################### ParentRot無し TheHunt Street1 Camera1
+
+			//2023/07/24
+			//CalcLocalNodePosture()変更により　Rot無しを明示的に数式にする必要
+			//( CalcLocalNodePosture()のnodematは　GetRotationActiveの値により回転を持つことがある )
+			transformmat = localnodeanimmat * adjusttra * ChaMatrixTra(parentLocalNodeMat);
+
+			break;
+
+		default:
+			_ASSERT(0);
+			transformmat = localnodeanimmat;
+			break;
+		}
+		//ChaMatrix retmat;
+		//if (multInvNodeMat) {
+		//	retmat = ChaMatrixInv(GetCameraNodeMat(cameramotid)) * transformmat;
+		//}
+		//else {
+		//	retmat = transformmat;
+		//}
+
+		if (setmotionpoint) {
+			int existflag = 0;
+			CMotionPoint* cameramp = camerabone->AddMotionPoint(cameramotid, roundingframe, &existflag);
+			if (cameramp) {
+				cameramp->SetWorldMat(transformmat);
+				cameramp->SetLocalMat(localnodeanimmat);
+			}
+			else {
+				_ASSERT(0);
+			}
+
+			int existflag2 = 0;
+			CMotionPoint* enullmp = camerabone->GetParent(false)->AddMotionPoint(cameramotid, roundingframe, &existflag2);
+			if (enullmp) {
+				enullmp->SetWorldMat(parentGlobalNodeMat);
+				enullmp->SetLocalMat(parentLocalNodeAnimMat);
+			}
+			else {
+				_ASSERT(0);
+			}
+
+		}
+
+
+
+		return transformmat;
 	}
-
-	ChaVector3 nodepos = ChaMatrixTraVec(camerabone->GetNodeMat());
-
-	ChaMatrix adjusttra;
-	adjusttra.SetIdentity();
-	adjusttra.SetTranslation(curcamera->adjustpos);
-
-
-	switch (inheritmode) {
-	case CAMERA_INHERIT_ALL:
-		//transformmat = nodemat * cammat;
-		transformmat = localnodeanimmat * parentGlobalNodeMat;//ParentRot有り
-		break;
-
-	case CAMERA_INHERIT_CANCEL_NULL1:
-		//transformmat = nodemat * cammat * ChaMatrixInv(rootmat);
-		transformmat = localnodeanimmat;//前 ##########
-		break;
-
-	case CAMERA_INHERIT_CANCEL_NULL2:
-		//################################################################################################
-		//UnityにおいてはRootMotionチェックオン. Mayaにおいてはトランスフォームの継承チェックオフ　に相当
-		//################################################################################################
-		//transformmat = cammat * ChaMatrixInv(lcltramat) * ChaMatrixInv(rootmat);
-		//transformmat = localnodeanimmat * adjusttra * parentLocalNodeMat;//###################### ParentRot無し TheHunt Street1 Camera1
-
-		//2023/07/24
-		//CalcLocalNodePosture()変更により　Rot無しを明示的に数式にする必要
-		//( CalcLocalNodePosture()のnodematは　GetRotationActiveの値により回転を持つことがある )
-		transformmat = localnodeanimmat * adjusttra * ChaMatrixTra(parentLocalNodeMat);
-
-		break;
-
-	default:
-		_ASSERT(0);
-		transformmat = localnodeanimmat;
-		break;
-	}
-
-
-	ChaMatrix retmat;
-	if (multInvNodeMat) {
-		retmat = ChaMatrixInv(GetCameraNodeMat(cameramotid)) * transformmat;
-	}
-	else {
-		retmat = transformmat;
-	}
-
-	return retmat;
 }
 
 
@@ -479,6 +526,7 @@ int CCameraFbx::GetCameraAnimParams(int cameramotid, double nextframe, double ca
 
 
 	ChaVector3 zeropos = ChaVector3(0.0f, 0.0f, 0.0f);
+	double roundingframe = RoundingTime(nextframe);
 
 	if (IsLoaded()) {
 		if (cameramotid > 0) {
@@ -490,11 +538,14 @@ int CCameraFbx::GetCameraAnimParams(int cameramotid, double nextframe, double ca
 			}
 
 
-			if (nextframe != 0.0) {
+			if (roundingframe != 0.0) {
 				bool multInvNodeMat = false;
 				ChaMatrix transformmat;
 				transformmat.SetIdentity();
-				transformmat = GetCameraTransformMat(cameramotid, nextframe, inheritmode, multInvNodeMat);
+				bool calcbynode = false;
+				bool setmotionpoint = false;
+				transformmat = GetCameraTransformMat(cameramotid, roundingframe, inheritmode, 
+					calcbynode, setmotionpoint);
 
 
 				//##############

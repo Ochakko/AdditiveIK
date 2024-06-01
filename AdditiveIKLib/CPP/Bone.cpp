@@ -35,6 +35,7 @@
 //#include <BoneProp.h>
 
 #include <ChaScene.h>
+#include <FbxMisc.h>
 
 //for __nop()
 #include <intrin.h>
@@ -1282,6 +1283,13 @@ CMotionPoint* CBone::AddMotionPoint(int srcmotid, double srcframe, int* existptr
 			LeaveCriticalSection(&m_CritSection_AddMP);
 			return 0;
 		}
+
+		map<int, CMotionPoint*>::iterator itrmotionkey;
+		itrmotionkey = m_motionkey.find(srcmotid - 1);
+		if ((itrmotionkey == m_motionkey.end()) && (srcframe == 0.0)) {
+			m_motionkey[srcmotid - 1] = newmp;
+		}
+
 		newmp->SetFrame(srcframe);
 
 		if (pbef){
@@ -1292,7 +1300,7 @@ CMotionPoint* CBone::AddMotionPoint(int srcmotid, double srcframe, int* existptr
 			}
 		}
 		else{
-			m_motionkey[srcmotid - 1] = newmp;
+			//m_motionkey[srcmotid - 1] = newmp;
 			if (pnext){
 				newmp->SetNext(pnext);
 			}
@@ -5932,7 +5940,22 @@ ChaVector3 CBone::CalcFbxScaleAnim(bool limitdegflag, int srcmotid, double srcfr
 		ChaMatrix localfbxmat = CalcFbxLocalMatrix(limitdegflag, srcmotid, srcframe);
 		GetSRTMatrix(localfbxmat, &svec, &rmat, &tvec);
 	}
-	else if(IsNull() || IsCamera()){
+	else if(IsNullAndChildIsCamera() || IsCamera()){
+		CMotionPoint* curmp = 0;
+		curmp = GetMotionPoint(srcmotid, roundingframe);
+		if (curmp) {
+			ChaMatrix localmat;
+			localmat = curmp->GetLocalMat();
+			//ChaVector3 svec, tvec;
+			//ChaMatrix rmat;
+			GetSRTMatrix(localmat, &svec, &rmat, &tvec);
+			return svec;
+		}
+		else {
+			return ChaVector3(1.0f, 1.0f, 1.0f);
+		}
+	}
+	else if (IsNull()) {
 		if (GetFbxNodeOnLoad()) {
 			FbxTime fbxtime;
 			fbxtime.SetSecondDouble(roundingframe / 30.0);
@@ -6179,12 +6202,26 @@ ChaVector3 CBone::CalcFBXTra(bool limitdegflag, int srcmotid, double srcframe)
 		GetSRTMatrix(localfbxmat, &svec, &rmat, &tvec);
 		return tvec;
 	}
-	else if(IsCamera() || IsNull()){
+	else if(IsCamera() || IsNullAndChildIsCamera()){
 
-		//########################
-		//カメラまたはeNull の場合
-		//########################
-
+		//######################################
+		//カメラまたは子供にカメラを持つeNull の場合
+		//######################################
+		CMotionPoint* curmp = 0;
+		curmp = GetMotionPoint(srcmotid, roundingframe);
+		if (curmp) {
+			ChaMatrix localmat;
+			localmat = curmp->GetLocalMat();
+			ChaVector3 svec, tvec;
+			ChaMatrix rmat;
+			GetSRTMatrix(localmat, &svec, &rmat, &tvec);
+			return tvec;
+		}
+		else {
+			return ChaVector3(0.0f, 0.0f, 0.0f);
+		}
+	}
+	else if (IsNull()) {
 		//if (GetParModel() && GetParModel()->IsCameraLoaded() && GetFbxNodeOnLoad()) {
 		if (GetParModel() && GetFbxNodeOnLoad()) {
 			FbxTime fbxtime;
@@ -6193,13 +6230,11 @@ ChaVector3 CBone::CalcFBXTra(bool limitdegflag, int srcmotid, double srcframe)
 			ChaVector3 tra = ChaVector3(fbxtra, false);
 
 			return tra;
-
 		}
 		else {
 			_ASSERT(0);
 			return ChaVector3(0.0f, 0.0f, 0.0f);
 		}
-
 	}
 	else {
 		return ChaVector3(0.0f, 0.0f, 0.0f);
@@ -7736,7 +7771,8 @@ int CBone::CreateIndexedMotionPoint(int srcmotid, double animleng)
 	//###############################################
 
 	//2023/04/28
-	if (IsNotSkeleton() && IsNotCamera() && IsNotNull()) {//2023/05/23  2023/06/29
+	if (IsNotSkeleton() && IsNotCamera() && //2023/05/23  2023/06/29
+		!IsNullAndChildIsCamera()) {//2024/05/24
 		return 0;
 	}
 
@@ -8165,11 +8201,26 @@ int CBone::GetFBXAnim(FbxNode* pNode, int animno, int motid, double animleng, bo
 		return 1;
 	}
 
+
+	bool cameraanimflag = IsNullAndChildIsCameraNode(pNode);
+	//bool cameraanimflag = IsCamera();
+	if (cameraanimflag) {
+		int dbgflag1 = 1;
+	}
+
+
 	//2023/04/28 2023/05/23
 	//if (IsNotSkeleton() && IsNotCamera() && IsNotNull()) {
-	if (IsNotSkeleton() && IsNotCamera()) {
+	if (IsNotSkeleton() && IsNotCamera() && !cameraanimflag) {
+	//if (IsNotSkeleton() && IsNotCamera()) {
+	//if (IsNotSkeleton()) {
 		return 0;
 	}
+
+	
+
+
+
 
 
 	//if (IsNull()) {
@@ -8181,10 +8232,6 @@ int CBone::GetFBXAnim(FbxNode* pNode, int animno, int motid, double animleng, bo
 	//}
 
 
-	FbxTime fbxtime;
-	fbxtime.SetSecondDouble(0.0);
-	FbxTime difftime;
-	difftime.SetSecondDouble(1.0 / 30);
 	double framecnt;
 	//for (framecnt = 0.0; framecnt < (animleng - 1); framecnt += 1.0) {
 	//for (framecnt = 0.0; framecnt < animleng; framecnt += 1.0) {//関数呼び出し時にanimleng - 1している
@@ -8209,18 +8256,29 @@ int CBone::GetFBXAnim(FbxNode* pNode, int animno, int motid, double animleng, bo
 		//for (framecnt = 0.0; framecnt < (animleng - 1); framecnt += 1.0) {
 		for (framecnt = 0.0; framecnt < animleng; framecnt += 1.0) {//2022/10/21 : 最終フレームにモーションポイントが無い問題対応
 
-			FbxAMatrix lGlobalSRT;
+
+			FbxTime fbxtime;
+			fbxtime.SetSecondDouble(framecnt / 30.0);
+
+			ChaMatrix chaGlobalSRT;
+			chaGlobalSRT.SetIdentity();
 
 			//#####  2022/11/01  ################################################################################################
 			//サブスレッド１つだけで計算することにした(CriticalSection回数が多すぎて遅くなる)ので　CriticalSectionコメントアウト
 			//スレッド数(LOADFBXANIMTHREAD)を１以外にする場合には　CriticalSection必須
 			//###################################################################################################################
+			FbxAMatrix lGlobalSRT;
 			//EnterCriticalSection(&(GetParModel()->m_CritSection_Node));//#######################
 			lGlobalSRT = pNode->EvaluateGlobalTransform(fbxtime, FbxNode::eSourcePivot, true, true);
 			//LeaveCriticalSection(&(GetParModel()->m_CritSection_Node));//#######################
-
-			ChaMatrix chaGlobalSRT;
 			chaGlobalSRT = ChaMatrixFromFbxAMatrix(lGlobalSRT);
+
+			//################################################
+			//cameraについては　この関数よりも後で改めて値をセットする
+			//################################################
+
+
+
 
 			////##############
 			////Add MotionPoint
@@ -8304,6 +8362,7 @@ int CBone::GetFBXAnim(FbxNode* pNode, int animno, int motid, double animleng, bo
 			//eNullにアニメーションは無いので　上方で(eSkeleton || eCamera)以外はリターンしている
 			//いろいろ直した結果　lCurveが0の場合にも　同じ数式でOKに
 			globalmat = (ChaMatrixInv(GetNodeMat()) * chaGlobalSRT);
+			
 
 #ifndef NDEBUG
 			//for debug
@@ -8339,7 +8398,7 @@ int CBone::GetFBXAnim(FbxNode* pNode, int animno, int motid, double animleng, bo
 			}
 
 
-			fbxtime = fbxtime + difftime;
+			//fbxtime = fbxtime + difftime;
 		}
 	}
 
@@ -8604,7 +8663,7 @@ bool CBone::IsHipsBone()
 //	return 0;
 //}
 
-void CBone::SaveFbxNodePosture(FbxNode* pNode)
+void CBone::SaveFbxNodePosture(int srcmotid, FbxNode* pNode)
 {
 	//#############################################
 	//CModel::CalcMeshMatReq()と内容を同期すること
@@ -8677,7 +8736,8 @@ void CBone::SaveFbxNodePosture(FbxNode* pNode)
 //}
 
 
-int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, double srcframe, ChaMatrix* plocalnodemat, ChaMatrix* plocalnodeanimmat)
+int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, int srcmotid, double srcframe,
+	ChaMatrix* plocalnodemat, ChaMatrix* plocalnodeanimmat)
 {
 
 	//#############################################
@@ -8697,6 +8757,15 @@ int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, double srcfra
 		_ASSERT(0);
 		return 0;
 	}
+
+	int currentmotid;
+	if (srcmotid > 0) {
+		currentmotid = srcmotid;
+	}
+	else {
+		currentmotid = GetCurMotID();
+	}
+
 
 	FbxTime fbxtime;
 	//fbxtime.SetSecondDouble((double)((int)(srcframe + 0.0001)) / 30.0);
@@ -8842,17 +8911,27 @@ int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, double srcfra
 	return 0;
 }
 
-void CBone::CalcNodePostureReq(bool bindposeflag, FbxNode* pNode, double srcframe, ChaMatrix* plocalnodemat, ChaMatrix* plocalnodeanimmat)
+void CBone::CalcNodePostureReq(bool bindposeflag, FbxNode* pNode,
+	int srcmotid, double srcframe, ChaMatrix* plocalnodemat, ChaMatrix* plocalnodeanimmat)
 {
 	if (!pNode || !plocalnodemat || !plocalnodeanimmat) {
 		_ASSERT(0);
 		return;
 	}
 
+	int currentmotid;
+	if (srcmotid > 0) {
+		currentmotid = srcmotid;
+	}
+	else {
+		currentmotid = GetCurMotID();
+	}
+
+
 	ChaMatrix localnodemat, localnodeanimmat;
 	localnodemat.SetIdentity();
 	localnodeanimmat.SetIdentity();
-	CalcLocalNodePosture(bindposeflag, pNode, srcframe, &localnodemat, &localnodeanimmat);
+	CalcLocalNodePosture(bindposeflag, pNode, currentmotid, srcframe, &localnodemat, &localnodeanimmat);
 
 	//親方向へ計算
 	ChaMatrix tmpmat1, tmpmat2;
@@ -8864,7 +8943,7 @@ void CBone::CalcNodePostureReq(bool bindposeflag, FbxNode* pNode, double srcfram
 
 	//親方向へ計算
 	if (GetParent(false)) {
-		GetParent(false)->CalcNodePostureReq(bindposeflag, pNode->GetParent(), srcframe, plocalnodemat, plocalnodeanimmat);
+		GetParent(false)->CalcNodePostureReq(bindposeflag, pNode->GetParent(), currentmotid, srcframe, plocalnodemat, plocalnodeanimmat);
 	}
 }
 
@@ -9086,7 +9165,7 @@ void CBone::GetBrotherReq(bool excludenullflag, CBone** ppfindbone)
 	}
 }
 
-ChaMatrix CBone::GetTransformMat(double srctime, bool forceanimflag)
+ChaMatrix CBone::GetTransformMat(int srcmotid, double srctime, bool forceanimflag)
 {
 	ChaMatrix retmat;
 	retmat.SetIdentity();
@@ -9095,7 +9174,7 @@ ChaMatrix CBone::GetTransformMat(double srctime, bool forceanimflag)
 
 	if (GetFbxNodeOnLoad()) {
 		bool bindposeflag = false;//!!!!!!!!!!!!! カレントポーズ計算
-		CalcNodePostureReq(bindposeflag, GetFbxNodeOnLoad(), srctime, &retmat, &retanimmat);
+		CalcNodePostureReq(bindposeflag, GetFbxNodeOnLoad(), srcmotid, srctime, &retmat, &retanimmat);
 	}
 	else {
 		_ASSERT(0);
@@ -9174,6 +9253,10 @@ ChaMatrix CBone::CalcFbxLocalMatrix(bool limitdegflag, int srcmotid, double srcf
 			parentfbxwm = parentbone->GetNodeMat() * parentwmanim;
 			localfbxmat = GetNodeMat() * wmanim * ChaMatrixInv(parentfbxwm);
 		}
+		else if (parentbone->IsNullAndChildIsCamera() || parentbone->IsCamera()) {
+			ChaMatrix parentwmanim = parentbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+			localfbxmat = GetNodeMat() * wmanim * ChaMatrixInv(parentfbxwm);
+		}
 		else if (parentbone->IsNull()) {
 			//2023/06/29 eNullもアニメーション可能にしたので
 			//GetENullMatrixを修正してCalcEnullMatReqで計算するようにしたところが2023/06/26から変わったところ
@@ -9183,19 +9266,19 @@ ChaMatrix CBone::CalcFbxLocalMatrix(bool limitdegflag, int srcmotid, double srcf
 
 			//parentfbxwm = parentbone->GetTransformMat(roundingframe, true);
 
-			parentfbxwm = parentbone->GetTransformMat(0.0, true);
+			parentfbxwm = parentbone->GetTransformMat(srcmotid, 0.0, true);
 			localfbxmat = GetNodeMat() * wmanim * ChaMatrixInv(parentfbxwm);
 		}
-		else if (parentbone->IsCamera()) {
-			//bool multInvNodeMat = false;
-			//parentfbxwm = GetParModel()->GetCameraTransformMat(srcmotid, roundingframe, g_cameraInheritMode, multInvNodeMat);
-
-
-			//parentfbxwm = parentbone->GetTransformMat(srcframe, true);
-
-			parentfbxwm = parentbone->GetTransformMat(0.0, true);//2023/07/05 Cameraの子供のスキンメッシュの形が　読み書き読み書き読みテストで形崩れしないように
-			localfbxmat = GetNodeMat() * wmanim * ChaMatrixInv(parentfbxwm);
-		}
+		//else if (parentbone->IsCamera()) {
+		//	//bool multInvNodeMat = false;
+		//	//parentfbxwm = GetParModel()->GetCameraTransformMat(srcmotid, roundingframe, g_cameraInheritMode, multInvNodeMat);
+		//
+		//
+		//	//parentfbxwm = parentbone->GetTransformMat(srcframe, true);
+		//
+		//	parentfbxwm = parentbone->GetTransformMat(srcmotid, 0.0, true);//2023/07/05 Cameraの子供のスキンメッシュの形が　読み書き読み書き読みテストで形崩れしないように
+		//	localfbxmat = GetNodeMat() * wmanim * ChaMatrixInv(parentfbxwm);
+		//}
 		else {
 			parentfbxwm.SetIdentity();
 			localfbxmat = GetNodeMat() * wmanim;
@@ -9225,5 +9308,107 @@ bool CBone::HasCameraParent()
 	}
 
 	return hascameraparent;
+}
+
+ChaMatrix CBone::GetFbxCameraWorldMat(int cameramotid, double nextframe)
+{
+	//############################################################################
+	//cameraの親のeNullのthisに対して呼び出す
+	// GetFbxAnim()からも呼び出す　つまり　子供のcameraに対する処理よりも前に呼び出すから
+	//############################################################################
+
+
+	//ChaMatrix nodemat, nodeanimmat;
+	//nodemat.SetIdentity();
+	//nodeanimmat.SetIdentity();
+	//bool bindposeflag = false;
+	//camerabone->CalcNodePostureReq(bindposeflag, cameranode, cameramotid, nextframe, &nodemat, &nodeanimmat);
+
+	ChaMatrix transformmat;
+	transformmat.SetIdentity();
+
+	if (!GetParModel()) {
+		_ASSERT(0);
+		transformmat.SetIdentity();
+		return transformmat;
+	}
+	if ((cameramotid <= 0) || (nextframe < 0.0)) {
+		_ASSERT(0);
+		transformmat.SetIdentity();
+		return transformmat;
+	}
+	if (!GetParModel()->IsCameraLoaded()) {
+		_ASSERT(0);
+		transformmat.SetIdentity();
+		return transformmat;
+	}
+
+
+	//CAMERANODE* curcamera = GetParModel()->GetCAMERANODE(cameramotid);
+	//if (!curcamera) {
+	//	_ASSERT(0);
+	//	transformmat.SetIdentity();
+	//	return transformmat;
+	//}
+
+	double roundingframe = RoundingTime(nextframe);
+
+
+	CBone* camerabone = nullptr;
+	FbxNode* cameranode = nullptr;
+	ChaMatrix parentGlobalNodeMat, parentLocalNodeMat;
+	parentGlobalNodeMat.SetIdentity();
+	parentLocalNodeMat.SetIdentity();
+	ChaMatrix localnodemat, localnodeanimmat;
+	localnodemat.SetIdentity();
+	localnodeanimmat.SetIdentity();
+
+	int result0 = GetParModel()->GetChildCameraBoneAndNode(this, &camerabone, &cameranode);
+	if ((result0 == 0) && camerabone && cameranode) {
+		bool bindposeflag = false;
+		camerabone->CalcLocalNodePosture(bindposeflag, 0, cameramotid, roundingframe, &localnodemat, &localnodeanimmat);
+
+		//ChaMatrix tmpParentLocalNodeAnimMat;
+		//tmpParentLocalNodeAnimMat.SetIdentity();
+		//CalcLocalNodePosture(bindposeflag, 0, cameramotid, nextframe, &parentLocalNodeMat, &tmpParentLocalNodeAnimMat);
+		parentGlobalNodeMat = GetTransformMat(cameramotid, roundingframe, true);//global
+	}
+	else {
+		_ASSERT(0);
+		parentGlobalNodeMat.SetIdentity();
+		parentLocalNodeMat.SetIdentity();
+	}
+
+	//ChaVector3 nodepos = ChaMatrixTraVec(GetNodeMat());
+
+	//ChaMatrix adjusttra;
+	//adjusttra.SetIdentity();
+	//adjusttra.SetTranslation(curcamera->adjustpos);
+
+
+	//switch (g_cameraInheritMode) {//読込時はCAMERA_INHERIT_ALL固定
+	//case CAMERA_INHERIT_ALL:
+		transformmat = localnodeanimmat * parentGlobalNodeMat;//ParentRot有り
+	//	break;
+
+	//case CAMERA_INHERIT_CANCEL_NULL1:
+	//	transformmat = localnodeanimmat;//前 ##########
+	//	break;
+
+	//case CAMERA_INHERIT_CANCEL_NULL2:
+	//	//################################################################################################
+	//	//UnityにおいてはRootMotionチェックオン. Mayaにおいてはトランスフォームの継承チェックオフ　に相当
+	//	//################################################################################################
+	//	transformmat = localnodeanimmat * adjusttra * ChaMatrixTra(parentLocalNodeMat);
+	//	break;
+
+	//default:
+	//	_ASSERT(0);
+	//	transformmat = localnodeanimmat;
+	//	break;
+	//}
+
+
+	return transformmat;
 }
 
