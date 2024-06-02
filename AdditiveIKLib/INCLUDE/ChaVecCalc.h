@@ -541,7 +541,7 @@ public:
 	//左ねじ
 	//int Q2EulZXY(CQuaternion* axisq, ChaVector3 befeul, ChaVector3* reteul);
 	//int Q2EulYXZ(CQuaternion* axisq, ChaVector3 befeul, ChaVector3* reteul);
-	int Q2EulXYZusingMat(int rotorder, CQuaternion* axisq, ChaVector3 befeul, ChaVector3* reteul, int isfirstbone, int isendbone, int notmodify180flag);//bulletもXYZの順
+	int Q2EulXYZusingMat(int rotorder, CQuaternion* axisq, ChaVector3 befeul, ChaVector3* reteul, int notmodify180flag);//bulletもXYZの順
 	int Q2EulXYZusingQ(bool srcunderIKRot, bool srcunderRetarget, 
 		CQuaternion* axisq, BEFEUL befeul, ChaVector3* reteul, int isfirstbone, int isendbone, int notmodify180flag);//bulletもXYZの順
 	//int Q2EulZYX(int needmodifyflag, CQuaternion* axisq, ChaVector3 befeul, ChaVector3* reteul);

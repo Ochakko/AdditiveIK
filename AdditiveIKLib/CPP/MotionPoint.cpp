@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include <windows.h>
 #include <MotionPoint.h>
 #include <Bone.h>
@@ -25,10 +25,8 @@ CMotionPoint::~CMotionPoint()
 int CMotionPoint::InitParams()
 {
 
-
-
 	//#####################################################
-	//ƒƒ“ƒo‚ğ’Ç‰Á‚µ‚½ê‡‚É‚Í@operator=@‚àXV‚·‚é‚±‚Æ
+	//ãƒ¡ãƒ³ãƒã‚’è¿½åŠ ã—ãŸå ´åˆã«ã¯ã€€operator=ã€€ã‚‚æ›´æ–°ã™ã‚‹ã“ã¨
 	//#####################################################
 
 	//not use at allocated
@@ -77,7 +75,7 @@ int CMotionPoint::InitParams()
 	m_next = 0;
 
 	//#####################################################
-	//ƒƒ“ƒo‚ğ’Ç‰Á‚µ‚½ê‡‚É‚Í@operator=@‚àXV‚·‚é‚±‚Æ
+	//ãƒ¡ãƒ³ãƒã‚’è¿½åŠ ã—ãŸå ´åˆã«ã¯ã€€operator=ã€€ã‚‚æ›´æ–°ã™ã‚‹ã“ã¨
 	//#####################################################
 
 	return 0;
@@ -328,7 +326,7 @@ CMotionPoint CMotionPoint::operator= (CMotionPoint mp)
 {
 	//####################
 	//2023/02/01
-	//InitParams‚Ì‡”Ô‚Å
+	//InitParamsã®é †ç•ªã§
 	//####################
 
 	m_useflag = mp.m_useflag;//0: not use, 1: in use
@@ -359,7 +357,7 @@ CMotionPoint CMotionPoint::operator= (CMotionPoint mp)
 	m_savetanimmat = mp.m_savetanimmat;
 	
 
-	//2023/02/05 ƒ`ƒFƒCƒ“‚Í‚»‚Ì‚Ü‚Ü‚É
+	//2023/02/05 ãƒã‚§ã‚¤ãƒ³ã¯ãã®ã¾ã¾ã«
 	//m_prev = mp.m_prev;
 	//m_next = mp.m_next;
 
@@ -382,9 +380,9 @@ CMotionPoint* CMotionPoint::GetNewMP()
 	curpoollen = (int)s_mppool.size();
 
 
-	//if ((s_befheadno != (s_mppool.size() - 1)) || (s_befelemno != (MPPOOLBLKLEN - 1))) {//‘O‰ñƒŠƒŠ[ƒX‚µ‚½ƒ|ƒCƒ“ƒ^‚ªÅŒã”ö‚Å‚Í‚È‚¢ê‡
+	//if ((s_befheadno != (s_mppool.size() - 1)) || (s_befelemno != (MPPOOLBLKLEN - 1))) {//å‰å›ãƒªãƒªãƒ¼ã‚¹ã—ãŸãƒã‚¤ãƒ³ã‚¿ãŒæœ€å¾Œå°¾ã§ã¯ãªã„å ´åˆ
 
-		//‘O‰ñƒŠƒŠ[ƒX‚µ‚½ƒ|ƒCƒ“ƒ^‚ÌŸ‚Ìƒƒ“ƒo[‚ğƒ`ƒFƒbƒN‚µ‚Ä–¢g—p‚¾‚Á‚½‚çƒŠƒŠ[ƒX
+		//å‰å›ãƒªãƒªãƒ¼ã‚¹ã—ãŸãƒã‚¤ãƒ³ã‚¿ã®æ¬¡ã®ãƒ¡ãƒ³ãƒãƒ¼ã‚’ãƒã‚§ãƒƒã‚¯ã—ã¦æœªä½¿ç”¨ã ã£ãŸã‚‰ãƒªãƒªãƒ¼ã‚¹
 		int chkheadno;
 		chkheadno = s_befheadno;
 		int chkelemno;
@@ -418,7 +416,7 @@ CMotionPoint* CMotionPoint::GetNewMP()
 		}
 
 		//if ((chkheadno >= 0) && (chkheadno < curpoollen)) {
-			//ƒv[ƒ‹‚ğæ“ª‚©‚çŒŸõ‚µ‚Ä–¢g—p‚ª‚İ‚Â‚©‚ê‚Î‚»‚ê‚ğƒŠƒŠ[ƒX
+			//ãƒ—ãƒ¼ãƒ«ã‚’å…ˆé ­ã‹ã‚‰æ¤œç´¢ã—ã¦æœªä½¿ç”¨ãŒã¿ã¤ã‹ã‚Œã°ãã‚Œã‚’ãƒªãƒªãƒ¼ã‚¹
 		int mpno;
 		for (mpno = 0; mpno < curpoollen; mpno++) {
 			CMotionPoint* curmphead = s_mppool[mpno];
@@ -446,7 +444,7 @@ CMotionPoint* CMotionPoint::GetNewMP()
 		//}
 	//}
 
-	//–¢g—pMP‚ªpool‚É–³‚©‚Á‚½ê‡AƒAƒƒP[ƒg‚µ‚ÄƒAƒƒP[ƒg‚µ‚½æ“ª‚Ìƒ|ƒCƒ“ƒ^‚ğƒŠƒŠ[ƒX
+	//æœªä½¿ç”¨MPãŒpoolã«ç„¡ã‹ã£ãŸå ´åˆã€ã‚¢ãƒ­ã‚±ãƒ¼ãƒˆã—ã¦ã‚¢ãƒ­ã‚±ãƒ¼ãƒˆã—ãŸå…ˆé ­ã®ãƒã‚¤ãƒ³ã‚¿ã‚’ãƒªãƒªãƒ¼ã‚¹
 	CMotionPoint* allocmp;
 	allocmp = new CMotionPoint[MPPOOLBLKLEN];
 	if (!allocmp) {
@@ -484,7 +482,7 @@ CMotionPoint* CMotionPoint::GetNewMP()
 			return 0;
 		}
 	}
-	s_mppool.push_back(allocmp);//allocate block(ƒAƒƒP[ƒg‚Ìæ“ªƒ|ƒCƒ“ƒ^)‚ğŠi”[
+	s_mppool.push_back(allocmp);//allocate block(ã‚¢ãƒ­ã‚±ãƒ¼ãƒˆæ™‚ã®å…ˆé ­ãƒã‚¤ãƒ³ã‚¿)ã‚’æ ¼ç´
 
 	//allocmp->SetUseFlag(1);
 
@@ -574,7 +572,7 @@ void CMotionPoint::DestroyMotionPoints() {
 //		newmat = srcbone->GetCurMp().GetWorldMat(true) * ChaMatrixInv(oldparmat) * newparmat;
 //
 //
-//		srcbone->GetCurMp().SetNewWorldMat(srcbone, newmat);//curmp‚ÍƒJƒŒƒ“ƒgî•ñƒRƒs[—p‚¾‚©‚çcurmp‚ÉƒZƒbƒg‚µ‚Ä‚àƒ‚[ƒVƒ‡ƒ“Ä¶‚Éî•ñ‚Í•Û‚³‚ê‚È‚¢
+//		srcbone->GetCurMp().SetNewWorldMat(srcbone, newmat);//curmpã¯ã‚«ãƒ¬ãƒ³ãƒˆæƒ…å ±ã‚³ãƒ”ãƒ¼ç”¨ã ã‹ã‚‰curmpã«ã‚»ãƒƒãƒˆã—ã¦ã‚‚ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³å†ç”Ÿæ™‚ã«æƒ…å ±ã¯ä¿æŒã•ã‚Œãªã„
 //	
 //	}
 //

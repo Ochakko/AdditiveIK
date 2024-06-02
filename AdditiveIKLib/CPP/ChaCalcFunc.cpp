@@ -1959,10 +1959,12 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 
 				ChaMatrix localmat = curmp->GetLocalMat();
 				eulq = ChaMatrix2Q(localmat);
+
+				int cameranotmodify180flag = 1;
 				eulq.Q2EulXYZusingMat(
-					IntRotationOrder(rotationorder),
+					IntRotationOrder(rotationorder),//!!!!!! eCamera* --> ROTORDER_*への変換
 					0,
-					ChaVector3(0.0f, 0.0f, 0.0f), &cureul, 0, 0, 1);
+					ChaVector3(0.0f, 0.0f, 0.0f), &cureul, cameranotmodify180flag);
 			}
 			else {
 				cureul = ChaVector3(0.0f, 0.0f, 0.0f);

@@ -5458,7 +5458,10 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 			if (sceneinfo->mAuthor == chkauthor) {
 				FbxString currentrev1 = "rev. 3.1";
 				FbxString currentrev2 = "rev. 3.2";
-				if ((sceneinfo->mRevision != currentrev1) && (sceneinfo->mRevision != currentrev2)) {
+				FbxString currentrev3 = "rev. 3.3";
+				if ((sceneinfo->mRevision != currentrev1) &&
+					(sceneinfo->mRevision != currentrev2) &&
+					(sceneinfo->mRevision != currentrev3)) {
 					oldtransparent = true;//!!!!!!!!!!!!!!!!!!!!
 				}
 			}

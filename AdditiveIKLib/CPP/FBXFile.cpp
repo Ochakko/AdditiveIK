@@ -1769,7 +1769,8 @@ bool CreateScene(bool limitdegflag, FbxManager* pSdkManager, FbxScene* pScene, C
 		//sceneInfo->mRevision = "rev. 2.9";//since 2023/04/19 about PM07:00 for version1.2.0.20
 		//sceneInfo->mRevision = "rev. 3.0";//since 2023/06/06 about PM10:00 for version1.2.0.21
 		//sceneInfo->mRevision = "rev. 3.1";//since 2023/09/25 about AM10:00 for EditMot version1.2.0.25
-		sceneInfo->mRevision = "rev. 3.2";//since 2024/03/07 about PM05:30 for AdditiveIK version1.0.0.11
+		//sceneInfo->mRevision = "rev. 3.2";//since 2024/03/07 about PM05:30 for AdditiveIK version1.0.0.11
+		sceneInfo->mRevision = "rev. 3.3";//since 2024/06/02 about PM04:30 for AdditiveIK version1.0.0.23
 
 		//######################################################################
 		//rev変更時は　FbxSetDefaultBonePosReq のoldbvh処理部分も更新する必要有
@@ -5903,13 +5904,15 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 				FbxString currentrev4 = "rev. 3.0";
 				FbxString currentrev5 = "rev. 3.1";
 				FbxString currentrev6 = "rev. 3.2";
+				FbxString currentrev7 = "rev. 3.3";
 				//2.7, 2.8, 2.9, 3.0が内容変更後の新バージョン
 				if ((sceneinfo->mRevision != currentrev1) &&
 					(sceneinfo->mRevision != currentrev2) &&
 					(sceneinfo->mRevision != currentrev3) &&
 					(sceneinfo->mRevision != currentrev4) &&
 					(sceneinfo->mRevision != currentrev5) &&
-					(sceneinfo->mRevision != currentrev6)
+					(sceneinfo->mRevision != currentrev6) &&
+					(sceneinfo->mRevision != currentrev7)
 					) {
 					oldbvh = true;//!!!!!!!!!!!!!!!!!!!!
 				}

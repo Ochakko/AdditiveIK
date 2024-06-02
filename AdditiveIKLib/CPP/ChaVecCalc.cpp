@@ -3228,7 +3228,7 @@ int CQuaternion::vec3RotateZ(ChaVector3* dstvec, double deg, ChaVector3* srcvec)
 //	return 0;
 //}
 
-int CQuaternion::Q2EulXYZusingMat(int rotorder, CQuaternion* axisq, ChaVector3 befeul, ChaVector3* reteul, int isfirstbone, int isendbone, int notmodify180flag)
+int CQuaternion::Q2EulXYZusingMat(int rotorder, CQuaternion* axisq, ChaVector3 befeul, ChaVector3* reteul, int notmodify180flag)
 {
 	const double DIVVALMIN = 1e-4;
 

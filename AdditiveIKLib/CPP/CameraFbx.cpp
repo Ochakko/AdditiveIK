@@ -364,12 +364,9 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(int cameramotid, double nextframe, i
 		return transformmat;
 	}
 
-
-	//double roundingframe = RoundingTime(nextframe);
-	//m_time = roundingframe;
 	
 	//2024/01/31 NotRoundingTime
-	m_time = roundingframe;
+	m_time = nextframe;
 
 	FbxTime fbxtime;
 	fbxtime.SetSecondDouble(m_time / 30.0);
@@ -383,23 +380,54 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(int cameramotid, double nextframe, i
 		return transformmat;
 	}
 
+
+	MOTINFO camerami = camerabone->GetParModel()->GetMotInfo(cameramotid);
+
+
 	if (calcbynode == false) {
 
 		//########################
 		//読込格納済のモーションを返す
 		//########################
 
+		//##################################################################
+		//calcbynode == falseの場合は　プレビュー時に使用するのでフレーム間を補間する
+		//##################################################################
+
 		ChaMatrix cameramat;
 		cameramat.SetIdentity();
+		ChaMatrix cameramat1;
+		cameramat1.SetIdentity();
+		ChaMatrix cameramat2;
+		cameramat2.SetIdentity();
 
 		CMotionPoint* curmp;
 		curmp = camerabone->GetMotionPoint(cameramotid, roundingframe);
 		if (curmp) {
-			cameramat = curmp->GetWorldMat();
+			cameramat1 = curmp->GetWorldMat();
 		}
 		else {
 			_ASSERT(0);
-			cameramat.SetIdentity();
+			cameramat1.SetIdentity();
+		}
+
+		double nextroundingframe = roundingframe + 1.0;
+		if (nextroundingframe < camerami.frameleng) {
+			CMotionPoint* curmp2;
+			curmp2 = camerabone->GetMotionPoint(cameramotid, nextroundingframe);
+			if (curmp2) {
+				cameramat2 = curmp2->GetWorldMat();
+			}
+			else {
+				_ASSERT(0);
+				cameramat2.SetIdentity();
+			}
+
+			double t = (m_time - roundingframe);
+			cameramat = cameramat1 + (cameramat2 - cameramat1) * (float)t;
+		}
+		else {
+			cameramat = cameramat1;
 		}
 
 		return cameramat;
@@ -526,7 +554,7 @@ int CCameraFbx::GetCameraAnimParams(int cameramotid, double nextframe, double ca
 
 
 	ChaVector3 zeropos = ChaVector3(0.0f, 0.0f, 0.0f);
-	double roundingframe = RoundingTime(nextframe);
+	//double roundingframe = RoundingTime(nextframe);
 
 	if (IsLoaded()) {
 
@@ -536,13 +564,14 @@ int CCameraFbx::GetCameraAnimParams(int cameramotid, double nextframe, double ca
 
 
 
-			if (roundingframe != 0.0) {
+			//if (roundingframe != 0.0) {
+			if (nextframe != 0.0) {
 				bool multInvNodeMat = false;
 				ChaMatrix transformmat;
 				transformmat.SetIdentity();
 				bool calcbynode = false;
 				bool setmotionpoint = false;
-				transformmat = GetCameraTransformMat(cameramotid, roundingframe, inheritmode, 
+				transformmat = GetCameraTransformMat(cameramotid, nextframe, inheritmode, 
 					calcbynode, setmotionpoint);
 
 

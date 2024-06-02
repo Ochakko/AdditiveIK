@@ -1,4 +1,4 @@
-#ifndef MOTIONPOINTH
+ï»¿#ifndef MOTIONPOINTH
 #define MOTIONPOINTH
 
 #include <coef.h>
@@ -70,10 +70,10 @@ public:
 	//ChaMatrix GetInvWorldMat(){ ChaMatrix invmat; ChaMatrixInverse(&invmat, NULL, &m_worldmat); return invmat; };
 
 
-	ChaMatrix GetLocalMat() { return m_localmat; };//CameraAnim‚ÌeNull‚ÆeCameraƒm[ƒh‚Ìƒ[ƒJƒ‹p¨‚ğ•Û‘¶A‘‚«o‚µ‚Ég‚¤
-	void SetLocalMat(ChaMatrix srcmat) { m_localmat = srcmat; };//CameraAnim‚ÌeNull‚ÆeCameraƒm[ƒh‚Ìƒ[ƒJƒ‹p¨‚ğ•Û‘¶A‘‚«o‚µ‚Ég‚¤
+	ChaMatrix GetLocalMat() { return m_localmat; };//CameraAnimã®eNullã¨eCameraãƒãƒ¼ãƒ‰ã®ãƒ­ãƒ¼ã‚«ãƒ«å§¿å‹¢ã‚’ä¿å­˜ã€æ›¸ãå‡ºã—ã«ä½¿ã†
+	void SetLocalMat(ChaMatrix srcmat) { m_localmat = srcmat; };//CameraAnimã®eNullã¨eCameraãƒãƒ¼ãƒ‰ã®ãƒ­ãƒ¼ã‚«ãƒ«å§¿å‹¢ã‚’ä¿å­˜ã€æ›¸ãå‡ºã—ã«ä½¿ã†
 
-//btmat, btflag‚ÍCBone‚ÉˆÚ“®
+//btmat, btflagã¯CBoneã«ç§»å‹•
 	//ChaMatrix GetBefBtMat();
 	//void SetBefBtMat(ChaMatrix srcmat);
 	//ChaMatrix GetBtMat();
@@ -83,9 +83,9 @@ public:
 
 
 	//2022/12/29
-	//ŠÖ”‚ÌŒÄ‚Ño‚µó‹µ‚É‚æ‚Á‚Äbefworldmat‚Ì“à—e‚ª•Ï‚í‚é‚Ì‚Í•s–¡‚¢‚Ì‚Å
-	//–¾¦“I‚Éˆø”‚Æ‚µ‚Ä“n‚·‚±‚Æ‚É‚µ‚½(‘¼‚ÌIK—p‚ÌReqŠÖ”‚É‚Â‚¢‚Ä‚à)
-	//GetBefWorldMat()‚Íg—p‚µ‚È‚¢‚±‚Æ‚É‚µ‚½
+	//é–¢æ•°ã®å‘¼ã³å‡ºã—çŠ¶æ³ã«ã‚ˆã£ã¦befworldmatã®å†…å®¹ãŒå¤‰ã‚ã‚‹ã®ã¯ä¸å‘³ã„ã®ã§
+	//æ˜ç¤ºçš„ã«å¼•æ•°ã¨ã—ã¦æ¸¡ã™ã“ã¨ã«ã—ãŸ(ä»–ã®IKç”¨ã®Reqé–¢æ•°ã«ã¤ã„ã¦ã‚‚)
+	//GetBefWorldMat()ã¯ä½¿ç”¨ã—ãªã„ã“ã¨ã«ã—ãŸ
 	//
 	//ChaMatrix GetBefWorldMat(){ return m_befworldmat; };
 	//void SetBefWorldMat( ChaMatrix srcmat ){ m_befworldmat = srcmat; };
@@ -118,11 +118,11 @@ public:
 	};
 	int GetLocalMatFlag()
 	{
-		return m_localmatflag;//CopyAndPaste‚Éworldmat‚Élocalmat‚ğƒZƒbƒg‚µ‚Ä‚¢‚é‚±‚Æ‚ğ¦‚·ƒtƒ‰ƒO
+		return m_localmatflag;//CopyAndPasteæ™‚ã«worldmatã«localmatã‚’ã‚»ãƒƒãƒˆã—ã¦ã„ã‚‹ã“ã¨ã‚’ç¤ºã™ãƒ•ãƒ©ã‚°
 	};
 	void SetLocalMatFlag(int srcflag)
 	{
-		m_localmatflag = srcflag;//CopyAndPaste‚Éworldmat‚Élocalmat‚ğƒZƒbƒg‚µ‚Ä‚¢‚é‚±‚Æ‚ğ¦‚·ƒtƒ‰ƒO
+		m_localmatflag = srcflag;//CopyAndPasteæ™‚ã«worldmatã«localmatã‚’ã‚»ãƒƒãƒˆã—ã¦ã„ã‚‹ã“ã¨ã‚’ç¤ºã™ãƒ•ãƒ©ã‚°
 	};
 
 	int GetUseFlag()
@@ -261,7 +261,7 @@ private:
 
 	int m_undovalidflag;
 	double m_frame;
-	int m_localmatflag;//CopyAndPaste‚Éworldmat‚Élocalmat‚ğƒZƒbƒg‚µ‚Ä‚¢‚é‚±‚Æ‚ğ¦‚·ƒtƒ‰ƒO
+	int m_localmatflag;//CopyAndPasteæ™‚ã«worldmatã«localmatã‚’ã‚»ãƒƒãƒˆã—ã¦ã„ã‚‹ã“ã¨ã‚’ç¤ºã™ãƒ•ãƒ©ã‚°
 	//ChaVector3 m_eul;
 	ChaVector3 m_tra;
 	//ChaVector3 m_firstframetra;
@@ -271,12 +271,12 @@ private:
 
 	ChaVector3 m_scale;//2024/01/31
 
-	ChaMatrix m_worldmat;//ƒ[ƒ‹ƒh•ÏŠ·‚Æe‚Ì‰e‹¿‚ğó‚¯‚½ƒ}ƒgƒŠƒbƒNƒX
-	ChaMatrix m_localmat;//local matrix : CameraAnim‚ÌeNull‚ÆeCameraƒm[ƒh‚Ìƒ[ƒJƒ‹p¨‚ğ•Û‘¶A‘‚«o‚µ‚Ég‚¤
+	ChaMatrix m_worldmat;//ãƒ¯ãƒ¼ãƒ«ãƒ‰å¤‰æ›ã¨è¦ªã®å½±éŸ¿ã‚’å—ã‘ãŸãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+	ChaMatrix m_localmat;//local matrix : CameraAnimã®eNullã¨eCameraãƒãƒ¼ãƒ‰ã®ãƒ­ãƒ¼ã‚«ãƒ«å§¿å‹¢ã‚’ä¿å­˜ã€æ›¸ãå‡ºã—ã«ä½¿ã†
 	
 	//2023/02/02
-	//CBone::m_curmp,CBone::GetCurMp()—p@ƒ‚ƒfƒ‹‚Ìworldmat‚ªŠ|‚©‚Á‚Ä‚¢‚È‚¢ƒAƒjƒp¨
-	//CBone::UpdateMatrix()‚ÅƒZƒbƒg‚µ@CBone::GetCurrent...‚âCBone::CalcCurrent...‚Åg—p
+	//CBone::m_curmp,CBone::GetCurMp()ç”¨ã€€ãƒ¢ãƒ‡ãƒ«ã®worldmatãŒæ›ã‹ã£ã¦ã„ãªã„ã‚¢ãƒ‹ãƒ¡å§¿å‹¢
+	//CBone::UpdateMatrix()ã§ã‚»ãƒƒãƒˆã—ã€€CBone::GetCurrent...ã‚„CBone::CalcCurrent...ã§ä½¿ç”¨
 	ChaMatrix m_animmat;
 
 
@@ -291,7 +291,7 @@ private:
 	//bool m_setbefworldmatflag;
 
 
-	//btmat‚ÍCBone‚ÉˆÚ“®
+	//btmatã¯CBoneã«ç§»å‹•
 	//ChaMatrix m_btmat;
 	//ChaMatrix m_befbtmat;
 	//int m_setbtflag;
