@@ -3072,7 +3072,7 @@ ChaVector3 ChaCalcFunc::GetLocalEul(CBone* srcbone, bool limitdegflag, int srcmo
 	}
 
 	//2023/04/28
-	if (srcbone->IsNotSkeleton() && srcbone->IsNotCamera()) {//2023/06/05 eCamera対応
+	if (srcbone->IsNotSkeleton() && srcbone->IsNotCamera() && !srcbone->IsNullAndChildIsCamera()) {//2023/06/05 eCamera対応
 		return reteul;
 	}
 

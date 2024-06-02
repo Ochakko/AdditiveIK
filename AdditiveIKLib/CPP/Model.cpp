@@ -6439,7 +6439,8 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 					//#### 2023/01/31 ####################################################################
 					//読み込み時にLocalEulとLimitedLocalEulの初期化をするべきなので　復活
 					//####################################################################################
-					PostLoadFbxAnim(mCurrentAnimLayer, curmotid);//並列化出来なかった計算をする
+					bool skeletonflag = true;
+					PostLoadFbxAnim(curmotid, skeletonflag);//並列化出来なかった計算をする
 
 
 					//2023/02/11
@@ -6547,6 +6548,10 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 		MOTINFO* miptr = itrmi->second;
 		if (miptr && miptr->cameramotion) {
 			GetFBXCameraAnim(miptr->motid, miptr->frameleng);
+		}
+		if (miptr && (miptr->motid > 0)) {
+			bool skeletonflag = false;
+			PostLoadFbxAnim(miptr->motid, skeletonflag);//並列化出来なかった計算をする
 		}
 	}
 
@@ -7106,22 +7111,29 @@ int CModel::PreLoadCameraFbxAnim(int srcmotid)
 }
 
 
-int CModel::PostLoadFbxAnim(FbxAnimLayer* mCurrentAnimLayer, int srcmotid)
+int CModel::PostLoadFbxAnim(int srcmotid, bool skeletonflag)
 {
 	MOTINFO curmi = GetMotInfo(srcmotid);
 	if (curmi.motid > 0) {
 		double animlen = curmi.frameleng;
 
-		PostLoadFbxAnimReq(mCurrentAnimLayer, srcmotid, animlen, GetTopBone(false));
+		PostLoadFbxAnimReq(srcmotid, animlen, GetTopBone(false), skeletonflag);
 	}
 	return 0;
 }
 
-void CModel::PostLoadFbxAnimReq(FbxAnimLayer* mCurrentAnimLayer, int srcmotid, double animlen, CBone* srcbone)
+void CModel::PostLoadFbxAnimReq(int srcmotid, double animlen, CBone* srcbone, bool skeletonflag)
 {
 	if (srcbone) {
+		bool opeflag = false;
+		if (skeletonflag) {
+			opeflag = srcbone->IsSkeleton();
+		}
+		else {
+			opeflag = srcbone->IsNullAndChildIsCamera();
+		}
 
-		if (srcbone->IsSkeleton() || srcbone->IsCamera()) {
+		if (opeflag) {
 			double curframe;
 			for (curframe = 0.0; curframe < animlen; curframe += 1.0) {//関数呼び出し時にanimleng - 1している
 
@@ -7133,7 +7145,8 @@ void CModel::PostLoadFbxAnimReq(FbxAnimLayer* mCurrentAnimLayer, int srcmotid, d
 					//#############
 
 					//CCameraFbx::PostLoadFbxAnim()でのmotidとCAMERANODE*の対応表エントリーよりも後で呼ぶ
-					if (srcbone->IsSkeleton()) {// || 
+					//if (srcbone->IsSkeleton()) { 
+					//if (srcbone->IsSkeleton() || srcbone->IsNullAndChildIsCamera()) { 
 						//(srcbone->HasMotionCurve(srcmotid) && srcbone->IsCamera() && IsCameraMotion(srcmotid)) ||
 						//(srcbone->HasMotionCurve(srcmotid) && srcbone->IsNullAndChildIsCamera() && IsCameraMotion(srcmotid))) {
 						bool limitdegflag = false;
@@ -7141,17 +7154,17 @@ void CModel::PostLoadFbxAnimReq(FbxAnimLayer* mCurrentAnimLayer, int srcmotid, d
 						curmp->SetLocalEul(cureul);
 						curmp->SetLimitedLocalEul(cureul);
 						curmp->SetCalcLimitedWM(2);
-					}
+					//}
 				}
 			}
 		}
 
 
 		if (srcbone->GetChild(false)) {
-			PostLoadFbxAnimReq(mCurrentAnimLayer, srcmotid, animlen, srcbone->GetChild(false));
+			PostLoadFbxAnimReq(srcmotid, animlen, srcbone->GetChild(false), skeletonflag);
 		}
 		if (srcbone->GetBrother(false)) {
-			PostLoadFbxAnimReq(mCurrentAnimLayer, srcmotid, animlen, srcbone->GetBrother(false));
+			PostLoadFbxAnimReq(srcmotid, animlen, srcbone->GetBrother(false), skeletonflag);
 		}
 	}
 }

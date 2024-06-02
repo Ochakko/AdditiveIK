@@ -54,6 +54,11 @@ extern int g_dsmousewait;
 extern float g_mouseherealpha;
 extern Gdiplus::Image* g_mousehereimage;
 extern Gdiplus::Image* g_menuaimbarimage;
+extern Gdiplus::Image* g_playerbutton_target26;
+extern Gdiplus::Image* g_playerbutton_target_inv26;
+extern Gdiplus::Image* g_playerbutton_target40;
+extern Gdiplus::Image* g_playerbutton_target_inv40;
+extern int g_edittarget;
 extern int g_currentsubmenuid;
 extern POINT g_currentsubmenupos;
 extern bool g_enableDS;
@@ -77,6 +82,41 @@ static double TIME_ERROR_WIDTH = 0.0001;
 
 
 class CModel;
+
+static int DrawGdiplusButton(Gdiplus::Image* srcimage, HDC srchdc,
+	int drawposx, int drawposy, int drawwidth, int drawheight, float srcalpha);
+int DrawGdiplusButton(Gdiplus::Image* srcimage, HDC srchdc, 
+	int drawposx, int drawposy, int drawwidth, int drawheight, float srcalpha)
+{
+	if (!srcimage) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (srchdc == NULL) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	Gdiplus::Graphics* gdipg = new Gdiplus::Graphics(srchdc);
+	if (gdipg) {
+		Gdiplus::ImageAttributes attr;
+		Gdiplus::ColorMatrix cmat = {
+			1.0f, 0.0f, 0.0f, 0.0f, 0.0f,   // Red
+			0.0f, 1.0f, 0.0f, 0.0f, 0.0f,   // Green
+			0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // Blue
+			0.0f, 0.0f, 0.0f, srcalpha, 0.0f,   // Alpha (70%)
+			0.0f, 0.0f, 0.0f, 0.0f, 1.0f    // must be 1
+		};
+		attr.SetColorMatrix(&cmat);
+		gdipg->DrawImage(srcimage, Gdiplus::Rect(drawposx, drawposy, drawwidth, drawheight),
+			0, 0, drawwidth, drawheight,
+			Gdiplus::UnitPixel, &attr, NULL, NULL);
+		delete gdipg;
+	}
+	return 0;
+}
+
+
 
 
 namespace OrgWinGUI{
@@ -2854,25 +2894,8 @@ void s_dummyfunc()
 						::ScreenToClient(getParent()->getHWnd(), &mousepoint);
 						int BMP_W = 52;
 						int BMP_H = 50;
-						Gdiplus::Graphics* gdipg = new Gdiplus::Graphics(hdcM->hDC);
-						if (gdipg) {
-							Gdiplus::ImageAttributes attr;
-							Gdiplus::ColorMatrix cmat = {
-								1.0f, 0.0f, 0.0f, 0.0f, 0.0f,   // Red
-								0.0f, 1.0f, 0.0f, 0.0f, 0.0f,   // Green
-								0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // Blue
-								0.0f, 0.0f, 0.0f, g_mouseherealpha, 0.0f,   // Alpha (70%)
-								0.0f, 0.0f, 0.0f, 0.0f, 1.0f    // must be 1
-							};
-							attr.SetColorMatrix(&cmat);
-							//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\AdditiveIK\Media\\MameMedia\\img_l105.png");
-							if (g_mousehereimage) {
-								gdipg->DrawImage(g_mousehereimage, Gdiplus::Rect(mousepoint.x, mousepoint.y, BMP_W, BMP_H),
-									0, 0, BMP_W, BMP_H,
-									Gdiplus::UnitPixel, &attr, NULL, NULL);
-							}
-							delete gdipg;
-						}
+						DrawGdiplusButton(g_mousehereimage, hdcM->hDC,
+							mousepoint.x, mousepoint.y, BMP_W, BMP_H, g_mouseherealpha);
 					}
 				}
 			}
@@ -3181,25 +3204,8 @@ void s_dummyfunc()
 						::ScreenToClient(getParent()->getHWnd(), &mousepoint);
 						int BMP_W = 52;
 						int BMP_H = 50;
-						Gdiplus::Graphics* gdipg = new Gdiplus::Graphics(hdcM->hDC);
-						if (gdipg) {
-							Gdiplus::ImageAttributes attr;
-							Gdiplus::ColorMatrix cmat = {
-								1.0f, 0.0f, 0.0f, 0.0f, 0.0f,   // Red
-								0.0f, 1.0f, 0.0f, 0.0f, 0.0f,   // Green
-								0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // Blue
-								0.0f, 0.0f, 0.0f, g_mouseherealpha, 0.0f,   // Alpha (70%)
-								0.0f, 0.0f, 0.0f, 0.0f, 1.0f    // must be 1
-							};
-							attr.SetColorMatrix(&cmat);
-							//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\AdditiveIK\Media\\MameMedia\\img_l105.png");
-							if (g_mousehereimage) {
-								gdipg->DrawImage(g_mousehereimage, Gdiplus::Rect(mousepoint.x, mousepoint.y, BMP_W, BMP_H),
-									0, 0, BMP_W, BMP_H,
-									Gdiplus::UnitPixel, &attr, NULL, NULL);
-							}
-							delete gdipg;
-						}
+						DrawGdiplusButton(g_mousehereimage, hdcM->hDC,
+							mousepoint.x, mousepoint.y, BMP_W, BMP_H, g_mouseherealpha);
 					}
 				}
 
@@ -3210,25 +3216,8 @@ void s_dummyfunc()
 						::ScreenToClient(getParent()->getHWnd(), &barpos);
 						int BMP_W = g_submenuwidth;
 						int BMP_H = 16;
-						Gdiplus::Graphics* gdipg = new Gdiplus::Graphics(hdcM->hDC);
-						if (gdipg) {
-							Gdiplus::ImageAttributes attr;
-							Gdiplus::ColorMatrix cmat = {
-								1.0f, 0.0f, 0.0f, 0.0f, 0.0f,   // Red
-								0.0f, 1.0f, 0.0f, 0.0f, 0.0f,   // Green
-								0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // Blue
-								0.0f, 0.0f, 0.0f, 1.0f, 0.0f,   // Alpha
-								0.0f, 0.0f, 0.0f, 0.0f, 1.0f    // must be 1
-							};
-							attr.SetColorMatrix(&cmat);
-							//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\AdditiveIK\Media\\MameMedia\\img_l105.png");
-							if (g_menuaimbarimage) {
-								gdipg->DrawImage(g_menuaimbarimage, Gdiplus::Rect(barpos.x, barpos.y, BMP_W, BMP_H),
-									0, 0, 140, 6,
-									Gdiplus::UnitPixel, &attr, NULL, NULL);
-							}
-							delete gdipg;
-						}
+						DrawGdiplusButton(g_menuaimbarimage, hdcM->hDC,
+							barpos.x, barpos.y, BMP_W, BMP_H, g_mouseherealpha);
 					}
 				}
 			}
@@ -3366,25 +3355,8 @@ void s_dummyfunc()
 						::ScreenToClient(getParent()->getHWnd(), &mousepoint);
 						int BMP_W = 52;
 						int BMP_H = 50;
-						Gdiplus::Graphics* gdipg = new Gdiplus::Graphics(hdcM->hDC);
-						if (gdipg) {
-							Gdiplus::ImageAttributes attr;
-							Gdiplus::ColorMatrix cmat = {
-								1.0f, 0.0f, 0.0f, 0.0f, 0.0f,   // Red
-								0.0f, 1.0f, 0.0f, 0.0f, 0.0f,   // Green
-								0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // Blue
-								0.0f, 0.0f, 0.0f, g_mouseherealpha, 0.0f,   // Alpha (70%)
-								0.0f, 0.0f, 0.0f, 0.0f, 1.0f    // must be 1
-							};
-							attr.SetColorMatrix(&cmat);
-							//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\AdditiveIK\Media\\MameMedia\\img_l105.png");
-							if (g_mousehereimage) {
-								gdipg->DrawImage(g_mousehereimage, Gdiplus::Rect(mousepoint.x, mousepoint.y, BMP_W, BMP_H),
-									0, 0, BMP_W, BMP_H,
-									Gdiplus::UnitPixel, &attr, NULL, NULL);
-							}
-							delete gdipg;
-						}
+						DrawGdiplusButton(g_mousehereimage, hdcM->hDC,
+							mousepoint.x, mousepoint.y, BMP_W, BMP_H, g_mouseherealpha);
 					}
 				}
 			}
@@ -3541,6 +3513,25 @@ void s_dummyfunc()
 			return retpos;
 		};
 
+		WindowPos GetButtonPos_ChangeTarget()
+		{
+			WindowPos retpos;
+			int pos00x = OFFSET_X + pos.x;// -150;
+			int pos00y = pos.y + size.y / 2 - BOX_WIDTH / 2;
+			int pos01x = pos00x + BOX_WIDTH;
+			int pos01y = pos00y + BOX_WIDTH - 1;
+
+			if (g_4kresolution) {
+				retpos.x = pos00x - 250;
+			}
+			else {
+				retpos.x = pos00x - 175;
+			}
+			retpos.y = pos00y;
+
+			return retpos;
+		}
+
 		//////////////////////////// Method //////////////////////////////
 		/// Method : 自動サイズ設定
 		virtual void autoResize(){
@@ -3554,6 +3545,31 @@ void s_dummyfunc()
 
 
 			drawEdge();
+
+
+
+			WindowPos changetargetpos = GetButtonPos_ChangeTarget();
+			if (changetarget.buttonPush) {
+				if (g_4kresolution) {
+					DrawGdiplusButton(g_playerbutton_target_inv40, hdcM->hDC,
+						changetargetpos.x, changetargetpos.y, BOX_WIDTH, BOX_WIDTH, 1.0f);
+				}
+				else {
+					DrawGdiplusButton(g_playerbutton_target_inv26, hdcM->hDC,
+						changetargetpos.x, changetargetpos.y, BOX_WIDTH, BOX_WIDTH, 1.0f);
+				}
+			}
+			else {
+				if (g_4kresolution) {
+					DrawGdiplusButton(g_playerbutton_target40, hdcM->hDC,
+						changetargetpos.x, changetargetpos.y, BOX_WIDTH, BOX_WIDTH, 1.0f);
+				}
+				else {
+					DrawGdiplusButton(g_playerbutton_target26, hdcM->hDC,
+						changetargetpos.x, changetargetpos.y, BOX_WIDTH, BOX_WIDTH, 1.0f);
+				}
+			}
+
 
 			//全てのボタンについて繰り返す
 			for(int i=0; i<=9; i++){
@@ -3762,7 +3778,37 @@ void s_dummyfunc()
 				}
 			}
 
-
+			{
+				WCHAR strtarget[36] = { 0L };
+				switch (g_edittarget) {
+				case EDITTARGET_BONE:
+					wcscpy_s(strtarget, 36, L"Bone");
+					break;
+				case EDITTARGET_CAMERA:
+					wcscpy_s(strtarget, 36, L"Camera");
+					break;
+				case EDITTARGET_MORPH:
+					wcscpy_s(strtarget, 36, L"Morph");
+					break;
+				default:
+					wcscpy_s(strtarget, 36, L"NoTarget");
+					break;
+				}
+				size_t targetnamelen = wcslen(strtarget);
+				if ((targetnamelen >= 1) && (targetnamelen <= 1020)) {
+					//hdcM->setFont(18, _T("ＭＳ ゴシック"));
+					if (g_4kresolution) {
+						hdcM->setFont(32, _T("ＭＳ ゴシック"));
+					}
+					else {
+						hdcM->setFont(24, _T("ＭＳ ゴシック"));
+					}
+					SetTextColor(hdcM->hDC, RGB(168, 129, 129));
+					TextOut(hdcM->hDC,
+						changetargetpos.x + BOX_WIDTH * 2, changetargetpos.y,
+						strtarget, (int)targetnamelen);
+				}
+			}
 
 			{
 				if (g_dsmousewait == 1) {
@@ -3772,25 +3818,8 @@ void s_dummyfunc()
 						::ScreenToClient(getParent()->getHWnd(), &mousepoint);
 						int BMP_W = 52;
 						int BMP_H = 50;
-						Gdiplus::Graphics* gdipg = new Gdiplus::Graphics(hdcM->hDC);
-						if (gdipg) {
-							Gdiplus::ImageAttributes attr;
-							Gdiplus::ColorMatrix cmat = {
-								1.0f, 0.0f, 0.0f, 0.0f, 0.0f,   // Red
-								0.0f, 1.0f, 0.0f, 0.0f, 0.0f,   // Green
-								0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // Blue
-								0.0f, 0.0f, 0.0f, g_mouseherealpha, 0.0f,   // Alpha (70%)
-								0.0f, 0.0f, 0.0f, 0.0f, 1.0f    // must be 1
-							};
-							attr.SetColorMatrix(&cmat);
-							//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\AdditiveIK\Media\\MameMedia\\img_l105.png");
-							if (g_mousehereimage) {
-								gdipg->DrawImage(g_mousehereimage, Gdiplus::Rect(mousepoint.x, mousepoint.y, BMP_W, BMP_H),
-									0, 0, BMP_W, BMP_H,
-									Gdiplus::UnitPixel, &attr, NULL, NULL);
-							}
-							delete gdipg;
-						}
+						DrawGdiplusButton(g_mousehereimage, hdcM->hDC,
+							mousepoint.x, mousepoint.y, BMP_W, BMP_H, g_mouseherealpha);
 					}
 				}
 			}
@@ -3799,58 +3828,77 @@ void s_dummyfunc()
 		//	Method : マウスダウンイベント受信
 		virtual void onLButtonDown(const MouseEvent& e){
 
-			//全てのボタンについて繰り返す
-			for(int i=0; i<=9; i++){
-
-				//まずボタンが押されたかを確認
-				if( ((OFFSET_X + BOX_POS_X + BOX_WIDTH * i) <= e.localX) && (e.localX < (OFFSET_X + BOX_POS_X + BOX_WIDTH * (i+1))) ){
-				}else{
-					continue;
+			WindowPos changetargetpos = GetButtonPos_ChangeTarget();
+			if ((e.localX >= changetargetpos.x) && (e.localX < (changetargetpos.x + BOX_WIDTH))) {
+				OneButtonParam* btnPrm00 = &changetarget;
+				if (btnPrm00->buttonListener != NULL) {
+					(btnPrm00->buttonListener)();
 				}
 
-				//ボタンパラメータのインスタンスへのポインタを作成
-				OneButtonParam *btnPrm;
-				switch (i) {
-				case 0: btnPrm = &physicsPlay; break;
-				case 1: btnPrm = &physicsRec; break;
-				case 2: btnPrm = 0; break;
-				case 3: btnPrm = &backStep; break;
-				case 4: btnPrm = &backPlay; break;
-				case 5: btnPrm = &reset; break;
-				case 6: btnPrm = &frontPlay; break;
-				case 7: btnPrm = &frontStep; break;
-				case 8: btnPrm = 0; break;
-				case 9: btnPrm = &selecttolast; break;
-				default: btnPrm = 0; break;
-				}
-				if (btnPrm) {
-					//ボタンリスナーを呼ぶ
-					if (btnPrm->buttonListener != NULL) {
-						(btnPrm->buttonListener)();
+				//ボタン押下状態をONにする
+				btnPrm00->buttonPush = true;
+
+				//再描画通知
+				callRewrite();
+
+				//ボタンアップアニメーションのためのスレッド作成
+				_beginthread(drawChangeTargetButtonUpThread, 0, (void*)this);
+			}
+			else {
+				//全てのボタンについて繰り返す
+				for (int i = 0; i <= 9; i++) {
+
+					//まずボタンが押されたかを確認
+					if (((OFFSET_X + BOX_POS_X + BOX_WIDTH * i) <= e.localX) && (e.localX < (OFFSET_X + BOX_POS_X + BOX_WIDTH * (i + 1)))) {
+					}
+					else {
+						continue;
 					}
 
-					//ボタン押下状態をONにする
-					btnPrm->buttonPush = true;
-
-					//再描画通知
-					callRewrite();
-
-					//ボタンアップアニメーションのためのスレッド作成
+					//ボタンパラメータのインスタンスへのポインタを作成
+					OneButtonParam* btnPrm;
 					switch (i) {
-					case 0: _beginthread(drawPhysicsPlayButtonUpThread, 0, (void*)this); break;
-					case 1: _beginthread(drawPhysicsRecButtonUpThread, 0, (void*)this); break;
-					case 2: break;
-					case 3: _beginthread(drawBackStepButtonUpThread, 0, (void*)this); break;
-					case 4: _beginthread(drawBackPlayButtonUpThread, 0, (void*)this); break;
-					case 5: _beginthread(drawResetButtonUpThread, 0, (void*)this); break;
-					case 6: _beginthread(drawFrontPlayButtonUpThread, 0, (void*)this); break;
-					case 7: _beginthread(drawFrontStepButtonUpThread, 0, (void*)this); break;
-					case 8: break;
-					case 9: _beginthread(drawSelectToLastButtonUpThread, 0, (void*)this); break;
-					default: break;
+					case 0: btnPrm = &physicsPlay; break;
+					case 1: btnPrm = &physicsRec; break;
+					case 2: btnPrm = 0; break;
+					case 3: btnPrm = &backStep; break;
+					case 4: btnPrm = &backPlay; break;
+					case 5: btnPrm = &reset; break;
+					case 6: btnPrm = &frontPlay; break;
+					case 7: btnPrm = &frontStep; break;
+					case 8: btnPrm = 0; break;
+					case 9: btnPrm = &selecttolast; break;
+					default: btnPrm = 0; break;
 					}
+					if (btnPrm) {
+						//ボタンリスナーを呼ぶ
+						if (btnPrm->buttonListener != NULL) {
+							(btnPrm->buttonListener)();
+						}
+
+						//ボタン押下状態をONにする
+						btnPrm->buttonPush = true;
+
+						//再描画通知
+						callRewrite();
+
+						//ボタンアップアニメーションのためのスレッド作成
+						switch (i) {
+						case 0: _beginthread(drawPhysicsPlayButtonUpThread, 0, (void*)this); break;
+						case 1: _beginthread(drawPhysicsRecButtonUpThread, 0, (void*)this); break;
+						case 2: break;
+						case 3: _beginthread(drawBackStepButtonUpThread, 0, (void*)this); break;
+						case 4: _beginthread(drawBackPlayButtonUpThread, 0, (void*)this); break;
+						case 5: _beginthread(drawResetButtonUpThread, 0, (void*)this); break;
+						case 6: _beginthread(drawFrontPlayButtonUpThread, 0, (void*)this); break;
+						case 7: _beginthread(drawFrontStepButtonUpThread, 0, (void*)this); break;
+						case 8: break;
+						case 9: _beginthread(drawSelectToLastButtonUpThread, 0, (void*)this); break;
+						default: break;
+						}
+					}
+					return;
 				}
-				return;
 			}
 		}
 		//	Method : 左マウスボタン ダブルクリックイベント受信
@@ -3907,6 +3955,9 @@ void s_dummyfunc()
 		void setSelectToLastButtonListener(std::function<void()> listener){
 			selecttolast.buttonListener = listener;
 		}
+		void setChangeTargetButtonListener(std::function<void()> listener) {
+			changetarget.buttonListener = listener;
+		}
 		//void setBtResetButtonListener(std::function<void()> listener){
 		//	btreset.buttonListener = listener;
 		//}
@@ -3955,7 +4006,7 @@ void s_dummyfunc()
 			bool buttonPush;
 			std::function<void()> buttonListener;
 		//}frontPlay,backPlay,stop,reset,frontStep,backStep,onefps,selecttolast,btreset,prevrange,nextrange,plusdisp,minusdisp,plusoffsetdisp,minusoffsetdisp,resetdisp;
-		}physicsPlay, physicsRec, backStep, backPlay, reset, frontPlay, frontStep, selecttolast;
+		}physicsPlay, physicsRec, backStep, backPlay, reset, frontPlay, frontStep, selecttolast, changetarget;
 		
 
 		int SIZE_Y;
@@ -4035,6 +4086,13 @@ void s_dummyfunc()
 
 			OWP_PlayerButton *thisClass = (OWP_PlayerButton*)pParam;
 			thisClass->selecttolast.buttonPush = false;
+			thisClass->callRewrite();
+		}
+		static void drawChangeTargetButtonUpThread(LPVOID	pParam) {
+			Sleep(100);
+
+			OWP_PlayerButton* thisClass = (OWP_PlayerButton*)pParam;
+			thisClass->changetarget.buttonPush = false;
 			thisClass->callRewrite();
 		}
 		//static void drawBtResetButtonUpThread(LPVOID	pParam){
@@ -4306,25 +4364,8 @@ void s_dummyfunc()
 							::ScreenToClient(getParent()->getHWnd(), &mousepoint);
 							int BMP_W = 52;
 							int BMP_H = 50;
-							Gdiplus::Graphics* gdipg = new Gdiplus::Graphics(hdcM->hDC);
-							if (gdipg) {
-								Gdiplus::ImageAttributes attr;
-								Gdiplus::ColorMatrix cmat = {
-									1.0f, 0.0f, 0.0f, 0.0f, 0.0f,   // Red
-									0.0f, 1.0f, 0.0f, 0.0f, 0.0f,   // Green
-									0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // Blue
-									0.0f, 0.0f, 0.0f, g_mouseherealpha, 0.0f,   // Alpha (70%)
-									0.0f, 0.0f, 0.0f, 0.0f, 1.0f    // must be 1
-								};
-								attr.SetColorMatrix(&cmat);
-								//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\AdditiveIK\Media\\MameMedia\\img_l105.png");
-								if (g_mousehereimage) {
-									gdipg->DrawImage(g_mousehereimage, Gdiplus::Rect(mousepoint.x, mousepoint.y, BMP_W, BMP_H),
-										0, 0, BMP_W, BMP_H,
-										Gdiplus::UnitPixel, &attr, NULL, NULL);
-								}
-								delete gdipg;
-							}
+							DrawGdiplusButton(g_mousehereimage, hdcM->hDC,
+								mousepoint.x, mousepoint.y, BMP_W, BMP_H, g_mouseherealpha);
 						}
 					}
 				}
@@ -4592,25 +4633,8 @@ void s_dummyfunc()
 						::ScreenToClient(getParent()->getHWnd(), &mousepoint);
 						int BMP_W = 52;
 						int BMP_H = 50;
-						Gdiplus::Graphics* gdipg = new Gdiplus::Graphics(hdcM->hDC);
-						if (gdipg) {
-							Gdiplus::ImageAttributes attr;
-							Gdiplus::ColorMatrix cmat = {
-								1.0f, 0.0f, 0.0f, 0.0f, 0.0f,   // Red
-								0.0f, 1.0f, 0.0f, 0.0f, 0.0f,   // Green
-								0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // Blue
-								0.0f, 0.0f, 0.0f, g_mouseherealpha, 0.0f,   // Alpha (70%)
-								0.0f, 0.0f, 0.0f, 0.0f, 1.0f    // must be 1
-							};
-							attr.SetColorMatrix(&cmat);
-							//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\AdditiveIK\Media\\MameMedia\\img_l105.png");
-							if (g_mousehereimage) {
-								gdipg->DrawImage(g_mousehereimage, Gdiplus::Rect(mousepoint.x, mousepoint.y, BMP_W, BMP_H),
-									0, 0, BMP_W, BMP_H,
-									Gdiplus::UnitPixel, &attr, NULL, NULL);
-							}
-							delete gdipg;
-						}
+						DrawGdiplusButton(g_mousehereimage, hdcM->hDC,
+							mousepoint.x, mousepoint.y, BMP_W, BMP_H, g_mouseherealpha);
 					}
 				}
 			}
@@ -9745,25 +9769,8 @@ void s_dummyfunc()
 						::ScreenToClient(getParent()->getHWnd(), &mousepoint);
 						int BMP_W = 52;
 						int BMP_H = 50;
-						Gdiplus::Graphics* gdipg = new Gdiplus::Graphics(hdcM->hDC);
-						if (gdipg) {
-							Gdiplus::ImageAttributes attr;
-							Gdiplus::ColorMatrix cmat = {
-								1.0f, 0.0f, 0.0f, 0.0f, 0.0f,   // Red
-								0.0f, 1.0f, 0.0f, 0.0f, 0.0f,   // Green
-								0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // Blue
-								0.0f, 0.0f, 0.0f, g_mouseherealpha, 0.0f,   // Alpha (70%)
-								0.0f, 0.0f, 0.0f, 0.0f, 1.0f    // must be 1
-							};
-							attr.SetColorMatrix(&cmat);
-							//Gdiplus::Image* imgptr = new Gdiplus::Image(L"E:\\PG\\AdditiveIK\Media\\MameMedia\\img_l105.png");
-							if (g_mousehereimage) {
-								gdipg->DrawImage(g_mousehereimage, Gdiplus::Rect(mousepoint.x, mousepoint.y, BMP_W, BMP_H),
-									0, 0, BMP_W, BMP_H,
-									Gdiplus::UnitPixel, &attr, NULL, NULL);
-							}
-							delete gdipg;
-						}
+						DrawGdiplusButton(g_mousehereimage, hdcM->hDC,
+							mousepoint.x, mousepoint.y, BMP_W, BMP_H, g_mouseherealpha);
 					}
 				}
 			}

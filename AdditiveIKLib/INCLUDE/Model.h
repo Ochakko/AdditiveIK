@@ -1185,8 +1185,8 @@ private:
 	int CreateLoadFbxAnim(FbxScene* pscene);
 	int DestroyLoadFbxAnim();
 	void WaitLoadFbxAnimFinished();
-	int PostLoadFbxAnim(FbxAnimLayer* mCurrentAnimLayer, int srcmotid);
-	void PostLoadFbxAnimReq(FbxAnimLayer* mCurrentAnimLayer, int srcmotid, double animlen, CBone* srcbone);
+	int PostLoadFbxAnim(int srcmotid, bool skeletonflag);
+	void PostLoadFbxAnimReq(int srcmotid, double animlen, CBone* srcbone, bool skeletonflag);
 	int PreLoadCameraFbxAnim(int srcmotid);
 	void SetHasMotionCurveReq(FbxAnimLayer* mCurrentAnimLayer, CBone* srcbone, int srcmotid);
 

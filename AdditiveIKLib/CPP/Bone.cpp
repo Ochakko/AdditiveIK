@@ -1284,12 +1284,6 @@ CMotionPoint* CBone::AddMotionPoint(int srcmotid, double srcframe, int* existptr
 			return 0;
 		}
 
-		map<int, CMotionPoint*>::iterator itrmotionkey;
-		itrmotionkey = m_motionkey.find(srcmotid - 1);
-		if ((itrmotionkey == m_motionkey.end()) && (srcframe == 0.0)) {
-			m_motionkey[srcmotid - 1] = newmp;
-		}
-
 		newmp->SetFrame(srcframe);
 
 		if (pbef){
@@ -1300,7 +1294,7 @@ CMotionPoint* CBone::AddMotionPoint(int srcmotid, double srcframe, int* existptr
 			}
 		}
 		else{
-			//m_motionkey[srcmotid - 1] = newmp;
+			m_motionkey[srcmotid - 1] = newmp;
 			if (pnext){
 				newmp->SetNext(pnext);
 			}
@@ -5809,7 +5803,7 @@ ChaVector3 CBone::CalcLocalTraAnim(bool limitdegflag, int srcmotid, double srcfr
 	double roundingframe = RoundingTime(srcframe);
 
 	//2023/04/28
-	if (IsNotSkeleton()) {
+	if (IsNotSkeleton() && !IsNullAndChildIsCamera()) {
 		return ChaVector3(0.0f, 0.0f, 0.0f);
 	}
 
@@ -5980,7 +5974,7 @@ ChaVector3 CBone::CalcLocalScaleAnim(bool limitdegflag, int srcmotid, double src
 	double roundingframe = RoundingTime(srcframe);
 
 	//2023/04/28
-	if (IsNotSkeleton()) {
+	if (IsNotSkeleton() && !IsNullAndChildIsCamera()) {
 		return ChaVector3(1.0f, 1.0f, 1.0f);
 	}
 

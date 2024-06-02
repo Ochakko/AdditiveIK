@@ -468,6 +468,10 @@ static Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 static ULONG_PTR gdiplusToken;
 Gdiplus::Image* g_mousehereimage = 0;
 Gdiplus::Image* g_menuaimbarimage = 0;
+Gdiplus::Image* g_playerbutton_target26 = 0;
+Gdiplus::Image* g_playerbutton_target_inv26 = 0;
+Gdiplus::Image* g_playerbutton_target40 = 0;
+Gdiplus::Image* g_playerbutton_target_inv40 = 0;
 int g_currentsubmenuid = 0;
 POINT g_currentsubmenupos = { 0, 0 };
 int g_submenuwidth = 32;
@@ -1853,6 +1857,7 @@ static bool s_LcursorFlag = false;			// カーソル移動フラグ
 static bool s_LupFlag = false;
 static bool s_LstartFlag = false;
 static bool s_LstopFlag = false;
+static bool s_LchangeTargetFlag = false;
 //static int s_LstopDoneCount = 0;
 static bool s_retargetguiFlag = false;
 
@@ -2344,7 +2349,7 @@ void OnDSUpdate();
 static void OnDSMouseHereApeal();
 static void OnArrowKey();//DS関数でキーボードの矢印キーに対応
 
-
+static MOTINFO GetEditTargetMotInfo();
 static void CalcTotalBound();
 static int SetCameraModel();
 static void SetCamera3DFromEyePos();
@@ -4113,6 +4118,9 @@ void InitApp()
 
 	InitCommonControls();
 
+	g_edittarget = EDITTARGET_BONE;
+	s_LchangeTargetFlag = false;
+
 	{
 		g_camEye = ChaVector3(0.0f, 0.0f, 0.0f);
 		g_camtargetpos = ChaVector3(0.0f, 0.0f, 0.0f);
@@ -4128,6 +4136,7 @@ void InitApp()
 		g_vCenter = ChaVector3(0.0f, 0.0f, 0.0f);
 	}
 
+	g_mouseherealpha = 1.0f;
 
 	s_filterindex = 1;
 	s_grassflag = false;
@@ -5394,6 +5403,10 @@ void InitApp()
 
 	g_mousehereimage = 0;
 	g_menuaimbarimage = 0;
+	g_playerbutton_target26 = 0;
+	g_playerbutton_target_inv26 = 0;
+	g_playerbutton_target40 = 0;
+	g_playerbutton_target_inv40 = 0;
 	g_currentsubmenuid = 0;
 	g_currentsubmenupos.x = 0;
 	g_currentsubmenupos.y = 0;
@@ -6061,6 +6074,22 @@ void OnDestroyDevice()
 	if (g_menuaimbarimage) {
 		delete g_menuaimbarimage;
 		g_menuaimbarimage = 0;
+	}
+	if (g_playerbutton_target26) {
+		delete g_playerbutton_target26;
+		g_playerbutton_target26 = 0;
+	}
+	if (g_playerbutton_target_inv26) {
+		delete g_playerbutton_target_inv26;
+		g_playerbutton_target_inv26 = 0;
+	}
+	if (g_playerbutton_target40) {
+		delete g_playerbutton_target40;
+		g_playerbutton_target40 = 0;
+	}
+	if (g_playerbutton_target_inv40) {
+		delete g_playerbutton_target_inv40;
+		g_playerbutton_target_inv40 = 0;
 	}
 	Gdiplus::GdiplusShutdown(gdiplusToken);
 
@@ -6931,26 +6960,31 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		//Preview
 		//##########
 		if (g_previewFlag) {
-			if (s_model && s_model->ExistCurrentMotion()) {
-				if (g_previewFlag <= 3) {
-					OnFramePreviewNormal(nextframe, difftime, endflag, loopstartflag);
-				}
-				else if (g_previewFlag == 4) {//BTの物理
-					OnFramePreviewBt(nextframe, difftime, endflag, loopstartflag);
-				}
-				else if (g_previewFlag == 5) {//ラグドール
-					//OnFramePreviewRagdoll(&nextframe, &difftime);
+			MOTINFO curmi = GetEditTargetMotInfo();
+			if (curmi.motid > 0) {
+				double previewframe = curmi.curframe;
 
-					//ラグドール休止中
-					_ASSERT(0);
-					OnFramePreviewNormal(nextframe, difftime, endflag, loopstartflag);
+				if (s_model && s_model->ExistCurrentMotion()) {
+					if (g_previewFlag <= 3) {
+						OnFramePreviewNormal(previewframe, difftime, endflag, loopstartflag);
+					}
+					else if (g_previewFlag == 4) {//BTの物理
+						OnFramePreviewBt(previewframe, difftime, endflag, loopstartflag);
+					}
+					else if (g_previewFlag == 5) {//ラグドール
+						//OnFramePreviewRagdoll(&nextframe, &difftime);
+
+						//ラグドール休止中
+						_ASSERT(0);
+						OnFramePreviewNormal(previewframe, difftime, endflag, loopstartflag);
+					}
+					else {
+						OnTimeLineCursor();
+					}
 				}
 				else {
-					OnTimeLineCursor();
+					g_previewFlag = 0;
 				}
-			}
-			else {
-				g_previewFlag = 0;
 			}
 		}
 		else {
@@ -12279,7 +12313,12 @@ int UpdateEditedEuler()
 
 
 	if (s_owpEulerGraph) {
-		s_owpEulerGraph->SetCurrentModel(s_model);
+		if (g_edittarget != EDITTARGET_CAMERA) {
+			s_owpEulerGraph->SetCurrentModel(s_model);
+		}
+		else {
+			s_owpEulerGraph->SetCurrentModel(s_cameramodel);
+		}
 	}
 
 	if (!s_model || !s_owpLTimeline || !s_owpEulerGraph) {
@@ -12381,23 +12420,75 @@ int UpdateEditedEuler()
 		s_owpEulerGraph->setInBlendShapeMode(false);
 
 
-		//選択状態がない場合にはtopboneのオイラーグラフを表示する。
-		if (s_curboneno < 0) {
-			CBone* topbone = s_model->GetTopBone();
-			if (topbone) {
-				s_curboneno = topbone->GetBoneNo();
-			}
-		}
-		CBone* opebone = s_model->GetBoneByID(s_curboneno);
-		if (opebone) {
-			CBone* parentbone = opebone->GetParent(false);
-			if (s_ikkind == 0) {
-				//ikkind がROT(0)の場合はIK　それ以外のMV, SCALEの場合にはFK
-				if (parentbone && parentbone->IsSkeleton()) {
-					opebone = parentbone;
+		int frameleng = 0;
+		int graphmotid = 0;
+		CBone* opebone = nullptr;
+		if (g_edittarget == EDITTARGET_BONE) {
+
+			graphmotid = s_model->GetCurrentMotID();
+			if (graphmotid > 0) {
+				frameleng = IntTime(s_model->GetCurrentMaxFrame());
+
+				if (s_curboneno < 0) {
+					CBone* topbone = s_model->GetTopBone();
+					if (topbone) {
+						//選択状態がない場合にはtopboneのオイラーグラフを表示する。
+						s_curboneno = topbone->GetBoneNo();
+					}
+				}
+
+				if (s_model && (s_curboneno >= 0)) {
+					opebone = s_model->GetBoneByID(s_curboneno);
+					if (opebone) {
+						CBone* parentbone = opebone->GetParent(false);
+						if (s_ikkind == 0) {
+							//ikkind がROT(0)の場合はIK　それ以外のMV, SCALEの場合にはFK
+							if (parentbone && parentbone->IsSkeleton()) {
+								opebone = parentbone;
+							}
+						}
+					}
+					else {
+						opebone = nullptr;
+					}
+				}
+				else {
+					opebone = nullptr;
 				}
 			}
+			else {
+				opebone = nullptr;
+			}
+		}
+		else if (g_edittarget == EDITTARGET_CAMERA) {
+			if (s_cameramodel) {
+				graphmotid = s_cameramodel->GetCameraMotionId();
+				if (graphmotid > 0) {
+					MOTINFO camerami = s_cameramodel->GetMotInfo(graphmotid);
+					frameleng = IntTime(camerami.frameleng);
+					CAMERANODE* cnptr = s_cameramodel->GetCAMERANODE(graphmotid);
+					if (cnptr && cnptr->pbone) {
+						opebone = cnptr->pbone->GetParent(false);
+						_ASSERT(opebone->IsNullAndChildIsCamera());
+					}
+					else {
+						opebone = nullptr;
+					}
+				}
+				else {
+					opebone = nullptr;
+				}
+			}
+			else {
+				opebone = nullptr;
+			}
+		}
+		else {
+			opebone = nullptr;
+		}
 
+
+		if (opebone) {
 			int curtime;
 			float minval = 0.0f;
 			float maxval = 0.0f;
@@ -12414,171 +12505,132 @@ int UpdateEditedEuler()
 				minfirstflag = 1;
 				maxfirstflag = 1;
 			}
-			//minfirstflag = 1;
-			//maxfirstflag = 1;
 
+			int startframe, endframe;
+			startframe = IntTime(s_owpLTimeline->getShowPosTime());
+			endframe = (int)(min(frameleng, startframe + IntTime(s_owpEulerGraph->getShowposWidth())));
 
-			//s_buttonselectstart = s_editrange.GetStartFrame();
-			//s_buttonselectend = s_editrange.GetEndFrame();
+			int firstframe;
+			firstframe = max((startframe - 1), 0);
 
-			int startframe, endframe, frameleng;
-			////if (g_previewFlag == 0) {
-			////	startframe = s_buttonselectstart;
-			////	endframe = s_buttonselectend;
-			////}
-			////else {
-			//	if (s_model->GetCurMotInfo()) {
-			//		double frameleng = s_model->GetCurMotInfo()->frameleng;
-			//		double currenttime = s_owpEulerGraph->getCurrentTime();
-
-			//		double startoffset;
-			//		double endoffset;
-			//		if (g_4kresolution) {
-			//			startoffset = 150.0;
-			//			endoffset = 260.0;
-			//		}
-			//		else {
-			//			startoffset = 50.0;
-			//			endoffset = 80.0;
-			//		}
-
-			//		startframe = max(0, (currenttime - startoffset));
-			//		endframe = min(frameleng, (startframe + endoffset));
-			//	}
-			//	else {
-			//		startframe = s_buttonselectstart;
-			//		endframe = s_buttonselectend;
-			//	}
-			////}
-
-			MOTINFO curmi = s_model->GetCurMotInfo();
-			if (curmi.motid > 0) {
-				frameleng = IntTime(curmi.frameleng);
-				startframe = IntTime(s_owpLTimeline->getShowPosTime());
-				endframe = (int)(min(frameleng, startframe + s_owpEulerGraph->getShowposWidth()));
-
-				int firstframe;
-				firstframe = max((startframe - 1), 0);
-
-				ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
-				int ret;
-				ret = s_owpEulerGraph->getEuler((double)firstframe, &befeul);
-				if (ret) {
-					befeul = ChaVector3(0.0f, 0.0f, 0.0f);
-				}
-
-				for (curtime = startframe; curtime <= endframe; curtime++) {
-					const WCHAR* wbonename = opebone->GetWBoneName();
-					ChaVector3 orgeul = ChaVector3(0.0f, 0.0f, 0.0f);
-					ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
-					//cureul = opebone->CalcFBXEul(curmi->motid, (double)curtime, &befeul);
-					//befeul = cureul;//!!!!!!!
-
-					CMotionPoint* curmp = opebone->GetMotionPoint(curmi.motid, (double)curtime);
-					if (curmp) {
-						if (s_ikkind == 0) {//回転
-							//opebone->GetWorldMat(curmi->motid, (double)curtime, 0, &cureul);
-							cureul = opebone->GetLocalEul(g_limitdegflag, curmi.motid, (double)curtime, 0);
-						}
-						else if (s_ikkind == 1) {//移動
-							cureul = opebone->CalcLocalTraAnim(g_limitdegflag, curmi.motid, (double)curtime);
-						}
-						else if (s_ikkind == 2) {//スケール
-							cureul = opebone->CalcLocalScaleAnim(g_limitdegflag, curmi.motid, (double)curtime);
-						}
-					}
-					else {
-						cureul.x = 0.0;
-						cureul.y = 0.0;
-						cureul.z = 0.0;
-						//befeul = cureul;//!!!!!!!
-					}
-					if ((curtime == 0.0) || (curtime == 1.0) || IsValidNewEul(cureul, befeul)) {
-						befeul = cureul;
-					}
-
-					bool needCallRewrite = false;
-					s_owpEulerGraph->setKey(needCallRewrite, _T("X"), (double)curtime, cureul.x);
-					s_owpEulerGraph->setKey(needCallRewrite, _T("Y"), (double)curtime, cureul.y);
-					s_owpEulerGraph->setKey(needCallRewrite, _T("Z"), (double)curtime, cureul.z);
-
-
-					//2023/10/13
-					if (curtime == eultiptime) {
-						s_owpEulerGraph->setEulTip(cureul);
-					}
-
-
-					if (minfirstflag == 1) {
-						minval = min(cureul.z, min(cureul.x, cureul.y));
-						minfirstflag = 0;
-					}
-					if (minval > cureul.x) {
-						minval = cureul.x;
-					}
-					if (minval > cureul.y) {
-						minval = cureul.y;
-					}
-					if (minval > cureul.z) {
-						minval = cureul.z;
-					}
-
-					if (maxfirstflag == 1) {
-						maxval = max(cureul.z, max(cureul.x, cureul.y));
-						maxfirstflag = 0;
-					}
-					if (maxval < cureul.x) {
-						maxval = cureul.x;
-					}
-					if (maxval < cureul.y) {
-						maxval = cureul.y;
-					}
-					if (maxval < cureul.z) {
-						maxval = cureul.z;
-					}
-
-				}
-
-				s_owpEulerGraph->setEulMinMax(s_ikkind, minval, maxval);
-
-				if (g_motionbrush_value) {
-
-					double scalemin, scalemax;
-					if (minval != maxval) {
-						scalemin = minval;
-						scalemax = maxval;
-					}
-					else {
-						//Eulerが全て０　例えば全フレームを選択してツールの姿勢初期化を実行した後など
-						//仮のminとmaxを指定
-						scalemin = minval;
-						scalemax = maxval + 10.0;
-					}
-
-					unsigned int scaleindex;
-					//for (scaleindex = 0; scaleindex < curmi->frameleng; scaleindex++) {
-					for (scaleindex = (unsigned int)startframe; scaleindex <= (unsigned int)endframe; scaleindex++) {
-
-						double curscalevalue;
-						if ((scaleindex >= (unsigned int)g_motionbrush_startframe) && (scaleindex <= (unsigned int)g_motionbrush_endframe) && (scaleindex < (unsigned int)g_motionbrush_frameleng)) {
-							curscalevalue = (double)(*(g_motionbrush_value + scaleindex));// *(scalemax - scalemin) + scalemin;
-							curscalevalue = (curscalevalue * 0.5 + 0.5) * (scalemax - scalemin) + scalemin;
-						}
-						else {
-							curscalevalue = 0.0;// *(scalemax - scalemin) + scalemin;
-							curscalevalue = (curscalevalue * 0.5 + 0.5) * (scalemax - scalemin) + scalemin;
-						}
-						bool needCallRewrite = false;
-						s_owpEulerGraph->setKey(needCallRewrite, _T("S"), (double)scaleindex, curscalevalue);//setkey
-					}
-
-
-				}
-
-				//_ASSERT(0);
-				s_owpEulerGraph->callRewrite();
-				//s_owpEulerGraph->draw();
+			ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+			int ret;
+			ret = s_owpEulerGraph->getEuler((double)firstframe, &befeul);
+			if (ret) {
+				befeul = ChaVector3(0.0f, 0.0f, 0.0f);
 			}
+
+			for (curtime = startframe; curtime <= endframe; curtime++) {
+				const WCHAR* wbonename = opebone->GetWBoneName();
+				ChaVector3 orgeul = ChaVector3(0.0f, 0.0f, 0.0f);
+				ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+				//cureul = opebone->CalcFBXEul(curmi->motid, (double)curtime, &befeul);
+				//befeul = cureul;//!!!!!!!
+
+				CMotionPoint* curmp = opebone->GetMotionPoint(graphmotid, (double)curtime);
+				if (curmp) {
+					if (s_ikkind == 0) {//回転
+						//opebone->GetWorldMat(curmi->motid, (double)curtime, 0, &cureul);
+						cureul = opebone->GetLocalEul(g_limitdegflag, graphmotid, (double)curtime, 0);
+					}
+					else if (s_ikkind == 1) {//移動
+						cureul = opebone->CalcLocalTraAnim(g_limitdegflag, graphmotid, (double)curtime);
+					}
+					else if (s_ikkind == 2) {//スケール
+						cureul = opebone->CalcLocalScaleAnim(g_limitdegflag, graphmotid, (double)curtime);
+					}
+				}
+				else {
+					cureul.x = 0.0;
+					cureul.y = 0.0;
+					cureul.z = 0.0;
+					//befeul = cureul;//!!!!!!!
+				}
+				if ((curtime == 0.0) || (curtime == 1.0) || IsValidNewEul(cureul, befeul)) {
+					befeul = cureul;
+				}
+
+				bool needCallRewrite = false;
+				s_owpEulerGraph->setKey(needCallRewrite, _T("X"), (double)curtime, cureul.x);
+				s_owpEulerGraph->setKey(needCallRewrite, _T("Y"), (double)curtime, cureul.y);
+				s_owpEulerGraph->setKey(needCallRewrite, _T("Z"), (double)curtime, cureul.z);
+
+
+				//2023/10/13
+				if (curtime == eultiptime) {
+					s_owpEulerGraph->setEulTip(cureul);
+				}
+
+
+				if (minfirstflag == 1) {
+					minval = min(cureul.z, min(cureul.x, cureul.y));
+					minfirstflag = 0;
+				}
+				if (minval > cureul.x) {
+					minval = cureul.x;
+				}
+				if (minval > cureul.y) {
+					minval = cureul.y;
+				}
+				if (minval > cureul.z) {
+					minval = cureul.z;
+				}
+
+				if (maxfirstflag == 1) {
+					maxval = max(cureul.z, max(cureul.x, cureul.y));
+					maxfirstflag = 0;
+				}
+				if (maxval < cureul.x) {
+					maxval = cureul.x;
+				}
+				if (maxval < cureul.y) {
+					maxval = cureul.y;
+				}
+				if (maxval < cureul.z) {
+					maxval = cureul.z;
+				}
+
+			}
+
+			s_owpEulerGraph->setEulMinMax(s_ikkind, minval, maxval);
+
+			if (g_motionbrush_value) {
+
+				double scalemin, scalemax;
+				if (minval != maxval) {
+					scalemin = minval;
+					scalemax = maxval;
+				}
+				else {
+					//Eulerが全て０　例えば全フレームを選択してツールの姿勢初期化を実行した後など
+					//仮のminとmaxを指定
+					scalemin = minval;
+					scalemax = maxval + 10.0;
+				}
+
+				unsigned int scaleindex;
+				//for (scaleindex = 0; scaleindex < curmi->frameleng; scaleindex++) {
+				for (scaleindex = (unsigned int)startframe; scaleindex <= (unsigned int)endframe; scaleindex++) {
+
+					double curscalevalue;
+					if ((scaleindex >= (unsigned int)g_motionbrush_startframe) && (scaleindex <= (unsigned int)g_motionbrush_endframe) && (scaleindex < (unsigned int)g_motionbrush_frameleng)) {
+						curscalevalue = (double)(*(g_motionbrush_value + scaleindex));// *(scalemax - scalemin) + scalemin;
+						curscalevalue = (curscalevalue * 0.5 + 0.5) * (scalemax - scalemin) + scalemin;
+					}
+					else {
+						curscalevalue = 0.0;// *(scalemax - scalemin) + scalemin;
+						curscalevalue = (curscalevalue * 0.5 + 0.5) * (scalemax - scalemin) + scalemin;
+					}
+					bool needCallRewrite = false;
+					s_owpEulerGraph->setKey(needCallRewrite, _T("S"), (double)scaleindex, curscalevalue);//setkey
+				}
+
+
+			}
+
+			//_ASSERT(0);
+			s_owpEulerGraph->callRewrite();
+			//s_owpEulerGraph->draw();
 		}
 	}
 
@@ -12591,7 +12643,12 @@ int refreshEulerGraph()
 
 
 	if (s_owpEulerGraph) {
-		s_owpEulerGraph->SetCurrentModel(s_model);
+		if (g_edittarget != EDITTARGET_CAMERA) {
+			s_owpEulerGraph->SetCurrentModel(s_model);
+		}
+		else {
+			s_owpEulerGraph->SetCurrentModel(s_cameramodel);
+		}		
 	}
 
 	if (!s_model || !s_owpLTimeline || !s_owpEulerGraph) {
@@ -12613,7 +12670,7 @@ int refreshEulerGraph()
 
 	if (s_model) {
 
-		int frameleng = IntTime(s_model->GetCurrentMaxFrame());
+		
 
 		//if (!g_motionbrush_value || (g_motionbrush_frameleng != frameleng)) {
 		int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
@@ -12652,6 +12709,7 @@ int refreshEulerGraph()
 			float maxval = 100.0;
 
 			int curmotid = pmodel->GetCurrentMotID();
+			int frameleng = IntTime(s_model->GetCurrentMaxFrame());
 
 			for (curtime = 0; curtime < frameleng; curtime++) {
 				float currentvalue = pmqoobj->GetShapeAnimWeight(curmotid, curtime, channelindex);
@@ -12708,144 +12766,199 @@ int refreshEulerGraph()
 			s_owpEulerGraph->newLine(0, 0, _T("Y"));
 			s_owpEulerGraph->newLine(0, 0, _T("Z"));
 			s_owpEulerGraph->newLine(0, 0, _T("S"));
-			//s_owpLTimeline->setMaxTime( s_model->m_curmotinfo->frameleng - 1.0 );
-			s_owpEulerGraph->setMaxTime(s_model->GetCurrentMaxFrame());//左端の１マスを選んだ状態がフレーム０を選んだ状態だから　-1 しない。
+			////s_owpLTimeline->setMaxTime( s_model->m_curmotinfo->frameleng - 1.0 );
+			//s_owpEulerGraph->setMaxTime(s_model->GetCurrentMaxFrame());//左端の１マスを選んだ状態がフレーム０を選んだ状態だから　-1 しない。
 
-			if (s_model && (s_curboneno >= 0)) {
-				CBone* opebone = s_model->GetBoneByID(s_curboneno);
-				if (opebone) {
-					CBone* parentbone = opebone->GetParent(false);
-					if (s_ikkind == 0) {
-						//ikkind がROT(0)の場合はIK　それ以外のMV, SCALEの場合にはFK
-						if (parentbone && parentbone->IsSkeleton()) {
-							opebone = parentbone;
-						}
+			int frameleng = 100;
+			int graphmotid = 0;
+			CBone* opebone = nullptr;
+			if (g_edittarget == EDITTARGET_BONE) {
+
+				graphmotid = s_model->GetCurrentMotID();
+				frameleng = IntTime(s_model->GetCurrentMaxFrame());
+
+				if (s_curboneno < 0) {
+					CBone* topbone = s_model->GetTopBone();
+					if (topbone) {
+						//選択状態がない場合にはtopboneのオイラーグラフを表示する。
+						s_curboneno = topbone->GetBoneNo();
 					}
-
-					int curtime;
-					float minval = 0.0;
-					float maxval = 0.0;
-					int minfirstflag = 1;
-					int maxfirstflag = 1;
-
-					double firstframe = 0.0;
-					ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
-					int ret;
-					ret = s_owpEulerGraph->getEuler(firstframe, &befeul);
-					if (ret) {
-						befeul = ChaVector3(0.0f, 0.0f, 0.0f);
-					}
-					for (curtime = 0; curtime < frameleng; curtime++) {
-						const WCHAR* wbonename = opebone->GetWBoneName();
-						ChaVector3 orgeul = ChaVector3(0.0f, 0.0f, 0.0f);
-						ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
-						//cureul = opebone->CalcFBXEul(curmi->motid, (double)curtime, &befeul);
-						//befeul = cureul;//!!!!!!!
-
-						CMotionPoint* curmp = opebone->GetMotionPoint(s_model->GetCurrentMotID(), (double)curtime);
-						if (curmp) {
-							if (s_ikkind == 0) {//回転
-								//opebone->GetWorldMat(curmi->motid, (double)curtime, 0, &cureul);
-								cureul = opebone->GetLocalEul(g_limitdegflag,
-									s_model->GetCurrentMotID(), (double)curtime, 0);
-							}
-							else if (s_ikkind == 1) {//移動
-								cureul = opebone->CalcLocalTraAnim(g_limitdegflag,
-									s_model->GetCurrentMotID(), (double)curtime);
-							}
-							else if (s_ikkind == 2) {//スケール
-								cureul = opebone->CalcLocalScaleAnim(g_limitdegflag,
-									s_model->GetCurrentMotID(), (double)curtime);
-							}
-						}
-						else {
-							cureul.x = 0.0;
-							cureul.y = 0.0;
-							cureul.z = 0.0;
-							//befeul = cureul;
-						}
-						if ((curtime == 0.0) || (curtime == 1.0) || IsValidNewEul(cureul, befeul)) {
-							befeul = cureul;
-						}
-
-						bool needCallRewrite = false;
-						s_owpEulerGraph->newKey(needCallRewrite, _T("X"), (double)curtime, cureul.x);
-						s_owpEulerGraph->newKey(needCallRewrite, _T("Y"), (double)curtime, cureul.y);
-						s_owpEulerGraph->newKey(needCallRewrite, _T("Z"), (double)curtime, cureul.z);
-						//s_owpEulerGraph->newKey(_T("S"), (double)curtime, 0.0);
-
-
-						//2023/10/13
-						if (curtime == eultiptime) {
-							s_owpEulerGraph->setEulTip(cureul);
-						}
-
-
-						if (minfirstflag == 1) {
-							minval = min(cureul.z, min(cureul.x, cureul.y));
-							minfirstflag = 0;
-						}
-						if (minval > cureul.x) {
-							minval = cureul.x;
-						}
-						if (minval > cureul.y) {
-							minval = cureul.y;
-						}
-						if (minval > cureul.z) {
-							minval = cureul.z;
-						}
-
-						if (maxfirstflag == 1) {
-							maxval = max(cureul.z, max(cureul.x, cureul.y));
-							maxfirstflag = 0;
-						}
-						if (maxval < cureul.x) {
-							maxval = cureul.x;
-						}
-						if (maxval < cureul.y) {
-							maxval = cureul.y;
-						}
-						if (maxval < cureul.z) {
-							maxval = cureul.z;
-						}
-
-					}
-
-					s_owpEulerGraph->setEulMinMax(s_ikkind, minval, maxval);
-
-					if (g_motionbrush_value) {
-
-						double scalemin, scalemax;
-						if (minval != maxval) {
-							scalemin = minval;
-							scalemax = maxval;
-						}
-						else {
-							//Eulerが全て０　例えば全フレームを選択してツールの姿勢初期化を実行した後など
-							//仮のminとmaxを指定
-							scalemin = minval;
-							scalemax = maxval + 10.0;
-						}
-
-
-						unsigned int scaleindex;
-						for (scaleindex = 0; scaleindex < (unsigned int)frameleng; scaleindex++) {
-							double curscalevalue;
-							//if ((scaleindex >= (unsigned int)g_motionbrush_startframe) && (scaleindex <= (unsigned int)g_motionbrush_endframe) && (scaleindex < (unsigned int)g_motionbrush_frameleng)) {
-							curscalevalue = (double)(*(g_motionbrush_value + scaleindex));// *(scalemax - scalemin) + scalemin;
-							curscalevalue = (curscalevalue * 0.5 + 0.5) * (scalemax - scalemin) + scalemin;
-							//}
-							//else {
-							//	curscalevalue = 0.0;// *(scalemax - scalemin) + scalemin;
-							//	curscalevalue = (curscalevalue * 0.5 + 0.5) * (scalemax - scalemin) + scalemin;
-							//}
-							bool needCallRewrite = false;
-							s_owpEulerGraph->newKey(needCallRewrite, _T("S"), (double)scaleindex, curscalevalue);//newkey
-						}
-					}
-
-					s_owpEulerGraph->callRewrite();
 				}
+
+				if (s_model && (s_curboneno >= 0)) {
+					opebone = s_model->GetBoneByID(s_curboneno);
+					if (opebone) {
+						CBone* parentbone = opebone->GetParent(false);
+						if (s_ikkind == 0) {
+							//ikkind がROT(0)の場合はIK　それ以外のMV, SCALEの場合にはFK
+							if (parentbone && parentbone->IsSkeleton()) {
+								opebone = parentbone;
+							}
+						}
+					}
+					else {
+						opebone = nullptr;
+					}
+				}
+				else {
+					opebone = nullptr;
+				}
+			}
+			else if (g_edittarget == EDITTARGET_CAMERA) {
+				if (s_cameramodel) {
+					graphmotid = s_cameramodel->GetCameraMotionId();
+					if (graphmotid > 0) {
+						MOTINFO camerami = s_cameramodel->GetMotInfo(graphmotid);
+						frameleng = IntTime(camerami.frameleng);
+						CAMERANODE* cnptr = s_cameramodel->GetCAMERANODE(graphmotid);
+						if (cnptr && cnptr->pbone) {
+							opebone = cnptr->pbone->GetParent(false);
+							_ASSERT(opebone->IsNullAndChildIsCamera());
+						}
+						else {
+							opebone = nullptr;
+						}
+					}
+					else {
+						opebone = nullptr;
+					}
+				}
+				else {
+					opebone = nullptr;
+				}
+			}
+			else {
+				opebone = nullptr;
+			}
+			s_owpEulerGraph->setMaxTime((double)frameleng);//左端の１マスを選んだ状態がフレーム０を選んだ状態だから　-1 しない。
+
+
+
+			if (opebone) {
+
+				int curtime;
+				float minval = 0.0;
+				float maxval = 0.0;
+				int minfirstflag = 1;
+				int maxfirstflag = 1;
+
+				double firstframe = 0.0;
+				ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+				int ret;
+				ret = s_owpEulerGraph->getEuler(firstframe, &befeul);
+				if (ret) {
+					befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+				}
+				for (curtime = 0; curtime < frameleng; curtime++) {
+					const WCHAR* wbonename = opebone->GetWBoneName();
+					ChaVector3 orgeul = ChaVector3(0.0f, 0.0f, 0.0f);
+					ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+					//cureul = opebone->CalcFBXEul(curmi->motid, (double)curtime, &befeul);
+					//befeul = cureul;//!!!!!!!
+
+					CMotionPoint* curmp = opebone->GetMotionPoint(graphmotid, (double)curtime);
+					if (curmp) {
+						if (s_ikkind == 0) {//回転
+							//opebone->GetWorldMat(curmi->motid, (double)curtime, 0, &cureul);
+							cureul = opebone->GetLocalEul(g_limitdegflag,
+								graphmotid, (double)curtime, 0);
+						}
+						else if (s_ikkind == 1) {//移動
+							cureul = opebone->CalcLocalTraAnim(g_limitdegflag,
+								graphmotid, (double)curtime);
+						}
+						else if (s_ikkind == 2) {//スケール
+							cureul = opebone->CalcLocalScaleAnim(g_limitdegflag,
+								graphmotid, (double)curtime);
+						}
+					}
+					else {
+						cureul.x = 0.0;
+						cureul.y = 0.0;
+						cureul.z = 0.0;
+						//befeul = cureul;
+					}
+					if ((curtime == 0.0) || (curtime == 1.0) || IsValidNewEul(cureul, befeul)) {
+						befeul = cureul;
+					}
+
+					bool needCallRewrite = false;
+					s_owpEulerGraph->newKey(needCallRewrite, _T("X"), (double)curtime, cureul.x);
+					s_owpEulerGraph->newKey(needCallRewrite, _T("Y"), (double)curtime, cureul.y);
+					s_owpEulerGraph->newKey(needCallRewrite, _T("Z"), (double)curtime, cureul.z);
+					//s_owpEulerGraph->newKey(_T("S"), (double)curtime, 0.0);
+
+
+					//2023/10/13
+					if (curtime == eultiptime) {
+						s_owpEulerGraph->setEulTip(cureul);
+					}
+
+
+					if (minfirstflag == 1) {
+						minval = min(cureul.z, min(cureul.x, cureul.y));
+						minfirstflag = 0;
+					}
+					if (minval > cureul.x) {
+						minval = cureul.x;
+					}
+					if (minval > cureul.y) {
+						minval = cureul.y;
+					}
+					if (minval > cureul.z) {
+						minval = cureul.z;
+					}
+
+					if (maxfirstflag == 1) {
+						maxval = max(cureul.z, max(cureul.x, cureul.y));
+						maxfirstflag = 0;
+					}
+					if (maxval < cureul.x) {
+						maxval = cureul.x;
+					}
+					if (maxval < cureul.y) {
+						maxval = cureul.y;
+					}
+					if (maxval < cureul.z) {
+						maxval = cureul.z;
+					}
+
+				}
+
+				s_owpEulerGraph->setEulMinMax(s_ikkind, minval, maxval);
+
+				if (g_motionbrush_value) {
+
+					double scalemin, scalemax;
+					if (minval != maxval) {
+						scalemin = minval;
+						scalemax = maxval;
+					}
+					else {
+						//Eulerが全て０　例えば全フレームを選択してツールの姿勢初期化を実行した後など
+						//仮のminとmaxを指定
+						scalemin = minval;
+						scalemax = maxval + 10.0;
+					}
+
+
+					unsigned int scaleindex;
+					for (scaleindex = 0; scaleindex < (unsigned int)frameleng; scaleindex++) {
+						double curscalevalue;
+						//if ((scaleindex >= (unsigned int)g_motionbrush_startframe) && (scaleindex <= (unsigned int)g_motionbrush_endframe) && (scaleindex < (unsigned int)g_motionbrush_frameleng)) {
+						curscalevalue = (double)(*(g_motionbrush_value + scaleindex));// *(scalemax - scalemin) + scalemin;
+						curscalevalue = (curscalevalue * 0.5 + 0.5) * (scalemax - scalemin) + scalemin;
+						//}
+						//else {
+						//	curscalevalue = 0.0;// *(scalemax - scalemin) + scalemin;
+						//	curscalevalue = (curscalevalue * 0.5 + 0.5) * (scalemax - scalemin) + scalemin;
+						//}
+						bool needCallRewrite = false;
+						s_owpEulerGraph->newKey(needCallRewrite, _T("S"), (double)scaleindex, curscalevalue);//newkey
+					}
+				}
+
+				s_owpEulerGraph->callRewrite();
 			}
 		}
 		//s_owpEulerGraph->setCurrentTime(0.0, false);
@@ -12871,7 +12984,7 @@ void refreshTimeline(OWP_Timeline& timeline)
 	//	return;
 	//}
 
-	MOTINFO curmi = s_model->GetCurMotInfo();
+	MOTINFO curmi = GetEditTargetMotInfo();
 	if (curmi.motid <= 0) {
 		return;
 	}
@@ -24235,7 +24348,12 @@ int CreateMotionBrush(double srcstart, double srcend, bool onrefreshflag)
 		g_motionbrush_value = 0;
 	}
 
-	int frameleng = IntTime(s_model->GetCurMotInfo().frameleng);
+	MOTINFO curmi = GetEditTargetMotInfo();
+	if (curmi.motid <= 0) {
+		return 2;
+	}
+	int frameleng = IntTime(curmi.frameleng);
+
 	if ((frameleng <= 0) || (frameleng > 100000)) {
 		//_ASSERT(0);
 		return 2;//フレーム,フレーム長範囲外は 2 を返す
@@ -24516,7 +24634,7 @@ int SetLTimelineMark(int curboneno)
 			s_owpPlayerButton->setJointName(markname);//2023/01/08
 		}
 	}
-	else {
+	else if (g_edittarget == EDITTARGET_BONE) {
 		if (curboneno >= 0) {
 			CBone* opebone = s_model->GetBoneByID(curboneno);
 			if (opebone) {
@@ -24559,9 +24677,84 @@ int SetLTimelineMark(int curboneno)
 						//	}
 						//}
 					}
-
+					else {
+						WCHAR markname[256] = { 0L };
+						swprintf_s(markname, 256, L"Unknown Bone");
+						if (s_owpPlayerButton) {
+							s_owpPlayerButton->setJointName(markname);//2023/01/08
+						}
+					}
+				}
+				else {
+					WCHAR markname[256] = { 0L };
+					swprintf_s(markname, 256, L"Unknown Bone");
+					if (s_owpPlayerButton) {
+						s_owpPlayerButton->setJointName(markname);//2023/01/08
+					}
 				}
 			}
+			else {
+				WCHAR markname[256] = { 0L };
+				swprintf_s(markname, 256, L"Unknown Bone");
+				if (s_owpPlayerButton) {
+					s_owpPlayerButton->setJointName(markname);//2023/01/08
+				}
+			}
+		}
+		else {
+			WCHAR markname[256] = { 0L };
+			swprintf_s(markname, 256, L"Unknown Bone");
+			if (s_owpPlayerButton) {
+				s_owpPlayerButton->setJointName(markname);//2023/01/08
+			}
+		}
+	}
+	else if (g_edittarget == EDITTARGET_CAMERA) {
+		if (s_cameramodel) {
+			int cameramotid = s_cameramodel->GetCameraMotionId();
+			if (cameramotid > 0) {
+				CAMERANODE* cnptr = s_cameramodel->GetCAMERANODE(cameramotid);
+				if (cnptr && cnptr->pbone && cnptr->pbone->GetParent(false)) {
+					WCHAR markname[256] = { 0L };
+					if (g_limitdegflag == true) {
+						swprintf_s(markname, 256, L"[L] : %s", cnptr->pbone->GetParent(false)->GetWBoneName());
+					}
+					else {
+						swprintf_s(markname, 256, L"[W] : %s", cnptr->pbone->GetParent(false)->GetWBoneName());
+					}
+					if (s_owpPlayerButton) {
+						s_owpPlayerButton->setJointName(markname);//2023/01/08
+					}
+				}
+				else {
+					WCHAR markname[256] = { 0L };
+					swprintf_s(markname, 256, L"Unknown CameraAnimNode");
+					if (s_owpPlayerButton) {
+						s_owpPlayerButton->setJointName(markname);//2023/01/08
+					}
+				}
+			}
+			else {
+				WCHAR markname[256] = { 0L };
+				swprintf_s(markname, 256, L"Camera Anim Not Exist");
+				if (s_owpPlayerButton) {
+					s_owpPlayerButton->setJointName(markname);//2023/01/08
+				}
+			}
+		}
+		else {
+			WCHAR markname[256] = { 0L };
+			swprintf_s(markname, 256, L"Camera Anim Not Exist");
+			if (s_owpPlayerButton) {
+				s_owpPlayerButton->setJointName(markname);//2023/01/08
+			}
+		}
+	}
+	else {
+		WCHAR markname[256] = { 0L };
+		swprintf_s(markname, 256, L"Unknown");
+		if (s_owpPlayerButton) {
+			s_owpPlayerButton->setJointName(markname);//2023/01/08
 		}
 	}
 
@@ -34307,7 +34500,7 @@ int OnFrameProcessCameraTime(double difftime, double* pnextframe, int* pendflag,
 				rangestart = s_previewrange.GetStartFrame();
 			}
 			//s_model->SetMotionFrame(cameramotid, rangestart);
-			s_cameramodel->SetMotionFrame(cameramotid, rangestart);
+			s_cameramodel->SetCameraMotionFrame(cameramotid, rangestart);
 			*pnextframe = 0.0;
 		}
 		//s_model->AdvanceTime(0, s_previewrange, g_previewFlag, difftime, pnextframe, pendflag, ploopstartflag, cameramotid);//!!! cameramotid !!!
@@ -35040,6 +35233,40 @@ int OnFrameTimeLineWnd()
 		s_zeroFrameFlag = false;
 	}
 
+	if (s_LchangeTargetFlag) {
+		s_LchangeTargetFlag =false;
+
+		g_edittarget++;
+		if (g_edittarget >= EDITTARGET_MAX) {
+			g_edittarget = EDITTARGET_BONE;
+		}
+
+		if (g_edittarget == EDITTARGET_MORPH) {
+			CloseAllRightPainWindow();
+			s_guiswplateno = 6;
+			GUISetVisible(s_guiswplateno);
+		}
+		else {
+			if (g_edittarget == EDITTARGET_BONE) {//bone-->camera-->morph-->"bone"
+
+				s_guiswflag = false;
+				GUIMenuSetVisible(s_platemenukind, s_platemenuno);
+
+				//ShowGUIDlgBlendShape(false);
+				//if (s_placefolderWnd) {
+				//	s_placefolderWnd->setVisible(true);
+				//}
+			}
+		}
+
+		SetLTimelineMark(s_curboneno);
+		if (s_owpTimeline) {
+			refreshTimeline(*s_owpTimeline);
+		}
+		refreshEulerGraph();
+	}
+
+
 	if (s_firstkeyFlag) {
 		if (s_model) {
 			s_buttonselectstart = 1.0;
@@ -35063,23 +35290,27 @@ int OnFrameTimeLineWnd()
 
 	if (s_lastkeyFlag) {
 		if (s_model && s_model->ExistCurrentMotion()) {
-			double lastframe = s_model->GetCurMotInfo().frameleng - 1.0;
+			double lastframe;
+			MOTINFO curmi = GetEditTargetMotInfo();
+			if (curmi.motid > 0) {
+				lastframe = curmi.frameleng - 1.0;
 
-			s_buttonselectstart = lastframe;
-			s_buttonselectend = lastframe;
-			s_buttonselecttothelast = 0;
-			g_playingstart = lastframe;
-			g_playingend = lastframe;
-			OnTimeLineButtonSelectFromSelectStartEnd(s_buttonselecttothelast);
-			SetShowPosTime();
-			int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
-			if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
-				_ASSERT(0);
-				::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
-				PostQuitMessage(result);
+				s_buttonselectstart = lastframe;
+				s_buttonselectend = lastframe;
+				s_buttonselecttothelast = 0;
+				g_playingstart = lastframe;
+				g_playingend = lastframe;
+				OnTimeLineButtonSelectFromSelectStartEnd(s_buttonselecttothelast);
+				SetShowPosTime();
+				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
+				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
+					_ASSERT(0);
+					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+					PostQuitMessage(result);
+				}
+				PrepairUndo();//LTimelineの選択後かつ編集前の保存を想定
+				g_underselectingframe = 0;
 			}
-			PrepairUndo();//LTimelineの選択後かつ編集前の保存を想定
-			g_underselectingframe = 0;
 		}
 		s_lastkeyFlag = false;
 	}
@@ -35088,7 +35319,13 @@ int OnFrameTimeLineWnd()
 		if (s_model && s_owpLTimeline) {
 			s_buttonselectstart = s_owpLTimeline->getCurrentTime();
 			if (s_model && s_model->ExistCurrentMotion()) {
-				s_buttonselectend = s_model->GetCurMotInfo().frameleng - 1.0;
+				MOTINFO curmi = GetEditTargetMotInfo();
+				if (curmi.motid > 0) {
+					s_buttonselectend = s_model->GetCurMotInfo().frameleng - 1.0;
+				}
+				else {
+					s_buttonselectend = s_buttonselectstart;
+				}
 			}
 			else {
 				s_buttonselectend = s_buttonselectstart;
@@ -36105,10 +36342,14 @@ int OnFrameToolWnd()
 
 			if (keynum >= 0) {
 				if (keynum == 0) {
-					double motleng = s_model->GetCurMotInfo().frameleng - 1;
-					double srcendframe = min(motleng, startframe + (copyEndTime - copyStartTime));
-					srcendframe = max(srcendframe, 0.0);
-					PasteMotionPointJustInTerm(copyStartTime, copyEndTime, startframe, srcendframe);
+					double motleng;
+					MOTINFO curmi = GetEditTargetMotInfo();
+					if (curmi.motid > 0) {
+						motleng = curmi.frameleng - 1;
+						double srcendframe = min(motleng, startframe + (copyEndTime - copyStartTime));
+						srcendframe = max(srcendframe, 0.0);
+						PasteMotionPointJustInTerm(copyStartTime, copyEndTime, startframe, srcendframe);
+					}
 				}
 				else {
 					PasteMotionPointJustInTerm(copyStartTime, copyEndTime, startframe, endframe);
@@ -36155,20 +36396,22 @@ int OnFrameToolWnd()
 			dlgret = (int)DialogBoxW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_MOTPROPDLG),
 				s_3dwnd, (DLGPROC)MotPropDlgProc);
 			if ((dlgret == IDOK) && s_tmpmotname[0]) {
-				MOTINFO curmi = s_model->GetCurMotInfo();
-				WideCharToMultiByte(CP_ACP, 0, s_tmpmotname, -1, curmi.motname, 256, NULL, NULL);
-				//s_model->m_curmotinfo->frameleng = s_tmpmotframeleng;
-				s_model->SetMotInfoLoopFlagByIndex(curmi.motid, s_tmpmotloop);
-				double oldframeleng = curmi.frameleng;
+				MOTINFO curmi = GetEditTargetMotInfo();
+				if (curmi.motid > 0) {
+					WideCharToMultiByte(CP_ACP, 0, s_tmpmotname, -1, curmi.motname, 256, NULL, NULL);
+					//s_model->m_curmotinfo->frameleng = s_tmpmotframeleng;
+					s_model->SetMotInfoLoopFlagByIndex(curmi.motid, s_tmpmotloop);
+					double oldframeleng = curmi.frameleng;
 
-				if (s_owpTimeline) {
-					s_owpTimeline->setMaxTime(s_tmpmotframeleng);
+					if (s_owpTimeline) {
+						s_owpTimeline->setMaxTime(s_tmpmotframeleng);
+					}
+					s_model->ChangeMotFrameLeng(curmi.motid, s_tmpmotframeleng);//はみ出たmpも削除
+					InitCurMotion(0, oldframeleng);
+
+					//メニュー書き換え, timeline update
+					OnAnimMenu(true, s_motmenuindexmap[s_model]);
 				}
-				s_model->ChangeMotFrameLeng(curmi.motid, s_tmpmotframeleng);//はみ出たmpも削除
-				InitCurMotion(0, oldframeleng);
-
-				//メニュー書き換え, timeline update
-				OnAnimMenu(true, s_motmenuindexmap[s_model]);
 			}
 		}
 
@@ -38459,6 +38702,14 @@ int CreateLongTimelineWnd()
 					}
 				}
 				});
+
+			s_owpPlayerButton->setChangeTargetButtonListener([]() {
+				if (s_model) {
+					s_LchangeTargetFlag = true;
+				}
+				});
+
+
 			//s_owpPlayerButton->setBtResetButtonListener([]() {
 			//	if (s_model) {
 			//		s_btresetFlag = true;
@@ -59816,12 +60067,14 @@ int ClearLimitedWM(CModel* srcmodel)
 
 	if (srcmodel && srcmodel->ExistCurrentMotion()) {
 		int curmotid = srcmodel->GetCurrentMotID();
-		double frameleng = srcmodel->GetCurrentMotLeng();
-
-		double curframe;
-		for (curframe = 0.0; curframe < frameleng; curframe += 1.0) {
-			//for (curframe = 1.0; curframe < frameleng; curframe += 1.0) {
-			srcmodel->ClearLimitedWM(curmotid, curframe);
+		MOTINFO curmi = GetEditTargetMotInfo();
+		if (curmi.motid > 0) {
+			double frameleng = curmi.frameleng;
+			double curframe;
+			for (curframe = 0.0; curframe < frameleng; curframe += 1.0) {
+				//for (curframe = 1.0; curframe < frameleng; curframe += 1.0) {
+				srcmodel->ClearLimitedWM(curmotid, curframe);
+			}
 		}
 	}
 	return 0;
@@ -69597,8 +69850,41 @@ int CreateSprites()
 	s_spritetex62->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex62;
 	s_spret2prev2.sprite.Init(spriteinitdata, screenvertexflag);
-	
-	
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\targetbutton26.png");
+	g_playerbutton_target26 = new Gdiplus::Image(filepath);
+	if (!g_playerbutton_target26) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\targetbutton_inv26.png");
+	g_playerbutton_target_inv26 = new Gdiplus::Image(filepath);
+	if (!g_playerbutton_target_inv26) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\targetbutton40.png");
+	g_playerbutton_target40 = new Gdiplus::Image(filepath);
+	if (!g_playerbutton_target40) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\targetbutton_inv40.png");
+	g_playerbutton_target_inv40 = new Gdiplus::Image(filepath);
+	if (!g_playerbutton_target_inv40) {
+		_ASSERT(0);
+		PostQuitMessage(1);
+		return S_FALSE;
+	}
+
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\BakeLW2W.png");
 	s_spritetex63 = new Texture();
@@ -70919,5 +71205,31 @@ bool InBlendShapeMode(CModel** ppmodel, CMQOObject** ppmqoobj, int* pchannelinde
 	else {
 		return false;
 	}
+}
+
+MOTINFO GetEditTargetMotInfo()
+{
+	MOTINFO curmi;
+	if (g_edittarget == EDITTARGET_CAMERA) {
+		if (s_cameramodel) {
+			int cameramotid = s_cameramodel->GetCameraMotionId();
+			if (cameramotid > 0) {
+				curmi = s_cameramodel->GetMotInfo(cameramotid);
+			}
+			else {
+				curmi.Init();
+			}
+		}
+		else {
+			curmi.Init();
+		}
+	}
+	else {
+		curmi = s_model->GetCurMotInfo();
+	}
+	if (curmi.motid <= 0) {
+		curmi.Init();
+	}
+	return curmi;
 }
 
