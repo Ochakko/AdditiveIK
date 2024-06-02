@@ -1027,6 +1027,10 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 
 
 				FbxCamera* lCamera = FbxCamera::Create(pScene, nodename);
+				FbxCamera* srccamera = srcnode->GetCamera();
+				if (srccamera && lCamera) {
+					lCamera->Copy(*srccamera);
+				}
 				psavenode->SetNodeAttribute(lCamera);
 
 				FbxNodeAttribute* saveattr = psavenode->GetNodeAttribute();
@@ -1038,8 +1042,6 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 
 				s_savenode2bone[psavenode] = ploadnode->GetBone();//2023/06/02
 				CopyNodePosture(srcnode, psavenode);//2023/06/02
-
-
 			}
 			break;
 			case FbxNodeAttribute::eBoundary:
@@ -3775,7 +3777,16 @@ void AnimateBoneReq(bool limitdegflag, FbxNode* pNode, FbxAnimLayer* lAnimLayer,
 			//if (curmotid != curbone->GetParModel()->GetCameraMotionId()) {
 			if (curmotinfo.cameramotion == false) {
 				//通常モーション
-				if (curbone->IsSkeleton() || curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
+				
+				//if (curbone->IsSkeleton() || curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
+
+				//2024/06/02
+				//Cameraアニメが存在しない場合にCameraノードのアニメを書き出すと
+				//カメラの０フレーム姿勢が原点になる
+				//カメラの０フレーム姿勢はアニメーションが無い場合のデフォルト位置としても使用しているので
+				//カメラのデフォルト位置が意図せずに初期化されてしまう
+				//よって書き出すモーションがカメラモーションでない場合には、カメラノードの姿勢を書き出さない
+				if (curbone->IsSkeleton()) {
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_X);
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Y);
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Z);

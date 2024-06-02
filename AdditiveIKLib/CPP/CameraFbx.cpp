@@ -529,13 +529,11 @@ int CCameraFbx::GetCameraAnimParams(int cameramotid, double nextframe, double ca
 	double roundingframe = RoundingTime(nextframe);
 
 	if (IsLoaded()) {
-		if (cameramotid > 0) {
 
-			CAMERANODE* curcamera = GetCameraNode(cameramotid);
-			if (!curcamera) {
-				_ASSERT(0);
-				return 1;
-			}
+		CAMERANODE* curcamera = GetCameraNode(cameramotid);//カメラがあるがカメラアニメが無い場合にもnullを返す
+
+		if (curcamera && (cameramotid > 0)) {
+
 
 
 			if (roundingframe != 0.0) {
@@ -609,19 +607,19 @@ int CCameraFbx::GetCameraAnimParams(int cameramotid, double nextframe, double ca
 			//ZeroFrameCamera
 
 			//モーションを持たない複数カメラ切り替えに対して　現在GUIが未対応　最初のカメラの0フレームの位置と向きを返す
-			CAMERANODE* curcamera = 0;
-			curcamera = GetFirstValidCameraNode();//anim無しのカメラ用
-			if (!curcamera) {
+			CAMERANODE* curcamera0 = 0;
+			curcamera0 = GetFirstValidCameraNode();//anim無しのカメラ用
+			if (!curcamera0) {
 				//何もしない
 				return 0;
 			}
 
-			*pEyePos = curcamera->position;
-			*pTargetPos = *pEyePos + curcamera->dirvec * camdist;
-			*pcamupvec = curcamera->upvec;
+			*pEyePos = curcamera0->position;
+			*pTargetPos = *pEyePos + curcamera0->dirvec * camdist;
+			*pcamupvec = curcamera0->upvec;
 
 			if (protmat) {
-				*protmat = ChaMatrixRot(curcamera->worldmat);
+				*protmat = ChaMatrixRot(curcamera0->worldmat);
 			}
 		}
 	}
