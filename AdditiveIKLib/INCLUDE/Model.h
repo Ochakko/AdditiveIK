@@ -2409,6 +2409,7 @@ public: //accesser
 
 	//CCameraFbx GetCameraFbx();
 	void SetCameraMotionId(int srcid);
+	void SetCameraMotionFrame(int cameramotid, double srcframe);
 	int GetCameraMotionId();
 
 

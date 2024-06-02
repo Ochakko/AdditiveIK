@@ -4148,7 +4148,7 @@ int CModel::AdvanceTime( int onefps, CEditRange srcrange, int previewflag, doubl
 	int loopflag = 0;
 	MOTINFO curmotinfo;
 	curmotinfo.Init();
-	if( srcmotid >= 0 ){
+	if( srcmotid > 0 ){
 		//curmotinfo = m_motinfo[ srcmotid - 1];//idは１から
 		curmotinfo = GetMotInfo(srcmotid);//2021/08/26 eraseすることがあるのでindex = motid - 1とは限らない
 		loopflag = 0;
@@ -4165,7 +4165,8 @@ int CModel::AdvanceTime( int onefps, CEditRange srcrange, int previewflag, doubl
 
 	double curspeed, curframe;
 	curspeed = curmotinfo.speed;
-	curframe = GetCurrentFrame();
+	//curframe = GetCurrentFrame();//<-- カメラの処理をしている場合、GetCurrentFrame()はカメラのフレームとは限らない
+	curframe = curmotinfo.curframe;//2024/06/02
 
 	double nextframe;
 	double oneframe = 1.0 / 30.0;
@@ -4216,6 +4217,7 @@ int CModel::AdvanceTime( int onefps, CEditRange srcrange, int previewflag, doubl
 	}
 
 	*nextframeptr = nextframe;
+
 
 	return 0;
 }
@@ -19854,6 +19856,21 @@ int CModel::GetCameraMotionId()
 {
 	return m_cameramotionid;
 }
+void CModel::SetCameraMotionFrame(int cameramotid, double srcframe)
+{
+	SetCameraMotionId(cameramotid);
+	MOTINFO* miptr = GetMotInfoPtr(cameramotid);
+	if (miptr && miptr->cameramotion) {
+		double setframe = max(0.0, min(srcframe, (miptr->frameleng - 1.0)));
+		miptr->curframe = setframe;
+	}
+	else {
+		_ASSERT(0);
+	}
+
+}
+
+
 
 int CModel::GetCurrentMotion()
 {

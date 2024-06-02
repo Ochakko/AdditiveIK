@@ -6850,9 +6850,35 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		//Camera Anim
 		//#############
 		double cameranextframe = 0.0;
-		int cameraendflag = 0;
-		int cameraloopstartflag = 0;
-		OnFrameProcessCameraTime(difftime, &cameranextframe, &cameraendflag, &cameraloopstartflag);
+		if (loopstartflag) {
+			//#####################################################
+			//タイムラインを範囲指定してプレビュー中に　範囲の最初に戻る場合
+			//#####################################################
+			double curmotframe = s_model->GetCurrentFrame();
+			if ((s_editrange.GetStartFrame() != s_editrange.GetEndFrame()) && (curmotframe == s_editrange.GetStartFrame())) 
+			{
+				cameranextframe = curmotframe;
+				if (s_cameramodel) {
+					s_cameramodel->SetCameraMotionFrame(s_cameramodel->GetCameraMotionId(), cameranextframe);
+				}
+			}
+			else {
+				//#####################################################
+				//範囲を指定しないでループした場合には　通常の処理をする
+				//#####################################################
+				int cameraendflag = 0;
+				int cameraloopstartflag = 0;
+				OnFrameProcessCameraTime(difftime, &cameranextframe, &cameraendflag, &cameraloopstartflag);
+			}
+		}
+		else {
+			//####################
+			//通常処理　時間を進める
+			//####################
+			int cameraendflag = 0;
+			int cameraloopstartflag = 0;
+			OnFrameProcessCameraTime(difftime, &cameranextframe, &cameraendflag, &cameraloopstartflag);
+		}
 		OnFramePreviewCamera(cameranextframe);
 	
 
@@ -34244,6 +34270,7 @@ int OnFrameProcessTime(double difftime, double* pnextframe, int* pendflag, int* 
 		if (*pendflag == 1) {
 			g_previewFlag = 0;
 		}
+		s_model->SetMotionFrame(*pnextframe);
 	}
 
 	return 0;
@@ -34285,6 +34312,7 @@ int OnFrameProcessCameraTime(double difftime, double* pnextframe, int* pendflag,
 		}
 		//s_model->AdvanceTime(0, s_previewrange, g_previewFlag, difftime, pnextframe, pendflag, ploopstartflag, cameramotid);//!!! cameramotid !!!
 		s_cameramodel->AdvanceTime(0, s_previewrange, g_previewFlag, difftime, pnextframe, pendflag, ploopstartflag, cameramotid);//!!! cameramotid !!!
+		s_cameramodel->SetCameraMotionFrame(cameramotid, *pnextframe);
 	}
 	else {
 		if (s_owpLTimeline) {
