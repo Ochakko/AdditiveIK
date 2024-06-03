@@ -3025,35 +3025,44 @@ int CModel::SetShaderConst(int btflag, bool calcslotflag)
 
 			int matrixindex = curbone->GetMatrixIndex();
 			if (matrixindex >= 0) {
-				//CMotionPoint tmpmp = curbone->GetCurMp();
-				if (btflag == 0) {
-					//set4x4[matrixindex] = tmpmp.GetWorldMat();
-					clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, opeframe, &curmp);
-					MoveMemory(&(m_setfl4x4[16 * matrixindex]),
-						clustermat.GetDataPtr(), sizeof(float) * 16);
-				}
-				else if (btflag == 1) {
-					//物理シミュ
-					//set4x4[matrixindex] = curbone->GetBtMat();
-					clustermat = curbone->GetBtMat(calcslotflag);
-					MoveMemory(&(m_setfl4x4[16 * matrixindex]),
-						clustermat.GetDataPtr(), sizeof(float) * 16);
-				}
-				else if (btflag == 2) {
-					//物理IK
-					//set4x4[matrixindex] = curbone->GetBtMat();
-					clustermat = curbone->GetBtMat(calcslotflag);
-					MoveMemory(&(m_setfl4x4[16 * matrixindex]),
-						clustermat.GetDataPtr(), sizeof(float) * 16);
+
+				if (setclcnt >= MAXBONENUM) {
+					_ASSERT(0);
+					::MessageBox(NULL, L"Bone num overflow error. Exit the app.", GetFileName(),
+						MB_OK | MB_ICONERROR);
+					abort();
 				}
 				else {
-					//set4x4[matrixindex] = tmpmp.GetWorldMat();
-					clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, opeframe, &curmp);
-					MoveMemory(&(m_setfl4x4[16 * matrixindex]),
-						clustermat.GetDataPtr(), sizeof(float) * 16);
-				}
+					//CMotionPoint tmpmp = curbone->GetCurMp();
+					if (btflag == 0) {
+						//set4x4[matrixindex] = tmpmp.GetWorldMat();
+						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, opeframe, &curmp);
+						MoveMemory(&(m_setfl4x4[16 * matrixindex]),
+							clustermat.GetDataPtr(), sizeof(float) * 16);
+					}
+					else if (btflag == 1) {
+						//物理シミュ
+						//set4x4[matrixindex] = curbone->GetBtMat();
+						clustermat = curbone->GetBtMat(calcslotflag);
+						MoveMemory(&(m_setfl4x4[16 * matrixindex]),
+							clustermat.GetDataPtr(), sizeof(float) * 16);
+					}
+					else if (btflag == 2) {
+						//物理IK
+						//set4x4[matrixindex] = curbone->GetBtMat();
+						clustermat = curbone->GetBtMat(calcslotflag);
+						MoveMemory(&(m_setfl4x4[16 * matrixindex]),
+							clustermat.GetDataPtr(), sizeof(float) * 16);
+					}
+					else {
+						//set4x4[matrixindex] = tmpmp.GetWorldMat();
+						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, opeframe, &curmp);
+						MoveMemory(&(m_setfl4x4[16 * matrixindex]),
+							clustermat.GetDataPtr(), sizeof(float) * 16);
+					}
 
-				setclcnt++;
+					setclcnt++;
+				}				
 			}
 		}
 	}
@@ -4151,12 +4160,13 @@ int CModel::AdvanceTime( int onefps, CEditRange srcrange, int previewflag, doubl
 	if( srcmotid > 0 ){
 		//curmotinfo = m_motinfo[ srcmotid - 1];//idは１から
 		curmotinfo = GetMotInfo(srcmotid);//2021/08/26 eraseすることがあるのでindex = motid - 1とは限らない
-		loopflag = 0;
+		//loopflag = 0;
 	}else{
 		//わざとsrcmotidに-1をセットして呼び出した場合は　カレントモーションに対する処理をする
 		curmotinfo = GetCurMotInfo();
-		loopflag = curmotinfo.loopflag;
+		//loopflag = curmotinfo.loopflag;
 	}
+	loopflag = curmotinfo.loopflag;
 
 	if(curmotinfo.motid <= 0){
 		return 0;

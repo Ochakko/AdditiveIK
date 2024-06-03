@@ -5521,6 +5521,35 @@ ChaMatrix CBone::GetWorldMat(bool limitdegflag,
 	return chacalcfunc.GetWorldMat(this, limitdegflag, srcmotid, srcframe, srcmp, dsteul);
 }
 
+ChaMatrix CBone::GetLocalMat(bool limitdegflag, int srcmotid, double srcframe, CMotionPoint* srcmp)
+{
+	ChaMatrix retlocalmat;
+	if (!IsCamera() && !IsNullAndChildIsCamera()) {
+		_ASSERT(0);
+		retlocalmat.SetIdentity();
+		return retlocalmat;
+	}
+
+	double roundingframe = RoundingTime(srcframe);
+
+	if (srcmp) {
+		retlocalmat = srcmp->GetLocalMat();
+	}
+	else {
+		CMotionPoint* curmp = GetMotionPoint(srcmotid, roundingframe, false);
+		if (curmp) {
+			retlocalmat = curmp->GetLocalMat();
+		}
+		else {
+			retlocalmat.SetIdentity();
+		}
+	}
+
+	return retlocalmat;
+}
+
+
+
 ChaMatrix CBone::GetCurrentWorldMat(bool multmodelwm, bool calcslotflag)
 {
 	//CMotionPoint curmp;
@@ -5807,19 +5836,23 @@ ChaVector3 CBone::CalcLocalTraAnim(bool limitdegflag, int srcmotid, double srcfr
 		return ChaVector3(0.0f, 0.0f, 0.0f);
 	}
 
-
-	ChaMatrix curmat;
-	curmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
-
 	ChaMatrix localmat;
-	localmat.SetIdentity();
-	if (GetParent(false)){
-		ChaMatrix parmat;
-		parmat = GetParent(false)->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
-		localmat = curmat * ChaMatrixInv(parmat);
+
+	if (IsNullAndChildIsCamera()) {
+		localmat = GetLocalMat(limitdegflag, srcmotid, roundingframe, 0);
 	}
 	else {
-		localmat = curmat;
+		ChaMatrix curmat;
+		curmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+		localmat.SetIdentity();
+		if (GetParent(false)) {
+			ChaMatrix parmat;
+			parmat = GetParent(false)->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+			localmat = curmat * ChaMatrixInv(parmat);
+		}
+		else {
+			localmat = curmat;
+		}
 	}
 
 	ChaMatrix smat, rmat, tmat;
@@ -5978,38 +6011,44 @@ ChaVector3 CBone::CalcLocalScaleAnim(bool limitdegflag, int srcmotid, double src
 		return ChaVector3(1.0f, 1.0f, 1.0f);
 	}
 
-
 	ChaVector3 svec, tvec;
 	ChaMatrix rmat;
 	ChaVector3 iniscale = ChaVector3(1.0f, 1.0f, 1.0f);
 
-	CMotionPoint* pcurmp = 0;
-	//CMotionPoint* pparmp = 0;
-	pcurmp = GetMotionPoint(srcmotid, roundingframe);
-	if (GetParent(false)) {
-		if (pcurmp) {
-			CMotionPoint setmp;
-			ChaMatrix invpar = ChaMatrixInv(GetParent(false)->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0));
-			ChaMatrix localmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, pcurmp) * invpar;
-
-			GetSRTMatrix(localmat, &svec, &rmat, &tvec);
-			return svec;
-		}
-		else {
-			return iniscale;
-		}
+	if (IsNullAndChildIsCamera()) {
+		ChaMatrix localmat = GetLocalMat(limitdegflag, srcmotid, roundingframe, 0);
+		GetSRTMatrix(localmat, &svec, &rmat, &tvec);
+		return svec;
 	}
 	else {
-		if (pcurmp) {
-			CMotionPoint setmp;
-			ChaMatrix localmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, pcurmp);
+		CMotionPoint* pcurmp = 0;
+		//CMotionPoint* pparmp = 0;
+		pcurmp = GetMotionPoint(srcmotid, roundingframe);
+		if (GetParent(false)) {
+			if (pcurmp) {
+				CMotionPoint setmp;
+				ChaMatrix invpar = ChaMatrixInv(GetParent(false)->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0));
+				ChaMatrix localmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, pcurmp) * invpar;
 
-			GetSRTMatrix(localmat, &svec, &rmat, &tvec);
-			return svec;
-
+				GetSRTMatrix(localmat, &svec, &rmat, &tvec);
+				return svec;
+			}
+			else {
+				return iniscale;
+			}
 		}
 		else {
-			return iniscale;
+			if (pcurmp) {
+				CMotionPoint setmp;
+				ChaMatrix localmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, pcurmp);
+
+				GetSRTMatrix(localmat, &svec, &rmat, &tvec);
+				return svec;
+
+			}
+			else {
+				return iniscale;
+			}
 		}
 	}
 }

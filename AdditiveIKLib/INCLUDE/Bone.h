@@ -469,6 +469,7 @@ public:
 	ChaVector3 GetWorldPos(bool limitdegflag, int srcmotid, double srcframe);
 	//補間無し
 	ChaMatrix GetWorldMat(bool limitdegflag, int srcmotid, double srcframe, CMotionPoint* srcmp, ChaVector3* dsteul = 0);
+	ChaMatrix GetLocalMat(bool limitdegflag, int srcmotid, double srcframe, CMotionPoint* srcmp);
 	//ChaMatrix GetLimitedWorldMat(int srcmotid, double srcframe, ChaVector3* dstneweul = 0, int callingstate = 0);
 	ChaVector3 GetLocalEul(bool limitdegflag, int srcmotid, double srcframe, CMotionPoint* srcmp);
 	ChaVector3 GetLimitedLocalEul(int srcmotid, double srcframe);
