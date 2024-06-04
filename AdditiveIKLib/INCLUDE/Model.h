@@ -706,6 +706,10 @@ public:
 		bool limitdegflag, CEditRange* erptr, 
 		int axiskind, int srcboneno, int maxlevel, int ikcnt);
 
+	int CameraRotateAxisDeltaUnderIK(
+		bool limitdegflag, CEditRange* erptr,
+		int axiskind,
+		float delta, int ikcnt);
 
 
 	int IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind, int srcboneno, float delta, int maxlevel, int ikcnt, ChaMatrix selectmat);

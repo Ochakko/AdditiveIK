@@ -496,7 +496,7 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, CEditRange
 		return 0;//not move
 	}
 
-	if (rotbone->IsNotSkeleton()) {
+	if (rotbone->IsNotSkeleton() && !rotbone->IsNullAndChildIsCamera()) {
 		return 0;//not move
 	}
 
@@ -630,7 +630,7 @@ int ChaCalcFunc::CalcQForRot(bool limitdegflag, bool calcaplyflag,
 		return 1;
 	}
 
-	if (srcrotbone->IsNotSkeleton()) {
+	if (srcrotbone->IsNotSkeleton() && !srcrotbone->IsNullAndChildIsCamera()) {
 		dstqForRot->SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 		dstqForHipsRot->SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 		return 0;
@@ -796,7 +796,7 @@ int ChaCalcFunc::RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int* onlyc
 	double roundingframe = RoundingTime(srcframe);
 
 	//2023/04/28
-	if (srcbone->IsNotSkeleton()) {
+	if (srcbone->IsNotSkeleton() && !srcbone->IsNullAndChildIsCamera()) {
 		return 0;
 	}
 
@@ -1693,7 +1693,7 @@ int ChaCalcFunc::CalcBoneEulOne(CModel* srcmodel, bool limitdegflag, CBone* curb
 		return 1;
 	}
 
-	if (curbone->IsSkeleton()) {
+	if (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera()) {
 		ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
 		int paraxiskind = -1;
 		double srcframe;
@@ -2051,7 +2051,7 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, bool directsetfl
 	}
 
 	//2023/04/28
-	if (srcbone->IsNotSkeleton()) {
+	if (srcbone->IsNotSkeleton() && !srcbone->IsNullAndChildIsCamera()) {
 		return 0;
 	}
 
@@ -2122,7 +2122,8 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, bool directsetfl
 
 
 		//if (g_limitdegflag == true) {
-		if ((limitdegflag == true) && (srcbone->GetBtForce() == 0)) {//2023/01/28 物理シミュは　自前では制限しない
+		if (!srcbone->IsNullAndChildIsCamera() && 
+			(limitdegflag == true) && (srcbone->GetBtForce() == 0)) {//2023/01/28 物理シミュは　自前では制限しない
 			ismovable = srcbone->ChkMovableEul(neweul);
 		}
 		else {
@@ -2276,7 +2277,7 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 	}
 
 	//2023/04/28
-	if (srcbone->IsNotSkeleton()) {
+	if (srcbone->IsNotSkeleton() && !srcbone->IsNullAndChildIsCamera()) {
 		return 0;
 	}
 
@@ -2602,7 +2603,7 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag,
 	}
 
 	//2023/04/28
-	if (srcbone->IsNotSkeleton()) {
+	if (srcbone->IsNotSkeleton() && !srcbone->IsNullAndChildIsCamera()) {
 		return 0;
 	}
 
@@ -2649,7 +2650,7 @@ int ChaCalcFunc::SetWorldMatFromEulAndScaleAndTra(CBone* srcbone, bool limitdegf
 	double roundingframe = RoundingTime(srcframe);
 
 	//2023/04/28
-	if (srcbone->IsNotSkeleton()) {
+	if (srcbone->IsNotSkeleton() && !srcbone->IsNullAndChildIsCamera()) {
 		return 0;
 	}
 
@@ -3029,7 +3030,7 @@ int ChaCalcFunc::SetLocalEul(CBone* srcbone, bool limitdegflag, int srcmotid, do
 	double roundingframe = RoundingTime(srcframe);
 
 	//2023/04/28
-	if (srcbone->IsNotSkeleton()) {
+	if (srcbone->IsNotSkeleton() && !srcbone->IsNullAndChildIsCamera()) {
 		return 0;
 	}
 
@@ -3145,7 +3146,7 @@ int ChaCalcFunc::ChkMovableEul(CBone* srcbone, ChaVector3 srceul)
 	}
 
 	//2023/04/28
-	if (srcbone->IsNotSkeleton()) {
+	if (srcbone->IsNotSkeleton() && !srcbone->IsNullAndChildIsCamera()) {
 		return 0;
 	}
 
@@ -3326,7 +3327,7 @@ void ChaCalcFunc::UpdateCurrentWM(CBone* srcbone, bool limitdegflag, int srcmoti
 	double roundingframe = RoundingTime(srcframe);
 
 	//2023/04/28 2023/05/23
-	if (srcbone->IsNotSkeleton() && srcbone->IsNotCamera()) {
+	if (srcbone->IsNotSkeleton() && srcbone->IsNotCamera() && !srcbone->IsNullAndChildIsCamera()) {
 		return;
 	}
 
@@ -3448,7 +3449,8 @@ void ChaCalcFunc::UpdateParentWMReq(CBone* srcbone, bool limitdegflag, bool setb
 	currentbefwm.SetIdentity();
 	currentnewwm.SetIdentity();
 
-	if (srcbone->IsSkeleton() || srcbone->IsCamera()) {//2023/05/23
+	if (srcbone->IsSkeleton() || srcbone->IsCamera() || //2023/05/23
+		srcbone->IsNullAndChildIsCamera()) {
 		if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
 			currentbefwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 			currentnewwm = currentbefwm * ChaMatrixInv(oldparentwm) * newparentwm;
@@ -4216,7 +4218,7 @@ ChaMatrix ChaCalcFunc::CalcNewLocalRotMatFromQofIK(CBone* srcbone, bool limitdeg
 	}
 
 	//2023/04/28
-	if (srcbone->IsNotSkeleton()) {
+	if (srcbone->IsNotSkeleton() && !srcbone->IsNullAndChildIsCamera()) {
 		if (dstsmat) {
 			dstsmat->SetIdentity();
 		}

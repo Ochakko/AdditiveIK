@@ -14959,6 +14959,246 @@ int CModel::IsMovableRot(bool limitdegflag, int srcmotid, double srcframe, doubl
 	return onlycheckIsMovable;
 }
 
+int CModel::CameraRotateAxisDeltaUnderIK(
+	bool limitdegflag, CEditRange* erptr,
+	int axiskind,
+	float delta, int ikcnt)
+{
+	if (!erptr) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	ChaCalcFunc chacalcfunc;
+
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int cameramotid = GetCameraMotionId();
+	MOTINFO camerami = GetMotInfo(cameramotid);
+	if (camerami.motid <= 0) {
+		return 0;
+	}
+	int curframeleng = IntTime(camerami.frameleng);
+
+
+	CBone* camerabone = nullptr;
+	CBone* enullbone = nullptr;
+	CAMERANODE* cnptr = GetCAMERANODE(cameramotid);
+	if (cnptr && cnptr->pbone && cnptr->pbone->GetParent(false)) {
+		camerabone = cnptr->pbone;
+		enullbone = cnptr->pbone->GetParent(false);
+	}
+	else {
+		_ASSERT(0);
+		return 0;
+	}
+
+
+
+	//int calcnum = 4;//ctrlを押しながらドラッグでdelta * 0.25になっている.多フレーム選択時の重さを考えると処理を重くすることは出来ないのでゆっくりドラッグする他ない.
+	float rotrad2 = delta / 10.0f * (float)PAI / 12.0f * g_physicsmvrate;//PhysicsIKプレートのEditRateスライダーで倍率設定.
+	//if (fabs(rotrad) < (0.020 * DEG2PAI)) {
+	if (fabs(rotrad2) < (0.020 * DEG2PAI)) {//2023/02/11
+		//g_underIKRot = false;//2023/01/14 parent limited or not
+		return 0;
+	}
+	if (fabs(rotrad2) > (0.0550 * DEG2PAI)) {//2023/02/11
+		rotrad2 = 0.0550f * fabs(rotrad2) / rotrad2;
+	}
+
+	//if (fabs(rotrad2) < (0.010 * DEG2PAI)) {
+	//	//g_underIKRot = false;//2023/01/14 parent limited or not
+	//	return 0;
+	//}
+	//if (fabs(rotrad2) > (0.30 * DEG2PAI)) {
+	//	rotrad2 = 0.30f * fabs(rotrad2) / rotrad2;
+	//}
+
+
+	int keynum;
+	double startframe, endframe, applyframe;
+	erptr->GetRange(&keynum, &startframe, &endframe, &applyframe);
+
+
+	//IKTarget()でフラグがリセットされるので　ループ先頭で　セットし直し
+	//g_underIKRot = true;
+
+
+
+
+	ChaVector3 axis0;
+	CQuaternion localq;
+
+	ChaMatrix selectmat;
+	selectmat.SetIdentity();//!!!!!!!!!!!!!!
+	
+	if ((axiskind == PICK_X) || (axiskind == PICK_SPA_X)) {
+		axis0 = selectmat.GetRow(0);
+	}
+	else if ((axiskind == PICK_Y) || (axiskind == PICK_SPA_Y)) {
+		axis0 = selectmat.GetRow(1);
+	}
+	else if ((axiskind == PICK_Z) || (axiskind == PICK_SPA_Z)) {
+		axis0 = selectmat.GetRow(2);
+	}
+	else {
+		_ASSERT(0);
+		//g_underIKRot = false;//2023/01/14 parent limited or not
+		return 1;
+	}
+	ChaVector3Normalize(&axis0, &axis0);
+	localq.SetAxisAndRot(axis0, rotrad2);
+
+
+	//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
+	//camerabone->SaveSRT(limitdegflag, cameramotid, startframe);
+
+	if (keynum >= 2) {
+		int keyno = 0;
+		double curframe;
+		for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
+
+			double changerate;
+			changerate = (double)(*(g_motionbrush_value + (int)curframe));
+			CQuaternion endq;
+			CQuaternion qForRot;
+			endq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+			localq.Slerp2(endq, 1.0 - changerate, &qForRot);
+
+			CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
+			if (enullmp) {
+				ChaMatrix parentLocalNodeAnimMat = enullmp->GetLocalMat();
+				ChaMatrix parentGlobalNodeMat = enullmp->GetWorldMat();
+				ChaMatrix parentNodeMat = enullbone->GetNodeMat();
+				ChaVector3 parentNodePos = ChaMatrixTraVec(parentNodeMat);
+
+
+				ChaMatrix befrot, aftrot;
+				befrot.SetIdentity();
+				aftrot.SetIdentity();
+				befrot.SetTranslation(-g_camtargetpos);
+				aftrot.SetTranslation(g_camtargetpos);
+				ChaMatrix rotmat = qForRot.MakeRotMatX();
+				ChaMatrix localaddrot = befrot * rotmat * aftrot;
+
+
+				//式2024/06/04_1 : ChaMatrix newparentGlobalNodeMat = newparentLocalNodeAnimMat * ChaMatrixInv(parentLocalNodeAnimMat) * parentGlobalNodeMat;
+				
+				ChaMatrix newparentGlobalNodeMat = parentGlobalNodeMat * localaddrot;//式2024/06/04_2
+
+				////式2024/06/04_1に//式2024/06/04_2を代入してlocalを求める
+				ChaMatrix newparentLocalNodeAnimMat = parentGlobalNodeMat * localaddrot * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
+
+				CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
+				if (cameramp) {
+					ChaMatrix localnodeanimmat = cameramp->GetLocalMat();
+					ChaMatrix newcameramat = localnodeanimmat * newparentGlobalNodeMat;
+
+					enullmp->SetLocalMat(newparentLocalNodeAnimMat);
+					enullmp->SetWorldMat(newparentGlobalNodeMat);
+
+					cameramp->SetWorldMat(newcameramat);
+
+					ChaVector3 neweul;
+					neweul = enullbone->CalcLocalEulXYZ(limitdegflag, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
+					enullmp->SetLocalEul(neweul);
+				}
+			}
+
+			//bool keynum1flag = false;
+			//bool postflag = false;
+			//bool fromiktarget = false;
+			//chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
+			//	keyno,
+			//	cameraanimbone, cameraanimbone,
+			//	cameramotid, curframe, startframe, applyframe,
+			//	localq, keynum1flag, postflag, fromiktarget);
+
+			keyno++;
+		}
+
+	}
+	else {
+		//CMotionPoint transmp;
+		//rotq.RotationMatrix(transmat);
+
+		//bool keynum1flag = true;
+		//bool postflag = false;
+		//bool fromiktarget = false;
+		//chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
+		//	0,
+		//	camerabone, camerabone,
+		//	cameramotid, GetCurrentFrame(), startframe, applyframe,
+		//	localq, keynum1flag, postflag, fromiktarget);
+
+
+		double curframe = RoundingTime(applyframe);
+		CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
+		if (enullmp) {
+			ChaMatrix parentLocalNodeAnimMat = enullmp->GetLocalMat();
+			ChaMatrix parentGlobalNodeMat = enullmp->GetWorldMat();
+
+
+			ChaMatrix befrot, aftrot;
+			befrot.SetIdentity();
+			aftrot.SetIdentity();
+			befrot.SetTranslation(-g_camtargetpos);
+			aftrot.SetTranslation(g_camtargetpos);
+			ChaMatrix rotmat = localq.MakeRotMatX();
+			ChaMatrix localaddrot = befrot * rotmat * aftrot;
+
+
+			//式2024/06/04_1 : ChaMatrix newparentGlobalNodeMat = newparentLocalNodeAnimMat * ChaMatrixInv(parentLocalNodeAnimMat) * parentGlobalNodeMat;
+
+			ChaMatrix newparentGlobalNodeMat = parentGlobalNodeMat * localaddrot;//式2024/06/04_2
+
+			////式2024/06/04_1に//式2024/06/04_2を代入してlocalを求める
+			ChaMatrix newparentLocalNodeAnimMat = parentGlobalNodeMat * localaddrot * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
+
+			CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
+			if (cameramp) {
+				ChaMatrix localnodeanimmat = cameramp->GetLocalMat();
+				ChaMatrix newcameramat = localnodeanimmat * newparentGlobalNodeMat;
+
+				enullmp->SetLocalMat(newparentLocalNodeAnimMat);
+				enullmp->SetWorldMat(newparentGlobalNodeMat);
+
+				cameramp->SetWorldMat(newcameramat);
+
+				ChaVector3 neweul;
+				neweul = enullbone->CalcLocalEulXYZ(limitdegflag, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
+				enullmp->SetLocalEul(neweul);
+
+			}
+		}
+
+	}
+
+
+	//if (g_applyendflag == 1) {
+	//	//curmotinfo->curframeから最後までcurmotinfo->curframeの姿勢を適用
+	//	if (GetTopBone(false)) {
+	//		int tolast;
+	//		for (tolast = (int)GetCurrentFrame() + 1; tolast < curframeleng; tolast++) {
+	//			//(m_bonelist[0])->PasteRotReq(m_curmotinfo->motid, m_curmotinfo->curframe, tolast);
+	//			GetTopBone(false)->PasteRotReq(limitdegflag, curmotid, GetCurrentFrame(), tolast);
+	//		}
+	//	}
+	//}
+
+
+	////絶対モードの場合
+	//if ((calccnt == (calcnum - 1)) && g_absikflag && lastbone) {
+	//	chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastbone, curmotid);
+	//}
+
+	return camerabone->GetBoneNo();
+
+}
+
+
+
 int CModel::IKRotateAxisDeltaUnderIK( 
 	bool limitdegflag, CEditRange* erptr, 
 	int axiskind, int srcboneno, float delta, int maxlevel, int ikcnt, ChaMatrix selectmat)
@@ -18379,7 +18619,7 @@ int CModel::CreateCalcEulThreads()
 
 	for (bonecount = 0; bonecount < bonenum; bonecount++) {
 		CBone* curbone = m_bonelist[bonecount];
-		if (curbone && curbone->IsSkeleton()) {
+		if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera())) {
 			CThreadingCalcEul* curupdate = m_CalcEulThreads + threadcount;
 
 			curupdate->AddBoneList(curbone);
@@ -21366,9 +21606,9 @@ int CModel::GetChildCameraBoneAndNode(CBone* enullbone, CBone** ppbone, FbxNode*
 				FbxNodeAttribute::EType type2 = (FbxNodeAttribute::EType)(pAttrib2->GetAttributeType());
 				if (type2 == FbxNodeAttribute::eCamera) {
 					*ppnode = pChild;
-					CBone* cameraanimbone = FindBoneByNode(pChild);
-					if (cameraanimbone) {
-						*ppbone = cameraanimbone;
+					CBone* camerabone = FindBoneByNode(pChild);
+					if (camerabone) {
+						*ppbone = camerabone;
 						return 0;//!!!!!!!!!!!!!!
 					}
 					else {

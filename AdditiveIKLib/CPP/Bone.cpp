@@ -2968,7 +2968,7 @@ ChaMatrix CBone::CalcNewLocalTAnimMatFromSRTraAnim(ChaMatrix srcnewlocalrotmat,
 	newtanimmatrotated.SetIdentity();
 
 	//2023/04/28
-	if (IsNotSkeleton()) {
+	if (IsNotSkeleton() && !IsNullAndChildIsCamera()) {
 		return newtanimmatrotated;
 	}
 

@@ -571,7 +571,7 @@ int CCameraFbx::GetCameraAnimParams(int cameramotid, double nextframe, double ca
 				transformmat.SetIdentity();
 				bool calcbynode = false;
 				bool setmotionpoint = false;
-				transformmat = GetCameraTransformMat(cameramotid, nextframe, inheritmode, 
+				transformmat = GetCameraTransformMat(cameramotid, nextframe, inheritmode,
 					calcbynode, setmotionpoint);
 
 
@@ -581,7 +581,6 @@ int CCameraFbx::GetCameraAnimParams(int cameramotid, double nextframe, double ca
 				//ChaMatrix transformmat = nodemat * cammat * ChaMatrixInv(lcltramat) * ChaMatrixInv(rootmat);	 
 				//ChaVector3TransformCoord(pEyePos, &nodepos, &transformmat);
 				ChaVector3TransformCoord(pEyePos, &zeropos, &transformmat);
-
 
 				//##############
 				//カメラの向き
