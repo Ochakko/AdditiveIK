@@ -14959,7 +14959,7 @@ int CModel::IsMovableRot(bool limitdegflag, int srcmotid, double srcframe, doubl
 	return onlycheckIsMovable;
 }
 
-int CModel::CameraRotateAxisDeltaUnderIK(
+int CModel::CameraRotateAxisDelta(
 	bool limitdegflag, CEditRange* erptr,
 	int axiskind,
 	float delta, int ikcnt)
@@ -15070,9 +15070,6 @@ int CModel::CameraRotateAxisDeltaUnderIK(
 			if (enullmp) {
 				ChaMatrix parentLocalNodeAnimMat = enullmp->GetLocalMat();
 				ChaMatrix parentGlobalNodeMat = enullmp->GetWorldMat();
-				ChaMatrix parentNodeMat = enullbone->GetNodeMat();
-				ChaVector3 parentNodePos = ChaMatrixTraVec(parentNodeMat);
-
 
 				ChaMatrix befrot, aftrot;
 				befrot.SetIdentity();
@@ -15081,7 +15078,6 @@ int CModel::CameraRotateAxisDeltaUnderIK(
 				aftrot.SetTranslation(g_camtargetpos);
 				ChaMatrix rotmat = qForRot.MakeRotMatX();
 				ChaMatrix localaddrot = befrot * rotmat * aftrot;
-
 
 				//式2024/06/04_1 : ChaMatrix newparentGlobalNodeMat = newparentLocalNodeAnimMat * ChaMatrixInv(parentLocalNodeAnimMat) * parentGlobalNodeMat;
 				
@@ -15106,32 +15102,11 @@ int CModel::CameraRotateAxisDeltaUnderIK(
 				}
 			}
 
-			//bool keynum1flag = false;
-			//bool postflag = false;
-			//bool fromiktarget = false;
-			//chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
-			//	keyno,
-			//	cameraanimbone, cameraanimbone,
-			//	cameramotid, curframe, startframe, applyframe,
-			//	localq, keynum1flag, postflag, fromiktarget);
-
 			keyno++;
 		}
 
 	}
 	else {
-		//CMotionPoint transmp;
-		//rotq.RotationMatrix(transmat);
-
-		//bool keynum1flag = true;
-		//bool postflag = false;
-		//bool fromiktarget = false;
-		//chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
-		//	0,
-		//	camerabone, camerabone,
-		//	cameramotid, GetCurrentFrame(), startframe, applyframe,
-		//	localq, keynum1flag, postflag, fromiktarget);
-
 
 		double curframe = RoundingTime(applyframe);
 		CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
@@ -15197,6 +15172,162 @@ int CModel::CameraRotateAxisDeltaUnderIK(
 
 }
 
+int CModel::CameraTranslateAxisDelta(
+	CEditRange* erptr, int axiskind, float delta, ChaMatrix matView)
+{
+	ChaVector3 basevec;
+	ChaVector3 vecx(1.0f, 0.0f, 0.0f);
+	ChaVector3 vecy(0.0f, 1.0f, 0.0f);
+	ChaVector3 vecz(0.0f, 0.0f, 1.0f);
+
+	ChaMatrix invmatView;
+	invmatView = ChaMatrixInv(matView);
+
+	if (axiskind == 0) {
+		basevec = invmatView.GetRow(0);
+	}
+	else if (axiskind == 1) {
+		basevec = invmatView.GetRow(1);
+	}
+	else if (axiskind == 2) {
+		basevec = invmatView.GetRow(2);
+	}
+	else {
+		_ASSERT(0);
+		basevec = invmatView.GetRow(0);
+	}
+	ChaVector3Normalize(&basevec, &basevec);
+
+	ChaVector3 addtra;
+	addtra = basevec * delta * g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
+
+	return CameraTranslateAxis(erptr, addtra);
+
+}
+int CModel::CameraTranslateAxis(
+	CEditRange* erptr, ChaVector3 addtra)
+{
+	if (!erptr) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	ChaCalcFunc chacalcfunc;
+
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int cameramotid = GetCameraMotionId();
+	MOTINFO camerami = GetMotInfo(cameramotid);
+	if (camerami.motid <= 0) {
+		return 0;
+	}
+	int curframeleng = IntTime(camerami.frameleng);
+
+
+	CBone* camerabone = nullptr;
+	CBone* enullbone = nullptr;
+	CAMERANODE* cnptr = GetCAMERANODE(cameramotid);
+	if (cnptr && cnptr->pbone && cnptr->pbone->GetParent(false)) {
+		camerabone = cnptr->pbone;
+		enullbone = cnptr->pbone->GetParent(false);
+	}
+	else {
+		_ASSERT(0);
+		return 0;
+	}
+
+	int keynum;
+	double startframe, endframe, applyframe;
+	erptr->GetRange(&keynum, &startframe, &endframe, &applyframe);
+
+	if (keynum >= 2) {
+		int keyno = 0;
+		double curframe;
+		for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
+
+			double changerate;
+			changerate = (double)(*(g_motionbrush_value + (int)curframe));
+			ChaVector3 frameaddtra = addtra * changerate;
+			ChaMatrix frameaddtramat;
+			frameaddtramat.SetIdentity();
+			frameaddtramat.SetTranslation(frameaddtra);
+
+			CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
+			if (enullmp) {
+				ChaMatrix parentLocalNodeAnimMat = enullmp->GetLocalMat();
+				ChaMatrix parentGlobalNodeMat = enullmp->GetWorldMat();
+
+
+				//式2024/06/04_1 : ChaMatrix newparentGlobalNodeMat = newparentLocalNodeAnimMat * ChaMatrixInv(parentLocalNodeAnimMat) * parentGlobalNodeMat;
+
+				ChaMatrix newparentGlobalNodeMat = parentGlobalNodeMat * frameaddtramat;//式2024/06/04_2
+
+				////式2024/06/04_1に//式2024/06/04_2を代入してlocalを求める
+				ChaMatrix newparentLocalNodeAnimMat = parentGlobalNodeMat * frameaddtramat * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
+
+				CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
+				if (cameramp) {
+					ChaMatrix localnodeanimmat = cameramp->GetLocalMat();
+					ChaMatrix newcameramat = localnodeanimmat * newparentGlobalNodeMat;
+
+					enullmp->SetLocalMat(newparentLocalNodeAnimMat);
+					enullmp->SetWorldMat(newparentGlobalNodeMat);
+
+					cameramp->SetWorldMat(newcameramat);
+
+					//ChaVector3 neweul;
+					//neweul = enullbone->CalcLocalEulXYZ(limitdegflag, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
+					//enullmp->SetLocalEul(neweul);
+				}
+			}
+
+			keyno++;
+		}
+
+	}
+	else {
+		double curframe = RoundingTime(applyframe);
+		CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
+		if (enullmp) {
+			ChaMatrix parentLocalNodeAnimMat = enullmp->GetLocalMat();
+			ChaMatrix parentGlobalNodeMat = enullmp->GetWorldMat();
+
+			double changerate;
+			changerate = (double)(*(g_motionbrush_value + (int)curframe));
+			ChaVector3 frameaddtra = addtra * changerate;
+			ChaMatrix frameaddtramat;
+			frameaddtramat.SetIdentity();
+			frameaddtramat.SetTranslation(frameaddtra);
+
+			//式2024/06/04_1 : ChaMatrix newparentGlobalNodeMat = newparentLocalNodeAnimMat * ChaMatrixInv(parentLocalNodeAnimMat) * parentGlobalNodeMat;
+
+			ChaMatrix newparentGlobalNodeMat = parentGlobalNodeMat * frameaddtramat;//式2024/06/04_2
+
+			////式2024/06/04_1に//式2024/06/04_2を代入してlocalを求める
+			ChaMatrix newparentLocalNodeAnimMat = parentGlobalNodeMat * frameaddtramat * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
+
+			CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
+			if (cameramp) {
+				ChaMatrix localnodeanimmat = cameramp->GetLocalMat();
+				ChaMatrix newcameramat = localnodeanimmat * newparentGlobalNodeMat;
+
+				enullmp->SetLocalMat(newparentLocalNodeAnimMat);
+				enullmp->SetWorldMat(newparentGlobalNodeMat);
+
+				cameramp->SetWorldMat(newcameramat);
+
+				//ChaVector3 neweul;
+				//neweul = enullbone->CalcLocalEulXYZ(limitdegflag, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
+				//enullmp->SetLocalEul(neweul);
+			}
+		}
+
+	}
+
+	return camerabone->GetBoneNo();
+
+}
 
 
 int CModel::IKRotateAxisDeltaUnderIK( 

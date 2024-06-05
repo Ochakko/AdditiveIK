@@ -845,7 +845,8 @@ static double s_cameraframe = 0.0;
 //static float g_projfar = g_initcamdist * 100.0f;
 static float s_fAspectRatio = 1.0f;
 //static float g_fovy = (float)(PI / 4.0);
-static float s_cammvstep = 100.0f;
+//static float s_cammvstep = 100.0f;
+static float s_cammvstep = 500.0f;
 static int s_editmotionflag = -1;
 static int s_tkeyflag = 0;
 //static float s_maxcamdist = 5000.0f;
@@ -2785,7 +2786,7 @@ void CalcFps(double fTime);
 static int RetargetFile(char* fbxpath);
 
 static int OnMouseMoveFunc();
-
+static int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax);
 
 static int RollbackCurBoneNo();
 static void PrepairUndo();
@@ -4528,7 +4529,8 @@ void InitApp()
 		g_projfar = g_initcamdist * 100.0f;
 		s_fAspectRatio = 1.0f;
 		g_fovy = (float)(PI / 4.0);
-		s_cammvstep = 100.0f;
+		//s_cammvstep = 100.0f;
+		s_cammvstep = 500.0f;
 	}
 
 	{
@@ -49636,7 +49638,7 @@ int OnMouseMoveFunc()
 						deltax *= 0.250f;
 					}
 
-					if ((s_befdeltax * deltax) > 0.0f) {
+					if (g_edittarget != EDITTARGET_CAMERA) {
 						if (s_ikkind == 0) {
 							s_editmotionflag = s_model->IKRotateAxisDeltaUnderIK(
 								g_limitdegflag,
@@ -49662,6 +49664,9 @@ int OnMouseMoveFunc()
 								s_editmotionflag = s_curboneno;
 							}
 						}
+					}
+					else {
+						OnCameraAnimMouseMove(s_ikkind, s_pickinfo.buttonflag, deltax);
 					}
 					s_befdeltax = deltax;
 
@@ -49706,94 +49711,39 @@ int OnMouseMoveFunc()
 
 					//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 4");
 
-					//if ((s_befdeltax * deltax) > 0.0f) {
-						if (g_edittarget != EDITTARGET_CAMERA) {
-							if (s_ikkind == 0) {
-								s_editmotionflag = s_model->IKRotateAxisDeltaUnderIK(
-									g_limitdegflag,
-									&s_editrange, buttonflagForIkFunc, s_pickinfo.pickobjno,
-									deltax, g_iklevel, s_ikcnt, s_ikselectmat);
+					if (g_edittarget != EDITTARGET_CAMERA) {
+						if (s_ikkind == 0) {
+							s_editmotionflag = s_model->IKRotateAxisDeltaUnderIK(
+								g_limitdegflag,
+								&s_editrange, buttonflagForIkFunc, s_pickinfo.pickobjno,
+								deltax, g_iklevel, s_ikcnt, s_ikselectmat);
 
-								//ClearLimitedWM(s_model);//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
-								//UpdateEditedEuler();
-							}
-							else if (s_ikkind == 1) {
-								AddBoneTra(buttonflagForIkFunc, deltax * 0.1f);
+							//ClearLimitedWM(s_model);//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
+							//UpdateEditedEuler();
+						}
+						else if (s_ikkind == 1) {
+							AddBoneTra(buttonflagForIkFunc - PICK_X, deltax * 0.1f);
+							s_editmotionflag = s_curboneno;
+						}
+						else if (s_ikkind == 2) {
+							if (g_shiftkey) {
+								AddBoneScale(buttonflagForIkFunc - PICK_X, deltax);
 								s_editmotionflag = s_curboneno;
 							}
-							else if (s_ikkind == 2) {
-								if (g_shiftkey) {
-									AddBoneScale(buttonflagForIkFunc, deltax);
-									s_editmotionflag = s_curboneno;
-								}
-								else {
-									//2024/01/30 
-									//shiftキーを押しながらX,Y,ZどれかのスプライトドラッグでPICK_CENTER
-									AddBoneScale(-1, deltax);
-									s_editmotionflag = s_curboneno;
-								}
-
+							else {
+								//2024/01/30 
+								//shiftキーを押しながらX,Y,ZどれかのスプライトドラッグでPICK_CENTER
+								AddBoneScale(-1, deltax);
+								s_editmotionflag = s_curboneno;
 							}
+
 						}
-						else {
+					}
+					else {
+						//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 5");
+						OnCameraAnimMouseMove(s_ikkind, buttonflagForIkFunc, deltax);
+					}
 
-							//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 5");
-
-							int cameramotid = 0;
-							int cameraframeleng = 100;
-							CBone* opebone0 = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);
-							if (s_cameramodel && opebone0) {
-
-								//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 6");
-
-								if (s_ikkind == 0) {
-
-									WCHAR strdbg[1024] = { 0L };
-									swprintf_s(strdbg, 1024, L"camdist %.2f, camtargetpos (%.2f, %.2f, %.2f)",
-										g_camdist, g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
-									OutputToInfoWnd(L"MouseMoveFunc : %s", strdbg);
-
-
-									s_editmotionflag = s_cameramodel->CameraRotateAxisDeltaUnderIK(
-										g_limitdegflag,
-										&s_editrange, buttonflagForIkFunc,
-										deltax, s_ikcnt);
-
-									s_cameramodel->GetCameraAnimParams(s_cameraframe, 
-										g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir, 
-										0, g_cameraInheritMode);//g_camdist
-
-									//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 7");
-
-
-									//ClearLimitedWM(s_model);//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
-									//UpdateEditedEuler();
-
-
-
-									//s_cameramodel->GetCameraAnimParams(s_editrange.GetApplyFrame(), 
-									//	g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir, 0, g_cameraInheritMode);//g_camdist
-									//s_cameraframe = s_editrange.GetApplyFrame();
-
-								}
-								//else if (s_ikkind == 1) {
-								//	AddCameraTra(buttonflagForIkFunc, deltax * 0.1f);
-								//	s_editmotionflag = s_curboneno;
-								//}
-								//else if (s_ikkind == 2) {
-								//	if (g_shiftkey) {
-								//		AddCameraScale(buttonflagForIkFunc, deltax);
-								//		s_editmotionflag = s_curboneno;
-								//	}
-								//	else {
-								//		//shiftキーを押しながらX,Y,ZどれかのスプライトドラッグでPICK_CENTER
-								//		AddCameraScale(-1, deltax);
-								//		s_editmotionflag = s_curboneno;
-								//	}
-								//}
-							}
-						}
-					//}
 					s_befdeltax = deltax;
 					s_ikcnt++;
 				}
@@ -49822,26 +49772,34 @@ int OnMouseMoveFunc()
 		}
 		cammv *= g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
 
-		ChaMatrix invmatView;
-		invmatView = ChaMatrixInv(s_matView);
-		ChaVector3 camdirx, camdiry;
-		camdirx = ChaVector3(invmatView.data[MATI_11], invmatView.data[MATI_12], invmatView.data[MATI_13]);
-		camdiry = ChaVector3(invmatView.data[MATI_21], invmatView.data[MATI_22], invmatView.data[MATI_23]);
-		ChaVector3Normalize(&camdirx, &camdirx);
-		ChaVector3Normalize(&camdiry, &camdiry);
-		ChaVector3 movevec = camdirx * cammv.x + camdiry * cammv.y;
+		if (g_edittarget != EDITTARGET_CAMERA) {
+			ChaMatrix invmatView;
+			invmatView = ChaMatrixInv(s_matView);
+			ChaVector3 camdirx, camdiry;
+			camdirx = ChaVector3(invmatView.data[MATI_11], invmatView.data[MATI_12], invmatView.data[MATI_13]);
+			camdiry = ChaVector3(invmatView.data[MATI_21], invmatView.data[MATI_22], invmatView.data[MATI_23]);
+			ChaVector3Normalize(&camdirx, &camdirx);
+			ChaVector3Normalize(&camdiry, &camdiry);
+			ChaVector3 movevec = camdirx * cammv.x + camdiry * cammv.y;
 
-		g_befcamEye = g_camEye;
-		g_befcamtargetpos = g_camtargetpos;
+			g_befcamEye = g_camEye;
+			g_befcamtargetpos = g_camtargetpos;
 
-		g_camEye = g_camEye + movevec;
-		g_camtargetpos = g_camtargetpos + movevec;
+			g_camEye = g_camEye + movevec;
+			g_camtargetpos = g_camtargetpos + movevec;
 
-		ChaVector3 diffv;
-		diffv = g_camtargetpos - g_camEye;
-		g_camdist = (float)ChaVector3LengthDbl(&diffv);
+			ChaVector3 diffv;
+			diffv = g_camtargetpos - g_camEye;
+			g_camdist = (float)ChaVector3LengthDbl(&diffv);
+		}
+		else {
+			int ikkind_translation = 1;
+			OnCameraAnimMouseMove(ikkind_translation, PICK_X, cammv.x);
+			OnCameraAnimMouseMove(ikkind_translation, PICK_Y, cammv.y);
+		}
 
 		SetCamera3DFromEyePos();
+
 	}
 	else if (s_twistcameraFlag) {
 		s_pickinfo.mousebefpos = s_pickinfo.mousepos;
@@ -49892,120 +49850,75 @@ int OnMouseMoveFunc()
 			roty *= 0.250f;
 		}
 
-		ChaMatrix matview;
-		ChaVector3 weye, wat;
-		weye = g_camEye;
-		wat = g_camtargetpos;
+		if (g_edittarget != EDITTARGET_CAMERA) {
+			ChaMatrix matview;
+			ChaVector3 weye, wat;
+			weye = g_camEye;
+			wat = g_camtargetpos;
 
-		ChaVector3 viewvec, upvec, rotaxisy, rotaxisxz;
-		viewvec = wat - weye;
-		ChaVector3Normalize(&viewvec, &viewvec);
-		upvec = ChaVector3(0.000001f, 1.0f, 0.0f);
+			ChaVector3 viewvec, upvec, rotaxisy, rotaxisxz;
+			viewvec = wat - weye;
+			ChaVector3Normalize(&viewvec, &viewvec);
+			upvec = ChaVector3(0.000001f, 1.0f, 0.0f);
 
-		float chkdot;
-		chkdot = ChaVector3Dot(&viewvec, &upvec);
-		if (fabs(chkdot) < 0.99965f) {
-			ChaVector3Cross(&rotaxisxz, (const ChaVector3*)&upvec, (const ChaVector3*)&viewvec);
-			ChaVector3Normalize(&rotaxisxz, &rotaxisxz);
+			float chkdot;
+			chkdot = ChaVector3Dot(&viewvec, &upvec);
+			if (fabs(chkdot) < 0.99965f) {
+				ChaVector3Cross(&rotaxisxz, (const ChaVector3*)&upvec, (const ChaVector3*)&viewvec);
+				ChaVector3Normalize(&rotaxisxz, &rotaxisxz);
 
-			ChaVector3Cross(&rotaxisy, (const ChaVector3*)&viewvec, (const ChaVector3*)&rotaxisxz);
-			ChaVector3Normalize(&rotaxisy, &rotaxisy);
-			//}
-			//else if (chkdot >= 0.99965f) {
-			//	rotaxisxz = upvec;
-			//	ChaVector3Cross(&rotaxisy, (const ChaVector3*)&viewvec, (const ChaVector3*)&rotaxisxz);
-			//	ChaVector3Normalize(&rotaxisy, &rotaxisy);
-			//	//rotxz = 0.0f;
-			//	//if (roty < 0.0f) {
-			//	//	roty = 0.0f;
-			//	//}
-			//	//else {
-			//	//}
-			//}
-			//else {
-			//	rotaxisxz = upvec;
-			//	ChaVector3Cross(&rotaxisy, (const ChaVector3*)&viewvec, (const ChaVector3*)&rotaxisxz);
-			//	ChaVector3Normalize(&rotaxisy, &rotaxisy);
-			//	//rotxz = 0.0f;
-			//	//if (roty > 0.0f) {
-			//	//	roty = 0.0f;
-			//	//}
-			//	//else {
-			//	//	//rotyだけ回す。
-			//	//}
-			//}
+				ChaVector3Cross(&rotaxisy, (const ChaVector3*)&viewvec, (const ChaVector3*)&rotaxisxz);
+				ChaVector3Normalize(&rotaxisy, &rotaxisy);
 
-
-			if (s_model && (s_curboneno >= 0) && s_camtargetflag) {
-				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-				_ASSERT(curbone);
-				if (curbone) {
-					g_befcamtargetpos = g_camtargetpos;
-					g_camtargetpos = curbone->GetChildWorld();
+				if (s_model && (s_curboneno >= 0) && s_camtargetflag) {
+					CBone* curbone = s_model->GetBoneByID(s_curboneno);
+					_ASSERT(curbone);
+					if (curbone) {
+						g_befcamtargetpos = g_camtargetpos;
+						g_camtargetpos = curbone->GetChildWorld();
+					}
+					else {
+						s_curboneno = -1;
+					}
 				}
-				else {
-					s_curboneno = -1;
-				}
+
+				ChaMatrix befrotmat, rotmaty, rotmatxz, aftrotmat;
+				befrotmat.SetIdentity();//2023/02/12
+				aftrotmat.SetIdentity();//2023/02/12
+				rotmaty.SetIdentity();//2023/02/12
+				rotmatxz.SetIdentity();//2023/02/12
+				ChaMatrixTranslation(&befrotmat, -g_camtargetpos.x, -g_camtargetpos.y, -g_camtargetpos.z);
+				ChaMatrixTranslation(&aftrotmat, g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
+				ChaMatrixRotationAxis(&rotmaty, &rotaxisy, rotxz * (float)DEG2PAI);
+				ChaMatrixRotationAxis(&rotmatxz, &rotaxisxz, roty * (float)DEG2PAI);
+
+				ChaMatrix mat;
+				mat = befrotmat * rotmatxz * rotmaty * aftrotmat;
+				ChaVector3 neweye;
+				ChaVector3TransformCoord(&neweye, &weye, &mat);
+
+				g_befcamEye = g_camEye;
+				g_camEye = neweye;
+				//!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
+				//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
+
+				ChaVector3 diffv;
+				diffv = neweye - g_camtargetpos;
+				g_camdist = (float)ChaVector3LengthDbl(&diffv);
+
+			}
+			else {
+				g_camEye = g_befcamEye;
+				g_camtargetpos = g_befcamtargetpos;
 			}
 
-
-			ChaMatrix befrotmat, rotmaty, rotmatxz, aftrotmat;
-			befrotmat.SetIdentity();//2023/02/12
-			aftrotmat.SetIdentity();//2023/02/12
-			rotmaty.SetIdentity();//2023/02/12
-			rotmatxz.SetIdentity();//2023/02/12
-			ChaMatrixTranslation(&befrotmat, -g_camtargetpos.x, -g_camtargetpos.y, -g_camtargetpos.z);
-			ChaMatrixTranslation(&aftrotmat, g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
-			ChaMatrixRotationAxis(&rotmaty, &rotaxisy, rotxz * (float)DEG2PAI);
-			ChaMatrixRotationAxis(&rotmatxz, &rotaxisxz, roty * (float)DEG2PAI);
-
-			ChaMatrix mat;
-			mat = befrotmat * rotmatxz * rotmaty * aftrotmat;
-			ChaVector3 neweye;
-			ChaVector3TransformCoord(&neweye, &weye, &mat);
-
-			//float chkdot2;
-			//ChaVector3 newviewvec = weye - neweye;
-			//ChaVector3Normalize(&newviewvec, &newviewvec);
-			//chkdot2 = ChaVector3Dot(&newviewvec, &upvec);
-			//if (fabs(chkdot2) < 0.99965f) {
-			//	ChaVector3Cross(&rotaxisxz, (const ChaVector3*)&upvec, (const ChaVector3*)&viewvec);
-			//	ChaVector3Normalize(&rotaxisxz, &rotaxisxz);
-
-			//	ChaVector3Cross(&rotaxisy, (const ChaVector3*)&viewvec, (const ChaVector3*)&rotaxisxz);
-			//	ChaVector3Normalize(&rotaxisy, &rotaxisy);
-			//}
-			//else {
-			//	roty = 0.0f;
-			//	rotaxisxz = upvec;
-			//	ChaVector3Cross(&rotaxisy, (const ChaVector3*)&viewvec, (const ChaVector3*)&rotaxisxz);
-			//	ChaVector3Normalize(&rotaxisy, &rotaxisy);
-			//}
-			//ChaMatrixRotationAxis(&rotmaty, &rotaxisy, rotxz * (float)DEG2PAI);
-			//ChaMatrixRotationAxis(&rotmatxz, &rotaxisxz, roty * (float)DEG2PAI);
-			//mat = befrotmat * rotmatxz * rotmaty * aftrotmat;
-			//ChaVector3TransformCoord(&neweye, &weye, &mat);
-
-			//#replacing comment out#g_Camera->SetViewParamsWithUpVec(neweye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-			//#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-			//#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
-
-			g_befcamEye = g_camEye;
-			g_camEye = neweye;
-			//!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-			//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-
-			ChaVector3 diffv;
-			diffv = neweye - g_camtargetpos;
-			g_camdist = (float)ChaVector3LengthDbl(&diffv);
-
+			SetCamera3DFromEyePos();
 		}
 		else {
-			g_camEye = g_befcamEye;
-			g_camtargetpos = g_befcamtargetpos;
+			int ikkind_rotation = 0;
+			OnCameraAnimMouseMove(ikkind_rotation, PICK_Y, rotxz);
+			OnCameraAnimMouseMove(ikkind_rotation, PICK_X, -roty);
 		}
-
-		SetCamera3DFromEyePos();
 	}
 	else if (s_pickinfo.buttonflag == PICK_CAMDIST) {
 		s_pickinfo.mousebefpos = s_pickinfo.mousepos;
@@ -50022,9 +49935,14 @@ int OnMouseMoveFunc()
 		}
 		deltadist *= g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
 
-		float newcamdist = g_camdist + deltadist;
-
-		ChangeCameraDist(newcamdist, true, false);
+		if (g_edittarget != EDITTARGET_CAMERA) {
+			float newcamdist = g_camdist + deltadist;
+			ChangeCameraDist(newcamdist, true, false);
+		}
+		else {
+			int ikkind_translation = 1;
+			OnCameraAnimMouseMove(ikkind_translation, PICK_Z, deltadist);
+		}
 
 	}
 
@@ -71408,3 +71326,48 @@ CBone* GetEditTargetOpeBone(int* pmotid, int* pframeleng)
 
 	return opebone;
 }
+
+
+int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
+{
+	int cameramotid = 0;
+	int cameraframeleng = 100;
+	CBone* opebone0 = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);
+	if (s_cameramodel && opebone0) {
+
+		//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 6");
+
+		if (opekind == 0) {
+			s_editmotionflag = s_cameramodel->CameraRotateAxisDelta(
+				g_limitdegflag,
+				&s_editrange, pickxyz,
+				deltax, s_ikcnt);
+
+			s_cameramodel->GetCameraAnimParams(s_cameraframe,
+				g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir,
+				0, g_cameraInheritMode);//g_camdist
+
+			//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 7");
+		}
+		else if (opekind == 1) {
+			s_editmotionflag = s_cameramodel->CameraTranslateAxisDelta(
+				&s_editrange, pickxyz - PICK_X, deltax, s_matView);
+
+			s_cameramodel->GetCameraAnimParams(s_cameraframe,
+				g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir,
+				0, g_cameraInheritMode);//g_camdist
+		}
+		else if (opekind == 2) {
+			s_editmotionflag = s_cameramodel->CameraTranslateAxisDelta(
+				&s_editrange, PICK_Z - PICK_X, deltax, s_matView);
+
+			s_cameramodel->GetCameraAnimParams(s_cameraframe,
+				g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir,
+				0, g_cameraInheritMode);//g_camdist
+		}
+	}
+	SetCamera3DFromEyePos();
+
+	return 0;
+}
+

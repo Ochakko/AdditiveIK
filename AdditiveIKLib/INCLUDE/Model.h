@@ -706,10 +706,16 @@ public:
 		bool limitdegflag, CEditRange* erptr, 
 		int axiskind, int srcboneno, int maxlevel, int ikcnt);
 
-	int CameraRotateAxisDeltaUnderIK(
+
+	int CameraRotateAxisDelta(
 		bool limitdegflag, CEditRange* erptr,
 		int axiskind,
 		float delta, int ikcnt);
+	int CameraTranslateAxisDelta(
+		CEditRange* erptr, int axiskind, float delta, ChaMatrix matView);
+	int CameraTranslateAxis(
+		CEditRange* erptr, ChaVector3 addtra);
+
 
 
 	int IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind, int srcboneno, float delta, int maxlevel, int ikcnt, ChaMatrix selectmat);
@@ -2839,14 +2845,14 @@ public: //accesser
 
 
 			//2024/05/12 bendvec 草をカメラ横方向に揺らすためのベクトル
-			Matrix cammat;
+			Matrix invcammat;
 			if (g_camera3D) {
-				cammat = g_camera3D->GetViewMatrixInv();
+				invcammat = g_camera3D->GetViewMatrixInv();
 			}
 			else {
-				cammat.SetIdentity();
+				invcammat.SetIdentity();
 			}
-			params.bendvec = ChaVector4(cammat._11, cammat._12, cammat._13, 0.0f);
+			params.bendvec = ChaVector4(invcammat._11, invcammat._12, invcammat._13, 0.0f);
 
 			m_instancingparams[m_instancingdrawnum] = params;
 			m_instancingdrawnum++;
