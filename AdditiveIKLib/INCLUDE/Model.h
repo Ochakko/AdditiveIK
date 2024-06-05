@@ -716,6 +716,11 @@ public:
 	int CameraTranslateAxis(
 		CEditRange* erptr, ChaVector3 addtra);
 
+	//2024/06/05
+	//カメラアニメのアンドゥーはIsNullAndChildIsCamera()==trueのボーンに対して行っている
+	//アンドゥ結果をIsCamera()==trueのボーンに反映するためにUpdateCameraMatFromENull()を呼ぶ
+	int UpdateCameraMatFromENull(int cameramotid);
+
 
 
 	int IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind, int srcboneno, float delta, int maxlevel, int ikcnt, ChaMatrix selectmat);
@@ -983,10 +988,13 @@ public:
 
 	int InitUndoMotion( int saveflag );
 	int SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, int curboneno, int curbaseno,
-		CEditRange* srcer, double srcapplyrate, BRUSHSTATE srcbrushstate, bool allframeflag);
+		int srcedittarget, CEditRange* srcer, double srcapplyrate, 
+		BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, bool allframeflag);
 	int RollBackUndoMotion(bool limitdegflag, HWND hmainwnd, int redoflag, 
+		int* edittarget,
 		int* curboneno, int* curbaseno, 
-		double* dststartframe, double* dstendframe, double* dstapplyframe, BRUSHSTATE* dstbrushstate);
+		double* dststartframe, double* dstendframe, double* dstapplyframe, 
+		BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera);
 
 	int AddBoneMotMark( OrgWinGUI::OWP_Timeline* owpTimeline, int curboneno, int curlineno, double startframe, double endframe, int flag );
 

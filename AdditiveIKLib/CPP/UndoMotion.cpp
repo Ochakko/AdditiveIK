@@ -69,6 +69,7 @@ int CUndoMotion::InitParams()
 	m_applyrate = 50.0;
 
 	m_brushstate.Init();
+	m_undocamera.Init();
 
 	return 0;
 }
@@ -119,7 +120,9 @@ int CUndoMotion::DestroyObjs()
 
 
 int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CModel* pmodel, int curboneno, int curbaseno,
-	CEditRange* srcer, double srcapplyrate, BRUSHSTATE srcbrushstate, bool allframeflag)
+	int srcedittarget, CEditRange* srcer, double srcapplyrate,
+	BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, 
+	bool allframeflag)
 {
 	if (!pmodel) {
 		return 2;
@@ -143,7 +146,8 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 
 
 	m_brushstate = srcbrushstate;
-
+	m_undocamera = srcundocamera;
+	m_edittarget = srcedittarget;
 
 	//if (g_bvh2fbxbatchflag || g_motioncachebatchflag || g_retargetbatchflag) {
 	//if ((InterlockedAdd(&g_bvh2fbxbatchflag, 0) != 0) && (InterlockedAdd(&g_motioncachebatchflag, 0) != 0) && (InterlockedAdd(&g_retargetbatchflag, 0) != 0)) {
@@ -154,7 +158,15 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 
 	//ClearData();
 
-	int curmotid = pmodel->GetCurrentMotID();
+	int curmotid;
+	if (srcedittarget != EDITTARGET_CAMERA) {
+		curmotid = pmodel->GetCurrentMotID();
+	}
+	else {
+		curmotid = pmodel->GetCameraMotionId();
+	}
+	MOTINFO curmi = pmodel->GetMotInfo(curmotid);
+
 
 	if (LimitDegCheckBoxFlag == false) {//2023/10/27 1.2.0.27 RC5 : LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
 
@@ -162,7 +174,7 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 		for (itrbone = pmodel->GetBoneListBegin(); itrbone != pmodel->GetBoneListEnd(); itrbone++) {
 			CBone* curbone = itrbone->second;
 			//_ASSERT( curbone );
-			if (curbone && (curbone->IsSkeleton())) {
+			if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {
 
 				//####################
 				// ANGLELIMIT of bone
@@ -279,7 +291,7 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 		for (itrbone = pmodel->GetBoneListBegin(); itrbone != pmodel->GetBoneListEnd(); itrbone++) {
 			CBone* curbone = itrbone->second;
 			//_ASSERT( curbone );
-			if (curbone && (curbone->IsSkeleton())) {
+			if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {
 
 				//####################
 				// ANGLELIMIT of bone
@@ -337,7 +349,7 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 		}
 	}
 ***/
-	MOTINFO curmi = pmodel->GetCurMotInfo();
+	//MOTINFO curmi = pmodel->GetCurMotInfo();//上に移動　カメラアニメとボーンモーションに対応
 	::MoveMemory(&m_savemotinfo, &curmi, sizeof(MOTINFO));
 
 	m_curboneno = curboneno;
@@ -359,7 +371,10 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 
 	return 0;
 }
-int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel, int* curboneno, int* curbaseno, double* dststartframe, double* dstendframe, double* dstapplyrate, BRUSHSTATE* dstbrushstate)
+int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel, 
+	int* edittarget, int* curboneno, int* curbaseno, 
+	double* dststartframe, double* dstendframe, double* dstapplyrate, 
+	BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera)
 {
 	if( m_validflag != 1 ){
 		_ASSERT( 0 );
@@ -394,8 +409,19 @@ int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel, int* curbonen
 		_ASSERT(0);
 		return 2;
 	}
+	if (!dstundocamera) {
+		_ASSERT(0);
+		return 2;
+	}
+	if (!edittarget) {
+		_ASSERT(0);
+		return 2;
+	}
+
 
 	*dstbrushstate = m_brushstate;
+	*dstundocamera = m_undocamera;
+	*edittarget = m_edittarget;
 
 	int setmotid = m_savemotinfo.motid;
 	MOTINFO chkmotinfo = pmodel->GetMotInfo( setmotid );
@@ -428,7 +454,7 @@ int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel, int* curbonen
 		CBone* curbone = itrbone->second;
 		_ASSERT( curbone );
 
-		if (curbone && (curbone->IsSkeleton())) {
+		if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {
 
 			//######################
 			//2023/02/04
@@ -494,7 +520,7 @@ int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel, int* curbonen
 		map<int, CBone*>::iterator itrbone2;
 		for (itrbone2 = pmodel->GetBoneListBegin(); itrbone2 != pmodel->GetBoneListEnd(); itrbone2++) {
 			CBone* curbone = itrbone2->second;
-			if (curbone && (curbone->IsSkeleton())) {
+			if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {
 				curbone->DeleteMPOutOfRange(setmotid, newleng - 1.0);
 			}
 		}
@@ -504,7 +530,13 @@ int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel, int* curbonen
 	//MoveMemory( chkmotinfo, &m_savemotinfo, sizeof( MOTINFO ) );
 	//pmodel->SetCurMotInfo( chkmotinfo );
 	pmodel->SetMotInfo(setmotid, m_savemotinfo);
-
+	if (m_edittarget != EDITTARGET_CAMERA) {
+		pmodel->SetCurrentMotion(setmotid);
+	}
+	else {
+		pmodel->SetCameraMotionId(setmotid);
+	}
+	
 
 	*curboneno = m_curboneno;
 	*curbaseno = m_curbaseno;

@@ -16,6 +16,36 @@ class CMQOObject;
 class CMorphKey;
 class CEditRange;
 
+
+typedef struct tag_undocamera
+{
+	bool spcameramode;
+	int camtargetflag;
+	bool camtargetdisp;
+	bool moveeyepos;
+	ChaVector3 camEyePos;
+	ChaVector3 camtargetpos;
+	ChaVector3 camUpVec;
+	float camdist;
+
+	void Init() {
+		spcameramode = false;
+		camtargetflag = 0;
+		camtargetdisp = false;
+		moveeyepos = false;
+		camEyePos.SetZeroVec3();
+		camtargetpos = ChaVector3(0.0f, 0.0f, -100.0f);
+		camUpVec = ChaVector3(0.0f, 1.0f, 0.0);
+		camdist = 500.0f;
+	};
+
+	tag_undocamera()
+	{
+		Init();
+	};
+}UNDOCAMERA;
+
+
 class CUndoMotion
 {
 public:
@@ -24,9 +54,13 @@ public:
 
 	int ClearData();
 	int SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CModel* pmodel, int curboneno, int curbaseno,
-		CEditRange* srcer, double srcapplyrate, BRUSHSTATE srcbrushstate, bool allframeflag);
-	int RollBackMotion(bool limitdegflag, CModel* pmodel, int* curboneno, int* curbaseno,
-		double* dststartframe, double* dstendframe, double* dstapplyrate, BRUSHSTATE* dstbrushstate);
+		int srcedittarget, CEditRange* srcer, double srcapplyrate,
+		BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, 
+		bool allframeflag);
+	int RollBackMotion(bool limitdegflag, CModel* pmodel, 
+		int* edittarget, int* curboneno, int* curbaseno,
+		double* dststartframe, double* dstendframe, double* dstapplyrate, 
+		BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera);
 
 private:
 	int InitParams();
@@ -60,8 +94,11 @@ private:
 	double m_startframe;
 	double m_endframe;
 	double m_applyrate;
+	
+	int m_edittarget;
 
 	BRUSHSTATE m_brushstate;
+	UNDOCAMERA m_undocamera;
 };
 
 

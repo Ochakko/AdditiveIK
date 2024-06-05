@@ -14959,6 +14959,56 @@ int CModel::IsMovableRot(bool limitdegflag, int srcmotid, double srcframe, doubl
 	return onlycheckIsMovable;
 }
 
+
+int CModel::UpdateCameraMatFromENull(int cameramotid)
+{
+	//2024/06/05
+	//カメラアニメのアンドゥーはIsNullAndChildIsCamera()==trueのボーンに対して行っている
+	//アンドゥ結果をIsCamera()==trueのボーンに反映するためにUpdateCameraMatFromENull()を呼ぶ
+
+	CBone* camerabone = nullptr;
+	CBone* enullbone = nullptr;
+	CAMERANODE* cnptr = GetCAMERANODE(cameramotid);
+	if (cnptr && cnptr->pbone && cnptr->pbone->GetParent(false)) {
+		camerabone = cnptr->pbone;
+		enullbone = cnptr->pbone->GetParent(false);
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+
+	MOTINFO camerami = GetMotInfo(cameramotid);
+	if (camerami.motid > 0) {
+		int frameleng = (int)camerami.frameleng;
+		int curframe;
+		for (curframe = 0; curframe < frameleng; curframe++) {
+			CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, (double)curframe);
+			CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, (double)curframe);
+			if (enullmp && cameramp) {
+				ChaMatrix enullwm = enullmp->GetWorldMat();
+				ChaMatrix cameralocal = cameramp->GetLocalMat();
+				ChaMatrix camerawm = cameralocal * enullwm;
+				cameramp->SetWorldMat(camerawm);
+
+				//ChaVector3 neweul;
+				//neweul = enullbone->CalcLocalEulXYZ(false, -1, cameramotid, (double)curframe, BEFEUL_BEFFRAME);
+				//enullmp->SetLocalEul(neweul);
+			}
+			else {
+				_ASSERT(0);
+				return 1;
+			}
+		}
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+
+	return 0;
+}
+
 int CModel::CameraRotateAxisDelta(
 	bool limitdegflag, CEditRange* erptr,
 	int axiskind,
@@ -15093,8 +15143,10 @@ int CModel::CameraRotateAxisDelta(
 
 					enullmp->SetLocalMat(newparentLocalNodeAnimMat);
 					enullmp->SetWorldMat(newparentGlobalNodeMat);
+					enullmp->SetLimitedWM(newparentGlobalNodeMat);
 
 					cameramp->SetWorldMat(newcameramat);
+					cameramp->SetLimitedWM(newcameramat);
 
 					ChaVector3 neweul;
 					neweul = enullbone->CalcLocalEulXYZ(limitdegflag, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
@@ -15138,8 +15190,10 @@ int CModel::CameraRotateAxisDelta(
 
 				enullmp->SetLocalMat(newparentLocalNodeAnimMat);
 				enullmp->SetWorldMat(newparentGlobalNodeMat);
+				enullmp->SetLimitedWM(newparentGlobalNodeMat);
 
 				cameramp->SetWorldMat(newcameramat);
+				cameramp->SetLimitedWM(newcameramat);
 
 				ChaVector3 neweul;
 				neweul = enullbone->CalcLocalEulXYZ(limitdegflag, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
@@ -15273,8 +15327,10 @@ int CModel::CameraTranslateAxis(
 
 					enullmp->SetLocalMat(newparentLocalNodeAnimMat);
 					enullmp->SetWorldMat(newparentGlobalNodeMat);
+					enullmp->SetLimitedWM(newparentGlobalNodeMat);
 
 					cameramp->SetWorldMat(newcameramat);
+					cameramp->SetLimitedWM(newcameramat);
 
 					//ChaVector3 neweul;
 					//neweul = enullbone->CalcLocalEulXYZ(limitdegflag, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
@@ -15314,8 +15370,10 @@ int CModel::CameraTranslateAxis(
 
 				enullmp->SetLocalMat(newparentLocalNodeAnimMat);
 				enullmp->SetWorldMat(newparentGlobalNodeMat);
+				enullmp->SetLimitedWM(newparentGlobalNodeMat);
 
 				cameramp->SetWorldMat(newcameramat);
+				cameramp->SetLimitedWM(newcameramat);
 
 				//ChaVector3 neweul;
 				//neweul = enullbone->CalcLocalEulXYZ(limitdegflag, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
@@ -17035,8 +17093,11 @@ int CModel::InitUndoMotion( int saveflag )
 	return 0;
 }
 
-int CModel::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, int curboneno, int curbaseno, CEditRange* srcer,
-	double srcapplyrate, BRUSHSTATE srcbrushstate, bool allframeflag)
+int CModel::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, int curboneno, int curbaseno, 
+	int srcedittarget, CEditRange* srcer,
+	double srcapplyrate, 
+	BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, 
+	bool allframeflag)
 {
 	//saveによって次回のundo位置は変わる
 	//undoによって次回のsave位置は変わらない
@@ -17052,7 +17113,7 @@ int CModel::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, int cur
 
 	//2023/10/27 1.2.0.27 RC5 : LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
 	int result = m_undomotion[m_undo_writepoint].SaveUndoMotion(LimitDegCheckBoxFlag, limitdegflag, this,
-		curboneno, curbaseno, srcer, srcapplyrate, srcbrushstate, allframeflag);
+		curboneno, curbaseno, srcedittarget, srcer, srcapplyrate, srcbrushstate, srcundocamera, allframeflag);
 	if (result == 1) {//result == 2はエラーにしない
 		_ASSERT(0);
 
@@ -17069,8 +17130,17 @@ int CModel::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, int cur
 
 	return 0;
 }
-int CModel::RollBackUndoMotion(bool limitdegflag, HWND hmainwnd, int redoflag, int* curboneno, int* curbaseno, double* dststartframe, double* dstendframe, double* dstapplyrate, BRUSHSTATE* dstbrushstate)
+int CModel::RollBackUndoMotion(bool limitdegflag, HWND hmainwnd, int redoflag, 
+	int* edittarget, int* curboneno, int* curbaseno, 
+	double* dststartframe, double* dstendframe, double* dstapplyrate, 
+	BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera)
 {
+	if (!edittarget || !curboneno || !curbaseno || !dststartframe || !dstendframe || !dstapplyrate || 
+		!dstbrushstate || !dstundocamera) {
+		_ASSERT(0);
+		return 1;
+	}
+
 	//saveによって次回のundo位置は変わる
 	//undoによって次回のsave位置は変わらない
 
@@ -17115,8 +17185,10 @@ int CModel::RollBackUndoMotion(bool limitdegflag, HWND hmainwnd, int redoflag, i
 	}
 
 	if(m_undo_readpoint >= 0 ){
-		int result = m_undomotion[m_undo_readpoint].RollBackMotion(limitdegflag, this, 
-			curboneno, curbaseno, dststartframe, dstendframe, dstapplyrate, dstbrushstate);
+		int result = m_undomotion[m_undo_readpoint].RollBackMotion(limitdegflag, this,
+			edittarget,
+			curboneno, curbaseno, dststartframe, dstendframe, dstapplyrate, 
+			dstbrushstate, dstundocamera);
 	}
 
 	return 0;

@@ -1861,6 +1861,7 @@ static bool s_LstartFlag = false;
 static bool s_LstopFlag = false;
 static bool s_LchangeTargetFlag = false;
 static bool s_LrefreshEditTarget = false;
+static bool s_LchangeTarget2Camera = false;
 //static int s_LstopDoneCount = 0;
 static bool s_retargetguiFlag = false;
 
@@ -2791,6 +2792,7 @@ static int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax);
 static int RollbackCurBoneNo();
 static void PrepairUndo();
 static void RollbackBrushState(BRUSHSTATE srcbrushstate);
+static void RollbackUndoCamera(UNDOCAMERA srcundocamera);
 static int OnFrameUndo(bool fromds, int fromdskind);
 static int OnSpriteUndo();
 static void OnGUIEventSpeed();
@@ -4125,6 +4127,7 @@ void InitApp()
 	g_edittarget = EDITTARGET_BONE;
 	s_LchangeTargetFlag = false;
 	s_LrefreshEditTarget = false;
+	s_LchangeTarget2Camera = false;
 
 	{
 		g_camEye = ChaVector3(0.0f, 0.0f, 0.0f);
@@ -7487,6 +7490,17 @@ void PrepairUndo()
 			brushstate.wallscrapingikflag = g_wallscrapingikflag;
 			brushstate.brushrepeats = g_brushrepeats;
 
+			UNDOCAMERA undocamera;
+			undocamera.Init();
+			undocamera.spcameramode = s_spcameramode.state;
+			undocamera.camtargetflag = s_camtargetflag;
+			undocamera.camtargetdisp = s_camtargetdisp;
+			undocamera.moveeyepos = s_moveeyepos;
+			undocamera.camEyePos = g_camEye;
+			undocamera.camtargetpos = g_camtargetpos;
+			undocamera.camUpVec = g_cameraupdir;
+			undocamera.camdist = g_camdist;
+
 			HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));//長いフレームの保存は数秒時間がかかることがあるので砂時計カーソルにする
 
 			bool allframeflag;
@@ -7501,15 +7515,19 @@ void PrepairUndo()
 			if (g_edittarget != EDITTARGET_CAMERA) {
 				//2023/10/27 1.2.0.27 RC5 : s_LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
 				s_model->SaveUndoMotion(s_LimitDegCheckBoxFlag, g_limitdegflag, s_curboneno, s_curbaseno,
-					&s_editrange, g_applyrate, brushstate, allframeflag);
+					g_edittarget, &s_editrange, g_applyrate, 
+					brushstate, undocamera,
+					allframeflag);
 			}
 			else if (s_cameramodel) {
 				int cameramotid = 0;
 				int cameraframeleng = 100;
 				CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);
 				if (opebone) {
-					s_cameramodel->SaveUndoMotion(s_LimitDegCheckBoxFlag, g_limitdegflag, opebone->GetBoneNo(), s_curbaseno,
-						&s_editrange, g_applyrate, brushstate, allframeflag);
+					s_cameramodel->SaveUndoMotion(s_LimitDegCheckBoxFlag, g_limitdegflag, s_curboneno, s_curbaseno,
+						g_edittarget, &s_editrange, g_applyrate,
+						brushstate, undocamera,
+						allframeflag);
 				}
 			}
 
@@ -9169,13 +9187,15 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		else {
 			//s_LrefreshEditTarget = true;
 
-			//if ((s_undoFlag == false) && (s_redoFlag == false)) {
-			//	if (s_oprigflag == 0) {
-			//		if ((s_ikkind == 0) && (editmotionflag >= 0)) {
-			//			ikdoneflag = true;
-			//		}
-			//	}
-			//}
+			if ((s_undoFlag == false) && (s_redoFlag == false)) {
+				if (s_oprigflag == 0) {
+					if ((s_ikkind == 0) && (editmotionflag >= 0)) {
+						if (s_cameramodel && (s_cameramodel->GetCameraMotionId() > 0)) {
+							ikdoneflag = true;
+						}
+					}
+				}
+			}
 		}
 
 
@@ -9241,7 +9261,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			//2023/02/04
 			//LimitEulにチェックを入れて編集したモーション部分を　角度制限無しの姿勢にベイクする
 			//if ((g_limitdegflag == true) && (s_editmotionflag >= 0)) {
-			if ((g_limitdegflag == true) && ikdoneflag) {
+			if ((g_limitdegflag == true) && ikdoneflag && (g_edittarget != EDITTARGET_CAMERA)) {
 				bool allframeflag = false;
 				bool setcursorflag = true;
 				bool onpasteflag = false;
@@ -9272,7 +9292,12 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				//後処理として　befeul.befframeeulで　ボーンごとのマルチスレッドで計算して正しいオイラーにする
 				//############################################################################################################
 				if (s_model->ExistCurrentMotion()) {
-					s_model->CalcBoneEul(g_limitdegflag, s_model->GetCurrentMotID());
+					if (g_edittarget != EDITTARGET_CAMERA) {
+						s_model->CalcBoneEul(g_limitdegflag, s_model->GetCurrentMotID());
+					}
+					else if (s_cameramodel) {
+						s_cameramodel->CalcBoneEul(false, s_cameramodel->GetCameraMotionId());
+					}
 				}
 			}
 
@@ -13805,6 +13830,11 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 		//	s_model->SaveUndoMotion(s_curboneno, s_curbaseno, &s_editrange, (double)g_applyrate);
 		//}
 		if ((InterlockedAdd(&g_retargetbatchflag, 0) == 0) && s_model) {
+
+			//#####################################################################
+			//2024/06/05
+			//モーション変更前のPrepairUndoは、ボーンモーションとカメラアニメについて呼び出す
+			//#####################################################################
 			PrepairUndo();
 		}
 	}
@@ -35187,8 +35217,12 @@ int OnFrameTimeLineWnd()
 			g_edittarget = EDITTARGET_BONE;
 		}
 
-		s_LrefreshEditTarget = true;
 
+		if (g_edittarget == EDITTARGET_CAMERA) {
+			s_LchangeTarget2Camera = true;//編集前のPrepairUndoをするため
+		}
+
+		s_LrefreshEditTarget = true;
 	}
 
 	if (s_LrefreshEditTarget) {
@@ -35199,19 +35233,12 @@ int OnFrameTimeLineWnd()
 			s_guiswplateno = 6;
 			GUISetVisible(s_guiswplateno);
 		}
+		//else if (g_edittarget == EDITTARGET_BONE) {//bone-->camera-->morph-->"bone"
 		else {
-			if (g_edittarget == EDITTARGET_BONE) {//bone-->camera-->morph-->"bone"
-
-				s_guiswflag = false;
-				GUIMenuSetVisible(s_platemenukind, s_platemenuno);
-
-				//ShowGUIDlgBlendShape(false);
-				//if (s_placefolderWnd) {
-				//	s_placefolderWnd->setVisible(true);
-				//}
-			}
+			//undo時　bone-->morph-->"camera"でもmorphウインドウが閉じるように
+			s_guiswflag = false;
+			GUIMenuSetVisible(s_platemenukind, s_platemenuno);
 		}
-
 		SetLTimelineMark(s_curboneno);
 		if (s_owpTimeline) {
 			refreshTimeline(*s_owpTimeline);
@@ -35219,6 +35246,12 @@ int OnFrameTimeLineWnd()
 		refreshEulerGraph();
 	}
 
+	if (s_LchangeTarget2Camera) {
+		s_LchangeTarget2Camera = false;
+
+		//編集前のPrepairUndoをする
+		PrepairUndo();
+	}
 
 	if (s_firstkeyFlag) {
 		if (s_model) {
@@ -35736,13 +35769,14 @@ int OnFrameToolWnd()
 	}
 
 	if (s_camtargetOnceflag) {
+		s_camtargetOnceflag = 0;
 		if (s_model && (s_curboneno >= 0)) {
 			CBone* curbone = s_model->GetBoneByID(s_curboneno);
 			_ASSERT(curbone);
 			if (curbone) {
 				s_saveboneno = s_curboneno;
 
-				if (s_camtargetflag) {
+				//if (s_camtargetflag) {
 					g_befcamtargetpos = g_camtargetpos;
 					g_camtargetpos = curbone->GetChildWorld();
 
@@ -35750,15 +35784,13 @@ int OnFrameToolWnd()
 					diffv = g_camEye - g_camtargetpos;
 					float newcamdist = (float)ChaVector3LengthDbl(&diffv);
 					ChangeCameraDist(newcamdist, false, false);//2024/03/08
-				}
+				//}
 			}
 			else {
 				s_curboneno = -1;
 			}
 		}
-		s_camtargetOnceflag = 0;
 	}
-
 
 
 	//DispGroupWnd チェックボックスを右クリック　類似をチェックするためのコンテクストメニューを出す
@@ -37344,7 +37376,19 @@ int OnSpriteUndo()
 
 	BRUSHSTATE brushstate;
 	brushstate.Init();
+	UNDOCAMERA undocamera;
+	undocamera.Init();
 
+
+	int saveedittarget = g_edittarget;
+	int newedittarget = g_edittarget;//ただの初期化　RollBackUndoMotionにて新しい状態へと上書きされる
+	int savecameramotionid;
+	if (s_cameramodel) {
+		savecameramotionid = s_cameramodel->GetCameraMotionId();
+	}
+	else {
+		savecameramotionid = 0;
+	}
 
 	///////////// undo
 	if (s_model && (s_undoFlag == true)) {
@@ -37352,8 +37396,8 @@ int OnSpriteUndo()
 		StopBt();
 		if (g_edittarget != EDITTARGET_CAMERA) {
 			s_model->RollBackUndoMotion(g_limitdegflag, g_mainhwnd,
-				0, &s_curboneno, &s_curbaseno,
-				&tmpselectstart, &tmpselectend, &tmpapplyrate, &brushstate);//!!!!!!!!!!!
+				0, &newedittarget, &s_curboneno, &s_curbaseno,
+				&tmpselectstart, &tmpselectend, &tmpapplyrate, &brushstate, &undocamera);//!!!!!!!!!!!
 		}
 		else if(s_cameramodel) {
 			int cameramotid = 0;
@@ -37363,13 +37407,13 @@ int OnSpriteUndo()
 				int curboneno = opebone->GetBoneNo();
 				int curbaseno = -1;
 				s_cameramodel->RollBackUndoMotion(g_limitdegflag, g_mainhwnd,
-					0, &curboneno, &curbaseno,
-					&tmpselectstart, &tmpselectend, &tmpapplyrate, &brushstate);//!!!!!!!!!!!
+					0, &newedittarget, &curboneno, &curbaseno,
+					&tmpselectstart, &tmpselectend, &tmpapplyrate, &brushstate, &undocamera);//!!!!!!!!!!!
 			}
 		}
 
 		RollbackBrushState(brushstate);//ブラシパラメータ復元
-
+		RollbackUndoCamera(undocamera);//カメラパラメータ復元
 		undodoneflag = true;
 	}
 	else if (s_model && (s_redoFlag == true))
@@ -37378,8 +37422,8 @@ int OnSpriteUndo()
 		StopBt();
 		if (g_edittarget != EDITTARGET_CAMERA) {
 			s_model->RollBackUndoMotion(g_limitdegflag, g_mainhwnd,
-				1, &s_curboneno, &s_curbaseno,
-				&tmpselectstart, &tmpselectend, &tmpapplyrate, &brushstate);//!!!!!!!!!!!
+				1, &newedittarget, &s_curboneno, &s_curbaseno,
+				&tmpselectstart, &tmpselectend, &tmpapplyrate, &brushstate, &undocamera);//!!!!!!!!!!!
 		}
 		else {
 			int cameramotid = 0;
@@ -37389,22 +37433,52 @@ int OnSpriteUndo()
 				int curboneno = opebone->GetBoneNo();
 				int curbaseno = -1;
 				s_cameramodel->RollBackUndoMotion(g_limitdegflag, g_mainhwnd,
-					1, &curboneno, &curbaseno,
-					&tmpselectstart, &tmpselectend, &tmpapplyrate, &brushstate);//!!!!!!!!!!!
+					1, &newedittarget, &curboneno, &curbaseno,
+					&tmpselectstart, &tmpselectend, &tmpapplyrate, &brushstate, &undocamera);//!!!!!!!!!!!
 			}
 		}
 
 		RollbackBrushState(brushstate);//ブラシパラメータ復元
-
+		RollbackUndoCamera(undocamera);//カメラパラメータ復元
 		undodoneflag = true;
 	}
+
+
+	g_edittarget = newedittarget;
+
 
 	if (s_model && (undodoneflag == true)) {
 		//s_copyKeyInfoList.clear();
 		//s_deletedKeyInfoList.clear();
 		//s_selectKeyInfoList.clear();
 
-		if ((g_edittarget != EDITTARGET_CAMERA) && s_model->ExistCurrentMotion() && (s_model->GetCurMotInfo().motid != s_curmotid)) {
+
+		if (s_model && (undodoneflag == true) && (saveedittarget != newedittarget)) {
+			
+			//s_LrefreshEditTarget = true;//即時実行する必要があるのでフラグセットではなく処理を直書き
+		
+			if (g_edittarget == EDITTARGET_MORPH) {
+				CloseAllRightPainWindow();
+				s_guiswplateno = 6;
+				GUISetVisible(s_guiswplateno);
+			}
+			//else if (g_edittarget == EDITTARGET_BONE) {//bone-->camera-->morph-->"bone"
+			else {
+				//undo時　bone-->morph-->"camera"でもmorphウインドウが閉じるように
+				s_guiswflag = false;
+				GUIMenuSetVisible(s_platemenukind, s_platemenuno);
+			}
+			SetLTimelineMark(s_curboneno);
+			//if (s_owpTimeline) {
+			//	refreshTimeline(*s_owpTimeline);
+			//}
+			//refreshEulerGraph();
+		}
+
+
+
+
+		if (s_model->ExistCurrentMotion() && (s_model->GetCurMotInfo().motid != s_curmotid)) {
 			int chkcnt = 0;
 			int findflag = 0;
 			int minum;
@@ -37425,35 +37499,24 @@ int OnSpriteUndo()
 				OnAnimMenu(true, selindex, 0);
 			}
 		}
-		else if ((g_edittarget == EDITTARGET_CAMERA) && 
-			(s_cameramodel->GetCameraMotionId() > 0) &&
-			(s_cameramodel->GetCameraMotionId() != s_curmotid)) {
-			int chkcnt = 0;
-			int findflag = 0;
-			int minum;
-			int miindex;
-			minum = s_cameramodel->GetMotInfoSize();
-			for (miindex = 0; miindex < minum; miindex++) {
-				MOTINFO curmi = s_cameramodel->GetMotInfoByIndex(miindex);
-				if (curmi.motid == s_cameramodel->GetCameraMotionId()) {
-					findflag = 1;
-					break;
-				}
-				chkcnt++;
-			}
-
-			if (findflag == 1) {
-				int selindex;
-				selindex = chkcnt;
-				OnAnimMenu(true, selindex, 0);
-			}
-		}
 		else {
 			if (s_model) {
 				//メニュー書き換え, timeline update
 				OnAnimMenu(true, s_motmenuindexmap[s_model], 0);
 			}
 		}
+
+
+		if (s_cameramodel && s_cameramodel->ExistCurrentMotion() && (s_cameramodel->GetCameraMotionId() != savecameramotionid)) {
+			if (s_camerapanel.radiobutton) {
+				int cameramotindex = s_model->MotionID2CameraIndex(s_cameramodel->GetCameraMotionId());
+				if (cameramotindex >= 0) {
+					s_cameramenuindexmap[s_model] = cameramotindex;
+					s_camerapanel.radiobutton->setSelectIndex(cameramotindex, false);
+				}
+			}
+		}
+
 
 		if (s_curboneno >= 0) {
 			ChangeCurrentBone();
@@ -37534,7 +37597,7 @@ int OnSpriteUndo()
 
 
 			//limitedへの変更を　worldに反映
-			if (g_limitdegflag == true) {
+			if ((g_limitdegflag == true) && (g_edittarget != EDITTARGET_CAMERA)) {
 				bool allframeflag = false;
 				bool setcursorflag = false;
 				bool onpasteflag = false;
@@ -37546,11 +37609,18 @@ int OnSpriteUndo()
 			}
 			
 
-			//2023/11/03 hipsを３回転してアンドゥしたときに　編集範囲の境目で　オイラーグラフが連続するために必要
-			s_model->CalcBoneEul(g_limitdegflag, s_model->GetCurrentMotID());
+			if (g_edittarget != EDITTARGET_CAMERA) {
+				//2023/11/03 hipsを３回転してアンドゥしたときに　編集範囲の境目で　オイラーグラフが連続するために必要
+				s_model->CalcBoneEul(g_limitdegflag, s_model->GetCurrentMotID());
+			}
+			else if (s_cameramodel) {
+				//2024/06/05
+				//カメラアニメのアンドゥーはIsNullAndChildIsCamera()==trueのボーンに対して行っている
+				//アンドゥ結果をIsCamera()==trueのボーンに反映するためにUpdateCameraMatFromENull()を呼ぶ
+				//s_cameramodel->UpdateCameraMatFromENull(s_cameramodel->GetCameraMotionId());
 
-
-
+				s_cameramodel->CalcBoneEul(false, s_cameramodel->GetCameraMotionId());
+			}
 
 			refreshEulerGraph();
 
@@ -37577,6 +37647,11 @@ int OnSpriteUndo()
 	if (oldcursor != NULL) {
 		SetCursor(oldcursor);
 	}
+
+
+	//if (s_model && (undodoneflag == true) && (saveedittarget != newedittarget)) {
+	//	s_LrefreshEditTarget = true;
+	//}
 
 	return 0;
 
@@ -39364,9 +39439,13 @@ int CreateSideMenuWnd()
 				bool value = s_sidemenu_sellock->getValue();
 				if (value) {
 					s_camtargetflag = true;
-					//if (s_sidemenu_targetdisp) {
-					//	s_sidemenu_targetdisp->setValue(false);
-					//}
+
+					//sellockオンの時はカメラが選択ジョイント中心回転、targetdispオンの時はカメラがマニピュレータ(カメラターゲット位置)中心回転
+					//両方オンにすると分かりずらいので排他選択
+					if (s_sidemenu_targetdisp) {
+						s_sidemenu_targetdisp->setValue(false);
+						s_camtargetdisp = false;
+					}
 				}
 				else {
 					s_camtargetflag = false;
@@ -39379,9 +39458,13 @@ int CreateSideMenuWnd()
 				bool value = s_sidemenu_targetdisp->getValue();
 				if (value) {
 					s_camtargetdisp = true;
-					//if (s_sidemenu_sellock) {
-					//	s_sidemenu_sellock->setValue(false);
-					//}
+
+					//sellockオンの時はカメラが選択ジョイント中心回転、targetdispオンの時はカメラがマニピュレータ(カメラターゲット位置)中心回転
+					//両方オンにすると分かりずらいので排他選択
+					if (s_sidemenu_sellock) {
+						s_sidemenu_sellock->setValue(false);
+						s_camtargetflag = false;
+					}
 				}
 				else {
 					s_camtargetdisp = false;
@@ -45789,8 +45872,14 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		myRenderer::RENDERSPRITE rendersprite;
 		rendersprite.Init();
 		rendersprite.pundosprite = &s_undosprite;
-		rendersprite.userint1 = s_model->GetCurrentUndoR();
-		rendersprite.userint2 = s_model->GetCurrentUndoW();
+		if (g_edittarget != EDITTARGET_CAMERA) {
+			rendersprite.userint1 = s_model->GetCurrentUndoR();
+			rendersprite.userint2 = s_model->GetCurrentUndoW();
+		}
+		else if (s_cameramodel) {
+			rendersprite.userint1 = s_cameramodel->GetCurrentUndoR();
+			rendersprite.userint2 = s_cameramodel->GetCurrentUndoW();
+		}
 		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
 
@@ -48289,10 +48378,10 @@ void AutoCameraTarget()
 		}
 	}
 	else {
-		ChaVector3 diffv;
-		diffv = g_camEye - g_camtargetpos;
-		float newcamdist = (float)ChaVector3LengthDbl(&diffv);
-		ChangeCameraDist(newcamdist, false, false);
+		//ChaVector3 diffv;
+		//diffv = g_camEye - g_camtargetpos;
+		//float newcamdist = (float)ChaVector3LengthDbl(&diffv);
+		//ChangeCameraDist(newcamdist, false, false);
 	}
 
 	SetCamera3DFromEyePos();
@@ -49548,66 +49637,68 @@ int OnMouseMoveFunc()
 				ChaVector3 tmpsc;
 				s_model->TransformBone(s_pickinfo.winx, s_pickinfo.winy, s_curboneno, &s_pickinfo.objworld, &tmpsc, &s_pickinfo.objscreen);
 
-				if (s_model) {
-					if (s_oprigflag == 0) {
-						ChaVector3 targetpos(0.0f, 0.0f, 0.0f);
-						//CallF(CalcTargetPos(&targetpos), return 1);
-						CalcTargetPos(&targetpos);
-						if (s_ikkind == 0) {
-							s_editmotionflag = s_model->IKRotateUnderIK(g_limitdegflag,
-								&s_editrange, s_pickinfo.pickobjno, targetpos, g_iklevel);
+				if (g_edittarget != EDITTARGET_CAMERA) {
+					if (s_model) {
+						if (s_oprigflag == 0) {
+							ChaVector3 targetpos(0.0f, 0.0f, 0.0f);
+							//CallF(CalcTargetPos(&targetpos), return 1);
+							CalcTargetPos(&targetpos);
+							if (s_ikkind == 0) {
+								s_editmotionflag = s_model->IKRotateUnderIK(g_limitdegflag,
+									&s_editrange, s_pickinfo.pickobjno, targetpos, g_iklevel);
 
-							//ClearLimitedWM(s_model);//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
-							//UpdateEditedEuler();
-						}
-						else if (s_ikkind == 1) {
-							//ChaVector3 diffvec = targetpos - s_pickinfo.objworld;
+								//ClearLimitedWM(s_model);//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
+								//UpdateEditedEuler();
+							}
+							else if (s_ikkind == 1) {
+								//ChaVector3 diffvec = targetpos - s_pickinfo.objworld;
 
-							ChaVector3 modelobjworld;
-							ChaMatrix invmodelwm = ChaMatrixInv(s_model->GetWorldMat());
-							ChaVector3TransformCoord(&modelobjworld, &s_pickinfo.objworld, &invmodelwm);
-							ChaVector3 diffvec = targetpos - modelobjworld;
-							AddBoneTra2(diffvec);
-							s_editmotionflag = s_curboneno;
-						}
-						else if (s_ikkind == 2) {
-							//ChaVector3 diffvec = targetpos - s_pickinfo.objworld;
+								ChaVector3 modelobjworld;
+								ChaMatrix invmodelwm = ChaMatrixInv(s_model->GetWorldMat());
+								ChaVector3TransformCoord(&modelobjworld, &s_pickinfo.objworld, &invmodelwm);
+								ChaVector3 diffvec = targetpos - modelobjworld;
+								AddBoneTra2(diffvec);
+								s_editmotionflag = s_curboneno;
+							}
+							else if (s_ikkind == 2) {
+								//ChaVector3 diffvec = targetpos - s_pickinfo.objworld;
 
-							ChaVector3 modelobjworld;
-							ChaMatrix invmodelwm = ChaMatrixInv(s_model->GetWorldMat());
-							ChaVector3TransformCoord(&modelobjworld, &s_pickinfo.objworld, &invmodelwm);
-							ChaVector3 diffvec = targetpos - modelobjworld;
-							AddBoneScale2(diffvec);
-							s_editmotionflag = s_curboneno;
-						}
-
-					}
-					else {
-						if (s_customrigbone) {
-							float deltau = (float)(s_pickinfo.mousepos.x - s_pickinfo.mousebefpos.x) * 0.5f;
-							float deltav = (float)(s_pickinfo.mousepos.y - s_pickinfo.mousebefpos.y) * 0.5f;
-							if (g_controlkey == true) {
-								deltau *= 0.250f;
-								deltav *= 0.250f;
+								ChaVector3 modelobjworld;
+								ChaMatrix invmodelwm = ChaMatrixInv(s_model->GetWorldMat());
+								ChaVector3TransformCoord(&modelobjworld, &s_pickinfo.objworld, &invmodelwm);
+								ChaVector3 diffvec = targetpos - modelobjworld;
+								AddBoneScale2(diffvec);
+								s_editmotionflag = s_curboneno;
 							}
 
-							s_ikcustomrig = s_customrigbone->GetCustomRig(s_customrigno);
-							s_model->RigControlUnderRig(g_limitdegflag,
-								0, &s_editrange, s_pickinfo.pickobjno,
-								0, deltau, 
-								s_ikcustomrig, s_pickinfo.buttonflag);
-							ChaMatrix tmpwm = s_model->GetWorldMat();
-							s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
-							s_model->RigControlUnderRig(g_limitdegflag, 
-								0, &s_editrange, s_pickinfo.pickobjno, 
-								1, deltav, 
-								s_ikcustomrig, s_pickinfo.buttonflag);
-							s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
-							s_editmotionflag = s_curboneno;
-							//s_editmotionflag = 0;//これを０にすると　oprigflag == 1の状態でアンドゥした時に　アンドゥ用の保存が走って　保存が増えて状態が戻らない
 						}
+						else {
+							if (s_customrigbone) {
+								float deltau = (float)(s_pickinfo.mousepos.x - s_pickinfo.mousebefpos.x) * 0.5f;
+								float deltav = (float)(s_pickinfo.mousepos.y - s_pickinfo.mousebefpos.y) * 0.5f;
+								if (g_controlkey == true) {
+									deltau *= 0.250f;
+									deltav *= 0.250f;
+								}
+
+								s_ikcustomrig = s_customrigbone->GetCustomRig(s_customrigno);
+								s_model->RigControlUnderRig(g_limitdegflag,
+									0, &s_editrange, s_pickinfo.pickobjno,
+									0, deltau,
+									s_ikcustomrig, s_pickinfo.buttonflag);
+								ChaMatrix tmpwm = s_model->GetWorldMat();
+								s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
+								s_model->RigControlUnderRig(g_limitdegflag,
+									0, &s_editrange, s_pickinfo.pickobjno,
+									1, deltav,
+									s_ikcustomrig, s_pickinfo.buttonflag);
+								s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
+								s_editmotionflag = s_curboneno;
+								//s_editmotionflag = 0;//これを０にすると　oprigflag == 1の状態でアンドゥした時に　アンドゥ用の保存が走って　保存が増えて状態が戻らない
+							}
+						}
+						s_ikcnt++;
 					}
-					s_ikcnt++;
 				}
 			}
 			else if (g_previewFlag == 5) {
@@ -49915,6 +50006,18 @@ int OnMouseMoveFunc()
 			SetCamera3DFromEyePos();
 		}
 		else {
+			if (s_model && (s_curboneno >= 0) && s_camtargetflag) {
+				CBone* curbone = s_model->GetBoneByID(s_curboneno);
+				_ASSERT(curbone);
+				if (curbone) {
+					g_befcamtargetpos = g_camtargetpos;
+					g_camtargetpos = curbone->GetChildWorld();
+				}
+				else {
+					s_curboneno = -1;
+				}
+			}
+
 			int ikkind_rotation = 0;
 			OnCameraAnimMouseMove(ikkind_rotation, PICK_Y, rotxz);
 			OnCameraAnimMouseMove(ikkind_rotation, PICK_X, -roty);
@@ -60198,7 +60301,20 @@ CGrassElem* FindGrassElem(CModel* srcmodel)
 	return retgrasselem;
 }
 
+void RollbackUndoCamera(UNDOCAMERA srcundocamera)
+{
+	s_spcameramode.state = srcundocamera.spcameramode;
+	s_camtargetflag = srcundocamera.camtargetflag;
+	s_camtargetdisp = srcundocamera.camtargetdisp;
+	s_moveeyepos = srcundocamera.moveeyepos;
+	g_camEye = srcundocamera.camEyePos;
+	g_camtargetpos = srcundocamera.camtargetpos;
+	g_cameraupdir = srcundocamera.camUpVec;
+	g_camdist = srcundocamera.camdist;
 
+	PostOpenChaFile();//変数をGUIに反映　SetCamera3DFromEyePosも内部で呼ぶ
+
+}
 
 void RollbackBrushState(BRUSHSTATE srcbrushstate)
 {
@@ -71098,7 +71214,6 @@ int PickBone(UIPICKINFO* ppickinfo)
 		return 0;
 	}
 
-
 	return s_model->PickBone(ppickinfo);
 }
 
@@ -71335,38 +71450,39 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 	CBone* opebone0 = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);
 	if (s_cameramodel && opebone0) {
 
-		//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 6");
-
+		bool doneflag = false;
 		if (opekind == 0) {
 			s_editmotionflag = s_cameramodel->CameraRotateAxisDelta(
 				g_limitdegflag,
 				&s_editrange, pickxyz,
 				deltax, s_ikcnt);
 
-			s_cameramodel->GetCameraAnimParams(s_cameraframe,
-				g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir,
-				0, g_cameraInheritMode);//g_camdist
-
-			//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 7");
+			doneflag = true;
 		}
 		else if (opekind == 1) {
 			s_editmotionflag = s_cameramodel->CameraTranslateAxisDelta(
 				&s_editrange, pickxyz - PICK_X, deltax, s_matView);
 
-			s_cameramodel->GetCameraAnimParams(s_cameraframe,
-				g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir,
-				0, g_cameraInheritMode);//g_camdist
+			doneflag = true;
 		}
 		else if (opekind == 2) {
 			s_editmotionflag = s_cameramodel->CameraTranslateAxisDelta(
 				&s_editrange, PICK_Z - PICK_X, deltax, s_matView);
 
+			doneflag = true;
+		}
+
+		if (doneflag) {
 			s_cameramodel->GetCameraAnimParams(s_cameraframe,
 				g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir,
 				0, g_cameraInheritMode);//g_camdist
+
+			ChaVector3 diffvec = g_camtargetpos - g_camEye;
+			float newcamdist = (float)ChaVector3LengthDbl(&diffvec);
+			ChangeCameraDist(newcamdist, false, false);
 		}
 	}
-	SetCamera3DFromEyePos();
+	//SetCamera3DFromEyePos();
 
 	return 0;
 }

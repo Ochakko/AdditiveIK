@@ -510,6 +510,7 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(int cameramotid, double nextframe, i
 			CMotionPoint* cameramp = camerabone->AddMotionPoint(cameramotid, roundingframe, &existflag);
 			if (cameramp) {
 				cameramp->SetWorldMat(transformmat);
+				cameramp->SetLimitedWM(transformmat);
 				cameramp->SetLocalMat(localnodeanimmat);
 			}
 			else {
@@ -520,6 +521,7 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(int cameramotid, double nextframe, i
 			CMotionPoint* enullmp = camerabone->GetParent(false)->AddMotionPoint(cameramotid, roundingframe, &existflag2);
 			if (enullmp) {
 				enullmp->SetWorldMat(parentGlobalNodeMat);
+				enullmp->SetLimitedWM(parentGlobalNodeMat);
 				enullmp->SetLocalMat(parentLocalNodeAnimMat);
 			}
 			else {
