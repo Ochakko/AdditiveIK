@@ -490,6 +490,8 @@ CModel::~CModel()
 }
 int CModel::InitParams()
 {
+	m_selectedboneno = 0;
+
 	int index1;
 	for (index1 = 0; index1 < REFPOSMAXNUM; index1++) {
 		m_inview[index1] = false;
@@ -14960,11 +14962,77 @@ int CModel::IsMovableRot(bool limitdegflag, int srcmotid, double srcframe, doubl
 }
 
 
-int CModel::UpdateCameraMatFromENull(int cameramotid)
+//int CModel::UpdateCameraMatFromENull(int cameramotid)
+//{
+//	//2024/06/05その後
+//	//IsCamera()==trueのボーンに関してもアンドゥ処理をすることによりUpdateCameramatFromENull()は不要になった　コメントアウト
+//
+//	//2024/06/05
+//	//カメラアニメのアンドゥーはIsNullAndChildIsCamera()==trueのボーンに対して行っている
+//	//アンドゥ結果をIsCamera()==trueのボーンに反映するためにUpdateCameraMatFromENull()を呼ぶ
+//
+//	CBone* camerabone = nullptr;
+//	CBone* enullbone = nullptr;
+//	CAMERANODE* cnptr = GetCAMERANODE(cameramotid);
+//	if (cnptr && cnptr->pbone && cnptr->pbone->GetParent(false)) {
+//		camerabone = cnptr->pbone;
+//		enullbone = cnptr->pbone->GetParent(false);
+//	}
+//	else {
+//		_ASSERT(0);
+//		return 1;
+//	}
+//
+//	MOTINFO camerami = GetMotInfo(cameramotid);
+//	if (camerami.motid > 0) {
+//		int frameleng = (int)camerami.frameleng;
+//		int curframe;
+//		for (curframe = 0; curframe < frameleng; curframe++) {
+//			CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, (double)curframe);
+//			CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, (double)curframe);
+//			if (enullmp && cameramp) {
+//				ChaMatrix enullwm = enullmp->GetWorldMat();
+//				ChaMatrix cameralocal = cameramp->GetLocalMat();
+//				ChaMatrix camerawm = cameralocal * enullwm;
+//				cameramp->SetWorldMat(camerawm);
+//
+//				//ChaVector3 neweul;
+//				//neweul = enullbone->CalcLocalEulXYZ(false, -1, cameramotid, (double)curframe, BEFEUL_BEFFRAME);
+//				//enullmp->SetLocalEul(neweul);
+//			}
+//			else {
+//				_ASSERT(0);
+//				return 1;
+//			}
+//		}
+//	}
+//	else {
+//		_ASSERT(0);
+//		return 1;
+//	}
+//
+//	return 0;
+//}
+
+int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, ChaMatrix newmatView)
 {
-	//2024/06/05
-	//カメラアニメのアンドゥーはIsNullAndChildIsCamera()==trueのボーンに対して行っている
-	//アンドゥ結果をIsCamera()==trueのボーンに反映するためにUpdateCameraMatFromENull()を呼ぶ
+	if (!erptr) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	ChaCalcFunc chacalcfunc;
+
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int cameramotid = GetCameraMotionId();
+	MOTINFO camerami = GetMotInfo(cameramotid);
+	if (camerami.motid <= 0) {
+		return 0;
+	}
+	int curframeleng = IntTime(camerami.frameleng);
+
 
 	CBone* camerabone = nullptr;
 	CBone* enullbone = nullptr;
@@ -14975,38 +15043,172 @@ int CModel::UpdateCameraMatFromENull(int cameramotid)
 	}
 	else {
 		_ASSERT(0);
-		return 1;
+		return 0;
 	}
 
-	MOTINFO camerami = GetMotInfo(cameramotid);
-	if (camerami.motid > 0) {
-		int frameleng = (int)camerami.frameleng;
-		int curframe;
-		for (curframe = 0; curframe < frameleng; curframe++) {
-			CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, (double)curframe);
-			CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, (double)curframe);
-			if (enullmp && cameramp) {
-				ChaMatrix enullwm = enullmp->GetWorldMat();
-				ChaMatrix cameralocal = cameramp->GetLocalMat();
-				ChaMatrix camerawm = cameralocal * enullwm;
-				cameramp->SetWorldMat(camerawm);
+	int keynum;
+	double startframe, endframe, applyframe;
+	erptr->GetRange(&keynum, &startframe, &endframe, &applyframe);
 
-				//ChaVector3 neweul;
-				//neweul = enullbone->CalcLocalEulXYZ(false, -1, cameramotid, (double)curframe, BEFEUL_BEFFRAME);
-				//enullmp->SetLocalEul(neweul);
+	ChaMatrix rotmat0;
+	//rotmat0 = ChaMatrixInv(befmatView) * newmatView;
+	rotmat0 = ChaMatrixInv(ChaMatrixInv(befmatView) * newmatView);//カメラをプラス回転することは世界をマイナス回転させること　つまりそれは逆行列
+	CQuaternion rotq0;
+	rotq0.RotationMatrix(rotmat0);
+
+
+	if (keynum >= 2) {
+		int keyno = 0;
+		double curframe;
+		for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
+
+			double changerate;
+			changerate = (double)(*(g_motionbrush_value + (int)curframe));
+			CQuaternion endq;
+			CQuaternion qForRot;
+			endq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+			rotq0.Slerp2(endq, 1.0 - changerate, &qForRot);
+
+			CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
+			if (enullmp) {
+				ChaMatrix parentLocalNodeAnimMat = enullmp->GetLocalMat();
+				ChaMatrix parentGlobalNodeMat = enullmp->GetWorldMat();
+
+				ChaMatrix befrot, aftrot;
+				befrot.SetIdentity();
+				aftrot.SetIdentity();
+				//befrot.SetTranslation(-g_camtargetpos);
+				//aftrot.SetTranslation(g_camtargetpos);
+				befrot.SetTranslation(-g_camEye);
+				aftrot.SetTranslation(g_camEye);
+				ChaMatrix rotmat = qForRot.MakeRotMatX();
+				ChaMatrix localaddrot = befrot * rotmat * aftrot;
+
+				//式2024/06/04_1 : ChaMatrix newparentGlobalNodeMat = newparentLocalNodeAnimMat * ChaMatrixInv(parentLocalNodeAnimMat) * parentGlobalNodeMat;
+
+				ChaMatrix newparentGlobalNodeMat = parentGlobalNodeMat * localaddrot;//式2024/06/04_2
+
+				////式2024/06/04_1に//式2024/06/04_2を代入してlocalを求める
+				ChaMatrix newparentLocalNodeAnimMat = parentGlobalNodeMat * localaddrot * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
+
+				CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
+				if (cameramp) {
+					ChaMatrix localnodeanimmat = cameramp->GetLocalMat();
+					ChaMatrix newcameramat = localnodeanimmat * newparentGlobalNodeMat;
+
+					//###########
+					//upvecの補正
+					//###########
+					ChaVector3 befupvec;
+					//befupvec = ChaMatrixInv(newcameramat).GetRow(1);
+					befupvec = newcameramat.GetRow(1);
+					ChaVector3Normalize(&befupvec, &befupvec);
+					ChaVector3 aftupvec;
+					//aftupvec = newmatView.GetRow(1);
+					aftupvec = ChaMatrixInv(newmatView).GetRow(1);
+					ChaVector3Normalize(&aftupvec, &aftupvec);
+					CQuaternion rotupq0;
+					rotupq0.RotationArc(befupvec, aftupvec);
+					CQuaternion endqUp;
+					CQuaternion qForRotUp;
+					endqUp.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+					//rotupq0.Slerp2(endq, 1.0 - changerate, &qForRotUp);
+					qForRotUp = rotupq0;//upvecの補正は補間しない
+					ChaMatrix rotmatUp = qForRotUp.MakeRotMatX();
+
+					ChaMatrix localaddrot2 = befrot * rotmatUp * aftrot;
+
+					ChaMatrix newparentGlobalNodeMat2 = newparentGlobalNodeMat * localaddrot2;
+					ChaMatrix newparentLocalNodeAnimMat2 = newparentGlobalNodeMat * localaddrot2 * ChaMatrixInv(newparentGlobalNodeMat) * newparentLocalNodeAnimMat;
+
+					ChaMatrix localnodeanimmat2 = localnodeanimmat;
+					ChaMatrix newcameramat2 = localnodeanimmat2 * newparentGlobalNodeMat2;
+
+					enullmp->SetLocalMat(newparentLocalNodeAnimMat2);
+					enullmp->SetWorldMat(newparentGlobalNodeMat2);
+					enullmp->SetLimitedWM(newparentGlobalNodeMat2);
+
+					cameramp->SetWorldMat(newcameramat2);
+					cameramp->SetLimitedWM(newcameramat2);
+
+					ChaVector3 neweul;
+					neweul = enullbone->CalcLocalEulXYZ(false, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
+					enullmp->SetLocalEul(neweul);
+				}
 			}
-			else {
-				_ASSERT(0);
-				return 1;
+
+			keyno++;
+		}
+
+	}
+	else {
+
+		double curframe = RoundingTime(applyframe);
+		CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
+		if (enullmp) {
+			ChaMatrix parentLocalNodeAnimMat = enullmp->GetLocalMat();
+			ChaMatrix parentGlobalNodeMat = enullmp->GetWorldMat();
+
+			ChaMatrix befrot, aftrot;
+			befrot.SetIdentity();
+			aftrot.SetIdentity();
+			//befrot.SetTranslation(-g_camtargetpos);
+			//aftrot.SetTranslation(g_camtargetpos);
+			befrot.SetTranslation(-g_camEye);
+			aftrot.SetTranslation(g_camEye);
+			ChaMatrix rotmat = rotq0.MakeRotMatX();
+			ChaMatrix localaddrot = befrot * rotmat * aftrot;
+
+			//式2024/06/04_1 : ChaMatrix newparentGlobalNodeMat = newparentLocalNodeAnimMat * ChaMatrixInv(parentLocalNodeAnimMat) * parentGlobalNodeMat;
+
+			ChaMatrix newparentGlobalNodeMat = parentGlobalNodeMat * localaddrot;//式2024/06/04_2
+
+			////式2024/06/04_1に//式2024/06/04_2を代入してlocalを求める
+			ChaMatrix newparentLocalNodeAnimMat = parentGlobalNodeMat * localaddrot * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
+
+			CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
+			if (cameramp) {
+				ChaMatrix localnodeanimmat = cameramp->GetLocalMat();
+				ChaMatrix newcameramat = localnodeanimmat * newparentGlobalNodeMat;
+
+				//###########
+				//upvecの補正
+				//###########
+				ChaVector3 befupvec;
+				//befupvec = ChaMatrixInv(newcameramat).GetRow(1);
+				befupvec = newcameramat.GetRow(1);
+				ChaVector3Normalize(&befupvec, &befupvec);
+				ChaVector3 aftupvec;
+				//aftupvec = newmatView.GetRow(1);
+				aftupvec = ChaMatrixInv(newmatView).GetRow(1);
+				ChaVector3Normalize(&aftupvec, &aftupvec);
+				CQuaternion rotupq0;
+				rotupq0.RotationArc(befupvec, aftupvec);
+				ChaMatrix rotmatUp = rotupq0.MakeRotMatX();
+
+				ChaMatrix localaddrot2 = befrot * rotmatUp * aftrot;
+
+				ChaMatrix newparentGlobalNodeMat2 = newparentGlobalNodeMat * localaddrot2;
+				ChaMatrix newparentLocalNodeAnimMat2 = newparentGlobalNodeMat * localaddrot2 * ChaMatrixInv(newparentGlobalNodeMat) * newparentLocalNodeAnimMat;
+
+				ChaMatrix localnodeanimmat2 = localnodeanimmat;
+				ChaMatrix newcameramat2 = localnodeanimmat2 * newparentGlobalNodeMat2;
+
+				enullmp->SetLocalMat(newparentLocalNodeAnimMat2);
+				enullmp->SetWorldMat(newparentGlobalNodeMat2);
+				enullmp->SetLimitedWM(newparentGlobalNodeMat2);
+
+				cameramp->SetWorldMat(newcameramat2);
+				cameramp->SetLimitedWM(newcameramat2);
+
+				ChaVector3 neweul;
+				neweul = enullbone->CalcLocalEulXYZ(false, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
+				enullmp->SetLocalEul(neweul);
 			}
 		}
 	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
 
-	return 0;
+	return camerabone->GetBoneNo();
 }
 
 int CModel::CameraRotateAxisDelta(
@@ -17113,10 +17315,9 @@ int CModel::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, int cur
 
 	//2023/10/27 1.2.0.27 RC5 : LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
 	int result = m_undomotion[m_undo_writepoint].SaveUndoMotion(LimitDegCheckBoxFlag, limitdegflag, this,
-		curboneno, curbaseno, srcedittarget, srcer, srcapplyrate, srcbrushstate, srcundocamera, allframeflag);
+		GetSelectedBoneNo(), curbaseno, srcedittarget, srcer, srcapplyrate, srcbrushstate, srcundocamera, allframeflag);
 	if (result == 1) {//result == 2はエラーにしない
 		_ASSERT(0);
-
 		m_undo_writepoint = saveundoid;
 		return 1;
 	}
@@ -17131,12 +17332,12 @@ int CModel::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, int cur
 	return 0;
 }
 int CModel::RollBackUndoMotion(bool limitdegflag, HWND hmainwnd, int redoflag, 
-	int* edittarget, int* curboneno, int* curbaseno, 
-	double* dststartframe, double* dstendframe, double* dstapplyrate, 
-	BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera)
+	int* edittarget, int* pselectedboneno, int* curbaseno,
+	//double* dststartframe, double* dstendframe, double* dstapplyrate, 
+	BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera, UNDOMOTID* dstundomotid)
 {
-	if (!edittarget || !curboneno || !curbaseno || !dststartframe || !dstendframe || !dstapplyrate || 
-		!dstbrushstate || !dstundocamera) {
+	if (!edittarget || !pselectedboneno || !curbaseno || 
+		!dstbrushstate || !dstundocamera || !dstundomotid) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -17187,8 +17388,9 @@ int CModel::RollBackUndoMotion(bool limitdegflag, HWND hmainwnd, int redoflag,
 	if(m_undo_readpoint >= 0 ){
 		int result = m_undomotion[m_undo_readpoint].RollBackMotion(limitdegflag, this,
 			edittarget,
-			curboneno, curbaseno, dststartframe, dstendframe, dstapplyrate, 
-			dstbrushstate, dstundocamera);
+			pselectedboneno, curbaseno,
+			//dststartframe, dstendframe, dstapplyrate, 
+			dstbrushstate, dstundocamera, dstundomotid);
 	}
 
 	return 0;
@@ -21824,4 +22026,24 @@ int CModel::GetChildCameraBoneAndNode(CBone* enullbone, CBone** ppbone, FbxNode*
 
 	return 1;//子供のcameraがみつからなかった場合は　return 1
 
+}
+
+
+const char* CModel::GetBoneName(int srcboneno) {
+	CBone* pbone = GetBoneByID(srcboneno);
+	if (pbone) {
+		return pbone->GetBoneName();
+	}
+	else {
+		return nullptr;
+	}
+}
+const WCHAR* CModel::GetWBoneName(int srcboneno) {
+	CBone* pbone = GetBoneByID(srcboneno);
+	if (pbone) {
+		return pbone->GetWBoneName();
+	}
+	else {
+		return nullptr;
+	}
 }

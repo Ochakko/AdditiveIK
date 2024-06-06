@@ -45,6 +45,29 @@ typedef struct tag_undocamera
 	};
 }UNDOCAMERA;
 
+typedef struct tag_undomotid
+{
+	int bonemotid;
+	int cameramotid;
+	int curmotid;
+	double startframe;
+	double endframe;
+	double applyrate;
+
+	void Init() {
+		bonemotid = 0;
+		cameramotid = 0;
+		curmotid = 0;
+		startframe = 1.0;
+		endframe = 1.0;
+		applyrate = 50.0;
+	};
+
+	tag_undomotid() {
+		Init();
+	};
+}UNDOMOTID;
+
 
 class CUndoMotion
 {
@@ -53,14 +76,15 @@ public:
 	~CUndoMotion();
 
 	int ClearData();
-	int SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CModel* pmodel, int curboneno, int curbaseno,
+	int SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CModel* pmodel, 
+		int selectedboneno, int curbaseno,
 		int srcedittarget, CEditRange* srcer, double srcapplyrate,
 		BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, 
 		bool allframeflag);
 	int RollBackMotion(bool limitdegflag, CModel* pmodel, 
-		int* edittarget, int* curboneno, int* curbaseno,
-		double* dststartframe, double* dstendframe, double* dstapplyrate, 
-		BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera);
+		int* edittarget, int* pselectedboneno, int* curbaseno,
+		//double* dststartframe, double* dstendframe, double* dstapplyrate, 
+		BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera, UNDOMOTID* dstundomotid);
 
 private:
 	int InitParams();
@@ -87,18 +111,17 @@ private:
 	std::map<CBone*, std::map<double, int>> m_bonemotmark;
 	std::map<CBone*, ANGLELIMIT> m_bone2limit;
 
-	int m_curboneno;
+	//int m_curboneno;
+	int m_selectedboneno;
 	int m_curbaseno;
 
 	int m_keynum;
-	double m_startframe;
-	double m_endframe;
-	double m_applyrate;
 	
 	int m_edittarget;
 
 	BRUSHSTATE m_brushstate;
 	UNDOCAMERA m_undocamera;
+	UNDOMOTID m_undomotid;
 };
 
 

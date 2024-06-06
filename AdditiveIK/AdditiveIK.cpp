@@ -817,6 +817,11 @@ static int s_doneinit = 0;
 static double s_buttonselectstart = 0.0;
 static double s_buttonselectend = 0.0;
 static int s_buttonselecttothelast = 0;
+static double s_savebuttonselectstart;
+static double s_savebuttonselectend;
+static int s_savebuttonselecttothelast;
+static double s_saveplayingstart;
+static double s_saveplayingend;
 
 
 
@@ -1015,6 +1020,7 @@ static ChaMatrix s_matWorld;//シーン(カメラ)のworldmat. modelのworldmat�
 static ChaMatrix s_matProj;
 static ChaMatrix s_matVP;
 static ChaMatrix s_matView;
+static ChaMatrix s_befLockMatView;//Lock2Sel処理前のs_matView
 static ChaMatrix s_matSkyProj;
 //static ChaVector3 s_camUpVec = ChaVector3(0.00001f, 1.0f, 0.0f);
 
@@ -1816,6 +1822,7 @@ static bool s_undersymcopyFlag = false;
 static bool s_cutFlag = false;			// カットフラグ
 static bool s_pasteFlag = false;			// ペーストフラグ
 static bool s_cursorFlag = false;			// カーソル移動フラグ
+static bool s_cursorUnderUndo = false;
 static bool s_LTimelineApplyFrameFlag = false;
 static bool s_selectFlag = false;			// キー選択フラグ
 static bool s_keyShiftFlag = false;		// キー移動フラグ
@@ -1860,7 +1867,7 @@ static bool s_LupFlag = false;
 static bool s_LstartFlag = false;
 static bool s_LstopFlag = false;
 static bool s_LchangeTargetFlag = false;
-static bool s_LrefreshEditTarget = false;
+static int s_LrefreshEditTarget = 0;
 static bool s_LchangeTarget2Camera = false;
 //static int s_LstopDoneCount = 0;
 static bool s_retargetguiFlag = false;
@@ -2818,6 +2825,7 @@ static int CreateRigidWnd();
 static int DestroyRigidWnd();
 static void InitRigidWnd();
 static int CreateSideMenuWnd();
+static int Params2SideMenuWnd();
 static int CreateTopSlidersWnd();
 static int Params2TopSlidersWnd();
 static int CreateImpulseWnd();
@@ -2934,7 +2942,7 @@ static CMotionPoint CalcPasteMotionPoint(CBone* srcbone, double srcframe, double
 static void ResetPasteDoneFlagReq(CBone* srcbone);
 
 
-static int ChangeCurrentBone();
+static int ChangeCurrentBone(int prepairundoflag);
 static int ChangeLimitDegFlag(bool srcflag, bool setcheckflag, bool updateeulflag);
 static int ChangeWallScrapingIKFlag(bool srcflag);
 static int ChangeCameraMode(int forcemode);//forcemode 反転をセット:0 強制オフ時:1 強制オン時:2
@@ -4126,7 +4134,7 @@ void InitApp()
 
 	g_edittarget = EDITTARGET_BONE;
 	s_LchangeTargetFlag = false;
-	s_LrefreshEditTarget = false;
+	s_LrefreshEditTarget = 0;
 	s_LchangeTarget2Camera = false;
 
 	{
@@ -4187,6 +4195,7 @@ void InitApp()
 	s_matProj.SetIdentity();
 	s_matVP.SetIdentity();
 	s_matView.SetIdentity();
+	s_befLockMatView.SetIdentity();
 	s_matSkyProj.SetIdentity();
 
 	//s_maxcamdist = 5000.0f;
@@ -5292,6 +5301,7 @@ void InitApp()
 	s_cutFlag = false;			// カットフラグ
 	s_pasteFlag = false;			// ペーストフラグ
 	s_cursorFlag = false;			// カーソル移動フラグ
+	s_cursorUnderUndo = false;
 	s_LTimelineApplyFrameFlag = false;
 	s_selectFlag = false;			// キー選択フラグ
 	s_keyShiftFlag = false;		// キー移動フラグ
@@ -5709,9 +5719,16 @@ void InitApp()
 	g_underselectingframe = 0;
 	s_buttonselectstart = 0.0;
 	s_buttonselectend = 0.0;
-
+	s_buttonselecttothelast = 0;
 	g_playingstart = 1.0;
 	g_playingend = 1.0;
+	s_savebuttonselectstart = 0.0;
+	s_savebuttonselectend = 0.0;
+	s_savebuttonselecttothelast = 0;
+	s_saveplayingstart = 1.0;
+	s_saveplayingend = 1.0;
+
+
 
 	s_editrangehistoryno = 0;
 	s_editrangesetindex = 0;
@@ -6858,6 +6875,9 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 
 		if ((g_previewFlag == 0) && (s_savepreviewFlag != 0)) {
 			s_cursorFlag = true;
+			if (s_undoFlag || s_redoFlag) {
+				s_cursorUnderUndo = true;
+			}
 		}
 		OnFrameTimeLineWnd();
 
@@ -6970,31 +6990,37 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		//Preview
 		//##########
 		if (g_previewFlag) {
-			MOTINFO curmi = GetEditTargetMotInfo();
-			if (curmi.motid > 0) {
-				double previewframe = curmi.curframe;
+			MOTINFO targetmi = GetEditTargetMotInfo();
+			double previewframe;
+			if (targetmi.motid > 0) {
+				previewframe = targetmi.curframe;
+			}
+			else {
+				//2024/06/06
+				//カメラグラフ表示中にカメラアニメが存在しない場合　targetmi.motid == 0　その場合にはカレントモーションのカレントフレームを表示
+				previewframe = s_model->GetCurrentFrame();
+			}
 
-				if (s_model && s_model->ExistCurrentMotion()) {
-					if (g_previewFlag <= 3) {
-						OnFramePreviewNormal(previewframe, difftime, endflag, loopstartflag);
-					}
-					else if (g_previewFlag == 4) {//BTの物理
-						OnFramePreviewBt(previewframe, difftime, endflag, loopstartflag);
-					}
-					else if (g_previewFlag == 5) {//ラグドール
-						//OnFramePreviewRagdoll(&nextframe, &difftime);
+			if (s_model && s_model->ExistCurrentMotion()) {
+				if (g_previewFlag <= 3) {
+					OnFramePreviewNormal(previewframe, difftime, endflag, loopstartflag);
+				}
+				else if (g_previewFlag == 4) {//BTの物理
+					OnFramePreviewBt(previewframe, difftime, endflag, loopstartflag);
+				}
+				else if (g_previewFlag == 5) {//ラグドール
+					//OnFramePreviewRagdoll(&nextframe, &difftime);
 
-						//ラグドール休止中
-						_ASSERT(0);
-						OnFramePreviewNormal(previewframe, difftime, endflag, loopstartflag);
-					}
-					else {
-						OnTimeLineCursor();
-					}
+					//ラグドール休止中
+					_ASSERT(0);
+					OnFramePreviewNormal(previewframe, difftime, endflag, loopstartflag);
 				}
 				else {
-					g_previewFlag = 0;
+					OnTimeLineCursor();
 				}
+			}
+			else {
+				g_previewFlag = 0;
 			}
 		}
 		else {
@@ -8853,7 +8879,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
 						}
 
-						ChangeCurrentBone();
+						ChangeCurrentBone(true);
 
 
 						//if (s_model->GetInitAxisMatX() == 0){//OnAnimMenuに移動
@@ -8961,12 +8987,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				s_saveboneno = s_curboneno;
 
 				if (s_camtargetflag) {
-					g_befcamtargetpos = g_camtargetpos;
-					g_camtargetpos = curbone->GetChildWorld();
-
-					ChaVector3 diffvec = g_camtargetpos - g_camEye;
-					float newcamdist = (float)ChaVector3LengthDbl(&diffvec);
-					ChangeCameraDist(newcamdist, false, false);
+					AutoCameraTarget();
 				}
 
 				if (s_model->ExistCurrentMotion()) {
@@ -9185,8 +9206,6 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 		}
 		else {
-			//s_LrefreshEditTarget = true;
-
 			if ((s_undoFlag == false) && (s_redoFlag == false)) {
 				if (s_oprigflag == 0) {
 					if ((s_ikkind == 0) && (editmotionflag >= 0)) {
@@ -9576,7 +9595,9 @@ int RollbackCurBoneNo()
 {
 	if ((s_curboneno < 0) && (s_saveboneno >= 0)) {
 		s_curboneno = s_saveboneno;
-
+		//if (s_model) {
+		//	s_model->SetSelectedBoneNo(s_curboneno);
+		//}
 		if (s_owpTimeline) {
 			//2024/04/24
 			s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], false);
@@ -12182,6 +12203,9 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 			s_owpTimeline->setCursorListener([]() {
 				if (s_model) {
 					s_cursorFlag = true;
+					if (s_undoFlag || s_redoFlag) {
+						s_cursorUnderUndo = true;
+					}
 				}
 				});
 
@@ -12688,8 +12712,6 @@ int refreshEulerGraph()
 
 	if (s_model) {
 
-		
-
 		//if (!g_motionbrush_value || (g_motionbrush_frameleng != frameleng)) {
 		int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 		if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
@@ -12949,6 +12971,23 @@ void refreshTimeline(OWP_Timeline& timeline)
 		return;
 	}
 
+	
+
+
+	int savecurrentline;// = timeline.getCurrentLine();
+	if (s_curboneno >= 0) {
+		const WCHAR* pbonename = s_model->GetWBoneName(s_curboneno);
+		if (pbonename) {
+			savecurrentline = timeline.getLineIndex(pbonename);
+		}
+		else {
+			savecurrentline = 0;
+		}
+	}
+	else {
+		savecurrentline = 0;
+	}
+
 	int saveshowposline = timeline.getShowPosLine();
 
 
@@ -13016,6 +13055,7 @@ void refreshTimeline(OWP_Timeline& timeline)
 	//	}
 	//}
 
+	timeline.setCurrentLine(savecurrentline);//2024/06/06
 	timeline.setShowPosLine(saveshowposline);
 
 	refreshEulerGraph();
@@ -13672,7 +13712,7 @@ int OnCameraMenu(bool dorefreshflag, int selindex, int saveundoflag)
 	s_underselectcamera = false;
 
 
-	s_LrefreshEditTarget = true;//refresh EditTarget, EulerGraph on CameraMode
+	s_LrefreshEditTarget = 1;//refresh EditTarget, EulerGraph on CameraMode
 
 	return 0;
 }
@@ -16134,7 +16174,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.22\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.23\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -20978,6 +21018,7 @@ LRESULT CALLBACK SaveChaDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 }
 
+
 int PostOpenChaFile()
 {
 	//2024/04/17 常駐スライダーなどにchaファイル読込値を反映する
@@ -20988,7 +21029,6 @@ int PostOpenChaFile()
 	if (s_owpSpeedSlider) {
 		s_owpSpeedSlider->setValue(g_dspeed, false);
 	}
-	
 	
 	ChangeCameraDist(g_camdist , s_moveeyepos, false);
 
@@ -27305,7 +27345,7 @@ int UpdateAfterEditAngleLimit(int limit2boneflag, bool setcursorflag)//default :
 	//読み込みなおし：lowerとupperは大小関係で入れ替わることがあるため適用後読み込みなおす。
 	Bone2AngleLimit();
 	//AngleLimit2Dlg(s_anglelimitdlg);
-	ChangeCurrentBone();
+	ChangeCurrentBone(true);
 
 	//UpdateEditedEuler();//selectした範囲のみ
 	refreshEulerGraph();//モーション全体
@@ -33688,7 +33728,7 @@ LRESULT CALLBACK RotAxisDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 }
 
 
-int ChangeCurrentBone()
+int ChangeCurrentBone(int prepairundoflag)
 {
 	static CModel* s_befmodel = 0;
 	static CBone* s_befbone = 0;
@@ -33754,11 +33794,13 @@ int ChangeCurrentBone()
 
 				//}
 
-
-				PrepairUndo();
+				if (prepairundoflag) {
+					PrepairUndo();
+				}
 			}
 
-			s_saveboneno = curbone->GetBoneNo();//2024/04/24
+			s_model->SetSelectedBoneNo(s_curboneno);
+			s_saveboneno = s_curboneno;//2024/04/24 //curbone->GetBoneNo();
 			s_befbone = curbone;
 			s_befmodel = s_model;
 		}
@@ -33885,6 +33927,8 @@ int ChangeCameraMode(int forcemode)
 	else {
 		_ASSERT(0);
 	}
+
+	PrepairUndo();//2024/06/06
 
 	return 0;
 }
@@ -35137,7 +35181,12 @@ int GetCurrentBoneFromTimeline(int* dstboneno)
 		if (curlineno >= 0) {
 			*dstboneno = s_lineno2boneno[curlineno];//*(&s_curboneno)
 			SetLTimelineMark(s_curboneno);
-			ChangeCurrentBone();
+			if ((s_undoFlag == false) && (s_redoFlag == false) && (s_cursorUnderUndo == false)) {
+				ChangeCurrentBone(true);
+			}
+			else {
+				ChangeCurrentBone(false);
+			}
 		}
 		else {
 			*dstboneno = -1;
@@ -35181,7 +35230,7 @@ int OnFrameTimeLineWnd()
 		s_LcursorFlag = false;
 		s_keyShiftFlag = false;
 		s_LupFlag = false;
-		s_cursorFlag = false;
+		s_cursorUnderUndo = false;
 
 		return 0;//!!!!!!!!!!!!!!!!!!!!!
 	}
@@ -35219,31 +35268,104 @@ int OnFrameTimeLineWnd()
 
 
 		if (g_edittarget == EDITTARGET_CAMERA) {
-			s_LchangeTarget2Camera = true;//編集前のPrepairUndoをするため
+			PrepairUndo();//編集前のPrepairUndo
 		}
 
-		s_LrefreshEditTarget = true;
+		s_LrefreshEditTarget = 1;
 	}
 
-	if (s_LrefreshEditTarget) {
-		s_LrefreshEditTarget = false;
+	if (s_LrefreshEditTarget != 0) {
+		//#############################################################################
+		//2024/06/06
+		//選択範囲を初期化後に選択範囲を復元しようとしても表示がずれてうまくいかない
+		//s_LrefreshEditTarget == 1のif文で初期化処理を行い
+		//ループを１周回して必要な処理をしてからs_LrefreshEditTarget == 2のif文で復元処理を行う
+		//#############################################################################
 
-		if (g_edittarget == EDITTARGET_MORPH) {
-			CloseAllRightPainWindow();
-			s_guiswplateno = 6;
-			GUISetVisible(s_guiswplateno);
+		int tmpLrefreshEditTarget = s_LrefreshEditTarget;
+
+		if (tmpLrefreshEditTarget >= 3) {
+			s_LrefreshEditTarget = 0;
 		}
-		//else if (g_edittarget == EDITTARGET_BONE) {//bone-->camera-->morph-->"bone"
-		else {
-			//undo時　bone-->morph-->"camera"でもmorphウインドウが閉じるように
-			s_guiswflag = false;
-			GUIMenuSetVisible(s_platemenukind, s_platemenuno);
+		else if (tmpLrefreshEditTarget == 1) {
+			s_LrefreshEditTarget++;
+
+			if (g_edittarget == EDITTARGET_MORPH) {
+				CloseAllRightPainWindow();
+				s_guiswplateno = 6;
+				GUISetVisible(s_guiswplateno);
+			}
+			//else if (g_edittarget == EDITTARGET_BONE) {//bone-->camera-->morph-->"bone"
+			else {
+				//undo時　bone-->morph-->"camera"でもmorphウインドウが閉じるように
+				s_guiswflag = false;
+				GUIMenuSetVisible(s_platemenukind, s_platemenuno);
+			}
+			if (s_model) {
+				s_curboneno = s_model->GetSelectedBoneNo();//2024/06/06
+			}
+			SetLTimelineMark(s_curboneno);
+			if (s_owpTimeline) {
+				refreshTimeline(*s_owpTimeline);
+			}
+
+
+			s_savebuttonselectstart = s_buttonselectstart;
+			s_savebuttonselectend = s_buttonselectend;
+			s_savebuttonselecttothelast = s_buttonselecttothelast;
+			s_saveplayingstart = g_playingstart;
+			s_saveplayingend = g_playingend;
+
+
+			s_buttonselectstart = 1.0;
+			s_buttonselectend = 1.0;
+			s_buttonselecttothelast = 0;
+			g_playingstart = 1.0;
+			g_playingend = 1.0;
+			OnTimeLineButtonSelectFromSelectStartEnd(s_buttonselecttothelast);
+			SetShowPosTime();
+			//refreshTimeline(*s_owpTimeline);
+			if (s_owpLTimeline) {
+				s_owpLTimeline->callRewrite();
+			}
+			if (s_owpEulerGraph) {
+				s_owpEulerGraph->callRewrite();
+			}
+			refreshEulerGraph();
+			//refreshTimeline(*s_owpTimeline);
+
+			//#############################################################################
+			//この直後に選択範囲を復元しようとしても表示がずれてうまくいかない
+			//ループを１周回して必要な処理をしてからtmpLrefreshEditTarget == 2のif文で復元処理を行う
+			//#############################################################################
+
 		}
-		SetLTimelineMark(s_curboneno);
-		if (s_owpTimeline) {
-			refreshTimeline(*s_owpTimeline);
+		else if (tmpLrefreshEditTarget == 2) {
+			s_LrefreshEditTarget++;
+
+			MOTINFO curmi = GetEditTargetMotInfo();
+			if ((curmi.motid > 0) && (s_savebuttonselectend < curmi.frameleng)) {
+				//##########################################################
+				//処理前の選択範囲が　新しい選択範囲"内"の場合には　選択範囲を引き継ぐ
+				//##########################################################
+				s_buttonselectstart = s_savebuttonselectstart;
+				s_buttonselectend = s_savebuttonselectend;
+				s_buttonselecttothelast = s_savebuttonselecttothelast;
+				g_playingstart = s_saveplayingstart;
+				g_playingend = s_saveplayingend;
+				OnTimeLineButtonSelectFromSelectStartEnd(s_buttonselecttothelast);
+				SetShowPosTime();
+				//refreshTimeline(*s_owpTimeline);
+				if (s_owpLTimeline) {
+					s_owpLTimeline->callRewrite();
+				}
+				if (s_owpEulerGraph) {
+					s_owpEulerGraph->callRewrite();
+				}
+				refreshEulerGraph();
+				//refreshTimeline(*s_owpTimeline);
+			}
 		}
-		refreshEulerGraph();
 	}
 
 	if (s_LchangeTarget2Camera) {
@@ -35361,6 +35483,7 @@ int OnFrameTimeLineWnd()
 	if (s_cursorFlag) {
 		TimelineCursorToMotion();
 		s_cursorFlag = false;
+		s_cursorUnderUndo = false;
 	}
 
 	if (s_LTimelineApplyFrameFlag) {
@@ -35771,24 +35894,30 @@ int OnFrameToolWnd()
 	if (s_camtargetOnceflag) {
 		s_camtargetOnceflag = 0;
 		if (s_model && (s_curboneno >= 0)) {
-			CBone* curbone = s_model->GetBoneByID(s_curboneno);
-			_ASSERT(curbone);
-			if (curbone) {
-				s_saveboneno = s_curboneno;
 
-				//if (s_camtargetflag) {
-					g_befcamtargetpos = g_camtargetpos;
-					g_camtargetpos = curbone->GetChildWorld();
+			AutoCameraTarget();
 
-					ChaVector3 diffv;
-					diffv = g_camEye - g_camtargetpos;
-					float newcamdist = (float)ChaVector3LengthDbl(&diffv);
-					ChangeCameraDist(newcamdist, false, false);//2024/03/08
-				//}
+			if (s_cameramodel && (g_edittarget == EDITTARGET_CAMERA)) {
+				//カメラアニメの選択フレームを編集して、カメラをターゲットジョイントに向ける
+				int cameramotid = 0;
+				int cameraframeleng = 100;
+				CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);
+				if (opebone && (cameramotid > 0)) {
+					s_editmotionflag = s_cameramodel->CameraAnimDiffRotMatView(&s_editrange, s_befLockMatView, s_matView);
+				}
+
+				s_cameramodel->GetCameraAnimParams(s_cameraframe,
+					g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir,
+					0, g_cameraInheritMode);//g_camdist
+
+				ChaVector3 diffvec = g_camtargetpos - g_camEye;
+				float newcamdist = (float)ChaVector3LengthDbl(&diffvec);
+				ChangeCameraDist(newcamdist, false, false);
+
+				UpdateEditedEuler();
 			}
-			else {
-				s_curboneno = -1;
-			}
+
+			PrepairUndo();
 		}
 	}
 
@@ -35815,7 +35944,7 @@ int OnFrameToolWnd()
 					s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
 				}
 
-				ChangeCurrentBone();
+				ChangeCurrentBone(true);
 			}
 		}
 		s_selecthand = 0;
@@ -35834,7 +35963,7 @@ int OnFrameToolWnd()
 					s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
 				}
 
-				ChangeCurrentBone();
+				ChangeCurrentBone(true);
 			}
 		}
 		s_selecthand = 0;
@@ -35853,7 +35982,7 @@ int OnFrameToolWnd()
 					s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
 				}
 
-				ChangeCurrentBone();
+				ChangeCurrentBone(true);
 			}
 		}
 		s_selectfoot = 0;
@@ -35872,7 +36001,7 @@ int OnFrameToolWnd()
 					s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
 				}
 
-				ChangeCurrentBone();
+				ChangeCurrentBone(true);
 			}
 		}
 		s_selectfoot = 0;
@@ -37370,15 +37499,13 @@ int OnSpriteUndo()
 
 
 	bool undodoneflag = false;
-	double tmpselectstart = 1.0;
-	double tmpselectend = 1.0;
-	double tmpapplyrate = 50.0;
 
 	BRUSHSTATE brushstate;
 	brushstate.Init();
 	UNDOCAMERA undocamera;
 	undocamera.Init();
-
+	UNDOMOTID undomotid;
+	undomotid.Init();
 
 	int saveedittarget = g_edittarget;
 	int newedittarget = g_edittarget;//ただの初期化　RollBackUndoMotionにて新しい状態へと上書きされる
@@ -37390,14 +37517,22 @@ int OnSpriteUndo()
 		savecameramotionid = 0;
 	}
 
+	int newselectedboneno;
+	if (s_model) {
+		newselectedboneno = s_model->GetSelectedBoneNo();//ただの初期化　RollBackUndoMotionにて新しい状態へと上書きされる
+	}
+	else {
+		newselectedboneno = 0;//ただの初期化　RollBackUndoMotionにて新しい状態へと上書きされる
+	}
+
 	///////////// undo
 	if (s_model && (s_undoFlag == true)) {
 		//undo
 		StopBt();
 		if (g_edittarget != EDITTARGET_CAMERA) {
 			s_model->RollBackUndoMotion(g_limitdegflag, g_mainhwnd,
-				0, &newedittarget, &s_curboneno, &s_curbaseno,
-				&tmpselectstart, &tmpselectend, &tmpapplyrate, &brushstate, &undocamera);//!!!!!!!!!!!
+				0, &newedittarget, &newselectedboneno, &s_curbaseno,
+				&brushstate, &undocamera, &undomotid);//!!!!!!!!!!!
 		}
 		else if(s_cameramodel) {
 			int cameramotid = 0;
@@ -37407,13 +37542,13 @@ int OnSpriteUndo()
 				int curboneno = opebone->GetBoneNo();
 				int curbaseno = -1;
 				s_cameramodel->RollBackUndoMotion(g_limitdegflag, g_mainhwnd,
-					0, &newedittarget, &curboneno, &curbaseno,
-					&tmpselectstart, &tmpselectend, &tmpapplyrate, &brushstate, &undocamera);//!!!!!!!!!!!
+					0, &newedittarget, &newselectedboneno, &curbaseno,
+					&brushstate, &undocamera, &undomotid);//!!!!!!!!!!!
 			}
 		}
 
 		RollbackBrushState(brushstate);//ブラシパラメータ復元
-		RollbackUndoCamera(undocamera);//カメラパラメータ復元
+		Params2TopSlidersWnd();
 		undodoneflag = true;
 	}
 	else if (s_model && (s_redoFlag == true))
@@ -37422,8 +37557,8 @@ int OnSpriteUndo()
 		StopBt();
 		if (g_edittarget != EDITTARGET_CAMERA) {
 			s_model->RollBackUndoMotion(g_limitdegflag, g_mainhwnd,
-				1, &newedittarget, &s_curboneno, &s_curbaseno,
-				&tmpselectstart, &tmpselectend, &tmpapplyrate, &brushstate, &undocamera);//!!!!!!!!!!!
+				1, &newedittarget, &newselectedboneno, &s_curbaseno,
+				&brushstate, &undocamera, &undomotid);//!!!!!!!!!!!
 		}
 		else {
 			int cameramotid = 0;
@@ -37433,13 +37568,13 @@ int OnSpriteUndo()
 				int curboneno = opebone->GetBoneNo();
 				int curbaseno = -1;
 				s_cameramodel->RollBackUndoMotion(g_limitdegflag, g_mainhwnd,
-					1, &newedittarget, &curboneno, &curbaseno,
-					&tmpselectstart, &tmpselectend, &tmpapplyrate, &brushstate, &undocamera);//!!!!!!!!!!!
+					1, &newedittarget, &newselectedboneno, &curbaseno,
+					&brushstate, &undocamera, &undomotid);//!!!!!!!!!!!
 			}
 		}
 
 		RollbackBrushState(brushstate);//ブラシパラメータ復元
-		RollbackUndoCamera(undocamera);//カメラパラメータ復元
+		Params2TopSlidersWnd();
 		undodoneflag = true;
 	}
 
@@ -37455,7 +37590,7 @@ int OnSpriteUndo()
 
 		if (s_model && (undodoneflag == true) && (saveedittarget != newedittarget)) {
 			
-			//s_LrefreshEditTarget = true;//即時実行する必要があるのでフラグセットではなく処理を直書き
+			//s_LrefreshEditTarget = 1;//即時実行する必要があるのでフラグセットではなく処理を直書き
 		
 			if (g_edittarget == EDITTARGET_MORPH) {
 				CloseAllRightPainWindow();
@@ -37478,7 +37613,7 @@ int OnSpriteUndo()
 
 
 
-		if (s_model->ExistCurrentMotion() && (s_model->GetCurMotInfo().motid != s_curmotid)) {
+		if (s_model->ExistCurrentMotion() && (s_model->GetCurMotInfo().motid != undomotid.bonemotid)) {
 			int chkcnt = 0;
 			int findflag = 0;
 			int minum;
@@ -37486,7 +37621,7 @@ int OnSpriteUndo()
 			minum = s_model->GetMotInfoSize();
 			for (miindex = 0; miindex < minum; miindex++) {
 				MOTINFO curmi = s_model->GetMotInfoByIndex(miindex);
-				if (curmi.motid == s_model->GetCurrentMotID()) {
+				if (curmi.motid == undomotid.bonemotid) {
 					findflag = 1;
 					break;
 				}
@@ -37507,9 +37642,9 @@ int OnSpriteUndo()
 		}
 
 
-		if (s_cameramodel && s_cameramodel->ExistCurrentMotion() && (s_cameramodel->GetCameraMotionId() != savecameramotionid)) {
+		if (s_cameramodel && s_cameramodel->ExistCurrentMotion() && (s_cameramodel->GetCameraMotionId() != undomotid.cameramotid)) {
 			if (s_camerapanel.radiobutton) {
-				int cameramotindex = s_model->MotionID2CameraIndex(s_cameramodel->GetCameraMotionId());
+				int cameramotindex = s_model->MotionID2CameraIndex(undomotid.cameramotid);
 				if (cameramotindex >= 0) {
 					s_cameramenuindexmap[s_model] = cameramotindex;
 					s_camerapanel.radiobutton->setSelectIndex(cameramotindex, false);
@@ -37518,12 +37653,17 @@ int OnSpriteUndo()
 		}
 
 
+		RollbackUndoCamera(undocamera);//カメラパラメータ復元
+		Params2SideMenuWnd();
+
+		s_curboneno = newselectedboneno;
 		if (s_curboneno >= 0) {
-			ChangeCurrentBone();
+			ChangeCurrentBone(false);
 
 			int curlineno = s_boneno2lineno[s_curboneno];
 			if (s_owpTimeline) {
-				s_owpTimeline->setCurrentLine(curlineno, true);
+				//s_owpTimeline->setCurrentLine(curlineno, true);
+				s_owpTimeline->setCurrentLine(curlineno, false);//!!!!!!
 			}
 			SetTimelineMark();
 			SetLTimelineMark(s_curboneno);
@@ -37534,27 +37674,30 @@ int OnSpriteUndo()
 		if (s_model->ExistCurrentMotion()) {
 
 			if (g_edittarget != EDITTARGET_CAMERA) {
-				s_buttonselectstart = max(0.0, tmpselectstart);
+				s_buttonselectstart = max(0.0, undomotid.startframe);
 				s_buttonselectstart = min(s_model->GetCurrentMaxFrame(), s_buttonselectstart);
 
-				s_buttonselectend = max(0.0, tmpselectend);
+				s_buttonselectend = max(0.0, undomotid.endframe);
 				s_buttonselectend = min(s_model->GetCurrentMaxFrame(), s_buttonselectend);
 			}
 			else if (s_cameramodel) {
 				MOTINFO camerami = s_cameramodel->GetMotInfo(s_cameramodel->GetCameraMotionId());
 				if (camerami.motid > 0) {
-					s_buttonselectstart = max(0.0, tmpselectstart);
+					s_buttonselectstart = max(0.0, undomotid.startframe);
 					s_buttonselectstart = min(camerami.frameleng, s_buttonselectstart);
 
-					s_buttonselectend = max(0.0, tmpselectend);
+					s_buttonselectend = max(0.0, undomotid.endframe);
 					s_buttonselectend = min(camerami.frameleng, s_buttonselectend);
 				}
+				else {
+					s_buttonselectstart = max(0.0, undomotid.startframe);
+					s_buttonselectstart = min(s_model->GetCurrentMaxFrame(), s_buttonselectstart);
 
+					s_buttonselectend = max(0.0, undomotid.endframe);
+					s_buttonselectend = min(s_model->GetCurrentMaxFrame(), s_buttonselectend);
+				}
 			}
-
-
-			//注意：applyrateはbrushstateには入っていない
-			g_applyrate = tmpapplyrate;
+			g_applyrate = undomotid.applyrate;
 			//CEditRange::SetApplyRate(g_applyrate);
 
 			OnTimeLineButtonSelectFromSelectStartEnd(0);
@@ -37614,6 +37757,9 @@ int OnSpriteUndo()
 				s_model->CalcBoneEul(g_limitdegflag, s_model->GetCurrentMotID());
 			}
 			else if (s_cameramodel) {
+
+				//2024/06/05その後
+				//IsCamera()==trueのボーンに関してもアンドゥ処理をすることによりUpdateCameramatFromENull()は不要になった　コメントアウト
 				//2024/06/05
 				//カメラアニメのアンドゥーはIsNullAndChildIsCamera()==trueのボーンに対して行っている
 				//アンドゥ結果をIsCamera()==trueのボーンに反映するためにUpdateCameraMatFromENull()を呼ぶ
@@ -37628,14 +37774,14 @@ int OnSpriteUndo()
 			//s_LupFlag = true;
 		}
 
-		Params2TopSlidersWnd();//2024/04/24
 	}
 
 
 	//select復元
 	//s_pickinfo.buttonflag = PICK_CENTER;
+	//s_curboneno = newselectedboneno;//2024/06/06 もう一度復元　必要
 	s_pickinfo.pickobjno = s_curboneno;
-
+	//ChangeCurrentBone(false);
 
 
 	s_undoFlag = false;
@@ -37650,8 +37796,10 @@ int OnSpriteUndo()
 
 
 	//if (s_model && (undodoneflag == true) && (saveedittarget != newedittarget)) {
-	//	s_LrefreshEditTarget = true;
-	//}
+	if (s_model && (undodoneflag == true)) {
+		//2024/06/07 可能な場合は選択範囲を復元
+		s_LrefreshEditTarget = 1;
+	}
 
 	return 0;
 
@@ -39098,6 +39246,28 @@ int CreateDmpAnimWnd()
 	return 0;
 }
 
+
+int Params2SideMenuWnd()//2024/06/06
+{
+	if (s_sidemenu_sellock) {
+		s_sidemenu_sellock->setValue(s_camtargetflag, false);
+	}
+
+	if (s_sidemenu_targetdisp) {
+		s_sidemenu_targetdisp->setValue(s_camtargetdisp, false);
+	}
+	
+	if (s_sidemenu_moveeyepos) {
+		s_sidemenu_moveeyepos->setValue(s_moveeyepos, false);
+	}
+
+	if (s_sidemenu_camdistSlider) {
+		s_sidemenu_camdistSlider->setValue((double)g_camdist, false);
+	}
+
+	return 0;
+}
+
 int Params2TopSlidersWnd()
 {
 
@@ -39420,12 +39590,19 @@ int CreateSideMenuWnd()
 		//s_sidemenu_targetdisp->setSize(WindowSize((int)(s_sidemenuwidth * 0.25f), (int)s_sidemenuheight));
 		//s_sidemenu_camdistSlider->setSize(WindowSize((int)(s_sidemenuwidth * 0.5f), (int)s_sidemenuheight));
 
+		//s_sidemenuWnd->addParts(*s_sidemenusp1);
+		//s_sidemenusp1->addParts1(*s_sidemenusp2);
+		//s_sidemenusp1->addParts2(*s_sidemenu_camdistSlider);
+		//s_sidemenusp2->addParts1(*s_sidemenu_sellock);
+		//s_sidemenusp2->addParts2(*s_sidemenu_targetdisp);
+		//s_sidemenusp2->addParts2(*s_sidemenu_moveeyepos);//２段目 targetdispの下
+
 		s_sidemenuWnd->addParts(*s_sidemenusp1);
 		s_sidemenusp1->addParts1(*s_sidemenusp2);
-		s_sidemenusp1->addParts2(*s_sidemenu_camdistSlider);
+		s_sidemenusp1->addParts2(*s_sidemenu_moveeyepos);
 		s_sidemenusp2->addParts1(*s_sidemenu_sellock);
 		s_sidemenusp2->addParts2(*s_sidemenu_targetdisp);
-		s_sidemenusp2->addParts2(*s_sidemenu_moveeyepos);//２段目 targetdispの下
+		s_sidemenuWnd->addParts(*s_sidemenu_camdistSlider);//２段目の全幅をスライダーに割り当て
 
 
 		s_sidemenuWnd->setCloseListener([]() {
@@ -39438,6 +39615,9 @@ int CreateSideMenuWnd()
 			s_sidemenu_sellock->setButtonListener([]() {
 				bool value = s_sidemenu_sellock->getValue();
 				if (value) {
+					
+					s_befLockMatView = s_matView;//2024/06/06
+
 					s_camtargetflag = true;
 
 					//sellockオンの時はカメラが選択ジョイント中心回転、targetdispオンの時はカメラがマニピュレータ(カメラターゲット位置)中心回転
@@ -39446,11 +39626,12 @@ int CreateSideMenuWnd()
 						s_sidemenu_targetdisp->setValue(false);
 						s_camtargetdisp = false;
 					}
+
+					s_camtargetOnceflag = true;//2024/06/04  2024/06/06オンの時だけ
 				}
 				else {
 					s_camtargetflag = false;
 				}
-				s_camtargetOnceflag = true;//2024/06/04
 			});
 		}
 		if (s_sidemenu_targetdisp) {
@@ -47936,7 +48117,7 @@ int BoneRClick(int srcboneno)
 			s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
 		}
 
-		ChangeCurrentBone();
+		ChangeCurrentBone(true);
 
 		if (s_curboneno >= 0) {
 			CBone* curbone = s_model->GetBoneByID(s_curboneno);
@@ -48467,12 +48648,18 @@ int OnTimeLineButtonSelectFromSelectStartEnd(int tothelastflag)
 
 	if (s_owpLTimeline && (g_underselectingframe == 0) && s_timelinewheelFlag) {
 		s_owpLTimeline->selectClear(false);
+		if (s_owpTimeline) {
+			s_owpTimeline->selectClear(false);
+		}
 		return 0;
 	}
 
 	//if ((s_copyKeyInfoList.size() > 0) || tothelastflag) {//2021/11/09 選択済の場合にはそのまま　これがないと１フレーム長選択でOnButtonSelectがループする
 	if (s_owpLTimeline) {
 		s_owpLTimeline->selectClear(false);//フレームに色付選択していない場合には呼ばれないので再帰ループしない
+		if (s_owpTimeline) {
+			s_owpTimeline->selectClear(false);
+		}
 		//if ((s_buttonselectstart != s_buttonselectend) || tothelastflag) {//tothelastの際には　範囲を指定していなくても実行
 		//if ((s_buttonselectstart <= s_buttonselectend) || tothelastflag) {//2021/11/09
 		double tmpmaxselectionframe;
@@ -52543,7 +52730,7 @@ void DSCrossButtonSelectTree(bool firstctrlselect)
 
 
 							}
-							ChangeCurrentBone();
+							ChangeCurrentBone(true);
 						}
 
 					}
@@ -59758,7 +59945,7 @@ int PickRigBone(UIPICKINFO* ppickinfo, bool forrigtip, int* dstrigno)//default:f
 										//::ClientToScreen(s_timelineWnd->getHWnd(), &mousepos);
 										//::SetCursorPos(mousepos.x, mousepos.y);
 									}
-									ChangeCurrentBone();//2021/11/19
+									ChangeCurrentBone(true);//2021/11/19
 
 									//Bone2CustomRig(rigno);
 									GUIMenuSetVisible(-1, -1);

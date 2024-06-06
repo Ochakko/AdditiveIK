@@ -715,11 +715,15 @@ public:
 		CEditRange* erptr, int axiskind, float delta, ChaMatrix matView);
 	int CameraTranslateAxis(
 		CEditRange* erptr, ChaVector3 addtra);
+	int CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, ChaMatrix newmatView);
 
+
+	//2024/06/05その後
+	//IsCamera()==trueのボーンに関してもアンドゥ処理をすることによりUpdateCameramatFromENull()は不要になった　コメントアウト
 	//2024/06/05
 	//カメラアニメのアンドゥーはIsNullAndChildIsCamera()==trueのボーンに対して行っている
 	//アンドゥ結果をIsCamera()==trueのボーンに反映するためにUpdateCameraMatFromENull()を呼ぶ
-	int UpdateCameraMatFromENull(int cameramotid);
+	//int UpdateCameraMatFromENull(int cameramotid);
 
 
 
@@ -992,9 +996,9 @@ public:
 		BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, bool allframeflag);
 	int RollBackUndoMotion(bool limitdegflag, HWND hmainwnd, int redoflag, 
 		int* edittarget,
-		int* curboneno, int* curbaseno, 
-		double* dststartframe, double* dstendframe, double* dstapplyframe, 
-		BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera);
+		int* pselectedboneno, int* curbaseno,
+		//double* dststartframe, double* dstendframe, double* dstapplyframe, 
+		BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera, UNDOMOTID* dstundomotid);
 
 	int AddBoneMotMark( OrgWinGUI::OWP_Timeline* owpTimeline, int curboneno, int curlineno, double startframe, double endframe, int flag );
 
@@ -1559,6 +1563,8 @@ public: //accesser
 		m_object[ srcindex ] = srcobj;
 	};
 
+	const char* GetBoneName(int srcboneno);
+	const WCHAR* GetWBoneName(int srcboneno);
 	CBone* GetBoneByName(std::string srcname ){
 
 		//2023/10/26 Joint有無について高速化
@@ -2944,6 +2950,22 @@ public: //accesser
 		return m_secondCallOfMotion2Bt;
 	}
 
+	void SetSelectedBoneNo(int srcboneno)
+	{
+		//undo,redoに使用
+		m_selectedboneno = srcboneno;
+	}
+	int GetSelectedBoneNo()
+	{
+		//undo,redoに使用
+		return m_selectedboneno;
+	}
+	CBone* GetSelectedBone()
+	{
+		//undo,redoに使用
+		CBone* pbone = GetBoneByID(m_selectedboneno);
+		return pbone;
+	}
 
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
@@ -3152,6 +3174,8 @@ private:
 	int m_updateslot;
 
 	CSChkInView* m_chkinview;
+
+	int m_selectedboneno;//undo,redoに使用
 
 	bool m_secondCallOfMotion2Bt;
 

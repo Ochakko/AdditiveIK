@@ -58,18 +58,16 @@ int CUndoMotion::InitParams()
 	m_base2mk.clear();
 	m_bone2limit.clear();
 
-	m_curboneno = -1;
+	m_selectedboneno = 0;
 	m_curbaseno = -1;
 
 	m_bonemotmark.clear();
 
 	m_keynum = 1;
-	m_startframe = 1.0;
-	m_endframe = 1.0;
-	m_applyrate = 50.0;
 
 	m_brushstate.Init();
 	m_undocamera.Init();
+	m_undomotid.Init();
 
 	return 0;
 }
@@ -119,7 +117,8 @@ int CUndoMotion::DestroyObjs()
 }
 
 
-int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CModel* pmodel, int curboneno, int curbaseno,
+int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CModel* pmodel, 
+	int selectedboneno, int curbaseno,
 	int srcedittarget, CEditRange* srcer, double srcapplyrate,
 	BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, 
 	bool allframeflag)
@@ -157,14 +156,19 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 
 
 	//ClearData();
+	m_undomotid.Init();
+	m_undomotid.bonemotid = pmodel->GetCurrentMotID();
+	m_undomotid.cameramotid = pmodel->GetCameraMotionId();
 
 	int curmotid;
 	if (srcedittarget != EDITTARGET_CAMERA) {
-		curmotid = pmodel->GetCurrentMotID();
+		curmotid = m_undomotid.bonemotid;
 	}
 	else {
-		curmotid = pmodel->GetCameraMotionId();
+		curmotid = m_undomotid.cameramotid;
 	}
+	m_undomotid.curmotid = curmotid;
+
 	MOTINFO curmi = pmodel->GetMotInfo(curmotid);
 
 
@@ -352,19 +356,19 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 	//MOTINFO curmi = pmodel->GetCurMotInfo();//上に移動　カメラアニメとボーンモーションに対応
 	::MoveMemory(&m_savemotinfo, &curmi, sizeof(MOTINFO));
 
-	m_curboneno = curboneno;
+	m_selectedboneno = selectedboneno;
 	m_curbaseno = curbaseno;
 
 	if (srcer) {
 		double tmpapplyframe;
-		srcer->GetRange(&m_keynum, &m_startframe, &m_endframe, &tmpapplyframe);
-		m_applyrate = srcapplyrate;
+		srcer->GetRange(&m_keynum, &(m_undomotid.startframe), &(m_undomotid.endframe), &tmpapplyframe);
+		m_undomotid.applyrate = srcapplyrate;
 	}
 	else {
 		m_keynum = 1;
-		m_startframe = 1.0;
-		m_endframe = 1.0;
-		m_applyrate = 50.0;
+		m_undomotid.startframe = 1.0;
+		m_undomotid.endframe = 1.0;
+		m_undomotid.applyrate = 50.0;
 	}
 
 	m_validflag = 1;
@@ -372,9 +376,9 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 	return 0;
 }
 int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel, 
-	int* edittarget, int* curboneno, int* curbaseno, 
-	double* dststartframe, double* dstendframe, double* dstapplyrate, 
-	BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera)
+	int* edittarget, int* pselectedboneno, int* curbaseno,
+	//double* dststartframe, double* dstendframe, double* dstapplyrate, 
+	BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera, UNDOMOTID* dstundomotid)
 {
 	if( m_validflag != 1 ){
 		_ASSERT( 0 );
@@ -384,24 +388,11 @@ int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel,
 		_ASSERT(0);
 		return 2;
 	}
-	if (!curboneno) {
+	if (!pselectedboneno) {
 		_ASSERT(0);
 		return 2;
 	}
 	if (!curbaseno) {
-		_ASSERT(0);
-		return 2;
-	}
-	if (!dststartframe)
-	{
-		_ASSERT(0);
-		return 2;
-	}
-	if (!dstendframe) {
-		_ASSERT(0);
-		return 2;
-	}
-	if (!dstapplyrate) {
 		_ASSERT(0);
 		return 2;
 	}
@@ -418,11 +409,11 @@ int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel,
 		return 2;
 	}
 
-
 	*dstbrushstate = m_brushstate;
 	*dstundocamera = m_undocamera;
+	*dstundomotid = m_undomotid;
 	*edittarget = m_edittarget;
-
+	
 	int setmotid = m_savemotinfo.motid;
 	MOTINFO chkmotinfo = pmodel->GetMotInfo( setmotid );
 	if(chkmotinfo.motid <= 0){
@@ -530,21 +521,16 @@ int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel,
 	//MoveMemory( chkmotinfo, &m_savemotinfo, sizeof( MOTINFO ) );
 	//pmodel->SetCurMotInfo( chkmotinfo );
 	pmodel->SetMotInfo(setmotid, m_savemotinfo);
-	if (m_edittarget != EDITTARGET_CAMERA) {
-		pmodel->SetCurrentMotion(setmotid);
-	}
-	else {
-		pmodel->SetCameraMotionId(setmotid);
-	}
+	//if (m_edittarget != EDITTARGET_CAMERA) {
+	//	pmodel->SetCurrentMotion(setmotid);
+	//}
+	//else {
+	//	pmodel->SetCameraMotionId(setmotid);
+	//}
 	
 
-	*curboneno = m_curboneno;
+	*pselectedboneno = m_selectedboneno;
 	*curbaseno = m_curbaseno;
-
-
-	*dststartframe = m_startframe;
-	*dstendframe = m_endframe;
-	*dstapplyrate = m_applyrate;
 
 	return 0;
 }
