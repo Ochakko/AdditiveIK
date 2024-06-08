@@ -2223,3 +2223,28 @@ int ChaScene::SetRefPosFlag(CModel* srcmodel)
 	return 0;
 }
 
+int ChaScene::MotID2SelIndex(int srcmodelindex, int srcmotid)
+{
+	int modelindexnum = (int)m_modelindex.size();
+	if ((srcmodelindex >= 0) && (srcmodelindex < modelindexnum)) {
+		MODELELEM modelelem = m_modelindex[srcmodelindex];
+		if (modelelem.modelptr) {
+			int timelinenum = (int)modelelem.tlarray.size();
+			int tlindex;
+			for (tlindex = 0; tlindex < timelinenum; tlindex++) {
+				TLELEM tlelem = modelelem.tlarray[tlindex];
+				if (tlelem.motionid == srcmotid) {
+					return tlelem.menuindex;//!!!!!!!!!!!!!!!!
+				}
+			}
+		}
+		else {
+			return -1;
+		}
+	}
+	else {
+		return -1;
+	}
+	
+	return -1;
+}

@@ -95,6 +95,8 @@ int CFrameCopyDlg::InitParams()
 
 	ZeroMemory(&m_hrootti, sizeof(HTREEITEM));
 
+	m_pastecamera = false;
+
 	return 0;
 }
 
@@ -212,6 +214,16 @@ int CFrameCopyDlg::ExecuteOnOK()
 	m_invalidelemmap.clear();
 	m_cpvec.clear();
 
+
+	UINT chkenable0 = IsDlgButtonChecked(IDC_CHECK_PASTECAMERA);
+	if (chkenable0 == BST_CHECKED) {
+		m_pastecamera = true;
+	}
+	else {
+		m_pastecamera = false;
+	}
+
+
 	int i, validno;
 	for (i = 0; i < m_influencenum[m_slotno]; i++) {
 		validno = m_influencelist[m_slotno][i];
@@ -228,11 +240,16 @@ int CFrameCopyDlg::ExecuteOnOK()
 	for (itrbone = m_model->GetBoneListBegin(); itrbone != m_model->GetBoneListEnd(); itrbone++) {
 		int chkboneno = itrbone->first;
 		CBone* chkbone = itrbone->second;
-		if (chkbone && chkbone->IsSkeleton() && (chkbone->GetBoneNo() != 0)) {//2023/09/28 exlucde RootNode (boneno == 0)
+		if (chkbone && 
+			(chkbone->IsSkeleton() || chkbone->IsCamera() || chkbone->IsNullAndChildIsCamera()) && 
+			(chkbone->GetBoneNo() != 0)) {//2023/09/28 exlucde RootNode (boneno == 0)
 			CBone* valbone = m_validelemmap[chkboneno];
 			CBone* invalbone = m_invalidelemmap[chkboneno];
 
 			if (valbone && !invalbone) {
+				m_cpvec.push_back(chkbone);
+			}
+			else if ((chkbone->IsCamera() || chkbone->IsNullAndChildIsCamera()) && m_pastecamera) {
 				m_cpvec.push_back(chkbone);
 			}
 		}
@@ -504,6 +521,12 @@ int CFrameCopyDlg::ParamsToDlg()
 		}
 	}
 
+	if (m_pastecamera == true) {
+		CheckDlgButton(IDC_CHECK_PASTECAMERA, true);
+	}
+	else {
+		CheckDlgButton(IDC_CHECK_PASTECAMERA, false);
+	}
 
 	if (g_pasteScale == true) {
 		CheckDlgButton(IDC_CHECK_PASTESCALE, true);

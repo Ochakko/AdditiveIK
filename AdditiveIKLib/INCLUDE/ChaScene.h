@@ -294,6 +294,7 @@ public:
 			return 0;
 		}
 	};
+	int MotID2SelIndex(int srcmodelindex, int srcmotid);
 
 	//void SetRenderingEngine(myRenderer::RenderingEngine* prenderingEngine)
 	//{

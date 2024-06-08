@@ -1903,8 +1903,12 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 		//########################
 		//カメラの場合
 		//########################
+		FbxTime fbxtime0;
+		fbxtime0.SetSecondDouble(0.0);
+		FbxDouble3 fbxLclRot = srcbone->GetFbxNodeOnLoad()->EvaluateLocalRotation(fbxtime0, FbxNode::eSourcePivot, true, true);
+		cureul = ChaVector3((float)fbxLclRot[0], (float)fbxLclRot[1], (float)fbxLclRot[2]);
 
-		cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+		//cureul = ChaVector3(0.0f, 0.0f, 0.0f);
 
 		//CMotionPoint* curmp = 0;
 		//curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
@@ -4370,7 +4374,8 @@ int ChaCalcFunc::InitMP(CBone* srcbone, bool limitdegflag, int srcmotid, double 
 	////CMotionPoint* firstmp = GetMotionPoint(1, 0.0);//motid == 1は１つ目のモーション
 
 	int firstmotid = 1;
-	MOTINFO firstmi = srcbone->GetParModel()->GetFirstValidMotInfo();//１つ目のモーションを削除済の場合に対応
+	bool cameraanimflag = srcbone->GetParModel()->IsCameraMotion(srcmotid);
+	MOTINFO firstmi = srcbone->GetParModel()->GetFirstValidMotInfo(cameraanimflag);//１つ目のモーションを削除済の場合に対応
 	if (firstmi.motid <= 0) {
 		//MotionPointが無い場合にもいても　想定している使い方として　MOTINFOはAddされた状態でRetargetは呼ばれる
 		//よってここを通る場合は　想定外エラー
@@ -4412,42 +4417,48 @@ int ChaCalcFunc::InitMP(CBone* srcbone, bool limitdegflag, int srcmotid, double 
 			firstmp = &initmp;
 		}
 
-		ChaMatrix matforinit;
-		matforinit.SetIdentity();
+		//ChaMatrix matforinit;
+		//matforinit.SetIdentity();
 
 		if (firstmp) {
-			//###############
-			//set matforinit 2023/05/15
-			//###############
-			//if (srcbone->GetParModel()->GetLoadingMotionCount() <= 1) {
-			if (srcbone->HasMotionCurve(srcmotid) &&//2024/05/24
-				srcbone->IsNotSkeleton() && (srcbone->GetParModel()->GetLoadingMotionCount() <= 1)) {//2023/10/23 skeleton以外の場合
-				FbxNode* pNode = srcbone->GetFbxNodeOnLoad();
-				if (pNode) {
 
-					EnterCriticalSection(&g_CritSection_FbxSdk);//!!!!!!!!!
-					FbxAMatrix lGlobalSRT;
-					FbxTime time0;
-					time0.SetSecondDouble(0.0);
-					lGlobalSRT = pNode->EvaluateGlobalTransform(time0, FbxNode::eSourcePivot, true, true);//current animation
-					ChaMatrix chaGlobalSRT;
-					chaGlobalSRT = ChaMatrixFromFbxAMatrix(lGlobalSRT);
-					matforinit = (ChaMatrixInv(srcbone->GetNodeMat()) * chaGlobalSRT);
-					//matforinit = chaGlobalSRT;
-					//matforinit = ChaMatrixInv(GetNodeMat());
-					LeaveCriticalSection(&g_CritSection_FbxSdk);//!!!!!!!!!
-				}
-				else {
-					_ASSERT(0);
-					matforinit.SetIdentity();
-				}
+			//2024/06/07 skeletonとcameraとenullchildiscamera以外は上記でリターンしている
+			//その３種に関しては　Evaluateする必要は無いので　以下コメントアウト
+			
+			////###############
+			////set matforinit 2023/05/15
+			////###############
+			////if (srcbone->GetParModel()->GetLoadingMotionCount() <= 1) {
+			//if (srcbone->HasMotionCurve(srcmotid) &&//2024/05/24
+			//	srcbone->IsNotSkeleton() && 
+			//	!srcbone->IsNullAndChildIsCamera() && srcbone->IsNotCamera() &&
+			//	(srcbone->GetParModel()->GetLoadingMotionCount() <= 1)) {//2023/10/23 skeleton以外の場合
+			//	FbxNode* pNode = srcbone->GetFbxNodeOnLoad();
+			//	if (pNode) {
 
-				//matforinit = firstmp->GetWorldMat();
-				////matforinit.SetIdentity();
-			}
-			else {
-				matforinit = firstmp->GetWorldMat();
-			}
+			//		EnterCriticalSection(&g_CritSection_FbxSdk);//!!!!!!!!!
+			//		FbxAMatrix lGlobalSRT;
+			//		FbxTime time0;
+			//		time0.SetSecondDouble(0.0);
+			//		lGlobalSRT = pNode->EvaluateGlobalTransform(time0, FbxNode::eSourcePivot, true, true);//current animation
+			//		ChaMatrix chaGlobalSRT;
+			//		chaGlobalSRT = ChaMatrixFromFbxAMatrix(lGlobalSRT);
+			//		matforinit = (ChaMatrixInv(srcbone->GetNodeMat()) * chaGlobalSRT);
+			//		//matforinit = chaGlobalSRT;
+			//		//matforinit = ChaMatrixInv(GetNodeMat());
+			//		LeaveCriticalSection(&g_CritSection_FbxSdk);//!!!!!!!!!
+			//	}
+			//	else {
+			//		_ASSERT(0);
+			//		matforinit.SetIdentity();
+			//	}
+
+			//	//matforinit = firstmp->GetWorldMat();
+			//	////matforinit.SetIdentity();
+			//}
+			//else {
+			//	matforinit = firstmp->GetWorldMat();
+			//}
 
 			//###########
 			//for debug
@@ -4473,38 +4484,42 @@ int ChaCalcFunc::InitMP(CBone* srcbone, bool limitdegflag, int srcmotid, double 
 			//curmp->SetWorldMat(firstanim);
 			//curmp->SetLimitedWM(firstanim);
 
-			curmp->SetWorldMat(matforinit);
-			curmp->SetLimitedWM(matforinit);
-
-
-			//SetInitMat(xmat);
-			////オイラー角初期化
-			ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
-			int paraxsiflag = 1;
-
-
-			//cureul = CalcLocalEulXYZ(0, paraxsiflag, 1, 0.0, BEFEUL_ZERO);
-			//cureul = srcbone->CalcLocalEulXYZ(0, paraxsiflag, srcmotid, roundingframe, BEFEUL_BEFFRAME);
-			cureul = firstmp->GetLocalEul();//2023/10/23
-
-
-			////１つ目のモーションを削除する場合もあるので　motid = 1決め打ちは出来ない　2022/09/13
-			////ChaVector3 cureul = GetLocalEul(firstmotid, 0.0, 0);//motid == 1は１つ目のモーション
-			////SetLocalEul(srcmotid, roundingframe, cureul, curmp);
-			//ChaVector3 cureul = firstmp->GetLocalEul();
-
-			curmp->SetLocalEul(cureul);
-			curmp->SetLimitedLocalEul(cureul);
-			//if (limitdegflag == true) {
+			curmp->SetLocalMat(firstmp->GetLocalMat());
+			curmp->SetWorldMat(firstmp->GetWorldMat());
+			curmp->SetLimitedWM(firstmp->GetWorldMat());
+			curmp->SetLocalEul(firstmp->GetLocalEul());
+			curmp->SetLimitedLocalEul(firstmp->GetLocalEul());
 			curmp->SetCalcLimitedWM(2);
+
+			////SetInitMat(xmat);
+			//////オイラー角初期化
+			//ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+			//int paraxsiflag = 1;
+
+
+			////cureul = CalcLocalEulXYZ(0, paraxsiflag, 1, 0.0, BEFEUL_ZERO);
+			////cureul = srcbone->CalcLocalEulXYZ(0, paraxsiflag, srcmotid, roundingframe, BEFEUL_BEFFRAME);
+			//cureul = firstmp->GetLocalEul();//2023/10/23
+
+
+			//////１つ目のモーションを削除する場合もあるので　motid = 1決め打ちは出来ない　2022/09/13
+			//////ChaVector3 cureul = GetLocalEul(firstmotid, 0.0, 0);//motid == 1は１つ目のモーション
+			//////SetLocalEul(srcmotid, roundingframe, cureul, curmp);
+			////ChaVector3 cureul = firstmp->GetLocalEul();
+
+			//curmp->SetLocalEul(cureul);
+			//curmp->SetLimitedLocalEul(cureul);
+			////if (limitdegflag == true) {
+			//curmp->SetCalcLimitedWM(2);
 			//}
 
 
 			//2023/02/11
 			//GetFbxAnimのif((animno == 0) && (srcframe == 0.0))を通らなかったRootジョイント用の初期化
-			if ((srcmotid == firstmotid) && (roundingframe == 0.0)) {
+			if (srcbone->IsNotCamera() && !srcbone->IsNullAndChildIsCamera() && 
+				(srcmotid == firstmotid) && (roundingframe == 0.0)) {
 				ChaMatrix firstmat;
-				firstmat = srcbone->GetNodeMat() * matforinit;
+				firstmat = srcbone->GetNodeMat() * firstmp->GetWorldMat();
 				srcbone->SetFirstMat(firstmat);
 			}
 		}
@@ -4628,7 +4643,8 @@ int ChaCalcFunc::InitMP(CModel* srcmodel, bool limitdegflag, CBone* curbone, int
 	//curbone->SetLocalEul(GetCurMotInfo()->motid, curframe, cureul);
 
 
-	if ((srcmodel->GetNoBoneFlag() == false) && curbone && (curbone->IsSkeleton())) {
+	if ((srcmodel->GetNoBoneFlag() == false) && curbone && 
+		(curbone->IsSkeleton() || curbone->IsCamera() ||  curbone->IsNullAndChildIsCamera())) {
 		InitMP(curbone, limitdegflag, srcmotid, curframe);
 	}
 
@@ -4650,7 +4666,7 @@ void ChaCalcFunc::InitMPReq(CModel* srcmodel, bool limitdegflag, CBone* curbone,
 		return;
 	}
 
-	if (curbone->IsSkeleton()) {
+	if (curbone->IsSkeleton() || curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
 		InitMP(srcmodel, limitdegflag, curbone, srcmotid, curframe);
 	}
 

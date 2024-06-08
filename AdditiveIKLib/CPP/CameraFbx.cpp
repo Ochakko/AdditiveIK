@@ -335,7 +335,7 @@ ChaMatrix CCameraFbx::GetCameraNodeMat(int cameramotid)
 }
 
 
-ChaMatrix CCameraFbx::GetCameraTransformMat(int cameramotid, double nextframe, int inheritmode, 
+ChaMatrix CCameraFbx::GetCameraTransformMat(CModel* cameramodel, int cameramotid, double nextframe, int inheritmode, 
 	bool calcbynode, bool setmotionpoint)
 {
 	//InvNodeMatが掛かっていない　wmではなくtransformmat
@@ -343,6 +343,11 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(int cameramotid, double nextframe, i
 
 	ChaMatrix transformmat;
 	transformmat.SetIdentity();
+	if (!cameramodel) {
+		_ASSERT(0);
+		transformmat.SetIdentity();
+		return transformmat;
+	}
 
 	double roundingframe = RoundingTime(nextframe);
 
@@ -401,34 +406,12 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(int cameramotid, double nextframe, i
 		ChaMatrix cameramat2;
 		cameramat2.SetIdentity();
 
-		CMotionPoint* curmp;
-		curmp = camerabone->GetMotionPoint(cameramotid, roundingframe);
-		if (curmp) {
-			cameramat1 = curmp->GetWorldMat();
-		}
-		else {
-			_ASSERT(0);
-			cameramat1.SetIdentity();
-		}
 
+		cameramat1 = GetCameraMatLoaded(cameramodel, cameramotid, roundingframe);
 		double nextroundingframe = roundingframe + 1.0;
-		if (nextroundingframe < camerami.frameleng) {
-			CMotionPoint* curmp2;
-			curmp2 = camerabone->GetMotionPoint(cameramotid, nextroundingframe);
-			if (curmp2) {
-				cameramat2 = curmp2->GetWorldMat();
-			}
-			else {
-				_ASSERT(0);
-				cameramat2.SetIdentity();
-			}
-
-			double t = (m_time - roundingframe);
-			cameramat = cameramat1 + (cameramat2 - cameramat1) * (float)t;
-		}
-		else {
-			cameramat = cameramat1;
-		}
+		cameramat2 = GetCameraMatLoaded(cameramodel, cameramotid, nextroundingframe);
+		double t = (m_time - roundingframe);
+		cameramat = cameramat1 + (cameramat2 - cameramat1) * (float)t;
 
 		return cameramat;
 	}
@@ -541,12 +524,12 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(int cameramotid, double nextframe, i
 //#################################################################
 //inheritmode  0: writemode, 1:inherit all, 2:inherit cancel and Lclcancel
 //#################################################################
-int CCameraFbx::GetCameraAnimParams(int cameramotid, double nextframe, double camdist, 
+int CCameraFbx::GetCameraAnimParams(CModel* cameramodel, int cameramotid, double nextframe, double camdist, 
 	ChaVector3* pEyePos, ChaVector3* pTargetPos, ChaVector3* pcamupvec, ChaMatrix* protmat, int inheritmode)
 {
 
 	//if (!pEyePos || !pTargetPos || (cameramotid <= 0)) {
-	if (!pEyePos || !pTargetPos || !pcamupvec) {//2023/05/29 cameramotid <= 0のときには　zeroframeカメラ位置をセット
+	if (!pEyePos || !pTargetPos || !pcamupvec || !cameramodel) {//2023/05/29 cameramotid <= 0のときには　zeroframeカメラ位置をセット
 		//###################################################
 		//protmatがNULLの場合も許可　rotmatをセットしないだけ
 		//###################################################
@@ -573,7 +556,7 @@ int CCameraFbx::GetCameraAnimParams(int cameramotid, double nextframe, double ca
 				transformmat.SetIdentity();
 				bool calcbynode = false;
 				bool setmotionpoint = false;
-				transformmat = GetCameraTransformMat(cameramotid, nextframe, inheritmode,
+				transformmat = GetCameraTransformMat(cameramodel, cameramotid, nextframe, inheritmode,
 					calcbynode, setmotionpoint);
 
 
@@ -765,5 +748,53 @@ CAMERANODE* CCameraFbx::GetFirstValidCameraNode()
 	return 0;//みつからなかった場合
 }
 
+ChaMatrix CCameraFbx::GetCameraMatLoaded(CModel* cameramodel, int cameramotid, double roundingframe)
+{
+	ChaMatrix retmat;
+	retmat.SetIdentity();
+
+	if (!cameramodel) {
+		_ASSERT(0);
+		return retmat;
+	}
+
+	CAMERANODE* curcamera = GetCameraNode(cameramotid);
+	if (curcamera && curcamera->pbone) {
+		CMotionPoint* curmp;
+		curmp = curcamera->pbone->GetMotionPoint(cameramotid, roundingframe);
+		if (curmp) {
+			retmat = curmp->GetWorldMat();
+		}
+		else {
+			//####################################################################################
+			//モーションポイントが存在しない場合　フレームがアニメ調よりも大きいと想定　最後のフレームの姿勢を返す
+			//####################################################################################
+
+			MOTINFO camerami = cameramodel->GetMotInfo(cameramotid);
+			if ((camerami.motid > 0) && (camerami.motid == cameramotid)) {
+				int motleng = (int)camerami.frameleng;
+				double lastframe = (double)(motleng - 1);
+				CMotionPoint* lastmp;
+				lastmp = curcamera->pbone->GetMotionPoint(cameramotid, lastframe);
+				if (lastmp) {
+					retmat = lastmp->GetWorldMat();
+				}
+				else {
+					retmat.SetIdentity();
+				}
+			}
+			else {
+				_ASSERT(0);
+				retmat.SetIdentity();
+			}
+		}
+	}
+	else {
+		_ASSERT(0);
+		retmat.SetIdentity();
+	}
+
+	return retmat;
+}
 
 

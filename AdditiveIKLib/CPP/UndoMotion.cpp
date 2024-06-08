@@ -169,6 +169,8 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 	}
 	m_undomotid.curmotid = curmotid;
 
+
+	bool cameraanimflag = pmodel->IsCameraMotion(curmotid);
 	MOTINFO curmi = pmodel->GetMotInfo(curmotid);
 
 
@@ -178,7 +180,22 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 		for (itrbone = pmodel->GetBoneListBegin(); itrbone != pmodel->GetBoneListEnd(); itrbone++) {
 			CBone* curbone = itrbone->second;
 			//_ASSERT( curbone );
-			if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {
+
+			bool opeflag = false;
+			//if (!cameraanimflag && curbone && (curbone->IsSkeleton() || (curbone->IsNull() && !curbone->IsNullAndChildIsCamera()))) {
+			if (!cameraanimflag && curbone && curbone->IsSkeleton()) {
+				opeflag = true;
+			}
+			else if (cameraanimflag && curbone && (curbone->IsCamera() || curbone->IsNullAndChildIsCamera())) {
+				opeflag = true;
+			}
+			else {
+				opeflag = false;
+				continue;//!!!!!!!!!!!!!!!!
+			}
+
+			//if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {
+			if (opeflag) {
 
 				//####################
 				// ANGLELIMIT of bone
@@ -422,6 +439,10 @@ int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel,
 		return 1;
 	}
 
+	bool cameraanimflag = pmodel->IsCameraMotion(setmotid);
+
+
+
 	//::MoveMemory(chkmotinfo, &m_savemotinfo, sizeof(MOTINFO));
 	//pmodel->SetCurMotInfo(chkmotinfo);
 	//pmodel->SetCurrentMotion(setmotid);
@@ -445,7 +466,22 @@ int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel,
 		CBone* curbone = itrbone->second;
 		_ASSERT( curbone );
 
-		if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {
+		//if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {
+		bool opeflag = false;
+		//if (!cameraanimflag && curbone && (curbone->IsSkeleton() || (curbone->IsNull() && !curbone->IsNullAndChildIsCamera()))) {
+		if (!cameraanimflag && curbone && curbone->IsSkeleton()) {
+			opeflag = true;
+		}
+		else if (cameraanimflag && curbone && (curbone->IsCamera() || curbone->IsNullAndChildIsCamera())) {
+			opeflag = true;
+		}
+		else {
+			opeflag = false;
+			continue;//!!!!!!!!!!!!!!!!
+		}
+
+		if (opeflag) {
+
 
 			//######################
 			//2023/02/04

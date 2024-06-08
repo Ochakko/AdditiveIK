@@ -18,6 +18,9 @@
 #include <MotionPoint.h>
 #include <Bone.h>
 //#include <BoneProp.h>
+#include <FbxMisc.h>
+
+#include <GlobalVar.h>
 
 #include "FilterType.h"
 #include "FilterDlg.h"
@@ -279,7 +282,9 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 		return 1;
 	}
 
-	if (curbone->IsSkeleton()) {
+	bool cameraanimflag = srcmodel->IsCameraMotion(srcmotid);
+	if ((!cameraanimflag && curbone->IsSkeleton()) ||
+		(cameraanimflag && (curbone->IsCamera() || curbone->IsNullAndChildIsCamera()))) {
 		int frameleng = srcendframe - srcstartframe + 1;
 		int bufleng = frameleng + m_filtersize * 2;//サンプリングは両端にm_fitersize分余計に
 
@@ -342,7 +347,27 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 					}
 				}
 				ChaVector3 cureul = curbone->CalcLocalEulXYZ(limitdegflag, -1, srcmotid, (double)smpframe, BEFEUL_BEFFRAME);// axiskind = -1 --> m_anglelimitの座標系
-				ChaVector3 curtra = curbone->CalcLocalTraAnim(limitdegflag, srcmotid, (double)smpframe);
+				ChaVector3 curtra;
+				if (curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
+					ChaMatrix localmat = curbone->GetLocalMat(false, srcmotid, (double)smpframe, 0);
+					//ChaVector3 svec, travec;
+					//ChaMatrix rmat;
+					//GetSRTMatrix(localmat, &svec, &rmat, &travec);
+					//curtra = travec;
+					ChaMatrix nodemat;
+					nodemat.SetIdentity();
+					//nodemat.SetTranslation(g_camEye);
+					nodemat.SetTranslation(g_camtargetpos);
+
+					//localmat = ChaMatrixInv(nodemat) * localmat;//!!!!!!!!!!
+
+					ChaMatrix smat, rmat, tmat, tanimmat;
+					GetSRTandTraAnim(localmat, nodemat, &smat, &rmat, &tmat, &tanimmat);
+					curtra = ChaMatrixTraVec(tanimmat);
+				}
+				else {
+					curtra = curbone->CalcLocalTraAnim(limitdegflag, srcmotid, (double)smpframe);
+				}
 
 				*(m_eul + bufindex) = cureul;
 				*(m_tra + bufindex) = curtra;
@@ -505,33 +530,128 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 				break;
 			}
 
+
 			for (frame = srcstartframe; frame <= srcendframe; frame++) {
-				ChaMatrix befwm = curbone->GetWorldMat(limitdegflag, srcmotid, (double)frame, 0);
-				//curbone->SetWorldMatFromEulAndTra(limitdegflag, 1, befwm, m_smootheul[frame - srcstartframe], m_smoothtra[frame - srcstartframe], srcmotid, (double)frame);
-				//curbone->SetWorldMatFromEul(0, 1, m_smootheul[frame - srcstartframe], srcmotid, (double)frame);
+				if (!cameraanimflag && curbone->IsNotCamera() && !curbone->IsNullAndChildIsCamera()) {
+					ChaMatrix befwm = curbone->GetWorldMat(limitdegflag, srcmotid, (double)frame, 0);
+					//curbone->SetWorldMatFromEulAndTra(limitdegflag, 1, befwm, m_smootheul[frame - srcstartframe], m_smoothtra[frame - srcstartframe], srcmotid, (double)frame);
+					//curbone->SetWorldMatFromEul(0, 1, m_smootheul[frame - srcstartframe], srcmotid, (double)frame);
 
 
-				//変更前のscalevecを取得
-				ChaMatrix beflocalmat;
-				beflocalmat.SetIdentity();
-				if (curbone->GetParent(false)) {
-					ChaMatrix parmat;
-					parmat = curbone->GetParent(false)->GetWorldMat(limitdegflag, srcmotid, (double)frame, 0);
-					beflocalmat = befwm * ChaMatrixInv(parmat);
+					//変更前のscalevecを取得
+					ChaMatrix beflocalmat;
+					beflocalmat.SetIdentity();
+					if (curbone->GetParent(false)) {
+						ChaMatrix parmat;
+						parmat = curbone->GetParent(false)->GetWorldMat(limitdegflag, srcmotid, (double)frame, 0);
+						beflocalmat = befwm * ChaMatrixInv(parmat);
+					}
+					else {
+						beflocalmat = befwm;
+					}
+					ChaVector3 befsvec, beftvec;
+					ChaMatrix befrmat;
+					GetSRTMatrix(beflocalmat, &befsvec, &befrmat, &beftvec);
+
+					int inittraflag = 0;
+					int setchildflag = 1;//!!!
+					curbone->SetWorldMatFromEulAndScaleAndTra(limitdegflag, inittraflag, setchildflag,
+						befwm, m_smootheul[frame - srcstartframe],
+						befsvec, m_smoothtra[frame - srcstartframe],
+						srcmotid, (double)frame);
 				}
-				else {
-					beflocalmat = befwm;
-				}
-				ChaVector3 befsvec, beftvec;
-				ChaMatrix befrmat;
-				GetSRTMatrix(beflocalmat, &befsvec, &befrmat, &beftvec);
+				else if (cameraanimflag && curbone->IsCamera() && curbone->GetParent(false)) {
 
-				int inittraflag = 0;
-				int setchildflag = 1;//!!!
-				curbone->SetWorldMatFromEulAndScaleAndTra(limitdegflag, inittraflag, setchildflag,
-					befwm, m_smootheul[frame - srcstartframe],
-					befsvec, m_smoothtra[frame - srcstartframe],
-					srcmotid, (double)frame);
+					//###########
+					//カメラノード
+					//###########
+
+					CMotionPoint* setmp = curbone->GetMotionPoint(srcmotid, (double)frame);
+					CMotionPoint* parentmp = curbone->GetParent(false)->GetMotionPoint(srcmotid, (double)frame);
+					if (setmp && parentmp) {
+						ChaMatrix samelocalmat = setmp->GetLocalMat();
+						ChaMatrix newworldmat = samelocalmat * parentmp->GetWorldMat();
+
+						setmp->SetWorldMat(newworldmat);
+					}
+				}
+				else if (cameraanimflag && curbone->IsNullAndChildIsCamera()) {
+
+					//###################################
+					//カメラノードの親のアニメ付きeNullノード
+					//###################################
+
+					CMotionPoint* setmp = curbone->GetMotionPoint(srcmotid, (double)frame);
+					if (setmp) {
+
+						ChaVector3 seteul = m_smootheul[frame - srcstartframe];
+						ChaVector3 settra = m_smoothtra[frame - srcstartframe];
+
+						ChaMatrix beflocalmat = curbone->GetLocalMat(false, srcmotid, (double)frame, setmp);
+						ChaMatrix befworldmat = curbone->GetWorldMat(false, srcmotid, (double)frame, setmp);
+						ChaVector3 befeul = curbone->CalcLocalEulXYZ(false, -1, srcmotid, (double)frame, BEFEUL_BEFFRAME);
+
+						ChaMatrix nodemat;
+						nodemat.SetIdentity();
+						nodemat.SetTranslation(g_camtargetpos);
+
+						ChaMatrix smat, rmat, tmat, tanimmat;
+						GetSRTandTraAnim(beflocalmat, nodemat, &smat, &rmat, &tmat, &tanimmat);
+
+							
+						EFbxRotationOrder rotationorder;
+						curbone->GetFbxNodeOnLoad()->GetRotationOrder(FbxNode::eSourcePivot, rotationorder);
+						int introtorder = IntRotationOrder(rotationorder);
+						CQuaternion newrotq;
+						newrotq.SetRotation(rotationorder, 0, seteul);
+						ChaMatrix newrotmat = newrotq.MakeRotMatX();
+
+						CQuaternion befrotq;
+						befrotq.SetRotation(rotationorder, 0, befeul);
+						ChaMatrix befrotmat;
+						befrotmat = befrotq.MakeRotMatX();
+
+						ChaMatrix diffrotmat;
+						diffrotmat = ChaMatrixInv(befrotmat) * newrotmat;
+
+						ChaMatrix difftraanimmat;
+						difftraanimmat.SetIdentity();
+						difftraanimmat.SetTranslation(settra - ChaMatrixTraVec(tanimmat));
+
+
+						ChaMatrix befrot, aftrot;
+						befrot.SetIdentity();
+						//befrot.SetTranslation(-g_camEye);
+						befrot.SetTranslation(-g_camtargetpos);
+						aftrot.SetIdentity();
+						//aftrot.SetTranslation(g_camEye);
+						aftrot.SetTranslation(g_camtargetpos);
+
+						ChaMatrix transmat;
+						transmat = befrot * diffrotmat * aftrot;
+
+						//ChaMatrix newlocalmat = befrot * smat * rmat * aftrot * tanimmat;//元の通り
+						//ChaMatrix newlocalmat = smat * rmat * tmat;//元の通り
+						
+						ChaMatrix newlocalmat = befrot * smat * rmat * aftrot * tanimmat * transmat;//回転だけスムージング
+
+
+						//今後の課題：　カメラの移動もスムージング.
+						//ChaMatrix newlocalmat = befrot * smat * rmat * aftrot * tanimmat * transmat * difftraanimmat;//回転中心が違う
+						//ChaMatrix newlocalmat = befrot * smat * rmat * aftrot * tanimmat * difftraanimmat * transmat;//回転中心が違う
+
+
+						ChaMatrix newworldmat = newlocalmat * ChaMatrixInv(beflocalmat) * befworldmat;
+						setmp->SetLocalMat(newlocalmat);
+						setmp->SetWorldMat(newworldmat);
+						setmp->SetLimitedWM(newworldmat);
+						setmp->SetLocalEul(seteul);
+					}
+					else {
+						_ASSERT(0);
+						return 1;
+					}
+				}				
 			}
 		}
 	}
@@ -544,7 +664,8 @@ void CMotFilter::FilterReq(bool edgesmp, bool limitdegflag,
 {
 	if (curbone) {
 
-		if (curbone->IsSkeleton()) {
+		if (curbone->IsSkeleton() || 
+			curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
 			int result = FilterFunc(edgesmp, limitdegflag,
 				srcmodel, curbone, srcmotid, srcstartframe, srcendframe);
 			if (result != 0) {

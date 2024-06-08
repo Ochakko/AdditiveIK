@@ -2787,7 +2787,7 @@ static int ChooseFogColorBar(HWND hDlgWnd, int lightindex, int idcolorbar);
 
 
 
-
+bool ChkEnableIK();
 
 //HRESULT LoadMesh( ID3D12Device* pd3dDevice, WCHAR* strFileName, ID3DXMesh** ppMesh );
 void CalcFps(double fTime);
@@ -7081,7 +7081,7 @@ void InsertCopyMPReq(bool limitdegflag, CBone* curbone, double curframe)
 {
 	if (curbone) {
 
-		if (curbone->IsSkeleton()) {
+		if (curbone->IsSkeleton() || curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
 			InsertCopyMP(limitdegflag, curbone, curframe);
 		}
 		
@@ -7098,28 +7098,45 @@ int InsertCopyMP(bool limitdegflag, CBone* curbone, double curframe)
 {
 	double roundingframe = RoundingTime(curframe);
 
-	if (curbone && (curbone->IsSkeleton())) {
+	if (curbone && (curbone->IsSkeleton() || curbone->IsCamera() || curbone->IsNullAndChildIsCamera())) {
 		MOTINFO curmi = s_model->GetCurMotInfo();
 		if (curmi.motid > 0) {
-			int rotcenterflag1 = 1;
-			ChaMatrix localmat = curbone->CalcLocalScaleRotMat(limitdegflag,
-				rotcenterflag1, curmi.motid, curframe);
-			ChaVector3 curanimtra = curbone->CalcLocalTraAnim(limitdegflag,
-				curmi.motid, curframe);
-			ChaVector3 localscale = curbone->CalcLocalScaleAnim(limitdegflag,
-				curmi.motid, curframe);
+			if (curbone->IsSkeleton()) {
+				int rotcenterflag1 = 1;
+				ChaMatrix localmat = curbone->CalcLocalScaleRotMat(limitdegflag,
+					rotcenterflag1, curmi.motid, curframe);
+				ChaVector3 curanimtra = curbone->CalcLocalTraAnim(limitdegflag,
+					curmi.motid, curframe);
+				ChaVector3 localscale = curbone->CalcLocalScaleAnim(limitdegflag,
+					curmi.motid, curframe);
 
-			localmat.AddTranslation(curanimtra);//SetではなくAdd
+				localmat.AddTranslation(curanimtra);//SetではなくAdd
 
+				CPELEM2 cpelem;
+				ZeroMemory(&cpelem, sizeof(CPELEM2));
+				cpelem.bone = curbone;
+				cpelem.mp.SetFrame(curframe);
+				cpelem.mp.SetWorldMat(localmat);
+				cpelem.mp.SetLocalMatFlag(1);//!!!!!!!!!! 1
+				s_copymotvec.push_back(cpelem);
+			}
+			else {
+				ChaMatrix localmat = curbone->GetLocalMat(false, curmi.motid, roundingframe, 0);
+				ChaMatrix worldmat = curbone->GetWorldMat(false, curmi.motid, roundingframe, 0);
+				ChaVector3 localeul = curbone->GetLocalEul(false, curmi.motid, roundingframe, 0);
 
+				CPELEM2 cpelem;
+				ZeroMemory(&cpelem, sizeof(CPELEM2));
+				cpelem.bone = curbone;
+				cpelem.mp.SetFrame(curframe);
+				cpelem.mp.SetWorldMat(worldmat);
+				cpelem.mp.SetLimitedWM(worldmat);
+				cpelem.mp.SetLocalMat(localmat);//!!!!!!!!
+				cpelem.mp.SetLocalEul(localeul);//!!!!!!!!
+				cpelem.mp.SetLocalMatFlag(0);//!!!!!!!!!! 0
+				s_copymotvec.push_back(cpelem);
+			}
 
-			CPELEM2 cpelem;
-			ZeroMemory(&cpelem, sizeof(CPELEM2));
-			cpelem.bone = curbone;
-			cpelem.mp.SetFrame(curframe);
-			cpelem.mp.SetWorldMat(localmat);
-			cpelem.mp.SetLocalMatFlag(1);//!!!!!!!!!!
-			s_copymotvec.push_back(cpelem);
 		}
 	}
 
@@ -7794,7 +7811,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				operatingjointno = s_model->InterpolateBetweenSelection(g_limitdegflag,
 					s_buttonselectstart, s_buttonselectend, interpolatebone, s_interpolateState);
 
-				if ((g_limitdegflag == true) && (operatingjointno >= 0)) {
+				bool cameraanimflag = s_model->IsCameraMotion(s_model->GetCurrentMotID());
+				if (!cameraanimflag && (g_limitdegflag == true) && (operatingjointno >= 0)) {
 					bool allframeflag = false;
 					bool setcursorflag = false;
 					bool onpasteflag = false;
@@ -8369,7 +8387,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	}
 	else if (uMsg == WM_MOUSEWHEEL) {
 		if ((g_keybuf['T'] & 0x80) != 0) {
-			if (s_model && (s_curboneno > 0)) {
+			if (s_model && (s_curboneno > 0) && ChkEnableIK()) {
 				s_tkeyflag = 1;
 
 				int delta;
@@ -9098,7 +9116,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		int editmotionflag = s_editmotionflag;
 
 		if (g_edittarget != EDITTARGET_CAMERA) {
-			if ((s_undoFlag == false) && (s_redoFlag == false)) {
+			if (ChkEnableIK() && (s_undoFlag == false) && (s_redoFlag == false)) {
 				if (s_oprigflag == 0) {
 					if ((s_ikkind == 0) && (editmotionflag >= 0)) {
 						if (s_pickinfo.buttonflag == PICK_CENTER) {
@@ -11880,28 +11898,43 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	{
 		int lastmotid = -1;
 		int motnum = s_model->GetMotInfoSize();
-		int motno;
-		for (motno = 0; motno < motnum; motno++) {
+		if (motnum > 0) {
+			int motno;
+			for (motno = 0; motno < motnum; motno++) {
 
-			//WCHAR strchk[256] = { 0L };
-			//swprintf_s(strchk, 256, L"check 3 : %d / %d", motno, motnum);
-			//::MessageBox(g_mainhwnd, strchk, L"check!!!", MB_OK);
+				//WCHAR strchk[256] = { 0L };
+				//swprintf_s(strchk, 256, L"check 3 : %d / %d", motno, motnum);
+				//::MessageBox(g_mainhwnd, strchk, L"check!!!", MB_OK);
 
-			MOTINFO curmi = s_model->GetMotInfo(motno + 1);
-			if (curmi.motid > 0) {
-				lastmotid = curmi.motid;
-				s_model->SetCurrentMotion(lastmotid);
-				//OnAddMotion(curmi->motid, (motno == 0));
-				// 
-				//Main.cppのOnAddMotion()は　メニューの追加のみ
-				//
-				OnAddMotion(curmi.motid, (motno == (motnum - 1)));//最後のモーション!!!!!! 2021/08/19
+				MOTINFO curmi = s_model->GetMotInfo(motno + 1);
+				if (curmi.motid > 0) {
+					lastmotid = curmi.motid;
+					s_model->SetCurrentMotion(lastmotid);
+					//OnAddMotion(curmi->motid, (motno == 0));
+					// 
+					//Main.cppのOnAddMotion()は　メニューの追加のみ
+					//
+					OnAddMotion(curmi.motid, (motno == (motnum - 1)));//最後のモーション!!!!!! 2021/08/19
 
-				if (s_nowloading && s_3dwnd) {
-					OnRenderNowLoading();
+					if (s_nowloading && s_3dwnd) {
+						OnRenderNowLoading();
+					}
+
 				}
-
 			}
+
+
+			//2024/06/09
+			//ファイルを開いた直後には、ボーンモーション編集可能なモーションを選択しておく
+			bool cameraanimflag = false;
+			MOTINFO firstvalidmi = s_model->GetFirstValidMotInfo(cameraanimflag);
+			if (firstvalidmi.motid > 0) {
+				int selindex = s_chascene->MotID2SelIndex(FindModelIndex(s_model), firstvalidmi.motid);
+				if (selindex >= 0) {
+					OnAnimMenu(dorefreshtl, selindex);
+				}
+			}
+
 		}
 		//s_model->SetCurrentMotion(lastmotid);
 	}
@@ -12090,85 +12123,95 @@ int InitCurMotion(int selectflag, double expandmotion)
 	//モーション初期化はunlimitedに対して行う
 	bool limitdegflag = false;
 
+	//MOTINFO curmi = GetEditTargetMotInfo();
 
-	if (s_model) {
-		if (s_model->ExistCurrentMotion()) {
-			//CallF(s_model->FillUpEmptyMotion(curmi->motid), return 0);
-			CBone* topbone = s_model->GetTopBone(false);
-			if (topbone && (s_model->GetNoBoneFlag() == false)) {
-				double motleng = s_model->GetCurrentMotLeng();
-				//_ASSERT(0);
+	//モーションプロパティ機能はモーションパネルで選択中のモーションに対して処理をする
+	//カメラパネル内のモーションはモーションパネル内にも存在するので　カメラモーションの長さを変える場合にも　モーションパネルで選択して実行する
+	MOTINFO curmi = s_model->GetCurMotInfo();
+	if (curmi.motid > 0) {
+		if (s_model) {
+			if (s_model->ExistCurrentMotion()) {
+				//CallF(s_model->FillUpEmptyMotion(curmi->motid), return 0);
+				CBone* topbone = s_model->GetTopBone(false);
+				if (topbone && (s_model->GetNoBoneFlag() == false)) {
+					double motleng = s_model->GetCurrentMotLeng();
+					//_ASSERT(0);
 
-				if (selectflag == 1) {//called from tool panel : init selected time range
+					if (selectflag == 1) {//called from tool panel : init selected time range
 
-					bool firstflag = true;
-					double startframe = 0.0;
-					double endframe = 0.0;
-					list<KeyInfo>::iterator itrcp;
-					for (itrcp = s_copyKeyInfoList.begin(); itrcp != s_copyKeyInfoList.end(); itrcp++) {
-						if (firstflag) {
-							startframe = itrcp->time;
-							firstflag = false;
+						bool firstflag = true;
+						double startframe = 0.0;
+						double endframe = 0.0;
+						list<KeyInfo>::iterator itrcp;
+						for (itrcp = s_copyKeyInfoList.begin(); itrcp != s_copyKeyInfoList.end(); itrcp++) {
+							if (firstflag) {
+								startframe = itrcp->time;
+								firstflag = false;
+							}
+							endframe = itrcp->time;
 						}
-						endframe = itrcp->time;
+
+						s_model->InitMpFrame(limitdegflag, curmi.motid, topbone, startframe, endframe);
+
+					}
+					else if (expandmotion > 0) {//モーション長を長くした際に、長くなった分の初期化をする
+						double oldframeleng = expandmotion;
+
+						//////if (topbone) {
+						////	//topbone->ResizeIndexedMotionPointReq(curmi->motid, motleng);
+						//////}
+
+						//double frame;
+						//for (frame = oldframeleng; frame < motleng; frame += 1.0) {
+						//	if (topbone) {
+						//		s_model->SetMotionFrame(frame);
+						//		s_model->InitMPReq(limitdegflag, topbone, curmi->motid, frame);
+						//	}
+						//}
+
+						if (oldframeleng < motleng) {
+							s_model->InitMpFrame(limitdegflag, curmi.motid, topbone, oldframeleng, RoundingTime(motleng - 1.0));
+						}
+
+						int errorcount = 0;
+						s_model->CreateIndexedMotionPointReq(s_model->GetTopBone(false),
+							curmi.motid, motleng, &errorcount);
+						if (errorcount != 0) {
+							_ASSERT(0);
+						}
+					}
+					else {
+						//double frame;
+						//for (frame = 0.0; frame < motleng; frame += 1.0) {
+						//	if (topbone) {
+						//		s_model->SetMotionFrame(frame);
+						//		s_model->InitMPReq(limitdegflag, topbone, curmi->motid, frame);
+						//	}
+						//}
+
+						s_model->InitMpFrame(limitdegflag, curmi.motid, topbone, 0.0, RoundingTime(motleng - 1.0));
+
+						int errorcount = 0;
+						s_model->CreateIndexedMotionPointReq(s_model->GetTopBone(false),
+							curmi.motid, motleng, &errorcount);
+						if (errorcount != 0) {
+							_ASSERT(0);
+						}
 					}
 
-					s_model->InitMpFrame(limitdegflag, s_model->GetCurrentMotID(), topbone, startframe, endframe);
 
-				}
-				else if (expandmotion > 0) {//モーション長を長くした際に、長くなった分の初期化をする
-					double oldframeleng = expandmotion;
-
-					//////if (topbone) {
-					////	//topbone->ResizeIndexedMotionPointReq(curmi->motid, motleng);
-					//////}
-
-					//double frame;
-					//for (frame = oldframeleng; frame < motleng; frame += 1.0) {
-					//	if (topbone) {
-					//		s_model->SetMotionFrame(frame);
-					//		s_model->InitMPReq(limitdegflag, topbone, curmi->motid, frame);
-					//	}
+					////LimitEulを表示時には　worldへの変更をlimitedに反映させる
+					//if (g_limitdegflag == true) {
+					//	bool allframeflag = true;//全フレーム
+					//	bool setcursorflag = false;
+					//	bool onpasteflag = false;
+					//	CopyLimitedWorldToWorld(s_model, allframeflag, setcursorflag, s_editmotionflag, onpasteflag);
 					//}
 
-					s_model->InitMpFrame(limitdegflag, s_model->GetCurrentMotID(), topbone, oldframeleng, motleng - 1.0);
-
-
-					int errorcount = 0;
-					s_model->CreateIndexedMotionPointReq(s_model->GetTopBone(false),
-						s_model->GetCurrentMotID(), motleng, &errorcount);
-					if (errorcount != 0) {
-						_ASSERT(0);
-					}
 				}
-				else {
-					//double frame;
-					//for (frame = 0.0; frame < motleng; frame += 1.0) {
-					//	if (topbone) {
-					//		s_model->SetMotionFrame(frame);
-					//		s_model->InitMPReq(limitdegflag, topbone, curmi->motid, frame);
-					//	}
-					//}
-
-					s_model->InitMpFrame(limitdegflag, s_model->GetCurrentMotID(), topbone, 0.0, motleng - 1.0);
-
-					int errorcount = 0;
-					s_model->CreateIndexedMotionPointReq(s_model->GetTopBone(false),
-						s_model->GetCurrentMotID(), motleng, &errorcount);
-					if (errorcount != 0) {
-						_ASSERT(0);
-					}
-				}
-
-
-				////LimitEulを表示時には　worldへの変更をlimitedに反映させる
-				//if (g_limitdegflag == true) {
-				//	bool allframeflag = true;//全フレーム
-				//	bool setcursorflag = false;
-				//	bool onpasteflag = false;
-				//	CopyLimitedWorldToWorld(s_model, allframeflag, setcursorflag, s_editmotionflag, onpasteflag);
-				//}
-
+			}
+			else {
+				_ASSERT(0);
 			}
 		}
 		else {
@@ -36457,7 +36500,9 @@ int OnFrameToolWnd()
 			if (keynum >= 0) {
 				if (keynum == 0) {
 					double motleng;
-					MOTINFO curmi = GetEditTargetMotInfo();
+					//コピーペースト機能はモーションパネルで選択中のモーションに対して処理をする
+					//カメラパネル内のモーションはモーションパネル内にも存在するので　カメラモーションのコピペをする場合にも　モーションパネルで選択して実行する
+					MOTINFO curmi = s_model->GetCurMotInfo();
 					if (curmi.motid > 0) {
 						motleng = curmi.frameleng - 1;
 						double srcendframe = min(motleng, startframe + (copyEndTime - copyStartTime));
@@ -36500,7 +36545,6 @@ int OnFrameToolWnd()
 		if (oldcursor) {
 			SetCursor(oldcursor);
 		}
-
 	}
 
 	if (s_motpropFlag) {
@@ -36510,21 +36554,37 @@ int OnFrameToolWnd()
 			dlgret = (int)DialogBoxW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_MOTPROPDLG),
 				s_3dwnd, (DLGPROC)MotPropDlgProc);
 			if ((dlgret == IDOK) && s_tmpmotname[0]) {
-				MOTINFO curmi = GetEditTargetMotInfo();
+
+				//MOTINFO curmi = GetEditTargetMotInfo();
+
+				//モーションプロパティ機能はモーションパネルで選択中のモーションに対して処理をする
+				//カメラパネル内のモーションはモーションパネル内にも存在するので　カメラモーションの名前を変える場合にも　モーションパネルで選択して実行する
+				MOTINFO curmi = s_model->GetCurMotInfo();
 				if (curmi.motid > 0) {
-					WideCharToMultiByte(CP_ACP, 0, s_tmpmotname, -1, curmi.motname, 256, NULL, NULL);
-					//s_model->m_curmotinfo->frameleng = s_tmpmotframeleng;
-					s_model->SetMotInfoLoopFlagByIndex(curmi.motid, s_tmpmotloop);
-					double oldframeleng = curmi.frameleng;
+					if (s_model) {//motpropはs_modelのカレントモーションに対して処理
+						
+						char newmotionname[256] = { 0L };
+						WideCharToMultiByte(CP_ACP, 0, s_tmpmotname, -1, newmotionname, 256, NULL, NULL);
+						newmotionname[255] = 0;
+						int newnamelen = (int)strlen(newmotionname);
+						if (newnamelen > 0) {
+							s_model->SetMotionName(curmi.motid, newmotionname);
+						}
+						
+						//s_model->m_curmotinfo->frameleng = s_tmpmotframeleng;
+						//s_model->SetMotInfoLoopFlagByIndex(curmi.motid, s_tmpmotloop);//!!! index
+						s_model->SetMotInfoLoopFlagByID(curmi.motid, s_tmpmotloop);//!!! motid
+						double oldframeleng = curmi.frameleng;
 
-					if (s_owpTimeline) {
-						s_owpTimeline->setMaxTime(s_tmpmotframeleng);
+						if (s_owpTimeline) {
+							s_owpTimeline->setMaxTime(s_tmpmotframeleng);
+						}
+						s_model->ChangeMotFrameLeng(curmi.motid, s_tmpmotframeleng);//はみ出たmpも削除
+						InitCurMotion(0, oldframeleng);
+
+						//メニュー書き換え, timeline update
+						OnAnimMenu(true, s_motmenuindexmap[s_model]);
 					}
-					s_model->ChangeMotFrameLeng(curmi.motid, s_tmpmotframeleng);//はみ出たmpも削除
-					InitCurMotion(0, oldframeleng);
-
-					//メニュー書き換え, timeline update
-					OnAnimMenu(true, s_motmenuindexmap[s_model]);
 				}
 			}
 		}
@@ -36830,19 +36890,47 @@ CMotionPoint CalcPasteMotionPoint(CBone* srcbone, double srcframe, double srcfra
 		retmp = mp0;
 	}
 	else {
-		ChaMatrix resultwm;
-		ChaMatrix wm0;
-		ChaMatrix wm1;
-		resultwm.SetIdentity();
-		wm0.SetIdentity();
-		wm1.SetIdentity();
+		if (srcbone->IsSkeleton()) {
+			ChaMatrix resultwm;
+			ChaMatrix wm0;
+			ChaMatrix wm1;
+			resultwm.SetIdentity();
+			wm0.SetIdentity();
+			wm1.SetIdentity();
 
-		wm0 = mp0.GetWorldMat();
-		wm1 = mp1.GetWorldMat();
-		resultwm =  (wm0 * (1.0 - interpolaterate)) + (wm1 * interpolaterate);
+			wm0 = mp0.GetWorldMat();
+			wm1 = mp1.GetWorldMat();
+			resultwm = (wm0 * (1.0 - interpolaterate)) + (wm1 * interpolaterate);
 
-		retmp = mp0;
-		retmp.SetWorldMat(resultwm);
+			retmp = mp0;
+			retmp.SetWorldMat(resultwm);
+		}
+		else {
+			ChaMatrix resultwm;
+			ChaMatrix wm0;
+			ChaMatrix wm1;
+			resultwm.SetIdentity();
+			wm0.SetIdentity();
+			wm1.SetIdentity();
+			wm0 = mp0.GetWorldMat();
+			wm1 = mp1.GetWorldMat();
+			resultwm = (wm0 * (1.0 - interpolaterate)) + (wm1 * interpolaterate);
+
+			ChaMatrix resultlcl;
+			ChaMatrix lcl0;
+			ChaMatrix lcl1;
+			resultlcl.SetIdentity();
+			lcl0.SetIdentity();
+			lcl1.SetIdentity();
+			lcl0 = mp0.GetLocalMat();
+			lcl1 = mp1.GetLocalMat();
+			resultlcl = (lcl0 * (1.0 - interpolaterate)) + (lcl1 * interpolaterate);
+
+			retmp = mp0;
+			retmp.SetWorldMat(resultwm);
+			retmp.SetLocalMat(resultlcl);
+			retmp.SetLimitedWM(resultwm);
+		}
 	}
 
 	return retmp;
@@ -36911,7 +36999,9 @@ int PasteMotionPoint(CBone* srcbone, CMotionPoint srcmp, double newframe)
 		hasNotMvParFlag = 0;
 	}
 
-	if (srcbone && (docopyflag == 1)) {
+	if (srcbone && 
+		((srcbone->IsSkeleton() && (docopyflag == 1)) || srcbone->IsCamera() || srcbone->IsNullAndChildIsCamera())
+		) {
 		if (s_model->ExistCurrentMotion()) {
 			int curmotid = s_model->GetCurMotInfo().motid;
 			srcbone->PasteMotionPoint(g_limitdegflag, curmotid, RoundingTime(newframe), srcmp);
@@ -37195,7 +37285,16 @@ int PasteMotionPointJustInTerm(double copyStartTime, double copyEndTime, double 
 	//
 	//ペースト範囲のオイラー角はPasteMotionPoint()-->SetWorldMat()-->CalcLocalEulXYZ()で計算済
 	//
-	if (g_limitdegflag == true) {
+	bool opecamera = false;
+	MOTINFO curmi = s_model->GetCurMotInfo();
+	if ((curmi.motid > 0) && s_model->IsCameraMotion(curmi.motid)) {
+		opecamera = true;
+	}
+	else {
+		opecamera = false;
+	}
+
+	if ((g_limitdegflag == true) && !opecamera) {
 		bool allframeflag = false;
 		bool setcursorflag = false;
 		bool onpasteflag = true;
@@ -40614,14 +40713,60 @@ static int s_blendshapelinenum = 0;
 				//WindowSize slidersize = newslider->getSize();//autoResize()が走るまでsizeは(0,0)
 				
 				WCHAR strlabel[512] = { 0 };
+				ZeroMemory(strlabel, sizeof(WCHAR) * 512);
 				if (curblendshape.mqoobj && curblendshape.mqoobj->GetName() && curblendshape.targetname) {
 					char mqoobjname[256] = { 0 };
 					WCHAR wmqoobjname[256] = { 0L };
 					strcpy_s(mqoobjname, 256, curblendshape.mqoobj->GetName());
 					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
 						mqoobjname, -1, wmqoobjname, 256);
-					swprintf_s(strlabel, 512, L"%s:%s",
-						wmqoobjname, curblendshape.targetname);
+					WCHAR wtargetname[256] = { 0L };
+					wcscpy_s(wtargetname, 256, curblendshape.targetname);
+					
+					//2024/06/08
+					//obj名:ターゲット名の長さが長すぎてスライダーに被ることがあったので文字数制限
+					//obj名は12文字まで、ターゲット名は最後の .の後から表示
+					int objnameleng = (int)wcsnlen_s(wmqoobjname, 256);
+					int cp_objnameleng = max(0, min(12, objnameleng));//!!!!!!!!!!
+					wmqoobjname[cp_objnameleng] = 0L;//!!!!!!!!!
+
+					//WCHAR printwtargetname[256] = { 0L };
+					//ZeroMemory(printwtargetname, sizeof(WCHAR) * 256);
+					//int targetnameleng = (int)wcsnlen_s(wtargetname, 256);
+					//int cp_targetnameleng = max(0, min(28, targetnameleng));//!!!!!!!!
+					//if (cp_targetnameleng > 28) {
+					//	int offsetpos = cp_targetnameleng - 28;
+					//	wcscpy_s(printwtargetname, 256, (wtargetname + offsetpos));
+					//}
+					//else {
+					//	wcscpy_s(printwtargetname, 256, wtargetname);
+					//}
+
+					WCHAR printwtargetname[256] = { 0L };
+					ZeroMemory(printwtargetname, sizeof(WCHAR) * 256);
+					WCHAR wch[2] = L".";
+					WCHAR* lastdot = wcsrchr(wtargetname, wch[0]);
+					int offsetpos = 0;
+					if (lastdot) {
+						offsetpos = (int)(lastdot - wtargetname);
+						offsetpos = max(0, min(254, offsetpos));
+					}
+					else {
+						offsetpos = 0;
+					}
+					wcscpy_s(printwtargetname, 256, (wtargetname + offsetpos));
+
+
+					ZeroMemory(strlabel, sizeof(WCHAR) * 512);
+					wcscpy_s(strlabel, 512, wmqoobjname);
+					wcscat_s(strlabel, 512, L":");
+					//wcscat_s(strlabel, 512, wtargetname);
+					wcscat_s(strlabel, 512, printwtargetname);
+					
+
+					//swprintf_s(strlabel, 512, L"%s:%s",
+					//	wmqoobjname, curblendshape.targetname);
+
 				}
 				else {
 					wcscpy_s(strlabel, 256, L"Unknown Name");
@@ -49274,7 +49419,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	case WM_MOUSEWHEEL:
 	{
 		if ((g_keybuf['T'] & 0x80) != 0) {
-			if (s_model && (s_curboneno > 0)) {
+			if (ChkEnableIK() && s_model && (s_curboneno > 0)) {
 				s_tkeyflag = 1;
 
 				int delta;
@@ -49825,7 +49970,7 @@ int OnMouseMoveFunc()
 				s_model->TransformBone(s_pickinfo.winx, s_pickinfo.winy, s_curboneno, &s_pickinfo.objworld, &tmpsc, &s_pickinfo.objscreen);
 
 				if (g_edittarget != EDITTARGET_CAMERA) {
-					if (s_model) {
+					if (s_model && ChkEnableIK()) {
 						if (s_oprigflag == 0) {
 							ChaVector3 targetpos(0.0f, 0.0f, 0.0f);
 							//CallF(CalcTargetPos(&targetpos), return 1);
@@ -49917,29 +50062,31 @@ int OnMouseMoveFunc()
 					}
 
 					if (g_edittarget != EDITTARGET_CAMERA) {
-						if (s_ikkind == 0) {
-							s_editmotionflag = s_model->IKRotateAxisDeltaUnderIK(
-								g_limitdegflag,
-								&s_editrange, s_pickinfo.buttonflag, s_pickinfo.pickobjno,
-								deltax, g_iklevel, s_ikcnt, s_ikselectmat);
+						if (ChkEnableIK()) {
+							if (s_ikkind == 0) {
+								s_editmotionflag = s_model->IKRotateAxisDeltaUnderIK(
+									g_limitdegflag,
+									&s_editrange, s_pickinfo.buttonflag, s_pickinfo.pickobjno,
+									deltax, g_iklevel, s_ikcnt, s_ikselectmat);
 
-							//ClearLimitedWM(s_model);//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
-							//UpdateEditedEuler();
-						}
-						else if (s_ikkind == 1) {
-							AddBoneTra(s_pickinfo.buttonflag - PICK_X, deltax * 0.1f);
-							s_editmotionflag = s_curboneno;
-						}
-						else if (s_ikkind == 2) {
-							if (g_shiftkey == false) {
-								AddBoneScale(s_pickinfo.buttonflag - PICK_X, deltax);
+								//ClearLimitedWM(s_model);//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
+								//UpdateEditedEuler();
+							}
+							else if (s_ikkind == 1) {
+								AddBoneTra(s_pickinfo.buttonflag - PICK_X, deltax * 0.1f);
 								s_editmotionflag = s_curboneno;
 							}
-							else {
-								//2024/01/30 
-								//shiftキーを押しながらX,Y,ZどれかのスプライトドラッグでPICK_CENTER
-								AddBoneScale(-1, deltax);
-								s_editmotionflag = s_curboneno;
+							else if (s_ikkind == 2) {
+								if (g_shiftkey == false) {
+									AddBoneScale(s_pickinfo.buttonflag - PICK_X, deltax);
+									s_editmotionflag = s_curboneno;
+								}
+								else {
+									//2024/01/30 
+									//shiftキーを押しながらX,Y,ZどれかのスプライトドラッグでPICK_CENTER
+									AddBoneScale(-1, deltax);
+									s_editmotionflag = s_curboneno;
+								}
 							}
 						}
 					}
@@ -49990,31 +50137,33 @@ int OnMouseMoveFunc()
 					//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 4");
 
 					if (g_edittarget != EDITTARGET_CAMERA) {
-						if (s_ikkind == 0) {
-							s_editmotionflag = s_model->IKRotateAxisDeltaUnderIK(
-								g_limitdegflag,
-								&s_editrange, buttonflagForIkFunc, s_pickinfo.pickobjno,
-								deltax, g_iklevel, s_ikcnt, s_ikselectmat);
+						if (ChkEnableIK()) {
+							if (s_ikkind == 0) {
+								s_editmotionflag = s_model->IKRotateAxisDeltaUnderIK(
+									g_limitdegflag,
+									&s_editrange, buttonflagForIkFunc, s_pickinfo.pickobjno,
+									deltax, g_iklevel, s_ikcnt, s_ikselectmat);
 
-							//ClearLimitedWM(s_model);//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
-							//UpdateEditedEuler();
-						}
-						else if (s_ikkind == 1) {
-							AddBoneTra(buttonflagForIkFunc - PICK_X, deltax * 0.1f);
-							s_editmotionflag = s_curboneno;
-						}
-						else if (s_ikkind == 2) {
-							if (g_shiftkey) {
-								AddBoneScale(buttonflagForIkFunc - PICK_X, deltax);
+								//ClearLimitedWM(s_model);//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
+								//UpdateEditedEuler();
+							}
+							else if (s_ikkind == 1) {
+								AddBoneTra(buttonflagForIkFunc - PICK_X, deltax * 0.1f);
 								s_editmotionflag = s_curboneno;
 							}
-							else {
-								//2024/01/30 
-								//shiftキーを押しながらX,Y,ZどれかのスプライトドラッグでPICK_CENTER
-								AddBoneScale(-1, deltax);
-								s_editmotionflag = s_curboneno;
-							}
+							else if (s_ikkind == 2) {
+								if (g_shiftkey) {
+									AddBoneScale(buttonflagForIkFunc - PICK_X, deltax);
+									s_editmotionflag = s_curboneno;
+								}
+								else {
+									//2024/01/30 
+									//shiftキーを押しながらX,Y,ZどれかのスプライトドラッグでPICK_CENTER
+									AddBoneScale(-1, deltax);
+									s_editmotionflag = s_curboneno;
+								}
 
+							}
 						}
 					}
 					else {
@@ -58429,39 +58578,67 @@ int GetCPTFileName(std::vector<HISTORYELEM>& dstvecopenfilename)
 {
 
 	dstvecopenfilename.clear();
-	//ZeroMemory(dstname, sizeof(WCHAR) * dstlen);
-
-
-	//MB3DOpenProj_20210410215628.txt
-	WCHAR searchfilename[MAX_PATH] = { 0L };
-	searchfilename[0] = { 0L };
-	swprintf_s(searchfilename, MAX_PATH, L"%sMB3DTempCopyFrames_v1.0.0.18_*.cpt", s_temppath);
-	HANDLE hFind;
-	WIN32_FIND_DATA win32fd;
-	hFind = FindFirstFileW(searchfilename, &win32fd);
 
 	std::vector<HISTORYELEM> vechistory;//!!!!!!!!! tmpファイル名
-	//std::vector<wstring> vecopenfilename;//!!!!!!!! tmpファイル内に書いてあるopenfilename
-
 	vechistory.clear();
-	bool notfoundfirst = true;
-	if (hFind != INVALID_HANDLE_VALUE) {
-		notfoundfirst = false;
-		do {
-			if ((win32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
-				HISTORYELEM curelem;
-				curelem.Init();
-				curelem.filetime = win32fd.ftCreationTime;
 
-				//printf("%s\n", win32fd.cFileName);
-				curelem.wfilename[MAX_PATH - 1] = { 0L };
-				curelem.wfilename[0] = { 0L };
-				swprintf_s(curelem.wfilename, MAX_PATH, L"%s%s", s_temppath, win32fd.cFileName);
+	{
+		//MB3DOpenProj_20210410215628.txt
+		WCHAR searchfilename[MAX_PATH] = { 0L };
+		searchfilename[0] = { 0L };
+		swprintf_s(searchfilename, MAX_PATH, L"%sMB3DTempCopyFrames_v1.0.0.18_*.cpt", s_temppath);
+		HANDLE hFind;
+		WIN32_FIND_DATA win32fd;
+		hFind = FindFirstFileW(searchfilename, &win32fd);
 
-				vechistory.push_back(curelem);
-			}
-		} while (FindNextFile(hFind, &win32fd));
-		FindClose(hFind);
+		bool notfoundfirst = true;
+		if (hFind != INVALID_HANDLE_VALUE) {
+			notfoundfirst = false;
+			do {
+				if ((win32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
+					HISTORYELEM curelem;
+					curelem.Init();
+					curelem.filetime = win32fd.ftCreationTime;
+
+					//printf("%s\n", win32fd.cFileName);
+					curelem.wfilename[MAX_PATH - 1] = { 0L };
+					curelem.wfilename[0] = { 0L };
+					swprintf_s(curelem.wfilename, MAX_PATH, L"%s%s", s_temppath, win32fd.cFileName);
+
+					vechistory.push_back(curelem);
+				}
+			} while (FindNextFile(hFind, &win32fd));
+			FindClose(hFind);
+		}
+	}
+	{
+		//MB3DOpenProj_20210410215628.txt
+		WCHAR searchfilename[MAX_PATH] = { 0L };
+		searchfilename[0] = { 0L };
+		swprintf_s(searchfilename, MAX_PATH, L"%sMB3DTempCopyFrames_v1.0.0.23_*.cpt", s_temppath);
+		HANDLE hFind;
+		WIN32_FIND_DATA win32fd;
+		hFind = FindFirstFileW(searchfilename, &win32fd);
+
+		bool notfoundfirst = true;
+		if (hFind != INVALID_HANDLE_VALUE) {
+			notfoundfirst = false;
+			do {
+				if ((win32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
+					HISTORYELEM curelem;
+					curelem.Init();
+					curelem.filetime = win32fd.ftCreationTime;
+
+					//printf("%s\n", win32fd.cFileName);
+					curelem.wfilename[MAX_PATH - 1] = { 0L };
+					curelem.wfilename[0] = { 0L };
+					swprintf_s(curelem.wfilename, MAX_PATH, L"%s%s", s_temppath, win32fd.cFileName);
+
+					vechistory.push_back(curelem);
+				}
+			} while (FindNextFile(hFind, &win32fd));
+			FindClose(hFind);
+		}
 	}
 
 	if (!vechistory.empty()) {
@@ -58938,9 +59115,17 @@ int WriteCPTFile(WCHAR* dstfilename)
 	SYSTEMTIME localtime;
 	GetLocalTime(&localtime);
 	WCHAR cptfilename[MAX_PATH] = { 0L };
-	swprintf_s(cptfilename, MAX_PATH, L"%s\\MB3DTempCopyFrames_v1.0.0.18_%04u%02u%02u%02u%02u%02u.cpt",
+
+	//swprintf_s(cptfilename, MAX_PATH, L"%s\\MB3DTempCopyFrames_v1.0.0.18_%04u%02u%02u%02u%02u%02u.cpt",
+	//	s_temppath,
+	//	localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
+
+
+	//2024/06/07 PM8:30頃　ファイルバージョンアップ AdditiveIK1.0.0.23へ向けて
+	swprintf_s(cptfilename, MAX_PATH, L"%s\\MB3DTempCopyFrames_v1.0.0.23_%04u%02u%02u%02u%02u%02u.cpt",
 		s_temppath,
 		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
+
 
 	HANDLE hfile = CreateFile(cptfilename, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
 		FILE_FLAG_SEQUENTIAL_SCAN, NULL);
@@ -58956,7 +59141,11 @@ int WriteCPTFile(WCHAR* dstfilename)
 
 	char CPTheader[256];
 	::ZeroMemory(CPTheader, sizeof(char) * 256);
-	strcpy_s(CPTheader, 256, "MB3DTempCopyFramesFile ver1.0.0.18");//本体ではない
+
+	//strcpy_s(CPTheader, 256, "MB3DTempCopyFramesFile ver1.0.0.18");//本体ではない
+
+	//2024/06/07 PM8:30頃　ファイルバージョンアップ AdditiveIK1.0.0.23へ向けて
+	strcpy_s(CPTheader, 256, "MB3DTempCopyFramesFile ver1.0.0.23");//本体ではない
 
 	DWORD wleng = 0;
 	WriteFile(hfile, CPTheader, sizeof(char) * 256, &wleng, NULL);
@@ -58998,14 +59187,38 @@ int WriteCPTFile(WCHAR* dstfilename)
 				return 1;
 			}
 
-			ChaMatrix curlocalmat;
-			curlocalmat = curcpelem.mp.GetWorldMat();
-			wleng = 0;
-			WriteFile(hfile, &curlocalmat, sizeof(ChaMatrix), &wleng, NULL);
-			if (wleng != (sizeof(ChaMatrix))) {
-				_ASSERT(0);
-				return 1;
+			//ChaMatrix curlocalmat;
+			{//file version 1.0.0.18
+				//curlocalmat = curcpelem.mp.GetWorldMat();
+				//wleng = 0;
+				//WriteFile(hfile, &curlocalmat, sizeof(ChaMatrix), &wleng, NULL);
+				//if (wleng != (sizeof(ChaMatrix))) {
+				//	_ASSERT(0);
+				//	return 1;
+				//}
 			}
+
+			ChaMatrix curlocalmat;
+			ChaMatrix curworldmat;
+			curlocalmat.SetIdentity();
+			curworldmat.SetIdentity();
+			{//file version 1.0.0.23
+				curlocalmat = curcpelem.mp.GetLocalMat();
+				wleng = 0;
+				WriteFile(hfile, &curlocalmat, sizeof(ChaMatrix), &wleng, NULL);
+				if (wleng != (sizeof(ChaMatrix))) {
+					_ASSERT(0);
+					return 1;
+				}
+				curworldmat = curcpelem.mp.GetWorldMat();
+				wleng = 0;
+				WriteFile(hfile, &curworldmat, sizeof(ChaMatrix), &wleng, NULL);
+				if (wleng != (sizeof(ChaMatrix))) {
+					_ASSERT(0);
+					return 1;
+				}
+			}
+
 
 			int localmatflag;
 			localmatflag = curcpelem.mp.GetLocalMatFlag();
@@ -59116,7 +59329,11 @@ int WriteCPIFile(WCHAR* srccptfilename)
 
 	char CPTheader[256];
 	::ZeroMemory(CPTheader, sizeof(char) * 256);
-	strcpy_s(CPTheader, 256, "MB3DTempCopyInfoFile ver1.0.0.18");//本体ではない
+
+	//strcpy_s(CPTheader, 256, "MB3DTempCopyInfoFile ver1.0.0.18");//本体ではない
+
+	//2024/06/07 PM8:30頃　ファイルバージョンアップ AdditiveIK1.0.0.23へ向けて
+	strcpy_s(CPTheader, 256, "MB3DTempCopyInfoFile ver1.0.0.23");//本体ではない
 
 	DWORD wleng = 0;
 	WriteFile(hfile, CPTheader, sizeof(char) * 256, &wleng, NULL);
@@ -59148,16 +59365,16 @@ int WriteCPIFile(WCHAR* srccptfilename)
 }
 
 
-bool ValidateCPIFile(char* dstCPIh, int* dstinfosize, char* srcbuf, DWORD bufleng)
+int ValidateCPIFile(char* dstCPIh, int* dstinfosize, char* srcbuf, DWORD bufleng)
 {
 	if (!dstCPIh || !dstinfosize || !srcbuf || (bufleng <= 0)) {
 		_ASSERT(0);
-		return false;
+		return 0;
 	}
 
 	if (bufleng <= (sizeof(char) * 256 + sizeof(int))) {
 		_ASSERT(0);
-		return false;
+		return 0;
 	}
 
 	MoveMemory(dstCPIh, srcbuf, sizeof(char) * 256);
@@ -59166,13 +59383,16 @@ bool ValidateCPIFile(char* dstCPIh, int* dstinfosize, char* srcbuf, DWORD buflen
 	magicstrlen = strlen(dstCPIh);
 	if ((magicstrlen <= 0) || (magicstrlen >= 256)) {
 		_ASSERT(0);
-		return false;
+		return 0;
 	}
+
 	int cmp18;
 	cmp18 = strcmp(dstCPIh, "MB3DTempCopyInfoFile ver1.0.0.18");//本体ではない
-	if (cmp18 != 0) {
+	int cmp23;
+	cmp23 = strcmp(dstCPIh, "MB3DTempCopyInfoFile ver1.0.0.23");//本体ではない
+	if ((cmp18 != 0) && (cmp23 != 0)) {
 		_ASSERT(0);
-		return false;
+		return 0;
 	}
 
 
@@ -59186,26 +59406,37 @@ bool ValidateCPIFile(char* dstCPIh, int* dstinfosize, char* srcbuf, DWORD buflen
 
 	if ((infosize != elemsize) || (datasize != elemsize)) {
 		_ASSERT(0);
-		return false;
+		return 0;
 	}
 
 	*dstinfosize = infosize;
 
-	return true;
+
+	//ファイルのバージョン番号を返す
+	if (cmp18 == 0) {
+		return 10018;//本体ではない
+	}
+	else if (cmp23 == 0) {
+		return 10023;//本体ではない
+	}
+	else {
+		return 0;
+	}
+
 
 }
 
 
-bool ValidateCPTFile(char* dstCPTh, int* dstcpelemnum, char* srcbuf, DWORD bufleng)
+int ValidateCPTFile(char* dstCPTh, int* dstcpelemnum, char* srcbuf, DWORD bufleng)
 {
 	if (!dstCPTh || !dstcpelemnum || !srcbuf || (bufleng <= 0)) {
 		_ASSERT(0);
-		return false;
+		return 0;
 	}
 
 	if (bufleng <= (sizeof(char) * 256 + sizeof(int))) {
 		_ASSERT(0);
-		return false;
+		return 0;
 	}
 
 	MoveMemory(dstCPTh, srcbuf, sizeof(char) * 256);
@@ -59225,7 +59456,7 @@ bool ValidateCPTFile(char* dstCPTh, int* dstcpelemnum, char* srcbuf, DWORD bufle
 	magicstrlen = strlen(dstCPTh);
 	if ((magicstrlen <= 0) || (magicstrlen >= 256)) {
 		_ASSERT(0);
-		return false;
+		return 0;
 	}
 	//int cmp7;
 	//int cmp8;
@@ -59239,9 +59470,11 @@ bool ValidateCPTFile(char* dstCPTh, int* dstcpelemnum, char* srcbuf, DWORD bufle
 	//}
 	int cmp18;
 	cmp18 = strcmp(dstCPTh, "MB3DTempCopyFramesFile ver1.0.0.18");//本体ではない
-	if (cmp18 != 0) {
+	int cmp23;
+	cmp23 = strcmp(dstCPTh, "MB3DTempCopyFramesFile ver1.0.0.23");//本体ではない
+	if ((cmp18 != 0) && (cmp23 != 0)) {
 		_ASSERT(0);
-		return false;
+		return 0;
 	}
 
 
@@ -59251,17 +59484,39 @@ bool ValidateCPTFile(char* dstCPTh, int* dstcpelemnum, char* srcbuf, DWORD bufle
 	DWORD datasize;
 	datasize = (bufleng - sizeof(char) * 256 - sizeof(int));
 	DWORD elemsize;
-	elemsize = sizeof(char) * MAX_PATH + sizeof(double) + sizeof(ChaMatrix) + sizeof(int);
+	if (cmp18 == 0) {
+		elemsize = sizeof(char) * MAX_PATH + sizeof(double) + 
+			sizeof(ChaMatrix) + 
+			sizeof(int);
+	}
+	else if (cmp23 == 0) {
+		elemsize = sizeof(char) * MAX_PATH + sizeof(double) +
+			sizeof(ChaMatrix) +
+			sizeof(ChaMatrix) +
+			sizeof(int);
+	}
+	else {
+		_ASSERT(0);
+		return 0;
+	}
 
 	if (datasize != (cpelemnum * elemsize)) {
 		_ASSERT(0);
-		return false;
+		return 0;
 	}
 
 	*dstcpelemnum = cpelemnum;
 
-
-	return true;
+	//ファイルのバージョン番号を返す
+	if (cmp18 == 0) {
+		return 10018;//本体ではない
+	}
+	else if (cmp23 == 0) {
+		return 10023;//本体ではない
+	}
+	else {
+		return 0;
+	}
 }
 
 int LoadCPIFile(HISTORYELEM* srcdstelem)
@@ -59328,9 +59583,9 @@ int LoadCPIFile(HISTORYELEM* srcdstelem)
 	int infosize = 0;
 	char CPIheader[256];
 	ZeroMemory(CPIheader, sizeof(char) * 256);
-	bool isvalid;
-	isvalid = ValidateCPIFile(CPIheader, &infosize, newbuf, bufleng);
-	if (!isvalid) {
+	int validversion;
+	validversion = ValidateCPIFile(CPIheader, &infosize, newbuf, bufleng);
+	if (validversion <= 0) {
 		_ASSERT(0);
 		if (newbuf) {
 			free(newbuf);
@@ -59467,9 +59722,9 @@ bool LoadCPTFile()
 	int cpelemnum = 0;
 	char CPTheader[256];
 	ZeroMemory(CPTheader, sizeof(char) * 256);
-	bool isvalid;
-	isvalid = ValidateCPTFile(CPTheader, &cpelemnum, newbuf, bufleng);
-	if (!isvalid) {
+	int validversion;
+	validversion = ValidateCPTFile(CPTheader, &cpelemnum, newbuf, bufleng);
+	if (validversion <= 0) {
 		_ASSERT(0);
 		if (newbuf) {
 			free(newbuf);
@@ -59513,21 +59768,53 @@ bool LoadCPTFile()
 		curpos += sizeof(double);
 
 
-
 		ChaMatrix curlocalmat;
-		if ((curpos + sizeof(ChaMatrix)) > bufleng) {
-			_ASSERT(0);
-			if (newbuf) {
-				free(newbuf);
-				newbuf = 0;
+		ChaMatrix curworldmat;
+		curlocalmat.SetIdentity();
+		curworldmat.SetIdentity();
+
+		if (validversion == 10018) {
+			if ((curpos + sizeof(ChaMatrix)) > bufleng) {
+				_ASSERT(0);
+				if (newbuf) {
+					free(newbuf);
+					newbuf = 0;
+				}
+				CloseHandle(hfile);
+				return false;
 			}
-			CloseHandle(hfile);
-			return false;
+			::MoveMemory(&curlocalmat, newbuf + curpos, sizeof(ChaMatrix));
+			curpos += sizeof(ChaMatrix);
 		}
-		::MoveMemory(&curlocalmat, newbuf + curpos, sizeof(ChaMatrix));
-		curpos += sizeof(ChaMatrix);
+		else if (validversion == 10023) {
+			if ((curpos + sizeof(ChaMatrix)) > bufleng) {
+				_ASSERT(0);
+				if (newbuf) {
+					free(newbuf);
+					newbuf = 0;
+				}
+				CloseHandle(hfile);
+				return false;
+			}
+			::MoveMemory(&curlocalmat, newbuf + curpos, sizeof(ChaMatrix));
+			curpos += sizeof(ChaMatrix);
 
-
+			if ((curpos + sizeof(ChaMatrix)) > bufleng) {
+				_ASSERT(0);
+				if (newbuf) {
+					free(newbuf);
+					newbuf = 0;
+				}
+				CloseHandle(hfile);
+				return false;
+			}
+			::MoveMemory(&curworldmat, newbuf + curpos, sizeof(ChaMatrix));
+			curpos += sizeof(ChaMatrix);
+		}
+		else {
+			_ASSERT(0);
+			return 1;
+		}
 
 		int localmatflag = 0;
 		if ((curpos + sizeof(int)) > bufleng) {
@@ -59553,7 +59840,17 @@ bool LoadCPTFile()
 
 			curcpelem.bone = curbone;
 			curcpelem.mp.SetFrame(curframe);
-			curcpelem.mp.SetWorldMat(curlocalmat);
+			if (validversion == 10018) {
+				curcpelem.mp.SetWorldMat(curlocalmat);
+			}
+			else if (validversion == 10023) {
+				curcpelem.mp.SetLocalMat(curlocalmat);
+				curcpelem.mp.SetWorldMat(curworldmat);
+			}
+			else {
+				_ASSERT(0);
+				return 1;
+			}
 			curcpelem.mp.SetLocalMatFlag(localmatflag);
 
 			s_pastemotvec.push_back(curcpelem);
@@ -60653,7 +60950,8 @@ int FilterNoDlg(bool copylw2w)
 	//s_filterState = 0;//2023/08/09コメントアウト：前回の値を保持
 
 	if (copylw2w) {
-		if (g_limitdegflag == true) {
+		bool cameraanimflag = s_model->IsCameraMotion(s_model->GetCurrentMotID());
+		if (!cameraanimflag && (g_limitdegflag == true)) {
 			bool allframeflag = false;
 			bool setcursorflag = false;
 			int operatingjointno = s_model->GetTopBone(false)->GetBoneNo();
@@ -71391,17 +71689,18 @@ int PickBone(UIPICKINFO* ppickinfo)
 		_ASSERT(0);
 		return 0;
 	}
-	if (s_camtargetdisp) {
-		//カメラターゲット位置にマニピュレータ表示時にはpickしない
-		return 0;
-	}
+	//if (s_camtargetdisp) {
+	//	//カメラターゲット位置にマニピュレータ表示時にはpickしない
+	//	return 0;
+	//}
 
 	if (s_spdispsw[SPDISPSW_DISPGROUP].state || s_spdispsw[SPDISPSW_SHADERTYPE].state){
 		//2024/03/08 Pick&Set中には　ボーンをピックしない
 		return 0;
 	}
 
-	return s_model->PickBone(ppickinfo);
+	int result0 = s_model->PickBone(ppickinfo);
+	return result0;
 }
 
 bool GetResultOfPickRay()
@@ -71672,5 +71971,28 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 	//SetCamera3DFromEyePos();
 
 	return 0;
+}
+
+bool ChkEnableIK()
+{
+	if (!s_model) {
+		return false;
+	}
+
+	int curmotid = s_model->GetCurrentMotID();
+	if (curmotid <= 0) {
+		return false;
+	}
+
+	if (g_edittarget != EDITTARGET_BONE) {
+		return false;
+	}
+
+	bool cameraanimflag = s_model->IsCameraMotion(curmotid);
+	if (cameraanimflag) {
+		return false;
+	}
+
+	return true;
 }
 

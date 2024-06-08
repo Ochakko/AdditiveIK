@@ -5635,7 +5635,7 @@ ChaMatrix CBone::CalcLocalScaleRotMat(bool limitdegflag, int rotcenterflag, int 
 	double roundingframe = RoundingTime(srcframe);
 
 	//2023/04/28
-	if (IsNotSkeleton()) {
+	if (IsNotSkeleton() && IsNotCamera() && !IsNullAndChildIsCamera()) {
 		ChaMatrix inimat;
 		inimat.SetIdentity();
 		return inimat;
@@ -5832,13 +5832,13 @@ ChaVector3 CBone::CalcLocalTraAnim(bool limitdegflag, int srcmotid, double srcfr
 	double roundingframe = RoundingTime(srcframe);
 
 	//2023/04/28
-	if (IsNotSkeleton() && !IsNullAndChildIsCamera()) {
+	if (IsNotSkeleton() && IsNotCamera() && !IsNullAndChildIsCamera()) {
 		return ChaVector3(0.0f, 0.0f, 0.0f);
 	}
 
 	ChaMatrix localmat;
 
-	if (IsNullAndChildIsCamera()) {
+	if (IsNullAndChildIsCamera() || IsCamera()) {
 		localmat = GetLocalMat(limitdegflag, srcmotid, roundingframe, 0);
 	}
 	else {
@@ -6007,7 +6007,7 @@ ChaVector3 CBone::CalcLocalScaleAnim(bool limitdegflag, int srcmotid, double src
 	double roundingframe = RoundingTime(srcframe);
 
 	//2023/04/28
-	if (IsNotSkeleton() && !IsNullAndChildIsCamera()) {
+	if (IsNotSkeleton() && IsNotCamera() && !IsNullAndChildIsCamera()) {
 		return ChaVector3(1.0f, 1.0f, 1.0f);
 	}
 
@@ -6015,7 +6015,7 @@ ChaVector3 CBone::CalcLocalScaleAnim(bool limitdegflag, int srcmotid, double src
 	ChaMatrix rmat;
 	ChaVector3 iniscale = ChaVector3(1.0f, 1.0f, 1.0f);
 
-	if (IsNullAndChildIsCamera()) {
+	if (IsNullAndChildIsCamera() || IsCamera()) {
 		ChaMatrix localmat = GetLocalMat(limitdegflag, srcmotid, roundingframe, 0);
 		GetSRTMatrix(localmat, &svec, &rmat, &tvec);
 		return svec;
@@ -6060,88 +6060,109 @@ int CBone::PasteMotionPoint(bool limitdegflag, int srcmotid, double srcframe, CM
 	double roundingframe = RoundingTime(srcframe);
 
 	//2023/04/28
-	if (IsNotSkeleton()) {
+	if (IsNotSkeleton() && IsNotCamera() && !IsNullAndChildIsCamera()) {
 		return 0;
 	}
 
+	if (IsSkeleton()) {
+		CMotionPoint* newmp = 0;
+		newmp = GetMotionPoint(srcmotid, roundingframe);
+		if (newmp) {
+			ChaMatrix befrotmat, aftrotmat;
+			befrotmat.SetIdentity();
+			aftrotmat.SetIdentity();
+			befrotmat.SetTranslation(-GetJointFPos());
+			aftrotmat.SetTranslation(GetJointFPos());
 
-	CMotionPoint* newmp = 0;
-	newmp = GetMotionPoint(srcmotid, roundingframe);
-	if (newmp){
-		ChaMatrix befrotmat, aftrotmat;
-		befrotmat.SetIdentity();
-		aftrotmat.SetIdentity();
-		befrotmat.SetTranslation(-GetJointFPos());
-		aftrotmat.SetTranslation(GetJointFPos());
+
+			ChaMatrix orgwm = GetWorldMat(limitdegflag, srcmotid, roundingframe, newmp);
+			ChaMatrix orglocalmat;
+			if (GetParent(false)) {
+				ChaMatrix parentwm;
+				parentwm = GetParent(false)->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+				orglocalmat = orgwm * ChaMatrixInv(parentwm);
+			}
+			else {
+				orglocalmat = orgwm;
+			}
+			ChaMatrix orgLocalS, orgLocalR, orgLocalT, orgLocalTAnim;
+			GetSRTandTraAnim(orglocalmat, GetNodeMat(), &orgLocalS, &orgLocalR, &orgLocalT, &orgLocalTAnim);
 
 
-		ChaMatrix orgwm = GetWorldMat(limitdegflag, srcmotid, roundingframe, newmp);
-		ChaMatrix orglocalmat;
-		if (GetParent(false)) {
-			ChaMatrix parentwm;
-			parentwm = GetParent(false)->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
-			orglocalmat = orgwm * ChaMatrixInv(parentwm);
+			ChaMatrix copylocalmat = srcmp.GetWorldMat();//localがセットされている
+			ChaMatrix copyLocalS, copyLocalR, copyLocalT, copyLocalTAnim;
+			GetSRTandTraAnim(copylocalmat, GetNodeMat(), &copyLocalS, &copyLocalR, &copyLocalT, &copyLocalTAnim);
+
+
+
+			ChaMatrix setLocalS, setLocalR, setLocalTAnim;
+			setLocalS.SetIdentity();
+			setLocalR.SetIdentity();
+			setLocalTAnim.SetIdentity();
+
+			//2024/03/11 S, R, T毎にペースト可能に
+			if (g_pasteScale) {
+				setLocalS = copyLocalS;
+			}
+			else {
+				setLocalS = orgLocalS;
+			}
+			if (g_pasteRotation) {
+				setLocalR = copyLocalR;
+			}
+			else {
+				setLocalR = orgLocalR;
+			}
+			if (g_pasteTranslation) {
+				setLocalTAnim = copyLocalTAnim;
+			}
+			else {
+				setLocalTAnim = orgLocalTAnim;
+			}
+			ChaMatrix setlocalmat;
+			setlocalmat = befrotmat * setLocalS * setLocalR * aftrotmat * setLocalTAnim;
+
+
+			ChaMatrix setmat;
+			setmat.SetIdentity();
+			if (GetParent(false)) {
+				ChaMatrix parentwm;
+				parentwm = GetParent(false)->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+				setmat = setlocalmat * parentwm;//copy情報はローカルなのでグロバールにする
+			}
+			else {
+				setmat = setlocalmat;
+			}
+
+			//bool directsetflag = false;
+			//bool infooutflag = false;
+			//int setchildflag = 1;//setchildflagは directsetflag == falseのときしか働かない
+			//SetWorldMat(limitdegflag, directsetflag, infooutflag, setchildflag, srcmotid, roundingframe, setmat);
+
+			UpdateCurrentWM(limitdegflag, srcmotid, roundingframe, setmat);
 		}
-		else {
-			orglocalmat = orgwm;
-		}
-		ChaMatrix orgLocalS, orgLocalR, orgLocalT, orgLocalTAnim;
-		GetSRTandTraAnim(orglocalmat, GetNodeMat(), &orgLocalS, &orgLocalR, &orgLocalT, &orgLocalTAnim);
-
-
-		ChaMatrix copylocalmat = srcmp.GetWorldMat();//localがセットされている
-		ChaMatrix copyLocalS, copyLocalR, copyLocalT, copyLocalTAnim;
-		GetSRTandTraAnim(copylocalmat, GetNodeMat(), &copyLocalS, &copyLocalR, &copyLocalT, &copyLocalTAnim);
-
-
-
-		ChaMatrix setLocalS, setLocalR, setLocalTAnim;
-		setLocalS.SetIdentity();
-		setLocalR.SetIdentity();
-		setLocalTAnim.SetIdentity();
-
-		//2024/03/11 S, R, T毎にペースト可能に
-		if (g_pasteScale) {
-			setLocalS = copyLocalS;
-		}
-		else {
-			setLocalS = orgLocalS;
-		}
-		if (g_pasteRotation) {
-			setLocalR = copyLocalR;
-		}
-		else {
-			setLocalR = orgLocalR;
-		}
-		if (g_pasteTranslation) {
-			setLocalTAnim = copyLocalTAnim;
-		}
-		else {
-			setLocalTAnim = orgLocalTAnim;
-		}
-		ChaMatrix setlocalmat;
-		setlocalmat = befrotmat * setLocalS * setLocalR * aftrotmat * setLocalTAnim;
-
-
-		ChaMatrix setmat;
-		setmat.SetIdentity();
-		if (GetParent(false)){
-			ChaMatrix parentwm;
-			parentwm = GetParent(false)->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
-			setmat = setlocalmat * parentwm;//copy情報はローカルなのでグロバールにする
-		}
-		else {
-			setmat = setlocalmat;
-		}
-
-		//bool directsetflag = false;
-		//bool infooutflag = false;
-		//int setchildflag = 1;//setchildflagは directsetflag == falseのときしか働かない
-		//SetWorldMat(limitdegflag, directsetflag, infooutflag, setchildflag, srcmotid, roundingframe, setmat);
-
-		UpdateCurrentWM(limitdegflag, srcmotid, roundingframe, setmat);
-
 	}
+	else {
+
+		//Camera, eNullCamera
+
+		CMotionPoint* newmp = 0;
+		newmp = GetMotionPoint(srcmotid, roundingframe);
+		if (newmp) {
+			newmp->SetLocalMat(srcmp.GetLocalMat());
+			newmp->SetWorldMat(srcmp.GetWorldMat());
+			newmp->SetLimitedWM(srcmp.GetWorldMat());
+			if (IsNullAndChildIsCamera()) {
+				ChaVector3 neweul;
+				neweul = CalcLocalEulXYZ(false, -1, srcmotid, roundingframe, BEFEUL_BEFFRAME);
+				newmp->SetLocalEul(neweul);
+			}
+			else {
+				newmp->SetLocalEul(srcmp.GetLocalEul());
+			}
+		}
+	}
+	
 
 	return 0;
 }
@@ -7854,12 +7875,14 @@ int CBone::CreateIndexedMotionPoint(int srcmotid, double animleng)
 					(itrvecmpmap->second).push_back(curmp);
 				}
 				else {
+					_ASSERT(0);
 					//for safety
 					(itrvecmpmap->second).push_back(&m_dummymp);
 				}
 				curmp = curmp->GetNext();
 			}
 			else {
+				_ASSERT(0);
 				(itrvecmpmap->second).push_back(&m_dummymp);
 			}
 		}
@@ -8235,25 +8258,33 @@ int CBone::GetFBXAnim(FbxNode* pNode, int animno, int motid, double animleng, bo
 	}
 
 
-	bool cameraanimflag = IsNullAndChildIsCameraNode(pNode);
-	//bool cameraanimflag = IsCamera();
+	bool cameraanimflag = GetParModel()->IsCameraMotion(motid);
+	//bool cameraanimflag = IsNullAndChildIsCameraNode(pNode);
+	////bool cameraanimflag = IsCamera();
 	if (cameraanimflag) {
 		int dbgflag1 = 1;
 	}
 
 
-	//2023/04/28 2023/05/23
-	//if (IsNotSkeleton() && IsNotCamera() && IsNotNull()) {
-	if (IsNotSkeleton() && IsNotCamera() && !cameraanimflag) {
-	//if (IsNotSkeleton() && IsNotCamera()) {
-	//if (IsNotSkeleton()) {
-		return 0;
+	////2023/04/28 2023/05/23
+	////if (IsNotSkeleton() && IsNotCamera() && IsNotNull()) {
+	//if (IsNotSkeleton() && IsNotCamera() && !cameraanimflag) {
+	////if (IsNotSkeleton() && IsNotCamera()) {
+	////if (IsNotSkeleton()) {
+	//	return 0;
+	//}
+
+	bool opeflag = false;
+	if (!cameraanimflag && (IsSkeleton() || (IsNull() && !IsNullAndChildIsCamera()))) {
+		opeflag = true;
 	}
-
-	
-
-
-
+	else if (cameraanimflag && (IsCamera() || IsNullAndChildIsCamera())) {
+		opeflag = true;
+	}
+	else {
+		opeflag = false;
+		return 0;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	}
 
 
 	//if (IsNull()) {

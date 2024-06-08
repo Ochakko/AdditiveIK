@@ -130,6 +130,7 @@ public:
 	int NormalizeInfBone();
 	int UpdateMorphWeight(int srcmotid, int framecnt);
 	int UpdateMorphBuffer();
+	int ChangeMorphAnimFrameLeng(int srcmotid, double newmotleng);
 
 	int ScaleBtCapsule(bool setinstancescale, CRigidElem* reptr, float boneleng, int srctype, float* lengptr );
 	int ScaleBtCone(bool setinstancescale, CRigidElem* reptr, float boneleng, float* cyliptr, float* sphptr );

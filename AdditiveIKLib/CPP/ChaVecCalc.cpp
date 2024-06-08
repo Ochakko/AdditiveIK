@@ -1994,9 +1994,42 @@ int CQuaternion::SetRotation(EFbxRotationOrder rotorder, CQuaternion* srcaxisq, 
 	float cosx, sinx, cosy, siny, cosz, sinz;
 
 	double phaix, phaiy, phaiz;
-	phaix = QuaternionLimitPhai((double)srceul.x * DEG2PAI);
-	phaiy = QuaternionLimitPhai((double)srceul.y * DEG2PAI);
-	phaiz = QuaternionLimitPhai((double)srceul.z * DEG2PAI);
+	if (fabs(srceul.x) >= 1e-3) {
+		phaix = QuaternionLimitPhai((double)srceul.x * DEG2PAI);
+		cosx = (float)cos(phaix * 0.5);
+		sinx = (float)sin(phaix * 0.5);
+		qx.SetParams(cosx, sinx, 0.0f, 0.0f);
+	}
+	else {
+		phaix = 0.0;
+		cosx = 1.0f;
+		sinx = 0.0f;
+		qx.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+	}
+	if (fabs(srceul.y) >= 1e-3) {
+		phaiy = QuaternionLimitPhai((double)srceul.y * DEG2PAI);
+		cosy = (float)cos(phaiy * 0.5);
+		siny = (float)sin(phaiy * 0.5);
+		qy.SetParams(cosy, 0.0f, siny, 0.0f);
+	}
+	else {
+		phaiy = 0.0;
+		cosy = 1.0f;
+		siny = 0.0f;
+		qy.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+	}
+	if (fabs(srceul.z) >= 1e-3) {
+		phaiz = QuaternionLimitPhai((double)srceul.z * DEG2PAI);
+		cosz = (float)cos(phaiz * 0.5);
+		sinz = (float)sin(phaiz * 0.5);
+		qz.SetParams(cosz, 0.0f, 0.0f, sinz);
+	}
+	else {
+		phaiz = 0.0;
+		cosz = 1.0f;
+		sinz = 0.0f;
+		qz.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+	}
 	//switch (rotorder) {
 	//case eEulerXYZ:
 	//	phaix = QuaternionLimitPhai((double)srceul.x * DEG2PAI);
@@ -2041,16 +2074,6 @@ int CQuaternion::SetRotation(EFbxRotationOrder rotorder, CQuaternion* srcaxisq, 
 	//}
 
 
-	cosx = (float)cos(phaix * 0.5);
-	sinx = (float)sin(phaix * 0.5);
-	cosy = (float)cos(phaiy * 0.5);
-	siny = (float)sin(phaiy * 0.5);
-	cosz = (float)cos(phaiz * 0.5);
-	sinz = (float)sin(phaiz * 0.5);
-
-	qx.SetParams(cosx, sinx, 0.0f, 0.0f);
-	qy.SetParams(cosy, 0.0f, siny, 0.0f);
-	qz.SetParams(cosz, 0.0f, 0.0f, sinz);
 
 	switch (rotorder) {
 	case eEulerXYZ:

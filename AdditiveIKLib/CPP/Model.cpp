@@ -2413,7 +2413,8 @@ int CModel::UpdateMatrix(bool limitdegflag,
 	}
 
 
-	if (GetInMorph()) {
+	if (GetInMorph() && (IsCameraMotion(curmotid) == false)) {//2024/06/07 カメラモーションにはモーフ情報は無い前提
+
 		//2024/05/22 BlendShapeプレートメニューのblendshapeDistスライダーによる指定距離内の場合にモーフ再生
 		map<int, CMQOObject*>::iterator itrobj;
 		for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
@@ -3475,6 +3476,28 @@ int CModel::SetMotionFrame(int srcmotid, double srcframe)
 	return 0;
 }
 
+int CModel::SetMotionName(int srcmotid, char* srcname)
+{
+	if (!srcname) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (srcname[0] == 0) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	MOTINFO* curmi = GetMotInfoPtr(srcmotid);
+	if (curmi) {
+		strcpy_s(curmi->motname, 256, srcname);
+		return 0;
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+	return 0;
+}
 
 int CModel::GetMotionName(int srcmotid, int dstnamelen, char* dstname)
 {
@@ -4138,11 +4161,22 @@ int CModel::ChangeMotFrameLeng( int motid, double srcleng )
 			map<int, CBone*>::iterator itrbone;
 			for( itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++ ){
 				CBone* curbone = itrbone->second;
-				if( curbone && (curbone->IsSkeleton())){
+				if( curbone && (curbone->IsSkeleton() || curbone->IsCamera() || curbone->IsNullAndChildIsCamera())){
 					curbone->DeleteMPOutOfRange( motid, srcleng - 1.0 );
 				}
 			}
 		}
+
+		//2024/06/07 blendshapeアニメ　モーフアニメのアニメ長変更
+		map<int, CMQOObject*>::iterator itrobj;
+		for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+			CMQOObject* curobj = itrobj->second;
+			_ASSERT(curobj);
+			if (!(curobj->EmptyShape())) {
+				curobj->ChangeMorphAnimFrameLeng(motid, srcleng);
+			}
+		}
+
 	}
 	return 0;
 }
@@ -5473,9 +5507,14 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 				FbxString currentrev1 = "rev. 3.1";
 				FbxString currentrev2 = "rev. 3.2";
 				FbxString currentrev3 = "rev. 3.3";
+				FbxString currentrev4 = "rev. 3.4";
+				FbxString currentrev5 = "rev. 3.5";
 				if ((sceneinfo->mRevision != currentrev1) &&
 					(sceneinfo->mRevision != currentrev2) &&
-					(sceneinfo->mRevision != currentrev3)) {
+					(sceneinfo->mRevision != currentrev3) &&
+					(sceneinfo->mRevision != currentrev4) &&
+					(sceneinfo->mRevision != currentrev5)
+					) {
 					oldtransparent = true;//!!!!!!!!!!!!!!!!!!!!
 				}
 			}
@@ -6448,11 +6487,14 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 					//ローカルオイラー角情報は　必要時に　Main.cppのrefreshEulerGraph()で計算される　
 					//###########################################################################################
 
+
+
 					//#### 2023/01/31 ####################################################################
 					//読み込み時にLocalEulとLimitedLocalEulの初期化をするべきなので　復活
 					//####################################################################################
 					bool skeletonflag = true;
 					PostLoadFbxAnim(curmotid, skeletonflag);//並列化出来なかった計算をする
+					
 
 
 					//2023/02/11
@@ -6560,11 +6602,15 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 		MOTINFO* miptr = itrmi->second;
 		if (miptr && miptr->cameramotion) {
 			GetFBXCameraAnim(miptr->motid, miptr->frameleng);
-		}
-		if (miptr && (miptr->motid > 0)) {
+
 			bool skeletonflag = false;
 			PostLoadFbxAnim(miptr->motid, skeletonflag);//並列化出来なかった計算をする
 		}
+
+		//if (miptr && (miptr->motid > 0)) {
+		//	bool skeletonflag = false;
+		//	PostLoadFbxAnim(miptr->motid, skeletonflag);//並列化出来なかった計算をする
+		//}
 	}
 
 
@@ -14589,6 +14635,105 @@ void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone,
 				srcbone->SetWorldMatFromQAndScaleAndTra(limitdegflag, setchildflag1, befwm, iniq, setq, setsc, settra, curmotid, frame);
 			}
 		}
+		else if (srcbone->IsCamera() || srcbone->IsNullAndChildIsCamera()) {
+			int curmotid = GetCurMotInfo().motid;
+			CMotionPoint* startmp = srcbone->GetMotionPoint(curmotid, roundingstartframe);
+			CMotionPoint* endmp = srcbone->GetMotionPoint(curmotid, roundingendframe);
+			if (startmp && endmp) {
+				CQuaternion startqW, endqW;
+				CQuaternion startqL, endqL;
+				ChaMatrix startrotW, endrotW;
+				ChaMatrix startrotL, endrotL;
+				ChaVector3 starttraW, endtraW;
+				ChaVector3 starttraL, endtraL;
+				ChaVector3 startscW, endscW;
+				ChaVector3 startscL, endscL;
+				GetSRTMatrix(startmp->GetWorldMat(), &startscW, &startrotW, &starttraW);
+				GetSRTMatrix(endmp->GetWorldMat(), &endscW, &endrotW, &endtraW);
+				GetSRTMatrix(startmp->GetLocalMat(), &startscL, &startrotL, &starttraL);
+				GetSRTMatrix(endmp->GetLocalMat(), &endscL, &endrotL, &endtraL);
+
+				startqW.RotationMatrix(startrotW);
+				endqW.RotationMatrix(endrotW);
+				startqL.RotationMatrix(startrotL);
+				endqL.RotationMatrix(endrotL);
+
+				double frame;
+				for (frame = roundingstartframe; frame <= roundingendframe; frame += 1.0) {
+					CQuaternion setqW;
+					CQuaternion setqL;
+					ChaVector3 settraW;
+					ChaVector3 settraL;
+					ChaVector3 setscW;
+					ChaVector3 setscL;
+					if (IsEqualRoundingTime(frame, roundingstartframe)) {
+						setqW = startqW;
+						settraW = starttraW;
+						setscW = startscW;
+						setqL = startqL;
+						settraL = starttraL;
+						setscL = startscL;
+					}
+					else if (IsEqualRoundingTime(frame, roundingendframe)) {
+						setqW = endqW;
+						settraW = endtraW;
+						setscW = endscW;
+						setqL = endqL;
+						settraL = endtraL;
+						setscL = endscL;
+					}
+					else {
+						double changerate;
+						if ((frame >= roundingstartframe) && (frame <= roundingendframe)) {
+							changerate = (double)(*(g_motionbrush_value + (int)(frame + 0.1)));
+						}
+						else {
+							changerate = (frame - roundingstartframe) / (roundingendframe - roundingstartframe + 1.0);
+						}
+
+						startqW.Slerp2(endqW, changerate, &setqW);
+						settraW = starttraW + (endtraW - starttraW) * changerate;
+						setscW = startscW + (endscW - startscW) * changerate;
+						startqL.Slerp2(endqL, changerate, &setqL);
+						settraL = starttraL + (endtraL - starttraL) * changerate;
+						setscL = startscL + (endscL - startscL) * changerate;
+					}
+
+					ChaMatrix setmatW, setmatL;
+					ChaMatrix scmatW, scmatL;
+					ChaMatrix tramatW, tramatL;
+					scmatW.SetIdentity();
+					scmatW.SetScale(setscW);
+					scmatL.SetIdentity();
+					scmatL.SetScale(setscL);
+					tramatW.SetIdentity();
+					tramatW.SetTranslation(settraW);
+					tramatL.SetIdentity();
+					tramatL.SetTranslation(settraL);
+					
+					setmatW = scmatW * setqW.MakeRotMatX() * tramatW;
+					setmatL = scmatL * setqL.MakeRotMatX() * tramatL;
+
+					CMotionPoint* setmp = srcbone->GetMotionPoint(curmotid, frame);
+					if (setmp) {
+						setmp->SetLocalMat(setmatL);
+						setmp->SetWorldMat(setmatW);
+						setmp->SetLimitedWM(setmatW);
+
+						ChaVector3 seteul = srcbone->CalcLocalEulXYZ(false, -1, curmotid, frame, BEFEUL_BEFFRAME);
+						setmp->SetLocalEul(seteul);
+					}
+					else {
+						_ASSERT(0);
+						return;
+					}
+				}
+			}
+			else {
+				_ASSERT(0);
+				return;
+			}
+		}
 
 		if (oneflag == false) {
 			if (srcbone->GetChild(false)) {
@@ -20353,7 +20498,7 @@ ChaMatrix CModel::GetCameraTransformMat(int cameramotid, double nextframe, int i
 		return retmat;
 	}
 
-	return m_camerafbx.GetCameraTransformMat(cameramotid, nextframe, inheritmode, 
+	return m_camerafbx.GetCameraTransformMat(this, cameramotid, nextframe, inheritmode, 
 		calcbynode, setmotionpoint);
 
 }
@@ -20434,7 +20579,7 @@ int CModel::GetCameraAnimParams(int cameramotionid, double nextframe, double cam
 		*pTargetPos = *pEyePos + curcn->dirvec * camdist;
 	}
 	else {
-		m_camerafbx.GetCameraAnimParams(cameramotionid, nextframe, camdist, pEyePos, pTargetPos, pcamupvec, protmat, inheritmode);
+		m_camerafbx.GetCameraAnimParams(this, cameramotionid, nextframe, camdist, pEyePos, pTargetPos, pcamupvec, protmat, inheritmode);
 	}
 
 	return 0;

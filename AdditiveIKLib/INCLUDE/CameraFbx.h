@@ -97,13 +97,16 @@ public:
 
 	CAMERANODE* GetCameraNode(int cameramotid);
 	ChaMatrix GetCameraNodeMat(int cameramotid);
-	ChaMatrix GetCameraTransformMat(int cameramotid, double nextframe, int inheritmode, 
+	ChaMatrix GetCameraTransformMat(CModel* cameramodel, 
+		int cameramotid, double nextframe, int inheritmode,
 		bool calcbynode, bool setmotionpoint);
-	int GetCameraAnimParams(int cameramotid, double nextframe, double camdist, 
+	int GetCameraAnimParams(CModel* cameramodel, int cameramotid, double nextframe, double camdist, 
 		ChaVector3* pEyePos, ChaVector3* pTargetPos, ChaVector3* pcamupdir, ChaMatrix* protmat, int inheritmode);
 	ChaVector3 CalcCameraFbxEulXYZ(int cameramotid, double srcframe);
 
 	CAMERANODE* GetFirstValidCameraNode();//anim無しカメラ用
+
+	ChaMatrix GetCameraMatLoaded(CModel* cameramodel, int cameramotid, double roundingframe);
 
 
 	//CCameraFbx operator= (CCameraFbx srcrange);

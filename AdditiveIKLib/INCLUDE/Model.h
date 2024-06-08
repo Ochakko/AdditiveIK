@@ -562,6 +562,7 @@ public:
 
 	double GetOpeFrame(bool calcslotflag);//calcslotflagに応じて　GetCurrentFrame() or GetRenderSlotFrame()を返す
 
+	int SetMotionName(int srcmotid, char* srcname);
 	int GetMotionName(int srcmotid, int dstnamelen, char* dstname);
 
 	int GetCurrentMotID();
@@ -1936,6 +1937,19 @@ public: //accesser
 			return 1;
 		}
 	}
+
+	int SetMotInfoLoopFlagByID(int srcmotid, int srcloopflag)
+	{
+		MOTINFO* pmi = GetMotInfoPtr(srcmotid);
+		if (pmi) {
+			pmi->loopflag = srcloopflag;
+		}
+		else {
+			_ASSERT(0);
+			return 1;
+		}
+		return 0;
+	}
 	int SetMotInfoLoopFlagByIndex(int srcindex, int srcloopflag)
 	{
 		if ((srcindex >= 0) && (srcindex < GetMotInfoSize())) {
@@ -1988,7 +2002,7 @@ public: //accesser
 			m_curmotinfo = srcinfo;
 		}
 	};
-	MOTINFO GetFirstValidMotInfo()
+	MOTINFO GetFirstValidMotInfo(bool cameraanimflag)
 	{
 		//if (GetNoBoneFlag() == false) {
 			MOTINFO retmi;
@@ -1996,7 +2010,11 @@ public: //accesser
 			std::map<int, MOTINFO*>::iterator itrmi;
 			for (itrmi = m_motinfo.begin(); itrmi != m_motinfo.end(); itrmi++) {
 				MOTINFO* curmi = itrmi->second;
-				if (curmi) {//NULLではないとき
+				if (!cameraanimflag && !curmi->cameramotion) {
+					retmi = *curmi;
+					break;
+				}
+				else if (cameraanimflag && curmi->cameramotion) {
 					retmi = *curmi;
 					break;
 				}

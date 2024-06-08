@@ -2487,6 +2487,55 @@ int CMQOObject::NormalizeInfBone()
 	return 0;
 }
 
+int CMQOObject::ChangeMorphAnimFrameLeng(int srcmotid, double newmotleng)
+{
+	int newbufleng = IntTime(newmotleng);
+	if (newbufleng <= 0) {
+		_ASSERT(0);
+		return 1;
+	}
+	int savebufleng = m_shapeanimleng2[srcmotid];
+	if (savebufleng <= 0) {
+		return 0;
+	}
+
+	if (savebufleng != newbufleng) {
+
+		//##########################
+		//バッファ長が変わる場合だけ処理
+		//##########################
+		m_shapeanimleng2[srcmotid] = newbufleng;
+
+		map<string, map<int, float*>>::iterator itrshapeanim;
+		for (itrshapeanim = m_shapeanim2.begin(); itrshapeanim != m_shapeanim2.end(); itrshapeanim++) {
+
+			float* newshapeanim = (float*)malloc(sizeof(float) * newbufleng);//!!!!
+			if (!newshapeanim) {
+				_ASSERT(0);
+				return 1;
+			}
+
+			ZeroMemory(newshapeanim, sizeof(float) * newbufleng);
+
+			float* srcanim = itrshapeanim->second[srcmotid];
+			if (srcanim) {
+				int cpleng = min(savebufleng, newbufleng);
+				MoveMemory(newshapeanim, srcanim, sizeof(float) * cpleng);
+
+				free(srcanim);//!!!!!
+				itrshapeanim->second[srcmotid] = newshapeanim;
+			}
+			else {
+				_ASSERT(0);
+				return 1;
+			}
+		}
+	}
+
+	return 0;
+}
+
+
 int CMQOObject::UpdateMorphWeight(int srcmotid, int framecnt)
 {
 	if (EmptyShape()) {

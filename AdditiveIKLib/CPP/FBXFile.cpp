@@ -1770,7 +1770,9 @@ bool CreateScene(bool limitdegflag, FbxManager* pSdkManager, FbxScene* pScene, C
 		//sceneInfo->mRevision = "rev. 3.0";//since 2023/06/06 about PM10:00 for version1.2.0.21
 		//sceneInfo->mRevision = "rev. 3.1";//since 2023/09/25 about AM10:00 for EditMot version1.2.0.25
 		//sceneInfo->mRevision = "rev. 3.2";//since 2024/03/07 about PM05:30 for AdditiveIK version1.0.0.11
-		sceneInfo->mRevision = "rev. 3.3";//since 2024/06/02 about PM04:30 for AdditiveIK version1.0.0.23
+		//sceneInfo->mRevision = "rev. 3.3";//since 2024/06/02 about PM04:30 for AdditiveIK version1.0.0.23
+		//sceneInfo->mRevision = "rev. 3.4";//since 2024/06/07 about PM01:40 for AdditiveIK version1.0.0.23
+		sceneInfo->mRevision = "rev. 3.5";//since 2024/06/08 about PM10:30 for AdditiveIK version1.0.0.23
 
 		//######################################################################
 		//rev変更時は　FbxSetDefaultBonePosReq のoldbvh処理部分も更新する必要有
@@ -3705,6 +3707,9 @@ void AnimateSkeleton(bool limitdegflag, FbxScene* pScene, CModel* pmodel)
 
 		pmodel->SetCurrentMotion( curmotid );
 		if (pmodel->IsCameraMotion(curmotid)) {//2023/06/21
+			//SetCameraMotionID()はカメラモーションをfbxのカレントモーションとして設定する
+			//姿勢の参照などでFbxNodeを使用する場合に影響する
+			//今のところまだ自前データに保存していない項目があるので必要
 			pmodel->SetCameraMotionId(curmotid);
 		}
 
@@ -3741,6 +3746,12 @@ void AnimateBoneReq(bool limitdegflag, FbxNode* pNode, FbxAnimLayer* lAnimLayer,
 		_ASSERT(0);
 		return;
 	}
+
+	static int dbgvalue = 0;
+	if (dbgvalue != curmotid) {
+		int dbgflag1 = 1;
+	}
+	dbgvalue = curmotid;
 
 
     int lKeyIndex = 0;
@@ -4517,6 +4528,13 @@ int AnimateMorph(FbxScene* pScene, CModel* pmodel)
 
 
 		lAnimStackName = curai->engmotname;
+
+
+		if (pmodel->IsCameraMotion(curmotid)) {
+			//2024/06/07 カメラモーションの場合にはモーフを書き出さない
+			continue;
+		}
+
 
 		//###########################################################################
 		//FbxAnimStack, FbxAnimLayerはボーンモーション書き出し時に作成してs_aiに格納してある
@@ -5905,6 +5923,8 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 				FbxString currentrev5 = "rev. 3.1";
 				FbxString currentrev6 = "rev. 3.2";
 				FbxString currentrev7 = "rev. 3.3";
+				FbxString currentrev8 = "rev. 3.4";
+				FbxString currentrev9 = "rev. 3.5";
 				//2.7, 2.8, 2.9, 3.0が内容変更後の新バージョン
 				if ((sceneinfo->mRevision != currentrev1) &&
 					(sceneinfo->mRevision != currentrev2) &&
@@ -5912,7 +5932,9 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 					(sceneinfo->mRevision != currentrev4) &&
 					(sceneinfo->mRevision != currentrev5) &&
 					(sceneinfo->mRevision != currentrev6) &&
-					(sceneinfo->mRevision != currentrev7)
+					(sceneinfo->mRevision != currentrev7) &&
+					(sceneinfo->mRevision != currentrev8) &&
+					(sceneinfo->mRevision != currentrev9)
 					) {
 					oldbvh = true;//!!!!!!!!!!!!!!!!!!!!
 				}
@@ -6011,7 +6033,19 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 		//bindposeを計算から求める
 		//########################
 		if (pNode) {
-			int firstmotid = pmodel->GetFirstValidMotInfo().motid;
+			//bool cameraanimflag;
+			int firstmotid;
+			//if (curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
+			//	cameraanimflag = true;
+			//}
+			//else {
+			//	cameraanimflag = false;
+			//}
+			
+			//2024/06/08
+			//この関数はモーションを１つも読み込んでいない状態で呼ばれる
+			//ボーンのポジション計算時には、他のノードの影響も計算できるようにcameraanimflag=falseでGetFirstValidMotInfo()を呼ぶことにした
+			firstmotid = pmodel->GetFirstValidMotInfo(false).motid;
 			ChaMatrix localnodemat, localnodeanimmat;
 			CalcLocalNodeMat(firstmotid, pmodel, curbone, &localnodemat, &localnodeanimmat);//2022/12/21 support prerot postrot ...etc.
 			ChaMatrix parentnodemat, parentnodeanimmat;
