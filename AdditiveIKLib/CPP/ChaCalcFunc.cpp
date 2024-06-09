@@ -4374,8 +4374,43 @@ int ChaCalcFunc::InitMP(CBone* srcbone, bool limitdegflag, int srcmotid, double 
 	////CMotionPoint* firstmp = GetMotionPoint(1, 0.0);//motid == 1は１つ目のモーション
 
 	int firstmotid = 1;
-	bool cameraanimflag = srcbone->GetParModel()->IsCameraMotion(srcmotid);
-	MOTINFO firstmi = srcbone->GetParModel()->GetFirstValidMotInfo(cameraanimflag);//１つ目のモーションを削除済の場合に対応
+	//bool cameraanimflag = srcbone->GetParModel()->IsCameraMotion(srcmotid);
+	//MOTINFO firstmi = srcbone->GetParModel()->GetFirstValidMotInfo(cameraanimflag);//１つ目のモーションを削除済の場合に対応
+
+	//#####################################################################################################
+	//2024/06/09 1.0.0.23 RC3
+	//srcmotidがカメラアニメかどうかでfirstmiを決めると　カメラアニメの長さを変更した際にカメラアニメのモデルが消えてしまう
+	//よってボーンごとにfirstmiを決定する
+	//#####################################################################################################
+	MOTINFO firstmi;
+	if (srcbone->IsSkeleton()) {
+		//skeletonの場合　通常モーションを先に調べて　無ければカメラモーションを調べる
+		bool cameraanimflag = false;
+		firstmi = srcbone->GetParModel()->GetFirstValidMotInfo(cameraanimflag);
+		if (firstmi.motid <= 0) {
+			cameraanimflag = true;
+			firstmi = srcbone->GetParModel()->GetFirstValidMotInfo(cameraanimflag);
+		}
+	}
+	else if (srcbone->IsCamera() || srcbone->IsNullAndChildIsCamera()) {
+		//カメラの場合　カメラモーションを先に調べて　無ければ通常モーションを調べる
+		bool cameraanimflag = true;
+		firstmi = srcbone->GetParModel()->GetFirstValidMotInfo(cameraanimflag);
+		if (firstmi.motid <= 0) {
+			cameraanimflag = false;
+			firstmi = srcbone->GetParModel()->GetFirstValidMotInfo(cameraanimflag);
+		}
+	}
+	else {
+		_ASSERT(0);
+		bool cameraanimflag = false;
+		firstmi = srcbone->GetParModel()->GetFirstValidMotInfo(cameraanimflag);
+		if (firstmi.motid <= 0) {
+			cameraanimflag = true;
+			firstmi = srcbone->GetParModel()->GetFirstValidMotInfo(cameraanimflag);
+		}
+	}
+
 	if (firstmi.motid <= 0) {
 		//MotionPointが無い場合にもいても　想定している使い方として　MOTINFOはAddされた状態でRetargetは呼ばれる
 		//よってここを通る場合は　想定外エラー

@@ -245,7 +245,7 @@ Smooth平滑化<br>
 
 [クリック位置に草が生えるんです 2024/05/13](https://youtu.be/_-YDEyL16G8 "Usage example3")<br>
 
-[あ、来た、こっちこっち 2024/05/28](https://youtu.be/vQkHzFg4SjU "Usage example4")<br>
+[モーキャプ編集+fbxカメラ編集 2024/06/09](https://youtu.be/_G4wev5w-4g "Usage example4")<br>
 
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")

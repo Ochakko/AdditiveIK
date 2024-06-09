@@ -804,6 +804,33 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 		return 0;
 	}
 
+
+	//2024/06/09
+	//カメラモーションの場合
+	//カメラモーションにはskeletonのモーションポイントが存在しない
+	//モーションパネルでカメラモーションをセレクトして　カメラモーションの長さを変えた場合に
+	//モデル表示が消えないように　初期状態をセットしてリターン
+	if (GetParModel() && GetParModel()->IsCameraMotion(srcmotid)) {
+		ChaMatrix initwm;
+		initwm.SetIdentity();
+		ChaMatrix modelwm = *wmat;
+		ChaVector3 zeroeul = ChaVector3(0.0f, 0.0f, 0.0f);
+
+		m_curmp[m_updateslot].InitParams();
+		m_curmp[m_updateslot].SetFrame(roundingframe);
+		m_curmp[m_updateslot].SetWorldMat(modelwm);
+		m_curmp[m_updateslot].SetLimitedWM(modelwm);
+		m_curmp[m_updateslot].SetLocalMat(initwm);
+		m_curmp[m_updateslot].SetAnimMat(initwm);
+		m_curmp[m_updateslot].SetLocalEul(zeroeul);
+		m_curmp[m_updateslot].SetCalcLimitedWM(2);
+		SetBtMat(modelwm, true);
+
+		return 0;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	}
+
+
+
 	int existflag = 0;
 
 	if ((g_previewFlag != 5) || (m_parmodel && (m_parmodel->GetBtCnt() == 0))){
@@ -8275,8 +8302,10 @@ int CBone::GetFBXAnim(FbxNode* pNode, int animno, int motid, double animleng, bo
 	//}
 
 	bool opeflag = false;
+	bool initpostureflag = false;
 	if (!cameraanimflag && (IsSkeleton() || (IsNull() && !IsNullAndChildIsCamera()))) {
 		opeflag = true;
+
 	}
 	else if (cameraanimflag && (IsCamera() || IsNullAndChildIsCamera())) {
 		opeflag = true;

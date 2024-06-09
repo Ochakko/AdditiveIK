@@ -11523,13 +11523,13 @@ int SetCameraModel()
 
 
 	//カメラモデルが無い場合には　スプライトスイッチもオフにしておく
-	if (!s_cameramodel) {
+	if (!s_cameramodel && (g_cameraanimmode == 1)) {
 		ChangeCameraMode(1);//forcemode 反転をセット:0 強制オフ時:1 強制オン時:2
 	}
 
 
 	//モデル読み込み中　かつ　カメラモデルがある場合　カメラアニメスイッチを強制オン
-	if (s_nowloading && s_cameramodel) {
+	if (s_nowloading && s_cameramodel && (g_cameraanimmode == 0)) {
 		ChangeCameraMode(2);
 	}
 
@@ -35939,29 +35939,37 @@ int OnFrameToolWnd()
 		s_camtargetOnceflag = 0;
 		if (s_model && (s_curboneno >= 0)) {
 
-			AutoCameraTarget();
+			int curmotid = s_model->GetCurrentMotID();
+			bool cameraanimflag = s_model->IsCameraMotion(curmotid);
+			if (cameraanimflag) {
+				::MessageBox(s_3dwnd, L"カメラモーション以外を選択してから再試行してください.", L"CurrentMotion is Camera warning",
+					MB_OK | MB_ICONINFORMATION);
+			}
+			else {
+				AutoCameraTarget();
 
-			if (s_cameramodel && (g_edittarget == EDITTARGET_CAMERA)) {
-				//カメラアニメの選択フレームを編集して、カメラをターゲットジョイントに向ける
-				int cameramotid = 0;
-				int cameraframeleng = 100;
-				CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);
-				if (opebone && (cameramotid > 0)) {
-					s_editmotionflag = s_cameramodel->CameraAnimDiffRotMatView(&s_editrange, s_befLockMatView, s_matView);
+				if (s_cameramodel && (g_edittarget == EDITTARGET_CAMERA)) {
+					//カメラアニメの選択フレームを編集して、カメラをターゲットジョイントに向ける
+					int cameramotid = 0;
+					int cameraframeleng = 100;
+					CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);
+					if (opebone && (cameramotid > 0)) {
+						s_editmotionflag = s_cameramodel->CameraAnimDiffRotMatView(&s_editrange, s_befLockMatView, s_matView);
+					}
+
+					s_cameramodel->GetCameraAnimParams(s_cameraframe,
+						g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir,
+						0, g_cameraInheritMode);//g_camdist
+
+					ChaVector3 diffvec = g_camtargetpos - g_camEye;
+					float newcamdist = (float)ChaVector3LengthDbl(&diffvec);
+					ChangeCameraDist(newcamdist, false, false);
+
+					UpdateEditedEuler();
 				}
 
-				s_cameramodel->GetCameraAnimParams(s_cameraframe,
-					g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir,
-					0, g_cameraInheritMode);//g_camdist
-
-				ChaVector3 diffvec = g_camtargetpos - g_camEye;
-				float newcamdist = (float)ChaVector3LengthDbl(&diffvec);
-				ChangeCameraDist(newcamdist, false, false);
-
-				UpdateEditedEuler();
+				PrepairUndo();
 			}
-
-			PrepairUndo();
 		}
 	}
 
@@ -39740,19 +39748,31 @@ int CreateSideMenuWnd()
 			s_sidemenu_sellock->setButtonListener([]() {
 				bool value = s_sidemenu_sellock->getValue();
 				if (value) {
-					
-					s_befLockMatView = s_matView;//2024/06/06
+					if (s_model) {
+						int curmotid = s_model->GetCurrentMotID();
+						bool cameraanimflag = s_model->IsCameraMotion(curmotid);
+						if (cameraanimflag) {
+							::MessageBox(s_3dwnd, L"カメラモーション以外を選択してから再試行してください.", L"CurrentMotion is Camera warning",
+								MB_OK | MB_ICONINFORMATION);
 
-					s_camtargetflag = true;
+							s_sidemenu_sellock->setValue(false, false);
+						}
+						else {
+							s_befLockMatView = s_matView;//2024/06/06
 
-					//sellockオンの時はカメラが選択ジョイント中心回転、targetdispオンの時はカメラがマニピュレータ(カメラターゲット位置)中心回転
-					//両方オンにすると分かりずらいので排他選択
-					if (s_sidemenu_targetdisp) {
-						s_sidemenu_targetdisp->setValue(false);
-						s_camtargetdisp = false;
+							s_camtargetflag = true;
+
+							//sellockオンの時はカメラが選択ジョイント中心回転、targetdispオンの時はカメラがマニピュレータ(カメラターゲット位置)中心回転
+							//両方オンにすると分かりずらいので排他選択
+							if (s_sidemenu_targetdisp) {
+								s_sidemenu_targetdisp->setValue(false);
+								s_camtargetdisp = false;
+							}
+
+							s_camtargetOnceflag = 1;//2024/06/04  2024/06/06オンの時だけ
+
+						}
 					}
-
-					s_camtargetOnceflag = true;//2024/06/04  2024/06/06オンの時だけ
 				}
 				else {
 					s_camtargetflag = false;
@@ -63768,6 +63788,8 @@ int OnFrameBlendShape()
 
 				SetLTimelineMark(s_curboneno);//playerbuttonのshape名更新
 				UpdateEditedEuler();
+
+				BlendShapeAnim2Dlg();//valueの変更操作よりも後で呼ぶ
 			}
 		}
 	}
@@ -63788,13 +63810,17 @@ int OnFrameBlendShape()
 
 					SetLTimelineMark(s_curboneno);//playerbuttonのshape名更新
 					UpdateEditedEuler();
+
+					BlendShapeAnim2Dlg();//valueの変更操作よりも後で呼ぶ
 				}
 			}
 		}
 	}
 
-
-	BlendShapeAnim2Dlg();//valueの変更操作よりも後で呼ぶ
+	//2024/06/09 ここでBlendShapeAnim2Dlgを呼ぶと
+	//毎フレームの処理が重すぎて　描画速度が極端に遅くなる
+	//変更があったときのみ処理するように修正
+	//BlendShapeAnim2Dlg();//valueの変更操作よりも後で呼ぶ
 
 	return 0;
 }
