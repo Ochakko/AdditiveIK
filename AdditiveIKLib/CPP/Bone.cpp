@@ -8727,7 +8727,7 @@ bool CBone::IsHipsBone()
 //	return 0;
 //}
 
-void CBone::SaveFbxNodePosture(int srcmotid, FbxNode* pNode)
+void CBone::SaveFbxNodePosture(FbxNode* pNode)
 {
 	//#############################################
 	//CModel::CalcMeshMatReq()と内容を同期すること
@@ -8800,7 +8800,7 @@ void CBone::SaveFbxNodePosture(int srcmotid, FbxNode* pNode)
 //}
 
 
-int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, int srcmotid, double srcframe,
+int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, double srcframe,
 	ChaMatrix* plocalnodemat, ChaMatrix* plocalnodeanimmat)
 {
 
@@ -8820,14 +8820,6 @@ int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, int srcmotid,
 	if (!pNode) {
 		_ASSERT(0);
 		return 0;
-	}
-
-	int currentmotid;
-	if (srcmotid > 0) {
-		currentmotid = srcmotid;
-	}
-	else {
-		currentmotid = GetCurMotID();
 	}
 
 
@@ -8976,26 +8968,19 @@ int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, int srcmotid,
 }
 
 void CBone::CalcNodePostureReq(bool bindposeflag, FbxNode* pNode,
-	int srcmotid, double srcframe, ChaMatrix* plocalnodemat, ChaMatrix* plocalnodeanimmat)
+	double srcframe, ChaMatrix* plocalnodemat, ChaMatrix* plocalnodeanimmat)
 {
 	if (!pNode || !plocalnodemat || !plocalnodeanimmat) {
 		_ASSERT(0);
 		return;
 	}
 
-	int currentmotid;
-	if (srcmotid > 0) {
-		currentmotid = srcmotid;
-	}
-	else {
-		currentmotid = GetCurMotID();
-	}
 
 
 	ChaMatrix localnodemat, localnodeanimmat;
 	localnodemat.SetIdentity();
 	localnodeanimmat.SetIdentity();
-	CalcLocalNodePosture(bindposeflag, pNode, currentmotid, srcframe, &localnodemat, &localnodeanimmat);
+	CalcLocalNodePosture(bindposeflag, pNode, srcframe, &localnodemat, &localnodeanimmat);
 
 	//親方向へ計算
 	ChaMatrix tmpmat1, tmpmat2;
@@ -9007,7 +8992,7 @@ void CBone::CalcNodePostureReq(bool bindposeflag, FbxNode* pNode,
 
 	//親方向へ計算
 	if (GetParent(false)) {
-		GetParent(false)->CalcNodePostureReq(bindposeflag, pNode->GetParent(), currentmotid, srcframe, plocalnodemat, plocalnodeanimmat);
+		GetParent(false)->CalcNodePostureReq(bindposeflag, pNode->GetParent(), srcframe, plocalnodemat, plocalnodeanimmat);
 	}
 }
 
@@ -9238,7 +9223,7 @@ ChaMatrix CBone::GetTransformMat(int srcmotid, double srctime, bool forceanimfla
 
 	if (GetFbxNodeOnLoad()) {
 		bool bindposeflag = false;//!!!!!!!!!!!!! カレントポーズ計算
-		CalcNodePostureReq(bindposeflag, GetFbxNodeOnLoad(), srcmotid, srctime, &retmat, &retanimmat);
+		CalcNodePostureReq(bindposeflag, GetFbxNodeOnLoad(), srctime, &retmat, &retanimmat);
 	}
 	else {
 		_ASSERT(0);
@@ -9430,7 +9415,7 @@ ChaMatrix CBone::GetFbxCameraWorldMat(int cameramotid, double nextframe)
 	int result0 = GetParModel()->GetChildCameraBoneAndNode(this, &camerabone, &cameranode);
 	if ((result0 == 0) && camerabone && cameranode) {
 		bool bindposeflag = false;
-		camerabone->CalcLocalNodePosture(bindposeflag, 0, cameramotid, roundingframe, &localnodemat, &localnodeanimmat);
+		camerabone->CalcLocalNodePosture(bindposeflag, 0, roundingframe, &localnodemat, &localnodeanimmat);
 
 		//ChaMatrix tmpParentLocalNodeAnimMat;
 		//tmpParentLocalNodeAnimMat.SetIdentity();

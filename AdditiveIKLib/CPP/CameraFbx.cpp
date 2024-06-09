@@ -425,7 +425,7 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(CModel* cameramodel, int cameramotid
 		localnodemat.SetIdentity();
 		localnodeanimmat.SetIdentity();
 		bool bindposeflag = false;
-		camerabone->CalcLocalNodePosture(bindposeflag, 0, cameramotid, roundingframe, &localnodemat, &localnodeanimmat);
+		camerabone->CalcLocalNodePosture(bindposeflag, 0, roundingframe, &localnodemat, &localnodeanimmat);
 
 		ChaMatrix parentGlobalNodeMat, parentLocalNodeMat, parentLocalNodeAnimMat;
 		parentGlobalNodeMat.SetIdentity();
@@ -433,7 +433,7 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(CModel* cameramodel, int cameramotid
 		parentLocalNodeAnimMat.SetIdentity();
 		if (camerabone->GetParent(false) && camerabone->GetParent(false)->IsNull()) {
 			//eNullノードのアニメーションに対応するために　timeはroundingframe
-			camerabone->GetParent(false)->CalcLocalNodePosture(bindposeflag, 0, cameramotid, roundingframe, &parentLocalNodeMat, &parentLocalNodeAnimMat);
+			camerabone->GetParent(false)->CalcLocalNodePosture(bindposeflag, 0, roundingframe, &parentLocalNodeMat, &parentLocalNodeAnimMat);
 
 			////parentGlobalNodeMat = camerabone->GetParent(false)->GetENullMatrix(roundingframe);//global
 			parentGlobalNodeMat = camerabone->GetParent(false)->GetTransformMat(cameramotid, roundingframe, true);//global

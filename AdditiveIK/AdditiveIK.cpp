@@ -11926,6 +11926,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 
 			//2024/06/09
 			//ファイルを開いた直後には、ボーンモーション編集可能なモーションを選択しておく
+			//カメラアニメしか無い場合は次の処理はしない
 			bool cameraanimflag = false;
 			MOTINFO firstvalidmi = s_model->GetFirstValidMotInfo(cameraanimflag);
 			if (firstvalidmi.motid > 0) {
@@ -36318,14 +36319,19 @@ int OnFrameToolWnd()
 
 		if (s_model && s_owpTimeline && s_owpLTimeline && s_model->ExistCurrentMotion()) {
 			s_copymotvec.clear();
-			s_copyKeyInfoList.clear();
-			s_copyKeyInfoList = s_owpLTimeline->getSelectedKey();
+			//s_copyKeyInfoList.clear();
+			//s_copyKeyInfoList = s_owpLTimeline->getSelectedKey();
+			//list<KeyInfo>::iterator itrcp;
+			//for (itrcp = s_copyKeyInfoList.begin(); itrcp != s_copyKeyInfoList.end(); itrcp++) {
+			//	double curframe = RoundingTime(itrcp->time);
+			//	InsertCopyMPReq(g_limitdegflag, s_model->GetTopBone(false), curframe);
+			//}
 
-			list<KeyInfo>::iterator itrcp;
-			for (itrcp = s_copyKeyInfoList.begin(); itrcp != s_copyKeyInfoList.end(); itrcp++) {
-				double curframe = RoundingTime(itrcp->time);
+			double curframe;
+			for (curframe = g_motionbrush_startframe; curframe <= g_motionbrush_endframe; curframe++) {
 				InsertCopyMPReq(g_limitdegflag, s_model->GetTopBone(false), curframe);
 			}
+
 
 
 			//変更時は　s_symCopyFlagでの処理も合わせて変更
@@ -37206,13 +37212,33 @@ int PasteMotionPointJustInTerm(double copyStartTime, double copyEndTime, double 
 		//コピーフレーム長が短く　ペーストフレーム長が長い場合にも　結果が滑らかになるように
 		//srcjustframeの端数を考慮して　CalcPasteMotionPoint()で　姿勢を補間する
 		//####################################################################################
-		double dstrate = (dstframe - roundingstartframe) / dstleng;
-		double srcjustframe = copyStartTime + dstrate * srcleng;
+		double dstrate;// = (dstframe - roundingstartframe) / dstleng;
+		double srcjustframe;// = copyStartTime + dstrate * srcleng;
 		double srcframe;
-		srcframe = RoundingTime(srcjustframe);
+		//srcframe = RoundingTime(srcjustframe);
+
+		if (dstframe == roundingstartframe) {
+			//先頭フレームはそのまま先頭フレーム
+			dstrate = 0.0;
+			srcjustframe = copyStartTime;
+			srcframe = RoundingTime(srcjustframe);
+		}
+		else if (dstframe == roundingendframe) {
+			//最終フレームはそのまま最終フレーム
+			dstrate = 1.0;
+			srcjustframe = copyEndTime;
+			srcframe = RoundingTime(srcjustframe);
+		}
+		else {
+			dstrate = (dstframe - roundingstartframe) / dstleng;
+			srcjustframe = copyStartTime + dstrate * srcleng;
+			srcframe = RoundingTime(srcjustframe);
+		}
 		double srcframe2;
-		srcframe2 = min((srcframe + 1.0), RoundingTime(copyEndTime));
+		//srcframe2 = min((srcframe + 1.0), RoundingTime(copyEndTime));//+1.0がナゾ　最初のフレームにペーストされない不具合
+		srcframe2 = min(srcframe, RoundingTime(copyEndTime));//2024/06/09 +1.0を取り除く
 		double interpolaterate = (srcjustframe - srcframe);
+
 
 		vector<CPELEM2>::iterator itrcp;
 		for (itrcp = s_pastemotvec.begin(); itrcp != s_pastemotvec.end(); itrcp++) {
@@ -50873,6 +50899,8 @@ void ShowGUIDlgLOD(bool srcflag)
 void ShowGUIDlgBlendShape(bool srcflag)
 {
 	if (srcflag == true) {
+		g_edittarget = EDITTARGET_MORPH;//2024/06/09　グラフモード変更
+
 		CreateBlendShapeWnd();
 		BlendShapeAnim2Dlg();
 
@@ -50881,14 +50909,30 @@ void ShowGUIDlgBlendShape(bool srcflag)
 			s_blendshapeWnd->setVisible(true);
 		}
 		refreshEulerGraph();
+
+		if (s_LrefreshEditTarget == 0) {
+			s_LrefreshEditTarget = 1;//2024/06/09 グラフリフレッシュ
+		}
 	}
 	else {
+
+		//2024/06/09　グラフモード変更
+		bool changedflag = false;
+		if (g_edittarget == EDITTARGET_MORPH) {
+			g_edittarget = EDITTARGET_BONE;
+			changedflag = true;
+		}
+
 		//DestroyBlendShapeWnd();
 		if (s_blendshapeWnd) {
 			s_blendshapeWnd->setListenMouse(false);
 			s_blendshapeWnd->setVisible(false);
 		}
 		refreshEulerGraph();
+
+		if (changedflag && (s_LrefreshEditTarget == 0)) {
+			s_LrefreshEditTarget = 1;//2024/06/09 グラフリフレッシュ
+		}
 	}
 
 	s_spguisw[SPGUISW_BLENDSHAPE].state = srcflag;

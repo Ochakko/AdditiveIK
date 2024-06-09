@@ -1518,10 +1518,10 @@ public: //accesser
 
 	//2023/02/16
 	//fbxの初期姿勢のジョイントの向きを書き出すために追加
-	void SaveFbxNodePosture(int srcmotid, FbxNode* pNode);
+	void SaveFbxNodePosture(FbxNode* pNode);
 	//void RestoreFbxNodePosture(FbxNode* pNode);
-	int CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, int srcmotid, double srcframe, ChaMatrix* plocalnodemat, ChaMatrix* plocalnodeanimmat);
-	void CalcNodePostureReq(bool bindposeflag, FbxNode* pNode, int srcmotid, double srcframe, ChaMatrix* plocalnodemat, ChaMatrix* plocalnodeanimmat);
+	int CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, double srcframe, ChaMatrix* plocalnodemat, ChaMatrix* plocalnodeanimmat);
+	void CalcNodePostureReq(bool bindposeflag, FbxNode* pNode, double srcframe, ChaMatrix* plocalnodemat, ChaMatrix* plocalnodeanimmat);
 
 
 	void ClearIKRotRec()

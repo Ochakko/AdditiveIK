@@ -224,7 +224,7 @@ static FbxNode* CreateDummyFbxMesh(FbxManager* pSdkManager, FbxScene* pScene, CB
 static void LinkDummyMeshToSkeleton(CFBXBone* fbxbone, FbxSkin* lSkin, FbxScene* pScene, FbxNode* pMesh, int* bonecnt);
 
 
-static int CalcLocalNodeMat(int srcmotid, CModel* pmodel, CBone* curbone, ChaMatrix* dstnodemat, ChaMatrix* dstnodeanimmat);//pNode = pmodel->GetBoneNode(curbone)を内部で使用
+static int CalcLocalNodeMat(CModel* pmodel, CBone* curbone, ChaMatrix* dstnodemat, ChaMatrix* dstnodeanimmat);//pNode = pmodel->GetBoneNode(curbone)を内部で使用
 static void GetBindMatrixNodeOnLoad(CModel* pmodel, CFBXBone* fbxbone, FbxAMatrix& lMatrix);
 
 static int WriteFBXAnimTra(bool limitdegflag, CFBXBone* fbxbone, FbxAnimLayer* lAnimLayer, int curmotid, int maxframe, int axiskind);
@@ -4097,7 +4097,7 @@ void WriteBindPoseReq(CModel* pmodel, FbxNode* pNode, FbxPose* srcbindpose, FbxP
 }
 
 
-int CalcLocalNodeMat(int srcmotid, CModel* pmodel, CBone* curbone, ChaMatrix* dstnodemat, ChaMatrix* dstnodeanimmat)//pNode = pmodel->GetBoneNode(curbone)を内部で使用
+int CalcLocalNodeMat(CModel* pmodel, CBone* curbone, ChaMatrix* dstnodemat, ChaMatrix* dstnodeanimmat)//pNode = pmodel->GetBoneNode(curbone)を内部で使用
 {
 	//parentにSetNodeMat()されていることが前提
 	//Reqで呼び出す
@@ -4114,9 +4114,9 @@ int CalcLocalNodeMat(int srcmotid, CModel* pmodel, CBone* curbone, ChaMatrix* ds
 	FbxNode* pNode = pmodel->GetBoneNode(curbone);
 	if (pNode) {
 
-		curbone->SaveFbxNodePosture(srcmotid, pNode);//2023/02/16
+		curbone->SaveFbxNodePosture(pNode);//2023/02/16
 		bool bindposeflag = true;//!!!!! 2023/07/06
-		curbone->CalcLocalNodePosture(bindposeflag, pNode, srcmotid, 0.0, dstnodemat, dstnodeanimmat);
+		curbone->CalcLocalNodePosture(bindposeflag, pNode, 0.0, dstnodemat, dstnodeanimmat);
 
 		//curbone->SetLocalNodeMat(*dstnodemat);
 		//curbone->SetLocalNodeAnimMat(*dstnodeanimmat);
@@ -6034,7 +6034,7 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 		//########################
 		if (pNode) {
 			//bool cameraanimflag;
-			int firstmotid;
+			//int firstmotid;
 			//if (curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
 			//	cameraanimflag = true;
 			//}
@@ -6042,12 +6042,14 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 			//	cameraanimflag = false;
 			//}
 			
-			//2024/06/08
-			//この関数はモーションを１つも読み込んでいない状態で呼ばれる
-			//ボーンのポジション計算時には、他のノードの影響も計算できるようにcameraanimflag=falseでGetFirstValidMotInfo()を呼ぶことにした
-			firstmotid = pmodel->GetFirstValidMotInfo(false).motid;
+			////2024/06/08
+			////この関数はモーションを１つも読み込んでいない状態で呼ばれる
+			////ボーンのポジション計算時には、他のノードの影響も計算できるようにcameraanimflag=falseでGetFirstValidMotInfo()を呼ぶことにした
+			//firstmotid = pmodel->GetFirstValidMotInfo(false).motid;
+			//2024/06/09 CalcLocalNodeMatはcurrentのFbxAnimationに対して処理されるのでmotidは使っていない
 			ChaMatrix localnodemat, localnodeanimmat;
-			CalcLocalNodeMat(firstmotid, pmodel, curbone, &localnodemat, &localnodeanimmat);//2022/12/21 support prerot postrot ...etc.
+			//CalcLocalNodeMat(firstmotid, pmodel, curbone, &localnodemat, &localnodeanimmat);//2022/12/21 support prerot postrot ...etc.
+			CalcLocalNodeMat(pmodel, curbone, &localnodemat, &localnodeanimmat);//2022/12/21 support prerot postrot ...etc.
 			ChaMatrix parentnodemat, parentnodeanimmat;
 			parentnodemat.SetIdentity();
 			parentnodeanimmat.SetIdentity();
