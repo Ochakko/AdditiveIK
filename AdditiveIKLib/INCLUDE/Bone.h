@@ -723,22 +723,43 @@ public: //accesser
 	void SetChildScreen( ChaVector3 srcvec ){ m_childscreen = srcvec; };
 
 	int GetMotionKeySize(){ return (int)m_motionkey.size(); };
-	CMotionPoint* GetMotionKey( int srccookie ){
-		if ((srccookie >= 1) && (srccookie <= m_motionkey.size())) {
-			return m_motionkey[srccookie - 1];
+	//CMotionPoint* GetMotionKey( int srccookie ){
+	//	if ((srccookie >= 1) && (srccookie <= m_motionkey.size())) {
+	//		return m_motionkey[srccookie - 1];//<---！！！！　モーションによっては一部のボーンのモーションポイントだけあるので　motidとindexの間の関係は -1の関係ではない
+	//	}
+	//	else {
+	//		//_ASSERT(0);//OnAddMotionのときには有り得る
+	//		return 0;
+	//	}
+	//};
+	CMotionPoint* GetMotionKey(int srcmotid)//2024/06/10 m_motionkeyはsizeとsrcmotidの間の関係が-1ではない std::mapである
+	{
+		if (srcmotid <= 0) {
+			return nullptr;
+		}
+		std::map<int, CMotionPoint*>::iterator itrmotkey;
+		itrmotkey = m_motionkey.find(srcmotid);
+		if (itrmotkey != m_motionkey.end()) {
+			return itrmotkey->second;
 		}
 		else {
-			//_ASSERT(0);//OnAddMotionのときには有り得る
-			return 0;
+			return nullptr;
 		}
 	};
+
 	void SetMotionKey( int srccookie, CMotionPoint* srcmk ){ 
-		if ((srccookie >= 1) && (srccookie <= m_motionkey.size())) {
-			m_motionkey[srccookie - 1] = srcmk;
+		if (srccookie > 0) {
+			m_motionkey[srccookie] = srcmk;//2024/06/10
 		}
 		else {
 			_ASSERT(0);
 		}
+		//if ((srccookie >= 1) && (srccookie <= m_motionkey.size())) {
+		//	m_motionkey[srccookie - 1] = srcmk;
+		//}
+		//else {
+		//	_ASSERT(0);
+		//}
 	};
 
 	int GetInitIndexedMotionPointSize()
@@ -1105,30 +1126,30 @@ public: //accesser
 	void ClearBtObject(){ m_btobject.clear(); };
 
 
-	int GetMotMarkSize(){ return (int)m_motmark.size(); };
-	int GetMotMarkSize2(int srcindex){
-		std::map<double, int> curmap = m_motmark[ srcindex ];
-		return (int)curmap.size();
-	};
-	int GetMotMarkOfMap( int srcindex, double srcframe ){
-		std::map<double,int> curmap = m_motmark[ srcindex ];
-		return curmap[ srcframe ];
-	};
+	//int GetMotMarkSize(){ return (int)m_motmark.size(); };
+	//int GetMotMarkSize2(int srcindex){
+	//	std::map<double, int> curmap = m_motmark[ srcindex ];
+	//	return (int)curmap.size();
+	//};
+	//int GetMotMarkOfMap( int srcindex, double srcframe ){
+	//	std::map<double,int> curmap = m_motmark[ srcindex ];
+	//	return curmap[ srcframe ];
+	//};
 	void GetMotMarkOfMap2( int srcindex, std::map<double, int>& dstmap ){
 		dstmap = m_motmark[ srcindex ];
 	};
-	std::map<int, std::map<double, int>>::iterator GetMotMarkOfMapBegin(){
-		return m_motmark.begin();
-	};
-	std::map<int, std::map<double, int>>::iterator GetMotMarkOfMapEnd(){
-		return m_motmark.end();
-	};
-	std::map<int, std::map<double, int>>::iterator FindMotMarkOfMap( int srcindex ){
-		return m_motmark.find( srcindex );
-	};
-	void SetMotMarkOfMap( int srcindex, double srcframe, int srcmark ){
-		((m_motmark[ srcindex ])[ srcframe ]) = srcmark;
-	};
+	//std::map<int, std::map<double, int>>::iterator GetMotMarkOfMapBegin(){
+	//	return m_motmark.begin();
+	//};
+	//std::map<int, std::map<double, int>>::iterator GetMotMarkOfMapEnd(){
+	//	return m_motmark.end();
+	//};
+	//std::map<int, std::map<double, int>>::iterator FindMotMarkOfMap( int srcindex ){
+	//	return m_motmark.find( srcindex );
+	//};
+	//void SetMotMarkOfMap( int srcindex, double srcframe, int srcmark ){
+	//	((m_motmark[ srcindex ])[ srcframe ]) = srcmark;
+	//};
 	void SetMotMarkOfMap2( int srcindex, std::map<double, int>& srcmap ){
 		m_motmark[ srcindex ] = srcmap;
 	};
@@ -1184,6 +1205,16 @@ public: //accesser
 	}
 	bool HasCameraParent();
 	
+	//IsCamera()&&ボーンの名前がモーション名と一致した場合にtrue
+	bool IsConcernedCamera(const char* motionname);
+
+	//IsNullAndChildIsCamera()&&子供ボーンの名前がモーション名と一致した場合にtrue
+	bool IsConcernedNullAndChildIsCamera(const char* motionname);
+
+	//モーションが非カメラモーションの場合:IsSkeleton || IsNull, モーションがカメラモーションの場合:IsCamera || IsConcernedNullAndChildIsCamera
+	bool IsConcerned(int srcmotid);
+
+
 	CBone* GetParent(bool excludenullflag);
 	CBone* GetChild(bool excludenullflag);
 	CBone* GetBrother(bool excludenullflag);
@@ -1268,7 +1299,6 @@ public: //accesser
 	//};
 
 	CMotionPoint* GetMotionPoint(int srcmotid, double srcframe, bool onaddmotion = false);
-
 
 
 	//ChaMatrix GetENullMatrix(double srctime);

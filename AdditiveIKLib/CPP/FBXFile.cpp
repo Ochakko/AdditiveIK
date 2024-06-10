@@ -1772,7 +1772,8 @@ bool CreateScene(bool limitdegflag, FbxManager* pSdkManager, FbxScene* pScene, C
 		//sceneInfo->mRevision = "rev. 3.2";//since 2024/03/07 about PM05:30 for AdditiveIK version1.0.0.11
 		//sceneInfo->mRevision = "rev. 3.3";//since 2024/06/02 about PM04:30 for AdditiveIK version1.0.0.23
 		//sceneInfo->mRevision = "rev. 3.4";//since 2024/06/07 about PM01:40 for AdditiveIK version1.0.0.23
-		sceneInfo->mRevision = "rev. 3.5";//since 2024/06/08 about PM10:30 for AdditiveIK version1.0.0.23
+		//sceneInfo->mRevision = "rev. 3.5";//since 2024/06/08 about PM10:30 for AdditiveIK version1.0.0.23
+		sceneInfo->mRevision = "rev. 3.6";//since 2024/06/10 about PM2:22 for AdditiveIK version1.0.0.23
 
 		//######################################################################
 		//rev変更時は　FbxSetDefaultBonePosReq のoldbvh処理部分も更新する必要有
@@ -3820,7 +3821,12 @@ void AnimateBoneReq(bool limitdegflag, FbxNode* pNode, FbxAnimLayer* lAnimLayer,
 				//if (curbone->HasMotionCurve(curmotid) && 
 				//	(curbone->IsCamera() || curbone->IsNull())) {
 				//if (curbone->IsCamera() || (curbone->IsNull() && (strcmp(curbone->GetBoneName(), camerami.motname) == 0))) {
-				if (curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
+				//if (curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
+
+				//2024/06/10
+				//処理中のカメラモーションに関係のあるカメラとeNullだけを書き出す
+				//IsCamera()&&ボーンの名前がモーション名と一致した場合にtrue　|| IsNullAndChildIsCamera()&&子供ボーンの名前がモーション名と一致した場合
+				if (curbone->IsConcernedCamera(motionname) || curbone->IsConcernedNullAndChildIsCamera(motionname)) {
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_X);
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Y);
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Z);
@@ -5925,6 +5931,7 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 				FbxString currentrev7 = "rev. 3.3";
 				FbxString currentrev8 = "rev. 3.4";
 				FbxString currentrev9 = "rev. 3.5";
+				FbxString currentrev10 = "rev. 3.6";
 				//2.7, 2.8, 2.9, 3.0が内容変更後の新バージョン
 				if ((sceneinfo->mRevision != currentrev1) &&
 					(sceneinfo->mRevision != currentrev2) &&
@@ -5934,7 +5941,8 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 					(sceneinfo->mRevision != currentrev6) &&
 					(sceneinfo->mRevision != currentrev7) &&
 					(sceneinfo->mRevision != currentrev8) &&
-					(sceneinfo->mRevision != currentrev9)
+					(sceneinfo->mRevision != currentrev9) &&
+					(sceneinfo->mRevision != currentrev10)
 					) {
 					oldbvh = true;//!!!!!!!!!!!!!!!!!!!!
 				}

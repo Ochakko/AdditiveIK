@@ -1272,7 +1272,8 @@ CMotionPoint* CBone::AddMotionPoint(int srcmotid, double srcframe, int* existptr
 	}
 
 	//2023/04/28 2023/05/23 2023/06/29
-	if (IsNotSkeleton() && IsNotCamera() && IsNotNull()) {
+	//if (IsNotSkeleton() && IsNotCamera() && IsNotNull()) {
+	if (!IsConcerned(srcmotid)) {//2024/06/10
 		if (existptr) {
 			*existptr = 0;
 		}
@@ -1280,9 +1281,14 @@ CMotionPoint* CBone::AddMotionPoint(int srcmotid, double srcframe, int* existptr
 		return 0;
 	}
 
-
-	if ((srcmotid <= 0) || (srcmotid > (m_motionkey.size() + 1))) {// on add : ひとつ大きくても可 : 他の部分でのチェックは motid > m_motionkey.size()
-		_ASSERT(0);
+	//if ((srcmotid <= 0) || (srcmotid > (m_motionkey.size() + 1))) {// on add : ひとつ大きくても可 : 他の部分でのチェックは motid > m_motionkey.size()
+	//2024/06/10
+	//カメラアニメにはボーンのモーションポイントが無い
+	//他のケースでも一部のボーンのモーションポイントだけがあるモーションも存在する
+	//そのようなモーションを読み込むと　m_motionkeyのサイズはボーンによって異なり　srcmotid>(m_motionkey.size() + 1)とは限らない
+	if (srcmotid <= 0) {//2024/06/10
+		//_ASSERT(0);
+		int dbgflag1 = 1;
 		LeaveCriticalSection(&m_CritSection_AddMP);
 		return 0;
 	}
@@ -1321,7 +1327,8 @@ CMotionPoint* CBone::AddMotionPoint(int srcmotid, double srcframe, int* existptr
 			}
 		}
 		else{
-			m_motionkey[srcmotid - 1] = newmp;
+			//m_motionkey[srcmotid - 1] = newmp;
+			m_motionkey[srcmotid] = newmp;//2024/06/10
 			if (pnext){
 				newmp->SetNext(pnext);
 			}
@@ -1507,7 +1514,8 @@ int CBone::DeleteMotion( int srcmotid )
 	//#######################################################
 
 	map<int, CMotionPoint*>::iterator itrmp;
-	itrmp = m_motionkey.find( srcmotid - 1 );//2021/08/26
+	//itrmp = m_motionkey.find( srcmotid - 1 );//2021/08/26
+	itrmp = m_motionkey.find(srcmotid);//2024/06/10
 	if( itrmp != m_motionkey.end() ){
 		CMotionPoint* topkey = itrmp->second;
 		if( topkey ){
@@ -1525,8 +1533,8 @@ int CBone::DeleteMotion( int srcmotid )
 	}
 
 	//m_motionkey.erase( itrmp );
-	m_motionkey[srcmotid - 1] = 0;////2021/08/26 eraseするとアクセスするためのインデックスがsrcmotid - 1ではなくなる
-
+	//m_motionkey[srcmotid - 1] = 0;////2021/08/26 eraseするとアクセスするためのインデックスがsrcmotid - 1ではなくなる
+	m_motionkey[srcmotid] = 0;//2024/06/10
 
 
 	std::map<int, vector<CMotionPoint*>>::iterator itrvecmpmap;
@@ -1552,12 +1560,14 @@ int CBone::DeleteMPOutOfRange( int motid, double srcleng )
 	}
 
 
-	if ((motid <= 0) || (motid > m_motionkey.size())) {
+	//if ((motid <= 0) || (motid > m_motionkey.size())) {
+	if (motid <= 0) {//2024/06/10
 		_ASSERT(0);
 		return 1;
 	}
 
-	CMotionPoint* curmp = m_motionkey[motid - 1];
+	//CMotionPoint* curmp = m_motionkey[motid - 1];
+	CMotionPoint* curmp = GetMotionKey(motid);//2024/06/10
 
 	while( curmp ){
 		CMotionPoint* nextmp = curmp->GetNext();
@@ -3379,12 +3389,14 @@ CMotionPoint* CBone::SetAbsMatReq(bool limitdegflag, int broflag,
 
 int CBone::DestroyMotionKey( int srcmotid )
 {
-	if ((srcmotid <= 0) || (srcmotid > m_motionkey.size())) {
+	//if ((srcmotid <= 0) || (srcmotid > m_motionkey.size())) {
+	if (srcmotid <= 0) {//2024/06/10
 		_ASSERT(0);
 		return 1;
 	}
 
-	CMotionPoint* curmp = m_motionkey[srcmotid - 1];
+	//CMotionPoint* curmp = m_motionkey[srcmotid - 1];
+	CMotionPoint* curmp = GetMotionKey(srcmotid);//2024/06/10
 	while( curmp ){
 		CMotionPoint* nextmp = curmp->GetNext();
 		
@@ -3395,8 +3407,8 @@ int CBone::DestroyMotionKey( int srcmotid )
 		curmp = nextmp;
 	}
 
-	m_motionkey[srcmotid - 1] = NULL;
-
+	//m_motionkey[srcmotid - 1] = NULL;
+	m_motionkey[srcmotid] = 0;//2024/06/10
 
 
 	std::map<int, vector<CMotionPoint*>>::iterator itrvecmpmap;
@@ -3414,7 +3426,8 @@ int CBone::DestroyMotionKey( int srcmotid )
 
 int CBone::AddBoneMarkIfNot( int motid, OrgWinGUI::OWP_Timeline* owpTimeline, int curlineno, double curframe, int flag )
 {
-	if ((motid <= 0) || (motid > m_motionkey.size())) {
+	//if ((motid <= 0) || (motid > m_motionkey.size())) {
+	if (motid <= 0) {//2024/06/10
 		_ASSERT(0);
 		return 1;
 	}
@@ -3427,7 +3440,8 @@ int CBone::AddBoneMarkIfNot( int motid, OrgWinGUI::OWP_Timeline* owpTimeline, in
 
 	map<double, int> curmark;
 	map<int, map<double, int>>::iterator itrcur;
-	itrcur = m_motmark.find( motid - 1 );//2021/08/26
+	//itrcur = m_motmark.find( motid - 1 );//2021/08/26
+	itrcur = m_motmark.find(motid);//2024/06/10
 	if( itrcur == m_motmark.end() ){
 		curmark.clear();
 	}else{
@@ -3437,7 +3451,8 @@ int CBone::AddBoneMarkIfNot( int motid, OrgWinGUI::OWP_Timeline* owpTimeline, in
 	itrmark = curmark.find( curframe );
 	if( itrmark == curmark.end() ){
 		curmark[ curframe ] = flag;
-		m_motmark[motid - 1] = curmark;
+		//m_motmark[motid - 1] = curmark;
+		m_motmark[motid] = curmark;//2024/06/10
 	}
 
 	return 0;
@@ -3445,13 +3460,15 @@ int CBone::AddBoneMarkIfNot( int motid, OrgWinGUI::OWP_Timeline* owpTimeline, in
 
 int CBone::DelBoneMarkRange( int motid, OrgWinGUI::OWP_Timeline* owpTimeline, int curlineno, double startframe, double endframe )
 {
-	if ((motid <= 0) || (motid > m_motionkey.size())) {
+	//if ((motid <= 0) || (motid > m_motionkey.size())) {
+	if (motid <= 0) {//2024/06/10
 		_ASSERT(0);
 		return 1;
 	}
 
 	map<int, map<double, int>>::iterator itrcur;
-	itrcur = m_motmark.find( motid - 1 );//2021/08/26
+	//itrcur = m_motmark.find( motid - 1 );//2021/08/26
+	itrcur = m_motmark.find(motid);//2024/06/10
 	if( itrcur == m_motmark.end() ){
 		return 0;
 	}
@@ -3468,7 +3485,8 @@ int CBone::DelBoneMarkRange( int motid, OrgWinGUI::OWP_Timeline* owpTimeline, in
 		}
 	}
 
-	m_motmark[motid - 1] = curmark;
+	//m_motmark[motid - 1] = curmark;
+	m_motmark[motid] = curmark;//2024/06/10
 
 	return 0;
 }
@@ -7812,7 +7830,8 @@ ChaVector3 CBone::GetWorldPos(bool limitdegflag, int srcmotid, double srcframe)
 
 
 	ChaVector3 retpos = ChaVector3(0.0f, 0.0f, 0.0f);
-	if ((srcmotid <= 0) || (srcmotid > m_motionkey.size())) {
+	//if ((srcmotid <= 0) || (srcmotid > m_motionkey.size())) {
+	if (srcmotid <= 0) {//2024/06/10
 		return retpos;
 	}
 
@@ -7858,7 +7877,8 @@ int CBone::CreateIndexedMotionPoint(int srcmotid, double animleng)
 	}
 
 
-	if ((srcmotid <= 0) || (srcmotid > m_motionkey.size())) {
+	//if ((srcmotid <= 0) || (srcmotid > m_motionkey.size())) {
+	if (srcmotid <= 0) {//2024/06/10
 		//_ASSERT(0);
 		return 1;
 	}
@@ -7888,7 +7908,8 @@ int CBone::CreateIndexedMotionPoint(int srcmotid, double animleng)
 	(itrvecmpmap->second).clear();//!!!!!!!!!!!!!!!
 	
 
-	CMotionPoint* curmp = m_motionkey[srcmotid - 1];
+	//CMotionPoint* curmp = m_motionkey[srcmotid - 1];
+	CMotionPoint* curmp = GetMotionKey(srcmotid);//2024/06/10
 	if (curmp) {
 		double mpframe;// = curmp->GetFrame();
 
@@ -8285,12 +8306,18 @@ int CBone::GetFBXAnim(FbxNode* pNode, int animno, int motid, double animleng, bo
 	}
 
 
-	bool cameraanimflag = GetParModel()->IsCameraMotion(motid);
-	//bool cameraanimflag = IsNullAndChildIsCameraNode(pNode);
-	////bool cameraanimflag = IsCamera();
-	if (cameraanimflag) {
-		int dbgflag1 = 1;
-	}
+	//bool cameraanimflag = GetParModel()->IsCameraMotion(motid);
+	////bool cameraanimflag = IsNullAndChildIsCameraNode(pNode);
+	//////bool cameraanimflag = IsCamera();
+	//if (cameraanimflag) {
+	//	int dbgflag1 = 1;
+	//}
+	//char cmpmotionname[256] = { 0 };
+	//int result0 = GetParModel()->GetMotionName(motid, 256, cmpmotionname);
+	//if (result0 != 0) {
+	//	_ASSERT(0);
+	//	return 1;
+	//}
 
 
 	////2023/04/28 2023/05/23
@@ -8301,18 +8328,27 @@ int CBone::GetFBXAnim(FbxNode* pNode, int animno, int motid, double animleng, bo
 	//	return 0;
 	//}
 
-	bool opeflag = false;
-	bool initpostureflag = false;
-	if (!cameraanimflag && (IsSkeleton() || (IsNull() && !IsNullAndChildIsCamera()))) {
-		opeflag = true;
+	//bool opeflag = false;
+	//bool initpostureflag = false;
+	//if (!cameraanimflag && (IsSkeleton() || (IsNull() && !IsNullAndChildIsCamera()))) {
+	//	opeflag = true;
+	//
+	//}
+	////else if (cameraanimflag && (IsCamera() || IsNullAndChildIsCamera())) {
+	////2024/06/10 読込中のカメラモーションに関係するカメラとeNullだけ読込
+	//else if (cameraanimflag && (IsConcernedCamera(cmpmotionname) || IsConcernedNullAndChildIsCamera(cmpmotionname))) {
+	//	opeflag = true;
+	//}
+	//else {
+	//	opeflag = false;
+	//	return 0;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//}
 
-	}
-	else if (cameraanimflag && (IsCamera() || IsNullAndChildIsCamera())) {
-		opeflag = true;
-	}
-	else {
-		opeflag = false;
-		return 0;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+	//2024/06/10
+	//IsConcerned()  モーションが非カメラモーションの場合:IsSkeleton || IsNull, モーションがカメラモーションの場合:IsCamera || IsConcernedNullAndChildIsCamera
+	if (!IsConcerned(motid)) {
+		return 0;
 	}
 
 
@@ -8391,6 +8427,7 @@ int CBone::GetFBXAnim(FbxNode* pNode, int animno, int motid, double animleng, bo
 				curmp = AddMotionPoint(motid, framecnt, &existflag);
 				if (!curmp) {
 					_ASSERT(0);
+					int dbgflag1 = 1;
 					return 1;
 				}
 			}
@@ -9488,5 +9525,76 @@ ChaMatrix CBone::GetFbxCameraWorldMat(int cameramotid, double nextframe)
 
 
 	return transformmat;
+}
+
+bool CBone::IsConcernedCamera(const char* motionname)
+{
+	if (!motionname) {
+		return false;
+	}
+	if (motionname[0] == 0) {
+		return false;
+	}
+
+	if (IsCamera()) {
+		int cmp0 = strcmp(GetBoneName(), motionname);
+		if (cmp0 == 0) {
+			//IsCamera()&&ボーンの名前がモーション名と一致した場合にtrue
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	else {
+		return false;
+	}
+}
+bool CBone::IsConcernedNullAndChildIsCamera(const char* motionname)
+{
+	if (!motionname) {
+		return false;
+	}
+	if (motionname[0] == 0) {
+		return false;
+	}
+
+	if (GetChild(false) && IsNullAndChildIsCamera()) {
+		//IsNullAndChildIsCamera()&&子供ボーンの名前がモーション名と一致した場合にtrue
+		return GetChild(false)->IsConcernedCamera(motionname);
+	}
+	else {
+		return false;
+	}
+}
+
+
+bool CBone::IsConcerned(int srcmotid)
+{
+	//モーションが非カメラモーションの場合:IsSkeleton || IsNull
+	//モーションがカメラモーションの場合:IsCamera || IsConcernedNullAndChildIsCamera
+
+	if (!GetParModel()) {
+		return false;
+	}
+
+	bool cameraanimflag = GetParModel()->IsCameraMotion(srcmotid);
+	char cmpmotionname[256] = { 0 };
+	int result0 = GetParModel()->GetMotionName(srcmotid, 256, cmpmotionname);
+	if (result0 != 0) {
+		_ASSERT(0);
+		return false;
+	}
+
+	//2024/06/10
+	//非カメラアニメ時：skeleton or enull, カメラアニメ時：関係するcamera or 関係するeNull
+	if ((!cameraanimflag && (IsSkeleton() || IsNull())) ||
+		(cameraanimflag && (IsConcernedCamera(cmpmotionname) || IsConcernedNullAndChildIsCamera(cmpmotionname)))) {
+
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 

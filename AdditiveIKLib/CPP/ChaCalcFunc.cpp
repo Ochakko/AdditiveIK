@@ -213,7 +213,8 @@ int ChaCalcFunc::GetBefNextMP(CBone* srcbone, int srcmotid, double srcframe, CMo
 
 	*existptr = 0;
 
-	if ((srcmotid <= 0) || (srcmotid > srcbone->GetMotionKeySize())) {
+	//if ((srcmotid <= 0) || (srcmotid > srcbone->GetMotionKeySize())) {
+	if (srcmotid <= 0) {//2024/06/10
 		//AddMotionPointから呼ばれるときに通る場合は正常
 		*ppbef = 0;
 		*ppnext = 0;
@@ -4346,10 +4347,12 @@ int ChaCalcFunc::InitMP(CBone* srcbone, bool limitdegflag, int srcmotid, double 
 	}
 	//2023/04/28
 	//if (srcbone->IsNotSkeleton()) {
-	if (srcbone->IsNotSkeleton() && !srcbone->IsNullAndChildIsCamera() && srcbone->IsNotCamera()) {
+	//if (srcbone->IsNotSkeleton() && !srcbone->IsNullAndChildIsCamera() && srcbone->IsNotCamera()) {
+	//	return 0;
+	//}
+	if (!srcbone->IsConcerned(srcmotid)) {
 		return 0;
 	}
-
 
 
 	double roundingframe = RoundingTime(srcframe);
@@ -4428,6 +4431,9 @@ int ChaCalcFunc::InitMP(CBone* srcbone, bool limitdegflag, int srcmotid, double 
 		//モーション無しfbxの最初のInitMP時にも　後方のfirstmpがNULLにならないためには　firstmpセットよりも前に　モーションポイントを作成する必要
 		int existflag = 0;
 		curmp = srcbone->AddMotionPoint(srcmotid, roundingframe, &existflag);
+		if (!curmp) {//2024/06/10
+			int dbgflag1 = 1;
+		}
 	}
 	if (curmp) {
 
@@ -4678,8 +4684,10 @@ int ChaCalcFunc::InitMP(CModel* srcmodel, bool limitdegflag, CBone* curbone, int
 	//curbone->SetLocalEul(GetCurMotInfo()->motid, curframe, cureul);
 
 
-	if ((srcmodel->GetNoBoneFlag() == false) && curbone && 
-		(curbone->IsSkeleton() || curbone->IsCamera() ||  curbone->IsNullAndChildIsCamera())) {
+	//if ((srcmodel->GetNoBoneFlag() == false) && curbone && 
+	//	(curbone->IsSkeleton() || curbone->IsCamera() ||  curbone->IsNullAndChildIsCamera())) {
+	if((srcmodel->GetNoBoneFlag() == false) && curbone &&
+		curbone->IsConcerned(srcmotid)) {//2024/06/10
 		InitMP(curbone, limitdegflag, srcmotid, curframe);
 	}
 
@@ -4701,9 +4709,26 @@ void ChaCalcFunc::InitMPReq(CModel* srcmodel, bool limitdegflag, CBone* curbone,
 		return;
 	}
 
-	if (curbone->IsSkeleton() || curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
+
+	//bool cameraanimflag = srcmodel->IsCameraMotion(srcmotid);
+	//char cmpmotionname[256] = { 0 };
+	//int result0 = srcmodel->GetMotionName(srcmotid, 256, cmpmotionname);
+	//if (result0 != 0) {
+	//	_ASSERT(0);
+	//	return;
+	//}
+
+	//2024/06/10
+	//非カメラアニメ時：skeleton or enull, カメラアニメ時：関係するcamera or 関係するeNull
+	//if ((!cameraanimflag && (curbone->IsSkeleton() || curbone->IsNull())) || 
+	//	(cameraanimflag && (curbone->IsConcernedCamera(cmpmotionname) || curbone->IsConcernedNullAndChildIsCamera(cmpmotionname)))) {
+	if (curbone->IsConcerned(srcmotid)) {
 		InitMP(srcmodel, limitdegflag, curbone, srcmotid, curframe);
 	}
+
+	//if (curbone->IsSkeleton() || curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
+	//	InitMP(srcmodel, limitdegflag, curbone, srcmotid, curframe);
+	//}
 
 	if (curbone->GetChild(false)) {
 		InitMPReq(srcmodel, limitdegflag, curbone->GetChild(false), srcmotid, curframe);

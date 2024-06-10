@@ -5509,11 +5509,13 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 				FbxString currentrev3 = "rev. 3.3";
 				FbxString currentrev4 = "rev. 3.4";
 				FbxString currentrev5 = "rev. 3.5";
+				FbxString currentrev6 = "rev. 3.6";
 				if ((sceneinfo->mRevision != currentrev1) &&
 					(sceneinfo->mRevision != currentrev2) &&
 					(sceneinfo->mRevision != currentrev3) &&
 					(sceneinfo->mRevision != currentrev4) &&
-					(sceneinfo->mRevision != currentrev5)
+					(sceneinfo->mRevision != currentrev5) &&
+					(sceneinfo->mRevision != currentrev6)
 					) {
 					oldtransparent = true;//!!!!!!!!!!!!!!!!!!!!
 				}
@@ -5541,13 +5543,13 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 
 //texture
 
-	if (strstr(tmpname, "plane__35_") != 0) {
-		int dbgflag1 = 1;
-	}
+	//if (strstr(tmpname, "plane__35_") != 0) {
+	//	int dbgflag1 = 1;
+	//}
 
-	if ((strstr(tmpname, "Terrain") != 0) || (strstr(tmpname, "terrain") != 0)) {
-		int dbgflag2 = 1;
-	}
+	//if ((strstr(tmpname, "Terrain") != 0) || (strstr(tmpname, "terrain") != 0)) {
+	//	int dbgflag2 = 1;
+	//}
 
 	//bool findalbedometal = false;
 	{
@@ -6644,9 +6646,10 @@ void CModel::CreateIndexedMotionPointReq(CBone* srcbone, int srcmotid, double sr
 	char motionname[256] = { 0 };
 	GetMotionName(srcmotid, 256, motionname);
 
-	//if (srcbone->IsSkeleton() || srcbone->IsCamera() || (srcbone->IsNull() && strcmp(srcbone->GetBoneName(), motionname) == 0)) {
-	if (srcbone->IsSkeleton() || srcbone->IsCamera() || srcbone->IsNullAndChildIsCamera()) {
-	//if (srcbone->IsSkeleton()) {
+	////if (srcbone->IsSkeleton() || srcbone->IsCamera() || (srcbone->IsNull() && strcmp(srcbone->GetBoneName(), motionname) == 0)) {
+	//if (srcbone->IsSkeleton() || srcbone->IsCamera() || srcbone->IsNullAndChildIsCamera()) {
+	////if (srcbone->IsSkeleton()) {
+	if (srcbone->IsConcerned(srcmotid)) {//2024/06/10
 		int result;
 		result = srcbone->CreateIndexedMotionPoint(srcmotid, srcanimleng);
 		//_ASSERT(result == 0);
@@ -7151,17 +7154,23 @@ int CModel::PreLoadCameraFbxAnim(int srcmotid)
 		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 			CBone* srcbone = itrbone->second;
 
-			if (srcbone && srcbone->IsCamera()) {
-
-				if (strcmp(curmi.motname, srcbone->GetBoneName()) == 0) {
-					//#######################################################
-					//MotionNameとBoneNameが同じ場合だけ　それらを対応付ける
-					//#######################################################
-
-					m_camerafbx.PreLoadFbxAnim(srcbone, srcmotid);//srcboneはFbxCamera*を持つFbxNodeに対応するCBone*　motionがコンポーネントとしてアタッチされていないboneの場合もある
-					break;//!!!!!!
-				}
+			if (srcbone && srcbone->IsConcernedCamera(curmi.motname)) {
+				//#######################################################
+				//MotionNameとBoneNameが同じ場合だけ　それらを対応付ける
+				//#######################################################
+				m_camerafbx.PreLoadFbxAnim(srcbone, srcmotid);//srcboneはFbxCamera*を持つFbxNodeに対応するCBone*　motionがコンポーネントとしてアタッチされていないboneの場合もある
+				break;//!!!!!!
 			}
+
+			//if (srcbone && srcbone->IsCamera()) {
+			//	if (strcmp(curmi.motname, srcbone->GetBoneName()) == 0) {
+			//		//#######################################################
+			//		//MotionNameとBoneNameが同じ場合だけ　それらを対応付ける
+			//		//#######################################################
+			//		m_camerafbx.PreLoadFbxAnim(srcbone, srcmotid);//srcboneはFbxCamera*を持つFbxNodeに対応するCBone*　motionがコンポーネントとしてアタッチされていないboneの場合もある
+			//		break;//!!!!!!
+			//	}
+			//}
 		}
 	}
 
@@ -7183,15 +7192,15 @@ int CModel::PostLoadFbxAnim(int srcmotid, bool skeletonflag)
 void CModel::PostLoadFbxAnimReq(int srcmotid, double animlen, CBone* srcbone, bool skeletonflag)
 {
 	if (srcbone) {
-		bool opeflag = false;
-		if (skeletonflag) {
-			opeflag = srcbone->IsSkeleton();
-		}
-		else {
-			opeflag = srcbone->IsNullAndChildIsCamera();
-		}
-
-		if (opeflag) {
+		//bool opeflag = false;
+		//if (skeletonflag) {
+		//	opeflag = srcbone->IsSkeleton();
+		//}
+		//else {
+		//	opeflag = srcbone->IsNullAndChildIsCamera();
+		//}
+		//if (opeflag) {
+		if (srcbone->IsConcerned(srcmotid)) {//2024/06/10
 			double curframe;
 			for (curframe = 0.0; curframe < animlen; curframe += 1.0) {//関数呼び出し時にanimleng - 1している
 
@@ -18905,6 +18914,11 @@ int CModel::CreateLoadFbxAnim(FbxScene* pscene)
 		//カメラとカメラを子供に持つeNullについては、AddMotionPointする目的で対象に加える
 		//ボーンモーション読込時にカメラもAddMotionPointしておかないと
 		//カメラアニメ読込時のAddMotionの際にmotoidとm_motionkey.size()の比較でエラーになる
+		//
+		//2024/06/10
+		//motidとm_motionkey.size()の間の関係が-1ではないものにも対応
+		//スレッド計算対象としてはskeleton, camera, nullandchildiscameraを登録
+		//スレッドから呼び出される関数CBone::GetFbxAnim()内でモーションにより読み込み処理をする対象を選択
 		if (curbone && (curbone->IsSkeleton() || curbone->IsCamera() || (pNode && IsNullAndChildIsCameraNode(pNode)))) {
 			FbxNode* curnode = curbone->GetFbxNodeOnLoad();
 			if (curnode) {
