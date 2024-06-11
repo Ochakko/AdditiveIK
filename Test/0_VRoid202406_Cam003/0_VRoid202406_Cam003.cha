@@ -50,9 +50,10 @@
     <IKStopName>UpperLeg</IKStopName>
     <RGDMORPH>0</RGDMORPH>
     <CURRE>0</CURRE>
-    <RGD>0</RGD>
-    <RefNum>1</RefNum>
+    <RGD>1</RGD>
+    <RefNum>2</RefNum>
     <RefFile>default_ref.ref</RefFile>
+    <RefFile>ForRapidMove.ref</RefFile>
     <ImpNum>1</ImpNum>
     <ImpFile>default_imp.imp</ImpFile>
   </Chara>

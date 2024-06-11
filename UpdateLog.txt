@@ -2,12 +2,13 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
-2024/06/10
-　AdditiveIK 1.0.0.23 RC4(リリース候補4)
+2024/06/11
+　AdditiveIK 1.0.0.23 release
 　　1.0.0.22からの変更点
 　　　カメラアニメ編集機能
 
-　　　　Documents/TroubleShooting/0_AboutCameraAnim.docxにカメラ編集機能について記述
+　　　　Documents/TroubleShooting/0_AboutCameraAnim.docx
+　　　　　上記ファイルにカメラ編集機能について記述
 
 　　　　対応機能
 　　　　　回転、パン、ドリー、XYZ各軸の回転とパン
@@ -16,6 +17,7 @@ https://github.com/Ochakko/AdditiveIK
 　　　　　スムージング
 　　　　　アニメのフレーム長変更
 　　　　　アンドゥリドゥ
+　　　　　fbx入出力
 　　　　fbxに記述されている既存のカメラアニメを編集可能(新規作成機能はまだありません)
 　　　　
 　　　fbxファイル書き出し時のリビジョン番号アップ
@@ -68,7 +70,7 @@ https://github.com/Ochakko/AdditiveIK
 　　　std::mapをstd::vectorのようにkeyとsizeに関連を持たせて使用していたのをやめて、普通にmapとして使用
 　　非カメラモーションにとって関係するボーンとカメラモーションにとって関係するボーンを判定数する関数を追加して整理
 　　上記２つの修正により、複数カメラアニメが設定してあるのfbxの読み込みと書き込みがうまくいくように.
-
+　　fbxファイルのリビジョン番号アップ
 
 
 
@@ -89,6 +91,22 @@ https://github.com/Ochakko/AdditiveIK
 　　　時間に対して30で割って整数にして30を掛ける　を繰り返すことによる丸め誤差
 　　対策
 　　　長いモーションについてはモーション長を30の倍数にする
+
+　既知の問題009　解決済
+　　BlendShapeプレートメニュー選択時に描画速度が極端に遅くなる不具合
+　　　解決済
+
+
+　既知の問題010
+　　症状
+　　　AdditiveIKにVRoid(fbx)を読み込み保存してUnity3Dに持っていくとモデルが真っ白に表示される
+　　原因
+　　　AdditiveIKがEmissionTextureに未対応なので、黒いはずのEmissionが白いEmissionとして表示されてしまう
+　　対策
+　　　UnityでマテリアルのEmissionTextureとしてVRoidのShader_NoneBlack.pngなどを設定し直す
+　　　またはEmissionのチェックをオフにする
+　　対応予定
+　　　AdditiveIKとしての対応予定は有り
 
 
 
