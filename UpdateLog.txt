@@ -2,6 +2,32 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/06/13
+
+　既知の問題0010について続報
+　　
+
+　　########
+　　# 問題0010　対応予定有　VRoid最新版で問題解消
+　　########
+　　　症状
+　　　　AdditiveIKにVRoid(fbx)を読み込み保存してUnity3Dに持っていくと
+　　　　モデルが真っ白に表示される
+　　　(中略)
+　　　2024/06/13状況
+　　　　pixiv様よりVRoidStudio1.28.2がリリースされました
+　　　　まだ１つのモデルでしか確認していませんが
+　　　　VRoid1.28.2とUniVRM0.122.0とUnityにより
+　　　　出力したfbxにおいては
+　　　　Emissionが黒い場合には？Emissionの係数が
+　　　　黒として出力されるようになったようです
+　　　　AdditiveIKとしての対応はこれからですが
+　　　　今のところ、新しいVRoidStudioのfbxでは
+　　　　問題0010は生じません
+
+
+
+
 2024/06/11
 　AdditiveIK 1.0.0.23 release
 　　1.0.0.22からの変更点
