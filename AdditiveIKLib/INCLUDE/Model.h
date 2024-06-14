@@ -1107,7 +1107,13 @@ public:
 
 	//void FillUpEmptyKeyReq( int motid, double animleng, CBone* curbone, CBone* parentbone );
 
-	void CreateIndexedMotionPointReq(CBone* srcbone, int srcmotid, double srcanimleng, int* perrorcount);
+
+
+	//void CreateIndexedMotionPointReq(CBone* srcbone, int srcmotid, double srcanimleng, int* perrorcount);
+	//2024/06/14 大きなfbx読込時に再帰処理でstack overflow.　親の姿勢に関係せずに処理可能なのでCreateIndexedMotionPointにおいては再帰処理をやめた
+	void CreateIndexedMotionPoint(int srcmotid, double srcanimleng, int* perrorcount);
+
+
 
 	CNodeOnLoad* FindNodeOnLoadByName(const char* srcname);
 	FbxNode* FindNodeByBone(CBone* srcbone);
@@ -1279,7 +1285,7 @@ private:
 	int SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* material );
 	int SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname,
 		FbxTexture::EWrapMode addressU, FbxTexture::EWrapMode addressV, 
-		ChaVectorDbl2 chauvscale, ChaVectorDbl2 chauvoffset);
+		ChaVectorDbl2 chauvscale, ChaVectorDbl2 chauvoffset, bool emissiveflag);
 	void CreateFBXBoneReq(FbxScene* pScene, FbxNode* pNode, FbxNode* parnode );
 	//void CreateExtendBoneReq(CBone* srcbone);
 	int GetFBXBone(FbxScene* pScene, FbxNodeAttribute::EType type, FbxNodeAttribute *pAttrib, FbxNode* curnode, FbxNode* parnode );

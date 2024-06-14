@@ -793,11 +793,34 @@ public:
 		m_metaltexid = srcval;
 	};
 
+	//#########
+	//emissive
+	//#########
+	const char* GetEmissiveTex() {
+		return m_emissivetex;
+	};
+	void SetEmissiveTex(const char* srcname) {
+		if (srcname && srcname[0]) {
+			strcpy_s(m_emissivetex, 256, srcname);
+		}
+		else {
+			_ASSERT(0);
+			m_emissivetex[0] = 0;
+		}
+	};
+	int GetEmissiveTexID() {
+		return m_emissivetexid;
+	};
+	void SetEmissiveTexID(int srcval) {
+		m_emissivetexid = srcval;
+	};
 
 	Texture& GetDiffuseMap();
 	Texture& GetAlbedoMap();
 	Texture& GetNormalMap();
 	Texture& GetMetalMap();
+	Texture& GetEmissiveMap();
+
 
 	void ResetUpdateFl4x4Flag()//パイプライン毎
 	{
@@ -963,6 +986,33 @@ public:
 	D3D12_TEXTURE_ADDRESS_MODE GetAddressV_metal()
 	{
 		return m_addressV_metal;
+	}
+
+
+
+	void SetAddressU_emissive(FbxTexture::EWrapMode srcmode) {//eClamp or eRepeat
+		if (srcmode == FbxTexture::EWrapMode::eClamp) {
+			m_addressU_emissive = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		}
+		else {
+			m_addressU_emissive = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		}
+	}
+	D3D12_TEXTURE_ADDRESS_MODE GetAddressU_emissive()
+	{
+		return m_addressU_emissive;
+	}
+	void SetAddressV_emissive(FbxTexture::EWrapMode srcmode) {//eClamp or eRepeat
+		if (srcmode == FbxTexture::EWrapMode::eClamp) {
+			m_addressV_emissive = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		}
+		else {
+			m_addressV_emissive = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		}
+	}
+	D3D12_TEXTURE_ADDRESS_MODE GetAddressV_emissive()
+	{
+		return m_addressV_emissive;
 	}
 
 	void SetRefPosFlag(bool srcflag)
@@ -1252,7 +1302,7 @@ private:
 	char m_albedotex[256];
 	char m_normaltex[256];
 	char m_metaltex[256];
-
+	char m_emissivetex[256];
 
 	int m_vcolflag;
 ////
@@ -1294,6 +1344,7 @@ private:
 	int m_albedotexid;
 	int m_normaltexid;
 	int m_metaltexid;
+	int m_emissivetexid;
 
 	Texture m_whitetex;
 	Texture m_blacktex;
@@ -1301,6 +1352,8 @@ private:
 	Texture* m_albedoMap;//bank管理の外部ポインタ
 	Texture* m_normalMap;//bank管理の外部ポインタ
 	Texture* m_metalMap;//bank管理の外部ポインタ
+	Texture* m_emissiveMap;//bank管理の外部ポインタ
+
 
 	D3D12_TEXTURE_ADDRESS_MODE m_addressU_albedo;
 	D3D12_TEXTURE_ADDRESS_MODE m_addressV_albedo;
@@ -1308,6 +1361,8 @@ private:
 	D3D12_TEXTURE_ADDRESS_MODE m_addressV_normal;
 	D3D12_TEXTURE_ADDRESS_MODE m_addressU_metal;
 	D3D12_TEXTURE_ADDRESS_MODE m_addressV_metal;
+	D3D12_TEXTURE_ADDRESS_MODE m_addressU_emissive;
+	D3D12_TEXTURE_ADDRESS_MODE m_addressV_emissive;
 
 	ChaVectorDbl2 m_uvscale;//2024/03/05
 	ChaVectorDbl2 m_uvoffset;//2024/03/05

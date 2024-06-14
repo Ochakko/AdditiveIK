@@ -299,6 +299,7 @@ int CMQOMaterial::InitParams()
 	ZeroMemory(m_albedotex, sizeof(char) * 256);
 	ZeroMemory(m_normaltex, sizeof(char) * 256);
 	ZeroMemory(m_metaltex, sizeof(char) * 256);
+	ZeroMemory(m_emissivetex, sizeof(char) * 256);
 
 	int shaderindex;
 	for (shaderindex = 0; shaderindex < MQOSHADER_MAX; shaderindex++) {
@@ -390,6 +391,7 @@ int CMQOMaterial::InitParams()
 	m_albedoMap = nullptr;//bank管理の外部ポインタ
 	m_normalMap = nullptr;//bank管理の外部ポインタ
 	m_metalMap = nullptr;//bank管理の外部ポインタ
+	m_emissiveMap = nullptr;//bank管理の外部ポインタ
 
 	m_settempdiffusemult = false;
 	m_tempdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -401,6 +403,8 @@ int CMQOMaterial::InitParams()
 	m_addressV_normal = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	m_addressU_metal = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	m_addressV_metal = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	m_addressU_emissive = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	m_addressV_emissive = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 
 	m_uvscale = ChaVectorDbl2(1.0, 1.0);
 	m_uvoffset = ChaVectorDbl2(0.0, 0.0);
@@ -494,6 +498,10 @@ void CMQOMaterial::DestroyObjs()
 	//	m_specularMap = nullptr;
 	//}
 	m_metalMap = nullptr;
+
+	//bank管理の外部ポインタ
+	m_emissiveMap = nullptr;
+
 
 }
 
@@ -1144,6 +1152,26 @@ int CMQOMaterial::CreateTexture( WCHAR* dirname, int texpool )
 	}
 	else {
 		m_metalMap = 0;
+	}
+
+
+	if (m_emissivetex[0]) {
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_emissivetex, 256, wname, 256);
+
+		//g_texbank->AddTex( dirname, wname, m_transparent, texpool, 0, &m_texid );
+		g_texbank->AddTex(dirname, wname, m_transparent, texpool, &m_emissivetexid);
+
+		CTexElem* findtex = g_texbank->GetTexElem(GetEmissiveTexID());
+		if (findtex) {
+			m_emissiveMap = findtex->GetPTex();
+		}
+		else {
+			_ASSERT(0);
+			m_emissiveMap = 0;
+		}
+	}
+	else {
+		m_emissiveMap = 0;
 	}
 
 
@@ -3086,6 +3114,16 @@ Texture& CMQOMaterial::GetMetalMap()
 		//return m_whitetex;
 	}
 }
+Texture& CMQOMaterial::GetEmissiveMap()
+{
+	if (m_emissiveMap) {
+		return *m_emissiveMap;
+	}
+	else {
+		//return m_blacktex;
+		return m_whitetex;
+	}
+}
 
 int CMQOMaterial::SetDiffuseTexture()
 {
@@ -3148,7 +3186,7 @@ int CMQOMaterial::CreateDecl(ID3D12Device* pdev, int objecttype)
 		//###########
 		//pm4 || pm3
 		//###########
-		EXPAND_SRV_REG__START_NO = 5;
+		EXPAND_SRV_REG__START_NO = 6;
 		NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
 		NUM_CBV_ONE_MATERIAL = 3;
 
@@ -3177,7 +3215,7 @@ int CMQOMaterial::CreateDecl(ID3D12Device* pdev, int objecttype)
 		//#############
 		//extline
 		//#############
-		EXPAND_SRV_REG__START_NO = 5;
+		EXPAND_SRV_REG__START_NO = 6;
 		NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
 		NUM_CBV_ONE_MATERIAL = 1;
 
@@ -3250,7 +3288,8 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
 				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
 				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
-				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 4, *g_shadowmapforshader);//Shadowマップ。
+				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
+				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
 			}
 			//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
 			//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
@@ -3288,7 +3327,8 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
 				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
 				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
-				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 4, *g_shadowmapforshader);//Shadowマップ。
+				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
+				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
 			}
 			//m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
 			//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
@@ -3331,7 +3371,8 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
 				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
 				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
-				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 4, *g_shadowmapforshader);//Shadowマップ。
+				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
+				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
 				//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
 			}
 			//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
@@ -3365,7 +3406,8 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
 				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
 				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
-				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 4, *g_shadowmapforshader);//Shadowマップ。
+				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
+				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
 				//m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
 			}
 			//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {

@@ -153,7 +153,8 @@ Texture2D<float4> g_diffusetex : register(t0);
 Texture2D<float4> g_albedo : register(t1); // アルベドマップ
 Texture2D<float4> g_normalMap : register(t2); // 法線マップ
 Texture2D<float4> g_metallicSmoothMap : register(t3); // メタリックスムースマップ。rにメタリック、aにスムース
-Texture2D<float4> g_shadowMap : register(t4);
+Texture2D<float4> g_emissiveMap : register(t4); // 自己照明マップ
+Texture2D<float4> g_shadowMap : register(t5);
 // サンプラーステート
 sampler g_sampler : register(s0);
 sampler g_sampler_albedo : register(s1);
@@ -204,6 +205,12 @@ float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir)
     return diffusecol;
 }
 
+float4 GetEmissiveMap(float2 uv1)
+{
+    float4 emimap = g_emissiveMap.Sample(g_sampler_albedo, uv1); //UVについてはalbedo,normal,metalをセットで切り替えるように
+    emimap.w = 0.0f; //diffuseに足し算して使用するのでwは0にしておく
+    return emimap;
+}
 
 //float3 GetNormal(float3 normal, float3 tangent, float3 biNormal, float2 uv)
 //{
@@ -649,7 +656,8 @@ SPSOut2 PSMainNoSkinPBR(SPSIn psIn) : SV_Target
     //finalColor.w = albedoColor.w;
     
     float diffusew = (lightsnum.x != 0) ? (albedoColor.w * totalalpha * divlights.x) : albedoColor.w;
-    float4 finalColor = emission * materialdisprate.z + float4(lig, diffusew) * psIn.diffusemult;
+    float4 emimap = GetEmissiveMap(psIn.uv);
+    float4 finalColor = emimap * emission * materialdisprate.z + float4(lig, diffusew) * psIn.diffusemult;
     clip(finalColor.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
     //finalColor.w = ((finalColor.w - ambient0.w) > 0.0f) ? finalColor.w : 0.0f;
     
@@ -776,7 +784,8 @@ SPSOut2 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target
     //finalColor.w = albedoColor.w;
     
     float diffusew = (lightsnum.x != 0) ? (albedoColor.w * totalalpha * divlights.x) : albedoColor.w;
-    float4 finalColor = emission * materialdisprate.z + float4(lig, diffusew) * psIn.diffusemult;
+    float4 emimap = GetEmissiveMap(psIn.uv);
+    float4 finalColor = emimap * emission * materialdisprate.z + float4(lig, diffusew) * psIn.diffusemult;
 
 /////////
     //// ライトビュースクリーン空間からUV空間に座標変換

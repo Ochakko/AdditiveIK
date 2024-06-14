@@ -206,10 +206,11 @@ static void AnimateBoneOfBVHReq( CFBXBone* fbxbone, FbxAnimLayer* lAnimLayer );
 
 
 enum {
-	CREATETEX_ALBEDO,
-	CREATETEX_NORMAL,
-	CREATETEX_METAL,
-	CREATETEX_MAX
+	CHA_CREATETEX_ALBEDO,
+	CHA_CREATETEX_NORMAL,
+	CHA_CREATETEX_METAL,
+	CHA_CREATETEX_EMISSION,
+	CHA_CREATETEX_MAX
 };
 static FbxTexture*  CreateTexture( FbxManager* pSdkManager, CModel* srcmodel, CMQOMaterial* mqomat, int texturetype );
 
@@ -1773,7 +1774,8 @@ bool CreateScene(bool limitdegflag, FbxManager* pSdkManager, FbxScene* pScene, C
 		//sceneInfo->mRevision = "rev. 3.3";//since 2024/06/02 about PM04:30 for AdditiveIK version1.0.0.23
 		//sceneInfo->mRevision = "rev. 3.4";//since 2024/06/07 about PM01:40 for AdditiveIK version1.0.0.23
 		//sceneInfo->mRevision = "rev. 3.5";//since 2024/06/08 about PM10:30 for AdditiveIK version1.0.0.23
-		sceneInfo->mRevision = "rev. 3.6";//since 2024/06/10 about PM2:22 for AdditiveIK version1.0.0.23
+		//sceneInfo->mRevision = "rev. 3.6";//since 2024/06/10 about PM2:22 for AdditiveIK version1.0.0.23
+		sceneInfo->mRevision = "rev. 3.7";//since 2024/06/14 about PM6:40 for AdditiveIK version1.0.0.24
 
 		//######################################################################
 		//rev変更時は　FbxSetDefaultBonePosReq のoldbvh処理部分も更新する必要有
@@ -2829,23 +2831,28 @@ int	CreateFbxMaterialFromMQOMaterial(FbxManager* pSdkManager, FbxScene* pScene,
 
 	int texkind;
 	bool findtexture = false;
-	for (texkind = CREATETEX_ALBEDO; texkind <= CREATETEX_METAL; texkind++) {
+	for (texkind = CHA_CREATETEX_ALBEDO; texkind <= CHA_CREATETEX_EMISSION; texkind++) {
 		FbxTexture* curtex = CreateTexture(pSdkManager, pmodel, mqomat, texkind);
 		if (curtex) {
 			switch (texkind) {
-			case CREATETEX_ALBEDO:
+			case CHA_CREATETEX_ALBEDO:
 				//if (*mqomat->GetAlbedoTex()) {
 					lMaterial->Diffuse.ConnectSrcObject(curtex);
 				//}
 				break;
-			case CREATETEX_METAL:
+			case CHA_CREATETEX_METAL:
 				//if (*mqomat->GetMetalTex()) {
 					lMaterial->Diffuse.ConnectSrcObject(curtex);
 				//}
 				break;
-			case CREATETEX_NORMAL:
+			case CHA_CREATETEX_NORMAL:
 				//if (*mqomat->GetNormalTex()) {
 					lMaterial->NormalMap.ConnectSrcObject(curtex);//2023/12/04 normalmapとしてコネクト
+				//}
+				break;
+			case CHA_CREATETEX_EMISSION:
+				//if (*mqomat->GetEmissiveTex()) {
+				lMaterial->Emissive.ConnectSrcObject(curtex);//2024/06/14 emissiveとしてコネクト
 				//}
 				break;
 			default:
@@ -2962,7 +2969,7 @@ FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMateri
 	FbxTexture::EWrapMode addressV;
 
 	switch (texkind) {
-	case CREATETEX_ALBEDO:
+	case CHA_CREATETEX_ALBEDO:
 	{
 		if (!*(mqomat->GetAlbedoTex())) {
 			return NULL;
@@ -2983,7 +2990,7 @@ FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMateri
 		}
 	}
 		break;
-	case CREATETEX_NORMAL:
+	case CHA_CREATETEX_NORMAL:
 	{
 		if (!*(mqomat->GetNormalTex())) {
 			return NULL;
@@ -3004,7 +3011,7 @@ FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMateri
 		}
 	}
 	break;
-	case CREATETEX_METAL:
+	case CHA_CREATETEX_METAL:
 	{
 		if (!*(mqomat->GetMetalTex())) {
 			return NULL;
@@ -3018,6 +3025,27 @@ FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMateri
 			addressU = FbxTexture::EWrapMode::eClamp;
 		}
 		if (mqomat->GetAddressV_metal() == D3D12_TEXTURE_ADDRESS_MODE_WRAP) {
+			addressV = FbxTexture::EWrapMode::eRepeat;
+		}
+		else {
+			addressV = FbxTexture::EWrapMode::eClamp;
+		}
+	}
+	break;
+	case CHA_CREATETEX_EMISSION:
+	{
+		if (!*(mqomat->GetEmissiveTex())) {
+			return NULL;
+		}
+		strcpy_s(texturename, 256, mqomat->GetEmissiveTex());
+
+		if (mqomat->GetAddressU_emissive() == D3D12_TEXTURE_ADDRESS_MODE_WRAP) {
+			addressU = FbxTexture::EWrapMode::eRepeat;
+		}
+		else {
+			addressU = FbxTexture::EWrapMode::eClamp;
+		}
+		if (mqomat->GetAddressV_emissive() == D3D12_TEXTURE_ADDRESS_MODE_WRAP) {
 			addressV = FbxTexture::EWrapMode::eRepeat;
 		}
 		else {
@@ -5932,6 +5960,7 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 				FbxString currentrev8 = "rev. 3.4";
 				FbxString currentrev9 = "rev. 3.5";
 				FbxString currentrev10 = "rev. 3.6";
+				FbxString currentrev11 = "rev. 3.7";
 				//2.7, 2.8, 2.9, 3.0が内容変更後の新バージョン
 				if ((sceneinfo->mRevision != currentrev1) &&
 					(sceneinfo->mRevision != currentrev2) &&
@@ -5942,7 +5971,8 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 					(sceneinfo->mRevision != currentrev7) &&
 					(sceneinfo->mRevision != currentrev8) &&
 					(sceneinfo->mRevision != currentrev9) &&
-					(sceneinfo->mRevision != currentrev10)
+					(sceneinfo->mRevision != currentrev10) &&
+					(sceneinfo->mRevision != currentrev11)
 					) {
 					oldbvh = true;//!!!!!!!!!!!!!!!!!!!!
 				}

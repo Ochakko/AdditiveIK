@@ -139,7 +139,8 @@ Texture2D<float4> g_diffusetex : register(t0);
 Texture2D<float4> g_albedo : register(t1); // アルベドマップ
 Texture2D<float4> g_normalMap : register(t2); // 法線マップ
 Texture2D<float4> g_metallicSmoothMap : register(t3); // メタリックスムースマップ。rにメタリック、aにスムース
-Texture2D<float4> g_shadowMap : register(t4);
+Texture2D<float4> g_emissiveMap : register(t4); // 自己照明マップ
+Texture2D<float4> g_shadowMap : register(t5);
 // サンプラーステート
 sampler g_sampler : register(s0);
 sampler g_sampler_albedo : register(s1);
@@ -176,6 +177,13 @@ float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir)
     float4 diffusecol = g_diffusetex.Sample(g_sampler_clamp, diffuseuv) * materialdisprate.x;
     
     return diffusecol;
+}
+
+float4 GetEmissiveMap(float2 uv1)
+{
+    float4 emimap = g_emissiveMap.Sample(g_sampler_albedo, uv1); //UVについてはalbedo,normal,metalをセットで切り替えるように
+    emimap.w = 0.0f;//diffuseに足し算して使用するのでwは0にしておく
+    return emimap;
 }
 
 /// <summary>
@@ -327,7 +335,8 @@ SPSOut2 PSMainSkinStd(SPSIn psIn) : SV_Target
     float4 totaldiffuse4 = float4(totaldiffuse, 1.0f);
     totaldiffuse4.w = (lightsnum.x != 0) ? (totalalpha * divlights.x) : 1.0f;
     float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * metalcoef.w;//ライト８個で白飛びしないように応急処置1/8=0.125
-    float4 pscol = emission * materialdisprate.z + albedoColor * psIn.diffusemult * totaldiffuse4 + totalspecular4;
+    float4 emimap = GetEmissiveMap(psIn.uv);
+    float4 pscol = emimap * emission * materialdisprate.z + albedoColor * psIn.diffusemult * totaldiffuse4 + totalspecular4;
     clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
     //pscol.w = ((pscol.w - ambient0.w) > 0.0f) ? pscol.w : 0.0f;
 
@@ -380,7 +389,8 @@ SPSOut2 PSMainSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target
     float4 totaldiffuse4 = float4(totaldiffuse, 1.0f);
     totaldiffuse4.w = (lightsnum.x != 0) ? (totalalpha * divlights.x) : 1.0f;
     float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * metalcoef.w; //ライト８個で白飛びしないように応急処置1/8=0.125
-    float4 pscol = emission * materialdisprate.z + albedoColor * psIn.diffusemult * totaldiffuse4 + totalspecular4;
+    float4 emimap = GetEmissiveMap(psIn.uv);
+    float4 pscol = emimap * emission * materialdisprate.z + albedoColor * psIn.diffusemult * totaldiffuse4 + totalspecular4;
 
 /////////
     // ライトビュースクリーン空間からUV空間に座標変換
@@ -445,7 +455,8 @@ SPSOut2 PSMainSkinNoLight(SPSIn psIn) : SV_Target
 
 
     float4 diffusecol = (lightsnum.y == 1) ? CalcDiffuseColor(1.0f, psIn.normal.xyz, toonlightdir.xyz) : float4(1.0f, 1.0f, 1.0f, 1.0f);
-    float4 pscol = emission * materialdisprate.z + albedoColor * diffusecol * psIn.diffusemult;
+    float4 emimap = GetEmissiveMap(psIn.uv);
+    float4 pscol = emimap * emission * materialdisprate.z + albedoColor * diffusecol * psIn.diffusemult;
     clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
     //pscol.w = ((pscol.w - ambient0.w) > 0.0f) ? pscol.w : 0.0f;
   
@@ -461,8 +472,9 @@ SPSOut2 PSMainSkinNoLightShadowReciever(SPSInShadowReciever psIn) : SV_Target
     float4 albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv);
 
 
-    float4 diffusecol = CalcDiffuseColor(1.0f, psIn.normal.xyz, toonlightdir.xyz);      
-    float4 pscol = emission * materialdisprate.z + albedoColor * diffusecol * psIn.diffusemult;
+    float4 diffusecol = CalcDiffuseColor(1.0f, psIn.normal.xyz, toonlightdir.xyz);
+    float4 emimap = GetEmissiveMap(psIn.uv);
+    float4 pscol = emimap * emission * materialdisprate.z + albedoColor * diffusecol * psIn.diffusemult;
 //////////
     // ライトビュースクリーン空間からUV空間に座標変換
     float2 shadowMapUV = psIn.posInLVP.xy / psIn.posInLVP.w;

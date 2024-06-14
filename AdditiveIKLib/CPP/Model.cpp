@@ -3329,7 +3329,7 @@ int CModel::AddMotion(const char* srcname, const WCHAR* wfilename, double srclen
 
 
 		int errorcount = 0;
-		CreateIndexedMotionPointReq(GetTopBone(false), newid, srcleng, &errorcount);//2022/10/30
+		CreateIndexedMotionPoint(newid, srcleng, &errorcount);//2022/10/30
 		if (errorcount != 0) {
 			if (GetBoneForMotionSize() > 1) {
 				_ASSERT(0);
@@ -4956,9 +4956,9 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 				//if ((strstr(meshname, "plane__35") != 0) || (strstr(materialname, "plane__35") != 0) || (strstr(nodename, "plane__35") != 0)) {
 				//	int dbgflag2 = 1;
 				//}
-				if ((strstr(meshname, "plane__35") != 0) || (strstr(materialname, "Caution") != 0) || (strstr(nodename, "Neon_Other_4") != 0)) {
-					int dbgflag2 = 1;
-				}
+				//if ((strstr(meshname, "plane__35") != 0) || (strstr(materialname, "Caution") != 0) || (strstr(nodename, "Neon_Other_4") != 0)) {
+				//	int dbgflag2 = 1;
+				//}
 
 				CMQOMaterial* currentmaterial = GetMQOMaterialByName(materialname);//既に存在するかどうかチェック
 				if (!currentmaterial) {
@@ -5510,12 +5510,14 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 				FbxString currentrev4 = "rev. 3.4";
 				FbxString currentrev5 = "rev. 3.5";
 				FbxString currentrev6 = "rev. 3.6";
+				FbxString currentrev7 = "rev. 3.7";
 				if ((sceneinfo->mRevision != currentrev1) &&
 					(sceneinfo->mRevision != currentrev2) &&
 					(sceneinfo->mRevision != currentrev3) &&
 					(sceneinfo->mRevision != currentrev4) &&
 					(sceneinfo->mRevision != currentrev5) &&
-					(sceneinfo->mRevision != currentrev6)
+					(sceneinfo->mRevision != currentrev6) &&
+					(sceneinfo->mRevision != currentrev7)
 					) {
 					oldtransparent = true;//!!!!!!!!!!!!!!!!!!!!
 				}
@@ -5573,9 +5575,10 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 
 						char tempname[256];
 						strcpy_s(tempname, 256, lLayeredTexture->GetName());
+						bool emissiveflag = false;
 						SetMaterialTexNames(newmqomat, tempname,
 							lLayeredTexture->GetWrapModeU(), lLayeredTexture->GetWrapModeV(),
-							chauvscale, chauvoffset);	
+							chauvscale, chauvoffset, emissiveflag);	
 						break;
 					}
 				}
@@ -5601,9 +5604,10 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 
 							char tempname[256];
 							strcpy_s(tempname, 256, nameptr);
+							bool emissiveflag = false;
 							SetMaterialTexNames(newmqomat, tempname,
 								lTexture->GetWrapModeU(), lTexture->GetWrapModeV(),
-								chauvscale, chauvoffset);
+								chauvscale, chauvoffset, emissiveflag);
 						}
 					}
 				}
@@ -5632,9 +5636,10 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 
 						char tempname[256];
 						strcpy_s(tempname, 256, lLayeredTexture->GetName());
+						bool emissiveflag = false;
 						SetMaterialTexNames(newmqomat, tempname,
 							lLayeredTexture->GetWrapModeU(), lLayeredTexture->GetWrapModeV(),
-							chauvscale, chauvoffset);
+							chauvscale, chauvoffset, emissiveflag);
 						break;
 					}
 				}
@@ -5660,15 +5665,79 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 
 							char tempname[256];
 							strcpy_s(tempname, 256, nameptr);
+							bool emissiveflag = false;
 							SetMaterialTexNames(newmqomat, tempname,
 								lTexture->GetWrapModeU(), lTexture->GetWrapModeV(),
-								chauvscale, chauvoffset);
+								chauvscale, chauvoffset, emissiveflag);
 						}
 					}
 				}
 			}
 		}
 	}
+
+	{
+		FbxProperty pProperty;
+		pProperty = pMaterial->FindProperty(FbxSurfaceMaterial::sEmissive);
+		int lLayeredTextureCount = pProperty.GetSrcObjectCount<FbxLayeredTexture>();
+		if (lLayeredTextureCount > 0)
+		{
+			for (int j = 0; j < lLayeredTextureCount; ++j)
+			{
+				FbxLayeredTexture* lLayeredTexture = pProperty.GetSrcObject<FbxLayeredTexture>(j);
+				int lNbTextures = lLayeredTexture->GetSrcObjectCount<FbxTexture>();
+				for (int k = 0; k < lNbTextures; ++k)
+				{
+					//char* nameptr = (char*)lLayeredTexture->GetName();
+					if (lLayeredTexture->GetName()) {
+						FbxVector2 fbxuvscale = lLayeredTexture->GetUVScaling();
+						ChaVectorDbl2 chauvscale = ChaVectorDbl2(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
+						FbxVector2 fbxuvoffset = lLayeredTexture->GetUVTranslation();
+						ChaVectorDbl2 chauvoffset = ChaVectorDbl2(fbxuvoffset[0], fbxuvoffset[1]);
+
+						char tempname[256];
+						strcpy_s(tempname, 256, lLayeredTexture->GetName());
+						bool emissiveflag = true;
+						SetMaterialTexNames(newmqomat, tempname,
+							lLayeredTexture->GetWrapModeU(), lLayeredTexture->GetWrapModeV(),
+							chauvscale, chauvoffset, emissiveflag);
+						break;
+					}
+				}
+			}
+		}
+		else
+		{
+			//no layered texture simply get on the property
+			int lNbTextures = pProperty.GetSrcObjectCount<FbxTexture>();
+			if (lNbTextures > 0)
+			{
+				for (int j = 0; j < lNbTextures; ++j)
+				{
+					FbxFileTexture* lTexture = pProperty.GetSrcObject<FbxFileTexture>(j);
+					if (lTexture)
+					{
+						char* nameptr = (char*)lTexture->GetFileName();
+						if (nameptr) {
+							FbxVector2 fbxuvscale = lTexture->GetUVScaling();
+							ChaVectorDbl2 chauvscale = ChaVectorDbl2(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
+							FbxVector2 fbxuvoffset = lTexture->GetUVTranslation();
+							ChaVectorDbl2 chauvoffset = ChaVectorDbl2(fbxuvoffset[0], fbxuvoffset[1]);
+
+							char tempname[256];
+							strcpy_s(tempname, 256, nameptr);
+							bool emissiveflag = true;
+							SetMaterialTexNames(newmqomat, tempname,
+								lTexture->GetWrapModeU(), lTexture->GetWrapModeV(),
+								chauvscale, chauvoffset, emissiveflag);
+						}
+					}
+				}
+			}
+		}
+	}
+
+
 
 	//{
 	//	FbxProperty pProperty;
@@ -5727,7 +5796,8 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 
 int CModel::SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname,
 	FbxTexture::EWrapMode addressU, FbxTexture::EWrapMode addressV,
-	ChaVectorDbl2 chauvscale, ChaVectorDbl2 chauvoffset)
+	ChaVectorDbl2 chauvscale, ChaVectorDbl2 chauvoffset,
+	bool emissiveflag)
 {
 	char temptexname[256] = {0};
 
@@ -5821,8 +5891,13 @@ int CModel::SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname,
 	newmqomat->SetUVOffset(chauvoffset);//2024/03/05
 
 
-
-	if ((newmqomat->GetAlbedoTex() && !(newmqomat->GetAlbedoTex()[0])) &&
+	if (emissiveflag && (newmqomat->GetEmissiveTex() && !(newmqomat->GetEmissiveTex()[0]))) {
+		//2024/06/14 emissive texture
+		newmqomat->SetEmissiveTex(temptexname);
+		newmqomat->SetAddressU_emissive(addressU);
+		newmqomat->SetAddressV_emissive(addressV);
+	}
+	else if ((newmqomat->GetAlbedoTex() && !(newmqomat->GetAlbedoTex()[0])) &&
 		(strstr(temptexname, "albedo") != 0) || (strstr(temptexname, "Albedo") != 0) || 
 		(strstr(temptexname, "_Base") != 0)) {
 		newmqomat->SetAlbedoTex(temptexname);
@@ -6501,7 +6576,7 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 
 					//2023/02/11
 					int errorcount = 0;
-					CreateIndexedMotionPointReq(GetTopBone(false), curmotid, animleng, &errorcount);
+					CreateIndexedMotionPoint(curmotid, animleng, &errorcount);
 					if (errorcount != 0) {
 						//_ASSERT(0);
 						int dbgflag1 = 1;
@@ -6637,32 +6712,32 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 //}
 
 
-void CModel::CreateIndexedMotionPointReq(CBone* srcbone, int srcmotid, double srcanimleng, int* perrorcount)
+void CModel::CreateIndexedMotionPoint(int srcmotid, double srcanimleng, int* perrorcount)
 {
-	if (!srcbone || !perrorcount) {
+	if (!perrorcount) {
+		_ASSERT(0);
 		return;
 	}
 
 	char motionname[256] = { 0 };
 	GetMotionName(srcmotid, 256, motionname);
 
-	////if (srcbone->IsSkeleton() || srcbone->IsCamera() || (srcbone->IsNull() && strcmp(srcbone->GetBoneName(), motionname) == 0)) {
-	//if (srcbone->IsSkeleton() || srcbone->IsCamera() || srcbone->IsNullAndChildIsCamera()) {
-	////if (srcbone->IsSkeleton()) {
-	if (srcbone->IsConcerned(srcmotid)) {//2024/06/10
-		int result;
-		result = srcbone->CreateIndexedMotionPoint(srcmotid, srcanimleng);
-		//_ASSERT(result == 0);
-		if (result != 0) {
-			(*perrorcount)++;
-		}
-	}
 
-	if (srcbone->GetChild(false)) {
-		CreateIndexedMotionPointReq(srcbone->GetChild(false), srcmotid, srcanimleng, perrorcount);
-	}
-	if (srcbone->GetBrother(false)) {
-		CreateIndexedMotionPointReq(srcbone->GetBrother(false), srcmotid, srcanimleng, perrorcount);
+	map<int, CBone*>::iterator itrbone;
+	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
+		CBone* srcbone = itrbone->second;
+
+		////if (srcbone->IsSkeleton() || srcbone->IsCamera() || (srcbone->IsNull() && strcmp(srcbone->GetBoneName(), motionname) == 0)) {
+		//if (srcbone->IsSkeleton() || srcbone->IsCamera() || srcbone->IsNullAndChildIsCamera()) {
+		////if (srcbone->IsSkeleton()) {
+		if (srcbone && srcbone->IsConcerned(srcmotid)) {//2024/06/10
+			int result;
+			result = srcbone->CreateIndexedMotionPoint(srcmotid, srcanimleng);
+			//_ASSERT(result == 0);
+			if (result != 0) {
+				(*perrorcount)++;
+			}
+		}
 	}
 
 }

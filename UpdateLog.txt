@@ -2,6 +2,23 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/06/14
+　既知の問題0010に対する根本的対応
+　　fbxファイルのEmissionTexture(EmissiveTexture)の読み書き表示に対応
+　　fbxのリビジョン番号アップ
+
+
+　Testフォルダのモデルをアップデート
+　　EmissiveTexture対応版モデルとして0_VRoid202406_Cam004
+
+
+　大きいfbx読み込み時にCreateIndexedMoiontPointReqの再帰処理がスタックオーバーフローしたので
+　再帰処理を使わずにCreateIndexedMoiontPoint()するように修正
+
+
+
+
+
 2024/06/13
 
 　既知の問題0010について続報

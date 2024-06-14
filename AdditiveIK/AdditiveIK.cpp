@@ -12175,7 +12175,7 @@ int InitCurMotion(int selectflag, double expandmotion)
 						}
 
 						int errorcount = 0;
-						s_model->CreateIndexedMotionPointReq(s_model->GetTopBone(false),
+						s_model->CreateIndexedMotionPoint(
 							curmi.motid, motleng, &errorcount);
 						if (errorcount != 0) {
 							_ASSERT(0);
@@ -12193,7 +12193,7 @@ int InitCurMotion(int selectflag, double expandmotion)
 						s_model->InitMpFrame(limitdegflag, curmi.motid, topbone, 0.0, RoundingTime(motleng - 1.0));
 
 						int errorcount = 0;
-						s_model->CreateIndexedMotionPointReq(s_model->GetTopBone(false),
+						s_model->CreateIndexedMotionPoint(
 							curmi.motid, motleng, &errorcount);
 						if (errorcount != 0) {
 							_ASSERT(0);
@@ -49588,7 +49588,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.23 : No.%d : ", s_appcnt);
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.24 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -57957,7 +57957,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.23 : No.%d : ", s_appcnt);
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.24 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (s_model && s_chascene) {
@@ -58679,7 +58679,7 @@ int GetCPTFileName(std::vector<HISTORYELEM>& dstvecopenfilename)
 		//MB3DOpenProj_20210410215628.txt
 		WCHAR searchfilename[MAX_PATH] = { 0L };
 		searchfilename[0] = { 0L };
-		swprintf_s(searchfilename, MAX_PATH, L"%sMB3DTempCopyFrames_v1.0.0.23_*.cpt", s_temppath);
+		swprintf_s(searchfilename, MAX_PATH, L"%sMB3DTempCopyFrames_v1.0.0.23_*.cpt", s_temppath);//ファイルのバージョン
 		HANDLE hFind;
 		WIN32_FIND_DATA win32fd;
 		hFind = FindFirstFileW(searchfilename, &win32fd);
@@ -59186,7 +59186,7 @@ int WriteCPTFile(WCHAR* dstfilename)
 
 
 	//2024/06/07 PM8:30頃　ファイルバージョンアップ AdditiveIK1.0.0.23へ向けて
-	swprintf_s(cptfilename, MAX_PATH, L"%s\\MB3DTempCopyFrames_v1.0.0.23_%04u%02u%02u%02u%02u%02u.cpt",
+	swprintf_s(cptfilename, MAX_PATH, L"%s\\MB3DTempCopyFrames_v1.0.0.23_%04u%02u%02u%02u%02u%02u.cpt",//ファイルのバージョン
 		s_temppath,
 		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 
