@@ -2,12 +2,24 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/06/16
+　BlendShapes出力時の名前は名前の中の最後の'.'以降の文字列を出力するように
+　　BlendShape出力時にBlendShapeをコピーすると文字列が付加されて元の名前が変わってしまう
+　　BlendShapeの名前に'.'を使わないことを前提に'.'以降を書き出して名前が変わらないように
+　　fbxファイルのリビジョン番号アップ
+
+　　Test/0_VRoid202406_Cam004モデルを読み込んで保存し直したものに更新
+
+
+　グラフモードをMorphにしている間はタイムラインのフレームを移動した際にブレンド率スライダーを更新
+　　毎フレーム更新すると重いのでフレームが変わった場合に更新
+
+
+
 2024/06/15
 　Documents/TroubleShooting/0_AboutCameraAnim.docx
 　　上記ファイルにカメラ編集機能を使ってみてのメモを追記
 　
-
-
 
 2024/06/14
 　既知の問題0010に対する根本的対応
@@ -21,9 +33,6 @@ https://github.com/Ochakko/AdditiveIK
 
 　大きいfbx読み込み時にCreateIndexedMoiontPointReqの再帰処理がスタックオーバーフローしたので
 　再帰処理を使わずにCreateIndexedMoiontPoint()するように修正
-
-
-
 
 
 2024/06/13

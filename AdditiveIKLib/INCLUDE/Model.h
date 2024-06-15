@@ -1112,7 +1112,7 @@ public:
 	//void CreateIndexedMotionPointReq(CBone* srcbone, int srcmotid, double srcanimleng, int* perrorcount);
 	//2024/06/14 大きなfbx読込時に再帰処理でstack overflow.　親の姿勢に関係せずに処理可能なのでCreateIndexedMotionPointにおいては再帰処理をやめた
 	void CreateIndexedMotionPoint(int srcmotid, double srcanimleng, int* perrorcount);
-
+	void CheckBoneTreeForDebugReq(CBone* srcbone, int srcmotid);//for debug
 
 
 	CNodeOnLoad* FindNodeOnLoadByName(const char* srcname);

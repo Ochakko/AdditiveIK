@@ -3336,6 +3336,9 @@ int CModel::AddMotion(const char* srcname, const WCHAR* wfilename, double srclen
 			}
 		}
 
+		//for debug 2024/06/15
+		//CheckBoneTreeForDebugReq(GetTopBone(false), newid);
+
 	}
 
 
@@ -5511,13 +5514,15 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 				FbxString currentrev5 = "rev. 3.5";
 				FbxString currentrev6 = "rev. 3.6";
 				FbxString currentrev7 = "rev. 3.7";
+				FbxString currentrev8 = "rev. 3.8";
 				if ((sceneinfo->mRevision != currentrev1) &&
 					(sceneinfo->mRevision != currentrev2) &&
 					(sceneinfo->mRevision != currentrev3) &&
 					(sceneinfo->mRevision != currentrev4) &&
 					(sceneinfo->mRevision != currentrev5) &&
 					(sceneinfo->mRevision != currentrev6) &&
-					(sceneinfo->mRevision != currentrev7)
+					(sceneinfo->mRevision != currentrev7) &&
+					(sceneinfo->mRevision != currentrev8)
 					) {
 					oldtransparent = true;//!!!!!!!!!!!!!!!!!!!!
 				}
@@ -6582,6 +6587,9 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 						int dbgflag1 = 1;
 					}
 
+					//for debug 2024/06/15
+					//CheckBoneTreeForDebugReq(GetTopBone(false), curmotid);
+
 				}
 				else {
 				}
@@ -6711,6 +6719,21 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 //	return 0;
 //}
 
+//void CModel::CheckBoneTreeForDebugReq(CBone* srcbone, int srcmotid)
+//{
+//	if (srcbone) {
+//		if (srcbone->IsConcerned(srcmotid)) {//2024/06/10
+//			int dbgflag1 = 1;
+//		}
+//
+//		if (srcbone->GetChild(false)) {
+//			CheckBoneTreeForDebugReq(srcbone->GetChild(false), srcmotid);
+//		}
+//		if (srcbone->GetBrother(false)) {
+//			CheckBoneTreeForDebugReq(srcbone->GetBrother(false), srcmotid);
+//		}
+//	}
+//}
 
 void CModel::CreateIndexedMotionPoint(int srcmotid, double srcanimleng, int* perrorcount)
 {

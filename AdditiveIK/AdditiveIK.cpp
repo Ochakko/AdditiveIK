@@ -35730,6 +35730,15 @@ int OnFrameTimeLineWnd()
 			}
 		}
 
+
+		//2024/06/15
+		//モーフスライダーの位置を更新
+		//毎フレーム呼ぶと重いので　フレーム変更時に呼ぶ
+		if (g_edittarget == EDITTARGET_MORPH) {
+			BlendShapeAnim2Dlg();
+		}
+
+
 		//bool updateonlycheckeul = true;
 		//OnFrameAngleLimit(updateonlycheckeul);//2022/12/30 commentout OnFrameUserMove()にて毎フレームupdateonlycheckeul = trueで呼び出す 
 

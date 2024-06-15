@@ -112,3 +112,40 @@ int IntRotationOrder(EFbxRotationOrder srcorder)
 
 	return retorder;
 }
+
+
+//srcnameの最後の.以降の文字列をdstnameに格納
+int TrimBlendShapeName(const char* srcname, char* dstname, int dstlen)
+{
+	if (!srcname || !dstname || (dstlen <= 0)) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (*srcname <= 0) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (dstlen > 1024) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	int offsettargetname = 0;
+	char outname[1024];
+	ZeroMemory(outname, sizeof(char) * 1024);
+	strcpy_s(outname, 1024, srcname);
+	const char* dottargetname = strrchr(outname, '.');
+	if (dottargetname) {
+		int tmpoffset = min(1023, max(0, (int)(dottargetname - outname + 1)));
+		if (outname[tmpoffset] != 0) {
+			offsettargetname = tmpoffset;
+		}
+		else {//.が最後の文字の場合
+			offsettargetname = 0;
+		}
+	}
+	strcpy_s(dstname, dstlen, (outname + offsettargetname));
+
+	return 0;
+}

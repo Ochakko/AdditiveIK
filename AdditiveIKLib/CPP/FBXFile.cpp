@@ -218,7 +218,7 @@ static int ExistBoneInInf( int boneno, CMQOObject* srcobj, int* dstclusterno );
 
 static int MapShapesOnMesh( FbxScene* pScene, FbxNode* lNode, FbxNode* srcnode, CModel* pmodel, CMQOObject* curobj, BLSINDEX* blsindex );
 static int MapTargetShape( FbxBlendShapeChannel* lBlendShapeChannel, FbxScene* pScene, 
-	CMQOObject* curobj, ChaVector3* targetv, string targetname, int targetcnt );
+	CMQOObject* curobj, ChaVector3* targetv, const char* targetname, int targetcnt );
 
 static void CreateDummyInfDataReq(CFBXBone* fbxbone, FbxManager*& pSdkManager, FbxScene*& pScene, FbxNode* lMesh, FbxSkin* lSkin, CBone** ppsetbone, int* bonecnt);
 static FbxNode* CreateDummyFbxMesh(FbxManager* pSdkManager, FbxScene* pScene, CBone** ppsetbone);
@@ -1775,7 +1775,8 @@ bool CreateScene(bool limitdegflag, FbxManager* pSdkManager, FbxScene* pScene, C
 		//sceneInfo->mRevision = "rev. 3.4";//since 2024/06/07 about PM01:40 for AdditiveIK version1.0.0.23
 		//sceneInfo->mRevision = "rev. 3.5";//since 2024/06/08 about PM10:30 for AdditiveIK version1.0.0.23
 		//sceneInfo->mRevision = "rev. 3.6";//since 2024/06/10 about PM2:22 for AdditiveIK version1.0.0.23
-		sceneInfo->mRevision = "rev. 3.7";//since 2024/06/14 about PM6:40 for AdditiveIK version1.0.0.24
+		//sceneInfo->mRevision = "rev. 3.7";//since 2024/06/14 about PM6:40 for AdditiveIK version1.0.0.24
+		sceneInfo->mRevision = "rev. 3.8";//since 2024/06/16 about AM0:40 for AdditiveIK version1.0.0.24
 
 		//######################################################################
 		//rev変更時は　FbxSetDefaultBonePosReq のoldbvh処理部分も更新する必要有
@@ -2028,7 +2029,7 @@ bool CreateScene(bool limitdegflag, FbxManager* pSdkManager, FbxScene* pScene, C
 //void MapBoxShape(FbxScene* pScene, FbxBlendShapeChannel* lBlendShapeChannel)
 //int MapTargetShape( FbxBlendShapeChannel* lBlendShapeChannel, FbxScene* pScene, CMQOObject* curobj, CMQOObject* curtarget, MATERIALBLOCK* pmb, int mbno )
 int MapTargetShape( FbxBlendShapeChannel* lBlendShapeChannel, FbxScene* pScene, 
-	CMQOObject* curobj, ChaVector3* targetv, string targetname, int targetcnt )
+	CMQOObject* curobj, ChaVector3* targetv, const char* targetname, int targetcnt )
 {
 	char shapename[256]={0};
 	//char tmpname[256] = { 0 };
@@ -2042,7 +2043,7 @@ int MapTargetShape( FbxBlendShapeChannel* lBlendShapeChannel, FbxScene* pScene,
 	//	sprintf_s(shapename, 256, "SHAPE_%s_%d", curobj->GetEngName(), targetcnt);
 	//}
 
-	strcpy_s(shapename, 256, targetname.c_str());
+	strcpy_s(shapename, 256, targetname);
 
 	//if (strcmp(shapename, "Fcl_ALL_Angry") == 0) {
 	//	int dbgflag1 = 1;
@@ -2149,9 +2150,14 @@ int MapShapesOnMesh(FbxScene* pScene, FbxNode* lNode, FbxNode* srcnode, CModel* 
 			if (errorname == 0) {
 				ChaVector3* curv = curobj->GetShapeVert(targetname);
 				if (curv) {
+					char writetargetname[256] = { 0 };
+					TrimBlendShapeName(targetname.c_str(), writetargetname, 256);//2024/06/16 最後の.以降の文字列を格納
+
 					FbxBlendShapeChannel* srcChannel = srcBlendShape->GetBlendShapeChannel(blsindex->channelno);
 					char channelname[256] = { 0 };
 					strcpy_s(channelname, 256, srcChannel->GetName());
+					char writechannelname[256] = { 0 };
+					TrimBlendShapeName(channelname, writechannelname, 256);//2024/06/16 最後の.以降の文字列を格納
 
 					FbxBlendShapeChannel* lBlendShapeChannel = lBlendShape->GetBlendShapeChannel(targetcnt);
 					if (lBlendShapeChannel) {
@@ -2159,15 +2165,18 @@ int MapShapesOnMesh(FbxScene* pScene, FbxNode* lNode, FbxNode* srcnode, CModel* 
 						_ASSERT(0);
 						continue;
 					}
-					lBlendShapeChannel = FbxBlendShapeChannel::Create(pScene, channelname);
+					//lBlendShapeChannel = FbxBlendShapeChannel::Create(pScene, channelname);
+					lBlendShapeChannel = FbxBlendShapeChannel::Create(pScene, writechannelname);//2024/06/16 最後の.以降の文字列
 					if (!lBlendShapeChannel) {
 						_ASSERT(0);
 						abort();
 					}
 					lBlendShape->AddBlendShapeChannel(lBlendShapeChannel);
 
-					MapTargetShape(lBlendShapeChannel, pScene, curobj, curv, targetname, targetcnt);
+					//MapTargetShape(lBlendShapeChannel, pScene, curobj, curv, targetname, targetcnt);
+					MapTargetShape(lBlendShapeChannel, pScene, curobj, curv, writetargetname, targetcnt);//2024/06/16 最後の.以降の文字列
 
+					
 					BLSINFO blsinfo;
 					blsinfo.Init();
 
@@ -5961,6 +5970,7 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 				FbxString currentrev9 = "rev. 3.5";
 				FbxString currentrev10 = "rev. 3.6";
 				FbxString currentrev11 = "rev. 3.7";
+				FbxString currentrev12 = "rev. 3.8";
 				//2.7, 2.8, 2.9, 3.0が内容変更後の新バージョン
 				if ((sceneinfo->mRevision != currentrev1) &&
 					(sceneinfo->mRevision != currentrev2) &&
@@ -5972,7 +5982,8 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 					(sceneinfo->mRevision != currentrev8) &&
 					(sceneinfo->mRevision != currentrev9) &&
 					(sceneinfo->mRevision != currentrev10) &&
-					(sceneinfo->mRevision != currentrev11)
+					(sceneinfo->mRevision != currentrev11) &&
+					(sceneinfo->mRevision != currentrev12)
 					) {
 					oldbvh = true;//!!!!!!!!!!!!!!!!!!!!
 				}
