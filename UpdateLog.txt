@@ -2,6 +2,13 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/06/15
+　Documents/TroubleShooting/0_AboutCameraAnim.docx
+　　上記ファイルにカメラ編集機能を使ってみてのメモを追記
+　
+
+
+
 2024/06/14
 　既知の問題0010に対する根本的対応
 　　fbxファイルのEmissionTexture(EmissiveTexture)の読み書き表示に対応
