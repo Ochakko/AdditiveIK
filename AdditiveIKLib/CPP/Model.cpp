@@ -3952,7 +3952,7 @@ int CModel::CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, i
 	bool excludeinvface = true;
 	int colli = 0;
 	colli = pickobj->CollisionGlobal_Ray_Pm(startglobal, dirglobal, startlocal, dirlocal,
-		excludeinvface, hitfaceindex, dsthitpos);
+		excludeinvface, hitfaceindex, dsthitpos);//polymesh4の場合のhitposはグローバル座標系で返ってくる
 	return colli;
 
 }
@@ -3974,7 +3974,18 @@ int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, 
 	CalcMouseLocalRay(pickinfo, &startlocal, &dirlocal);
 	bool excludeinvface = true;
 	int colli = 0;
-	colli = pickobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, excludeinvface, hitfaceindex, dsthitpos);
+	ChaVector3 tmphitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	colli = pickobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, excludeinvface, hitfaceindex, &tmphitpos);
+
+
+	//2024/06/16
+	//CollisionLocal_Ray_Pm3()で取得するhitposはメッシュのローカル座標系での座標値
+	//アプリで使用しやすいように　ワールド座標系に直してから返す
+	if (colli != 0) {
+		ChaMatrix tmpwm = GetWorldMat();
+		ChaVector3TransformCoord(dsthitpos, &tmphitpos, &tmpwm);
+	}
+
 	return colli;
 
 }

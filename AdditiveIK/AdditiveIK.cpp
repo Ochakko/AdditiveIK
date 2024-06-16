@@ -15083,7 +15083,9 @@ int RenderGrass(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 	for (grasselemindex = 0; grasselemindex < grasselemnum; grasselemindex++) {
 		CGrassElem* curgrasselem = s_grassElemVec[grasselemindex];
 		if (curgrasselem && curgrasselem->GetGrass()) {
-			ChaMatrix tmpwm = curgrasselem->GetGrass()->GetWorldMat();
+			//ChaMatrix tmpwm = curgrasselem->GetGrass()->GetWorldMat();
+			ChaMatrix tmpwm;
+			tmpwm.SetIdentity();//2024/06/16
 			curgrasselem->GetGrass()->UpdateMatrix(false,
 				&tmpwm, &s_matView, &s_matProj, true, 0);
 
