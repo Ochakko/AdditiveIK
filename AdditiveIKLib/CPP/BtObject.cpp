@@ -56,7 +56,7 @@ int CBtObject::InitParams()
 	ChaMatrixIdentity(&m_firstTransformMatX);
 	m_firstTransform.setIdentity();
 
-	m_btpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	m_btpos.SetParams(0.0f, 0.0f, 0.0f);
 
 	m_connectflag = 0;
 	m_constzrad = 0.0f;
@@ -352,7 +352,8 @@ int CBtObject::CreateObject(bool limitdegflag, int srcmotid, double srcframe, CB
 	m_btq.SetParams(btq.getW(), btq.getX(), btq.getY(), btq.getZ());//2023/01/17
 
 
-	ChaVector3 starteul = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 starteul;
+	starteul.SetParams(0.0f, 0.0f, 0.0f);
 	//ChaVector3 befeul = m_bone->GetLocalEul(limitdegflag, srcmotid, srcframe, 0);
 	BEFEUL befeul = m_bone->GetBefEul(limitdegflag, srcmotid, srcframe);
 	CQuaternion axisq;
@@ -972,8 +973,8 @@ int CBtObject::SetEquilibriumPoint(bool limitdegflag, int lflag, int aflag)
 			//
 			//
 			//		ChaVector3 lowereul, uppereul;
-			//		lowereul = ChaVector3(btScalar(anglelimit.lower[0]), btScalar(anglelimit.lower[1]), btScalar(anglelimit.lower[2]));
-			//		uppereul = ChaVector3(btScalar(anglelimit.upper[0]), btScalar(anglelimit.upper[1]), btScalar(anglelimit.upper[2]));
+			//		lowereul.SetParams(btScalar(anglelimit.lower[0]), btScalar(anglelimit.lower[1]), btScalar(anglelimit.lower[2]));
+			//		uppereul.SetParams(btScalar(anglelimit.upper[0]), btScalar(anglelimit.upper[1]), btScalar(anglelimit.upper[2]));
 			//
 			//		//CQuaternion lowereulq;
 			//		//lowereulq.SetRotationXYZ(&eulaxisq, lowereul);
@@ -1122,7 +1123,7 @@ int CBtObject::SetPosture2Bt(bool secondcall, bool btmovable, int limitrate,
 	worldtra.setOrigin(btVector3(srcrigidcenter.x, srcrigidcenter.y, srcrigidcenter.z));
 
 	m_rigidbody->getMotionState()->setWorldTransform(worldtra);
-	m_btpos = ChaVector3(srcrigidcenter.x, srcrigidcenter.y, srcrigidcenter.z);
+	m_btpos.SetParams(srcrigidcenter.x, srcrigidcenter.y, srcrigidcenter.z);
 
 
 	if (secondcall) {
@@ -1275,7 +1276,8 @@ int CBtObject::SetBtMotion(bool limitdegflag, ChaMatrix curtraanim)
 	//calc BtEul
 	CQuaternion curlocalq;
 	curlocalq.RotationMatrix(xlocalrotmat);	
-	ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 cureul;
+	cureul.SetParams(0.0f, 0.0f, 0.0f);
 	int notmodify180flag = 1;
 	//ChaVector3 befeul = m_bone->GetBtEul();
 	BEFEUL befeul;

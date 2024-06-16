@@ -836,7 +836,7 @@ int ChaCalcFunc::RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int* onlyc
 	}
 
 	//Get startframeframe traanim : SRT保存はCModel::IKRotate* から呼び出すCBone::SaveSRT()で行っている
-	//ChaVector3 startframetraanim = ChaVector3(0.0f, 0.0f, 0.0f);
+	//ChaVector3 startframetraanim.SetParams(0.0f, 0.0f, 0.0f);
 	ChaMatrix startframetraanimmat;
 	startframetraanimmat.SetIdentity();
 	{
@@ -1695,7 +1695,8 @@ int ChaCalcFunc::CalcBoneEulOne(CModel* srcmodel, bool limitdegflag, CBone* curb
 	}
 
 	if (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera()) {
-		ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+		ChaVector3 cureul;
+		cureul.SetParams(0.0f, 0.0f, 0.0f);
 		int paraxiskind = -1;
 		double srcframe;
 		for (srcframe = RoundingTime(startframe); srcframe <= RoundingTime(endframe); srcframe += 1.0) {
@@ -1754,7 +1755,8 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 
 	//axiskind : BONEAXIS_*  or  -1(CBone::m_anglelimit.boneaxiskind)
 
-	ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 cureul;
+	cureul.SetParams(0.0f, 0.0f, 0.0f);
 	BEFEUL befeul;
 	befeul.Init();
 
@@ -1907,9 +1909,9 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 		FbxTime fbxtime0;
 		fbxtime0.SetSecondDouble(0.0);
 		FbxDouble3 fbxLclRot = srcbone->GetFbxNodeOnLoad()->EvaluateLocalRotation(fbxtime0, FbxNode::eSourcePivot, true, true);
-		cureul = ChaVector3((float)fbxLclRot[0], (float)fbxLclRot[1], (float)fbxLclRot[2]);
+		cureul.SetParams((float)fbxLclRot[0], (float)fbxLclRot[1], (float)fbxLclRot[2]);
 
-		//cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+		//cureul.SetParams(0.0f, 0.0f, 0.0f);
 
 		//CMotionPoint* curmp = 0;
 		//curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
@@ -1926,7 +1928,7 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 		//		ChaVector3(0.0f, 0.0f, 0.0f), &cureul, 0, 0, 1);
 		//}
 		//else {
-		//	cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+		//	cureul.SetParams(0.0f, 0.0f, 0.0f);
 		//}
 
 		//if (srcbone->GetParModel() && srcbone->GetParModel()->IsCameraLoaded()) {
@@ -1935,12 +1937,12 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 		//	cureul = srcbone->GetParModel()->CalcCameraFbxEulXYZ(srcmotid, roundingframe);
 		//	//####  rotorder注意  #####
 		//	LeaveCriticalSection(&g_CritSection_FbxSdk);
-		//	//cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+		//	//cureul.SetParams(0.0f, 0.0f, 0.0f);
 		//
 		//}
 		//else {
 		//	_ASSERT(0);
-		//	cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+		//	cureul.SetParams(0.0f, 0.0f, 0.0f);
 		//}
 	}
 	else if (srcbone->IsNull()) {
@@ -1972,7 +1974,7 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 					ChaVector3(0.0f, 0.0f, 0.0f), &cureul, cameranotmodify180flag);
 			}
 			else {
-				cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+				cureul.SetParams(0.0f, 0.0f, 0.0f);
 			}
 
 
@@ -1997,7 +1999,7 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 			//
 			//}
 			//else {
-			//	cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+			//	cureul.SetParams(0.0f, 0.0f, 0.0f);
 			//}
 		}
 		else {
@@ -2108,8 +2110,10 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, bool directsetfl
 		//calc bef SRT
 		ChaMatrix befrmat;
 		befrmat.SetIdentity();
-		ChaVector3 befscalevec = ChaVector3(1.0f, 1.0f, 1.0f);
-		ChaVector3 beftvec = ChaVector3(0.0f, 0.0f, 0.0f);
+		ChaVector3 befscalevec;
+		befscalevec.SetParams(1.0f, 1.0f, 1.0f);
+		ChaVector3 beftvec;
+		beftvec.SetParams(0.0f, 0.0f, 0.0f);
 		GetSRTMatrix(beflocalmat, &befscalevec, &befrmat, &beftvec);
 
 		//calc new SRT
@@ -2122,7 +2126,8 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, bool directsetfl
 
 		//calc new eul
 		srcbone->SetWorldMat(limitdegflag, srcmotid, roundingframe, srcmat, curmp);//tmp time
-		ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
+		ChaVector3 neweul;
+		neweul.SetParams(0.0f, 0.0f, 0.0f);
 		neweul = srcbone->CalcLocalEulXYZ(limitdegflag, -1, srcmotid, roundingframe, BEFEUL_BEFFRAME);
 
 
@@ -2338,12 +2343,13 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 
 	////calc new eul
 	//srcbone->SetWorldMat(limitdegflag, srcmotid, roundingframe, srcmat, curmp);//tmp time
-	//ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
+	//ChaVector3 neweul.SetParams(0.0f, 0.0f, 0.0f);
 	//neweul = srcbone->CalcLocalEulXYZ(limitdegflag, -1, srcmotid, roundingframe, BEFEUL_BEFFRAME);
 
 	CQuaternion axisq;
 	axisq.RotationMatrix(srcbone->GetNodeMat());
-	ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 neweul;
+	neweul.SetParams(0.0f, 0.0f, 0.0f);
 	CQuaternion eulq;
 	//eulq.RotationMatrix(srcmat);//<--- global !!!
 	eulq.RotationMatrix(newlocalmat);//local !!!
@@ -2439,7 +2445,8 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 				befeul3.Init();
 				befeul3.befframeeul = saveeul;
 				befeul3.currentframeeul = saveeul;
-				ChaVector3 seteul = ChaVector3(0.0f, 0.0f, 0.0f);
+				ChaVector3 seteul;
+				seteul.SetParams(0.0f, 0.0f, 0.0f);
 				
 				//eulq.Q2EulXYZusingQ(true, false, &axisq, befeul3, &seteul, isfirstbone, isendbone, notmodify180flag3);
 				calcq1.Q2EulXYZusingQ(true, false, &axisq, befeul3, &seteul, isfirstbone, isendbone, notmodify180flag3);
@@ -2512,7 +2519,8 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 				befeul3.Init();
 				befeul3.befframeeul = saveeul;
 				befeul3.currentframeeul = saveeul;
-				ChaVector3 seteul = ChaVector3(0.0f, 0.0f, 0.0f);
+				ChaVector3 seteul;
+				seteul.SetParams(0.0f, 0.0f, 0.0f);
 				calcq2.Q2EulXYZusingQ(true, false, &axisq, befeul3, &seteul, isfirstbone, isendbone, notmodify180flag3);
 				srcbone->SetBtEul(seteul);
 			}
@@ -2560,7 +2568,8 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 				befeul3.Init();
 				befeul3.befframeeul = saveeul;
 				befeul3.currentframeeul = saveeul;
-				ChaVector3 seteul = ChaVector3(0.0f, 0.0f, 0.0f);
+				ChaVector3 seteul;
+				seteul.SetParams(0.0f, 0.0f, 0.0f);
 				calcq1.Q2EulXYZusingQ(true, false, &axisq, befeul3, &seteul, isfirstbone, isendbone, notmodify180flag3);
 				srcbone->SetBtEul(seteul);
 			}
@@ -2944,8 +2953,10 @@ ChaVector3 ChaCalcFunc::LimitEul(CBone* srcbone, ChaVector3 srceul)
 
 	const float thdeg = 165.0f;
 
-	ChaVector3 reteul = ChaVector3(0.0f, 0.0f, 0.0f);
-	ChaVector3 tmpeul = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 reteul;
+	reteul.SetParams(0.0f, 0.0f, 0.0f);
+	ChaVector3 tmpeul;
+	tmpeul.SetParams(0.0f, 0.0f, 0.0f);
 
 
 	//2023/04/28
@@ -3071,7 +3082,8 @@ ChaVector3 ChaCalcFunc::GetLocalEul(CBone* srcbone, bool limitdegflag, int srcmo
 {
 	double roundingframe = RoundingTime(srcframe);
 
-	ChaVector3 reteul = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 reteul;
+	reteul.SetParams(0.0f, 0.0f, 0.0f);
 	if (!srcbone) {
 		_ASSERT(0);
 		return reteul;
@@ -3130,7 +3142,7 @@ ChaVector3 ChaCalcFunc::GetLocalEul(CBone* srcbone, bool limitdegflag, int srcmo
 		}
 		else {
 			//_ASSERT(0);
-			reteul = ChaVector3(0.0f, 0.0f, 0.0f);
+			reteul.SetParams(0.0f, 0.0f, 0.0f);
 		}
 	}
 
@@ -3416,7 +3428,8 @@ void ChaCalcFunc::UpdateCurrentWM(CBone* srcbone, bool limitdegflag, int srcmoti
 		befeul.Init();
 		befeul.befframeeul = saveeul;
 		befeul.currentframeeul = saveeul;
-		ChaVector3 seteul = ChaVector3(0.0f, 0.0f, 0.0f);
+		ChaVector3 seteul;
+		seteul.SetParams(0.0f, 0.0f, 0.0f);
 		CQuaternion setq;
 		//setq.RotationMatrix(newwm);//global !!!!
 		setq.RotationMatrix(currentlocalmat);//local !!!!
@@ -3958,12 +3971,12 @@ int ChaCalcFunc::ConvBoneRotation(CModel* srcmodel, CModel* srcbvhmodel, int sel
 			}
 			else {
 				rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-				traanim = ChaVector3(0.0f, 0.0f, 0.0f);
+				traanim.SetParams(0.0f, 0.0f, 0.0f);
 			}
 		}
 		else {
 			//rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-			//traanim = ChaVector3(0.0f, 0.0f, 0.0f);
+			//traanim.SetParams(0.0f, 0.0f, 0.0f);
 
 			return 0;
 		}
@@ -4534,7 +4547,7 @@ int ChaCalcFunc::InitMP(CBone* srcbone, bool limitdegflag, int srcmotid, double 
 
 			////SetInitMat(xmat);
 			//////オイラー角初期化
-			//ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+			//ChaVector3 cureul.SetParams(0.0f, 0.0f, 0.0f);
 			//int paraxsiflag = 1;
 
 
@@ -4577,7 +4590,7 @@ int ChaCalcFunc::InitMP(CBone* srcbone, bool limitdegflag, int srcmotid, double 
 	//	newmp->SetWorldMat(xmat);
 	//	//SetInitMat(xmat);
 	//	////オイラー角初期化
-	//	ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+	//	ChaVector3 cureul.SetParams(0.0f, 0.0f, 0.0f);
 	//	int paraxsiflag = 1;
 	//	cureul = CalcLocalEulXYZ(paraxsiflag, srcmotid, roundingframe, BEFEUL_ZERO);
 	//	SetLocalEul(srcmotid, roundingframe, cureul);
@@ -4628,7 +4641,7 @@ int ChaCalcFunc::InitMP(CBone* srcbone, bool limitdegflag, int srcmotid, double 
 	//			newmp->SetWorldMat(tmpmat);//anglelimit無し
 
 	//			//オイラー角初期化
-	//			ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+	//			ChaVector3 cureul.SetParams(0.0f, 0.0f, 0.0f);
 	//			int paraxiskind = -1;//2021/11/18
 	//			//int isfirstbone = 0;
 	//			cureul = curbone->CalcLocalEulXYZ(paraxiskind, motid, (double)framecnt, BEFEUL_ZERO);
@@ -4677,7 +4690,7 @@ int ChaCalcFunc::InitMP(CModel* srcmodel, bool limitdegflag, CBone* curbone, int
 	//}
 
 	////オイラー角初期化
-	//ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+	//ChaVector3 cureul.SetParams(0.0f, 0.0f, 0.0f);
 	//int paraxsiflag = 1;
 	////int isfirstbone = 0;
 	//cureul = curbone->CalcLocalEulXYZ(paraxsiflag, GetCurMotInfo()->motid, curframe, BEFEUL_ZERO);
@@ -4809,7 +4822,7 @@ BEFEUL ChaCalcFunc::GetBefEul(CBone* srcbone, bool limitdegflag, int srcmotid, d
 	//	befframe = roundingframe - 1.0;
 	//	if (roundingframe <= 1.01) {
 	//		//roundingframe が0.0または1.0の場合 
-	//		//befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+	//		//befeul.SetParams(0.0f, 0.0f, 0.0f);
 	//		CMotionPoint* curmp;
 	//		curmp = GetMotionPoint(srcmotid, roundingframe);
 	//		if (curmp) {
@@ -4834,7 +4847,7 @@ BEFEUL ChaCalcFunc::GetBefEul(CBone* srcbone, bool limitdegflag, int srcmotid, d
 	//
 	////if (g_underIKRot == true) {
 	////	if (roundingframe <= 1.01) {
-	////		befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+	////		befeul.SetParams(0.0f, 0.0f, 0.0f);
 	////	}
 	////}
 
@@ -4919,9 +4932,9 @@ ChaMatrix ChaCalcFunc::ccfChaMatrixRot(ChaMatrix srcmat)//回転成分だけの�
 	retmat.SetIdentity();
 
 	ChaVector3 rotx, roty, rotz;
-	rotx = ChaVector3(srcmat.data[MATI_11], srcmat.data[MATI_12], srcmat.data[MATI_13]);
-	roty = ChaVector3(srcmat.data[MATI_21], srcmat.data[MATI_22], srcmat.data[MATI_23]);
-	rotz = ChaVector3(srcmat.data[MATI_31], srcmat.data[MATI_32], srcmat.data[MATI_33]);
+	rotx.SetParams(srcmat.data[MATI_11], srcmat.data[MATI_12], srcmat.data[MATI_13]);
+	roty.SetParams(srcmat.data[MATI_21], srcmat.data[MATI_22], srcmat.data[MATI_23]);
+	rotz.SetParams(srcmat.data[MATI_31], srcmat.data[MATI_32], srcmat.data[MATI_33]);
 	ChaVector3Normalize(&rotx, &rotx);
 	ChaVector3Normalize(&roty, &roty);
 	ChaVector3Normalize(&rotz, &rotz);
@@ -4948,9 +4961,9 @@ ChaMatrix ChaCalcFunc::ccfChaMatrixScale(ChaMatrix srcmat)//スケール成分�
 	retmat.SetIdentity();
 
 	ChaVector3 rotx, roty, rotz;
-	rotx = ChaVector3(srcmat.data[MATI_11], srcmat.data[MATI_12], srcmat.data[MATI_13]);
-	roty = ChaVector3(srcmat.data[MATI_21], srcmat.data[MATI_22], srcmat.data[MATI_23]);
-	rotz = ChaVector3(srcmat.data[MATI_31], srcmat.data[MATI_32], srcmat.data[MATI_33]);
+	rotx.SetParams(srcmat.data[MATI_11], srcmat.data[MATI_12], srcmat.data[MATI_13]);
+	roty.SetParams(srcmat.data[MATI_21], srcmat.data[MATI_22], srcmat.data[MATI_23]);
+	rotz.SetParams(srcmat.data[MATI_31], srcmat.data[MATI_32], srcmat.data[MATI_33]);
 
 	float scalex, scaley, scalez;
 	scalex = (float)ChaVector3LengthDbl(&rotx);
@@ -4979,9 +4992,9 @@ ChaMatrix ChaCalcFunc::ccfChaMatrixTra(ChaMatrix srcmat)//移動成分だけの�
 ChaVector3 ChaCalcFunc::ccfChaMatrixScaleVec(ChaMatrix srcmat)//スケール成分のベクトルを取得
 {
 	ChaVector3 rotx, roty, rotz;
-	rotx = ChaVector3(srcmat.data[MATI_11], srcmat.data[MATI_12], srcmat.data[MATI_13]);
-	roty = ChaVector3(srcmat.data[MATI_21], srcmat.data[MATI_22], srcmat.data[MATI_23]);
-	rotz = ChaVector3(srcmat.data[MATI_31], srcmat.data[MATI_32], srcmat.data[MATI_33]);
+	rotx.SetParams(srcmat.data[MATI_11], srcmat.data[MATI_12], srcmat.data[MATI_13]);
+	roty.SetParams(srcmat.data[MATI_21], srcmat.data[MATI_22], srcmat.data[MATI_23]);
+	rotz.SetParams(srcmat.data[MATI_31], srcmat.data[MATI_32], srcmat.data[MATI_33]);
 
 	float scalex, scaley, scalez;
 	scalex = (float)ChaVector3LengthDbl(&rotx);
@@ -5001,8 +5014,9 @@ ChaVector3 ChaCalcFunc::ccfChaMatrixRotVec(ChaMatrix srcmat, int notmodify180fla
 	//srcmatには　GetNodeMat * GetWorldMat * Inv(GetParent()->GetWorldMat) * Inv(GetParent()->GetNodeMat) を渡す
 	//ジョイントのオイラー角を取得する場合には　CBone::CalcLocalEulXYZ()を使う
 
-	ChaVector3 reteul = ChaVector3(0.0f, 0.0f, 0.0f);
-	//ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 reteul;
+	reteul.SetParams(0.0f, 0.0f, 0.0f);
+	//ChaVector3 befeul.SetParams(0.0f, 0.0f, 0.0f);
 	BEFEUL befeul;
 	befeul.Init();
 
@@ -5439,7 +5453,7 @@ void ChaCalcFunc::ccfChaVector3Normalize(ChaVector3* pdst, const ChaVector3* psr
 	//	pdst->z = result[2];
 	//}
 	//else {
-	//	//*pdst = ChaVector3(0.0f, 0.0f, 0.0f);
+	//	//*pdst.SetParams(0.0f, 0.0f, 0.0f);
 	//	pdst->x = psrc->x;
 	//	pdst->y = psrc->y;
 	//	pdst->z = psrc->z;
@@ -5464,7 +5478,7 @@ void ChaCalcFunc::ccfChaVector3Normalize(ChaVector3* pdst, const ChaVector3* psr
 		}
 	}
 	else {
-		//*pdst = ChaVector3(0.0f, 0.0f, 0.0f);
+		//*pdst.SetParams(0.0f, 0.0f, 0.0f);
 		pdst->x = src.x;
 		pdst->y = src.y;
 		pdst->z = src.z;
@@ -5868,9 +5882,12 @@ ChaMatrix* ChaCalcFunc::ccfChaMatrixRotationYawPitchRoll(ChaMatrix* pOut, float 
 		return NULL;
 	}
 
-	ChaVector3 axisy = ChaVector3(0.0f, 1.0f, 0.0f);
-	ChaVector3 axisx = ChaVector3(1.0f, 0.0f, 0.0f);
-	ChaVector3 axisz = ChaVector3(0.0f, 0.0f, 1.0f);
+	ChaVector3 axisy;
+	axisy.SetParams(0.0f, 1.0f, 0.0f);
+	ChaVector3 axisx;
+	axisx.SetParams(1.0f, 0.0f, 0.0f);
+	ChaVector3 axisz;
+	axisz.SetParams(0.0f, 0.0f, 1.0f);
 
 	CQuaternion qyaw, qpitch, qroll;
 	qyaw.SetAxisAndRot(axisy, srcyaw);
@@ -5890,7 +5907,8 @@ ChaMatrix* ChaCalcFunc::ccfChaMatrixRotationX(ChaMatrix* pOut, float srcrad)
 		return NULL;
 	}
 
-	ChaVector3 axisx = ChaVector3(1.0f, 0.0f, 0.0f);
+	ChaVector3 axisx;
+	axisx.SetParams(1.0f, 0.0f, 0.0f);
 	CQuaternion qx;
 	qx.SetAxisAndRot(axisx, srcrad);
 
@@ -5904,7 +5922,8 @@ ChaMatrix* ChaCalcFunc::ccfChaMatrixRotationY(ChaMatrix* pOut, float srcrad)
 		return NULL;
 	}
 
-	ChaVector3 axisy = ChaVector3(0.0f, 1.0f, 0.0f);
+	ChaVector3 axisy;
+	axisy.SetParams(0.0f, 1.0f, 0.0f);
 	CQuaternion qy;
 	qy.SetAxisAndRot(axisy, srcrad);
 
@@ -5918,7 +5937,8 @@ ChaMatrix* ChaCalcFunc::ccfChaMatrixRotationZ(ChaMatrix* pOut, float srcrad)
 		return NULL;
 	}
 
-	ChaVector3 axisz = ChaVector3(0.0f, 0.0f, 1.0f);
+	ChaVector3 axisz;
+	axisz.SetParams(0.0f, 0.0f, 1.0f);
 	CQuaternion qz;
 	qz.SetAxisAndRot(axisz, srcrad);
 
@@ -6003,8 +6023,10 @@ ChaMatrix ChaCalcFunc::ccfCalcAxisMatX(ChaVector3 vecx, ChaVector3 srcpos, ChaMa
 	//convmatのvecxをbonevecにする　それに合わせて３軸が互いに垂直になるようにvecy, veczを求める
 	//###########################################################################################
 	ChaVector3 axisx = vecx;
-	ChaVector3 axisy0 = ChaVector3(srcmat.data[MATI_21], srcmat.data[MATI_22], srcmat.data[MATI_23]);
-	ChaVector3 axisz0 = ChaVector3(srcmat.data[MATI_31], srcmat.data[MATI_32], srcmat.data[MATI_33]);
+	ChaVector3 axisy0;
+	axisy0.SetParams(srcmat.data[MATI_21], srcmat.data[MATI_22], srcmat.data[MATI_23]);
+	ChaVector3 axisz0;
+	axisz0.SetParams(srcmat.data[MATI_31], srcmat.data[MATI_32], srcmat.data[MATI_33]);
 
 	ChaVector3 axisy1, axisz1;
 	ChaVector3Cross(&axisy1, &axisz0, &axisx);
@@ -6448,9 +6470,9 @@ void ChaCalcFunc::ccfGetSRTMatrix(ChaMatrix srcmat, ChaVector3* svecptr, ChaMatr
 		return;
 	}
 
-	*svecptr = ChaVector3(1.0f, 1.0f, 1.0f);
+	svecptr->SetParams(1.0f, 1.0f, 1.0f);
 	ChaMatrixIdentity(rmatptr);
-	*tvecptr = ChaVector3(0.0f, 0.0f, 0.0f);
+	tvecptr->SetParams(0.0f, 0.0f, 0.0f);
 
 	ChaMatrix tmpmat1 = srcmat;
 
@@ -6589,8 +6611,10 @@ void ChaCalcFunc::ccfGetSRTMatrix2(ChaMatrix srcmat, ChaMatrix* smatptr, ChaMatr
 	ChaMatrixIdentity(&rmat);
 	ChaMatrixIdentity(&tmat);
 
-	ChaVector3 svec = ChaVector3(0.0, 0.0, 0.0);
-	ChaVector3 tvec = ChaVector3(0.0, 0.0, 0.0);
+	ChaVector3 svec;
+	svec.SetParams(0.0, 0.0, 0.0);
+	ChaVector3 tvec;
+	tvec.SetParams(0.0, 0.0, 0.0);
 
 	GetSRTMatrix(srcmat, &svec, &rmat, &tvec);
 
@@ -6613,7 +6637,8 @@ void ChaCalcFunc::ccfGetSRTandTraAnim(ChaMatrix srcmat, ChaMatrix srcnodemat, Ch
 		return;
 	}
 
-	ChaVector3 jointfpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 jointfpos;
+	jointfpos.SetParams(0.0f, 0.0f, 0.0f);
 	jointfpos = ChaMatrixTraVec(srcnodemat);
 
 	ChaMatrix befrotmat, aftrotmat;
@@ -6661,7 +6686,8 @@ ChaMatrix ChaCalcFunc::ccfChaMatrixFromSRT(bool sflag, bool tflag, ChaMatrix src
 		return retmat;
 	}
 
-	ChaVector3 jointfpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 jointfpos;
+	jointfpos.SetParams(0.0f, 0.0f, 0.0f);
 	jointfpos = ChaMatrixTraVec(srcnodemat);
 
 	ChaMatrix befrotmat, aftrotmat;
@@ -6718,19 +6744,19 @@ ChaMatrix ChaCalcFunc::ccfChaMatrixKeepScale(ChaMatrix srcmat, ChaVector3 srcsve
 		vecx0 = vecx / lenx;
 	}
 	else {
-		vecx0 = ChaVector3(1.0f, 0.0f, 0.0f);//!!!
+		vecx0.SetParams(1.0f, 0.0f, 0.0f);//!!!
 	}
 	if (leny >= 0.000001f) {
 		vecy0 = vecy / leny;
 	}
 	else {
-		vecy0 = ChaVector3(0.0f, 1.0f, 0.0f);//!!!
+		vecy0.SetParams(0.0f, 1.0f, 0.0f);//!!!
 	}
 	if (lenz >= 0.000001f) {
 		vecz0 = vecz / lenz;
 	}
 	else {
-		vecz0 = ChaVector3(0.0f, 0.0f, 1.0f);//!!!
+		vecz0.SetParams(0.0f, 0.0f, 1.0f);//!!!
 	}
 
 
@@ -6788,7 +6814,8 @@ ChaMatrix ChaCalcFunc::ccfChaMatrixFromSRTraAnim(bool sflag, bool tanimflag, Cha
 		return retmat;
 	}
 
-	ChaVector3 jointfpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 jointfpos;
+	jointfpos.SetParams(0.0f, 0.0f, 0.0f);
 	jointfpos = ChaMatrixTraVec(srcnodemat);
 
 	ChaMatrix befrotmat, aftrotmat;
@@ -6827,7 +6854,8 @@ ChaMatrix ChaCalcFunc::ccfChaMatrixFromSRTraAnim(bool sflag, bool tanimflag, Cha
 		}
 
 		//2023/02/12 スケール誤差によるグラフギザギザ対策
-		ChaVector3 keepscale = ChaVector3(1.0f, 1.0f, 1.0f);
+		ChaVector3 keepscale;
+		keepscale.SetParams(1.0f, 1.0f, 1.0f);
 		retmat = ChaMatrixKeepScale(tmpmat, keepscale);
 	}
 

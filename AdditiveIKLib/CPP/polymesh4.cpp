@@ -399,23 +399,23 @@ int CPolyMesh4::SetOptV(BINORMALDISPV* dispv, int* pleng, int* matnum, CModel* p
 
 					if (m_normalleng == (m_facenum * 3)) {
 						if (m_normalmappingmode == 0) {
-							curv->normal = ChaVector4(*(m_normal + (setno * 3 + vi[vcnt])), 0.0f);//!!!!!! eByPolygonVertex : save with AdditiveIK
+							curv->normal.SetParams(*(m_normal + (setno * 3 + vi[vcnt])), 0.0f);//!!!!!! eByPolygonVertex : save with AdditiveIK
 						}
 						else {
-							curv->normal = ChaVector4(*(m_normal + (setno * 3 + vcnt)), 0.0f);//!!!!!!!!!!! eByControlPoint : save with Maya FBX
+							curv->normal.SetParams(*(m_normal + (setno * 3 + vcnt)), 0.0f);//!!!!!!!!!!! eByControlPoint : save with Maya FBX
 						}
 					}
 					else if( m_normalleng == m_orgpointnum ){
-						curv->normal = ChaVector4(*(m_normal + vno), 0.0f);
+						curv->normal.SetParams(*(m_normal + vno), 0.0f);
 					}else{
 						_ASSERT( 0 );
 					}
 				}else{
-					curv->normal = ChaVector4( 0.0f, 0.0f, 1.0f, 0.0f );
+					curv->normal.SetParams( 0.0f, 0.0f, 1.0f, 0.0f );
 					_ASSERT( 0 );
 				}
-				curv->tangent = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
-				curv->binormal = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
+				curv->tangent.SetParams(0.0f, 0.0f, 0.0f, 0.0f);
+				curv->binormal.SetParams(0.0f, 0.0f, 0.0f, 0.0f);
 
 				//####
 				//uv0
@@ -432,7 +432,7 @@ int CPolyMesh4::SetOptV(BINORMALDISPV* dispv, int* pleng, int* matnum, CModel* p
 						_ASSERT(0);
 					}
 				}else{
-					curv->uv[0] = ChaVector2(0.0f, 0.0f);
+					curv->uv[0].SetParams(0.0f, 0.0f);
 				}
 
 				//####
@@ -464,7 +464,7 @@ int CPolyMesh4::SetOptV(BINORMALDISPV* dispv, int* pleng, int* matnum, CModel* p
 						}
 					}
 					else {
-						curv->uv[1] = ChaVector2(0.0f, 0.0f);
+						curv->uv[1].SetParams(0.0f, 0.0f);
 					}
 				}
 
@@ -529,16 +529,16 @@ typedef struct tag_modelbaund
 }MODELBAUND;
 ***/
 
-	//m_bound.min = ChaVector3(FLT_MAX, FLT_MAX, FLT_MAX);
-	//m_bound.max = ChaVector3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-	//m_bound.center = ChaVector3(0.0f, 0.0f, 0.0f);
+	//m_bound.min.SetParams(FLT_MAX, FLT_MAX, FLT_MAX);
+	//m_bound.max.SetParams(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+	//m_bound.center.SetParams(0.0f, 0.0f, 0.0f);
 	//m_bound.r = 1.0f;
 	m_bound.Init();
 
 	if( (m_orgpointnum == 0) || (m_facenum == 0) ){
-		m_bound.min = ChaVector3(0.0f, 0.0f, 0.0f);
-		m_bound.max = ChaVector3(0.0f, 0.0f, 0.0f);
-		m_bound.center = ChaVector3(0.0f, 0.0f, 0.0f);
+		m_bound.min.SetParams(0.0f, 0.0f, 0.0f);
+		m_bound.max.SetParams(0.0f, 0.0f, 0.0f);
+		m_bound.center.SetParams(0.0f, 0.0f, 0.0f);
 		m_bound.r = 1.0f;
 
 		m_bound.SetIsValid(false);//!!!!!!!!!!!!!!!
@@ -726,9 +726,9 @@ int CPolyMesh4::UpdateMorphBuffer( ChaVector3* mpoint )
 		BINORMALDISPV* curv1 = m_dispv + fno * 3 + 1;
 		BINORMALDISPV* curv2 = m_dispv + fno * 3 + 2;
 
-		curv0->pos = ChaVector4((mpoint + dstindex0)->x, (mpoint + dstindex0)->y, (mpoint + dstindex0)->z, 1.0f);
-		curv1->pos = ChaVector4((mpoint + dstindex1)->x, (mpoint + dstindex1)->y, (mpoint + dstindex1)->z, 1.0f);
-		curv2->pos = ChaVector4((mpoint + dstindex2)->x, (mpoint + dstindex2)->y, (mpoint + dstindex2)->z, 1.0f);
+		curv0->pos.SetParams((mpoint + dstindex0)->x, (mpoint + dstindex0)->y, (mpoint + dstindex0)->z, 1.0f);
+		curv1->pos.SetParams((mpoint + dstindex1)->x, (mpoint + dstindex1)->y, (mpoint + dstindex1)->z, 1.0f);
+		curv2->pos.SetParams((mpoint + dstindex2)->x, (mpoint + dstindex2)->y, (mpoint + dstindex2)->z, 1.0f);
 	}
 
 	//int vno;
@@ -736,7 +736,7 @@ int CPolyMesh4::UpdateMorphBuffer( ChaVector3* mpoint )
 	//	int curindex = *(m_orgindex + vno);
 	//	BINORMALDISPV* curv = m_dispv + vno;
 	//
-	//	curv->pos = ChaVector4( (mpoint + curindex)->x, (mpoint + curindex)->y, (mpoint + curindex)->z, 1.0f );
+	//	curv->pos.SetParams( (mpoint + curindex)->x, (mpoint + curindex)->y, (mpoint + curindex)->z, 1.0f );
 	//}
 
 	return 0;

@@ -390,8 +390,8 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 				int srcindex;
 				int dstindex = 0;
 				for (srcindex = m_filtersize; srcindex < (frameleng + m_filtersize); srcindex++) {
-					tmp_vec3 = ChaVector3(0.0f, 0.0f, 0.0f);
-					tmp_pos3 = ChaVector3(0.0f, 0.0f, 0.0f);
+					tmp_vec3.SetParams(0.0f, 0.0f, 0.0f);
+					tmp_pos3.SetParams(0.0f, 0.0f, 0.0f);
 					int addcount = 0;
 					for (int k = -m_filtersize; k <= m_filtersize; k++) {
 						int smpframe = srcindex + k;
@@ -440,8 +440,8 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 				int srcindex;
 				int dstindex = 0;
 				for (srcindex = m_filtersize; srcindex < (frameleng + m_filtersize); srcindex++) {
-					tmp_vec3 = ChaVector3(0.0f, 0.0f, 0.0f);
-					tmp_pos3 = ChaVector3(0.0f, 0.0f, 0.0f);
+					tmp_vec3.SetParams(0.0f, 0.0f, 0.0f);
+					tmp_pos3.SetParams(0.0f, 0.0f, 0.0f);
 					for (int k = -m_filtersize; k <= m_filtersize; k++) {
 						if (k <= 0) {
 							coef = k + m_filtersize;
@@ -491,8 +491,8 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 				int srcindex;
 				int dstindex = 0;
 				for (srcindex = m_filtersize; srcindex < (frameleng + m_filtersize); srcindex++) {
-					tmp_vec3 = ChaVector3(0.0f, 0.0f, 0.0f);
-					tmp_pos3 = ChaVector3(0.0f, 0.0f, 0.0f);
+					tmp_vec3.SetParams(0.0f, 0.0f, 0.0f);
+					tmp_pos3.SetParams(0.0f, 0.0f, 0.0f);
 					for (int k = -m_filtersize; k <= m_filtersize; k++) {
 						if (k <= 0) {
 							r = k + m_filtersize;

@@ -36,10 +36,10 @@ void CUndoSprite::InitParams()
 
 	int posno;
 	for (posno = 0; posno < 4; posno++) {
-		m_posR[posno] = ChaVector3(0.0f, 0.0f, 0.0f);
-		m_posW[posno] = ChaVector3(0.0f, 0.0f, 0.0f);
+		m_posR[posno].SetParams(0.0f, 0.0f, 0.0f);
+		m_posW[posno].SetParams(0.0f, 0.0f, 0.0f);
 	}
-	m_size = ChaVector2(1.0f, 1.0f);
+	m_size.SetParams(1.0f, 1.0f);
 
 }
 void CUndoSprite::DestroyObjs()
@@ -176,7 +176,7 @@ int CUndoSprite::SetParams()
 	}
 
 
-	m_size = ChaVector2(spawidth, spawidth);
+	m_size.SetParams(spawidth, spawidth);
 
 
 	{
@@ -266,7 +266,8 @@ int CUndoSprite::DrawScreen(RenderContext* rc, int undoR, int undoW)
 	int instanceno[12];
 	ZeroMemory(instanceno, sizeof(int) * 12);
 
-	ChaVector4 colmult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	ChaVector4 colmult;
+	colmult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 
 	int spacnt;
 	for (spacnt = 0; spacnt < 4; spacnt++) {

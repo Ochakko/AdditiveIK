@@ -130,9 +130,9 @@ void ChaScene::InitParams()
 	ClearModelIndex();
 
 	m_totalmb.Init();
-	//m_totalmb.center = ChaVector3(0.0f, 0.0f, 0.0f);
-	//m_totalmb.max = ChaVector3(5.0f, 5.0f, 5.0f);
-	//m_totalmb.min = ChaVector3(-5.0f, -5.0f, -5.0f);
+	//m_totalmb.center.SetParams(0.0f, 0.0f, 0.0f);
+	//m_totalmb.max.SetParams(5.0f, 5.0f, 5.0f);
+	//m_totalmb.min.SetParams(-5.0f, -5.0f, -5.0f);
 	//m_totalmb.r = (float)ChaVector3LengthDbl(&m_totalmb.max);
 
 	m_curmodelmenuindex = -1;
@@ -308,7 +308,7 @@ bool ChaScene::PickPolyMesh(int pickkind,
 	*pickmodel = nullptr;
 	*pickmqoobj = nullptr;
 	*pickmaterial = nullptr;
-	*pickhitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	pickhitpos->SetParams(0.0f, 0.0f, 0.0f);
 
 	vector<myRenderer::RENDEROBJ> pickvec;
 
@@ -360,7 +360,8 @@ bool ChaScene::PickPolyMesh(int pickkind,
 				myRenderer::RENDEROBJ pickobj = pickvec[pickindex];
 				CModel* curmodel = pickobj.pmodel;
 				CMQOObject* curobj = pickobj.mqoobj;
-				ChaVector3 curhitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+				ChaVector3 curhitpos;
+				curhitpos.SetParams(0.0f, 0.0f, 0.0f);
 
 				if (pickobj.GetPickOpeFlag(g_projfar, g_pickdistrate) && curmodel && curobj) {
 					UIPICKINFO pickinfo = *tmppickinfo;
@@ -505,7 +506,8 @@ bool ChaScene::GetResultOfPickRay(int pickkind,
 				myRenderer::RENDEROBJ pickobj = pickvec[pickindex];
 				CModel* curmodel = pickobj.pmodel;
 				CMQOObject* curobj = pickobj.mqoobj;
-				ChaVector3 curhitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+				ChaVector3 curhitpos;
+				curhitpos.SetParams(0.0f, 0.0f, 0.0f);
 				if (curmodel && curobj) {
 					int hitfaceindex = -1;
 					int colli = 0;

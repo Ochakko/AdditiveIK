@@ -991,7 +991,8 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	Read_Float(xmlbuf, "<ModelRotationZ>", "</ModelRotationZ>", &rotz);
 
 	//DispRateは必須ではない
-	ChaVector4 materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	ChaVector4 materialdisprate;
+	materialdisprate.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 	Read_Float(xmlbuf, "<DiffuseDispRate>", "</DiffuseDispRate>", &materialdisprate.x);
 	Read_Float(xmlbuf, "<SpecularDispRate>", "</SpecularDispRate>", &materialdisprate.y);
 	Read_Float(xmlbuf, "<EmissiveDispRate>", "</EmissiveDispRate>", &materialdisprate.z);

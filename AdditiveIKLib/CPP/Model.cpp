@@ -556,7 +556,7 @@ int CModel::InitParams()
 	m_enulltime = 0.0;//SetShaderConstにおける　ボーンの無いメッシュアニメ enull evaluate用の時間
 
 
-	m_materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);//diffuse, specular, emissive, ambient
+	m_materialdisprate.SetParams(1.0f, 1.0f, 1.0f, 1.0f);//diffuse, specular, emissive, ambient
 	m_currentanimlayer = 0;
 
 	m_fromBvh = false;
@@ -594,13 +594,13 @@ int CModel::InitParams()
 
 	m_physicsikcnt = 0;
 	//ChaMatrixIdentity(&m_worldmat);
-	m_modelposition = ChaVector3(0.0f, 0.0f, 0.0f);//読み込み時位置
-	m_modelrotation = ChaVector3(0.0f, 0.0f, 0.0f);//読み込み時向き
+	m_modelposition.SetParams(0.0f, 0.0f, 0.0f);//読み込み時位置
+	m_modelrotation.SetParams(0.0f, 0.0f, 0.0f);//読み込み時向き
 	m_initaxismatx = 0;
 	m_loadedflag = false;
 	m_createbtflag = false;
 	m_oldaxis_atloading = 0;
-	m_ikrotaxis = ChaVector3( 1.0f, 0.0f, 0.0f );
+	m_ikrotaxis.SetParams( 1.0f, 0.0f, 0.0f );
 	m_texpool = 0;
 	m_tmpmotspeed = 1.0f;
 
@@ -643,6 +643,7 @@ int CModel::InitParams()
 
 	m_btcnt = 0;
 	m_topbt = 0;
+	m_btovec.clear();
 
 	m_rigideleminfo.clear();
 	m_impinfo.clear();
@@ -1824,11 +1825,14 @@ MODELBOUND CModel::CalcBoneBound()
 	//::ZeroMemory(&mb, sizeof(MODELBOUND));
 	mb.Init();
 
-	//ChaVector3 min = ChaVector3(0.0f, 0.0f, 0.0f);
-	//ChaVector3 max = ChaVector3(0.0f, 0.0f, 0.0f);
-	ChaVector3 min = ChaVector3(FLT_MAX, FLT_MAX, FLT_MAX);
-	ChaVector3 max = ChaVector3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-	ChaVector3 center = ChaVector3(0.0f, 0.0f, 0.0f);
+	//ChaVector3 min.SetParams(0.0f, 0.0f, 0.0f);
+	//ChaVector3 max.SetParams(0.0f, 0.0f, 0.0f);
+	ChaVector3 min;
+	min.SetParams(FLT_MAX, FLT_MAX, FLT_MAX);
+	ChaVector3 max;
+	max.SetParams(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+	ChaVector3 center;
+	center.SetParams(0.0f, 0.0f, 0.0f);
 	float r = 0.0f;
 
 	bool firstflag = true;
@@ -2267,7 +2271,7 @@ void CModel::Motion2BtReq(CBtObject* srcbto)
 //	//limitedeulを計算する
 //
 //	if (srcbone) {
-//		ChaVector3 limitedeul = ChaVector3(0.0f, 0.0f, 0.0f);
+//		ChaVector3 limitedeul.SetParams(0.0f, 0.0f, 0.0f);
 //		limitedeul = srcbone->CalcLocalLimitedEulXYZ(srcmotid, srcframe);
 //		srcbone->SetLimitedLocalEul(srcmotid, srcframe, limitedeul);
 //
@@ -3864,12 +3868,15 @@ int CModel::PickBone( UIPICKINFO* pickinfo )
 
 	int minno = -1;
 	ChaVector3 cmpsc;
-	ChaVector3 picksc = ChaVector3( 0.0f, 0.0f, 0.0f );
-	ChaVector3 pickworld = ChaVector3( 0.0f, 0.0f, 0.0f );
+	ChaVector3 picksc;
+	picksc.SetParams(0.0f, 0.0f, 0.0f);
+	ChaVector3 pickworld;
+	pickworld.SetParams(0.0f, 0.0f, 0.0f);
 	float cmpdist;
 	float mindist = 0.0f;
 	int firstflag = 1;
-	ChaVector2 firstdiff = ChaVector2(0.0f, 0.0f);
+	ChaVector2 firstdiff;
+	firstdiff.SetParams(0.0f, 0.0f);
 
 	map<int, CBone*>::iterator itrbone;
 	for( itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++ ){
@@ -3941,7 +3948,7 @@ int CModel::CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, i
 		return 0;
 	}
 	*hitfaceindex = -1;
-	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
 
 	ChaVector3 startglobal, dirglobal;
 	CalcMouseGlobalRay(pickinfo, &startglobal, &dirglobal);
@@ -3968,13 +3975,14 @@ int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, 
 		return 0;
 	}
 	*hitfaceindex = -1;
-	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
 
 	ChaVector3 startlocal, dirlocal;
 	CalcMouseLocalRay(pickinfo, &startlocal, &dirlocal);
 	bool excludeinvface = true;
 	int colli = 0;
-	ChaVector3 tmphitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 tmphitpos;
+	tmphitpos.SetParams(0.0f, 0.0f, 0.0f);
 	colli = pickobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, excludeinvface, hitfaceindex, &tmphitpos);
 
 
@@ -4003,7 +4011,7 @@ int CModel::GetResultOfPickRay(CMQOObject* pickobj, int* hitfaceindex, ChaVector
 		return 0;
 	}
 	*hitfaceindex = -1;
-	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
 
 	int colli = 0;
 	colli = pickobj->GetResultOfPickRay(hitfaceindex, dsthitpos);
@@ -4038,8 +4046,8 @@ int CModel::CalcMouseLocalRay( UIPICKINFO* pickinfo, ChaVector3* startptr, ChaVe
 	rayx = (float)pickinfo->clickpos.x / ((float)pickinfo->winx / 2.0f) - 1.0f;
 	rayy = 1.0f - (float)pickinfo->clickpos.y / ((float)pickinfo->winy / 2.0f);
 
-	startsc = ChaVector3( rayx, rayy, 0.0f );
-	endsc = ChaVector3( rayx, rayy, 1.0f );
+	startsc.SetParams( rayx, rayy, 0.0f );
+	endsc.SetParams( rayx, rayy, 1.0f );
 	
     ChaMatrix mWVP, invmWVP;
 	mWVP = m_matWorld * m_matVP;
@@ -4067,8 +4075,8 @@ int CModel::CalcMouseGlobalRay(UIPICKINFO* pickinfo, ChaVector3* startptr, ChaVe
 	rayx = (float)pickinfo->clickpos.x / ((float)pickinfo->winx / 2.0f) - 1.0f;
 	rayy = 1.0f - (float)pickinfo->clickpos.y / ((float)pickinfo->winy / 2.0f);
 
-	startsc = ChaVector3(rayx, rayy, 0.0f);
-	endsc = ChaVector3(rayx, rayy, 1.0f);
+	startsc.SetParams(rayx, rayy, 0.0f);
+	endsc.SetParams(rayx, rayy, 1.0f);
 
 	ChaMatrix invmVP;
 	invmVP = ChaMatrixInv(m_matVP);
@@ -4144,7 +4152,8 @@ int CModel::TransformBone( int winx, int winy, int srcboneno, ChaVector3* worldp
 		mW.SetIdentity();
 		mWVP = m_matVP;
 
-		ChaVector3 tmpfpos = ChaVector3(0.0f, 0.0f, 0.0f);
+		ChaVector3 tmpfpos;
+		tmpfpos.SetParams(0.0f, 0.0f, 0.0f);
 		ChaVector3TransformCoord(worldptr, &tmpfpos, &mW);
 		ChaVector3TransformCoord(screenptr, &tmpfpos, &mWVP);
 
@@ -5392,11 +5401,11 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 						pMesh->GetPolygonVertexUV(faceno1, vno, lUVDiffuseElement->GetName(), srcuv, bunmapped);
 						if (getuvnum == 0) {
 							ChaVector2* curuv = newobj->GetUVBuf() + faceno1 * 3 + vno;
-							*curuv = ChaVector2((float)srcuv[0], 1.0f - (float)srcuv[1]);//!!! 1.0f - uv.y
+							curuv->SetParams((float)srcuv[0], 1.0f - (float)srcuv[1]);//!!! 1.0f - uv.y
 						}
 						else {
 							ChaVector2* curuv1 = newobj->GetUVBuf1() + faceno1 * 3 + vno;
-							*curuv1 = ChaVector2((float)srcuv[0], 1.0f - (float)srcuv[1]);//!!! 1.0f - uv.y
+							curuv1->SetParams((float)srcuv[0], 1.0f - (float)srcuv[1]);//!!! 1.0f - uv.y
 						}
 					}
 				}
@@ -6346,7 +6355,7 @@ FbxAnimLayer* CModel::GetAnimLayer( int motid )
 //	double roundingframe = RoundingTime(srcframe);
 //
 //	if (curbone) {
-//		ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+//		ChaVector3 cureul.SetParams(0.0f, 0.0f, 0.0f);
 //		int paraxiskind = -1;//2021/11/18
 //		//int isfirstbone = 0;
 //		cureul = curbone->CalcLocalEulXYZ(paraxiskind, srcmotid, roundingframe, BEFEUL_BEFFRAME);
@@ -6976,9 +6985,9 @@ void CModel::CreateIndexedMotionPoint(int srcmotid, double srcanimleng, int* per
 //			FbxAMatrix lGlobalSRT = pNode->EvaluateGlobalTransform(fbxtime, FbxNode::eSourcePivot);
 //
 //
-//			ChaVector3 chatra = ChaVector3((float)lT2[0], (float)lT2[1], (float)lT2[2]);
-//			ChaVector3 chaeul = ChaVector3((float)lR2[0], (float)lR2[1], (float)lR2[2]);
-//			ChaVector3 chascale = ChaVector3((float)lS2[0], (float)lS2[1], (float)lS2[2]);
+//			ChaVector3 chatra.SetParams((float)lT2[0], (float)lT2[1], (float)lT2[2]);
+//			ChaVector3 chaeul.SetParams((float)lR2[0], (float)lR2[1], (float)lR2[2]);
+//			ChaVector3 chascale.SetParams((float)lS2[0], (float)lS2[1], (float)lS2[2]);
 //			ChaMatrix chaSRT;
 //			chaSRT = ChaMatrixFromFbxAMatrix(lSRT);
 //			ChaMatrix chaGlobalSRT;
@@ -7003,7 +7012,7 @@ void CModel::CreateIndexedMotionPoint(int srcmotid, double srcanimleng, int* per
 //
 //
 //			//	ChaMatrix newnodemat = curbone->GetNodeMat() * ChaMatrixInv(globalSRT);
-//			//	ChaVector3 zeropos = ChaVector3(0.0f, 0.0f, 0.0f);
+//			//	ChaVector3 zeropos.SetParams(0.0f, 0.0f, 0.0f);
 //			//	ChaVector3 truefpos;
 //			//	ChaVector3TransformCoord(&truefpos, &zeropos, &newnodemat);
 //
@@ -7037,7 +7046,7 @@ void CModel::CreateIndexedMotionPoint(int srcmotid, double srcanimleng, int* per
 //				parentjointpos = curbone->GetParent()->GetJointFPos();
 //			}
 //			else {
-//				parentjointpos = ChaVector3(0.0f, 0.0f, 0.0f);
+//				parentjointpos.SetParams(0.0f, 0.0f, 0.0f);
 //			}
 //
 //			//##############
@@ -7445,9 +7454,9 @@ void CModel::SetHasMotionCurveReq(FbxAnimLayer* mCurrentAnimLayer, CBone* srcbon
 //			////#############################
 //
 //				//正しいスケールで姿勢をセットし直し
-//				ChaVector3 chascale = ChaVector3((float)lS2[0], (float)lS2[1] , (float)lS2[2]);
-//				ChaVector3 chatra = ChaVector3((float)lT2[0], (float)lT2[1], (float)lT2[2]);
-//				ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+//				ChaVector3 chascale.SetParams((float)lS2[0], (float)lS2[1] , (float)lS2[2]);
+//				ChaVector3 chatra.SetParams((float)lT2[0], (float)lT2[1], (float)lT2[2]);
+//				ChaVector3 cureul.SetParams(0.0f, 0.0f, 0.0f);
 //				int paraxiskind = -1;//2021/11/18
 //				cureul = curbone->CalcLocalEulXYZ(paraxiskind, motid, framecnt, BEFEUL_BEFFRAME);
 //				int inittraflag1 = 0;
@@ -7760,7 +7769,8 @@ int CModel::RenderRefArrow(bool limitdegflag,
 			double diffleng = ChaVector3LengthDbl(&diffvec);
 			ChaVector3Normalize(&diffvec, &diffvec);
 
-			ChaVector3 orgdir = ChaVector3(1.0f, 0.0f, 0.0f);
+			ChaVector3 orgdir;
+			orgdir.SetParams(1.0f, 0.0f, 0.0f);
 
 			CQuaternion rotq;
 			rotq.RotationArc(orgdir, diffvec);
@@ -7859,8 +7869,10 @@ int CModel::RenderBoneMark(bool limitdegflag, InstancedSprite* bcircleptr,
 	if (g_rigidmarkflag && (g_previewFlag != 5) && (g_previewFlag != 4)){
 		ResetBoneMarkInstanceScale();
 
-		//RenderCapsuleReq(limitdegflag, rc, m_topbt);
-		RenderCapsuleReq(m_topbt, limitdegflag,
+		////RenderCapsuleReq(limitdegflag, rc, m_topbt);
+		//RenderCapsuleReq(m_topbt, limitdegflag,
+		//	selboneno, srcchascene, srcmatVP);
+		RenderCapsuleBtoVec(limitdegflag,
 			selboneno, srcchascene, srcmatVP);
 
 		CBone::RenderColDisp(srcchascene);
@@ -7907,35 +7919,38 @@ int CModel::RenderBoneMark(bool limitdegflag, InstancedSprite* bcircleptr,
 					scpos.z = 0.00001f;
 
 					//bcircleptr->SetPos(scpos);
-					ChaVector2 bsize = ChaVector2(1.0f, 1.0f);
-					ChaVector4 bcolor = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
+					ChaVector2 bsize;
+					bsize.SetParams(1.0f, 1.0f);
+					ChaVector4 bcolor;
+					bcolor.SetParams(1.0f, 1.0f, 1.0f, 0.7f);
 					if (boneptr->GetSelectFlag() & 2){
-						bcolor = ChaVector4(0.0f, 0.0f, 1.0f, 0.7f);
-						bsize = ChaVector2(0.050f, 0.050f);
+						bcolor.SetParams(0.0f, 0.0f, 1.0f, 0.7f);
+						bsize.SetParams(0.050f, 0.050f);
 						if (g_4kresolution) {
 							bsize = bsize * 0.5f;
 						}
 						//bcircleptr->SetSize(bsize);
 					}
 					else if (boneptr->GetSelectFlag() & 1){
-						bcolor = ChaVector4(g_bonemark_bright, 0.0f, 0.0f, 0.7f);//2024/01/12 bright
-						bsize = ChaVector2(0.025f, 0.025f);
+						bcolor.SetParams(g_bonemark_bright, 0.0f, 0.0f, 0.7f);//2024/01/12 bright
+						bsize.SetParams(0.025f, 0.025f);
 						if (g_4kresolution) {
 							bsize = bsize * 0.5f;
 						}
 						//bcircleptr->SetSize(bsize);
 					}
 					else{
-						//bcolor = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
-						bcolor = ChaVector4(g_bonemark_bright, g_bonemark_bright, g_bonemark_bright, 0.7f);//2024/01/12 bright
-						bsize = ChaVector2(0.025f, 0.025f);
+						//bcolor.SetParams(1.0f, 1.0f, 1.0f, 0.7f);
+						bcolor.SetParams(g_bonemark_bright, g_bonemark_bright, g_bonemark_bright, 0.7f);//2024/01/12 bright
+						bsize.SetParams(0.025f, 0.025f);
 						if (g_4kresolution) {
 							bsize = bsize * 0.5f;
 						}
 						//bcircleptr->SetSize(bsize);
 					}
 
-					ChaVector2 circlesize = ChaVector2(6.0f, 6.0f);
+					ChaVector2 circlesize;
+					circlesize.SetParams(6.0f, 6.0f);
 
 					bcircleptr->UpdateScreen(instanceno, scpos, circlesize, bcolor);
 					instanceno++;
@@ -8016,7 +8031,7 @@ int CModel::RenderBoneCircleOne(bool limitdegflag, RenderContext* pRenderContext
 			bcircleptr->SetPos(scpos);
 			ChaVector2 bsize;
 			bcircleptr->SetColor(ChaVector4(1.0f, 0.0f, 0.0f, 0.7f));
-			bsize = ChaVector2(0.025f, 0.025f);
+			bsize.SetParams(0.025f, 0.025f);
 			//if (g_4kresolution) {
 			//	bsize = bsize * 0.5f;
 			//}
@@ -8028,70 +8043,124 @@ int CModel::RenderBoneCircleOne(bool limitdegflag, RenderContext* pRenderContext
 	return 0;
 }
 
-void CModel::RenderCapsuleReq(CBtObject* srcbto, bool limitdegflag,
+void CModel::RenderCapsuleBtoVec(bool limitdegflag,
 	int selboneno, ChaScene* srcchascene, ChaMatrix srcmatVP)
 {
-	if (!srcbto || !srcchascene) {
+	if (!srcchascene) {
 		return;
 	}
 
-	CBone* srcbone = srcbto->GetBone();
-	CBone* childbone = srcbto->GetEndBone();
-	//if (srcbone && childbone && !srcbone->GetSkipRenderBoneMark()){
-	if (srcbone && childbone && !srcbone->GetSkipRenderBoneMark() && srcbone->IsSkeleton() && childbone->IsSkeleton()){//2024/06/16 IsSkeleton()
-		//if (srcbone->GetParent()){
-			//CRigidElem* curre = srcbone->GetParent()->GetRigidElem(srcbone);
-		CRigidElem* curre = srcbone->GetRigidElem(childbone);
-		if (curre && (curre->GetSkipflag() == 0)){
-			if ((strstr(childbone->GetBoneName(), "J_Sec_L_CoatSkirt") != 0) ||
-				(strstr(childbone->GetBoneName(), "J_Sec_R_CoatSkirt") != 0))
-			{
-				curre->SetSkipflag(1);//足の横にあるスカート用のジョイントの剛体は自動でスキップ(Invalidate)
-			}
-			else {
-				CModel* curcoldisp;
-				int curinstanceno;
-				curcoldisp = srcbone->GetCurColDispInstancing(childbone, &curinstanceno);
-				//if (curcoldisp) {
-				if (curcoldisp && (curinstanceno < RIGMULTINDEXMAX)) {//2024/06/16 RIGMULTINDEXMAX以上は描画しない
-					//################################################################################
-					//以降SetInstancingParamsまでの間で処理をスキップしない。
-					// スキップするとgetnoとinstancenoが一致しなくなり　CDispObjに保存してあるscale情報がずれる
-					// 
-					// 2024/06/16　ただし最大数以上は描画しないように
-					//################################################################################
+	vector<CBtObject*>::iterator itrbtovec;
+	for (itrbtovec = m_btovec.begin(); itrbtovec != m_btovec.end(); itrbtovec++) {
+		CBtObject* srcbto = *itrbtovec;
+		if (srcbto) {
+			CBone* srcbone = srcbto->GetBone();
+			CBone* childbone = srcbto->GetEndBone();
+			if (srcbone && childbone && !srcbone->GetSkipRenderBoneMark() && srcbone->IsSkeleton() && childbone->IsSkeleton()) {
+				CRigidElem* curre = srcbone->GetRigidElem(childbone);
+				if (curre && (curre->GetSkipflag() == 0)){
+					CModel* curcoldisp;
+					int curinstanceno;
+					curcoldisp = srcbone->GetCurColDispInstancing(childbone, &curinstanceno);
+					//if (curcoldisp) {
+					if (curcoldisp && (curinstanceno < RIGMULTINDEXMAX)) {//2024/06/16 RIGMULTINDEXMAX以上は描画しない
+						//################################################################################
+						//以降SetInstancingParamsまでの間で処理をスキップしない。
+						// スキップするとgetnoとinstancenoが一致しなくなり　CDispObjに保存してあるscale情報がずれる
+						// 
+						// 2024/06/16　ただし最大数以上は描画しないように
+						//################################################################################
 
-					bool setinstancescale = true;
-					bool calcslotflag = false;
-					srcbone->CalcRigidElemParams(setinstancescale, childbone, 0, calcslotflag);//形状データのスケールのために呼ぶ。
-					//srcbto->SetCapsuleBtMotion(curre);
+						bool setinstancescale = true;
+						bool calcslotflag = false;
+						srcbone->CalcRigidElemParams(setinstancescale, childbone, 0, calcslotflag);//形状データのスケールのために呼ぶ。
+						//srcbto->SetCapsuleBtMotion(curre);
 
-					ChaMatrix tmpcapmat = curre->GetCapsulematForColiShape(limitdegflag, 0, calcslotflag);//2023/01/18 //2024/03/29 calcslotflag
-					//curcoldisp->UpdateMatrix(limitdegflag, &tmpcapmat, &m_matVP);
+						ChaMatrix tmpcapmat = curre->GetCapsulematForColiShape(limitdegflag, 0, calcslotflag);//2023/01/18 //2024/03/29 calcslotflag
+						//curcoldisp->UpdateMatrix(limitdegflag, &tmpcapmat, &m_matVP);
 
-					ChaVector4 difmult;
-					//if( boneptr->GetSelectFlag() & 4 ){
-					if (childbone->GetSelectFlag() & 4) {
-						difmult = ChaVector4(1.0f, 0.0f, 0.0f, 0.5f);
+						ChaVector4 difmult;
+						//if( boneptr->GetSelectFlag() & 4 ){
+						if (childbone->GetSelectFlag() & 4) {
+							difmult.SetParams(1.0f, 0.0f, 0.0f, 0.5f);
+						}
+						else {
+							difmult.SetParams(0.25f, 0.5f, 0.5f, 0.5f);
+						}
+						curcoldisp->SetInstancingParams(curinstanceno, tmpcapmat, srcmatVP, difmult);
 					}
-					else {
-						difmult = ChaVector4(0.25f, 0.5f, 0.5f, 0.5f);
-					}
-					curcoldisp->SetInstancingParams(curinstanceno, tmpcapmat, srcmatVP, difmult);
 				}
 			}
 		}
-		//}
 	}
-
-	int childno;
-	for (childno = 0; childno < srcbto->GetChildBtSize(); childno++){
-		CBtObject* childbto = srcbto->GetChildBt(childno);
-		RenderCapsuleReq(childbto, limitdegflag,
-			selboneno, srcchascene, srcmatVP);
-	}
-
 }
+
+
+
+//void CModel::RenderCapsuleReq(CBtObject* srcbto, bool limitdegflag,
+//	int selboneno, ChaScene* srcchascene, ChaMatrix srcmatVP)
+//{
+//	if (!srcbto || !srcchascene) {
+//		return;
+//	}
+//
+//	CBone* srcbone = srcbto->GetBone();
+//	CBone* childbone = srcbto->GetEndBone();
+//	//if (srcbone && childbone && !srcbone->GetSkipRenderBoneMark()){
+//	if (srcbone && childbone && !srcbone->GetSkipRenderBoneMark() && srcbone->IsSkeleton() && childbone->IsSkeleton()){//2024/06/16 IsSkeleton()
+//		//if (srcbone->GetParent()){
+//			//CRigidElem* curre = srcbone->GetParent()->GetRigidElem(srcbone);
+//		CRigidElem* curre = srcbone->GetRigidElem(childbone);
+//		if (curre && (curre->GetSkipflag() == 0)){
+//			if ((strstr(childbone->GetBoneName(), "J_Sec_L_CoatSkirt") != 0) ||
+//				(strstr(childbone->GetBoneName(), "J_Sec_R_CoatSkirt") != 0))
+//			{
+//				curre->SetSkipflag(1);//足の横にあるスカート用のジョイントの剛体は自動でスキップ(Invalidate)
+//			}
+//			else {
+//				CModel* curcoldisp;
+//				int curinstanceno;
+//				curcoldisp = srcbone->GetCurColDispInstancing(childbone, &curinstanceno);
+//				//if (curcoldisp) {
+//				if (curcoldisp && (curinstanceno < RIGMULTINDEXMAX)) {//2024/06/16 RIGMULTINDEXMAX以上は描画しない
+//					//################################################################################
+//					//以降SetInstancingParamsまでの間で処理をスキップしない。
+//					// スキップするとgetnoとinstancenoが一致しなくなり　CDispObjに保存してあるscale情報がずれる
+//					// 
+//					// 2024/06/16　ただし最大数以上は描画しないように
+//					//################################################################################
+//
+//					bool setinstancescale = true;
+//					bool calcslotflag = false;
+//					srcbone->CalcRigidElemParams(setinstancescale, childbone, 0, calcslotflag);//形状データのスケールのために呼ぶ。
+//					//srcbto->SetCapsuleBtMotion(curre);
+//
+//					ChaMatrix tmpcapmat = curre->GetCapsulematForColiShape(limitdegflag, 0, calcslotflag);//2023/01/18 //2024/03/29 calcslotflag
+//					//curcoldisp->UpdateMatrix(limitdegflag, &tmpcapmat, &m_matVP);
+//
+//					ChaVector4 difmult;
+//					//if( boneptr->GetSelectFlag() & 4 ){
+//					if (childbone->GetSelectFlag() & 4) {
+//						difmult.SetParams(1.0f, 0.0f, 0.0f, 0.5f);
+//					}
+//					else {
+//						difmult.SetParams(0.25f, 0.5f, 0.5f, 0.5f);
+//					}
+//					curcoldisp->SetInstancingParams(curinstanceno, tmpcapmat, srcmatVP, difmult);
+//				}
+//			}
+//		}
+//		//}
+//	}
+//
+//	int childno;
+//	for (childno = 0; childno < srcbto->GetChildBtSize(); childno++){
+//		CBtObject* childbto = srcbto->GetChildBt(childno);
+//		RenderCapsuleReq(childbto, limitdegflag,
+//			selboneno, srcchascene, srcmatVP);
+//	}
+//
+//}
 
 
 void CModel::RenderBoneCircleReq(RenderContext* pRenderContext, CBtObject* srcbto, CMySprite* bcircleptr)
@@ -8113,7 +8182,7 @@ void CModel::RenderBoneCircleReq(RenderContext* pRenderContext, CBtObject* srcbt
 				////CBone* childbone = boneptr->GetChild();
 				//ChaMatrix transmat = capsulemat * m_matVP;
 				//ChaVector3 scpos;
-				//ChaVector3 firstpos = ChaVector3(0.0f, 0.0f, 0.0f);
+				//ChaVector3 firstpos.SetParams(0.0f, 0.0f, 0.0f);
 				//
 				//ChaVector3TransformCoord(&scpos, &firstpos, &transmat);
 				ChaMatrix btmat = srcbone->GetBtMat();
@@ -8139,17 +8208,17 @@ void CModel::RenderBoneCircleReq(RenderContext* pRenderContext, CBtObject* srcbt
 				ChaVector2 bsize;
 				if (childbone->GetSelectFlag() & 2){
 					bcircleptr->SetColor(ChaVector4(0.0f, 0.0f, 1.0f, 0.7f));
-					bsize = ChaVector2(0.050f, 0.050f);
+					bsize.SetParams(0.050f, 0.050f);
 					bcircleptr->SetSize(bsize);
 				}
 				else if (childbone->GetSelectFlag() & 1){
 					bcircleptr->SetColor(ChaVector4(1.0f, 0.0f, 0.0f, 0.7f));
-					bsize = ChaVector2(0.025f, 0.025f);
+					bsize.SetParams(0.025f, 0.025f);
 					bcircleptr->SetSize(bsize);
 				}
 				else{
 					bcircleptr->SetColor(ChaVector4(0.8f, 0.8f, 0.8f, 0.7f));
-					bsize = ChaVector2(0.025f, 0.025f);
+					bsize.SetParams(0.025f, 0.025f);
 					bcircleptr->SetSize(bsize);
 				}
 				CallF(bcircleptr->OnRender(pRenderContext), return);
@@ -8558,6 +8627,7 @@ int CModel::DestroyBtObject()
 		DestroyBtObjectReq( m_topbt );
 	}
 	m_topbt = 0;
+	m_btovec.clear();
 	m_rigidbone.clear();
 
 	map<int,CBone*>::iterator itrbone;
@@ -9106,6 +9176,12 @@ void CModel::CreateBtObjectReq(bool limitdegflag, CBtObject* parbt, CBone* notus
 				}
 				createdflag = true;
 
+
+				if (curre->GetSkipflag() == 0) {
+					m_btovec.push_back(newbto);//2024/06/16
+				}
+
+
 				//if (!m_topbt){
 				//	m_topbt = newbto;
 				//	m_topbt->SetTopFlag( 1 );
@@ -9146,6 +9222,45 @@ void CModel::CreateBtObjectReq(bool limitdegflag, CBtObject* parbt, CBone* notus
 		CreateBtObjectReq(limitdegflag, parbt, 0, curbone->GetBrother(false));
 	}
 }
+
+int CModel::SetBtObjectVec()
+{
+	m_btovec.clear();
+	SetBtObjectVecReq(GetTopBt());
+	return 0;
+}
+void CModel::SetBtObjectVecReq(CBtObject* srcbto)
+{
+	if (srcbto) {
+		CBone* srcbone = srcbto->GetBone();
+		CBone* childbone = srcbto->GetEndBone();
+		if (srcbone && childbone && !srcbone->GetSkipRenderBoneMark() && srcbone->IsSkeleton() && childbone->IsSkeleton()) {//2024/06/16 IsSkeleton()
+			CRigidElem* curre = srcbone->GetRigidElem(childbone);
+			if (curre && (curre->GetSkipflag() == 0)) {
+				if ((strstr(childbone->GetBoneName(), "J_Sec_L_CoatSkirt") != 0) ||
+					(strstr(childbone->GetBoneName(), "J_Sec_R_CoatSkirt") != 0))
+				{
+					curre->SetSkipflag(1);//足の横にあるスカート用のジョイントの剛体は自動でスキップ(Invalidate)
+				}
+				else {
+					m_btovec.push_back(srcbto);//2024/06/16
+				}
+			}
+		}
+
+		int childno;
+		for (childno = 0; childno < srcbto->GetChildBtSize(); childno++) {
+			CBtObject* childbto = srcbto->GetChildBt(childno);
+			if (childbto) {
+				SetBtObjectVecReq(childbto);
+			}
+		}
+	}
+}
+
+
+
+
 
 //void CModel::CalcRigidElem()
 //{
@@ -9690,7 +9805,7 @@ MOTINFO* CModel::GetRgdMorphInfo()
 //	if ((curbto->GetTopFlag() == 0) && curbto->GetBone()) {
 //		CBone* curbone = curbto->GetBone();
 //
-//		ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+//		ChaVector3 cureul.SetParams(0.0f, 0.0f, 0.0f);
 //		int paraxsiflag1 = 1;
 //		//int isfirstbone = 0;
 //		cureul = curbone->CalcBtLocalEulXYZ(paraxsiflag1, BEFEUL_BEFFRAME);
@@ -9774,7 +9889,7 @@ void CModel::SetBtMotionReq(bool limitdegflag, CBtObject* curbto,
 			}
 
 			/*
-			ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+			ChaVector3 cureul.SetParams(0.0f, 0.0f, 0.0f);
 			int paraxsiflag1 = 1;
 			//int isfirstbone = 0;
 			cureul = curbone->CalcBtLocalEulXYZ(paraxsiflag1, BEFEUL_ZERO);
@@ -9822,7 +9937,7 @@ void CModel::SetBtMotionReq(bool limitdegflag, CBtObject* curbto,
 //	ChaVector3TransformCoord(&curpos1, &tmpfpos, &tmpbtmat);
 //	ChaVector3TransformCoord(&curpos2, &tmpfpos, &tmpparentbtmat);
 //	ChaVector3 adjustvec = curpos2 - curpos1;
-//	//ChaVector3 adjustvec = ChaVector3(0.0, 0.0, 0.0);//for debug
+//	//ChaVector3 adjustvec.SetParams(0.0, 0.0, 0.0);//for debug
 //
 //	if (adjustrot == 1) {
 //		ChaVector3 childpos;
@@ -9885,7 +10000,7 @@ void CModel::SetBtMotionReq(bool limitdegflag, CBtObject* curbto,
 //	ChaVector3TransformCoord(&basepos, &tmpfpos, &tmpparentbtmat);
 //	ChaVector3TransformCoord(&curpos, &tmpfpos, &tmpbtmat);
 //	ChaVector3 adjustvec = curpos - basepos;
-//	//ChaVector3 adjustvec = ChaVector3(0.0, 0.0, 0.0);//for debug
+//	//ChaVector3 adjustvec.SetParams(0.0, 0.0, 0.0);//for debug
 //
 //	if (ChaVector3LengthDbl(&adjustvec) >= 0.050f) {
 //		tmat.data[MATI_41] += adjustvec.x;
@@ -9924,7 +10039,7 @@ void CModel::SetBtMotionReq(bool limitdegflag, CBtObject* curbto,
 //	ChaVector3TransformCoord(&childpos1, &tmpchildfpos, &tmpbtmat);
 //	ChaVector3TransformCoord(&childpos2, &tmpchildfpos, &tmpchildbtmat);
 //	ChaVector3 adjustvec = childpos2 - childpos1;
-//	//ChaVector3 adjustvec = ChaVector3(0.0, 0.0, 0.0);//for debug
+//	//ChaVector3 adjustvec.SetParams(0.0, 0.0, 0.0);//for debug
 //
 //	if (adjustrot == 1) {
 //		ChaVector3 curpos;
@@ -10508,7 +10623,7 @@ int CModel::EnableAllRigidElem(int srcrgdindex)
 	}
 
 	EnableAllRigidElemReq(GetTopBone(false), srcrgdindex);
-
+	SetBtObjectVec();//2024/06/16
 	return 0;
 }
 int CModel::DisableAllRigidElem(int srcrgdindex)
@@ -10518,7 +10633,7 @@ int CModel::DisableAllRigidElem(int srcrgdindex)
 	}
 
 	DisableAllRigidElemReq(GetTopBone(false), srcrgdindex);
-
+	SetBtObjectVec();//2024/06/16
 	return 0;
 }
 
@@ -10749,6 +10864,7 @@ int CModel::SetAllSkipflagData(int gid, int rgdindex, int srcval)
 	}
 
 	SetSkipflagDataReq(gid, rgdindex, GetTopBone(false), srcval);
+	SetBtObjectVec();//2024/06/16
 	return 0;
 }
 void CModel::SetSkipflagDataReq(int gid, int rgdindex, CBone* srcbone, int srcval)
@@ -10967,7 +11083,8 @@ int CModel::SetAllImpulseData( int gid, float impx, float impy, float impz )
 	if(!GetTopBone()){
 		return 0;
 	}
-	ChaVector3 srcimp = ChaVector3( impx, impy, impz );
+	ChaVector3 srcimp;
+	srcimp.SetParams(impx, impy, impz);
 
 	//SetImpulseDataReq( gid, GetTopBone(false), srcimp );
 
@@ -11858,8 +11975,8 @@ int CModel::CalcAxisAndRotForIKRotateVert(int limitdegflag,
 	ChaVector3Normalize(&ikaxis, &ikaxis);
 
 	ChaVector3 parworld, chilworld;
-	parworld = ChaVector3(0.0f, 0.0f, 0.0f);
-	chilworld = ChaVector3(0.0f, 0.0f, 0.0f);
+	parworld.SetParams(0.0f, 0.0f, 0.0f);
+	chilworld.SetParams(0.0f, 0.0f, 0.0f);
 	{
 		parworld = parentbone->GetWorldPos(limitdegflag, curmotid, curframe);
 		ChaMatrix parworldmat = firstbone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, curframe, 0);// *GetWorldMat();
@@ -11868,9 +11985,9 @@ int CModel::CalcAxisAndRotForIKRotateVert(int limitdegflag,
 	}
 
 	ChaVector3 rotaxis2;
-	rotaxis2 = ChaVector3(0.0f, 0.0f, 0.0f);
+	rotaxis2.SetParams(0.0f, 0.0f, 0.0f);
 	ChaVector3 rotaxis3;
-	rotaxis3 = ChaVector3(0.0f, 0.0f, 0.0f);;
+	rotaxis3.SetParams(0.0f, 0.0f, 0.0f);;
 	{
 		ChaVector3 parbef, chilbef, tarbef;
 		parbef = parworld;
@@ -11887,14 +12004,14 @@ int CModel::CalcAxisAndRotForIKRotateVert(int limitdegflag,
 
 
 		//////// vertical
-		rotaxis3 = ChaVector3(0.0f, 0.0f, 0.0f);
+		rotaxis3.SetParams(0.0f, 0.0f, 0.0f);
 		ChaVector3Cross(&rotaxis3, (const ChaVector3*)&ikaxis, (const ChaVector3*)&vec0);
 		ChaVector3Normalize(&rotaxis3, &rotaxis3);
 	}
 
 
 	ChaVector3 rotaxis4;
-	rotaxis4 = ChaVector3(0.0f, 0.0f, 0.0f);
+	rotaxis4.SetParams(0.0f, 0.0f, 0.0f);
 	float rotrad4 = 0.0f;
 	{
 		ChaVector3 parbef, chilbef, tarbef;
@@ -12384,14 +12501,14 @@ int CModel::IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
 								//	//else {//2023/10/16_1 Q2EulXYZusingQ()にて　IK時にbefeul.currentframeeulを使用することにしたので不要に
 								//	//	//2023/10/12
 								//	//	//applyframeにも　オイラー角の計算は必要
-								//	//	//ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
+								//	//	//ChaVector3 neweul.SetParams(0.0f, 0.0f, 0.0f);
 								//	//	//neweul = parentbone->CalcLocalEulXYZ(limitdegflag, -1, m_curmotinfo->motid, curframe, BEFEUL_BEFFRAME);
 								//	//	//parentbone->SetLocalEul(limitdegflag, m_curmotinfo->motid, curframe, neweul, 0);
 								//	//	
 								//	//	//2023/10/16
 								//	//	// applyframeで急激に値が変わるとカーブが想定と違うことがあるので　計算済を徐々にトレースしながら
 								//	//	parentbone->SetWorldMat(limitdegflag, m_curmotinfo->motid, curframe, currotrec.applyframemat, 0);
-								//	//	ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
+								//	//	ChaVector3 neweul.SetParams(0.0f, 0.0f, 0.0f);
 								//	//	neweul = parentbone->CalcLocalEulXYZ(limitdegflag, -1, m_curmotinfo->motid, curframe, BEFEUL_BEFFRAME);
 								//	//	parentbone->SetLocalEul(limitdegflag, m_curmotinfo->motid, curframe, neweul, 0);
 								//	//}
@@ -13020,15 +13137,15 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 //		ChaVector3 axis0;
 //		CQuaternion localq;
 //		//if (axiskind == PICK_X) {
-//		//	axis0 = ChaVector3(1.0f, 0.0f, 0.0f);
+//		//	axis0.SetParams(1.0f, 0.0f, 0.0f);
 //		//	localq.SetAxisAndRot(axis0, rotrad2);
 //		//}
 //		//else if (axiskind == PICK_Y) {
-//		//	axis0 = ChaVector3(0.0f, 1.0f, 0.0f);
+//		//	axis0.SetParams(0.0f, 1.0f, 0.0f);
 //		//	localq.SetAxisAndRot(axis0, rotrad2);
 //		//}
 //		//else if (axiskind == PICK_Z) {
-//		//	axis0 = ChaVector3(0.0f, 0.0f, 1.0f);
+//		//	axis0.SetParams(0.0f, 0.0f, 1.0f);
 //		//	localq.SetAxisAndRot(axis0, rotrad2);
 //		//}
 //		//else {
@@ -13036,13 +13153,13 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 //		//	return 1;
 //		//}
 //		if ((axiskind == PICK_X) || (axiskind == PICK_SPA_X)) {
-//			axis0 = ChaVector3(selectmat.data[MATI_11], selectmat.data[MATI_12], selectmat.data[MATI_13]);
+//			axis0.SetParams(selectmat.data[MATI_11], selectmat.data[MATI_12], selectmat.data[MATI_13]);
 //		}
 //		else if ((axiskind == PICK_Y) || (axiskind == PICK_SPA_Y)) {
-//			axis0 = ChaVector3(selectmat.data[MATI_21], selectmat.data[MATI_22], selectmat.data[MATI_23]);
+//			axis0.SetParams(selectmat.data[MATI_21], selectmat.data[MATI_22], selectmat.data[MATI_23]);
 //		}
 //		else if ((axiskind == PICK_Z) || (axiskind == PICK_SPA_Z)) {
-//			axis0 = ChaVector3(selectmat.data[MATI_31], selectmat.data[MATI_32], selectmat.data[MATI_33]);
+//			axis0.SetParams(selectmat.data[MATI_31], selectmat.data[MATI_32], selectmat.data[MATI_33]);
 //		}
 //		else {
 //			_ASSERT(0);
@@ -13224,15 +13341,15 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 //			ChaVector3 axis0;
 //			CQuaternion localq;
 //			if (axiskind == PICK_X){
-//				axis0 = ChaVector3(1.0f, 0.0f, 0.0f);
+//				axis0.SetParams(1.0f, 0.0f, 0.0f);
 //				localq.SetAxisAndRot(axis0, -rotrad2);
 //			}
 //			else if (axiskind == PICK_Y){
-//				axis0 = ChaVector3(0.0f, 1.0f, 0.0f);
+//				axis0.SetParams(0.0f, 1.0f, 0.0f);
 //				localq.SetAxisAndRot(axis0, -rotrad2);
 //			}
 //			else if (axiskind == PICK_Z){
-//				axis0 = ChaVector3(0.0f, 0.0f, 1.0f);
+//				axis0.SetParams(0.0f, 0.0f, 1.0f);
 //				localq.SetAxisAndRot(axis0, -rotrad2);
 //			}
 //			else{
@@ -13374,7 +13491,7 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 //							btScalar eulz = 0.0;
 //							btScalar euly = 0.0;
 //							btScalar eulx = 0.0;
-//							ChaVector3 eul = ChaVector3(0.0f, 0.0f, 0.0f);
+//							ChaVector3 eul.SetParams(0.0f, 0.0f, 0.0f);
 //							//worldtra.getBasis().getEulerZYX(eulz, euly, eulx, 1);
 //							eulmat.getEulerZYX(eulz, euly, eulx, 1);
 //							eul.x = eulx * 180.0 / PAI;
@@ -13392,8 +13509,8 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 //							CQuaternion eulq;
 //							eulq = QMakeFromBtMat3x3(eulmat);
 //							int needmodifyflag = 0;
-//							ChaVector3 testbefeul = ChaVector3(0.0f, 0.0f, 0.0f);
-//							ChaVector3 testeul = ChaVector3(0.0f, 0.0f, 0.0f);
+//							ChaVector3 testbefeul.SetParams(0.0f, 0.0f, 0.0f);
+//							ChaVector3 testeul.SetParams(0.0f, 0.0f, 0.0f);
 //							//eulq.Q2EulZYXbt(needmodifyflag, 0, testbefeul, &testeul);
 //							eulq.Q2EulXYZ(0, testbefeul, &testeul);//bulletの回転順序は数値検証の結果XYZ。(ZYXではない)。
 //							sprintf_s(strmsg, 256, "testeul [%f, %f, %f]\n", testeul.x, testeul.y, testeul.z);
@@ -13517,15 +13634,15 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 //								CQuaternion localq;
 //								
 //								//if (axiskind == AXIS_X){
-//								//	axis0 = ChaVector3(1.0f, 0.0f, 0.0f);
+//								//	axis0.SetParams(1.0f, 0.0f, 0.0f);
 //								//	localq.SetAxisAndRot(axis0, rotrad2);
 //								//}
 //								//else if (axiskind == AXIS_Y){
-//								//	axis0 = ChaVector3(0.0f, 1.0f, 0.0f);
+//								//	axis0.SetParams(0.0f, 1.0f, 0.0f);
 //								//	localq.SetAxisAndRot(axis0, rotrad2);
 //								//}
 //								//else if (axiskind == AXIS_Z){
-//								//	axis0 = ChaVector3(0.0f, 0.0f, 1.0f);
+//								//	axis0.SetParams(0.0f, 0.0f, 1.0f);
 //								//	localq.SetAxisAndRot(axis0, rotrad2);
 //								//}
 //								//else{
@@ -13533,17 +13650,17 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 //								//	return 1;
 //								//}
 //								
-//								//axis0 = ChaVector3(1.0f, 0.0f, 0.0f);
+//								//axis0.SetParams(1.0f, 0.0f, 0.0f);
 //								///localq.SetAxisAndRot(axis0, 0.0697 * 0.50);
 //
 //								if ((axiskind == PICK_X) || (axiskind == PICK_SPA_X)) {
-//									axis0 = ChaVector3(selectmat.data[MATI_11], selectmat.data[MATI_12], selectmat.data[MATI_13]);
+//									axis0.SetParams(selectmat.data[MATI_11], selectmat.data[MATI_12], selectmat.data[MATI_13]);
 //								}
 //								else if ((axiskind == PICK_Y) || (axiskind == PICK_SPA_Y)) {
-//									axis0 = ChaVector3(selectmat.data[MATI_21], selectmat.data[MATI_22], selectmat.data[MATI_23]);
+//									axis0.SetParams(selectmat.data[MATI_21], selectmat.data[MATI_22], selectmat.data[MATI_23]);
 //								}
 //								else if ((axiskind == PICK_Z) || (axiskind == PICK_SPA_Z)) {
-//									axis0 = ChaVector3(selectmat.data[MATI_31], selectmat.data[MATI_32], selectmat.data[MATI_33]);
+//									axis0.SetParams(selectmat.data[MATI_31], selectmat.data[MATI_32], selectmat.data[MATI_33]);
 //								}
 //								else {
 //									_ASSERT(0);
@@ -13968,15 +14085,15 @@ int CModel::RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, int s
 							ChaVector3 axis0;
 							CQuaternion localq;
 							//if (axiskind == AXIS_X){
-							//	axis0 = ChaVector3(1.0f, 0.0f, 0.0f);
+							//	axis0.SetParams(1.0f, 0.0f, 0.0f);
 							//	localq.SetAxisAndRot(axis0, rotrad2);
 							//}
 							//else if (axiskind == AXIS_Y){
-							//	axis0 = ChaVector3(0.0f, 1.0f, 0.0f);
+							//	axis0.SetParams(0.0f, 1.0f, 0.0f);
 							//	localq.SetAxisAndRot(axis0, rotrad2);
 							//}
 							//else if (axiskind == AXIS_Z){
-							//	axis0 = ChaVector3(0.0f, 0.0f, 1.0f);
+							//	axis0.SetParams(0.0f, 0.0f, 1.0f);
 							//	localq.SetAxisAndRot(axis0, rotrad2);
 							//}
 							//else{
@@ -14374,7 +14491,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 						//curboneのrotqを保存
 						IKROTREC currotrec;
 						currotrec.rotq = localq;
-						currotrec.targetpos = ChaVector3(0.0f, 0.0f, 0.0f);
+						currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
 						currotrec.lessthanthflag = false;
 						if (uvno == 0) {
 							curbone->AddIKRotRec_U(currotrec);
@@ -14407,7 +14524,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 
 						IKROTREC currotrec;
 						currotrec.rotq = localq;
-						currotrec.targetpos = ChaVector3(0.0f, 0.0f, 0.0f);
+						currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
 						currotrec.lessthanthflag = true;//!!!!!!!!!!!
 						if (uvno == 0) {
 							curbone->AddIKRotRec_U(currotrec);
@@ -16123,7 +16240,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 				currotrec.applyframemat = aplybone->GetWorldMat(limitdegflag, curmotid, applyframe, 0);
 				currotrec.applyframeeul = aplybone->GetLocalEul(limitdegflag, curmotid, applyframe, 0);
 				currotrec.rotq = localq;
-				currotrec.targetpos = ChaVector3(0.0f, 0.0f, 0.0f);
+				currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
 				currotrec.lessthanthflag = false;
 				aplybone->AddIKRotRec(currotrec);
 			}
@@ -16134,7 +16251,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 				currotrec.applyframemat = aplybone->GetWorldMat(limitdegflag, curmotid, applyframe, 0);
 				currotrec.applyframeeul = aplybone->GetLocalEul(limitdegflag, curmotid, applyframe, 0);
 				currotrec.rotq = localq;
-				currotrec.targetpos = ChaVector3(0.0f, 0.0f, 0.0f);
+				currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
 				currotrec.lessthanthflag = true;//!!!!!!!!!!!
 				aplybone->AddIKRotRec(currotrec);
 			}
@@ -16336,14 +16453,14 @@ int CModel::IKRotateAxisDeltaPostIK(
 							//	//else {//2023/10/16_1 Q2EulXYZusingQ()にて　IK時にbefeul.currentframeeulを使用することにしたので不要に
 							//	//	//2023/10/12
 							//	//	//applyframeにも　オイラー角の計算は必要
-							//	//	//ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
+							//	//	//ChaVector3 neweul.SetParams(0.0f, 0.0f, 0.0f);
 							//	//	//neweul = aplybone->CalcLocalEulXYZ(limitdegflag, -1, m_curmotinfo->motid, curframe, BEFEUL_BEFFRAME);
 							//	//	//aplybone->SetLocalEul(limitdegflag, m_curmotinfo->motid, curframe, neweul, 0);
 
 							//	//	//2023/10/16
 							//	//	// applyframeで急激に値が変わるとカーブが想定と違うことがあるので　計算済を徐々にトレースしながら
 							//	//	aplybone->SetWorldMat(limitdegflag, m_curmotinfo->motid, curframe, currotrec.applyframemat, 0);
-							//	//	ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
+							//	//	ChaVector3 neweul.SetParams(0.0f, 0.0f, 0.0f);
 							//	//	neweul = aplybone->CalcLocalEulXYZ(limitdegflag, -1, m_curmotinfo->motid, curframe, BEFEUL_BEFFRAME);
 							//	//	aplybone->SetLocalEul(limitdegflag, m_curmotinfo->motid, curframe, neweul, 0);
 
@@ -16717,7 +16834,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind
 //	selectmat.data[MATI_42] = 0.0f;
 //	selectmat.data[MATI_43] = 0.0f;
 //
-//	axis0 = ChaVector3( 1.0f, 0.0f, 0.0f );
+//	axis0.SetParams( 1.0f, 0.0f, 0.0f );
 //	ChaVector3TransformCoord( &rotaxis, &axis0, &selectmat );
 //	ChaVector3Normalize( &rotaxis, &rotaxis );
 //	rotrad = delta / 10.0f * (float)PAI / 12.0f;
@@ -16987,7 +17104,8 @@ int CModel::FKBoneTraUnderFK(
 	ChaMatrix dummyparentwm;
 	dummyparentwm.SetIdentity();//Req関数の最初の呼び出し時は　Identityを渡せばよい
 
-	ChaVector3 translation = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 translation;
+	translation.SetParams(0.0f, 0.0f, 0.0f);
 
 	if (keynum >= 2) {
 		//float changerate = 1.0f / (float)(endframe - startframe + 1);
@@ -17316,11 +17434,11 @@ int CModel::FKBoneScaleAxis(bool limitdegflag, int onlyoneflag, CEditRange* erpt
 		scalevec.z = 1.0f;
 	}
 
-	//ChaVector3 basevec = ChaVector3(0.0f, 0.0f, 0.0f);
-	//ChaVector3 vecx = ChaVector3(1.0f, 0.0f, 0.0f);
-	//ChaVector3 vecy = ChaVector3(0.0f, 1.0f, 0.0f);
-	//ChaVector3 vecz = ChaVector3(0.0f, 0.0f, 1.0f);
-	//ChaVector3 vec1 = ChaVector3(1.0f, 1.0f, 1.0f);
+	//ChaVector3 basevec.SetParams(0.0f, 0.0f, 0.0f);
+	//ChaVector3 vecx.SetParams(1.0f, 0.0f, 0.0f);
+	//ChaVector3 vecy.SetParams(0.0f, 1.0f, 0.0f);
+	//ChaVector3 vecz.SetParams(0.0f, 0.0f, 1.0f);
+	//ChaVector3 vec1.SetParams(1.0f, 1.0f, 1.0f);
 	//int multworld = 1;//!!!!!!!!!!!!!!!!!!!!!!!!!!
 	//ChaMatrix selectmat = curbone->CalcManipulatorMatrix(0, 0, multworld, m_curmotinfo->motid, m_curmotinfo->curframe);
 	//if (axiskind == 0) {
@@ -17437,7 +17555,8 @@ int CModel::FKBoneScale(bool limitdegflag, int onlyoneflag, CEditRange* erptr, i
 					//}
 					//ChaVector3 curtra;
 					//curtra = addtra * (float)currate2;
-					ChaVector3 iniscale = ChaVector3(1.0f, 1.0f, 1.0f);
+					ChaVector3 iniscale;
+					iniscale.SetParams(1.0f, 1.0f, 1.0f);
 					ChaVector3 curscale;
 					curscale = iniscale + (scalediffvec * (float)changerate);
 
@@ -17511,7 +17630,7 @@ int CModel::ImpulseBoneRagdoll(int onlyoneflag, CEditRange* erptr, int srcboneno
 	double firstframe = 0.0;
 
 	ChaVector3 impulse = addtra * g_physicsmvrate;
-	//ChaVector3 impulse = ChaVector3(100.0f, 0.0f ,0.0f);
+	//ChaVector3 impulse.SetParams(100.0f, 0.0f ,0.0f);
 
 	CBone* parentbone = curbone->GetParent();
 	if (parentbone){
@@ -17888,7 +18007,8 @@ void CModel::CalcBoneEulReq(bool limitdegflag, CBone* curbone, int srcmotid, dou
 	}
 
 	if (curbone->IsSkeleton()) {
-		ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+		ChaVector3 cureul;
+		cureul.SetParams(0.0f, 0.0f, 0.0f);
 		int paraxiskind = -1;
 		double srcframe;
 		for (srcframe = startframe; srcframe <= endframe; srcframe += 1.0) {
@@ -17915,7 +18035,8 @@ void CModel::CalcBoneEulReq(bool limitdegflag, CBone* curbone, int srcmotid, dou
 	}
 
 	if (curbone->IsSkeleton()) {
-		ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+		ChaVector3 cureul;
+		cureul.SetParams(0.0f, 0.0f, 0.0f);
 		int paraxiskind = -1;//2021/11/18
 		//int isfirstbone = 0;
 		//cureul = curbone->CalcLocalEulXYZ(paraxsiflag, srcmotid, srcframe, BEFEUL_ZERO);
@@ -20226,7 +20347,7 @@ int CModel::InitMP(bool limitdegflag, CBone* curbone, int srcmotid, double curfr
 	//}
 
 	////オイラー角初期化
-	//ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+	//ChaVector3 cureul.SetParams(0.0f, 0.0f, 0.0f);
 	//int paraxsiflag = 1;
 	////int isfirstbone = 0;
 	//cureul = curbone->CalcLocalEulXYZ(paraxsiflag, GetCurMotInfo()->motid, curframe, BEFEUL_ZERO);
@@ -20632,7 +20753,8 @@ ChaMatrix CModel::GetCameraTransformMat(int cameramotid, double nextframe, int i
 
 ChaVector3 CModel::CalcCameraFbxEulXYZ(int cameramotid, double srcframe)
 {
-	ChaVector3 reteul = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 reteul;
+	reteul.SetParams(0.0f, 0.0f, 0.0f);
 
 	if (!m_camerafbx.IsLoaded()) {
 		_ASSERT(0);
@@ -20715,7 +20837,8 @@ int CModel::GetCameraAnimParams(int cameramotionid, double nextframe, double cam
 
 ChaVector3 CModel::GetCameraAdjustPos(int cameramotid)
 {
-	ChaVector3 rettra = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 rettra;
+	rettra.SetParams(0.0f, 0.0f, 0.0f);
 
 	if (!m_camerafbx.IsLoaded()) {
 		return rettra;
@@ -21955,7 +22078,7 @@ void CModel::ResetBoneMarkInstanceScale()
 {
 	CBone::ResetColDispInstancingParams();
 	ResetInstancingParams();
-	ResetDispObjScale();
+	//ResetDispObjScale();//<--- 2024/06/17 RigidMarkとは関係ない　1000を越える個数のメッシュを持つモデルに対して呼ぶとかなり重い　コメントアウト
 }
 void CModel::ResetRefPosMarkInstanceScale()
 {
@@ -22166,15 +22289,19 @@ void CModel::GetFrustumPlanes(ChaMatrix vp, float* planes)
 
 	//vp.transpose();
 
-	//ChaVector4 vright = ChaVector4(vp.data[MATI_11], vp.data[MATI_12], vp.data[MATI_13], vp.data[MATI_14]);
-	//ChaVector4 vup = ChaVector4(vp.data[MATI_21], vp.data[MATI_22], vp.data[MATI_23], vp.data[MATI_24]);
-	//ChaVector4 vforward = ChaVector4(vp.data[MATI_31], vp.data[MATI_32], vp.data[MATI_33], vp.data[MATI_34]);
-	//ChaVector4 vpos = ChaVector4(vp.data[MATI_41], vp.data[MATI_42], vp.data[MATI_43], vp.data[MATI_44]);
+	//ChaVector4 vright.SetParams(vp.data[MATI_11], vp.data[MATI_12], vp.data[MATI_13], vp.data[MATI_14]);
+	//ChaVector4 vup.SetParams(vp.data[MATI_21], vp.data[MATI_22], vp.data[MATI_23], vp.data[MATI_24]);
+	//ChaVector4 vforward.SetParams(vp.data[MATI_31], vp.data[MATI_32], vp.data[MATI_33], vp.data[MATI_34]);
+	//ChaVector4 vpos.SetParams(vp.data[MATI_41], vp.data[MATI_42], vp.data[MATI_43], vp.data[MATI_44]);
 
-	ChaVector4 vright = ChaVector4(vp.data[MATI_11], vp.data[MATI_21], vp.data[MATI_31], vp.data[MATI_41]);
-	ChaVector4 vup = ChaVector4(vp.data[MATI_12], vp.data[MATI_22], vp.data[MATI_32], vp.data[MATI_42]);
-	ChaVector4 vforward = ChaVector4(vp.data[MATI_13], vp.data[MATI_23], vp.data[MATI_33], vp.data[MATI_43]);
-	ChaVector4 vpos = ChaVector4(vp.data[MATI_14], vp.data[MATI_24], vp.data[MATI_34], vp.data[MATI_44]);
+	ChaVector4 vright;
+	vright.SetParams(vp.data[MATI_11], vp.data[MATI_21], vp.data[MATI_31], vp.data[MATI_41]);
+	ChaVector4 vup;
+	vup.SetParams(vp.data[MATI_12], vp.data[MATI_22], vp.data[MATI_32], vp.data[MATI_42]);
+	ChaVector4 vforward;
+	vforward.SetParams(vp.data[MATI_13], vp.data[MATI_23], vp.data[MATI_33], vp.data[MATI_43]);
+	ChaVector4 vpos;
+	vpos.SetParams(vp.data[MATI_14], vp.data[MATI_24], vp.data[MATI_34], vp.data[MATI_44]);
 
 
 	ChaVector4 planes0 = vpos + vright;		// left

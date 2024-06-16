@@ -40,7 +40,7 @@ int CExtLine::InitParams()
 {
 	m_linenum = 0;
 	m_linev = 0;
-	m_color = ChaVector4( 1.0f, 1.0f, 1.0f, 1.0f );
+	m_color.SetParams( 1.0f, 1.0f, 1.0f, 1.0f );
 
 	m_pointnum = 0;
 	m_facenum = 0;
@@ -177,9 +177,9 @@ int CExtLine::CreateBuffer( EXTLINEV* lineptr, int arrayleng, int* setnum )
 int CExtLine::CalcBound()
 {
 	if( m_linenum <= 0 ){
-		m_bound.min = ChaVector3( 0.0f, 0.0f, 0.0f );
-		m_bound.max = ChaVector3( 0.0f, 0.0f, 0.0f );
-		m_bound.center = ChaVector3( 0.0f, 0.0f, 0.0f );
+		m_bound.min.SetParams( 0.0f, 0.0f, 0.0f );
+		m_bound.max.SetParams( 0.0f, 0.0f, 0.0f );
+		m_bound.center.SetParams( 0.0f, 0.0f, 0.0f );
 		m_bound.r = 0.0f;
 		
 		m_bound.SetIsValid(false);//!!!!!!!!!!!!

@@ -2181,14 +2181,14 @@ int CMQOObject::CollisionLocal_Ray_BB(ChaVector3 startlocal, ChaVector3 dirlocal
 	}
 
 	ChaVector3 points[8];
-	points[0] = ChaVector3(objbb.min.x, objbb.min.y, objbb.min.z);
-	points[1] = ChaVector3(objbb.max.x, objbb.min.y, objbb.min.z);
-	points[2] = ChaVector3(objbb.min.x, objbb.max.y, objbb.min.z);
-	points[3] = ChaVector3(objbb.max.x, objbb.max.y, objbb.min.z);
-	points[4] = ChaVector3(objbb.min.x, objbb.min.y, objbb.max.z);
-	points[5] = ChaVector3(objbb.max.x, objbb.min.y, objbb.max.z);
-	points[6] = ChaVector3(objbb.min.x, objbb.max.y, objbb.max.z);
-	points[7] = ChaVector3(objbb.max.x, objbb.max.y, objbb.max.z);
+	points[0].SetParams(objbb.min.x, objbb.min.y, objbb.min.z);
+	points[1].SetParams(objbb.max.x, objbb.min.y, objbb.min.z);
+	points[2].SetParams(objbb.min.x, objbb.max.y, objbb.min.z);
+	points[3].SetParams(objbb.max.x, objbb.max.y, objbb.min.z);
+	points[4].SetParams(objbb.min.x, objbb.min.y, objbb.max.z);
+	points[5].SetParams(objbb.max.x, objbb.min.y, objbb.max.z);
+	points[6].SetParams(objbb.min.x, objbb.max.y, objbb.max.z);
+	points[7].SetParams(objbb.max.x, objbb.max.y, objbb.max.z);
 
 	//面の向きは考慮せずにセット
 	int indices[12 * 3];
@@ -2276,7 +2276,7 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 		return 0;
 	}
 	*hitfaceindex = -1;
-	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
 
 	CPolyMesh3* pm3ptr = GetPm3();
 	if (!pm3ptr) {
@@ -2368,7 +2368,7 @@ int CMQOObject::CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglo
 		return 0;
 	}
 	*hitfaceindex = -1;
-	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
 
 	if (!GetPm4() && !GetPm3()) {
 		_ASSERT(0);
@@ -2415,7 +2415,7 @@ int CMQOObject::GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos)
 		return 0;
 	}
 	*hitfaceindex = -1;
-	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
 
 	if (!GetPm4() && !GetPm3()) {
 		_ASSERT(0);
@@ -2653,9 +2653,9 @@ int CMQOObject::ScaleBtBox(bool setinstancescale, CRigidElem* reptr, float bonel
 
 	ChaVector3 scale;
 	ChaVector3 tra;
-	//scale = ChaVector3( scsph, sccyli, scboxz );
-	scale = ChaVector3(sccyli, scsph, scboxz);
-	tra = ChaVector3( 0.0f, 0.0f, 0.0f );
+	//scale.SetParams( scsph, sccyli, scboxz );
+	scale.SetParams(sccyli, scsph, scboxz);
+	tra.SetParams( 0.0f, 0.0f, 0.0f );
 
 	if (setinstancescale) {//インスタンシングのデータ順に関わるので必要な時だけ
 		MultScale(scale, tra);
@@ -2683,9 +2683,9 @@ int CMQOObject::ScaleBtCone(bool setinstancescale, CRigidElem* reptr, float bone
 
 	ChaVector3 scale;
 	ChaVector3 tra;
-	//scale = ChaVector3( scsph, sccyli, scsph );
-	scale = ChaVector3(sccyli, scsph, scsph); 
-	tra = ChaVector3(0.0f, 0.0f, 0.0f);
+	//scale.SetParams( scsph, sccyli, scsph );
+	scale.SetParams(sccyli, scsph, scsph); 
+	tra.SetParams(0.0f, 0.0f, 0.0f);
 
 
 	if (setinstancescale) {//インスタンシングのデータ順に関わるので必要な時だけ
@@ -2707,8 +2707,8 @@ int CMQOObject::ScaleBtSphere(bool setinstancescale, CRigidElem* reptr, float bo
 
 	ChaVector3 scale;
 	ChaVector3 tra;
-	scale = ChaVector3( sccyli, sccyli, sccyli );
-	tra = ChaVector3( 0.0f, 0.0f, 0.0f );
+	scale.SetParams( sccyli, sccyli, sccyli );
+	tra.SetParams( 0.0f, 0.0f, 0.0f );
 
 	if (setinstancescale) {//インスタンシングのデータ順に関わるので必要な時だけ
 		MultScale(scale, tra);
@@ -2733,21 +2733,21 @@ int CMQOObject::ScaleBtCapsule(bool setinstancescale, CRigidElem* reptr, float b
 	ChaVector3 scale;
 	ChaVector3 tra;
 	if( srctype == 0 ){
-		//scale = ChaVector3( scsph, scsph, sccyli );
-		scale = ChaVector3( scsph, sccyli, scsph );
-		tra = ChaVector3( 0.0f, 0.0f, 0.0f );
+		//scale.SetParams( scsph, scsph, sccyli );
+		scale.SetParams( scsph, sccyli, scsph );
+		tra.SetParams( 0.0f, 0.0f, 0.0f );
 		if( lengptr ){
 			*lengptr = sccyli * 200.0f;
 		}
 	}else if( srctype == 1 ){
-		scale = ChaVector3( scsph, scsph, scsph );
-		tra = ChaVector3( 0.0f, 100.0f * ( sccyli - scsph ), 0.0f );
+		scale.SetParams( scsph, scsph, scsph );
+		tra.SetParams( 0.0f, 100.0f * ( sccyli - scsph ), 0.0f );
 		if( lengptr ){
 			*lengptr = scsph * 100.0f;
 		}
 	}else{
-		scale = ChaVector3( scsph, scsph, scsph );
-		tra = ChaVector3( 0.0f, 100.0f * ( scsph - sccyli ), 0.0f );
+		scale.SetParams( scsph, scsph, scsph );
+		tra.SetParams( 0.0f, 100.0f * ( scsph - sccyli ), 0.0f );
 		if( lengptr ){
 			*lengptr = scsph * 100.0f;
 		}
@@ -2759,28 +2759,28 @@ int CMQOObject::ScaleBtCapsule(bool setinstancescale, CRigidElem* reptr, float b
 	ChaVector3 tra;
 	if (srctype == 0){
 		//cylinder
-		//scale = ChaVector3(scsph, sccyli, scsph);
-		//tra = ChaVector3(0.0f, 100.0f * (scsph - sccyli), 0.0f);
-		scale = ChaVector3(sccyli, scsph, scsph);
-		tra = ChaVector3(100.0f * (scsph - sccyli), 0.0f, 0.0f);
+		//scale.SetParams(scsph, sccyli, scsph);
+		//tra.SetParams(0.0f, 100.0f * (scsph - sccyli), 0.0f);
+		scale.SetParams(sccyli, scsph, scsph);
+		tra.SetParams(100.0f * (scsph - sccyli), 0.0f, 0.0f);
 		if (lengptr){
 			*lengptr = sccyli * 200.0f;
 		}
 	}
 	else if (srctype == 1){
 		//upper sphere
-		//scale = ChaVector3(scsph, scsph, scsph);
-		//tra = ChaVector3(0.0f, -300.0f * scsph + 100.0f * (scsph + 2.0f * sccyli), 0.0f);
-		scale = ChaVector3(scsph, scsph, scsph);
-		tra = ChaVector3(-300.0f * scsph + 100.0f * (scsph + 2.0f * sccyli), 0.0f, 0.0f);
+		//scale.SetParams(scsph, scsph, scsph);
+		//tra.SetParams(0.0f, -300.0f * scsph + 100.0f * (scsph + 2.0f * sccyli), 0.0f);
+		scale.SetParams(scsph, scsph, scsph);
+		tra.SetParams(-300.0f * scsph + 100.0f * (scsph + 2.0f * sccyli), 0.0f, 0.0f);
 		if (lengptr){
 			*lengptr = scsph * 100.0f;
 		}
 	}
 	else{
 		//lower sphere
-		scale = ChaVector3(scsph, scsph, scsph);
-		tra = ChaVector3(0.0f, 0.0f, 0.0f);
+		scale.SetParams(scsph, scsph, scsph);
+		tra.SetParams(0.0f, 0.0f, 0.0f);
 		if (lengptr){
 			*lengptr = scsph * 100.0f;
 		}

@@ -765,10 +765,11 @@ int CBVHElem::ConvXYZRot()
 	}
 
 
-	//ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+	//ChaVector3 befeul.SetParams(0.0f, 0.0f, 0.0f);
 	BEFEUL befeul;
 	befeul.Init();
-	ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 cureul;
+	cureul.SetParams(0.0f, 0.0f, 0.0f);
 
 	int frameno;
 	for (frameno = 0; frameno < framenum; frameno++) {
@@ -779,8 +780,8 @@ int CBVHElem::ConvXYZRot()
 		befframe = frameno - 1;
 		if (frameno <= 1) {
 			//roundingframe が0.0または1.0の場合 
-			befeul.befframeeul = ChaVector3(0.0f, 0.0f, 0.0f);
-			befeul.currentframeeul = ChaVector3(0.0f, 0.0f, 0.0f);
+			befeul.befframeeul.SetParams(0.0f, 0.0f, 0.0f);
+			befeul.currentframeeul.SetParams(0.0f, 0.0f, 0.0f);
 		}
 		else {
 			befeul.befframeeul = cureul;
@@ -806,7 +807,7 @@ int CBVHElem::ConvXYZRot()
 		//	//IKRot中は　０フレームも１フレームも　180度チェックをする
 		//	notmodify180flag = 0;
 		//	//if (frameno <= 1) {
-		//	//	befeul.befframeeul = ChaVector3(0.0f, 0.0f, 0.0f);
+		//	//	befeul.befframeeul.SetParams(0.0f, 0.0f, 0.0f);
 		//	//}
 		//}
 

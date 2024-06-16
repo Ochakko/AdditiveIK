@@ -436,14 +436,14 @@
         ChaVector3 srcpos, ChaVector2 srcdispsize, ChaVector4 srccolmult)
     {
         if ((instanceno >= 0) && (instanceno < INSTANCEDSPMAX)) {
-            m_possize[instanceno].pos = ChaVector4(srcpos, 1.0f);
+            m_possize[instanceno].pos.SetParams(srcpos, 1.0f);
             m_possize[instanceno].size = srcdispsize;
             m_possize[instanceno].colmult = srccolmult;
 
             UINT screenW, screenH;
             screenW = g_graphicsEngine->GetFrameBufferWidth();
             screenH = g_graphicsEngine->GetFrameBufferHeight();
-            m_possize[instanceno].WH = ChaVector2((1.0f / (float)screenW), (1.0f / (float)screenH));
+            m_possize[instanceno].WH.SetParams((1.0f / (float)screenW), (1.0f / (float)screenH));
 
             if (instanceno >= m_instancenum) {
                 m_instancenum = instanceno + 1;//!!!!!!!!!!!
@@ -511,7 +511,8 @@
         //ディスクリプタヒープを設定する。
         renderContext->SetDescriptorHeap(m_descriptorHeap);
         //描画
-        renderContext->DrawIndexedInstanced(m_indexBuffer.GetCount(), m_instancenum);
+        //renderContext->DrawIndexedInstanced(m_indexBuffer.GetCount(), m_instancenum);
+        renderContext->DrawIndexedInstanced(4, m_instancenum);
         //.DrawIndexedInstanced(m_indexBuffer.GetCount(), numinstanced);
 
 

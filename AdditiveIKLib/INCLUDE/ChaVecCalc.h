@@ -90,6 +90,14 @@ public:
 
 	~ChaMatrix();
 
+	void SetParams(ChaMatrix srcmat) {
+		data[MATI_11] = srcmat.data[MATI_11]; data[MATI_12] = srcmat.data[MATI_12]; data[MATI_13] = srcmat.data[MATI_13]; data[MATI_14] = srcmat.data[MATI_14];
+		data[MATI_21] = srcmat.data[MATI_21]; data[MATI_22] = srcmat.data[MATI_22]; data[MATI_23] = srcmat.data[MATI_23]; data[MATI_24] = srcmat.data[MATI_24];
+		data[MATI_31] = srcmat.data[MATI_31]; data[MATI_32] = srcmat.data[MATI_32]; data[MATI_33] = srcmat.data[MATI_33]; data[MATI_34] = srcmat.data[MATI_34];
+		data[MATI_41] = srcmat.data[MATI_41]; data[MATI_42] = srcmat.data[MATI_42]; data[MATI_43] = srcmat.data[MATI_43]; data[MATI_44] = srcmat.data[MATI_44];
+	};
+
+
 	ChaMatrix operator= (ChaMatrix m);
 //#ifdef CONVD3DX11
 	ChaMatrix operator= (DirectX::XMMATRIX m);
@@ -206,6 +214,13 @@ public:
 	ChaVector2(float srcx, float srcy);
 	~ChaVector2();
 
+	void SetParams(float srcx, float srcy) {
+		x = srcx; y = srcy;
+	};
+	void SetParams(ChaVector2 srcvec2) {
+		x = srcvec2.x; y = srcvec2.y;
+	};
+
 	ChaVector2 operator= (ChaVector2 v);
 	ChaVector2 operator* (float srcw) const;
 	ChaVector2 &operator*= (float srcw);
@@ -254,6 +269,13 @@ public:
 	~ChaVector3();
 
 	void SetZeroVec3();
+	void SetParams(float srcx, float srcy, float srcz) {
+		x = srcx; y = srcy; z = srcz;
+	};
+	void SetParams(ChaVector3 srcvec3) {
+		x = srcvec3.x; y = srcvec3.y; z = srcvec3.z;
+	};
+
 
 	ChaVector3 operator= (ChaVector3 v);
 	ChaVector3 operator* (float srcw) const;
@@ -315,8 +337,8 @@ typedef struct tag_befeul
 
 	void Init()
 	{
-		befframeeul = ChaVector3(0.0f, 0.0f, 0.0f);
-		currentframeeul = ChaVector3(0.0f, 0.0f, 0.0f);
+		befframeeul.SetParams(0.0f, 0.0f, 0.0f);
+		currentframeeul.SetParams(0.0f, 0.0f, 0.0f);
 	};
 	tag_befeul()
 	{
@@ -335,6 +357,17 @@ public:
 	ChaVector4(float srcx, float srcy, float srcz, float srcw);
 	ChaVector4(ChaVector3 srcvec3, float srcw);
 	~ChaVector4();
+
+	void SetParams(float srcx, float srcy, float srcz, float srcw) {
+		x = srcx; y = srcy; z = srcz; w = srcw;
+	};
+	void SetParams(ChaVector4 srcvec4) {
+		x = srcvec4.x; y = srcvec4.y; z = srcvec4.z; w = srcvec4.w;
+	};
+	void SetParams(ChaVector3 srcvec3, float srcw) {
+		x = srcvec3.x; y = srcvec3.y; z = srcvec3.z; w = srcw;
+	};
+
 
 	ChaVector4 operator= (ChaVector4 v);
 	ChaVector4 operator* (float srcw) const;
@@ -843,8 +876,8 @@ typedef  struct tag_modelbound
 
 	void Init()
 	{
-		min = ChaVector3(FLT_MAX, FLT_MAX, FLT_MAX);
-		max = ChaVector3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+		min.SetParams(FLT_MAX, FLT_MAX, FLT_MAX);
+		max.SetParams(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 		center.SetZeroVec3();
 		validflag = false;
 		r = 0.0f;
@@ -1136,11 +1169,11 @@ public:
 	void InitParams() {
 		m_fogkind = 0;
 
-		m_distcolor = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		m_distparams = ChaVector3(10.0f, 10000.0f, 0.6f);
+		m_distcolor.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
+		m_distparams.SetParams(10.0f, 10000.0f, 0.6f);
 
-		m_heightcolor = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		m_heightparams = ChaVector3(0.0f, 140.0f, 0.6f);
+		m_heightcolor.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
+		m_heightparams.SetParams(0.0f, 140.0f, 0.6f);
 	};
 
 private:

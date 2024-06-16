@@ -48,8 +48,8 @@ typedef struct tag_cameranode
 		position.SetZeroVec3();
 		worldmat.SetIdentity();
 
-		dirvec = ChaVector3(0.0f, 0.0f, 1.0f);
-		upvec = ChaVector3(0.0f, 1.0f, 0.0f);
+		dirvec.SetParams(0.0f, 0.0f, 1.0f);
+		upvec.SetParams(0.0f, 1.0f, 0.0f);
 		adjustpos.SetZeroVec3();
 
 		aspectHeight = 600.0f; // アスペクト高
@@ -227,7 +227,7 @@ public:
 	//}
 	//void SetCameraLclTra(FbxDouble3 srcval)
 	//{
-	//	m_cameralcltra = ChaVector3((float)srcval[0], (float)srcval[1], (float)srcval[2]);
+	//	m_cameralcltra.SetParams((float)srcval[0], (float)srcval[1], (float)srcval[2]);
 	//}
 	//ChaVector3 GetCameraParentLclTra()
 	//{

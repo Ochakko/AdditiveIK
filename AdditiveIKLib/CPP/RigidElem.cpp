@@ -67,7 +67,7 @@ int CRigidElem::InitParams()
 	m_sphr = 0.0f;
 	m_boxz = 0.0f;
 
-	//m_impulse = ChaVector3( 0.0f, 0.0f, 0.0f );
+	//m_impulse.SetParams( 0.0f, 0.0f, 0.0f );
 	
 	m_l_kindex = 2;
 	m_a_kindex = 2;

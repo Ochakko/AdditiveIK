@@ -34,8 +34,8 @@ typedef struct tag_undocamera
 		camtargetdisp = false;
 		moveeyepos = false;
 		camEyePos.SetZeroVec3();
-		camtargetpos = ChaVector3(0.0f, 0.0f, -100.0f);
-		camUpVec = ChaVector3(0.0f, 1.0f, 0.0);
+		camtargetpos.SetParams(0.0f, 0.0f, -100.0f);
+		camUpVec.SetParams(0.0f, 1.0f, 0.0);
 		camdist = 500.0f;
 	};
 

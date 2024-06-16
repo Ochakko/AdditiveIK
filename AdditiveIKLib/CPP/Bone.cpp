@@ -396,10 +396,10 @@ int CBone::InitParams()
 	//ChaMatrixIdentity(&(m_befbtmat[0]));
 	//ChaMatrixIdentity(&(m_befbtmat[1]));
 	m_setbtflag = 0;
-	m_bteul = ChaVector3(0.0f, 0.0f, 0.0f);
+	m_bteul.SetParams(0.0f, 0.0f, 0.0f);
 
-	m_btparentpos = ChaVector3(0.0f, 0.0f, 0.0f);
-	m_btchildpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	m_btparentpos.SetParams(0.0f, 0.0f, 0.0f);
+	m_btchildpos.SetParams(0.0f, 0.0f, 0.0f);
 	ChaMatrixIdentity(&m_btdiffmat);
 
 	m_initcustomrigflag = 0;
@@ -433,8 +433,8 @@ int CBone::InitParams()
 	ZeroMemory( m_wbonename, sizeof( WCHAR ) * 256 );
 	ZeroMemory( m_engbonename, sizeof( char ) * 256 );
 
-	m_childworld = ChaVector3( 0.0f, 0.0f, 0.0f );
-	m_childscreen = ChaVector3( 0.0f, 0.0f, 0.0f );
+	m_childworld.SetParams( 0.0f, 0.0f, 0.0f );
+	m_childscreen.SetParams( 0.0f, 0.0f, 0.0f );
 
 	m_parent = 0;
 	m_child = 0;
@@ -450,9 +450,9 @@ int CBone::InitParams()
 	ChaMatrixIdentity(&m_nodeanimmat);
 	//m_bindmat.SetIdentity();
 
-	m_jointwpos = ChaVector3( 0.0f, 0.0f, 0.0f );
-	m_jointfpos = ChaVector3( 0.0f, 0.0f, 0.0f );
-	m_oldjointfpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	m_jointwpos.SetParams( 0.0f, 0.0f, 0.0f );
+	m_jointfpos.SetParams( 0.0f, 0.0f, 0.0f );
+	m_oldjointfpos.SetParams(0.0f, 0.0f, 0.0f);
 	m_defboneposkind  = DEFBONEPOS_NONE;//FbxFile.cpp FbxSetDefaultBonePosReq()でセット　BPの有無など
 
 
@@ -464,7 +464,7 @@ int CBone::InitParams()
 
 	m_tmpq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 
-	m_firstframebonepos = ChaVector3(0.0f, 0.0f, 0.0f);
+	m_firstframebonepos.SetParams(0.0f, 0.0f, 0.0f);
 
 	m_posefoundflag = false;
 	ZeroMemory(m_cachebefmp, sizeof(CMotionPoint*) * (MAXMOTIONNUM + 1));
@@ -502,7 +502,7 @@ int CBone::InitParams()
 
 	m_ikstopflag = false;
 	m_iktargetflag = false;
-	m_iktargetpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	m_iktargetpos.SetParams(0.0f, 0.0f, 0.0f);
 
 	m_ikrotrec.clear();
 	m_ikrotrec_u.clear();
@@ -589,7 +589,8 @@ void CBone::ResetRefPosMarkInstancingParams()//static function
 void CBone::RenderColDisp(ChaScene* srcchascene)//static function
 {
 	int lightflag = 0;
-	ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, g_rigidmark_alpha);//2024/01/12 alpha
+	ChaVector4 diffusemult;
+	diffusemult.SetParams(1.0f, 1.0f, 1.0f, g_rigidmark_alpha);//2024/01/12 alpha
 	bool forcewithalpha = true;
 	int btflag = 0;
 	bool zcmpalways = true;
@@ -624,7 +625,7 @@ void CBone::RenderColDisp(ChaScene* srcchascene)//static function
 void CBone::RenderRefPosMark(ChaScene* srcchascene, myRenderer::RenderingEngine* re, ChaVector4 diffusemult)//static function
 {
 	int lightflag = 0;
-	//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, g_rigidmark_alpha);//2024/01/12 alpha
+	//ChaVector4 diffusemult.SetParams(1.0f, 1.0f, 1.0f, g_rigidmark_alpha);//2024/01/12 alpha
 	bool forcewithalpha = true;
 	int btflag = 0;
 	bool zcmpalways = true;
@@ -814,8 +815,8 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 		ChaMatrix initwm;
 		initwm.SetIdentity();
 		ChaMatrix modelwm = *wmat;
-		ChaVector3 zeroeul = ChaVector3(0.0f, 0.0f, 0.0f);
-
+		ChaVector3 zeroeul;
+		zeroeul.SetParams(0.0f, 0.0f, 0.0f);
 		m_curmp[m_updateslot].InitParams();
 		m_curmp[m_updateslot].SetFrame(roundingframe);
 		m_curmp[m_updateslot].SetWorldMat(modelwm);
@@ -1762,7 +1763,8 @@ float CBone::CalcAxisMatX_Manipulator(bool limitdegflag, int srcboneaxis, int bi
 		return 0.0f;//!!!!!!!!!!!!!!!!!!!! return !!!!!!!!!!!!!!!!!!!
 	}
 
-	ChaVector3 zeropos = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 zeropos;
+	zeropos.SetParams(0.0f, 0.0f, 0.0f);
 
 	ChaMatrix tmpzerofm = GetNodeMat() * GetCurrentZeroFrameMat(limitdegflag, 1);
 	ChaMatrix tmplimwm = GetNodeMat() * GetCurrentWorldMat(false, true);
@@ -1979,7 +1981,8 @@ float CBone::CalcAxisMatX_NodeMat(CBone* childbone, ChaMatrix* dstmat)
 	//}
 
 
-	ChaVector3 zeropos = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 zeropos;
+	zeropos.SetParams(0.0f, 0.0f, 0.0f);
 
 	ChaVector3 tmpfpos = GetJointFPos();
 	ChaVector3 tmpchildfpos = childbone->GetJointFPos();
@@ -2067,7 +2070,8 @@ float CBone::CalcAxisMatX_RigidBody(bool limitdegflag, bool dir2xflag, int bindf
 		return 0.0f;
 	}
 
-	ChaVector3 zeropos = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 zeropos;
+	zeropos.SetParams(0.0f, 0.0f, 0.0f);
 
 	ChaVector3 tmpfpos = GetJointFPos();
 	ChaVector3 tmpchildfpos = childbone->GetJointFPos();
@@ -2693,11 +2697,11 @@ int CBone::CreateRigidElem( CBone* parentbone, int reflag, std::string rename, i
 			if (itrimp != findimpmap->second.end()){
 				return 0;
 			}
-			findimpmap->second[this] = ChaVector3(0.0f, 0.0f, 0.0f);
+			findimpmap->second[this].SetParams(0.0f, 0.0f, 0.0f);
 		}else{
 			map<CBone*, ChaVector3> curmap;
 
-			curmap[this] = ChaVector3( 0.0f, 0.0f, 0.0f );
+			curmap[this].SetParams( 0.0f, 0.0f, 0.0f );
 			parentbone->m_impmap[impname] = curmap;
 		}
 	}
@@ -2964,7 +2968,8 @@ void CBone::PasteRotReq(bool limitdegflag, int srcmotid, double srcframe, double
 
 
 		//オイラー角初期化
-		ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+		ChaVector3 cureul;
+		cureul.SetParams(0.0f, 0.0f, 0.0f);
 		int paraxsiflag = 1;
 		//int isfirstbone = 0;
 		//cureul = CalcLocalEulXYZ(-1, srcmotid, srcframe, BEFEUL_ZERO);
@@ -3562,10 +3567,12 @@ int CBone::CalcLocalInfo(bool limitdegflag, int motid, double frameno, CMotionPo
 		localmat.SetIdentity();
 	}
 
-	ChaVector3 svec = ChaVector3(1.0f, 1.0f, 1.0f);
+	ChaVector3 svec;
+	svec.SetParams(1.0f, 1.0f, 1.0f);
 	ChaMatrix rmat;
 	rmat.SetIdentity();
-	ChaVector3 tvec = ChaVector3(0.0f ,0.0f, 0.0f);
+	ChaVector3 tvec;
+	tvec.SetParams(0.0f, 0.0f, 0.0f);
 	GetSRTMatrix(localmat, &svec, &rmat, &tvec);
 
 	CMotionPoint setmp;
@@ -3856,7 +3863,8 @@ int CBone::GetBoneNum()
 
 int CBone::CalcFirstFrameBonePos(ChaMatrix srcmat)
 {
-	ChaVector3 zeropos = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 zeropos;
+	zeropos.SetParams(0.0f, 0.0f, 0.0f);
 	ChaVector3TransformCoord(&m_firstframebonepos, &zeropos, &srcmat);
 
 
@@ -3864,7 +3872,7 @@ int CBone::CalcFirstFrameBonePos(ChaMatrix srcmat)
 	//ChaVector3TransformCoord(&m_firstframebonepos, &jpos, &srcmat);
 	
 	
-	//ChaVector3 zeropos = ChaVector3(0.0f, 0.0f, 0.0f);//2022/07/29
+	//ChaVector3 zeropos.SetParams(0.0f, 0.0f, 0.0f);//2022/07/29
 	//ChaVector3TransformCoord(&m_firstframebonepos, &zeropos, &(GetFirstMat()));
 
 
@@ -3943,7 +3951,7 @@ BEFEUL CBone::GetBefEul(bool limitdegflag, int srcmotid, double srcframe)
 //{
 //	double roundingframe = RoundingTime(srcframe);
 //
-//	ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+//	ChaVector3 befeul.SetParams(0.0f, 0.0f, 0.0f);
 //
 //	if (IsNotSkeleton()) {
 //		return befeul;
@@ -3954,7 +3962,7 @@ BEFEUL CBone::GetBefEul(bool limitdegflag, int srcmotid, double srcframe)
 //	double befframe;
 //	befframe = roundingframe - 1.0;
 //	if (roundingframe <= 1.01) {
-//		//befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+//		//befeul.SetParams(0.0f, 0.0f, 0.0f);
 //		CMotionPoint* curmp;
 //		curmp = GetMotionPoint(srcmotid, roundingframe);
 //		if (curmp) {
@@ -3971,7 +3979,7 @@ BEFEUL CBone::GetBefEul(bool limitdegflag, int srcmotid, double srcframe)
 //
 //	//if (g_underIKRot == true) {
 //	//	if (roundingframe <= 1.01) {
-//	//		befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+//	//		befeul.SetParams(0.0f, 0.0f, 0.0f);
 //	//	}
 //	//}
 //
@@ -4049,7 +4057,7 @@ ChaVector3 CBone::CalcLocalEulXYZ(bool limitdegflag, int axiskind,
 //
 //	double roundingframe = RoundingTime(srcframe);
 //
-//	ChaVector3 reteul = ChaVector3(0.0f, 0.0f, 0.0f);
+//	ChaVector3 reteul.SetParams(0.0f, 0.0f, 0.0f);
 //	//reteul = GetLimitedLocalEul(srcmotid, srcframe);
 //	//reteul = CalcLocalEulAndSetLimitedEul(srcmotid, roundingframe);
 //
@@ -4077,7 +4085,7 @@ ChaVector3 CBone::CalcLocalEulXYZ(bool limitdegflag, int axiskind,
 //		CQuaternion axisq;
 //		axisq.RotationMatrix(GetNodeMat());
 //
-//		ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+//		ChaVector3 befeul.SetParams(0.0f, 0.0f, 0.0f);
 //		double befframe;
 //		befframe = roundingframe - 1.0;
 //		if (befframe >= -0.0001) {
@@ -4105,7 +4113,7 @@ ChaVector3 CBone::CalcLocalEulXYZ(bool limitdegflag, int axiskind,
 //			//IKRot中は　０フレームも１フレームも　180度チェックをする
 //			notmodify180flag = 0;
 //			if (roundingframe <= 1.01) {
-//				befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+//				befeul.SetParams(0.0f, 0.0f, 0.0f);
 //			}
 //		}
 //		eulq.Q2EulXYZusingQ(&axisq, befeul, &reteul, isfirstbone, isendbone, notmodify180flag);
@@ -4122,7 +4130,7 @@ ChaVector3 CBone::CalcLocalEulXYZ(bool limitdegflag, int axiskind,
 //ChaVector3 CBone::CalcLocalUnlimitedEulXYZ(int srcmotid, double srcframe)
 //{
 //	//制限角度の制限を受けない姿勢のオイラー角を計算
-//	ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+//	ChaVector3 cureul.SetParams(0.0f, 0.0f, 0.0f);
 //	double roundingframe = RoundingTime(srcframe);
 //
 //	CMotionPoint* curmp = GetMotionPoint(srcmotid, roundingframe);
@@ -4250,8 +4258,8 @@ ChaMatrix CBone::CalcLocalRotMatFromEul(ChaVector3 srceul)
 //{
 //	//axiskind : BONEAXIS_*  or  -1(CBone::m_anglelimit.boneaxiskind)
 //
-//	ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
-//	ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+//	ChaVector3 cureul.SetParams(0.0f, 0.0f, 0.0f);
+//	ChaVector3 befeul.SetParams(0.0f, 0.0f, 0.0f);
 //
 //	const WCHAR* bonename = GetWBoneName();
 //	if (wcscmp(bonename, L"RootNode") == 0) {
@@ -4336,7 +4344,7 @@ ChaMatrix CBone::CalcLocalRotMatFromEul(ChaVector3 srceul)
 //		//IKRot中は　０フレームも１フレームも　180度チェックをする
 //		notmodify180flag = 0;
 //		if (curframe <= 1.01) {
-//			befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+//			befeul.SetParams(0.0f, 0.0f, 0.0f);
 //		}
 //	}
 //
@@ -4443,8 +4451,8 @@ ChaMatrix CBone::CalcLocalRotMatFromEul(ChaVector3 srceul)
 //{
 //	//axiskind : BONEAXIS_*  or  -1(CBone::m_anglelimit.boneaxiskind)
 //
-//	ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
-//	ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+//	ChaVector3 cureul.SetParams(0.0f, 0.0f, 0.0f);
+//	ChaVector3 befeul.SetParams(0.0f, 0.0f, 0.0f);
 //
 //	const WCHAR* bonename = GetWBoneName();
 //	if (wcscmp(bonename, L"RootNode") == 0) {
@@ -5243,8 +5251,8 @@ ANGLELIMIT CBone::GetAngleLimit(bool limitdegflag, int getchkflag)
 		//int existflag = 0;
 		//CalcFBXMotion(curmotid, curframe, &m_curmp, &existflag);
 
-		//ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
-		//ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
+		//ChaVector3 cureul.SetParams(0.0f, 0.0f, 0.0f);
+		//ChaVector3 neweul.SetParams(0.0f, 0.0f, 0.0f);
 		////cureul = CalcLocalEulXYZ(m_anglelimit.boneaxiskind, curmotid, curframe, BEFEUL_BEFFRAME);
 		//cureul = CalcCurrentLocalEulXYZ(m_anglelimit.boneaxiskind, curmotid, curframe, BEFEUL_BEFFRAME);
 
@@ -5253,8 +5261,10 @@ ANGLELIMIT CBone::GetAngleLimit(bool limitdegflag, int getchkflag)
 				int curmotid = GetParModel()->GetCurrentMotID();
 				int curframe = IntTime(GetParModel()->GetCurrentFrame());
 
-				ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
-				ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
+				ChaVector3 cureul;
+				cureul.SetParams(0.0f, 0.0f, 0.0f);
+				ChaVector3 neweul;
+				neweul.SetParams(0.0f, 0.0f, 0.0f);
 				if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
 					////cureul = CalcCurrentLocalEulXYZ(-1, BEFEUL_BEFFRAME);
 					//cureul = CalcLocalEulXYZ(-1, m_curmotid, curframe, BEFEUL_BEFFRAME, 0);
@@ -5496,7 +5506,7 @@ ChaMatrix CBone::CalcSymXMat2(bool limitdegflag, int srcmotid, double srcframe, 
 
 	ChaMatrix directsetmat;
 	ChaMatrixIdentity(&directsetmat);
-	//ChaVector3 symscale = ChaVector3(1.0f, 1.0f, 1.0f);
+	//ChaVector3 symscale.SetParams(1.0f, 1.0f, 1.0f);
 	//symscale = CalcLocalScaleAnim(srcmotid, roundingframe);
 
 	//2023/04/28
@@ -5755,7 +5765,8 @@ ChaMatrix CBone::CalcLocalSymScaleRotMat(bool limitdegflag, int rotcenterflag, i
 			symbone->CalcLocalInfo(limitdegflag, srcmotid, srcframe, &symlocalmp);
 			retmat = symlocalmp.GetQ().CalcSymX2();
 
-			ChaVector3 symscale = ChaVector3(1.0f, 1.0f, 1.0f);
+			ChaVector3 symscale;
+			symscale.SetParams(1.0f, 1.0f, 1.0f);
 			symscale = symbone->CalcLocalScaleAnim(limitdegflag, srcmotid, srcframe);
 			ChaMatrix symscalemat;
 			ChaMatrixIdentity(&symscalemat);
@@ -5781,7 +5792,7 @@ ChaMatrix CBone::CalcLocalSymScaleRotMat(bool limitdegflag, int rotcenterflag, i
 			//CalcLocalRotMatはrotcenter対応、scale有り!!!!!!!!!!!!!!
 			
 
-			//ChaVector3 symscale = ChaVector3(1.0f, 1.0f, 1.0f);
+			//ChaVector3 symscale.SetParams(1.0f, 1.0f, 1.0f);
 			//symscale = CalcLocalScaleAnim(srcmotid, srcframe);
 			//ChaMatrix symscalemat;
 			//ChaMatrixIdentity(&symscalemat);
@@ -5808,7 +5819,7 @@ ChaMatrix CBone::CalcLocalSymScaleRotMat(bool limitdegflag, int rotcenterflag, i
 		//CalcLocalRotMatはrotcenter対応、scale有り!!!!!!!!!!!!!!
 
 
-		//ChaVector3 symscale = ChaVector3(1.0f, 1.0f, 1.0f);
+		//ChaVector3 symscale.SetParams(1.0f, 1.0f, 1.0f);
 		//symscale = CalcLocalScaleAnim(srcmotid, srcframe);
 		//ChaMatrix symscalemat;
 		//ChaMatrixIdentity(&symscalemat);
@@ -5834,7 +5845,8 @@ ChaMatrix CBone::CalcLocalSymScaleRotMat(bool limitdegflag, int rotcenterflag, i
 
 ChaVector3 CBone::CalcLocalSymScaleVec(bool limitdegflag, int srcmotid, double srcframe)
 {
-	ChaVector3 retscale = ChaVector3(1.0f, 1.0f, 1.0f);
+	ChaVector3 retscale;
+	retscale.SetParams(1.0f, 1.0f, 1.0f);
 
 	//2023/04/28
 	if (IsNotSkeleton()) {
@@ -5927,7 +5939,8 @@ ChaVector3 CBone::CalcLocalTraAnim(bool limitdegflag, int srcmotid, double srcfr
 ChaVector3 CBone::CalcLocalSymTraAnim(bool limitdegflag, int srcmotid, double srcframe)
 {
 
-	ChaVector3 rettra = ChaVector3(0.0f, 0.0f, 0.0);//scaleに設定されていてもrotcenterの位置になる
+	ChaVector3 rettra;
+	rettra.SetParams(0.0f, 0.0f, 0.0);//scaleに設定されていてもrotcenterの位置になる
 
 	//2023/04/28
 	if (IsNotSkeleton()) {
@@ -5984,7 +5997,8 @@ ChaVector3 CBone::CalcFbxScaleAnim(bool limitdegflag, int srcmotid, double srcfr
 
 	ChaVector3 svec, tvec;
 	ChaMatrix rmat;
-	ChaVector3 iniscale = ChaVector3(1.0f, 1.0f, 1.0f);
+	ChaVector3 iniscale;
+	iniscale.SetParams(1.0f, 1.0f, 1.0f);
 
 
 	//ChaMatrix wmanim = GetNodeMat() * GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
@@ -6035,11 +6049,11 @@ ChaVector3 CBone::CalcFbxScaleAnim(bool limitdegflag, int srcmotid, double srcfr
 			svec = ChaVector3(fbxcamerascl);
 		}
 		else {
-			svec = ChaVector3(1.0f, 1.0f, 1.0f);
+			svec.SetParams(1.0f, 1.0f, 1.0f);
 		}
 	}
 	else {
-		svec = ChaVector3(1.0f, 1.0f, 1.0f);
+		svec.SetParams(1.0f, 1.0f, 1.0f);
 	}
 
 	return svec;
@@ -6058,7 +6072,8 @@ ChaVector3 CBone::CalcLocalScaleAnim(bool limitdegflag, int srcmotid, double src
 
 	ChaVector3 svec, tvec;
 	ChaMatrix rmat;
-	ChaVector3 iniscale = ChaVector3(1.0f, 1.0f, 1.0f);
+	ChaVector3 iniscale;
+	iniscale.SetParams(1.0f, 1.0f, 1.0f);
 
 	if (IsNullAndChildIsCamera() || IsCamera()) {
 		ChaMatrix localmat = GetLocalMat(limitdegflag, srcmotid, roundingframe, 0);
@@ -6258,8 +6273,8 @@ ChaVector3 CBone::CalcFBXEulXYZ(bool limitdegflag, int srcmotid, double srcframe
 //		isfirstbone = 1;
 //	}
 //
-//	ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
-//	ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+//	ChaVector3 befeul.SetParams(0.0f, 0.0f, 0.0f);
+//	ChaVector3 cureul.SetParams(0.0f, 0.0f, 0.0f);
 //	if (befeulptr){
 //		befeul = *befeulptr;
 //	}
@@ -6326,7 +6341,8 @@ ChaVector3 CBone::CalcFBXTra(bool limitdegflag, int srcmotid, double srcframe)
 			FbxTime fbxtime;
 			fbxtime.SetSecondDouble(roundingframe / 30.0);
 			FbxVector4 fbxtra = GetFbxNodeOnLoad()->EvaluateLocalTranslation(fbxtime, FbxNode::eSourcePivot, true, true);
-			ChaVector3 tra = ChaVector3(fbxtra, false);
+			ChaVector3 tra;
+			tra = ChaVector3(fbxtra, false);
 
 			return tra;
 		}
@@ -6356,7 +6372,7 @@ ChaVector3 CBone::CalcFBXTra(bool limitdegflag, int srcmotid, double srcframe)
 	//return rettvec;
 
 
-	//ChaVector3 fbxtra = ChaVector3(localfbxmat.data[MATI_41], localfbxmat.data[MATI_42], localfbxmat.data[MATI_43]);
+	//ChaVector3 fbxtra.SetParams(localfbxmat.data[MATI_41], localfbxmat.data[MATI_42], localfbxmat.data[MATI_43]);
 	//return fbxtra;
 
 }
@@ -6387,7 +6403,7 @@ int CBone::QuaternionInOrder(bool limitdegflag, int srcmotid, double srcframe, C
 int CBone::CalcNewBtMat(CRigidElem* srcre, CBone* childbone, ChaMatrix* dstmat, ChaVector3* dstpos)
 {
 	ChaMatrixIdentity(dstmat);
-	*dstpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	dstpos->SetParams(0.0f, 0.0f, 0.0f);
 
 	if (!childbone || !dstmat || !dstpos){
 		return 1;
@@ -6459,7 +6475,7 @@ int CBone::CalcNewBtMat(CModel* srcmodel, CBone* childbone, ChaMatrix* dstmat, C
 	//srcframe : 時間補間有り
 
 	ChaMatrixIdentity(dstmat);
-	*dstpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	dstpos->SetParams(0.0f, 0.0f, 0.0f);
 
 	if (!childbone || !dstmat || !dstpos){
 		return 1;
@@ -6468,7 +6484,7 @@ int CBone::CalcNewBtMat(CModel* srcmodel, CBone* childbone, ChaMatrix* dstmat, C
 	//2023/04/28
 	if (IsNotSkeleton()) {
 		dstmat->SetIdentity();
-		*dstpos = ChaVector3(0.0f, 0.0f, 0.0f);
+		dstpos->SetParams(0.0f, 0.0f, 0.0f);
 		return 0;
 	}
 
@@ -6588,7 +6604,7 @@ int CBone::CalcNewBtMat(CModel* srcmodel, CBone* childbone, ChaMatrix* dstmat, C
 //int CBone::CalcNewBtMat(CModel* srcmodel, CRigidElem* srcre, CBone* childbone, ChaMatrix* dstmat, ChaVector3* dstpos)
 //{
 //	ChaMatrixIdentity(dstmat);
-//	*dstpos = ChaVector3(0.0f, 0.0f, 0.0f);
+//	*dstpos.SetParams(0.0f, 0.0f, 0.0f);
 //
 //	if (!childbone || !dstmat || !dstpos) {
 //		return 1;
@@ -7436,7 +7452,8 @@ void CBone::OnDelModel(CModel* srcparmodel)
 
 ChaVector3 CBone::GetLimitedLocalEul(int srcmotid, double srcframe)
 {
-	ChaVector3 reteul = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 reteul;
+	reteul.SetParams(0.0f, 0.0f, 0.0f);
 
 	//2023/04/28
 	if (IsNotSkeleton()) {
@@ -7460,7 +7477,8 @@ ChaVector3 CBone::GetLimitedLocalEul(int srcmotid, double srcframe)
 
 ChaVector3 CBone::GetUnlimitedLocalEul(int srcmotid, double srcframe)
 {
-	ChaVector3 reteul = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 reteul;
+	reteul.SetParams(0.0f, 0.0f, 0.0f);
 
 	//2023/04/28
 	if (IsNotSkeleton()) {
@@ -7486,8 +7504,8 @@ ChaVector3 CBone::GetUnlimitedLocalEul(int srcmotid, double srcframe)
 //{
 //	double roundingframe = RoundingTime(srcframe);
 //
-//	ChaVector3 orgeul = ChaVector3(0.0f, 0.0f, 0.0f);
-//	ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
+//	ChaVector3 orgeul.SetParams(0.0f, 0.0f, 0.0f);
+//	ChaVector3 neweul.SetParams(0.0f, 0.0f, 0.0f);
 //
 //	orgeul = CalcLocalEulXYZ(-1, srcmotid, roundingframe, BEFEUL_BEFFRAME);
 //	int ismovable;
@@ -7567,7 +7585,7 @@ ChaVector3 CBone::GetUnlimitedLocalEul(int srcmotid, double srcframe)
 //	double roundingframe = RoundingTime(srcframe);
 //	ChaMatrix retmat;
 //	retmat.SetIdentity();
-//	ChaVector3 neweul = ChaVector3(0.0f, 0.0f, 0.0f);
+//	ChaVector3 neweul.SetParams(0.0f, 0.0f, 0.0f);
 //
 //	if (!dstneweul) {
 //		_ASSERT(0);
@@ -7621,7 +7639,7 @@ ChaVector3 CBone::GetUnlimitedLocalEul(int srcmotid, double srcframe)
 //		CQuaternion eulq;
 //		eulq.RotationMatrix(curlocalmat);
 //
-//		ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+//		ChaVector3 befeul.SetParams(0.0f, 0.0f, 0.0f);
 //		double befframe;
 //		befframe = roundingframe - 1.0;
 //		if (befframe >= -0.0001) {
@@ -7651,7 +7669,7 @@ ChaVector3 CBone::GetUnlimitedLocalEul(int srcmotid, double srcframe)
 //			//IKRot中は　０フレームも１フレームも　180度チェックをする
 //			notmodify180flag = 0;
 //			if (roundingframe <= 1.01) {
-//				befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+//				befeul.SetParams(0.0f, 0.0f, 0.0f);
 //			}
 //		}
 //		eulq.Q2EulXYZusingQ(&axisq, befeul, &neweul, isfirstbone, isendbone, notmodify180flag);
@@ -7829,7 +7847,8 @@ ChaVector3 CBone::GetWorldPos(bool limitdegflag, int srcmotid, double srcframe)
 	double roundingframe = RoundingTime(srcframe);
 
 
-	ChaVector3 retpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 retpos;
+	retpos.SetParams(0.0f, 0.0f, 0.0f);
 	//if ((srcmotid <= 0) || (srcmotid > m_motionkey.size())) {
 	if (srcmotid <= 0) {//2024/06/10
 		return retpos;
@@ -8076,7 +8095,7 @@ int CBone::AdditiveCurrentToAngleLimit()
 	//	if (curmi) {
 	//		int curmotid = curmi->motid;
 	//		int curframe = curmi->curframe;
-	//		ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+	//		ChaVector3 cureul.SetParams(0.0f, 0.0f, 0.0f);
 	//		cureul = CalcLocalEulXYZ(-1, m_curmotid, curframe, BEFEUL_BEFFRAME, 0);
 	//		AdditiveToAngleLimit(cureul);
 	//	}
@@ -8184,7 +8203,7 @@ int CBone::AdditiveAllMotionsToAngleLimit()
 	//	if (curmi) {
 	//		int curmotid = curmi->motid;
 	//		int curframe = curmi->curframe;
-	//		ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+	//		ChaVector3 cureul.SetParams(0.0f, 0.0f, 0.0f);
 	//		cureul = CalcLocalEulXYZ(-1, m_curmotid, curframe, BEFEUL_BEFFRAME, 0);
 	//		AdditiveToAngleLimit(cureul);
 	//	}
@@ -8555,9 +8574,9 @@ int CBone::GetFBXAnim(FbxNode* pNode, int animno, int motid, double animleng, bo
 	//				const FbxVector4 lS2 = pNode->EvaluateLocalScaling(fbxtime, FbxNode::eSourcePivot);
 	//				LeaveCriticalSection(&(GetParModel()->m_CritSection_Node));//#######################
 	//
-	//				ChaVector3 chatra = ChaVector3((float)lT2[0], (float)lT2[1], (float)lT2[2]);
-	//				ChaVector3 chaeul = ChaVector3((float)lR2[0], (float)lR2[1], (float)lR2[2]);
-	//				ChaVector3 chascale = ChaVector3((float)lS2[0], (float)lS2[1], (float)lS2[2]);
+	//				ChaVector3 chatra.SetParams((float)lT2[0], (float)lT2[1], (float)lT2[2]);
+	//				ChaVector3 chaeul.SetParams((float)lR2[0], (float)lR2[1], (float)lR2[2]);
+	//				ChaVector3 chascale.SetParams((float)lS2[0], (float)lS2[1], (float)lS2[2]);
 	//
 	//				//####################
 	//				//calc joint position
@@ -8569,7 +8588,7 @@ int CBone::GetFBXAnim(FbxNode* pNode, int animno, int motid, double animleng, bo
 	//					parentjointpos = curbone->GetParent()->GetJointFPos();
 	//				}
 	//				else {
-	//					parentjointpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	//					parentjointpos.SetParams(0.0f, 0.0f, 0.0f);
 	//				}
 	//
 	//				//##############
@@ -9073,9 +9092,9 @@ void CBone::CalcNodePostureReq(bool bindposeflag, FbxNode* pNode,
 //		ChaVector3 roteul, preroteul, postroteul;
 //		FbxDouble3 roteulxyz, preroteulxyz, postroteulxyz;
 //
-//		roteul = ChaVector3((float)m_fbxLclRot[0], (float)m_fbxLclRot[1], (float)m_fbxLclRot[2]);
-//		preroteul = ChaVector3((float)m_fbxPreRot[0], (float)m_fbxPreRot[1], (float)m_fbxPreRot[2]);
-//		postroteul = ChaVector3((float)m_fbxPostRot[0], (float)m_fbxPostRot[1], (float)m_fbxPostRot[2]);
+//		roteul.SetParams((float)m_fbxLclRot[0], (float)m_fbxLclRot[1], (float)m_fbxLclRot[2]);
+//		preroteul.SetParams((float)m_fbxPreRot[0], (float)m_fbxPreRot[1], (float)m_fbxPreRot[2]);
+//		postroteul.SetParams((float)m_fbxPostRot[0], (float)m_fbxPostRot[1], (float)m_fbxPostRot[2]);
 //		roteulxyz = roteul.ConvRotOrder2XYZ(m_rotationorder);
 //		preroteulxyz = preroteul.ConvRotOrder2XYZ(m_rotationorder);
 //		postroteulxyz = postroteul.ConvRotOrder2XYZ(m_rotationorder);

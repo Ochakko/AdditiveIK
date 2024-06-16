@@ -124,7 +124,7 @@ int ChkRay(int allowrev, int i1, int i2, int i3,
 		return 0;
 	}
 	*justptr = 0;
-	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
 
 	ChaVector3 v1;
 	v1 = startpos;
@@ -136,9 +136,9 @@ int ChkRay(int allowrev, int i1, int i2, int i3,
 	ChaVector3Normalize(&e, &v);
 
 	ChaVector3 point1, point2, point3;
-	point1 = ChaVector3((pointbuf + i1)->pos.x, (pointbuf + i1)->pos.y, (pointbuf + i1)->pos.z);
-	point2 = ChaVector3((pointbuf + i2)->pos.x, (pointbuf + i2)->pos.y, (pointbuf + i2)->pos.z);
-	point3 = ChaVector3((pointbuf + i3)->pos.x, (pointbuf + i3)->pos.y, (pointbuf + i3)->pos.z);
+	point1.SetParams((pointbuf + i1)->pos.x, (pointbuf + i1)->pos.y, (pointbuf + i1)->pos.z);
+	point2.SetParams((pointbuf + i2)->pos.x, (pointbuf + i2)->pos.y, (pointbuf + i2)->pos.z);
+	point3.SetParams((pointbuf + i3)->pos.x, (pointbuf + i3)->pos.y, (pointbuf + i3)->pos.z);
 
 	ChaVector3 s, t;
 	s = point2 - point1;
@@ -237,9 +237,9 @@ int ChkRay(int allowrev,
 	ChaVector3Normalize(&e, &v);
 
 	ChaVector3 point1, point2, point3;
-	point1 = ChaVector3(p0.pos.x, p0.pos.y, p0.pos.z);
-	point2 = ChaVector3(p1.pos.x, p1.pos.y, p1.pos.z);
-	point3 = ChaVector3(p2.pos.x, p2.pos.y, p2.pos.z);
+	point1.SetParams(p0.pos.x, p0.pos.y, p0.pos.z);
+	point2.SetParams(p1.pos.x, p1.pos.y, p1.pos.z);
+	point3.SetParams(p2.pos.x, p2.pos.y, p2.pos.z);
 
 	ChaVector3 s, t;
 	s = point2 - point1;

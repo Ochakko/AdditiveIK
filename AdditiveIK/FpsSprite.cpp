@@ -34,10 +34,10 @@ void CFpsSprite::InitParams()
 
 	int posno;
 	for (posno = 0; posno < 6; posno++) {
-		m_pos[posno] = ChaVector3(0.0f, 0.0f, 0.0f);
+		m_pos[posno].SetParams(0.0f, 0.0f, 0.0f);
 	}
-	m_size_label = ChaVector2(1.0f, 1.0f);
-	m_size_num = ChaVector2(1.0f, 1.0f);
+	m_size_label.SetParams(1.0f, 1.0f);
+	m_size_num.SetParams(1.0f, 1.0f);
 
 }
 void CFpsSprite::DestroyObjs()
@@ -171,8 +171,8 @@ int CFpsSprite::SetParams()
 		}
 	}
 
-	m_size_label = ChaVector2((spawidth * 2), spawidth);
-	m_size_num = ChaVector2(spawidth, spawidth);
+	m_size_label.SetParams((spawidth * 2), spawidth);
+	m_size_num.SetParams(spawidth, spawidth);
 
 
 	{
@@ -182,7 +182,7 @@ int CFpsSprite::SetParams()
 			m_pos[spacnt].y = (float)(m_point[spacnt].y);
 			m_pos[spacnt].z = 0.0f;
 
-			//ChaVector2 dispsize = ChaVector2(spawidth / (float)s_mainwidth * 2.0f, spawidth / (float)s_mainheight * 2.0f);
+			//ChaVector2 dispsize.SetParams(spawidth / (float)s_mainwidth * 2.0f, spawidth / (float)s_mainheight * 2.0f);
 			//if (m_sprite[spacnt]) {
 			//	CallF(s_spundo[spacnt].sprite->SetPos(disppos), return 1);
 			//	CallF(s_spundo[spacnt].sprite->SetSize(dispsize), return 1);
@@ -262,7 +262,8 @@ int CFpsSprite::DrawScreen(RenderContext* rc, int srcfps)
 			else {
 				cursize = m_size_num;
 			}
-			ChaVector4 colmult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+			ChaVector4 colmult;
+			colmult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 			m_sprite[m_index[spacnt]].UpdateScreen(instanceno[m_index[spacnt]], m_pos[spacnt], cursize, colmult);
 			//m_sprite[m_index[spacnt]].DrawScreen(rc);
 

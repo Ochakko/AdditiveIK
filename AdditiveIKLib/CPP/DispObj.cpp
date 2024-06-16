@@ -1382,7 +1382,7 @@ int CDispObj::RenderNormalMaterial(RenderContext* rc, myRenderer::RENDEROBJ rend
 
 
 //
-////diffuse = ChaVector4( 0.6f, 0.6f, 0.6f, 1.0f );
+////diffuse.SetParams( 0.6f, 0.6f, 0.6f, 1.0f );
 //
 //	hr = g_hdiffuse->SetRawValue(&diffuse, 0, sizeof(ChaVector4));
 //	_ASSERT(SUCCEEDED(hr));
@@ -2325,8 +2325,8 @@ void CDispObj::ResetScaleInstancing()
 void CDispObj::SetScale(ChaVector3 srcscale, ChaVector3 srcoffset)
 {
 	if ((m_scaleinstancenum >= 0) && (m_scaleinstancenum < RIGMULTINDEXMAX)) {
-		m_scaleInstancing[m_scaleinstancenum].scale = ChaVector4(srcscale, 0.0f);
-		m_scaleInstancing[m_scaleinstancenum].offset = ChaVector4(srcoffset, 0.0f);
+		m_scaleInstancing[m_scaleinstancenum].scale.SetParams(srcscale, 0.0f);
+		m_scaleInstancing[m_scaleinstancenum].offset.SetParams(srcoffset, 0.0f);
 		m_scaleinstancenum++;
 	}
 	else {

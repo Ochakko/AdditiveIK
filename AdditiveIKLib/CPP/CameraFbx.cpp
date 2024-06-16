@@ -176,7 +176,7 @@ int CCameraFbx::AddFbxCamera(FbxNode* pNode, CBone* pbone)
 		FbxDouble fovY = fovY_Degree * 3.14159265358979 / 180.0;
 
 
-		//newcameranode->upVector = ChaVector3((float)upVector[0], (float)upVector[1], (float)upVector[2]);     // アップベクトル
+		//newcameranode->upVector.SetParams((float)upVector[0], (float)upVector[1], (float)upVector[2]);     // アップベクトル
 		newcameranode->aspectHeight = aspectHeight; // アスペクト高
 		newcameranode->aspectWidth = aspectWidth;  // アスペクト幅
 		newcameranode->nearZ = nearZ;     // near平面距離
@@ -206,21 +206,23 @@ int CCameraFbx::AddFbxCamera(FbxNode* pNode, CBone* pbone)
 		ChaMatrix rotmat = cameramat;
 		CQuaternion cameraq;
 		cameraq.RotationMatrix(rotmat);
-		//ChaVector3 firstdir = ChaVector3(1.0f, 0.0f, 0.0f);
-		//ChaVector3 cameradir = ChaVector3(1.0f, 0.0f, 0.0f);
+		//ChaVector3 firstdir.SetParams(1.0f, 0.0f, 0.0f);
+		//ChaVector3 cameradir.SetParams(1.0f, 0.0f, 0.0f);
 		ChaVector3 dirvec0;
 		ChaVector3 dirvec;
-		dirvec0 = ChaVector3(1.0f, 0.0f, 0.0f);
-		dirvec = ChaVector3(1.0f, 0.0f, 0.0f);
+		dirvec0.SetParams(1.0f, 0.0f, 0.0f);
+		dirvec.SetParams(1.0f, 0.0f, 0.0f);
 		cameraq.Rotate(&dirvec, dirvec0);
 		ChaVector3Normalize(&dirvec, &dirvec);
 		newcameranode->dirvec = dirvec;
 
 
-		//ChaVector3 firstupdir = ChaVector3(0.0f, 1.0f, 0.0f);
-		//ChaVector3 cameraupdir = ChaVector3(0.0f, 1.0f, 0.0f);
-		ChaVector3 firstupdir = ChaVector3(0.01f, 0.99f, 0.0f);
-		ChaVector3 cameraupdir = ChaVector3(0.01f, 0.99f, 0.0f);
+		//ChaVector3 firstupdir.SetParams(0.0f, 1.0f, 0.0f);
+		//ChaVector3 cameraupdir.SetParams(0.0f, 1.0f, 0.0f);
+		ChaVector3 firstupdir;
+		firstupdir.SetParams(0.01f, 0.99f, 0.0f);
+		ChaVector3 cameraupdir;
+		cameraupdir.SetParams(0.01f, 0.99f, 0.0f);
 		cameraq.Rotate(&cameraupdir, firstupdir);
 		ChaVector3Normalize(&cameraupdir, &cameraupdir);
 		newcameranode->upvec = cameraupdir;
@@ -275,7 +277,8 @@ int CCameraFbx::PreLoadFbxAnim(CBone* srcbone, int srcmotid)
 	FbxTime fbxtime0;
 	fbxtime0.SetSecondDouble(0.0);
 	FbxVector4 lcltime0 = cameranode->pnode->EvaluateLocalTranslation(fbxtime0, FbxNode::eSourcePivot, true, true);
-	ChaVector3 chalcltime0 = ChaVector3(lcltime0, false);
+	ChaVector3 chalcltime0;
+	chalcltime0 = ChaVector3(lcltime0, false);
 	ChaVector3 charotpiv = ChaVector3(cameranode->pnode->GetRotationPivot(FbxNode::eSourcePivot));
 	ChaVector3 nodepos = ChaMatrixTraVec(srcbone->GetNodeMat());
 	cameranode->adjustpos = charotpiv - chalcltime0;
@@ -538,7 +541,8 @@ int CCameraFbx::GetCameraAnimParams(CModel* cameramodel, int cameramotid, double
 	}
 
 
-	ChaVector3 zeropos = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 zeropos;
+	zeropos.SetParams(0.0f, 0.0f, 0.0f);
 	//double roundingframe = RoundingTime(nextframe);
 
 	if (IsLoaded()) {
@@ -572,8 +576,8 @@ int CCameraFbx::GetCameraAnimParams(CModel* cameramodel, int cameramotid, double
 				//##############
 				ChaVector3 dirvec0;
 				ChaVector3 dirvec;
-				dirvec0 = ChaVector3(-1.0f, 0.0f, 0.0f);
-				dirvec = ChaVector3(-1.0f, 0.0f, 0.0f);
+				dirvec0.SetParams(-1.0f, 0.0f, 0.0f);
+				dirvec.SetParams(-1.0f, 0.0f, 0.0f);
 
 				ChaMatrix convmat = ChaMatrixRot(transformmat);
 				ChaVector3TransformCoord(&dirvec, &dirvec0, &convmat);
@@ -593,8 +597,10 @@ int CCameraFbx::GetCameraAnimParams(CModel* cameramodel, int cameramotid, double
 				//ChaVector3 upvec = ChaMatrixRot(convmat).GetRow(1);
 				//ChaVector3Normalize(&upvec, &upvec);
 				//*pcamupvec = upvec;
-				ChaVector3 firstupdir = ChaVector3(0.01f, 0.99f, 0.0f);
-				ChaVector3 cameraupdir = ChaVector3(0.01f, 0.99f, 0.0f);
+				ChaVector3 firstupdir;
+				firstupdir.SetParams(0.01f, 0.99f, 0.0f);
+				ChaVector3 cameraupdir;
+				cameraupdir.SetParams(0.01f, 0.99f, 0.0f);
 				ChaVector3TransformCoord(&cameraupdir, &firstupdir, &convmat);
 				ChaVector3Normalize(&cameraupdir, &cameraupdir);
 				*pcamupvec = cameraupdir;
@@ -647,7 +653,8 @@ int CCameraFbx::GetCameraAnimParams(CModel* cameramodel, int cameramotid, double
 
 ChaVector3 CCameraFbx::CalcCameraFbxEulXYZ(int cameramotid, double srcframe)
 {
-	ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 cureul;
+	cureul.SetParams(0.0f, 0.0f, 0.0f);
 
 
 	CAMERANODE* curcamera = FindCameraNodeByMotId(cameramotid);
@@ -667,7 +674,8 @@ ChaVector3 CCameraFbx::CalcCameraFbxEulXYZ(int cameramotid, double srcframe)
 	m_time = roundingframe;
 	FbxTime fbxtime;
 	fbxtime.SetSecondDouble(m_time / 30.0);
-	ChaVector3 zeropos = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 zeropos;
+	zeropos.SetParams(0.0f, 0.0f, 0.0f);
 
 	int notmodify180flag;
 	if (roundingframe <= 1.0) {
@@ -688,7 +696,7 @@ ChaVector3 CCameraFbx::CalcCameraFbxEulXYZ(int cameramotid, double srcframe)
 				cameranode->GetRotationOrder(FbxNode::eSourcePivot, rotationorder);
 
 				FbxVector4 orgfbxeul = cameranode->EvaluateLocalRotation(fbxtime, FbxNode::eSourcePivot, true, true);
-				cureul = ChaVector3((float)orgfbxeul[0], (float)orgfbxeul[1], (float)orgfbxeul[2]);
+				cureul.SetParams((float)orgfbxeul[0], (float)orgfbxeul[1], (float)orgfbxeul[2]);
 
 			}
 		}

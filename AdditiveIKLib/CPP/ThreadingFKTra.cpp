@@ -57,7 +57,7 @@ int CThreadingFKTra::InitParams()
 	erptr = 0;
 	boneno = 0;
 	motid = 0;
-	addtra = ChaVector3(0.0f, 0.0f, 0.0);
+	addtra.SetParams(0.0f, 0.0f, 0.0);
 
 
 	ClearFrameList();

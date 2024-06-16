@@ -39,11 +39,11 @@ int CMotionPoint::InitParams()
 	m_undovalidflag = 0;
 	m_frame = 0.0;
 	m_q.SetParams( 1.0f, 0.0f, 0.0f, 0.0f );
-	m_tra = ChaVector3( 0.0f, 0.0f, 0.0f );
-	//m_firstframetra = ChaVector3(0.0f, 0.0f, 0.0f);
+	m_tra.SetParams( 0.0f, 0.0f, 0.0f );
+	//m_firstframetra.SetParams(0.0f, 0.0f, 0.0f);
 
-	m_localeul = ChaVector3(0.0f, 0.0f, 0.0f);
-	m_scale = ChaVector3(1.0f, 1.0f, 1.0f);
+	m_localeul.SetParams(0.0f, 0.0f, 0.0f);
+	m_scale.SetParams(1.0f, 1.0f, 1.0f);
 
 	ChaMatrixIdentity(&m_worldmat);
 	ChaMatrixIdentity(&m_localmat);
@@ -63,7 +63,7 @@ int CMotionPoint::InitParams()
 
 	m_calclimitedwm = 0;
 	ChaMatrixIdentity(&m_limitedwm);
-	m_limitedlocaleul = ChaVector3(0.0f, 0.0f, 0.0f);
+	m_limitedlocaleul.SetParams(0.0f, 0.0f, 0.0f);
 
 
 	m_savesmat.SetIdentity();
@@ -115,7 +115,7 @@ int CMotionPoint::SetQ( CQuaternion* axisq, CQuaternion newq )
 	if( m_prev ){
 		befeul = m_prev->m_eul;
 	}else{
-		befeul = ChaVector3( 0.0f, 0.0f, 0.0f );
+		befeul.SetParams( 0.0f, 0.0f, 0.0f );
 	}
 	
 	m_q.Q2Eul( axisq, befeul, &m_eul );
@@ -311,8 +311,8 @@ int CMotionPoint::CalcQandTra( ChaMatrix srcmat, CBone* boneptr, float hrate )
 		////m_firstframetra = tvec - srcbonepos;
 	}
 	else{
-		m_tra = ChaVector3(0.0f, 0.0f, 0.0f);
-		//m_firstframetra = ChaVector3(0.0f, 0.0f, 0.0f);
+		m_tra.SetParams(0.0f, 0.0f, 0.0f);
+		//m_firstframetra.SetParams(0.0f, 0.0f, 0.0f);
 	}
 
 	m_q.RotationMatrix(srcmat);

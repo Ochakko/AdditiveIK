@@ -99,8 +99,8 @@ typedef struct tag_dollyelem
 		ZeroMemory(comment, sizeof(WCHAR) * HISTORYCOMMENTLEN);
 
 		validflag = false;
-		camerapos = ChaVector3(0.0f, 0.0f, 10.0f);
-		cameratarget = ChaVector3(0.0f, 0.0f, 0.0f);
+		camerapos.SetParams(0.0f, 0.0f, 10.0f);
+		cameratarget.SetParams(0.0f, 0.0f, 0.0f);
 	};
 
 	tag_dollyelem() {

@@ -66,11 +66,11 @@ typedef struct tag_sppossizecol {
 	ChaVector4 colmult;
 	void Init()
 	{
-		pos = ChaVector4(0.0f, 0.0f, 0.0f, 1.0f);
-		size = ChaVector2(1.0f, 1.0f);
+		pos.SetParams(0.0f, 0.0f, 0.0f, 1.0f);
+		size.SetParams(1.0f, 1.0f);
 		WH.x = 800.0f;
 		WH.y = 600.0f;
-		colmult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		colmult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 	};
 	tag_sppossizecol() {
 		Init();

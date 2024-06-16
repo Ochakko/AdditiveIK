@@ -7187,7 +7187,7 @@ void s_dummyfunc()
 				GRAPH_SIZE_Y = 170;
 			}
 
-			eultip = ChaVector3(0.0f, 0.0f, 0.0f);
+			eultip.SetParams(0.0f, 0.0f, 0.0f);
 			inBlendShapeMode = false;
 		}
 		~OWP_EulerGraph() {

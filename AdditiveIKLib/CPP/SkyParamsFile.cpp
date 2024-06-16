@@ -293,7 +293,8 @@ int CSkyParamsFile::LoadSkyParamsFile(WCHAR* filename, CShaderTypeParams* dstpar
 			hsvtoon.lightindex = lightindex;
 
 			//ChaVector4 basehsv = curmqomat->GetDif4F().RGB2HSV();
-			ChaVector4 basehsv = ChaVector4(0.0f, 0.0f, 1.0f, 1.0f);
+			ChaVector4 basehsv;
+			basehsv.SetParams(0.0f, 0.0f, 1.0f, 1.0f);
 			Read_Float(&materialbuf, "<ToonBaseH>", "</ToonBaseH>\r\n", &(basehsv.x));
 			Read_Float(&materialbuf, "<ToonBaseS>", "</ToonBaseS>\r\n", &(basehsv.y));
 			Read_Float(&materialbuf, "<ToonBaseV>", "</ToonBaseV>\r\n", &(basehsv.z));

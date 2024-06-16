@@ -812,9 +812,9 @@ int CopyNodePosture(FbxNode* srcnode, FbxNode* psavenode)
 
 		ChaVector3 roteul, preroteul, postroteul;
 		FbxDouble3 roteulxyz, preroteulxyz, postroteulxyz;
-		roteul = ChaVector3(fbxLclRot);
-		preroteul = ChaVector3(fbxPreRot);
-		postroteul = ChaVector3(fbxPostRot);
+		roteul.SetParams(fbxLclRot);
+		preroteul.SetParams(fbxPreRot);
+		postroteul.SetParams(fbxPostRot);
 
 		////rotationorderに変更がある場合のみ　変換する
 		////変換すると保存したものが変になる　そのままXYZ順としてセットするとなぜかうまくいく　なぞ
@@ -2652,7 +2652,7 @@ FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene,
 //			//}
 //			//ChaVector3 orgpos;
 //			//ChaVector3 zeroframepos;
-//			//orgpos = ChaVector3(pm3dispv->pos.x, pm3dispv->pos.y, pm3dispv->pos.z);
+//			//orgpos.SetParams(pm3dispv->pos.x, pm3dispv->pos.y, pm3dispv->pos.z);
 //			//ChaVector3TransformCoord(&zeroframepos, &orgpos, &zeroframemat);
 //			//*(lcp + vno) = FbxVector4(zeroframepos.x, zeroframepos.y, zeroframepos.z, 1.0);//2022/08/18
 //
@@ -2663,7 +2663,7 @@ FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene,
 //			ChaMatrix invmeshmat = ChaMatrixInv(curobj->GetMeshMat());
 //			ChaVector3 disppos;
 //			ChaVector3 orgpos;
-//			disppos = ChaVector3(pm3dispv->pos.x, pm3dispv->pos.y, pm3dispv->pos.z);
+//			disppos.SetParams(pm3dispv->pos.x, pm3dispv->pos.y, pm3dispv->pos.z);
 //			ChaVector3TransformCoord(&orgpos, &disppos, &invmeshmat);// org = disp * invmeshmat
 //			*(lcp + vno) = FbxVector4(orgpos.x, orgpos.y, orgpos.z, 1.0);
 //
@@ -3230,7 +3230,7 @@ FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMateri
 //			//		lCluster->SetLinkMode(FbxCluster::eAdditive);
 //			//	}
 //
-//			//	ChaVector3 pos = ChaVector3(0.0f, 0.0f, 0.0f);
+//			//	ChaVector3 pos.SetParams(0.0f, 0.0f, 0.0f);
 //			//	pos.x = s_firsttopbone->GetBone()->GetJointFPos().x;
 //			//	pos.y = s_firsttopbone->GetBone()->GetJointFPos().y;
 //			//	pos.z = s_firsttopbone->GetBone()->GetJointFPos().z;
@@ -4278,11 +4278,11 @@ void GetBindMatrixNodeOnLoad(CModel* pmodel, CFBXBone* fbxbone, FbxAMatrix& lBin
 					parentpos = parentbone->GetPosition();
 				}
 				else{
-					parentpos = ChaVector3(0.0f, 0.0f, 0.0f);
+					parentpos.SetParams(0.0f, 0.0f, 0.0f);
 				}
 			}
 			else{
-				parentpos = ChaVector3(0.0f, 0.0f, 0.0f);
+				parentpos.SetParams(0.0f, 0.0f, 0.0f);
 			}
 		}
 		else{
@@ -4302,11 +4302,11 @@ void GetBindMatrixNodeOnLoad(CModel* pmodel, CFBXBone* fbxbone, FbxAMatrix& lBin
 					parentpos = parentbone->GetJointFPos();
 				}
 				else{
-					parentpos = ChaVector3(0.0f, 0.0f, 0.0f);
+					parentpos.SetParams(0.0f, 0.0f, 0.0f);
 				}
 			}
 			else{
-				parentpos = ChaVector3(0.0f, 0.0f, 0.0f);
+				parentpos.SetParams(0.0f, 0.0f, 0.0f);
 			}
 		}
 		else{
@@ -4740,7 +4740,7 @@ void CreateFBXBoneOfBVHReq( FbxScene* pScene, CBVHElem* pbe, CFBXBone* parfbxbon
 		parentpos = parpbe->GetPosition();
 	}
 	else{
-		parentpos = ChaVector3(0.0f, 0.0f, 0.0f);
+		parentpos.SetParams(0.0f, 0.0f, 0.0f);
 	}
 
 
@@ -4957,7 +4957,7 @@ void CreateFBXBoneOfBVHReq( FbxScene* pScene, CBVHElem* pbe, CFBXBone* parfbxbon
 //	//	else {
 //	//		tramat = topj->GetNodeMat() * zeroanim;
 //	//	}
-//	//	ChaVector3 zeropos = ChaVector3(0.0f, 0.0f, 0.0f);
+//	//	ChaVector3 zeropos.SetParams(0.0f, 0.0f, 0.0f);
 //	//	ChaVector3 jointpos;
 //	//	ChaVector3TransformCoord(&zeropos, &jointpos, &tramat);
 //	//	lSkeletonNode->LclTranslation.Set(FbxVector4(jointpos.x, jointpos.y, jointpos.z));
@@ -5002,7 +5002,7 @@ void CreateFBXBoneOfBVHReq( FbxScene* pScene, CBVHElem* pbe, CFBXBone* parfbxbon
 //	if( parentbone ){
 //		parentpos = parentbone->GetJointFPos();
 //	}else{
-//		parentpos = ChaVector3( 0.0f, 0.0f, 0.0f );
+//		parentpos.SetParams( 0.0f, 0.0f, 0.0f );
 //	}
 //
 //	CFBXBone* fbxbone = new CFBXBone();
@@ -5023,7 +5023,7 @@ void CreateFBXBoneOfBVHReq( FbxScene* pScene, CBVHElem* pbe, CFBXBone* parfbxbon
 //	//lSkeletonLimbNode1->LclTranslation.Set(FbxVector4(curpos.x - parentpos.x, curpos.y - parentpos.y, curpos.z - parentpos.z));
 //	pbone->RestoreFbxNodePosture(lSkeletonLimbNode1);
 //
-//	//ChaVector3 curpos = ChaVector3(0.0f, 0.0f, 0.0f);
+//	//ChaVector3 curpos.SetParams(0.0f, 0.0f, 0.0f);
 //	//{
 //	//	ChaMatrix tramat;
 //	//	ChaMatrix zeroanim;//2022/08/18
@@ -5037,10 +5037,10 @@ void CreateFBXBoneOfBVHReq( FbxScene* pScene, CBVHElem* pbe, CFBXBone* parfbxbon
 //	//	else {
 //	//		tramat = pbone->GetNodeMat() * zeroanim;
 //	//	}
-//	//	ChaVector3 zeropos = ChaVector3(0.0f, 0.0f, 0.0f);
+//	//	ChaVector3 zeropos.SetParams(0.0f, 0.0f, 0.0f);
 //	//	ChaVector3TransformCoord(&zeropos, &curpos, &tramat);
 //	//}
-//	//ChaVector3 parentpos = ChaVector3(0.0f, 0.0f, 0.0);
+//	//ChaVector3 parentpos.SetParams(0.0f, 0.0f, 0.0);
 //	//if (pbone->GetParent()) {
 //	//	ChaMatrix tramat;
 //	//	ChaMatrix zeroanim;//2022/08/18
@@ -5054,7 +5054,7 @@ void CreateFBXBoneOfBVHReq( FbxScene* pScene, CBVHElem* pbe, CFBXBone* parfbxbon
 //	//	else {
 //	//		tramat = pbone->GetParent()->GetNodeMat() * zeroanim;
 //	//	}
-//	//	ChaVector3 zeropos = ChaVector3(0.0f, 0.0f, 0.0f);
+//	//	ChaVector3 zeropos.SetParams(0.0f, 0.0f, 0.0f);
 //	//	ChaVector3TransformCoord(&zeropos, &parentpos, &tramat);
 //	//}
 //	//lSkeletonLimbNode1->LclTranslation.Set(FbxVector4(curpos.x - parentpos.x, curpos.y - parentpos.y, curpos.z - parentpos.z));
@@ -5507,8 +5507,10 @@ int WriteFBXAnimRot(bool limitdegflag, CFBXBone* fbxbone, FbxAnimLayer* lAnimLay
 			break;
 		}
 
-		ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
-		ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+		ChaVector3 befeul;
+		befeul.SetParams(0.0f, 0.0f, 0.0f);
+		ChaVector3 cureul;
+		cureul.SetParams(0.0f, 0.0f, 0.0f);
 
 		lCurve = lSkel->LclRotation.GetCurve(lAnimLayer, strChannel, true);
 		lCurve->KeyModifyBegin();
@@ -5583,8 +5585,10 @@ int WriteFBXAnimScale(bool limitdegflag, CFBXBone* fbxbone, FbxAnimLayer* lAnimL
 		}
 
 
-		ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
-		ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+		ChaVector3 befeul;
+		befeul.SetParams(0.0f, 0.0f, 0.0f);
+		ChaVector3 cureul;
+		cureul.SetParams(0.0f, 0.0f, 0.0f);
 
 		lCurve = lSkel->LclScaling.GetCurve(lAnimLayer, strChannel, true);
 		lCurve->KeyModifyBegin();

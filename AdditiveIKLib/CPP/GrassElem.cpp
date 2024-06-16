@@ -71,7 +71,8 @@ int CGrassElem::SetInstancingParams(ChaMatrix matVP)
 	int grassindex;
 	for (grassindex = 0; grassindex < grassnum; grassindex++) {
 		if (grassindex < GRASSINDEXMAX) {
-			ChaVector4 grassmaterial = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+			ChaVector4 grassmaterial;
+			grassmaterial.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 			GetGrass()->SetInstancingParams(grassindex, GetGrassMat(grassindex), matVP, grassmaterial);
 		}
 	}
@@ -92,7 +93,8 @@ int CGrassElem::RenderInstancingModel(ChaScene* srcchascene)
 	}
 
 	int lightflag = 1;
-	ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	ChaVector4 diffusemult;
+	diffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 	bool forcewithalpha = true;
 	int btflag = 0;
 	bool zcmpalways = false;

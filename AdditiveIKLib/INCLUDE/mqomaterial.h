@@ -95,12 +95,12 @@ struct SConstantBuffer {
 		mWorld.SetIdentity();
 		mView.SetIdentity();
 		mProj.SetIdentity();
-		diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		ambient = ChaVector4(0.2f, 0.2f, 0.2f, 0.0f);
-		emission = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
-		metalcoef = ChaVector4(0.250f, 0.250f, 0.0f, 0.0f);
-		materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		shadowmaxz = ChaVector4(1.0f/3000.0f, 0.0010f, 0.0f, 0.0f);
+		diffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
+		ambient.SetParams(0.2f, 0.2f, 0.2f, 0.0f);
+		emission.SetParams(0.0f, 0.0f, 0.0f, 0.0f);
+		metalcoef.SetParams(0.250f, 0.250f, 0.0f, 0.0f);
+		materialdisprate.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
+		shadowmaxz.SetParams(1.0f/3000.0f, 0.0010f, 0.0f, 0.0f);
 		UVs[0] = 0;
 		UVs[1] = 1;
 		UVs[2] = 1;
@@ -114,13 +114,13 @@ struct SConstantBuffer {
 		Flags2[2] = 0;
 		Flags2[3] = 0;
 		time.SetZeroVec4(0.0f);
-		bbsize = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
+		bbsize.SetParams(0.0f, 0.0f, 0.0f, 0.0f);
 		distortiontype[0] = 0;
 		distortiontype[1] = 1;
 		distortiontype[2] = 0;
 		distortiontype[3] = 0;
-		distortionscale = ChaVector4(1.0f, 1.0f, 0.0f, 0.0f);
-		distortioncenter = ChaVector4(0.5f, 0.5f, 0.0f, 1.0f);
+		distortionscale.SetParams(1.0f, 1.0f, 0.0f, 0.0f);
+		distortioncenter.SetParams(0.5f, 0.5f, 0.0f, 1.0f);
 	};
 };
 
@@ -165,9 +165,9 @@ struct SConstantBufferLights {
 		eyePos.SetZeroVec4(1.0f);
 		specPow.SetZeroVec4(0.0f);
 		//ambientLight.SetZeroVec4(1.0f);
-		toonlightdir = ChaVector4(0.0f, 0.0f, -1.0f, 0.0f);
-		fog = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
-		fogcolor = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		toonlightdir.SetParams(0.0f, 0.0f, -1.0f, 0.0f);
+		fog.SetParams(0.0f, 0.0f, 0.0f, 0.0f);
+		fogcolor.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 	};
 };
 
@@ -196,8 +196,10 @@ typedef struct tag_scaleinstancing
 	ChaVector4 scale;
 	ChaVector4 offset;
 	void Init() {
-		scale = ChaVector4(1.0f, 1.0f, 1.0f, 0.0f);
-		offset = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
+		//scale.SetParams(1.0f, 1.0f, 1.0f, 0.0f);
+		//offset.SetParams(0.0f, 0.0f, 0.0f, 0.0f);
+		scale.SetParams(1.0f, 1.0f, 1.0f, 0.0f);//x,y,z,w
+		offset.SetParams(0.0f, 0.0f, 0.0f, 0.0f);//x,y,z,w
 	};
 	tag_scaleinstancing()
 	{
@@ -219,9 +221,9 @@ typedef struct tag_hsvtoon
 		lightindex = 0;
 		hicolorh = 200.0f / 255.0f;
 		lowcolorh = 138.0f / 255.0f;
-		basehsv = ChaVector4(0.0f, 0.0f, 1.0f, 1.0f);//H, S, V, alpha
-		hiaddhsv = ChaVector4(0.0f, 0.0f, 0.2f, 0.0f);//H, S, V, alpha
-		lowaddhsv = ChaVector4(0.0f, 0.0f, -0.2f, 0.0f);//H, S, V, alpha
+		basehsv.SetParams(0.0f, 0.0f, 1.0f, 1.0f);//H, S, V, alpha
+		hiaddhsv.SetParams(0.0f, 0.0f, 0.2f, 0.0f);//H, S, V, alpha
+		lowaddhsv.SetParams(0.0f, 0.0f, -0.2f, 0.0f);//H, S, V, alpha
 		gradationflag = true;
 		powertoon = true;
 	};
@@ -229,9 +231,9 @@ typedef struct tag_hsvtoon
 		lightindex = 0;
 		hicolorh = 200.0f / 255.0f;
 		lowcolorh = 138.0f / 255.0f;
-		basehsv = ChaVector4(0.0f, 0.0f, 1.0f, 1.0f);//H, S, V, alpha
-		hiaddhsv = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);//H, S, V, alpha
-		lowaddhsv = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);//H, S, V, alpha
+		basehsv.SetParams(0.0f, 0.0f, 1.0f, 1.0f);//H, S, V, alpha
+		hiaddhsv.SetParams(0.0f, 0.0f, 0.0f, 0.0f);//H, S, V, alpha
+		lowaddhsv.SetParams(0.0f, 0.0f, 0.0f, 0.0f);//H, S, V, alpha
 		gradationflag = true;
 		powertoon = true;
 	};
@@ -1471,8 +1473,8 @@ public:
 		distortionflag = false;
 		distortionscale = 1.0;//2024/05/01
 		riverorsea = 0;//2024/05/01 0:river, 1:sea
-		seacenter = ChaVector2(0.5f, 0.5f);//2024/05/01 UV
-		riverdir = ChaVector2(0.0f, 1.0f);//2024/05/01 UV
+		seacenter.SetParams(0.5f, 0.5f);//2024/05/01 UV
+		riverdir.SetParams(0.0f, 1.0f);//2024/05/01 UV
 		riverflowrate = 1.0f;//2024/05/01 velocity
 		distortionmaptype = 1;//2024/05/01 0:rg, 1:rb, 2:gb
 	};

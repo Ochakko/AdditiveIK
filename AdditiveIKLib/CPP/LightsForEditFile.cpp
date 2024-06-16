@@ -302,12 +302,12 @@ int CLightsForEditFile::ReadLight(int slotindex, int lightcnt, XMLIOBUF* xmlbuf)
 
 
 	ChaVector3 loadeddir, ndir;
-	ndir = ChaVector3(0.0f, 0.0f, -1.0f);
-	loadeddir = ChaVector3(tmpdirx, tmpdiry, tmpdirz);
+	ndir.SetParams(0.0f, 0.0f, -1.0f);
+	loadeddir.SetParams(tmpdirx, tmpdiry, tmpdirz);
 	ChaVector3Normalize(&ndir, &loadeddir);
 	g_lightDir[slotindex][lightcnt] = ndir;
 
-	g_lightDiffuse[slotindex][lightcnt] = ChaVector3(r01, g01, b01);
+	g_lightDiffuse[slotindex][lightcnt].SetParams(r01, g01, b01);
 
 	return 0;
 }

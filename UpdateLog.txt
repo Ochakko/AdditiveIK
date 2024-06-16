@@ -2,6 +2,19 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2024/06/17
+　パフォーマンス改善
+　　メッシュの個数が多いfbx読み込み時にDispAndLimitsメニューのRigid(剛体)表示にチェックを入れていると
+　　極端に表示が遅くなりオフにしたときの半分くらいの表示速度になっていた
+　　ChaVector2, ChaVector3, ChaVector4の初期化方法を変更
+　　不要な初期化をコメントアウト
+　　変更後もRigid表示オンで多少表示は遅くなるがかなり改善
+　　Rigid表示オフ同士で比べた場合にも少し高速化
+
+
+
+
 2024/06/16
 　BlendShapes出力時の名前は名前の中の最後の'.'以降の文字列を出力するように
 　　BlendShape出力時にBlendShapeをコピーすると文字列が付加されて元の名前が変わってしまう

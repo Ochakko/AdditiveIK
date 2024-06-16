@@ -45,8 +45,8 @@ void CDollyHistoryDlg::InitParams()
 	m_namenum = 0;
 	m_dollyhistory.clear();
 
-	m_camerapos = ChaVector3(0.0f, 0.0f, 10.0f);
-	m_targetpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	m_camerapos.SetParams(0.0f, 0.0f, 10.0f);
+	m_targetpos.SetParams(0.0f, 0.0f, 0.0f);
 	ZeroMemory(m_comment, sizeof(WCHAR) * HISTORYCOMMENTLEN);
 
 

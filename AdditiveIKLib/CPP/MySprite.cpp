@@ -50,27 +50,27 @@ int CMySprite::InitParams()
 	//m_layout = 0;
 	//m_VB = 0;
 
-	m_pos = ChaVector3( 0.0f, 0.0f, 0.0f );
-	m_size = ChaVector2( 1.0f, 1.0f );
-	m_col = ChaVector4( 1.0f, 1.0f, 1.0f, 1.0f );
-	//m_col = ChaVector4(0.5f, 0.5f, 0.5f, 1.0f);
-	m_spriteoffset = ChaVector3(0.0f, 0.0f, 0.0f);
-	m_spritescale = ChaVector2(1.0f, 1.0f);
+	m_pos.SetParams( 0.0f, 0.0f, 0.0f );
+	m_size.SetParams( 1.0f, 1.0f );
+	m_col.SetParams( 1.0f, 1.0f, 1.0f, 1.0f );
+	//m_col.SetParams(0.5f, 0.5f, 0.5f, 1.0f);
+	m_spriteoffset.SetParams(0.0f, 0.0f, 0.0f);
+	m_spritescale.SetParams(1.0f, 1.0f);
 
-	m_v[0].pos = ChaVector4( -1.0f, +1.0f, 0.0f, 1.0f );
-	m_v[1].pos = ChaVector4( +1.0f, +1.0f, 0.0f, 1.0f );
-	m_v[2].pos = ChaVector4( +1.0f, -1.0f, 0.0f, 1.0f );
-	m_v[3].pos = ChaVector4(-1.0f, +1.0f, 0.0f, 1.0f);
-	m_v[4].pos = ChaVector4(+1.0f, -1.0f, 0.0f, 1.0f);
-	m_v[5].pos = ChaVector4(-1.0f, -1.0f, 0.0f, 1.0f);
+	m_v[0].pos.SetParams( -1.0f, +1.0f, 0.0f, 1.0f );
+	m_v[1].pos.SetParams( +1.0f, +1.0f, 0.0f, 1.0f );
+	m_v[2].pos.SetParams( +1.0f, -1.0f, 0.0f, 1.0f );
+	m_v[3].pos.SetParams(-1.0f, +1.0f, 0.0f, 1.0f);
+	m_v[4].pos.SetParams(+1.0f, -1.0f, 0.0f, 1.0f);
+	m_v[5].pos.SetParams(-1.0f, -1.0f, 0.0f, 1.0f);
 
 
-	m_v[0].uv = ChaVector2( 0.0f, 0.0f );
-	m_v[1].uv = ChaVector2( 1.0f, 0.0f );
-	m_v[2].uv = ChaVector2( 1.0f, 1.0f );
-	m_v[3].uv = ChaVector2(0.0f, 0.0f);
-	m_v[4].uv = ChaVector2(1.0f, 1.0f);
-	m_v[5].uv = ChaVector2(0.0f, 1.0f);
+	m_v[0].uv.SetParams( 0.0f, 0.0f );
+	m_v[1].uv.SetParams( 1.0f, 0.0f );
+	m_v[2].uv.SetParams( 1.0f, 1.0f );
+	m_v[3].uv.SetParams(0.0f, 0.0f);
+	m_v[4].uv.SetParams(1.0f, 1.0f);
+	m_v[5].uv.SetParams(0.0f, 1.0f);
 
 	return 0;
 }

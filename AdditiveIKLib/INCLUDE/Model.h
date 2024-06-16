@@ -182,10 +182,10 @@ typedef struct tag_instancingparams
 	{
 		ZeroMemory(wmat, sizeof(float) * 16);
 		ZeroMemory(vpmat, sizeof(float) * 16);
-		diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		scale = ChaVector4(1.0f, 1.0f, 1.0f, 0.0f);
-		scaleoffset = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
-		bendvec = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
+		diffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
+		scale.SetParams(1.0f, 1.0f, 1.0f, 0.0f);
+		scaleoffset.SetParams(0.0f, 0.0f, 0.0f, 0.0f);
+		bendvec.SetParams(0.0f, 0.0f, 0.0f, 0.0f);
 	};
 	tag_instancingparams() {
 		Init();
@@ -397,8 +397,10 @@ public:
 	int RenderBoneCircleOne(bool limitdegflag, RenderContext* pRenderContext, CMySprite* bcircleptr, int selboneno);
 
 
-	//void RenderCapsuleReq(bool limitdegflag, RenderContext* pRenderContext, CBtObject* srcbto);
-	void RenderCapsuleReq(CBtObject* srcbt, bool limitdegflag,
+	////void RenderCapsuleReq(bool limitdegflag, RenderContext* pRenderContext, CBtObject* srcbto);
+	//void RenderCapsuleReq(CBtObject* srcbt, bool limitdegflag,
+	//	int selboneno, ChaScene* srcchascene, ChaMatrix srcmatVP);
+	void RenderCapsuleBtoVec(bool limitdegflag,
 		int selboneno, ChaScene* srcchascene, ChaMatrix srcmatVP);
 	void ResetDispObjScale();
 
@@ -889,6 +891,9 @@ public:
  * @detail シミュレーション開始のたびに呼ぶ。一番最初の呼び出しだけonfirstcreateを１にする。
  */
 	int CreateBtObject(bool limitdegflag, int onfirstcreate);
+	int SetBtObjectVec();
+	void SetBtObjectVecReq(CBtObject* srcbto);
+
 
 /**
  * @fn
@@ -2890,7 +2895,7 @@ public: //accesser
 			else {
 				invcammat.SetIdentity();
 			}
-			params.bendvec = ChaVector4(invcammat._11, invcammat._12, invcammat._13, 0.0f);
+			params.bendvec.SetParams(invcammat._11, invcammat._12, invcammat._13, 0.0f);
 
 			m_instancingparams[m_instancingdrawnum] = params;
 			m_instancingdrawnum++;
@@ -3039,6 +3044,7 @@ private:
 
 	CBone* m_topbone;//一番親のボーン。
 	CBtObject* m_topbt;//一番親のbullet剛体オブジェクト。
+	std::vector<CBtObject*> m_btovec;//2024/06/16 処理高速化のために　skipflagが0のbtoのvectorを用意　1000個を越えるノードがある場合などに有効
 	//float m_btgscale;//bulletの重力に掛け算するスケール。--> m_rigideleminfoのbtgscaleに移動。
 
 

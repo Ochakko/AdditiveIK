@@ -92,8 +92,8 @@ namespace myRenderer
             forcewithalpha = false;
             //lightflag = 1;
             lightflag = -1;//2024/03/07
-            diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-            materialdisprate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+            diffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
+            materialdisprate.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
             calcslotflag = false;
             btflag = 0;
             zcmpalways = false;

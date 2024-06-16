@@ -336,8 +336,8 @@ int CMQOMaterial::InitParams()
 	m_distortionflag = false;
 	m_distortionscale = 1.0;//2024/05/01
 	m_riverorsea = 0;//2024/05/01 0:river, 1:sea
-	m_seacenter = ChaVector2(0.5f, 0.5f);//2024/05/01 UV
-	m_riverdir = ChaVector2(0.0f, 1.0f);//2024/05/01 UV
+	m_seacenter.SetParams(0.5f, 0.5f);//2024/05/01 UV
+	m_riverdir.SetParams(0.0f, 1.0f);//2024/05/01 UV
 	m_riverflowrate = 1.0;//2024/05/01 velocity
 	m_distortionmaptype = 1;//2024/05/01 0:rg, 1:rb, 2:gb
 
@@ -394,7 +394,7 @@ int CMQOMaterial::InitParams()
 	m_emissiveMap = nullptr;//bank管理の外部ポインタ
 
 	m_settempdiffusemult = false;
-	m_tempdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	m_tempdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 
 
 	m_addressU_albedo = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -3450,7 +3450,7 @@ void CMQOMaterial::SetConstShadow(SConstantBufferShadow* pcbShadow)
 
 	g_cameraShadow->Update();
 	Vector3 lpos = g_cameraShadow->GetPosition();
-	pcbShadow->lightPos = ChaVector4(lpos.x, lpos.y, lpos.z, 1.0f);
+	pcbShadow->lightPos.SetParams(lpos.x, lpos.y, lpos.z, 1.0f);
 	//ChaMatrix lvp = ChaMatrix(g_cameraShadow->GetViewProjectionMatrix());
 	ChaMatrix mView = g_cameraShadow->GetViewMatrix(false);
 	ChaMatrix mProj = g_cameraShadow->GetProjectionMatrix();
@@ -3505,12 +3505,12 @@ void CMQOMaterial::SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBuff
 			g_lightdiffuseforshader[lightno] * GetLightScale(g_lightNo[lightno]);//2023/12/08 materialのlightscaleを掛けるように.
 		pcbLights->directionalLight[lightno].direction = g_lightdirforshader[lightno];
 	}	
-	//ChaVector3 cameye = ChaVector3(g_camera3D->GetPosition());
-	//ChaVector3 camtarget = ChaVector3(g_camera3D->GetTarget());
-	//m_cbLights.directionalLight[0].direction = ChaVector4((camtarget - cameye), 0.0f);//この向きで合っている
-	//pcbLights->eyePos = ChaVector4(ChaVector3(g_camera3D->GetPosition()), 0.0f);
-	pcbLights->eyePos = ChaVector4(g_camEye, 1.0f);
-	pcbLights->specPow = ChaVector4(5.0f, 5.0f, 5.0f, 0.0f);
+	//ChaVector3 cameye.SetParams(g_camera3D->GetPosition());
+	//ChaVector3 camtarget.SetParams(g_camera3D->GetTarget());
+	//m_cbLights.directionalLight[0].direction.SetParams((camtarget - cameye), 0.0f);//この向きで合っている
+	//pcbLights->eyePos.SetParams(ChaVector3(g_camera3D->GetPosition()), 0.0f);
+	pcbLights->eyePos.SetParams(g_camEye, 1.0f);
+	pcbLights->specPow.SetParams(5.0f, 5.0f, 5.0f, 0.0f);
 	pcbLights->toonlightdir = g_lightdirforall[toonlightindex];//2024/02/15
 
 
@@ -3699,9 +3699,9 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].mProj = mProj;
 		//m_cb.diffusemult = renderobj.diffusemult;
 		m_cb[currentrefposindex].diffusemult = pextline->GetColor();
-		m_cb[currentrefposindex].ambient = ChaVector4(GetAmb3F(), (float)GetAlphaTestClipVal());
+		m_cb[currentrefposindex].ambient.SetParams(GetAmb3F(), (float)GetAlphaTestClipVal());
 		if (GetEnableEmission()) {
-			m_cb[currentrefposindex].emission = ChaVector4(GetEmi3F() * GetEmissiveScale(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+			m_cb[currentrefposindex].emission.SetParams(GetEmi3F() * GetEmissiveScale(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
 		else {
 			m_cb[currentrefposindex].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
@@ -3716,7 +3716,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		else {
 			divshadowfar = 0.0f;
 		}
-		m_cb[currentrefposindex].shadowmaxz = ChaVector4(
+		m_cb[currentrefposindex].shadowmaxz.SetParams(
 			divshadowfar,
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 
@@ -3736,16 +3736,16 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
 		if (modelbb.IsValid()) {
-			m_cb[currentrefposindex].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+			m_cb[currentrefposindex].bbsize.SetParams((modelbb.max - modelbb.min), 0.0f);
 		}
 		else {
-			m_cb[currentrefposindex].bbsize = ChaVector4(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
+			m_cb[currentrefposindex].bbsize.SetParams(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
 		}
 		m_cb[currentrefposindex].distortiontype[0] = GetRiverOrSea();
 		m_cb[currentrefposindex].distortiontype[1] = GetDistortionMapType();
 		m_cb[currentrefposindex].distortiontype[2] = 0;
 		m_cb[currentrefposindex].distortiontype[3] = 0;
-		m_cb[currentrefposindex].distortionscale = ChaVector4((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
+		m_cb[currentrefposindex].distortionscale.SetParams((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
 		m_cb[currentrefposindex].distortioncenter.x = GetSeaCenter().x;
 		m_cb[currentrefposindex].distortioncenter.y = GetSeaCenter().y;
 		m_cb[currentrefposindex].distortioncenter.z = GetRiverDir().x;
@@ -3766,14 +3766,14 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		else {
 			m_cb[currentrefposindex].diffusemult = renderobj.diffusemult;
 		}
-		m_cb[currentrefposindex].ambient = ChaVector4(GetAmb3F(), (float)GetAlphaTestClipVal());
+		m_cb[currentrefposindex].ambient.SetParams(GetAmb3F(), (float)GetAlphaTestClipVal());
 		if (GetEnableEmission()) {
-			m_cb[currentrefposindex].emission = ChaVector4(GetEmi3F() * GetEmissiveScale(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+			m_cb[currentrefposindex].emission.SetParams(GetEmi3F() * GetEmissiveScale(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
 		else {
 			m_cb[currentrefposindex].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
-		m_cb[currentrefposindex].metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), GetMetalAdd(), GetSpecularCoef());
+		m_cb[currentrefposindex].metalcoef.SetParams(GetMetalCoef(), GetSmoothCoef(), GetMetalAdd(), GetSpecularCoef());
 		m_cb[currentrefposindex].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 
 		float shadowfar = g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
@@ -3784,7 +3784,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		else {
 			divshadowfar = 0.0f;
 		}
-		m_cb[currentrefposindex].shadowmaxz = ChaVector4(
+		m_cb[currentrefposindex].shadowmaxz.SetParams(
 			divshadowfar,
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 
@@ -3804,16 +3804,16 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
 		if (modelbb.IsValid()) {
-			m_cb[currentrefposindex].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+			m_cb[currentrefposindex].bbsize.SetParams((modelbb.max - modelbb.min), 0.0f);
 		}
 		else {
-			m_cb[currentrefposindex].bbsize = ChaVector4(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
+			m_cb[currentrefposindex].bbsize.SetParams(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
 		}
 		m_cb[currentrefposindex].distortiontype[0] = GetRiverOrSea();
 		m_cb[currentrefposindex].distortiontype[1] = GetDistortionMapType();
 		m_cb[currentrefposindex].distortiontype[2] = 0;
 		m_cb[currentrefposindex].distortiontype[3] = 0;
-		m_cb[currentrefposindex].distortionscale = ChaVector4((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
+		m_cb[currentrefposindex].distortionscale.SetParams((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
 		m_cb[currentrefposindex].distortioncenter.x = GetSeaCenter().x;
 		m_cb[currentrefposindex].distortioncenter.y = GetSeaCenter().y;
 		m_cb[currentrefposindex].distortioncenter.z = GetRiverDir().x;
@@ -3852,14 +3852,14 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		else {
 			m_cb[currentrefposindex].diffusemult = renderobj.diffusemult;
 		}
-		m_cb[currentrefposindex].ambient = ChaVector4(GetAmb3F(), (float)GetAlphaTestClipVal());
+		m_cb[currentrefposindex].ambient.SetParams(GetAmb3F(), (float)GetAlphaTestClipVal());
 		if (GetEnableEmission()) {
-			m_cb[currentrefposindex].emission = ChaVector4(GetEmi3F() * GetEmissiveScale(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+			m_cb[currentrefposindex].emission.SetParams(GetEmi3F() * GetEmissiveScale(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
 		else {
 			m_cb[currentrefposindex].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
-		m_cb[currentrefposindex].metalcoef = ChaVector4(GetMetalCoef(), GetSmoothCoef(), GetMetalAdd(), GetSpecularCoef());
+		m_cb[currentrefposindex].metalcoef.SetParams(GetMetalCoef(), GetSmoothCoef(), GetMetalAdd(), GetSpecularCoef());
 		m_cb[currentrefposindex].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 
 		float shadowfar = g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
@@ -3870,7 +3870,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		else {
 			divshadowfar = 0.0f;
 		}
-		m_cb[currentrefposindex].shadowmaxz = ChaVector4(
+		m_cb[currentrefposindex].shadowmaxz.SetParams(
 			divshadowfar,
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 
@@ -3890,16 +3890,16 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
 		if (modelbb.IsValid()) {
-			m_cb[currentrefposindex].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+			m_cb[currentrefposindex].bbsize.SetParams((modelbb.max - modelbb.min), 0.0f);
 		}
 		else {
-			m_cb[currentrefposindex].bbsize = ChaVector4(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
+			m_cb[currentrefposindex].bbsize.SetParams(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
 		}
 		m_cb[currentrefposindex].distortiontype[0] = GetRiverOrSea();
 		m_cb[currentrefposindex].distortiontype[1] = GetDistortionMapType();
 		m_cb[currentrefposindex].distortiontype[2] = 0;
 		m_cb[currentrefposindex].distortiontype[3] = 0;
-		m_cb[currentrefposindex].distortionscale = ChaVector4((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
+		m_cb[currentrefposindex].distortionscale.SetParams((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
 		m_cb[currentrefposindex].distortioncenter.x = GetSeaCenter().x;
 		m_cb[currentrefposindex].distortioncenter.y = GetSeaCenter().y;
 		m_cb[currentrefposindex].distortioncenter.z = GetRiverDir().x;
@@ -3991,9 +3991,9 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].mProj = mProj;
 		//m_cb.diffusemult = renderobj.diffusemult;
 		m_cb[0].diffusemult = pextline->GetColor();
-		m_cb[0].ambient = ChaVector4(GetAmb3F(), (float)GetAlphaTestClipVal());
+		m_cb[0].ambient.SetParams(GetAmb3F(), (float)GetAlphaTestClipVal());
 		if (GetEnableEmission()) {
-			m_cb[0].emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+			m_cb[0].emission.SetParams(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
 		else {
 			m_cb[0].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
@@ -4007,7 +4007,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		else {
 			divshadowfar = 0.0f;
 		}
-		m_cb[0].shadowmaxz = ChaVector4(
+		m_cb[0].shadowmaxz.SetParams(
 			divshadowfar,
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		m_cb[0].UVs[0] = g_uvset;
@@ -4023,16 +4023,16 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
 		if (modelbb.IsValid()) {
-			m_cb[0].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+			m_cb[0].bbsize.SetParams((modelbb.max - modelbb.min), 0.0f);
 		}
 		else {
-			m_cb[0].bbsize = ChaVector4(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
+			m_cb[0].bbsize.SetParams(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
 		}
 		m_cb[0].distortiontype[0] = GetRiverOrSea();
 		m_cb[0].distortiontype[1] = GetDistortionMapType();
 		m_cb[0].distortiontype[2] = 0;
 		m_cb[0].distortiontype[3] = 0;
-		m_cb[0].distortionscale = ChaVector4((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
+		m_cb[0].distortionscale.SetParams((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
 		m_cb[0].distortioncenter.x = GetSeaCenter().x;
 		m_cb[0].distortioncenter.y = GetSeaCenter().y;
 		m_cb[0].distortioncenter.z = GetRiverDir().x;
@@ -4051,9 +4051,9 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		else {
 			m_cb[0].diffusemult = renderobj.diffusemult;
 		}
-		m_cb[0].ambient = ChaVector4(GetAmb3F(), (float)GetAlphaTestClipVal());
+		m_cb[0].ambient.SetParams(GetAmb3F(), (float)GetAlphaTestClipVal());
 		if (GetEnableEmission()) {
-			m_cb[0].emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+			m_cb[0].emission.SetParams(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
 		else {
 			m_cb[0].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
@@ -4067,7 +4067,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		else {
 			divshadowfar = 0.0f;
 		}
-		m_cb[0].shadowmaxz = ChaVector4(
+		m_cb[0].shadowmaxz.SetParams(
 			divshadowfar,
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		m_cb[0].UVs[0] = g_uvset;
@@ -4083,16 +4083,16 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
 		if (modelbb.IsValid()) {
-			m_cb[0].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+			m_cb[0].bbsize.SetParams((modelbb.max - modelbb.min), 0.0f);
 		}
 		else {
-			m_cb[0].bbsize = ChaVector4(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
+			m_cb[0].bbsize.SetParams(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
 		}
 		m_cb[0].distortiontype[0] = GetRiverOrSea();
 		m_cb[0].distortiontype[1] = GetDistortionMapType();
 		m_cb[0].distortiontype[2] = 0;
 		m_cb[0].distortiontype[3] = 0;
-		m_cb[0].distortionscale = ChaVector4((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
+		m_cb[0].distortionscale.SetParams((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
 		m_cb[0].distortioncenter.x = GetSeaCenter().x;
 		m_cb[0].distortioncenter.y = GetSeaCenter().y;
 		m_cb[0].distortioncenter.z = GetRiverDir().x;
@@ -4125,9 +4125,9 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		else {
 			m_cb[0].diffusemult = renderobj.diffusemult;
 		}
-		m_cb[0].ambient = ChaVector4(GetAmb3F(), (float)GetAlphaTestClipVal());
+		m_cb[0].ambient.SetParams(GetAmb3F(), (float)GetAlphaTestClipVal());
 		if (GetEnableEmission()) {
-			m_cb[0].emission = ChaVector4(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
+			m_cb[0].emission.SetParams(GetEmi3F(), 0.0f);//diffuse + emissiveとするのでwは0.0にしておく
 		}
 		else {
 			m_cb[0].emission.SetZeroVec4(0.0f);//diffuse + emissiveとするのでwは0.0にしておく
@@ -4141,7 +4141,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		else {
 			divshadowfar = 0.0f;
 		}
-		m_cb[0].shadowmaxz = ChaVector4(
+		m_cb[0].shadowmaxz.SetParams(
 			divshadowfar,
 			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 		m_cb[0].UVs[0] = g_uvset;
@@ -4157,16 +4157,16 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
 		if (modelbb.IsValid()) {
-			m_cb[0].bbsize = ChaVector4((modelbb.max - modelbb.min), 0.0f);
+			m_cb[0].bbsize.SetParams((modelbb.max - modelbb.min), 0.0f);
 		}
 		else {
-			m_cb[0].bbsize = ChaVector4(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
+			m_cb[0].bbsize.SetParams(1.0f, 1.0f, 1.0f, 0.0f);//割り算に使っても良いように
 		}
 		m_cb[0].distortiontype[0] = GetRiverOrSea();
 		m_cb[0].distortiontype[1] = GetDistortionMapType();
 		m_cb[0].distortiontype[2] = 0;
 		m_cb[0].distortiontype[3] = 0;
-		m_cb[0].distortionscale = ChaVector4((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
+		m_cb[0].distortionscale.SetParams((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
 		m_cb[0].distortioncenter.x = GetSeaCenter().x;
 		m_cb[0].distortioncenter.y = GetSeaCenter().y;
 		m_cb[0].distortioncenter.z = GetRiverDir().x;

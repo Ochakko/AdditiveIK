@@ -846,11 +846,11 @@ int CPolyMesh3::SetOptV(BINORMALDISPV* dispv, int* pleng, int* matnum, CModel* p
 					curv->normal = -ChaVector4(curn3p->pervert->smnormal, 0.0f);//2023/07/29 ”½“]
 				}
 				else {
-					curv->normal = ChaVector4(curn3p->pervert->smnormal, 0.0f);
+					curv->normal.SetParams(curn3p->pervert->smnormal, 0.0f);
 				}
 
-				curv->tangent = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
-				curv->binormal = ChaVector4(0.0f, 0.0f, 0.0f, 0.0f);
+				curv->tangent.SetParams(0.0f, 0.0f, 0.0f, 0.0f);
+				curv->binormal.SetParams(0.0f, 0.0f, 0.0f, 0.0f);
 
 				curv->uv[0] = curn3p->pervert->uv[0];
 				if (srcuvnum >= 2) {
@@ -950,17 +950,17 @@ typedef struct tag_modelbaund
 }MODELBAUND;
 ***/
 
-	//m_bound.min = ChaVector3(FLT_MAX, FLT_MAX, FLT_MAX);
-	//m_bound.max = ChaVector3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-	//m_bound.center = ChaVector3(0.0f, 0.0f, 0.0f);
+	//m_bound.min.SetParams(FLT_MAX, FLT_MAX, FLT_MAX);
+	//m_bound.max.SetParams(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+	//m_bound.center.SetParams(0.0f, 0.0f, 0.0f);
 	//m_bound.r = 1.0f;
 
 	m_bound.Init();
 
 	if( (m_orgpointnum == 0) || (m_facenum == 0) ){
-		m_bound.min = ChaVector3(0.0f, 0.0f, 0.0f);
-		m_bound.max = ChaVector3(0.0f, 0.0f, 0.0f);
-		m_bound.center = ChaVector3(0.0f, 0.0f, 0.0f);
+		m_bound.min.SetParams(0.0f, 0.0f, 0.0f);
+		m_bound.max.SetParams(0.0f, 0.0f, 0.0f);
+		m_bound.center.SetParams(0.0f, 0.0f, 0.0f);
 		m_bound.r = 1.0f;
 
 		m_bound.SetIsValid(false);//!!!!!!!!
@@ -1018,7 +1018,7 @@ int CPolyMesh3::MultScale( ChaVector3 srcscale, ChaVector3 srctra )
 		int orgvno = curn3p->pervert->vno;
 		ChaVector3* srcv = m_pointbuf + orgvno;
 		BINORMALDISPV* curv = m_dispv + vno;
-		curv->pos = ChaVector4( srcv->x * srcscale.x + srctra.x, srcv->y * srcscale.y + srctra.y, srcv->z * srcscale.z + srctra.z, 1.0f );
+		curv->pos.SetParams( srcv->x * srcscale.x + srctra.x, srcv->y * srcscale.y + srctra.y, srcv->z * srcscale.z + srctra.z, 1.0f );
 	}
 
 	return 0;
@@ -1092,7 +1092,7 @@ int CPolyMesh3::UpdateMorphBuffer(ChaVector3* mpoint)
 	//	int curindex = *(m_dispindex + vno);
 	//	BINORMALDISPV* curv = m_dispv + vno;
 	//
-	//	curv->pos = ChaVector4((mpoint + curindex)->x, (mpoint + curindex)->y, (mpoint + curindex)->z, 1.0f);
+	//	curv->pos.SetParams((mpoint + curindex)->x, (mpoint + curindex)->y, (mpoint + curindex)->z, 1.0f);
 	//}
 
 	//int fno;
@@ -1113,9 +1113,9 @@ int CPolyMesh3::UpdateMorphBuffer(ChaVector3* mpoint)
 	//	BINORMALDISPV* curv1 = m_dispv + fno * 3 + 1;
 	//	BINORMALDISPV* curv2 = m_dispv + fno * 3 + 2;
 
-	//	curv0->pos = ChaVector4((mpoint + dstindex0)->x, (mpoint + dstindex0)->y, (mpoint + dstindex0)->z, 1.0f);
-	//	curv1->pos = ChaVector4((mpoint + dstindex1)->x, (mpoint + dstindex1)->y, (mpoint + dstindex1)->z, 1.0f);
-	//	curv2->pos = ChaVector4((mpoint + dstindex2)->x, (mpoint + dstindex2)->y, (mpoint + dstindex2)->z, 1.0f);
+	//	curv0->pos.SetParams((mpoint + dstindex0)->x, (mpoint + dstindex0)->y, (mpoint + dstindex0)->z, 1.0f);
+	//	curv1->pos.SetParams((mpoint + dstindex1)->x, (mpoint + dstindex1)->y, (mpoint + dstindex1)->z, 1.0f);
+	//	curv2->pos.SetParams((mpoint + dstindex2)->x, (mpoint + dstindex2)->y, (mpoint + dstindex2)->z, 1.0f);
 	//}
 
 

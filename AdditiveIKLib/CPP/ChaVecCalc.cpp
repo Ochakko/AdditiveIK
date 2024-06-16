@@ -395,6 +395,7 @@ ChaVector3::ChaVector3(float srcx, float srcy, float srcz)
 	y = srcy;
 	z = srcz;
 }
+
 ChaVector3::ChaVector3(DirectX::XMVECTOR v)
 {
 	x = v.m128_f32[0];
@@ -467,8 +468,9 @@ FbxDouble3 ChaVector3::ConvRotOrder2XYZ(EFbxRotationOrder rotorder)
 	CQuaternion rotq;
 	rotq.SetRotation(rotorder, 0, *this);
 
-	ChaVector3 eulxyz = ChaVector3(0.0f, 0.0f, 0.0f);
-	//ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 eulxyz;
+	eulxyz.SetParams(0.0f, 0.0f, 0.0f);
+	//ChaVector3 befeul.SetParams(0.0f, 0.0f, 0.0f);
 	BEFEUL befeul;
 	befeul.Init();
 
@@ -766,7 +768,8 @@ void ChaVector4::Normalize()
 	if (w >= 0.0000010f) {
 		*this = *this / w;
 	}
-	ChaVector3 xyz = ChaVector3(x, y, z);
+	ChaVector3 xyz;
+	xyz.SetParams(x, y, z);
 	ChaVector3Normalize(&xyz, &xyz);
 	x = xyz.x;
 	y = xyz.y;
@@ -950,7 +953,7 @@ ChaVector4 ChaVector4::RGB2HSV()
 	_diff = _max - _min;
 
 	if (_max <= 1e-4) {
-		rethsv = ChaVector4(0.0f, 0.0f, 0.0f, this->w);
+		rethsv.SetParams(0.0f, 0.0f, 0.0f, this->w);
 	}
 	else {
 		double out_h, out_s, out_v;
@@ -976,7 +979,7 @@ ChaVector4 ChaVector4::RGB2HSV()
 		out_v = _max;
 		out_s = _diff / _max;
 
-		rethsv = ChaVector4((float)out_h, (float)out_s, (float)out_v, this->w);
+		rethsv.SetParams((float)out_h, (float)out_s, (float)out_v, this->w);
 	}
 
 	return rethsv;
@@ -1035,7 +1038,7 @@ ChaVector4 ChaVector4::HSV2RGB()
 			out_b = q;
 		}
 	}
-	retrgb = ChaVector4((float)out_r, (float)out_g, (float)out_b, this->w);
+	retrgb.SetParams((float)out_r, (float)out_g, (float)out_b, this->w);
 	return retrgb;
 }
 
@@ -1293,20 +1296,20 @@ ChaVector3 ChaMatrix::GetRow(int rowindex)
 	ChaVector3 retrow;
 	switch (rowindex) {
 	case 0:
-		retrow = ChaVector3(data[MATI_11], data[MATI_12], data[MATI_13]);
+		retrow.SetParams(data[MATI_11], data[MATI_12], data[MATI_13]);
 		break;
 	case 1:
-		retrow = ChaVector3(data[MATI_21], data[MATI_22], data[MATI_23]);
+		retrow.SetParams(data[MATI_21], data[MATI_22], data[MATI_23]);
 		break;
 	case 2:
-		retrow = ChaVector3(data[MATI_31], data[MATI_32], data[MATI_33]);
+		retrow.SetParams(data[MATI_31], data[MATI_32], data[MATI_33]);
 		break;
 	case 3:
-		retrow = ChaVector3(data[MATI_41], data[MATI_42], data[MATI_43]);
+		retrow.SetParams(data[MATI_41], data[MATI_42], data[MATI_43]);
 		break;
 	default:
 		_ASSERT(0);
-		retrow = ChaVector3(data[MATI_11], data[MATI_12], data[MATI_13]);
+		retrow.SetParams(data[MATI_11], data[MATI_12], data[MATI_13]);
 		break;
 	}
 
@@ -1318,20 +1321,20 @@ ChaVector3 ChaMatrix::GetCol(int colindex)
 	ChaVector3 retcol;
 	switch (colindex) {
 	case 0:
-		retcol = ChaVector3(data[MATI_11], data[MATI_21], data[MATI_31]);
+		retcol.SetParams(data[MATI_11], data[MATI_21], data[MATI_31]);
 		break;
 	case 1:
-		retcol = ChaVector3(data[MATI_12], data[MATI_22], data[MATI_32]);
+		retcol.SetParams(data[MATI_12], data[MATI_22], data[MATI_32]);
 		break;
 	case 2:
-		retcol = ChaVector3(data[MATI_13], data[MATI_23], data[MATI_33]);
+		retcol.SetParams(data[MATI_13], data[MATI_23], data[MATI_33]);
 		break;
 	case 3:
-		retcol = ChaVector3(data[MATI_14], data[MATI_24], data[MATI_34]);
+		retcol.SetParams(data[MATI_14], data[MATI_24], data[MATI_34]);
 		break;
 	default:
 		_ASSERT(0);
-		retcol = ChaVector3(data[MATI_11], data[MATI_12], data[MATI_13]);
+		retcol.SetParams(data[MATI_11], data[MATI_12], data[MATI_13]);
 		break;
 	}
 
@@ -3680,7 +3683,7 @@ int CQuaternion::Q2EulXYZusingQ(bool srcunderIKRot, bool srcunderRetarget,
 
 
 
-	EinvZ = ChaVector3(0.0f, 0.0f, -Euler.z);
+	EinvZ.SetParams(0.0f, 0.0f, -Euler.z);
 	QinvZ.SetRotationXYZ(&iniq, EinvZ);
 	EQinvZ = QinvZ * EQ;
 	EQinvZ.Rotate(&targetVec, axisXVec);
@@ -3734,7 +3737,7 @@ int CQuaternion::Q2EulXYZusingQ(bool srcunderIKRot, bool srcunderRetarget,
 		Euler.y = tmpY1;
 	}
 
-	EinvY = ChaVector3(0.0f, -Euler.y, 0.0f);
+	EinvY.SetParams(0.0f, -Euler.y, 0.0f);
 	QinvY.SetRotationXYZ(&iniq, EinvY);
 	EQinvYZ = QinvY * QinvZ * EQ;
 	EQinvYZ.Rotate(&targetVec, axisZVec);
@@ -4991,14 +4994,14 @@ ChaFrustumInfo::~ChaFrustumInfo()
 //	m_matVP = matVP;
 //	ChaMatrix matInvViewProj = ChaMatrixInv(matVP);
 //
-//	//m_vecFrustum[0] = ChaVector3(-1.0f, -1.0f, 0.0f); // xyz
-//	//m_vecFrustum[1] = ChaVector3(1.0f, -1.0f, 0.0f); // Xyz
-//	//m_vecFrustum[2] = ChaVector3(-1.0f, 1.0f, 0.0f); // xYz
-//	//m_vecFrustum[3] = ChaVector3(1.0f, 1.0f, 0.0f); // XYz
-//	//m_vecFrustum[4] = ChaVector3(-1.0f, -1.0f, 1.0f); // xyZ
-//	//m_vecFrustum[5] = ChaVector3(1.0f, -1.0f, 1.0f); // XyZ
-//	//m_vecFrustum[6] = ChaVector3(-1.0f, 1.0f, 1.0f); // xYZ
-//	//m_vecFrustum[7] = ChaVector3(1.0f, 1.0f, 1.0f); // XYZ
+//	//m_vecFrustum[0].SetParams(-1.0f, -1.0f, 0.0f); // xyz
+//	//m_vecFrustum[1].SetParams(1.0f, -1.0f, 0.0f); // Xyz
+//	//m_vecFrustum[2].SetParams(-1.0f, 1.0f, 0.0f); // xYz
+//	//m_vecFrustum[3].SetParams(1.0f, 1.0f, 0.0f); // XYz
+//	//m_vecFrustum[4].SetParams(-1.0f, -1.0f, 1.0f); // xyZ
+//	//m_vecFrustum[5].SetParams(1.0f, -1.0f, 1.0f); // XyZ
+//	//m_vecFrustum[6].SetParams(-1.0f, 1.0f, 1.0f); // xYZ
+//	//m_vecFrustum[7].SetParams(1.0f, 1.0f, 1.0f); // XYZ
 //
 //	//float minx = -1.0f;
 //	//float maxx = 1.0f;
@@ -5024,14 +5027,14 @@ ChaFrustumInfo::~ChaFrustumInfo()
 //	float minz = 0.9990f;
 //	float maxz = 0.9997f;
 //	//float maxz = 0.70f;
-//	m_vecFrustum[0] = ChaVector3(minx, miny, minz); // xyz
-//	m_vecFrustum[1] = ChaVector3(maxx, miny, minz); // Xyz
-//	m_vecFrustum[2] = ChaVector3(minx, maxy, minz); // xYz
-//	m_vecFrustum[3] = ChaVector3(maxx, maxy, minz); // XYz
-//	m_vecFrustum[4] = ChaVector3(minx, miny, maxz); // xyZ
-//	m_vecFrustum[5] = ChaVector3(maxx, miny, maxz); // XyZ
-//	m_vecFrustum[6] = ChaVector3(minx, maxy, maxz); // xYZ
-//	m_vecFrustum[7] = ChaVector3(maxx, maxy, maxz); // XYZ
+//	m_vecFrustum[0].SetParams(minx, miny, minz); // xyz
+//	m_vecFrustum[1].SetParams(maxx, miny, minz); // Xyz
+//	m_vecFrustum[2].SetParams(minx, maxy, minz); // xYz
+//	m_vecFrustum[3].SetParams(maxx, maxy, minz); // XYz
+//	m_vecFrustum[4].SetParams(minx, miny, maxz); // xyZ
+//	m_vecFrustum[5].SetParams(maxx, miny, maxz); // XyZ
+//	m_vecFrustum[6].SetParams(minx, maxy, maxz); // xYZ
+//	m_vecFrustum[7].SetParams(maxx, maxy, maxz); // XYZ
 //
 //
 //
@@ -5564,8 +5567,8 @@ int ChaFrustumInfo::ChkInView(int srclodnum, int srclodno, MODELBOUND srcmb, Cha
 	//	ChaVector3 lightpos;
 	//	ChaVector3 lighttarget;
 	//	if (g_cameraShadow) {
-	//		lightpos = ChaVector3(g_cameraShadow->GetPosition());
-	//		lighttarget = ChaVector3(g_cameraShadow->GetTarget());
+	//		lightpos.SetParams(g_cameraShadow->GetPosition());
+	//		lighttarget.SetParams(g_cameraShadow->GetTarget());
 	//	}
 	//	else {
 	//		lightpos = g_camEye;

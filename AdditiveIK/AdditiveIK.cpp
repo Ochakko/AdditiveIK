@@ -843,7 +843,7 @@ static bool s_moveeyepos = false;//s_sidemenu_camdistSlider動作の種類　tru
 //float g_initcamdist = 50.0f;
 //static float g_projnear = 0.001f;
 //static float g_projnear = 1.0f;
-//static ChaVector3 g_cameraupdir = ChaVector3(0.0f, 1.0f, 0.0f);
+//static ChaVector3 g_cameraupdir.SetParams(0.0f, 1.0f, 0.0f);
 static double s_cameraframe = 0.0;
 //static float g_camdist = g_initcamdist;
 //static float g_projnear = 0.01f;
@@ -1023,7 +1023,7 @@ static ChaMatrix s_matVP;
 static ChaMatrix s_matView;
 static ChaMatrix s_befLockMatView;//Lock2Sel処理前のs_matView
 static ChaMatrix s_matSkyProj;
-//static ChaVector3 s_camUpVec = ChaVector3(0.00001f, 1.0f, 0.0f);
+//static ChaVector3 s_camUpVec.SetParams(0.00001f, 1.0f, 0.0f);
 
 static int s_curmotid = -1;
 static int s_curboneno = -1;
@@ -4139,18 +4139,18 @@ void InitApp()
 	s_LchangeTarget2Camera = false;
 
 	{
-		g_camEye = ChaVector3(0.0f, 0.0f, 0.0f);
-		g_camtargetpos = ChaVector3(0.0f, 0.0f, 0.0f);
-		g_befcamEye = ChaVector3(0.0f, 0.0f, 0.0f);
-		g_befcamtargetpos = ChaVector3(0.0f, 0.0f, 0.0f);
-		g_cameraupdir = ChaVector3(0.0f, 1.0f, 0.0f);
+		g_camEye.SetParams(0.0f, 0.0f, 0.0f);
+		g_camtargetpos.SetParams(0.0f, 0.0f, 0.0f);
+		g_befcamEye.SetParams(0.0f, 0.0f, 0.0f);
+		g_befcamtargetpos.SetParams(0.0f, 0.0f, 0.0f);
+		g_cameraupdir.SetParams(0.0f, 1.0f, 0.0f);
 		g_camdist = 50.0f;
 		g_initcamdist = 50.0f;
 		g_fovy = (float)(PI / 4.0);
 		g_projnear = 0.01f;
 		g_projfar = g_initcamdist * 100.0f;
 	
-		g_vCenter = ChaVector3(0.0f, 0.0f, 0.0f);
+		g_vCenter.SetParams(0.0f, 0.0f, 0.0f);
 	}
 
 	g_mouseherealpha = 1.0f;
@@ -4164,7 +4164,7 @@ void InitApp()
 	s_befpickmodel = nullptr;
 	s_befpickmqoobj = nullptr;
 	s_befpickmaterial = nullptr;
-	s_pickhitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	s_pickhitpos.SetParams(0.0f, 0.0f, 0.0f);
 
 	s_befselectmodel = nullptr;
 	s_befselectmqoobj = nullptr;
@@ -4186,7 +4186,7 @@ void InitApp()
 	
 	int dofindex;
 	for (dofindex = 0; dofindex < DOFSLOTNUM; dofindex++) {
-		g_dofparams[dofindex] = ChaVector4(3000.0f, 5000.0f, 0.0f, 0.0f);
+		g_dofparams[dofindex].SetParams(3000.0f, 5000.0f, 0.0f, 0.0f);
 		g_skydofflag[dofindex] = false;
 	}
 	g_dofindex = 0;
@@ -4475,14 +4475,14 @@ void InitApp()
 		s_selectobj_ringy = 0;
 		s_selectobj_ringz = 0;
 		s_selectobj_center = 0;
-		s_matredmat = ChaVector4(1.0f, 0.0f, 0.0f, 1.0f);
-		s_ringredmat = ChaVector4(1.0f, 0.0f, 0.0f, 1.0f);
-		s_matbluemat = ChaVector4(0.0f, 0.0f, 1.0f, 1.0f);
-		s_ringbluemat = ChaVector4(0.0f, 0.0f, 1.0f, 1.0f);
-		s_matgreenmat = ChaVector4(0.0f, 1.0f, 0.0f, 1.0f);
-		s_ringgreenmat = ChaVector4(0.0f, 1.0f, 0.0f, 1.0f);
-		s_matyellowmat = ChaVector4(1.0f, 1.0f, 0.0f, 1.0f);
-		s_ringyellowmat = ChaVector4(1.0f, 1.0f, 0.0f, 1.0f);
+		s_matredmat.SetParams(1.0f, 0.0f, 0.0f, 1.0f);
+		s_ringredmat.SetParams(1.0f, 0.0f, 0.0f, 1.0f);
+		s_matbluemat.SetParams(0.0f, 0.0f, 1.0f, 1.0f);
+		s_ringbluemat.SetParams(0.0f, 0.0f, 1.0f, 1.0f);
+		s_matgreenmat.SetParams(0.0f, 1.0f, 0.0f, 1.0f);
+		s_ringgreenmat.SetParams(0.0f, 1.0f, 0.0f, 1.0f);
+		s_matyellowmat.SetParams(1.0f, 1.0f, 0.0f, 1.0f);
+		s_ringyellowmat.SetParams(1.0f, 1.0f, 0.0f, 1.0f);
 	}
 
 	s_grassElemVec.clear();
@@ -4495,7 +4495,7 @@ void InitApp()
 	//::ZeroMemory(s_rigmaterial_ringX, sizeof(CMQOMaterial*) * (RIGMULTINDEXMAX + 1));
 	//::ZeroMemory(s_rigmaterial_ringY, sizeof(CMQOMaterial*) * (RIGMULTINDEXMAX + 1));
 	//::ZeroMemory(s_rigmaterial_ringZ, sizeof(CMQOMaterial*) * (RIGMULTINDEXMAX + 1));
-	s_matrigmat = ChaVector4(255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 1.0f);
+	s_matrigmat.SetParams(255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 1.0f);
 
 
 	s_curmotid = -1;
@@ -4534,7 +4534,7 @@ void InitApp()
 		s_twistcameraFlag = false;
 		s_rbuttonSelectFlag = false;
 		s_cameraframe = 0.0;
-		g_cameraupdir = ChaVector3(0.0f, 1.0f, 0.0f);
+		g_cameraupdir.SetParams(0.0f, 1.0f, 0.0f);
 
 		g_initcamdist = 50.0f;
 		g_camdist = g_initcamdist;
@@ -5152,9 +5152,9 @@ void InitApp()
 	s_LimitDegCheckBoxFlag = false;
 	s_WallScrapingCheckBoxFlag = false;
 
-	//s_totalmb.center = ChaVector3(0.0f, 0.0f, 0.0f);
-	//s_totalmb.max = ChaVector3(5.0f, 5.0f, 5.0f);
-	//s_totalmb.min = ChaVector3(-5.0f, -5.0f, -5.0f);
+	//s_totalmb.center.SetParams(0.0f, 0.0f, 0.0f);
+	//s_totalmb.max.SetParams(5.0f, 5.0f, 5.0f);
+	//s_totalmb.min.SetParams(-5.0f, -5.0f, -5.0f);
 	//s_totalmb.r = (float)ChaVector3LengthDbl(&s_totalmb.max);
 
 	//s_undosprite = 0;
@@ -5897,15 +5897,15 @@ void InitApp()
 		for (lightindex = 0; lightindex < LIGHTNUMMAX; lightindex++) {
 			double initrad = PI * 2.0 * (double)lightindex / (double)LIGHTNUMMAX;// -PI / 6;
 			ChaVector3 dir0, ndir;
-			dir0 = ChaVector3((float)sin(initrad),
+			dir0.SetParams((float)sin(initrad),
 				-0.5f,
 				(float)-cos(initrad));
 			ChaVector3Normalize(&ndir, &dir0);
 			g_lightDir[slotindex][lightindex] = ndir;
 			//g_lightdirforshader[lightindex] = -g_lightdir[lightindex];//-lightdir
 
-			g_lightDiffuse[slotindex][lightindex] = ChaVector3(1.0f, 1.0f, 1.0f);
-			//g_lightdiffuseforshader[lightindex] = ChaVector4(g_lightdiffuse[lightindex].x, g_lightdiffuse[lightindex].y, g_lightdiffuse[lightindex].z, 1.0f);
+			g_lightDiffuse[slotindex][lightindex].SetParams(1.0f, 1.0f, 1.0f);
+			//g_lightdiffuseforshader[lightindex].SetParams(g_lightdiffuse[lightindex].x, g_lightdiffuse[lightindex].y, g_lightdiffuse[lightindex].z, 1.0f);
 
 			if (lightindex == 0) {//初期状態では lightindex == 0のときキャラの正面を照らす向き
 				g_lightEnable[slotindex][lightindex] = true;
@@ -6964,7 +6964,7 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		////}
 		////else {
 		////	_ASSERT(0);
-		////	g_vCenter = ChaVector3(0.0f, 0.0f, 0.0f);
+		////	g_vCenter.SetParams(0.0f, 0.0f, 0.0f);
 		////	fObjectRadius = 10.0f;
 		////}
 		////if (fObjectRadius < 0.1f) {
@@ -7339,8 +7339,8 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 	//{
 	//	DirectX::XMFLOAT4 arrowColor = (i == g_nActiveLight) ? DirectX::XMFLOAT4(1, 1, 0, 1) : DirectX::XMFLOAT4(1, 1, 1, 1);
 	//	//V(g_LightControl[i].OnRender10(arrowColor, &mView, &mProj, //#replacing comment out#g_Camera->GetEyePt()));
-	//	vLightDir[i] = ChaVector3(g_LightControl[i].GetLightDirection());
-	//	vLightDiffuse[i] = ChaVector4(1, 1, 1, 1) * g_fLightScale;
+	//	vLightDir[i].SetParams(g_LightControl[i].GetLightDirection());
+	//	vLightDiffuse[i].SetParams(1, 1, 1, 1) * g_fLightScale;
 	//}
 
 	////V(g_pLightDir->SetRawValue(vLightDir, 0, sizeof(ChaVector3) * MAX_LIGHTS));
@@ -7363,7 +7363,8 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 			}
 
 			int lightflag = -1;
-			ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+			ChaVector4 diffusemult;
+			diffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 			int btflag;
 			if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
 				btflag = 0;
@@ -8522,8 +8523,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		s_pickinfo.clickpos = ptCursor;
 		s_pickinfo.mousepos = ptCursor;
 		s_pickinfo.mousebefpos = ptCursor;
-		s_pickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
-		s_pickinfo.firstdiff = ChaVector2(0.0f, 0.0f);
+		s_pickinfo.diffmouse.SetParams(0.0f, 0.0f);
+		s_pickinfo.firstdiff.SetParams(0.0f, 0.0f);
 
 		//s_pickinfo.winx = (int)DXUTGetWindowWidth();
 		//s_pickinfo.winy = (int)DXUTGetWindowHeight();
@@ -9390,8 +9391,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		s_pickinfo.clickpos = ptCursor;
 		s_pickinfo.mousepos = ptCursor;
 		s_pickinfo.mousebefpos = ptCursor;
-		s_pickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
-		s_pickinfo.firstdiff = ChaVector2(0.0f, 0.0f);
+		s_pickinfo.diffmouse.SetParams(0.0f, 0.0f);
+		s_pickinfo.firstdiff.SetParams(0.0f, 0.0f);
 
 		//s_pickinfo.winx = (int)DXUTGetWindowWidth();
 		//s_pickinfo.winy = (int)DXUTGetWindowHeight();
@@ -9482,7 +9483,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		//カメラの回転を　右ダブルクリックした場合は　カメラのupvecを初期化する
 		if (PickSpCam(ptCursor) == PICK_CAMROT) {
-			g_cameraupdir = ChaVector3(0.0f, 1.0f, 0.0f);
+			g_cameraupdir.SetParams(0.0f, 1.0f, 0.0f);
 
 			//////#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
 			////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
@@ -11493,9 +11494,9 @@ CModel* OpenMQOFile()
 	   //	}
 	   //}
 
-	   //s_totalmb.center = ChaVector3( 0.0f, 0.0f, 0.0f );
-	   //s_totalmb.max = ChaVector3( 0.0f, 0.0f, 0.0f );
-	   //s_totalmb.min = ChaVector3( 0.0f, 0.0f, 0.0f );
+	   //s_totalmb.center.SetParams( 0.0f, 0.0f, 0.0f );
+	   //s_totalmb.max.SetParams( 0.0f, 0.0f, 0.0f );
+	   //s_totalmb.min.SetParams( 0.0f, 0.0f, 0.0f );
 	   //s_totalmb.r = 0.0f;
 	CalcTotalBound();
 
@@ -11545,9 +11546,9 @@ int SetCameraModel()
 void CalcTotalBound()
 {
 
-	//s_totalmb.center = ChaVector3(0.0f, 0.0f, 0.0f);
-	//s_totalmb.max = ChaVector3(50.0f, 50.0f, 50.0f);
-	//s_totalmb.min = ChaVector3(-50.0f, -50.0f, -50.0f);
+	//s_totalmb.center.SetParams(0.0f, 0.0f, 0.0f);
+	//s_totalmb.max.SetParams(50.0f, 50.0f, 50.0f);
+	//s_totalmb.min.SetParams(-50.0f, -50.0f, -50.0f);
 	//s_totalmb.r = (float)ChaVector3LengthDbl(&s_totalmb.max);
 
 
@@ -11572,13 +11573,13 @@ void CalcTotalBound()
 			fObjectRadius = totalmb.r;
 		}
 		else {
-			g_vCenter = ChaVector3(0.0f, 0.0f, 0.0f);
+			g_vCenter.SetParams(0.0f, 0.0f, 0.0f);
 			fObjectRadius = 10.0f;
 		}
 	}
 	else {
 		_ASSERT(0);
-		g_vCenter = ChaVector3(0.0f, 0.0f, 0.0f);
+		g_vCenter.SetParams(0.0f, 0.0f, 0.0f);
 		fObjectRadius = 10.0f;
 	}
 	if (fObjectRadius < 0.1f) {
@@ -11600,7 +11601,8 @@ void CalcTotalBound()
 	//s_fAspectRatio = 1.0f;//ここでは更新しない
 	g_fovy = (float)(PI / 4);
 	g_camtargetpos = g_vCenter;
-	ChaVector3 dirz = ChaVector3(0.0f, 0.0f, 1.0);
+	ChaVector3 dirz;
+	dirz.SetParams(0.0f, 0.0f, 1.0);
 	g_camEye = g_vCenter + dirz * g_initcamdist;
 	//ChangeCameraMode(1);//forcemode 反転をセット:0 強制オフ時:1 強制オン時:2.  この関数の上の方のSetCameraModel()で制御するので　ここはコメントアウト
 
@@ -11640,7 +11642,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	//	return 0;
 	//}
 
-	g_camtargetpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	g_camtargetpos.SetParams(0.0f, 0.0f, 0.0f);
 	g_befcamtargetpos = g_camtargetpos;
 
 
@@ -12071,6 +12073,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	CBone* vroidheadjoint = s_model->FindBoneByName("J_Bip_C_Head");
 	if (vroidheadjoint) {
 		SkipJointMarkReq(1, vroidheadjoint, false);
+		s_model->SetBtObjectVec();//2024/06/16
 	}
 
 
@@ -12525,7 +12528,8 @@ int UpdateEditedEuler()
 
 				//2023/10/13
 				if (curtime == eultiptime) {
-					ChaVector3 eultip = ChaVector3(currentvalue, 0.0f, 0.0f);
+					ChaVector3 eultip;
+					eultip.SetParams(currentvalue, 0.0f, 0.0f);
 					s_owpEulerGraph->setEulTip(eultip);
 				}
 			}
@@ -12604,17 +12608,20 @@ int UpdateEditedEuler()
 			int firstframe;
 			firstframe = max((startframe - 1), 0);
 
-			ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+			ChaVector3 befeul;
+			befeul.SetParams(0.0f, 0.0f, 0.0f);
 			int ret;
 			ret = s_owpEulerGraph->getEuler((double)firstframe, &befeul);
 			if (ret) {
-				befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+				befeul.SetParams(0.0f, 0.0f, 0.0f);
 			}
 
 			for (curtime = startframe; curtime <= endframe; curtime++) {
 				const WCHAR* wbonename = opebone->GetWBoneName();
-				ChaVector3 orgeul = ChaVector3(0.0f, 0.0f, 0.0f);
-				ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+				ChaVector3 orgeul;
+				orgeul.SetParams(0.0f, 0.0f, 0.0f);
+				ChaVector3 cureul;
+				cureul.SetParams(0.0f, 0.0f, 0.0f);
 				//cureul = opebone->CalcFBXEul(curmi->motid, (double)curtime, &befeul);
 				//befeul = cureul;//!!!!!!!
 
@@ -12808,7 +12815,8 @@ int refreshEulerGraph()
 
 				//2023/10/13
 				if (curtime == eultiptime) {
-					ChaVector3 eultip = ChaVector3(currentvalue, 0.0f, 0.0f);
+					ChaVector3 eultip;
+					eultip.SetParams(currentvalue, 0.0f, 0.0f);
 					s_owpEulerGraph->setEulTip(eultip);
 				}
 			}
@@ -12874,16 +12882,19 @@ int refreshEulerGraph()
 				int maxfirstflag = 1;
 
 				double firstframe = 0.0;
-				ChaVector3 befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+				ChaVector3 befeul;
+				befeul.SetParams(0.0f, 0.0f, 0.0f);
 				int ret;
 				ret = s_owpEulerGraph->getEuler(firstframe, &befeul);
 				if (ret) {
-					befeul = ChaVector3(0.0f, 0.0f, 0.0f);
+					befeul.SetParams(0.0f, 0.0f, 0.0f);
 				}
 				for (curtime = 0; curtime < frameleng; curtime++) {
 					const WCHAR* wbonename = opebone->GetWBoneName();
-					ChaVector3 orgeul = ChaVector3(0.0f, 0.0f, 0.0f);
-					ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+					ChaVector3 orgeul;
+					orgeul.SetParams(0.0f, 0.0f, 0.0f);
+					ChaVector3 cureul;
+					cureul.SetParams(0.0f, 0.0f, 0.0f);
 					//cureul = opebone->CalcFBXEul(curmi->motid, (double)curtime, &befeul);
 					//befeul = cureul;//!!!!!!!
 
@@ -13696,7 +13707,8 @@ int OnCameraMenu(bool dorefreshflag, int selindex, int saveundoflag)
 
 	if (s_cameramodel->IsCameraLoaded()) {
 		//fbxにカメラが在る場合
-		ChaVector3 camdir = ChaVector3(0.0f, 0.0f, 1.0f);
+		ChaVector3 camdir;
+		camdir.SetParams(0.0f, 0.0f, 1.0f);
 		s_cameramodel->GetCameraProjParams(cameramotid, &g_projnear, &g_projfar, &g_fovy, &g_camEye, &camdir, &g_cameraupdir);
 
 		g_initcamdist = max(0.1f, min(s_maxcamdist, g_projfar));
@@ -14725,7 +14737,7 @@ float CalcSelectScale()
 	//selm = s_selm;
 	//ChaMatrixNormalizeRot(&selm);
 	//ChaVector3 orgcenterpos = curboneptr->GetJointFPos();
-	//ChaVector3 orgedgepos = ChaVector3(orgcenterpos.x, orgcenterpos.y + 100.0f, orgcenterpos.z);
+	//ChaVector3 orgedgepos.SetParams(orgcenterpos.x, orgcenterpos.y + 100.0f, orgcenterpos.z);
 	//ChaVector3 dispcenterpos, dispedgepos;
 	//ChaVector3TransformCoord(&dispcenterpos, &orgcenterpos, &selm);
 	//ChaVector3TransformCoord(&dispedgepos, &orgedgepos, &selm);
@@ -14875,10 +14887,11 @@ int RenderSelectFunc(myRenderer::RenderingEngine* re)
 	s_chascene->UpdateMatrixOneModel(s_select, g_limitdegflag, &s_selectmat, &s_matView, &s_matProj, 0.0, 0);
 	if (s_dispselect) {
 		int lightflag = 1;
-		//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
-		//ChaVector4 diffusemult = ChaVector4(0.6f, 0.6f, 0.6f, 0.3f);
-		//ChaVector4 diffusemult = ChaVector4(0.6f, 0.6f, 0.6f, 1.0f);
-		ChaVector4 diffusemult = ChaVector4(0.6f, 0.6f, 0.6f, 0.6f);
+		//ChaVector4 diffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.7f);
+		//ChaVector4 diffusemult.SetParams(0.6f, 0.6f, 0.6f, 0.3f);
+		//ChaVector4 diffusemult.SetParams(0.6f, 0.6f, 0.6f, 1.0f);
+		ChaVector4 diffusemult;
+		diffusemult.SetParams(0.6f, 0.6f, 0.6f, 0.6f);
 		bool forcewithalpha = true;
 		int btflag = 0;
 		bool zcmpalways = true;
@@ -14901,9 +14914,10 @@ int RenderSelectPostureFunc(myRenderer::RenderingEngine* re)
 	s_chascene->UpdateMatrixOneModel(s_select_posture, g_limitdegflag, &s_selectmat_posture, &s_matView, &s_matProj, 0.0, 0);
 	if (s_dispselect) {
 		int lightflag = 1;
-		//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 0.7f);
-		ChaVector4 diffusemult = ChaVector4(0.6f, 0.6f, 0.6f, 0.3f);
+		//ChaVector4 diffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
+		//ChaVector4 diffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.7f);
+		ChaVector4 diffusemult;
+		diffusemult.SetParams(0.6f, 0.6f, 0.6f, 0.3f);
 		bool forcewithalpha = true;
 		int btflag = 0;
 		bool zcmpalways = true;
@@ -14951,7 +14965,7 @@ CModel* GetCurRigModel(CUSTOMRIG currig, int* pinstanceno, ChaVector4* prigmat)
 	}
 
 	*pinstanceno = -1;//error値で初期化
-	*prigmat = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);//error値で初期化
+	prigmat->SetParams(1.0f, 1.0f, 1.0f, 1.0f);//error値で初期化
 
 
 	//int rigopemarkno = currig.shapemult;
@@ -14973,17 +14987,17 @@ CModel* GetCurRigModel(CUSTOMRIG currig, int* pinstanceno, ChaVector4* prigmat)
 		}
 
 		if (rigcolor == RIGCOLOR_RED) {
-			s_matrigmat = ChaVector4(1.0f, 0.5f, 0.5f, alpha);
+			s_matrigmat.SetParams(1.0f, 0.5f, 0.5f, alpha);
 		}
 		else if (rigcolor == RIGCOLOR_GREEN) {
-			s_matrigmat = ChaVector4(0.0f, 1.0f, 0.0f, alpha);
+			s_matrigmat.SetParams(0.0f, 1.0f, 0.0f, alpha);
 		}
 		else if (rigcolor == RIGCOLOR_BLUE) {
-			s_matrigmat = ChaVector4(15.0f / 255.0f, 200.0f / 255.0f, 1.0f, alpha);
+			s_matrigmat.SetParams(15.0f / 255.0f, 200.0f / 255.0f, 1.0f, alpha);
 		}
 		else {
 			_ASSERT(0);
-			s_matrigmat = ChaVector4(1.0f, 0.5f, 0.5f, alpha);
+			s_matrigmat.SetParams(1.0f, 0.5f, 0.5f, alpha);
 		}
 
 		CModel* currigmodel;
@@ -15162,7 +15176,8 @@ int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderCon
 
 	{
 		int lightflag = 0;
-		ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, g_rigmark_alpha);//2024/01/12 alpha
+		ChaVector4 diffusemult;
+		diffusemult.SetParams(1.0f, 1.0f, 1.0f, g_rigmark_alpha);//2024/01/12 alpha
 		bool forcewithalpha = true;
 		int btflag = 0;
 		bool zcmpalways = false;
@@ -15248,8 +15263,8 @@ int CalcPickRay(ChaVector3* startptr, ChaVector3* endptr)
 	rayx = mousesc.x / (s_pickinfo.winx / 2.0f) - 1.0f;
 	rayy = 1.0f - mousesc.y / (s_pickinfo.winy / 2.0f);
 
-	startsc = ChaVector3(rayx, rayy, 0.0f);
-	endsc = ChaVector3(rayx, rayy, 1.0f);
+	startsc.SetParams(rayx, rayy, 0.0f);
+	endsc.SetParams(rayx, rayy, 1.0f);
 
 	ChaMatrix mView;
 	ChaMatrix mProj;
@@ -21403,7 +21418,8 @@ int SetSpUndoParams()
 		disppos.x = (float)(s_spundo[spacnt].dispcenter.x);
 		disppos.y = (float)(s_spundo[spacnt].dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+		ChaVector2 dispsize;
+		dispsize.SetParams(s_spsize, s_spsize);
 		//CallF(s_spundo[spacnt].sprite->SetPos(disppos), return 1);
 		//CallF(s_spundo[spacnt].sprite->SetSize(dispsize), return 1);
 		s_spundo[spacnt].sprite.UpdateScreen(disppos, dispsize);
@@ -21438,7 +21454,8 @@ int SetSpAxisParams()
 		disppos.x = (float)(s_spaxis[spacnt].dispcenter.x);
 		disppos.y = (float)(s_spaxis[spacnt].dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+		ChaVector2 dispsize;
+		dispsize.SetParams(s_spsize, s_spsize);
 		//CallF(s_spaxis[spacnt].sprite->SetPos(disppos), return 1);
 		//CallF(s_spaxis[spacnt].sprite->SetSize(dispsize), return 1);
 		s_spaxis[spacnt].sprite.UpdateScreen(disppos, dispsize);
@@ -21487,7 +21504,8 @@ int SetSpDispSWParams()
 		disppos.x = (float)(s_spdispsw[spgcnt].dispcenter.x);
 		disppos.y = (float)(s_spdispsw[spgcnt].dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(spgwidth, spgheight);
+		ChaVector2 dispsize;
+		dispsize.SetParams(spgwidth, spgheight);
 
 		//CallF(s_spdispsw[spgcnt].spriteON->SetPos(disppos), return 1);
 		//CallF(s_spdispsw[spgcnt].spriteON->SetSize(dispsize), return 1);
@@ -21538,7 +21556,8 @@ int SetSpRigidSWParams()
 		disppos.x = (float)(s_sprigidsw[spgcnt].dispcenter.x);
 		disppos.y = (float)(s_sprigidsw[spgcnt].dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(spgwidth, spgheight);
+		ChaVector2 dispsize;
+		dispsize.SetParams(spgwidth, spgheight);
 
 		//CallF(s_sprigidsw[spgcnt].spriteON->SetPos(disppos), return 1);
 		//CallF(s_sprigidsw[spgcnt].spriteON->SetSize(dispsize), return 1);
@@ -21585,7 +21604,8 @@ int SetSpRetargetSWParams()
 		disppos.x = (float)(s_spretargetsw[sprcnt].dispcenter.x);
 		disppos.y = (float)(s_spretargetsw[sprcnt].dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(spgwidth, spgheight);
+		ChaVector2 dispsize;
+		dispsize.SetParams(spgwidth, spgheight);
 
 		//CallF(s_spretargetsw[sprcnt].spriteON->SetPos(disppos), return 1);
 		//CallF(s_spretargetsw[sprcnt].spriteON->SetSize(dispsize), return 1);
@@ -21631,7 +21651,8 @@ int SetSpEffectSWParams()
 		disppos.x = (float)(s_speffectsw[sprcnt].dispcenter.x);
 		disppos.y = (float)(s_speffectsw[sprcnt].dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(spgwidth, spgheight);
+		ChaVector2 dispsize;
+		dispsize.SetParams(spgwidth, spgheight);
 
 		//CallF(s_speffectsw[sprcnt].spriteON->SetPos(disppos), return 1);
 		//CallF(s_speffectsw[sprcnt].spriteON->SetSize(dispsize), return 1);
@@ -21687,7 +21708,7 @@ int SetSpMenuAimBarParams()
 	//			//disppos.x = (float)(s_spmenuaimbar[menuno].dispcenter.x);
 	//			//disppos.y = (float)(s_spmenuaimbar[menuno].dispcenter.y);
 	//			//disppos.z = 0.0f;
-	//			//ChaVector2 dispsize = ChaVector2(spritewidth / (float)s_mainwidth * 2.0f, spriteheight / (float)s_mainheight * 2.0f);
+	//			//ChaVector2 dispsize.SetParams(spritewidth / (float)s_mainwidth * 2.0f, spriteheight / (float)s_mainheight * 2.0f);
 
 	//			//if (s_spmenuaimbar[menuno].spriteON) {
 	//			//	CallF(s_spmenuaimbar[menuno].spriteON->SetPos(disppos), return 1);
@@ -21751,7 +21772,7 @@ int SetSpAimBarParams()
 	//	disppos.x = (float)(s_spaimbar[spgcnt].dispcenter.x);
 	//	disppos.y = (float)(s_spaimbar[spgcnt].dispcenter.y);
 	//	disppos.z = 0.0f;
-	//	ChaVector2 dispsize = ChaVector2(spgwidth, spgheight);
+	//	ChaVector2 dispsize.SetParams(spgwidth, spgheight);
 
 	//	//CallF(s_spaimbar[spgcnt].spriteON->SetPos(disppos), return 1);
 	//	//CallF(s_spaimbar[spgcnt].spriteON->SetSize(dispsize), return 1);
@@ -21795,7 +21816,8 @@ int SetSpMouseCenterParams()
 	disppos.x = (float)(s_mousecenteron.dispcenter.x);
 	disppos.y = (float)(s_mousecenteron.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsize, s_spsize);
 
 	//CallF(s_mousecenteron.sprite->SetPos(disppos), return 1);
 	//CallF(s_mousecenteron.sprite->SetSize(dispsize), return 1);
@@ -21839,7 +21861,8 @@ int SetSpSel3DParams()
 	disppos.x = (float)(s_spsel3d.dispcenter.x);
 	disppos.y = (float)(s_spsel3d.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsize, s_spsize);
 
 	//CallF(s_spsel3d.spriteON->SetPos(disppos), return 1);
 	//CallF(s_spsel3d.spriteON->SetSize(dispsize), return 1);
@@ -21872,7 +21895,8 @@ int SetSpIkModeSWParams()
 		disppos.x = (float)(s_spikmodesw[spgcnt].dispcenter.x);
 		disppos.y = (float)(s_spikmodesw[spgcnt].dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+		ChaVector2 dispsize;
+		dispsize.SetParams(s_spsize, s_spsize);
 
 		//CallF(s_spikmodesw[spgcnt].spriteON->SetPos(disppos), return 1);
 		//CallF(s_spikmodesw[spgcnt].spriteON->SetSize(dispsize), return 1);
@@ -21897,7 +21921,8 @@ int SetSpRefPosSWParams()
 	disppos.x = (float)(s_sprefpos.dispcenter.x);
 	disppos.y = (float)(s_sprefpos.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsize, s_spsize);
 
 
 	//CallF(s_sprefpos.spriteON->SetPos(disppos), return 1);
@@ -21921,7 +21946,8 @@ int SetSpLimitEulSWParams()
 	disppos.x = (float)(s_splimiteul.dispcenter.x);
 	disppos.y = (float)(s_splimiteul.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsize, s_spsize);
 
 	//CallF(s_splimiteul.spriteON->SetPos(disppos), return 1);
 	//CallF(s_splimiteul.spriteON->SetSize(dispsize), return 1);
@@ -21944,7 +21970,8 @@ int SetSpScrapingSWParams()
 	disppos.x = (float)(s_spscraping.dispcenter.x);
 	disppos.y = (float)(s_spscraping.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsize, s_spsize);
 
 	//CallF(s_spscraping.spriteON->SetPos(disppos), return 1);
 	//CallF(s_spscraping.spriteON->SetSize(dispsize), return 1);
@@ -21996,7 +22023,8 @@ int SetSpRet2PrevParams()
 		disppos.x = (float)(s_spret2prev.dispcenter.x);
 		disppos.y = (float)(s_spret2prev.dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(spretwidth1, spretheight1);
+		ChaVector2 dispsize;
+		dispsize.SetParams(spretwidth1, spretheight1);
 
 		//CallF(s_spret2prev.sprite->SetPos(disppos), return 1);
 		//CallF(s_spret2prev.sprite->SetSize(dispsize), return 1);
@@ -22015,7 +22043,8 @@ int SetSpRet2PrevParams()
 		disppos.x = (float)(s_spret2prev2.dispcenter.x);
 		disppos.y = (float)(s_spret2prev2.dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(spretwidth2, spretheight2);
+		ChaVector2 dispsize;
+		dispsize.SetParams(spretwidth2, spretheight2);
 
 		//CallF(s_spret2prev2.sprite->SetPos(disppos), return 1);
 		//CallF(s_spret2prev2.sprite->SetSize(dispsize), return 1);
@@ -22065,7 +22094,8 @@ int SetSpGUISWParams()
 		disppos.x = (float)(s_spguisw[spgcnt].dispcenter.x);
 		disppos.y = (float)(s_spguisw[spgcnt].dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(spgwidth, spgheight);
+		ChaVector2 dispsize;
+		dispsize.SetParams(spgwidth, spgheight);
 
 		//CallF(s_spguisw[spgcnt].spriteON->SetPos(disppos), return 1);
 		//CallF(s_spguisw[spgcnt].spriteON->SetSize(dispsize), return 1);
@@ -22109,7 +22139,8 @@ int SetSpCamParams()
 		disppos.x = (float)(s_spcam[spacnt].dispcenter.x);
 		disppos.y = (float)(s_spcam[spacnt].dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+		ChaVector2 dispsize;
+		dispsize.SetParams(s_spsize, s_spsize);
 
 		//CallF(s_spcam[spacnt].sprite->SetPos(disppos), return 1);
 		//CallF(s_spcam[spacnt].sprite->SetSize(dispsize), return 1);
@@ -22131,7 +22162,8 @@ int SetSpCameraModeSWParams()
 	disppos.x = (float)(s_spcameramode.dispcenter.x);
 	disppos.y = (float)(s_spcameramode.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsize, s_spsize);
 
 
 	dispsize *= 0.70f;//大きくみえるデザインなので　少し小さくして表示　当たり判定は元の大きさ
@@ -22157,7 +22189,8 @@ int SetSpCameraInheritSWParams()
 	disppos.x = (float)(s_spcamerainherit.dispcenter.x);
 	disppos.y = (float)(s_spcamerainherit.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsize, s_spsize);
 
 
 	dispsize *= 0.80f;//大きくみえるデザインなので　少し小さくして表示　当たり判定は元の大きさ
@@ -22190,7 +22223,8 @@ int SetSpCopyParams()
 	disppos.x = (float)(s_spcopy.dispcenter.x);
 	disppos.y = (float)(s_spcopy.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
 
 	//CallF(s_spcopy.sprite->SetPos(disppos), return 1);
 	//CallF(s_spcopy.sprite->SetSize(dispsize), return 1);
@@ -22213,7 +22247,8 @@ int SetSpSymCopyParams()
 	disppos.x = (float)(s_spsymcopy.dispcenter.x);
 	disppos.y = (float)(s_spsymcopy.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
 
 	//CallF(s_spsymcopy.sprite->SetPos(disppos), return 1);
 	//CallF(s_spsymcopy.sprite->SetSize(dispsize), return 1);
@@ -22237,7 +22272,8 @@ int SetSpPasteParams()
 	disppos.x = (float)(s_sppaste.dispcenter.x);
 	disppos.y = (float)(s_sppaste.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
 
 	//CallF(s_sppaste.sprite->SetPos(disppos), return 1);
 	//CallF(s_sppaste.sprite->SetSize(dispsize), return 1);
@@ -22260,7 +22296,8 @@ int SetSpCopyHistoryParams()
 	disppos.x = (float)(s_spcopyhistory.dispcenter.x);
 	disppos.y = (float)(s_spcopyhistory.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
 
 	//CallF(s_spcopyhistory.sprite->SetPos(disppos), return 1);
 	//CallF(s_spcopyhistory.sprite->SetSize(dispsize), return 1);
@@ -22283,7 +22320,8 @@ int SetSpInterpolateParams()
 		disppos.x = (float)(s_spinterpolate.dispcenter.x);
 		disppos.y = (float)(s_spinterpolate.dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+		ChaVector2 dispsize;
+		dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
 
 		s_spinterpolate.sprite.UpdateScreen(disppos, dispsize);
 	}
@@ -22298,7 +22336,8 @@ int SetSpInterpolateParams()
 		disppos.x = (float)(s_spjumpinterpolate.dispcenter.x);
 		disppos.y = (float)(s_spjumpinterpolate.dispcenter.y);
 		disppos.z = 0.0f;
-		ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+		ChaVector2 dispsize;
+		dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
 
 		s_spjumpinterpolate.sprite.UpdateScreen(disppos, dispsize);
 	}
@@ -22319,7 +22358,8 @@ int SetSpInitParams()
 	disppos.x = (float)(s_spinit.dispcenter.x);
 	disppos.y = (float)(s_spinit.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
 
 	//CallF(s_spinit.sprite->SetPos(disppos), return 1);
 	//CallF(s_spinit.sprite->SetSize(dispsize), return 1);
@@ -22341,7 +22381,8 @@ int SetSpScaleInitParams()
 	disppos.x = (float)(s_spscaleinit.dispcenter.x);
 	disppos.y = (float)(s_spscaleinit.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
 
 	//CallF(s_spscaleinit.sprite->SetPos(disppos), return 1);
 	//CallF(s_spscaleinit.sprite->SetSize(dispsize), return 1);
@@ -22362,7 +22403,8 @@ int SetSpPropertyParams()
 	disppos.x = (float)(s_spproperty.dispcenter.x);
 	disppos.y = (float)(s_spproperty.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
 
 	//CallF(s_spproperty.sprite->SetPos(disppos), return 1);
 	//CallF(s_spproperty.sprite->SetSize(dispsize), return 1);
@@ -22384,7 +22426,8 @@ int SetSpZeroFrameParams()
 	disppos.x = (float)(s_spzeroframe.dispcenter.x);
 	disppos.y = (float)(s_spzeroframe.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
 
 	//CallF(s_spzeroframe.sprite->SetPos(disppos), return 1);
 	//CallF(s_spzeroframe.sprite->SetSize(dispsize), return 1);
@@ -22405,7 +22448,8 @@ int SetSpCameraDollyParams()
 	disppos.x = (float)(s_spcameradolly.dispcenter.x);
 	disppos.y = (float)(s_spcameradolly.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
 
 	//CallF(s_spcameradolly.sprite->SetPos(disppos), return 1);
 	//CallF(s_spcameradolly.sprite->SetSize(dispsize), return 1);
@@ -22426,7 +22470,8 @@ int SetSpModelPosDirParams()
 	disppos.x = (float)(s_spmodelposdir.dispcenter.x);
 	disppos.y = (float)(s_spmodelposdir.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
 
 	//CallF(s_spmodelposdir.sprite->SetPos(disppos), return 1);
 	//CallF(s_spmodelposdir.sprite->SetSize(dispsize), return 1);
@@ -22447,7 +22492,8 @@ int SetSpMaterialRateParams()
 	disppos.x = (float)(s_spmaterialrate.dispcenter.x);
 	disppos.y = (float)(s_spmaterialrate.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsizeSmall, s_spsizeSmall);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
 
 	//CallF(s_spmaterialrate.sprite->SetPos(disppos), return 1);
 	//CallF(s_spmaterialrate.sprite->SetSize(dispsize), return 1);
@@ -22489,7 +22535,8 @@ int SetSpRigParams()
 	disppos.x = (float)(s_sprig[0].dispcenter.x);
 	disppos.y = (float)(s_sprig[0].dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsize, s_spsize);
 
 	//CallF(s_sprig[SPRIG_INACTIVE].sprite->SetPos(disppos), return 1);
 	//CallF(s_sprig[SPRIG_INACTIVE].sprite->SetSize(dispsize), return 1);
@@ -22513,7 +22560,8 @@ int SetSpCpLW2WParams()
 	disppos.x = (float)(s_spcplw2w.dispcenter.x);
 	disppos.y = (float)(s_spcplw2w.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsize, s_spsize);
 
 	//CallF(s_spcplw2w.sprite->SetPos(disppos), return 1);
 	//CallF(s_spcplw2w.sprite->SetSize(dispsize), return 1);
@@ -22533,7 +22581,8 @@ int SetSpUpperBarParams()
 	disppos.x = (float)(s_spupperbar.dispcenter.x);
 	disppos.y = (float)(s_spupperbar.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2((float)s_mainwidth, 24.0f);
+	ChaVector2 dispsize;
+	dispsize.SetParams((float)s_mainwidth, 24.0f);
 
 	//CallF(s_spupperbar.sprite->SetPos(disppos), return 1);
 	//CallF(s_spupperbar.sprite->SetSize(dispsize), return 1);
@@ -22552,7 +22601,8 @@ int SetSpSmoothParams()
 	disppos.x = (float)(s_spsmooth.dispcenter.x);
 	disppos.y = (float)(s_spsmooth.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsize, s_spsize);
 
 	//CallF(s_spsmooth.sprite->SetPos(disppos), return 1);
 	//CallF(s_spsmooth.sprite->SetSize(dispsize), return 1);
@@ -22572,7 +22622,8 @@ int SetSpConstExeParams()
 	disppos.x = (float)(s_spconstexe.dispcenter.x);
 	disppos.y = (float)(s_spconstexe.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsize, s_spsize);
 
 	//CallF(s_spconstexe.sprite->SetPos(disppos), return 1);
 	//CallF(s_spconstexe.sprite->SetSize(dispsize), return 1);
@@ -22592,7 +22643,8 @@ int SetSpConstRefreshParams()
 	disppos.x = (float)(s_spconstrefresh.dispcenter.x);
 	disppos.y = (float)(s_spconstrefresh.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(s_spsize, s_spsize);
+	ChaVector2 dispsize;
+	dispsize.SetParams(s_spsize, s_spsize);
 
 	//CallF(s_spconstrefresh.sprite->SetPos(disppos), return 1);
 	//CallF(s_spconstrefresh.sprite->SetSize(dispsize), return 1);
@@ -22614,8 +22666,8 @@ int SetSpMouseHereParams()
 	disppos.x = (float)(s_spmousehere.dispcenter.x);
 	disppos.y = (float)(s_spmousehere.dispcenter.y);
 	disppos.z = 0.0f;
-	ChaVector2 dispsize = ChaVector2(spawidth / (float)s_mainwidth * 2.0f, spawidth / (float)s_mainheight * 2.0f);
-
+	ChaVector2 dispsize;
+	dispsize.SetParams(spawidth / (float)s_mainwidth * 2.0f, spawidth / (float)s_mainheight * 2.0f);
 	//CallF(s_spmousehere.sprite->SetPos(disppos), return 1);
 	//CallF(s_spmousehere.sprite->SetSize(dispsize), return 1);
 	s_spmousehere.sprite.UpdateScreen(disppos, dispsize);
@@ -22640,7 +22692,7 @@ int SetSpMouseHereParams()
 //	disppos.x = (float)(s_spbt.dispcenter.x);
 //	disppos.y = (float)(s_spbt.dispcenter.y);
 //	disppos.z = 0.0f;
-//	ChaVector2 dispsize = ChaVector2(spawidth / (float)s_mainwidth * 2.0f, spawidth / (float)s_mainheight * 2.0f);
+//	ChaVector2 dispsize.SetParams(spawidth / (float)s_mainwidth * 2.0f, spawidth / (float)s_mainheight * 2.0f);
 //	if (s_spbt.sprite) {
 //		CallF(s_spbt.sprite->SetPos(disppos), return 1);
 //		CallF(s_spbt.sprite->SetSize(dispsize), return 1);
@@ -24053,7 +24105,7 @@ int SetSelectState()
 	pickinfo.clickpos = ptCursor;
 	pickinfo.mousepos = ptCursor;
 	pickinfo.mousebefpos = ptCursor;
-	pickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
+	pickinfo.diffmouse.SetParams(0.0f, 0.0f);
 
 	//pickinfo.winx = (int)DXUTGetWindowWidth();
 	//pickinfo.winy = (int)DXUTGetWindowHeight();
@@ -24151,10 +24203,12 @@ int SetSelectState()
 	//float lowa = 0.3f;
 	float lowa = 0.45f;//23023/12/21
 
-	ChaVector4 hidiffusemult = ChaVector4(hirate, hirate, hirate, hia);
-	ChaVector4 lowdiffusemult = ChaVector4(lowrate, lowrate, lowrate, lowa);
-	//ChaVector4 hidiffusemult = ChaVector4(hirate, hirate, hirate, hia);
-	//ChaVector4 lowdiffusemult = ChaVector4(hirate, hirate, hirate, lowa);
+	ChaVector4 hidiffusemult;
+	hidiffusemult.SetParams(hirate, hirate, hirate, hia);
+	ChaVector4 lowdiffusemult;
+	lowdiffusemult.SetParams(lowrate, lowrate, lowrate, lowa);
+	//ChaVector4 hidiffusemult.SetParams(hirate, hirate, hirate, hia);
+	//ChaVector4 lowdiffusemult.SetParams(hirate, hirate, hirate, lowa);
 
 
 	if (s_matred && s_ringred && s_matblue && s_ringblue && s_matgreen && s_ringgreen && s_matyellow) {
@@ -25951,7 +26005,8 @@ int ConvDir2PolarCoord(float srcdirx, float srcdiry, float srcdirz, float* dstxz
 		_ASSERT(0);
 		return 1;
 	}
-	ChaVector3 srcdir = ChaVector3(srcdirx, srcdiry, srcdirz);
+	ChaVector3 srcdir;
+	srcdir.SetParams(srcdirx, srcdiry, srcdirz);
 	ChaVector3 ndir;
 	ndir.SetZeroVec3();
 	ChaVector3Normalize(&ndir, &srcdir);
@@ -25983,7 +26038,8 @@ int ConvPolarCoord2Dir(float srcxzdeg, float srcydeg, float* dstdirx, float* dst
 	float dirx = (float)sin(srcxzdeg * DEG2PAI) * dirycos;//本来はX軸が０度だが、Z軸が０度になるように計算。左回りに。
 	float dirz = (float)-cos(srcxzdeg * DEG2PAI) * dirycos;//本来はX軸が０度だが、Z軸が０度になるように計算。左回りに。
 
-	ChaVector3 calcdir = ChaVector3(dirx, diry, dirz);
+	ChaVector3 calcdir;
+	calcdir.SetParams(dirx, diry, dirz);
 	ChaVector3 ndir;
 	ndir.SetZeroVec3();
 	ChaVector3Normalize(&ndir, &calcdir);
@@ -26189,7 +26245,7 @@ int Dlg2LightsEach(HWND hDlgWnd, int lightindex,
 	float dirz = 0.0f;
 	ConvPolarCoord2Dir(degxz, degy, &dirx, &diry, &dirz);
 
-	g_lightDir[g_lightSlot][lightindex] = ChaVector3(dirx, diry, dirz);
+	g_lightDir[g_lightSlot][lightindex].SetParams(dirx, diry, dirz);
 
 	UINT chkenable = IsDlgButtonChecked(hDlgWnd, idenable);
 	if (chkenable == BST_CHECKED) {
@@ -27485,8 +27541,10 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 {
 	WCHAR strval[256] = { 0L };
 	float value = 0.0f;
-	ChaVector3 tmppos = ChaVector3(0.0f, 0.0f, 0.0f);
-	ChaVector3 tmprot = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 tmppos;
+	tmppos.SetParams(0.0f, 0.0f, 0.0f);
+	ChaVector3 tmprot;
+	tmprot.SetParams(0.0f, 0.0f, 0.0f);
 
 	switch (msg) {
 	case WM_INITDIALOG:
@@ -27667,7 +27725,8 @@ LRESULT CALLBACK MaterialRateDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 {
 	WCHAR strval[256] = { 0L };
 	float value = 1.0f;
-	ChaVector4 tmpmaterialrate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	ChaVector4 tmpmaterialrate;
+	tmpmaterialrate.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 
 	switch (msg) {
 	case WM_INITDIALOG:
@@ -27861,7 +27920,7 @@ int ChooseLightColorBar(HWND hDlgWnd, int lightindex, int idcolorbar)
 		fb = min(1.0f, fb);
 		fb = max(0.0f, fb);
 
-		g_lightDiffuse[g_lightSlot][lightindex] = ChaVector3(fr, fg, fb);
+		g_lightDiffuse[g_lightSlot][lightindex].SetParams(fr, fg, fb);
 		SetLightDirection();
 
 		HWND ctrlwnd = GetDlgItem(hDlgWnd, idcolorbar);
@@ -33664,15 +33723,15 @@ int RotAxis(HWND hDlgWnd)
 			ChaVector3 axis0;
 			CQuaternion rotq;
 			if (s_rotaxiskind == AXIS_X) {
-				axis0 = ChaVector3(1.0f, 0.0f, 0.0f);
+				axis0.SetParams(1.0f, 0.0f, 0.0f);
 				rotq.SetAxisAndRot(axis0, rotrad);
 			}
 			else if (s_rotaxiskind == AXIS_Y) {
-				axis0 = ChaVector3(0.0f, 1.0f, 0.0f);
+				axis0.SetParams(0.0f, 1.0f, 0.0f);
 				rotq.SetAxisAndRot(axis0, rotrad);
 			}
 			else if (s_rotaxiskind == AXIS_Z) {
-				axis0 = ChaVector3(0.0f, 0.0f, 1.0f);
+				axis0.SetParams(0.0f, 0.0f, 1.0f);
 				rotq.SetAxisAndRot(axis0, rotrad);
 			}
 			else {
@@ -36194,7 +36253,7 @@ int OnFrameToolWnd()
 			}
 
 			SkipJointMarkReq(s_skipJointMark, curbone, false);
-
+			s_model->SetBtObjectVec();//2024/06/16
 		}
 
 		s_skipJointMark = 0;
@@ -42853,6 +42912,7 @@ int CreateRigidWnd()
 						else {
 							curre->SetSkipflag(0);
 						}
+						s_model->SetBtObjectVec();//2024/06/16
 					}
 				}
 				s_rigidWnd->callRewrite();						//再描画
@@ -42868,6 +42928,7 @@ int CreateRigidWnd()
 						int val = s_rigidskip->getValue() ? 0 : 1;//!!!!!!!!GUIはValidでデータとしてはSkip
 						int gid = -1;
 						s_model->SetSkipflagDataReq(gid, s_reindexmap[s_model], curbone, val);
+						s_model->SetBtObjectVec();//2024/06/16
 						s_rigidWnd->callRewrite();						//再描画
 					}
 				}
@@ -45777,9 +45838,10 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 						//double renderalpha0 = (renderleng - fabs(currentframe - renderframe)) / renderleng;
 						////2024/02/08 int g_refalpha (0から100) : DispAndLimitsプレートメニューのRefPosAlphaスライダー
 						//double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
-						//ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, (float)renderalpha);
+						//ChaVector4 refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)renderalpha);
 						const double refstartalpha = (double)g_refalpha * 0.01f;
-						ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, (float)refstartalpha);
+						ChaVector4 refdiffusemult;
+						refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)refstartalpha);
 
 						int lightflag = 0;
 						bool forcewithalpha = true;
@@ -45809,7 +45871,8 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 							s_model->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
 							s_model->SetRefPosFl4x4ToDispObj(refposindex);
 
-							ChaVector4 refdiffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+							ChaVector4 refdiffusemult;
+							refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 
 							int lightflag = -1;
 							bool forcewithalpha = true;
@@ -45834,8 +45897,9 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 						//render arrow : selected bone : befpos --> aftpos arrow
 						CBone* childbone = curbone->GetChild(false);
 						if (childbone && childbone->IsSkeleton() && curbone->GetRefPosMark()) {
-							//ChaVector4 arrowdiffusemult = ChaVector4(1.0f, 0.5f, 0.5f, 0.85f);
-							ChaVector4 arrowdiffusemult = ChaVector4(1.0f, 0.5f, 0.5f, 0.5f);
+							//ChaVector4 arrowdiffusemult.SetParams(1.0f, 0.5f, 0.5f, 0.85f);
+							ChaVector4 arrowdiffusemult;
+							arrowdiffusemult.SetParams(1.0f, 0.5f, 0.5f, 0.5f);
 
 							curbone->GetRefPosMark()->RenderRefArrow(g_limitdegflag,
 								re, s_chascene, s_matVP, curbone, arrowdiffusemult, 1, vecbonepos);
@@ -45877,7 +45941,7 @@ int OnRenderModel(RenderContext* pRenderContext)
 
 
 	//int lightflag = 1;
-	//ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	//ChaVector4 diffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 	//int btflag = 0;
 	//if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
 	//	btflag = 0;
@@ -45942,7 +46006,8 @@ int OnRenderOnlyOneObj(myRenderer::RenderingEngine* re, RenderContext* rc)
 		//if (curmodel && curmodel->GetLoadedFlag() && curmodel->GetModelDisp()){
 		if (curmodel && curmodel->m_loadedflag && curmodel->m_modeldisp) {//curmodelが作成途中の場合を考えて、先頭から２つのpublicデータメンバーを参照する
 			int lightflag = -1;
-			ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+			ChaVector4 diffusemult;
+			diffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 			int btflag = 0;
 
 			curmodel->RenderTest(withalpha, s_chascene, g_lightflag, diffusemult, s_onlyoneobjno);
@@ -45974,7 +46039,7 @@ int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 			vCenter.z = g_camEye.z;
 		}
 		else {
-			vCenter = ChaVector3(g_camEye.x, 0.0f, g_camEye.z);
+			vCenter.SetParams(g_camEye.x, 0.0f, g_camEye.z);
 		}
 
 		//float fObjectRadius = s_chascene->GetTotalModelBound().r;
@@ -45994,7 +46059,8 @@ int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 
 		//g_projfarでクリッピングされないようにsky用のprojを使う
 		s_chascene->UpdateMatrixOneModel(s_sky, g_limitdegflag, &skymat, &s_matView, &s_matSkyProj, 0.0, 0);
-		ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		ChaVector4 diffusemult;
+		diffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 		bool forcewithalpha = false;//2024/03/25 skyは一番最初に描画するために不透明である必要
 		//bool forcewithalpha = true;
 		int btflag = 0;
@@ -46030,7 +46096,8 @@ int OnRenderGround(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		ChaMatrix initmat;
 		initmat.SetIdentity();
 		s_chascene->UpdateMatrixOneModel(s_ground, g_limitdegflag, &initmat, &s_matView, &s_matProj, 0.0, 0);
-		ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		ChaVector4 diffusemult;
+		diffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 		bool forcewithalpha = false;
 		int btflag = 0;
 		bool zcmpalways = false;
@@ -46043,7 +46110,7 @@ int OnRenderGround(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 	//	g_hmWorld->SetMatrix(gpmat.GetDataPtr());
 	//	//g_pEffect->SetMatrix(g_hmWorld, &(gpmat.D3DX()));
 	//
-	//	ChaVector4 diffusemult = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	//	ChaVector4 diffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 	//	bool withalpha = false;
 	//	s_gplane->OnRender(withalpha, pRenderContext, 0, diffusemult);
 	//}
@@ -46064,11 +46131,21 @@ int OnRenderBoneMark(myRenderer::RenderingEngine* re, RenderContext* rc)
 	if (!s_model) {
 		return 0;
 	}
-	if (!s_model->GetLoadedFlag() || (s_model->GetBoneForMotionSize() == 0) || 
-		(s_model->GetBoneForMotionSize() >= RIGMULTINDEXMAX)) {
-		//インスタンシング最大数を越えた場合にもリターン0
+
+
+	//GetBoneForMotionSize()が重い　全体の負荷の１％近く持っていくこともあるようだ　コメントアウト
+	//if (!s_model->GetLoadedFlag() || (s_model->GetBoneForMotionSize() == 0) || 
+	//	(s_model->GetBoneForMotionSize() >= RIGMULTINDEXMAX)) {
+	//	//インスタンシング最大数を越えた場合にもリターン0
+	//	return 0;
+	//}
+
+	if (!s_model->GetLoadedFlag()) {
 		return 0;
 	}
+
+
+
 
 	if (s_model->GetGrassFlag()) {
 		return 0;
@@ -46869,7 +46946,8 @@ int SetLightDirection()
 	}
 
 
-	ChaVector3 dirz = ChaVector3(0.0f, 0.0f, 1.0f);
+	ChaVector3 dirz;
+	dirz.SetParams(0.0f, 0.0f, 1.0f);
 	ChaVector3 lightdir0, nlightdir0;
 	lightdir0 = g_camEye - g_camtargetpos;//2022/10/31
 	ChaVector3Normalize(&nlightdir0, &lightdir0);
@@ -46903,7 +46981,7 @@ int SetLightDirection()
 				camrotq.Rotate(&rotdir, nlightdir);
 			}
 			else {
-				rotdir = ChaVector3(-nlightdir.x, nlightdir.y, -nlightdir.z);
+				rotdir.SetParams(-nlightdir.x, nlightdir.y, -nlightdir.z);
 			}
 			ChaVector3Normalize(&nrotdir, &rotdir);
 		}
@@ -46915,7 +46993,7 @@ int SetLightDirection()
 
 		if (g_lightEnable[g_lightSlot][lightindex] == true) {
 			g_lightdirforshader[activenum] = -ChaVector4(nrotdir, 0.0f);//-lightdir
-			g_lightdiffuseforshader[activenum] = ChaVector4(scaleddiffuse.x, scaleddiffuse.y, scaleddiffuse.z, 1.0f);
+			g_lightdiffuseforshader[activenum].SetParams(scaleddiffuse.x, scaleddiffuse.y, scaleddiffuse.z, 1.0f);
 			g_lightNo[activenum] = lightindex;//2023/12/17必要分詰めて格納するので　ShaderのLightScale参照用のライト番号が必要
 			activenum++;
 		}
@@ -46927,8 +47005,8 @@ int SetLightDirection()
 		//else {
 		//	//シェーダ定数のintでfor分を回すことは出来ない　シェーダ引数のuniform intでなら可だがfxファイルのtechniqueを記述する必要有
 		//	//shaderではif分でスキップするよりは配列分計算した方が速いので　計算結果が０になるようなデータを入れる
-		//	g_lightdirforshader[lightindex] = ChaVector4(0.0f, 0.0f, 1.0f, 0.0f);
-		//	g_lightdiffuseforshader[lightindex] = ChaVector4(0.0f, 0.0f, 0.0f, 1.0f);
+		//	g_lightdirforshader[lightindex].SetParams(0.0f, 0.0f, 1.0f, 0.0f);
+		//	g_lightdiffuseforshader[lightindex].SetParams(0.0f, 0.0f, 0.0f, 1.0f);
 		//}
 	}
 
@@ -47141,7 +47219,8 @@ int JumpInterpolateFromTool()
 			GetSRTandTraAnim(mat1, hipsbone->GetNodeMat(), &S1, &R1, &T1, &TAnim1);
 
 			double difft = calcframe - roundingstart;
-			ChaVector3 newtanim = ChaVector3(0.0f, 0.0f, 0.0f);
+			ChaVector3 newtanim;
+			newtanim.SetParams(0.0f, 0.0f, 0.0f);
 			newtanim.x = (float)((double)startTAnim.data[MATI_41] + vecx * difft);
 			newtanim.z = (float)((double)startTAnim.data[MATI_43] + vecz * difft);
 			newtanim.y = (float)((double)startTAnim.data[MATI_42] + vecy0 * difft + 0.5 * gravity * difft * difft);
@@ -47378,8 +47457,10 @@ int InitMpByEul(int initmode, CBone* curbone, int srcmotid, double srcframe)
 	if (curbone && (curbone->IsSkeleton())) {
 		//if (curbone->GetChild()){//2022/11/23 CommentOut なぜこのif文があったのか？ 不具合によりエンドジョイントにモーションポイントが無かったから？
 		if (initmode == INITMP_ROTTRA) {
-			ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
-			ChaVector3 traanim = ChaVector3(0.0f, 0.0f, 0.0f);
+			ChaVector3 cureul;
+			cureul.SetParams(0.0f, 0.0f, 0.0f);
+			ChaVector3 traanim;
+			traanim.SetParams(0.0f, 0.0f, 0.0f);
 			//int inittraflag1 = 1;
 			int setchildflag1 = 1;
 			//int initscaleflag1 = 1;//!!!!!!!
@@ -47389,7 +47470,8 @@ int InitMpByEul(int initmode, CBone* curbone, int srcmotid, double srcframe)
 				setchildflag1, befwm, cureul, traanim, srcmotid, roundingframe);//scale計算無し
 		}
 		else if (initmode == INITMP_ROT) {
-			ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+			ChaVector3 cureul;
+			cureul.SetParams(0.0f, 0.0f, 0.0f);
 			int inittraflag0 = 0;
 			int setchildflag1 = 1;
 			ChaMatrix befwm = curbone->GetWorldMat(g_limitdegflag, srcmotid, roundingframe, 0);
@@ -47397,7 +47479,8 @@ int InitMpByEul(int initmode, CBone* curbone, int srcmotid, double srcframe)
 				inittraflag0, setchildflag1, befwm, cureul, srcmotid, roundingframe);
 		}
 		else if (initmode == INITMP_TRA) {
-			ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+			ChaVector3 cureul;
+			cureul.SetParams(0.0f, 0.0f, 0.0f);
 			int paraxsiflag1 = 1;
 			//int isfirstbone = 0;
 			cureul = curbone->CalcLocalEulXYZ(g_limitdegflag,
@@ -47410,7 +47493,8 @@ int InitMpByEul(int initmode, CBone* curbone, int srcmotid, double srcframe)
 				inittraflag1, setchildflag1, befwm, cureul, srcmotid, roundingframe);
 		}
 		else if (initmode == INITMP_SCALE) {
-			ChaVector3 cureul = ChaVector3(0.0f, 0.0f, 0.0f);
+			ChaVector3 cureul;
+			cureul.SetParams(0.0f, 0.0f, 0.0f);
 			int paraxsiflag1 = 1;
 			//int isfirstbone = 0;
 			cureul = curbone->CalcLocalEulXYZ(g_limitdegflag,
@@ -48290,8 +48374,8 @@ int BoneRClick(int srcboneno)
 		s_pickinfo.clickpos = ptCursor;
 		s_pickinfo.mousepos = ptCursor;
 		s_pickinfo.mousebefpos = ptCursor;
-		s_pickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
-		s_pickinfo.firstdiff = ChaVector2(0.0f, 0.0f);
+		s_pickinfo.diffmouse.SetParams(0.0f, 0.0f);
+		s_pickinfo.firstdiff.SetParams(0.0f, 0.0f);
 
 		//s_pickinfo.winx = (int)DXUTGetWindowWidth();
 		//s_pickinfo.winy = (int)DXUTGetWindowHeight();
@@ -50265,8 +50349,8 @@ int OnMouseMoveFunc()
 			ChaMatrix invmatView;
 			invmatView = ChaMatrixInv(s_matView);
 			ChaVector3 camdirx, camdiry;
-			camdirx = ChaVector3(invmatView.data[MATI_11], invmatView.data[MATI_12], invmatView.data[MATI_13]);
-			camdiry = ChaVector3(invmatView.data[MATI_21], invmatView.data[MATI_22], invmatView.data[MATI_23]);
+			camdirx.SetParams(invmatView.data[MATI_11], invmatView.data[MATI_12], invmatView.data[MATI_13]);
+			camdiry.SetParams(invmatView.data[MATI_21], invmatView.data[MATI_22], invmatView.data[MATI_23]);
 			ChaVector3Normalize(&camdirx, &camdirx);
 			ChaVector3Normalize(&camdiry, &camdiry);
 			ChaVector3 movevec = camdirx * cammv.x + camdiry * cammv.y;
@@ -50348,7 +50432,7 @@ int OnMouseMoveFunc()
 			ChaVector3 viewvec, upvec, rotaxisy, rotaxisxz;
 			viewvec = wat - weye;
 			ChaVector3Normalize(&viewvec, &viewvec);
-			upvec = ChaVector3(0.000001f, 1.0f, 0.0f);
+			upvec.SetParams(0.000001f, 1.0f, 0.0f);
 
 			float chkdot;
 			chkdot = ChaVector3Dot(&viewvec, &upvec);
@@ -55888,7 +55972,7 @@ void OnDSMouseHereApeal()
 	//	disppos.x = (float)(s_spmousehere.dispcenter.x);
 	//	disppos.y = (float)(s_spmousehere.dispcenter.y);
 	//	disppos.z = 0.0f;
-	//	ChaVector2 dispsize = ChaVector2(spawidth / (float)s_mainwidth * 2.0f, spawidth / (float)s_mainheight * 2.0f);
+	//	ChaVector2 dispsize.SetParams(spawidth / (float)s_mainwidth * 2.0f, spawidth / (float)s_mainheight * 2.0f);
 	//	if (s_spmousehere.sprite) {
 	//		CallF(s_spmousehere.sprite->SetPos(disppos), return);
 	//		CallF(s_spmousehere.sprite->SetSize(dispsize), return);
@@ -55910,7 +55994,7 @@ void OnDSMouseHereApeal()
 	//		}
 	//		g_mouseherealpha = s_mousehereval * s_mousehereval;
 
-	//		ChaVector4 spritecol = ChaVector4(1.0f, 1.0f, 1.0f, g_mouseherealpha);
+	//		ChaVector4 spritecol.SetParams(1.0f, 1.0f, 1.0f, g_mouseherealpha);
 	//		CallF(s_spmousehere.sprite->SetColor(spritecol), return);
 	//	}
 	//	else {
@@ -60201,8 +60285,8 @@ ChaMatrix CalcRigMat(CUSTOMRIG* currig, CBone* curbone, int curmotid, double cur
 	}
 
 
-	//ChaVector3 offsetorgpos = ChaVector3(0.0f, 0.0f, 0.0f);
-	//ChaVector3 offsetdisppos = ChaVector3(0.0f, 0.0f, 0.0f);
+	//ChaVector3 offsetorgpos.SetParams(0.0f, 0.0f, 0.0f);
+	//ChaVector3 offsetdisppos.SetParams(0.0f, 0.0f, 0.0f);
 
 	//ChaMatrix curwm = curbone->GetWorldMat(g_limitdegflag, curmotid, curframe, 0);
 	ChaMatrix curbonerotmat;
@@ -60221,7 +60305,7 @@ ChaMatrix CalcRigMat(CUSTOMRIG* currig, CBone* curbone, int curmotid, double cur
 	}
 	else {
 		_ASSERT(0);
-		offsetvec = ChaVector3(1.0f, 0.0f, 0.0f);
+		offsetvec.SetParams(1.0f, 0.0f, 0.0f);
 	}
 	offsetvec *= rigorderoffset;
 	//ChaVector3TransformCoord(&offsetdisppos, &offsetorgpos, &selm);
@@ -61395,8 +61479,10 @@ int SetModelWorldMat()
 		}
 	}
 
-	ChaVector3 tmppos = ChaVector3(0.0f, 0.0f, 0.0f);
-	ChaVector3 tmprot = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 tmppos;
+	tmppos.SetParams(0.0f, 0.0f, 0.0f);
+	ChaVector3 tmprot;
+	tmprot.SetParams(0.0f, 0.0f, 0.0f);
 	int result = GetModelWorldMat(&tmppos, &tmprot);//向きはダイアログにセットされている向きを使用
 	if (result == 0) {
 		if (!curgrasselem) {
@@ -61595,8 +61681,8 @@ bool DispTipUI()
 	tmppickinfo.mousepos = ptCursor;
 
 	tmppickinfo.clickpos = ptCursor;
-	tmppickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
-	tmppickinfo.firstdiff = ChaVector2(0.0f, 0.0f);
+	tmppickinfo.diffmouse.SetParams(0.0f, 0.0f);
+	tmppickinfo.firstdiff.SetParams(0.0f, 0.0f);
 	//tmppickinfo.winx = (int)DXUTGetWindowWidth();
 	//tmppickinfo.winy = (int)DXUTGetWindowHeight();
 	tmppickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
@@ -61956,8 +62042,8 @@ bool DispTipUIFrog()
 	tmppickinfo.mousepos = ptCursor;
 
 	tmppickinfo.clickpos = ptCursor;
-	tmppickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
-	tmppickinfo.firstdiff = ChaVector2(0.0f, 0.0f);
+	tmppickinfo.diffmouse.SetParams(0.0f, 0.0f);
+	tmppickinfo.firstdiff.SetParams(0.0f, 0.0f);
 	//tmppickinfo.winx = (int)DXUTGetWindowWidth();
 	//tmppickinfo.winy = (int)DXUTGetWindowHeight();
 	tmppickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
@@ -62002,8 +62088,10 @@ bool DispTipUIFrog()
 bool DispTipSelect()
 {
 	ChaMatrix wvpmat = s_selectmat * s_matVP;
-	ChaVector3 zeropos = ChaVector3(0.0f, 0.0f, 0.0f);
-	ChaVector3 screenpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	ChaVector3 zeropos;
+	zeropos.SetParams(0.0f, 0.0f, 0.0f);
+	ChaVector3 screenpos;
+	screenpos.SetParams(0.0f, 0.0f, 0.0f);
 	ChaVector3TransformCoord(&screenpos, &zeropos, &wvpmat);
 
 	float scposx, scposy;
@@ -62029,8 +62117,8 @@ bool DispTipBone()
 	tmppickinfo.mousepos = ptCursor;
 
 	tmppickinfo.clickpos = ptCursor;
-	tmppickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
-	tmppickinfo.firstdiff = ChaVector2(0.0f, 0.0f);
+	tmppickinfo.diffmouse.SetParams(0.0f, 0.0f);
+	tmppickinfo.firstdiff.SetParams(0.0f, 0.0f);
 	//tmppickinfo.winx = (int)DXUTGetWindowWidth();
 	//tmppickinfo.winy = (int)DXUTGetWindowHeight();
 	tmppickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
@@ -62078,8 +62166,8 @@ bool DispTipRig()
 	tmppickinfo.mousepos = ptCursor;
 
 	tmppickinfo.clickpos = ptCursor;
-	tmppickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
-	tmppickinfo.firstdiff = ChaVector2(0.0f, 0.0f);
+	tmppickinfo.diffmouse.SetParams(0.0f, 0.0f);
+	tmppickinfo.firstdiff.SetParams(0.0f, 0.0f);
 	//tmppickinfo.winx = (int)DXUTGetWindowWidth();
 	//tmppickinfo.winy = (int)DXUTGetWindowHeight();
 	tmppickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
@@ -62133,8 +62221,8 @@ bool DispTipMesh()
 	s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
 
 	tmppickinfo.clickpos = ptCursor;
-	tmppickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
-	tmppickinfo.firstdiff = ChaVector2(0.0f, 0.0f);
+	tmppickinfo.diffmouse.SetParams(0.0f, 0.0f);
+	tmppickinfo.firstdiff.SetParams(0.0f, 0.0f);
 	//tmppickinfo.winx = (int)DXUTGetWindowWidth();
 	//tmppickinfo.winy = (int)DXUTGetWindowHeight();
 	tmppickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
@@ -62192,8 +62280,8 @@ bool DispTipMaterial()
 	s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
 
 	tmppickinfo.clickpos = ptCursor;
-	tmppickinfo.diffmouse = ChaVector2(0.0f, 0.0f);
-	tmppickinfo.firstdiff = ChaVector2(0.0f, 0.0f);
+	tmppickinfo.diffmouse.SetParams(0.0f, 0.0f);
+	tmppickinfo.firstdiff.SetParams(0.0f, 0.0f);
 	//tmppickinfo.winx = (int)DXUTGetWindowWidth();
 	//tmppickinfo.winy = (int)DXUTGetWindowHeight();
 	tmppickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
@@ -65140,7 +65228,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 
 			float newvalueU = (float)s_st_seacenterUslider->getValue();
 			float newvalueV = (float)s_st_seacenterVslider->getValue();
-			s_shadertypeparams.seacenter = ChaVector2(newvalueU, newvalueV);
+			s_shadertypeparams.seacenter.SetParams(newvalueU, newvalueV);
 
 			if (curmqomat) {
 				curmqomat->SetSeaCenter(s_shadertypeparams.seacenter);
@@ -65167,7 +65255,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 
 			float newvalueU = (float)s_st_seacenterUslider->getValue();
 			float newvalueV = (float)s_st_seacenterVslider->getValue();
-			s_shadertypeparams.seacenter = ChaVector2(newvalueU, newvalueV);
+			s_shadertypeparams.seacenter.SetParams(newvalueU, newvalueV);
 
 			if (curmqomat) {
 				curmqomat->SetSeaCenter(s_shadertypeparams.seacenter);
@@ -65194,7 +65282,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 
 			float newvalueU = (float)s_st_riverdirUslider->getValue();
 			float newvalueV = (float)s_st_riverdirVslider->getValue();
-			s_shadertypeparams.riverdir = ChaVector2(newvalueU, newvalueV);
+			s_shadertypeparams.riverdir.SetParams(newvalueU, newvalueV);
 
 			if (curmqomat) {
 				curmqomat->SetRiverDir(s_shadertypeparams.riverdir);
@@ -65221,7 +65309,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 
 			float newvalueU = (float)s_st_riverdirUslider->getValue();
 			float newvalueV = (float)s_st_riverdirVslider->getValue();
-			s_shadertypeparams.riverdir = ChaVector2(newvalueU, newvalueV);
+			s_shadertypeparams.riverdir.SetParams(newvalueU, newvalueV);
 
 			if (curmqomat) {
 				curmqomat->SetRiverDir(s_shadertypeparams.riverdir);
@@ -69790,9 +69878,12 @@ void SetCamera3DFromEyePos()
 
 //// camera for shadowmap
 	if (s_model) {
-		ChaVector3 dirright = ChaVector3(g_camera3D->GetRight());
-		ChaVector3 dirup = ChaVector3(g_camera3D->GetUp());
-		ChaVector3 dirforward = ChaVector3(g_camera3D->GetForward());
+		ChaVector3 dirright;
+		dirright = ChaVector3(g_camera3D->GetRight());
+		ChaVector3 dirup;
+		dirup = ChaVector3(g_camera3D->GetUp());
+		ChaVector3 dirforward;
+		dirforward = ChaVector3(g_camera3D->GetForward());
 		ChaVector3 modelpos = ChaMatrixTraVec(s_model->GetWorldMat());
 		ChaVector3 camdiff = g_camtargetpos - g_camEye;
 
@@ -69808,12 +69899,12 @@ void SetCamera3DFromEyePos()
 			(g_shadowmap_lightdir[g_shadowmap_slotno] <= 8)) {
 			ChaVector4 lightdir;
 			lightdir = g_lightdirforall[g_shadowmap_lightdir[g_shadowmap_slotno] - 1];
-			ldirxz = ChaVector3(lightdir.x, 0.0f, lightdir.z);
+			ldirxz.SetParams(lightdir.x, 0.0f, lightdir.z);
 		}
 		else {
 			ChaVector4 lightdir;
 			lightdir = g_lightdirforall[0];
-			ldirxz = ChaVector3(lightdir.x, 0.0f, lightdir.z);
+			ldirxz.SetParams(lightdir.x, 0.0f, lightdir.z);
 		}
 
 
@@ -71549,12 +71640,12 @@ int OnCreateDevice()
 	//s_matgreenmat = s_matgreen->GetDif4F();
 	//s_ringgreenmat = s_ringgreen->GetDif4F();
 	//s_matyellowmat = s_matyellow->GetDif4F();
-	s_matredmat = ChaVector4(255.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f, 1.0f);
-	s_ringredmat = ChaVector4(255.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f, 1.0f);
-	s_matbluemat = ChaVector4(150.0f / 255.0f, 200.0f / 255.0f, 255.0f / 255.0f, 1.0f);
-	s_ringbluemat = ChaVector4(150.0f / 255.0f, 200.0f / 255.0f, 255.0f / 255.0f, 1.0f);
-	s_matgreenmat = ChaVector4(0.0f / 255.0f, 255.0f / 255.0f, 0.0f / 255.0f, 1.0f);
-	s_ringgreenmat = ChaVector4(0.0f / 255.0f, 255.0f / 255.0f, 0.0f / 255.0f, 1.0f);
+	s_matredmat.SetParams(255.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f, 1.0f);
+	s_ringredmat.SetParams(255.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f, 1.0f);
+	s_matbluemat.SetParams(150.0f / 255.0f, 200.0f / 255.0f, 255.0f / 255.0f, 1.0f);
+	s_ringbluemat.SetParams(150.0f / 255.0f, 200.0f / 255.0f, 255.0f / 255.0f, 1.0f);
+	s_matgreenmat.SetParams(0.0f / 255.0f, 255.0f / 255.0f, 0.0f / 255.0f, 1.0f);
+	s_ringgreenmat.SetParams(0.0f / 255.0f, 255.0f / 255.0f, 0.0f / 255.0f, 1.0f);
 	s_matyellowmat = s_matyellow->GetDif4F();
 	
 	
@@ -71638,7 +71729,7 @@ int OnCreateDevice()
 	CallF(s_rigopemark_ringZ->LoadMQO(s_pdev,
 		L"..\\Media\\MameMedia\\ringZ.mqo", 0, rigmult, 0), return S_FALSE);
 
-	s_matrigmat = ChaVector4(255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 1.0f);
+	s_matrigmat.SetParams(255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 1.0f);
 	
 	
 	s_bmark = new CModel();

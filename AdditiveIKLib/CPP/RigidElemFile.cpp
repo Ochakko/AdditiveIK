@@ -300,7 +300,7 @@ int CRigidElemFile::LoadRigidElemFile( WCHAR* strpath, CModel* srcmodel )
 	srcmodel->SetCurrentRigidElem( reinfoindex );
 
 	srcmodel->SetBtGScale(scbtg, reinfoindex);//CModel::m_rigideleminfoへのaddが済んでから。
-
+	srcmodel->SetBtObjectVec();//2024/06/16
 
 	//_ASSERT(0);
 

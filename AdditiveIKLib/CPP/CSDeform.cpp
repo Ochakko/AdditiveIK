@@ -702,7 +702,7 @@ int CSDeform::GetDeformedDispV(int srcvertindex, BINORMALDISPV* dstv)
 		CSVertexWithBone* outputData = (CSVertexWithBone*)m_outputSB.GetResourceOnCPU();
 		if (outputData) {
 			CSVertexWithBone* currentoutput = outputData + srcvertindex;
-			dstv->pos = ChaVector4(currentoutput->pos[0], currentoutput->pos[1], currentoutput->pos[2], currentoutput->pos[3]);
+			dstv->pos.SetParams(currentoutput->pos[0], currentoutput->pos[1], currentoutput->pos[2], currentoutput->pos[3]);
 		}
 		else {
 			_ASSERT(0);
@@ -732,7 +732,7 @@ int CSDeform::PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
 	}
 
 	*hitfaceindex = -1;
-	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
 
 	//if (m_pm3 || m_pm4) {
 	if (m_pm4) {
@@ -800,7 +800,7 @@ int CSDeform::GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos)
 		return 0;
 	}
 	*hitfaceindex = -1;
-	*dsthitpos = ChaVector3(0.0f, 0.0f, 0.0f);
+	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
 
 	if (m_pickstate != 1) {
 		return 0;

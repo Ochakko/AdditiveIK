@@ -47,12 +47,12 @@ typedef struct tag_ikrotrec
 	ChaVector3 applyframeeul;
 
 	void Init() {
-		targetpos = ChaVector3(0.0f, 0.0f, 0.0f);
+		targetpos.SetParams(0.0f, 0.0f, 0.0f);
 		rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 		lessthanthflag = true;
 		
 		applyframemat.SetIdentity();
-		applyframeeul = ChaVector3(0.0f, 0.0f, 0.0f);
+		applyframeeul.SetParams(0.0f, 0.0f, 0.0f);
 	}
 
 	tag_ikrotrec() {
@@ -345,7 +345,7 @@ public:
 
 	int SaveSRT(bool limitdegflag, int srcmotid, double srcframe);
 
-	//CMotionPoint* RotBoneQCurrentReq(bool infooutflag, CBone* parbone, int srcmotid, double srcframe, CQuaternion rotq, CBone* bvhbone = 0, ChaVector3 traanim = ChaVector3(0.0f, 0.0f, 0.0f), int setmatflag = 0, ChaMatrix* psetmat = 0);
+	//CMotionPoint* RotBoneQCurrentReq(bool infooutflag, CBone* parbone, int srcmotid, double srcframe, CQuaternion rotq, CBone* bvhbone = 0, ChaVector3 traanim.SetParams(0.0f, 0.0f, 0.0f), int setmatflag = 0, ChaMatrix* psetmat = 0);
 
 /**
 
@@ -1574,7 +1574,7 @@ public: //accesser
 		else {
 			IKROTREC norec;
 			norec.rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-			norec.targetpos = ChaVector3(0.0f, 0.0f, 0.0f);
+			norec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
 			norec.lessthanthflag = true;
 			return norec;
 		}
@@ -1609,7 +1609,7 @@ public: //accesser
 		else {
 			IKROTREC norec;
 			norec.rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-			norec.targetpos = ChaVector3(0.0f, 0.0f, 0.0f);
+			norec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
 			norec.lessthanthflag = true;
 			return norec;
 		}
@@ -1622,7 +1622,7 @@ public: //accesser
 		else {
 			IKROTREC norec;
 			norec.rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-			norec.targetpos = ChaVector3(0.0f, 0.0f, 0.0f);
+			norec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
 			norec.lessthanthflag = true;
 			return norec;
 		}
