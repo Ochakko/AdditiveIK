@@ -853,6 +853,7 @@ static float s_fAspectRatio = 1.0f;
 //static float s_cammvstep = 100.0f;
 static float s_cammvstep = 500.0f;
 static int s_editmotionflag = -1;
+static int s_editcameraflag = -1;//2024/06/16
 static int s_tkeyflag = 0;
 //static float s_maxcamdist = 5000.0f;
 static float s_maxcamdist = 20000.0f;
@@ -5729,6 +5730,8 @@ void InitApp()
 	s_saveplayingend = 1.0;
 
 
+	s_editmotionflag = -1;
+	s_editcameraflag = -1;
 
 	s_editrangehistoryno = 0;
 	s_editrangesetindex = 0;
@@ -7578,6 +7581,7 @@ void PrepairUndo()
 
 		}
 		s_editmotionflag = -1;
+		s_editcameraflag = -1;
 
 		//}
 	}
@@ -9226,8 +9230,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		else {
 			if ((s_undoFlag == false) && (s_redoFlag == false)) {
 				if (s_oprigflag == 0) {
-					if ((s_ikkind == 0) && (editmotionflag >= 0)) {
-						if (s_cameramodel && (s_cameramodel->GetCameraMotionId() > 0)) {
+					if (((s_ikkind == 0) || (s_ikkind == 1) || (s_ikkind == 2)) && (s_editcameraflag >= 0)) {//2024/06/16 ドリー編集も対象に
+						//if (s_cameramodel && (s_cameramodel->GetCameraMotionId() > 0)) {
+						if (s_cameramodel) {
 							ikdoneflag = true;
 						}
 					}
@@ -35965,7 +35970,7 @@ int OnFrameToolWnd()
 					int cameraframeleng = 100;
 					CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);
 					if (opebone && (cameramotid > 0)) {
-						s_editmotionflag = s_cameramodel->CameraAnimDiffRotMatView(&s_editrange, s_befLockMatView, s_matView);
+						s_editcameraflag = s_cameramodel->CameraAnimDiffRotMatView(&s_editrange, s_befLockMatView, s_matView);
 					}
 
 					s_cameramodel->GetCameraAnimParams(s_cameraframe,
@@ -72019,7 +72024,7 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 
 		bool doneflag = false;
 		if (opekind == 0) {
-			s_editmotionflag = s_cameramodel->CameraRotateAxisDelta(
+			s_editcameraflag = s_cameramodel->CameraRotateAxisDelta(
 				g_limitdegflag,
 				&s_editrange, pickxyz,
 				deltax, s_ikcnt);
@@ -72027,13 +72032,13 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 			doneflag = true;
 		}
 		else if (opekind == 1) {
-			s_editmotionflag = s_cameramodel->CameraTranslateAxisDelta(
+			s_editcameraflag = s_cameramodel->CameraTranslateAxisDelta(
 				&s_editrange, pickxyz - PICK_X, deltax, s_matView);
 
 			doneflag = true;
 		}
 		else if (opekind == 2) {
-			s_editmotionflag = s_cameramodel->CameraTranslateAxisDelta(
+			s_editcameraflag = s_cameramodel->CameraTranslateAxisDelta(
 				&s_editrange, PICK_Z - PICK_X, deltax, s_matView);
 
 			doneflag = true;

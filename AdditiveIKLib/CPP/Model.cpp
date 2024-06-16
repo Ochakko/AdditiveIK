@@ -8037,7 +8037,8 @@ void CModel::RenderCapsuleReq(CBtObject* srcbto, bool limitdegflag,
 
 	CBone* srcbone = srcbto->GetBone();
 	CBone* childbone = srcbto->GetEndBone();
-	if (srcbone && childbone && !srcbone->GetSkipRenderBoneMark()){
+	//if (srcbone && childbone && !srcbone->GetSkipRenderBoneMark()){
+	if (srcbone && childbone && !srcbone->GetSkipRenderBoneMark() && srcbone->IsSkeleton() && childbone->IsSkeleton()){//2024/06/16 IsSkeleton()
 		//if (srcbone->GetParent()){
 			//CRigidElem* curre = srcbone->GetParent()->GetRigidElem(srcbone);
 		CRigidElem* curre = srcbone->GetRigidElem(childbone);
@@ -8051,10 +8052,13 @@ void CModel::RenderCapsuleReq(CBtObject* srcbto, bool limitdegflag,
 				CModel* curcoldisp;
 				int curinstanceno;
 				curcoldisp = srcbone->GetCurColDispInstancing(childbone, &curinstanceno);
-				if (curcoldisp) {
+				//if (curcoldisp) {
+				if (curcoldisp && (curinstanceno < RIGMULTINDEXMAX)) {//2024/06/16 RIGMULTINDEXMAX以上は描画しない
 					//################################################################################
 					//以降SetInstancingParamsまでの間で処理をスキップしない。
 					// スキップするとgetnoとinstancenoが一致しなくなり　CDispObjに保存してあるscale情報がずれる
+					// 
+					// 2024/06/16　ただし最大数以上は描画しないように
 					//################################################################################
 
 					bool setinstancescale = true;
