@@ -177,11 +177,11 @@ namespace myRenderer
         void Init() {
             pfont = 0;
             ZeroMemory(strfont, sizeof(WCHAR) * 512);
-            disppos = Vector2(0.0f, 0.0f);
-            color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+            disppos.Set(0.0f, 0.0f);
+            color.Set(1.0f, 1.0f, 1.0f, 1.0f);
             rotation = 0.0f;
             scale = 1.0f;
-            pivot = Vector2(0.0f, 0.0f);
+            pivot.Set(0.0f, 0.0f);
         };
         tag_renderfont()
         {

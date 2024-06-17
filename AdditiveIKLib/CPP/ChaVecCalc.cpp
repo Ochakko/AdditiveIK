@@ -430,6 +430,29 @@ ChaVector3::ChaVector3(FbxVector4 src, bool divbyw)
 	}
 }
 
+void ChaVector3::SetParams(FbxVector4 src, bool divbyw)
+{
+	if (divbyw == false) {
+		x = (float)src[0];
+		y = (float)src[1];
+		z = (float)src[2];
+	}
+	else {
+		if ((src[3] != 0.0) && (src[3] != 1.0)) {
+			x = (float)(src[0] / src[3]);
+			y = (float)(src[1] / src[3]);
+			z = (float)(src[2] / src[3]);
+		}
+		else {
+			x = (float)src[0];
+			y = (float)src[1];
+			z = (float)src[2];
+		}
+	}
+}
+
+
+
 void ChaVector3::SetZeroVec3()
 {
 	x = 0.0f;
@@ -4710,17 +4733,17 @@ int CalcTangentAndBinormal(int srcuvnum, BINORMALDISPV* vert_0, BINORMALDISPV* v
 	//	cp2[2] = Vector3(vert_2->pos.z, vert_2->uv[1].x, vert_2->uv[1].y);
 	//}
 	//else {
-		cp0[0] = Vector3(vert_0->pos.x, vert_0->uv[0].x, vert_0->uv[0].y);
-		cp0[1] = Vector3(vert_0->pos.y, vert_0->uv[0].x, vert_0->uv[0].y);
-		cp0[2] = Vector3(vert_0->pos.z, vert_0->uv[0].x, vert_0->uv[0].y);
+		cp0[0].Set(vert_0->pos.x, vert_0->uv[0].x, vert_0->uv[0].y);
+		cp0[1].Set(vert_0->pos.y, vert_0->uv[0].x, vert_0->uv[0].y);
+		cp0[2].Set(vert_0->pos.z, vert_0->uv[0].x, vert_0->uv[0].y);
 
-		cp1[0] = Vector3(vert_1->pos.x, vert_1->uv[0].x, vert_1->uv[0].y);
-		cp1[1] = Vector3(vert_1->pos.y, vert_1->uv[0].x, vert_1->uv[0].y);
-		cp1[2] = Vector3(vert_1->pos.z, vert_1->uv[0].x, vert_1->uv[0].y);
+		cp1[0].Set(vert_1->pos.x, vert_1->uv[0].x, vert_1->uv[0].y);
+		cp1[1].Set(vert_1->pos.y, vert_1->uv[0].x, vert_1->uv[0].y);
+		cp1[2].Set(vert_1->pos.z, vert_1->uv[0].x, vert_1->uv[0].y);
 
-		cp2[0] = Vector3(vert_2->pos.x, vert_2->uv[0].x, vert_2->uv[0].y);
-		cp2[1] = Vector3(vert_2->pos.y, vert_2->uv[0].x, vert_2->uv[0].y);
-		cp2[2] = Vector3(vert_2->pos.z, vert_2->uv[0].x, vert_2->uv[0].y);
+		cp2[0].Set(vert_2->pos.x, vert_2->uv[0].x, vert_2->uv[0].y);
+		cp2[1].Set(vert_2->pos.y, vert_2->uv[0].x, vert_2->uv[0].y);
+		cp2[2].Set(vert_2->pos.z, vert_2->uv[0].x, vert_2->uv[0].y);
 	//}
 
 

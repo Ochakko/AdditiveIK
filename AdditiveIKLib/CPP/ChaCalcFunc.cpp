@@ -2013,7 +2013,7 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 				FbxTime fbxtime;
 				fbxtime.SetSecondDouble(roundingframe / 30.0);
 				FbxVector4 orgfbxeul = srcbone->GetFbxNodeOnLoad()->EvaluateLocalRotation(fbxtime, FbxNode::eSourcePivot, true, true);
-				cureul = ChaVector3(orgfbxeul, false);
+				cureul.SetParams(orgfbxeul, false);
 				//####  rotorder注意  #####
 				LeaveCriticalSection(&g_CritSection_FbxSdk);
 				return cureul;

@@ -32,9 +32,9 @@
         }
         ZeroMemory(&m_constantBufferCPU, sizeof(LocalConstantBuffer));
         m_numTexture = 0;
-        m_position = Vector3(0.0f, 0.0f, 0.0f);				//座標。
-        m_size = Vector2(1.0f, 1.0f);						//サイズ。
-        m_rotation = Quaternion(0.0f, 0.0f, 0.0f, 1.0f);			//回転。
+        m_position.Set(0.0f, 0.0f, 0.0f);				//座標。
+        m_size.Set(1.0f, 1.0f);						//サイズ。
+        m_rotation.Set(0.0f, 0.0f, 0.0f, 1.0f);			//回転。
         m_world.SetIdentity();					//ワールド行列。
 
         m_userExpandConstantBufferCPU = nullptr;		//ユーザー拡張の定数バッファ(CPU側)

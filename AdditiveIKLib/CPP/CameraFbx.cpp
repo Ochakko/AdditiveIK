@@ -196,7 +196,7 @@ int CCameraFbx::AddFbxCamera(FbxNode* pNode, CBone* pbone)
 		FbxTime timezero;
 		timezero.SetSecondDouble(m_time);
 		FbxVector4 fbxpos = newcameranode->pcamera->EvaluatePosition(timezero);
-		newcameranode->position = ChaVector3(fbxpos);
+		newcameranode->position.SetParams(fbxpos);
 
 		FbxAMatrix fbxcameramat = newcameranode->pnode->EvaluateGlobalTransform(timezero, FbxNode::eSourcePivot, true, true);
 		ChaMatrix cameramat = ChaMatrixFromFbxAMatrix(fbxcameramat);
@@ -278,8 +278,9 @@ int CCameraFbx::PreLoadFbxAnim(CBone* srcbone, int srcmotid)
 	fbxtime0.SetSecondDouble(0.0);
 	FbxVector4 lcltime0 = cameranode->pnode->EvaluateLocalTranslation(fbxtime0, FbxNode::eSourcePivot, true, true);
 	ChaVector3 chalcltime0;
-	chalcltime0 = ChaVector3(lcltime0, false);
-	ChaVector3 charotpiv = ChaVector3(cameranode->pnode->GetRotationPivot(FbxNode::eSourcePivot));
+	chalcltime0.SetParams(lcltime0, false);
+	ChaVector3 charotpiv;
+	charotpiv.SetParams(cameranode->pnode->GetRotationPivot(FbxNode::eSourcePivot));
 	ChaVector3 nodepos = ChaMatrixTraVec(srcbone->GetNodeMat());
 	cameranode->adjustpos = charotpiv - chalcltime0;
 

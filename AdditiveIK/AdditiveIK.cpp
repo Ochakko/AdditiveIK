@@ -3079,7 +3079,7 @@ static int AddModelBound(MODELBOUND* mb, MODELBOUND* addmb);
 static int OnSetMotSpeed();
 
 static int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu);
-static int OnChangeModel(CModel* selmodel);
+static int OnChangeModel(CModel* selmodel, bool forceflag);
 static int SetTimelineHasRigFlag();
 static int OnREMenu(int selindex, int callbymenu);
 static int OnRgdMenu(int selindex, int callbymenu);
@@ -3876,16 +3876,18 @@ INT WINAPI wWinMain(
 		g_camera3D->SetNear(100.0f);
 		g_camera3D->SetFar(500000.0f);
 		g_camera3D->SetViewAngle(g_fovy);//2023/12/30
-		Vector3 cameye = Vector3(g_camEye.x, g_camEye.y, g_camEye.z);
+		Vector3 cameye;
+		cameye.Set(g_camEye.x, g_camEye.y, g_camEye.z);
 		g_camera3D->SetPosition(cameye);
-		Vector3 target = Vector3(g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
+		Vector3 target;
+		target.Set(g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
 		g_camera3D->SetTarget(target);
 		g_camera3D->SetUp(Vector3(g_cameraupdir.x, g_cameraupdir.y, g_cameraupdir.z));
 		g_camera3D->SetWidth((float)g_graphicsEngine->GetFrameBufferWidth());//2023/11/20
 		g_camera3D->SetHeight((float)g_graphicsEngine->GetFrameBufferHeight());//2023/11/20
 		g_camera3D->Update();
 		
-		s_matSkyProj = ChaMatrix(g_camera3D->GetProjectionMatrix());
+		s_matSkyProj.SetParams(g_camera3D->GetProjectionMatrix());
 	}
 
 
@@ -4382,7 +4384,7 @@ void InitApp()
 	s_dispfontfortip = false;
 	s_dispPickfortip = false;
 	ZeroMemory(s_strfortip, sizeof(WCHAR) * 512);
-	s_fontposfortip = Vector2(0.0f, 0.0f);
+	s_fontposfortip.Set(0.0f, 0.0f);
 	s_fontfortip.SetShadowParam(true, 1.0, 
 		Vector4(15.0f / 255.0f, 77.0f / 255.0f, 33.0f / 255.0f, 1.0f));//font縁取り設定
 
@@ -13989,13 +13991,13 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 	return 0;
 }
 
-int OnChangeModel(CModel* selmodel)
+int OnChangeModel(CModel* selmodel, bool forceflag)
 {
 	if (!s_chascene || !s_model) {
 		return 0;
 	}
 
-	if (s_model == selmodel) {
+	if (!forceflag && (s_model == selmodel)) {
 		//2024/02/09
 		//操作中にモーションやカメラの状態が変わるのを出来るだけ防ぐために
 		//選択状態が変わらない場合には　OnModelMenuを呼ばないで　すぐに0リターンする
@@ -15269,8 +15271,8 @@ int CalcPickRay(ChaVector3* startptr, ChaVector3* endptr)
 	ChaMatrix mView;
 	ChaMatrix mProj;
 	
-	mProj = ChaMatrix(g_camera3D->GetProjectionMatrix());
-	mView = ChaMatrix(g_camera3D->GetViewMatrix(false));
+	mProj.SetParams(g_camera3D->GetProjectionMatrix());
+	mView.SetParams(g_camera3D->GetViewMatrix(false));
 	ChaMatrix mVP, invmVP;
 	mVP = mView * mProj;
 	ChaMatrixInverse(&invmVP, NULL, &mVP);//2023/03/24 model座標系　model->GetWorldMat()の効果は打ち消しておく
@@ -20900,6 +20902,13 @@ int SaveProject()
 	}
 
 
+	//2024/06/17 各パネル選択状態がずれないように
+	if (s_model) {
+		bool forceflag = true;
+		OnChangeModel(s_model, forceflag);
+	}
+
+
 	if (oldcursor) {
 		SetCursor(oldcursor);
 	}
@@ -24985,6 +24994,13 @@ int ExportFBXFile()
 		CRigFile rigfile;
 		rigfile.WriteRigFile(rigname, s_model);
 
+	}
+
+
+	//2024/06/17 各パネル選択状態がずれないように
+	if (s_model) {
+		bool forceflag = true;
+		OnChangeModel(s_model, forceflag);
 	}
 
 
@@ -35536,7 +35552,8 @@ int OnFrameTimeLineWnd()
 	if (g_selecttolastFlag) {
 		if (s_model && s_owpLTimeline) {
 			s_buttonselectstart = s_owpLTimeline->getCurrentTime();
-			if (s_model && s_model->ExistCurrentMotion()) {
+			//if (s_model && s_model->ExistCurrentMotion()) {
+			if (s_model) {//2024/06/17 カメラモーションだけの場合もある
 				MOTINFO curmi = GetEditTargetMotInfo();
 				if (curmi.motid > 0) {
 					s_buttonselectend = s_model->GetCurMotInfo().frameleng - 1.0;
@@ -46244,8 +46261,10 @@ int OnRenderFontForTip(myRenderer::RenderingEngine* re, RenderContext* rc)
 	if ((s_dispPickfortip && g_pickmeshflag) || s_dispfontfortip) {//pick時にもスプライトのtipを表示することはある
 	//if (s_dispfontfortip) {
 	//if (s_strfortip[0] != 0L) {
-		Vector4 fontcol = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-		Vector2 fontpivot = Vector2(0.0f, 0.0f);
+		Vector4 fontcol;
+		fontcol.Set(1.0f, 1.0f, 1.0f, 1.0f);
+		Vector2 fontpivot;
+		fontpivot.Set(0.0f, 0.0f);
 
 		float fontscale = 0.5f;//フォントのスケール
 
@@ -46277,7 +46296,7 @@ int OnRenderFontForTip(myRenderer::RenderingEngine* re, RenderContext* rc)
 		Vector2 disppos;
 		float fontposx = ((float)tipposx - (float)winx / 2.0f);// *2.0f;
 		float fontposy = -((float)tipposy - (float)winy / 2.0f);// *2.0f;
-		disppos = Vector2(fontposx, fontposy);
+		disppos.Set(fontposx, fontposy);
 
 
 		myRenderer::RENDERFONT renderfont;
@@ -61409,7 +61428,7 @@ int CreateTipRig(CBone* currigbone, int currigno, POINT ptCursor)
 		return 1;
 	}
 
-	s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
+	s_fontposfortip.Set((float)ptCursor.x, (float)ptCursor.y);
 
 
 	CUSTOMRIG curcustomrig = currigbone->GetCustomRig(currigno);
@@ -61440,7 +61459,8 @@ bool PickAndSelectMeshOfDispGroupDlg()
 			s_befselectmqoobj = s_pickmqoobj;
 			s_befselectmaterial = s_pickmaterial;
 
-			OnChangeModel(s_pickmodel);
+			bool forceflag = false;
+			OnChangeModel(s_pickmodel, forceflag);
 
 			WCHAR objname[256] = { 0L };
 			char tmpobjname[256] = { 0 };
@@ -61585,7 +61605,8 @@ bool PickAndSelectMaterialOfShaderTypeDlg()
 			s_befselectmqoobj = s_pickmqoobj;
 			s_befselectmaterial = s_pickmaterial;
 
-			OnChangeModel(s_pickmodel);
+			bool forceflag = false;
+			OnChangeModel(s_pickmodel, forceflag);
 
 			int materialnum = s_model->GetMQOMaterialSize();
 			int materialindex;
@@ -61690,7 +61711,7 @@ bool DispTipUI()
 	tmppickinfo.pickrange = PICKRANGE;
 
 
-	s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
+	s_fontposfortip.Set((float)ptCursor.x, (float)ptCursor.y);
 
 	WCHAR sz512[512];
 	ZeroMemory(sz512, sizeof(WCHAR) * 512);
@@ -62051,7 +62072,7 @@ bool DispTipUIFrog()
 	tmppickinfo.pickrange = PICKRANGE;
 
 
-	s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
+	s_fontposfortip.Set((float)ptCursor.x, (float)ptCursor.y);
 
 	WCHAR sz512[512];
 	ZeroMemory(sz512, sizeof(WCHAR) * 512);
@@ -62099,7 +62120,7 @@ bool DispTipSelect()
 	scposy = (screenpos.y + 1.0f) * 0.5f * s_mainheight;
 
 
-	s_fontposfortip = Vector2(scposx, scposy);
+	s_fontposfortip.Set(scposx, scposy);
 	swprintf_s(s_strfortip, 512, L"Target(%.1f, %.1f, %.1f)", s_selectmat.data[MATI_41], s_selectmat.data[MATI_42], s_selectmat.data[MATI_43]);
 
 	return true;
@@ -62126,7 +62147,7 @@ bool DispTipBone()
 	tmppickinfo.pickrange = PICKRANGE;
 
 
-	s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
+	s_fontposfortip.Set((float)ptCursor.x, (float)ptCursor.y);
 
 	WCHAR sz512[512];
 	ZeroMemory(sz512, sizeof(WCHAR) * 512);
@@ -62218,7 +62239,7 @@ bool DispTipMesh()
 	GetCursorPos(&ptCursor);
 	::ScreenToClient(s_3dwnd, &ptCursor);
 	tmppickinfo.mousepos = ptCursor;
-	s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
+	s_fontposfortip.Set((float)ptCursor.x, (float)ptCursor.y);
 
 	tmppickinfo.clickpos = ptCursor;
 	tmppickinfo.diffmouse.SetParams(0.0f, 0.0f);
@@ -62277,7 +62298,7 @@ bool DispTipMaterial()
 	GetCursorPos(&ptCursor);
 	::ScreenToClient(s_3dwnd, &ptCursor);
 	tmppickinfo.mousepos = ptCursor;
-	s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
+	s_fontposfortip.Set((float)ptCursor.x, (float)ptCursor.y);
 
 	tmppickinfo.clickpos = ptCursor;
 	tmppickinfo.diffmouse.SetParams(0.0f, 0.0f);
@@ -69856,9 +69877,11 @@ void SetCamera3DFromEyePos()
 	g_camera3D->SetFar(g_projfar);
 	//g_camera3D->SetViewAngle(60.0f / 180.0f * (float)PI);
 	g_camera3D->SetViewAngle(g_fovy);//2023/12/30
-	Vector3 cameye = Vector3(g_camEye.x, g_camEye.y, g_camEye.z);
+	Vector3 cameye;
+	cameye.Set(g_camEye.x, g_camEye.y, g_camEye.z);
 	g_camera3D->SetPosition(cameye);
-	Vector3 target = Vector3(g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
+	Vector3 target;
+	target.Set(g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
 	g_camera3D->SetTarget(target);
 	g_camera3D->SetUp(Vector3(g_cameraupdir.x, g_cameraupdir.y, g_cameraupdir.z));
 	g_camera3D->SetWidth((float)g_graphicsEngine->GetFrameBufferWidth());//2023/11/20
@@ -69871,19 +69894,19 @@ void SetCamera3DFromEyePos()
 	else {
 		s_matWorld.SetIdentity();
 	}
-	s_matView = ChaMatrix(g_camera3D->GetViewMatrix(false));
-	s_matProj = ChaMatrix(g_camera3D->GetProjectionMatrix());
+	s_matView.SetParams(g_camera3D->GetViewMatrix(false));
+	s_matProj.SetParams(g_camera3D->GetProjectionMatrix());
 	s_matVP = s_matView * s_matProj;
 
 
 //// camera for shadowmap
 	if (s_model) {
 		ChaVector3 dirright;
-		dirright = ChaVector3(g_camera3D->GetRight());
+		dirright.SetParams(g_camera3D->GetRight());
 		ChaVector3 dirup;
-		dirup = ChaVector3(g_camera3D->GetUp());
+		dirup.SetParams(g_camera3D->GetUp());
 		ChaVector3 dirforward;
-		dirforward = ChaVector3(g_camera3D->GetForward());
+		dirforward.SetParams(g_camera3D->GetForward());
 		ChaVector3 modelpos = ChaMatrixTraVec(s_model->GetWorldMat());
 		ChaVector3 camdiff = g_camtargetpos - g_camEye;
 
@@ -71890,7 +71913,7 @@ bool GetResultOfPickRay()
 	POINT ptCursor;
 	GetCursorPos(&ptCursor);
 	::ScreenToClient(s_3dwnd, &ptCursor);
-	s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
+	s_fontposfortip.Set((float)ptCursor.x, (float)ptCursor.y);
 
 	WCHAR modelname[256] = { 0L };
 	WCHAR objname[256] = { 0L };
@@ -71922,7 +71945,7 @@ bool GetResultOfPickRay()
 			if (wcscmp(s_strfortip, tmptip) != 0) {
 				wcscpy_s(s_strfortip, 512, tmptip);
 			}
-			//s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
+			//s_fontposfortip.Set((float)ptCursor.x, (float)ptCursor.y);
 		}
 	}
 	else if (s_spdispsw[SPDISPSW_SHADERTYPE].state) {
@@ -71945,7 +71968,7 @@ bool GetResultOfPickRay()
 			if (wcscmp(s_strfortip, tmptip) != 0) {
 				wcscpy_s(s_strfortip, 512, tmptip);
 			}
-			//s_fontposfortip = Vector2((float)ptCursor.x, (float)ptCursor.y);
+			//s_fontposfortip.Set((float)ptCursor.x, (float)ptCursor.y);
 		}
 	}
 	else {

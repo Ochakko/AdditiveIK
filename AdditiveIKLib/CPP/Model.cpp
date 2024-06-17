@@ -459,7 +459,7 @@ void ChaMatrix2FbxAMatrix(FbxAMatrix& retmat, ChaMatrix& srcmat)
 void FbxAMatrix2ChaMatrix(ChaMatrix& retmat, FbxAMatrix srcmat)
 {
 	ChaMatrixIdentity(&retmat);
-	retmat = ChaMatrix(
+	retmat.SetParams(
 		(float)srcmat.Get(0, 0), (float)srcmat.Get(0, 1), (float)srcmat.Get(0, 2), (float)srcmat.Get(0, 3),
 		(float)srcmat.Get(1, 0), (float)srcmat.Get(1, 1), (float)srcmat.Get(1, 2), (float)srcmat.Get(1, 3),
 		(float)srcmat.Get(2, 0), (float)srcmat.Get(2, 1), (float)srcmat.Get(2, 2), (float)srcmat.Get(2, 3),
@@ -5275,7 +5275,8 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 				pMesh->GetPolygonVertexNormal(faceno0, vno, srcnormal);
 				
 				ChaVector3* curn = newobj->GetNormal() + faceno0 * 3 + vno;
-				ChaVector3 tmpn = ChaVector3(srcnormal);
+				ChaVector3 tmpn;
+				tmpn.SetParams(srcnormal);
 				ChaVector3TransformCoord(curn, &tmpn, &globalnormalmat);
 				ChaVector3Normalize(curn, curn);
 			}
@@ -21141,7 +21142,7 @@ int CModel::ChkInView(int refposindex)
 
 		ChaVector3 lightpos;
 		if (g_cameraShadow) {
-			lightpos = ChaVector3(g_cameraShadow->GetPosition());
+			lightpos.SetParams(g_cameraShadow->GetPosition());
 		}
 		else {
 			lightpos = g_camEye;

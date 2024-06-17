@@ -646,7 +646,7 @@ int CXMLIO::Read_Matrix(XMLIOBUF* xmliobuf, const char* startpat, const char* en
 		return 1;
 	}
 
-	*dstmat = ChaMatrix(
+	dstmat->SetParams(
 		_11, _12, _13, _14,
 		_21, _22, _23, _24,
 		_31, _32, _33, _34,

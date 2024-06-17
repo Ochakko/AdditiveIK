@@ -96,6 +96,19 @@ public:
 		data[MATI_31] = srcmat.data[MATI_31]; data[MATI_32] = srcmat.data[MATI_32]; data[MATI_33] = srcmat.data[MATI_33]; data[MATI_34] = srcmat.data[MATI_34];
 		data[MATI_41] = srcmat.data[MATI_41]; data[MATI_42] = srcmat.data[MATI_42]; data[MATI_43] = srcmat.data[MATI_43]; data[MATI_44] = srcmat.data[MATI_44];
 	};
+	void SetParams(Matrix m) {
+		data[MATI_11] = m._11; data[MATI_12] = m._12; data[MATI_13] = m._13; data[MATI_14] = m._14;
+		data[MATI_21] = m._21; data[MATI_22] = m._22; data[MATI_23] = m._23; data[MATI_24] = m._24;
+		data[MATI_31] = m._31; data[MATI_32] = m._32; data[MATI_33] = m._33; data[MATI_34] = m._34;
+		data[MATI_41] = m._41; data[MATI_42] = m._42; data[MATI_43] = m._43; data[MATI_44] = m._44;
+	};
+	void SetParams(float m11, float m12, float m13, float m14, float m21, float m22, float m23, float m24, float m31, float m32, float m33, float m34, float m41, float m42, float m43, float m44) {
+		data[MATI_11] = m11; data[MATI_12] = m12; data[MATI_13] = m13; data[MATI_14] = m14;
+		data[MATI_21] = m21; data[MATI_22] = m22; data[MATI_23] = m23; data[MATI_24] = m24;
+		data[MATI_31] = m31; data[MATI_32] = m32; data[MATI_33] = m33; data[MATI_34] = m34;
+		data[MATI_41] = m41; data[MATI_42] = m42; data[MATI_43] = m43; data[MATI_44] = m44;
+	};
+
 
 
 	ChaMatrix operator= (ChaMatrix m);
@@ -274,6 +287,16 @@ public:
 	};
 	void SetParams(ChaVector3 srcvec3) {
 		x = srcvec3.x; y = srcvec3.y; z = srcvec3.z;
+	};
+	void SetParams(Vector3 srcvec3) {
+		x = srcvec3.x; y = srcvec3.y; z = srcvec3.z;
+	}
+	void SetParams(FbxVector4 srcvec4) {
+		x = (float)srcvec4[0]; y = (float)srcvec4[1]; z = (float)srcvec4[2];
+	}
+	void SetParams(FbxVector4 srcvector4, bool divbyw);
+	void SetParams(FbxDouble3 srcdbl3) {
+		x = (float)srcdbl3[0]; y = (float)srcdbl3[1]; z = (float)srcdbl3[2];
 	};
 
 

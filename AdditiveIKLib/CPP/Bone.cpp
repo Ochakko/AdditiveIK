@@ -6046,7 +6046,7 @@ ChaVector3 CBone::CalcFbxScaleAnim(bool limitdegflag, int srcmotid, double srcfr
 			FbxTime fbxtime;
 			fbxtime.SetSecondDouble(roundingframe / 30.0);
 			FbxVector4 fbxcamerascl = GetFbxNodeOnLoad()->EvaluateLocalScaling(fbxtime, FbxNode::eSourcePivot, true, true);
-			svec = ChaVector3(fbxcamerascl);
+			svec.SetParams(fbxcamerascl);
 		}
 		else {
 			svec.SetParams(1.0f, 1.0f, 1.0f);
@@ -6342,7 +6342,7 @@ ChaVector3 CBone::CalcFBXTra(bool limitdegflag, int srcmotid, double srcframe)
 			fbxtime.SetSecondDouble(roundingframe / 30.0);
 			FbxVector4 fbxtra = GetFbxNodeOnLoad()->EvaluateLocalTranslation(fbxtime, FbxNode::eSourcePivot, true, true);
 			ChaVector3 tra;
-			tra = ChaVector3(fbxtra, false);
+			tra.SetParams(fbxtra, false);
 
 			return tra;
 		}
