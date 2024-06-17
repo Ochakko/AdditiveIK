@@ -30,6 +30,14 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+　ショートムービー
+　　空の色は何色ですか？
+　　https://youtu.be/0LkwVw9eubg
+
+
+
+
+
 2024/06/16
 　BlendShapes出力時の名前は名前の中の最後の'.'以降の文字列を出力するように
 　　BlendShape出力時にBlendShapeをコピーすると文字列が付加されて元の名前が変わってしまう
