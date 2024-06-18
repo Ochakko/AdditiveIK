@@ -271,11 +271,14 @@ static HSVTOON s_skyhsvtoonforall;//s_skt用の設定内容を保存
 //	};
 //}SPAXIS, SPCAM;
 
+#define BUTTONPUSHEDMAXCOUNT	30
+
 class CSpAxis
 {
 public:
-	CSpAxis() : sprite() {
+	CSpAxis() : sprite(), sprite_pushed() {
 		::ZeroMemory(&dispcenter, sizeof(POINT));
+		pushcount = 0;
 	};
 	~CSpAxis()
 	{
@@ -283,17 +286,43 @@ public:
 	};
 	void DestroyObjs() {
 		sprite.DestroyObjs();
+		sprite_pushed.DestroyObjs();
+	};
+	void ButtonDown() {
+		pushcount = 1;
+	};
+	void ButtonUp() {
+		pushcount = 0;
+	}
+	//void UpdatePushCount() {
+	//	if (pushcount >= BUTTONPUSHEDMAXCOUNT) {
+	//		pushcount = 0;
+	//	}
+	//	if (pushcount > 0) {
+	//		pushcount++;
+	//	}
+	//};
+	Sprite* GetSpriteForRender() {
+		if (pushcount <= 0) {
+			return &sprite;
+		}
+		else {
+			return &sprite_pushed;
+		}
 	};
 public:
+	int pushcount;
 	Sprite sprite;
+	Sprite sprite_pushed;
 	POINT dispcenter;
 };
 
 class CSpCam
 {
 public:
-	CSpCam() : sprite() {
+	CSpCam() : sprite(), sprite_pushed() {
 		::ZeroMemory(&dispcenter, sizeof(POINT));
+		pushcount = 0;
 	};
 	~CSpCam()
 	{
@@ -301,18 +330,44 @@ public:
 	};
 	void DestroyObjs() {
 		sprite.DestroyObjs();
+		sprite_pushed.DestroyObjs();
+	};
+	void ButtonDown() {
+		pushcount = 1;
+	};
+	void ButtonUp() {
+		pushcount = 0;
+	}
+	//void UpdatePushCount() {
+	//	if (pushcount >= BUTTONPUSHEDMAXCOUNT) {
+	//		pushcount = 0;
+	//	}
+	//	if (pushcount > 0) {
+	//		pushcount++;
+	//	}
+	//};
+	Sprite* GetSpriteForRender() {
+		if (pushcount <= 0) {
+			return &sprite;
+		}
+		else {
+			return &sprite_pushed;
+		}
 	};
 
 public:
+	int pushcount;
 	Sprite sprite;
+	Sprite sprite_pushed;
 	POINT dispcenter;
 };
 
 class CSpElem
 {
 public:
-	CSpElem() : sprite() {
+	CSpElem() : sprite(), sprite_pushed() {
 		::ZeroMemory(&dispcenter, sizeof(POINT));
+		pushcount = 0;
 	};
 	~CSpElem()
 	{
@@ -320,9 +375,35 @@ public:
 	};
 	void DestroyObjs() {
 		sprite.DestroyObjs();
+		sprite_pushed.DestroyObjs();
 	};
+	void ButtonDown() {
+		pushcount = 1;
+	};
+	void ButtonUp() {
+		pushcount = 0;
+	}
+	void UpdatePushCount() {
+		if (pushcount >= BUTTONPUSHEDMAXCOUNT) {
+			pushcount = 0;
+		}
+		if (pushcount > 0) {
+			pushcount++;
+		}
+	};
+	Sprite* GetSpriteForRender() {
+		if (pushcount <= 0) {
+			return &sprite;
+		}
+		else {
+			return &sprite_pushed;
+		}
+	};
+
 public:
+	int pushcount;
 	Sprite sprite;
+	Sprite sprite_pushed;
 	POINT dispcenter;
 };
 
@@ -351,7 +432,14 @@ public:
 		spriteON.DestroyObjs();
 		spriteOFF.DestroyObjs();
 	};
-
+	Sprite* GetSpriteForRender() {
+		if (state) {
+			return &spriteON;
+		}
+		else {
+			return &spriteOFF;
+		}
+	};
 public:
 	bool state;//ON : 1 or OFF : 0
 	Sprite spriteON;
@@ -375,7 +463,21 @@ public:
 		sprite2.DestroyObjs();
 		sprite3.DestroyObjs();
 	};
-
+	Sprite* GetSpriteForRender() {
+		if (mode == 0) {
+			return &sprite1;
+		}
+		else if (mode == 1) {
+			return &sprite2;
+		}
+		else if (mode == 2) {
+			return &sprite3;
+		}
+		else {
+			_ASSERT(0);
+			return &sprite1;
+		}
+	};
 
 public:
 	int mode;
@@ -1792,6 +1894,8 @@ static int s_blendshapeOpeIndex = 0;
 static float s_blendshapeBefore = 0.0f;
 static float s_blendshapeAfter = 0.0f;
 
+static bool s_SpriteButtonDown = false;
+static bool s_SpriteButtonDownUndoRedo = false;
 
 static bool s_closeFlag = false;			// 終了フラグ
 static bool s_closetoolFlag = false;
@@ -2076,6 +2180,35 @@ static Texture* s_spritetex90 = 0;
 static Texture* s_spritetex91 = 0;
 static Texture* s_spritetex92 = 0;
 static Texture* s_spritetex93 = 0;
+
+static Texture* s_spritetex_pushed1 = 0;
+static Texture* s_spritetex_pushed2 = 0;
+static Texture* s_spritetex_pushed5 = 0;
+static Texture* s_spritetex_pushed6 = 0;
+static Texture* s_spritetex_pushed7 = 0;
+static Texture* s_spritetex_pushed55 = 0;
+static Texture* s_spritetex_pushed56 = 0;
+static Texture* s_spritetex_pushed57 = 0;
+static Texture* s_spritetex_pushed63 = 0;
+static Texture* s_spritetex_pushed64 = 0;
+static Texture* s_spritetex_pushed65 = 0;
+static Texture* s_spritetex_pushed66 = 0;
+static Texture* s_spritetex_pushed67 = 0;
+static Texture* s_spritetex_pushed68 = 0;
+static Texture* s_spritetex_pushed69 = 0;
+static Texture* s_spritetex_pushed70 = 0;
+static Texture* s_spritetex_pushed85 = 0;
+static Texture* s_spritetex_pushed71 = 0;
+static Texture* s_spritetex_pushed72 = 0;
+static Texture* s_spritetex_pushed73 = 0;
+static Texture* s_spritetex_pushed74 = 0;
+static Texture* s_spritetex_pushed75 = 0;
+static Texture* s_spritetex_pushed76 = 0;
+static Texture* s_spritetex_pushed77 = 0;
+static Texture* s_spritetex_pushed78 = 0;
+static Texture* s_spritetex_pushed61 = 0;
+static Texture* s_spritetex_pushed62 = 0;
+
 
 
 static int s_toolspritemode = 0;
@@ -4140,6 +4273,9 @@ void InitApp()
 	s_LrefreshEditTarget = 0;
 	s_LchangeTarget2Camera = false;
 
+	s_SpriteButtonDown = false;
+	s_SpriteButtonDownUndoRedo = false;
+
 	{
 		g_camEye.SetParams(0.0f, 0.0f, 0.0f);
 		g_camtargetpos.SetParams(0.0f, 0.0f, 0.0f);
@@ -4357,6 +4493,35 @@ void InitApp()
 		s_spritetex79 = 0;
 		s_spritetex80 = 0;
 		s_spritetex81 = 0;
+
+
+		s_spritetex_pushed1 = 0;
+		s_spritetex_pushed2 = 0;
+		s_spritetex_pushed5 = 0;
+		s_spritetex_pushed6 = 0;
+		s_spritetex_pushed7 = 0;
+		s_spritetex_pushed55 = 0;
+		s_spritetex_pushed56 = 0;
+		s_spritetex_pushed57 = 0;
+		s_spritetex_pushed63 = 0;
+		s_spritetex_pushed64 = 0;
+		s_spritetex_pushed65 = 0;
+		s_spritetex_pushed66 = 0;
+		s_spritetex_pushed67 = 0;
+		s_spritetex_pushed68 = 0;
+		s_spritetex_pushed69 = 0;
+		s_spritetex_pushed70 = 0;
+		s_spritetex_pushed85 = 0;
+		s_spritetex_pushed71 = 0;
+		s_spritetex_pushed72 = 0;
+		s_spritetex_pushed73 = 0;
+		s_spritetex_pushed74 = 0;
+		s_spritetex_pushed75 = 0;
+		s_spritetex_pushed76 = 0;
+		s_spritetex_pushed77 = 0;
+		s_spritetex_pushed78 = 0;
+		s_spritetex_pushed61 = 0;
+		s_spritetex_pushed62 = 0;
 	}
 
 	{
@@ -8504,6 +8669,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				//RollbackCurBoneNo();
 				if ((s_undoFlag == false) && (s_redoFlag == false)) {
 					s_undoFlag = true;
+					s_spundo[0].ButtonDown();
+					s_SpriteButtonDownUndoRedo = true;
 				}
 				//PostMessage(g_mainhwnd, WM_KEYDOWN, VK_CONTROL | 'Z', 0);
 				//PostMessage(s_3dwnd, WM_KEYDOWN, VK_CONTROL | 'Z', 0);
@@ -8514,6 +8681,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				//RollbackCurBoneNo();
 				if ((s_undoFlag == false) && (s_redoFlag == false)) {
 					s_redoFlag = true;
+					s_spundo[1].ButtonDown();
+					s_SpriteButtonDownUndoRedo = true;
 				}
 				//PostMessage(g_mainhwnd, WM_KEYDOWN, VK_CONTROL | VK_SHIFT | 'Z', 0);
 				//PostMessage(s_3dwnd, WM_KEYDOWN, VK_CONTROL | VK_SHIFT | 'Z', 0);
@@ -8576,6 +8745,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				if (s_model) {
 					if (s_cameradollyFlag == false) {
 						s_cameradollyFlag = true;
+						s_spcameradolly.ButtonDown();
+						s_SpriteButtonDown = true;
 					}
 				}
 				pickflag = true;
@@ -8585,6 +8756,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				s_pickinfo.buttonflag = spckind;
 				s_pickinfo.pickobjno = -1;
 				RollbackCurBoneNo();
+				if ((spckind >= PICK_CAMROT) && (spckind <= PICK_CAMDIST)) {
+					s_spcam[spckind - PICK_CAMROT].ButtonDown();
+				}
 				pickflag = true;
 			}
 		}
@@ -8662,6 +8836,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			if ((pickflag == false) && (PickSpCpLW2W(ptCursor) != 0)) {
 				if (s_copyLW2WFlag == false) {
 					s_copyLW2WFlag = true;
+					s_spcplw2w.ButtonDown();
+					s_SpriteButtonDown = true;
 				}
 				pickflag = true;
 			}
@@ -8669,6 +8845,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			if ((pickflag == false) && (PickSpSmooth(ptCursor) != 0)) {
 				if (s_smoothFlag == false) {
 					s_smoothFlag = true;
+					s_spsmooth.ButtonDown();
+					s_SpriteButtonDown = true;
 				}
 				pickflag = true;
 			}
@@ -8676,12 +8854,16 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			if ((pickflag == false) && (PickSpConstExe(ptCursor) != 0)) {
 				if (s_constexeFlag == false) {
 					s_constexeFlag = true;
+					s_spconstexe.ButtonDown();
+					s_SpriteButtonDown = true;
 				}
 				pickflag = true;
 			}
 			if ((pickflag == false) && (PickSpConstRefresh(ptCursor) != 0)) {
 				if (s_constrefreshFlag == false) {
 					s_constrefreshFlag = true;
+					s_spconstrefresh.ButtonDown();
+					s_SpriteButtonDown = true;
 				}
 				pickflag = true;
 			}
@@ -8689,6 +8871,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 			if ((pickflag == false) && (PickSpFrog2(ptCursor) != 0)) {
 				if (s_model) {
+					s_spret2prev2.ButtonDown();
+					s_SpriteButtonDown = true;
 					ChangeToolSpriteMode();
 				}
 				pickflag = true;
@@ -8697,6 +8881,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				if (s_model) {
 					if (s_copyFlag == false) {
 						s_copyFlag = true;
+						s_spcopy.ButtonDown();
+						s_SpriteButtonDown = true;
 					}
 				}
 				pickflag = true;
@@ -8705,6 +8891,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				if (s_model) {
 					if (s_symcopyFlag == false) {
 						s_symcopyFlag = true;
+						s_spsymcopy.ButtonDown();
+						s_SpriteButtonDown = true;
 					}
 				}
 				pickflag = true;
@@ -8713,6 +8901,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				if (s_model) {
 					if (s_pasteFlag == false) {
 						s_pasteFlag = true;
+						s_sppaste.ButtonDown();
+						s_SpriteButtonDown = true;
 					}
 				}
 				pickflag = true;
@@ -8721,6 +8911,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				if (s_model) {
 					if (s_selCopyHisotryFlag == false) {
 						s_selCopyHisotryFlag = true;
+						s_spcopyhistory.ButtonDown();
+						s_SpriteButtonDown = true;
 					}
 				}
 				pickflag = true;
@@ -8732,11 +8924,15 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					if (pickinterpolate == 1) {
 						if (s_interpolateFlag == false) {
 							s_interpolateFlag = true;
+							s_spinterpolate.ButtonDown();
+							s_SpriteButtonDown = true;
 						}
 					}
 					else if (pickinterpolate == 2) {
 						if (s_jumpinterpolateFlag == false) {
 							s_jumpinterpolateFlag = true;
+							s_spjumpinterpolate.ButtonDown();
+							s_SpriteButtonDown = true;
 						}
 					}
 					else {
@@ -8749,6 +8945,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				if (s_model) {
 					if (s_initmpFlag == false) {
 						s_initmpFlag = true;
+						s_spinit.ButtonDown();
+						s_SpriteButtonDown = true;
 					}
 				}
 				pickflag = true;
@@ -8757,6 +8955,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				if (s_model) {
 					if (s_scaleAllInitFlag == false) {
 						s_scaleAllInitFlag = true;
+						s_spscaleinit.ButtonDown();
+						s_SpriteButtonDown = true;
 					}
 				}
 				pickflag = true;
@@ -8765,6 +8965,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				if (s_model) {
 					if (s_motpropFlag == false) {
 						s_motpropFlag = true;
+						s_spproperty.ButtonDown();
+						s_SpriteButtonDown = true;
 					}
 				}
 				pickflag = true;
@@ -8777,6 +8979,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						g_previewFlag = 0;
 						s_LcursorFlag = true;
 						s_zeroFrameFlag = true;
+						s_spzeroframe.ButtonDown();
+						s_SpriteButtonDown = true;
 					}
 				}
 				pickflag = true;
@@ -8785,6 +8989,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				if (s_model) {
 					if (s_modelworldmatFlag == false) {
 						s_modelworldmatFlag = true;
+						s_spmodelposdir.ButtonDown();
+						s_SpriteButtonDown = true;
 					}
 				}
 				pickflag = true;
@@ -8793,6 +8999,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				if (s_model) {
 					if (s_materialrateFlag == false) {
 						s_materialrateFlag = true;
+						s_spmaterialrate.ButtonDown();
+						s_SpriteButtonDown = true;
 					}
 				}
 				pickflag = true;
@@ -8857,6 +9065,10 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				if (spakind != 0) {
 
 					pickflag = true;
+
+					if ((spakind >= PICK_SPA_X) && (spakind <= PICK_SPA_Z)) {
+						s_spaxis[spakind - PICK_SPA_X].ButtonDown();
+					}
 
 					if (g_edittarget != EDITTARGET_CAMERA) {
 						if (s_saveboneno >= 0) {
@@ -9102,6 +9314,20 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		ReleaseCapture();
 		//}
 		//ReleaseCapture();
+
+
+		{
+			int spacnt;
+			for (spacnt = 0; spacnt < SPR_CAM_MAX; spacnt++) {
+				s_spcam[spacnt].ButtonUp();
+			}
+		}
+		{
+			int spacnt;
+			for (spacnt = 0; spacnt < SPAXISNUM; spacnt++) {
+				s_spaxis[spacnt].ButtonUp();
+			}
+		}
 
 
 		bool ikdoneflag = false;
@@ -9366,13 +9592,14 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 
 		}
-		else {
-			s_pickinfo.buttonflag = 0;
-			s_ikcnt = 0;
-			s_onragdollik = 0;
 
-			OnSpriteUndo();
-		}
+		//else {//2024/06/18 OnFrameToolWnd()に移動
+		//	s_pickinfo.buttonflag = 0;
+		//	s_ikcnt = 0;
+		//	s_onragdollik = 0;
+		//
+		//	OnSpriteUndo();
+		//}
 
 	}
 	else if (uMsg == WM_RBUTTONDOWN) {
@@ -16242,7 +16469,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.23\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.24\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -21432,6 +21659,7 @@ int SetSpUndoParams()
 		//CallF(s_spundo[spacnt].sprite->SetPos(disppos), return 1);
 		//CallF(s_spundo[spacnt].sprite->SetSize(dispsize), return 1);
 		s_spundo[spacnt].sprite.UpdateScreen(disppos, dispsize);
+		s_spundo[spacnt].sprite_pushed.UpdateScreen(disppos, dispsize);
 	}
 
 	return 0;
@@ -21468,6 +21696,7 @@ int SetSpAxisParams()
 		//CallF(s_spaxis[spacnt].sprite->SetPos(disppos), return 1);
 		//CallF(s_spaxis[spacnt].sprite->SetSize(dispsize), return 1);
 		s_spaxis[spacnt].sprite.UpdateScreen(disppos, dispsize);
+		s_spaxis[spacnt].sprite_pushed.UpdateScreen(disppos, dispsize);
 	}
 
 	return 0;
@@ -22038,6 +22267,7 @@ int SetSpRet2PrevParams()
 		//CallF(s_spret2prev.sprite->SetPos(disppos), return 1);
 		//CallF(s_spret2prev.sprite->SetSize(dispsize), return 1);
 		s_spret2prev.sprite.UpdateScreen(disppos, dispsize);
+		s_spret2prev.sprite_pushed.UpdateScreen(disppos, dispsize);
 	}
 
 	{
@@ -22058,6 +22288,7 @@ int SetSpRet2PrevParams()
 		//CallF(s_spret2prev2.sprite->SetPos(disppos), return 1);
 		//CallF(s_spret2prev2.sprite->SetSize(dispsize), return 1);
 		s_spret2prev2.sprite.UpdateScreen(disppos, dispsize);
+		s_spret2prev2.sprite_pushed.UpdateScreen(disppos, dispsize);
 	}
 
 	return 0;
@@ -22154,7 +22385,7 @@ int SetSpCamParams()
 		//CallF(s_spcam[spacnt].sprite->SetPos(disppos), return 1);
 		//CallF(s_spcam[spacnt].sprite->SetSize(dispsize), return 1);
 		s_spcam[spacnt].sprite.UpdateScreen(disppos, dispsize);
-
+		s_spcam[spacnt].sprite_pushed.UpdateScreen(disppos, dispsize);
 	}
 
 	return 0;
@@ -22238,6 +22469,7 @@ int SetSpCopyParams()
 	//CallF(s_spcopy.sprite->SetPos(disppos), return 1);
 	//CallF(s_spcopy.sprite->SetSize(dispsize), return 1);
 	s_spcopy.sprite.UpdateScreen(disppos, dispsize);
+	s_spcopy.sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22262,6 +22494,7 @@ int SetSpSymCopyParams()
 	//CallF(s_spsymcopy.sprite->SetPos(disppos), return 1);
 	//CallF(s_spsymcopy.sprite->SetSize(dispsize), return 1);
 	s_spsymcopy.sprite.UpdateScreen(disppos, dispsize);
+	s_spsymcopy.sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22287,6 +22520,7 @@ int SetSpPasteParams()
 	//CallF(s_sppaste.sprite->SetPos(disppos), return 1);
 	//CallF(s_sppaste.sprite->SetSize(dispsize), return 1);
 	s_sppaste.sprite.UpdateScreen(disppos, dispsize);
+	s_sppaste.sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22311,6 +22545,7 @@ int SetSpCopyHistoryParams()
 	//CallF(s_spcopyhistory.sprite->SetPos(disppos), return 1);
 	//CallF(s_spcopyhistory.sprite->SetSize(dispsize), return 1);
 	s_spcopyhistory.sprite.UpdateScreen(disppos, dispsize);
+	s_spcopyhistory.sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22333,6 +22568,7 @@ int SetSpInterpolateParams()
 		dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
 
 		s_spinterpolate.sprite.UpdateScreen(disppos, dispsize);
+		s_spinterpolate.sprite_pushed.UpdateScreen(disppos, dispsize);
 	}
 
 
@@ -22349,6 +22585,7 @@ int SetSpInterpolateParams()
 		dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
 
 		s_spjumpinterpolate.sprite.UpdateScreen(disppos, dispsize);
+		s_spjumpinterpolate.sprite_pushed.UpdateScreen(disppos, dispsize);
 	}
 
 
@@ -22373,6 +22610,7 @@ int SetSpInitParams()
 	//CallF(s_spinit.sprite->SetPos(disppos), return 1);
 	//CallF(s_spinit.sprite->SetSize(dispsize), return 1);
 	s_spinit.sprite.UpdateScreen(disppos, dispsize);
+	s_spinit.sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22396,6 +22634,7 @@ int SetSpScaleInitParams()
 	//CallF(s_spscaleinit.sprite->SetPos(disppos), return 1);
 	//CallF(s_spscaleinit.sprite->SetSize(dispsize), return 1);
 	s_spscaleinit.sprite.UpdateScreen(disppos, dispsize);
+	s_spscaleinit.sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22418,6 +22657,7 @@ int SetSpPropertyParams()
 	//CallF(s_spproperty.sprite->SetPos(disppos), return 1);
 	//CallF(s_spproperty.sprite->SetSize(dispsize), return 1);
 	s_spproperty.sprite.UpdateScreen(disppos, dispsize);
+	s_spproperty.sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22441,6 +22681,7 @@ int SetSpZeroFrameParams()
 	//CallF(s_spzeroframe.sprite->SetPos(disppos), return 1);
 	//CallF(s_spzeroframe.sprite->SetSize(dispsize), return 1);
 	s_spzeroframe.sprite.UpdateScreen(disppos, dispsize);
+	s_spzeroframe.sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22463,6 +22704,7 @@ int SetSpCameraDollyParams()
 	//CallF(s_spcameradolly.sprite->SetPos(disppos), return 1);
 	//CallF(s_spcameradolly.sprite->SetSize(dispsize), return 1);
 	s_spcameradolly.sprite.UpdateScreen(disppos, dispsize);
+	s_spcameradolly.sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22485,6 +22727,7 @@ int SetSpModelPosDirParams()
 	//CallF(s_spmodelposdir.sprite->SetPos(disppos), return 1);
 	//CallF(s_spmodelposdir.sprite->SetSize(dispsize), return 1);
 	s_spmodelposdir.sprite.UpdateScreen(disppos, dispsize);
+	s_spmodelposdir.sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22507,6 +22750,7 @@ int SetSpMaterialRateParams()
 	//CallF(s_spmaterialrate.sprite->SetPos(disppos), return 1);
 	//CallF(s_spmaterialrate.sprite->SetSize(dispsize), return 1);
 	s_spmaterialrate.sprite.UpdateScreen(disppos, dispsize);
+	s_spmaterialrate.sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22550,10 +22794,12 @@ int SetSpRigParams()
 	//CallF(s_sprig[SPRIG_INACTIVE].sprite->SetPos(disppos), return 1);
 	//CallF(s_sprig[SPRIG_INACTIVE].sprite->SetSize(dispsize), return 1);
 	s_sprig[SPRIG_INACTIVE].sprite.UpdateScreen(disppos, dispsize);
+	s_sprig[SPRIG_INACTIVE].sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	//CallF(s_sprig[SPRIG_ACTIVE].sprite->SetPos(disppos), return 1);
 	//CallF(s_sprig[SPRIG_ACTIVE].sprite->SetSize(dispsize), return 1);
 	s_sprig[SPRIG_ACTIVE].sprite.UpdateScreen(disppos, dispsize);
+	s_sprig[SPRIG_ACTIVE].sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22575,6 +22821,7 @@ int SetSpCpLW2WParams()
 	//CallF(s_spcplw2w.sprite->SetPos(disppos), return 1);
 	//CallF(s_spcplw2w.sprite->SetSize(dispsize), return 1);
 	s_spcplw2w.sprite.UpdateScreen(disppos, dispsize);
+	s_spcplw2w.sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22596,6 +22843,7 @@ int SetSpUpperBarParams()
 	//CallF(s_spupperbar.sprite->SetPos(disppos), return 1);
 	//CallF(s_spupperbar.sprite->SetSize(dispsize), return 1);
 	s_spupperbar.sprite.UpdateScreen(disppos, dispsize);
+	s_spupperbar.sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 }
@@ -22616,6 +22864,7 @@ int SetSpSmoothParams()
 	//CallF(s_spsmooth.sprite->SetPos(disppos), return 1);
 	//CallF(s_spsmooth.sprite->SetSize(dispsize), return 1);
 	s_spsmooth.sprite.UpdateScreen(disppos, dispsize);
+	s_spsmooth.sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22637,6 +22886,7 @@ int SetSpConstExeParams()
 	//CallF(s_spconstexe.sprite->SetPos(disppos), return 1);
 	//CallF(s_spconstexe.sprite->SetSize(dispsize), return 1);
 	s_spconstexe.sprite.UpdateScreen(disppos, dispsize);
+	s_spconstexe.sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22658,6 +22908,7 @@ int SetSpConstRefreshParams()
 	//CallF(s_spconstrefresh.sprite->SetPos(disppos), return 1);
 	//CallF(s_spconstrefresh.sprite->SetSize(dispsize), return 1);
 	s_spconstrefresh.sprite.UpdateScreen(disppos, dispsize);
+	s_spconstrefresh.sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 
@@ -22680,6 +22931,7 @@ int SetSpMouseHereParams()
 	//CallF(s_spmousehere.sprite->SetPos(disppos), return 1);
 	//CallF(s_spmousehere.sprite->SetSize(dispsize), return 1);
 	s_spmousehere.sprite.UpdateScreen(disppos, dispsize);
+	s_spmousehere.sprite_pushed.UpdateScreen(disppos, dispsize);
 
 	return 0;
 }
@@ -22845,6 +23097,8 @@ int PickSpDispSW(POINT srcpos)
 	bool pickfrog = PickSpFrog(srcpos);
 	if (pickfrog == true) {
 		kind = -2;
+		s_spret2prev.ButtonDown();
+		s_SpriteButtonDown = true;
 	}
 
 
@@ -22911,6 +23165,8 @@ int PickSpRigidSW(POINT srcpos)
 	bool pickfrog = PickSpFrog(srcpos);
 	if (pickfrog == true) {
 		kind = -2;
+		s_spret2prev.ButtonDown();
+		s_SpriteButtonDown = true;
 	}
 
 
@@ -22973,6 +23229,8 @@ int PickSpRetargetSW(POINT srcpos)
 	bool pickfrog = PickSpFrog(srcpos);
 	if (pickfrog == true) {
 		kind = -2;
+		s_spret2prev.ButtonDown();
+		s_SpriteButtonDown = true;
 	}
 
 
@@ -23018,6 +23276,8 @@ int PickSpEffectSW(POINT srcpos)
 	bool pickfrog = PickSpFrog(srcpos);
 	if (pickfrog == true) {
 		kind = -2;
+		s_spret2prev.ButtonDown();
+		s_SpriteButtonDown = true;
 	}
 
 
@@ -23275,6 +23535,8 @@ int PickSpGUISW(POINT srcpos)
 	bool pickfrog = PickSpFrog(srcpos);
 	if (pickfrog == true) {
 		kind = -2;
+		s_spret2prev.ButtonDown();
+		s_SpriteButtonDown = true;
 	}
 
 
@@ -35912,7 +36174,29 @@ int OnFrameMouseButton()
 int OnFrameToolWnd()
 {
 
+	//2024/06/18
+	if (s_SpriteButtonDown) {
+		//2024/06/18
+		//スプライトボタンを押した状態を表示してから処理を行うために
+		//s_SpriteButtonDownがtrueの場合は何もしないで1周回して　次の周回で処理を行う
+		s_SpriteButtonDown = false;
+		return 0;
+	}
+
+
 	OnFrameBlendShape();
+
+
+	//2024/06/18 undo, redoはOnFrameUndo()で処理
+	//if (s_undoFlag || s_redoFlag) {
+	//	s_pickinfo.buttonflag = 0;
+	//	s_ikcnt = 0;
+	//	s_onragdollik = 0;
+	//
+	//	OnSpriteUndo();
+	//}
+
+
 
 	if (s_topslidersEditRateFlag) {
 		if (s_topSlidersWnd && s_owpEditRateSlider) {
@@ -38038,6 +38322,19 @@ int OnFrameUndo(bool fromds, int fromdskind)
 	s_underoperation = true;
 
 
+	//2024/06/18
+	if (s_SpriteButtonDownUndoRedo) {
+		//2024/06/18
+		//スプライトボタンを押した状態を表示してから処理を行うために
+		//s_SpriteButtonDownUndoRedoがtrueの場合は何もしないで1周回して　次の周回で処理を行う
+		s_SpriteButtonDownUndoRedo = false;
+		s_underoperation = false;
+		return 0;
+	}
+
+
+
+
 	//2022/11/07 playerbuttonのprevrange, nextrangeに　undo, redoとして対応
 
 
@@ -38059,12 +38356,16 @@ int OnFrameUndo(bool fromds, int fromdskind)
 		if (((fromds && (fromdskind == 1)) || (g_keybuf[VK_SHIFT] & 0x80)) && (s_undoFlag == false) && (s_redoFlag == false)) {
 			//redo
 			s_redoFlag = true;
-			OnSpriteUndo();
+			s_spundo[1].ButtonDown();
+			s_SpriteButtonDownUndoRedo = true;
+			//OnSpriteUndo();
 		}
 		else if (((fromds && (fromdskind == 0)) || !fromds) && (s_undoFlag == false) && (s_redoFlag == false)) {
 			//undo
 			s_undoFlag = true;
-			OnSpriteUndo();
+			s_spundo[0].ButtonDown();
+			s_SpriteButtonDownUndoRedo = true;
+			//OnSpriteUndo();
 		}
 	}
 
@@ -46325,11 +46626,44 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 	}
 
 
+
+	{
+		s_spupperbar.UpdatePushCount();
+		s_spret2prev.UpdatePushCount();
+		s_mousecenteron.UpdatePushCount();
+		//s_sprefpos.UpdatePushCount();
+		//s_splimiteul.UpdatePushCount();
+		//s_spscraping.UpdatePushCount();
+		s_spcplw2w.UpdatePushCount();
+		int spucnt;
+		for (spucnt = 0; spucnt < 2; spucnt++) {
+			s_spundo[spucnt].UpdatePushCount();
+		}
+		s_spsmooth.UpdatePushCount();
+		s_spconstexe.UpdatePushCount();
+		s_spconstrefresh.UpdatePushCount();
+		s_spret2prev2.UpdatePushCount();
+		s_spcopy.UpdatePushCount();
+		s_spsymcopy.UpdatePushCount();
+		s_sppaste.UpdatePushCount();
+		s_spcopyhistory.UpdatePushCount();
+		s_spjumpinterpolate.UpdatePushCount();
+		s_spinterpolate.UpdatePushCount();
+		s_spinit.UpdatePushCount();
+		s_spscaleinit.UpdatePushCount();
+		s_spproperty.UpdatePushCount();
+		s_spzeroframe.UpdatePushCount();
+		s_spcameradolly.UpdatePushCount();
+		s_spmodelposdir.UpdatePushCount();
+		s_spmaterialrate.UpdatePushCount();
+	}
+
+
 	{
 		//2024/03/04
 		myRenderer::RENDERSPRITE rendersprite;
 		rendersprite.Init();
-		rendersprite.psprite = &(s_spupperbar.sprite);
+		rendersprite.psprite = s_spupperbar.GetSpriteForRender();
 		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
 
@@ -46372,7 +46706,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 	//s_spret2prev.sprite.DrawScreen(pRenderContext);
 	myRenderer::RENDERSPRITE rendersprite;
 	rendersprite.Init();
-	rendersprite.psprite = &(s_spret2prev.sprite);
+	rendersprite.psprite = s_spret2prev.GetSpriteForRender();
 	s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 
 
@@ -46381,7 +46715,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		//s_mousecenteron.sprite.DrawScreen(pRenderContext);
 		myRenderer::RENDERSPRITE rendersprite;
 		rendersprite.Init();
-		rendersprite.psprite = &(s_mousecenteron.sprite);
+		rendersprite.psprite = s_mousecenteron.GetSpriteForRender();
 		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
 
@@ -46413,20 +46747,10 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		}
 
 		{
-			if (s_spsel3d.state) {
-				//s_spsel3d.spriteON.DrawScreen(pRenderContext);
-				myRenderer::RENDERSPRITE rendersprite;
-				rendersprite.Init();
-				rendersprite.psprite = &(s_spsel3d.spriteON);
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-			}
-			else {
-				//s_spsel3d.spriteOFF.DrawScreen(pRenderContext);
-				myRenderer::RENDERSPRITE rendersprite;
-				rendersprite.Init();
-				rendersprite.psprite = &(s_spsel3d.spriteOFF);
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-			}
+			myRenderer::RENDERSPRITE rendersprite;
+			rendersprite.Init();
+			rendersprite.psprite = s_spsel3d.GetSpriteForRender();
+			s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 		}
 		//{
 		//	int spgcnt;
@@ -46486,20 +46810,10 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				//Plate Menu 0
 				int spgcnt;
 				for (spgcnt = 0; spgcnt < SPGUISWNUM; spgcnt++) {
-					if (s_spguisw[spgcnt].state) {
-						//s_spguisw[spgcnt].spriteON.DrawScreen(pRenderContext);
-						myRenderer::RENDERSPRITE rendersprite;
-						rendersprite.Init();
-						rendersprite.psprite = &(s_spguisw[spgcnt].spriteON);
-						s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-					}
-					else {
-						//s_spguisw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
-						myRenderer::RENDERSPRITE rendersprite;
-						rendersprite.Init();
-						rendersprite.psprite = &(s_spguisw[spgcnt].spriteOFF);
-						s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-					}
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = s_spguisw[spgcnt].GetSpriteForRender();
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
 		}
@@ -46633,74 +46947,41 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				//s_spaxis[spacnt].sprite.DrawScreen(pRenderContext);
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
-				rendersprite.psprite = &(s_spaxis[spacnt].sprite);
+				//rendersprite.psprite = &(s_spaxis[spacnt].sprite);
+				rendersprite.psprite = s_spaxis[spacnt].GetSpriteForRender();
 				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			//IK Mode
 			int spgcnt;
 			for (spgcnt = 0; spgcnt < 3; spgcnt++) {
-				if (s_spikmodesw[spgcnt].state) {
-					//s_spikmodesw[spgcnt].spriteON.DrawScreen(pRenderContext);
-					myRenderer::RENDERSPRITE rendersprite;
-					rendersprite.Init();
-					rendersprite.psprite = &(s_spikmodesw[spgcnt].spriteON);
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-				}
-				else {
-					//s_spikmodesw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
-					myRenderer::RENDERSPRITE rendersprite;
-					rendersprite.Init();
-					rendersprite.psprite = &(s_spikmodesw[spgcnt].spriteOFF);
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-				}
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = s_spikmodesw[spgcnt].GetSpriteForRender();
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			//lodsw
-			if (s_sprefpos.state) {
-				//s_sprefpos.spriteON.DrawScreen(pRenderContext);
+			{
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
-				rendersprite.psprite = &(s_sprefpos.spriteON);
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-			}
-			else {
-				//s_sprefpos.spriteOFF.DrawScreen(pRenderContext);
-				myRenderer::RENDERSPRITE rendersprite;
-				rendersprite.Init();
-				rendersprite.psprite = &(s_sprefpos.spriteOFF);
+				rendersprite.psprite = s_sprefpos.GetSpriteForRender();
 				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			//limiteulsw
-			if (s_splimiteul.state) {
-				//s_splimiteul.spriteON.DrawScreen(pRenderContext);
+			{
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
-				rendersprite.psprite = &(s_splimiteul.spriteON);
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-			}
-			else {
-				//s_splimiteul.spriteOFF.DrawScreen(pRenderContext);
-				myRenderer::RENDERSPRITE rendersprite;
-				rendersprite.Init();
-				rendersprite.psprite = &(s_splimiteul.spriteOFF);
+				rendersprite.psprite = s_splimiteul.GetSpriteForRender();
 				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			//scrapingsw
-			if (s_spscraping.state) {
-				//s_spscraping.spriteON.DrawScreen(pRenderContext);
+			{
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
-				rendersprite.psprite = &(s_spscraping.spriteON);
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-			}
-			else {
-				//s_spscraping.spriteOFF.DrawScreen(pRenderContext);
-				myRenderer::RENDERSPRITE rendersprite;
-				rendersprite.Init();
-				rendersprite.psprite = &(s_spscraping.spriteOFF);
+				rendersprite.psprite = s_spscraping.GetSpriteForRender();
 				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
@@ -46709,7 +46990,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				//s_spcplw2w.sprite.DrawScreen(pRenderContext);
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
-				rendersprite.psprite = &(s_spcplw2w.sprite);
+				rendersprite.psprite = s_spcplw2w.GetSpriteForRender();
 				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
@@ -46720,7 +47001,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				//s_spundo[spucnt].sprite.DrawScreen(pRenderContext);
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
-				rendersprite.psprite = &(s_spundo[spucnt].sprite);
+				rendersprite.psprite = s_spundo[spucnt].GetSpriteForRender();
 				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
@@ -46729,7 +47010,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				//s_sprig[s_oprigflag].sprite.DrawScreen(pRenderContext);
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
-				rendersprite.psprite = &(s_sprig[s_oprigflag].sprite);
+				rendersprite.psprite = s_sprig[s_oprigflag].GetSpriteForRender();
 				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
@@ -46738,7 +47019,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				//s_spsmooth.sprite.DrawScreen(pRenderContext);
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
-				rendersprite.psprite = &(s_spsmooth.sprite);
+				rendersprite.psprite = s_spsmooth.GetSpriteForRender();
 				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
@@ -46747,7 +47028,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				//s_spconstexe.sprite.DrawScreen(pRenderContext);
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
-				rendersprite.psprite = &(s_spconstexe.sprite);
+				rendersprite.psprite = s_spconstexe.GetSpriteForRender();
 				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
@@ -46756,7 +47037,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				//s_spconstrefresh.sprite.DrawScreen(pRenderContext);
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
-				rendersprite.psprite = &(s_spconstrefresh.sprite);
+				rendersprite.psprite = s_spconstrefresh.GetSpriteForRender();
 				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
@@ -46764,7 +47045,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				//s_spret2prev2.sprite.DrawScreen(pRenderContext);
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
-				rendersprite.psprite = &(s_spret2prev2.sprite);
+				rendersprite.psprite = s_spret2prev2.GetSpriteForRender();
 				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
@@ -46775,7 +47056,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					//s_spcopy.sprite.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
-					rendersprite.psprite = &(s_spcopy.sprite);
+					rendersprite.psprite = s_spcopy.GetSpriteForRender();
 					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 
@@ -46784,7 +47065,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					//s_spsymcopy.sprite.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
-					rendersprite.psprite = &(s_spsymcopy.sprite);
+					rendersprite.psprite = s_spsymcopy.GetSpriteForRender();
 					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 
@@ -46793,7 +47074,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					//s_sppaste.sprite.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
-					rendersprite.psprite = &(s_sppaste.sprite);
+					rendersprite.psprite = s_sppaste.GetSpriteForRender();
 					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 
@@ -46802,7 +47083,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					//s_spcopyhistory.sprite.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
-					rendersprite.psprite = &(s_spcopyhistory.sprite);
+					rendersprite.psprite = s_spcopyhistory.GetSpriteForRender();
 					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
@@ -46812,7 +47093,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					//s_spinterpolate.sprite.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
-					rendersprite.psprite = &(s_spjumpinterpolate.sprite);
+					rendersprite.psprite = s_spjumpinterpolate.GetSpriteForRender();
 					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 
@@ -46821,7 +47102,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					//s_spinterpolate.sprite.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
-					rendersprite.psprite = &(s_spinterpolate.sprite);
+					rendersprite.psprite = s_spinterpolate.GetSpriteForRender();
 					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 
@@ -46830,7 +47111,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					//s_spinit.sprite.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
-					rendersprite.psprite = &(s_spinit.sprite);
+					rendersprite.psprite = s_spinit.GetSpriteForRender();
 					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				{
@@ -46838,7 +47119,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					//s_spscaleinit.sprite.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
-					rendersprite.psprite = &(s_spscaleinit.sprite);
+					rendersprite.psprite = s_spscaleinit.GetSpriteForRender();
 					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				{
@@ -46846,7 +47127,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					//s_spproperty.sprite.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
-					rendersprite.psprite = &(s_spproperty.sprite);
+					rendersprite.psprite = s_spproperty.GetSpriteForRender();
 					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
@@ -46856,7 +47137,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					//s_spzeroframe.sprite.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
-					rendersprite.psprite = &(s_spzeroframe.sprite);
+					rendersprite.psprite = s_spzeroframe.GetSpriteForRender();
 					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				{
@@ -46864,7 +47145,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					//s_spcameradolly.sprite.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
-					rendersprite.psprite = &(s_spcameradolly.sprite);
+					rendersprite.psprite = s_spcameradolly.GetSpriteForRender();
 					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 
 				}
@@ -46873,7 +47154,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					//s_spmodelposdir.sprite.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
-					rendersprite.psprite = &(s_spmodelposdir.sprite);
+					rendersprite.psprite = s_spmodelposdir.GetSpriteForRender();
 					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 
 				}
@@ -46882,7 +47163,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					//s_spmaterialrate.sprite.DrawScreen(pRenderContext);
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
-					rendersprite.psprite = &(s_spmaterialrate.sprite);
+					rendersprite.psprite = s_spmaterialrate.GetSpriteForRender();
 					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
@@ -46898,47 +47179,22 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 			//s_spcam[spccnt].sprite.DrawScreen(pRenderContext);
 			myRenderer::RENDERSPRITE rendersprite;
 			rendersprite.Init();
-			rendersprite.psprite = &(s_spcam[spccnt].sprite);
+			rendersprite.psprite = s_spcam[spccnt].GetSpriteForRender();
 			s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 		}
 		//cameramode
-		if (s_spcameramode.state == true) {
-			//s_spcameramode.spriteON.DrawScreen(pRenderContext);
+		{
 			myRenderer::RENDERSPRITE rendersprite;
 			rendersprite.Init();
-			rendersprite.psprite = &(s_spcameramode.spriteON);
-			s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-		}
-		else {
-			//s_spcameramode.spriteOFF.DrawScreen(pRenderContext);
-			myRenderer::RENDERSPRITE rendersprite;
-			rendersprite.Init();
-			rendersprite.psprite = &(s_spcameramode.spriteOFF);
+			rendersprite.psprite = s_spcameramode.GetSpriteForRender();
 			s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 		}
 		//camerainherit
 		if (g_cameraanimmode != 0) {
-			if (s_spcamerainherit.mode == 0) {
-				//s_spcamerainherit.sprite1.DrawScreen(pRenderContext);
-				myRenderer::RENDERSPRITE rendersprite;
-				rendersprite.Init();
-				rendersprite.psprite = &(s_spcamerainherit.sprite1);
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-			}
-			else if (s_spcamerainherit.mode == 1) {
-				//s_spcamerainherit.sprite2.DrawScreen(pRenderContext);
-				myRenderer::RENDERSPRITE rendersprite;
-				rendersprite.Init();
-				rendersprite.psprite = &(s_spcamerainherit.sprite2);
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-			}
-			else if (s_spcamerainherit.mode == 2) {
-				//s_spcamerainherit.sprite3.DrawScreen(pRenderContext);
-				myRenderer::RENDERSPRITE rendersprite;
-				rendersprite.Init();
-				rendersprite.psprite = &(s_spcamerainherit.sprite3);
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-			}
+			myRenderer::RENDERSPRITE rendersprite;
+			rendersprite.Init();
+			rendersprite.psprite = s_spcamerainherit.GetSpriteForRender();
+			s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 		}
 	}
 
@@ -46949,7 +47205,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		//s_spmousehere.sprite.DrawScreen(pRenderContext);
 		myRenderer::RENDERSPRITE rendersprite;
 		rendersprite.Init();
-		rendersprite.psprite = &(s_spmousehere.sprite);
+		rendersprite.psprite = s_spmousehere.GetSpriteForRender();
 		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
 
@@ -70066,6 +70322,12 @@ int CreateSprites()
 	s_spritetex1->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex1;
 	s_spundo[0].sprite.Init(spriteinitdata, screenvertexflag);
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Undo_1_pushed.png");
+	s_spritetex_pushed1 = new Texture();
+	s_spritetex_pushed1->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed1;
+	s_spundo[0].sprite_pushed.Init(spriteinitdata, screenvertexflag);
 
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Redo_1.png");
@@ -70073,23 +70335,12 @@ int CreateSprites()
 	s_spritetex2->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex2;
 	s_spundo[1].sprite.Init(spriteinitdata, screenvertexflag);
-
-	
-
 	wcscpy_s(filepath, MAX_PATH, mpath);
-	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Undo_1.png");
-	s_spritetex3 = new Texture();
-	s_spritetex3->InitFromWICFile(filepath);
-	spriteinitdata.m_textures[0] = s_spritetex3;
-	s_spundo[0].sprite.Init(spriteinitdata, screenvertexflag);
-
-
-	wcscpy_s(filepath, MAX_PATH, mpath);
-	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Redo_1.png");
-	s_spritetex4 = new Texture();
-	s_spritetex4->InitFromWICFile(filepath);
-	spriteinitdata.m_textures[0] = s_spritetex4;
-	s_spundo[1].sprite.Init(spriteinitdata, screenvertexflag);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Redo_1_pushed.png");
+	s_spritetex_pushed2 = new Texture();
+	s_spritetex_pushed2->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed2;
+	s_spundo[1].sprite_pushed.Init(spriteinitdata, screenvertexflag);
 
 
 	wcscpy_s(filepath, MAX_PATH, mpath);
@@ -70098,13 +70349,25 @@ int CreateSprites()
 	s_spritetex5->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex5;
 	s_spaxis[0].sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\X_pushed.gif");
+	s_spritetex_pushed5 = new Texture();
+	s_spritetex_pushed5->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed5;
+	s_spaxis[0].sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Y.gif");
 	s_spritetex6 = new Texture();
 	s_spritetex6->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex6;
 	s_spaxis[1].sprite.Init(spriteinitdata, screenvertexflag);
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Y_pushed.gif");
+	s_spritetex_pushed6 = new Texture();
+	s_spritetex_pushed6->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed6;
+	s_spaxis[1].sprite_pushed.Init(spriteinitdata, screenvertexflag);
 
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Z.gif");
@@ -70112,7 +70375,13 @@ int CreateSprites()
 	s_spritetex7->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex7;
 	s_spaxis[2].sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Z_pushed.gif");
+	s_spritetex_pushed7 = new Texture();
+	s_spritetex_pushed7->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed7;
+	s_spaxis[2].sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\RefPosON.gif");
 	s_spritetex8 = new Texture();
@@ -70582,21 +70851,39 @@ int CreateSprites()
 	s_spritetex55->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex55;
 	s_spcam[SPR_CAM_I].sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\cam_i_pushed.gif");
+	s_spritetex_pushed55 = new Texture();
+	s_spritetex_pushed55->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed55;
+	s_spcam[SPR_CAM_I].sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\cam_kai.gif");
 	s_spritetex56 = new Texture();
 	s_spritetex56->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex56;
 	s_spcam[SPR_CAM_KAI].sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\cam_kai_pushed.gif");
+	s_spritetex_pushed56 = new Texture();
+	s_spritetex_pushed56->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed56;
+	s_spcam[SPR_CAM_KAI].sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\cam_kaku.gif");
 	s_spritetex57 = new Texture();
 	s_spritetex57->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex57;
 	s_spcam[SPR_CAM_KAKU].sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\cam_kaku_pushed.gif");
+	s_spritetex_pushed57 = new Texture();
+	s_spritetex_pushed57->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed57;
+	s_spcam[SPR_CAM_KAKU].sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\RigOFF.png");//2024/02/14 gif-->pngに
 	s_spritetex58 = new Texture();
@@ -70663,13 +70950,25 @@ int CreateSprites()
 	s_spritetex61->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex61;
 	s_spret2prev.sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\targetbutton_inv.png");
+	s_spritetex_pushed61 = new Texture();
+	s_spritetex_pushed61->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed61;
+	s_spret2prev.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\img_ret2prev2.png");
 	s_spritetex62 = new Texture();
 	s_spritetex62->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex62;
 	s_spret2prev2.sprite.Init(spriteinitdata, screenvertexflag);
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\targetbutton_inv.png");
+	s_spritetex_pushed62 = new Texture();
+	s_spritetex_pushed62->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed62;
+	s_spret2prev2.sprite_pushed.Init(spriteinitdata, screenvertexflag);
 
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\targetbutton26.png");
@@ -70711,55 +71010,103 @@ int CreateSprites()
 	s_spritetex63->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex63;
 	s_spcplw2w.sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\BakeLW2W_pushed.png");
+	s_spritetex_pushed63 = new Texture();
+	s_spritetex_pushed63->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed63;
+	s_spcplw2w.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\SmoothFilter.png");
 	s_spritetex64 = new Texture();
 	s_spritetex64->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex64;
 	s_spsmooth.sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\SmoothFilter_pushed.png");
+	s_spritetex_pushed64 = new Texture();
+	s_spritetex_pushed64->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed64;
+	s_spsmooth.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Constraint_Execute.png");
 	s_spritetex65 = new Texture();
 	s_spritetex65->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex65;
 	s_spconstexe.sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Constraint_Execute_pushed.png");
+	s_spritetex_pushed65 = new Texture();
+	s_spritetex_pushed65->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed65;
+	s_spconstexe.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Constraint_refresh.png");
 	s_spritetex66 = new Texture();
 	s_spritetex66->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex66;
 	s_spconstrefresh.sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Constraint_refresh_pushed.png");
+	s_spritetex_pushed66 = new Texture();
+	s_spritetex_pushed66->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed66;
+	s_spconstrefresh.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\CopyButton.gif");
 	s_spritetex67 = new Texture();
 	s_spritetex67->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex67;
 	s_spcopy.sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\CopyButton_pushed.gif");
+	s_spritetex_pushed67 = new Texture();
+	s_spritetex_pushed67->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed67;
+	s_spcopy.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\SymCopyButton3.png");
 	s_spritetex68 = new Texture();
 	s_spritetex68->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex68;
 	s_spsymcopy.sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\SymCopyButton3_pushed.png");
+	s_spritetex_pushed68 = new Texture();
+	s_spritetex_pushed68->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed68;
+	s_spsymcopy.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\PasteButton.gif");
 	s_spritetex69 = new Texture();
 	s_spritetex69->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex69;
 	s_sppaste.sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\PasteButton_pushed.gif");
+	s_spritetex_pushed69 = new Texture();
+	s_spritetex_pushed69->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed69;
+	s_sppaste.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\CopyHistoryButton.gif");
 	s_spritetex70 = new Texture();
 	s_spritetex70->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex70;
 	s_spcopyhistory.sprite.Init(spriteinitdata, screenvertexflag);
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\CopyHistoryButton_pushed.gif");
+	s_spritetex_pushed70 = new Texture();
+	s_spritetex_pushed70->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed70;
+	s_spcopyhistory.sprite_pushed.Init(spriteinitdata, screenvertexflag);
 
 
 	wcscpy_s(filepath, MAX_PATH, mpath);
@@ -70768,6 +71115,12 @@ int CreateSprites()
 	s_spritetex85->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex85;
 	s_spjumpinterpolate.sprite.Init(spriteinitdata, screenvertexflag);
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\JumpInterpolation_1_pushed.png");
+	s_spritetex_pushed85 = new Texture();
+	s_spritetex_pushed85->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed85;
+	s_spjumpinterpolate.sprite_pushed.Init(spriteinitdata, screenvertexflag);
 
 
 	wcscpy_s(filepath, MAX_PATH, mpath);
@@ -70776,56 +71129,104 @@ int CreateSprites()
 	s_spritetex71->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex71;
 	s_spinterpolate.sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\InterpolateButton_pushed.png");
+	s_spritetex_pushed71 = new Texture();
+	s_spritetex_pushed71->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed71;
+	s_spinterpolate.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\InitButton.png");
 	s_spritetex72 = new Texture();
 	s_spritetex72->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex72;
 	s_spinit.sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\InitButton_pushed.png");
+	s_spritetex_pushed72 = new Texture();
+	s_spritetex_pushed72->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed72;
+	s_spinit.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\ScaleInitButton.png");
 	s_spritetex73 = new Texture();
 	s_spritetex73->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex73;
 	s_spscaleinit.sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\ScaleInitButton_pushed.png");
+	s_spritetex_pushed73 = new Texture();
+	s_spritetex_pushed73->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed73;
+	s_spscaleinit.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\PropertyButton.png");
 	s_spritetex74 = new Texture();
 	s_spritetex74->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex74;
 	s_spproperty.sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\PropertyButton_pushed.png");
+	s_spritetex_pushed74 = new Texture();
+	s_spritetex_pushed74->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed74;
+	s_spproperty.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Edit0FrameButton.png");
 	s_spritetex75 = new Texture();
 	s_spritetex75->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex75;
 	s_spzeroframe.sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Edit0FrameButton_pushed.png");
+	s_spritetex_pushed75 = new Texture();
+	s_spritetex_pushed75->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed75;
+	s_spzeroframe.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\CameraDollyButton.png");
 	s_spritetex76 = new Texture();
 	s_spritetex76->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex76;
 	s_spcameradolly.sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\CameraDollyButton_pushed.png");
+	s_spritetex_pushed76 = new Texture();
+	s_spritetex_pushed76->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed76;
+	s_spcameradolly.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\ModelPosDirButton.png");
 	s_spritetex77 = new Texture();
 	s_spritetex77->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex77;
 	s_spmodelposdir.sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\ModelPosDirButton_pushed.png");
+	s_spritetex_pushed77 = new Texture();
+	s_spritetex_pushed77->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed77;
+	s_spmodelposdir.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\MaterialRateButton.png");
 	s_spritetex78 = new Texture();
 	s_spritetex78->InitFromWICFile(filepath);
 	spriteinitdata.m_textures[0] = s_spritetex78;
 	s_spmaterialrate.sprite.Init(spriteinitdata, screenvertexflag);
-	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\MaterialRateButton_pushed.png");
+	s_spritetex_pushed78 = new Texture();
+	s_spritetex_pushed78->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex_pushed78;
+	s_spmaterialrate.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
 
 	
 	wcscpy_s(filepath, MAX_PATH, mpath);
@@ -71336,6 +71737,118 @@ void DestroySprites()
 		delete s_spritetex93;
 		s_spritetex93 = 0;
 	}
+
+
+
+	if (s_spritetex_pushed1) {
+		delete s_spritetex_pushed1;
+		s_spritetex_pushed1 = 0;
+	}
+	if (s_spritetex_pushed2) {
+		delete s_spritetex_pushed2;
+		s_spritetex_pushed2 = 0;
+	}
+	if (s_spritetex_pushed5) {
+		delete s_spritetex_pushed5;
+		s_spritetex_pushed5 = 0;
+	}
+	if (s_spritetex_pushed6) {
+		delete s_spritetex_pushed6;
+		s_spritetex_pushed6 = 0;
+	}
+	if (s_spritetex_pushed7) {
+		delete s_spritetex_pushed7;
+		s_spritetex_pushed7 = 0;
+	}
+	if (s_spritetex_pushed55) {
+		delete s_spritetex_pushed55;
+		s_spritetex_pushed55 = 0;
+	}
+	if (s_spritetex_pushed56) {
+		delete s_spritetex_pushed56;
+		s_spritetex_pushed56 = 0;
+	}
+	if (s_spritetex_pushed57) {
+		delete s_spritetex_pushed57;
+		s_spritetex_pushed57 = 0;
+	}
+	if (s_spritetex_pushed63) {
+		delete s_spritetex_pushed63;
+		s_spritetex_pushed63 = 0;
+	}
+	if (s_spritetex_pushed64) {
+		delete s_spritetex_pushed64;
+		s_spritetex_pushed64 = 0;
+	}
+	if (s_spritetex_pushed65) {
+		delete s_spritetex_pushed65;
+		s_spritetex_pushed65 = 0;
+	}
+	if (s_spritetex_pushed66) {
+		delete s_spritetex_pushed66;
+		s_spritetex_pushed66 = 0;
+	}
+	if (s_spritetex_pushed67) {
+		delete s_spritetex_pushed67;
+		s_spritetex_pushed67 = 0;
+	}
+	if (s_spritetex_pushed68) {
+		delete s_spritetex_pushed68;
+		s_spritetex_pushed68 = 0;
+	}
+	if (s_spritetex_pushed69) {
+		delete s_spritetex_pushed69;
+		s_spritetex_pushed69 = 0;
+	}
+	if (s_spritetex_pushed70) {
+		delete s_spritetex_pushed70;
+		s_spritetex_pushed70 = 0;
+	}
+	if (s_spritetex_pushed85) {
+		delete s_spritetex_pushed85;
+		s_spritetex_pushed85 = 0;
+	}
+	if (s_spritetex_pushed71) {
+		delete s_spritetex_pushed71;
+		s_spritetex_pushed71 = 0;
+	}
+	if (s_spritetex_pushed72) {
+		delete s_spritetex_pushed72;
+		s_spritetex_pushed72 = 0;
+	}
+	if (s_spritetex_pushed73) {
+		delete s_spritetex_pushed73;
+		s_spritetex_pushed73 = 0;
+	}
+	if (s_spritetex_pushed74) {
+		delete s_spritetex_pushed74;
+		s_spritetex_pushed74 = 0;
+	}
+	if (s_spritetex_pushed75) {
+		delete s_spritetex_pushed75;
+		s_spritetex_pushed75 = 0;
+	}
+	if (s_spritetex_pushed76) {
+		delete s_spritetex_pushed76;
+		s_spritetex_pushed76 = 0;
+	}
+	if (s_spritetex_pushed77) {
+		delete s_spritetex_pushed77;
+		s_spritetex_pushed77 = 0;
+	}
+	if (s_spritetex_pushed78) {
+		delete s_spritetex_pushed78;
+		s_spritetex_pushed78 = 0;
+	}
+	if (s_spritetex_pushed61) {
+		delete s_spritetex_pushed61;
+		s_spritetex_pushed61 = 0;
+	}
+	if (s_spritetex_pushed62) {
+		delete s_spritetex_pushed62;
+		s_spritetex_pushed62 = 0;
+	}
+
 
 	int delindex;
 	s_spundo[0].DestroyObjs();
