@@ -622,7 +622,11 @@ ChaTexRGBA::ChaTexRGBA(float srcR, float srcG, float srcB, float srcA) {
 	Clamp();
 };
 ChaTexRGBA::ChaTexRGBA(ChaVector4 src) {
-	*this = ChaTexRGBA(src.x, src.y, src.z, src.w);
+	R = (unsigned char)(src.x * 255.0f);
+	G = (unsigned char)(src.y * 255.0f);
+	B = (unsigned char)(src.z * 255.0f);
+	A = (unsigned char)(src.w * 255.0f);
+	Clamp();
 };
 ChaTexRGBA::~ChaTexRGBA() {
 };
@@ -633,27 +637,13 @@ void ChaTexRGBA::InitParams() {
 	B = 0;
 	A = 255;
 };
-void ChaTexRGBA::Clamp()
-{
-	R = min(255, R);
-	R = max(0, R);
-
-	G = min(255, G);
-	G = max(0, G);
-
-	B = min(255, B);
-	B = max(0, B);
-
-	A = min(255, A);
-	A = max(0, A);
-};
 
 void ChaTexRGBA::FromHSV(ChaVector4 srchsv) {
 	ChaVector4 calcrgba = srchsv.HSV2RGB();
-	*this = ChaTexRGBA(calcrgba);
+	this->SetParams(calcrgba);
 };
 void ChaTexRGBA::FromRGBA(ChaVector4 srcrgba) {
-	*this = ChaTexRGBA(srcrgba);
+	this->SetParams(srcrgba);
 };
 
 ChaTexRGBA ChaTexRGBA::operator= (ChaTexRGBA v) { this->R = v.R; this->G = v.G; this->B = v.B; this->A = v.A; return *this; };
@@ -746,7 +736,7 @@ ChaTexRGBA ChaTexRGBA::operator* (const ChaTexRGBA& v) const {
 	calc1 = param1 * param2;
 
 	ChaTexRGBA result;
-	result = ChaTexRGBA(calc1.x, calc1.y, calc1.z, calc1.w);
+	result.SetParams(calc1.x, calc1.y, calc1.z, calc1.w);
 	result.Clamp();
 
 	return result;
@@ -2590,7 +2580,7 @@ void CQuaternion::RotationMatrix(ChaMatrix srcmat)
 			tmpq.w = (float)(((double)m[1][2] - (double)m[2][1]) / S);
 		}
 		else {
-			tmpq = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
+			tmpq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 		}
 		break;
 	case 1:
@@ -2602,7 +2592,7 @@ void CQuaternion::RotationMatrix(ChaMatrix srcmat)
 			tmpq.w = (float)(((double)m[2][0] - (double)m[0][2]) / S);
 		}
 		else {
-			tmpq = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
+			tmpq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 		}
 		break;
 	case 2:
@@ -2614,7 +2604,7 @@ void CQuaternion::RotationMatrix(ChaMatrix srcmat)
 			tmpq.w = (float)(((double)m[0][1] - (double)m[1][0]) / S);
 		}
 		else {
-			tmpq = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
+			tmpq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 		}
 		break;
 	}
@@ -5644,7 +5634,7 @@ void ChaFrustumInfo::InitParams()
 	}
 	int planeno;
 	for (planeno = 0; planeno < 6; planeno++) {
-		m_planeFrustum[planeno] = ChaPlane(0.0f, 0.0f, -1.0f, 0.0f);
+		m_planeFrustum[planeno].SetParams(0.0f, 0.0f, -1.0f, 0.0f);
 		m_footpos[planeno].SetZeroVec3();
 	}
 

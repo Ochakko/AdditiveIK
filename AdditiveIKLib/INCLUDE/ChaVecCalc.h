@@ -191,6 +191,11 @@ public:
 	ChaVectorDbl2(double srcx, double srcy);
 	~ChaVectorDbl2();
 
+	void SetParams(double srcx, double srcy) {
+		x = srcx;
+		y = srcy;
+	};
+
 	ChaVectorDbl2 operator= (ChaVectorDbl2 v);
 	ChaVectorDbl2 operator* (double srcw) const;
 	ChaVectorDbl2& operator*= (double srcw);
@@ -456,10 +461,39 @@ public:
 	~ChaTexRGBA();
 
 	void InitParams();
-	void Clamp();
+	void Clamp() {
+		R = min(255, R);
+		R = max(0, R);
+		G = min(255, G);
+		G = max(0, G);
+		B = min(255, B);
+		B = max(0, B);
+		A = min(255, A);
+		A = max(0, A);
+	};
 	
 	void FromHSV(ChaVector4 srchsv);
 	void FromRGBA(ChaVector4 srcrgba);
+
+	void SetParams(unsigned char srcR, unsigned char srcG, unsigned char srcB, unsigned char srcA) {
+		R = srcR;
+		G = srcG;
+		B = srcB;
+		A = srcA;
+		Clamp();
+	};
+	void SetParams(float srcR, float srcG, float srcB, float srcA) {
+		R = (unsigned char)(srcR * 255.0f);
+		G = (unsigned char)(srcG * 255.0f);
+		B = (unsigned char)(srcB * 255.0f);
+		A = (unsigned char)(srcA * 255.0f);
+		Clamp();
+	};
+	void SetParams(ChaVector4 src) {
+		SetParams(src.x, src.y, src.z, src.w);
+		Clamp();
+	};
+
 
 	ChaTexRGBA operator= (ChaTexRGBA v);
 	ChaTexRGBA operator* (float srcw) const;
@@ -493,6 +527,10 @@ public:
 	ChaPlane();
 	ChaPlane(float srca, float srcb, float srcc, float srcd);
 	~ChaPlane();
+
+	void SetParams(float srca, float srcb, float srcc, float srcd) {
+		a = srca; b = srcb; c = srcc; d = srcd;
+	};
 
 	int FromPoints(ChaVector3 point1, ChaVector3 point2, ChaVector3 point3);
 	int GetFootOnPlane(ChaVector3 srcpos, ChaVector3* dstpos);

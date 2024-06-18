@@ -5595,9 +5595,11 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 					//char* nameptr = (char*)lLayeredTexture->GetName();
 					if (lLayeredTexture->GetName()) {
 						FbxVector2 fbxuvscale = lLayeredTexture->GetUVScaling();
-						ChaVectorDbl2 chauvscale = ChaVectorDbl2(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
+						ChaVectorDbl2 chauvscale;
+						chauvscale.SetParams(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
 						FbxVector2 fbxuvoffset = lLayeredTexture->GetUVTranslation();
-						ChaVectorDbl2 chauvoffset = ChaVectorDbl2(fbxuvoffset[0], fbxuvoffset[1]);
+						ChaVectorDbl2 chauvoffset;
+						chauvoffset.SetParams(fbxuvoffset[0], fbxuvoffset[1]);
 
 						char tempname[256];
 						strcpy_s(tempname, 256, lLayeredTexture->GetName());
@@ -5624,9 +5626,11 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 						char* nameptr = (char*)lTexture->GetFileName();
 						if (nameptr) {
 							FbxVector2 fbxuvscale = lTexture->GetUVScaling();
-							ChaVectorDbl2 chauvscale = ChaVectorDbl2(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
+							ChaVectorDbl2 chauvscale;
+							chauvscale.SetParams(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
 							FbxVector2 fbxuvoffset = lTexture->GetUVTranslation();
-							ChaVectorDbl2 chauvoffset = ChaVectorDbl2(fbxuvoffset[0], fbxuvoffset[1]);
+							ChaVectorDbl2 chauvoffset;
+							chauvoffset.SetParams(fbxuvoffset[0], fbxuvoffset[1]);
 
 							char tempname[256];
 							strcpy_s(tempname, 256, nameptr);
@@ -5656,9 +5660,11 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 					//char* nameptr = (char*)lLayeredTexture->GetName();
 					if (lLayeredTexture->GetName()) {
 						FbxVector2 fbxuvscale = lLayeredTexture->GetUVScaling();
-						ChaVectorDbl2 chauvscale = ChaVectorDbl2(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
+						ChaVectorDbl2 chauvscale;
+						chauvscale.SetParams(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
 						FbxVector2 fbxuvoffset = lLayeredTexture->GetUVTranslation();
-						ChaVectorDbl2 chauvoffset = ChaVectorDbl2(fbxuvoffset[0], fbxuvoffset[1]);
+						ChaVectorDbl2 chauvoffset;
+						chauvoffset.SetParams(fbxuvoffset[0], fbxuvoffset[1]);
 
 						char tempname[256];
 						strcpy_s(tempname, 256, lLayeredTexture->GetName());
@@ -5685,9 +5691,11 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 						char* nameptr = (char*)lTexture->GetFileName();
 						if (nameptr) {
 							FbxVector2 fbxuvscale = lTexture->GetUVScaling();
-							ChaVectorDbl2 chauvscale = ChaVectorDbl2(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
+							ChaVectorDbl2 chauvscale;
+							chauvscale.SetParams(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
 							FbxVector2 fbxuvoffset = lTexture->GetUVTranslation();
-							ChaVectorDbl2 chauvoffset = ChaVectorDbl2(fbxuvoffset[0], fbxuvoffset[1]);
+							ChaVectorDbl2 chauvoffset;
+							chauvoffset.SetParams(fbxuvoffset[0], fbxuvoffset[1]);
 
 							char tempname[256];
 							strcpy_s(tempname, 256, nameptr);
@@ -5717,9 +5725,11 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 					//char* nameptr = (char*)lLayeredTexture->GetName();
 					if (lLayeredTexture->GetName()) {
 						FbxVector2 fbxuvscale = lLayeredTexture->GetUVScaling();
-						ChaVectorDbl2 chauvscale = ChaVectorDbl2(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
+						ChaVectorDbl2 chauvscale;
+						chauvscale.SetParams(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
 						FbxVector2 fbxuvoffset = lLayeredTexture->GetUVTranslation();
-						ChaVectorDbl2 chauvoffset = ChaVectorDbl2(fbxuvoffset[0], fbxuvoffset[1]);
+						ChaVectorDbl2 chauvoffset;
+						chauvoffset.SetParams(fbxuvoffset[0], fbxuvoffset[1]);
 
 						char tempname[256];
 						strcpy_s(tempname, 256, lLayeredTexture->GetName());
@@ -5746,9 +5756,11 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 						char* nameptr = (char*)lTexture->GetFileName();
 						if (nameptr) {
 							FbxVector2 fbxuvscale = lTexture->GetUVScaling();
-							ChaVectorDbl2 chauvscale = ChaVectorDbl2(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
+							ChaVectorDbl2 chauvscale;
+							chauvscale.SetParams(fmax(1.0, fbxuvscale[0]), fmax(1.0, fbxuvscale[1]));
 							FbxVector2 fbxuvoffset = lTexture->GetUVTranslation();
-							ChaVectorDbl2 chauvoffset = ChaVectorDbl2(fbxuvoffset[0], fbxuvoffset[1]);
+							ChaVectorDbl2 chauvoffset;
+							chauvoffset.SetParams(fbxuvoffset[0], fbxuvoffset[1]);
 
 							char tempname[256];
 							strcpy_s(tempname, 256, nameptr);
@@ -17159,7 +17171,7 @@ int CModel::FKBoneTraUnderFK(
 	}
 
 	IKROTREC currotrec;
-	currotrec.rotq = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
+	currotrec.rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 	currotrec.targetpos = translation;
 	currotrec.lessthanthflag = false;
 	curbone->AddIKRotRec(currotrec);

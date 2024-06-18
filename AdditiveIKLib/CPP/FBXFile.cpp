@@ -3122,8 +3122,10 @@ FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMateri
 	{
 		ChaVectorDbl2 chauvscale = mqomat->GetUVScale();
 		ChaVectorDbl2 chauvoffset = mqomat->GetUVOffset();
-		FbxVector2 uvscale = FbxVector2(chauvscale.x, chauvscale.y);
-		FbxVector2 uvoffset = FbxVector2(chauvoffset.x, chauvoffset.y);
+		FbxVector2 uvscale;
+		uvscale.Set (chauvscale.x, chauvscale.y);
+		FbxVector2 uvoffset;
+		uvoffset.Set(chauvoffset.x, chauvoffset.y);
 		lTexture->SetUVScaling(uvscale);
 		lTexture->SetUVTranslation(uvoffset);
 	}
@@ -5167,10 +5169,12 @@ FbxNode* CreateDummyFbxMesh(FbxManager* pSdkManager, FbxScene* pScene, CBone** p
 	int vsetno = 0;
 	int vcnt;
 	for (vcnt = 0; vcnt < facenum * 3; vcnt++){
-		*(lcp + vsetno) = FbxVector4(0.0f, 0.0f, 0.0f, 1.0f);
-		FbxVector4 fbxn = FbxVector4(0.0f, 0.0f, -1.0f, 0.0f);
+		(lcp + vsetno)->Set(0.0f, 0.0f, 0.0f, 1.0f);
+		FbxVector4 fbxn;
+		fbxn.Set(0.0f, 0.0f, -1.0f, 0.0f);
 		lElementNormal->GetDirectArray().Add(fbxn);
-		FbxVector2 fbxuv = FbxVector2(0.0f, 0.0f);
+		FbxVector2 fbxuv;
+		fbxuv.Set(0.0f, 0.0f);
 		lUVDiffuseElement->GetDirectArray().Add(fbxuv);
 		vsetno++;
 	}

@@ -1468,7 +1468,7 @@ public:
 		specularcoef = 0.1250f;
 		normaly0flag = false;
 		shadowcasterflag = true;
-		uvscale = ChaVectorDbl2(1.0, 1.0);
+		uvscale.SetParams(1.0, 1.0);
 		alphatest = (8.0 / 255.0);
 		distortionflag = false;
 		distortionscale = 1.0;//2024/05/01
@@ -1532,7 +1532,7 @@ public:
 	float specularcoef = 0.1250f;
 	bool normaly0flag = false;
 	bool shadowcasterflag = true;
-	ChaVectorDbl2 uvscale;// = ChaVectorDbl2(1.0, 1.0);
+	ChaVectorDbl2 uvscale;//.SetParams(1.0, 1.0);
 	WCHAR wmaterialname[256];// = { 0L };
 	HSVTOON hsvtoon;
 	double alphatest;//2024/03/22

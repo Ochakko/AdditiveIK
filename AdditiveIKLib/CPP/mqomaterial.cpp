@@ -406,8 +406,8 @@ int CMQOMaterial::InitParams()
 	m_addressU_emissive = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	m_addressV_emissive = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 
-	m_uvscale = ChaVectorDbl2(1.0, 1.0);
-	m_uvoffset = ChaVectorDbl2(0.0, 0.0);
+	m_uvscale.SetParams(1.0, 1.0);
+	m_uvoffset.SetParams(0.0, 0.0);
 
 	m_hsvtoon.Init();
 

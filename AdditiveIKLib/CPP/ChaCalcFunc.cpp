@@ -2419,7 +2419,8 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 
 			CQuaternion saveq;
 			saveq.RotationMatrix(beflocalmat);
-			CQuaternion calcq1 = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
+			CQuaternion calcq1;
+			calcq1.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 			//calcq1 = eulq.Slerp(saveq, 100, 50);
 			calcq1 = saveq.Slerp(eulq, 100, g_physicalMovableRate);//DispAndLimitsのスライダー設定値g_physicalMovableRate％
 			ChaMatrix setlocalrotmat = calcq1.MakeRotMatX();
@@ -2481,7 +2482,8 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 			CQuaternion saveq;
 			saveq.RotationMatrix(beflocalmat);
 			//saveq.SetRotationXYZ(&axisq, saveeul);
-			CQuaternion calcq1 = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
+			CQuaternion calcq1;
+			calcq1 = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
 			//calcq1 = limitq.Slerp(eulq, 100, g_limitrate);//LimitEulerプレートメニューのlimit rate for physicsのスライダー値(%)
 			//calcq1 = eulq.Slerp(limitq, 100, g_limitrate);//2024/04/15 limitrateが実質FreeRateになっていたので修正　新しいlimitrate = (100 - 古いlimitrate)
 			//calcq1 = eulq.Slerp(limitq, 100, srcbone->GetLimitRate());//2024/04/17 limitrateはCBoneごとの管理になった
@@ -2491,7 +2493,8 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 			limitrate = min(100, limitrate);
 			calcq1 = eulq.Slerp(limitq, 100, limitrate);//2024/04/17　fpsに応じて設定するシーンごとのscaleをlimitrateに掛ける
 
-			CQuaternion calcq2 = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
+			CQuaternion calcq2;
+			calcq2 = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
 			////calcq2 = calcq1.Slerp(saveq, 100, g_limitrate);
 			//calcq2 = calcq1.Slerp(saveq, 100, 50);
 			calcq2 = calcq1;
@@ -2542,7 +2545,8 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directs
 			//int limitrate = (int)((double)srcbone->GetLimitRate() * g_physicalLimitScale + 0.0001);
 			//limitrate = max(0, limitrate);
 			//limitrate = min(100, limitrate);
-			CQuaternion calcq1 = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
+			CQuaternion calcq1;
+			calcq1 = CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
 			//calcq1 = eulq.Slerp(saveq, 100, limitrate);
 			calcq1 = saveq;
 
