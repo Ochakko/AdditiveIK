@@ -2,8 +2,8 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
-2024/06/19
-　AdditiveIK 1.0.0.24 RC2(リリース候補2)
+2024/06/20
+　AdditiveIK 1.0.0.24 release
 　　1.0.0.23からの変更点
 　　　既知の問題0010に対する根本的対応
 　　　　fbxファイルのEmissionTexture(EmissiveTexture)の読み書き表示に対応
