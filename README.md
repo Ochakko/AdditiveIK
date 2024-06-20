@@ -248,6 +248,8 @@ Smooth平滑化<br>
 [モーキャプ編集+fbxカメラ編集 2024/06/09](https://youtu.be/_G4wev5w-4g "Usage example4")<br>
 
 [空の色は何色ですか？ 2024/06/17](https://youtu.be/0LkwVw9eubg "Usage example5")<br>
+
+[屋根の上に飛べますか？ 2024/06/20](https://youtu.be/YLJxziIqBsQ "Usage example6")<br>
 <br>
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")

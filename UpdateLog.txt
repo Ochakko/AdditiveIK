@@ -2,6 +2,15 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2024/06/21
+　ショートムービー
+　　屋根の上に飛べますか？(1.0.0.24)
+　　https://youtu.be/YLJxziIqBsQ
+
+
+
+
 2024/06/20
 　AdditiveIK 1.0.0.24 release
 　　1.0.0.23からの変更点
