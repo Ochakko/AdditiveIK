@@ -179,10 +179,13 @@ int ChaCalcFunc::GetRoundThreshold(float srcval, float degth)
 }
 int ChaCalcFunc::GetBefNextMP(CBone* srcbone, int srcmotid, double srcframe, CMotionPoint** ppbef, CMotionPoint** ppnext, int* existptr, bool onaddmotion)
 {
+
+
 	if (!srcbone || !ppbef || !ppnext || !existptr) {
 		_ASSERT(0);
 		return 1;
 	}
+	EnterCriticalSection(&(srcbone->m_CritSection_GetBefNext));
 
 
 	//2023/04/28 2023/05/23
@@ -196,6 +199,7 @@ int ChaCalcFunc::GetBefNextMP(CBone* srcbone, int srcmotid, double srcframe, CMo
 		if (existptr) {
 			*existptr = 0;
 		}
+		LeaveCriticalSection(&(srcbone->m_CritSection_GetBefNext));
 		return 0;
 	}
 
@@ -219,6 +223,7 @@ int ChaCalcFunc::GetBefNextMP(CBone* srcbone, int srcmotid, double srcframe, CMo
 		*ppbef = 0;
 		*ppnext = 0;
 		//_ASSERT(0);
+		LeaveCriticalSection(&(srcbone->m_CritSection_GetBefNext));
 		return 0;
 	}
 	else {
@@ -230,6 +235,7 @@ int ChaCalcFunc::GetBefNextMP(CBone* srcbone, int srcmotid, double srcframe, CMo
 			//	m_cachebefmp[srcmotid - 1] = NULL;
 			//}
 			////_ASSERT(0);
+			LeaveCriticalSection(&(srcbone->m_CritSection_GetBefNext));
 			return 0;
 		}
 		else {
@@ -296,7 +302,6 @@ int ChaCalcFunc::GetBefNextMP(CBone* srcbone, int srcmotid, double srcframe, CMo
 
 	if (getbychain == true) {
 #ifdef USE_CACHE_ONGETMOTIONPOINT__
-		EnterCriticalSection(&(srcbone->m_CritSection_GetBefNext));
 				//キャッシュをチェックする
 
 
@@ -315,7 +320,6 @@ int ChaCalcFunc::GetBefNextMP(CBone* srcbone, int srcmotid, double srcframe, CMo
 				int dbgflag0 = 1;
 			}
 		}
-		LeaveCriticalSection(&(srcbone->m_CritSection_GetBefNext));
 #endif
 
 		if (!pcur) {
@@ -352,7 +356,6 @@ int ChaCalcFunc::GetBefNextMP(CBone* srcbone, int srcmotid, double srcframe, CMo
 		}
 
 #ifdef USE_CACHE_ONGETMOTIONPOINT__
-		EnterCriticalSection(&(srcbone->m_CritSection_GetBefNext2));
 		//m_cachebefmp = pbef;
 		if ((srcmotid >= 1) && (srcmotid <= MAXMOTIONNUM)) {
 
@@ -392,7 +395,6 @@ int ChaCalcFunc::GetBefNextMP(CBone* srcbone, int srcmotid, double srcframe, CMo
 			//	m_cachebefmp[srcmotid - 1] = NULL;
 			//}
 		}
-		LeaveCriticalSection(&(srcbone->m_CritSection_GetBefNext2));
 #endif
 
 
@@ -478,6 +480,8 @@ int ChaCalcFunc::GetBefNextMP(CBone* srcbone, int srcmotid, double srcframe, CMo
 			*existptr = 0;
 		}
 	}
+
+	LeaveCriticalSection(&(srcbone->m_CritSection_GetBefNext));
 
 	return 0;
 }
@@ -2759,6 +2763,7 @@ CMotionPoint* ChaCalcFunc::GetMotionPoint(CBone* srcbone, int srcmotid, double s
 		_ASSERT(0);
 		return 0;
 	}
+	EnterCriticalSection(&(srcbone->m_CritSection_GetMotionPoint));
 
 	//存在するときだけ返す。
 	CMotionPoint* pbef = 0;
@@ -2766,9 +2771,11 @@ CMotionPoint* ChaCalcFunc::GetMotionPoint(CBone* srcbone, int srcmotid, double s
 	int existflag = 0;
 	GetBefNextMP(srcbone, srcmotid, srcframe, &pbef, &pnext, &existflag, onaddmotion);
 	if (existflag == 1) {
+		LeaveCriticalSection(&(srcbone->m_CritSection_GetMotionPoint));
 		return pbef;
 	}
 	else {
+		LeaveCriticalSection(&(srcbone->m_CritSection_GetMotionPoint));
 		return 0;
 	}
 }
@@ -3943,6 +3950,19 @@ int ChaCalcFunc::ConvBoneRotation(CModel* srcmodel, CModel* srcbvhmodel, int sel
 				//リターゲット時にTraAnimとして計算すべきは　０フレームからの変化分である
 				//################################################################################
 
+
+
+				////for debug
+				//{
+				//	MOTINFO chkmi = srcbvhmodel->GetCurMotInfo();
+				//	if ((bvhbone->IsHipsBone()) && ((roundingframe == 0.0) || (roundingframe == 1.0)) &&
+				//		!chkmi.cameramotion && (chkmi.frameleng >= 900.0)) {
+				//		int dbgflag1 = 1;
+				//	}
+				//}
+
+
+
 				ChaMatrix bvhsmat, bvhrmat, bvhtmat, bvhtanimmat;
 				ChaMatrix bvhsmat0, bvhrmat0, bvhtmat0, bvhtanimmat0;
 
@@ -3972,6 +3992,7 @@ int ChaCalcFunc::ConvBoneRotation(CModel* srcmodel, CModel* srcbvhmodel, int sel
 
 				traanim = ChaMatrixTraVec(bvhtanimmat) - ChaMatrixTraVec(bvhtanimmat0);//2023/01/08
 				traanim = traanim * hrate;
+				int dbgflag1 = 1;
 			}
 			else {
 				rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
@@ -4103,6 +4124,19 @@ int ChaCalcFunc::FKRotate(CModel* srcmodel, bool limitdegflag, bool onretarget, 
 
 	int curmotid = srcmodel->GetCurrentMotID();
 	double roundingframe = RoundingTime(srcframe);
+
+
+	//for debug
+	{
+		MOTINFO chkmi = srcmodel->GetCurMotInfo();
+		if ((curbone->IsHipsBone()) && ((roundingframe == 0.0) || (roundingframe == 1.0)) &&
+			!chkmi.cameramotion && (chkmi.frameleng >= 900.0)) {
+			int dbgflag1 = 1;
+		}
+	}
+
+
+
 
 	bool onaddmotion = true;//for getbychain
 	CBone* parentbone = curbone->GetParent(false);

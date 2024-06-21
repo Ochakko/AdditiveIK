@@ -10858,31 +10858,34 @@ int RetargetFile(char* fbxpath)
 			//s_maxboneno = s_convbone_bvh->GetBoneForMotionSize();
 			s_maxboneno = s_convbone_bvh->GetMaxBoneNo();
 
-			WCHAR wretargetfilename[MAX_PATH] = { 0L };
-			char retargetfilename[MAX_PATH] = { 0 };
-			sprintf_s(retargetfilename, MAX_PATH, "%sretarget.rtg", directorypath);
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, retargetfilename, MAX_PATH, wretargetfilename, MAX_PATH);
+			if (s_model && s_convbone_model && s_convbone_bvh) {
+				WCHAR wretargetfilename[MAX_PATH] = { 0L };
+				char retargetfilename[MAX_PATH] = { 0 };
+				sprintf_s(retargetfilename, MAX_PATH, "%sretarget.rtg", directorypath);
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, retargetfilename, MAX_PATH, wretargetfilename, MAX_PATH);
 
-			int result1;
-			result1 = LoadRetargetFile(wretargetfilename);
-			if (result1 == 0) {
-				int result2;
-				result2 = RetargetMotion();
-				if (result2 != 0) {
-					_ASSERT(0);
+				int result1;
+				result1 = LoadRetargetFile(wretargetfilename);
+				if (result1 == 0) {
+					int result2;
+					result2 = RetargetMotion();
+					if (result2 != 0) {
+						_ASSERT(0);
+					}
 				}
+
+				//if (s_convbone_model_batch && s_convbone_model_batch->GetCurMotInfo()) {
+				//	int motid = s_convbone_model_batch->GetCurMotInfo()->motid;
+				//	double startframe = 1.0;
+				//	double endframe = s_convbone_model_batch->GetCurMotInfo()->frameleng - 1.0;
+				//	s_convbone_model->ModifyEuler360Req(g_limitdegflag, s_convbone_model->GetTopBone(false),
+				//		motid, startframe, endframe);
+				//}
+
+				//int modelindex = (int)s_modelindex.size() - 1;
+				//OnDelModel(modelindex);
+
 			}
-
-			//if (s_convbone_model_batch && s_convbone_model_batch->GetCurMotInfo()) {
-			//	int motid = s_convbone_model_batch->GetCurMotInfo()->motid;
-			//	double startframe = 1.0;
-			//	double endframe = s_convbone_model_batch->GetCurMotInfo()->frameleng - 1.0;
-			//	s_convbone_model->ModifyEuler360Req(g_limitdegflag, s_convbone_model->GetTopBone(false),
-			//		motid, startframe, endframe);
-			//}
-
-			//int modelindex = (int)s_modelindex.size() - 1;
-			//OnDelModel(modelindex);
 		}
 	}
 	return 0;
@@ -20112,6 +20115,16 @@ int RetargetMotion()
 		s_convbone_model->SetUnderRetarget(false);
 		return 1;
 	}
+
+
+	//2024/06/21
+	//UnderRetagetFlagをtrueにした状態でUpdateMatrixを呼んでからリターゲット処理をする
+	ChaMatrix modelwm = s_convbone_model->GetWorldMat();
+	s_convbone_model->UpdateMatrix(false, &modelwm, &s_matView, &s_matProj, true, 0);
+	ChaMatrix bvhwm = s_convbone_bvh->GetWorldMat();
+	s_convbone_bvh->UpdateMatrix(false, &bvhwm, &s_matView, &s_matProj, true, 0);
+
+
 
 	int result = s_convbone_model->Retarget(s_convbone_bvh, s_matView, s_matProj, s_convbonemap, AddMotion);
 	if (result) {
@@ -49963,7 +49976,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.24 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.25 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -58332,7 +58345,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.24 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.25 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (s_model && s_chascene) {

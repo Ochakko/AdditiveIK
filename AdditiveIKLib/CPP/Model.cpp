@@ -21004,7 +21004,32 @@ int CModel::ChkInView(int refposindex)
 	}
 
 
-	if (GetSkyFlag() || (wcsstr(GetFileName(), L".mqo") != 0)) {
+	if (GetUnderRetarget() == true) {
+
+		//2024/06/21
+		//リターゲット中は強制的に視野内として設定
+		//視野外のままリターゲットすると　計算が行われなかったり　1フレーム目の移動アニメが２倍になったりした
+
+		SetInView(true, refposindex);
+		SetInShadow(false, refposindex);
+
+		map<int, CMQOObject*>::iterator itr;
+		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+			CMQOObject* curobj = itr->second;
+			if (curobj) {
+				curobj->SetInView(true, refposindex);
+			}
+		}
+		if (GetSkyFlag()) {
+			SetDistChkInView(500000.0f, refposindex);
+		}
+		else {
+			SetDistChkInView(0.01f, refposindex);//2024/03/25
+		}
+
+		SetInMorph(false);
+	}
+	else if (GetSkyFlag() || (wcsstr(GetFileName(), L".mqo") != 0)) {
 
 		//このアプリにおいては　mqoファイル(マニピュレータや地面格子)はクリッピングしない用途に使用しているので　常に描画するように
 
@@ -21841,10 +21866,11 @@ int CModel::Retarget(CModel* srcbvhmodel, ChaMatrix smatView, ChaMatrix smatProj
 	bvhminum = srcbvhmodel->GetMotInfoSize();
 	for (bvhmiindex = 0; bvhmiindex < bvhminum; bvhmiindex++) {
 		MOTINFO bvhmi = srcbvhmodel->GetMotInfoByIndex(bvhmiindex);
-		if ((bvhmi.motid <= 0) || (bvhmi.frameleng <= 0.0)) {
+		if ((bvhmi.motid <= 0) || (bvhmi.frameleng <= 0.0) || bvhmi.cameramotion) {//2024/06/21 CameraMotionは除外
 			//::MessageBox(NULL, L"motion of bvh is not found error.", L"error!!!", MB_OK);
 			//g_underRetargetFlag = false;
 			//return 1;
+			int dbgflag1 = 1;
 			continue;
 		}
 
@@ -21938,31 +21964,35 @@ int CModel::Retarget(CModel* srcbvhmodel, ChaMatrix smatView, ChaMatrix smatProj
 		}
 
 
-
-		////リターゲットマルチスレッド計算 2023/10/23
-		SetRetargetFrame(1.0, RoundingTime(motleng - 1.0));
-		if (m_RetargetThreads) {
-			int updatecount;
-			for (updatecount = 0; updatecount < RETARGET_THREADSNUM; updatecount++) {
-				CThreadingRetarget* curupdate = m_RetargetThreads + updatecount;
-		
-				curupdate->RetargetReqOne(limitdegflag, this, srcbvhmodel, modelbone,
-					bvhtopbone, hrate, sconvbonemap);
-			}
-			WaitRetargetFinished();
-		}
-
-
-		//double frame;
-		//////for (frame = 0.0; frame < motleng; frame += 1.0) {
-		//for (frame = 1.0; frame < motleng; frame += 1.0) {//2023/03/27 : 0フレームはInitMPの姿勢のままにする
-		//	if (modelbone) {
-		//		if (bvhtopbone) {
-		//			ChaCalcFunc chacalcfunc;
-		//			chacalcfunc.RetargetReq(this, srcbvhmodel, modelbone, frame, bvhtopbone, hrate, sconvbonemap);
-		//		}
+		//2024/06/22 リターゲットのマルチスレッド計算で問題が生じた
+		//(AddMotionPointが絡むと難しい)
+		//一度シングルスレッドに戻す
+		//リターゲットについては　今後はモデル単位のマルチスレッドに切り替える予定
+		//
+		//////リターゲットマルチスレッド計算 2023/10/23
+		//SetRetargetFrame(1.0, RoundingTime(motleng - 1.0));
+		//if (m_RetargetThreads) {
+		//	int updatecount;
+		//	for (updatecount = 0; updatecount < RETARGET_THREADSNUM; updatecount++) {
+		//		CThreadingRetarget* curupdate = m_RetargetThreads + updatecount;
+		//
+		//		curupdate->RetargetReqOne(limitdegflag, this, srcbvhmodel, modelbone,
+		//			bvhtopbone, hrate, sconvbonemap);
 		//	}
+		//	WaitRetargetFinished();
 		//}
+
+
+		double frame;
+		////for (frame = 0.0; frame < motleng; frame += 1.0) {
+		for (frame = 1.0; frame < motleng; frame += 1.0) {//2023/03/27 : 0フレームはInitMPの姿勢のままにする
+			if (modelbone) {
+				if (bvhtopbone) {
+					ChaCalcFunc chacalcfunc;
+					chacalcfunc.RetargetReq(this, srcbvhmodel, modelbone, frame, bvhtopbone, hrate, sconvbonemap);
+				}
+			}
+		}
 
 
 		//###############################

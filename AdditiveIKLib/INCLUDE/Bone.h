@@ -83,7 +83,7 @@ public:
 	CBone() {
 		InitializeCriticalSection(&m_CritSection_AddMP);
 		InitializeCriticalSection(&m_CritSection_GetBefNext);
-		InitializeCriticalSection(&m_CritSection_GetBefNext2);
+		InitializeCriticalSection(&m_CritSection_GetMotionPoint);
 		InitParams();
 	};
 
@@ -1801,7 +1801,8 @@ public: //accesser
 
 public:
 	CRITICAL_SECTION m_CritSection_GetBefNext;
-	CRITICAL_SECTION m_CritSection_GetBefNext2;
+	//CRITICAL_SECTION m_CritSection_GetBefNext2;
+	CRITICAL_SECTION m_CritSection_GetMotionPoint;
 
 private:
 	CRITICAL_SECTION m_CritSection_AddMP;

@@ -332,7 +332,7 @@ CBone::CBone( CModel* parmodel )// : m_curmp(), m_axisq()
 {
 	InitializeCriticalSection(&m_CritSection_AddMP);
 	InitializeCriticalSection(&m_CritSection_GetBefNext);
-	InitializeCriticalSection(&m_CritSection_GetBefNext2);
+	InitializeCriticalSection(&m_CritSection_GetMotionPoint);
 	InitParams();
 	SetParams(parmodel);
 }
@@ -341,7 +341,7 @@ CBone::~CBone()
 {
 	DeleteCriticalSection(&m_CritSection_AddMP);
 	DeleteCriticalSection(&m_CritSection_GetBefNext);
-	DeleteCriticalSection(&m_CritSection_GetBefNext2);
+	DeleteCriticalSection(&m_CritSection_GetMotionPoint);
 	DestroyObjs();
 }
 
@@ -9605,9 +9605,12 @@ bool CBone::IsConcerned(int srcmotid)
 		return false;
 	}
 
-	//2024/06/10
-	//非カメラアニメ時：skeleton or enull, カメラアニメ時：関係するcamera or 関係するeNull
-	if ((!cameraanimflag && (IsSkeleton() || IsNull())) ||
+	////2024/06/10
+	////非カメラアニメ時：skeleton or enull, カメラアニメ時：関係するcamera or 関係するeNull
+	//if ((!cameraanimflag && (IsSkeleton() || IsNull())) ||
+	//2024/06/22
+	//非カメラアニメ時：skeleton, カメラアニメ時：関係するcamera or 関係するeNull
+	if ((!cameraanimflag && IsSkeleton()) ||
 		(cameraanimflag && (IsConcernedCamera(cmpmotionname) || IsConcernedNullAndChildIsCamera(cmpmotionname)))) {
 
 		return true;
