@@ -21963,36 +21963,39 @@ int CModel::Retarget(CModel* srcbvhmodel, ChaMatrix smatView, ChaMatrix smatProj
 			hrate = 1.0f;
 		}
 
-
+		//2024/06/22_2
+		//修正前のver1.0.0.24においてもsrcとdstの両方を視野内に入れてマルチスレッドリターゲットしたところ正常だったことに着目
+		//リターゲットのsrcとdstの "両方に" 強制的に視野内フラグをつけたところマルチスレッドでも問題は出なかった
+		//視野外の場合にいくつかの計算がスキップされることが原因だった
+		//
 		//2024/06/22 リターゲットのマルチスレッド計算で問題が生じた
 		//(AddMotionPointが絡むと難しい)
 		//一度シングルスレッドに戻す
-		//リターゲットについては　今後はモデル単位のマルチスレッドに切り替える予定
 		//
 		//////リターゲットマルチスレッド計算 2023/10/23
-		//SetRetargetFrame(1.0, RoundingTime(motleng - 1.0));
-		//if (m_RetargetThreads) {
-		//	int updatecount;
-		//	for (updatecount = 0; updatecount < RETARGET_THREADSNUM; updatecount++) {
-		//		CThreadingRetarget* curupdate = m_RetargetThreads + updatecount;
-		//
-		//		curupdate->RetargetReqOne(limitdegflag, this, srcbvhmodel, modelbone,
-		//			bvhtopbone, hrate, sconvbonemap);
-		//	}
-		//	WaitRetargetFinished();
-		//}
-
-
-		double frame;
-		////for (frame = 0.0; frame < motleng; frame += 1.0) {
-		for (frame = 1.0; frame < motleng; frame += 1.0) {//2023/03/27 : 0フレームはInitMPの姿勢のままにする
-			if (modelbone) {
-				if (bvhtopbone) {
-					ChaCalcFunc chacalcfunc;
-					chacalcfunc.RetargetReq(this, srcbvhmodel, modelbone, frame, bvhtopbone, hrate, sconvbonemap);
-				}
+		SetRetargetFrame(1.0, RoundingTime(motleng - 1.0));
+		if (m_RetargetThreads) {
+			int updatecount;
+			for (updatecount = 0; updatecount < RETARGET_THREADSNUM; updatecount++) {
+				CThreadingRetarget* curupdate = m_RetargetThreads + updatecount;
+		
+				curupdate->RetargetReqOne(limitdegflag, this, srcbvhmodel, modelbone,
+					bvhtopbone, hrate, sconvbonemap);
 			}
+			WaitRetargetFinished();
 		}
+
+
+		//double frame;
+		//////for (frame = 0.0; frame < motleng; frame += 1.0) {
+		//for (frame = 1.0; frame < motleng; frame += 1.0) {//2023/03/27 : 0フレームはInitMPの姿勢のままにする
+		//	if (modelbone) {
+		//		if (bvhtopbone) {
+		//			ChaCalcFunc chacalcfunc;
+		//			chacalcfunc.RetargetReq(this, srcbvhmodel, modelbone, frame, bvhtopbone, hrate, sconvbonemap);
+		//		}
+		//	}
+		//}
 
 
 		//###############################

@@ -9610,6 +9610,7 @@ bool CBone::IsConcerned(int srcmotid)
 	//if ((!cameraanimflag && (IsSkeleton() || IsNull())) ||
 	//2024/06/22
 	//非カメラアニメ時：skeleton, カメラアニメ時：関係するcamera or 関係するeNull
+	//(補足)非カメラアニメ時にeNullも含めた場合　通常のeNullにはアニメが無いのでInitMPでASSERTする　今後eNullアニメに対応する場合にはアニメ有無を判定してから対象に加える
 	if ((!cameraanimflag && IsSkeleton()) ||
 		(cameraanimflag && (IsConcernedCamera(cmpmotionname) || IsConcernedNullAndChildIsCamera(cmpmotionname)))) {
 

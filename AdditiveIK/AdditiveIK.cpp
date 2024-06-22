@@ -20113,8 +20113,15 @@ int RetargetMotion()
 	if (s_model != s_convbone_model) {
 		::DSMessageBox(NULL, L"Retry After Selectiong ShapeModel using ModelMenu Of MainWindow.", L"error!!!", MB_OK);
 		s_convbone_model->SetUnderRetarget(false);
+		s_convbone_bvh->SetUnderRetarget(false);
 		return 1;
 	}
+
+
+	//2024/06/22_2
+	//src, dst両方にリターゲットフラグを立てて　UpdateMatrixにて強制的に視野内と判定する必要有(いくつかの処理がスキップされないように)
+	s_convbone_model->SetUnderRetarget(true);
+	s_convbone_bvh->SetUnderRetarget(true);
 
 
 	//2024/06/21
@@ -20131,10 +20138,12 @@ int RetargetMotion()
 		_ASSERT(0);
 		//g_underRetargetFlag = false;
 		s_convbone_model->SetUnderRetarget(false);
+		s_convbone_bvh->SetUnderRetarget(false);
 		return 1;
 	}
 	//g_underRetargetFlag = false;
 	s_convbone_model->SetUnderRetarget(false);
+	s_convbone_bvh->SetUnderRetarget(false);
 
 
 	if (g_limitdegflag == true) {
