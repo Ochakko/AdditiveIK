@@ -60862,6 +60862,15 @@ int PickManipulator(UIPICKINFO* ppickinfo, bool pickring)
 		//カメラターゲット位置にマニピュレータ表示時にはpickしない
 		return -1;
 	}
+	if (FindGrassElem(s_model) != nullptr) {
+		//2024/06/22 草選択時にはPickManipulatorしない
+		//草選択時にPickManipulator判定をすると
+		//読み込み直後に草が選択されている場合に　Model'sPosAndDirでPickAndPutしようとしても　この関数がhit状態を返すのでPickAndPut出来なかった
+		//根本的原因としては
+		//初期状態で草が選択されている場合
+		//草にモーションが無いためにRenderSelectMark()関数が0リターンしてs_select->UpdateMatrixが一回も行われないため
+		return -1;
+	}
 
 	if (s_dispselect) {
 		bool excludeinvface = false;
@@ -61231,7 +61240,10 @@ int FindModelIndex(CModel* srcmodel)
 CGrassElem* FindGrassElem(CModel* srcmodel)
 {
 	CGrassElem* retgrasselem = nullptr;
-	
+
+	if (!srcmodel) {
+		return nullptr;
+	}	
 	if (srcmodel->GetGrassFlag() == false) {
 		return nullptr;
 	}
