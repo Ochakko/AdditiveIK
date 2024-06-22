@@ -1502,8 +1502,9 @@ int ChaScene::DelModel(int srcmodelindex, std::vector<CGrassElem*>& grasselemvec
 						}
 					}
 				}
+				grasselemvec = newgrasselemvec;//2024/06/22
 			}
-			grasselemvec = newgrasselemvec;
+			//grasselemvec = newgrasselemvec;//2024/06/22 この場所でのセットは間違い delmodel->GetGrassFlag()のif内へ移動
 
 
 			std::vector<MODELELEM> tmpvec;

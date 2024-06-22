@@ -473,7 +473,7 @@ static DWORD s_rigidflag = 0;
 
 
 
-CModel::CModel() : m_camerafbx(), m_frustum()
+CModel::CModel() : m_camerafbx(), m_frustum(), m_undomotion()
 {
 	InitializeCriticalSection(&m_CritSection_Node);
 
