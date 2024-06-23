@@ -95,7 +95,7 @@ int CFrameCopyDlg::InitParams()
 
 	ZeroMemory(&m_hrootti, sizeof(HTREEITEM));
 
-	m_pastecamera = false;
+	//m_pastecamera = false;
 
 	return 0;
 }
@@ -215,13 +215,13 @@ int CFrameCopyDlg::ExecuteOnOK()
 	m_cpvec.clear();
 
 
-	UINT chkenable0 = IsDlgButtonChecked(IDC_CHECK_PASTECAMERA);
-	if (chkenable0 == BST_CHECKED) {
-		m_pastecamera = true;
-	}
-	else {
-		m_pastecamera = false;
-	}
+	//UINT chkenable0 = IsDlgButtonChecked(IDC_CHECK_PASTECAMERA);
+	//if (chkenable0 == BST_CHECKED) {
+	//	m_pastecamera = true;
+	//}
+	//else {
+	//	m_pastecamera = false;
+	//}
 
 
 	int i, validno;
@@ -249,7 +249,8 @@ int CFrameCopyDlg::ExecuteOnOK()
 			if (valbone && !invalbone) {
 				m_cpvec.push_back(chkbone);
 			}
-			else if ((chkbone->IsCamera() || chkbone->IsNullAndChildIsCamera()) && m_pastecamera) {
+			//else if ((chkbone->IsCamera() || chkbone->IsNullAndChildIsCamera()) && m_pastecamera) {
+			else if (chkbone->IsCamera() || chkbone->IsNullAndChildIsCamera()) {
 				m_cpvec.push_back(chkbone);
 			}
 		}
@@ -521,12 +522,12 @@ int CFrameCopyDlg::ParamsToDlg()
 		}
 	}
 
-	if (m_pastecamera == true) {
-		CheckDlgButton(IDC_CHECK_PASTECAMERA, true);
-	}
-	else {
-		CheckDlgButton(IDC_CHECK_PASTECAMERA, false);
-	}
+	//if (m_pastecamera == true) {
+	//	CheckDlgButton(IDC_CHECK_PASTECAMERA, true);
+	//}
+	//else {
+	//	CheckDlgButton(IDC_CHECK_PASTECAMERA, false);
+	//}
 
 	if (g_pasteScale == true) {
 		CheckDlgButton(IDC_CHECK_PASTESCALE, true);

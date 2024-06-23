@@ -14764,7 +14764,7 @@ int CModel::RigControlPostRig(bool limitdegflag, int depthcnt,
 
 
 
-int CModel::InterpolateBetweenSelection(bool limitdegflag, double srcstartframe, double srcendframe, 
+int CModel::InterpolateBetweenSelection(bool limitdegflag, int curmotid, double srcstartframe, double srcendframe, 
 	CBone* interpolatebone, int srckind)
 {
 	//2023/02/06
@@ -14772,9 +14772,9 @@ int CModel::InterpolateBetweenSelection(bool limitdegflag, double srcstartframe,
 
 	int operatingjointno = -1;
 
-	if (!ExistCurrentMotion()){
-		return operatingjointno;
-	}
+	//if (!ExistCurrentMotion()){
+	//	return operatingjointno;
+	//}
 
 	if (!interpolatebone) {
 		return operatingjointno;
@@ -14793,19 +14793,19 @@ int CModel::InterpolateBetweenSelection(bool limitdegflag, double srcstartframe,
 	if (srckind == 1) {
 		//all
 		bool oneflag = false;
-		InterpolateBetweenSelectionReq(limitdegflag, GetTopBone(false), srcstartframe, srcendframe, oneflag, firstbroflag);
+		InterpolateBetweenSelectionReq(limitdegflag, GetTopBone(false), curmotid, srcstartframe, srcendframe, oneflag, firstbroflag);
 		operatingjointno = GetTopBone(false)->GetBoneNo();
 	}
 	else if (srckind == 2) {
 		//parent one
 		bool oneflag = true;
-		InterpolateBetweenSelectionReq(limitdegflag, interpolatebone, srcstartframe, srcendframe, oneflag, firstbroflag);
+		InterpolateBetweenSelectionReq(limitdegflag, interpolatebone, curmotid, srcstartframe, srcendframe, oneflag, firstbroflag);
 		operatingjointno = interpolatebone->GetBoneNo();
 	}
 	else if (srckind == 3) {
 		//parent deeper
 		bool oneflag = false;
-		InterpolateBetweenSelectionReq(limitdegflag, interpolatebone, srcstartframe, srcendframe, oneflag, firstbroflag);
+		InterpolateBetweenSelectionReq(limitdegflag, interpolatebone, curmotid, srcstartframe, srcendframe, oneflag, firstbroflag);
 		operatingjointno = interpolatebone->GetBoneNo();
 	}
 	else {
@@ -14819,6 +14819,7 @@ int CModel::InterpolateBetweenSelection(bool limitdegflag, double srcstartframe,
 }
 
 void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone, 
+	int curmotid,
 	double srcstartframe, double srcendframe, bool oneflag, bool broflag)
 {
 	if (!srcbone){
@@ -14827,16 +14828,16 @@ void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone,
 	if ((srcstartframe < 0.0) || (srcendframe < 0.0) || (srcendframe <= srcstartframe)){
 		return;
 	}
-	if (!ExistCurrentMotion()){
-		return;
-	}
+	//if (!ExistCurrentMotion()){
+	//	return;
+	//}
 
 	double roundingstartframe = RoundingTime(srcstartframe);
 	double roundingendframe = RoundingTime(srcendframe);
 
 	if (srcbone){
 		if (srcbone->IsSkeleton()) {
-			int curmotid = GetCurMotInfo().motid;
+			//int curmotid = GetCurMotInfo().motid;
 			CMotionPoint startmp, endmp;
 			srcbone->CalcLocalInfo(limitdegflag, curmotid, roundingstartframe, &startmp);
 			srcbone->CalcLocalInfo(limitdegflag, curmotid, roundingendframe, &endmp);
@@ -14888,7 +14889,7 @@ void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone,
 			}
 		}
 		else if (srcbone->IsCamera() || srcbone->IsNullAndChildIsCamera()) {
-			int curmotid = GetCurMotInfo().motid;
+			//int curmotid = GetCurMotInfo().motid;
 			CMotionPoint* startmp = srcbone->GetMotionPoint(curmotid, roundingstartframe);
 			CMotionPoint* endmp = srcbone->GetMotionPoint(curmotid, roundingendframe);
 			if (startmp && endmp) {
@@ -14990,10 +14991,12 @@ void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone,
 		if (oneflag == false) {
 			if (srcbone->GetChild(false)) {
 				bool broflag2 = true;
-				InterpolateBetweenSelectionReq(limitdegflag, srcbone->GetChild(false), roundingstartframe, roundingendframe, oneflag, broflag2);
+				InterpolateBetweenSelectionReq(limitdegflag, srcbone->GetChild(false), 
+					curmotid, roundingstartframe, roundingendframe, oneflag, broflag2);
 			}
 			if (srcbone->GetBrother(false) && broflag) {
-				InterpolateBetweenSelectionReq(limitdegflag, srcbone->GetBrother(false), roundingstartframe, roundingendframe, oneflag, broflag);
+				InterpolateBetweenSelectionReq(limitdegflag, srcbone->GetBrother(false), 
+					curmotid, roundingstartframe, roundingendframe, oneflag, broflag);
 			}
 		}
 	}

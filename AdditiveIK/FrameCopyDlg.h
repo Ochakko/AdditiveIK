@@ -161,7 +161,7 @@ private:
 
 	HTREEITEM m_hrootti;
 
-	bool m_pastecamera;
+	//bool m_pastecamera;
 
 public:
 // ユーザーが指定したtreeの先頭番号を格納する。

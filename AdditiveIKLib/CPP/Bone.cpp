@@ -4988,7 +4988,8 @@ int CBone::SetWorldMatFromQAndScaleAndTra(bool limitdegflag, int setchildflag,
 	CMotionPoint* curmp;
 	curmp = GetMotionPoint(srcmotid, roundingframe);
 	if (!curmp) {
-		_ASSERT(0);
+		//_ASSERT(0);
+		int dbgflag1 = 1;
 		return 1;
 	}
 
@@ -5078,7 +5079,8 @@ int CBone::SetWorldMatFromEulAndTra(bool limitdegflag, int setchildflag,
 	CMotionPoint* curmp;
 	curmp = GetMotionPoint(srcmotid, roundingframe);
 	if (!curmp) {
-		_ASSERT(0);
+		//_ASSERT(0);
+		int dbgflag1 = 1;
 		return 1;
 	}
 

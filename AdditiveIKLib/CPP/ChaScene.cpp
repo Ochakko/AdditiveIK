@@ -1375,19 +1375,28 @@ int ChaScene::WaitUpdateThreads()
 
 CModel* ChaScene::GetTheLastCameraModel()
 {
-	CModel* retcameramodel = 0;
+	CModel* findCameraModel = nullptr;
+	CModel* findCameraAnimModel = nullptr;
 	vector<MODELELEM>::iterator itrmodel;
 	for (itrmodel = m_modelindex.begin(); itrmodel != m_modelindex.end(); itrmodel++) {
 		CModel* curmodel = itrmodel->modelptr;
 		if (curmodel) {
 			if ((g_endappflag == 0) && curmodel->IsCameraLoaded()) {
-				retcameramodel = curmodel;//後から読み込んだモデルの中で　カメラがあれば　それを選ぶ
+				findCameraModel = curmodel;//後から読み込んだモデルの中で　カメラがあれば　それを選ぶ
+
+				if (curmodel->ExistCameraMotion()) {
+					findCameraAnimModel = curmodel;//2024/06/23 カメラアニメがあれば　それを選ぶ
+				}
 			}
 		}
 	}
 
-	return retcameramodel;
-
+	if (findCameraAnimModel) {
+		return findCameraAnimModel;//2024/06/23 カメラアニメが在る方を優先
+	}
+	else {
+		return findCameraModel;
+	}
 }
 
 int ChaScene::CalcTotalModelBound()

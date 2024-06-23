@@ -1035,7 +1035,7 @@ public:
 
 	CBone* GetSymPosBone(CBone* srcbone);
 
-	int InterpolateBetweenSelection(bool limitdegflag, double srcstartframe, double srcendframe, 
+	int InterpolateBetweenSelection(bool limitdegflag, int curmotid, double srcstartframe, double srcendframe, 
 		CBone* srcbone, int srckind);
 
 	int BulletSimulationStop();
@@ -1369,6 +1369,7 @@ private:
 
 	void SetFirstFrameBonePosReq(CBone* srcbone, int srcmotid, HINFO* phinfo);
 	void InterpolateBetweenSelectionReq(bool limitdegflag, CBone* interpolatebone, 
+		int curmotid,
 		double srcstartframe, double srcendframe, bool oneflag, bool broflag);
 
 
@@ -2090,6 +2091,15 @@ public: //accesser
 		}
 		return retmi;
 	};
+	bool ExistCameraMotion() {
+		MOTINFO chkmi = GetCameraMotInfoByCameraIndex(0);//最初のカメラモーション
+		if (chkmi.motid > 0) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
 	MOTINFO GetCameraMotInfoByMotId(int srcmotid) {//カメラモーション
 		//DeleteMotion時に要素をeraseするのでid - 1が配列のインデックスになるとは限らない//2021/08/26
 		MOTINFO retmi;

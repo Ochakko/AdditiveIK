@@ -36,6 +36,8 @@
 //#include <ChaVecCalc.h>
 #include <GlobalVar.h>
 
+#include <ChaCalcFunc.h>
+
 #include <mqomaterial.h>
 
 #include <ChaFile.h>
@@ -257,9 +259,22 @@ enum {
 };
 
 
+
+//#define FPSSAVENUM 100
+#define FPSSAVENUM 120
+static double s_fTime = 0.0;
+static float s_fElapsedTime = 0.0;
+static double s_befftime = 0.0;
+static double s_mousemoveBefTime = 0.0;
+static double s_fps100[FPSSAVENUM];
+static int s_fps100index = 0;
+static double s_avrgfps = 0.0;
+static double s_rectime = 0.0;
+static double s_reccnt = 0;
+
+
 static HSVTOON s_hsvtoonforall;//mqomaterial指定が無い場合の設定内容を保存
 static HSVTOON s_skyhsvtoonforall;//s_skt用の設定内容を保存
-
 
 
 //typedef struct tag_spaxis
@@ -271,7 +286,11 @@ static HSVTOON s_skyhsvtoonforall;//s_skt用の設定内容を保存
 //	};
 //}SPAXIS, SPCAM;
 
-#define BUTTONPUSHEDMAXCOUNT	30
+
+
+//押したボタンの反転色表示回数　60fpsのときの回数
+#define BUTTONPUSHEDMAXCOUNT	15
+
 
 class CSpAxis
 {
@@ -294,14 +313,6 @@ public:
 	void ButtonUp() {
 		pushcount = 0;
 	}
-	//void UpdatePushCount() {
-	//	if (pushcount >= BUTTONPUSHEDMAXCOUNT) {
-	//		pushcount = 0;
-	//	}
-	//	if (pushcount > 0) {
-	//		pushcount++;
-	//	}
-	//};
 	Sprite* GetSpriteForRender() {
 		if (pushcount <= 0) {
 			return &sprite;
@@ -338,14 +349,6 @@ public:
 	void ButtonUp() {
 		pushcount = 0;
 	}
-	//void UpdatePushCount() {
-	//	if (pushcount >= BUTTONPUSHEDMAXCOUNT) {
-	//		pushcount = 0;
-	//	}
-	//	if (pushcount > 0) {
-	//		pushcount++;
-	//	}
-	//};
 	Sprite* GetSpriteForRender() {
 		if (pushcount <= 0) {
 			return &sprite;
@@ -384,7 +387,7 @@ public:
 		pushcount = 0;
 	}
 	void UpdatePushCount() {
-		if (pushcount >= BUTTONPUSHEDMAXCOUNT) {
+		if (pushcount >= GetPushedMaxCount()) {//2024/06/23 現在の表示速度に合わせた回数分
 			pushcount = 0;
 		}
 		if (pushcount > 0) {
@@ -399,7 +402,14 @@ public:
 			return &sprite_pushed;
 		}
 	};
-
+private:
+	int GetPushedMaxCount()
+	{
+		//2024/06/23
+		//60fpsのときBUTTONPUSHEDMAXCOUNT回の間反転表示　現在の表示速度(s_avrgfps)においてはretmaxcount回の間反転表示
+		int retmaxcount = (int)((double)(BUTTONPUSHEDMAXCOUNT) * (s_avrgfps / 60.0));
+		return retmaxcount;
+	};
 public:
 	int pushcount;
 	Sprite sprite;
@@ -488,8 +498,6 @@ public:
 };
 
 
-//#define FPSSAVENUM 100
-#define FPSSAVENUM 120
 
 
 //global
@@ -508,16 +516,6 @@ static HWINEVENTHOOK s_hhook = NULL;
 
 static CColDlg s_coldlg;
 
-static double s_fTime = 0.0;
-static float s_fElapsedTime = 0.0;
-static double s_befftime = 0.0;
-static double s_mousemoveBefTime = 0.0;
-static double s_fps100[FPSSAVENUM];
-static int s_fps100index = 0;
-static double s_avrgfps = 0.0;
-
-static double s_rectime = 0.0;
-static double s_reccnt = 0;
 
 static int s_appcnt = 0;
 static int s_launchbyc4 = 0;
@@ -936,7 +934,6 @@ static float s_selectscale = 1.0f;
 //static int s_sethipstra = 0;
 //static CFrameCopyDlg s_selbonedlg;
 static map<CModel*, CFrameCopyDlg*> s_selbonedlgmap;
-
 static bool s_allmodelbone = false;
 
 static std::vector<HISTORYELEM> s_cptfilename;
@@ -1919,6 +1916,13 @@ static bool s_undoFlag = false;
 static bool s_redoFlag = false;
 static bool s_undoredoFromPlayerButton = false;
 static bool s_frogFlag = false;
+
+static bool s_copycameraFlag = false;
+static bool s_pastecameraFlag = false;
+static bool s_initmpcameraFlag = false;
+static bool s_interpolatecameraFlag = false;
+static bool s_smoothcameraFlag = false;
+
 static bool s_plateFlag = false;
 static bool s_copyFlag = false;			// コピーフラグ
 static bool s_copyLW2WFlag = false;			//Limited2World ベイクフラグ
@@ -2055,8 +2059,8 @@ typedef struct tag_cpelem
 static vector<CPELEM2> s_copymotvec;
 static vector<CPELEM2> s_pastemotvec;
 static int WriteCPTFile(WCHAR* dstfilename);
-static int WriteCPIFile(WCHAR* cptfilename);
-static bool LoadCPTFile();
+static int WriteCPIFile(CModel* srcmodel, MOTINFO* curmi, WCHAR* cptfilename);
+static bool LoadCPTFile(CModel* srcmodel);
 static int LoadCPIFile(HISTORYELEM* srcdstelem);
 
 static vector<CBone*> s_pasteRJoint;
@@ -2215,6 +2219,18 @@ static Texture* s_spritetex_pushed61 = 0;
 static Texture* s_spritetex_pushed62 = 0;
 
 
+static Texture* s_spritetexCamera67 = 0;
+static Texture* s_spritetexCamera_pushed67 = 0;
+static Texture* s_spritetexCamera69 = 0;
+static Texture* s_spritetexCamera_pushed69 = 0;
+static Texture* s_spritetexCamera71 = 0;
+static Texture* s_spritetexCamera_pushed71 = 0;
+static Texture* s_spritetexCamera72 = 0;
+static Texture* s_spritetexCamera_pushed72 = 0;
+static Texture* s_spritetexCamera64 = 0;
+static Texture* s_spritetexCamera_pushed64 = 0;
+
+
 
 static int s_toolspritemode = 0;
 static float s_spsize = 45.0f;//CheckResolution()でセットする
@@ -2268,6 +2284,12 @@ static Sprite s_kinsprite;
 static CUndoSprite s_undosprite;
 static CFpsSprite s_fpssprite;
 static CSpElem s_spupperbar;
+
+static CSpElem s_spcopy_camera;
+static CSpElem s_sppaste_camera;
+static CSpElem s_spinterpolate_camera;
+static CSpElem s_spinit_camera;
+static CSpElem s_spsmooth_camera;
 
 typedef struct tag_modelpanel
 {
@@ -2499,6 +2521,7 @@ void OnDSUpdate();
 static void OnDSMouseHereApeal();
 static void OnArrowKey();//DS関数でキーボードの矢印キーに対応
 
+static MOTINFO GetCameraMotInfo();
 static MOTINFO GetEditTargetMotInfo();
 static CBone* GetEditTargetOpeBone(int* pmotid, int* pframeleng);
 static void CalcTotalBound();
@@ -2945,7 +2968,7 @@ static void OnGUIEventSpeed();
 static int SetShowPosTime();
 //static int CallFilterFunc(int callnum);
 static int FilterFuncDlg();
-static int FilterNoDlg(bool copylw2w);
+static int FilterNoDlg(bool copylw2w, CModel* srcmodel, int curmotid);
 
 static void SavePlayingStartEnd();
 static void SetButtonStartEndFromPlaying();
@@ -3072,11 +3095,13 @@ static int OnRenderUtDialog(RenderContext* pRenderContext, float fElapsedTime);
 static int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
 
 
-static int PasteMotionPoint(CBone* srcbone, CMotionPoint srcmp, double newframe);
-static int PasteNotMvParMotionPoint(CBone* srcbone, 
+static int CopyMotionFunc(CModel* srcmodel, MOTINFO* curmi);
+static int PasteMotionFunc(CModel* srcmodel, MOTINFO* curmi);
+static int PasteMotionPoint(int curmotid, CBone* srcbone, CMotionPoint srcmp, double newframe);
+static int PasteNotMvParMotionPoint(CModel* srcmodel, CBone* srcbone, int curmotid,
 	double copystarttime, double srcframe, double srcframe2, double interpolaterate, 
 	double dststartframe, double newframe);
-static int PasteMotionPointJustInTerm(double copyStartTime, double copyEndTime, double startframe, double endframe);
+static int PasteMotionPointJustInTerm(CModel* srcmodel, int curmotid, double copyStartTime, double copyEndTime, double startframe, double endframe);
 //static int PasteMotionPointAfterCopyEnd(double copyStartTime, double copyEndTime, double startframe, double endframe);
 static CMotionPoint CalcPasteMotionPoint(CBone* srcbone, double srcframe, double srcframe2, double interpolaterate);
 static void ResetPasteDoneFlagReq(CBone* srcbone);
@@ -3238,8 +3263,7 @@ static void DestroyGrassElem();
 
 static void ResetRigModelNum();
 static CModel* GetCurRigModel(CUSTOMRIG currig, int* pinstanceno, ChaVector4* prigmat);
-static CFrameCopyDlg* GetCurrentFrameCopyDlg();
-
+static CFrameCopyDlg* GetCurrentFrameCopyDlg(bool cameraflag);
 
 static int CreateModelPanel();
 static int DestroyModelPanel();
@@ -3335,6 +3359,13 @@ static int SetSpRet2PrevParams();
 static bool PickSpFrog(POINT srcpos);
 static bool PickSpFrog2(POINT srcpos);
 
+static int SetSpCameraCommandParams();
+static int PickSpCopyCamera(POINT srcpos);
+static int PickSpPasteCamera(POINT srcpos);
+static int PickSpInitCamera(POINT srcpos);
+static int PickSpInterpolateCamera(POINT srcpos);
+static int PickSpSmoothCamera(POINT srcpos);
+
 static int SetSpCopyParams();
 static int PickSpCopy(POINT srcpos);
 static int SetSpSymCopyParams();
@@ -3380,8 +3411,8 @@ static int PickSpRefPosSW(POINT srcpos);
 
 
 
-static int InsertCopyMP(bool limitdegflag, CBone* curbone, double curframe);
-static void InsertCopyMPReq(bool limitdegflag, CBone* curbone, double curframe);
+static int InsertCopyMP(bool limitdegflag, CBone* curbone, double curframe, MOTINFO* curmi);
+static void InsertCopyMPReq(bool limitdegflag, CBone* curbone, double curframe, MOTINFO* curmi);
 static int InsertSymMP(bool limitdegflag, CBone* curbone, double curframe, int symrootmode);
 static void InsertSymMPReq(bool limitdegflag, CBone* curbone, double curframe, int symrootmode);
 
@@ -4530,6 +4561,18 @@ void InitApp()
 		s_spritetex_pushed78 = 0;
 		s_spritetex_pushed61 = 0;
 		s_spritetex_pushed62 = 0;
+
+
+		s_spritetexCamera67 = 0;
+		s_spritetexCamera_pushed67 = 0;
+		s_spritetexCamera69 = 0;
+		s_spritetexCamera_pushed69 = 0;
+		s_spritetexCamera71 = 0;
+		s_spritetexCamera_pushed71 = 0;
+		s_spritetexCamera72 = 0;
+		s_spritetexCamera_pushed72 = 0;
+		s_spritetexCamera64 = 0;
+		s_spritetexCamera_pushed64 = 0;
 	}
 
 	{
@@ -5464,6 +5507,13 @@ void InitApp()
 	s_redoFlag = false;
 	s_undoredoFromPlayerButton = false;
 	s_frogFlag = false;
+
+	s_copycameraFlag = false;
+	s_pastecameraFlag = false;
+	s_initmpcameraFlag = false;
+	s_interpolatecameraFlag = false;
+	s_smoothcameraFlag = false;
+
 	s_plateFlag = false;
 	s_copyFlag = false;			// コピーフラグ
 	s_copyLW2WFlag = false;
@@ -6365,6 +6415,7 @@ void OnDestroyDevice()
 		s_customrigdlg = 0;
 	}
 
+
 	if (s_copyhistorydlg.GetCreatedFlag() == true) {
 		if (::IsWindow(s_copyhistorydlg.m_hWnd)) {
 			s_copyhistorydlg.DestroyWindow();
@@ -7260,38 +7311,37 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 	s_savepreviewFlag = g_previewFlag;
 }
 
-void InsertCopyMPReq(bool limitdegflag, CBone* curbone, double curframe)
+void InsertCopyMPReq(bool limitdegflag, CBone* curbone, double curframe, MOTINFO* curmi)
 {
-	if (curbone) {
+	if (curbone && curmi) {
 
 		if (curbone->IsSkeleton() || curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
-			InsertCopyMP(limitdegflag, curbone, curframe);
+			InsertCopyMP(limitdegflag, curbone, curframe, curmi);
 		}
 		
 		if (curbone->GetChild(false)) {
-			InsertCopyMPReq(limitdegflag, curbone->GetChild(false), curframe);
+			InsertCopyMPReq(limitdegflag, curbone->GetChild(false), curframe, curmi);
 		}
 		if (curbone->GetBrother(false)) {
-			InsertCopyMPReq(limitdegflag, curbone->GetBrother(false), curframe);
+			InsertCopyMPReq(limitdegflag, curbone->GetBrother(false), curframe, curmi);
 		}
 	}
 }
 
-int InsertCopyMP(bool limitdegflag, CBone* curbone, double curframe)
+int InsertCopyMP(bool limitdegflag, CBone* curbone, double curframe, MOTINFO* curmi)
 {
 	double roundingframe = RoundingTime(curframe);
 
-	if (curbone && (curbone->IsSkeleton() || curbone->IsCamera() || curbone->IsNullAndChildIsCamera())) {
-		MOTINFO curmi = s_model->GetCurMotInfo();
-		if (curmi.motid > 0) {
+	if (curmi && curbone && (curbone->IsSkeleton() || curbone->IsCamera() || curbone->IsNullAndChildIsCamera())) {
+		if (curmi->motid > 0) {
 			if (curbone->IsSkeleton()) {
 				int rotcenterflag1 = 1;
 				ChaMatrix localmat = curbone->CalcLocalScaleRotMat(limitdegflag,
-					rotcenterflag1, curmi.motid, curframe);
+					rotcenterflag1, curmi->motid, curframe);
 				ChaVector3 curanimtra = curbone->CalcLocalTraAnim(limitdegflag,
-					curmi.motid, curframe);
+					curmi->motid, curframe);
 				ChaVector3 localscale = curbone->CalcLocalScaleAnim(limitdegflag,
-					curmi.motid, curframe);
+					curmi->motid, curframe);
 
 				localmat.AddTranslation(curanimtra);//SetではなくAdd
 
@@ -7304,9 +7354,9 @@ int InsertCopyMP(bool limitdegflag, CBone* curbone, double curframe)
 				s_copymotvec.push_back(cpelem);
 			}
 			else {
-				ChaMatrix localmat = curbone->GetLocalMat(false, curmi.motid, roundingframe, 0);
-				ChaMatrix worldmat = curbone->GetWorldMat(false, curmi.motid, roundingframe, 0);
-				ChaVector3 localeul = curbone->GetLocalEul(false, curmi.motid, roundingframe, 0);
+				ChaMatrix localmat = curbone->GetLocalMat(false, curmi->motid, roundingframe, 0);
+				ChaMatrix worldmat = curbone->GetWorldMat(false, curmi->motid, roundingframe, 0);
+				ChaVector3 localeul = curbone->GetLocalEul(false, curmi->motid, roundingframe, 0);
 
 				CPELEM2 cpelem;
 				ZeroMemory(&cpelem, sizeof(CPELEM2));
@@ -7991,22 +8041,40 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					interpolatebone = curbone;
 				}
 
-
-				int operatingjointno = -1;
-				operatingjointno = s_model->InterpolateBetweenSelection(g_limitdegflag,
-					s_buttonselectstart, s_buttonselectend, interpolatebone, s_interpolateState);
-
-				bool cameraanimflag = s_model->IsCameraMotion(s_model->GetCurrentMotID());
-				if (!cameraanimflag && (g_limitdegflag == true) && (operatingjointno >= 0)) {
-					bool allframeflag = false;
-					bool setcursorflag = false;
-					bool onpasteflag = false;
-					CopyLimitedWorldToWorld(s_model, allframeflag, setcursorflag, operatingjointno, onpasteflag);
+				CModel* srcmodel;
+				MOTINFO curmi;
+				if (s_interpolateFlag) {
+					srcmodel = s_model;
+					curmi = s_model->GetCurMotInfo();
 				}
-				refreshEulerGraph();
-				PrepairUndo();
+				else if (s_interpolatecameraFlag) {
+					srcmodel = s_cameramodel;
+					curmi = GetCameraMotInfo();
+				}
+				else {
+					srcmodel = nullptr;
+					curmi.Init();
+				}
+				if (srcmodel && (curmi.motid > 0)) {
+					int operatingjointno = -1;
+					operatingjointno = srcmodel->InterpolateBetweenSelection(g_limitdegflag,
+						curmi.motid,
+						s_buttonselectstart, s_buttonselectend, interpolatebone, s_interpolateState);
+
+					bool cameraanimflag = srcmodel->IsCameraMotion(curmi.motid);
+					if (!cameraanimflag && (g_limitdegflag == true) && (operatingjointno >= 0)) {
+						bool allframeflag = false;
+						bool setcursorflag = false;
+						bool onpasteflag = false;
+						CopyLimitedWorldToWorld(srcmodel, allframeflag, setcursorflag, operatingjointno, onpasteflag);
+					}
+					refreshEulerGraph();
+					PrepairUndo();
+				}
 				s_interpolateState = 0;
 			}
+			s_interpolateFlag = false;//!!!!!
+			s_interpolatecameraFlag = false;//!!!!!
 		}
 		else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_FILTERFROMTOOL)) &&
 			(menuid < (ID_RMENU_0 + MENUOFFSET_FILTERFROMTOOL + 3))) {
@@ -8031,7 +8099,24 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				int subid = (menuid - ID_RMENU_0 - MENUOFFSET_INITMPFROMTOOL) / 4;//4 * 3 / 4 --> 0, 1, 2, 3 : submenu
 							//int initmode = (menuid - ID_RMENU_0 - MENUOFFSET_INITMPFROMTOOL) - subid * 4;//0, 1, 2, 3
 				int initmode = (menuid - ID_RMENU_0 - MENUOFFSET_INITMPFROMTOOL) % 4;//0, 1, 2, 3 //### 2022/07/04 : subsubmenu
-				if (s_model->ExistCurrentMotion()) {
+
+				CModel* srcmodel;
+				MOTINFO curmi;
+				if (s_initmpFlag) {
+					srcmodel = s_model;
+					curmi = s_model->GetCurMotInfo();
+				}
+				else if (s_initmpcameraFlag) {
+					srcmodel = s_cameramodel;
+					curmi = GetCameraMotInfo();
+				}
+				else {
+					srcmodel = nullptr;
+					curmi.Init();
+				}
+
+				if (srcmodel && (curmi.motid > 0)) {
+				//if (s_model->ExistCurrentMotion()) {
 					s_copymotvec.clear();
 					s_copyKeyInfoList.clear();
 					//s_copyKeyInfoList = s_owpLTimeline->getSelectedKey();
@@ -8050,10 +8135,11 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						list<KeyInfo>::iterator itrcp;
 						for (itrcp = s_copyKeyInfoList.begin(); itrcp != s_copyKeyInfoList.end(); itrcp++) {
 							double curframe = itrcp->time;
-							CBone* topbone = s_model->GetTopBone(false);
+							CBone* topbone = srcmodel->GetTopBone(false);
 							if (topbone) {
 								bool broflag = false;
-								InitMpByEulReq(initmode, topbone, s_model->GetCurrentMotID(), curframe, broflag);//topbone req
+								//InitMpByEulReq(initmode, topbone, srcmodel->GetCurrentMotID(), curframe, broflag);//topbone req
+								InitMpByEulReq(initmode, topbone, curmi.motid, curframe, broflag);//topbone req
 								updatejointno = topbone->GetBoneNo();
 							}
 						}
@@ -8063,7 +8149,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							list<KeyInfo>::iterator itrcp;
 							for (itrcp = s_copyKeyInfoList.begin(); itrcp != s_copyKeyInfoList.end(); itrcp++) {
 								double curframe = itrcp->time;
-								InitMpByEul(initmode, opebone, s_model->GetCurrentMotID(), curframe);//opebone
+								//InitMpByEul(initmode, opebone, srcmodel->GetCurrentMotID(), curframe);//opebone
+								InitMpByEul(initmode, opebone, curmi.motid, curframe);//opebone
 								updatejointno = opebone->GetBoneNo();
 							}
 						}
@@ -8074,7 +8161,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							for (itrcp = s_copyKeyInfoList.begin(); itrcp != s_copyKeyInfoList.end(); itrcp++) {
 								double curframe = itrcp->time;
 								bool broflag = false;
-								InitMpByEulReq(initmode, opebone, s_model->GetCurrentMotID(), curframe, broflag);//opebone req
+								//InitMpByEulReq(initmode, opebone, srcmodel->GetCurrentMotID(), curframe, broflag);//opebone req
+								InitMpByEulReq(initmode, opebone, curmi.motid, curframe, broflag);//opebone req
 								updatejointno = opebone->GetBoneNo();
 							}
 						}
@@ -8085,26 +8173,29 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							for (itrcp = s_copyKeyInfoList.begin(); itrcp != s_copyKeyInfoList.end(); itrcp++) {
 								double curframe = itrcp->time;
 								bool broflag = false;
-								InitMpByEulEndJointReq(initmode, opebone, s_model->GetCurrentMotID(), curframe, broflag);//opebone req
+								//InitMpByEulEndJointReq(initmode, opebone, srcmodel->GetCurrentMotID(), curframe, broflag);//opebone req
+								InitMpByEulEndJointReq(initmode, opebone, curmi.motid, curframe, broflag);//opebone req
 								updatejointno = opebone->GetBoneNo();
 							}
 						}
 					}
 
-					if (g_limitdegflag == true) {
+					if (s_initmpFlag && (g_limitdegflag == true)){
 						bool allframeflag = false;
 						bool setcursorflag = false;
 						bool onpasteflag = false;
-						CopyLimitedWorldToWorld(s_model, allframeflag, setcursorflag, updatejointno, onpasteflag);
+						CopyLimitedWorldToWorld(srcmodel, allframeflag, setcursorflag, updatejointno, onpasteflag);
 					}
 
-					s_model->CalcBoneEul(g_limitdegflag, s_model->GetCurrentMotID());//2023/11/07
-					
+					//s_model->CalcBoneEul(g_limitdegflag, s_model->GetCurrentMotID());//2023/11/07
+					srcmodel->CalcBoneEul(g_limitdegflag, curmi.motid);
 
 					refreshEulerGraph();
 					PrepairUndo();
 				}
 			}
+			s_initmpFlag = false;//!!!!
+			s_initmpcameraFlag = false;//!!!!
 		}
 
 
@@ -8890,6 +8981,59 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 				pickflag = true;
 			}
+
+			if ((pickflag == false) && (PickSpCopyCamera(ptCursor) != 0)) {
+				if (s_model) {
+					if (s_copycameraFlag == false) {
+						s_copycameraFlag = true;
+						s_spcopy_camera.ButtonDown();
+						s_SpriteButtonDown = true;
+					}
+				}
+				pickflag = true;
+			}
+			if ((pickflag == false) && (PickSpPasteCamera(ptCursor) != 0)) {
+				if (s_model) {
+					if (s_pastecameraFlag == false) {
+						s_pastecameraFlag = true;
+						s_sppaste_camera.ButtonDown();
+						s_SpriteButtonDown = true;
+					}
+				}
+				pickflag = true;
+			}
+			if ((pickflag == false) && (PickSpInitCamera(ptCursor) != 0)) {
+				if (s_model) {
+					if (s_initmpcameraFlag == false) {
+						s_initmpcameraFlag = true;
+						s_spinit_camera.ButtonDown();
+						s_SpriteButtonDown = true;
+					}
+				}
+				pickflag = true;
+			}
+			if ((pickflag == false) && (PickSpInterpolateCamera(ptCursor) != 0)) {
+				if (s_model) {
+					if (s_interpolatecameraFlag == false) {
+						s_interpolatecameraFlag = true;
+						s_spinterpolate_camera.ButtonDown();
+						s_SpriteButtonDown = true;
+					}
+				}
+				pickflag = true;
+			}
+			if ((pickflag == false) && (PickSpSmoothCamera(ptCursor) != 0)) {
+				if (s_model) {
+					if (s_smoothcameraFlag == false) {
+						s_smoothcameraFlag = true;
+						s_spsmooth_camera.ButtonDown();
+						s_SpriteButtonDown = true;
+					}
+				}
+				pickflag = true;
+			}
+
+
 			if ((pickflag == false) && (PickSpCopy(ptCursor) != 0)) {
 				if (s_model) {
 					if (s_copyFlag == false) {
@@ -10852,7 +10996,7 @@ int RetargetFile(char* fbxpath)
 					s_buttonselectstart = 1.0;
 					s_buttonselectend = curmi.frameleng - 1.0;
 
-					FilterNoDlg(false);
+					FilterNoDlg(false, s_model, curmi.motid);
 
 					s_filterState = saveFilterState;
 					s_buttonselectstart = savestart;
@@ -11765,6 +11909,8 @@ CModel* OpenMQOFile()
 
 int SetCameraModel()
 {
+	CModel* savecameramodel = s_cameramodel;
+
 	s_cameramodel = 0;
 
 	if (s_chascene) {
@@ -11782,6 +11928,13 @@ int SetCameraModel()
 	//モデル読み込み中　かつ　カメラモデルがある場合　カメラアニメスイッチを強制オン
 	if (s_nowloading && s_cameramodel && (g_cameraanimmode == 0)) {
 		ChangeCameraMode(2);
+	}
+
+
+	//2024/06/23
+	//新しくファイルを追加読込してカメラモデルが変わった場合　カメラパネル作成し直し
+	if (savecameramodel != s_cameramodel) {
+		DispCameraPanel();
 	}
 
 
@@ -12080,7 +12233,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 
 	//FrameCopyDlgはOnModelMenu()にてまだ無いときに作成される
 	//tboファイルのLoadはOnModelMenu()よりも後で
-	CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg();
+	CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg(false);
 	if (curcpdlg) {
 		bool result = curcpdlg->LoadWithProjectFile(tbofilename);//LoadTboFile
 	}
@@ -14418,7 +14571,7 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		ClampTimelineSelection();//2024/06/23
 
 
-		CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg();
+		CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg(false);
 		if (!curcpdlg) {
 			curcpdlg = new CFrameCopyDlg();
 			if (!curcpdlg) {
@@ -15179,16 +15332,24 @@ int RenderSelectPostureFunc(myRenderer::RenderingEngine* re)
 
 }
 
-CFrameCopyDlg* GetCurrentFrameCopyDlg()
+CFrameCopyDlg* GetCurrentFrameCopyDlg(bool cameraflag)
 {
 	if (!s_model) {
 		_ASSERT(0);
 		return 0;
 	}
 
+	CModel* srcmodel;
+	if (cameraflag) {
+		srcmodel = s_cameramodel;
+	}
+	else {
+		srcmodel = s_model;
+	}
+
 	CFrameCopyDlg* curcpdlg = 0;
 	map<CModel*, CFrameCopyDlg*>::iterator itrfinddlg;
-	itrfinddlg = s_selbonedlgmap.find(s_model);
+	itrfinddlg = s_selbonedlgmap.find(srcmodel);
 	if (itrfinddlg == s_selbonedlgmap.end()) {
 		return 0;
 	}
@@ -18398,6 +18559,8 @@ int CreateCameraPanel()
 		return 0;
 	}
 
+	SetCameraModel();
+
 	if (s_camerapanel.panel) {
 		s_firstcamerapanelpos = false;
 		s_camerapanelpos = s_camerapanel.panel->getPos();
@@ -18417,8 +18580,8 @@ int CreateCameraPanel()
 	//	return 0;
 	//}
 	int cameranum;
-	if (s_model) {
-		cameranum = s_model->GetCameraMotInfoSize();
+	if (s_cameramodel) {
+		cameranum = s_cameramodel->GetCameraMotInfoSize();
 	}
 	else {
 		cameranum = 0;
@@ -18482,14 +18645,14 @@ int CreateCameraPanel()
 
 
 
-		if (s_model) {
+		if (s_cameramodel) {
 			int cameracnt = 0;
 			int minum;
 			int miindex;
-			minum = s_model->GetMotInfoSize();
+			minum = s_cameramodel->GetMotInfoSize();
 			for (miindex = 0; miindex < minum; miindex++) {
-				MOTINFO curmi = s_model->GetMotInfoByIndex(miindex);
-				if (curmi.cameramotion) {
+				MOTINFO curmi = s_cameramodel->GetMotInfoByIndex(miindex);
+				if (curmi.cameramotion) {//!!!!!
 					WCHAR wmotname[MAX_PATH] = { 0L };
 					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, curmi.motname, 256, wmotname, MAX_PATH);
 					if (cameracnt == 0) {
@@ -18544,7 +18707,7 @@ int CreateCameraPanel()
 
 
 			for (miindex = 0; miindex < minum; miindex++) {
-				MOTINFO curmi = s_model->GetMotInfoByIndex(miindex);
+				MOTINFO curmi = s_cameramodel->GetMotInfoByIndex(miindex);
 				if (curmi.cameramotion) {
 					OWP_Button* owpButton = new OWP_Button(L"delete");
 					if (owpButton) {
@@ -18561,18 +18724,18 @@ int CreateCameraPanel()
 
 			s_camerapanel.modelindex = s_curmodelmenuindex;
 			//s_camerapanel.radiobutton->setSelectIndex(0);
-			if (s_model) {
+			if (s_cameramodel) {
 				if (s_camerapanel.radiobutton) {
-					int cameramotid = s_model->GetCameraMotionId();
+					int cameramotid = s_cameramodel->GetCameraMotionId();
 					if (cameramotid > 0) {
-						int cameramotindex = s_model->MotionID2CameraIndex(cameramotid);
+						int cameramotindex = s_cameramodel->MotionID2CameraIndex(cameramotid);
 						if (cameramotindex >= 0) {
-							s_cameramenuindexmap[s_model] = cameramotindex;
+							s_cameramenuindexmap[s_cameramodel] = cameramotindex;
 							s_camerapanel.radiobutton->setSelectIndex(cameramotindex, false);//!!!!
 						}
 					}
 				}
-				//s_camerapanel.scroll->inView(s_motmenuindexmap[s_model]);
+				//s_camerapanel.scroll->inView(s_motmenuindexmap[s_cameramodel]);
 				if (s_camerapanel.scroll) {
 					s_camerapanel.scroll->setShowPosLine(s_savecamerapanelshowposline);
 				}
@@ -18585,7 +18748,7 @@ int CreateCameraPanel()
 		}
 		else {
 			//_ASSERT(0);
-			return 0;//s_model == NULL : 0 return
+			return 0;//s_cameramodel == NULL : 0 return
 		}
 
 
@@ -18593,25 +18756,25 @@ int CreateCameraPanel()
 			s_camerapanel.panel->setVisible(false);//作成中非表示
 
 			s_camerapanel.panel->setCloseListener([]() {
-				if (s_model) {
+				if (s_cameramodel) {
 					s_closecameraFlag = true;
 				}
 				});
 
 		}
 
-		if (s_model) {
+		if (s_cameramodel) {
 			int delmenuindex = 0;
-			for (delmenuindex = 0; delmenuindex < s_model->GetCameraMotInfoSize(); delmenuindex++) {
+			for (delmenuindex = 0; delmenuindex < s_cameramodel->GetCameraMotInfoSize(); delmenuindex++) {
 				if (s_camerapanel.delbutton[delmenuindex]) {
 					s_camerapanel.delbutton[delmenuindex]->setButtonListener([delmenuindex]() {
 						if ((s_underdelmodel == false) && (s_opedelmodelcnt < 0) && //Model削除と同時は禁止
-							!s_underdelmotion && s_model && (s_model->GetCameraMotInfoSize() >= 2)) {//全部消すときはメインメニューから
+							!s_underdelmotion && s_cameramodel && (s_cameramodel->GetCameraMotInfoSize() >= 2)) {//全部消すときはメインメニューから
 
-							MOTINFO camerami = s_model->GetCameraMotInfoByCameraIndex(delmenuindex);
+							MOTINFO camerami = s_cameramodel->GetCameraMotInfoByCameraIndex(delmenuindex);
 							if (camerami.motid > 0) {
 								int delmotid = camerami.motid;
-								int deleteindex = s_model->MotionID2Index(delmotid);
+								int deleteindex = s_cameramodel->MotionID2Index(delmotid);
 								if (deleteindex >= 0) {
 									s_opedelmotioncnt = deleteindex;
 									s_underdelmotion = true;
@@ -18633,9 +18796,9 @@ int CreateCameraPanel()
 
 		if (s_camerapanel.radiobutton) {
 			s_camerapanel.radiobutton->setSelectListener([]() {
-				if (s_model) {
+				if (s_cameramodel) {
 					int curindex = s_camerapanel.radiobutton->getSelectIndex();
-					if ((s_opeselectcameracnt < 0) && !s_underselectcamera && (curindex >= 0) && (curindex < s_model->GetCameraMotInfoSize())) {
+					if ((s_opeselectcameracnt < 0) && !s_underselectcamera && (curindex >= 0) && (curindex < s_cameramodel->GetCameraMotInfoSize())) {
 						s_opeselectcameracnt = curindex;
 						s_underselectcamera = true;
 						//int cameraindex = curindex;
@@ -21640,20 +21803,26 @@ int SetSpParams()
 	
 	SetSpRet2PrevParams();
 	
-	SetSpCopyParams();//SetSpCameraInheritSWParams()よりも後で呼ぶ
-	SetSpSymCopyParams();
-	SetSpPasteParams();
-	SetSpCopyHistoryParams();
+
 	
-	SetSpInterpolateParams();
-	SetSpInitParams();
-	SetSpScaleInitParams();
-	SetSpPropertyParams();
-	
-	SetSpZeroFrameParams();
-	SetSpCameraDollyParams();
-	SetSpModelPosDirParams();
-	SetSpMaterialRateParams();
+	{//SetSpCameraInheritSWParams()よりも後で呼ぶ
+		SetSpCameraCommandParams();
+
+		SetSpCopyParams();
+		SetSpSymCopyParams();
+		SetSpPasteParams();
+		SetSpCopyHistoryParams();
+
+		SetSpInterpolateParams();
+		SetSpInitParams();
+		SetSpScaleInitParams();
+		SetSpPropertyParams();
+
+		SetSpZeroFrameParams();
+		SetSpCameraDollyParams();
+		SetSpModelPosDirParams();
+		SetSpMaterialRateParams();
+	}
 
 	return 0;
 }
@@ -22313,7 +22482,7 @@ int SetSpRet2PrevParams()
 		int spgshift = 6;
 		//s_spret2prev2.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 4;
 		s_spret2prev2.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 5;//2024/03/11
-		s_spret2prev2.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+		s_spret2prev2.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize * 2 + 12;
 
 
 		ChaVector3 disppos;
@@ -22488,14 +22657,101 @@ int SetSpCameraInheritSWParams()
 	return 0;
 }
 
+int SetSpCameraCommandParams()
+{
+	{
+		int spgshift = 6;
+		s_spcopy_camera.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 4;
+		s_spcopy_camera.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+
+		ChaVector3 disppos;
+		disppos.x = (float)(s_spcopy_camera.dispcenter.x);
+		disppos.y = (float)(s_spcopy_camera.dispcenter.y);
+		disppos.z = 0.0f;
+		ChaVector2 dispsize;
+		dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
+
+		s_spcopy_camera.sprite.UpdateScreen(disppos, dispsize);
+		s_spcopy_camera.sprite_pushed.UpdateScreen(disppos, dispsize);
+	}
+
+	{
+		int spgshift = 6;
+		s_sppaste_camera.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 3;
+		s_sppaste_camera.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+
+		ChaVector3 disppos;
+		disppos.x = (float)(s_sppaste_camera.dispcenter.x);
+		disppos.y = (float)(s_sppaste_camera.dispcenter.y);
+		disppos.z = 0.0f;
+		ChaVector2 dispsize;
+		dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
+
+		s_sppaste_camera.sprite.UpdateScreen(disppos, dispsize);
+		s_sppaste_camera.sprite_pushed.UpdateScreen(disppos, dispsize);
+
+	}
+
+	{
+		int spgshift = 6;
+		s_spinterpolate_camera.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 2;
+		s_spinterpolate_camera.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+
+		ChaVector3 disppos;
+		disppos.x = (float)(s_spinterpolate_camera.dispcenter.x);
+		disppos.y = (float)(s_spinterpolate_camera.dispcenter.y);
+		disppos.z = 0.0f;
+		ChaVector2 dispsize;
+		dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
+
+		s_spinterpolate_camera.sprite.UpdateScreen(disppos, dispsize);
+		s_spinterpolate_camera.sprite_pushed.UpdateScreen(disppos, dispsize);
+	}
+
+	{
+		int spgshift = 6;
+		s_spinit_camera.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 1;
+		s_spinit_camera.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+
+
+		ChaVector3 disppos;
+		disppos.x = (float)(s_spinit_camera.dispcenter.x);
+		disppos.y = (float)(s_spinit_camera.dispcenter.y);
+		disppos.z = 0.0f;
+		ChaVector2 dispsize;
+		dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
+
+		s_spinit_camera.sprite.UpdateScreen(disppos, dispsize);
+		s_spinit_camera.sprite_pushed.UpdateScreen(disppos, dispsize);
+	}
+
+	{
+		int spgshift = 6;
+		s_spsmooth_camera.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 0;
+		s_spsmooth_camera.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+
+
+		ChaVector3 disppos;
+		disppos.x = (float)(s_spsmooth_camera.dispcenter.x);
+		disppos.y = (float)(s_spsmooth_camera.dispcenter.y);
+		disppos.z = 0.0f;
+		ChaVector2 dispsize;
+		dispsize.SetParams(s_spsizeSmall, s_spsizeSmall);
+
+		s_spsmooth_camera.sprite.UpdateScreen(disppos, dispsize);
+		s_spsmooth_camera.sprite_pushed.UpdateScreen(disppos, dispsize);
+	}
+	return 0;
+}
+
 int SetSpCopyParams()
 {
 
 	int spgshift = 6;
 	//s_spcopy.dispcenter.x = s_mainwidth - (int)s_spsize - 10 - (int)s_spsize - 6 - ((int)s_spsize + 6) * 5;
-	s_spcopy.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 3;
+	s_spcopy.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 4;
 	//s_spcopy.dispcenter.y = s_spcamerainherit.dispcenter.y + (int)s_spsize + 6;
-	s_spcopy.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+	s_spcopy.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize * 2 + 12;
 
 	ChaVector3 disppos;
 	disppos.x = (float)(s_spcopy.dispcenter.x);
@@ -22517,9 +22773,9 @@ int SetSpSymCopyParams()
 {
 	int spgshift = 6;
 	//s_spsymcopy.dispcenter.x = s_mainwidth - (int)s_spsize - 10 - (int)s_spsize - 6 - ((int)s_spsize + 6) * 5 + (int)s_spsizeSmall + 6;
-	s_spsymcopy.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 2;
+	s_spsymcopy.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 3;
 	//s_spsymcopy.dispcenter.y = s_spcamerainherit.dispcenter.y + (int)s_spsize + 6;
-	s_spsymcopy.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+	s_spsymcopy.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize * 2 + 12;
 
 
 	ChaVector3 disppos;
@@ -22543,9 +22799,9 @@ int SetSpPasteParams()
 
 	int spgshift = 6;
 	//s_sppaste.dispcenter.x = s_mainwidth - (int)s_spsize - 10 - (int)s_spsize - 6 - ((int)s_spsize + 6) * 5 + (int)(s_spsizeSmall + 6) * 2;
-	s_sppaste.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 1;
+	s_sppaste.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 2;
 	//s_sppaste.dispcenter.y = s_spcamerainherit.dispcenter.y + (int)s_spsize + 6;
-	s_sppaste.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+	s_sppaste.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize * 2 + 12;
 
 
 	ChaVector3 disppos;
@@ -22568,9 +22824,9 @@ int SetSpCopyHistoryParams()
 {
 	int spgshift = 6;
 	//s_spcopyhistory.dispcenter.x = s_mainwidth - (int)s_spsize - 10 - (int)s_spsize - 6 - ((int)s_spsize + 6) * 5 + (int)(s_spsizeSmall + 6) * 3;
-	s_spcopyhistory.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 0;
+	s_spcopyhistory.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 1;
 	//s_spcopyhistory.dispcenter.y = s_spcamerainherit.dispcenter.y + (int)s_spsize + 6;
-	s_spcopyhistory.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+	s_spcopyhistory.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize * 2 + 12;
 
 
 	ChaVector3 disppos;
@@ -22596,7 +22852,7 @@ int SetSpInterpolateParams()
 	//interpolate
 	{
 		s_spinterpolate.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 3;
-		s_spinterpolate.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+		s_spinterpolate.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize * 2 + 12;
 
 		ChaVector3 disppos;
 		disppos.x = (float)(s_spinterpolate.dispcenter.x);
@@ -22613,7 +22869,7 @@ int SetSpInterpolateParams()
 	//jump interpolate
 	{
 		s_spjumpinterpolate.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 4;
-		s_spjumpinterpolate.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+		s_spjumpinterpolate.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize * 2 + 12;
 
 		ChaVector3 disppos;
 		disppos.x = (float)(s_spjumpinterpolate.dispcenter.x);
@@ -22635,7 +22891,7 @@ int SetSpInitParams()
 {
 	int spgshift = 6;
 	s_spinit.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 2;
-	s_spinit.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+	s_spinit.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize * 2 + 12;
 
 
 	ChaVector3 disppos;
@@ -22659,7 +22915,7 @@ int SetSpScaleInitParams()
 
 	int spgshift = 6;
 	s_spscaleinit.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 1;
-	s_spscaleinit.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+	s_spscaleinit.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize * 2 + 12;
 
 
 	ChaVector3 disppos;
@@ -22682,7 +22938,7 @@ int SetSpPropertyParams()
 {
 	int spgshift = 6;
 	s_spproperty.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 0;
-	s_spproperty.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+	s_spproperty.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize * 2 + 12;
 
 
 	ChaVector3 disppos;
@@ -22706,8 +22962,8 @@ int SetSpZeroFrameParams()
 {
 
 	int spgshift = 6;
-	s_spzeroframe.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 3;
-	s_spzeroframe.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+	s_spzeroframe.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 4;
+	s_spzeroframe.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize * 2 + 12;
 
 	ChaVector3 disppos;
 	disppos.x = (float)(s_spzeroframe.dispcenter.x);
@@ -22728,8 +22984,8 @@ int SetSpZeroFrameParams()
 int SetSpCameraDollyParams()
 {
 	int spgshift = 6;
-	s_spcameradolly.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 2;
-	s_spcameradolly.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+	s_spcameradolly.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 3;
+	s_spcameradolly.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize * 2 + 12;
 
 
 	ChaVector3 disppos;
@@ -22751,8 +23007,8 @@ int SetSpCameraDollyParams()
 int SetSpModelPosDirParams()
 {
 	int spgshift = 6;
-	s_spmodelposdir.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 1;
-	s_spmodelposdir.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+	s_spmodelposdir.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 2;
+	s_spmodelposdir.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize * 2 + 12;
 
 
 	ChaVector3 disppos;
@@ -22774,8 +23030,8 @@ int SetSpModelPosDirParams()
 int SetSpMaterialRateParams()
 {
 	int spgshift = 6;
-	s_spmaterialrate.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 0;
-	s_spmaterialrate.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize + 6;
+	s_spmaterialrate.dispcenter.x = s_spcam[2].dispcenter.x - ((int)s_spsizeSmall + 6) * 1;
+	s_spmaterialrate.dispcenter.y = s_spcameramode.dispcenter.y + (int)s_spsize * 2 + 12;
 
 
 	ChaVector3 disppos;
@@ -23909,6 +24165,150 @@ int PickSpConstRefresh(POINT srcpos)
 
 	return pickflag;
 }
+
+int PickSpCopyCamera(POINT srcpos)
+{
+	int pickflag = 0;
+
+	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
+		//非表示中
+		return 0;
+	}
+	if (g_previewFlag != 0) {
+		//preview中は　押さない
+		return 0;
+	}
+
+	int starty = s_spcopy_camera.dispcenter.y - (int)s_spsizeSmall / 2;
+	int endy = starty + (int)s_spsizeSmall;
+
+	//SPRIG_INACTIVEとSPRIG_ACTIVEは同じ位置なので当たり判定は１回で良い
+	if ((srcpos.y >= starty) && (srcpos.y <= endy)) {
+		int startx = s_spcopy_camera.dispcenter.x - (int)s_spsizeSmall / 2;
+		int endx = startx + (int)s_spsizeSmall;
+
+		if ((srcpos.x >= startx) && (srcpos.x <= endx)) {
+			pickflag = 1;
+		}
+	}
+
+	return pickflag;
+}
+int PickSpPasteCamera(POINT srcpos)
+{
+	int pickflag = 0;
+
+	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
+		//非表示中
+		return 0;
+	}
+	if (g_previewFlag != 0) {
+		//preview中は　押さない
+		return 0;
+	}
+
+	int starty = s_sppaste_camera.dispcenter.y - (int)s_spsizeSmall / 2;
+	int endy = starty + (int)s_spsizeSmall;
+
+	//SPRIG_INACTIVEとSPRIG_ACTIVEは同じ位置なので当たり判定は１回で良い
+	if ((srcpos.y >= starty) && (srcpos.y <= endy)) {
+		int startx = s_sppaste_camera.dispcenter.x - (int)s_spsizeSmall / 2;
+		int endx = startx + (int)s_spsizeSmall;
+
+		if ((srcpos.x >= startx) && (srcpos.x <= endx)) {
+			pickflag = 1;
+		}
+	}
+
+	return pickflag;
+}
+int PickSpInitCamera(POINT srcpos)
+{
+	int pickflag = 0;
+
+	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
+		//非表示中
+		return 0;
+	}
+	if (g_previewFlag != 0) {
+		//preview中は　押さない
+		return 0;
+	}
+
+	int starty = s_spinit_camera.dispcenter.y - (int)s_spsizeSmall / 2;
+	int endy = starty + (int)s_spsizeSmall;
+
+	//SPRIG_INACTIVEとSPRIG_ACTIVEは同じ位置なので当たり判定は１回で良い
+	if ((srcpos.y >= starty) && (srcpos.y <= endy)) {
+		int startx = s_spinit_camera.dispcenter.x - (int)s_spsizeSmall / 2;
+		int endx = startx + (int)s_spsizeSmall;
+
+		if ((srcpos.x >= startx) && (srcpos.x <= endx)) {
+			pickflag = 1;
+		}
+	}
+
+	return pickflag;
+}
+int PickSpInterpolateCamera(POINT srcpos)
+{
+	int pickflag = 0;
+
+	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
+		//非表示中
+		return 0;
+	}
+	if (g_previewFlag != 0) {
+		//preview中は　押さない
+		return 0;
+	}
+
+	int starty = s_spinterpolate_camera.dispcenter.y - (int)s_spsizeSmall / 2;
+	int endy = starty + (int)s_spsizeSmall;
+
+	//SPRIG_INACTIVEとSPRIG_ACTIVEは同じ位置なので当たり判定は１回で良い
+	if ((srcpos.y >= starty) && (srcpos.y <= endy)) {
+		int startx = s_spinterpolate_camera.dispcenter.x - (int)s_spsizeSmall / 2;
+		int endx = startx + (int)s_spsizeSmall;
+
+		if ((srcpos.x >= startx) && (srcpos.x <= endx)) {
+			pickflag = 1;
+		}
+	}
+
+	return pickflag;
+}
+int PickSpSmoothCamera(POINT srcpos)
+{
+	int pickflag = 0;
+
+	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
+		//非表示中
+		return 0;
+	}
+	if (g_previewFlag != 0) {
+		//preview中は　押さない
+		return 0;
+	}
+
+	int starty = s_spsmooth_camera.dispcenter.y - (int)s_spsizeSmall / 2;
+	int endy = starty + (int)s_spsizeSmall;
+
+	//SPRIG_INACTIVEとSPRIG_ACTIVEは同じ位置なので当たり判定は１回で良い
+	if ((srcpos.y >= starty) && (srcpos.y <= endy)) {
+		int startx = s_spsmooth_camera.dispcenter.x - (int)s_spsizeSmall / 2;
+		int endx = startx + (int)s_spsizeSmall;
+
+		if ((srcpos.x >= startx) && (srcpos.x <= endx)) {
+			pickflag = 1;
+		}
+	}
+
+	return pickflag;
+}
+
+
+
 
 int PickSpCopy(POINT srcpos)
 {
@@ -36492,7 +36892,7 @@ int OnFrameToolWnd()
 		int result = -1;
 
 		if (s_model && s_owpTimeline && s_owpLTimeline) {
-			CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg();
+			CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg(false);
 			if (curcpdlg) {
 				curcpdlg->SetModel(s_model);
 				s_underframecopydlg = true;
@@ -36558,8 +36958,9 @@ int OnFrameToolWnd()
 			////フィルターで滑らかに
 			//int callnum = 1;
 			//CallFilterFunc(callnum);
+			MOTINFO curmi = s_model->GetCurMotInfo();
 			bool copylw2w = true;
-			FilterNoDlg(copylw2w);
+			FilterNoDlg(copylw2w, s_model, curmi.motid);
 
 			//カーソルを元に戻す
 			SetCursor(oldcursor);
@@ -36584,10 +36985,12 @@ int OnFrameToolWnd()
 	}
 
 	if (s_initmpFlag) {
-
 		InitMpFromTool();
-
-		s_initmpFlag = false;
+		//s_initmpFlag = false;//InitMpFromTool()はコンテクストメニューを出す　実際の処理の部分でフラグを参照する　フラグリセットは処理部で行う
+	}
+	if (s_initmpcameraFlag) {
+		InitMpFromTool();
+		//s_initmpcameraFlag = false;//InitMpFromTool()はコンテクストメニューを出す　実際の処理の部分でフラグを参照する　フラグリセットは処理部で行う
 	}
 
 	if (s_skipJointMark != 0) {
@@ -36654,7 +37057,16 @@ int OnFrameToolWnd()
 		if (s_model && s_owpTimeline && s_owpLTimeline && s_model->ExistCurrentMotion()) {
 			InterpolateFromTool();
 		}
-		s_interpolateFlag = false;
+		//s_interpolateFlag = false;//InterpolateFromTool()はコンテクストメニューを出す　実際の処理の部分でフラグを参照する　フラグリセットは処理部で行う
+	}
+	if (s_interpolatecameraFlag) {
+		if (s_model && s_owpTimeline && s_owpLTimeline) {
+			MOTINFO curmi = GetCameraMotInfo();
+			if (curmi.motid > 0) {
+				InterpolateFromTool();
+			}
+		}
+		//s_interpolatecameraFlag = false;//InterpolateFromTool()はコンテクストメニューを出す　実際の処理の部分でフラグを参照する　フラグリセットは処理部で行う
 	}
 
 	if (s_jumpinterpolateFlag) {
@@ -36748,56 +37160,23 @@ int OnFrameToolWnd()
 	}
 
 	if (s_copyFlag) {
-
 		if (s_model && s_owpTimeline && s_owpLTimeline && s_model->ExistCurrentMotion()) {
-			s_copymotvec.clear();
-			//s_copyKeyInfoList.clear();
-			//s_copyKeyInfoList = s_owpLTimeline->getSelectedKey();
-			//list<KeyInfo>::iterator itrcp;
-			//for (itrcp = s_copyKeyInfoList.begin(); itrcp != s_copyKeyInfoList.end(); itrcp++) {
-			//	double curframe = RoundingTime(itrcp->time);
-			//	InsertCopyMPReq(g_limitdegflag, s_model->GetTopBone(false), curframe);
-			//}
-
-			double curframe;
-			for (curframe = g_motionbrush_startframe; curframe <= g_motionbrush_endframe; curframe++) {
-				InsertCopyMPReq(g_limitdegflag, s_model->GetTopBone(false), curframe);
-			}
-
-
-
-			//変更時は　s_symCopyFlagでの処理も合わせて変更
-			int result1 = 0;
-			int result2 = 0;
-			if (!s_copymotvec.empty()) {
-				//添付フォルダのファイルに記録
-				WCHAR retcptfilename[MAX_PATH] = { 0L };
-				result1 = WriteCPTFile(retcptfilename);
-				if (result1 == 0) {
-					result2 = WriteCPIFile(retcptfilename);//cp info
-					if ((result2 != 0) && (retcptfilename[0] != 0)) {
-						//ダイアログでコピーをCancelした場合含む
-						//invalidな履歴はその場で削除
-						BOOL bexist;
-						bexist = PathFileExists(retcptfilename);
-						if (bexist) {
-							DeleteFileW(retcptfilename);
-						}
-					}
-				}
-			}
-			if ((result1 == 0) && (result2 == 0)) {
-				if (s_model) {
-					PrepairUndo();
-				}
-				if (s_copyhistorydlg.GetCreatedFlag() == true) {
-					GetCPTFileName(s_cptfilename);
-					s_copyhistorydlg.SetNames(s_model, s_cptfilename);
-				}
+			MOTINFO curmi = s_model->GetCurMotInfo();
+			if (curmi.motid > 0) {
+				CopyMotionFunc(s_model, &curmi);
 			}
 		}
-
 		s_copyFlag = false;
+		s_undersymcopyFlag = false;
+	}
+	if (s_copycameraFlag) {
+		if (s_cameramodel && s_owpTimeline && s_owpLTimeline) {
+			MOTINFO curmi = GetCameraMotInfo();
+			if (curmi.motid > 0) {
+				CopyMotionFunc(s_cameramodel, &curmi);
+			}
+		}
+		s_copycameraFlag = false;
 		s_undersymcopyFlag = false;
 	}
 
@@ -36825,7 +37204,8 @@ int OnFrameToolWnd()
 				WCHAR retcptfilename[MAX_PATH] = { 0L };
 				result1 = WriteCPTFile(retcptfilename);
 				if (result1 == 0) {
-					result2 = WriteCPIFile(retcptfilename);//cp info
+					MOTINFO curmi = s_model->GetCurMotInfo();
+					result2 = WriteCPIFile(s_model, &curmi, retcptfilename);//cp info
 					if ((result2 != 0) && (retcptfilename[0] != 0)) {
 						//ダイアログでコピーをCancelした場合含む
 						//invalidな履歴はその場で削除
@@ -36883,97 +37263,10 @@ int OnFrameToolWnd()
 
 		HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));//長いフレームの保存は数秒時間がかかることがあるので砂時計カーソルにする
 
-
-		//添付ファイルを読み取ってs_pastemotvecに格納する
-		s_pastemotvec.clear();
-		bool result;
-		result = LoadCPTFile();
-
-		if (result && s_model && s_owpTimeline && s_model->ExistCurrentMotion() && !s_pastemotvec.empty())
-		{
-			vector<CBone*> vecopebone;
-			if (s_RboneAndPasteFlag == true) {
-				vecopebone = s_pasteRJoint;
-			}
-			else {
-				CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg();
-				if (curcpdlg) {
-					vecopebone = curcpdlg->m_cpvec;
-				}
-				else {
-					vecopebone.clear();
-				}				
-			}
-
-			int cpnum = (int)vecopebone.size();
-			int keynum = 0;
-			double startframe, endframe, applyframe;
-
-			double pastestartframe = 0.0;
-			s_editrange.Clear();
-			if (s_model) {
-				if (s_owpTimeline && s_owpLTimeline) {
-					s_editrange.SetRange(s_owpLTimeline->getSelectedKey(), s_owpLTimeline->getCurrentTime());
-					//CEditRange::SetApplyRate(g_applyrate);
-					s_editrange.GetRange(&keynum, &startframe, &endframe, &applyframe);
-				}
-			}
-
-			//double curmaxframe = s_model->m_curmotinfo->frameleng;
-
-			//コピーされたキーの先頭時刻を求める
-			double copyStartTime = DBL_MAX;
-			double copyEndTime = 0;
-			vector<CPELEM2>::iterator itrcp;
-			for (itrcp = s_pastemotvec.begin(); itrcp != s_pastemotvec.end(); itrcp++) {
-				if (itrcp->mp.GetFrame() <= copyStartTime) {
-					copyStartTime = itrcp->mp.GetFrame();
-				}
-				if (itrcp->mp.GetFrame() >= copyEndTime) {
-					copyEndTime = itrcp->mp.GetFrame();
-				}
-			}
-
-
-			if (keynum >= 0) {
-				if (keynum == 0) {
-					double motleng;
-					//コピーペースト機能はモーションパネルで選択中のモーションに対して処理をする
-					//カメラパネル内のモーションはモーションパネル内にも存在するので　カメラモーションのコピペをする場合にも　モーションパネルで選択して実行する
-					MOTINFO curmi = s_model->GetCurMotInfo();
-					if (curmi.motid > 0) {
-						motleng = curmi.frameleng - 1;
-						double srcendframe = min(motleng, startframe + (copyEndTime - copyStartTime));
-						srcendframe = max(srcendframe, 0.0);
-						PasteMotionPointJustInTerm(copyStartTime, copyEndTime, startframe, srcendframe);
-					}
-				}
-				else {
-					PasteMotionPointJustInTerm(copyStartTime, copyEndTime, startframe, endframe);
-
-					//if (keynum <= (int)(copyEndTime - copyStartTime + 1.0 + 0.1)){
-					//	PasteMotionPointJustInTerm(copyStartTime, copyEndTime, startframe, endframe);
-					//}else{
-					//	PasteMotionPointJustInTerm(copyStartTime, copyEndTime, startframe, endframe);
-
-					//	//コピー元の最終フレームの姿勢をコピー先の残りのフレームにペースト
-					//	PasteMotionPointAfterCopyEnd(copyStartTime, copyEndTime, startframe, endframe);
-					//}
-				}
-			}
-
-
-			if (s_model->ExistCurrentMotion()) {
-				s_model->CalcBoneEul(g_limitdegflag, s_model->GetCurrentMotID());//2023/11/05 既存モーションの上にペーストする際にギザギザしないように
-			}
-
-
-			//UpdateEditedEuler();
-			refreshEulerGraph();
-
-			//s_model->SaveUndoMotion(s_curboneno, s_curbaseno, &s_editrange, (double)g_applyrate);
-			if (s_model) {
-				PrepairUndo();
+		if (s_model) {
+			MOTINFO curmi = s_model->GetCurMotInfo();
+			if (curmi.motid > 0) {
+				PasteMotionFunc(s_model, &curmi);
 			}
 		}
 
@@ -36984,6 +37277,25 @@ int OnFrameToolWnd()
 			SetCursor(oldcursor);
 		}
 	}
+	if (s_pastecameraFlag) {
+
+		HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));//長いフレームの保存は数秒時間がかかることがあるので砂時計カーソルにする
+
+		if (s_cameramodel) {
+			MOTINFO curmi = GetCameraMotInfo();
+			if (curmi.motid > 0) {
+				PasteMotionFunc(s_cameramodel, &curmi);
+			}
+		}
+
+		s_RboneAndPasteFlag = false;
+		s_pastecameraFlag = false;
+
+		if (oldcursor) {
+			SetCursor(oldcursor);
+		}
+	}
+
 
 	if (s_motpropFlag) {
 
@@ -37060,15 +37372,37 @@ int OnFrameToolWnd()
 
 	if (s_smoothFlag) {//s_spsmoothボタン用
 		if (s_model && s_model->ExistCurrentMotion()) {
-			//PrepairUndo();
+			MOTINFO curmi = s_model->GetCurMotInfo();
+			if (curmi.motid > 0) {
+				//PrepairUndo();
 
-			//ギザギザを平滑化
-			bool copylw2w = true;
-			FilterNoDlg(copylw2w);
+				//ギザギザを平滑化
+				bool copylw2w = true;
+				FilterNoDlg(copylw2w, s_model, curmi.motid);
 
-			//PrepairUndo();//FilterNoDlg内部から呼ぶ
+				//PrepairUndo();//FilterNoDlg内部から呼ぶ
+			}
 		}
 		s_smoothFlag = false;
+	}
+	if (s_smoothcameraFlag) {//s_spsmooth_cameraボタン用
+		if (s_cameramodel) {
+			MOTINFO curmi = GetCameraMotInfo();
+			if (curmi.motid > 0) {
+				int savefilterState = s_filterState;
+				s_filterState = 1;//!!! all bone
+
+				//PrepairUndo();
+
+				//ギザギザを平滑化
+				bool copylw2w = true;
+				FilterNoDlg(copylw2w, s_cameramodel, curmi.motid);
+
+				//PrepairUndo();//FilterNoDlg内部から呼ぶ
+				s_filterState = savefilterState;
+			}
+		}
+		s_smoothcameraFlag = false;
 	}
 
 	if (s_constexeFlag) {//s_spconstexeボタン用
@@ -37080,8 +37414,9 @@ int OnFrameToolWnd()
 			s_model->PosConstraintExecuteFromButton(g_limitdegflag, &s_editrange);
 
 			//ギザギザを平滑化
+			MOTINFO curmi = s_model->GetCurMotInfo();
 			bool copylw2w = true;
-			FilterNoDlg(copylw2w);
+			FilterNoDlg(copylw2w, s_model, curmi.motid);
 
 			if (oldcursor) {
 				SetCursor(oldcursor);
@@ -37375,20 +37710,164 @@ CMotionPoint CalcPasteMotionPoint(CBone* srcbone, double srcframe, double srcfra
 }
 
 
+int CopyMotionFunc(CModel* srcmodel, MOTINFO* curmi)
+{
+	if (srcmodel && s_owpTimeline && s_owpLTimeline && curmi && (curmi->motid > 0)) {
+		s_copymotvec.clear();
 
-int PasteMotionPoint(CBone* srcbone, CMotionPoint srcmp, double newframe)
+		double curframe;
+		for (curframe = g_motionbrush_startframe; curframe <= g_motionbrush_endframe; curframe++) {
+			InsertCopyMPReq(g_limitdegflag, srcmodel->GetTopBone(false), curframe, curmi);
+		}
+
+		//変更時は　s_symCopyFlagでの処理も合わせて変更
+		int result1 = 0;
+		int result2 = 0;
+		if (!s_copymotvec.empty()) {
+			//添付フォルダのファイルに記録
+			WCHAR retcptfilename[MAX_PATH] = { 0L };
+			result1 = WriteCPTFile(retcptfilename);
+			if (result1 == 0) {
+				result2 = WriteCPIFile(srcmodel, curmi, retcptfilename);//cp info
+				if ((result2 != 0) && (retcptfilename[0] != 0)) {
+					//ダイアログでコピーをCancelした場合含む
+					//invalidな履歴はその場で削除
+					BOOL bexist;
+					bexist = PathFileExists(retcptfilename);
+					if (bexist) {
+						DeleteFileW(retcptfilename);
+					}
+				}
+			}
+		}
+		if ((result1 == 0) && (result2 == 0)) {
+			if (srcmodel) {
+				PrepairUndo();
+			}
+			if (s_copyhistorydlg.GetCreatedFlag() == true) {
+				GetCPTFileName(s_cptfilename);
+				s_copyhistorydlg.SetNames(srcmodel, s_cptfilename);
+			}
+		}
+	}
+
+	return 0;
+}
+int PasteMotionFunc(CModel* srcmodel, MOTINFO* curmi)
+{
+	if (!curmi) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (curmi->motid <= 0) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	//添付ファイルを読み取ってs_pastemotvecに格納する
+	s_pastemotvec.clear();
+	bool result;
+	result = LoadCPTFile(srcmodel);
+
+	if (result && srcmodel && s_owpTimeline && !s_pastemotvec.empty())
+	{
+		vector<CBone*> vecopebone;
+		if (s_RboneAndPasteFlag == true) {
+			vecopebone = s_pasteRJoint;
+		}
+		else {
+			CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg(curmi->cameramotion);
+			if (curcpdlg) {
+				vecopebone = curcpdlg->m_cpvec;
+			}
+			else {
+				vecopebone.clear();
+			}
+		}
+
+		int cpnum = (int)vecopebone.size();
+		int keynum = 0;
+		double startframe, endframe, applyframe;
+
+		double pastestartframe = 0.0;
+		s_editrange.Clear();
+		if (srcmodel) {
+			if (s_owpTimeline && s_owpLTimeline) {
+				s_editrange.SetRange(s_owpLTimeline->getSelectedKey(), s_owpLTimeline->getCurrentTime());
+				//CEditRange::SetApplyRate(g_applyrate);
+				s_editrange.GetRange(&keynum, &startframe, &endframe, &applyframe);
+			}
+		}
+
+		//double curmaxframe = srcmodel->m_curmotinfo->frameleng;
+
+		//コピーされたキーの先頭時刻を求める
+		double copyStartTime = DBL_MAX;
+		double copyEndTime = 0;
+		vector<CPELEM2>::iterator itrcp;
+		for (itrcp = s_pastemotvec.begin(); itrcp != s_pastemotvec.end(); itrcp++) {
+			if (itrcp->mp.GetFrame() <= copyStartTime) {
+				copyStartTime = itrcp->mp.GetFrame();
+			}
+			if (itrcp->mp.GetFrame() >= copyEndTime) {
+				copyEndTime = itrcp->mp.GetFrame();
+			}
+		}
+
+
+		if (keynum >= 0) {
+			if (keynum == 0) {
+				double motleng;
+				motleng = curmi->frameleng - 1;
+				double srcendframe = min(motleng, startframe + (copyEndTime - copyStartTime));
+				srcendframe = max(srcendframe, 0.0);
+				PasteMotionPointJustInTerm(srcmodel, curmi->motid, copyStartTime, copyEndTime, startframe, srcendframe);
+			}
+			else {
+				PasteMotionPointJustInTerm(srcmodel, curmi->motid, copyStartTime, copyEndTime, startframe, endframe);
+			}
+
+			srcmodel->CalcBoneEul(g_limitdegflag, curmi->motid);//2023/11/05 既存モーションの上にペーストする際にギザギザしないように
+		}
+
+
+		//UpdateEditedEuler();
+		refreshEulerGraph();
+
+		if (srcmodel) {
+			PrepairUndo();
+		}
+	}
+	return 0;
+}
+
+
+int PasteMotionPoint(int curmotid, CBone* srcbone, CMotionPoint srcmp, double newframe)
 {
 	if (!s_model) {
 		_ASSERT(0);
 		return 1;
 	}
+	if (curmotid <= 0) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	bool cameraflag;
+	if (srcbone->GetParModel() && srcbone->GetParModel()->IsCameraMotion(curmotid)) {
+		cameraflag = true;
+	}
+	else {
+		cameraflag = false;
+	}
+
 
 	vector<CBone*> vecopebone;
 	if (s_RboneAndPasteFlag == true) {
 		vecopebone = s_pasteRJoint;
 	}
 	else {
-		CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg();
+		CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg(cameraflag);
 		if (curcpdlg) {
 			vecopebone = curcpdlg->m_cpvec;
 		}
@@ -37440,16 +37919,16 @@ int PasteMotionPoint(CBone* srcbone, CMotionPoint srcmp, double newframe)
 	if (srcbone && 
 		((srcbone->IsSkeleton() && (docopyflag == 1)) || srcbone->IsCamera() || srcbone->IsNullAndChildIsCamera())
 		) {
-		if (s_model->ExistCurrentMotion()) {
-			int curmotid = s_model->GetCurMotInfo().motid;
+		//if (s_model->ExistCurrentMotion()) {
+		//	int curmotid = s_model->GetCurMotInfo().motid;
 			srcbone->PasteMotionPoint(g_limitdegflag, curmotid, RoundingTime(newframe), srcmp);
-		}
+		//}
 	}
 
 	return 0;
 }
 
-int PasteNotMvParMotionPoint(CBone* srcbone, 
+int PasteNotMvParMotionPoint(CModel* srcmodel, CBone* srcbone, int curmotid,
 	double copystarttime, double srcframe, double srcframe2, double interpolaterate, 
 	double dststartframe, double newframe)
 {
@@ -37459,17 +37938,26 @@ int PasteNotMvParMotionPoint(CBone* srcbone,
 
 	int operatingjointno = 0;
 
-	if (!s_model) {
+	if (!srcmodel) {
 		_ASSERT(0);
 		return operatingjointno;
 	}
+
+	bool cameraflag;
+	if (srcmodel->IsCameraMotion(curmotid)) {
+		cameraflag = true;
+	}
+	else {
+		cameraflag = false;
+	}
+
 
 	vector<CBone*> vecopebone;
 	if (s_RboneAndPasteFlag == true) {
 		vecopebone = s_pasteRJoint;
 	}
 	else {
-		CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg();
+		CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg(cameraflag);
 		if (curcpdlg) {
 			vecopebone = curcpdlg->m_cpvec;
 		}
@@ -37523,8 +38011,8 @@ int PasteNotMvParMotionPoint(CBone* srcbone,
 
 	if (srcbone && (docopyflag == 1)) {
 		CMotionPoint* newmp = 0;
-		if (s_model->ExistCurrentMotion()) {
-			int curmotid = s_model->GetCurMotInfo().motid;
+		//if (srcmodel->ExistCurrentMotion()) {
+			//int curmotid = srcmodel->GetCurMotInfo().motid;
 			newmp = srcbone->GetMotionPoint(curmotid, newframe);
 			if (newmp) {
 				if (hasNotMvParFlag == 1) {
@@ -37598,17 +38086,26 @@ int PasteNotMvParMotionPoint(CBone* srcbone,
 					}
 				}
 			}
-		}
+		//}
 	}
 
 	return operatingjointno;//!!!!!!!!!!
 }
 
-int PasteMotionPointJustInTerm(double copyStartTime, double copyEndTime, double startframe, double endframe)
+int PasteMotionPointJustInTerm(CModel* srcmodel, int curmotid, 
+	double copyStartTime, double copyEndTime, double startframe, double endframe)
 {
-	if (!s_model) {
+	if (!srcmodel) {
 		_ASSERT(0);
 		return 1;
+	}
+
+	bool cameraflag;
+	if (srcmodel->IsCameraMotion(curmotid)) {
+		cameraflag = true;
+	}
+	else {
+		cameraflag = false;
 	}
 
 	vector<CBone*> vecopebone;
@@ -37616,7 +38113,7 @@ int PasteMotionPointJustInTerm(double copyStartTime, double copyEndTime, double 
 		vecopebone = s_pasteRJoint;
 	}
 	else {
-		CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg();
+		CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg(cameraflag);
 		if (curcpdlg) {
 			vecopebone = curcpdlg->m_cpvec;
 		}
@@ -37637,7 +38134,7 @@ int PasteMotionPointJustInTerm(double copyStartTime, double copyEndTime, double 
 	double dstframe;
 	for (dstframe = roundingstartframe; dstframe <= roundingendframe; dstframe += 1.0) {
 
-		ResetPasteDoneFlagReq(s_model->GetTopBone(false));//!!!!
+		ResetPasteDoneFlagReq(srcmodel->GetTopBone(false));//!!!!
 
 		//####################################################################################
 		//2023/11/02
@@ -37678,7 +38175,7 @@ int PasteMotionPointJustInTerm(double copyStartTime, double copyEndTime, double 
 			if (srcbone && (srcbone->GetPasteDoneFlag() == false)) {
 				CMotionPoint srcmp;
 				srcmp = CalcPasteMotionPoint(srcbone, srcframe, srcframe2, interpolaterate);
-				PasteMotionPoint(srcbone, srcmp, dstframe);
+				PasteMotionPoint(curmotid, srcbone, srcmp, dstframe);
 
 				srcbone->SetPasteDoneFlag(true);//!!!!!
 			}
@@ -37691,7 +38188,7 @@ int PasteMotionPointJustInTerm(double copyStartTime, double copyEndTime, double 
 			//}
 		}
 	}
-	ResetPasteDoneFlagReq(s_model->GetTopBone(false));//!!!!念のためにここでもリセットしておく
+	ResetPasteDoneFlagReq(srcmodel->GetTopBone(false));//!!!!念のためにここでもリセットしておく
 
 
 
@@ -37699,7 +38196,7 @@ int PasteMotionPointJustInTerm(double copyStartTime, double copyEndTime, double 
 	int operatingjointno = 0;
 	for (dstframe = roundingstartframe; dstframe <= roundingendframe; dstframe += 1.0) {
 
-		ResetPasteDoneFlagReq(s_model->GetTopBone(false));//!!!!
+		ResetPasteDoneFlagReq(srcmodel->GetTopBone(false));//!!!!
 
 		//double dstrate = (dstframe - startframe) / dstleng;
 		double dstrate = (dstframe - roundingstartframe) / dstleng;
@@ -37717,7 +38214,7 @@ int PasteMotionPointJustInTerm(double copyStartTime, double copyEndTime, double 
 			if (srcbone && (srcbone->GetPasteDoneFlag() == false)) {
 				CMotionPoint srcmp = itrcp->mp;
 				if (IsEqualRoundingTime(srcmp.GetFrame(), srcframe)) {
-					int resultjointno = PasteNotMvParMotionPoint(srcbone, 
+					int resultjointno = PasteNotMvParMotionPoint(srcmodel, srcbone, curmotid,
 						RoundingTime(copyStartTime), srcframe, srcframe2, interpolaterate,
 						RoundingTime(startframe), dstframe);
 
@@ -37744,8 +38241,9 @@ int PasteMotionPointJustInTerm(double copyStartTime, double copyEndTime, double 
 	//ペースト範囲のオイラー角はPasteMotionPoint()-->SetWorldMat()-->CalcLocalEulXYZ()で計算済
 	//
 	bool opecamera = false;
-	MOTINFO curmi = s_model->GetCurMotInfo();
-	if ((curmi.motid > 0) && s_model->IsCameraMotion(curmi.motid)) {
+	//MOTINFO curmi = srcmodel->GetCurMotInfo();
+	//if ((curmi.motid > 0) && srcmodel->IsCameraMotion(curmi.motid)) {
+	if (srcmodel->IsCameraMotion(curmotid)) {
 		opecamera = true;
 	}
 	else {
@@ -37756,12 +38254,12 @@ int PasteMotionPointJustInTerm(double copyStartTime, double copyEndTime, double 
 		bool allframeflag = false;
 		bool setcursorflag = false;
 		bool onpasteflag = true;
-		CopyLimitedWorldToWorld(s_model, allframeflag, setcursorflag, operatingjointno, onpasteflag);
-		//MOTINFO* curmi = s_model->GetCurMotInfo();
+		CopyLimitedWorldToWorld(srcmodel, allframeflag, setcursorflag, operatingjointno, onpasteflag);
+		//MOTINFO* curmi = srcmodel->GetCurMotInfo();
 		//if (curmi) {
-		//	s_model->CalcBoneEul(g_limitdegflag, curmi->motid);//2023/10/20 CopyWorldToLimitedWorldの後　ApplyNewLimitsToWMよりも前
+		//	srcmodel->CalcBoneEul(g_limitdegflag, curmi->motid);//2023/10/20 CopyWorldToLimitedWorldの後　ApplyNewLimitsToWMよりも前
 		//}
-		ApplyNewLimitsToWM(s_model);
+		ApplyNewLimitsToWM(srcmodel);
 	}
 
 	//vector<CPELEM>::iterator itrcp;
@@ -46704,6 +47202,12 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		s_spcameradolly.UpdatePushCount();
 		s_spmodelposdir.UpdatePushCount();
 		s_spmaterialrate.UpdatePushCount();
+
+		s_spcopy_camera.UpdatePushCount();
+		s_sppaste_camera.UpdatePushCount();
+		s_spinterpolate_camera.UpdatePushCount();
+		s_spinit_camera.UpdatePushCount();
+		s_spsmooth_camera.UpdatePushCount();
 	}
 
 
@@ -47095,6 +47599,46 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				rendersprite.Init();
 				rendersprite.psprite = s_spret2prev2.GetSpriteForRender();
 				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+			}
+
+
+			//tool shortcut button : １段目
+			{
+				{
+					//CameraCopy
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = s_spcopy_camera.GetSpriteForRender();
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				}
+				{
+					//CameraPaste
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = s_sppaste_camera.GetSpriteForRender();
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				}
+				{
+					//CameraInit
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = s_spinit_camera.GetSpriteForRender();
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				}
+				{
+					//CameraInterpolate
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = s_spinterpolate_camera.GetSpriteForRender();
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				}
+				{
+					//CameraSmooth
+					myRenderer::RENDERSPRITE rendersprite;
+					rendersprite.Init();
+					rendersprite.psprite = s_spsmooth_camera.GetSpriteForRender();
+					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				}
 			}
 
 
@@ -47590,7 +48134,7 @@ int InterpolateFromTool()
 	if (!s_owpTimeline || !s_owpLTimeline) {
 		return 0;
 	}
-	if (!s_model->ExistCurrentMotion()) {
+	if (s_interpolateFlag && !s_model->ExistCurrentMotion()) {
 		return 0;
 	}
 
@@ -47678,7 +48222,7 @@ int InitMpFromTool()
 	if (!s_owpTimeline || !s_owpLTimeline) {
 		return 0;
 	}
-	if (!s_model->ExistCurrentMotion()) {
+	if (s_initmpFlag && !s_model->ExistCurrentMotion()) {
 		return 0;
 	}
 
@@ -47834,6 +48378,10 @@ int InitMpByEul(int initmode, CBone* curbone, int srcmotid, double srcframe)
 		}
 		//}
 	}
+	else if (curbone->IsNullAndChildIsCamera()) {//2024/06/23
+		ChaCalcFunc chacalcfunc;
+		chacalcfunc.InitMPReq(curbone->GetParModel(), g_limitdegflag, curbone, srcmotid, roundingframe);
+	}
 	return 0;
 }
 
@@ -47843,7 +48391,7 @@ void InitMpByEulReq(int initmode, CBone* curbone, int srcmotid, double srcframe,
 		return;
 	}
 
-	if (curbone->IsSkeleton()) {
+	if (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera()) {//2024/06/23 eNullCamera
 		InitMpByEul(initmode, curbone, srcmotid, srcframe);
 	}
 
@@ -57391,7 +57939,7 @@ HWND GetOFWnd(POINT srcpoint)
 	s_ofhwnd = 0;
 	s_enumdist.clear();
 
-	CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg();
+	CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg(false);
 
 
 	if (!retctrlwnd && s_getfilenamehwnd) {
@@ -59733,7 +60281,7 @@ int WriteCPTFile(WCHAR* dstfilename)
 	return 0;
 }
 
-int WriteCPIFile(WCHAR* srccptfilename)
+int WriteCPIFile(CModel* srcmodel, MOTINFO* curmi, WCHAR* srccptfilename)
 {
 
 
@@ -59742,10 +60290,13 @@ int WriteCPIFile(WCHAR* srccptfilename)
 	if (cpelemnum <= 0) {
 		return 0;
 	}
-	if (!s_model) {
+	if (!srcmodel) {
 		return 0;
 	}
-	if (!s_model->ExistCurrentMotion()) {
+	//if (!s_model->ExistCurrentMotion()) {
+	//	return 0;
+	//}
+	if (!curmi) {
 		return 0;
 	}
 	if (!srccptfilename) {
@@ -59769,10 +60320,11 @@ int WriteCPIFile(WCHAR* srccptfilename)
 	*/
 	cpinfo.startframe = s_copymotvec[0].mp.GetFrame();
 	cpinfo.framenum = s_copymotvec[cpelemnum - 1].mp.GetFrame() - cpinfo.startframe + 1;
-	wcscpy_s(cpinfo.fbxname, MAX_PATH, s_model->GetFileName());
+	wcscpy_s(cpinfo.fbxname, MAX_PATH, srcmodel->GetFileName());
 
 	char motname[MAX_PATH] = { 0 };
-	s_model->GetCurrentMotName(motname, MAX_PATH);
+	strcpy_s(motname, MAX_PATH, curmi->motname);
+	//s_model->GetCurrentMotName(motname, MAX_PATH);
 	WCHAR wmotname[MAX_PATH] = { 0L };
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, motname, 256, wmotname, MAX_PATH);
 	wcscpy_s(cpinfo.motionname, MAX_PATH, wmotname);
@@ -60125,16 +60677,16 @@ int LoadCPIFile(HISTORYELEM* srcdstelem)
 
 
 
-bool LoadCPTFile()
+bool LoadCPTFile(CModel* srcmodel)
 {
-	if (!s_model) {
+	if (!srcmodel) {
 		_ASSERT(0);
 		return false;
 	}
-	if (!s_model->ExistCurrentMotion()) {
-		_ASSERT(0);
-		return false;
-	}
+	//if (!s_model->ExistCurrentMotion()) {
+	//	_ASSERT(0);
+	//	return false;
+	//}
 
 	if (s_copyhistorydlg.GetCreatedFlag() == false) {
 		int result = CreateCopyHistoryDlg();
@@ -60149,6 +60701,7 @@ bool LoadCPTFile()
 	//std::vector<HISTORYELEM> cptfilename;
 	s_cptfilename.clear();
 	GetCPTFileName(s_cptfilename);
+	s_copyhistorydlg.SetNames(srcmodel, s_cptfilename);//2024/06/23 srcmodelがs_model以外の場合(s_cameramodel)があるのでセットし直す
 
 	if (s_cptfilename.empty()) {
 		_ASSERT(0);
@@ -60156,7 +60709,7 @@ bool LoadCPTFile()
 	}
 
 	WCHAR infilename[MAX_PATH] = { 0L };
-	int result = s_copyhistorydlg.GetSelectedFileName(s_model, infilename);
+	int result = s_copyhistorydlg.GetSelectedFileName(srcmodel, infilename);
 	infilename[MAX_PATH - 1] = 0L;
 	if (result || (infilename[0] == 0L)) {
 		//_ASSERT(0);
@@ -60319,8 +60872,8 @@ bool LoadCPTFile()
 
 
 		CBone* curbone;
-		//curbone = s_model->GetBoneByName(curbonename);
-		curbone = s_model->FindBoneByName(curbonename);//2023/08/14 _Joint有無対応
+		//curbone = srcmodel->GetBoneByName(curbonename);
+		curbone = srcmodel->FindBoneByName(curbonename);//2023/08/14 _Joint有無対応
 		if (curbone) {
 			CPELEM2 curcpelem;
 			ZeroMemory(&curcpelem, sizeof(CPELEM2));
@@ -61444,15 +61997,15 @@ int DisplayApplyRateText()
 	return 0;
 }
 
-int FilterNoDlg(bool copylw2w)
+int FilterNoDlg(bool copylw2w, CModel* srcmodel, int curmotid)
 {
-	if (!s_model) {
+	if (!srcmodel) {
 		return 0;
 	}
-	if (!s_model->ExistCurrentMotion()) {
+	if (s_smoothFlag && !srcmodel->ExistCurrentMotion()) {
 		return 0;
 	}
-	if (!s_model->GetTopBone()) {
+	if (!srcmodel->GetTopBone()) {
 		return 0;
 	}
 
@@ -61463,7 +62016,7 @@ int FilterNoDlg(bool copylw2w)
 		edgesmp = true;
 	}
 	else {
-		edgesmp = s_model->CheckIKTarget();
+		edgesmp = srcmodel->CheckIKTarget();
 	}
 
 	//s_filternodlg = true;
@@ -61477,13 +62030,13 @@ int FilterNoDlg(bool copylw2w)
 		//######
 		//1:All
 		//######
-		opebone = s_model->GetTopBone(false);
+		opebone = srcmodel->GetTopBone(false);
 	}
 	else if ((s_filterState == 2) || (s_filterState == 3)) {
 		//########################
 		//2:selectedOne, 3:Deeper
 		//########################
-		CBone* curbone = s_model->GetBoneByID(s_curboneno);
+		CBone* curbone = srcmodel->GetBoneByID(s_curboneno);
 		if (curbone) {
 			if (curbone->GetParent(false)) {
 				opebone = curbone->GetParent(false);
@@ -61493,7 +62046,7 @@ int FilterNoDlg(bool copylw2w)
 			}
 		}
 		else {
-			opebone = s_model->GetTopBone(false);
+			opebone = srcmodel->GetTopBone(false);
 		}
 	}
 	else {
@@ -61501,7 +62054,7 @@ int FilterNoDlg(bool copylw2w)
 		//the first time : default value
 		//################################
 		s_filterState = 3;
-		CBone* curbone = s_model->GetBoneByID(s_curboneno);
+		CBone* curbone = srcmodel->GetBoneByID(s_curboneno);
 		if (curbone) {
 			if (curbone->GetParent(false)) {
 				opebone = curbone->GetParent(false);
@@ -61511,25 +62064,25 @@ int FilterNoDlg(bool copylw2w)
 			}
 		}
 		else {
-			opebone = s_model->GetTopBone(false);
+			opebone = srcmodel->GetTopBone(false);
 		}
 	}
 
-	motfilter.FilterNoDlg(edgesmp, g_limitdegflag, s_model, opebone,
+	motfilter.FilterNoDlg(edgesmp, g_limitdegflag, srcmodel, opebone,
 		s_filterState,
-		s_model->GetCurMotInfo().motid,
+		curmotid,
 		IntTime(s_buttonselectstart), IntTime(s_buttonselectend));
 
 	//s_filterState = 0;//2023/08/09コメントアウト：前回の値を保持
 
 	if (copylw2w) {
-		bool cameraanimflag = s_model->IsCameraMotion(s_model->GetCurrentMotID());
+		bool cameraanimflag = srcmodel->IsCameraMotion(curmotid);
 		if (!cameraanimflag && (g_limitdegflag == true)) {
 			bool allframeflag = false;
 			bool setcursorflag = false;
-			int operatingjointno = s_model->GetTopBone(false)->GetBoneNo();
+			int operatingjointno =srcmodel->GetTopBone(false)->GetBoneNo();
 			bool onpasteflag = false;
-			CopyLimitedWorldToWorld(s_model, allframeflag, setcursorflag, operatingjointno, onpasteflag);
+			CopyLimitedWorldToWorld(srcmodel, allframeflag, setcursorflag, operatingjointno, onpasteflag);
 		}
 		refreshEulerGraph();
 		PrepairUndo();
@@ -62918,7 +63471,8 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_emissionslider = new OWP_Slider(0.0, 1.0, 0.0);
+		//s_st_emissionslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_st_emissionslider = new OWP_Slider(0.0, 10.0, 0.0);//2024/06/23 max 10.0
 		if (!s_st_emissionslider) {
 			_ASSERT(0);
 			return 1;
@@ -71362,6 +71916,73 @@ int CreateSprites()
 	s_spmaterialrate.sprite_pushed.Init(spriteinitdata, screenvertexflag);
 
 
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Camera_CopyButton.gif");
+	s_spritetexCamera67 = new Texture();
+	s_spritetexCamera67->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetexCamera67;
+	s_spcopy_camera.sprite.Init(spriteinitdata, screenvertexflag);
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Camera_CopyButton_pushed.gif");
+	s_spritetexCamera_pushed67 = new Texture();
+	s_spritetexCamera_pushed67->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetexCamera_pushed67;
+	s_spcopy_camera.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Camera_PasteButton.gif");
+	s_spritetexCamera69 = new Texture();
+	s_spritetexCamera69->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetexCamera69;
+	s_sppaste_camera.sprite.Init(spriteinitdata, screenvertexflag);
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Camera_PasteButton_pushed.gif");
+	s_spritetexCamera_pushed69 = new Texture();
+	s_spritetexCamera_pushed69->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetexCamera_pushed69;
+	s_sppaste_camera.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Camera_InterpolateButton.png");
+	s_spritetexCamera71 = new Texture();
+	s_spritetexCamera71->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetexCamera71;
+	s_spinterpolate_camera.sprite.Init(spriteinitdata, screenvertexflag);
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Camera_InterpolateButton_pushed.png");
+	s_spritetexCamera_pushed71 = new Texture();
+	s_spritetexCamera_pushed71->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetexCamera_pushed71;
+	s_spinterpolate_camera.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Camera_InitButton.png");
+	s_spritetexCamera72 = new Texture();
+	s_spritetexCamera72->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetexCamera72;
+	s_spinit_camera.sprite.Init(spriteinitdata, screenvertexflag);
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Camera_InitButton_pushed.png");
+	s_spritetexCamera_pushed72 = new Texture();
+	s_spritetexCamera_pushed72->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetexCamera_pushed72;
+	s_spinit_camera.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\Camera_SmoothFilter.png");
+	s_spritetexCamera64 = new Texture();
+	s_spritetexCamera64->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetexCamera64;
+	s_spsmooth_camera.sprite.Init(spriteinitdata, screenvertexflag);
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\SmoothFilter_pushed.png");
+	s_spritetexCamera_pushed64 = new Texture();
+	s_spritetexCamera_pushed64->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetexCamera_pushed64;
+	s_spsmooth_camera.sprite_pushed.Init(spriteinitdata, screenvertexflag);
+
+
+
 	
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\MouseCenterButtonON.png");
@@ -71984,6 +72605,48 @@ void DestroySprites()
 	}
 
 
+	if (s_spritetexCamera67) {
+		delete s_spritetexCamera67;
+		s_spritetexCamera67 = 0;
+	}
+	if (s_spritetexCamera_pushed67) {
+		delete s_spritetexCamera_pushed67;
+		s_spritetexCamera_pushed67 = 0;
+	}
+	if (s_spritetexCamera69) {
+		delete s_spritetexCamera69;
+		s_spritetexCamera69 = 0;
+	}
+	if (s_spritetexCamera_pushed69) {
+		delete s_spritetexCamera_pushed69;
+		s_spritetexCamera_pushed69 = 0;
+	}
+	if (s_spritetexCamera71) {
+		delete s_spritetexCamera71;
+		s_spritetexCamera71 = 0;
+	}
+	if (s_spritetexCamera_pushed71) {
+		delete s_spritetexCamera_pushed71;
+		s_spritetexCamera_pushed71 = 0;
+	}
+	if (s_spritetexCamera72) {
+		delete s_spritetexCamera72;
+		s_spritetexCamera72 = 0;
+	}
+	if (s_spritetexCamera_pushed72) {
+		delete s_spritetexCamera_pushed72;
+		s_spritetexCamera_pushed72 = 0;
+	}
+	if (s_spritetexCamera64) {
+		delete s_spritetexCamera64;
+		s_spritetexCamera64 = 0;
+	}
+	if (s_spritetexCamera_pushed64) {
+		delete s_spritetexCamera_pushed64;
+		s_spritetexCamera_pushed64 = 0;
+	}
+
+
 	int delindex;
 	s_spundo[0].DestroyObjs();
 	s_spundo[1].DestroyObjs();
@@ -72016,6 +72679,13 @@ void DestroySprites()
 	s_spcameradolly.DestroyObjs();
 	s_spmodelposdir.DestroyObjs();
 	s_spmaterialrate.DestroyObjs();
+
+	s_spcopy_camera.DestroyObjs();
+	s_sppaste_camera.DestroyObjs();
+	s_spinterpolate_camera.DestroyObjs();
+	s_spinit_camera.DestroyObjs();
+	s_spsmooth_camera.DestroyObjs();
+
 	for (delindex = 0; delindex < SPGUISWNUM; delindex++) {
 		s_spguisw[delindex].DestroyObjs();
 	}
@@ -72672,6 +73342,27 @@ bool InBlendShapeMode(CModel** ppmodel, CMQOObject** ppmqoobj, int* pchannelinde
 	else {
 		return false;
 	}
+}
+
+MOTINFO GetCameraMotInfo()
+{
+	MOTINFO curmi;
+	if (s_cameramodel) {
+		int cameramotid = s_cameramodel->GetCameraMotionId();
+		if (cameramotid > 0) {
+			curmi = s_cameramodel->GetMotInfo(cameramotid);
+		}
+		else {
+			curmi.Init();
+		}
+	}
+	else {
+		curmi.Init();
+	}
+	if (curmi.motid <= 0) {
+		curmi.Init();
+	}
+	return curmi;
 }
 
 MOTINFO GetEditTargetMotInfo()
