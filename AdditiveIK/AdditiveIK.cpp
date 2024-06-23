@@ -924,6 +924,11 @@ static double s_savebuttonselectend;
 static int s_savebuttonselecttothelast;
 static double s_saveplayingstart;
 static double s_saveplayingend;
+static double s_savemotionbrush_startframe;
+static double s_savemotionbrush_endframe;
+static double s_savemotionbrush_applyframe;
+static double s_savemotionbrush_numframe;
+static int s_savemotionbrush_frameleng;
 
 
 
@@ -2972,6 +2977,7 @@ static int CreateCopyHistoryDlg();
 static int CreateDollyHistoryDlg();
 
 static void InitTimelineSelection();
+static void ClampTimelineSelection();
 
 static int CreateLightsWnd();
 static int Lights2Dlg(HWND hDlgWnd);
@@ -5897,6 +5903,11 @@ void InitApp()
 	s_savebuttonselecttothelast = 0;
 	s_saveplayingstart = 1.0;
 	s_saveplayingend = 1.0;
+	s_savemotionbrush_startframe = 1.0;
+	s_savemotionbrush_endframe = 1.0;
+	s_savemotionbrush_applyframe = 1.0;
+	s_savemotionbrush_numframe = 1.0;
+	s_savemotionbrush_frameleng = 1;
 
 
 	s_editmotionflag = -1;
@@ -14022,7 +14033,8 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 	HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
 	//大きいフレーム位置のまま小さいフレーム長のデータを読み込んだ時にエラーにならないように。
-	InitTimelineSelection();
+	//InitTimelineSelection();
+	ClampTimelineSelection();//2024/06/23
 
 	if (!s_model) {
 		_ASSERT(0);
@@ -14194,7 +14206,8 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 	SetMainWindowTitle();
 
 
-	InitTimelineSelection();
+	//InitTimelineSelection();
+	ClampTimelineSelection();//2024/06/23
 
 
 	s_underselectmotion = false;
@@ -14401,7 +14414,8 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 
 
 		//大きいフレーム位置のまま小さいフレーム長のデータを読み込んだ時にエラーにならないように。
-		InitTimelineSelection();
+		//InitTimelineSelection();
+		ClampTimelineSelection();//2024/06/23
 
 
 		CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg();
@@ -35727,6 +35741,9 @@ int OnFrameTimeLineWnd()
 			s_savebuttonselecttothelast = s_buttonselecttothelast;
 			s_saveplayingstart = g_playingstart;
 			s_saveplayingend = g_playingend;
+			s_savemotionbrush_startframe = g_motionbrush_startframe;
+			s_savemotionbrush_endframe = g_motionbrush_endframe;
+			s_savemotionbrush_applyframe = g_motionbrush_applyframe;
 
 
 			s_buttonselectstart = 1.0;
@@ -35756,16 +35773,23 @@ int OnFrameTimeLineWnd()
 			s_LrefreshEditTarget++;
 
 			MOTINFO curmi = GetEditTargetMotInfo();
-			if ((curmi.motid > 0) && (s_savebuttonselectend < curmi.frameleng)) {
+			//if ((curmi.motid > 0) && (s_savebuttonselectend < curmi.frameleng)) {
+			if (curmi.motid > 0) {
 				//##########################################################
-				//処理前の選択範囲が　新しい選択範囲"内"の場合には　選択範囲を引き継ぐ
+				//処理前の選択範囲を引き継ぐ　ただしモーション長にクランプする
 				//##########################################################
 				s_buttonselectstart = s_savebuttonselectstart;
 				s_buttonselectend = s_savebuttonselectend;
 				s_buttonselecttothelast = s_savebuttonselecttothelast;
 				g_playingstart = s_saveplayingstart;
 				g_playingend = s_saveplayingend;
-				OnTimeLineButtonSelectFromSelectStartEnd(s_buttonselecttothelast);
+				g_motionbrush_startframe = s_savemotionbrush_startframe;
+				g_motionbrush_endframe = s_savemotionbrush_endframe;
+				g_motionbrush_applyframe = s_savemotionbrush_applyframe;
+
+				//OnTimeLineButtonSelectFromSelectStartEnd(s_buttonselecttothelast);
+				ClampTimelineSelection();//2024/06/23
+
 				SetShowPosTime();
 				//refreshTimeline(*s_owpTimeline);
 				if (s_owpLTimeline) {
@@ -60389,6 +60413,80 @@ void InitTimelineSelection()
 
 }
 
+void ClampTimelineSelection()
+{
+	if (!s_model) {
+		InitTimelineSelection();
+		return;
+	}
+
+	//if (!s_model->ExistCurrentMotion()) {
+	//	InitTimelineSelection();
+	//	return;
+	//}
+	MOTINFO curmi = GetEditTargetMotInfo();
+	if (curmi.motid <= 0) {
+		InitTimelineSelection();
+		return;
+	}
+
+
+	//double newstart = min((curmi.frameleng - 1.0), max(1.0, s_buttonselectstart));
+	//double newend = min((curmi.frameleng - 1.0), max(newstart, s_buttonselectend));
+	double newstart = min((curmi.frameleng - 1.0), max(1.0, g_motionbrush_startframe));
+	double newend = min((curmi.frameleng - 1.0), max(newstart, g_motionbrush_endframe));
+	double newnumframe = newend - newstart + 1.0;
+	double newapplyframe;
+	if (g_applyrate == 0.0) {
+		newapplyframe = newstart;
+	}
+	else if (g_applyrate == 100.0) {
+		newapplyframe = newend;
+	}
+	else {
+		newapplyframe = (double)((int)(newstart + (newend - newstart) * (g_applyrate / 100.0)));
+	}
+
+	s_editrange.Clear();
+	s_buttonselectstart = newstart;
+	s_buttonselectend = newend;
+
+
+	if (g_motionbrush_value) {
+		free(g_motionbrush_value);
+		g_motionbrush_value = 0;
+	}
+	g_motionbrush_value = (float*)malloc(sizeof(float) * 1);
+	if (g_motionbrush_value) {
+		*g_motionbrush_value = 1.0f;
+	}
+
+	//g_motionbrush_method = 0;
+	g_motionbrush_startframe = newstart;
+	g_motionbrush_endframe = newend;
+	g_motionbrush_applyframe = newapplyframe;
+	g_motionbrush_numframe = newnumframe;
+	g_motionbrush_frameleng = IntTime(newnumframe);
+
+	if (s_owpTimeline) {
+		s_owpTimeline->setCurrentTime(newapplyframe, false);
+	}
+	if (s_owpLTimeline) {
+		s_owpLTimeline->setCurrentTime(newapplyframe, false);
+	}
+
+	//if (s_model) {
+	//	MOTINFO* curmi;
+	//	curmi = s_model->GetCurMotInfo();
+	//	if (curmi) {
+	//		s_model->SetMotionFrame(1.0);
+	//	}
+	//}
+
+	int tothelastflag = 0;
+	OnTimeLineButtonSelectFromSelectStartEnd(tothelastflag);
+
+}
 
 void OnArrowKey()
 {
