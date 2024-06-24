@@ -44,18 +44,28 @@ int CRMenuMain::Create(HWND srchwnd, int srcoffset)
 	return 0;
 }
 
-int CRMenuMain::CreatePopupMenu(HWND srchwnd, HMENU parmenu, WCHAR* partitle)
+int CRMenuMain::CreatePopupMenu(HWND srchwnd, HMENU parmenu, WCHAR* partitle, bool grayed)//default : grayed = false
 {
 	Create(srchwnd, m_menuoffset);
 
+	UINT flags = MF_STRING | MF_POPUP;
+	if (grayed) {
+		//2024/06/24
+		flags |= MF_GRAYED;
+	}
+	
 	if (parmenu){
-		AppendMenu(parmenu, MF_STRING | MF_POPUP, (UINT_PTR)m_rsubmenu, partitle);
+		AppendMenu(parmenu, flags, (UINT_PTR)m_rsubmenu, partitle);
 	}
 
 	return 0;
 }
 
 
+HMENU CRMenuMain::GetRMenu()
+{
+	return m_rmenu;
+}
 HMENU CRMenuMain::GetSubMenu()
 {
 	return m_rsubmenu;

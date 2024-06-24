@@ -3097,6 +3097,7 @@ static int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderCo
 
 static int CopyMotionFunc(CModel* srcmodel, MOTINFO* curmi);
 static int PasteMotionFunc(CModel* srcmodel, MOTINFO* curmi);
+static int InterpolateMotionFunc(CModel* srcmodel, MOTINFO* curmi);
 static int PasteMotionPoint(int curmotid, CBone* srcbone, CMotionPoint srcmp, double newframe);
 static int PasteNotMvParMotionPoint(CModel* srcmodel, CBone* srcbone, int curmotid,
 	double copystarttime, double srcframe, double srcframe2, double interpolaterate, 
@@ -8033,48 +8034,11 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			if (s_model && s_model->GetTopBone() && curbone) {
 				s_interpolateState = (menuid - ID_RMENU_0 - MENUOFFSET_INTERPOLATEFROMTOOL + 1);
 
-				CBone* interpolatebone;
-				if (s_ikkind == 0) {
-					interpolatebone = opebone;
-				}
-				else {
-					interpolatebone = curbone;
-				}
-
-				CModel* srcmodel;
-				MOTINFO curmi;
-				if (s_interpolateFlag) {
-					srcmodel = s_model;
-					curmi = s_model->GetCurMotInfo();
-				}
-				else if (s_interpolatecameraFlag) {
-					srcmodel = s_cameramodel;
-					curmi = GetCameraMotInfo();
-				}
-				else {
-					srcmodel = nullptr;
-					curmi.Init();
-				}
-				if (srcmodel && (curmi.motid > 0)) {
-					int operatingjointno = -1;
-					operatingjointno = srcmodel->InterpolateBetweenSelection(g_limitdegflag,
-						curmi.motid,
-						s_buttonselectstart, s_buttonselectend, interpolatebone, s_interpolateState);
-
-					bool cameraanimflag = srcmodel->IsCameraMotion(curmi.motid);
-					if (!cameraanimflag && (g_limitdegflag == true) && (operatingjointno >= 0)) {
-						bool allframeflag = false;
-						bool setcursorflag = false;
-						bool onpasteflag = false;
-						CopyLimitedWorldToWorld(srcmodel, allframeflag, setcursorflag, operatingjointno, onpasteflag);
-					}
-					refreshEulerGraph();
-					PrepairUndo();
-				}
-				s_interpolateState = 0;
+				MOTINFO curmi = s_model->GetCurMotInfo();
+				InterpolateMotionFunc(s_model, &curmi);
+			
 			}
 			s_interpolateFlag = false;//!!!!!
-			s_interpolatecameraFlag = false;//!!!!!
 		}
 		else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_FILTERFROMTOOL)) &&
 			(menuid < (ID_RMENU_0 + MENUOFFSET_FILTERFROMTOOL + 3))) {
@@ -37055,18 +37019,21 @@ int OnFrameToolWnd()
 
 	if (s_interpolateFlag) {
 		if (s_model && s_owpTimeline && s_owpLTimeline && s_model->ExistCurrentMotion()) {
-			InterpolateFromTool();
+			InterpolateFromTool();//コンテクストメニューを出してから処理
 		}
-		//s_interpolateFlag = false;//InterpolateFromTool()はコンテクストメニューを出す　実際の処理の部分でフラグを参照する　フラグリセットは処理部で行う
+		s_interpolateFlag = false;
 	}
 	if (s_interpolatecameraFlag) {
-		if (s_model && s_owpTimeline && s_owpLTimeline) {
+		if (s_cameramodel && s_owpTimeline && s_owpLTimeline) {
 			MOTINFO curmi = GetCameraMotInfo();
 			if (curmi.motid > 0) {
-				InterpolateFromTool();
+				//2024/06/24
+				//カメラアニメの場合はメニューを選択する必要が無いので　コンテクストメニューをスキップして　直接処理関数を呼び出す
+				s_interpolateState = 1;//all bone
+				InterpolateMotionFunc(s_cameramodel, &curmi);
 			}
 		}
-		//s_interpolatecameraFlag = false;//InterpolateFromTool()はコンテクストメニューを出す　実際の処理の部分でフラグを参照する　フラグリセットは処理部で行う
+		s_interpolatecameraFlag = false;
 	}
 
 	if (s_jumpinterpolateFlag) {
@@ -37709,6 +37676,71 @@ CMotionPoint CalcPasteMotionPoint(CBone* srcbone, double srcframe, double srcfra
 	return retmp;
 }
 
+int InterpolateMotionFunc(CModel* srcmodel, MOTINFO* curmi)
+{
+	if (!srcmodel || !curmi) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (curmi->motid <= 0) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	bool cameraflag = srcmodel->IsCameraMotion(curmi->motid);
+
+	CBone* interpolatebone = nullptr;
+	bool limitdegflag;
+	if (cameraflag) {
+		interpolatebone = srcmodel->GetTopBone(false);
+		limitdegflag = false;
+	}
+	else {
+		CBone* opebone = nullptr;
+		CBone* curbone = nullptr;
+		if (srcmodel && (s_curboneno >= 0)) {
+			curbone = srcmodel->GetBoneByID(s_curboneno);
+		}
+		else {
+			curbone = 0;
+		}
+		//if (curbone && curbone->GetParent()) {
+		//2023/02/08 opeboneにparentをセットするのは　IKRotのときだけ
+		if (curbone && curbone->GetParent(false) && curbone->GetParent(false)->IsSkeleton() && (s_ikkind == 0)) {
+			opebone = curbone->GetParent(false);
+		}
+		else {
+			opebone = curbone;
+		}
+
+		if (s_ikkind == 0) {
+			interpolatebone = opebone;
+		}
+		else {
+			interpolatebone = curbone;
+		}
+		limitdegflag = g_limitdegflag;
+	}
+
+	if (curmi->motid > 0) {
+		int operatingjointno = -1;
+		operatingjointno = srcmodel->InterpolateBetweenSelection(limitdegflag,
+			curmi->motid,
+			s_buttonselectstart, s_buttonselectend, interpolatebone, s_interpolateState);
+
+		bool cameraanimflag = srcmodel->IsCameraMotion(curmi->motid);
+		if (!cameraanimflag && (g_limitdegflag == true) && (operatingjointno >= 0)) {
+			bool allframeflag = false;
+			bool setcursorflag = false;
+			bool onpasteflag = false;
+			CopyLimitedWorldToWorld(srcmodel, allframeflag, setcursorflag, operatingjointno, onpasteflag);
+		}
+		refreshEulerGraph();
+		PrepairUndo();
+	}
+	s_interpolateState = 0;
+	return 0;
+}
 
 int CopyMotionFunc(CModel* srcmodel, MOTINFO* curmi)
 {
@@ -48274,7 +48306,18 @@ int InitMpFromTool()
 		if (!rsubmenu[subno]) {
 			return 1;
 		}
-		ret = rsubmenu[subno]->CreatePopupMenu(parwnd, submenu, strinitmpsub[subno]);
+
+		bool subgrayed;
+		if (s_initmpcameraFlag && (subno >= 1)) {
+			//2024/06/24
+			//カメラアニメのInitMpの場合には　処理対象としてAllBoneしか選択肢が無いので　他の選択肢はグレーアウトする
+			subgrayed = true;
+		}
+		else {
+			subgrayed = false;
+		}
+
+		ret = rsubmenu[subno]->CreatePopupMenu(parwnd, submenu, strinitmpsub[subno], subgrayed);
 		if (ret) {
 			return 1;
 		}
@@ -48289,11 +48332,27 @@ int InitMpFromTool()
 
 		int subsubno;
 		for (subsubno = 0; subsubno < 4; subsubno++) {
-			int subsubid = setmenuid + subsubno;
-			AppendMenu(subsubmenu, MF_STRING, subsubid, strinitmpsubsub[subsubno]);
+			bool subsubgrayed;
+			if (s_initmpcameraFlag && (subsubno >= 1)) {
+				subsubgrayed = true;
+			}
+			else {
+				subsubgrayed = false;
+			}
 
+			int subsubid = setmenuid + subsubno;
+			if (!subsubgrayed) {
+				AppendMenu(subsubmenu, MF_STRING, subsubid, strinitmpsubsub[subsubno]);
+			}
+			else {
+				//2024/06/24
+				//現在、カメラアニメのInitMpは　SRT全初期化のみ対応なので　未対応機能の呼び出しはグレーアウト
+				AppendMenu(subsubmenu, MF_STRING | MF_GRAYED, subsubid, strinitmpsubsub[subsubno]);
+			}
 		}
 	}
+
+
 
 	/////////////
 	s_cursubmenu = rmenu->GetSubMenu();
@@ -62815,8 +62874,64 @@ bool DispTipUI()
 		}
 	}
 
+	//###########################
+	//Command buttons for Camera
+	//###########################
+	{
+		if (dispfontfortip == false) {
+			if (PickSpCopyCamera(ptCursor) != 0) {
+				if (s_model) {
+					dispfontfortip = true;
+					wcscpy_s(sz512, 512, L"Copy Camera Motion");
+					//CreateToolTip(ptCursor, s_strfortip);
+				}
+			}
+		}
 
+		if (dispfontfortip == false) {
+			if (PickSpPasteCamera(ptCursor) != 0) {
+				if (s_model) {
+					dispfontfortip = true;
+					wcscpy_s(sz512, 512, L"Paste Camera Motion");
+					//CreateToolTip(ptCursor, s_strfortip);
+				}
+			}
+		}
 
+		if (dispfontfortip == false) {
+			if (PickSpInterpolateCamera(ptCursor) != 0) {
+				if (s_model) {
+					dispfontfortip = true;
+					wcscpy_s(sz512, 512, L"Interpolate Camera Motion");
+					//CreateToolTip(ptCursor, s_strfortip);
+				}
+			}
+		}
+
+		if (dispfontfortip == false) {
+			if (PickSpInitCamera(ptCursor) != 0) {
+				if (s_model) {
+					dispfontfortip = true;
+					wcscpy_s(sz512, 512, L"Init Camera MotionPoint");
+					//CreateToolTip(ptCursor, s_strfortip);
+				}
+			}
+		}
+
+		if (dispfontfortip == false) {
+			if (PickSpSmoothCamera(ptCursor) != 0) {
+				if (s_smoothFlag == false) {
+					dispfontfortip = true;
+					wcscpy_s(sz512, 512, L"Smooth Camera Angle");
+					//CreateToolTip(ptCursor, s_strfortip);
+				}
+			}
+		}
+	}
+
+	//#################################
+	//Command buttons for bone motion
+	//#################################
 	if (s_toolspritemode == 0) {//ToolShortCut : 0
 		if (dispfontfortip == false) {
 			if (PickSpCopy(ptCursor) != 0) {
@@ -62954,6 +63069,9 @@ bool DispTipUI()
 	else {
 		_ASSERT(0);
 	}
+
+
+
 
 	if (dispfontfortip == false) {
 		int oprigs_dispfontfortip = 0;

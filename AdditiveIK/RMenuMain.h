@@ -8,9 +8,10 @@ public:
 	~CRMenuMain();
 
 	int Create( HWND srchwnd, int menuoffset );
-	int CreatePopupMenu(HWND srchwnd, HMENU parmenu, WCHAR* partitle);
+	int CreatePopupMenu(HWND srchwnd, HMENU parmenu, WCHAR* partitle, bool grayed = false);
 	int Destroy();
 
+	HMENU GetRMenu();
 	HMENU GetSubMenu();
 
 	int TrackPopupMenu(POINT pt);
