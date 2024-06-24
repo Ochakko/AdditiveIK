@@ -130,6 +130,9 @@ public:
 
 	int SetRefPosFlag(CModel* srcmodel);
 
+	bool IsCameraModel(CModel* srcmodel);
+	bool IsCameraMotion(CModel* srcmodel, int srcmotid);
+
 private:
 	void InitParams();
 	void DestroyObjs();

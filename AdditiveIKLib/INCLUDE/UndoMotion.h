@@ -1,4 +1,4 @@
-#ifndef UNDOMOTIONH
+﻿#ifndef UNDOMOTIONH
 #define UNDOMOTIONH
 
 //#include <d3dx9.h>
@@ -15,7 +15,7 @@ class CMotionPoint;
 class CMQOObject;
 class CMorphKey;
 class CEditRange;
-
+class ChaScene;
 
 typedef struct tag_undocamera
 {
@@ -27,6 +27,7 @@ typedef struct tag_undocamera
 	ChaVector3 camtargetpos;
 	ChaVector3 camUpVec;
 	float camdist;
+	CModel* cameramodel;//2024/06/24
 
 	void Init() {
 		spcameramode = false;
@@ -37,6 +38,7 @@ typedef struct tag_undocamera
 		camtargetpos.SetParams(0.0f, 0.0f, -100.0f);
 		camUpVec.SetParams(0.0f, 1.0f, 0.0);
 		camdist = 500.0f;
+		cameramodel = nullptr;
 	};
 
 	tag_undocamera()
@@ -78,10 +80,14 @@ public:
 	int ClearData();
 	int SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CModel* pmodel, 
 		int selectedboneno, int curbaseno,
-		int srcedittarget, CEditRange* srcer, double srcapplyrate,
+		int srcedittarget,//アプリケーションのedittargetモード
+		bool undocameraflag,//カメラアニメのUndoとして呼び出す場合にtrue
+		CEditRange* srcer, double srcapplyrate,
 		BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, 
 		bool allframeflag);
-	int RollBackMotion(bool limitdegflag, CModel* pmodel, 
+	int RollBackMotion(ChaScene* pchascene, 
+		bool undocameraflag,//カメラアニメのUndoとして呼び出す場合にtrue
+		bool limitdegflag, CModel* pmodel, 
 		int* edittarget, int* pselectedboneno, int* curbaseno,
 		//double* dststartframe, double* dstendframe, double* dstapplyrate, 
 		BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera, UNDOMOTID* dstundomotid);
@@ -106,6 +112,7 @@ public:
 private:
 	int m_validflag;
 	MOTINFO m_savemotinfo;
+	MOTINFO m_savecameramotinfo;
 	std::map<CBone*, CMotionPoint*> m_bone2mp;
 	std::map<CMQOObject*, CMorphKey*> m_base2mk;
 	std::map<CBone*, std::map<double, int>> m_bonemotmark;

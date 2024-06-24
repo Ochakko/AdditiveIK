@@ -473,7 +473,7 @@ static DWORD s_rigidflag = 0;
 
 
 
-CModel::CModel() : m_camerafbx(), m_frustum(), m_undomotion()
+CModel::CModel() : m_camerafbx(), m_frustum(), m_undomotion(), m_undocamera()
 {
 	InitializeCriticalSection(&m_CritSection_Node);
 
@@ -3625,6 +3625,9 @@ int CModel::DeleteMotion( int motid )
 	for( undono = 0; undono < UNDOMAX; undono++ ){
 		if( m_undomotion[undono].GetSaveMotInfo().motid == motid ){
 			m_undomotion[undono].SetValidFlag( 0 );
+		}
+		if (m_undocamera[undono].GetSaveMotInfo().motid == motid) {
+			m_undocamera[undono].SetValidFlag(0);
 		}
 	}
 
@@ -17666,7 +17669,8 @@ int CModel::InitUndoMotion( int saveflag )
 
 	int undono;
 	for( undono = 0; undono < UNDOMAX; undono++ ){
-		m_undomotion[ undono ].ClearData();
+		m_undomotion[undono].ClearData();
+		m_undocamera[undono].ClearData();
 	}
 
 	m_undo_readpoint = 0;
@@ -17707,18 +17711,45 @@ int CModel::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, int cur
 	//undoによって次回のsave位置は変わらない
 
 
-	if( m_bonelist.empty() || !m_curmotinfo ){
-		return 0;
-	}
+	//2024/06/24 ボーンとモーションが無いモデルをセレクトしている場合も
+	//カメラアニメのために処理をすることにしたのでここではリターンしない
+	//if( m_bonelist.empty() || !m_curmotinfo ){
+	//	return 0;
+	//}
+
 
 	int saveundoid = m_undo_writepoint;
 	m_undo_writepoint = GetNewUndoID();
 
 
 	//2023/10/27 1.2.0.27 RC5 : LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
-	int result = m_undomotion[m_undo_writepoint].SaveUndoMotion(LimitDegCheckBoxFlag, limitdegflag, this,
-		GetSelectedBoneNo(), curbaseno, srcedittarget, srcer, srcapplyrate, srcbrushstate, srcundocamera, allframeflag);
-	if (result == 1) {//result == 2はエラーにしない
+	bool undocameraflag1 = false;
+	int result1 = m_undomotion[m_undo_writepoint].SaveUndoMotion(LimitDegCheckBoxFlag, limitdegflag, 
+		this,//!!!!!!!
+		GetSelectedBoneNo(), curbaseno, 
+		srcedittarget,
+		undocameraflag1,//2024/06/24 BoneMotionをSaveする
+		srcer, srcapplyrate, srcbrushstate, srcundocamera, allframeflag);
+	
+	int result2 = 0;
+	if (srcundocamera.cameramodel) {
+		bool undocameraflag2 = true;//!!!!
+		bool limitdegchkbox = false;
+		bool limitdegcamera = false;
+		int selectedcameraboneno = 0;
+		int curbasenocamera = 0;
+		result2 = m_undocamera[m_undo_writepoint].SaveUndoMotion(limitdegchkbox, limitdegcamera, 
+			srcundocamera.cameramodel,//!!!!!!
+			selectedcameraboneno, curbasenocamera,
+			srcedittarget,
+			undocameraflag2,//2024/06/24 CameraAnimをSaveする
+			srcer, srcapplyrate, srcbrushstate, srcundocamera, allframeflag);
+	}
+	else {
+		m_undocamera[m_undo_writepoint].SetValidFlag(0);
+	}
+
+	if ((result1 == 1) || (result2 == 1)) {//result == 2はエラーにしない
 		_ASSERT(0);
 		m_undo_writepoint = saveundoid;
 		return 1;
@@ -17729,11 +17760,10 @@ int CModel::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, int cur
 		m_undo_firstflag = false;
 	}
 
-
-
 	return 0;
 }
-int CModel::RollBackUndoMotion(bool limitdegflag, HWND hmainwnd, int redoflag, 
+int CModel::RollBackUndoMotion(ChaScene* pchascene, 
+	bool limitdegflag, HWND hmainwnd, int redoflag, 
 	int* edittarget, int* pselectedboneno, int* curbaseno,
 	//double* dststartframe, double* dstendframe, double* dstapplyrate, 
 	BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera, UNDOMOTID* dstundomotid)
@@ -17747,9 +17777,14 @@ int CModel::RollBackUndoMotion(bool limitdegflag, HWND hmainwnd, int redoflag,
 	//saveによって次回のundo位置は変わる
 	//undoによって次回のsave位置は変わらない
 
-	if( m_bonelist.empty() || !m_curmotinfo ){
-		return 0;
-	}
+
+
+	//2024/06/24 ボーンとモーションが無いモデルをセレクトしている場合も
+	//カメラアニメのために処理をすることにしたのでここではリターンしない
+	//if( m_bonelist.empty() || !m_curmotinfo ){
+	//	return 0;
+	//}
+
 
 	if (m_undo_firstflag) {
 		return 0;
@@ -17788,11 +17823,37 @@ int CModel::RollBackUndoMotion(bool limitdegflag, HWND hmainwnd, int redoflag,
 	}
 
 	if(m_undo_readpoint >= 0 ){
-		int result = m_undomotion[m_undo_readpoint].RollBackMotion(limitdegflag, this,
+		bool undocameraflag1 = false;
+		int result1 = m_undomotion[m_undo_readpoint].RollBackMotion(pchascene, undocameraflag1,
+			limitdegflag, this,
 			edittarget,
 			pselectedboneno, curbaseno,
-			//dststartframe, dstendframe, dstapplyrate, 
 			dstbrushstate, dstundocamera, dstundomotid);
+
+
+		int result2 = 0;
+		bool undocameraflag2 = true;
+		bool limitdegcamera = false;
+		int selectedcameraboneno = 0;
+		int curbasenocamera = 0;
+		if (result1 == 0) {
+			BRUSHSTATE camerabrushstate;
+			UNDOCAMERA cameraundocamera;
+			UNDOMOTID cameraundomotid;
+			result2 = m_undocamera[m_undo_readpoint].RollBackMotion(pchascene, undocameraflag2,
+				limitdegcamera, this,
+				edittarget,
+				&selectedcameraboneno, &curbasenocamera,
+				&camerabrushstate, &cameraundocamera, &cameraundomotid);
+		}
+		else {
+			result2 = m_undocamera[m_undo_readpoint].RollBackMotion(pchascene, undocameraflag2,
+				limitdegcamera, this,
+				edittarget,
+				&selectedcameraboneno, &curbasenocamera,
+				dstbrushstate, dstundocamera, dstundomotid);
+		}
+
 	}
 
 	return 0;
@@ -17831,7 +17892,9 @@ int CModel::GetValidUndoID()
 			curid = m_undo_writepoint;//配列の最後では無く記録の最後
 		}
 
-		if( m_undomotion[curid].GetValidFlag() == 1 ){
+		//if(m_undomotion[curid].GetValidFlag() == 1){
+		if ((m_undocamera[curid].GetValidFlag() == 1) || //2024/06/24 ボーンモーションとカメラアニメのどちらかが正常に保存されている場合
+			(m_undomotion[curid].GetValidFlag() == 1)) {
 			retid = curid;
 			break;
 		}
@@ -17853,7 +17916,9 @@ int CModel::GetValidRedoID()
 			curid = 0;
 		}
 
-		if( m_undomotion[curid].GetValidFlag() == 1 ){
+		//if(m_undomotion[curid].GetValidFlag() == 1){
+		if ((m_undocamera[curid].GetValidFlag() == 1) || //2024/06/24 ボーンモーションとカメラアニメのどちらかが正常に保存されている場合
+			(m_undomotion[curid].GetValidFlag() == 1)) {
 			retid = curid;
 			break;
 		}

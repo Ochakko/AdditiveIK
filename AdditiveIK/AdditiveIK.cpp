@@ -7778,6 +7778,7 @@ void PrepairUndo()
 			undocamera.camtargetpos = g_camtargetpos;
 			undocamera.camUpVec = g_cameraupdir;
 			undocamera.camdist = g_camdist;
+			undocamera.cameramodel = s_cameramodel;//2024/06/24
 
 			HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));//長いフレームの保存は数秒時間がかかることがあるので砂時計カーソルにする
 
@@ -7790,24 +7791,14 @@ void PrepairUndo()
 				allframeflag = false;
 			}
 
-			if (g_edittarget != EDITTARGET_CAMERA) {
-				//2023/10/27 1.2.0.27 RC5 : s_LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
-				s_model->SaveUndoMotion(s_LimitDegCheckBoxFlag, g_limitdegflag, s_curboneno, s_curbaseno,
-					g_edittarget, &s_editrange, g_applyrate, 
-					brushstate, undocamera,
-					allframeflag);
-			}
-			else if (s_cameramodel) {
-				int cameramotid = 0;
-				int cameraframeleng = 100;
-				CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);
-				if (opebone) {
-					s_cameramodel->SaveUndoMotion(s_LimitDegCheckBoxFlag, g_limitdegflag, s_curboneno, s_curbaseno,
-						g_edittarget, &s_editrange, g_applyrate,
-						brushstate, undocamera,
-						allframeflag);
-				}
-			}
+			//##################################################################################
+			//2024/06/24 s_model->SaveUndoMotion()は　BoneMotionとCameraAnimの両方をSaveするように.
+			//##################################################################################
+			//2023/10/27 1.2.0.27 RC5 : s_LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
+			s_model->SaveUndoMotion(s_LimitDegCheckBoxFlag, g_limitdegflag, s_curboneno, s_curbaseno,
+				g_edittarget, &s_editrange, g_applyrate, 
+				brushstate, undocamera,
+				allframeflag);
 
 			SetCursor(oldcursor);//カーソルを元に戻す
 
@@ -38616,23 +38607,12 @@ int OnSpriteUndo()
 	if (s_model && (s_undoFlag == true)) {
 		//undo
 		StopBt();
-		if (g_edittarget != EDITTARGET_CAMERA) {
-			s_model->RollBackUndoMotion(g_limitdegflag, g_mainhwnd,
-				0, &newedittarget, &newselectedboneno, &s_curbaseno,
-				&brushstate, &undocamera, &undomotid);//!!!!!!!!!!!
-		}
-		else if(s_cameramodel) {
-			int cameramotid = 0;
-			int cameraframeleng = 100;
-			CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);
-			if (opebone) {
-				int curboneno = opebone->GetBoneNo();
-				int curbaseno = -1;
-				s_cameramodel->RollBackUndoMotion(g_limitdegflag, g_mainhwnd,
-					0, &newedittarget, &newselectedboneno, &curbaseno,
-					&brushstate, &undocamera, &undomotid);//!!!!!!!!!!!
-			}
-		}
+		//#########################################################################################
+		//2024/06/24 s_model->RollBackUndoMotion()は BoneMotionとCameraAnimの両方をRollBackするように.
+		//#########################################################################################
+		s_model->RollBackUndoMotion(s_chascene, g_limitdegflag, g_mainhwnd,
+			0, &newedittarget, &newselectedboneno, &s_curbaseno,
+			&brushstate, &undocamera, &undomotid);//!!!!!!!!!!!
 
 		RollbackBrushState(brushstate);//ブラシパラメータ復元
 		Params2TopSlidersWnd();
@@ -38642,23 +38622,12 @@ int OnSpriteUndo()
 	{
 		//redo
 		StopBt();
-		if (g_edittarget != EDITTARGET_CAMERA) {
-			s_model->RollBackUndoMotion(g_limitdegflag, g_mainhwnd,
-				1, &newedittarget, &newselectedboneno, &s_curbaseno,
-				&brushstate, &undocamera, &undomotid);//!!!!!!!!!!!
-		}
-		else {
-			int cameramotid = 0;
-			int cameraframeleng = 100;
-			CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);
-			if (opebone) {
-				int curboneno = opebone->GetBoneNo();
-				int curbaseno = -1;
-				s_cameramodel->RollBackUndoMotion(g_limitdegflag, g_mainhwnd,
-					1, &newedittarget, &newselectedboneno, &curbaseno,
-					&brushstate, &undocamera, &undomotid);//!!!!!!!!!!!
-			}
-		}
+		//#########################################################################################
+		//2024/06/24 s_model->RollBackUndoMotion()は BoneMotionとCameraAnimの両方をRollBackするように.
+		//#########################################################################################
+		s_model->RollBackUndoMotion(s_chascene, g_limitdegflag, g_mainhwnd,
+			1, &newedittarget, &newselectedboneno, &s_curbaseno,
+			&brushstate, &undocamera, &undomotid);//!!!!!!!!!!!
 
 		RollbackBrushState(brushstate);//ブラシパラメータ復元
 		Params2TopSlidersWnd();
@@ -38697,9 +38666,6 @@ int OnSpriteUndo()
 			//refreshEulerGraph();
 		}
 
-
-
-
 		if (s_model->ExistCurrentMotion() && (s_model->GetCurMotInfo().motid != undomotid.bonemotid)) {
 			int chkcnt = 0;
 			int findflag = 0;
@@ -38728,15 +38694,25 @@ int OnSpriteUndo()
 			}
 		}
 
+		if (undocamera.cameramodel && (undocamera.cameramodel == s_cameramodel)) {
+			if (s_cameramodel->ExistCurrentMotion() && (s_cameramodel->GetCameraMotionId() != undomotid.cameramotid)) {
 
-		if (s_cameramodel && s_cameramodel->ExistCurrentMotion() && (s_cameramodel->GetCameraMotionId() != undomotid.cameramotid)) {
-			if (s_camerapanel.radiobutton) {
-				int cameramotindex = s_model->MotionID2CameraIndex(undomotid.cameramotid);
-				if (cameramotindex >= 0) {
-					s_cameramenuindexmap[s_model] = cameramotindex;
-					s_camerapanel.radiobutton->setSelectIndex(cameramotindex, false);
+				s_cameramodel->SetCameraMotion(undomotid.cameramotid);
+
+				if (s_camerapanel.radiobutton) {
+					int cameramotindex = s_model->MotionID2CameraIndex(undomotid.cameramotid);
+					if (cameramotindex >= 0) {
+						s_cameramenuindexmap[s_model] = cameramotindex;
+						s_camerapanel.radiobutton->setSelectIndex(cameramotindex, false);
+					}
 				}
 			}
+		}
+		else {
+			//カメラモデルが無い場合に通る
+			// 
+			//カメラモデル(最後に読み込んだカメラアニメ付きモデル)が作業途中で変更された場合にここを通る可能性がある(その場合は未対応)
+			int dbgflag1 = 1;
 		}
 
 
@@ -47274,14 +47250,18 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		myRenderer::RENDERSPRITE rendersprite;
 		rendersprite.Init();
 		rendersprite.pundosprite = &s_undosprite;
-		if (g_edittarget != EDITTARGET_CAMERA) {
+
+		//2024/06/24
+		//カメラアニメのアンドゥデータは　選択中のモデルに格納することにした　EDITTARGET_CAMERA時にも　選択中のモデルアンドゥ番号を表示する
+		//if (g_edittarget != EDITTARGET_CAMERA) {
 			rendersprite.userint1 = s_model->GetCurrentUndoR();
 			rendersprite.userint2 = s_model->GetCurrentUndoW();
-		}
-		else if (s_cameramodel) {
-			rendersprite.userint1 = s_cameramodel->GetCurrentUndoR();
-			rendersprite.userint2 = s_cameramodel->GetCurrentUndoW();
-		}
+		//}
+		//else if (s_cameramodel) {
+		//	rendersprite.userint1 = s_cameramodel->GetCurrentUndoR();
+		//	rendersprite.userint2 = s_cameramodel->GetCurrentUndoW();
+		//}
+		
 		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
 

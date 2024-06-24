@@ -1000,7 +1000,8 @@ public:
 	int SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, int curboneno, int curbaseno,
 		int srcedittarget, CEditRange* srcer, double srcapplyrate, 
 		BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, bool allframeflag);
-	int RollBackUndoMotion(bool limitdegflag, HWND hmainwnd, int redoflag, 
+	int RollBackUndoMotion(ChaScene* pchascene, 
+		bool limitdegflag, HWND hmainwnd, int redoflag,
 		int* edittarget,
 		int* pselectedboneno, int* curbaseno,
 		//double* dststartframe, double* dstendframe, double* dstapplyframe, 
@@ -1470,7 +1471,8 @@ private:
 				return m_motinfo[miindex];
 			}
 			else {
-				_ASSERT(0);
+				//_ASSERT(0);
+				int dbgflag1 = 1;
 				return 0;
 			}
 		//}
@@ -2100,6 +2102,18 @@ public: //accesser
 			return false;
 		}
 	}
+	MOTINFO GetCurCameraMotInfo() {
+		MOTINFO retmi;
+		retmi.Init();
+		int cameramotid = GetCameraMotionId();
+		if (cameramotid > 0) {
+			retmi = GetCameraMotInfoByMotId(cameramotid);
+		}
+		else {
+			retmi.Init();
+		}
+		return retmi;
+	};
 	MOTINFO GetCameraMotInfoByMotId(int srcmotid) {//カメラモーション
 		//DeleteMotion時に要素をeraseするのでid - 1が配列のインデックスになるとは限らない//2021/08/26
 		MOTINFO retmi;
@@ -3131,7 +3145,8 @@ private:
 
 	int m_texpool;//Direct3Dのテクスチャ作成プール（場所）。システムメモリかビデオメモリかマネージドか選ぶ。通常は0でビデオメモリを指定する。
 	ChaVector3 m_ikrotaxis;//IK, FKでボーン回転するための回転軸を一時的に保存する。
-	CUndoMotion m_undomotion[ UNDOMAX ];//アンドゥー機能のためのCUndoMotionの配列。CUndoMotionの１つのインスタンスは１フレーム分のモーションを保存する。
+	CUndoMotion m_undomotion[UNDOMAX];//ボーンモーションアンドゥー機能のためのCUndoMotionの配列。CUndoMotionの１つのインスタンスは１フレーム分のモーションを保存する。
+	CUndoMotion m_undocamera[UNDOMAX];//カメラアニメアンドゥー機能のためのCUndoMotionの配列。CUndoMotionの１つのインスタンスは１フレーム分のモーションを保存する。
 	//int m_undoid;//アンドゥー用データをリングバッファで使用するための現在位置へのインデックス。
 	//int m_undoSavedNum;//保存中のアンドゥーの数
 	int m_undo_readpoint;

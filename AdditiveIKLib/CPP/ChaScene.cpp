@@ -2260,3 +2260,34 @@ int ChaScene::MotID2SelIndex(int srcmodelindex, int srcmotid)
 	
 	return -1;
 }
+
+bool ChaScene::IsCameraModel(CModel* srcmodel)
+{
+	if (!srcmodel) {
+		return false;
+	}
+	if (srcmodel == GetTheLastCameraModel()) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+bool ChaScene::IsCameraMotion(CModel* srcmodel, int srcmotid)
+{
+	if (!srcmodel) {
+		return false;
+	}
+	if (IsCameraModel(srcmodel)) {
+		if (srcmodel->IsCameraMotion(srcmotid)) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	else {
+		return false;
+	}
+}
+

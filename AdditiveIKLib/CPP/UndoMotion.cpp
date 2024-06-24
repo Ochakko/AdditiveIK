@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <math.h>
@@ -25,6 +25,7 @@
 #include <ChaVecCalc.h>
 #include <EditRange.h>
 
+#include <ChaScene.h>
 
 #include <string>
 
@@ -53,6 +54,8 @@ int CUndoMotion::InitParams()
 	m_validflag = 0;
 	ZeroMemory( &m_savemotinfo, sizeof( MOTINFO ) );
 	m_savemotinfo.motid = -1;
+	ZeroMemory(&m_savecameramotinfo, sizeof(MOTINFO));
+	m_savecameramotinfo.motid = -1;
 
 	m_bone2mp.clear();
 	m_base2mk.clear();
@@ -119,22 +122,42 @@ int CUndoMotion::DestroyObjs()
 
 int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CModel* pmodel, 
 	int selectedboneno, int curbaseno,
-	int srcedittarget, CEditRange* srcer, double srcapplyrate,
+	int srcedittarget,//ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã®edittargetãƒ¢ãƒ¼ãƒ‰
+	bool undocameraflag,//ã‚«ãƒ¡ãƒ©ã‚¢ãƒ‹ãƒ¡ã®Undoã¨ã—ã¦å‘¼ã³å‡ºã™å ´åˆã«true
+	CEditRange* srcer, double srcapplyrate,
 	BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, 
 	bool allframeflag)
 {
+
+	//##############################################
+	//pmodelã¯ã€€ã‚«ãƒ¡ãƒ©ã®Undoæ™‚ã«ã¯ã€€cameramodelãŒæ¸¡ã•ã‚Œã‚‹
+	//##############################################
 	if (!pmodel) {
 		return 2;
 	}
+	m_undomotid.Init();
+	m_undomotid.bonemotid = pmodel->GetCurrentMotID();
+	m_undomotid.cameramotid = pmodel->GetCameraMotionId();
+	m_undomotid.curmotid = m_undomotid.bonemotid;
 
-	if(!pmodel->ExistCurrentMotion()){
-		return 2;
+	if (!undocameraflag) {
+		if (m_undomotid.bonemotid <= 0) {
+			return 2;
+		}
+		MOTINFO chkmi = pmodel->GetMotInfo(m_undomotid.bonemotid);
+		if (chkmi.motid <= 0) {
+			return 2;
+		}
+	}
+	else {
+		int chkcameramotion = m_undomotid.cameramotid;
+		if (!pmodel->IsCameraMotion(chkcameramotion)) {
+			return 2;
+		}
 	}
 
-	if( pmodel->GetCurMotInfo().motid <= 0 ){
-		return 2;
-	}
-	//if( pmodel->GetBoneListSize()<= 0 ){
+
+	//if( opemodel->GetBoneListSize()<= 0 ){
 	if (pmodel->GetBoneForMotionSize() <= 0) {
 		return 2;
 	}
@@ -156,25 +179,21 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 
 
 	//ClearData();
-	m_undomotid.Init();
-	m_undomotid.bonemotid = pmodel->GetCurrentMotID();
-	m_undomotid.cameramotid = pmodel->GetCameraMotionId();
 
 	int curmotid;
-	if (srcedittarget != EDITTARGET_CAMERA) {
+	//if (srcedittarget != EDITTARGET_CAMERA) {
+	if (!undocameraflag) {
 		curmotid = m_undomotid.bonemotid;
 	}
 	else {
 		curmotid = m_undomotid.cameramotid;
 	}
-	m_undomotid.curmotid = curmotid;
-
+	//m_undomotid.curmotid = curmotid;
 
 	bool cameraanimflag = pmodel->IsCameraMotion(curmotid);
-	MOTINFO curmi = pmodel->GetMotInfo(curmotid);
 
 
-	if (LimitDegCheckBoxFlag == false) {//2023/10/27 1.2.0.27 RC5 : LimitDegCheckBoxFlag == true@‚Â‚Ü‚è@LimitEulƒ{ƒ^ƒ“‚ÌƒIƒ“ƒIƒt‚Íƒ‚[ƒVƒ‡ƒ“‚Ì•Û‘¶‚ğƒXƒLƒbƒv
+	if (LimitDegCheckBoxFlag == false) {//2023/10/27 1.2.0.27 RC5 : LimitDegCheckBoxFlag == trueæ™‚ã€€ã¤ã¾ã‚Šã€€LimitEulãƒœã‚¿ãƒ³ã®ã‚ªãƒ³ã‚ªãƒ•æ™‚ã¯ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ã®ä¿å­˜ã‚’ã‚¹ã‚­ãƒƒãƒ—
 
 		map<int, CBone*>::iterator itrbone;
 		for (itrbone = pmodel->GetBoneListBegin(); itrbone != pmodel->GetBoneListEnd(); itrbone++) {
@@ -303,9 +322,9 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 	else {
 
 		//##########################################################################################################################
-		//2023/10/27 1.2.0.27 RC5 : LimitDegCheckBoxFlag == true@‚Â‚Ü‚è@LimitEulƒ{ƒ^ƒ“‚ÌƒIƒ“ƒIƒt‚Íƒ‚[ƒVƒ‡ƒ“‚Ì•Û‘¶‚ğƒXƒLƒbƒv
+		//2023/10/27 1.2.0.27 RC5 : LimitDegCheckBoxFlag == trueæ™‚ã€€ã¤ã¾ã‚Šã€€LimitEulãƒœã‚¿ãƒ³ã®ã‚ªãƒ³ã‚ªãƒ•æ™‚ã¯ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ã®ä¿å­˜ã‚’ã‚¹ã‚­ãƒƒãƒ—
 		// 
-		//undomp->SetValidFlag(0)‚ğ‚·‚é
+		//undomp->SetValidFlag(0)ã‚’ã™ã‚‹
 		//
 		//##########################################################################################################################
 		map<int, CBone*>::iterator itrbone;
@@ -370,8 +389,11 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 		}
 	}
 ***/
-	//MOTINFO curmi = pmodel->GetCurMotInfo();//ã‚ÉˆÚ“®@ƒJƒƒ‰ƒAƒjƒ‚Æƒ{[ƒ“ƒ‚[ƒVƒ‡ƒ“‚É‘Î‰
-	::MoveMemory(&m_savemotinfo, &curmi, sizeof(MOTINFO));
+	MOTINFO curbonemi = pmodel->GetCurMotInfo();
+	MOTINFO curcamerami = pmodel->GetCurCameraMotInfo();
+	::MoveMemory(&m_savemotinfo, &curbonemi, sizeof(MOTINFO));
+	::MoveMemory(&m_savecameramotinfo, &curcamerami, sizeof(MOTINFO));//2024/06/24
+
 
 	m_selectedboneno = selectedboneno;
 	m_curbaseno = curbaseno;
@@ -392,16 +414,22 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 
 	return 0;
 }
-int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel, 
+int CUndoMotion::RollBackMotion(ChaScene* pchascene, 
+	bool undocameraflag,//ã‚«ãƒ¡ãƒ©ã‚¢ãƒ‹ãƒ¡ã®Undoã¨ã—ã¦å‘¼ã³å‡ºã™å ´åˆã«true 
+	bool limitdegflag, CModel* pmodel,
 	int* edittarget, int* pselectedboneno, int* curbaseno,
 	//double* dststartframe, double* dstendframe, double* dstapplyrate, 
 	BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera, UNDOMOTID* dstundomotid)
 {
 	if( m_validflag != 1 ){
-		_ASSERT( 0 );
+		//_ASSERT( 0 );//é¸æŠä¸­ã®ãƒ¢ãƒ‡ãƒ«ã«ã‚«ãƒ¡ãƒ©ã‚¢ãƒ‹ãƒ¡ã ã‘ã‚ã£ã¦ãƒœãƒ¼ãƒ³ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ãŒç„¡ã„å ´åˆãªã©ã€€æ™®é€šã«ã“ã“ã‚’é€šã‚‹ã€€ã‚¨ãƒ©ãƒ¼ã§ã¯ãªã„
 		return 2;
 	}
-	if (!pmodel) {
+	if (!pchascene) {
+		_ASSERT(0);
+		return 2;
+	}
+	if (!pmodel) {//ã‚«ãƒ¡ãƒ©ã®Undoæ™‚ã«ã‚‚pmodelã¯s_modelãŒæ¸¡ã•ã‚Œã‚‹
 		_ASSERT(0);
 		return 2;
 	}
@@ -426,31 +454,55 @@ int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel,
 		return 2;
 	}
 
+
+	CModel* opemodel;//2024/06/24
+	if (!undocameraflag) {
+		opemodel = pmodel;
+	}
+	else {
+		opemodel = m_undocamera.cameramodel;
+		int chkcameramotion = m_undomotid.cameramotid;
+		if (!pchascene->IsCameraMotion(opemodel, chkcameramotion)) {//ã‚«ãƒ¡ãƒ©ãƒ¢ãƒ‡ãƒ«ã¨ã‚«ãƒ¡ãƒ©ã‚¢ãƒ‹ãƒ¡ãŒå‰Šé™¤ã•ã‚Œã¦ã„ãªã„ã“ã¨ã‚’ç¢ºèª
+			return 2;
+		}
+	}
+	if (!opemodel) {
+		return 2;
+	}
+
+
 	*dstbrushstate = m_brushstate;
 	*dstundocamera = m_undocamera;
 	*dstundomotid = m_undomotid;
 	*edittarget = m_edittarget;
 	
-	int setmotid = m_savemotinfo.motid;
-	MOTINFO chkmotinfo = pmodel->GetMotInfo( setmotid );
+	int setmotid;
+	if (!undocameraflag) {
+		setmotid = m_savemotinfo.motid;
+	}
+	else {
+		setmotid = m_undomotid.cameramotid;//2024/06/24
+	}
+
+	MOTINFO chkmotinfo = opemodel->GetMotInfo( setmotid );
 	if(chkmotinfo.motid <= 0){
-		_ASSERT( 0 );
+		//_ASSERT( 0 );
 		SetValidFlag(0);//!!!!!!!!!!!!!!!
 		return 1;
 	}
 
-	bool cameraanimflag = pmodel->IsCameraMotion(setmotid);
+	bool cameraanimflag = opemodel->IsCameraMotion(setmotid);
 
 
 
 	//::MoveMemory(chkmotinfo, &m_savemotinfo, sizeof(MOTINFO));
-	//pmodel->SetCurMotInfo(chkmotinfo);
-	//pmodel->SetCurrentMotion(setmotid);
+	//opemodel->SetCurMotInfo(chkmotinfo);
+	//opemodel->SetCurrentMotion(setmotid);
 
 	/*
 /////// destroy
 	map<int, CBone*>::iterator itrbone;
-	for( itrbone = pmodel->GetBoneListBegin(); itrbone != pmodel->GetBoneListEnd(); itrbone++ ){
+	for( itrbone = opemodel->GetBoneListBegin(); itrbone != opemodel->GetBoneListEnd(); itrbone++ ){
 		CBone* curbone = itrbone->second;
 		_ASSERT( curbone );
 		if (curbone){
@@ -462,7 +514,7 @@ int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel,
 
 ///////// set
 	map<int, CBone*>::iterator itrbone;
-	for (itrbone = pmodel->GetBoneListBegin(); itrbone != pmodel->GetBoneListEnd(); itrbone++){
+	for (itrbone = opemodel->GetBoneListBegin(); itrbone != opemodel->GetBoneListEnd(); itrbone++){
 		CBone* curbone = itrbone->second;
 		_ASSERT( curbone );
 
@@ -504,7 +556,7 @@ int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel,
 				double srcframe = srcmp->GetFrame();
 				CMotionPoint* dstmp = curbone->GetMotionPoint(setmotid, (double)((int)(srcframe + 0.1)));
 
-				//ƒ‚[ƒVƒ‡ƒ“‚ª’·‚­‚È‚éê‡
+				//ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ãŒé•·ããªã‚‹å ´åˆ
 				if (!dstmp) {
 					dstmp = CMotionPoint::GetNewMP();
 					if (!dstmp) {
@@ -540,12 +592,19 @@ int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel,
 	}
 
 
-	//ƒ‚[ƒVƒ‡ƒ“‚ª’Z‚­‚È‚Á‚½ê‡‚É‘Î‰
+	//ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ãŒçŸ­ããªã£ãŸå ´åˆã«å¯¾å¿œ
 	double oldleng = chkmotinfo.frameleng;
-	double newleng = m_savemotinfo.frameleng;
+	double newleng;
+	if (!undocameraflag) {
+		newleng = m_savemotinfo.frameleng;
+	}
+	else {
+		newleng = m_savecameramotinfo.frameleng;
+	}
+	
 	if (oldleng > newleng) {
 		map<int, CBone*>::iterator itrbone2;
-		for (itrbone2 = pmodel->GetBoneListBegin(); itrbone2 != pmodel->GetBoneListEnd(); itrbone2++) {
+		for (itrbone2 = opemodel->GetBoneListBegin(); itrbone2 != opemodel->GetBoneListEnd(); itrbone2++) {
 			CBone* curbone = itrbone2->second;
 			if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {
 				curbone->DeleteMPOutOfRange(setmotid, newleng - 1.0);
@@ -555,13 +614,19 @@ int CUndoMotion::RollBackMotion(bool limitdegflag, CModel* pmodel,
 
 
 	//MoveMemory( chkmotinfo, &m_savemotinfo, sizeof( MOTINFO ) );
-	//pmodel->SetCurMotInfo( chkmotinfo );
-	pmodel->SetMotInfo(setmotid, m_savemotinfo);
+	//opemodel->SetCurMotInfo( chkmotinfo );
+	if (!undocameraflag) {
+		opemodel->SetMotInfo(setmotid, m_savemotinfo);
+	}
+	else {
+		opemodel->SetMotInfo(setmotid, m_savecameramotinfo);
+	}
+	
 	//if (m_edittarget != EDITTARGET_CAMERA) {
-	//	pmodel->SetCurrentMotion(setmotid);
+	//	opemodel->SetCurrentMotion(setmotid);
 	//}
 	//else {
-	//	pmodel->SetCameraMotionId(setmotid);
+	//	opemodel->SetCameraMotionId(setmotid);
 	//}
 	
 
