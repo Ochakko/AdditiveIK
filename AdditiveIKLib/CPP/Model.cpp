@@ -17701,7 +17701,7 @@ int CModel::InitUndoMotion( int saveflag )
 	return 0;
 }
 
-int CModel::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, int curboneno, int curbaseno, 
+int CModel::SaveUndoMotion(UNDOSELECT srcundoselect, bool LimitDegCheckBoxFlag, bool limitdegflag, int curboneno, int curbaseno, 
 	int srcedittarget, CEditRange* srcer,
 	double srcapplyrate, 
 	BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, 
@@ -17724,7 +17724,7 @@ int CModel::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, int cur
 
 	//2023/10/27 1.2.0.27 RC5 : LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
 	bool undocameraflag1 = false;
-	int result1 = m_undomotion[m_undo_writepoint].SaveUndoMotion(LimitDegCheckBoxFlag, limitdegflag, 
+	int result1 = m_undomotion[m_undo_writepoint].SaveUndoMotion(srcundoselect, LimitDegCheckBoxFlag, limitdegflag, 
 		this,//!!!!!!!
 		GetSelectedBoneNo(), curbaseno, 
 		srcedittarget,
@@ -17738,7 +17738,7 @@ int CModel::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, int cur
 		bool limitdegcamera = false;
 		int selectedcameraboneno = 0;
 		int curbasenocamera = 0;
-		result2 = m_undocamera[m_undo_writepoint].SaveUndoMotion(limitdegchkbox, limitdegcamera, 
+		result2 = m_undocamera[m_undo_writepoint].SaveUndoMotion(srcundoselect, limitdegchkbox, limitdegcamera, 
 			srcundocamera.cameramodel,//!!!!!!
 			selectedcameraboneno, curbasenocamera,
 			srcedittarget,
@@ -17765,11 +17765,11 @@ int CModel::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, int cur
 int CModel::RollBackUndoMotion(ChaScene* pchascene, 
 	bool limitdegflag, HWND hmainwnd, int redoflag, 
 	int* edittarget, int* pselectedboneno, int* curbaseno,
-	//double* dststartframe, double* dstendframe, double* dstapplyrate, 
+	UNDOSELECT* dstundoselect,
 	BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera, UNDOMOTID* dstundomotid)
 {
 	if (!edittarget || !pselectedboneno || !curbaseno || 
-		!dstbrushstate || !dstundocamera || !dstundomotid) {
+		!dstbrushstate || !dstundocamera || !dstundomotid || !dstundoselect) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -17801,33 +17801,56 @@ int CModel::RollBackUndoMotion(ChaScene* pchascene,
 	//アンドゥリドゥは変更部分についてだけ行っている 上記の禁止をしないとすると
 	//例えば　一番新しい保存から一番古い保存へとリドゥするとしたら　一番新しい保存から一番古い保存までの間の全てのアンドゥを実行しなければならない　(それをしないことにした)
 
+	bool thefirstselectmodel = false;
+	bool thelastselectmodel = false;
 
 	int savereadpoint = m_undo_readpoint;
 	if( redoflag == 0 ){
 		int tmpreadpoint = GetValidUndoID();
+
 		if (tmpreadpoint == m_undo_writepoint) {//2022/11/08
-			::MessageBox(hmainwnd, L"最初の保存ポイントよりも昔にはアンドゥ出来ません。", L"can't go to older than the oldest.", MB_OK);
-			//returnせずにそのままのm_undo_readpointでRollBackMotionすることにより　ブラシ状態を保つ
+			int chkreadpoint = GetValidRedoID();
+			if (m_undomotion[chkreadpoint].IsUndoSelectModelFromThis(this) ||
+				m_undomotion[chkreadpoint].IsUndoSelectModelToThis(this)) {
+				thefirstselectmodel = true;
+				m_undo_readpoint = chkreadpoint;//2024/06/25 最初の保存済のundonoをセット
+			}
+			else {
+				//::MessageBox(hmainwnd, L"最初の保存ポイントよりも昔にはアンドゥ出来ません。", L"can't go to older than the oldest.", MB_OK);
+				//returnせずにそのままのm_undo_readpointでRollBackMotionすることにより　ブラシ状態を保つ
+				m_undo_readpoint = savereadpoint;
+			}
 		}
 		else {
 			m_undo_readpoint = tmpreadpoint;
 		}
 	}else{
 		if (m_undo_readpoint == m_undo_writepoint) {//2022/11/08
-			::MessageBox(hmainwnd, L"書き出しポイントよりも未来にはリドゥ出来ません。", L"can't go to newer than the newest.", MB_OK);
-			//returnせずにそのままのm_undo_readpointでRollBackMotionすることにより　ブラシ状態を保つ
+			int chkreadpoint = GetValidUndoID();
+			if (m_undomotion[chkreadpoint].IsUndoSelectModelFromThis(this) || 
+				m_undomotion[chkreadpoint].IsUndoSelectModelToThis(this)) {
+				thelastselectmodel = true;
+				m_undo_readpoint = chkreadpoint;//2024/06/25 最後の保存済のundonoをセット
+			}
+			else {
+				//::MessageBox(hmainwnd, L"書き出しポイントよりも未来にはリドゥ出来ません。", L"can't go to newer than the newest.", MB_OK);
+				//returnせずにそのままのm_undo_readpointでRollBackMotionすることにより　ブラシ状態を保つ
+				m_undo_readpoint = savereadpoint;
+			}
 		}
 		else {
 			m_undo_readpoint = GetValidRedoID();
 		}
+
 	}
 
-	if(m_undo_readpoint >= 0 ){
+	if(m_undo_readpoint >= 0){
 		bool undocameraflag1 = false;
 		int result1 = m_undomotion[m_undo_readpoint].RollBackMotion(pchascene, undocameraflag1,
 			limitdegflag, this,
 			edittarget,
 			pselectedboneno, curbaseno,
+			dstundoselect,
 			dstbrushstate, dstundocamera, dstundomotid);
 
 
@@ -17840,10 +17863,12 @@ int CModel::RollBackUndoMotion(ChaScene* pchascene,
 			BRUSHSTATE camerabrushstate;
 			UNDOCAMERA cameraundocamera;
 			UNDOMOTID cameraundomotid;
+			UNDOSELECT cameraundoselect;
 			result2 = m_undocamera[m_undo_readpoint].RollBackMotion(pchascene, undocameraflag2,
 				limitdegcamera, this,
 				edittarget,
 				&selectedcameraboneno, &curbasenocamera,
+				&cameraundoselect,
 				&camerabrushstate, &cameraundocamera, &cameraundomotid);
 		}
 		else {
@@ -17851,9 +17876,16 @@ int CModel::RollBackUndoMotion(ChaScene* pchascene,
 				limitdegcamera, this,
 				edittarget,
 				&selectedcameraboneno, &curbasenocamera,
+				dstundoselect,
 				dstbrushstate, dstundocamera, dstundomotid);
 		}
 
+	}
+
+	if (thefirstselectmodel || thelastselectmodel) {
+		//2024/06/25 元に戻す
+		//m_undo_readpoint = m_undo_writepoint;
+		m_undo_readpoint = savereadpoint;
 	}
 
 	return 0;

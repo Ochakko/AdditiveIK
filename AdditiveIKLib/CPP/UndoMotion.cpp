@@ -52,6 +52,9 @@ CUndoMotion::~CUndoMotion()
 int CUndoMotion::InitParams()
 {
 	m_validflag = 0;
+
+	m_undoselect.Init();
+
 	ZeroMemory( &m_savemotinfo, sizeof( MOTINFO ) );
 	m_savemotinfo.motid = -1;
 	ZeroMemory(&m_savecameramotinfo, sizeof(MOTINFO));
@@ -120,7 +123,8 @@ int CUndoMotion::DestroyObjs()
 }
 
 
-int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CModel* pmodel, 
+int CUndoMotion::SaveUndoMotion(UNDOSELECT srcundoselect,
+	bool LimitDegCheckBoxFlag, bool limitdegflag, CModel* pmodel, 
 	int selectedboneno, int curbaseno,
 	int srcedittarget,//アプリケーションのedittargetモード
 	bool undocameraflag,//カメラアニメのUndoとして呼び出す場合にtrue
@@ -135,12 +139,22 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 	if (!pmodel) {
 		return 2;
 	}
+
+
+	//2024/06/25
+	m_undoselect = srcundoselect;
+
+
+	CModel* pcameramodel = nullptr;
+
 	m_undomotid.Init();
 	m_undomotid.bonemotid = pmodel->GetCurrentMotID();
-	m_undomotid.cameramotid = pmodel->GetCameraMotionId();
 	m_undomotid.curmotid = m_undomotid.bonemotid;
 
 	if (!undocameraflag) {
+		pcameramodel = srcundocamera.cameramodel;
+		m_undomotid.cameramotid = pcameramodel->GetCameraMotionId();
+
 		if (m_undomotid.bonemotid <= 0) {
 			return 2;
 		}
@@ -150,8 +164,11 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 		}
 	}
 	else {
+		pcameramodel = pmodel;
+		m_undomotid.cameramotid = pcameramodel->GetCameraMotionId();
+
 		int chkcameramotion = m_undomotid.cameramotid;
-		if (!pmodel->IsCameraMotion(chkcameramotion)) {
+		if (!pcameramodel->IsCameraMotion(chkcameramotion)) {
 			return 2;
 		}
 	}
@@ -178,221 +195,239 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 	}
 
 
-	//ClearData();
+	if (m_undoselect.undokind == UNDOKIND_EDITMOTION) {
 
-	int curmotid;
-	//if (srcedittarget != EDITTARGET_CAMERA) {
-	if (!undocameraflag) {
-		curmotid = m_undomotid.bonemotid;
-	}
-	else {
-		curmotid = m_undomotid.cameramotid;
-	}
-	//m_undomotid.curmotid = curmotid;
+		//ClearData();
 
-	bool cameraanimflag = pmodel->IsCameraMotion(curmotid);
+		int curmotid;
+		//if (srcedittarget != EDITTARGET_CAMERA) {
+		if (!undocameraflag) {
+			curmotid = m_undomotid.bonemotid;
+		}
+		else {
+			curmotid = m_undomotid.cameramotid;
+		}
+		//m_undomotid.curmotid = curmotid;
+
+		bool cameraanimflag = pmodel->IsCameraMotion(curmotid);
 
 
-	if (LimitDegCheckBoxFlag == false) {//2023/10/27 1.2.0.27 RC5 : LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
+		if (LimitDegCheckBoxFlag == false) {//2023/10/27 1.2.0.27 RC5 : LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
 
-		map<int, CBone*>::iterator itrbone;
-		for (itrbone = pmodel->GetBoneListBegin(); itrbone != pmodel->GetBoneListEnd(); itrbone++) {
-			CBone* curbone = itrbone->second;
-			//_ASSERT( curbone );
+			map<int, CBone*>::iterator itrbone;
+			for (itrbone = pmodel->GetBoneListBegin(); itrbone != pmodel->GetBoneListEnd(); itrbone++) {
+				CBone* curbone = itrbone->second;
+				//_ASSERT( curbone );
 
-			bool opeflag = false;
-			//if (!cameraanimflag && curbone && (curbone->IsSkeleton() || (curbone->IsNull() && !curbone->IsNullAndChildIsCamera()))) {
-			if (!cameraanimflag && curbone && curbone->IsSkeleton()) {
-				opeflag = true;
-			}
-			else if (cameraanimflag && curbone && (curbone->IsCamera() || curbone->IsNullAndChildIsCamera())) {
-				opeflag = true;
-			}
-			else {
-				opeflag = false;
-				continue;//!!!!!!!!!!!!!!!!
-			}
-
-			//if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {
-			if (opeflag) {
-
-				//####################
-				// ANGLELIMIT of bone
-				//####################
-
-				int getchkflag = 1;
-				m_bone2limit[curbone] = curbone->GetAngleLimit(limitdegflag, getchkflag);
-
-				//###################
-				// first MotionPoint
-				//###################
-				double roundingstartframe, roundingendframe;
-				if (allframeflag == true) {
-					roundingstartframe = 1.0;
-					roundingendframe = RoundingTime(pmodel->GetCurrentMaxFrame());
+				bool opeflag = false;
+				//if (!cameraanimflag && curbone && (curbone->IsSkeleton() || (curbone->IsNull() && !curbone->IsNullAndChildIsCamera()))) {
+				if (!cameraanimflag && curbone && curbone->IsSkeleton()) {
+					opeflag = true;
+				}
+				else if (cameraanimflag && curbone && (curbone->IsCamera() || curbone->IsNullAndChildIsCamera())) {
+					opeflag = true;
 				}
 				else {
-					roundingstartframe = RoundingTime(srcer->GetStartFrame());
-					roundingendframe = RoundingTime(srcer->GetEndFrame());
+					opeflag = false;
+					continue;//!!!!!!!!!!!!!!!!
 				}
 
+				//if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {
+				if (opeflag) {
 
-				CMotionPoint* firstsrcmp = curbone->GetMotionPoint(curmotid, roundingstartframe);
-				//CMotionPoint* firstsrcmp = curbone->GetMotionPoint(curmotid, 0.0);
-				if (!firstsrcmp) {
-					//_ASSERT(0);
-					return 2;
-				}
-				CMotionPoint* firstundomp = 0;
-				map<CBone*, CMotionPoint*>::iterator itrbone2mp;
-				itrbone2mp = m_bone2mp.find(curbone);
-				if (itrbone2mp != m_bone2mp.end()) {
-					firstundomp = itrbone2mp->second;
-				}
-				if (!firstundomp) {
-					firstundomp = CMotionPoint::GetNewMP();
-					if (!firstundomp) {
-						_ASSERT(0);
-						SetValidFlag(0);
-						return 1;
-					}
-					m_bone2mp[curbone] = firstundomp;
-				}
-				firstundomp->CopyMP(firstsrcmp);
-				firstundomp->SetUndoValidFlag(1);
+					//####################
+					// ANGLELIMIT of bone
+					//####################
 
-				//######################
-				// followed MotionPoint
-				//######################
+					int getchkflag = 1;
+					m_bone2limit[curbone] = curbone->GetAngleLimit(limitdegflag, getchkflag);
 
-				CMotionPoint* befundomp = firstundomp;
-
-				double currenttime;
-				CMotionPoint* srcmp = firstsrcmp;
-				CMotionPoint* undomp = firstundomp;
-
-
-				for (currenttime = (roundingstartframe + 1.0); currenttime <= roundingendframe; currenttime += 1.0) {
-					//for (currenttime = 1.0; currenttime < (pmodel->GetCurMotInfo()->frameleng - 1.0); currenttime += 1.0) {
-					srcmp = curbone->GetMotionPoint(curmotid, (double)((int)(currenttime + 0.1)));
-					undomp = 0;
-					if (srcmp && befundomp) {
-						undomp = befundomp->GetNext();
-						if (!undomp) {
-							undomp = CMotionPoint::GetNewMP();
-							if (!undomp) {
-								_ASSERT(0);
-								SetValidFlag(0);
-								return 1;
-							}
-							befundomp->AddToNext(undomp);
-						}
-						undomp->CopyMP(srcmp);
-						undomp->SetUndoValidFlag(1);
+					//###################
+					// first MotionPoint
+					//###################
+					double roundingstartframe, roundingendframe;
+					if (allframeflag == true) {
+						roundingstartframe = 1.0;
+						roundingendframe = RoundingTime(pmodel->GetCurrentMaxFrame());
 					}
 					else {
-						_ASSERT(0);
-						SetValidFlag(0);
+						roundingstartframe = RoundingTime(srcer->GetStartFrame());
+						roundingendframe = RoundingTime(srcer->GetEndFrame());
+					}
+
+
+					CMotionPoint* firstsrcmp = curbone->GetMotionPoint(curmotid, roundingstartframe);
+					//CMotionPoint* firstsrcmp = curbone->GetMotionPoint(curmotid, 0.0);
+					//if (!firstsrcmp) {//2024/06/26 １つのfbxに複数のカメラノードと複数のカメラアニメがある場合　このif文を普通に通る　エラーではない
+					//	//_ASSERT(0);
+					//	return 2;
+					//}
+
+					CMotionPoint* firstundomp = 0;
+					map<CBone*, CMotionPoint*>::iterator itrbone2mp;
+					itrbone2mp = m_bone2mp.find(curbone);
+					if (itrbone2mp != m_bone2mp.end()) {
+						firstundomp = itrbone2mp->second;
+					}
+					if (!firstundomp) {
+						firstundomp = CMotionPoint::GetNewMP();
+						if (!firstundomp) {
+							_ASSERT(0);
+							SetValidFlag(0);
+							return 1;
+						}
+						m_bone2mp[curbone] = firstundomp;
+					}
+					if (firstsrcmp) {
+						firstundomp->CopyMP(firstsrcmp);
+						firstundomp->SetUndoValidFlag(1);
+					}
+					else {
+						firstundomp->SetUndoValidFlag(0);
+					}
+
+					//######################
+					// followed MotionPoint
+					//######################
+
+					CMotionPoint* befundomp = firstundomp;
+
+					double currenttime;
+					CMotionPoint* srcmp = firstsrcmp;
+					CMotionPoint* undomp = firstundomp;
+
+					if (firstsrcmp) {
+						for (currenttime = (roundingstartframe + 1.0); currenttime <= roundingendframe; currenttime += 1.0) {
+							//for (currenttime = 1.0; currenttime < (pmodel->GetCurMotInfo()->frameleng - 1.0); currenttime += 1.0) {
+							srcmp = curbone->GetMotionPoint(curmotid, (double)((int)(currenttime + 0.1)));
+							undomp = 0;
+							if (srcmp && befundomp) {
+								undomp = befundomp->GetNext();
+								if (!undomp) {
+									undomp = CMotionPoint::GetNewMP();
+									if (!undomp) {
+										_ASSERT(0);
+										SetValidFlag(0);
+										return 1;
+									}
+									befundomp->AddToNext(undomp);
+								}
+								undomp->CopyMP(srcmp);
+								undomp->SetUndoValidFlag(1);
+							}
+							else {
+								//_ASSERT(0);
+								//SetValidFlag(0);
+								return 1;
+							}
+
+							befundomp = undomp;
+						}
+					}
+
+					if (undomp) {
+						undomp = undomp->GetNext();
+						while (undomp) {
+							undomp->SetUndoValidFlag(0);
+							undomp = undomp->GetNext();
+						}
+					}
+
+					map<double, int> tmpmap;
+					curbone->GetMotMarkOfMap2(curmotid, tmpmap);
+					if ((int)tmpmap.size() > 0) {
+						(m_bonemotmark[curbone]).clear();
+						m_bonemotmark[curbone] = tmpmap;
+					}
+					else {
+						(m_bonemotmark[curbone]).clear();
+					}
+				}
+			}
+		}
+		else {
+
+			//##########################################################################################################################
+			//2023/10/27 1.2.0.27 RC5 : LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
+			// 
+			//undomp->SetValidFlag(0)をする
+			//
+			//##########################################################################################################################
+			map<int, CBone*>::iterator itrbone;
+			for (itrbone = pmodel->GetBoneListBegin(); itrbone != pmodel->GetBoneListEnd(); itrbone++) {
+				CBone* curbone = itrbone->second;
+				//_ASSERT( curbone );
+				if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {
+
+					//####################
+					// ANGLELIMIT of bone
+					//####################
+					int getchkflag = 1;
+					m_bone2limit[curbone] = curbone->GetAngleLimit(limitdegflag, getchkflag);
+
+					CMotionPoint* firstundomp = 0;
+					map<CBone*, CMotionPoint*>::iterator itrbone2mp;
+					itrbone2mp = m_bone2mp.find(curbone);
+					if (itrbone2mp != m_bone2mp.end()) {
+						firstundomp = itrbone2mp->second;
+					}
+					if (firstundomp) {
+						CMotionPoint* undomp = firstundomp;
+						while (undomp) {
+							undomp->SetUndoValidFlag(0);
+							undomp = undomp->GetNext();
+						}
+					}
+				}
+			}
+		}
+		/***
+			map<int, CMQOObject*>::iterator itrbase;
+			for( itrbase = pmodel->m_mbaseobject.begin(); itrbase != pmodel->m_mbaseobject.end(); itrbase++ ){
+				CMQOObject* curbase = itrbase->second;
+				_ASSERT( curbase );
+				CMorphKey* firstmk = curbase->m_morphkey[ curmotid ];
+				if( firstmk ){
+					CMorphKey* undofirstmk = new CMorphKey( curbase );
+					if( !undofirstmk ){
+						_ASSERT( 0 );
 						return 1;
 					}
 
-					befundomp = undomp;
-				}
+					undofirstmk->CopyMotion( firstmk );
 
-				if (undomp) {
-					undomp = undomp->GetNext();
-					while (undomp) {
-						undomp->SetUndoValidFlag(0);
-						undomp = undomp->GetNext();
+					CMorphKey* curmk = firstmk->m_next;
+					CMorphKey* befundomk = undofirstmk;
+					while( curmk ){
+						CMorphKey* newundomk = new CMorphKey( curbase );
+						if( !newundomk ){
+							_ASSERT( 0 );
+							return 1;
+						}
+						newundomk->CopyMotion( curmk );
+
+						befundomk->AddToNext( newundomk );
+
+						befundomk = newundomk;
+						curmk = curmk->m_next;
 					}
-				}
-
-				map<double, int> tmpmap;
-				curbone->GetMotMarkOfMap2(curmotid, tmpmap);
-				if ((int)tmpmap.size() > 0) {
-					(m_bonemotmark[curbone]).clear();
-					m_bonemotmark[curbone] = tmpmap;
-				}
-				else {
-					(m_bonemotmark[curbone]).clear();
+					m_base2mk[ curbase ] = undofirstmk;
 				}
 			}
-		}
+		***/
+
+	}
+
+	MOTINFO curbonemi = pmodel->GetCurMotInfo();
+	::MoveMemory(&m_savemotinfo, &curbonemi, sizeof(MOTINFO));
+
+	if (pcameramodel) {
+		MOTINFO curcamerami = pcameramodel->GetCurCameraMotInfo();
+		::MoveMemory(&m_savecameramotinfo, &curcamerami, sizeof(MOTINFO));//2024/06/24
 	}
 	else {
-
-		//##########################################################################################################################
-		//2023/10/27 1.2.0.27 RC5 : LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
-		// 
-		//undomp->SetValidFlag(0)をする
-		//
-		//##########################################################################################################################
-		map<int, CBone*>::iterator itrbone;
-		for (itrbone = pmodel->GetBoneListBegin(); itrbone != pmodel->GetBoneListEnd(); itrbone++) {
-			CBone* curbone = itrbone->second;
-			//_ASSERT( curbone );
-			if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {
-
-				//####################
-				// ANGLELIMIT of bone
-				//####################
-				int getchkflag = 1;
-				m_bone2limit[curbone] = curbone->GetAngleLimit(limitdegflag, getchkflag);
-
-				CMotionPoint* firstundomp = 0;
-				map<CBone*, CMotionPoint*>::iterator itrbone2mp;
-				itrbone2mp = m_bone2mp.find(curbone);
-				if (itrbone2mp != m_bone2mp.end()) {
-					firstundomp = itrbone2mp->second;
-				}
-				if (firstundomp) {
-					CMotionPoint* undomp = firstundomp;
-					while (undomp) {
-						undomp->SetUndoValidFlag(0);
-						undomp = undomp->GetNext();
-					}
-				}
-			}
-		}
+		m_savecameramotinfo.Init();
 	}
-/***
-	map<int, CMQOObject*>::iterator itrbase;
-	for( itrbase = pmodel->m_mbaseobject.begin(); itrbase != pmodel->m_mbaseobject.end(); itrbase++ ){
-		CMQOObject* curbase = itrbase->second;
-		_ASSERT( curbase );
-		CMorphKey* firstmk = curbase->m_morphkey[ curmotid ];
-		if( firstmk ){
-			CMorphKey* undofirstmk = new CMorphKey( curbase );
-			if( !undofirstmk ){
-				_ASSERT( 0 );
-				return 1;
-			}
-
-			undofirstmk->CopyMotion( firstmk );
-
-			CMorphKey* curmk = firstmk->m_next;
-			CMorphKey* befundomk = undofirstmk;
-			while( curmk ){
-				CMorphKey* newundomk = new CMorphKey( curbase );
-				if( !newundomk ){
-					_ASSERT( 0 );
-					return 1;
-				}
-				newundomk->CopyMotion( curmk );
-
-				befundomk->AddToNext( newundomk );
-
-				befundomk = newundomk;
-				curmk = curmk->m_next;
-			}
-			m_base2mk[ curbase ] = undofirstmk;
-		}
-	}
-***/
-	MOTINFO curbonemi = pmodel->GetCurMotInfo();
-	MOTINFO curcamerami = pmodel->GetCurCameraMotInfo();
-	::MoveMemory(&m_savemotinfo, &curbonemi, sizeof(MOTINFO));
-	::MoveMemory(&m_savecameramotinfo, &curcamerami, sizeof(MOTINFO));//2024/06/24
 
 
 	m_selectedboneno = selectedboneno;
@@ -410,7 +445,9 @@ int CUndoMotion::SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CM
 		m_undomotid.applyrate = 50.0;
 	}
 
-	m_validflag = 1;
+
+
+	m_validflag = 1;//!!!!!!!!!!!!!!
 
 	return 0;
 }
@@ -418,7 +455,7 @@ int CUndoMotion::RollBackMotion(ChaScene* pchascene,
 	bool undocameraflag,//カメラアニメのUndoとして呼び出す場合にtrue 
 	bool limitdegflag, CModel* pmodel,
 	int* edittarget, int* pselectedboneno, int* curbaseno,
-	//double* dststartframe, double* dstendframe, double* dstapplyrate, 
+	UNDOSELECT* dstundoselect,
 	BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera, UNDOMOTID* dstundomotid)
 {
 	if( m_validflag != 1 ){
@@ -453,7 +490,10 @@ int CUndoMotion::RollBackMotion(ChaScene* pchascene,
 		_ASSERT(0);
 		return 2;
 	}
-
+	if (!dstundoselect) {
+		_ASSERT(0);
+		return 2;
+	}
 
 	CModel* opemodel;//2024/06/24
 	if (!undocameraflag) {
@@ -471,164 +511,170 @@ int CUndoMotion::RollBackMotion(ChaScene* pchascene,
 	}
 
 
+	*dstundoselect = m_undoselect;
 	*dstbrushstate = m_brushstate;
 	*dstundocamera = m_undocamera;
 	*dstundomotid = m_undomotid;
 	*edittarget = m_edittarget;
-	
-	int setmotid;
-	if (!undocameraflag) {
-		setmotid = m_savemotinfo.motid;
-	}
-	else {
-		setmotid = m_undomotid.cameramotid;//2024/06/24
-	}
-
-	MOTINFO chkmotinfo = opemodel->GetMotInfo( setmotid );
-	if(chkmotinfo.motid <= 0){
-		//_ASSERT( 0 );
-		SetValidFlag(0);//!!!!!!!!!!!!!!!
-		return 1;
-	}
-
-	bool cameraanimflag = opemodel->IsCameraMotion(setmotid);
 
 
+	if (m_undoselect.undokind == UNDOKIND_EDITMOTION) {
 
-	//::MoveMemory(chkmotinfo, &m_savemotinfo, sizeof(MOTINFO));
-	//opemodel->SetCurMotInfo(chkmotinfo);
-	//opemodel->SetCurrentMotion(setmotid);
-
-	/*
-/////// destroy
-	map<int, CBone*>::iterator itrbone;
-	for( itrbone = opemodel->GetBoneListBegin(); itrbone != opemodel->GetBoneListEnd(); itrbone++ ){
-		CBone* curbone = itrbone->second;
-		_ASSERT( curbone );
-		if (curbone){
-			curbone->DestroyMotionKey(setmotid);
-			curbone->ClearMotMarkOfMap2(setmotid);
-		}
-	}
-	*/
-
-///////// set
-	map<int, CBone*>::iterator itrbone;
-	for (itrbone = opemodel->GetBoneListBegin(); itrbone != opemodel->GetBoneListEnd(); itrbone++){
-		CBone* curbone = itrbone->second;
-		_ASSERT( curbone );
-
-		//if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {
-		bool opeflag = false;
-		//if (!cameraanimflag && curbone && (curbone->IsSkeleton() || (curbone->IsNull() && !curbone->IsNullAndChildIsCamera()))) {
-		if (!cameraanimflag && curbone && curbone->IsSkeleton()) {
-			opeflag = true;
-		}
-		else if (cameraanimflag && curbone && (curbone->IsCamera() || curbone->IsNullAndChildIsCamera())) {
-			opeflag = true;
+		int setmotid;
+		if (!undocameraflag) {
+			setmotid = m_savemotinfo.motid;
 		}
 		else {
-			opeflag = false;
-			continue;//!!!!!!!!!!!!!!!!
+			setmotid = m_undomotid.cameramotid;//2024/06/24
 		}
 
-		if (opeflag) {
+		MOTINFO chkmotinfo = opemodel->GetMotInfo(setmotid);
+		if (chkmotinfo.motid <= 0) {
+			//_ASSERT( 0 );
+			SetValidFlag(0);//!!!!!!!!!!!!!!!
+			return 1;
+		}
+
+		bool cameraanimflag = opemodel->IsCameraMotion(setmotid);
 
 
-			//######################
-			//2023/02/04
-			//ANGLELIMIT of CBone
-			//######################
 
-			map<CBone*, ANGLELIMIT>::iterator itrbone2limit;
-			itrbone2limit = m_bone2limit.find(curbone);
-			if (itrbone2limit != m_bone2limit.end()) {
-				curbone->SetAngleLimit(limitdegflag, itrbone2limit->second);
+		//::MoveMemory(chkmotinfo, &m_savemotinfo, sizeof(MOTINFO));
+		//opemodel->SetCurMotInfo(chkmotinfo);
+		//opemodel->SetCurrentMotion(setmotid);
+
+		/*
+	/////// destroy
+		map<int, CBone*>::iterator itrbone;
+		for( itrbone = opemodel->GetBoneListBegin(); itrbone != opemodel->GetBoneListEnd(); itrbone++ ){
+			CBone* curbone = itrbone->second;
+			_ASSERT( curbone );
+			if (curbone){
+				curbone->DestroyMotionKey(setmotid);
+				curbone->ClearMotMarkOfMap2(setmotid);
+			}
+		}
+		*/
+
+		///////// set
+		map<int, CBone*>::iterator itrbone;
+		for (itrbone = opemodel->GetBoneListBegin(); itrbone != opemodel->GetBoneListEnd(); itrbone++) {
+			CBone* curbone = itrbone->second;
+			_ASSERT(curbone);
+
+			//if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {
+			bool opeflag = false;
+			//if (!cameraanimflag && curbone && (curbone->IsSkeleton() || (curbone->IsNull() && !curbone->IsNullAndChildIsCamera()))) {
+			if (!cameraanimflag && curbone && curbone->IsSkeleton()) {
+				opeflag = true;
+			}
+			else if (cameraanimflag && curbone && (curbone->IsCamera() || curbone->IsNullAndChildIsCamera())) {
+				opeflag = true;
+			}
+			else {
+				opeflag = false;
+				continue;//!!!!!!!!!!!!!!!!
 			}
 
-			//#######################
-			//CMotionPoint of CBone
-			//#######################
+			if (opeflag) {
 
-			CMotionPoint* srcmp = m_bone2mp[curbone];
-			CMotionPoint* befdstmp = 0;
-			while (srcmp && (srcmp->GetUndoValidFlag() == 1)) {
-				double srcframe = srcmp->GetFrame();
-				CMotionPoint* dstmp = curbone->GetMotionPoint(setmotid, (double)((int)(srcframe + 0.1)));
 
-				//モーションが長くなる場合
-				if (!dstmp) {
-					dstmp = CMotionPoint::GetNewMP();
-					if (!dstmp) {
-						_ASSERT(0);
-						SetValidFlag(0);
-						return 1;
-					}
-					if (befdstmp) {
-						befdstmp->AddToNext(dstmp);
-					}
+				//######################
+				//2023/02/04
+				//ANGLELIMIT of CBone
+				//######################
+
+				map<CBone*, ANGLELIMIT>::iterator itrbone2limit;
+				itrbone2limit = m_bone2limit.find(curbone);
+				if (itrbone2limit != m_bone2limit.end()) {
+					curbone->SetAngleLimit(limitdegflag, itrbone2limit->second);
 				}
 
-				dstmp->CopyMP(srcmp);
-				srcmp = srcmp->GetNext();
-				befdstmp = dstmp;
+				//#######################
+				//CMotionPoint of CBone
+				//#######################
+
+				CMotionPoint* srcmp = m_bone2mp[curbone];
+				CMotionPoint* befdstmp = 0;
+				while (srcmp && (srcmp->GetUndoValidFlag() == 1)) {
+					double srcframe = srcmp->GetFrame();
+					CMotionPoint* dstmp = curbone->GetMotionPoint(setmotid, (double)((int)(srcframe + 0.1)));
+
+					//モーションが長くなる場合
+					if (!dstmp) {
+						dstmp = CMotionPoint::GetNewMP();
+						if (!dstmp) {
+							_ASSERT(0);
+							SetValidFlag(0);
+							return 1;
+						}
+						if (befdstmp) {
+							befdstmp->AddToNext(dstmp);
+						}
+					}
+
+					dstmp->CopyMP(srcmp);
+					srcmp = srcmp->GetNext();
+					befdstmp = dstmp;
+				}
+				curbone->SetMotMarkOfMap2(setmotid, m_bonemotmark[curbone]);
 			}
-			curbone->SetMotMarkOfMap2(setmotid, m_bonemotmark[curbone]);
+
+			//if (curbone){
+			//	CMotionPoint* srcmp = m_bone2mp[curbone];
+			//	CMotionPoint* dstmp = curbone->GetMotionKey(setmotid);
+			//	while (srcmp && (srcmp->GetUndoValidFlag() == 1) && dstmp){
+			//		dstmp->CopyMP(srcmp);
+
+			//		srcmp = srcmp->GetNext();
+			//		dstmp = dstmp->GetNext();
+			//	}
+
+			//	//curbone->SetMotionKey(setmotid, undofirstmp);
+			//	curbone->SetMotMarkOfMap2(setmotid, m_bonemotmark[curbone]);
+			//}
 		}
 
-		//if (curbone){
-		//	CMotionPoint* srcmp = m_bone2mp[curbone];
-		//	CMotionPoint* dstmp = curbone->GetMotionKey(setmotid);
-		//	while (srcmp && (srcmp->GetUndoValidFlag() == 1) && dstmp){
-		//		dstmp->CopyMP(srcmp);
 
-		//		srcmp = srcmp->GetNext();
-		//		dstmp = dstmp->GetNext();
-		//	}
+		//モーションが短くなった場合に対応
+		double oldleng = chkmotinfo.frameleng;
+		double newleng;
+		if (!undocameraflag) {
+			newleng = m_savemotinfo.frameleng;
+		}
+		else {
+			newleng = m_savecameramotinfo.frameleng;
+		}
 
-		//	//curbone->SetMotionKey(setmotid, undofirstmp);
-		//	curbone->SetMotMarkOfMap2(setmotid, m_bonemotmark[curbone]);
+		if (oldleng > newleng) {
+			map<int, CBone*>::iterator itrbone2;
+			for (itrbone2 = opemodel->GetBoneListBegin(); itrbone2 != opemodel->GetBoneListEnd(); itrbone2++) {
+				CBone* curbone = itrbone2->second;
+				if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {
+					curbone->DeleteMPOutOfRange(setmotid, newleng - 1.0);
+				}
+			}
+		}
+
+
+		//MoveMemory( chkmotinfo, &m_savemotinfo, sizeof( MOTINFO ) );
+		//opemodel->SetCurMotInfo( chkmotinfo );
+		if (!undocameraflag) {
+			opemodel->SetMotInfo(setmotid, m_savemotinfo);
+		}
+		else {
+			opemodel->SetMotInfo(setmotid, m_savecameramotinfo);
+		}
+
+		//if (m_edittarget != EDITTARGET_CAMERA) {
+		//	opemodel->SetCurrentMotion(setmotid);
 		//}
+		//else {
+		//	opemodel->SetCameraMotionId(setmotid);
+		//}
+
 	}
 
-
-	//モーションが短くなった場合に対応
-	double oldleng = chkmotinfo.frameleng;
-	double newleng;
-	if (!undocameraflag) {
-		newleng = m_savemotinfo.frameleng;
-	}
-	else {
-		newleng = m_savecameramotinfo.frameleng;
-	}
-	
-	if (oldleng > newleng) {
-		map<int, CBone*>::iterator itrbone2;
-		for (itrbone2 = opemodel->GetBoneListBegin(); itrbone2 != opemodel->GetBoneListEnd(); itrbone2++) {
-			CBone* curbone = itrbone2->second;
-			if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {
-				curbone->DeleteMPOutOfRange(setmotid, newleng - 1.0);
-			}
-		}
-	}
-
-
-	//MoveMemory( chkmotinfo, &m_savemotinfo, sizeof( MOTINFO ) );
-	//opemodel->SetCurMotInfo( chkmotinfo );
-	if (!undocameraflag) {
-		opemodel->SetMotInfo(setmotid, m_savemotinfo);
-	}
-	else {
-		opemodel->SetMotInfo(setmotid, m_savecameramotinfo);
-	}
-	
-	//if (m_edittarget != EDITTARGET_CAMERA) {
-	//	opemodel->SetCurrentMotion(setmotid);
-	//}
-	//else {
-	//	opemodel->SetCameraMotionId(setmotid);
-	//}
-	
 
 	*pselectedboneno = m_selectedboneno;
 	*curbaseno = m_curbaseno;

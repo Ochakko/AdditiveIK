@@ -17,6 +17,42 @@ class CMorphKey;
 class CEditRange;
 class ChaScene;
 
+
+enum {
+	UNDOKIND_EDITMOTION,//ボーンモーション、カメラアニメ編集
+	UNDOKIND_SELECTMODEL_FROMTHIS,//カレントモデル選択変更
+	UNDOKIND_SELECTMODEL_TOTHIS,//カレントモデル選択変更
+	UNDOKIND_SELECTMOTION,//カレントモーション選択変更
+	UNDOKIND_SELECTCAMERAANIM,//カレントカメラアニメ選択変更
+	UNDOKIND_MAX
+};
+
+typedef struct tag_undoselect
+{
+	int undokind;
+	CModel* from_model;
+	CModel* to_model;
+	int from_motion;
+	int to_motion;
+	CModel* cameramodel;
+	int from_cameraanim;
+	int to_cameraanim;
+
+	void Init() {
+		undokind = UNDOKIND_EDITMOTION;
+		from_model = nullptr;
+		to_model = nullptr;
+		from_motion = 0;
+		to_motion = 0;
+		cameramodel = nullptr;
+		from_cameraanim = 0;
+		to_cameraanim = 0;
+	};
+	tag_undoselect() {
+		Init();
+	};
+}UNDOSELECT;
+
 typedef struct tag_undocamera
 {
 	bool spcameramode;
@@ -78,7 +114,7 @@ public:
 	~CUndoMotion();
 
 	int ClearData();
-	int SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, CModel* pmodel, 
+	int SaveUndoMotion(UNDOSELECT srcundoselect, bool LimitDegCheckBoxFlag, bool limitdegflag, CModel* pmodel, 
 		int selectedboneno, int curbaseno,
 		int srcedittarget,//アプリケーションのedittargetモード
 		bool undocameraflag,//カメラアニメのUndoとして呼び出す場合にtrue
@@ -89,8 +125,36 @@ public:
 		bool undocameraflag,//カメラアニメのUndoとして呼び出す場合にtrue
 		bool limitdegflag, CModel* pmodel, 
 		int* edittarget, int* pselectedboneno, int* curbaseno,
-		//double* dststartframe, double* dstendframe, double* dstapplyrate, 
+		UNDOSELECT* dstundoselect,
 		BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera, UNDOMOTID* dstundomotid);
+
+	bool IsUndoSelectModelFromThis(CModel* srcmodel) {
+		if (m_undoselect.undokind == UNDOKIND_SELECTMODEL_FROMTHIS) {
+			if (m_undoselect.from_model = srcmodel) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			return false;
+		}
+	};
+	bool IsUndoSelectModelToThis(CModel* srcmodel) {
+		if (m_undoselect.undokind == UNDOKIND_SELECTMODEL_TOTHIS) {
+			if (m_undoselect.to_model = srcmodel) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			return false;
+		}
+	};
+
 
 private:
 	int InitParams();
@@ -109,8 +173,16 @@ public:
 		m_validflag = srcval;
 	};
 
+	UNDOSELECT GetUndoSelect()
+	{
+		return m_undoselect;
+	}
+
 private:
 	int m_validflag;
+
+	UNDOSELECT m_undoselect;
+
 	MOTINFO m_savemotinfo;
 	MOTINFO m_savecameramotinfo;
 	std::map<CBone*, CMotionPoint*> m_bone2mp;

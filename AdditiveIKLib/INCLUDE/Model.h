@@ -997,14 +997,14 @@ public:
 	int ResetBt();
 
 	int InitUndoMotion( int saveflag );
-	int SaveUndoMotion(bool LimitDegCheckBoxFlag, bool limitdegflag, int curboneno, int curbaseno,
+	int SaveUndoMotion(UNDOSELECT srcundoselect, bool LimitDegCheckBoxFlag, bool limitdegflag, int curboneno, int curbaseno,
 		int srcedittarget, CEditRange* srcer, double srcapplyrate, 
 		BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, bool allframeflag);
 	int RollBackUndoMotion(ChaScene* pchascene, 
 		bool limitdegflag, HWND hmainwnd, int redoflag,
 		int* edittarget,
 		int* pselectedboneno, int* curbaseno,
-		//double* dststartframe, double* dstendframe, double* dstapplyframe, 
+		UNDOSELECT* dstundoselect,
 		BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera, UNDOMOTID* dstundomotid);
 
 	int AddBoneMotMark( OrgWinGUI::OWP_Timeline* owpTimeline, int curboneno, int curlineno, double startframe, double endframe, int flag );
