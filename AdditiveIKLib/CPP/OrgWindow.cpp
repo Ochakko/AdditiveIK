@@ -897,7 +897,8 @@ namespace OrgWinGUI{
 				bool noboneflag = currentmodel->GetNoBoneFlag();
 				bool inviewflag = currentmodel->GetInView(0);
 
-				if ((noboneflag == false) && (inviewflag == true)) {
+				//if ((noboneflag == false) && (inviewflag == true)) {
+				if (noboneflag == false) {//2024/06/25 モデルが視野外でもオイラーグラフを描画
 					if (lineData.size() >= 4) {//X, Y, Z, Brush
 
 						int drawnum = min((int)lineData.size(), showLineNum);
