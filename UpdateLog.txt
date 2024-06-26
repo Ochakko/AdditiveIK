@@ -43,6 +43,11 @@ https://github.com/Ochakko/AdditiveIK
 　　　　　１度も表示されないマニピュレータとの当たり判定で当りが返ってきていたために草の配置関数が呼ばれなかった
 　　　　　草の選択中にはマニピュレータとの当たり判定としてはずれを返すようにして解決
 
+　　RC2:
+　　　Documents/TroubleShooting/0_AboutCameraAnim.docx
+　　　　上記ファイルに絵を追加
+　　　ScreenShotsフォルダにスクリーンショット画像追加
+　　　README.mdに記述しているUnity3Dのバージョンを更新
 
 
 
