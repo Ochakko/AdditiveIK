@@ -7746,7 +7746,6 @@ void PrepairUndo_SelectModel(CModel* befmodel, CModel* nextmodel)
 		return;
 	}
 
-
 	UNDOSELECT undoselectFromThis;
 	undoselectFromThis.Init();
 	undoselectFromThis.from_model = befmodel;
@@ -7754,8 +7753,12 @@ void PrepairUndo_SelectModel(CModel* befmodel, CModel* nextmodel)
 	if (befmodel) {
 		undoselectFromThis.undokind = UNDOKIND_SELECTMODEL_FROMTHIS;
 		undoselectFromThis.from_motion = befmodel->GetCurrentMotID();
+		//undoselectFromThis.from_undoR = befmodel->GetCurrentUndoR();
+		//undoselectFromThis.from_undoW = befmodel->GetCurrentUndoW();
 		if (nextmodel) {
 			undoselectFromThis.to_motion = nextmodel->GetCurrentMotID();
+			//undoselectFromThis.to_undoR = nextmodel->GetCurrentUndoR();
+			//undoselectFromThis.to_undoW = nextmodel->GetCurrentUndoW();
 		}
 	}
 
@@ -7767,8 +7770,12 @@ void PrepairUndo_SelectModel(CModel* befmodel, CModel* nextmodel)
 	if (nextmodel) {
 		undoselectToThis.undokind = UNDOKIND_SELECTMODEL_TOTHIS;
 		undoselectToThis.to_motion = nextmodel->GetCurrentMotID();
+		//undoselectToThis.to_undoR = nextmodel->GetCurrentUndoR();
+		//undoselectToThis.to_undoW = nextmodel->GetCurrentUndoW();
 		if (befmodel) {
 			undoselectToThis.from_motion = befmodel->GetCurrentMotID();
+			//undoselectToThis.from_undoR = befmodel->GetCurrentUndoR();
+			//undoselectToThis.from_undoW = befmodel->GetCurrentUndoW();
 		}
 	}
 
@@ -16737,7 +16744,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.24\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.25\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -38799,40 +38806,37 @@ int OnSpriteUndo()
 
 		CModel* setmodel = nullptr;
 		int setmotion = 0;
+		//int undoR = 0;
+		//int undoW = 0;
 		if (undoselect.undokind == UNDOKIND_SELECTMODEL_FROMTHIS) {
 			setmodel = undoselect.to_model;
 			setmotion = undoselect.to_motion;
+			//undoR = undoselect.to_undoR;
+			//undoW = undoselect.to_undoW;
 		}
 		else if (undoselect.undokind == UNDOKIND_SELECTMODEL_TOTHIS) {
 			setmodel = undoselect.from_model;
 			setmotion = undoselect.from_motion;
+			//undoR = undoselect.from_undoR;
+			//undoW = undoselect.from_undoW;
 		}
-		bool forceflag = true;
-		bool callundo = false;
-		OnChangeModel(setmodel, forceflag, callundo);
 
-		int selindex = s_chascene->MotID2SelIndex(FindModelIndex(setmodel), setmotion);
-		if (selindex >= 0) {
-			bool dorefreshtl = true;
-			int saveundoflag = 0;
-			OnAnimMenu(dorefreshtl, selindex, saveundoflag);
+
+		int setmodelindex = FindModelIndex(setmodel);
+		if (setmodelindex >= 0) {//2024/06/26 モデルが削除されていないことを確認
+			bool forceflag = true;
+			bool callundo = false;
+			OnChangeModel(setmodel, forceflag, callundo);
+
+			int selindex = s_chascene->MotID2SelIndex(setmodelindex, setmotion);
+			if (selindex >= 0) {
+				bool dorefreshtl = true;
+				int saveundoflag = 0;
+				OnAnimMenu(dorefreshtl, selindex, saveundoflag);
+			}
 		}
 	}
-	//}
-	//else if (undoselect.undokind == UNDOKIND_SELECTMODEL_TOTHIS) {
-	//	if (s_undoFlag) {
-	//		bool forceflag = true;
-	//		bool callundo = false;
-	//		OnChangeModel(undoselect.from_model, forceflag, callundo);
 
-	//		int selindex = s_chascene->MotID2SelIndex(FindModelIndex(undoselect.from_model), undoselect.from_motion);
-	//		if (selindex >= 0) {
-	//			bool dorefreshtl = true;
-	//			int saveundoflag = 0;
-	//			OnAnimMenu(dorefreshtl, selindex, saveundoflag);
-	//		}
-	//	}
-	//}
 	else {
 		g_edittarget = newedittarget;
 

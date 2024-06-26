@@ -32,8 +32,15 @@ typedef struct tag_undoselect
 	int undokind;
 	CModel* from_model;
 	CModel* to_model;
+	
 	int from_motion;
 	int to_motion;
+
+	//int from_undoR;
+	//int from_undoW;
+	//int to_undoR;
+	//int to_undoW;
+
 	CModel* cameramodel;
 	int from_cameraanim;
 	int to_cameraanim;
@@ -44,6 +51,10 @@ typedef struct tag_undoselect
 		to_model = nullptr;
 		from_motion = 0;
 		to_motion = 0;
+		//from_undoR = 0;
+		//from_undoW = 0;
+		//to_undoR = 0;
+		//to_undoW = 0;
 		cameramodel = nullptr;
 		from_cameraanim = 0;
 		to_cameraanim = 0;

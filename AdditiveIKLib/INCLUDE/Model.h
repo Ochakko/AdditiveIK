@@ -2414,6 +2414,12 @@ public: //accesser
 	int GetCurrentUndo1st() {
 		return m_undo_firstflag;
 	}
+	void SetUndoR(int srcval) {
+		m_undo_readpoint = srcval;
+	}
+	void SetUndoW(int srcval) {
+		m_undo_writepoint = srcval;
+	}
 
 	int GetLoadingMotionCount() {
 		return m_loadingmotionnum;

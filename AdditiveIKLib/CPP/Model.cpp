@@ -17807,35 +17807,54 @@ int CModel::RollBackUndoMotion(ChaScene* pchascene,
 	int savereadpoint = m_undo_readpoint;
 	if( redoflag == 0 ){
 		int tmpreadpoint = GetValidUndoID();
-
 		if (tmpreadpoint == m_undo_writepoint) {//2022/11/08
-			int chkreadpoint = GetValidRedoID();
-			if (m_undomotion[chkreadpoint].IsUndoSelectModelFromThis(this) ||
-				m_undomotion[chkreadpoint].IsUndoSelectModelToThis(this)) {
-				thefirstselectmodel = true;
-				m_undo_readpoint = chkreadpoint;//2024/06/25 最初の保存済のundonoをセット
+			//2024/06/26 この部分の処理についてのメモは以下のredoの部分に描いた
+			if (m_undomotion[tmpreadpoint].IsUndoSelectModelFromThis(this) ||
+				m_undomotion[tmpreadpoint].IsUndoSelectModelToThis(this)) {
+
+				m_undo_readpoint = tmpreadpoint;
 			}
 			else {
-				//::MessageBox(hmainwnd, L"最初の保存ポイントよりも昔にはアンドゥ出来ません。", L"can't go to older than the oldest.", MB_OK);
-				//returnせずにそのままのm_undo_readpointでRollBackMotionすることにより　ブラシ状態を保つ
-				m_undo_readpoint = savereadpoint;
+				int chkreadpoint = GetValidRedoID();
+				if (m_undomotion[chkreadpoint].IsUndoSelectModelFromThis(this) ||
+					m_undomotion[chkreadpoint].IsUndoSelectModelToThis(this)) {
+					thefirstselectmodel = true;
+					m_undo_readpoint = chkreadpoint;//2024/06/25 最初の保存済のundonoをセット
+				}
+				else {
+					//::MessageBox(hmainwnd, L"最初の保存ポイントよりも昔にはアンドゥ出来ません。", L"can't go to older than the oldest.", MB_OK);
+					//returnせずにそのままのm_undo_readpointでRollBackMotionすることにより　ブラシ状態を保つ
+					m_undo_readpoint = savereadpoint;
+				}
 			}
 		}
 		else {
-			m_undo_readpoint = tmpreadpoint;
+			m_undo_readpoint = GetValidUndoID();
 		}
 	}else{
 		if (m_undo_readpoint == m_undo_writepoint) {//2022/11/08
-			int chkreadpoint = GetValidUndoID();
-			if (m_undomotion[chkreadpoint].IsUndoSelectModelFromThis(this) || 
-				m_undomotion[chkreadpoint].IsUndoSelectModelToThis(this)) {
-				thelastselectmodel = true;
-				m_undo_readpoint = chkreadpoint;//2024/06/25 最後の保存済のundonoをセット
+
+			//2024/06/26 この部分のメモ
+			//モデルセレクト変更を連続して行い　Undoを連続して呼び出した後　Redoを連続して実行した場合に　Redoボタンだけを押すことで　モデル選択を再現したい
+			//以下の処理をしない場合　readpoint == writepointのまま何も変化なくモデル選択が移動しないことが多かった
+			//その場合にも　モデルセレクトを保存しているundomotionへ適切にUndoすればモデル選択を辿れたが　Redoだけを押してモデル選択を再現したかった
+			if (m_undomotion[m_undo_readpoint].IsUndoSelectModelFromThis(this) ||
+				m_undomotion[m_undo_readpoint].IsUndoSelectModelToThis(this)) {
+
+				m_undo_readpoint = savereadpoint;
 			}
 			else {
-				//::MessageBox(hmainwnd, L"書き出しポイントよりも未来にはリドゥ出来ません。", L"can't go to newer than the newest.", MB_OK);
-				//returnせずにそのままのm_undo_readpointでRollBackMotionすることにより　ブラシ状態を保つ
-				m_undo_readpoint = savereadpoint;
+				int chkreadpoint = GetValidUndoID();//Undo : ひとつ前
+				if (m_undomotion[chkreadpoint].IsUndoSelectModelFromThis(this) ||
+					m_undomotion[chkreadpoint].IsUndoSelectModelToThis(this)) {
+					thelastselectmodel = true;
+					m_undo_readpoint = chkreadpoint;
+				}
+				else {
+					//::MessageBox(hmainwnd, L"書き出しポイントよりも未来にはリドゥ出来ません。", L"can't go to newer than the newest.", MB_OK);
+					//returnせずにそのままのm_undo_readpointでRollBackMotionすることにより　ブラシ状態を保つ
+					m_undo_readpoint = savereadpoint;
+				}
 			}
 		}
 		else {
