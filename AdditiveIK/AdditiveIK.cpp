@@ -11012,7 +11012,7 @@ int RetargetFile(char* fbxpath)
 
 		if (s_chascene && (s_chascene->GetModelNum() > 0)) {
 			//OnModelMenu(false, s_chascene->GetModelNum() - 1, 1);
-			bool forceflag = false;
+			bool forceflag = true;
 			bool callundo = false;
 			OnChangeModel(s_chascene->GetModelNum() - 1, forceflag, callundo);
 		}
@@ -11059,7 +11059,7 @@ int RetargetFile(char* fbxpath)
 
 
 			//OnModelMenu(false, s_convbone_model_batch_selindex, 1);
-			bool forceflag = false;
+			bool forceflag = true;//2024/06/26 各ダイアログ作成のためにforceflag必要
 			bool callundo = false;
 			OnChangeModel(s_convbone_model_batch_selindex, forceflag, callundo);
 
@@ -11684,7 +11684,7 @@ int OpenFile()
 		else if (cmpfbx == 0) {
 			if (s_chascene && (s_chascene->GetModelNum() > 0)) {
 				//OnModelMenu(false, s_chascene->GetModelNum() - 1, 1);
-				bool forceflag = false;
+				bool forceflag = true;//2024/06/26 各ダイアログ作成のためにforceflag必要
 				bool callundo = true;
 				OnChangeModel(s_chascene->GetModelNum() - 1, forceflag, callundo);
 			}
@@ -11702,7 +11702,7 @@ int OpenFile()
 		else if (cmpmqo == 0) {
 			if (s_chascene && (s_chascene->GetModelNum() > 0)) {
 				//OnModelMenu(false, s_chascene->GetModelNum() - 1, 1);
-				bool forceflag = false;
+				bool forceflag = true;//2024/06/26 各ダイアログ作成のためにforceflag必要
 				bool callundo = true;
 				OnChangeModel(s_chascene->GetModelNum() - 1, forceflag, callundo);
 			}
@@ -11770,7 +11770,7 @@ int OpenFile()
 				//if (*nexttopchar != TEXT('\0')) {
 				if (s_chascene && (s_chascene->GetModelNum() > 0)) {
 					//OnModelMenu(false, s_chascene->GetModelNum() - 1, 1);
-					bool forceflag = false;
+					bool forceflag = true;//2024/06/26 各ダイアログ作成のためにforceflag必要
 					bool callundo = true;
 					OnChangeModel(s_chascene->GetModelNum() - 1, forceflag, callundo);
 				}
@@ -11794,7 +11794,7 @@ int OpenFile()
 			else if (cmpmqo == 0) {
 				if (s_chascene && (s_chascene->GetModelNum() > 0)) {
 					//OnModelMenu(false, s_chascene->GetModelNum() - 1, 1);
-					bool forceflag = false;
+					bool forceflag = true;//2024/06/26 各ダイアログ作成のためにforceflag必要
 					bool callundo = true;
 					OnChangeModel(s_chascene->GetModelNum() - 1, forceflag, callundo);
 				}
@@ -12293,9 +12293,9 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	}
 
 	//CallF(OnModelMenu(dorefreshtl, mindex, 0), return 0);
-	bool forceflag = false;
+	bool forceflag = true;
 	bool callundo = true;
-	OnChangeModel(mindex, forceflag, callundo);
+	OnChangeModel(mindex, forceflag, callundo);//2024/06/26 各ダイアログ作成のためにforceflag必要
 
 
 	if (s_nowloading && s_3dwnd) {
@@ -37235,10 +37235,13 @@ int OnFrameToolWnd()
 	if (s_selCopyHisotryFlag) {
 
 		GUIMenuSetVisible(-1, -1);
-
-		GetCPTFileName(s_cptfilename);
-		s_copyhistorydlg.SetNames(s_model, s_cptfilename);
-		s_copyhistorydlg.ShowWindow(SW_SHOW);
+		if (s_model) {
+			int result1 = GetCPTFileName(s_cptfilename);
+			_ASSERT(result1 == 0);
+			int result2 = s_copyhistorydlg.SetNames(s_model, s_cptfilename);
+			_ASSERT(result2 == 0);
+			s_copyhistorydlg.ShowWindow(SW_SHOW);
+		}
 
 		s_selCopyHisotryFlag = false;
 	}

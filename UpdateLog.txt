@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/06/26
-　AdditiveIK 1.0.0.25 RC1(リリース候補1)
+　AdditiveIK 1.0.0.25 RC3(リリース候補3)
 　　1.0.0.24からの変更点
 　　　アンドゥリドゥをより便利に.
 　　　　モデルセレクト、モーションセレクト、カメラセレクト、カメラアニメ編集についてもアンドゥリドゥ対象に.
@@ -48,6 +48,11 @@ https://github.com/Ochakko/AdditiveIK
 　　　　上記ファイルに絵を追加
 　　　ScreenShotsフォルダにスクリーンショット画像追加
 　　　README.mdに記述しているUnity3Dのバージョンを更新
+　　RC3:
+　　　コピーヒストリーウインドウが右ペインに出ない不具合修正
+　　　コマンド対象ボーンダイアログが出ない不具合を修正
+　　　　OnModelMenu()をOnChangeModel()から呼び出すようにした際にforceflagの設定をミスしていたのが原因で
+　　　　いくつかのウインドウが作成されていない状態だった
 
 
 
