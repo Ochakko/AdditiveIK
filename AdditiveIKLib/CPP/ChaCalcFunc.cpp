@@ -4445,15 +4445,32 @@ int ChaCalcFunc::InitMP(CBone* srcbone, bool limitdegflag, int srcmotid, double 
 			cameraanimflag = true;
 			firstmi = srcbone->GetParModel()->GetFirstValidMotInfo(cameraanimflag);
 		}
+
+		if (firstmi.motid <= 0) {
+			//MotionPointが無い場合においても　想定している使い方として　MOTINFOはAddされた状態でRetargetは呼ばれる
+			//よってここを通る場合は　想定外エラー
+			_ASSERT(0);
+			return 1;
+		}
+		else {
+			firstmotid = firstmi.motid;
+		}
 	}
 	else if (srcbone->IsCamera() || srcbone->IsNullAndChildIsCamera()) {
 		//カメラの場合　カメラモーションを先に調べて　無ければ通常モーションを調べる
 		bool cameraanimflag = true;
-		firstmi = srcbone->GetParModel()->GetFirstValidMotInfo(cameraanimflag);
-		if (firstmi.motid <= 0) {
-			cameraanimflag = false;
-			firstmi = srcbone->GetParModel()->GetFirstValidMotInfo(cameraanimflag);
-		}
+		//firstmi = srcbone->GetParModel()->GetFirstValidMotInfo(cameraanimflag);
+		//if (firstmi.motid <= 0) {
+		//	cameraanimflag = false;
+		//	firstmi = srcbone->GetParModel()->GetFirstValidMotInfo(cameraanimflag);
+		//}
+
+
+		//2024/06/27
+		//複数カメラがある場合、対象カメラ以外のカメラのモーションポイントは無いのが普通
+		//カメラの場合の初期姿勢はinitmpとする
+
+
 	}
 	else {
 		_ASSERT(0);
@@ -4463,17 +4480,18 @@ int ChaCalcFunc::InitMP(CBone* srcbone, bool limitdegflag, int srcmotid, double 
 			cameraanimflag = true;
 			firstmi = srcbone->GetParModel()->GetFirstValidMotInfo(cameraanimflag);
 		}
+
+		if (firstmi.motid <= 0) {
+			//MotionPointが無い場合においても　想定している使い方として　MOTINFOはAddされた状態でRetargetは呼ばれる
+			//よってここを通る場合は　想定外エラー
+			_ASSERT(0);
+			return 1;
+		}
+		else {
+			firstmotid = firstmi.motid;
+		}
 	}
 
-	if (firstmi.motid <= 0) {
-		//MotionPointが無い場合にもいても　想定している使い方として　MOTINFOはAddされた状態でRetargetは呼ばれる
-		//よってここを通る場合は　想定外エラー
-		_ASSERT(0);
-		return 1;
-	}
-	else {
-		firstmotid = firstmi.motid;
-	}
 
 	CMotionPoint* curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
 	if (!curmp) {
@@ -4489,7 +4507,8 @@ int ChaCalcFunc::InitMP(CBone* srcbone, bool limitdegflag, int srcmotid, double 
 	if (curmp) {
 
 		CMotionPoint* firstmp = 0;
-		if ((srcbone->GetParModel()->GetLoadedFlag() == false) && (srcbone->GetParModel()->GetLoadingMotionCount() <= 0)) {
+		if ((srcbone->IsCamera() || srcbone->IsNullAndChildIsCamera()) || //2024/06/27 カメラの場合もfirstmpはinitmpとする
+			(srcbone->GetParModel()->GetLoadedFlag() == false) && (srcbone->GetParModel()->GetLoadingMotionCount() <= 0)) {
 			//Motionが１つも無いfbx読み込みのフォロー
 			//読み込み中で　fbxにモーションが無い場合　モーションポイントを作成する　それ以外の場合で　モーションポイントが無い場合はエラー
 			firstmp = &initmp;

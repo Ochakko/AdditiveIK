@@ -1,4 +1,4 @@
-#ifndef MOTFILTERH
+﻿#ifndef MOTFILTERH
 #define MOTFILTERH
 
 

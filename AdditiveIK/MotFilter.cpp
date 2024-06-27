@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <math.h>
@@ -94,20 +94,20 @@ int CMotFilter::GetFilterType()
 
 /***********************************************************
 
-@@ƒtƒBƒ‹ƒ^ƒTƒCƒY‚ª‘å‚«‚¢‚Ù‚ÇA
-  @‚½‚­‚³‚ñ‚ÌƒtƒŒ[ƒ€ŠÔ‚Å•½ŠŠ‚ª‚È‚³‚ê‚éB
+ã€€ã€€ãƒ•ã‚£ãƒ«ã‚¿ã‚µã‚¤ã‚ºãŒå¤§ãã„ã»ã©ã€
+  ã€€ãŸãã•ã‚“ã®ãƒ•ãƒ¬ãƒ¼ãƒ é–“ã§å¹³æ»‘ãŒãªã•ã‚Œã‚‹ã€‚
 
-   EˆÚ“®•½‹ÏF
-	’Êí‚ÌüŒ`‚É‚æ‚é•½ŠŠ‰»B
+   ãƒ»ç§»å‹•å¹³å‡ï¼š
+	é€šå¸¸ã®ç·šå½¢ã«ã‚ˆã‚‹å¹³æ»‘åŒ–ã€‚
 
-	E‰ÁdˆÚ“®•½‹ÏF
-	™X‚Éd‚İ‚ğ¬‚³‚­‚µ‚Ä‚¢‚­•½ŠŠ‰»B
-	ˆÚ“®•½‹Ï‚æ‚è‚àA­‚µƒs[ƒN‚ªc‚è‚â‚·‚¢B
+	ãƒ»åŠ é‡ç§»å‹•å¹³å‡ï¼š
+	å¾ã€…ã«é‡ã¿ã‚’å°ã•ãã—ã¦ã„ãå¹³æ»‘åŒ–ã€‚
+	ç§»å‹•å¹³å‡ã‚ˆã‚Šã‚‚ã€å°‘ã—ãƒ”ãƒ¼ã‚¯ãŒæ®‹ã‚Šã‚„ã™ã„ã€‚
 
-	EƒKƒEƒVƒAƒ“F
-	ƒKƒEƒVƒAƒ“ƒtƒBƒ‹ƒ^‚É‚æ‚é•½ŠŠ‰»B
-	Œ³‚Ìƒ‚[ƒVƒ‡ƒ“‚ÌÄŒ»—¦‚ª‘å‚«‚¢Bi‚Æ‚¢‚¢‚È‚ j
-						   @
+	ãƒ»ã‚¬ã‚¦ã‚·ã‚¢ãƒ³ï¼š
+	ã‚¬ã‚¦ã‚·ã‚¢ãƒ³ãƒ•ã‚£ãƒ«ã‚¿ã«ã‚ˆã‚‹å¹³æ»‘åŒ–ã€‚
+	å…ƒã®ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ã®å†ç¾ç‡ãŒå¤§ãã„ã€‚ï¼ˆã¨ã„ã„ãªã‚ï¼‰
+						   ã€€
 ***********************************************************/
 int CMotFilter::Filter(bool edgesmp, bool limitdegflag, 
 	CModel* srcmodel, CBone* srcbone,
@@ -130,7 +130,7 @@ int CMotFilter::Filter(bool edgesmp, bool limitdegflag,
 	CallFilterFunc(edgesmp, limitdegflag, 
 		srcmodel, srcbone, srcopekind, srcmotid, srcstartframe, srcendframe);
 
-	::MessageBox(NULL, L"•½ŠŠ‰»‚ğÀs‚µ‚Ü‚µ‚½B", L"ˆ—I—¹", MB_OK);
+	::MessageBox(NULL, L"å¹³æ»‘åŒ–ã‚’å®Ÿè¡Œã—ã¾ã—ãŸã€‚", L"å‡¦ç†çµ‚äº†", MB_OK);
 
 	return 0;
 }
@@ -159,12 +159,12 @@ int CMotFilter::FilterNoDlg(bool edgesmp, bool limitdegflag,
 
 
 	//2023/02/27
-	//‚±‚Á‚¿‚Ì•û‚ªŒ`‚ª•Ï‚í‚ç‚È‚¢
+	//ã“ã£ã¡ã®æ–¹ãŒå½¢ãŒå¤‰ã‚ã‚‰ãªã„
 	//m_filtertype = AVGF_MOVING;
 	//m_filtersize = 9;
 
 
-	//2023/08/09 NoDlg‚Ìê‡‚Í@m_filtertype, m_filtersize‚Í‘O‰ñÀs‚Ì’l‚ğg—p‚·‚é
+	//2023/08/09 NoDlgã®å ´åˆã¯ã€€m_filtertype, m_filtersizeã¯å‰å›å®Ÿè¡Œæ™‚ã®å€¤ã‚’ä½¿ç”¨ã™ã‚‹
 	//m_filtertype = AVGF_WEIGHTED_MOVING;
 	if (m_filtertype == 0) {
 		m_filtertype = AVGF_GAUSSIAN;
@@ -184,7 +184,7 @@ int CMotFilter::CallFilterFunc(bool edgesmp, bool limitdegflag,
 	int srcopekind, int srcmotid, int srcstartframe, int srcendframe)
 {
 	int frameleng = srcendframe - srcstartframe + 1;
-	int bufleng = frameleng + m_filtersize * 2;//ƒTƒ“ƒvƒŠƒ“ƒO‚Í—¼’[‚Ém_fitersize•ª—]Œv‚É
+	int bufleng = frameleng + m_filtersize * 2;//ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã¯ä¸¡ç«¯ã«m_fitersizeåˆ†ä½™è¨ˆã«
 
 	m_eul = new ChaVector3[bufleng];
 	if (!m_eul) {
@@ -208,11 +208,11 @@ int CMotFilter::CallFilterFunc(bool edgesmp, bool limitdegflag,
 		return 1;
 	}
 
-	ZeroMemory(m_eul, sizeof(ChaVector3) * bufleng);//ƒTƒ“ƒvƒŠƒ“ƒO‚Í—¼’[‚Ém_fitersize•ª—]Œv‚É
-	ZeroMemory(m_tra, sizeof(ChaVector3) * bufleng);//ƒTƒ“ƒvƒŠƒ“ƒO‚Í—¼’[‚Ém_fitersize•ª—]Œv‚É
+	ZeroMemory(m_eul, sizeof(ChaVector3) * bufleng);//ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã¯ä¸¡ç«¯ã«m_fitersizeåˆ†ä½™è¨ˆã«
+	ZeroMemory(m_tra, sizeof(ChaVector3) * bufleng);//ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã¯ä¸¡ç«¯ã«m_fitersizeåˆ†ä½™è¨ˆã«
 
-	ZeroMemory(m_smootheul, sizeof(ChaVector3) * frameleng);//Œ‹‰Ê‚Ístartframe-->endframe
-	ZeroMemory(m_smoothtra, sizeof(ChaVector3) * frameleng);//Œ‹‰Ê‚Ístartframe-->endframe
+	ZeroMemory(m_smootheul, sizeof(ChaVector3) * frameleng);//çµæœã¯startframe-->endframe
+	ZeroMemory(m_smoothtra, sizeof(ChaVector3) * frameleng);//çµæœã¯startframe-->endframe
 
 
 	if (srcopekind == 1) {
@@ -286,7 +286,7 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 	if ((!cameraanimflag && curbone->IsSkeleton()) ||
 		(cameraanimflag && (curbone->IsCamera() || curbone->IsNullAndChildIsCamera()))) {
 		int frameleng = srcendframe - srcstartframe + 1;
-		int bufleng = frameleng + m_filtersize * 2;//ƒTƒ“ƒvƒŠƒ“ƒO‚Í—¼’[‚Ém_fitersize•ª—]Œv‚É
+		int bufleng = frameleng + m_filtersize * 2;//ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã¯ä¸¡ç«¯ã«m_fitersizeåˆ†ä½™è¨ˆã«
 
 		int motionleng;
 		MOTINFO curmi = srcmodel->GetMotInfo(srcmotid);
@@ -307,17 +307,17 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 
 		if (curbone) {
 
-			ZeroMemory(m_eul, sizeof(ChaVector3) * bufleng);//ƒTƒ“ƒvƒŠƒ“ƒO‚Í—¼’[‚Ém_fitersize•ª—]Œv‚É
-			ZeroMemory(m_tra, sizeof(ChaVector3) * bufleng);//ƒTƒ“ƒvƒŠƒ“ƒO‚Í—¼’[‚Ém_fitersize•ª—]Œv‚É
+			ZeroMemory(m_eul, sizeof(ChaVector3) * bufleng);//ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã¯ä¸¡ç«¯ã«m_fitersizeåˆ†ä½™è¨ˆã«
+			ZeroMemory(m_tra, sizeof(ChaVector3) * bufleng);//ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã¯ä¸¡ç«¯ã«m_fitersizeåˆ†ä½™è¨ˆã«
 
-			ZeroMemory(m_smootheul, sizeof(ChaVector3) * frameleng);//Œ‹‰Ê‚Ístartframe-->endframe
-			ZeroMemory(m_smoothtra, sizeof(ChaVector3) * frameleng);//Œ‹‰Ê‚Ístartframe-->endframe
+			ZeroMemory(m_smootheul, sizeof(ChaVector3) * frameleng);//çµæœã¯startframe-->endframe
+			ZeroMemory(m_smoothtra, sizeof(ChaVector3) * frameleng);//çµæœã¯startframe-->endframe
 
 			int bufindex = 0;
 			for (frame = (srcstartframe - m_filtersize); frame <= (srcendframe + m_filtersize); frame++) {
 				int smpframe;
 				if (edgesmp == false) {
-					//—¼’[•”•ª‚ÌƒTƒ“ƒvƒŠƒ“ƒO@©—R’[@•ÒW—Ìˆæ‚ÌŠO‚à(‚ ‚ê‚Î)ƒTƒ“ƒvƒŠƒ“ƒO
+					//ä¸¡ç«¯éƒ¨åˆ†ã®ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã€€è‡ªç”±ç«¯ã€€ç·¨é›†é ˜åŸŸã®å¤–ã‚‚(ã‚ã‚Œã°)ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
 					if ((frame >= 1) && (frame < motionleng)) {
 						smpframe = frame;
 					}
@@ -334,8 +334,8 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 				}
 				else {
 					//2023/03/05
-					//å‚É@ˆÊ’uƒRƒ“ƒXƒgƒŒƒCƒ“ƒg‚Ì‚Ì@ƒIƒvƒVƒ‡ƒ“‚Æ‚µ‚Äg—p‚·‚é—\’è
-					//—¼’[•”•ª‚ÌƒTƒ“ƒvƒŠƒ“ƒO@ŒÅ’è’[@•ÒW—Ìˆæ‚ÌŠO‚ÍƒTƒ“ƒvƒŠƒ“ƒO‚µ‚È‚¢
+					//ä¸»ã«ã€€ä½ç½®ã‚³ãƒ³ã‚¹ãƒˆãƒ¬ã‚¤ãƒ³ãƒˆã®æ™‚ã®ã€€ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã¨ã—ã¦ä½¿ç”¨ã™ã‚‹äºˆå®š
+					//ä¸¡ç«¯éƒ¨åˆ†ã®ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã€€å›ºå®šç«¯ã€€ç·¨é›†é ˜åŸŸã®å¤–ã¯ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã—ãªã„
 					if (frame < srcstartframe) {
 						smpframe = srcstartframe;
 					}
@@ -346,7 +346,7 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 						smpframe = frame;
 					}
 				}
-				ChaVector3 cureul = curbone->CalcLocalEulXYZ(limitdegflag, -1, srcmotid, (double)smpframe, BEFEUL_BEFFRAME);// axiskind = -1 --> m_anglelimit‚ÌÀ•WŒn
+				ChaVector3 cureul = curbone->CalcLocalEulXYZ(limitdegflag, -1, srcmotid, (double)smpframe, BEFEUL_BEFFRAME);// axiskind = -1 --> m_anglelimitã®åº§æ¨™ç³»
 				ChaVector3 curtra;
 				if (curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
 					ChaMatrix localmat = curbone->GetLocalMat(false, srcmotid, (double)smpframe, 0);
@@ -375,17 +375,17 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 			}
 
 
-			//•½ŠŠ‰»ˆ—
+			//å¹³æ»‘åŒ–å‡¦ç†
 			switch (m_filtertype) {
 			case AVGF_NONE:
-				//•½ŠŠˆ—‚È‚µ
+				//å¹³æ»‘å‡¦ç†ãªã—
 			{
 				MoveMemory((void*)m_smootheul, (void*)(m_eul + m_filtersize), sizeof(ChaVector3) * frameleng);
 				MoveMemory((void*)m_smoothtra, (void*)(m_tra + m_filtersize), sizeof(ChaVector3) * frameleng);
 			}
 			break;
 			case AVGF_MOVING:
-				//ˆÚ“®•½‹Ï
+				//ç§»å‹•å¹³å‡
 			{
 				int srcindex;
 				int dstindex = 0;
@@ -425,7 +425,7 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 			break;
 
 			case AVGF_WEIGHTED_MOVING:
-				//‰ÁdˆÚ“®•½‹Ï
+				//åŠ é‡ç§»å‹•å¹³å‡
 			{
 				double denomVal = 0.0;
 				float weightVal = 0.0;
@@ -475,7 +475,7 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 			break;
 
 			case AVGF_GAUSSIAN:
-				//ƒKƒEƒVƒAƒ“ 
+				//ã‚¬ã‚¦ã‚·ã‚¢ãƒ³ 
 			{
 				double normalizeVal = 0.0;
 				float normalDistVal = 0.0;
@@ -538,7 +538,7 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 					//curbone->SetWorldMatFromEul(0, 1, m_smootheul[frame - srcstartframe], srcmotid, (double)frame);
 
 
-					//•ÏX‘O‚Ìscalevec‚ğæ“¾
+					//å¤‰æ›´å‰ã®scalevecã‚’å–å¾—
 					ChaMatrix beflocalmat;
 					beflocalmat.SetIdentity();
 					if (curbone->GetParent(false)) {
@@ -563,7 +563,7 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 				else if (cameraanimflag && curbone->IsCamera() && curbone->GetParent(false)) {
 
 					//###########
-					//ƒJƒƒ‰ƒm[ƒh
+					//ã‚«ãƒ¡ãƒ©ãƒãƒ¼ãƒ‰
 					//###########
 
 					CMotionPoint* setmp = curbone->GetMotionPoint(srcmotid, (double)frame);
@@ -578,7 +578,7 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 				else if (cameraanimflag && curbone->IsNullAndChildIsCamera()) {
 
 					//###################################
-					//ƒJƒƒ‰ƒm[ƒh‚Ìe‚ÌƒAƒjƒ•t‚«eNullƒm[ƒh
+					//ã‚«ãƒ¡ãƒ©ãƒãƒ¼ãƒ‰ã®è¦ªã®ã‚¢ãƒ‹ãƒ¡ä»˜ãeNullãƒãƒ¼ãƒ‰
 					//###################################
 
 					CMotionPoint* setmp = curbone->GetMotionPoint(srcmotid, (double)frame);
@@ -630,15 +630,15 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 						ChaMatrix transmat;
 						transmat = befrot * diffrotmat * aftrot;
 
-						//ChaMatrix newlocalmat = befrot * smat * rmat * aftrot * tanimmat;//Œ³‚Ì’Ê‚è
-						//ChaMatrix newlocalmat = smat * rmat * tmat;//Œ³‚Ì’Ê‚è
+						//ChaMatrix newlocalmat = befrot * smat * rmat * aftrot * tanimmat;//å…ƒã®é€šã‚Š
+						//ChaMatrix newlocalmat = smat * rmat * tmat;//å…ƒã®é€šã‚Š
 						
-						ChaMatrix newlocalmat = befrot * smat * rmat * aftrot * tanimmat * transmat;//‰ñ“]‚¾‚¯ƒXƒ€[ƒWƒ“ƒO
+						ChaMatrix newlocalmat = befrot * smat * rmat * aftrot * tanimmat * transmat;//å›è»¢ã ã‘ã‚¹ãƒ ãƒ¼ã‚¸ãƒ³ã‚°
 
 
-						//¡Œã‚Ì‰Û‘èF@ƒJƒƒ‰‚ÌˆÚ“®‚àƒXƒ€[ƒWƒ“ƒO.
-						//ChaMatrix newlocalmat = befrot * smat * rmat * aftrot * tanimmat * transmat * difftraanimmat;//‰ñ“]’†S‚ªˆá‚¤
-						//ChaMatrix newlocalmat = befrot * smat * rmat * aftrot * tanimmat * difftraanimmat * transmat;//‰ñ“]’†S‚ªˆá‚¤
+						//ä»Šå¾Œã®èª²é¡Œï¼šã€€ã‚«ãƒ¡ãƒ©ã®ç§»å‹•ã‚‚ã‚¹ãƒ ãƒ¼ã‚¸ãƒ³ã‚°.
+						//ChaMatrix newlocalmat = befrot * smat * rmat * aftrot * tanimmat * transmat * difftraanimmat;//å›è»¢ä¸­å¿ƒãŒé•ã†
+						//ChaMatrix newlocalmat = befrot * smat * rmat * aftrot * tanimmat * difftraanimmat * transmat;//å›è»¢ä¸­å¿ƒãŒé•ã†
 
 
 						ChaMatrix newworldmat = newlocalmat * ChaMatrixInv(beflocalmat) * befworldmat;
@@ -648,8 +648,12 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 						setmp->SetLocalEul(seteul);
 					}
 					else {
-						_ASSERT(0);
-						return 1;
+						//_ASSERT(0);
+						//return 1;
+						
+						//2024/06/27
+						//è¤‡æ•°ã‚«ãƒ¡ãƒ©ãŒã‚ã‚‹å ´åˆã€å¯¾è±¡ã‚«ãƒ¡ãƒ©ä»¥å¤–ã®ã‚«ãƒ¡ãƒ©ã®ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ãƒã‚¤ãƒ³ãƒˆã¯ç„¡ã„ã®ãŒæ™®é€š
+						//ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ãƒã‚¤ãƒ³ãƒˆãŒç„¡ã„å ´åˆã¯Setã—ãªã„ãŒã€€å†å¸°å‡¦ç†ãŒç¶šãã‚ˆã†ã«æ­£å¸¸ãƒªã‚¿ãƒ¼ãƒ³ã™ã‚‹
 					}
 				}				
 			}
@@ -688,7 +692,7 @@ void CMotFilter::FilterReq(bool edgesmp, bool limitdegflag,
 
 
 
-//ƒKƒEƒVƒAƒ“ƒtƒBƒ‹ƒ^—p
+//ã‚¬ã‚¦ã‚·ã‚¢ãƒ³ãƒ•ã‚£ãƒ«ã‚¿ç”¨
 int CMotFilter::Combi(int n, int r) {
 	if (n < 0){
 		_ASSERT(0);

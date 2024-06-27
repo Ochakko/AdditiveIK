@@ -14986,8 +14986,11 @@ void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone,
 				}
 			}
 			else {
-				_ASSERT(0);
-				return;
+				//2024/06/27
+				//複数カメラがある場合、対象カメラ以外のカメラのモーションポイントは無いのが普通
+				//モーションポイントが無い場合は処理をしないが　再帰呼び出しはするように
+				//_ASSERT(0);
+				//return;
 			}
 		}
 
