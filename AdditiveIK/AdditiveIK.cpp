@@ -8460,7 +8460,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			ActivatePanel(0);
 			int selindex = menuid - 61000;
 			//OnModelMenu(true, selindex, 1);
-			bool forceflag = false;
+			bool forceflag = true;
 			bool callundo = true;
 			OnChangeModel(selindex, forceflag, callundo);
 			ActivatePanel(1);
@@ -11061,7 +11061,8 @@ int RetargetFile(char* fbxpath)
 			//OnModelMenu(false, s_convbone_model_batch_selindex, 1);
 			bool forceflag = true;//2024/06/26 各ダイアログ作成のためにforceflag必要
 			bool callundo = false;
-			OnChangeModel(s_convbone_model_batch_selindex, forceflag, callundo);
+			//OnChangeModel(s_convbone_model_batch_selindex, forceflag, callundo);
+			OnChangeModel(s_convbone_model_batch, forceflag, callundo);
 
 			s_model = s_convbone_model_batch;
 			s_convbone_model = s_convbone_model_batch;
@@ -11888,10 +11889,10 @@ CModel* OpenMQOFile()
 			return 0;
 		}
 	}
-	if (s_model && (s_curmodelmenuindex >= 0) && s_chascene && (s_chascene->GetModelNum() != 0)) {
-		s_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
-		s_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
-	}
+	//if (s_model && (s_curmodelmenuindex >= 0) && s_chascene && (s_chascene->GetModelNum() != 0)) {
+	//	s_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
+	//	s_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
+	//}
 
 	DestroyTimeLine(1);
 
@@ -12148,10 +12149,10 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 			return 0;
 		}
 	}
-	if (s_model && (s_curmodelmenuindex >= 0) && s_chascene && (s_chascene->GetModelNum() != 0)) {
-		s_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
-		s_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
-	}
+	//if (s_model && (s_curmodelmenuindex >= 0) && s_chascene && (s_chascene->GetModelNum() != 0)) {
+	//	s_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
+	//	s_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
+	//}
 
 
 
@@ -12278,13 +12279,13 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 
 	//CalcTotalBound();//下で呼んでる
 
-	if (s_chascene) {
-		s_chascene->SetTimelineArray(mindex, s_tlarray);
-		s_chascene->SetLineno2Boneno(mindex, s_lineno2boneno, s_boneno2lineno);
-	}
-	else {
-		_ASSERT(0);
-	}
+	//if (s_chascene) {
+	//	s_chascene->SetTimelineArray(mindex, s_tlarray);
+	//	s_chascene->SetLineno2Boneno(mindex, s_lineno2boneno, s_boneno2lineno);
+	//}
+	//else {
+	//	_ASSERT(0);
+	//}
 
 
 
@@ -12376,14 +12377,15 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 		int lastmotid = -1;
 		int motnum = s_model->GetMotInfoSize();
 		if (motnum > 0) {
-			int motno;
-			for (motno = 0; motno < motnum; motno++) {
+			int motindex;
+			for (motindex = 0; motindex < motnum; motindex++) {
 
 				//WCHAR strchk[256] = { 0L };
 				//swprintf_s(strchk, 256, L"check 3 : %d / %d", motno, motnum);
 				//::MessageBox(g_mainhwnd, strchk, L"check!!!", MB_OK);
 
-				MOTINFO curmi = s_model->GetMotInfo(motno + 1);
+				//MOTINFO curmi = s_model->GetMotInfo(motno + 1);
+				MOTINFO curmi = s_model->GetMotInfoByIndex(motindex);//2024/06/27
 				if (curmi.motid > 0) {
 					lastmotid = curmi.motid;
 					s_model->SetCurrentMotion(lastmotid);
@@ -12391,7 +12393,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 					// 
 					//Main.cppのOnAddMotion()は　メニューの追加のみ
 					//
-					OnAddMotion(curmi.motid, (motno == (motnum - 1)));//最後のモーション!!!!!! 2021/08/19
+					OnAddMotion(curmi.motid, (motindex == (motnum - 1)));//最後のモーション!!!!!! 2021/08/19
 
 					if (s_nowloading && s_3dwnd) {
 						OnRenderNowLoading();
@@ -12711,7 +12713,7 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 	//EraseKeyList();
 	////if (s_model && s_model->GetBoneListSize() > 0) {
 	//if (s_model && (s_model->GetBoneForMotionSize() > 0)) {
-	if (s_model) {
+	if (s_model && s_chascene) {
 		if (!s_owpTimeline) {
 			//OWP_Timeline* owpTimeline = 0;
 			//タイムラインのGUIパーツを生成
@@ -12771,21 +12773,22 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 		}
 
 		if (s_owpTimeline) {
-			int nextindex;
-			nextindex = (int)s_tlarray.size();
-
-			TLELEM newtle;
-			newtle.menuindex = nextindex;
-			newtle.motionid = newmotid;
-			s_tlarray.push_back(newtle);
-
-			//2022/08/21
 			int currentmodelindex = FindModelIndex(s_model);
-			if (s_chascene && (currentmodelindex >= 0)) {
-				s_chascene->SetTimelineArray(currentmodelindex, s_tlarray);
-			}
+			if (currentmodelindex >= 0) {
+				//#######################################################
+				//2024/06/27 s_tlarrayの操作前にカレントモデルのtlarrayを取得
+				//#######################################################
+				s_chascene->GetTimelineArray(currentmodelindex, s_tlarray);
 
-			if (s_model) {
+				int nextindex;
+				nextindex = (int)s_tlarray.size();
+
+				TLELEM newtle;
+				newtle.menuindex = nextindex;
+				newtle.motionid = newmotid;
+				s_tlarray.push_back(newtle);
+
+				s_chascene->SetTimelineArray(currentmodelindex, s_tlarray);
 				s_model->SetCurrentMotion(newmotid);
 			}
 		}
@@ -14495,18 +14498,19 @@ int OnChangeModel(CModel* selmodel, bool forceflag, bool callundo)
 	}
 
 
-	int modelnum = s_chascene->GetModelNum();
-	int modelindex;
-	int selmodelindex = -1;
-	for (modelindex = 0; modelindex < modelnum; modelindex++) {
-		CModel* chkmodel = s_chascene->GetModel(modelindex);
-		if (chkmodel && (chkmodel == selmodel)) {
-			selmodelindex = modelindex;
-			break;
-		}
-	}
+	//int modelnum = s_chascene->GetModelNum();
+	//int modelindex;
+	//int selmodelindex = -1;
+	//for (modelindex = 0; modelindex < modelnum; modelindex++) {
+	//	CModel* chkmodel = s_chascene->GetModel(modelindex);
+	//	if (chkmodel && (chkmodel == selmodel)) {
+	//		selmodelindex = modelindex;
+	//		break;
+	//	}
+	//}
+	int selmodelindex = FindModelIndex(selmodel);
 
-	if ((selmodelindex >= 0) && (selmodelindex < modelnum)) {
+	if (selmodelindex >= 0) {
 		ActivatePanel(0);
 		OnModelMenu(true, selmodelindex, 1);
 		ActivatePanel(1);
@@ -14539,12 +14543,12 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 	}
 	s_oprigflag = 0;
 
-	if (callbymenu == 1) {
-		if (s_model && (s_curmodelmenuindex >= 0) && s_chascene && (s_chascene->GetModelNum() != 0)) {
-			s_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
-			s_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
-		}
-	}
+	//if (callbymenu == 1) {
+	//	if (s_model && (s_curmodelmenuindex >= 0) && s_chascene && (s_chascene->GetModelNum() != 0)) {
+	//		s_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
+	//		s_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
+	//	}
+	//}
 
 	s_curmodelmenuindex = selindex;
 
@@ -20404,6 +20408,12 @@ int RetargetMotion()
 	s_convbone_model->UpdateMatrix(false, &modelwm, &s_matView, &s_matProj, true, 0);
 	ChaMatrix bvhwm = s_convbone_bvh->GetWorldMat();
 	s_convbone_bvh->UpdateMatrix(false, &bvhwm, &s_matView, &s_matProj, true, 0);
+
+
+
+	bool forceflag = true;
+	bool callundo = false;
+	OnChangeModel(s_convbone_model, forceflag, callundo);
 
 
 
@@ -50434,7 +50444,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			ActivatePanel(0);
 			int selindex = menuid - 61000;
 			//OnModelMenu(true, selindex, 1);
-			bool forceflag = false;
+			bool forceflag = true;
 			bool callundo = true;
 			OnChangeModel(selindex, forceflag, callundo);
 			ActivatePanel(1);
@@ -53625,7 +53635,7 @@ void DSSelectCharactor()
 
 			s_modelpanel.modelindex = nextmodelindex;
 			//OnModelMenu(true, s_modelpanel.modelindex, 1);
-			bool forceflag = false;
+			bool forceflag = true;
 			bool callundo = true;
 			OnChangeModel(s_modelpanel.modelindex, forceflag, callundo);
 			s_modelpanel.panel->callRewrite();
