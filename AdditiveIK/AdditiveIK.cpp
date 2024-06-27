@@ -14780,8 +14780,10 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 
 		//if (!g_bvh2fbxbatchflag && !g_motioncachebatchflag && !g_retargetbatchflag) {
 		//if ((InterlockedAdd(&g_bvh2fbxbatchflag, 0) == 0) && (InterlockedAdd(&g_motioncachebatchflag, 0) == 0) && (InterlockedAdd(&g_retargetbatchflag, 0) == 0)) {
-		if ((s_dispconvbone == true) &&
-			(InterlockedAdd(&g_bvh2fbxbatchflag, 0) == 0) && (InterlockedAdd(&g_retargetbatchflag, 0) == 0)) {
+		if (!s_retargetguiFlag && //2024/06/27 GUIからのリターゲット実行中に設定を初期化しないようにスキップ
+			((s_dispconvbone == true) && 
+			(InterlockedAdd(&g_bvh2fbxbatchflag, 0) == 0) && (InterlockedAdd(&g_retargetbatchflag, 0) == 0))
+			) {
 			CreateConvBoneWnd();//!!!!!!!!!!!!! モデル選択変更によりリターゲットウインドウ作り直し
 		}
 
@@ -20411,9 +20413,10 @@ int RetargetMotion()
 
 
 
-	bool forceflag = true;
-	bool callundo = false;
-	OnChangeModel(s_convbone_model, forceflag, callundo);
+	//2024/06/27 呼んでもエラーにならないようにしたが　冗長なのでコメントアウト
+	//bool forceflag = true;
+	//bool callundo = false;
+	//OnChangeModel(s_convbone_model, forceflag, callundo);
 
 
 
