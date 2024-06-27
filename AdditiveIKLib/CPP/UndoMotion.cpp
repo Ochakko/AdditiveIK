@@ -152,8 +152,11 @@ int CUndoMotion::SaveUndoMotion(UNDOSELECT srcundoselect,
 	m_undomotid.curmotid = m_undomotid.bonemotid;
 
 	if (!undocameraflag) {
+
 		pcameramodel = srcundocamera.cameramodel;
-		m_undomotid.cameramotid = pcameramodel->GetCameraMotionId();
+		if (pcameramodel) {//2024/06/27
+			m_undomotid.cameramotid = pcameramodel->GetCameraMotionId();
+		}
 
 		if (m_undomotid.bonemotid <= 0) {
 			return 2;
