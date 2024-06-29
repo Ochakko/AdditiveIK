@@ -13042,6 +13042,7 @@ int UpdateEditedEuler()
 
 			}
 
+			s_owpEulerGraph->MakePointBuf();//2024/06/29
 			//_ASSERT(0);
 			s_owpEulerGraph->callRewrite();
 			//s_owpEulerGraph->draw();
@@ -13472,7 +13473,7 @@ int refreshEulerGraph()
 						s_owpEulerGraph->newKey(needCallRewrite, _T("S"), (double)scaleindex, curscalevalue);//newkey
 					}
 				}
-
+				s_owpEulerGraph->MakePointBuf();//2024/06/29
 				s_owpEulerGraph->callRewrite();
 			}
 		}
@@ -50830,7 +50831,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.25 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.26 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -59202,7 +59203,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.25 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.26 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (s_model && s_chascene) {

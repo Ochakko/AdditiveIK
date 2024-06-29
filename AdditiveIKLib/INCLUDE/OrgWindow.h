@@ -6455,6 +6455,7 @@ void s_dummyfunc()
 			int minselected;//2022/09/12 : key[].selectの検索ヒント
 			int maxselected;//2022/09/12 : key[].selectの検索ヒント
 
+
 			//////////////////////////// Method //////////////////////////////
 			//	Method : 描画
 			virtual void callRewrite();
@@ -8270,13 +8271,28 @@ void s_dummyfunc()
 			return maxTime;
 		}
 		void setMaxTime(double _maxTime) {
-			maxTime = max(_maxTime, 0);
-			currentTime = min(currentTime, maxTime);
+			//maxTime = max(_maxTime, 0);
+			//currentTime = min(currentTime, maxTime);
+			maxTime = max(_maxTime, 1.0);
+			currentTime = max(1.0, min(currentTime, maxTime));
 
 			//再描画要求
 			if (rewriteOnChange) {
 				callRewrite();
 			}
+		}
+		int MakePointBuf()
+		{
+			int showLineNum = 4;
+			int drawnum = min((int)lineData.size(), showLineNum);
+			for (int i = 0; i < drawnum; i++) {
+				lineData[i]->MakePointBuf(
+					pos.x + MARGIN,
+					pos.y,
+					size.x - SCROLL_BAR_WIDTH - MARGIN * 2,
+					timeSize, showPos_time);
+			}
+			return 0;
 		}
 		/// Accessor : timeSnapSize
 		double getTimeSnapSize() const {
@@ -8496,6 +8512,10 @@ void s_dummyfunc()
 				maxselected = 0;
 				key.clear();
 				//InitEulKeys();
+
+				pointbufleng = 0;
+				setpointnum = 0;
+				pointbuf = nullptr;
 			};
 			//EulLineData(const EulLineData& a) {
 			//	_ASSERT_EXPR(0, L"コピーコンストラクタは使えません");
@@ -8506,6 +8526,13 @@ void s_dummyfunc()
 					//delete (*it);
 					(*it)->InvalidateEulKeys();
 				}
+
+				if (pointbuf) {
+					free(pointbuf);
+					pointbuf = nullptr;
+				}
+				pointbufleng = 0;
+				setpointnum = 0;
 
 				//DestroyEulKeys();
 
@@ -8643,10 +8670,168 @@ void s_dummyfunc()
 			int minselected;//2022/09/12 : key[].selected検索のヒント
 			int maxselected;//2022/09/12 : key[].selected検索のヒント
 
+			int pointbufleng;//2024/06/29 for GDI Polyline()
+			int setpointnum;//2024/06/29 for GDI Polyline()
+			POINT* pointbuf;//2024/06/29 for GDI Polyline()
+
 
 			int getValue(double srcframe, double* dstvalue);
 
 			//////////////////////////// Method //////////////////////////////
+			int CalcEulRange(int y0, bool* sgraph, double* eulrange, int* y2) {
+				if (!sgraph || !eulrange || !y2) {
+					_ASSERT(0);
+					return 1;
+				}
+
+				if (wcscmp(L"X", name.c_str()) == 0) {
+					*sgraph = false;
+					*eulrange = abs(parent->maxeul - parent->mineul) / parent->getDispScale();
+					*y2 = y0 + (int)parent->getDispOffset();
+
+				}
+				else if (wcscmp(L"Y", name.c_str()) == 0) {
+					*sgraph = false;
+					*eulrange = abs(parent->maxeul - parent->mineul) / parent->getDispScale();
+					*y2 = y0 + (int)parent->getDispOffset();
+				}
+				else if (wcscmp(L"Z", name.c_str()) == 0) {
+					*sgraph = false;
+					*eulrange = abs(parent->maxeul - parent->mineul) / parent->getDispScale();
+					*y2 = y0 + (int)parent->getDispOffset();
+				}
+				else if (wcscmp(L"S", name.c_str()) == 0) {
+					*sgraph = true;
+					*eulrange = abs(parent->maxeul - parent->mineul) * 1.0;//scale 1.0
+					*y2 = y0;//MotionBrushは初期位置
+				}
+				else {
+					*sgraph = false;
+					*eulrange = abs(parent->maxeul - parent->mineul) * 1.0;//scale 1.0
+					*y2 = y0;//MotionBrushは初期位置
+				}
+
+				if (*eulrange < 1.0) {
+					*eulrange = 1.0;
+				}
+
+				return 0;
+			};
+
+			int MakePointBuf(
+				int posX, int posY,
+				int width,
+				double timeSize,
+				double startTime) {
+
+				if (!parent) {
+					_ASSERT(0);
+					return 1;
+				}
+				if (parent->maxTime < 1.0) {
+					_ASSERT(0);
+					return 1;
+				}
+
+				int newpointbufleng = IntTime(parent->maxTime);
+				if ((newpointbufleng > 0) && (newpointbufleng != pointbufleng)) {
+					if (pointbuf) {
+						free(pointbuf);
+						pointbuf = nullptr;
+					}
+					pointbuf = (POINT*)malloc(sizeof(POINT) * newpointbufleng);
+					if (!pointbuf) {
+						_ASSERT(0);
+						abort();
+					}
+					pointbufleng = newpointbufleng;
+				}
+				setpointnum = 0;
+
+				return SetPointBuf(posX, posY, width, timeSize, startTime);
+			};
+
+			int SetPointBuf(
+				int posX, int posY,
+				int width,
+				double timeSize,
+				double startTime
+			) {
+				if (!pointbuf) {
+					return 1;
+				}
+				if (pointbufleng <= 0) {
+					return 1;
+				}
+				if (pointbufleng < setpointnum) {
+					return 1;
+				}
+				setpointnum = 0;
+
+				int x0 = posX;
+				int x1 = posX + parent->LABEL_SIZE_X;
+				int x2 = posX + width;
+				int y0 = posY;
+				int y1 = posY + parent->GRAPH_SIZE_Y;
+
+				double eulmargin = 10.0;
+				double eulrange;
+				int y2;
+				bool sgraph = false;
+				CalcEulRange(y0, &sgraph, &eulrange, &y2);
+
+				int startindex;
+				startindex = getKeyIndex(startTime);
+
+				int currentkeynum = (int)key.size();
+				int currenttimeindex = getKeyIndex(parent->currentTime);
+
+				int endkey;// = min(currentkeynum, (startindex + 1));
+				endkey = currentkeynum - 1;
+
+				int drawpointnum = endkey - startindex + 1;
+				if (drawpointnum > pointbufleng) {
+					_ASSERT(0);
+					return 1;
+				}
+
+				for (int i = startindex; i <= endkey; i++) {
+					double keytime = key[i]->time;
+					if ((keytime - startTime) < 0.0) {
+						continue;
+					}
+					//valueが増える方向を上方向に。座標系は下方向にプラス。
+					//int ey0 = (parent->maxeul - key[i]->value) / (eulrange + 2.0 * eulmargin) * (y1 - y0) + y0;
+					int ey0 = (int)((parent->maxeul - key[i]->value) / eulrange * ((double)y1 - (double)y0) + (double)y2);
+					int ey1 = ey0 + DOT_SIZE_Y;
+
+					int ex0 = (int)((keytime - startTime) * timeSize) + x1;
+					int ex1 = ex0 + DOT_SIZE_X;
+
+					if (ex1 > (x2 + DOT_SIZE_X)) {
+						break;
+					}
+					if (ey0 < y0) {
+						continue;
+					}
+					if (ex0 >= x1) {
+						(pointbuf + setpointnum)->x = ex0;
+						(pointbuf + setpointnum)->y = ey0;
+						setpointnum++;
+					}
+					else {
+						_ASSERT(0);
+						return 1;
+					}
+				}
+
+				if (pointbufleng < setpointnum) {
+					return 1;
+				}
+
+				return 0;
+			};
+
 			//	Method : 描画
 			void draw(HDCMaster *hdcM,
 				int posX, int posY,
@@ -8676,214 +8861,61 @@ void s_dummyfunc()
 				int y0 = posY;
 				int y1 = posY + parent->GRAPH_SIZE_Y;
 
-				
-
 				if (parent->isseteulminmax == false) {
 					return;
 				}
 
-
-				//if (highLight) {
-				//	hdcM->setPenAndBrush(NULL, RGB(min(baseR + 20, 255), min(baseG + 20, 255), min(baseB + 20, 255)));
-				//	Rectangle(hdcM->hDC, x0, y0, x1, y1);
-				//}
-
-
-
-				//TextOut(hdcM->hDC,
-				//	posX + 2, posY + parent->LABEL_SIZE_Y / 2 - 5,
-				//	prname.c_str(), (int)_tcslen(prname.c_str()));
-
-				//TextOut( hdcM->hDC,
-				//		 posX+2, posY+parent->LABEL_SIZE_Y/2-5,
-				//		 name.c_str(), _tcslen(name.c_str()));
-
-				//枠
-				//if (wcscmp(L"X", name.c_str()) == 0) {
-					//hdcM->setPenAndBrush(RGB(min(baseR + 20, 255), min(baseG + 20, 255), min(baseB + 20, 255)), NULL);
-					//Rectangle(hdcM->hDC, x0, y0, x2, y1);
-					//hdcM->setPenAndBrush(RGB(min(baseR + 20, 255), min(baseG + 20, 255), min(baseB + 20, 255)), RGB(baseR, baseG, baseB));
-					//Rectangle(hdcM->hDC, x1 - 2, y0, x1 + 1, y1);
-					//Rectangle(hdcM->hDC, x1, y0, x2, y1);
-					//int x3 = (int)((parent->maxTime - startTime)*timeSize) + x1 + 2;		//maxTime
-					//if (x1 <= x3 && x3 <= x2) {
-					//	MoveToEx(hdcM->hDC, x3, y0, NULL);
-					//	LineTo(hdcM->hDC, x3, y1);
-					//}
-					//if (x1 <= x3 + 2 && x3 + 2 <= x2) {
-					//	MoveToEx(hdcM->hDC, x3 + 2, y0, NULL);
-					//	LineTo(hdcM->hDC, x3 + 2, y1);
-					//}
-					//int x4 = (int)((parent->currentTime - startTime)*timeSize) + x1 + 1;		//currentTime
-					//if (x1 <= x4 && x4 < x2) {
-					//	MoveToEx(hdcM->hDC, x4, y0, NULL);
-					//	LineTo(hdcM->hDC, x4, y1);
-					//}
-				//}
-
-				//ゴーストキー
 				x1++; x2--;
 				y0++; y1--;
-				//for (int i = 0; i<(int)key.size(); i++) {
-				//	int xx0 = (int)((key[i]->time - startTime + parent->ghostShiftTime)*timeSize) + x1;
-				//	int xx1 = (int)(key[i]->length*timeSize) + xx0 + 1;
-
-				//	if (x2 <= xx0) {
-				//		break;
-				//	}
-				//	if (x1 <= xx1 && key[i]->select) {
-
-				//		if (x1 <= xx1 - 1 && xx0 + 1 <= x2) {
-
-				//			hdcM->setPenAndBrush(NULL, RGB(min(baseR + 20, 255), min(baseG + 20, 255), min(baseB + 20, 255)));
-				//			Rectangle(hdcM->hDC, max(xx0 + 1, x1), y0 + 1, min(xx1 - 1, x2), y1 - 1);
-
-				//		}
-
-				//		if (x1 <= xx0) {
-				//			hdcM->setPenAndBrush(RGB(baseR, baseG, baseB), NULL);
-				//			MoveToEx(hdcM->hDC, xx0, y0, NULL);
-				//			LineTo(hdcM->hDC, xx0, y1);
-				//		}
-
-				//	}
-				//}
 
 				double eulmargin = 10.0;
 
 				double eulrange;
 				int y2;
-
 				bool sgraph = false;
+				CalcEulRange(y0, &sgraph, &eulrange, &y2);
+
 
 				//キー
 				if (wcscmp(L"X", name.c_str()) == 0) {
-					sgraph = false;
-
-					//hdcM->setPenAndBrush(NULL, RGB(255, 0, 0));
 					hdcM->setPenAndBrush(NULL, RGB(255, 128, 128));
-					eulrange = abs(parent->maxeul - parent->mineul) / parent->getDispScale();
-					y2 = y0 + (int)parent->getDispOffset();
-
 				}
 				else if (wcscmp(L"Y", name.c_str()) == 0) {
-					sgraph = false;
-
 					hdcM->setPenAndBrush(NULL, RGB(0, 255, 0));
-					eulrange = abs(parent->maxeul - parent->mineul) / parent->getDispScale();
-					y2 = y0 + (int)parent->getDispOffset();
 				}
 				else if (wcscmp(L"Z", name.c_str()) == 0) {
-					sgraph = false;
-
-					//hdcM->setPenAndBrush(NULL, RGB(0, 0, 255));
-					//hdcM->setPenAndBrush(NULL, RGB(0, 128, 255));
 					hdcM->setPenAndBrush(NULL, RGB(150, 200, 255));
-					eulrange = abs(parent->maxeul - parent->mineul) / parent->getDispScale();
-					y2 = y0 + (int)parent->getDispOffset();
 				}
 				else if (wcscmp(L"S", name.c_str()) == 0) {
-					sgraph = true;
-
-					//2022/10/20 CommentOut : スケールの色で選択範囲の両端に垂直線を引くために　returnしないことに
-					//if ((g_previewFlag) != 0 && (g_previewFlag != 5)) {
-					//	return;//!!!!!!!!!!!!!!! preview時にはブラシラインは表示しない
-					//}
-
 					hdcM->setPenAndBrush(NULL, RGB(255, 255, 255));
-					eulrange = abs(parent->maxeul - parent->mineul) * 1.0;//scale 1.0
-					y2 = y0;//MotionBrushは初期位置
 				}
 				else {
 					hdcM->setPenAndBrush(NULL, RGB(min(baseR + 20, 255), min(baseG + 20, 255), min(baseB + 20, 255)));
-					eulrange = abs(parent->maxeul - parent->mineul) * 1.0;//scale 1.0
-					y2 = y0;//MotionBrushは初期位置
 				}
 
-				//if (eulrange < 10.0) {
-				//	eulrange = 10.0;
-				//}
-				if (eulrange < 1.0) {
-					eulrange = 1.0;
-				}
-
-
-				bool firstdrawflag = true;
 				int startindex;// = getKeyIndex(startTime);
-				if ((g_previewFlag == 0) || (g_previewFlag == 5) || g_preciseOnPreviewToo) {
+				//if ((g_previewFlag == 0) || (g_previewFlag == 5) || g_preciseOnPreviewToo) {
 					startindex = getKeyIndex(startTime);
-				}
-				else {
-					startindex = max(0, (getKeyIndex(parent->currentTime) - KEYNUM_ONPREVIEW * 2));
-				}
+				//}
+				//else {
+				//	startindex = max(0, (getKeyIndex(parent->currentTime) - KEYNUM_ONPREVIEW * 2));
+				//}
 
+
+				//#######################
+				//オイラーグラフのライン描画
+				//#######################
 				//スケール表示時　再生中はSグラフ非表示　ただし下方コードにて　両端の垂直ラインは描画
 				if ((startindex >= 0) && !(sgraph && (g_previewFlag != 0) && (g_previewFlag != 5))) {
-					int currentkeynum = (int)key.size();
-					int currenttimeindex = getKeyIndex(parent->currentTime);
-
-					//int endkey = min(currentkeynum, (startindex + (int)parent->showPos_width));
-					int endkey;// = min(currentkeynum, (startindex + 1));
-					if ((g_previewFlag == 0) || (g_previewFlag == 5)) {
-						endkey = currentkeynum - 1;
-					}
-					else {
-						//endkey = min(currentkeynum, (startindex + KEYNUM_ONPREVIEW));
-						endkey = min((currentkeynum - 1), currenttimeindex);
-					}
-
-					//for (int i = startindex; i < currentkeynum; i++) {
-					for (int i = startindex; i <= endkey; i++) {
-						//for (int i = 0; i < (int)key.size(); i++) {
-
-						double keytime = key[i]->time;
-
-						if ((keytime - startTime) < 0.0) {
-							continue;
-							//break;
-						}
-
-						//valueが増える方向を上方向に。座標系は下方向にプラス。
-						//int ey0 = (parent->maxeul - key[i]->value) / (eulrange + 2.0 * eulmargin) * (y1 - y0) + y0;
-						int ey0 = (int)((parent->maxeul - key[i]->value) / eulrange * ((double)y1 - (double)y0) + (double)y2);
-						int ey1 = ey0 + DOT_SIZE_Y;
-
-						int ex0 = (int)((keytime - startTime) * timeSize) + x1;
-						int ex1 = ex0 + DOT_SIZE_X;
-
-						if (ex1 > (x2 + DOT_SIZE_X)) {
-							break;
-						}
-
-						
-						if (ey0 < y0) {
-							continue;
-						}
-
-						//if (key[i]->select) {
-						//}
-						//Rectangle(hdcM->hDC, max(ex0 + 2, ex1), ey0 + 2, min(ex1 - 2, x2), ey1 - 2);
-
-						if (ex0 >= x1) {
-							if (firstdrawflag == true) {
-								MoveToEx(hdcM->hDC, ex0, ey0, NULL);
-								firstdrawflag = false;
-							}
-							else {
-								LineTo(hdcM->hDC, ex0, ey0);//2022/09/13 RectangleよりもLineToの方が描画が速い
-							}
-
-							//Rectangle(hdcM->hDC, ex0, ey0, ex1, ey1);
-						}
-						else {
-							_ASSERT(0);
-						}
+					int result = SetPointBuf(posX, posY, width, timeSize, startTime);//2024/06/29
+					if (result == 0) {
+						Polyline(hdcM->hDC, pointbuf, setpointnum);//2024/06/29　ライン一括描画
 					}
 				}
 
 
-			//Ellipse and line at current.
-			//カレント位置に丸マーク　カレント位置に垂直ライン
+				//Ellipse and line at current.
+				//カレント位置に丸マーク　カレント位置に垂直ライン
 				{
 					double keytime = parent->currentTime;
 					int currentindex = getKeyIndex(keytime);
@@ -8917,8 +8949,8 @@ void s_dummyfunc()
 					}
 				}
 
-			//Lines at both of edge
-			//選択両端に　垂直ライン
+				//Lines at both of edge
+				//選択両端に　垂直ライン
 				if (sgraph) {
 
 					int edgeindex;

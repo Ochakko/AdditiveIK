@@ -2,6 +2,19 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+
+2024/06/30
+　オイラーグラフのラインを一括描画、プレビュー中も全範囲表示
+　　LineTo()を複数回呼び出す方法をやめて、Polyline()関数で一括描画することにより表示高速化
+　　プレビュー時にも全範囲表示しても、以前の省略描画速度と同じくらいの描画速度に
+
+
+
+
+
+
+
 2024/06/28
 　AdditiveIK 1.0.0.25 release
 　　1.0.0.24からの変更点
