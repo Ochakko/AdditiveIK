@@ -1886,12 +1886,13 @@ static OWP_Label* s_blendshapeemptyLabel = 0;
 static OWP_Separator* s_blendshapedistsp = 0;
 static OWP_Label* s_blendshapedistLabel = 0;
 static OWP_Slider* s_blendshapedistSlider = 0;
-static std::vector<OWP_Label*> s_blendshapeLabel;
+static std::vector<OWP_Button*> s_blendshapeButton;
 static std::vector<OWP_Slider*> s_blendshapeSlider;
 static std::vector<CBlendShapeElem> s_blendshapeelemvec;
 static int s_blendshapelinenum = 0;
 static bool s_blendshapeUnderEdit = false;
 static bool s_blendshapePostEdit = false;
+static bool s_blendshapeUnderSelect = false;
 static int s_blendshapeOpeIndex = 0;
 static float s_blendshapeBefore = 0.0f;
 static float s_blendshapeAfter = 0.0f;
@@ -4828,7 +4829,7 @@ void InitApp()
 		s_blendshapedistLabel = 0;
 		s_blendshapedistSlider = 0;
 
-		s_blendshapeLabel.clear();
+		s_blendshapeButton.clear();
 		s_blendshapeSlider.clear();
 		s_blendshapeelemvec.clear();
 		s_blendshapelinenum = 0;
@@ -4840,6 +4841,7 @@ void InitApp()
 		s_blendshapeOpeIndex = 0;
 		s_blendshapeUnderEdit = false;
 		s_blendshapePostEdit = false;
+		s_blendshapeUnderSelect = false;
 	}
 
 
@@ -13200,6 +13202,7 @@ int UpdateEditedEuler()
 
 			}
 
+			s_owpEulerGraph->MakePointBuf();//2024/06/29
 			//_ASSERT(0);
 			s_owpEulerGraph->callRewrite();
 			//s_owpEulerGraph->draw();
@@ -13328,6 +13331,7 @@ int refreshEulerGraph()
 				}
 			}
 
+			s_owpEulerGraph->MakePointBuf();//2024/06/29
 			s_owpEulerGraph->callRewrite();
 		}
 		else {
@@ -14383,9 +14387,13 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 				ApplyNewLimitsToWM(s_model);
 			}
 
-
+			if (s_spguisw[SPGUISW_BLENDSHAPE].state) {
+				//2024/06/30 モデル切替モーション切り替え時に　BlendShapeの操作中ターゲットのグラフを表示
+				s_blendshapeUnderSelect = true;
+			}
 		}
 	}
+
 
 	if (s_owpTimeline && dorefreshflag) {
 		//タイムラインのキーを設定
@@ -14440,6 +14448,21 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 
 
 	s_underselectmotion = false;
+
+
+	{
+		//2024/06/30
+		//モーションを切り替えた際に　グラフ上のフレーム選択は引き継がれていたが　モーフ編集するとカレントフレームしかしない状態だったので対策
+		s_buttonselectstart = g_motionbrush_startframe;
+		s_buttonselectend = g_motionbrush_endframe;
+		OnTimeLineButtonSelectFromSelectStartEnd(s_buttonselecttothelast);
+		int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
+		if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
+			_ASSERT(0);
+			::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+			PostQuitMessage(result);
+		}
+	}
 
 
 	if (s_model->GetInitAxisMatX() == 0) {//OnAnimMenuに移動
@@ -41803,13 +41826,13 @@ int CreateBlendShapeWnd()
 static OrgWindow* s_blendshapeWnd = 0;
 static OWP_ScrollWnd* s_blendshapeSCWnd = 0;
 static OWP_Separator* s_blendshapesp0 = 0;
-static std::vector<OWP_Label*> s_blendshapeLabel;
+static std::vector<OWP_Button*> s_blendshapeButton;
 static std::vector<OWP_Slider*> s_blendshapeSlider;
 static std::vector<CBlendShapeElem> s_blendshapeelemvec;
 static int s_blendshapelinenum = 0;
 */
 
-		s_blendshapeLabel.clear();
+		s_blendshapeButton.clear();
 		s_blendshapeSlider.clear();
 		s_blendshapeelemvec.clear();
 
@@ -41996,12 +42019,12 @@ static int s_blendshapelinenum = 0;
 				}
 
 				int sliderheight = 20;
-				OWP_Label* newlabel = new OWP_Label(strlabel, sliderheight);//左右カラムの高さ合わせ
-				if (!newlabel) {
+				OWP_Button* newbutton = new OWP_Button(strlabel, sliderheight);//左右カラムの高さ合わせ
+				if (!newbutton) {
 					_ASSERT(0);
 					return 1;
 				}
-				s_blendshapeLabel.push_back(newlabel);
+				s_blendshapeButton.push_back(newbutton);
 
 			}
 			else {
@@ -42011,18 +42034,18 @@ static int s_blendshapelinenum = 0;
 		}
 
 		{
-			int labelnum = (int)s_blendshapeLabel.size();
+			int labelnum = (int)s_blendshapeButton.size();
 			int slidernum = (int)s_blendshapeSlider.size();
 			if (labelnum == slidernum) {
 				int guino;
 				for (guino = 0; guino < labelnum; guino++) {
-					OWP_Label* addlabel = s_blendshapeLabel[guino];
+					OWP_Button* addbutton = s_blendshapeButton[guino];
 					OWP_Slider* addslider = s_blendshapeSlider[guino];
-					if (!addlabel || !addslider) {
+					if (!addbutton || !addslider) {
 						_ASSERT(0);
 						return 1;
 					}
-					s_blendshapesp1->addParts1(*addlabel);
+					s_blendshapesp1->addParts1(*addbutton);
 					s_blendshapesp1->addParts2(*addslider);
 				}
 			}
@@ -42101,10 +42124,24 @@ static int s_blendshapelinenum = 0;
 
 
 						//s_blendshapeBefore = 0.0f;
-
-
-
 					}
+
+
+					if (s_blendshapeButton[lineno]) {
+						s_blendshapeButton[lineno]->setButtonListener([lineno]() {
+							OWP_Button* thisbutton = s_blendshapeButton[lineno];
+							if (s_model && s_blendshapeWnd && thisbutton) {
+								CBlendShapeElem curblendshape = s_blendshapeelemvec[lineno];
+								if (curblendshape.validflag && curblendshape.mqoobj) {
+
+									s_blendshapeOpeIndex = lineno;
+									s_blendshapeUnderSelect = true;//2024/06/30
+								}
+								s_blendshapeWnd->callRewrite();						//再描画
+							}
+						});
+					}
+
 				}
 				else {
 					_ASSERT(0);
@@ -42844,15 +42881,15 @@ int DestroyBlendShapeWnd()
 	}
 
 
-	int labelnum = (int)s_blendshapeLabel.size();
+	int labelnum = (int)s_blendshapeButton.size();
 	int labelindex;
 	for (labelindex = 0; labelindex < labelnum; labelindex++) {
-		OWP_Label* dellabel = s_blendshapeLabel[labelindex];
-		if (dellabel) {
-			delete dellabel;
+		OWP_Button* delbutton = s_blendshapeButton[labelindex];
+		if (delbutton) {
+			delete delbutton;
 		}
 	}
-	s_blendshapeLabel.clear();
+	s_blendshapeButton.clear();
 
 	int slidernum = (int)s_blendshapeSlider.size();
 	int sliderindex;
@@ -52176,6 +52213,9 @@ void ShowGUIDlgBlendShape(bool srcflag)
 		if (s_LrefreshEditTarget == 0) {
 			s_LrefreshEditTarget = 1;//2024/06/09 グラフリフレッシュ
 		}
+
+		//2024/06/30 BlendShapeの操作中ターゲットのグラフを表示
+		s_blendshapeUnderSelect = true;
 	}
 	else {
 
@@ -65180,6 +65220,22 @@ int CreateShaderTypeParamsDlg()
 
 int OnFrameBlendShape()
 {
+
+
+	if (s_blendshapeUnderSelect) {//2024/06/30 Means SelChange
+		s_blendshapeUnderSelect = false;
+
+		if ((s_blendshapeOpeIndex >= 0) && (s_blendshapeOpeIndex < (int)s_blendshapeelemvec.size())) {
+			CBlendShapeElem blendshapeelem = s_blendshapeelemvec[s_blendshapeOpeIndex];
+			if (blendshapeelem.validflag && blendshapeelem.model && blendshapeelem.mqoobj) {
+
+				SetLTimelineMark(s_curboneno);//playerbuttonのshape名更新
+				UpdateEditedEuler();
+			}
+		}
+	}
+
+
 	if (s_blendshapeUnderEdit) {//スライダードラッグ中処理
 		s_blendshapeUnderEdit = false;
 
@@ -65206,6 +65262,7 @@ int OnFrameBlendShape()
 				if (blendshapeelem.validflag && blendshapeelem.model && blendshapeelem.mqoobj) {
 
 					if (fabs(s_blendshapeAfter - s_blendshapeBefore) >= 0.020f) {//クリックしただけのときに処理が走らないように、ある程度値が変化した時だけ処理
+
 						int result1 = blendshapeelem.model->OnBlendWeightChanged(&s_editrange,
 							blendshapeelem.mqoobj, s_blendshapeOpeIndex, s_blendshapeAfter);
 						if (result1 != 0) {

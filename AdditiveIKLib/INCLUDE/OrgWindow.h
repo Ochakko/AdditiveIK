@@ -3260,7 +3260,7 @@ void s_dummyfunc()
 	class OWP_Button : public OrgWindowParts{
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_Button( const TCHAR *_name=_T("") ) : OrgWindowParts() {
+		OWP_Button(const TCHAR *_name=_T(""), int _labelheight = 15) : OrgWindowParts() {
 			name = new TCHAR[256];
 			if (_name) {
 				size_t tclen = _tcslen(_name);
@@ -3279,6 +3279,8 @@ void s_dummyfunc()
 					_tcscpy_s(name, 256, TEXT("NoName"));
 				}
 			}
+
+			SIZE_Y = max(SIZE_Y, _labelheight);//2024/06/30
 
 			buttonPush=false;
 			//buttonListener = [](){s_dummyfunc();};
@@ -3426,7 +3428,7 @@ void s_dummyfunc()
 		bool buttonPush;
 		std::function<void()> buttonListener;
 
-		static const int SIZE_Y= 15;
+		int SIZE_Y = 15;
 		static const int BOX_POS_X= 3;
 		static const int BOX_WIDTH= 10;
 
@@ -8757,6 +8759,10 @@ void s_dummyfunc()
 				double timeSize,
 				double startTime
 			) {
+				if (!parent) {
+					_ASSERT(0);
+					return 1;
+				}
 				if (!pointbuf) {
 					return 1;
 				}
@@ -8781,7 +8787,7 @@ void s_dummyfunc()
 				CalcEulRange(y0, &sgraph, &eulrange, &y2);
 
 				int startindex;
-				startindex = getKeyIndex(startTime);
+				startindex = max(0, getKeyIndex(startTime));
 
 				int currentkeynum = (int)key.size();
 				int currenttimeindex = getKeyIndex(parent->currentTime);
@@ -8820,7 +8826,8 @@ void s_dummyfunc()
 						setpointnum++;
 					}
 					else {
-						_ASSERT(0);
+						//_ASSERT(0);
+						int dbgflag1 = 1;
 						return 1;
 					}
 				}
