@@ -1509,7 +1509,15 @@ public: //accesser
 			return false;
 		}
 		else {
-			return m_inview[refposindex];
+			if (GetUnderIKRot() || GetUnderIKRotApplyFrame()) {
+				//2024/07/01
+				//モデルがIK操作対象になっている場合には　IK計算がスキップされないように　強制的に視野内として扱う
+				int dbgflag1 = 1;
+				return true;
+			}
+			else {
+				return m_inview[refposindex];
+			}
 		}
 	};
 	bool GetBefInView(int refposindex) {
