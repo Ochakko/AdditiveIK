@@ -2780,7 +2780,7 @@ static void ShowGUIDlgDispParams(bool srcflag);
 static void ShowGUIDlgBullet(bool srcflag);
 static void ShowGUIDlgLOD(bool srcflag);
 static void ShowGUIDlgBlendShape(bool srcflag);
-static void CloseAllRightPainWindow();
+static void CloseAllRightPainWindow(bool closefirstrow);
 static void CloseAllAndDispPlaceFolder();
 static void CloseTheFirstRowGUI();
 
@@ -36326,7 +36326,7 @@ int OnFrameTimeLineWnd()
 			s_LrefreshEditTarget = 2;
 
 			if (g_edittarget == EDITTARGET_MORPH) {
-				CloseAllRightPainWindow();
+				CloseAllRightPainWindow(true);
 				s_guiswplateno = 6;
 				GUISetVisible(s_guiswplateno);
 			}
@@ -38995,7 +38995,7 @@ int OnSpriteUndo()
 				//s_LrefreshEditTarget = 1;//即時実行する必要があるのでフラグセットではなく処理を直書き
 
 				if (g_edittarget == EDITTARGET_MORPH) {
-					CloseAllRightPainWindow();
+					CloseAllRightPainWindow(true);
 					s_guiswplateno = 6;
 					GUISetVisible(s_guiswplateno);
 				}
@@ -47776,18 +47776,10 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 
 
 			//CameraAndIKに関しては s_guiswflag==falseの場合にも　ONのときはON
-			if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
-				//s_spguisw[spgcnt].spriteON.DrawScreen(pRenderContext);
+			{
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
-				rendersprite.psprite = &(s_spguisw[SPGUISW_CAMERA_AND_IK].spriteON);
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-			}
-			else {
-				//s_spguisw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
-				myRenderer::RENDERSPRITE rendersprite;
-				rendersprite.Init();
-				rendersprite.psprite = &(s_spguisw[SPGUISW_CAMERA_AND_IK].spriteOFF);
+				rendersprite.psprite = s_spguisw[SPGUISW_CAMERA_AND_IK].GetSpriteForRender();
 				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
@@ -47800,20 +47792,10 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 			//Plate Menu 1
 			int spgcnt;
 			for (spgcnt = 0; spgcnt < SPDISPSWNUM; spgcnt++) {
-				if (s_spdispsw[spgcnt].state) {
-					//s_spdispsw[spgcnt].spriteON.DrawScreen(pRenderContext);
-					myRenderer::RENDERSPRITE rendersprite;
-					rendersprite.Init();
-					rendersprite.psprite = &(s_spdispsw[spgcnt].spriteON);
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-				}
-				else {
-					//s_spdispsw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
-					myRenderer::RENDERSPRITE rendersprite;
-					rendersprite.Init();
-					rendersprite.psprite = &(s_spdispsw[spgcnt].spriteOFF);
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-				}
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = s_spdispsw[spgcnt].GetSpriteForRender();
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 		else if (s_platemenukind == SPPLATEMENUKIND_RIGID) {
@@ -47822,20 +47804,10 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 			//Plate Menu 1
 			int spgcnt;
 			for (spgcnt = 0; spgcnt < SPRIGIDSWNUM; spgcnt++) {
-				if (s_sprigidsw[spgcnt].state) {
-					//s_sprigidsw[spgcnt].spriteON.DrawScreen(pRenderContext);
-					myRenderer::RENDERSPRITE rendersprite;
-					rendersprite.Init();
-					rendersprite.psprite = &(s_sprigidsw[spgcnt].spriteON);
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-				}
-				else {
-					//s_sprigidsw[spgcnt].spriteOFF.DrawScreen(pRenderContext);
-					myRenderer::RENDERSPRITE rendersprite;
-					rendersprite.Init();
-					rendersprite.psprite = &(s_sprigidsw[spgcnt].spriteOFF);
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-				}
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = s_sprigidsw[spgcnt].GetSpriteForRender();
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 		else if (s_platemenukind == SPPLATEMENUKIND_RETARGET) {
@@ -47843,38 +47815,20 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 			//Plate Menu 2
 			int sprcnt;
 			for (sprcnt = 0; sprcnt < SPRETARGETSWNUM; sprcnt++) {
-				if (s_spretargetsw[sprcnt].state) {
-					//s_spretargetsw[sprcnt].spriteON.DrawScreen(pRenderContext);
-					myRenderer::RENDERSPRITE rendersprite;
-					rendersprite.Init();
-					rendersprite.psprite = &(s_spretargetsw[sprcnt].spriteON);
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-				}
-				else {
-					//s_spretargetsw[sprcnt].spriteOFF.DrawScreen(pRenderContext);
-					myRenderer::RENDERSPRITE rendersprite;
-					rendersprite.Init();
-					rendersprite.psprite = &(s_spretargetsw[sprcnt].spriteOFF);
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-				}
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = s_spretargetsw[sprcnt].GetSpriteForRender();
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 		else if (s_platemenukind == SPPLATEMENUKIND_EFFECT) {
 
 			int sprcnt;
 			for (sprcnt = 0; sprcnt < SPEFFECTSWNUM; sprcnt++) {
-				if (s_speffectsw[sprcnt].state) {
-					myRenderer::RENDERSPRITE rendersprite;
-					rendersprite.Init();
-					rendersprite.psprite = &(s_speffectsw[sprcnt].spriteON);
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-				}
-				else {
-					myRenderer::RENDERSPRITE rendersprite;
-					rendersprite.Init();
-					rendersprite.psprite = &(s_speffectsw[sprcnt].spriteOFF);
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-				}
+				myRenderer::RENDERSPRITE rendersprite;
+				rendersprite.Init();
+				rendersprite.psprite = s_speffectsw[sprcnt].GetSpriteForRender();
+				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 	}
@@ -52338,13 +52292,17 @@ void ShowGUIDlgBlendShape(bool srcflag)
 		}
 	}
 	else {
-
-		//2024/06/09　グラフモード変更
-		bool changedflag = false;
-		if (g_edittarget == EDITTARGET_MORPH) {
-			g_edittarget = EDITTARGET_BONE;
-			changedflag = true;
-		}
+		//2024/07/02
+		//BlendShapeメニューオフの時に　EDITTARGET_BONEにするのをやめた
+		//s_LrefreshEditTargetを処理すると１段目のメニューが全てオフになってしまうから
+		//エディットターゲット(Bone or Camera or Morph)は必要に応じてユーザが手動で操作(タイムラインの赤いカエルをクリック)
+		//
+		////2024/06/09　グラフモード変更
+		//bool changedflag = false;
+		//if (g_edittarget == EDITTARGET_MORPH) {
+		//	g_edittarget = EDITTARGET_BONE;
+		//	changedflag = true;
+		//}
 
 		//DestroyBlendShapeWnd();
 		if (s_blendshapeWnd) {
@@ -52353,9 +52311,14 @@ void ShowGUIDlgBlendShape(bool srcflag)
 		}
 		refreshEulerGraph();
 
-		if (changedflag && (s_LrefreshEditTarget == 0)) {
-			s_LrefreshEditTarget = 1;//2024/06/09 グラフリフレッシュ
-		}
+		//2024/07/02
+		//BlendShapeメニューオフの時に　EDITTARGET_BONEにするのをやめた
+		//s_LrefreshEditTargetを処理すると１段目のメニューが全てオフになってしまうから
+		//エディットターゲット(Bone or Camera or Morph)は必要に応じてユーザが手動で操作(タイムラインの赤いカエルをクリック)
+		//
+		//if (changedflag && (s_LrefreshEditTarget == 0)) {
+		//	s_LrefreshEditTarget = 1;//2024/06/09 グラフリフレッシュ
+		//}
 	}
 
 	s_spguisw[SPGUISW_BLENDSHAPE].state = srcflag;
@@ -52628,116 +52591,123 @@ void ShowDampAnimWnd(bool srcflag)
 
 void GUIMenuSetVisible(int srcmenukind, int srcplateno)
 {
-	CloseAllRightPainWindow();
 
-	if ((srcmenukind >= SPPLATEMENUKIND_DISP) && (srcmenukind <= SPPLATEMENUKIND_EFFECT)) {
+	bool closefirstrow;
+	if (s_guiswflag && (s_guiswplateno == 2)) {
+		//2024/07/02 CameraAndIKメニュークリック時には１段目のウインドウを閉じない
+		closefirstrow = false;
+	}
+	else {
+		closefirstrow = true;
+	}
+	CloseAllRightPainWindow(closefirstrow);//対応ウインドウを開く前に　全部閉じる
+
+	if (s_guiswflag) {
+		//１段目メニュー
+		if ((s_guiswplateno > 1) && (s_guiswplateno < (SPGUISWNUM + 2))) {
+			GUISetVisible(s_guiswplateno);//((spgno == 0) && (spgno < SPGUISWNUM))でGUISetVisible(spgno + 2)でGUISetVisible(1)はPlaceFolderWindow用
+			SelectNextWindow(MB3D_WND_3D);
+		}
+		else {
+			if (s_placefolderWnd) {
+				s_placefolderWnd->setVisible(true);
+			}
+			SelectNextWindow(MB3D_WND_SIDE);
+		}
+	}
+	else if ((srcmenukind >= SPPLATEMENUKIND_DISP) && (srcmenukind <= SPPLATEMENUKIND_EFFECT)) {
 		//#####################
 		//プレートメニュー更新
 		//#####################
 		s_platemenukind = srcmenukind;
 
 
-		if (s_guiswflag) {
-			//１段目メニュー
-			if ((s_guiswplateno > 1) && (s_guiswplateno < (SPGUISWNUM + 2))) {
-				GUISetVisible(s_guiswplateno);//((spgno == 0) && (spgno < SPGUISWNUM))でGUISetVisible(spgno + 2)でGUISetVisible(1)はPlaceFolderWindow用
-				SelectNextWindow(MB3D_WND_3D);
-			}
-			else {
-				if (s_placefolderWnd) {
-					s_placefolderWnd->setVisible(true);
+		//２段目プレートクリック時には　１段目のCameraAndIK以外の選択状態をオフにする
+		int plateno;
+		for (plateno = SPGUISW_DISP_AND_LIMITS; plateno < SPGUISWNUM; plateno++) {
+			s_spguisw[plateno].state = false;
+		}
+
+
+		//###########################
+		//新しいプレートメニュー表示
+		//###########################
+		switch (s_platemenukind) {
+			//case SPPLATEMENUKIND_GUI:
+			//	if ((srcplateno >= 1) && (srcplateno < (SPGUISWNUM + 2))) {
+			//		GUISetVisible(srcplateno);//((spgno == 0) && (spgno < SPGUISWNUM))でGUISetVisible(spgno + 2)でGUISetVisible(1)はPlaceFolderWindow用
+			//		if (s_placefolderWnd) {
+			//			s_placefolderWnd->setVisible(true);
+			//		}
+			//		SelectNextWindow(MB3D_WND_3D);
+			//	}
+			//	else {
+			//		if (s_placefolderWnd) {
+			//			s_placefolderWnd->setVisible(true);
+			//		}
+			//		SelectNextWindow(MB3D_WND_SIDE);
+			//	}
+			//	break;
+		case SPPLATEMENUKIND_DISP:
+			if ((srcplateno >= 1) && (srcplateno <= SPDISPSWNUM)) {
+				if (s_customrigdlg) {
+					DestroyWindow(s_customrigdlg);
+					s_customrigdlg = 0;
 				}
+				if (s_placefolderWnd) {
+					s_placefolderWnd->setVisible(false);
+				}
+				GUIDispSetVisible(srcplateno);
 				SelectNextWindow(MB3D_WND_SIDE);
 			}
-		}
-		else {
-			//２段目プレートクリック時には　１段目のCameraAndIK以外の選択状態をオフにする
-			int plateno;
-			for (plateno = SPGUISW_DISP_AND_LIMITS; plateno < SPGUISWNUM; plateno++) {
-				s_spguisw[plateno].state = false;
+			else {
+				_ASSERT(0);
 			}
-
-
-			//###########################
-			//新しいプレートメニュー表示
-			//###########################
-			switch (s_platemenukind) {
-				//case SPPLATEMENUKIND_GUI:
-				//	if ((srcplateno >= 1) && (srcplateno < (SPGUISWNUM + 2))) {
-				//		GUISetVisible(srcplateno);//((spgno == 0) && (spgno < SPGUISWNUM))でGUISetVisible(spgno + 2)でGUISetVisible(1)はPlaceFolderWindow用
-				//		if (s_placefolderWnd) {
-				//			s_placefolderWnd->setVisible(true);
-				//		}
-				//		SelectNextWindow(MB3D_WND_3D);
-				//	}
-				//	else {
-				//		if (s_placefolderWnd) {
-				//			s_placefolderWnd->setVisible(true);
-				//		}
-				//		SelectNextWindow(MB3D_WND_SIDE);
-				//	}
-				//	break;
-			case SPPLATEMENUKIND_DISP:
-				if ((srcplateno >= 1) && (srcplateno <= SPDISPSWNUM)) {
-					if (s_customrigdlg) {
-						DestroyWindow(s_customrigdlg);
-						s_customrigdlg = 0;
-					}
-					if (s_placefolderWnd) {
-						s_placefolderWnd->setVisible(false);
-					}
-					GUIDispSetVisible(srcplateno);
-					SelectNextWindow(MB3D_WND_SIDE);
+			break;
+		case SPPLATEMENUKIND_RIGID:
+			if ((srcplateno >= 1) && (srcplateno <= SPRIGIDSWNUM)) {
+				if (s_customrigdlg) {
+					DestroyWindow(s_customrigdlg);
+					s_customrigdlg = 0;
 				}
-				else {
-					_ASSERT(0);
+				if (s_placefolderWnd) {
+					s_placefolderWnd->setVisible(false);
 				}
-				break;
-			case SPPLATEMENUKIND_RIGID:
-				if ((srcplateno >= 1) && (srcplateno <= SPRIGIDSWNUM)) {
-					if (s_customrigdlg) {
-						DestroyWindow(s_customrigdlg);
-						s_customrigdlg = 0;
-					}
-					if (s_placefolderWnd) {
-						s_placefolderWnd->setVisible(false);
-					}
-					GUIRigidSetVisible(srcplateno);
-					SelectNextWindow(MB3D_WND_SIDE);
-				}
-				else {
-					_ASSERT(0);
-				}
-				break;
-			case SPPLATEMENUKIND_RETARGET:
-				if ((srcplateno >= 1) && (srcplateno <= SPRETARGETSWNUM)) {
-					if (s_customrigdlg) {
-						DestroyWindow(s_customrigdlg);
-						s_customrigdlg = 0;
-					}
-					if (s_placefolderWnd) {
-						s_placefolderWnd->setVisible(false);
-					}
-					GUIRetargetSetVisible(srcplateno);
-					SelectNextWindow(MB3D_WND_SIDE);
-				}
-				break;
-			case SPPLATEMENUKIND_EFFECT:
-				if ((srcplateno >= 1) && (srcplateno <= SPEFFECTSWNUM)) {
-					if (s_customrigdlg) {
-						DestroyWindow(s_customrigdlg);
-						s_customrigdlg = 0;
-					}
-					if (s_placefolderWnd) {
-						s_placefolderWnd->setVisible(false);
-					}
-					GUIEffectSetVisible(srcplateno);
-					SelectNextWindow(MB3D_WND_SIDE);
-				}
-				break;
-			default:
-				break;
+				GUIRigidSetVisible(srcplateno);
+				SelectNextWindow(MB3D_WND_SIDE);
 			}
+			else {
+				_ASSERT(0);
+			}
+			break;
+		case SPPLATEMENUKIND_RETARGET:
+			if ((srcplateno >= 1) && (srcplateno <= SPRETARGETSWNUM)) {
+				if (s_customrigdlg) {
+					DestroyWindow(s_customrigdlg);
+					s_customrigdlg = 0;
+				}
+				if (s_placefolderWnd) {
+					s_placefolderWnd->setVisible(false);
+				}
+				GUIRetargetSetVisible(srcplateno);
+				SelectNextWindow(MB3D_WND_SIDE);
+			}
+			break;
+		case SPPLATEMENUKIND_EFFECT:
+			if ((srcplateno >= 1) && (srcplateno <= SPEFFECTSWNUM)) {
+				if (s_customrigdlg) {
+					DestroyWindow(s_customrigdlg);
+					s_customrigdlg = 0;
+				}
+				if (s_placefolderWnd) {
+					s_placefolderWnd->setVisible(false);
+				}
+				GUIEffectSetVisible(srcplateno);
+				SelectNextWindow(MB3D_WND_SIDE);
+			}
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -73634,7 +73604,7 @@ int OnCreateDevice()
 return 0;
 }
 
-void CloseAllRightPainWindow()
+void CloseAllRightPainWindow(bool closefirstraw)
 {
 	//platemenu用のウインドウ以外を閉じるまたは破棄する
 	if (s_placefolderWnd) {
@@ -73667,13 +73637,15 @@ void CloseAllRightPainWindow()
 	GUIRetargetSetVisible(-2);
 	GUIEffectSetVisible(-2);
 	GUIDispSetVisible(-2);
-	CloseTheFirstRowGUI();
 
+	if (closefirstraw) {//CameraAndIKクリック時には閉じない
+		CloseTheFirstRowGUI();
+	}
 }
 
 void CloseAllAndDispPlaceFolder()
 {
-	CloseAllRightPainWindow();
+	CloseAllRightPainWindow(true);
 
 	if (s_placefolderWnd) {
 		s_placefolderWnd->setVisible(true);
