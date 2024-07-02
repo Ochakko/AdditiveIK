@@ -175,6 +175,7 @@
   <ItemGroup>
     <ClCompile Include="..\BTMANAGER\BPWorld.cpp" />
     <ClCompile Include="..\BTSRC\clew\clew.c" />
+    <ClCompile Include="..\CPP\BlendShapeElem.cpp" />
     <ClCompile Include="..\CPP\BntFile.cpp" />
     <ClCompile Include="..\CPP\Bone.cpp" />
     <ClCompile Include="..\CPP\BtObject.cpp" />
@@ -555,6 +556,7 @@
     <ClInclude Include="..\BTSRC\LinearMath\btVector3.h" />
     <ClInclude Include="..\BTSRC\LinearMath\TaskScheduler\btThreadSupportInterface.h" />
     <ClInclude Include="..\examples\MultiThreadedDemo\CommonRigidBodyMTBase.h" />
+    <ClInclude Include="..\INCLUDE\BlendShapeElem.h" />
     <ClInclude Include="..\INCLUDE\BntFile.h" />
     <ClInclude Include="..\INCLUDE\Bone.h" />
     <ClInclude Include="..\INCLUDE\BtObject.h" />

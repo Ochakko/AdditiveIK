@@ -219,6 +219,9 @@
     <ClCompile Include="..\CPP\FbxMisc.cpp">
       <Filter>ForFbx</Filter>
     </ClCompile>
+    <ClCompile Include="..\CPP\BlendShapeElem.cpp">
+      <Filter>BlendShape</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
@@ -1345,6 +1348,9 @@
     <ClInclude Include="..\INCLUDE\FbxMisc.h">
       <Filter>ForFbx</Filter>
     </ClInclude>
+    <ClInclude Include="..\INCLUDE\BlendShapeElem.h">
+      <Filter>BlendShape</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\BTSRC\BulletInverseDynamics\premake4.lua">
@@ -1422,6 +1428,9 @@
     </Filter>
     <Filter Include="Undo">
       <UniqueIdentifier>{66d1311c-70fd-4ef0-ae3d-e7e34183a9dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BlendShape">
+      <UniqueIdentifier>{dc0494c8-759f-48d6-ac4a-8c1e7ea80e43}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

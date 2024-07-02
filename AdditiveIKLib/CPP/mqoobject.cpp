@@ -2934,6 +2934,10 @@ int CMQOObject::AddShapeAnim(char* nameptr, int srcmotid, int animleng)
 	map<string, map<int, float*>>::iterator itrshapeanim;
 	itrshapeanim = m_shapeanim2.find(nameptr);
 	if (itrshapeanim != m_shapeanim2.end()) {
+		if (itrshapeanim->second[srcmotid] != nullptr) {
+			free(itrshapeanim->second[srcmotid]);
+			itrshapeanim->second[srcmotid] = nullptr;
+		}
 		itrshapeanim->second[srcmotid] = newshapeanim;
 	}
 	else {

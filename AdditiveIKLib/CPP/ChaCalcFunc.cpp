@@ -1910,10 +1910,15 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 		//########################
 		//カメラの場合
 		//########################
-		FbxTime fbxtime0;
-		fbxtime0.SetSecondDouble(0.0);
-		FbxDouble3 fbxLclRot = srcbone->GetFbxNodeOnLoad()->EvaluateLocalRotation(fbxtime0, FbxNode::eSourcePivot, true, true);
-		cureul.SetParams((float)fbxLclRot[0], (float)fbxLclRot[1], (float)fbxLclRot[2]);
+		if (srcbone->GetFbxNodeOnLoad()) {
+			EnterCriticalSection(&g_CritSection_FbxSdk);
+			FbxTime fbxtime0;
+			fbxtime0.SetSecondDouble(0.0);
+			FbxDouble3 fbxLclRot = srcbone->GetFbxNodeOnLoad()->EvaluateLocalRotation(fbxtime0, FbxNode::eSourcePivot, true, true);
+			cureul.SetParams((float)fbxLclRot[0], (float)fbxLclRot[1], (float)fbxLclRot[2]);
+			//####  rotorder注意  #####
+			LeaveCriticalSection(&g_CritSection_FbxSdk);
+		}
 
 		//cureul.SetParams(0.0f, 0.0f, 0.0f);
 

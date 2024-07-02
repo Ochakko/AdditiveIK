@@ -6045,10 +6045,12 @@ ChaVector3 CBone::CalcFbxScaleAnim(bool limitdegflag, int srcmotid, double srcfr
 	}
 	else if (IsNull()) {
 		if (GetFbxNodeOnLoad()) {
+			EnterCriticalSection(&g_CritSection_FbxSdk);
 			FbxTime fbxtime;
 			fbxtime.SetSecondDouble(roundingframe / 30.0);
 			FbxVector4 fbxcamerascl = GetFbxNodeOnLoad()->EvaluateLocalScaling(fbxtime, FbxNode::eSourcePivot, true, true);
 			svec.SetParams(fbxcamerascl);
+			LeaveCriticalSection(&g_CritSection_FbxSdk);
 		}
 		else {
 			svec.SetParams(1.0f, 1.0f, 1.0f);
@@ -6340,11 +6342,13 @@ ChaVector3 CBone::CalcFBXTra(bool limitdegflag, int srcmotid, double srcframe)
 	else if (IsNull()) {
 		//if (GetParModel() && GetParModel()->IsCameraLoaded() && GetFbxNodeOnLoad()) {
 		if (GetParModel() && GetFbxNodeOnLoad()) {
+			EnterCriticalSection(&g_CritSection_FbxSdk);
 			FbxTime fbxtime;
 			fbxtime.SetSecondDouble(roundingframe / 30.0);
 			FbxVector4 fbxtra = GetFbxNodeOnLoad()->EvaluateLocalTranslation(fbxtime, FbxNode::eSourcePivot, true, true);
 			ChaVector3 tra;
 			tra.SetParams(fbxtra, false);
+			LeaveCriticalSection(&g_CritSection_FbxSdk);
 
 			return tra;
 		}
@@ -8978,7 +8982,7 @@ int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, double srcfra
 
 	//##############################################################################################################################
 	//2023/06/28
-	//Mesh用の変換行列計算(CModel::CalcMeshMatReq())時には　prerot, postrotlclrotはXYZ順　lclrotはrotationorder順でうまくいくようだ
+	//Mesh用の変換行列計算(CModel::CalcMeshMatReq())時には　prerot, postrotはXYZ順　lclrotはrotationorder順でうまくいくようだ
 	//		ただし　カメラの子供のメッシュについては　うまくいっていない(parentがeCameraの場合の計算に対応していない)
 	//
 	//TheHunt Street1 Camera_1の　HUDの位置向き　壁の位置向き　　　TheHunt City1 Camera_1の子供のArmsのなどで検証

@@ -3,6 +3,9 @@
 
 //#include <d3dx9.h>
 //#include <ChaVecCalc.h>
+
+#include <BlendShapeElem.h>
+
 #include <wchar.h>
 #include <Coef.h>
 #include <string>
@@ -22,8 +25,9 @@ enum {
 	UNDOKIND_EDITMOTION,//ボーンモーション、カメラアニメ編集
 	UNDOKIND_SELECTMODEL_FROMTHIS,//カレントモデル選択変更
 	UNDOKIND_SELECTMODEL_TOTHIS,//カレントモデル選択変更
-	UNDOKIND_SELECTMOTION,//カレントモーション選択変更
-	UNDOKIND_SELECTCAMERAANIM,//カレントカメラアニメ選択変更
+	//UNDOKIND_SELECTMOTION,//カレントモーション選択変更　　UNDOKIND_EDITMOTIONで行う
+	//UNDOKIND_SELECTCAMERAANIM,//カレントカメラアニメ選択変更　　UNDOKIND_EDITMOTIONで行う
+	UNDOKIND_EDITBLENDSHAPE,//ブレンドシェイプ編集
 	UNDOKIND_MAX
 };
 
@@ -118,6 +122,7 @@ typedef struct tag_undomotid
 }UNDOMOTID;
 
 
+
 class CUndoMotion
 {
 public:
@@ -131,13 +136,21 @@ public:
 		bool undocameraflag,//カメラアニメのUndoとして呼び出す場合にtrue
 		CEditRange* srcer, double srcapplyrate,
 		BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, 
+		CBlendShapeElem srcblendshapeelem,
 		bool allframeflag);
+	int SaveBlendShapeMotion(bool limitdegflag, int curboneno, int curbaseno,
+		int srcedittarget, CEditRange* srcer, double srcapplyrate,
+		BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera,
+		CBlendShapeElem srcblendshapeelem);//2024/07/01
+
 	int RollBackMotion(ChaScene* pchascene, 
 		bool undocameraflag,//カメラアニメのUndoとして呼び出す場合にtrue
+		bool undoblendshapeflag,//blendshapeアニメのUndoとして呼び出す場合にtrue
 		bool limitdegflag, CModel* pmodel, 
 		int* edittarget, int* pselectedboneno, int* curbaseno,
 		UNDOSELECT* dstundoselect,
-		BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera, UNDOMOTID* dstundomotid);
+		BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera, UNDOMOTID* dstundomotid,
+		CBlendShapeElem* dstblendshapeelem);
 
 	bool IsUndoSelectModelFromThis(CModel* srcmodel) {
 		if (m_undoselect.undokind == UNDOKIND_SELECTMODEL_FROMTHIS) {
@@ -189,6 +202,11 @@ public:
 		return m_undoselect;
 	}
 
+	bool GetBlendShapeFlag()
+	{
+		return (m_undoselect.undokind == UNDOKIND_EDITBLENDSHAPE);
+	}
+
 private:
 	int m_validflag;
 
@@ -201,6 +219,8 @@ private:
 	std::map<CBone*, std::map<double, int>> m_bonemotmark;
 	std::map<CBone*, ANGLELIMIT> m_bone2limit;
 
+	std::vector<float> m_blendshapeweight;//2024/07/01
+
 	//int m_curboneno;
 	int m_selectedboneno;
 	int m_curbaseno;
@@ -212,6 +232,7 @@ private:
 	BRUSHSTATE m_brushstate;
 	UNDOCAMERA m_undocamera;
 	UNDOMOTID m_undomotid;
+	CBlendShapeElem m_blendshapeelem;//2024/07/01
 };
 
 

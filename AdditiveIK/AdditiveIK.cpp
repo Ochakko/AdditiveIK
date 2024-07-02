@@ -1893,9 +1893,12 @@ static int s_blendshapelinenum = 0;
 static bool s_blendshapeUnderEdit = false;
 static bool s_blendshapePostEdit = false;
 static bool s_blendshapeUnderSelect = false;
+static bool s_blendshapeUnderSelectFromUndo = false;
+static bool s_blendshapeUnderSelectFromRefresh = false;
 static int s_blendshapeOpeIndex = 0;
 static float s_blendshapeBefore = 0.0f;
 static float s_blendshapeAfter = 0.0f;
+static int s_blendshapeUndoOpeIndex = 0;
 
 static bool s_SpriteButtonDown = false;
 static bool s_SpriteButtonDownUndoRedo = false;
@@ -2962,6 +2965,7 @@ static int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax);
 static int RollbackCurBoneNo();
 static void PrepairUndo();
 static void PrepairUndo_SelectModel(CModel* befmodel, CModel* nextmodel);
+static void PrepairUndo_BlendShape(CBlendShapeElem srcblendshapeelem);
 static void RollbackBrushState(BRUSHSTATE srcbrushstate);
 static void RollbackUndoCamera(UNDOCAMERA srcundocamera);
 static int OnFrameUndo(bool fromds, int fromdskind);
@@ -3472,7 +3476,6 @@ static bool FindAtTheLast(std::wstring const& strsource, std::wstring const& str
 
 
 static int ChangeUpdateMatrixThreads();
-static int FindModelIndex(CModel* srcmodel);
 
 static CGrassElem* FindGrassElem(CModel* srcmodel);
 
@@ -4842,6 +4845,9 @@ void InitApp()
 		s_blendshapeUnderEdit = false;
 		s_blendshapePostEdit = false;
 		s_blendshapeUnderSelect = false;
+		s_blendshapeUnderSelectFromUndo = false;
+		s_blendshapeUnderSelectFromRefresh = false;
+		s_blendshapeUndoOpeIndex = 0;
 	}
 
 
@@ -7741,6 +7747,45 @@ void CalcFps(double fTime)
 	s_savetime = fTime;
 }
 
+void PrepairUndo_BlendShape(CBlendShapeElem srcblendshapeelem)
+{
+	if (!srcblendshapeelem.validflag || !srcblendshapeelem.model || !srcblendshapeelem.mqoobj ||
+		(srcblendshapeelem.channelindex < 0)) {
+		return;
+	}
+
+
+	BRUSHSTATE brushstate;
+	brushstate.Init();
+	brushstate.brushmirrorUflag = g_brushmirrorUflag;
+	brushstate.brushmirrorVflag = g_brushmirrorVflag;
+	brushstate.ifmirrorVDiv2flag = g_ifmirrorVDiv2flag;
+	brushstate.limitdegflag = g_limitdegflag;
+	brushstate.motionbrush_method = g_motionbrush_method;
+	brushstate.wallscrapingikflag = g_wallscrapingikflag;
+	brushstate.brushrepeats = g_brushrepeats;
+
+	UNDOCAMERA undocamera;
+	undocamera.Init();
+	undocamera.spcameramode = s_spcameramode.state;
+	undocamera.camtargetflag = s_camtargetflag;
+	undocamera.camtargetdisp = s_camtargetdisp;
+	undocamera.moveeyepos = s_moveeyepos;
+	undocamera.camEyePos = g_camEye;
+	undocamera.camtargetpos = g_camtargetpos;
+	undocamera.camUpVec = g_cameraupdir;
+	undocamera.camdist = g_camdist;
+	undocamera.cameramodel = s_cameramodel;
+
+	if (s_model) {
+		int result = s_model->SaveUndoBlendShapeMotion(
+			g_limitdegflag, s_curboneno, s_curbaseno,
+			g_edittarget, &s_editrange, g_applyrate,
+			brushstate, undocamera, srcblendshapeelem);
+		_ASSERT(result == 0);
+	}
+}
+
 void PrepairUndo_SelectModel(CModel* befmodel, CModel* nextmodel)
 {
 	if (befmodel == nextmodel) {
@@ -7804,20 +7849,30 @@ void PrepairUndo_SelectModel(CModel* befmodel, CModel* nextmodel)
 	undocamera.camdist = g_camdist;
 	undocamera.cameramodel = s_cameramodel;//2024/06/24
 
+	//2024/07/02
+	CBlendShapeElem blendshapeelem;
+	blendshapeelem.Init();
+	int blendshapenum = (int)s_blendshapeelemvec.size();
+	if ((s_blendshapeOpeIndex >= 0) && (s_blendshapeOpeIndex < blendshapenum)) {
+		blendshapeelem = s_blendshapeelemvec[s_blendshapeOpeIndex];
+		//if (blendshapeelem.validflag && blendshapeelem.model && blendshapeelem.mqoobj) {
+		//}
+	}
+
 	bool allframeflag = false;
 
 	if (befmodel) {
 		befmodel->SaveUndoMotion(undoselectFromThis,
 			s_LimitDegCheckBoxFlag, g_limitdegflag, s_curboneno, s_curbaseno,
 			g_edittarget, &s_editrange, g_applyrate,
-			brushstate, undocamera,
+			brushstate, undocamera, blendshapeelem,
 			allframeflag);
 	}
 	if (nextmodel) {
 		nextmodel->SaveUndoMotion(undoselectToThis,
 			s_LimitDegCheckBoxFlag, g_limitdegflag, nextmodel->GetSelectedBoneNo(), 0,
 			g_edittarget, &s_editrange, g_applyrate,
-			brushstate, undocamera,
+			brushstate, undocamera, blendshapeelem,
 			allframeflag);
 	}
 }
@@ -7865,7 +7920,18 @@ void PrepairUndo()
 			undocamera.camdist = g_camdist;
 			undocamera.cameramodel = s_cameramodel;//2024/06/24
 
-			
+
+			//2024/07/02
+			CBlendShapeElem blendshapeelem;
+			blendshapeelem.Init();
+			int blendshapenum = (int)s_blendshapeelemvec.size();
+			if ((s_blendshapeOpeIndex >= 0) && (s_blendshapeOpeIndex < blendshapenum)) {
+				blendshapeelem = s_blendshapeelemvec[s_blendshapeOpeIndex];
+				//if (blendshapeelem.validflag && blendshapeelem.model && blendshapeelem.mqoobj) {
+				//}
+			}
+
+
 			UNDOSELECT undoselect;
 			undoselect.Init();
 			undoselect.undokind = UNDOKIND_EDITMOTION;//!!!!!!!!!!
@@ -7889,7 +7955,7 @@ void PrepairUndo()
 			s_model->SaveUndoMotion(undoselect,
 				s_LimitDegCheckBoxFlag, g_limitdegflag, s_curboneno, s_curbaseno,
 				g_edittarget, &s_editrange, g_applyrate, 
-				brushstate, undocamera,
+				brushstate, undocamera, blendshapeelem,
 				allframeflag);
 
 			SetCursor(oldcursor);//カーソルを元に戻す
@@ -12411,7 +12477,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 			bool cameraanimflag = false;
 			MOTINFO firstvalidmi = s_model->GetFirstValidMotInfo(cameraanimflag);
 			if (firstvalidmi.motid > 0) {
-				int selindex = s_chascene->MotID2SelIndex(FindModelIndex(s_model), firstvalidmi.motid);
+				int selindex = s_chascene->MotID2SelIndex(s_chascene->FindModelIndex(s_model), firstvalidmi.motid);
 				if (selindex >= 0) {
 					OnAnimMenu(dorefreshtl, selindex);
 				}
@@ -12775,7 +12841,7 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 		}
 
 		if (s_owpTimeline) {
-			int currentmodelindex = FindModelIndex(s_model);
+			int currentmodelindex = s_chascene->FindModelIndex(s_model);
 			if (currentmodelindex >= 0) {
 				//#######################################################
 				//2024/06/27 s_tlarrayの操作前にカレントモデルのtlarrayを取得
@@ -14387,7 +14453,9 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 				ApplyNewLimitsToWM(s_model);
 			}
 
-			if (s_spguisw[SPGUISW_BLENDSHAPE].state) {
+			if (s_spguisw[SPGUISW_BLENDSHAPE].state && 
+				!s_undoFlag && !s_redoFlag && 
+				!s_blendshapeUnderSelectFromUndo && !s_blendshapeUnderSelectFromRefresh) {
 				//2024/06/30 モデル切替モーション切り替え時に　BlendShapeの操作中ターゲットのグラフを表示
 				s_blendshapeUnderSelect = true;
 			}
@@ -14532,7 +14600,7 @@ int OnChangeModel(CModel* selmodel, bool forceflag, bool callundo)
 	//		break;
 	//	}
 	//}
-	int selmodelindex = FindModelIndex(selmodel);
+	int selmodelindex = s_chascene->FindModelIndex(selmodel);
 
 	if (selmodelindex >= 0) {
 		ActivatePanel(0);
@@ -14975,6 +15043,12 @@ int OnDelMotion(int delmenuindex, bool ondelbutton)//default : ondelbutton = fal
 
 	//s_underdelmotion = true;
 
+	if (!s_chascene) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
 	int tlnum = (int)s_tlarray.size();
 	if ((tlnum <= 0) || (delmenuindex < 0) || (delmenuindex >= tlnum)) {
 		//s_underdelmotion = false;
@@ -15020,7 +15094,7 @@ int OnDelMotion(int delmenuindex, bool ondelbutton)//default : ondelbutton = fal
 
 
 	//2022/09/13
-	int currentmodelindex = FindModelIndex(s_model);
+	int currentmodelindex = s_chascene->FindModelIndex(s_model);
 	if (s_chascene && (currentmodelindex >= 0)) {
 		s_chascene->SetTimelineArray(currentmodelindex, s_tlarray);
 	}
@@ -36246,9 +36320,10 @@ int OnFrameTimeLineWnd()
 
 		if (tmpLrefreshEditTarget >= 3) {
 			s_LrefreshEditTarget = 0;
+
 		}
 		else if (tmpLrefreshEditTarget == 1) {
-			s_LrefreshEditTarget++;
+			s_LrefreshEditTarget = 2;
 
 			if (g_edittarget == EDITTARGET_MORPH) {
 				CloseAllRightPainWindow();
@@ -36304,7 +36379,7 @@ int OnFrameTimeLineWnd()
 
 		}
 		else if (tmpLrefreshEditTarget == 2) {
-			s_LrefreshEditTarget++;
+			s_LrefreshEditTarget = 3;
 
 			MOTINFO curmi = GetEditTargetMotInfo();
 			//if ((curmi.motid > 0) && (s_savebuttonselectend < curmi.frameleng)) {
@@ -36334,6 +36409,19 @@ int OnFrameTimeLineWnd()
 				}
 				refreshEulerGraph();
 				//refreshTimeline(*s_owpTimeline);
+			}
+
+			//2024/07/02 UndoからPrepairUndo_BlendShape()が呼ばれる問題への対策
+			//s_LrefreshEditTargetフラグを立てるとBlendShapeWndの表示関数が呼ばれて
+			//s_blendshapeUnderSelectFromUndo(PrepairUndoの抑止の役割もしている)がリセットされた後で　s_blendshapeUnderSelectがセットされ　PrepairUndo_BlendShape()が実行されてしまう
+			//つまりRollBack処理時にPrepairUndo_BlendShape()が呼ばれてしまう
+			//これを避けるために
+			//s_LrefeshEditTargetの処理が終わった時点まで　s_blendshapeUnderSelectFromUndoをリセットしない
+			//s_LrefeshEditTargetが終わった時点で　s_blendshapeUnderSelectFromUndoをリセットしてs_blendshapeUnderSelectFromRefreshを立てる
+			//そしてs_blendshapeUnderSelectFromRefreshをみて　PrepairUndo_BlendShape()無しのBlendShapeのSelChangeを行う
+			if (s_blendshapeUnderSelectFromUndo) {
+				s_blendshapeUnderSelectFromUndo = false;
+				s_blendshapeUnderSelectFromRefresh = true;
 			}
 		}
 	}
@@ -38767,6 +38855,12 @@ int OnSpriteUndo()
 	}
 	s_underoperation = true;
 
+	if (!s_chascene) {
+		_ASSERT(0);
+		s_underoperation = false;
+		return 1;
+	}
+
 
 	HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
@@ -38781,6 +38875,8 @@ int OnSpriteUndo()
 	undomotid.Init();
 	UNDOSELECT undoselect;
 	undoselect.Init();
+	CBlendShapeElem blendshapeelem;
+	blendshapeelem.Init();
 
 	int saveedittarget = g_edittarget;
 	int newedittarget = g_edittarget;//ただの初期化　RollBackUndoMotionにて新しい状態へと上書きされる
@@ -38810,7 +38906,7 @@ int OnSpriteUndo()
 		s_model->RollBackUndoMotion(s_chascene, g_limitdegflag, g_mainhwnd,
 			0, &newedittarget, &newselectedboneno, &s_curbaseno,
 			&undoselect,
-			&brushstate, &undocamera, &undomotid);//!!!!!!!!!!!
+			&brushstate, &undocamera, &undomotid, &blendshapeelem);//!!!!!!!!!!!
 
 		RollbackBrushState(brushstate);//ブラシパラメータ復元
 		Params2TopSlidersWnd();
@@ -38826,19 +38922,27 @@ int OnSpriteUndo()
 		s_model->RollBackUndoMotion(s_chascene, g_limitdegflag, g_mainhwnd,
 			1, &newedittarget, &newselectedboneno, &s_curbaseno,
 			&undoselect,
-			&brushstate, &undocamera, &undomotid);//!!!!!!!!!!!
+			&brushstate, &undocamera, &undomotid, &blendshapeelem);//!!!!!!!!!!!
 
 		RollbackBrushState(brushstate);//ブラシパラメータ復元
 		Params2TopSlidersWnd();
 		undodoneflag = true;
 	}
 
-
-
 	if (!undodoneflag) {
+		s_underoperation = false;
 		return 0;
 	}
 
+
+	//2024/07/02 BlendShape選択状態の復元の１段階目のトリガーを立てる　UndoからPrepairUndo_BlendShape()を呼び出すことを抑止する
+	if (blendshapeelem.validflag && 
+		blendshapeelem.model && (blendshapeelem.model == s_model) &&
+		blendshapeelem.mqoobj && (blendshapeelem.channelindex >= 0)) {
+
+		s_blendshapeUndoOpeIndex = blendshapeelem.channelindex;
+		s_blendshapeUnderSelectFromUndo = true;//2024/07/02 SelChange BlendShape
+	}
 
 
 	if ((undoselect.undokind == UNDOKIND_SELECTMODEL_FROMTHIS) ||
@@ -38862,7 +38966,7 @@ int OnSpriteUndo()
 		}
 
 
-		int setmodelindex = FindModelIndex(setmodel);
+		int setmodelindex = s_chascene->FindModelIndex(setmodel);
 		if (setmodelindex >= 0) {//2024/06/26 モデルが削除されていないことを確認
 			bool forceflag = true;
 			bool callundo = false;
@@ -38909,7 +39013,7 @@ int OnSpriteUndo()
 			}
 
 
-			int selindex = s_chascene->MotID2SelIndex(FindModelIndex(s_model), undomotid.bonemotid);
+			int selindex = s_chascene->MotID2SelIndex(s_chascene->FindModelIndex(s_model), undomotid.bonemotid);
 			if (selindex >= 0) {
 				bool dorefreshtl = true;
 				int saveundoflag = 0;
@@ -39100,10 +39204,14 @@ int OnSpriteUndo()
 	//ChangeCurrentBone(false);
 
 
+	//2024/06/07 可能な場合は選択範囲を復元
+	s_LrefreshEditTarget = 1;
+
+
 	s_undoFlag = false;
 	s_redoFlag = false;
 
-	s_underoperation = false;
+	
 
 
 	if (oldcursor != NULL) {
@@ -39111,12 +39219,9 @@ int OnSpriteUndo()
 	}
 
 
-	//if (s_model && (undodoneflag == true) && (saveedittarget != newedittarget)) {
-	if (s_model) {
-		//2024/06/07 可能な場合は選択範囲を復元
-		s_LrefreshEditTarget = 1;
-	}
 
+
+	s_underoperation = false;
 	return 0;
 
 }
@@ -42087,6 +42192,11 @@ static int s_blendshapelinenum = 0;
 									//curblendshape.mqoobj->SetShapeAnimWeight(curblendshape.channelindex, 
 									//	curmotid, IntTime(curframe), value);
 
+									if (s_blendshapeOpeIndex != lineno) {
+										//選択が切り替わったときには　PrepairUndo_BlendShape()有りのSelChangeイベント
+										s_blendshapeUnderSelect = true;
+									}
+
 									s_blendshapeOpeIndex = lineno;
 									s_blendshapeAfter = value;
 									s_blendshapeUnderEdit = true;
@@ -42132,7 +42242,9 @@ static int s_blendshapelinenum = 0;
 							OWP_Button* thisbutton = s_blendshapeButton[lineno];
 							if (s_model && s_blendshapeWnd && thisbutton) {
 								CBlendShapeElem curblendshape = s_blendshapeelemvec[lineno];
-								if (curblendshape.validflag && curblendshape.mqoobj) {
+								if (curblendshape.validflag && curblendshape.mqoobj &&
+									!s_undoFlag && !s_redoFlag &&
+									!s_blendshapeUnderSelectFromUndo && !s_blendshapeUnderSelectFromRefresh) {
 
 									s_blendshapeOpeIndex = lineno;
 									s_blendshapeUnderSelect = true;//2024/06/30
@@ -52199,6 +52311,7 @@ void ShowGUIDlgLOD(bool srcflag)
 void ShowGUIDlgBlendShape(bool srcflag)
 {
 	if (srcflag == true) {
+
 		g_edittarget = EDITTARGET_MORPH;//2024/06/09　グラフモード変更
 
 		CreateBlendShapeWnd();
@@ -52215,7 +52328,14 @@ void ShowGUIDlgBlendShape(bool srcflag)
 		}
 
 		//2024/06/30 BlendShapeの操作中ターゲットのグラフを表示
-		s_blendshapeUnderSelect = true;
+		if (!s_undoFlag && !s_redoFlag &&
+			!s_blendshapeUnderSelectFromUndo && !s_blendshapeUnderSelectFromRefresh) {
+
+			//s_blendshapeUnderSelect = true;
+			
+			//2024/07/02 RollBackUndoMotionの一連の動作でUndoが走ってしまわないようにFromUndoフラグを使用
+			s_blendshapeUnderSelectFromUndo = true;
+		}
 	}
 	else {
 
@@ -62181,28 +62301,6 @@ int ChangeUpdateMatrixThreads()
 	return 0;
 }
 
-int FindModelIndex(CModel* srcmodel)
-{
-	if (!srcmodel || !s_chascene) {
-		return -1;
-	}
-
-	int modelnum = s_chascene->GetModelNum();
-	if (modelnum <= 0) {
-		return -1;
-	}
-
-	int modelno;
-	for (modelno = 0; modelno < modelnum; modelno++) {
-		MODELELEM curme = s_chascene->GetModelElem(modelno);
-		if (curme.modelptr == srcmodel) {
-			return modelno;//!!!!!!!!!!!!!!
-		}
-	}
-
-	return -1;
-}
-
 CGrassElem* FindGrassElem(CModel* srcmodel)
 {
 	CGrassElem* retgrasselem = nullptr;
@@ -65222,15 +65320,41 @@ int OnFrameBlendShape()
 {
 
 
-	if (s_blendshapeUnderSelect) {//2024/06/30 Means SelChange
+	if (s_blendshapeUnderSelect) { //2024/06/30 Means SelChange
+
+		//undoFlagが立っていた場合にもフラグをリセット
 		s_blendshapeUnderSelect = false;
 
-		if ((s_blendshapeOpeIndex >= 0) && (s_blendshapeOpeIndex < (int)s_blendshapeelemvec.size())) {
+		if (!s_undoFlag && !s_redoFlag && //2024/07/02
+			!s_blendshapeUnderSelectFromUndo && !s_blendshapeUnderSelectFromRefresh) {
+
+			if ((s_blendshapeOpeIndex >= 0) && (s_blendshapeOpeIndex < (int)s_blendshapeelemvec.size())) {
+				CBlendShapeElem blendshapeelem = s_blendshapeelemvec[s_blendshapeOpeIndex];
+				if (blendshapeelem.validflag && blendshapeelem.model && blendshapeelem.mqoobj) {
+
+					SetLTimelineMark(s_curboneno);//playerbuttonのshape名更新
+					UpdateEditedEuler();
+
+					PrepairUndo_BlendShape(blendshapeelem);
+				}
+			}
+		}
+	}
+
+	if (s_blendshapeUnderSelectFromRefresh) {//2024/07/02 Means SelChange From Undo
+		s_blendshapeUnderSelectFromRefresh = false;
+
+		int blendshapenum = (int)s_blendshapeelemvec.size();
+		if ((s_blendshapeUndoOpeIndex >= 0) && (s_blendshapeUndoOpeIndex < blendshapenum)) {
+			s_blendshapeOpeIndex = s_blendshapeUndoOpeIndex;
 			CBlendShapeElem blendshapeelem = s_blendshapeelemvec[s_blendshapeOpeIndex];
 			if (blendshapeelem.validflag && blendshapeelem.model && blendshapeelem.mqoobj) {
-
 				SetLTimelineMark(s_curboneno);//playerbuttonのshape名更新
 				UpdateEditedEuler();
+
+				BlendShapeAnim2Dlg();//valueの変更操作よりも後で呼ぶ
+
+				//!!!! Undoからトリガーされるので　PrepairUndo_BlendShape()呼び出しは無し
 			}
 		}
 	}
@@ -65247,7 +65371,7 @@ int OnFrameBlendShape()
 				blendshapeelem.mqoobj->SetShapeAnimWeight(blendshapeelem.channelindex,
 					curmotid, IntTime(curframe), s_blendshapeAfter);
 
-				SetLTimelineMark(s_curboneno);//playerbuttonのshape名更新
+				//SetLTimelineMark(s_curboneno);//playerbuttonのshape名更新
 				UpdateEditedEuler();
 
 				BlendShapeAnim2Dlg();//valueの変更操作よりも後で呼ぶ
@@ -65274,6 +65398,8 @@ int OnFrameBlendShape()
 					UpdateEditedEuler();
 
 					BlendShapeAnim2Dlg();//valueの変更操作よりも後で呼ぶ
+
+					PrepairUndo_BlendShape(blendshapeelem);
 				}
 			}
 		}

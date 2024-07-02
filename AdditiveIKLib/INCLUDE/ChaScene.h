@@ -133,6 +133,9 @@ public:
 	bool IsCameraModel(CModel* srcmodel);
 	bool IsCameraMotion(CModel* srcmodel, int srcmotid);
 
+
+	int FindModelIndex(CModel* srcmodel);
+
 private:
 	void InitParams();
 	void DestroyObjs();

@@ -198,56 +198,7 @@ typedef struct tag_instancingparams
 	};
 }INSTANCINGPARAMS;
 
-class CBlendShapeElem
-{
-public:
-	CBlendShapeElem() {
-		Init();
-	};
-	~CBlendShapeElem() {
-		Init();
-	};
-	int SetBlendShape(CModel* srcmodel, CMQOObject* srcmqoobj, int srcchannelindex) {
-		if (!srcmodel || !srcmqoobj || (srcchannelindex < 0)) {
-			_ASSERT(0);
-			validflag = false;
-			return 1;
-		}
-		model = srcmodel;
-		mqoobj = srcmqoobj;
-		channelindex = srcchannelindex;
 
-		int error0 = 0;
-		std::string strshapename = mqoobj->GetShapeName(channelindex, &error0);
-		if (error0 != 0) {
-			_ASSERT(0);
-			validflag = false;
-			return 1;
-		}
-
-		char shapename[256] = { 0 };
-		strcpy_s(shapename, 256, strshapename.c_str());
-		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, shapename, -1, targetname, 256);
-
-		validflag = true;
-		return 0;
-	};
-
-	void Init() {
-		validflag = false;
-		model = nullptr;
-		mqoobj = nullptr;
-		ZeroMemory(targetname, sizeof(WCHAR) * 256);
-		channelindex = 0;
-	};
-
-public:
-	bool validflag;
-	CModel* model;
-	CMQOObject* mqoobj;
-	WCHAR targetname[256];
-	int channelindex;
-};
 
 
 #define MAXPHYSIKRECCNT		(60 * 60)
@@ -999,13 +950,18 @@ public:
 	int InitUndoMotion( int saveflag );
 	int SaveUndoMotion(UNDOSELECT srcundoselect, bool LimitDegCheckBoxFlag, bool limitdegflag, int curboneno, int curbaseno,
 		int srcedittarget, CEditRange* srcer, double srcapplyrate, 
-		BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, bool allframeflag);
+		BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, 
+		CBlendShapeElem srcblendshapeelem, bool allframeflag);
+	int SaveUndoBlendShapeMotion(bool limitdegflag, int curboneno, int curbaseno,
+		int srcedittarget, CEditRange* srcer, double srcapplyrate,
+		BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera,
+		CBlendShapeElem srcblendshapeelem);
 	int RollBackUndoMotion(ChaScene* pchascene, 
 		bool limitdegflag, HWND hmainwnd, int redoflag,
 		int* edittarget,
 		int* pselectedboneno, int* curbaseno,
 		UNDOSELECT* dstundoselect,
-		BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera, UNDOMOTID* dstundomotid);
+		BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera, UNDOMOTID* dstundomotid, CBlendShapeElem* dstblendshapeelem);
 
 	int AddBoneMotMark( OrgWinGUI::OWP_Timeline* owpTimeline, int curboneno, int curlineno, double startframe, double endframe, int flag );
 
@@ -3159,8 +3115,9 @@ private:
 
 	int m_texpool;//Direct3Dのテクスチャ作成プール（場所）。システムメモリかビデオメモリかマネージドか選ぶ。通常は0でビデオメモリを指定する。
 	ChaVector3 m_ikrotaxis;//IK, FKでボーン回転するための回転軸を一時的に保存する。
-	CUndoMotion m_undomotion[UNDOMAX];//ボーンモーションアンドゥー機能のためのCUndoMotionの配列。CUndoMotionの１つのインスタンスは１フレーム分のモーションを保存する。
-	CUndoMotion m_undocamera[UNDOMAX];//カメラアニメアンドゥー機能のためのCUndoMotionの配列。CUndoMotionの１つのインスタンスは１フレーム分のモーションを保存する。
+	CUndoMotion m_undomotion[UNDOMAX];//ボーンモーションアンドゥー機能のためのCUndoMotionの配列。
+	CUndoMotion m_undocamera[UNDOMAX];//カメラアニメアンドゥー機能のためのCUndoMotionの配列。
+	CUndoMotion m_undoblendshape[UNDOMAX];//モーフアニメアンドゥー機能のためのCUndoMotionの配列。
 	//int m_undoid;//アンドゥー用データをリングバッファで使用するための現在位置へのインデックス。
 	//int m_undoSavedNum;//保存中のアンドゥーの数
 	int m_undo_readpoint;

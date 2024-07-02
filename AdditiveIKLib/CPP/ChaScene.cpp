@@ -2237,6 +2237,10 @@ int ChaScene::SetRefPosFlag(CModel* srcmodel)
 
 int ChaScene::MotID2SelIndex(int srcmodelindex, int srcmotid)
 {
+	if (srcmotid <= 0) {
+		return -1;
+	}
+
 	int modelindexnum = (int)m_modelindex.size();
 	if ((srcmodelindex >= 0) && (srcmodelindex < modelindexnum)) {
 		MODELELEM modelelem = m_modelindex[srcmodelindex];
@@ -2291,3 +2295,24 @@ bool ChaScene::IsCameraMotion(CModel* srcmodel, int srcmotid)
 	}
 }
 
+int ChaScene::FindModelIndex(CModel* srcmodel)
+{
+	if (!srcmodel) {
+		return -1;
+	}
+
+	int modelnum = GetModelNum();
+	if (modelnum <= 0) {
+		return -1;
+	}
+
+	int modelindex;
+	for (modelindex = 0; modelindex < modelnum; modelindex++) {
+		MODELELEM curme = GetModelElem(modelindex);
+		if (curme.modelptr == srcmodel) {
+			return modelindex;//!!!!!!!!!!!!!!
+		}
+	}
+
+	return -1;
+}

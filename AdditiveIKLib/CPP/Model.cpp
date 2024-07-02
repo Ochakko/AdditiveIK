@@ -355,7 +355,7 @@ extern LONG g_retargetbatchflag;
 extern bool g_btsimurecflag;
 
 extern CRITICAL_SECTION g_CritSection_GetGP;
-extern int CalcLocalMeshMat(FbxMesh* pMesh, ChaMatrix* dstmeshmat);//FbxFile.cpp
+//extern int CalcLocalMeshMat(FbxMesh* pMesh, ChaMatrix* dstmeshmat);//FbxFile.cpp
 
 
 /*
@@ -473,7 +473,7 @@ static DWORD s_rigidflag = 0;
 
 
 
-CModel::CModel() : m_camerafbx(), m_frustum(), m_undomotion(), m_undocamera()
+CModel::CModel() : m_camerafbx(), m_frustum(), m_undomotion(), m_undocamera(), m_undoblendshape()
 {
 	InitializeCriticalSection(&m_CritSection_Node);
 
@@ -3628,6 +3628,9 @@ int CModel::DeleteMotion( int motid )
 		}
 		if (m_undocamera[undono].GetSaveMotInfo().motid == motid) {
 			m_undocamera[undono].SetValidFlag(0);
+		}
+		if (m_undoblendshape[undono].GetSaveMotInfo().motid == motid) {
+			m_undoblendshape[undono].SetValidFlag(0);
 		}
 	}
 
@@ -17674,6 +17677,7 @@ int CModel::InitUndoMotion( int saveflag )
 	for( undono = 0; undono < UNDOMAX; undono++ ){
 		m_undomotion[undono].ClearData();
 		m_undocamera[undono].ClearData();
+		m_undoblendshape[undono].ClearData();
 	}
 
 	m_undo_readpoint = 0;
@@ -17704,10 +17708,52 @@ int CModel::InitUndoMotion( int saveflag )
 	return 0;
 }
 
+int CModel::SaveUndoBlendShapeMotion(
+	bool limitdegflag, int curboneno, int curbaseno,
+	int srcedittarget, CEditRange* srcer, double srcapplyrate,
+	BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera,
+	CBlendShapeElem srcblendshapeelem)
+{
+	//saveによって次回のundo位置は変わる
+	//undoによって次回のsave位置は変わらない
+
+	int saveundoid = m_undo_writepoint;
+	m_undo_writepoint = GetNewUndoID();
+
+
+	m_undomotion[m_undo_writepoint].SetValidFlag(0);
+	m_undocamera[m_undo_writepoint].SetValidFlag(0);
+	m_undoblendshape[m_undo_writepoint].SetValidFlag(0);
+
+	int result = 0;
+	if (srcblendshapeelem.validflag &&
+		srcblendshapeelem.model && (srcblendshapeelem.model == this) && //!!! blendshapeelem.model == this !!!!
+		srcblendshapeelem.mqoobj && (srcblendshapeelem.channelindex >= 0)) {
+
+		result = m_undoblendshape[m_undo_writepoint].SaveBlendShapeMotion(
+			limitdegflag, curboneno, curbaseno,
+			srcedittarget, srcer, srcapplyrate,
+			srcbrushstate, srcundocamera, srcblendshapeelem);
+	}
+
+	if ((result != 0) && (result != 2)) {//result == 2はエラーにしない
+		_ASSERT(0);
+		m_undo_writepoint = saveundoid;
+		return 1;
+	}
+	else {
+		//成功した場合
+		m_undo_readpoint = m_undo_writepoint;
+		m_undo_firstflag = false;
+	}
+
+	return 0;
+}
 int CModel::SaveUndoMotion(UNDOSELECT srcundoselect, bool LimitDegCheckBoxFlag, bool limitdegflag, int curboneno, int curbaseno, 
 	int srcedittarget, CEditRange* srcer,
 	double srcapplyrate, 
 	BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, 
+	CBlendShapeElem srcblendshapeelem,
 	bool allframeflag)
 {
 	//saveによって次回のundo位置は変わる
@@ -17732,7 +17778,8 @@ int CModel::SaveUndoMotion(UNDOSELECT srcundoselect, bool LimitDegCheckBoxFlag, 
 		GetSelectedBoneNo(), curbaseno, 
 		srcedittarget,
 		undocameraflag1,//2024/06/24 BoneMotionをSaveする
-		srcer, srcapplyrate, srcbrushstate, srcundocamera, allframeflag);
+		srcer, srcapplyrate, srcbrushstate, srcundocamera, 
+		srcblendshapeelem, allframeflag);
 	
 	int result2 = 0;
 	if (srcundocamera.cameramodel) {
@@ -17746,13 +17793,31 @@ int CModel::SaveUndoMotion(UNDOSELECT srcundoselect, bool LimitDegCheckBoxFlag, 
 			selectedcameraboneno, curbasenocamera,
 			srcedittarget,
 			undocameraflag2,//2024/06/24 CameraAnimをSaveする
-			srcer, srcapplyrate, srcbrushstate, srcundocamera, allframeflag);
+			srcer, srcapplyrate, srcbrushstate, srcundocamera, 
+			srcblendshapeelem, allframeflag);
 	}
 	else {
 		m_undocamera[m_undo_writepoint].SetValidFlag(0);
 	}
 
-	if ((result1 == 1) || (result2 == 1)) {//result == 2はエラーにしない
+
+	//フレーム範囲セレクトしたときの　初期状態のBlendShapeを保存しておく必要がある
+	int result3 = 0;
+	if (srcblendshapeelem.validflag &&
+		srcblendshapeelem.model && (srcblendshapeelem.model == this) && //!!! blendshapeelem.model == this !!!!
+		srcblendshapeelem.mqoobj && (srcblendshapeelem.channelindex >= 0)) {
+
+		result3 = m_undoblendshape[m_undo_writepoint].SaveBlendShapeMotion(
+			limitdegflag, curboneno, curbaseno,
+			srcedittarget, srcer, srcapplyrate,
+			srcbrushstate, srcundocamera, srcblendshapeelem);
+	}
+	else {
+		m_undoblendshape[m_undo_writepoint].SetValidFlag(0);
+	}
+
+
+	if ((result1 == 1) || (result2 == 1) || (result3 == 1)) {//result == 2はエラーにしない
 		_ASSERT(0);
 		m_undo_writepoint = saveundoid;
 		return 1;
@@ -17769,10 +17834,10 @@ int CModel::RollBackUndoMotion(ChaScene* pchascene,
 	bool limitdegflag, HWND hmainwnd, int redoflag, 
 	int* edittarget, int* pselectedboneno, int* curbaseno,
 	UNDOSELECT* dstundoselect,
-	BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera, UNDOMOTID* dstundomotid)
+	BRUSHSTATE* dstbrushstate, UNDOCAMERA* dstundocamera, UNDOMOTID* dstundomotid, CBlendShapeElem* dstblendshapeelem)
 {
 	if (!edittarget || !pselectedboneno || !curbaseno || 
-		!dstbrushstate || !dstundocamera || !dstundomotid || !dstundoselect) {
+		!dstbrushstate || !dstundocamera || !dstundomotid || !dstundoselect || !dstblendshapeelem) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -17867,17 +17932,43 @@ int CModel::RollBackUndoMotion(ChaScene* pchascene,
 	}
 
 	if(m_undo_readpoint >= 0){
+		if (m_undoblendshape[m_undo_readpoint].GetValidFlag() && 
+			m_undoblendshape[m_undo_readpoint].GetBlendShapeFlag()) {
+			//フレーム範囲セレクトしたときの　初期状態のBlendShapeも復元
+			bool undocameraflag1 = false;
+			bool undoblendshapeflag1 = true;
+			int result0 = m_undoblendshape[m_undo_readpoint].RollBackMotion(pchascene, 
+				undocameraflag1, undoblendshapeflag1,
+				limitdegflag, this,
+				edittarget,
+				pselectedboneno, curbaseno,
+				dstundoselect,
+				dstbrushstate, dstundocamera, dstundomotid,
+				dstblendshapeelem);
+			if (result0 != 0) {
+				dstblendshapeelem->validflag = false;
+			}
+		}
+		else {
+			dstblendshapeelem->validflag = false;//!!!!!!!!!!!!!!!
+		}
+
 		bool undocameraflag1 = false;
-		int result1 = m_undomotion[m_undo_readpoint].RollBackMotion(pchascene, undocameraflag1,
+		bool undoblendshapeflag1 = false;
+		CBlendShapeElem blendshapeelem1;
+		int result1 = m_undomotion[m_undo_readpoint].RollBackMotion(pchascene, 
+			undocameraflag1, undoblendshapeflag1,
 			limitdegflag, this,
 			edittarget,
 			pselectedboneno, curbaseno,
 			dstundoselect,
-			dstbrushstate, dstundocamera, dstundomotid);
+			dstbrushstate, dstundocamera, dstundomotid,
+			&blendshapeelem1);
 
 
 		int result2 = 0;
 		bool undocameraflag2 = true;
+		bool undoblendshapeflag2 = false;
 		bool limitdegcamera = false;
 		int selectedcameraboneno = 0;
 		int curbasenocamera = 0;
@@ -17886,22 +17977,27 @@ int CModel::RollBackUndoMotion(ChaScene* pchascene,
 			UNDOCAMERA cameraundocamera;
 			UNDOMOTID cameraundomotid;
 			UNDOSELECT cameraundoselect;
-			result2 = m_undocamera[m_undo_readpoint].RollBackMotion(pchascene, undocameraflag2,
+			CBlendShapeElem blendshapeelem2;
+			result2 = m_undocamera[m_undo_readpoint].RollBackMotion(pchascene, 
+				undocameraflag2, undoblendshapeflag2,
 				limitdegcamera, this,
 				edittarget,
 				&selectedcameraboneno, &curbasenocamera,
 				&cameraundoselect,
-				&camerabrushstate, &cameraundocamera, &cameraundomotid);
+				&camerabrushstate, &cameraundocamera, &cameraundomotid,
+				&blendshapeelem2);
 		}
 		else {
-			result2 = m_undocamera[m_undo_readpoint].RollBackMotion(pchascene, undocameraflag2,
+			CBlendShapeElem blendshapeelem3;
+			result2 = m_undocamera[m_undo_readpoint].RollBackMotion(pchascene,
+				undocameraflag2, undoblendshapeflag2,
 				limitdegcamera, this,
 				edittarget,
 				&selectedcameraboneno, &curbasenocamera,
 				dstundoselect,
-				dstbrushstate, dstundocamera, dstundomotid);
+				dstbrushstate, dstundocamera, dstundomotid,
+				&blendshapeelem3);
 		}
-
 	}
 
 	if (thefirstselectmodel || thelastselectmodel) {
@@ -17948,7 +18044,9 @@ int CModel::GetValidUndoID()
 
 		//if(m_undomotion[curid].GetValidFlag() == 1){
 		if ((m_undocamera[curid].GetValidFlag() == 1) || //2024/06/24 ボーンモーションとカメラアニメのどちらかが正常に保存されている場合
-			(m_undomotion[curid].GetValidFlag() == 1)) {
+			(m_undomotion[curid].GetValidFlag() == 1) ||
+			(m_undoblendshape[curid].GetValidFlag() == 1) //2024/07/01 ブレンドシェイプの保存を追加
+			) {
 			retid = curid;
 			break;
 		}
@@ -17972,7 +18070,9 @@ int CModel::GetValidRedoID()
 
 		//if(m_undomotion[curid].GetValidFlag() == 1){
 		if ((m_undocamera[curid].GetValidFlag() == 1) || //2024/06/24 ボーンモーションとカメラアニメのどちらかが正常に保存されている場合
-			(m_undomotion[curid].GetValidFlag() == 1)) {
+			(m_undomotion[curid].GetValidFlag() == 1) ||
+			(m_undoblendshape[curid].GetValidFlag() == 1) //2024/07/01 ブレンドシェイプの保存を追加
+			) {
 			retid = curid;
 			break;
 		}
