@@ -3,8 +3,8 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
-2024/07/02
-　AdditiveIK 1.0.0.26 RC1(リリース候補1)
+2024/07/03
+　AdditiveIK 1.0.0.26 RC2(リリース候補2)
 　　1.0.0.25からの変更点
 　　　モーフ(BlendShape)アニメ編集もアンドゥリドゥ対象に.
 　　　　アンドゥリドゥまとめ
@@ -24,6 +24,8 @@ https://github.com/Ochakko/AdditiveIK
 　　　BlendShapeウインドウのターゲット名をボタン化
 　　　　スライダーを動かさないでもボタンを押してグラフを確認可能に.
 
+　　　ドキュメント追加
+　　　　Documents/TroubleShooting/0_AboutUndoRedo.docx
 
 　　　不具合修正
 　　　　１段目プレートメニュークリックに対する処理を修正
@@ -42,6 +44,14 @@ https://github.com/Ochakko/AdditiveIK
 　　　　　赤いカエルによるグラフ切り替えの絵の中のコメントが間違っていたのを修正
 
 
+　RC2:
+　　オープンダイアログのTestフォルダ参照ボタンのリンク先が
+　　1.0.0.25のTestフォルダになっていたのを1.0.0.26のTestフォルダに修正
+　　
+　　オープンダイアログの参照ボタンの文言を調整
+
+　　ドキュメント追加
+　　　Documents/TroubleShooting/0_AboutUndoRedo.docx
 
 
 
