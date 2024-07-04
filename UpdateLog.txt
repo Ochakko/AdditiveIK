@@ -4,7 +4,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/07/04
-　AdditiveIK 1.0.0.26 RC3(リリース候補3)
+　AdditiveIK 1.0.0.26 release
 　　1.0.0.25からの変更点
 　　　モーフ(BlendShape)アニメ編集もアンドゥリドゥ対象に.
 　　　　アンドゥリドゥまとめ
