@@ -38206,9 +38206,11 @@ int PasteMotionPoint(int curmotid, CBone* srcbone, CMotionPoint srcmp, double ne
 
 				break;
 			}
-			else {
-				hasNotMvParFlag = 0;
-			}
+
+			//2024/07/04 hasNotMVParFlagは初期値１。０で上書きするのは対象ボーンとしてvecopebone内に見つかったときだけ。よってコメントアウト。
+			//else {
+			//	hasNotMvParFlag = 0;
+			//}
 		}
 	}
 	else {
@@ -38298,9 +38300,14 @@ int PasteNotMvParMotionPoint(CModel* srcmodel, CBone* srcbone, int curmotid,
 
 				break;
 			}
-			else {
-				hasNotMvParFlag = 0;
-			}
+
+			//2024/07/04 hasNotMVParFlagは初期値１。０で上書きするのは対象ボーンとしてvecopebone内に見つかったときだけ。よってコメントアウト。
+			//この関数はペースト直後に　srcbone引数を変えて何回も呼び出される
+			//コメントアウト前は　(srcbone == vecopebone[0])であるボーンがNotMvの処理対象であるような場合にしか機能していなかった。
+			//else {
+			//	hasNotMvParFlag = 0;
+			//}
+
 		}
 	}
 	else {
@@ -38511,7 +38518,12 @@ int PasteMotionPointJustInTerm(CModel* srcmodel, int curmotid,
 		vector<CPELEM2>::iterator itrcp;
 		for (itrcp = s_pastemotvec.begin(); itrcp != s_pastemotvec.end(); itrcp++) {
 			CBone* srcbone = itrcp->bone;
-			if (srcbone && (srcbone->GetPasteDoneFlag() == false)) {
+			if (srcbone && (srcbone->GetPasteDoneFlag() == false) &&
+				(
+					(!cameraflag && srcbone->IsSkeleton()) || 
+					(cameraflag && (srcbone->IsCamera() || srcbone->IsNullAndChildIsCamera()))
+				) 
+			) {
 				CMotionPoint srcmp = itrcp->mp;
 				if (IsEqualRoundingTime(srcmp.GetFrame(), srcframe)) {
 					int resultjointno = PasteNotMvParMotionPoint(srcmodel, srcbone, curmotid,

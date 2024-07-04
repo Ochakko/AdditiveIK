@@ -3,8 +3,8 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
-2024/07/03
-　AdditiveIK 1.0.0.26 RC2(リリース候補2)
+2024/07/04
+　AdditiveIK 1.0.0.26 RC3(リリース候補3)
 　　1.0.0.25からの変更点
 　　　モーフ(BlendShape)アニメ編集もアンドゥリドゥ対象に.
 　　　　アンドゥリドゥまとめ
@@ -42,6 +42,13 @@ https://github.com/Ochakko/AdditiveIK
 　　　　Documents/TroubleShooting/0_AboutCameraAnim.docx
 　　　　　上記ファイルの絵を修正
 　　　　　赤いカエルによるグラフ切り替えの絵の中のコメントが間違っていたのを修正
+　　　　
+　　　　カメラが入っているモデルにおけるペースト処理の修正
+　　　　　ペーストボタンを右クリックして操作対象ボーンからHipsを除外した場合の挙動が仕様と違ったので修正
+　　　　　例えば　Testフォルダの0_VRoid202406_Cam004を読み込み、操作対象スロットとしてNoHipsを選択してペーストした場合
+　　　　　　元のモーションのHipsの位置を起点にして、元の位置と繋がるようにしてHipsの動きもペーストされる(仕様)
+　　　　　Hipsの動きを全くペーストしたくない場合には、操作対象ボーンダイアログのTranslationチェックを外してペーストする(仕様)
+　　　　　今回の修正で上記仕様通りになった
 
 
 　RC2:
@@ -52,6 +59,20 @@ https://github.com/Ochakko/AdditiveIK
 
 　　ドキュメント追加
 　　　Documents/TroubleShooting/0_AboutUndoRedo.docx
+
+　RC3:
+　　カメラが入っているモデルにおけるペースト処理の修正
+　　　ペーストボタンを右クリックして操作対象ボーンからHipsを除外した場合の挙動が仕様と違ったので修正
+　　　例えば　Testフォルダの0_VRoid202406_Cam004を読み込み、操作対象スロットとしてNoHipsを選択してペーストした場合
+　　　　元のモーションのHipsの位置を起点にして、元の位置と繋がるようにしてHipsの動きもペーストされる(仕様)
+　　　Hipsの動きを全くペーストしたくない場合には、操作対象ボーンダイアログのTranslationチェックを外してペーストする(仕様)
+　　　今回の修正で上記仕様通りになった
+　　　
+　　ドキュメントに追記
+　　　Documents/TroubleShooting/0_AboutUndoRedo.docx
+　　　上記ファイルにUndoとRedoのショートカットキーについて追記
+
+
 
 
 
