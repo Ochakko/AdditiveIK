@@ -9,6 +9,8 @@
 
 #include "GlobalVar.h"
 #include <Model.h>
+#include "../../AdditiveIK/RMenuMain.h"
+#include "../../AdditiveIK/resource.h"//IDR_RMENU
 
 using namespace std;
 
@@ -18,6 +20,7 @@ extern std::vector<void*> g_keypool;//allocate KEYPOOLBLKLEN motoinpoints at ons
 extern LONG g_bvh2fbxbatchflag;
 //extern LONG g_motioncachebatchflag;
 extern LONG g_retargetbatchflag;
+extern LONG g_undertrackingRMenu;
 
 namespace OrgWinGUI{
 
@@ -1723,6 +1726,81 @@ namespace OrgWinGUI{
 	}
 
 
+	int OWP_ComboBoxA::trackPopUpMenu()
+	{
+		int combonum = (int)combovec.size();
+		if (combonum <= 0) {
+			return 0;
+		}
+
+		if (!getParent()) {
+			return 0;
+		}
+		HWND parwnd;
+		parwnd = getParent()->getHWnd();
+
+		CRMenuMain* rmenu;
+		rmenu = new CRMenuMain(IDR_RMENU);
+		if (!rmenu) {
+			return 1;
+		}
+		int ret;
+		//ret = rmenu->Create(parwnd, MENUOFFSET_SETCONVBONEBVH);
+		ret = rmenu->Create(parwnd, 0);
+		if (ret) {
+			return 1;
+		}
+
+		HMENU submenu = rmenu->GetSubMenu();
+
+		int menunum;
+		menunum = GetMenuItemCount(submenu);
+		int menuno;
+		for (menuno = 0; menuno < menunum; menuno++)
+		{
+			RemoveMenu(submenu, 0, MF_BYPOSITION);
+		}
+
+		int combono;
+		for (combono = 0; combono < combonum; combono++) {
+			const char* addstr = combovec[combono].c_str();
+			if (addstr) {
+				//int setmenuid = ID_RMENU_0 + combono + MENUOFFSET_SETCONVBONEBVH;
+				int setmenuid = combono;
+				AppendMenuA(submenu, MF_STRING, setmenuid, addstr);
+			}
+		}
+
+
+		POINT pt;
+		//GetCursorPos(&pt);
+		pt.x = getParent()->getPos().x + pos.x + 2;
+		pt.y = getParent()->getPos().y + pos.y + 2;
+
+		//s_cursubmenu = rmenu->GetSubMenu();
+
+		InterlockedExchange(&g_undertrackingRMenu, (LONG)1);
+		int menuid;
+		menuid = rmenu->TrackPopupMenuReturnCmd(pt);
+
+		rmenu->Destroy();
+		delete rmenu;
+		InterlockedExchange(&g_undertrackingRMenu, (LONG)0);
+
+		//if (s_convboneWnd) {
+		//	//2023/10/15
+		//	//OrgWindowのLisner関数でコンテクストメニューを出した場合　メニュー終了時にLBUTTONUPを呼び出す必要有り
+		//	//呼び出さなかった場合　SetCaptureとReleaseCaptureのバランスが崩れて　スクロールバーを画面外でBUTTONUPしたときに処理されない
+		//	::SendMessage(s_convboneWnd->getHWnd(), WM_LBUTTONUP, 0, 0);
+		//}
+		::SendMessage(getParent()->getHWnd(), WM_LBUTTONUP, 0, 0);
+
+		selectedcombo = menuid;
+
+		return menuid;
+	}
+
+
 	/// Method : 再描画要求を送る
 	void OrgWindowParts::callRewrite(){
 		//if( parentWindow==NULL ) return;
@@ -1902,9 +1980,5 @@ namespace OrgWinGUI{
 
 		return 0;
 	}
-
-
-
-
-
 }
+

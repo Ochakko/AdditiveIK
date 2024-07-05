@@ -79,6 +79,7 @@ int CRMenuMain::Destroy()
 	return 0;
 }
 
+
 int CRMenuMain::TrackPopupMenu( POINT pt )
 {
 	Params2Dlg();
@@ -87,6 +88,12 @@ int CRMenuMain::TrackPopupMenu( POINT pt )
 	::TrackPopupMenu(m_rsubmenu, TPM_LEFTALIGN, pt.x, pt.y, 0, m_menuwnd, NULL);
 
 	return 0;
+}
+int CRMenuMain::TrackPopupMenuReturnCmd(POINT pt)
+{
+	Params2Dlg();
+	int menuid = ::TrackPopupMenuEx(m_rsubmenu, TPM_LEFTALIGN | TPM_RETURNCMD, pt.x, pt.y, m_menuwnd, NULL);
+	return menuid;
 }
 
 int CRMenuMain::Params2Dlg()

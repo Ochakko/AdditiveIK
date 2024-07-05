@@ -15,6 +15,7 @@ public:
 	HMENU GetSubMenu();
 
 	int TrackPopupMenu(POINT pt);
+	int TrackPopupMenuReturnCmd(POINT pt);
 
 private:
 	int InitParams();

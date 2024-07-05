@@ -1176,6 +1176,49 @@ static OWP_Label* s_dmpanimAlabel = 0;
 static OWP_Slider* s_dmpanimASlider = 0;
 static OWP_Button* s_dmpanimB = 0;
 
+static OrgWindow* s_displimitsWnd = 0;
+static OWP_CheckBoxA* s_lightsChk = 0;
+static OWP_Separator* s_lightssp = 0;
+static OWP_Slider* s_lightsSlider = 0;
+static OWP_Separator* s_threadssp = 0;
+static OWP_Label* s_threadsLabel = 0;
+static OWP_Slider* s_threadsSlider = 0;
+static OWP_CheckBoxA* s_highRpmChk = 0;
+static OWP_Separator* s_bonemarksp = 0;
+static OWP_CheckBoxA* s_bonemarkChk = 0;
+static OWP_Slider* s_bonemarkSlider = 0;
+static OWP_Separator* s_rigidmarksp = 0;
+static OWP_CheckBoxA* s_rigidmarkChk = 0;
+static OWP_Slider* s_rigidmarkSlider = 0;
+static OWP_Separator* s_rigmarksp = 0;
+static OWP_Label* s_rigmarkLabel = 0;
+static OWP_Slider* s_rigmarkSlider = 0;
+static OWP_Separator* s_refpossp = 0;
+static OWP_Label* s_refposLabel = 0;
+static OWP_Slider* s_refposSlider = 0;
+static OWP_Separator* s_iklevelssp = 0;
+static OWP_Label* s_iklevelsLabel = 0;
+static OWP_ComboBoxA* s_iklevelsCombo = 0;
+static OWP_Separator* s_axiskindsp = 0;
+static OWP_Label* s_axiskindLabel = 0;
+static OWP_ComboBoxA* s_axiskindCombo = 0;
+static OWP_Separator* s_uvsetsp = 0;
+static OWP_Label* s_uvsetLabel = 0;
+static OWP_ComboBoxA* s_uvsetCombo = 0;
+static OWP_Separator* s_dispsp1 = 0;
+static OWP_CheckBoxA* s_x180Chk = 0;
+static OWP_CheckBoxA* s_rottraChk = 0;
+static OWP_Separator* s_dispsp2 = 0;
+static OWP_CheckBoxA* s_dofChk = 0;
+static OWP_CheckBoxA* s_bloomChk = 0;
+static OWP_Separator* s_dispsp3 = 0;
+static OWP_CheckBoxA* s_alphaChk = 0;
+static OWP_CheckBoxA* s_zcmpChk = 0;
+static OWP_Separator* s_dispsp4 = 0;
+static OWP_CheckBoxA* s_freefpsChk = 0;
+static OWP_CheckBoxA* s_skydispChk = 0;
+
+
 static OrgWindow* s_sidemenuWnd = 0;
 //static OWP_Separator* s_sidemenusp = 0;
 //static OWP_Separator* s_sidemenusp1 = 0;
@@ -1916,6 +1959,7 @@ static bool s_RcloseFlag = false;
 static bool s_ScloseFlag = false;
 static bool s_IcloseFlag = false;
 static bool s_GcloseFlag = false;
+static bool s_displimitscloseFlag = false;
 static bool s_undoFlag = false;
 static bool s_redoFlag = false;
 static bool s_undoredoFromPlayerButton = false;
@@ -2929,7 +2973,7 @@ LRESULT CALLBACK SaveGcoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK CheckAxisTypeProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK AngleLimitDlgProc2(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK LightsForEditDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
-LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
+//LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK GUIBulletDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK GUILODDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
@@ -3023,7 +3067,7 @@ static int ConvPolarCoord2Dir(float srcxzdeg, float srcydeg, float* dstdirx, flo
 
 
 static int CreateGUIDlgDispParams();
-static int DispParams2Dlg(HWND hDlgWnd);
+static int DispParams2Dlg();
 //static int CreateGUIDlgBrushes();
 static int Brushes2Dlg(HWND hDlgWnd);
 static int CreateGUIDlgBullet();
@@ -4878,6 +4922,50 @@ void InitApp()
 	}
 
 	{
+		s_displimitsWnd = 0;
+		s_lightsChk = 0;
+		s_lightssp = 0;
+		s_lightsSlider = 0;
+		s_threadssp = 0;
+		s_threadsLabel = 0;
+		s_threadsSlider = 0;
+		s_highRpmChk = 0;
+		s_bonemarksp = 0;
+		s_bonemarkChk = 0;
+		s_bonemarkSlider = 0;
+		s_rigidmarksp = 0;
+		s_rigidmarkChk = 0;
+		s_rigidmarkSlider = 0;
+		s_rigmarksp = 0;
+		s_rigmarkLabel = 0;
+		s_rigmarkSlider = 0;
+		s_refpossp = 0;
+		s_refposLabel = 0;
+		s_refposSlider = 0;
+		s_iklevelssp = 0;
+		s_iklevelsLabel = 0;
+		s_iklevelsCombo = 0;
+		s_axiskindsp = 0;
+		s_axiskindLabel = 0;
+		s_axiskindCombo = 0;
+		s_uvsetsp = 0;
+		s_uvsetLabel = 0;
+		s_uvsetCombo = 0;
+		s_dispsp1 = 0;
+		s_x180Chk = 0;
+		s_rottraChk = 0;
+		s_dispsp2 = 0;
+		s_dofChk = 0;
+		s_bloomChk = 0;
+		s_dispsp3 = 0;
+		s_alphaChk = 0;
+		s_zcmpChk = 0;
+		s_dispsp4 = 0;
+		s_freefpsChk = 0;
+		s_skydispChk = 0;
+	}
+
+	{
 		s_st_closeFlag = false;
 		s_st_remakeToonTextureFlag = false;
 		s_st_backFlag = false;
@@ -5514,6 +5602,7 @@ void InitApp()
 	s_ScloseFlag = false;
 	s_IcloseFlag = false;
 	s_GcloseFlag = false;
+	s_displimitscloseFlag = false;
 	s_undoFlag = false;
 	s_redoFlag = false;
 	s_undoredoFromPlayerButton = false;
@@ -6865,6 +6954,174 @@ void OnDestroyDevice()
 		delete s_dmpanimWnd;
 		s_dmpanimWnd = 0;
 	}
+
+	{//displimitsWnd
+		if (s_lightsChk) {
+			delete s_lightsChk;
+			s_lightsChk = 0;
+		}
+		if (s_lightssp) {
+			delete s_lightssp;
+			s_lightssp = 0;
+		}
+		if (s_lightsSlider) {
+			delete s_lightsSlider;
+			s_lightsSlider = 0;
+		}
+		if (s_threadssp) {
+			delete s_threadssp;
+			s_threadssp = 0;
+		}
+		if (s_threadsLabel) {
+			delete s_threadsLabel;
+			s_threadsLabel = 0;
+		}
+		if (s_threadsSlider) {
+			delete s_threadsSlider;
+			s_threadsSlider = 0;
+		}
+		if (s_highRpmChk) {
+			delete s_highRpmChk;
+			s_highRpmChk = 0;
+		}
+		if (s_bonemarksp) {
+			delete s_bonemarksp;
+			s_bonemarksp = 0;
+		}
+		if (s_bonemarkChk) {
+			delete s_bonemarkChk;
+			s_bonemarkChk = 0;
+		}
+		if (s_bonemarkSlider) {
+			delete s_bonemarkSlider;
+			s_bonemarkSlider = 0;
+		}
+		if (s_rigidmarksp) {
+			delete s_rigidmarksp;
+			s_rigidmarksp = 0;
+		}
+		if (s_rigidmarkChk) {
+			delete s_rigidmarkChk;
+			s_rigidmarkChk = 0;
+		}
+		if (s_rigidmarkSlider) {
+			delete s_rigidmarkSlider;
+			s_rigidmarkSlider = 0;
+		}
+		if (s_rigmarksp) {
+			delete s_rigmarksp;
+			s_rigmarksp = 0;
+		}
+		if (s_rigmarkLabel) {
+			delete s_rigmarkLabel;
+			s_rigmarkLabel = 0;
+		}
+		if (s_rigmarkSlider) {
+			delete s_rigmarkSlider;
+			s_rigmarkSlider = 0;
+		}
+		if (s_refpossp) {
+			delete s_refpossp;
+			s_refpossp = 0;
+		}
+		if (s_refposLabel) {
+			delete s_refposLabel;
+			s_refposLabel = 0;
+		}
+		if (s_refposSlider) {
+			delete s_refposSlider;
+			s_refposSlider = 0;
+		}
+		if (s_iklevelssp) {
+			delete s_iklevelssp;
+			s_iklevelssp = 0;
+		}
+		if (s_iklevelsLabel) {
+			delete s_iklevelsLabel;
+			s_iklevelsLabel = 0;
+		}
+		if (s_iklevelsCombo) {
+			delete s_iklevelsCombo;
+			s_iklevelsCombo = 0;
+		}
+		if (s_axiskindsp) {
+			delete s_axiskindsp;
+			s_axiskindsp = 0;
+		}
+		if (s_axiskindLabel) {
+			delete s_axiskindLabel;
+			s_axiskindLabel = 0;
+		}
+		if (s_axiskindCombo) {
+			delete s_axiskindCombo;
+			s_axiskindCombo = 0;
+		}
+		if (s_uvsetsp) {
+			delete s_uvsetsp;
+			s_uvsetsp = 0;
+		}
+		if (s_uvsetLabel) {
+			delete s_uvsetLabel;
+			s_uvsetLabel = 0;
+		}
+		if (s_uvsetCombo) {
+			delete s_uvsetCombo;
+			s_uvsetCombo = 0;
+		}
+		if (s_dispsp1) {
+			delete s_dispsp1;
+			s_dispsp1 = 0;
+		}
+		if (s_x180Chk) {
+			delete s_x180Chk;
+			s_x180Chk = 0;
+		}
+		if (s_rottraChk) {
+			delete s_rottraChk;
+			s_rottraChk = 0;
+		}
+		if (s_dispsp2) {
+			delete s_dispsp2;
+			s_dispsp2 = 0;
+		}
+		if (s_dofChk) {
+			delete s_dofChk;
+			s_dofChk = 0;
+		}
+		if (s_bloomChk) {
+			delete s_bloomChk;
+			s_bloomChk = 0;
+		}
+		if (s_dispsp3) {
+			delete s_dispsp3;
+			s_dispsp3 = 0;
+		}
+		if (s_alphaChk) {
+			delete s_alphaChk;
+			s_alphaChk = 0;
+		}
+		if (s_zcmpChk) {
+			delete s_zcmpChk;
+			s_zcmpChk = 0;
+		}
+		if (s_dispsp4) {
+			delete s_dispsp4;
+			s_dispsp4 = 0;
+		}
+		if (s_freefpsChk) {
+			delete s_freefpsChk;
+			s_freefpsChk = 0;
+		}
+		if (s_skydispChk) {
+			delete s_skydispChk;
+			s_skydispChk = 0;
+		}
+		if (s_displimitsWnd) {
+			delete s_displimitsWnd;
+			s_displimitsWnd = 0;
+		}
+	}
+
 
 
 	if (s_impgroupcheck) {
@@ -26098,15 +26355,9 @@ int RollBackEditRange(int prevrangeFlag, int nextrangeFlag)
 
 int CreateGUIDlgDispParams()
 {
-	if (s_guidlg[GUIDLG_DISP_AND_LIMITS]) {
-		//already opened
-		return 0;
-	}
-
-	s_guidlg[GUIDLG_DISP_AND_LIMITS] = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_GUIDISPPARAMS), g_mainhwnd, (DLGPROC)GUIDispParamsDlgProc);
-	if (!s_guidlg[GUIDLG_DISP_AND_LIMITS]) {
+	if (s_displimitsWnd) {
 		_ASSERT(0);
-		return 1;
+		return 0;//作成済
 	}
 
 	int windowposx;
@@ -26117,18 +26368,443 @@ int CreateGUIDlgDispParams()
 		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
-	SetParent(s_guidlg[GUIDLG_DISP_AND_LIMITS], g_mainhwnd);
-	SetWindowPos(
-		s_guidlg[GUIDLG_DISP_AND_LIMITS],
-		HWND_TOP,
-		windowposx,
-		s_sidemenuheight,
-		s_sidewidth,
-		s_sideheight,
-		SWP_SHOWWINDOW
-	);
+	s_displimitsWnd = new OrgWindow(
+		0,
+		_T("DispAndLimitsDlg"),		//ウィンドウクラス名
+		GetModuleHandle(NULL),	//インスタンスハンドル
+		WindowPos(windowposx, s_sidemenuheight),
+		WindowSize(s_sidewidth, s_sideheight),		//サイズ
+		_T("DispAndLimitsDlg"),	//タイトル
+		g_mainhwnd,	//親ウィンドウハンドル
+		false,					//表示・非表示状態
+		//70, 50, 70,				//カラー
+		0, 0, 0,				//カラー
+		true,					//閉じられるか否か
+		true);					//サイズ変更の可否
 
-	ShowWindow(s_guidlg[GUIDLG_DISP_AND_LIMITS], SW_HIDE);
+	if (s_displimitsWnd) {
+		double rate1 = 0.350;
+		double rate50 = 0.50;
+
+		s_lightssp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
+		if (!s_lightssp) {
+			_ASSERT(0);
+			abort();
+		}
+		s_lightsChk = new OWP_CheckBoxA(L"Enable Lights", (g_lightflag != 0));
+		if (!s_lightsChk) {
+			_ASSERT(0);
+			abort();
+		}
+		s_lightsSlider = new OWP_Slider((double)g_fLightScale, 10.0, 0.0);
+		if (!s_lightsSlider) {
+			_ASSERT(0);
+			abort();
+		}
+
+		s_threadssp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
+		if (!s_threadssp) {
+			_ASSERT(0);
+			abort();
+		}
+		s_threadsLabel = new OWP_Label(L"Update Threads");
+		if (!s_threadsLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_threadsSlider = new OWP_Slider((double)g_UpdateMatrixThreads, 8.0, 1.0);
+		if (!s_threadsSlider) {
+			_ASSERT(0);
+			abort();
+		}
+
+		s_highRpmChk = new OWP_CheckBoxA(L"Hight RPM", g_HighRpmMode);
+		if (!s_highRpmChk) {
+			_ASSERT(0);
+			abort();
+		}
+
+		s_bonemarksp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
+		if (!s_bonemarksp) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bonemarkChk = new OWP_CheckBoxA(L"BoneMark", (g_bonemarkflag != 0));
+		if (!s_bonemarkChk) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bonemarkSlider = new OWP_Slider((double)g_bonemark_bright, 1.0, 0.0);
+		if (!s_bonemarkSlider) {
+			_ASSERT(0);
+			abort();
+		}
+
+		s_rigidmarksp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
+		if (!s_rigidmarksp) {
+			_ASSERT(0);
+			abort();
+		}
+		s_rigidmarkChk = new OWP_CheckBoxA(L"RigidMark", (g_rigidmarkflag != 0));
+		if (!s_rigidmarkChk) {
+			_ASSERT(0);
+			abort();
+		}
+		s_rigidmarkSlider = new OWP_Slider((double)g_rigidmark_alpha, 1.0, 0.0);
+		if (!s_rigidmarkSlider) {
+			_ASSERT(0);
+			abort();
+		}
+
+		s_rigmarksp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
+		if (!s_rigmarksp) {
+			_ASSERT(0);
+			abort();
+		}
+		s_rigmarkLabel = new OWP_Label(L"RigMark");
+		if (!s_rigmarkLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_rigmarkSlider = new OWP_Slider((double)g_rigmark_alpha, 1.0, 0.0);
+		if (!s_rigmarkSlider) {
+			_ASSERT(0);
+			abort();
+		}
+
+		s_refpossp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
+		if (!s_refpossp) {
+			_ASSERT(0);
+			abort();
+		}
+		s_refposLabel = new OWP_Label(L"RefPosAlpha");
+		if (!s_refposLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_refposSlider = new OWP_Slider((double)g_refalpha, 100.0, 0.0);
+		if (!s_refposSlider) {
+			_ASSERT(0);
+			abort();
+		}
+
+		s_iklevelssp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
+		if (!s_iklevelssp) {
+			_ASSERT(0);
+			abort();
+		}
+		s_iklevelsLabel = new OWP_Label(L"IK Levels");
+		if (!s_iklevelsLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_iklevelsCombo = new OWP_ComboBoxA(L"IKLEVELS");//g_iklevel:1,15
+		if (!s_iklevelsCombo) {
+			_ASSERT(0);
+			abort();
+		}
+		int levelnum = 15;
+		int levelno;
+		for (levelno = 1; levelno <= levelnum; levelno++) {
+			char combostr[256] = { 0 };
+			sprintf_s(combostr, 256, "%02d", levelno);
+			s_iklevelsCombo->addString(combostr);
+		}
+
+
+		s_axiskindsp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
+		if (!s_axiskindsp) {
+			_ASSERT(0);
+			abort();
+		}
+		s_axiskindLabel = new OWP_Label(L"Axis Kind");
+		if (!s_axiskindLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_axiskindCombo = new OWP_ComboBoxA(L"AXISKIND");//g_boneaxis:CURRENT,PARENT,GLOBAL,BINDPOSE
+		if (!s_axiskindCombo) {
+			_ASSERT(0);
+			abort();
+		}
+		s_axiskindCombo->addString("Current");
+		s_axiskindCombo->addString("Parent");
+		s_axiskindCombo->addString("Global");
+		s_axiskindCombo->addString("BindPose");
+
+
+		s_uvsetsp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
+		if (!s_uvsetsp) {
+			_ASSERT(0);
+			abort();
+		}
+		s_uvsetLabel = new OWP_Label(L"UV Set");
+		if (!s_uvsetLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_uvsetCombo = new OWP_ComboBoxA(L"UVSET");//g_uvset:UVSet0, UVSet1
+		if (!s_uvsetCombo) {
+			_ASSERT(0);
+			abort();
+		}
+		s_uvsetCombo->addString("UV Set0");
+		s_uvsetCombo->addString("UV Set1");
+
+		s_dispsp1 = new OWP_Separator(s_displimitsWnd, true, rate50, true);
+		if (!s_dispsp1) {
+			_ASSERT(0);
+			abort();
+		}
+		s_x180Chk = new OWP_CheckBoxA(L"Modify Euler X180", g_x180flag);
+		if (!s_x180Chk) {
+			_ASSERT(0);
+			abort();
+		}
+		s_rottraChk = new OWP_CheckBoxA(L"Rotate Translation", g_rotatetanim);
+		if (!s_rottraChk) {
+			_ASSERT(0);
+			abort();
+		}
+
+		s_dispsp2 = new OWP_Separator(s_displimitsWnd, true, rate50, true);
+		if (!s_dispsp2) {
+			_ASSERT(0);
+			abort();
+		}
+		s_dofChk = new OWP_CheckBoxA(L"DOF(DepthOfField)", g_zpreflag);
+		if (!s_dofChk) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bloomChk = new OWP_CheckBoxA(L"HDRP Bloom", g_hdrpbloom);
+		if (!s_bloomChk) {
+			_ASSERT(0);
+			abort();
+		}
+
+		s_dispsp3 = new OWP_Separator(s_displimitsWnd, true, rate50, true);
+		if (!s_dispsp3) {
+			_ASSERT(0);
+			abort();
+		}
+		s_alphaChk = new OWP_CheckBoxA(L"Alpha Blending", g_alphablending);
+		if (!s_alphaChk) {
+			_ASSERT(0);
+			abort();
+		}
+		s_zcmpChk = new OWP_CheckBoxA(L"ZCmpAlways", g_zalways);
+		if (!s_zcmpChk) {
+			_ASSERT(0);
+			abort();
+		}
+
+		s_dispsp4 = new OWP_Separator(s_displimitsWnd, true, rate50, true);
+		if (!s_dispsp4) {
+			_ASSERT(0);
+			abort();
+		}
+		s_freefpsChk = new OWP_CheckBoxA(L"Free fps", g_freefps);
+		if (!s_freefpsChk) {
+			_ASSERT(0);
+			abort();
+		}
+		s_skydispChk = new OWP_CheckBoxA(L"Sky Disp", g_skydispflag);
+		if (!s_skydispChk) {
+			_ASSERT(0);
+			abort();
+		}
+
+
+
+		s_displimitsWnd->addParts(*s_lightssp);
+		s_lightssp->addParts1(*s_lightsChk);
+		s_lightssp->addParts2(*s_lightsSlider);
+		s_displimitsWnd->addParts(*s_threadssp);
+		s_threadssp->addParts1(*s_threadsLabel);
+		s_threadssp->addParts2(*s_threadsSlider);
+		s_displimitsWnd->addParts(*s_highRpmChk);
+		s_displimitsWnd->addParts(*s_bonemarksp);
+		s_bonemarksp->addParts1(*s_bonemarkChk);
+		s_bonemarksp->addParts2(*s_bonemarkSlider);
+		s_displimitsWnd->addParts(*s_rigidmarksp);
+		s_rigidmarksp->addParts1(*s_rigidmarkChk);
+		s_rigidmarksp->addParts2(*s_rigidmarkSlider);
+		s_displimitsWnd->addParts(*s_rigmarksp);
+		s_rigmarksp->addParts1(*s_rigmarkLabel);
+		s_rigmarksp->addParts2(*s_rigmarkSlider);
+		s_displimitsWnd->addParts(*s_refpossp);
+		s_refpossp->addParts1(*s_refposLabel);
+		s_refpossp->addParts2(*s_refposSlider);
+		s_displimitsWnd->addParts(*s_iklevelssp);
+		s_iklevelssp->addParts1(*s_iklevelsLabel);
+		s_iklevelssp->addParts2(*s_iklevelsCombo);
+		s_displimitsWnd->addParts(*s_axiskindsp);
+		s_axiskindsp->addParts1(*s_axiskindLabel);
+		s_axiskindsp->addParts2(*s_axiskindCombo);
+		s_displimitsWnd->addParts(*s_uvsetsp);
+		s_uvsetsp->addParts1(*s_uvsetLabel);
+		s_uvsetsp->addParts2(*s_uvsetCombo);
+		s_displimitsWnd->addParts(*s_dispsp1);
+		s_dispsp1->addParts1(*s_x180Chk);
+		s_dispsp1->addParts2(*s_rottraChk);
+		s_displimitsWnd->addParts(*s_dispsp2);
+		s_dispsp2->addParts1(*s_dofChk);
+		s_dispsp2->addParts2(*s_bloomChk);
+		s_displimitsWnd->addParts(*s_dispsp3);
+		s_dispsp3->addParts1(*s_alphaChk);
+		s_dispsp3->addParts2(*s_zcmpChk);
+		s_displimitsWnd->addParts(*s_dispsp4);
+		s_dispsp4->addParts1(*s_freefpsChk);
+		s_dispsp4->addParts2(*s_skydispChk);
+
+		//###########
+		//CheckBox
+		//###########
+		s_lightsChk->setButtonListener([]() {
+			bool value = s_lightsChk->getValue();
+			if (value) {
+				g_lightflag = 1;
+			}
+			else {
+				g_lightflag = 0;
+			}
+		});
+		s_highRpmChk->setButtonListener([]() {
+			bool value = s_highRpmChk->getValue();
+			g_HighRpmMode = value;
+		});
+		s_bonemarkChk->setButtonListener([]() {
+			bool value = s_bonemarkChk->getValue();
+			if (value) {
+				g_bonemarkflag = 1;
+			}
+			else {
+				g_bonemarkflag = 0;
+			}
+		});
+		s_rigidmarkChk->setButtonListener([]() {
+			bool value = s_rigidmarkChk->getValue();
+			if (value) {
+				g_rigidmarkflag = 1;
+			}
+			else {
+				g_rigidmarkflag = 0;
+			}
+		});
+		s_x180Chk->setButtonListener([]() {
+			bool value = s_x180Chk->getValue();
+			g_x180flag = value;
+		});
+		s_rottraChk->setButtonListener([]() {
+			bool value = s_rottraChk->getValue();
+			g_rotatetanim = value;
+		});
+		s_dofChk->setButtonListener([]() {
+			bool value = s_dofChk->getValue();
+			g_zpreflag = value;
+		});
+		s_bloomChk->setButtonListener([]() {
+			bool value = s_bloomChk->getValue();
+			g_hdrpbloom = value;
+		});
+		s_alphaChk->setButtonListener([]() {
+			bool value = s_alphaChk->getValue();
+			g_alphablending = value;
+		});
+		s_zcmpChk->setButtonListener([]() {
+			bool value = s_zcmpChk->getValue();
+			g_zalways = value;
+		});
+		s_freefpsChk->setButtonListener([]() {
+			bool value = s_freefpsChk->getValue();
+			g_freefps = value;
+		});
+		s_skydispChk->setButtonListener([]() {
+			bool value = s_skydispChk->getValue();
+			g_skydispflag = value;
+		});
+
+		//##########
+		//Slider
+		//##########
+		s_lightsSlider->setCursorListener([]() {
+			double value = s_lightsSlider->getValue();
+			g_fLightScale = (float)value;
+		});
+		s_bonemarkSlider->setCursorListener([]() {
+			double value = s_bonemarkSlider->getValue();
+			g_bonemark_bright = (float)value;
+		});
+		s_rigidmarkSlider->setCursorListener([]() {
+			double value = s_rigidmarkSlider->getValue();
+			g_rigidmark_alpha = (float)value;
+		});
+		s_rigmarkSlider->setCursorListener([]() {
+			double value = s_rigmarkSlider->getValue();
+			g_rigmark_alpha = (float)value;
+		});
+		s_refposSlider->setCursorListener([]() {
+			double value = s_refposSlider->getValue();
+			g_refalpha = (int)(value + 0.0001);
+		});
+
+		s_threadsSlider->setCursorListener([]() {
+			int value = (int)(s_threadsSlider->getValue() + 0.5);
+			g_UpdateMatrixThreads = max(1, min(8, value));
+			s_threadsSlider->setValue((double)value, false);//intに丸めた値をセットし直し
+			});
+		s_threadsSlider->setLUpListener([]() {
+			int value = (int)(s_threadsSlider->getValue() + 0.5);
+			g_UpdateMatrixThreads = max(1, min(8, value));
+			s_threadsSlider->setValue((double)value, false);//intに丸めた値をセットし直し
+
+			//#################################################
+			//ReleasedCaptureのときに　PrepairUndo用のフラグを立てる
+			//#################################################
+			s_changeupdatethreadsFlag = true;
+		});
+
+
+		//############
+		//ComboBox
+		//############
+		s_iklevelsCombo->setButtonListener([]() {
+			int comboid = s_iklevelsCombo->trackPopUpMenu();
+			//char strchk[256] = { 0 };
+			//sprintf_s(strchk, 256, "select combo %d", comboid);
+			//MessageBoxA(s_displimitsWnd->getHWnd(), strchk, "Check", MB_OK);
+			g_iklevel = comboid + 1;
+		});
+		s_axiskindCombo->setButtonListener([]() {
+			int comboid = s_axiskindCombo->trackPopUpMenu();
+			//char strchk[256] = { 0 };
+			//sprintf_s(strchk, 256, "select combo %d", comboid);
+			//MessageBoxA(s_displimitsWnd->getHWnd(), strchk, "Check", MB_OK);
+			g_boneaxis = comboid;
+			});
+		s_uvsetCombo->setButtonListener([]() {
+			int comboid = s_uvsetCombo->trackPopUpMenu();
+			//char strchk[256] = { 0 };
+			//sprintf_s(strchk, 256, "select combo %d", comboid);
+			//MessageBoxA(s_displimitsWnd->getHWnd(), strchk, "Check", MB_OK);
+			g_uvset = comboid;
+		});
+
+
+		s_displimitsWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
+		s_displimitsWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
+
+		//１クリック目問題対応
+		s_displimitsWnd->refreshPosAndSize();
+
+		s_displimitsWnd->callRewrite();
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+
 	return 0;
 
 }
@@ -29738,643 +30414,488 @@ void CheckFogKindParamsButton(HWND hDlgWnd, int srckind)
 //}
 
 
-int DispParams2Dlg(HWND hDlgWnd)
+int DispParams2Dlg()
 {
-	//#######
-	//Button
-	//#######
-	// //マテリアル毎に設定することに
-	//CheckShaderTypeButton(hDlgWnd, g_shadertype);
-
 
 	//#######
 	//Slider
 	//#######
-	int sliderpos = (int)(g_fLightScale * 10.0f);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIGHTS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIGHTS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIGHTS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+	if (s_lightsSlider) {
+		s_lightsSlider->setValue((double)g_fLightScale, false);
+	}
+	if (s_threadsSlider) {
+		s_threadsSlider->setValue((double)g_UpdateMatrixThreads, false);
+	}
+	if (s_bonemarkSlider) {
+		s_bonemarkSlider->setValue((double)g_bonemark_bright, false);
+	}
+	if (s_rigidmarkSlider) {
+		s_rigidmarkSlider->setValue((double)g_rigidmark_alpha, false);
+	}
+	if (s_rigmarkSlider) {
+		s_rigmarkSlider->setValue((double)g_rigmark_alpha, false);
+	}
+	if (s_refposSlider) {
+		s_refposSlider->setValue((double)g_refalpha, false);
+	}
 
-	sliderpos = g_UpdateMatrixThreads;
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_UPDATETHREADS), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)1);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_UPDATETHREADS), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)8);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_UPDATETHREADS), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-	//sliderpos = (int)(g_dspeed * 100.0f);
-	//SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-	//SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)700);
-	//SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-	sliderpos = (int)(g_bonemark_bright * 100.0f);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-	sliderpos = (int)(g_rigidmark_alpha * 100.0f);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-	sliderpos = (int)(g_rigmark_alpha * 100.0f);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-	sliderpos = (int)g_refalpha;
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-	SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-
-	//#####
-	//Text
-	//#####
-	WCHAR strdlg[256] = { 0L };
-	swprintf_s(strdlg, 256, L"Enable Lights %.1f", g_fLightScale);
-	SetDlgItemText(hDlgWnd, IDC_CHECK_LIGHTS, strdlg);
-
-	swprintf_s(strdlg, 256, L"Update Threads %d", g_UpdateMatrixThreads);
-	SetDlgItemText(hDlgWnd, IDC_STATIC_UPDATETHREADS, strdlg);
-
-	//swprintf_s(strdlg, 256, L"Speed %.2f", g_dspeed);
-	//SetDlgItemText(hDlgWnd, IDC_STATIC_SPEED, strdlg);
-
-	//swprintf_s(strdlg, 256, L"EditRate %.1f", g_physicsmvrate);
-	//SetDlgItemText(hDlgWnd, IDC_STATIC_EDITRATE, strdlg);
-
-	swprintf_s(strdlg, 256, L"RefPosAlpha %d", g_refalpha);
-	SetDlgItemText(hDlgWnd, IDC_STATIC_REFPOSALPHA, strdlg);
 
 	//#########
 	//ComboBox
 	//#########
-	HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_IKLEVELS);
-	if (combownd != NULL) {
-		SendMessage(combownd, CB_RESETCONTENT, 0, 0);
-		int slotno;
-		for (slotno = 0; slotno < 15; slotno++) {
-			WCHAR strcombo[256];
-			swprintf_s(strcombo, 256, L"%d", (slotno + 1));
-			SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)strcombo);
-		}
-		::SendMessage(combownd, CB_SETCURSEL, (WPARAM)(g_iklevel - 1), 0);
+	if (s_iklevelsCombo) {
+		s_iklevelsCombo->setSelectedCombo(g_iklevel - 1);
 	}
-	else {
-		_ASSERT(0);
-		return 1;
+	if (s_axiskindCombo) {
+		s_axiskindCombo->setSelectedCombo(g_boneaxis);
 	}
-
-
-
-	combownd = GetDlgItem(hDlgWnd, IDC_COMBO_AXISKIND);
-	if (combownd != NULL) {
-		SendMessage(combownd, CB_RESETCONTENT, 0, 0);
-
-		WCHAR straxis[256];
-		ULONG boneaxisindex;
-		swprintf_s(straxis, 256, L"Current");
-		boneaxisindex = BONEAXIS_CURRENT;
-		SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)straxis);
-		swprintf_s(straxis, 256, L"Parent");
-		boneaxisindex = BONEAXIS_PARENT;
-		SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)straxis);
-		swprintf_s(straxis, 256, L"Global");
-		boneaxisindex = BONEAXIS_GLOBAL;
-		SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)straxis);
-		swprintf_s(straxis, 256, L"BindPose");
-		boneaxisindex = BONEAXIS_BINDPOSE;
-		SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)straxis);
-		SendMessage(combownd, CB_SETCURSEL, (WPARAM)g_boneaxis, 0);
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-
-
-	combownd = GetDlgItem(hDlgWnd, IDC_COMBO_UVSET);
-	if (combownd != NULL) {
-		SendMessage(combownd, CB_RESETCONTENT, 0, 0);
-
-		WCHAR struvset[256];
-		ULONG uvindex;
-		swprintf_s(struvset, 256, L"UVSet0");
-		uvindex = BONEAXIS_CURRENT;
-		SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)struvset);
-		swprintf_s(struvset, 256, L"UVSet1");
-		uvindex = BONEAXIS_PARENT;
-		SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)struvset);
-		SendMessage(combownd, CB_SETCURSEL, (WPARAM)g_uvset, 0);
-	}
-	else {
-		_ASSERT(0);
-		return 1;
+	if (s_uvsetCombo) {
+		s_uvsetCombo->setSelectedCombo(g_uvset);
 	}
 
 
 	//#########
 	//CheckBox
 	//#########
-	if (g_hdrpbloom == true) {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_BLOOM, true);
+	if (s_bloomChk) {
+		s_bloomChk->setValue(g_hdrpbloom, false);
 	}
-	else {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_BLOOM, false);
+	if (s_freefpsChk) {
+		s_freefpsChk->setValue(g_freefps, false);
 	}
-
-	if (g_freefps == true) {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_FREEFPS, true);
+	if (s_lightsChk) {
+		s_lightsChk->setValue((g_lightflag != 0), false);
 	}
-	else {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_FREEFPS, false);
+	if (s_highRpmChk) {
+		s_highRpmChk->setValue(g_HighRpmMode, false);
 	}
-
-	if ((bool)g_lightflag == true) {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_LIGHTS, true);
+	if (s_bonemarkChk) {
+		s_bonemarkChk->setValue((g_bonemarkflag != 0), false);
 	}
-	else {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_LIGHTS, false);
+	if (s_rigidmarkChk) {
+		s_rigidmarkChk->setValue((g_rigidmarkflag != 0), false);
 	}
-
-	if (g_HighRpmMode == true) {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_HIGHRPM, true);
+	if (s_x180Chk) {
+		s_x180Chk->setValue(g_x180flag, false);
 	}
-	else {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_HIGHRPM, false);
+	if (s_rottraChk) {
+		s_rottraChk->setValue(g_rotatetanim, false);
 	}
-
-	if ((bool)g_bonemarkflag == true) {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_DISPBONE, true);
+	if (s_dofChk) {
+		s_dofChk->setValue(g_zpreflag, false);
 	}
-	else {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_DISPBONE, false);
+	if (s_zcmpChk) {
+		s_zcmpChk->setValue(g_zalways, false);
 	}
-
-	if ((bool)g_rigidmarkflag == true) {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_RIGIDMARK, true);
+	if (s_skydispChk) {
+		s_skydispChk->setValue(g_skydispflag, false);
 	}
-	else {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_RIGIDMARK, false);
-	}
-
-	//if ((bool)s_camtargetflag == true) {
-	//	CheckDlgButton(hDlgWnd, IDC_CHECK_LOCKTOSEL, true);
-	//}
-	//else {
-	//	CheckDlgButton(hDlgWnd, IDC_CHECK_LOCKTOSEL, false);
-	//}
-
-	if (g_preciseOnPreviewToo == true) {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_PRECISE, true);
-	}
-	else {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_PRECISE, false);
-	}
-
-	if (g_x180flag == true) {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_X180, true);
-	}
-	else {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_X180, false);
-	}
-
-	if (g_rotatetanim == true) {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_TROT, true);
-	}
-	else {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_TROT, false);
-	}
-
-	if (g_zpreflag == true) {
-		CheckDlgButton(hDlgWnd, IDC_ZPREPASS, true);
-	}
-	else {
-		CheckDlgButton(hDlgWnd, IDC_ZPREPASS, false);
-	}
-
-	if (g_zalways == true) {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_ZALWAYS, true);
-	}
-	else {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_ZALWAYS, false);
-	}
-
-	if (g_skydispflag == true) {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_SKYDISP, true);
-	}
-	else {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_SKYDISP, false);
-	}
-
-	if (g_alphablending == true) {
-		CheckDlgButton(hDlgWnd, IDC_AlphaBlending, true);
-	}
-	else {
-		CheckDlgButton(hDlgWnd, IDC_AlphaBlending, false);
+	if (s_alphaChk) {
+		s_alphaChk->setValue(g_alphablending, false);
 	}
 
 	return 0;
 }
 
 
-LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
-{
-	switch (msg) {
-	case WM_INITDIALOG:
-	{
-		//Lights2Dlg(hDlgWnd);
-		//EnableWindow(GetDlgItem(hDlgWnd, IDC_RESETLIM_CURRENT), FALSE);
-
-		DispParams2Dlg(hDlgWnd);
-
-		return FALSE;
-	}
-	break;
-
-	case WM_DRAWITEM://オーナードローコントロールの描画 : リソースでカラーバーボタンにオーナードロー属性を設定してある
-	//DefWindowProc(hDlgWnd, msg, wp, lp);
-	break;
-
-	case WM_HSCROLL:
-		if (GetDlgItem(hDlgWnd, IDC_SLIDER_LIGHTS) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIGHTS), TBM_GETPOS, 0, 0);
-			g_fLightScale = (float)((double)cursliderpos / 10.0);
-
-			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"Enable Lights %.1f", g_fLightScale);
-			SetDlgItemText(hDlgWnd, IDC_CHECK_LIGHTS, strdlg);
-		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_UPDATETHREADS) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_UPDATETHREADS), TBM_GETPOS, 0, 0);
-			g_UpdateMatrixThreads = cursliderpos;
-
-			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"Update Threads %d", g_UpdateMatrixThreads);
-			SetDlgItemText(hDlgWnd, IDC_STATIC_UPDATETHREADS, strdlg);
-
-			if (LOWORD(wp) == SB_ENDSCROLL) {
-				//#################################################
-				//ReleasedCaptureのときに　PrepairUndo用のフラグを立てる
-				//#################################################
-				s_changeupdatethreadsFlag = true;
-			}
-
-		}
-		//else if (GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED) == (HWND)lp) {
-		//	int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_GETPOS, 0, 0);
-		//	g_dspeed = (float)((double)cursliderpos / 100.0);
-		//
-		//	WCHAR strdlg[256] = { 0L };
-		//	swprintf_s(strdlg, 256, L"Speed %.2f", g_dspeed);
-		//	SetDlgItemText(hDlgWnd, IDC_STATIC_SPEED, strdlg);
-		//
-		//	s_model->SetTmpMotSpeed((float)g_dspeed);
-		//	OnSetMotSpeed();
-		//
-		//
-		//	if (s_topSlidersWnd && s_owpSpeedSlider) {
-		//		s_owpSpeedSlider->setValue(g_dspeed, false);
-		//		s_topSlidersWnd->callRewrite();//再描画
-		//	}
-		//}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_GETPOS, 0, 0);
-			g_bonemark_bright = (float)((double)cursliderpos / 100.0);
-		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK), TBM_GETPOS, 0, 0);
-			g_rigidmark_alpha = (float)((double)cursliderpos / 100.0);
-		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_GETPOS, 0, 0);
-			g_rigmark_alpha = (float)((double)cursliderpos / 100.0);
-		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA), TBM_GETPOS, 0, 0);
-			g_refalpha = cursliderpos;
-
-			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"RefPosAlpha %d", g_refalpha);
-			SetDlgItemText(hDlgWnd, IDC_STATIC_REFPOSALPHA, strdlg);
-		}
-
-	break;
-
-	case WM_COMMAND:
-
-		switch (LOWORD(wp)) {
-
-
-		////マテリアル毎に設定することに
-		//case IDC_SHADER_AUTO:
-		//	CheckShaderTypeButton(hDlgWnd, -1);
-		//	break;
-		//case IDC_SHADER_PBR:
-		//	CheckShaderTypeButton(hDlgWnd, MQOSHADER_PBR);
-		//	break;
-		//case IDC_SHADER_STD:
-		//	CheckShaderTypeButton(hDlgWnd, MQOSHADER_STD);
-		//	break;
-		//case IDC_SHADER_NOLIGHT:
-		//	CheckShaderTypeButton(hDlgWnd, MQOSHADER_TOON);
-		//	break;
-
-		case IDC_CHECK_BLOOM:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_BLOOM);
-			if (ischecked == BST_CHECKED) {
-				g_hdrpbloom = true;
-			}
-			else {
-				g_hdrpbloom = false;
-			}
-		}
-		break;
-
-		case IDC_CHECK_SKYDISP:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_SKYDISP);
-			if (ischecked == BST_CHECKED) {
-				g_skydispflag = true;
-
-				//ティアリング位置に黒いUpperBarを表示してちらつきがみえないようにした
-				//freefpsはここでは操作しないことに
-				// 
-				////天球表示時にfree fpsで描画するとティアリングが起きるので
-				////天球表示をオンにした場合には自動的にfreefpsをオフにする
-				//CheckDlgButton(hDlgWnd, IDC_CHECK_FREEFPS, false);
-				//g_freefps = false;
-			}
-			else {
-				g_skydispflag = false;
-			}
-		}
-		break;
-
-		case IDC_AlphaBlending:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_AlphaBlending);
-			if (ischecked == BST_CHECKED) {
-				g_alphablending = true;
-			}
-			else {
-				g_alphablending = false;
-			}
-		}
-		break;
-
-		case IDC_CHECK_FREEFPS:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_FREEFPS);
-			if (ischecked == BST_CHECKED) {
-				g_freefps = true;
-			}
-			else {
-				g_freefps = false;
-			}
-		}
-		break;
-
-		case IDC_CHECK_LIGHTS:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_LIGHTS);
-			if (ischecked == BST_CHECKED) {
-				g_lightflag = 1;
-			}
-			else {
-				g_lightflag = 0;
-			}
-		}
-			break;
-		case IDC_CHECK_HIGHRPM:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_HIGHRPM);
-			if (ischecked == BST_CHECKED) {
-				g_HighRpmMode = true;
-			}
-			else {
-				g_HighRpmMode = false;
-			}
-		}
-		break;
-		case IDC_CHECK_DISPBONE:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_DISPBONE);
-			if (ischecked == BST_CHECKED) {
-				g_bonemarkflag = 1;
-			}
-			else {
-				g_bonemarkflag = 0;
-			}
-		}
-		break;
-		case IDC_CHECK_RIGIDMARK:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_RIGIDMARK);
-			if (ischecked == BST_CHECKED) {
-				g_rigidmarkflag = 1;
-			}
-			else {
-				g_rigidmarkflag = 0;
-			}
-		}
-		break;
-		case IDC_CHECK_LOCKTOSEL:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_LOCKTOSEL);
-			if (ischecked == BST_CHECKED) {
-				s_camtargetflag = 1;
-			}
-			else {
-				s_camtargetflag = 0;
-			}
-		}
-		break;
-		case IDC_CHECK_PRECISE:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_PRECISE);
-			if (ischecked == BST_CHECKED) {
-				g_preciseOnPreviewToo = true;
-			}
-			else {
-				g_preciseOnPreviewToo = false;
-			}
-		}
-		break;
-		case IDC_CHECK_X180:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_X180);
-			if (ischecked == BST_CHECKED) {
-				g_x180flag = true;
-			}
-			else {
-				g_x180flag = false;
-			}
-		}
-		break;
-		case IDC_CHECK_TROT:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_TROT);
-			if (ischecked == BST_CHECKED) {
-				g_rotatetanim = true;
-			}
-			else {
-				g_rotatetanim = false;
-			}
-		}
-		break;
-		case IDC_ZPREPASS:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_ZPREPASS);
-			if (ischecked == BST_CHECKED) {
-				g_zpreflag = true;
-			}
-			else {
-				g_zpreflag = false;
-			}
-		}
-		break;
-		case IDC_CHECK_ZALWAYS:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_ZALWAYS);
-			if (ischecked == BST_CHECKED) {
-				g_zalways = true;
-			}
-			else {
-				g_zalways = false;
-			}
-		}
-		break;
-
-	//##########
-	//COMBO BOX
-	//##########
-		case IDC_COMBO_IKLEVELS:
-			if (HIWORD(wp) == CBN_SELCHANGE) {
-				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_IKLEVELS);
-				if (combownd != NULL) {
-					int combono;
-					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
-					if ((combono >= 0) && (combono < 15)) {
-						g_iklevel = combono + 1;
-					}
-					else {
-						_ASSERT(0);
-						return false;
-					}
-				}
-				else {
-					_ASSERT(0);
-					return false;
-				}
-				//RECT clientrect;
-				//GetClientRect(hDlgWnd, &clientrect);
-				//InvalidateRect(hDlgWnd, &clientrect, TRUE);
-			}
-			break;
-		case IDC_COMBO_AXISKIND:
-			if (HIWORD(wp) == CBN_SELCHANGE) {
-				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_AXISKIND);
-				if (combownd != NULL) {
-					int combono;
-					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
-					if ((combono >= 0) && (combono <= 3)) {
-						switch (combono) {
-						case 0:
-							g_boneaxis = BONEAXIS_CURRENT;
-							break;
-						case 1:
-							g_boneaxis = BONEAXIS_PARENT;
-							break;
-						case 2:
-							g_boneaxis = BONEAXIS_GLOBAL;
-							break;
-						case 3:
-							g_boneaxis = BONEAXIS_BINDPOSE;
-							break;
-						default:
-							g_boneaxis = BONEAXIS_CURRENT;
-							break;
-						}
-					}
-					else {
-						_ASSERT(0);
-						return false;
-					}
-				}
-				else {
-					_ASSERT(0);
-					return false;
-				}
-				//RECT clientrect;
-				//GetClientRect(hDlgWnd, &clientrect);
-				//InvalidateRect(hDlgWnd, &clientrect, TRUE);
-			}
-			break;
-		case IDC_COMBO_UVSET:
-			if (HIWORD(wp) == CBN_SELCHANGE) {
-				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_UVSET);
-				if (combownd != NULL) {
-					int combono;
-					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
-					if ((combono >= 0) && (combono <= 1)) {
-						g_uvset = combono;
-					}
-					else {
-						_ASSERT(0);
-						return false;
-					}
-				}
-				else {
-					_ASSERT(0);
-					return false;
-				}
-				//RECT clientrect;
-				//GetClientRect(hDlgWnd, &clientrect);
-				//InvalidateRect(hDlgWnd, &clientrect, TRUE);
-			}
-			break;
-
-		//case IDC_COMBO1:
-		//break;
-		
-		case IDCANCEL:
-			//EndDialog(hDlgWnd, IDCANCEL);
-			if (s_guidlg[GUIDLG_DISP_AND_LIMITS]) {
-				ShowGUIDlgDispParams(false);
-			}
-			break;
-		default:
-			return FALSE;
-			break;
-		}
-		break;
-	case WM_CLOSE:
-		if (s_guidlg[GUIDLG_DISP_AND_LIMITS]) {
-			ShowGUIDlgDispParams(false);
-		}
-		break;
-	default:
-		DefWindowProc(hDlgWnd, msg, wp, lp);
-		return FALSE;
-	}
-	return TRUE;
-
-}
+//LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
+//{
+//	switch (msg) {
+//	case WM_INITDIALOG:
+//	{
+//		//Lights2Dlg(hDlgWnd);
+//		//EnableWindow(GetDlgItem(hDlgWnd, IDC_RESETLIM_CURRENT), FALSE);
+//
+//		DispParams2Dlg(hDlgWnd);
+//
+//		return FALSE;
+//	}
+//	break;
+//
+//	case WM_DRAWITEM://オーナードローコントロールの描画 : リソースでカラーバーボタンにオーナードロー属性を設定してある
+//	//DefWindowProc(hDlgWnd, msg, wp, lp);
+//	break;
+//
+//	case WM_HSCROLL:
+//		if (GetDlgItem(hDlgWnd, IDC_SLIDER_LIGHTS) == (HWND)lp) {
+//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIGHTS), TBM_GETPOS, 0, 0);
+//			g_fLightScale = (float)((double)cursliderpos / 10.0);
+//
+//			WCHAR strdlg[256] = { 0L };
+//			swprintf_s(strdlg, 256, L"Enable Lights %.1f", g_fLightScale);
+//			SetDlgItemText(hDlgWnd, IDC_CHECK_LIGHTS, strdlg);
+//		}
+//		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_UPDATETHREADS) == (HWND)lp) {
+//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_UPDATETHREADS), TBM_GETPOS, 0, 0);
+//			g_UpdateMatrixThreads = cursliderpos;
+//
+//			WCHAR strdlg[256] = { 0L };
+//			swprintf_s(strdlg, 256, L"Update Threads %d", g_UpdateMatrixThreads);
+//			SetDlgItemText(hDlgWnd, IDC_STATIC_UPDATETHREADS, strdlg);
+//
+//			if (LOWORD(wp) == SB_ENDSCROLL) {
+//				//#################################################
+//				//ReleasedCaptureのときに　PrepairUndo用のフラグを立てる
+//				//#################################################
+//				s_changeupdatethreadsFlag = true;
+//			}
+//
+//		}
+//		//else if (GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED) == (HWND)lp) {
+//		//	int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_GETPOS, 0, 0);
+//		//	g_dspeed = (float)((double)cursliderpos / 100.0);
+//		//
+//		//	WCHAR strdlg[256] = { 0L };
+//		//	swprintf_s(strdlg, 256, L"Speed %.2f", g_dspeed);
+//		//	SetDlgItemText(hDlgWnd, IDC_STATIC_SPEED, strdlg);
+//		//
+//		//	s_model->SetTmpMotSpeed((float)g_dspeed);
+//		//	OnSetMotSpeed();
+//		//
+//		//
+//		//	if (s_topSlidersWnd && s_owpSpeedSlider) {
+//		//		s_owpSpeedSlider->setValue(g_dspeed, false);
+//		//		s_topSlidersWnd->callRewrite();//再描画
+//		//	}
+//		//}
+//		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK) == (HWND)lp) {
+//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_GETPOS, 0, 0);
+//			g_bonemark_bright = (float)((double)cursliderpos / 100.0);
+//		}
+//		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK) == (HWND)lp) {
+//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK), TBM_GETPOS, 0, 0);
+//			g_rigidmark_alpha = (float)((double)cursliderpos / 100.0);
+//		}
+//		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK) == (HWND)lp) {
+//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_GETPOS, 0, 0);
+//			g_rigmark_alpha = (float)((double)cursliderpos / 100.0);
+//		}
+//		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA) == (HWND)lp) {
+//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA), TBM_GETPOS, 0, 0);
+//			g_refalpha = cursliderpos;
+//
+//			WCHAR strdlg[256] = { 0L };
+//			swprintf_s(strdlg, 256, L"RefPosAlpha %d", g_refalpha);
+//			SetDlgItemText(hDlgWnd, IDC_STATIC_REFPOSALPHA, strdlg);
+//		}
+//
+//	break;
+//
+//	case WM_COMMAND:
+//
+//		switch (LOWORD(wp)) {
+//
+//
+//		////マテリアル毎に設定することに
+//		//case IDC_SHADER_AUTO:
+//		//	CheckShaderTypeButton(hDlgWnd, -1);
+//		//	break;
+//		//case IDC_SHADER_PBR:
+//		//	CheckShaderTypeButton(hDlgWnd, MQOSHADER_PBR);
+//		//	break;
+//		//case IDC_SHADER_STD:
+//		//	CheckShaderTypeButton(hDlgWnd, MQOSHADER_STD);
+//		//	break;
+//		//case IDC_SHADER_NOLIGHT:
+//		//	CheckShaderTypeButton(hDlgWnd, MQOSHADER_TOON);
+//		//	break;
+//
+//		case IDC_CHECK_BLOOM:
+//		{
+//			UINT ischecked = 0;
+//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_BLOOM);
+//			if (ischecked == BST_CHECKED) {
+//				g_hdrpbloom = true;
+//			}
+//			else {
+//				g_hdrpbloom = false;
+//			}
+//		}
+//		break;
+//
+//		case IDC_CHECK_SKYDISP:
+//		{
+//			UINT ischecked = 0;
+//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_SKYDISP);
+//			if (ischecked == BST_CHECKED) {
+//				g_skydispflag = true;
+//
+//				//ティアリング位置に黒いUpperBarを表示してちらつきがみえないようにした
+//				//freefpsはここでは操作しないことに
+//				// 
+//				////天球表示時にfree fpsで描画するとティアリングが起きるので
+//				////天球表示をオンにした場合には自動的にfreefpsをオフにする
+//				//CheckDlgButton(hDlgWnd, IDC_CHECK_FREEFPS, false);
+//				//g_freefps = false;
+//			}
+//			else {
+//				g_skydispflag = false;
+//			}
+//		}
+//		break;
+//
+//		case IDC_AlphaBlending:
+//		{
+//			UINT ischecked = 0;
+//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_AlphaBlending);
+//			if (ischecked == BST_CHECKED) {
+//				g_alphablending = true;
+//			}
+//			else {
+//				g_alphablending = false;
+//			}
+//		}
+//		break;
+//
+//		case IDC_CHECK_FREEFPS:
+//		{
+//			UINT ischecked = 0;
+//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_FREEFPS);
+//			if (ischecked == BST_CHECKED) {
+//				g_freefps = true;
+//			}
+//			else {
+//				g_freefps = false;
+//			}
+//		}
+//		break;
+//
+//		case IDC_CHECK_LIGHTS:
+//		{
+//			UINT ischecked = 0;
+//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_LIGHTS);
+//			if (ischecked == BST_CHECKED) {
+//				g_lightflag = 1;
+//			}
+//			else {
+//				g_lightflag = 0;
+//			}
+//		}
+//			break;
+//		case IDC_CHECK_HIGHRPM:
+//		{
+//			UINT ischecked = 0;
+//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_HIGHRPM);
+//			if (ischecked == BST_CHECKED) {
+//				g_HighRpmMode = true;
+//			}
+//			else {
+//				g_HighRpmMode = false;
+//			}
+//		}
+//		break;
+//		case IDC_CHECK_DISPBONE:
+//		{
+//			UINT ischecked = 0;
+//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_DISPBONE);
+//			if (ischecked == BST_CHECKED) {
+//				g_bonemarkflag = 1;
+//			}
+//			else {
+//				g_bonemarkflag = 0;
+//			}
+//		}
+//		break;
+//		case IDC_CHECK_RIGIDMARK:
+//		{
+//			UINT ischecked = 0;
+//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_RIGIDMARK);
+//			if (ischecked == BST_CHECKED) {
+//				g_rigidmarkflag = 1;
+//			}
+//			else {
+//				g_rigidmarkflag = 0;
+//			}
+//		}
+//		break;
+//		case IDC_CHECK_LOCKTOSEL:
+//		{
+//			UINT ischecked = 0;
+//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_LOCKTOSEL);
+//			if (ischecked == BST_CHECKED) {
+//				s_camtargetflag = 1;
+//			}
+//			else {
+//				s_camtargetflag = 0;
+//			}
+//		}
+//		break;
+//		case IDC_CHECK_PRECISE:
+//		{
+//			UINT ischecked = 0;
+//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_PRECISE);
+//			if (ischecked == BST_CHECKED) {
+//				g_preciseOnPreviewToo = true;
+//			}
+//			else {
+//				g_preciseOnPreviewToo = false;
+//			}
+//		}
+//		break;
+//		case IDC_CHECK_X180:
+//		{
+//			UINT ischecked = 0;
+//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_X180);
+//			if (ischecked == BST_CHECKED) {
+//				g_x180flag = true;
+//			}
+//			else {
+//				g_x180flag = false;
+//			}
+//		}
+//		break;
+//		case IDC_CHECK_TROT:
+//		{
+//			UINT ischecked = 0;
+//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_TROT);
+//			if (ischecked == BST_CHECKED) {
+//				g_rotatetanim = true;
+//			}
+//			else {
+//				g_rotatetanim = false;
+//			}
+//		}
+//		break;
+//		case IDC_ZPREPASS:
+//		{
+//			UINT ischecked = 0;
+//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_ZPREPASS);
+//			if (ischecked == BST_CHECKED) {
+//				g_zpreflag = true;
+//			}
+//			else {
+//				g_zpreflag = false;
+//			}
+//		}
+//		break;
+//		case IDC_CHECK_ZALWAYS:
+//		{
+//			UINT ischecked = 0;
+//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_ZALWAYS);
+//			if (ischecked == BST_CHECKED) {
+//				g_zalways = true;
+//			}
+//			else {
+//				g_zalways = false;
+//			}
+//		}
+//		break;
+//
+//	//##########
+//	//COMBO BOX
+//	//##########
+//		case IDC_COMBO_IKLEVELS:
+//			if (HIWORD(wp) == CBN_SELCHANGE) {
+//				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_IKLEVELS);
+//				if (combownd != NULL) {
+//					int combono;
+//					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
+//					if ((combono >= 0) && (combono < 15)) {
+//						g_iklevel = combono + 1;
+//					}
+//					else {
+//						_ASSERT(0);
+//						return false;
+//					}
+//				}
+//				else {
+//					_ASSERT(0);
+//					return false;
+//				}
+//				//RECT clientrect;
+//				//GetClientRect(hDlgWnd, &clientrect);
+//				//InvalidateRect(hDlgWnd, &clientrect, TRUE);
+//			}
+//			break;
+//		case IDC_COMBO_AXISKIND:
+//			if (HIWORD(wp) == CBN_SELCHANGE) {
+//				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_AXISKIND);
+//				if (combownd != NULL) {
+//					int combono;
+//					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
+//					if ((combono >= 0) && (combono <= 3)) {
+//						switch (combono) {
+//						case 0:
+//							g_boneaxis = BONEAXIS_CURRENT;
+//							break;
+//						case 1:
+//							g_boneaxis = BONEAXIS_PARENT;
+//							break;
+//						case 2:
+//							g_boneaxis = BONEAXIS_GLOBAL;
+//							break;
+//						case 3:
+//							g_boneaxis = BONEAXIS_BINDPOSE;
+//							break;
+//						default:
+//							g_boneaxis = BONEAXIS_CURRENT;
+//							break;
+//						}
+//					}
+//					else {
+//						_ASSERT(0);
+//						return false;
+//					}
+//				}
+//				else {
+//					_ASSERT(0);
+//					return false;
+//				}
+//				//RECT clientrect;
+//				//GetClientRect(hDlgWnd, &clientrect);
+//				//InvalidateRect(hDlgWnd, &clientrect, TRUE);
+//			}
+//			break;
+//		case IDC_COMBO_UVSET:
+//			if (HIWORD(wp) == CBN_SELCHANGE) {
+//				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_UVSET);
+//				if (combownd != NULL) {
+//					int combono;
+//					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
+//					if ((combono >= 0) && (combono <= 1)) {
+//						g_uvset = combono;
+//					}
+//					else {
+//						_ASSERT(0);
+//						return false;
+//					}
+//				}
+//				else {
+//					_ASSERT(0);
+//					return false;
+//				}
+//				//RECT clientrect;
+//				//GetClientRect(hDlgWnd, &clientrect);
+//				//InvalidateRect(hDlgWnd, &clientrect, TRUE);
+//			}
+//			break;
+//
+//		//case IDC_COMBO1:
+//		//break;
+//		
+//		case IDCANCEL:
+//			//EndDialog(hDlgWnd, IDCANCEL);
+//			if (s_guidlg[GUIDLG_DISP_AND_LIMITS]) {
+//				ShowGUIDlgDispParams(false);
+//			}
+//			break;
+//		default:
+//			return FALSE;
+//			break;
+//		}
+//		break;
+//	case WM_CLOSE:
+//		if (s_guidlg[GUIDLG_DISP_AND_LIMITS]) {
+//			ShowGUIDlgDispParams(false);
+//		}
+//		break;
+//	default:
+//		DefWindowProc(hDlgWnd, msg, wp, lp);
+//		return FALSE;
+//	}
+//	return TRUE;
+//
+//}
 
 //LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 //{
@@ -36173,6 +36694,10 @@ int OnFrameCloseFlag()
 		if (s_model) {
 			CallF(s_model->CreateBtObject(g_limitdegflag, 0), return 1);
 		}
+	}
+	if (s_displimitscloseFlag) {
+		s_displimitscloseFlag = false;
+		ShowGUIDlgDispParams(false);
 	}
 	if (s_st_closeFlag) {
 		s_st_closeFlag = false;
@@ -50946,7 +51471,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.26 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.27 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -52213,15 +52738,16 @@ void ShowThresholdWnd(bool srcflag)
 
 void ShowGUIDlgDispParams(bool srcflag)
 {
-	if (s_guidlg[GUIDLG_DISP_AND_LIMITS] != 0) {
+	if (s_displimitsWnd) {
 		if (srcflag == true) {
-			DispParams2Dlg(s_guidlg[GUIDLG_DISP_AND_LIMITS]);//2024/04/17 chaファイルを読み込んで変化している可能性があるので、GUIを設定し直
-			ShowWindow(s_guidlg[GUIDLG_DISP_AND_LIMITS], SW_SHOW);
-			UpdateWindow(s_guidlg[GUIDLG_DISP_AND_LIMITS]);
+			DispParams2Dlg();//2024/04/17 chaファイルを読み込んで変化している可能性があるので、GUIを設定し直
+			s_displimitsWnd->setVisible(true);
+			s_displimitsWnd->setListenMouse(true);
+			s_displimitsWnd->callRewrite();
 		}
 		else {
-			ShowWindow(s_guidlg[GUIDLG_DISP_AND_LIMITS], SW_HIDE);
-			UpdateWindow(s_guidlg[GUIDLG_DISP_AND_LIMITS]);
+			s_displimitsWnd->setVisible(false);
+			s_displimitsWnd->setListenMouse(false);
 		}
 	}
 
@@ -52600,6 +53126,7 @@ void ShowDampAnimWnd(bool srcflag)
 		}
 	}
 }
+
 
 void GUIMenuSetVisible(int srcmenukind, int srcplateno)
 {
@@ -59345,7 +59872,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.26 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.27 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (s_model && s_chascene) {

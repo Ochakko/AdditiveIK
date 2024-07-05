@@ -2,6 +2,17 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/07/06
+　OWP_ComboBoxAクラスを追加
+
+　DispAndLimitsプレートメニューのWin32ダイアログをからOWPで作り直し
+
+
+　予定
+　　プレートメニューを押したときに右ペインに出すウインドウは全てOWPにしていく”予定”
+
+
+
 
 2024/07/04
 　AdditiveIK 1.0.0.26 release

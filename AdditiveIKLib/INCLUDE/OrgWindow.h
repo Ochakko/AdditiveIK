@@ -82,6 +82,7 @@ static double TIME_ERROR_WIDTH = 0.0001;
 
 
 class CModel;
+class CRMenuMain;
 
 static int DrawGdiplusButton(Gdiplus::Image* srcimage, HDC srchdc,
 	int drawposx, int drawposy, int drawwidth, int drawheight, float srcalpha);
@@ -3253,6 +3254,252 @@ void s_dummyfunc()
 		int SIZE_Y= 15;
 		static const int NAME_POS_X= 5;
 	};
+
+
+	///<summary>
+	///	ウィンドウ内部品"ボタン"クラス
+	///</summary>
+	class OWP_ComboBoxA : public OrgWindowParts {
+	public:
+		//////////////////// Constructor/Destructor //////////////////////
+		OWP_ComboBoxA(const TCHAR* _name = _T(""), int _labelheight = 15) : OrgWindowParts() {
+			name = new TCHAR[256];
+			if (_name) {
+				size_t tclen = _tcslen(_name);
+				size_t cplen;
+				if (tclen != 0) {
+					if (tclen <= 255) {
+						cplen = tclen;
+					}
+					else {
+						cplen = 255;
+					}
+					_tcsncpy_s(name, 256, _name, cplen);
+					name[cplen] = (TCHAR)0;
+				}
+				else {
+					_tcscpy_s(name, 256, TEXT("NoName"));
+				}
+			}
+
+			SIZE_Y = max(SIZE_Y, _labelheight);//2024/06/30
+
+			buttonPush = false;
+			//buttonListener = [](){s_dummyfunc();};
+			buttonListener = NULL;
+
+			combovec.clear();
+			selectedcombo = 0;
+
+			underButtonUpThreadFlag = 0;
+		}
+		~OWP_ComboBoxA() {
+			while (InterlockedAdd(&underButtonUpThreadFlag, 0) != 0) {
+				//ボタンを押すアニメーションを再生中に　ボタンを削除しないように　待機ループ
+				Sleep(1);
+			}
+			delete[] name;
+		}
+
+		//////////////////////////// Method //////////////////////////////
+		/// Method : 自動サイズ設定
+		virtual void autoResize() {
+			size.y = SIZE_Y;
+		}
+		//	Method : 描画
+		virtual void draw() {
+			if (!hdcM) {
+				return;
+			}
+
+
+			drawEdge();
+
+			//全体を囲むRect
+			int pos01x = pos.x + 1;
+			int pos01y = pos.y + 1;
+			int pos02x = pos.x + size.x - 1;
+			int pos02y = pos.y + size.y - 1;
+			hdcM->setPenAndBrush(RGB(240, 240, 240), NULL);
+			Rectangle(hdcM->hDC, pos01x, pos01y, pos02x, pos02y);
+
+
+			//ボックス
+			int pos1x = pos.x + BOX_POS_X;
+			int pos1y = pos.y + size.y / 2 - BOX_WIDTH / 2;
+			int pos2x = pos.x + BOX_POS_X + BOX_WIDTH - 1;
+			int pos2y = pos.y + size.y / 2 + BOX_WIDTH / 2 - 1;
+			if (buttonPush) {
+				hdcM->setPenAndBrush(RGB(min(baseColor.r + 20, 255), min(baseColor.g + 20, 255), min(baseColor.b + 20, 255)), NULL);
+			}
+			else {
+				hdcM->setPenAndBrush(RGB(240, 240, 240), NULL);
+			}
+			Rectangle(hdcM->hDC, pos1x, pos1y, pos2x + 1, pos2y + 1);
+			if (!buttonPush) {
+				hdcM->setPenAndBrush(RGB(min(baseColor.r + 20, 255), min(baseColor.g + 20, 255), min(baseColor.b + 20, 255)), NULL);
+			}
+			else {
+				hdcM->setPenAndBrush(RGB(240, 240, 240), NULL);
+			}
+			MoveToEx(hdcM->hDC, pos1x, pos2y, NULL);
+			LineTo(hdcM->hDC, pos2x, pos2y);
+			LineTo(hdcM->hDC, pos2x, pos1y);
+
+			//名前
+			pos1x = pos.x + BOX_POS_X + BOX_WIDTH + 3;
+			pos1y = pos.y + size.y / 2 - 5;
+			hdcM->setFont(12, _T("ＭＳ ゴシック"));
+			//TCHAR* isToAll = 0;
+			//isToAll = _tcsstr(name, _T("ToAll"));
+			//if(!isToAll){
+			//	SetTextColor(hdcM->hDC, RGB(240, 240, 240));
+			//}
+			//else {
+			//	//名前にToAllとついていた場合には、特殊ボタンとして色を変える
+			//	SetTextColor(hdcM->hDC, RGB(64, 128 + 32, 128 + 32));
+			//}
+
+			SetTextColor(hdcM->hDC, OrgWindowParts::getTextColor());
+
+			if (combovec.empty() || (selectedcombo < 0) || (selectedcombo >= combovec.size())) {
+				TextOut(hdcM->hDC,
+					pos1x, pos1y,
+					name, (int)_tcslen(name));
+			}
+			else {
+				TextOutA(hdcM->hDC,
+					pos1x, pos1y,
+					combovec[selectedcombo].c_str(), (int)strlen(combovec[selectedcombo].c_str()));
+			}
+
+
+
+			{
+				if (g_dsmousewait == 1) {
+					POINT mousepoint;
+					::GetCursorPos(&mousepoint);
+					if (getParent() && getHDCMaster()) {
+						::ScreenToClient(getParent()->getHWnd(), &mousepoint);
+						int BMP_W = 52;
+						int BMP_H = 50;
+						DrawGdiplusButton(g_mousehereimage, hdcM->hDC,
+							mousepoint.x, mousepoint.y, BMP_W, BMP_H, g_mouseherealpha);
+					}
+				}
+			}
+
+		}
+		//	Method : マウスダウンイベント受信
+		virtual void onLButtonDown(const MouseEvent& e) {
+			if ((g_endappflag == 0) && parentWindow && IsWindow(parentWindow->getHWnd())) {
+
+				if (this->buttonListener != NULL) {
+					(this->buttonListener)();
+				}
+
+				buttonPush = true;
+
+				RECT tmpRect;
+				tmpRect.left = pos.x + 1;
+				tmpRect.top = pos.y + 1;
+				tmpRect.right = pos.x + size.x - 1;
+				tmpRect.bottom = pos.y + size.y - 1;
+				InvalidateRect(parentWindow->getHWnd(), &tmpRect, false);
+				draw();
+
+				//ボタンアップアニメーションのためのスレッド作成
+				InterlockedExchange(&underButtonUpThreadFlag, (LONG)1);
+				_beginthread(drawButtonUpThread, 0, (void*)this);
+			}
+		}
+		//	Method : 左マウスボタン ダブルクリックイベント受信
+		virtual void onLButtonDBLCLK(const MouseEvent& e) {//2023/10/04
+		}
+		//	Method : 右マウスボタン ダブルクリックイベント受信
+		virtual void onRButtonDBLCLK(const MouseEvent& e) {//2023/10/04
+			int dbgflag1 = 1;
+		}
+
+		/////////////////////////// Accessor /////////////////////////////
+		//	Accessor : buttonListener
+		void setButtonListener(std::function<void()> listener) {
+			this->buttonListener = listener;
+		}
+		void setName(const TCHAR* value) {
+			if (name && value) {
+				size_t tclen = _tcslen(value);
+				size_t cplen;
+				if (tclen != 0) {
+					if (tclen <= 255) {
+						cplen = tclen;
+					}
+					else {
+						cplen = 255;
+					}
+					_tcsncpy_s(name, 256, value, cplen);
+					name[cplen] = (TCHAR)0;
+				}
+				else {
+					_tcscpy_s(name, 256, TEXT("NoName"));
+				}
+			}
+
+			callRewrite();
+		}
+
+
+
+		void addString(const std::string value) {
+			combovec.push_back(value);
+		};
+		int trackPopUpMenu();
+		int getSelectedCombo() {
+			return selectedcombo;
+		};
+		void setSelectedCombo(int value) {
+			if ((value >= 0) && (value < combovec.size())) {
+				selectedcombo = value;
+			}
+		};
+	private:
+		////////////////////////// MemberVar /////////////////////////////
+		TCHAR* name;
+		std::vector<std::string> combovec;
+		int selectedcombo;
+
+		bool buttonPush;
+		std::function<void()> buttonListener;
+
+		int SIZE_Y = 15;
+		static const int BOX_POS_X = 3;
+		static const int BOX_WIDTH = 10;
+
+		LONG underButtonUpThreadFlag;//ボタンを押している間にボタンを削除しないようにフラグを立てる
+
+		//////////////////////////// Method //////////////////////////////
+		//	Method : ボタンアップのスレッド
+		static void drawButtonUpThread(LPVOID	pParam) {
+			Sleep(100);
+
+			OWP_ComboBoxA* thisClass = (OWP_ComboBoxA*)pParam;
+
+			thisClass->buttonPush = false;
+
+			if (thisClass->parentWindow && IsWindow(thisClass->parentWindow->getHWnd())) {
+
+				RECT tmpRect;
+				tmpRect.left = thisClass->pos.x + 1;
+				tmpRect.top = thisClass->pos.y + 1;
+				tmpRect.right = thisClass->pos.x + thisClass->size.x - 1;
+				tmpRect.bottom = thisClass->pos.y + thisClass->size.y - 1;
+				InvalidateRect(thisClass->parentWindow->getHWnd(), &tmpRect, false);
+			}
+
+			InterlockedExchange(&(thisClass->underButtonUpThreadFlag), (LONG)0);
+		}
+	};
+
 
 	///<summary>
 	///	ウィンドウ内部品"ボタン"クラス
