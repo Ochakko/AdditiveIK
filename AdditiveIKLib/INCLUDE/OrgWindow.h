@@ -58,6 +58,9 @@ extern Gdiplus::Image* g_playerbutton_target26;
 extern Gdiplus::Image* g_playerbutton_target_inv26;
 extern Gdiplus::Image* g_playerbutton_target40;
 extern Gdiplus::Image* g_playerbutton_target_inv40;
+extern Gdiplus::Image* g_numbutton[SKNUMBUTTON_MAX];
+extern Gdiplus::Image* g_numbutton_pushed[SKNUMBUTTON_MAX];
+
 extern int g_edittarget;
 extern int g_currentsubmenuid;
 extern POINT g_currentsubmenupos;
@@ -121,6 +124,8 @@ int DrawGdiplusButton(Gdiplus::Image* srcimage, HDC srchdc,
 
 
 namespace OrgWinGUI{
+
+class OWP_EditBox;
 
 	//global
 void InitEulKeys();
@@ -1595,6 +1600,7 @@ void s_dummyfunc()
 					if(this->closeListener!=NULL){
 						(this->closeListener)();
 					}
+					this->setVisible(false);//2024/07/06
 					return;
 				}
 
@@ -3705,6 +3711,595 @@ void s_dummyfunc()
 	};
 
 	///<summary>
+	///	ウィンドウ内部品"ボタン"クラス
+	///</summary>
+	class OWP_ColorBox : public OrgWindowParts {
+	public:
+		//////////////////// Constructor/Destructor //////////////////////
+		OWP_ColorBox(COLORREF srccol, int _labelheight = 15) : OrgWindowParts() {
+			//name = new TCHAR[256];
+			//if (_name) {
+			//	size_t tclen = _tcslen(_name);
+			//	size_t cplen;
+			//	if (tclen != 0) {
+			//		if (tclen <= 255) {
+			//			cplen = tclen;
+			//		}
+			//		else {
+			//			cplen = 255;
+			//		}
+			//		_tcsncpy_s(name, 256, _name, cplen);
+			//		name[cplen] = (TCHAR)0;
+			//	}
+			//	else {
+			//		_tcscpy_s(name, 256, TEXT("NoName"));
+			//	}
+			//}
+
+			SIZE_Y = max(SIZE_Y, _labelheight);//2024/06/30
+
+			buttonPush = false;
+			//buttonListener = [](){s_dummyfunc();};
+			buttonListener = NULL;
+
+			choosedcolor = srccol;
+
+			underButtonUpThreadFlag = 0;
+		}
+		~OWP_ColorBox() {
+			while (InterlockedAdd(&underButtonUpThreadFlag, 0) != 0) {
+				//ボタンを押すアニメーションを再生中に　ボタンを削除しないように　待機ループ
+				Sleep(1);
+			}
+			if (name) {
+				delete[] name;
+				name = nullptr;
+			}
+		}
+
+		int ChooseColor();
+
+		//////////////////////////// Method //////////////////////////////
+		/// Method : 自動サイズ設定
+		virtual void autoResize() {
+			size.y = SIZE_Y;
+		}
+		//	Method : 描画
+		virtual void draw() {
+			if (!hdcM) {
+				return;
+			}
+
+			drawEdge();
+
+			//ボックス
+			int pos1x = pos.x + 3;
+			int pos1y = pos.y + 3;
+			int pos2x = pos.x + size.x - 3;
+			int pos2y = pos.y + size.y - 3;
+
+			hdcM->setPenAndBrush(choosedcolor, choosedcolor);
+			Rectangle(hdcM->hDC, pos1x, pos1y, pos2x, pos2y);
+
+			{
+				if (g_dsmousewait == 1) {
+					POINT mousepoint;
+					::GetCursorPos(&mousepoint);
+					if (getParent() && getHDCMaster()) {
+						::ScreenToClient(getParent()->getHWnd(), &mousepoint);
+						int BMP_W = 52;
+						int BMP_H = 50;
+						DrawGdiplusButton(g_mousehereimage, hdcM->hDC,
+							mousepoint.x, mousepoint.y, BMP_W, BMP_H, g_mouseherealpha);
+					}
+				}
+			}
+
+		}
+		//	Method : マウスダウンイベント受信
+		virtual void onLButtonDown(const MouseEvent& e) {
+			if ((g_endappflag == 0) && parentWindow && IsWindow(parentWindow->getHWnd())) {
+
+				ChooseColor();
+
+				if (this->buttonListener != NULL) {
+					(this->buttonListener)();
+				}
+
+				buttonPush = true;
+
+				RECT tmpRect;
+				tmpRect.left = pos.x + 1;
+				tmpRect.top = pos.y + 1;
+				tmpRect.right = pos.x + size.x - 1;
+				tmpRect.bottom = pos.y + size.y - 1;
+				InvalidateRect(parentWindow->getHWnd(), &tmpRect, false);
+				draw();
+
+				//ボタンアップアニメーションのためのスレッド作成
+				InterlockedExchange(&underButtonUpThreadFlag, (LONG)1);
+				_beginthread(drawButtonUpThread, 0, (void*)this);
+			}
+		}
+		//	Method : 左マウスボタン ダブルクリックイベント受信
+		virtual void onLButtonDBLCLK(const MouseEvent& e) {//2023/10/04
+		}
+		//	Method : 右マウスボタン ダブルクリックイベント受信
+		virtual void onRButtonDBLCLK(const MouseEvent& e) {//2023/10/04
+			int dbgflag1 = 1;
+		}
+
+		/////////////////////////// Accessor /////////////////////////////
+		void setColor(COLORREF srccol) {
+			choosedcolor = srccol;
+		}
+		COLORREF getColor()
+		{
+			return choosedcolor;
+		}
+
+		//	Accessor : buttonListener
+		void setButtonListener(std::function<void()> listener) {
+			this->buttonListener = listener;
+		}
+		void setName(const TCHAR* value) {
+			if (name && value) {
+				size_t tclen = _tcslen(value);
+				size_t cplen;
+				if (tclen != 0) {
+					if (tclen <= 255) {
+						cplen = tclen;
+					}
+					else {
+						cplen = 255;
+					}
+					_tcsncpy_s(name, 256, value, cplen);
+					name[cplen] = (TCHAR)0;
+				}
+				else {
+					_tcscpy_s(name, 256, TEXT("NoName"));
+				}
+			}
+
+			callRewrite();
+		}
+	private:
+		////////////////////////// MemberVar /////////////////////////////
+		TCHAR* name;
+
+		bool buttonPush;
+		std::function<void()> buttonListener;
+
+		int SIZE_Y = 15;
+		static const int BOX_POS_X = 3;
+		static const int BOX_WIDTH = 10;
+
+		LONG underButtonUpThreadFlag;//ボタンを押している間にボタンを削除しないようにフラグを立てる
+
+		COLORREF choosedcolor;
+		//////////////////////////// Method //////////////////////////////
+		//	Method : ボタンアップのスレッド
+		static void drawButtonUpThread(LPVOID	pParam) {
+			Sleep(100);
+
+			OWP_ColorBox* thisClass = (OWP_ColorBox*)pParam;
+
+			thisClass->buttonPush = false;
+
+			if (thisClass->parentWindow && IsWindow(thisClass->parentWindow->getHWnd())) {
+
+				RECT tmpRect;
+				tmpRect.left = thisClass->pos.x + 1;
+				tmpRect.top = thisClass->pos.y + 1;
+				tmpRect.right = thisClass->pos.x + thisClass->size.x - 1;
+				tmpRect.bottom = thisClass->pos.y + thisClass->size.y - 1;
+				InvalidateRect(thisClass->parentWindow->getHWnd(), &tmpRect, false);
+			}
+
+			InterlockedExchange(&(thisClass->underButtonUpThreadFlag), (LONG)0);
+		}
+	};
+
+
+
+	///<summary>
+	///	ウィンドウ内部品"プレイヤーボタン"クラス
+	///</summary>
+	class OWP_SoftNumKey : public OrgWindowParts {
+	public:
+		//////////////////// Constructor/Destructor //////////////////////
+		OWP_SoftNumKey() : OrgWindowParts(), numkeyparam() {
+			//setIsPlayerButton(true);
+
+			if (g_4kresolution) {
+				//BOX_WIDTHとSIZE_Yは setButtonSizeでも変更出来る
+				BOX_WIDTH = 40;
+				SIZE_Y = 44;
+				OFFSET_X = BOX_WIDTH / 2;
+			}
+			else {
+				//BOX_WIDTHとSIZE_Yは setButtonSizeでも変更出来る
+				BOX_WIDTH = 26;
+				SIZE_Y = 30;
+				OFFSET_X = BOX_WIDTH / 2;
+			}
+			pushnum = 0;
+			peditbox = nullptr;
+		}
+		~OWP_SoftNumKey() {
+		}
+
+		WindowPos getButtonPos(int buttonno)
+		{
+			WindowPos retpos;
+
+			if ((buttonno >= SKNUMBUTTON_0) && (buttonno < SKNUMBUTTON_MAX)) {
+				int lineindex;
+				lineindex = buttonno / 10;
+				int leftindex = buttonno - lineindex * 10;
+
+				//ボタンの四隅になる座標を求める
+				int pos1x = OFFSET_X + pos.x + PNG_W * leftindex;
+				int pos1y = pos.y + lineindex * PNG_H;
+				int pos2x = OFFSET_X + pos.x + PNG_W * (leftindex + 1);
+				int pos2y = pos.y + (lineindex + 1) * PNG_H;
+
+				retpos.x = pos1x;
+				retpos.y = pos1y;
+			}
+			else {
+				_ASSERT(0);
+				retpos.x = 0;
+				retpos.y = 0;
+			}
+
+			return retpos;
+		};
+		WindowSize getButtonSize(int buttonno) {
+			WindowSize retsize;
+			retsize.x = PNG_W;
+			retsize.y = PNG_H;
+			return retsize;
+		};
+
+		int drawNum(WindowPos srcpos, WindowSize srcsize, int srcnum, bool pushed)
+		{
+			if (getParent() && (srcnum >= SKNUMBUTTON_0) && (srcnum < SKNUMBUTTON_MAX)) {
+				if (pushed) {
+					DrawGdiplusButton(g_numbutton_pushed[srcnum], hdcM->hDC,
+						srcpos.x, srcpos.y, PNG_W, PNG_H, 1.0);
+				}
+				else {
+					DrawGdiplusButton(g_numbutton[srcnum], hdcM->hDC,
+						srcpos.x, srcpos.y, PNG_W, PNG_H, 1.0);
+				}
+			}
+			return 0;
+		};
+
+		//////////////////////////// Method //////////////////////////////
+		/// Method : 自動サイズ設定
+		virtual void autoResize() {
+			size.y = PNG_H * 2;
+		};
+		//	Method : 描画
+		virtual void draw() {
+			if (!hdcM) {
+				return;
+			}
+
+			drawEdge();
+
+
+			for (int i = SKNUMBUTTON_0; i < SKNUMBUTTON_MAX; i++) {
+				WindowPos numkeypos = getButtonPos(i);
+				WindowSize numkeysize = getButtonSize(i);
+				//ボタンパラメータのインスタンスへのポインタを作成
+				OneButtonParam* btnPrm;
+				btnPrm = &(numkeyparam[i]);
+				if (btnPrm) {
+					drawNum(numkeypos, numkeysize, i, btnPrm->buttonPush);
+				}
+			}
+
+			{
+				if (g_dsmousewait == 1) {
+					POINT mousepoint;
+					::GetCursorPos(&mousepoint);
+					if (getParent() && getHDCMaster()) {
+						::ScreenToClient(getParent()->getHWnd(), &mousepoint);
+						int BMP_W = 52;
+						int BMP_H = 50;
+						DrawGdiplusButton(g_mousehereimage, hdcM->hDC,
+							mousepoint.x, mousepoint.y, BMP_W, BMP_H, g_mouseherealpha);
+					}
+				}
+			}
+		};
+
+		//	Method : マウスダウンイベント受信
+		virtual void onLButtonDown(const MouseEvent& e);
+		//	Method : 左マウスボタン ダブルクリックイベント受信
+		virtual void onLButtonDBLCLK(const MouseEvent& e) {//2023/10/04
+		};
+		//	Method : 右マウスボタン ダブルクリックイベント受信
+		virtual void onRButtonDBLCLK(const MouseEvent& e) {//2023/10/04
+			int dbgflag1 = 1;
+		};
+
+
+		/////////////////////////// Accessor /////////////////////////////
+		//	Accessor : buttonListener
+
+		//void setPhysicsPlayButtonListener(std::function<void()> listener) {
+		//	physicsPlay.buttonListener = listener;
+		//}
+
+		/// Accessor : ボタンサイズを変更する
+		void setButtonSize(int value) {
+			BOX_WIDTH = value;
+			SIZE_Y = BOX_WIDTH + 4;
+		}
+		int getButtonSize() const {
+			return BOX_WIDTH;
+		}
+
+		void setEditBox(OWP_EditBox* srceditbox) {
+			peditbox = srceditbox;
+		}
+	private:
+		////////////////////////// MemberVar /////////////////////////////
+
+		class OneButtonParam {
+		public:
+			OneButtonParam() {
+				buttonPush = false;
+				//buttonListener = [](){s_dummyfunc();};
+				buttonListener = NULL;
+			}
+
+			bool buttonPush;
+			std::function<void()> buttonListener;
+		};
+		OneButtonParam numkeyparam[SKNUMBUTTON_MAX];
+
+		int SIZE_Y;
+		//static const int BOX_POS_X = 3;
+		int BOX_WIDTH;
+		int OFFSET_X;
+		int pushnum;
+
+		static const int PNG_W = 48;
+		static const int PNG_H = 34;
+
+		OWP_EditBox* peditbox;
+
+		//////////////////////////// Method //////////////////////////////
+		//	Method : ボタンアップのスレッド
+		static void drawNumButtonUpThread(LPVOID pParam) {
+			Sleep(100);
+			OWP_SoftNumKey* thisClass = (OWP_SoftNumKey*)pParam;
+			if (thisClass) {
+				if ((thisClass->pushnum >= SKNUMBUTTON_0) && (thisClass->pushnum < SKNUMBUTTON_MAX)) {
+					thisClass->numkeyparam[thisClass->pushnum].buttonPush = false;
+					thisClass->callRewrite();
+				}
+			}
+		}
+	};
+
+	///<summary>
+	///	ウィンドウ内部品"ボタン"クラス
+	///</summary>
+	class OWP_EditBox : public OrgWindowParts {
+	public:
+		//////////////////// Constructor/Destructor //////////////////////
+		OWP_EditBox(const TCHAR* _name = _T(""), int _labelheight = 15) : OrgWindowParts() {
+			name = new TCHAR[256];
+			if (_name) {
+				size_t tclen = _tcslen(_name);
+				size_t cplen;
+				if (tclen != 0) {
+					if (tclen <= 255) {
+						cplen = tclen;
+					}
+					else {
+						cplen = 255;
+					}
+					_tcsncpy_s(name, 256, _name, cplen);
+					name[cplen] = (TCHAR)0;
+				}
+				else {
+					_tcscpy_s(name, 256, TEXT("NoName"));
+				}
+			}
+
+			SIZE_Y = max(SIZE_Y, _labelheight);//2024/06/30
+
+			buttonPush = false;
+			//buttonListener = [](){s_dummyfunc();};
+			buttonListener = NULL;
+
+			//psoftnumWnd = nullptr;
+			//psoftnumkey = nullptr;
+			//softnumcloseFlag = false;
+
+			underButtonUpThreadFlag = 0;
+		}
+		~OWP_EditBox();
+
+		static int MakeSoftNumKey();
+		static void DestroySoftNumWnd();
+
+		int AddChar(WCHAR srcwc);
+		int BackSpaceChar();
+		int ClearChar();
+
+		//////////////////////////// Method //////////////////////////////
+		/// Method : 自動サイズ設定
+		virtual void autoResize() {
+			size.y = SIZE_Y;
+		}
+		//	Method : 描画
+		virtual void draw() {
+			//if (softnumcloseFlag) {
+			//	softnumcloseFlag = false;
+			//	if (psoftnumWnd) {
+			//		psoftnumWnd->setVisible(false);
+			//	}
+			//	return;
+			//}
+
+
+			if (!hdcM) {
+				return;
+			}
+
+
+			drawEdge();
+
+			//白で塗りつぶすRect
+			int pos01x = pos.x + 1;
+			int pos01y = pos.y + 1;
+			int pos02x = pos.x + size.x - 1;
+			int pos02y = pos.y + size.y - 1;
+			hdcM->setPenAndBrush(RGB(240, 240, 240), RGB(240, 240, 240));
+			Rectangle(hdcM->hDC, pos01x, pos01y, pos02x, pos02y);
+
+			//ボックス
+			int pos1x = pos.x + BOX_POS_X;
+			int pos1y = pos.y + size.y / 2 - BOX_WIDTH / 2;
+			int pos2x = pos.x + BOX_POS_X + BOX_WIDTH - 1;
+			int pos2y = pos.y + size.y / 2 + BOX_WIDTH / 2 - 1;
+			if (buttonPush) {
+				hdcM->setPenAndBrush(RGB(min(baseColor.r + 20, 255), min(baseColor.g + 20, 255), min(baseColor.b + 20, 255)), NULL);
+			}
+			else {
+				hdcM->setPenAndBrush(RGB(240, 240, 240), NULL);
+			}
+			Rectangle(hdcM->hDC, pos1x, pos1y, pos2x + 1, pos2y + 1);
+			if (!buttonPush) {
+				hdcM->setPenAndBrush(RGB(min(baseColor.r + 20, 255), min(baseColor.g + 20, 255), min(baseColor.b + 20, 255)), NULL);
+			}
+			else {
+				hdcM->setPenAndBrush(RGB(240, 240, 240), NULL);
+			}
+			MoveToEx(hdcM->hDC, pos1x, pos2y, NULL);
+			LineTo(hdcM->hDC, pos2x, pos2y);
+			LineTo(hdcM->hDC, pos2x, pos1y);
+
+			//名前
+			pos1x = pos.x + BOX_POS_X + BOX_WIDTH + 3;
+			pos1y = pos.y + size.y / 2 - 5;
+			hdcM->setFont(12, _T("ＭＳ ゴシック"));
+			//TCHAR* isToAll = 0;
+			//isToAll = _tcsstr(name, _T("ToAll"));
+			//if(!isToAll){
+			//	SetTextColor(hdcM->hDC, RGB(240, 240, 240));
+			//}
+			//else {
+			//	//名前にToAllとついていた場合には、特殊ボタンとして色を変える
+			//	SetTextColor(hdcM->hDC, RGB(64, 128 + 32, 128 + 32));
+			//}
+
+			//SetTextColor(hdcM->hDC, OrgWindowParts::getTextColor());
+			SetTextColor(hdcM->hDC, RGB(10, 10, 10));//白く塗りつぶしたRectに黒字
+
+			TextOut(hdcM->hDC,
+				pos1x, pos1y,
+				name, (int)_tcslen(name));
+			{
+				if (g_dsmousewait == 1) {
+					POINT mousepoint;
+					::GetCursorPos(&mousepoint);
+					if (getParent() && getHDCMaster()) {
+						::ScreenToClient(getParent()->getHWnd(), &mousepoint);
+						int BMP_W = 52;
+						int BMP_H = 50;
+						DrawGdiplusButton(g_mousehereimage, hdcM->hDC,
+							mousepoint.x, mousepoint.y, BMP_W, BMP_H, g_mouseherealpha);
+					}
+				}
+			}
+
+		}
+		//	Method : マウスダウンイベント受信
+		virtual void onLButtonDown(const MouseEvent& e);
+
+		//	Method : 左マウスボタン ダブルクリックイベント受信
+		virtual void onLButtonDBLCLK(const MouseEvent& e) {//2023/10/04
+		}
+		//	Method : 右マウスボタン ダブルクリックイベント受信
+		virtual void onRButtonDBLCLK(const MouseEvent& e) {//2023/10/04
+			int dbgflag1 = 1;
+		}
+
+		/////////////////////////// Accessor /////////////////////////////
+		//	Accessor : buttonListener
+		void setButtonListener(std::function<void()> listener) {
+			this->buttonListener = listener;
+		}
+		void setName(const TCHAR* value) {
+			if (name && value) {
+				size_t tclen = _tcslen(value);
+				size_t cplen;
+				if (tclen != 0) {
+					if (tclen <= 255) {
+						cplen = tclen;
+					}
+					else {
+						cplen = 255;
+					}
+					_tcsncpy_s(name, 256, value, cplen);
+					name[cplen] = (TCHAR)0;
+				}
+				else {
+					_tcscpy_s(name, 256, TEXT("NoName"));
+				}
+			}
+
+			callRewrite();
+		}
+		int getName(WCHAR* dstname, int dstleng);
+	private:
+		////////////////////////// MemberVar /////////////////////////////
+		TCHAR* name;
+
+		bool buttonPush;
+		std::function<void()> buttonListener;
+
+		int SIZE_Y = 15;
+		static const int BOX_POS_X = 3;
+		static const int BOX_WIDTH = 10;
+
+		LONG underButtonUpThreadFlag;//ボタンを押している間にボタンを削除しないようにフラグを立てる
+
+		//bool softnumcloseFlag = false;
+
+		//////////////////////////// Method //////////////////////////////
+		//	Method : ボタンアップのスレッド
+		static void drawButtonUpThread(LPVOID	pParam) {
+			Sleep(100);
+
+			OWP_EditBox* thisClass = (OWP_EditBox*)pParam;
+
+			thisClass->buttonPush = false;
+
+			if (thisClass->parentWindow && IsWindow(thisClass->parentWindow->getHWnd())) {
+
+				RECT tmpRect;
+				tmpRect.left = thisClass->pos.x + 1;
+				tmpRect.top = thisClass->pos.y + 1;
+				tmpRect.right = thisClass->pos.x + thisClass->size.x - 1;
+				tmpRect.bottom = thisClass->pos.y + thisClass->size.y - 1;
+				InvalidateRect(thisClass->parentWindow->getHWnd(), &tmpRect, false);
+			}
+
+			InterlockedExchange(&(thisClass->underButtonUpThreadFlag), (LONG)0);
+		}
+	};
+
+	///<summary>
 	///	ウィンドウ内部品"プレイヤーボタン"クラス
 	///</summary>
 	class OWP_PlayerButton : public OrgWindowParts{
@@ -4254,9 +4849,9 @@ void s_dummyfunc()
 
 			bool buttonPush;
 			std::function<void()> buttonListener;
-		//}frontPlay,backPlay,stop,reset,frontStep,backStep,onefps,selecttolast,btreset,prevrange,nextrange,plusdisp,minusdisp,plusoffsetdisp,minusoffsetdisp,resetdisp;
 		}physicsPlay, physicsRec, backStep, backPlay, reset, frontPlay, frontStep, selecttolast, changetarget;
 		
+		OneButtonParam numkeyparam[11];
 
 		int SIZE_Y;
 		static const int BOX_POS_X= 3;

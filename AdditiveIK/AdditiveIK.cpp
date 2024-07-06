@@ -505,6 +505,7 @@ public:
 //TResourceBank<CMQOMaterial> g_materialbank;
 
 IShaderResource* g_shadowmapforshader = nullptr;
+CColDlg g_coldlg;
 
 
 
@@ -512,10 +513,6 @@ IShaderResource* g_shadowmapforshader = nullptr;
 static Microsoft::WRL::ComPtr<ID3D12DebugDevice> s_debugDevice;
 
 static HWINEVENTHOOK s_hhook = NULL;
-
-
-static CColDlg s_coldlg;
-
 
 static int s_appcnt = 0;
 static int s_launchbyc4 = 0;
@@ -572,6 +569,12 @@ Gdiplus::Image* g_playerbutton_target26 = 0;
 Gdiplus::Image* g_playerbutton_target_inv26 = 0;
 Gdiplus::Image* g_playerbutton_target40 = 0;
 Gdiplus::Image* g_playerbutton_target_inv40 = 0;
+
+
+Gdiplus::Image* g_numbutton[SKNUMBUTTON_MAX];
+Gdiplus::Image* g_numbutton_pushed[SKNUMBUTTON_MAX];
+
+
 int g_currentsubmenuid = 0;
 POINT g_currentsubmenupos = { 0, 0 };
 int g_submenuwidth = 32;
@@ -892,7 +895,7 @@ static HWND s_thresholddlg = 0;
 
 
 
-static HWND s_lightsforeditdlg = 0;
+//static HWND s_lightsforeditdlg = 0;
 static HWND s_latertransparentdlg = 0;
 static HWND s_shadowparamsdlg = 0;
 static HWND s_guidlg[GUIDLGNUM];
@@ -1217,6 +1220,29 @@ static OWP_CheckBoxA* s_zcmpChk = 0;
 static OWP_Separator* s_dispsp4 = 0;
 static OWP_CheckBoxA* s_freefpsChk = 0;
 static OWP_CheckBoxA* s_skydispChk = 0;
+
+
+static OrgWindow* s_lightsWnd = 0;
+static OWP_Separator* s_lightsslotsp = 0;
+static OWP_ComboBoxA* s_lightsslotCombo = 0;
+static OWP_Label* s_lightsslotLabel = 0;
+static OWP_GroupBox* s_lightsgroup[8];
+static OWP_Separator* s_lightschecksp[8];
+static OWP_CheckBoxA* s_lightsenableChk[8];
+static OWP_CheckBoxA* s_lightsviewrotChk[8];
+static OWP_Separator* s_lightscolorsp[8];
+static OWP_ColorBox* s_lightscolorBox[8];
+static OWP_Slider* s_lightsmultSlider[8];
+static OWP_Separator* s_polarsp0[8];
+static OWP_Separator* s_polarsp1[8];
+static OWP_Separator* s_polarsp2[8];
+static OWP_Label* s_polarxzLabel[8];
+static OWP_EditBox* s_polarxzEdit[8];
+//static OWP_Button* s_polarxzEdit[8];
+static OWP_Label* s_polaryLabel[8];
+static OWP_EditBox* s_polaryEdit[8];
+//static OWP_Button* s_polaryEdit[8];
+static OWP_Button* s_lightsapplyB = 0;
 
 
 static OrgWindow* s_sidemenuWnd = 0;
@@ -2988,8 +3014,8 @@ LRESULT CALLBACK ProgressDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK ThresholdDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 
 
-static int OwnerDrawLightColorBar(HWND hDlgWnd, int lightindex, int idcolorbar);
-static int ChooseLightColorBar(HWND hDlgWnd, int lightindex, int idcolorbar);
+//static int OwnerDrawLightColorBar(HWND hDlgWnd, int lightindex, int idcolorbar);
+//static int ChooseLightColorBar(HWND hDlgWnd, int lightindex, int idcolorbar);
 
 static int OwnerDrawFogColorBar(HWND hDlgWnd, int lightindex, int idcolorbar);
 static int ChooseFogColorBar(HWND hDlgWnd, int lightindex, int idcolorbar);
@@ -3053,14 +3079,14 @@ static void InitTimelineSelection();
 static void ClampTimelineSelection();
 
 static int CreateLightsWnd();
-static int Lights2Dlg(HWND hDlgWnd);
-static int Lights2DlgEach(HWND hDlgWnd, int lightindex,
-	int iddirx, int iddiry,
-	int idenable, int idwithviewrot, int idslider, int idtextlight);
-static int Dlg2Lights(HWND hDlgWnd, int lightindex);
-static int Dlg2LightsEach(HWND hDlgWnd, int lightindex,
-	int iddirx, int iddiry,
-	int idenable, int idwithviewrot, int idslider);
+static int Lights2Dlg();
+//static int Lights2DlgEach(int lightindex,
+//	int iddirx, int iddiry,
+//	int idenable, int idwithviewrot, int idslider, int idtextlight);
+static int Dlg2Lights();
+//static int Dlg2LightsEach(HWND hDlgWnd, int lightindex,
+//	int iddirx, int iddiry,
+//	int idenable, int idwithviewrot, int idslider);
 static int CheckStr_float(const WCHAR* srcstr);
 static int ConvDir2PolarCoord(float srcdirx, float srcdiry, float srcdirz, float* dstxzdeg, float* dstydeg);
 static int ConvPolarCoord2Dir(float srcxzdeg, float srcydeg, float* dstdirx, float* dstdiry, float* dstdirz);
@@ -3073,7 +3099,6 @@ static int Brushes2Dlg(HWND hDlgWnd);
 static int CreateGUIDlgBullet();
 static int CreateGUIDlgLOD();
 static int LODParams2Dlg(HWND hDlgWnd);
-
 
 
 
@@ -4004,6 +4029,8 @@ INT WINAPI wWinMain(
 	LoadDofParamsFile();
 
 
+	OWP_EditBox::MakeSoftNumKey();
+
 	CreatePlaceFolderWnd();
 	CreateTimelineWnd();
 	CreateToolWnd();
@@ -4019,6 +4046,7 @@ INT WINAPI wWinMain(
 	CreateTopSlidersWnd();
 
 	CreateLightsWnd();
+	
 	CreateGUIDlgDispParams();
 	//CreateGUIDlgBrushes();
 	CreateGUIDlgBullet();
@@ -4114,7 +4142,7 @@ INT WINAPI wWinMain(
 	}
 
 
-
+	
 
 
 	int dbgcount = 0;
@@ -4656,7 +4684,7 @@ void InitApp()
 		Vector4(15.0f / 255.0f, 77.0f / 255.0f, 33.0f / 255.0f, 1.0f));//font縁取り設定
 
 
-	s_coldlg.InitParams();
+	g_coldlg.InitParams();
 	s_selbonedlgmap.clear();
 
 	s_utcontrolvisible = true;
@@ -4921,6 +4949,7 @@ void InitApp()
 		}
 	}
 
+
 	{
 		s_displimitsWnd = 0;
 		s_lightsChk = 0;
@@ -4964,6 +4993,33 @@ void InitApp()
 		s_freefpsChk = 0;
 		s_skydispChk = 0;
 	}
+
+	{
+		s_lightsWnd = 0;
+		s_lightsslotsp = 0;
+		s_lightsslotCombo = 0;
+		s_lightsslotLabel = 0;
+		int lightindex;
+		for (lightindex = 0; lightindex < 8; lightindex++) {
+			s_lightsgroup[lightindex] = 0;
+			s_lightschecksp[lightindex] = 0;
+			s_lightsenableChk[lightindex] = 0;
+			s_lightsviewrotChk[lightindex] = 0;
+			s_lightscolorsp[lightindex] = 0;
+			s_lightscolorBox[lightindex] = 0;
+			s_lightsmultSlider[lightindex] = 0;
+			s_polarsp0[lightindex] = 0;
+			s_polarsp1[lightindex] = 0;
+			s_polarsp2[lightindex] = 0;
+			s_polarxzLabel[lightindex] = 0;
+			s_polarxzEdit[lightindex] = 0;
+			s_polaryLabel[lightindex] = 0;
+			s_polaryEdit[lightindex] = 0;
+		}
+		s_lightsapplyB = 0;
+	}
+
+
 
 	{
 		s_st_closeFlag = false;
@@ -5753,6 +5809,13 @@ void InitApp()
 	g_playerbutton_target_inv26 = 0;
 	g_playerbutton_target40 = 0;
 	g_playerbutton_target_inv40 = 0;
+
+	int numindex;
+	for (numindex = 0; numindex < SKNUMBUTTON_MAX; numindex++) {
+		g_numbutton[numindex] = nullptr;
+		g_numbutton_pushed[numindex] = nullptr;
+	}
+
 	g_currentsubmenuid = 0;
 	g_currentsubmenupos.x = 0;
 	g_currentsubmenupos.y = 0;
@@ -5966,7 +6029,7 @@ void InitApp()
 	s_anglelimitcopy.Init();
 
 
-	s_lightsforeditdlg = 0;
+	//s_lightsforeditdlg = 0;
 	s_latertransparentdlg = 0;
 	s_shadowparamsdlg = 0;
 	int dlgno;
@@ -6427,6 +6490,7 @@ void OnDestroyDevice()
 		g_mouseherebmp = 0;
 	}
 
+
 	if (g_mousehereimage) {
 		delete g_mousehereimage;
 		g_mousehereimage = 0;
@@ -6451,9 +6515,18 @@ void OnDestroyDevice()
 		delete g_playerbutton_target_inv40;
 		g_playerbutton_target_inv40 = 0;
 	}
+	int numindex;
+	for (numindex = 0; numindex < SKNUMBUTTON_MAX; numindex++) {
+		if (g_numbutton[numindex]) {
+			delete g_numbutton[numindex];
+			g_numbutton[numindex] = nullptr;
+		}
+		if (g_numbutton_pushed[numindex]) {
+			delete g_numbutton_pushed[numindex];
+			g_numbutton_pushed[numindex] = nullptr;
+		}
+	}
 	Gdiplus::GdiplusShutdown(gdiplusToken);
-
-
 
 
 	s_motmenuindexmap.clear();
@@ -6478,12 +6551,12 @@ void OnDestroyDevice()
 		}
 		s_anglelimitdlg = 0;
 	}
-	if (s_lightsforeditdlg) {
-		if (IsWindow(s_lightsforeditdlg)) {
-			DestroyWindow(s_lightsforeditdlg);
-		}
-		s_lightsforeditdlg = 0;
-	}
+	//if (s_lightsforeditdlg) {
+	//	if (IsWindow(s_lightsforeditdlg)) {
+	//		DestroyWindow(s_lightsforeditdlg);
+	//	}
+	//	s_lightsforeditdlg = 0;
+	//}
 	if (s_latertransparentdlg) {
 		if (IsWindow(s_latertransparentdlg)) {
 			DestroyWindow(s_latertransparentdlg);
@@ -6955,6 +7028,8 @@ void OnDestroyDevice()
 		s_dmpanimWnd = 0;
 	}
 
+
+
 	{//displimitsWnd
 		if (s_lightsChk) {
 			delete s_lightsChk;
@@ -7122,6 +7197,89 @@ void OnDestroyDevice()
 		}
 	}
 
+	{
+		if (s_lightsslotsp) {
+			delete s_lightsslotsp;
+			s_lightsslotsp = 0;
+		}
+		if (s_lightsslotCombo) {
+			delete s_lightsslotCombo;
+			s_lightsslotCombo = 0;
+		}
+		if (s_lightsslotLabel) {
+			delete s_lightsslotLabel;
+			s_lightsslotLabel = 0;
+		}
+		int lightindex;
+		for (lightindex = 0; lightindex < 8; lightindex++) {
+			if (s_lightsgroup[lightindex]) {
+				delete s_lightsgroup[lightindex];
+				s_lightsgroup[lightindex] = 0;
+			}
+			if (s_lightschecksp[lightindex]) {
+				delete s_lightschecksp[lightindex];
+				s_lightschecksp[lightindex] = 0;
+			}
+			if (s_lightsenableChk[lightindex]) {
+				delete s_lightsenableChk[lightindex];
+				s_lightsenableChk[lightindex] = 0;
+			}
+			if (s_lightsviewrotChk[lightindex]) {
+				delete s_lightsviewrotChk[lightindex];
+				s_lightsviewrotChk[lightindex] = 0;
+			}
+			if (s_lightscolorsp[lightindex]) {
+				delete s_lightscolorsp[lightindex];
+				s_lightscolorsp[lightindex] = 0;
+			}
+			if (s_lightscolorBox[lightindex]) {
+				delete s_lightscolorBox[lightindex];
+				s_lightscolorBox[lightindex] = 0;
+			}
+			if (s_lightsmultSlider[lightindex]) {
+				delete s_lightsmultSlider[lightindex];
+				s_lightsmultSlider[lightindex] = 0;
+			}
+			if (s_polarsp0[lightindex]) {
+				delete s_polarsp0[lightindex];
+				s_polarsp0[lightindex] = 0;
+			}
+			if (s_polarsp1[lightindex]) {
+				delete s_polarsp1[lightindex];
+				s_polarsp1[lightindex] = 0;
+			}
+			if (s_polarsp2[lightindex]) {
+				delete s_polarsp2[lightindex];
+				s_polarsp2[lightindex] = 0;
+			}
+			if (s_polarxzLabel[lightindex]) {
+				delete s_polarxzLabel[lightindex];
+				s_polarxzLabel[lightindex] = 0;
+			}
+			if (s_polarxzEdit[lightindex]) {
+				delete s_polarxzEdit[lightindex];
+				s_polarxzEdit[lightindex] = 0;
+			}
+			if (s_polaryLabel[lightindex]) {
+				delete s_polaryLabel[lightindex];
+				s_polaryLabel[lightindex] = 0;
+			}
+			if (s_polaryEdit[lightindex]) {
+				delete s_polaryEdit[lightindex];
+				s_polaryEdit[lightindex] = 0;
+			}
+		}
+		if (s_lightsapplyB) {
+			delete s_lightsapplyB;
+			s_lightsapplyB = 0;
+		}
+		if (s_lightsWnd) {
+			delete s_lightsWnd;
+			s_lightsWnd = 0;
+		}
+	}
+
+
 
 
 	if (s_impgroupcheck) {
@@ -7251,11 +7409,13 @@ void OnDestroyDevice()
 	}
 
 
+	OWP_EditBox::DestroySoftNumWnd();
 	CMotionPoint::DestroyMotionPoints();
 	CBone::DestroyColDisp();
 	CBone::DestroyBones();
 	CRigidElem::DestroyRigidElems();
 	IMCompute::DestroyStaticMem();//全てのCModel削除の後で呼ぶ
+
 
 	DestroyEulKeys();
 	DestroyKeys();
@@ -26353,6 +26513,7 @@ int RollBackEditRange(int prevrangeFlag, int nextrangeFlag)
 	return 0;
 }
 
+
 int CreateGUIDlgDispParams()
 {
 	if (s_displimitsWnd) {
@@ -26920,20 +27081,9 @@ int CreateGUIDlgLOD()
 
 int CreateLightsWnd()
 {
-
-	if (s_lightsforeditdlg) {
-		//already opened
-		return 0;
-	}
-
-
-	//s_dseullimitctrls.clear();
-
-
-	s_lightsforeditdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_LIGHTSFOREDITDLG), g_mainhwnd, (DLGPROC)LightsForEditDlgProc);
-	if (!s_lightsforeditdlg) {
+	if (s_lightsWnd) {
 		_ASSERT(0);
-		return 1;
+		return 0;//作成済
 	}
 
 	int windowposx;
@@ -26944,37 +27094,247 @@ int CreateLightsWnd()
 		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
-	SetParent(s_lightsforeditdlg, g_mainhwnd);
-	SetWindowPos(
-		s_lightsforeditdlg,
-		HWND_TOP,
-		windowposx,
-		s_sidemenuheight,
-		s_sidewidth,
-		s_sideheight,
-		SWP_SHOWWINDOW
-	);
+	s_lightsWnd = new OrgWindow(
+		0,
+		_T("LightsForEditDlg"),		//ウィンドウクラス名
+		GetModuleHandle(NULL),	//インスタンスハンドル
+		WindowPos(windowposx, s_sidemenuheight),
+		WindowSize(s_sidewidth, s_sideheight),		//サイズ
+		_T("LightsForEditDlg"),	//タイトル
+		g_mainhwnd,	//親ウィンドウハンドル
+		false,					//表示・非表示状態
+		//70, 50, 70,				//カラー
+		0, 0, 0,				//カラー
+		true,					//閉じられるか否か
+		true);					//サイズ変更の可否
 
-	////s_dseullimitctrls.push_back(IDD_ANGLELIMITDLG);
-	//s_dseullimitctrls.push_back(IDC_BONEAXIS);
-	//s_dseullimitctrls.push_back(IDC_EDIT_XL);
-	//s_dseullimitctrls.push_back(IDC_EDIT_XU);
-	//s_dseullimitctrls.push_back(IDC_EDIT_YL);
-	//s_dseullimitctrls.push_back(IDC_EDIT_YU);
-	//s_dseullimitctrls.push_back(IDC_EDIT_ZL);
-	//s_dseullimitctrls.push_back(IDC_EDIT_ZU);
-	//s_dseullimitctrls.push_back(IDOK);
+	if (s_lightsWnd) {
+		double rate1 = 0.350;
+		double rate50 = 0.50;
+
+		s_lightsslotsp = new OWP_Separator(s_lightsWnd, true, rate50, true);
+		if (!s_lightsslotsp) {
+			_ASSERT(0);
+			abort();
+		}
+		s_lightsslotCombo = new OWP_ComboBoxA(L"LightsSlot");
+		if (!s_lightsslotCombo) {
+			_ASSERT(0);
+			abort();
+		}
+		int slotindex;
+		for (slotindex = 0; slotindex < 8; slotindex++) {
+			char strslot[128] = { 0 };
+			sprintf_s(strslot, 128, "Slot_%d", slotindex);
+			s_lightsslotCombo->addString(strslot);
+		}
+		s_lightsslotCombo->setSelectedCombo(g_lightSlot);
 
 
-	//ShowWindow(s_lightsforeditdlg, SW_SHOW);
-	//UpdateWindow(s_lightsforeditdlg);
+		s_lightsslotLabel = new OWP_Label(L"(角度設定は極座標)");
+		if (!s_lightsslotLabel) {
+			_ASSERT(0);
+			abort();
+		}
 
-	ShowWindow(s_lightsforeditdlg, SW_HIDE);
-	//UpdateWindow(s_lightsforeditdlg);
+		int lightindex;
+		for (lightindex = 0; lightindex < 8; lightindex++) {
+			WCHAR groupname[256] = { 0L };
+			swprintf_s(groupname, 256, L"Light_%d", lightindex + 1);
+			s_lightsgroup[lightindex] = new OWP_GroupBox(groupname);
+			if (!s_lightsgroup[lightindex]) {
+				_ASSERT(0);
+				abort();
+			}
+			s_lightschecksp[lightindex] = new OWP_Separator(s_lightsWnd, true, rate50, true);
+			if (!s_lightschecksp[lightindex]) {
+				_ASSERT(0);
+				abort();
+			}
+			s_lightsenableChk[lightindex] = new OWP_CheckBoxA(L"Enable", g_lightEnable[g_lightSlot][lightindex]);
+			if (!s_lightsenableChk[lightindex]) {
+				_ASSERT(0);
+				abort();
+			}
+			s_lightsviewrotChk[lightindex] = new OWP_CheckBoxA(L"RotWithView", g_lightDirWithView[g_lightSlot][lightindex]);
+			if (!s_lightsviewrotChk[lightindex]) {
+				_ASSERT(0);
+				abort();
+			}
+			s_lightscolorsp[lightindex] = new OWP_Separator(s_lightsWnd, true, rate50, true);
+			if (!s_lightscolorsp[lightindex]) {
+				_ASSERT(0);
+				abort();
+			}
+			s_lightscolorBox[lightindex] = new OWP_ColorBox(g_lightDiffuse[g_lightSlot][lightindex].ColorRef());//g_lightDiffuse[g_lightSlot][lightindex].SetParams(fr, fg, fb);
+			if (!s_lightscolorBox[lightindex]) {
+				_ASSERT(0);
+				abort();
+			}
+			s_lightsmultSlider[lightindex] = new OWP_Slider(g_lightScale[g_lightSlot][lightindex], 3.0, 0.0);
+			if (!s_lightsmultSlider[lightindex]) {
+				_ASSERT(0);
+				abort();
+			}
+			s_polarsp0[lightindex] = new OWP_Separator(s_lightsWnd, true, rate50, true);
+			if (!s_polarsp0[lightindex]) {
+				_ASSERT(0);
+				abort();
+			}
+			s_polarsp1[lightindex] = new OWP_Separator(s_lightsWnd, true, rate50, true);
+			if (!s_polarsp1[lightindex]) {
+				_ASSERT(0);
+				abort();
+			}
+			s_polarsp2[lightindex] = new OWP_Separator(s_lightsWnd, true, rate50, true);
+			if (!s_polarsp2[lightindex]) {
+				_ASSERT(0);
+				abort();
+			}
+			s_polarxzLabel[lightindex] = new OWP_Label(L"XZ(-180,180]");
+			if (!s_polarxzLabel[lightindex]) {
+				_ASSERT(0);
+				abort();
+			}
+			s_polarxzEdit[lightindex] = new OWP_EditBox(L"XZ Edit");
+			if (!s_polarxzEdit[lightindex]) {
+				_ASSERT(0);
+				abort();
+			}
+			int result1 = s_polarxzEdit[lightindex]->MakeSoftNumKey();
+			if (result1 != 0) {
+				_ASSERT(0);
+				abort();
+			}
+			s_polaryLabel[lightindex] = new OWP_Label(L"Y(-90,90]");
+			if (!s_polaryLabel[lightindex]) {
+				_ASSERT(0);
+				abort();
+			}
+			s_polaryEdit[lightindex] = new OWP_EditBox(L"Y Edit");
+			if (!s_polaryEdit[lightindex]) {
+				_ASSERT(0);
+				abort();
+			}
+			int result2 = s_polaryEdit[lightindex]->MakeSoftNumKey();
+			if (result2 != 0) {
+				_ASSERT(0);
+				abort();
+			}
+		}
+		s_lightsapplyB = new OWP_Button(L"Apply", 25);
+		if (!s_lightsapplyB) {
+			_ASSERT(0);
+			abort();
+		}
 
 
-	//AngleLimit2Bone();
+		s_lightsWnd->addParts(*s_lightsslotsp);
+		s_lightsslotsp->addParts1(*s_lightsslotCombo);
+		s_lightsslotsp->addParts2(*s_lightsslotLabel);
+		int lightindex2;
+		for (lightindex2 = 0; lightindex2 < 8; lightindex2++) {
+			s_lightsWnd->addParts(*s_lightsgroup[lightindex2]);
+			s_lightsgroup[lightindex2]->addParts(*s_lightschecksp[lightindex2]);
+			s_lightschecksp[lightindex2]->addParts1(*s_lightsenableChk[lightindex2]);
+			s_lightschecksp[lightindex2]->addParts2(*s_lightsviewrotChk[lightindex2]);
+			s_lightsgroup[lightindex2]->addParts(*s_lightscolorsp[lightindex2]);
+			s_lightscolorsp[lightindex2]->addParts1(*s_lightscolorBox[lightindex2]);
+			s_lightscolorsp[lightindex2]->addParts2(*s_lightsmultSlider[lightindex2]);
+			s_lightsgroup[lightindex2]->addParts(*s_polarsp0[lightindex2]);
+			s_polarsp0[lightindex2]->addParts1(*s_polarsp1[lightindex2]);
+			s_polarsp0[lightindex2]->addParts2(*s_polarsp2[lightindex2]);
+			s_polarsp1[lightindex2]->addParts1(*s_polarxzLabel[lightindex2]);
+			s_polarsp1[lightindex2]->addParts2(*s_polarxzEdit[lightindex2]);
+			s_polarsp2[lightindex2]->addParts1(*s_polaryLabel[lightindex2]);
+			s_polarsp2[lightindex2]->addParts2(*s_polaryEdit[lightindex2]);
+		}
+		s_lightsWnd->addParts(*s_lightsapplyB);
 
+
+		//############
+		//ComboBox
+		//############
+		s_lightsslotCombo->setButtonListener([]() {
+			int comboid = s_lightsslotCombo->trackPopUpMenu();
+			g_lightSlot = comboid;
+
+			Lights2Dlg();
+			if (s_lightsWnd) {
+				s_lightsWnd->callRewrite();
+			}
+			SetLightDirection();
+		});
+
+		int lightindex3;
+		for (lightindex3 = 0; lightindex3 < 8; lightindex3++) {
+			//###########
+			//CheckBox
+			//###########
+			s_lightsenableChk[lightindex3]->setButtonListener([lightindex3]() {
+				bool value = s_lightsenableChk[lightindex3]->getValue();
+				g_lightEnable[g_lightSlot][lightindex3] = value;
+				SetLightDirection();
+			});
+			
+			s_lightsviewrotChk[lightindex3]->setButtonListener([lightindex3]() {
+				bool value = s_lightsenableChk[lightindex3]->getValue();
+				g_lightDirWithView[g_lightSlot][lightindex3] = value;
+				SetLightDirection();
+			});
+
+
+			//##########
+			//Slider
+			//##########
+			s_lightsmultSlider[lightindex3]->setCursorListener([lightindex3]() {
+				double value = s_lightsmultSlider[lightindex3]->getValue();
+				g_lightScale[g_lightSlot][lightindex3] = (float)value;
+				SetLightDirection();
+			});
+
+			//##########
+			//ColorBox
+			//##########
+			s_lightscolorBox[lightindex3]->setButtonListener([lightindex3]() {
+				COLORREF choosedcolor = s_lightscolorBox[lightindex3]->getColor();
+				float fr, fg, fb;
+				fr = (float)((double)GetRValue(choosedcolor) / 255.0);
+				fr = min(1.0f, fr);
+				fr = max(0.0f, fr);
+				fg = (float)((double)GetGValue(choosedcolor) / 255.0);
+				fg = min(1.0f, fg);
+				fg = max(0.0f, fg);
+				fb = (float)((double)GetBValue(choosedcolor) / 255.0);
+				fb = min(1.0f, fb);
+				fb = max(0.0f, fb);
+
+				g_lightDiffuse[g_lightSlot][lightindex3].SetParams(fr, fg, fb);
+				SetLightDirection();
+
+				s_lightscolorBox[lightindex3]->callRewrite();
+			});
+		}
+
+		s_lightsapplyB->setButtonListener([]() {
+			Dlg2Lights();
+			SetLightDirection();
+		});
+
+
+
+		s_lightsWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
+		s_lightsWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
+
+		//１クリック目問題対応
+		s_lightsWnd->refreshPosAndSize();
+
+		s_lightsWnd->callRewrite();
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
 
 	return 0;
 }
@@ -27652,67 +28012,9 @@ int ConvPolarCoord2Dir(float srcxzdeg, float srcydeg, float* dstdirx, float* dst
 }
 
 
-
-int Lights2DlgEach(HWND hDlgWnd, int lightindex,
-	int iddirx, int iddiry,
-	int idenable, int idwithviewrot, int idslider, int idtextlight)
+int Lights2Dlg()
 {
-	if (!hDlgWnd) {
-		_ASSERT(0);
-		return 1;
-	}
-	if ((lightindex < 0) || (lightindex >= LIGHTNUMMAX)) {
-		_ASSERT(0);
-		return 1;
-	}
-	if ((g_lightSlot < 0) || (g_lightSlot >= LIGHTSLOTNUM)) {
-		_ASSERT(0);
-		return 1;
-	}
-
-
-	if (g_lightEnable[g_lightSlot][lightindex] == true) {
-		CheckDlgButton(hDlgWnd, idenable, true);
-	}
-	else {
-		CheckDlgButton(hDlgWnd, idenable, false);
-	}
-	if (g_lightDirWithView[g_lightSlot][lightindex] == true) {
-		CheckDlgButton(hDlgWnd, idwithviewrot, true);
-	}
-	else {
-		CheckDlgButton(hDlgWnd, idwithviewrot, false);
-	}
-
-	float degxz = 0.0f;
-	float degy = 0.0f;
-	ConvDir2PolarCoord(g_lightDir[g_lightSlot][lightindex].x, g_lightDir[g_lightSlot][lightindex].y, g_lightDir[g_lightSlot][lightindex].z,
-		&degxz, &degy);
-
-	WCHAR strdirx[256] = { 0L };
-	swprintf_s(strdirx, 256, L"%.4f", degxz);
-	SetDlgItemText(hDlgWnd, iddirx, strdirx);
-	WCHAR strdiry[256] = { 0L };
-	swprintf_s(strdiry, 256, L"%.4f", degy);
-	SetDlgItemText(hDlgWnd, iddiry, strdiry);
-
-
-	int sliderpos = (int)(g_lightScale[g_lightSlot][lightindex] * 100.0f + 0.0001f);
-	SendMessage(GetDlgItem(hDlgWnd, idslider), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-	SendMessage(GetDlgItem(hDlgWnd, idslider), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)300);
-	SendMessage(GetDlgItem(hDlgWnd, idslider), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-	WCHAR strlight[256] = { 0L };
-	swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][lightindex]);
-	SetDlgItemText(hDlgWnd, idtextlight, strlight);
-
-	
-	return 0;
-}
-
-int Lights2Dlg(HWND hDlgWnd)
-{
-	if (hDlgWnd != 0) {
+	if (s_lightsWnd != 0) {
 
 
 		if ((g_lightSlot < 0) || (g_lightSlot >= LIGHTSLOTNUM)) {
@@ -27720,391 +28022,104 @@ int Lights2Dlg(HWND hDlgWnd)
 			return 1;
 		}
 
+		if (s_lightsslotCombo) {
+			s_lightsslotCombo->setSelectedCombo(g_lightSlot);
+		}
 
-		HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO1);
-		if (combownd != NULL) {
-			SendMessage(combownd, CB_RESETCONTENT, 0, 0);
-			int slotno;
-			for (slotno = 0; slotno < LIGHTSLOTNUM; slotno++) {
-				WCHAR strcombo[256];
-				swprintf_s(strcombo, 256, L"Slot_%d", slotno);
-				SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)strcombo);
+		int lightindex;
+		for (lightindex = 0; lightindex < 8; lightindex++) {
+			if (s_lightsenableChk[lightindex]) {
+				s_lightsenableChk[lightindex]->setValue(g_lightEnable[g_lightSlot][lightindex]);
 			}
-			::SendMessage(combownd, CB_SETCURSEL, (WPARAM)g_lightSlot, 0);
-		}
-		else {
-			_ASSERT(0);
-			return 1;
-		}
+
+			if (s_lightsviewrotChk[lightindex]) {
+				s_lightsviewrotChk[lightindex]->setValue(g_lightDirWithView[g_lightSlot][lightindex]);
+			}
+
+			if (s_lightsmultSlider[lightindex]) {
+				s_lightsmultSlider[lightindex]->setValue((double)g_lightScale[g_lightSlot][lightindex]);
+			}
 
 
-		int result1 = Lights2DlgEach(hDlgWnd, 0,
-			IDC_LIGHTDIRX1, IDC_LIGHTDIRY1,
-			IDC_ENABLE1, IDC_WITHVIEWROT1, IDC_SLIDER1, IDC_TEXT_LIGHT1);
-		if (result1 != 0) {
-			_ASSERT(0);
-			return 1;
-		}
+			float degxz = 0.0f;
+			float degy = 0.0f;
+			ConvDir2PolarCoord(g_lightDir[g_lightSlot][lightindex].x, g_lightDir[g_lightSlot][lightindex].y, g_lightDir[g_lightSlot][lightindex].z,
+				&degxz, &degy);
 
-		int result2 = Lights2DlgEach(hDlgWnd, 1,
-			IDC_LIGHTDIRX2, IDC_LIGHTDIRY2,
-			IDC_ENABLE2, IDC_WITHVIEWROT2, IDC_SLIDER2, IDC_TEXT_LIGHT2);
-		if (result2 != 0) {
-			_ASSERT(0);
-			return 1;
-		}
+			WCHAR strdirx[256] = { 0L };
+			swprintf_s(strdirx, 256, L"%.4f", degxz);
+			if (s_polarxzEdit[lightindex]) {
+				s_polarxzEdit[lightindex]->setName(strdirx);
+			}
+			WCHAR strdiry[256] = { 0L };
+			swprintf_s(strdiry, 256, L"%.4f", degy);
+			if (s_polaryEdit[lightindex]) {
+				s_polaryEdit[lightindex]->setName(strdiry);
+			}
 
-		int result3 = Lights2DlgEach(hDlgWnd, 2,
-			IDC_LIGHTDIRX3, IDC_LIGHTDIRY3,
-			IDC_ENABLE3, IDC_WITHVIEWROT3, IDC_SLIDER3, IDC_TEXT_LIGHT3);
-		if (result3 != 0) {
-			_ASSERT(0);
-			return 1;
-		}
 
-		int result4 = Lights2DlgEach(hDlgWnd, 3,
-			IDC_LIGHTDIRX4, IDC_LIGHTDIRY4,
-			IDC_ENABLE4, IDC_WITHVIEWROT4, IDC_SLIDER4, IDC_TEXT_LIGHT4);
-		if (result4 != 0) {
-			_ASSERT(0);
-			return 1;
-		}
+			COLORREF col = g_lightDiffuse[g_lightSlot][lightindex].ColorRef();
+			if (s_lightscolorBox[lightindex]) {
 
-		int result5 = Lights2DlgEach(hDlgWnd, 4,
-			IDC_LIGHTDIRX5, IDC_LIGHTDIRY5,
-			IDC_ENABLE5, IDC_WITHVIEWROT5, IDC_SLIDER5, IDC_TEXT_LIGHT5);
-		if (result5 != 0) {
-			_ASSERT(0);
-			return 1;
-		}
+			}
 
-		int result6 = Lights2DlgEach(hDlgWnd, 5,
-			IDC_LIGHTDIRX6, IDC_LIGHTDIRY6,
-			IDC_ENABLE6, IDC_WITHVIEWROT6, IDC_SLIDER6, IDC_TEXT_LIGHT6);
-		if (result6 != 0) {
-			_ASSERT(0);
-			return 1;
 		}
-
-		int result7 = Lights2DlgEach(hDlgWnd, 6,
-			IDC_LIGHTDIRX7, IDC_LIGHTDIRY7,
-			IDC_ENABLE7, IDC_WITHVIEWROT7, IDC_SLIDER7, IDC_TEXT_LIGHT7);
-		if (result7 != 0) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		int result8 = Lights2DlgEach(hDlgWnd, 7,
-			IDC_LIGHTDIRX8, IDC_LIGHTDIRY8,
-			IDC_ENABLE8, IDC_WITHVIEWROT8, IDC_SLIDER8, IDC_TEXT_LIGHT8);
-		if (result8 != 0) {
-			_ASSERT(0);
-			return 1;
-		}
-
 	}
 	return 0;
 }
 
-int Dlg2LightsEach(HWND hDlgWnd, int lightindex,
-	int iddirx, int iddiry,
-	int idenable, int idwithviewrot, int idslider)
+
+
+int Dlg2Lights()
 {
-	if (!hDlgWnd) {
-		_ASSERT(0);
-		return 1;
-	}
-	if ((lightindex < 0) || (lightindex >= LIGHTNUMMAX)) {
-		_ASSERT(0);
-		return 1;
-	}
-	if ((g_lightSlot < 0) || (g_lightSlot >= LIGHTSLOTNUM)) {
-		_ASSERT(0);
-		return 1;
-	}
-
-
-
-	WCHAR strdegxz[256] = { 0L };
-	GetDlgItemText(hDlgWnd, iddirx, strdegxz, 256);
-	WCHAR strdegy[256] = { 0L };
-	GetDlgItemText(hDlgWnd, iddiry, strdegy, 256);
-	int chkx, chky;
-	chkx = CheckStr_float(strdegxz);
-	chky = CheckStr_float(strdegy);
-	if ((chkx != 0) || (chky != 0)) {
-		_ASSERT(0);
-		return 2;//!!!!!! input error
-	}
-	float degxz, degy;
-	degxz = (float)_wtof(strdegxz);
-	degy = (float)_wtof(strdegy);
-
-	float dirx = 0.0f;
-	float diry = 0.0f;
-	float dirz = 0.0f;
-	ConvPolarCoord2Dir(degxz, degy, &dirx, &diry, &dirz);
-
-	g_lightDir[g_lightSlot][lightindex].SetParams(dirx, diry, dirz);
-
-	UINT chkenable = IsDlgButtonChecked(hDlgWnd, idenable);
-	if (chkenable == BST_CHECKED) {
-		g_lightEnable[g_lightSlot][lightindex] = true;
-	}
-	else {
-		g_lightEnable[g_lightSlot][lightindex] = false;
-	}
-	UINT chkwithview = IsDlgButtonChecked(hDlgWnd, idwithviewrot);
-	if (chkwithview == BST_CHECKED) {
-		g_lightDirWithView[g_lightSlot][lightindex] = true;
-	}
-	else {
-		g_lightDirWithView[g_lightSlot][lightindex] = false;
-	}
-
-
-	int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, idslider), TBM_GETPOS, 0, 0);
-	g_lightScale[g_lightSlot][lightindex] = (float)((double)cursliderpos / 100.0);
-
-	return 0;
-}
-
-int Dlg2Lights(HWND hDlgWnd, int lightindex)
-{
-	if (hDlgWnd != 0) {
-
-
-		HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO1);
-		if (combownd != NULL) {
-			int combono;
-			combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
-			if ((combono >= 0) && (combono < LIGHTSLOTNUM)) {
-				g_lightSlot = combono;
-			}
-			else {
-				_ASSERT(0);
-				return 1;
-			}
-		}
-		else {
-			_ASSERT(0);
-			return 1;
-		}
+	if (s_lightsWnd != 0) {
 		if ((g_lightSlot < 0) || (g_lightSlot >= LIGHTSLOTNUM)) {
 			_ASSERT(0);
 			return 1;
 		}
 
 
+		int lightindex;
+		for (lightindex = 0; lightindex < 8; lightindex++) {
+			WCHAR strdegxz[256] = { 0L };
+			if (s_polarxzEdit[lightindex]) {
+				s_polarxzEdit[lightindex]->getName(strdegxz, 256);
+			}
+			WCHAR strdegy[256] = { 0L };
+			if (s_polaryEdit[lightindex]) {
+				s_polaryEdit[lightindex]->getName(strdegy, 256);
+			}
+			int chkx, chky;
+			chkx = CheckStr_float(strdegxz);
+			chky = CheckStr_float(strdegy);
+			if ((chkx != 0) || (chky != 0)) {
+				_ASSERT(0);
+				return 2;//!!!!!! input error
+			}
+			float degxz, degy;
+			degxz = (float)_wtof(strdegxz);
+			degy = (float)_wtof(strdegy);
+			
+			float dirx = 0.0f;
+			float diry = 0.0f;
+			float dirz = 0.0f;
+			ConvPolarCoord2Dir(degxz, degy, &dirx, &diry, &dirz);
+			g_lightDir[g_lightSlot][lightindex].SetParams(dirx, diry, dirz);
 
-		switch (lightindex)
-		{
-		case 0:
-		{
-			int result = Dlg2LightsEach(hDlgWnd, lightindex,
-				IDC_LIGHTDIRX1, IDC_LIGHTDIRY1,
-				IDC_ENABLE1, IDC_WITHVIEWROT1, IDC_SLIDER1);
-			if (result == 0) {
-				//そのまま
+			if (s_lightsenableChk[lightindex]) {
+				g_lightEnable[g_lightSlot][lightindex] = s_lightsenableChk[lightindex]->getValue();
 			}
-			else if (result == 1) {
-				//プログラム的エラー
-				_ASSERT(0);
-				return 1;
-			}
-			else if (result == 2) {
-				//ユーザー入力エラー
-				::MessageBoxW(hDlgWnd, L"ライト１の向きの数値が不正です。半角小数で指定してください。", L"Lights For Edit Dlg : Error !!!", MB_OK);
-				return 1;
-			}
-			else { 
-				//その他エラー
-				_ASSERT(0);
-				return 1;
-			}
-		}
-		break;
-		case 1:
-		{
-			int result = Dlg2LightsEach(hDlgWnd, lightindex,
-				IDC_LIGHTDIRX2, IDC_LIGHTDIRY2,
-				IDC_ENABLE2, IDC_WITHVIEWROT2, IDC_SLIDER2);
-			if (result == 0) {
-				//そのまま
-			}
-			else if (result == 1) {
-				//プログラム的エラー
-				_ASSERT(0);
-				return 1;
-			}
-			else if (result == 2) {
-				//ユーザー入力エラー
-				::MessageBoxW(hDlgWnd, L"ライト２の向きの数値が不正です。半角小数で指定してください。", L"Lights For Edit Dlg : Error !!!", MB_OK);
-				return 1;
-			}
-			else {
-				//その他エラー
-				_ASSERT(0);
-				return 1;
-			}
-		}
-			break;
-		case 2:
-		{
-			int result = Dlg2LightsEach(hDlgWnd, lightindex,
-				IDC_LIGHTDIRX3, IDC_LIGHTDIRY3,
-				IDC_ENABLE3, IDC_WITHVIEWROT3, IDC_SLIDER3);
-			if (result == 0) {
-				//そのまま
-			}
-			else if (result == 1) {
-				//プログラム的エラー
-				_ASSERT(0);
-				return 1;
-			}
-			else if (result == 2) {
-				//ユーザー入力エラー
-				::MessageBoxW(hDlgWnd, L"ライト３の向きの数値が不正です。半角小数で指定してください。", L"Lights For Edit Dlg : Error !!!", MB_OK);
-				return 1;
-			}
-			else {
-				//その他エラー
-				_ASSERT(0);
-				return 1;
-			}
-		}
-			break;
-		case 3:
-		{
-			int result = Dlg2LightsEach(hDlgWnd, lightindex,
-				IDC_LIGHTDIRX4, IDC_LIGHTDIRY4,
-				IDC_ENABLE4, IDC_WITHVIEWROT4, IDC_SLIDER4);
-			if (result == 0) {
-				//そのまま
-			}
-			else if (result == 1) {
-				//プログラム的エラー
-				_ASSERT(0);
-				return 1;
-			}
-			else if (result == 2) {
-				//ユーザー入力エラー
-				::MessageBoxW(hDlgWnd, L"ライト４の向きの数値が不正です。半角小数で指定してください。", L"Lights For Edit Dlg : Error !!!", MB_OK);
-				return 1;
-			}
-			else {
-				//その他エラー
-				_ASSERT(0);
-				return 1;
-			}
-		}
-			break;
-		case 4:
-		{
-			int result = Dlg2LightsEach(hDlgWnd, lightindex,
-				IDC_LIGHTDIRX5, IDC_LIGHTDIRY5,
-				IDC_ENABLE5, IDC_WITHVIEWROT5, IDC_SLIDER5);
-			if (result == 0) {
-				//そのまま
-			}
-			else if (result == 1) {
-				//プログラム的エラー
-				_ASSERT(0);
-				return 1;
-			}
-			else if (result == 2) {
-				//ユーザー入力エラー
-				::MessageBoxW(hDlgWnd, L"ライト５の向きの数値が不正です。半角小数で指定してください。", L"Lights For Edit Dlg : Error !!!", MB_OK);
-				return 1;
-			}
-			else {
-				//その他エラー
-				_ASSERT(0);
-				return 1;
-			}
-		}
-			break;
-		case 5:
-		{
-			int result = Dlg2LightsEach(hDlgWnd, lightindex,
-				IDC_LIGHTDIRX6, IDC_LIGHTDIRY6,
-				IDC_ENABLE6, IDC_WITHVIEWROT6, IDC_SLIDER6);
-			if (result == 0) {
-				//そのまま
-			}
-			else if (result == 1) {
-				//プログラム的エラー
-				_ASSERT(0);
-				return 1;
-			}
-			else if (result == 2) {
-				//ユーザー入力エラー
-				::MessageBoxW(hDlgWnd, L"ライト６の向きの数値が不正です。半角小数で指定してください。", L"Lights For Edit Dlg : Error !!!", MB_OK);
-				return 1;
-			}
-			else {
-				//その他エラー
-				_ASSERT(0);
-				return 1;
-			}
-		}
-			break;
-		case 6:
-		{
-			int result = Dlg2LightsEach(hDlgWnd, lightindex,
-				IDC_LIGHTDIRX7, IDC_LIGHTDIRY7,
-				IDC_ENABLE7, IDC_WITHVIEWROT7, IDC_SLIDER7);
-			if (result == 0) {
-				//そのまま
-			}
-			else if (result == 1) {
-				//プログラム的エラー
-				_ASSERT(0);
-				return 1;
-			}
-			else if (result == 2) {
-				//ユーザー入力エラー
-				::MessageBoxW(hDlgWnd, L"ライト７の向きの数値が不正です。半角小数で指定してください。", L"Lights For Edit Dlg : Error !!!", MB_OK);
-				return 1;
-			}
-			else {
-				//その他エラー
-				_ASSERT(0);
-				return 1;
-			}
-		}
-			break;
-		case 7:
-		{
-			int result = Dlg2LightsEach(hDlgWnd, lightindex,
-				IDC_LIGHTDIRX8, IDC_LIGHTDIRY8,
-				IDC_ENABLE8, IDC_WITHVIEWROT8, IDC_SLIDER8);
-			if (result == 0) {
-				//そのまま
-			}
-			else if (result == 1) {
-				//プログラム的エラー
-				_ASSERT(0);
-				return 1;
-			}
-			else if (result == 2) {
-				//ユーザー入力エラー
-				::MessageBoxW(hDlgWnd, L"ライト８の向きの数値が不正です。半角小数で指定してください。", L"Lights For Edit Dlg : Error !!!", MB_OK);
-				return 1;
-			}
-			else {
-				//その他エラー
-				_ASSERT(0);
-				return 1;
-			}
-		}
-			break;
 
-		default:
-			_ASSERT(0);
-			return 1;
-			break;
+			if (s_lightsviewrotChk[lightindex]) {
+				g_lightDirWithView[g_lightSlot][lightindex] = s_lightsviewrotChk[lightindex]->getValue();
+			}
+
+			if (s_lightsmultSlider[lightindex]) {
+				g_lightScale[g_lightSlot][lightindex] = (float)s_lightsmultSlider[lightindex]->getValue();
+			}
 		}
+
+
 	}
 
 	return 0;
@@ -29412,34 +29427,6 @@ LRESULT CALLBACK MaterialRateDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 
 }
 
-int OwnerDrawLightColorBar(HWND hDlgWnd, int lightindex, int idcolorbar)
-{
-	if (!hDlgWnd) {
-		_ASSERT(0);
-		return 1;
-	}
-	if ((lightindex < 0) || (lightindex >= LIGHTNUMMAX)) {
-		_ASSERT(0);
-		return 1;
-	}
-	if ((g_lightSlot < 0) || (g_lightSlot >= LIGHTSLOTNUM)) {
-		_ASSERT(0);
-		return 1;
-	}
-
-
-	COLORREF col = g_lightDiffuse[g_lightSlot][lightindex].ColorRef();
-	HBRUSH hBrush = CreateSolidBrush(col);
-	HWND hwnd = GetDlgItem(hDlgWnd, idcolorbar);
-	HDC hdc = GetDC(hwnd);
-	RECT rect;
-	GetClientRect(hwnd, &rect);
-	FillRect(hdc, &rect, hBrush);
-	ReleaseDC(hwnd, hdc);
-	DeleteObject(hBrush);
-
-	return 0;
-}
 
 int OwnerDrawFogColorBar(HWND hDlgWnd, int fogkind, int idcolorbar)
 {
@@ -29491,47 +29478,6 @@ int OwnerDrawFogColorBar(HWND hDlgWnd, int fogkind, int idcolorbar)
 	return 0;
 }
 
-int ChooseLightColorBar(HWND hDlgWnd, int lightindex, int idcolorbar)
-{
-	if (!hDlgWnd) {
-		_ASSERT(0);
-		return 1;
-	}
-	if ((lightindex < 0) || (lightindex >= LIGHTNUMMAX)) {
-		_ASSERT(0);
-		return 1;
-	}
-	if ((g_lightSlot < 0) || (g_lightSlot >= LIGHTSLOTNUM)) {
-		_ASSERT(0);
-		return 1;
-	}
-
-	COLORREF colrgb = g_lightDiffuse[g_lightSlot][lightindex].ColorRef();
-	int dlgret = s_coldlg.Choose(hDlgWnd, &colrgb);
-	if (dlgret == 1) {
-		float fr, fg, fb;
-		fr = (float)((double)GetRValue(colrgb) / 255.0);
-		fr = min(1.0f, fr);
-		fr = max(0.0f, fr);
-		fg = (float)((double)GetGValue(colrgb) / 255.0);
-		fg = min(1.0f, fg);
-		fg = max(0.0f, fg);
-		fb = (float)((double)GetBValue(colrgb) / 255.0);
-		fb = min(1.0f, fb);
-		fb = max(0.0f, fb);
-
-		g_lightDiffuse[g_lightSlot][lightindex].SetParams(fr, fg, fb);
-		SetLightDirection();
-
-		HWND ctrlwnd = GetDlgItem(hDlgWnd, idcolorbar);
-		RECT rect;
-		GetClientRect(ctrlwnd, &rect);
-		InvalidateRect(ctrlwnd, &rect, true);
-	}
-
-	return 0;
-}
-
 
 
 int ChooseFogColorBar(HWND hDlgWnd, int fogkind, int idcolorbar)
@@ -29570,7 +29516,7 @@ int ChooseFogColorBar(HWND hDlgWnd, int fogkind, int idcolorbar)
 
 	COLORREF colrgb;
 	colrgb = RGB(ur, ug, ub);
-	int dlgret = s_coldlg.Choose(hDlgWnd, &colrgb);
+	int dlgret = g_coldlg.Choose(hDlgWnd, &colrgb);
 	if (dlgret == 1) {
 		float fr, fg, fb;
 		fr = (float)((double)GetRValue(colrgb) / 255.0);
@@ -33983,467 +33929,7 @@ LRESULT CALLBACK GUILODDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 
 
-LRESULT CALLBACK LightsForEditDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
-{
 
-	//static int s_lightstimerid = 2121;
-
-	if ((g_lightSlot < 0) || (g_lightSlot >= LIGHTSLOTNUM)) {
-		_ASSERT(0);
-		return FALSE;
-	}
-
-
-	switch (msg) {
-	case WM_INITDIALOG:
-	{
-		Lights2Dlg(hDlgWnd);
-
-		//EnableWindow(GetDlgItem(hDlgWnd, IDC_RESETLIM_CURRENT), FALSE);
-		//EnableWindow(GetDlgItem(hDlgWnd, IDC_RESET0_CURRENT), FALSE);
-		//EnableWindow(GetDlgItem(hDlgWnd, IDC_REPLACE180TO170_CURRENT), FALSE);
-		//EnableWindow(GetDlgItem(hDlgWnd, IDC_LIMITFROMMOTION_CURRENT), FALSE);
-
-		//SetTimer(hDlgWnd, s_lightstimerid, 20, NULL);
-
-		return FALSE;
-	}
-	break;
-
-	//case WM_PAINT:
-	//{
-	// 
-	// 
-	// ユーザがWindowsの設定機能でTheme(テーマ)を変えることでダイアログの背景色を適切に設定するしかないようだ
-	// 例えば　設定-->アクセシビリティ-->コントラストテーマ-->夜空-->適用する
-	//　　　　 アプリ起動時と終了時に　左Alt + 左Shift + PrintScreenでテーマをオンオフ
-	// 
-	// 
-	//	//GetThemeSysColor(
-	//	//	[in] HTHEME hTheme,
-	//	//	[in] int    iColorId
-	//	//);
-	//	//COLORREF bkcol = GetSysColor(COLOR_WINDOW);
-	//	COLORREF bkcol = RGB(0, 0, 0);
-	//	HBRUSH hBrush = CreateSolidBrush(bkcol);
-	//	HDC hdc = GetDC(hDlgWnd);
-	//	SetBkColor(hdc, bkcol);
-	//	//RECT rect;
-	//	//GetClientRect(hDlgWnd, &rect);
-	//	//FillRect(hdc, &rect, hBrush);
-	//	ReleaseDC(hDlgWnd, hdc);
-	//	//DeleteObject(hBrush);
-
-	//	DefWindowProc(hDlgWnd, msg, wp, lp);
-	//}
-	//break;
-	case WM_DRAWITEM://オーナードローコントロールの描画 : リソースでカラーバーボタンにオーナードロー属性を設定してある
-		{
-			int result1 = OwnerDrawLightColorBar(hDlgWnd, 0, IDC_COLORBAR11);
-			if (result1 != 0) {
-				_ASSERT(0);
-			}
-			int result2 = OwnerDrawLightColorBar(hDlgWnd, 1, IDC_COLORBAR12);
-			if (result2 != 0) {
-				_ASSERT(0);
-			}
-			int result3 = OwnerDrawLightColorBar(hDlgWnd, 2, IDC_COLORBAR13);
-			if (result3 != 0) {
-				_ASSERT(0);
-			}
-			int result4 = OwnerDrawLightColorBar(hDlgWnd, 3, IDC_COLORBAR14);
-			if (result4 != 0) {
-				_ASSERT(0);
-			}
-			int result5 = OwnerDrawLightColorBar(hDlgWnd, 4, IDC_COLORBAR15);
-			if (result5 != 0) {
-				_ASSERT(0);
-			}
-			int result6 = OwnerDrawLightColorBar(hDlgWnd, 5, IDC_COLORBAR16);
-			if (result6 != 0) {
-				_ASSERT(0);
-			}
-			int result7 = OwnerDrawLightColorBar(hDlgWnd, 6, IDC_COLORBAR17);
-			if (result7 != 0) {
-				_ASSERT(0);
-			}
-			int result8 = OwnerDrawLightColorBar(hDlgWnd, 7, IDC_COLORBAR18);
-			if (result8 != 0) {
-				_ASSERT(0);
-			}
-	}
-		//DefWindowProc(hDlgWnd, msg, wp, lp);
-		break;
-
-	case WM_HSCROLL:
-		if (GetDlgItem(hDlgWnd, IDC_SLIDER1) == (HWND)lp)
-		{
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER1), TBM_GETPOS, 0, 0);
-			g_lightScale[g_lightSlot][0] = (float)((double)cursliderpos / 100.0);
-			WCHAR strlight[256] = { 0L };
-			swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][0]);
-			SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT1, strlight);
-			SetLightDirection();
-		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER2) == (HWND)lp)
-		{
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER2), TBM_GETPOS, 0, 0);
-			g_lightScale[g_lightSlot][1] = (float)((double)cursliderpos / 100.0);
-			WCHAR strlight[256] = { 0L };
-			swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][1]);
-			SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT2, strlight);
-			SetLightDirection();
-		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER3) == (HWND)lp)
-		{
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER3), TBM_GETPOS, 0, 0);
-			g_lightScale[g_lightSlot][2] = (float)((double)cursliderpos / 100.0);
-			WCHAR strlight[256] = { 0L };
-			swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][2]);
-			SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT3, strlight);
-			SetLightDirection();
-		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER4) == (HWND)lp)
-		{
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER4), TBM_GETPOS, 0, 0);
-			g_lightScale[g_lightSlot][3] = (float)((double)cursliderpos / 100.0);
-			WCHAR strlight[256] = { 0L };
-			swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][3]);
-			SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT4, strlight);
-			SetLightDirection();
-		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER5) == (HWND)lp)
-		{
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER5), TBM_GETPOS, 0, 0);
-			g_lightScale[g_lightSlot][4] = (float)((double)cursliderpos / 100.0);
-			WCHAR strlight[256] = { 0L };
-			swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][4]);
-			SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT5, strlight);
-			SetLightDirection();
-		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER6) == (HWND)lp)
-		{
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER6), TBM_GETPOS, 0, 0);
-			g_lightScale[g_lightSlot][5] = (float)((double)cursliderpos / 100.0);
-			WCHAR strlight[256] = { 0L };
-			swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][5]);
-			SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT6, strlight);
-			SetLightDirection();
-		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER7) == (HWND)lp)
-		{
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER7), TBM_GETPOS, 0, 0);
-			g_lightScale[g_lightSlot][6] = (float)((double)cursliderpos / 100.0);
-			WCHAR strlight[256] = { 0L };
-			swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][6]);
-			SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT7, strlight);
-			SetLightDirection();
-		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER8) == (HWND)lp)
-		{
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER8), TBM_GETPOS, 0, 0);
-			g_lightScale[g_lightSlot][7] = (float)((double)cursliderpos / 100.0);
-			WCHAR strlight[256] = { 0L };
-			swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][7]);
-			SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT8, strlight);
-			SetLightDirection();
-		}
-		break;
-
-	case WM_NOTIFY:
-		{
-			LPNMHDR nmhdr = reinterpret_cast<LPNMHDR>(lp);
-			if (nmhdr->code == TRBN_THUMBPOSCHANGING) //&& (nmhdr->hwndFrom == hSlider))
-			{
-				NMTRBTHUMBPOSCHANGING* nmtrb = reinterpret_cast<NMTRBTHUMBPOSCHANGING*>(lp);
-				switch (nmtrb->nReason)
-				{
-				case TB_ENDTRACK:
-					if (GetDlgItem(hDlgWnd, IDC_SLIDER1) == nmhdr->hwndFrom)
-					{
-						int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER1), TBM_GETPOS, 0, 0);
-						g_lightScale[g_lightSlot][0] = (float)((double)cursliderpos / 100.0);
-						WCHAR strlight[256] = { 0L };
-						swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][0]);
-						SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT1, strlight);
-						SetLightDirection();
-					}
-					else if (GetDlgItem(hDlgWnd, IDC_SLIDER2) == nmhdr->hwndFrom)
-					{
-						int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER2), TBM_GETPOS, 0, 0);
-						g_lightScale[g_lightSlot][1] = (float)((double)cursliderpos / 100.0);
-						WCHAR strlight[256] = { 0L };
-						swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][1]);
-						SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT2, strlight);
-						SetLightDirection();
-					}
-					else if (GetDlgItem(hDlgWnd, IDC_SLIDER3) == nmhdr->hwndFrom)
-					{
-						int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER3), TBM_GETPOS, 0, 0);
-						g_lightScale[g_lightSlot][2] = (float)((double)cursliderpos / 100.0);
-						WCHAR strlight[256] = { 0L };
-						swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][2]);
-						SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT3, strlight);
-						SetLightDirection();
-					}
-					else if (GetDlgItem(hDlgWnd, IDC_SLIDER4) == nmhdr->hwndFrom)
-					{
-						int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER4), TBM_GETPOS, 0, 0);
-						g_lightScale[g_lightSlot][3] = (float)((double)cursliderpos / 100.0);
-						WCHAR strlight[256] = { 0L };
-						swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][3]);
-						SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT4, strlight);
-						SetLightDirection();
-					}
-					else if (GetDlgItem(hDlgWnd, IDC_SLIDER5) == nmhdr->hwndFrom)
-					{
-						int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER5), TBM_GETPOS, 0, 0);
-						g_lightScale[g_lightSlot][4] = (float)((double)cursliderpos / 100.0);
-						WCHAR strlight[256] = { 0L };
-						swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][4]);
-						SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT5, strlight);
-						SetLightDirection();
-					}
-					else if (GetDlgItem(hDlgWnd, IDC_SLIDER6) == nmhdr->hwndFrom)
-					{
-						int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER6), TBM_GETPOS, 0, 0);
-						g_lightScale[g_lightSlot][5] = (float)((double)cursliderpos / 100.0);
-						WCHAR strlight[256] = { 0L };
-						swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][5]);
-						SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT6, strlight);
-						SetLightDirection();
-					}
-					else if (GetDlgItem(hDlgWnd, IDC_SLIDER7) == nmhdr->hwndFrom)
-					{
-						int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER7), TBM_GETPOS, 0, 0);
-						g_lightScale[g_lightSlot][6] = (float)((double)cursliderpos / 100.0);
-						WCHAR strlight[256] = { 0L };
-						swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][6]);
-						SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT7, strlight);
-						SetLightDirection();
-					}
-					else if (GetDlgItem(hDlgWnd, IDC_SLIDER8) == nmhdr->hwndFrom)
-					{
-						int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER8), TBM_GETPOS, 0, 0);
-						g_lightScale[g_lightSlot][7] = (float)((double)cursliderpos / 100.0);
-						WCHAR strlight[256] = { 0L };
-						swprintf_s(strlight, 256, L"%.2f", g_lightScale[g_lightSlot][7]);
-						SetDlgItemText(hDlgWnd, IDC_TEXT_LIGHT8, strlight);
-						SetLightDirection();
-					}
-					break;
-				default:
-					break;
-				}
-			}
-		}
-		break;
-	case WM_COMMAND:
-
-		switch (LOWORD(wp)) {
-
-		case IDC_COMBO1:
-			if (HIWORD(wp) == CBN_SELCHANGE) {
-				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO1);
-				if (combownd != NULL) {
-					int combono;
-					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
-					if ((combono >= 0) && (combono < LIGHTSLOTNUM)) {
-						g_lightSlot = combono;
-					}
-					else {
-						_ASSERT(0);
-						return false;
-					}
-				}
-				else {
-					_ASSERT(0);
-					return false;
-				}
-				if ((g_lightSlot < 0) || (g_lightSlot >= LIGHTSLOTNUM)) {
-					_ASSERT(0);
-					return false;
-				}
-
-				Lights2Dlg(hDlgWnd);
-
-				RECT clientrect;
-				GetClientRect(hDlgWnd, &clientrect);
-				InvalidateRect(hDlgWnd, &clientrect, TRUE);
-
-				SetLightDirection();
-			}
-			break;
-		case IDC_SETLIGHT1://ApplyButton
-		{
-			int result1 = Dlg2Lights(hDlgWnd, 0);
-			int result2 = Dlg2Lights(hDlgWnd, 1);
-			int result3 = Dlg2Lights(hDlgWnd, 2);
-			int result4 = Dlg2Lights(hDlgWnd, 3);
-			int result5 = Dlg2Lights(hDlgWnd, 4);
-			int result6 = Dlg2Lights(hDlgWnd, 5);
-			int result7 = Dlg2Lights(hDlgWnd, 6);
-			int result8 = Dlg2Lights(hDlgWnd, 7);
-			//if ((result1 == 0) && (result2 == 0) && (result3 == 0) && (result4 == 0) &&
-			//	(result5 == 0) && (result6 == 0) && (result7 == 0) && (result8 == 0)) {
-				SetLightDirection();
-			//}
-		}
-			break;
-
-		case IDC_ENABLE1:
-		case IDC_WITHVIEWROT1:
-		{
-			int result = Dlg2Lights(hDlgWnd, 0);
-			SetLightDirection();
-		}
-		break;
-		case IDC_ENABLE2:
-		case IDC_WITHVIEWROT2:
-		{
-			int result = Dlg2Lights(hDlgWnd, 1);
-			SetLightDirection();
-		}
-		break;
-		case IDC_ENABLE3:
-		case IDC_WITHVIEWROT3:
-		{
-			int result = Dlg2Lights(hDlgWnd, 2);
-			SetLightDirection();
-		}
-		break;
-		case IDC_ENABLE4:
-		case IDC_WITHVIEWROT4:
-		{
-			int result = Dlg2Lights(hDlgWnd, 3);
-			SetLightDirection();
-		}
-		break;
-		case IDC_ENABLE5:
-		case IDC_WITHVIEWROT5:
-		{
-			int result = Dlg2Lights(hDlgWnd, 4);
-			SetLightDirection();
-		}
-		break;
-		case IDC_ENABLE6:
-		case IDC_WITHVIEWROT6:
-		{
-			int result = Dlg2Lights(hDlgWnd, 5);
-			SetLightDirection();
-		}
-		break;
-		case IDC_ENABLE7:
-		case IDC_WITHVIEWROT7:
-		{
-			int result = Dlg2Lights(hDlgWnd, 6);
-			SetLightDirection();
-		}
-		break;
-		case IDC_ENABLE8:
-		case IDC_WITHVIEWROT8:
-		{
-			int result = Dlg2Lights(hDlgWnd, 7);
-			SetLightDirection();
-		}
-		break;
-
-
-		case IDC_COLORBAR11:
-		{
-			int result = ChooseLightColorBar(hDlgWnd, 0, IDC_COLORBAR11);
-			if (result != 0) {
-				_ASSERT(0);
-			}
-		}
-			break;
-		case IDC_COLORBAR12:
-		{
-			int result = ChooseLightColorBar(hDlgWnd, 1, IDC_COLORBAR12);
-			if (result != 0) {
-				_ASSERT(0);
-			}
-		}
-			break;
-		case IDC_COLORBAR13:
-		{
-			int result = ChooseLightColorBar(hDlgWnd, 2, IDC_COLORBAR13);
-			if (result != 0) {
-				_ASSERT(0);
-			}
-		}
-			break;
-		case IDC_COLORBAR14:
-		{
-			int result = ChooseLightColorBar(hDlgWnd, 3, IDC_COLORBAR14);
-			if (result != 0) {
-				_ASSERT(0);
-			}
-		}
-			break;
-		case IDC_COLORBAR15:
-		{
-			int result = ChooseLightColorBar(hDlgWnd, 4, IDC_COLORBAR15);
-			if (result != 0) {
-				_ASSERT(0);
-			}
-		}
-			break;
-		case IDC_COLORBAR16:
-		{
-			int result = ChooseLightColorBar(hDlgWnd, 5, IDC_COLORBAR16);
-			if (result != 0) {
-				_ASSERT(0);
-			}
-		}
-			break;
-		case IDC_COLORBAR17:
-		{
-			int result = ChooseLightColorBar(hDlgWnd, 6, IDC_COLORBAR17);
-			if (result != 0) {
-				_ASSERT(0);
-			}
-		}
-			break;
-		case IDC_COLORBAR18:
-		{
-			int result = ChooseLightColorBar(hDlgWnd, 7, IDC_COLORBAR18);
-			if (result != 0) {
-				_ASSERT(0);
-			}
-		}
-			break;
-
-
-		case IDCANCEL:
-			//EndDialog(hDlgWnd, IDCANCEL);
-			break;
-		default:
-			return FALSE;
-			break;
-		}
-		break;
-	case WM_CLOSE:
-		if (s_lightsforeditdlg) {
-
-			//if (s_lightstimerid > 0) {
-			//	KillTimer(hDlgWnd, s_lightstimerid);
-			//	s_lightstimerid = 0;
-			//}
-			
-			//DestroyWindow(s_lightsforeditdlg);
-			//s_lightsforeditdlg = 0;
-
-			ShowLightsWnd(false);
-		}
-		break;
-	default:
-		DefWindowProc(hDlgWnd, msg, wp, lp);
-		return FALSE;
-	}
-	return TRUE;
-
-}
 
 LRESULT CALLBACK ThresholdDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -52866,14 +52352,16 @@ void ShowGUIDlgBlendShape(bool srcflag)
 
 void ShowLightsWnd(bool srcflag)
 {
-	if (s_lightsforeditdlg != 0) {
+	if (s_lightsWnd) {
 		if (srcflag == true) {
-			ShowWindow(s_lightsforeditdlg, SW_SHOW);
-			UpdateWindow(s_lightsforeditdlg);
+			Lights2Dlg();
+			s_lightsWnd->setVisible(true);
+			s_lightsWnd->setListenMouse(true);
+			s_lightsWnd->callRewrite();
 		}
 		else {
-			ShowWindow(s_lightsforeditdlg, SW_HIDE);
-			UpdateWindow(s_lightsforeditdlg);
+			s_lightsWnd->setVisible(false);
+			s_lightsWnd->setListenMouse(false);
 		}
 	}
 
@@ -59641,8 +59129,8 @@ void ChangeMouseSetCapture()
 			//else
 			if (s_platemenukind == SPPLATEMENUKIND_DISP) {
 				if (s_platemenuno == (SPDISPSW_LIGHTS + 1)) {
-					if (s_lightsforeditdlg) {
-						SetCapture(s_lightsforeditdlg);
+					if (s_lightsWnd) {
+						SetCapture(s_lightsWnd->getHWnd());
 					}
 				}
 				else if (s_platemenuno == (SPDISPSW_DISPGROUP + 1)) {
@@ -62529,7 +62017,7 @@ int LoadChooseColor()
 	CChooseColorFile colorfile;
 	int resultcolfile = colorfile.LoadChooseColorFile(colorfilepath, &(savedcolorref[0]));
 	if (resultcolfile == 0) {
-		s_coldlg.SetCustomColor(&(savedcolorref[0]));
+		g_coldlg.SetCustomColor(&(savedcolorref[0]));
 	}
 
 	return 0;
@@ -62666,7 +62154,7 @@ int SaveChooseColor()
 {
 	COLORREF colforsave[16];
 	ZeroMemory(colforsave, sizeof(COLORREF) * 16);
-	int resultgetcol = s_coldlg.GetCustomColor(16, &(colforsave[0]));
+	int resultgetcol = g_coldlg.GetCustomColor(16, &(colforsave[0]));
 	if (resultgetcol == 0) {
 		WCHAR colorfilepath[MAX_PATH] = { 0L };
 		swprintf_s(colorfilepath, MAX_PATH, L"%s\\MB3DOpenProjChooseColor_0.txt", s_temppath);
@@ -72624,7 +72112,7 @@ int CreateSprites()
 
 	{
 		WCHAR pngpath[MAX_PATH];
-		swprintf_s(pngpath, MAX_PATH, L"%simg_l105.png", mpath);
+		swprintf_s(pngpath, MAX_PATH, L"%sMameMedia\\img_l105.png", mpath);
 		//swprintf_s(bmppath, MAX_PATH, L"%simg_l105.bmp", mpath);
 		//g_mouseherebmp = (HBITMAP)::LoadImage(GetModuleHandle(NULL), bmppath, IMAGE_BITMAP, 52, 50, LR_LOADFROMFILE);
 		//_ASSERT(g_mouseherebmp);
@@ -72637,6 +72125,64 @@ int CreateSprites()
 		}
 	}
 	
+	{
+		WCHAR filename[SKNUMBUTTON_MAX][MAX_PATH] = {
+			L"MameMedia\\num0_48.png",
+			L"MameMedia\\num1_48.png",
+			L"MameMedia\\num2_48.png",
+			L"MameMedia\\num3_48.png",
+			L"MameMedia\\num4_48.png",
+			L"MameMedia\\num5_48.png",
+			L"MameMedia\\num6_48.png",
+			L"MameMedia\\num7_48.png",
+			L"MameMedia\\num8_48.png",
+			L"MameMedia\\num9_48.png",
+			L"MameMedia\\num_period_48.png",
+			L"MameMedia\\num_minus_48.png",
+			L"MameMedia\\num_BS_48.png",
+			L"MameMedia\\num_Clear_48.png"
+		};
+		WCHAR filename_pushed[SKNUMBUTTON_MAX][MAX_PATH] = {
+			L"MameMedia\\num0_48_pushed.png",
+			L"MameMedia\\num1_48_pushed.png",
+			L"MameMedia\\num2_48_pushed.png",
+			L"MameMedia\\num3_48_pushed.png",
+			L"MameMedia\\num4_48_pushed.png",
+			L"MameMedia\\num5_48_pushed.png",
+			L"MameMedia\\num6_48_pushed.png",
+			L"MameMedia\\num7_48_pushed.png",
+			L"MameMedia\\num8_48_pushed.png",
+			L"MameMedia\\num9_48_pushed.png",
+			L"MameMedia\\num_period_48_pushed.png",
+			L"MameMedia\\num_minus_48_pushed.png",
+			L"MameMedia\\num_BS_48_pushed.png",
+			L"MameMedia\\num_Clear_48_pushed.png"
+		};
+
+		int numindex;
+		for (numindex = 0; numindex < SKNUMBUTTON_MAX; numindex++) {
+			WCHAR pngpath[MAX_PATH];
+			swprintf_s(pngpath, MAX_PATH, L"%s%s", mpath, filename[numindex]);
+			g_numbutton[numindex] = new Gdiplus::Image(pngpath);
+			if (!g_numbutton[numindex]) {
+				_ASSERT(0);
+				PostQuitMessage(1);
+				return S_FALSE;
+			}
+
+			WCHAR pngpath_pushed[MAX_PATH];
+			swprintf_s(pngpath_pushed, MAX_PATH, L"%s%s", mpath, filename_pushed[numindex]);
+			g_numbutton_pushed[numindex] = new Gdiplus::Image(pngpath_pushed);
+			if (!g_numbutton_pushed[numindex]) {
+				_ASSERT(0);
+				PostQuitMessage(1);
+				return S_FALSE;
+			}
+		}
+	}
+
+
+
 	{
 		WCHAR pngpath[MAX_PATH];
 		swprintf_s(pngpath, MAX_PATH, L"%sMenuAimBar140.png", mpath);

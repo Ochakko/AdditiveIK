@@ -2,14 +2,23 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2024/07/07
+　OWP_EditBox, OWP_ColorBoxクラスを追加
+　　OWP_EditBoxは数値の入力用にクリックするとソフトウェアキーボードを出します
+　　　ソフトウェアキーボードは数字と.と-とBackSpaceとClearのボタンを持ちます
+　　OWP_ColorBoxは色の選択用にクリックするとColorDialogを出します
+
+　LightsプレートメニューのWin32ダイアログをOWPで作り直し
+
+　予定
+　　プレートメニューを押したときに右ペインに出すウインドウは全てOWPにしていく”予定”
+
+
 2024/07/06
 　OWP_ComboBoxAクラスを追加
 
 　DispAndLimitsプレートメニューのWin32ダイアログをからOWPで作り直し
-
-
-　予定
-　　プレートメニューを押したときに右ペインに出すウインドウは全てOWPにしていく”予定”
 
 
 

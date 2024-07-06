@@ -8,7 +8,10 @@
 #include <map>
 
 #include "GlobalVar.h"
+#include "ColDlg.h"
+
 #include <Model.h>
+
 #include "../../AdditiveIK/RMenuMain.h"
 #include "../../AdditiveIK/resource.h"//IDR_RMENU
 
@@ -21,6 +24,7 @@ extern LONG g_bvh2fbxbatchflag;
 //extern LONG g_motioncachebatchflag;
 extern LONG g_retargetbatchflag;
 extern LONG g_undertrackingRMenu;
+extern CColDlg g_coldlg;
 
 namespace OrgWinGUI{
 
@@ -29,6 +33,11 @@ namespace OrgWinGUI{
 	////////////////		ウィンドウ内部品クラス			////////////////
 	////////////////										////////////////
 	////////////////----------------------------------------////////////////
+
+	static OrgWindow* s_psoftnumWnd = nullptr;
+	static OWP_SoftNumKey* s_psoftnumkey = nullptr;
+
+
 
 	void OrgWindow::allPaint() {
 		//static int s_paintcnt = 0;
@@ -1800,6 +1809,316 @@ namespace OrgWinGUI{
 		return menuid;
 	}
 
+
+
+	OWP_EditBox::~OWP_EditBox() {
+		while (InterlockedAdd(&underButtonUpThreadFlag, 0) != 0) {
+			//ボタンを押すアニメーションを再生中に　ボタンを削除しないように　待機ループ
+			Sleep(1);
+		}
+		if (name) {
+			delete[] name;
+			name = nullptr;
+		}
+		
+	}
+
+	void OWP_EditBox::DestroySoftNumWnd()
+	{
+		//################
+		//static function
+		//################
+
+		if (s_psoftnumWnd) {
+			s_psoftnumWnd->setVisible(false);
+			s_psoftnumWnd->setListenMouse(false);
+		}
+		if (s_psoftnumkey) {
+			delete s_psoftnumkey;
+			s_psoftnumkey = nullptr;
+		}
+		if (s_psoftnumWnd) {
+			delete s_psoftnumWnd;
+			s_psoftnumWnd = nullptr;
+		}
+	}
+
+
+	int OWP_EditBox::MakeSoftNumKey() {
+		//################
+		//static function
+		//################
+
+
+		if (s_psoftnumWnd) {
+			return 0;//作成済
+		}
+
+		s_psoftnumWnd = new OrgWindow(
+			//0,
+			1,//!!!! parent=NULLかつtopmostにすれば3D表示の上に表示される
+			_T("SoftKeyWnd"),		//ウィンドウクラス名
+			GetModuleHandle(NULL),	//インスタンスハンドル
+			WindowPos(0, 0),
+			//WindowPos(0, 0),
+			WindowSize(48 * 11, 34 * 3),//サイズ
+			_T("SoftKeyWnd"),	//タイトル
+			//g_mainhwnd,	//親ウィンドウハンドル
+			//s_3dwnd,
+			NULL,//!!!! parent=NULLかつtopmostにすれば3D表示の上に表示される
+			false,					//表示・非表示状態
+			//70, 50, 70,				//カラー
+			0, 0, 0,				//カラー
+			true,					//閉じられるか否か
+			true);					//サイズ変更の可否
+
+		if (s_psoftnumWnd) {
+
+			s_psoftnumWnd->setBackGroundColor(true);
+
+
+			s_psoftnumkey = new OWP_SoftNumKey();
+			if (!s_psoftnumkey) {
+				_ASSERT(0);
+				abort();
+			}
+			s_psoftnumWnd->addParts(*s_psoftnumkey);
+
+
+			s_psoftnumWnd->setSize(WindowSize(48 * 11, 34 * 3));
+			s_psoftnumWnd->setPos(WindowPos(0, 0));
+
+			//１クリック目問題対応
+			s_psoftnumWnd->refreshPosAndSize();
+
+			s_psoftnumWnd->callRewrite();
+
+			return 0;
+		}
+		else {
+			_ASSERT(0);
+			return 1;
+		}
+	}
+
+	void OWP_EditBox::onLButtonDown(const MouseEvent& e) {
+		if ((g_endappflag == 0) && parentWindow && IsWindow(parentWindow->getHWnd())) {
+
+			if (this->buttonListener != NULL) {
+				(this->buttonListener)();
+			}
+
+			buttonPush = true;
+
+			if (s_psoftnumWnd && s_psoftnumkey && getParent()) {
+
+				s_psoftnumkey->setEditBox(this);
+
+				WindowPos parentpos = getParent()->getPos();
+				s_psoftnumWnd->setPos(WindowPos(parentpos.x + pos.x - 50 * 8, parentpos.y + pos.y + 40));
+				s_psoftnumWnd->setVisible(true);
+				s_psoftnumWnd->setListenMouse(true);
+			}
+
+
+			RECT tmpRect;
+			tmpRect.left = pos.x + 1;
+			tmpRect.top = pos.y + 1;
+			tmpRect.right = pos.x + size.x - 1;
+			tmpRect.bottom = pos.y + size.y - 1;
+			InvalidateRect(parentWindow->getHWnd(), &tmpRect, false);
+			draw();
+
+			//ボタンアップアニメーションのためのスレッド作成
+			InterlockedExchange(&underButtonUpThreadFlag, (LONG)1);
+			_beginthread(drawButtonUpThread, 0, (void*)this);
+		}
+	}
+
+	int OWP_EditBox::getName(WCHAR* dstname, int dstleng)
+	{
+		if (!dstname) {
+			_ASSERT(0);
+			return 1;
+		}
+		if ((dstleng <= 0) || (dstleng > 256)) {
+			_ASSERT(0);
+			return 1;
+		}
+		if (name) {
+			if (*name) {
+				wcscpy_s(dstname, 256, name);
+			}
+			else {
+				*dstname = 0L;
+			}
+		}
+		return 0;
+	}
+	int OWP_EditBox::AddChar(WCHAR srcwc)
+	{
+		if (name) {
+			if (*name != 0L) {
+				int namelen = (int)wcslen(name);
+				if ((namelen > 0) && (namelen < (255 - 1))) {
+					*(name + namelen) = srcwc;
+					*(name + namelen + 1) = 0L;
+				}
+			}
+			else {
+				*name = srcwc;
+				*(name + 1) = 0L;
+			}
+			callRewrite();
+		}
+
+		return 0;
+	}
+	int OWP_EditBox::BackSpaceChar()
+	{
+		if (name) {
+			if (*name != 0L) {
+				int namelen = (int)wcslen(name);
+				if ((namelen > 0) && (namelen < (255 - 1))) {
+					*(name + namelen - 1) = 0L;
+					callRewrite();
+				}
+			}
+			else {
+			}
+		}
+		return 0;
+	}
+	int OWP_EditBox::ClearChar()
+	{
+		if (name) {
+			if (*name != 0L) {
+				*name = 0L;
+				callRewrite();
+			}
+			else {
+			}
+		}
+		return 0;
+	}
+
+
+	void OWP_SoftNumKey::onLButtonDown(const MouseEvent& e) {
+
+		//全てのボタンについて繰り返す
+		for (int i = SKNUMBUTTON_0; i < SKNUMBUTTON_MAX; i++) {
+			WindowPos numkeypos = getButtonPos(i);
+			WindowSize numkeysize = getButtonSize(i);
+
+			//まずボタンが押されたかを確認
+			if ((e.localX >= (numkeypos.x - pos.x)) && (e.localX < (numkeypos.x - pos.x + numkeysize.x)) &&
+				(e.localY >= (numkeypos.y - pos.y)) && (e.localY < (numkeypos.y - pos.y + numkeysize.y))) {
+			}
+			else {
+				continue;
+			}
+
+			//ボタンパラメータのインスタンスへのポインタを作成
+			OneButtonParam* btnPrm;
+			btnPrm = &(numkeyparam[i]);
+			if (btnPrm) {
+				//ボタンリスナーを呼ぶ
+				if (btnPrm->buttonListener != NULL) {
+					(btnPrm->buttonListener)();
+				}
+
+				//ボタン押下状態をONにする
+				btnPrm->buttonPush = true;
+
+				//再描画通知
+				callRewrite();
+
+				//ボタンアップアニメーションのためのスレッド作成
+				pushnum = i;
+				_beginthread(drawNumButtonUpThread, 0, (void*)this);
+
+				if (peditbox) {
+					bool minusflag = false;
+					bool bsflag = false;
+					bool clrflag = false;
+					WCHAR srcwc = 0L;
+					switch (pushnum) {
+					case SKNUMBUTTON_0:
+						srcwc = TEXT('0');
+						break;
+					case SKNUMBUTTON_1:
+						srcwc = TEXT('1');
+						break;
+					case SKNUMBUTTON_2:
+						srcwc = TEXT('2');
+						break;
+					case SKNUMBUTTON_3:
+						srcwc = TEXT('3');
+						break;
+					case SKNUMBUTTON_4:
+						srcwc = TEXT('4');
+						break;
+					case SKNUMBUTTON_5:
+						srcwc = TEXT('5');
+						break;
+					case SKNUMBUTTON_6:
+						srcwc = TEXT('6');
+						break;
+					case SKNUMBUTTON_7:
+						srcwc = TEXT('7');
+						break;
+					case SKNUMBUTTON_8:
+						srcwc = TEXT('8');
+						break;
+					case SKNUMBUTTON_9:
+						srcwc = TEXT('9');
+						break;
+					case SKNUMBUTTON_PERIOD:
+						srcwc = TEXT('.');
+						break;
+					case SKNUMBUTTON_MINUS:
+						srcwc = TEXT('-');
+						break;
+					case SKNUMBUTTON_BACKSPACE:
+						bsflag = true;
+						break;
+					case SKNUMBUTTON_CLEAR:
+						clrflag = true;
+						break;
+					default:
+						break;
+					}
+					if (srcwc != 0L) {
+						peditbox->AddChar(srcwc);
+					}
+					else if (bsflag) {
+						peditbox->BackSpaceChar();
+					}
+					else if (clrflag) {
+						peditbox->ClearChar();
+					}
+				}
+
+			}
+
+
+			return;
+		}
+
+	}
+
+
+
+	int OWP_ColorBox::ChooseColor()
+	{
+		if (!getParent()) {
+			_ASSERT(0);
+			return 0;
+		}
+		int dlgret = g_coldlg.Choose(getParent()->getHWnd(), &choosedcolor);
+
+		return 0;
+	}
 
 	/// Method : 再描画要求を送る
 	void OrgWindowParts::callRewrite(){
