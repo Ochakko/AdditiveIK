@@ -966,7 +966,7 @@ static int s_tkeyflag = 0;
 static float s_maxcamdist = 20000.0f;
 
 
-static WCHAR s_strcurrent[256] = L"Move To Current Frame";
+static WCHAR s_strcurrent[256] = L"MoveToCurrentFrame";
 static WCHAR s_streditrange[256] = L"Drag Edit Range";
 static WCHAR s_strmark[256] = L"LongTimeLine";
 
@@ -1226,7 +1226,8 @@ static OrgWindow* s_lightsWnd = 0;
 static OWP_Separator* s_lightsslotsp = 0;
 static OWP_ComboBoxA* s_lightsslotCombo = 0;
 static OWP_Label* s_lightsslotLabel = 0;
-static OWP_GroupBox* s_lightsgroup[8];
+//static OWP_GroupBox* s_lightsgroup[8];
+static OWP_Label* s_lightsgroupLabel[8];
 static OWP_Separator* s_lightschecksp[8];
 static OWP_CheckBoxA* s_lightsenableChk[8];
 static OWP_CheckBoxA* s_lightsviewrotChk[8];
@@ -4997,7 +4998,7 @@ void InitApp()
 		s_lightsslotLabel = 0;
 		int lightindex;
 		for (lightindex = 0; lightindex < 8; lightindex++) {
-			s_lightsgroup[lightindex] = 0;
+			s_lightsgroupLabel[lightindex] = 0;
 			s_lightschecksp[lightindex] = 0;
 			s_lightsenableChk[lightindex] = 0;
 			s_lightsviewrotChk[lightindex] = 0;
@@ -7210,9 +7211,9 @@ void OnDestroyDevice()
 		}
 		int lightindex;
 		for (lightindex = 0; lightindex < 8; lightindex++) {
-			if (s_lightsgroup[lightindex]) {
-				delete s_lightsgroup[lightindex];
-				s_lightsgroup[lightindex] = 0;
+			if (s_lightsgroupLabel[lightindex]) {
+				delete s_lightsgroupLabel[lightindex];
+				s_lightsgroupLabel[lightindex] = 0;
 			}
 			if (s_lightschecksp[lightindex]) {
 				delete s_lightschecksp[lightindex];
@@ -13207,7 +13208,14 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 			//タイムラインのGUIパーツを生成
 			bool shortlabel = false;
 			bool heightwheel = true;
-			s_owpTimeline = new OWP_Timeline(heightwheel, shortlabel, L"testmotion", 100.0, 4.0);
+			int labelheight;
+			if (g_4kresolution) {
+				labelheight = 28;
+			}
+			else {
+				labelheight = 19;
+			}
+			s_owpTimeline = new OWP_Timeline(heightwheel, shortlabel, labelheight, L"testmotion", 100.0, 4.0);
 			s_owpTimeline->setDispKeyFlag(false);//高速化のためkey表示無し
 
 			// カーソル移動時のイベントリスナーに
@@ -13292,7 +13300,14 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 				}
 				bool shortlabel = true;
 				bool heightwheel = false;
-				s_owpLTimeline = new OWP_Timeline(heightwheel, shortlabel, L"EditRangeTimeLine");
+				int labelheight;
+				if (g_4kresolution) {
+					labelheight = 22;
+				}
+				else {
+					labelheight = 18;
+				}
+				s_owpLTimeline = new OWP_Timeline(heightwheel, shortlabel, labelheight, L"EditRangeTimeLine");
 				if (s_owpLTimeline) {
 					s_owpLTimeline->setDispKeyFlag(true);
 					//s_LtimelineWnd->addParts(*s_owpLTimeline);//playerbuttonより後
@@ -26547,6 +26562,14 @@ int CreateGUIDlgDispParams()
 		true,					//閉じられるか否か
 		true);					//サイズ変更の可否
 
+	int labelheight;
+	if (g_4kresolution) {
+		labelheight = 28;
+	}
+	else {
+		labelheight = 20;
+	}
+
 	if (s_displimitsWnd) {
 		double rate1 = 0.350;
 		double rate50 = 0.50;
@@ -26556,34 +26579,33 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_lightsChk = new OWP_CheckBoxA(L"Enable Lights", (g_lightflag != 0));
+		s_lightsChk = new OWP_CheckBoxA(L"Enable Lights", (g_lightflag != 0), labelheight);
 		if (!s_lightsChk) {
 			_ASSERT(0);
 			abort();
 		}
-		s_lightsSlider = new OWP_Slider((double)g_fLightScale, 10.0, 0.0);
+		s_lightsSlider = new OWP_Slider((double)g_fLightScale, 10.0, 0.0, labelheight);
 		if (!s_lightsSlider) {
 			_ASSERT(0);
 			abort();
 		}
-
 		s_threadssp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
 		if (!s_threadssp) {
 			_ASSERT(0);
 			abort();
 		}
-		s_threadsLabel = new OWP_Label(L"Update Threads");
+		s_threadsLabel = new OWP_Label(L"Update Threads", labelheight);
 		if (!s_threadsLabel) {
 			_ASSERT(0);
 			abort();
 		}
-		s_threadsSlider = new OWP_Slider((double)g_UpdateMatrixThreads, 8.0, 1.0);
+		s_threadsSlider = new OWP_Slider((double)g_UpdateMatrixThreads, 8.0, 1.0, labelheight);
 		if (!s_threadsSlider) {
 			_ASSERT(0);
 			abort();
 		}
 
-		s_highRpmChk = new OWP_CheckBoxA(L"Hight RPM", g_HighRpmMode);
+		s_highRpmChk = new OWP_CheckBoxA(L"Hight RPM", g_HighRpmMode, labelheight);
 		if (!s_highRpmChk) {
 			_ASSERT(0);
 			abort();
@@ -26594,12 +26616,12 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_bonemarkChk = new OWP_CheckBoxA(L"BoneMark", (g_bonemarkflag != 0));
+		s_bonemarkChk = new OWP_CheckBoxA(L"BoneMark", (g_bonemarkflag != 0), labelheight);
 		if (!s_bonemarkChk) {
 			_ASSERT(0);
 			abort();
 		}
-		s_bonemarkSlider = new OWP_Slider((double)g_bonemark_bright, 1.0, 0.0);
+		s_bonemarkSlider = new OWP_Slider((double)g_bonemark_bright, 1.0, 0.0, labelheight);
 		if (!s_bonemarkSlider) {
 			_ASSERT(0);
 			abort();
@@ -26610,12 +26632,12 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_rigidmarkChk = new OWP_CheckBoxA(L"RigidMark", (g_rigidmarkflag != 0));
+		s_rigidmarkChk = new OWP_CheckBoxA(L"RigidMark", (g_rigidmarkflag != 0), labelheight);
 		if (!s_rigidmarkChk) {
 			_ASSERT(0);
 			abort();
 		}
-		s_rigidmarkSlider = new OWP_Slider((double)g_rigidmark_alpha, 1.0, 0.0);
+		s_rigidmarkSlider = new OWP_Slider((double)g_rigidmark_alpha, 1.0, 0.0, labelheight);
 		if (!s_rigidmarkSlider) {
 			_ASSERT(0);
 			abort();
@@ -26626,12 +26648,12 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_rigmarkLabel = new OWP_Label(L"RigMark");
+		s_rigmarkLabel = new OWP_Label(L"RigMark", labelheight);
 		if (!s_rigmarkLabel) {
 			_ASSERT(0);
 			abort();
 		}
-		s_rigmarkSlider = new OWP_Slider((double)g_rigmark_alpha, 1.0, 0.0);
+		s_rigmarkSlider = new OWP_Slider((double)g_rigmark_alpha, 1.0, 0.0, labelheight);
 		if (!s_rigmarkSlider) {
 			_ASSERT(0);
 			abort();
@@ -26642,12 +26664,12 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_refposLabel = new OWP_Label(L"RefPosAlpha");
+		s_refposLabel = new OWP_Label(L"RefPosAlpha", labelheight);
 		if (!s_refposLabel) {
 			_ASSERT(0);
 			abort();
 		}
-		s_refposSlider = new OWP_Slider((double)g_refalpha, 100.0, 0.0);
+		s_refposSlider = new OWP_Slider((double)g_refalpha, 100.0, 0.0, labelheight);
 		if (!s_refposSlider) {
 			_ASSERT(0);
 			abort();
@@ -26658,12 +26680,12 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_iklevelsLabel = new OWP_Label(L"IK Levels");
+		s_iklevelsLabel = new OWP_Label(L"IK Levels", labelheight);
 		if (!s_iklevelsLabel) {
 			_ASSERT(0);
 			abort();
 		}
-		s_iklevelsCombo = new OWP_ComboBoxA(L"IKLEVELS");//g_iklevel:1,15
+		s_iklevelsCombo = new OWP_ComboBoxA(L"IKLEVELS", labelheight);//g_iklevel:1,15
 		if (!s_iklevelsCombo) {
 			_ASSERT(0);
 			abort();
@@ -26682,12 +26704,12 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_axiskindLabel = new OWP_Label(L"Axis Kind");
+		s_axiskindLabel = new OWP_Label(L"Axis Kind", labelheight);
 		if (!s_axiskindLabel) {
 			_ASSERT(0);
 			abort();
 		}
-		s_axiskindCombo = new OWP_ComboBoxA(L"AXISKIND");//g_boneaxis:CURRENT,PARENT,GLOBAL,BINDPOSE
+		s_axiskindCombo = new OWP_ComboBoxA(L"AXISKIND", labelheight);//g_boneaxis:CURRENT,PARENT,GLOBAL,BINDPOSE
 		if (!s_axiskindCombo) {
 			_ASSERT(0);
 			abort();
@@ -26703,12 +26725,12 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_uvsetLabel = new OWP_Label(L"UV Set");
+		s_uvsetLabel = new OWP_Label(L"UV Set", labelheight);
 		if (!s_uvsetLabel) {
 			_ASSERT(0);
 			abort();
 		}
-		s_uvsetCombo = new OWP_ComboBoxA(L"UVSET");//g_uvset:UVSet0, UVSet1
+		s_uvsetCombo = new OWP_ComboBoxA(L"UVSET", labelheight);//g_uvset:UVSet0, UVSet1
 		if (!s_uvsetCombo) {
 			_ASSERT(0);
 			abort();
@@ -26721,12 +26743,12 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_x180Chk = new OWP_CheckBoxA(L"Modify Euler X180", g_x180flag);
+		s_x180Chk = new OWP_CheckBoxA(L"Modify Euler X180", g_x180flag, labelheight);
 		if (!s_x180Chk) {
 			_ASSERT(0);
 			abort();
 		}
-		s_rottraChk = new OWP_CheckBoxA(L"Rotate Translation", g_rotatetanim);
+		s_rottraChk = new OWP_CheckBoxA(L"Rotate Translation", g_rotatetanim, labelheight);
 		if (!s_rottraChk) {
 			_ASSERT(0);
 			abort();
@@ -26737,12 +26759,12 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_dofChk = new OWP_CheckBoxA(L"DOF(DepthOfField)", g_zpreflag);
+		s_dofChk = new OWP_CheckBoxA(L"DOF(DepthOfField)", g_zpreflag, labelheight);
 		if (!s_dofChk) {
 			_ASSERT(0);
 			abort();
 		}
-		s_bloomChk = new OWP_CheckBoxA(L"HDRP Bloom", g_hdrpbloom);
+		s_bloomChk = new OWP_CheckBoxA(L"HDRP Bloom", g_hdrpbloom, labelheight);
 		if (!s_bloomChk) {
 			_ASSERT(0);
 			abort();
@@ -26753,12 +26775,12 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_alphaChk = new OWP_CheckBoxA(L"Alpha Blending", g_alphablending);
+		s_alphaChk = new OWP_CheckBoxA(L"Alpha Blending", g_alphablending, labelheight);
 		if (!s_alphaChk) {
 			_ASSERT(0);
 			abort();
 		}
-		s_zcmpChk = new OWP_CheckBoxA(L"ZCmpAlways", g_zalways);
+		s_zcmpChk = new OWP_CheckBoxA(L"ZCmpAlways", g_zalways, labelheight);
 		if (!s_zcmpChk) {
 			_ASSERT(0);
 			abort();
@@ -26769,12 +26791,12 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_freefpsChk = new OWP_CheckBoxA(L"Free fps", g_freefps);
+		s_freefpsChk = new OWP_CheckBoxA(L"Free fps", g_freefps, labelheight);
 		if (!s_freefpsChk) {
 			_ASSERT(0);
 			abort();
 		}
-		s_skydispChk = new OWP_CheckBoxA(L"Sky Disp", g_skydispflag);
+		s_skydispChk = new OWP_CheckBoxA(L"Sky Disp", g_skydispflag, labelheight);
 		if (!s_skydispChk) {
 			_ASSERT(0);
 			abort();
@@ -27112,6 +27134,14 @@ int CreateLightsWnd()
 		true,					//閉じられるか否か
 		true);					//サイズ変更の可否
 
+	int labelheight;
+	if (g_4kresolution) {
+		labelheight = 28;
+	}
+	else {
+		labelheight = 20;
+	}
+
 	if (s_lightsWnd) {
 		double rate1 = 0.350;
 		double rate50 = 0.50;
@@ -27121,7 +27151,7 @@ int CreateLightsWnd()
 			_ASSERT(0);
 			abort();
 		}
-		s_lightsslotCombo = new OWP_ComboBoxA(L"LightsSlot");
+		s_lightsslotCombo = new OWP_ComboBoxA(L"LightsSlot", labelheight);
 		if (!s_lightsslotCombo) {
 			_ASSERT(0);
 			abort();
@@ -27135,7 +27165,7 @@ int CreateLightsWnd()
 		s_lightsslotCombo->setSelectedCombo(g_lightSlot);
 
 
-		s_lightsslotLabel = new OWP_Label(L"(角度設定は極座標)");
+		s_lightsslotLabel = new OWP_Label(L"(角度設定は極座標)", labelheight);
 		if (!s_lightsslotLabel) {
 			_ASSERT(0);
 			abort();
@@ -27145,8 +27175,8 @@ int CreateLightsWnd()
 		for (lightindex = 0; lightindex < 8; lightindex++) {
 			WCHAR groupname[256] = { 0L };
 			swprintf_s(groupname, 256, L"Light_%d", lightindex + 1);
-			s_lightsgroup[lightindex] = new OWP_GroupBox(groupname);
-			if (!s_lightsgroup[lightindex]) {
+			s_lightsgroupLabel[lightindex] = new OWP_Label(groupname, labelheight);
+			if (!s_lightsgroupLabel[lightindex]) {
 				_ASSERT(0);
 				abort();
 			}
@@ -27155,12 +27185,12 @@ int CreateLightsWnd()
 				_ASSERT(0);
 				abort();
 			}
-			s_lightsenableChk[lightindex] = new OWP_CheckBoxA(L"Enable", g_lightEnable[g_lightSlot][lightindex]);
+			s_lightsenableChk[lightindex] = new OWP_CheckBoxA(L"Enable", g_lightEnable[g_lightSlot][lightindex], labelheight);
 			if (!s_lightsenableChk[lightindex]) {
 				_ASSERT(0);
 				abort();
 			}
-			s_lightsviewrotChk[lightindex] = new OWP_CheckBoxA(L"RotWithView", g_lightDirWithView[g_lightSlot][lightindex]);
+			s_lightsviewrotChk[lightindex] = new OWP_CheckBoxA(L"RotWithView", g_lightDirWithView[g_lightSlot][lightindex], labelheight);
 			if (!s_lightsviewrotChk[lightindex]) {
 				_ASSERT(0);
 				abort();
@@ -27170,12 +27200,12 @@ int CreateLightsWnd()
 				_ASSERT(0);
 				abort();
 			}
-			s_lightscolorBox[lightindex] = new OWP_ColorBox(g_lightDiffuse[g_lightSlot][lightindex].ColorRef());//g_lightDiffuse[g_lightSlot][lightindex].SetParams(fr, fg, fb);
+			s_lightscolorBox[lightindex] = new OWP_ColorBox(g_lightDiffuse[g_lightSlot][lightindex].ColorRef(), labelheight);//g_lightDiffuse[g_lightSlot][lightindex].SetParams(fr, fg, fb);
 			if (!s_lightscolorBox[lightindex]) {
 				_ASSERT(0);
 				abort();
 			}
-			s_lightsmultSlider[lightindex] = new OWP_Slider(g_lightScale[g_lightSlot][lightindex], 3.0, 0.0);
+			s_lightsmultSlider[lightindex] = new OWP_Slider(g_lightScale[g_lightSlot][lightindex], 3.0, 0.0, labelheight);
 			if (!s_lightsmultSlider[lightindex]) {
 				_ASSERT(0);
 				abort();
@@ -27195,12 +27225,12 @@ int CreateLightsWnd()
 				_ASSERT(0);
 				abort();
 			}
-			s_polarxzLabel[lightindex] = new OWP_Label(L"XZ(-180,180]");
+			s_polarxzLabel[lightindex] = new OWP_Label(L"XZ(-180,180]", labelheight);
 			if (!s_polarxzLabel[lightindex]) {
 				_ASSERT(0);
 				abort();
 			}
-			s_polarxzEdit[lightindex] = new OWP_EditBox(L"XZ Edit");
+			s_polarxzEdit[lightindex] = new OWP_EditBox(L"XZ Edit", labelheight);
 			if (!s_polarxzEdit[lightindex]) {
 				_ASSERT(0);
 				abort();
@@ -27210,12 +27240,12 @@ int CreateLightsWnd()
 				_ASSERT(0);
 				abort();
 			}
-			s_polaryLabel[lightindex] = new OWP_Label(L"Y(-90,90]");
+			s_polaryLabel[lightindex] = new OWP_Label(L"Y(-90,90]", labelheight);
 			if (!s_polaryLabel[lightindex]) {
 				_ASSERT(0);
 				abort();
 			}
-			s_polaryEdit[lightindex] = new OWP_EditBox(L"Y Edit");
+			s_polaryEdit[lightindex] = new OWP_EditBox(L"Y Edit", labelheight);
 			if (!s_polaryEdit[lightindex]) {
 				_ASSERT(0);
 				abort();
@@ -27244,14 +27274,14 @@ int CreateLightsWnd()
 		s_lightsslotsp->addParts2(*s_lightsslotLabel);
 		int lightindex2;
 		for (lightindex2 = 0; lightindex2 < 8; lightindex2++) {
-			s_lightsWnd->addParts(*s_lightsgroup[lightindex2]);
-			s_lightsgroup[lightindex2]->addParts(*s_lightschecksp[lightindex2]);
+			s_lightsWnd->addParts(*s_lightsgroupLabel[lightindex2]);
+			s_lightsWnd->addParts(*s_lightschecksp[lightindex2]);
 			s_lightschecksp[lightindex2]->addParts1(*s_lightsenableChk[lightindex2]);
 			s_lightschecksp[lightindex2]->addParts2(*s_lightsviewrotChk[lightindex2]);
-			s_lightsgroup[lightindex2]->addParts(*s_lightscolorsp[lightindex2]);
+			s_lightsWnd->addParts(*s_lightscolorsp[lightindex2]);
 			s_lightscolorsp[lightindex2]->addParts1(*s_lightscolorBox[lightindex2]);
 			s_lightscolorsp[lightindex2]->addParts2(*s_lightsmultSlider[lightindex2]);
-			s_lightsgroup[lightindex2]->addParts(*s_polarsp0[lightindex2]);
+			s_lightsWnd->addParts(*s_polarsp0[lightindex2]);
 			s_polarsp0[lightindex2]->addParts1(*s_polarsp1[lightindex2]);
 			s_polarsp0[lightindex2]->addParts2(*s_polarsp2[lightindex2]);
 			s_polarsp1[lightindex2]->addParts1(*s_polarxzLabel[lightindex2]);
@@ -27289,7 +27319,7 @@ int CreateLightsWnd()
 			});
 			
 			s_lightsviewrotChk[lightindex3]->setButtonListener([lightindex3]() {
-				bool value = s_lightsenableChk[lightindex3]->getValue();
+				bool value = s_lightsviewrotChk[lightindex3]->getValue();
 				g_lightDirWithView[g_lightSlot][lightindex3] = value;
 				SetLightDirection();
 			});
@@ -28040,15 +28070,15 @@ int Lights2Dlg()
 		int lightindex;
 		for (lightindex = 0; lightindex < 8; lightindex++) {
 			if (s_lightsenableChk[lightindex]) {
-				s_lightsenableChk[lightindex]->setValue(g_lightEnable[g_lightSlot][lightindex]);
+				s_lightsenableChk[lightindex]->setValue(g_lightEnable[g_lightSlot][lightindex], false);
 			}
 
 			if (s_lightsviewrotChk[lightindex]) {
-				s_lightsviewrotChk[lightindex]->setValue(g_lightDirWithView[g_lightSlot][lightindex]);
+				s_lightsviewrotChk[lightindex]->setValue(g_lightDirWithView[g_lightSlot][lightindex], false);
 			}
 
 			if (s_lightsmultSlider[lightindex]) {
-				s_lightsmultSlider[lightindex]->setValue((double)g_lightScale[g_lightSlot][lightindex]);
+				s_lightsmultSlider[lightindex]->setValue((double)g_lightScale[g_lightSlot][lightindex], false);
 			}
 
 
@@ -28071,7 +28101,7 @@ int Lights2Dlg()
 
 			COLORREF col = g_lightDiffuse[g_lightSlot][lightindex].ColorRef();
 			if (s_lightscolorBox[lightindex]) {
-
+				s_lightscolorBox[lightindex]->setColor(col);
 			}
 
 		}
@@ -30455,2525 +30485,6 @@ int DispParams2Dlg()
 }
 
 
-//LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
-//{
-//	switch (msg) {
-//	case WM_INITDIALOG:
-//	{
-//		//Lights2Dlg(hDlgWnd);
-//		//EnableWindow(GetDlgItem(hDlgWnd, IDC_RESETLIM_CURRENT), FALSE);
-//
-//		DispParams2Dlg(hDlgWnd);
-//
-//		return FALSE;
-//	}
-//	break;
-//
-//	case WM_DRAWITEM://オーナードローコントロールの描画 : リソースでカラーバーボタンにオーナードロー属性を設定してある
-//	//DefWindowProc(hDlgWnd, msg, wp, lp);
-//	break;
-//
-//	case WM_HSCROLL:
-//		if (GetDlgItem(hDlgWnd, IDC_SLIDER_LIGHTS) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIGHTS), TBM_GETPOS, 0, 0);
-//			g_fLightScale = (float)((double)cursliderpos / 10.0);
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"Enable Lights %.1f", g_fLightScale);
-//			SetDlgItemText(hDlgWnd, IDC_CHECK_LIGHTS, strdlg);
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_UPDATETHREADS) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_UPDATETHREADS), TBM_GETPOS, 0, 0);
-//			g_UpdateMatrixThreads = cursliderpos;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"Update Threads %d", g_UpdateMatrixThreads);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_UPDATETHREADS, strdlg);
-//
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				//#################################################
-//				//ReleasedCaptureのときに　PrepairUndo用のフラグを立てる
-//				//#################################################
-//				s_changeupdatethreadsFlag = true;
-//			}
-//
-//		}
-//		//else if (GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED) == (HWND)lp) {
-//		//	int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPEED), TBM_GETPOS, 0, 0);
-//		//	g_dspeed = (float)((double)cursliderpos / 100.0);
-//		//
-//		//	WCHAR strdlg[256] = { 0L };
-//		//	swprintf_s(strdlg, 256, L"Speed %.2f", g_dspeed);
-//		//	SetDlgItemText(hDlgWnd, IDC_STATIC_SPEED, strdlg);
-//		//
-//		//	s_model->SetTmpMotSpeed((float)g_dspeed);
-//		//	OnSetMotSpeed();
-//		//
-//		//
-//		//	if (s_topSlidersWnd && s_owpSpeedSlider) {
-//		//		s_owpSpeedSlider->setValue(g_dspeed, false);
-//		//		s_topSlidersWnd->callRewrite();//再描画
-//		//	}
-//		//}
-//		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BONEMARK), TBM_GETPOS, 0, 0);
-//			g_bonemark_bright = (float)((double)cursliderpos / 100.0);
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGIDMARK), TBM_GETPOS, 0, 0);
-//			g_rigidmark_alpha = (float)((double)cursliderpos / 100.0);
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_RIGMARK), TBM_GETPOS, 0, 0);
-//			g_rigmark_alpha = (float)((double)cursliderpos / 100.0);
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_REFPOSALPHA), TBM_GETPOS, 0, 0);
-//			g_refalpha = cursliderpos;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"RefPosAlpha %d", g_refalpha);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_REFPOSALPHA, strdlg);
-//		}
-//
-//	break;
-//
-//	case WM_COMMAND:
-//
-//		switch (LOWORD(wp)) {
-//
-//
-//		////マテリアル毎に設定することに
-//		//case IDC_SHADER_AUTO:
-//		//	CheckShaderTypeButton(hDlgWnd, -1);
-//		//	break;
-//		//case IDC_SHADER_PBR:
-//		//	CheckShaderTypeButton(hDlgWnd, MQOSHADER_PBR);
-//		//	break;
-//		//case IDC_SHADER_STD:
-//		//	CheckShaderTypeButton(hDlgWnd, MQOSHADER_STD);
-//		//	break;
-//		//case IDC_SHADER_NOLIGHT:
-//		//	CheckShaderTypeButton(hDlgWnd, MQOSHADER_TOON);
-//		//	break;
-//
-//		case IDC_CHECK_BLOOM:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_BLOOM);
-//			if (ischecked == BST_CHECKED) {
-//				g_hdrpbloom = true;
-//			}
-//			else {
-//				g_hdrpbloom = false;
-//			}
-//		}
-//		break;
-//
-//		case IDC_CHECK_SKYDISP:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_SKYDISP);
-//			if (ischecked == BST_CHECKED) {
-//				g_skydispflag = true;
-//
-//				//ティアリング位置に黒いUpperBarを表示してちらつきがみえないようにした
-//				//freefpsはここでは操作しないことに
-//				// 
-//				////天球表示時にfree fpsで描画するとティアリングが起きるので
-//				////天球表示をオンにした場合には自動的にfreefpsをオフにする
-//				//CheckDlgButton(hDlgWnd, IDC_CHECK_FREEFPS, false);
-//				//g_freefps = false;
-//			}
-//			else {
-//				g_skydispflag = false;
-//			}
-//		}
-//		break;
-//
-//		case IDC_AlphaBlending:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_AlphaBlending);
-//			if (ischecked == BST_CHECKED) {
-//				g_alphablending = true;
-//			}
-//			else {
-//				g_alphablending = false;
-//			}
-//		}
-//		break;
-//
-//		case IDC_CHECK_FREEFPS:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_FREEFPS);
-//			if (ischecked == BST_CHECKED) {
-//				g_freefps = true;
-//			}
-//			else {
-//				g_freefps = false;
-//			}
-//		}
-//		break;
-//
-//		case IDC_CHECK_LIGHTS:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_LIGHTS);
-//			if (ischecked == BST_CHECKED) {
-//				g_lightflag = 1;
-//			}
-//			else {
-//				g_lightflag = 0;
-//			}
-//		}
-//			break;
-//		case IDC_CHECK_HIGHRPM:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_HIGHRPM);
-//			if (ischecked == BST_CHECKED) {
-//				g_HighRpmMode = true;
-//			}
-//			else {
-//				g_HighRpmMode = false;
-//			}
-//		}
-//		break;
-//		case IDC_CHECK_DISPBONE:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_DISPBONE);
-//			if (ischecked == BST_CHECKED) {
-//				g_bonemarkflag = 1;
-//			}
-//			else {
-//				g_bonemarkflag = 0;
-//			}
-//		}
-//		break;
-//		case IDC_CHECK_RIGIDMARK:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_RIGIDMARK);
-//			if (ischecked == BST_CHECKED) {
-//				g_rigidmarkflag = 1;
-//			}
-//			else {
-//				g_rigidmarkflag = 0;
-//			}
-//		}
-//		break;
-//		case IDC_CHECK_LOCKTOSEL:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_LOCKTOSEL);
-//			if (ischecked == BST_CHECKED) {
-//				s_camtargetflag = 1;
-//			}
-//			else {
-//				s_camtargetflag = 0;
-//			}
-//		}
-//		break;
-//		case IDC_CHECK_PRECISE:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_PRECISE);
-//			if (ischecked == BST_CHECKED) {
-//				g_preciseOnPreviewToo = true;
-//			}
-//			else {
-//				g_preciseOnPreviewToo = false;
-//			}
-//		}
-//		break;
-//		case IDC_CHECK_X180:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_X180);
-//			if (ischecked == BST_CHECKED) {
-//				g_x180flag = true;
-//			}
-//			else {
-//				g_x180flag = false;
-//			}
-//		}
-//		break;
-//		case IDC_CHECK_TROT:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_TROT);
-//			if (ischecked == BST_CHECKED) {
-//				g_rotatetanim = true;
-//			}
-//			else {
-//				g_rotatetanim = false;
-//			}
-//		}
-//		break;
-//		case IDC_ZPREPASS:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_ZPREPASS);
-//			if (ischecked == BST_CHECKED) {
-//				g_zpreflag = true;
-//			}
-//			else {
-//				g_zpreflag = false;
-//			}
-//		}
-//		break;
-//		case IDC_CHECK_ZALWAYS:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_ZALWAYS);
-//			if (ischecked == BST_CHECKED) {
-//				g_zalways = true;
-//			}
-//			else {
-//				g_zalways = false;
-//			}
-//		}
-//		break;
-//
-//	//##########
-//	//COMBO BOX
-//	//##########
-//		case IDC_COMBO_IKLEVELS:
-//			if (HIWORD(wp) == CBN_SELCHANGE) {
-//				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_IKLEVELS);
-//				if (combownd != NULL) {
-//					int combono;
-//					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
-//					if ((combono >= 0) && (combono < 15)) {
-//						g_iklevel = combono + 1;
-//					}
-//					else {
-//						_ASSERT(0);
-//						return false;
-//					}
-//				}
-//				else {
-//					_ASSERT(0);
-//					return false;
-//				}
-//				//RECT clientrect;
-//				//GetClientRect(hDlgWnd, &clientrect);
-//				//InvalidateRect(hDlgWnd, &clientrect, TRUE);
-//			}
-//			break;
-//		case IDC_COMBO_AXISKIND:
-//			if (HIWORD(wp) == CBN_SELCHANGE) {
-//				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_AXISKIND);
-//				if (combownd != NULL) {
-//					int combono;
-//					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
-//					if ((combono >= 0) && (combono <= 3)) {
-//						switch (combono) {
-//						case 0:
-//							g_boneaxis = BONEAXIS_CURRENT;
-//							break;
-//						case 1:
-//							g_boneaxis = BONEAXIS_PARENT;
-//							break;
-//						case 2:
-//							g_boneaxis = BONEAXIS_GLOBAL;
-//							break;
-//						case 3:
-//							g_boneaxis = BONEAXIS_BINDPOSE;
-//							break;
-//						default:
-//							g_boneaxis = BONEAXIS_CURRENT;
-//							break;
-//						}
-//					}
-//					else {
-//						_ASSERT(0);
-//						return false;
-//					}
-//				}
-//				else {
-//					_ASSERT(0);
-//					return false;
-//				}
-//				//RECT clientrect;
-//				//GetClientRect(hDlgWnd, &clientrect);
-//				//InvalidateRect(hDlgWnd, &clientrect, TRUE);
-//			}
-//			break;
-//		case IDC_COMBO_UVSET:
-//			if (HIWORD(wp) == CBN_SELCHANGE) {
-//				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_UVSET);
-//				if (combownd != NULL) {
-//					int combono;
-//					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
-//					if ((combono >= 0) && (combono <= 1)) {
-//						g_uvset = combono;
-//					}
-//					else {
-//						_ASSERT(0);
-//						return false;
-//					}
-//				}
-//				else {
-//					_ASSERT(0);
-//					return false;
-//				}
-//				//RECT clientrect;
-//				//GetClientRect(hDlgWnd, &clientrect);
-//				//InvalidateRect(hDlgWnd, &clientrect, TRUE);
-//			}
-//			break;
-//
-//		//case IDC_COMBO1:
-//		//break;
-//		
-//		case IDCANCEL:
-//			//EndDialog(hDlgWnd, IDCANCEL);
-//			if (s_guidlg[GUIDLG_DISP_AND_LIMITS]) {
-//				ShowGUIDlgDispParams(false);
-//			}
-//			break;
-//		default:
-//			return FALSE;
-//			break;
-//		}
-//		break;
-//	case WM_CLOSE:
-//		if (s_guidlg[GUIDLG_DISP_AND_LIMITS]) {
-//			ShowGUIDlgDispParams(false);
-//		}
-//		break;
-//	default:
-//		DefWindowProc(hDlgWnd, msg, wp, lp);
-//		return FALSE;
-//	}
-//	return TRUE;
-//
-//}
-
-//LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
-//{
-//
-//	if (!s_shadertypeparamsdlgwnd) {
-//		s_shadertypeparamsdlgwnd = hDlgWnd;//条件リターンより前でセット
-//	}
-//
-//	if (!s_model) {
-//		return DefWindowProc(hDlgWnd, msg, wp, lp);
-//	}
-//
-//	int materialnum = s_model->GetMQOMaterialSize();
-//	materialnum = min(materialnum, MAXMATERIALNUM);//2024/03/03
-//
-//	if ((s_shadertypeparamsindex < 0) || (s_shadertypeparamsindex >= (materialnum + 1))) {
-//		if (s_shadertypeparamsindex != -1) {
-//			int dbgflag1 = 1;
-//		}
-//		return DefWindowProc(hDlgWnd, msg, wp, lp);
-//	}
-//
-//	int materialindex = s_shadertypeparamsindex - 1;
-//	CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
-//	//if (curmqomat) {
-//	//	s_shadertypeparams.SetMaterial(curmqomat);//<--設定中にここでリセットされてしまうのでコメントアウト 2024/03/08
-//	//}
-//
-//	int lightsliderid[LIGHTNUMMAX] = {
-//		IDC_SL_LITSCALE1, IDC_SL_LITSCALE2, IDC_SL_LITSCALE3, IDC_SL_LITSCALE4,
-//		IDC_SL_LITSCALE5, IDC_SL_LITSCALE6, IDC_SL_LITSCALE7, IDC_SL_LITSCALE8
-//	};
-//	int lighttextid[LIGHTNUMMAX] = {
-//		IDC_STATIC_LIGHTSCALE1, IDC_STATIC_LIGHTSCALE2, IDC_STATIC_LIGHTSCALE3, IDC_STATIC_LIGHTSCALE4,
-//		IDC_STATIC_LIGHTSCALE5, IDC_STATIC_LIGHTSCALE6, IDC_STATIC_LIGHTSCALE7, IDC_STATIC_LIGHTSCALE8
-//	};
-//
-//
-//	switch (msg) {
-//	case WM_INITDIALOG:
-//	{
-//		SetMaterial2ShaderTypeParamsDlg(curmqomat);
-//		return FALSE;
-//	}
-//	break;
-//
-//	case WM_DRAWITEM://オーナードローコントロールの描画 : リソースでカラーバーボタンにオーナードロー属性を設定してある
-//		//DefWindowProc(hDlgWnd, msg, wp, lp);
-//		break;
-//
-//	case WM_HSCROLL:
-//		if (GetDlgItem(hDlgWnd, IDC_SLIDER_METALCOEF) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_METALCOEF), TBM_GETPOS, 0, 0);
-//			float newmetalcoef = (float)((double)cursliderpos / 100.0);
-//			s_shadertypeparams.metalcoef = newmetalcoef;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"Metal_Add %.2f", newmetalcoef);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_METALCOEF, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetMetalAdd(newmetalcoef);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetMetalAdd(newmetalcoef);
-//					}
-//				}
-//			}
-//
-//			//if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-//			//	if (s_metalcoeflabel[s_shadertypeparamsindex]) {
-//			//		WCHAR strdlg2[256] = { 0L };
-//			//		swprintf_s(strdlg2, 256, L"%.2f", newmetalcoef);
-//			//		s_metalcoeflabel[s_shadertypeparamsindex]->setName(strdlg2);
-//			//	}
-//			//}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_SMOOTHCOEF) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SMOOTHCOEF), TBM_GETPOS, 0, 0);
-//			float newsmoothcoef = (float)((double)cursliderpos / 100.0);
-//			s_shadertypeparams.smoothcoef = newsmoothcoef;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"SmoothCoef %.2f", newsmoothcoef);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_SMOOTHCOEF, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetSmoothCoef(newsmoothcoef);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetSmoothCoef(newsmoothcoef);
-//					}
-//				}
-//			}
-//
-//			//if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-//			//	if (s_smoothcoeflabel[s_shadertypeparamsindex]) {
-//			//		WCHAR strdlg2[256] = { 0L };
-//			//		swprintf_s(strdlg2, 256, L"%.2f", newsmoothcoef);
-//			//		s_smoothcoeflabel[s_shadertypeparamsindex]->setName(strdlg2);
-//			//	}
-//			//}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_EMISCALE) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_EMISCALE), TBM_GETPOS, 0, 0);
-//			float newemiscale = (float)((double)cursliderpos / 100.0);
-//			s_shadertypeparams.emissiveScale = newemiscale;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"Emission:%.2f", newemiscale);
-//			SetDlgItemText(hDlgWnd, IDC_CHECK_EMISSION, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetEmissiveScale(newemiscale);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetEmissiveScale(newemiscale);
-//					}
-//				}
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_SPECULARCOEF) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPECULARCOEF), TBM_GETPOS, 0, 0);
-//			float newspcscale = (float)((double)cursliderpos / 200.0);
-//			s_shadertypeparams.specularcoef = newspcscale;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"SpecularCoef %.3f", newspcscale);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_SPECULARCOEF, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetSpecularCoef(newspcscale);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetSpecularCoef(newspcscale);
-//					}
-//				}
-//			}
-//		}
-//
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TILINGU) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGU), TBM_GETPOS, 0, 0);
-//			s_shadertypeparams.uvscale.x = (double)cursliderpos;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"Tiling U:%d", cursliderpos);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TILINGU, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetUVScale(s_shadertypeparams.uvscale);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetUVScale(s_shadertypeparams.uvscale);
-//					}
-//				}
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TILINGV) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGV), TBM_GETPOS, 0, 0);
-//			s_shadertypeparams.uvscale.y = (double)cursliderpos;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"Tiling V:%d", cursliderpos);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TILINGV, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetUVScale(s_shadertypeparams.uvscale);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetUVScale(s_shadertypeparams.uvscale);
-//					}
-//				}
-//			}
-//		}
-//
-//
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDR) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDR), TBM_GETPOS, 0, 0);
-//			s_shadertypeparams.hsvtoon.hicolorh = (float)((double)cursliderpos / 100.0);
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonHiAddr:%.2f", s_shadertypeparams.hsvtoon.hicolorh);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDR, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonHiAddrH(s_shadertypeparams.hsvtoon.hicolorh);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetToonHiAddrH(s_shadertypeparams.hsvtoon.hicolorh);
-//						s_hsvtoonforall.hicolorh = s_shadertypeparams.hsvtoon.hicolorh;
-//					}
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				if (curmqomat) {
-//					s_toonmqomaterial = curmqomat;
-//				}
-//				else {
-//					s_toonmqomaterial = nullptr;
-//				}
-//				s_toonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDR) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDR), TBM_GETPOS, 0, 0);
-//			s_shadertypeparams.hsvtoon.lowcolorh = (float)((double)cursliderpos / 100.0);
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonLowAddr:%.2f", s_shadertypeparams.hsvtoon.lowcolorh);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDR, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonLowAddrH(s_shadertypeparams.hsvtoon.lowcolorh);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetToonLowAddrH(s_shadertypeparams.hsvtoon.lowcolorh);
-//						s_hsvtoonforall.lowcolorh = s_shadertypeparams.hsvtoon.lowcolorh;
-//					}
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				if (curmqomat) {
-//					s_toonmqomaterial = curmqomat;
-//				}
-//				else {
-//					s_toonmqomaterial = nullptr;
-//				}
-//				s_toonparamchange = true;
-//			}
-//		}
-//
-//
-//
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONBASEH) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEH), TBM_GETPOS, 0, 0);
-//			s_shadertypeparams.hsvtoon.basehsv.x = (float)cursliderpos;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonBase_H:%.1f", s_shadertypeparams.hsvtoon.basehsv.x);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONBASEH, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonBaseH(s_shadertypeparams.hsvtoon.basehsv.x);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetToonBaseH(s_shadertypeparams.hsvtoon.basehsv.x);
-//						s_hsvtoonforall.basehsv.x = s_shadertypeparams.hsvtoon.basehsv.x;
-//					}
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				if (curmqomat) {
-//					s_toonmqomaterial = curmqomat;
-//				}
-//				else {
-//					s_toonmqomaterial = nullptr;
-//				}
-//				s_toonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONBASES) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASES), TBM_GETPOS, 0, 0);
-//			s_shadertypeparams.hsvtoon.basehsv.y = (float)cursliderpos * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonBase_S:%.2f", s_shadertypeparams.hsvtoon.basehsv.y);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONBASES, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonBaseS(s_shadertypeparams.hsvtoon.basehsv.y);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetToonBaseS(s_shadertypeparams.hsvtoon.basehsv.y);
-//						s_hsvtoonforall.basehsv.y = s_shadertypeparams.hsvtoon.basehsv.y;
-//					}
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				if (curmqomat) {
-//					s_toonmqomaterial = curmqomat;
-//				}
-//				else {
-//					s_toonmqomaterial = nullptr;
-//				}
-//				s_toonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONBASEV) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEV), TBM_GETPOS, 0, 0);
-//			s_shadertypeparams.hsvtoon.basehsv.z = (float)cursliderpos * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonHi_V:%.2f", s_shadertypeparams.hsvtoon.basehsv.z);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONBASEV, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonBaseV(s_shadertypeparams.hsvtoon.basehsv.z);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetToonBaseV(s_shadertypeparams.hsvtoon.basehsv.z);
-//						s_hsvtoonforall.basehsv.z = s_shadertypeparams.hsvtoon.basehsv.z;
-//					}
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				if (curmqomat) {
-//					s_toonmqomaterial = curmqomat;
-//				}
-//				else {
-//					s_toonmqomaterial = nullptr;
-//				}
-//				s_toonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONBASEA) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEA), TBM_GETPOS, 0, 0);
-//			s_shadertypeparams.hsvtoon.basehsv.w = (float)cursliderpos * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonBase_A:%.2f", s_shadertypeparams.hsvtoon.basehsv.w);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONBASEA, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonBaseA(s_shadertypeparams.hsvtoon.basehsv.w);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetToonBaseA(s_shadertypeparams.hsvtoon.basehsv.w);
-//						s_hsvtoonforall.basehsv.w = s_shadertypeparams.hsvtoon.basehsv.w;
-//					}
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				if (curmqomat) {
-//					s_toonmqomaterial = curmqomat;
-//				}
-//				else {
-//					s_toonmqomaterial = nullptr;
-//				}
-//				s_toonparamchange = true;
-//			}
-//		}
-//
-//
-//
-//
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDH) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDH), TBM_GETPOS, 0, 0);
-//			s_shadertypeparams.hsvtoon.hiaddhsv.x = (float)((double)cursliderpos - 360.0);
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonHi_H:%.1f", s_shadertypeparams.hsvtoon.hiaddhsv.x);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDH, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonHiAddH(s_shadertypeparams.hsvtoon.hiaddhsv.x);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetToonHiAddH(s_shadertypeparams.hsvtoon.hiaddhsv.x);
-//						s_hsvtoonforall.hiaddhsv.x = s_shadertypeparams.hsvtoon.hiaddhsv.x;
-//					}
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				if (curmqomat) {
-//					s_toonmqomaterial = curmqomat;
-//				}
-//				else {
-//					s_toonmqomaterial = nullptr;
-//				}
-//				s_toonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDH) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDH), TBM_GETPOS, 0, 0);
-//			s_shadertypeparams.hsvtoon.lowaddhsv.x = (float)((double)cursliderpos - 360.0);
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonLow_H:%.1f", s_shadertypeparams.hsvtoon.lowaddhsv.x);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDH, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonLowAddH(s_shadertypeparams.hsvtoon.lowaddhsv.x);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetToonLowAddH(s_shadertypeparams.hsvtoon.lowaddhsv.x);
-//						s_hsvtoonforall.lowaddhsv.x = s_shadertypeparams.hsvtoon.lowaddhsv.x;
-//					}
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				if (curmqomat) {
-//					s_toonmqomaterial = curmqomat;
-//				}
-//				else {
-//					s_toonmqomaterial = nullptr;
-//				}
-//				s_toonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDS) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDS), TBM_GETPOS, 0, 0);
-//			s_shadertypeparams.hsvtoon.hiaddhsv.y = (float)((double)cursliderpos - 100.0) * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonHi_S:%.2f", s_shadertypeparams.hsvtoon.hiaddhsv.y);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDS, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonHiAddS(s_shadertypeparams.hsvtoon.hiaddhsv.y);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetToonHiAddS(s_shadertypeparams.hsvtoon.hiaddhsv.y);
-//						s_hsvtoonforall.hiaddhsv.y = s_shadertypeparams.hsvtoon.hiaddhsv.y;
-//					}
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				if (curmqomat) {
-//					s_toonmqomaterial = curmqomat;
-//				}
-//				else {
-//					s_toonmqomaterial = nullptr;
-//				}
-//				s_toonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDS) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDS), TBM_GETPOS, 0, 0);
-//			s_shadertypeparams.hsvtoon.lowaddhsv.y = (float)((double)cursliderpos - 100.0) * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonLow_S:%.2f", s_shadertypeparams.hsvtoon.lowaddhsv.y);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDS, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonLowAddS(s_shadertypeparams.hsvtoon.lowaddhsv.y);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetToonLowAddS(s_shadertypeparams.hsvtoon.lowaddhsv.y);
-//						s_hsvtoonforall.lowaddhsv.y = s_shadertypeparams.hsvtoon.lowaddhsv.y;
-//					}
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				if (curmqomat) {
-//					s_toonmqomaterial = curmqomat;
-//				}
-//				else {
-//					s_toonmqomaterial = nullptr;
-//				}
-//				s_toonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDV) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDV), TBM_GETPOS, 0, 0);
-//			s_shadertypeparams.hsvtoon.hiaddhsv.z = (float)((double)cursliderpos - 100.0) * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonHi_V:%.2f", s_shadertypeparams.hsvtoon.hiaddhsv.z);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDV, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonHiAddV(s_shadertypeparams.hsvtoon.hiaddhsv.z);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetToonHiAddV(s_shadertypeparams.hsvtoon.hiaddhsv.z);
-//						s_hsvtoonforall.hiaddhsv.z = s_shadertypeparams.hsvtoon.hiaddhsv.z;
-//					}
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				if (curmqomat) {
-//					s_toonmqomaterial = curmqomat;
-//				}
-//				else {
-//					s_toonmqomaterial = nullptr;
-//				}
-//				s_toonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDV) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDV), TBM_GETPOS, 0, 0);
-//			s_shadertypeparams.hsvtoon.lowaddhsv.z = (float)((double)cursliderpos - 100.0) * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonLow_V:%.2f", s_shadertypeparams.hsvtoon.lowaddhsv.z);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDV, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonLowAddV(s_shadertypeparams.hsvtoon.lowaddhsv.z);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetToonLowAddV(s_shadertypeparams.hsvtoon.lowaddhsv.z);
-//						s_hsvtoonforall.lowaddhsv.z = s_shadertypeparams.hsvtoon.lowaddhsv.z;
-//					}
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				if (curmqomat) {
-//					s_toonmqomaterial = curmqomat;
-//				}
-//				else {
-//					s_toonmqomaterial = nullptr;
-//				}
-//				s_toonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDA) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDA), TBM_GETPOS, 0, 0);
-//			s_shadertypeparams.hsvtoon.hiaddhsv.w = (float)((double)cursliderpos - 100.0) * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonHi_A:%.2f", s_shadertypeparams.hsvtoon.hiaddhsv.w);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDA, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonHiAddA(s_shadertypeparams.hsvtoon.hiaddhsv.w);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetToonHiAddA(s_shadertypeparams.hsvtoon.hiaddhsv.w);
-//						s_hsvtoonforall.hiaddhsv.w = s_shadertypeparams.hsvtoon.hiaddhsv.w;
-//					}
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				if (curmqomat) {
-//					s_toonmqomaterial = curmqomat;
-//				}
-//				else {
-//					s_toonmqomaterial = nullptr;
-//				}
-//				s_toonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDA) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDA), TBM_GETPOS, 0, 0);
-//			s_shadertypeparams.hsvtoon.lowaddhsv.w = (float)((double)cursliderpos - 100.0) * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonLOW_A:%.2f", s_shadertypeparams.hsvtoon.lowaddhsv.w);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDA, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonLowAddA(s_shadertypeparams.hsvtoon.lowaddhsv.w);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetToonLowAddA(s_shadertypeparams.hsvtoon.lowaddhsv.w);
-//						s_hsvtoonforall.lowaddhsv.w = s_shadertypeparams.hsvtoon.lowaddhsv.w;
-//					}
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				if (curmqomat) {
-//					s_toonmqomaterial = curmqomat;
-//				}
-//				else {
-//					s_toonmqomaterial = nullptr;
-//				}
-//				s_toonparamchange = true;
-//			}
-//		}
-//
-//
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_ALPHATEST) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_ALPHATEST), TBM_GETPOS, 0, 0);
-//			s_shadertypeparams.alphatest = (double)cursliderpos / 255.0;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"AlphaTest:%d", cursliderpos);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_ALPHATEST, strdlg);
-//
-//			if (curmqomat) {
-//				curmqomat->SetAlphaTestClipVal(s_shadertypeparams.alphatest);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetAlphaTestClipVal(s_shadertypeparams.alphatest);
-//					}
-//				}
-//			}
-//		}
-//
-//
-//
-//
-//		{
-//			int litno4;
-//			for (litno4 = 0; litno4 < LIGHTNUMMAX; litno4++) {
-//				HWND litwnd = GetDlgItem(hDlgWnd, lightsliderid[litno4]);
-//				if ((litwnd != NULL) && (litwnd == (HWND)lp)) {
-//					int cursliderpos = (int)SendMessage(litwnd, TBM_GETPOS, 0, 0);
-//					float newlitscale = (float)((double)cursliderpos / 100.0);
-//					s_shadertypeparams.lightscale[litno4] = newlitscale;
-//
-//					WCHAR strdlg[256] = { 0L };
-//					swprintf_s(strdlg, 256, L"LightScale%d %.2f", (litno4 + 1), newlitscale);
-//					SetDlgItemText(hDlgWnd, lighttextid[litno4], strdlg);
-//
-//					if (curmqomat) {
-//						curmqomat->SetLightScale(litno4, newlitscale);
-//					}
-//					else {
-//						int materialindex4;
-//						for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
-//							CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex4);
-//							if (setmqomat) {
-//								setmqomat->SetLightScale(litno4, newlitscale);
-//							}
-//						}
-//					}
-//
-//				}
-//			}
-//		}
-//		break;
-//
-//	case WM_COMMAND:
-//
-//		switch (LOWORD(wp)) {
-//
-//
-//		case IDC_SHADER_AUTO2:
-//		{
-//			CheckShaderTypeParamsButton(hDlgWnd, -1);
-//			if (curmqomat) {
-//				curmqomat->SetShaderType(-1);
-//				s_shadertypeparams.shadertype = -1;
-//
-//				if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-//					if (s_shadertypelabel[s_shadertypeparamsindex]) {
-//						WCHAR strdlg2[256] = { 0L };
-//						wcscpy_s(strdlg2, 256, L"AUTO");
-//						s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
-//					}
-//				}
-//			}
-//			else {
-//				int materialindex5;
-//				for (materialindex5 = 0; materialindex5 < materialnum; materialindex5++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex5);
-//					if (setmqomat) {
-//						setmqomat->SetShaderType(-1);
-//					}
-//
-//					if (s_shadertypelabel[materialindex5 + 1]) {
-//						WCHAR strdlg2[256] = { 0L };
-//						wcscpy_s(strdlg2, 256, L"AUTO");
-//						s_shadertypelabel[materialindex5 + 1]->setName(strdlg2);
-//					}
-//				}
-//			}
-//		}
-//			break;
-//		case IDC_SHADER_PBR2:
-//		{
-//			CheckShaderTypeParamsButton(hDlgWnd, MQOSHADER_PBR);
-//			s_shadertypeparams.shadertype = MQOSHADER_PBR;
-//			
-//			if (curmqomat) {
-//				curmqomat->SetShaderType(MQOSHADER_PBR);
-//
-//				if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-//					if (s_shadertypelabel[s_shadertypeparamsindex]) {
-//						WCHAR strdlg2[256] = { 0L };
-//						wcscpy_s(strdlg2, 256, L"PBR");
-//						s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
-//					}
-//				}
-//			}
-//			else {
-//				int materialindex6;
-//				for (materialindex6 = 0; materialindex6 < materialnum; materialindex6++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex6);
-//					if (setmqomat) {
-//						setmqomat->SetShaderType(MQOSHADER_PBR);
-//					}
-//
-//					if (s_shadertypelabel[materialindex6 + 1]) {
-//						WCHAR strdlg2[256] = { 0L };
-//						wcscpy_s(strdlg2, 256, L"PBR");
-//						s_shadertypelabel[materialindex6 + 1]->setName(strdlg2);
-//					}
-//				}
-//			}
-//		}
-//			break;
-//		case IDC_SHADER_STD2:
-//		{
-//			CheckShaderTypeParamsButton(hDlgWnd, MQOSHADER_STD);
-//			s_shadertypeparams.shadertype = MQOSHADER_STD;
-//
-//			if (curmqomat) {
-//				curmqomat->SetShaderType(MQOSHADER_STD);
-//
-//				if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-//					if (s_shadertypelabel[s_shadertypeparamsindex]) {
-//						WCHAR strdlg2[256] = { 0L };
-//						wcscpy_s(strdlg2, 256, L"STD");
-//						s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
-//					}
-//				}
-//			}
-//			else {
-//				int materialindex7;
-//				for (materialindex7 = 0; materialindex7 < materialnum; materialindex7++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex7);
-//					if (setmqomat) {
-//						setmqomat->SetShaderType(MQOSHADER_STD);
-//					}
-//
-//					if (s_shadertypelabel[materialindex7 + 1]) {
-//						WCHAR strdlg2[256] = { 0L };
-//						wcscpy_s(strdlg2, 256, L"STD");
-//						s_shadertypelabel[materialindex7 + 1]->setName(strdlg2);
-//					}
-//				}
-//			}
-//		}
-//			break;
-//		case IDC_SHADER_NOLIGHT2:
-//		{
-//			CheckShaderTypeParamsButton(hDlgWnd, MQOSHADER_TOON);
-//			s_shadertypeparams.shadertype = MQOSHADER_TOON;
-//
-//			if (curmqomat) {
-//				curmqomat->SetShaderType(MQOSHADER_TOON);
-//
-//				if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-//					if (s_shadertypelabel[s_shadertypeparamsindex]) {
-//						WCHAR strdlg2[256] = { 0L };
-//						wcscpy_s(strdlg2, 256, L"TOON");
-//						s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
-//					}
-//				}
-//			}
-//			else {
-//				int materialindex8;
-//				for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex8);
-//					if (setmqomat) {
-//						setmqomat->SetShaderType(MQOSHADER_TOON);
-//					}
-//
-//					if (s_shadertypelabel[materialindex8 + 1]) {
-//						WCHAR strdlg2[256] = { 0L };
-//						wcscpy_s(strdlg2, 256, L"TOON");
-//						s_shadertypelabel[materialindex8 + 1]->setName(strdlg2);
-//					}
-//				}
-//			}
-//		}
-//			break;
-//
-//
-//
-//		case IDC_TOONLIGHT1:
-//		{
-//			CheckToonLightButton(hDlgWnd, 0);
-//			s_shadertypeparams.hsvtoon.lightindex = 0;
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonLightIndex(0);
-//			}
-//			else {
-//				int materialindex8;
-//				for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex8);
-//					if (setmqomat) {
-//						setmqomat->SetToonLightIndex(0);
-//					}
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_TOONLIGHT2:
-//		{
-//			CheckToonLightButton(hDlgWnd, 1);
-//			s_shadertypeparams.hsvtoon.lightindex = 1;
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonLightIndex(1);
-//			}
-//			else {
-//				int materialindex8;
-//				for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex8);
-//					if (setmqomat) {
-//						setmqomat->SetToonLightIndex(1);
-//					}
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_TOONLIGHT3:
-//		{
-//			CheckToonLightButton(hDlgWnd, 2);
-//			s_shadertypeparams.hsvtoon.lightindex = 2;
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonLightIndex(2);
-//			}
-//			else {
-//				int materialindex8;
-//				for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex8);
-//					if (setmqomat) {
-//						setmqomat->SetToonLightIndex(2);
-//					}
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_TOONLIGHT4:
-//		{
-//			CheckToonLightButton(hDlgWnd, 3);
-//			s_shadertypeparams.hsvtoon.lightindex = 3;
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonLightIndex(3);
-//			}
-//			else {
-//				int materialindex8;
-//				for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex8);
-//					if (setmqomat) {
-//						setmqomat->SetToonLightIndex(3);
-//					}
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_TOONLIGHT5:
-//		{
-//			CheckToonLightButton(hDlgWnd, 4);
-//			s_shadertypeparams.hsvtoon.lightindex = 4;
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonLightIndex(4);
-//			}
-//			else {
-//				int materialindex8;
-//				for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex8);
-//					if (setmqomat) {
-//						setmqomat->SetToonLightIndex(4);
-//					}
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_TOONLIGHT6:
-//		{
-//			CheckToonLightButton(hDlgWnd, 5);
-//			s_shadertypeparams.hsvtoon.lightindex = 5;
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonLightIndex(5);
-//			}
-//			else {
-//				int materialindex8;
-//				for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex8);
-//					if (setmqomat) {
-//						setmqomat->SetToonLightIndex(5);
-//					}
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_TOONLIGHT7:
-//		{
-//			CheckToonLightButton(hDlgWnd, 6);
-//			s_shadertypeparams.hsvtoon.lightindex = 6;
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonLightIndex(6);
-//			}
-//			else {
-//				int materialindex8;
-//				for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex8);
-//					if (setmqomat) {
-//						setmqomat->SetToonLightIndex(6);
-//					}
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_TOONLIGHT8:
-//		{
-//			CheckToonLightButton(hDlgWnd, 7);
-//			s_shadertypeparams.hsvtoon.lightindex = 7;
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonLightIndex(7);
-//			}
-//			else {
-//				int materialindex8;
-//				for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex8);
-//					if (setmqomat) {
-//						setmqomat->SetToonLightIndex(7);
-//					}
-//				}
-//			}
-//		}
-//		break;
-//
-//
-//
-//		case IDC_CHECK_LIGHTINGMAT:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_LIGHTINGMAT);
-//			if (ischecked == BST_CHECKED) {
-//				s_shadertypeparams.lightingmat = true;
-//			}
-//			else {
-//				s_shadertypeparams.lightingmat = false;
-//			}
-//
-//			if (curmqomat) {
-//				curmqomat->SetLightingFlag(s_shadertypeparams.lightingmat);
-//			}
-//			else {
-//				int materialindex9;
-//				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex9);
-//					if (setmqomat) {
-//						setmqomat->SetLightingFlag(s_shadertypeparams.lightingmat);
-//					}
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_CHECK_SHADOWCASTER:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_SHADOWCASTER);
-//			if (ischecked == BST_CHECKED) {
-//				s_shadertypeparams.shadowcasterflag = true;
-//			}
-//			else {
-//				s_shadertypeparams.shadowcasterflag = false;
-//			}
-//
-//			if (curmqomat) {
-//				curmqomat->SetShadowCasterFlag(s_shadertypeparams.shadowcasterflag);
-//			}
-//			else {
-//				int materialindex9;
-//				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex9);
-//					if (setmqomat) {
-//						setmqomat->SetShadowCasterFlag(s_shadertypeparams.shadowcasterflag);
-//					}
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_CHECK_EMISSION:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_EMISSION);
-//			if (ischecked == BST_CHECKED) {
-//				s_shadertypeparams.enableEmission = true;
-//			}
-//			else {
-//				s_shadertypeparams.enableEmission = false;
-//			}
-//
-//			if (curmqomat) {
-//				curmqomat->SetEnableEmission(s_shadertypeparams.enableEmission);
-//			}
-//			else {
-//				int materialindex9;
-//				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex9);
-//					if (setmqomat) {
-//						setmqomat->SetEnableEmission(s_shadertypeparams.enableEmission);
-//					}
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_CHECK_NORMALY0:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_NORMALY0);
-//			if (ischecked == BST_CHECKED) {
-//				s_shadertypeparams.normaly0flag = true;
-//			}
-//			else {
-//				s_shadertypeparams.normaly0flag = false;
-//			}
-//
-//			if (curmqomat) {
-//				curmqomat->SetNormalY0Flag(s_shadertypeparams.normaly0flag);
-//			}
-//			else {
-//				int materialindex9;
-//				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex9);
-//					if (setmqomat) {
-//						setmqomat->SetNormalY0Flag(s_shadertypeparams.normaly0flag);
-//					}
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_CHECK_DISTORTION:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_DISTORTION);
-//			if (ischecked == BST_CHECKED) {
-//				s_shadertypeparams.distortionflag = true;
-//			}
-//			else {
-//				s_shadertypeparams.distortionflag = false;
-//			}
-//
-//			if (curmqomat) {
-//				curmqomat->SetDistortionFlag(s_shadertypeparams.distortionflag);
-//			}
-//			else {
-//				int materialindex9;
-//				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex9);
-//					if (setmqomat) {
-//						setmqomat->SetDistortionFlag(s_shadertypeparams.distortionflag);
-//					}
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_CHECK_GRADATION:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_GRADATION);
-//			if (ischecked == BST_CHECKED) {
-//				s_shadertypeparams.hsvtoon.gradationflag = true;
-//
-//				HWND powertoonwnd = GetDlgItem(hDlgWnd, IDC_CHECK_POWERTOON);
-//				if (powertoonwnd) {
-//					EnableWindow(powertoonwnd, TRUE);
-//				}
-//			}
-//			else {
-//				s_shadertypeparams.hsvtoon.gradationflag = false;
-//
-//				HWND powertoonwnd = GetDlgItem(hDlgWnd, IDC_CHECK_POWERTOON);
-//				if (powertoonwnd) {
-//					EnableWindow(powertoonwnd, FALSE);
-//				}
-//			}
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonGradationFlag(s_shadertypeparams.hsvtoon.gradationflag);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetToonGradationFlag(s_shadertypeparams.hsvtoon.gradationflag);
-//						s_hsvtoonforall.gradationflag = s_shadertypeparams.hsvtoon.gradationflag;
-//					}
-//				}
-//			}
-//
-//			if (curmqomat) {
-//				s_toonmqomaterial = curmqomat;
-//			}
-//			else {
-//				s_toonmqomaterial = nullptr;
-//			}
-//			s_toonparamchange = true;
-//		}
-//		break;
-//		case IDC_CHECK_POWERTOON:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_POWERTOON);
-//			if (ischecked == BST_CHECKED) {
-//				s_shadertypeparams.hsvtoon.powertoon = true;
-//			}
-//			else {
-//				s_shadertypeparams.hsvtoon.powertoon = false;
-//			}
-//
-//			if (curmqomat) {
-//				curmqomat->SetToonPowerToon(s_shadertypeparams.hsvtoon.powertoon);
-//			}
-//			else {
-//				int materialindex2;
-//				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//					CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex2);
-//					if (setmqomat) {
-//						setmqomat->SetToonPowerToon(s_shadertypeparams.hsvtoon.powertoon);
-//						s_hsvtoonforall.powertoon = s_shadertypeparams.hsvtoon.powertoon;
-//					}
-//				}
-//			}
-//
-//			if (curmqomat) {
-//				s_toonmqomaterial = curmqomat;
-//			}
-//			else {
-//				s_toonmqomaterial = nullptr;
-//			}
-//			s_toonparamchange = true;
-//		}
-//		break;
-//
-//
-//
-//
-//		case IDOK:
-//		case IDCANCEL:
-//			//EndDialog(hDlgWnd, IDCANCEL);
-//			//s_shadertypeparamsFlag = false;
-//			ShowWindow(hDlgWnd, SW_HIDE);
-//
-//			//2023/12/30 以下２行　ここで呼び出すと２回目にSW_SHOWしても表示されないことがあるので　コメントアウト
-//			// WindowProcを回す必要があるため
-//			//s_shadertypeparamsindex = -1;
-//			//s_shadertypeparamsFlag = false;
-//			break;
-//		default:
-//			return FALSE;
-//			break;
-//		}
-//		break;
-//	case WM_CLOSE:
-//		//s_shadertypeparamsFlag = false;
-//		ShowWindow(hDlgWnd, SW_HIDE);
-//
-//		//2023/12/30 以下２行　ここで呼び出すと２回目にSW_SHOWしても表示されないことがあるので　コメントアウト
-//		// WindowProcを回す必要があるため
-//		//s_shadertypeparamsindex = -1;
-//		//s_shadertypeparamsFlag = false;
-//		break;
-//	default:
-//		DefWindowProc(hDlgWnd, msg, wp, lp);
-//		return FALSE;
-//	}
-//	return TRUE;
-//
-//}
-
-//LRESULT CALLBACK SkyParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
-//{
-//
-//	if (!s_skyparamsdlgwnd) {
-//		s_skyparamsdlgwnd = hDlgWnd;//条件リターンより前でセット
-//	}
-//
-//	if (!s_sky) {
-//		return DefWindowProc(hDlgWnd, msg, wp, lp);
-//	}
-//	if ((g_skyindex < 0) || (g_skyindex >= SKYSLOTNUM)) {
-//		_ASSERT(0);
-//		return DefWindowProc(hDlgWnd, msg, wp, lp);
-//	}
-//
-//	int materialnum = s_sky->GetMQOMaterialSize();
-//	materialnum = min(materialnum, MAXMATERIALNUM);//2024/03/03
-//
-//
-//	CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(0);//最初のマテリアル
-//
-//
-//	//if ((s_shadertypeparamsindex < 0) || (s_shadertypeparamsindex >= (materialnum + 1))) {
-//	//	if (s_shadertypeparamsindex != -1) {
-//	//		int dbgflag1 = 1;
-//	//	}
-//	//	return DefWindowProc(hDlgWnd, msg, wp, lp);
-//	//}
-//
-//
-//	int lightsliderid[LIGHTNUMMAX] = {
-//		IDC_SL_LITSCALE1, IDC_SL_LITSCALE2, IDC_SL_LITSCALE3, IDC_SL_LITSCALE4,
-//		IDC_SL_LITSCALE5, IDC_SL_LITSCALE6, IDC_SL_LITSCALE7, IDC_SL_LITSCALE8
-//	};
-//	int lighttextid[LIGHTNUMMAX] = {
-//		IDC_STATIC_LIGHTSCALE1, IDC_STATIC_LIGHTSCALE2, IDC_STATIC_LIGHTSCALE3, IDC_STATIC_LIGHTSCALE4,
-//		IDC_STATIC_LIGHTSCALE5, IDC_STATIC_LIGHTSCALE6, IDC_STATIC_LIGHTSCALE7, IDC_STATIC_LIGHTSCALE8
-//	};
-//
-//
-//	switch (msg) {
-//	case WM_INITDIALOG:
-//	{
-//		SetMaterial2SkyParamsDlg();
-//		return FALSE;
-//	}
-//	break;
-//
-//	case WM_DRAWITEM://オーナードローコントロールの描画 : リソースでカラーバーボタンにオーナードロー属性を設定してある
-//		//DefWindowProc(hDlgWnd, msg, wp, lp);
-//		break;
-//
-//	case WM_HSCROLL:
-//		if (GetDlgItem(hDlgWnd, IDC_SLIDER_METALCOEF) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_METALCOEF), TBM_GETPOS, 0, 0);
-//			float newmetalcoef = (float)((double)cursliderpos / 100.0);
-//			s_skyparams[g_skyindex].metalcoef = newmetalcoef;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"Metal_Add %.2f", newmetalcoef);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_METALCOEF, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetMetalAdd(newmetalcoef);
-//				}
-//			}
-//
-//			//if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-//			//	if (s_metalcoeflabel[s_shadertypeparamsindex]) {
-//			//		WCHAR strdlg2[256] = { 0L };
-//			//		swprintf_s(strdlg2, 256, L"%.2f", newmetalcoef);
-//			//		s_metalcoeflabel[s_shadertypeparamsindex]->setName(strdlg2);
-//			//	}
-//			//}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_SMOOTHCOEF) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SMOOTHCOEF), TBM_GETPOS, 0, 0);
-//			float newsmoothcoef = (float)((double)cursliderpos / 100.0);
-//			s_skyparams[g_skyindex].smoothcoef = newsmoothcoef;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"SmoothCoef %.2f", newsmoothcoef);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_SMOOTHCOEF, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetSmoothCoef(newsmoothcoef);
-//				}
-//			}
-//
-//			//if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-//			//	if (s_smoothcoeflabel[s_shadertypeparamsindex]) {
-//			//		WCHAR strdlg2[256] = { 0L };
-//			//		swprintf_s(strdlg2, 256, L"%.2f", newsmoothcoef);
-//			//		s_smoothcoeflabel[s_shadertypeparamsindex]->setName(strdlg2);
-//			//	}
-//			//}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_EMISCALE) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_EMISCALE), TBM_GETPOS, 0, 0);
-//			float newemiscale = (float)((double)cursliderpos / 100.0);
-//			s_skyparams[g_skyindex].emissiveScale = newemiscale;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"Emission:%.2f", newemiscale);
-//			SetDlgItemText(hDlgWnd, IDC_CHECK_EMISSION, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetEmissiveScale(newemiscale);
-//				}
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_SPECULARCOEF) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_SPECULARCOEF), TBM_GETPOS, 0, 0);
-//			float newspcscale = (float)((double)cursliderpos / 200.0);
-//			s_skyparams[g_skyindex].specularcoef = newspcscale;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"SpecularCoef %.3f", newspcscale);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_SPECULARCOEF, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetSpecularCoef(newspcscale);
-//				}
-//			}
-//		}
-//
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TILINGU) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGU), TBM_GETPOS, 0, 0);
-//			s_skyparams[g_skyindex].uvscale.x = (double)cursliderpos;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"Tiling U:%d", cursliderpos);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TILINGU, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetUVScale(s_skyparams[g_skyindex].uvscale);
-//				}
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TILINGV) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TILINGV), TBM_GETPOS, 0, 0);
-//			s_skyparams[g_skyindex].uvscale.y = (double)cursliderpos;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"Tiling V:%d", cursliderpos);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TILINGV, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetUVScale(s_skyparams[g_skyindex].uvscale);
-//				}
-//			}
-//		}
-//
-//
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDR) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDR), TBM_GETPOS, 0, 0);
-//			s_skyparams[g_skyindex].hsvtoon.hicolorh = (float)((double)cursliderpos / 100.0);
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonHiAddr:%.2f", s_skyparams[g_skyindex].hsvtoon.hicolorh);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDR, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetToonHiAddrH(s_skyparams[g_skyindex].hsvtoon.hicolorh);
-//					s_skyhsvtoonforall.hicolorh = s_skyparams[g_skyindex].hsvtoon.hicolorh;
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				s_skytoonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDR) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDR), TBM_GETPOS, 0, 0);
-//			s_skyparams[g_skyindex].hsvtoon.lowcolorh = (float)((double)cursliderpos / 100.0);
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonLowAddr:%.2f", s_skyparams[g_skyindex].hsvtoon.lowcolorh);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDR, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetToonLowAddrH(s_skyparams[g_skyindex].hsvtoon.lowcolorh);
-//					s_skyhsvtoonforall.lowcolorh = s_skyparams[g_skyindex].hsvtoon.lowcolorh;
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				s_skytoonparamchange = true;
-//			}
-//		}
-//
-//
-//
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONBASEH) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEH), TBM_GETPOS, 0, 0);
-//			s_skyparams[g_skyindex].hsvtoon.basehsv.x = (float)cursliderpos;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonBase_H:%.1f", s_skyparams[g_skyindex].hsvtoon.basehsv.x);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONBASEH, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetToonBaseH(s_skyparams[g_skyindex].hsvtoon.basehsv.x);
-//					s_skyhsvtoonforall.basehsv.x = s_skyparams[g_skyindex].hsvtoon.basehsv.x;
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				s_skytoonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONBASES) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASES), TBM_GETPOS, 0, 0);
-//			s_skyparams[g_skyindex].hsvtoon.basehsv.y = (float)cursliderpos * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonBase_S:%.2f", s_skyparams[g_skyindex].hsvtoon.basehsv.y);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONBASES, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetToonBaseS(s_skyparams[g_skyindex].hsvtoon.basehsv.y);
-//					s_skyhsvtoonforall.basehsv.y = s_skyparams[g_skyindex].hsvtoon.basehsv.y;
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				s_skytoonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONBASEV) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEV), TBM_GETPOS, 0, 0);
-//			s_skyparams[g_skyindex].hsvtoon.basehsv.z = (float)cursliderpos * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonHi_V:%.2f", s_skyparams[g_skyindex].hsvtoon.basehsv.z);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONBASEV, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetToonBaseV(s_skyparams[g_skyindex].hsvtoon.basehsv.z);
-//					s_skyhsvtoonforall.basehsv.z = s_skyparams[g_skyindex].hsvtoon.basehsv.z;
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				s_skytoonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONBASEA) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONBASEA), TBM_GETPOS, 0, 0);
-//			s_skyparams[g_skyindex].hsvtoon.basehsv.w = (float)cursliderpos * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonBase_A:%.2f", s_skyparams[g_skyindex].hsvtoon.basehsv.w);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONBASEA, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetToonBaseA(s_skyparams[g_skyindex].hsvtoon.basehsv.w);
-//					s_skyhsvtoonforall.basehsv.w = s_skyparams[g_skyindex].hsvtoon.basehsv.w;
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				s_skytoonparamchange = true;
-//			}
-//		}
-//
-//
-//
-//
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDH) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDH), TBM_GETPOS, 0, 0);
-//			s_skyparams[g_skyindex].hsvtoon.hiaddhsv.x = (float)((double)cursliderpos - 360.0);
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonHi_H:%.1f", s_skyparams[g_skyindex].hsvtoon.hiaddhsv.x);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDH, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetToonHiAddH(s_skyparams[g_skyindex].hsvtoon.hiaddhsv.x);
-//					s_skyhsvtoonforall.hiaddhsv.x = s_skyparams[g_skyindex].hsvtoon.hiaddhsv.x;
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				s_skytoonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDH) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDH), TBM_GETPOS, 0, 0);
-//			s_skyparams[g_skyindex].hsvtoon.lowaddhsv.x = (float)((double)cursliderpos - 360.0);
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonLow_H:%.1f", s_skyparams[g_skyindex].hsvtoon.lowaddhsv.x);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDH, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetToonLowAddH(s_skyparams[g_skyindex].hsvtoon.lowaddhsv.x);
-//					s_skyhsvtoonforall.lowaddhsv.x = s_skyparams[g_skyindex].hsvtoon.lowaddhsv.x;
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				s_skytoonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDS) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDS), TBM_GETPOS, 0, 0);
-//			s_skyparams[g_skyindex].hsvtoon.hiaddhsv.y = (float)((double)cursliderpos - 100.0) * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonHi_S:%.2f", s_skyparams[g_skyindex].hsvtoon.hiaddhsv.y);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDS, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetToonHiAddS(s_skyparams[g_skyindex].hsvtoon.hiaddhsv.y);
-//					s_skyhsvtoonforall.hiaddhsv.y = s_skyparams[g_skyindex].hsvtoon.hiaddhsv.y;
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				s_skytoonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDS) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDS), TBM_GETPOS, 0, 0);
-//			s_skyparams[g_skyindex].hsvtoon.lowaddhsv.y = (float)((double)cursliderpos - 100.0) * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonLow_S:%.2f", s_skyparams[g_skyindex].hsvtoon.lowaddhsv.y);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDS, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetToonLowAddS(s_skyparams[g_skyindex].hsvtoon.lowaddhsv.y);
-//					s_skyhsvtoonforall.lowaddhsv.y = s_skyparams[g_skyindex].hsvtoon.lowaddhsv.y;
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				s_skytoonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDV) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDV), TBM_GETPOS, 0, 0);
-//			s_skyparams[g_skyindex].hsvtoon.hiaddhsv.z = (float)((double)cursliderpos - 100.0) * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonHi_V:%.2f", s_skyparams[g_skyindex].hsvtoon.hiaddhsv.z);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDV, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetToonHiAddV(s_skyparams[g_skyindex].hsvtoon.hiaddhsv.z);
-//					s_skyhsvtoonforall.hiaddhsv.z = s_skyparams[g_skyindex].hsvtoon.hiaddhsv.z;
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				s_skytoonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDV) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDV), TBM_GETPOS, 0, 0);
-//			s_skyparams[g_skyindex].hsvtoon.lowaddhsv.z = (float)((double)cursliderpos - 100.0) * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonLow_V:%.2f", s_skyparams[g_skyindex].hsvtoon.lowaddhsv.z);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDV, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetToonLowAddV(s_skyparams[g_skyindex].hsvtoon.lowaddhsv.z);
-//					s_skyhsvtoonforall.lowaddhsv.z = s_skyparams[g_skyindex].hsvtoon.lowaddhsv.z;
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				s_skytoonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDA) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONHIADDA), TBM_GETPOS, 0, 0);
-//			s_skyparams[g_skyindex].hsvtoon.hiaddhsv.w = (float)((double)cursliderpos - 100.0) * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonHi_A:%.2f", s_skyparams[g_skyindex].hsvtoon.hiaddhsv.w);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONHIADDA, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetToonHiAddA(s_skyparams[g_skyindex].hsvtoon.hiaddhsv.w);
-//					s_skyhsvtoonforall.hiaddhsv.w = s_skyparams[g_skyindex].hsvtoon.hiaddhsv.w;
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				s_skytoonparamchange = true;
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDA) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_TOONLOWADDA), TBM_GETPOS, 0, 0);
-//			s_skyparams[g_skyindex].hsvtoon.lowaddhsv.w = (float)((double)cursliderpos - 100.0) * 0.01f;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"ToonLOW_A:%.2f", s_skyparams[g_skyindex].hsvtoon.lowaddhsv.w);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_TOONLOWADDA, strdlg);
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetToonLowAddA(s_skyparams[g_skyindex].hsvtoon.lowaddhsv.w);
-//					s_skyhsvtoonforall.lowaddhsv.w = s_skyparams[g_skyindex].hsvtoon.lowaddhsv.w;
-//				}
-//			}
-//			if (LOWORD(wp) == SB_ENDSCROLL) {
-//				s_skytoonparamchange = true;
-//			}
-//		}
-//
-//
-//
-//
-//
-//
-//		{
-//			int litno4;
-//			for (litno4 = 0; litno4 < LIGHTNUMMAX; litno4++) {
-//				HWND litwnd = GetDlgItem(hDlgWnd, lightsliderid[litno4]);
-//				if ((litwnd != NULL) && (litwnd == (HWND)lp)) {
-//					int cursliderpos = (int)SendMessage(litwnd, TBM_GETPOS, 0, 0);
-//					float newlitscale = (float)((double)cursliderpos / 100.0);
-//					s_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
-//
-//					WCHAR strdlg[256] = { 0L };
-//					swprintf_s(strdlg, 256, L"LightScale%d %.2f", (litno4 + 1), newlitscale);
-//					SetDlgItemText(hDlgWnd, lighttextid[litno4], strdlg);
-//
-//					int materialindex4;
-//					for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
-//						CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex4);
-//						if (setmqomat) {
-//							setmqomat->SetLightScale(litno4, newlitscale);
-//						}
-//					}
-//				}
-//			}
-//		}
-//		break;
-//
-//	case WM_COMMAND:
-//
-//		switch (LOWORD(wp)) {
-//
-//		//#########
-//		//ComboBox
-//		//#########
-//		case IDC_COMBO_SLOTS:
-//			if (HIWORD(wp) == CBN_SELCHANGE) {
-//				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_SLOTS);
-//				if (combownd != NULL) {
-//					int combono;
-//					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
-//					if ((combono >= 0) && (combono < SKYSLOTNUM)) {
-//						g_skyindex = combono;
-//						SetMaterial2SkyParamsDlg();
-//						SetSkyParamsToSky(s_skyparams[g_skyindex]);
-//					}
-//					else {
-//						_ASSERT(0);
-//						return false;
-//					}
-//				}
-//				else {
-//					_ASSERT(0);
-//					return false;
-//				}
-//
-//			}
-//			break;
-//
-//		//#######
-//		//Button
-//		//#######
-//		case IDC_SHADER_AUTO2:
-//		{
-//			CheckShaderTypeParamsButton(hDlgWnd, -1);
-//			s_skyparams[g_skyindex].shadertype = -1;
-//			int materialindex5;
-//			for (materialindex5 = 0; materialindex5 < materialnum; materialindex5++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex5);
-//				if (setmqomat) {
-//					setmqomat->SetShaderType(-1);
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_SHADER_PBR2:
-//		{
-//			CheckShaderTypeParamsButton(hDlgWnd, MQOSHADER_PBR);
-//			s_skyparams[g_skyindex].shadertype = MQOSHADER_PBR;
-//
-//			int materialindex6;
-//			for (materialindex6 = 0; materialindex6 < materialnum; materialindex6++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex6);
-//				if (setmqomat) {
-//					setmqomat->SetShaderType(MQOSHADER_PBR);
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_SHADER_STD2:
-//		{
-//			CheckShaderTypeParamsButton(hDlgWnd, MQOSHADER_STD);
-//			s_skyparams[g_skyindex].shadertype = MQOSHADER_STD;
-//
-//			int materialindex7;
-//			for (materialindex7 = 0; materialindex7 < materialnum; materialindex7++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex7);
-//				if (setmqomat) {
-//					setmqomat->SetShaderType(MQOSHADER_STD);
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_SHADER_NOLIGHT2:
-//		{
-//			CheckShaderTypeParamsButton(hDlgWnd, MQOSHADER_TOON);
-//			s_skyparams[g_skyindex].shadertype = MQOSHADER_TOON;
-//
-//			int materialindex8;
-//			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex8);
-//				if (setmqomat) {
-//					setmqomat->SetShaderType(MQOSHADER_TOON);
-//				}
-//			}
-//		}
-//		break;
-//
-//
-//
-//		case IDC_TOONLIGHT1:
-//		{
-//			CheckToonLightButton(hDlgWnd, 0);
-//			s_skyparams[g_skyindex].hsvtoon.lightindex = 0;
-//
-//			int materialindex8;
-//			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex8);
-//				if (setmqomat) {
-//					setmqomat->SetToonLightIndex(0);
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_TOONLIGHT2:
-//		{
-//			CheckToonLightButton(hDlgWnd, 1);
-//			s_skyparams[g_skyindex].hsvtoon.lightindex = 1;
-//
-//			int materialindex8;
-//			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex8);
-//				if (setmqomat) {
-//					setmqomat->SetToonLightIndex(1);
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_TOONLIGHT3:
-//		{
-//			CheckToonLightButton(hDlgWnd, 2);
-//			s_skyparams[g_skyindex].hsvtoon.lightindex = 2;
-//
-//			int materialindex8;
-//			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex8);
-//				if (setmqomat) {
-//					setmqomat->SetToonLightIndex(2);
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_TOONLIGHT4:
-//		{
-//			CheckToonLightButton(hDlgWnd, 3);
-//			s_skyparams[g_skyindex].hsvtoon.lightindex = 3;
-//
-//			int materialindex8;
-//			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex8);
-//				if (setmqomat) {
-//					setmqomat->SetToonLightIndex(3);
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_TOONLIGHT5:
-//		{
-//			CheckToonLightButton(hDlgWnd, 4);
-//			s_skyparams[g_skyindex].hsvtoon.lightindex = 4;
-//
-//			int materialindex8;
-//			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex8);
-//				if (setmqomat) {
-//					setmqomat->SetToonLightIndex(4);
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_TOONLIGHT6:
-//		{
-//			CheckToonLightButton(hDlgWnd, 5);
-//			s_skyparams[g_skyindex].hsvtoon.lightindex = 5;
-//
-//			int materialindex8;
-//			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex8);
-//				if (setmqomat) {
-//					setmqomat->SetToonLightIndex(5);
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_TOONLIGHT7:
-//		{
-//			CheckToonLightButton(hDlgWnd, 6);
-//			s_skyparams[g_skyindex].hsvtoon.lightindex = 6;
-//
-//			int materialindex8;
-//			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex8);
-//				if (setmqomat) {
-//					setmqomat->SetToonLightIndex(6);
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_TOONLIGHT8:
-//		{
-//			CheckToonLightButton(hDlgWnd, 7);
-//			s_skyparams[g_skyindex].hsvtoon.lightindex = 7;
-//
-//			int materialindex8;
-//			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex8);
-//				if (setmqomat) {
-//					setmqomat->SetToonLightIndex(7);
-//				}
-//			}
-//		}
-//		break;
-//
-//
-//
-//		case IDC_CHECK_LIGHTINGMAT:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_LIGHTINGMAT);
-//			if (ischecked == BST_CHECKED) {
-//				s_skyparams[g_skyindex].lightingmat = true;
-//			}
-//			else {
-//				s_skyparams[g_skyindex].lightingmat = false;
-//			}
-//
-//			int materialindex9;
-//			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex9);
-//				if (setmqomat) {
-//					setmqomat->SetLightingFlag(s_skyparams[g_skyindex].lightingmat);
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_CHECK_SHADOWCASTER:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_SHADOWCASTER);
-//			if (ischecked == BST_CHECKED) {
-//				s_skyparams[g_skyindex].shadowcasterflag = true;
-//			}
-//			else {
-//				s_skyparams[g_skyindex].shadowcasterflag = false;
-//			}
-//
-//			int materialindex9;
-//			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex9);
-//				if (setmqomat) {
-//					setmqomat->SetShadowCasterFlag(s_skyparams[g_skyindex].shadowcasterflag);
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_CHECK_EMISSION:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_EMISSION);
-//			if (ischecked == BST_CHECKED) {
-//				s_skyparams[g_skyindex].enableEmission = true;
-//			}
-//			else {
-//				s_skyparams[g_skyindex].enableEmission = false;
-//			}
-//
-//			int materialindex9;
-//			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex9);
-//				if (setmqomat) {
-//					setmqomat->SetEnableEmission(s_skyparams[g_skyindex].enableEmission);
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_CHECK_NORMALY0:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_NORMALY0);
-//			if (ischecked == BST_CHECKED) {
-//				s_skyparams[g_skyindex].normaly0flag = true;
-//			}
-//			else {
-//				s_skyparams[g_skyindex].normaly0flag = false;
-//			}
-//
-//			int materialindex9;
-//			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex9);
-//				if (setmqomat) {
-//					setmqomat->SetNormalY0Flag(s_skyparams[g_skyindex].normaly0flag);
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_CHECK_DISTORTION:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_DISTORTION);
-//			if (ischecked == BST_CHECKED) {
-//				s_skyparams[g_skyindex].distortionflag = true;
-//			}
-//			else {
-//				s_skyparams[g_skyindex].distortionflag = false;
-//			}
-//
-//			int materialindex9;
-//			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex9);
-//				if (setmqomat) {
-//					setmqomat->SetDistortionFlag(s_skyparams[g_skyindex].distortionflag);
-//				}
-//			}
-//		}
-//		break;
-//		case IDC_CHECK_GRADATION:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_GRADATION);
-//			if (ischecked == BST_CHECKED) {
-//				s_skyparams[g_skyindex].hsvtoon.gradationflag = true;
-//
-//				HWND powertoonwnd = GetDlgItem(hDlgWnd, IDC_CHECK_POWERTOON);
-//				if (powertoonwnd) {
-//					EnableWindow(powertoonwnd, TRUE);
-//				}
-//			}
-//			else {
-//				s_skyparams[g_skyindex].hsvtoon.gradationflag = false;
-//
-//				HWND powertoonwnd = GetDlgItem(hDlgWnd, IDC_CHECK_POWERTOON);
-//				if (powertoonwnd) {
-//					EnableWindow(powertoonwnd, FALSE);
-//				}
-//			}
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetToonGradationFlag(s_skyparams[g_skyindex].hsvtoon.gradationflag);
-//					s_skyhsvtoonforall.gradationflag = s_skyparams[g_skyindex].hsvtoon.gradationflag;
-//				}
-//			}
-//			s_skytoonparamchange = true;
-//		}
-//		break;
-//		case IDC_CHECK_POWERTOON:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_POWERTOON);
-//			if (ischecked == BST_CHECKED) {
-//				s_skyparams[g_skyindex].hsvtoon.powertoon = true;
-//			}
-//			else {
-//				s_skyparams[g_skyindex].hsvtoon.powertoon = false;
-//			}
-//
-//			int materialindex2;
-//			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
-//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex2);
-//				if (setmqomat) {
-//					setmqomat->SetToonPowerToon(s_skyparams[g_skyindex].hsvtoon.powertoon);
-//					s_skyhsvtoonforall.powertoon = s_skyparams[g_skyindex].hsvtoon.powertoon;
-//				}
-//			}
-//			s_skytoonparamchange = true;
-//		}
-//		break;
-//
-//
-//
-//
-//		case IDOK:
-//		case IDCANCEL:
-//			//EndDialog(hDlgWnd, IDCANCEL);
-//			//s_shadertypeparamsFlag = false;
-//			ShowWindow(hDlgWnd, SW_HIDE);
-//
-//			//2023/12/30 以下２行　ここで呼び出すと２回目にSW_SHOWしても表示されないことがあるので　コメントアウト
-//			// WindowProcを回す必要があるため
-//			//s_shadertypeparamsindex = -1;
-//			//s_shadertypeparamsFlag = false;
-//			break;
-//		default:
-//			return FALSE;
-//			break;
-//		}
-//		break;
-//	case WM_CLOSE:
-//		//s_shadertypeparamsFlag = false;
-//		ShowWindow(hDlgWnd, SW_HIDE);
-//
-//		//2023/12/30 以下２行　ここで呼び出すと２回目にSW_SHOWしても表示されないことがあるので　コメントアウト
-//		// WindowProcを回す必要があるため
-//		//s_shadertypeparamsindex = -1;
-//		//s_shadertypeparamsFlag = false;
-//		break;
-//	default:
-//		DefWindowProc(hDlgWnd, msg, wp, lp);
-//		return FALSE;
-//	}
-//	return TRUE;
-//
-//}
-
 LRESULT CALLBACK FogParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
 
@@ -33385,218 +30896,6 @@ int Brushes2Dlg(HWND hDlgWnd)
 	return 0;
 }
 
-//LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
-//{
-//	switch (msg) {
-//	case WM_INITDIALOG:
-//	{
-//		//Lights2Dlg(hDlgWnd);
-//		//EnableWindow(GetDlgItem(hDlgWnd, IDC_RESETLIM_CURRENT), FALSE);
-//
-//		Brushes2Dlg(hDlgWnd);
-//
-//		return FALSE;
-//	}
-//	break;
-//
-//	case WM_DRAWITEM://オーナードローコントロールの描画 : リソースでカラーバーボタンにオーナードロー属性を設定してある
-//		//DefWindowProc(hDlgWnd, msg, wp, lp);
-//		break;
-//
-//	case WM_HSCROLL:
-//		if (GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_TOPPOS), TBM_GETPOS, 0, 0);
-//			g_applyrate = (double)(cursliderpos / 10);
-//
-//
-//			//2024/01/11 以下５行　内容を修正してUpdateTopPosText()に移動
-//			//CEditRange::SetApplyRate((double)g_applyrate);
-//			//double applyframe = s_editrange.GetApplyFrame();
-//			//WCHAR strdlg[256] = { 0L };
-//			//swprintf_s(strdlg, 256, L"TopPos %d%% : %d", g_applyrate, IntTime(applyframe));
-//			//SetDlgItemText(hDlgWnd, IDC_STATIC_TOPPOS, strdlg);
-//
-//
-//			//if (s_topSlidersWnd && s_owpTopPosSlider) {
-//			//	s_owpTopPosSlider->setValue(g_applyrate, false);
-//			//	s_topSlidersWnd->callRewrite();//再描画
-//			//}
-//
-//			if (s_editmotionflag < 0) {//IK中でないとき
-//				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
-//				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
-//					_ASSERT(0);
-//					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
-//					PostQuitMessage(result);
-//				}
-//				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
-//
-//				if (LOWORD(wp) == SB_ENDSCROLL) {
-//					//#################################################
-//					//ReleasedCaptureのときに　PrepairUndo用のフラグを立てる
-//					//#################################################
-//					s_utApplyRateFlag = true;//PrepairUndo();//保存はOnFrameUtCheckBoxにて
-//				}
-//			}
-//		}
-//		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS) == (HWND)lp) {
-//			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_BRUSHREPEATS), TBM_GETPOS, 0, 0);
-//			g_brushrepeats = cursliderpos;
-//
-//			WCHAR strdlg[256] = { 0L };
-//			swprintf_s(strdlg, 256, L"Brush Repeats : %d", g_brushrepeats);
-//			SetDlgItemText(hDlgWnd, IDC_STATIC_DLG_BRUSHREPEATS, strdlg);
-//
-//			if (s_editmotionflag < 0) {//IK中でないとき
-//				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
-//				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
-//					_ASSERT(0);
-//					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
-//					PostQuitMessage(result);
-//				}
-//				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
-//
-//				if (LOWORD(wp) == SB_ENDSCROLL) {
-//					//#################################################
-//					//ReleasedCaptureのときに　PrepairUndo用のフラグを立てる
-//					//#################################################
-//					s_utBrushRepeatsFlag = true;//PrepairUndo();//保存はOnFrameUtCheckBoxにて
-//				}
-//			}
-//		}
-//
-//		break;
-//
-//	//#########################################################################################
-//	//子供コントロールのWM_NOTIFYが来ないので　マウスを放したときの処理は　WM_HSCROLLのSB_ENDSCROLLで処理
-//	//#########################################################################################
-//	//case WM_NOTIFY:
-//	//{
-//	//	LPNMHDR nmhdr = reinterpret_cast<LPNMHDR>(lp);
-//	//	//if (nmhdr->code == TRBN_THUMBPOSCHANGING) //&& (nmhdr->hwndFrom == hSlider))
-//	//	//{
-//	//		NMTRBTHUMBPOSCHANGING* nmtrb = reinterpret_cast<NMTRBTHUMBPOSCHANGING*>(lp);
-//	//		switch (nmtrb->nReason)
-//	//		{
-//	//		case TB_ENDTRACK:
-//	//break;
-//	case WM_COMMAND:
-//
-//		switch (LOWORD(wp)) {
-//
-//		case IDC_COMBO_BRUSHES:
-//			if (HIWORD(wp) == CBN_SELCHANGE) {
-//				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_BRUSHES);
-//				if (combownd != NULL) {
-//					int combono;
-//					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
-//					if ((combono != CB_ERR) && (combono >= 0) && (combono < MAXPLUGIN)) {
-//						if ((s_plugin + combono)->validflag == 1) {
-//							g_motionbrush_method = (s_plugin + combono)->menuid;
-//
-//							if (s_editmotionflag < 0) {//IK中でないとき
-//								int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
-//								if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
-//									_ASSERT(0);
-//									::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
-//									PostQuitMessage(result);
-//								}
-//								s_utBrushMethodFlag = true;//PrepairUndo();//保存はOnFrameUtCheckBoxにて
-//							}
-//						}
-//						else {
-//							_ASSERT(0);
-//						}
-//					}
-//					else {
-//						_ASSERT(0);
-//					}
-//				}
-//				else {
-//					_ASSERT(0);
-//					return false;
-//				}
-//				//RECT clientrect;
-//				//GetClientRect(hDlgWnd, &clientrect);
-//				//InvalidateRect(hDlgWnd, &clientrect, TRUE);
-//			}
-//			break;
-//
-//		case IDC_CHECK_BRUSHU:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_BRUSHU);
-//			if (ischecked == BST_CHECKED) {
-//				g_brushmirrorUflag = 1;
-//			}
-//			else {
-//				g_brushmirrorUflag = 0;
-//			}
-//			if (s_editmotionflag < 0) {//IK中でないとき
-//				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
-//				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
-//					_ASSERT(0);
-//					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
-//					PostQuitMessage(result);
-//				}
-//				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
-//			}
-//
-//			//##################
-//			//For PrepairUndo()
-//			//##################
-//			s_BrushMirrorUCheckBoxFlag = true;//UTDialogの
-//		}
-//		break;
-//		case IDC_CHECK_BRUSHV:
-//		{
-//			UINT ischecked = 0;
-//			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_BRUSHV);
-//			if (ischecked == BST_CHECKED) {
-//				g_brushmirrorVflag = 1;
-//			}
-//			else {
-//				g_brushmirrorVflag = 0;
-//			}
-//			if (s_editmotionflag < 0) {//IK中でないとき
-//				int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
-//				if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
-//					_ASSERT(0);
-//					::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
-//					PostQuitMessage(result);
-//				}
-//				//PrepairUndo();//保存はOnFrameUtCheckBoxにて
-//			}
-//
-//			//##################
-//			//For PrepairUndo()
-//			//##################
-//			s_BrushMirrorVCheckBoxFlag = true;//UTDialogの
-//		}
-//		break;
-//
-//
-//
-//
-//		case IDCANCEL:
-//			//EndDialog(hDlgWnd, IDCANCEL);
-//			break;
-//		default:
-//			return FALSE;
-//			break;
-//		}
-//		break;
-//	case WM_CLOSE:
-//		if (s_guidlg[GUIDLG_BRUSHPARAMS]) {
-//			ShowGUIDlgBrushes(false);
-//		}
-//		break;
-//	default:
-//		DefWindowProc(hDlgWnd, msg, wp, lp);
-//		return FALSE;
-//	}
-//	return TRUE;
-//}
 LRESULT CALLBACK GUIBulletDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
 	switch (msg) {
@@ -41104,7 +38403,7 @@ int CreateSideMenuWnd()
 							//sellockオンの時はカメラが選択ジョイント中心回転、targetdispオンの時はカメラがマニピュレータ(カメラターゲット位置)中心回転
 							//両方オンにすると分かりずらいので排他選択
 							if (s_sidemenu_targetdisp) {
-								s_sidemenu_targetdisp->setValue(false);
+								s_sidemenu_targetdisp->setValue(false, false);
 								s_camtargetdisp = false;
 							}
 
@@ -41127,7 +38426,7 @@ int CreateSideMenuWnd()
 					//sellockオンの時はカメラが選択ジョイント中心回転、targetdispオンの時はカメラがマニピュレータ(カメラターゲット位置)中心回転
 					//両方オンにすると分かりずらいので排他選択
 					if (s_sidemenu_sellock) {
-						s_sidemenu_sellock->setValue(false);
+						s_sidemenu_sellock->setValue(false, false);
 						s_camtargetflag = false;
 					}
 				}
@@ -41215,6 +38514,15 @@ int CreatePlaceFolderWnd()
 		0, 0, 0,				//カラー
 		true, true);					//サイズ変更の可否
 
+	int labelheight;
+	if (g_4kresolution) {
+		labelheight = 18;
+	}
+	else {
+		labelheight = 15;
+	}
+
+
 	if (s_placefolderWnd) {
 		//s_placefolderlabel_1 = new OWP_Label(L"After Loading Model Data,");
 		//if (!s_placefolderlabel_1) {
@@ -41293,7 +38601,7 @@ int CreatePlaceFolderWnd()
 
 		int textno;
 		for (textno = 0; textno < SHORTCUTTEXTNUM; textno++) {
-			s_shortcuttext[textno] = new OWP_Label(shortcuttext[textno]);
+			s_shortcuttext[textno] = new OWP_Label(shortcuttext[textno], labelheight);
 			if (!s_shortcuttext[textno]) {
 				_ASSERT(0);
 				return 1;
@@ -46678,87 +43986,95 @@ int CreateToolWnd()
 
 	//s_toolWnd->callRewrite();
 
+	int labelheight;
+	if (g_4kresolution) {
+		labelheight = 28;
+	}
+	else {
+		labelheight = 15;
+	}
+
 	if (s_toolWnd) {
-		s_toolSelBoneB = new OWP_Button(_T("コマンド対象ボーン target bone"));
+		s_toolSelBoneB = new OWP_Button(_T("コマンド対象ボーン target bone"), labelheight);
 		if (!s_toolSelBoneB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_toolSelectCopyFileName = new OWP_Button(_T("コピー履歴選択 sel cp history"));
+		s_toolSelectCopyFileName = new OWP_Button(_T("コピー履歴選択 sel cp history"), labelheight);
 		if (!s_toolSelectCopyFileName) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_toolCopyB = new OWP_Button(_T("コピー copy"));
+		s_toolCopyB = new OWP_Button(_T("コピー copy"), labelheight);
 		if (!s_toolCopyB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_toolSymCopyB = new OWP_Button(_T("対称コピー sym copy"));
+		s_toolSymCopyB = new OWP_Button(_T("対称コピー sym copy"), labelheight);
 		if (!s_toolSymCopyB) {
 			_ASSERT(0);
 			return 1;
 		}
 		//s_toolCutB = new OWP_Button(_T("カット"));
-		s_toolPasteB = new OWP_Button(_T("ペースト paste"));
+		s_toolPasteB = new OWP_Button(_T("ペースト paste"), labelheight);
 		if (!s_toolPasteB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_toolInitMPB = new OWP_Button(_T("姿勢初期化 init"));
+		s_toolInitMPB = new OWP_Button(_T("姿勢初期化 init"), labelheight);
 		if (!s_toolInitMPB) {
 			_ASSERT(0);
 			return 1;
 		}
 		//s_toolDeleteB = new OWP_Button(_T("削除"));
 		//s_toolMarkB = new OWP_Button(_T("マーク作成"));
-		s_toolMotPropB = new OWP_Button(_T("プロパティ property"));
+		s_toolMotPropB = new OWP_Button(_T("プロパティ property"), labelheight);
 		if (!s_toolMotPropB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_toolFilterB = new OWP_Button(_T("平滑化 smoothing"));
+		s_toolFilterB = new OWP_Button(_T("平滑化 smoothing"), labelheight);
 		if (!s_toolFilterB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_toolInterpolateB = new OWP_Button(_T("補間 interpolate"));
+		s_toolInterpolateB = new OWP_Button(_T("補間 interpolate"), labelheight);
 		if (!s_toolInterpolateB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_toolZeroFrameB = new OWP_Button(_T("Edit 0 Frame"));
+		s_toolZeroFrameB = new OWP_Button(_T("Edit 0 Frame"), labelheight);
 		if (!s_toolZeroFrameB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_toolSkipRenderBoneMarkB = new OWP_Button(_T("jointマークスキップ(Deeper)"));
+		s_toolSkipRenderBoneMarkB = new OWP_Button(_T("jointマークスキップ(Deeper)"), labelheight);
 		if (!s_toolSkipRenderBoneMarkB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_toolSkipRenderBoneMarkB2 = new OWP_Button(_T("jointマークスキップReset(Deeper)"));
+		s_toolSkipRenderBoneMarkB2 = new OWP_Button(_T("jointマークスキップReset(Deeper)"), labelheight);
 		if (!s_toolSkipRenderBoneMarkB2) {
 			_ASSERT(0);
 			return 1;
 		}
 		//s_tool180deg = new OWP_Button(_T("180度修正 180deg Adjust Euler"));
-		s_toolScaleInitAllB = new OWP_Button(_T("ScaleAllInit(ギザギザしたら押す)"));
+		s_toolScaleInitAllB = new OWP_Button(_T("ScaleAllInit(ギザギザしたら押す)"), labelheight);
 		if (!s_toolScaleInitAllB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_toolCameraDollyB = new OWP_Button(_T("カメラ数値ドリー (CameraDolly)"));
+		s_toolCameraDollyB = new OWP_Button(_T("カメラ数値ドリー (CameraDolly)"), labelheight);
 		if (!s_toolCameraDollyB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_toolMaterialRateB = new OWP_Button(_T("モデルマテリアル倍率MaterialRate"));
+		s_toolMaterialRateB = new OWP_Button(_T("モデルマテリアル倍率MaterialRate"), labelheight);
 		if (!s_toolMaterialRateB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_toolModelWorldMatB = new OWP_Button(_T("モデル位置向きModelWorldMat"));
+		s_toolModelWorldMatB = new OWP_Button(_T("モデル位置向きModelWorldMat"), labelheight);
 		if (!s_toolModelWorldMatB) {
 			_ASSERT(0);
 			return 1;

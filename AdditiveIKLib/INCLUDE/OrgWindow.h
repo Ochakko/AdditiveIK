@@ -2707,7 +2707,7 @@ void s_dummyfunc()
 	class OWP_GroupBox : public OrgWindowParts{
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_GroupBox(const TCHAR *_name ) : OrgWindowParts() {
+		OWP_GroupBox(const TCHAR *_name, int _labelheight ) : OrgWindowParts() {
 			name = new TCHAR[256];
 			if (_name) {
 				size_t tclen = _tcslen(_name);
@@ -2726,6 +2726,12 @@ void s_dummyfunc()
 					_tcscpy_s(name, 256, TEXT("NoName"));
 				}
 			}
+
+
+			SIZE_CLOSE_Y = max(SIZE_CLOSE_Y, _labelheight);//2024/07/08
+			BOX_POS_X = (int)((double)SIZE_CLOSE_Y * 0.20);//2024/07/07
+			BOX_WIDTH = (int)((double)SIZE_CLOSE_Y * 0.667);//2024/07/07
+
 
 			//openListener = [](){s_dummyfunc();};
 			openListener = NULL;
@@ -2805,7 +2811,8 @@ void s_dummyfunc()
 
 				//グループボックスのサイズを内部要素に合わせてトリミング
 				partsAreaSize.y= currentPartsSizeY;
-				size.y= partsAreaPos.y-pos.y+partsAreaSize.y+3;
+				//size.y= partsAreaPos.y-pos.y+partsAreaSize.y+3;
+				size.y = partsAreaPos.y - pos.y + currentPartsSizeY;//2024/07/08
 
 			}else{
 				size.y= SIZE_CLOSE_Y;
@@ -2867,12 +2874,17 @@ void s_dummyfunc()
 				int pos1x,pos1y;
 				if( canClose ){
 					pos1x= pos.x+ BOX_POS_X+ BOX_WIDTH+ NAME_POS_X2;
-					pos1y= pos.y+ SIZE_CLOSE_Y/2- 5;
+					//pos1y= pos.y+ SIZE_CLOSE_Y/2- 5;
+					pos1y = pos.y + 2;
 				}else{
 					pos1x= pos.x+NAME_POS_X1;
-					pos1y= pos.y+SIZE_CLOSE_Y/2-5;
+					//pos1y= pos.y+SIZE_CLOSE_Y/2-5;
+					pos1y = pos.y + 2;
 				}
-				hdcM->setFont(12,_T("ＭＳ ゴシック"));
+				//hdcM->setFont(12,_T("ＭＳ ゴシック"));
+				int fontsize = (int)((double)SIZE_CLOSE_Y * 0.8);//2024/07/08　高さを大きくした場合にはフォントも大きく
+				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
+
 				SetTextColor(hdcM->hDC,RGB(240,240,240));
 				SetBkColor(hdcM->hDC,RGB(baseColor.r,baseColor.g,baseColor.b));
 				SetBkMode(hdcM->hDC,OPAQUE);
@@ -2888,6 +2900,7 @@ void s_dummyfunc()
 				std::list<OrgWindowParts*>::iterator itr;
 				for(itr = partsList.begin(); itr != partsList.end(); itr++){
 					if (*itr) {
+						(*itr)->callRewrite();
 						(*itr)->draw();
 					}
 				}
@@ -2918,19 +2931,27 @@ void s_dummyfunc()
 			std::list<OrgWindowParts*>::iterator plItr;
 			for (plItr = partsList.begin(); plItr != partsList.end(); plItr++) {
 				if (*plItr) {
-					WindowPos chkpos = (*plItr)->getPos();
-					WindowSize chksize = (*plItr)->getSize();
-					//############################################################
-					//2023/10/04 マウス位置が子供ウインドウ内部にある場合だけ処理
-					//############################################################
-					if ((e.localX >= chkpos.x) && (e.localX <= (chkpos.x + chksize.x)) &&
-						(e.localY >= chkpos.y) && (e.localY <= (chkpos.y + chksize.y))) {
+					//WindowPos chkpos = (*plItr)->getPos();
+					//WindowSize chksize = (*plItr)->getSize();
+					////############################################################
+					////2023/10/04 マウス位置が子供ウインドウ内部にある場合だけ処理
+					////############################################################
+					//if ((e.localX >= chkpos.x) && (e.localX <= (chkpos.x + chksize.x)) &&
+					//	(e.localY >= chkpos.y) && (e.localY <= (chkpos.y + chksize.y))) {
+
+					WindowSize partsSize = (*plItr)->getSize();
+					int tmpPosX = e.localX + pos.x - (*plItr)->getPos().x;
+					int tmpPosY = e.localY + pos.y - (*plItr)->getPos().y;
+					if ((0 <= tmpPosX) && (tmpPosX < partsSize.x) &&
+						(0 <= tmpPosY) && (tmpPosY < partsSize.y)) {
 
 						MouseEvent mouseEvent;
 						mouseEvent.globalX = e.globalX;
 						mouseEvent.globalY = e.globalY;
-						mouseEvent.localX = e.localX + pos.x - (*plItr)->getPos().x;
-						mouseEvent.localY = e.localY + pos.y - (*plItr)->getPos().y;
+						//mouseEvent.localX = e.localX + pos.x - (*plItr)->getPos().x;
+						//mouseEvent.localY = e.localY + pos.y - (*plItr)->getPos().y;
+						mouseEvent.localX = tmpPosX;
+						mouseEvent.localY = tmpPosY;
 						mouseEvent.altKey = e.altKey;
 						mouseEvent.shiftKey = e.shiftKey;
 						mouseEvent.ctrlKey = e.ctrlKey;
@@ -2946,25 +2967,53 @@ void s_dummyfunc()
 			std::list<OrgWindowParts*>::iterator plItr;
 			for (plItr = partsList.begin(); plItr != partsList.end(); plItr++) {
 				if (*plItr) {
-					WindowPos chkpos = (*plItr)->getPos();
-					WindowSize chksize = (*plItr)->getSize();
-					//############################################################
-					//2023/10/04 マウス位置が子供ウインドウ内部にある場合だけ処理
-					//############################################################
-					if ((e.localX >= chkpos.x) && (e.localX <= (chkpos.x + chksize.x)) &&
-						(e.localY >= chkpos.y) && (e.localY <= (chkpos.y + chksize.y))) {
+					//WindowPos chkpos = (*plItr)->getPos();
+					//WindowSize chksize = (*plItr)->getSize();
+					////############################################################
+					////2023/10/04 マウス位置が子供ウインドウ内部にある場合だけ処理
+					////############################################################
+					//if ((e.localX >= chkpos.x) && (e.localX <= (chkpos.x + chksize.x)) &&
+					//	(e.localY >= chkpos.y) && (e.localY <= (chkpos.y + chksize.y))) {
+
+					WindowSize partsSize = (*plItr)->getSize();
+					int tmpPosX = e.localX + pos.x - (*plItr)->getPos().x;
+					int tmpPosY = e.localY + pos.y - (*plItr)->getPos().y;
+					if ((0 <= tmpPosX) && (tmpPosX < partsSize.x) &&
+						(0 <= tmpPosY) && (tmpPosY < partsSize.y)) {
 
 						MouseEvent mouseEvent;
 						mouseEvent.globalX = e.globalX;
 						mouseEvent.globalY = e.globalY;
-						mouseEvent.localX = e.localX + pos.x - (*plItr)->getPos().x;
-						mouseEvent.localY = e.localY + pos.y - (*plItr)->getPos().y;
+						//mouseEvent.localX = e.localX + pos.x - (*plItr)->getPos().x;
+						//mouseEvent.localY = e.localY + pos.y - (*plItr)->getPos().y;
+						mouseEvent.localX = tmpPosX;
+						mouseEvent.localY = tmpPosY;
 						mouseEvent.altKey = e.altKey;
 						mouseEvent.shiftKey = e.shiftKey;
 						mouseEvent.ctrlKey = e.ctrlKey;
 
 						(*plItr)->onRButtonDBLCLK(mouseEvent);
 					}
+				}
+			}
+		}
+
+		virtual void onMouseWheel(const MouseEvent& e) {
+			//内部パーツ
+			std::list<OrgWindowParts*>::iterator plItr;
+			for (plItr = partsList.begin(); plItr != partsList.end(); plItr++) {
+				if (*plItr) {
+					MouseEvent mouseEvent;
+					mouseEvent.globalX = e.globalX;
+					mouseEvent.globalY = e.globalY;
+					mouseEvent.localX = e.localX + pos.x - (*plItr)->getPos().x;
+					mouseEvent.localY = e.localY + pos.y - (*plItr)->getPos().y;
+					mouseEvent.altKey = e.altKey;
+					mouseEvent.shiftKey = e.shiftKey;
+					mouseEvent.ctrlKey = e.ctrlKey;
+					mouseEvent.wheeldelta = e.wheeldelta;
+
+					(*plItr)->onMouseWheel(mouseEvent);
 				}
 			}
 		}
@@ -3045,6 +3094,17 @@ void s_dummyfunc()
 				if( parentWindow!=NULL ){
 					parentWindow->autoResizeAllParts();
 				}
+
+				//callRewrite();
+				//if (open) {
+				//	std::list<OrgWindowParts*>::iterator itr;
+				//	for (itr = partsList.begin(); itr != partsList.end(); itr++) {
+				//		if (*itr) {
+				//			(*itr)->callRewrite();
+				//			(*itr)->draw();
+				//		}
+				//	}
+				//}
 			}
 		}
 		/// Accessor : canClose
@@ -3075,9 +3135,9 @@ void s_dummyfunc()
 		bool canClose;
 		std::function<void()> openListener;
 
-		static const int SIZE_CLOSE_Y= 13;
-		static const int BOX_POS_X= 3;
-		static const int BOX_WIDTH= 10;
+		int SIZE_CLOSE_Y= 13;
+		int BOX_POS_X= 3;
+		int BOX_WIDTH= 10;
 		static const int NAME_POS_X1= 5;
 		static const int NAME_POS_X2= 3;
 
@@ -3292,7 +3352,9 @@ void s_dummyfunc()
 				}
 			}
 
-			SIZE_Y = max(SIZE_Y, _labelheight);//2024/06/30
+			SIZE_Y = max(SIZE_Y, _labelheight);//2024/07/07
+			BOX_POS_X = (int)((double)SIZE_Y  * 0.20);//2024/07/07
+			BOX_WIDTH = (int)((double)SIZE_Y * 0.667);//2024/07/07
 
 			buttonPush = false;
 			//buttonListener = [](){s_dummyfunc();};
@@ -3357,9 +3419,13 @@ void s_dummyfunc()
 			LineTo(hdcM->hDC, pos2x, pos1y);
 
 			//名前
-			pos1x = pos.x + BOX_POS_X + BOX_WIDTH + 3;
-			pos1y = pos.y + size.y / 2 - 5;
-			hdcM->setFont(12, _T("ＭＳ ゴシック"));
+			int pos3x = pos.x + BOX_POS_X + BOX_WIDTH + 3;
+			int pos3y = pos.y + 2;
+			//hdcM->setFont(12, _T("ＭＳ ゴシック"));
+			int fontsize = (int)((double)SIZE_Y * 0.80);//2024/07/07　高さを大きくした場合にはフォントも大きく
+			hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
+
+			
 			//TCHAR* isToAll = 0;
 			//isToAll = _tcsstr(name, _T("ToAll"));
 			//if(!isToAll){
@@ -3374,12 +3440,12 @@ void s_dummyfunc()
 
 			if (combovec.empty() || (selectedcombo < 0) || (selectedcombo >= combovec.size())) {
 				TextOut(hdcM->hDC,
-					pos1x, pos1y,
+					pos3x, pos3y,
 					name, (int)_tcslen(name));
 			}
 			else {
 				TextOutA(hdcM->hDC,
-					pos1x, pos1y,
+					pos3x, pos3y,
 					combovec[selectedcombo].c_str(), (int)strlen(combovec[selectedcombo].c_str()));
 			}
 
@@ -3482,8 +3548,8 @@ void s_dummyfunc()
 		std::function<void()> buttonListener;
 
 		int SIZE_Y = 15;
-		static const int BOX_POS_X = 3;
-		static const int BOX_WIDTH = 10;
+		int BOX_POS_X = 3;
+		int BOX_WIDTH = 10;
 
 		LONG underButtonUpThreadFlag;//ボタンを押している間にボタンを削除しないようにフラグを立てる
 
@@ -4188,9 +4254,14 @@ void s_dummyfunc()
 			LineTo(hdcM->hDC, pos2x, pos1y);
 
 			//名前
-			pos1x = pos.x + BOX_POS_X + BOX_WIDTH + 3;
-			pos1y = pos.y + size.y / 2 - 5;
-			hdcM->setFont(12, _T("ＭＳ ゴシック"));
+			int pos3x = pos.x + BOX_POS_X + BOX_WIDTH + 3;
+			//pos1y = pos.y + size.y / 2 - 5;
+			int pos3y = pos.y + 2;
+			//hdcM->setFont(12, _T("ＭＳ ゴシック"));
+			int fontsize = (int)((double)SIZE_Y * 0.80);//2024/07/08　高さを大きくした場合にはフォントも大きく
+			hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
+
+			
 			//TCHAR* isToAll = 0;
 			//isToAll = _tcsstr(name, _T("ToAll"));
 			//if(!isToAll){
@@ -4205,7 +4276,7 @@ void s_dummyfunc()
 			SetTextColor(hdcM->hDC, RGB(10, 10, 10));//白く塗りつぶしたRectに黒字
 
 			TextOut(hdcM->hDC,
-				pos1x, pos1y,
+				pos3x, pos3y,
 				name, (int)_tcslen(name));
 			{
 				if (g_dsmousewait == 1) {
@@ -5024,7 +5095,9 @@ void s_dummyfunc()
 
 			value= _value;
 
-			SIZE_Y = max(SIZE_Y, _labelheight);
+			SIZE_Y = max(SIZE_Y, _labelheight);//2024/07/08
+			BOX_POS_X = (int)((double)SIZE_Y * 0.20);//2024/07/08
+			BOX_WIDTH = (int)((double)SIZE_Y * 0.667);//2024/07/08
 
 			//buttonListener = [](){s_dummyfunc();};
 			buttonListener = NULL;
@@ -5110,8 +5183,8 @@ void s_dummyfunc()
 		std::function<void()> contextmenuListener;//右クリック用リスナー
 
 		int SIZE_Y= 15;
-		static const int BOX_POS_X= 3;
-		static const int BOX_WIDTH= 10;
+		int BOX_POS_X= 3;
+		int BOX_WIDTH= 10;
 	};
 
 	///<summary>
@@ -5381,7 +5454,7 @@ void s_dummyfunc()
 	class OWP_Slider : public OrgWindowParts{
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_Slider( double _value=0.0, double _maxValue=1.0, double _minValue=0.0 ) : OrgWindowParts() {
+		OWP_Slider( double _value=0.0, double _maxValue=1.0, double _minValue=0.0, int _labelheight = 20 ) : OrgWindowParts() {
 			maxValue= max(_minValue,_maxValue);
 			minValue= min(_minValue,_maxValue);
 			value= max(min(_value,maxValue),minValue);
@@ -5394,6 +5467,8 @@ void s_dummyfunc()
 			oldvaluevec.clear();
 			oldvaluevec.push_back(value);
 			oldvalueindex = 0;
+
+			SIZE_Y = max(SIZE_Y, _labelheight);//2024/07/07
 
 			cursorListener = NULL;//2024/03/03
 			lupListener = NULL;//2024/03/12
@@ -5768,7 +5843,7 @@ void s_dummyfunc()
 
 		bool drag;
 
-		static const int SIZE_Y= 20;
+		int SIZE_Y= 20;
 		static const int LABEL_SIZE_X= 65;
 		static const int AXIS_POS_X= 5;
 		static const int AXIS_SIZE_Y= 10;
@@ -5786,7 +5861,7 @@ void s_dummyfunc()
 	class OWP_Timeline : public OrgWindowParts{
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_Timeline(const bool _heightwheel, const bool srcshortlabel, const std::basic_string<TCHAR> &_name=_T(""), const double &_maxTime=1.0, const double &_timeSize=8.0 ) : OrgWindowParts() {
+		OWP_Timeline(const bool _heightwheel, const bool srcshortlabel, int _labelheight, const std::basic_string<TCHAR> &_name=_T(""), const double &_maxTime=1.0, const double &_timeSize=8.0 ) : OrgWindowParts() {
 			
 			TIME_ERROR_WIDTH = 0.0001;
 
@@ -5851,12 +5926,15 @@ void s_dummyfunc()
 				//LABEL_SIZE_X = 280;
 				LABEL_SIZE_X = 600 - SCROLL_BAR_WIDTH - 20;
 			}
-			if (g_4kresolution) {
-				LABEL_SIZE_Y = 22;
-			}
-			else {
-				LABEL_SIZE_Y = 15;
-			}
+
+			//if (g_4kresolution) {
+			//	LABEL_SIZE_Y = 22;
+			//}
+			//else {
+			//	LABEL_SIZE_Y = 15;
+			//}
+			LABEL_SIZE_Y = max(LABEL_SIZE_Y, _labelheight);//2024/07/07
+
 
 			heightwheel = _heightwheel;//高さ方向にホイールスクロールするかどうか
 
@@ -7336,14 +7414,18 @@ void s_dummyfunc()
 				}
 
 				//ラベル
-				if (g_4kresolution) {
-					//hdcM->setFont(20, _T("ＭＳ ゴシック"));
-					hdcM->setFont(18, _T("ＭＳ ゴシック"));
-				}
-				else {
-					hdcM->setFont(12, _T("ＭＳ ゴシック"));
-				}
-				
+				//if (g_4kresolution) {
+				//	//hdcM->setFont(20, _T("ＭＳ ゴシック"));
+				//	hdcM->setFont(18, _T("ＭＳ ゴシック"));
+				//}
+				//else {
+				//	hdcM->setFont(12, _T("ＭＳ ゴシック"));
+				//}
+				int fontsize = (int)((double)parent->LABEL_SIZE_Y * 0.8);//2024/07/07　高さを大きくした場合にはフォントも大きく
+				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
+
+
+
 				if (textcol == RGB(255, 255, 255)) {
 					if (hasrigflag) {
 						SetTextColor(hdcM->hDC, RGB(0, 255, 0));

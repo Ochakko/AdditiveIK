@@ -1483,7 +1483,7 @@ namespace OrgWinGUI{
 
 			//チェックボックス
 			int pos1x = pos.x + BOX_POS_X;
-			int pos1y = pos.y + size.y / 2 - BOX_WIDTH / 2;
+			int pos1y = pos.y + size.y / 2 - BOX_WIDTH / 2 + 1;
 			int pos2x = pos.x + BOX_POS_X + BOX_WIDTH - 1;
 			int pos2y = pos.y + size.y / 2 + BOX_WIDTH / 2 - 1;
 			hdcM->setPenAndBrush(RGB(240, 240, 240), NULL);
@@ -1505,8 +1505,8 @@ namespace OrgWinGUI{
 			LineTo(hdcM->hDC, pos2x - 1, pos2y);
 
 			//名前
-			pos1x = pos.x + BOX_POS_X + BOX_WIDTH + 3;
-			pos1y = pos.y + size.y / 2 - 5;
+			int pos3x = pos.x + BOX_POS_X + BOX_WIDTH + 3;
+			int pos3y = pos.y + 2;// +size.y / 2 - 5;
 
 			//hdcM->setFont(12, _T("ＭＳ ゴシック"));
 			int fontsize = (int)((double)SIZE_Y * 0.8);//2024/07/07　高さを大きくした場合にはフォントも大きく
@@ -1515,7 +1515,7 @@ namespace OrgWinGUI{
 			//SetTextColor(hdcM->hDC, RGB(240, 240, 240));
 			SetTextColor(hdcM->hDC, OrgWindowParts::getTextColor());
 			TextOut(hdcM->hDC,
-				pos1x, pos1y,
+				pos3x, pos3y,
 				name, (int)_tcslen(name));
 		}
 		{
