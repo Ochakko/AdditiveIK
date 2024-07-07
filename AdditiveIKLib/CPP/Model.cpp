@@ -21943,7 +21943,7 @@ int CModel::SetDispGroupGUI(std::vector<OrgWinGUI::OWP_CheckBoxA*>& checkboxvec,
 			}
 			wcscat_s(labelnameW, 1024, meshnameW);
 
-			OWP_CheckBoxA* newchk = new OWP_CheckBoxA(labelnameW, 0);
+			OWP_CheckBoxA* newchk = new OWP_CheckBoxA(labelnameW, false, 20);
 			if (!newchk) {
 				_ASSERT(0);
 				return 1;

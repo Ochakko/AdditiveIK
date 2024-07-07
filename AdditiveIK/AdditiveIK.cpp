@@ -1242,6 +1242,7 @@ static OWP_EditBox* s_polarxzEdit[8];
 static OWP_Label* s_polaryLabel[8];
 static OWP_EditBox* s_polaryEdit[8];
 //static OWP_Button* s_polaryEdit[8];
+static OWP_Separator* s_lightsapplysp = 0;
 static OWP_Button* s_lightsapplyB = 0;
 
 
@@ -1906,6 +1907,7 @@ static int s_maxboneno = 0;
 static CBone* s_modelbone_bone[MAXBONENUM];
 static CBone* s_bvhbone_bone[MAXBONENUM];
 static map<CBone*, CBone*> s_convbonemap;
+static map<int, int> s_bvhbone_bonenomap;//<メニューインデックス, ボーン番号>  eNullなどは除外してs_bvhbone_boneにセットする
 static int s_bvhbone_cbno = 0;
 static OWP_Button* s_rtgfilesave = 0;
 static OWP_Button* s_rtgfileload = 0;
@@ -2998,7 +3000,7 @@ LRESULT CALLBACK SaveImpDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK SaveGcoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK CheckAxisTypeProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK AngleLimitDlgProc2(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
-LRESULT CALLBACK LightsForEditDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
+//LRESULT CALLBACK LightsForEditDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 //LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK GUIBulletDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
@@ -3080,13 +3082,7 @@ static void ClampTimelineSelection();
 
 static int CreateLightsWnd();
 static int Lights2Dlg();
-//static int Lights2DlgEach(int lightindex,
-//	int iddirx, int iddiry,
-//	int idenable, int idwithviewrot, int idslider, int idtextlight);
 static int Dlg2Lights();
-//static int Dlg2LightsEach(HWND hDlgWnd, int lightindex,
-//	int iddirx, int iddiry,
-//	int idenable, int idwithviewrot, int idslider);
 static int CheckStr_float(const WCHAR* srcstr);
 static int ConvDir2PolarCoord(float srcdirx, float srcdiry, float srcdirz, float* dstxzdeg, float* dstydeg);
 static int ConvPolarCoord2Dir(float srcxzdeg, float srcydeg, float* dstdirx, float* dstdiry, float* dstdirz);
@@ -5016,6 +5012,7 @@ void InitApp()
 			s_polaryLabel[lightindex] = 0;
 			s_polaryEdit[lightindex] = 0;
 		}
+		s_lightsapplysp = 0;
 		s_lightsapplyB = 0;
 	}
 
@@ -6158,6 +6155,7 @@ void InitApp()
 	s_convbonemidashi[0] = 0;
 	s_convbonemidashi[1] = 0;
 	s_convbonemap.clear();
+	s_bvhbone_bonenomap.clear();
 
 	s_bvhbone_cbno = 0;
 
@@ -7268,6 +7266,10 @@ void OnDestroyDevice()
 				delete s_polaryEdit[lightindex];
 				s_polaryEdit[lightindex] = 0;
 			}
+		}
+		if (s_lightsapplysp) {
+			delete s_lightsapplysp;
+			s_lightsapplysp = 0;
 		}
 		if (s_lightsapplyB) {
 			delete s_lightsapplyB;
@@ -8548,52 +8550,53 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 		}
 
-		//else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_SETCONVBONE)) && (menuid <= (ID_RMENU_0 + s_maxboneno + 1 + MENUOFFSET_SETCONVBONE))) {
-		else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_SETCONVBONE)) && (menuid < (ID_RMENU_0 + MAXBONENUM + MENUOFFSET_SETCONVBONE))) {
-			if ((s_bvhbone_cbno >= 0) && (s_bvhbone_cbno < MAXBONENUM)) {
-				if (menuid == (ID_RMENU_0 + 0 + MENUOFFSET_SETCONVBONE)) {
-					//未設定
-					s_bvhbone_bone[s_bvhbone_cbno] = 0;
-					CBone* modelbone = s_modelbone_bone[s_bvhbone_cbno];
-					_ASSERT(modelbone);
-					if (modelbone) {
-						s_convbonemap[modelbone] = 0;
-					}
-					s_bvhbone[s_bvhbone_cbno]->setName(L"NotSet");
-					s_bvhbone[s_bvhbone_cbno]->callRewrite();
-				}
-				else {
-					int boneno = menuid - ID_RMENU_0 - 1 - MENUOFFSET_SETCONVBONE;
-					curbone = s_convbone_bvh->GetBoneByID(boneno);
-					WCHAR strmes[1024];
-					if (!curbone) {
-						s_bvhbone_bone[s_bvhbone_cbno] = 0;
-						CBone* modelbone = s_modelbone_bone[s_bvhbone_cbno];
-						_ASSERT(modelbone);
-						if (modelbone) {
-							s_convbonemap[modelbone] = 0;
-						}
-						s_bvhbone[s_bvhbone_cbno]->setName(L"NotSet");
-						s_bvhbone[s_bvhbone_cbno]->callRewrite();
-
-						swprintf_s(strmes, 1024, L"convbone : sel bvh bone : curbone NULL !!!");
-						::DSMessageBox(NULL, strmes, L"check!!!", MB_OK);
-					}
-					else {
-						swprintf_s(strmes, 1024, L"%s", curbone->GetWBoneName());
-						s_bvhbone[s_bvhbone_cbno]->setName(strmes);
-						s_bvhbone[s_bvhbone_cbno]->callRewrite();
-						s_bvhbone_bone[s_bvhbone_cbno] = curbone;
-
-						CBone* modelbone = s_modelbone_bone[s_bvhbone_cbno];
-						if (modelbone) {
-							s_convbonemap[modelbone] = curbone;
-						}
-					}
-				}
-			}
-
-		}
+		////else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_SETCONVBONE)) && (menuid <= (ID_RMENU_0 + s_maxboneno + 1 + MENUOFFSET_SETCONVBONE))) {
+		//else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_SETCONVBONE)) && (menuid < (ID_RMENU_0 + MAXBONENUM + MENUOFFSET_SETCONVBONE))) {
+		//	if ((s_bvhbone_cbno >= 0) && (s_bvhbone_cbno < MAXBONENUM)) {
+		//		if (menuid == (ID_RMENU_0 + 0 + MENUOFFSET_SETCONVBONE)) {
+		//			//未設定
+		//			s_bvhbone_bone[s_bvhbone_cbno] = 0;
+		//			CBone* modelbone = s_modelbone_bone[s_bvhbone_cbno];
+		//			_ASSERT(modelbone);
+		//			if (modelbone) {
+		//				s_convbonemap[modelbone] = 0;
+		//			}
+		//			s_bvhbone[s_bvhbone_cbno]->setName(L"NotSet");
+		//			s_bvhbone[s_bvhbone_cbno]->callRewrite();
+		//		}
+		//		else {
+		//			int cbno = menuid - ID_RMENU_0 - 1 - MENUOFFSET_SETCONVBONE;
+		//			int boneno = s_bvhbone_bonenomap[cbno];//2024/07/07 変換表
+		//			curbone = s_convbone_bvh->GetBoneByID(boneno);
+		//			WCHAR strmes[1024];
+		//			if (!curbone) {
+		//				s_bvhbone_bone[s_bvhbone_cbno] = 0;
+		//				CBone* modelbone = s_modelbone_bone[s_bvhbone_cbno];
+		//				_ASSERT(modelbone);
+		//				if (modelbone) {
+		//					s_convbonemap[modelbone] = 0;
+		//				}
+		//				s_bvhbone[s_bvhbone_cbno]->setName(L"NotSet");
+		//				s_bvhbone[s_bvhbone_cbno]->callRewrite();
+		//
+		//				swprintf_s(strmes, 1024, L"convbone : sel bvh bone : curbone NULL !!!");
+		//				::DSMessageBox(NULL, strmes, L"check!!!", MB_OK);
+		//			}
+		//			else {
+		//				swprintf_s(strmes, 1024, L"%s", curbone->GetWBoneName());
+		//				s_bvhbone[s_bvhbone_cbno]->setName(strmes);
+		//				s_bvhbone[s_bvhbone_cbno]->callRewrite();
+		//				s_bvhbone_bone[s_bvhbone_cbno] = curbone;
+		//
+		//				CBone* modelbone = s_modelbone_bone[s_bvhbone_cbno];
+		//				if (modelbone) {
+		//					s_convbonemap[modelbone] = curbone;
+		//				}
+		//			}
+		//		}
+		//	}
+		//
+		//}
 
 		else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_INTERPOLATEFROMTOOL)) && 
 			(menuid < (ID_RMENU_0 + MENUOFFSET_INTERPOLATEFROMTOOL + 3))) {
@@ -18875,7 +18878,7 @@ int CreateModelPanel()
 
 
 		//スクロールウインドウ
-		s_modelpanel.scroll = new OWP_ScrollWnd(L"ModelPanelScroll", true);
+		s_modelpanel.scroll = new OWP_ScrollWnd(L"ModelPanelScroll", true, 20);
 		if (!s_modelpanel.scroll) {
 			_ASSERT(0);
 			return 1;
@@ -18896,7 +18899,7 @@ int CreateModelPanel()
 				if (curmodel) {
 					if (modelcnt == 0) {
 						bool limitnamelen = true;
-						s_modelpanel.radiobutton = new OWP_RadioButton(curmodel->GetFileName(), limitnamelen);
+						s_modelpanel.radiobutton = new OWP_RadioButton(curmodel->GetFileName(), limitnamelen, 20);
 						if (!s_modelpanel.radiobutton) {
 							_ASSERT(0);
 							return 1;
@@ -18935,10 +18938,10 @@ int CreateModelPanel()
 			for (modelcnt = 0; modelcnt < modelnum; modelcnt++) {
 				CModel* curmodel = s_chascene->GetModel(modelcnt);
 				if (curmodel) {
-					OWP_CheckBoxA* owpCheckBox = new OWP_CheckBoxA(L"Show/Hide", curmodel->GetModelDisp());
+					OWP_CheckBoxA* owpCheckBox = new OWP_CheckBoxA(L"Show/Hide", curmodel->GetModelDisp(), 20);
 					if (owpCheckBox) {
 						s_modelpanel.checkvec.push_back(owpCheckBox);
-						OWP_Button* owpButton = new OWP_Button(L"delete");
+						OWP_Button* owpButton = new OWP_Button(L"delete", 20);
 						if (owpButton) {
 							s_modelpanel.delbutton.push_back(owpButton);
 						}
@@ -19273,7 +19276,7 @@ int CreateCameraPanel()
 					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, curmi.motname, 256, wmotname, MAX_PATH);
 					if (cameracnt == 0) {
 						bool limitnamelen = true;
-						s_camerapanel.radiobutton = new OWP_RadioButton(wmotname, limitnamelen);
+						s_camerapanel.radiobutton = new OWP_RadioButton(wmotname, limitnamelen, 20);
 						if (!s_camerapanel.radiobutton) {
 							_ASSERT(0);
 							return 1;
@@ -19295,7 +19298,7 @@ int CreateCameraPanel()
 			}
 
 			//スクロールウインドウ
-			s_camerapanel.scroll = new OWP_ScrollWnd(L"CameraPanelScroll", true);
+			s_camerapanel.scroll = new OWP_ScrollWnd(L"CameraPanelScroll", true, 20);
 			if (!s_camerapanel.scroll) {
 				_ASSERT(0);
 				return 1;
@@ -19325,7 +19328,7 @@ int CreateCameraPanel()
 			for (miindex = 0; miindex < minum; miindex++) {
 				MOTINFO curmi = s_cameramodel->GetMotInfoByIndex(miindex);
 				if (curmi.cameramotion) {
-					OWP_Button* owpButton = new OWP_Button(L"delete");
+					OWP_Button* owpButton = new OWP_Button(L"delete", 20);
 					if (owpButton) {
 						s_camerapanel.delbutton.push_back(owpButton);
 						s_camerapanel.separator->addParts2(*owpButton);
@@ -19583,7 +19586,7 @@ int CreateMotionPanel()
 
 		//スクロールウインドウ
 		//2023/10/15 Separatorに渡すので　Separatorよりも先に作成
-		s_motionpanel.scroll = new OWP_ScrollWnd(L"MotionPanelScroll", true);
+		s_motionpanel.scroll = new OWP_ScrollWnd(L"MotionPanelScroll", true, 20);
 		if (!s_motionpanel.scroll) {
 			_ASSERT(0);
 			return 1;
@@ -19616,7 +19619,7 @@ int CreateMotionPanel()
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, curmi.motname, 256, wmotname, MAX_PATH);
 				if (motioncnt == 0) {
 					bool limitnamelen = true;
-					s_motionpanel.radiobutton = new OWP_RadioButton(wmotname, limitnamelen);
+					s_motionpanel.radiobutton = new OWP_RadioButton(wmotname, limitnamelen, 20);
 					if (!s_motionpanel.radiobutton) {
 						_ASSERT(0);
 						return 1;
@@ -19645,7 +19648,7 @@ int CreateMotionPanel()
 
 			for (miindex = 0; miindex < minum; miindex++) {
 				MOTINFO curmi = s_model->GetMotInfoByIndex(miindex);
-				OWP_Button* owpButton = new OWP_Button(L"delete");
+				OWP_Button* owpButton = new OWP_Button(L"delete", 20);
 				if (owpButton) {
 					s_motionpanel.delbutton.push_back(owpButton);
 					s_motionpanel.separator->addParts2(*owpButton);
@@ -19770,6 +19773,7 @@ int DestroyConvBoneWnd()
 	s_convbone_model = 0;
 	s_convbone_bvh = 0;
 	s_convbonemap.clear();
+	s_bvhbone_bonenomap.clear();
 
 	if (s_convboneWnd) {
 		s_convboneWnd->setListenMouse(false);
@@ -19910,7 +19914,7 @@ int CreateConvBoneWnd()
 		s_convboneWnd->setSizeMin(WindowSize(150, 150));		// 最小サイズを設定
 
 		//スクロールウインドウ
-		s_convboneSCWnd = new OWP_ScrollWnd(L"ConvBoneScWnd", true);
+		s_convboneSCWnd = new OWP_ScrollWnd(L"ConvBoneScWnd", true, 20);
 		if (!s_convboneSCWnd) {
 			_ASSERT(0);
 			return 1;
@@ -19932,12 +19936,12 @@ int CreateConvBoneWnd()
 			if (curbone && (curbone->IsSkeleton())) {
 				const WCHAR* wbonename = curbone->GetWBoneName();
 				_ASSERT(wbonename);
-				s_modelbone[cbno] = new OWP_Label(wbonename);
+				s_modelbone[cbno] = new OWP_Label(wbonename, 20);
 				if (s_modelbone[cbno]) {
 					s_modelbone_bone[cbno] = curbone;
 
 					swprintf_s(bvhbonename, MAX_PATH, L"NotSet_%03d", cbno);
-					s_bvhbone[cbno] = new OWP_Button(bvhbonename);
+					s_bvhbone[cbno] = new OWP_Button(bvhbonename, 20);
 					if (s_bvhbone[cbno]) {
 						s_bvhbone_bone[cbno] = 0;
 						s_convbonemap[curbone] = 0;
@@ -19977,63 +19981,63 @@ int CreateConvBoneWnd()
 		//s_cbselmodel = new OWP_Button(L"SelectShapeModel");
 		WCHAR strtext[256] = { 0L };
 		swprintf_s(strtext, 256, L"Model: %s", s_model->GetFileName());
-		s_cbselmodel = new OWP_Label(strtext);
+		s_cbselmodel = new OWP_Label(strtext, 20);
 		if (!s_cbselmodel) {
 			_ASSERT(0);
 			return 1;
 		}
 
-		s_cbselbvh = new OWP_Button(L"SelectMotionModel");
+		s_cbselbvh = new OWP_Button(L"SelectMotionModel", 20);
 		if (!s_cbselbvh) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_convboneconvert = new OWP_Button(L"ConvertButton");
+		s_convboneconvert = new OWP_Button(L"ConvertButton", 20);
 		if (!s_convboneconvert) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_convbonespace1 = new OWP_Label(L"--------------");
+		s_convbonespace1 = new OWP_Label(L"--------------", 20);
 		if (!s_convbonespace1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_convbonespace2 = new OWP_Label(L"--------------");
+		s_convbonespace2 = new OWP_Label(L"--------------", 20);
 		if (!s_convbonespace2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_convbonespace3 = new OWP_Label(L"--------------");
+		s_convbonespace3 = new OWP_Label(L"--------------", 20);
 		if (!s_convbonespace3) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_convbonespace4 = new OWP_Label(L"--------------");
+		s_convbonespace4 = new OWP_Label(L"--------------", 20);
 		if (!s_convbonespace4) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_convbonespace5 = new OWP_Label(L"              ");
+		s_convbonespace5 = new OWP_Label(L"              ", 20);
 		if (!s_convbonespace5) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_rtgfilesave = new OWP_Button(L"Save RtgFile");
+		s_rtgfilesave = new OWP_Button(L"Save RtgFile", 20);
 		if (!s_rtgfilesave) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_rtgfileload = new OWP_Button(L"Load RtgFile");
+		s_rtgfileload = new OWP_Button(L"Load RtgFile", 20);
 		if (!s_rtgfileload) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_convbonemidashi[0] = new OWP_Label(L"ShapeSide");
+		s_convbonemidashi[0] = new OWP_Label(L"ShapeSide", 20);
 		if (!s_convbonemidashi) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_convbonemidashi[1] = new OWP_Label(L"MotionSide");
+		s_convbonemidashi[1] = new OWP_Label(L"MotionSide", 20);
 		if (!s_convbonemidashi) {
 			_ASSERT(0);
 			return 1;
@@ -20381,21 +20385,6 @@ int SetConvBoneBvh()
 	InterlockedExchange(&g_undertrackingRMenu, (LONG)1);
 	int menuid;
 	menuid = rmenu->TrackPopupMenu(pt);
-	//if ((menuid >= ID_RMENU_0) && (menuid < (ID_RMENU_0 + modelnum))){
-	//	int modelindex = menuid - ID_RMENU_0;
-	//	s_convbone_bvh = s_modelindex[modelindex].modelptr;
-
-	//	WCHAR strmes[1024];
-	//	if (!s_convbone_bvh){
-	//		swprintf_s(strmes, 1024, L"convbone : sel model : modelptr NULL !!!");
-	//		::DSMessageBox(NULL, strmes, L"check", MB_OK);
-	//	}
-	//	else{
-	//		swprintf_s(strmes, 1024, L"%s", s_convbone_bvh->GetFileName());
-	//		s_cbselbvh->setName(strmes);
-	//	}
-	//}
-
 
 	rmenu->Destroy();
 	delete rmenu;
@@ -20407,7 +20396,6 @@ int SetConvBoneBvh()
 		//呼び出さなかった場合　SetCaptureとReleaseCaptureのバランスが崩れて　スクロールバーを画面外でBUTTONUPしたときに処理されない
 		::SendMessage(s_convboneWnd->getHWnd(), WM_LBUTTONUP, 0, 0);
 	}
-
 
 	return 0;
 }
@@ -20441,7 +20429,8 @@ int SetConvBone(int cbno)
 		return 1;
 	}
 	int ret;
-	ret = rmenu->Create(parwnd, MENUOFFSET_SETCONVBONE);
+	//ret = rmenu->Create(parwnd, MENUOFFSET_SETCONVBONE);
+	ret = rmenu->Create(parwnd, 0);
 	if (ret) {
 		return 1;
 	}
@@ -20456,20 +20445,27 @@ int SetConvBone(int cbno)
 		RemoveMenu(submenu, 0, MF_BYPOSITION);
 	}
 
-	int setmenuid0 = ID_RMENU_0 + 0 + MENUOFFSET_SETCONVBONE;
+	int setmenuid0 = ID_RMENU_0 + 0;
 	AppendMenu(submenu, MF_STRING, setmenuid0, L"NotSet");
 
+	int bvhcbno = 0;
 	int maxboneno = 0;
 	map<int, CBone*>::iterator itrbone;
 	for (itrbone = s_convbone_bvh->GetBoneListBegin(); itrbone != s_convbone_bvh->GetBoneListEnd(); itrbone++) {
 		CBone* curbone = itrbone->second;
 		if (curbone && (curbone->IsSkeleton())) {
 			int boneno = curbone->GetBoneNo();
-			int setmenuid = ID_RMENU_0 + boneno + 1 + MENUOFFSET_SETCONVBONE;
+
+			s_bvhbone_bonenomap[bvhcbno] = boneno;//2024/07/07 メニューのインデックス-->ボーン番号　変換表
+
+			//int setmenuid = ID_RMENU_0 + boneno + 1;
+			int setmenuid = ID_RMENU_0 + bvhcbno + 1;//2024/07/07
 			AppendMenu(submenu, MF_STRING, setmenuid, curbone->GetWBoneName());
 			if (boneno > maxboneno) {
 				maxboneno = boneno;
 			}
+
+			bvhcbno++;//2024/07/07
 		}
 	}
 	//s_maxboneno = s_convbone_bvh->GetBoneListSize();
@@ -20484,46 +20480,8 @@ int SetConvBone(int cbno)
 
 	InterlockedExchange(&g_undertrackingRMenu, (LONG)1);
 	int menuid;
-	menuid = rmenu->TrackPopupMenu(pt);
-	//if ((menuid >= ID_RMENU_0) && (menuid <= (ID_RMENU_0 + maxboneno + 1))){
-	//	if (menuid == (ID_RMENU_0 + 0)){
-	//		//未設定
-	//		s_bvhbone_bone[cbno] = 0;
-	//		CBone* modelbone = s_modelbone_bone[cbno];
-	//		_ASSERT(modelbone);
-	//		if (modelbone){
-	//			s_convbonemap[modelbone] = 0;
-	//		}
-	//		s_bvhbone[cbno]->setName(L"NotSet");
-	//	}
-	//	else{
-	//		int boneno = menuid - ID_RMENU_0 - 1;
-	//		CBone* curbone = s_convbone_bvh->GetBoneByID(boneno);
-	//		WCHAR strmes[1024];
-	//		if (!curbone){
-	//			s_bvhbone_bone[cbno] = 0;
-	//			CBone* modelbone = s_modelbone_bone[cbno];
-	//			_ASSERT(modelbone);
-	//			if (modelbone){
-	//				s_convbonemap[modelbone] = 0;
-	//			}
-	//			s_bvhbone[cbno]->setName(L"NotSet");
-	//
-	//			swprintf_s(strmes, 1024, L"convbone : sel bvh bone : curbone NULL !!!");
-	//			::DSMessageBox(NULL, strmes, L"check", MB_OK);
-	//		}
-	//		else{
-	//			swprintf_s(strmes, 1024, L"%s", curbone->GetWBoneName());
-	//			s_bvhbone[cbno]->setName(strmes);
-	//			s_bvhbone_bone[cbno] = curbone;
-	//
-	//			CBone* modelbone = s_modelbone_bone[cbno];
-	//			if (modelbone){
-	//				s_convbonemap[modelbone] = curbone;
-	//			}
-	//		}
-	//	}
-	//}
+	//menuid = rmenu->TrackPopupMenu(pt);
+	menuid = rmenu->TrackPopupMenuReturnCmd(pt);//2024/07/07
 
 	rmenu->Destroy();
 	delete rmenu;
@@ -20536,6 +20494,52 @@ int SetConvBone(int cbno)
 		::SendMessage(s_convboneWnd->getHWnd(), WM_LBUTTONUP, 0, 0);
 	}
 
+	if ((menuid >= (ID_RMENU_0)) && (menuid < (ID_RMENU_0 + MAXBONENUM))) {
+		if ((s_bvhbone_cbno >= 0) && (s_bvhbone_cbno < MAXBONENUM)) {
+			if (menuid == (ID_RMENU_0 + 0)) {
+				//未設定
+				s_bvhbone_bone[s_bvhbone_cbno] = 0;
+				CBone* modelbone = s_modelbone_bone[s_bvhbone_cbno];
+				_ASSERT(modelbone);
+				if (modelbone) {
+					s_convbonemap[modelbone] = 0;
+				}
+				s_bvhbone[s_bvhbone_cbno]->setName(L"NotSet");
+				s_bvhbone[s_bvhbone_cbno]->callRewrite();
+			}
+			else {
+				int bvhcbno = menuid - ID_RMENU_0 - 1;
+				int boneno = s_bvhbone_bonenomap[bvhcbno];//2024/07/07 変換表
+				CBone* curbone = s_convbone_bvh->GetBoneByID(boneno);
+				WCHAR strmes[1024];
+				if (!curbone) {
+					s_bvhbone_bone[s_bvhbone_cbno] = 0;
+					CBone* modelbone = s_modelbone_bone[s_bvhbone_cbno];
+					_ASSERT(modelbone);
+					if (modelbone) {
+						s_convbonemap[modelbone] = 0;
+					}
+					s_bvhbone[s_bvhbone_cbno]->setName(L"NotSet");
+					s_bvhbone[s_bvhbone_cbno]->callRewrite();
+
+					swprintf_s(strmes, 1024, L"convbone : sel bvh bone : curbone NULL !!!");
+					::DSMessageBox(NULL, strmes, L"check!!!", MB_OK);
+				}
+				else {
+					swprintf_s(strmes, 1024, L"%s", curbone->GetWBoneName());
+					s_bvhbone[s_bvhbone_cbno]->setName(strmes);
+					s_bvhbone[s_bvhbone_cbno]->callRewrite();
+					s_bvhbone_bone[s_bvhbone_cbno] = curbone;
+
+					CBone* modelbone = s_modelbone_bone[s_bvhbone_cbno];
+					if (modelbone) {
+						s_convbonemap[modelbone] = curbone;
+					}
+				}
+			}
+		}
+
+	}
 
 	return 0;
 }
@@ -27222,11 +27226,17 @@ int CreateLightsWnd()
 				abort();
 			}
 		}
-		s_lightsapplyB = new OWP_Button(L"Apply", 25);
+		s_lightsapplysp = new OWP_Separator(s_lightsWnd, true, rate50, true);
+		if (!s_lightsapplysp) {
+			_ASSERT(0);
+			abort();
+		}
+		s_lightsapplyB = new OWP_Button(L"Apply(適用)", 28);
 		if (!s_lightsapplyB) {
 			_ASSERT(0);
 			abort();
 		}
+		s_lightsapplyB->setTextColor(RGB(168, 129, 129));
 
 
 		s_lightsWnd->addParts(*s_lightsslotsp);
@@ -27249,7 +27259,8 @@ int CreateLightsWnd()
 			s_polarsp2[lightindex2]->addParts1(*s_polaryLabel[lightindex2]);
 			s_polarsp2[lightindex2]->addParts2(*s_polaryEdit[lightindex2]);
 		}
-		s_lightsWnd->addParts(*s_lightsapplyB);
+		s_lightsWnd->addParts(*s_lightsapplysp);
+		s_lightsapplysp->addParts2(*s_lightsapplyB);
 
 
 		//############
@@ -41336,6 +41347,9 @@ int CreateDispGroupWnd()
 		return 0;
 	}
 
+	HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));//数秒時間がかかることがあるので砂時計カーソルにする
+
+
 	DestroyDispGroupWnd();
 
 
@@ -41365,14 +41379,20 @@ int CreateDispGroupWnd()
 		s_groupWnd->setSizeMin(WindowSize(150, 150));		// 最小サイズを設定
 
 
-		s_groupsetB = new OWP_Button(L"Set");
+		s_groupsetB = new OWP_Button(L"Set", 20);
 		if (!s_groupsetB) {
 			_ASSERT(0);
+			if (oldcursor != NULL) {
+				SetCursor(oldcursor);
+			}
 			return 1;
 		}
-		s_groupgetB = new OWP_Button(L"Get");
+		s_groupgetB = new OWP_Button(L"Get", 20);
 		if (!s_groupgetB) {
 			_ASSERT(0);
+			if (oldcursor != NULL) {
+				SetCursor(oldcursor);
+			}
 			return 1;
 		}
 		//s_grouptestB = new OWP_Button(L"Test");
@@ -41380,39 +41400,60 @@ int CreateDispGroupWnd()
 		//	_ASSERT(0);
 		//	return 1;
 		//}
-		s_grouponB = new OWP_Button(L"ON");
+		s_grouponB = new OWP_Button(L"ON", 20);
 		if (!s_grouponB) {
 			_ASSERT(0);
+			if (oldcursor != NULL) {
+				SetCursor(oldcursor);
+			}
 			return 1;
 		}
-		s_groupoffB = new OWP_Button(L"OFF");
+		s_groupoffB = new OWP_Button(L"OFF", 20);
 		if (!s_groupoffB) {
 			_ASSERT(0);
+			if (oldcursor != NULL) {
+				SetCursor(oldcursor);
+			}
 			return 1;
 		}
-		s_groupclearB = new OWP_Button(L"Clear");
+		s_groupclearB = new OWP_Button(L"Clear", 20);
 		if (!s_groupclearB) {
 			_ASSERT(0);
+			if (oldcursor != NULL) {
+				SetCursor(oldcursor);
+			}
 			return 1;
 		}
-		s_grouplabel11 = new OWP_Label(L"---------");
+		s_grouplabel11 = new OWP_Label(L"---------", 20);
 		if (!s_grouplabel11) {
 			_ASSERT(0);
+			if (oldcursor != NULL) {
+				SetCursor(oldcursor);
+			}
 			return 1;
 		}
-		s_grouplabel12 = new OWP_Label(L"---------");
+		s_grouplabel12 = new OWP_Label(L"---------", 20);
 		if (!s_grouplabel12) {
 			_ASSERT(0);
+			if (oldcursor != NULL) {
+				SetCursor(oldcursor);
+			}
 			return 1;
 		}
-		s_grouplabel21 = new OWP_Label(L"---------");
+		s_grouplabel21 = new OWP_Label(L"---------", 20);
 		if (!s_grouplabel21) {
 			_ASSERT(0);
+			if (oldcursor != NULL) {
+				SetCursor(oldcursor);
+			}
 			return 1;
 		}
-		s_grouplabel22 = new OWP_Label(L"---------");
+		s_grouplabel22 = new OWP_Label(L"---------", 20);
 		if (!s_grouplabel22) {
 			_ASSERT(0);
+			if (oldcursor != NULL) {
+				SetCursor(oldcursor);
+			}
 			return 1;
 		}
 
@@ -41421,9 +41462,12 @@ int CreateDispGroupWnd()
 		for (groupindex0 = 0; groupindex0 < MAXDISPGROUPNUM; groupindex0++) {
 			WCHAR groupname[256] = { 0L };
 			swprintf_s(groupname, 256, L"%02d", groupindex0 + 1);
-			s_groupselect[groupindex0] = new OWP_CheckBoxA(groupname, 0);
+			s_groupselect[groupindex0] = new OWP_CheckBoxA(groupname, false, 20);
 			if (!s_groupselect[groupindex0]) {
 				_ASSERT(0);
+				if (oldcursor != NULL) {
+					SetCursor(oldcursor);
+				}
 				return 1;
 			}
 		}
@@ -41431,11 +41475,17 @@ int CreateDispGroupWnd()
 		int result = s_model->SetDispGroupGUI(s_groupobjvec, s_groupmqoobjvec);
 		if (result != 0) {
 			_ASSERT(0);
+			if (oldcursor != NULL) {
+				SetCursor(oldcursor);
+			}
 			return 1;
 		}
 		s_grouplinenum = (int)s_groupobjvec.size();
 
 		if (s_grouplinenum <= 0) {
+			if (oldcursor != NULL) {
+				SetCursor(oldcursor);
+			}
 			return 0;
 		}
 
@@ -41443,24 +41493,29 @@ int CreateDispGroupWnd()
 		double centerrate;
 		int linedatasize;
 		if (g_4kresolution) {
-			centerrate = (double)12 / (double)140;
+			//centerrate = (double)12 / (double)140;
+			centerrate = (double)12 / (double)140 * 1.50;
 			//linedatasize = max(140, linenum + 12);
 			//linedatasize = max(106, (linenum + 12));
-			linedatasize = (int)((double)s_grouplinenum * 1.2);
+			linedatasize = (int)((double)s_grouplinenum * 1.5);
 		}
 		else {
-			centerrate = (double)12 / (double)70;
+			//centerrate = (double)12 / (double)70;
+			centerrate = (double)12 / (double)70 * 1.50;
 			//linedatasize = max(70, linenum + 12);
 			//linedatasize = max(54, (linenum + 12));
-			linedatasize = (int)((double)s_grouplinenum * 1.2);
+			linedatasize = (int)((double)s_grouplinenum * 1.5);
 		}
 
 
 
 		//スクロールウインドウ		
-		s_groupSCWnd = new OWP_ScrollWnd(L"DispGroupScWnd", true);
+		s_groupSCWnd = new OWP_ScrollWnd(L"DispGroupScWnd", true, 20);
 		if (!s_groupSCWnd) {
 			_ASSERT(0);
+			if (oldcursor != NULL) {
+				SetCursor(oldcursor);
+			}
 			return 1;
 		}
 		s_groupSCWnd->setLineDataSize(linedatasize);//!!!!!!!!!!!!!
@@ -41472,6 +41527,9 @@ int CreateDispGroupWnd()
 		s_groupsp0 = new OWP_Separator(s_groupWnd, true, centerrate, false);//上段と下段を格納
 		if (!s_groupsp0) {
 			_ASSERT(0);
+			if (oldcursor != NULL) {
+				SetCursor(oldcursor);
+			}
 			return 1;
 		}
 		//s_groupSCWnd->addParts(*s_groupsp0);
@@ -41482,6 +41540,9 @@ int CreateDispGroupWnd()
 		s_groupsp = new OWP_Separator(s_groupWnd, true, 0.5, true);//ウインドウ上段部分用
 		if (!s_groupsp) {
 			_ASSERT(0);
+			if (oldcursor != NULL) {
+				SetCursor(oldcursor);
+			}
 			return 1;
 		}
 		s_groupsp0->addParts1(*s_groupsp);
@@ -41492,6 +41553,9 @@ int CreateDispGroupWnd()
 		s_groupsp3 = new OWP_Separator(s_groupWnd, true, 0.8, true, s_groupSCWnd);//parent : s_groupSCWnd　下段　objチェックボックスとtestボタン用
 		if (!s_groupsp3) {
 			_ASSERT(0);
+			if (oldcursor != NULL) {
+				SetCursor(oldcursor);
+			}
 			return 1;
 		}
 		s_groupSCWnd->addParts(*s_groupsp3);
@@ -41499,9 +41563,12 @@ int CreateDispGroupWnd()
 		for (lineno = 0; lineno < s_grouplinenum; lineno++) {
 			s_groupsp3->addParts1(*(s_groupobjvec[lineno]));
 
-			OWP_Button* testbutton = new OWP_Button(L"Test");
+			OWP_Button* testbutton = new OWP_Button(L"Test", 20);
 			if (!testbutton) {
 				_ASSERT(0);
+				if (oldcursor != NULL) {
+					SetCursor(oldcursor);
+				}
 				return 1;
 			}
 			s_grouptestBvec.push_back(testbutton);
@@ -41513,6 +41580,9 @@ int CreateDispGroupWnd()
 		s_groupsp1 = new OWP_Separator(s_groupWnd, true, 0.5, true);//上段　グループ番号チェックボックス用
 		if (!s_groupsp1) {
 			_ASSERT(0);
+			if (oldcursor != NULL) {
+				SetCursor(oldcursor);
+			}
 			return 1;
 		}
 		s_groupsp->addParts1(*s_groupsp1);
@@ -41521,6 +41591,9 @@ int CreateDispGroupWnd()
 		s_groupsp2 = new OWP_Separator(s_groupWnd, true, 0.5, true);//上段　グループ番号チェックボックス用
 		if (!s_groupsp2) {
 			_ASSERT(0);
+			if (oldcursor != NULL) {
+				SetCursor(oldcursor);
+			}
 			return 1;
 		}
 		s_groupsp->addParts2(*s_groupsp2);
@@ -41560,7 +41633,7 @@ int CreateDispGroupWnd()
 				if (s_grouptestBvec[lineno1]) {
 					s_grouptestBvec[lineno1]->setButtonListener([lineno1]() {
 
-						HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
+						HCURSOR oldcursor1 = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
 						//ボタンのtext色をリセット
 						int lineno;
@@ -41586,8 +41659,8 @@ int CreateDispGroupWnd()
 							s_grouptestBvec[lineno1]->setTextColor(importantcol);
 						}
 
-						if (oldcursor) {
-							SetCursor(oldcursor);
+						if (oldcursor1) {
+							SetCursor(oldcursor1);
 						}
 					});
 				}
@@ -41622,7 +41695,7 @@ int CreateDispGroupWnd()
 				s_groupsetB->setButtonListener([]() {
 					if (s_model) {
 
-						HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
+						HCURSOR oldcursor1 = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
 						//選択中のグループ番号を取得
 						int selectedgroupno = 0;
@@ -41645,8 +41718,8 @@ int CreateDispGroupWnd()
 							s_model->MakeDispGroupForRender();
 						}
 
-						if (oldcursor) {
-							SetCursor(oldcursor);
+						if (oldcursor1) {
+							SetCursor(oldcursor1);
 						}
 
 					}
@@ -41661,7 +41734,7 @@ int CreateDispGroupWnd()
 
 						s_groupUnderGetting = true;//s_groupgetBボタンの処理中は　groupobjvecのチェック処理をスキップ
 
-						HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
+						HCURSOR oldcursor1 = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
 
 						//objectのチェックを全てリセット
@@ -41708,8 +41781,8 @@ int CreateDispGroupWnd()
 							}
 						}
 
-						if (oldcursor) {
-							SetCursor(oldcursor);
+						if (oldcursor1) {
+							SetCursor(oldcursor1);
 						}
 
 						s_groupUnderGetting = false;//s_groupgetBボタンの処理中は　groupobjvecのチェック処理をスキップ
@@ -41722,7 +41795,7 @@ int CreateDispGroupWnd()
 			if(s_grouponB){
 				s_grouponB->setButtonListener([]() {
 					if (s_model) {
-						HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
+						HCURSOR oldcursor1 = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
 						//選択中のグループ番号を取得
 						int selectedgroupno = 0;
@@ -41739,8 +41812,8 @@ int CreateDispGroupWnd()
 							s_model->SetDispGroupON(selectedgroupno - 1, true);
 						}
 
-						if (oldcursor) {
-							SetCursor(oldcursor);
+						if (oldcursor1) {
+							SetCursor(oldcursor1);
 						}
 					}
 				});
@@ -41752,7 +41825,7 @@ int CreateDispGroupWnd()
 				s_groupoffB->setButtonListener([]() {
 					if (s_model) {
 
-						HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
+						HCURSOR oldcursor1 = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
 						//選択中のグループ番号を取得
 						int selectedgroupno = 0;
@@ -41769,8 +41842,8 @@ int CreateDispGroupWnd()
 							s_model->SetDispGroupON(selectedgroupno - 1, false);
 						}
 
-						if (oldcursor) {
-							SetCursor(oldcursor);
+						if (oldcursor1) {
+							SetCursor(oldcursor1);
 						}
 
 					}
@@ -41781,7 +41854,7 @@ int CreateDispGroupWnd()
 		{//Clearボタン
 			if (s_groupclearB) {
 				s_groupclearB->setButtonListener([]() {
-					HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
+					HCURSOR oldcursor1 = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
 					int objno1;
 					for (objno1 = 0; objno1 < s_grouplinenum; objno1++) {
@@ -41791,8 +41864,8 @@ int CreateDispGroupWnd()
 						}
 					}
 
-					if (oldcursor) {
-						SetCursor(oldcursor);
+					if (oldcursor1) {
+						SetCursor(oldcursor1);
 					}
 
 				});
@@ -41811,7 +41884,7 @@ int CreateDispGroupWnd()
 					s_groupobjvec[objno1]->setButtonListener([objno1]() {
 						if (s_model) {
 							if (s_groupUnderGetting == false) {//s_groupgetBボタンの処理中は　groupobjvecのチェック処理をスキップ)								
-								HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
+								HCURSOR oldcursor1 = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
 								vector<int> selectedobjtree;
 								selectedobjtree.clear();
@@ -41837,8 +41910,8 @@ int CreateDispGroupWnd()
 									}
 								}
 
-								if (oldcursor) {
-									SetCursor(oldcursor);
+								if (oldcursor1) {
+									SetCursor(oldcursor1);
 								}
 							}
 						}
@@ -41876,6 +41949,9 @@ int CreateDispGroupWnd()
 	}
 
 
+	if (oldcursor != NULL) {
+		SetCursor(oldcursor);
+	}
 
 	return 0;
 }
@@ -41982,20 +42058,20 @@ static int s_blendshapelinenum = 0;
 			centerrate = (double)7 / (double)140;
 			//linedatasize = max(140, linenum + 12);
 			//linedatasize = max(106, (linenum + 12));
-			linedatasize = (int)((double)s_blendshapelinenum * 1.25);
+			linedatasize = (int)((double)s_blendshapelinenum * 1.50);
 		}
 		else {
 			//centerrate = (double)3 / (double)70;
 			centerrate = (double)7 / (double)70;
 			//linedatasize = max(70, linenum + 12);
 			//linedatasize = max(54, (linenum + 12));
-			linedatasize = (int)((double)s_blendshapelinenum * 1.25);
+			linedatasize = (int)((double)s_blendshapelinenum * 1.50);
 		}
 		//centerrate = 1.0 / (double)linedatasize;
 
 
 		//スクロールウインドウ		
-		s_blendshapeSCWnd = new OWP_ScrollWnd(L"BlendShapeScWnd", true);
+		s_blendshapeSCWnd = new OWP_ScrollWnd(L"BlendShapeScWnd", true, 20);
 		if (!s_blendshapeSCWnd) {
 			_ASSERT(0);
 			return 1;
@@ -42013,7 +42089,8 @@ static int s_blendshapelinenum = 0;
 		//s_blendshapeSCWnd->addParts(*s_blendshapesp0);
 
 		//s_blendshapesp1 = new OWP_Separator(s_blendshapeWnd, true, 0.3, true, s_blendshapeSCWnd);
-		s_blendshapesp1 = new OWP_Separator(s_blendshapeWnd, true, 0.38, true, s_blendshapeSCWnd);
+		//s_blendshapesp1 = new OWP_Separator(s_blendshapeWnd, true, 0.38, true, s_blendshapeSCWnd);
+		s_blendshapesp1 = new OWP_Separator(s_blendshapeWnd, true, 0.50, true, s_blendshapeSCWnd);
 		if (!s_blendshapesp0) {
 			_ASSERT(0);
 			return 1;
@@ -43632,7 +43709,7 @@ int CreateRigidWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_colradio = new OWP_RadioButton(L"Cone", limitradionamelen);
+		s_colradio = new OWP_RadioButton(L"Cone", limitradionamelen, 15);
 		if (!s_colradio) {
 			_ASSERT(0);
 			return 1;
@@ -43641,7 +43718,7 @@ int CreateRigidWnd()
 		s_colradio->addLine(L"Sphere");
 		s_colradio->addLine(L"Rectangular");
 
-		s_lkradio = new OWP_RadioButton(L"[posSpring]very weak", limitradionamelen);
+		s_lkradio = new OWP_RadioButton(L"[posSpring]very weak", limitradionamelen, 15);
 		if (!s_lkradio) {
 			_ASSERT(0);
 			return 1;
@@ -43663,7 +43740,7 @@ int CreateRigidWnd()
 			return 1;
 		}
 
-		s_akradio = new OWP_RadioButton(L"[rotSpring]very weak", limitradionamelen);
+		s_akradio = new OWP_RadioButton(L"[rotSpring]very weak", limitradionamelen, 15);
 		if (!s_akradio) {
 			_ASSERT(0);
 			return 1;
@@ -45947,7 +46024,7 @@ int CreateShaderTypeWnd()
 		linedatasize = (int)((double)(materialnum + 1) * 1.2);
 
 
-		s_SCshadertype = new OWP_ScrollWnd(L"ShaderTypeScWnd", true);
+		s_SCshadertype = new OWP_ScrollWnd(L"ShaderTypeScWnd", true, 20);
 		if (!s_SCshadertype) {
 			_ASSERT(0);
 			return 1;
@@ -45985,13 +46062,13 @@ int CreateShaderTypeWnd()
 		//colorforindex.g = 129;
 		//colorforindex.b = 129;
 		COLORREF indexcolor = RGB(168, 129, 129);
-		s_materialnameB[0] = new OWP_Button(L"MaterialName");
+		s_materialnameB[0] = new OWP_Button(L"MaterialName", 25);
 		if (!s_materialnameB[0]) {
 			_ASSERT(0);
 			return 1;
 		}
 		s_materialnameB[0]->setTextColor(indexcolor);
-		s_shadertypelabel[0] = new OWP_Label(L"ShaderType");
+		s_shadertypelabel[0] = new OWP_Label(L"ShaderType", 25);
 		if (!s_shadertypelabel[0]) {
 			_ASSERT(0);
 			return 1;
@@ -46039,7 +46116,7 @@ int CreateShaderTypeWnd()
 			strcpy_s(name, 256, curmqomat->GetName());
 			WCHAR wname[256] = { 0L };
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, 256, wname, 256);
-			s_materialnameB[setindex] = new OWP_Button(wname);
+			s_materialnameB[setindex] = new OWP_Button(wname, 20);
 			if (!s_materialnameB[setindex]) {
 				_ASSERT(0);
 				return 1;
@@ -46067,7 +46144,7 @@ int CreateShaderTypeWnd()
 				wcscpy_s(strshadertype, 256, L"Unknown");
 				break;
 			}
-			s_shadertypelabel[setindex] = new OWP_Label(strshadertype);
+			s_shadertypelabel[setindex] = new OWP_Label(strshadertype, 20);
 			if (!s_shadertypelabel[setindex]) {
 				_ASSERT(0);
 				return 1;
@@ -63879,7 +63956,7 @@ int CreateShaderTypeParamsDlg()
 		s_st_namelabel->setTextColor(colorCaution);
 
 
-		s_st_shadertyperadio = new OWP_RadioButton(L"Auto", limitradionamelen);
+		s_st_shadertyperadio = new OWP_RadioButton(L"Auto", limitradionamelen, 15);
 		if (!s_st_shadertyperadio) {
 			_ASSERT(0);
 			return 1;
@@ -64138,7 +64215,7 @@ int CreateShaderTypeParamsDlg()
 		}
 
 
-		s_st_toonlitradio = new OWP_RadioButton(L"ToonLit1", limitradionamelen);
+		s_st_toonlitradio = new OWP_RadioButton(L"ToonLit1", limitradionamelen, 15);
 		if (!s_st_toonlitradio) {
 			_ASSERT(0);
 			return 1;
@@ -64509,7 +64586,7 @@ int CreateShaderTypeParamsDlg()
 		}
 
 
-		s_st_riverradio = new OWP_RadioButton(L"river", limitradionamelen);
+		s_st_riverradio = new OWP_RadioButton(L"river", limitradionamelen, 15);
 		if (!s_st_riverradio) {
 			_ASSERT(0);
 			return 1;
@@ -64589,7 +64666,7 @@ int CreateShaderTypeParamsDlg()
 
 
 
-		s_st_distortionmapradio = new OWP_RadioButton(L"RG", limitradionamelen);
+		s_st_distortionmapradio = new OWP_RadioButton(L"RG", limitradionamelen, 15);
 		if (!s_st_distortionmapradio) {
 			_ASSERT(0);
 			return 1;
@@ -66999,7 +67076,7 @@ int CreateSkyParamsDlg()
 		}
 
 
-		s_skyst_shadertyperadio = new OWP_RadioButton(L"Auto", limitradionamelen);
+		s_skyst_shadertyperadio = new OWP_RadioButton(L"Auto", limitradionamelen, 15);
 		if (!s_skyst_shadertyperadio) {
 			_ASSERT(0);
 			return 1;
@@ -67257,7 +67334,7 @@ int CreateSkyParamsDlg()
 		}
 
 
-		s_skyst_toonlitradio = new OWP_RadioButton(L"ToonLit1", limitradionamelen);
+		s_skyst_toonlitradio = new OWP_RadioButton(L"ToonLit1", limitradionamelen, 15);
 		if (!s_skyst_toonlitradio) {
 			_ASSERT(0);
 			return 1;
@@ -67628,7 +67705,7 @@ int CreateSkyParamsDlg()
 		}
 
 
-		s_skyst_riverradio = new OWP_RadioButton(L"river", limitradionamelen);
+		s_skyst_riverradio = new OWP_RadioButton(L"river", limitradionamelen, 15);
 		if (!s_skyst_riverradio) {
 			_ASSERT(0);
 			return 1;
@@ -67708,7 +67785,7 @@ int CreateSkyParamsDlg()
 
 
 
-		s_skyst_distortionmapradio = new OWP_RadioButton(L"RG", limitradionamelen);
+		s_skyst_distortionmapradio = new OWP_RadioButton(L"RG", limitradionamelen, 15);
 		if (!s_skyst_distortionmapradio) {
 			_ASSERT(0);
 			return 1;

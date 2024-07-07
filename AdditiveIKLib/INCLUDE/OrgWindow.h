@@ -3196,7 +3196,11 @@ void s_dummyfunc()
 			//名前
 			int pos1x= pos.x+NAME_POS_X;
 			int pos1y= pos.y+size.y/2-5;
-			hdcM->setFont(12,_T("ＭＳ ゴシック"));
+
+			//hdcM->setFont(12,_T("ＭＳ ゴシック"));
+			int fontsize = (int)((double)SIZE_Y * 0.8);//2024/07/07　高さを大きくした場合にはフォントも大きく
+			hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
+
 			//SetTextColor(hdcM->hDC,RGB(240,240,240));
 			SetTextColor(hdcM->hDC, OrgWindowParts::getTextColor());
 			TextOut( hdcM->hDC,
@@ -3586,17 +3590,12 @@ void s_dummyfunc()
 			//名前
 			pos1x= pos.x+BOX_POS_X+BOX_WIDTH+3;
 			pos1y= pos.y+size.y/2-5;
-			hdcM->setFont(12,_T("ＭＳ ゴシック"));
-			//TCHAR* isToAll = 0;
-			//isToAll = _tcsstr(name, _T("ToAll"));
-			//if(!isToAll){
-			//	SetTextColor(hdcM->hDC, RGB(240, 240, 240));
-			//}
-			//else {
-			//	//名前にToAllとついていた場合には、特殊ボタンとして色を変える
-			//	SetTextColor(hdcM->hDC, RGB(64, 128 + 32, 128 + 32));
-			//}
-			
+
+			//hdcM->setFont(12,_T("ＭＳ ゴシック"));
+			int fontsize = (int)((double)SIZE_Y * 0.8);//2024/07/07　高さを大きくした場合にはフォントも大きく
+			hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
+
+
 			SetTextColor(hdcM->hDC, OrgWindowParts::getTextColor());
 
 			TextOut( hdcM->hDC,
@@ -5003,7 +5002,7 @@ void s_dummyfunc()
 	class OWP_CheckBoxA : public OrgWindowParts {
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_CheckBoxA( const TCHAR *_name=_T(""), bool _value=false ) : OrgWindowParts() {
+		OWP_CheckBoxA( const TCHAR *_name=_T(""), bool _value=false, int _labelheight=15 ) : OrgWindowParts() {
 			name = new TCHAR[256];
 			if (_name) {
 				size_t tclen = _tcslen(_name);
@@ -5024,6 +5023,8 @@ void s_dummyfunc()
 			}
 
 			value= _value;
+
+			SIZE_Y = max(SIZE_Y, _labelheight);
 
 			//buttonListener = [](){s_dummyfunc();};
 			buttonListener = NULL;
@@ -5108,7 +5109,7 @@ void s_dummyfunc()
 		std::function<void()> buttonListener;
 		std::function<void()> contextmenuListener;//右クリック用リスナー
 
-		static const int SIZE_Y= 15;
+		int SIZE_Y= 15;
 		static const int BOX_POS_X= 3;
 		static const int BOX_WIDTH= 10;
 	};
@@ -5119,7 +5120,7 @@ void s_dummyfunc()
 	class OWP_RadioButton : public OrgWindowParts{
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_RadioButton( const TCHAR *name, bool srclimitnamelen) : OrgWindowParts() {
+		OWP_RadioButton( const TCHAR *name, bool srclimitnamelen, int _labelheight) : OrgWindowParts() {
 
 			limitnamelen = srclimitnamelen;
 
@@ -5152,6 +5153,9 @@ void s_dummyfunc()
 					nameList.push_back(_T(" "));
 				}
 			}
+
+			SIZE_Y = max(SIZE_Y, _labelheight);//2024/07/07
+
 
 			selectIndex= 0;
 
@@ -5194,7 +5198,11 @@ void s_dummyfunc()
 				//名前
 				pos1x= pos.x+BOX_POS_X+BOX_WIDTH+3;
 				pos1y= pos.y+SIZE_Y/2-6+ SIZE_Y*i+ 2;
-				hdcM->setFont(12,_T("ＭＳ ゴシック"));
+				
+				//hdcM->setFont(12,_T("ＭＳ ゴシック"));
+				int fontsize = (int)((double)SIZE_Y * 0.8);//2024/07/07　高さを大きくした場合にはフォントも大きく
+				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
+
 				SetTextColor(hdcM->hDC,RGB(240,240,240));
 				TextOut( hdcM->hDC,
 						 pos1x, pos1y,
@@ -5362,7 +5370,7 @@ void s_dummyfunc()
 
 		std::vector< std::basic_string<TCHAR> > nameList;
 
-		static const int SIZE_Y= 15;
+		int SIZE_Y= 15;
 		static const int BOX_POS_X= 3;
 		static const int BOX_WIDTH= 10;
 	};
@@ -11338,7 +11346,14 @@ void s_dummyfunc()
 	class OWP_ScrollWnd : public OrgWindowParts{
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_ScrollWnd(const TCHAR *_name, bool _allareamousewheel) : OrgWindowParts() {
+		OWP_ScrollWnd(const TCHAR *_name, bool _allareamousewheel, int _labelheight) : OrgWindowParts() {
+
+			//##################################
+			//2024/07/07 _labelheight引数について
+			//##################################
+			//setShowPosLine()でLABEL_SIZE_Y * 項目数で選択行の高さを計算する
+			//_labelheightとしてコンテンツ１項目当りの高さを渡す必要有
+
 			name = new TCHAR[256];
 			if (_name) {
 				size_t tclen = _tcslen(_name);
@@ -11357,6 +11372,11 @@ void s_dummyfunc()
 					_tcscpy_s(name, 256, TEXT("NoName"));
 				}
 			}
+
+			//2024/07/07
+			//setShowPosLine()でLABEL_SIZE_Y * 項目数で選択行を計算する
+			//_labelheightとしてコンテンツ１項目当りの高さを渡す必要有
+			LABEL_SIZE_Y = max(LABEL_SIZE_Y, _labelheight);
 
 			//cursorListener = [](){s_dummyfunc(); };
 			//lineShiftListener = [](int beforIndex, int afterIndex){s_dummyfunc(); };
@@ -11954,7 +11974,7 @@ void s_dummyfunc()
 
 		int lineDatasize;
 		
-		static const int LABEL_SIZE_Y = 15;
+		int LABEL_SIZE_Y = 15;
 		//static const int SCROLL_BAR_WIDTH = 10;
 		static const int SCROLL_BAR_WIDTH = 15;
 		static const int MARGIN = 3;

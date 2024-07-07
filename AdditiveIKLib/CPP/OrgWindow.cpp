@@ -1507,7 +1507,11 @@ namespace OrgWinGUI{
 			//名前
 			pos1x = pos.x + BOX_POS_X + BOX_WIDTH + 3;
 			pos1y = pos.y + size.y / 2 - 5;
-			hdcM->setFont(12, _T("ＭＳ ゴシック"));
+
+			//hdcM->setFont(12, _T("ＭＳ ゴシック"));
+			int fontsize = (int)((double)SIZE_Y * 0.8);//2024/07/07　高さを大きくした場合にはフォントも大きく
+			hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
+
 			//SetTextColor(hdcM->hDC, RGB(240, 240, 240));
 			SetTextColor(hdcM->hDC, OrgWindowParts::getTextColor());
 			TextOut(hdcM->hDC,
