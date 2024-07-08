@@ -3604,6 +3604,8 @@ void s_dummyfunc()
 			}
 
 			SIZE_Y = max(SIZE_Y, _labelheight);//2024/06/30
+			BOX_POS_X = (int)((double)SIZE_Y * 0.20);//2024/07/08
+			BOX_WIDTH = (int)((double)SIZE_Y * 0.667);//2024/07/08
 
 			buttonPush=false;
 			//buttonListener = [](){s_dummyfunc();};
@@ -3654,8 +3656,8 @@ void s_dummyfunc()
 			LineTo(hdcM->hDC,   pos2x,pos1y);
 
 			//名前
-			pos1x= pos.x+BOX_POS_X+BOX_WIDTH+3;
-			pos1y= pos.y+size.y/2-5;
+			int pos3x= pos.x+BOX_POS_X+BOX_WIDTH+3;
+			int pos3y= pos.y+2;
 
 			//hdcM->setFont(12,_T("ＭＳ ゴシック"));
 			int fontsize = (int)((double)SIZE_Y * 0.8);//2024/07/07　高さを大きくした場合にはフォントも大きく
@@ -3665,7 +3667,7 @@ void s_dummyfunc()
 			SetTextColor(hdcM->hDC, OrgWindowParts::getTextColor());
 
 			TextOut( hdcM->hDC,
-					 pos1x, pos1y,
+					 pos3x, pos3y,
 					 name, (int)_tcslen(name));
 			{
 				if (g_dsmousewait == 1) {
@@ -3747,8 +3749,10 @@ void s_dummyfunc()
 		std::function<void()> buttonListener;
 
 		int SIZE_Y = 15;
-		static const int BOX_POS_X= 3;
-		static const int BOX_WIDTH= 10;
+		int BOX_POS_X= 3;
+		int BOX_WIDTH= 10;
+
+
 
 		LONG underButtonUpThreadFlag;//ボタンを押している間にボタンを削除しないようにフラグを立てる
 
@@ -4223,12 +4227,12 @@ void s_dummyfunc()
 
 			drawEdge();
 
-			//白で塗りつぶすRect
+			//やや青み掛かった白で塗りつぶすRect
 			int pos01x = pos.x + 1;
 			int pos01y = pos.y + 1;
 			int pos02x = pos.x + size.x - 1;
 			int pos02y = pos.y + size.y - 1;
-			hdcM->setPenAndBrush(RGB(240, 240, 240), RGB(240, 240, 240));
+			hdcM->setPenAndBrush(RGB(239, 244, 250), RGB(239, 244, 250));//やや青み掛かった白
 			Rectangle(hdcM->hDC, pos01x, pos01y, pos02x, pos02y);
 
 			//ボックス

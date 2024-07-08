@@ -2045,6 +2045,7 @@ namespace OrgWinGUI{
 					bool minusflag = false;
 					bool bsflag = false;
 					bool clrflag = false;
+					bool closeflag = false;
 					WCHAR srcwc = 0L;
 					switch (pushnum) {
 					case SKNUMBUTTON_0:
@@ -2089,17 +2090,29 @@ namespace OrgWinGUI{
 					case SKNUMBUTTON_CLEAR:
 						clrflag = true;
 						break;
+					case SKNUMBUTTON_CLOSE:
+						closeflag = true;
+						break;
 					default:
 						break;
 					}
-					if (srcwc != 0L) {
-						peditbox->AddChar(srcwc);
+
+					if (closeflag) {
+						if (getParent()) {
+							getParent()->setVisible(false);//2024/07/08 閉じるボタン
+							return;
+						}
 					}
-					else if (bsflag) {
-						peditbox->BackSpaceChar();
-					}
-					else if (clrflag) {
-						peditbox->ClearChar();
+					else {
+						if (srcwc != 0L) {
+							peditbox->AddChar(srcwc);
+						}
+						else if (bsflag) {
+							peditbox->BackSpaceChar();
+						}
+						else if (clrflag) {
+							peditbox->ClearChar();
+						}
 					}
 				}
 

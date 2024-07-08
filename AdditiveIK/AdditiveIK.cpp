@@ -1244,6 +1244,7 @@ static OWP_Label* s_polaryLabel[8];
 static OWP_EditBox* s_polaryEdit[8];
 //static OWP_Button* s_polaryEdit[8];
 static OWP_Separator* s_lightsapplysp = 0;
+static OWP_Label* s_lightsspace1Label = 0;
 static OWP_Button* s_lightsapplyB = 0;
 
 
@@ -5014,6 +5015,7 @@ void InitApp()
 			s_polaryEdit[lightindex] = 0;
 		}
 		s_lightsapplysp = 0;
+		s_lightsspace1Label = 0;
 		s_lightsapplyB = 0;
 	}
 
@@ -7271,6 +7273,10 @@ void OnDestroyDevice()
 		if (s_lightsapplysp) {
 			delete s_lightsapplysp;
 			s_lightsapplysp = 0;
+		}
+		if (s_lightsspace1Label) {
+			delete s_lightsspace1Label;
+			s_lightsspace1Label = 0;
 		}
 		if (s_lightsapplyB) {
 			delete s_lightsapplyB;
@@ -27165,7 +27171,7 @@ int CreateLightsWnd()
 		s_lightsslotCombo->setSelectedCombo(g_lightSlot);
 
 
-		s_lightsslotLabel = new OWP_Label(L"(角度設定は極座標)", labelheight);
+		s_lightsslotLabel = new OWP_Label(L"PolarCoordDeg(極座標)", labelheight);
 		if (!s_lightsslotLabel) {
 			_ASSERT(0);
 			abort();
@@ -27261,7 +27267,12 @@ int CreateLightsWnd()
 			_ASSERT(0);
 			abort();
 		}
-		s_lightsapplyB = new OWP_Button(L"Apply(適用)", 28);
+		s_lightsspace1Label = new OWP_Label(L"     ", 24);
+		if (!s_lightsspace1Label) {
+			_ASSERT(0);
+			abort();
+		}
+		s_lightsapplyB = new OWP_Button(L"Apply(適用)", 38);
 		if (!s_lightsapplyB) {
 			_ASSERT(0);
 			abort();
@@ -27289,6 +27300,7 @@ int CreateLightsWnd()
 			s_polarsp2[lightindex2]->addParts1(*s_polaryLabel[lightindex2]);
 			s_polarsp2[lightindex2]->addParts2(*s_polaryEdit[lightindex2]);
 		}
+		s_lightsWnd->addParts(*s_lightsspace1Label);
 		s_lightsWnd->addParts(*s_lightsapplysp);
 		s_lightsapplysp->addParts2(*s_lightsapplyB);
 
@@ -38101,6 +38113,16 @@ int CreateTopSlidersWnd()
 		0, 0, 0,				//カラー
 		true, true);					//サイズ変更の可否
 
+
+	int labelheight;
+	if (g_4kresolution) {
+		labelheight = 20;
+	}
+	else {
+		labelheight = 18;
+	}
+
+
 	if (s_topSlidersWnd) {
 		//s_sidemenuWnd->setCloseListener([]() { s_ScloseFlag = true; });
 
@@ -38141,17 +38163,17 @@ int CreateTopSlidersWnd()
 		//	_ASSERT(0);
 		//	return 1;
 		//}
-		s_owpBrushRepeatsSlider = new OWP_Slider((double)g_brushrepeats, 100.0, 1.0);
+		s_owpBrushRepeatsSlider = new OWP_Slider((double)g_brushrepeats, 100.0, 1.0, labelheight);
 		if (!s_owpBrushRepeatsSlider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_owpBrushMirrorU = new OWP_CheckBoxA(L"Brush U", (g_brushmirrorUflag == 1));
+		s_owpBrushMirrorU = new OWP_CheckBoxA(L"Brush U", (g_brushmirrorUflag == 1), labelheight);
 		if (!s_owpBrushMirrorU) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_owpBrushMirrorV = new OWP_CheckBoxA(L"Brush V", (g_brushmirrorVflag == 1));
+		s_owpBrushMirrorV = new OWP_CheckBoxA(L"Brush V", (g_brushmirrorVflag == 1), labelheight);
 		if (!s_owpBrushMirrorV) {
 			_ASSERT(0);
 			return 1;
@@ -69533,7 +69555,8 @@ int CreateSprites()
 			L"MameMedia\\num_period_48.png",
 			L"MameMedia\\num_minus_48.png",
 			L"MameMedia\\num_BS_48.png",
-			L"MameMedia\\num_Clear_48.png"
+			L"MameMedia\\num_Clear_48.png",
+			L"MameMedia\\num_close_48.png"
 		};
 		WCHAR filename_pushed[SKNUMBUTTON_MAX][MAX_PATH] = {
 			L"MameMedia\\num0_48_pushed.png",
@@ -69549,7 +69572,8 @@ int CreateSprites()
 			L"MameMedia\\num_period_48_pushed.png",
 			L"MameMedia\\num_minus_48_pushed.png",
 			L"MameMedia\\num_BS_48_pushed.png",
-			L"MameMedia\\num_Clear_48_pushed.png"
+			L"MameMedia\\num_Clear_48_pushed.png",
+			L"MameMedia\\num_close_48_pushed.png"
 		};
 
 		int numindex;
