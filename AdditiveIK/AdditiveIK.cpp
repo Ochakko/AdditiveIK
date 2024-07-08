@@ -570,7 +570,7 @@ Gdiplus::Image* g_playerbutton_target_inv26 = 0;
 Gdiplus::Image* g_playerbutton_target40 = 0;
 Gdiplus::Image* g_playerbutton_target_inv40 = 0;
 
-
+Gdiplus::Image* g_numBG = nullptr;
 Gdiplus::Image* g_numbutton[SKNUMBUTTON_MAX];
 Gdiplus::Image* g_numbutton_pushed[SKNUMBUTTON_MAX];
 
@@ -4027,7 +4027,7 @@ INT WINAPI wWinMain(
 	LoadDofParamsFile();
 
 
-	OWP_EditBox::MakeSoftNumKey();
+	OWP_EditBox::makeSoftNumKey();
 
 	CreatePlaceFolderWnd();
 	CreateTimelineWnd();
@@ -5810,6 +5810,8 @@ void InitApp()
 	g_playerbutton_target40 = 0;
 	g_playerbutton_target_inv40 = 0;
 
+
+	g_numBG = nullptr;
 	int numindex;
 	for (numindex = 0; numindex < SKNUMBUTTON_MAX; numindex++) {
 		g_numbutton[numindex] = nullptr;
@@ -6516,6 +6518,12 @@ void OnDestroyDevice()
 		delete g_playerbutton_target_inv40;
 		g_playerbutton_target_inv40 = 0;
 	}
+
+
+	if (g_numBG) {
+		delete g_numBG;
+		g_numBG = 0;
+	}
 	int numindex;
 	for (numindex = 0; numindex < SKNUMBUTTON_MAX; numindex++) {
 		if (g_numbutton[numindex]) {
@@ -6527,6 +6535,8 @@ void OnDestroyDevice()
 			g_numbutton_pushed[numindex] = nullptr;
 		}
 	}
+
+
 	Gdiplus::GdiplusShutdown(gdiplusToken);
 
 
@@ -7418,7 +7428,7 @@ void OnDestroyDevice()
 	}
 
 
-	OWP_EditBox::DestroySoftNumWnd();
+	OWP_EditBox::destroySoftNumWnd();
 	CMotionPoint::DestroyMotionPoints();
 	CBone::DestroyColDisp();
 	CBone::DestroyBones();
@@ -27241,7 +27251,7 @@ int CreateLightsWnd()
 				_ASSERT(0);
 				abort();
 			}
-			int result1 = s_polarxzEdit[lightindex]->MakeSoftNumKey();
+			int result1 = s_polarxzEdit[lightindex]->makeSoftNumKey();
 			if (result1 != 0) {
 				_ASSERT(0);
 				abort();
@@ -27256,7 +27266,7 @@ int CreateLightsWnd()
 				_ASSERT(0);
 				abort();
 			}
-			int result2 = s_polaryEdit[lightindex]->MakeSoftNumKey();
+			int result2 = s_polaryEdit[lightindex]->makeSoftNumKey();
 			if (result2 != 0) {
 				_ASSERT(0);
 				abort();
@@ -69553,9 +69563,15 @@ int CreateSprites()
 			L"MameMedia\\num8_48.png",
 			L"MameMedia\\num9_48.png",
 			L"MameMedia\\num_period_48.png",
-			L"MameMedia\\num_minus_48.png",
+			L"MameMedia\\num_signe_48.png",
 			L"MameMedia\\num_BS_48.png",
 			L"MameMedia\\num_Clear_48.png",
+			L"MameMedia\\num_cp1_48.png",
+			L"MameMedia\\num_cp2_48.png",
+			L"MameMedia\\num_cp3_48.png",
+			L"MameMedia\\num_ps1_48.png",
+			L"MameMedia\\num_ps2_48.png",
+			L"MameMedia\\num_ps3_48.png",
 			L"MameMedia\\num_close_48.png"
 		};
 		WCHAR filename_pushed[SKNUMBUTTON_MAX][MAX_PATH] = {
@@ -69570,12 +69586,28 @@ int CreateSprites()
 			L"MameMedia\\num8_48_pushed.png",
 			L"MameMedia\\num9_48_pushed.png",
 			L"MameMedia\\num_period_48_pushed.png",
-			L"MameMedia\\num_minus_48_pushed.png",
+			L"MameMedia\\num_signe_48_pushed.png",
 			L"MameMedia\\num_BS_48_pushed.png",
 			L"MameMedia\\num_Clear_48_pushed.png",
+			L"MameMedia\\num_cp1_48_pushed.png",
+			L"MameMedia\\num_cp2_48_pushed.png",
+			L"MameMedia\\num_cp3_48_pushed.png",
+			L"MameMedia\\num_ps1_48_pushed.png",
+			L"MameMedia\\num_ps2_48_pushed.png",
+			L"MameMedia\\num_ps3_48_pushed.png",
 			L"MameMedia\\num_close_48_pushed.png"
 		};
 
+		{
+			WCHAR pngpath[MAX_PATH];
+			swprintf_s(pngpath, MAX_PATH, L"%s%s", mpath, L"MameMedia\\num_BG_480x256.png");
+			g_numBG = new Gdiplus::Image(pngpath);
+			if (!g_numBG) {
+				_ASSERT(0);
+				PostQuitMessage(1);
+				return S_FALSE;
+			}
+		}
 		int numindex;
 		for (numindex = 0; numindex < SKNUMBUTTON_MAX; numindex++) {
 			WCHAR pngpath[MAX_PATH];

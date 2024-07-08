@@ -1827,7 +1827,7 @@ namespace OrgWinGUI{
 		
 	}
 
-	void OWP_EditBox::DestroySoftNumWnd()
+	void OWP_EditBox::destroySoftNumWnd()
 	{
 		//################
 		//static function
@@ -1848,7 +1848,7 @@ namespace OrgWinGUI{
 	}
 
 
-	int OWP_EditBox::MakeSoftNumKey() {
+	int OWP_EditBox::makeSoftNumKey() {
 		//################
 		//static function
 		//################
@@ -1865,7 +1865,7 @@ namespace OrgWinGUI{
 			GetModuleHandle(NULL),	//インスタンスハンドル
 			WindowPos(0, 0),
 			//WindowPos(0, 0),
-			WindowSize(48 * 11, 34 * 3),//サイズ
+			WindowSize(48 * 11, 34 * 4),//サイズ
 			_T("SoftKeyWnd"),	//タイトル
 			//g_mainhwnd,	//親ウィンドウハンドル
 			//s_3dwnd,
@@ -1889,7 +1889,7 @@ namespace OrgWinGUI{
 			s_psoftnumWnd->addParts(*s_psoftnumkey);
 
 
-			s_psoftnumWnd->setSize(WindowSize(48 * 11, 34 * 3));
+			s_psoftnumWnd->setSize(WindowSize(48 * 11, 34 * 4));
 			s_psoftnumWnd->setPos(WindowPos(0, 0));
 
 			//１クリック目問題対応
@@ -1959,7 +1959,7 @@ namespace OrgWinGUI{
 		}
 		return 0;
 	}
-	int OWP_EditBox::AddChar(WCHAR srcwc)
+	int OWP_EditBox::addChar(WCHAR srcwc)
 	{
 		if (name) {
 			if (*name != 0L) {
@@ -1978,7 +1978,7 @@ namespace OrgWinGUI{
 
 		return 0;
 	}
-	int OWP_EditBox::BackSpaceChar()
+	int OWP_EditBox::backSpaceChar()
 	{
 		if (name) {
 			if (*name != 0L) {
@@ -1993,7 +1993,7 @@ namespace OrgWinGUI{
 		}
 		return 0;
 	}
-	int OWP_EditBox::ClearChar()
+	int OWP_EditBox::clearChar()
 	{
 		if (name) {
 			if (*name != 0L) {
@@ -2002,6 +2002,57 @@ namespace OrgWinGUI{
 			}
 			else {
 			}
+		}
+		return 0;
+	}
+	int OWP_EditBox::invSigne()
+	{
+		if (name && (*name != 0L)) {
+			if (*name == TEXT('-')) {
+				//先頭文字が-の場合　-を取り除いて符号反転
+				WCHAR tmpstr[256] = { 0L };
+				ZeroMemory(tmpstr, sizeof(WCHAR) * 256);
+				wcscpy_s(tmpstr, 256, (name + 1));
+				tmpstr[255] = 0L;
+				wcscpy_s(name, 256, tmpstr);
+			}
+			else {
+				//先頭文字が-以外の場合　先頭に-を付けて符号反転
+				int orglen = (int)wcslen(name);
+				if ((orglen >= 0) && (orglen < (256 - 1))) {
+					WCHAR tmpstr[256] = { 0L };
+					ZeroMemory(tmpstr, sizeof(WCHAR) * 256);
+					wcscpy_s(tmpstr, 256, name);
+					tmpstr[255] = 0L;
+					*name = TEXT('-');//先頭に-
+					wcscpy_s(name + 1, 256, tmpstr);//２文字目以降に
+				}
+				else {
+					int dbgflag1 = 1;
+				}
+			}
+			callRewrite();
+		}
+		return 0;
+	}
+	std::wstring OWP_EditBox::getNameString()
+	{
+		wstring retstr;
+		if (name && (*name != 0L)) {
+			name[255] = 0L;
+			retstr = name;
+			return retstr;
+		}
+		else {
+			retstr = std::wstring(L"0");
+			return retstr;
+		}
+	}
+	int OWP_EditBox::setNameString(std::wstring srcstr)
+	{
+		if (name && srcstr.c_str() && (*srcstr.c_str() != 0L)) {
+			wcscpy_s(name, 256, srcstr.c_str());
+			callRewrite();
 		}
 		return 0;
 	}
@@ -2042,77 +2093,86 @@ namespace OrgWinGUI{
 				_beginthread(drawNumButtonUpThread, 0, (void*)this);
 
 				if (peditbox) {
-					bool minusflag = false;
-					bool bsflag = false;
-					bool clrflag = false;
-					bool closeflag = false;
-					WCHAR srcwc = 0L;
-					switch (pushnum) {
-					case SKNUMBUTTON_0:
-						srcwc = TEXT('0');
-						break;
-					case SKNUMBUTTON_1:
-						srcwc = TEXT('1');
-						break;
-					case SKNUMBUTTON_2:
-						srcwc = TEXT('2');
-						break;
-					case SKNUMBUTTON_3:
-						srcwc = TEXT('3');
-						break;
-					case SKNUMBUTTON_4:
-						srcwc = TEXT('4');
-						break;
-					case SKNUMBUTTON_5:
-						srcwc = TEXT('5');
-						break;
-					case SKNUMBUTTON_6:
-						srcwc = TEXT('6');
-						break;
-					case SKNUMBUTTON_7:
-						srcwc = TEXT('7');
-						break;
-					case SKNUMBUTTON_8:
-						srcwc = TEXT('8');
-						break;
-					case SKNUMBUTTON_9:
-						srcwc = TEXT('9');
-						break;
-					case SKNUMBUTTON_PERIOD:
-						srcwc = TEXT('.');
-						break;
-					case SKNUMBUTTON_MINUS:
-						srcwc = TEXT('-');
-						break;
-					case SKNUMBUTTON_BACKSPACE:
-						bsflag = true;
-						break;
-					case SKNUMBUTTON_CLEAR:
-						clrflag = true;
-						break;
-					case SKNUMBUTTON_CLOSE:
-						closeflag = true;
-						break;
-					default:
-						break;
+					if ((pushnum >= SKNUMBUTTON_0) && (pushnum <= SKNUMBUTTON_PERIOD)) {
+						WCHAR srcwc = 0L;
+						switch (pushnum) {
+						case SKNUMBUTTON_0:
+							srcwc = TEXT('0');
+							break;
+						case SKNUMBUTTON_1:
+							srcwc = TEXT('1');
+							break;
+						case SKNUMBUTTON_2:
+							srcwc = TEXT('2');
+							break;
+						case SKNUMBUTTON_3:
+							srcwc = TEXT('3');
+							break;
+						case SKNUMBUTTON_4:
+							srcwc = TEXT('4');
+							break;
+						case SKNUMBUTTON_5:
+							srcwc = TEXT('5');
+							break;
+						case SKNUMBUTTON_6:
+							srcwc = TEXT('6');
+							break;
+						case SKNUMBUTTON_7:
+							srcwc = TEXT('7');
+							break;
+						case SKNUMBUTTON_8:
+							srcwc = TEXT('8');
+							break;
+						case SKNUMBUTTON_9:
+							srcwc = TEXT('9');
+							break;
+						case SKNUMBUTTON_PERIOD:
+							srcwc = TEXT('.');
+							break;
+						default:
+							_ASSERT(0);
+							srcwc = 0L;
+							break;
+						}
+						if (srcwc != 0L) {
+							peditbox->addChar(srcwc);
+						}
 					}
-
-					if (closeflag) {
+					else if (pushnum == SKNUMBUTTON_SIGNE) {
+						peditbox->invSigne();
+					}
+					else if (pushnum == SKNUMBUTTON_BACKSPACE) {
+						peditbox->backSpaceChar();
+					}
+					else if (pushnum == SKNUMBUTTON_CLEAR) {
+						peditbox->clearChar();
+					}
+					else if (pushnum == SKNUMBUTTON_CLOSE) {
 						if (getParent()) {
 							getParent()->setVisible(false);//2024/07/08 閉じるボタン
 							return;
 						}
 					}
+					else if (pushnum == SKNUMBUTTON_CP1) {
+						copymap[0] = peditbox->getNameString();
+					}
+					else if (pushnum == SKNUMBUTTON_CP2) {
+						copymap[1] = peditbox->getNameString();
+					}
+					else if (pushnum == SKNUMBUTTON_CP3) {
+						copymap[2] = peditbox->getNameString();
+					}
+					else if (pushnum == SKNUMBUTTON_PS1) {
+						peditbox->setNameString(copymap[0]);
+					}
+					else if (pushnum == SKNUMBUTTON_PS2) {
+						peditbox->setNameString(copymap[1]);
+					}
+					else if (pushnum == SKNUMBUTTON_PS3) {
+						peditbox->setNameString(copymap[2]);
+					}
 					else {
-						if (srcwc != 0L) {
-							peditbox->AddChar(srcwc);
-						}
-						else if (bsflag) {
-							peditbox->BackSpaceChar();
-						}
-						else if (clrflag) {
-							peditbox->ClearChar();
-						}
+						_ASSERT(0);
 					}
 				}
 

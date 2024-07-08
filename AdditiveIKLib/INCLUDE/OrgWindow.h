@@ -7,6 +7,7 @@
 #include <list>
 #include <map>
 #include <string>
+#include <corecrt_wstring.h>
 #include <process.h>
 #include <functional>
 #include <vector>
@@ -58,6 +59,7 @@ extern Gdiplus::Image* g_playerbutton_target26;
 extern Gdiplus::Image* g_playerbutton_target_inv26;
 extern Gdiplus::Image* g_playerbutton_target40;
 extern Gdiplus::Image* g_playerbutton_target_inv40;
+extern Gdiplus::Image* g_numBG;
 extern Gdiplus::Image* g_numbutton[SKNUMBUTTON_MAX];
 extern Gdiplus::Image* g_numbutton_pushed[SKNUMBUTTON_MAX];
 
@@ -89,7 +91,10 @@ class CRMenuMain;
 
 static int DrawGdiplusButton(Gdiplus::Image* srcimage, HDC srchdc,
 	int drawposx, int drawposy, int drawwidth, int drawheight, float srcalpha);
-int DrawGdiplusButton(Gdiplus::Image* srcimage, HDC srchdc, 
+static int DrawGdiplusButtonStretch(Gdiplus::Image* srcimage, HDC srchdc,
+	int drawposx, int drawposy, 
+	int srcw, int srch, int dstw, int dsth, float srcalpha);
+int DrawGdiplusButton(Gdiplus::Image* srcimage, HDC srchdc,
 	int drawposx, int drawposy, int drawwidth, int drawheight, float srcalpha)
 {
 	if (!srcimage) {
@@ -114,6 +119,42 @@ int DrawGdiplusButton(Gdiplus::Image* srcimage, HDC srchdc,
 		attr.SetColorMatrix(&cmat);
 		gdipg->DrawImage(srcimage, Gdiplus::Rect(drawposx, drawposy, drawwidth, drawheight),
 			0, 0, drawwidth, drawheight,
+			Gdiplus::UnitPixel, &attr, NULL, NULL);
+		delete gdipg;
+	}
+	return 0;
+}
+int DrawGdiplusButtonStretch(Gdiplus::Image* srcimage, HDC srchdc,
+	int dstx, int dsty,
+	int srcw, int srch, int dstw, int dsth, float srcalpha)
+{
+	if (!srcimage) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (srchdc == NULL) {
+		_ASSERT(0);
+		return 1;
+	}
+	if ((srcw <= 0) || (srch <= 0) || (dstw <= 0) || (dsth <= 0)) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	Gdiplus::Graphics* gdipg = new Gdiplus::Graphics(srchdc);
+	if (gdipg) {
+		Gdiplus::ImageAttributes attr;
+		Gdiplus::ColorMatrix cmat = {
+			1.0f, 0.0f, 0.0f, 0.0f, 0.0f,   // Red
+			0.0f, 1.0f, 0.0f, 0.0f, 0.0f,   // Green
+			0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // Blue
+			0.0f, 0.0f, 0.0f, srcalpha, 0.0f,   // Alpha (70%)
+			0.0f, 0.0f, 0.0f, 0.0f, 1.0f    // must be 1
+		};
+		attr.SetColorMatrix(&cmat);
+		gdipg->DrawImage(srcimage, Gdiplus::Rect(dstx, dsty, dstw, dsth),
+			0, 0, srcw, srch,
 			Gdiplus::UnitPixel, &attr, NULL, NULL);
 		delete gdipg;
 	}
@@ -3994,6 +4035,10 @@ void s_dummyfunc()
 			}
 			pushnum = 0;
 			peditbox = nullptr;
+
+			copymap[0] = std::wstring(L"0");
+			copymap[1] = std::wstring(L"0");
+			copymap[2] = std::wstring(L"0");
 		}
 		~OWP_SoftNumKey() {
 		}
@@ -4002,7 +4047,7 @@ void s_dummyfunc()
 		{
 			WindowPos retpos;
 
-			if ((buttonno >= SKNUMBUTTON_0) && (buttonno < SKNUMBUTTON_MAX)) {
+			if ((buttonno >= SKNUMBUTTON_0) && (buttonno < SKNUMBUTTON_CLOSE)) {
 				int lineindex;
 				lineindex = buttonno / 10;
 				int leftindex = buttonno - lineindex * 10;
@@ -4012,6 +4057,20 @@ void s_dummyfunc()
 				int pos1y = pos.y + lineindex * PNG_H;
 				int pos2x = OFFSET_X + pos.x + PNG_W * (leftindex + 1);
 				int pos2y = pos.y + (lineindex + 1) * PNG_H;
+
+				retpos.x = pos1x;
+				retpos.y = pos1y;
+			}
+			else if (buttonno == SKNUMBUTTON_CLOSE) {
+				//閉じるボタンは３段目の一番右
+				int lineindex = 2;
+				int leftindex = 9;
+				int offsety = 15;
+
+				int pos1x = OFFSET_X + pos.x + PNG_W * leftindex;
+				int pos1y = pos.y + lineindex * PNG_H + offsety;
+				int pos2x = OFFSET_X + pos.x + PNG_W * (leftindex + 1);
+				int pos2y = pos.y + (lineindex + 1) * PNG_H + offsety;
 
 				retpos.x = pos1x;
 				retpos.y = pos1y;
@@ -4035,12 +4094,16 @@ void s_dummyfunc()
 		{
 			if (getParent() && (srcnum >= SKNUMBUTTON_0) && (srcnum < SKNUMBUTTON_MAX)) {
 				if (pushed) {
-					DrawGdiplusButton(g_numbutton_pushed[srcnum], hdcM->hDC,
-						srcpos.x, srcpos.y, PNG_W, PNG_H, 1.0);
+					if (g_numbutton_pushed[srcnum]) {
+						DrawGdiplusButton(g_numbutton_pushed[srcnum], hdcM->hDC,
+							srcpos.x, srcpos.y, PNG_W, PNG_H, 1.0);
+					}
 				}
 				else {
-					DrawGdiplusButton(g_numbutton[srcnum], hdcM->hDC,
-						srcpos.x, srcpos.y, PNG_W, PNG_H, 1.0);
+					if (g_numbutton[srcnum]) {
+						DrawGdiplusButton(g_numbutton[srcnum], hdcM->hDC,
+							srcpos.x, srcpos.y, PNG_W, PNG_H, 1.0);
+					}
 				}
 			}
 			return 0;
@@ -4049,7 +4112,8 @@ void s_dummyfunc()
 		//////////////////////////// Method //////////////////////////////
 		/// Method : 自動サイズ設定
 		virtual void autoResize() {
-			size.y = PNG_H * 2;
+			int closeoffsety = 15;
+			size.y = PNG_H * 3 + closeoffsety;//!!!!!!!!!!!!!
 		};
 		//	Method : 描画
 		virtual void draw() {
@@ -4060,6 +4124,14 @@ void s_dummyfunc()
 			drawEdge();
 
 
+			//ソフトNumKeyの背景画像を描画
+			if (getParent() && g_numBG) {
+				WindowSize bgsize = getParent()->getSize();
+				DrawGdiplusButtonStretch(g_numBG, hdcM->hDC,
+					0, 0, 480, 256, bgsize.x, bgsize.y, 1.0);
+			}
+
+			//NumKeyのキー画像を描画
 			for (int i = SKNUMBUTTON_0; i < SKNUMBUTTON_MAX; i++) {
 				WindowPos numkeypos = getButtonPos(i);
 				WindowSize numkeysize = getButtonSize(i);
@@ -4143,6 +4215,8 @@ void s_dummyfunc()
 
 		OWP_EditBox* peditbox;
 
+		std::map<int, std::wstring> copymap;
+
 		//////////////////////////// Method //////////////////////////////
 		//	Method : ボタンアップのスレッド
 		static void drawNumButtonUpThread(LPVOID pParam) {
@@ -4197,12 +4271,15 @@ void s_dummyfunc()
 		}
 		~OWP_EditBox();
 
-		static int MakeSoftNumKey();
-		static void DestroySoftNumWnd();
+		static int makeSoftNumKey();
+		static void destroySoftNumWnd();
 
-		int AddChar(WCHAR srcwc);
-		int BackSpaceChar();
-		int ClearChar();
+		int addChar(WCHAR srcwc);
+		int backSpaceChar();
+		int clearChar();
+		int invSigne();
+		std::wstring getNameString();
+		int setNameString(std::wstring srcstr);
 
 		//////////////////////////// Method //////////////////////////////
 		/// Method : 自動サイズ設定
