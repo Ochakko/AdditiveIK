@@ -8902,21 +8902,27 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		//}
 		else if (menuid == (ID_RMENU_0 + MENUOFFSET_BONERCLICK)) {
 			//新規
-			GUIMenuSetVisible(-1, -1);
+			//GUIMenuSetVisible(-1, -1);
+			bool closefirstrow = true;
+			CloseAllRightPainWindow(closefirstrow);//対応ウインドウを開く前に　１段目と２段目を全部閉じる
 			int currigno = -1;
 			DispCustomRigDlg(currigno);
 		}
 		else if ((menuid >= (ID_RMENU_0 + MAXRIGNUM + MENUOFFSET_BONERCLICK)) && (menuid < (ID_RMENU_0 + MAXRIGNUM * 2 + MENUOFFSET_BONERCLICK))) {
 			//設定
-			GUIMenuSetVisible(-1, -1);
+			//GUIMenuSetVisible(-1, -1);
+			bool closefirstrow = true;
+			CloseAllRightPainWindow(closefirstrow);//対応ウインドウを開く前に　１段目と２段目を全部閉じる
 			int currigno = s_customrigmenuindex[menuid - (ID_RMENU_0 + MAXRIGNUM) - MENUOFFSET_BONERCLICK];
 			DispCustomRigDlg(currigno);
 		}
 		else if ((menuid >= (ID_RMENU_0 + MAXRIGNUM * 2 + MENUOFFSET_BONERCLICK)) && (menuid < (ID_RMENU_0 + MAXRIGNUM * 3 + MENUOFFSET_BONERCLICK))) {
 			//実行
 			int currigno = s_customrigmenuindex[menuid - (ID_RMENU_0 + MAXRIGNUM * 2) - MENUOFFSET_BONERCLICK];
-			//Bone2CustomRig(currigno);
-			GUIMenuSetVisible(-1, -1);
+			////Bone2CustomRig(currigno);
+			//GUIMenuSetVisible(-1, -1);
+			bool closefirstrow = true;
+			CloseAllRightPainWindow(closefirstrow);//対応ウインドウを開く前に　１段目と２段目を全部閉じる
 			DispCustomRigDlg(currigno);//2024/01/21 設定ダイアログ表示をピックしたリグの内容に更新
 			if (s_customrigbone) {
 				s_oprigflag = 1;
@@ -34723,7 +34729,9 @@ int OnFrameToolWnd()
 
 	if (s_selCopyHisotryFlag) {
 
-		GUIMenuSetVisible(-1, -1);
+		//GUIMenuSetVisible(-1, -1);
+		bool closefirstrow = true;
+		CloseAllRightPainWindow(closefirstrow);//対応ウインドウを開く前に　１段目と２段目を全部閉じる
 		if (s_model) {
 			int result1 = GetCPTFileName(s_cptfilename);
 			_ASSERT(result1 == 0);
@@ -47966,6 +47974,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	menuid = LOWORD(wParam);
 
 	LRESULT lret = 0;
+	bool closefirstrow = true;
 
 	switch (uMsg)
 	{
@@ -48194,12 +48203,16 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				//return 0;
 				break;
 			case ID_40049:
-				GUIMenuSetVisible(-1, -1);
+				//GUIMenuSetVisible(-1, -1);
+				closefirstrow = true;
+				CloseAllRightPainWindow(closefirstrow);//対応ウインドウを開く前に　１段目と２段目を全部閉じる
 				DispAngleLimitDlg();
 				//return 0;
 				break;
 			case ID_40050:
-				GUIMenuSetVisible(-1, -1);
+				//GUIMenuSetVisible(-1, -1);
+				closefirstrow = true;
+				CloseAllRightPainWindow(closefirstrow);//対応ウインドウを開く前に　１段目と２段目を全部閉じる
 				DispRotAxisDlg();
 				//return 0;
 				break;
@@ -50087,17 +50100,16 @@ void ShowDampAnimWnd(bool srcflag)
 void GUIMenuSetVisible(int srcmenukind, int srcplateno)
 {
 
-	bool closefirstrow;
-	if (s_guiswflag && (s_guiswplateno == 2)) {
-		//2024/07/02 CameraAndIKメニュークリック時には１段目のウインドウを閉じない
-		closefirstrow = false;
-	}
-	else {
-		closefirstrow = true;
-	}
-	CloseAllRightPainWindow(closefirstrow);//対応ウインドウを開く前に　全部閉じる
-
 	if (s_guiswflag) {
+		bool closefirstrow;
+		if (s_guiswplateno == 2) {
+			closefirstrow = false;
+		}
+		else {
+			closefirstrow = true;
+		}
+		CloseAllRightPainWindow(closefirstrow);//対応ウインドウを開く前に　１段目と２段目を全部閉じる
+
 		//１段目メニュー
 		if ((s_guiswplateno > 1) && (s_guiswplateno < (SPGUISWNUM + 2))) {
 			GUISetVisible(s_guiswplateno);//((spgno == 0) && (spgno < SPGUISWNUM))でGUISetVisible(spgno + 2)でGUISetVisible(1)はPlaceFolderWindow用
@@ -50111,6 +50123,10 @@ void GUIMenuSetVisible(int srcmenukind, int srcplateno)
 		}
 	}
 	else if ((srcmenukind >= SPPLATEMENUKIND_DISP) && (srcmenukind <= SPPLATEMENUKIND_EFFECT)) {
+		bool closefirstrow = true;
+		CloseAllRightPainWindow(closefirstrow);//対応ウインドウを開く前に　１段目と２段目を全部閉じる
+
+
 		//#####################
 		//プレートメニュー更新
 		//#####################
@@ -59258,8 +59274,10 @@ int PickRigBone(UIPICKINFO* ppickinfo, bool forrigtip, int* dstrigno)//default:f
 									}
 									ChangeCurrentBone(true);//2021/11/19
 
-									//Bone2CustomRig(rigno);
-									GUIMenuSetVisible(-1, -1);
+									////Bone2CustomRig(rigno);
+									//GUIMenuSetVisible(-1, -1);
+									bool closefirstrow = true;
+									CloseAllRightPainWindow(closefirstrow);//対応ウインドウを開く前に　１段目と２段目を全部閉じる
 									DispCustomRigDlg(rigno);//2024/01/21 設定ダイアログ表示をピックしたリグの内容に更新
 								}
 								else {
@@ -68559,7 +68577,9 @@ int ShowMaterialRateDlg()
 int ShowCameraDollyDlg()
 {
 
-	GUIMenuSetVisible(-1, -1);
+	//GUIMenuSetVisible(-1, -1);
+	bool closefirstrow = true;
+	CloseAllRightPainWindow(closefirstrow);//対応ウインドウを開く前に　１段目と２段目を全部閉じる
 
 	std::vector<DOLLYELEM> vecdolly;
 	vecdolly.clear();
@@ -71237,6 +71257,10 @@ void CloseTheFirstRowGUI()
 	ShowGUIDlgBullet(false);
 	ShowGUIDlgLOD(false);
 	ShowGUIDlgBlendShape(false);
+
+	if (s_placefolderWnd) {
+		s_placefolderWnd->setVisible(false);//2024/07/09
+	}
 }
 
 int UpdateTopPosText()
