@@ -9780,7 +9780,12 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						s_spaxis[spakind - PICK_SPA_X].ButtonDown();
 					}
 
-					if (g_edittarget != EDITTARGET_CAMERA) {
+					if (g_edittarget == EDITTARGET_MORPH) {
+						RollbackCurBoneNo();
+						s_pickinfo.buttonflag = spakind;
+						s_pickinfo.pickobjno = s_curboneno;
+					}
+					else if (g_edittarget == EDITTARGET_BONE) {
 						if (s_saveboneno >= 0) {
 							RollbackCurBoneNo();
 							s_pickinfo.buttonflag = spakind;
@@ -9797,7 +9802,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							//	ToggleRig();
 						}
 					}
-					else {
+					else if (g_edittarget == EDITTARGET_CAMERA) {
 						int cameramotid = 0;
 						int cameraframeleng = 100;
 						CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);
@@ -9841,11 +9846,12 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						//}
 
 						s_pickinfo.buttonflag = PICK_CENTER;//!!!!!!!!!!!!!
-						//g_underIKRot = true;
-						//g_underIKRotApplyFrame = true;
-						s_model->SetUnderIKRot(true);
-						s_model->SetUnderIKRotApplyFrame(true);
-
+						if (g_edittarget == EDITTARGET_BONE) {
+							//g_underIKRot = true;
+							//g_underIKRotApplyFrame = true;
+							s_model->SetUnderIKRot(true);
+							s_model->SetUnderIKRotApplyFrame(true);
+						}
 
 						//IK中は30fpsにする
 						//IK中の描画回数が多いと　IKROTRECの保存数が多すぎて
@@ -9865,10 +9871,12 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						bool pickring = false;
 						int pickmanipulator = PickManipulator(&s_pickinfo, pickring);
 						if (pickmanipulator >= 0) {
-							//g_underIKRot = true;
-							//g_underIKRotApplyFrame = true;
-							s_model->SetUnderIKRot(true);
-							s_model->SetUnderIKRotApplyFrame(true);
+							if (g_edittarget == EDITTARGET_BONE) {
+								//g_underIKRot = true;
+								//g_underIKRotApplyFrame = true;
+								s_model->SetUnderIKRot(true);
+								s_model->SetUnderIKRotApplyFrame(true);
+							}
 
 							//IK中は30fpsにする
 							//IK中の描画回数が多いと　IKROTRECの保存数が多すぎて
@@ -9892,10 +9900,12 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						s_pickinfo.pickobjno = savecurboneno;
 					}
 					else {
-						//g_underIKRot = true;
-						//g_underIKRotApplyFrame = true;
-						s_model->SetUnderIKRot(true);
-						s_model->SetUnderIKRotApplyFrame(true);
+						if (g_edittarget == EDITTARGET_BONE) {
+							//g_underIKRot = true;
+							//g_underIKRotApplyFrame = true;
+							s_model->SetUnderIKRot(true);
+							s_model->SetUnderIKRotApplyFrame(true);
+						}
 
 						//IK中は30fpsにする
 						//IK中の描画回数が多いと　IKROTRECの保存数が多すぎて
@@ -10287,14 +10297,13 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			UpdateEditedEuler();
 			//refreshEulerGraph();
 
-
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-
-			s_pickinfo.buttonflag = 0;
-			s_ikcnt = 0;
-			s_onragdollik = 0;
+			//2024/07/09 場所移動　undoFlag, redoFlagによらずに実行するべき
+			//if (oldcursor != NULL) {
+			//	SetCursor(oldcursor);
+			//}
+			//s_pickinfo.buttonflag = 0;
+			//s_ikcnt = 0;
+			//s_onragdollik = 0;
 
 			//if ((s_editmotionflag >= 0) || (g_btsimurecflag == true)) {
 			if (ikdoneflag || (g_btsimurecflag == true)) {
@@ -10302,6 +10311,15 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 
 		}
+
+
+		if (oldcursor != NULL) {
+			SetCursor(oldcursor);
+		}
+		s_pickinfo.buttonflag = 0;
+		s_ikcnt = 0;
+		s_onragdollik = 0;
+
 
 		//else {//2024/06/18 OnFrameToolWnd()に移動
 		//	s_pickinfo.buttonflag = 0;
@@ -33676,7 +33694,10 @@ int OnFrameTimeLineWnd()
 			//else if (g_edittarget == EDITTARGET_BONE) {//bone-->camera-->morph-->"bone"
 			else {
 				//undo時　bone-->morph-->"camera"でもmorphウインドウが閉じるように
-				s_guiswflag = false;
+				//2024/07/09　起動直後のプロジェクト読み込み後は　ショートカット一覧(メニュー１段目)が表示されるように
+				if (s_spguisw[SPGUISW_BLENDSHAPE].state) {//2024/07/09
+					s_guiswflag = false;
+				}
 				GUIMenuSetVisible(s_platemenukind, s_platemenuno);
 			}
 			if (s_model) {
@@ -48796,7 +48817,7 @@ int OnMouseMoveFunc()
 
 		}
 	}
-	else if (s_pickinfo.buttonflag == PICK_CENTER) {
+	else if ((s_pickinfo.pickobjno >= 0) && (s_pickinfo.buttonflag == PICK_CENTER)) {
 		if (s_model) {
 			if (g_previewFlag == 0) {
 
@@ -48809,7 +48830,13 @@ int OnMouseMoveFunc()
 				ChaVector3 tmpsc;
 				s_model->TransformBone(s_pickinfo.winx, s_pickinfo.winy, s_curboneno, &s_pickinfo.objworld, &tmpsc, &s_pickinfo.objscreen);
 
-				if (g_edittarget != EDITTARGET_CAMERA) {
+				if (g_edittarget == EDITTARGET_MORPH) {
+					//::MessageBox(s_3dwnd, L"EdittingMorph mode now. \nClick red frog and change graph mode!", 
+					//	L"Current mode is not for editing BoneMotion.", MB_OK);
+					OutputToInfoWnd(L"### EdittingMorph mode now. ###");
+					OutputToInfoWnd(L"### Click red frog and change graph mode! ###");
+				}
+				else if (g_edittarget == EDITTARGET_BONE) {
 					if (s_model && ChkEnableIK()) {
 						if (s_oprigflag == 0) {
 							ChaVector3 targetpos(0.0f, 0.0f, 0.0f);
@@ -48883,7 +48910,9 @@ int OnMouseMoveFunc()
 			}
 		}
 	}
-	else if ((s_pickinfo.buttonflag == PICK_X) || (s_pickinfo.buttonflag == PICK_Y) || (s_pickinfo.buttonflag == PICK_Z)) {
+	else if ((s_pickinfo.pickobjno >= 0) && 
+		((s_pickinfo.buttonflag == PICK_X) || (s_pickinfo.buttonflag == PICK_Y) || (s_pickinfo.buttonflag == PICK_Z))
+		) {
 		if (s_model) {
 			if (g_previewFlag == 0) {
 				s_pickinfo.mousebefpos = s_pickinfo.mousepos;
@@ -48901,7 +48930,13 @@ int OnMouseMoveFunc()
 						deltax *= 0.250f;
 					}
 
-					if (g_edittarget != EDITTARGET_CAMERA) {
+					if (g_edittarget == EDITTARGET_MORPH) {
+						//::MessageBox(s_3dwnd, L"EdittingMorph mode now. \nClick red frog and change graph mode!",
+						//	L"Current mode is not for editing BoneMotion.", MB_OK);
+						OutputToInfoWnd(L"### EdittingMorph mode now. ###");
+						OutputToInfoWnd(L"### Click red frog and change graph mode! ###");
+					}
+					else if (g_edittarget == EDITTARGET_BONE) {
 						if (ChkEnableIK()) {
 							if (s_ikkind == 0) {
 								s_editmotionflag = s_model->IKRotateAxisDeltaUnderIK(
@@ -48930,7 +48965,7 @@ int OnMouseMoveFunc()
 							}
 						}
 					}
-					else {
+					else if (g_edittarget == EDITTARGET_CAMERA) {
 						OnCameraAnimMouseMove(s_ikkind, s_pickinfo.buttonflag, deltax);
 					}
 					s_befdeltax = deltax;
@@ -48945,7 +48980,9 @@ int OnMouseMoveFunc()
 			}
 		}
 	}
-	else if ((s_pickinfo.buttonflag == PICK_SPA_X) || (s_pickinfo.buttonflag == PICK_SPA_Y) || (s_pickinfo.buttonflag == PICK_SPA_Z)) {
+	else if ((s_pickinfo.pickobjno >= 0) && 
+		((s_pickinfo.buttonflag == PICK_SPA_X) || (s_pickinfo.buttonflag == PICK_SPA_Y) || (s_pickinfo.buttonflag == PICK_SPA_Z))
+		) {
 
 		//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 2");
 
@@ -48976,7 +49013,13 @@ int OnMouseMoveFunc()
 
 					//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 4");
 
-					if (g_edittarget != EDITTARGET_CAMERA) {
+					if (g_edittarget == EDITTARGET_MORPH) {
+						//::MessageBox(s_3dwnd, L"EdittingMorph mode now. \nClick red frog and change graph mode!",
+						//	L"Current mode is not for editing BoneMotion.", MB_OK);
+						OutputToInfoWnd(L"### EdittingMorph mode now. ###");
+						OutputToInfoWnd(L"### Click red frog and change graph mode! ###");
+					}
+					else if (g_edittarget == EDITTARGET_BONE) {
 						if (ChkEnableIK()) {
 							if (s_ikkind == 0) {
 								s_editmotionflag = s_model->IKRotateAxisDeltaUnderIK(
@@ -49006,7 +49049,7 @@ int OnMouseMoveFunc()
 							}
 						}
 					}
-					else {
+					else if (g_edittarget == EDITTARGET_CAMERA) {
 						//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 5");
 						OnCameraAnimMouseMove(s_ikkind, buttonflagForIkFunc, deltax);
 					}
