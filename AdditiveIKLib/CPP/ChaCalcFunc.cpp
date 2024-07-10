@@ -2150,7 +2150,7 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, bool directsetfl
 		}
 
 		if (infooutflag == true) {
-			OutputToInfoWnd(L"CBone::SetWorldMat : %s : frame %5.1lf : neweul [%f, %f, %f] : ismovable %d", srcbone->GetWBoneName(), roundingframe, neweul.x, neweul.y, neweul.z, ismovable);
+			OutputToInfoWnd(INFOCOLOR_INFO, L"CBone::SetWorldMat : %s : frame %5.1lf : neweul [%f, %f, %f] : ismovable %d", srcbone->GetWBoneName(), roundingframe, neweul.x, neweul.y, neweul.z, ismovable);
 		}
 
 		if (onlycheck == 0) {

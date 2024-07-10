@@ -27,7 +27,7 @@
 	int OpenDbgFile(int srcappcnt);
 	int CloseDbgFile();
 
-	void OutputToInfoWnd(const WCHAR* lpFormat, ...);
+	void OutputToInfoWnd(int infocolor, const WCHAR* lpFormat, ...);
 
 #else
 	extern HANDLE dbgfile;
@@ -40,6 +40,6 @@
 	extern void ErrorMessage(const char* szMessage, HRESULT hr);
 	extern int OpenDbgFile(int srcappcnt);
 	extern int CloseDbgFile();
-	extern void OutputToInfoWnd(const WCHAR* lpFormat, ...);
+	extern void OutputToInfoWnd(int infocolor, const WCHAR* lpFormat, ...);
 #endif
 

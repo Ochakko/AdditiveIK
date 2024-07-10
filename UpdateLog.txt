@@ -2,6 +2,17 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/07/10
+　InfoWindow(３Dウインドウとロングタイムラインの間に位置するウインドウ)に関する修正
+　　出力文字色をINFO(white), WARNING(blue), ERROR(red)の３種類に
+
+
+
+　予定
+　　プレートメニューを押したときに右ペインに出すウインドウは全てOWPにしていく”予定”
+
+
+
 2024/07/09
 　SoftNumKey修正
 　　数字キー以外の画像に色を付けて識別しやすく
@@ -22,12 +33,6 @@ https://github.com/Ochakko/AdditiveIK
 　　　ショートカット一覧ウインドウが表示されている状態から、CustomRigウインドウやカメラ履歴ウインドウを表示しようとしても表示されなかった
 　　　ショートカット一覧ウインドウの閉じ忘れが原因
 　　　ver1.0.0.26からの不具合
-
-
-
-　予定
-　　プレートメニューを押したときに右ペインに出すウインドウは全てOWPにしていく”予定”
-
 
 
 

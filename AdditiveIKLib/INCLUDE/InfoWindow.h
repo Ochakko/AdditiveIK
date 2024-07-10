@@ -10,6 +10,8 @@
 
 #include <OrgWindow.h>
 
+#include <map>
+
 //1行の長さ
 #define INFOWINDOWLINEW	300
 
@@ -28,7 +30,7 @@ public:
 	~CInfoWindow();
 
 	int CreateInfoWindow(HWND srcparentwnd, int srcposx, int srcposy, int srcwidth, int srcheight);
-	int OutputInfo(const WCHAR* lpFormat, ...);
+	int OutputInfo(int infocolor, const WCHAR* lpFormat, ...);
 
 
 	void UpdateWindow();
@@ -54,7 +56,8 @@ private:
 
 	//WCHAR m_stroutput[INFOWINDOWLINEH][INFOWINDOWLINEW];
 	WCHAR* m_stroutput;
-	
+	std::map<int, int> m_infocolorvec;
+
 	int m_dataindex;//データ格納位置
 	int m_viewindex;//表示開始位置
 	bool m_isfirstoutput;//最初のデータ格納かどうか

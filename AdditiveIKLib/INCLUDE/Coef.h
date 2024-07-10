@@ -131,6 +131,17 @@ class CMQOMaterial;
 #define MAXRIGNUM	10
 #define MAXRIGELEMNUM	5
 
+
+
+enum //dbg.cpp OutputToInfoWnd(INFOCOLOR_INFO, )用 
+{
+	INFOCOLOR_INFO,
+	INFOCOLOR_WARNING,
+	INFOCOLOR_ERROR,
+	INFOCOLOR_MAX
+};
+
+
 enum 
 {
 	SKNUMBUTTON_0,

@@ -17,7 +17,7 @@
 #include <InfoWindow.h>
 
 //Global Func
-void OutputToInfoWnd(const WCHAR* lpFormat, ...)
+void OutputToInfoWnd(int infocolor, const WCHAR* lpFormat, ...)
 {
 	if (g_infownd) {
 		int ret;
@@ -42,7 +42,7 @@ void OutputToInfoWnd(const WCHAR* lpFormat, ...)
 			swprintf_s(strlineno, L"L%d", g_infownd->GetDataIndex() + 1);
 		}
 
-		g_infownd->OutputInfo(L"%s: %s", strlineno, outchar);
+		g_infownd->OutputInfo(infocolor, L"%s: %s", strlineno, outchar);
 		g_infownd->UpdateWindow();
 
 	}

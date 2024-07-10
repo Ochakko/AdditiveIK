@@ -48714,11 +48714,11 @@ CInfoWindow* CreateInfoWnd()
 		if (ret == 0) {
 			g_infownd = newinfownd;
 
-			//OutputToInfoWnd(L"InfoWindow initialized 1");
-			OutputToInfoWnd(L"Upper to lower, older to newer. Limit to 6,000 lines.");
-			OutputToInfoWnd(L"Scroll is enable by mouse wheel.");
-			OutputToInfoWnd(L"If the most newest line is shown at lowest position, AutoScroll works.Save to info_(date).txt on exit.");
-			OutputToInfoWnd(L"上：古,下：新。6,000行。ホイールでスクロール。一番新しいものを表示している時AutoScroll。終了時にinfo_日時.txtにセーブ。");
+			//OutputToInfoWnd(INFOCOLOR_INFO, L"InfoWindow initialized 1");
+			OutputToInfoWnd(INFOCOLOR_INFO, L"Upper to lower, older to newer. Limit to 6,000 lines.");
+			OutputToInfoWnd(INFOCOLOR_INFO, L"Scroll is enable by mouse wheel.");
+			OutputToInfoWnd(INFOCOLOR_INFO, L"If the most newest line is shown at lowest position, AutoScroll works.Save to info_(date).txt on exit.");
+			OutputToInfoWnd(INFOCOLOR_INFO, L"上：古,下：新。6,000行。ホイールでスクロール。一番新しいものを表示している時AutoScroll。終了時にinfo_日時.txtにセーブ。");
 		}
 
 	}
@@ -48769,7 +48769,7 @@ void RecalcAxisX_All()
 
 int OnMouseMoveFunc()
 {
-	//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 0");
+	//OutputToInfoWnd(INFOCOLOR_INFO, L"AdditiveIK.cpp : MouseMoveFunc 0");
 
 	static bool s_doingflag = false;
 	if (s_doingflag == true) {
@@ -48777,7 +48777,7 @@ int OnMouseMoveFunc()
 	}
 	s_doingflag = true;
 
-	//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 1");
+	//OutputToInfoWnd(INFOCOLOR_INFO, L"AdditiveIK.cpp : MouseMoveFunc 1");
 
 	if (g_graphicsEngine) {
 		s_pickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
@@ -48846,8 +48846,8 @@ int OnMouseMoveFunc()
 				if (g_edittarget == EDITTARGET_MORPH) {
 					//::MessageBox(s_3dwnd, L"EdittingMorph mode now. \nClick red frog and change graph mode!", 
 					//	L"Current mode is not for editing BoneMotion.", MB_OK);
-					OutputToInfoWnd(L"### EdittingMorph mode now. ###");
-					OutputToInfoWnd(L"### Click red frog and change graph mode! ###");
+					OutputToInfoWnd(INFOCOLOR_WARNING, L"### EdittingMorph mode now. ###");
+					OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change graph mode! ###");
 				}
 				else if (g_edittarget == EDITTARGET_BONE) {
 					if (s_model && ChkEnableIK()) {
@@ -48946,8 +48946,8 @@ int OnMouseMoveFunc()
 					if (g_edittarget == EDITTARGET_MORPH) {
 						//::MessageBox(s_3dwnd, L"EdittingMorph mode now. \nClick red frog and change graph mode!",
 						//	L"Current mode is not for editing BoneMotion.", MB_OK);
-						OutputToInfoWnd(L"### EdittingMorph mode now. ###");
-						OutputToInfoWnd(L"### Click red frog and change graph mode! ###");
+						OutputToInfoWnd(INFOCOLOR_WARNING, L"### EdittingMorph mode now. ###");
+						OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change graph mode! ###");
 					}
 					else if (g_edittarget == EDITTARGET_BONE) {
 						if (ChkEnableIK()) {
@@ -48997,7 +48997,7 @@ int OnMouseMoveFunc()
 		((s_pickinfo.buttonflag == PICK_SPA_X) || (s_pickinfo.buttonflag == PICK_SPA_Y) || (s_pickinfo.buttonflag == PICK_SPA_Z))
 		) {
 
-		//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 2");
+		//OutputToInfoWnd(INFOCOLOR_INFO, L"AdditiveIK.cpp : MouseMoveFunc 2");
 
 		if (s_model) {
 			if (g_previewFlag == 0) {
@@ -49015,7 +49015,7 @@ int OnMouseMoveFunc()
 				ChaVector3 tmpsc;
 				s_model->TransformBone(s_pickinfo.winx, s_pickinfo.winy, s_curboneno, &s_pickinfo.objworld, &tmpsc, &s_pickinfo.objscreen);
 
-				//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 3");
+				//OutputToInfoWnd(INFOCOLOR_INFO, L"AdditiveIK.cpp : MouseMoveFunc 3");
 
 
 				if (g_previewFlag == 0) {
@@ -49024,13 +49024,13 @@ int OnMouseMoveFunc()
 						deltax *= 0.250f;
 					}
 
-					//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 4");
+					//OutputToInfoWnd(INFOCOLOR_INFO, L"AdditiveIK.cpp : MouseMoveFunc 4");
 
 					if (g_edittarget == EDITTARGET_MORPH) {
 						//::MessageBox(s_3dwnd, L"EdittingMorph mode now. \nClick red frog and change graph mode!",
 						//	L"Current mode is not for editing BoneMotion.", MB_OK);
-						OutputToInfoWnd(L"### EdittingMorph mode now. ###");
-						OutputToInfoWnd(L"### Click red frog and change graph mode! ###");
+						OutputToInfoWnd(INFOCOLOR_WARNING, L"### EdittingMorph mode now. ###");
+						OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change graph mode! ###");
 					}
 					else if (g_edittarget == EDITTARGET_BONE) {
 						if (ChkEnableIK()) {
@@ -49063,7 +49063,7 @@ int OnMouseMoveFunc()
 						}
 					}
 					else if (g_edittarget == EDITTARGET_CAMERA) {
-						//OutputToInfoWnd(L"AdditiveIK.cpp : MouseMoveFunc 5");
+						//OutputToInfoWnd(INFOCOLOR_INFO, L"AdditiveIK.cpp : MouseMoveFunc 5");
 						OnCameraAnimMouseMove(s_ikkind, buttonflagForIkFunc, deltax);
 					}
 
@@ -50651,13 +50651,13 @@ void OnDSUpdate()
 
 	//ChangeMouseReleaseCapture();//処理が終わってからキャプチャーを外す
 
-	//OutputToInfoWnd(L"\n\n");
-	//OutputToInfoWnd(L"Axis 0 : %1.4f\n", axisval0);
-	//OutputToInfoWnd(L"Axis 1 : %1.4f\n", axisval1);
-	//OutputToInfoWnd(L"Axis 2 : %1.4f\n", axisval2);
-	//OutputToInfoWnd(L"Axis 3 : %1.4f\n", axisval3);
-	//OutputToInfoWnd(L"Axis 4 : %1.4f\n", axisval4);
-	//OutputToInfoWnd(L"Axis 5 : %1.4f\n", axisval5);
+	//OutputToInfoWnd(INFOCOLOR_INFO, L"\n\n");
+	//OutputToInfoWnd(INFOCOLOR_INFO, L"Axis 0 : %1.4f\n", axisval0);
+	//OutputToInfoWnd(INFOCOLOR_INFO, L"Axis 1 : %1.4f\n", axisval1);
+	//OutputToInfoWnd(INFOCOLOR_INFO, L"Axis 2 : %1.4f\n", axisval2);
+	//OutputToInfoWnd(INFOCOLOR_INFO, L"Axis 3 : %1.4f\n", axisval3);
+	//OutputToInfoWnd(INFOCOLOR_INFO, L"Axis 4 : %1.4f\n", axisval4);
+	//OutputToInfoWnd(INFOCOLOR_INFO, L"Axis 5 : %1.4f\n", axisval5);
 
 	//ChangeColor(int id, const UCHAR r, const UCHAR g, const UCHAR b);
 
@@ -50773,12 +50773,12 @@ void DSColorAndVibration()
 	//	if (curbuttondown >= 1) {
 	//		ChangeColor(s_dsdeviceid, 255, 0, 0);
 	//		//ChangeVibration(s_dsdeviceid, 200, 200);
-	//		//OutputToInfoWnd(L"Button Down %d", buttonno);
+	//		//OutputToInfoWnd(INFOCOLOR_INFO, L"Button Down %d", buttonno);
 	//	}
 	//	else if (curbuttonup >= 1) {
 	//		ChangeColor(s_dsdeviceid, 0, 0, 255);
 	//		//ChangeVibration(s_dsdeviceid, 0, 0);
-	//		//OutputToInfoWnd(L"Button Up %d", buttonno);
+	//		//OutputToInfoWnd(INFOCOLOR_INFO, L"Button Up %d", buttonno);
 	//	}
 	//}
 
@@ -50797,12 +50797,12 @@ void DSColorAndVibration()
 	//if (existon) {
 	//	ChangeColor(s_dsdeviceid, 255, 0, 0);
 	//	//ChangeVibration(s_dsdeviceid, 200, 200);
-	//	//OutputToInfoWnd(L"Axis On %d", axisno);
+	//	//OutputToInfoWnd(INFOCOLOR_INFO, L"Axis On %d", axisno);
 	//}
 	//else if ((existon == false) && (s_bef_existon == true)) {
 	//	ChangeColor(s_dsdeviceid, 0, 0, 255);
 	//	//ChangeVibration(s_dsdeviceid, 0, 0);
-	//	//OutputToInfoWnd(L"Axis Off %d", axisno);
+	//	//OutputToInfoWnd(INFOCOLOR_INFO, L"Axis Off %d", axisno);
 	//}
 
 	//s_bef_existon = existon;
@@ -51230,7 +51230,7 @@ void SelectNextWindow(int nextwndid)
 		GUISetVisible_Sel3D();//3DWindowを選択しているかどうかのマークを右上隅に表示
 
 	}
-	//OutputToInfoWnd(L"Button Down %d", buttonL1);
+	//OutputToInfoWnd(INFOCOLOR_INFO, L"Button Down %d", buttonL1);
 }
 
 void DSSelectCharactor()

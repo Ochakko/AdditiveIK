@@ -76,6 +76,7 @@ void CInfoWindow::InitParams()
 	m_dataindex = 0;
 	m_viewindex = 0;
 
+	m_infocolorvec.clear();
 }
 void CInfoWindow::DestroyObjs()
 {
@@ -111,6 +112,8 @@ void CInfoWindow::DestroyObjs()
 		free(m_stroutput);
 		m_stroutput = 0;
 	}
+
+	m_infocolorvec.clear();
 }
 
 
@@ -122,6 +125,7 @@ int CInfoWindow::CreateInfoWindow(HWND srcparentwnd, int srcposx, int srcposy, i
 		return 1;
 	}
 	ZeroMemory(m_stroutput, sizeof(WCHAR) * INFOWINDOWLINEW * INFOWINDOWLINEH);
+	m_infocolorvec.clear();
 
 	HBRUSH blkbrush = CreateSolidBrush(RGB(0, 0, 0));//Ž©•ª‚Åíœ‚µ‚È‚¢@DestroyWindowŽž‚É‰ð•ú‚³‚ê‚é
 
@@ -200,7 +204,7 @@ int CInfoWindow::CreateInfoWindow(HWND srcparentwnd, int srcposx, int srcposy, i
 
 }
 
-int CInfoWindow::OutputInfo(const WCHAR* lpFormat, ...)
+int CInfoWindow::OutputInfo(int infocolor, const WCHAR* lpFormat, ...)
 {
 	if (!m_hWnd) {
 		return 0;
@@ -250,6 +254,8 @@ int CInfoWindow::OutputInfo(const WCHAR* lpFormat, ...)
 	//wleng = (unsigned long)wcslen(outchar);
 	wcscpy_s(m_stroutput + (size_t)m_dataindex * INFOWINDOWLINEW, INFOWINDOWLINEW, outchar);
 
+	m_infocolorvec[m_dataindex] = infocolor;//2024/07/10
+
 	m_isfirstoutput = false;
 
 	//WriteFile(dbgfile, outchar, sizeof(WCHAR) * wleng, &writeleng, NULL);
@@ -294,7 +300,6 @@ void CInfoWindow::OnPaint()
 		m_hdcM->setPenAndBrush(RGB(0, 0, 0), RGB(0, 0, 0));
 		Rectangle(m_hdcM->hDC, 0, 0, clirect.right, clirect.bottom);
 		m_hdcM->setFont(12, _T("‚l‚r ƒSƒVƒbƒN"));
-		SetTextColor(m_hdcM->hDC, RGB(240, 240, 240));
 
 		if (m_stroutput) {
 			//TextOut(m_hdcM->hDC, 10, 2, outchar, (int)wcslen(outchar));
@@ -305,6 +310,23 @@ void CInfoWindow::OnPaint()
 			int dispno = 0;
 			for (outputno = 0; outputno < lineview; outputno++) {
 				if ((curindex >= 0) && (curindex <= m_dataindex)) {
+
+					int infocolor = m_infocolorvec[curindex];
+					switch (infocolor) {
+					case INFOCOLOR_INFO:
+						SetTextColor(m_hdcM->hDC, RGB(240, 240, 240));
+						break;
+					case INFOCOLOR_WARNING:
+						SetTextColor(m_hdcM->hDC, RGB(24, 126, 176));
+						break;
+					case INFOCOLOR_ERROR:
+						SetTextColor(m_hdcM->hDC, RGB(168, 129, 129));
+						break;
+					default:
+						_ASSERT(0);
+						SetTextColor(m_hdcM->hDC, RGB(240, 240, 240));
+						break;
+					}
 
 					*(m_stroutput + INFOWINDOWLINEW * INFOWINDOWLINEH - 1) = 0L;
 					size_t infolen;
