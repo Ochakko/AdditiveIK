@@ -6,6 +6,8 @@ https://github.com/Ochakko/AdditiveIK
 　InfoWindow(３Dウインドウとロングタイムラインの間に位置するウインドウ)に関する修正
 　　出力文字色をINFO(white), WARNING(blue), ERROR(red)の３種類に
 
+　BulletメニューのウインドウをOWPで作り直し
+
 
 
 　予定

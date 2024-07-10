@@ -1247,6 +1247,27 @@ static OWP_Separator* s_lightsapplysp = 0;
 static OWP_Label* s_lightsspace1Label = 0;
 static OWP_Button* s_lightsapplyB = 0;
 
+static OrgWindow* s_bulletWnd = 0;
+static OWP_Label* s_bulletcalccntLabel = 0;
+static OWP_Slider* s_bulletcalccntSlider = 0;
+static OWP_Label* s_bulletERPLabel = 0;
+static OWP_Slider* s_bulletERPSlider = 0;
+static OWP_Label* s_bulletlimitrateLabel = 0;
+static OWP_Slider* s_bulletlimitrateSlider = 0;
+static OWP_Label* s_bulletmvrateLabel = 0;
+static OWP_Slider* s_bulletmvrateSlider = 0;
+static OWP_Label* s_bulletspringscaleLabel = 0;
+static OWP_Slider* s_bulletspringscaleSlider = 0;
+static OWP_Label* s_bulletrigidspeedLabel = 0;
+static OWP_Slider* s_bulletrigidspeedSlider = 0;
+static OWP_Label* s_bulletcommentLabel = 0;
+static OWP_Label* s_bulletspacer1Label = 0;
+static OWP_Label* s_bulletspacer2Label = 0;
+static OWP_Label* s_bulletspacer3Label = 0;
+static OWP_Label* s_bulletspacer4Label = 0;
+static OWP_Label* s_bulletspacer5Label = 0;
+static OWP_Label* s_bulletspacer6Label = 0;
+
 
 static OrgWindow* s_sidemenuWnd = 0;
 //static OWP_Separator* s_sidemenusp = 0;
@@ -5019,7 +5040,28 @@ void InitApp()
 		s_lightsapplyB = 0;
 	}
 
-
+	{
+		s_bulletWnd = 0;
+		s_bulletcalccntLabel = 0;
+		s_bulletcalccntSlider = 0;
+		s_bulletERPLabel = 0;
+		s_bulletERPSlider = 0;
+		s_bulletlimitrateLabel = 0;
+		s_bulletlimitrateSlider = 0;
+		s_bulletmvrateLabel = 0;
+		s_bulletmvrateSlider = 0;
+		s_bulletspringscaleLabel = 0;
+		s_bulletspringscaleSlider = 0;
+		s_bulletrigidspeedLabel = 0;
+		s_bulletrigidspeedSlider = 0;
+		s_bulletcommentLabel = 0;
+		s_bulletspacer1Label = 0;
+		s_bulletspacer2Label = 0;
+		s_bulletspacer3Label = 0;
+		s_bulletspacer4Label = 0;
+		s_bulletspacer5Label = 0;
+		s_bulletspacer6Label = 0;
+	}
 
 	{
 		s_st_closeFlag = false;
@@ -7298,7 +7340,89 @@ void OnDestroyDevice()
 		}
 	}
 
+	{
+		if (s_bulletcalccntLabel) {
+			delete s_bulletcalccntLabel;
+			s_bulletcalccntLabel = 0;
+		}
+		if (s_bulletcalccntSlider) {
+			delete s_bulletcalccntSlider;
+			s_bulletcalccntSlider = 0;
+		}
+		if (s_bulletERPLabel) {
+			delete s_bulletERPLabel;
+			s_bulletERPLabel = 0;
+		}
+		if (s_bulletERPSlider) {
+			delete s_bulletERPSlider;
+			s_bulletERPSlider = 0;
+		}
+		if (s_bulletlimitrateLabel) {
+			delete s_bulletlimitrateLabel;
+			s_bulletlimitrateLabel = 0;
+		}
+		if (s_bulletlimitrateSlider) {
+			delete s_bulletlimitrateSlider;
+			s_bulletlimitrateSlider = 0;
+		}
+		if (s_bulletmvrateLabel) {
+			delete s_bulletmvrateLabel;
+			s_bulletmvrateLabel = 0;
+		}
+		if (s_bulletmvrateSlider) {
+			delete s_bulletmvrateSlider;
+			s_bulletmvrateSlider = 0;
+		}
+		if (s_bulletspringscaleLabel) {
+			delete s_bulletspringscaleLabel;
+			s_bulletspringscaleLabel = 0;
+		}
+		if (s_bulletspringscaleSlider) {
+			delete s_bulletspringscaleSlider;
+			s_bulletspringscaleSlider = 0;
+		}
+		if (s_bulletrigidspeedLabel) {
+			delete s_bulletrigidspeedLabel;
+			s_bulletrigidspeedLabel = 0;
+		}
+		if (s_bulletrigidspeedSlider) {
+			delete s_bulletrigidspeedSlider;
+			s_bulletrigidspeedSlider = 0;
+		}
+		if (s_bulletcommentLabel) {
+			delete s_bulletcommentLabel;
+			s_bulletcommentLabel = 0;
+		}
+		if (s_bulletspacer1Label) {
+			delete s_bulletspacer1Label;
+			s_bulletspacer1Label = 0;
+		}
+		if (s_bulletspacer2Label) {
+			delete s_bulletspacer2Label;
+			s_bulletspacer2Label = 0;
+		}
+		if (s_bulletspacer3Label) {
+			delete s_bulletspacer3Label;
+			s_bulletspacer3Label = 0;
+		}
+		if (s_bulletspacer4Label) {
+			delete s_bulletspacer4Label;
+			s_bulletspacer4Label = 0;
+		}
+		if (s_bulletspacer5Label) {
+			delete s_bulletspacer5Label;
+			s_bulletspacer5Label = 0;
+		}
+		if (s_bulletspacer6Label) {
+			delete s_bulletspacer6Label;
+			s_bulletspacer6Label = 0;
+		}
 
+		if (s_bulletWnd) {
+			delete s_bulletWnd;
+			s_bulletWnd = 0;
+		}
+	}
 
 
 	if (s_impgroupcheck) {
@@ -22219,53 +22343,20 @@ int PostOpenChaFile()
 	ChangeCameraDist(g_camdist , s_moveeyepos, false);
 
 
-	if (s_guidlg[GUIDLG_BULLETPHYSICS]) {
-		WCHAR strdlg[256] = { 0L };
-
-		HWND limitratewnd = GetDlgItem(s_guidlg[GUIDLG_BULLETPHYSICS], IDC_SLIDER_PHYSICALLIMITSCALE);
-		if (limitratewnd != NULL) {
-			int sliderpos = (int)(g_physicalLimitScale * 100.0f);
-			SendMessage(limitratewnd, TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-			SendMessage(limitratewnd, TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
-			SendMessage(limitratewnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+	if (s_bulletWnd) {
+		if (s_bulletlimitrateSlider) {
+			s_bulletlimitrateSlider->setValue(g_physicalLimitScale, false);
 		}
-		swprintf_s(strdlg, 256, L"LimitRateScale %.2f", g_physicalLimitScale);
-		SetDlgItemText(s_guidlg[GUIDLG_BULLETPHYSICS], IDC_STATIC_PHYSICALLIMITSCALE, strdlg);
-
-
-		HWND movableratewnd = GetDlgItem(s_guidlg[GUIDLG_BULLETPHYSICS], IDC_SLIDER_MOVABLERATE);
-		if (movableratewnd != NULL) {
-			int sliderpos = g_physicalMovableRate;
-			SendMessage(movableratewnd, TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-			SendMessage(movableratewnd, TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-			SendMessage(movableratewnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+		if (s_bulletmvrateSlider) {
+			s_bulletmvrateSlider->setValue((double)g_physicalMovableRate, false);
 		}
-		swprintf_s(strdlg, 256, L"BtMovableRate %d", g_physicalMovableRate);
-		SetDlgItemText(s_guidlg[GUIDLG_BULLETPHYSICS], IDC_STATIC_MOVABLERATE, strdlg);
-
-
-		HWND akscalewnd = GetDlgItem(s_guidlg[GUIDLG_BULLETPHYSICS], IDC_SLIDER_AKSCALE);
-		if (akscalewnd != NULL) {
-			int sliderpos = (int)(g_akscale * 10.0f + 0.001f);
-			SendMessage(akscalewnd, TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-			SendMessage(akscalewnd, TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-			SendMessage(akscalewnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+		if (s_bulletspringscaleSlider) {
+			s_bulletspringscaleSlider->setValue((double)g_akscale, false);
 		}
-		swprintf_s(strdlg, 256, L"SpringScale %.1f", g_akscale);
-		SetDlgItemText(s_guidlg[GUIDLG_BULLETPHYSICS], IDC_STATIC_AKSCALE, strdlg);
-
-
-		HWND vscalewnd = GetDlgItem(s_guidlg[GUIDLG_BULLETPHYSICS], IDC_SLIDER_VELOSCALE);
-		if (akscalewnd != NULL) {
-			int sliderpos = (int)(g_physicalVeloScale * 100.0 + 0.0001);
-			SendMessage(vscalewnd, TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-			SendMessage(vscalewnd, TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-			SendMessage(vscalewnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
+		if (s_bulletrigidspeedSlider) {
+			s_bulletrigidspeedSlider->setValue(g_physicalVeloScale, false);
 		}
-		swprintf_s(strdlg, 256, L"RigidSpeed %.2f", g_physicalVeloScale);
-		SetDlgItemText(s_guidlg[GUIDLG_BULLETPHYSICS], IDC_STATIC_VELOSCALE, strdlg);
 	}
-
 
 	if (s_chascene && 
 		((g_boneaxis < BONEAXIS_CURRENT) || (g_boneaxis > BONEAXIS_BINDPOSE))) {//g_boneaxisがchafileで設定されなかった場合
@@ -27073,15 +27164,9 @@ int CreateGUIDlgDispParams()
 //}
 int CreateGUIDlgBullet()
 {
-	if (s_guidlg[GUIDLG_BULLETPHYSICS]) {
-		//already opened
-		return 0;
-	}
-
-	s_guidlg[GUIDLG_BULLETPHYSICS] = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_GUIBULLETDLG), g_mainhwnd, (DLGPROC)GUIBulletDlgProc);
-	if (!s_guidlg[GUIDLG_BULLETPHYSICS]) {
+	if (s_bulletWnd) {
 		_ASSERT(0);
-		return 1;
+		return 0;//作成済
 	}
 
 	int windowposx;
@@ -27092,20 +27177,206 @@ int CreateGUIDlgBullet()
 		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
-	SetParent(s_guidlg[GUIDLG_BULLETPHYSICS], g_mainhwnd);
-	SetWindowPos(
-		s_guidlg[GUIDLG_BULLETPHYSICS],
-		HWND_TOP,
-		windowposx,
-		s_sidemenuheight,
-		s_sidewidth,
-		s_sideheight,
-		SWP_SHOWWINDOW
-	);
+	s_bulletWnd = new OrgWindow(
+		0,
+		_T("BulletDlg"),		//ウィンドウクラス名
+		GetModuleHandle(NULL),	//インスタンスハンドル
+		WindowPos(windowposx, s_sidemenuheight),
+		WindowSize(s_sidewidth, s_sideheight),		//サイズ
+		_T("BulletDlg"),	//タイトル
+		g_mainhwnd,	//親ウィンドウハンドル
+		false,					//表示・非表示状態
+		//70, 50, 70,				//カラー
+		0, 0, 0,				//カラー
+		true,					//閉じられるか否か
+		true);					//サイズ変更の可否
 
-	ShowWindow(s_guidlg[GUIDLG_BULLETPHYSICS], SW_HIDE);
+	int labelheight;
+	if (g_4kresolution) {
+		labelheight = 28;
+	}
+	else {
+		labelheight = 20;
+	}
+
+	if (s_bulletWnd) {
+		s_bulletcalccntLabel = new OWP_Label(L"BulletPhysics Calclation Count", labelheight);
+		if (!s_bulletcalccntLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletcalccntSlider = new OWP_Slider((double)((int)g_btcalccnt), 10.0, 1.0, labelheight);
+		if (!s_bulletcalccntSlider) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletERPLabel = new OWP_Label(L"ERP Position Correcting Rate", labelheight);
+		if (!s_bulletERPLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletERPSlider = new OWP_Slider(g_erp, 1.0, 0.0);
+		if (!s_bulletERPSlider) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletlimitrateLabel = new OWP_Label(L"Scale of PhysicalLimitRate", labelheight);
+		if (!s_bulletlimitrateLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletlimitrateSlider = new OWP_Slider(g_physicalLimitScale, 1.0, 0.0, labelheight);
+		if (!s_bulletlimitrateSlider) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletmvrateLabel = new OWP_Label(L"Movable Rate on MovableRange", labelheight);
+		if (!s_bulletmvrateLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletmvrateSlider = new OWP_Slider((double)g_physicalMovableRate, 100.0, 0.0, labelheight);
+		if (!s_bulletmvrateSlider) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletspringscaleLabel = new OWP_Label(L"Scale of PhysicalSpringCoef", labelheight);
+		if (!s_bulletspringscaleLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletspringscaleSlider = new OWP_Slider((double)g_akscale, 10.0, 0.0, labelheight);
+		if (!s_bulletspringscaleSlider) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletrigidspeedLabel = new OWP_Label(L"Scale of RigidSpeed on MovalbeRange", labelheight);
+		if (!s_bulletrigidspeedLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletrigidspeedSlider = new OWP_Slider(g_physicalVeloScale, 1.0, 0.0, labelheight);
+		if (!s_bulletrigidspeedSlider) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletcommentLabel = new OWP_Label(L"(SpeedScale on UnmovableRange is 0.1 fixed)", labelheight);
+		if (!s_bulletcommentLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletspacer1Label = new OWP_Label(L"      ", labelheight);
+		if (!s_bulletspacer1Label) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletspacer2Label = new OWP_Label(L"      ", labelheight);
+		if (!s_bulletspacer2Label) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletspacer3Label = new OWP_Label(L"      ", labelheight);
+		if (!s_bulletspacer3Label) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletspacer4Label = new OWP_Label(L"      ", labelheight);
+		if (!s_bulletspacer4Label) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletspacer5Label = new OWP_Label(L"      ", labelheight);
+		if (!s_bulletspacer5Label) {
+			_ASSERT(0);
+			abort();
+		}
+		s_bulletspacer6Label = new OWP_Label(L"      ", labelheight);
+		if (!s_bulletspacer6Label) {
+			_ASSERT(0);
+			abort();
+		}
+
+
+		s_bulletWnd->addParts(*s_bulletcalccntLabel);
+		s_bulletWnd->addParts(*s_bulletcalccntSlider);
+		s_bulletWnd->addParts(*s_bulletspacer1Label);
+
+		s_bulletWnd->addParts(*s_bulletERPLabel);
+		s_bulletWnd->addParts(*s_bulletERPSlider);
+		s_bulletWnd->addParts(*s_bulletspacer2Label);
+
+		s_bulletWnd->addParts(*s_bulletlimitrateLabel);
+		s_bulletWnd->addParts(*s_bulletlimitrateSlider);//g_physicalLimitScale: 0,1
+		s_bulletWnd->addParts(*s_bulletspacer3Label);
+
+		s_bulletWnd->addParts(*s_bulletmvrateLabel);
+		s_bulletWnd->addParts(*s_bulletmvrateSlider);//g_physicalMovableRate: 0, 100
+		s_bulletWnd->addParts(*s_bulletspacer4Label);
+
+		s_bulletWnd->addParts(*s_bulletspringscaleLabel);
+		s_bulletWnd->addParts(*s_bulletspringscaleSlider);//g_akscale: 0, 10
+		s_bulletWnd->addParts(*s_bulletspacer5Label);
+
+		s_bulletWnd->addParts(*s_bulletrigidspeedLabel);
+		s_bulletWnd->addParts(*s_bulletrigidspeedSlider);//g_physicalVeloScale: 0, 1
+		s_bulletWnd->addParts(*s_bulletspacer6Label);
+
+		s_bulletWnd->addParts(*s_bulletcommentLabel);
+
+
+		//##########
+		//Slider
+		//##########
+		s_bulletcalccntSlider->setCursorListener([]() {
+			double value = s_bulletcalccntSlider->getValue();
+			g_btcalccnt = (int)(value + 0.0001);
+			s_bulletcalccntSlider->setValue((double)g_btcalccnt, false);//intに丸めてセットし直し
+		});
+
+		s_bulletERPSlider->setCursorListener([]() {
+			double value = s_bulletERPSlider->getValue();
+			g_erp = value;
+		});
+
+		s_bulletlimitrateSlider->setCursorListener([]() {
+			double value = s_bulletlimitrateSlider->getValue();
+			g_physicalLimitScale = value;
+		});
+
+		s_bulletmvrateSlider->setCursorListener([]() {
+			double value = s_bulletmvrateSlider->getValue();
+			g_physicalMovableRate = (int)(value + 0.0001);
+			s_bulletmvrateSlider->setValue((double)g_physicalMovableRate, false);//intに丸めてセットし直し
+		});
+
+		s_bulletspringscaleSlider->setCursorListener([]() {
+			double value = s_bulletspringscaleSlider->getValue();
+			g_akscale = (float)value;
+		});
+		s_bulletspringscaleSlider->setLUpListener([]() {
+			s_changeAngleSpringScaleFlag = true;
+		});
+
+		s_bulletrigidspeedSlider->setCursorListener([]() {
+			double value = s_bulletrigidspeedSlider->getValue();
+			g_physicalVeloScale = value;
+		});
+
+
+		s_bulletWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
+		s_bulletWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
+
+		//１クリック目問題対応
+		s_bulletWnd->refreshPosAndSize();
+
+		s_bulletWnd->callRewrite();
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+
 	return 0;
-
 }
 int CreateGUIDlgLOD()
 {
@@ -30942,177 +31213,7 @@ int Brushes2Dlg(HWND hDlgWnd)
 	return 0;
 }
 
-LRESULT CALLBACK GUIBulletDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
-{
-	switch (msg) {
-	case WM_INITDIALOG:
-	{
-		//Lights2Dlg(hDlgWnd);
-		//EnableWindow(GetDlgItem(hDlgWnd, IDC_RESETLIM_CURRENT), FALSE);
 
-		//#######
-		//Slider
-		//#######
-		int sliderpos = (int)g_btcalccnt;
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_CALCCNT), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)1);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_CALCCNT), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)10);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_CALCCNT), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-		sliderpos = (int)(g_erp * 5000.0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_DLG_ERP), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_DLG_ERP), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)5000);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_DLG_ERP), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-		sliderpos = (int)(g_physicalLimitScale * 100.0f);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PHYSICALLIMITSCALE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PHYSICALLIMITSCALE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)200);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PHYSICALLIMITSCALE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-		sliderpos = g_physicalMovableRate;
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_MOVABLERATE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_MOVABLERATE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_MOVABLERATE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-		sliderpos = (int)(g_akscale * 10.0f + 0.001f);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_AKSCALE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_AKSCALE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_AKSCALE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-		sliderpos = (int)(g_physicalVeloScale * 100.0 + 0.0001);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_VELOSCALE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_VELOSCALE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-		SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_VELOSCALE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-
-
-		//#####
-		//Text 
-		//#####
-		WCHAR strdlg[256] = { 0L };
-		swprintf_s(strdlg, 256, L"Bullet Calc Count : %d", (int)g_btcalccnt);
-		SetDlgItemText(hDlgWnd, IDC_STATIC_CALCCNT, strdlg);
-
-		swprintf_s(strdlg, 256, L"Position Correcting Rate : %.3f", g_erp);
-		SetDlgItemText(hDlgWnd, IDC_STATIC_DLG_ERP, strdlg);
-
-		swprintf_s(strdlg, 256, L"LimitRateScale %.2f", g_physicalLimitScale);
-		SetDlgItemText(hDlgWnd, IDC_STATIC_PHYSICALLIMITSCALE, strdlg);
-
-		swprintf_s(strdlg, 256, L"BtMovableRate %d", g_physicalMovableRate);
-		SetDlgItemText(hDlgWnd, IDC_STATIC_MOVABLERATE, strdlg);
-
-		swprintf_s(strdlg, 256, L"SpringScale %.1f", g_akscale);
-		SetDlgItemText(hDlgWnd, IDC_STATIC_AKSCALE, strdlg);
-
-		swprintf_s(strdlg, 256, L"RigidSpeed %.2f", g_physicalVeloScale);
-		SetDlgItemText(hDlgWnd, IDC_STATIC_VELOSCALE, strdlg);
-
-		return FALSE;
-	}
-	break;
-
-	case WM_DRAWITEM://オーナードローコントロールの描画 : リソースでカラーバーボタンにオーナードロー属性を設定してある
-		//DefWindowProc(hDlgWnd, msg, wp, lp);
-		break;
-
-	case WM_HSCROLL:
-		if (GetDlgItem(hDlgWnd, IDC_SLIDER_CALCCNT) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_CALCCNT), TBM_GETPOS, 0, 0);
-			g_btcalccnt = (double)cursliderpos;
-
-			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"Bullet Calc Count : %d", (int)g_btcalccnt);
-			SetDlgItemText(hDlgWnd, IDC_STATIC_CALCCNT, strdlg);
-		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_DLG_ERP) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_DLG_ERP), TBM_GETPOS, 0, 0);
-			g_erp = (double)cursliderpos / 5000.0;
-
-			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"Position Correcting Rate : %.3f", g_erp);
-			SetDlgItemText(hDlgWnd, IDC_STATIC_DLG_ERP, strdlg);
-		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_PHYSICALLIMITSCALE) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_PHYSICALLIMITSCALE), TBM_GETPOS, 0, 0);
-			g_physicalLimitScale = (float)((double)cursliderpos / 100.0);
-
-			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"LimitRateScale %.2f", g_physicalLimitScale);
-			SetDlgItemText(hDlgWnd, IDC_STATIC_PHYSICALLIMITSCALE, strdlg);
-		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_MOVABLERATE) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_MOVABLERATE), TBM_GETPOS, 0, 0);
-			g_physicalMovableRate = cursliderpos;
-
-			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"BtMovableRate %d", g_physicalMovableRate);
-			SetDlgItemText(hDlgWnd, IDC_STATIC_MOVABLERATE, strdlg);
-		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_AKSCALE) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_AKSCALE), TBM_GETPOS, 0, 0);
-			g_akscale = (float)((double)cursliderpos / 10.0);
-
-			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"SpringScale %.1f", g_akscale);
-			SetDlgItemText(hDlgWnd, IDC_STATIC_AKSCALE, strdlg);
-
-			if (LOWORD(wp) == SB_ENDSCROLL) {
-				s_changeAngleSpringScaleFlag = true;
-			}
-		}
-		else if (GetDlgItem(hDlgWnd, IDC_SLIDER_VELOSCALE) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_VELOSCALE), TBM_GETPOS, 0, 0);
-			g_physicalVeloScale = (double)cursliderpos * 0.010;
-
-			WCHAR strdlg[256] = { 0L };
-			swprintf_s(strdlg, 256, L"RigidSpeed %.2f", g_physicalVeloScale);
-			SetDlgItemText(s_guidlg[GUIDLG_BULLETPHYSICS], IDC_STATIC_VELOSCALE, strdlg);
-		}
-
-
-		break;
-	//case WM_NOTIFY:
-	//{
-	//	LPNMHDR nmhdr = reinterpret_cast<LPNMHDR>(lp);
-	//	if (nmhdr->code == TRBN_THUMBPOSCHANGING) //&& (nmhdr->hwndFrom == hSlider))
-	//	{
-	//		NMTRBTHUMBPOSCHANGING* nmtrb = reinterpret_cast<NMTRBTHUMBPOSCHANGING*>(lp);
-	//		switch (nmtrb->nReason)
-	//		{
-	//		case TB_ENDTRACK:
-	//			//if (GetDlgItem(hDlgWnd, IDC_SLIDER1) == nmhdr->hwndFrom)
-	//			break;
-	//		default:
-	//			break;
-	//		}
-	//	}
-	//}
-	//break;
-	case WM_COMMAND:
-
-		switch (LOWORD(wp)) {
-
-			//case IDC_COMBO1:
-			//break;
-
-		case IDCANCEL:
-			//EndDialog(hDlgWnd, IDCANCEL);
-			break;
-		default:
-			return FALSE;
-			break;
-		}
-		break;
-	case WM_CLOSE:
-		if (s_guidlg[GUIDLG_BULLETPHYSICS]) {
-			ShowGUIDlgBullet(false);
-		}
-		break;
-	default:
-		DefWindowProc(hDlgWnd, msg, wp, lp);
-		return FALSE;
-	}
-	return TRUE;
-}
 LRESULT CALLBACK GUILODDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
 	WCHAR streditbox[256] = { 0 };
@@ -49738,14 +49839,15 @@ void ShowGUIDlgDispParams(bool srcflag)
 //}
 void ShowGUIDlgBullet(bool srcflag)
 {
-	if (s_guidlg[GUIDLG_BULLETPHYSICS] != 0) {
+	if (s_bulletWnd) {
 		if (srcflag == true) {
-			ShowWindow(s_guidlg[GUIDLG_BULLETPHYSICS], SW_SHOW);
-			UpdateWindow(s_guidlg[GUIDLG_BULLETPHYSICS]);
+			s_bulletWnd->setVisible(true);
+			s_bulletWnd->setListenMouse(true);
+			s_bulletWnd->callRewrite();
 		}
 		else {
-			ShowWindow(s_guidlg[GUIDLG_BULLETPHYSICS], SW_HIDE);
-			UpdateWindow(s_guidlg[GUIDLG_BULLETPHYSICS]);
+			s_bulletWnd->setVisible(false);
+			s_bulletWnd->setListenMouse(false);
 		}
 	}
 
