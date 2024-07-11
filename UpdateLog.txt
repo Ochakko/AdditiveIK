@@ -7,10 +7,13 @@ https://github.com/Ochakko/AdditiveIK
 
 　ShadowメニューのウインドウをOWPで作り直し
 
+　LimitEulerメニューのウインドウをOWPで作り直し
+
 
 
 　予定
 　　プレートメニューを押したときに右ペインに出すウインドウは全てOWPにしていく”予定”
+
 
 
 

@@ -1853,38 +1853,40 @@ namespace OrgWinGUI{
 		//static function
 		//################
 
-
-		if (s_psoftnumWnd) {
+		if (s_psoftnumWnd && s_psoftnumkey) {
 			return 0;//作成済
 		}
 
-		s_psoftnumWnd = new OrgWindow(
-			//0,
-			1,//!!!! parent=NULLかつtopmostにすれば3D表示の上に表示される
-			_T("SoftKeyWnd"),		//ウィンドウクラス名
-			GetModuleHandle(NULL),	//インスタンスハンドル
-			WindowPos(0, 0),
-			//WindowPos(0, 0),
-			WindowSize(48 * 11, 34 * 4),//サイズ
-			_T("SoftKeyWnd"),	//タイトル
-			//g_mainhwnd,	//親ウィンドウハンドル
-			//s_3dwnd,
-			NULL,//!!!! parent=NULLかつtopmostにすれば3D表示の上に表示される
-			false,					//表示・非表示状態
-			//70, 50, 70,				//カラー
-			0, 0, 0,				//カラー
-			true,					//閉じられるか否か
-			true);					//サイズ変更の可否
+		if (!s_psoftnumWnd) {
+			s_psoftnumWnd = new OrgWindow(
+				//0,
+				1,//!!!! parent=NULLかつtopmostにすれば3D表示の上に表示される
+				_T("SoftKeyWnd"),		//ウィンドウクラス名
+				GetModuleHandle(NULL),	//インスタンスハンドル
+				WindowPos(0, 0),
+				//WindowPos(0, 0),
+				WindowSize(48 * 11, 34 * 4),//サイズ
+				_T("SoftKeyWnd"),	//タイトル
+				//g_mainhwnd,	//親ウィンドウハンドル
+				//s_3dwnd,
+				NULL,//!!!! parent=NULLかつtopmostにすれば3D表示の上に表示される
+				false,					//表示・非表示状態
+				//70, 50, 70,				//カラー
+				0, 0, 0,				//カラー
+				true,					//閉じられるか否か
+				true);					//サイズ変更の可否
+		}
 
 		if (s_psoftnumWnd) {
 
 			s_psoftnumWnd->setBackGroundColor(true);
 
-
-			s_psoftnumkey = new OWP_SoftNumKey();
 			if (!s_psoftnumkey) {
-				_ASSERT(0);
-				abort();
+				s_psoftnumkey = new OWP_SoftNumKey();
+				if (!s_psoftnumkey) {
+					_ASSERT(0);
+					abort();
+				}
 			}
 			s_psoftnumWnd->addParts(*s_psoftnumkey);
 

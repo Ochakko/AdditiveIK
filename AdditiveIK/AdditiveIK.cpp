@@ -882,7 +882,7 @@ static ChaVector4 s_ringyellowmat;
 
 
 static bool s_dispanglelimit = false;
-static HWND s_anglelimitdlg = 0;
+//static HWND s_anglelimitdlg = 0;
 static ANGLELIMIT s_anglelimit;
 static ANGLELIMIT s_anglelimitcopy;
 static CBone* s_anglelimitbone = 0;
@@ -1371,6 +1371,87 @@ static OWP_Label* s_shadowspacerLabel = 0;
 static OWP_Separator* s_shadowapplysp = 0;
 static OWP_Button* s_shadowapplyB = 0;
 static OWP_Button* s_shadowinitB = 0;
+
+
+static OrgWindow* s_limitWnd = 0;
+static OWP_Label* s_limitnameLabel = 0;
+static OWP_Separator* s_limitxsp1 = 0;
+static OWP_Separator* s_limitxsp2 = 0;
+static OWP_Separator* s_limitxsp2a = 0;
+static OWP_Separator* s_limitxsp2b = 0;
+static OWP_Separator* s_limitxsp3 = 0;
+static OWP_Separator* s_limitxsp3a = 0;
+static OWP_Label* s_limitxupperLabel = 0;
+static OWP_EditBox* s_limitxupperEdit = 0;
+static OWP_Label* s_limitxlowerLabel = 0;
+static OWP_EditBox* s_limitxlowerEdit = 0;
+static OWP_Label* s_limitxchkLabel = 0;
+static OWP_EditBox* s_limitxchkEdit = 0;
+static OWP_Separator* s_limitysp1 = 0;
+static OWP_Separator* s_limitysp2 = 0;
+static OWP_Separator* s_limitysp2a = 0;
+static OWP_Separator* s_limitysp2b = 0;
+static OWP_Separator* s_limitysp3 = 0;
+static OWP_Separator* s_limitysp3a = 0;
+static OWP_Label* s_limityupperLabel = 0;
+static OWP_EditBox* s_limityupperEdit = 0;
+static OWP_Label* s_limitylowerLabel = 0;
+static OWP_EditBox* s_limitylowerEdit = 0;
+static OWP_Label* s_limitychkLabel = 0;
+static OWP_EditBox* s_limitychkEdit = 0;
+static OWP_Separator* s_limitzsp1 = 0;
+static OWP_Separator* s_limitzsp2 = 0;
+static OWP_Separator* s_limitzsp2a = 0;
+static OWP_Separator* s_limitzsp2b = 0;
+static OWP_Separator* s_limitzsp3 = 0;
+static OWP_Separator* s_limitzsp3a = 0;
+static OWP_Label* s_limitzupperLabel = 0;
+static OWP_EditBox* s_limitzupperEdit = 0;
+static OWP_Label* s_limitzlowerLabel = 0;
+static OWP_EditBox* s_limitzlowerEdit = 0;
+static OWP_Label* s_limitzchkLabel = 0;
+static OWP_EditBox* s_limitzchkEdit = 0;
+static OWP_Separator* s_limiteulsp1 = 0;
+static OWP_Separator* s_limiteulsp2 = 0;
+static OWP_Separator* s_limiteulsp3 = 0;
+static OWP_Button* s_limiteuloneB = 0;
+static OWP_Button* s_limiteuldeeperB = 0;
+static OWP_Button* s_limiteulallB = 0;
+static OWP_Label* s_limitcppsLabel = 0;
+static OWP_Separator* s_limitcpsp1 = 0;
+static OWP_Separator* s_limitcpsp2 = 0;
+static OWP_Separator* s_limitcpsp3 = 0;
+static OWP_Button* s_limitcptosymB = 0;
+static OWP_Button* s_limitcpfromsymB = 0;
+static OWP_Button* s_limitcpB = 0;
+static OWP_Button* s_limitpsB = 0;
+static OWP_Label* s_limitsetLabel = 0;
+static OWP_Separator* s_limitsetsp1 = 0;
+static OWP_Separator* s_limitsetsp2 = 0; 
+static OWP_Separator* s_limitsetsp3 = 0;
+static OWP_Button* s_limitreset180B = 0;
+static OWP_Button* s_limit180to170B = 0;
+static OWP_Button* s_limitreset0B = 0;
+static OWP_Button* s_limitfrommotB = 0;
+static OWP_Label* s_limitsetallLabel = 0;
+static OWP_Separator* s_limitsetallsp1 = 0;
+static OWP_Separator* s_limitsetallsp2 = 0;
+static OWP_Separator* s_limitsetallsp3 = 0;
+static OWP_Button* s_limitresetall180B = 0;
+static OWP_Button* s_limitall180to170B = 0;
+static OWP_Button* s_limitallreset0B = 0;
+static OWP_Button* s_limitallfrommotB = 0;
+static OWP_Label* s_limitallboneallmotLabel = 0;
+static OWP_Button* s_limitallboneallmotB = 0;
+static OWP_Label* s_limitphysicsLabel = 0;
+static OWP_Separator* s_limitphysicssp = 0;
+static OWP_Label* s_limitphysicsrateLabel = 0;
+static OWP_Slider* s_limitphysicsrateSlider = 0;
+static OWP_Separator* s_limitphsysicssp1 = 0;
+static OWP_Separator* s_limitphsysicssp2 = 0;
+static OWP_Button* s_limitphysicsDepperB = 0;
+static OWP_Button* s_limitphysicsAllB = 0;
+
 
 
 static OrgWindow* s_sidemenuWnd = 0;
@@ -3126,14 +3207,14 @@ LRESULT CALLBACK SaveREDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK SaveImpDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK SaveGcoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK CheckAxisTypeProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
-LRESULT CALLBACK AngleLimitDlgProc2(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
+//LRESULT CALLBACK AngleLimitDlgProc2(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 //LRESULT CALLBACK LightsForEditDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 //LRESULT CALLBACK GUIDispParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 //LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 //LRESULT CALLBACK GUIBulletDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 //LRESULT CALLBACK GUILODDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK LaterTransparentDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
-LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
+//LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK RotAxisDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK CustomRigDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK AboutDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
@@ -3382,7 +3463,7 @@ static int DispModelPanel();
 static int DispMotionPanel();
 static int DispCameraPanel();
 //static int DispConvBoneWindow();
-static int DispAngleLimitDlg();
+static int CreateAngleLimitDlg();
 static int DispThresholdDlg();
 static int DispRotAxisDlg();
 static int DispCustomRigDlg(int rigno);
@@ -3409,7 +3490,7 @@ static int AngleLimit2Bone(int limit2boneflag);
 static int AngleLimit2Bone_One(CBone* srconbe);
 static void AngleLimit2Bone_Req(CBone* srcbone, int setbroflag);
 static void LimitRate2Bone_Req(CBone* srcbone, int setbroflag);
-static int AngleLimit2Dlg(HWND hDlgWnd, bool updateonlycheckeul);
+static int AngleLimit2Dlg(bool updateonlycheckeul);
 static int Global2ThresholdDlg(HWND hDlgWnd);
 static int ThresholdDlg2Global(HWND hDlgWnd);
 static int InitAngleLimitEditInt(HWND hDlgWnd, int editresid, int srclimit);
@@ -3418,8 +3499,9 @@ static int InitAngleLimitSlider(HWND hDlgWnd, int slresid, int txtresid, int src
 static int GetAngleLimitSliderVal(HWND hDlgWnd, int slresid, int txtresid, int* dstptr);
 static int InitAngleLimitSliderFloat(HWND hDlgWnd, int slresid, int txtresid, float srclimit);
 static int GetAngleLimitSliderValFloat(HWND hDlgWnd, int slresid, int txtresid, float* dstptr);
-static int AngleDlg2AngleLimit(HWND hDlgWnd);//2022/12/05
+static int AngleDlg2AngleLimit();//2022/12/05
 static int GetAngleLimitEditInt(HWND hDlgWnd, int editresid, int* dstlimit);//2022/12/05
+static int GetAngleLimitEditIntOWP(OWP_EditBox* srcedit, int* dstlimit);//2024/07/11
 static int CheckStr_SInt(const WCHAR* srcstr);//2022/12/05
 static int UpdateAfterEditAngleLimit(int limit2boneflag, bool setcursorflag = true);//2022/12/06
 static int CopyWorldToLimitedWorld(CModel* srcmodel);
@@ -4147,12 +4229,12 @@ INT WINAPI wWinMain(
 
 
 	OnCreateDevice();
+
+	OWP_EditBox::makeSoftNumKey();
+
 	LoadSkyParamsFile();//s_skyを作成した後で呼ぶ
 	LoadFogParamsFile();
 	LoadDofParamsFile();
-
-
-	OWP_EditBox::makeSoftNumKey();
 
 	CreatePlaceFolderWnd();
 	CreateTimelineWnd();
@@ -5278,6 +5360,88 @@ void InitApp()
 	}
 
 	{
+		s_limitWnd = 0;
+		s_limitnameLabel = 0;
+		s_limitxsp1 = 0;
+		s_limitxsp2 = 0;
+		s_limitxsp2a = 0;
+		s_limitxsp2b = 0;
+		s_limitxsp3 = 0;
+		s_limitxsp3a = 0;
+		s_limitxupperLabel = 0;
+		s_limitxupperEdit = 0;
+		s_limitxlowerLabel = 0;
+		s_limitxlowerEdit = 0;
+		s_limitxchkLabel = 0;
+		s_limitxchkEdit = 0;
+		s_limitysp1 = 0;
+		s_limitysp2 = 0;
+		s_limitysp2a = 0;
+		s_limitysp2b = 0;
+		s_limitysp3 = 0;
+		s_limitysp3a = 0;
+		s_limityupperLabel = 0;
+		s_limityupperEdit = 0;
+		s_limitylowerLabel = 0;
+		s_limitylowerEdit = 0;
+		s_limitychkLabel = 0;
+		s_limitychkEdit = 0;
+		s_limitzsp1 = 0;
+		s_limitzsp2 = 0;
+		s_limitzsp2a = 0;
+		s_limitzsp2b = 0;
+		s_limitzsp3 = 0;
+		s_limitzsp3a = 0;
+		s_limitzupperLabel = 0;
+		s_limitzupperEdit = 0;
+		s_limitzlowerLabel = 0;
+		s_limitzlowerEdit = 0;
+		s_limitzchkLabel = 0;
+		s_limitzchkEdit = 0;
+		s_limiteulsp1 = 0;
+		s_limiteulsp2 = 0;
+		s_limiteulsp3 = 0;
+		s_limiteuloneB = 0;
+		s_limiteuldeeperB = 0;
+		s_limiteulallB = 0;
+		s_limitcppsLabel = 0;
+		s_limitcpsp1 = 0;
+		s_limitcpsp2 = 0;
+		s_limitcpsp3 = 0;
+		s_limitcptosymB = 0;
+		s_limitcpfromsymB = 0;
+		s_limitcpB = 0;
+		s_limitpsB = 0;
+		s_limitsetLabel = 0;
+		s_limitsetsp1 = 0;
+		s_limitsetsp2 = 0;
+		s_limitsetsp3 = 0;
+		s_limitreset180B = 0;
+		s_limit180to170B = 0;
+		s_limitreset0B = 0;
+		s_limitfrommotB = 0;
+		s_limitsetallLabel = 0;
+		s_limitsetallsp1 = 0;
+		s_limitsetallsp2 = 0;
+		s_limitsetallsp3 = 0;
+		s_limitresetall180B = 0;
+		s_limitall180to170B = 0;
+		s_limitallreset0B = 0;
+		s_limitallfrommotB = 0;
+		s_limitallboneallmotLabel = 0;
+		s_limitallboneallmotB = 0;
+		s_limitphysicsLabel = 0;
+		s_limitphysicssp = 0;
+		s_limitphysicsrateLabel = 0;
+		s_limitphysicsrateSlider = 0;
+		s_limitphsysicssp1 = 0;
+		s_limitphsysicssp2 = 0;
+		s_limitphysicsDepperB = 0;
+		s_limitphysicsAllB = 0;
+	}
+
+
+	{
 		s_st_closeFlag = false;
 		s_st_remakeToonTextureFlag = false;
 		s_st_backFlag = false;
@@ -6282,7 +6446,7 @@ void InitApp()
 	s_rgdindexmap.clear();
 
 	s_anglelimitbone = 0;
-	s_anglelimitdlg = 0;
+	//s_anglelimitdlg = 0;
 	s_anglelimit.Init();
 	s_anglelimitcopy.Init();
 
@@ -6811,13 +6975,13 @@ void OnDestroyDevice()
 	}
 	s_editrangehistoryno = 0;
 
-	if (s_anglelimitdlg) {
-		s_underanglelimithscroll = 0;
-		if (IsWindow(s_anglelimitdlg)) {
-			DestroyWindow(s_anglelimitdlg);
-		}
-		s_anglelimitdlg = 0;
-	}
+	//if (s_anglelimitdlg) {
+	//	s_underanglelimithscroll = 0;
+	//	if (IsWindow(s_anglelimitdlg)) {
+	//		DestroyWindow(s_anglelimitdlg);
+	//	}
+	//	s_anglelimitdlg = 0;
+	//}
 	//if (s_lightsforeditdlg) {
 	//	if (IsWindow(s_lightsforeditdlg)) {
 	//		DestroyWindow(s_lightsforeditdlg);
@@ -8058,6 +8222,324 @@ void OnDestroyDevice()
 			s_shadowWnd = 0;
 		}
 	}
+
+
+	{
+		if (s_limitnameLabel) {
+			delete s_limitnameLabel;
+			s_limitnameLabel = 0;
+		}
+		if (s_limitxsp1) {
+			delete s_limitxsp1;
+			s_limitxsp1 = 0;
+		}
+		if (s_limitxsp2) {
+			delete s_limitxsp2;
+			s_limitxsp2 = 0;
+		}
+		if (s_limitxsp2a) {
+			delete s_limitxsp2a;
+			s_limitxsp2a = 0;
+		}
+		if (s_limitxsp2b) {
+			delete s_limitxsp2b;
+			s_limitxsp2b = 0;
+		}
+		if (s_limitxsp3) {
+			delete s_limitxsp3;
+			s_limitxsp3 = 0;
+		}
+		if (s_limitxsp3a) {
+			delete s_limitxsp3a;
+			s_limitxsp3a = 0;
+		}
+		if (s_limitxupperLabel) {
+			delete s_limitxupperLabel;
+			s_limitxupperLabel = 0;
+		}
+		if (s_limitxupperEdit) {
+			delete s_limitxupperEdit;
+			s_limitxupperEdit = 0;
+		}
+		if (s_limitxlowerLabel) {
+			delete s_limitxlowerLabel;
+			s_limitxlowerLabel = 0;
+		}
+		if (s_limitxlowerEdit) {
+			delete s_limitxlowerEdit;
+			s_limitxlowerEdit = 0;
+		}
+		if (s_limitxchkLabel) {
+			delete s_limitxchkLabel;
+			s_limitxchkLabel = 0;
+		}
+		if (s_limitxchkEdit) {
+			delete s_limitxchkEdit;
+			s_limitxchkEdit = 0;
+		}
+		if (s_limitysp1) {
+			delete s_limitysp1;
+			s_limitysp1 = 0;
+		}
+		if (s_limitysp2) {
+			delete s_limitysp2;
+			s_limitysp2 = 0;
+		}
+		if (s_limitysp2a) {
+			delete s_limitysp2a;
+			s_limitysp2a = 0;
+		}
+		if (s_limitysp2b) {
+			delete s_limitysp2b;
+			s_limitysp2b = 0;
+		}
+		if (s_limitysp3) {
+			delete s_limitysp3;
+			s_limitysp3 = 0;
+		}
+		if (s_limitysp3a) {
+			delete s_limitysp3a;
+			s_limitysp3a = 0;
+		}
+		if (s_limityupperLabel) {
+			delete s_limityupperLabel;
+			s_limityupperLabel = 0;
+		}
+		if (s_limityupperEdit) {
+			delete s_limityupperEdit;
+			s_limityupperEdit = 0;
+		}
+		if (s_limitylowerLabel) {
+			delete s_limitylowerLabel;
+			s_limitylowerLabel = 0;
+		}
+		if (s_limitylowerEdit) {
+			delete s_limitylowerEdit;
+			s_limitylowerEdit = 0;
+		}
+		if (s_limitychkLabel) {
+			delete s_limitychkLabel;
+			s_limitychkLabel = 0;
+		}
+		if (s_limitychkEdit) {
+			delete s_limitychkEdit;
+			s_limitychkEdit = 0;
+		}
+		if (s_limitzsp1) {
+			delete s_limitzsp1;
+			s_limitzsp1 = 0;
+		}
+		if (s_limitzsp2) {
+			delete s_limitzsp2;
+			s_limitzsp2 = 0;
+		}
+		if (s_limitzsp2a) {
+			delete s_limitzsp2a;
+			s_limitzsp2a = 0;
+		}
+		if (s_limitzsp2b) {
+			delete s_limitzsp2b;
+			s_limitzsp2b = 0;
+		}
+		if (s_limitzsp3) {
+			delete s_limitzsp3;
+			s_limitzsp3 = 0;
+		}
+		if (s_limitzsp3a) {
+			delete s_limitzsp3a;
+			s_limitzsp3a = 0;
+		}
+		if (s_limitzupperLabel) {
+			delete s_limitzupperLabel;
+			s_limitzupperLabel = 0;
+		}
+		if (s_limitzupperEdit) {
+			delete s_limitzupperEdit;
+			s_limitzupperEdit = 0;
+		}
+		if (s_limitzlowerLabel) {
+			delete s_limitzlowerLabel;
+			s_limitzlowerLabel = 0;
+		}
+		if (s_limitzlowerEdit) {
+			delete s_limitzlowerEdit;
+			s_limitzlowerEdit = 0;
+		}
+		if (s_limitzchkLabel) {
+			delete s_limitzchkLabel;
+			s_limitzchkLabel = 0;
+		}
+		if (s_limitzchkEdit) {
+			delete s_limitzchkEdit;
+			s_limitzchkEdit = 0;
+		}
+		if (s_limiteulsp1) {
+			delete s_limiteulsp1;
+			s_limiteulsp1 = 0;
+		}
+		if (s_limiteulsp2) {
+			delete s_limiteulsp2;
+			s_limiteulsp2 = 0;
+		}
+		if (s_limiteulsp3) {
+			delete s_limiteulsp3;
+			s_limiteulsp3 = 0;
+		}
+		if (s_limiteuloneB) {
+			delete s_limiteuloneB;
+			s_limiteuloneB = 0;
+		}
+		if (s_limiteuldeeperB) {
+			delete s_limiteuldeeperB;
+			s_limiteuldeeperB = 0;
+		}
+		if (s_limiteulallB) {
+			delete s_limiteulallB;
+			s_limiteulallB = 0;
+		}
+		if (s_limitcppsLabel) {
+			delete s_limitcppsLabel;
+			s_limitcppsLabel = 0;
+		}
+		if (s_limitcpsp1) {
+			delete s_limitcpsp1;
+			s_limitcpsp1 = 0;
+		}
+		if (s_limitcpsp2) {
+			delete s_limitcpsp2;
+			s_limitcpsp2 = 0;
+		}
+		if (s_limitcpsp3) {
+			delete s_limitcpsp3;
+			s_limitcpsp3 = 0;
+		}
+		if (s_limitcptosymB) {
+			delete s_limitcptosymB;
+			s_limitcptosymB = 0;
+		}
+		if (s_limitcpfromsymB) {
+			delete s_limitcpfromsymB;
+			s_limitcpfromsymB = 0;
+		}
+		if (s_limitcpB) {
+			delete s_limitcpB;
+			s_limitcpB = 0;
+		}
+		if (s_limitpsB) {
+			delete s_limitpsB;
+			s_limitpsB = 0;
+		}
+		if (s_limitsetLabel) {
+			delete s_limitsetLabel;
+			s_limitsetLabel = 0;
+		}
+		if (s_limitsetsp1) {
+			delete s_limitsetsp1;
+			s_limitsetsp1 = 0;
+		}
+		if (s_limitsetsp2) {
+			delete s_limitsetsp2;
+			s_limitsetsp2 = 0;
+		}
+		if (s_limitsetsp3) {
+			delete s_limitsetsp3;
+			s_limitsetsp3 = 0;
+		}
+		if (s_limitreset180B) {
+			delete s_limitreset180B;
+			s_limitreset180B = 0;
+		}
+		if (s_limit180to170B) {
+			delete s_limit180to170B;
+			s_limit180to170B = 0;
+		}
+		if (s_limitreset0B) {
+			delete s_limitreset0B;
+			s_limitreset0B = 0;
+		}
+		if (s_limitfrommotB) {
+			delete s_limitfrommotB;
+			s_limitfrommotB = 0;
+		}
+		if (s_limitsetallLabel) {
+			delete s_limitsetallLabel;
+			s_limitsetallLabel = 0;
+		}
+		if (s_limitsetallsp1) {
+			delete s_limitsetallsp1;
+			s_limitsetallsp1 = 0;
+		}
+		if (s_limitsetallsp2) {
+			delete s_limitsetallsp2;
+			s_limitsetallsp2 = 0;
+		}
+		if (s_limitsetallsp3) {
+			delete s_limitsetallsp3;
+			s_limitsetallsp3 = 0;
+		}
+		if (s_limitresetall180B) {
+			delete s_limitresetall180B;
+			s_limitresetall180B = 0;
+		}
+		if (s_limitall180to170B) {
+			delete s_limitall180to170B;
+			s_limitall180to170B = 0;
+		}
+		if (s_limitallreset0B) {
+			delete s_limitallreset0B;
+			s_limitallreset0B = 0;
+		}
+		if (s_limitallfrommotB) {
+			delete s_limitallfrommotB;
+			s_limitallfrommotB = 0;
+		}
+		if (s_limitallboneallmotLabel) {
+			delete s_limitallboneallmotLabel;
+			s_limitallboneallmotLabel = 0;
+		}
+		if (s_limitallboneallmotB) {
+			delete s_limitallboneallmotB;
+			s_limitallboneallmotB = 0;
+		}
+		if (s_limitphysicsLabel) {
+			delete s_limitphysicsLabel;
+			s_limitphysicsLabel = 0;
+		}
+		if (s_limitphysicssp) {
+			delete s_limitphysicssp;
+			s_limitphysicssp = 0;
+		}
+		if (s_limitphysicsrateLabel) {
+			delete s_limitphysicsrateLabel;
+			s_limitphysicsrateLabel = 0;
+		}
+		if (s_limitphysicsrateSlider) {
+			delete s_limitphysicsrateSlider;
+			s_limitphysicsrateSlider = 0;
+		}
+		if (s_limitphsysicssp1) {
+			delete s_limitphsysicssp1;
+			s_limitphsysicssp1 = 0;
+		}
+		if (s_limitphsysicssp2) {
+			delete s_limitphsysicssp2;
+			s_limitphsysicssp2 = 0;
+		}
+		if (s_limitphysicsDepperB) {
+			delete s_limitphysicsDepperB;
+			s_limitphysicsDepperB = 0;
+		}
+		if (s_limitphysicsAllB) {
+			delete s_limitphysicsAllB;
+			s_limitphysicsAllB = 0;
+		}
+
+		if (s_limitWnd) {
+			delete s_limitWnd;
+			s_limitWnd = 0;
+		}
+	}
+
 
 	if (s_impgroupcheck) {
 		delete s_impgroupcheck;
@@ -15853,11 +16335,15 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 	s_customrigbone = 0;
 	s_curboneno = -1;//2024/03/03
 
-	if (s_anglelimitdlg) {
-		s_underanglelimithscroll = 0;
-		DestroyWindow(s_anglelimitdlg);
-		s_anglelimitdlg = 0;
+	//if (s_anglelimitdlg) {
+	//	s_underanglelimithscroll = 0;
+	//	DestroyWindow(s_anglelimitdlg);
+	//	s_anglelimitdlg = 0;
+	//}
+	if (s_limitWnd) {
+		ShowLimitEulerWnd(false);
 	}
+
 	if (s_rotaxisdlg) {
 		DestroyWindow(s_rotaxisdlg);
 		s_rotaxisdlg = 0;
@@ -28101,11 +28587,6 @@ int CreateGUIDlgLOD()
 			_ASSERT(0);
 			abort();
 		}
-		int result1 = s_lodnearEdit->makeSoftNumKey();
-		if (result1 != 0) {
-			_ASSERT(0);
-			abort();
-		}
 		s_lodfarLabel = new OWP_Label(L"ProjFar", labelheight);
 		if (!s_lodfarLabel) {
 			_ASSERT(0);
@@ -28115,11 +28596,6 @@ int CreateGUIDlgLOD()
 		swprintf_s(strfar, 256, L"%.1f", g_projfar);
 		s_lodfarEdit = new OWP_EditBox(strfar, labelheight);
 		if (!s_lodfarEdit) {
-			_ASSERT(0);
-			abort();
-		}
-		int result2 = s_lodfarEdit->makeSoftNumKey();
-		if (result2 != 0) {
 			_ASSERT(0);
 			abort();
 		}
@@ -28596,11 +29072,6 @@ int CreateLightsWnd()
 				_ASSERT(0);
 				abort();
 			}
-			int result1 = s_polarxzEdit[lightindex]->makeSoftNumKey();
-			if (result1 != 0) {
-				_ASSERT(0);
-				abort();
-			}
 			s_polaryLabel[lightindex] = new OWP_Label(L"Y(-90,90]", labelheight);
 			if (!s_polaryLabel[lightindex]) {
 				_ASSERT(0);
@@ -28608,11 +29079,6 @@ int CreateLightsWnd()
 			}
 			s_polaryEdit[lightindex] = new OWP_EditBox(L"Y Edit", labelheight);
 			if (!s_polaryEdit[lightindex]) {
-				_ASSERT(0);
-				abort();
-			}
-			int result2 = s_polaryEdit[lightindex]->makeSoftNumKey();
-			if (result2 != 0) {
 				_ASSERT(0);
 				abort();
 			}
@@ -28919,7 +29385,6 @@ int CreateShadowParamsWnd()
 			_ASSERT(0);
 			abort();
 		}
-		s_shadowcamposupEdit->makeSoftNumKey();
 		s_shadowcamposdistsp0 = new OWP_Separator(s_shadowWnd, true, rate50, true);
 		if (!s_shadowcamposdistsp0) {
 			_ASSERT(0);
@@ -28945,7 +29410,6 @@ int CreateShadowParamsWnd()
 			_ASSERT(0);
 			abort();
 		}
-		s_shadowcamposdistEdit->makeSoftNumKey();
 		s_shadowcamposdistxLabel = new OWP_Label(L"X CameraDist", labelheight);
 		if (!s_shadowcamposdistxLabel) {
 			_ASSERT(0);
@@ -29046,7 +29510,6 @@ int CreateShadowParamsWnd()
 			_ASSERT(0);
 			abort();
 		}
-		s_shadowprojnearEdit->makeSoftNumKey();
 		s_shadowprojfarLabel = new OWP_Label(L"far", labelheight);
 		if (!s_shadowprojfarLabel) {
 			_ASSERT(0);
@@ -29057,7 +29520,6 @@ int CreateShadowParamsWnd()
 			_ASSERT(0);
 			abort();
 		}
-		s_shadowprojfarEdit->makeSoftNumKey();
 		s_shadowotherLabel = new OWP_Label(L"Other", labelheight);
 		if (!s_shadowotherLabel) {
 			_ASSERT(0);
@@ -29405,14 +29867,15 @@ int DispThresholdDlg()
 }
 
 
-int DispAngleLimitDlg()
+int CreateAngleLimitDlg()
 {
 	s_underanglelimithscroll = 0;
 
-	if (s_anglelimitdlg) {
-		//already opened
-		return 0;
+	if (s_limitWnd) {
+		//_ASSERT(0);
+		return 0;//作成済
 	}
+
 	if (!s_model) {
 		return 0;
 	}
@@ -29433,21 +29896,6 @@ int DispAngleLimitDlg()
 	s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 	Bone2AngleLimit();
 
-	/*
-	int dlgret;
-	dlgret = (int)DialogBoxW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ANGLELIMITDLG),
-		s_3dwnd, (DLGPROC)AngleLimitDlgProc);
-	if (dlgret != IDOK){
-		return 0;
-	}
-	*/
-	//s_anglelimitdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ANGLELIMITDLG), s_3dwnd, (DLGPROC)AngleLimitDlgProc);
-	//s_anglelimitdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ANGLELIMITDLG), g_mainhwnd, (DLGPROC)AngleLimitDlgProc);
-	s_anglelimitdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ANGLELIMITDLG3), g_mainhwnd, (DLGPROC)AngleLimitDlgProc2);
-	if (!s_anglelimitdlg) {
-		_ASSERT(0);
-		return 1;
-	}
 
 	int windowposx;
 	if (g_4kresolution) {
@@ -29457,36 +29905,951 @@ int DispAngleLimitDlg()
 		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
-	SetParent(s_anglelimitdlg, g_mainhwnd);
-	SetWindowPos(
-		s_anglelimitdlg,
-		HWND_TOP,
-		windowposx,
-		s_sidemenuheight,
-		s_sidewidth,
-		s_sideheight,
-		SWP_SHOWWINDOW
-	);
+	s_limitWnd = new OrgWindow(
+		0,
+		_T("LimitDlg"),		//ウィンドウクラス名
+		GetModuleHandle(NULL),	//インスタンスハンドル
+		WindowPos(windowposx, s_sidemenuheight),
+		WindowSize(s_sidewidth, s_sideheight),		//サイズ
+		_T("LimitDlg"),	//タイトル
+		g_mainhwnd,	//親ウィンドウハンドル
+		false,					//表示・非表示状態
+		//70, 50, 70,				//カラー
+		0, 0, 0,				//カラー
+		true,					//閉じられるか否か
+		true);					//サイズ変更の可否
 
-	//s_dseullimitctrls.push_back(IDD_ANGLELIMITDLG);
-	s_dseullimitctrls.push_back(IDC_BONEAXIS);
-	s_dseullimitctrls.push_back(IDC_EDIT_XL);
-	s_dseullimitctrls.push_back(IDC_EDIT_XU);
-	s_dseullimitctrls.push_back(IDC_EDIT_YL);
-	s_dseullimitctrls.push_back(IDC_EDIT_YU);
-	s_dseullimitctrls.push_back(IDC_EDIT_ZL);
-	s_dseullimitctrls.push_back(IDC_EDIT_ZU);
-	s_dseullimitctrls.push_back(IDOK);
+	int labelheight;
+	if (g_4kresolution) {
+		labelheight = 28;
+	}
+	else {
+		labelheight = 20;
+	}
+
+	if (s_limitWnd) {
+		double rate1 = 0.350;
+		double rate50 = 0.50;
 
 
-	//::MoveWindow(s_anglelimitdlg, 1200, 32, 450, 858, TRUE);
-	//s_rigidWnd->setSize(WindowSize(450, 858));//880
-	//s_rigidWnd->setPos(WindowPos(1200, 32));
+		s_limitnameLabel = new OWP_Label(L"BoneName", labelheight);
+		if (!s_limitnameLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitxsp1 = new OWP_Separator(s_limitWnd, true, 0.667, true);
+		if (!s_limitxsp1) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitxsp2 = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitxsp2) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitxsp3 = new OWP_Separator(s_limitWnd, true, 0.95, true);
+		if (!s_limitxsp3) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitxsp2a = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitxsp2a) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitxsp2b = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitxsp2b) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitxsp3a = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitxsp3a) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitxupperLabel = new OWP_Label(L"X Upper", labelheight);
+		if (!s_limitxupperLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitxupperEdit = new OWP_EditBox(L"XUpperEdit", labelheight);
+		if (!s_limitxupperEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitxlowerLabel = new OWP_Label(L"X Lower", labelheight);
+		if (!s_limitxlowerLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitxlowerEdit = new OWP_EditBox(L"XLowerEdit", labelheight);
+		if (!s_limitxlowerEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitxchkLabel = new OWP_Label(L"X Check", labelheight);;
+		if (!s_limitxchkLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitxchkEdit = new OWP_EditBox(L"XCheckEdit", labelheight);
+		if (!s_limitxchkEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitysp1 = new OWP_Separator(s_limitWnd, true, 0.667, true);
+		if (!s_limitysp1) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitysp2 = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitysp2) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitysp3 = new OWP_Separator(s_limitWnd, true, 0.95, true);
+		if (!s_limitysp3) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitysp2a = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitysp2a) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitysp2b = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitysp2b) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitysp3a = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitysp3a) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limityupperLabel = new OWP_Label(L"Y Upper", labelheight);
+		if (!s_limityupperLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limityupperEdit = new OWP_EditBox(L"YUpperEdit", labelheight);
+		if (!s_limityupperEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitylowerLabel = new OWP_Label(L"Y Lower", labelheight);
+		if (!s_limitylowerLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitylowerEdit = new OWP_EditBox(L"YLowerEdit", labelheight);
+		if (!s_limitylowerEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitychkLabel = new OWP_Label(L"Y Check", labelheight);
+		if (!s_limitychkLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitychkEdit = new OWP_EditBox(L"YCheckEdit", labelheight);
+		if (!s_limitychkEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitzsp1 = new OWP_Separator(s_limitWnd, true, 0.667, true);
+		if (!s_limitzsp1) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitzsp2 = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitzsp2) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitzsp3 = new OWP_Separator(s_limitWnd, true, 0.95, true);
+		if (!s_limitzsp3) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitzsp2a = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitzsp2a) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitzsp2b = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitzsp2b) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitzsp3a = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitzsp3a) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitzupperLabel = new OWP_Label(L"Z Upper", labelheight);
+		if (!s_limitzupperLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitzupperEdit = new OWP_EditBox(L"ZUpperEdit", labelheight);
+		if (!s_limitzupperEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitzlowerLabel = new OWP_Label(L"Z Lower", labelheight);
+		if (!s_limitzlowerLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitzlowerEdit = new OWP_EditBox(L"ZLowerEdit", labelheight);
+		if (!s_limitzlowerEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitzchkLabel = new OWP_Label(L"Z Check", labelheight);
+		if (!s_limitzchkLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitzchkEdit = new OWP_EditBox(L"ZCheckEdit", labelheight);
+		if (!s_limitzchkEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limiteulsp1 = new OWP_Separator(s_limitWnd, true, 0.667, true);
+		if (!s_limiteulsp1) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limiteulsp2 = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limiteulsp2) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limiteulsp3 = new OWP_Separator(s_limitWnd, true, 0.95, true);
+		if (!s_limiteulsp3) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limiteuloneB = new OWP_Button(L"One", labelheight);
+		if (!s_limiteuloneB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limiteuloneB->setTextColor(RGB(168, 129, 129));
+		s_limiteuldeeperB = new OWP_Button(L"Deeper", labelheight);
+		if (!s_limiteuldeeperB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limiteuldeeperB->setTextColor(RGB(168, 129, 129));
+		s_limiteulallB = new OWP_Button(L"All", labelheight);
+		if (!s_limiteulallB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limiteulallB->setTextColor(RGB(168, 129, 129));
+		s_limitcppsLabel = new OWP_Label(L"CopyPaste To Current Bone", labelheight);
+		if (!s_limitcppsLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitcpsp1 = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitcpsp1) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitcpsp2 = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitcpsp2) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitcpsp3 = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitcpsp3) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitcptosymB = new OWP_Button(L"Cp2Sym", labelheight);
+		if (!s_limitcptosymB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitcpfromsymB = new OWP_Button(L"CpFromSym", labelheight);
+		if (!s_limitcpfromsymB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitcpB = new OWP_Button(L"Copy", labelheight);
+		if (!s_limitcpB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitpsB = new OWP_Button(L"Paste", labelheight);
+		if (!s_limitpsB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitsetLabel = new OWP_Label(L"Set to Current Bone", labelheight);
+		if (!s_limitsetLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitsetsp1 = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitsetsp1) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitsetsp2 = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitsetsp2) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitsetsp3 = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitsetsp3) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitreset180B = new OWP_Button(L"180", labelheight);
+		if (!s_limitreset180B) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limit180to170B = new OWP_Button(L"180to170", labelheight);
+		if (!s_limit180to170B) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitreset0B = new OWP_Button(L"0", labelheight);
+		if (!s_limitreset0B) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitfrommotB = new OWP_Button(L"CurMot", labelheight);
+		if (!s_limitfrommotB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitsetallLabel = new OWP_Label(L"Set to All Bone", labelheight);
+		if (!s_limitsetallLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitsetallsp1 = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitsetallsp1) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitsetallsp2 = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitsetallsp2) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitsetallsp3 = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitsetallsp3) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitresetall180B = new OWP_Button(L"180", labelheight);
+		if (!s_limitresetall180B) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitall180to170B = new OWP_Button(L"180to170", labelheight);
+		if (!s_limitall180to170B) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitallreset0B = new OWP_Button(L"0", labelheight);
+		if (!s_limitallreset0B) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitallfrommotB = new OWP_Button(L"CurMot", labelheight);
+		if (!s_limitallfrommotB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitallboneallmotLabel = new OWP_Label(L"All Bone All Motion", labelheight);
+		if (!s_limitallboneallmotLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitallboneallmotB = new OWP_Button(L"From All Retartgeted Motions", labelheight);
+		if (!s_limitallboneallmotB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitphysicsLabel = new OWP_Label(L"limit rate for phsycis", labelheight);
+		if (!s_limitphysicsLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitphysicssp = new OWP_Separator(s_limitWnd, true, rate1, true);
+		if (!s_limitphysicssp) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitphysicsrateLabel = new OWP_Label(L"rate", labelheight);
+		if (!s_limitphysicsrateLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitphysicsrateSlider = new OWP_Slider((double)s_anglelimit.limitrate, 100.0, 0.0);
+		if (!s_limitphysicsrateSlider) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitphsysicssp1 = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitphsysicssp1) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitphsysicssp2 = new OWP_Separator(s_limitWnd, true, rate50, true);
+		if (!s_limitphsysicssp2) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitphysicsDepperB = new OWP_Button(L"Deeper", labelheight);
+		if (!s_limitphysicsDepperB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitphysicsDepperB->setTextColor(RGB(168, 129, 129));
+		s_limitphysicsAllB = new OWP_Button(L"All", labelheight);
+		if (!s_limitphysicsAllB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitphysicsAllB->setTextColor(RGB(168, 129, 129));
+		
 
-	ShowWindow(s_anglelimitdlg, SW_SHOW);
-	UpdateWindow(s_anglelimitdlg);
 
-	//AngleLimit2Bone();
+		s_limitWnd->addParts(*s_limitnameLabel);
+		s_limitWnd->addParts(*s_limitxsp1);
+		s_limitxsp1->addParts1(*s_limitxsp2);
+		s_limitxsp1->addParts2(*s_limitxsp3);
+		s_limitxsp2->addParts1(*s_limitxsp2a);
+		s_limitxsp2->addParts2(*s_limitxsp2b);
+		s_limitxsp3->addParts1(*s_limitxsp3a);
+		s_limitxsp2a->addParts1(*s_limitxlowerLabel);
+		s_limitxsp2a->addParts2(*s_limitxlowerEdit);
+		s_limitxsp2b->addParts1(*s_limitxupperLabel);
+		s_limitxsp2b->addParts2(*s_limitxupperEdit);
+		s_limitxsp3a->addParts1(*s_limitxchkLabel);
+		s_limitxsp3a->addParts2(*s_limitxchkEdit);
+
+		s_limitWnd->addParts(*s_limitysp1);
+		s_limitysp1->addParts1(*s_limitysp2);
+		s_limitysp1->addParts2(*s_limitysp3);
+		s_limitysp2->addParts1(*s_limitysp2a);
+		s_limitysp2->addParts2(*s_limitysp2b);
+		s_limitysp3->addParts1(*s_limitysp3a);
+		s_limitysp2a->addParts1(*s_limitylowerLabel);
+		s_limitysp2a->addParts2(*s_limitylowerEdit);
+		s_limitysp2b->addParts1(*s_limityupperLabel);
+		s_limitysp2b->addParts2(*s_limityupperEdit);
+		s_limitysp3a->addParts1(*s_limitychkLabel);
+		s_limitysp3a->addParts2(*s_limitychkEdit);
+
+		s_limitWnd->addParts(*s_limitzsp1);
+		s_limitzsp1->addParts1(*s_limitzsp2);
+		s_limitzsp1->addParts2(*s_limitzsp3);
+		s_limitzsp2->addParts1(*s_limitzsp2a);
+		s_limitzsp2->addParts2(*s_limitzsp2b);
+		s_limitzsp3->addParts1(*s_limitzsp3a);
+		s_limitzsp2a->addParts1(*s_limitzlowerLabel);
+		s_limitzsp2a->addParts2(*s_limitzlowerEdit);
+		s_limitzsp2b->addParts1(*s_limitzupperLabel);
+		s_limitzsp2b->addParts2(*s_limitzupperEdit);
+		s_limitzsp3a->addParts1(*s_limitzchkLabel);
+		s_limitzsp3a->addParts2(*s_limitzchkEdit);
+
+		s_limitWnd->addParts(*s_limiteulsp1);
+		s_limiteulsp1->addParts1(*s_limiteulsp2);
+		s_limiteulsp1->addParts2(*s_limiteulsp3);
+		s_limiteulsp2->addParts1(*s_limiteuloneB);
+		s_limiteulsp2->addParts2(*s_limiteuldeeperB);
+		s_limiteulsp3->addParts1(*s_limiteulallB);
+		s_limitWnd->addParts(*s_limitcppsLabel);
+		s_limitWnd->addParts(*s_limitcpsp1);
+		s_limitcpsp1->addParts1(*s_limitcpsp2);
+		s_limitcpsp1->addParts2(*s_limitcpsp3);
+		s_limitcpsp2->addParts1(*s_limitcptosymB);
+		s_limitcpsp2->addParts2(*s_limitcpfromsymB);
+		s_limitcpsp3->addParts1(*s_limitcpB);
+		s_limitcpsp3->addParts2(*s_limitpsB);
+		s_limitWnd->addParts(*s_limitsetLabel);
+		s_limitWnd->addParts(*s_limitsetsp1);
+		s_limitsetsp1->addParts1(*s_limitsetsp2);
+		s_limitsetsp1->addParts2(*s_limitsetsp3);
+		s_limitsetsp2->addParts1(*s_limitreset180B);
+		s_limitsetsp2->addParts2(*s_limit180to170B);
+		s_limitsetsp3->addParts1(*s_limitreset0B);
+		s_limitsetsp3->addParts2(*s_limitfrommotB);
+		s_limitWnd->addParts(*s_limitsetallLabel);
+		s_limitWnd->addParts(*s_limitsetallsp1);
+		s_limitsetallsp1->addParts1(*s_limitsetallsp2);
+		s_limitsetallsp1->addParts2(*s_limitsetallsp3);
+		s_limitsetallsp2->addParts1(*s_limitresetall180B);
+		s_limitsetallsp2->addParts2(*s_limitall180to170B);
+		s_limitsetallsp3->addParts1(*s_limitallreset0B);
+		s_limitsetallsp3->addParts2(*s_limitallfrommotB);
+		s_limitWnd->addParts(*s_limitallboneallmotLabel);
+		s_limitWnd->addParts(*s_limitallboneallmotB);
+		s_limitWnd->addParts(*s_limitphysicsLabel);
+		s_limitWnd->addParts(*s_limitphysicssp);
+		s_limitphysicssp->addParts1(*s_limitphysicsrateLabel);
+		s_limitphysicssp->addParts2(*s_limitphysicsrateSlider);
+		s_limitWnd->addParts(*s_limitphsysicssp1);
+		s_limitphsysicssp1->addParts2(*s_limitphsysicssp2);
+		s_limitphsysicssp2->addParts1(*s_limitphysicsDepperB);
+		s_limitphsysicssp2->addParts2(*s_limitphysicsAllB);
+
+
+		//##########
+		//Slider
+		//##########
+		s_limitphysicsrateSlider->setCursorListener([]() {
+			double value = s_limitphysicsrateSlider->getValue();
+			int setvalue = (int)(value + 0.0001);
+			s_anglelimit.limitrate = setvalue;
+			s_limitphysicsrateSlider->setValue(setvalue, false);//intに丸めてセットし直し
+		});
+
+		//########
+		//Button
+		//########
+		s_limiteuloneB->setButtonListener([]() {
+			s_changelimitangleFlag = true;
+			PrepairUndo();//全フレーム変更の前に全フレーム保存
+
+			int result1 = 0;
+			result1 = AngleDlg2AngleLimit();//エラー入力通知ダイアログも出す
+			if (result1 == 0) {
+				UpdateAfterEditAngleLimit(eLIM2BONE_LIM2BONE_ONE);
+			}
+
+			PrepairUndo();//全フレーム変更後に全フレーム保存
+			s_changelimitangleFlag = false;
+		});
+		s_limiteuldeeperB->setButtonListener([]() {
+			s_changelimitangleFlag = true;
+			PrepairUndo();//全フレーム変更の前に全フレーム保存
+
+			int result1 = 0;
+			result1 = AngleDlg2AngleLimit();//エラー入力通知ダイアログも出す
+			if (result1 == 0) {
+				UpdateAfterEditAngleLimit(eLIM2BONE_LIM2BONE_DEEPER);
+			}
+
+			PrepairUndo();//全フレーム変更後に全フレーム保存
+			s_changelimitangleFlag = false;
+		});
+		s_limiteulallB->setButtonListener([]() {
+			s_changelimitangleFlag = true;
+			PrepairUndo();//全フレーム変更の前に全フレーム保存
+
+			int result1 = 0;
+			result1 = AngleDlg2AngleLimit();//エラー入力通知ダイアログも出す
+			if (result1 == 0) {
+				UpdateAfterEditAngleLimit(eLIM2BONE_LIM2BONE_ALL);
+			}
+
+			PrepairUndo();//全フレーム変更後に全フレーム保存
+			s_changelimitangleFlag = false;
+		});
+
+		s_limitcptosymB->setButtonListener([]() {
+			//CopyToSymBone
+			if (s_anglelimitbone && s_limitWnd) {
+				int symboneno = 0;
+				int existflag = 0;
+				s_model->GetSymBoneNo(s_anglelimitbone->GetBoneNo(), &symboneno, &existflag);
+				if (symboneno >= 0) {
+					CBone* symbone = s_model->GetBoneByID(symboneno);
+					if (symbone) {
+						ANGLELIMIT symanglelimit = s_anglelimit;
+						//symanglelimit.lower[1] *= -1;
+						symanglelimit.lower[2] *= -1;
+						//symanglelimit.upper[1] *= -1;
+						symanglelimit.upper[2] *= -1;
+
+						if (s_model->ExistCurrentMotion()) {
+							s_changelimitangleFlag = true;
+							PrepairUndo();//全フレーム変更の前に全フレーム保存
+
+							symbone->SetAngleLimit(g_limitdegflag, symanglelimit);
+
+							UpdateAfterEditAngleLimit(eLIM2BONE_NONE);
+
+							PrepairUndo();//全フレーム変更後に全フレーム保存
+							s_changelimitangleFlag = false;
+						}
+					}
+				}
+			}
+		});
+		s_limitcpfromsymB->setButtonListener([]() {
+			//CopyFromSymBone
+			if (s_anglelimitbone && s_limitWnd) {
+				int symboneno = 0;
+				int existflag = 0;
+				s_model->GetSymBoneNo(s_anglelimitbone->GetBoneNo(), &symboneno, &existflag);
+				if (symboneno >= 0) {
+					CBone* symbone = s_model->GetBoneByID(symboneno);
+					if (symbone) {
+						if (s_model->ExistCurrentMotion()) {
+
+							s_changelimitangleFlag = true;
+							PrepairUndo();//全フレーム変更の前に全フレーム保存
+
+							ANGLELIMIT anglelimit = symbone->GetAngleLimit(g_limitdegflag, 0);
+							ANGLELIMIT symanglelimit = anglelimit;
+							//symanglelimit.lower[1] *= -1;
+							symanglelimit.lower[2] *= -1;
+							//symanglelimit.upper[1] *= -1;
+							symanglelimit.upper[2] *= -1;
+
+							//s_anglelimitbone->SetAngleLimit(symanglelimit, curmi->motid, curmi->curframe);
+							s_anglelimit = symanglelimit;
+							UpdateAfterEditAngleLimit(eLIM2BONE_LIM2BONE_ONE);
+
+							bool updateonlycheckeul = false;
+							AngleLimit2Dlg(updateonlycheckeul);
+							//UpdateWindow(s_anglelimitdlg);
+							s_limitWnd->callRewrite();
+
+							PrepairUndo();//全フレーム変更後に全フレーム保存
+							s_changelimitangleFlag = false;
+
+						}
+
+					}
+				}
+			}
+		});
+		s_limitcpB->setButtonListener([]() {
+			//copy button
+			if (s_anglelimitbone && s_limitWnd) {
+				s_anglelimitcopy = s_anglelimit;
+			}
+		});
+		s_limitpsB->setButtonListener([]() {
+			//paste button
+			if (s_anglelimitbone && s_limitWnd) {
+				s_changelimitangleFlag = true;
+				PrepairUndo();//全フレーム変更の前に全フレーム保存
+
+				s_anglelimit = s_anglelimitcopy;
+				UpdateAfterEditAngleLimit(eLIM2BONE_LIM2BONE_ONE);
+				bool updateonlycheckeul = false;
+				AngleLimit2Dlg(updateonlycheckeul);
+				//UpdateWindow(s_anglelimitdlg);
+				s_limitWnd->callRewrite();
+
+				PrepairUndo();//全フレーム変更後に全フレーム保存
+				s_changelimitangleFlag = false;
+
+			}
+		});
+
+
+
+		s_limitreset180B->setButtonListener([]() {
+			//curboneだけ
+			if (s_model && s_limitWnd && s_anglelimitbone) {
+				s_changelimitangleFlag = true;
+				PrepairUndo();//全フレーム変更の前に全フレーム保存
+
+				bool excludebt = false;
+				s_model->ResetAngleLimit(excludebt, 180, s_anglelimitbone);//2022/12/05 curbone引数追加
+
+				UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM);
+
+				bool updateonlycheckeul = false;
+				AngleLimit2Dlg(updateonlycheckeul);
+				//UpdateWindow(s_anglelimitdlg);
+				s_limitWnd->callRewrite();
+
+				PrepairUndo();//全フレーム変更後に全フレーム保存
+				s_changelimitangleFlag = false;
+
+			}
+		});
+		s_limit180to170B->setButtonListener([]() {
+			//curboneだけ
+			if (s_model && s_limitWnd && s_anglelimitbone) {
+				s_changelimitangleFlag = true;
+				PrepairUndo();//全フレーム変更の前に全フレーム保存
+
+				s_model->AngleLimitReplace180to170(s_anglelimitbone);//2022/12/05 curbone引数追加
+
+				UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM);
+
+				bool updateonlycheckeul = false;
+				AngleLimit2Dlg(updateonlycheckeul);
+				//UpdateWindow(s_anglelimitdlg);
+				s_limitWnd->callRewrite();
+
+				PrepairUndo();//全フレーム変更後に全フレーム保存
+				s_changelimitangleFlag = false;
+
+			}
+		});
+		s_limitreset0B->setButtonListener([]() {
+			//curboneだけ
+			if (s_model && s_limitWnd && s_anglelimitbone) {
+				s_changelimitangleFlag = true;
+				PrepairUndo();//全フレーム変更の前に全フレーム保存
+
+				bool excludebt = false;
+				s_model->ResetAngleLimit(excludebt, 0, s_anglelimitbone);//2022/12/05 curbone引数追加
+
+				UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM);
+
+				bool updateonlycheckeul = false;
+				AngleLimit2Dlg(updateonlycheckeul);
+				//UpdateWindow(s_anglelimitdlg);
+				s_limitWnd->callRewrite();
+
+				PrepairUndo();//全フレーム変更後に全フレーム保存
+				s_changelimitangleFlag = false;
+
+			}
+		});
+		s_limitfrommotB->setButtonListener([]() {
+			//curboneだけ
+			if (s_model && s_limitWnd && s_anglelimitbone) {
+				if (s_model->ExistCurrentMotion()) {
+					bool savelimitflag = g_limitdegflag;
+
+					////s_changelimitangleFlag = true;
+					////PrepairUndo();//全フレーム変更の前に全フレーム保存
+
+					//長いフレームの処理は数秒時間がかかることがあるので砂時計カーソルにする
+					HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
+
+					bool excludebt = true;
+					//s_model->ResetAngleLimit(excludebt, 0);
+					s_model->ResetAngleLimit(excludebt, 0, s_anglelimitbone);//2024/02/02 curboneだけリセット
+					UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM, false);
+
+					s_model->AdditiveCurrentToAngleLimit(s_anglelimitbone);//2022/12/05 curbone引数追加
+
+					//ChangeLimitDegFlag(s_savelimitdegflag, true, false);//updateeulはこれより後で呼ばれるUpdateAfterEditAngleLimitで
+
+					UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM, false);
+
+					bool updateonlycheckeul = false;
+					AngleLimit2Dlg(updateonlycheckeul);
+					//UpdateWindow(s_anglelimitdlg);
+					s_limitWnd->callRewrite();
+
+					//カーソルを元に戻す
+					SetCursor(oldcursor);
+
+					PrepairUndo();//全フレーム変更後に全フレーム保存
+					s_changelimitangleFlag = false;
+
+				}
+			}
+		});
+
+
+
+		s_limitresetall180B->setButtonListener([]() {
+			if (s_model && s_limitWnd) {
+				s_changelimitangleFlag = true;
+				PrepairUndo();//全フレーム変更の前に全フレーム保存
+
+				bool excludebt = false;
+				s_model->ResetAngleLimit(excludebt, 180);
+
+				UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM);
+
+				bool updateonlycheckeul = false;
+				AngleLimit2Dlg(updateonlycheckeul);
+				//UpdateWindow(s_anglelimitdlg);
+				s_limitWnd->callRewrite();
+
+				PrepairUndo();//全フレーム変更後に全フレーム保存
+				s_changelimitangleFlag = false;
+
+			}
+		});
+		s_limitall180to170B->setButtonListener([]() {
+			if (s_model && s_limitWnd) {
+				s_changelimitangleFlag = true;
+				PrepairUndo();//全フレーム変更の前に全フレーム保存
+
+				s_model->AngleLimitReplace180to170();
+
+				UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM);
+
+				bool updateonlycheckeul = false;
+				AngleLimit2Dlg(updateonlycheckeul);
+				//UpdateWindow(s_anglelimitdlg);
+				s_limitWnd->callRewrite();
+
+				PrepairUndo();//全フレーム変更後に全フレーム保存
+				s_changelimitangleFlag = false;
+
+			}
+		});
+		s_limitallreset0B->setButtonListener([]() {
+			if (s_model && s_limitWnd) {
+				s_changelimitangleFlag = true;
+				PrepairUndo();//全フレーム変更の前に全フレーム保存
+
+				bool excludebt = false;
+				s_model->ResetAngleLimit(excludebt, 0);
+
+				UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM);
+
+				bool updateonlycheckeul = false;
+				AngleLimit2Dlg(updateonlycheckeul);
+				//UpdateWindow(s_anglelimitdlg);
+				s_limitWnd->callRewrite();
+
+				PrepairUndo();//全フレーム変更後に全フレーム保存
+				s_changelimitangleFlag = false;
+
+			}
+		});
+		s_limitallfrommotB->setButtonListener([]() {
+			if (s_model && s_limitWnd) {
+				if (s_model->ExistCurrentMotion()) {
+
+					s_changelimitangleFlag = true;
+					PrepairUndo();//全フレーム変更の前に全フレーム保存
+
+					//長いフレームの処理は数秒時間がかかることがあるので砂時計カーソルにする
+					HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
+
+					//s_savelimitdegflag = g_limitdegflag;
+					//ChangeLimitDegFlag(false, true, true);
+					//g_limitdegflag = false;
+					//if (s_LimitDegCheckBox) {
+					//	s_LimitDegCheckBox->SetChecked(g_limitdegflag);
+					//}
+
+
+					//モーションからの設定の前に　まずはゼロ初期化する
+					bool excludebt = true;
+					s_model->ResetAngleLimit(excludebt, 0);
+					UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM, false);
+
+
+					//g_limitdegflagに関わらず　既存モーションの制限無しの姿勢を元に設定
+					s_model->AdditiveCurrentToAngleLimit(0);//内部で全フレーム分処理
+
+					//ChangeLimitDegFlag(s_savelimitdegflag, true, false);//updateeulはこれより後で呼ばれるUpdateAfterEditAngleLimitで
+					//g_limitdegflag = s_savelimitdegflag;
+					//if (s_LimitDegCheckBox) {
+					//	s_LimitDegCheckBox->SetChecked(g_limitdegflag);
+					//}
+
+					UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM, false);
+
+					bool updateonlycheckeul = false;
+					AngleLimit2Dlg(updateonlycheckeul);
+					//UpdateWindow(s_anglelimitdlg);
+					s_limitWnd->callRewrite();
+
+					//カーソルを元に戻す
+					SetCursor(oldcursor);
+
+					PrepairUndo();//全フレーム変更後に全フレーム保存
+					s_changelimitangleFlag = false;
+
+				}
+			}
+		});
+
+		s_limitallboneallmotB->setButtonListener([]() {
+			if (s_model && s_limitWnd) {
+				if (s_model->ExistCurrentMotion()) {
+					bool savelimitflag = g_limitdegflag;
+
+					s_changelimitangleFlag = true;
+					PrepairUndo();//全フレーム変更の前に全フレーム保存
+
+					//長いフレームの処理は数秒時間がかかることがあるので砂時計カーソルにする
+					HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
+
+					//if (savelimitflag == true) {
+					//	//2023/10/18 制限角度キャプチャは　limitdegflag = falseにした状態で働く
+					//	s_savelimitdegflag = true;
+					//	ChangeLimitDegFlag(false, true, true);
+					//}
+
+					//モーションからの設定の前に　まずはゼロ初期化する
+					bool excludebt = true;
+					s_model->ResetAngleLimit(excludebt, 0);
+					UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM, false);
+
+					//g_limitdegflagに関わらず　既存モーションの制限無しの姿勢を元に設定
+					s_model->AdditiveAllMotionsToAngleLimit();//内部で全モーション全フレーム分処理
+
+					//ChangeLimitDegFlag(s_savelimitdegflag, true, false);//updateeulはこれより後で呼ばれるUpdateAfterEditAngleLimitで
+					//if (savelimitflag == true) {
+					//	//処理後に元に戻す
+					//	s_savelimitdegflag = false;
+					//	ChangeLimitDegFlag(true, true, true);
+					//}
+
+					UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM, false);
+
+					//s_model->SetMotionFrame(1.0);
+					//ChaMatrix tmpwm = s_model->GetWorldMat();
+					//s_model->UpdateMatrix(&tmpwm, &s_matVP);
+
+					bool updateonlycheckeul = false;
+					AngleLimit2Dlg(updateonlycheckeul);
+					//UpdateWindow(s_anglelimitdlg);
+					s_limitWnd->callRewrite();
+
+					//カーソルを元に戻す
+					SetCursor(oldcursor);
+
+					PrepairUndo();//全フレーム変更後に全フレーム保存
+					s_changelimitangleFlag = false;
+
+				}
+			}
+		});
+
+		s_limitphysicsDepperB->setButtonListener([]() {
+			if (s_anglelimitbone && s_limitWnd) {
+				LimitRate2Bone_Req(s_anglelimitbone, 0);
+			}
+			//PrepairUndo();
+		});
+		s_limitphysicsAllB->setButtonListener([]() {
+			if (s_anglelimitbone && s_limitWnd) {
+				LimitRate2Bone_Req(s_model->GetTopBone(false), 1);
+			}
+			//PrepairUndo();
+		});
+
+
+		s_limitWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
+		s_limitWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
+
+		//１クリック目問題対応
+		s_limitWnd->refreshPosAndSize();
+
+		s_limitWnd->callRewrite();
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+
+	return 0;
+
+
 
 
 	return 0;
@@ -29795,6 +31158,42 @@ int CheckStr_float(const WCHAR* srcstr)
 
 
 
+int GetAngleLimitEditIntOWP(OWP_EditBox* srcedit, int* dstlimit)
+{
+	if (!srcedit || !dstlimit) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	WCHAR stredit[ANGLEDLGEDITLEN] = { 0L };
+	::ZeroMemory(stredit, sizeof(WCHAR) * ANGLEDLGEDITLEN);
+	srcedit->getName(stredit, ANGLEDLGEDITLEN);
+
+	stredit[ANGLEDLGEDITLEN - 1] = 0L;
+	int result1;
+	result1 = CheckStr_SInt(stredit);
+	if (result1 == 0) {
+		stredit[ANGLEDLGEDITLEN - 1] = 0L;
+
+		SetLastError(0);
+		int tmpint = _wtoi(stredit);
+		DWORD dwresult = GetLastError();
+		if (dwresult == 0) {
+			*dstlimit = tmpint;
+			return 0;
+		}
+		else {
+			_ASSERT(0);
+			*dstlimit = 0;
+			return 1;
+		}
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+}
+
 int GetAngleLimitEditInt(HWND hDlgWnd, int editresid, int* dstlimit)
 {
 	WCHAR stredit[ANGLEDLGEDITLEN] = { 0L };
@@ -29826,6 +31225,7 @@ int GetAngleLimitEditInt(HWND hDlgWnd, int editresid, int* dstlimit)
 		return 1;
 	}
 }
+
 
 int ConvDir2PolarCoord(float srcdirx, float srcdiry, float srcdirz, float* dstxzdeg, float* dstydeg)
 {
@@ -30378,63 +31778,64 @@ int Global2ThresholdDlg(HWND hDlgWnd)
 	return 0;
 }
 
-int AngleLimit2Dlg(HWND hDlgWnd, bool updateonlycheckeul)
+int AngleLimit2Dlg(bool updateonlycheckeul)
 {
-	if (s_anglelimitbone && (hDlgWnd != 0)) {
+	if (s_anglelimitbone && (s_limitWnd != 0)) {
 
 		if (updateonlycheckeul == false) {
-
-			SetDlgItemText(hDlgWnd, IDC_BONENAME, (LPCWSTR)s_anglelimitbone->GetWBoneName());
-
-			SendMessage(GetDlgItem(hDlgWnd, IDC_BONEAXIS), CB_RESETCONTENT, 0, 0);
-			WCHAR strcombo[256];
-			wcscpy_s(strcombo, 256, L"CurrentBoneAxis");
-			SendMessage(GetDlgItem(hDlgWnd, IDC_BONEAXIS), CB_ADDSTRING, 0, (LPARAM)strcombo);
-			wcscpy_s(strcombo, 256, L"ParentBoneAxis");
-			SendMessage(GetDlgItem(hDlgWnd, IDC_BONEAXIS), CB_ADDSTRING, 0, (LPARAM)strcombo);
-			wcscpy_s(strcombo, 256, L"GlobalBoneAxis");
-			SendMessage(GetDlgItem(hDlgWnd, IDC_BONEAXIS), CB_ADDSTRING, 0, (LPARAM)strcombo);
-			SendMessage(GetDlgItem(hDlgWnd, IDC_BONEAXIS), CB_SETCURSEL, s_anglelimit.boneaxiskind, 0);
-			EnableWindow(GetDlgItem(hDlgWnd, IDC_BONEAXIS), FALSE);//固定値
-
+			if (s_limitnameLabel) {
+				s_limitnameLabel->setName(s_anglelimitbone->GetWBoneName());
+			}
 
 			//入力フィールドを毎フレーム更新すると　入力できないので　updateonlycheckeulのときには更新しない
-			InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_XL, s_anglelimit.lower[AXIS_X]);
-			InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_XU, s_anglelimit.upper[AXIS_X]);
+			WCHAR strlimit[ANGLEDLGEDITLEN] = { 0L };
 
-			InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_YL, s_anglelimit.lower[AXIS_Y]);
-			InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_YU, s_anglelimit.upper[AXIS_Y]);
+			swprintf_s(strlimit, ANGLEDLGEDITLEN, L"%d", s_anglelimit.lower[AXIS_X]);
+			if (s_limitxlowerEdit) {
+				s_limitxlowerEdit->setName(strlimit);
+			}
+			swprintf_s(strlimit, ANGLEDLGEDITLEN, L"%d", s_anglelimit.upper[AXIS_X]);
+			if (s_limitxupperEdit) {
+				s_limitxupperEdit->setName(strlimit);
+			}
 
-			InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_ZL, s_anglelimit.lower[AXIS_Z]);
-			InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_ZU, s_anglelimit.upper[AXIS_Z]);
+			swprintf_s(strlimit, ANGLEDLGEDITLEN, L"%d", s_anglelimit.lower[AXIS_Y]);
+			if (s_limitylowerEdit) {
+				s_limitylowerEdit->setName(strlimit);
+			}
+			swprintf_s(strlimit, ANGLEDLGEDITLEN, L"%d", s_anglelimit.upper[AXIS_Y]);
+			if (s_limityupperEdit) {
+				s_limityupperEdit->setName(strlimit);
+			}
 
+			swprintf_s(strlimit, ANGLEDLGEDITLEN, L"%d", s_anglelimit.lower[AXIS_Z]);
+			if (s_limitzlowerEdit) {
+				s_limitzlowerEdit->setName(strlimit);
+			}
+			swprintf_s(strlimit, ANGLEDLGEDITLEN, L"%d", s_anglelimit.upper[AXIS_Z]);
+			if (s_limitzupperEdit) {
+				s_limitzupperEdit->setName(strlimit);
+			}
 
-			int sliderpos = s_anglelimit.limitrate;
-			SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIMITRATE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
-			SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIMITRATE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)100);
-			SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIMITRATE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-			WCHAR strrate[256] = { 0L };
-			swprintf_s(strrate, 256, L"rate : %d", s_anglelimit.limitrate);
-			SetDlgItemText(hDlgWnd, IDC_STATIC_LIMITRATE, strrate);
+			if (s_limitphysicsrateSlider) {
+				s_limitphysicsrateSlider->setValue((double)s_anglelimit.limitrate, false);
+			}
 		}
 
+		WCHAR strchk[ANGLEDLGEDITLEN] = { 0L };
+		swprintf_s(strchk, ANGLEDLGEDITLEN, L"%d", (int)s_anglelimit.chkeul[AXIS_X]);
+		if (s_limitxchkEdit) {
+			s_limitxchkEdit->setName(strchk);
+		}
+		swprintf_s(strchk, ANGLEDLGEDITLEN, L"%d", (int)s_anglelimit.chkeul[AXIS_Y]);
+		if (s_limitychkEdit) {
+			s_limitychkEdit->setName(strchk);
+		}
+		swprintf_s(strchk, ANGLEDLGEDITLEN, L"%d", (int)s_anglelimit.chkeul[AXIS_Z]);
+		if (s_limitzchkEdit) {
+			s_limitzchkEdit->setName(strchk);
+		}
 
-		InitAngleLimitEditFloat(hDlgWnd, IDC_EDIT_CHKX, s_anglelimit.chkeul[AXIS_X]);
-		InitAngleLimitEditFloat(hDlgWnd, IDC_EDIT_CHKY, s_anglelimit.chkeul[AXIS_Y]);
-		InitAngleLimitEditFloat(hDlgWnd, IDC_EDIT_CHKZ, s_anglelimit.chkeul[AXIS_Z]);
-
-
-		//InitAngleLimitSlider(hDlgWnd, IDC_SLXL, IDC_XLVAL, s_anglelimit.lower[AXIS_X]);
-		//InitAngleLimitSlider(hDlgWnd, IDC_SLXU, IDC_XUVAL, s_anglelimit.upper[AXIS_X]);
-		//InitAngleLimitSliderFloat(hDlgWnd, IDC_SLCHKX, IDC_CHKXVAL, s_anglelimit.chkeul[AXIS_X]);
-
-		//InitAngleLimitSlider(hDlgWnd, IDC_SLYL, IDC_YLVAL, s_anglelimit.lower[AXIS_Y]);
-		//InitAngleLimitSlider(hDlgWnd, IDC_SLYU, IDC_YUVAL, s_anglelimit.upper[AXIS_Y]);
-		//InitAngleLimitSliderFloat(hDlgWnd, IDC_SLCHKY, IDC_CHKYVAL, s_anglelimit.chkeul[AXIS_Y]);
-
-		//InitAngleLimitSlider(hDlgWnd, IDC_SLZL, IDC_ZLVAL, s_anglelimit.lower[AXIS_Z]);
-		//InitAngleLimitSlider(hDlgWnd, IDC_SLZU, IDC_ZUVAL, s_anglelimit.upper[AXIS_Z]);
-		//InitAngleLimitSliderFloat(hDlgWnd, IDC_SLCHKZ, IDC_CHKZVAL, s_anglelimit.chkeul[AXIS_Z]);
 
 		//if (s_anglelimit.via180flag[0] == 1){
 		//	CheckDlgButton(hDlgWnd, IDC_CHECKX, BST_CHECKED);
@@ -30455,29 +31856,10 @@ int AngleLimit2Dlg(HWND hDlgWnd, bool updateonlycheckeul)
 		//	CheckDlgButton(hDlgWnd, IDC_CHECKZ, BST_UNCHECKED);
 		//}
 
-
-		//if (s_anglelimit.applyeul[AXIS_X] == 1) {
-		//	CheckDlgButton(hDlgWnd, IDC_APPLYX, BST_CHECKED);
-		//}
-		//else {
-		//	CheckDlgButton(hDlgWnd, IDC_APPLYX, BST_UNCHECKED);
-		//}
-		//if (s_anglelimit.applyeul[AXIS_Y] == 1) {
-		//	CheckDlgButton(hDlgWnd, IDC_APPLYY, BST_CHECKED);
-		//}
-		//else {
-		//	CheckDlgButton(hDlgWnd, IDC_APPLYY, BST_UNCHECKED);
-		//}
-		//if (s_anglelimit.applyeul[AXIS_Z] == 1) {
-		//	CheckDlgButton(hDlgWnd, IDC_APPLYZ, BST_CHECKED);
-		//}
-		//else {
-		//	CheckDlgButton(hDlgWnd, IDC_APPLYZ, BST_UNCHECKED);
-		//}
-
 	}
 	else {
-		_ASSERT(0);
+		//_ASSERT(0);
+		int dbgflag1 = 1;
 	}
 
 	return 0;
@@ -30547,7 +31929,7 @@ int ThresholdDlg2Global(HWND hDlgWnd)
 }
 
 
-int AngleDlg2AngleLimit(HWND hDlgWnd)//2022/12/05 エラー入力通知ダイアログも出す
+int AngleDlg2AngleLimit()//2022/12/05 エラー入力通知ダイアログも出す
 {
 	int result_xl, result_xu;
 	int result_yl, result_yu;
@@ -30570,36 +31952,36 @@ int AngleDlg2AngleLimit(HWND hDlgWnd)//2022/12/05 エラー入力通知ダイア
 	val_zu = 180;
 	bool errorflag = false;
 
-	result_xl = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_XL, &val_xl);
+	result_xl = GetAngleLimitEditIntOWP(s_limitxlowerEdit, &val_xl);
 	if (result_xl != 0) {
 		::MessageBox(g_mainhwnd, L"AngleLimitDlgのXLowerの入力値が不正です。", L"入力し直してください。", MB_OK);
 		errorflag = true;
 	}
-	result_xu = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_XU, &val_xu);
+	result_xu = GetAngleLimitEditIntOWP(s_limitxupperEdit, &val_xu);
 	if (result_xu != 0) {
 		::MessageBox(g_mainhwnd, L"AngleLimitDlgのXUpperの入力値が不正です。", L"入力し直してください。", MB_OK);
 		errorflag = true;
 	}
 
 
-	result_yl = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_YL, &val_yl);
+	result_yl = GetAngleLimitEditIntOWP(s_limitylowerEdit, &val_yl);
 	if (result_yl != 0) {
 		::MessageBox(g_mainhwnd, L"AngleLimitDlgのYLowerの入力値が不正です。", L"入力し直してください。", MB_OK);
 		errorflag = true;
 	}
-	result_yu = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_YU, &val_yu);
+	result_yu = GetAngleLimitEditIntOWP(s_limitxupperEdit, &val_yu);
 	if (result_yu != 0) {
 		::MessageBox(g_mainhwnd, L"AngleLimitDlgのYUpperの入力値が不正です。", L"入力し直してください。", MB_OK);
 		errorflag = true;
 	}
 
 
-	result_zl = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_ZL, &val_zl);
+	result_zl = GetAngleLimitEditIntOWP(s_limitzlowerEdit, &val_zl);
 	if (result_zl != 0) {
 		::MessageBox(g_mainhwnd, L"AngleLimitDlgのZLowerの入力値が不正です。", L"入力し直してください。", MB_OK);
 		errorflag = true;
 	}
-	result_zu = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_ZU, &val_zu);
+	result_zu = GetAngleLimitEditIntOWP(s_limitzupperEdit, &val_zu);
 	if (result_zu != 0) {
 		::MessageBox(g_mainhwnd, L"AngleLimitDlgのZUpperの入力値が不正です。", L"入力し直してください。", MB_OK);
 		errorflag = true;
@@ -32409,537 +33791,6 @@ LRESULT CALLBACK ThresholdDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 }
 
-LRESULT CALLBACK AngleLimitDlgProc2(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
-{
-	switch (msg) {
-	case WM_INITDIALOG:
-	{
-		Bone2AngleLimit();
-		bool updateonlycheckeul = false;
-		AngleLimit2Dlg(hDlgWnd, updateonlycheckeul);
-		ClearLimitedWM(s_model);//2022/12/06
-
-		//EnableWindow(GetDlgItem(hDlgWnd, IDC_RESETLIM_CURRENT), FALSE);
-		//EnableWindow(GetDlgItem(hDlgWnd, IDC_RESET0_CURRENT), FALSE);
-		//EnableWindow(GetDlgItem(hDlgWnd, IDC_REPLACE180TO170_CURRENT), FALSE);
-		//EnableWindow(GetDlgItem(hDlgWnd, IDC_LIMITFROMMOTION_CURRENT), FALSE);
-
-		return FALSE;
-	}
-	break;
-
-	////for slider
-	//case WM_LBUTTONDOWN:
-	//	s_underanglelimithscroll = 1;
-	//	break;
-	//case WM_LBUTTONUP:
-	//	s_underanglelimithscroll = 0;
-	//	break;
-
-
-	case WM_COMMAND:
-		switch (LOWORD(wp)) {
-		case IDC_BONEAXIS:
-
-			//lmtファイルによる固定値
-
-			//{
-			//	int combono = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_BONEAXIS), CB_GETCURSEL, 0, 0);
-			//	if ((combono >= BONEAXIS_CURRENT) && (combono <= BONEAXIS_GLOBAL)){
-			//		s_anglelimit.boneaxiskind = combono;
-			//	}
-			//}
-			break;
-
-		case IDC_APPLYONE:
-		{
-			s_changelimitangleFlag = true;
-			PrepairUndo();//全フレーム変更の前に全フレーム保存
-
-			int result1 = 0;
-			result1 = AngleDlg2AngleLimit(hDlgWnd);//エラー入力通知ダイアログも出す
-			if (result1 == 0) {
-				UpdateAfterEditAngleLimit(eLIM2BONE_LIM2BONE_ONE);
-			}
-
-			PrepairUndo();//全フレーム変更後に全フレーム保存
-			s_changelimitangleFlag = false;
-		}
-		break;
-		case IDC_APPLYDEEPER:
-		{
-			s_changelimitangleFlag = true;
-			PrepairUndo();//全フレーム変更の前に全フレーム保存
-
-			int result1 = 0;
-			result1 = AngleDlg2AngleLimit(hDlgWnd);//エラー入力通知ダイアログも出す
-			if (result1 == 0) {
-				UpdateAfterEditAngleLimit(eLIM2BONE_LIM2BONE_DEEPER);
-			}
-
-			PrepairUndo();//全フレーム変更後に全フレーム保存
-			s_changelimitangleFlag = false;
-		}
-		break;
-		case IDC_APPLYALL:
-		{
-			s_changelimitangleFlag = true;
-			PrepairUndo();//全フレーム変更の前に全フレーム保存
-
-			int result1 = 0;
-			result1 = AngleDlg2AngleLimit(hDlgWnd);//エラー入力通知ダイアログも出す
-			if (result1 == 0) {
-				UpdateAfterEditAngleLimit(eLIM2BONE_LIM2BONE_ALL);
-			}
-
-			PrepairUndo();//全フレーム変更後に全フレーム保存
-			s_changelimitangleFlag = false;
-		}
-		break;
-		case IDC_APPLYDEEPER_LIMITRATE:
-		{
-			if (s_anglelimitbone && s_anglelimitdlg) {
-				LimitRate2Bone_Req(s_anglelimitbone, 0);
-			}
-			//PrepairUndo();
-		}
-		break;
-		case IDC_APPLYALL_LIMITRATE:
-		{
-			if (s_anglelimitbone && s_anglelimitdlg) {
-				LimitRate2Bone_Req(s_model->GetTopBone(false), 1);
-			}
-			//PrepairUndo();
-		}
-		break;
-
-		case IDC_BUTTON1:
-		{
-			//CopyToSymBone
-			if (s_anglelimitbone && s_anglelimitdlg) {
-				int symboneno = 0;
-				int existflag = 0;
-				s_model->GetSymBoneNo(s_anglelimitbone->GetBoneNo(), &symboneno, &existflag);
-				if (symboneno >= 0) {
-					CBone* symbone = s_model->GetBoneByID(symboneno);
-					if (symbone) {
-						ANGLELIMIT symanglelimit = s_anglelimit;
-						//symanglelimit.lower[1] *= -1;
-						symanglelimit.lower[2] *= -1;
-						//symanglelimit.upper[1] *= -1;
-						symanglelimit.upper[2] *= -1;
-
-						if (s_model->ExistCurrentMotion()) {
-							s_changelimitangleFlag = true;
-							PrepairUndo();//全フレーム変更の前に全フレーム保存
-
-							symbone->SetAngleLimit(g_limitdegflag, symanglelimit);
-
-							UpdateAfterEditAngleLimit(eLIM2BONE_NONE);
-
-							PrepairUndo();//全フレーム変更後に全フレーム保存
-							s_changelimitangleFlag = false;
-						}
-					}
-				}
-			}
-		}
-		break;
-		case IDC_BUTTON2:
-		{
-			//CopyFromSymBone
-			if (s_anglelimitbone && s_anglelimitdlg) {
-				int symboneno = 0;
-				int existflag = 0;
-				s_model->GetSymBoneNo(s_anglelimitbone->GetBoneNo(), &symboneno, &existflag);
-				if (symboneno >= 0) {
-					CBone* symbone = s_model->GetBoneByID(symboneno);
-					if (symbone) {
-						if (s_model->ExistCurrentMotion()) {
-
-							s_changelimitangleFlag = true;
-							PrepairUndo();//全フレーム変更の前に全フレーム保存
-
-							ANGLELIMIT anglelimit = symbone->GetAngleLimit(g_limitdegflag, 0);
-							ANGLELIMIT symanglelimit = anglelimit;
-							//symanglelimit.lower[1] *= -1;
-							symanglelimit.lower[2] *= -1;
-							//symanglelimit.upper[1] *= -1;
-							symanglelimit.upper[2] *= -1;
-
-							//s_anglelimitbone->SetAngleLimit(symanglelimit, curmi->motid, curmi->curframe);
-							s_anglelimit = symanglelimit;
-							UpdateAfterEditAngleLimit(eLIM2BONE_LIM2BONE_ONE);
-
-							bool updateonlycheckeul = false;
-							AngleLimit2Dlg(s_anglelimitdlg, updateonlycheckeul);
-							UpdateWindow(s_anglelimitdlg);
-
-							PrepairUndo();//全フレーム変更後に全フレーム保存
-							s_changelimitangleFlag = false;
-
-						}
-
-					}
-				}
-			}
-		}
-		break;
-		case IDC_BUTTON3:
-		{
-			//copy button
-			if (s_anglelimitbone && s_anglelimitdlg) {
-				s_anglelimitcopy = s_anglelimit;
-			}
-		}
-		break;
-		case IDC_BUTTON4:
-		{
-			//paste button
-			if (s_anglelimitbone && s_anglelimitdlg) {
-				s_changelimitangleFlag = true;
-				PrepairUndo();//全フレーム変更の前に全フレーム保存
-
-				s_anglelimit = s_anglelimitcopy;
-				UpdateAfterEditAngleLimit(eLIM2BONE_LIM2BONE_ONE);
-				bool updateonlycheckeul = false;
-				AngleLimit2Dlg(s_anglelimitdlg, updateonlycheckeul);
-				UpdateWindow(s_anglelimitdlg);
-
-				PrepairUndo();//全フレーム変更後に全フレーム保存
-				s_changelimitangleFlag = false;
-
-			}
-		}
-		break;
-
-
-		//To All Bone
-		case IDC_RESETLIM:
-		{
-			if (s_model && s_anglelimitdlg) {
-				s_changelimitangleFlag = true;
-				PrepairUndo();//全フレーム変更の前に全フレーム保存
-
-				bool excludebt = false;
-				s_model->ResetAngleLimit(excludebt, 180);
-
-				UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM);
-
-				bool updateonlycheckeul = false;
-				AngleLimit2Dlg(s_anglelimitdlg, updateonlycheckeul);
-				UpdateWindow(s_anglelimitdlg);
-
-				PrepairUndo();//全フレーム変更後に全フレーム保存
-				s_changelimitangleFlag = false;
-
-			}
-		}
-		break;
-		case IDC_RESET0:
-		{
-			if (s_model && s_anglelimitdlg) {
-				s_changelimitangleFlag = true;
-				PrepairUndo();//全フレーム変更の前に全フレーム保存
-
-				bool excludebt = false;
-				s_model->ResetAngleLimit(excludebt, 0);
-
-				UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM);
-
-				bool updateonlycheckeul = false;
-				AngleLimit2Dlg(s_anglelimitdlg, updateonlycheckeul);
-				UpdateWindow(s_anglelimitdlg);
-
-				PrepairUndo();//全フレーム変更後に全フレーム保存
-				s_changelimitangleFlag = false;
-
-			}
-		}
-		break;
-		case IDC_REPLACE180TO170:
-		{
-			if (s_model && s_anglelimitdlg) {
-				s_changelimitangleFlag = true;
-				PrepairUndo();//全フレーム変更の前に全フレーム保存
-
-				s_model->AngleLimitReplace180to170();
-
-				UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM);
-
-				bool updateonlycheckeul = false;
-				AngleLimit2Dlg(s_anglelimitdlg, updateonlycheckeul);
-				UpdateWindow(s_anglelimitdlg);
-
-				PrepairUndo();//全フレーム変更後に全フレーム保存
-				s_changelimitangleFlag = false;
-
-			}
-
-		}
-		break;
-		case IDC_LIMITFROMMOTION:
-		{
-			if (s_model && s_anglelimitdlg) {
-				if (s_model->ExistCurrentMotion()) {
-
-					s_changelimitangleFlag = true;
-					PrepairUndo();//全フレーム変更の前に全フレーム保存
-
-					//長いフレームの処理は数秒時間がかかることがあるので砂時計カーソルにする
-					HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
-
-					//s_savelimitdegflag = g_limitdegflag;
-					//ChangeLimitDegFlag(false, true, true);
-					//g_limitdegflag = false;
-					//if (s_LimitDegCheckBox) {
-					//	s_LimitDegCheckBox->SetChecked(g_limitdegflag);
-					//}
-
-
-					//モーションからの設定の前に　まずはゼロ初期化する
-					bool excludebt = true;
-					s_model->ResetAngleLimit(excludebt, 0);
-					UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM, false);
-
-
-					//g_limitdegflagに関わらず　既存モーションの制限無しの姿勢を元に設定
-					s_model->AdditiveCurrentToAngleLimit(0);//内部で全フレーム分処理
-
-					//ChangeLimitDegFlag(s_savelimitdegflag, true, false);//updateeulはこれより後で呼ばれるUpdateAfterEditAngleLimitで
-					//g_limitdegflag = s_savelimitdegflag;
-					//if (s_LimitDegCheckBox) {
-					//	s_LimitDegCheckBox->SetChecked(g_limitdegflag);
-					//}
-
-					UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM, false);
-
-					bool updateonlycheckeul = false;
-					AngleLimit2Dlg(s_anglelimitdlg, updateonlycheckeul);
-					UpdateWindow(s_anglelimitdlg);
-
-					//カーソルを元に戻す
-					SetCursor(oldcursor);
-
-					PrepairUndo();//全フレーム変更後に全フレーム保存
-					s_changelimitangleFlag = false;
-
-				}
-			}
-		}
-		break;
-
-		//To AllBones From AllMotions
-		case IDC_LIMITFROMALLMOTIONS:
-		{
-			if (s_model && s_anglelimitdlg) {
-				if (s_model->ExistCurrentMotion()) {
-					bool savelimitflag = g_limitdegflag;
-
-					s_changelimitangleFlag = true;
-					PrepairUndo();//全フレーム変更の前に全フレーム保存
-
-					//長いフレームの処理は数秒時間がかかることがあるので砂時計カーソルにする
-					HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
-
-					//if (savelimitflag == true) {
-					//	//2023/10/18 制限角度キャプチャは　limitdegflag = falseにした状態で働く
-					//	s_savelimitdegflag = true;
-					//	ChangeLimitDegFlag(false, true, true);
-					//}
-
-					//モーションからの設定の前に　まずはゼロ初期化する
-					bool excludebt = true;
-					s_model->ResetAngleLimit(excludebt, 0);
-					UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM, false);
-
-					//g_limitdegflagに関わらず　既存モーションの制限無しの姿勢を元に設定
-					s_model->AdditiveAllMotionsToAngleLimit();//内部で全モーション全フレーム分処理
-
-					//ChangeLimitDegFlag(s_savelimitdegflag, true, false);//updateeulはこれより後で呼ばれるUpdateAfterEditAngleLimitで
-					//if (savelimitflag == true) {
-					//	//処理後に元に戻す
-					//	s_savelimitdegflag = false;
-					//	ChangeLimitDegFlag(true, true, true);
-					//}
-
-					UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM, false);
-
-					//s_model->SetMotionFrame(1.0);
-					//ChaMatrix tmpwm = s_model->GetWorldMat();
-					//s_model->UpdateMatrix(&tmpwm, &s_matVP);
-
-					bool updateonlycheckeul = false;
-					AngleLimit2Dlg(s_anglelimitdlg, updateonlycheckeul);
-					UpdateWindow(s_anglelimitdlg);
-
-					//カーソルを元に戻す
-					SetCursor(oldcursor);
-
-					PrepairUndo();//全フレーム変更後に全フレーム保存
-					s_changelimitangleFlag = false;
-
-				}
-			}
-		}
-		break;
-
-
-		case IDC_RESETLIM_CURRENT:
-		{
-			//curboneだけ
-			if (s_model && s_anglelimitdlg && s_anglelimitbone) {
-				s_changelimitangleFlag = true;
-				PrepairUndo();//全フレーム変更の前に全フレーム保存
-
-				bool excludebt = false;
-				s_model->ResetAngleLimit(excludebt, 180, s_anglelimitbone);//2022/12/05 curbone引数追加
-
-				UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM);
-
-				bool updateonlycheckeul = false;
-				AngleLimit2Dlg(s_anglelimitdlg, updateonlycheckeul);
-				UpdateWindow(s_anglelimitdlg);
-
-				PrepairUndo();//全フレーム変更後に全フレーム保存
-				s_changelimitangleFlag = false;
-
-			}
-		}
-		break;
-		case IDC_RESET0_CURRENT:
-		{
-			//curboneだけ
-			if (s_model && s_anglelimitdlg && s_anglelimitbone) {
-				s_changelimitangleFlag = true;
-				PrepairUndo();//全フレーム変更の前に全フレーム保存
-
-				bool excludebt = false;
-				s_model->ResetAngleLimit(excludebt, 0, s_anglelimitbone);//2022/12/05 curbone引数追加
-
-				UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM);
-
-				bool updateonlycheckeul = false;
-				AngleLimit2Dlg(s_anglelimitdlg, updateonlycheckeul);
-				UpdateWindow(s_anglelimitdlg);
-
-				PrepairUndo();//全フレーム変更後に全フレーム保存
-				s_changelimitangleFlag = false;
-
-			}
-		}
-		break;
-		case IDC_REPLACE180TO170_CURRENT:
-		{
-			//curboneだけ
-			if (s_model && s_anglelimitdlg && s_anglelimitbone) {
-				s_changelimitangleFlag = true;
-				PrepairUndo();//全フレーム変更の前に全フレーム保存
-
-				s_model->AngleLimitReplace180to170(s_anglelimitbone);//2022/12/05 curbone引数追加
-
-				UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM);
-
-				bool updateonlycheckeul = false;
-				AngleLimit2Dlg(s_anglelimitdlg, updateonlycheckeul);
-				UpdateWindow(s_anglelimitdlg);
-
-				PrepairUndo();//全フレーム変更後に全フレーム保存
-				s_changelimitangleFlag = false;
-
-			}
-
-		}
-		break;
-		case IDC_LIMITFROMMOTION_CURRENT:
-		{
-			//curboneだけ
-			if (s_model && s_anglelimitdlg && s_anglelimitbone) {
-				if (s_model->ExistCurrentMotion()) {
-					bool savelimitflag = g_limitdegflag;
-
-					////s_changelimitangleFlag = true;
-					////PrepairUndo();//全フレーム変更の前に全フレーム保存
-
-					//長いフレームの処理は数秒時間がかかることがあるので砂時計カーソルにする
-					HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
-
-					bool excludebt = true;
-					//s_model->ResetAngleLimit(excludebt, 0);
-					s_model->ResetAngleLimit(excludebt, 0, s_anglelimitbone);//2024/02/02 curboneだけリセット
-					UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM, false);
-
-					s_model->AdditiveCurrentToAngleLimit(s_anglelimitbone);//2022/12/05 curbone引数追加
-
-					//ChangeLimitDegFlag(s_savelimitdegflag, true, false);//updateeulはこれより後で呼ばれるUpdateAfterEditAngleLimitで
-
-					UpdateAfterEditAngleLimit(eLIM2BONE_BONE2LIM, false);
-
-					bool updateonlycheckeul = false;
-					AngleLimit2Dlg(s_anglelimitdlg, updateonlycheckeul);
-					UpdateWindow(s_anglelimitdlg);
-
-					//カーソルを元に戻す
-					SetCursor(oldcursor);
-
-					PrepairUndo();//全フレーム変更後に全フレーム保存
-					s_changelimitangleFlag = false;
-
-				}
-			}
-		}
-		break;
-
-
-
-
-		//case IDOK:
-			//break;
-		case IDCANCEL:
-			//EndDialog(hDlgWnd, IDCANCEL);
-			break;
-		default:
-			return FALSE;
-			break;
-		}
-		break;
-
-	case WM_HSCROLL:
-		if (GetDlgItem(hDlgWnd, IDC_SLIDER_LIMITRATE) == (HWND)lp) {
-			int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_LIMITRATE), TBM_GETPOS, 0, 0);
-			s_anglelimit.limitrate = cursliderpos;
-
-			if (s_anglelimitbone) {
-				s_anglelimitbone->SetLimitRate(s_anglelimit.limitrate);
-			}
-
-			WCHAR strval[256] = { 0L };
-			swprintf_s(strval, 256, L"rate : %d", s_anglelimit.limitrate);
-			SetDlgItemTextW(hDlgWnd, IDC_STATIC_LIMITRATE, strval);
-
-			//if (LOWORD(wp) == SB_ENDSCROLL) {
-			//	//#################################################
-			//	//ReleasedCaptureのときに　PrepairUndo用のフラグを立てる
-			//	//#################################################
-			//	s_***Flag = true;//PrepairUndo();//保存はOnFrameUtCheckBoxにて
-			//}
-		}
-		break;
-
-	case WM_CLOSE:
-		if (s_anglelimitdlg) {
-			s_underanglelimithscroll = 0;
-			DestroyWindow(s_anglelimitdlg);
-			s_anglelimitdlg = 0;
-		}
-		break;
-	default:
-		DefWindowProc(hDlgWnd, msg, wp, lp);
-		return FALSE;
-	}
-	return TRUE;
-
-}
 
 int DispRotAxisDlg()
 {
@@ -33230,11 +34081,11 @@ int ChangeCurrentBone(int prepairundoflag)
 			SetImpWndParams();
 			SetDmpWndParams();
 			RigidElem2WndParam();
-			if (s_anglelimitdlg) {
+			if (s_limitWnd) {
 				//s_model->UpdateMatrix(&s_model->GetWorldMat(), &s_matVP);//commentout
 				Bone2AngleLimit();
 				bool updateonlycheckeul = false;
-				AngleLimit2Dlg(s_anglelimitdlg, updateonlycheckeul);
+				AngleLimit2Dlg(updateonlycheckeul);
 			}
 
 			//if (s_befbone != curbone) {
@@ -33877,13 +34728,13 @@ int OnFrameLightsForEdit()
 
 int OnFrameAngleLimit(bool updateonlycheckeul)
 {
-	if (s_anglelimitdlg) {
+	if (s_limitWnd) {
 		if (s_model && (s_underanglelimithscroll == 0)) {//HScroll中に値を取得して設定するとスライダーが動かないから
 			//s_model->UpdateMatrix(&s_model->GetWorldMat(), &s_matVP);//commentout
 
 
 			Bone2AngleLimit();
-			AngleLimit2Dlg(s_anglelimitdlg, updateonlycheckeul);
+			AngleLimit2Dlg(updateonlycheckeul);
 
 
 			if (updateonlycheckeul == false) {
@@ -33892,10 +34743,9 @@ int OnFrameAngleLimit(bool updateonlycheckeul)
 				}
 			}
 
-			UpdateWindow(s_anglelimitdlg);
-
-			//Bone2AngleLimit(setcheckflag);
-			//AngleLimit2Dlg(s_anglelimitdlg);
+			//UpdateWindow(s_anglelimitdlg);
+			s_limitWnd->callRewrite();
+	
 		}
 	}
 
@@ -49268,7 +50118,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				//GUIMenuSetVisible(-1, -1);
 				closefirstrow = true;
 				CloseAllRightPainWindow(closefirstrow);//対応ウインドウを開く前に　１段目と２段目を全部閉じる
-				DispAngleLimitDlg();
+				ShowLimitEulerWnd(true);
 				//return 0;
 				break;
 			case ID_40050:
@@ -50714,28 +51564,38 @@ void ShowRetargetWnd(bool srcflag)
 
 void ShowLimitEulerWnd(bool srcflag)
 {
-	if (s_model && (s_curboneno >= 0)) {
-		if (s_bpWorld) {
-			if (srcflag == true) {
-				if (s_anglelimitdlg) {
-					s_underanglelimithscroll = 0;
-					DestroyWindow(s_anglelimitdlg);
-					s_anglelimitdlg = 0;
+	if (s_model && (s_curboneno >= 0) && s_bpWorld) {
+		if (srcflag == true) {
+			int result = CreateAngleLimitDlg();
+			if ((result == 0) && s_limitWnd) {
+				if (!s_model->GetTopBone()) {
+					return;
 				}
-
-				DispAngleLimitDlg();
-
-				s_spretargetsw[SPRETARGETSW_LIMITEULER].state = true;
-			}
-			else {
-				if (s_anglelimitdlg) {
-					s_underanglelimithscroll = 0;
-					DestroyWindow(s_anglelimitdlg);
-					s_anglelimitdlg = 0;
+				if (s_model->GetOldAxisFlagAtLoading() == 1) {
+					::DSMessageBox(s_3dwnd, L"Work Only After Setting Of Axis.\nRetry after Saving FBX file.", L"error!!!", MB_OK);
+					return;
 				}
-				s_spretargetsw[SPRETARGETSW_LIMITEULER].state = false;
+				s_dseullimitctrls.clear();
+				ChaMatrix tmpwm = s_model->GetWorldMat();
+				s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
+				Bone2AngleLimit();
+				bool updateonlycheckeul = false;
+				AngleLimit2Dlg(updateonlycheckeul);
+
+				s_limitWnd->setVisible(true);
+				s_limitWnd->setListenMouse(true);
+				s_limitWnd->callRewrite();
 			}
 		}
+		else {
+			if (s_limitWnd) {
+				s_limitWnd->setVisible(false);
+				s_limitWnd->setListenMouse(false);		
+				s_underanglelimithscroll = 0;
+			}
+		}
+
+		s_spretargetsw[SPRETARGETSW_LIMITEULER].state = srcflag;
 	}
 }
 
@@ -50744,9 +51604,8 @@ void ShowThresholdWnd(bool srcflag)
 	if (s_model && (s_curboneno >= 0)) {
 		if (s_bpWorld) {
 			if (srcflag == true) {
-				if (s_anglelimitdlg) {
-					DestroyWindow(s_anglelimitdlg);
-					s_anglelimitdlg = 0;
+				if (s_limitWnd) {
+					ShowLimitEulerWnd(false);
 				}
 
 				DispThresholdDlg();
@@ -53559,7 +54418,7 @@ void DSCrossButtonSelectEulLimitCtrls(bool firstctrlselect)
 	//	return;
 	//}
 
-	if (!s_anglelimitdlg || !IsWindow(s_anglelimitdlg)) {
+	if (!s_limitWnd) {
 		return;
 	}
 
@@ -56976,13 +57835,13 @@ HWND GetOFWnd(POINT srcpoint)
 			return retctrlwnd;
 		}
 	}
-	else if (!retctrlwnd && (s_currentwndid == MB3D_WND_SIDE) && s_anglelimitdlg && (s_platemenukind == SPPLATEMENUKIND_RETARGET) && (s_platemenuno == (SPRETARGETSW_LIMITEULER + 1))) {
+	else if (!retctrlwnd && (s_currentwndid == MB3D_WND_SIDE) && s_limitWnd && (s_platemenukind == SPPLATEMENUKIND_RETARGET) && (s_platemenuno == (SPRETARGETSW_LIMITEULER + 1))) {
 		//if (s_anglelimitdlg && (s_platemenukind == SPPLATEMENUKIND_RETARGET) && (s_platemenuno == (SPRETARGETSW_LIMITEULER + 1))) {
 		if ((s_curdseullimitctrlno >= 0) && (s_curdseullimitctrlno < s_dseullimitctrls.size()) && s_dseullimitctrls[s_curdseullimitctrlno]) {
-			::EnumChildWindows(s_anglelimitdlg, EnumChildProc, (LPARAM)&retctrlwnd);
+			::EnumChildWindows(s_limitWnd->getHWnd(), EnumChildProc, (LPARAM)&retctrlwnd);
 			retctrlwnd = GetNearestEnumDist();
 			if (retctrlwnd) {
-				s_ofhwnd = s_anglelimitdlg;
+				s_ofhwnd = s_limitWnd->getHWnd();
 				return retctrlwnd;
 			}
 		}
@@ -57732,8 +58591,8 @@ void ChangeMouseSetCapture()
 					}
 				}
 				else if (s_platemenuno == (SPRETARGETSW_LIMITEULER + 1)) {
-					if (s_anglelimitdlg) {
-						SetCapture(s_anglelimitdlg);
+					if (s_limitWnd) {
+						SetCapture(s_limitWnd->getHWnd());
 					}
 				}
 			}
@@ -72276,11 +73135,10 @@ void CloseAllRightPainWindow(bool closefirstraw)
 	if (s_dollyhistorydlg.GetCreatedFlag() == true) {
 		s_dollyhistorydlg.ShowWindow(SW_HIDE);
 	}
-	if (s_anglelimitdlg) {
-		s_underanglelimithscroll = 0;
-		DestroyWindow(s_anglelimitdlg);
-		s_anglelimitdlg = 0;
-	}
+	//if (s_limitWnd) {
+	//	s_underanglelimithscroll = 0;
+	//	ShowLimitEulerWnd(false);
+	//}
 	if (s_rotaxisdlg) {
 		DestroyWindow(s_rotaxisdlg);
 		s_rotaxisdlg = 0;

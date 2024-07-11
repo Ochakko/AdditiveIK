@@ -4414,7 +4414,7 @@ void s_dummyfunc()
 		int getName(WCHAR* dstname, int dstleng);
 	private:
 		////////////////////////// MemberVar /////////////////////////////
-		TCHAR* name;
+		TCHAR* name = 0;
 
 		bool buttonPush;
 		std::function<void()> buttonListener;
