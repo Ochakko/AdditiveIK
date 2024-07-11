@@ -9,6 +9,8 @@ https://github.com/Ochakko/AdditiveIK
 
 　LimitEulerメニューのウインドウをOWPで作り直し
 
+　Q2EulThresholdメニューのウインドウをOWPで作り直し
+
 
 
 　予定

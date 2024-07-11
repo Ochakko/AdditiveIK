@@ -891,7 +891,7 @@ static bool s_savelimitdegflag = true;
 
 
 static bool s_dispthreshold = false;
-static HWND s_thresholddlg = 0;
+//static HWND s_thresholddlg = 0;
 
 
 
@@ -1451,6 +1451,36 @@ static OWP_Separator* s_limitphsysicssp1 = 0;
 static OWP_Separator* s_limitphsysicssp2 = 0;
 static OWP_Button* s_limitphysicsDepperB = 0;
 static OWP_Button* s_limitphysicsAllB = 0;
+
+static OrgWindow* s_thWnd = 0;
+static OWP_Label* s_ththLabel = 0;
+static OWP_Separator* s_ththsp1 = 0;
+static OWP_Separator* s_ththsp2 = 0;
+static OWP_Separator* s_ththsp3 = 0;
+static OWP_Label* s_ththnoendjLabel = 0;
+static OWP_EditBox* s_ththnoendjEdit = 0;
+static OWP_Label* s_ththendjLabel = 0;
+static OWP_EditBox* s_ththendjEdit = 0;
+static OWP_Label* s_throundLabel = 0;
+static OWP_Separator* s_throundsp1 = 0;
+static OWP_Separator* s_throundsp2 = 0;
+static OWP_Separator* s_throundsp2a = 0;
+static OWP_Separator* s_throundsp2b = 0;
+static OWP_Separator* s_throundsp3 = 0;
+static OWP_Separator* s_throundsp3a = 0;
+static OWP_Label* s_throundxLabel = 0;
+static OWP_EditBox* s_throundxEdit = 0;
+static OWP_Label* s_throundyLabel = 0;
+static OWP_EditBox* s_throundyEdit = 0;
+static OWP_Label* s_throundzLabel = 0;
+static OWP_EditBox* s_throundzEdit = 0;
+static OWP_Label* s_thspacerLabel = 0;
+static OWP_Separator* s_thapplysp1 = 0;
+static OWP_Separator* s_thapplysp2 = 0;
+static OWP_Button* s_thapplyB = 0;
+static OWP_Button* s_thdefaultB = 0;
+static OWP_Label* s_thspacerLabel1 = 0;
+static OWP_Label* s_thspacerLabel2 = 0;
 
 
 
@@ -3464,7 +3494,7 @@ static int DispMotionPanel();
 static int DispCameraPanel();
 //static int DispConvBoneWindow();
 static int CreateAngleLimitDlg();
-static int DispThresholdDlg();
+static int CreateThresholdDlg();
 static int DispRotAxisDlg();
 static int DispCustomRigDlg(int rigno);
 static int InvalidateCustomRig(int rigno);
@@ -3491,8 +3521,8 @@ static int AngleLimit2Bone_One(CBone* srconbe);
 static void AngleLimit2Bone_Req(CBone* srcbone, int setbroflag);
 static void LimitRate2Bone_Req(CBone* srcbone, int setbroflag);
 static int AngleLimit2Dlg(bool updateonlycheckeul);
-static int Global2ThresholdDlg(HWND hDlgWnd);
-static int ThresholdDlg2Global(HWND hDlgWnd);
+static int Global2ThresholdDlg();
+static int ThresholdDlg2Global();
 static int InitAngleLimitEditInt(HWND hDlgWnd, int editresid, int srclimit);
 static int InitAngleLimitEditFloat(HWND hDlgWnd, int editresid, float srcfloat);
 static int InitAngleLimitSlider(HWND hDlgWnd, int slresid, int txtresid, int srclimit);
@@ -5440,6 +5470,37 @@ void InitApp()
 		s_limitphysicsAllB = 0;
 	}
 
+	{
+		s_thWnd = 0;
+		s_ththLabel = 0;
+		s_ththsp1 = 0;
+		s_ththsp2 = 0;
+		s_ththsp3 = 0;
+		s_ththnoendjLabel = 0;
+		s_ththnoendjEdit = 0;
+		s_ththendjLabel = 0;
+		s_ththendjEdit = 0;
+		s_throundLabel = 0;
+		s_throundsp1 = 0;
+		s_throundsp2 = 0;
+		s_throundsp2a = 0;
+		s_throundsp2b = 0;
+		s_throundsp3 = 0;
+		s_throundsp3a = 0;
+		s_throundxLabel = 0;
+		s_throundxEdit = 0;
+		s_throundyLabel = 0;
+		s_throundyEdit = 0;
+		s_throundzLabel = 0;
+		s_throundzEdit = 0;
+		s_thspacerLabel = 0;
+		s_thspacerLabel1 = 0;
+		s_thspacerLabel2 = 0;
+		s_thapplysp1 = 0;
+		s_thapplysp2 = 0;
+		s_thapplyB = 0;
+		s_thdefaultB = 0;
+	}
 
 	{
 		s_st_closeFlag = false;
@@ -8540,6 +8601,125 @@ void OnDestroyDevice()
 		}
 	}
 
+	{
+		if (s_ththLabel) {
+			delete s_ththLabel;
+			s_ththLabel = 0;
+		}
+		if (s_ththsp1) {
+			delete s_ththsp1;
+			s_ththsp1 = 0;
+		}
+		if (s_ththsp2) {
+			delete s_ththsp2;
+			s_ththsp2 = 0;
+		}
+		if (s_ththsp3) {
+			delete s_ththsp3;
+			s_ththsp3 = 0;
+		}
+		if (s_ththnoendjLabel) {
+			delete s_ththnoendjLabel;
+			s_ththnoendjLabel = 0;
+		}
+		if (s_ththnoendjEdit) {
+			delete s_ththnoendjEdit;
+			s_ththnoendjEdit = 0;
+		}
+		if (s_ththendjLabel) {
+			delete s_ththendjLabel;
+			s_ththendjLabel = 0;
+		}
+		if (s_ththendjEdit) {
+			delete s_ththendjEdit;
+			s_ththendjEdit = 0;
+		}
+		if (s_throundLabel) {
+			delete s_throundLabel;
+			s_throundLabel = 0;
+		}
+		if (s_throundsp1) {
+			delete s_throundsp1;
+			s_throundsp1 = 0;
+		}
+		if (s_throundsp2) {
+			delete s_throundsp2;
+			s_throundsp2 = 0;
+		}
+		if (s_throundsp2a) {
+			delete s_throundsp2a;
+			s_throundsp2a = 0;
+		}
+		if (s_throundsp2b) {
+			delete s_throundsp2b;
+			s_throundsp2b = 0;
+		}
+		if (s_throundsp3) {
+			delete s_throundsp3;
+			s_throundsp3 = 0;
+		}
+		if (s_throundsp3a) {
+			delete s_throundsp3a;
+			s_throundsp3a = 0;
+		}
+		if (s_throundxLabel) {
+			delete s_throundxLabel;
+			s_throundxLabel = 0;
+		}
+		if (s_throundxEdit) {
+			delete s_throundxEdit;
+			s_throundxEdit = 0;
+		}
+		if (s_throundyLabel) {
+			delete s_throundyLabel;
+			s_throundyLabel = 0;
+		}
+		if (s_throundyEdit) {
+			delete s_throundyEdit;
+			s_throundyEdit = 0;
+		}
+		if (s_throundzLabel) {
+			delete s_throundzLabel;
+			s_throundzLabel = 0;
+		}
+		if (s_throundzEdit) {
+			delete s_throundzEdit;
+			s_throundzEdit = 0;
+		}
+		if (s_thspacerLabel) {
+			delete s_thspacerLabel;
+			s_thspacerLabel = 0;
+		}
+		if (s_thspacerLabel1) {
+			delete s_thspacerLabel1;
+			s_thspacerLabel1 = 0;
+		}
+		if (s_thspacerLabel2) {
+			delete s_thspacerLabel2;
+			s_thspacerLabel2 = 0;
+		}
+		if (s_thapplysp1) {
+			delete s_thapplysp1;
+			s_thapplysp1 = 0;
+		}
+		if (s_thapplysp2) {
+			delete s_thapplysp2;
+			s_thapplysp2 = 0;
+		}
+		if (s_thapplyB) {
+			delete s_thapplyB;
+			s_thapplyB = 0;
+		}
+		if (s_thdefaultB) {
+			delete s_thdefaultB;
+			s_thdefaultB = 0;
+		}
+
+		if (s_thWnd) {
+			delete s_thWnd;
+			s_thWnd = 0;
+		}
+	}
 
 	if (s_impgroupcheck) {
 		delete s_impgroupcheck;
@@ -29793,34 +29973,11 @@ int CreateShadowParamsWnd()
 	return 0;
 }
 
-int DispThresholdDlg()
+int CreateThresholdDlg()
 {
-	if (s_thresholddlg) {
-		//already opened
-		return 0;
-	}
-	//if (!s_model) {
-	//	return 0;
-	//}
-	//if (s_curboneno < 0) {
-	//	return 0;
-	//}
-	//if (!s_model->GetTopBone()) {
-	//	return 0;
-	//}
-	//if (s_model->GetOldAxisFlagAtLoading() == 1) {
-	//	::DSMessageBox(s_3dwnd, L"Work Only After Setting Of Axis.\nRetry after Saving FBX file.", L"error!!!", MB_OK);
-	//	return 0;
-	//}
-
-
-
-	//s_dseullimitctrls.clear();
-
-	s_thresholddlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_THRESHOLDDLG), g_mainhwnd, (DLGPROC)ThresholdDlgProc);
-	if (!s_thresholddlg) {
-		_ASSERT(0);
-		return 1;
+	if (s_thWnd) {
+		//_ASSERT(0);
+		return 0;//作成済
 	}
 
 	int windowposx;
@@ -29831,37 +29988,238 @@ int DispThresholdDlg()
 		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
-	SetParent(s_thresholddlg, g_mainhwnd);
-	SetWindowPos(
-		s_thresholddlg,
-		HWND_TOP,
-		windowposx,
-		s_sidemenuheight,
-		s_sidewidth,
-		s_sideheight,
-		SWP_SHOWWINDOW
-	);
+	s_thWnd = new OrgWindow(
+		0,
+		_T("ThresholdDlg"),		//ウィンドウクラス名
+		GetModuleHandle(NULL),	//インスタンスハンドル
+		WindowPos(windowposx, s_sidemenuheight),
+		WindowSize(s_sidewidth, s_sideheight),		//サイズ
+		_T("ThresholdDlg"),	//タイトル
+		g_mainhwnd,	//親ウィンドウハンドル
+		false,					//表示・非表示状態
+		//70, 50, 70,				//カラー
+		0, 0, 0,				//カラー
+		true,					//閉じられるか否か
+		true);					//サイズ変更の可否
 
-	////s_dseullimitctrls.push_back(IDD_ANGLELIMITDLG);
-	//s_dseullimitctrls.push_back(IDC_BONEAXIS);
-	//s_dseullimitctrls.push_back(IDC_EDIT_XL);
-	//s_dseullimitctrls.push_back(IDC_EDIT_XU);
-	//s_dseullimitctrls.push_back(IDC_EDIT_YL);
-	//s_dseullimitctrls.push_back(IDC_EDIT_YU);
-	//s_dseullimitctrls.push_back(IDC_EDIT_ZL);
-	//s_dseullimitctrls.push_back(IDC_EDIT_ZU);
-	//s_dseullimitctrls.push_back(IDOK);
+	int labelheight;
+	if (g_4kresolution) {
+		labelheight = 28;
+	}
+	else {
+		labelheight = 20;
+	}
+
+	if (s_thWnd) {
+		double rate50 = 0.50;
+
+		s_ththLabel = new OWP_Label(L"Threshold Degree", labelheight);
+		if (!s_ththLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_ththsp1 = new OWP_Separator(s_thWnd, true, rate50, true);
+		if (!s_ththsp1) {
+			_ASSERT(0);
+			abort();
+		}
+		s_ththsp2 = new OWP_Separator(s_thWnd, true, rate50, true);
+		if (!s_ththsp2) {
+			_ASSERT(0);
+			abort();
+		}
+		s_ththsp3 = new OWP_Separator(s_thWnd, true, rate50, true);
+		if (!s_ththsp3) {
+			_ASSERT(0);
+			abort();
+		}
+		s_ththnoendjLabel = new OWP_Label(L"NoEndJoint", labelheight);
+		if (!s_ththnoendjLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_ththnoendjEdit = new OWP_EditBox(L"NoEndJ Edit", labelheight);//g_thdeg
+		if (!s_ththnoendjEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		s_ththendjLabel = new OWP_Label(L"EndJoint", labelheight);
+		if (!s_ththendjLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_ththendjEdit = new OWP_EditBox(L"EndJ Edit", labelheight);//g_thdeg_endjoint
+		if (!s_ththendjEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		s_throundLabel = new OWP_Label(L"Rounding Degree", labelheight);
+		if (!s_throundLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_throundsp1 = new OWP_Separator(s_thWnd, true, 0.667, true);
+		if (!s_throundsp1) {
+			_ASSERT(0);
+			abort();
+		}
+		s_throundsp2 = new OWP_Separator(s_thWnd, true, rate50, true);
+		if (!s_throundsp2) {
+			_ASSERT(0);
+			abort();
+		}
+		s_throundsp2a = new OWP_Separator(s_thWnd, true, rate50, true);
+		if (!s_throundsp2a) {
+			_ASSERT(0);
+			abort();
+		}
+		s_throundsp2b = new OWP_Separator(s_thWnd, true, rate50, true);
+		if (!s_throundsp2b) {
+			_ASSERT(0);
+			abort();
+		}
+		s_throundsp3 = new OWP_Separator(s_thWnd, true, 0.95, true);
+		if (!s_throundsp3) {
+			_ASSERT(0);
+			abort();
+		}
+		s_throundsp3a = new OWP_Separator(s_thWnd, true, rate50, true);
+		if (!s_throundsp3a) {
+			_ASSERT(0);
+			abort();
+		}
+		s_throundxLabel = new OWP_Label(L"X Round", labelheight);
+		if (!s_throundxLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_throundxEdit = new OWP_EditBox(L"XEdit", labelheight);//g_thRoundX
+		if (!s_throundxEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		s_throundyLabel = new OWP_Label(L"Y Round", labelheight);
+		if (!s_throundyLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_throundyEdit = new OWP_EditBox(L"YEdit", labelheight);//g_thRoundY
+		if (!s_throundyEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		s_throundzLabel = new OWP_Label(L"Z Round", labelheight);
+		if (!s_throundzLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_throundzEdit = new OWP_EditBox(L"ZEdit", labelheight);//g_thRoundZ
+		if (!s_throundzEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		s_thspacerLabel = new OWP_Label(L"     ", labelheight);
+		if (!s_thspacerLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_thspacerLabel1 = new OWP_Label(L"     ", labelheight);
+		if (!s_thspacerLabel1) {
+			_ASSERT(0);
+			abort();
+		}
+		s_thspacerLabel2 = new OWP_Label(L"     ", labelheight);
+		if (!s_thspacerLabel2) {
+			_ASSERT(0);
+			abort();
+		}
+		s_thapplysp1 = new OWP_Separator(s_thWnd, true, rate50, true);
+		if (!s_thapplysp1) {
+			_ASSERT(0);
+			abort();
+		}
+		s_thapplysp2 = new OWP_Separator(s_thWnd, true, rate50, true);
+		if (!s_thapplysp2) {
+			_ASSERT(0);
+			abort();
+		}
+		s_thapplyB = new OWP_Button(L"Apply", 32);
+		if (!s_thapplyB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_thapplyB->setTextColor(RGB(168, 129, 129));
+		s_thdefaultB = new OWP_Button(L"Default", 32);
+		if (!s_thdefaultB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_thdefaultB->setTextColor(RGB(168, 129, 129));
 
 
-	//::MoveWindow(s_anglelimitdlg, 1200, 32, 450, 858, TRUE);
-	//s_rigidWnd->setSize(WindowSize(450, 858));//880
-	//s_rigidWnd->setPos(WindowPos(1200, 32));
+		s_thWnd->addParts(*s_ththLabel);
+		s_thWnd->addParts(*s_ththsp1);
+		s_ththsp1->addParts1(*s_ththsp2);
+		s_ththsp1->addParts2(*s_ththsp3);
+		s_ththsp2->addParts1(*s_ththnoendjLabel);
+		s_ththsp2->addParts2(*s_ththnoendjEdit);
+		s_ththsp3->addParts1(*s_ththendjLabel);
+		s_ththsp3->addParts2(*s_ththendjEdit);
+		s_thWnd->addParts(*s_thspacerLabel1);
+		s_thWnd->addParts(*s_thspacerLabel2);
+		s_thWnd->addParts(*s_throundLabel);
+		s_thWnd->addParts(*s_throundsp1);
+		s_throundsp1->addParts1(*s_throundsp2);
+		s_throundsp2->addParts1(*s_throundsp2a);
+		s_throundsp2->addParts2(*s_throundsp2b);
+		s_throundsp1->addParts2(*s_throundsp3);
+		s_throundsp3->addParts1(*s_throundsp3a);
+		s_throundsp2a->addParts1(*s_throundxLabel);
+		s_throundsp2a->addParts2(*s_throundxEdit);
+		s_throundsp2b->addParts1(*s_throundyLabel);
+		s_throundsp2b->addParts2(*s_throundyEdit);
+		s_throundsp3a->addParts1(*s_throundzLabel);
+		s_throundsp3a->addParts2(*s_throundzEdit);
+		s_thWnd->addParts(*s_thspacerLabel);
+		s_thWnd->addParts(*s_thapplysp1);
+		s_thapplysp1->addParts2(*s_thapplysp2);
+		s_thapplysp2->addParts1(*s_thapplyB);
+		s_thapplysp2->addParts2(*s_thdefaultB);
 
-	ShowWindow(s_thresholddlg, SW_SHOW);
-	UpdateWindow(s_thresholddlg);
 
-	//AngleLimit2Bone();
 
+		s_thapplyB->setButtonListener([]() {
+			//s_changelimitangleFlag = true;
+			//PrepairUndo();//全フレーム変更の前に全フレーム保存
+
+			ThresholdDlg2Global();
+
+			//PrepairUndo();//全フレーム変更後に全フレーム保存
+			//s_changelimitangleFlag = false;
+		});
+		s_thdefaultB->setButtonListener([]() {
+			g_thdeg = 181.0f;
+			g_thdeg_endjoint = 159.0f;
+			g_thRoundX = 179.0f;
+			g_thRoundY = 179.0f;
+			g_thRoundZ = 179.0f;
+
+			Global2ThresholdDlg();
+		});
+
+
+		s_thWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
+		s_thWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
+
+		//１クリック目問題対応
+		s_thWnd->refreshPosAndSize();
+
+		s_thWnd->callRewrite();
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
 
 	return 0;
 }
@@ -31761,15 +32119,34 @@ void CheckShadowDirectionButton(int srcshadowdir)
 }
 
 
-int Global2ThresholdDlg(HWND hDlgWnd)
+int Global2ThresholdDlg()
 {
-	if (hDlgWnd != 0) {
-		InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_ENDJOINT, Float2Int(g_thdeg_endjoint));
-		InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_NOTENDJOINT, Float2Int(g_thdeg));
+	if (s_thWnd != 0) {
+		WCHAR stredit[256] = { 0L };
 
-		InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_XROUND, Float2Int(g_thRoundX));
-		InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_YROUND, Float2Int(g_thRoundY));
-		InitAngleLimitEditInt(hDlgWnd, IDC_EDIT_ZROUND, Float2Int(g_thRoundZ));
+		swprintf_s(stredit, 256, L"%d", Float2Int(g_thdeg_endjoint));
+		if (s_ththnoendjEdit) {
+			s_ththnoendjEdit->setName(stredit);
+		}
+		swprintf_s(stredit, 256, L"%d", Float2Int(g_thdeg));
+		if (s_ththendjEdit) {
+			s_ththendjEdit->setName(stredit);
+		}
+
+
+		swprintf_s(stredit, 256, L"%d", Float2Int(g_thRoundX));
+		if (s_throundxEdit) {
+			s_throundxEdit->setName(stredit);
+		}
+		swprintf_s(stredit, 256, L"%d", Float2Int(g_thRoundY));
+		if (s_throundyEdit) {
+			s_throundyEdit->setName(stredit);
+		}
+		swprintf_s(stredit, 256, L"%d", Float2Int(g_thRoundZ));
+		if (s_throundzEdit) {
+			s_throundzEdit->setName(stredit);
+		}
+
 	}
 	else {
 		_ASSERT(0);
@@ -31865,7 +32242,7 @@ int AngleLimit2Dlg(bool updateonlycheckeul)
 	return 0;
 }
 
-int ThresholdDlg2Global(HWND hDlgWnd)
+int ThresholdDlg2Global()
 {
 	int result_thdeg, result_thdeg_endjoint;
 	int result_xround, result_yround, result_zround;
@@ -31884,32 +32261,41 @@ int ThresholdDlg2Global(HWND hDlgWnd)
 	val_zround = Float2Int(g_thRoundZ);
 	bool errorflag = false;
 
-	result_thdeg = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_NOTENDJOINT, &val_thdeg);
-	if (result_thdeg != 0) {
-		::MessageBox(g_mainhwnd, L"ThresholdDlgのNotEndJointの入力値が不正です。", L"入力し直してください。", MB_OK);
-		errorflag = true;
+	if (s_ththnoendjEdit) {
+		result_thdeg = GetAngleLimitEditIntOWP(s_ththnoendjEdit, &val_thdeg);
+		if (result_thdeg != 0) {
+			::MessageBox(g_mainhwnd, L"ThresholdDlgのNotEndJointの入力値が不正です。", L"入力し直してください。", MB_OK);
+			errorflag = true;
+		}
 	}
-	result_thdeg_endjoint = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_ENDJOINT, &val_thdeg_endjoint);
-	if (result_thdeg_endjoint != 0) {
-		::MessageBox(g_mainhwnd, L"ThresholdDlgのEndJointの入力値が不正です。", L"入力し直してください。", MB_OK);
-		errorflag = true;
+	if (s_ththendjEdit) {
+		result_thdeg_endjoint = GetAngleLimitEditIntOWP(s_ththendjEdit, &val_thdeg_endjoint);
+		if (result_thdeg_endjoint != 0) {
+			::MessageBox(g_mainhwnd, L"ThresholdDlgのEndJointの入力値が不正です。", L"入力し直してください。", MB_OK);
+			errorflag = true;
+		}
 	}
 
-
-	result_xround = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_XROUND, &val_xround);
-	if (result_xround != 0) {
-		::MessageBox(g_mainhwnd, L"ThresholdDlgのXRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
-		errorflag = true;
+	if (s_throundxEdit) {
+		result_xround = GetAngleLimitEditIntOWP(s_throundxEdit, &val_xround);
+		if (result_xround != 0) {
+			::MessageBox(g_mainhwnd, L"ThresholdDlgのXRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
+			errorflag = true;
+		}
 	}
-	result_yround = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_YROUND, &val_yround);
-	if (result_yround != 0) {
-		::MessageBox(g_mainhwnd, L"ThresholdDlgのYRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
-		errorflag = true;
+	if (s_throundyEdit) {
+		result_yround = GetAngleLimitEditIntOWP(s_throundyEdit, &val_yround);
+		if (result_yround != 0) {
+			::MessageBox(g_mainhwnd, L"ThresholdDlgのYRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
+			errorflag = true;
+		}
 	}
-	result_zround = GetAngleLimitEditInt(hDlgWnd, IDC_EDIT_ZROUND, &val_zround);
-	if (result_zround != 0) {
-		::MessageBox(g_mainhwnd, L"ThresholdDlgのZRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
-		errorflag = true;
+	if (s_throundzEdit) {
+		result_zround = GetAngleLimitEditIntOWP(s_throundzEdit, &val_zround);
+		if (result_zround != 0) {
+			::MessageBox(g_mainhwnd, L"ThresholdDlgのZRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
+			errorflag = true;
+		}
 	}
 
 
@@ -33731,65 +34117,6 @@ int Brushes2Dlg(HWND hDlgWnd)
 
 
 
-LRESULT CALLBACK ThresholdDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
-{
-	switch (msg) {
-	case WM_INITDIALOG:
-	{
-		Global2ThresholdDlg(hDlgWnd);
-		return FALSE;
-	}
-	break;
-
-	case WM_COMMAND:
-		switch (LOWORD(wp)) {
-		case IDC_APPLY:
-		{
-			//s_changelimitangleFlag = true;
-			//PrepairUndo();//全フレーム変更の前に全フレーム保存
-
-			ThresholdDlg2Global(hDlgWnd);
-
-			//PrepairUndo();//全フレーム変更後に全フレーム保存
-			//s_changelimitangleFlag = false;
-		}
-		break;
-		case IDC_DEFAULTVALUE:
-		{
-			g_thdeg = 181.0f;
-			g_thdeg_endjoint = 159.0f;
-			g_thRoundX = 179.0f;
-			g_thRoundY = 179.0f;
-			g_thRoundZ = 179.0f;
-
-			Global2ThresholdDlg(hDlgWnd);
-
-		}
-		break;
-
-		//case IDOK:
-			//break;
-		case IDCANCEL:
-			//EndDialog(hDlgWnd, IDCANCEL);
-			break;
-		default:
-			return FALSE;
-			break;
-		}
-		break;
-	case WM_CLOSE:
-		if (s_thresholddlg) {
-			DestroyWindow(s_thresholddlg);
-			s_thresholddlg = 0;
-		}
-		break;
-	default:
-		DefWindowProc(hDlgWnd, msg, wp, lp);
-		return FALSE;
-	}
-	return TRUE;
-
-}
 
 
 int DispRotAxisDlg()
@@ -51604,21 +51931,22 @@ void ShowThresholdWnd(bool srcflag)
 	if (s_model && (s_curboneno >= 0)) {
 		if (s_bpWorld) {
 			if (srcflag == true) {
-				if (s_limitWnd) {
-					ShowLimitEulerWnd(false);
+				int result1 = CreateThresholdDlg();
+				if ((result1 == 0) && s_thWnd) {
+					Global2ThresholdDlg();
+
+					s_thWnd->setVisible(true);
+					s_thWnd->setListenMouse(true);
 				}
-
-				DispThresholdDlg();
-
-				s_spretargetsw[SPRETARGETSW_THRESHOLD].state = true;
 			}
 			else {
-				if (s_thresholddlg) {
-					DestroyWindow(s_thresholddlg);
-					s_thresholddlg = 0;
+				if (s_thWnd) {
+					s_thWnd->setVisible(false);
+					s_thWnd->setListenMouse(false);
 				}
-				s_spretargetsw[SPRETARGETSW_THRESHOLD].state = false;
 			}
+
+			s_spretargetsw[SPRETARGETSW_THRESHOLD].state = srcflag;
 		}
 	}
 }
