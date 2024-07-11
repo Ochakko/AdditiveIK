@@ -5,6 +5,9 @@ https://github.com/Ochakko/AdditiveIK
 2024/07/11
 　ProjAndLODメニューのウインドウをOWPで作り直し
 
+　ShadowメニューのウインドウをOWPで作り直し
+
+
 
 　予定
 　　プレートメニューを押したときに右ペインに出すウインドウは全てOWPにしていく”予定”
