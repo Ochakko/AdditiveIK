@@ -2,6 +2,15 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/07/12
+　FogメニューのウインドウをOWPで作り直し
+
+
+　予定
+　　プレートメニューを押したときに右ペインに出すウインドウは全てOWPにしていく”予定”
+
+
+
 2024/07/11
 　ProjAndLODメニューのウインドウをOWPで作り直し
 
@@ -10,12 +19,6 @@ https://github.com/Ochakko/AdditiveIK
 　LimitEulerメニューのウインドウをOWPで作り直し
 
 　Q2EulThresholdメニューのウインドウをOWPで作り直し
-
-
-
-　予定
-　　プレートメニューを押したときに右ペインに出すウインドウは全てOWPにしていく”予定”
-
 
 
 
