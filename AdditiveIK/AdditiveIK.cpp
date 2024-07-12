@@ -783,7 +783,7 @@ static HWND s_jumpgravitydlgwnd = 0;
 //static HWND s_shadertypeparamsdlgwnd = 0;
 static HWND s_skyparamsdlgwnd = 0;
 //static HWND s_fogparamsdlgwnd = 0;
-static HWND s_dofparamsdlgwnd = 0;
+//static HWND s_dofparamsdlgwnd = 0;
 static HWND s_savechadlghwnd = 0;
 static HWND s_bvhdlghwnd = 0;
 static HWND s_saveredlghwnd = 0;
@@ -1220,6 +1220,9 @@ static OWP_CheckBoxA* s_zcmpChk = 0;
 static OWP_Separator* s_dispsp4 = 0;
 static OWP_CheckBoxA* s_freefpsChk = 0;
 static OWP_CheckBoxA* s_skydispChk = 0;
+static OWP_Label* s_dispspacerLabel001 = 0;
+static OWP_Label* s_dispspacerLabel002 = 0;
+static OWP_Label* s_dispspacerLabel003 = 0;
 
 
 static OrgWindow* s_lightsWnd = 0;
@@ -1317,6 +1320,10 @@ static OWP_Slider* s_lodlevel4lod3Slider = 0;
 static OWP_Label* s_lodspacer1Label = 0;
 static OWP_Separator* s_lodapplysp = 0;
 static OWP_Button* s_lodapplyB = 0;
+static OWP_Label* s_lodspacerLabel001 = 0;
+static OWP_Label* s_lodspacerLabel002 = 0;
+static OWP_Label* s_lodspacerLabel003 = 0;
+
 
 static OrgWindow* s_shadowWnd = 0;
 static OWP_Separator* s_shadowslotsp = 0;
@@ -1371,6 +1378,9 @@ static OWP_Label* s_shadowspacerLabel = 0;
 static OWP_Separator* s_shadowapplysp = 0;
 static OWP_Button* s_shadowapplyB = 0;
 static OWP_Button* s_shadowinitB = 0;
+static OWP_Label* s_shadowspacerLabel001 = 0;
+static OWP_Label* s_shadowspacerLabel002 = 0;
+static OWP_Label* s_shadowspacerLabel003 = 0;
 
 
 static OrgWindow* s_limitWnd = 0;
@@ -1451,6 +1461,12 @@ static OWP_Separator* s_limitphsysicssp1 = 0;
 static OWP_Separator* s_limitphsysicssp2 = 0;
 static OWP_Button* s_limitphysicsDepperB = 0;
 static OWP_Button* s_limitphysicsAllB = 0;
+static OWP_Label* s_limitspacerLabel001 = 0;
+static OWP_Label* s_limitspacerLabel002 = 0;
+static OWP_Label* s_limitspacerLabel003 = 0;
+static OWP_Label* s_limitspacerLabel004 = 0;
+
+
 
 static OrgWindow* s_thWnd = 0;
 static OWP_Label* s_ththLabel = 0;
@@ -1516,6 +1532,23 @@ static OWP_Slider* s_fogheightSlider = 0;
 static OWP_Label* s_fogspacerLabel3 = 0;
 static OWP_Separator* s_fogapplysp = 0;
 static OWP_Button* s_fogapplyB = 0;
+
+static OrgWindow* s_dofWnd = 0;
+static OWP_Label* s_dofLabel = 0;
+static OWP_ComboBoxA* s_dofslotCombo = 0;
+static OWP_Label* s_dofspacerLabel1 = 0;
+static OWP_Separator* s_dofdistsp1 = 0;
+static OWP_Separator* s_dofdistsp2 = 0;
+static OWP_Separator* s_dofdistsp3 = 0;
+static OWP_Label* s_dofdistnearLabel = 0;
+static OWP_EditBox* s_dofdistnearEdit = 0;
+static OWP_Label* s_dofdistfarLabel = 0;
+static OWP_EditBox* s_dofdistfarEdit = 0;
+static OWP_Label* s_dofspacerLabel2 = 0;
+static OWP_CheckBoxA* s_dofskyChk = 0;
+static OWP_Label* s_dofspacerLabel3 = 0;
+static OWP_Separator* s_dofapplysp = 0;
+static OWP_Button* s_dofapplyB = 0;
 
 
 static OrgWindow* s_sidemenuWnd = 0;
@@ -3246,7 +3279,7 @@ static int FogParams2Dlg();
 static void CheckFogKindParamsButton(int srckind);
 
 static int CreateDofParamsDlg();//params設定用　OWPでは無い方
-static int Set2DofParamsDlg();//params設定用　OWPでは無い方
+static int DofParams2Dlg();//params設定用　OWPでは無い方
 
 
 
@@ -3262,8 +3295,8 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK JumpGravityDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK SkyParamsDlgProc(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK FogParamsDlgProc(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK DofParamsDlgProc(HWND, UINT, WPARAM, LPARAM);
+//LRESULT CALLBACK FogParamsDlgProc(HWND, UINT, WPARAM, LPARAM);
+//LRESULT CALLBACK DofParamsDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK OpenBvhDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK SaveChaDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK ExportXDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
@@ -5261,6 +5294,9 @@ void InitApp()
 		s_dispsp4 = 0;
 		s_freefpsChk = 0;
 		s_skydispChk = 0;
+		s_dispspacerLabel001 = 0;
+		s_dispspacerLabel002 = 0;
+		s_dispspacerLabel003 = 0;
 	}
 
 	{
@@ -5362,6 +5398,9 @@ void InitApp()
 		s_lodspacer1Label = 0;
 		s_lodapplysp = 0;
 		s_lodapplyB = 0;
+		s_lodspacerLabel001 = 0;
+		s_lodspacerLabel002 = 0;
+		s_lodspacerLabel003 = 0;
 	}
 
 	{
@@ -5421,6 +5460,10 @@ void InitApp()
 		s_shadowapplysp = 0;
 		s_shadowapplyB = 0;
 		s_shadowinitB = 0;
+
+		s_shadowspacerLabel001 = 0;
+		s_shadowspacerLabel002 = 0;
+		s_shadowspacerLabel003 = 0;
 	}
 
 	{
@@ -5502,6 +5545,10 @@ void InitApp()
 		s_limitphsysicssp2 = 0;
 		s_limitphysicsDepperB = 0;
 		s_limitphysicsAllB = 0;
+		s_limitspacerLabel001 = 0;
+		s_limitspacerLabel002 = 0;
+		s_limitspacerLabel003 = 0;
+		s_limitspacerLabel004 = 0;
 	}
 
 	{
@@ -5572,6 +5619,26 @@ void InitApp()
 		s_fogapplysp = 0;
 		s_fogapplyB = 0;
 	}
+
+	{
+		s_dofWnd = 0;
+		s_dofLabel = 0;
+		s_dofslotCombo = 0;
+		s_dofspacerLabel1 = 0;
+		s_dofdistsp1 = 0;
+		s_dofdistsp2 = 0;
+		s_dofdistsp3 = 0;
+		s_dofdistnearLabel = 0;
+		s_dofdistnearEdit = 0;
+		s_dofdistfarLabel = 0;
+		s_dofdistfarEdit = 0;
+		s_dofspacerLabel2 = 0;
+		s_dofskyChk = 0;
+		s_dofspacerLabel3 = 0;
+		s_dofapplysp = 0;
+		s_dofapplyB = 0;
+	}
+
 
 	{
 		s_st_closeFlag = false;
@@ -6926,7 +6993,7 @@ void InitApp()
 	//s_shadertypeparamsdlgwnd = 0;
 	s_skyparamsdlgwnd = 0;
 	//s_fogparamsdlgwnd = 0;
-	s_dofparamsdlgwnd = 0;
+	//s_dofparamsdlgwnd = 0;
 
 
 	{
@@ -7191,10 +7258,10 @@ void OnDestroyDevice()
 	//	DestroyWindow(s_fogparamsdlgwnd);
 	//	s_fogparamsdlgwnd = 0;
 	//}
-	if (s_dofparamsdlgwnd) {
-		DestroyWindow(s_dofparamsdlgwnd);
-		s_dofparamsdlgwnd = 0;
-	}
+	//if (s_dofparamsdlgwnd) {
+	//	DestroyWindow(s_dofparamsdlgwnd);
+	//	s_dofparamsdlgwnd = 0;
+	//}
 
 	CloseDbgFile();
 	if (g_infownd) {
@@ -7754,6 +7821,19 @@ void OnDestroyDevice()
 			delete s_skydispChk;
 			s_skydispChk = 0;
 		}
+		if (s_dispspacerLabel001) {
+			delete s_dispspacerLabel001;
+			s_dispspacerLabel001 = 0;
+		}
+		if (s_dispspacerLabel002) {
+			delete s_dispspacerLabel002;
+			s_dispspacerLabel002 = 0;
+		}
+		if (s_dispspacerLabel003) {
+			delete s_dispspacerLabel003;
+			s_dispspacerLabel003 = 0;
+		}
+
 		if (s_displimitsWnd) {
 			delete s_displimitsWnd;
 			s_displimitsWnd = 0;
@@ -8124,6 +8204,18 @@ void OnDestroyDevice()
 			delete s_lodapplyB;
 			s_lodapplyB = 0;
 		}
+		if (s_lodspacerLabel001) {
+			delete s_lodspacerLabel001;
+			s_lodspacerLabel001 = 0;
+		}
+		if (s_lodspacerLabel002) {
+			delete s_lodspacerLabel002;
+			s_lodspacerLabel002 = 0;
+		}
+		if (s_lodspacerLabel003) {
+			delete s_lodspacerLabel003;
+			s_lodspacerLabel003 = 0;
+		}
 
 		if (s_lodWnd) {
 			delete s_lodWnd;
@@ -8347,6 +8439,18 @@ void OnDestroyDevice()
 		if (s_shadowinitB) {
 			delete s_shadowinitB;
 			s_shadowinitB = 0;
+		}
+		if (s_shadowspacerLabel001) {
+			delete s_shadowspacerLabel001;
+			s_shadowspacerLabel001 = 0;
+		}
+		if (s_shadowspacerLabel002) {
+			delete s_shadowspacerLabel002;
+			s_shadowspacerLabel002 = 0;
+		}
+		if (s_shadowspacerLabel003) {
+			delete s_shadowspacerLabel003;
+			s_shadowspacerLabel003 = 0;
 		}
 
 		if (s_shadowWnd) {
@@ -8665,6 +8769,23 @@ void OnDestroyDevice()
 			delete s_limitphysicsAllB;
 			s_limitphysicsAllB = 0;
 		}
+		if (s_limitspacerLabel001) {
+			delete s_limitspacerLabel001;
+			s_limitspacerLabel001 = 0;
+		}
+		if (s_limitspacerLabel002) {
+			delete s_limitspacerLabel002;
+			s_limitspacerLabel002 = 0;
+		}
+		if (s_limitspacerLabel003) {
+			delete s_limitspacerLabel003;
+			s_limitspacerLabel003 = 0;
+		}
+		if (s_limitspacerLabel004) {
+			delete s_limitspacerLabel004;
+			s_limitspacerLabel004 = 0;
+		}
+
 
 		if (s_limitWnd) {
 			delete s_limitWnd;
@@ -8932,7 +9053,73 @@ void OnDestroyDevice()
 		}
 	}
 
+	{
+		if (s_dofLabel) {
+			delete s_dofLabel;
+			s_dofLabel = 0;
+		}
+		if (s_dofslotCombo) {
+			delete s_dofslotCombo;
+			s_dofslotCombo = 0;
+		}
+		if (s_dofspacerLabel1) {
+			delete s_dofspacerLabel1;
+			s_dofspacerLabel1 = 0;
+		}
+		if (s_dofdistsp1) {
+			delete s_dofdistsp1;
+			s_dofdistsp1 = 0;
+		}
+		if (s_dofdistsp2) {
+			delete s_dofdistsp2;
+			s_dofdistsp2 = 0;
+		}
+		if (s_dofdistsp3) {
+			delete s_dofdistsp3;
+			s_dofdistsp3 = 0;
+		}
+		if (s_dofdistnearLabel) {
+			delete s_dofdistnearLabel;
+			s_dofdistnearLabel = 0;
+		}
+		if (s_dofdistnearEdit) {
+			delete s_dofdistnearEdit;
+			s_dofdistnearEdit = 0;
+		}
+		if (s_dofdistfarLabel) {
+			delete s_dofdistfarLabel;
+			s_dofdistfarLabel = 0;
+		}
+		if (s_dofdistfarEdit) {
+			delete s_dofdistfarEdit;
+			s_dofdistfarEdit = 0;
+		}
+		if (s_dofspacerLabel2) {
+			delete s_dofspacerLabel2;
+			s_dofspacerLabel2 = 0;
+		}
+		if (s_dofskyChk) {
+			delete s_dofskyChk;
+			s_dofskyChk = 0;
+		}
+		if (s_dofspacerLabel3) {
+			delete s_dofspacerLabel3;
+			s_dofspacerLabel3 = 0;
+		}
+		if (s_dofapplysp) {
+			delete s_dofapplysp;
+			s_dofapplysp = 0;
+		}
+		if (s_dofapplyB) {
+			delete s_dofapplyB;
+			s_dofapplyB = 0;
+		}
 
+		if (s_dofWnd) {
+			delete s_dofWnd;
+			s_dofWnd = 0;
+		}
+	}
 
 	if (s_impgroupcheck) {
 		delete s_impgroupcheck;
@@ -18960,7 +19147,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.26\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.27\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -28445,7 +28632,21 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-
+		s_dispspacerLabel001 = new OWP_Label(L"     ", 32);
+		if (!s_dispspacerLabel001) {
+			_ASSERT(0);
+			abort();
+		}
+		s_dispspacerLabel002 = new OWP_Label(L"     ", 32);
+		if (!s_dispspacerLabel002) {
+			_ASSERT(0);
+			abort();
+		}
+		s_dispspacerLabel003 = new OWP_Label(L"     ", 32);
+		if (!s_dispspacerLabel003) {
+			_ASSERT(0);
+			abort();
+		}
 
 
 		s_displimitsWnd->addParts(*s_lightssp);
@@ -28455,6 +28656,7 @@ int CreateGUIDlgDispParams()
 		s_threadssp->addParts1(*s_threadsLabel);
 		s_threadssp->addParts2(*s_threadsSlider);
 		s_displimitsWnd->addParts(*s_highRpmChk);
+		s_displimitsWnd->addParts(*s_dispspacerLabel001);//
 		s_displimitsWnd->addParts(*s_bonemarksp);
 		s_bonemarksp->addParts1(*s_bonemarkChk);
 		s_bonemarksp->addParts2(*s_bonemarkSlider);
@@ -28467,6 +28669,7 @@ int CreateGUIDlgDispParams()
 		s_displimitsWnd->addParts(*s_refpossp);
 		s_refpossp->addParts1(*s_refposLabel);
 		s_refpossp->addParts2(*s_refposSlider);
+		s_displimitsWnd->addParts(*s_dispspacerLabel002);//
 		s_displimitsWnd->addParts(*s_iklevelssp);
 		s_iklevelssp->addParts1(*s_iklevelsLabel);
 		s_iklevelssp->addParts2(*s_iklevelsCombo);
@@ -28476,6 +28679,7 @@ int CreateGUIDlgDispParams()
 		s_displimitsWnd->addParts(*s_uvsetsp);
 		s_uvsetsp->addParts1(*s_uvsetLabel);
 		s_uvsetsp->addParts2(*s_uvsetCombo);
+		s_displimitsWnd->addParts(*s_dispspacerLabel003);//
 		s_displimitsWnd->addParts(*s_dispsp1);
 		s_dispsp1->addParts1(*s_x180Chk);
 		s_dispsp1->addParts2(*s_rottraChk);
@@ -29173,6 +29377,23 @@ int CreateGUIDlgLOD()
 			abort();
 		}
 		s_lodapplyB->setTextColor(RGB(168, 129, 129));
+		s_lodspacerLabel001 = new OWP_Label(L"     ", 32);
+		if (!s_lodspacerLabel001) {
+			_ASSERT(0);
+			abort();
+		}
+		s_lodspacerLabel002 = new OWP_Label(L"     ", 32);
+		if (!s_lodspacerLabel002) {
+			_ASSERT(0);
+			abort();
+		}
+		s_lodspacerLabel003 = new OWP_Label(L"     ", 32);
+		if (!s_lodspacerLabel003) {
+			_ASSERT(0);
+			abort();
+		}
+
+
 
 
 		s_lodWnd->addParts(*s_lodprojLabel);
@@ -29189,6 +29410,7 @@ int CreateGUIDlgLOD()
 		s_lodWnd->addParts(*s_lodpickdistsp);
 		s_lodpickdistsp->addParts1(*s_lodpickdistLabel);
 		s_lodpickdistsp->addParts2(*s_lodpickdistSlider);
+		s_lodWnd->addParts(*s_lodspacerLabel001);//
 		s_lodWnd->addParts(*s_lodlevel2Label);
 		s_lodWnd->addParts(*s_lodlevel2lod0sp);
 		s_lodlevel2lod0sp->addParts1(*s_lodlevel2lod0Label);
@@ -29196,6 +29418,7 @@ int CreateGUIDlgLOD()
 		s_lodWnd->addParts(*s_lodlevel2lod1sp);
 		s_lodlevel2lod1sp->addParts1(*s_lodlevel2lod1Label);
 		s_lodlevel2lod1sp->addParts2(*s_lodlevel2lod1Slider);
+		s_lodWnd->addParts(*s_lodspacerLabel002);//
 		s_lodWnd->addParts(*s_lodlevel3Label);
 		s_lodWnd->addParts(*s_lodlevel3lod0sp);
 		s_lodlevel3lod0sp->addParts1(*s_lodlevel3lod0Label);
@@ -29206,6 +29429,7 @@ int CreateGUIDlgLOD()
 		s_lodWnd->addParts(*s_lodlevel3lod2sp);
 		s_lodlevel3lod2sp->addParts1(*s_lodlevel3lod2Label);
 		s_lodlevel3lod2sp->addParts2(*s_lodlevel3lod2Slider);
+		s_lodWnd->addParts(*s_lodspacerLabel003);//
 		s_lodWnd->addParts(*s_lodlevel4Label);
 		s_lodWnd->addParts(*s_lodlevel4lod0sp);
 		s_lodlevel4lod0sp->addParts1(*s_lodlevel4lod0Label);
@@ -29984,6 +30208,21 @@ int CreateShadowParamsWnd()
 			_ASSERT(0);
 			abort();
 		}
+		s_shadowspacerLabel001 = new OWP_Label(L"     ", 32);
+		if (!s_shadowspacerLabel001) {
+			_ASSERT(0);
+			abort();
+		}
+		s_shadowspacerLabel002 = new OWP_Label(L"     ", 32);
+		if (!s_shadowspacerLabel002) {
+			_ASSERT(0);
+			abort();
+		}
+		s_shadowspacerLabel003 = new OWP_Label(L"     ", 32);
+		if (!s_shadowspacerLabel003) {
+			_ASSERT(0);
+			abort();
+		}
 
 
 		s_shadowWnd->addParts(*s_shadowslotsp);
@@ -30004,6 +30243,7 @@ int CreateShadowParamsWnd()
 		s_shadowcamposdistsp1->addParts1(*s_shadowcamposdistLabel);
 		s_shadowcamposdistsp1->addParts2(*s_shadowcamposdistEdit);
 		s_shadowcamposdistsp2->addParts1(*s_shadowcamposdistxLabel);
+		s_shadowWnd->addParts(*s_shadowspacerLabel001);//
 		s_shadowWnd->addParts(*s_shadowcamdirLabel);
 		s_shadowWnd->addParts(*s_shadowcamdirsp0);
 		s_shadowcamdirsp0->addParts1(*s_shadowcamdirsp1);
@@ -30020,6 +30260,7 @@ int CreateShadowParamsWnd()
 		s_shadowcamdirsp5->addParts2(*s_shadowcamdirChk[5]);
 		s_shadowcamdirsp6->addParts1(*s_shadowcamdirChk[6]);
 		s_shadowcamdirsp6->addParts2(*s_shadowcamdirChk[7]);
+		s_shadowWnd->addParts(*s_shadowspacerLabel002);//
 		s_shadowWnd->addParts(*s_shadowprojLabel);
 		s_shadowWnd->addParts(*s_shadowprojfovsp);
 		s_shadowprojfovsp->addParts1(*s_shadowprojfovLabel);
@@ -30031,6 +30272,7 @@ int CreateShadowParamsWnd()
 		s_shadowprojnearfarsp1->addParts2(*s_shadowprojnearEdit);
 		s_shadowprojnearfarsp2->addParts1(*s_shadowprojfarLabel);
 		s_shadowprojnearfarsp2->addParts2(*s_shadowprojfarEdit);
+		s_shadowWnd->addParts(*s_shadowspacerLabel003);//
 		s_shadowWnd->addParts(*s_shadowotherLabel);
 		s_shadowWnd->addParts(*s_shadowothersp1);
 		s_shadowothersp1->addParts1(*s_shadowothercolorLabel);
@@ -30893,8 +31135,26 @@ int CreateAngleLimitDlg()
 			abort();
 		}
 		s_limitphysicsAllB->setTextColor(RGB(168, 129, 129));
-		
-
+		s_limitspacerLabel001 = new OWP_Label(L"     ", 32);
+		if (!s_limitspacerLabel001) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitspacerLabel002 = new OWP_Label(L"     ", 32);
+		if (!s_limitspacerLabel002) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitspacerLabel003 = new OWP_Label(L"     ", 32);
+		if (!s_limitspacerLabel003) {
+			_ASSERT(0);
+			abort();
+		}
+		s_limitspacerLabel004 = new OWP_Label(L"     ", 32);
+		if (!s_limitspacerLabel004) {
+			_ASSERT(0);
+			abort();
+		}
 
 		s_limitWnd->addParts(*s_limitnameLabel);
 		s_limitWnd->addParts(*s_limitxsp1);
@@ -30935,13 +31195,13 @@ int CreateAngleLimitDlg()
 		s_limitzsp2b->addParts2(*s_limitzupperEdit);
 		s_limitzsp3a->addParts1(*s_limitzchkLabel);
 		s_limitzsp3a->addParts2(*s_limitzchkEdit);
-
 		s_limitWnd->addParts(*s_limiteulsp1);
 		s_limiteulsp1->addParts1(*s_limiteulsp2);
 		s_limiteulsp1->addParts2(*s_limiteulsp3);
 		s_limiteulsp2->addParts1(*s_limiteuloneB);
 		s_limiteulsp2->addParts2(*s_limiteuldeeperB);
 		s_limiteulsp3->addParts1(*s_limiteulallB);
+		s_limitWnd->addParts(*s_limitspacerLabel001);//
 		s_limitWnd->addParts(*s_limitcppsLabel);
 		s_limitWnd->addParts(*s_limitcpsp1);
 		s_limitcpsp1->addParts1(*s_limitcpsp2);
@@ -30950,6 +31210,7 @@ int CreateAngleLimitDlg()
 		s_limitcpsp2->addParts2(*s_limitcpfromsymB);
 		s_limitcpsp3->addParts1(*s_limitcpB);
 		s_limitcpsp3->addParts2(*s_limitpsB);
+		s_limitWnd->addParts(*s_limitspacerLabel002);//
 		s_limitWnd->addParts(*s_limitsetLabel);
 		s_limitWnd->addParts(*s_limitsetsp1);
 		s_limitsetsp1->addParts1(*s_limitsetsp2);
@@ -30958,6 +31219,7 @@ int CreateAngleLimitDlg()
 		s_limitsetsp2->addParts2(*s_limit180to170B);
 		s_limitsetsp3->addParts1(*s_limitreset0B);
 		s_limitsetsp3->addParts2(*s_limitfrommotB);
+		s_limitWnd->addParts(*s_limitspacerLabel003);//
 		s_limitWnd->addParts(*s_limitsetallLabel);
 		s_limitWnd->addParts(*s_limitsetallsp1);
 		s_limitsetallsp1->addParts1(*s_limitsetallsp2);
@@ -30968,6 +31230,7 @@ int CreateAngleLimitDlg()
 		s_limitsetallsp3->addParts2(*s_limitallfrommotB);
 		s_limitWnd->addParts(*s_limitallboneallmotLabel);
 		s_limitWnd->addParts(*s_limitallboneallmotB);
+		s_limitWnd->addParts(*s_limitspacerLabel004);//
 		s_limitWnd->addParts(*s_limitphysicsLabel);
 		s_limitWnd->addParts(*s_limitphysicssp);
 		s_limitphysicssp->addParts1(*s_limitphysicsrateLabel);
@@ -31903,6 +32166,8 @@ int Lights2Dlg()
 			}
 
 		}
+
+		s_lightsWnd->callRewrite();
 	}
 	return 0;
 }
@@ -32084,62 +32349,65 @@ int Dlg2LaterTransparent(HWND hDlgWnd)
 
 int LODParams2Dlg()
 {
+	if (s_lodWnd) {
 
-	//#######
-	//Slider
-	//#######
-	if (s_lodprojfovSlider) {
-		double value = (double)g_fovy * 180.0 / PI;
-		s_lodprojfovSlider->setValue(value, false);
-	}
-	if (s_lodpickdistSlider) {
-		s_lodpickdistSlider->setValue(g_pickdistrate, false);
-	}
+		//#######
+		//Slider
+		//#######
+		if (s_lodprojfovSlider) {
+			double value = (double)g_fovy * 180.0 / PI;
+			s_lodprojfovSlider->setValue(value, false);
+		}
+		if (s_lodpickdistSlider) {
+			s_lodpickdistSlider->setValue(g_pickdistrate, false);
+		}
 
-	if (s_lodlevel2lod0Slider) {
-		s_lodlevel2lod0Slider->setValue((double)g_lodrate2L[CHKINVIEW_LOD0], false);
-	}
-	if (s_lodlevel2lod1Slider) {
-		s_lodlevel2lod1Slider->setValue((double)g_lodrate2L[CHKINVIEW_LOD1], false);
-	}
+		if (s_lodlevel2lod0Slider) {
+			s_lodlevel2lod0Slider->setValue((double)g_lodrate2L[CHKINVIEW_LOD0], false);
+		}
+		if (s_lodlevel2lod1Slider) {
+			s_lodlevel2lod1Slider->setValue((double)g_lodrate2L[CHKINVIEW_LOD1], false);
+		}
 
-	if (s_lodlevel3lod0Slider) {
-		s_lodlevel3lod0Slider->setValue((double)g_lodrate3L[CHKINVIEW_LOD0], false);
-	}
-	if (s_lodlevel3lod1Slider) {
-		s_lodlevel3lod1Slider->setValue((double)g_lodrate3L[CHKINVIEW_LOD1], false);
-	}
-	if (s_lodlevel3lod2Slider) {
-		s_lodlevel3lod2Slider->setValue((double)g_lodrate3L[CHKINVIEW_LOD2], false);
-	}
+		if (s_lodlevel3lod0Slider) {
+			s_lodlevel3lod0Slider->setValue((double)g_lodrate3L[CHKINVIEW_LOD0], false);
+		}
+		if (s_lodlevel3lod1Slider) {
+			s_lodlevel3lod1Slider->setValue((double)g_lodrate3L[CHKINVIEW_LOD1], false);
+		}
+		if (s_lodlevel3lod2Slider) {
+			s_lodlevel3lod2Slider->setValue((double)g_lodrate3L[CHKINVIEW_LOD2], false);
+		}
 
-	if (s_lodlevel4lod0Slider) {
-		s_lodlevel4lod0Slider->setValue((double)g_lodrate4L[CHKINVIEW_LOD0], false);
-	}
-	if (s_lodlevel4lod1Slider) {
-		s_lodlevel4lod1Slider->setValue((double)g_lodrate4L[CHKINVIEW_LOD1], false);
-	}
-	if (s_lodlevel4lod2Slider) {
-		s_lodlevel4lod2Slider->setValue((double)g_lodrate4L[CHKINVIEW_LOD2], false);
-	}
-	if (s_lodlevel4lod3Slider) {
-		s_lodlevel4lod3Slider->setValue((double)g_lodrate4L[CHKINVIEW_LOD3], false);
-	}
+		if (s_lodlevel4lod0Slider) {
+			s_lodlevel4lod0Slider->setValue((double)g_lodrate4L[CHKINVIEW_LOD0], false);
+		}
+		if (s_lodlevel4lod1Slider) {
+			s_lodlevel4lod1Slider->setValue((double)g_lodrate4L[CHKINVIEW_LOD1], false);
+		}
+		if (s_lodlevel4lod2Slider) {
+			s_lodlevel4lod2Slider->setValue((double)g_lodrate4L[CHKINVIEW_LOD2], false);
+		}
+		if (s_lodlevel4lod3Slider) {
+			s_lodlevel4lod3Slider->setValue((double)g_lodrate4L[CHKINVIEW_LOD3], false);
+		}
 
-	//#####
-	//EditBox
-	//#####
-	WCHAR strdlg[256] = { 0L };
-	swprintf_s(strdlg, 256, L"%.2f", g_projnear);
-	if (s_lodnearEdit) {
-		s_lodnearEdit->setNameString(strdlg);
-	}
+		//#####
+		//EditBox
+		//#####
+		WCHAR strdlg[256] = { 0L };
+		swprintf_s(strdlg, 256, L"%.2f", g_projnear);
+		if (s_lodnearEdit) {
+			s_lodnearEdit->setNameString(strdlg);
+		}
 
-	swprintf_s(strdlg, 256, L"%.1f", g_projfar);
-	if (s_lodfarEdit) {
-		s_lodfarEdit->setNameString(strdlg);
-	}
+		swprintf_s(strdlg, 256, L"%.1f", g_projfar);
+		if (s_lodfarEdit) {
+			s_lodfarEdit->setNameString(strdlg);
+		}
 
+		s_lodWnd->callRewrite();
+	}
 	return 0;
 }
 
@@ -32153,64 +32421,69 @@ int ShadowParams2Dlg()
 		g_shadowmap_slotno = 0;
 	}
 
-	//#########
-	//ComboBox
-	//#########
-	if (s_shadowslotCombo) {
-		s_shadowslotCombo->setSelectedCombo(g_shadowmap_slotno);
-	}
 
-	//#########
-	//CheckBox
-	//#########
-	if (s_shadowenableChk) {
-		s_shadowenableChk->setValue(g_enableshadow, false);
-	}
-	if (s_shadowvsmChk) {
-		s_shadowvsmChk->setValue(g_VSMflag, false);
-	}
-	if (s_shadowvsmblurChk) {
-		s_shadowvsmblurChk->setValue(g_blurShadow, false);
-	}
+	if (s_shadowWnd) {
 
-	CheckShadowDirectionButton(g_shadowmap_lightdir[g_shadowmap_slotno]);
+		//#########
+		//ComboBox
+		//#########
+		if (s_shadowslotCombo) {
+			s_shadowslotCombo->setSelectedCombo(g_shadowmap_slotno);
+		}
 
-	//########
-	//EditBox
-	//########
-	if (s_shadowcamposupEdit) {
-		swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_plusup[g_shadowmap_slotno]);
-		s_shadowcamposupEdit->setNameString(strdlg);
-	}
-	if (s_shadowcamposdistEdit) {
-		swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_distscale[g_shadowmap_slotno]);
-		s_shadowcamposdistEdit->setNameString(strdlg);
-	}
-	if (s_shadowprojnearEdit) {
-		swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_near[g_shadowmap_slotno]);
-		s_shadowprojnearEdit->setNameString(strdlg);
-	}
-	if (s_shadowprojfarEdit) {
-		swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_far[g_shadowmap_slotno]);
-		s_shadowprojfarEdit->setNameString(strdlg);
-	}
+		//#########
+		//CheckBox
+		//#########
+		if (s_shadowenableChk) {
+			s_shadowenableChk->setValue(g_enableshadow, false);
+		}
+		if (s_shadowvsmChk) {
+			s_shadowvsmChk->setValue(g_VSMflag, false);
+		}
+		if (s_shadowvsmblurChk) {
+			s_shadowvsmblurChk->setValue(g_blurShadow, false);
+		}
 
-	//#######
-	//Slider
-	//#######
-	if (s_shadowprojfovSlider) {
-		s_shadowprojfovSlider->setValue(g_shadowmap_fov[g_shadowmap_slotno], false);
-	}
-	if (s_shadowothercolorSlider) {
-		s_shadowothercolorSlider->setValue(g_shadowmap_color[g_shadowmap_slotno], false);
-	}
-	if (s_shadowotherbiasSlider) {
-		s_shadowotherbiasSlider->setValue(g_shadowmap_bias[g_shadowmap_slotno], false);
-	}
-	if (s_shadowothermultSlider) {
-		s_shadowothermultSlider->setValue(g_shadowmap_projscale[g_shadowmap_slotno], false);
-	}
+		CheckShadowDirectionButton(g_shadowmap_lightdir[g_shadowmap_slotno]);
 
+		//########
+		//EditBox
+		//########
+		if (s_shadowcamposupEdit) {
+			swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_plusup[g_shadowmap_slotno]);
+			s_shadowcamposupEdit->setNameString(strdlg);
+		}
+		if (s_shadowcamposdistEdit) {
+			swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_distscale[g_shadowmap_slotno]);
+			s_shadowcamposdistEdit->setNameString(strdlg);
+		}
+		if (s_shadowprojnearEdit) {
+			swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_near[g_shadowmap_slotno]);
+			s_shadowprojnearEdit->setNameString(strdlg);
+		}
+		if (s_shadowprojfarEdit) {
+			swprintf_s(strdlg, 256, L"%.1f", g_shadowmap_far[g_shadowmap_slotno]);
+			s_shadowprojfarEdit->setNameString(strdlg);
+		}
+
+		//#######
+		//Slider
+		//#######
+		if (s_shadowprojfovSlider) {
+			s_shadowprojfovSlider->setValue(g_shadowmap_fov[g_shadowmap_slotno], false);
+		}
+		if (s_shadowothercolorSlider) {
+			s_shadowothercolorSlider->setValue(g_shadowmap_color[g_shadowmap_slotno], false);
+		}
+		if (s_shadowotherbiasSlider) {
+			s_shadowotherbiasSlider->setValue(g_shadowmap_bias[g_shadowmap_slotno], false);
+		}
+		if (s_shadowothermultSlider) {
+			s_shadowothermultSlider->setValue(g_shadowmap_projscale[g_shadowmap_slotno], false);
+		}
+
+		s_shadowWnd->callRewrite();
+	}
 	return 0;
 }
 
@@ -32360,6 +32633,7 @@ int Global2ThresholdDlg()
 			s_throundzEdit->setName(stredit);
 		}
 
+		s_thWnd->callRewrite();
 	}
 	else {
 		_ASSERT(0);
@@ -32446,6 +32720,8 @@ int AngleLimit2Dlg(bool updateonlycheckeul)
 		//	CheckDlgButton(hDlgWnd, IDC_CHECKZ, BST_UNCHECKED);
 		//}
 
+
+		s_limitWnd->callRewrite();
 	}
 	else {
 		//_ASSERT(0);
@@ -33835,217 +34111,88 @@ void CheckFogKindParamsButton(int srckind)
 
 int DispParams2Dlg()
 {
+	if (s_displimitsWnd) {
 
-	//#######
-	//Slider
-	//#######
-	if (s_lightsSlider) {
-		s_lightsSlider->setValue((double)g_fLightScale, false);
-	}
-	if (s_threadsSlider) {
-		s_threadsSlider->setValue((double)g_UpdateMatrixThreads, false);
-	}
-	if (s_bonemarkSlider) {
-		s_bonemarkSlider->setValue((double)g_bonemark_bright, false);
-	}
-	if (s_rigidmarkSlider) {
-		s_rigidmarkSlider->setValue((double)g_rigidmark_alpha, false);
-	}
-	if (s_rigmarkSlider) {
-		s_rigmarkSlider->setValue((double)g_rigmark_alpha, false);
-	}
-	if (s_refposSlider) {
-		s_refposSlider->setValue((double)g_refalpha, false);
-	}
-
-
-	//#########
-	//ComboBox
-	//#########
-	if (s_iklevelsCombo) {
-		s_iklevelsCombo->setSelectedCombo(g_iklevel - 1);
-	}
-	if (s_axiskindCombo) {
-		s_axiskindCombo->setSelectedCombo(g_boneaxis);
-	}
-	if (s_uvsetCombo) {
-		s_uvsetCombo->setSelectedCombo(g_uvset);
-	}
+		//#######
+		//Slider
+		//#######
+		if (s_lightsSlider) {
+			s_lightsSlider->setValue((double)g_fLightScale, false);
+		}
+		if (s_threadsSlider) {
+			s_threadsSlider->setValue((double)g_UpdateMatrixThreads, false);
+		}
+		if (s_bonemarkSlider) {
+			s_bonemarkSlider->setValue((double)g_bonemark_bright, false);
+		}
+		if (s_rigidmarkSlider) {
+			s_rigidmarkSlider->setValue((double)g_rigidmark_alpha, false);
+		}
+		if (s_rigmarkSlider) {
+			s_rigmarkSlider->setValue((double)g_rigmark_alpha, false);
+		}
+		if (s_refposSlider) {
+			s_refposSlider->setValue((double)g_refalpha, false);
+		}
 
 
-	//#########
-	//CheckBox
-	//#########
-	if (s_bloomChk) {
-		s_bloomChk->setValue(g_hdrpbloom, false);
-	}
-	if (s_freefpsChk) {
-		s_freefpsChk->setValue(g_freefps, false);
-	}
-	if (s_lightsChk) {
-		s_lightsChk->setValue((g_lightflag != 0), false);
-	}
-	if (s_highRpmChk) {
-		s_highRpmChk->setValue(g_HighRpmMode, false);
-	}
-	if (s_bonemarkChk) {
-		s_bonemarkChk->setValue((g_bonemarkflag != 0), false);
-	}
-	if (s_rigidmarkChk) {
-		s_rigidmarkChk->setValue((g_rigidmarkflag != 0), false);
-	}
-	if (s_x180Chk) {
-		s_x180Chk->setValue(g_x180flag, false);
-	}
-	if (s_rottraChk) {
-		s_rottraChk->setValue(g_rotatetanim, false);
-	}
-	if (s_dofChk) {
-		s_dofChk->setValue(g_zpreflag, false);
-	}
-	if (s_zcmpChk) {
-		s_zcmpChk->setValue(g_zalways, false);
-	}
-	if (s_skydispChk) {
-		s_skydispChk->setValue(g_skydispflag, false);
-	}
-	if (s_alphaChk) {
-		s_alphaChk->setValue(g_alphablending, false);
-	}
+		//#########
+		//ComboBox
+		//#########
+		if (s_iklevelsCombo) {
+			s_iklevelsCombo->setSelectedCombo(g_iklevel - 1);
+		}
+		if (s_axiskindCombo) {
+			s_axiskindCombo->setSelectedCombo(g_boneaxis);
+		}
+		if (s_uvsetCombo) {
+			s_uvsetCombo->setSelectedCombo(g_uvset);
+		}
 
+
+		//#########
+		//CheckBox
+		//#########
+		if (s_bloomChk) {
+			s_bloomChk->setValue(g_hdrpbloom, false);
+		}
+		if (s_freefpsChk) {
+			s_freefpsChk->setValue(g_freefps, false);
+		}
+		if (s_lightsChk) {
+			s_lightsChk->setValue((g_lightflag != 0), false);
+		}
+		if (s_highRpmChk) {
+			s_highRpmChk->setValue(g_HighRpmMode, false);
+		}
+		if (s_bonemarkChk) {
+			s_bonemarkChk->setValue((g_bonemarkflag != 0), false);
+		}
+		if (s_rigidmarkChk) {
+			s_rigidmarkChk->setValue((g_rigidmarkflag != 0), false);
+		}
+		if (s_x180Chk) {
+			s_x180Chk->setValue(g_x180flag, false);
+		}
+		if (s_rottraChk) {
+			s_rottraChk->setValue(g_rotatetanim, false);
+		}
+		if (s_dofChk) {
+			s_dofChk->setValue(g_zpreflag, false);
+		}
+		if (s_zcmpChk) {
+			s_zcmpChk->setValue(g_zalways, false);
+		}
+		if (s_skydispChk) {
+			s_skydispChk->setValue(g_skydispflag, false);
+		}
+		if (s_alphaChk) {
+			s_alphaChk->setValue(g_alphablending, false);
+		}
+
+		s_displimitsWnd->callRewrite();
+	}
 	return 0;
-}
-
-
-
-LRESULT CALLBACK DofParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
-{
-
-	if (!s_dofparamsdlgwnd) {
-		s_dofparamsdlgwnd = hDlgWnd;//条件リターンより前でセット
-	}
-
-	if ((g_dofindex < 0) || (g_dofindex >= DOFSLOTNUM)) {
-		_ASSERT(0);
-		return DefWindowProc(hDlgWnd, msg, wp, lp);
-	}
-
-
-	switch (msg) {
-	case WM_INITDIALOG:
-	{
-		Set2DofParamsDlg();
-		return FALSE;
-	}
-	break;
-
-	case WM_DRAWITEM://オーナードローコントロールの描画 : リソースでカラーバーボタンにオーナードロー属性を設定してある
-	//DefWindowProc(hDlgWnd, msg, wp, lp);
-	break;
-
-	case WM_COMMAND:
-
-		switch (LOWORD(wp)) {
-
-		//##########
-		//COMBOBOX
-		//##########
-		case IDC_COMBO_SLOTS:
-			if (HIWORD(wp) == CBN_SELCHANGE) {
-				HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_SLOTS);
-				if (combownd != NULL) {
-					int combono;
-					combono = (int)SendMessage(combownd, CB_GETCURSEL, 0, 0);
-					if ((combono >= 0) && (combono < DOFSLOTNUM)) {
-						g_dofindex = combono;
-						Set2DofParamsDlg();
-					}
-					else {
-						_ASSERT(0);
-						return false;
-					}
-				}
-				else {
-					_ASSERT(0);
-					return false;
-				}
-			}
-		break;
-
-
-
-		case IDC_CHECK_SKYDOF:
-		{
-			UINT ischecked = 0;
-			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_SKYDOF);
-			if (ischecked == BST_CHECKED) {
-				g_skydofflag[g_dofindex] = true;
-			}
-			else {
-				g_skydofflag[g_dofindex] = false;
-			}
-		}
-		break;
-
-
-		case IDC_APPLYDOF:
-		{
-			WCHAR streditbox[256] = { 0L };
-			float tempeditvalue;
-
-
-			GetDlgItemText(hDlgWnd, IDC_DOF_NEAR, streditbox, 256);
-			tempeditvalue = (float)_wtof(streditbox);
-			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-				g_dofparams[g_dofindex].x = tempeditvalue;
-			}
-			else {
-				::MessageBox(hDlgWnd, L"invalid editbox value : Near", L"Invalid Value", MB_OK);
-			}
-			GetDlgItemText(hDlgWnd, IDC_DOF_FAR, streditbox, 256);
-			tempeditvalue = (float)_wtof(streditbox);
-			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-				g_dofparams[g_dofindex].y = tempeditvalue;
-			}
-			else {
-				::MessageBox(hDlgWnd, L"invalid editbox value : Far", L"Invalid Value", MB_OK);
-			}
-
-
-		}
-		break;
-
-		case IDOK:
-		case IDCANCEL:
-			//EndDialog(hDlgWnd, IDCANCEL);
-			//s_shadertypeparamsFlag = false;
-			ShowWindow(hDlgWnd, SW_HIDE);
-
-			//2023/12/30 以下２行　ここで呼び出すと２回目にSW_SHOWしても表示されないことがあるので　コメントアウト
-			// WindowProcを回す必要があるため
-			//s_shadertypeparamsindex = -1;
-			//s_shadertypeparamsFlag = false;
-			break;
-		default:
-			return FALSE;
-			break;
-		}
-		break;
-	case WM_CLOSE:
-		//s_shadertypeparamsFlag = false;
-		ShowWindow(hDlgWnd, SW_HIDE);
-
-		//2023/12/30 以下２行　ここで呼び出すと２回目にSW_SHOWしても表示されないことがあるので　コメントアウト
-		// WindowProcを回す必要があるため
-		//s_shadertypeparamsindex = -1;
-		//s_shadertypeparamsFlag = false;
-		break;
-	default:
-		DefWindowProc(hDlgWnd, msg, wp, lp);
-		return FALSE;
-	}
-	return TRUE;
-
 }
 
 
@@ -41619,6 +41766,9 @@ int BlendShapeAnim2Dlg()
 			}
 		}
 	}
+
+	s_blendshapeWnd->callRewrite();
+
 	return 0;
 }
 int CreateBlendShapeWnd()
@@ -58961,8 +59111,8 @@ void ChangeMouseSetCapture()
 					}
 				}
 				else if (s_platemenuno == (SPEFFECTSW_DOF + 1)) {
-					if (s_dofparamsdlgwnd) {
-						SetCapture(s_dofparamsdlgwnd);
+					if (s_dofWnd) {
+						SetCapture(s_dofWnd->getHWnd());
 					}
 				}
 			}
@@ -69462,11 +69612,11 @@ int CreateFogParamsDlg()
 
 	s_fogWnd = new OrgWindow(
 		0,
-		_T("ThresholdDlg"),		//ウィンドウクラス名
+		_T("FogDlg"),		//ウィンドウクラス名
 		GetModuleHandle(NULL),	//インスタンスハンドル
 		WindowPos(windowposx, s_sidemenuheight),
 		WindowSize(s_sidewidth, s_sideheight),		//サイズ
-		_T("ThresholdDlg"),	//タイトル
+		_T("FogDlg"),	//タイトル
 		g_mainhwnd,	//親ウィンドウハンドル
 		false,					//表示・非表示状態
 		//70, 50, 70,				//カラー
@@ -69824,39 +69974,204 @@ int CreateFogParamsDlg()
 int CreateDofParamsDlg()
 {
 
-	HWND hDlgWnd = CreateDialogW((HMODULE)GetModuleHandle(NULL),
-		MAKEINTRESOURCE(IDD_DOFPARAMSDLG), s_3dwnd, (DLGPROC)DofParamsDlgProc);
-	if (hDlgWnd != NULL) {
-		s_dofparamsdlgwnd = hDlgWnd;
 
-		int windowposx;
-		if (g_4kresolution) {
-			windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-		}
-		else {
-			windowposx = s_timelinewidth + s_mainwidth;
-		}
+	if (s_dofWnd) {
+		//_ASSERT(0);
+		return 0;//作成済
+	}
 
-		SetParent(s_dofparamsdlgwnd, g_mainhwnd);
-		SetWindowPos(
-			s_dofparamsdlgwnd,
-			HWND_TOP,
-			windowposx,
-			s_sidemenuheight,
-			s_sidewidth,
-			s_sideheight,
-			SWP_SHOWWINDOW
-		);
-
-		ShowWindow(s_dofparamsdlgwnd, SW_HIDE);
-		s_dofparamsFlag = false;
-		return 0;
+	int windowposx;
+	if (g_4kresolution) {
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 	}
 	else {
-		s_dofparamsdlgwnd = NULL;
-		s_dofparamsFlag = false;
+		windowposx = s_timelinewidth + s_mainwidth;
+	}
+
+	s_dofWnd = new OrgWindow(
+		0,
+		_T("DOF_Dlg"),		//ウィンドウクラス名
+		GetModuleHandle(NULL),	//インスタンスハンドル
+		WindowPos(windowposx, s_sidemenuheight),
+		WindowSize(s_sidewidth, s_sideheight),		//サイズ
+		_T("DOF_Dlg"),	//タイトル
+		g_mainhwnd,	//親ウィンドウハンドル
+		false,					//表示・非表示状態
+		//70, 50, 70,				//カラー
+		0, 0, 0,				//カラー
+		true,					//閉じられるか否か
+		true);					//サイズ変更の可否
+
+	int labelheight;
+	if (g_4kresolution) {
+		labelheight = 28;
+	}
+	else {
+		labelheight = 20;
+	}
+
+	if (s_dofWnd) {
+		double rate50 = 0.50;
+
+		s_dofLabel = new OWP_Label(L"被写界深度 Depth of Field(DOF)", labelheight);
+		if (!s_dofLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_dofslotCombo = new OWP_ComboBoxA(L"DOF_Combo", labelheight);//g_dofindex
+		if (!s_dofslotCombo) {
+			_ASSERT(0);
+			abort();
+		}
+		int slotindex;
+		for (slotindex = 0; slotindex < 8; slotindex++) {
+			char strslot[128] = { 0 };
+			sprintf_s(strslot, 128, "Slot_%d", slotindex);
+			s_dofslotCombo->addString(strslot);
+		}
+		s_dofslotCombo->setSelectedCombo(g_dofindex);
+		s_dofspacerLabel1 = new OWP_Label(L"     ", 32);
+		if (!s_dofspacerLabel1) {
+			_ASSERT(0);
+			abort();
+		}
+		s_dofdistsp1 = new OWP_Separator(s_dofWnd, true, rate50, true);
+		if (!s_dofdistsp1) {
+			_ASSERT(0);
+			abort();
+		}
+		s_dofdistsp2 = new OWP_Separator(s_dofWnd, true, rate50, true);
+		if (!s_dofdistsp2) {
+			_ASSERT(0);
+			abort();
+		}
+		s_dofdistsp3 = new OWP_Separator(s_dofWnd, true, rate50, true);
+		if (!s_dofdistsp3) {
+			_ASSERT(0);
+			abort();
+		}
+		s_dofdistnearLabel = new OWP_Label(L"near", labelheight);
+		if (!s_dofdistnearLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_dofdistnearEdit = new OWP_EditBox(L"DofNearEdit", labelheight);//g_dofparams[g_dofindex].x
+		if (!s_dofdistnearEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		s_dofdistfarLabel = new OWP_Label(L"far", labelheight);//g_dofparams[g_dofindex].y
+		if (!s_dofdistfarLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		s_dofdistfarEdit = new OWP_EditBox(L"DofFarEdit", labelheight);
+		if (!s_dofdistfarEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		s_dofspacerLabel2 = new OWP_Label(L"     ", 32);
+		if (!s_dofspacerLabel2) {
+			_ASSERT(0);
+			abort();
+		}
+		s_dofskyChk = new OWP_CheckBoxA(L"Sky DOF", g_skydofflag[g_dofindex], labelheight);
+		if (!s_dofskyChk) {
+			_ASSERT(0);
+			abort();
+		}
+		s_dofspacerLabel3 = new OWP_Label(L"     ", 32);
+		if (!s_dofspacerLabel3) {
+			_ASSERT(0);
+			abort();
+		}
+		s_dofapplysp = new OWP_Separator(s_dofWnd, true, rate50, true);
+		if (!s_dofapplysp) {
+			_ASSERT(0);
+			abort();
+		}
+		s_dofapplyB = new OWP_Button(L"Apply(適用)", 38);
+		if (!s_dofapplyB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_dofapplyB->setTextColor(RGB(168, 129, 129));
+
+
+		s_dofWnd->addParts(*s_dofLabel);
+		s_dofWnd->addParts(*s_dofslotCombo);
+		s_dofWnd->addParts(*s_dofspacerLabel1);
+		s_dofWnd->addParts(*s_dofdistsp1);
+		s_dofdistsp1->addParts1(*s_dofdistsp2);
+		s_dofdistsp1->addParts2(*s_dofdistsp3);
+		s_dofdistsp2->addParts1(*s_dofdistnearLabel);
+		s_dofdistsp2->addParts2(*s_dofdistnearEdit);
+		s_dofdistsp3->addParts1(*s_dofdistfarLabel);
+		s_dofdistsp3->addParts2(*s_dofdistfarEdit);
+		s_dofWnd->addParts(*s_dofspacerLabel2);
+		s_dofWnd->addParts(*s_dofskyChk);
+		s_dofWnd->addParts(*s_dofspacerLabel3);
+		s_dofWnd->addParts(*s_dofapplysp);
+		s_dofapplysp->addParts2(*s_dofapplyB);
+
+
+		s_dofslotCombo->setButtonListener([]() {
+			int comboid = s_dofslotCombo->trackPopUpMenu();
+			g_dofindex = comboid;
+
+			DofParams2Dlg();
+		});
+
+		s_dofskyChk->setButtonListener([]() {
+			bool value = s_dofskyChk->getValue();
+			g_skydofflag[g_dofindex] = value;
+		});
+
+		s_dofapplyB->setButtonListener([]() {
+			WCHAR streditbox[256] = { 0L };
+			float tempeditvalue;
+
+			if (s_dofdistnearEdit) {
+				s_dofdistnearEdit->getName(streditbox, 256);
+				tempeditvalue = (float)_wtof(streditbox);
+				if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
+					g_dofparams[g_dofindex].x = tempeditvalue;
+				}
+				else {
+					if (s_dofWnd) {
+						::MessageBox(s_dofWnd->getHWnd(), L"invalid editbox value : Near", L"Invalid Value", MB_OK);
+					}
+				}
+			}
+			if (s_dofdistfarEdit) {
+				s_dofdistfarEdit->getName(streditbox, 256);
+				tempeditvalue = (float)_wtof(streditbox);
+				if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
+					g_dofparams[g_dofindex].y = tempeditvalue;
+				}
+				else {
+					if (s_dofWnd) {
+						::MessageBox(s_dofWnd->getHWnd(), L"invalid editbox value : Far", L"Invalid Value", MB_OK);
+					}
+				}
+			}
+		});
+
+
+		s_dofWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
+		s_dofWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
+
+		//１クリック目問題対応
+		s_dofWnd->refreshPosAndSize();
+
+		s_dofWnd->callRewrite();
+	}
+	else {
+		_ASSERT(0);
 		return 1;
 	}
+
+	return 0;
 }
 
 int SetModel2ModelWorldMatDlg(CModel* srcmodel)
@@ -70943,9 +71258,12 @@ int FogParams2Dlg()
 	return 0;
 }
 
-int Set2DofParamsDlg()
+int DofParams2Dlg()
 {
-	HWND hDlgWnd = s_dofparamsdlgwnd;
+	if (!s_dofWnd) {
+		_ASSERT(0);
+		return 1;
+	}
 
 	if ((g_dofindex < 0) || (g_dofindex >= DOFSLOTNUM)) {
 		_ASSERT(0);
@@ -70955,42 +71273,34 @@ int Set2DofParamsDlg()
 	//#########
 	//ComboBox
 	//#########
-	HWND combownd = GetDlgItem(hDlgWnd, IDC_COMBO_SLOTS);
-	if (combownd != NULL) {
-		SendMessage(combownd, CB_RESETCONTENT, 0, 0);
-		int slotno;
-		for (slotno = 0; slotno < DOFSLOTNUM; slotno++) {
-			WCHAR strcombo[256];
-			swprintf_s(strcombo, 256, L"slot:%d", slotno);
-			SendMessage(combownd, CB_ADDSTRING, 0, (LPARAM)strcombo);
-		}
-		::SendMessage(combownd, CB_SETCURSEL, (WPARAM)g_dofindex, 0);
+	if (s_dofslotCombo) {
+		s_dofslotCombo->setSelectedCombo(g_dofindex);
 	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-
 
 	//#####
 	//Text
 	//#####
 	WCHAR strdlg[256] = { 0L };
 	swprintf_s(strdlg, 256, L"%.2f", g_dofparams[g_dofindex].x);
-	SetDlgItemText(hDlgWnd, IDC_DOF_NEAR, strdlg);
+	if (s_dofdistnearEdit) {
+		s_dofdistnearEdit->setName(strdlg);
+	}
 
 	swprintf_s(strdlg, 256, L"%.2f", g_dofparams[g_dofindex].y);
-	SetDlgItemText(hDlgWnd, IDC_DOF_FAR, strdlg);
+	if (s_dofdistfarEdit) {
+		s_dofdistfarEdit->setName(strdlg);
+	}
+
 
 	//#########
 	//CheckBox
 	//#########
-	if (g_skydofflag[g_dofindex] == true) {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_SKYDOF, true);
+	if (s_dofskyChk) {
+		s_dofskyChk->setValue(g_skydofflag[g_dofindex], false);
 	}
-	else {
-		CheckDlgButton(hDlgWnd, IDC_CHECK_SKYDOF, false);
-	}
+
+
+	s_dofWnd->callRewrite();
 
 	return 0;
 }
@@ -71126,20 +71436,24 @@ void ShowFogWnd(bool srcflag)
 }
 void ShowDofWnd(bool srcflag)
 {
+	if (srcflag == true) {
+		int result1 = CreateDofParamsDlg();
+		if ((result1 == 0) && s_dofWnd) {
+			DofParams2Dlg();
 
-	if (s_dofparamsdlgwnd) {
-		if (srcflag) {
-			Set2DofParamsDlg();
-
-			ShowWindow(s_dofparamsdlgwnd, SW_SHOW);
-			UpdateWindow(s_dofparamsdlgwnd);
-		}
-		else {
-			ShowWindow(s_dofparamsdlgwnd, SW_HIDE);
-			UpdateWindow(s_dofparamsdlgwnd);
+			s_dofWnd->setVisible(true);
+			s_dofWnd->setListenMouse(true);
 		}
 	}
+	else {
+		if (s_dofWnd) {
+			s_dofWnd->setVisible(false);
+			s_dofWnd->setListenMouse(false);
+		}
+	}
+
 	s_speffectsw[SPEFFECTSW_DOF].state = srcflag;
+
 }
 
 
