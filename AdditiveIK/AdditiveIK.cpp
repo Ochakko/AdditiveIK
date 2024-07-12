@@ -20776,9 +20776,30 @@ int CreateModelPanel()
 			for (modelcnt = 0; modelcnt < modelnum; modelcnt++) {
 				CModel* curmodel = s_chascene->GetModel(modelcnt);
 				if (curmodel) {
+
+					//2024/07/12
+					//文字を大きくした影響で
+					//モデル名がdeleteボタン側にはみ出すことが多くなった
+					//文字数制限をして表示がはみ出さないように.
+					WCHAR filename[MAX_PATH] = { 0L };
+					WCHAR printname[64] = { 0L };
+					ZeroMemory(filename, sizeof(WCHAR) * MAX_PATH);
+					ZeroMemory(printname, sizeof(WCHAR) * 64);
+					wcscpy_s(filename, MAX_PATH, curmodel->GetFileName());
+					int nameleng = (int)wcslen(filename);
+					int cpleng;
+					if (nameleng <= 21) {
+						cpleng = nameleng;
+					}
+					else {
+						cpleng = 21;
+					}
+					wcsncpy_s(printname, 64, filename, cpleng);
+
+
 					if (modelcnt == 0) {
 						bool limitnamelen = true;
-						s_modelpanel.radiobutton = new OWP_RadioButton(curmodel->GetFileName(), limitnamelen, 20);
+						s_modelpanel.radiobutton = new OWP_RadioButton(printname, limitnamelen, 20);
 						if (!s_modelpanel.radiobutton) {
 							_ASSERT(0);
 							return 1;
@@ -20786,7 +20807,7 @@ int CreateModelPanel()
 					}
 					else {
 						if (s_modelpanel.radiobutton) {
-							s_modelpanel.radiobutton->addLine(curmodel->GetFileName());
+							s_modelpanel.radiobutton->addLine(printname);
 						}
 					}
 				}

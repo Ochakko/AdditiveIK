@@ -2079,10 +2079,10 @@ namespace OrgWinGUI{
 			OneButtonParam* btnPrm;
 			btnPrm = &(numkeyparam[i]);
 			if (btnPrm) {
-				//ボタンリスナーを呼ぶ
-				if (btnPrm->buttonListener != NULL) {
-					(btnPrm->buttonListener)();
-				}
+				////ボタンリスナーを呼ぶ
+				//if (btnPrm->buttonListener != NULL) {
+				//	(btnPrm->buttonListener)();
+				//}
 
 				//ボタン押下状態をONにする
 				btnPrm->buttonPush = true;
@@ -2177,11 +2177,9 @@ namespace OrgWinGUI{
 						_ASSERT(0);
 					}
 				}
-
 			}
 
-
-			return;
+			return;//2024/07/12 マウス位置で当たったキーを１つだけ処理したら処理終了
 		}
 
 	}
