@@ -48,6 +48,7 @@ public:
 private:
 	void InitParams();
 	void DestroyObjs();
+	void InitInfoColor();
 
 private:
 	HWND m_hWnd;
@@ -56,7 +57,8 @@ private:
 
 	//WCHAR m_stroutput[INFOWINDOWLINEH][INFOWINDOWLINEW];
 	WCHAR* m_stroutput;
-	std::map<int, int> m_infocolorvec;
+	//std::map<int, int> m_infocolorvec;
+	std::vector<int> m_infocolorvec;
 
 	int m_dataindex;//データ格納位置
 	int m_viewindex;//表示開始位置

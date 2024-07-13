@@ -4112,6 +4112,7 @@ INT WINAPI wWinMain(
 	//_CrtSetBreakAlloc(46773535);
 	//_CrtSetBreakAlloc(46773550);
 
+
 	SetBaseDir();
 
 	LoadIniFile();

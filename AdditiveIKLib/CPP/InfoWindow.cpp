@@ -76,8 +76,19 @@ void CInfoWindow::InitParams()
 	m_dataindex = 0;
 	m_viewindex = 0;
 
-	m_infocolorvec.clear();
+	InitInfoColor();
+
 }
+
+void CInfoWindow::InitInfoColor()
+{
+	m_infocolorvec.clear();
+	int dataindex;
+	for (dataindex = 0; dataindex < INFOWINDOWLINEH; dataindex++) {
+		m_infocolorvec.push_back(INFOCOLOR_INFO);
+	}
+}
+
 void CInfoWindow::DestroyObjs()
 {
 	if (s_hThread != NULL) {
@@ -125,7 +136,7 @@ int CInfoWindow::CreateInfoWindow(HWND srcparentwnd, int srcposx, int srcposy, i
 		return 1;
 	}
 	ZeroMemory(m_stroutput, sizeof(WCHAR) * INFOWINDOWLINEW * INFOWINDOWLINEH);
-	m_infocolorvec.clear();
+	InitInfoColor();
 
 	HBRUSH blkbrush = CreateSolidBrush(RGB(0, 0, 0));//Ž©•ª‚Åíœ‚µ‚È‚¢@DestroyWindowŽž‚É‰ð•ú‚³‚ê‚é
 
