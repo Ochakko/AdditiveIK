@@ -2448,6 +2448,8 @@ static vector<CBone*> s_pasteRJoint;
 static int SetRJoint(int srcboneno);
 static void AddRJointReq(CBone* srcbone);
 
+static int ShortenNameW(const WCHAR* srcname, WCHAR* dstname, int dstbufleng, int cpmaxleng);
+
 //static int WriteTBOFile();
 //static bool LoadTBOFile();
 
@@ -10371,14 +10373,15 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				s_convbone_bvh = 0;
 			}
 
-			WCHAR strmes[1024];
+			WCHAR strmes[1024] = { 0L };
 			if (!s_convbone_bvh) {
 				swprintf_s(strmes, 1024, L"convbone : sel model : modelptr NULL !!!");
 				::DSMessageBox(NULL, strmes, L"check!!!", MB_OK);
 				s_maxboneno = 0;
 			}
 			else {
-				swprintf_s(strmes, 1024, L"%s", s_convbone_bvh->GetFileName());
+				//swprintf_s(strmes, 1024, L"%s", s_convbone_bvh->GetFileName());
+				ShortenNameW(s_convbone_bvh->GetFileName(), strmes, 1024, 21);
 				s_cbselbvh->setName(strmes);
 				COLORREF importantcol = RGB(168, 129, 129);
 				s_cbselbvh->setTextColor(importantcol);
@@ -20782,21 +20785,8 @@ int CreateModelPanel()
 					//文字を大きくした影響で
 					//モデル名がdeleteボタン側にはみ出すことが多くなった
 					//文字数制限をして表示がはみ出さないように.
-					WCHAR filename[MAX_PATH] = { 0L };
 					WCHAR printname[64] = { 0L };
-					ZeroMemory(filename, sizeof(WCHAR) * MAX_PATH);
-					ZeroMemory(printname, sizeof(WCHAR) * 64);
-					wcscpy_s(filename, MAX_PATH, curmodel->GetFileName());
-					int nameleng = (int)wcslen(filename);
-					int cpleng;
-					if (nameleng <= 21) {
-						cpleng = nameleng;
-					}
-					else {
-						cpleng = 21;
-					}
-					wcsncpy_s(printname, 64, filename, cpleng);
-
+					ShortenNameW(curmodel->GetFileName(), printname, 64, 21);
 
 					if (modelcnt == 0) {
 						bool limitnamelen = true;
@@ -21881,7 +21871,8 @@ int CreateConvBoneWnd()
 
 		//s_cbselmodel = new OWP_Button(L"SelectShapeModel");
 		WCHAR strtext[256] = { 0L };
-		swprintf_s(strtext, 256, L"Model: %s", s_model->GetFileName());
+		//swprintf_s(strtext, 256, L"Model: %s", s_model->GetFileName());
+		ShortenNameW(s_model->GetFileName(), strtext, 256, 21);//2024/07/13 21文字まで
 		s_cbselmodel = new OWP_Label(strtext, 20);
 		if (!s_cbselmodel) {
 			_ASSERT(0);
@@ -74596,3 +74587,47 @@ bool ChkEnableIK()
 	return true;
 }
 
+int ShortenNameW(const WCHAR* srcname, WCHAR* dstname, int dstbufleng, int cpmaxleng)
+{
+	if (!srcname || !dstname) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (dstbufleng <= 0) {
+		_ASSERT(0);
+		return 1;
+	}
+	if ((cpmaxleng <= 0) || (cpmaxleng >= 1024)) {
+		_ASSERT(0);
+		return 1;
+	}
+	int nameleng = (int)wcslen(srcname);
+	if ((nameleng <= 0) || (nameleng >= 1024)) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	WCHAR filename[1024] = { 0L };
+	WCHAR printname[1024] = { 0L };
+	ZeroMemory(filename, sizeof(WCHAR) * 1024);
+	ZeroMemory(printname, sizeof(WCHAR) * 1024);
+
+	wcscpy_s(filename, 1024, srcname);
+	int cpleng;
+	if (nameleng <= cpmaxleng) {
+		cpleng = nameleng;
+	}
+	else {
+		cpleng = cpmaxleng;
+	}
+	wcsncpy_s(printname, 1024, filename, cpleng);
+
+	if (cpleng < dstbufleng) {
+		wcscpy_s(dstname, dstbufleng, printname);
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+	return 0;
+}
