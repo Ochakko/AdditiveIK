@@ -468,7 +468,7 @@ namespace OrgWinGUI{
 
 		int showLineNum = (size.y) / (LABEL_SIZE_Y);
 
-		{//ラベルスクロールバー
+		if (lineDatasize > 0) {//ラベルスクロールバー
 			int x0 = pos.x + size.x - SCROLL_BAR_WIDTH - 1;
 			int x1 = x0 + SCROLL_BAR_WIDTH + 1;
 			int y0 = pos.y;

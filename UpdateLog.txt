@@ -2,6 +2,15 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/07/15
+　OWP_ListBoxクラス新規
+
+　LaterTransparentメニューのウインドウをOWPで作り直し
+
+
+
+
+
 2024/07/13
 　AdditiveIK 1.0.0.27 release
 　　1.0.0.26からの変更点

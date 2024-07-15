@@ -896,7 +896,7 @@ static bool s_dispthreshold = false;
 
 
 //static HWND s_lightsforeditdlg = 0;
-static HWND s_latertransparentdlg = 0;
+//static HWND s_latertransparentdlg = 0;
 //static HWND s_shadowparamsdlg = 0;
 static HWND s_guidlg[GUIDLGNUM];
 
@@ -1549,6 +1549,24 @@ static OWP_CheckBoxA* s_dofskyChk = 0;
 static OWP_Label* s_dofspacerLabel3 = 0;
 static OWP_Separator* s_dofapplysp = 0;
 static OWP_Button* s_dofapplyB = 0;
+
+static OrgWindow* s_laterWnd = 0;
+static OWP_Label* s_laterlistLabel = 0;
+static OWP_ScrollWnd* s_laterlist1Sc = 0;
+static OWP_ListBox* s_laterlist1List = 0;
+static OWP_Label* s_laterspacerLabel1 = 0;
+static OWP_Button* s_lateraddB = 0;
+static OWP_Label* s_laterspacerLabel2 = 0;
+static OWP_ScrollWnd* s_laterlist2Sc = 0;
+static OWP_ListBox* s_laterlist2List = 0;
+static OWP_Label* s_laterspacerLabel3 = 0;
+static OWP_Separator* s_latersp1 = 0;
+static OWP_Separator* s_latersp2 = 0;
+static OWP_Separator* s_latersp3 = 0;
+static OWP_Button* s_laterdelallB = 0;
+static OWP_Button* s_laterdelB = 0;
+static OWP_Button* s_laterupB = 0;
+static OWP_Button* s_laterdownB = 0;
 
 
 static OrgWindow* s_sidemenuWnd = 0;
@@ -3312,7 +3330,7 @@ LRESULT CALLBACK CheckAxisTypeProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 //LRESULT CALLBACK GUIBrushesDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 //LRESULT CALLBACK GUIBulletDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 //LRESULT CALLBACK GUILODDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
-LRESULT CALLBACK LaterTransparentDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
+//LRESULT CALLBACK LaterTransparentDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 //LRESULT CALLBACK ShadowParamsDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK RotAxisDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK CustomRigDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
@@ -3406,8 +3424,8 @@ static int LODParams2Dlg();
 
 
 static int CreateLaterTransparentWnd();
-static int LaterTransparent2Dlg(HWND hDlgWnd);
-static int Dlg2LaterTransparent(HWND hDlgWnd);
+static int LaterTransparent2Dlg();
+static int Dlg2LaterTransparent();
 
 static int CreateShadowParamsWnd();
 static int ShadowParams2Dlg();
@@ -5642,6 +5660,25 @@ void InitApp()
 		s_dofapplyB = 0;
 	}
 
+	{
+		s_laterWnd = 0;
+		s_laterlistLabel = 0;
+		s_laterlist1Sc = 0;
+		s_laterlist1List = 0;
+		s_laterspacerLabel1 = 0;
+		s_lateraddB = 0;
+		s_laterspacerLabel2 = 0;
+		s_laterlist2Sc = 0;
+		s_laterlist2List = 0;
+		s_laterspacerLabel3 = 0;
+		s_latersp1 = 0;
+		s_latersp2 = 0;
+		s_latersp3 = 0;
+		s_laterdelallB = 0;
+		s_laterdelB = 0;
+		s_laterupB = 0;
+		s_laterdownB = 0;
+	}
 
 	{
 		s_st_closeFlag = false;
@@ -6654,7 +6691,7 @@ void InitApp()
 
 
 	//s_lightsforeditdlg = 0;
-	s_latertransparentdlg = 0;
+	//s_latertransparentdlg = 0;
 	//s_shadowparamsdlg = 0;
 	int dlgno;
 	for (dlgno = 0; dlgno < GUIDLGNUM; dlgno++) {
@@ -7190,12 +7227,12 @@ void OnDestroyDevice()
 	//	}
 	//	s_lightsforeditdlg = 0;
 	//}
-	if (s_latertransparentdlg) {
-		if (IsWindow(s_latertransparentdlg)) {
-			DestroyWindow(s_latertransparentdlg);
-		}
-		s_latertransparentdlg = nullptr;
-	}
+	//if (s_latertransparentdlg) {
+	//	if (IsWindow(s_latertransparentdlg)) {
+	//		DestroyWindow(s_latertransparentdlg);
+	//	}
+	//	s_latertransparentdlg = nullptr;
+	//}
 	//if (s_shadowparamsdlg) {
 	//	if (IsWindow(s_shadowparamsdlg)) {
 	//		DestroyWindow(s_shadowparamsdlg);
@@ -9123,6 +9160,80 @@ void OnDestroyDevice()
 			s_dofWnd = 0;
 		}
 	}
+
+
+	{
+		if (s_laterlistLabel) {
+			delete s_laterlistLabel;
+			s_laterlistLabel = 0;
+		}
+		if (s_laterlist1Sc) {
+			delete s_laterlist1Sc;
+			s_laterlist1Sc = 0;
+		}
+		if (s_laterlist1List) {
+			delete s_laterlist1List;
+			s_laterlist1List = 0;
+		}
+		if (s_laterspacerLabel1) {
+			delete s_laterspacerLabel1;
+			s_laterspacerLabel1 = 0;
+		}
+		if (s_lateraddB) {
+			delete s_lateraddB;
+			s_lateraddB = 0;
+		}
+		if (s_laterspacerLabel2) {
+			delete s_laterspacerLabel2;
+			s_laterspacerLabel2 = 0;
+		}
+		if (s_laterlist2Sc) {
+			delete s_laterlist2Sc;
+			s_laterlist2Sc = 0;
+		}
+		if (s_laterlist2List) {
+			delete s_laterlist2List;
+			s_laterlist2List = 0;
+		}
+		if (s_laterspacerLabel3) {
+			delete s_laterspacerLabel3;
+			s_laterspacerLabel3 = 0;
+		}
+		if (s_latersp1) {
+			delete s_latersp1;
+			s_latersp1 = 0;
+		}
+		if (s_latersp2) {
+			delete s_latersp2;
+			s_latersp2 = 0;
+		}
+		if (s_latersp3) {
+			delete s_latersp3;
+			s_latersp3 = 0;
+		}
+		if (s_laterdelallB) {
+			delete s_laterdelallB;
+			s_laterdelallB = 0;
+		}
+		if (s_laterdelB) {
+			delete s_laterdelB;
+			s_laterdelB = 0;
+		}
+		if (s_laterupB) {
+			delete s_laterupB;
+			s_laterupB = 0;
+		}
+		if (s_laterdownB) {
+			delete s_laterdownB;
+			s_laterdownB = 0;
+		}
+
+		if (s_laterWnd) {
+			delete s_laterWnd;
+			s_laterWnd = 0;
+		}
+	}
+
 
 	if (s_impgroupcheck) {
 		delete s_impgroupcheck;
@@ -29845,22 +29956,9 @@ int CreateLightsWnd()
 
 int CreateLaterTransparentWnd()
 {
-
-	if (s_latertransparentdlg) {
-		//already opened
-		//return 0;
-		DestroyWindow(s_latertransparentdlg);
-		s_latertransparentdlg = 0;
-	}
-
-
-	////s_dseullimitctrls.clear();
-
-
-	s_latertransparentdlg = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_LATERTRANSPARENTDLG), g_mainhwnd, (DLGPROC)LaterTransparentDlgProc);
-	if (!s_latertransparentdlg) {
-		_ASSERT(0);
-		return 1;
+	if (s_laterWnd) {
+		//_ASSERT(0);
+		return 0;//作成済
 	}
 
 	int windowposx;
@@ -29871,37 +29969,189 @@ int CreateLaterTransparentWnd()
 		windowposx = s_timelinewidth + s_mainwidth;
 	}
 
-	SetParent(s_latertransparentdlg, g_mainhwnd);
-	SetWindowPos(
-		s_latertransparentdlg,
-		HWND_TOP,
-		windowposx,
-		s_sidemenuheight,
-		s_sidewidth,
-		s_sideheight,
-		SWP_SHOWWINDOW
-	);
+	s_laterWnd = new OrgWindow(
+		0,
+		_T("LaterTransparentDlg"),		//ウィンドウクラス名
+		GetModuleHandle(NULL),	//インスタンスハンドル
+		WindowPos(windowposx, s_sidemenuheight),
+		WindowSize(s_sidewidth, s_sideheight),		//サイズ
+		_T("LaterTransparentDlg"),	//タイトル
+		g_mainhwnd,	//親ウィンドウハンドル
+		false,					//表示・非表示状態
+		//70, 50, 70,				//カラー
+		0, 0, 0,				//カラー
+		true,					//閉じられるか否か
+		true);					//サイズ変更の可否
 
-	////s_dseullimitctrls.push_back(IDD_ANGLELIMITDLG);
-	//s_dseullimitctrls.push_back(IDC_BONEAXIS);
-	//s_dseullimitctrls.push_back(IDC_EDIT_XL);
-	//s_dseullimitctrls.push_back(IDC_EDIT_XU);
-	//s_dseullimitctrls.push_back(IDC_EDIT_YL);
-	//s_dseullimitctrls.push_back(IDC_EDIT_YU);
-	//s_dseullimitctrls.push_back(IDC_EDIT_ZL);
-	//s_dseullimitctrls.push_back(IDC_EDIT_ZU);
-	//s_dseullimitctrls.push_back(IDOK);
+	int labelheight;
+	if (g_4kresolution) {
+		labelheight = 28;
+	}
+	else {
+		labelheight = 20;
+	}
+
+	if (s_laterWnd) {
+		double rate50 = 0.50;
+
+		s_laterlistLabel = new OWP_Label(L"Texture Files", labelheight);
+		if (!s_laterlistLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		//s_laterlist1Sc = new OWP_ScrollWnd(L"List1Scroll", false, labelheight);
+		//if (!s_laterlist1Sc) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		s_laterlist1List = new OWP_ListBox(L"List1", labelheight);
+		if (!s_laterlist1List) {
+			_ASSERT(0);
+			abort();
+		}
+		s_laterspacerLabel1 = new OWP_Label(L"     ", labelheight);
+		if (!s_laterspacerLabel1) {
+			_ASSERT(0);
+			abort();
+		}
+		s_lateraddB = new OWP_Button(L"↓Add to LaterTransparent", 32);
+		if (!s_lateraddB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_laterspacerLabel2 = new OWP_Label(L"     ", labelheight);
+		if (!s_laterspacerLabel2) {
+			_ASSERT(0);
+			abort();
+		}
+		//s_laterlist2Sc = new OWP_ScrollWnd(L"List2Scroll", false, labelheight);
+		//if (!s_laterlist2Sc) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		s_laterlist2List = new OWP_ListBox(L"List2", labelheight);
+		if (!s_laterlist2List) {
+			_ASSERT(0);
+			abort();
+		}
+		s_laterspacerLabel3 = new OWP_Label(L"     ", labelheight);
+		if (!s_laterspacerLabel3) {
+			_ASSERT(0);
+			abort();
+		}
+		s_latersp1 = new OWP_Separator(s_laterWnd, true, rate50, true);
+		if (!s_latersp1) {
+			_ASSERT(0);
+			abort();
+		}
+		s_latersp2 = new OWP_Separator(s_laterWnd, true, rate50, true);
+		if (!s_latersp2) {
+			_ASSERT(0);
+			abort();
+		}
+		s_latersp3 = new OWP_Separator(s_laterWnd, true, rate50, true);
+		if (!s_latersp3) {
+			_ASSERT(0);
+			abort();
+		}
+		s_laterdelallB = new OWP_Button(L"Delete All", labelheight);
+		if (!s_laterdelallB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_laterdelB = new OWP_Button(L"Delete", labelheight);
+		if (!s_laterdelB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_laterupB = new OWP_Button(L"↑ Up", labelheight);;
+		if (!s_laterupB) {
+			_ASSERT(0);
+			abort();
+		}
+		s_laterdownB = new OWP_Button(L"↓ Down", labelheight);
+		if (!s_laterdownB) {
+			_ASSERT(0);
+			abort();
+		}
 
 
-	//ShowWindow(s_lightsforeditdlg, SW_SHOW);
-	//UpdateWindow(s_lightsforeditdlg);
 
-	ShowWindow(s_latertransparentdlg, SW_HIDE);
-	//UpdateWindow(s_lightsforeditdlg);
+		s_laterWnd->addParts(*s_laterlistLabel);
+		//s_laterWnd->addParts(*s_laterlist1Sc);
+		//s_laterlist1Sc->addParts(*s_laterlist1List);
+		s_laterWnd->addParts(*s_laterlist1List);
+		s_laterWnd->addParts(*s_laterspacerLabel1);
+		s_laterWnd->addParts(*s_lateraddB);
+		s_laterWnd->addParts(*s_laterspacerLabel2);
+		//s_laterWnd->addParts(*s_laterlist2Sc);
+		//s_laterlist2Sc->addParts(*s_laterlist2List);
+		s_laterWnd->addParts(*s_laterlist2List);
+		s_laterWnd->addParts(*s_laterspacerLabel3);
+		s_laterWnd->addParts(*s_latersp1);
+		s_latersp1->addParts1(*s_latersp2);
+		s_latersp1->addParts2(*s_latersp3);
+		s_latersp2->addParts1(*s_laterdelallB);
+		s_latersp2->addParts2(*s_laterdelB);
+		s_latersp3->addParts1(*s_laterupB);
+		s_latersp3->addParts2(*s_laterdownB);
+
+		s_lateraddB->setButtonListener([]() {
+			if (s_laterlist1List && s_laterlist2List) {
+				wstring strlist1 = s_laterlist1List->getCurrentLineName();
+				if (!s_laterlist2List->existName(strlist1)) {
+					s_laterlist2List->newLine(strlist1);
+					s_laterlist2List->setCurrentLineName(strlist1);
+					Dlg2LaterTransparent();
+				}
+			}
+		});
+		s_laterdelallB->setButtonListener([]() {
+			if (s_laterlist2List) {
+				s_laterlist2List->deleteLine();
+			}
+		});
+		s_laterdelB->setButtonListener([]() {
+			if (s_laterlist2List) {
+				int currentline = s_laterlist2List->getCurrentLine();
+				if (currentline >= 0) {
+					s_laterlist2List->deleteLine(currentline);
+					Dlg2LaterTransparent();
+				}
+			}
+		});
+		s_laterupB->setButtonListener([]() {
+			if (s_laterlist2List) {
+				int currentline = s_laterlist2List->getCurrentLine();
+				if (currentline >= 0) {
+					s_laterlist2List->upLine(currentline);
+					Dlg2LaterTransparent();
+				}
+			}
+		});
+		s_laterdownB->setButtonListener([]() {
+			if (s_laterlist2List) {
+				int currentline = s_laterlist2List->getCurrentLine();
+				if (currentline >= 0) {
+					s_laterlist2List->downLine(currentline);
+					Dlg2LaterTransparent();
+				}
+			}
+		});
 
 
-	//AngleLimit2Bone();
+		s_laterWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
+		s_laterWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
 
+		//１クリック目問題対応
+		s_laterWnd->refreshPosAndSize();
+
+		s_laterWnd->callRewrite();
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
 
 	return 0;
 }
@@ -32243,22 +32493,18 @@ int Dlg2Lights()
 }
 
 
-int LaterTransparent2Dlg(HWND hDlgWnd)
+int LaterTransparent2Dlg()
 {
-
-	//m_list_wnd.SendMessage( LB_RESETCONTENT, 0, 0 );
-	HWND list1wnd = GetDlgItem(hDlgWnd, IDC_LIST1);
-	if (!list1wnd) {
+	if (!s_laterWnd) {
 		_ASSERT(0);
 		return 1;
 	}
-	HWND list2wnd = GetDlgItem(hDlgWnd, IDC_LIST2);
-	if (!list2wnd) {
+	if (!s_laterlist1List || !s_laterlist2List) {
 		_ASSERT(0);
 		return 1;
 	}
-	::SendMessage(list1wnd, LB_RESETCONTENT, 0, 0);
-	::SendMessage(list2wnd, LB_RESETCONTENT, 0, 0);
+	s_laterlist1List->deleteLine();
+	s_laterlist2List->deleteLine();
 
 	if (!s_model) {
 		return 0;
@@ -32277,12 +32523,7 @@ int LaterTransparent2Dlg(HWND hDlgWnd)
 			WCHAR wctexname[512] = { 0L };
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mbtexname, 512, wctexname, 512);
 
-			LRESULT lres;
-			lres = SendMessage(list1wnd, LB_ADDSTRING, 0, (LPARAM)wctexname);
-			if ((lres == LB_ERR) || (lres == LB_ERRSPACE)) {
-				_ASSERT(0);
-				return 1;
-			}
+			s_laterlist1List->newLine(wctexname);
 		}
 
 
@@ -32292,17 +32533,11 @@ int LaterTransparent2Dlg(HWND hDlgWnd)
 			string curlatername = s_model->GetLaterTransparent(listno2);
 			char mblastername[512] = { 0 };
 			strcpy_s(mblastername, 512, curlatername.c_str());
-			WCHAR wclastername[512] = { 0L };
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mblastername, 512, wclastername, 512);
+			WCHAR wclatername[512] = { 0L };
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mblastername, 512, wclatername, 512);
 
 
-
-			LRESULT lres2;
-			lres2 = SendMessage(list2wnd, LB_ADDSTRING, 0, (LPARAM)wclastername);
-			if ((lres2 == LB_ERR) || (lres2 == LB_ERRSPACE)) {
-				_ASSERT(0);
-				return 1;
-			}
+			s_laterlist2List->newLine(wclatername);
 		}
 
 	}
@@ -32317,39 +32552,27 @@ int LaterTransparent2Dlg(HWND hDlgWnd)
 }
 
 
-int Dlg2LaterTransparent(HWND hDlgWnd)
+int Dlg2LaterTransparent()
 {
 	if (!s_model) {
 		return 0;
 	}
 
-	HWND list2wnd = GetDlgItem(hDlgWnd, IDC_LIST2);
-	if (!list2wnd) {
+	if (!s_laterWnd || !s_laterlist2List) {
 		_ASSERT(0);
 		return 1;
 	}
 
-	int elemnum = (int)SendMessage(list2wnd, LB_GETCOUNT, 0, 0);
+
+	int elemnum = s_laterlist2List->getLineNum();
 
 	//リスト２をsavelist2に格納
 	vector<wstring> savelist2;
 	int elemno;
 	for (elemno = 0; elemno < elemnum; elemno++) {
-		int textlen;
-		textlen = (int)SendMessage(list2wnd, LB_GETTEXTLEN, (WPARAM)elemno, 0);
-		if ((textlen > 0) && (textlen < 512)) {
-			WCHAR text2[512] = { 0L };
-			int result = (int)SendMessage(list2wnd, LB_GETTEXT, (WPARAM)elemno, (LPARAM)(&text2[0]));
-			if (result != LB_ERR) {
-				savelist2.push_back(text2);
-			}
-			else {
-				_ASSERT(0);
-				return 1;
-			}
-		}
+		wstring currentname = s_laterlist2List->getName(elemno);
+		savelist2.push_back(currentname);
 	}
-
 
 	int result2 = s_model->SetLaterTransparentVec(savelist2);//丸ごと設定
 	if (result2 != 0) {
@@ -33588,316 +33811,6 @@ LRESULT CALLBACK MaterialRateDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 //	return 0;
 //}
 //
-
-
-LRESULT CALLBACK LaterTransparentDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
-{
-
-	switch (msg) {
-	case WM_INITDIALOG:
-	{
-		LaterTransparent2Dlg(hDlgWnd);
-		return FALSE;
-	}
-	break;
-
-	case WM_COMMAND:
-
-		switch (LOWORD(wp)) {
-
-		case IDC_ADDTOLATERTRANSPARENT:
-		{
-			HWND list1wnd = GetDlgItem(hDlgWnd, IDC_LIST1);
-			HWND list2wnd = GetDlgItem(hDlgWnd, IDC_LIST2);
-			if (list1wnd && list2wnd) {
-				int selindex1;
-				selindex1 = (int)SendMessage(list1wnd, LB_GETCURSEL, 0, 0);
-				if (selindex1 != LB_ERR) {//何も選択していないときもLB_ERRが返る
-					int textlen1;
-					textlen1 = (int)SendMessage(list1wnd, LB_GETTEXTLEN, (WPARAM)selindex1, 0);
-					if ((textlen1 > 0) && (textlen1 < 512)) {
-						WCHAR text1[512] = { 0L };
-						int result1 = (int)SendMessage(list1wnd, LB_GETTEXT, (WPARAM)selindex1, (LPARAM)(&text1[0]));
-						if (result1 != LB_ERR) {
-
-
-							//text1と同じ名前がlist2にあるかどうかチェック　2023/10/10
-							bool foundsame = false;
-							{
-								int chkelemnum = (int)SendMessage(list2wnd, LB_GETCOUNT, 0, 0);
-								int chkelemno;
-								for (chkelemno = 0; chkelemno < chkelemnum; chkelemno++) {
-									WCHAR chktext2[512] = { 0L };
-									int chktextlen2 = (int)SendMessage(list2wnd, LB_GETTEXTLEN, (WPARAM)chkelemno, 0);
-									if ((chktextlen2 > 0) && (chktextlen2 < 512)) {
-										int result2 = (int)SendMessage(list2wnd, LB_GETTEXT, (WPARAM)chkelemno, (LPARAM)(&chktext2[0]));
-										if (result2 != LB_ERR) {
-											if (wcscmp(text1, chktext2) == 0) {
-												foundsame = true;
-												break;
-											}
-										}
-									}
-								}
-							}
-
-
-							if (foundsame == false) {//list2にtext1がまだ存在しない場合に　list2にtext1をAdd
-								LRESULT lres2;
-								lres2 = SendMessage(list2wnd, LB_ADDSTRING, 0, (LPARAM)(&text1[0]));
-								if ((lres2 == LB_ERR) || (lres2 == LB_ERRSPACE)) {
-									_ASSERT(0);
-									return FALSE;
-								}
-
-
-								//追加した要素を選択
-								int elemnum = (int)SendMessage(list2wnd, LB_GETCOUNT, 0, 0);
-								if (elemnum >= 1) {
-									SendMessage(list2wnd, LB_SETCURSEL, (WPARAM)(elemnum - 1), 0);
-								}
-							}
-						}
-					}
-				}
-				else {
-					//何も選択していないときもLB_ERRが返る
-					return TRUE;
-				}
-
-				Dlg2LaterTransparent(hDlgWnd);
-			}
-		}
-		break;
-		case IDC_DELETEALL:
-		{
-			HWND list2wnd = GetDlgItem(hDlgWnd, IDC_LIST2);
-			if (list2wnd) {
-				::SendMessage(list2wnd, LB_RESETCONTENT, 0, 0);
-
-				Dlg2LaterTransparent(hDlgWnd);
-			}
-
-		}
-		break;
-		case IDC_DELETEONE:
-		{
-			HWND list2wnd = GetDlgItem(hDlgWnd, IDC_LIST2);
-			if (list2wnd) {
-				int selindex;
-				selindex = (int)SendMessage(list2wnd, LB_GETCURSEL, 0, 0);
-				if (selindex != LB_ERR) {//何も選択していないときもLB_ERRが返る
-					int ret;
-					ret = (int)SendMessage(list2wnd, LB_DELETESTRING, (WPARAM)selindex, 0);
-					if (ret == LB_ERR) {
-						_ASSERT(0);
-						return FALSE;
-					}
-
-					Dlg2LaterTransparent(hDlgWnd);
-				}
-				else {
-					//何も選択していないときもLB_ERRが返る
-					return TRUE;
-				}
-			}
-		}
-		break;
-		case IDC_UPORDER:
-		{
-			HWND list2wnd = GetDlgItem(hDlgWnd, IDC_LIST2);
-			if (list2wnd) {
-				int selindex;
-				selindex = (int)SendMessage(list2wnd, LB_GETCURSEL, 0, 0);
-				if (selindex != LB_ERR) {//何も選択していないときもLB_ERRが返る
-
-					int elemnum = (int)SendMessage(list2wnd, LB_GETCOUNT, 0, 0);
-
-					if ((selindex != 0) && (elemnum > 0)) {//一番上以外の要素に対して操作
-
-						//操作前のリストをsavelist2に格納
-						vector<wstring> savelist2;
-						int elemno;
-						for (elemno = 0; elemno < elemnum; elemno++) {
-							int textlen;
-							textlen = (int)SendMessage(list2wnd, LB_GETTEXTLEN, (WPARAM)elemno, 0);
-							if ((textlen > 0) && (textlen < 512)) {
-								WCHAR text2[512] = { 0L };
-								int result = (int)SendMessage(list2wnd, LB_GETTEXT, (WPARAM)elemno, (LPARAM)(&text2[0]));
-								if (result != LB_ERR) {
-									savelist2.push_back(text2);
-								}
-								else {
-									_ASSERT(0);
-									return FALSE;
-								}
-							}
-						}
-
-						//リストを全削除
-						::SendMessage(list2wnd, LB_RESETCONTENT, 0, 0);
-
-						//順番を変えて　list2にAddし直し
-						int listno2;
-						for (listno2 = 0; listno2 < elemnum; listno2++) {
-							if (listno2 == (selindex - 1)) {
-								LRESULT lres0;
-								lres0 = SendMessage(list2wnd, LB_ADDSTRING, 0, (LPARAM)savelist2[selindex].c_str());
-								if ((lres0 == LB_ERR) || (lres0 == LB_ERRSPACE)) {
-									_ASSERT(0);
-									return FALSE;
-								}
-							}
-							else if (listno2 == selindex) {
-								LRESULT lres1;
-								lres1 = SendMessage(list2wnd, LB_ADDSTRING, 0, (LPARAM)savelist2[selindex - 1].c_str());
-								if ((lres1 == LB_ERR) || (lres1 == LB_ERRSPACE)) {
-									_ASSERT(0);
-									return FALSE;
-								}
-							}
-							else {
-								LRESULT lres2;
-								lres2 = SendMessage(list2wnd, LB_ADDSTRING, 0, (LPARAM)savelist2[listno2].c_str());
-								if ((lres2 == LB_ERR) || (lres2 == LB_ERRSPACE)) {
-									_ASSERT(0);
-									return FALSE;
-								}
-							}
-
-						}
-
-						if ((selindex - 1) >= 0) {
-							//UpOrderした要素を選択
-							SendMessage(list2wnd, LB_SETCURSEL, (WPARAM)(selindex - 1), 0);
-						}
-
-						Dlg2LaterTransparent(hDlgWnd);
-					}
-					else {
-						//一番上の要素に対してはUpOrder操作をしない
-					}
-				}
-				else {
-					//何も選択していないときもLB_ERRが返る
-					return TRUE;
-				}
-			}
-		}
-		break;
-		case IDC_DOWNORDER:
-		{
-			HWND list2wnd = GetDlgItem(hDlgWnd, IDC_LIST2);
-			if (list2wnd) {
-				int selindex;
-				selindex = (int)SendMessage(list2wnd, LB_GETCURSEL, 0, 0);
-				if (selindex != LB_ERR) {//何も選択していないときもLB_ERRが返る
-
-					int elemnum = (int)SendMessage(list2wnd, LB_GETCOUNT, 0, 0);
-
-					if ((selindex != (elemnum - 1)) && (elemnum > 0)) {//一番下以外の要素に対して操作
-
-						//操作前のリストをsavelist2に格納
-						vector<wstring> savelist2;
-						int elemno;
-						for (elemno = 0; elemno < elemnum; elemno++) {
-							int textlen;
-							textlen = (int)SendMessage(list2wnd, LB_GETTEXTLEN, (WPARAM)elemno, 0);
-							if ((textlen > 0) && (textlen < 512)) {
-								WCHAR text2[512] = { 0L };
-								int result = (int)SendMessage(list2wnd, LB_GETTEXT, (WPARAM)elemno, (LPARAM)(&text2[0]));
-								if (result != LB_ERR) {
-									savelist2.push_back(text2);
-								}
-								else {
-									_ASSERT(0);
-									return FALSE;
-								}
-							}
-						}
-
-						//リストを全削除
-						::SendMessage(list2wnd, LB_RESETCONTENT, 0, 0);
-
-						//順番を変えて　list2にAddし直し
-						int listno2;
-						for (listno2 = 0; listno2 < elemnum; listno2++) {
-							if (listno2 == selindex) {
-								LRESULT lres0;
-								lres0 = SendMessage(list2wnd, LB_ADDSTRING, 0, (LPARAM)savelist2[selindex + 1].c_str());
-								if ((lres0 == LB_ERR) || (lres0 == LB_ERRSPACE)) {
-									_ASSERT(0);
-									return FALSE;
-								}
-							}
-							else if (listno2 == (selindex + 1)) {
-								LRESULT lres1;
-								lres1 = SendMessage(list2wnd, LB_ADDSTRING, 0, (LPARAM)savelist2[selindex].c_str());
-								if ((lres1 == LB_ERR) || (lres1 == LB_ERRSPACE)) {
-									_ASSERT(0);
-									return FALSE;
-								}
-							}
-							else {
-								LRESULT lres2;
-								lres2 = SendMessage(list2wnd, LB_ADDSTRING, 0, (LPARAM)savelist2[listno2].c_str());
-								if ((lres2 == LB_ERR) || (lres2 == LB_ERRSPACE)) {
-									_ASSERT(0);
-									return FALSE;
-								}
-							}
-						}
-
-						if ((selindex + 1) < elemnum) {
-							//DownOrderした要素を選択
-							SendMessage(list2wnd, LB_SETCURSEL, (WPARAM)(selindex + 1), 0);
-						}
-
-						Dlg2LaterTransparent(hDlgWnd);
-
-					}
-					else {
-						//一番下の要素に対してはDownOrder操作をしない
-					}
-				}
-				else {
-					//何も選択していないときもLB_ERRが返る
-					return TRUE;
-				}
-			}
-		}
-		break;
-
-		case IDCANCEL:
-			//EndDialog(hDlgWnd, IDCANCEL);
-		break;
-		default:
-			return FALSE;
-		break;
-	}
-	break;
-	case WM_CLOSE:
-		if (s_latertransparentdlg) {
-
-			//if (s_lightstimerid > 0) {
-			//	KillTimer(hDlgWnd, s_lightstimerid);
-			//	s_lightstimerid = 0;
-			//}
-
-			//DestroyWindow(s_latertransparentdlg);
-			//s_latertransparentdlg = 0;
-
-			ShowLaterTransparentWnd(false);
-		}
-	break;
-	default:
-		DefWindowProc(hDlgWnd, msg, wp, lp);
-		return FALSE;
-	}
-	return TRUE;
-
-}
-
 
 
 //void CheckShaderTypeButton(HWND hDlgWnd, int srcshadertype)
@@ -50843,7 +50756,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.27 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.28 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -52291,21 +52204,18 @@ void ShowLightsWnd(bool srcflag)
 void ShowLaterTransparentWnd(bool srcflag)
 {
 	if (srcflag == true) {
-		if (s_latertransparentdlg) {
-			DestroyWindow(s_latertransparentdlg);
-			s_latertransparentdlg = 0;
-		}
+		int result1 = CreateLaterTransparentWnd();
+		if ((result1 == 0) && s_laterWnd) {
+			LaterTransparent2Dlg();
 
-		int result = CreateLaterTransparentWnd();
-		if ((result == 0) && s_latertransparentdlg) {
-			ShowWindow(s_latertransparentdlg, SW_SHOW);
-			UpdateWindow(s_latertransparentdlg);
+			s_laterWnd->setVisible(true);
+			s_laterWnd->setListenMouse(true);
 		}
 	}
 	else {
-		if (s_latertransparentdlg) {
-			DestroyWindow(s_latertransparentdlg);
-			s_latertransparentdlg = 0;
+		if (s_laterWnd) {
+			s_laterWnd->setVisible(false);
+			s_laterWnd->setListenMouse(false);
 		}
 	}
 
@@ -59060,8 +58970,8 @@ void ChangeMouseSetCapture()
 					}
 				}
 				else if (s_platemenuno == (SPDISPSW_LATERTRANSPARENT + 1)) {
-					if (s_latertransparentdlg) {
-						SetCapture(s_latertransparentdlg);
+					if (s_laterWnd) {
+						SetCapture(s_laterWnd->getHWnd());
 					}
 				}
 				else if (s_platemenuno == (SPDISPSW_SHADERTYPE + 1)) {
@@ -59281,7 +59191,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.27 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.28 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (s_model && s_chascene) {

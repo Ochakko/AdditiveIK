@@ -11503,6 +11503,643 @@ void s_dummyfunc()
 	};
 
 
+
+
+	///<summary>
+	///	ウィンドウ内部品"リストボックス"クラス
+	///</summary>
+	class OWP_ListBox : public OrgWindowParts {
+	public:
+		//////////////////// Constructor/Destructor //////////////////////
+		OWP_ListBox(const TCHAR* _name, int _labelheight = 15) : OrgWindowParts() {
+			name = new TCHAR[256];
+			if (_name) {
+				size_t tclen = _tcslen(_name);
+				size_t cplen;
+				if (tclen != 0) {
+					if (tclen <= 255) {
+						cplen = tclen;
+					}
+					else {
+						cplen = 255;
+					}
+					_tcsncpy_s(name, 256, _name, cplen);
+					name[cplen] = (TCHAR)0;
+				}
+				else {
+					_tcscpy_s(name, 256, TEXT("NoName"));
+				}
+			}
+
+			
+			LABEL_SIZE_Y = max(LABEL_SIZE_Y, _labelheight);
+
+			//cursorListener = [](){s_dummyfunc();};
+			//lineShiftListener = [](int beforIndex, int afterIndex){s_dummyfunc();};
+			//changeVisibleListener = [](int targetIndex){s_dummyfunc();};
+			//changeLockListener = [](int targetIndex){s_dummyfunc();};
+			//callPropertyListener = [](int targetIndex){s_dummyfunc();};
+			cursorListener = NULL;
+			lineShiftListener = NULL;
+			callPropertyListener = NULL;
+
+			currentLine = 0;
+			showPosLine = 0;
+
+			rewriteOnChange = true;
+			canMouseControll = true;
+
+			dragLine = false;
+			dragScrollBarLine = false;
+
+			mouseRBtnOnIndex = -1;
+		}
+		~OWP_ListBox() {
+			delete[] name;
+
+			std::vector<LineData*>::iterator itr;
+			for (itr = lineData.begin(); itr != lineData.end(); itr++) {
+				delete* itr;
+			}
+		}
+
+		//////////////////////////// Method //////////////////////////////
+		/// Method : 自動サイズ設定
+		virtual void autoResize() {
+			//size.y -= (size.y - MARGIN * 2) % (LABEL_SIZE_Y - 1) - 1;
+			size.y = max((LABEL_SIZE_Y * 10), (LABEL_SIZE_Y * (int)lineData.size()));
+		}
+		//	Method : 描画
+		virtual void draw() {
+			if (!hdcM) {
+				return;
+			}
+
+			drawEdge();
+
+			int showLineNum = (size.y - MARGIN * 2) / (LABEL_SIZE_Y - 1);
+
+			//行データ
+			for (int i = showPosLine, j = 0; i < (int)lineData.size() && j < showLineNum; i++, j++) {
+				bool highLight = false;
+				if (i == currentLine) highLight = true;
+
+				lineData[i]->draw(hdcM,
+					pos.x + MARGIN,
+					pos.y + MARGIN + j * (LABEL_SIZE_Y - 1),
+					size.x - SCROLL_BAR_WIDTH - MARGIN * 2, highLight);
+			}
+
+			//ドラッグ移動の目印
+			if (dragLine && (shiftIndex != 0)) {
+				int markPos = currentLine + shiftIndex - showPosLine;
+				if (0 <= shiftIndex) markPos += 1;
+
+				markPos = pos.y + MARGIN + markPos * (LABEL_SIZE_Y - 1);
+
+				hdcM->setPenAndBrush(RGB(255, 255, 255), NULL, 0, 2);
+				MoveToEx(hdcM->hDC, pos.x + MARGIN, markPos, NULL);
+				LineTo(hdcM->hDC, size.x - SCROLL_BAR_WIDTH - MARGIN * 2, markPos);
+			}
+
+			{//ラベルスクロールバー
+				int x0 = pos.x + size.x - MARGIN - SCROLL_BAR_WIDTH - 1;
+				int x1 = x0 + SCROLL_BAR_WIDTH + 1;
+				int y0 = pos.y + MARGIN;
+				int y1 = pos.y + size.y - MARGIN;
+
+				//枠
+				hdcM->setPenAndBrush(RGB(min(baseColor.r + 20, 255), min(baseColor.g + 20, 255), min(baseColor.b + 20, 255)), NULL);
+				Rectangle(hdcM->hDC, x0, y0, x1, y1);
+
+				//中身
+				if (lineData.size() > 0) {
+					int barSize = (y1 - y0 - 4) * showLineNum / (int)lineData.size();
+					int barStart = (y1 - y0 - 4) * showPosLine / (int)lineData.size();
+					if (showLineNum < (int)lineData.size()) {
+						//hdcM->setPenAndBrush(NULL, RGB(min(baseColor.r + 20, 255), min(baseColor.g + 20, 255), min(baseColor.b + 20, 255)));
+						hdcM->setPenAndBrush(NULL, RGB(240, 240, 240));//2023/03/23
+						Rectangle(hdcM->hDC, x0 + 2, y0 + 2 + barStart, x1 - 2, y0 + 2 + barStart + barSize + 1);
+					}
+				}
+			}
+			{
+				if (g_dsmousewait == 1) {
+					POINT mousepoint;
+					::GetCursorPos(&mousepoint);
+					if (getParent() && getHDCMaster()) {
+						::ScreenToClient(getParent()->getHWnd(), &mousepoint);
+						int BMP_W = 52;
+						int BMP_H = 50;
+						DrawGdiplusButton(g_mousehereimage, hdcM->hDC,
+							mousepoint.x, mousepoint.y, BMP_W, BMP_H, g_mouseherealpha);
+					}
+				}
+			}
+
+		}
+		//	Method : 行を追加	(既に同名のキーがある場合はFalseを返す)
+		bool newLine(const std::basic_string<TCHAR>& _name, const void* object = NULL) {
+			for (int i = 0; i < (int)lineData.size(); i++) {
+				if (lineData[i]->name == _name) {
+					return false;
+				}
+			}
+			lineData.push_back(new LineData(_name, this, object));
+
+			//再描画要求
+			if (rewriteOnChange) {
+				callRewrite();
+			}
+			return true;
+		}
+		//	Method : 行を削除
+		void deleteLine() {
+			for (int i = 0; i < (int)lineData.size(); i++) {
+				delete lineData[i];
+			}
+			lineData.clear();
+
+			//再描画要求
+			if (rewriteOnChange) {
+				callRewrite();
+			}
+		}
+		bool deleteLine(const std::basic_string<TCHAR>& _name) {
+			int popPos = -1;
+			for (int i = 0; i < (int)lineData.size(); i++) {
+				if (lineData[i]->name == _name) {
+					delete lineData[i];
+					popPos = i;
+				}
+			}
+			if (popPos == -1) return false;
+			for (int i = popPos + 1; i < (int)lineData.size(); i++) {
+				lineData[i - 1] = lineData[i];
+			}
+			lineData.pop_back();
+
+			//再描画要求
+			if (rewriteOnChange) {
+				callRewrite();
+			}
+			return true;
+		}
+		bool deleteLine(int index) {
+			if ((unsigned int)lineData.size() <= (unsigned int)index) return false;
+
+			bool ret = deleteLine(lineData[index]->name);
+
+			//再描画要求
+			if (ret && rewriteOnChange) {
+				callRewrite();
+			}
+			return ret;
+		}
+		void upLine(int index) {
+			int upperline = index - 1;
+			if ((upperline >= 0) && (index >= 0) && (index < (int)lineData.size())) {
+				LineData* tmp = lineData[upperline];
+				lineData[upperline] = lineData[index];
+				lineData[index] = tmp;
+				currentLine = upperline;
+				if (rewriteOnChange) {
+					callRewrite();
+				}
+			}
+		}
+		void downLine(int index) {
+			int downline = index + 1;
+			if ((downline >= 0) && (index >= 0) && (index < (int)lineData.size())) {
+				LineData* tmp = lineData[downline];
+				lineData[downline] = lineData[index];
+				lineData[index] = tmp;
+				currentLine = downline;
+				if (rewriteOnChange) {
+					callRewrite();
+				}
+			}
+		}
+		int getLineNum() {
+			return (int)lineData.size();
+		}
+		///	Method : マウス左ボタンダウンイベント受信
+		virtual void onLButtonDown(const MouseEvent& e) {
+			if (!canMouseControll) return;
+
+			int x0 = MARGIN;
+			int x1 = MARGIN + LABEL_SIZE_Y * 2;
+			int x2 = size.x - SCROLL_BAR_WIDTH - MARGIN - 1;
+			int x3 = size.x - MARGIN;
+			int y0 = MARGIN;
+			int y1 = size.y - MARGIN;
+
+			//ラベルドラッグ
+			if ((x1 <= e.localX) && (e.localX < x2) &&
+				(y0 <= e.localY) && (e.localY < y1)) {
+				setCurrentLine(showPosLine + (e.localY - y0) / (LABEL_SIZE_Y - 1));
+
+				dragLine = true;
+				shiftIndex = 0;
+			}
+
+			//ラインスクロールバー
+			if ((x2 <= e.localX) && (e.localX < x3) &&
+				(y0 <= e.localY) && (e.localY < y1)) {
+				int showLineNum = (y1 - y0) / (LABEL_SIZE_Y - 1);
+				if (showLineNum < (int)lineData.size()) {
+					int barSize = (y1 - y0 - 4) * showLineNum / (int)lineData.size();
+
+					int movableY = y1 - y0 - barSize;
+					int movableYStart = y0 + barSize / 2;
+
+					setShowPosLine((e.localY - movableYStart) * ((int)lineData.size() - showLineNum) / movableY);
+
+					dragScrollBarLine = true;
+				}
+			}
+
+		}
+		//	Method : 左マウスボタン ダブルクリックイベント受信
+		virtual void onLButtonDBLCLK(const MouseEvent& e) {//2023/10/04
+		}
+		//	Method : 右マウスボタン ダブルクリックイベント受信
+		virtual void onRButtonDBLCLK(const MouseEvent& e) {//2023/10/04
+			int dbgflag1 = 1;
+		}
+
+		///	Method : 左マウスボタンアップイベント受信
+		virtual void onLButtonUp(const MouseEvent& e) {
+			if (!canMouseControll) return;
+
+			//ドラッグによるキー移動
+			if (dragLine) {
+				int beforIndex = currentLine;
+				int afterIndex = max(0, min(currentLine + shiftIndex, ((int)lineData.size() - 1)));
+				if (beforIndex != afterIndex) {
+
+					//リスナーコール
+					if (this->lineShiftListener != NULL) {
+						(this->lineShiftListener)(beforIndex, afterIndex);
+					}
+
+					//置き換え
+					if (beforIndex < afterIndex) {
+						LineData* tmp = lineData[beforIndex];
+						for (int i = beforIndex; i < afterIndex; i++) {
+							lineData[i] = lineData[i + 1];
+						}
+						lineData[afterIndex] = tmp;
+					}
+					else {
+						LineData* tmp = lineData[beforIndex];
+						for (int i = beforIndex; afterIndex < i; i--) {
+							lineData[i] = lineData[i - 1];
+						}
+						lineData[afterIndex] = tmp;
+					}
+
+					//カレントラインを修正
+					currentLine = afterIndex;
+
+				}
+			}
+
+			//ドラッグフラグを初期化
+			dragLine = false;
+			dragScrollBarLine = false;
+
+			//再描画要求
+			if (rewriteOnChange) {
+				callRewrite();
+			}
+		}
+		///	Method : マウス移動イベント受信
+		virtual void onMouseMove(const MouseEvent& e) {
+			if (!canMouseControll) return;
+
+			int x0 = MARGIN;
+			int x1 = size.x - SCROLL_BAR_WIDTH - MARGIN - 1;
+			int x2 = size.x - MARGIN;
+			int y0 = MARGIN;
+			int y1 = size.y - MARGIN;
+
+			//ライン
+			if (dragLine) {
+				int showLineNum = (size.y - MARGIN * 2) / (LABEL_SIZE_Y - 1);
+
+				int newCposLine = showPosLine + (e.localY - y0) / (LABEL_SIZE_Y - 1);
+				newCposLine = min(max(newCposLine, 0), (int)lineData.size() - 1);
+
+				if (newCposLine <= showPosLine) {
+					showPosLine = newCposLine;
+				}
+				if ((showPosLine + showLineNum - 1) <= newCposLine) {
+					showPosLine = newCposLine - showLineNum + 1;
+				}
+
+				//ラベルドラッグ
+				if (dragLine) {
+					shiftIndex = newCposLine - currentLine;
+
+					//可視状態ボタンドラッグ
+				}
+
+
+				//再描画要求
+				if (rewriteOnChange) {
+					callRewrite();
+				}
+			}
+
+			//ラベルスクロールバー
+			if (dragScrollBarLine) {
+				int showLineNum = (y1 - y0) / (LABEL_SIZE_Y - 1);
+				int barSize = (y1 - y0 - 4) * showLineNum / (int)lineData.size();
+
+				int movableY = y1 - y0 - barSize;
+				int movableYStart = y0 + barSize / 2;
+
+				setShowPosLine((e.localY - movableYStart) * ((int)lineData.size() - showLineNum) / movableY);
+			}
+		}
+		///	Method : 右マウスボタンダウンイベント受信
+		virtual void onRButtonDown(const MouseEvent& e) {
+			if (!canMouseControll) return;
+
+			int x0 = MARGIN;
+			int x1 = MARGIN + LABEL_SIZE_Y * 2;
+			int x2 = size.x - SCROLL_BAR_WIDTH - MARGIN - 1;
+			int x3 = size.x - MARGIN;
+			int y0 = MARGIN;
+			int y1 = size.y - MARGIN;
+
+			//ラベル右クリック
+			if ((x1 <= e.localX) && (e.localX < x2) &&
+				(y0 <= e.localY) && (e.localY < y1)) {
+				mouseRBtnOnIndex = showPosLine + (e.localY - y0) / (LABEL_SIZE_Y - 1);
+
+				setCurrentLine(mouseRBtnOnIndex);
+			}
+
+		}
+		///	Method : 右マウスボタンアップイベント受信
+		virtual void onRButtonUp(const MouseEvent& e) {
+			if (!canMouseControll) return;
+
+			int x0 = MARGIN;
+			int x1 = MARGIN + LABEL_SIZE_Y * 2;
+			int x2 = size.x - SCROLL_BAR_WIDTH - MARGIN - 1;
+			int x3 = size.x - MARGIN;
+			int y0 = MARGIN;
+			int y1 = size.y - MARGIN;
+
+			//プロパティコール
+			if ((mouseRBtnOnIndex != -1) &&
+				(mouseRBtnOnIndex == ((showPosLine + (e.localY - y0)) / (LABEL_SIZE_Y - 1))) &&
+				(x1 <= e.localX) && (e.localX < x2) &&
+				(y0 <= e.localY) && (e.localY < y1)) {
+
+				//リスナーコール
+				if (this->callPropertyListener != NULL) {
+					(this->callPropertyListener)(mouseRBtnOnIndex);
+				}
+			}
+
+			mouseRBtnOnIndex = -1;
+		}
+
+		//////////////////////////// Accessor //////////////////////////////
+		/// Accessor : name
+		const TCHAR* getName() const {
+			return name;
+		}
+		void setName(const TCHAR* value) {
+			if (name && value) {
+				size_t tclen = _tcslen(value);
+				size_t cplen;
+				if (tclen != 0) {
+					if (tclen <= 255) {
+						cplen = tclen;
+					}
+					else {
+						cplen = 255;
+					}
+					_tcsncpy_s(name, 256, value, cplen);
+					name[cplen] = (TCHAR)0;
+				}
+				else {
+					_tcscpy_s(name, 256, TEXT("NoName"));
+				}
+			}
+
+			//再描画要求
+			if (rewriteOnChange) {
+				callRewrite();
+			}
+		}
+		std::basic_string<TCHAR> getName(int index) const {
+			index = min(max(index, 0), (int)lineData.size() - 1);
+			return lineData[index]->name;
+		}
+		bool setName(int index, const std::basic_string<TCHAR>& value) {
+			if ((0 <= index) && (index < (int)lineData.size())) {
+
+				lineData[index]->name = value;
+
+				//再描画要求
+				if (rewriteOnChange) {
+					callRewrite();
+				}
+
+				return true;
+			}
+			return false;
+		}
+		/// Accessor : rewriteOnChange
+		bool getRewriteOnChangeFlag() const {
+			return rewriteOnChange;
+		}
+		void setRewriteOnChangeFlag(bool value) {
+			rewriteOnChange = value;
+		}
+		//	Accessor : currentLine
+		int getCurrentLine() const {
+			return currentLine;
+		}
+		void setCurrentLine(int _currentLine, bool noCallListener = false) {
+			int showLineNum = (size.y - MARGIN * 2) / (LABEL_SIZE_Y - 1);
+
+			currentLine = min(max(_currentLine, 0), (int)lineData.size() - 1);
+
+			if (currentLine <= showPosLine) {
+				showPosLine = currentLine;
+			}
+			if ((showPosLine + showLineNum - 1) <= currentLine) {
+				showPosLine = currentLine - showLineNum + 1;
+			}
+
+			//リスナーコール
+			if (!noCallListener && (this->cursorListener != NULL)) {
+				(this->cursorListener)();
+			}
+
+			//再描画要求
+			if (rewriteOnChange) {
+				callRewrite();
+			}
+		}
+		std::basic_string<TCHAR> getCurrentLineName() const {
+			return lineData[currentLine]->name;
+		}
+		void setCurrentLineName(const std::basic_string<TCHAR>& value) {
+			for (int i = 0; i < (int)lineData.size(); i++) {
+				if (lineData[i]->name == value) {
+					setCurrentLine(i);
+				}
+			}
+		}
+		bool existName(std::basic_string<TCHAR> srcname) {
+			for (int i = 0; i < (int)lineData.size(); i++) {
+				if (lineData[i]->name == srcname) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		//	Accessor : showPosLine
+		int getShowPosLine() const {
+			return showPosLine;
+		}
+		void setShowPosLine(int _showPosLine) {
+			int y0 = MARGIN;
+			int y1 = size.y - MARGIN + 1;
+
+			int showLineNum = (size.y - MARGIN * 2) / (LABEL_SIZE_Y - 1);
+			if (showLineNum < (int)lineData.size()) {
+				showPosLine = max(0, min(_showPosLine, (int)lineData.size() - showLineNum));
+			}
+			else {
+				showPosLine = 0;
+			}
+
+			//再描画要求
+			if (rewriteOnChange) {
+				callRewrite();
+			}
+		}
+
+		const void* getObj(int index) {
+			if (lineData.size() <= (unsigned int)index) return 0;
+
+			return lineData[index]->object;
+		}
+
+		///	Accessor : cursorListener
+		void setCursorListener(std::function<void()> listener) {
+			this->cursorListener = listener;
+		}
+		///	Accessor : lineShiftListener
+		void setLineShiftListener(std::function<void(int beforIndex, int afterIndex)> listener) {
+			this->lineShiftListener = listener;
+		}
+		///	Accessor : callPropertyListener
+		void setCallPropertyListener(std::function<void(int targetIndex)> listener) {
+			this->callPropertyListener = listener;
+		}
+
+	private:
+		////////////////////////// MemberVar /////////////////////////////
+		int currentLine, showPosLine;
+		TCHAR* name;
+		std::function<void()> cursorListener;										//カーソル位置が変更された直後に呼ばれる
+		std::function<void(int beforIndex, int afterIndex)> lineShiftListener;		//移動が行われる直前に呼ばれる
+		std::function<void(int targetIndex)> callPropertyListener;					//レイヤーのプロパティを呼ぶ時に呼ばれる
+
+		class LineData {
+		public:
+			LineData(std::basic_string<TCHAR> _name, OWP_ListBox* _parent, const void* _object) {
+				name = _name;
+				parent = _parent;
+				object = _object;
+				visible = true;
+				lock = false;
+				select = false;
+			}
+			~LineData() {
+			}
+
+			std::basic_string<TCHAR> name;
+			const void* object;
+			bool visible;
+			bool lock;
+			bool select;
+
+			//	Method : 描画
+			void draw(HDCMaster* hdcM,
+				int posX, int posY,
+				int width,
+				bool highLight = false) {
+				unsigned char baseR = parent->baseColor.r;
+				unsigned char baseG = parent->baseColor.g;
+				unsigned char baseB = parent->baseColor.b;
+
+				//highLight
+				int x0 = posX;
+				int x1 = posX + width;
+				int y0 = posY;
+				int y1 = posY + parent->LABEL_SIZE_Y;
+				int x2 = x0 + parent->LABEL_SIZE_Y - 1;
+				int x3 = x2 + parent->LABEL_SIZE_Y - 1;
+				if (highLight) {
+					//hdcM->setPenAndBrush(NULL,RGB(min(baseR+20,255),min(baseG+20,255),min(baseB+20,255)));
+					hdcM->setPenAndBrush(NULL, RGB(255, 128, 0));
+					Rectangle(hdcM->hDC, x3, y0, x1, y1);
+				}
+
+				//ラベル
+				//hdcM->setFont(12, _T("ＭＳ ゴシック"));
+				int fontsize = (int)((double)parent->LABEL_SIZE_Y * 0.8);//2024/07/07　高さを大きくした場合にはフォントも大きく
+				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
+				SetTextColor(hdcM->hDC, RGB(240, 240, 240));
+				TextOut(hdcM->hDC,
+					x3 + 2, posY + parent->LABEL_SIZE_Y / 2 - 5,
+					name.c_str(), (int)_tcslen(name.c_str()));
+
+
+				//枠
+				hdcM->setPenAndBrush(RGB(min(baseR + 20, 255), min(baseG + 20, 255), min(baseB + 20, 255)), NULL);
+				Rectangle(hdcM->hDC, x0, y0, x1, y1);
+				MoveToEx(hdcM->hDC, x2, y0, NULL);
+				LineTo(hdcM->hDC, x2, y1);
+				MoveToEx(hdcM->hDC, x3, y0, NULL);
+				LineTo(hdcM->hDC, x3, y1);
+
+			}
+
+		private:
+			OWP_ListBox* parent;
+		};
+		std::vector<LineData*> lineData;
+
+		int LABEL_SIZE_Y = 15;
+		static const int SCROLL_BAR_WIDTH = 10;
+		static const int MARGIN = 3;
+		static const int NAME_POS_X = 5;
+
+		bool rewriteOnChange;		//キー操作時に再描画を行うか否かのフラグ
+		bool canMouseControll;		//マウスでの操作が可能か否かのフラグ
+
+		bool dragLine, dragScrollBarLine;
+
+		int shiftIndex;				//選択行のドラッグでの移動量
+
+		int mouseRBtnOnIndex;		//右クリックが押されたときの行インデックス
+	};
+
+
+
 	///<summary>
 	///	ウィンドウ内部品"スクロールウインドウ"クラス
 	///</summary>
@@ -11692,7 +12329,7 @@ void s_dummyfunc()
 			if ((x2 <= e.localX) && (e.localX < x3) && 
 				(y0 <= e.localY) && (e.localY < y1)){
 				showLineNum = (y1 - y0) / (LABEL_SIZE_Y);
-				if (showLineNum < lineDatasize){
+				if ((showLineNum < lineDatasize) && (lineDatasize > 0)){
 					int barSize = (y1 - y0) * showLineNum / lineDatasize;
 
 					int movableY = y1 - y0 - barSize;
@@ -11855,7 +12492,7 @@ void s_dummyfunc()
 			int y1 = size.y;
 
 			//ラベルスクロールバー
-			if (dragScrollBarLine){
+			if (dragScrollBarLine && (lineDatasize > 0)){
 				int showLineNum = (y1 - y0) / (LABEL_SIZE_Y);
 				int barSize = (y1 - y0) * showLineNum / lineDatasize;
 
