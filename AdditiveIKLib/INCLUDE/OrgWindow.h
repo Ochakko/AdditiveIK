@@ -11511,7 +11511,7 @@ void s_dummyfunc()
 	class OWP_ListBox : public OrgWindowParts {
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_ListBox(const TCHAR* _name, int _labelheight = 15) : OrgWindowParts() {
+		OWP_ListBox(const TCHAR* _name, int _initlinenum, int _labelheight) : OrgWindowParts() {
 			name = new TCHAR[256];
 			if (_name) {
 				size_t tclen = _tcslen(_name);
@@ -11533,6 +11533,9 @@ void s_dummyfunc()
 
 			
 			LABEL_SIZE_Y = max(LABEL_SIZE_Y, _labelheight);
+
+			initiallinenum = max(3, _initlinenum);
+			size.y = initiallinenum * LABEL_SIZE_Y;
 
 			//cursorListener = [](){s_dummyfunc();};
 			//lineShiftListener = [](int beforIndex, int afterIndex){s_dummyfunc();};
@@ -11567,7 +11570,8 @@ void s_dummyfunc()
 		/// Method : 自動サイズ設定
 		virtual void autoResize() {
 			//size.y -= (size.y - MARGIN * 2) % (LABEL_SIZE_Y - 1) - 1;
-			size.y = max((LABEL_SIZE_Y * 10), (LABEL_SIZE_Y * (int)lineData.size()));
+			//size.y = max((LABEL_SIZE_Y * 10), (LABEL_SIZE_Y * (int)lineData.size()));
+			size.y = initiallinenum * LABEL_SIZE_Y;
 		}
 		//	Method : 描画
 		virtual void draw() {
@@ -11578,6 +11582,13 @@ void s_dummyfunc()
 			drawEdge();
 
 			int showLineNum = (size.y - MARGIN * 2) / (LABEL_SIZE_Y - 1);
+
+
+			//枠縁取り
+			hdcM->setPenAndBrush(RGB(240, 240, 240), NULL, 0, 1);
+			Rectangle(hdcM->hDC, pos.x, pos.y, pos.x + size.x, pos.y + size.y);
+
+
 
 			//行データ
 			for (int i = showPosLine, j = 0; i < (int)lineData.size() && j < showLineNum; i++, j++) {
@@ -11909,6 +11920,34 @@ void s_dummyfunc()
 			mouseRBtnOnIndex = -1;
 		}
 
+		virtual void onMouseWheel(const MouseEvent& e) {
+			int x0 = 0;
+			int x1 = size.x;
+			int y0 = 0;
+			int y1 = size.y;
+			if ((e.localX >= x0) && (e.localX <= x1) &&
+				(e.localY >= y0) && (e.localY <= y1)) {
+
+				//#########################################
+				//クライアントエリアでホイールを回した場合
+				//#########################################
+
+				int wheeldelta = e.wheeldelta;
+				int linedelta = 0;
+				if (wheeldelta > 0) {
+					linedelta = -1;
+				}
+				else if (wheeldelta < 0) {
+					linedelta = 1;
+				}
+				else {
+					linedelta = 0;
+				}
+				int curline = getShowPosLine();
+				setShowPosLine(curline + linedelta);
+				autoResize();
+			}
+		}
 		//////////////////////////// Accessor //////////////////////////////
 		/// Accessor : name
 		const TCHAR* getName() const {
@@ -12127,6 +12166,8 @@ void s_dummyfunc()
 		static const int SCROLL_BAR_WIDTH = 10;
 		static const int MARGIN = 3;
 		static const int NAME_POS_X = 5;
+
+		int initiallinenum = 10;
 
 		bool rewriteOnChange;		//キー操作時に再描画を行うか否かのフラグ
 		bool canMouseControll;		//マウスでの操作が可能か否かのフラグ

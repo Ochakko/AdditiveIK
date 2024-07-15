@@ -8,7 +8,10 @@ https://github.com/Ochakko/AdditiveIK
 　LaterTransparentメニューのウインドウをOWPで作り直し
 
 
-
+　OWP_ListBoxの修正
+　　枠の縁取り描画追加
+　　コンストラクタにサイズに関わる初期ライン数引数を追加
+　　マウスホイール対応
 
 
 2024/07/13

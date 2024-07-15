@@ -29993,6 +29993,7 @@ int CreateLaterTransparentWnd()
 
 	if (s_laterWnd) {
 		double rate50 = 0.50;
+		int initlinenum = 10;
 
 		s_laterlistLabel = new OWP_Label(L"Texture Files", labelheight);
 		if (!s_laterlistLabel) {
@@ -30004,7 +30005,7 @@ int CreateLaterTransparentWnd()
 		//	_ASSERT(0);
 		//	abort();
 		//}
-		s_laterlist1List = new OWP_ListBox(L"List1", labelheight);
+		s_laterlist1List = new OWP_ListBox(L"List1", initlinenum, labelheight);
 		if (!s_laterlist1List) {
 			_ASSERT(0);
 			abort();
@@ -30029,7 +30030,7 @@ int CreateLaterTransparentWnd()
 		//	_ASSERT(0);
 		//	abort();
 		//}
-		s_laterlist2List = new OWP_ListBox(L"List2", labelheight);
+		s_laterlist2List = new OWP_ListBox(L"List2", initlinenum, labelheight);
 		if (!s_laterlist2List) {
 			_ASSERT(0);
 			abort();
