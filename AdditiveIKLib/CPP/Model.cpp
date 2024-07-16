@@ -8581,7 +8581,7 @@ int CModel::GetTextureNameVec(std::vector<std::string>& dstvec)
 		if (curmat) {
 			//if (curmat->GetTex() && (strlen(curmat->GetTex()) > 0)) {
 			//	string curtexname = curmat->GetTex();
-			if (curmat->GetAlbedoTex() && (strlen(curmat->GetAlbedoTex()) > 0)) {//2024/01/08
+			if (curmat->GetAlbedoTex() && (*curmat->GetAlbedoTex() != 0) && (strlen(curmat->GetAlbedoTex()) > 0)) {//2024/01/08
 				string curtexname = curmat->GetAlbedoTex();
 
 

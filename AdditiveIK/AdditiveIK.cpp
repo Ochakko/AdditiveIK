@@ -20897,7 +20897,8 @@ int CreateModelPanel()
 					//モデル名がdeleteボタン側にはみ出すことが多くなった
 					//文字数制限をして表示がはみ出さないように.
 					WCHAR printname[64] = { 0L };
-					ShortenNameW(curmodel->GetFileName(), printname, 64, 21);
+					//ShortenNameW(curmodel->GetFileName(), printname, 64, 21);
+					ShortenNameW(curmodel->GetFileName(), printname, 64, 25);
 
 					if (modelcnt == 0) {
 						bool limitnamelen = true;
@@ -20919,7 +20920,7 @@ int CreateModelPanel()
 			}
 
 			//s_modelpanel.separator =  new OWP_Separator(s_modelpanel.panel, false);// セパレータ1（境界線による横方向2分割）
-			s_modelpanel.separator = new OWP_Separator(s_modelpanel.panel, true, 0.5, true, s_modelpanel.scroll);// セパレータ1（境界線による横方向2分割）
+			s_modelpanel.separator = new OWP_Separator(s_modelpanel.panel, true, 0.70, true, s_modelpanel.scroll);// セパレータ1（境界線による横方向2分割）
 			if (!s_modelpanel.separator) {
 				_ASSERT(0);
 				return 1;
@@ -20940,10 +20941,10 @@ int CreateModelPanel()
 			for (modelcnt = 0; modelcnt < modelnum; modelcnt++) {
 				CModel* curmodel = s_chascene->GetModel(modelcnt);
 				if (curmodel) {
-					OWP_CheckBoxA* owpCheckBox = new OWP_CheckBoxA(L"Show/Hide", curmodel->GetModelDisp(), 20);
+					OWP_CheckBoxA* owpCheckBox = new OWP_CheckBoxA(L"Show", curmodel->GetModelDisp(), 20);
 					if (owpCheckBox) {
 						s_modelpanel.checkvec.push_back(owpCheckBox);
-						OWP_Button* owpButton = new OWP_Button(L"delete", 20);
+						OWP_Button* owpButton = new OWP_Button(L"del", 20);
 						if (owpButton) {
 							s_modelpanel.delbutton.push_back(owpButton);
 						}
@@ -32519,12 +32520,14 @@ int LaterTransparent2Dlg()
 		int listno;
 		for (listno = 0; listno < texturenum; listno++) {
 			string curtexname = modelstexturevec[listno];
-			char mbtexname[512] = { 0 };
-			strcpy_s(mbtexname, 512, curtexname.c_str());
-			WCHAR wctexname[512] = { 0L };
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mbtexname, 512, wctexname, 512);
+			if (curtexname.c_str() && (*curtexname.c_str() != 0)) {
+				char mbtexname[512] = { 0 };
+				strcpy_s(mbtexname, 512, curtexname.c_str());
+				WCHAR wctexname[512] = { 0L };
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mbtexname, 512, wctexname, 512);
 
-			s_laterlist1List->newLine(wctexname);
+				s_laterlist1List->newLine(wctexname);
+			}
 		}
 
 
@@ -32532,13 +32535,14 @@ int LaterTransparent2Dlg()
 		int listno2;
 		for (listno2 = 0; listno2 < laternum; listno2++) {
 			string curlatername = s_model->GetLaterTransparent(listno2);
-			char mblastername[512] = { 0 };
-			strcpy_s(mblastername, 512, curlatername.c_str());
-			WCHAR wclatername[512] = { 0L };
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mblastername, 512, wclatername, 512);
+			if (curlatername.c_str() && (*curlatername.c_str() != 0)) {
+				char mblastername[512] = { 0 };
+				strcpy_s(mblastername, 512, curlatername.c_str());
+				WCHAR wclatername[512] = { 0L };
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mblastername, 512, wclatername, 512);
 
-
-			s_laterlist2List->newLine(wclatername);
+				s_laterlist2List->newLine(wclatername);
+			}
 		}
 
 	}
@@ -32572,7 +32576,9 @@ int Dlg2LaterTransparent()
 	int elemno;
 	for (elemno = 0; elemno < elemnum; elemno++) {
 		wstring currentname = s_laterlist2List->getName(elemno);
-		savelist2.push_back(currentname);
+		if (currentname.c_str() && (*currentname.c_str() != 0L) &&(currentname != L"NoData")) {
+			savelist2.push_back(currentname);
+		}
 	}
 
 	int result2 = s_model->SetLaterTransparentVec(savelist2);//丸ごと設定

@@ -683,7 +683,7 @@ namespace OrgWinGUI{
 		for (int i = showPos_line, j = 0; i < (int)lineData.size() && j < linenum; i++, j++) {
 			bool highLight = false;
 			if (i == currentLine) highLight = true;
-			if (i >= 0) {
+			if ((i >= 0) && lineData[i]) {
 				lineData[i]->draw(hdcM,
 					pos.x + MARGIN,
 					pos.y + MARGIN + AXIS_SIZE_Y + j * (LABEL_SIZE_Y - 1),

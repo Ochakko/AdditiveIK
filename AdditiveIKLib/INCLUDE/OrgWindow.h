@@ -94,6 +94,8 @@ static int DrawGdiplusButton(Gdiplus::Image* srcimage, HDC srchdc,
 static int DrawGdiplusButtonStretch(Gdiplus::Image* srcimage, HDC srchdc,
 	int drawposx, int drawposy, 
 	int srcw, int srch, int dstw, int dsth, float srcalpha);
+static bool CalcTextExtent(HDC hdc, const WCHAR* srcname, SIZE* pspacesize, SIZE* pnamesize);
+
 int DrawGdiplusButton(Gdiplus::Image* srcimage, HDC srchdc,
 	int drawposx, int drawposy, int drawwidth, int drawheight, float srcalpha)
 {
@@ -160,7 +162,63 @@ int DrawGdiplusButtonStretch(Gdiplus::Image* srcimage, HDC srchdc,
 	}
 	return 0;
 }
+bool CalcTextExtent(HDC hdc, const WCHAR* srcname, SIZE* pspacesize, SIZE* pnamesize)
+{
+	if (!srcname || !pspacesize || !pnamesize) {
+		_ASSERT(0);
+		return false;
+	}
+	if (*srcname == 0L) {
+		_ASSERT(0);
+		return false;
+	}
 
+	int namelen = (int)wcslen(srcname);
+	if (namelen >= 1024) {
+		_ASSERT(0);
+		return false;
+	}
+
+	int loopcount = 0;
+	int spacecount = 0;
+	while (loopcount < namelen) {
+		WCHAR chkwc = *(srcname + loopcount);
+		if ((chkwc == TEXT(' ')) || (chkwc == TEXT('　'))) {
+			spacecount++;
+		}
+		else {
+			break;
+		}
+		loopcount++;
+	}
+
+	bool result1 = true;
+	bool result2 = true;
+	if (spacecount > 0) {
+		WCHAR strspace[1024] = { 0L };
+		ZeroMemory(strspace, sizeof(WCHAR) * 1024);
+		wcsncpy_s(strspace, 1024, srcname, spacecount);
+		result1 = GetTextExtentPoint32W(hdc, strspace, spacecount, pspacesize);
+	}
+	else {
+		pspacesize->cx = 0;
+		pspacesize->cy = 0;
+	}
+
+	WCHAR strname[1024] = { 0L };
+	ZeroMemory(strname, sizeof(WCHAR) * 1024);
+	wcscpy_s(strname, 1024, srcname + spacecount);
+	int wccount = (int)wcslen(strname);
+	result2 = GetTextExtentPoint32W(hdc, strname, wccount, pnamesize);
+
+	if (result1 && result2) {
+		return true;
+	}
+	else {
+		_ASSERT(0);
+		return false;
+	}
+}
 
 
 
@@ -5337,29 +5395,48 @@ void s_dummyfunc()
 
 			//ラジオボタンの数だけ繰り返す
 			for(int i=0; i<(int)nameList.size(); i++){
+
+				int fontsize = (int)((double)SIZE_Y * 0.8);
+				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));//ClacTextExtent()よりも前でフォントを設定
+
+				SIZE spacesize, namesize;
+				spacesize.cx = 0;
+				spacesize.cy = 0;
+				namesize.cx = 0;
+				namesize.cy = 0;
+				bool result0;
+				result0 = CalcTextExtent(hdcM->hDC, nameList[i].c_str(), &spacesize, &namesize);
+
 				//ボタン部分
-				int pos1x= pos.x+BOX_POS_X;
-				int pos1y= pos.y+SIZE_Y/2-BOX_WIDTH/2+ SIZE_Y*i+ 2;
-				int pos2x= pos.x+BOX_POS_X+BOX_WIDTH-1;
-				int pos2y= pos.y+SIZE_Y/2+BOX_WIDTH/2-1+ SIZE_Y*i+ 2;
-				hdcM->setPenAndBrush(NULL,RGB(240,240,240));
-				if( i==selectIndex ){
+				if ((i == selectIndex) && result0) {
+					//白い丸セレクトマーク
+					int pos1x= pos.x+BOX_POS_X;
+					int pos1y= pos.y+SIZE_Y/2-BOX_WIDTH/2+ SIZE_Y*i+ 2;
+					int pos2x= pos.x+BOX_POS_X+BOX_WIDTH-1;
+					int pos2y= pos.y+SIZE_Y/2+BOX_WIDTH/2-1+ SIZE_Y*i+ 2;
+					hdcM->setPenAndBrush(NULL,RGB(240,240,240));
 					Ellipse(hdcM->hDC, pos1x+2,pos1y+2, pos2x-2,pos2y-2);
+
+					//2024/07/16
+					//オレンジの下線マーク
+					int pos01x = pos.x + BOX_POS_X + BOX_WIDTH + 3 + spacesize.cx;
+					int pos02x = pos01x + namesize.cx;
+					int pos01y = pos.y + SIZE_Y * i + (int)(SIZE_Y * 0.80);
+					int pos02y = pos.y + SIZE_Y * (i + 1);
+					hdcM->setPenAndBrush(NULL, RGB(255, 128, 0));
+					Rectangle(hdcM->hDC, pos01x, pos01y, pos02x, pos02y);
 				}
-				hdcM->setPenAndBrush(RGB(min(baseColor.r+20,255),min(baseColor.g+20,255),min(baseColor.b+20,255)),NULL);
-				Ellipse(hdcM->hDC, pos1x,pos1y, pos2x,pos2y);
+				//hdcM->setPenAndBrush(RGB(min(baseColor.r+20,255),min(baseColor.g+20,255),min(baseColor.b+20,255)),NULL);
+				//Ellipse(hdcM->hDC, pos1x,pos1y, pos2x,pos2y);
 
 				//名前
-				pos1x= pos.x+BOX_POS_X+BOX_WIDTH+3;
-				pos1y= pos.y+SIZE_Y/2-6+ SIZE_Y*i+ 2;
-				
+				int pos3x= pos.x+BOX_POS_X+BOX_WIDTH+3;
+				int pos3y= pos.y + SIZE_Y * i + 2;
 				//hdcM->setFont(12,_T("ＭＳ ゴシック"));
-				int fontsize = (int)((double)SIZE_Y * 0.8);//2024/07/07　高さを大きくした場合にはフォントも大きく
-				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
 
 				SetTextColor(hdcM->hDC,RGB(240,240,240));
 				TextOut( hdcM->hDC,
-						 pos1x, pos1y,
+						 pos3x, pos3y,
 						 nameList[i].c_str(), (int)_tcslen(nameList[i].c_str()));
 
 				{
@@ -7185,7 +7262,13 @@ void s_dummyfunc()
 			}
 		}
 		std::basic_string<TCHAR> getCurrentLineName() const{
-			return lineData[currentLine]->name;
+			if ((lineData.size() > 0) && (currentLine >= 0) && (currentLine < lineData.size()) &&
+				(lineData[currentLine]->name.c_str()) && (*(lineData[currentLine]->name.c_str()) != 0L)) {
+				return lineData[currentLine]->name;
+			}
+			else {
+				return std::wstring(L"NoData");
+			}
 		}
 		void setCurrentLineName(const std::basic_string<TCHAR>& value){
 			for(int i=0; i<(int)lineData.size(); i++){
@@ -7213,7 +7296,7 @@ void s_dummyfunc()
 		}
 
 		void setShowPosLine(int _showPosLine){
-			int showLineNum = (size.y - SCROLL_BAR_WIDTH - AXIS_SIZE_Y - MARGIN * 2) / (LABEL_SIZE_Y - 1);
+			int showLineNum = max(0, ((size.y - SCROLL_BAR_WIDTH - AXIS_SIZE_Y - MARGIN * 2) / (LABEL_SIZE_Y - 1)));
 			int y0= MARGIN+AXIS_SIZE_Y;
 			int y1= size.y-MARGIN-SCROLL_BAR_WIDTH+1;
 
@@ -7481,18 +7564,55 @@ void s_dummyfunc()
 				unsigned char baseG= parent->baseColor.g;
 				unsigned char baseB= parent->baseColor.b;
 
+
+				std::basic_string<TCHAR> prname;
+				if (depth > 0) {
+					int depthcnt;
+					for (depthcnt = 0; depthcnt < depth; depthcnt++) {
+						prname += TEXT("  ");
+					}
+					prname += name;
+				}
+				else {
+					prname = name;
+				}
+
+				if (getIKStopFlag()) {
+					prname += TEXT(" (⛔)");
+				}
+				if (getConstraintFlag()) {
+					prname += TEXT(" (⏸)");
+				}
+
+				int fontsize = (int)((double)parent->LABEL_SIZE_Y * 0.8);
+				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));//ClacTextExtent()よりも前でフォントを設定
+
+				SIZE spacesize, namesize;
+				spacesize.cx = 0;
+				spacesize.cy = 0;
+				namesize.cx = 0;
+				namesize.cy = 0;
+				bool result0;
+				result0 = CalcTextExtent(hdcM->hDC, prname.c_str(), &spacesize, &namesize);
+
 				//highLight
-				int x0= posX;
-				int x1= posX+parent->LABEL_SIZE_X;
-				int x2= posX+width;
-				int y00 = posY - parent->LABEL_SIZE_Y;
-				int y0= posY;
-				int y1= posY+parent->LABEL_SIZE_Y;
-				if( highLight ){
+				if(highLight && result0){
+					int x00 = posX + spacesize.cx;
+					int x01 = x00 + namesize.cx;
+					int y00 = posY + (int)(parent->LABEL_SIZE_Y * 0.80);
+					int y01 = posY + parent->LABEL_SIZE_Y;
 					//hdcM->setPenAndBrush(NULL,RGB(min(baseR+20,255),min(baseG+20,255),min(baseB+20,255)));
 					hdcM->setPenAndBrush(NULL, RGB(255, 128, 0));
-					Rectangle(hdcM->hDC,x0,y0,x1,y1);
+					Rectangle(hdcM->hDC, x00, y00, x01, y01);
 				}
+
+
+				int x0 = posX;
+				int x1 = posX + parent->LABEL_SIZE_X;
+				int x2 = posX + width;
+				int y00 = posY - parent->LABEL_SIZE_Y;
+				int y0 = posY;
+				int y1 = posY + parent->LABEL_SIZE_Y;
 
 				//ラベル
 				//if (g_4kresolution) {
@@ -7502,8 +7622,6 @@ void s_dummyfunc()
 				//else {
 				//	hdcM->setFont(12, _T("ＭＳ ゴシック"));
 				//}
-				int fontsize = (int)((double)parent->LABEL_SIZE_Y * 0.8);//2024/07/07　高さを大きくした場合にはフォントも大きく
-				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
 
 
 
@@ -7530,19 +7648,6 @@ void s_dummyfunc()
 					SetTextColor(hdcM->hDC, textcol);
 				}
 
-				std::basic_string<TCHAR> prname;
-				int depthcnt;
-				for (depthcnt = 0; depthcnt < depth; depthcnt++){
-					prname += TEXT("  ");
-				}
-				prname += name;
-
-				if (getIKStopFlag()) {
-					prname += TEXT(" (⛔)");
-				}
-				if (getConstraintFlag()) {
-					prname += TEXT(" (⏸)");
-				}
 
 				TextOut(hdcM->hDC,
 					posX + 2, posY + parent->LABEL_SIZE_Y / 2 - 5,
@@ -8797,7 +8902,7 @@ void s_dummyfunc()
 				int yy0 = MARGIN + AXIS_SIZE_Y;
 				int yy1 = size.y - MARGIN - SCROLL_BAR_WIDTH + 1;
 
-				int showLineNum = (size.y - SCROLL_BAR_WIDTH - AXIS_SIZE_Y - MARGIN * 2) / (LABEL_SIZE_Y - 1);
+				int showLineNum = max(0, ((size.y - SCROLL_BAR_WIDTH - AXIS_SIZE_Y - MARGIN * 2) / (LABEL_SIZE_Y - 1)));
 				if (showLineNum<(int)lineData.size()) {
 					int barSize = (yy1 - yy0 - 4)*showLineNum / (int)lineData.size();
 
@@ -9343,7 +9448,7 @@ void s_dummyfunc()
 			return currentLine;
 		}
 		void setCurrentLine(int _currentLine, bool noCallListener = false) {
-			int showLineNum = (size.y - SCROLL_BAR_WIDTH - AXIS_SIZE_Y - MARGIN * 2) / (LABEL_SIZE_Y - 1);
+			int showLineNum = max(0, ((size.y - SCROLL_BAR_WIDTH - AXIS_SIZE_Y - MARGIN * 2) / (LABEL_SIZE_Y - 1)));
 
 			currentLine = min(max(_currentLine, 0), (int)lineData.size() - 1);
 
@@ -9365,7 +9470,13 @@ void s_dummyfunc()
 			}
 		}
 		std::basic_string<TCHAR> getCurrentLineName() const {
-			return lineData[currentLine]->name;
+			if ((lineData.size() > 0) && (currentLine >= 0) && (currentLine < lineData.size()) &&
+				(lineData[currentLine]->name.c_str()) && (*(lineData[currentLine]->name.c_str()) != 0L)) {
+				return lineData[currentLine]->name;
+			}
+			else {
+				return std::wstring(L"NoData");
+			}
 		}
 		void setCurrentLineName(const std::basic_string<TCHAR>& value) {
 			for (int i = 0; i<(int)lineData.size(); i++) {
@@ -9395,7 +9506,7 @@ void s_dummyfunc()
 			int y0 = MARGIN + AXIS_SIZE_Y;
 			int y1 = size.y - MARGIN - SCROLL_BAR_WIDTH + 1;
 
-			int showLineNum = (size.y - SCROLL_BAR_WIDTH - AXIS_SIZE_Y - MARGIN * 2) / (LABEL_SIZE_Y - 1);
+			int showLineNum = max(0, ((size.y - SCROLL_BAR_WIDTH - AXIS_SIZE_Y - MARGIN * 2) / (LABEL_SIZE_Y - 1)));
 			if (showLineNum<(int)lineData.size()) {
 				showPos_line = max(0, min(_showPosLine, (int)lineData.size() - showLineNum));
 			}
@@ -11142,8 +11253,13 @@ void s_dummyfunc()
 			}
 		}
 		std::basic_string<TCHAR> getName(int index) const{
-			index= min(max(index,0),(int)lineData.size()-1);
-			return lineData[index]->name;
+			if (!lineData.empty()) {
+				index = max(0, min(index, (int)lineData.size() - 1));
+				return lineData[index]->name;
+			}
+			else {
+				return std::wstring(L"NoData");
+			}
 		}
 		bool setName(int index, const std::basic_string<TCHAR>& value ){
 			if( (0 <= index) && (index < (int)lineData.size()) ){
@@ -11193,7 +11309,13 @@ void s_dummyfunc()
 			}
 		}
 		std::basic_string<TCHAR> getCurrentLineName() const{
-			return lineData[currentLine]->name;
+			if ((lineData.size() > 0) && (currentLine >= 0) && (currentLine < lineData.size()) &&
+				(lineData[currentLine]->name.c_str()) && (*(lineData[currentLine]->name.c_str()) != 0L)) {
+				return lineData[currentLine]->name;
+			}
+			else {
+				return std::wstring(L"NoData");
+			}
 		}
 		void setCurrentLineName(const std::basic_string<TCHAR> &value){
 			for(int i=0; i<(int)lineData.size(); i++){
@@ -11406,21 +11528,37 @@ void s_dummyfunc()
 				unsigned char baseG= parent->baseColor.g;
 				unsigned char baseB= parent->baseColor.b;
 
+				int fontsize = 12;
+				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));//ClacTextExtent()よりも前でフォントを設定
+
+				//int fontsize = (int)((double)parent->LABEL_SIZE_Y * 0.8);
+				SIZE spacesize, namesize;
+				spacesize.cx = 0;
+				spacesize.cy = 0;
+				namesize.cx = 0;
+				namesize.cy = 0;
+				bool result0;
+				result0 = CalcTextExtent(hdcM->hDC, name.c_str(), &spacesize, &namesize);
+
+
 				//highLight
-				int x0= posX;
-				int x1= posX+width;
-				int y0= posY;
-				int y1= posY+parent->LABEL_SIZE_Y;
-				int x2= x0+parent->LABEL_SIZE_Y-1;
-				int x3= x2+parent->LABEL_SIZE_Y-1;
-				if( highLight ){
-					//hdcM->setPenAndBrush(NULL,RGB(min(baseR+20,255),min(baseG+20,255),min(baseB+20,255)));
+				if(highLight && result0){
+					int x00 = posX + parent->LABEL_SIZE_Y + spacesize.cx;
+					int x01 = x00 + namesize.cx;
+					int y00 = posY + (int)(parent->LABEL_SIZE_Y * 0.80);
+					int y01 = posY + parent->LABEL_SIZE_Y;
 					hdcM->setPenAndBrush(NULL, RGB(255, 128, 0));
-					Rectangle(hdcM->hDC,x3,y0,x1,y1);
+					Rectangle(hdcM->hDC, x00, y00, x01, y01);
 				}
 
+				int x0 = posX;
+				int x1 = posX + width;
+				int y0 = posY;
+				int y1 = posY + parent->LABEL_SIZE_Y;
+				int x2 = x0 + parent->LABEL_SIZE_Y - 1;
+				int x3 = x2 + parent->LABEL_SIZE_Y - 1;
+
 				//ラベル
-				hdcM->setFont(12,_T("ＭＳ ゴシック"));
 				SetTextColor(hdcM->hDC,RGB(240,240,240));
 				TextOut( hdcM->hDC,
 						 x3+2, posY+parent->LABEL_SIZE_Y/2-5,
@@ -11471,12 +11609,14 @@ void s_dummyfunc()
 				}
 
 				//枠
-				hdcM->setPenAndBrush(RGB(min(baseR+20,255),min(baseG+20,255),min(baseB+20,255)),NULL);
-				Rectangle(hdcM->hDC,x0,y0,x1,y1);
-				MoveToEx(hdcM->hDC, x2,y0, NULL);
-				LineTo(hdcM->hDC,   x2,y1);
-				MoveToEx(hdcM->hDC, x3,y0, NULL);
-				LineTo(hdcM->hDC,   x3,y1);
+				{
+					hdcM->setPenAndBrush(RGB(min(baseR + 20, 255), min(baseG + 20, 255), min(baseB + 20, 255)), NULL);
+					Rectangle(hdcM->hDC, x0, y0, x1, y1);
+					MoveToEx(hdcM->hDC, x2, y0, NULL);
+					LineTo(hdcM->hDC, x2, y1);
+					MoveToEx(hdcM->hDC, x3, y0, NULL);
+					LineTo(hdcM->hDC, x3, y1);
+				}
 				
 			}
 
@@ -11485,8 +11625,8 @@ void s_dummyfunc()
 		};
 		std::vector<LineData*> lineData;
 
-		static const int LABEL_SIZE_Y= 15;
-		static const int SCROLL_BAR_WIDTH= 10;
+		static const int LABEL_SIZE_Y = 15;
+		static const int SCROLL_BAR_WIDTH = 10;
 		static const int MARGIN= 3;
 		static const int NAME_POS_X= 5;
 
@@ -11581,7 +11721,7 @@ void s_dummyfunc()
 
 			drawEdge();
 
-			int showLineNum = (size.y - MARGIN * 2) / (LABEL_SIZE_Y - 1);
+			int showLineNum = max(0, ((size.y - MARGIN * 2) / (LABEL_SIZE_Y - 1)));
 
 
 			//枠縁取り
@@ -11594,11 +11734,12 @@ void s_dummyfunc()
 			for (int i = showPosLine, j = 0; i < (int)lineData.size() && j < showLineNum; i++, j++) {
 				bool highLight = false;
 				if (i == currentLine) highLight = true;
-
-				lineData[i]->draw(hdcM,
-					pos.x + MARGIN,
-					pos.y + MARGIN + j * (LABEL_SIZE_Y - 1),
-					size.x - SCROLL_BAR_WIDTH - MARGIN * 2, highLight);
+				if (lineData[i]) {
+					lineData[i]->draw(hdcM,
+						pos.x + MARGIN,
+						pos.y + MARGIN + j * (LABEL_SIZE_Y - 1),
+						size.x - SCROLL_BAR_WIDTH - MARGIN * 2, highLight);
+				}
 			}
 
 			//ドラッグ移動の目印
@@ -11709,7 +11850,8 @@ void s_dummyfunc()
 		}
 		void upLine(int index) {
 			int upperline = index - 1;
-			if ((upperline >= 0) && (index >= 0) && (index < (int)lineData.size())) {
+			if ((upperline >= 0) && (index >= 0) && 
+				(upperline < (int)lineData.size()) && (index < (int)lineData.size())) {
 				LineData* tmp = lineData[upperline];
 				lineData[upperline] = lineData[index];
 				lineData[index] = tmp;
@@ -11721,7 +11863,8 @@ void s_dummyfunc()
 		}
 		void downLine(int index) {
 			int downline = index + 1;
-			if ((downline >= 0) && (index >= 0) && (index < (int)lineData.size())) {
+			if ((downline >= 0) && (index >= 0) && 
+				(downline < (int)lineData.size()) && (index < (int)lineData.size())) {
 				LineData* tmp = lineData[downline];
 				lineData[downline] = lineData[index];
 				lineData[index] = tmp;
@@ -11757,7 +11900,7 @@ void s_dummyfunc()
 			//ラインスクロールバー
 			if ((x2 <= e.localX) && (e.localX < x3) &&
 				(y0 <= e.localY) && (e.localY < y1)) {
-				int showLineNum = (y1 - y0) / (LABEL_SIZE_Y - 1);
+				int showLineNum = max(0, ((y1 - y0) / (LABEL_SIZE_Y - 1)));
 				if (showLineNum < (int)lineData.size()) {
 					int barSize = (y1 - y0 - 4) * showLineNum / (int)lineData.size();
 
@@ -11837,7 +11980,7 @@ void s_dummyfunc()
 
 			//ライン
 			if (dragLine) {
-				int showLineNum = (size.y - MARGIN * 2) / (LABEL_SIZE_Y - 1);
+				int showLineNum = max(0, ((size.y - MARGIN * 2) / (LABEL_SIZE_Y - 1)));
 
 				int newCposLine = showPosLine + (e.localY - y0) / (LABEL_SIZE_Y - 1);
 				newCposLine = min(max(newCposLine, 0), (int)lineData.size() - 1);
@@ -11865,7 +12008,7 @@ void s_dummyfunc()
 
 			//ラベルスクロールバー
 			if (dragScrollBarLine) {
-				int showLineNum = (y1 - y0) / (LABEL_SIZE_Y - 1);
+				int showLineNum = max(0, ((y1 - y0) / (LABEL_SIZE_Y - 1)));
 				int barSize = (y1 - y0 - 4) * showLineNum / (int)lineData.size();
 
 				int movableY = y1 - y0 - barSize;
@@ -11978,8 +12121,13 @@ void s_dummyfunc()
 			}
 		}
 		std::basic_string<TCHAR> getName(int index) const {
-			index = min(max(index, 0), (int)lineData.size() - 1);
-			return lineData[index]->name;
+			if (!lineData.empty()) {
+				index = max(0, min(index, (int)lineData.size() - 1));
+				return lineData[index]->name;
+			}
+			else {
+				return std::wstring(L"NoData");
+			}
 		}
 		bool setName(int index, const std::basic_string<TCHAR>& value) {
 			if ((0 <= index) && (index < (int)lineData.size())) {
@@ -12007,7 +12155,7 @@ void s_dummyfunc()
 			return currentLine;
 		}
 		void setCurrentLine(int _currentLine, bool noCallListener = false) {
-			int showLineNum = (size.y - MARGIN * 2) / (LABEL_SIZE_Y - 1);
+			int showLineNum = max(0, ((size.y - MARGIN * 2) / (LABEL_SIZE_Y - 1)));
 
 			currentLine = min(max(_currentLine, 0), (int)lineData.size() - 1);
 
@@ -12029,7 +12177,13 @@ void s_dummyfunc()
 			}
 		}
 		std::basic_string<TCHAR> getCurrentLineName() const {
-			return lineData[currentLine]->name;
+			if ((lineData.size() > 0) && (currentLine >= 0) && (currentLine < lineData.size()) &&
+				(lineData[currentLine]->name.c_str()) && (*(lineData[currentLine]->name.c_str()) != 0L)) {
+				return lineData[currentLine]->name;
+			}
+			else {
+				return std::wstring(L"NoData");
+			}
 		}
 		void setCurrentLineName(const std::basic_string<TCHAR>& value) {
 			for (int i = 0; i < (int)lineData.size(); i++) {
@@ -12055,7 +12209,7 @@ void s_dummyfunc()
 			int y0 = MARGIN;
 			int y1 = size.y - MARGIN + 1;
 
-			int showLineNum = (size.y - MARGIN * 2) / (LABEL_SIZE_Y - 1);
+			int showLineNum = max(0, ((size.y - MARGIN * 2) / (LABEL_SIZE_Y - 1)));
 			if (showLineNum < (int)lineData.size()) {
 				showPosLine = max(0, min(_showPosLine, (int)lineData.size() - showLineNum));
 			}
@@ -12124,23 +12278,38 @@ void s_dummyfunc()
 				unsigned char baseG = parent->baseColor.g;
 				unsigned char baseB = parent->baseColor.b;
 
+
+				int fontsize = (int)((double)parent->LABEL_SIZE_Y * 0.8);
+				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));//ClacTextExtent()よりも前でフォントを設定
+
+				SIZE spacesize, namesize;
+				spacesize.cx = 0;
+				spacesize.cy = 0;
+				namesize.cx = 0;
+				namesize.cy = 0;
+				bool result0;
+				result0 = CalcTextExtent(hdcM->hDC, name.c_str(), &spacesize, &namesize);
+
 				//highLight
+				if (highLight && result0) {
+					//int x00 = posX;
+					int x00 = posX + parent->LABEL_SIZE_Y * 2 + spacesize.cx;
+					int x01 = x00 + namesize.cx;
+					int y00 = posY + (int)(parent->LABEL_SIZE_Y * 0.80);
+					int y01 = posY + parent->LABEL_SIZE_Y;
+					hdcM->setPenAndBrush(NULL, RGB(255, 128, 0));
+					Rectangle(hdcM->hDC, x00, y00, x01, y01);
+				}
+
+
 				int x0 = posX;
 				int x1 = posX + width;
 				int y0 = posY;
 				int y1 = posY + parent->LABEL_SIZE_Y;
 				int x2 = x0 + parent->LABEL_SIZE_Y - 1;
 				int x3 = x2 + parent->LABEL_SIZE_Y - 1;
-				if (highLight) {
-					//hdcM->setPenAndBrush(NULL,RGB(min(baseR+20,255),min(baseG+20,255),min(baseB+20,255)));
-					hdcM->setPenAndBrush(NULL, RGB(255, 128, 0));
-					Rectangle(hdcM->hDC, x3, y0, x1, y1);
-				}
-
 				//ラベル
 				//hdcM->setFont(12, _T("ＭＳ ゴシック"));
-				int fontsize = (int)((double)parent->LABEL_SIZE_Y * 0.8);//2024/07/07　高さを大きくした場合にはフォントも大きく
-				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
 				SetTextColor(hdcM->hDC, RGB(240, 240, 240));
 				TextOut(hdcM->hDC,
 					x3 + 2, posY + parent->LABEL_SIZE_Y / 2 - 5,
@@ -12312,7 +12481,7 @@ void s_dummyfunc()
 			size = parentWindow->getClientSize();
 
 
-			int showLineNum = (size.y) / (LABEL_SIZE_Y);
+			int showLineNum = max(0, ((size.y) / (LABEL_SIZE_Y)));
 
 			int x0 = pos.x + size.x - SCROLL_BAR_WIDTH - 1;
 			int x1 = x0 + SCROLL_BAR_WIDTH + 1;
@@ -12364,7 +12533,7 @@ void s_dummyfunc()
 			int y0 = 0;
 			int y1 = size.y;
 
-			int showLineNum = (size.y) / (LABEL_SIZE_Y);
+			int showLineNum = max(0, ((size.y) / (LABEL_SIZE_Y)));
 
 			//ラインスクロールバー
 			if ((x2 <= e.localX) && (e.localX < x3) && 
@@ -12534,7 +12703,7 @@ void s_dummyfunc()
 
 			//ラベルスクロールバー
 			if (dragScrollBarLine && (lineDatasize > 0)){
-				int showLineNum = (y1 - y0) / (LABEL_SIZE_Y);
+				int showLineNum = max(0, ((y1 - y0) / (LABEL_SIZE_Y)));
 				int barSize = (y1 - y0) * showLineNum / lineDatasize;
 
 				int movableY = y1 - y0 - barSize;
@@ -12744,7 +12913,7 @@ void s_dummyfunc()
 			int y0 = 0;
 			int y1 = size.y;
 
-			int showLineNum = (size.y) / (LABEL_SIZE_Y);
+			int showLineNum = max(0, ((size.y) / (LABEL_SIZE_Y)));
 			if (showLineNum < lineDatasize){
 				showPosLine = max(0, min(_showPosLine, lineDatasize - showLineNum));
 			}
@@ -12761,7 +12930,7 @@ void s_dummyfunc()
 		}
 		void inView(int srcline)
 		{
-			int showLineNum = (size.y) / (LABEL_SIZE_Y);
+			int showLineNum = max(0, ((size.y) / (LABEL_SIZE_Y)));
 			//int currentline = getCurrentLine();
 
 			if ((srcline >= showPosLine) && (srcline <= (showPosLine + showLineNum))) {

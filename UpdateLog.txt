@@ -2,6 +2,16 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/07/16
+　GUI修正
+　　行選択時に行全体をオレンジにしていたのをオレンジのアンダーラインに変更
+
+　　名前取得時のインデックスチェックを修正
+
+　　リストの名前取得時にデータが無い場合にNoData文字列を返すように
+
+
+
 2024/07/15
 　OWP_ListBoxクラス新規
 
