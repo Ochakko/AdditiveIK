@@ -9,6 +9,10 @@ https://github.com/Ochakko/AdditiveIK
 
 　　StrMisc.h, StrMisc.cpp追加
 
+　　RigidParams(剛体設定)メニューの右ペインウインドウ調整
+　　　文字を大きくしてスクロールウインドウ対応
+　　
+
 
 
 2024/07/16

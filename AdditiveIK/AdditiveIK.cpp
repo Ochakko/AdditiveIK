@@ -2064,6 +2064,8 @@ static bool s_dofparamsFlag = false;
 
 
 static OrgWindow* s_rigidWnd = 0;
+static OWP_ScrollWnd* s_rigidSc = 0;
+static OWP_Separator* s_rigidspall = 0;
 static OWP_Separator* s_rigidsp0 = 0;
 static OWP_CheckBoxA* s_groupcheck = 0;
 static OWP_Slider* s_sphrateSlider = 0;
@@ -2132,7 +2134,14 @@ static OWP_Button* s_gDeeperB = 0;
 static OWP_Button* s_btforceDeeperB = 0;
 static OWP_Button* s_coliidDeeperB = 0;
 static OWP_Separator* s_coliseparator = 0;
-
+static OWP_Label* s_rigidspacerLabel01 = 0;
+static OWP_Label* s_rigidspacerLabel02 = 0;
+static OWP_Label* s_rigidspacerLabel03 = 0;
+static OWP_Label* s_rigidspacerLabel04 = 0;
+static OWP_Label* s_rigidspacerLabel05 = 0;
+static OWP_Label* s_rigidspacerLabel06 = 0;
+static OWP_Label* s_rigidspacerLabel07 = 0;
+static OWP_Label* s_rigidspacerLabel08 = 0;
 
 
 
@@ -42766,6 +42775,47 @@ int DestroyRigidWnd()
 		delete s_coliseparator;
 		s_coliseparator = 0;
 	}
+	if (s_rigidspacerLabel01) {
+		delete s_rigidspacerLabel01;
+		s_rigidspacerLabel01 = 0;
+	}
+	if (s_rigidspacerLabel02) {
+		delete s_rigidspacerLabel02;
+		s_rigidspacerLabel02 = 0;
+	}
+	if (s_rigidspacerLabel03) {
+		delete s_rigidspacerLabel03;
+		s_rigidspacerLabel03 = 0;
+	}
+	if (s_rigidspacerLabel04) {
+		delete s_rigidspacerLabel04;
+		s_rigidspacerLabel04 = 0;
+	}
+	if (s_rigidspacerLabel05) {
+		delete s_rigidspacerLabel05;
+		s_rigidspacerLabel05 = 0;
+	}
+	if (s_rigidspacerLabel06) {
+		delete s_rigidspacerLabel06;
+		s_rigidspacerLabel06 = 0;
+	}
+	if (s_rigidspacerLabel07) {
+		delete s_rigidspacerLabel07;
+		s_rigidspacerLabel07 = 0;
+	}
+	if (s_rigidspacerLabel08) {
+		delete s_rigidspacerLabel08;
+		s_rigidspacerLabel08 = 0;
+	}
+
+	if (s_rigidspall) {
+		delete s_rigidspall;
+		s_rigidspall = 0;
+	}
+	if (s_rigidSc) {
+		delete s_rigidSc;
+		s_rigidSc = 0;
+	}
 
 	return 0;
 }
@@ -42980,6 +43030,8 @@ void InitRigidWnd()
 
 	s_dsrigidctrls.clear();
 
+	s_rigidSc = 0;
+	s_rigidspall = 0;
 	s_sphrateSlider = 0;
 	s_boxzSlider = 0;
 	s_boxzlabel = 0;
@@ -43061,6 +43113,15 @@ void InitRigidWnd()
 	s_btforceDeeperB = 0;
 	s_coliidDeeperB = 0;
 	s_coliseparator = 0;
+	s_rigidspacerLabel01 = 0;
+	s_rigidspacerLabel02 = 0;
+	s_rigidspacerLabel03 = 0;
+	s_rigidspacerLabel04 = 0;
+	s_rigidspacerLabel05 = 0;
+	s_rigidspacerLabel06 = 0;
+	s_rigidspacerLabel07 = 0;
+	s_rigidspacerLabel08 = 0;
+
 
 }
 
@@ -43108,15 +43169,40 @@ int CreateRigidWnd()
 		0, 0, 0,				//カラー
 		true, true);					//サイズ変更の可否
 
+	int labelheight;
+	if (g_4kresolution) {
+		labelheight = 28;
+	}
+	else {
+		labelheight = 20;
+	}
+
 	if (s_rigidWnd) {
 		bool limitradionamelen = false;
 
-		s_rigidsp0 = new OWP_Separator(s_rigidWnd, true, 0.5, true);
+		s_rigidSc = new OWP_ScrollWnd(L"RigidScroll", true, labelheight);
+		if (!s_rigidSc) {
+			_ASSERT(0);
+			return 1;
+		}
+		int linedatasize = (int)(51.0 * 1.25);
+		s_rigidSc->setLineDataSize(linedatasize);//!!!!!!!!!!!!!
+		s_rigidWnd->addParts(*s_rigidSc);
+
+		s_rigidspall = new OWP_Separator(s_rigidWnd, true, 0.995, false, s_rigidSc);//スクロールの子供全体をまとめるセパレータ　縦分割
+		if (!s_rigidspall) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_rigidSc->addParts(*s_rigidspall);
+
+
+		s_rigidsp0 = new OWP_Separator(s_rigidWnd, true, 0.7, true);
 		if (!s_rigidsp0) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_rigidWnd->addParts(*s_rigidsp0);
+		//s_rigidWnd->addParts(*s_rigidsp0);
 
 		s_coliseparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
 		if (!s_coliseparator) {
@@ -43139,24 +43225,24 @@ int CreateRigidWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_thicknessSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.15, true);
+		s_thicknessSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.20, true);
 		if (!s_thicknessSeparator2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_depthSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.15, true);
+		s_depthSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.20, true);
 		if (!s_depthSeparator2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_massSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.15, true);
+		s_massSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.20, true);
 		if (!s_massSeparator2) {
 			_ASSERT(0);
 			return 1;
 		}
 
 
-		s_validSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.5, true);
+		s_validSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.50, true);
 		if (!s_validSeparator2) {
 			_ASSERT(0);
 			return 1;
@@ -43176,7 +43262,7 @@ int CreateRigidWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_restitutionSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
+		s_restitutionSeparator = new OWP_Separator(s_rigidWnd, true, 0.65, true);
 		if (!s_restitutionSeparator) {
 			_ASSERT(0);
 			return 1;
@@ -43202,62 +43288,62 @@ int CreateRigidWnd()
 			return 1;
 		}
 
-		s_thicknessDeeperB = new OWP_Button(L"ToDeeper");
+		s_thicknessDeeperB = new OWP_Button(L"ToDeeper", labelheight);
 		if (!s_thicknessDeeperB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_depthDeeperB = new OWP_Button(L"ToDeeper");
+		s_depthDeeperB = new OWP_Button(L"ToDeeper", labelheight);
 		if (!s_depthDeeperB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_massDeeperB = new OWP_Button(L"ToDeeper");
+		s_massDeeperB = new OWP_Button(L"ToDeeper", labelheight);
 		if (!s_massDeeperB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_validDeeperB = new OWP_Button(L"ToDeeper");
+		s_validDeeperB = new OWP_Button(L"ToDeeper", labelheight);
 		if (!s_validDeeperB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_forbidDeeperB = new OWP_Button(L"ToDeeper");
+		s_forbidDeeperB = new OWP_Button(L"ToDeeper", labelheight);
 		if (!s_forbidDeeperB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_colDeeperB = new OWP_Button(L"ToDeeper");
+		s_colDeeperB = new OWP_Button(L"ToDeeper", labelheight);
 		if (!s_colDeeperB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_springDeeperB = new OWP_Button(L"ToDeeper");
+		s_springDeeperB = new OWP_Button(L"ToDeeper", labelheight);
 		if (!s_springDeeperB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_restitutionDeeperB = new OWP_Button(L"ToDeeper");
+		s_restitutionDeeperB = new OWP_Button(L"ToDeeper", labelheight);
 		if (!s_restitutionDeeperB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_dumpingDeeperB = new OWP_Button(L"ToDeeper");
+		s_dumpingDeeperB = new OWP_Button(L"ToDeeper", labelheight);
 		if (!s_dumpingDeeperB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_gDeeperB = new OWP_Button(L"ToDeeper");
+		s_gDeeperB = new OWP_Button(L"ToDeeper", labelheight);
 		if (!s_gDeeperB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_btforceDeeperB = new OWP_Button(L"ToDeeper");
+		s_btforceDeeperB = new OWP_Button(L"ToDeeper", labelheight);
 		if (!s_btforceDeeperB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_coliidDeeperB = new OWP_Button(L"ToDeeper");
+		s_coliidDeeperB = new OWP_Button(L"ToDeeper", labelheight);
 		if (!s_coliidDeeperB) {
 			_ASSERT(0);
 			return 1;
@@ -43266,23 +43352,23 @@ int CreateRigidWnd()
 
 
 
-		s_groupcheck = new OWP_CheckBoxA(L"ToAll_MeansToSetToSameGroupRigids", 0);
+		s_groupcheck = new OWP_CheckBoxA(L"ToAll=ToGroup", 0, labelheight);
 		if (!s_groupcheck) {
 			_ASSERT(0);
 			return 1;
 		}
 
-		s_sphrateSlider = new OWP_Slider(0.6, 20.0, 0.0);
+		s_sphrateSlider = new OWP_Slider(0.6, 20.0, 0.0, labelheight);
 		if (!s_sphrateSlider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_boxzSlider = new OWP_Slider(0.6, 20.0, 0.0);
+		s_boxzSlider = new OWP_Slider(0.6, 20.0, 0.0, labelheight);
 		if (!s_boxzSlider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_massSlider = new OWP_Slider(g_initmass, 30.0, 0.0);
+		s_massSlider = new OWP_Slider(g_initmass, 30.0, 0.0, labelheight);
 		if (!s_massSlider) {
 			_ASSERT(0);
 			return 1;
@@ -43290,37 +43376,37 @@ int CreateRigidWnd()
 		//s_massSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
 		//s_massSeparator1 = new OWP_Separator(s_rigidWnd, true, 0.5, true);
 		//s_massSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		s_massB = new OWP_Button(L"MassToAll");
+		s_massB = new OWP_Button(L"MassToAll", labelheight);
 		if (!s_massB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_thicknessB = new OWP_Button(L"ThicknessToAll");
+		s_thicknessB = new OWP_Button(L"ThicknessToAll", labelheight);
 		if (!s_thicknessB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_depthB = new OWP_Button(L"DepthToAll");
+		s_depthB = new OWP_Button(L"DepthToAll", labelheight);
 		if (!s_depthB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_massspacelabel = new OWP_Label(L"(Space4)");
+		s_massspacelabel = new OWP_Label(L"(Space4)", labelheight);
 		if (!s_massspacelabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_validSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
+		s_validSeparator = new OWP_Separator(s_rigidWnd, true, 0.60, true);
 		if (!s_validSeparator) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skipB = new OWP_Button(L"ToAll");
+		s_skipB = new OWP_Button(L"ToAll", labelheight);
 		if (!s_skipB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_rigidskip = new OWP_CheckBoxA(L"Valid/Invalid (有効/無効)", 1);
+		s_rigidskip = new OWP_CheckBoxA(L"Valid/Invalid (有効/無効)", 1, labelheight);
 		if (!s_rigidskip) {
 			_ASSERT(0);
 			return 1;
@@ -43330,30 +43416,30 @@ int CreateRigidWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_forbidB = new OWP_Button(L"ToAll");
+		s_forbidB = new OWP_Button(L"ToAll", labelheight);
 		if (!s_forbidB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_forbidrot = new OWP_CheckBoxA(L"ForbidRot", 0);
+		s_forbidrot = new OWP_CheckBoxA(L"ForbidRot", 0, labelheight);
 		if (!s_forbidrot) {
 			_ASSERT(0);
 			return 1;
 		}
 		//s_allrigidenableB = new OWP_Button(L"ValidateAllRigids");
 		//s_allrigiddisableB = new OWP_Button(L"InvalidateAllRigids");
-		s_btgSlider = new OWP_Slider(-1.0, 1.0, -1.0);
+		s_btgSlider = new OWP_Slider(-1.0, 1.0, -1.0, labelheight);
 		if (!s_btgSlider) {
 			_ASSERT(0);
 			return 1;
 		}
 		//s_btgscSlider = new OWP_Slider(10.0, 100.0, 0.0);
-		s_btgscSlider = new OWP_Slider(10.0, 200.0, 0.0);//2024/04/15 200.0
+		s_btgscSlider = new OWP_Slider(10.0, 200.0, 0.0, labelheight);//2024/04/15 200.0
 		if (!s_btgscSlider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_btgB = new OWP_Button(L"GToAll");
+		s_btgB = new OWP_Button(L"GToAll", labelheight);
 		if (!s_btgB) {
 			_ASSERT(0);
 			return 1;
@@ -43363,62 +43449,62 @@ int CreateRigidWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_btforce = new OWP_CheckBoxA(L"RigidBodySimulation", 0);
+		s_btforce = new OWP_CheckBoxA(L"RigidBodySimulation", 0, labelheight);
 		if (!s_btforce) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_btforceB = new OWP_Button(L"ToAll");
+		s_btforceB = new OWP_Button(L"ToAll", labelheight);
 		if (!s_btforceB) {
 			_ASSERT(0);
 			return 1;
 		}
 
-		s_shplabel = new OWP_Label(L"Thickness");
+		s_shplabel = new OWP_Label(L"Thickness", labelheight);
 		if (!s_shplabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_boxzlabel = new OWP_Label(L"Depth");
+		s_boxzlabel = new OWP_Label(L"Depth", labelheight);
 		if (!s_boxzlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_massSLlabel = new OWP_Label(L"Mass");
+		s_massSLlabel = new OWP_Label(L"Mass", labelheight);
 		if (!s_massSLlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_btglabel = new OWP_Label(L"Gravity");
+		s_btglabel = new OWP_Label(L"Gravity", labelheight);
 		if (!s_btglabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_btgsclabel = new OWP_Label(L"ScaleOfGravity");
+		s_btgsclabel = new OWP_Label(L"ScaleOfGravity", labelheight);
 		if (!s_btgsclabel) {
 			_ASSERT(0);
 			return 1;
 		}
 
-		s_namelabel = new OWP_Label(L"BonaName:????");
+		s_namelabel = new OWP_Label(L"BonaName:????", labelheight);
 		if (!s_namelabel) {
 			_ASSERT(0);
 			return 1;
 		}
 
-		s_lenglabel = new OWP_Label(L"BoneLength:*****[m]");
+		s_lenglabel = new OWP_Label(L"BoneLength:*****[m]", labelheight);
 		if (!s_lenglabel) {
 			_ASSERT(0);
 			return 1;
 		}
 
 
-		s_kB = new OWP_Button(L"SpringParamsToAll");
+		s_kB = new OWP_Button(L"SpringParamsToAll", labelheight);
 		if (!s_kB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_restB = new OWP_Button(L"RestitutionAndFrictionToAll");
+		s_restB = new OWP_Button(L"RestitutionAndFrictionToAll", labelheight);
 		if (!s_restB) {
 			_ASSERT(0);
 			return 1;
@@ -43429,12 +43515,12 @@ int CreateRigidWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_colB = new OWP_Button(L"ToAll");
+		s_colB = new OWP_Button(L"ToAll", labelheight);
 		if (!s_colB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_colradio = new OWP_RadioButton(L"Cone", limitradionamelen, 15);
+		s_colradio = new OWP_RadioButton(L"Cone", limitradionamelen, labelheight);
 		if (!s_colradio) {
 			_ASSERT(0);
 			return 1;
@@ -43443,7 +43529,7 @@ int CreateRigidWnd()
 		s_colradio->addLine(L"Sphere");
 		s_colradio->addLine(L"Rectangular");
 
-		s_lkradio = new OWP_RadioButton(L"[posSpring]very weak", limitradionamelen, 15);
+		s_lkradio = new OWP_RadioButton(L"[posSpring]very weak", limitradionamelen, labelheight);
 		if (!s_lkradio) {
 			_ASSERT(0);
 			return 1;
@@ -43454,18 +43540,18 @@ int CreateRigidWnd()
 
 		//s_lkSlider = new OWP_Slider(g_initcuslk, 1e6, 1e4);//60000
 		//s_lkSlider = new OWP_Slider(g_initcuslk, 1e10, 1e8);//60000
-		s_lkSlider = new OWP_Slider(g_initcuslk, 1e4, 1e2);//60000
+		s_lkSlider = new OWP_Slider(g_initcuslk, 1e4, 1e2, labelheight);//60000
 		if (!s_lkSlider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_lklabel = new OWP_Label(L"posSpring customValue");
+		s_lklabel = new OWP_Label(L"posSpring customValue", labelheight);
 		if (!s_lklabel) {
 			_ASSERT(0);
 			return 1;
 		}
 
-		s_akradio = new OWP_RadioButton(L"[rotSpring]very weak", limitradionamelen, 15);
+		s_akradio = new OWP_RadioButton(L"[rotSpring]very weak", limitradionamelen, labelheight);
 		if (!s_akradio) {
 			_ASSERT(0);
 			return 1;
@@ -43479,72 +43565,112 @@ int CreateRigidWnd()
 		//s_akSlider = new OWP_Slider(g_initcusak, 3000.0f, 30.0f);//300
 		//s_akSlider = new OWP_Slider(g_initcusak, 3000.0f, 10.0f);//300 ver10024
 		//s_akSlider = new OWP_Slider(g_initcusak, 3000.0f, 2.0f);//2022/07/19
-		s_akSlider = new OWP_Slider(g_initcusak, 500.0f, 0.0f);//2024/04/15 柔らかい設定へシフト　硬い設定が必要になった場合にはScaleSliderを追加して対応予定
+		s_akSlider = new OWP_Slider(g_initcusak, 500.0f, 0.0f, labelheight);//2024/04/15 柔らかい設定へシフト　硬い設定が必要になった場合にはScaleSliderを追加して対応予定
 		if (!s_akSlider) {
 			_ASSERT(0);
 			return 1;
 		}
 		//s_akSlider = new OWP_Slider(g_initcusak, 1.0f, 0.0f);//2023/01/18
-		s_aklabel = new OWP_Label(L"rotSpring customValue");
+		s_aklabel = new OWP_Label(L"rotSpring customValue", labelheight);
 		if (!s_aklabel) {
 			_ASSERT(0);
 			return 1;
 		}
 
-		s_restSlider = new OWP_Slider(0.5f, 1.0f, 0.0f);
+		s_restSlider = new OWP_Slider(0.5f, 1.0f, 0.0f, labelheight);
 		if (!s_restSlider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_restlabel = new OWP_Label(L"RigidRestitution");
+		s_restlabel = new OWP_Label(L"RigidRestitution", labelheight);
 		if (!s_restlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_fricSlider = new OWP_Slider(0.5f, 1.0f, 0.0f);
+		s_fricSlider = new OWP_Slider(0.5f, 1.0f, 0.0f, labelheight);
 		if (!s_fricSlider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_friclabel = new OWP_Label(L"RigidFriction");
+		s_friclabel = new OWP_Label(L"RigidFriction", labelheight);
 		if (!s_friclabel) {
 			_ASSERT(0);
 			return 1;
 		}
 
 
-		s_ldmplabel = new OWP_Label(L"[posSpring]rateOfDumping");
+		s_ldmplabel = new OWP_Label(L"[posSpring]rateOfDumping", labelheight);
 		if (!s_ldmplabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_admplabel = new OWP_Label(L"[rotSpring]rateOfDumping");
+		s_admplabel = new OWP_Label(L"[rotSpring]rateOfDumping", labelheight);
 		if (!s_admplabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_ldmpSlider = new OWP_Slider(g_l_dmp, 1.0, 0.0);
+		s_ldmpSlider = new OWP_Slider(g_l_dmp, 1.0, 0.0, labelheight);
 		if (!s_ldmpSlider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_admpSlider = new OWP_Slider(g_a_dmp, 1.0, 0.0);
+		s_admpSlider = new OWP_Slider(g_a_dmp, 1.0, 0.0, labelheight);
 		if (!s_admpSlider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_dmpB = new OWP_Button(L"DumpingToAll");
+		s_dmpB = new OWP_Button(L"DumpingToAll", labelheight);
 		if (!s_dmpB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_groupB = new OWP_Button(L"Conflict");
+		s_groupB = new OWP_Button(L"Conflict", labelheight);
 		if (!s_groupB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_gcoliB = new OWP_Button(L"GConflict");
+		s_gcoliB = new OWP_Button(L"GConflict", labelheight);
 		if (!s_gcoliB) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_rigidspacerLabel01 = new OWP_Label(L"     ", labelheight);
+		if (!s_rigidspacerLabel01) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_rigidspacerLabel02 = new OWP_Label(L"     ", labelheight);
+		if (!s_rigidspacerLabel02) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_rigidspacerLabel03 = new OWP_Label(L"     ", labelheight);
+		if (!s_rigidspacerLabel03) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_rigidspacerLabel04 = new OWP_Label(L"     ", labelheight);
+		if (!s_rigidspacerLabel04) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_rigidspacerLabel05 = new OWP_Label(L"     ", labelheight);
+		if (!s_rigidspacerLabel05) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_rigidspacerLabel06 = new OWP_Label(L"     ", labelheight);
+		if (!s_rigidspacerLabel06) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_rigidspacerLabel07 = new OWP_Label(L"     ", labelheight);
+		if (!s_rigidspacerLabel07) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_rigidspacerLabel08 = new OWP_Label(L"     ", labelheight);
+		if (!s_rigidspacerLabel08) {
 			_ASSERT(0);
 			return 1;
 		}
@@ -43588,54 +43714,57 @@ int CreateRigidWnd()
 
 		int slw = 350;
 
-		s_sphrateSlider->setSize(WindowSize(slw, 40));
-		s_boxzSlider->setSize(WindowSize(slw, 40));
-		s_massSlider->setSize(WindowSize(slw, 40));
-		s_btgSlider->setSize(WindowSize(slw, 40));
-		s_btgscSlider->setSize(WindowSize(slw, 40));
-		s_ldmpSlider->setSize(WindowSize(slw, 40));
-		s_admpSlider->setSize(WindowSize(slw, 40));
-		s_lkSlider->setSize(WindowSize(slw, 40));
-		s_akSlider->setSize(WindowSize(slw, 40));
-		s_restSlider->setSize(WindowSize(slw, 40));
-		s_fricSlider->setSize(WindowSize(slw, 40));
+		s_sphrateSlider->setSize(WindowSize(slw, labelheight));
+		s_boxzSlider->setSize(WindowSize(slw, labelheight));
+		s_massSlider->setSize(WindowSize(slw, labelheight));
+		s_btgSlider->setSize(WindowSize(slw, labelheight));
+		s_btgscSlider->setSize(WindowSize(slw, labelheight));
+		s_ldmpSlider->setSize(WindowSize(slw, labelheight));
+		s_admpSlider->setSize(WindowSize(slw, labelheight));
+		s_lkSlider->setSize(WindowSize(slw, labelheight));
+		s_akSlider->setSize(WindowSize(slw, labelheight));
+		s_restSlider->setSize(WindowSize(slw, labelheight));
+		s_fricSlider->setSize(WindowSize(slw, labelheight));
 
 
 
+		s_rigidspall->addParts1(*s_rigidsp0);
 		s_rigidsp0->addParts1(*s_namelabel);
 		s_rigidsp0->addParts2(*s_groupcheck);
 		//s_rigidWnd->addParts(*s_namelabel);
 		//s_rigidWnd->addParts(*s_groupcheck);
+		s_rigidspall->addParts1(*s_rigidspacerLabel01);
 
-		s_rigidWnd->addParts(*s_thicknessSeparator2);
+		s_rigidspall->addParts1(*s_thicknessSeparator2);
 		s_thicknessSeparator2->addParts1(*s_shplabel);
 		s_thicknessSeparator2->addParts2(*s_sphrateSlider);
-		s_rigidWnd->addParts(*s_thicknessSeparator);
+		s_rigidspall->addParts1(*s_thicknessSeparator);
 		s_thicknessSeparator->addParts1(*s_thicknessB);
 		s_thicknessSeparator->addParts2(*s_thicknessDeeperB);
-		//s_rigidWnd->addParts(*s_thicknessB);
+		//s_rigidspall->addParts1(*s_thicknessB);
 
-		s_rigidWnd->addParts(*s_depthSeparator2);
+		s_rigidspall->addParts1(*s_depthSeparator2);
 		s_depthSeparator2->addParts1(*s_boxzlabel);
 		s_depthSeparator2->addParts2(*s_boxzSlider);
-		s_rigidWnd->addParts(*s_depthSeparator);
+		s_rigidspall->addParts1(*s_depthSeparator);
 		s_depthSeparator->addParts1(*s_depthB);
 		s_depthSeparator->addParts2(*s_depthDeeperB);
-		//s_rigidWnd->addParts(*s_depthB);
+		//s_rigidspall->addParts1(*s_depthB);
 
-		s_rigidWnd->addParts(*s_massSeparator2);
+		s_rigidspall->addParts1(*s_massSeparator2);
 		s_massSeparator2->addParts1(*s_massSLlabel);
 		s_massSeparator2->addParts2(*s_massSlider);
-		s_rigidWnd->addParts(*s_massSeparator);
+		s_rigidspall->addParts1(*s_massSeparator);
 		s_massSeparator->addParts1(*s_massB);
 		s_massSeparator->addParts2(*s_massDeeperB);
-		//s_rigidWnd->addParts(*s_massB);
+		//s_rigidspall->addParts1(*s_massB);
+		s_rigidspall->addParts1(*s_rigidspacerLabel02);
 
-		////s_rigidWnd->addParts(*s_massB);
+		////s_rigidspall->addParts1(*s_massB);
 		////s_massB->setColor(64, 128, 128);
 		////s_thicknessB->setColor(64, 128, 128);
 		////s_depthB->setColor(64, 128, 128);
-		//s_rigidWnd->addParts(*s_massSeparator);
+		//s_rigidspall->addParts1(*s_massSeparator);
 		//s_massSeparator->addParts1(*s_massSeparator1);
 		//s_massSeparator->addParts2(*s_massSeparator2);
 		//s_massSeparator1->addParts1(*s_massB);
@@ -43643,92 +43772,99 @@ int CreateRigidWnd()
 		//s_massSeparator2->addParts1(*s_depthB);
 		////s_massSeparator2->addParts2(*s_massspacelabel);
 
-		s_rigidWnd->addParts(*s_lenglabel);
+		s_rigidspall->addParts1(*s_lenglabel);
 
-		s_rigidWnd->addParts(*s_validSeparator);
+		s_rigidspall->addParts1(*s_validSeparator);
 		s_validSeparator->addParts1(*s_rigidskip);
 		s_validSeparator->addParts2(*s_validSeparator2);
 		s_validSeparator2->addParts1(*s_skipB);
 		s_validSeparator2->addParts2(*s_validDeeperB);
 		//s_validSeparator->addParts2(*s_skipB);
-		////s_rigidWnd->addParts(*s_rigidskip);
+		////s_rigidspall->addParts1(*s_rigidskip);
 
-		s_rigidWnd->addParts(*s_forbidSeparator);
+		s_rigidspall->addParts1(*s_forbidSeparator);
 		s_forbidSeparator->addParts1(*s_forbidrot);
 		s_forbidSeparator->addParts2(*s_forbidSeparator2);
 		s_forbidSeparator2->addParts1(*s_forbidB);
 		s_forbidSeparator2->addParts2(*s_forbidDeeperB);
 		//s_forbidSeparator->addParts2(*s_forbidB);
-		////s_rigidWnd->addParts(*s_forbidrot);
-		////s_rigidWnd->addParts(*s_allrigidenableB);
-		////s_rigidWnd->addParts(*s_allrigiddisableB);
+		////s_rigidspall->addParts1(*s_forbidrot);
+		////s_rigidspall->addParts1(*s_allrigidenableB);
+		////s_rigidspall->addParts1(*s_allrigiddisableB);
+		s_rigidspall->addParts1(*s_rigidspacerLabel03);
 
-
-		s_rigidWnd->addParts(*s_colSeparator);
+		s_rigidspall->addParts1(*s_colSeparator);
 		s_colSeparator->addParts1(*s_colradio);
 		s_colSeparator->addParts2(*s_colSeparator2);
 		s_colSeparator2->addParts1(*s_colB);
 		s_colSeparator2->addParts2(*s_colDeeperB);
 		//s_colSeparator->addParts2(*s_colB);
-		////s_rigidWnd->addParts(*s_colradio);
+		////s_rigidspall->addParts1(*s_colradio);
+		s_rigidspall->addParts1(*s_rigidspacerLabel04);
 
-		s_rigidWnd->addParts(*s_lkradio);
-		s_rigidWnd->addParts(*s_lklabel);
-		s_rigidWnd->addParts(*s_lkSlider);
-		s_rigidWnd->addParts(*s_akradio);
-		s_rigidWnd->addParts(*s_aklabel);
-		s_rigidWnd->addParts(*s_akSlider);
-		s_rigidWnd->addParts(*s_springSeparator);
+		s_rigidspall->addParts1(*s_lkradio);
+		s_rigidspall->addParts1(*s_lklabel);
+		s_rigidspall->addParts1(*s_lkSlider);
+		s_rigidspall->addParts1(*s_akradio);
+		s_rigidspall->addParts1(*s_aklabel);
+		s_rigidspall->addParts1(*s_akSlider);
+		s_rigidspall->addParts1(*s_springSeparator);
 		s_springSeparator->addParts1(*s_kB);
 		s_springSeparator->addParts2(*s_springDeeperB);
-		//s_rigidWnd->addParts(*s_kB);
+		//s_rigidspall->addParts1(*s_kB);
+		s_rigidspall->addParts1(*s_rigidspacerLabel05);
 
-		s_rigidWnd->addParts(*s_restlabel);
-		s_rigidWnd->addParts(*s_restSlider);
-		s_rigidWnd->addParts(*s_friclabel);
-		s_rigidWnd->addParts(*s_fricSlider);
-		s_rigidWnd->addParts(*s_restitutionSeparator);
+		s_rigidspall->addParts1(*s_restlabel);
+		s_rigidspall->addParts1(*s_restSlider);
+		s_rigidspall->addParts1(*s_friclabel);
+		s_rigidspall->addParts1(*s_fricSlider);
+		s_rigidspall->addParts1(*s_restitutionSeparator);
 		s_restitutionSeparator->addParts1(*s_restB);
 		s_restitutionSeparator->addParts2(*s_restitutionDeeperB);
-		//s_rigidWnd->addParts(*s_restB);
+		//s_rigidspall->addParts1(*s_restB);
+		s_rigidspall->addParts1(*s_rigidspacerLabel06);
 
-
-		s_rigidWnd->addParts(*s_ldmplabel);
-		s_rigidWnd->addParts(*s_ldmpSlider);
-		s_rigidWnd->addParts(*s_admplabel);
-		s_rigidWnd->addParts(*s_admpSlider);
-		s_rigidWnd->addParts(*s_dumpingSeparator);
+		s_rigidspall->addParts1(*s_ldmplabel);
+		s_rigidspall->addParts1(*s_ldmpSlider);
+		s_rigidspall->addParts1(*s_admplabel);
+		s_rigidspall->addParts1(*s_admpSlider);
+		s_rigidspall->addParts1(*s_dumpingSeparator);
 		s_dumpingSeparator->addParts1(*s_dmpB);
 		s_dumpingSeparator->addParts2(*s_dumpingDeeperB);
-		//s_rigidWnd->addParts(*s_dmpB);
+		//s_rigidspall->addParts1(*s_dmpB);
+		s_rigidspall->addParts1(*s_rigidspacerLabel07);
 
-		s_rigidWnd->addParts(*s_btglabel);
-		s_rigidWnd->addParts(*s_btgSlider);
-		s_rigidWnd->addParts(*s_btgsclabel);
-		s_rigidWnd->addParts(*s_btgscSlider);
+		s_rigidspall->addParts1(*s_btglabel);
+		s_rigidspall->addParts1(*s_btgSlider);
+		s_rigidspall->addParts1(*s_btgsclabel);
+		s_rigidspall->addParts1(*s_btgscSlider);
 
-		s_rigidWnd->addParts(*s_gSeparator);
+		s_rigidspall->addParts1(*s_gSeparator);
 		s_gSeparator->addParts1(*s_btgB);
 		s_gSeparator->addParts2(*s_gDeeperB);
-		//s_rigidWnd->addParts(*s_btgB);
+		//s_rigidspall->addParts1(*s_btgB);
+		s_rigidspall->addParts1(*s_rigidspacerLabel08);
 
-		//s_rigidWnd->addParts(*s_btforce);
-		s_rigidWnd->addParts(*s_btforceSeparator);
+		//s_rigidspall->addParts1(*s_btforce);
+		s_rigidspall->addParts1(*s_btforceSeparator);
 		s_btforceSeparator->addParts1(*s_btforce);
 		s_btforceSeparator->addParts2(*s_btforceSeparator2);
 		s_btforceSeparator2->addParts1(*s_btforceB);
 		s_btforceSeparator2->addParts2(*s_btforceDeeperB);
 		//s_btforceSeparator->addParts2(*s_btforceB);
 
-		s_rigidWnd->addParts(*s_coliidSeparator);
+		s_rigidspall->addParts1(*s_coliidSeparator);
 		//s_coliidSeparator->addParts1(*s_groupB);
 		s_coliidSeparator->addParts1(*s_coliseparator);
 		s_coliidSeparator->addParts2(*s_coliidDeeperB);
 		s_coliseparator->addParts1(*s_groupB);
 		s_coliseparator->addParts2(*s_gcoliB);
-		//s_rigidWnd->addParts(*s_groupB);
-		//s_rigidWnd->addParts(*s_gcoliB);
+		//s_rigidspall->addParts1(*s_groupB);
+		//s_rigidspall->addParts1(*s_gcoliB);
 		/////////
+
+
+
 		s_dsrigidctrls.push_back(s_namelabel);
 		s_dsrigidctrls.push_back(s_groupcheck);
 		s_dsrigidctrls.push_back(s_shplabel);
@@ -44443,6 +44579,10 @@ int CreateRigidWnd()
 				s_model->SetAllBtforceData(s_reindexmap[s_model], kinflag);
 			}
 			});
+
+
+
+		//s_rigidSc->autoResize();
 
 		s_rigidWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
 		s_rigidWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
