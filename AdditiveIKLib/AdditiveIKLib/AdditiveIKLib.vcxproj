@@ -238,6 +238,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdafx.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="..\CPP\StrMisc.cpp" />
     <ClCompile Include="..\CPP\TexBank.cpp" />
     <ClCompile Include="..\CPP\TexElem.cpp" />
     <ClCompile Include="..\CPP\ThreadingBase.cpp" />
@@ -616,6 +617,7 @@
     <ClInclude Include="..\INCLUDE\ShadowParamsFile.h" />
     <ClInclude Include="..\INCLUDE\SkyParamsFile.h" />
     <ClInclude Include="..\INCLUDE\stdafx.h" />
+    <ClInclude Include="..\INCLUDE\StrMisc.h" />
     <ClInclude Include="..\INCLUDE\TexBank.h" />
     <ClInclude Include="..\INCLUDE\TexElem.h" />
     <ClInclude Include="..\INCLUDE\ThreadingBase.h" />

@@ -92,6 +92,8 @@
 #include "MotFilter.h"
 #include <MotionPoint.h>
 
+#include <StrMisc.h>
+
 #include "DSUpdateUnderTracking.h"
 #include "PluginElem.h"
 
@@ -2466,7 +2468,6 @@ static vector<CBone*> s_pasteRJoint;
 static int SetRJoint(int srcboneno);
 static void AddRJointReq(CBone* srcbone);
 
-static int ShortenNameW(const WCHAR* srcname, WCHAR* dstname, int dstbufleng, int cpmaxleng);
 
 //static int WriteTBOFile();
 //static bool LoadTBOFile();
@@ -41087,12 +41088,20 @@ int CreateDispGroupWnd()
 		0, 0, 0,				//カラー
 		true, true);					//サイズ変更の可否
 
+	int labelheight;
+	if (g_4kresolution) {
+		labelheight = 24;
+	}
+	else {
+		labelheight = 20;
+	}
+
 	if (s_groupWnd) {
 
 		s_groupWnd->setSizeMin(WindowSize(150, 150));		// 最小サイズを設定
 
 
-		s_groupsetB = new OWP_Button(L"Set", 20);
+		s_groupsetB = new OWP_Button(L"Set", labelheight);
 		if (!s_groupsetB) {
 			_ASSERT(0);
 			if (oldcursor != NULL) {
@@ -41100,7 +41109,7 @@ int CreateDispGroupWnd()
 			}
 			return 1;
 		}
-		s_groupgetB = new OWP_Button(L"Get", 20);
+		s_groupgetB = new OWP_Button(L"Get", labelheight);
 		if (!s_groupgetB) {
 			_ASSERT(0);
 			if (oldcursor != NULL) {
@@ -41113,7 +41122,7 @@ int CreateDispGroupWnd()
 		//	_ASSERT(0);
 		//	return 1;
 		//}
-		s_grouponB = new OWP_Button(L"ON", 20);
+		s_grouponB = new OWP_Button(L"ON", labelheight);
 		if (!s_grouponB) {
 			_ASSERT(0);
 			if (oldcursor != NULL) {
@@ -41121,7 +41130,7 @@ int CreateDispGroupWnd()
 			}
 			return 1;
 		}
-		s_groupoffB = new OWP_Button(L"OFF", 20);
+		s_groupoffB = new OWP_Button(L"OFF", labelheight);
 		if (!s_groupoffB) {
 			_ASSERT(0);
 			if (oldcursor != NULL) {
@@ -41129,7 +41138,7 @@ int CreateDispGroupWnd()
 			}
 			return 1;
 		}
-		s_groupclearB = new OWP_Button(L"Clear", 20);
+		s_groupclearB = new OWP_Button(L"Clear", labelheight);
 		if (!s_groupclearB) {
 			_ASSERT(0);
 			if (oldcursor != NULL) {
@@ -41137,7 +41146,7 @@ int CreateDispGroupWnd()
 			}
 			return 1;
 		}
-		s_grouplabel11 = new OWP_Label(L"---------", 20);
+		s_grouplabel11 = new OWP_Label(L"---------", labelheight);
 		if (!s_grouplabel11) {
 			_ASSERT(0);
 			if (oldcursor != NULL) {
@@ -41145,7 +41154,7 @@ int CreateDispGroupWnd()
 			}
 			return 1;
 		}
-		s_grouplabel12 = new OWP_Label(L"---------", 20);
+		s_grouplabel12 = new OWP_Label(L"---------", labelheight);
 		if (!s_grouplabel12) {
 			_ASSERT(0);
 			if (oldcursor != NULL) {
@@ -41153,7 +41162,7 @@ int CreateDispGroupWnd()
 			}
 			return 1;
 		}
-		s_grouplabel21 = new OWP_Label(L"---------", 20);
+		s_grouplabel21 = new OWP_Label(L"---------", labelheight);
 		if (!s_grouplabel21) {
 			_ASSERT(0);
 			if (oldcursor != NULL) {
@@ -41161,7 +41170,7 @@ int CreateDispGroupWnd()
 			}
 			return 1;
 		}
-		s_grouplabel22 = new OWP_Label(L"---------", 20);
+		s_grouplabel22 = new OWP_Label(L"---------", labelheight);
 		if (!s_grouplabel22) {
 			_ASSERT(0);
 			if (oldcursor != NULL) {
@@ -41175,7 +41184,7 @@ int CreateDispGroupWnd()
 		for (groupindex0 = 0; groupindex0 < MAXDISPGROUPNUM; groupindex0++) {
 			WCHAR groupname[256] = { 0L };
 			swprintf_s(groupname, 256, L"%02d", groupindex0 + 1);
-			s_groupselect[groupindex0] = new OWP_CheckBoxA(groupname, false, 20);
+			s_groupselect[groupindex0] = new OWP_CheckBoxA(groupname, false, labelheight);
 			if (!s_groupselect[groupindex0]) {
 				_ASSERT(0);
 				if (oldcursor != NULL) {
@@ -41185,7 +41194,7 @@ int CreateDispGroupWnd()
 			}
 		}
 
-		int result = s_model->SetDispGroupGUI(s_groupobjvec, s_groupmqoobjvec);
+		int result = s_model->SetDispGroupGUI(s_groupobjvec, s_groupmqoobjvec, labelheight);
 		if (result != 0) {
 			_ASSERT(0);
 			if (oldcursor != NULL) {
@@ -41223,7 +41232,7 @@ int CreateDispGroupWnd()
 
 
 		//スクロールウインドウ		
-		s_groupSCWnd = new OWP_ScrollWnd(L"DispGroupScWnd", true, 20);
+		s_groupSCWnd = new OWP_ScrollWnd(L"DispGroupScWnd", true, labelheight);
 		if (!s_groupSCWnd) {
 			_ASSERT(0);
 			if (oldcursor != NULL) {
@@ -41276,7 +41285,7 @@ int CreateDispGroupWnd()
 		for (lineno = 0; lineno < s_grouplinenum; lineno++) {
 			s_groupsp3->addParts1(*(s_groupobjvec[lineno]));
 
-			OWP_Button* testbutton = new OWP_Button(L"Test", 20);
+			OWP_Button* testbutton = new OWP_Button(L"Test", labelheight);
 			if (!testbutton) {
 				_ASSERT(0);
 				if (oldcursor != NULL) {
@@ -74504,47 +74513,3 @@ bool ChkEnableIK()
 	return true;
 }
 
-int ShortenNameW(const WCHAR* srcname, WCHAR* dstname, int dstbufleng, int cpmaxleng)
-{
-	if (!srcname || !dstname) {
-		_ASSERT(0);
-		return 1;
-	}
-	if (dstbufleng <= 0) {
-		_ASSERT(0);
-		return 1;
-	}
-	if ((cpmaxleng <= 0) || (cpmaxleng >= 1024)) {
-		_ASSERT(0);
-		return 1;
-	}
-	int nameleng = (int)wcslen(srcname);
-	if ((nameleng <= 0) || (nameleng >= 1024)) {
-		_ASSERT(0);
-		return 1;
-	}
-
-	WCHAR filename[1024] = { 0L };
-	WCHAR printname[1024] = { 0L };
-	ZeroMemory(filename, sizeof(WCHAR) * 1024);
-	ZeroMemory(printname, sizeof(WCHAR) * 1024);
-
-	wcscpy_s(filename, 1024, srcname);
-	int cpleng;
-	if (nameleng <= cpmaxleng) {
-		cpleng = nameleng;
-	}
-	else {
-		cpleng = cpmaxleng;
-	}
-	wcsncpy_s(printname, 1024, filename, cpleng);
-
-	if (cpleng < dstbufleng) {
-		wcscpy_s(dstname, dstbufleng, printname);
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-	return 0;
-}

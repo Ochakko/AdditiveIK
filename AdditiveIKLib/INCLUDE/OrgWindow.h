@@ -11,12 +11,13 @@
 #include <process.h>
 #include <functional>
 #include <vector>
-#include <gdiplus.h>
+//#include <gdiplus.h>
 
 
 //#include <d3dx9.h>
 #include <ChaVecCalc.h>
 
+#include <StrMisc.h>
 
 //#define EULPOOLBLKLEN	2048
 //#define EULPOOLBLKLEN	65536
@@ -88,137 +89,6 @@ static double TIME_ERROR_WIDTH = 0.0001;
 
 class CModel;
 class CRMenuMain;
-
-static int DrawGdiplusButton(Gdiplus::Image* srcimage, HDC srchdc,
-	int drawposx, int drawposy, int drawwidth, int drawheight, float srcalpha);
-static int DrawGdiplusButtonStretch(Gdiplus::Image* srcimage, HDC srchdc,
-	int drawposx, int drawposy, 
-	int srcw, int srch, int dstw, int dsth, float srcalpha);
-static bool CalcTextExtent(HDC hdc, const WCHAR* srcname, SIZE* pspacesize, SIZE* pnamesize);
-
-int DrawGdiplusButton(Gdiplus::Image* srcimage, HDC srchdc,
-	int drawposx, int drawposy, int drawwidth, int drawheight, float srcalpha)
-{
-	if (!srcimage) {
-		_ASSERT(0);
-		return 1;
-	}
-	if (srchdc == NULL) {
-		_ASSERT(0);
-		return 1;
-	}
-
-	Gdiplus::Graphics* gdipg = new Gdiplus::Graphics(srchdc);
-	if (gdipg) {
-		Gdiplus::ImageAttributes attr;
-		Gdiplus::ColorMatrix cmat = {
-			1.0f, 0.0f, 0.0f, 0.0f, 0.0f,   // Red
-			0.0f, 1.0f, 0.0f, 0.0f, 0.0f,   // Green
-			0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // Blue
-			0.0f, 0.0f, 0.0f, srcalpha, 0.0f,   // Alpha (70%)
-			0.0f, 0.0f, 0.0f, 0.0f, 1.0f    // must be 1
-		};
-		attr.SetColorMatrix(&cmat);
-		gdipg->DrawImage(srcimage, Gdiplus::Rect(drawposx, drawposy, drawwidth, drawheight),
-			0, 0, drawwidth, drawheight,
-			Gdiplus::UnitPixel, &attr, NULL, NULL);
-		delete gdipg;
-	}
-	return 0;
-}
-int DrawGdiplusButtonStretch(Gdiplus::Image* srcimage, HDC srchdc,
-	int dstx, int dsty,
-	int srcw, int srch, int dstw, int dsth, float srcalpha)
-{
-	if (!srcimage) {
-		_ASSERT(0);
-		return 1;
-	}
-	if (srchdc == NULL) {
-		_ASSERT(0);
-		return 1;
-	}
-	if ((srcw <= 0) || (srch <= 0) || (dstw <= 0) || (dsth <= 0)) {
-		_ASSERT(0);
-		return 1;
-	}
-
-
-	Gdiplus::Graphics* gdipg = new Gdiplus::Graphics(srchdc);
-	if (gdipg) {
-		Gdiplus::ImageAttributes attr;
-		Gdiplus::ColorMatrix cmat = {
-			1.0f, 0.0f, 0.0f, 0.0f, 0.0f,   // Red
-			0.0f, 1.0f, 0.0f, 0.0f, 0.0f,   // Green
-			0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // Blue
-			0.0f, 0.0f, 0.0f, srcalpha, 0.0f,   // Alpha (70%)
-			0.0f, 0.0f, 0.0f, 0.0f, 1.0f    // must be 1
-		};
-		attr.SetColorMatrix(&cmat);
-		gdipg->DrawImage(srcimage, Gdiplus::Rect(dstx, dsty, dstw, dsth),
-			0, 0, srcw, srch,
-			Gdiplus::UnitPixel, &attr, NULL, NULL);
-		delete gdipg;
-	}
-	return 0;
-}
-bool CalcTextExtent(HDC hdc, const WCHAR* srcname, SIZE* pspacesize, SIZE* pnamesize)
-{
-	if (!srcname || !pspacesize || !pnamesize) {
-		_ASSERT(0);
-		return false;
-	}
-	if (*srcname == 0L) {
-		_ASSERT(0);
-		return false;
-	}
-
-	int namelen = (int)wcslen(srcname);
-	if (namelen >= 1024) {
-		_ASSERT(0);
-		return false;
-	}
-
-	int loopcount = 0;
-	int spacecount = 0;
-	while (loopcount < namelen) {
-		WCHAR chkwc = *(srcname + loopcount);
-		if ((chkwc == TEXT(' ')) || (chkwc == TEXT('　'))) {
-			spacecount++;
-		}
-		else {
-			break;
-		}
-		loopcount++;
-	}
-
-	bool result1 = true;
-	bool result2 = true;
-	if (spacecount > 0) {
-		WCHAR strspace[1024] = { 0L };
-		ZeroMemory(strspace, sizeof(WCHAR) * 1024);
-		wcsncpy_s(strspace, 1024, srcname, spacecount);
-		result1 = GetTextExtentPoint32W(hdc, strspace, spacecount, pspacesize);
-	}
-	else {
-		pspacesize->cx = 0;
-		pspacesize->cy = 0;
-	}
-
-	WCHAR strname[1024] = { 0L };
-	ZeroMemory(strname, sizeof(WCHAR) * 1024);
-	wcscpy_s(strname, 1024, srcname + spacecount);
-	int wccount = (int)wcslen(strname);
-	result2 = GetTextExtentPoint32W(hdc, strname, wccount, pnamesize);
-
-	if (result1 && result2) {
-		return true;
-	}
-	else {
-		_ASSERT(0);
-		return false;
-	}
-}
 
 
 
@@ -5397,18 +5267,13 @@ void s_dummyfunc()
 			for(int i=0; i<(int)nameList.size(); i++){
 
 				int fontsize = (int)((double)SIZE_Y * 0.8);
-				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));//ClacTextExtent()よりも前でフォントを設定
+				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));//DrawGdiText()よりも前でフォントを設定
 
-				SIZE spacesize, namesize;
-				spacesize.cx = 0;
-				spacesize.cy = 0;
-				namesize.cx = 0;
-				namesize.cy = 0;
-				bool result0;
-				result0 = CalcTextExtent(hdcM->hDC, nameList[i].c_str(), &spacesize, &namesize);
+				int textposx = pos.x + BOX_POS_X + BOX_WIDTH + 3;
+				int textposy = pos.y + SIZE_Y * i + 2;
 
 				//ボタン部分
-				if ((i == selectIndex) && result0) {
+				if (i == selectIndex) {
 					//白い丸セレクトマーク
 					int pos1x= pos.x+BOX_POS_X;
 					int pos1y= pos.y+SIZE_Y/2-BOX_WIDTH/2+ SIZE_Y*i+ 2;
@@ -5417,27 +5282,14 @@ void s_dummyfunc()
 					hdcM->setPenAndBrush(NULL,RGB(240,240,240));
 					Ellipse(hdcM->hDC, pos1x+2,pos1y+2, pos2x-2,pos2y-2);
 
-					//2024/07/16
-					//オレンジの下線マーク
-					int pos01x = pos.x + BOX_POS_X + BOX_WIDTH + 3 + spacesize.cx;
-					int pos02x = pos01x + namesize.cx;
-					int pos01y = pos.y + SIZE_Y * i + (int)(SIZE_Y * 0.80);
-					int pos02y = pos.y + SIZE_Y * (i + 1);
-					hdcM->setPenAndBrush(NULL, RGB(255, 128, 0));
-					Rectangle(hdcM->hDC, pos01x, pos01y, pos02x, pos02y);
+					DrawGdiText(hdcM->hDC, nameList[i].c_str(),
+						textposx, textposy, SIZE_Y, RGB(240, 240, 240), true);//underline付
 				}
-				//hdcM->setPenAndBrush(RGB(min(baseColor.r+20,255),min(baseColor.g+20,255),min(baseColor.b+20,255)),NULL);
-				//Ellipse(hdcM->hDC, pos1x,pos1y, pos2x,pos2y);
+				else {
+					DrawGdiText(hdcM->hDC, nameList[i].c_str(),
+						textposx, textposy, SIZE_Y, RGB(240, 240, 240), false);
+				}
 
-				//名前
-				int pos3x= pos.x+BOX_POS_X+BOX_WIDTH+3;
-				int pos3y= pos.y + SIZE_Y * i + 2;
-				//hdcM->setFont(12,_T("ＭＳ ゴシック"));
-
-				SetTextColor(hdcM->hDC,RGB(240,240,240));
-				TextOut( hdcM->hDC,
-						 pos3x, pos3y,
-						 nameList[i].c_str(), (int)_tcslen(nameList[i].c_str()));
 
 				{
 					if (g_dsmousewait == 1) {
@@ -7585,27 +7437,32 @@ void s_dummyfunc()
 				}
 
 				int fontsize = (int)((double)parent->LABEL_SIZE_Y * 0.8);
-				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));//ClacTextExtent()よりも前でフォントを設定
+				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));//DrawGdiText()よりも前でフォントを設定
 
-				SIZE spacesize, namesize;
-				spacesize.cx = 0;
-				spacesize.cy = 0;
-				namesize.cx = 0;
-				namesize.cy = 0;
-				bool result0;
-				result0 = CalcTextExtent(hdcM->hDC, prname.c_str(), &spacesize, &namesize);
-
-				//highLight
-				if(highLight && result0){
-					int x00 = posX + spacesize.cx;
-					int x01 = x00 + namesize.cx;
-					int y00 = posY + (int)(parent->LABEL_SIZE_Y * 0.80);
-					int y01 = posY + parent->LABEL_SIZE_Y;
-					//hdcM->setPenAndBrush(NULL,RGB(min(baseR+20,255),min(baseG+20,255),min(baseB+20,255)));
-					hdcM->setPenAndBrush(NULL, RGB(255, 128, 0));
-					Rectangle(hdcM->hDC, x00, y00, x01, y01);
+				COLORREF color1;
+				if (textcol == RGB(255, 255, 255)) {
+					if (hasrigflag) {
+						color1 = RGB(0, 255, 0);
+					}
+					else if (m_nullflag == 0) {
+						color1 = RGB(220, 220, 220);
+					}
+					else if (m_nullflag == 1) {
+						color1 = RGB(0, 220, 220);
+					}
+					else if (m_nullflag == 2) {
+						color1 = RGB(64, 128, 255);
+					}
+					else {
+						color1 = RGB(255, 0, 0);
+					}
+				}
+				else {
+					color1 = textcol;
 				}
 
+				DrawGdiText(hdcM->hDC, prname.c_str(),
+					posX + 2, posY + 2, parent->LABEL_SIZE_Y, color1, highLight);
 
 				int x0 = posX;
 				int x1 = posX + parent->LABEL_SIZE_X;
@@ -7613,49 +7470,6 @@ void s_dummyfunc()
 				int y00 = posY - parent->LABEL_SIZE_Y;
 				int y0 = posY;
 				int y1 = posY + parent->LABEL_SIZE_Y;
-
-				//ラベル
-				//if (g_4kresolution) {
-				//	//hdcM->setFont(20, _T("ＭＳ ゴシック"));
-				//	hdcM->setFont(18, _T("ＭＳ ゴシック"));
-				//}
-				//else {
-				//	hdcM->setFont(12, _T("ＭＳ ゴシック"));
-				//}
-
-
-
-				if (textcol == RGB(255, 255, 255)) {
-					if (hasrigflag) {
-						SetTextColor(hdcM->hDC, RGB(0, 255, 0));
-					}
-					else if (m_nullflag == 0) {
-						SetTextColor(hdcM->hDC, RGB(220, 220, 220));
-					}
-					else if (m_nullflag == 1) {
-						SetTextColor(hdcM->hDC, RGB(0, 220, 220));
-					}
-					else if (m_nullflag == 2) {
-						SetTextColor(hdcM->hDC, RGB(64, 128, 255));
-					}
-					else {
-						//_ASSERT(0);
-						SetTextColor(hdcM->hDC, RGB(255, 0, 0));
-						//return;
-					}
-				}
-				else {
-					SetTextColor(hdcM->hDC, textcol);
-				}
-
-
-				TextOut(hdcM->hDC,
-					posX + 2, posY + parent->LABEL_SIZE_Y / 2 - 5,
-					prname.c_str(), (int)_tcslen(prname.c_str()));
-
-				//TextOut( hdcM->hDC,
-				//		 posX+2, posY+parent->LABEL_SIZE_Y/2-5,
-				//		 name.c_str(), _tcslen(name.c_str()));
 
 				//枠
 				hdcM->setPenAndBrush(RGB(min(baseR+20,255),min(baseG+20,255),min(baseB+20,255)),NULL);
@@ -11529,27 +11343,7 @@ void s_dummyfunc()
 				unsigned char baseB= parent->baseColor.b;
 
 				int fontsize = 12;
-				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));//ClacTextExtent()よりも前でフォントを設定
-
-				//int fontsize = (int)((double)parent->LABEL_SIZE_Y * 0.8);
-				SIZE spacesize, namesize;
-				spacesize.cx = 0;
-				spacesize.cy = 0;
-				namesize.cx = 0;
-				namesize.cy = 0;
-				bool result0;
-				result0 = CalcTextExtent(hdcM->hDC, name.c_str(), &spacesize, &namesize);
-
-
-				//highLight
-				if(highLight && result0){
-					int x00 = posX + parent->LABEL_SIZE_Y + spacesize.cx;
-					int x01 = x00 + namesize.cx;
-					int y00 = posY + (int)(parent->LABEL_SIZE_Y * 0.80);
-					int y01 = posY + parent->LABEL_SIZE_Y;
-					hdcM->setPenAndBrush(NULL, RGB(255, 128, 0));
-					Rectangle(hdcM->hDC, x00, y00, x01, y01);
-				}
+				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));//DrawGdiText()よりも前でフォントを設定
 
 				int x0 = posX;
 				int x1 = posX + width;
@@ -11559,10 +11353,9 @@ void s_dummyfunc()
 				int x3 = x2 + parent->LABEL_SIZE_Y - 1;
 
 				//ラベル
-				SetTextColor(hdcM->hDC,RGB(240,240,240));
-				TextOut( hdcM->hDC,
-						 x3+2, posY+parent->LABEL_SIZE_Y/2-5,
-						 name.c_str(), (int)_tcslen(name.c_str()));
+				DrawGdiText(hdcM->hDC, name.c_str(),
+					x3 + 2, posY + 2, parent->LABEL_SIZE_Y, RGB(240, 240, 240), highLight);
+
 
 				{//可視・不可視
 					if( visible ){
@@ -12280,26 +12073,7 @@ void s_dummyfunc()
 
 
 				int fontsize = (int)((double)parent->LABEL_SIZE_Y * 0.8);
-				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));//ClacTextExtent()よりも前でフォントを設定
-
-				SIZE spacesize, namesize;
-				spacesize.cx = 0;
-				spacesize.cy = 0;
-				namesize.cx = 0;
-				namesize.cy = 0;
-				bool result0;
-				result0 = CalcTextExtent(hdcM->hDC, name.c_str(), &spacesize, &namesize);
-
-				//highLight
-				if (highLight && result0) {
-					//int x00 = posX;
-					int x00 = posX + parent->LABEL_SIZE_Y * 2 + spacesize.cx;
-					int x01 = x00 + namesize.cx;
-					int y00 = posY + (int)(parent->LABEL_SIZE_Y * 0.80);
-					int y01 = posY + parent->LABEL_SIZE_Y;
-					hdcM->setPenAndBrush(NULL, RGB(255, 128, 0));
-					Rectangle(hdcM->hDC, x00, y00, x01, y01);
-				}
+				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));//DrawGdiText()よりも前でフォントを設定
 
 
 				int x0 = posX;
@@ -12309,11 +12083,8 @@ void s_dummyfunc()
 				int x2 = x0 + parent->LABEL_SIZE_Y - 1;
 				int x3 = x2 + parent->LABEL_SIZE_Y - 1;
 				//ラベル
-				//hdcM->setFont(12, _T("ＭＳ ゴシック"));
-				SetTextColor(hdcM->hDC, RGB(240, 240, 240));
-				TextOut(hdcM->hDC,
-					x3 + 2, posY + parent->LABEL_SIZE_Y / 2 - 5,
-					name.c_str(), (int)_tcslen(name.c_str()));
+				DrawGdiText(hdcM->hDC, name.c_str(),
+					x3 + 2, posY + 2, parent->LABEL_SIZE_Y, RGB(240, 240, 240), highLight);
 
 
 				//枠

@@ -315,7 +315,7 @@ public:
 
 
 	//DispGroup : test button : exclusive display
-	int SetDispGroupGUI(std::vector<OrgWinGUI::OWP_CheckBoxA*>& checkboxvec, std::vector<CMQOObject*>& mqoobjvec);
+	int SetDispGroupGUI(std::vector<OrgWinGUI::OWP_CheckBoxA*>& checkboxvec, std::vector<CMQOObject*>& mqoobjvec, int labelheight);
 	int RenderTest(bool withalpha, ChaScene* srcchascene, int lightflag, ChaVector4 diffusemult, int srcobjno);
 	int SelectRenderObject(int srcobjno, std::vector<CMQOObject*>& selectedobjvec);
 	void SelectRenderObjectReq(FbxNode* pNode, std::vector<CMQOObject*>& selectedobjvec);

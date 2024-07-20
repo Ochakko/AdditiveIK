@@ -222,6 +222,9 @@
     <ClCompile Include="..\CPP\BlendShapeElem.cpp">
       <Filter>BlendShape</Filter>
     </ClCompile>
+    <ClCompile Include="..\CPP\StrMisc.cpp">
+      <Filter>misc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
@@ -1350,6 +1353,9 @@
     </ClInclude>
     <ClInclude Include="..\INCLUDE\BlendShapeElem.h">
       <Filter>BlendShape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\StrMisc.h">
+      <Filter>misc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

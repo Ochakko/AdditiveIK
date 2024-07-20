@@ -2,6 +2,15 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/07/20
+　GUI修正
+　　DrawGdiText()関数を追加
+　　　オレンジ色アンダーラインフラグ付き
+
+　　StrMisc.h, StrMisc.cpp追加
+
+
+
 2024/07/16
 　GUI修正
 　　行選択時に行全体をオレンジにしていたのをオレンジのアンダーラインに変更

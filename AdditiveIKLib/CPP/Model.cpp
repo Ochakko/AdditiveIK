@@ -21920,7 +21920,7 @@ int CModel::SetBlendShapeGUI(std::vector<CBlendShapeElem>& blendshapeelem)
 }
 
 int CModel::SetDispGroupGUI(std::vector<OrgWinGUI::OWP_CheckBoxA*>& checkboxvec,
-	std::vector<CMQOObject*>& mqoobjvec)
+	std::vector<CMQOObject*>& mqoobjvec, int labelheight)
 {
 	checkboxvec.clear();
 	mqoobjvec.clear();
@@ -21939,11 +21939,12 @@ int CModel::SetDispGroupGUI(std::vector<OrgWinGUI::OWP_CheckBoxA*>& checkboxvec,
 			WCHAR labelnameW[1024] = { 0L };
 			int depthindex;
 			for (depthindex = 0; depthindex < digelem.depth; depthindex++) {
-				wcscat_s(labelnameW, 1024, L"  ");
+				//wcscat_s(labelnameW, 1024, L"  ");
+				wcscat_s(labelnameW, 1024, L" ");
 			}
 			wcscat_s(labelnameW, 1024, meshnameW);
 
-			OWP_CheckBoxA* newchk = new OWP_CheckBoxA(labelnameW, false, 20);
+			OWP_CheckBoxA* newchk = new OWP_CheckBoxA(labelnameW, false, labelheight);
 			if (!newchk) {
 				_ASSERT(0);
 				return 1;
