@@ -783,7 +783,7 @@ static HWND s_materialratedlgwnd = 0;
 static HWND s_modelworldmatdlgwnd = 0;
 static HWND s_jumpgravitydlgwnd = 0;
 //static HWND s_shadertypeparamsdlgwnd = 0;
-static HWND s_skyparamsdlgwnd = 0;
+//static HWND s_skyparamsdlgwnd = 0;
 //static HWND s_fogparamsdlgwnd = 0;
 //static HWND s_dofparamsdlgwnd = 0;
 static HWND s_savechadlghwnd = 0;
@@ -1850,6 +1850,14 @@ static bool s_st_flowratesliderFlag = false;
 static bool s_st_distortionmapradioFlag = false;
 
 static OrgWindow* s_skyst_paramsWnd = 0;
+static OWP_ScrollWnd* s_skyst_Sc = 0;
+static OWP_Separator* s_skyst_spall = 0;
+static OWP_Label* s_skyst_spacerLabel01 = 0;
+static OWP_Label* s_skyst_spacerLabel02 = 0;
+static OWP_Label* s_skyst_spacerLabel03 = 0;
+static OWP_Label* s_skyst_spacerLabel04 = 0;
+static OWP_Label* s_skyst_spacerLabel05 = 0;
+static OWP_Label* s_skyst_spacerLabel06 = 0;
 static OWP_Separator* s_skyst_namesp = 0;
 static OWP_Button* s_skyst_backB = 0;
 static OWP_Label* s_skyst_namelabel = 0;
@@ -5971,6 +5979,14 @@ void InitApp()
 
 
 		s_skyst_paramsWnd = 0;
+		s_skyst_Sc = 0;
+		s_skyst_spall = 0;
+		s_skyst_spacerLabel01 = 0;
+		s_skyst_spacerLabel02 = 0;
+		s_skyst_spacerLabel03 = 0;
+		s_skyst_spacerLabel04 = 0;
+		s_skyst_spacerLabel05 = 0;
+		s_skyst_spacerLabel06 = 0;
 		s_skyst_namesp = 0;
 		s_skyst_backB = 0;
 		s_skyst_namelabel = 0;
@@ -7057,7 +7073,7 @@ void InitApp()
 	s_modelworldmatdlgwnd = 0;
 	s_jumpgravitydlgwnd = 0;
 	//s_shadertypeparamsdlgwnd = 0;
-	s_skyparamsdlgwnd = 0;
+	//s_skyparamsdlgwnd = 0;
 	//s_fogparamsdlgwnd = 0;
 	//s_dofparamsdlgwnd = 0;
 
@@ -7316,10 +7332,10 @@ void OnDestroyDevice()
 	//	DestroyWindow(s_shadertypeparamsdlgwnd);
 	//	s_shadertypeparamsdlgwnd = 0;
 	//}
-	if (s_skyparamsdlgwnd) {
-		DestroyWindow(s_skyparamsdlgwnd);
-		s_skyparamsdlgwnd = 0;
-	}
+	//if (s_skyparamsdlgwnd) {
+	//	DestroyWindow(s_skyparamsdlgwnd);
+	//	s_skyparamsdlgwnd = 0;
+	//}
 	//if (s_fogparamsdlgwnd) {
 	//	DestroyWindow(s_fogparamsdlgwnd);
 	//	s_fogparamsdlgwnd = 0;
@@ -45290,7 +45306,38 @@ void DestroySkyParamsDlg()
 	}
 
 
-
+	if (s_skyst_Sc) {
+		delete s_skyst_Sc;
+		s_skyst_Sc = 0;
+	}
+	if (s_skyst_spall) {
+		delete s_skyst_spall;
+		s_skyst_spall = 0;
+	}
+	if (s_skyst_spacerLabel01) {
+		delete s_skyst_spacerLabel01;
+		s_skyst_spacerLabel01 = 0;
+	}
+	if (s_skyst_spacerLabel02) {
+		delete s_skyst_spacerLabel02;
+		s_skyst_spacerLabel02 = 0;
+	}
+	if (s_skyst_spacerLabel03) {
+		delete s_skyst_spacerLabel03;
+		s_skyst_spacerLabel03 = 0;
+	}
+	if (s_skyst_spacerLabel04) {
+		delete s_skyst_spacerLabel04;
+		s_skyst_spacerLabel04 = 0;
+	}
+	if (s_skyst_spacerLabel05) {
+		delete s_skyst_spacerLabel05;
+		s_skyst_spacerLabel05 = 0;
+	}
+	if (s_skyst_spacerLabel06) {
+		delete s_skyst_spacerLabel06;
+		s_skyst_spacerLabel06 = 0;
+	}
 	if (s_skyst_namesp) {
 		delete s_skyst_namesp;
 		s_skyst_namesp = 0;
@@ -59227,8 +59274,8 @@ void ChangeMouseSetCapture()
 			}
 			else if (s_platemenukind == SPPLATEMENUKIND_EFFECT) {
 				if (s_platemenuno == (SPEFFECTSW_SKY + 1)) {
-					if (s_skyparamsdlgwnd) {
-						SetCapture(s_skyparamsdlgwnd);
+					if (s_skyst_paramsWnd) {
+						SetCapture(s_skyst_paramsWnd->getHWnd());
 					}
 				}
 				else if (s_platemenuno == (SPEFFECTSW_FOG + 1)) {
@@ -63901,7 +63948,7 @@ int CreateShaderTypeParamsDlg()
 		double separaterate = 0.26;
 		double separateratelit = 0.35;
 
-		s_st_Sc = new OWP_ScrollWnd(L"ShaderParamsScroll", true, labelheight);
+		s_st_Sc = new OWP_ScrollWnd(L"ShaderParamsScroll", false, labelheight);//wheelフラグOFF：ホイールでスライダーを動かしたいから
 		if (!s_st_Sc) {
 			_ASSERT(0);
 			return 1;
@@ -67026,22 +67073,80 @@ int CreateSkyParamsDlg()
 		0, 0, 0,				//カラー
 		true, true);					//サイズ変更の可否
 
+	int labelheight;
+	if (g_4kresolution) {
+		labelheight = 28;
+	}
+	else {
+		labelheight = 20;
+	}
+
 	if (s_skyst_paramsWnd) {
 		bool limitradionamelen = true;
 		double separaterate = 0.24;
+		double separateratelit = 0.35;
 
+
+		s_skyst_Sc = new OWP_ScrollWnd(L"ShaderParamsScroll", false, labelheight);//wheelフラグOFF：ホイールでスライダーを動かしたいから
+		if (!s_skyst_Sc) {
+			_ASSERT(0);
+			return 1;
+		}
+		int linedatasize = (int)(40.0 * 1.25);
+		s_skyst_Sc->setLineDataSize(linedatasize);//!!!!!!!!!!!!
+		s_skyst_paramsWnd->addParts(*s_skyst_Sc);
+
+
+		//スクロールするGUI全てを束ねるセパレータは必要
+		s_skyst_spall = new OWP_Separator(s_skyst_paramsWnd, true, 0.995, false, s_skyst_Sc);
+		if (!s_skyst_spall) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_skyst_Sc->addParts(*s_skyst_spall);
+
+		s_skyst_spacerLabel01 = new OWP_Label(L"     ", labelheight);
+		if (!s_skyst_spacerLabel01) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_skyst_spacerLabel02 = new OWP_Label(L"     ", labelheight);
+		if (!s_skyst_spacerLabel02) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_skyst_spacerLabel03 = new OWP_Label(L"     ", labelheight);
+		if (!s_skyst_spacerLabel03) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_skyst_spacerLabel04 = new OWP_Label(L"     ", labelheight);
+		if (!s_skyst_spacerLabel04) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_skyst_spacerLabel05 = new OWP_Label(L"     ", labelheight);
+		if (!s_skyst_spacerLabel05) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_skyst_spacerLabel06 = new OWP_Label(L"     ", labelheight);
+		if (!s_skyst_spacerLabel06) {
+			_ASSERT(0);
+			return 1;
+		}
 
 		s_skyst_namesp = new OWP_Separator(s_skyst_paramsWnd, true, 0.2, true);
 		if (!s_skyst_namesp) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_backB = new OWP_Button(L"<-Back");
+		s_skyst_backB = new OWP_Button(L"<-Back", labelheight);
 		if (!s_skyst_backB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_namelabel = new OWP_Label(L"MaterialName");
+		s_skyst_namelabel = new OWP_Label(L"MaterialName", labelheight);
 		if (!s_skyst_namelabel) {
 			_ASSERT(0);
 			return 1;
@@ -67088,15 +67193,15 @@ int CreateSkyParamsDlg()
 		for (slotindex = 0; slotindex < 8; slotindex++) {
 			WCHAR strslotno[256] = { 0L };
 			swprintf_s(strslotno, 256, L"Slot%d", (slotindex + 1));
-			s_skyst_slotB[slotindex] = new OWP_Button(strslotno);
+			s_skyst_slotB[slotindex] = new OWP_Button(strslotno, labelheight);
 			if (!s_skyst_slotB[slotindex]) {
 				_ASSERT(0);
 				return 1;
 			}
 		}
+		
 
-
-		s_skyst_shadertyperadio = new OWP_RadioButton(L"Auto", limitradionamelen, 15);
+		s_skyst_shadertyperadio = new OWP_RadioButton(L"Auto", limitradionamelen, labelheight);
 		if (!s_skyst_shadertyperadio) {
 			_ASSERT(0);
 			return 1;
@@ -67104,29 +67209,29 @@ int CreateSkyParamsDlg()
 		s_skyst_shadertyperadio->addLine(L"PBR");
 		s_skyst_shadertyperadio->addLine(L"Std.");
 		s_skyst_shadertyperadio->addLine(L"HSV Toon");
-
+		
 
 		s_skyst_litflagsp = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
 		if (!s_skyst_litflagsp) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_lightflagchk = new OWP_CheckBoxA(L"Lighting", 0);
+		s_skyst_lightflagchk = new OWP_CheckBoxA(L"Lighting", 0, labelheight);
 		if (!s_skyst_lightflagchk) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_shadowcasterchk = new OWP_CheckBoxA(L"ShadowCaster", 0);
+		s_skyst_shadowcasterchk = new OWP_CheckBoxA(L"ShadowCaster", 0, labelheight);
 		if (!s_skyst_shadowcasterchk) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_normaly0chk = new OWP_CheckBoxA(L"NormalY0", 0);
+		s_skyst_normaly0chk = new OWP_CheckBoxA(L"NormalY0", 0, labelheight);
 		if (!s_skyst_normaly0chk) {
 			_ASSERT(0);
 			return 1;
 		}
-
+		
 
 
 		s_skyst_spccoefsp0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
@@ -67134,32 +67239,32 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_spccoefsp1 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
+		s_skyst_spccoefsp1 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
 		if (!s_skyst_spccoefsp1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_spccoefsp2 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
+		s_skyst_spccoefsp2 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
 		if (!s_skyst_spccoefsp2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_spccoeflabel = new OWP_Label(L"SpecularCoef");
+		s_skyst_spccoeflabel = new OWP_Label(L"Specular", labelheight);
 		if (!s_skyst_spccoeflabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_spccoefslider = new OWP_Slider(0.0, 2.0, 0.0);
+		s_skyst_spccoefslider = new OWP_Slider(0.0, 2.0, 0.0, labelheight);
 		if (!s_skyst_spccoefslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_emissionchk = new OWP_CheckBoxA(L"Emission", 0);
+		s_skyst_emissionchk = new OWP_CheckBoxA(L"Emi", 0, labelheight);
 		if (!s_skyst_emissionchk) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_emissionslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_skyst_emissionslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_skyst_emissionslider) {
 			_ASSERT(0);
 			return 1;
@@ -67171,32 +67276,32 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_metalsp1 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
+		s_skyst_metalsp1 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
 		if (!s_skyst_metalsp1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_metalsp2 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
+		s_skyst_metalsp2 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
 		if (!s_skyst_metalsp2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_metallabel = new OWP_Label(L"Metal_Add");
+		s_skyst_metallabel = new OWP_Label(L"Metal", labelheight);
 		if (!s_skyst_metallabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_metalslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_skyst_metalslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_skyst_metalslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_smoothlabel = new OWP_Label(L"Smooth");
+		s_skyst_smoothlabel = new OWP_Label(L"Smooth", labelheight);
 		if (!s_skyst_smoothlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_smoothslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_skyst_smoothslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_skyst_smoothslider) {
 			_ASSERT(0);
 			return 1;
@@ -67209,32 +67314,32 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscalesp1_1 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
+		s_skyst_litscalesp1_1 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
 		if (!s_skyst_litscalesp1_1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscalesp1_2 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
+		s_skyst_litscalesp1_2 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
 		if (!s_skyst_litscalesp1_2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscalelabel1 = new OWP_Label(L"LitScale1");
+		s_skyst_litscalelabel1 = new OWP_Label(L"Lit1", labelheight);
 		if (!s_skyst_litscalelabel1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscaleslider1 = new OWP_Slider(0.0, 5.0, 0.0);
+		s_skyst_litscaleslider1 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
 		if (!s_skyst_litscaleslider1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscalelabel2 = new OWP_Label(L"LitScale2");
+		s_skyst_litscalelabel2 = new OWP_Label(L"Lit2", labelheight);
 		if (!s_skyst_litscalelabel2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscaleslider2 = new OWP_Slider(0.0, 5.0, 0.0);
+		s_skyst_litscaleslider2 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
 		if (!s_skyst_litscaleslider2) {
 			_ASSERT(0);
 			return 1;
@@ -67246,32 +67351,32 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscalesp3_1 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
+		s_skyst_litscalesp3_1 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
 		if (!s_skyst_litscalesp3_1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscalesp3_2 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
+		s_skyst_litscalesp3_2 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
 		if (!s_skyst_litscalesp3_2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscalelabel3 = new OWP_Label(L"LitScale3");
+		s_skyst_litscalelabel3 = new OWP_Label(L"Lit3", labelheight);
 		if (!s_skyst_litscalelabel3) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscaleslider3 = new OWP_Slider(0.0, 5.0, 0.0);
+		s_skyst_litscaleslider3 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
 		if (!s_skyst_litscaleslider3) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscalelabel4 = new OWP_Label(L"LitScale4");
+		s_skyst_litscalelabel4 = new OWP_Label(L"Lit4", labelheight);
 		if (!s_skyst_litscalelabel4) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscaleslider4 = new OWP_Slider(0.0, 5.0, 0.0);
+		s_skyst_litscaleslider4 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
 		if (!s_skyst_litscaleslider4) {
 			_ASSERT(0);
 			return 1;
@@ -67284,32 +67389,32 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscalesp5_1 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
+		s_skyst_litscalesp5_1 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
 		if (!s_skyst_litscalesp5_1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscalesp5_2 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
+		s_skyst_litscalesp5_2 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
 		if (!s_skyst_litscalesp5_2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscalelabel5 = new OWP_Label(L"LitScale5");
+		s_skyst_litscalelabel5 = new OWP_Label(L"Lit5", labelheight);
 		if (!s_skyst_litscalelabel5) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscaleslider5 = new OWP_Slider(0.0, 5.0, 0.0);
+		s_skyst_litscaleslider5 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
 		if (!s_skyst_litscaleslider5) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscalelabel6 = new OWP_Label(L"LitScale6");
+		s_skyst_litscalelabel6 = new OWP_Label(L"Lit6", labelheight);
 		if (!s_skyst_litscalelabel6) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscaleslider6 = new OWP_Slider(0.0, 5.0, 0.0);
+		s_skyst_litscaleslider6 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
 		if (!s_skyst_litscaleslider6) {
 			_ASSERT(0);
 			return 1;
@@ -67322,17 +67427,17 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscalesp7_1 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
+		s_skyst_litscalesp7_1 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
 		if (!s_skyst_litscalesp7_1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscalesp7_2 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
+		s_skyst_litscalesp7_2 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
 		if (!s_skyst_litscalesp7_2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscalelabel7 = new OWP_Label(L"LitScale7");
+		s_skyst_litscalelabel7 = new OWP_Label(L"Lit7", labelheight);
 		if (!s_skyst_litscalelabel7) {
 			_ASSERT(0);
 			return 1;
@@ -67342,19 +67447,19 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscalelabel8 = new OWP_Label(L"LitScale8");
+		s_skyst_litscalelabel8 = new OWP_Label(L"Lit8", labelheight);
 		if (!s_skyst_litscalelabel8) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_litscaleslider8 = new OWP_Slider(0.0, 5.0, 0.0);
+		s_skyst_litscaleslider8 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
 		if (!s_skyst_litscaleslider8) {
 			_ASSERT(0);
 			return 1;
 		}
+		
 
-
-		s_skyst_toonlitradio = new OWP_RadioButton(L"ToonLit1", limitradionamelen, 15);
+		s_skyst_toonlitradio = new OWP_RadioButton(L"ToonLit1", limitradionamelen, labelheight);
 		if (!s_skyst_toonlitradio) {
 			_ASSERT(0);
 			return 1;
@@ -67383,22 +67488,22 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonhiaddrlabel = new OWP_Label(L"HiAddr");
+		s_skyst_toonhiaddrlabel = new OWP_Label(L"HiAddr", labelheight);
 		if (!s_skyst_toonhiaddrlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonhiaddrslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_skyst_toonhiaddrslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_skyst_toonhiaddrslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonlowaddrlabel = new OWP_Label(L"LowAddr");
+		s_skyst_toonlowaddrlabel = new OWP_Label(L"LowAddr", labelheight);
 		if (!s_skyst_toonlowaddrlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonlowaddrslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_skyst_toonlowaddrslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_skyst_litscaleslider8) {
 			_ASSERT(0);
 			return 1;
@@ -67410,12 +67515,12 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_gradationchk = new OWP_CheckBoxA(L"Gradation", 0);
+		s_skyst_gradationchk = new OWP_CheckBoxA(L"Gradation", 0, labelheight);
 		if (!s_skyst_gradationchk) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_powertoonchk = new OWP_CheckBoxA(L"PowerToon", 0);
+		s_skyst_powertoonchk = new OWP_CheckBoxA(L"PowerToon", 0, labelheight);
 		if (!s_skyst_powertoonchk) {
 			_ASSERT(0);
 			return 1;
@@ -67438,22 +67543,22 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonbaseHlabel = new OWP_Label(L"BaseH");
+		s_skyst_toonbaseHlabel = new OWP_Label(L"BaseH", labelheight);
 		if (!s_skyst_toonbaseHlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonbaseHslider = new OWP_Slider(0.0, 360.0, 0.0);
+		s_skyst_toonbaseHslider = new OWP_Slider(0.0, 360.0, 0.0, labelheight);
 		if (!s_skyst_toonbaseHslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonbaseSlabel = new OWP_Label(L"BaseS");
+		s_skyst_toonbaseSlabel = new OWP_Label(L"BaseS", labelheight);
 		if (!s_skyst_toonbaseSlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonbaseSslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_skyst_toonbaseSslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_skyst_toonbaseSslider) {
 			_ASSERT(0);
 			return 1;
@@ -67473,22 +67578,22 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonbaseVlabel = new OWP_Label(L"BaseV");
+		s_skyst_toonbaseVlabel = new OWP_Label(L"BaseV", labelheight);
 		if (!s_skyst_toonbaseVlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonbaseVslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_skyst_toonbaseVslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_skyst_toonbaseVslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonbaseAlabel = new OWP_Label(L"BaseA");
+		s_skyst_toonbaseAlabel = new OWP_Label(L"BaseA", labelheight);
 		if (!s_skyst_toonbaseAlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonbaseAslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_skyst_toonbaseAslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_skyst_toonbaseAslider) {
 			_ASSERT(0);
 			return 1;
@@ -67510,22 +67615,22 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonhiHlabel = new OWP_Label(L"HighH");
+		s_skyst_toonhiHlabel = new OWP_Label(L"HighH", labelheight);
 		if (!s_skyst_toonhiHlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonhiHslider = new OWP_Slider(0.0, 360.0, -360.0);
+		s_skyst_toonhiHslider = new OWP_Slider(0.0, 360.0, -360.0, labelheight);
 		if (!s_skyst_toonhiHslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonhiSlabel = new OWP_Label(L"HighS");
+		s_skyst_toonhiSlabel = new OWP_Label(L"HighS", labelheight);
 		if (!s_skyst_toonhiSlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonhiSslider = new OWP_Slider(0.0, 1.0, -1.0);
+		s_skyst_toonhiSslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
 		if (!s_skyst_toonhiSslider) {
 			_ASSERT(0);
 			return 1;
@@ -67545,22 +67650,22 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonhiVlabel = new OWP_Label(L"HighV");
+		s_skyst_toonhiVlabel = new OWP_Label(L"HighV", labelheight);
 		if (!s_skyst_toonhiVlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonhiVslider = new OWP_Slider(0.0, 1.0, -1.0);
+		s_skyst_toonhiVslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
 		if (!s_skyst_toonhiVslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonhiAlabel = new OWP_Label(L"HighA");
+		s_skyst_toonhiAlabel = new OWP_Label(L"HighA", labelheight);
 		if (!s_skyst_toonhiAlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonhiAslider = new OWP_Slider(0.0, 1.0, -1.0);
+		s_skyst_toonhiAslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
 		if (!s_skyst_toonhiAslider) {
 			_ASSERT(0);
 			return 1;
@@ -67582,22 +67687,22 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonlowHlabel = new OWP_Label(L"LowH");
+		s_skyst_toonlowHlabel = new OWP_Label(L"LowH", labelheight);
 		if (!s_skyst_toonlowHlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonlowHslider = new OWP_Slider(0.0, 360.0, -360.0);
+		s_skyst_toonlowHslider = new OWP_Slider(0.0, 360.0, -360.0, labelheight);
 		if (!s_skyst_toonlowHslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonlowSlabel = new OWP_Label(L"LowS");
+		s_skyst_toonlowSlabel = new OWP_Label(L"LowS", labelheight);
 		if (!s_skyst_toonlowSlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonlowSslider = new OWP_Slider(0.0, 1.0, -1.0);
+		s_skyst_toonlowSslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
 		if (!s_skyst_toonlowSslider) {
 			_ASSERT(0);
 			return 1;
@@ -67617,22 +67722,22 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonlowVlabel = new OWP_Label(L"LowV");
+		s_skyst_toonlowVlabel = new OWP_Label(L"LowV", labelheight);
 		if (!s_skyst_toonlowVlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonlowVslider = new OWP_Slider(0.0, 1.0, -1.0);
+		s_skyst_toonlowVslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
 		if (!s_skyst_toonlowVslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonlowAlabel = new OWP_Label(L"LowA");
+		s_skyst_toonlowAlabel = new OWP_Label(L"LowA", labelheight);
 		if (!s_skyst_toonlowAlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_toonlowAslider = new OWP_Slider(0.0, 1.0, -1.0);
+		s_skyst_toonlowAslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
 		if (!s_skyst_toonlowAslider) {
 			_ASSERT(0);
 			return 1;
@@ -67654,22 +67759,22 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_tilingUlabel = new OWP_Label(L"TilingU");
+		s_skyst_tilingUlabel = new OWP_Label(L"TileU", labelheight);
 		if (!s_skyst_tilingUlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_tilingUslider = new OWP_Slider(0.0, 100.0, 0.0);
+		s_skyst_tilingUslider = new OWP_Slider(0.0, 100.0, 0.0, labelheight);
 		if (!s_skyst_tilingUslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_tilingVlabel = new OWP_Label(L"TilingV");
+		s_skyst_tilingVlabel = new OWP_Label(L"TileV", labelheight);
 		if (!s_skyst_tilingVlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_tilingVslider = new OWP_Slider(0.0, 100.0, 0.0);
+		s_skyst_tilingVslider = new OWP_Slider(0.0, 100.0, 0.0, labelheight);
 		if (!s_skyst_tilingVslider) {
 			_ASSERT(0);
 			return 1;
@@ -67686,7 +67791,7 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_alphatestlabel = new OWP_Label(L"AlphaTest");
+		s_skyst_alphatestlabel = new OWP_Label(L"ATest", labelheight);
 		if (!s_skyst_alphatestlabel) {
 			_ASSERT(0);
 			return 1;
@@ -67696,7 +67801,7 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-
+		
 
 		s_skyst_distortionsp0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
 		if (!s_skyst_distortionsp0) {
@@ -67708,24 +67813,24 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_distortionchk = new OWP_CheckBoxA(L"distortion", 0);
+		s_skyst_distortionchk = new OWP_CheckBoxA(L"distortion", 0, labelheight);
 		if (!s_skyst_distortionchk) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_distortionscalelabel = new OWP_Label(L"Scale");
+		s_skyst_distortionscalelabel = new OWP_Label(L"Scale", labelheight);
 		if (!s_skyst_distortionscalelabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_distortionscaleslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_skyst_distortionscaleslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_skyst_distortionscaleslider) {
 			_ASSERT(0);
 			return 1;
 		}
 
 
-		s_skyst_riverradio = new OWP_RadioButton(L"river", limitradionamelen, 15);
+		s_skyst_riverradio = new OWP_RadioButton(L"river", limitradionamelen, labelheight);
 		if (!s_skyst_riverradio) {
 			_ASSERT(0);
 			return 1;
@@ -67743,17 +67848,17 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_seacenterlabel = new OWP_Label(L"SeaCenterUV");
+		s_skyst_seacenterlabel = new OWP_Label(L"SeaCenterUV", labelheight);
 		if (!s_skyst_seacenterlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_seacenterUslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_skyst_seacenterUslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_skyst_seacenterUslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_seacenterVslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_skyst_seacenterVslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_skyst_seacenterVslider) {
 			_ASSERT(0);
 			return 1;
@@ -67770,17 +67875,17 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_riverdirlabel = new OWP_Label(L"SeaCenterUV");
+		s_skyst_riverdirlabel = new OWP_Label(L"SeaCenterUV", labelheight);
 		if (!s_skyst_riverdirlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_riverdirUslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_skyst_riverdirUslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_skyst_riverdirUslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_riverdirVslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_skyst_riverdirVslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_skyst_riverdirVslider) {
 			_ASSERT(0);
 			return 1;
@@ -67792,12 +67897,12 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_flowratelabel = new OWP_Label(L"SeaCenterUV");
+		s_skyst_flowratelabel = new OWP_Label(L"SeaCenterUV", labelheight);
 		if (!s_skyst_flowratelabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_flowrateslider = new OWP_Slider(1.0, 2.0, -2.0);
+		s_skyst_flowrateslider = new OWP_Slider(1.0, 2.0, -2.0, labelheight);
 		if (!s_skyst_flowrateslider) {
 			_ASSERT(0);
 			return 1;
@@ -67805,7 +67910,7 @@ int CreateSkyParamsDlg()
 
 
 
-		s_skyst_distortionmapradio = new OWP_RadioButton(L"RG", limitradionamelen, 15);
+		s_skyst_distortionmapradio = new OWP_RadioButton(L"RG", limitradionamelen, labelheight);
 		if (!s_skyst_distortionmapradio) {
 			_ASSERT(0);
 			return 1;
@@ -67814,11 +67919,11 @@ int CreateSkyParamsDlg()
 		s_skyst_distortionmapradio->addLine(L"RB");
 
 
-		s_skyst_paramsWnd->addParts(*s_skyst_namesp);
+		s_skyst_spall->addParts1(*s_skyst_namesp);
 		//s_skyst_namesp->addParts1(*s_skyst_backB);
 		s_skyst_namesp->addParts2(*s_skyst_namelabel);
 
-		s_skyst_paramsWnd->addParts(*s_skyst_slotsp1_0);
+		s_skyst_spall->addParts1(*s_skyst_slotsp1_0);
 		s_skyst_slotsp1_0->addParts1(*s_skyst_slotsp1_1);
 		s_skyst_slotsp1_0->addParts2(*s_skyst_slotsp1_2);
 		s_skyst_slotsp1_1->addParts1(*s_skyst_slotB[0]);
@@ -67826,22 +67931,26 @@ int CreateSkyParamsDlg()
 		s_skyst_slotsp1_2->addParts1(*s_skyst_slotB[2]);
 		s_skyst_slotsp1_2->addParts2(*s_skyst_slotB[3]);
 
-		s_skyst_paramsWnd->addParts(*s_skyst_slotsp2_0);
+		s_skyst_spall->addParts1(*s_skyst_slotsp2_0);
 		s_skyst_slotsp2_0->addParts1(*s_skyst_slotsp2_1);
 		s_skyst_slotsp2_0->addParts2(*s_skyst_slotsp2_2);
 		s_skyst_slotsp2_1->addParts1(*s_skyst_slotB[4]);
 		s_skyst_slotsp2_1->addParts2(*s_skyst_slotB[5]);
 		s_skyst_slotsp2_2->addParts1(*s_skyst_slotB[6]);
 		s_skyst_slotsp2_2->addParts2(*s_skyst_slotB[7]);
+		s_skyst_spall->addParts1(*s_skyst_spacerLabel01);
 
-		s_skyst_paramsWnd->addParts(*s_skyst_shadertyperadio);
 
-		s_skyst_paramsWnd->addParts(*s_skyst_litflagsp);
+		s_skyst_spall->addParts1(*s_skyst_shadertyperadio);
+		s_skyst_spall->addParts1(*s_skyst_spacerLabel02);
+
+		s_skyst_spall->addParts1(*s_skyst_litflagsp);
 		s_skyst_litflagsp->addParts1(*s_skyst_lightflagchk);
 		s_skyst_litflagsp->addParts2(*s_skyst_shadowcasterchk);
-		s_skyst_paramsWnd->addParts(*s_skyst_normaly0chk);
+		s_skyst_spall->addParts1(*s_skyst_normaly0chk);
+		s_skyst_spall->addParts1(*s_skyst_spacerLabel03);
 
-		s_skyst_paramsWnd->addParts(*s_skyst_spccoefsp0);
+		s_skyst_spall->addParts1(*s_skyst_spccoefsp0);
 		s_skyst_spccoefsp0->addParts1(*s_skyst_spccoefsp1);
 		s_skyst_spccoefsp1->addParts1(*s_skyst_spccoeflabel);
 		s_skyst_spccoefsp1->addParts2(*s_skyst_spccoefslider);
@@ -67849,7 +67958,7 @@ int CreateSkyParamsDlg()
 		s_skyst_spccoefsp2->addParts1(*s_skyst_emissionchk);
 		s_skyst_spccoefsp2->addParts2(*s_skyst_emissionslider);
 
-		s_skyst_paramsWnd->addParts(*s_skyst_metalsp0);
+		s_skyst_spall->addParts1(*s_skyst_metalsp0);
 		s_skyst_metalsp0->addParts1(*s_skyst_metalsp1);
 		s_skyst_metalsp1->addParts1(*s_skyst_metallabel);
 		s_skyst_metalsp1->addParts2(*s_skyst_metalslider);
@@ -67857,7 +67966,7 @@ int CreateSkyParamsDlg()
 		s_skyst_metalsp2->addParts1(*s_skyst_smoothlabel);
 		s_skyst_metalsp2->addParts2(*s_skyst_smoothslider);
 
-		s_skyst_paramsWnd->addParts(*s_skyst_litscalesp1_0);
+		s_skyst_spall->addParts1(*s_skyst_litscalesp1_0);
 		s_skyst_litscalesp1_0->addParts1(*s_skyst_litscalesp1_1);
 		s_skyst_litscalesp1_1->addParts1(*s_skyst_litscalelabel1);
 		s_skyst_litscalesp1_1->addParts2(*s_skyst_litscaleslider1);
@@ -67865,7 +67974,7 @@ int CreateSkyParamsDlg()
 		s_skyst_litscalesp1_2->addParts1(*s_skyst_litscalelabel2);
 		s_skyst_litscalesp1_2->addParts2(*s_skyst_litscaleslider2);
 
-		s_skyst_paramsWnd->addParts(*s_skyst_litscalesp3_0);
+		s_skyst_spall->addParts1(*s_skyst_litscalesp3_0);
 		s_skyst_litscalesp3_0->addParts1(*s_skyst_litscalesp3_1);
 		s_skyst_litscalesp3_1->addParts1(*s_skyst_litscalelabel3);
 		s_skyst_litscalesp3_1->addParts2(*s_skyst_litscaleslider3);
@@ -67874,7 +67983,7 @@ int CreateSkyParamsDlg()
 		s_skyst_litscalesp3_2->addParts2(*s_skyst_litscaleslider4);
 
 
-		s_skyst_paramsWnd->addParts(*s_skyst_litscalesp5_0);
+		s_skyst_spall->addParts1(*s_skyst_litscalesp5_0);
 		s_skyst_litscalesp5_0->addParts1(*s_skyst_litscalesp5_1);
 		s_skyst_litscalesp5_1->addParts1(*s_skyst_litscalelabel5);
 		s_skyst_litscalesp5_1->addParts2(*s_skyst_litscaleslider5);
@@ -67883,18 +67992,19 @@ int CreateSkyParamsDlg()
 		s_skyst_litscalesp5_2->addParts2(*s_skyst_litscaleslider6);
 
 
-		s_skyst_paramsWnd->addParts(*s_skyst_litscalesp7_0);
+		s_skyst_spall->addParts1(*s_skyst_litscalesp7_0);
 		s_skyst_litscalesp7_0->addParts1(*s_skyst_litscalesp7_1);
 		s_skyst_litscalesp7_1->addParts1(*s_skyst_litscalelabel7);
 		s_skyst_litscalesp7_1->addParts2(*s_skyst_litscaleslider7);
 		s_skyst_litscalesp7_0->addParts2(*s_skyst_litscalesp7_2);
 		s_skyst_litscalesp7_2->addParts1(*s_skyst_litscalelabel8);
 		s_skyst_litscalesp7_2->addParts2(*s_skyst_litscaleslider8);
+		s_skyst_spall->addParts1(*s_skyst_spacerLabel04);
 
-		s_skyst_paramsWnd->addParts(*s_skyst_toonlitradio);
+		s_skyst_spall->addParts1(*s_skyst_toonlitradio);
+		s_skyst_spall->addParts1(*s_skyst_spacerLabel05);
 
-
-		s_skyst_paramsWnd->addParts(*s_skyst_toonaddrsp0);
+		s_skyst_spall->addParts1(*s_skyst_toonaddrsp0);
 		s_skyst_toonaddrsp0->addParts1(*s_skyst_toonaddrsp1);
 		s_skyst_toonaddrsp1->addParts1(*s_skyst_toonhiaddrlabel);
 		s_skyst_toonaddrsp1->addParts2(*s_skyst_toonhiaddrslider);
@@ -67903,19 +68013,19 @@ int CreateSkyParamsDlg()
 		s_skyst_toonaddrsp2->addParts2(*s_skyst_toonlowaddrslider);
 
 
-		s_skyst_paramsWnd->addParts(*s_skyst_gradationsp0);
+		s_skyst_spall->addParts1(*s_skyst_gradationsp0);
 		s_skyst_gradationsp0->addParts1(*s_skyst_gradationchk);
 		s_skyst_gradationsp0->addParts2(*s_skyst_powertoonchk);
 
 
-		s_skyst_paramsWnd->addParts(*s_skyst_toonbasesp1_0);
+		s_skyst_spall->addParts1(*s_skyst_toonbasesp1_0);
 		s_skyst_toonbasesp1_0->addParts1(*s_skyst_toonbasesp1_1);
 		s_skyst_toonbasesp1_1->addParts1(*s_skyst_toonbaseHlabel);
 		s_skyst_toonbasesp1_1->addParts2(*s_skyst_toonbaseHslider);
 		s_skyst_toonbasesp1_0->addParts2(*s_skyst_toonbasesp1_2);
 		s_skyst_toonbasesp1_2->addParts1(*s_skyst_toonbaseSlabel);
 		s_skyst_toonbasesp1_2->addParts2(*s_skyst_toonbaseSslider);
-		s_skyst_paramsWnd->addParts(*s_skyst_toonbasesp2_0);
+		s_skyst_spall->addParts1(*s_skyst_toonbasesp2_0);
 		s_skyst_toonbasesp2_0->addParts1(*s_skyst_toonbasesp2_1);
 		s_skyst_toonbasesp2_1->addParts1(*s_skyst_toonbaseVlabel);
 		s_skyst_toonbasesp2_1->addParts2(*s_skyst_toonbaseVslider);
@@ -67924,14 +68034,14 @@ int CreateSkyParamsDlg()
 		s_skyst_toonbasesp2_2->addParts2(*s_skyst_toonbaseAslider);
 
 
-		s_skyst_paramsWnd->addParts(*s_skyst_toonhisp1_0);
+		s_skyst_spall->addParts1(*s_skyst_toonhisp1_0);
 		s_skyst_toonhisp1_0->addParts1(*s_skyst_toonhisp1_1);
 		s_skyst_toonhisp1_1->addParts1(*s_skyst_toonhiHlabel);
 		s_skyst_toonhisp1_1->addParts2(*s_skyst_toonhiHslider);
 		s_skyst_toonhisp1_0->addParts2(*s_skyst_toonhisp1_2);
 		s_skyst_toonhisp1_2->addParts1(*s_skyst_toonhiSlabel);
 		s_skyst_toonhisp1_2->addParts2(*s_skyst_toonhiSslider);
-		s_skyst_paramsWnd->addParts(*s_skyst_toonhisp2_0);
+		s_skyst_spall->addParts1(*s_skyst_toonhisp2_0);
 		s_skyst_toonhisp2_0->addParts1(*s_skyst_toonhisp2_1);
 		s_skyst_toonhisp2_1->addParts1(*s_skyst_toonhiVlabel);
 		s_skyst_toonhisp2_1->addParts2(*s_skyst_toonhiVslider);
@@ -67940,14 +68050,14 @@ int CreateSkyParamsDlg()
 		s_skyst_toonhisp2_2->addParts2(*s_skyst_toonhiAslider);
 
 
-		s_skyst_paramsWnd->addParts(*s_skyst_toonlowsp1_0);
+		s_skyst_spall->addParts1(*s_skyst_toonlowsp1_0);
 		s_skyst_toonlowsp1_0->addParts1(*s_skyst_toonlowsp1_1);
 		s_skyst_toonlowsp1_1->addParts1(*s_skyst_toonlowHlabel);
 		s_skyst_toonlowsp1_1->addParts2(*s_skyst_toonlowHslider);
 		s_skyst_toonlowsp1_0->addParts2(*s_skyst_toonlowsp1_2);
 		s_skyst_toonlowsp1_2->addParts1(*s_skyst_toonlowSlabel);
 		s_skyst_toonlowsp1_2->addParts2(*s_skyst_toonlowSslider);
-		s_skyst_paramsWnd->addParts(*s_skyst_toonlowsp2_0);
+		s_skyst_spall->addParts1(*s_skyst_toonlowsp2_0);
 		s_skyst_toonlowsp2_0->addParts1(*s_skyst_toonlowsp2_1);
 		s_skyst_toonlowsp2_1->addParts1(*s_skyst_toonlowVlabel);
 		s_skyst_toonlowsp2_1->addParts2(*s_skyst_toonlowVslider);
@@ -67956,7 +68066,7 @@ int CreateSkyParamsDlg()
 		s_skyst_toonlowsp2_2->addParts2(*s_skyst_toonlowAslider);
 
 
-		s_skyst_paramsWnd->addParts(*s_skyst_tilingsp0);
+		s_skyst_spall->addParts1(*s_skyst_tilingsp0);
 		s_skyst_tilingsp0->addParts1(*s_skyst_tilingsp1);
 		s_skyst_tilingsp1->addParts1(*s_skyst_tilingUlabel);
 		s_skyst_tilingsp1->addParts2(*s_skyst_tilingUslider);
@@ -67964,37 +68074,38 @@ int CreateSkyParamsDlg()
 		s_skyst_tilingsp2->addParts1(*s_skyst_tilingVlabel);
 		s_skyst_tilingsp2->addParts2(*s_skyst_tilingVslider);
 
-		s_skyst_paramsWnd->addParts(*s_skyst_alphatestsp0);
+		s_skyst_spall->addParts1(*s_skyst_alphatestsp0);
 		s_skyst_alphatestsp0->addParts1(*s_skyst_alphatestsp1);
 		s_skyst_alphatestsp1->addParts1(*s_skyst_alphatestlabel);
 		s_skyst_alphatestsp1->addParts2(*s_skyst_alphatestslider);
+		s_skyst_spall->addParts1(*s_skyst_spacerLabel06);
 
-		s_skyst_paramsWnd->addParts(*s_skyst_distortionsp0);
+		s_skyst_spall->addParts1(*s_skyst_distortionsp0);
 		s_skyst_distortionsp0->addParts1(*s_skyst_distortionchk);
 		s_skyst_distortionsp0->addParts2(*s_skyst_distortionsp1);
 		s_skyst_distortionsp1->addParts1(*s_skyst_distortionscalelabel);
 		s_skyst_distortionsp1->addParts2(*s_skyst_distortionscaleslider);
 
-		//s_skyst_paramsWnd->addParts(*s_skyst_riverradio);
+		//s_skyst_spall->addParts1(*s_skyst_riverradio);
 
-		//s_skyst_paramsWnd->addParts(*s_skyst_seacentersp0);
+		//s_skyst_spall->addParts1(*s_skyst_seacentersp0);
 		//s_skyst_seacentersp0->addParts1(*s_skyst_seacenterlabel);
 		//s_skyst_seacentersp0->addParts2(*s_skyst_seacentersp1);
 		//s_skyst_seacentersp1->addParts1(*s_skyst_seacenterUslider);
 		//s_skyst_seacentersp1->addParts2(*s_skyst_seacenterVslider);
 
-		//s_skyst_paramsWnd->addParts(*s_skyst_riverdirsp0);
+		//s_skyst_spall->addParts1(*s_skyst_riverdirsp0);
 		//s_skyst_riverdirsp0->addParts1(*s_skyst_riverdirlabel);
 		//s_skyst_riverdirsp0->addParts2(*s_skyst_riverdirsp1);
 		//s_skyst_riverdirsp1->addParts1(*s_skyst_riverdirUslider);
 		//s_skyst_riverdirsp1->addParts2(*s_skyst_riverdirVslider);
 
 
-		//s_skyst_paramsWnd->addParts(*s_skyst_flowratesp0);
+		//s_skyst_spall->addParts1(*s_skyst_flowratesp0);
 		//s_skyst_flowratesp0->addParts1(*s_skyst_flowratelabel);
 		//s_skyst_flowratesp0->addParts2(*s_skyst_flowrateslider);
 
-		//s_skyst_paramsWnd->addParts(*s_skyst_distortionmapradio);
+		//s_skyst_spall->addParts1(*s_skyst_distortionmapradio);
 
 
 
