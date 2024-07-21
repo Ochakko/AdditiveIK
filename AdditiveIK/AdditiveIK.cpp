@@ -1636,6 +1636,14 @@ static int s_shadertypeparamsindex = -1;//index==0は全てのマテリアルに
 
 
 static OrgWindow* s_st_paramsWnd = 0;
+static OWP_ScrollWnd* s_st_Sc = 0;
+static OWP_Separator* s_st_spall = 0;
+static OWP_Label* s_st_spacerLabel01 = 0;
+static OWP_Label* s_st_spacerLabel02 = 0;
+static OWP_Label* s_st_spacerLabel03 = 0;
+static OWP_Label* s_st_spacerLabel04 = 0;
+static OWP_Label* s_st_spacerLabel05 = 0;
+static OWP_Label* s_st_spacerLabel06 = 0;
 static OWP_Separator* s_st_namesp = 0;
 static OWP_Button* s_st_backB = 0;
 static OWP_Label* s_st_namelabel = 0;
@@ -5744,6 +5752,14 @@ void InitApp()
 		s_st_distortionmapradioFlag = false;
 
 		s_st_paramsWnd = 0;
+		s_st_Sc = 0;
+		s_st_spall = 0;
+		s_st_spacerLabel01 = 0;
+		s_st_spacerLabel02 = 0;
+		s_st_spacerLabel03 = 0;
+		s_st_spacerLabel04 = 0;
+		s_st_spacerLabel05 = 0;
+		s_st_spacerLabel06 = 0;
 		s_st_namesp = 0;
 		s_st_backB = 0;
 		s_st_namelabel = 0;
@@ -44671,7 +44687,38 @@ void DestroyShaderTypeParamsDlg()
 	}
 
 
-
+	if (s_st_Sc) {
+		delete s_st_Sc;
+		s_st_Sc = 0;
+	}
+	if (s_st_spall) {
+		delete s_st_spall;
+		s_st_spall = 0;
+	}
+	if (s_st_spacerLabel01) {
+		delete s_st_spacerLabel01;
+		s_st_spacerLabel01 = 0;
+	}
+	if (s_st_spacerLabel02) {
+		delete s_st_spacerLabel02;
+		s_st_spacerLabel02 = 0;
+	}
+	if (s_st_spacerLabel03) {
+		delete s_st_spacerLabel03;
+		s_st_spacerLabel03 = 0;
+	}
+	if (s_st_spacerLabel04) {
+		delete s_st_spacerLabel04;
+		s_st_spacerLabel04 = 0;
+	}
+	if (s_st_spacerLabel05) {
+		delete s_st_spacerLabel05;
+		s_st_spacerLabel05 = 0;
+	}
+	if (s_st_spacerLabel06) {
+		delete s_st_spacerLabel06;
+		s_st_spacerLabel06 = 0;
+	}
 	if (s_st_namesp) {
 		delete s_st_namesp;
 		s_st_namesp = 0;
@@ -63841,22 +63888,78 @@ int CreateShaderTypeParamsDlg()
 		0, 0, 0,				//カラー
 		true, true);					//サイズ変更の可否
 
+	int labelheight;
+	if (g_4kresolution) {
+		labelheight = 28;
+	}
+	else {
+		labelheight = 20;
+	}
+
 	if (s_st_paramsWnd) {
 		bool limitradionamelen = true;
 		double separaterate = 0.26;
+		double separateratelit = 0.35;
+
+		s_st_Sc = new OWP_ScrollWnd(L"ShaderParamsScroll", true, labelheight);
+		if (!s_st_Sc) {
+			_ASSERT(0);
+			return 1;
+		}
+		int linedatasize = (int)(46.0 * 1.25);
+		s_st_Sc->setLineDataSize(linedatasize);//!!!!!!!!!!!!
+		s_st_paramsWnd->addParts(*s_st_Sc);
 
 
+		//スクロールするGUI全てを束ねるセパレータは必要
+		s_st_spall = new OWP_Separator(s_st_paramsWnd, true, 0.995, false, s_st_Sc);
+		if (!s_st_spall) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_st_Sc->addParts(*s_st_spall);
+
+		s_st_spacerLabel01 = new OWP_Label(L"     ", labelheight);
+		if (!s_st_spacerLabel01) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_st_spacerLabel02 = new OWP_Label(L"     ", labelheight);
+		if (!s_st_spacerLabel02) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_st_spacerLabel03 = new OWP_Label(L"     ", labelheight);
+		if (!s_st_spacerLabel03) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_st_spacerLabel04 = new OWP_Label(L"     ", labelheight);
+		if (!s_st_spacerLabel04) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_st_spacerLabel05 = new OWP_Label(L"     ", labelheight);
+		if (!s_st_spacerLabel05) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_st_spacerLabel06 = new OWP_Label(L"     ", labelheight);
+		if (!s_st_spacerLabel06) {
+			_ASSERT(0);
+			return 1;
+		}
 		s_st_namesp = new OWP_Separator(s_st_paramsWnd, true, 0.2, true);
 		if (!s_st_namesp) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_backB = new OWP_Button(L"<-Back");
+		s_st_backB = new OWP_Button(L"<-Back", labelheight);
 		if (!s_st_backB) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_namelabel = new OWP_Label(L"MaterialName");
+		s_st_namelabel = new OWP_Label(L"MaterialName", labelheight);
 		if (!s_st_namelabel) {
 			_ASSERT(0);
 			return 1;
@@ -63868,7 +63971,7 @@ int CreateShaderTypeParamsDlg()
 		s_st_namelabel->setTextColor(colorCaution);
 
 
-		s_st_shadertyperadio = new OWP_RadioButton(L"Auto", limitradionamelen, 15);
+		s_st_shadertyperadio = new OWP_RadioButton(L"Auto", limitradionamelen, labelheight);
 		if (!s_st_shadertyperadio) {
 			_ASSERT(0);
 			return 1;
@@ -63883,17 +63986,17 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_lightflagchk = new OWP_CheckBoxA(L"Lighting", 0);
+		s_st_lightflagchk = new OWP_CheckBoxA(L"Lighting", 0, labelheight);
 		if (!s_st_lightflagchk) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_shadowcasterchk = new OWP_CheckBoxA(L"ShadowCaster", 0);
+		s_st_shadowcasterchk = new OWP_CheckBoxA(L"ShadowCaster", 0, labelheight);
 		if (!s_st_shadowcasterchk) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_normaly0chk = new OWP_CheckBoxA(L"NormalY0", 0);
+		s_st_normaly0chk = new OWP_CheckBoxA(L"NormalY0", 0, labelheight);
 		if (!s_st_normaly0chk) {
 			_ASSERT(0);
 			return 1;
@@ -63906,33 +64009,33 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_spccoefsp1 = new OWP_Separator(s_st_paramsWnd, true, separaterate, true);
+		s_st_spccoefsp1 = new OWP_Separator(s_st_paramsWnd, true, separateratelit, true);
 		if (!s_st_spccoefsp1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_spccoefsp2 = new OWP_Separator(s_st_paramsWnd, true, separaterate, true);
+		s_st_spccoefsp2 = new OWP_Separator(s_st_paramsWnd, true, separateratelit, true);
 		if (!s_st_spccoefsp2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_spccoeflabel = new OWP_Label(L"SpecularCoef");
+		s_st_spccoeflabel = new OWP_Label(L"Specular", labelheight);
 		if (!s_st_spccoeflabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_spccoefslider = new OWP_Slider(0.0, 2.0, 0.0);
+		s_st_spccoefslider = new OWP_Slider(0.0, 2.0, 0.0, labelheight);
 		if (!s_st_spccoefslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_emissionchk = new OWP_CheckBoxA(L"Emission", 0);
+		s_st_emissionchk = new OWP_CheckBoxA(L"Emi", 0, labelheight);
 		if (!s_st_emissionchk) {
 			_ASSERT(0);
 			return 1;
 		}
 		//s_st_emissionslider = new OWP_Slider(0.0, 1.0, 0.0);
-		s_st_emissionslider = new OWP_Slider(0.0, 10.0, 0.0);//2024/06/23 max 10.0
+		s_st_emissionslider = new OWP_Slider(0.0, 10.0, 0.0, labelheight);//2024/06/23 max 10.0
 		if (!s_st_emissionslider) {
 			_ASSERT(0);
 			return 1;
@@ -63944,32 +64047,32 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_metalsp1 = new OWP_Separator(s_st_paramsWnd, true, separaterate, true);
+		s_st_metalsp1 = new OWP_Separator(s_st_paramsWnd, true, separateratelit, true);
 		if (!s_st_metalsp1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_metalsp2 = new OWP_Separator(s_st_paramsWnd, true, separaterate, true);
+		s_st_metalsp2 = new OWP_Separator(s_st_paramsWnd, true, separateratelit, true);
 		if (!s_st_metalsp2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_metallabel = new OWP_Label(L"Metal_Add");
+		s_st_metallabel = new OWP_Label(L"Metal", labelheight);
 		if (!s_st_metallabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_metalslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_st_metalslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_st_metalslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_smoothlabel = new OWP_Label(L"Smooth");
+		s_st_smoothlabel = new OWP_Label(L"Smooth", labelheight);
 		if (!s_st_smoothlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_smoothslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_st_smoothslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_st_smoothslider) {
 			_ASSERT(0);
 			return 1;
@@ -63982,32 +64085,32 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscalesp1_1 = new OWP_Separator(s_st_paramsWnd, true, separaterate, true);
+		s_st_litscalesp1_1 = new OWP_Separator(s_st_paramsWnd, true, separateratelit, true);
 		if (!s_st_litscalesp1_1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscalesp1_2 = new OWP_Separator(s_st_paramsWnd, true, separaterate, true);
+		s_st_litscalesp1_2 = new OWP_Separator(s_st_paramsWnd, true, separateratelit, true);
 		if (!s_st_litscalesp1_2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscalelabel1 = new OWP_Label(L"LitScale1");
+		s_st_litscalelabel1 = new OWP_Label(L"Lit1", labelheight);
 		if (!s_st_litscalelabel1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscaleslider1 = new OWP_Slider(0.0, 5.0, 0.0);
+		s_st_litscaleslider1 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
 		if (!s_st_litscaleslider1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscalelabel2 = new OWP_Label(L"LitScale2");
+		s_st_litscalelabel2 = new OWP_Label(L"Lit2", labelheight);
 		if (!s_st_litscalelabel2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscaleslider2 = new OWP_Slider(0.0, 5.0, 0.0);
+		s_st_litscaleslider2 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
 		if (!s_st_litscaleslider2) {
 			_ASSERT(0);
 			return 1;
@@ -64019,32 +64122,32 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscalesp3_1 = new OWP_Separator(s_st_paramsWnd, true, separaterate, true);
+		s_st_litscalesp3_1 = new OWP_Separator(s_st_paramsWnd, true, separateratelit, true);
 		if (!s_st_litscalesp3_1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscalesp3_2 = new OWP_Separator(s_st_paramsWnd, true, separaterate, true);
+		s_st_litscalesp3_2 = new OWP_Separator(s_st_paramsWnd, true, separateratelit, true);
 		if (!s_st_litscalesp3_2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscalelabel3 = new OWP_Label(L"LitScale3");
+		s_st_litscalelabel3 = new OWP_Label(L"Lit3", labelheight);
 		if (!s_st_litscalelabel3) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscaleslider3 = new OWP_Slider(0.0, 5.0, 0.0);
+		s_st_litscaleslider3 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
 		if (!s_st_litscaleslider3) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscalelabel4 = new OWP_Label(L"LitScale4");
+		s_st_litscalelabel4 = new OWP_Label(L"Lit4", labelheight);
 		if (!s_st_litscalelabel4) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscaleslider4 = new OWP_Slider(0.0, 5.0, 0.0);
+		s_st_litscaleslider4 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
 		if (!s_st_litscaleslider4) {
 			_ASSERT(0);
 			return 1;
@@ -64057,32 +64160,32 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscalesp5_1 = new OWP_Separator(s_st_paramsWnd, true, separaterate, true);
+		s_st_litscalesp5_1 = new OWP_Separator(s_st_paramsWnd, true, separateratelit, true);
 		if (!s_st_litscalesp5_1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscalesp5_2 = new OWP_Separator(s_st_paramsWnd, true, separaterate, true);
+		s_st_litscalesp5_2 = new OWP_Separator(s_st_paramsWnd, true, separateratelit, true);
 		if (!s_st_litscalesp5_2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscalelabel5 = new OWP_Label(L"LitScale5");
+		s_st_litscalelabel5 = new OWP_Label(L"Lit5", labelheight);
 		if (!s_st_litscalelabel5) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscaleslider5 = new OWP_Slider(0.0, 5.0, 0.0);
+		s_st_litscaleslider5 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
 		if (!s_st_litscaleslider5) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscalelabel6 = new OWP_Label(L"LitScale6");
+		s_st_litscalelabel6 = new OWP_Label(L"Lit6", labelheight);
 		if (!s_st_litscalelabel6) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscaleslider6 = new OWP_Slider(0.0, 5.0, 0.0);
+		s_st_litscaleslider6 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
 		if (!s_st_litscaleslider6) {
 			_ASSERT(0);
 			return 1;
@@ -64095,39 +64198,39 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscalesp7_1 = new OWP_Separator(s_st_paramsWnd, true, separaterate, true);
+		s_st_litscalesp7_1 = new OWP_Separator(s_st_paramsWnd, true, separateratelit, true);
 		if (!s_st_litscalesp7_1) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscalesp7_2 = new OWP_Separator(s_st_paramsWnd, true, separaterate, true);
+		s_st_litscalesp7_2 = new OWP_Separator(s_st_paramsWnd, true, separateratelit, true);
 		if (!s_st_litscalesp7_2) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscalelabel7 = new OWP_Label(L"LitScale7");
+		s_st_litscalelabel7 = new OWP_Label(L"Lit7", labelheight);
 		if (!s_st_litscalelabel7) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscaleslider7 = new OWP_Slider(0.0, 5.0, 0.0);
+		s_st_litscaleslider7 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
 		if (!s_st_litscaleslider7) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscalelabel8 = new OWP_Label(L"LitScale8");
+		s_st_litscalelabel8 = new OWP_Label(L"Lit8", labelheight);
 		if (!s_st_litscalelabel8) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_litscaleslider8 = new OWP_Slider(0.0, 5.0, 0.0);
+		s_st_litscaleslider8 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
 		if (!s_st_litscaleslider8) {
 			_ASSERT(0);
 			return 1;
 		}
 
 
-		s_st_toonlitradio = new OWP_RadioButton(L"ToonLit1", limitradionamelen, 15);
+		s_st_toonlitradio = new OWP_RadioButton(L"ToonLit1", limitradionamelen, labelheight);
 		if (!s_st_toonlitradio) {
 			_ASSERT(0);
 			return 1;
@@ -64156,22 +64259,22 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonhiaddrlabel = new OWP_Label(L"HiAddr");
+		s_st_toonhiaddrlabel = new OWP_Label(L"HiAddr", labelheight);
 		if (!s_st_toonhiaddrlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonhiaddrslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_st_toonhiaddrslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_st_toonhiaddrslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonlowaddrlabel = new OWP_Label(L"LowAddr");
+		s_st_toonlowaddrlabel = new OWP_Label(L"LowAddr", labelheight);
 		if (!s_st_toonlowaddrlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonlowaddrslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_st_toonlowaddrslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_st_litscaleslider8) {
 			_ASSERT(0);
 			return 1;
@@ -64183,12 +64286,12 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_gradationchk = new OWP_CheckBoxA(L"Gradation", 0);
+		s_st_gradationchk = new OWP_CheckBoxA(L"Gradation", 0, labelheight);
 		if (!s_st_gradationchk) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_powertoonchk = new OWP_CheckBoxA(L"PowerToon", 0);
+		s_st_powertoonchk = new OWP_CheckBoxA(L"PowerToon", 0, labelheight);
 		if (!s_st_powertoonchk) {
 			_ASSERT(0);
 			return 1;
@@ -64211,22 +64314,22 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonbaseHlabel = new OWP_Label(L"BaseH");
+		s_st_toonbaseHlabel = new OWP_Label(L"BaseH", labelheight);
 		if (!s_st_toonbaseHlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonbaseHslider = new OWP_Slider(0.0, 360.0, 0.0);
+		s_st_toonbaseHslider = new OWP_Slider(0.0, 360.0, 0.0, labelheight);
 		if (!s_st_toonbaseHslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonbaseSlabel = new OWP_Label(L"BaseS");
+		s_st_toonbaseSlabel = new OWP_Label(L"BaseS", labelheight);
 		if (!s_st_toonbaseSlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonbaseSslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_st_toonbaseSslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_st_toonbaseSslider) {
 			_ASSERT(0);
 			return 1;
@@ -64246,22 +64349,22 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonbaseVlabel = new OWP_Label(L"BaseV");
+		s_st_toonbaseVlabel = new OWP_Label(L"BaseV", labelheight);
 		if (!s_st_toonbaseVlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonbaseVslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_st_toonbaseVslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_st_toonbaseVslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonbaseAlabel = new OWP_Label(L"BaseA");
+		s_st_toonbaseAlabel = new OWP_Label(L"BaseA", labelheight);
 		if (!s_st_toonbaseAlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonbaseAslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_st_toonbaseAslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_st_toonbaseAslider) {
 			_ASSERT(0);
 			return 1;
@@ -64283,22 +64386,22 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonhiHlabel = new OWP_Label(L"HighH");
+		s_st_toonhiHlabel = new OWP_Label(L"HighH", labelheight);
 		if (!s_st_toonhiHlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonhiHslider = new OWP_Slider(0.0, 360.0, -360.0);
+		s_st_toonhiHslider = new OWP_Slider(0.0, 360.0, -360.0, labelheight);
 		if (!s_st_toonhiHslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonhiSlabel = new OWP_Label(L"HighS");
+		s_st_toonhiSlabel = new OWP_Label(L"HighS", labelheight);
 		if (!s_st_toonhiSlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonhiSslider = new OWP_Slider(0.0, 1.0, -1.0);
+		s_st_toonhiSslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
 		if (!s_st_toonhiSslider) {
 			_ASSERT(0);
 			return 1;
@@ -64318,22 +64421,22 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonhiVlabel = new OWP_Label(L"HighV");
+		s_st_toonhiVlabel = new OWP_Label(L"HighV", labelheight);
 		if (!s_st_toonhiVlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonhiVslider = new OWP_Slider(0.0, 1.0, -1.0);
+		s_st_toonhiVslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
 		if (!s_st_toonhiVslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonhiAlabel = new OWP_Label(L"HighA");
+		s_st_toonhiAlabel = new OWP_Label(L"HighA", labelheight);
 		if (!s_st_toonhiAlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonhiAslider = new OWP_Slider(0.0, 1.0, -1.0);
+		s_st_toonhiAslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
 		if (!s_st_toonhiAslider) {
 			_ASSERT(0);
 			return 1;
@@ -64355,22 +64458,22 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonlowHlabel = new OWP_Label(L"LowH");
+		s_st_toonlowHlabel = new OWP_Label(L"LowH", labelheight);
 		if (!s_st_toonlowHlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonlowHslider = new OWP_Slider(0.0, 360.0, -360.0);
+		s_st_toonlowHslider = new OWP_Slider(0.0, 360.0, -360.0, labelheight);
 		if (!s_st_toonlowHslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonlowSlabel = new OWP_Label(L"LowS");
+		s_st_toonlowSlabel = new OWP_Label(L"LowS", labelheight);
 		if (!s_st_toonlowSlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonlowSslider = new OWP_Slider(0.0, 1.0, -1.0);
+		s_st_toonlowSslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
 		if (!s_st_toonlowSslider) {
 			_ASSERT(0);
 			return 1;
@@ -64390,22 +64493,22 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonlowVlabel = new OWP_Label(L"LowV");
+		s_st_toonlowVlabel = new OWP_Label(L"LowV", labelheight);
 		if (!s_st_toonlowVlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonlowVslider = new OWP_Slider(0.0, 1.0, -1.0);
+		s_st_toonlowVslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
 		if (!s_st_toonlowVslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonlowAlabel = new OWP_Label(L"LowA");
+		s_st_toonlowAlabel = new OWP_Label(L"LowA", labelheight);
 		if (!s_st_toonlowAlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_toonlowAslider = new OWP_Slider(0.0, 1.0, -1.0);
+		s_st_toonlowAslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
 		if (!s_st_toonlowAslider) {
 			_ASSERT(0);
 			return 1;
@@ -64427,22 +64530,22 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_tilingUlabel = new OWP_Label(L"TilingU");
+		s_st_tilingUlabel = new OWP_Label(L"TileU", labelheight);
 		if (!s_st_tilingUlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_tilingUslider = new OWP_Slider(0.0, 100.0, 0.0);
+		s_st_tilingUslider = new OWP_Slider(0.0, 100.0, 0.0, labelheight);
 		if (!s_st_tilingUslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_tilingVlabel = new OWP_Label(L"TilingV");
+		s_st_tilingVlabel = new OWP_Label(L"TileV", labelheight);
 		if (!s_st_tilingVlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_tilingVslider = new OWP_Slider(0.0, 100.0, 0.0);
+		s_st_tilingVslider = new OWP_Slider(0.0, 100.0, 0.0, labelheight);
 		if (!s_st_tilingVslider) {
 			_ASSERT(0);
 			return 1;
@@ -64459,12 +64562,12 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_alphatestlabel = new OWP_Label(L"AlphaTest");
+		s_st_alphatestlabel = new OWP_Label(L"ATest", labelheight);
 		if (!s_st_alphatestlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_alphatestslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_st_alphatestslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_st_alphatestslider) {
 			_ASSERT(0);
 			return 1;
@@ -64481,24 +64584,24 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_distortionchk = new OWP_CheckBoxA(L"SimpleWater(PBR,NoSkin)", 0);
+		s_st_distortionchk = new OWP_CheckBoxA(L"SimpleWater(PBR,NoSkin)", 0, labelheight);
 		if (!s_st_distortionchk) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_distortionscalelabel = new OWP_Label(L"Scale");
+		s_st_distortionscalelabel = new OWP_Label(L"Scale", labelheight);
 		if (!s_st_distortionscalelabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_distortionscaleslider = new OWP_Slider(1.0, 10.0, 0.0);
+		s_st_distortionscaleslider = new OWP_Slider(1.0, 10.0, 0.0, labelheight);
 		if (!s_st_distortionscaleslider) {
 			_ASSERT(0);
 			return 1;
 		}
 
 
-		s_st_riverradio = new OWP_RadioButton(L"river", limitradionamelen, 15);
+		s_st_riverradio = new OWP_RadioButton(L"river", limitradionamelen, labelheight);
 		if (!s_st_riverradio) {
 			_ASSERT(0);
 			return 1;
@@ -64516,17 +64619,17 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_seacenterlabel = new OWP_Label(L"SeaCenterUV");
+		s_st_seacenterlabel = new OWP_Label(L"SeaCenterUV", labelheight);
 		if (!s_st_seacenterlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_seacenterUslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_st_seacenterUslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_st_seacenterUslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_seacenterVslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_st_seacenterVslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_st_seacenterVslider) {
 			_ASSERT(0);
 			return 1;
@@ -64543,17 +64646,17 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_riverdirlabel = new OWP_Label(L"FlowDirUV");
+		s_st_riverdirlabel = new OWP_Label(L"FlowDirUV", labelheight);
 		if (!s_st_riverdirlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_riverdirUslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_st_riverdirUslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_st_riverdirUslider) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_riverdirVslider = new OWP_Slider(0.0, 1.0, 0.0);
+		s_st_riverdirVslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
 		if (!s_st_riverdirVslider) {
 			_ASSERT(0);
 			return 1;
@@ -64565,12 +64668,12 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_flowratelabel = new OWP_Label(L"FlowRate");
+		s_st_flowratelabel = new OWP_Label(L"FlowRate", labelheight);
 		if (!s_st_flowratelabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_flowrateslider = new OWP_Slider(1.0, 4.0, -4.0);
+		s_st_flowrateslider = new OWP_Slider(1.0, 4.0, -4.0, labelheight);
 		if (!s_st_flowrateslider) {
 			_ASSERT(0);
 			return 1;
@@ -64578,7 +64681,7 @@ int CreateShaderTypeParamsDlg()
 
 
 
-		s_st_distortionmapradio = new OWP_RadioButton(L"RG", limitradionamelen, 15);
+		s_st_distortionmapradio = new OWP_RadioButton(L"RG", limitradionamelen, labelheight);
 		if (!s_st_distortionmapradio) {
 			_ASSERT(0);
 			return 1;
@@ -64587,18 +64690,21 @@ int CreateShaderTypeParamsDlg()
 		s_st_distortionmapradio->addLine(L"RB");
 
 
-		s_st_paramsWnd->addParts(*s_st_namesp);
+		s_st_spall->addParts1(*s_st_namesp);
 		s_st_namesp->addParts1(*s_st_backB);
 		s_st_namesp->addParts2(*s_st_namelabel);
+		s_st_spall->addParts1(*s_st_spacerLabel01);
 
-		s_st_paramsWnd->addParts(*s_st_shadertyperadio);
+		s_st_spall->addParts1(*s_st_shadertyperadio);
+		s_st_spall->addParts1(*s_st_spacerLabel02);
 
-		s_st_paramsWnd->addParts(*s_st_litflagsp);
+		s_st_spall->addParts1(*s_st_litflagsp);
 		s_st_litflagsp->addParts1(*s_st_lightflagchk);
 		s_st_litflagsp->addParts2(*s_st_shadowcasterchk);
-		s_st_paramsWnd->addParts(*s_st_normaly0chk);
+		s_st_spall->addParts1(*s_st_normaly0chk);
+		s_st_spall->addParts1(*s_st_spacerLabel03);
 
-		s_st_paramsWnd->addParts(*s_st_spccoefsp0);
+		s_st_spall->addParts1(*s_st_spccoefsp0);
 		s_st_spccoefsp0->addParts1(*s_st_spccoefsp1);
 		s_st_spccoefsp1->addParts1(*s_st_spccoeflabel);
 		s_st_spccoefsp1->addParts2(*s_st_spccoefslider);
@@ -64606,7 +64712,7 @@ int CreateShaderTypeParamsDlg()
 		s_st_spccoefsp2->addParts1(*s_st_emissionchk);
 		s_st_spccoefsp2->addParts2(*s_st_emissionslider);
 
-		s_st_paramsWnd->addParts(*s_st_metalsp0);
+		s_st_spall->addParts1(*s_st_metalsp0);
 		s_st_metalsp0->addParts1(*s_st_metalsp1);
 		s_st_metalsp1->addParts1(*s_st_metallabel);
 		s_st_metalsp1->addParts2(*s_st_metalslider);
@@ -64614,7 +64720,7 @@ int CreateShaderTypeParamsDlg()
 		s_st_metalsp2->addParts1(*s_st_smoothlabel);
 		s_st_metalsp2->addParts2(*s_st_smoothslider);
 
-		s_st_paramsWnd->addParts(*s_st_litscalesp1_0);
+		s_st_spall->addParts1(*s_st_litscalesp1_0);
 		s_st_litscalesp1_0->addParts1(*s_st_litscalesp1_1);
 		s_st_litscalesp1_1->addParts1(*s_st_litscalelabel1);
 		s_st_litscalesp1_1->addParts2(*s_st_litscaleslider1);
@@ -64622,7 +64728,7 @@ int CreateShaderTypeParamsDlg()
 		s_st_litscalesp1_2->addParts1(*s_st_litscalelabel2);
 		s_st_litscalesp1_2->addParts2(*s_st_litscaleslider2);
 
-		s_st_paramsWnd->addParts(*s_st_litscalesp3_0);
+		s_st_spall->addParts1(*s_st_litscalesp3_0);
 		s_st_litscalesp3_0->addParts1(*s_st_litscalesp3_1);
 		s_st_litscalesp3_1->addParts1(*s_st_litscalelabel3);
 		s_st_litscalesp3_1->addParts2(*s_st_litscaleslider3);
@@ -64631,7 +64737,7 @@ int CreateShaderTypeParamsDlg()
 		s_st_litscalesp3_2->addParts2(*s_st_litscaleslider4);
 
 
-		s_st_paramsWnd->addParts(*s_st_litscalesp5_0);
+		s_st_spall->addParts1(*s_st_litscalesp5_0);
 		s_st_litscalesp5_0->addParts1(*s_st_litscalesp5_1);
 		s_st_litscalesp5_1->addParts1(*s_st_litscalelabel5);
 		s_st_litscalesp5_1->addParts2(*s_st_litscaleslider5);
@@ -64640,18 +64746,19 @@ int CreateShaderTypeParamsDlg()
 		s_st_litscalesp5_2->addParts2(*s_st_litscaleslider6);
 
 
-		s_st_paramsWnd->addParts(*s_st_litscalesp7_0);
+		s_st_spall->addParts1(*s_st_litscalesp7_0);
 		s_st_litscalesp7_0->addParts1(*s_st_litscalesp7_1);
 		s_st_litscalesp7_1->addParts1(*s_st_litscalelabel7);
 		s_st_litscalesp7_1->addParts2(*s_st_litscaleslider7);
 		s_st_litscalesp7_0->addParts2(*s_st_litscalesp7_2);
 		s_st_litscalesp7_2->addParts1(*s_st_litscalelabel8);
 		s_st_litscalesp7_2->addParts2(*s_st_litscaleslider8);
+		s_st_spall->addParts1(*s_st_spacerLabel04);
 
-		s_st_paramsWnd->addParts(*s_st_toonlitradio);
+		s_st_spall->addParts1(*s_st_toonlitradio);
+		s_st_spall->addParts1(*s_st_spacerLabel05);
 
-
-		s_st_paramsWnd->addParts(*s_st_toonaddrsp0);
+		s_st_spall->addParts1(*s_st_toonaddrsp0);
 		s_st_toonaddrsp0->addParts1(*s_st_toonaddrsp1);
 		s_st_toonaddrsp1->addParts1(*s_st_toonhiaddrlabel);
 		s_st_toonaddrsp1->addParts2(*s_st_toonhiaddrslider);
@@ -64660,19 +64767,19 @@ int CreateShaderTypeParamsDlg()
 		s_st_toonaddrsp2->addParts2(*s_st_toonlowaddrslider);
 
 
-		s_st_paramsWnd->addParts(*s_st_gradationsp0);
+		s_st_spall->addParts1(*s_st_gradationsp0);
 		s_st_gradationsp0->addParts1(*s_st_gradationchk);
 		s_st_gradationsp0->addParts2(*s_st_powertoonchk);
 
 
-		s_st_paramsWnd->addParts(*s_st_toonbasesp1_0);
+		s_st_spall->addParts1(*s_st_toonbasesp1_0);
 		s_st_toonbasesp1_0->addParts1(*s_st_toonbasesp1_1);
 		s_st_toonbasesp1_1->addParts1(*s_st_toonbaseHlabel);
 		s_st_toonbasesp1_1->addParts2(*s_st_toonbaseHslider);
 		s_st_toonbasesp1_0->addParts2(*s_st_toonbasesp1_2);
 		s_st_toonbasesp1_2->addParts1(*s_st_toonbaseSlabel);
 		s_st_toonbasesp1_2->addParts2(*s_st_toonbaseSslider);
-		s_st_paramsWnd->addParts(*s_st_toonbasesp2_0);
+		s_st_spall->addParts1(*s_st_toonbasesp2_0);
 		s_st_toonbasesp2_0->addParts1(*s_st_toonbasesp2_1);
 		s_st_toonbasesp2_1->addParts1(*s_st_toonbaseVlabel);
 		s_st_toonbasesp2_1->addParts2(*s_st_toonbaseVslider);
@@ -64681,14 +64788,14 @@ int CreateShaderTypeParamsDlg()
 		s_st_toonbasesp2_2->addParts2(*s_st_toonbaseAslider);
 
 
-		s_st_paramsWnd->addParts(*s_st_toonhisp1_0);
+		s_st_spall->addParts1(*s_st_toonhisp1_0);
 		s_st_toonhisp1_0->addParts1(*s_st_toonhisp1_1);
 		s_st_toonhisp1_1->addParts1(*s_st_toonhiHlabel);
 		s_st_toonhisp1_1->addParts2(*s_st_toonhiHslider);
 		s_st_toonhisp1_0->addParts2(*s_st_toonhisp1_2);
 		s_st_toonhisp1_2->addParts1(*s_st_toonhiSlabel);
 		s_st_toonhisp1_2->addParts2(*s_st_toonhiSslider);
-		s_st_paramsWnd->addParts(*s_st_toonhisp2_0);
+		s_st_spall->addParts1(*s_st_toonhisp2_0);
 		s_st_toonhisp2_0->addParts1(*s_st_toonhisp2_1);
 		s_st_toonhisp2_1->addParts1(*s_st_toonhiVlabel);
 		s_st_toonhisp2_1->addParts2(*s_st_toonhiVslider);
@@ -64697,14 +64804,14 @@ int CreateShaderTypeParamsDlg()
 		s_st_toonhisp2_2->addParts2(*s_st_toonhiAslider);
 
 
-		s_st_paramsWnd->addParts(*s_st_toonlowsp1_0);
+		s_st_spall->addParts1(*s_st_toonlowsp1_0);
 		s_st_toonlowsp1_0->addParts1(*s_st_toonlowsp1_1);
 		s_st_toonlowsp1_1->addParts1(*s_st_toonlowHlabel);
 		s_st_toonlowsp1_1->addParts2(*s_st_toonlowHslider);
 		s_st_toonlowsp1_0->addParts2(*s_st_toonlowsp1_2);
 		s_st_toonlowsp1_2->addParts1(*s_st_toonlowSlabel);
 		s_st_toonlowsp1_2->addParts2(*s_st_toonlowSslider);
-		s_st_paramsWnd->addParts(*s_st_toonlowsp2_0);
+		s_st_spall->addParts1(*s_st_toonlowsp2_0);
 		s_st_toonlowsp2_0->addParts1(*s_st_toonlowsp2_1);
 		s_st_toonlowsp2_1->addParts1(*s_st_toonlowVlabel);
 		s_st_toonlowsp2_1->addParts2(*s_st_toonlowVslider);
@@ -64713,7 +64820,7 @@ int CreateShaderTypeParamsDlg()
 		s_st_toonlowsp2_2->addParts2(*s_st_toonlowAslider);
 
 
-		s_st_paramsWnd->addParts(*s_st_tilingsp0);
+		s_st_spall->addParts1(*s_st_tilingsp0);
 		s_st_tilingsp0->addParts1(*s_st_tilingsp1);
 		s_st_tilingsp1->addParts1(*s_st_tilingUlabel);
 		s_st_tilingsp1->addParts2(*s_st_tilingUslider);
@@ -64721,37 +64828,38 @@ int CreateShaderTypeParamsDlg()
 		s_st_tilingsp2->addParts1(*s_st_tilingVlabel);
 		s_st_tilingsp2->addParts2(*s_st_tilingVslider);
 
-		s_st_paramsWnd->addParts(*s_st_alphatestsp0);
+		s_st_spall->addParts1(*s_st_alphatestsp0);
 		s_st_alphatestsp0->addParts1(*s_st_alphatestsp1);
 		s_st_alphatestsp1->addParts1(*s_st_alphatestlabel);
 		s_st_alphatestsp1->addParts2(*s_st_alphatestslider);
+		s_st_spall->addParts1(*s_st_spacerLabel06);
 
-		s_st_paramsWnd->addParts(*s_st_distortionsp0);
+		s_st_spall->addParts1(*s_st_distortionsp0);
 		s_st_distortionsp0->addParts1(*s_st_distortionchk);
 		s_st_distortionsp0->addParts2(*s_st_distortionsp1);
 		s_st_distortionsp1->addParts1(*s_st_distortionscalelabel);
 		s_st_distortionsp1->addParts2(*s_st_distortionscaleslider);
 
-		s_st_paramsWnd->addParts(*s_st_riverradio);
+		s_st_spall->addParts1(*s_st_riverradio);
 
-		//s_st_paramsWnd->addParts(*s_st_seacentersp0);
+		//s_st_spall->addParts1(*s_st_seacentersp0);
 		//s_st_seacentersp0->addParts1(*s_st_seacenterlabel);
 		//s_st_seacentersp0->addParts2(*s_st_seacentersp1);
 		//s_st_seacentersp1->addParts1(*s_st_seacenterUslider);
 		//s_st_seacentersp1->addParts2(*s_st_seacenterVslider);
 
-		s_st_paramsWnd->addParts(*s_st_riverdirsp0);
+		s_st_spall->addParts1(*s_st_riverdirsp0);
 		s_st_riverdirsp0->addParts1(*s_st_riverdirlabel);
 		s_st_riverdirsp0->addParts2(*s_st_riverdirsp1);
 		s_st_riverdirsp1->addParts1(*s_st_riverdirUslider);
 		s_st_riverdirsp1->addParts2(*s_st_riverdirVslider);
 
 
-		s_st_paramsWnd->addParts(*s_st_flowratesp0);
+		s_st_spall->addParts1(*s_st_flowratesp0);
 		s_st_flowratesp0->addParts1(*s_st_flowratelabel);
 		s_st_flowratesp0->addParts2(*s_st_flowrateslider);
 
-		s_st_paramsWnd->addParts(*s_st_distortionmapradio);
+		s_st_spall->addParts1(*s_st_distortionmapradio);
 
 
 

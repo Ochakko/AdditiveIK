@@ -12631,6 +12631,25 @@ void s_dummyfunc()
 
 				autoResize();
 			}
+
+
+			//内部パーツ
+			std::list<OrgWindowParts*>::iterator plItr;
+			for (plItr = partsList.begin(); plItr != partsList.end(); plItr++) {
+				if (*plItr) {
+					MouseEvent mouseEvent;
+					mouseEvent.globalX = e.globalX;
+					mouseEvent.globalY = e.globalY;
+					mouseEvent.localX = e.localX + pos.x - (*plItr)->getPos().x;
+					mouseEvent.localY = e.localY + pos.y - (*plItr)->getPos().y;
+					mouseEvent.altKey = e.altKey;
+					mouseEvent.shiftKey = e.shiftKey;
+					mouseEvent.ctrlKey = e.ctrlKey;
+					mouseEvent.wheeldelta = e.wheeldelta;
+
+					(*plItr)->onMouseWheel(mouseEvent);
+				}
+			}
 		}
 
 		//////////////////////////// Accessor //////////////////////////////
