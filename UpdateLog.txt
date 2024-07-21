@@ -13,8 +13,14 @@ https://github.com/Ochakko/AdditiveIK
 　　Skyメニューの右ペインウインドウ調整
 　　　文字を大きくしてスクロールウインドウ対応
 
+　　OWP_SoftAlNumKeyクラスを追加
+　　　メモ欄用エディットボックス対応準備
+　　　ソフトキーでアルファベットも入力可能に.
+　　　OWP_EditBox作成時にonlunumkeyflag引数をtrueにすると数字だけのソフトキー、falseにすると数字とアルファベットのソフトキーと関連付け.
+　　　アルファベットのキーの並びはキーボードの配列順に.
 
 　　
+
 
 2024/07/20
 　GUI修正

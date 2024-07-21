@@ -63,6 +63,8 @@ extern Gdiplus::Image* g_playerbutton_target_inv40;
 extern Gdiplus::Image* g_numBG;
 extern Gdiplus::Image* g_numbutton[SKNUMBUTTON_MAX];
 extern Gdiplus::Image* g_numbutton_pushed[SKNUMBUTTON_MAX];
+extern Gdiplus::Image* g_alnumbutton[SKALNUM_MAX];
+extern Gdiplus::Image* g_alnumbutton_pushed[SKALNUM_MAX];
 
 extern int g_edittarget;
 extern int g_currentsubmenuid;
@@ -4159,13 +4161,295 @@ void s_dummyfunc()
 		}
 	};
 
+
+	///<summary>
+	///	ウィンドウ内部品"プレイヤーボタン"クラス
+	///</summary>
+	class OWP_SoftAlNumKey : public OrgWindowParts {
+	public:
+		//////////////////// Constructor/Destructor //////////////////////
+		OWP_SoftAlNumKey() : OrgWindowParts(), numkeyparam() {
+			//setIsPlayerButton(true);
+
+			if (g_4kresolution) {
+				//BOX_WIDTHとSIZE_Yは setButtonSizeでも変更出来る
+				BOX_WIDTH = 40;
+				SIZE_Y = 44;
+				OFFSET_X = BOX_WIDTH / 2;
+			}
+			else {
+				//BOX_WIDTHとSIZE_Yは setButtonSizeでも変更出来る
+				BOX_WIDTH = 26;
+				SIZE_Y = 30;
+				OFFSET_X = BOX_WIDTH / 2;
+			}
+			pushnum = 0;
+			peditbox = nullptr;
+
+			copymap[0] = std::wstring(L"0");
+			copymap[1] = std::wstring(L"0");
+			copymap[2] = std::wstring(L"0");
+		}
+		~OWP_SoftAlNumKey() {
+		}
+
+		WindowPos getButtonPos(int buttonno)
+		{
+			WindowPos retpos;
+
+			if ((buttonno >= SKALNUM_Q) && (buttonno <= SKALNUM_P)) {
+				//１段目
+				int lineindex = 0;
+				int leftindex = buttonno;
+
+				//ボタンの四隅になる座標を求める
+				int pos1x = OFFSET_X + pos.x + PNG_W * leftindex;
+				int pos1y = pos.y + lineindex * PNG_H;
+				int pos2x = OFFSET_X + pos.x + PNG_W * (leftindex + 1);
+				int pos2y = pos.y + (lineindex + 1) * PNG_H;
+
+				retpos.x = pos1x;
+				retpos.y = pos1y;
+			}
+			else if ((buttonno >= SKALNUM_A) && (buttonno <= SKALNUM_L)) {
+				//２段目
+				int lineindex = 1;
+				int leftindex = buttonno - SKALNUM_A;
+
+				//ボタンの四隅になる座標を求める
+				int pos1x = OFFSET_X + pos.x + PNG_W * leftindex;
+				int pos1y = pos.y + lineindex * PNG_H;
+				int pos2x = OFFSET_X + pos.x + PNG_W * (leftindex + 1);
+				int pos2y = pos.y + (lineindex + 1) * PNG_H;
+
+				retpos.x = pos1x;
+				retpos.y = pos1y;
+			}
+			else if ((buttonno >= SKALNUM_Z) && (buttonno <= SKALNUM_M)) {
+				//３段目
+				int lineindex = 2;
+				int leftindex = buttonno - SKALNUM_Z;
+
+				//ボタンの四隅になる座標を求める
+				int pos1x = OFFSET_X + pos.x + PNG_W * leftindex;
+				int pos1y = pos.y + lineindex * PNG_H;
+				int pos2x = OFFSET_X + pos.x + PNG_W * (leftindex + 1);
+				int pos2y = pos.y + (lineindex + 1) * PNG_H;
+
+				retpos.x = pos1x;
+				retpos.y = pos1y;
+			}
+			else if ((buttonno >= SKALNUM_0) && (buttonno <= SKALNUM_9)) {
+				//４段目
+				int lineindex = 3;
+				int leftindex = buttonno - SKALNUM_0;
+
+				//ボタンの四隅になる座標を求める
+				int pos1x = OFFSET_X + pos.x + PNG_W * leftindex;
+				int pos1y = pos.y + lineindex * PNG_H;
+				int pos2x = OFFSET_X + pos.x + PNG_W * (leftindex + 1);
+				int pos2y = pos.y + (lineindex + 1) * PNG_H;
+
+				retpos.x = pos1x;
+				retpos.y = pos1y;
+			}
+			else if ((buttonno >= SKALNUM_PERIOD) && (buttonno <= SKALNUM_PS3)) {
+				//５段目
+				int lineindex = 4;
+				int leftindex = buttonno - SKALNUM_PERIOD;
+
+				//ボタンの四隅になる座標を求める
+				int pos1x = OFFSET_X + pos.x + PNG_W * leftindex;
+				int pos1y = pos.y + lineindex * PNG_H;
+				int pos2x = OFFSET_X + pos.x + PNG_W * (leftindex + 1);
+				int pos2y = pos.y + (lineindex + 1) * PNG_H;
+
+				retpos.x = pos1x;
+				retpos.y = pos1y;
+			}
+			else if (buttonno == SKALNUM_CLOSE) {
+				//閉じるボタンは６段目の一番右
+				int lineindex = 5;
+				int leftindex = 9;
+				int offsety = 15;
+
+				int pos1x = OFFSET_X + pos.x + PNG_W * leftindex;
+				int pos1y = pos.y + lineindex * PNG_H + offsety;
+				int pos2x = OFFSET_X + pos.x + PNG_W * (leftindex + 1);
+				int pos2y = pos.y + (lineindex + 1) * PNG_H + offsety;
+
+				retpos.x = pos1x;
+				retpos.y = pos1y;
+			}
+			else {
+				_ASSERT(0);
+				retpos.x = 0;
+				retpos.y = 0;
+			}
+
+			return retpos;
+		};
+		WindowSize getButtonSize(int buttonno) {
+			WindowSize retsize;
+			retsize.x = PNG_W;
+			retsize.y = PNG_H;
+			return retsize;
+		};
+
+		int drawAlNum(WindowPos srcpos, WindowSize srcsize, int srcnum, bool pushed)
+		{
+			if (getParent() && (srcnum >= SKALNUM_Q) && (srcnum < SKALNUM_MAX)) {
+				if (pushed) {
+					if (g_alnumbutton_pushed[srcnum]) {
+						DrawGdiplusButton(g_alnumbutton_pushed[srcnum], hdcM->hDC,
+							srcpos.x, srcpos.y, PNG_W, PNG_H, 1.0);
+					}
+				}
+				else {
+					if (g_alnumbutton[srcnum]) {
+						DrawGdiplusButton(g_alnumbutton[srcnum], hdcM->hDC,
+							srcpos.x, srcpos.y, PNG_W, PNG_H, 1.0);
+					}
+				}
+			}
+			return 0;
+		};
+
+		//////////////////////////// Method //////////////////////////////
+		/// Method : 自動サイズ設定
+		virtual void autoResize() {
+			int closeoffsety = 15;
+			size.y = PNG_H * 6 + closeoffsety;//!!!!!!!!!!!!!
+		};
+		//	Method : 描画
+		virtual void draw() {
+			if (!hdcM) {
+				return;
+			}
+
+			drawEdge();
+
+
+			//ソフトAlNumKeyの背景画像を描画
+			if (getParent() && g_numBG) {
+				WindowSize bgsize = getParent()->getSize();
+				DrawGdiplusButtonStretch(g_numBG, hdcM->hDC,
+					0, 0, 480, 256, bgsize.x, bgsize.y, 1.0);
+			}
+
+			//AlNumKeyのキー画像を描画
+			for (int i = SKALNUM_Q; i < SKALNUM_MAX; i++) {
+				WindowPos numkeypos = getButtonPos(i);
+				WindowSize numkeysize = getButtonSize(i);
+				//ボタンパラメータのインスタンスへのポインタを作成
+				OneButtonParam* btnPrm;
+				btnPrm = &(numkeyparam[i]);
+				if (btnPrm) {
+					drawAlNum(numkeypos, numkeysize, i, btnPrm->buttonPush);
+				}
+			}
+
+			{
+				if (g_dsmousewait == 1) {
+					POINT mousepoint;
+					::GetCursorPos(&mousepoint);
+					if (getParent() && getHDCMaster()) {
+						::ScreenToClient(getParent()->getHWnd(), &mousepoint);
+						int BMP_W = 52;
+						int BMP_H = 50;
+						DrawGdiplusButton(g_mousehereimage, hdcM->hDC,
+							mousepoint.x, mousepoint.y, BMP_W, BMP_H, g_mouseherealpha);
+					}
+				}
+			}
+		};
+
+		//	Method : マウスダウンイベント受信
+		virtual void onLButtonDown(const MouseEvent& e);
+		//	Method : 左マウスボタン ダブルクリックイベント受信
+		virtual void onLButtonDBLCLK(const MouseEvent& e) {//2023/10/04
+		};
+		//	Method : 右マウスボタン ダブルクリックイベント受信
+		virtual void onRButtonDBLCLK(const MouseEvent& e) {//2023/10/04
+			int dbgflag1 = 1;
+		};
+
+
+		/////////////////////////// Accessor /////////////////////////////
+		//	Accessor : buttonListener
+
+		//void setPhysicsPlayButtonListener(std::function<void()> listener) {
+		//	physicsPlay.buttonListener = listener;
+		//}
+
+		/// Accessor : ボタンサイズを変更する
+		void setButtonSize(int value) {
+			BOX_WIDTH = value;
+			SIZE_Y = BOX_WIDTH + 4;
+		}
+		int getButtonSize() const {
+			return BOX_WIDTH;
+		}
+
+		void setEditBox(OWP_EditBox* srceditbox) {
+			peditbox = srceditbox;
+		}
+	private:
+		////////////////////////// MemberVar /////////////////////////////
+
+		class OneButtonParam {
+		public:
+			OneButtonParam() {
+				buttonPush = false;
+				//buttonListener = [](){s_dummyfunc();};
+				buttonListener = NULL;
+			}
+
+			bool buttonPush;
+			std::function<void()> buttonListener;
+		};
+		OneButtonParam numkeyparam[SKALNUM_MAX];
+
+		int SIZE_Y;
+		//static const int BOX_POS_X = 3;
+		int BOX_WIDTH;
+		int OFFSET_X;
+		int pushnum;
+
+		static const int PNG_W = 48;
+		static const int PNG_H = 34;
+
+		OWP_EditBox* peditbox;
+
+		std::map<int, std::wstring> copymap;
+
+		//////////////////////////// Method //////////////////////////////
+		//	Method : ボタンアップのスレッド
+		static void drawAlNumButtonUpThread(LPVOID pParam) {
+			Sleep(100);
+			OWP_SoftAlNumKey* thisClass = (OWP_SoftAlNumKey*)pParam;
+			if (thisClass) {
+				if ((thisClass->pushnum >= SKNUMBUTTON_0) && (thisClass->pushnum < SKALNUM_MAX)) {
+					thisClass->numkeyparam[thisClass->pushnum].buttonPush = false;
+					thisClass->callRewrite();
+				}
+			}
+		}
+	};
+
+
+
+
 	///<summary>
 	///	ウィンドウ内部品"ボタン"クラス
 	///</summary>
 	class OWP_EditBox : public OrgWindowParts {
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_EditBox(const TCHAR* _name = _T(""), int _labelheight = 15) : OrgWindowParts() {
+		OWP_EditBox(bool _onlynumflag, const TCHAR* _name = _T(""), int _labelheight = 15) : OrgWindowParts() {
+			
+			onlynumflag = _onlynumflag;
+
 			name = new TCHAR[256];
 			if (_name) {
 				size_t tclen = _tcslen(_name);
@@ -4342,6 +4626,7 @@ void s_dummyfunc()
 		int getName(WCHAR* dstname, int dstleng);
 	private:
 		////////////////////////// MemberVar /////////////////////////////
+		bool onlynumflag;
 		TCHAR* name = 0;
 
 		bool buttonPush;

@@ -36,6 +36,8 @@ namespace OrgWinGUI{
 
 	static OrgWindow* s_psoftnumWnd = nullptr;
 	static OWP_SoftNumKey* s_psoftnumkey = nullptr;
+	static OrgWindow* s_psoftalnumWnd = nullptr;
+	static OWP_SoftAlNumKey* s_psoftalnumkey = nullptr;
 
 
 
@@ -1821,6 +1823,11 @@ namespace OrgWinGUI{
 			Sleep(1);
 		}
 		if (name) {
+			//*name == 0Lのときdelete[] nameがassertするので
+			if (*name == 0L) {
+				wcscpy_s(name, 256, L"123");
+			}
+
 			delete[] name;
 			name = nullptr;
 		}
@@ -1845,6 +1852,21 @@ namespace OrgWinGUI{
 			delete s_psoftnumWnd;
 			s_psoftnumWnd = nullptr;
 		}
+
+
+		if (s_psoftalnumWnd) {
+			s_psoftalnumWnd->setVisible(false);
+			s_psoftalnumWnd->setListenMouse(false);
+		}
+		if (s_psoftalnumkey) {
+			delete s_psoftalnumkey;
+			s_psoftalnumkey = nullptr;
+		}
+		if (s_psoftalnumWnd) {
+			delete s_psoftalnumWnd;
+			s_psoftalnumWnd = nullptr;
+		}
+
 	}
 
 
@@ -1853,10 +1875,10 @@ namespace OrgWinGUI{
 		//static function
 		//################
 
-		if (s_psoftnumWnd && s_psoftnumkey) {
-			return 0;//作成済
-		}
 
+		//#####
+		//Num
+		//#####
 		if (!s_psoftnumWnd) {
 			s_psoftnumWnd = new OrgWindow(
 				//0,
@@ -1898,13 +1920,64 @@ namespace OrgWinGUI{
 			s_psoftnumWnd->refreshPosAndSize();
 
 			s_psoftnumWnd->callRewrite();
-
-			return 0;
 		}
 		else {
 			_ASSERT(0);
 			return 1;
 		}
+
+
+		//######
+		//AlNum
+		//######
+		if (!s_psoftalnumWnd) {
+			s_psoftalnumWnd = new OrgWindow(
+				//0,
+				1,//!!!! parent=NULLかつtopmostにすれば3D表示の上に表示される
+				_T("SoftAlNumKeyWnd"),		//ウィンドウクラス名
+				GetModuleHandle(NULL),	//インスタンスハンドル
+				WindowPos(0, 0),
+				//WindowPos(0, 0),
+				WindowSize(48 * 11, 34 * 7),//サイズ
+				_T("SoftAlNumKeyWnd"),	//タイトル
+				//g_mainhwnd,	//親ウィンドウハンドル
+				//s_3dwnd,
+				NULL,//!!!! parent=NULLかつtopmostにすれば3D表示の上に表示される
+				false,					//表示・非表示状態
+				//70, 50, 70,				//カラー
+				0, 0, 0,				//カラー
+				true,					//閉じられるか否か
+				true);					//サイズ変更の可否
+		}
+
+		if (s_psoftalnumWnd) {
+
+			s_psoftalnumWnd->setBackGroundColor(true);
+
+			if (!s_psoftalnumkey) {
+				s_psoftalnumkey = new OWP_SoftAlNumKey();
+				if (!s_psoftalnumkey) {
+					_ASSERT(0);
+					abort();
+				}
+			}
+			s_psoftalnumWnd->addParts(*s_psoftalnumkey);
+
+
+			s_psoftalnumWnd->setSize(WindowSize(48 * 11, 34 * 7));
+			s_psoftalnumWnd->setPos(WindowPos(0, 0));
+
+			//１クリック目問題対応
+			s_psoftalnumWnd->refreshPosAndSize();
+
+			s_psoftalnumWnd->callRewrite();
+		}
+		else {
+			_ASSERT(0);
+			return 1;
+		}
+
+		return 0;
 	}
 
 	void OWP_EditBox::onLButtonDown(const MouseEvent& e) {
@@ -1916,14 +1989,39 @@ namespace OrgWinGUI{
 
 			buttonPush = true;
 
-			if (s_psoftnumWnd && s_psoftnumkey && getParent()) {
+			if (onlynumflag) {
+				//alnumを閉じて　numを開く
+				if (s_psoftalnumWnd && s_psoftalnumkey && getParent()) {
+					s_psoftalnumWnd->setVisible(false);
+					s_psoftalnumWnd->setListenMouse(false);
+				}
 
-				s_psoftnumkey->setEditBox(this);
+				if (s_psoftnumWnd && s_psoftnumkey && getParent()) {
 
-				WindowPos parentpos = getParent()->getPos();
-				s_psoftnumWnd->setPos(WindowPos(parentpos.x + pos.x - 50 * 8, parentpos.y + pos.y + 40));
-				s_psoftnumWnd->setVisible(true);
-				s_psoftnumWnd->setListenMouse(true);
+					s_psoftnumkey->setEditBox(this);
+
+					WindowPos parentpos = getParent()->getPos();
+					s_psoftnumWnd->setPos(WindowPos(parentpos.x + pos.x - 50 * 8, parentpos.y + pos.y + 40));
+					s_psoftnumWnd->setVisible(true);
+					s_psoftnumWnd->setListenMouse(true);
+				}
+			}
+			else {
+				//numを閉じて　alnumを開く
+				if (s_psoftnumWnd && s_psoftnumkey && getParent()) {
+					s_psoftnumWnd->setVisible(false);
+					s_psoftnumWnd->setListenMouse(false);
+				}
+
+				if (s_psoftalnumWnd && s_psoftalnumkey && getParent()) {
+
+					s_psoftalnumkey->setEditBox(this);
+
+					WindowPos parentpos = getParent()->getPos();
+					s_psoftalnumWnd->setPos(WindowPos(parentpos.x + pos.x - 50 * 8, parentpos.y + pos.y + 40));
+					s_psoftalnumWnd->setVisible(true);
+					s_psoftalnumWnd->setListenMouse(true);
+				}
 			}
 
 
@@ -2088,7 +2186,7 @@ namespace OrgWinGUI{
 				btnPrm->buttonPush = true;
 
 				//再描画通知
-				callRewrite();
+				//callRewrite();
 
 				//ボタンアップアニメーションのためのスレッド作成
 				pushnum = i;
@@ -2180,6 +2278,114 @@ namespace OrgWinGUI{
 			}
 
 			return;//2024/07/12 マウス位置で当たったキーを１つだけ処理したら処理終了
+		}
+
+	}
+
+
+
+	void OWP_SoftAlNumKey::onLButtonDown(const MouseEvent& e) {
+
+		//全てのボタンについて繰り返す
+		for (int i = SKALNUM_Q; i < SKALNUM_MAX; i++) {
+			WindowPos numkeypos = getButtonPos(i);
+			WindowSize numkeysize = getButtonSize(i);
+
+			//まずボタンが押されたかを確認
+			if ((e.localX >= (numkeypos.x - pos.x)) && (e.localX < (numkeypos.x - pos.x + numkeysize.x)) &&
+				(e.localY >= (numkeypos.y - pos.y)) && (e.localY < (numkeypos.y - pos.y + numkeysize.y))) {
+			}
+			else {
+				continue;
+			}
+
+			//ボタンパラメータのインスタンスへのポインタを作成
+			OneButtonParam* btnPrm;
+			btnPrm = &(numkeyparam[i]);
+			if (btnPrm) {
+				////ボタンリスナーを呼ぶ
+				//if (btnPrm->buttonListener != NULL) {
+				//	(btnPrm->buttonListener)();
+				//}
+
+				//ボタン押下状態をONにする
+				btnPrm->buttonPush = true;
+
+				//再描画通知
+				//callRewrite();
+
+				//ボタンアップアニメーションのためのスレッド作成
+				pushnum = i;
+				_beginthread(drawAlNumButtonUpThread, 0, (void*)this);
+
+				if (peditbox) {
+					if ((pushnum >= SKALNUM_Q) && (pushnum <= SKALNUM_M)) {
+						WCHAR alkey[SKALNUM_M + 1] = {
+							TEXT('Q'), TEXT('W'), TEXT('E'), TEXT('R'), TEXT('T'), TEXT('Y'), TEXT('U'), TEXT('I'), TEXT('O'), TEXT('P'),
+							TEXT('A'), TEXT('S'), TEXT('D'), TEXT('F'), TEXT('G'), TEXT('H'), TEXT('J'), TEXT('K'), TEXT('L'), 
+							TEXT('Z'), TEXT('X'), TEXT('C'), TEXT('V'), TEXT('B'), TEXT('N'), TEXT('M')
+						};
+						WCHAR srcwc = alkey[pushnum - SKALNUM_Q];
+						if (srcwc != 0L) {
+							peditbox->addChar(srcwc);
+						}
+					}
+					else if ((pushnum >= SKALNUM_0) && (pushnum <= SKALNUM_9)) {
+						WCHAR numkey[SKALNUM_9 - SKALNUM_0 + 1] = {
+							TEXT('0'), TEXT('1'), TEXT('2'), TEXT('3'), TEXT('4'),
+							TEXT('5'), TEXT('6'), TEXT('7'), TEXT('8'), TEXT('9')
+						};
+						WCHAR srcwc = numkey[pushnum - SKALNUM_0];
+						if (srcwc != 0L) {
+							peditbox->addChar(srcwc);
+						}
+					}
+					else if (pushnum == SKALNUM_PERIOD) {
+						WCHAR srcwc = TEXT('.');
+						if (srcwc != 0L) {
+							peditbox->addChar(srcwc);
+						}
+					}
+					else if (pushnum == SKALNUM_SIGNE) {
+						peditbox->invSigne();
+					}
+					else if (pushnum == SKALNUM_BACKSPACE) {
+						peditbox->backSpaceChar();
+					}
+					else if (pushnum == SKALNUM_CLEAR) {
+						peditbox->clearChar();
+					}
+					else if (pushnum == SKALNUM_CLOSE) {
+						if (getParent()) {
+							getParent()->setVisible(false);//2024/07/08 閉じるボタン
+							return;
+						}
+					}
+					else if (pushnum == SKALNUM_CP1) {
+						copymap[0] = peditbox->getNameString();
+					}
+					else if (pushnum == SKALNUM_CP2) {
+						copymap[1] = peditbox->getNameString();
+					}
+					else if (pushnum == SKALNUM_CP3) {
+						copymap[2] = peditbox->getNameString();
+					}
+					else if (pushnum == SKALNUM_PS1) {
+						peditbox->setNameString(copymap[0]);
+					}
+					else if (pushnum == SKALNUM_PS2) {
+						peditbox->setNameString(copymap[1]);
+					}
+					else if (pushnum == SKALNUM_PS3) {
+						peditbox->setNameString(copymap[2]);
+					}
+					else {
+						_ASSERT(0);
+					}
+				}
+			}
+
+			return;//マウス位置で当たったキーを１つだけ処理したら処理終了
 		}
 
 	}

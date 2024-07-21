@@ -575,7 +575,8 @@ Gdiplus::Image* g_playerbutton_target_inv40 = 0;
 Gdiplus::Image* g_numBG = nullptr;
 Gdiplus::Image* g_numbutton[SKNUMBUTTON_MAX];
 Gdiplus::Image* g_numbutton_pushed[SKNUMBUTTON_MAX];
-
+Gdiplus::Image* g_alnumbutton[SKALNUM_MAX];
+Gdiplus::Image* g_alnumbutton_pushed[SKALNUM_MAX];
 
 int g_currentsubmenuid = 0;
 POINT g_currentsubmenupos = { 0, 0 };
@@ -6518,6 +6519,11 @@ void InitApp()
 		g_numbutton[numindex] = nullptr;
 		g_numbutton_pushed[numindex] = nullptr;
 	}
+	int alnumindex;
+	for (alnumindex = 0; alnumindex < SKALNUM_MAX; alnumindex++) {
+		g_alnumbutton[alnumindex] = nullptr;
+		g_alnumbutton_pushed[alnumindex] = nullptr;
+	}
 
 	g_currentsubmenuid = 0;
 	g_currentsubmenupos.x = 0;
@@ -7234,6 +7240,18 @@ void OnDestroyDevice()
 		if (g_numbutton_pushed[numindex]) {
 			delete g_numbutton_pushed[numindex];
 			g_numbutton_pushed[numindex] = nullptr;
+		}
+	}
+
+	int alnumindex;
+	for (alnumindex = 0; alnumindex < SKALNUM_MAX; alnumindex++) {
+		if (g_alnumbutton[alnumindex]) {
+			delete g_alnumbutton[alnumindex];
+			g_alnumbutton[alnumindex] = nullptr;
+		}
+		if (g_alnumbutton_pushed[alnumindex]) {
+			delete g_alnumbutton_pushed[alnumindex];
+			g_alnumbutton_pushed[alnumindex] = nullptr;
 		}
 	}
 
@@ -29346,7 +29364,7 @@ int CreateGUIDlgLOD()
 		}
 		WCHAR strnear[256] = { 0L };
 		swprintf_s(strnear, 256, L"%.2f", g_projnear);
-		s_lodnearEdit = new OWP_EditBox(strnear, labelheight);
+		s_lodnearEdit = new OWP_EditBox(true, strnear, labelheight);
 		if (!s_lodnearEdit) {
 			_ASSERT(0);
 			abort();
@@ -29358,7 +29376,7 @@ int CreateGUIDlgLOD()
 		}
 		WCHAR strfar[256] = { 0L };
 		swprintf_s(strfar, 256, L"%.1f", g_projfar);
-		s_lodfarEdit = new OWP_EditBox(strfar, labelheight);
+		s_lodfarEdit = new OWP_EditBox(true, strfar, labelheight);
 		if (!s_lodfarEdit) {
 			_ASSERT(0);
 			abort();
@@ -29851,7 +29869,7 @@ int CreateLightsWnd()
 				_ASSERT(0);
 				abort();
 			}
-			s_polarxzEdit[lightindex] = new OWP_EditBox(L"XZ Edit", labelheight);
+			s_polarxzEdit[lightindex] = new OWP_EditBox(true, L"XZ Edit", labelheight);
 			if (!s_polarxzEdit[lightindex]) {
 				_ASSERT(0);
 				abort();
@@ -29861,7 +29879,7 @@ int CreateLightsWnd()
 				_ASSERT(0);
 				abort();
 			}
-			s_polaryEdit[lightindex] = new OWP_EditBox(L"Y Edit", labelheight);
+			s_polaryEdit[lightindex] = new OWP_EditBox(true, L"Y Edit", labelheight);
 			if (!s_polaryEdit[lightindex]) {
 				_ASSERT(0);
 				abort();
@@ -30304,7 +30322,7 @@ int CreateShadowParamsWnd()
 			_ASSERT(0);
 			abort();
 		}
-		s_shadowcamposupEdit = new OWP_EditBox(L"plus Up Edit", labelheight);
+		s_shadowcamposupEdit = new OWP_EditBox(true, L"plus Up Edit", labelheight);
 		if (!s_shadowcamposupEdit) {
 			_ASSERT(0);
 			abort();
@@ -30329,7 +30347,7 @@ int CreateShadowParamsWnd()
 			_ASSERT(0);
 			abort();
 		}
-		s_shadowcamposdistEdit = new OWP_EditBox(L"dist Scale Edit", labelheight);
+		s_shadowcamposdistEdit = new OWP_EditBox(true, L"dist Scale Edit", labelheight);
 		if (!s_shadowcamposdistEdit) {
 			_ASSERT(0);
 			abort();
@@ -30429,7 +30447,7 @@ int CreateShadowParamsWnd()
 			_ASSERT(0);
 			abort();
 		}
-		s_shadowprojnearEdit = new OWP_EditBox(L"near Edit", labelheight);
+		s_shadowprojnearEdit = new OWP_EditBox(true, L"near Edit", labelheight);
 		if (!s_shadowprojnearEdit) {
 			_ASSERT(0);
 			abort();
@@ -30439,7 +30457,7 @@ int CreateShadowParamsWnd()
 			_ASSERT(0);
 			abort();
 		}
-		s_shadowprojfarEdit = new OWP_EditBox(L"far Edit", labelheight);
+		s_shadowprojfarEdit = new OWP_EditBox(true, L"far Edit", labelheight);
 		if (!s_shadowprojfarEdit) {
 			_ASSERT(0);
 			abort();
@@ -30800,7 +30818,7 @@ int CreateThresholdDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_ththnoendjEdit = new OWP_EditBox(L"NoEndJ Edit", labelheight);//g_thdeg
+		s_ththnoendjEdit = new OWP_EditBox(true, L"NoEndJ Edit", labelheight);//g_thdeg
 		if (!s_ththnoendjEdit) {
 			_ASSERT(0);
 			abort();
@@ -30810,7 +30828,7 @@ int CreateThresholdDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_ththendjEdit = new OWP_EditBox(L"EndJ Edit", labelheight);//g_thdeg_endjoint
+		s_ththendjEdit = new OWP_EditBox(true, L"EndJ Edit", labelheight);//g_thdeg_endjoint
 		if (!s_ththendjEdit) {
 			_ASSERT(0);
 			abort();
@@ -30855,7 +30873,7 @@ int CreateThresholdDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_throundxEdit = new OWP_EditBox(L"XEdit", labelheight);//g_thRoundX
+		s_throundxEdit = new OWP_EditBox(true, L"XEdit", labelheight);//g_thRoundX
 		if (!s_throundxEdit) {
 			_ASSERT(0);
 			abort();
@@ -30865,7 +30883,7 @@ int CreateThresholdDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_throundyEdit = new OWP_EditBox(L"YEdit", labelheight);//g_thRoundY
+		s_throundyEdit = new OWP_EditBox(true, L"YEdit", labelheight);//g_thRoundY
 		if (!s_throundyEdit) {
 			_ASSERT(0);
 			abort();
@@ -30875,7 +30893,7 @@ int CreateThresholdDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_throundzEdit = new OWP_EditBox(L"ZEdit", labelheight);//g_thRoundZ
+		s_throundzEdit = new OWP_EditBox(true, L"ZEdit", labelheight);//g_thRoundZ
 		if (!s_throundzEdit) {
 			_ASSERT(0);
 			abort();
@@ -31092,7 +31110,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limitxupperEdit = new OWP_EditBox(L"XUpperEdit", labelheight);
+		s_limitxupperEdit = new OWP_EditBox(true, L"XUpperEdit", labelheight);
 		if (!s_limitxupperEdit) {
 			_ASSERT(0);
 			abort();
@@ -31102,7 +31120,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limitxlowerEdit = new OWP_EditBox(L"XLowerEdit", labelheight);
+		s_limitxlowerEdit = new OWP_EditBox(true, L"XLowerEdit", labelheight);
 		if (!s_limitxlowerEdit) {
 			_ASSERT(0);
 			abort();
@@ -31112,7 +31130,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limitxchkEdit = new OWP_EditBox(L"XCheckEdit", labelheight);
+		s_limitxchkEdit = new OWP_EditBox(true, L"XCheckEdit", labelheight);
 		if (!s_limitxchkEdit) {
 			_ASSERT(0);
 			abort();
@@ -31152,7 +31170,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limityupperEdit = new OWP_EditBox(L"YUpperEdit", labelheight);
+		s_limityupperEdit = new OWP_EditBox(true, L"YUpperEdit", labelheight);
 		if (!s_limityupperEdit) {
 			_ASSERT(0);
 			abort();
@@ -31162,7 +31180,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limitylowerEdit = new OWP_EditBox(L"YLowerEdit", labelheight);
+		s_limitylowerEdit = new OWP_EditBox(true, L"YLowerEdit", labelheight);
 		if (!s_limitylowerEdit) {
 			_ASSERT(0);
 			abort();
@@ -31172,7 +31190,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limitychkEdit = new OWP_EditBox(L"YCheckEdit", labelheight);
+		s_limitychkEdit = new OWP_EditBox(true, L"YCheckEdit", labelheight);
 		if (!s_limitychkEdit) {
 			_ASSERT(0);
 			abort();
@@ -31212,7 +31230,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limitzupperEdit = new OWP_EditBox(L"ZUpperEdit", labelheight);
+		s_limitzupperEdit = new OWP_EditBox(true, L"ZUpperEdit", labelheight);
 		if (!s_limitzupperEdit) {
 			_ASSERT(0);
 			abort();
@@ -31222,7 +31240,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limitzlowerEdit = new OWP_EditBox(L"ZLowerEdit", labelheight);
+		s_limitzlowerEdit = new OWP_EditBox(true, L"ZLowerEdit", labelheight);
 		if (!s_limitzlowerEdit) {
 			_ASSERT(0);
 			abort();
@@ -31232,7 +31250,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limitzchkEdit = new OWP_EditBox(L"ZCheckEdit", labelheight);
+		s_limitzchkEdit = new OWP_EditBox(true, L"ZCheckEdit", labelheight);
 		if (!s_limitzchkEdit) {
 			_ASSERT(0);
 			abort();
@@ -70006,7 +70024,7 @@ int CreateFogParamsDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_fogdistnearEdit = new OWP_EditBox(L"nearEdit", labelheight);
+		s_fogdistnearEdit = new OWP_EditBox(true, L"nearEdit", labelheight);
 		if (!s_fogdistnearEdit) {
 			_ASSERT(0);
 			abort();
@@ -70016,7 +70034,7 @@ int CreateFogParamsDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_fogdistfarEdit = new OWP_EditBox(L"nearEdit", labelheight);
+		s_fogdistfarEdit = new OWP_EditBox(true, L"nearEdit", labelheight);
 		if (!s_fogdistfarEdit) {
 			_ASSERT(0);
 			abort();
@@ -70061,7 +70079,7 @@ int CreateFogParamsDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_fogheightminEdit = new OWP_EditBox(L"minEdit", labelheight);
+		s_fogheightminEdit = new OWP_EditBox(true, L"minEdit", labelheight);
 		if (!s_fogheightminEdit) {
 			_ASSERT(0);
 			abort();
@@ -70071,7 +70089,7 @@ int CreateFogParamsDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_fogheightmaxEdit = new OWP_EditBox(L"maxEdit", labelheight);
+		s_fogheightmaxEdit = new OWP_EditBox(true, L"maxEdit", labelheight);
 		if (!s_fogheightmaxEdit) {
 			_ASSERT(0);
 			abort();
@@ -70353,7 +70371,7 @@ int CreateDofParamsDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_dofdistnearEdit = new OWP_EditBox(L"DofNearEdit", labelheight);//g_dofparams[g_dofindex].x
+		s_dofdistnearEdit = new OWP_EditBox(true, L"DofNearEdit", labelheight);//g_dofparams[g_dofindex].x
 		if (!s_dofdistnearEdit) {
 			_ASSERT(0);
 			abort();
@@ -70363,7 +70381,7 @@ int CreateDofParamsDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_dofdistfarEdit = new OWP_EditBox(L"DofFarEdit", labelheight);
+		s_dofdistfarEdit = new OWP_EditBox(true, L"DofFarEdit", labelheight);
 		if (!s_dofdistfarEdit) {
 			_ASSERT(0);
 			abort();
@@ -72940,7 +72958,130 @@ int CreateSprites()
 		}
 	}
 
+	{
+		WCHAR filename[SKALNUM_MAX][MAX_PATH] = {
+			L"MameMedia\\Q_48.png",
+			L"MameMedia\\W_48.png",
+			L"MameMedia\\E_48.png",
+			L"MameMedia\\R_48.png",
+			L"MameMedia\\T_48.png",
+			L"MameMedia\\Y_48.png",
+			L"MameMedia\\U_48.png",
+			L"MameMedia\\I_48.png",
+			L"MameMedia\\O_48.png",
+			L"MameMedia\\P_48.png",
+			L"MameMedia\\A_48.png",
+			L"MameMedia\\S_48.png",
+			L"MameMedia\\D_48.png",
+			L"MameMedia\\F_48.png",
+			L"MameMedia\\G_48.png",
+			L"MameMedia\\H_48.png",
+			L"MameMedia\\J_48.png",
+			L"MameMedia\\K_48.png",
+			L"MameMedia\\L_48.png",
+			L"MameMedia\\Z_48.png",
+			L"MameMedia\\X_48.png",
+			L"MameMedia\\C_48.png",
+			L"MameMedia\\V_48.png",
+			L"MameMedia\\B_48.png",
+			L"MameMedia\\N_48.png",
+			L"MameMedia\\M_48.png",
 
+			L"MameMedia\\num0_48.png",
+			L"MameMedia\\num1_48.png",
+			L"MameMedia\\num2_48.png",
+			L"MameMedia\\num3_48.png",
+			L"MameMedia\\num4_48.png",
+			L"MameMedia\\num5_48.png",
+			L"MameMedia\\num6_48.png",
+			L"MameMedia\\num7_48.png",
+			L"MameMedia\\num8_48.png",
+			L"MameMedia\\num9_48.png",
+			L"MameMedia\\num_period_48.png",
+			L"MameMedia\\num_signe_48.png",
+			L"MameMedia\\num_BS_48.png",
+			L"MameMedia\\num_Clear_48.png",
+			L"MameMedia\\num_cp1_48.png",
+			L"MameMedia\\num_cp2_48.png",
+			L"MameMedia\\num_cp3_48.png",
+			L"MameMedia\\num_ps1_48.png",
+			L"MameMedia\\num_ps2_48.png",
+			L"MameMedia\\num_ps3_48.png",
+			L"MameMedia\\num_close_48.png"
+		};
+
+		WCHAR filename_pushed[SKALNUM_MAX][MAX_PATH] = {
+			L"MameMedia\\Q_48_pushed.png",
+			L"MameMedia\\W_48_pushed.png",
+			L"MameMedia\\E_48_pushed.png",
+			L"MameMedia\\R_48_pushed.png",
+			L"MameMedia\\T_48_pushed.png",
+			L"MameMedia\\Y_48_pushed.png",
+			L"MameMedia\\U_48_pushed.png",
+			L"MameMedia\\I_48_pushed.png",
+			L"MameMedia\\O_48_pushed.png",
+			L"MameMedia\\P_48_pushed.png",
+			L"MameMedia\\A_48_pushed.png",
+			L"MameMedia\\S_48_pushed.png",
+			L"MameMedia\\D_48_pushed.png",
+			L"MameMedia\\F_48_pushed.png",
+			L"MameMedia\\G_48_pushed.png",
+			L"MameMedia\\H_48_pushed.png",
+			L"MameMedia\\J_48_pushed.png",
+			L"MameMedia\\K_48_pushed.png",
+			L"MameMedia\\L_48_pushed.png",
+			L"MameMedia\\Z_48_pushed.png",
+			L"MameMedia\\X_48_pushed.png",
+			L"MameMedia\\C_48_pushed.png",
+			L"MameMedia\\V_48_pushed.png",
+			L"MameMedia\\B_48_pushed.png",
+			L"MameMedia\\N_48_pushed.png",
+			L"MameMedia\\M_48_pushed.png",
+
+			L"MameMedia\\num0_48_pushed.png",
+			L"MameMedia\\num1_48_pushed.png",
+			L"MameMedia\\num2_48_pushed.png",
+			L"MameMedia\\num3_48_pushed.png",
+			L"MameMedia\\num4_48_pushed.png",
+			L"MameMedia\\num5_48_pushed.png",
+			L"MameMedia\\num6_48_pushed.png",
+			L"MameMedia\\num7_48_pushed.png",
+			L"MameMedia\\num8_48_pushed.png",
+			L"MameMedia\\num9_48_pushed.png",
+			L"MameMedia\\num_period_48_pushed.png",
+			L"MameMedia\\num_signe_48_pushed.png",
+			L"MameMedia\\num_BS_48_pushed.png",
+			L"MameMedia\\num_Clear_48_pushed.png",
+			L"MameMedia\\num_cp1_48_pushed.png",
+			L"MameMedia\\num_cp2_48_pushed.png",
+			L"MameMedia\\num_cp3_48_pushed.png",
+			L"MameMedia\\num_ps1_48_pushed.png",
+			L"MameMedia\\num_ps2_48_pushed.png",
+			L"MameMedia\\num_ps3_48_pushed.png",
+			L"MameMedia\\num_close_48_pushed.png"
+		};
+
+		int alnumindex;
+		for (alnumindex = 0; alnumindex < SKALNUM_MAX; alnumindex++) {
+			WCHAR pngpath[MAX_PATH];
+			swprintf_s(pngpath, MAX_PATH, L"%s%s", mpath, filename[alnumindex]);
+			g_alnumbutton[alnumindex] = new Gdiplus::Image(pngpath);
+			if (!g_alnumbutton[alnumindex]) {
+				_ASSERT(0);
+				PostQuitMessage(1);
+				return S_FALSE;
+			}
+
+			WCHAR pngpath_pushed[MAX_PATH];
+			swprintf_s(pngpath_pushed, MAX_PATH, L"%s%s", mpath, filename_pushed[alnumindex]);
+			g_alnumbutton_pushed[alnumindex] = new Gdiplus::Image(pngpath_pushed);
+			if (!g_alnumbutton_pushed[alnumindex]) {
+				_ASSERT(0);
+				PostQuitMessage(1);
+				return S_FALSE;
+			}
+		}
+	}
 
 	{
 		WCHAR pngpath[MAX_PATH];
