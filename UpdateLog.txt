@@ -2,6 +2,15 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/07/24
+　GUI修正
+　　CopyHistoryDlgの右ペインウインドウをOWPで作り直し
+　　　文字を大きくみやすく.
+　　　ページング方式をやめてスクロール方式に.
+
+
+
+
 2024/07/21
 　GUI修正
 　　スクロールウインドウの子供ウインドウにマウスホイールが伝達していなかったのを修正
@@ -20,8 +29,6 @@ https://github.com/Ochakko/AdditiveIK
 　　　アルファベットのキーの並びはキーボードの配列順に.
 
 　　
-
-
 2024/07/20
 　GUI修正
 　　DrawGdiText()関数を追加

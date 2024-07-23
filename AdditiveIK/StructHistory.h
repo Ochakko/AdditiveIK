@@ -57,6 +57,15 @@ typedef struct tag_historyelem
 			return (std::wstring(wfilename) < std::wstring(right.wfilename));
 		}
 	};
+	bool operator== (const tag_historyelem& chk) const { 
+		if (wcscmp(wfilename, chk.wfilename) == 0) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	};
+
 
 	void Init() {
 		ZeroMemory(&filetime, sizeof(FILETIME));

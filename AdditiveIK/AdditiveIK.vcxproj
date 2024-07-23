@@ -191,7 +191,6 @@
     <ClInclude Include="..\MiniEngine\VertexBuffer.h" />
     <ClInclude Include="AdditiveIK.h" />
     <ClInclude Include="ColiIDDlg.h" />
-    <ClInclude Include="CopyHistoryDlg.h" />
     <ClInclude Include="CpInfoDlg.h" />
     <ClInclude Include="dlgid.h" />
     <ClInclude Include="DollyHistoryDlg.h" />
@@ -256,7 +255,6 @@
     <ClCompile Include="..\MiniEngine\VertexBuffer.cpp" />
     <ClCompile Include="AdditiveIK.cpp" />
     <ClCompile Include="ColiIDDlg.cpp" />
-    <ClCompile Include="CopyHistoryDlg.cpp" />
     <ClCompile Include="CpInfoDlg.cpp" />
     <ClCompile Include="DollyHistoryDlg.cpp" />
     <ClCompile Include="DXUTmisc\DXUTmisc.cpp" />

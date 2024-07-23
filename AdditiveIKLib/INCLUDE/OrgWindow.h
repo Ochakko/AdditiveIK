@@ -94,7 +94,7 @@ class CRMenuMain;
 
 
 
-namespace OrgWinGUI{
+namespace OrgWinGUI{//!!!!!!!!!!!!!!! namespace
 
 class OWP_EditBox;
 
@@ -5451,7 +5451,7 @@ void s_dummyfunc()
 				}
 			}
 		}
-		bool getValue() const{
+		const bool getValue(){
 			return value;
 		}
 		int getName(TCHAR* dstname, int dstleng) {

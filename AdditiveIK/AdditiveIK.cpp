@@ -69,7 +69,7 @@
 #include "RegistDlg.h"
 #include <GColiFile.h>
 #include "SettingsDlg.h"
-#include "CopyHistoryDlg.h"
+#include <CopyHistoryDlg2.h>
 #include "DollyHistoryDlg.h"
 #include "CpInfoDlg.h"
 
@@ -943,7 +943,7 @@ static map<CModel*, CFrameCopyDlg*> s_selbonedlgmap;
 static bool s_allmodelbone = false;
 
 static std::vector<HISTORYELEM> s_cptfilename;
-static CCopyHistoryDlg s_copyhistorydlg;
+static CCopyHistoryDlg2 s_copyhistorydlg2;
 static CDollyHistoryDlg s_dollyhistorydlg;
 
 static bool s_camtargetdisp = false;//カメラターゲット位置にマニピュレータを表示するかどうかのフラグ
@@ -2997,6 +2997,7 @@ ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わら�
 
 
 //ID_RMENU_0を足して使う
+// (99)はCopyHistoryDlg2のSearch()呼び出し用に確保
 #define MENUOFFSET_SETCONVBONEMODEL		(100)
 #define MENUOFFSET_SETCONVBONEBVH		(MENUOFFSET_SETCONVBONEMODEL + 100)
 #define MENUOFFSET_SETCONVBONE			(MENUOFFSET_SETCONVBONEBVH + 100)
@@ -4720,6 +4721,18 @@ int CheckResolution()
 
 	}
 
+
+	{
+		int windowposx;
+		if (g_4kresolution) {
+			windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
+		}
+		else {
+			windowposx = s_timelinewidth + s_mainwidth;
+		}
+		s_copyhistorydlg2.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+	}
+
 	return 0;
 }
 
@@ -4735,6 +4748,8 @@ void InitApp()
 	InitializeCriticalSection(&g_CritSection_FbxSdk);
 
 	InitCommonControls();
+
+	s_copyhistorydlg2.InitParams();
 
 	g_edittarget = EDITTARGET_BONE;
 	s_LchangeTargetFlag = false;
@@ -7319,10 +7334,8 @@ void OnDestroyDevice()
 	}
 
 
-	if (s_copyhistorydlg.GetCreatedFlag() == true) {
-		if (::IsWindow(s_copyhistorydlg.m_hWnd)) {
-			s_copyhistorydlg.DestroyWindow();
-		}
+	if (s_copyhistorydlg2.GetCreatedFlag() == true) {
+		s_copyhistorydlg2.DestroyObjs();
 	}
 	if (s_dollyhistorydlg.GetCreatedFlag() == true) {
 		if (::IsWindow(s_dollyhistorydlg.m_hWnd)) {
@@ -10510,7 +10523,6 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		}
 
 
-
 		//if ((menuid >= (ID_RMENU_0 + MENUOFFSET_SETCONVBONEMODEL)) && (menuid < (ID_RMENU_0 + modelnum + MENUOFFSET_SETCONVBONEMODEL))) {
 		//	int modelindex = menuid - ID_RMENU_0 - MENUOFFSET_SETCONVBONEMODEL;
 		//	s_convbone_model = s_modelindex[modelindex].modelptr;
@@ -10534,6 +10546,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		//if (menuid == (ID_RMENU_IKTARGET + MENUOFFSET_BONERCLICK)) {
 		//	int dbgflag1 = 1;
 		//}
+
 
 		if ((menuid >= (ID_RMENU_0 + MENUOFFSET_SETCONVBONEBVH)) && (menuid < (ID_RMENU_0 + modelnum + MENUOFFSET_SETCONVBONEBVH))) {
 			int modelindex = menuid - ID_RMENU_0 - MENUOFFSET_SETCONVBONEBVH;
@@ -17247,16 +17260,8 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 
 		if (InterlockedAdd(&g_retargetbatchflag, 0) == 0) {
 			{
-				if (s_copyhistorydlg.GetCreatedFlag() == false) {
-					int result = CreateCopyHistoryDlg();
-					if (result != 0) {
-						_ASSERT(0);
-						return 1;
-					}
-				}
-
 				GetCPTFileName(s_cptfilename);
-				s_copyhistorydlg.SetNames(s_model, s_cptfilename);
+				s_copyhistorydlg2.SetNames(s_model, s_cptfilename);
 			}
 		}
 
@@ -37139,9 +37144,9 @@ int OnFrameToolWnd()
 		if (s_model) {
 			int result1 = GetCPTFileName(s_cptfilename);
 			_ASSERT(result1 == 0);
-			int result2 = s_copyhistorydlg.SetNames(s_model, s_cptfilename);
+			int result2 = s_copyhistorydlg2.SetNames(s_model, s_cptfilename);
 			_ASSERT(result2 == 0);
-			s_copyhistorydlg.ShowWindow(SW_SHOW);
+			s_copyhistorydlg2.SetVisible(true);
 		}
 
 		s_selCopyHisotryFlag = false;
@@ -37228,10 +37233,8 @@ int OnFrameToolWnd()
 				if (s_model) {
 					PrepairUndo();
 				}
-				if (s_copyhistorydlg.GetCreatedFlag() == true) {
-					GetCPTFileName(s_cptfilename);
-					s_copyhistorydlg.SetNames(s_model, s_cptfilename);
-				}
+				GetCPTFileName(s_cptfilename);
+				s_copyhistorydlg2.SetNames(s_model, s_cptfilename);
 			}
 		}
 
@@ -37541,40 +37544,40 @@ void AddRJointReq(CBone* srcbone)
 
 }
 
-int CreateCopyHistoryDlg()
-{
-	if (s_copyhistorydlg.GetCreatedFlag() == false) {
-		s_copyhistorydlg.Create(g_mainhwnd);
-	}
-	SetParent(s_copyhistorydlg.m_hWnd, g_mainhwnd);
-
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-
-	SetWindowPos(
-		s_copyhistorydlg.m_hWnd,
-		HWND_TOP,
-		windowposx,
-		s_sidemenuheight,
-		s_sidewidth,
-		s_sideheight,
-		SWP_SHOWWINDOW
-	);
-
-	s_copyhistorydlg.ShowWindow(SW_HIDE);
-
-	s_copyhistorydlg.ParamsToDlg(s_model);
-	GetCPTFileName(s_cptfilename);
-	s_copyhistorydlg.SetNames(s_model, s_cptfilename);
-
-	return 0;
-}
+//int CreateCopyHistoryDlg()
+//{
+//	if (s_copyhistorydlg.GetCreatedFlag() == false) {
+//		s_copyhistorydlg.Create(g_mainhwnd);
+//	}
+//	SetParent(s_copyhistorydlg.m_hWnd, g_mainhwnd);
+//
+//	int windowposx;
+//	if (g_4kresolution) {
+//		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
+//	}
+//	else {
+//		windowposx = s_timelinewidth + s_mainwidth;
+//	}
+//
+//
+//	SetWindowPos(
+//		s_copyhistorydlg.m_hWnd,
+//		HWND_TOP,
+//		windowposx,
+//		s_sidemenuheight,
+//		s_sidewidth,
+//		s_sideheight,
+//		SWP_SHOWWINDOW
+//	);
+//
+//	s_copyhistorydlg.ShowWindow(SW_HIDE);
+//
+//	s_copyhistorydlg.ParamsToDlg(s_model);
+//	GetCPTFileName(s_cptfilename);
+//	s_copyhistorydlg.SetNames(s_model, s_cptfilename);
+//
+//	return 0;
+//}
 int CreateDollyHistoryDlg()
 {
 	if (s_dollyhistorydlg.GetCreatedFlag() == false) {
@@ -37820,10 +37823,8 @@ int CopyMotionFunc(CModel* srcmodel, MOTINFO* curmi)
 			if (srcmodel) {
 				PrepairUndo();
 			}
-			if (s_copyhistorydlg.GetCreatedFlag() == true) {
-				GetCPTFileName(s_cptfilename);
-				s_copyhistorydlg.SetNames(srcmodel, s_cptfilename);
-			}
+			GetCPTFileName(s_cptfilename);
+			s_copyhistorydlg2.SetNames(srcmodel, s_cptfilename);
 		}
 	}
 
@@ -50626,7 +50627,12 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	case WM_COMMAND:
 	{
-		if ((menuid >= 59900) && (menuid <= (59900 + MAXMOTIONNUM))) {
+		if (menuid == (ID_RMENU_0 + 99)) {
+			if (s_copyhistorydlg2.GetCreatedFlag()) {
+				s_copyhistorydlg2.OnSearch();
+			}
+		}
+		else if ((menuid >= 59900) && (menuid <= (59900 + MAXMOTIONNUM))) {
 			ActivatePanel(0);
 			int selindex = menuid - 59900;
 			OnAnimMenu(true, selindex);
@@ -61219,20 +61225,13 @@ bool LoadCPTFile(CModel* srcmodel)
 	//	return false;
 	//}
 
-	if (s_copyhistorydlg.GetCreatedFlag() == false) {
-		int result = CreateCopyHistoryDlg();
-		if (result != 0) {
-			_ASSERT(0);
-			return false;
-		}
-	}
 
 	s_pastemotvec.clear();
 
 	//std::vector<HISTORYELEM> cptfilename;
 	s_cptfilename.clear();
 	GetCPTFileName(s_cptfilename);
-	s_copyhistorydlg.SetNames(srcmodel, s_cptfilename);//2024/06/23 srcmodelがs_model以外の場合(s_cameramodel)があるのでセットし直す
+	s_copyhistorydlg2.SetNames(srcmodel, s_cptfilename);//2024/06/23 srcmodelがs_model以外の場合(s_cameramodel)があるのでセットし直す
 
 	if (s_cptfilename.empty()) {
 		_ASSERT(0);
@@ -61240,7 +61239,7 @@ bool LoadCPTFile(CModel* srcmodel)
 	}
 
 	WCHAR infilename[MAX_PATH] = { 0L };
-	int result = s_copyhistorydlg.GetSelectedFileName(srcmodel, infilename);
+	int result = s_copyhistorydlg2.GetSelectedFileName(srcmodel, infilename);
 	infilename[MAX_PATH - 1] = 0L;
 	if (result || (infilename[0] == 0L)) {
 		//_ASSERT(0);
@@ -70164,7 +70163,7 @@ int CreateFogParamsDlg()
 
 
 		s_fogslotCombo->setButtonListener([]() {
-			int comboid = s_lightsslotCombo->trackPopUpMenu();
+			int comboid = s_fogslotCombo->trackPopUpMenu();
 			if ((comboid >= 0) && (comboid < FOGSLOTNUM)) {
 				g_fogindex = comboid;
 				FogParams2Dlg();
@@ -74595,8 +74594,8 @@ void CloseAllRightPainWindow(bool closefirstraw)
 	if (s_placefolderWnd) {
 		s_placefolderWnd->setVisible(false);
 	}
-	if (s_copyhistorydlg.GetCreatedFlag() == true) {
-		s_copyhistorydlg.ShowWindow(SW_HIDE);
+	if (s_copyhistorydlg2.GetCreatedFlag() == true) {
+		s_copyhistorydlg2.SetVisible(false);
 	}
 	
 	if (s_dollyhistorydlg.GetCreatedFlag() == true) {
