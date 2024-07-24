@@ -1010,25 +1010,16 @@ int CCopyHistoryDlg2::CreateOWPWnd(CModel* srcmodel)
 		m_recentChk->setButtonListener([=, this]() {
 			bool value = m_recentChk->getValue();
 			m_ischeckedmostrecent = value;
+			EnableList(!m_ischeckedmostrecent);//2024/07/24
+			if (m_dlgwnd) {
+				m_dlgwnd->callRewrite();
+			}
 		});
 
 		m_searchB->setButtonListener([=, this]() {
 			//OnSearch();//OnSearch()からはParams2Dlg()が呼ばれてそこからCreateOWPWnd()が呼ばれてm_searchBは作り直されエラーになる
 			::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + 99), 0);//SendMessageでも上記と同様のエラー.　PostMessage()を使う
 		});
-
-		//size_t owpnum = m_owpelem.size();
-		//int owpindex;
-		//for (owpindex = 0; owpindex < owpnum; owpindex++) {
-		//	CCpHistoryOWPElem curowp = m_owpelem[owpindex];
-		//	if (curowp.GetNameCheckBox()) {
-		//		curowp.GetNameCheckBox()->setButtonListener([=, this]() {
-		//
-		//		});
-		//	}
-		//}
-
-
 
 
 		m_dlgwnd->setSize(WindowSize(m_sizex, m_sizey));
@@ -1059,11 +1050,180 @@ int CCopyHistoryDlg2::ParamsToDlg(CModel* srcmodel)
 	WCHAR currentname[MAX_PATH] = { 0L };
 	int result = GetSelectedFileName(srcmodel, currentname);
 
+//##################
+//選択状態の保存をする
+//##################
+	int saveselectedindex = GetCheckedElem();
+	HISTORYELEM saveselectedelem;
+	saveselectedelem.Init();
+	if (saveselectedindex >= 0) {
+		saveselectedelem = m_copyhistory[saveselectedindex];
+	}
+	int selectedfbx = -1;
+	WCHAR findfbxname[256] = { 0L };
+	if (m_Combo1) {
+		int selectedindex = m_Combo1->getSelectedCombo() - 1;
+		if ((selectedindex >= 0) && (selectedindex < (int)m_strcombo_fbxname.size())) {
+			selectedfbx = selectedindex;
+			wcscpy_s(findfbxname, 256, m_strcombo_fbxname[selectedfbx].c_str());
+		}
+	}
+	int selectedmotion = -1;
+	WCHAR findmotname[256] = { 0L };
+	if (m_Combo2) {
+		int selectedindex = m_Combo2->getSelectedCombo() - 1;
+		if ((selectedindex >= 0) && (selectedindex < (int)m_strcombo_motionname.size())) {
+			selectedmotion = selectedindex;
+			wcscpy_s(findmotname, 256, m_strcombo_motionname[selectedmotion].c_str());
+		}
+	}
+	int selectedbvh = -1;
+	int findbvhtype = -1;
+	if (m_Combo3) {
+		int selectedindex = m_Combo3->getSelectedCombo() - 1;
+		if ((selectedindex >= 0) && (selectedindex < (int)m_strcombo_bvhtype.size())) {
+			selectedbvh = selectedindex;
+			findbvhtype = m_strcombo_bvhtype[selectedbvh];
+		}
+	}
+	int selectedfromyear = -1;
+	int findfromyear = -1;
+	if (m_fromComboYear) {
+		int selectedindex = m_fromComboYear->getSelectedCombo() - 1;
+		if ((selectedindex >= 0) && (selectedindex < 4)) {
+			selectedfromyear = selectedindex;
+			findfromyear = 2021 + selectedfromyear;
+		}
+	}
+	int selectedtoyear = -1;
+	int findtoyear = -1;
+	if (m_toComboYear) {
+		int selectedindex = m_toComboYear->getSelectedCombo() - 1;
+		if ((selectedindex >= 0) && (selectedindex < 4)) {
+			selectedtoyear = selectedindex;
+			findtoyear = 2021 + selectedtoyear;
+		}
+	}
+	int selectedfromMonth = -1;
+	int findfromMonth = -1;
+	if (m_fromComboMonth) {
+		int selectedindex = m_fromComboMonth->getSelectedCombo() - 1;
+		if ((selectedindex >= 0) && (selectedindex < 12)) {
+			selectedfromMonth = selectedindex;
+			findfromMonth = selectedfromMonth + 1;
+		}
+	}
+	int selectedtoMonth = -1;
+	int findtoMonth = -1;
+	if (m_toComboMonth) {
+		int selectedindex = m_toComboMonth->getSelectedCombo() - 1;
+		if ((selectedindex >= 0) && (selectedindex < 12)) {
+			selectedtoMonth = selectedindex;
+			findtoMonth = selectedtoMonth + 1;
+		}
+	}
+	int selectedfromDay = -1;
+	int findfromDay = -1;
+	if (m_fromComboDay) {
+		int selectedindex = m_fromComboDay->getSelectedCombo() - 1;
+		if ((selectedindex >= 0) && (selectedindex < 31)) {
+			selectedfromDay = selectedindex;
+			findfromDay = selectedfromDay + 1;
+		}
+	}
+	int selectedtoDay = -1;
+	int findtoDay = -1;
+	if (m_toComboDay) {
+		int selectedindex = m_toComboDay->getSelectedCombo() - 1;
+		if ((selectedindex >= 0) && (selectedindex < 31)) {
+			selectedtoDay = selectedindex;
+			findtoDay = selectedtoDay + 1;
+		}
+	}
+
+//##################
+//ウインドウを作り直す
+//##################
+	DestroyOWPWnd();//まず破棄する
 	int result2 = CreateOWPWnd(srcmodel);
 	if (result2 != 0) {
 		_ASSERT(0);
 		abort();
 	}
+
+//####################
+//可能であれば選択を復元
+//####################
+	if (saveselectedindex >= 0) {
+		int newelemindex;
+		int newelemnum = (int)m_copyhistory.size();
+		for (newelemindex = 0; newelemindex < newelemnum; newelemindex++) {
+			HISTORYELEM chkhistory = m_copyhistory[newelemindex];
+			if ((chkhistory.hascpinfo == 1) && (saveselectedelem == chkhistory)) {
+				size_t owpnum = m_owpelemvec.size();
+				if (newelemindex < owpnum) {
+					OnRadio(newelemindex);
+				}
+			}
+		}
+	}
+	if ((selectedfbx >= 0) && (findfbxname[0] != 0L) && m_Combo1) {
+		int combonum = (int)m_strcombo_fbxname.size();
+		int comboindex;
+		for (comboindex = 0; comboindex < combonum; comboindex++) {
+			wstring chkname = m_strcombo_fbxname[comboindex];
+			if (chkname == findfbxname) {
+				m_Combo1->setSelectedCombo(comboindex + 1);//+1 : index0は"----"//2024/07/24
+				break;
+			}
+		}
+	}
+	if ((selectedmotion >= 0) && (findmotname[0] != 0L) && m_Combo2) {
+		int combonum = (int)m_strcombo_motionname.size();
+		int comboindex;
+		for (comboindex = 0; comboindex < combonum; comboindex++) {
+			wstring chkname = m_strcombo_motionname[comboindex];
+			if (chkname == findmotname) {
+				m_Combo2->setSelectedCombo(comboindex + 1);//+1 : index0は"----"//2024/07/24
+				break;
+			}
+		}
+	}
+	if ((selectedbvh >= 0) && (findbvhtype >= 0) && m_Combo3) {
+		int combonum = (int)m_strcombo_bvhtype.size();
+		int comboindex;
+		for (comboindex = 0; comboindex < combonum; comboindex++) {
+			int chktype = m_strcombo_bvhtype[comboindex];
+			if (chktype == findbvhtype) {
+				m_Combo3->setSelectedCombo(comboindex + 1);//+1 : index0は"----"//2024/07/24
+				break;
+			}
+		}
+	}
+	if ((selectedfromyear >= 0) && m_fromComboYear) {
+		m_fromComboYear->setSelectedCombo(selectedfromyear + 1);//+1 : index0は"----"//2024/07/24
+	}
+	if ((selectedtoyear >= 0) && m_toComboYear) {
+		m_toComboYear->setSelectedCombo(selectedtoyear + 1);//+1 : index0は"----"//2024/07/24
+	}
+	if ((selectedfromMonth >= 0) && m_fromComboMonth) {
+		m_fromComboMonth->setSelectedCombo(selectedfromMonth + 1);//+1 : index0は"----"//2024/07/24
+	}
+	if ((selectedtoMonth >= 0) && m_toComboMonth) {
+		m_toComboMonth->setSelectedCombo(selectedtoMonth + 1);//+1 : index0は"----"//2024/07/24
+	}
+	if ((selectedfromDay >= 0) && m_fromComboDay) {
+		m_fromComboDay->setSelectedCombo(selectedfromDay + 1);//+1 : index0は"----"//2024/07/24
+	}
+	if ((selectedtoDay >= 0) && m_toComboDay) {
+		m_toComboDay->setSelectedCombo(selectedtoDay + 1);//+1 : index0は"----"//2024/07/24
+	}
+
+//###############
+//リスト選択の可否
+//###############
+	EnableList(!m_ischeckedmostrecent);//2024/07/24
+	m_dlgwnd->callRewrite();
 
 	m_initsearchcomboflag = true;
 
@@ -1090,15 +1250,11 @@ int CCopyHistoryDlg2::SetNames(CModel* srcmodel, std::vector<HISTORYELEM>& copyh
 		return 1;
 	}
 
-	int saveselectedindex = GetCheckedElem();
-	HISTORYELEM saveselectedelem;
-	saveselectedelem.Init();
-	if (saveselectedindex >= 0) {
-		saveselectedelem = m_copyhistory[saveselectedindex];
-	}
 
-	DestroyOWPWnd();
 
+//##################
+//ウインドウを作り直す
+//##################
 	m_model = srcmodel;
 	m_copyhistory = copyhistory;
 	m_savecopyhistory = copyhistory;
@@ -1158,31 +1314,11 @@ int CCopyHistoryDlg2::SetNames(CModel* srcmodel, std::vector<HISTORYELEM>& copyh
 		}
 	}
 
-	ParamsToDlg(srcmodel);//表示されていないときにはm_hWndがNULLの場合があるのでShowWindowの後でSetNamesを呼ぶ
+	ParamsToDlg(srcmodel);
 
-
-	//可能であれば選択を復元
-	if (saveselectedindex >= 0) {
-		int newelemindex;
-		int newelemnum = (int)m_copyhistory.size();
-		for (newelemindex = 0; newelemindex < newelemnum; newelemindex++) {
-			HISTORYELEM chkhistory = m_copyhistory[newelemindex];
-			if ((chkhistory.hascpinfo == 1) && (saveselectedelem == chkhistory)) {
-				size_t owpnum = m_owpelemvec.size();
-				if (newelemindex < owpnum) {
-					OnRadio(newelemindex);
-				}
-			}
-		}
-	}
-
-
-	//if (m_dlgwnd) {
-	//	m_dlgwnd->setVisible(false);
-	//	m_dlgwnd->setListenMouse(false);
-	//}
 
 	m_createdflag = true;
+
 
 	return 0;
 
@@ -1470,6 +1606,10 @@ int CCopyHistoryDlg2::OnDelete(int delid)
 		}
 	}
 
+	if (m_dlgwnd) {
+		m_dlgwnd->callRewrite();
+	}
+
 	return 0;
 }
 
@@ -1498,6 +1638,14 @@ int CCopyHistoryDlg2::OnRadio(int radioid)
 		}
 	}
 
+	if (m_dlgSc) {
+		int showposline = radioid * 4;
+		m_dlgSc->setShowPosLine(showposline);//2024/07/24
+	}
+
+	if (m_dlgwnd) {
+		m_dlgwnd->callRewrite();
+	}
 
 	return 0;
 }
@@ -1632,3 +1780,25 @@ int CCopyHistoryDlg2::GetSelectedFileName(CModel* srcmodel, WCHAR* dstfilename)
 	}
 };
 
+void CCopyHistoryDlg2::EnableList(bool srcflag)
+{
+	size_t owpnum = m_owpelemvec.size();
+	int owpindex;
+	for (owpindex = 0; owpindex < owpnum; owpindex++) {
+		CCpHistoryOWPElem* curowp = m_owpelemvec[owpindex];
+		if (curowp){
+			if (curowp->GetNameCheckBox() && (curowp->GetNameCheckBox() != m_recentChk)) {
+				curowp->GetNameCheckBox()->setActive(srcflag);
+			}
+			if (curowp->GetDescLabel()) {
+				curowp->GetDescLabel()->setActive(srcflag);
+			}
+			if (curowp->GetMemoLabel()) {
+				curowp->GetMemoLabel()->setActive(srcflag);
+			}
+			if (curowp->GetDelButton()) {
+				curowp->GetDelButton()->setActive(srcflag);
+			}
+		}
+	}
+}

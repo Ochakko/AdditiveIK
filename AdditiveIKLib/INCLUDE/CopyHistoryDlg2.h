@@ -116,7 +116,7 @@ private:
 	int DestroyOWPElem();
 
 	int CreateOWPWnd(CModel* srcmodel);
-
+	void EnableList(bool srcflag);
 
 	//void SetEnableCtrls();
 

@@ -1488,7 +1488,12 @@ namespace OrgWinGUI{
 			int pos1y = pos.y + size.y / 2 - BOX_WIDTH / 2 + 1;
 			int pos2x = pos.x + BOX_POS_X + BOX_WIDTH - 1;
 			int pos2y = pos.y + size.y / 2 + BOX_WIDTH / 2 - 1;
-			hdcM->setPenAndBrush(RGB(240, 240, 240), NULL);
+			if (getActive()) {
+				hdcM->setPenAndBrush(RGB(240, 240, 240), NULL);
+			}
+			else {
+				hdcM->setPenAndBrush(RGB(120, 120, 120), NULL);//2024/07/24
+			}
 			Rectangle(hdcM->hDC, pos1x, pos1y, pos2x + 1, pos2y + 1);
 			if (value) {
 				MoveToEx(hdcM->hDC, pos1x + 2, pos1y + 2, NULL);
@@ -1496,7 +1501,12 @@ namespace OrgWinGUI{
 				MoveToEx(hdcM->hDC, pos2x - 2, pos1y + 2, NULL);
 				LineTo(hdcM->hDC, pos1x + 1, pos2y - 1);
 			}
-			hdcM->setPenAndBrush(RGB(min(baseColor.r + 20, 255), min(baseColor.g + 20, 255), min(baseColor.b + 20, 255)), NULL);
+			if (getActive()) {
+				hdcM->setPenAndBrush(RGB(min(baseColor.r + 20, 255), min(baseColor.g + 20, 255), min(baseColor.b + 20, 255)), NULL);
+			}
+			else {
+				hdcM->setPenAndBrush(RGB(120, 120, 120), NULL);//2024/07/24
+			}
 			MoveToEx(hdcM->hDC, pos1x, pos1y + 2, NULL);
 			LineTo(hdcM->hDC, pos1x, pos2y - 1);
 			MoveToEx(hdcM->hDC, pos2x, pos1y + 2, NULL);
@@ -1514,8 +1524,14 @@ namespace OrgWinGUI{
 			int fontsize = (int)((double)SIZE_Y * 0.8);//2024/07/07　高さを大きくした場合にはフォントも大きく
 			hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
 
-			//SetTextColor(hdcM->hDC, RGB(240, 240, 240));
-			SetTextColor(hdcM->hDC, OrgWindowParts::getTextColor());
+			COLORREF txtcol;
+			if (getActive()) {
+				txtcol = OrgWindowParts::getTextColor();
+			}
+			else {
+				txtcol = RGB(120, 120, 120);//2024/07/24
+			}
+			SetTextColor(hdcM->hDC, txtcol);
 			TextOut(hdcM->hDC,
 				pos3x, pos3y,
 				name, (int)_tcslen(name));

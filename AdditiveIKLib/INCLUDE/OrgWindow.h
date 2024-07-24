@@ -481,7 +481,10 @@ void s_dummyfunc()
 		OrgWindowParts(){
 			parentWindow = NULL;
 			isregistered = false;
-			isactive = false;
+
+			//isactive = false;
+			isactive = true;//2024/07/24
+			
 			isslider = false;
 			isradiobutton = false;
 			isseparator = false;
@@ -749,10 +752,10 @@ void s_dummyfunc()
 				}
 				else {
 					if (fill) {
-						hdcM->setPenAndBrush(RGB(min(baseColor.r + 20, 255), min(baseColor.g + 20, 255), min(baseColor.b + 20, 255)), RGB(baseColor.r, baseColor.g, baseColor.b));
+						hdcM->setPenAndBrush(RGB(min(baseColor.r, 255), min(baseColor.g, 255), min(baseColor.b, 255)), RGB(baseColor.r, baseColor.g, baseColor.b));
 					}
 					else {
-						hdcM->setPenAndBrush(RGB(min(baseColor.r + 20, 255), min(baseColor.g + 20, 255), min(baseColor.b + 20, 255)), NULL);
+						hdcM->setPenAndBrush(RGB(min(baseColor.r, 255), min(baseColor.g, 255), min(baseColor.b, 255)), NULL);
 					}
 					Rectangle(hdcM->hDC, pos.x, pos.y, pos.x + size.x, pos.y + size.y);
 				}
@@ -779,7 +782,9 @@ void s_dummyfunc()
 
 			parentwindow = 0;
 
-			isactive = false;
+			//isactive = false;
+			isactive = true;
+
 			listenmouse = false;
 			istopmost = srcistopmost;
 
@@ -909,9 +914,9 @@ void s_dummyfunc()
 		void setBackGroundColor(bool srcisactive) {
 			if (hWnd == NULL) return;
 
-			isactive = srcisactive;
-
-			if (isactive) {
+			//isactive = srcisactive;
+			//if (isactive) {
+			if (srcisactive) {
 				if (isblacktheme) {
 					baseR = 0;
 					baseG = 0;
@@ -2135,7 +2140,7 @@ void s_dummyfunc()
 			//内部パーツ
 			std::list<OrgWindowParts*>::iterator plItr;
 			for (plItr = partsList1.begin(); plItr != partsList1.end(); plItr++) {
-				if (*plItr) {
+				if (*plItr && (*plItr)->getActive()) {
 					WindowSize partsSize = (*plItr)->getSize();
 					int tmpPosX = e.localX + pos.x - (*plItr)->getPos().x;
 					int tmpPosY = e.localY + pos.y - (*plItr)->getPos().y;
@@ -2158,7 +2163,7 @@ void s_dummyfunc()
 			}
 			std::list<OrgWindowParts*>::iterator plItr2;
 			for (plItr2 = partsList2.begin(); plItr2 != partsList2.end(); plItr2++) {
-				if (*plItr2) {
+				if (*plItr2 && (*plItr2)->getActive()) {
 					WindowSize partsSize = (*plItr2)->getSize();
 					int tmpPosX = e.localX + pos.x - (*plItr2)->getPos().x;
 					int tmpPosY = e.localY + pos.y - (*plItr2)->getPos().y;
@@ -2184,7 +2189,7 @@ void s_dummyfunc()
 			//内部パーツ
 			std::list<OrgWindowParts*>::iterator plItr;
 			for (plItr = partsList1.begin(); plItr != partsList1.end(); plItr++) {
-				if (*plItr) {
+				if (*plItr && (*plItr)->getActive()) {
 					WindowSize partsSize = (*plItr)->getSize();
 					int tmpPosX = e.localX + pos.x - (*plItr)->getPos().x;
 					int tmpPosY = e.localY + pos.y - (*plItr)->getPos().y;
@@ -2207,7 +2212,7 @@ void s_dummyfunc()
 			}
 			std::list<OrgWindowParts*>::iterator plItr2;
 			for (plItr2 = partsList2.begin(); plItr2 != partsList2.end(); plItr2++) {
-				if (*plItr2) {
+				if (*plItr2 && (*plItr2)->getActive()) {
 					WindowSize partsSize = (*plItr2)->getSize();
 					int tmpPosX = e.localX + pos.x - (*plItr2)->getPos().x;
 					int tmpPosY = e.localY + pos.y - (*plItr2)->getPos().y;
@@ -2261,7 +2266,7 @@ void s_dummyfunc()
 			//内部パーツ
 			std::list<OrgWindowParts*>::iterator plItr;
 			for (plItr = partsList1.begin(); plItr != partsList1.end(); plItr++) {
-				if (*plItr) {
+				if (*plItr && (*plItr)->getActive()) {
 					MouseEvent mouseEvent;
 					mouseEvent.globalX = e.globalX;
 					mouseEvent.globalY = e.globalY;
@@ -2276,7 +2281,7 @@ void s_dummyfunc()
 			}
 			std::list<OrgWindowParts*>::iterator plItr2;
 			for (plItr2 = partsList2.begin(); plItr2 != partsList2.end(); plItr2++) {
-				if (*plItr2) {
+				if (*plItr2 && (*plItr2)->getActive()) {
 					MouseEvent mouseEvent;
 					mouseEvent.globalX = e.globalX;
 					mouseEvent.globalY = e.globalY;
@@ -2294,7 +2299,7 @@ void s_dummyfunc()
 			//内部パーツ
 			std::list<OrgWindowParts*>::iterator plItr;
 			for (plItr = partsList1.begin(); plItr != partsList1.end(); plItr++) {
-				if (*plItr) {
+				if (*plItr && (*plItr)->getActive()) {
 					MouseEvent mouseEvent;
 					mouseEvent.globalX = e.globalX;
 					mouseEvent.globalY = e.globalY;
@@ -2310,7 +2315,7 @@ void s_dummyfunc()
 			}
 			std::list<OrgWindowParts*>::iterator plItr2;
 			for (plItr2 = partsList2.begin(); plItr2 != partsList2.end(); plItr2++) {
-				if (*plItr2) {
+				if (*plItr2 && (*plItr2)->getActive()) {
 					MouseEvent mouseEvent;
 					mouseEvent.globalX = e.globalX;
 					mouseEvent.globalY = e.globalY;
@@ -2330,7 +2335,7 @@ void s_dummyfunc()
 			//内部パーツ
 			std::list<OrgWindowParts*>::iterator plItr;
 			for (plItr = partsList1.begin(); plItr != partsList1.end(); plItr++) {
-				if (*plItr) {
+				if (*plItr && (*plItr)->getActive()) {
 					MouseEvent mouseEvent;
 					mouseEvent.globalX = e.globalX;
 					mouseEvent.globalY = e.globalY;
@@ -2346,7 +2351,7 @@ void s_dummyfunc()
 			}
 			std::list<OrgWindowParts*>::iterator plItr2;
 			for (plItr2 = partsList2.begin(); plItr2 != partsList2.end(); plItr2++) {
-				if (*plItr2) {
+				if (*plItr2 && (*plItr2)->getActive()) {
 					MouseEvent mouseEvent;
 					mouseEvent.globalX = e.globalX;
 					mouseEvent.globalY = e.globalY;
@@ -2366,7 +2371,7 @@ void s_dummyfunc()
 			//内部パーツ
 			std::list<OrgWindowParts*>::iterator plItr;
 			for (plItr = partsList1.begin(); plItr != partsList1.end(); plItr++) {
-				if (*plItr) {
+				if (*plItr && (*plItr)->getActive()) {
 					MouseEvent mouseEvent;
 					mouseEvent.globalX = e.globalX;
 					mouseEvent.globalY = e.globalY;
@@ -2382,7 +2387,7 @@ void s_dummyfunc()
 			}
 			std::list<OrgWindowParts*>::iterator plItr2;
 			for ( plItr2 = partsList2.begin(); plItr2 != partsList2.end(); plItr2++) {
-				if (*plItr2) {
+				if (*plItr2 && (*plItr2)->getActive()) {
 					MouseEvent mouseEvent;
 					mouseEvent.globalX = e.globalX;
 					mouseEvent.globalY = e.globalY;
@@ -2548,7 +2553,7 @@ void s_dummyfunc()
 				{
 					std::list<OrgWindowParts*>::iterator plItr;
 					for (plItr = partsList1.begin(); plItr != partsList1.end(); plItr++) {
-						if (*plItr) {
+						if (*plItr && (*plItr)->getActive()) {
 							(*plItr)->setDoneFlag(false);
 
 							WindowSize partsSize = (*plItr)->getSize();
@@ -2583,7 +2588,7 @@ void s_dummyfunc()
 				{
 					std::list<OrgWindowParts*>::iterator plItr2;
 					for (plItr2 = partsList2.begin(); plItr2 != partsList2.end(); plItr2++) {
-						if (*plItr2) {
+						if (*plItr2 && (*plItr2)->getActive()) {
 							(*plItr2)->setDoneFlag(false);
 
 							WindowSize partsSize = (*plItr2)->getSize();
@@ -3232,8 +3237,14 @@ void s_dummyfunc()
 			int fontsize = (int)((double)SIZE_Y * 0.8);//2024/07/07　高さを大きくした場合にはフォントも大きく
 			hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
 
-			//SetTextColor(hdcM->hDC,RGB(240,240,240));
-			SetTextColor(hdcM->hDC, OrgWindowParts::getTextColor());
+			COLORREF txtcol;
+			if (getActive()) {
+				txtcol = OrgWindowParts::getTextColor();
+			}
+			else {
+				txtcol = RGB(120, 120, 120);
+			}
+			SetTextColor(hdcM->hDC, txtcol);
 			TextOut( hdcM->hDC,
 					 pos1x, pos1y,
 					 name, (int)_tcslen(name));
@@ -3634,8 +3645,14 @@ void s_dummyfunc()
 			int fontsize = (int)((double)SIZE_Y * 0.8);//2024/07/07　高さを大きくした場合にはフォントも大きく
 			hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));
 
-
-			SetTextColor(hdcM->hDC, OrgWindowParts::getTextColor());
+			COLORREF txtcol;
+			if (getActive()) {
+				txtcol = OrgWindowParts::getTextColor();
+			}
+			else {
+				txtcol = RGB(120, 120, 120);
+			}
+			SetTextColor(hdcM->hDC, txtcol);
 
 			TextOut( hdcM->hDC,
 					 pos3x, pos3y,
@@ -3657,7 +3674,7 @@ void s_dummyfunc()
 		}
 		//	Method : マウスダウンイベント受信
 		virtual void onLButtonDown(const MouseEvent& e){
-			if ((g_endappflag == 0) && parentWindow && IsWindow(parentWindow->getHWnd())) {
+			if ((g_endappflag == 0) && parentWindow && IsWindow(parentWindow->getHWnd()) && getActive()) {
 
 				if (this->buttonListener != NULL) {
 					(this->buttonListener)();
@@ -5410,6 +5427,9 @@ void s_dummyfunc()
 		virtual void draw();
 		//	Method : マウスダウンイベント受信
 		virtual void onLButtonDown(const MouseEvent& e){
+			if (!getActive()) {
+				return;//2024/07/24
+			}
 			//if ((e.localX >= pos.x) && (e.localX <= (pos.x + size.x)) && 
 			//	(e.localY >= pos.y) && (e.localY <= (pos.y + size.y))) {
 				setValue(value ^ true);
@@ -5417,6 +5437,10 @@ void s_dummyfunc()
 		}
 		//	Method : コンテクストメニューイベント受信
 		virtual void onRButtonDown(const MouseEvent& e) {
+			if (!getActive()) {
+				return;//2024/07/24
+			}
+
 			//リスナーコール
 			if (this->contextmenuListener != NULL) {
 				(this->contextmenuListener)();
@@ -5424,9 +5448,17 @@ void s_dummyfunc()
 		}
 		//	Method : 左マウスボタン ダブルクリックイベント受信
 		virtual void onLButtonDBLCLK(const MouseEvent& e) {//2023/10/04
+			if (!getActive()) {
+				return;//2024/07/24
+			}
+
 		}
 		//	Method : 右マウスボタン ダブルクリックイベント受信
 		virtual void onRButtonDBLCLK(const MouseEvent& e) {//2023/10/04
+			if (!getActive()) {
+				return;//2024/07/24
+			}
+
 			int dbgflag1 = 1;
 		}
 

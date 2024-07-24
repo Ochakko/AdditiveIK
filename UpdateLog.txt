@@ -8,6 +8,14 @@ https://github.com/Ochakko/AdditiveIK
 　　　文字を大きくみやすく.
 　　　ページング方式をやめてスクロール方式に.
 
+　　CopyHistoryDlgの調整
+　　　MostRecentチェック時にはリスト選択不可に.
+　　　ウインドウを作り直した後にコンボボックスの以前の選択状態を復元
+
+　　OWP_Button, OWP_CheckBoxA, OWP_Labelの修正
+　　　setActive(flag)で非アクティブにした場合にはグレー表示してマウスイベントを受け付けないように.
+
+
 
 
 
