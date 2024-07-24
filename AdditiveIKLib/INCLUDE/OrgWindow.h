@@ -5384,7 +5384,7 @@ void s_dummyfunc()
 	class OWP_CheckBoxA : public OrgWindowParts {
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_CheckBoxA( const TCHAR *_name=_T(""), bool _value=false, int _labelheight=15 ) : OrgWindowParts() {
+		OWP_CheckBoxA(const TCHAR *_name, bool _value, int _labelheight, bool _underlineflag) : OrgWindowParts() {
 			name = new TCHAR[256];
 			if (_name) {
 				size_t tclen = _tcslen(_name);
@@ -5405,6 +5405,7 @@ void s_dummyfunc()
 			}
 
 			value= _value;
+			underlineflag = _underlineflag;
 
 			SIZE_Y = max(SIZE_Y, _labelheight);//2024/07/08
 			BOX_POS_X = (int)((double)SIZE_Y * 0.20);//2024/07/08
@@ -5505,6 +5506,7 @@ void s_dummyfunc()
 		////////////////////////// MemberVar /////////////////////////////
 		TCHAR *name;
 		bool value;
+		bool underlineflag;
 		std::function<void()> buttonListener;
 		std::function<void()> contextmenuListener;//右クリック用リスナー
 
@@ -12569,7 +12571,7 @@ void s_dummyfunc()
 			size = parentWindow->getClientSize();
 
 
-			int showLineNum = max(0, ((size.y) / (LABEL_SIZE_Y)));
+			int showLineNum = getShowLineNum();
 
 			int x0 = pos.x + size.x - SCROLL_BAR_WIDTH - 1;
 			int x1 = x0 + SCROLL_BAR_WIDTH + 1;
@@ -12621,7 +12623,7 @@ void s_dummyfunc()
 			int y0 = 0;
 			int y1 = size.y;
 
-			int showLineNum = max(0, ((size.y) / (LABEL_SIZE_Y)));
+			int showLineNum = getShowLineNum();
 
 			//ラインスクロールバー
 			if ((x2 <= e.localX) && (e.localX < x3) && 
@@ -13016,11 +13018,15 @@ void s_dummyfunc()
 		int getShowPosLine() const{
 			return showPosLine;
 		}
+		int getShowLineNum() const {
+			int showLineNum = max(0, ((size.y) / (LABEL_SIZE_Y)));
+			return showLineNum;
+		}
 		void setShowPosLine(int _showPosLine){
 			int y0 = 0;
 			int y1 = size.y;
 
-			int showLineNum = max(0, ((size.y) / (LABEL_SIZE_Y)));
+			int showLineNum = getShowLineNum();
 			if (showLineNum < lineDatasize){
 				showPosLine = max(0, min(_showPosLine, lineDatasize - showLineNum));
 			}
@@ -13037,7 +13043,7 @@ void s_dummyfunc()
 		}
 		void inView(int srcline)
 		{
-			int showLineNum = max(0, ((size.y) / (LABEL_SIZE_Y)));
+			int showLineNum = getShowLineNum();
 			//int currentline = getCurrentLine();
 
 			if ((srcline >= showPosLine) && (srcline <= (showPosLine + showLineNum))) {
@@ -13049,7 +13055,8 @@ void s_dummyfunc()
 				}
 			}
 			else {
-				setShowPosLine(srcline - showLineNum + 3);
+				//setShowPosLine(srcline - showLineNum + 3);
+				setShowPosLine(srcline);//2024/07/24 ウインドウ小　コピー履歴-->下までスクロールしてセレクト-->他の右ペイン-->再びコピー履歴　でテスト
 			}
 		}
 

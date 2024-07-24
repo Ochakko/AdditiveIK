@@ -1531,10 +1531,16 @@ namespace OrgWinGUI{
 			else {
 				txtcol = RGB(120, 120, 120);//2024/07/24
 			}
-			SetTextColor(hdcM->hDC, txtcol);
-			TextOut(hdcM->hDC,
-				pos3x, pos3y,
-				name, (int)_tcslen(name));
+			if (value && getActive() && underlineflag) {
+				DrawGdiText(hdcM->hDC, name,
+					pos3x, pos3y, SIZE_Y,
+					txtcol, true);//2024/07/24 underlineflagオプションオンかつチェックボックスがチェックされている場合
+			}
+			else {
+				DrawGdiText(hdcM->hDC, name,
+					pos3x, pos3y, SIZE_Y,
+					txtcol, false);
+			}
 		}
 		{
 			if (g_dsmousewait == 1) {
@@ -2202,7 +2208,7 @@ namespace OrgWinGUI{
 				btnPrm->buttonPush = true;
 
 				//再描画通知
-				//callRewrite();
+				callRewrite();//2024/07/24 重くなるがボタンを押したときにボタンを反転表示するために必要
 
 				//ボタンアップアニメーションのためのスレッド作成
 				pushnum = i;
@@ -2328,7 +2334,7 @@ namespace OrgWinGUI{
 				btnPrm->buttonPush = true;
 
 				//再描画通知
-				//callRewrite();
+				callRewrite();//2024/07/24 重くなるがボタンを押したときにボタンを反転表示するために必要
 
 				//ボタンアップアニメーションのためのスレッド作成
 				pushnum = i;

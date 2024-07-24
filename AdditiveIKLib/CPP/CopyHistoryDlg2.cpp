@@ -28,7 +28,7 @@ CCpHistoryOWPElem::~CCpHistoryOWPElem()
 	DestroyObjs();
 }
 int CCpHistoryOWPElem::SetHistoryElem(
-	int srcindex,
+	int srccopyhistoryindex,
 	OrgWinGUI::OrgWindow* parwnd, OrgWinGUI::OWP_Separator* parentsp,
 	HISTORYELEM srchistory)
 {
@@ -49,7 +49,7 @@ int CCpHistoryOWPElem::SetHistoryElem(
 	
 	double rate50 = 0.50;
 
-	m_index = srcindex;
+	m_copyhistoryindex = srccopyhistoryindex;
 
 	m_namesp = new OWP_Separator(parwnd, true, 0.75, true);
 	if (!m_namesp) {
@@ -62,7 +62,7 @@ int CCpHistoryOWPElem::SetHistoryElem(
 	wcscpy_s(dispname, MAX_PATH, srchistory.cpinfo.fbxname);
 	wcscat_s(dispname, MAX_PATH, L"_");
 	wcscat_s(dispname, MAX_PATH, srchistory.cpinfo.motionname);
-	m_nameChk = new OWP_CheckBoxA(dispname, false, labelheight);
+	m_nameChk = new OWP_CheckBoxA(dispname, false, labelheight, true);
 	if (!m_nameChk) {
 		_ASSERT(0);
 		return 1;
@@ -202,14 +202,14 @@ int CCpHistoryOWPElem::SetEventFunc(CCopyHistoryDlg2* srcdlg)
 	if (m_nameChk) {
 		m_nameChk->setButtonListener([=, this]() {
 			if (m_parentdlg) {
-				m_parentdlg->OnRadio(m_index);
+				m_parentdlg->OnRadio(m_copyhistoryindex);
 			}
 		});
 	}
 	if (m_deleteB) {
 		m_deleteB->setButtonListener([=, this]() {
 			if (m_parentdlg) {
-				m_parentdlg->OnDelete(m_index);
+				m_parentdlg->OnDelete(m_copyhistoryindex);
 			}
 		});
 	}
@@ -464,9 +464,10 @@ void CCopyHistoryDlg2::InitParams()
 	m_model = 0;
 	m_ischeckedmostrecent = true;
 	m_selectnamemap.clear();
+	m_selectindexmap.clear();
 
 	//m_namenum = 0;
-	m_selectedindex = -1;
+	//m_selectedindex = -1;
 	m_copyhistory.clear();
 	m_savecopyhistory.clear();
 
@@ -518,6 +519,27 @@ void CCopyHistoryDlg2::SetVisible(bool srcflag)
 		if (m_dlgwnd) {
 			m_dlgwnd->setListenMouse(true);
 			m_dlgwnd->setVisible(true);
+			if (m_dlgSc) {
+				//############
+				//2024/07/24
+				//############
+				//int showposline = m_dlgSc->getShowPosLine();
+				//m_dlgSc->setShowPosLine(showposline);
+				//コピー履歴をスクロールしてチェック-->他の右ペインウインドウを表示-->再びコピー履歴表示としたときに
+				//ラベルは表示されたがセパレータの中にあるチェックボックスとボタンが表示されなかった
+				//スクロールバーを少し動かすと全て表示された
+				//スクロール処理のsetShowPosLine()から呼び出していたautoResize()が必要だった
+				//m_dlgSc->autoResize();
+
+				//選択項目が画面内に入るようにスクロール処理をすることにした
+				int selectindex = m_selectindexmap[m_model];
+				int showposline = selectindex * 4 + 7;
+				//+7 : Sc->inView()は表示行数計算時に親ウインドウのsize.yを使う
+				//今回の場合inView()の１行目は、m_dlgspcombo(画面上下段の上段)の１行目になっている
+				//m_dlgsplistの１行目からの計算にするためにm_dlgspcomboの全行数7を足す
+				m_dlgSc->inView(showposline);//内部でautoResize()も呼ぶ
+			}
+			m_dlgwnd->callRewrite();//2024/07/24
 		}
 	}
 	else {
@@ -917,7 +939,7 @@ int CCopyHistoryDlg2::CreateOWPWnd(CModel* srcmodel)
 		}
 		m_dlgspcombo->addParts1(*m_spacerLabel1);
 
-		m_recentChk = new OWP_CheckBoxA(L"最新選択MostRecent", m_ischeckedmostrecent, labelheight);
+		m_recentChk = new OWP_CheckBoxA(L"最新を使用 UseMostRecent", m_ischeckedmostrecent, labelheight, false);
 		if (!m_recentChk) {
 			_ASSERT(0);
 			abort();
@@ -1040,7 +1062,7 @@ int CCopyHistoryDlg2::CreateOWPWnd(CModel* srcmodel)
 	return 0;
 }
 
-int CCopyHistoryDlg2::ParamsToDlg(CModel* srcmodel)
+int CCopyHistoryDlg2::ParamsToDlg(CModel* srcmodel, HISTORYELEM saveselectedelem)
 {
 	if (!srcmodel) {
 		_ASSERT(0);
@@ -1053,12 +1075,20 @@ int CCopyHistoryDlg2::ParamsToDlg(CModel* srcmodel)
 //##################
 //選択状態の保存をする
 //##################
-	int saveselectedindex = GetCheckedElem();
-	HISTORYELEM saveselectedelem;
-	saveselectedelem.Init();
-	if (saveselectedindex >= 0) {
-		saveselectedelem = m_copyhistory[saveselectedindex];
-	}
+
+	//######################################################################################
+	//CopyHistoryの選択状態はm_copyhistoryが更新されるより前で保存しなければならない--> 引数で渡される
+	//######################################################################################
+	//int saveselectedindex = GetCheckedElem();
+	//HISTORYELEM saveselectedelem;
+	//saveselectedelem.Init();
+	//if (saveselectedindex >= 0) {
+	//	saveselectedelem = m_copyhistory[saveselectedindex];
+	//}
+
+	//###############################
+	//ComboBoxの選択状態はこの場所で良い
+	//###############################
 	int selectedfbx = -1;
 	WCHAR findfbxname[256] = { 0L };
 	if (m_Combo1) {
@@ -1154,7 +1184,7 @@ int CCopyHistoryDlg2::ParamsToDlg(CModel* srcmodel)
 //####################
 //可能であれば選択を復元
 //####################
-	if (saveselectedindex >= 0) {
+	if (saveselectedelem.hascpinfo == 1) {
 		int newelemindex;
 		int newelemnum = (int)m_copyhistory.size();
 		for (newelemindex = 0; newelemindex < newelemnum; newelemindex++) {
@@ -1162,11 +1192,13 @@ int CCopyHistoryDlg2::ParamsToDlg(CModel* srcmodel)
 			if ((chkhistory.hascpinfo == 1) && (saveselectedelem == chkhistory)) {
 				size_t owpnum = m_owpelemvec.size();
 				if (newelemindex < owpnum) {
-					OnRadio(newelemindex);
+					OnRadio(newelemindex);//copyhistoryのindex : 0から
+					break;
 				}
 			}
 		}
 	}
+
 	if ((selectedfbx >= 0) && (findfbxname[0] != 0L) && m_Combo1) {
 		int combonum = (int)m_strcombo_fbxname.size();
 		int comboindex;
@@ -1250,7 +1282,10 @@ int CCopyHistoryDlg2::SetNames(CModel* srcmodel, std::vector<HISTORYELEM>& copyh
 		return 1;
 	}
 
-
+//##################
+//選択状態の保存をする
+//##################
+	HISTORYELEM saveselectedelem = GetCheckedElem();
 
 //##################
 //ウインドウを作り直す
@@ -1314,7 +1349,7 @@ int CCopyHistoryDlg2::SetNames(CModel* srcmodel, std::vector<HISTORYELEM>& copyh
 		}
 	}
 
-	ParamsToDlg(srcmodel);
+	ParamsToDlg(srcmodel, saveselectedelem);
 
 
 	m_createdflag = true;
@@ -1327,6 +1362,16 @@ int CCopyHistoryDlg2::SetNames(CModel* srcmodel, std::vector<HISTORYELEM>& copyh
 
 int CCopyHistoryDlg2::OnSearch()
 {
+	//##################
+	//選択状態の保存をする
+	//##################
+	HISTORYELEM saveselectedelem = GetCheckedElem();
+
+
+
+	//##########
+	//Searching
+	//##########
 	int selectedfbx = -1;
 	WCHAR findfbxname[256] = { 0L };
 	if (m_Combo1) {
@@ -1540,7 +1585,7 @@ int CCopyHistoryDlg2::OnSearch()
 	m_copyhistory = copyhistory5;
 
 
-	ParamsToDlg(m_model);
+	ParamsToDlg(m_model, saveselectedelem);
 
 	return 0;
 }
@@ -1590,7 +1635,7 @@ int CCopyHistoryDlg2::OnDelete(int delid)
 	int owpindex;
 	for (owpindex = 0; owpindex < owpnum; owpindex++) {
 		CCpHistoryOWPElem* curowp = m_owpelemvec[owpindex];
-		if (curowp && (curowp->GetIndex() == delid)) {
+		if (curowp && (curowp->GetCopyHistoryIndex() == delid)) {
 			if (curowp->GetDescLabel()) {
 				curowp->GetDescLabel()->setName(L"deleted.");
 			}
@@ -1622,6 +1667,7 @@ int CCopyHistoryDlg2::OnRadio(int radioid)
 	//OKボタンを押さないでも反映されるように
 	if (!m_copyhistory.empty()) {
 		m_selectnamemap[m_model] = m_copyhistory[radioid].wfilename;
+		m_selectindexmap[m_model] = radioid;
 	}
 
 	size_t owpnum = m_owpelemvec.size();
@@ -1629,7 +1675,7 @@ int CCopyHistoryDlg2::OnRadio(int radioid)
 	for (owpindex = 0; owpindex < owpnum; owpindex++) {
 		CCpHistoryOWPElem* curowp = m_owpelemvec[owpindex];
 		if (curowp && curowp->GetNameCheckBox()) {
-			if (curowp->GetIndex() == radioid) {
+			if (curowp->GetCopyHistoryIndex() == radioid) {
 				curowp->GetNameCheckBox()->setValue(true, false);
 			}
 			else {
@@ -1639,8 +1685,13 @@ int CCopyHistoryDlg2::OnRadio(int radioid)
 	}
 
 	if (m_dlgSc) {
-		int showposline = radioid * 4;
-		m_dlgSc->setShowPosLine(showposline);//2024/07/24
+		//2024/07/24
+		//選択項目が画面内に入るようにスクロール処理をすることにした
+		int showposline = radioid * 4 + 7;
+		//+7 : Sc->inView()は表示行数計算時に親ウインドウのsize.yを使う
+		//今回の場合inView()の１行目は、m_dlgspcombo(画面上下段の上段)の１行目になっている
+		//m_dlgsplistの１行目からの計算にするためにm_dlgspcomboの全行数7を足す
+		m_dlgSc->inView(showposline);//2024/07/24 inView()は視野内にある場合には何もしない
 	}
 
 	if (m_dlgwnd) {
@@ -1652,13 +1703,21 @@ int CCopyHistoryDlg2::OnRadio(int radioid)
 
 
 
-HISTORYELEM CCopyHistoryDlg2::GetFirstValidElem()
+HISTORYELEM CCopyHistoryDlg2::GetFirstValidElem(int* pindex)
 {
+	if (!pindex) {
+		_ASSERT(0);
+		HISTORYELEM inielem;
+		inielem.Init();
+		return inielem;
+	}
+
 	int elemnum = (int)m_copyhistory.size();
 	int elemno;
 	for (elemno = 0; elemno < elemnum; elemno++) {
 		HISTORYELEM helem = m_copyhistory[elemno];
 		if (helem.hascpinfo == 1) {
+			*pindex = elemno;
 			return helem;
 		}
 		else {
@@ -1669,19 +1728,21 @@ HISTORYELEM CCopyHistoryDlg2::GetFirstValidElem()
 	//有効な履歴がみつからなかった場合
 	HISTORYELEM inielem;
 	inielem.Init();
+	*pindex = -1;
 	return inielem;
 }
 
-int CCopyHistoryDlg2::GetCheckedElem()
+HISTORYELEM CCopyHistoryDlg2::GetCheckedElem()
 {
-	size_t selectedno = -1;//チェックされていない場合
+	int selectedno = -1;//チェックされていない場合
 
 	size_t owpnum = m_owpelemvec.size();
 	int owpindex;
 	for (owpindex = 0; owpindex < owpnum; owpindex++) {
 		CCpHistoryOWPElem* curowp = m_owpelemvec[owpindex];
 		if (curowp && curowp->GetNameCheckBox() && curowp->GetNameCheckBox()->getValue()) {
-			selectedno = owpindex;
+			//selectedno = owpindex;
+			selectedno = curowp->GetCopyHistoryIndex();//2024/07/24
 			break;
 		}
 	}
@@ -1689,17 +1750,17 @@ int CCopyHistoryDlg2::GetCheckedElem()
 	if ((selectedno >= 0) && (selectedno < m_copyhistory.size())) {
 		HISTORYELEM checkedelem = m_copyhistory[selectedno];
 		if (checkedelem.hascpinfo == 1) {
-			//return checkedelem;
-			return (int)selectedno;
+			return checkedelem;
+			//return (int)selectedno;
 		}
 	}
 
 	//有効な履歴がみつからなかった場合
-	//HISTORYELEM inielem;
-	//inielem.Init();
-	//return inielem;
+	HISTORYELEM inielem;
+	inielem.Init();
+	return inielem;
 
-	return -1;
+	//return -1;
 }
 
 int CCopyHistoryDlg2::GetSelectedFileName(CModel* srcmodel, WCHAR* dstfilename) 
@@ -1719,9 +1780,11 @@ int CCopyHistoryDlg2::GetSelectedFileName(CModel* srcmodel, WCHAR* dstfilename)
 		//まだウインドウが作成されていない場合
 
 		//最新の有効なコピーを選択
-		HISTORYELEM firstelem = GetFirstValidElem();
+		int selectindex = -1;
+		HISTORYELEM firstelem = GetFirstValidElem(&selectindex);
 		if (firstelem.hascpinfo == 1) {
 			m_selectnamemap[srcmodel] = firstelem.wfilename;
+			m_selectindexmap[srcmodel] = selectindex;
 			wcscpy_s(dstfilename, MAX_PATH, firstelem.wfilename);
 			return 0;
 		}
@@ -1737,9 +1800,11 @@ int CCopyHistoryDlg2::GetSelectedFileName(CModel* srcmodel, WCHAR* dstfilename)
 
 		if (m_ischeckedmostrecent == true) {
 			//最新の有効なコピーを選択
-			HISTORYELEM firstelem = GetFirstValidElem();
+			int selectindex = -1;
+			HISTORYELEM firstelem = GetFirstValidElem(&selectindex);
 			if (firstelem.hascpinfo == 1) {
 				m_selectnamemap[srcmodel] = firstelem.wfilename;
+				m_selectindexmap[srcmodel] = selectindex;
 				wcscpy_s(dstfilename, MAX_PATH, firstelem.wfilename);
 				return 0;
 			}
@@ -1766,9 +1831,11 @@ int CCopyHistoryDlg2::GetSelectedFileName(CModel* srcmodel, WCHAR* dstfilename)
 				return 0;
 			}
 			else {
-				HISTORYELEM firstelem = GetFirstValidElem();
+				int selectindex = -1;
+				HISTORYELEM firstelem = GetFirstValidElem(&selectindex);
 				if (firstelem.hascpinfo == 1) {
 					m_selectnamemap[srcmodel] = firstelem.wfilename;
+					m_selectindexmap[srcmodel] = selectindex;
 					wcscpy_s(dstfilename, MAX_PATH, firstelem.wfilename);
 					return 0;
 				}

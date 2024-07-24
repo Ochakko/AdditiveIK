@@ -34,7 +34,7 @@ public:
 	~CCpHistoryOWPElem();
 
 	int SetHistoryElem(
-		int srcindex, OrgWinGUI::OrgWindow* parwnd, OrgWinGUI::OWP_Separator* parentsp, 
+		int srccopyhistoryindex, OrgWinGUI::OrgWindow* parwnd, OrgWinGUI::OWP_Separator* parentsp, 
 		HISTORYELEM srchistory);
 	int AddParts(OrgWinGUI::OWP_Separator* parentsp);
 	int SetEventFunc(CCopyHistoryDlg2* srcdlg);
@@ -48,8 +48,8 @@ private:
 	void DestroyObjs();
 
 public:
-	int GetIndex() {
-		return m_index;
+	int GetCopyHistoryIndex() {
+		return m_copyhistoryindex;
 	};
 	OrgWinGUI::OWP_CheckBoxA* GetNameCheckBox() {
 		return m_nameChk;
@@ -65,7 +65,7 @@ public:
 	};
 private:
 	CCopyHistoryDlg2* m_parentdlg;
-	int m_index;
+	int m_copyhistoryindex;
 	OrgWinGUI::OWP_Separator* m_namesp;
 	OrgWinGUI::OWP_CheckBoxA* m_nameChk;
 	OrgWinGUI::OWP_Button* m_deleteB;
@@ -100,7 +100,7 @@ public:
 	{
 		return m_createdflag;
 	};
-	int ParamsToDlg(CModel* srcmodel);
+	int ParamsToDlg(CModel* srcmodel, HISTORYELEM saveselectedelem);
 
 	void SetVisible(bool srcflag);
 	int OnSearch();
@@ -125,8 +125,8 @@ private:
 		return m_ischeckedmostrecent;
 	};
 
-	HISTORYELEM GetFirstValidElem();
-	int GetCheckedElem();
+	HISTORYELEM GetFirstValidElem(int* pindex);
+	HISTORYELEM GetCheckedElem();
 
 private:
 
@@ -147,10 +147,12 @@ private:
 
 
 	//size_t m_namenum;//m_copyhistory.size()
-	size_t m_selectedindex;
+	//int m_selectedindex;//m_selectindexmapへ変更
 	bool m_ischeckedmostrecent;
 
 	std::map<CModel*, std::wstring> m_selectnamemap;
+	std::map<CModel*, int> m_selectindexmap;
+
 
 	//int m_startno;
 	std::vector<HISTORYELEM> m_copyhistory;

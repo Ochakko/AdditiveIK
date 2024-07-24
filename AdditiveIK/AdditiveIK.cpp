@@ -15426,7 +15426,7 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 						delete s_parentcheck;
 						s_parentcheck = 0;
 					}
-					s_parentcheck = new OWP_CheckBoxA(L"ParentEuler", 1);//parentcheck ON by default
+					s_parentcheck = new OWP_CheckBoxA(L"ParentEuler", 1, 15, false);//parentcheck ON by default
 					//s_LtimelineWnd->addParts(*s_parentcheck);
 					//s_LTSeparator->addParts2(*s_parentcheck);//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!parentwindow libfbxdll error 2021/03/04 comment out tmp
 					//s_parentcheck->setButtonListener([]() { 
@@ -21006,7 +21006,7 @@ int CreateModelPanel()
 			for (modelcnt = 0; modelcnt < modelnum; modelcnt++) {
 				CModel* curmodel = s_chascene->GetModel(modelcnt);
 				if (curmodel) {
-					OWP_CheckBoxA* owpCheckBox = new OWP_CheckBoxA(L"Show", curmodel->GetModelDisp(), 20);
+					OWP_CheckBoxA* owpCheckBox = new OWP_CheckBoxA(L"Show", curmodel->GetModelDisp(), 20, false);
 					if (owpCheckBox) {
 						s_modelpanel.checkvec.push_back(owpCheckBox);
 						OWP_Button* owpButton = new OWP_Button(L"del", 20);
@@ -28600,7 +28600,7 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_lightsChk = new OWP_CheckBoxA(L"Enable Lights", (g_lightflag != 0), labelheight);
+		s_lightsChk = new OWP_CheckBoxA(L"Enable Lights", (g_lightflag != 0), labelheight, false);
 		if (!s_lightsChk) {
 			_ASSERT(0);
 			abort();
@@ -28626,7 +28626,7 @@ int CreateGUIDlgDispParams()
 			abort();
 		}
 
-		s_highRpmChk = new OWP_CheckBoxA(L"Hight RPM", g_HighRpmMode, labelheight);
+		s_highRpmChk = new OWP_CheckBoxA(L"Hight RPM", g_HighRpmMode, labelheight, false);
 		if (!s_highRpmChk) {
 			_ASSERT(0);
 			abort();
@@ -28637,7 +28637,7 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_bonemarkChk = new OWP_CheckBoxA(L"BoneMark", (g_bonemarkflag != 0), labelheight);
+		s_bonemarkChk = new OWP_CheckBoxA(L"BoneMark", (g_bonemarkflag != 0), labelheight, false);
 		if (!s_bonemarkChk) {
 			_ASSERT(0);
 			abort();
@@ -28653,7 +28653,7 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_rigidmarkChk = new OWP_CheckBoxA(L"RigidMark", (g_rigidmarkflag != 0), labelheight);
+		s_rigidmarkChk = new OWP_CheckBoxA(L"RigidMark", (g_rigidmarkflag != 0), labelheight, false);
 		if (!s_rigidmarkChk) {
 			_ASSERT(0);
 			abort();
@@ -28764,12 +28764,12 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_x180Chk = new OWP_CheckBoxA(L"Modify Euler X180", g_x180flag, labelheight);
+		s_x180Chk = new OWP_CheckBoxA(L"Modify Euler X180", g_x180flag, labelheight, false);
 		if (!s_x180Chk) {
 			_ASSERT(0);
 			abort();
 		}
-		s_rottraChk = new OWP_CheckBoxA(L"Rotate Translation", g_rotatetanim, labelheight);
+		s_rottraChk = new OWP_CheckBoxA(L"Rotate Translation", g_rotatetanim, labelheight, false);
 		if (!s_rottraChk) {
 			_ASSERT(0);
 			abort();
@@ -28780,12 +28780,12 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_dofChk = new OWP_CheckBoxA(L"DOF(DepthOfField)", g_zpreflag, labelheight);
+		s_dofChk = new OWP_CheckBoxA(L"DOF(DepthOfField)", g_zpreflag, labelheight, false);
 		if (!s_dofChk) {
 			_ASSERT(0);
 			abort();
 		}
-		s_bloomChk = new OWP_CheckBoxA(L"HDRP Bloom", g_hdrpbloom, labelheight);
+		s_bloomChk = new OWP_CheckBoxA(L"HDRP Bloom", g_hdrpbloom, labelheight, false);
 		if (!s_bloomChk) {
 			_ASSERT(0);
 			abort();
@@ -28796,12 +28796,12 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_alphaChk = new OWP_CheckBoxA(L"Alpha Blending", g_alphablending, labelheight);
+		s_alphaChk = new OWP_CheckBoxA(L"Alpha Blending", g_alphablending, labelheight, false);
 		if (!s_alphaChk) {
 			_ASSERT(0);
 			abort();
 		}
-		s_zcmpChk = new OWP_CheckBoxA(L"ZCmpAlways", g_zalways, labelheight);
+		s_zcmpChk = new OWP_CheckBoxA(L"ZCmpAlways", g_zalways, labelheight, false);
 		if (!s_zcmpChk) {
 			_ASSERT(0);
 			abort();
@@ -28812,12 +28812,12 @@ int CreateGUIDlgDispParams()
 			_ASSERT(0);
 			abort();
 		}
-		s_freefpsChk = new OWP_CheckBoxA(L"Free fps", g_freefps, labelheight);
+		s_freefpsChk = new OWP_CheckBoxA(L"Free fps", g_freefps, labelheight, false);
 		if (!s_freefpsChk) {
 			_ASSERT(0);
 			abort();
 		}
-		s_skydispChk = new OWP_CheckBoxA(L"Sky Disp", g_skydispflag, labelheight);
+		s_skydispChk = new OWP_CheckBoxA(L"Sky Disp", g_skydispflag, labelheight, false);
 		if (!s_skydispChk) {
 			_ASSERT(0);
 			abort();
@@ -29829,12 +29829,12 @@ int CreateLightsWnd()
 				_ASSERT(0);
 				abort();
 			}
-			s_lightsenableChk[lightindex] = new OWP_CheckBoxA(L"Enable", g_lightEnable[g_lightSlot][lightindex], labelheight);
+			s_lightsenableChk[lightindex] = new OWP_CheckBoxA(L"Enable", g_lightEnable[g_lightSlot][lightindex], labelheight, true);
 			if (!s_lightsenableChk[lightindex]) {
 				_ASSERT(0);
 				abort();
 			}
-			s_lightsviewrotChk[lightindex] = new OWP_CheckBoxA(L"RotWithView", g_lightDirWithView[g_lightSlot][lightindex], labelheight);
+			s_lightsviewrotChk[lightindex] = new OWP_CheckBoxA(L"RotWithView", g_lightDirWithView[g_lightSlot][lightindex], labelheight, false);
 			if (!s_lightsviewrotChk[lightindex]) {
 				_ASSERT(0);
 				abort();
@@ -30269,7 +30269,7 @@ int CreateShadowParamsWnd()
 			_ASSERT(0);
 			abort();
 		}
-		s_shadowenableChk = new OWP_CheckBoxA(L"Enable Shadow", g_enableshadow, labelheight);
+		s_shadowenableChk = new OWP_CheckBoxA(L"Enable Shadow", g_enableshadow, labelheight, false);
 		if (!s_shadowenableChk) {
 			_ASSERT(0);
 			abort();
@@ -30292,12 +30292,12 @@ int CreateShadowParamsWnd()
 			_ASSERT(0);
 			abort();
 		}
-		s_shadowvsmChk = new OWP_CheckBoxA(L"Variance Shadow Maps", g_VSMflag, labelheight);
+		s_shadowvsmChk = new OWP_CheckBoxA(L"Variance Shadow Maps", g_VSMflag, labelheight, false);
 		if (!s_shadowvsmChk) {
 			_ASSERT(0);
 			abort();
 		}
-		s_shadowvsmblurChk = new OWP_CheckBoxA(L"Blur Shadow", g_blurShadow, labelheight);
+		s_shadowvsmblurChk = new OWP_CheckBoxA(L"Blur Shadow", g_blurShadow, labelheight, false);
 		if (!s_shadowvsmblurChk) {
 			_ASSERT(0);
 			abort();
@@ -30406,7 +30406,7 @@ int CreateShadowParamsWnd()
 		for (dirindex = 0; dirindex < 8; dirindex++) {
 			WCHAR strdir[32] = { 0L };
 			swprintf_s(strdir, 32, L"%d", (dirindex + 1));
-			s_shadowcamdirChk[dirindex] = new OWP_CheckBoxA(strdir, false, labelheight);
+			s_shadowcamdirChk[dirindex] = new OWP_CheckBoxA(strdir, false, labelheight, true);
 			if (!s_shadowcamdirChk[dirindex]) {
 				_ASSERT(0);
 				abort();
@@ -40338,7 +40338,7 @@ int CreateDmpAnimWnd()
 
 	if (s_dmpanimWnd) {
 
-		s_dmpgroupcheck = new OWP_CheckBoxA(L"SetToAllRigidsMeansToSetToSameGroup", 0);
+		s_dmpgroupcheck = new OWP_CheckBoxA(L"SetToAllRigidsMeansToSetToSameGroup", 0, 15, false);
 		if (!s_dmpgroupcheck) {
 			_ASSERT(0);
 			return 1;
@@ -40612,12 +40612,12 @@ int CreateTopSlidersWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_owpBrushMirrorU = new OWP_CheckBoxA(L"Brush U", (g_brushmirrorUflag == 1), labelheight);
+		s_owpBrushMirrorU = new OWP_CheckBoxA(L"Brush U", (g_brushmirrorUflag == 1), labelheight, false);
 		if (!s_owpBrushMirrorU) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_owpBrushMirrorV = new OWP_CheckBoxA(L"Brush V", (g_brushmirrorVflag == 1), labelheight);
+		s_owpBrushMirrorV = new OWP_CheckBoxA(L"Brush V", (g_brushmirrorVflag == 1), labelheight, false);
 		if (!s_owpBrushMirrorV) {
 			_ASSERT(0);
 			return 1;
@@ -40800,17 +40800,17 @@ int CreateSideMenuWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_sidemenu_sellock = new OWP_CheckBoxA(L"Lock2Joint", s_camtargetflag);
+		s_sidemenu_sellock = new OWP_CheckBoxA(L"Lock2Joint", s_camtargetflag, 15, false);
 		if (!s_sidemenu_sellock) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_sidemenu_targetdisp = new OWP_CheckBoxA(L"DispTarget", s_camtargetdisp);
+		s_sidemenu_targetdisp = new OWP_CheckBoxA(L"DispTarget", s_camtargetdisp, 15, false);
 		if (!s_sidemenu_targetdisp) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_sidemenu_moveeyepos = new OWP_CheckBoxA(L"MoveEyePos", s_moveeyepos);
+		s_sidemenu_moveeyepos = new OWP_CheckBoxA(L"MoveEyePos", s_moveeyepos, 15, false);
 		if (!s_sidemenu_moveeyepos) {
 			_ASSERT(0);
 			return 1;
@@ -41244,7 +41244,7 @@ int CreateDispGroupWnd()
 		for (groupindex0 = 0; groupindex0 < MAXDISPGROUPNUM; groupindex0++) {
 			WCHAR groupname[256] = { 0L };
 			swprintf_s(groupname, 256, L"%02d", groupindex0 + 1);
-			s_groupselect[groupindex0] = new OWP_CheckBoxA(groupname, false, labelheight);
+			s_groupselect[groupindex0] = new OWP_CheckBoxA(groupname, false, labelheight, true);
 			if (!s_groupselect[groupindex0]) {
 				_ASSERT(0);
 				if (oldcursor != NULL) {
@@ -41912,7 +41912,7 @@ static int s_blendshapelinenum = 0;
 			return 1;
 		}
 
-		s_blendshapeadditive = new OWP_CheckBoxA(L"AdditiveMode", g_blendshapeAddtiveMode);
+		s_blendshapeadditive = new OWP_CheckBoxA(L"AdditiveMode", g_blendshapeAddtiveMode, 20, false);
 		if (!s_blendshapeadditive) {
 			_ASSERT(0);
 			return 1;
@@ -43403,7 +43403,7 @@ int CreateRigidWnd()
 
 
 
-		s_groupcheck = new OWP_CheckBoxA(L"ToAll=ToGroup", 0, labelheight);
+		s_groupcheck = new OWP_CheckBoxA(L"ToAll=ToGroup", 0, labelheight, false);
 		if (!s_groupcheck) {
 			_ASSERT(0);
 			return 1;
@@ -43457,7 +43457,7 @@ int CreateRigidWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_rigidskip = new OWP_CheckBoxA(L"Valid/Invalid (有効/無効)", 1, labelheight);
+		s_rigidskip = new OWP_CheckBoxA(L"Valid/Invalid (有効/無効)", 1, labelheight, false);
 		if (!s_rigidskip) {
 			_ASSERT(0);
 			return 1;
@@ -43472,7 +43472,7 @@ int CreateRigidWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_forbidrot = new OWP_CheckBoxA(L"ForbidRot", 0, labelheight);
+		s_forbidrot = new OWP_CheckBoxA(L"ForbidRot", 0, labelheight, false);
 		if (!s_forbidrot) {
 			_ASSERT(0);
 			return 1;
@@ -43500,7 +43500,7 @@ int CreateRigidWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_btforce = new OWP_CheckBoxA(L"RigidBodySimulation", 0, labelheight);
+		s_btforce = new OWP_CheckBoxA(L"RigidBodySimulation", 0, labelheight, false);
 		if (!s_btforce) {
 			_ASSERT(0);
 			return 1;
@@ -46260,7 +46260,7 @@ int CreateImpulseWnd()
 		true);					//サイズ変更の可否
 
 	if (s_impWnd) {
-		s_impgroupcheck = new OWP_CheckBoxA(L"SetToAllRigidSMeansToSetSameGroup", 0);
+		s_impgroupcheck = new OWP_CheckBoxA(L"SetToAllRigidSMeansToSetSameGroup", 0, 15, false);
 		if (!s_impgroupcheck) {
 			_ASSERT(0);
 			return 1;
@@ -46479,7 +46479,7 @@ int CreateGPlaneWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_gpdisp = new OWP_CheckBoxA(L"Display", 1);
+		s_gpdisp = new OWP_CheckBoxA(L"Display", 1, 15, false);
 		if (!s_gpdisp) {
 			_ASSERT(0);
 			return 1;
@@ -64050,17 +64050,17 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_lightflagchk = new OWP_CheckBoxA(L"Lighting", 0, labelheight);
+		s_st_lightflagchk = new OWP_CheckBoxA(L"Lighting", 0, labelheight, false);
 		if (!s_st_lightflagchk) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_shadowcasterchk = new OWP_CheckBoxA(L"ShadowCaster", 0, labelheight);
+		s_st_shadowcasterchk = new OWP_CheckBoxA(L"ShadowCaster", 0, labelheight, false);
 		if (!s_st_shadowcasterchk) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_normaly0chk = new OWP_CheckBoxA(L"NormalY0", 0, labelheight);
+		s_st_normaly0chk = new OWP_CheckBoxA(L"NormalY0", 0, labelheight, false);
 		if (!s_st_normaly0chk) {
 			_ASSERT(0);
 			return 1;
@@ -64093,7 +64093,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_emissionchk = new OWP_CheckBoxA(L"Emi", 0, labelheight);
+		s_st_emissionchk = new OWP_CheckBoxA(L"Emi", 0, labelheight, false);
 		if (!s_st_emissionchk) {
 			_ASSERT(0);
 			return 1;
@@ -64350,12 +64350,12 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_gradationchk = new OWP_CheckBoxA(L"Gradation", 0, labelheight);
+		s_st_gradationchk = new OWP_CheckBoxA(L"Gradation", 0, labelheight, false);
 		if (!s_st_gradationchk) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_powertoonchk = new OWP_CheckBoxA(L"PowerToon", 0, labelheight);
+		s_st_powertoonchk = new OWP_CheckBoxA(L"PowerToon", 0, labelheight, false);
 		if (!s_st_powertoonchk) {
 			_ASSERT(0);
 			return 1;
@@ -64648,7 +64648,7 @@ int CreateShaderTypeParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_st_distortionchk = new OWP_CheckBoxA(L"SimpleWater(PBR,NoSkin)", 0, labelheight);
+		s_st_distortionchk = new OWP_CheckBoxA(L"SimpleWater(PBR,NoSkin)", 0, labelheight, false);
 		if (!s_st_distortionchk) {
 			_ASSERT(0);
 			return 1;
@@ -67233,17 +67233,17 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_lightflagchk = new OWP_CheckBoxA(L"Lighting", 0, labelheight);
+		s_skyst_lightflagchk = new OWP_CheckBoxA(L"Lighting", 0, labelheight, false);
 		if (!s_skyst_lightflagchk) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_shadowcasterchk = new OWP_CheckBoxA(L"ShadowCaster", 0, labelheight);
+		s_skyst_shadowcasterchk = new OWP_CheckBoxA(L"ShadowCaster", 0, labelheight, false);
 		if (!s_skyst_shadowcasterchk) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_normaly0chk = new OWP_CheckBoxA(L"NormalY0", 0, labelheight);
+		s_skyst_normaly0chk = new OWP_CheckBoxA(L"NormalY0", 0, labelheight, false);
 		if (!s_skyst_normaly0chk) {
 			_ASSERT(0);
 			return 1;
@@ -67276,7 +67276,7 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_emissionchk = new OWP_CheckBoxA(L"Emi", 0, labelheight);
+		s_skyst_emissionchk = new OWP_CheckBoxA(L"Emi", 0, labelheight, false);
 		if (!s_skyst_emissionchk) {
 			_ASSERT(0);
 			return 1;
@@ -67532,12 +67532,12 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_gradationchk = new OWP_CheckBoxA(L"Gradation", 0, labelheight);
+		s_skyst_gradationchk = new OWP_CheckBoxA(L"Gradation", 0, labelheight, false);
 		if (!s_skyst_gradationchk) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_powertoonchk = new OWP_CheckBoxA(L"PowerToon", 0, labelheight);
+		s_skyst_powertoonchk = new OWP_CheckBoxA(L"PowerToon", 0, labelheight, false);
 		if (!s_skyst_powertoonchk) {
 			_ASSERT(0);
 			return 1;
@@ -67830,7 +67830,7 @@ int CreateSkyParamsDlg()
 			_ASSERT(0);
 			return 1;
 		}
-		s_skyst_distortionchk = new OWP_CheckBoxA(L"distortion", 0, labelheight);
+		s_skyst_distortionchk = new OWP_CheckBoxA(L"distortion", 0, labelheight, false);
 		if (!s_skyst_distortionchk) {
 			_ASSERT(0);
 			return 1;
@@ -69978,17 +69978,17 @@ int CreateFogParamsDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_fogkindnoChk = new OWP_CheckBoxA(L"NoFog", false, labelheight);
+		s_fogkindnoChk = new OWP_CheckBoxA(L"NoFog", false, labelheight, true);
 		if (!s_fogkindnoChk) {
 			_ASSERT(0);
 			abort();
 		}
-		s_fogkinddistChk = new OWP_CheckBoxA(L"DistFog", false, labelheight);
+		s_fogkinddistChk = new OWP_CheckBoxA(L"DistFog", false, labelheight, true);
 		if (!s_fogkinddistChk) {
 			_ASSERT(0);
 			abort();
 		}
-		s_fogkindheightChk = new OWP_CheckBoxA(L"HeightFog", false, labelheight);
+		s_fogkindheightChk = new OWP_CheckBoxA(L"HeightFog", false, labelheight, true);
 		if (!s_fogkindheightChk) {
 			_ASSERT(0);
 			abort();
@@ -70390,7 +70390,7 @@ int CreateDofParamsDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_dofskyChk = new OWP_CheckBoxA(L"Sky DOF", g_skydofflag[g_dofindex], labelheight);
+		s_dofskyChk = new OWP_CheckBoxA(L"Sky DOF", g_skydofflag[g_dofindex], labelheight, false);
 		if (!s_dofskyChk) {
 			_ASSERT(0);
 			abort();

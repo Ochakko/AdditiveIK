@@ -23,6 +23,24 @@ typedef struct tag_cpinfo
 	int importance;//0:undef, 1:tiny, 2:alittle, 3:normal, 4:noticed, 5:imortant, 6:very important
 	WCHAR comment[HISTORYCOMMENTLEN];//WCHAR * 31文字まで。３２文字目は終端記号
 
+
+	bool operator== (const tag_cpinfo& chk) const {
+		if ((wcscmp(fbxname, chk.fbxname) == 0) &&
+			(wcscmp(motionname, chk.motionname) == 0) &&
+			(startframe == chk.startframe) && 
+			(framenum == chk.framenum) && 
+			(bvhtype == chk.bvhtype) && 
+			(importance == chk.importance)// &&
+			//(wcscmp(comment, chk.comment) == 0)
+		) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	};
+
+
 	void Init() {
 		ZeroMemory(fbxname, sizeof(WCHAR) * MAX_PATH);
 		ZeroMemory(motionname, sizeof(WCHAR) * MAX_PATH);
@@ -58,7 +76,11 @@ typedef struct tag_historyelem
 		}
 	};
 	bool operator== (const tag_historyelem& chk) const { 
-		if (wcscmp(wfilename, chk.wfilename) == 0) {
+		if ((wcscmp(wfilename, chk.wfilename) == 0) && 
+			(filetime.dwHighDateTime == chk.filetime.dwHighDateTime) &&
+			(filetime.dwLowDateTime == chk.filetime.dwLowDateTime) &&
+			(cpinfo == chk.cpinfo)
+		) {
 			return true;
 		}
 		else {

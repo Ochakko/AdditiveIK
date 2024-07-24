@@ -220,8 +220,8 @@ bool DrawGdiText(HDC hDC, const WCHAR* srctext,
 		//オレンジの下線マーク
 		int pos01x = posx + spacesize.cx;
 		int pos02x = pos01x + namesize.cx;
-		int pos01y = posy + (int)(labelheight * 0.85);
-		int pos02y = posy + labelheight;
+		int pos01y = posy + (int)(labelheight * 0.70);
+		int pos02y = posy + (int)(labelheight * 0.85);//2024/07/24 下にはみ出すとアンダーラインが消えなくなることがあった(画面小Shadowメニュー)ので　x0.85まで
 
 		HPEN hPen = CreatePen(PS_SOLID, 1, RGB(255, 128, 0));
 		DeleteObject(SelectObject(hDC, hPen));
