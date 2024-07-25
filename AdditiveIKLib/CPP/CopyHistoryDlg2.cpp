@@ -62,7 +62,7 @@ int CCpHistoryOWPElem::SetHistoryElem(
 	wcscpy_s(dispname, MAX_PATH, srchistory.cpinfo.fbxname);
 	wcscat_s(dispname, MAX_PATH, L"_");
 	wcscat_s(dispname, MAX_PATH, srchistory.cpinfo.motionname);
-	m_nameChk = new OWP_CheckBoxA(dispname, false, labelheight, true);
+	m_nameChk = new OWP_CheckBoxA(dispname, false, labelheight, true, MAX_PATH);
 	if (!m_nameChk) {
 		_ASSERT(0);
 		return 1;
@@ -77,7 +77,7 @@ int CCpHistoryOWPElem::SetHistoryElem(
 	//m_namesp->addParts2(*m_deleteB);
 
 
-	WCHAR strdesc[256] = { 0L };
+	WCHAR strdesc[MAX_PATH] = { 0L };
 	if (srchistory.hascpinfo == 1) {
 		WCHAR textstartframe[MAX_PATH] = { 0L };
 		swprintf_s(textstartframe, MAX_PATH, L"%.0lf", srchistory.cpinfo.startframe);
@@ -100,13 +100,13 @@ int CCpHistoryOWPElem::SetHistoryElem(
 			swprintf_s(textimportance, INPORTANCESTRLEN, L"Undef.");
 		}
 
-		swprintf_s(strdesc, 256, L"StartFrame:%s Num:%s  %s %s",
+		swprintf_s(strdesc, MAX_PATH, L"StartFrame:%s Num:%s  %s %s",
 			textstartframe, textframenum, textbvhtype, textimportance);
 	}
 	else {
-		wcscpy_s(strdesc, 256, L"Invalid.");
+		wcscpy_s(strdesc, MAX_PATH, L"Invalid.");
 	}
-	m_descLabel = new OWP_Label(strdesc, labelheight);
+	m_descLabel = new OWP_Label(strdesc, labelheight, MAX_PATH);
 	if (!m_descLabel) {
 		_ASSERT(0);
 		return 1;
@@ -519,7 +519,7 @@ void CCopyHistoryDlg2::SetVisible(bool srcflag)
 		if (m_dlgwnd) {
 			m_dlgwnd->setListenMouse(true);
 			m_dlgwnd->setVisible(true);
-			if (m_dlgSc) {
+			if (m_dlgSc && m_dlgspcombo) {
 				//############
 				//2024/07/24
 				//############
@@ -533,10 +533,13 @@ void CCopyHistoryDlg2::SetVisible(bool srcflag)
 
 				//選択項目が画面内に入るようにスクロール処理をすることにした
 				int selectindex = m_selectindexmap[m_model];
-				int showposline = selectindex * 4 + 7;
-				//+7 : Sc->inView()は表示行数計算時に親ウインドウのsize.yを使う
-				//今回の場合inView()の１行目は、m_dlgspcombo(画面上下段の上段)の１行目になっている
-				//m_dlgsplistの１行目からの計算にするためにm_dlgspcomboの全行数7を足す
+				int showposline = selectindex * 4 + m_dlgspcombo->getPartsNum1();
+				//+getPartsNum1()について 
+				//今回の場合 親ウインドウの直接の子供はm_dlgspcomboとm_dlgsplist(m_dlgSc)の上下２段組で下段だけスクロールする
+				//m_dlgsplist(下段)のshowPosLineの制御をする
+				//スクロールウインドウのinView()は表示行数計算時に親ウインドウのsize.y/LABEL_SIZE_Yを使う
+				//inView()の１行目の位置は、m_dlgspcombo(上段)の１行目の位置になっている
+				//m_dlgsplistの１行目からの計算にするためにm_dlgspcomboの全行数を足す
 				m_dlgSc->inView(showposline);//内部でautoResize()も呼ぶ
 			}
 			m_dlgwnd->callRewrite();//2024/07/24
@@ -693,11 +696,11 @@ int CCopyHistoryDlg2::CreateOWPWnd(CModel* srcmodel)
 		size_t fbxnameno;
 		size_t curmodelindex = 0;
 		for (fbxnameno = 0; fbxnameno < fbxnamenum; fbxnameno++) {
-			WCHAR tempchar[256];
-			ZeroMemory(tempchar, sizeof(WCHAR) * 256);
-			wcscpy_s(tempchar, 256, m_strcombo_fbxname[fbxnameno].c_str());
-			char strcombo1[256] = { 0L };
-			WideCharToMultiByte(CP_ACP, 0, tempchar, -1, strcombo1, 256, NULL, NULL);
+			WCHAR tempchar[MAX_PATH];
+			ZeroMemory(tempchar, sizeof(WCHAR) * MAX_PATH);
+			wcscpy_s(tempchar, MAX_PATH, m_strcombo_fbxname[fbxnameno].c_str());
+			char strcombo1[MAX_PATH] = { 0L };
+			WideCharToMultiByte(CP_ACP, 0, tempchar, -1, strcombo1, MAX_PATH, NULL, NULL);
 			m_Combo1->addString(strcombo1);
 			if (wcscmp(tempchar, modelname) == 0) {
 				curmodelindex = fbxnameno;//!!!!!!!!!!!!!!!!
@@ -716,11 +719,11 @@ int CCopyHistoryDlg2::CreateOWPWnd(CModel* srcmodel)
 		size_t motionnamenum = m_strcombo_motionname.size();
 		size_t motionnameno;
 		for (motionnameno = 0; motionnameno < motionnamenum; motionnameno++) {
-			WCHAR tempchar[256];
-			ZeroMemory(tempchar, sizeof(WCHAR) * 256);
-			wcscpy_s(tempchar, 256, m_strcombo_motionname[motionnameno].c_str());
-			char strcombo2[256] = { 0L };
-			WideCharToMultiByte(CP_ACP, 0, tempchar, -1, strcombo2, 256, NULL, NULL);
+			WCHAR tempchar[MAX_PATH];
+			ZeroMemory(tempchar, sizeof(WCHAR) * MAX_PATH);
+			wcscpy_s(tempchar, MAX_PATH, m_strcombo_motionname[motionnameno].c_str());
+			char strcombo2[MAX_PATH] = { 0L };
+			WideCharToMultiByte(CP_ACP, 0, tempchar, -1, strcombo2, MAX_PATH, NULL, NULL);
 			m_Combo2->addString(strcombo2);
 		}
 		m_Combo2->setSelectedCombo(0);//index == 0 は　"----"
@@ -737,11 +740,11 @@ int CCopyHistoryDlg2::CreateOWPWnd(CModel* srcmodel)
 		size_t bvhtypenum = m_strcombo_bvhtype.size();
 		size_t bvhtypeno;
 		for (bvhtypeno = 0; bvhtypeno < bvhtypenum; bvhtypeno++) {
-			WCHAR tempchar[256];
-			ZeroMemory(tempchar, sizeof(WCHAR) * 256);
-			swprintf_s(tempchar, 256, L"bvh_%03d", m_strcombo_bvhtype[bvhtypeno]);
-			char strcombo3[256] = { 0L };
-			WideCharToMultiByte(CP_ACP, 0, tempchar, -1, strcombo3, 256, NULL, NULL);
+			WCHAR tempchar[MAX_PATH];
+			ZeroMemory(tempchar, sizeof(WCHAR) * MAX_PATH);
+			swprintf_s(tempchar, MAX_PATH, L"bvh_%03d", m_strcombo_bvhtype[bvhtypeno]);
+			char strcombo3[MAX_PATH] = { 0L };
+			WideCharToMultiByte(CP_ACP, 0, tempchar, -1, strcombo3, MAX_PATH, NULL, NULL);
 			m_Combo3->addString(strcombo3);
 		}
 		m_Combo3->setSelectedCombo(0);//index == 0 は　"----"
@@ -788,9 +791,9 @@ int CCopyHistoryDlg2::CreateOWPWnd(CModel* srcmodel)
 			int comboyearno;
 			for (comboyearno = 0; comboyearno < comboyearnum; comboyearno++) {
 				int curyear = 2021 + comboyearno;
-				char stryear[256];
-				ZeroMemory(stryear, sizeof(char) * 256);
-				sprintf_s(stryear, 256, "%d", curyear);
+				char stryear[MAX_PATH];
+				ZeroMemory(stryear, sizeof(char) * MAX_PATH);
+				sprintf_s(stryear, MAX_PATH, "%d", curyear);
 				m_fromComboYear->addString(stryear);
 			}
 			m_fromComboYear->setSelectedCombo(0);//index == 0 は　"----"
@@ -808,9 +811,9 @@ int CCopyHistoryDlg2::CreateOWPWnd(CModel* srcmodel)
 			int comboMonthno;
 			for (comboMonthno = 0; comboMonthno < comboMonthnum; comboMonthno++) {
 				int curMonth = comboMonthno + 1;
-				char strMonth[256];
-				ZeroMemory(strMonth, sizeof(char) * 256);
-				sprintf_s(strMonth, 256, "%d", curMonth);
+				char strMonth[MAX_PATH];
+				ZeroMemory(strMonth, sizeof(char) * MAX_PATH);
+				sprintf_s(strMonth, MAX_PATH, "%d", curMonth);
 				m_fromComboMonth->addString(strMonth);
 			}
 			m_fromComboMonth->setSelectedCombo(0);//index == 0 は　"----"
@@ -828,9 +831,9 @@ int CCopyHistoryDlg2::CreateOWPWnd(CModel* srcmodel)
 			int comboDayno;
 			for (comboDayno = 0; comboDayno < comboDaynum; comboDayno++) {
 				int curDay = comboDayno + 1;
-				char strDay[256];
-				ZeroMemory(strDay, sizeof(char) * 256);
-				sprintf_s(strDay, 256, "%d", curDay);
+				char strDay[MAX_PATH];
+				ZeroMemory(strDay, sizeof(char) * MAX_PATH);
+				sprintf_s(strDay, MAX_PATH, "%d", curDay);
 				m_fromComboDay->addString(strDay);
 			}
 			m_fromComboDay->setSelectedCombo(0);//index == 0 は　"----"
@@ -876,9 +879,9 @@ int CCopyHistoryDlg2::CreateOWPWnd(CModel* srcmodel)
 			int comboyearno;
 			for (comboyearno = 0; comboyearno < comboyearnum; comboyearno++) {
 				int curyear = 2021 + comboyearno;
-				char stryear[256];
-				ZeroMemory(stryear, sizeof(char) * 256);
-				sprintf_s(stryear, 256, "%d", curyear);
+				char stryear[MAX_PATH];
+				ZeroMemory(stryear, sizeof(char) * MAX_PATH);
+				sprintf_s(stryear, MAX_PATH, "%d", curyear);
 				m_toComboYear->addString(stryear);
 			}
 			m_toComboYear->setSelectedCombo(0);//index == 0 は　"----"
@@ -896,9 +899,9 @@ int CCopyHistoryDlg2::CreateOWPWnd(CModel* srcmodel)
 			int comboMonthno;
 			for (comboMonthno = 0; comboMonthno < comboMonthnum; comboMonthno++) {
 				int curMonth = comboMonthno + 1;
-				char strMonth[256];
-				ZeroMemory(strMonth, sizeof(char) * 256);
-				sprintf_s(strMonth, 256, "%d", curMonth);
+				char strMonth[MAX_PATH];
+				ZeroMemory(strMonth, sizeof(char) * MAX_PATH);
+				sprintf_s(strMonth, MAX_PATH, "%d", curMonth);
 				m_toComboMonth->addString(strMonth);
 			}
 			m_toComboMonth->setSelectedCombo(0);//index == 0 は　"----"
@@ -916,9 +919,9 @@ int CCopyHistoryDlg2::CreateOWPWnd(CModel* srcmodel)
 			int comboDayno;
 			for (comboDayno = 0; comboDayno < comboDaynum; comboDayno++) {
 				int curDay = comboDayno + 1;
-				char strDay[256];
-				ZeroMemory(strDay, sizeof(char) * 256);
-				sprintf_s(strDay, 256, "%d", curDay);
+				char strDay[MAX_PATH];
+				ZeroMemory(strDay, sizeof(char) * MAX_PATH);
+				sprintf_s(strDay, MAX_PATH, "%d", curDay);
 				m_toComboDay->addString(strDay);
 			}
 			m_toComboDay->setSelectedCombo(0);//index == 0 は　"----"
@@ -1090,21 +1093,21 @@ int CCopyHistoryDlg2::ParamsToDlg(CModel* srcmodel, HISTORYELEM saveselectedelem
 	//ComboBoxの選択状態はこの場所で良い
 	//###############################
 	int selectedfbx = -1;
-	WCHAR findfbxname[256] = { 0L };
+	WCHAR findfbxname[MAX_PATH] = { 0L };
 	if (m_Combo1) {
 		int selectedindex = m_Combo1->getSelectedCombo() - 1;
 		if ((selectedindex >= 0) && (selectedindex < (int)m_strcombo_fbxname.size())) {
 			selectedfbx = selectedindex;
-			wcscpy_s(findfbxname, 256, m_strcombo_fbxname[selectedfbx].c_str());
+			wcscpy_s(findfbxname, MAX_PATH, m_strcombo_fbxname[selectedfbx].c_str());
 		}
 	}
 	int selectedmotion = -1;
-	WCHAR findmotname[256] = { 0L };
+	WCHAR findmotname[MAX_PATH] = { 0L };
 	if (m_Combo2) {
 		int selectedindex = m_Combo2->getSelectedCombo() - 1;
 		if ((selectedindex >= 0) && (selectedindex < (int)m_strcombo_motionname.size())) {
 			selectedmotion = selectedindex;
-			wcscpy_s(findmotname, 256, m_strcombo_motionname[selectedmotion].c_str());
+			wcscpy_s(findmotname, MAX_PATH, m_strcombo_motionname[selectedmotion].c_str());
 		}
 	}
 	int selectedbvh = -1;
@@ -1373,22 +1376,22 @@ int CCopyHistoryDlg2::OnSearch()
 	//Searching
 	//##########
 	int selectedfbx = -1;
-	WCHAR findfbxname[256] = { 0L };
+	WCHAR findfbxname[MAX_PATH] = { 0L };
 	if (m_Combo1) {
 		int selectedindex = m_Combo1->getSelectedCombo() - 1;
 		if ((selectedindex >= 0) && (selectedindex < (int)m_strcombo_fbxname.size())) {
 			selectedfbx = selectedindex;
-			wcscpy_s(findfbxname, 256, m_strcombo_fbxname[selectedfbx].c_str());
+			wcscpy_s(findfbxname, MAX_PATH, m_strcombo_fbxname[selectedfbx].c_str());
 		}
 	}
 
 	int selectedmotion = -1;
-	WCHAR findmotname[256] = { 0L };
+	WCHAR findmotname[MAX_PATH] = { 0L };
 	if (m_Combo2) {
 		int selectedindex = m_Combo2->getSelectedCombo() - 1;
 		if ((selectedindex >= 0) && (selectedindex < (int)m_strcombo_motionname.size())) {
 			selectedmotion = selectedindex;
-			wcscpy_s(findmotname, 256, m_strcombo_motionname[selectedmotion].c_str());
+			wcscpy_s(findmotname, MAX_PATH, m_strcombo_motionname[selectedmotion].c_str());
 		}
 	}
 
@@ -1684,13 +1687,16 @@ int CCopyHistoryDlg2::OnRadio(int radioid)
 		}
 	}
 
-	if (m_dlgSc) {
-		//2024/07/24
+	if (m_dlgSc && m_dlgspcombo) {
+		//2024/07/24 2024/07/25
 		//選択項目が画面内に入るようにスクロール処理をすることにした
-		int showposline = radioid * 4 + 7;
-		//+7 : Sc->inView()は表示行数計算時に親ウインドウのsize.yを使う
-		//今回の場合inView()の１行目は、m_dlgspcombo(画面上下段の上段)の１行目になっている
-		//m_dlgsplistの１行目からの計算にするためにm_dlgspcomboの全行数7を足す
+		int showposline = radioid * 4 + m_dlgspcombo->getPartsNum1();
+		//+getPartsNum1()について 
+		//今回の場合 親ウインドウの直接の子供はm_dlgspcomboとm_dlgsplist(m_dlgSc)の上下２段組で下段だけスクロールする
+		//m_dlgsplist(下段)のshowPosLineの制御をする
+		//スクロールウインドウのinView()は表示行数計算時に親ウインドウのsize.y/LABEL_SIZE_Yを使う
+		//inView()の１行目の位置は、m_dlgspcombo(上段)の１行目の位置になっている
+		//m_dlgsplistの１行目からの計算にするためにm_dlgspcomboの全行数を足す
 		m_dlgSc->inView(showposline);//2024/07/24 inView()は視野内にある場合には何もしない
 	}
 

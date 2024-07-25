@@ -1095,7 +1095,6 @@ void s_dummyfunc()
 		//	Method : ウィンドウ位置とサイズの更新
 		void refreshPosAndSize() {
 			if (hWnd == NULL) return;
-
 			RECT tmpRect;
 			GetWindowRect(hWnd, &tmpRect);
 			pos.x = tmpRect.left;
@@ -2459,7 +2458,12 @@ void s_dummyfunc()
 		WindowSize getPartsAreaSize2() {
 			return partsAreaSize2;
 		}
-
+		int getPartsNum1() {
+			return (int)partsList1.size();
+		}
+		int getPartsNum2() {
+			return (int)partsList2.size();
+		}
 
 	private:
 		////////////////////////// MemberVar /////////////////////////////
@@ -3192,23 +3196,26 @@ void s_dummyfunc()
 	class OWP_Label : public OrgWindowParts{
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_Label(const TCHAR *_name, int _labelheight = 15 ) : OrgWindowParts() {
-			name = new TCHAR[256];
+		OWP_Label(const TCHAR *_name, int _labelheight, int _namebuflen = _MAX_PATH) : OrgWindowParts() {
+			
+			NAME_BUFLEN = min(NAME_LIMITLEN, max(4, _namebuflen));
+
+			name = new TCHAR[NAME_BUFLEN];
 			if (_name) {
 				size_t tclen = _tcslen(_name);
 				size_t cplen;
 				if (tclen != 0) {
-					if (tclen <= 255) {
+					if (tclen <= (NAME_BUFLEN - 1)) {
 						cplen = tclen;
 					}
 					else {
-						cplen = 255;
+						cplen = NAME_BUFLEN - 1;
 					}
-					_tcsncpy_s(name, 256, _name, cplen);
+					_tcsncpy_s(name, NAME_BUFLEN, _name, cplen);
 					name[cplen] = (TCHAR)0;
 				}
 				else {
-					_tcscpy_s(name, 256, TEXT("NoName"));
+					_tcscpy_s(name, NAME_BUFLEN, TEXT("NoName"));
 				}
 			}
 			SIZE_Y = max(SIZE_Y, _labelheight);//2024/05/22
@@ -3282,17 +3289,17 @@ void s_dummyfunc()
 				size_t tclen = _tcslen(value);
 				size_t cplen;
 				if (tclen != 0) {
-					if (tclen <= 255) {
+					if (tclen <= (NAME_BUFLEN - 1)) {
 						cplen = tclen;
 					}
 					else {
-						cplen = 255;
+						cplen = NAME_BUFLEN - 1;
 					}
-					_tcsncpy_s(name, 256, value, cplen);
+					_tcsncpy_s(name, NAME_BUFLEN, value, cplen);
 					name[cplen] = (TCHAR)0;
 				}
 				else {
-					_tcscpy_s(name, 256, TEXT("NoName"));
+					_tcscpy_s(name, NAME_BUFLEN, TEXT("NoName"));
 				}
 			}
 
@@ -3305,6 +3312,9 @@ void s_dummyfunc()
 
 		int SIZE_Y= 15;
 		static const int NAME_POS_X= 5;
+		int NAME_BUFLEN;
+		static const int NAME_LIMITLEN = 1024;
+
 	};
 
 
@@ -4463,26 +4473,27 @@ void s_dummyfunc()
 	class OWP_EditBox : public OrgWindowParts {
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_EditBox(bool _onlynumflag, const TCHAR* _name = _T(""), int _labelheight = 15) : OrgWindowParts() {
+		OWP_EditBox(bool _onlynumflag, const TCHAR* _name, int _labelheight, int _namebuflen) : OrgWindowParts() {
 			
 			onlynumflag = _onlynumflag;
+			NAME_BUFLEN = min(NAME_LIMITLEN, max(4, _namebuflen));
 
-			name = new TCHAR[256];
+			name = new TCHAR[NAME_BUFLEN];
 			if (_name) {
 				size_t tclen = _tcslen(_name);
 				size_t cplen;
 				if (tclen != 0) {
-					if (tclen <= 255) {
+					if (tclen <= (NAME_BUFLEN - 1)) {
 						cplen = tclen;
 					}
 					else {
-						cplen = 255;
+						cplen = (NAME_BUFLEN - 1);
 					}
-					_tcsncpy_s(name, 256, _name, cplen);
+					_tcsncpy_s(name, NAME_BUFLEN, _name, cplen);
 					name[cplen] = (TCHAR)0;
 				}
 				else {
-					_tcscpy_s(name, 256, TEXT("NoName"));
+					_tcscpy_s(name, NAME_BUFLEN, TEXT("NoName"));
 				}
 			}
 
@@ -4624,17 +4635,17 @@ void s_dummyfunc()
 				size_t tclen = _tcslen(value);
 				size_t cplen;
 				if (tclen != 0) {
-					if (tclen <= 255) {
+					if (tclen <= (NAME_BUFLEN - 1)) {
 						cplen = tclen;
 					}
 					else {
-						cplen = 255;
+						cplen = NAME_BUFLEN - 1;
 					}
-					_tcsncpy_s(name, 256, value, cplen);
+					_tcsncpy_s(name, NAME_BUFLEN, value, cplen);
 					name[cplen] = (TCHAR)0;
 				}
 				else {
-					_tcscpy_s(name, 256, TEXT("NoName"));
+					_tcscpy_s(name, NAME_BUFLEN, TEXT("NoName"));
 				}
 			}
 
@@ -4652,6 +4663,8 @@ void s_dummyfunc()
 		int SIZE_Y = 15;
 		static const int BOX_POS_X = 3;
 		static const int BOX_WIDTH = 10;
+		int NAME_BUFLEN;
+		static const int NAME_LIMITLEN = 1024;
 
 		LONG underButtonUpThreadFlag;//ボタンを押している間にボタンを削除しないようにフラグを立てる
 
@@ -5384,23 +5397,26 @@ void s_dummyfunc()
 	class OWP_CheckBoxA : public OrgWindowParts {
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_CheckBoxA(const TCHAR *_name, bool _value, int _labelheight, bool _underlineflag) : OrgWindowParts() {
-			name = new TCHAR[256];
+		OWP_CheckBoxA(const TCHAR *_name, bool _value, int _labelheight, bool _underlineflag, int _namebuflen = _MAX_PATH) : OrgWindowParts() {
+
+			NAME_BUFLEN = min(NAME_LIMITLEN, max(4, _namebuflen));
+
+			name = new TCHAR[NAME_BUFLEN];
 			if (_name) {
 				size_t tclen = _tcslen(_name);
 				size_t cplen;
 				if (tclen != 0) {
-					if (tclen <= 255) {
+					if (tclen <= (NAME_BUFLEN - 1)) {
 						cplen = tclen;
 					}
 					else {
-						cplen = 255;
+						cplen = NAME_BUFLEN - 1;
 					}
-					_tcsncpy_s(name, 256, _name, cplen);
+					_tcsncpy_s(name, NAME_BUFLEN, _name, cplen);
 					name[cplen] = (TCHAR)0;
 				}
 				else {
-					_tcscpy_s(name, 256, TEXT("NoName"));
+					_tcscpy_s(name, NAME_BUFLEN, TEXT("NoName"));
 				}
 			}
 
@@ -5488,7 +5504,7 @@ void s_dummyfunc()
 			return value;
 		}
 		int getName(TCHAR* dstname, int dstleng) {
-			if (dstname && (dstleng > 0) && (dstleng <= 512)) {
+			if (dstname && (dstleng > 0) && (dstleng <= NAME_LIMITLEN)) {
 				_tcscpy_s(dstname, dstleng, name);
 				return 0;
 			}
@@ -5513,6 +5529,9 @@ void s_dummyfunc()
 		int SIZE_Y= 15;
 		int BOX_POS_X= 3;
 		int BOX_WIDTH= 10;
+
+		int NAME_BUFLEN;
+		static const int NAME_LIMITLEN = 1024;
 	};
 
 	///<summary>

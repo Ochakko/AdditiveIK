@@ -274,6 +274,9 @@ static double s_avrgfps = 0.0;
 static double s_rectime = 0.0;
 static double s_reccnt = 0;
 
+static int EDIT_BUFLEN_NUM = 20;
+static int EDIT_BUFLEN_MEMO = 32;
+
 
 static HSVTOON s_hsvtoonforall;//mqomaterial指定が無い場合の設定内容を保存
 static HSVTOON s_skyhsvtoonforall;//s_skt用の設定内容を保存
@@ -29369,7 +29372,7 @@ int CreateGUIDlgLOD()
 		}
 		WCHAR strnear[256] = { 0L };
 		swprintf_s(strnear, 256, L"%.2f", g_projnear);
-		s_lodnearEdit = new OWP_EditBox(true, strnear, labelheight);
+		s_lodnearEdit = new OWP_EditBox(true, strnear, labelheight, EDIT_BUFLEN_NUM);
 		if (!s_lodnearEdit) {
 			_ASSERT(0);
 			abort();
@@ -29381,7 +29384,7 @@ int CreateGUIDlgLOD()
 		}
 		WCHAR strfar[256] = { 0L };
 		swprintf_s(strfar, 256, L"%.1f", g_projfar);
-		s_lodfarEdit = new OWP_EditBox(true, strfar, labelheight);
+		s_lodfarEdit = new OWP_EditBox(true, strfar, labelheight, EDIT_BUFLEN_NUM);
 		if (!s_lodfarEdit) {
 			_ASSERT(0);
 			abort();
@@ -29874,7 +29877,7 @@ int CreateLightsWnd()
 				_ASSERT(0);
 				abort();
 			}
-			s_polarxzEdit[lightindex] = new OWP_EditBox(true, L"XZ Edit", labelheight);
+			s_polarxzEdit[lightindex] = new OWP_EditBox(true, L"XZ Edit", labelheight, EDIT_BUFLEN_NUM);
 			if (!s_polarxzEdit[lightindex]) {
 				_ASSERT(0);
 				abort();
@@ -29884,7 +29887,7 @@ int CreateLightsWnd()
 				_ASSERT(0);
 				abort();
 			}
-			s_polaryEdit[lightindex] = new OWP_EditBox(true, L"Y Edit", labelheight);
+			s_polaryEdit[lightindex] = new OWP_EditBox(true, L"Y Edit", labelheight, EDIT_BUFLEN_NUM);
 			if (!s_polaryEdit[lightindex]) {
 				_ASSERT(0);
 				abort();
@@ -30327,7 +30330,7 @@ int CreateShadowParamsWnd()
 			_ASSERT(0);
 			abort();
 		}
-		s_shadowcamposupEdit = new OWP_EditBox(true, L"plus Up Edit", labelheight);
+		s_shadowcamposupEdit = new OWP_EditBox(true, L"plus Up Edit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_shadowcamposupEdit) {
 			_ASSERT(0);
 			abort();
@@ -30352,7 +30355,7 @@ int CreateShadowParamsWnd()
 			_ASSERT(0);
 			abort();
 		}
-		s_shadowcamposdistEdit = new OWP_EditBox(true, L"dist Scale Edit", labelheight);
+		s_shadowcamposdistEdit = new OWP_EditBox(true, L"dist Scale Edit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_shadowcamposdistEdit) {
 			_ASSERT(0);
 			abort();
@@ -30452,7 +30455,7 @@ int CreateShadowParamsWnd()
 			_ASSERT(0);
 			abort();
 		}
-		s_shadowprojnearEdit = new OWP_EditBox(true, L"near Edit", labelheight);
+		s_shadowprojnearEdit = new OWP_EditBox(true, L"near Edit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_shadowprojnearEdit) {
 			_ASSERT(0);
 			abort();
@@ -30462,7 +30465,7 @@ int CreateShadowParamsWnd()
 			_ASSERT(0);
 			abort();
 		}
-		s_shadowprojfarEdit = new OWP_EditBox(true, L"far Edit", labelheight);
+		s_shadowprojfarEdit = new OWP_EditBox(true, L"far Edit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_shadowprojfarEdit) {
 			_ASSERT(0);
 			abort();
@@ -30823,7 +30826,7 @@ int CreateThresholdDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_ththnoendjEdit = new OWP_EditBox(true, L"NoEndJ Edit", labelheight);//g_thdeg
+		s_ththnoendjEdit = new OWP_EditBox(true, L"NoEndJ Edit", labelheight, EDIT_BUFLEN_NUM);//g_thdeg
 		if (!s_ththnoendjEdit) {
 			_ASSERT(0);
 			abort();
@@ -30833,7 +30836,7 @@ int CreateThresholdDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_ththendjEdit = new OWP_EditBox(true, L"EndJ Edit", labelheight);//g_thdeg_endjoint
+		s_ththendjEdit = new OWP_EditBox(true, L"EndJ Edit", labelheight, EDIT_BUFLEN_NUM);//g_thdeg_endjoint
 		if (!s_ththendjEdit) {
 			_ASSERT(0);
 			abort();
@@ -30878,7 +30881,7 @@ int CreateThresholdDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_throundxEdit = new OWP_EditBox(true, L"XEdit", labelheight);//g_thRoundX
+		s_throundxEdit = new OWP_EditBox(true, L"XEdit", labelheight, EDIT_BUFLEN_NUM);//g_thRoundX
 		if (!s_throundxEdit) {
 			_ASSERT(0);
 			abort();
@@ -30888,7 +30891,7 @@ int CreateThresholdDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_throundyEdit = new OWP_EditBox(true, L"YEdit", labelheight);//g_thRoundY
+		s_throundyEdit = new OWP_EditBox(true, L"YEdit", labelheight, EDIT_BUFLEN_NUM);//g_thRoundY
 		if (!s_throundyEdit) {
 			_ASSERT(0);
 			abort();
@@ -30898,7 +30901,7 @@ int CreateThresholdDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_throundzEdit = new OWP_EditBox(true, L"ZEdit", labelheight);//g_thRoundZ
+		s_throundzEdit = new OWP_EditBox(true, L"ZEdit", labelheight, EDIT_BUFLEN_NUM);//g_thRoundZ
 		if (!s_throundzEdit) {
 			_ASSERT(0);
 			abort();
@@ -31115,7 +31118,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limitxupperEdit = new OWP_EditBox(true, L"XUpperEdit", labelheight);
+		s_limitxupperEdit = new OWP_EditBox(true, L"XUpperEdit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_limitxupperEdit) {
 			_ASSERT(0);
 			abort();
@@ -31125,7 +31128,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limitxlowerEdit = new OWP_EditBox(true, L"XLowerEdit", labelheight);
+		s_limitxlowerEdit = new OWP_EditBox(true, L"XLowerEdit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_limitxlowerEdit) {
 			_ASSERT(0);
 			abort();
@@ -31135,7 +31138,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limitxchkEdit = new OWP_EditBox(true, L"XCheckEdit", labelheight);
+		s_limitxchkEdit = new OWP_EditBox(true, L"XCheckEdit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_limitxchkEdit) {
 			_ASSERT(0);
 			abort();
@@ -31175,7 +31178,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limityupperEdit = new OWP_EditBox(true, L"YUpperEdit", labelheight);
+		s_limityupperEdit = new OWP_EditBox(true, L"YUpperEdit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_limityupperEdit) {
 			_ASSERT(0);
 			abort();
@@ -31185,7 +31188,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limitylowerEdit = new OWP_EditBox(true, L"YLowerEdit", labelheight);
+		s_limitylowerEdit = new OWP_EditBox(true, L"YLowerEdit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_limitylowerEdit) {
 			_ASSERT(0);
 			abort();
@@ -31195,7 +31198,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limitychkEdit = new OWP_EditBox(true, L"YCheckEdit", labelheight);
+		s_limitychkEdit = new OWP_EditBox(true, L"YCheckEdit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_limitychkEdit) {
 			_ASSERT(0);
 			abort();
@@ -31235,7 +31238,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limitzupperEdit = new OWP_EditBox(true, L"ZUpperEdit", labelheight);
+		s_limitzupperEdit = new OWP_EditBox(true, L"ZUpperEdit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_limitzupperEdit) {
 			_ASSERT(0);
 			abort();
@@ -31245,7 +31248,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limitzlowerEdit = new OWP_EditBox(true, L"ZLowerEdit", labelheight);
+		s_limitzlowerEdit = new OWP_EditBox(true, L"ZLowerEdit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_limitzlowerEdit) {
 			_ASSERT(0);
 			abort();
@@ -31255,7 +31258,7 @@ int CreateAngleLimitDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_limitzchkEdit = new OWP_EditBox(true, L"ZCheckEdit", labelheight);
+		s_limitzchkEdit = new OWP_EditBox(true, L"ZCheckEdit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_limitzchkEdit) {
 			_ASSERT(0);
 			abort();
@@ -40343,7 +40346,7 @@ int CreateDmpAnimWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_dmpanimLlabel = new OWP_Label(L"posSpringDumpingPerFrame");
+		s_dmpanimLlabel = new OWP_Label(L"posSpringDumpingPerFrame", 15);
 		if (!s_dmpanimLlabel) {
 			_ASSERT(0);
 			return 1;
@@ -40353,7 +40356,7 @@ int CreateDmpAnimWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_dmpanimAlabel = new OWP_Label(L"rotSpringDumpingPerFrame");
+		s_dmpanimAlabel = new OWP_Label(L"rotSpringDumpingPerFrame", 15);
 		if (!s_dmpanimAlabel) {
 			_ASSERT(0);
 			return 1;
@@ -41882,7 +41885,7 @@ static int s_blendshapelinenum = 0;
 		}
 
 
-		s_blendshapemodelname = new OWP_Label(s_model->GetFileName());
+		s_blendshapemodelname = new OWP_Label(s_model->GetFileName(), 20);
 		if (!s_blendshapemodelname) {
 			_ASSERT(0);
 			return 1;
@@ -41894,13 +41897,13 @@ static int s_blendshapelinenum = 0;
 			return 1;
 		}
 
-		s_blendshapeemptyLabel = new OWP_Label(L"          ");
+		s_blendshapeemptyLabel = new OWP_Label(L"          ", 20);
 		if (!s_blendshapeemptyLabel) {
 			_ASSERT(0);
 			return 0;
 		}
 
-		s_blendshapedistLabel = new OWP_Label(L"MorphDist");
+		s_blendshapedistLabel = new OWP_Label(L"MorphDist", 20);
 		if (!s_blendshapedistLabel) {
 			_ASSERT(0);
 			return 1;
@@ -46285,22 +46288,22 @@ int CreateImpulseWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_impxlabel = new OWP_Label(L"Impulse X");
+		s_impxlabel = new OWP_Label(L"Impulse X", 15);
 		if (!s_impxlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_impylabel = new OWP_Label(L"Impulse Y");
+		s_impylabel = new OWP_Label(L"Impulse Y", 15);
 		if (!s_impylabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_impzlabel = new OWP_Label(L"Impulse Z");
+		s_impzlabel = new OWP_Label(L"Impulse Z", 15);
 		if (!s_impzlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_impscalelabel = new OWP_Label(L"ScaleOfImpulse ");
+		s_impscalelabel = new OWP_Label(L"ScaleOfImpulse ", 15);
 		if (!s_impscalelabel) {
 			_ASSERT(0);
 			return 1;
@@ -46464,17 +46467,17 @@ int CreateGPlaneWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_ghlabel = new OWP_Label(L"Height");
+		s_ghlabel = new OWP_Label(L"Height", 15);
 		if (!s_ghlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_gsizexlabel = new OWP_Label(L"SizeOfX");
+		s_gsizexlabel = new OWP_Label(L"SizeOfX", 15);
 		if (!s_gsizexlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_gsizezlabel = new OWP_Label(L"SizeOfZ");
+		s_gsizezlabel = new OWP_Label(L"SizeOfZ", 15);
 		if (!s_gsizezlabel) {
 			_ASSERT(0);
 			return 1;
@@ -46495,12 +46498,12 @@ int CreateGPlaneWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_grestlabel = new OWP_Label(L"Restitution");
+		s_grestlabel = new OWP_Label(L"Restitution", 15);
 		if (!s_grestlabel) {
 			_ASSERT(0);
 			return 1;
 		}
-		s_gfriclabel = new OWP_Label(L"Friction");
+		s_gfriclabel = new OWP_Label(L"Friction", 15);
 		if (!s_gfriclabel) {
 			_ASSERT(0);
 			return 1;
@@ -70023,7 +70026,7 @@ int CreateFogParamsDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_fogdistnearEdit = new OWP_EditBox(true, L"nearEdit", labelheight);
+		s_fogdistnearEdit = new OWP_EditBox(true, L"nearEdit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_fogdistnearEdit) {
 			_ASSERT(0);
 			abort();
@@ -70033,7 +70036,7 @@ int CreateFogParamsDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_fogdistfarEdit = new OWP_EditBox(true, L"nearEdit", labelheight);
+		s_fogdistfarEdit = new OWP_EditBox(true, L"nearEdit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_fogdistfarEdit) {
 			_ASSERT(0);
 			abort();
@@ -70078,7 +70081,7 @@ int CreateFogParamsDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_fogheightminEdit = new OWP_EditBox(true, L"minEdit", labelheight);
+		s_fogheightminEdit = new OWP_EditBox(true, L"minEdit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_fogheightminEdit) {
 			_ASSERT(0);
 			abort();
@@ -70088,7 +70091,7 @@ int CreateFogParamsDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_fogheightmaxEdit = new OWP_EditBox(true, L"maxEdit", labelheight);
+		s_fogheightmaxEdit = new OWP_EditBox(true, L"maxEdit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_fogheightmaxEdit) {
 			_ASSERT(0);
 			abort();
@@ -70370,7 +70373,7 @@ int CreateDofParamsDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_dofdistnearEdit = new OWP_EditBox(true, L"DofNearEdit", labelheight);//g_dofparams[g_dofindex].x
+		s_dofdistnearEdit = new OWP_EditBox(true, L"DofNearEdit", labelheight, EDIT_BUFLEN_NUM);//g_dofparams[g_dofindex].x
 		if (!s_dofdistnearEdit) {
 			_ASSERT(0);
 			abort();
@@ -70380,7 +70383,7 @@ int CreateDofParamsDlg()
 			_ASSERT(0);
 			abort();
 		}
-		s_dofdistfarEdit = new OWP_EditBox(true, L"DofFarEdit", labelheight);
+		s_dofdistfarEdit = new OWP_EditBox(true, L"DofFarEdit", labelheight, EDIT_BUFLEN_NUM);
 		if (!s_dofdistfarEdit) {
 			_ASSERT(0);
 			abort();

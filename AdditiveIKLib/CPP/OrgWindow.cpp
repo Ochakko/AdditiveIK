@@ -1847,7 +1847,7 @@ namespace OrgWinGUI{
 		if (name) {
 			//*name == 0Lのときdelete[] nameがassertするので
 			if (*name == 0L) {
-				wcscpy_s(name, 256, L"123");
+				wcscpy_s(name, NAME_BUFLEN, L"1");//NAME_BUFLENの最小値は４なので注意
 			}
 
 			delete[] name;
@@ -2067,13 +2067,13 @@ namespace OrgWinGUI{
 			_ASSERT(0);
 			return 1;
 		}
-		if ((dstleng <= 0) || (dstleng > 256)) {
+		if ((dstleng <= 0) || (dstleng > NAME_LIMITLEN)) {
 			_ASSERT(0);
 			return 1;
 		}
 		if (name) {
 			if (*name) {
-				wcscpy_s(dstname, 256, name);
+				wcscpy_s(dstname, dstleng, name);
 			}
 			else {
 				*dstname = 0L;
@@ -2086,7 +2086,7 @@ namespace OrgWinGUI{
 		if (name) {
 			if (*name != 0L) {
 				int namelen = (int)wcslen(name);
-				if ((namelen > 0) && (namelen < (255 - 1))) {
+				if ((namelen > 0) && (namelen < (NAME_BUFLEN - 2))) {
 					*(name + namelen) = srcwc;
 					*(name + namelen + 1) = 0L;
 				}
@@ -2105,7 +2105,7 @@ namespace OrgWinGUI{
 		if (name) {
 			if (*name != 0L) {
 				int namelen = (int)wcslen(name);
-				if ((namelen > 0) && (namelen < (255 - 1))) {
+				if ((namelen > 0) && (namelen <= (NAME_BUFLEN - 1))) {
 					*(name + namelen - 1) = 0L;
 					callRewrite();
 				}
@@ -2132,22 +2132,22 @@ namespace OrgWinGUI{
 		if (name && (*name != 0L)) {
 			if (*name == TEXT('-')) {
 				//先頭文字が-の場合　-を取り除いて符号反転
-				WCHAR tmpstr[256] = { 0L };
-				ZeroMemory(tmpstr, sizeof(WCHAR) * 256);
-				wcscpy_s(tmpstr, 256, (name + 1));
-				tmpstr[255] = 0L;
-				wcscpy_s(name, 256, tmpstr);
+				WCHAR tmpstr[NAME_LIMITLEN] = { 0L };
+				ZeroMemory(tmpstr, sizeof(WCHAR) * NAME_LIMITLEN);
+				wcscpy_s(tmpstr, NAME_LIMITLEN, (name + 1));
+				tmpstr[NAME_LIMITLEN - 1] = 0L;
+				wcscpy_s(name, NAME_BUFLEN, tmpstr);
 			}
 			else {
 				//先頭文字が-以外の場合　先頭に-を付けて符号反転
 				int orglen = (int)wcslen(name);
-				if ((orglen >= 0) && (orglen < (256 - 1))) {
-					WCHAR tmpstr[256] = { 0L };
-					ZeroMemory(tmpstr, sizeof(WCHAR) * 256);
-					wcscpy_s(tmpstr, 256, name);
-					tmpstr[255] = 0L;
+				if ((orglen >= 0) && (orglen < (NAME_BUFLEN - 1))) {
+					WCHAR tmpstr[NAME_LIMITLEN] = { 0L };
+					ZeroMemory(tmpstr, sizeof(WCHAR) * NAME_LIMITLEN);
+					wcscpy_s(tmpstr, NAME_LIMITLEN, name);
+					tmpstr[NAME_LIMITLEN - 1] = 0L;
 					*name = TEXT('-');//先頭に-
-					wcscpy_s(name + 1, 256, tmpstr);//２文字目以降に
+					wcscpy_s(name + 1, NAME_BUFLEN - 1, tmpstr);//２文字目以降に
 				}
 				else {
 					int dbgflag1 = 1;
@@ -2161,7 +2161,7 @@ namespace OrgWinGUI{
 	{
 		wstring retstr;
 		if (name && (*name != 0L)) {
-			name[255] = 0L;
+			name[NAME_BUFLEN - 1] = 0L;
 			retstr = name;
 			return retstr;
 		}
@@ -2173,7 +2173,7 @@ namespace OrgWinGUI{
 	int OWP_EditBox::setNameString(std::wstring srcstr)
 	{
 		if (name && srcstr.c_str() && (*srcstr.c_str() != 0L)) {
-			wcscpy_s(name, 256, srcstr.c_str());
+			wcscpy_s(name, NAME_BUFLEN, srcstr.c_str());
 			callRewrite();
 		}
 		return 0;

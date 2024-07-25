@@ -2,6 +2,13 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/07/25
+　OWP_EditBox, OWP_Label, OWP_CheckBoxAの文字列バッファ長を引数に.
+　　OWP_EditBoxを使用して入出力する情報の中には(メモ欄など)、ファイル入出力時に文字数が決まっているものがあるので準備
+
+
+
+
 2024/07/24
 　GUI修正
 　　CopyHistoryDlgの右ペインウインドウをOWPで作り直し
