@@ -165,9 +165,6 @@
     <ClInclude Include="dlgid.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="DollyHistoryDlg.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="FilterDlg.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -330,9 +327,6 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="CpInfoDlg.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="DollyHistoryDlg.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="FilterDlg.cpp">

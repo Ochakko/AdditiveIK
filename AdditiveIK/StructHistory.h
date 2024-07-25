@@ -11,8 +11,6 @@
 #include <string>
 
 
-#define HISTORYCOMMENTLEN	32
-
 typedef struct tag_cpinfo
 {
 	WCHAR fbxname[MAX_PATH];

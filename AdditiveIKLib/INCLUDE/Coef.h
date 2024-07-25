@@ -23,6 +23,12 @@ class CMQOMaterial;
 #define ALIGNED		_declspec(align(16))
 #define	u_long	unsigned long
 
+
+#define HISTORYCOMMENTLEN	32
+#define EDIT_BUFLEN_NUM		20
+#define EDIT_BUFLEN_MEMO	(HISTORYCOMMENTLEN)
+
+
 //2023/12/13, 2023/12/14
 //for shadowmap
 //シャドウマップパラメータは　この後GUIで設定可能にし g_*変数 にする予定

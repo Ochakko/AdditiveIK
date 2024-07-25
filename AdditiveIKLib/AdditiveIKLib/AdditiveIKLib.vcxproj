@@ -196,6 +196,7 @@
     <ClCompile Include="..\CPP\DispGroupFile.cpp" />
     <ClCompile Include="..\CPP\DispObj.cpp" />
     <ClCompile Include="..\CPP\DofParamsFile.cpp" />
+    <ClCompile Include="..\CPP\DollyHistoryDlg2.cpp" />
     <ClCompile Include="..\CPP\EditRange.cpp" />
     <ClCompile Include="..\CPP\EngName.cpp" />
     <ClCompile Include="..\CPP\ExtLine.cpp" />
@@ -582,6 +583,7 @@
     <ClInclude Include="..\INCLUDE\DispGroupFile.h" />
     <ClInclude Include="..\INCLUDE\DispObj.h" />
     <ClInclude Include="..\INCLUDE\DofParamsFile.h" />
+    <ClInclude Include="..\INCLUDE\DollyHistoryDlg2.h" />
     <ClInclude Include="..\INCLUDE\EditRange.h" />
     <ClInclude Include="..\INCLUDE\EngName.h" />
     <ClInclude Include="..\INCLUDE\ExtLine.h" />

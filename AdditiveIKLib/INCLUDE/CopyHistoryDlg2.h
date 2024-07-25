@@ -12,7 +12,7 @@
 #include <vector>
 #include <string>
 
-#define COPYNUMFORDISP	10
+//#define COPYNUMFORDISP	10
 #define IMPORTANCEKINDNUM	7
 #define INPORTANCESTRLEN	32
 

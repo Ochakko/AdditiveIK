@@ -228,6 +228,9 @@
     <ClCompile Include="..\CPP\CopyHistoryDlg2.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
+    <ClCompile Include="..\CPP\DollyHistoryDlg2.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
@@ -1361,6 +1364,9 @@
       <Filter>misc</Filter>
     </ClInclude>
     <ClInclude Include="..\INCLUDE\CopyHistoryDlg2.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\DollyHistoryDlg2.h">
       <Filter>GUI</Filter>
     </ClInclude>
   </ItemGroup>

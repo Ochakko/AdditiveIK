@@ -7,6 +7,9 @@ https://github.com/Ochakko/AdditiveIK
 　　OWP_EditBoxを使用して入出力する情報の中には(メモ欄など)、ファイル入出力時に文字数が決まっているものがあるので準備
 
 
+　DollyHistoryDlg(カメラ履歴ウインドウ)をOWPで作り直し
+	
+
 
 
 2024/07/24

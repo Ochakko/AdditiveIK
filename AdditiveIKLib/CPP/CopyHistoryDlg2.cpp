@@ -219,6 +219,8 @@ int CCpHistoryOWPElem::SetEventFunc(CCopyHistoryDlg2* srcdlg)
 
 void CCpHistoryOWPElem::InitParams()
 {
+	m_copyhistoryindex = -1;
+
 	m_namesp = nullptr;
 	m_nameChk = nullptr;
 	m_deleteB = nullptr;
@@ -460,6 +462,11 @@ void CCopyHistoryDlg2::InitParams()
 {
 	m_createdflag = false;
 	m_visible = false;
+
+	m_posx = 0;
+	m_posy = 0;
+	m_sizex = 150;
+	m_sizey = 150;
 
 	m_model = 0;
 	m_ischeckedmostrecent = true;
@@ -1753,7 +1760,7 @@ HISTORYELEM CCopyHistoryDlg2::GetCheckedElem()
 		}
 	}
 
-	if ((selectedno >= 0) && (selectedno < m_copyhistory.size())) {
+	if ((selectedno >= 0) && (selectedno < (int)m_copyhistory.size())) {
 		HISTORYELEM checkedelem = m_copyhistory[selectedno];
 		if (checkedelem.hascpinfo == 1) {
 			return checkedelem;

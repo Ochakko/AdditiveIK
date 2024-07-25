@@ -193,7 +193,6 @@
     <ClInclude Include="ColiIDDlg.h" />
     <ClInclude Include="CpInfoDlg.h" />
     <ClInclude Include="dlgid.h" />
-    <ClInclude Include="DollyHistoryDlg.h" />
     <ClInclude Include="DXUTmisc\DXUTmisc.h" />
     <ClInclude Include="FilterDlg.h" />
     <ClInclude Include="FilterType.h" />
@@ -256,7 +255,6 @@
     <ClCompile Include="AdditiveIK.cpp" />
     <ClCompile Include="ColiIDDlg.cpp" />
     <ClCompile Include="CpInfoDlg.cpp" />
-    <ClCompile Include="DollyHistoryDlg.cpp" />
     <ClCompile Include="DXUTmisc\DXUTmisc.cpp" />
     <ClCompile Include="FilterDlg.cpp" />
     <ClCompile Include="FpsSprite.cpp" />

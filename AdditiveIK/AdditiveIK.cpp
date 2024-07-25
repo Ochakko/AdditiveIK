@@ -70,7 +70,7 @@
 #include <GColiFile.h>
 #include "SettingsDlg.h"
 #include <CopyHistoryDlg2.h>
-#include "DollyHistoryDlg.h"
+#include <DollyHistoryDlg2.h>
 #include "CpInfoDlg.h"
 
 #include <math.h>
@@ -273,9 +273,6 @@ static int s_fps100index = 0;
 static double s_avrgfps = 0.0;
 static double s_rectime = 0.0;
 static double s_reccnt = 0;
-
-static int EDIT_BUFLEN_NUM = 20;
-static int EDIT_BUFLEN_MEMO = 32;
 
 
 static HSVTOON s_hsvtoonforall;//mqomaterial指定が無い場合の設定内容を保存
@@ -947,7 +944,7 @@ static bool s_allmodelbone = false;
 
 static std::vector<HISTORYELEM> s_cptfilename;
 static CCopyHistoryDlg2 s_copyhistorydlg2;
-static CDollyHistoryDlg s_dollyhistorydlg;
+static CDollyHistoryDlg2 s_dollyhistorydlg2;
 
 static bool s_camtargetdisp = false;//カメラターゲット位置にマニピュレータを表示するかどうかのフラグ
 static bool s_moveeyepos = false;//s_sidemenu_camdistSlider動作の種類　true:eyeposが動く、false:targetposが動く
@@ -3000,7 +2997,8 @@ ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わら�
 
 
 //ID_RMENU_0を足して使う
-// (99)はCopyHistoryDlg2のSearch()呼び出し用に確保
+// (98)はDollyHistoryDlg2のOnSaveDolly()呼び出し用に確保
+// (99)はCopyHistoryDlg2のOnSearch()呼び出し用に確保
 #define MENUOFFSET_SETCONVBONEMODEL		(100)
 #define MENUOFFSET_SETCONVBONEBVH		(MENUOFFSET_SETCONVBONEMODEL + 100)
 #define MENUOFFSET_SETCONVBONE			(MENUOFFSET_SETCONVBONEBVH + 100)
@@ -3430,7 +3428,7 @@ static int CreateToolWnd();
 static int CreateLayerWnd();
 static int CreatePlaceFolderWnd();
 
-static int CreateCopyHistoryDlg();
+//static int CreateCopyHistoryDlg();
 static int CreateDollyHistoryDlg();
 
 static void InitTimelineSelection();
@@ -4411,12 +4409,6 @@ INT WINAPI wWinMain(
 	CreateBlendShapeWnd();
 	//CreateLaterTransparentWnd();//s_modelが設定されてから作成する
 
-	if (s_dollyhistorydlg.GetCreatedFlag() == false) {
-		int result = CreateDollyHistoryDlg();
-		if (result != 0) {
-			_ASSERT(0);
-		}
-	}
 	CreateMaterialRateWnd();
 	CreateModelWorldMatWnd();
 	CreateJumpGravityWnd();
@@ -4428,6 +4420,8 @@ INT WINAPI wWinMain(
 
 
 	//CreateCopyHistoryDlg();//s_modelが出来てから呼ぶ　OnModelMenu()に移動
+	CreateDollyHistoryDlg();//CheckResolution()より後、g_mainhwndがセットされた後で呼ぶ
+
 
 	GUIMenuSetVisible(s_platemenukind, s_platemenuno);
 
@@ -4734,6 +4728,7 @@ int CheckResolution()
 			windowposx = s_timelinewidth + s_mainwidth;
 		}
 		s_copyhistorydlg2.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+		s_dollyhistorydlg2.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 	}
 
 	return 0;
@@ -4753,6 +4748,12 @@ void InitApp()
 	InitCommonControls();
 
 	s_copyhistorydlg2.InitParams();
+
+	{
+		s_dollyhistorydlg2.InitParams();
+		//ここではまだhistorydlg2.SetPosAndSize()が呼ばれていないのでダイアログの作成はしない
+		//SetPosAndSize()が呼ばれてg_mainhwndがセットされた後で作成する
+	}
 
 	g_edittarget = EDITTARGET_BONE;
 	s_LchangeTargetFlag = false;
@@ -7337,14 +7338,12 @@ void OnDestroyDevice()
 	}
 
 
-	if (s_copyhistorydlg2.GetCreatedFlag() == true) {
+	//if (s_copyhistorydlg2.GetCreatedFlag() == true) {
 		s_copyhistorydlg2.DestroyObjs();
-	}
-	if (s_dollyhistorydlg.GetCreatedFlag() == true) {
-		if (::IsWindow(s_dollyhistorydlg.m_hWnd)) {
-			s_dollyhistorydlg.DestroyWindow();
-		}
-	}
+	//}
+	//if (s_dollyhistorydlg2.GetCreatedFlag() == true) {
+		s_dollyhistorydlg2.DestroyObjs();
+	//}
 
 	//if (s_cameradollydlgwnd) {
 	//	DestroyWindow(s_cameradollydlgwnd);
@@ -37145,10 +37144,14 @@ int OnFrameToolWnd()
 		bool closefirstrow = true;
 		CloseAllRightPainWindow(closefirstrow);//対応ウインドウを開く前に　１段目と２段目を全部閉じる
 		if (s_model) {
-			int result1 = GetCPTFileName(s_cptfilename);
-			_ASSERT(result1 == 0);
-			int result2 = s_copyhistorydlg2.SetNames(s_model, s_cptfilename);
-			_ASSERT(result2 == 0);
+			//2024/07/25
+			//OnModelMenu()とモーションコピー時にSetNames()を呼んでいるのでここでは呼ばない
+			//ここで呼ばない方がウインドウ状態を閉じる前と同じ状態にすることができる
+			//int result1 = GetCPTFileName(s_cptfilename);
+			//_ASSERT(result1 == 0);
+			//int result2 = s_copyhistorydlg2.SetNames(s_model, s_cptfilename);
+			//_ASSERT(result2 == 0);
+
 			s_copyhistorydlg2.SetVisible(true);
 		}
 
@@ -37583,37 +37586,13 @@ void AddRJointReq(CBone* srcbone)
 //}
 int CreateDollyHistoryDlg()
 {
-	if (s_dollyhistorydlg.GetCreatedFlag() == false) {
-		s_dollyhistorydlg.Create(g_mainhwnd);
-		s_dollyhistorydlg.SetUpdateFunc(UpdateCameraPosAndTarget);
-	}
-	SetParent(s_dollyhistorydlg.m_hWnd, g_mainhwnd);
-
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-
-	SetWindowPos(
-		s_dollyhistorydlg.m_hWnd,
-		HWND_TOP,
-		windowposx,
-		s_sidemenuheight,
-		s_sidewidth,
-		s_sideheight,
-		SWP_SHOWWINDOW
-	);
-
-	s_dollyhistorydlg.ShowWindow(SW_HIDE);
-	s_dollyhistorydlg.ParamsToDlg();
-	vector<DOLLYELEM> vechistory;
-	vechistory.clear();
-	s_dollyhistorydlg.LoadDollyHistory(vechistory);
-	s_dollyhistorydlg.SetNames(vechistory);
+	//dollyhistorydlg2の作成は位置とサイズが決まってg_mainhwndがセットされた後で
+	s_dollyhistorydlg2.SetUpdateFunc(UpdateCameraPosAndTarget);
+	std::vector<DOLLYELEM> vecdolly;
+	vecdolly.clear();
+	//s_dollyhistorydlg2.SetOnShow(true);//2024/02/27 ダイアログを出したときにカメラが動いてしまうのを防止
+	s_dollyhistorydlg2.LoadDollyHistory(vecdolly);
+	s_dollyhistorydlg2.SetNames(vecdolly);
 
 	return 0;
 }
@@ -50630,7 +50609,12 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	case WM_COMMAND:
 	{
-		if (menuid == (ID_RMENU_0 + 99)) {
+		if (menuid == (ID_RMENU_0 + 98)) {
+			if (s_dollyhistorydlg2.GetCreatedFlag()) {
+				s_dollyhistorydlg2.OnSaveDolly();
+			}
+		}
+		else if (menuid == (ID_RMENU_0 + 99)) {
 			if (s_copyhistorydlg2.GetCreatedFlag()) {
 				s_copyhistorydlg2.OnSearch();
 			}
@@ -71848,13 +71832,19 @@ int ShowCameraDollyDlg()
 	bool closefirstrow = true;
 	CloseAllRightPainWindow(closefirstrow);//対応ウインドウを開く前に　１段目と２段目を全部閉じる
 
-	std::vector<DOLLYELEM> vecdolly;
-	vecdolly.clear();
-	s_dollyhistorydlg.SetOnShow(true);//2024/02/27 ダイアログを出したときにカメラが動いてしまうのを防止
-	s_dollyhistorydlg.LoadDollyHistory(vecdolly);
-	s_dollyhistorydlg.SetNames(vecdolly);
-	s_dollyhistorydlg.ShowWindow(SW_SHOW);
-	//s_dollyhistorydlg.SetOnShow(false);//2024/02/27 この時点ではまだカメラ位置を変えようとしていない　OFFはdollyhistorydlgのOnPaint()で行う
+	//std::vector<DOLLYELEM> vecdolly;
+	//vecdolly.clear();
+	//s_dollyhistorydlg.SetOnShow(true);//2024/02/27 ダイアログを出したときにカメラが動いてしまうのを防止
+	//s_dollyhistorydlg.LoadDollyHistory(vecdolly);
+	//s_dollyhistorydlg.SetNames(vecdolly);
+	//s_dollyhistorydlg.ShowWindow(SW_SHOW);
+	////s_dollyhistorydlg.SetOnShow(false);//2024/02/27 この時点ではまだカメラ位置を変えようとしていない　OFFはdollyhistorydlgのOnPaint()で行う
+
+	//2024/07/25
+	//SetNames()呼び出しはInitApp()で行う
+	//開いたり閉じたりした場合にもウインドウの状態が保たれるようにここではSetNames()を呼ばない
+	s_dollyhistorydlg2.SetVisible(true);
+
 	return 0;
 }
 
@@ -74601,8 +74591,8 @@ void CloseAllRightPainWindow(bool closefirstraw)
 		s_copyhistorydlg2.SetVisible(false);
 	}
 	
-	if (s_dollyhistorydlg.GetCreatedFlag() == true) {
-		s_dollyhistorydlg.ShowWindow(SW_HIDE);
+	if (s_dollyhistorydlg2.GetCreatedFlag() == true) {
+		s_dollyhistorydlg2.SetVisible(false);
 	}
 	//if (s_limitWnd) {
 	//	s_underanglelimithscroll = 0;
