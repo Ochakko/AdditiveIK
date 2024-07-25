@@ -881,9 +881,6 @@ int CDollyHistoryDlg2::CreateOWPWnd()
 		_ASSERT(0);
 		return 1;
 	}
-
-	return 0;
-
 	return 0;
 }
 

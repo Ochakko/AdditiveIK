@@ -1648,9 +1648,11 @@ int CCopyHistoryDlg2::OnDelete(int delid)
 		if (curowp && (curowp->GetCopyHistoryIndex() == delid)) {
 			if (curowp->GetDescLabel()) {
 				curowp->GetDescLabel()->setName(L"deleted.");
+				curowp->GetDescLabel()->setActive(false);
 			}
 			if (curowp->GetMemoLabel()) {
 				curowp->GetMemoLabel()->setName(L"deleted.");
+				curowp->GetMemoLabel()->setActive(false);
 			}
 			if (curowp->GetNameCheckBox()) {
 				curowp->GetNameCheckBox()->setActive(false);
@@ -1867,17 +1869,29 @@ void CCopyHistoryDlg2::EnableList(bool srcflag)
 	for (owpindex = 0; owpindex < owpnum; owpindex++) {
 		CCpHistoryOWPElem* curowp = m_owpelemvec[owpindex];
 		if (curowp){
-			if (curowp->GetNameCheckBox() && (curowp->GetNameCheckBox() != m_recentChk)) {
-				curowp->GetNameCheckBox()->setActive(srcflag);
-			}
-			if (curowp->GetDescLabel()) {
-				curowp->GetDescLabel()->setActive(srcflag);
-			}
-			if (curowp->GetMemoLabel()) {
-				curowp->GetMemoLabel()->setActive(srcflag);
-			}
-			if (curowp->GetDelButton()) {
-				curowp->GetDelButton()->setActive(srcflag);
+			int historyindex = curowp->GetCopyHistoryIndex();
+			if ((historyindex >= 0) && (historyindex < m_copyhistory.size())) {
+				bool setflag = srcflag;
+				HISTORYELEM curhistory = m_copyhistory[historyindex];
+				if (curhistory.hascpinfo == 1) {
+					setflag = srcflag;
+				}
+				else {
+					setflag = false;//2024/07/25 deletedなどは非アクティブのままに
+				}
+				if (curowp->GetNameCheckBox() && (curowp->GetNameCheckBox() != m_recentChk)) {
+					curowp->GetNameCheckBox()->setActive(setflag);
+				}
+				if (curowp->GetDescLabel()) {
+					curowp->GetDescLabel()->setActive(setflag);
+				}
+				if (curowp->GetMemoLabel()) {
+					curowp->GetMemoLabel()->setActive(setflag);
+				}
+				if (curowp->GetDelButton()) {
+					curowp->GetDelButton()->setActive(setflag);
+				}
+
 			}
 		}
 	}

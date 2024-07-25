@@ -71,7 +71,7 @@
 #include "SettingsDlg.h"
 #include <CopyHistoryDlg2.h>
 #include <DollyHistoryDlg2.h>
-#include "CpInfoDlg.h"
+#include <CpInfoDlg2.h>
 
 #include <math.h>
 #include <stdio.h>
@@ -945,6 +945,11 @@ static bool s_allmodelbone = false;
 static std::vector<HISTORYELEM> s_cptfilename;
 static CCopyHistoryDlg2 s_copyhistorydlg2;
 static CDollyHistoryDlg2 s_dollyhistorydlg2;
+
+static bool s_undercpinfodlg2;
+static CCpInfoDlg2 s_cpinfodlg2;
+static CPMOTINFO s_cpinfo;
+static MOTINFO s_cpmotinfo;
 
 static bool s_camtargetdisp = false;//カメラターゲット位置にマニピュレータを表示するかどうかのフラグ
 static bool s_moveeyepos = false;//s_sidemenu_camdistSlider動作の種類　true:eyeposが動く、false:targetposが動く
@@ -2997,6 +3002,7 @@ ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わら�
 
 
 //ID_RMENU_0を足して使う
+// (97)はCpInfoDlg2をトリガーとするCopyMotionFunc()呼び出し用に確保
 // (98)はDollyHistoryDlg2のOnSaveDolly()呼び出し用に確保
 // (99)はCopyHistoryDlg2のOnSearch()呼び出し用に確保
 #define MENUOFFSET_SETCONVBONEMODEL		(100)
@@ -3519,7 +3525,7 @@ static int OnRenderFontForTip(myRenderer::RenderingEngine* re, RenderContext* pR
 static int OnRenderUtDialog(RenderContext* pRenderContext, float fElapsedTime);
 static int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
 
-
+static int DispCpInfoDlg2(CModel* srcmodel, MOTINFO* curmi, int srctype);//srctype:0->copy, 1->cameracopy, 2->symcopy
 static int CopyMotionFunc(CModel* srcmodel, MOTINFO* curmi);
 static int PasteMotionFunc(CModel* srcmodel, MOTINFO* curmi);
 static int InterpolateMotionFunc(CModel* srcmodel, MOTINFO* curmi);
@@ -4518,7 +4524,6 @@ INT WINAPI wWinMain(
 			//int dispfps = (int)(s_avrgfps + 0.5);
 			//swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.1 : No.%d : fps %d", s_appcnt, dispfps);
 			//SetWindowText(g_mainhwnd, strmaintitle);
-
 			if (g_underWriteFbx == false) {//2024/02/10
 
 				s_chascene->SetUpdateSlot();//2023/03/13
@@ -4754,6 +4759,12 @@ void InitApp()
 		//ここではまだhistorydlg2.SetPosAndSize()が呼ばれていないのでダイアログの作成はしない
 		//SetPosAndSize()が呼ばれてg_mainhwndがセットされた後で作成する
 	}
+
+	s_undercpinfodlg2 = false;
+	s_cpinfodlg2.InitParams();
+	s_cpinfo.Init();
+	s_cpmotinfo.Init();
+
 
 	g_edittarget = EDITTARGET_BONE;
 	s_LchangeTargetFlag = false;
@@ -7338,12 +7349,10 @@ void OnDestroyDevice()
 	}
 
 
-	//if (s_copyhistorydlg2.GetCreatedFlag() == true) {
-		s_copyhistorydlg2.DestroyObjs();
-	//}
-	//if (s_dollyhistorydlg2.GetCreatedFlag() == true) {
-		s_dollyhistorydlg2.DestroyObjs();
-	//}
+	s_copyhistorydlg2.DestroyObjs();
+	s_dollyhistorydlg2.DestroyObjs();
+	s_cpinfodlg2.DestroyObjs();
+
 
 	//if (s_cameradollydlgwnd) {
 	//	DestroyWindow(s_cameradollydlgwnd);
@@ -37181,7 +37190,8 @@ int OnFrameToolWnd()
 		if (s_model && s_owpTimeline && s_owpLTimeline && s_model->ExistCurrentMotion()) {
 			MOTINFO curmi = s_model->GetCurMotInfo();
 			if (curmi.motid > 0) {
-				CopyMotionFunc(s_model, &curmi);
+				//CopyMotionFunc(s_model, &curmi);
+				DispCpInfoDlg2(s_model, &curmi, 0);
 			}
 		}
 		s_copyFlag = false;
@@ -37191,7 +37201,8 @@ int OnFrameToolWnd()
 		if (s_cameramodel && s_owpTimeline && s_owpLTimeline) {
 			MOTINFO curmi = GetCameraMotInfo();
 			if (curmi.motid > 0) {
-				CopyMotionFunc(s_cameramodel, &curmi);
+				//CopyMotionFunc(s_cameramodel, &curmi);
+				DispCpInfoDlg2(s_model, &curmi, 1);
 			}
 		}
 		s_copycameraFlag = false;
@@ -37203,47 +37214,11 @@ int OnFrameToolWnd()
 		//s_symcopyFlagでメニューを出し　１周回ってからのコンテクストメニュー実行後の　s_symcopyFlag2
 
 		if (s_model && s_owpTimeline && s_owpLTimeline && s_model->ExistCurrentMotion()) {
-
-			s_copymotvec.clear();
-			s_copyKeyInfoList.clear();
-			s_copyKeyInfoList = s_owpLTimeline->getSelectedKey();
-
-			list<KeyInfo>::iterator itrcp;
-			for (itrcp = s_copyKeyInfoList.begin(); itrcp != s_copyKeyInfoList.end(); itrcp++) {
-				double curframe = RoundingTime(itrcp->time);
-				InsertSymMPReq(g_limitdegflag, s_model->GetTopBone(false), curframe, s_getsym_retmode);//s_getsym_retmode!!!
-			}
-
-			//変更時は　s_copyFlagでの処理も合わせて変更
-			int result1 = 0;
-			int result2 = 0;
-			if (!s_copymotvec.empty()) {
-				//添付フォルダのファイルに記録
-				WCHAR retcptfilename[MAX_PATH] = { 0L };
-				result1 = WriteCPTFile(retcptfilename);
-				if (result1 == 0) {
-					MOTINFO curmi = s_model->GetCurMotInfo();
-					result2 = WriteCPIFile(s_model, &curmi, retcptfilename);//cp info
-					if ((result2 != 0) && (retcptfilename[0] != 0)) {
-						//ダイアログでコピーをCancelした場合含む
-						//invalidな履歴はその場で削除
-						BOOL bexist;
-						bexist = PathFileExists(retcptfilename);
-						if (bexist) {
-							DeleteFileW(retcptfilename);
-						}
-					}
-				}
-			}
-			if ((result1 == 0) && (result2 == 0)) {
-				if (s_model) {
-					PrepairUndo();
-				}
-				GetCPTFileName(s_cptfilename);
-				s_copyhistorydlg2.SetNames(s_model, s_cptfilename);
+			MOTINFO curmi = s_model->GetCurMotInfo();
+			if (curmi.motid > 0) {
+				DispCpInfoDlg2(s_model, &curmi, 2);
 			}
 		}
-
 
 		s_symcopyFlag2 = false;
 		s_symcopyFlag = false;
@@ -37774,12 +37749,6 @@ int InterpolateMotionFunc(CModel* srcmodel, MOTINFO* curmi)
 int CopyMotionFunc(CModel* srcmodel, MOTINFO* curmi)
 {
 	if (srcmodel && s_owpTimeline && s_owpLTimeline && curmi && (curmi->motid > 0)) {
-		s_copymotvec.clear();
-
-		double curframe;
-		for (curframe = g_motionbrush_startframe; curframe <= g_motionbrush_endframe; curframe++) {
-			InsertCopyMPReq(g_limitdegflag, srcmodel->GetTopBone(false), curframe, curmi);
-		}
 
 		//変更時は　s_symCopyFlagでの処理も合わせて変更
 		int result1 = 0;
@@ -50609,7 +50578,19 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	case WM_COMMAND:
 	{
-		if (menuid == (ID_RMENU_0 + 98)) {
+		if (menuid == (ID_RMENU_0 + 97)) {
+			s_undercpinfodlg2 = false;
+
+			int dlgresult = (int)lParam;
+			if (dlgresult == 0) {
+				if (s_model && s_owpTimeline && s_owpLTimeline && s_model->ExistCurrentMotion()) {
+					if (s_cpmotinfo.motid > 0) {
+						CopyMotionFunc(s_model, &s_cpmotinfo);
+					}
+				}
+			}
+		}
+		else if (menuid == (ID_RMENU_0 + 98)) {
 			if (s_dollyhistorydlg2.GetCreatedFlag()) {
 				s_dollyhistorydlg2.OnSaveDolly();
 			}
@@ -60805,6 +60786,77 @@ int WriteCPTFile(WCHAR* dstfilename)
 	return 0;
 }
 
+int DispCpInfoDlg2(CModel* srcmodel, MOTINFO* curmi, int srctype)
+//srctype:0->copy, 1->cameracopy, 2->symcopy
+{
+	if (!srcmodel) {
+		return 0;
+	}
+	if (!curmi) {
+		return 0;
+	}
+
+	s_cpmotinfo = *curmi;
+
+	if ((srctype == 0) || (srctype == 1)) {
+		s_copymotvec.clear();
+		double curframe;
+		for (curframe = g_motionbrush_startframe; curframe <= g_motionbrush_endframe; curframe++) {
+			InsertCopyMPReq(g_limitdegflag, srcmodel->GetTopBone(false), curframe, curmi);
+		}
+	}
+	else if (srctype == 2) {
+		s_copymotvec.clear();
+		s_copyKeyInfoList.clear();
+		s_copyKeyInfoList = s_owpLTimeline->getSelectedKey();
+
+		list<KeyInfo>::iterator itrcp;
+		for (itrcp = s_copyKeyInfoList.begin(); itrcp != s_copyKeyInfoList.end(); itrcp++) {
+			double curframe = RoundingTime(itrcp->time);
+			InsertSymMPReq(g_limitdegflag, s_model->GetTopBone(false), curframe, s_getsym_retmode);//s_getsym_retmode!!!
+		}
+	}
+
+	int cpelemnum;
+	cpelemnum = (int)s_copymotvec.size();
+	if (cpelemnum <= 0) {
+		return 0;
+	}
+
+	s_cpinfo.Init();
+	/*
+		typedef struct tag_cpinfo
+		{
+			WCHAR fbxname[MAX_PATH];
+			WCHAR motionname[MAX_PATH];
+			double startframe;
+			double framenum;
+			int bvhtype;//0:undef, 1-144:bvh1 - bvh144, -1:bvh_other
+			int importance;//0:undef, 1:tiny, 2:alittle, 3:normal, 4:noticed, 5:imortant, 6:very important
+			WCHAR comment[32];//WCHAR * 31文字まで。３２文字目は終端記号
+
+		}CPMOTINFO;
+	*/
+	s_cpinfo.startframe = s_copymotvec[0].mp.GetFrame();
+	s_cpinfo.framenum = s_copymotvec[cpelemnum - 1].mp.GetFrame() - s_cpinfo.startframe + 1;
+	wcscpy_s(s_cpinfo.fbxname, MAX_PATH, srcmodel->GetFileName());
+
+	char motname[MAX_PATH] = { 0 };
+	strcpy_s(motname, MAX_PATH, curmi->motname);
+	//s_model->GetCurrentMotName(motname, MAX_PATH);
+	WCHAR wmotname[MAX_PATH] = { 0L };
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, motname, 256, wmotname, MAX_PATH);
+	wcscpy_s(s_cpinfo.motionname, MAX_PATH, wmotname);
+
+	s_cpinfodlg2.SetCpInfo(&s_cpinfo);
+	s_cpinfodlg2.SetVisible(true);
+
+	s_undercpinfodlg2 = true;//!!!!!!
+
+	return 0;
+}
+
+
 int WriteCPIFile(CModel* srcmodel, MOTINFO* curmi, WCHAR* srccptfilename)
 {
 
@@ -60826,40 +60878,6 @@ int WriteCPIFile(CModel* srcmodel, MOTINFO* curmi, WCHAR* srccptfilename)
 	if (!srccptfilename) {
 		return 0;
 	}
-
-	CPMOTINFO cpinfo;
-	ZeroMemory(&cpinfo, sizeof(CPMOTINFO));
-	/*
-		typedef struct tag_cpinfo
-		{
-			WCHAR fbxname[MAX_PATH];
-			WCHAR motionname[MAX_PATH];
-			double startframe;
-			double framenum;
-			int bvhtype;//0:undef, 1-144:bvh1 - bvh144, -1:bvh_other
-			int importance;//0:undef, 1:tiny, 2:alittle, 3:normal, 4:noticed, 5:imortant, 6:very important
-			WCHAR comment[32];//WCHAR * 31文字まで。３２文字目は終端記号
-
-		}CPMOTINFO;
-	*/
-	cpinfo.startframe = s_copymotvec[0].mp.GetFrame();
-	cpinfo.framenum = s_copymotvec[cpelemnum - 1].mp.GetFrame() - cpinfo.startframe + 1;
-	wcscpy_s(cpinfo.fbxname, MAX_PATH, srcmodel->GetFileName());
-
-	char motname[MAX_PATH] = { 0 };
-	strcpy_s(motname, MAX_PATH, curmi->motname);
-	//s_model->GetCurrentMotName(motname, MAX_PATH);
-	WCHAR wmotname[MAX_PATH] = { 0L };
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, motname, 256, wmotname, MAX_PATH);
-	wcscpy_s(cpinfo.motionname, MAX_PATH, wmotname);
-
-	CCpInfoDlg dlg;
-	dlg.SetCpInfo(&cpinfo);
-	int dlgret = (int)dlg.DoModal();
-	if (dlgret != IDOK) {
-		return 1;
-	}
-
 
 	*(srccptfilename + MAX_PATH - 1) = 0L;
 	size_t cptfilenameleng = wcslen(srccptfilename);
@@ -60914,7 +60932,7 @@ int WriteCPIFile(CModel* srcmodel, MOTINFO* curmi, WCHAR* srccptfilename)
 	}
 
 	wleng = 0;
-	WriteFile(hfile, &cpinfo, sizeof(CPMOTINFO), &wleng, NULL);
+	WriteFile(hfile, &s_cpinfo, sizeof(CPMOTINFO), &wleng, NULL);
 	if (wleng != (sizeof(CPMOTINFO))) {
 		_ASSERT(0);
 		return 1;
