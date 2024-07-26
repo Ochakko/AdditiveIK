@@ -1,4 +1,4 @@
-#ifndef SETDLGPOSH
+﻿#ifndef SETDLGPOSH
 #define SETDLGPOSH
 
 

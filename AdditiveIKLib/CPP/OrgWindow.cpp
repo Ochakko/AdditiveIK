@@ -1807,7 +1807,7 @@ namespace OrgWinGUI{
 				AppendMenuA(submenu, MF_STRING, setmenuid, addstr);
 			}
 		}
-
+		
 
 		POINT pt;
 		//GetCursorPos(&pt);

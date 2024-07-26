@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 
 #include <windows.h>
 
@@ -12,7 +12,7 @@
 using namespace std;
 
 
-extern HWND g_mainhwnd;//ƒAƒvƒŠƒP[ƒVƒ‡ƒ“ƒEƒCƒ“ƒhƒEƒnƒ“ƒhƒ‹
+extern HWND g_mainhwnd;//ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«
 
 POINT GetDlgPosDesktopCenter(RECT dlgrect)
 {
@@ -71,7 +71,7 @@ int SetDlgPosDesktopCenter(HWND hDlgWnd, HWND hWndInsertAfter)
 		lefttopposx = (desktoprect.left + desktoprect.right) / 2;
 		lefttopposy = (desktoprect.top + desktoprect.bottom) / 2;
 
-		//2023/01/26 dlgƒTƒCƒY‚ðl—¶‚µ‚Ä@ƒfƒXƒNƒgƒbƒv’†‰›‚É”z’u
+		//2023/01/26 dlgã‚µã‚¤ã‚ºã‚’è€ƒæ…®ã—ã¦ã€€ãƒ‡ã‚¹ã‚¯ãƒˆãƒƒãƒ—ä¸­å¤®ã«é…ç½®
 
 
 		RECT dlgrect;
@@ -82,11 +82,11 @@ int SetDlgPosDesktopCenter(HWND hDlgWnd, HWND hWndInsertAfter)
 		::GetWindowRect(g_mainhwnd, &apprect);
 		POINT windowlefttop = { apprect.left, apprect.top };
 
-		//2023/12/18 App‚Ì¶ã‹÷‚É•\Ž¦‚³‚ê‚Ä‚¢‚éê‡‚¾‚¯ƒZƒ“ƒ^[‚ÉŽ‚Á‚Ä‚­‚é
+		//2023/12/18 Appã®å·¦ä¸Šéš…ã«è¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹å ´åˆã ã‘ã‚»ãƒ³ã‚¿ãƒ¼ã«æŒã£ã¦ãã‚‹
 		if (((clientlefttop.x - windowlefttop.x) >= 0) &&
-			((clientlefttop.x - windowlefttop.x) <= 24) &&//16:ƒtƒŒ[ƒ€‚ÌŒú‚³‚È‚Ç‚Ì•ª‚æ‚è­‚µ‘å‚«‚ß
+			((clientlefttop.x - windowlefttop.x) <= 24) &&//16:ãƒ•ãƒ¬ãƒ¼ãƒ ã®åŽšã•ãªã©ã®åˆ†ã‚ˆã‚Šå°‘ã—å¤§ãã‚
 			((clientlefttop.y - windowlefttop.y) >= 0) &&
-			((clientlefttop.y - windowlefttop.y) <= 100)) {//82:Menu‚È‚Ç‚Ì•ª‚æ‚è­‚µ‘å‚«‚ß
+			((clientlefttop.y - windowlefttop.y) <= 100)) {//82:Menuãªã©ã®åˆ†ã‚ˆã‚Šå°‘ã—å¤§ãã‚
 
 			setposx = max(60, (lefttopposx - (dlgrect.right - dlgrect.left) / 2));
 			setposy = max(60, (lefttopposy - (dlgrect.bottom - dlgrect.top) / 2));

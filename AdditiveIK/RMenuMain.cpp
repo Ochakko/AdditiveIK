@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 //#include "stdafx.h"
 
 #include <Windows.h>
@@ -82,6 +82,13 @@ int CRMenuMain::Destroy()
 
 int CRMenuMain::TrackPopupMenu( POINT pt )
 {
+	MENUINFO menuinfo;
+	ZeroMemory(&menuinfo, sizeof(menuinfo));
+	menuinfo.cbSize = sizeof(MENUINFO);
+	menuinfo.fMask = MIM_MAXHEIGHT;//設定メンバを選択
+	menuinfo.cyMax = 400;//メニューの高さの最大値　ピクセル単位
+	SetMenuInfo(m_rsubmenu, &menuinfo);//2024/07/26
+
 	Params2Dlg();
 	//int retmenuid;
 	//retmenuid = ::TrackPopupMenu(m_rsubmenu, TPM_RETURNCMD | TPM_LEFTALIGN, pt.x, pt.y, 0, m_menuwnd, NULL);
@@ -91,6 +98,13 @@ int CRMenuMain::TrackPopupMenu( POINT pt )
 }
 int CRMenuMain::TrackPopupMenuReturnCmd(POINT pt)
 {
+	MENUINFO menuinfo;
+	ZeroMemory(&menuinfo, sizeof(menuinfo));
+	menuinfo.cbSize = sizeof(MENUINFO);
+	menuinfo.fMask = MIM_MAXHEIGHT;//設定メンバを選択
+	menuinfo.cyMax = 400;//メニューの高さの最大値　ピクセル単位
+	SetMenuInfo(m_rsubmenu, &menuinfo);//2024/07/26
+
 	Params2Dlg();
 	int menuid = ::TrackPopupMenuEx(m_rsubmenu, TPM_LEFTALIGN | TPM_RETURNCMD, pt.x, pt.y, m_menuwnd, NULL);
 	return menuid;
