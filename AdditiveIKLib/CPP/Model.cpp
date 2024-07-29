@@ -15620,6 +15620,69 @@ int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, Ch
 	return camerabone->GetBoneNo();
 }
 
+int CModel::CameraAnimPasteCurrent(ChaMatrix newmatView)
+{
+	ChaCalcFunc chacalcfunc;
+
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int cameramotid = GetCameraMotionId();
+	MOTINFO camerami = GetMotInfo(cameramotid);
+	if (camerami.motid <= 0) {
+		return 0;
+	}
+	int curframeleng = IntTime(camerami.frameleng);
+
+
+	CBone* camerabone = nullptr;
+	CBone* enullbone = nullptr;
+	CAMERANODE* cnptr = GetCAMERANODE(cameramotid);
+	if (cnptr && cnptr->pbone && cnptr->pbone->GetParent(false)) {
+		camerabone = cnptr->pbone;
+		enullbone = cnptr->pbone->GetParent(false);
+	}
+	else {
+		_ASSERT(0);
+		return 0;
+	}
+
+	double applyframe = g_motionbrush_applyframe;
+
+	double curframe = RoundingTime(applyframe);
+	CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
+	if (enullmp) {
+		ChaMatrix parentLocalNodeAnimMat = enullmp->GetLocalMat();
+		ChaMatrix parentGlobalNodeMat = enullmp->GetWorldMat();
+
+
+		ChaMatrix newparentGlobalNodeMat = ChaMatrixInv(newmatView);
+		ChaMatrix newparentLocalNodeAnimMat = ChaMatrixInv(newmatView) * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
+
+		CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
+		if (cameramp) {
+			ChaMatrix localnodeanimmat = cameramp->GetLocalMat();
+			ChaMatrix newcameramat = localnodeanimmat * newparentGlobalNodeMat;
+
+			enullmp->SetLocalMat(newparentLocalNodeAnimMat);
+			enullmp->SetWorldMat(newparentGlobalNodeMat);
+			enullmp->SetLimitedWM(newparentGlobalNodeMat);
+
+			cameramp->SetWorldMat(newcameramat);
+			cameramp->SetLimitedWM(newcameramat);
+
+			ChaVector3 neweul;
+			neweul = enullbone->CalcLocalEulXYZ(false, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
+			enullmp->SetLocalEul(neweul);
+		}
+	}
+
+	return camerabone->GetBoneNo();
+}
+
+
+
+
 int CModel::CameraRotateAxisDelta(
 	bool limitdegflag, CEditRange* erptr,
 	int axiskind,

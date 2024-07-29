@@ -56,7 +56,17 @@ int CDollyHistoryOWPElem::SetDollyElem(
 		_ASSERT(0);
 		return 1;
 	}
-	m_deleteB = new OWP_Button(L"delete", labelheight);
+	//m_namesp2 = new OWP_Separator(parwnd, true, rate50, true);
+	//if (!m_namesp2) {
+	//	_ASSERT(0);
+	//	return 1;
+	//}
+	//m_pasteB = new OWP_Button(L"paste", labelheight);
+	//if (!m_pasteB) {
+	//	_ASSERT(0);
+	//	return 1;
+	//}
+	m_deleteB = new OWP_Button(L"del", labelheight);
 	if (!m_deleteB) {
 		_ASSERT(0);
 		return 1;
@@ -134,6 +144,13 @@ int CDollyHistoryOWPElem::AddParts(OrgWinGUI::OWP_Separator* parentsp)
 		_ASSERT(0);
 		return 1;
 	}
+	//if (m_namesp2) {
+	//	parentsp->addParts2(*m_namesp2);
+	//}
+	//else {
+	//	_ASSERT(0);
+	//	return 1;
+	//}
 	if (m_nameChk) {
 		m_namesp->addParts1(*m_nameChk);
 	}
@@ -141,7 +158,15 @@ int CDollyHistoryOWPElem::AddParts(OrgWinGUI::OWP_Separator* parentsp)
 		_ASSERT(0);
 		return 1;
 	}
+	//if (m_pasteB) {
+	//	m_namesp2->addParts1(*m_pasteB);
+	//}
+	//else {
+	//	_ASSERT(0);
+	//	return 1;
+	//}
 	if (m_deleteB) {
+		//m_namesp2->addParts2(*m_deleteB);
 		m_namesp->addParts2(*m_deleteB);
 	}
 	else {
@@ -179,7 +204,8 @@ int CDollyHistoryOWPElem::SetEventFunc(CDollyHistoryDlg2* srcdlg)
 	if (m_nameChk) {
 		m_nameChk->setButtonListener([=, this]() {
 			if (m_parentdlg) {
-				m_parentdlg->OnRadio(m_dollyelemindex);
+				bool pasteflag = true;//カメラアニメスイッチオンの場合にはカメラアニメにペーストする
+				m_parentdlg->OnRadio(m_dollyelemindex, pasteflag);
 			}
 		});
 	}
@@ -190,6 +216,14 @@ int CDollyHistoryOWPElem::SetEventFunc(CDollyHistoryDlg2* srcdlg)
 			}
 		});
 	}
+	//if (m_pasteB) {
+	//	m_pasteB->setButtonListener([=, this]() {
+	//		if (m_parentdlg) {
+	//			bool pasteflag = true;
+	//			m_parentdlg->OnRadio(m_dollyelemindex, pasteflag);
+	//		}
+	//	});
+	//}
 
 	return 0;
 }
@@ -199,7 +233,9 @@ void CDollyHistoryOWPElem::InitParams()
 	m_dollyelemindex = -1;
 
 	m_namesp = nullptr;
+	m_namesp2 = nullptr;
 	m_nameChk = nullptr;
+	m_pasteB = nullptr;
 	m_deleteB = nullptr;
 	m_descLabel = nullptr;
 	m_memoLabel = nullptr;
@@ -213,9 +249,17 @@ void CDollyHistoryOWPElem::DestroyObjs()
 		delete m_namesp;
 		m_namesp = nullptr;
 	}
+	if (m_namesp2) {
+		delete m_namesp2;
+		m_namesp2 = nullptr;
+	}
 	if (m_nameChk) {
 		delete m_nameChk;
 		m_nameChk = nullptr;
+	}
+	if (m_pasteB) {
+		delete m_pasteB;
+		m_pasteB = nullptr;
 	}
 	if (m_deleteB) {
 		delete m_deleteB;
@@ -278,7 +322,7 @@ void CDollyHistoryDlg2::InitParams()
 	ZeroMemory(m_comment, sizeof(WCHAR) * HISTORYCOMMENTLEN);
 
 	m_UpdateFunc = nullptr;
-
+	m_PasteFunc = nullptr;
 
 	m_dlgwnd = nullptr;
 	m_dlgSc = nullptr;
@@ -311,9 +355,10 @@ void CDollyHistoryDlg2::InitParams()
 	m_spacer2Label = nullptr;
 }
 
-void CDollyHistoryDlg2::SetUpdateFunc(int (*UpdateFunc)())
+void CDollyHistoryDlg2::SetUpdateFunc(int (*UpdateFunc)(), int (*PasteFunc)())
 {
 	m_UpdateFunc = UpdateFunc;
+	m_PasteFunc = PasteFunc;
 }
 
 int CDollyHistoryDlg2::DestroyOWPWnd()
@@ -859,7 +904,8 @@ int CDollyHistoryDlg2::CreateOWPWnd()
 			OnGetDolly();
 		});
 		m_setB->setButtonListener([=, this]() {
-			OnSetDolly();
+			bool pasteflag = true;//カメラアニメスイッチオンの場合にはカメラアニメにペーストする
+			OnSetDolly(pasteflag);
 		});
 		m_saveB->setButtonListener([=, this]() {
 			//OnSaveDolly();//OnSaveDolly()からはParams2Dlg()が呼ばれてそこからCreateOWPWnd()が呼ばれてm_saveBは作り直されエラーになる
@@ -947,7 +993,7 @@ int CDollyHistoryDlg2::OnDelete(int delid)
 }
 
 
-int CDollyHistoryDlg2::SetDollyElem2Camera(DOLLYELEM srcelem)
+int CDollyHistoryDlg2::SetDollyElem2Camera(DOLLYELEM srcelem, bool pasteflag)
 {
 	if (!m_UpdateFunc) {
 		_ASSERT(0);
@@ -973,6 +1019,11 @@ int CDollyHistoryDlg2::SetDollyElem2Camera(DOLLYELEM srcelem)
 			result = (this->m_UpdateFunc)();//!!!!!!!!!! Main.cpp : int UpdateCameraPosAndTarget()
 			if (result == 0) {
 				//正常
+
+				if (pasteflag && (m_PasteFunc != nullptr)) {
+					(this->m_PasteFunc)();
+				}
+
 				return 0;
 			}
 			else {
@@ -998,7 +1049,7 @@ int CDollyHistoryDlg2::SetDollyElem2Camera(DOLLYELEM srcelem)
 	return 0;
 }
 
-int CDollyHistoryDlg2::OnRadio(int radioid)
+int CDollyHistoryDlg2::OnRadio(int radioid, bool pasteflag)
 {
 
 	if (m_dollyhistory.empty()) {
@@ -1048,7 +1099,7 @@ int CDollyHistoryDlg2::OnRadio(int radioid)
 	int result = 0;
 	if (!m_dollyhistory.empty()) {
 		DOLLYELEM curelem = m_dollyhistory[radioid];
-		result = SetDollyElem2Camera(curelem);
+		result = SetDollyElem2Camera(curelem, pasteflag);
 	}
 
 	if (m_dlgwnd) {
@@ -1057,6 +1108,7 @@ int CDollyHistoryDlg2::OnRadio(int radioid)
 
 	return result;
 }
+
 
 DOLLYELEM CDollyHistoryDlg2::GetFirstValidElem()
 {
@@ -1119,7 +1171,7 @@ int CDollyHistoryDlg2::OnGetDolly()
 
 	return 0;
 }
-int CDollyHistoryDlg2::OnSetDolly()
+int CDollyHistoryDlg2::OnSetDolly(bool pasteflag)
 {
 	WCHAR strpos[256] = { 0L };
 	float posvalue = 0.0f;
@@ -1219,6 +1271,11 @@ int CDollyHistoryDlg2::OnSetDolly()
 			result = (this->m_UpdateFunc)();//!!!!!!!!!! Main.cpp : int UpdateCameraPosAndTarget()
 			if (result == 0) {
 				//正常
+
+				if (pasteflag && (m_PasteFunc != nullptr)) {
+					(this->m_PasteFunc)();
+				}
+
 				return 0;
 			}
 			else {
@@ -1246,7 +1303,8 @@ int CDollyHistoryDlg2::OnSetDolly()
 int CDollyHistoryDlg2::OnSaveDolly()
 {
 	BOOL bhandled = true;
-	LRESULT lresult = OnSetDolly();
+	bool pasteflag = true;//カメラアニメスイッチオンの場合にはカメラアニメにペーストする
+	LRESULT lresult = OnSetDolly(pasteflag);
 	if (lresult == 0) {
 		DOLLYELEM dollyelem;
 		dollyelem.Init();

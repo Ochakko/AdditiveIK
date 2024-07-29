@@ -59,7 +59,9 @@ private:
 	CDollyHistoryDlg2* m_parentdlg;
 	int m_dollyelemindex;
 	OrgWinGUI::OWP_Separator* m_namesp;
+	OrgWinGUI::OWP_Separator* m_namesp2;
 	OrgWinGUI::OWP_CheckBoxA* m_nameChk;
+	OrgWinGUI::OWP_Button* m_pasteB;
 	OrgWinGUI::OWP_Button* m_deleteB;
 	OrgWinGUI::OWP_Label* m_descLabel;
 	OrgWinGUI::OWP_Label* m_memoLabel;
@@ -76,7 +78,7 @@ public:
 	~CDollyHistoryDlg2();
 
 	int SetPosAndSize(int srcposx, int srcposy, int srcsizex, int srcsizey);//!!!!!!!!
-	void SetUpdateFunc(int (*UpdateFunc)());
+	void SetUpdateFunc(int (*UpdateFunc)(), int (*PasteFunc)());
 
 	bool GetCreatedFlag()
 	{
@@ -87,7 +89,7 @@ public:
 	int SetNames(std::vector<DOLLYELEM>& copyhistory);
 
 	int OnDelete(int delid);
-	int OnRadio(int radioid);
+	int OnRadio(int radioid, bool pasteflag);
 	int OnSaveDolly();
 
 	void SetVisible(bool srcflag);
@@ -108,10 +110,10 @@ private:
 	DOLLYELEM GetFirstValidElem();
 	DOLLYELEM GetCheckedElem();
 
-	int SetDollyElem2Camera(DOLLYELEM srcelem);
+	int SetDollyElem2Camera(DOLLYELEM srcelem, bool pasteflag);
 
 	int OnGetDolly();
-	int OnSetDolly();
+	int OnSetDolly(bool pasteflag);
 
 
 public:
@@ -137,6 +139,7 @@ private:
 	WCHAR m_comment[HISTORYCOMMENTLEN];
 
 	int (*m_UpdateFunc)();
+	int (*m_PasteFunc)();
 
 	//2024/02/27
 	//ShowWindow()を呼び出したときにOnRadio*()内でカメラが動いてしまわないようにフラグで回避

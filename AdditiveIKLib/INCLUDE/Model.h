@@ -670,7 +670,7 @@ public:
 	int CameraTranslateAxis(
 		CEditRange* erptr, ChaVector3 addtra);
 	int CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, ChaMatrix newmatView);
-
+	int CameraAnimPasteCurrent(ChaMatrix newmatView);
 
 	//2024/06/05その後
 	//IsCamera()==trueのボーンに関してもアンドゥ処理をすることによりUpdateCameramatFromENull()は不要になった　コメントアウト

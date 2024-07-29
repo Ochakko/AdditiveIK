@@ -3393,6 +3393,7 @@ static int RetargetFile(char* fbxpath);
 
 static int OnMouseMoveFunc();
 static int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax);
+static int OnCameraAnimPaste();
 
 static int RollbackCurBoneNo();
 static void PrepairUndo();
@@ -37562,7 +37563,7 @@ void AddRJointReq(CBone* srcbone)
 int CreateDollyHistoryDlg()
 {
 	//dollyhistorydlg2の作成は位置とサイズが決まってg_mainhwndがセットされた後で
-	s_dollyhistorydlg2.SetUpdateFunc(UpdateCameraPosAndTarget);
+	s_dollyhistorydlg2.SetUpdateFunc(UpdateCameraPosAndTarget, OnCameraAnimPaste);
 	std::vector<DOLLYELEM> vecdolly;
 	vecdolly.clear();
 	//s_dollyhistorydlg2.SetOnShow(true);//2024/02/27 ダイアログを出したときにカメラが動いてしまうのを防止
@@ -50998,7 +50999,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.28 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.29 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -59433,7 +59434,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.28 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.29 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (s_model && s_chascene) {
@@ -71876,7 +71877,7 @@ int UpdateCameraPosAndTarget()
 	diffv = g_camEye - g_camtargetpos;
 	g_camdist = (float)ChaVector3LengthDbl(&diffv);
 	if (g_camdist >= 1e-4) {
-		return 0;
+		//return 0;//2024/07/29 後にも処理がある　return文をコメントアウト
 	}
 	else {
 		_ASSERT(0);
@@ -71884,6 +71885,8 @@ int UpdateCameraPosAndTarget()
 	}
 
 	SetCamera3DFromEyePos();
+
+	return 0;
 }
 
 bool IsClickedSpriteButton()
@@ -72181,6 +72184,7 @@ void SetCamera3DFromEyePos()
 		g_cameraShadow->SetHeight((float)SHADOWMAP_SIZE);//2023/12/11 RenderingEngin::InitShadowMapでのバッファのサイズに合わせる
 		g_cameraShadow->Update();
 	}
+
 }
 
 int CreateSprites()
@@ -74999,6 +75003,36 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 
 	return 0;
 }
+
+int OnCameraAnimPaste()
+{
+
+	//現在のカメラ行列をカメラアニメにペーストする
+
+	if (s_cameramodel) {
+		int cameramotid = 0;
+		int cameraframeleng = 100;
+		CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);
+		if (opebone && (cameramotid > 0)) {
+			s_editcameraflag = s_cameramodel->CameraAnimPasteCurrent(s_matView);
+		}
+
+		//s_cameramodel->GetCameraAnimParams(s_cameraframe,
+		//	g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir,
+		//	0, g_cameraInheritMode);//g_camdist
+		//
+		//ChaVector3 diffvec = g_camtargetpos - g_camEye;
+		//float newcamdist = (float)ChaVector3LengthDbl(&diffvec);
+		//ChangeCameraDist(newcamdist, false, false);
+
+		UpdateEditedEuler();
+	}
+
+	PrepairUndo();
+
+	return 0;
+}
+
 
 bool ChkEnableIK()
 {
