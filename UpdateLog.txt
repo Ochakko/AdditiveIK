@@ -13,6 +13,8 @@ https://github.com/Ochakko/AdditiveIK
 　Documents/TroubleShooting/0_AboutCameraAnim.docxの使用してのメモの記述を修正
 　　
 
+　ツイストしてからのLock2Jointの処理を更に改善
+　　修正した計算順序でY軸をセットしただけで改善
 
 
 

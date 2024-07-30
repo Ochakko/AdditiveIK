@@ -15505,9 +15505,11 @@ int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, Ch
 				CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
 				if (cameramp) {
 					ChaMatrix newcameramat = cameramp->GetWorldMat() * addrot;
+					
 					//ChaMatrix newcameramat = calcmatView;
-					//ChaVector3 aftupvec = ChaMatrixInv(newmatView).GetRow(1);
-					//newcameramat.SetRow(1, aftupvec);
+					ChaVector3 aftupvec = ChaMatrixInv(newmatView).GetRow(1);
+					newcameramat.SetRow(1, aftupvec);//2024/07/30 Y軸をそのままセットで良い
+					
 					ChaMatrix newparentGlobalNodeMat = ChaMatrixInv(cameramp->GetLocalMat()) * newcameramat;
 					ChaMatrix newparentLocalNodeAnimMat = newparentGlobalNodeMat * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
 
@@ -15557,9 +15559,11 @@ int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, Ch
 			CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
 			if (cameramp) {
 				ChaMatrix newcameramat = cameramp->GetWorldMat() * addrot;
+				
 				//ChaMatrix newcameramat = ChaMatrixInv(newmatView);
-				//ChaVector3 aftupvec = ChaMatrixInv(newmatView).GetRow(1);
-				//newcameramat.SetRow(1, aftupvec);
+				ChaVector3 aftupvec = ChaMatrixInv(newmatView).GetRow(1);
+				newcameramat.SetRow(1, aftupvec);//2024/07/30 軸をそのままセットで良い
+				
 				ChaMatrix newparentGlobalNodeMat = ChaMatrixInv(cameramp->GetLocalMat()) * newcameramat;
 				ChaMatrix newparentLocalNodeAnimMat = newparentGlobalNodeMat * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
 
