@@ -667,10 +667,11 @@ public:
 		float delta, int ikcnt);
 	int CameraTranslateAxisDelta(
 		CEditRange* erptr, int axiskind, float delta, ChaMatrix matView);
-	int CameraTranslateAxis(
-		CEditRange* erptr, ChaVector3 addtra);
+	int CameraTranslateAxis(CEditRange* erptr, ChaVector3 addtra);
+	int CameraTranslateAxis(double curframe, ChaVector3 addtra);
+	int CameraDistDelta(CEditRange* erptr, float delta, bool lock2joint);
 	int CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, ChaMatrix newmatView);
-	int CameraAnimPasteCurrent(ChaMatrix newmatView);
+	int CameraAnimPasteCurrent(double curframe, ChaMatrix newmatView);
 
 	//2024/06/05その後
 	//IsCamera()==trueのボーンに関してもアンドゥ処理をすることによりUpdateCameramatFromENull()は不要になった　コメントアウト
@@ -1092,8 +1093,10 @@ public:
 	//void SetRotationActiveTrueReq(CNodeOnLoad* srcnodeonload);
 	//void SetRotationActiveDefaultReq(CNodeOnLoad* srcnodeonload);
 
-	int GetCameraAnimParams(int cameramotid, double nextframe, double camdist, ChaVector3* pEyePos, ChaVector3* pTargetPos, ChaVector3* pcamupvec, ChaMatrix* protmat, int inheritmode);
-	int GetCameraAnimParams(double nextframe, double camdist, ChaVector3* pEyePos, ChaVector3* pTargetPos, ChaVector3* pcamupvec, ChaMatrix* protmat, int inheritmode);
+	int GetCameraAnimParams(int cameramotid, double nextframe, double camdist, 
+		ChaVector3* pEyePos, ChaVector3* pTargetPos, ChaVector3* pcamupvec, ChaMatrix* protmat, int inheritmode);
+	int GetCameraAnimParams(double nextframe, double camdist, 
+		ChaVector3* pEyePos, ChaVector3* pTargetPos, ChaVector3* pcamupvec, ChaMatrix* protmat, int inheritmode);
 	int GetCameraProjParams(int cameramotid, float* pprojnear, float* pprojfar, float* pfovy, ChaVector3* pcampos, ChaVector3* pcamdir, ChaVector3* pcamupvec);
 	ChaVector3 CalcCameraFbxEulXYZ(int cameramotid, double srcframe);
 	ChaMatrix GetCameraTransformMat(int cameramotid, double nextframe, int inheritmode, 

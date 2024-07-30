@@ -15461,7 +15461,8 @@ int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, Ch
 
 	ChaMatrix rotmat0;
 	//rotmat0 = ChaMatrixInv(befmatView) * newmatView;
-	rotmat0 = ChaMatrixInv(ChaMatrixInv(befmatView) * newmatView);//カメラをプラス回転することは世界をマイナス回転させること　つまりそれは逆行列
+	//rotmat0 = ChaMatrixInv(ChaMatrixInv(befmatView) * newmatView);//カメラをプラス回転することは世界をマイナス回転させること　つまりそれは逆行列
+	rotmat0 = befmatView * ChaMatrixInv(newmatView);//2024/07/30 inv(inv(bef)) * inv(new) : カメラをプラス回転することは世界をマイナス回転させること　つまりそれは逆行列
 	CQuaternion rotq0;
 	rotq0.RotationMatrix(rotmat0);
 
@@ -15478,67 +15479,44 @@ int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, Ch
 			endq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 			rotq0.Slerp2(endq, 1.0 - changerate, &qForRot);
 
+			ChaMatrix befrot, aftrot;
+			befrot.SetIdentity();
+			aftrot.SetIdentity();
+			//befrot.SetTranslation(-g_camtargetpos);
+			//aftrot.SetTranslation(g_camtargetpos);
+			befrot.SetTranslation(-g_camEye);
+			aftrot.SetTranslation(g_camEye);
+			ChaMatrix rotmat = qForRot.MakeRotMatX();
+			ChaMatrix addrot = befrot * rotmat * aftrot;
+
 			CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
 			if (enullmp) {
+				//2024/07/30
+				//こんがらがっていたので修正
+				//トラブルシューティングのドキュメント(0_カメラアニメについて.docx)に書いた通り
+				//カメラノードの親ノードにアニメをアタッチしている
+				//カメラノードの親ノードのアニメを編集するように計算する
+				//修正により、カメラ移動-->カメラツイスト-->Lock2Joint操作もうまくいくようになった
+				//ただし、この計算順序は回転の時だけ.　移動については従来通り
+
 				ChaMatrix parentLocalNodeAnimMat = enullmp->GetLocalMat();
 				ChaMatrix parentGlobalNodeMat = enullmp->GetWorldMat();
 
-				ChaMatrix befrot, aftrot;
-				befrot.SetIdentity();
-				aftrot.SetIdentity();
-				//befrot.SetTranslation(-g_camtargetpos);
-				//aftrot.SetTranslation(g_camtargetpos);
-				befrot.SetTranslation(-g_camEye);
-				aftrot.SetTranslation(g_camEye);
-				ChaMatrix rotmat = qForRot.MakeRotMatX();
-				ChaMatrix localaddrot = befrot * rotmat * aftrot;
-
-				//式2024/06/04_1 : ChaMatrix newparentGlobalNodeMat = newparentLocalNodeAnimMat * ChaMatrixInv(parentLocalNodeAnimMat) * parentGlobalNodeMat;
-
-				ChaMatrix newparentGlobalNodeMat = parentGlobalNodeMat * localaddrot;//式2024/06/04_2
-
-				////式2024/06/04_1に//式2024/06/04_2を代入してlocalを求める
-				ChaMatrix newparentLocalNodeAnimMat = parentGlobalNodeMat * localaddrot * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
-
 				CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
 				if (cameramp) {
-					ChaMatrix localnodeanimmat = cameramp->GetLocalMat();
-					ChaMatrix newcameramat = localnodeanimmat * newparentGlobalNodeMat;
+					ChaMatrix newcameramat = cameramp->GetWorldMat() * addrot;
+					//ChaMatrix newcameramat = calcmatView;
+					//ChaVector3 aftupvec = ChaMatrixInv(newmatView).GetRow(1);
+					//newcameramat.SetRow(1, aftupvec);
+					ChaMatrix newparentGlobalNodeMat = ChaMatrixInv(cameramp->GetLocalMat()) * newcameramat;
+					ChaMatrix newparentLocalNodeAnimMat = newparentGlobalNodeMat * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
 
-					//###########
-					//upvecの補正
-					//###########
-					ChaVector3 befupvec;
-					//befupvec = ChaMatrixInv(newcameramat).GetRow(1);
-					befupvec = newcameramat.GetRow(1);
-					ChaVector3Normalize(&befupvec, &befupvec);
-					ChaVector3 aftupvec;
-					//aftupvec = newmatView.GetRow(1);
-					aftupvec = ChaMatrixInv(newmatView).GetRow(1);
-					ChaVector3Normalize(&aftupvec, &aftupvec);
-					CQuaternion rotupq0;
-					rotupq0.RotationArc(befupvec, aftupvec);
-					CQuaternion endqUp;
-					CQuaternion qForRotUp;
-					endqUp.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-					//rotupq0.Slerp2(endq, 1.0 - changerate, &qForRotUp);
-					qForRotUp = rotupq0;//upvecの補正は補間しない
-					ChaMatrix rotmatUp = qForRotUp.MakeRotMatX();
+					enullmp->SetLocalMat(newparentLocalNodeAnimMat);
+					enullmp->SetWorldMat(newparentGlobalNodeMat);
+					enullmp->SetLimitedWM(newparentGlobalNodeMat);
 
-					ChaMatrix localaddrot2 = befrot * rotmatUp * aftrot;
-
-					ChaMatrix newparentGlobalNodeMat2 = newparentGlobalNodeMat * localaddrot2;
-					ChaMatrix newparentLocalNodeAnimMat2 = newparentGlobalNodeMat * localaddrot2 * ChaMatrixInv(newparentGlobalNodeMat) * newparentLocalNodeAnimMat;
-
-					ChaMatrix localnodeanimmat2 = localnodeanimmat;
-					ChaMatrix newcameramat2 = localnodeanimmat2 * newparentGlobalNodeMat2;
-
-					enullmp->SetLocalMat(newparentLocalNodeAnimMat2);
-					enullmp->SetWorldMat(newparentGlobalNodeMat2);
-					enullmp->SetLimitedWM(newparentGlobalNodeMat2);
-
-					cameramp->SetWorldMat(newcameramat2);
-					cameramp->SetLimitedWM(newcameramat2);
+					cameramp->SetWorldMat(newcameramat);
+					cameramp->SetLimitedWM(newcameramat);
 
 					ChaVector3 neweul;
 					neweul = enullbone->CalcLocalEulXYZ(false, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
@@ -15553,62 +15531,44 @@ int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, Ch
 	else {
 
 		double curframe = RoundingTime(applyframe);
+		ChaMatrix befrot, aftrot;
+		befrot.SetIdentity();
+		aftrot.SetIdentity();
+		//befrot.SetTranslation(-g_camtargetpos);
+		//aftrot.SetTranslation(g_camtargetpos);
+		befrot.SetTranslation(-g_camEye);
+		aftrot.SetTranslation(g_camEye);
+		ChaMatrix rotmat = rotq0.MakeRotMatX();
+		ChaMatrix addrot = befrot * rotmat * aftrot;
+
 		CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
 		if (enullmp) {
+			//2024/07/30
+			//こんがらがっていたので修正
+			//トラブルシューティングのドキュメント(0_カメラアニメについて.docx)に書いた通り
+			//カメラノードの親ノードにアニメをアタッチしている
+			//カメラノードの親ノードのアニメを編集するように計算する
+			//修正により、カメラ移動-->カメラツイスト-->Lock2Joint操作もうまくいくようになった
+			//ただし、この計算順序は回転の時だけ.　移動については従来通り
+
 			ChaMatrix parentLocalNodeAnimMat = enullmp->GetLocalMat();
 			ChaMatrix parentGlobalNodeMat = enullmp->GetWorldMat();
 
-			ChaMatrix befrot, aftrot;
-			befrot.SetIdentity();
-			aftrot.SetIdentity();
-			//befrot.SetTranslation(-g_camtargetpos);
-			//aftrot.SetTranslation(g_camtargetpos);
-			befrot.SetTranslation(-g_camEye);
-			aftrot.SetTranslation(g_camEye);
-			ChaMatrix rotmat = rotq0.MakeRotMatX();
-			ChaMatrix localaddrot = befrot * rotmat * aftrot;
-
-			//式2024/06/04_1 : ChaMatrix newparentGlobalNodeMat = newparentLocalNodeAnimMat * ChaMatrixInv(parentLocalNodeAnimMat) * parentGlobalNodeMat;
-
-			ChaMatrix newparentGlobalNodeMat = parentGlobalNodeMat * localaddrot;//式2024/06/04_2
-
-			////式2024/06/04_1に//式2024/06/04_2を代入してlocalを求める
-			ChaMatrix newparentLocalNodeAnimMat = parentGlobalNodeMat * localaddrot * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
-
 			CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
 			if (cameramp) {
-				ChaMatrix localnodeanimmat = cameramp->GetLocalMat();
-				ChaMatrix newcameramat = localnodeanimmat * newparentGlobalNodeMat;
+				ChaMatrix newcameramat = cameramp->GetWorldMat() * addrot;
+				//ChaMatrix newcameramat = ChaMatrixInv(newmatView);
+				//ChaVector3 aftupvec = ChaMatrixInv(newmatView).GetRow(1);
+				//newcameramat.SetRow(1, aftupvec);
+				ChaMatrix newparentGlobalNodeMat = ChaMatrixInv(cameramp->GetLocalMat()) * newcameramat;
+				ChaMatrix newparentLocalNodeAnimMat = newparentGlobalNodeMat * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
 
-				//###########
-				//upvecの補正
-				//###########
-				ChaVector3 befupvec;
-				//befupvec = ChaMatrixInv(newcameramat).GetRow(1);
-				befupvec = newcameramat.GetRow(1);
-				ChaVector3Normalize(&befupvec, &befupvec);
-				ChaVector3 aftupvec;
-				//aftupvec = newmatView.GetRow(1);
-				aftupvec = ChaMatrixInv(newmatView).GetRow(1);
-				ChaVector3Normalize(&aftupvec, &aftupvec);
-				CQuaternion rotupq0;
-				rotupq0.RotationArc(befupvec, aftupvec);
-				ChaMatrix rotmatUp = rotupq0.MakeRotMatX();
+				enullmp->SetLocalMat(newparentLocalNodeAnimMat);
+				enullmp->SetWorldMat(newparentGlobalNodeMat);
+				enullmp->SetLimitedWM(newparentGlobalNodeMat);
 
-				ChaMatrix localaddrot2 = befrot * rotmatUp * aftrot;
-
-				ChaMatrix newparentGlobalNodeMat2 = newparentGlobalNodeMat * localaddrot2;
-				ChaMatrix newparentLocalNodeAnimMat2 = newparentGlobalNodeMat * localaddrot2 * ChaMatrixInv(newparentGlobalNodeMat) * newparentLocalNodeAnimMat;
-
-				ChaMatrix localnodeanimmat2 = localnodeanimmat;
-				ChaMatrix newcameramat2 = localnodeanimmat2 * newparentGlobalNodeMat2;
-
-				enullmp->SetLocalMat(newparentLocalNodeAnimMat2);
-				enullmp->SetWorldMat(newparentGlobalNodeMat2);
-				enullmp->SetLimitedWM(newparentGlobalNodeMat2);
-
-				cameramp->SetWorldMat(newcameramat2);
-				cameramp->SetLimitedWM(newcameramat2);
+				cameramp->SetWorldMat(newcameramat);
+				cameramp->SetLimitedWM(newcameramat);
 
 				ChaVector3 neweul;
 				neweul = enullbone->CalcLocalEulXYZ(false, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
@@ -15620,7 +15580,74 @@ int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, Ch
 	return camerabone->GetBoneNo();
 }
 
-int CModel::CameraAnimPasteCurrent(ChaMatrix newmatView)
+int CModel::CameraDistDelta(CEditRange* erptr, float delta, bool lock2joint) {
+
+	if (!erptr) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	ChaCalcFunc chacalcfunc;
+
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int cameramotid = GetCameraMotionId();
+	MOTINFO camerami = GetMotInfo(cameramotid);
+	if (camerami.motid <= 0) {
+		return 0;
+	}
+	int curframeleng = IntTime(camerami.frameleng);
+
+
+	CBone* camerabone = nullptr;
+	CBone* enullbone = nullptr;
+	CAMERANODE* cnptr = GetCAMERANODE(cameramotid);
+	if (cnptr && cnptr->pbone && cnptr->pbone->GetParent(false)) {
+		camerabone = cnptr->pbone;
+		enullbone = cnptr->pbone->GetParent(false);
+	}
+	else {
+		_ASSERT(0);
+		return 0;
+	}
+
+	int keynum;
+	double startframe, endframe, applyframe;
+	erptr->GetRange(&keynum, &startframe, &endframe, &applyframe);
+
+
+	float maxcamdist = 20000.0f;
+	float savecamdist = g_camdist;
+	ChaVector3 savetargetpos = g_camtargetpos;
+
+	double curframe;
+	for (curframe = startframe; curframe <= endframe; curframe+=1.0) {
+
+		double changerate;
+		changerate = (double)(*(g_motionbrush_value + (int)curframe));
+		double deltacamdist = (double)delta * changerate;
+
+		float newcamdist = fmin(maxcamdist, (float)(savecamdist + deltacamdist));
+		deltacamdist = newcamdist - savecamdist;
+
+		ChaVector3 tmpcamEye, tmpcamtarget, tmpcamupdir;
+		GetCameraAnimParams(cameramotid, RoundingTime(curframe), newcamdist,
+			&tmpcamEye, &tmpcamtarget, &tmpcamupdir, 0, g_cameraInheritMode);//newcamdist
+
+		if (lock2joint) {
+			tmpcamtarget = savetargetpos;
+		}
+		ChaVector3 eye2tar = tmpcamtarget - tmpcamEye;
+		ChaVector3Normalize(&eye2tar, &eye2tar);
+		ChaVector3 mveye = eye2tar * (float)deltacamdist;
+		CameraTranslateAxis(RoundingTime(curframe), mveye);
+	}
+
+	return camerabone->GetBoneNo();
+}
+
+int CModel::CameraAnimPasteCurrent(double curframe, ChaMatrix newmatView)
 {
 	ChaCalcFunc chacalcfunc;
 
@@ -15647,9 +15674,9 @@ int CModel::CameraAnimPasteCurrent(ChaMatrix newmatView)
 		return 0;
 	}
 
-	double applyframe = g_motionbrush_applyframe;
+	//double applyframe = g_motionbrush_applyframe;
+	//double curframe = RoundingTime(applyframe);
 
-	double curframe = RoundingTime(applyframe);
 	CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
 	if (enullmp) {
 		ChaMatrix parentLocalNodeAnimMat = enullmp->GetLocalMat();
@@ -15679,7 +15706,6 @@ int CModel::CameraAnimPasteCurrent(ChaMatrix newmatView)
 
 	return camerabone->GetBoneNo();
 }
-
 
 
 
@@ -16055,6 +16081,77 @@ int CModel::CameraTranslateAxis(
 			}
 		}
 
+	}
+
+	return camerabone->GetBoneNo();
+
+}
+
+int CModel::CameraTranslateAxis(double curframe, ChaVector3 addtra)
+{
+
+	ChaCalcFunc chacalcfunc;
+
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int cameramotid = GetCameraMotionId();
+	MOTINFO camerami = GetMotInfo(cameramotid);
+	if (camerami.motid <= 0) {
+		return 0;
+	}
+	int curframeleng = IntTime(camerami.frameleng);
+
+
+	CBone* camerabone = nullptr;
+	CBone* enullbone = nullptr;
+	CAMERANODE* cnptr = GetCAMERANODE(cameramotid);
+	if (cnptr && cnptr->pbone && cnptr->pbone->GetParent(false)) {
+		camerabone = cnptr->pbone;
+		enullbone = cnptr->pbone->GetParent(false);
+	}
+	else {
+		_ASSERT(0);
+		return 0;
+	}
+
+	double changerate;
+	//changerate = (double)(*(g_motionbrush_value + (int)curframe));
+	changerate = 1.0;
+	ChaVector3 frameaddtra = addtra * changerate;
+	ChaMatrix frameaddtramat;
+	frameaddtramat.SetIdentity();
+	frameaddtramat.SetTranslation(frameaddtra);
+
+	//double curframe = RoundingTime(applyframe);
+	CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
+	if (enullmp) {
+		ChaMatrix parentLocalNodeAnimMat = enullmp->GetLocalMat();
+		ChaMatrix parentGlobalNodeMat = enullmp->GetWorldMat();
+
+		//式2024/06/04_1 : ChaMatrix newparentGlobalNodeMat = newparentLocalNodeAnimMat * ChaMatrixInv(parentLocalNodeAnimMat) * parentGlobalNodeMat;
+
+		ChaMatrix newparentGlobalNodeMat = parentGlobalNodeMat * frameaddtramat;//式2024/06/04_2
+
+		////式2024/06/04_1に//式2024/06/04_2を代入してlocalを求める
+		ChaMatrix newparentLocalNodeAnimMat = parentGlobalNodeMat * frameaddtramat * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
+
+		CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
+		if (cameramp) {
+			ChaMatrix localnodeanimmat = cameramp->GetLocalMat();
+			ChaMatrix newcameramat = localnodeanimmat * newparentGlobalNodeMat;
+
+			enullmp->SetLocalMat(newparentLocalNodeAnimMat);
+			enullmp->SetWorldMat(newparentGlobalNodeMat);
+			enullmp->SetLimitedWM(newparentGlobalNodeMat);
+
+			cameramp->SetWorldMat(newcameramat);
+			cameramp->SetLimitedWM(newcameramat);
+
+			//ChaVector3 neweul;
+			//neweul = enullbone->CalcLocalEulXYZ(limitdegflag, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
+			//enullmp->SetLocalEul(neweul);
+		}
 	}
 
 	return camerabone->GetBoneNo();
@@ -21069,7 +21166,7 @@ ChaVector3 CModel::CalcCameraFbxEulXYZ(int cameramotid, double srcframe)
 }
 
 
-int CModel::GetCameraAnimParams(double nextframe, double camdist, 
+int CModel::GetCameraAnimParams(double nextframe, double camdist,
 	ChaVector3* pEyePos, ChaVector3* pTargetPos, ChaVector3* pcamupvec, 
 	ChaMatrix* protmat, int inheritmode)
 {
@@ -21095,11 +21192,13 @@ int CModel::GetCameraAnimParams(double nextframe, double camdist,
 
 
 	int cameramotionid = GetCameraMotionId();
-	return GetCameraAnimParams(cameramotionid, nextframe, camdist, pEyePos, pTargetPos, pcamupvec, protmat, inheritmode);
+	return GetCameraAnimParams(cameramotionid, nextframe, camdist,
+		pEyePos, pTargetPos, pcamupvec, protmat, inheritmode);
 
 }
 
-int CModel::GetCameraAnimParams(int cameramotionid, double nextframe, double camdist, ChaVector3* pEyePos, ChaVector3* pTargetPos, ChaVector3* pcamupvec, ChaMatrix* protmat, int inheritmode)
+int CModel::GetCameraAnimParams(int cameramotionid, double nextframe, double camdist, 
+	ChaVector3* pEyePos, ChaVector3* pTargetPos, ChaVector3* pcamupvec, ChaMatrix* protmat, int inheritmode)
 {
 	if (!pEyePos || !pTargetPos || !pcamupvec) {
 		//###################################################
@@ -21126,7 +21225,8 @@ int CModel::GetCameraAnimParams(int cameramotionid, double nextframe, double cam
 		*pTargetPos = *pEyePos + curcn->dirvec * camdist;
 	}
 	else {
-		m_camerafbx.GetCameraAnimParams(this, cameramotionid, nextframe, camdist, pEyePos, pTargetPos, pcamupvec, protmat, inheritmode);
+		m_camerafbx.GetCameraAnimParams(this, cameramotionid, nextframe, camdist, 
+			pEyePos, pTargetPos, pcamupvec, protmat, inheritmode);
 	}
 
 	return 0;

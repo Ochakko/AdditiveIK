@@ -11969,7 +11969,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			if (curbone) {
 				s_saveboneno = s_curboneno;
 
-				if (s_camtargetflag) {
+				if (s_camtargetflag && (s_camtargetOnceflag == 0)) {//2024/07/29 s_camtargetOnceflagが１のときはOnFrameToolWndで処理
 					AutoCameraTarget();
 				}
 
@@ -35407,7 +35407,8 @@ int OnFramePreviewCamera(double srcnextframe)
 
 
 			//2024/01/31 NotRoundingTime
-			s_cameramodel->GetCameraAnimParams(nextcameraframe, g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir, 0, g_cameraInheritMode);//g_camdist
+			s_cameramodel->GetCameraAnimParams(nextcameraframe, g_camdist,
+				&g_camEye, &g_camtargetpos, &g_cameraupdir, 0, g_cameraInheritMode);//g_camdist
 			s_cameraframe = nextcameraframe;
 
 		}
@@ -36795,7 +36796,8 @@ int OnFrameToolWnd()
 					}
 
 					s_cameramodel->GetCameraAnimParams(s_cameraframe,
-						g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir,
+						g_camdist,
+						&g_camEye, &g_camtargetpos, &g_cameraupdir,
 						0, g_cameraInheritMode);//g_camdist
 
 					ChaVector3 diffvec = g_camtargetpos - g_camEye;
@@ -51845,7 +51847,7 @@ int OnMouseMoveFunc()
 		::ScreenToClient(s_3dwnd, &ptCursor);
 		s_pickinfo.mousepos = ptCursor;
 
-		float deltadist = (float)(s_pickinfo.mousepos.x - s_pickinfo.mousebefpos.x) + (s_pickinfo.mousepos.y - s_pickinfo.mousebefpos.y) * 0.5f;
+		float deltadist = (float)((s_pickinfo.mousepos.x - s_pickinfo.mousebefpos.x) + (s_pickinfo.mousepos.y - s_pickinfo.mousebefpos.y)) * 0.5f;
 		//float mdelta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
 		//float deltadist = mdelta * g_camdist * 0.0010f;
 		if (g_controlkey == true) {
@@ -51858,8 +51860,15 @@ int OnMouseMoveFunc()
 			ChangeCameraDist(newcamdist, true, false);
 		}
 		else {
-			int ikkind_translation = 1;
-			OnCameraAnimMouseMove(ikkind_translation, PICK_Z, deltadist);
+			//int ikkind_translation = 1;
+			//OnCameraAnimMouseMove(ikkind_translation, PICK_Z, deltadist);
+			
+			//2024/07/30
+			//camaradist操作は　カメラが回転していく場合には　回転に応じてカメラ位置を動かす必要がある
+			//よってZ方向の移動ではうまくいかないことが多かった
+			//CameraDist操作専用の関数を呼び出す
+			int ikkind_scale = 2;//2024/07/30
+			OnCameraAnimMouseMove(ikkind_scale, PICK_Z, deltadist);//2024/07/30
 		}
 
 	}
@@ -74983,16 +74992,33 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 			doneflag = true;
 		}
 		else if (opekind == 2) {
-			s_editcameraflag = s_cameramodel->CameraTranslateAxisDelta(
-				&s_editrange, PICK_Z - PICK_X, deltax, s_matView);
+			//s_editcameraflag = s_cameramodel->CameraTranslateAxisDelta(
+			//	&s_editrange, PICK_Z - PICK_X, deltax, s_matView);
 
+			//2024/07/30
+			//camaradist操作は　カメラが回転していく場合には　回転に応じてカメラ位置を動かす必要がある
+			//よってZ方向の移動ではうまくいかないことが多かった
+			//CameraDist操作専用の関数作成
+			s_editcameraflag = s_cameramodel->CameraDistDelta(&s_editrange, deltax, s_camtargetflag);
+			g_camdist += deltax;
+
+			//OutputToInfoWnd(INFOCOLOR_INFO, L"deltax %f, g_camdist %f", deltax, g_camdist);
 			doneflag = true;
 		}
 
 		if (doneflag) {
+			ChaVector3 tmpcamtarget;
 			s_cameramodel->GetCameraAnimParams(s_cameraframe,
-				g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir,
+				g_camdist,
+				&g_camEye, &tmpcamtarget, &g_cameraupdir,
 				0, g_cameraInheritMode);//g_camdist
+
+			if (s_camtargetflag) {
+				//g_camtargetposはそのまま
+			}
+			else {
+				g_camtargetpos = tmpcamtarget;
+			}
 
 			ChaVector3 diffvec = g_camtargetpos - g_camEye;
 			float newcamdist = (float)ChaVector3LengthDbl(&diffvec);
@@ -75014,7 +75040,7 @@ int OnCameraAnimPaste()
 		int cameraframeleng = 100;
 		CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);
 		if (opebone && (cameramotid > 0)) {
-			s_editcameraflag = s_cameramodel->CameraAnimPasteCurrent(s_matView);
+			s_editcameraflag = s_cameramodel->CameraAnimPasteCurrent(s_cameramodel->GetCurrentFrame(), s_matView);
 		}
 
 		//s_cameramodel->GetCameraAnimParams(s_cameraframe,

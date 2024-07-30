@@ -100,7 +100,8 @@ public:
 	ChaMatrix GetCameraTransformMat(CModel* cameramodel, 
 		int cameramotid, double nextframe, int inheritmode,
 		bool calcbynode, bool setmotionpoint);
-	int GetCameraAnimParams(CModel* cameramodel, int cameramotid, double nextframe, double camdist, 
+	int GetCameraAnimParams(CModel* cameramodel, int cameramotid, double nextframe, 
+		double camdist,
 		ChaVector3* pEyePos, ChaVector3* pTargetPos, ChaVector3* pcamupdir, ChaMatrix* protmat, int inheritmode);
 	ChaVector3 CalcCameraFbxEulXYZ(int cameramotid, double srcframe);
 

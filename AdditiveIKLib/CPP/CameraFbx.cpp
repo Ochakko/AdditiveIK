@@ -528,7 +528,8 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(CModel* cameramodel, int cameramotid
 //#################################################################
 //inheritmode  0: writemode, 1:inherit all, 2:inherit cancel and Lclcancel
 //#################################################################
-int CCameraFbx::GetCameraAnimParams(CModel* cameramodel, int cameramotid, double nextframe, double camdist, 
+int CCameraFbx::GetCameraAnimParams(CModel* cameramodel, int cameramotid, double nextframe, 
+	double camdist,
 	ChaVector3* pEyePos, ChaVector3* pTargetPos, ChaVector3* pcamupvec, ChaMatrix* protmat, int inheritmode)
 {
 
