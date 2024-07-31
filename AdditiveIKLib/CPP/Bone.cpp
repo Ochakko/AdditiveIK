@@ -6320,14 +6320,34 @@ ChaVector3 CBone::CalcFBXTra(bool limitdegflag, int srcmotid, double srcframe)
 		GetSRTMatrix(localfbxmat, &svec, &rmat, &tvec);
 		return tvec;
 	}
-	else if(IsCamera() || IsNullAndChildIsCamera()){
+	else if(IsCamera()){
 
+		//######
+		//カメラ
+		//######
+		CMotionPoint* curmp = 0;
+		curmp = GetMotionPoint(srcmotid, roundingframe);
+		if (curmp) {
+			ChaMatrix nodemat = GetNodeMat();
+			ChaMatrix localmat;
+			localmat = curmp->GetLocalMat();
+			ChaVector3 svec, tvec;
+			ChaMatrix rmat;
+			GetSRTMatrix(localmat, &svec, &rmat, &tvec);
+			return tvec;
+		}
+		else {
+			return ChaVector3(0.0f, 0.0f, 0.0f);
+		}
+	}
+	else if (IsNullAndChildIsCamera()) {
 		//######################################
-		//カメラまたは子供にカメラを持つeNull の場合
+		//子供にカメラを持つeNull の場合
 		//######################################
 		CMotionPoint* curmp = 0;
 		curmp = GetMotionPoint(srcmotid, roundingframe);
 		if (curmp) {
+			ChaMatrix nodemat = GetNodeMat();
 			ChaMatrix localmat;
 			localmat = curmp->GetLocalMat();
 			ChaVector3 svec, tvec;

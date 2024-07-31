@@ -15466,7 +15466,6 @@ int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, Ch
 	CQuaternion rotq0;
 	rotq0.RotationMatrix(rotmat0);
 
-
 	if (keynum >= 2) {
 		int keyno = 0;
 		double curframe;
@@ -15479,15 +15478,15 @@ int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, Ch
 			endq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 			rotq0.Slerp2(endq, 1.0 - changerate, &qForRot);
 
-			ChaMatrix befrot, aftrot;
-			befrot.SetIdentity();
-			aftrot.SetIdentity();
-			//befrot.SetTranslation(-g_camtargetpos);
-			//aftrot.SetTranslation(g_camtargetpos);
-			befrot.SetTranslation(-g_camEye);
-			aftrot.SetTranslation(g_camEye);
+			//ChaMatrix befrot, aftrot;
+			//befrot.SetIdentity();
+			//aftrot.SetIdentity();
+			////befrot.SetTranslation(-g_camtargetpos);
+			////aftrot.SetTranslation(g_camtargetpos);
+			//befrot.SetTranslation(-g_camEye);
+			//aftrot.SetTranslation(g_camEye);
 			ChaMatrix rotmat = qForRot.MakeRotMatX();
-			ChaMatrix addrot = befrot * rotmat * aftrot;
+			//ChaMatrix addrot = befrot * rotmat * aftrot;//2024/07/31 回転中心をセットする方法から　回転してから元のtranslationを復元する方法に変更
 
 			CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
 			if (enullmp) {
@@ -15504,11 +15503,18 @@ int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, Ch
 
 				CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
 				if (cameramp) {
-					ChaMatrix newcameramat = cameramp->GetWorldMat() * addrot;
-					
-					//ChaMatrix newcameramat = calcmatView;
-					ChaVector3 aftupvec = ChaMatrixInv(newmatView).GetRow(1);
-					newcameramat.SetRow(1, aftupvec);//2024/07/30 Y軸をそのままセットで良い
+					ChaMatrix cameramat = cameramp->GetWorldMat();
+					ChaVector3 savecamerapos = cameramat.GetTranslation();
+					//ChaMatrix newcameramat = cameramat * addrot;
+					ChaMatrix newcameramat = cameramat * rotmat;
+					newcameramat.SetRow(3, savecamerapos);//2024/07/31 位置は変えない
+
+					//2024/07/31
+					//Row(1)にupvecをセットすると　プロジェクトを保存して読み込んだ際にapplyframe以外のtranslation成分が大きく異なってしまう
+					//Row 0,1,2がXYZの順番では無い場合があるから？それともスケール？　まだ原因は分かっていないが　保存読み込みで変質しないようにupvecセット部分はコメントアウト
+					////ChaMatrix newcameramat = calcmatView;
+					//ChaVector3 aftupvec = ChaMatrixInv(newmatView).GetRow(1);
+					//newcameramat.SetRow(1, aftupvec);//2024/07/30 Y軸をそのままセットで良い
 					
 					ChaMatrix newparentGlobalNodeMat = ChaMatrixInv(cameramp->GetLocalMat()) * newcameramat;
 					ChaMatrix newparentLocalNodeAnimMat = newparentGlobalNodeMat * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
@@ -15533,15 +15539,15 @@ int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, Ch
 	else {
 
 		double curframe = RoundingTime(applyframe);
-		ChaMatrix befrot, aftrot;
-		befrot.SetIdentity();
-		aftrot.SetIdentity();
-		//befrot.SetTranslation(-g_camtargetpos);
-		//aftrot.SetTranslation(g_camtargetpos);
-		befrot.SetTranslation(-g_camEye);
-		aftrot.SetTranslation(g_camEye);
+		//ChaMatrix befrot, aftrot;
+		//befrot.SetIdentity();
+		//aftrot.SetIdentity();
+		////befrot.SetTranslation(-g_camtargetpos);
+		////aftrot.SetTranslation(g_camtargetpos);
+		//befrot.SetTranslation(-g_camEye);
+		//aftrot.SetTranslation(g_camEye);
 		ChaMatrix rotmat = rotq0.MakeRotMatX();
-		ChaMatrix addrot = befrot * rotmat * aftrot;
+		//ChaMatrix addrot = befrot * rotmat * aftrot;//2024/07/31 回転中心をセットする方法から　回転してから元のtranslationを復元する方法に変更
 
 		CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
 		if (enullmp) {
@@ -15558,12 +15564,20 @@ int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, Ch
 
 			CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
 			if (cameramp) {
-				ChaMatrix newcameramat = cameramp->GetWorldMat() * addrot;
+				ChaMatrix cameramat = cameramp->GetWorldMat();
+				ChaVector3 savecamerapos = cameramat.GetTranslation();
+				//ChaMatrix newcameramat = cameramat * addrot;
+				ChaMatrix newcameramat = cameramat * rotmat;
+				newcameramat.SetRow(3, savecamerapos);//2024/07/31 位置は変えない
+
+				//2024/07/31
+				//Row(1)にupvecをセットすると　プロジェクトを保存して読み込んだ際にapplyframe以外のtranslation成分が大きく異なってしまう
+				//Row 0,1,2がXYZの順番では無い場合があるから？それともスケール？　まだ原因は分かっていないが　保存読み込みで変質しないようにupvecセット部分はコメントアウト
+				////ChaMatrix newcameramat = ChaMatrixInv(newmatView);
+				//ChaVector3 aftupvec = ChaMatrixInv(newmatView).GetRow(1);
+				//newcameramat.SetRow(1, aftupvec);//2024/07/30 軸をそのままセットで良い
 				
-				//ChaMatrix newcameramat = ChaMatrixInv(newmatView);
-				ChaVector3 aftupvec = ChaMatrixInv(newmatView).GetRow(1);
-				newcameramat.SetRow(1, aftupvec);//2024/07/30 軸をそのままセットで良い
-				
+
 				ChaMatrix newparentGlobalNodeMat = ChaMatrixInv(cameramp->GetLocalMat()) * newcameramat;
 				ChaMatrix newparentLocalNodeAnimMat = newparentGlobalNodeMat * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
 
@@ -15808,6 +15822,8 @@ int CModel::CameraRotateAxisDelta(
 	//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
 	//camerabone->SaveSRT(limitdegflag, cameramotid, startframe);
 
+	//式2024/06/04_1 : ChaMatrix newparentGlobalNodeMat = newparentLocalNodeAnimMat * ChaMatrixInv(parentLocalNodeAnimMat) * parentGlobalNodeMat;
+
 	if (keynum >= 2) {
 		int keyno = 0;
 		double curframe;
@@ -15820,30 +15836,30 @@ int CModel::CameraRotateAxisDelta(
 			endq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 			localq.Slerp2(endq, 1.0 - changerate, &qForRot);
 
+			ChaMatrix befrot, aftrot;
+			befrot.SetIdentity();
+			aftrot.SetIdentity();
+			befrot.SetTranslation(-g_camtargetpos);
+			aftrot.SetTranslation(g_camtargetpos);
+			ChaMatrix rotmat = qForRot.MakeRotMatX();
+			ChaMatrix addrot = befrot * rotmat * aftrot;
+
 			CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
 			if (enullmp) {
 				ChaMatrix parentLocalNodeAnimMat = enullmp->GetLocalMat();
 				ChaMatrix parentGlobalNodeMat = enullmp->GetWorldMat();
 
-				ChaMatrix befrot, aftrot;
-				befrot.SetIdentity();
-				aftrot.SetIdentity();
-				befrot.SetTranslation(-g_camtargetpos);
-				aftrot.SetTranslation(g_camtargetpos);
-				ChaMatrix rotmat = qForRot.MakeRotMatX();
-				ChaMatrix localaddrot = befrot * rotmat * aftrot;
-
-				//式2024/06/04_1 : ChaMatrix newparentGlobalNodeMat = newparentLocalNodeAnimMat * ChaMatrixInv(parentLocalNodeAnimMat) * parentGlobalNodeMat;
-				
-				ChaMatrix newparentGlobalNodeMat = parentGlobalNodeMat * localaddrot;//式2024/06/04_2
-
-				////式2024/06/04_1に//式2024/06/04_2を代入してlocalを求める
-				ChaMatrix newparentLocalNodeAnimMat = parentGlobalNodeMat * localaddrot * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
-
 				CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
 				if (cameramp) {
-					ChaMatrix localnodeanimmat = cameramp->GetLocalMat();
-					ChaMatrix newcameramat = localnodeanimmat * newparentGlobalNodeMat;
+					ChaMatrix newcameramat = cameramp->GetWorldMat() * addrot;
+
+					//ChaMatrix newcameramat = calcmatView;
+					//ChaVector3 aftupvec = ChaMatrixInv(newmatView).GetRow(1);
+					//newcameramat.SetRow(1, aftupvec);//2024/07/30 Y軸をそのままセットで良い
+
+					ChaMatrix newparentGlobalNodeMat = ChaMatrixInv(cameramp->GetLocalMat()) * newcameramat;
+					//式2024/06/04_1 : ChaMatrix newparentGlobalNodeMat = newparentLocalNodeAnimMat * ChaMatrixInv(parentLocalNodeAnimMat) * parentGlobalNodeMat;
+					ChaMatrix newparentLocalNodeAnimMat = newparentGlobalNodeMat * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
 
 					enullmp->SetLocalMat(newparentLocalNodeAnimMat);
 					enullmp->SetWorldMat(newparentGlobalNodeMat);
@@ -15853,7 +15869,7 @@ int CModel::CameraRotateAxisDelta(
 					cameramp->SetLimitedWM(newcameramat);
 
 					ChaVector3 neweul;
-					neweul = enullbone->CalcLocalEulXYZ(limitdegflag, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
+					neweul = enullbone->CalcLocalEulXYZ(false, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
 					enullmp->SetLocalEul(neweul);
 				}
 			}
@@ -15865,32 +15881,31 @@ int CModel::CameraRotateAxisDelta(
 	else {
 
 		double curframe = RoundingTime(applyframe);
+
+		ChaMatrix befrot, aftrot;
+		befrot.SetIdentity();
+		aftrot.SetIdentity();
+		befrot.SetTranslation(-g_camtargetpos);
+		aftrot.SetTranslation(g_camtargetpos);
+		ChaMatrix rotmat = localq.MakeRotMatX();
+		ChaMatrix addrot = befrot * rotmat * aftrot;
+
 		CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
 		if (enullmp) {
 			ChaMatrix parentLocalNodeAnimMat = enullmp->GetLocalMat();
 			ChaMatrix parentGlobalNodeMat = enullmp->GetWorldMat();
 
-
-			ChaMatrix befrot, aftrot;
-			befrot.SetIdentity();
-			aftrot.SetIdentity();
-			befrot.SetTranslation(-g_camtargetpos);
-			aftrot.SetTranslation(g_camtargetpos);
-			ChaMatrix rotmat = localq.MakeRotMatX();
-			ChaMatrix localaddrot = befrot * rotmat * aftrot;
-
-
-			//式2024/06/04_1 : ChaMatrix newparentGlobalNodeMat = newparentLocalNodeAnimMat * ChaMatrixInv(parentLocalNodeAnimMat) * parentGlobalNodeMat;
-
-			ChaMatrix newparentGlobalNodeMat = parentGlobalNodeMat * localaddrot;//式2024/06/04_2
-
-			////式2024/06/04_1に//式2024/06/04_2を代入してlocalを求める
-			ChaMatrix newparentLocalNodeAnimMat = parentGlobalNodeMat * localaddrot * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
-
 			CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
 			if (cameramp) {
-				ChaMatrix localnodeanimmat = cameramp->GetLocalMat();
-				ChaMatrix newcameramat = localnodeanimmat * newparentGlobalNodeMat;
+				ChaMatrix newcameramat = cameramp->GetWorldMat() * addrot;
+
+				//ChaMatrix newcameramat = ChaMatrixInv(newmatView);
+				//ChaVector3 aftupvec = ChaMatrixInv(newmatView).GetRow(1);
+				//newcameramat.SetRow(1, aftupvec);//2024/07/30 軸をそのままセットで良い
+
+				ChaMatrix newparentGlobalNodeMat = ChaMatrixInv(cameramp->GetLocalMat()) * newcameramat;
+				//式2024/06/04_1 : ChaMatrix newparentGlobalNodeMat = newparentLocalNodeAnimMat * ChaMatrixInv(parentLocalNodeAnimMat) * parentGlobalNodeMat;
+				ChaMatrix newparentLocalNodeAnimMat = newparentGlobalNodeMat * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
 
 				enullmp->SetLocalMat(newparentLocalNodeAnimMat);
 				enullmp->SetWorldMat(newparentGlobalNodeMat);
@@ -15900,12 +15915,10 @@ int CModel::CameraRotateAxisDelta(
 				cameramp->SetLimitedWM(newcameramat);
 
 				ChaVector3 neweul;
-				neweul = enullbone->CalcLocalEulXYZ(limitdegflag, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
+				neweul = enullbone->CalcLocalEulXYZ(false, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
 				enullmp->SetLocalEul(neweul);
-
 			}
 		}
-
 	}
 
 

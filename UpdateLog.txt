@@ -2,6 +2,18 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/07/31
+　カメラアニメを編集してからプロジェクトの保存読み込みテストして問題解決
+　　読み書き読み書き読みテスト＋Mayaで読込テスト＋Unityで読み込みテスト
+　　　保存読み込みをするとカメラの移動成分が変質することがあった
+　　　原因部分はLock2Jointチェック時のRow(1)にupvecをセットする部分だった
+　　　upvecセット部分をコメントアウトで　解決
+
+
+　カメラアニメ回転処理時もLock2Jointと同じ計算順序に.
+
+
+
 2024/07/30
 　カメラアニメIK回転処理を修正
 　　カメラをツイスト(upvecを編集)してからLock2Jointにチェックを入れた場合にもうまくいくように.
@@ -9,13 +21,10 @@ https://github.com/Ochakko/AdditiveIK
 　カメラアニメのカメラ距離編集について修正
 　　カメラを回転した後でカメラ距離を編集してもうまくいくように.
 
-
 　Documents/TroubleShooting/0_AboutCameraAnim.docxの使用してのメモの記述を修正
 　　
-
 　ツイストしてからのLock2Jointの処理を更に改善
 　　修正した計算順序でY軸をセットしただけで改善
-
 
 
 2024/07/29
