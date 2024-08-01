@@ -173,6 +173,9 @@ public:
 
 	float* GetDataPtr();
 
+	int MakeLookAt(ChaVector3 srcpos, ChaVector3 srctarget, ChaVector3 srcupvec);
+
+
 public:
 	union
 	{

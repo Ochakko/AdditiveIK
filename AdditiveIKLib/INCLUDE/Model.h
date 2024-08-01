@@ -671,7 +671,7 @@ public:
 	int CameraTranslateAxis(double curframe, ChaVector3 addtra);
 	int CameraDistDelta(CEditRange* erptr, float delta, bool lock2joint);
 	int CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, ChaMatrix newmatView);
-	int CameraAnimPasteCurrent(double curframe, ChaMatrix newmatView);
+	int CameraAnimPasteCurrent(ChaMatrix newmatView);
 
 	//2024/06/05その後
 	//IsCamera()==trueのボーンに関してもアンドゥ処理をすることによりUpdateCameramatFromENull()は不要になった　コメントアウト

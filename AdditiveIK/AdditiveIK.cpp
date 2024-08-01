@@ -75036,12 +75036,16 @@ int OnCameraAnimPaste()
 	//現在のカメラ行列をカメラアニメにペーストする
 
 	if (s_cameramodel) {
-		int cameramotid = 0;
-		int cameraframeleng = 100;
-		CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);
-		if (opebone && (cameramotid > 0)) {
-			s_editcameraflag = s_cameramodel->CameraAnimPasteCurrent(s_cameramodel->GetCurrentFrame(), s_matView);
-		}
+		//2024/08/01
+		//カメラアニメスイッチとグラフモードに関わらず　カメラアニメがあればそのカレントフレームへペースト
+		s_editcameraflag = s_cameramodel->CameraAnimPasteCurrent(s_matView);
+
+		//int cameramotid = 0;
+		//int cameraframeleng = 100;
+		//CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);//結果はグラフモード依存
+		//if (opebone && (cameramotid > 0)) {
+		//	s_editcameraflag = s_cameramodel->CameraAnimPasteCurrent(cameramotid, s_cameramodel->GetCurrentFrame(), s_matView);
+		//}
 
 		//s_cameramodel->GetCameraAnimParams(s_cameraframe,
 		//	g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir,

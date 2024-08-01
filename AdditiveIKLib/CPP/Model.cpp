@@ -15665,20 +15665,20 @@ int CModel::CameraDistDelta(CEditRange* erptr, float delta, bool lock2joint) {
 	return camerabone->GetBoneNo();
 }
 
-int CModel::CameraAnimPasteCurrent(double curframe, ChaMatrix newmatView)
+int CModel::CameraAnimPasteCurrent(ChaMatrix newmatView)
 {
 	ChaCalcFunc chacalcfunc;
 
 	if (!ExistCurrentMotion()) {
 		return 0;
 	}
+
 	int cameramotid = GetCameraMotionId();
 	MOTINFO camerami = GetMotInfo(cameramotid);
 	if (camerami.motid <= 0) {
 		return 0;
 	}
 	int curframeleng = IntTime(camerami.frameleng);
-
 
 	CBone* camerabone = nullptr;
 	CBone* enullbone = nullptr;
@@ -15692,22 +15692,44 @@ int CModel::CameraAnimPasteCurrent(double curframe, ChaMatrix newmatView)
 		return 0;
 	}
 
-	//double applyframe = g_motionbrush_applyframe;
-	//double curframe = RoundingTime(applyframe);
+
+	double curframe = RoundingTime(camerami.curframe);
 
 	CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
 	if (enullmp) {
 		ChaMatrix parentLocalNodeAnimMat = enullmp->GetLocalMat();
 		ChaMatrix parentGlobalNodeMat = enullmp->GetWorldMat();
 
-
-		ChaMatrix newparentGlobalNodeMat = ChaMatrixInv(newmatView);
-		ChaMatrix newparentLocalNodeAnimMat = ChaMatrixInv(newmatView) * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
-
 		CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
 		if (cameramp) {
-			ChaMatrix localnodeanimmat = cameramp->GetLocalMat();
-			ChaMatrix newcameramat = localnodeanimmat * newparentGlobalNodeMat;
+
+			//変更前のmatviewを求める
+			ChaVector3 tmpcamEye, tmpcamtarget, tmpcamupdir;
+			GetCameraAnimParams(cameramotid, curframe, g_camdist,
+				&tmpcamEye, &tmpcamtarget, &tmpcamupdir, 0, g_cameraInheritMode);//g_camdist
+			ChaMatrix befmatView;
+			befmatView.MakeLookAt(tmpcamEye, tmpcamtarget, tmpcamupdir);
+
+
+			//後ろから掛ける変化分を計算
+			ChaMatrix rotmat0;
+			rotmat0 = befmatView * ChaMatrixInv(newmatView);//2024/07/30 inv(inv(bef)) * inv(new) : カメラをプラス回転することは世界をマイナス回転させること　つまりそれは逆行列
+			//CQuaternion rotq0;
+			//rotq0.RotationMatrix(rotmat0);
+			ChaVector3 newcamerapos = ChaMatrixInv(newmatView).GetTranslation();
+
+			
+			//変化分を掛けて　位置を新しいmatViewに合わせる
+			ChaMatrix cameramat = cameramp->GetWorldMat();
+			//ChaMatrix newcameramat = cameramat * rotq0.MakeRotMatX();
+			ChaMatrix newcameramat = cameramat * rotmat0;
+			newcameramat.SetTranslation(newcamerapos);
+
+
+			//cameraの親のeNullのカメラアニメの新しい値を逆算
+			ChaMatrix newparentGlobalNodeMat = ChaMatrixInv(cameramp->GetLocalMat()) * newcameramat;
+			ChaMatrix newparentLocalNodeAnimMat = newparentGlobalNodeMat * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
+
 
 			enullmp->SetLocalMat(newparentLocalNodeAnimMat);
 			enullmp->SetWorldMat(newparentGlobalNodeMat);

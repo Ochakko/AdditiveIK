@@ -1530,6 +1530,23 @@ CQuaternion ChaMatrix::GetRotQ()
 	return retq;
 }
 
+int ChaMatrix::MakeLookAt(ChaVector3 srcpos, ChaVector3 srctarget, ChaVector3 srcupvec)
+{
+	SetIdentity();
+	Matrix tmpresult;
+	Vector3 tmppos, tmptarget, tmpup;
+	tmpresult.SetIdentity();
+	tmppos.Set(srcpos.x, srcpos.y, srcpos.z);
+	tmptarget.Set(srctarget.x, srctarget.y, srctarget.z);
+	tmpup.Set(srcupvec.x, srcupvec.y, srcupvec.z);
+
+	tmpresult.MakeLookAt(tmppos, tmptarget, tmpup);
+	
+	this->SetParams(tmpresult);
+	return 0;
+}
+
+
 
 ChaMatrix ChaMatrix::operator= (ChaMatrix m) { 
 
