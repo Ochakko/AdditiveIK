@@ -1587,7 +1587,9 @@ static OrgWindow* s_sidemenuWnd = 0;
 //static OWP_Button* s_sidemenu_retarget = 0;
 static OWP_Separator* s_sidemenusp1 = 0;
 static OWP_Separator* s_sidemenusp2 = 0;
+static OWP_Separator* s_sidemenusp3 = 0;
 static OWP_CheckBoxA* s_sidemenu_sellock = 0;
+static OWP_Button* s_sidemenu_sellockOnce = 0;
 static OWP_CheckBoxA* s_sidemenu_targetdisp = 0;
 static OWP_CheckBoxA* s_sidemenu_moveeyepos = 0;
 static OWP_Slider* s_sidemenu_camdistSlider = 0;
@@ -6798,7 +6800,9 @@ void InitApp()
 	s_LTSeparator = 0;
 	s_sidemenusp1 = 0;
 	s_sidemenusp2 = 0;
+	s_sidemenusp3 = 0;
 	s_sidemenu_sellock = 0;
+	s_sidemenu_sellockOnce = 0;
 	s_sidemenu_targetdisp = 0;
 	s_sidemenu_moveeyepos = 0;
 	s_sidemenu_camdistSlider = 0;
@@ -7678,9 +7682,17 @@ void OnDestroyDevice()
 		delete s_sidemenusp2;
 		s_sidemenusp2 = 0;
 	}
+	if (s_sidemenusp3) {
+		delete s_sidemenusp3;
+		s_sidemenusp3 = 0;
+	}
 	if (s_sidemenu_sellock) {
 		delete s_sidemenu_sellock;
 		s_sidemenu_sellock = 0;
+	}
+	if (s_sidemenu_sellockOnce) {
+		delete s_sidemenu_sellockOnce;
+		s_sidemenu_sellockOnce = 0;
 	}
 	if (s_sidemenu_targetdisp) {
 		delete s_sidemenu_targetdisp;
@@ -14395,7 +14407,7 @@ int OpenFile()
 		delete[] tmpsavepath;
 
 
-	s_camtargetOnceflag = 1;//set cameratarget to selected joint ONCE
+	//s_camtargetOnceflag = 1;//set cameratarget to selected joint ONCE
 
 
 	return 0;
@@ -36773,8 +36785,7 @@ int OnFrameToolWnd()
 		s_plateFlag = false;
 	}
 
-	if (s_camtargetOnceflag) {
-		s_camtargetOnceflag = 0;
+	if (s_camtargetOnceflag) {	
 		if (s_model && (s_curboneno >= 0)) {
 
 			int curmotid = s_model->GetCurrentMotID();
@@ -36786,14 +36797,24 @@ int OnFrameToolWnd()
 			else {
 				AutoCameraTarget();
 
-				if (s_cameramodel && (g_edittarget == EDITTARGET_CAMERA)) {
+				//if (s_cameramodel && (g_edittarget == EDITTARGET_CAMERA)) {
+				if (s_cameramodel) {
 					//カメラアニメの選択フレームを編集して、カメラをターゲットジョイントに向ける
-					int cameramotid = 0;
-					int cameraframeleng = 100;
-					CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);
-					if (opebone && (cameramotid > 0)) {
-						s_editcameraflag = s_cameramodel->CameraAnimDiffRotMatView(&s_editrange, s_befLockMatView, s_matView);
-					}
+					//int cameramotid = 0;
+					//int cameraframeleng = 100;
+					//CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);//EditMode依存の結果
+					//if (opebone && (cameramotid > 0)) {
+
+						//EditModeに関わらずLock2Jointを実行
+						if (s_camtargetflag) {
+							//always s_editrange全範囲に対してウェイト1.0でLock2Joint処理.ジョイントのモーションにも対応
+							s_editcameraflag = s_cameramodel->CameraAnimLock2Joint(&s_editrange, s_model, s_curboneno);
+						}
+						else {
+							//once applyframeに対してLock2Joint、applyframe以外はbrushウェイト分だけLock2Joint.applyframe時のジョイント位置を使用
+							s_editcameraflag = s_cameramodel->CameraAnimDiffRotMatView(&s_editrange, s_befLockMatView, s_matView);
+						}
+					//}
 
 					s_cameramodel->GetCameraAnimParams(s_cameraframe,
 						g_camdist,
@@ -36809,6 +36830,9 @@ int OnFrameToolWnd()
 
 				PrepairUndo();
 			}
+
+			s_camtargetOnceflag = 0;//AutoCameraTarget()呼び出しよりも後で初期化
+
 		}
 	}
 
@@ -40754,8 +40778,18 @@ int CreateSideMenuWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		s_sidemenu_sellock = new OWP_CheckBoxA(L"Lock2Joint", s_camtargetflag, 15, false);
+		s_sidemenusp3 = new OWP_Separator(s_sidemenuWnd, true, 0.5f, true);
+		if (!s_sidemenusp3) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_sidemenu_sellock = new OWP_CheckBoxA(L"AlwaysLock", s_camtargetflag, 15, false);
 		if (!s_sidemenu_sellock) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_sidemenu_sellockOnce = new OWP_Button(L"OnceLock", 15);
+		if (!s_sidemenu_sellockOnce) {
 			_ASSERT(0);
 			return 1;
 		}
@@ -40790,9 +40824,11 @@ int CreateSideMenuWnd()
 
 		s_sidemenuWnd->addParts(*s_sidemenusp1);
 		s_sidemenusp1->addParts1(*s_sidemenusp2);
-		s_sidemenusp1->addParts2(*s_sidemenu_moveeyepos);
-		s_sidemenusp2->addParts1(*s_sidemenu_sellock);
-		s_sidemenusp2->addParts2(*s_sidemenu_targetdisp);
+		s_sidemenusp1->addParts2(*s_sidemenusp3);
+		s_sidemenusp2->addParts1(*s_sidemenu_sellockOnce);
+		s_sidemenusp2->addParts2(*s_sidemenu_sellock);
+		s_sidemenusp3->addParts1(*s_sidemenu_moveeyepos);
+		s_sidemenusp3->addParts2(*s_sidemenu_targetdisp);
 		s_sidemenuWnd->addParts(*s_sidemenu_camdistSlider);//２段目の全幅をスライダーに割り当て
 
 
@@ -40817,7 +40853,6 @@ int CreateSideMenuWnd()
 						}
 						else {
 							s_befLockMatView = s_matView;//2024/06/06
-
 							s_camtargetflag = true;
 
 							//sellockオンの時はカメラが選択ジョイント中心回転、targetdispオンの時はカメラがマニピュレータ(カメラターゲット位置)中心回転
@@ -40834,6 +40869,26 @@ int CreateSideMenuWnd()
 				}
 				else {
 					s_camtargetflag = false;
+				}
+			});
+		}
+		if (s_sidemenu_sellockOnce) {
+			s_sidemenu_sellockOnce->setButtonListener([]() {
+				if (s_model) {
+					int curmotid = s_model->GetCurrentMotID();
+					bool cameraanimflag = s_model->IsCameraMotion(curmotid);
+					if (cameraanimflag) {
+						::MessageBox(s_3dwnd, L"カメラモーション以外を選択してから再試行してください.", L"CurrentMotion is Camera warning",
+							MB_OK | MB_ICONINFORMATION);
+
+						s_sidemenu_sellock->setValue(false, false);
+					}
+					else {
+						//Once
+						s_befLockMatView = s_matView;
+						s_camtargetOnceflag = 1;
+
+					}
 				}
 			});
 		}
@@ -50107,7 +50162,7 @@ int GetSymRootMode()
 void AutoCameraTarget()
 {
 	//s_camtargetflag = (int)s_CamTargetCheckBox->GetChecked();
-	if (s_model && (s_curboneno >= 0) && s_camtargetflag) {
+	if (s_model && (s_curboneno >= 0) && (s_camtargetflag || s_camtargetOnceflag)) {
 		CBone* curbone = s_model->GetBoneByID(s_curboneno);
 		_ASSERT(curbone);
 		if (curbone) {

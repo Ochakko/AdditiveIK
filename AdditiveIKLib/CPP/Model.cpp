@@ -15747,7 +15747,138 @@ int CModel::CameraAnimPasteCurrent(ChaMatrix newmatView)
 	return camerabone->GetBoneNo();
 }
 
+int CModel::CameraAnimLock2Joint(CEditRange* erptr, CModel* srclockmodel, int srcboneno)
+{
+	//s_editrange全範囲に対してウェイト1.0でLock2Joint処理
 
+	if (!erptr) {
+		_ASSERT(0);
+		return 0;
+	}
+	if (!srclockmodel) {
+		_ASSERT(0);
+		return 0;
+	}
+	if (srcboneno < 0) {
+		_ASSERT(0);
+		return 0;
+	}
+	CBone* lockjoint = srclockmodel->GetBoneByID(srcboneno);
+	if (!lockjoint) {
+		_ASSERT(0);
+		return 0;
+	}
+	MOTINFO lockmi = srclockmodel->GetCurMotInfo();
+	if (lockmi.motid <= 0) {
+		_ASSERT(0);
+		return 0;
+	}
+	int lockmotid = lockmi.motid;
+
+
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int cameramotid = GetCameraMotionId();
+	MOTINFO camerami = GetMotInfo(cameramotid);
+	if (camerami.motid <= 0) {
+		return 0;
+	}
+	int curframeleng = IntTime(camerami.frameleng);
+
+
+	CBone* camerabone = nullptr;
+	CBone* enullbone = nullptr;
+	CAMERANODE* cnptr = GetCAMERANODE(cameramotid);
+	if (cnptr && cnptr->pbone && cnptr->pbone->GetParent(false)) {
+		camerabone = cnptr->pbone;
+		enullbone = cnptr->pbone->GetParent(false);
+	}
+	else {
+		_ASSERT(0);
+		return 0;
+	}
+
+	int keynum;
+	double startframe, endframe, applyframe;
+	erptr->GetRange(&keynum, &startframe, &endframe, &applyframe);
+	startframe = RoundingTime(startframe);
+	endframe = RoundingTime(endframe);
+
+	double lockstartframe, lockendframe;
+	lockstartframe = fmin((lockmi.frameleng - 1.0), startframe);
+	lockendframe = fmin((lockmi.frameleng - 1.0), endframe);
+
+	double curframe;
+	for (curframe = startframe; curframe <= endframe; curframe += 1.0) {
+		double curlockframe = fmin(lockendframe, fmax(lockstartframe, curframe));//lockmodelのフレーム番号をs_editrangeでクランプ
+
+		CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
+		if (enullmp) {
+			ChaMatrix parentLocalNodeAnimMat = enullmp->GetLocalMat();
+			ChaMatrix parentGlobalNodeMat = enullmp->GetWorldMat();
+
+			CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
+			if (cameramp) {
+
+				//変更前のカメラ行列を取得
+				ChaVector3 tmpcamEye, tmpcamtarget, tmpcamupdir;
+				GetCameraAnimParams(cameramotid, curframe, g_camdist,
+					&tmpcamEye, &tmpcamtarget, &tmpcamupdir, 0, g_cameraInheritMode);//g_camdist
+				ChaMatrix befmatView;
+				befmatView.MakeLookAt(tmpcamEye, tmpcamtarget, tmpcamupdir);
+
+				//lockjointの位置を求める
+				ChaMatrix lockwm = lockjoint->GetWorldMat(g_limitdegflag, lockmotid, curlockframe, 0) * srclockmodel->GetWorldMat();
+				ChaVector3 lockjpos = lockjoint->GetJointFPos();
+				ChaVector3 lockpos;
+				ChaVector3TransformCoord(&lockpos, &lockjpos, &lockwm);
+
+				//target位置をlockposに置き換えた新しいカメラ行列を取得
+				ChaMatrix newmatView;
+				newmatView.MakeLookAt(tmpcamEye, lockpos, tmpcamupdir);//lockpos
+
+
+				//後ろから掛ける変化分を計算
+				ChaMatrix rotmat0;
+				rotmat0 = befmatView * ChaMatrixInv(newmatView);//2024/07/30 inv(inv(bef)) * inv(new) : カメラをプラス回転することは世界をマイナス回転させること　つまりそれは逆行列
+				//CQuaternion rotq0;
+				//rotq0.RotationMatrix(rotmat0);
+				ChaVector3 newcamerapos = ChaMatrixInv(newmatView).GetTranslation();
+
+
+				//変化分を掛けて　位置を新しいmatViewに合わせる
+				ChaMatrix cameramat = cameramp->GetWorldMat();
+				//ChaMatrix newcameramat = cameramat * rotq0.MakeRotMatX();
+				ChaMatrix newcameramat = cameramat * rotmat0;
+				newcameramat.SetTranslation(newcamerapos);
+
+
+				//cameraの親のeNullのカメラアニメの新しい値を逆算
+				ChaMatrix newparentGlobalNodeMat = ChaMatrixInv(cameramp->GetLocalMat()) * newcameramat;
+				ChaMatrix newparentLocalNodeAnimMat = newparentGlobalNodeMat * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
+
+
+				enullmp->SetLocalMat(newparentLocalNodeAnimMat);
+				enullmp->SetWorldMat(newparentGlobalNodeMat);
+				enullmp->SetLimitedWM(newparentGlobalNodeMat);
+
+				cameramp->SetWorldMat(newcameramat);
+				cameramp->SetLimitedWM(newcameramat);
+
+				ChaVector3 neweul;
+				neweul = enullbone->CalcLocalEulXYZ(false, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
+				enullmp->SetLocalEul(neweul);
+			}
+		}
+
+
+
+	}
+
+
+	return camerabone->GetBoneNo();
+}
 
 int CModel::CameraRotateAxisDelta(
 	bool limitdegflag, CEditRange* erptr,

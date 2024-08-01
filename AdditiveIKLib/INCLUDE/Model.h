@@ -672,6 +672,8 @@ public:
 	int CameraDistDelta(CEditRange* erptr, float delta, bool lock2joint);
 	int CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, ChaMatrix newmatView);
 	int CameraAnimPasteCurrent(ChaMatrix newmatView);
+	int CameraAnimLock2Joint(CEditRange* erptr, CModel* srcmodel, int srcboneno);//s_editrange全範囲に対してウェイト1.0でLock2Joint処理. ジョイントのモーションにも対応
+
 
 	//2024/06/05その後
 	//IsCamera()==trueのボーンに関してもアンドゥ処理をすることによりUpdateCameramatFromENull()は不要になった　コメントアウト
