@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/08/02
-　AdditiveIK 1.0.0.29 RC2(リリース候補2)
+　AdditiveIK 1.0.0.29 RC3(リリース候補3)
 　　1.0.0.28からの変更点
 　　　カメラアニメを編集可能な条件を変更
 　　　　当初の仕様ではカメラアニメスイッチがカメラアニメ再生スイッチで　カメラグラフモードがカメラアニメ編集+再生スイッチだった
@@ -60,10 +60,18 @@ https://github.com/Ochakko/AdditiveIK
 　　　　新機能について追記
 　　　　一部仕様変更について追記
 
+
+　　　ショートムービー
+　　　　fbxカメラ基本編集機能の修正と確認
+　　　　https://youtu.be/rb1UI_p5Acc
+
+
 　RC2:
 　　カメラアニメ編集可能条件を変更(上述)
 　　0_AboutCameraAnim.docx修正
-　　
+　RC3:
+　　カメラアニメ編集機能をテストした際の動画リンクをREADME.mdのExplaining Movieの欄に追加
+　　README.mdのスクリーンショット１枚交換
 
 
 

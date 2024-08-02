@@ -27,8 +27,8 @@ Fig.4 Multiple Model (UnityAsset HQ Retro Farmhouseを読込. model:VRoid).<br>
 ![TopFig5](ScreenShots/SS_FlyingCity_4_2_W800.png "トップ絵5")<br>
 Fig.5 PlayFbxCameraAnim (UnityAsset TheHuntを読込. model:VRoid).<br>
 <br>
-![TopFig6](ScreenShots/AdditiveIK_To10028_TowerTop_1_Trim.png "トップ絵6")<br>
-Fig.6 (UnityAsset FantasyTownを読込 JAPANESE CITYのテクスチャを適用. model:VRoid).<br>
+![TopFig6](ScreenShots/SS_For10029/SS_YouTube_20240802_1080.png "トップ絵6")<br>
+Fig.6 (UnityAsset FantasyTownを読込 JAPANESE CITYのテクスチャ. 草：GrassAndPlants.  model:VRoid).<br>
 <br>
 <br>
 # 免責<br>
@@ -247,6 +247,8 @@ Smooth平滑化<br>
 [空の色は何色ですか？ 2024/06/17](https://youtu.be/0LkwVw9eubg "Usage example5")<br>
 
 [屋根の上に飛べますか？ 2024/06/20](https://youtu.be/YLJxziIqBsQ "Usage example6")<br>
+
+[fbxカメラ基本編集機能の修正と確認 2024/08/02](https://youtu.be/rb1UI_p5Acc "Usage example7")<br>
 <br>
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")
