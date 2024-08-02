@@ -2956,6 +2956,7 @@ void OnDSUpdate();
 static void OnDSMouseHereApeal();
 static void OnArrowKey();//DS関数でキーボードの矢印キーに対応
 
+//static bool IsEditingCameraAnim();
 static MOTINFO GetCameraMotInfo();
 static MOTINFO GetEditTargetMotInfo();
 static CBone* GetEditTargetOpeBone(int* pmotid, int* pframeleng);
@@ -36798,25 +36799,17 @@ int OnFrameToolWnd()
 			else {
 				AutoCameraTarget();
 
-				//if (s_cameramodel && (g_edittarget == EDITTARGET_CAMERA)) {
-				if (s_cameramodel && s_spcameramode.state) {//2024/08/02 カメラアニメスイッチがオンの時にカメラアニメも編集
-
-					//カメラアニメの選択フレームを編集して、カメラをターゲットジョイントに向ける
-					//int cameramotid = 0;
-					//int cameraframeleng = 100;
-					//CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);//EditMode依存の結果
-					//if (opebone && (cameramotid > 0)) {
-
-						//### EditModeに関わらず ### Lock2Jointを実行
-						if (s_camtargetflag) {
-							//always s_editrange全範囲に対してウェイト1.0でLock2Joint処理.ジョイントのモーションにも対応
-							s_editcameraflag = s_cameramodel->CameraAnimLock2Joint(&s_editrange, s_model, s_curboneno);
-						}
-						else {
-							//once applyframeに対してLock2Joint、applyframe以外はbrushウェイト分だけLock2Joint.applyframe時のジョイント位置を使用
-							s_editcameraflag = s_cameramodel->CameraAnimDiffRotMatView(&s_editrange, s_befLockMatView, s_matView);
-						}
-					//}
+				//2024/08/02
+				//Lock2Joint操作時には　カメラアニメオンまたはカメラグラフモードの場合に　カメラアニメを編集
+				if (s_cameramodel && (s_spcameramode.state || (g_edittarget == EDITTARGET_CAMERA))) {
+					if (s_camtargetflag) {
+						//always s_editrange全範囲に対してウェイト1.0でLock2Joint処理.ジョイントのモーションにも対応
+						s_editcameraflag = s_cameramodel->CameraAnimLock2Joint(&s_editrange, s_model, s_curboneno);
+					}
+					else {
+						//once applyframeに対してLock2Joint、applyframe以外はbrushウェイト分だけLock2Joint.applyframe時のジョイント位置を使用
+						s_editcameraflag = s_cameramodel->CameraAnimDiffRotMatView(&s_editrange, s_befLockMatView, s_matView);
+					}
 
 					s_cameramodel->GetCameraAnimParams(s_cameraframe,
 						g_camdist,
@@ -75094,9 +75087,9 @@ int OnCameraAnimPaste()
 	//現在のカメラ行列をカメラアニメにペーストする
 
 	if (s_cameramodel) {
-		//2024/08/01
-		//### EditModeに関わらず ###　カメラアニメがあればそのカレントフレームへペースト
-		if (s_spcameramode.state) {//2024/08/02
+		//2024/08/02
+		//カメラ履歴セレクト時には　カメラアニメスイッチオンまたはカメラグラフモードの場合に　カメラアニメにペースト
+		if (s_spcameramode.state || (g_edittarget == EDITTARGET_CAMERA)) {
 			s_editcameraflag = s_cameramodel->CameraAnimPasteCurrent(s_matView);
 		}
 
@@ -75146,4 +75139,37 @@ bool ChkEnableIK()
 
 	return true;
 }
+
+//bool IsEditingCameraAnim()
+//{
+//	if (!s_cameramodel) {
+//		return false;
+//	}
+//	
+//	int cameramotid = s_cameramodel->GetCameraMotionId();
+//	if (cameramotid <= 0) {
+//		return false;
+//	}
+//	MOTINFO camerami = s_cameramodel->GetMotInfo(cameramotid);
+//	int cameraframeleng = IntTime(camerami.frameleng);
+//	if (cameraframeleng <= 0) {
+//		return false;
+//	}
+//	CAMERANODE* cnptr = s_cameramodel->GetCAMERANODE(cameramotid);
+//	if (!cnptr) {
+//		return false;
+//	}
+//	if (!cnptr->pbone) {
+//		return false;
+//	}
+//
+//	if (s_spcameramode.state || (g_edittarget == EDITTARGET_CAMERA)) {
+//		//2024/08/02
+//		//カメラアニメスイッチがオンの場合　または　グラフモードがカメラモードの場合に　カメラアニメを編集する
+//		return true;
+//	}
+//	else {
+//		return false;
+//	}
+//}
 
