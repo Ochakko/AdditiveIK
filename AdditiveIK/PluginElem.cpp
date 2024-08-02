@@ -222,7 +222,11 @@
 //#define MB2VERSION 210027
 
 //2024/07/14 先頭に２を付加
-#define MB2VERSION 210028
+//#define MB2VERSION 210028
+
+//2024/08/02 先頭に２を付加
+#define MB2VERSION 210029
+
 
 CPluginElem::CPluginElem()
 {

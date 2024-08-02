@@ -19351,7 +19351,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.28\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.29\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -36791,6 +36791,7 @@ int OnFrameToolWnd()
 			int curmotid = s_model->GetCurrentMotID();
 			bool cameraanimflag = s_model->IsCameraMotion(curmotid);
 			if (cameraanimflag) {
+				//jointの位置はjointのモーションに依存するから
 				::MessageBox(s_3dwnd, L"カメラモーション以外を選択してから再試行してください.", L"CurrentMotion is Camera warning",
 					MB_OK | MB_ICONINFORMATION);
 			}
@@ -36798,14 +36799,15 @@ int OnFrameToolWnd()
 				AutoCameraTarget();
 
 				//if (s_cameramodel && (g_edittarget == EDITTARGET_CAMERA)) {
-				if (s_cameramodel) {
+				if (s_cameramodel && s_spcameramode.state) {//2024/08/02 カメラアニメスイッチがオンの時にカメラアニメも編集
+
 					//カメラアニメの選択フレームを編集して、カメラをターゲットジョイントに向ける
 					//int cameramotid = 0;
 					//int cameraframeleng = 100;
 					//CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);//EditMode依存の結果
 					//if (opebone && (cameramotid > 0)) {
 
-						//EditModeに関わらずLock2Jointを実行
+						//### EditModeに関わらず ### Lock2Jointを実行
 						if (s_camtargetflag) {
 							//always s_editrange全範囲に対してウェイト1.0でLock2Joint処理.ジョイントのモーションにも対応
 							s_editcameraflag = s_cameramodel->CameraAnimLock2Joint(&s_editrange, s_model, s_curboneno);
@@ -36824,10 +36826,9 @@ int OnFrameToolWnd()
 					ChaVector3 diffvec = g_camtargetpos - g_camEye;
 					float newcamdist = (float)ChaVector3LengthDbl(&diffvec);
 					ChangeCameraDist(newcamdist, false, false);
-
-					UpdateEditedEuler();
 				}
 
+				UpdateEditedEuler();
 				PrepairUndo();
 			}
 
@@ -40846,6 +40847,7 @@ int CreateSideMenuWnd()
 						int curmotid = s_model->GetCurrentMotID();
 						bool cameraanimflag = s_model->IsCameraMotion(curmotid);
 						if (cameraanimflag) {
+							//jointの位置はjointのモーションに依存するから
 							::MessageBox(s_3dwnd, L"カメラモーション以外を選択してから再試行してください.", L"CurrentMotion is Camera warning",
 								MB_OK | MB_ICONINFORMATION);
 
@@ -40878,6 +40880,7 @@ int CreateSideMenuWnd()
 					int curmotid = s_model->GetCurrentMotID();
 					bool cameraanimflag = s_model->IsCameraMotion(curmotid);
 					if (cameraanimflag) {
+						//jointの位置はjointのモーションに依存するから
 						::MessageBox(s_3dwnd, L"カメラモーション以外を選択してから再試行してください.", L"CurrentMotion is Camera warning",
 							MB_OK | MB_ICONINFORMATION);
 
@@ -75092,8 +75095,10 @@ int OnCameraAnimPaste()
 
 	if (s_cameramodel) {
 		//2024/08/01
-		//カメラアニメスイッチとグラフモードに関わらず　カメラアニメがあればそのカレントフレームへペースト
-		s_editcameraflag = s_cameramodel->CameraAnimPasteCurrent(s_matView);
+		//### EditModeに関わらず ###　カメラアニメがあればそのカレントフレームへペースト
+		if (s_spcameramode.state) {//2024/08/02
+			s_editcameraflag = s_cameramodel->CameraAnimPasteCurrent(s_matView);
+		}
 
 		//int cameramotid = 0;
 		//int cameraframeleng = 100;
