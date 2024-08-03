@@ -17127,6 +17127,7 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 
 	s_customrigbone = 0;
 	s_curboneno = -1;//2024/03/03
+	s_saveboneno = -1;//2024/08/03 RollBackCurBoneNo()で戻らないように初期化
 
 	//if (s_anglelimitdlg) {
 	//	s_underanglelimithscroll = 0;
@@ -17146,6 +17147,17 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		s_customrigdlg = 0;
 	}
 	s_oprigflag = 0;
+
+
+	if (s_sidemenu_sellock) {
+		//AlwaysLockにチェックを入れたままモデルを変えると
+		//カメラ距離が急に大きくなり上限値を越えてカメラターゲットが動かなくなることがあった
+		//モデル変更時にはAlwaysLockのチェックを外す
+		//この処理と上述のs_curboneno, s_savebonenoの初期化も必要
+		s_sidemenu_sellock->setValue(false, false);
+	}
+
+
 
 	//if (callbymenu == 1) {
 	//	if (s_model && (s_curmodelmenuindex >= 0) && s_chascene && (s_chascene->GetModelNum() != 0)) {
@@ -34724,44 +34736,52 @@ int ChangeCameraMode(int forcemode)
 {
 	s_savecameraanimmode = g_cameraanimmode;
 
-	if (forcemode == 0) {
-
-		//強制オフでは無い場合
-
-		if (s_spcameramode.state == false) {
-			//現在のスイッチがオフの場合
-			if (s_cameramodel) {
-				//カメラモデルが存在する場合　オンにする
-				g_cameraanimmode = 1;
-				s_spcameramode.state = true;
-			}
-			else {
-				//カメラモデルが存在しない場合
-				//何もしない　オンにしない
-			}
-		}
-		else {
-			//現在のスイッチがオンかつオプションもオンの場合　オフにする
-			g_cameraanimmode = 0;
-			s_spcameramode.state = false;
-		}
-	}
-	else if (forcemode == 1) {
-		//強制　オフ
-		g_cameraanimmode = 0;
-		s_spcameramode.state = false;
-	}
-	else if (forcemode == 2) {
-		//強制　オン
+	if (g_edittarget == EDITTARGET_CAMERA) {
+		//カメラグラフモードオンの場合には　カメラエディットオン＋カメラ再生オン
+		//よってカメラ再生オン
 		g_cameraanimmode = 1;
 		s_spcameramode.state = true;
 	}
 	else {
-		_ASSERT(0);
+		if (forcemode == 0) {
+
+			//強制オフでは無い場合
+
+			if (s_spcameramode.state == false) {
+				//現在のスイッチがオフの場合
+				if (s_cameramodel) {
+					//カメラモデルが存在する場合　オンにする
+					g_cameraanimmode = 1;
+					s_spcameramode.state = true;
+				}
+				else {
+					//カメラモデルが存在しない場合
+					//何もしない　オンにしない
+				}
+			}
+			else {
+				//現在のスイッチがオンかつオプションもオンの場合　オフにする
+				g_cameraanimmode = 0;
+				s_spcameramode.state = false;
+			}
+		}
+		else if (forcemode == 1) {
+			//強制　オフ
+			g_cameraanimmode = 0;
+			s_spcameramode.state = false;
+		}
+		else if (forcemode == 2) {
+			//強制　オン
+			g_cameraanimmode = 1;
+			s_spcameramode.state = true;
+		}
+		else {
+			_ASSERT(0);
+		}
+
+		PrepairUndo();//2024/06/06
 	}
-
-	PrepairUndo();//2024/06/06
-
+	
 	return 0;
 }
 
@@ -36104,6 +36124,11 @@ int OnFrameTimeLineWnd()
 
 
 		if (g_edittarget == EDITTARGET_CAMERA) {
+			//カメラグラフモードオンの場合には　カメラエディットオン＋カメラ再生オン
+			//よってカメラ再生オン
+			g_cameraanimmode = 1;
+			s_spcameramode.state = true;
+
 			PrepairUndo();//編集前のPrepairUndo
 		}
 
@@ -51052,7 +51077,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.29 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.30 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -51732,24 +51757,30 @@ int OnMouseMoveFunc()
 		cammv *= g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
 
 		if (g_edittarget != EDITTARGET_CAMERA) {
-			ChaMatrix invmatView;
-			invmatView = ChaMatrixInv(s_matView);
-			ChaVector3 camdirx, camdiry;
-			camdirx.SetParams(invmatView.data[MATI_11], invmatView.data[MATI_12], invmatView.data[MATI_13]);
-			camdiry.SetParams(invmatView.data[MATI_21], invmatView.data[MATI_22], invmatView.data[MATI_23]);
-			ChaVector3Normalize(&camdirx, &camdirx);
-			ChaVector3Normalize(&camdiry, &camdiry);
-			ChaVector3 movevec = camdirx * cammv.x + camdiry * cammv.y;
+			if (s_spcameramode.state) {
+				OutputToInfoWnd(INFOCOLOR_WARNING, L"### PlayingCameraAnim mode now. ###");
+				OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change to CameraEditMode or Off CameraAnimSwitch! ###");
+			}
+			else {
+				ChaMatrix invmatView;
+				invmatView = ChaMatrixInv(s_matView);
+				ChaVector3 camdirx, camdiry;
+				camdirx.SetParams(invmatView.data[MATI_11], invmatView.data[MATI_12], invmatView.data[MATI_13]);
+				camdiry.SetParams(invmatView.data[MATI_21], invmatView.data[MATI_22], invmatView.data[MATI_23]);
+				ChaVector3Normalize(&camdirx, &camdirx);
+				ChaVector3Normalize(&camdiry, &camdiry);
+				ChaVector3 movevec = camdirx * cammv.x + camdiry * cammv.y;
 
-			g_befcamEye = g_camEye;
-			g_befcamtargetpos = g_camtargetpos;
+				g_befcamEye = g_camEye;
+				g_befcamtargetpos = g_camtargetpos;
 
-			g_camEye = g_camEye + movevec;
-			g_camtargetpos = g_camtargetpos + movevec;
+				g_camEye = g_camEye + movevec;
+				g_camtargetpos = g_camtargetpos + movevec;
 
-			ChaVector3 diffv;
-			diffv = g_camtargetpos - g_camEye;
-			g_camdist = (float)ChaVector3LengthDbl(&diffv);
+				ChaVector3 diffv;
+				diffv = g_camtargetpos - g_camEye;
+				g_camdist = (float)ChaVector3LengthDbl(&diffv);
+			}
 		}
 		else {
 			int ikkind_translation = 1;
@@ -51810,68 +51841,74 @@ int OnMouseMoveFunc()
 		}
 
 		if (g_edittarget != EDITTARGET_CAMERA) {
-			ChaMatrix matview;
-			ChaVector3 weye, wat;
-			weye = g_camEye;
-			wat = g_camtargetpos;
-
-			ChaVector3 viewvec, upvec, rotaxisy, rotaxisxz;
-			viewvec = wat - weye;
-			ChaVector3Normalize(&viewvec, &viewvec);
-			upvec.SetParams(0.000001f, 1.0f, 0.0f);
-
-			float chkdot;
-			chkdot = ChaVector3Dot(&viewvec, &upvec);
-			if (fabs(chkdot) < 0.99965f) {
-				ChaVector3Cross(&rotaxisxz, (const ChaVector3*)&upvec, (const ChaVector3*)&viewvec);
-				ChaVector3Normalize(&rotaxisxz, &rotaxisxz);
-
-				ChaVector3Cross(&rotaxisy, (const ChaVector3*)&viewvec, (const ChaVector3*)&rotaxisxz);
-				ChaVector3Normalize(&rotaxisy, &rotaxisy);
-
-				if (s_model && (s_curboneno >= 0) && s_camtargetflag) {
-					CBone* curbone = s_model->GetBoneByID(s_curboneno);
-					_ASSERT(curbone);
-					if (curbone) {
-						g_befcamtargetpos = g_camtargetpos;
-						g_camtargetpos = curbone->GetChildWorld();
-					}
-					else {
-						s_curboneno = -1;
-					}
-				}
-
-				ChaMatrix befrotmat, rotmaty, rotmatxz, aftrotmat;
-				befrotmat.SetIdentity();//2023/02/12
-				aftrotmat.SetIdentity();//2023/02/12
-				rotmaty.SetIdentity();//2023/02/12
-				rotmatxz.SetIdentity();//2023/02/12
-				ChaMatrixTranslation(&befrotmat, -g_camtargetpos.x, -g_camtargetpos.y, -g_camtargetpos.z);
-				ChaMatrixTranslation(&aftrotmat, g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
-				ChaMatrixRotationAxis(&rotmaty, &rotaxisy, rotxz * (float)DEG2PAI);
-				ChaMatrixRotationAxis(&rotmatxz, &rotaxisxz, roty * (float)DEG2PAI);
-
-				ChaMatrix mat;
-				mat = befrotmat * rotmatxz * rotmaty * aftrotmat;
-				ChaVector3 neweye;
-				ChaVector3TransformCoord(&neweye, &weye, &mat);
-
-				g_befcamEye = g_camEye;
-				g_camEye = neweye;
-				//!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-				//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-
-				ChaVector3 diffv;
-				diffv = neweye - g_camtargetpos;
-				g_camdist = (float)ChaVector3LengthDbl(&diffv);
-
+			if (s_spcameramode.state) {
+				OutputToInfoWnd(INFOCOLOR_WARNING, L"### PlayingCameraAnim mode now. ###");
+				OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change to CameraEditMode or Off CameraAnimSwitch! ###");
 			}
 			else {
-				g_camEye = g_befcamEye;
-				g_camtargetpos = g_befcamtargetpos;
-			}
+				ChaMatrix matview;
+				ChaVector3 weye, wat;
+				weye = g_camEye;
+				wat = g_camtargetpos;
 
-			SetCamera3DFromEyePos();
+				ChaVector3 viewvec, upvec, rotaxisy, rotaxisxz;
+				viewvec = wat - weye;
+				ChaVector3Normalize(&viewvec, &viewvec);
+				upvec.SetParams(0.000001f, 1.0f, 0.0f);
+
+				float chkdot;
+				chkdot = ChaVector3Dot(&viewvec, &upvec);
+				if (fabs(chkdot) < 0.99965f) {
+					ChaVector3Cross(&rotaxisxz, (const ChaVector3*)&upvec, (const ChaVector3*)&viewvec);
+					ChaVector3Normalize(&rotaxisxz, &rotaxisxz);
+
+					ChaVector3Cross(&rotaxisy, (const ChaVector3*)&viewvec, (const ChaVector3*)&rotaxisxz);
+					ChaVector3Normalize(&rotaxisy, &rotaxisy);
+
+					if (s_model && (s_curboneno >= 0) && s_camtargetflag) {
+						CBone* curbone = s_model->GetBoneByID(s_curboneno);
+						_ASSERT(curbone);
+						if (curbone) {
+							g_befcamtargetpos = g_camtargetpos;
+							g_camtargetpos = curbone->GetChildWorld();
+						}
+						else {
+							s_curboneno = -1;
+						}
+					}
+
+					ChaMatrix befrotmat, rotmaty, rotmatxz, aftrotmat;
+					befrotmat.SetIdentity();//2023/02/12
+					aftrotmat.SetIdentity();//2023/02/12
+					rotmaty.SetIdentity();//2023/02/12
+					rotmatxz.SetIdentity();//2023/02/12
+					ChaMatrixTranslation(&befrotmat, -g_camtargetpos.x, -g_camtargetpos.y, -g_camtargetpos.z);
+					ChaMatrixTranslation(&aftrotmat, g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
+					ChaMatrixRotationAxis(&rotmaty, &rotaxisy, rotxz * (float)DEG2PAI);
+					ChaMatrixRotationAxis(&rotmatxz, &rotaxisxz, roty * (float)DEG2PAI);
+
+					ChaMatrix mat;
+					mat = befrotmat * rotmatxz * rotmaty * aftrotmat;
+					ChaVector3 neweye;
+					ChaVector3TransformCoord(&neweye, &weye, &mat);
+
+					g_befcamEye = g_camEye;
+					g_camEye = neweye;
+					//!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
+					//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
+
+					ChaVector3 diffv;
+					diffv = neweye - g_camtargetpos;
+					g_camdist = (float)ChaVector3LengthDbl(&diffv);
+
+				}
+				else {
+					g_camEye = g_befcamEye;
+					g_camtargetpos = g_befcamtargetpos;
+				}
+
+				SetCamera3DFromEyePos();
+			}
 		}
 		else {
 			if (s_model && (s_curboneno >= 0) && s_camtargetflag) {
@@ -51907,8 +51944,14 @@ int OnMouseMoveFunc()
 		deltadist *= g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
 
 		if (g_edittarget != EDITTARGET_CAMERA) {
-			float newcamdist = g_camdist + deltadist;
-			ChangeCameraDist(newcamdist, true, false);
+			if (s_spcameramode.state) {
+				OutputToInfoWnd(INFOCOLOR_WARNING, L"### PlayingCameraAnim mode now. ###");
+				OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change to CameraEditMode or Off CameraAnimSwitch! ###");
+			}
+			else {
+				float newcamdist = g_camdist + deltadist;
+				ChangeCameraDist(newcamdist, true, false);
+			}
 		}
 		else {
 			//int ikkind_translation = 1;
@@ -59494,7 +59537,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.29 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.30 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (s_model && s_chascene) {
