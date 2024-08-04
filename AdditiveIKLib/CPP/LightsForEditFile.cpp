@@ -277,16 +277,16 @@ int CLightsForEditFile::ReadLight(int slotindex, int lightcnt, XMLIOBUF* xmlbuf)
 
 	float r01, g01, b01;
 	r01 = (float)((double)tmpR255 / 255.0f);
-	r01 = max(0.0f, r01);
-	r01 = min(1.0f, r01);
+	r01 = fmax(0.0f, r01);
+	r01 = fmin(1.0f, r01);
 
 	g01 = (float)((double)tmpG255 / 255.0f);
-	g01 = max(0.0f, g01);
-	g01 = min(1.0f, g01);
+	g01 = fmax(0.0f, g01);
+	g01 = fmin(1.0f, g01);
 
 	b01 = (float)((double)tmpB255 / 255.0f);
-	b01 = max(0.0f, b01);
-	b01 = min(1.0f, b01);
+	b01 = fmax(0.0f, b01);
+	b01 = fmin(1.0f, b01);
 
 	float tmpscale = 1.0f;
 	int result2 = Read_Float(xmlbuf, "<Scale>", "</Scale>", &tmpscale);

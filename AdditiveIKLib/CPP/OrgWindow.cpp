@@ -699,8 +699,8 @@ namespace OrgWinGUI{
 			int yy0 = pos.y + MARGIN + AXIS_SIZE_Y;
 			int xx1 = pos.x + size.x - MARGIN - SCROLL_BAR_WIDTH - 1;
 			int yy1 = pos.y + size.y - MARGIN - SCROLL_BAR_WIDTH;
-			int x0 = xx0 + (int)((min(dragSelectTime1, dragSelectTime2) - showPos_time) * timeSize);
-			int x1 = xx0 + (int)((max(dragSelectTime1, dragSelectTime2) - showPos_time) * timeSize);
+			int x0 = xx0 + (int)((fmin(dragSelectTime1, dragSelectTime2) - showPos_time) * timeSize);
+			int x1 = xx0 + (int)((fmax(dragSelectTime1, dragSelectTime2) - showPos_time) * timeSize);
 			int y0 = yy0 + (min(dragSelectLine1, dragSelectLine2) - showPos_line) * (LABEL_SIZE_Y - 1) + 1;
 			int y1 = yy0 + (max(dragSelectLine1, dragSelectLine2) - showPos_line + 1) * (LABEL_SIZE_Y - 1) - 1;
 
@@ -1602,10 +1602,10 @@ namespace OrgWinGUI{
 
 			if (curshowTimeLength < maxTime) {
 				//showPos_time= max(0,min( _showPosTime, maxTime-showTimeLength));
-				newshowpostime = max(0, min(newshowpostime, maxTime - curshowTimeLength / 2.0));
+				newshowpostime = (double)(max(0, (int)(fmin(newshowpostime, maxTime - curshowTimeLength / 2.0))));
 			}
 			else {
-				newshowpostime = 0;
+				newshowpostime = 0.0;
 			}
 		}
 
@@ -1628,7 +1628,7 @@ namespace OrgWinGUI{
 			_currentTime = floor(_currentTime / timeSnapSize + 0.5)*timeSnapSize;
 		}
 
-		currentTime = min(max(_currentTime, 0), maxTime);
+		currentTime = fmin(fmax(_currentTime, 0), maxTime);
 		showPos_time = calcShowPosTime(currentTime);
 
 		//リスナーコール
@@ -1669,7 +1669,7 @@ namespace OrgWinGUI{
 
 			if (curshowTimeLength < maxTime) {
 				//showPos_time= max(0,min( _showPosTime, maxTime-showTimeLength));
-				newshowpostime = max(0, min(newshowpostime, maxTime - curshowTimeLength / 2.0));
+				newshowpostime = (double)(max(0, (int)(fmin(newshowpostime, maxTime - curshowTimeLength / 2.0))));
 			}
 			else {
 				newshowpostime = 0;
@@ -1692,7 +1692,7 @@ namespace OrgWinGUI{
 			_currentTime = floor(_currentTime / timeSnapSize + 0.5)*timeSnapSize;
 		}
 
-		currentTime = min(max(_currentTime, 0), maxTime);
+		currentTime = fmin(fmax(_currentTime, 0), maxTime);
 		showPos_time = calcShowPosTime(currentTime);
 
 		//リスナーコール

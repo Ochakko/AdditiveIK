@@ -3459,7 +3459,7 @@ int CModel::SetMotionFrame(double srcframe)
 		}
 	}
 
-	m_curmotinfo->curframe = max(0.0, min((m_curmotinfo->frameleng - 1.0), srcframe));
+	m_curmotinfo->curframe = fmax(0.0, fmin((m_curmotinfo->frameleng - 1.0), srcframe));
 
 	return 0;
 }
@@ -3467,7 +3467,7 @@ int CModel::SetMotionFrame(int srcmotid, double srcframe)
 {
 	MOTINFO* curmi = GetMotInfoPtr(srcmotid);
 	if (curmi) {
-		curmi->curframe = max(0.0, min((curmi->frameleng - 1.0), srcframe));
+		curmi->curframe = fmax(0.0, fmin((curmi->frameleng - 1.0), srcframe));
 	}
 	else {
 		if (GetNoBoneFlag()) {
@@ -4255,7 +4255,7 @@ int CModel::AdvanceTime( int onefps, CEditRange srcrange, int previewflag, doubl
 		rangeend = curmotinfo.frameleng - 1.0;
 	}
 
-	rangestart = max(1.0, rangestart);
+	rangestart = fmax(1.0, rangestart);
 
 
 	if( previewflag >= 0 ){
@@ -11958,8 +11958,8 @@ int CModel::CalcAxisAndRotForIKRotate(int limitdegflag,
 
 	float rotdot2, rotrad2;
 	rotdot2 = ChaVector3Dot(&vec0, &vec1);
-	rotdot2 = min(1.0f, rotdot2);
-	rotdot2 = max(-1.0f, rotdot2);
+	rotdot2 = fmin(1.0f, rotdot2);
+	rotdot2 = fmax(-1.0f, rotdot2);
 	rotrad2 = (float)acos(rotdot2);
 
 	*dstaxis = rotaxis2;
@@ -12048,8 +12048,8 @@ int CModel::CalcAxisAndRotForIKRotateVert(int limitdegflag,
 
 		float rotdot4;
 		rotdot4 = ChaVector3Dot(&vec0, &vec1);
-		rotdot4 = min(1.0f, rotdot4);
-		rotdot4 = max(-1.0f, rotdot4);
+		rotdot4 = fmin(1.0f, rotdot4);
+		rotdot4 = fmax(-1.0f, rotdot4);
 		rotrad4 = (float)acos(rotdot4);
 	}
 
@@ -12946,8 +12946,8 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 //
 //				double rotdot2, rotrad2;
 //				rotdot2 = ChaVector3DotDbl(&vec0, &vec1);
-//				rotdot2 = min(1.0f, rotdot2);
-//				rotdot2 = max(-1.0f, rotdot2);
+//				rotdot2 = fmin(1.0f, rotdot2);
+//				rotdot2 = fmax(-1.0f, rotdot2);
 //				rotrad2 = acos(rotdot2);
 //				rotrad2 *= currate;
 //				double firstframe = 0.0;
@@ -19303,15 +19303,15 @@ void CModel::ApplyPhysIkRec(bool limitdegflag)
 				double rectimestep;
 				rectimestep = srcmaxtime / (g_motionbrush_applyframe - g_motionbrush_startframe + 1);
 				currectime = (double)((int)(rectimestep * (curframe - g_motionbrush_startframe)));
-				currectime = (double)((int)min(currectime, (m_phyikrectime - 1.0)));
-				currectime = (double)((int)max(0.0, currectime));
+				currectime = (double)((int)fmin(currectime, (m_phyikrectime - 1.0)));
+				currectime = (double)((int)fmax(0.0, currectime));
 			}
 			else {
 				double rectimestep;
 				rectimestep = srcmaxtime / (g_motionbrush_endframe - g_motionbrush_applyframe + 1);
 				currectime = (double)((int)(m_phyikrectime - rectimestep * (curframe - g_motionbrush_applyframe)));
-				currectime = (double)((int)min(currectime, (m_phyikrectime - 1.0)));
-				currectime = (double)((int)max(0.0, currectime));
+				currectime = (double)((int)fmin(currectime, (m_phyikrectime - 1.0)));
+				currectime = (double)((int)fmax(0.0, currectime));
 			}
 
 			ApplyPhysIkRecReq(limitdegflag, GetTopBone(false), curframe, currectime);
@@ -19326,8 +19326,8 @@ void CModel::ApplyPhysIkRec(bool limitdegflag)
 			double rectimestep;
 			rectimestep = srcmaxtime / (g_motionbrush_endframe - g_motionbrush_startframe + 1.0);
 			currectime = (double)((int)(rectimestep * (curframe - g_motionbrush_startframe)));
-			currectime = (double)((int)min(currectime, (m_phyikrectime - 1.0)));
-			currectime = (double)((int)max(0.0, currectime));
+			currectime = (double)((int)fmin(currectime, (m_phyikrectime - 1.0)));
+			currectime = (double)((int)fmax(0.0, currectime));
 
 			ApplyPhysIkRecReq(limitdegflag, GetTopBone(false), curframe, currectime);
 
@@ -21492,7 +21492,7 @@ void CModel::SetCameraMotionFrame(int cameramotid, double srcframe)
 	SetCameraMotionId(cameramotid);
 	MOTINFO* miptr = GetMotInfoPtr(cameramotid);
 	if (miptr && miptr->cameramotion) {
-		double setframe = max(0.0, min(srcframe, (miptr->frameleng - 1.0)));
+		double setframe = fmax(0.0, fmin(srcframe, (miptr->frameleng - 1.0)));
 		miptr->curframe = setframe;
 	}
 	else {
@@ -22042,7 +22042,7 @@ void CModel::SetRenderSlotFrame(double srcframe)
 {
 	//RenderBoneMark()で　表示に合わせた剛体位置を表示するために使用
 	if (m_curmotinfo) {
-		m_curmotinfo->befframe = max(0.0, min((m_curmotinfo->frameleng - 1.0), srcframe));;
+		m_curmotinfo->befframe = fmax(0.0, fmin((m_curmotinfo->frameleng - 1.0), srcframe));;
 	}
 }
 double CModel::GetRenderSlotFrame()

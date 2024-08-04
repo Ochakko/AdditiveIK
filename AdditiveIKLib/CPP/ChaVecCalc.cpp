@@ -476,9 +476,9 @@ void ChaVector3::Normalize()
 
 void ChaVector3::Clamp(float srcmin, float srcmax)
 {
-	float tmpx = max(srcmin, min(srcmax, x));
-	float tmpy = max(srcmin, min(srcmax, y));
-	float tmpz = max(srcmin, min(srcmax, z));
+	float tmpx = fmax(srcmin, fmin(srcmax, x));
+	float tmpy = fmax(srcmin, fmin(srcmax, y));
+	float tmpz = fmax(srcmin, fmin(srcmax, z));
 	x = tmpx;
 	y = tmpy;
 	z = tmpz;
@@ -812,10 +812,10 @@ ChaVector4 ChaVector4::operator- () const { return *this * -1.0; }
 
 void ChaVector4::Clamp(float srcmin, float srcmax)
 {
-	float tmpx = max(srcmin, min(srcmax, x));
-	float tmpy = max(srcmin, min(srcmax, y));
-	float tmpz = max(srcmin, min(srcmax, z));
-	float tmpw = max(srcmin, min(srcmax, w));
+	float tmpx = fmax(srcmin, fmin(srcmax, x));
+	float tmpy = fmax(srcmin, fmin(srcmax, y));
+	float tmpz = fmax(srcmin, fmin(srcmax, z));
+	float tmpw = fmax(srcmin, fmin(srcmax, w));
 	x = tmpx;
 	y = tmpy;
 	z = tmpz;
@@ -823,17 +823,17 @@ void ChaVector4::Clamp(float srcmin, float srcmax)
 
 void ChaVector4::ClampHSV()
 {
-	x = min(360.0f, x);
-	x = max(0.0f, x);
+	x = fmin(360.0f, x);
+	x = fmax(0.0f, x);
 
-	y = min(1.0f, y);
-	y = max(0.0f, y);
+	y = fmin(1.0f, y);
+	y = fmax(0.0f, y);
 	
-	z = min(1.0f, z);
-	z = max(0.0f, z);
+	z = fmin(1.0f, z);
+	z = fmax(0.0f, z);
 
-	w = min(1.0f, w);
-	w = max(0.0f, w);
+	w = fmin(1.0f, w);
+	w = fmax(0.0f, w);
 }
 
 int ChaVector4::HSV_Add(ChaVector4 srcadd)
@@ -857,20 +857,20 @@ int ChaVector4::HSV_Add(ChaVector4 srcadd)
 			temphsv.x += 360.0f;
 		}
 	}
-	temphsv.x = min(360.0f, temphsv.x);
-	temphsv.x = max(0.0f, temphsv.x);
+	temphsv.x = fmin(360.0f, temphsv.x);
+	temphsv.x = fmax(0.0f, temphsv.x);
 
 	temphsv.y += srcadd.y;
-	temphsv.y = min(1.0f, temphsv.y);
-	temphsv.y = max(0.0f, temphsv.y);
+	temphsv.y = fmin(1.0f, temphsv.y);
+	temphsv.y = fmax(0.0f, temphsv.y);
 
 	temphsv.z += srcadd.z;
-	temphsv.z = min(1.0f, temphsv.z);
-	temphsv.z = max(0.0f, temphsv.z);
+	temphsv.z = fmin(1.0f, temphsv.z);
+	temphsv.z = fmax(0.0f, temphsv.z);
 
 	temphsv.w += srcadd.w;
-	temphsv.w = min(1.0f, temphsv.w);
-	temphsv.w = max(0.0f, temphsv.w);
+	temphsv.w = fmin(1.0f, temphsv.w);
+	temphsv.w = fmax(0.0f, temphsv.w);
 
 	ChaVector4 resultrgb = temphsv.HSV2RGB();
 	*this = resultrgb;
@@ -908,8 +908,8 @@ int ChaVector4::HSV_AddH(float addh)
 			temphsv.x += 360.0f;
 		}
 	}
-	temphsv.x = min(360.0f, temphsv.x);
-	temphsv.x = max(0.0f, temphsv.x);
+	temphsv.x = fmin(360.0f, temphsv.x);
+	temphsv.x = fmax(0.0f, temphsv.x);
 
 	ChaVector4 resultrgb = temphsv.HSV2RGB();
 	*this = resultrgb;
@@ -929,8 +929,8 @@ int ChaVector4::HSV_AddS(float adds)
 
 	ChaVector4 temphsv = RGB2HSV();
 	temphsv.y += adds;
-	temphsv.y = min(1.0f, temphsv.y);
-	temphsv.y = max(0.0f, temphsv.y);
+	temphsv.y = fmin(1.0f, temphsv.y);
+	temphsv.y = fmax(0.0f, temphsv.y);
 
 	ChaVector4 resultrgb = temphsv.HSV2RGB();
 	*this = resultrgb;
@@ -947,8 +947,8 @@ int ChaVector4::HSV_AddV(float addv)
 
 	ChaVector4 temphsv = RGB2HSV();
 	temphsv.z += addv;
-	temphsv.z = min(1.0f, temphsv.z);
-	temphsv.z = max(0.0f, temphsv.z);
+	temphsv.z = fmin(1.0f, temphsv.z);
+	temphsv.z = fmax(0.0f, temphsv.z);
 
 	ChaVector4 resultrgb = temphsv.HSV2RGB();
 	*this = resultrgb;

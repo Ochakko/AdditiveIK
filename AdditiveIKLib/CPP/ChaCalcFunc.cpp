@@ -763,8 +763,8 @@ bool ChaCalcFunc::CalcAxisAndRotForIKRotateAxis(CModel* srcmodel, int limitdegfl
 
 	float rotdot2, rotrad2;
 	rotdot2 = ChaVector3Dot(&vec0, &vec1);
-	rotdot2 = min(1.0f, rotdot2);
-	rotdot2 = max(-1.0f, rotdot2);
+	rotdot2 = fmin(1.0f, rotdot2);
+	rotdot2 = fmax(-1.0f, rotdot2);
 	rotrad2 = (float)acos(rotdot2);
 
 	*dstaxis = rotaxis2;
@@ -3031,10 +3031,10 @@ float ChaCalcFunc::LimitAngle(CBone* srcbone, enum tag_axiskind srckind, float s
 			//リミット付近でもIKが動くためには遊びの部分が必要
 
 			if (cmpvalupper > tmpanglelimit.upper[srckind]) {
-				newval = min(cmpvalupper, (float)(tmpanglelimit.upper[srckind] - EULLIMITPLAY));
+				newval = fmin(cmpvalupper, (float)(tmpanglelimit.upper[srckind] - EULLIMITPLAY));
 			}
 			if (cmpvallower < tmpanglelimit.lower[srckind]) {
-				newval = max(cmpvallower, (float)(tmpanglelimit.lower[srckind] + EULLIMITPLAY));
+				newval = fmax(cmpvallower, (float)(tmpanglelimit.lower[srckind] + EULLIMITPLAY));
 			}
 		}
 		else {

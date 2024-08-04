@@ -14615,7 +14615,7 @@ void CalcTotalBound()
 		fObjectRadius = 10.0f;
 	}
 
-	s_cammvstep = max(0.01f, min(500.0f, fObjectRadius));//2023/05/19
+	s_cammvstep = (float)fmax(0.01f, fmin(500.0f, fObjectRadius));//2023/05/19
 
 	//DbgOut(L"fbx : totalmb : r %f, center (%f, %f, %f)\r\n",
 	//	s_totalmb.r, s_totalmb.center.x, s_totalmb.center.y, s_totalmb.center.z);
@@ -14624,8 +14624,8 @@ void CalcTotalBound()
 	//	g_LightControl[i].SetRadius(fObjectRadius);
 
 
-	g_projnear = max(0.01f, min(10.0f, fObjectRadius * 0.01f));
-	g_initcamdist = max(0.1f, min(s_maxcamdist, fObjectRadius * 3.0f));
+	g_projnear = (float)fmax(0.01f, fmin(10.0f, fObjectRadius * 0.01f));
+	g_initcamdist = (float)fmax(0.1f, fmin(s_maxcamdist, fObjectRadius * 3.0f));
 	g_projfar = g_initcamdist * 100.0f;
 	//s_fAspectRatio = 1.0f;//ここでは更新しない
 	g_fovy = (float)(PI / 4);
@@ -15711,7 +15711,7 @@ int UpdateEditedEuler()
 
 
 				if (minfirstflag == 1) {
-					minval = min(cureul.z, min(cureul.x, cureul.y));
+					minval = (float)fmin(cureul.z, fmin(cureul.x, cureul.y));
 					minfirstflag = 0;
 				}
 				if (minval > cureul.x) {
@@ -15725,7 +15725,7 @@ int UpdateEditedEuler()
 				}
 
 				if (maxfirstflag == 1) {
-					maxval = max(cureul.z, max(cureul.x, cureul.y));
+					maxval = (float)fmax(cureul.z, fmax(cureul.x, cureul.y));
 					maxfirstflag = 0;
 				}
 				if (maxval < cureul.x) {
@@ -15990,7 +15990,7 @@ int refreshEulerGraph()
 
 
 					if (minfirstflag == 1) {
-						minval = min(cureul.z, min(cureul.x, cureul.y));
+						minval = (float)fmin(cureul.z, fmin(cureul.x, cureul.y));
 						minfirstflag = 0;
 					}
 					if (minval > cureul.x) {
@@ -16004,7 +16004,7 @@ int refreshEulerGraph()
 					}
 
 					if (maxfirstflag == 1) {
-						maxval = max(cureul.z, max(cureul.x, cureul.y));
+						maxval = (float)fmax(cureul.z, fmax(cureul.x, cureul.y));
 						maxfirstflag = 0;
 					}
 					if (maxval < cureul.x) {
@@ -16763,7 +16763,7 @@ int OnCameraMenu(bool dorefreshflag, int selindex, int saveundoflag)
 		camdir.SetParams(0.0f, 0.0f, 1.0f);
 		s_cameramodel->GetCameraProjParams(cameramotid, &g_projnear, &g_projfar, &g_fovy, &g_camEye, &camdir, &g_cameraupdir);
 
-		g_initcamdist = max(0.1f, min(s_maxcamdist, g_projfar));
+		g_initcamdist = (float)fmax(0.1f, fmin(s_maxcamdist, g_projfar));
 		g_camtargetpos = g_camEye + camdir * g_initcamdist;
 
 		ChangeCameraMode(2);//forcemode 反転をセット:0 強制オフ時:1 強制オン時:2
@@ -17835,7 +17835,7 @@ float CalcSelectScale()
 		modelr = 10.0;
 	}
 	
-	s_selectscale = max(0.01f, min(2.0f, (float)(modelr * 0.0020)));//2023/05/19
+	s_selectscale = (float)fmax(0.01f, fmin(2.0f, (float)(modelr * 0.0020)));//2023/05/19
 	if (s_oprigflag == 1) {
 		s_selectscale *= 0.125f;
 		//s_selectscale *= 0.50f;
@@ -27960,8 +27960,8 @@ int CreateMotionBrush(double srcstart, double srcend, bool onrefreshflag)
 
 				//if ((cpframe >= (int)g_motionbrush_startframe) && (cpframe <= (int)g_motionbrush_endframe)) {
 				cpvalue = *(tempvalue + cpframe);
-				cpvalue = min(1.0f, cpvalue);
-				cpvalue = max(-1.0f, cpvalue);
+				cpvalue = (float)fmin(1.0f, cpvalue);
+				cpvalue = (float)fmax(-1.0f, cpvalue);
 				//}
 				//else {
 				//	cpvalue = 0.0f;
@@ -30018,14 +30018,14 @@ int CreateLightsWnd()
 				COLORREF choosedcolor = s_lightscolorBox[lightindex3]->getColor();
 				float fr, fg, fb;
 				fr = (float)((double)GetRValue(choosedcolor) / 255.0);
-				fr = min(1.0f, fr);
-				fr = max(0.0f, fr);
+				fr = (float)fmin(1.0f, fr);
+				fr = (float)fmax(0.0f, fr);
 				fg = (float)((double)GetGValue(choosedcolor) / 255.0);
-				fg = min(1.0f, fg);
-				fg = max(0.0f, fg);
+				fg = (float)fmin(1.0f, fg);
+				fg = (float)fmax(0.0f, fg);
 				fb = (float)((double)GetBValue(choosedcolor) / 255.0);
-				fb = min(1.0f, fb);
-				fb = max(0.0f, fb);
+				fb = (float)fmin(1.0f, fb);
+				fb = (float)fmax(0.0f, fb);
 
 				g_lightDiffuse[g_lightSlot][lightindex3].SetParams(fr, fg, fb);
 				SetLightDirection();
@@ -37893,8 +37893,8 @@ int PasteMotionFunc(CModel* srcmodel, MOTINFO* curmi)
 			if (keynum == 0) {
 				double motleng;
 				motleng = curmi->frameleng - 1;
-				double srcendframe = min(motleng, startframe + (copyEndTime - copyStartTime));
-				srcendframe = max(srcendframe, 0.0);
+				double srcendframe = fmin(motleng, startframe + (copyEndTime - copyStartTime));
+				srcendframe = fmax(srcendframe, 0.0);
 				PasteMotionPointJustInTerm(srcmodel, curmi->motid, copyStartTime, copyEndTime, startframe, srcendframe);
 			}
 			else {
@@ -38245,8 +38245,8 @@ int PasteMotionPointJustInTerm(CModel* srcmodel, int curmotid,
 			srcframe = RoundingTime(srcjustframe);
 		}
 		double srcframe2;
-		//srcframe2 = min((srcframe + 1.0), RoundingTime(copyEndTime));//+1.0がナゾ　最初のフレームにペーストされない不具合
-		srcframe2 = min(srcframe, RoundingTime(copyEndTime));//2024/06/09 +1.0を取り除く
+		//srcframe2 = fmin((srcframe + 1.0), RoundingTime(copyEndTime));//+1.0がナゾ　最初のフレームにペーストされない不具合
+		srcframe2 = fmin(srcframe, RoundingTime(copyEndTime));//2024/06/09 +1.0を取り除く
 		double interpolaterate = (srcjustframe - srcframe);
 
 
@@ -38286,7 +38286,7 @@ int PasteMotionPointJustInTerm(CModel* srcmodel, int curmotid,
 		double srcframe;
 		srcframe = RoundingTime(srcjustframe);
 		double srcframe2;
-		srcframe2 = min((srcframe + 1.0), RoundingTime(copyEndTime));
+		srcframe2 = fmin((srcframe + 1.0), RoundingTime(copyEndTime));
 		double interpolaterate = (srcjustframe - srcframe);
 
 		vector<CPELEM2>::iterator itrcp;
@@ -38882,27 +38882,27 @@ int OnSpriteUndo()
 	if (s_model->ExistCurrentMotion()) {
 
 		if (g_edittarget != EDITTARGET_CAMERA) {
-			s_buttonselectstart = max(0.0, undomotid.startframe);
-			s_buttonselectstart = min(s_model->GetCurrentMaxFrame(), s_buttonselectstart);
+			s_buttonselectstart = fmax(0.0, undomotid.startframe);
+			s_buttonselectstart = fmin(s_model->GetCurrentMaxFrame(), s_buttonselectstart);
 
-			s_buttonselectend = max(0.0, undomotid.endframe);
-			s_buttonselectend = min(s_model->GetCurrentMaxFrame(), s_buttonselectend);
+			s_buttonselectend = fmax(0.0, undomotid.endframe);
+			s_buttonselectend = fmin(s_model->GetCurrentMaxFrame(), s_buttonselectend);
 		}
 		else if (s_cameramodel) {
 			MOTINFO camerami = s_cameramodel->GetMotInfo(s_cameramodel->GetCameraMotionId());
 			if (camerami.motid > 0) {
-				s_buttonselectstart = max(0.0, undomotid.startframe);
-				s_buttonselectstart = min(camerami.frameleng, s_buttonselectstart);
+				s_buttonselectstart = fmax(0.0, undomotid.startframe);
+				s_buttonselectstart = fmin(camerami.frameleng, s_buttonselectstart);
 
-				s_buttonselectend = max(0.0, undomotid.endframe);
-				s_buttonselectend = min(camerami.frameleng, s_buttonselectend);
+				s_buttonselectend = fmax(0.0, undomotid.endframe);
+				s_buttonselectend = fmin(camerami.frameleng, s_buttonselectend);
 			}
 			else {
-				s_buttonselectstart = max(0.0, undomotid.startframe);
-				s_buttonselectstart = min(s_model->GetCurrentMaxFrame(), s_buttonselectstart);
+				s_buttonselectstart = fmax(0.0, undomotid.startframe);
+				s_buttonselectstart = fmin(s_model->GetCurrentMaxFrame(), s_buttonselectstart);
 
-				s_buttonselectend = max(0.0, undomotid.endframe);
-				s_buttonselectend = min(s_model->GetCurrentMaxFrame(), s_buttonselectend);
+				s_buttonselectend = fmax(0.0, undomotid.endframe);
+				s_buttonselectend = fmin(s_model->GetCurrentMaxFrame(), s_buttonselectend);
 			}
 		}
 		g_applyrate = undomotid.applyrate;
@@ -47158,7 +47158,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 					//2024/02/08 選択ジョイントの位置の軌跡を表示する際に補間無しのGetWorldMatで済ませたいのでRoundingTimeしてキーの位置限定にする
 					int divnum;
 					divnum = min((int)renderleng, (REFPOSMAXNUM - 2));//選択フレーム長より多くは分割しない
-					double renderstep = max(1.0, (renderleng / (double)divnum));//renderstep = 0は無限ループになる
+					double renderstep = fmax(1.0, (renderleng / (double)divnum));//renderstep = 0は無限ループになる
 
 					bool addcurrentjointpos = false;
 					int refposindex = 0;
@@ -61625,8 +61625,8 @@ void ClampTimelineSelection()
 
 	//double newstart = min((curmi.frameleng - 1.0), max(1.0, s_buttonselectstart));
 	//double newend = min((curmi.frameleng - 1.0), max(newstart, s_buttonselectend));
-	double newstart = min((curmi.frameleng - 1.0), max(1.0, g_motionbrush_startframe));
-	double newend = min((curmi.frameleng - 1.0), max(newstart, g_motionbrush_endframe));
+	double newstart = fmin((curmi.frameleng - 1.0), fmax(1.0, g_motionbrush_startframe));
+	double newend = fmin((curmi.frameleng - 1.0), fmax(newstart, g_motionbrush_endframe));
 	double newnumframe = newend - newstart + 1.0;
 	double newapplyframe;
 	if (g_applyrate == 0.0) {
@@ -62456,8 +62456,8 @@ int SetShowPosTime()
 		s_editrange.GetRange(&selnum, &startframe, &endframe, &applyframe);
 
 		double curframe = applyframe;
-		double startedgeframe = max(1.0, (double)((int)(curframe - s_owpEulerGraph->getShowposWidth() / 2.0)));
-		//double startedgeframe = max(1.0, (double)((int)(curframe - s_owpEulerGraph->getShowposWidth())));
+		double startedgeframe = fmax(1.0, (double)((int)(curframe - s_owpEulerGraph->getShowposWidth() / 2.0)));
+		//double startedgeframe = fmax(1.0, (double)((int)(curframe - s_owpEulerGraph->getShowposWidth())));
 
 		//s_owpTimeline->setShowPosTime(curframe);
 		//s_owpLTimeline->setShowPosTime(curframe);
@@ -70295,14 +70295,14 @@ int CreateFogParamsDlg()
 			COLORREF choosedcolor = s_fogdistColor->getColor();
 			float fr, fg, fb;
 			fr = (float)((double)GetRValue(choosedcolor) / 255.0);
-			fr = min(1.0f, fr);
-			fr = max(0.0f, fr);
+			fr = (float)fmin(1.0f, fr);
+			fr = (float)fmax(0.0f, fr);
 			fg = (float)((double)GetGValue(choosedcolor) / 255.0);
-			fg = min(1.0f, fg);
-			fg = max(0.0f, fg);
+			fg = (float)fmin(1.0f, fg);
+			fg = (float)fmax(0.0f, fg);
 			fb = (float)((double)GetBValue(choosedcolor) / 255.0);
-			fb = min(1.0f, fb);
-			fb = max(0.0f, fb);
+			fb = (float)fmin(1.0f, fb);
+			fb = (float)fmax(0.0f, fb);
 
 			ChaVector4 setcol;
 			setcol.SetParams(fr, fg, fb, 1.0);
@@ -70313,14 +70313,14 @@ int CreateFogParamsDlg()
 			COLORREF choosedcolor = s_fogheightColor->getColor();
 			float fr, fg, fb;
 			fr = (float)((double)GetRValue(choosedcolor) / 255.0);
-			fr = min(1.0f, fr);
-			fr = max(0.0f, fr);
+			fr = (float)fmin(1.0f, fr);
+			fr = (float)fmax(0.0f, fr);
 			fg = (float)((double)GetGValue(choosedcolor) / 255.0);
-			fg = min(1.0f, fg);
-			fg = max(0.0f, fg);
+			fg = (float)fmin(1.0f, fg);
+			fg = (float)fmax(0.0f, fg);
 			fb = (float)((double)GetBValue(choosedcolor) / 255.0);
-			fb = min(1.0f, fb);
-			fb = max(0.0f, fb);
+			fb = (float)fmin(1.0f, fb);
+			fb = (float)fmax(0.0f, fb);
 
 			ChaVector4 setcol;
 			setcol.SetParams(fr, fg, fb, 1.0);
@@ -72146,7 +72146,7 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider)
 {
 	float savecamdist = g_camdist;
 
-	g_camdist = min(s_maxcamdist, newcamdist);//2024/06/04 最大値でクランプしてからtargetを再計算する
+	g_camdist = (float)fmin(s_maxcamdist, newcamdist);//2024/06/04 最大値でクランプしてからtargetを再計算する
 
 	if (g_camdist >= 0.01f) {//2022/10/29 0.0001では近づきすぎたときに固まるので0.01に変更
 		ChaVector3 camvec = g_camEye - g_camtargetpos;
@@ -72169,7 +72169,7 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider)
 		ChaVector3 camvec2 = g_camtargetpos - g_camEye;
 		ChaVector3Normalize(&camvec2, &camvec2);
 
-		float savedist3 = min(s_maxcamdist, (savecamdist * 3.0f));//2024/06/04
+		float savedist3 = (float)fmin(s_maxcamdist, (savecamdist * 3.0f));//2024/06/04
 
 		g_befcamEye = g_camEye;
 		g_befcamtargetpos = g_camtargetpos;

@@ -304,9 +304,9 @@ int CBtObject::CreateObject(bool limitdegflag, int srcmotid, double srcframe, CB
 
 	float h, r, z;
 	//max : boneleng 0 対策
-	r = max(0.0001f, curre->GetSphr());// * 0.95f;
-	h = max(0.0001f, curre->GetCylileng());// *0.70f;//!!!!!!!!!!!!!
-	z = max(0.0001f, curre->GetBoxz());
+	r = fmax(0.0001f, curre->GetSphr());// * 0.95f;
+	h = fmax(0.0001f, curre->GetCylileng());// *0.70f;//!!!!!!!!!!!!!
+	z = fmax(0.0001f, curre->GetBoxz());
 
 	//double lengrate = 1.0;
 	//double lengrate = 0.95;

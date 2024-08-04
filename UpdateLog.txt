@@ -2,6 +2,13 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/08/04
+　浮動小数に対してmin(), max()を呼び出していた部分を修正
+　　曖昧警告が出ることがあった.
+　　fmin(), fmax()を使うように修正.
+
+
+
 
 2024/08/03
 　カメラグラフモードにてAlwaysLockオンの状態でカレントモデルを変更した場合に
