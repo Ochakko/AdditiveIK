@@ -6,7 +6,7 @@ https://github.com/Ochakko/AdditiveIK
 　浮動小数に対してmin(), max()を呼び出していた部分を修正
 　　曖昧警告が出ることがあった.
 　　fmin(), fmax()を使うように修正.
-
+　　AdditiveIK/AdditiveIKのファイルとAdditiveIKLib/CPP以下のファイルとAdditiveIKLib/IINCLUDE/OrgWindow.hに対して修正
 
 
 

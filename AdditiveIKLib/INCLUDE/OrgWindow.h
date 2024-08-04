@@ -2432,7 +2432,7 @@ void s_dummyfunc()
 			return centerRate;
 		}
 		void setCenterRate(const double value){
-			centerRate= max(0.0, min(value,1.0));
+			centerRate= fmax(0.0, fmin(value,1.0));
 			if( parentWindow!=NULL ){
 				parentWindow->autoResizeAllParts();
 			}
@@ -5803,9 +5803,9 @@ void s_dummyfunc()
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
 		OWP_Slider( double _value=0.0, double _maxValue=1.0, double _minValue=0.0, int _labelheight = 20 ) : OrgWindowParts() {
-			maxValue= max(_minValue,_maxValue);
-			minValue= min(_minValue,_maxValue);
-			value= max(min(_value,maxValue),minValue);
+			maxValue= fmax(_minValue,_maxValue);
+			minValue= fmin(_minValue,_maxValue);
+			value= fmax(fmin(_value,maxValue),minValue);
 
 			drag=false;
 			isslider = true;//!!!!!!
@@ -6100,23 +6100,23 @@ void s_dummyfunc()
 			return maxValue;
 		}
 		void setMaxValue(double _maxValue){
-			maxValue= max(_maxValue,minValue);
-			value= min(value,maxValue);
+			maxValue= fmax(_maxValue,minValue);
+			value= fmin(value,maxValue);
 		}
 		//	Accessor : minValue
 		double getMinValue() const{
 			return minValue;
 		}
 		void setMinValue(double _minValue){
-			minValue= min(_minValue,maxValue);
-			value= max(value,minValue);
+			minValue= fmin(_minValue,maxValue);
+			value= fmax(value,minValue);
 		}
 		//	Accessor : value
 		double getValue() const{
 			return value;
 		}
 		void setValue(double _value, bool calllistener = true){
-			value= min(max(_value,minValue),maxValue);
+			value= fmin(fmax(_value,minValue),maxValue);
 
 			//リスナーコール
 			if((this->cursorListener!=NULL) && (calllistener == true)){
@@ -6870,7 +6870,7 @@ void s_dummyfunc()
 				//}
 				double newshowpostime;
 				if (wheeldelta > 0) {
-					newshowpostime = min((showPos_time + 1.0), maxTime);
+					newshowpostime = (double)((int)fmin((showPos_time + 1.0), maxTime));
 				}
 				else {
 					newshowpostime = max(0, (showPos_time - 1.0));
@@ -7016,8 +7016,8 @@ void s_dummyfunc()
 						for (int i = min(dragSelectLine1, dragSelectLine2);
 							(i <= max(dragSelectLine1, dragSelectLine2) && i < (signed int)lineData.size());
 							i++) {
-							lineData[i]->selectKey(min(dragSelectTime1, dragSelectTime2),
-								max(dragSelectTime1, dragSelectTime2));
+							lineData[i]->selectKey(fmin(dragSelectTime1, dragSelectTime2),
+								fmax(dragSelectTime1, dragSelectTime2));
 						}
 					}
 					//リスナーコール
@@ -7128,8 +7128,8 @@ void s_dummyfunc()
 
 						for (int i = min(dragSelectLine1, dragSelectLine2);
 							i <= max(dragSelectLine1, dragSelectLine2) && i < (signed int)lineData.size(); i++){
-							lineData[i]->selectKey(min(dragSelectTime1, dragSelectTime2),
-								max(dragSelectTime1, dragSelectTime2));
+							lineData[i]->selectKey(fmin(dragSelectTime1, dragSelectTime2),
+								fmax(dragSelectTime1, dragSelectTime2));
 						}
 					}
 					//リスナーコール
@@ -7237,8 +7237,8 @@ void s_dummyfunc()
 				selectClear(true);
 				for(int i=min(dragSelectLine1,dragSelectLine2);
 					i<=max(dragSelectLine1,dragSelectLine2) && i<(signed int)lineData.size(); i++){
-					lineData[i]->selectKey( min(dragSelectTime1,dragSelectTime2),
-											max(dragSelectTime1,dragSelectTime2) );
+					lineData[i]->selectKey( fmin(dragSelectTime1,dragSelectTime2),
+											fmax(dragSelectTime1,dragSelectTime2) );
 				}
 			}
 
@@ -7382,8 +7382,8 @@ void s_dummyfunc()
 			return maxTime;
 		}
 		void setMaxTime(double _maxTime){
-			maxTime= max(_maxTime,0);
-			currentTime= min(currentTime,maxTime);
+			maxTime= fmax(_maxTime,0);
+			currentTime= fmin(currentTime, maxTime);
 
 			//再描画要求
 			if( rewriteOnChange ){
@@ -7491,7 +7491,7 @@ void s_dummyfunc()
 			int y1= size.y-MARGIN-SCROLL_BAR_WIDTH+1;
 
 			if( showLineNum < (int)lineData.size() ){
-				showPos_line= max(0,min( _showPosLine ,(int)lineData.size()-showLineNum));
+				showPos_line= max(0,min(_showPosLine ,(int)lineData.size()-showLineNum));
 			}else{
 				showPos_line= 0;
 			}
@@ -9100,8 +9100,8 @@ void s_dummyfunc()
 
 						for (int i = min(dragSelectLine1, dragSelectLine2);
 							i <= max(dragSelectLine1, dragSelectLine2) && i < (signed int)lineData.size(); i++) {
-							lineData[i]->selectKey(min(dragSelectTime1, dragSelectTime2),
-								max(dragSelectTime1, dragSelectTime2));
+							lineData[i]->selectKey(fmin(dragSelectTime1, dragSelectTime2),
+								fmax(dragSelectTime1, dragSelectTime2));
 						}
 					}
 					//リスナーコール
@@ -9253,8 +9253,8 @@ void s_dummyfunc()
 
 				for (int i = min(dragSelectLine1, dragSelectLine2);
 				i <= max(dragSelectLine1, dragSelectLine2) && i < (signed int)lineData.size(); i++){
-				lineData[i]->selectKey(min(dragSelectTime1, dragSelectTime2),
-				max(dragSelectTime1, dragSelectTime2));
+				lineData[i]->selectKey(fmin(dragSelectTime1, dragSelectTime2),
+				fmax(dragSelectTime1, dragSelectTime2));
 				}
 				}
 				//リスナーコール
@@ -9466,10 +9466,10 @@ void s_dummyfunc()
 		{
 			double newshowpostime;
 			if (wheeldelta > 0) {
-				newshowpostime = min((showPos_time + 1.0), maxTime);
+				newshowpostime = (double)((int)fmin((showPos_time + 1.0), maxTime));
 			}
 			else {
-				newshowpostime = max(0, (showPos_time - 1.0));
+				newshowpostime = (double)((int)fmax(0, (showPos_time - 1.0)));
 			}
 			showPos_time = newshowpostime;
 
@@ -9545,8 +9545,8 @@ void s_dummyfunc()
 		void setMaxTime(double _maxTime) {
 			//maxTime = max(_maxTime, 0);
 			//currentTime = min(currentTime, maxTime);
-			maxTime = max(_maxTime, 1.0);
-			currentTime = max(1.0, min(currentTime, maxTime));
+			maxTime = fmax(_maxTime, 1.0);
+			currentTime = fmax(1.0, fmin(currentTime, maxTime));
 
 			//再描画要求
 			if (rewriteOnChange) {
@@ -11486,7 +11486,7 @@ void s_dummyfunc()
 
 			int showLineNum= (size.y-MARGIN*2)/(LABEL_SIZE_Y-1);
 			if( showLineNum < (int)lineData.size() ){
-				showPosLine= max(0,min( _showPosLine ,(int)lineData.size()-showLineNum));
+				showPosLine= max(0,min(_showPosLine ,(int)lineData.size()-showLineNum));
 			}else{
 				showPosLine= 0;
 			}
