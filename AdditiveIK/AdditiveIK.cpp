@@ -157,6 +157,16 @@ using namespace std;
 #define ANGLEDLGEDITLEN	256
 
 
+
+enum {//OnCameraAnimMouseMove()
+	CAMERAANIMEDIT_NONE,
+	CAMERAANIMEDIT_ROT,
+	CAMERAANIMEDIT_MV,
+	CAMERAANIMEDIT_DIST,
+	CAMERAANIMEDIT_TWIST,
+	CAMERAANIMEDIT_MAX
+};
+
 enum {
 	SPRIG_INACTIVE,
 	SPRIG_ACTIVE,
@@ -1026,6 +1036,7 @@ static ChaMatrix s_inimat;
 static double s_time = 0.0;
 //static double s_difftime = 0.0;
 static int s_ikkind = 0;
+static int s_cameraeditkind = 0;//2024/08/05
 
 //PICKRANGEを大きくするとジョイントではなく疑似ボーンドラッグまで可能になるが、マニピュレータのリングのpickが難しくなる
 #define PICKRANGE	16
@@ -6273,7 +6284,7 @@ void InitApp()
 	g_wallscrapingikflag = 0;
 
 	s_ikkind = 0;
-
+	s_cameraeditkind = CAMERAANIMEDIT_NONE;
 
 	//g_wmatDirectSetFlag = false;
 	g_limitdegflag = false;
@@ -11319,6 +11330,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		}
 
 
+		//s_cameraeditkind = CAMERAANIMEDIT_NONE;//コメントアウト：グラフ表示を保持するために初期化しない
+
 		if (s_curboneno >= 0) {
 			s_saveboneno = s_curboneno;
 		}
@@ -12074,7 +12087,6 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		//}
 		//ReleaseCapture();
 
-
 		{
 			int spacnt;
 			for (spacnt = 0; spacnt < SPR_CAM_MAX; spacnt++) {
@@ -12217,13 +12229,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		}
 		else {
 			if ((s_undoFlag == false) && (s_redoFlag == false)) {
-				if (s_oprigflag == 0) {
-					if (((s_ikkind == 0) || (s_ikkind == 1) || (s_ikkind == 2)) && (s_editcameraflag >= 0)) {//2024/06/16 ドリー編集も対象に
-						//if (s_cameramodel && (s_cameramodel->GetCameraMotionId() > 0)) {
-						if (s_cameramodel) {
-							ikdoneflag = true;
-						}
-					}
+				//if (((s_ikkind == 0) || (s_ikkind == 1) || (s_ikkind == 2)) && (s_editcameraflag >= 0)) {//2024/06/16 ドリー編集も対象に
+				if (s_cameramodel && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editmotionflag >= 0)) {//2024/08/05 s_cameraeditkind : OnCameraAnimMouseMove()呼び出し時のopekind
+					ikdoneflag = true;
 				}
 			}
 		}
@@ -12360,6 +12368,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		s_onragdollik = 0;
 
 
+		//s_cameraeditkind = CAMERAANIMEDIT_NONE;//コメントアウト：グラフ表示を保持するために初期化しない
+
 		//else {//2024/06/18 OnFrameToolWnd()に移動
 		//	s_pickinfo.buttonflag = 0;
 		//	s_ikcnt = 0;
@@ -12375,6 +12385,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			s_cancelRButtonDown = true;
 			return 0;
 		}
+
+		//s_cameraeditkind = CAMERAANIMEDIT_NONE;//コメントアウト：グラフ表示を保持するために初期化しない
 
 
 		//SetCapture(DXUTGetHWND());
@@ -15626,7 +15638,7 @@ int UpdateEditedEuler()
 
 	}
 	else {
-		s_owpEulerGraph->setInBlendShapeMode(false);
+		s_owpEulerGraph->setInBlendShapeMode(false);//false
 
 		int frameleng = 0;
 		int graphmotid = 0;
@@ -15666,6 +15678,19 @@ int UpdateEditedEuler()
 				befeul.SetParams(0.0f, 0.0f, 0.0f);
 			}
 
+
+			int graphkind = 0;
+			if ((s_ikkind == 0) || (s_cameraeditkind == CAMERAANIMEDIT_ROT) || (s_cameraeditkind == CAMERAANIMEDIT_TWIST)) {//回転
+				graphkind = 0;
+			}
+			else if ((s_ikkind == 1) || (s_cameraeditkind == CAMERAANIMEDIT_MV) || (s_cameraeditkind == CAMERAANIMEDIT_DIST)) {//移動
+				graphkind = 1;
+			}
+			else if (s_ikkind == 2) {//スケール
+				graphkind = 2;
+			}
+
+
 			for (curtime = startframe; curtime <= endframe; curtime++) {
 				const WCHAR* wbonename = opebone->GetWBoneName();
 				ChaVector3 orgeul;
@@ -15677,14 +15702,14 @@ int UpdateEditedEuler()
 
 				CMotionPoint* curmp = opebone->GetMotionPoint(graphmotid, (double)curtime);
 				if (curmp) {
-					if (s_ikkind == 0) {//回転
+					if (graphkind == 0) {//回転
 						//opebone->GetWorldMat(curmi->motid, (double)curtime, 0, &cureul);
 						cureul = opebone->GetLocalEul(g_limitdegflag, graphmotid, (double)curtime, 0);
 					}
-					else if (s_ikkind == 1) {//移動
+					else if (graphkind == 1) {//移動
 						cureul = opebone->CalcLocalTraAnim(g_limitdegflag, graphmotid, (double)curtime);
 					}
-					else if (s_ikkind == 2) {//スケール
+					else if (graphkind == 2) {//スケール
 						cureul = opebone->CalcLocalScaleAnim(g_limitdegflag, graphmotid, (double)curtime);
 					}
 				}
@@ -15740,7 +15765,7 @@ int UpdateEditedEuler()
 
 			}
 
-			s_owpEulerGraph->setEulMinMax(s_ikkind, minval, maxval);
+			s_owpEulerGraph->setEulMinMax(graphkind, minval, maxval);
 
 			if (g_motionbrush_value) {
 
@@ -15941,6 +15966,19 @@ int refreshEulerGraph()
 				if (ret) {
 					befeul.SetParams(0.0f, 0.0f, 0.0f);
 				}
+
+
+				int graphkind = 0;
+				if ((s_ikkind == 0) || (s_cameraeditkind == CAMERAANIMEDIT_ROT) || (s_cameraeditkind == CAMERAANIMEDIT_TWIST)) {//回転
+					graphkind = 0;
+				}
+				else if ((s_ikkind == 1) || (s_cameraeditkind == CAMERAANIMEDIT_MV) || (s_cameraeditkind == CAMERAANIMEDIT_DIST)) {//移動
+					graphkind = 1;
+				}
+				else if (s_ikkind == 2) {//スケール
+					graphkind = 2;
+				}
+
 				for (curtime = 0; curtime < frameleng; curtime++) {
 					const WCHAR* wbonename = opebone->GetWBoneName();
 					ChaVector3 orgeul;
@@ -15952,16 +15990,16 @@ int refreshEulerGraph()
 
 					CMotionPoint* curmp = opebone->GetMotionPoint(graphmotid, (double)curtime);
 					if (curmp) {
-						if (s_ikkind == 0) {//回転
+						if (graphkind == 0) {//回転
 							//opebone->GetWorldMat(curmi->motid, (double)curtime, 0, &cureul);
 							cureul = opebone->GetLocalEul(g_limitdegflag,
 								graphmotid, (double)curtime, 0);
 						}
-						else if (s_ikkind == 1) {//移動
+						else if (graphkind == 1) {//移動
 							cureul = opebone->CalcLocalTraAnim(g_limitdegflag,
 								graphmotid, (double)curtime);
 						}
-						else if (s_ikkind == 2) {//スケール
+						else if (graphkind == 2) {//スケール
 							cureul = opebone->CalcLocalScaleAnim(g_limitdegflag,
 								graphmotid, (double)curtime);
 						}
@@ -16019,7 +16057,7 @@ int refreshEulerGraph()
 
 				}
 
-				s_owpEulerGraph->setEulMinMax(s_ikkind, minval, maxval);
+				s_owpEulerGraph->setEulMinMax(graphkind, minval, maxval);
 
 				if (g_motionbrush_value) {
 
@@ -39241,7 +39279,7 @@ int InitPluginMenu()
 }
 
 
-bool UnderDragOperation_L()
+bool UnderDragOperation_L()//左ドラッグ中かどうか
 {
 
 	if (s_twistcameraFlag) {
@@ -51640,7 +51678,22 @@ int OnMouseMoveFunc()
 						}
 					}
 					else if (g_edittarget == EDITTARGET_CAMERA) {
-						OnCameraAnimMouseMove(s_ikkind, s_pickinfo.buttonflag, deltax);
+						switch (s_ikkind) {
+						case 0:
+							s_cameraeditkind = CAMERAANIMEDIT_ROT;
+							break;
+						case 1:
+							s_cameraeditkind = CAMERAANIMEDIT_MV;
+							break;
+						case 2:
+							s_cameraeditkind = CAMERAANIMEDIT_DIST;
+							break;
+						default:
+							_ASSERT(0);
+							s_cameraeditkind = CAMERAANIMEDIT_ROT;
+							break;
+						}
+						OnCameraAnimMouseMove(s_cameraeditkind, s_pickinfo.buttonflag, deltax);
 					}
 					s_befdeltax = deltax;
 
@@ -51724,8 +51777,22 @@ int OnMouseMoveFunc()
 						}
 					}
 					else if (g_edittarget == EDITTARGET_CAMERA) {
-						//OutputToInfoWnd(INFOCOLOR_INFO, L"AdditiveIK.cpp : MouseMoveFunc 5");
-						OnCameraAnimMouseMove(s_ikkind, buttonflagForIkFunc, deltax);
+						switch (s_ikkind) {
+						case 0:
+							s_cameraeditkind = CAMERAANIMEDIT_ROT;
+							break;
+						case 1:
+							s_cameraeditkind = CAMERAANIMEDIT_MV;
+							break;
+						case 2:
+							s_cameraeditkind = CAMERAANIMEDIT_DIST;
+							break;
+						default:
+							_ASSERT(0);
+							s_cameraeditkind = CAMERAANIMEDIT_ROT;
+							break;
+						}
+						OnCameraAnimMouseMove(s_cameraeditkind, buttonflagForIkFunc, deltax);
 					}
 
 					s_befdeltax = deltax;
@@ -51783,9 +51850,8 @@ int OnMouseMoveFunc()
 			}
 		}
 		else {
-			int ikkind_translation = 1;
-			OnCameraAnimMouseMove(ikkind_translation, PICK_X, cammv.x);
-			OnCameraAnimMouseMove(ikkind_translation, PICK_Y, cammv.y);
+			OnCameraAnimMouseMove(CAMERAANIMEDIT_MV, PICK_X, cammv.x);
+			OnCameraAnimMouseMove(CAMERAANIMEDIT_MV, PICK_Y, cammv.y);
 		}
 
 		SetCamera3DFromEyePos();
@@ -51804,23 +51870,36 @@ int OnMouseMoveFunc()
 			deltax *= 0.250f;
 		}
 
+		if (g_edittarget != EDITTARGET_CAMERA) {
+			if (s_spcameramode.state) {
+				OutputToInfoWnd(INFOCOLOR_WARNING, L"### PlayingCameraAnim mode now. ###");
+				OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change to CameraEditMode or Off CameraAnimSwitch! ###");
+			}
+			else {
+				ChaVector3 twistaxis;
+				CQuaternion twistq;
+				twistaxis = g_camtargetpos - g_camEye;
+				ChaVector3Normalize(&twistaxis, &twistaxis);
+				twistq.SetAxisAndRot(twistaxis, deltax);
+				ChaVector3 newupvec;
+				twistq.Rotate(&newupvec, g_cameraupdir);
+				ChaVector3Normalize(&newupvec, &newupvec);
+				g_cameraupdir = newupvec;
 
-		ChaVector3 twistaxis;
-		CQuaternion twistq;
-		twistaxis = g_camtargetpos - g_camEye;
-		ChaVector3Normalize(&twistaxis, &twistaxis);
-		twistq.SetAxisAndRot(twistaxis, deltax);
-		ChaVector3 newupvec;
-		twistq.Rotate(&newupvec, g_cameraupdir);
-		ChaVector3Normalize(&newupvec, &newupvec);
-		g_cameraupdir = newupvec;
+				g_befcamEye = g_camEye;
+				ChaVector3 diffv;
+				diffv = g_camEye - g_camtargetpos;
+				g_camdist = (float)ChaVector3LengthDbl(&diffv);
 
-		g_befcamEye = g_camEye;
-		ChaVector3 diffv;
-		diffv = g_camEye - g_camtargetpos;
-		g_camdist = (float)ChaVector3LengthDbl(&diffv);
-
-		SetCamera3DFromEyePos();
+				SetCamera3DFromEyePos();
+			}
+		}
+		else {
+			//##################################
+			//g_edittarget == EDITTARGET_CAMERA
+			//##################################
+			OnCameraAnimMouseMove(CAMERAANIMEDIT_TWIST, PICK_Z, deltax);
+		}
 	}
 	else if (s_pickinfo.buttonflag == PICK_CAMROT) {
 
@@ -51922,10 +52001,8 @@ int OnMouseMoveFunc()
 					s_curboneno = -1;
 				}
 			}
-
-			int ikkind_rotation = 0;
-			OnCameraAnimMouseMove(ikkind_rotation, PICK_Y, rotxz);
-			OnCameraAnimMouseMove(ikkind_rotation, PICK_X, -roty);
+			OnCameraAnimMouseMove(CAMERAANIMEDIT_ROT, PICK_Y, rotxz);
+			OnCameraAnimMouseMove(CAMERAANIMEDIT_ROT, PICK_X, -roty);
 		}
 	}
 	else if (s_pickinfo.buttonflag == PICK_CAMDIST) {
@@ -51961,8 +52038,7 @@ int OnMouseMoveFunc()
 			//camaradist操作は　カメラが回転していく場合には　回転に応じてカメラ位置を動かす必要がある
 			//よってZ方向の移動ではうまくいかないことが多かった
 			//CameraDist操作専用の関数を呼び出す
-			int ikkind_scale = 2;//2024/07/30
-			OnCameraAnimMouseMove(ikkind_scale, PICK_Z, deltadist);//2024/07/30
+			OnCameraAnimMouseMove(CAMERAANIMEDIT_DIST, PICK_Z, deltadist);//2024/07/30
 		}
 
 	}
@@ -75071,7 +75147,7 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 	if (s_cameramodel && opebone0) {
 
 		bool doneflag = false;
-		if (opekind == 0) {
+		if (opekind == CAMERAANIMEDIT_ROT) {
 			s_editcameraflag = s_cameramodel->CameraRotateAxisDelta(
 				g_limitdegflag,
 				&s_editrange, pickxyz,
@@ -75079,13 +75155,13 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 
 			doneflag = true;
 		}
-		else if (opekind == 1) {
+		else if (opekind == CAMERAANIMEDIT_MV) {
 			s_editcameraflag = s_cameramodel->CameraTranslateAxisDelta(
 				&s_editrange, pickxyz - PICK_X, deltax, s_matView);
 
 			doneflag = true;
 		}
-		else if (opekind == 2) {
+		else if (opekind == CAMERAANIMEDIT_DIST) {
 			//s_editcameraflag = s_cameramodel->CameraTranslateAxisDelta(
 			//	&s_editrange, PICK_Z - PICK_X, deltax, s_matView);
 
@@ -75097,6 +75173,11 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 			g_camdist += deltax;
 
 			//OutputToInfoWnd(INFOCOLOR_INFO, L"deltax %f, g_camdist %f", deltax, g_camdist);
+			doneflag = true;
+		}
+		else if (opekind == CAMERAANIMEDIT_TWIST) {
+			s_editcameraflag = s_cameramodel->CameraTwistDelta(&s_editrange, deltax);
+
 			doneflag = true;
 		}
 
@@ -75117,6 +75198,8 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 			ChaVector3 diffvec = g_camtargetpos - g_camEye;
 			float newcamdist = (float)ChaVector3LengthDbl(&diffvec);
 			ChangeCameraDist(newcamdist, false, false);
+
+			UpdateEditedEuler();//twist時には右ドラッグなのでLBUTTONUPメッセージでのUpdateEditedEuler()が呼ばれない.ここで呼ぶことに.
 		}
 	}
 	//SetCamera3DFromEyePos();
@@ -75133,28 +75216,18 @@ int OnCameraAnimPaste()
 		//2024/08/02
 		//カメラ履歴セレクト時には　カメラアニメスイッチオンまたはカメラグラフモードの場合に　カメラアニメにペースト
 		if (s_spcameramode.state || (g_edittarget == EDITTARGET_CAMERA)) {
-			s_editcameraflag = s_cameramodel->CameraAnimPasteCurrent(s_matView);
+			int cameramotid = s_cameramodel->GetCameraMotionId();
+			MOTINFO camerami = s_cameramodel->GetMotInfo(cameramotid);
+			if (camerami.motid > 0) {
+				double curframe = RoundingTime(camerami.curframe);
+				s_editcameraflag = s_cameramodel->CameraAnimPaste(curframe, s_matView);
+
+
+				UpdateEditedEuler();
+				PrepairUndo();
+			}
 		}
-
-		//int cameramotid = 0;
-		//int cameraframeleng = 100;
-		//CBone* opebone = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);//結果はグラフモード依存
-		//if (opebone && (cameramotid > 0)) {
-		//	s_editcameraflag = s_cameramodel->CameraAnimPasteCurrent(cameramotid, s_cameramodel->GetCurrentFrame(), s_matView);
-		//}
-
-		//s_cameramodel->GetCameraAnimParams(s_cameraframe,
-		//	g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir,
-		//	0, g_cameraInheritMode);//g_camdist
-		//
-		//ChaVector3 diffvec = g_camtargetpos - g_camEye;
-		//float newcamdist = (float)ChaVector3LengthDbl(&diffvec);
-		//ChangeCameraDist(newcamdist, false, false);
-
-		UpdateEditedEuler();
 	}
-
-	PrepairUndo();
 
 	return 0;
 }

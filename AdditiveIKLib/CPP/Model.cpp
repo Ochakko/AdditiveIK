@@ -15665,7 +15665,75 @@ int CModel::CameraDistDelta(CEditRange* erptr, float delta, bool lock2joint) {
 	return camerabone->GetBoneNo();
 }
 
-int CModel::CameraAnimPasteCurrent(ChaMatrix newmatView)
+int CModel::CameraTwistDelta(CEditRange* erptr, float delta) {
+
+	if (!erptr) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	ChaCalcFunc chacalcfunc;
+
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int cameramotid = GetCameraMotionId();
+	MOTINFO camerami = GetMotInfo(cameramotid);
+	if (camerami.motid <= 0) {
+		return 0;
+	}
+	int curframeleng = IntTime(camerami.frameleng);
+
+
+	CBone* camerabone = nullptr;
+	CBone* enullbone = nullptr;
+	CAMERANODE* cnptr = GetCAMERANODE(cameramotid);
+	if (cnptr && cnptr->pbone && cnptr->pbone->GetParent(false)) {
+		camerabone = cnptr->pbone;
+		enullbone = cnptr->pbone->GetParent(false);
+	}
+	else {
+		_ASSERT(0);
+		return 0;
+	}
+
+	int keynum;
+	double startframe, endframe, applyframe;
+	erptr->GetRange(&keynum, &startframe, &endframe, &applyframe);
+
+	ChaVector3 savetargetpos = g_camtargetpos;
+
+	double curframe;
+	for (curframe = startframe; curframe <= endframe; curframe += 1.0) {
+
+		double changerate;
+		changerate = (double)(*(g_motionbrush_value + (int)curframe));
+		double deltatwist = (double)delta * changerate;
+
+		ChaVector3 tmpcamEye, tmpcamtarget, tmpcamupdir;
+		GetCameraAnimParams(cameramotid, RoundingTime(curframe), g_camdist,
+			&tmpcamEye, &tmpcamtarget, &tmpcamupdir, 0, g_cameraInheritMode);//g_camdist
+
+		ChaVector3 twistaxis;
+		CQuaternion twistq;
+		twistaxis = tmpcamtarget - tmpcamEye;
+		ChaVector3Normalize(&twistaxis, &twistaxis);
+		twistq.SetAxisAndRot(twistaxis, deltatwist);
+		ChaVector3 newupvec;
+		twistq.Rotate(&newupvec, tmpcamupdir);
+		ChaVector3Normalize(&newupvec, &newupvec);
+
+		ChaMatrix newmatView;
+		newmatView.MakeLookAt(tmpcamEye, tmpcamtarget, newupvec);
+
+		CameraAnimPaste(curframe, newmatView);
+	}
+
+	return camerabone->GetBoneNo();
+}
+
+
+int CModel::CameraAnimPaste(double curframe, ChaMatrix newmatView)
 {
 	ChaCalcFunc chacalcfunc;
 
@@ -15693,7 +15761,7 @@ int CModel::CameraAnimPasteCurrent(ChaMatrix newmatView)
 	}
 
 
-	double curframe = RoundingTime(camerami.curframe);
+	//double curframe = RoundingTime(camerami.curframe);//引数に
 
 	CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
 	if (enullmp) {
