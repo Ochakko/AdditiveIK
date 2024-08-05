@@ -31,7 +31,7 @@ public:
 
 	int SetDollyElem(
 		int srcdollyelemindex, OrgWinGUI::OrgWindow* parwnd, OrgWinGUI::OWP_Separator* parentsp,
-		DOLLYELEM srcdollyelem);
+		DOLLYELEM2 srcdollyelem);
 	int AddParts(OrgWinGUI::OWP_Separator* parentsp);
 	int SetEventFunc(CDollyHistoryDlg2* srcdlg);
 
@@ -85,8 +85,10 @@ public:
 		return m_createdflag;
 	};
 
-	int LoadDollyHistory(std::vector<DOLLYELEM>& vecdolly);
-	int SetNames(std::vector<DOLLYELEM>& copyhistory);
+	int LoadDollyHistory(std::vector<DOLLYELEM2>& vecdolly);
+	int LoadDollyHistory_ver1(std::vector<DOLLYELEM2>& vecdolly);
+	int LoadDollyHistory_ver2(std::vector<DOLLYELEM2>& vecdolly);
+	int SetNames(std::vector<DOLLYELEM2>& copyhistory);
 
 	int OnDelete(int delid);
 	int OnRadio(int radioid, bool pasteflag);
@@ -107,10 +109,10 @@ private:
 	int EditParamsToDlg();
 
 
-	DOLLYELEM GetFirstValidElem();
-	DOLLYELEM GetCheckedElem();
+	DOLLYELEM2 GetFirstValidElem();
+	DOLLYELEM2 GetCheckedElem();
 
-	int SetDollyElem2Camera(DOLLYELEM srcelem, bool pasteflag);
+	int SetDollyElem2Camera(DOLLYELEM2 srcelem, bool pasteflag);
 
 	int OnGetDolly();
 	int OnSetDolly(bool pasteflag);
@@ -131,12 +133,21 @@ private:
 	bool m_createdflag;
 	bool m_visible;
 	//size_t m_namenum;//m_dollyhistory.size()を使う
-	std::vector<DOLLYELEM> m_dollyhistory;
+	std::vector<DOLLYELEM2> m_dollyhistory;
 	std::vector<CDollyHistoryOWPElem*> m_owpelemvec;
 
 	ChaVector3 m_camerapos;
 	ChaVector3 m_targetpos;
 	WCHAR m_comment[HISTORYCOMMENTLEN];
+
+
+	ChaVector3 m_upvec;
+	//#########################################################################
+	//m_upvecはエディットボックス編集しない
+	//LoadDollyHistory_ver2()で読み込まれる
+	//OnGet()と　OnRadio()から呼ばれるSetDollyElem2Camera()で取得した値をそのまま使う
+	//#########################################################################
+
 
 	int (*m_UpdateFunc)();
 	int (*m_PasteFunc)();

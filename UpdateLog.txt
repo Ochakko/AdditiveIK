@@ -2,12 +2,26 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2024/08/05
+　カメラドリー履歴にカメラupvec情報を追加
+　　昔の履歴のupvecはY軸として扱う
+　　新しい履歴のupvecは数値としては編集せず(数値として直感的ではないため)に画面の状態を保存して復元する
+　　つまり、GUIはそのままでカメラのupvecに対応
+
+
+　ヒント
+　　カメラのupvec編集はカメラ回転アイコンを右ドラッグ
+　　カメラ回転アイコンを右ダブルクリックでupvecリセット
+
+
+
+
 2024/08/04
 　浮動小数に対してmin(), max()を呼び出していた部分を修正
 　　曖昧警告が出ることがあった.
 　　fmin(), fmax()を使うように修正.
 　　AdditiveIK/AdditiveIKのファイルとAdditiveIKLib/CPP以下のファイルとAdditiveIKLib/IINCLUDE/OrgWindow.hに対して修正
-
 
 
 2024/08/03

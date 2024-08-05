@@ -37609,7 +37609,7 @@ int CreateDollyHistoryDlg()
 {
 	//dollyhistorydlg2の作成は位置とサイズが決まってg_mainhwndがセットされた後で
 	s_dollyhistorydlg2.SetUpdateFunc(UpdateCameraPosAndTarget, OnCameraAnimPaste);
-	std::vector<DOLLYELEM> vecdolly;
+	std::vector<DOLLYELEM2> vecdolly;
 	vecdolly.clear();
 	//s_dollyhistorydlg2.SetOnShow(true);//2024/02/27 ダイアログを出したときにカメラが動いてしまうのを防止
 	s_dollyhistorydlg2.LoadDollyHistory(vecdolly);

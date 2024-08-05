@@ -137,5 +137,34 @@ typedef struct tag_dollyelem
 	};
 }DOLLYELEM;
 
+typedef struct tag_dollyelem2
+{
+	DOLLYELEM elem1;
+	ChaVector3 upvec;
+	bool noupvecflag;
+
+	bool operator< (const tag_dollyelem2& right) const {
+		LONG lRet = CompareFileTime(&(elem1.filetime), &(right.elem1.filetime));
+		if (lRet < 0) {
+			return true;
+		}
+		else if (lRet > 0) {
+			return false;
+		}
+		else {
+			return (std::wstring(elem1.wfilename) < std::wstring(right.elem1.wfilename));
+		}
+	};
+
+	void Init() {
+		elem1.Init();
+		upvec.SetParams(0.0f, 1.0f, 0.0f);
+		noupvecflag = false;
+	};
+
+	tag_dollyelem2() {
+		Init();
+	};
+}DOLLYELEM2;
 
 #endif
