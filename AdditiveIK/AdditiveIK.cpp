@@ -72,6 +72,7 @@
 #include <CopyHistoryDlg2.h>
 #include <DollyHistoryDlg2.h>
 #include <RigidParamsDlg.h>
+#include <DispLimitsDlg.h>
 #include <CpInfoDlg2.h>
 
 #include <math.h>
@@ -960,6 +961,7 @@ static CCopyHistoryDlg2 s_copyhistorydlg2;
 static CDollyHistoryDlg2 s_dollyhistorydlg2;
 
 static CRigidParamsDlg s_rigidparamsdlg;
+static CDispLimitsDlg s_displimitsdlg;
 
 static bool s_undercpinfodlg2;
 static CCpInfoDlg2 s_cpinfodlg2;
@@ -1202,51 +1204,6 @@ static OWP_Slider* s_dmpanimLSlider = 0;
 static OWP_Label* s_dmpanimAlabel = 0;
 static OWP_Slider* s_dmpanimASlider = 0;
 static OWP_Button* s_dmpanimB = 0;
-
-static OrgWindow* s_displimitsWnd = 0;
-static OWP_CheckBoxA* s_lightsChk = 0;
-static OWP_Separator* s_lightssp = 0;
-static OWP_Slider* s_lightsSlider = 0;
-static OWP_Separator* s_threadssp = 0;
-static OWP_Label* s_threadsLabel = 0;
-static OWP_Slider* s_threadsSlider = 0;
-static OWP_CheckBoxA* s_highRpmChk = 0;
-static OWP_Separator* s_bonemarksp = 0;
-static OWP_CheckBoxA* s_bonemarkChk = 0;
-static OWP_Slider* s_bonemarkSlider = 0;
-static OWP_Separator* s_rigidmarksp = 0;
-static OWP_CheckBoxA* s_rigidmarkChk = 0;
-static OWP_Slider* s_rigidmarkSlider = 0;
-static OWP_Separator* s_rigmarksp = 0;
-static OWP_Label* s_rigmarkLabel = 0;
-static OWP_Slider* s_rigmarkSlider = 0;
-static OWP_Separator* s_refpossp = 0;
-static OWP_Label* s_refposLabel = 0;
-static OWP_Slider* s_refposSlider = 0;
-static OWP_Separator* s_iklevelssp = 0;
-static OWP_Label* s_iklevelsLabel = 0;
-static OWP_ComboBoxA* s_iklevelsCombo = 0;
-static OWP_Separator* s_axiskindsp = 0;
-static OWP_Label* s_axiskindLabel = 0;
-static OWP_ComboBoxA* s_axiskindCombo = 0;
-static OWP_Separator* s_uvsetsp = 0;
-static OWP_Label* s_uvsetLabel = 0;
-static OWP_ComboBoxA* s_uvsetCombo = 0;
-static OWP_Separator* s_dispsp1 = 0;
-static OWP_CheckBoxA* s_x180Chk = 0;
-static OWP_CheckBoxA* s_rottraChk = 0;
-static OWP_Separator* s_dispsp2 = 0;
-static OWP_CheckBoxA* s_dofChk = 0;
-static OWP_CheckBoxA* s_bloomChk = 0;
-static OWP_Separator* s_dispsp3 = 0;
-static OWP_CheckBoxA* s_alphaChk = 0;
-static OWP_CheckBoxA* s_zcmpChk = 0;
-static OWP_Separator* s_dispsp4 = 0;
-static OWP_CheckBoxA* s_freefpsChk = 0;
-static OWP_CheckBoxA* s_skydispChk = 0;
-static OWP_Label* s_dispspacerLabel001 = 0;
-static OWP_Label* s_dispspacerLabel002 = 0;
-static OWP_Label* s_dispspacerLabel003 = 0;
 
 
 static OrgWindow* s_lightsWnd = 0;
@@ -2304,7 +2261,6 @@ static bool s_constrefreshFlag = false;//s_spconstrefreshボタン用
 //static bool s_filternodlg = false;
 static bool s_delmodelFlag = false;
 static bool s_delallmodelFlag = false;
-static bool s_changeupdatethreadsFlag = false;
 static bool s_newmotFlag = false;
 static bool s_delcurmotFlag = false;
 static bool s_jumpinterpolateFlag = false;
@@ -2923,6 +2879,8 @@ ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わら�
 //#####################
 
 //Dlgからのメニューオフセットはcoef.hに
+//// (95)はCDispLimitsDlgをトリガーとする呼び出し用に確保
+//#define MENUOFFSET_DISPLIMITSDLG		(95)
 //// (96)はCRigidParamsDlgをトリガーとする呼び出し用に確保
 //#define MENUOFFSET_RIGIDPARAMSDLG		(96)
 //// (97)はCpInfoDlg2をトリガーとするCopyMotionFunc()呼び出し用に確保
@@ -3375,8 +3333,6 @@ static int ConvDir2PolarCoord(float srcdirx, float srcdiry, float srcdirz, float
 static int ConvPolarCoord2Dir(float srcxzdeg, float srcydeg, float* dstdirx, float* dstdiry, float* dstdirz);
 
 
-static int CreateGUIDlgDispParams();
-static int DispParams2Dlg();
 //static int CreateGUIDlgBrushes();
 static int Brushes2Dlg(HWND hDlgWnd);
 static int CreateGUIDlgBullet();
@@ -4326,8 +4282,6 @@ INT WINAPI wWinMain(
 
 	CreateLightsWnd();
 	
-	CreateGUIDlgDispParams();
-	//CreateGUIDlgBrushes();
 	CreateGUIDlgBullet();
 	CreateGUIDlgLOD();
 	
@@ -4656,6 +4610,7 @@ int CheckResolution()
 		s_copyhistorydlg2.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_dollyhistorydlg2.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_rigidparamsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+		s_displimitsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 	}
 
 	return 0;
@@ -4682,7 +4637,7 @@ void InitApp()
 		//SetPosAndSize()が呼ばれてg_mainhwndがセットされた後で作成する
 	}
 	s_rigidparamsdlg.InitParams();
-
+	s_displimitsdlg.InitParams();
 
 	s_undercpinfodlg2 = false;
 	s_cpinfodlg2.InitParams();
@@ -5251,54 +5206,6 @@ void InitApp()
 			//s_metalcoeflabel[objno] = 0;//+1は見出しの分
 			//s_lightscalelabel[objno] = 0;//+1は見出しの分
 		}
-	}
-
-
-	{
-		s_displimitsWnd = 0;
-		s_lightsChk = 0;
-		s_lightssp = 0;
-		s_lightsSlider = 0;
-		s_threadssp = 0;
-		s_threadsLabel = 0;
-		s_threadsSlider = 0;
-		s_highRpmChk = 0;
-		s_bonemarksp = 0;
-		s_bonemarkChk = 0;
-		s_bonemarkSlider = 0;
-		s_rigidmarksp = 0;
-		s_rigidmarkChk = 0;
-		s_rigidmarkSlider = 0;
-		s_rigmarksp = 0;
-		s_rigmarkLabel = 0;
-		s_rigmarkSlider = 0;
-		s_refpossp = 0;
-		s_refposLabel = 0;
-		s_refposSlider = 0;
-		s_iklevelssp = 0;
-		s_iklevelsLabel = 0;
-		s_iklevelsCombo = 0;
-		s_axiskindsp = 0;
-		s_axiskindLabel = 0;
-		s_axiskindCombo = 0;
-		s_uvsetsp = 0;
-		s_uvsetLabel = 0;
-		s_uvsetCombo = 0;
-		s_dispsp1 = 0;
-		s_x180Chk = 0;
-		s_rottraChk = 0;
-		s_dispsp2 = 0;
-		s_dofChk = 0;
-		s_bloomChk = 0;
-		s_dispsp3 = 0;
-		s_alphaChk = 0;
-		s_zcmpChk = 0;
-		s_dispsp4 = 0;
-		s_freefpsChk = 0;
-		s_skydispChk = 0;
-		s_dispspacerLabel001 = 0;
-		s_dispspacerLabel002 = 0;
-		s_dispspacerLabel003 = 0;
 	}
 
 	{
@@ -6381,7 +6288,6 @@ void InitApp()
 	s_timelineshowposFlag = false;
 	s_prevrangeFlag = false;
 	s_nextrangeFlag = false;
-	s_changeupdatethreadsFlag = false;
 	s_newmotFlag = false;
 	s_delcurmotFlag = false;
 	s_calclimitedwmState = 0;
@@ -7276,6 +7182,7 @@ void OnDestroyDevice()
 	s_copyhistorydlg2.DestroyObjs();
 	s_dollyhistorydlg2.DestroyObjs();
 	s_rigidparamsdlg.DestroyObjs();
+	s_displimitsdlg.DestroyObjs();
 	s_cpinfodlg2.DestroyObjs();
 
 
@@ -7714,187 +7621,6 @@ void OnDestroyDevice()
 		s_dmpanimWnd = 0;
 	}
 
-
-
-	{//displimitsWnd
-		if (s_lightsChk) {
-			delete s_lightsChk;
-			s_lightsChk = 0;
-		}
-		if (s_lightssp) {
-			delete s_lightssp;
-			s_lightssp = 0;
-		}
-		if (s_lightsSlider) {
-			delete s_lightsSlider;
-			s_lightsSlider = 0;
-		}
-		if (s_threadssp) {
-			delete s_threadssp;
-			s_threadssp = 0;
-		}
-		if (s_threadsLabel) {
-			delete s_threadsLabel;
-			s_threadsLabel = 0;
-		}
-		if (s_threadsSlider) {
-			delete s_threadsSlider;
-			s_threadsSlider = 0;
-		}
-		if (s_highRpmChk) {
-			delete s_highRpmChk;
-			s_highRpmChk = 0;
-		}
-		if (s_bonemarksp) {
-			delete s_bonemarksp;
-			s_bonemarksp = 0;
-		}
-		if (s_bonemarkChk) {
-			delete s_bonemarkChk;
-			s_bonemarkChk = 0;
-		}
-		if (s_bonemarkSlider) {
-			delete s_bonemarkSlider;
-			s_bonemarkSlider = 0;
-		}
-		if (s_rigidmarksp) {
-			delete s_rigidmarksp;
-			s_rigidmarksp = 0;
-		}
-		if (s_rigidmarkChk) {
-			delete s_rigidmarkChk;
-			s_rigidmarkChk = 0;
-		}
-		if (s_rigidmarkSlider) {
-			delete s_rigidmarkSlider;
-			s_rigidmarkSlider = 0;
-		}
-		if (s_rigmarksp) {
-			delete s_rigmarksp;
-			s_rigmarksp = 0;
-		}
-		if (s_rigmarkLabel) {
-			delete s_rigmarkLabel;
-			s_rigmarkLabel = 0;
-		}
-		if (s_rigmarkSlider) {
-			delete s_rigmarkSlider;
-			s_rigmarkSlider = 0;
-		}
-		if (s_refpossp) {
-			delete s_refpossp;
-			s_refpossp = 0;
-		}
-		if (s_refposLabel) {
-			delete s_refposLabel;
-			s_refposLabel = 0;
-		}
-		if (s_refposSlider) {
-			delete s_refposSlider;
-			s_refposSlider = 0;
-		}
-		if (s_iklevelssp) {
-			delete s_iklevelssp;
-			s_iklevelssp = 0;
-		}
-		if (s_iklevelsLabel) {
-			delete s_iklevelsLabel;
-			s_iklevelsLabel = 0;
-		}
-		if (s_iklevelsCombo) {
-			delete s_iklevelsCombo;
-			s_iklevelsCombo = 0;
-		}
-		if (s_axiskindsp) {
-			delete s_axiskindsp;
-			s_axiskindsp = 0;
-		}
-		if (s_axiskindLabel) {
-			delete s_axiskindLabel;
-			s_axiskindLabel = 0;
-		}
-		if (s_axiskindCombo) {
-			delete s_axiskindCombo;
-			s_axiskindCombo = 0;
-		}
-		if (s_uvsetsp) {
-			delete s_uvsetsp;
-			s_uvsetsp = 0;
-		}
-		if (s_uvsetLabel) {
-			delete s_uvsetLabel;
-			s_uvsetLabel = 0;
-		}
-		if (s_uvsetCombo) {
-			delete s_uvsetCombo;
-			s_uvsetCombo = 0;
-		}
-		if (s_dispsp1) {
-			delete s_dispsp1;
-			s_dispsp1 = 0;
-		}
-		if (s_x180Chk) {
-			delete s_x180Chk;
-			s_x180Chk = 0;
-		}
-		if (s_rottraChk) {
-			delete s_rottraChk;
-			s_rottraChk = 0;
-		}
-		if (s_dispsp2) {
-			delete s_dispsp2;
-			s_dispsp2 = 0;
-		}
-		if (s_dofChk) {
-			delete s_dofChk;
-			s_dofChk = 0;
-		}
-		if (s_bloomChk) {
-			delete s_bloomChk;
-			s_bloomChk = 0;
-		}
-		if (s_dispsp3) {
-			delete s_dispsp3;
-			s_dispsp3 = 0;
-		}
-		if (s_alphaChk) {
-			delete s_alphaChk;
-			s_alphaChk = 0;
-		}
-		if (s_zcmpChk) {
-			delete s_zcmpChk;
-			s_zcmpChk = 0;
-		}
-		if (s_dispsp4) {
-			delete s_dispsp4;
-			s_dispsp4 = 0;
-		}
-		if (s_freefpsChk) {
-			delete s_freefpsChk;
-			s_freefpsChk = 0;
-		}
-		if (s_skydispChk) {
-			delete s_skydispChk;
-			s_skydispChk = 0;
-		}
-		if (s_dispspacerLabel001) {
-			delete s_dispspacerLabel001;
-			s_dispspacerLabel001 = 0;
-		}
-		if (s_dispspacerLabel002) {
-			delete s_dispspacerLabel002;
-			s_dispspacerLabel002 = 0;
-		}
-		if (s_dispspacerLabel003) {
-			delete s_dispspacerLabel003;
-			s_dispspacerLabel003 = 0;
-		}
-
-		if (s_displimitsWnd) {
-			delete s_displimitsWnd;
-			s_displimitsWnd = 0;
-		}
-	}
 
 	{
 		if (s_lightsslotsp) {
@@ -28243,485 +27969,6 @@ int RollBackEditRange(int prevrangeFlag, int nextrangeFlag)
 }
 
 
-int CreateGUIDlgDispParams()
-{
-	if (s_displimitsWnd) {
-		_ASSERT(0);
-		return 0;//作成済
-	}
-
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-	s_displimitsWnd = new OrgWindow(
-		0,
-		_T("DispAndLimitsDlg"),		//ウィンドウクラス名
-		GetModuleHandle(NULL),	//インスタンスハンドル
-		WindowPos(windowposx, s_sidemenuheight),
-		WindowSize(s_sidewidth, s_sideheight),		//サイズ
-		_T("DispAndLimitsDlg"),	//タイトル
-		g_mainhwnd,	//親ウィンドウハンドル
-		false,					//表示・非表示状態
-		//70, 50, 70,				//カラー
-		0, 0, 0,				//カラー
-		true,					//閉じられるか否か
-		true);					//サイズ変更の可否
-
-	int labelheight;
-	if (g_4kresolution) {
-		labelheight = 28;
-	}
-	else {
-		labelheight = 20;
-	}
-
-	if (s_displimitsWnd) {
-		double rate1 = 0.350;
-		double rate50 = 0.50;
-
-		s_lightssp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
-		if (!s_lightssp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lightsChk = new OWP_CheckBoxA(L"Enable Lights", (g_lightflag != 0), labelheight, false);
-		if (!s_lightsChk) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lightsSlider = new OWP_Slider((double)g_fLightScale, 10.0, 0.0, labelheight);
-		if (!s_lightsSlider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_threadssp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
-		if (!s_threadssp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_threadsLabel = new OWP_Label(L"Update Threads", labelheight);
-		if (!s_threadsLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_threadsSlider = new OWP_Slider((double)g_UpdateMatrixThreads, 8.0, 1.0, labelheight);
-		if (!s_threadsSlider) {
-			_ASSERT(0);
-			abort();
-		}
-
-		s_highRpmChk = new OWP_CheckBoxA(L"Hight RPM", g_HighRpmMode, labelheight, false);
-		if (!s_highRpmChk) {
-			_ASSERT(0);
-			abort();
-		}
-
-		s_bonemarksp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
-		if (!s_bonemarksp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bonemarkChk = new OWP_CheckBoxA(L"BoneMark", (g_bonemarkflag != 0), labelheight, false);
-		if (!s_bonemarkChk) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bonemarkSlider = new OWP_Slider((double)g_bonemark_bright, 1.0, 0.0, labelheight);
-		if (!s_bonemarkSlider) {
-			_ASSERT(0);
-			abort();
-		}
-
-		s_rigidmarksp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
-		if (!s_rigidmarksp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_rigidmarkChk = new OWP_CheckBoxA(L"RigidMark", (g_rigidmarkflag != 0), labelheight, false);
-		if (!s_rigidmarkChk) {
-			_ASSERT(0);
-			abort();
-		}
-		s_rigidmarkSlider = new OWP_Slider((double)g_rigidmark_alpha, 1.0, 0.0, labelheight);
-		if (!s_rigidmarkSlider) {
-			_ASSERT(0);
-			abort();
-		}
-
-		s_rigmarksp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
-		if (!s_rigmarksp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_rigmarkLabel = new OWP_Label(L"RigMark", labelheight);
-		if (!s_rigmarkLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_rigmarkSlider = new OWP_Slider((double)g_rigmark_alpha, 1.0, 0.0, labelheight);
-		if (!s_rigmarkSlider) {
-			_ASSERT(0);
-			abort();
-		}
-
-		s_refpossp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
-		if (!s_refpossp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_refposLabel = new OWP_Label(L"RefPosAlpha", labelheight);
-		if (!s_refposLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_refposSlider = new OWP_Slider((double)g_refalpha, 100.0, 0.0, labelheight);
-		if (!s_refposSlider) {
-			_ASSERT(0);
-			abort();
-		}
-
-		s_iklevelssp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
-		if (!s_iklevelssp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_iklevelsLabel = new OWP_Label(L"IK Levels", labelheight);
-		if (!s_iklevelsLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_iklevelsCombo = new OWP_ComboBoxA(L"IKLEVELS", labelheight);//g_iklevel:1,15
-		if (!s_iklevelsCombo) {
-			_ASSERT(0);
-			abort();
-		}
-		int levelnum = 15;
-		int levelno;
-		for (levelno = 1; levelno <= levelnum; levelno++) {
-			char combostr[256] = { 0 };
-			sprintf_s(combostr, 256, "%02d", levelno);
-			s_iklevelsCombo->addString(combostr);
-		}
-
-
-		s_axiskindsp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
-		if (!s_axiskindsp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_axiskindLabel = new OWP_Label(L"Axis Kind", labelheight);
-		if (!s_axiskindLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_axiskindCombo = new OWP_ComboBoxA(L"AXISKIND", labelheight);//g_boneaxis:CURRENT,PARENT,GLOBAL,BINDPOSE
-		if (!s_axiskindCombo) {
-			_ASSERT(0);
-			abort();
-		}
-		s_axiskindCombo->addString("Current");
-		s_axiskindCombo->addString("Parent");
-		s_axiskindCombo->addString("Global");
-		s_axiskindCombo->addString("BindPose");
-
-
-		s_uvsetsp = new OWP_Separator(s_displimitsWnd, true, rate1, true);
-		if (!s_uvsetsp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_uvsetLabel = new OWP_Label(L"UV Set", labelheight);
-		if (!s_uvsetLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_uvsetCombo = new OWP_ComboBoxA(L"UVSET", labelheight);//g_uvset:UVSet0, UVSet1
-		if (!s_uvsetCombo) {
-			_ASSERT(0);
-			abort();
-		}
-		s_uvsetCombo->addString("UV Set0");
-		s_uvsetCombo->addString("UV Set1");
-
-		s_dispsp1 = new OWP_Separator(s_displimitsWnd, true, rate50, true);
-		if (!s_dispsp1) {
-			_ASSERT(0);
-			abort();
-		}
-		s_x180Chk = new OWP_CheckBoxA(L"Modify Euler X180", g_x180flag, labelheight, false);
-		if (!s_x180Chk) {
-			_ASSERT(0);
-			abort();
-		}
-		s_rottraChk = new OWP_CheckBoxA(L"Rotate Translation", g_rotatetanim, labelheight, false);
-		if (!s_rottraChk) {
-			_ASSERT(0);
-			abort();
-		}
-
-		s_dispsp2 = new OWP_Separator(s_displimitsWnd, true, rate50, true);
-		if (!s_dispsp2) {
-			_ASSERT(0);
-			abort();
-		}
-		s_dofChk = new OWP_CheckBoxA(L"DOF(DepthOfField)", g_zpreflag, labelheight, false);
-		if (!s_dofChk) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bloomChk = new OWP_CheckBoxA(L"HDRP Bloom", g_hdrpbloom, labelheight, false);
-		if (!s_bloomChk) {
-			_ASSERT(0);
-			abort();
-		}
-
-		s_dispsp3 = new OWP_Separator(s_displimitsWnd, true, rate50, true);
-		if (!s_dispsp3) {
-			_ASSERT(0);
-			abort();
-		}
-		s_alphaChk = new OWP_CheckBoxA(L"Alpha Blending", g_alphablending, labelheight, false);
-		if (!s_alphaChk) {
-			_ASSERT(0);
-			abort();
-		}
-		s_zcmpChk = new OWP_CheckBoxA(L"ZCmpAlways", g_zalways, labelheight, false);
-		if (!s_zcmpChk) {
-			_ASSERT(0);
-			abort();
-		}
-
-		s_dispsp4 = new OWP_Separator(s_displimitsWnd, true, rate50, true);
-		if (!s_dispsp4) {
-			_ASSERT(0);
-			abort();
-		}
-		s_freefpsChk = new OWP_CheckBoxA(L"Free fps", g_freefps, labelheight, false);
-		if (!s_freefpsChk) {
-			_ASSERT(0);
-			abort();
-		}
-		s_skydispChk = new OWP_CheckBoxA(L"Sky Disp", g_skydispflag, labelheight, false);
-		if (!s_skydispChk) {
-			_ASSERT(0);
-			abort();
-		}
-		s_dispspacerLabel001 = new OWP_Label(L"     ", 32);
-		if (!s_dispspacerLabel001) {
-			_ASSERT(0);
-			abort();
-		}
-		s_dispspacerLabel002 = new OWP_Label(L"     ", 32);
-		if (!s_dispspacerLabel002) {
-			_ASSERT(0);
-			abort();
-		}
-		s_dispspacerLabel003 = new OWP_Label(L"     ", 32);
-		if (!s_dispspacerLabel003) {
-			_ASSERT(0);
-			abort();
-		}
-
-
-		s_displimitsWnd->addParts(*s_lightssp);
-		s_lightssp->addParts1(*s_lightsChk);
-		s_lightssp->addParts2(*s_lightsSlider);
-		s_displimitsWnd->addParts(*s_threadssp);
-		s_threadssp->addParts1(*s_threadsLabel);
-		s_threadssp->addParts2(*s_threadsSlider);
-		s_displimitsWnd->addParts(*s_highRpmChk);
-		s_displimitsWnd->addParts(*s_dispspacerLabel001);//
-		s_displimitsWnd->addParts(*s_bonemarksp);
-		s_bonemarksp->addParts1(*s_bonemarkChk);
-		s_bonemarksp->addParts2(*s_bonemarkSlider);
-		s_displimitsWnd->addParts(*s_rigidmarksp);
-		s_rigidmarksp->addParts1(*s_rigidmarkChk);
-		s_rigidmarksp->addParts2(*s_rigidmarkSlider);
-		s_displimitsWnd->addParts(*s_rigmarksp);
-		s_rigmarksp->addParts1(*s_rigmarkLabel);
-		s_rigmarksp->addParts2(*s_rigmarkSlider);
-		s_displimitsWnd->addParts(*s_refpossp);
-		s_refpossp->addParts1(*s_refposLabel);
-		s_refpossp->addParts2(*s_refposSlider);
-		s_displimitsWnd->addParts(*s_dispspacerLabel002);//
-		s_displimitsWnd->addParts(*s_iklevelssp);
-		s_iklevelssp->addParts1(*s_iklevelsLabel);
-		s_iklevelssp->addParts2(*s_iklevelsCombo);
-		s_displimitsWnd->addParts(*s_axiskindsp);
-		s_axiskindsp->addParts1(*s_axiskindLabel);
-		s_axiskindsp->addParts2(*s_axiskindCombo);
-		s_displimitsWnd->addParts(*s_uvsetsp);
-		s_uvsetsp->addParts1(*s_uvsetLabel);
-		s_uvsetsp->addParts2(*s_uvsetCombo);
-		s_displimitsWnd->addParts(*s_dispspacerLabel003);//
-		s_displimitsWnd->addParts(*s_dispsp1);
-		s_dispsp1->addParts1(*s_x180Chk);
-		s_dispsp1->addParts2(*s_rottraChk);
-		s_displimitsWnd->addParts(*s_dispsp2);
-		s_dispsp2->addParts1(*s_dofChk);
-		s_dispsp2->addParts2(*s_bloomChk);
-		s_displimitsWnd->addParts(*s_dispsp3);
-		s_dispsp3->addParts1(*s_alphaChk);
-		s_dispsp3->addParts2(*s_zcmpChk);
-		s_displimitsWnd->addParts(*s_dispsp4);
-		s_dispsp4->addParts1(*s_freefpsChk);
-		s_dispsp4->addParts2(*s_skydispChk);
-
-		//###########
-		//CheckBox
-		//###########
-		s_lightsChk->setButtonListener([]() {
-			bool value = s_lightsChk->getValue();
-			if (value) {
-				g_lightflag = 1;
-			}
-			else {
-				g_lightflag = 0;
-			}
-		});
-		s_highRpmChk->setButtonListener([]() {
-			bool value = s_highRpmChk->getValue();
-			g_HighRpmMode = value;
-		});
-		s_bonemarkChk->setButtonListener([]() {
-			bool value = s_bonemarkChk->getValue();
-			if (value) {
-				g_bonemarkflag = 1;
-			}
-			else {
-				g_bonemarkflag = 0;
-			}
-		});
-		s_rigidmarkChk->setButtonListener([]() {
-			bool value = s_rigidmarkChk->getValue();
-			if (value) {
-				g_rigidmarkflag = 1;
-			}
-			else {
-				g_rigidmarkflag = 0;
-			}
-		});
-		s_x180Chk->setButtonListener([]() {
-			bool value = s_x180Chk->getValue();
-			g_x180flag = value;
-		});
-		s_rottraChk->setButtonListener([]() {
-			bool value = s_rottraChk->getValue();
-			g_rotatetanim = value;
-		});
-		s_dofChk->setButtonListener([]() {
-			bool value = s_dofChk->getValue();
-			g_zpreflag = value;
-		});
-		s_bloomChk->setButtonListener([]() {
-			bool value = s_bloomChk->getValue();
-			g_hdrpbloom = value;
-		});
-		s_alphaChk->setButtonListener([]() {
-			bool value = s_alphaChk->getValue();
-			g_alphablending = value;
-		});
-		s_zcmpChk->setButtonListener([]() {
-			bool value = s_zcmpChk->getValue();
-			g_zalways = value;
-		});
-		s_freefpsChk->setButtonListener([]() {
-			bool value = s_freefpsChk->getValue();
-			g_freefps = value;
-		});
-		s_skydispChk->setButtonListener([]() {
-			bool value = s_skydispChk->getValue();
-			g_skydispflag = value;
-		});
-
-		//##########
-		//Slider
-		//##########
-		s_lightsSlider->setCursorListener([]() {
-			double value = s_lightsSlider->getValue();
-			g_fLightScale = (float)value;
-		});
-		s_bonemarkSlider->setCursorListener([]() {
-			double value = s_bonemarkSlider->getValue();
-			g_bonemark_bright = (float)value;
-		});
-		s_rigidmarkSlider->setCursorListener([]() {
-			double value = s_rigidmarkSlider->getValue();
-			g_rigidmark_alpha = (float)value;
-		});
-		s_rigmarkSlider->setCursorListener([]() {
-			double value = s_rigmarkSlider->getValue();
-			g_rigmark_alpha = (float)value;
-		});
-		s_refposSlider->setCursorListener([]() {
-			double value = s_refposSlider->getValue();
-			g_refalpha = (int)(value + 0.0001);
-		});
-
-		s_threadsSlider->setCursorListener([]() {
-			int value = (int)(s_threadsSlider->getValue() + 0.5);
-			g_UpdateMatrixThreads = max(1, min(8, value));
-			s_threadsSlider->setValue((double)value, false);//intに丸めた値をセットし直し
-			});
-		s_threadsSlider->setLUpListener([]() {
-			int value = (int)(s_threadsSlider->getValue() + 0.5);
-			g_UpdateMatrixThreads = max(1, min(8, value));
-			s_threadsSlider->setValue((double)value, false);//intに丸めた値をセットし直し
-
-			//#################################################
-			//ReleasedCaptureのときに　PrepairUndo用のフラグを立てる
-			//#################################################
-			s_changeupdatethreadsFlag = true;
-		});
-
-
-		//############
-		//ComboBox
-		//############
-		s_iklevelsCombo->setButtonListener([]() {
-			int comboid = s_iklevelsCombo->trackPopUpMenu();
-			//char strchk[256] = { 0 };
-			//sprintf_s(strchk, 256, "select combo %d", comboid);
-			//MessageBoxA(s_displimitsWnd->getHWnd(), strchk, "Check", MB_OK);
-			g_iklevel = comboid + 1;
-		});
-		s_axiskindCombo->setButtonListener([]() {
-			int comboid = s_axiskindCombo->trackPopUpMenu();
-			//char strchk[256] = { 0 };
-			//sprintf_s(strchk, 256, "select combo %d", comboid);
-			//MessageBoxA(s_displimitsWnd->getHWnd(), strchk, "Check", MB_OK);
-			g_boneaxis = comboid;
-			});
-		s_uvsetCombo->setButtonListener([]() {
-			int comboid = s_uvsetCombo->trackPopUpMenu();
-			//char strchk[256] = { 0 };
-			//sprintf_s(strchk, 256, "select combo %d", comboid);
-			//MessageBoxA(s_displimitsWnd->getHWnd(), strchk, "Check", MB_OK);
-			g_uvset = comboid;
-		});
-
-
-		s_displimitsWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
-		s_displimitsWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
-
-		//１クリック目問題対応
-		s_displimitsWnd->refreshPosAndSize();
-
-		s_displimitsWnd->callRewrite();
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-
-	return 0;
-
-}
 //int CreateGUIDlgBrushes()
 //{
 //	if (s_guidlg[GUIDLG_BRUSHPARAMS]) {
@@ -33796,91 +33043,6 @@ void CheckFogKindParamsButton(int srckind)
 //}
 
 
-int DispParams2Dlg()
-{
-	if (s_displimitsWnd) {
-
-		//#######
-		//Slider
-		//#######
-		if (s_lightsSlider) {
-			s_lightsSlider->setValue((double)g_fLightScale, false);
-		}
-		if (s_threadsSlider) {
-			s_threadsSlider->setValue((double)g_UpdateMatrixThreads, false);
-		}
-		if (s_bonemarkSlider) {
-			s_bonemarkSlider->setValue((double)g_bonemark_bright, false);
-		}
-		if (s_rigidmarkSlider) {
-			s_rigidmarkSlider->setValue((double)g_rigidmark_alpha, false);
-		}
-		if (s_rigmarkSlider) {
-			s_rigmarkSlider->setValue((double)g_rigmark_alpha, false);
-		}
-		if (s_refposSlider) {
-			s_refposSlider->setValue((double)g_refalpha, false);
-		}
-
-
-		//#########
-		//ComboBox
-		//#########
-		if (s_iklevelsCombo) {
-			s_iklevelsCombo->setSelectedCombo(g_iklevel - 1);
-		}
-		if (s_axiskindCombo) {
-			s_axiskindCombo->setSelectedCombo(g_boneaxis);
-		}
-		if (s_uvsetCombo) {
-			s_uvsetCombo->setSelectedCombo(g_uvset);
-		}
-
-
-		//#########
-		//CheckBox
-		//#########
-		if (s_bloomChk) {
-			s_bloomChk->setValue(g_hdrpbloom, false);
-		}
-		if (s_freefpsChk) {
-			s_freefpsChk->setValue(g_freefps, false);
-		}
-		if (s_lightsChk) {
-			s_lightsChk->setValue((g_lightflag != 0), false);
-		}
-		if (s_highRpmChk) {
-			s_highRpmChk->setValue(g_HighRpmMode, false);
-		}
-		if (s_bonemarkChk) {
-			s_bonemarkChk->setValue((g_bonemarkflag != 0), false);
-		}
-		if (s_rigidmarkChk) {
-			s_rigidmarkChk->setValue((g_rigidmarkflag != 0), false);
-		}
-		if (s_x180Chk) {
-			s_x180Chk->setValue(g_x180flag, false);
-		}
-		if (s_rottraChk) {
-			s_rottraChk->setValue(g_rotatetanim, false);
-		}
-		if (s_dofChk) {
-			s_dofChk->setValue(g_zpreflag, false);
-		}
-		if (s_zcmpChk) {
-			s_zcmpChk->setValue(g_zalways, false);
-		}
-		if (s_skydispChk) {
-			s_skydispChk->setValue(g_skydispflag, false);
-		}
-		if (s_alphaChk) {
-			s_alphaChk->setValue(g_alphablending, false);
-		}
-
-		s_displimitsWnd->callRewrite();
-	}
-	return 0;
-}
 
 
 int Brushes2Dlg(HWND hDlgWnd)
@@ -34851,12 +34013,6 @@ int OnFrameUtCheckBox()
 		s_IfMirrorVDiv2CheckBoxFlag = false;
 	}
 
-
-	if (s_changeupdatethreadsFlag) {
-		ChangeUpdateMatrixThreads();
-		s_changeupdatethreadsFlag = false;
-		//g_SampleUI.GetSlider(IDC_SL_UMTHREADS)->SetEnabled(true);//!!!!!!!!!
-	}
 
 	if (s_changeAngleSpringScaleFlag) {
 		if (s_chascene) {
@@ -48323,7 +47479,11 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	case WM_COMMAND:
 	{
-		if (menuid == (ID_RMENU_0 + MENUOFFSET_RIGIDPARAMSDLG)) {
+		
+		if (menuid == (ID_RMENU_0 + MENUOFFSET_DISPLIMITSDLG)) {
+			ChangeUpdateMatrixThreads();
+		}
+		else if (menuid == (ID_RMENU_0 + MENUOFFSET_RIGIDPARAMSDLG)) {
 			int opekind = (int)lParam;
 			if (opekind == RIGIDPARAMSDLG_OPE_CLOSE) {
 				s_rigidparamsdlg.SetVisible(false);
@@ -50158,18 +49318,7 @@ void ShowThresholdWnd(bool srcflag)
 
 void ShowGUIDlgDispParams(bool srcflag)
 {
-	if (s_displimitsWnd) {
-		if (srcflag == true) {
-			DispParams2Dlg();//2024/04/17 chaファイルを読み込んで変化している可能性があるので、GUIを設定し直
-			s_displimitsWnd->setVisible(true);
-			s_displimitsWnd->setListenMouse(true);
-			s_displimitsWnd->callRewrite();
-		}
-		else {
-			s_displimitsWnd->setVisible(false);
-			s_displimitsWnd->setListenMouse(false);
-		}
-	}
+	s_displimitsdlg.SetVisible(srcflag);
 
 	s_spguisw[SPGUISW_DISP_AND_LIMITS].state = srcflag;
 }
@@ -57215,6 +56364,9 @@ void OrgWindowListenMouse(bool srcflag)
 	}
 	if (s_rigidparamsdlg.GetVisible()) {
 		s_rigidparamsdlg.ListenMouse(srcflag);
+	}
+	if (s_displimitsdlg.GetVisible()) {
+		s_displimitsdlg.ListenMouse(srcflag);
 	}
 	if (s_shadertypeWnd) {
 		s_shadertypeWnd->setListenMouse(srcflag);

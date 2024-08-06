@@ -6,6 +6,8 @@ https://github.com/Ochakko/AdditiveIK
 2024/08/06
 　RigidWnd(剛体設定ウインドウ)をCRigidParamsDlgにクラス化
 
+　DispAndLimitsウインドウをCDispLimitsDlgにクラス化
+
 
 　予定
 　　AdditiveIK.cppにスタティックメンバとして大量に記述しているOWP関係のソースをクラス化していく予定

@@ -237,6 +237,9 @@
     <ClCompile Include="..\CPP\RigidParamsDlg.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
+    <ClCompile Include="..\CPP\DispLimitsDlg.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
@@ -1379,6 +1382,9 @@
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\INCLUDE\RigidParamsDlg.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\DispLimitsDlg.h">
       <Filter>GUI</Filter>
     </ClInclude>
   </ItemGroup>

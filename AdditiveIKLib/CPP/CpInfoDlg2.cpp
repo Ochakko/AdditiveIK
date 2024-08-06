@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include <CpInfoDlg2.h>
 
 #include "../../AdditiveIK/SetDlgPos.h"
@@ -17,7 +17,7 @@ using namespace std;
 using namespace OrgWinGUI;
 
 
-extern HWND g_mainhwnd;//ƒAƒvƒŠƒP[ƒVƒ‡ƒ“ƒEƒCƒ“ƒhƒEƒnƒ“ƒhƒ‹
+extern HWND g_mainhwnd;//ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -94,7 +94,7 @@ void CCpInfoDlg2::InitParams()
 //			SetThreadAffinityMask(handle1, affinitymask);
 //		}
 //
-//		//WiatFor‚µ‚È‚¢ê‡‚É‚Íæ‚É•Â‚¶‚Ä‚àOK
+//		//WiatForã—ãªã„å ´åˆã«ã¯å…ˆã«é–‰ã˜ã¦ã‚‚OK
 //		CloseHandle(handle1);
 //	}
 //
@@ -113,7 +113,7 @@ void CCpInfoDlg2::SetVisible(bool srcflag)
 
 
 	if (srcflag) {
-		m_dlgresult = -1;//!!!!!!!!ŠJ‚­‚Æ‚«‚É‰Šú‰»@•Â‚¶‚é‚Æ‚«‚É‚ÍŒã‚ÅŽQÆ‚·‚é‚Ì‚ÅŒ‹‰Ê‚ð‰Šú‰»‚µ‚È‚¢
+		m_dlgresult = -1;//!!!!!!!!é–‹ãã¨ãã«åˆæœŸåŒ–ã€€é–‰ã˜ã‚‹ã¨ãã«ã¯å¾Œã§å‚ç…§ã™ã‚‹ã®ã§çµæžœã‚’åˆæœŸåŒ–ã—ãªã„
 
 		RECT dlgrect;
 		dlgrect.top = 0;
@@ -133,7 +133,7 @@ void CCpInfoDlg2::SetVisible(bool srcflag)
 			//::GetWindowRect(m_dlgwnd->getHWnd(), &dlgrect2);
 			//SetCursorPos(dlgrect2.left + 25, dlgrect2.top + 10);
 
-			EnableWindow(g_mainhwnd, FALSE);//!!!!!!!!!!!! ‹^Ž—ƒ‚[ƒ_ƒ‹
+			EnableWindow(g_mainhwnd, FALSE);//!!!!!!!!!!!! ç–‘ä¼¼ãƒ¢ãƒ¼ãƒ€ãƒ«
 
 
 		}
@@ -205,7 +205,7 @@ int CCpInfoDlg2::ParamsToDlg()
 		double framenum;
 		int bvhtype;//0:undef, 1-144:bvh1 - bvh144, -1:bvh_other
 		int importance;//0:undef, 1:tiny, 2:alittle, 3:normal, 4:noticed, 5:imortant, 6:very important
-		WCHAR comment[32];//WCHAR * 31•¶Žš‚Ü‚ÅB‚R‚Q•¶Žš–Ú‚ÍI’[‹L†
+		WCHAR comment[32];//WCHAR * 31æ–‡å­—ã¾ã§ã€‚ï¼“ï¼’æ–‡å­—ç›®ã¯çµ‚ç«¯è¨˜å·
 	}CPMOTINFO;
 */
 
@@ -327,19 +327,19 @@ int CCpInfoDlg2::CreateOWPWnd(POINT setpoint)
 
 	m_dlgwnd = new OrgWindow(
 		1,
-		_T("CpInfoDlg2"),		//ƒEƒBƒ“ƒhƒEƒNƒ‰ƒX–¼
-		GetModuleHandle(NULL),	//ƒCƒ“ƒXƒ^ƒ“ƒXƒnƒ“ƒhƒ‹
+		_T("CpInfoDlg2"),		//ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹å
+		GetModuleHandle(NULL),	//ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ãƒãƒ³ãƒ‰ãƒ«
 		WindowPos(setpoint.x, setpoint.y),
-		WindowSize(600, 400),		//ƒTƒCƒY
-		_T("CpInfoDlg2"),	//ƒ^ƒCƒgƒ‹
-		//g_mainhwnd,	//eƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹
+		WindowSize(600, 400),		//ã‚µã‚¤ã‚º
+		_T("CpInfoDlg2"),	//ã‚¿ã‚¤ãƒˆãƒ«
+		//g_mainhwnd,	//è¦ªã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«
 		NULL,
-		//false,					//•\Ž¦E”ñ•\Ž¦ó‘Ô
+		//false,					//è¡¨ç¤ºãƒ»éžè¡¨ç¤ºçŠ¶æ…‹
 		true,
-		//70, 50, 70,				//ƒJƒ‰[
-		0, 0, 0,				//ƒJƒ‰[
-		true,					//•Â‚¶‚ç‚ê‚é‚©”Û‚©
-		true);					//ƒTƒCƒY•ÏX‚Ì‰Â”Û
+		//70, 50, 70,				//ã‚«ãƒ©ãƒ¼
+		0, 0, 0,				//ã‚«ãƒ©ãƒ¼
+		true,					//é–‰ã˜ã‚‰ã‚Œã‚‹ã‹å¦ã‹
+		true);					//ã‚µã‚¤ã‚ºå¤‰æ›´ã®å¯å¦
 
 	int labelheight;
 	//if (g_4kresolution) {
@@ -351,7 +351,7 @@ int CCpInfoDlg2::CreateOWPWnd(POINT setpoint)
 
 	if (m_dlgwnd) {
 
-		////ƒ‚[ƒ_ƒ‹‰»
+		////ãƒ¢ãƒ¼ãƒ€ãƒ«åŒ–
 		//SetWindowLong(m_dlgwnd->getHWnd(), GWL_EXSTYLE, WS_EX_DLGMODALFRAME);
 		//SetWindowLong(m_dlgwnd->getHWnd(), GWL_STYLE, WS_CAPTION);
 
@@ -479,24 +479,28 @@ int CCpInfoDlg2::CreateOWPWnd(POINT setpoint)
 			int combono = m_importanceCombo->trackPopUpMenu();
 		});
 		m_okB->setButtonListener([=, this]() {
-			EnableWindow(g_mainhwnd, TRUE);//!!!!!!!!!!!! ‹^Ž—ƒ‚[ƒ_ƒ‹‰ðœ
+			EnableWindow(g_mainhwnd, TRUE);//!!!!!!!!!!!! ç–‘ä¼¼ãƒ¢ãƒ¼ãƒ€ãƒ«è§£é™¤
 			OnOK();
-			::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_CPINFODLG), (LPARAM)m_dlgresult);
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_CPINFODLG), (LPARAM)m_dlgresult);
+			}
 		});
 		m_cancelB->setButtonListener([=, this]() {
-			EnableWindow(g_mainhwnd, TRUE);//!!!!!!!!!!!! ‹^Ž—ƒ‚[ƒ_ƒ‹‰ðœ
+			EnableWindow(g_mainhwnd, TRUE);//!!!!!!!!!!!! ç–‘ä¼¼ãƒ¢ãƒ¼ãƒ€ãƒ«è§£é™¤
 			OnCancel();
-			::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_CPINFODLG), (LPARAM)m_dlgresult);
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_CPINFODLG), (LPARAM)m_dlgresult);
+			}
 		});
 		m_dlgwnd->setCloseListener([]() {
-			EnableWindow(g_mainhwnd, TRUE);//!!!!!!!!!!!! ‹^Ž—ƒ‚[ƒ_ƒ‹‰ðœ
+			EnableWindow(g_mainhwnd, TRUE);//!!!!!!!!!!!! ç–‘ä¼¼ãƒ¢ãƒ¼ãƒ€ãƒ«è§£é™¤
 		});
 
 
 		m_dlgwnd->setSize(WindowSize(600, 260));
 		m_dlgwnd->setPos(WindowPos(setpoint.x, setpoint.y));
 
-		//‚PƒNƒŠƒbƒN–Ú–â‘è‘Î‰ž
+		//ï¼‘ã‚¯ãƒªãƒƒã‚¯ç›®å•é¡Œå¯¾å¿œ
 		m_dlgwnd->refreshPosAndSize();
 
 		m_dlgwnd->callRewrite();

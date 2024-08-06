@@ -909,8 +909,10 @@ int CDollyHistoryDlg2::CreateOWPWnd()
 			OnSetDolly(pasteflag);
 		});
 		m_saveB->setButtonListener([=, this]() {
-			//OnSaveDolly();//OnSaveDolly()からはParams2Dlg()が呼ばれてそこからCreateOWPWnd()が呼ばれてm_saveBは作り直されエラーになる
-			::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_DOLLYHISTORYDLG), 0);//SendMessageでも上記と同様のエラー.　PostMessage()を使う
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				//OnSaveDolly();//OnSaveDolly()からはParams2Dlg()が呼ばれてそこからCreateOWPWnd()が呼ばれてm_saveBは作り直されエラーになる
+				::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_DOLLYHISTORYDLG), 0);//SendMessageでも上記と同様のエラー.　PostMessage()を使う
+			}
 		});
 
 

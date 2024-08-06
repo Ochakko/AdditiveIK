@@ -1631,10 +1631,9 @@ int CRigidParamsDlg::CreateRigidWnd()
 
 
 		m_rigidWnd->setCloseListener([=, this]() {
-			PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_RIGIDPARAMSDLG), (LPARAM)RIGIDPARAMSDLG_OPE_CLOSE);
-			//if (m_model) {
-			//	m_RcloseFlag = true;
-			//}
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_RIGIDPARAMSDLG), (LPARAM)RIGIDPARAMSDLG_OPE_CLOSE);
+			}
 			});
 
 		m_sphrateSlider->setCursorListener([=, this]() {
@@ -2150,7 +2149,9 @@ int CRigidParamsDlg::CreateRigidWnd()
 			});
 
 		m_groupB->setButtonListener([=, this]() {
-			PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_RIGIDPARAMSDLG), (LPARAM)RIGIDPARAMSDLG_OPE_COLIDLG);
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_RIGIDPARAMSDLG), (LPARAM)RIGIDPARAMSDLG_OPE_COLIDLG);
+			}
 			});
 		m_coliidDeeperB->setButtonListener([=, this]() {
 			if (m_model) {
@@ -2175,7 +2176,9 @@ int CRigidParamsDlg::CreateRigidWnd()
 			}
 			});
 		m_gcoliB->setButtonListener([=, this]() {
-			PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_RIGIDPARAMSDLG), (LPARAM)RIGIDPARAMSDLG_OPE_GCOLIDLG);
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_RIGIDPARAMSDLG), (LPARAM)RIGIDPARAMSDLG_OPE_GCOLIDLG);
+			}
 		});
 
 		m_massB->setButtonListener([=, this]() {

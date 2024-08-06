@@ -195,6 +195,7 @@
     <ClCompile Include="..\CPP\CSDeform.cpp" />
     <ClCompile Include="..\CPP\dbg.cpp" />
     <ClCompile Include="..\CPP\DispGroupFile.cpp" />
+    <ClCompile Include="..\CPP\DispLimitsDlg.cpp" />
     <ClCompile Include="..\CPP\DispObj.cpp" />
     <ClCompile Include="..\CPP\DofParamsFile.cpp" />
     <ClCompile Include="..\CPP\DollyHistoryDlg2.cpp" />
@@ -584,6 +585,7 @@
     <ClInclude Include="..\INCLUDE\CSDeform.h" />
     <ClInclude Include="..\INCLUDE\dbg.h" />
     <ClInclude Include="..\INCLUDE\DispGroupFile.h" />
+    <ClInclude Include="..\INCLUDE\DispLimitsDlg.h" />
     <ClInclude Include="..\INCLUDE\DispObj.h" />
     <ClInclude Include="..\INCLUDE\DofParamsFile.h" />
     <ClInclude Include="..\INCLUDE\DollyHistoryDlg2.h" />

@@ -1,4 +1,4 @@
-// InfluenceDlg.h : CCpInfoDlg2 ‚ÌéŒ¾
+ï»¿// InfluenceDlg.h : CCpInfoDlg2 ã®å®£è¨€
 
 #ifndef __CCpInfoDlg22_H_
 #define __CCpInfoDlg22_H_
@@ -7,7 +7,7 @@
 
 #include <coef.h>
 #include "../../AdditiveIK/StructHistory.h"
-#include "../../AdditiveIK/resource.h"       // ƒƒCƒ“ ƒVƒ“ƒ{ƒ‹
+#include "../../AdditiveIK/resource.h"       // ãƒ¡ã‚¤ãƒ³ ã‚·ãƒ³ãƒœãƒ«
 
 #include <vector>
 #include <string>
