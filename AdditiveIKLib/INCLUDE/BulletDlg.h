@@ -47,7 +47,6 @@ public:
 	void ListenMouse(bool srcflag);
 	int ParamsToDlg();
 
-private:
 	int CreateBulletWnd();
 
 private:

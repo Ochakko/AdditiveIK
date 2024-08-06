@@ -10,6 +10,8 @@ https://github.com/Ochakko/AdditiveIK
 
 　BulletウインドウをCBulletDlgにクラス化
 
+　ProjLODウインドウをCProjLodDlgにクラス化
+
 
 　予定
 　　AdditiveIK.cppにスタティックメンバとして大量に記述しているOWP関係のソースをクラス化していく予定

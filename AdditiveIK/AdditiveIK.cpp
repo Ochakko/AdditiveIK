@@ -74,6 +74,7 @@
 #include <RigidParamsDlg.h>
 #include <DispLimitsDlg.h>
 #include <BulletDlg.h>
+#include <ProjLodDlg.h>
 #include <CpInfoDlg2.h>
 
 #include <math.h>
@@ -961,9 +962,12 @@ static std::vector<HISTORYELEM> s_cptfilename;
 static CCopyHistoryDlg2 s_copyhistorydlg2;
 static CDollyHistoryDlg2 s_dollyhistorydlg2;
 
+
 static CRigidParamsDlg s_rigidparamsdlg;
 static CDispLimitsDlg s_displimitsdlg;
 static CBulletDlg s_bulletdlg;
+static CProjLodDlg s_projloddlg;
+
 
 static bool s_undercpinfodlg2;
 static CCpInfoDlg2 s_cpinfodlg2;
@@ -1232,59 +1236,6 @@ static OWP_EditBox* s_polaryEdit[8];
 static OWP_Separator* s_lightsapplysp = 0;
 static OWP_Label* s_lightsspace1Label = 0;
 static OWP_Button* s_lightsapplyB = 0;
-
-
-static OrgWindow* s_lodWnd = 0;
-static OWP_Label* s_lodprojLabel = 0;
-static OWP_Separator* s_lodprojfovsp0 = 0;
-static OWP_Label* s_lodprojfovLabel = 0;
-static OWP_Slider* s_lodprojfovSlider = 0;
-static OWP_Separator* s_lodnearfarsp0 = 0;
-static OWP_Separator* s_lodnearfarsp1 = 0;
-static OWP_Separator* s_lodnearfarsp2 = 0;
-static OWP_Label* s_lodnearLabel = 0;
-static OWP_EditBox* s_lodnearEdit = 0;
-static OWP_Label* s_lodfarLabel = 0;
-static OWP_EditBox* s_lodfarEdit = 0;
-static OWP_Separator* s_lodpickdistsp = 0;
-static OWP_Label* s_lodpickdistLabel = 0;
-static OWP_Slider* s_lodpickdistSlider = 0;
-static OWP_Label* s_lodlevel2Label = 0;
-static OWP_Separator* s_lodlevel2lod0sp = 0;
-static OWP_Label* s_lodlevel2lod0Label = 0;
-static OWP_Slider* s_lodlevel2lod0Slider = 0;
-static OWP_Separator* s_lodlevel2lod1sp = 0;
-static OWP_Label* s_lodlevel2lod1Label = 0;
-static OWP_Slider* s_lodlevel2lod1Slider = 0;
-static OWP_Label* s_lodlevel3Label = 0;
-static OWP_Separator* s_lodlevel3lod0sp = 0;
-static OWP_Label* s_lodlevel3lod0Label = 0;
-static OWP_Slider* s_lodlevel3lod0Slider = 0;
-static OWP_Separator* s_lodlevel3lod1sp = 0;
-static OWP_Label* s_lodlevel3lod1Label = 0;
-static OWP_Slider* s_lodlevel3lod1Slider = 0;
-static OWP_Separator* s_lodlevel3lod2sp = 0;
-static OWP_Label* s_lodlevel3lod2Label = 0;
-static OWP_Slider* s_lodlevel3lod2Slider = 0;
-static OWP_Label* s_lodlevel4Label = 0;
-static OWP_Separator* s_lodlevel4lod0sp = 0;
-static OWP_Label* s_lodlevel4lod0Label = 0;
-static OWP_Slider* s_lodlevel4lod0Slider = 0;
-static OWP_Separator* s_lodlevel4lod1sp = 0;
-static OWP_Label* s_lodlevel4lod1Label = 0;
-static OWP_Slider* s_lodlevel4lod1Slider = 0;
-static OWP_Separator* s_lodlevel4lod2sp = 0;
-static OWP_Label* s_lodlevel4lod2Label = 0;
-static OWP_Slider* s_lodlevel4lod2Slider = 0;
-static OWP_Separator* s_lodlevel4lod3sp = 0;
-static OWP_Label* s_lodlevel4lod3Label = 0;
-static OWP_Slider* s_lodlevel4lod3Slider = 0;
-static OWP_Label* s_lodspacer1Label = 0;
-static OWP_Separator* s_lodapplysp = 0;
-static OWP_Button* s_lodapplyB = 0;
-static OWP_Label* s_lodspacerLabel001 = 0;
-static OWP_Label* s_lodspacerLabel002 = 0;
-static OWP_Label* s_lodspacerLabel003 = 0;
 
 
 static OrgWindow* s_shadowWnd = 0;
@@ -2859,6 +2810,8 @@ ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わら�
 //#####################
 
 //Dlgからのメニューオフセットはcoef.hに
+//// (93)はCProjLodDlgをトリガーとする呼び出し用に確保
+//#define MENUOFFSET_PROJLODDLG			(93)
 //// (94)はCBulletDlgをトリガーとする呼び出し用に確保
 //#define MENUOFFSET_BULLETDLG			(94)
 //// (95)はCDispLimitsDlgをトリガーとする呼び出し用に確保
@@ -3314,12 +3267,8 @@ static int CheckStr_float(const WCHAR* srcstr);
 static int ConvDir2PolarCoord(float srcdirx, float srcdiry, float srcdirz, float* dstxzdeg, float* dstydeg);
 static int ConvPolarCoord2Dir(float srcxzdeg, float srcydeg, float* dstdirx, float* dstdiry, float* dstdirz);
 
-
 //static int CreateGUIDlgBrushes();
 static int Brushes2Dlg(HWND hDlgWnd);
-static int CreateGUIDlgLOD();
-static int LODParams2Dlg();
-
 
 
 static int CreateLaterTransparentWnd();
@@ -4261,9 +4210,7 @@ INT WINAPI wWinMain(
 	CreateSideMenuWnd();
 	CreateTopSlidersWnd();
 
-	CreateLightsWnd();
-	CreateGUIDlgLOD();
-	
+	CreateLightsWnd();	
 
 	CreateDispGroupWnd();
 	CreateBlendShapeWnd();
@@ -4591,6 +4538,7 @@ int CheckResolution()
 		s_rigidparamsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_displimitsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_bulletdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+		s_projloddlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 	}
 
 	return 0;
@@ -4619,6 +4567,7 @@ void InitApp()
 	s_rigidparamsdlg.InitParams();
 	s_displimitsdlg.InitParams();
 	s_bulletdlg.InitParams();
+	s_projloddlg.InitParams();
 
 	s_undercpinfodlg2 = false;
 	s_cpinfodlg2.InitParams();
@@ -5214,60 +5163,6 @@ void InitApp()
 		s_lightsapplysp = 0;
 		s_lightsspace1Label = 0;
 		s_lightsapplyB = 0;
-	}
-
-	{
-		s_lodWnd = 0;
-		s_lodprojLabel = 0;
-		s_lodprojfovsp0 = 0;
-		s_lodprojfovLabel = 0;
-		s_lodprojfovSlider = 0;
-		s_lodnearfarsp0 = 0;
-		s_lodnearfarsp1 = 0;
-		s_lodnearfarsp2 = 0;
-		s_lodnearLabel = 0;
-		s_lodnearEdit = 0;
-		s_lodfarLabel = 0;
-		s_lodfarEdit = 0;
-		s_lodpickdistsp = 0;
-		s_lodpickdistLabel = 0;
-		s_lodpickdistSlider = 0;
-		s_lodlevel2Label = 0;
-		s_lodlevel2lod0sp = 0;
-		s_lodlevel2lod0Label = 0;
-		s_lodlevel2lod0Slider = 0;
-		s_lodlevel2lod1sp = 0;
-		s_lodlevel2lod1Label = 0;
-		s_lodlevel2lod1Slider = 0;
-		s_lodlevel3Label = 0;
-		s_lodlevel3lod0sp = 0;
-		s_lodlevel3lod0Label = 0;
-		s_lodlevel3lod0Slider = 0;
-		s_lodlevel3lod1sp = 0;
-		s_lodlevel3lod1Label = 0;
-		s_lodlevel3lod1Slider = 0;
-		s_lodlevel3lod2sp = 0;
-		s_lodlevel3lod2Label = 0;
-		s_lodlevel3lod2Slider = 0;
-		s_lodlevel4Label = 0;
-		s_lodlevel4lod0sp = 0;
-		s_lodlevel4lod0Label = 0;
-		s_lodlevel4lod0Slider = 0;
-		s_lodlevel4lod1sp = 0;
-		s_lodlevel4lod1Label = 0;
-		s_lodlevel4lod1Slider = 0;
-		s_lodlevel4lod2sp = 0;
-		s_lodlevel4lod2Label = 0;
-		s_lodlevel4lod2Slider = 0;
-		s_lodlevel4lod3sp = 0;
-		s_lodlevel4lod3Label = 0;
-		s_lodlevel4lod3Slider = 0;
-		s_lodspacer1Label = 0;
-		s_lodapplysp = 0;
-		s_lodapplyB = 0;
-		s_lodspacerLabel001 = 0;
-		s_lodspacerLabel002 = 0;
-		s_lodspacerLabel003 = 0;
 	}
 
 	{
@@ -7141,6 +7036,7 @@ void OnDestroyDevice()
 	s_rigidparamsdlg.DestroyObjs();
 	s_displimitsdlg.DestroyObjs();
 	s_bulletdlg.DestroyObjs();
+	s_projloddlg.DestroyObjs();
 	s_cpinfodlg2.DestroyObjs();
 
 
@@ -7667,215 +7563,6 @@ void OnDestroyDevice()
 		if (s_lightsWnd) {
 			delete s_lightsWnd;
 			s_lightsWnd = 0;
-		}
-	}
-
-
-	{
-		if (s_lodprojLabel) {
-			delete s_lodprojLabel;
-			s_lodprojLabel = 0;
-		}
-		if (s_lodprojfovsp0) {
-			delete s_lodprojfovsp0;
-			s_lodprojfovsp0 = 0;
-		}
-		if (s_lodprojfovLabel) {
-			delete s_lodprojfovLabel;
-			s_lodprojfovLabel = 0;
-		}
-		if (s_lodprojfovSlider) {
-			delete s_lodprojfovSlider;
-			s_lodprojfovSlider = 0;
-		}
-		if (s_lodnearfarsp0) {
-			delete s_lodnearfarsp0;
-			s_lodnearfarsp0 = 0;
-		}
-		if (s_lodnearfarsp1) {
-			delete s_lodnearfarsp1;
-			s_lodnearfarsp1 = 0;
-		}
-		if (s_lodnearfarsp2) {
-			delete s_lodnearfarsp2;
-			s_lodnearfarsp2 = 0;
-		}
-		if (s_lodnearLabel) {
-			delete s_lodnearLabel;
-			s_lodnearLabel = 0;
-		}
-		if (s_lodnearEdit) {
-			delete s_lodnearEdit;
-			s_lodnearEdit = 0;
-		}
-		if (s_lodfarLabel) {
-			delete s_lodfarLabel;
-			s_lodfarLabel = 0;
-		}
-		if (s_lodfarEdit) {
-			delete s_lodfarEdit;
-			s_lodfarEdit = 0;
-		}
-		if (s_lodpickdistsp) {
-			delete s_lodpickdistsp;
-			s_lodpickdistsp = 0;
-		}
-		if (s_lodpickdistLabel) {
-			delete s_lodpickdistLabel;
-			s_lodpickdistLabel = 0;
-		}
-		if (s_lodpickdistSlider) {
-			delete s_lodpickdistSlider;
-			s_lodpickdistSlider = 0;
-		}
-		if (s_lodlevel2Label) {
-			delete s_lodlevel2Label;
-			s_lodlevel2Label = 0;
-		}
-		if (s_lodlevel2lod0sp) {
-			delete s_lodlevel2lod0sp;
-			s_lodlevel2lod0sp = 0;
-		}
-		if (s_lodlevel2lod0Label) {
-			delete s_lodlevel2lod0Label;
-			s_lodlevel2lod0Label = 0;
-		}
-		if (s_lodlevel2lod0Slider) {
-			delete s_lodlevel2lod0Slider;
-			s_lodlevel2lod0Slider = 0;
-		}
-		if (s_lodlevel2lod1sp) {
-			delete s_lodlevel2lod1sp;
-			s_lodlevel2lod1sp = 0;
-		}
-		if (s_lodlevel2lod1Label) {
-			delete s_lodlevel2lod1Label;
-			s_lodlevel2lod1Label = 0;
-		}
-		if (s_lodlevel2lod1Slider) {
-			delete s_lodlevel2lod1Slider;
-			s_lodlevel2lod1Slider = 0;
-		}
-		if (s_lodlevel3Label) {
-			delete s_lodlevel3Label;
-			s_lodlevel3Label = 0;
-		}
-		if (s_lodlevel3lod0sp) {
-			delete s_lodlevel3lod0sp;
-			s_lodlevel3lod0sp = 0;
-		}
-		if (s_lodlevel3lod0Label) {
-			delete s_lodlevel3lod0Label;
-			s_lodlevel3lod0Label = 0;
-		}
-		if (s_lodlevel3lod0Slider) {
-			delete s_lodlevel3lod0Slider;
-			s_lodlevel3lod0Slider = 0;
-		}
-		if (s_lodlevel3lod1sp) {
-			delete s_lodlevel3lod1sp;
-			s_lodlevel3lod1sp = 0;
-		}
-		if (s_lodlevel3lod1Label) {
-			delete s_lodlevel3lod1Label;
-			s_lodlevel3lod1Label = 0;
-		}
-		if (s_lodlevel3lod1Slider) {
-			delete s_lodlevel3lod1Slider;
-			s_lodlevel3lod1Slider = 0;
-		}
-		if (s_lodlevel3lod2sp) {
-			delete s_lodlevel3lod2sp;
-			s_lodlevel3lod2sp = 0;
-		}
-		if (s_lodlevel3lod2Label) {
-			delete s_lodlevel3lod2Label;
-			s_lodlevel3lod2Label = 0;
-		}
-		if (s_lodlevel3lod2Slider) {
-			delete s_lodlevel3lod2Slider;
-			s_lodlevel3lod2Slider = 0;
-		}
-		if (s_lodlevel4Label) {
-			delete s_lodlevel4Label;
-			s_lodlevel4Label = 0;
-		}
-		if (s_lodlevel4lod0sp) {
-			delete s_lodlevel4lod0sp;
-			s_lodlevel4lod0sp = 0;
-		}
-		if (s_lodlevel4lod0Label) {
-			delete s_lodlevel4lod0Label;
-			s_lodlevel4lod0Label = 0;
-		}
-		if (s_lodlevel4lod0Slider) {
-			delete s_lodlevel4lod0Slider;
-			s_lodlevel4lod0Slider = 0;
-		}
-		if (s_lodlevel4lod1sp) {
-			delete s_lodlevel4lod1sp;
-			s_lodlevel4lod1sp = 0;
-		}
-		if (s_lodlevel4lod1Label) {
-			delete s_lodlevel4lod1Label;
-			s_lodlevel4lod1Label = 0;
-		}
-		if (s_lodlevel4lod1Slider) {
-			delete s_lodlevel4lod1Slider;
-			s_lodlevel4lod1Slider = 0;
-		}
-		if (s_lodlevel4lod2sp) {
-			delete s_lodlevel4lod2sp;
-			s_lodlevel4lod2sp = 0;
-		}
-		if (s_lodlevel4lod2Label) {
-			delete s_lodlevel4lod2Label;
-			s_lodlevel4lod2Label = 0;
-		}
-		if (s_lodlevel4lod2Slider) {
-			delete s_lodlevel4lod2Slider;
-			s_lodlevel4lod2Slider = 0;
-		}
-		if (s_lodlevel4lod3sp) {
-			delete s_lodlevel4lod3sp;
-			s_lodlevel4lod3sp = 0;
-		}
-		if (s_lodlevel4lod3Label) {
-			delete s_lodlevel4lod3Label;
-			s_lodlevel4lod3Label = 0;
-		}
-		if (s_lodlevel4lod3Slider) {
-			delete s_lodlevel4lod3Slider;
-			s_lodlevel4lod3Slider = 0;
-		}
-		if (s_lodspacer1Label) {
-			delete s_lodspacer1Label;
-			s_lodspacer1Label = 0;
-		}
-		if (s_lodapplysp) {
-			delete s_lodapplysp;
-			s_lodapplysp = 0;
-		}
-		if (s_lodapplyB) {
-			delete s_lodapplyB;
-			s_lodapplyB = 0;
-		}
-		if (s_lodspacerLabel001) {
-			delete s_lodspacerLabel001;
-			s_lodspacerLabel001 = 0;
-		}
-		if (s_lodspacerLabel002) {
-			delete s_lodspacerLabel002;
-			s_lodspacerLabel002 = 0;
-		}
-		if (s_lodspacerLabel003) {
-			delete s_lodspacerLabel003;
-			s_lodspacerLabel003 = 0;
-		}
-
-		if (s_lodWnd) {
-			delete s_lodWnd;
-			s_lodWnd = 0;
 		}
 	}
 
@@ -23521,7 +23208,10 @@ int PostOpenChaFile()
 	
 	ChangeCameraDist(g_camdist , s_moveeyepos, false);
 
+
+	s_bulletdlg.CreateBulletWnd();//作成済でない場合に作成
 	s_bulletdlg.ParamsToDlg();
+
 
 	if (s_chascene && 
 		((g_boneaxis < BONEAXIS_CURRENT) || (g_boneaxis > BONEAXIS_BINDPOSE))) {//g_boneaxisがchafileで設定されなかった場合
@@ -27866,462 +27556,6 @@ int RollBackEditRange(int prevrangeFlag, int nextrangeFlag)
 //
 //}
 
-int CreateGUIDlgLOD()
-{
-	if (s_lodWnd) {
-		_ASSERT(0);
-		return 0;//作成済
-	}
-
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-	s_lodWnd = new OrgWindow(
-		0,
-		_T("LODDlg"),		//ウィンドウクラス名
-		GetModuleHandle(NULL),	//インスタンスハンドル
-		WindowPos(windowposx, s_sidemenuheight),
-		WindowSize(s_sidewidth, s_sideheight),		//サイズ
-		_T("LODDlg"),	//タイトル
-		g_mainhwnd,	//親ウィンドウハンドル
-		false,					//表示・非表示状態
-		//70, 50, 70,				//カラー
-		0, 0, 0,				//カラー
-		true,					//閉じられるか否か
-		true);					//サイズ変更の可否
-
-	int labelheight;
-	if (g_4kresolution) {
-		labelheight = 28;
-	}
-	else {
-		labelheight = 20;
-	}
-
-	if (s_lodWnd) {
-		double ratesllabel = 0.3;
-		double rate50 = 0.5;
-
-		s_lodprojLabel = new OWP_Label(L"Projection Settings", labelheight);
-		if (!s_lodprojLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodprojfovsp0 = new OWP_Separator(s_lodWnd, true, ratesllabel, true);
-		if (!s_lodprojfovsp0) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodprojfovLabel = new OWP_Label(L"fov", labelheight);
-		if (!s_lodprojfovLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		int fovvalue = (int)(g_fovy * 180.0f / (float)PI + 0.0001f);
-		s_lodprojfovSlider = new OWP_Slider((double)fovvalue, 180.0, 10.0, labelheight);
-		if (!s_lodprojfovSlider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodnearfarsp0 = new OWP_Separator(s_lodWnd, true, rate50, true);
-		if (!s_lodnearfarsp0) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodnearfarsp1 = new OWP_Separator(s_lodWnd, true, rate50, true);
-		if (!s_lodnearfarsp1) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodnearfarsp2 = new OWP_Separator(s_lodWnd, true, rate50, true);
-		if (!s_lodnearfarsp2) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodnearLabel = new OWP_Label(L"ProjNear", labelheight);
-		if (!s_lodnearLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		WCHAR strnear[256] = { 0L };
-		swprintf_s(strnear, 256, L"%.2f", g_projnear);
-		s_lodnearEdit = new OWP_EditBox(true, strnear, labelheight, EDIT_BUFLEN_NUM);
-		if (!s_lodnearEdit) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodfarLabel = new OWP_Label(L"ProjFar", labelheight);
-		if (!s_lodfarLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		WCHAR strfar[256] = { 0L };
-		swprintf_s(strfar, 256, L"%.1f", g_projfar);
-		s_lodfarEdit = new OWP_EditBox(true, strfar, labelheight, EDIT_BUFLEN_NUM);
-		if (!s_lodfarEdit) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodpickdistsp = new OWP_Separator(s_lodWnd, true, ratesllabel, true);
-		if (!s_lodpickdistsp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodpickdistLabel = new OWP_Label(L"PickDist", labelheight);
-		if (!s_lodpickdistLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodpickdistSlider = new OWP_Slider(g_pickdistrate, 1.0, 0.0, labelheight);
-		if (!s_lodpickdistSlider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel2Label = new OWP_Label(L"Tow Levels LOD : clipping distance", labelheight);
-		if (!s_lodlevel2Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel2lod0sp = new OWP_Separator(s_lodWnd, true, ratesllabel, true);
-		if (!s_lodlevel2lod0sp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel2lod0Label = new OWP_Label(L"LOD0", labelheight);
-		if (!s_lodlevel2lod0Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel2lod0Slider = new OWP_Slider((double)g_lodrate2L[CHKINVIEW_LOD0], 1.0, 0.0, labelheight);
-		if (!s_lodlevel2lod0Slider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel2lod1sp = new OWP_Separator(s_lodWnd, true, ratesllabel, true);
-		if (!s_lodlevel2lod1sp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel2lod1Label = new OWP_Label(L"LOD1", labelheight);
-		if (!s_lodlevel2lod1Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel2lod1Slider = new OWP_Slider((double)g_lodrate2L[CHKINVIEW_LOD1], 1.0, 0.0, labelheight);
-		if (!s_lodlevel2lod1Slider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel3Label = new OWP_Label(L"Three Levels LOD : clipping distance", labelheight);
-		if (!s_lodlevel3Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel3lod0sp = new OWP_Separator(s_lodWnd, true, ratesllabel, true);
-		if (!s_lodlevel3lod0sp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel3lod0Label = new OWP_Label(L"LOD0", labelheight);
-		if (!s_lodlevel3lod0Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel3lod0Slider = new OWP_Slider((double)g_lodrate3L[CHKINVIEW_LOD0], 1.0, 0.0, labelheight);
-		if (!s_lodlevel3lod0Slider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel3lod1sp = new OWP_Separator(s_lodWnd, true, ratesllabel, true);
-		if (!s_lodlevel3lod1sp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel3lod1Label = new OWP_Label(L"LOD1", labelheight);
-		if (!s_lodlevel3lod1Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel3lod1Slider = new OWP_Slider((double)g_lodrate3L[CHKINVIEW_LOD1], 1.0, 0.0, labelheight);
-		if (!s_lodlevel3lod1Slider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel3lod2sp = new OWP_Separator(s_lodWnd, true, ratesllabel, true);
-		if (!s_lodlevel3lod2sp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel3lod2Label = new OWP_Label(L"LOD2", labelheight);
-		if (!s_lodlevel3lod2Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel3lod2Slider = new OWP_Slider((double)g_lodrate3L[CHKINVIEW_LOD2], 1.0, 0.0, labelheight);
-		if (!s_lodlevel3lod2Slider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel4Label = new OWP_Label(L"Four Levels LOD : clipping distance", labelheight);
-		if (!s_lodlevel4Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel4lod0sp = new OWP_Separator(s_lodWnd, true, ratesllabel, true);
-		if (!s_lodlevel4lod0sp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel4lod0Label = new OWP_Label(L"LOD0", labelheight);
-		if (!s_lodlevel4lod0Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel4lod0Slider = new OWP_Slider((double)g_lodrate4L[CHKINVIEW_LOD0], 1.0, 0.0, labelheight);
-		if (!s_lodlevel4lod0Slider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel4lod1sp = new OWP_Separator(s_lodWnd, true, ratesllabel, true);
-		if (!s_lodlevel4lod1sp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel4lod1Label = new OWP_Label(L"LOD1", labelheight);
-		if (!s_lodlevel4lod1Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel4lod1Slider = new OWP_Slider((double)g_lodrate4L[CHKINVIEW_LOD1], 1.0, 0.0, labelheight);
-		if (!s_lodlevel4lod1Slider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel4lod2sp = new OWP_Separator(s_lodWnd, true, ratesllabel, true);
-		if (!s_lodlevel4lod2sp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel4lod2Label = new OWP_Label(L"LOD2", labelheight);
-		if (!s_lodlevel4lod2Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel4lod2Slider = new OWP_Slider((double)g_lodrate4L[CHKINVIEW_LOD2], 1.0, 0.0, labelheight);
-		if (!s_lodlevel4lod2Slider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel4lod3sp = new OWP_Separator(s_lodWnd, true, ratesllabel, true);
-		if (!s_lodlevel4lod3sp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel4lod3Label = new OWP_Label(L"LOD3", labelheight);
-		if (!s_lodlevel4lod3Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodlevel4lod3Slider = new OWP_Slider((double)g_lodrate4L[CHKINVIEW_LOD3], 1.0, 0.0, labelheight);
-		if (!s_lodlevel4lod3Slider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodspacer1Label = new OWP_Label(L"     ", 24);
-		if (!s_lodspacer1Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodapplysp = new OWP_Separator(s_lodWnd, true, rate50, true);
-		if (!s_lodapplysp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodapplyB = new OWP_Button(L"Apply(適用)", 38);
-		if (!s_lodapplyB) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodapplyB->setTextColor(RGB(168, 129, 129));
-		s_lodspacerLabel001 = new OWP_Label(L"     ", 32);
-		if (!s_lodspacerLabel001) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodspacerLabel002 = new OWP_Label(L"     ", 32);
-		if (!s_lodspacerLabel002) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lodspacerLabel003 = new OWP_Label(L"     ", 32);
-		if (!s_lodspacerLabel003) {
-			_ASSERT(0);
-			abort();
-		}
-
-
-
-
-		s_lodWnd->addParts(*s_lodprojLabel);
-		s_lodWnd->addParts(*s_lodprojfovsp0);
-		s_lodprojfovsp0->addParts1(*s_lodprojfovLabel);
-		s_lodprojfovsp0->addParts2(*s_lodprojfovSlider);
-		s_lodWnd->addParts(*s_lodnearfarsp0);
-		s_lodnearfarsp0->addParts1(*s_lodnearfarsp1);
-		s_lodnearfarsp0->addParts2(*s_lodnearfarsp2);
-		s_lodnearfarsp1->addParts1(*s_lodnearLabel);
-		s_lodnearfarsp1->addParts2(*s_lodnearEdit);
-		s_lodnearfarsp2->addParts1(*s_lodfarLabel);
-		s_lodnearfarsp2->addParts2(*s_lodfarEdit);
-		s_lodWnd->addParts(*s_lodpickdistsp);
-		s_lodpickdistsp->addParts1(*s_lodpickdistLabel);
-		s_lodpickdistsp->addParts2(*s_lodpickdistSlider);
-		s_lodWnd->addParts(*s_lodspacerLabel001);//
-		s_lodWnd->addParts(*s_lodlevel2Label);
-		s_lodWnd->addParts(*s_lodlevel2lod0sp);
-		s_lodlevel2lod0sp->addParts1(*s_lodlevel2lod0Label);
-		s_lodlevel2lod0sp->addParts2(*s_lodlevel2lod0Slider);
-		s_lodWnd->addParts(*s_lodlevel2lod1sp);
-		s_lodlevel2lod1sp->addParts1(*s_lodlevel2lod1Label);
-		s_lodlevel2lod1sp->addParts2(*s_lodlevel2lod1Slider);
-		s_lodWnd->addParts(*s_lodspacerLabel002);//
-		s_lodWnd->addParts(*s_lodlevel3Label);
-		s_lodWnd->addParts(*s_lodlevel3lod0sp);
-		s_lodlevel3lod0sp->addParts1(*s_lodlevel3lod0Label);
-		s_lodlevel3lod0sp->addParts2(*s_lodlevel3lod0Slider);
-		s_lodWnd->addParts(*s_lodlevel3lod1sp);
-		s_lodlevel3lod1sp->addParts1(*s_lodlevel3lod1Label);
-		s_lodlevel3lod1sp->addParts2(*s_lodlevel3lod1Slider);
-		s_lodWnd->addParts(*s_lodlevel3lod2sp);
-		s_lodlevel3lod2sp->addParts1(*s_lodlevel3lod2Label);
-		s_lodlevel3lod2sp->addParts2(*s_lodlevel3lod2Slider);
-		s_lodWnd->addParts(*s_lodspacerLabel003);//
-		s_lodWnd->addParts(*s_lodlevel4Label);
-		s_lodWnd->addParts(*s_lodlevel4lod0sp);
-		s_lodlevel4lod0sp->addParts1(*s_lodlevel4lod0Label);
-		s_lodlevel4lod0sp->addParts2(*s_lodlevel4lod0Slider);
-		s_lodWnd->addParts(*s_lodlevel4lod1sp);
-		s_lodlevel4lod1sp->addParts1(*s_lodlevel4lod1Label);
-		s_lodlevel4lod1sp->addParts2(*s_lodlevel4lod1Slider);
-		s_lodWnd->addParts(*s_lodlevel4lod2sp);
-		s_lodlevel4lod2sp->addParts1(*s_lodlevel4lod2Label);
-		s_lodlevel4lod2sp->addParts2(*s_lodlevel4lod2Slider);
-		s_lodWnd->addParts(*s_lodlevel4lod3sp);
-		s_lodlevel4lod3sp->addParts1(*s_lodlevel4lod3Label);
-		s_lodlevel4lod3sp->addParts2(*s_lodlevel4lod3Slider);
-		s_lodWnd->addParts(*s_lodspacer1Label);
-		s_lodWnd->addParts(*s_lodapplysp);
-		s_lodapplysp->addParts2(*s_lodapplyB);
-
-
-
-		//##########
-		//Slider
-		//##########
-		s_lodprojfovSlider->setCursorListener([]() {
-			double value = s_lodprojfovSlider->getValue();
-			g_fovy = (float)(value * PI / 180.0);
-			SetCamera3DFromEyePos();//2023/12/30
-		});
-		s_lodpickdistSlider->setCursorListener([]() {
-			double value = s_lodpickdistSlider->getValue();
-			g_pickdistrate = value;
-		});
-
-		s_lodlevel2lod0Slider->setCursorListener([]() {
-			double value = s_lodlevel2lod0Slider->getValue();
-			g_lodrate2L[CHKINVIEW_LOD0] = (float)value;
-		});
-		s_lodlevel2lod1Slider->setCursorListener([]() {
-			double value = s_lodlevel2lod1Slider->getValue();
-			g_lodrate2L[CHKINVIEW_LOD1] = (float)value;
-		});
-
-		s_lodlevel3lod0Slider->setCursorListener([]() {
-			double value = s_lodlevel3lod0Slider->getValue();
-			g_lodrate3L[CHKINVIEW_LOD0] = (float)value;
-		});
-		s_lodlevel3lod1Slider->setCursorListener([]() {
-			double value = s_lodlevel3lod1Slider->getValue();
-			g_lodrate3L[CHKINVIEW_LOD1] = (float)value;
-		});
-		s_lodlevel3lod2Slider->setCursorListener([]() {
-			double value = s_lodlevel3lod2Slider->getValue();
-			g_lodrate3L[CHKINVIEW_LOD2] = (float)value;
-		});
-
-		s_lodlevel4lod0Slider->setCursorListener([]() {
-			double value = s_lodlevel4lod0Slider->getValue();
-			g_lodrate4L[CHKINVIEW_LOD0] = (float)value;
-		});
-		s_lodlevel4lod1Slider->setCursorListener([]() {
-			double value = s_lodlevel4lod1Slider->getValue();
-			g_lodrate4L[CHKINVIEW_LOD1] = (float)value;
-		});
-		s_lodlevel4lod2Slider->setCursorListener([]() {
-			double value = s_lodlevel4lod2Slider->getValue();
-			g_lodrate4L[CHKINVIEW_LOD2] = (float)value;
-		});
-		s_lodlevel4lod3Slider->setCursorListener([]() {
-			double value = s_lodlevel4lod3Slider->getValue();
-			g_lodrate4L[CHKINVIEW_LOD3] = (float)value;
-		});
-
-
-		s_lodapplyB->setButtonListener([]() {
-			WCHAR strnear[256] = { 0L };
-			if (s_lodnearEdit) {
-				s_lodnearEdit->getName(strnear, 256);
-			}
-			float tempeditvalue = (float)_wtof(strnear);
-			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-				g_projnear = tempeditvalue;
-			}
-			else {
-				if (s_lodWnd && s_lodWnd->getHWnd()) {
-					::MessageBox(s_lodWnd->getHWnd(), L"invalid editbox value : near", L"Invalid Value", MB_OK);
-				}
-			}
-
-			WCHAR strfar[256] = { 0L };
-			if (s_lodfarEdit) {
-				s_lodfarEdit->getName(strfar, 256);
-			}
-			tempeditvalue = (float)_wtof(strfar);
-			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-				g_projfar = tempeditvalue;
-			}
-			else {
-				if (s_lodWnd && s_lodWnd->getHWnd()) {
-					::MessageBox(s_lodWnd->getHWnd(), L"invalid editbox value : far", L"Invalid Value", MB_OK);
-				}
-			}
-
-			SetCamera3DFromEyePos();//2023/12/30			
-		});
-
-
-
-		s_lodWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
-		s_lodWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
-
-		//１クリック目問題対応
-		s_lodWnd->refreshPosAndSize();
-
-		s_lodWnd->callRewrite();
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-
-	return 0;
-}
 
 
 int CreateLightsWnd()
@@ -31227,70 +30461,6 @@ int Dlg2LaterTransparent()
 		return 1;
 	}
 
-	return 0;
-}
-
-int LODParams2Dlg()
-{
-	if (s_lodWnd) {
-
-		//#######
-		//Slider
-		//#######
-		if (s_lodprojfovSlider) {
-			double value = (double)g_fovy * 180.0 / PI;
-			s_lodprojfovSlider->setValue(value, false);
-		}
-		if (s_lodpickdistSlider) {
-			s_lodpickdistSlider->setValue(g_pickdistrate, false);
-		}
-
-		if (s_lodlevel2lod0Slider) {
-			s_lodlevel2lod0Slider->setValue((double)g_lodrate2L[CHKINVIEW_LOD0], false);
-		}
-		if (s_lodlevel2lod1Slider) {
-			s_lodlevel2lod1Slider->setValue((double)g_lodrate2L[CHKINVIEW_LOD1], false);
-		}
-
-		if (s_lodlevel3lod0Slider) {
-			s_lodlevel3lod0Slider->setValue((double)g_lodrate3L[CHKINVIEW_LOD0], false);
-		}
-		if (s_lodlevel3lod1Slider) {
-			s_lodlevel3lod1Slider->setValue((double)g_lodrate3L[CHKINVIEW_LOD1], false);
-		}
-		if (s_lodlevel3lod2Slider) {
-			s_lodlevel3lod2Slider->setValue((double)g_lodrate3L[CHKINVIEW_LOD2], false);
-		}
-
-		if (s_lodlevel4lod0Slider) {
-			s_lodlevel4lod0Slider->setValue((double)g_lodrate4L[CHKINVIEW_LOD0], false);
-		}
-		if (s_lodlevel4lod1Slider) {
-			s_lodlevel4lod1Slider->setValue((double)g_lodrate4L[CHKINVIEW_LOD1], false);
-		}
-		if (s_lodlevel4lod2Slider) {
-			s_lodlevel4lod2Slider->setValue((double)g_lodrate4L[CHKINVIEW_LOD2], false);
-		}
-		if (s_lodlevel4lod3Slider) {
-			s_lodlevel4lod3Slider->setValue((double)g_lodrate4L[CHKINVIEW_LOD3], false);
-		}
-
-		//#####
-		//EditBox
-		//#####
-		WCHAR strdlg[256] = { 0L };
-		swprintf_s(strdlg, 256, L"%.2f", g_projnear);
-		if (s_lodnearEdit) {
-			s_lodnearEdit->setNameString(strdlg);
-		}
-
-		swprintf_s(strdlg, 256, L"%.1f", g_projfar);
-		if (s_lodfarEdit) {
-			s_lodfarEdit->setNameString(strdlg);
-		}
-
-		s_lodWnd->callRewrite();
-	}
 	return 0;
 }
 
@@ -47113,7 +46283,10 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	case WM_COMMAND:
 	{
 		
-		if (menuid == (ID_RMENU_0 + MENUOFFSET_BULLETDLG)) {
+		if (menuid == (ID_RMENU_0 + MENUOFFSET_PROJLODDLG)) {
+			SetCamera3DFromEyePos();
+		}
+		else if (menuid == (ID_RMENU_0 + MENUOFFSET_BULLETDLG)) {
 			if (s_chascene) {
 				s_chascene->ChangeAngleSpringScale();
 			}
@@ -48985,18 +48158,7 @@ void ShowGUIDlgBullet(bool srcflag)
 }
 void ShowGUIDlgLOD(bool srcflag)
 {
-	if (s_lodWnd) {
-		if (srcflag == true) {
-			LODParams2Dlg();
-			s_lodWnd->setVisible(true);
-			s_lodWnd->setListenMouse(true);
-			s_lodWnd->callRewrite();
-		}
-		else {
-			s_lodWnd->setVisible(false);
-			s_lodWnd->setListenMouse(false);
-		}
-	}
+	s_projloddlg.SetVisible(srcflag);
 
 	s_spguisw[SPGUISW_PROJ_AND_LOD].state = srcflag;
 }
