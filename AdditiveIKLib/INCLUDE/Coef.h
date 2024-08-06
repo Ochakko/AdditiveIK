@@ -24,6 +24,30 @@ class CMQOMaterial;
 #define	u_long	unsigned long
 
 
+//#####################
+//ID_RMENU_0を足して使う
+//#####################
+//Dlgからのメニューオフセットはcoef.hに　100以降はAdditiveIK.cppに
+// (96)はCRigidParamsDlgをトリガーとする呼び出し用に確保
+#define MENUOFFSET_RIGIDPARAMSDLG		(96)
+// (97)はCpInfoDlg2をトリガーとするCopyMotionFunc()呼び出し用に確保
+#define MENUOFFSET_CPINFODLG			(97)
+// (98)はDollyHistoryDlg2のOnSaveDolly()呼び出し用に確保
+#define MENUOFFSET_DOLLYHISTORYDLG		(98)
+// (99)はCopyHistoryDlg2のOnSearch()呼び出し用に確保
+#define MENUOFFSET_COPYHISTORYDLG		(99)
+
+
+
+//lParam
+enum {
+	RIGIDPARAMSDLG_OPE_CLOSE,
+	RIGIDPARAMSDLG_OPE_COLIDLG,
+	RIGIDPARAMSDLG_OPE_GCOLIDLG,
+	RIGIDPARAMSDLG_OPE_MAX
+};
+
+
 #define HISTORYCOMMENTLEN	32
 #define EDIT_BUFLEN_NUM		20
 #define EDIT_BUFLEN_MEMO	(HISTORYCOMMENTLEN)

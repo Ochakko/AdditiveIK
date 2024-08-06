@@ -230,6 +230,7 @@
     <ClCompile Include="..\CPP\RigFile.cpp" />
     <ClCompile Include="..\CPP\RigidElem.cpp" />
     <ClCompile Include="..\CPP\RigidElemFile.cpp" />
+    <ClCompile Include="..\CPP\RigidParamsDlg.cpp" />
     <ClCompile Include="..\CPP\ShaderTypeFile.cpp" />
     <ClCompile Include="..\CPP\ShadowParamsFile.cpp" />
     <ClCompile Include="..\CPP\SkyParamsFile.cpp" />
@@ -619,6 +620,7 @@
     <ClInclude Include="..\INCLUDE\RigFile.h" />
     <ClInclude Include="..\INCLUDE\RigidElem.h" />
     <ClInclude Include="..\INCLUDE\RigidElemFile.h" />
+    <ClInclude Include="..\INCLUDE\RigidParamsDlg.h" />
     <ClInclude Include="..\INCLUDE\ShaderTypeFile.h" />
     <ClInclude Include="..\INCLUDE\ShadowParamsFile.h" />
     <ClInclude Include="..\INCLUDE\SkyParamsFile.h" />

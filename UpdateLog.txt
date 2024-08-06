@@ -3,6 +3,17 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/08/06
+　RigidWnd(剛体設定ウインドウ)をCRigidParamsDlgにクラス化
+
+
+　予定
+　　AdditiveIK.cppにスタティックメンバとして大量に記述しているOWP関係のソースをクラス化していく予定
+　　大量にあるのでそれなりに時間がかかると思われる
+
+
+
+
 2024/08/05
 　カメラドリー履歴にカメラupvec情報を追加
 　　昔の履歴のupvecはY軸として扱う

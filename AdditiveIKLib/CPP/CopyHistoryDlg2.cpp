@@ -1050,7 +1050,7 @@ int CCopyHistoryDlg2::CreateOWPWnd(CModel* srcmodel)
 
 		m_searchB->setButtonListener([=, this]() {
 			//OnSearch();//OnSearch()からはParams2Dlg()が呼ばれてそこからCreateOWPWnd()が呼ばれてm_searchBは作り直されエラーになる
-			::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + 99), 0);//SendMessageでも上記と同様のエラー.　PostMessage()を使う
+			::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_COPYHISTORYDLG), 0);//SendMessageでも上記と同様のエラー.　PostMessage()を使う
 		});
 
 

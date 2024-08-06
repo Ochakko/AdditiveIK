@@ -71,6 +71,7 @@
 #include "SettingsDlg.h"
 #include <CopyHistoryDlg2.h>
 #include <DollyHistoryDlg2.h>
+#include <RigidParamsDlg.h>
 #include <CpInfoDlg2.h>
 
 #include <math.h>
@@ -784,10 +785,12 @@ static int s_dspushedR3 = 0;
 
 static HWND s_mqodlghwnd = 0;
 static bool s_underframecopydlg = false;
+
 static CColiIDDlg* s_pcolidlg = 0;
 static bool s_undercolidlg = false;
 static CGColiIDDlg* s_pgcolidlg = 0;
 static bool s_undergcolidlg = false;
+
 static HWND s_motpropdlghwnd = 0;
 //static HWND s_cameradollydlgwnd = 0;
 static HWND s_materialratedlgwnd = 0;
@@ -955,6 +958,8 @@ static bool s_allmodelbone = false;
 static std::vector<HISTORYELEM> s_cptfilename;
 static CCopyHistoryDlg2 s_copyhistorydlg2;
 static CDollyHistoryDlg2 s_dollyhistorydlg2;
+
+static CRigidParamsDlg s_rigidparamsdlg;
 
 static bool s_undercpinfodlg2;
 static CCpInfoDlg2 s_cpinfodlg2;
@@ -2098,106 +2103,6 @@ static bool s_fogparamsFlag = false;
 static bool s_dofparamsFlag = false;
 
 
-static OrgWindow* s_rigidWnd = 0;
-static OWP_ScrollWnd* s_rigidSc = 0;
-static OWP_Separator* s_rigidspall = 0;
-static OWP_Separator* s_rigidsp0 = 0;
-static OWP_CheckBoxA* s_groupcheck = 0;
-static OWP_Slider* s_sphrateSlider = 0;
-static OWP_Slider* s_boxzSlider = 0;
-static OWP_Slider* s_massSlider = 0;
-//static OWP_Separator* s_massSeparator = 0;
-//static OWP_Separator* s_massSeparator1 = 0;
-//static OWP_Separator* s_massSeparator2 = 0;
-static OWP_Button* s_massB = 0;
-static OWP_Button* s_thicknessB = 0;
-static OWP_Button* s_depthB = 0;
-static OWP_Label* s_massspacelabel = 0;
-static OWP_CheckBoxA* s_rigidskip = 0;
-static OWP_Button* s_skipB = 0;
-static OWP_Separator* s_forbidSeparator = 0;
-static OWP_Button* s_forbidB = 0;
-static OWP_CheckBoxA* s_forbidrot = 0;
-static OWP_Label* s_shplabel = 0;
-static OWP_Label* s_boxzlabel = 0;
-static OWP_Separator* s_colSeparator = 0;
-static OWP_Button* s_colB = 0;
-static OWP_RadioButton* s_colradio = 0;
-static OWP_RadioButton* s_lkradio = 0;
-static OWP_RadioButton* s_akradio = 0;
-static OWP_Slider* s_ldmpSlider = 0;
-static OWP_Slider* s_admpSlider = 0;
-static OWP_Label* s_massSLlabel = 0;
-static OWP_Label* s_namelabel = 0;
-static OWP_Label* s_lenglabel = 0;
-static OWP_Label* s_ldmplabel = 0;
-static OWP_Label* s_admplabel = 0;
-static OWP_Button* s_kB = 0;
-static OWP_Button* s_restB = 0;
-static OWP_Button* s_dmpB = 0;
-static OWP_Button* s_groupB = 0;
-static OWP_Button* s_gcoliB = 0;
-static OWP_Separator* s_validSeparator = 0;
-static OWP_Button* s_allrigidenableB = 0;
-static OWP_Button* s_allrigiddisableB = 0;
-//2024/02/20
-static OWP_Separator* s_thicknessSeparator = 0;
-static OWP_Separator* s_depthSeparator = 0;
-static OWP_Separator* s_massSeparator = 0;
-static OWP_Separator* s_thicknessSeparator2 = 0;
-static OWP_Separator* s_depthSeparator2 = 0;
-static OWP_Separator* s_massSeparator2 = 0;
-static OWP_Separator* s_validSeparator2 = 0;
-static OWP_Separator* s_forbidSeparator2 = 0;
-static OWP_Separator* s_colSeparator2 = 0;
-static OWP_Separator* s_springSeparator = 0;
-static OWP_Separator* s_restitutionSeparator = 0;
-static OWP_Separator* s_dumpingSeparator = 0;
-static OWP_Separator* s_gSeparator = 0;
-static OWP_Separator* s_btforceSeparator2 = 0;
-static OWP_Separator* s_coliidSeparator = 0;
-static OWP_Button* s_thicknessDeeperB = 0;
-static OWP_Button* s_depthDeeperB = 0;
-static OWP_Button* s_massDeeperB = 0;
-static OWP_Button* s_validDeeperB = 0;
-static OWP_Button* s_forbidDeeperB = 0;
-static OWP_Button* s_colDeeperB = 0;
-static OWP_Button* s_springDeeperB = 0;
-static OWP_Button* s_restitutionDeeperB = 0;
-static OWP_Button* s_dumpingDeeperB = 0;
-static OWP_Button* s_gDeeperB = 0;
-static OWP_Button* s_btforceDeeperB = 0;
-static OWP_Button* s_coliidDeeperB = 0;
-static OWP_Separator* s_coliseparator = 0;
-static OWP_Label* s_rigidspacerLabel01 = 0;
-static OWP_Label* s_rigidspacerLabel02 = 0;
-static OWP_Label* s_rigidspacerLabel03 = 0;
-static OWP_Label* s_rigidspacerLabel04 = 0;
-static OWP_Label* s_rigidspacerLabel05 = 0;
-static OWP_Label* s_rigidspacerLabel06 = 0;
-static OWP_Label* s_rigidspacerLabel07 = 0;
-static OWP_Label* s_rigidspacerLabel08 = 0;
-
-
-
-static OWP_Slider* s_lkSlider = 0;
-static OWP_Label* s_lklabel = 0;
-static OWP_Slider* s_akSlider = 0;
-static OWP_Label* s_aklabel = 0;
-
-static OWP_Slider* s_restSlider = 0;
-static OWP_Label* s_restlabel = 0;
-static OWP_Slider* s_fricSlider = 0;
-static OWP_Label* s_friclabel = 0;
-
-static OWP_Slider* s_btgSlider = 0;
-static OWP_Label* s_btglabel = 0;
-static OWP_Slider* s_btgscSlider = 0;
-static OWP_Label* s_btgsclabel = 0;
-static OWP_Button* s_btgB = 0;
-static OWP_Separator* s_btforceSeparator = 0;
-static OWP_CheckBoxA* s_btforce = 0;
-static OWP_Button* s_btforceB = 0;
 
 static OrgWindow* s_impWnd = 0;
 static OWP_CheckBoxA* s_impgroupcheck = 0;
@@ -2352,7 +2257,6 @@ static bool s_closemotionFlag = false;
 static bool s_closeconvboneFlag = false;
 static bool s_closeblendshapeFlag = false;
 static bool s_DcloseFlag = false;
-static bool s_RcloseFlag = false;
 static bool s_ScloseFlag = false;
 static bool s_IcloseFlag = false;
 static bool s_GcloseFlag = false;
@@ -3014,11 +2918,21 @@ ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わら�
 // UI control IDs
 //--------------------------------------------------------------------------------------
 
-
+//#####################
 //ID_RMENU_0を足して使う
-// (97)はCpInfoDlg2をトリガーとするCopyMotionFunc()呼び出し用に確保
-// (98)はDollyHistoryDlg2のOnSaveDolly()呼び出し用に確保
-// (99)はCopyHistoryDlg2のOnSearch()呼び出し用に確保
+//#####################
+
+//Dlgからのメニューオフセットはcoef.hに
+//// (96)はCRigidParamsDlgをトリガーとする呼び出し用に確保
+//#define MENUOFFSET_RIGIDPARAMSDLG		(96)
+//// (97)はCpInfoDlg2をトリガーとするCopyMotionFunc()呼び出し用に確保
+//#define MENUOFFSET_CPINFODLG			(97)
+//// (98)はDollyHistoryDlg2のOnSaveDolly()呼び出し用に確保
+//#define MENUOFFSET_DOLLYHISTORYDLG		(98)
+//// (99)はCopyHistoryDlg2のOnSearch()呼び出し用に確保
+//#define MENUOFFSET_COPYHISTORYDLG		(99)
+
+
 #define MENUOFFSET_SETCONVBONEMODEL		(100)
 #define MENUOFFSET_SETCONVBONEBVH		(MENUOFFSET_SETCONVBONEMODEL + 100)
 #define MENUOFFSET_SETCONVBONE			(MENUOFFSET_SETCONVBONEBVH + 100)
@@ -3298,6 +3212,7 @@ static float CalcSelectScale();
 static double CalcRefFrame();
 static void ChangeCurDirFromMameMediaToTest();
 
+static int SetModel2Dlgs(CModel* srcmodel);
 
 
 //static int CreateCameraDollyWnd();//2023/08/23 CreateDollyHistoryDlg()に移行
@@ -3436,9 +3351,6 @@ static bool IsClickedSpriteButton();
 static int CreateTimelineWnd();
 static int CreateLongTimelineWnd();
 static int CreateDmpAnimWnd();
-static int CreateRigidWnd();
-static int DestroyRigidWnd();
-static void InitRigidWnd();
 static int CreateSideMenuWnd();
 static int Params2SideMenuWnd();
 static int CreateTopSlidersWnd();
@@ -3751,11 +3663,6 @@ static bool PickAndSelectMaterialOfShaderTypeDlg();
 static bool PickAndPut();
 
 
-
-
-//static int SetSelectCol();
-static int RigidElem2WndParam();
-static int SetRigidLeng();
 static int SetImpWndParams();
 static int SetGpWndParams();
 static int SetDmpWndParams();
@@ -4409,7 +4316,6 @@ INT WINAPI wWinMain(
 	CreateToolWnd();
 	CreateLongTimelineWnd();
 	CreateDmpAnimWnd();
-	CreateRigidWnd();
 	CreateShaderTypeWnd();
 	CreateImpulseWnd();
 	CreateGPlaneWnd();
@@ -4749,6 +4655,7 @@ int CheckResolution()
 		}
 		s_copyhistorydlg2.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_dollyhistorydlg2.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+		s_rigidparamsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 	}
 
 	return 0;
@@ -4774,6 +4681,8 @@ void InitApp()
 		//ここではまだhistorydlg2.SetPosAndSize()が呼ばれていないのでダイアログの作成はしない
 		//SetPosAndSize()が呼ばれてg_mainhwndがセットされた後で作成する
 	}
+	s_rigidparamsdlg.InitParams();
+
 
 	s_undercpinfodlg2 = false;
 	s_cpinfodlg2.InitParams();
@@ -6401,7 +6310,6 @@ void InitApp()
 	s_closeconvboneFlag = false;
 	s_closeblendshapeFlag = false;
 	s_DcloseFlag = false;
-	s_RcloseFlag = false;
 	s_ScloseFlag = false;
 	s_IcloseFlag = false;
 	s_GcloseFlag = false;
@@ -6770,7 +6678,6 @@ void InitApp()
 	OrgWinGUI::InitEulKeys();
 	OrgWinGUI::InitKeys();
 
-	InitRigidWnd();//2024/03/03
 
 	s_motmenuindexmap.clear();
 	s_cameramenuindexmap.clear();
@@ -7368,6 +7275,7 @@ void OnDestroyDevice()
 
 	s_copyhistorydlg2.DestroyObjs();
 	s_dollyhistorydlg2.DestroyObjs();
+	s_rigidparamsdlg.DestroyObjs();
 	s_cpinfodlg2.DestroyObjs();
 
 
@@ -7653,7 +7561,6 @@ void OnDestroyDevice()
 	}
 
 
-	DestroyRigidWnd();
 	DestroyDispGroupWnd();
 	DestroyBlendShapeWnd();
 	DestroyShaderTypeWnd();
@@ -12041,10 +11948,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 
 		if (s_model && (s_curboneno >= 0)) {
-			SetRigidLeng();
 			SetImpWndParams();
 			SetDmpWndParams();
-			RigidElem2WndParam();
+			s_rigidparamsdlg.SetModel(s_model, s_curboneno, s_reindexmap, s_rgdindexmap);
 		}
 
 	}
@@ -17238,6 +17144,8 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		ShowShadowParamsWnd(s_spdispsw[SPDISPSW_SHADOWPARAMS].state);
 		ShowGUIDlgBlendShape(s_spguisw[SPGUISW_BLENDSHAPE].state);
 
+		SetModel2Dlgs(nullptr);
+
 		s_underselectmodel = false;
 		return 0;//!!!!!!!!!
 	}
@@ -17269,6 +17177,8 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		ShowShaderTypeWnd(s_spdispsw[SPDISPSW_SHADERTYPE].state);
 		ShowShadowParamsWnd(s_spdispsw[SPDISPSW_SHADOWPARAMS].state);
 		ShowGUIDlgBlendShape(s_spguisw[SPGUISW_BLENDSHAPE].state);
+
+		SetModel2Dlgs(nullptr);
 
 		s_underselectmodel = false;
 		return 0;//!!!!!!!!!!!!!!!!!!!
@@ -17321,48 +17231,8 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		ClampTimelineSelection();//2024/06/23
 
 
-		CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg(false);
-		if (!curcpdlg) {
-			curcpdlg = new CFrameCopyDlg();
-			if (!curcpdlg) {
-				_ASSERT(0);
-				s_underselectmodel = false;
-				return 1;//!!!!!!!!!
-			}
-			s_selbonedlgmap[s_model] = curcpdlg;
-			curcpdlg->SetModel(s_model);
-		}
+		SetModel2Dlgs(s_model);
 
-		if (InterlockedAdd(&g_retargetbatchflag, 0) == 0) {
-			{
-				GetCPTFileName(s_cptfilename);
-				s_copyhistorydlg2.SetNames(s_model, s_cptfilename);
-			}
-		}
-
-		{
-			if (s_materialratedlgwnd) {
-				if (s_model) {
-					SetModel2MaterialRateDlg(s_model);
-				}
-			}
-		}
-
-		{
-			if (s_modelworldmatdlgwnd) {
-				if (s_model) {
-					SetModel2ModelWorldMatDlg(s_model);
-				}
-			}
-		}
-
-		{
-			if (s_st_paramsWnd) {
-				if (s_model) {
-					SetMaterial2ShaderTypeParamsDlg(nullptr);
-				}
-			}
-		}
 
 		if (s_model) {
 			if (s_model->GetRigidElemInfoSize() > 0) {
@@ -17493,7 +17363,7 @@ int OnREMenu(int selindex, int callbymenu)
 
 	CallF(s_model->SetCurrentRigidElem(s_reindexmap[s_model]), return 1);
 
-	RigidElem2WndParam();
+	s_rigidparamsdlg.SetModel(s_model, s_curboneno, s_reindexmap, s_rgdindexmap);
 
 	SetMainWindowTitle();
 
@@ -23633,264 +23503,8 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 	return 0;
 }
 
-int RigidElem2WndParam()
-{
-	if (!s_model) {
-		return 0;
-	}
-	if (s_curboneno < 0) {
-		return 0;
-	}
 
 
-	//ダイアログの数値はメニューで選択中のもの
-	s_model->SetCurrentRigidElem(s_reindexmap[s_model]);
-
-
-	CBone* curbone = s_model->GetBoneByID(s_curboneno);
-	if (curbone) {
-		//int kinflag = curbone->m_btforce;
-
-		CBone* parentbone = curbone->GetParent(false);
-		if (parentbone && parentbone->IsSkeleton()) {
-			int kinflag = parentbone->GetBtForce();
-			s_btforce->setValue((bool)kinflag, false);
-
-			CRigidElem* curre = parentbone->GetRigidElem(curbone);
-			if (curre) {
-				float rate = (float)curre->GetSphrate();
-				float boxz = (float)curre->GetBoxzrate();
-				float mass = (float)curre->GetMass();
-				bool skipflag = !((bool)curre->GetSkipflag());
-				int colindex = curre->GetColtype();
-				int lkindex = curre->GetLKindex();
-				int akindex = curre->GetAKindex();
-				float ldmp = curre->GetLDamping();
-				float admp = curre->GetADamping();
-				float cuslk = curre->GetCusLk();
-				float cusak = curre->GetCusAk();
-				float rest = curre->GetRestitution();
-				float fric = curre->GetFriction();
-				float btg = curre->GetBtg();
-				int forbidrot = curre->GetForbidRotFlag();
-
-				if (s_sphrateSlider) {
-					s_sphrateSlider->setValue(rate, false);
-				}
-				if (s_boxzSlider) {
-					s_boxzSlider->setValue(boxz, false);
-				}
-				if (s_massSlider) {
-					s_massSlider->setValue(mass, false);
-				}
-				if (s_rigidskip) {
-					s_rigidskip->setValue(skipflag, false);
-				}
-				if (s_forbidrot) {
-					s_forbidrot->setValue(forbidrot, false);
-				}
-				if (s_colradio) {
-					s_colradio->setSelectIndex(colindex, false);
-				}
-				if (s_lkradio) {
-					s_lkradio->setSelectIndex(lkindex, false);
-				}
-				if (s_akradio) {
-					s_akradio->setSelectIndex(akindex, false);
-				}
-				if (s_ldmpSlider) {
-					s_ldmpSlider->setValue(ldmp, false);
-				}
-				if (s_admpSlider) {
-					s_admpSlider->setValue(admp, false);
-				}
-				if (s_lkSlider) {
-					s_lkSlider->setValue(cuslk, false);
-				}
-				if (s_akSlider) {
-					s_akSlider->setValue(cusak, false);
-				}
-				if (s_restSlider) {
-					s_restSlider->setValue(rest, false);
-				}
-				if (s_fricSlider) {
-					s_fricSlider->setValue(fric, false);
-				}
-				if (s_btgSlider) {
-					s_btgSlider->setValue(btg, false);
-				}
-			}
-			else {
-				//rigid elemが作成されていないとき
-				if (s_sphrateSlider) {
-					s_sphrateSlider->setValue(1.0, false);
-				}
-				if (s_boxzSlider) {
-					s_boxzSlider->setValue(1.0, false);
-				}
-				if (s_massSlider) {
-					s_massSlider->setValue(1.0, false);
-				}
-				if (s_rigidskip) {
-					s_rigidskip->setValue(0, false);
-				}
-				if (s_forbidrot) {
-					s_forbidrot->setValue(0, false);
-				}
-				if (s_colradio) {
-					s_colradio->setSelectIndex(0, false);
-				}
-				if (s_lkradio) {
-					s_lkradio->setSelectIndex(0, false);
-				}
-				if (s_akradio) {
-					s_akradio->setSelectIndex(0, false);
-				}
-				if (s_ldmpSlider) {
-					s_ldmpSlider->setValue(g_l_dmp, false);
-				}
-				if (s_admpSlider) {
-					s_admpSlider->setValue(g_a_dmp, false);
-				}
-				if (s_lkSlider) {
-					s_lkSlider->setValue(g_initcuslk, false);
-				}
-				if (s_akSlider) {
-					s_akSlider->setValue(g_initcusak, false);
-				}
-				if (s_restSlider) {
-					s_restSlider->setValue(0.0, false);
-				}
-				if (s_fricSlider) {
-					s_fricSlider->setValue(0.0, false);
-				}
-				if (s_btgSlider) {
-					s_btgSlider->setValue(9.0, false);
-				}
-			}
-		}
-		else {
-			//rigid elemが作成されていないとき
-			if (s_sphrateSlider) {
-				s_sphrateSlider->setValue(1.0, false);
-			}
-			if (s_boxzSlider) {
-				s_boxzSlider->setValue(1.0, false);
-			}
-			if (s_massSlider) {
-				s_massSlider->setValue(1.0, false);
-			}
-			if (s_rigidskip) {
-				s_rigidskip->setValue(0, false);
-			}
-			if (s_forbidrot) {
-				s_forbidrot->setValue(0, false);
-			}
-			if (s_colradio) {
-				s_colradio->setSelectIndex(0, false);
-			}
-			if (s_lkradio) {
-				s_lkradio->setSelectIndex(0, false);
-			}
-			if (s_akradio) {
-				s_akradio->setSelectIndex(0, false);
-			}
-			if (s_ldmpSlider) {
-				s_ldmpSlider->setValue(g_l_dmp, false);
-			}
-			if (s_admpSlider) {
-				s_admpSlider->setValue(g_a_dmp, false);
-			}
-			if (s_lkSlider) {
-				s_lkSlider->setValue(g_initcuslk, false);
-			}
-			if (s_akSlider) {
-				s_akSlider->setValue(g_initcusak, false);
-			}
-			if (s_restSlider) {
-				s_restSlider->setValue(0.0, false);
-			}
-			if (s_fricSlider) {
-				s_fricSlider->setValue(0.0, false);
-			}
-			if (s_btgSlider) {
-				s_btgSlider->setValue(9.0, false);
-			}
-		}
-		if (s_namelabel) {
-			s_namelabel->setName((WCHAR*)curbone->GetWBoneName());
-		}
-	}
-	else {
-		if (s_namelabel) {
-			WCHAR noname[256];
-			wcscpy_s(noname, 256, L"BoneName：not selected");
-			s_namelabel->setName(noname);
-		}
-	}
-	if (s_model && (s_model->GetNoBoneFlag() == false) && s_btgscSlider) {
-		s_btgscSlider->setValue(s_model->GetBtGScale(s_model->GetCurReIndex()), false);
-	}
-
-
-	if (s_rigidWnd) {
-		s_rigidWnd->callRewrite();
-	}
-
-
-	//再生中、シミュレーション中への対応。元の状態に戻す。
-	if (g_previewFlag != 5) {
-		s_model->SetCurrentRigidElem(s_reindexmap[s_model]);
-	}
-	else {
-		s_model->SetCurrentRigidElem(s_rgdindexmap[s_model]);
-	}
-
-
-	return 0;
-}
-
-int SetRigidLeng()
-{
-	if (s_curboneno < 0) {
-		return 0;
-	}
-	if (!s_model) {
-		return 0;
-	}
-	if (!s_model->GetTopBt()) {
-		return 0;
-	}
-
-	CBtObject* curbto = s_model->FindBtObject(s_curboneno);
-	if (curbto) {
-		WCHAR curlabel[512];
-		swprintf_s(curlabel, 512, L"BonaName：%s", curbto->GetEndBone()->GetWBoneName());
-		if (s_namelabel) {
-			s_namelabel->setName(curlabel);
-		}
-
-		WCHAR curlabel2[256];
-		swprintf_s(curlabel2, 256, L"BoneLength:%.3f[m]", curbto->GetBoneLeng());
-		if (s_lenglabel) {
-			s_lenglabel->setName(curlabel2);
-		}
-	}
-	else {
-		WCHAR curlabel[512];
-		wcscpy_s(curlabel, 512, L"BoneName：not selected");
-		if (s_namelabel) {
-			s_namelabel->setName(curlabel);
-		}
-
-		WCHAR curlabel2[256];
-		wcscpy_s(curlabel2, 256, L"BoneLength：not selected");
-		if (s_lenglabel) {
-			s_lenglabel->setName(curlabel2);
-		}
-	}
-	return 0;
-}
 
 int SetImpWndParams()
 {
@@ -34649,10 +34263,9 @@ int ChangeCurrentBone(int prepairundoflag)
 			//	}
 			//}
 
-			SetRigidLeng();
 			SetImpWndParams();
 			SetDmpWndParams();
-			RigidElem2WndParam();
+			s_rigidparamsdlg.SetModel(s_model, s_curboneno, s_reindexmap, s_rgdindexmap);
 			if (s_limitWnd) {
 				//s_model->UpdateMatrix(&s_model->GetWorldMat(), &s_matVP);//commentout
 				Bone2AngleLimit();
@@ -36011,18 +35624,6 @@ int OnFrameCloseFlag()
 	if (s_DcloseFlag) {
 		s_DcloseFlag = false;
 		s_dmpanimWnd->setVisible(0);
-		if (s_bpWorld) {
-			s_bpWorld->setGlobalERP(btScalar(g_erp));
-		}
-		if (s_model) {
-			CallF(s_model->CreateBtObject(g_limitdegflag, 0), return 1);
-		}
-	}
-	if (s_RcloseFlag) {
-		s_RcloseFlag = false;
-		if (s_rigidWnd) {
-			s_rigidWnd->setVisible(0);
-		}
 		if (s_bpWorld) {
 			s_bpWorld->setGlobalERP(btScalar(g_erp));
 		}
@@ -42551,393 +42152,6 @@ int CheckSimilarMenu()
 }
 
 
-int DestroyRigidWnd()
-{
-	if (s_sphrateSlider) {
-		delete s_sphrateSlider;
-		s_sphrateSlider = 0;
-	}
-	if (s_boxzSlider) {
-		delete s_boxzSlider;
-		s_boxzSlider = 0;
-	}
-	if (s_boxzlabel) {
-		delete s_boxzlabel;
-		s_boxzlabel = 0;
-	}
-	if (s_massSlider) {
-		delete s_massSlider;
-		s_massSlider = 0;
-	}
-	if (s_massSLlabel) {
-		delete s_massSLlabel;
-		s_massSLlabel = 0;
-	}
-	//if (s_massSeparator) {
-	//	delete s_massSeparator;
-	//	s_massSeparator = 0;
-	//}
-	//if (s_massSeparator1) {
-	//	delete s_massSeparator1;
-	//	s_massSeparator1 = 0;
-	//}
-	//if (s_massSeparator2) {
-	//	delete s_massSeparator2;
-	//	s_massSeparator2 = 0;
-	//}
-	if (s_massB) {
-		delete s_massB;
-		s_massB = 0;
-	}
-	if (s_thicknessB) {
-		delete s_thicknessB;
-		s_thicknessB = 0;
-	}
-	if (s_depthB) {
-		delete s_depthB;
-		s_depthB = 0;
-	}
-	if (s_massspacelabel) {
-		delete s_massspacelabel;
-		s_massspacelabel = 0;
-	}
-	if (s_namelabel) {
-		delete s_namelabel;
-		s_namelabel = 0;
-	}
-	if (s_lenglabel) {
-		delete s_lenglabel;
-		s_lenglabel = 0;
-	}
-	if (s_skipB) {
-		delete s_skipB;
-		s_skipB = 0;
-	}
-	if (s_rigidskip) {
-		delete s_rigidskip;
-		s_rigidskip = 0;
-	}
-	if (s_forbidSeparator) {
-		delete s_forbidSeparator;
-		s_forbidSeparator = 0;
-	}
-	if (s_forbidB) {
-		delete s_forbidB;
-		s_forbidB = 0;
-	}
-	if (s_forbidrot) {
-		delete s_forbidrot;
-		s_forbidrot = 0;
-	}
-
-	if (s_validSeparator) {
-		delete s_validSeparator;
-		s_validSeparator = 0;
-	}
-	if (s_allrigidenableB) {
-		delete s_allrigidenableB;
-		s_allrigidenableB = 0;
-	}
-	if (s_allrigiddisableB) {
-		delete s_allrigiddisableB;
-		s_allrigiddisableB = 0;
-	}
-
-
-	if (s_shplabel) {
-		delete s_shplabel;
-		s_shplabel = 0;
-	}
-	if (s_colSeparator) {
-		delete s_colSeparator;
-		s_colSeparator = 0;
-	}
-	if (s_colB) {
-		delete s_colB;
-		s_colB = 0;
-	}
-	if (s_colradio) {
-		delete s_colradio;
-		s_colradio = 0;
-	}
-	if (s_lkradio) {
-		delete s_lkradio;
-		s_lkradio = 0;
-	}
-	if (s_lkSlider) {
-		delete s_lkSlider;
-		s_lkSlider = 0;
-	}
-	if (s_lklabel) {
-		delete s_lklabel;
-		s_lklabel = 0;
-	}
-	if (s_akradio) {
-		delete s_akradio;
-		s_akradio = 0;
-	}
-	if (s_akSlider) {
-		delete s_akSlider;
-		s_akSlider = 0;
-	}
-	if (s_aklabel) {
-		delete s_aklabel;
-		s_aklabel = 0;
-	}
-	if (s_restSlider) {
-		delete s_restSlider;
-		s_restSlider = 0;
-	}
-	if (s_restlabel) {
-		delete s_restlabel;
-		s_restlabel = 0;
-	}
-	if (s_fricSlider) {
-		delete s_fricSlider;
-		s_fricSlider = 0;
-	}
-	if (s_friclabel) {
-		delete s_friclabel;
-		s_friclabel = 0;
-	}
-	if (s_ldmpSlider) {
-		delete s_ldmpSlider;
-		s_ldmpSlider = 0;
-	}
-	if (s_admpSlider) {
-		delete s_admpSlider;
-		s_admpSlider = 0;
-	}
-	if (s_kB) {
-		delete s_kB;
-		s_kB = 0;
-	}
-	if (s_restB) {
-		delete s_restB;
-		s_restB = 0;
-	}
-	if (s_ldmplabel) {
-		delete s_ldmplabel;
-		s_ldmplabel = 0;
-	}
-	if (s_admplabel) {
-		delete s_admplabel;
-		s_admplabel = 0;
-	}
-	if (s_dmpB) {
-		delete s_dmpB;
-		s_dmpB = 0;
-	}
-	if (s_groupB) {
-		delete s_groupB;
-		s_groupB = 0;
-	}
-	if (s_gcoliB) {
-		delete s_gcoliB;
-		s_gcoliB = 0;
-	}
-	if (s_btgSlider) {
-		delete s_btgSlider;
-		s_btgSlider = 0;
-	}
-	if (s_btglabel) {
-		delete s_btglabel;
-		s_btglabel = 0;
-	}
-	if (s_btgscSlider) {
-		delete s_btgscSlider;
-		s_btgscSlider = 0;
-	}
-	if (s_btgsclabel) {
-		delete s_btgsclabel;
-		s_btgsclabel = 0;
-	}
-	if (s_btforceSeparator) {
-		delete s_btforceSeparator;
-		s_btforceSeparator = 0;
-	}
-	if (s_btforce) {
-		delete s_btforce;
-		s_btforce = 0;
-	}
-	if (s_btforceB) {
-		delete s_btforceB;
-		s_btforceB = 0;
-	}
-	if (s_rigidsp0) {
-		delete s_rigidsp0;
-		s_rigidsp0 = 0;
-	}
-	if (s_groupcheck) {
-		delete s_groupcheck;
-		s_groupcheck = 0;
-	}
-	if (s_btgB) {
-		delete s_btgB;
-		s_btgB = 0;
-	}
-	if (s_rigidWnd) {
-		delete s_rigidWnd;
-		s_rigidWnd = 0;
-	}
-	if (s_thicknessSeparator) {
-		delete s_thicknessSeparator;
-		s_thicknessSeparator = 0;
-	}
-	if (s_depthSeparator) {
-		delete s_depthSeparator;
-		s_depthSeparator = 0;
-	}
-	if (s_massSeparator) {
-		delete s_massSeparator;
-		s_massSeparator = 0;
-	}
-	if (s_thicknessSeparator2) {
-		delete s_thicknessSeparator2;
-		s_thicknessSeparator2 = 0;
-	}
-	if (s_depthSeparator2) {
-		delete s_depthSeparator2;
-		s_depthSeparator2 = 0;
-	}
-	if (s_massSeparator2) {
-		delete s_massSeparator2;
-		s_massSeparator2 = 0;
-	}
-	if (s_validSeparator2) {
-		delete s_validSeparator2;
-		s_validSeparator2 = 0;
-	}
-	if (s_forbidSeparator2) {
-		delete s_forbidSeparator2;
-		s_forbidSeparator2 = 0;
-	}
-	if (s_colSeparator2) {
-		delete s_colSeparator2;
-		s_colSeparator2 = 0;
-	}
-	if (s_springSeparator) {
-		delete s_springSeparator;
-		s_springSeparator = 0;
-	}
-	if (s_restitutionSeparator) {
-		delete s_restitutionSeparator;
-		s_restitutionSeparator = 0;
-	}
-	if (s_dumpingSeparator) {
-		delete s_dumpingSeparator;
-		s_dumpingSeparator = 0;
-	}
-	if (s_gSeparator) {
-		delete s_gSeparator;
-		s_gSeparator = 0;
-	}
-	if (s_btforceSeparator2) {
-		delete s_btforceSeparator2;
-		s_btforceSeparator2 = 0;
-	}
-	if (s_coliidSeparator) {
-		delete s_coliidSeparator;
-		s_coliidSeparator = 0;
-	}
-
-
-	if (s_thicknessDeeperB) {
-		delete s_thicknessDeeperB;
-		s_thicknessDeeperB = 0;
-	}
-	if (s_depthDeeperB) {
-		delete s_depthDeeperB;
-		s_depthDeeperB = 0;
-	}
-	if (s_massDeeperB) {
-		delete s_massDeeperB;
-		s_massDeeperB = 0;
-	}
-	if (s_validDeeperB) {
-		delete s_validDeeperB;
-		s_validDeeperB = 0;
-	}
-	if (s_forbidDeeperB) {
-		delete s_forbidDeeperB;
-		s_forbidDeeperB = 0;
-	}
-	if (s_colDeeperB) {
-		delete s_colDeeperB;
-		s_colDeeperB = 0;
-	}
-	if (s_springDeeperB) {
-		delete s_springDeeperB;
-		s_springDeeperB = 0;
-	}
-	if (s_restitutionDeeperB) {
-		delete s_restitutionDeeperB;
-		s_restitutionDeeperB = 0;
-	}
-	if (s_dumpingDeeperB) {
-		delete s_dumpingDeeperB;
-		s_dumpingDeeperB = 0;
-	}
-	if (s_gDeeperB) {
-		delete s_gDeeperB;
-		s_gDeeperB = 0;
-	}
-	if (s_btforceDeeperB) {
-		delete s_btforceDeeperB;
-		s_btforceDeeperB = 0;
-	}
-	if (s_coliidDeeperB) {
-		delete s_coliidDeeperB;
-		s_coliidDeeperB = 0;
-	}
-	if (s_coliseparator) {
-		delete s_coliseparator;
-		s_coliseparator = 0;
-	}
-	if (s_rigidspacerLabel01) {
-		delete s_rigidspacerLabel01;
-		s_rigidspacerLabel01 = 0;
-	}
-	if (s_rigidspacerLabel02) {
-		delete s_rigidspacerLabel02;
-		s_rigidspacerLabel02 = 0;
-	}
-	if (s_rigidspacerLabel03) {
-		delete s_rigidspacerLabel03;
-		s_rigidspacerLabel03 = 0;
-	}
-	if (s_rigidspacerLabel04) {
-		delete s_rigidspacerLabel04;
-		s_rigidspacerLabel04 = 0;
-	}
-	if (s_rigidspacerLabel05) {
-		delete s_rigidspacerLabel05;
-		s_rigidspacerLabel05 = 0;
-	}
-	if (s_rigidspacerLabel06) {
-		delete s_rigidspacerLabel06;
-		s_rigidspacerLabel06 = 0;
-	}
-	if (s_rigidspacerLabel07) {
-		delete s_rigidspacerLabel07;
-		s_rigidspacerLabel07 = 0;
-	}
-	if (s_rigidspacerLabel08) {
-		delete s_rigidspacerLabel08;
-		s_rigidspacerLabel08 = 0;
-	}
-
-	if (s_rigidspall) {
-		delete s_rigidspall;
-		s_rigidspall = 0;
-	}
-	if (s_rigidSc) {
-		delete s_rigidSc;
-		s_rigidSc = 0;
-	}
-
-	return 0;
-}
 
 int DestroyBlendShapeWnd()
 {
@@ -43142,1592 +42356,6 @@ int DestroyDispGroupWnd()
 	return 0;
 }
 
-
-void InitRigidWnd()
-{
-	s_rigidWnd = NULL;
-
-	s_dsrigidctrls.clear();
-
-	s_rigidSc = 0;
-	s_rigidspall = 0;
-	s_sphrateSlider = 0;
-	s_boxzSlider = 0;
-	s_boxzlabel = 0;
-	s_massSlider = 0;
-	s_massSLlabel = 0;
-	s_massB = 0;
-	s_thicknessB = 0;
-	s_depthB = 0;
-	s_massspacelabel = 0;
-	s_namelabel = 0;
-	s_lenglabel = 0;
-	s_skipB = 0;
-	s_rigidskip = 0;
-	s_forbidSeparator = 0;
-	s_forbidB = 0;
-	s_forbidrot = 0;
-	s_validSeparator = 0;
-	s_allrigidenableB = 0;
-	s_allrigiddisableB = 0;
-	s_shplabel = 0;
-	s_colSeparator = 0;
-	s_colB = 0;
-	s_colradio = 0;
-	s_lkradio = 0;
-	s_lkSlider = 0;
-	s_lklabel = 0;
-	s_akradio = 0;
-	s_akSlider = 0;
-	s_aklabel = 0;
-	s_restSlider = 0;
-	s_restlabel = 0;
-	s_fricSlider = 0;
-	s_friclabel = 0;
-	s_ldmpSlider = 0;
-	s_admpSlider = 0;
-	s_kB = 0;
-	s_restB = 0;
-	s_ldmplabel = 0;
-	s_admplabel = 0;
-	s_dmpB = 0;
-	s_groupB = 0;
-	s_gcoliB = 0;
-	s_btgSlider = 0;
-	s_btglabel = 0;
-	s_btgscSlider = 0;
-	s_btgsclabel = 0;
-	s_btforceSeparator = 0;
-	s_btforce = 0;
-	s_btforceB = 0;
-	s_rigidsp0 = 0;
-	s_groupcheck = 0;
-	s_btgB = 0;
-	s_rigidWnd = 0;
-	s_thicknessSeparator = 0;
-	s_depthSeparator = 0;
-	s_massSeparator = 0;
-	s_thicknessSeparator2 = 0;
-	s_depthSeparator2 = 0;
-	s_massSeparator2 = 0;
-	s_validSeparator2 = 0;
-	s_forbidSeparator2 = 0;
-	s_colSeparator2 = 0;
-	s_springSeparator = 0;
-	s_restitutionSeparator = 0;
-	s_dumpingSeparator = 0;
-	s_gSeparator = 0;
-	s_btforceSeparator2 = 0;
-	s_coliidSeparator = 0;
-	s_thicknessDeeperB = 0;
-	s_depthDeeperB = 0;
-	s_massDeeperB = 0;
-	s_validDeeperB = 0;
-	s_forbidDeeperB = 0;
-	s_colDeeperB = 0;
-	s_springDeeperB = 0;
-	s_restitutionDeeperB = 0;
-	s_dumpingDeeperB = 0;
-	s_gDeeperB = 0;
-	s_btforceDeeperB = 0;
-	s_coliidDeeperB = 0;
-	s_coliseparator = 0;
-	s_rigidspacerLabel01 = 0;
-	s_rigidspacerLabel02 = 0;
-	s_rigidspacerLabel03 = 0;
-	s_rigidspacerLabel04 = 0;
-	s_rigidspacerLabel05 = 0;
-	s_rigidspacerLabel06 = 0;
-	s_rigidspacerLabel07 = 0;
-	s_rigidspacerLabel08 = 0;
-
-
-}
-
-int CreateRigidWnd()
-{
-
-	/////////
-	//s_rigidWnd = new OrgWindow(
-	//	0,
-	//	_T("RigidWindow"),		//ウィンドウクラス名
-	//	GetModuleHandle(NULL),	//インスタンスハンドル
-	//							//WindowPos(100, 200),		//位置
-	//	WindowPos(1216, 48),
-	//	//WindowSize(450,880),		//サイズ
-	//	//WindowSize(450,680),		//サイズ
-	//	//WindowSize(450, 760),		//サイズ
-	//	WindowSize(450, 780),		//サイズ
-	//	_T("剛体設定ウィンドウ"),	//タイトル
-	//	g_mainhwnd,	//親ウィンドウハンドル
-	//	true,					//表示・非表示状態
-	//	70, 50, 70,				//カラー
-	//	true,					//閉じられるか否か
-	//	true);					//サイズ変更の可否
-
-	s_dsrigidctrls.clear();
-
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-	s_rigidWnd = new OrgWindow(
-		0,
-		_T("RigidWindow"),		//ウィンドウクラス名
-		GetModuleHandle(NULL),	//インスタンスハンドル
-		WindowPos(windowposx, s_sidemenuheight),
-		WindowSize(s_sidewidth, s_sideheight),		//サイズ
-		_T("RigidWindow"),	//タイトル
-		g_mainhwnd,	//親ウィンドウハンドル
-		true,					//表示・非表示状態
-		//70, 50, 70,				//カラー
-		0, 0, 0,				//カラー
-		true, true);					//サイズ変更の可否
-
-	int labelheight;
-	if (g_4kresolution) {
-		labelheight = 28;
-	}
-	else {
-		labelheight = 20;
-	}
-
-	if (s_rigidWnd) {
-		bool limitradionamelen = false;
-
-		s_rigidSc = new OWP_ScrollWnd(L"RigidScroll", true, labelheight);
-		if (!s_rigidSc) {
-			_ASSERT(0);
-			return 1;
-		}
-		int linedatasize = (int)(51.0 * 1.25);
-		s_rigidSc->setLineDataSize(linedatasize);//!!!!!!!!!!!!!
-		s_rigidWnd->addParts(*s_rigidSc);
-
-		s_rigidspall = new OWP_Separator(s_rigidWnd, true, 0.995, false, s_rigidSc);//スクロールの子供全体をまとめるセパレータ　縦分割
-		if (!s_rigidspall) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_rigidSc->addParts(*s_rigidspall);
-
-
-		s_rigidsp0 = new OWP_Separator(s_rigidWnd, true, 0.7, true);
-		if (!s_rigidsp0) {
-			_ASSERT(0);
-			return 1;
-		}
-		//s_rigidWnd->addParts(*s_rigidsp0);
-
-		s_coliseparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		if (!s_coliseparator) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		s_thicknessSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		if (!s_thicknessSeparator) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_depthSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		if (!s_depthSeparator) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_massSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		if (!s_massSeparator) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_thicknessSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.20, true);
-		if (!s_thicknessSeparator2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_depthSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.20, true);
-		if (!s_depthSeparator2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_massSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.20, true);
-		if (!s_massSeparator2) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		s_validSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.50, true);
-		if (!s_validSeparator2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_forbidSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		if (!s_forbidSeparator2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_colSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		if (!s_colSeparator2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_springSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		if (!s_springSeparator) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_restitutionSeparator = new OWP_Separator(s_rigidWnd, true, 0.65, true);
-		if (!s_restitutionSeparator) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_dumpingSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		if (!s_dumpingSeparator) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_gSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		if (!s_gSeparator) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_btforceSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		if (!s_btforceSeparator2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_coliidSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		if (!s_coliidSeparator) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		s_thicknessDeeperB = new OWP_Button(L"ToDeeper", labelheight);
-		if (!s_thicknessDeeperB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_depthDeeperB = new OWP_Button(L"ToDeeper", labelheight);
-		if (!s_depthDeeperB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_massDeeperB = new OWP_Button(L"ToDeeper", labelheight);
-		if (!s_massDeeperB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_validDeeperB = new OWP_Button(L"ToDeeper", labelheight);
-		if (!s_validDeeperB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_forbidDeeperB = new OWP_Button(L"ToDeeper", labelheight);
-		if (!s_forbidDeeperB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_colDeeperB = new OWP_Button(L"ToDeeper", labelheight);
-		if (!s_colDeeperB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_springDeeperB = new OWP_Button(L"ToDeeper", labelheight);
-		if (!s_springDeeperB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_restitutionDeeperB = new OWP_Button(L"ToDeeper", labelheight);
-		if (!s_restitutionDeeperB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_dumpingDeeperB = new OWP_Button(L"ToDeeper", labelheight);
-		if (!s_dumpingDeeperB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_gDeeperB = new OWP_Button(L"ToDeeper", labelheight);
-		if (!s_gDeeperB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_btforceDeeperB = new OWP_Button(L"ToDeeper", labelheight);
-		if (!s_btforceDeeperB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_coliidDeeperB = new OWP_Button(L"ToDeeper", labelheight);
-		if (!s_coliidDeeperB) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-
-
-		s_groupcheck = new OWP_CheckBoxA(L"ToAll=ToGroup", 0, labelheight, false);
-		if (!s_groupcheck) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		s_sphrateSlider = new OWP_Slider(0.6, 20.0, 0.0, labelheight);
-		if (!s_sphrateSlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_boxzSlider = new OWP_Slider(0.6, 20.0, 0.0, labelheight);
-		if (!s_boxzSlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_massSlider = new OWP_Slider(g_initmass, 30.0, 0.0, labelheight);
-		if (!s_massSlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		//s_massSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		//s_massSeparator1 = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		//s_massSeparator2 = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		s_massB = new OWP_Button(L"MassToAll", labelheight);
-		if (!s_massB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_thicknessB = new OWP_Button(L"ThicknessToAll", labelheight);
-		if (!s_thicknessB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_depthB = new OWP_Button(L"DepthToAll", labelheight);
-		if (!s_depthB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_massspacelabel = new OWP_Label(L"(Space4)", labelheight);
-		if (!s_massspacelabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_validSeparator = new OWP_Separator(s_rigidWnd, true, 0.60, true);
-		if (!s_validSeparator) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skipB = new OWP_Button(L"ToAll", labelheight);
-		if (!s_skipB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_rigidskip = new OWP_CheckBoxA(L"Valid/Invalid (有効/無効)", 1, labelheight, false);
-		if (!s_rigidskip) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_forbidSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		if (!s_forbidSeparator) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_forbidB = new OWP_Button(L"ToAll", labelheight);
-		if (!s_forbidB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_forbidrot = new OWP_CheckBoxA(L"ForbidRot", 0, labelheight, false);
-		if (!s_forbidrot) {
-			_ASSERT(0);
-			return 1;
-		}
-		//s_allrigidenableB = new OWP_Button(L"ValidateAllRigids");
-		//s_allrigiddisableB = new OWP_Button(L"InvalidateAllRigids");
-		s_btgSlider = new OWP_Slider(-1.0, 1.0, -1.0, labelheight);
-		if (!s_btgSlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		//s_btgscSlider = new OWP_Slider(10.0, 100.0, 0.0);
-		s_btgscSlider = new OWP_Slider(10.0, 200.0, 0.0, labelheight);//2024/04/15 200.0
-		if (!s_btgscSlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_btgB = new OWP_Button(L"GToAll", labelheight);
-		if (!s_btgB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_btforceSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		if (!s_btforceSeparator) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_btforce = new OWP_CheckBoxA(L"RigidBodySimulation", 0, labelheight, false);
-		if (!s_btforce) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_btforceB = new OWP_Button(L"ToAll", labelheight);
-		if (!s_btforceB) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		s_shplabel = new OWP_Label(L"Thickness", labelheight);
-		if (!s_shplabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_boxzlabel = new OWP_Label(L"Depth", labelheight);
-		if (!s_boxzlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_massSLlabel = new OWP_Label(L"Mass", labelheight);
-		if (!s_massSLlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_btglabel = new OWP_Label(L"Gravity", labelheight);
-		if (!s_btglabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_btgsclabel = new OWP_Label(L"ScaleOfGravity", labelheight);
-		if (!s_btgsclabel) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		s_namelabel = new OWP_Label(L"BonaName:????", labelheight);
-		if (!s_namelabel) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		s_lenglabel = new OWP_Label(L"BoneLength:*****[m]", labelheight);
-		if (!s_lenglabel) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		s_kB = new OWP_Button(L"SpringParamsToAll", labelheight);
-		if (!s_kB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_restB = new OWP_Button(L"RestitutionAndFrictionToAll", labelheight);
-		if (!s_restB) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		s_colSeparator = new OWP_Separator(s_rigidWnd, true, 0.5, true);
-		if (!s_colSeparator) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_colB = new OWP_Button(L"ToAll", labelheight);
-		if (!s_colB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_colradio = new OWP_RadioButton(L"Cone", limitradionamelen, labelheight);
-		if (!s_colradio) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_colradio->addLine(L"Capsule");
-		s_colradio->addLine(L"Sphere");
-		s_colradio->addLine(L"Rectangular");
-
-		s_lkradio = new OWP_RadioButton(L"[posSpring]very weak", limitradionamelen, labelheight);
-		if (!s_lkradio) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_lkradio->addLine(L"[posSpring]weak");
-		s_lkradio->addLine(L"[posSpring]regular");
-		s_lkradio->addLine(L"[posSpring]custom");
-
-		//s_lkSlider = new OWP_Slider(g_initcuslk, 1e6, 1e4);//60000
-		//s_lkSlider = new OWP_Slider(g_initcuslk, 1e10, 1e8);//60000
-		s_lkSlider = new OWP_Slider(g_initcuslk, 1e4, 1e2, labelheight);//60000
-		if (!s_lkSlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_lklabel = new OWP_Label(L"posSpring customValue", labelheight);
-		if (!s_lklabel) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		s_akradio = new OWP_RadioButton(L"[rotSpring]very weak", limitradionamelen, labelheight);
-		if (!s_akradio) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_akradio->addLine(L"[rotSpring]weak");
-		s_akradio->addLine(L"[rotSpring]regular");
-		s_akradio->addLine(L"[rotSpring]custom");
-
-		//s_akSlider = new OWP_Slider(g_initcusak, 6000.0f, 0.0f);//300
-		//s_akSlider = new OWP_Slider(g_initcusak, 30.0f, 0.0f);//300
-		//s_akSlider = new OWP_Slider(g_initcusak, 3000.0f, 30.0f);//300
-		//s_akSlider = new OWP_Slider(g_initcusak, 3000.0f, 10.0f);//300 ver10024
-		//s_akSlider = new OWP_Slider(g_initcusak, 3000.0f, 2.0f);//2022/07/19
-		s_akSlider = new OWP_Slider(g_initcusak, 500.0f, 0.0f, labelheight);//2024/04/15 柔らかい設定へシフト　硬い設定が必要になった場合にはScaleSliderを追加して対応予定
-		if (!s_akSlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		//s_akSlider = new OWP_Slider(g_initcusak, 1.0f, 0.0f);//2023/01/18
-		s_aklabel = new OWP_Label(L"rotSpring customValue", labelheight);
-		if (!s_aklabel) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		s_restSlider = new OWP_Slider(0.5f, 1.0f, 0.0f, labelheight);
-		if (!s_restSlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_restlabel = new OWP_Label(L"RigidRestitution", labelheight);
-		if (!s_restlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_fricSlider = new OWP_Slider(0.5f, 1.0f, 0.0f, labelheight);
-		if (!s_fricSlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_friclabel = new OWP_Label(L"RigidFriction", labelheight);
-		if (!s_friclabel) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		s_ldmplabel = new OWP_Label(L"[posSpring]rateOfDumping", labelheight);
-		if (!s_ldmplabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_admplabel = new OWP_Label(L"[rotSpring]rateOfDumping", labelheight);
-		if (!s_admplabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_ldmpSlider = new OWP_Slider(g_l_dmp, 1.0, 0.0, labelheight);
-		if (!s_ldmpSlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_admpSlider = new OWP_Slider(g_a_dmp, 1.0, 0.0, labelheight);
-		if (!s_admpSlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_dmpB = new OWP_Button(L"DumpingToAll", labelheight);
-		if (!s_dmpB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_groupB = new OWP_Button(L"Conflict", labelheight);
-		if (!s_groupB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_gcoliB = new OWP_Button(L"GConflict", labelheight);
-		if (!s_gcoliB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_rigidspacerLabel01 = new OWP_Label(L"     ", labelheight);
-		if (!s_rigidspacerLabel01) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_rigidspacerLabel02 = new OWP_Label(L"     ", labelheight);
-		if (!s_rigidspacerLabel02) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_rigidspacerLabel03 = new OWP_Label(L"     ", labelheight);
-		if (!s_rigidspacerLabel03) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_rigidspacerLabel04 = new OWP_Label(L"     ", labelheight);
-		if (!s_rigidspacerLabel04) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_rigidspacerLabel05 = new OWP_Label(L"     ", labelheight);
-		if (!s_rigidspacerLabel05) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_rigidspacerLabel06 = new OWP_Label(L"     ", labelheight);
-		if (!s_rigidspacerLabel06) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_rigidspacerLabel07 = new OWP_Label(L"     ", labelheight);
-		if (!s_rigidspacerLabel07) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_rigidspacerLabel08 = new OWP_Label(L"     ", labelheight);
-		if (!s_rigidspacerLabel08) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-
-
-		COLORREF colorToAll = RGB(64, 128 + 32, 128 + 32);
-		COLORREF colorValidInvalid = RGB(168, 129, 129);
-		COLORREF colorToDeeper = RGB(24, 126, 176);
-
-		s_groupcheck->setTextColor(colorToAll);
-		s_massB->setTextColor(colorToAll);
-		s_thicknessB->setTextColor(colorToAll);
-		s_depthB->setTextColor(colorToAll);
-		s_skipB->setTextColor(colorToAll);
-		s_forbidB->setTextColor(colorToAll);
-		s_btgB->setTextColor(colorToAll);
-		s_btforceB->setTextColor(colorToAll);
-		s_colB->setTextColor(colorToAll);
-		s_dmpB->setTextColor(colorToAll);
-		s_kB->setTextColor(colorToAll);
-		s_restB->setTextColor(colorToAll);
-
-		s_rigidskip->setTextColor(colorValidInvalid);
-		s_btforce->setTextColor(colorValidInvalid);
-
-		s_thicknessDeeperB->setTextColor(colorToDeeper);
-		s_depthDeeperB->setTextColor(colorToDeeper);
-		s_massDeeperB->setTextColor(colorToDeeper);
-		s_validDeeperB->setTextColor(colorToDeeper);
-		s_forbidDeeperB->setTextColor(colorToDeeper);
-		s_colDeeperB->setTextColor(colorToDeeper);
-		s_springDeeperB->setTextColor(colorToDeeper);
-		s_restitutionDeeperB->setTextColor(colorToDeeper);
-		s_dumpingDeeperB->setTextColor(colorToDeeper);
-		s_gDeeperB->setTextColor(colorToDeeper);
-		s_btforceDeeperB->setTextColor(colorToDeeper);
-		s_coliidDeeperB->setTextColor(colorToDeeper);
-
-
-		int slw = 350;
-
-		s_sphrateSlider->setSize(WindowSize(slw, labelheight));
-		s_boxzSlider->setSize(WindowSize(slw, labelheight));
-		s_massSlider->setSize(WindowSize(slw, labelheight));
-		s_btgSlider->setSize(WindowSize(slw, labelheight));
-		s_btgscSlider->setSize(WindowSize(slw, labelheight));
-		s_ldmpSlider->setSize(WindowSize(slw, labelheight));
-		s_admpSlider->setSize(WindowSize(slw, labelheight));
-		s_lkSlider->setSize(WindowSize(slw, labelheight));
-		s_akSlider->setSize(WindowSize(slw, labelheight));
-		s_restSlider->setSize(WindowSize(slw, labelheight));
-		s_fricSlider->setSize(WindowSize(slw, labelheight));
-
-
-
-		s_rigidspall->addParts1(*s_rigidsp0);
-		s_rigidsp0->addParts1(*s_namelabel);
-		s_rigidsp0->addParts2(*s_groupcheck);
-		//s_rigidWnd->addParts(*s_namelabel);
-		//s_rigidWnd->addParts(*s_groupcheck);
-		s_rigidspall->addParts1(*s_rigidspacerLabel01);
-
-		s_rigidspall->addParts1(*s_thicknessSeparator2);
-		s_thicknessSeparator2->addParts1(*s_shplabel);
-		s_thicknessSeparator2->addParts2(*s_sphrateSlider);
-		s_rigidspall->addParts1(*s_thicknessSeparator);
-		s_thicknessSeparator->addParts1(*s_thicknessB);
-		s_thicknessSeparator->addParts2(*s_thicknessDeeperB);
-		//s_rigidspall->addParts1(*s_thicknessB);
-
-		s_rigidspall->addParts1(*s_depthSeparator2);
-		s_depthSeparator2->addParts1(*s_boxzlabel);
-		s_depthSeparator2->addParts2(*s_boxzSlider);
-		s_rigidspall->addParts1(*s_depthSeparator);
-		s_depthSeparator->addParts1(*s_depthB);
-		s_depthSeparator->addParts2(*s_depthDeeperB);
-		//s_rigidspall->addParts1(*s_depthB);
-
-		s_rigidspall->addParts1(*s_massSeparator2);
-		s_massSeparator2->addParts1(*s_massSLlabel);
-		s_massSeparator2->addParts2(*s_massSlider);
-		s_rigidspall->addParts1(*s_massSeparator);
-		s_massSeparator->addParts1(*s_massB);
-		s_massSeparator->addParts2(*s_massDeeperB);
-		//s_rigidspall->addParts1(*s_massB);
-		s_rigidspall->addParts1(*s_rigidspacerLabel02);
-
-		////s_rigidspall->addParts1(*s_massB);
-		////s_massB->setColor(64, 128, 128);
-		////s_thicknessB->setColor(64, 128, 128);
-		////s_depthB->setColor(64, 128, 128);
-		//s_rigidspall->addParts1(*s_massSeparator);
-		//s_massSeparator->addParts1(*s_massSeparator1);
-		//s_massSeparator->addParts2(*s_massSeparator2);
-		//s_massSeparator1->addParts1(*s_massB);
-		//s_massSeparator1->addParts2(*s_thicknessB);
-		//s_massSeparator2->addParts1(*s_depthB);
-		////s_massSeparator2->addParts2(*s_massspacelabel);
-
-		s_rigidspall->addParts1(*s_lenglabel);
-
-		s_rigidspall->addParts1(*s_validSeparator);
-		s_validSeparator->addParts1(*s_rigidskip);
-		s_validSeparator->addParts2(*s_validSeparator2);
-		s_validSeparator2->addParts1(*s_skipB);
-		s_validSeparator2->addParts2(*s_validDeeperB);
-		//s_validSeparator->addParts2(*s_skipB);
-		////s_rigidspall->addParts1(*s_rigidskip);
-
-		s_rigidspall->addParts1(*s_forbidSeparator);
-		s_forbidSeparator->addParts1(*s_forbidrot);
-		s_forbidSeparator->addParts2(*s_forbidSeparator2);
-		s_forbidSeparator2->addParts1(*s_forbidB);
-		s_forbidSeparator2->addParts2(*s_forbidDeeperB);
-		//s_forbidSeparator->addParts2(*s_forbidB);
-		////s_rigidspall->addParts1(*s_forbidrot);
-		////s_rigidspall->addParts1(*s_allrigidenableB);
-		////s_rigidspall->addParts1(*s_allrigiddisableB);
-		s_rigidspall->addParts1(*s_rigidspacerLabel03);
-
-		s_rigidspall->addParts1(*s_colSeparator);
-		s_colSeparator->addParts1(*s_colradio);
-		s_colSeparator->addParts2(*s_colSeparator2);
-		s_colSeparator2->addParts1(*s_colB);
-		s_colSeparator2->addParts2(*s_colDeeperB);
-		//s_colSeparator->addParts2(*s_colB);
-		////s_rigidspall->addParts1(*s_colradio);
-		s_rigidspall->addParts1(*s_rigidspacerLabel04);
-
-		s_rigidspall->addParts1(*s_lkradio);
-		s_rigidspall->addParts1(*s_lklabel);
-		s_rigidspall->addParts1(*s_lkSlider);
-		s_rigidspall->addParts1(*s_akradio);
-		s_rigidspall->addParts1(*s_aklabel);
-		s_rigidspall->addParts1(*s_akSlider);
-		s_rigidspall->addParts1(*s_springSeparator);
-		s_springSeparator->addParts1(*s_kB);
-		s_springSeparator->addParts2(*s_springDeeperB);
-		//s_rigidspall->addParts1(*s_kB);
-		s_rigidspall->addParts1(*s_rigidspacerLabel05);
-
-		s_rigidspall->addParts1(*s_restlabel);
-		s_rigidspall->addParts1(*s_restSlider);
-		s_rigidspall->addParts1(*s_friclabel);
-		s_rigidspall->addParts1(*s_fricSlider);
-		s_rigidspall->addParts1(*s_restitutionSeparator);
-		s_restitutionSeparator->addParts1(*s_restB);
-		s_restitutionSeparator->addParts2(*s_restitutionDeeperB);
-		//s_rigidspall->addParts1(*s_restB);
-		s_rigidspall->addParts1(*s_rigidspacerLabel06);
-
-		s_rigidspall->addParts1(*s_ldmplabel);
-		s_rigidspall->addParts1(*s_ldmpSlider);
-		s_rigidspall->addParts1(*s_admplabel);
-		s_rigidspall->addParts1(*s_admpSlider);
-		s_rigidspall->addParts1(*s_dumpingSeparator);
-		s_dumpingSeparator->addParts1(*s_dmpB);
-		s_dumpingSeparator->addParts2(*s_dumpingDeeperB);
-		//s_rigidspall->addParts1(*s_dmpB);
-		s_rigidspall->addParts1(*s_rigidspacerLabel07);
-
-		s_rigidspall->addParts1(*s_btglabel);
-		s_rigidspall->addParts1(*s_btgSlider);
-		s_rigidspall->addParts1(*s_btgsclabel);
-		s_rigidspall->addParts1(*s_btgscSlider);
-
-		s_rigidspall->addParts1(*s_gSeparator);
-		s_gSeparator->addParts1(*s_btgB);
-		s_gSeparator->addParts2(*s_gDeeperB);
-		//s_rigidspall->addParts1(*s_btgB);
-		s_rigidspall->addParts1(*s_rigidspacerLabel08);
-
-		//s_rigidspall->addParts1(*s_btforce);
-		s_rigidspall->addParts1(*s_btforceSeparator);
-		s_btforceSeparator->addParts1(*s_btforce);
-		s_btforceSeparator->addParts2(*s_btforceSeparator2);
-		s_btforceSeparator2->addParts1(*s_btforceB);
-		s_btforceSeparator2->addParts2(*s_btforceDeeperB);
-		//s_btforceSeparator->addParts2(*s_btforceB);
-
-		s_rigidspall->addParts1(*s_coliidSeparator);
-		//s_coliidSeparator->addParts1(*s_groupB);
-		s_coliidSeparator->addParts1(*s_coliseparator);
-		s_coliidSeparator->addParts2(*s_coliidDeeperB);
-		s_coliseparator->addParts1(*s_groupB);
-		s_coliseparator->addParts2(*s_gcoliB);
-		//s_rigidspall->addParts1(*s_groupB);
-		//s_rigidspall->addParts1(*s_gcoliB);
-		/////////
-
-
-
-		s_dsrigidctrls.push_back(s_namelabel);
-		s_dsrigidctrls.push_back(s_groupcheck);
-		s_dsrigidctrls.push_back(s_shplabel);
-		s_dsrigidctrls.push_back(s_sphrateSlider);
-		s_dsrigidctrls.push_back(s_boxzlabel);
-		s_dsrigidctrls.push_back(s_boxzSlider);
-		s_dsrigidctrls.push_back(s_massSLlabel);
-		s_dsrigidctrls.push_back(s_massSlider);
-		s_dsrigidctrls.push_back(s_massB);
-		s_dsrigidctrls.push_back(s_thicknessB);
-		s_dsrigidctrls.push_back(s_depthB);
-		s_dsrigidctrls.push_back(s_lenglabel);
-		s_dsrigidctrls.push_back(s_rigidskip);
-		s_dsrigidctrls.push_back(s_skipB);
-		s_dsrigidctrls.push_back(s_forbidrot);
-		s_dsrigidctrls.push_back(s_forbidB);
-		//s_dsrigidctrls.push_back(s_allrigidenableB);
-		//s_dsrigidctrls.push_back(s_allrigiddisableB);
-
-		s_dsrigidctrls.push_back(s_colradio);
-		s_dsrigidctrls.push_back(s_colB);
-
-		s_dsrigidctrls.push_back(s_lkradio);
-		s_dsrigidctrls.push_back(s_lklabel);
-		s_dsrigidctrls.push_back(s_lkSlider);
-		s_dsrigidctrls.push_back(s_akradio);
-		s_dsrigidctrls.push_back(s_aklabel);
-		s_dsrigidctrls.push_back(s_akSlider);
-		s_dsrigidctrls.push_back(s_kB);
-
-		s_dsrigidctrls.push_back(s_restlabel);
-		s_dsrigidctrls.push_back(s_restSlider);
-		s_dsrigidctrls.push_back(s_friclabel);
-		s_dsrigidctrls.push_back(s_fricSlider);
-		s_dsrigidctrls.push_back(s_restB);
-
-
-		s_dsrigidctrls.push_back(s_ldmplabel);
-		s_dsrigidctrls.push_back(s_ldmpSlider);
-		s_dsrigidctrls.push_back(s_admplabel);
-		s_dsrigidctrls.push_back(s_admpSlider);
-		s_dsrigidctrls.push_back(s_dmpB);
-
-		s_dsrigidctrls.push_back(s_btglabel);
-		s_dsrigidctrls.push_back(s_btgSlider);
-		s_dsrigidctrls.push_back(s_btgsclabel);
-		s_dsrigidctrls.push_back(s_btgscSlider);
-		s_dsrigidctrls.push_back(s_btgB);
-		s_dsrigidctrls.push_back(s_btforce);
-		s_dsrigidctrls.push_back(s_btforceB);
-
-		s_dsrigidctrls.push_back(s_groupB);
-		s_dsrigidctrls.push_back(s_gcoliB);
-
-
-		s_rigidWnd->setCloseListener([]() {
-			if (s_model) {
-				s_RcloseFlag = true;
-			}
-			});
-
-		s_sphrateSlider->setCursorListener([]() {
-			if (s_model && s_rigidWnd) {
-				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-				if (curre) {
-					if (s_sphrateSlider) {
-						float val = (float)s_sphrateSlider->getValue();
-						curre->SetSphrate(val);
-					}
-				}
-				s_rigidWnd->callRewrite();						//再描画
-			}
-			});
-		s_thicknessDeeperB->setButtonListener([]() {
-			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && s_sphrateSlider) {
-				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-				if (curbone) {
-					CBone* parentbone = curbone->GetParent(false);
-					if (parentbone && parentbone->IsSkeleton()) {
-						float val = (float)s_sphrateSlider->getValue();
-						int gid = -1;
-						s_model->SetSphrateDataReq(gid, s_reindexmap[s_model], curbone, val);
-						s_rigidWnd->callRewrite();						//再描画
-					}
-				}
-			}
-			});
-		s_boxzSlider->setCursorListener([]() {
-			if (s_model && s_rigidWnd) {
-				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-				if (curre) {
-					if (s_boxzSlider) {
-						float val = (float)s_boxzSlider->getValue();
-						curre->SetBoxzrate(val);
-					}
-				}
-				s_rigidWnd->callRewrite();						//再描画
-			}
-			});
-		s_depthDeeperB->setButtonListener([]() {
-			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && s_boxzSlider) {
-				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-				if (curbone) {
-					CBone* parentbone = curbone->GetParent(false);
-					if (parentbone && parentbone->IsSkeleton()) {
-						float val = (float)s_boxzSlider->getValue();
-						int gid = -1;
-						s_model->SetBoxzrateDataReq(gid, s_reindexmap[s_model], curbone, val);
-						s_rigidWnd->callRewrite();						//再描画
-					}
-				}
-			}
-			});
-		s_massSlider->setCursorListener([]() {
-			if (s_model && s_rigidWnd) {
-				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-				if (curre) {
-					if (s_massSlider) {
-						float val = (float)s_massSlider->getValue();
-						curre->SetMass(val);
-					}
-				}
-				s_rigidWnd->callRewrite();						//再描画
-			}
-			});
-		s_massDeeperB->setButtonListener([]() {
-			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && s_massSlider) {
-				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-				if (curbone) {
-					CBone* parentbone = curbone->GetParent(false);
-					if (parentbone && parentbone->IsSkeleton()) {
-						float val = (float)s_massSlider->getValue();
-						int gid = -1;
-						s_model->SetMassDataReq(gid, s_reindexmap[s_model], curbone, val);
-						s_rigidWnd->callRewrite();						//再描画
-					}
-				}
-			}
-			});
-
-		s_ldmpSlider->setCursorListener([]() {
-			if (s_model && s_rigidWnd) {
-				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-				if (curre) {
-					if (s_ldmpSlider) {
-						float val = (float)s_ldmpSlider->getValue();
-						curre->SetLDamping(val);
-					}
-				}
-				s_rigidWnd->callRewrite();						//再描画
-			}
-			});
-		s_admpSlider->setCursorListener([]() {
-			if (s_model && s_rigidWnd) {
-				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-				if (curre) {
-					if (s_admpSlider) {
-						float val = (float)s_admpSlider->getValue();
-						curre->SetADamping(val);
-					}
-				}
-				s_rigidWnd->callRewrite();						//再描画
-			}
-			});
-		s_dumpingDeeperB->setButtonListener([]() {
-			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd) {
-				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-				if (curbone) {
-					CBone* parentbone = curbone->GetParent(false);
-					if (parentbone && parentbone->IsSkeleton()) {
-						int gid = -1;
-						if (s_ldmpSlider && s_admpSlider) {
-							float ldmp = (float)s_ldmpSlider->getValue();
-							float admp = (float)s_admpSlider->getValue();
-							s_model->SetDmpDataReq(gid, s_reindexmap[s_model], curbone, ldmp, admp);
-						}
-						s_rigidWnd->callRewrite();						//再描画
-					}
-				}
-			}
-			});
-		s_lkSlider->setCursorListener([]() {
-			if (s_model && s_rigidWnd) {
-				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-				if (curre) {
-					if (s_lkSlider) {
-						float val = (float)s_lkSlider->getValue();
-						curre->SetCusLk(val);
-					}
-				}
-				s_rigidWnd->callRewrite();						//再描画
-			}
-			});
-		s_akSlider->setCursorListener([]() {
-			if (s_model && s_rigidWnd) {
-				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-				if (curre) {
-					if (s_akSlider) {
-						float val = (float)s_akSlider->getValue();
-						curre->SetCusAk(val);
-					}
-				}
-				s_rigidWnd->callRewrite();						//再描画
-			}
-			});
-
-
-		s_restSlider->setCursorListener([]() {
-			if (s_model && s_rigidWnd) {
-				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-				if (curre) {
-					if (s_restSlider) {
-						float val = (float)s_restSlider->getValue();
-						curre->SetRestitution(val);
-					}
-				}
-				s_rigidWnd->callRewrite();						//再描画
-			}
-			});
-		s_restitutionDeeperB->setButtonListener([]() {
-			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && 
-				s_restSlider && s_fricSlider) {
-				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-				if (curbone) {
-					CBone* parentbone = curbone->GetParent(false);
-					if (parentbone && parentbone->IsSkeleton()) {
-						float rest = (float)s_restSlider->getValue();
-						float fric = (float)s_fricSlider->getValue();
-						int gid = -1;
-						s_model->SetRestDataReq(gid, s_reindexmap[s_model], curbone, rest, fric);
-						s_rigidWnd->callRewrite();						//再描画
-					}
-				}
-			}
-			});
-		s_fricSlider->setCursorListener([]() {
-			if (s_model && s_rigidWnd) {
-				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-				if (curre) {
-					if (s_fricSlider) {
-						float val = (float)s_fricSlider->getValue();
-						curre->SetFriction(val);
-					}
-				}
-				s_rigidWnd->callRewrite();						//再描画
-			}
-			});
-		s_rigidskip->setButtonListener([]() {
-			if (s_model && s_rigidWnd) {
-				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-				if (curre) {
-					if (s_rigidskip) {
-						bool validflag = s_rigidskip->getValue();
-						if (validflag == false) {//!!!!!!!!GUIはValidでデータとしてはSkip
-							curre->SetSkipflag(1);
-						}
-						else {
-							curre->SetSkipflag(0);
-						}
-						s_model->SetBtObjectVec();//2024/06/16
-					}
-				}
-				s_rigidWnd->callRewrite();						//再描画
-			}
-			});
-		s_validDeeperB->setButtonListener([]() {
-			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && s_rigidskip) {
-				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-				if (curbone) {
-					CBone* parentbone = curbone->GetParent(false);
-					if (parentbone && parentbone->IsSkeleton()) {
-						//int val = s_rigidskip->getValue() ? 1 : 0;
-						int val = s_rigidskip->getValue() ? 0 : 1;//!!!!!!!!GUIはValidでデータとしてはSkip
-						int gid = -1;
-						s_model->SetSkipflagDataReq(gid, s_reindexmap[s_model], curbone, val);
-						s_model->SetBtObjectVec();//2024/06/16
-						s_rigidWnd->callRewrite();						//再描画
-					}
-				}
-			}
-			});
-		s_skipB->setButtonListener([]() {
-			if (s_model && s_rigidskip && s_groupcheck) {
-				bool validflag = s_rigidskip->getValue();
-				int skipflag;
-				if (validflag == false) {
-					skipflag = 1;
-				}
-				else {
-					skipflag = 0;
-				}
-				int chkg = (int)s_groupcheck->getValue();
-				int gid = -1;
-				if (chkg) {
-					CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-					if (curre) {
-						gid = curre->GetGroupid();
-					}
-					else {
-						gid = -1;
-					}
-				}
-				s_model->SetAllSkipflagData(gid, s_reindexmap[s_model], skipflag);
-			}
-			});
-
-		s_forbidrot->setButtonListener([]() {
-			if (s_model && s_rigidWnd && s_forbidrot) {
-				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-				if (curre) {
-					bool validflag = s_forbidrot->getValue();
-					if (validflag == false) {
-						curre->SetForbidRotFlag(0);
-					}
-					else {
-						curre->SetForbidRotFlag(1);
-					}
-				}
-				s_rigidWnd->callRewrite();						//再描画
-			}
-			});
-		s_forbidDeeperB->setButtonListener([]() {
-			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && s_forbidrot) {
-				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-				if (curbone) {
-					CBone* parentbone = curbone->GetParent(false);
-					if (parentbone && parentbone->IsSkeleton()) {
-						int val = s_forbidrot->getValue() ? 1 : 0;
-						int gid = -1;
-						s_model->SetForbidrotDataReq(gid, s_reindexmap[s_model], curbone, val);
-						s_rigidWnd->callRewrite();						//再描画
-					}
-				}
-			}
-			});
-		s_forbidB->setButtonListener([]() {
-			if (s_model && s_forbidrot && s_groupcheck) {
-				bool validflag = s_forbidrot->getValue();
-				int chkg = (int)s_groupcheck->getValue();
-				int gid = -1;
-				if (chkg) {
-					CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-					if (curre) {
-						gid = curre->GetGroupid();
-					}
-					else {
-						gid = -1;
-					}
-				}
-				s_model->SetAllForbidrotData(gid, s_reindexmap[s_model], validflag);
-			}
-			});
-
-		//s_allrigidenableB->setButtonListener([](){
-		//	if (s_model){
-		//		s_model->EnableAllRigidElem(s_reindexmap[s_model]);
-		//	}
-		//	s_rigidWnd->callRewrite();						//再描画
-		//});
-		//s_allrigiddisableB->setButtonListener([](){
-		//	if (s_model){
-		//		s_model->DisableAllRigidElem(s_reindexmap[s_model]);
-		//	}
-		//	s_rigidWnd->callRewrite();						//再描画
-		//});
-
-
-		s_btforce->setButtonListener([]() {
-			if (s_model && (s_curboneno >= 0) && s_btforce) {
-				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-				if (curbone) {
-					CBone* parentbone = curbone->GetParent(false);
-					if (parentbone && parentbone->IsSkeleton()) {
-						bool kinflag = s_btforce->getValue();
-						if (kinflag == false) {
-							parentbone->SetBtForce(0);
-						}
-						else {
-							parentbone->SetBtForce(1);
-						}
-					}
-				}
-			}
-			s_rigidWnd->callRewrite();						//再描画
-			});
-		s_btforceDeeperB->setButtonListener([]() {
-			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && s_btforce) {
-				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-				if (curbone) {
-					CBone* parentbone = curbone->GetParent(false);
-					if (parentbone && parentbone->IsSkeleton()) {
-						int val = s_btforce->getValue() ? 1 : 0;
-						int gid = -1;
-						s_model->SetBtforceDataReq(s_reindexmap[s_model], curbone, val);
-						s_rigidWnd->callRewrite();						//再描画
-					}
-				}
-			}
-			});
-		s_btgSlider->setCursorListener([]() {
-			if (s_model && s_rigidWnd && s_btgSlider) {
-				float btg = (float)s_btgSlider->getValue();
-				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-				if (curre) {
-					curre->SetBtg(btg);
-				}
-				s_rigidWnd->callRewrite();						//再描画
-			}
-			});
-		s_btgscSlider->setCursorListener([]() {
-			if (s_model && s_rigidWnd && s_btgscSlider) {
-				float btgsc = (float)s_btgscSlider->getValue();
-				if (s_model && (s_reindexmap[s_model] >= 0)) {
-					REINFO tmpinfo = s_model->GetRigidElemInfo(s_reindexmap[s_model]);
-					tmpinfo.btgscale = btgsc;
-					s_model->SetRigidElemInfo(s_reindexmap[s_model], tmpinfo);
-				}
-				s_rigidWnd->callRewrite();						//再描画
-			}
-			});
-		s_gDeeperB->setButtonListener([]() {
-			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && s_btgSlider) {
-				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-				if (curbone) {
-					CBone* parentbone = curbone->GetParent(false);
-					if (parentbone && parentbone->IsSkeleton()) {
-						float val = (float)s_btgSlider->getValue();
-						int gid = -1;
-						s_model->SetBtgDataReq(gid, s_reindexmap[s_model], curbone, val);
-						s_rigidWnd->callRewrite();						//再描画
-					}
-				}
-			}
-			});
-
-		s_colradio->setSelectListener([]() {
-			if (s_model && s_rigidWnd && s_colradio) {
-				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-				if (curre) {
-					int val = s_colradio->getSelectIndex();
-					curre->SetColtype(val);
-				}
-				s_rigidWnd->callRewrite();						//再描画
-			}
-			});
-		s_colDeeperB->setButtonListener([]() {
-			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && s_colradio) {
-				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-				if (curbone) {
-					CBone* parentbone = curbone->GetParent(false);
-					if (parentbone && parentbone->IsSkeleton()) {
-						int val = s_colradio->getSelectIndex();
-						int gid = -1;
-						s_model->SetColtypeDataReq(gid, s_reindexmap[s_model], curbone, val);
-						s_rigidWnd->callRewrite();						//再描画
-					}
-				}
-			}
-			});
-		s_colB->setButtonListener([]() {
-			if (s_model && s_colradio && s_groupcheck) {
-				int val = s_colradio->getSelectIndex();
-				int chkg = (int)s_groupcheck->getValue();
-				int gid = -1;
-				if (chkg) {
-					CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-					if (curre) {
-						gid = curre->GetGroupid();
-					}
-					else {
-						gid = -1;
-					}
-				}
-				s_model->SetAllColtypeData(gid, s_reindexmap[s_model], val);
-			}
-			});
-
-		s_lkradio->setSelectListener([]() {
-			if (s_model && s_rigidWnd && s_lkradio) {
-				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-				if (curre) {
-					int val = s_lkradio->getSelectIndex();
-					curre->SetLKindex(val);
-				}
-				s_rigidWnd->callRewrite();						//再描画
-			}
-			});
-		s_springDeeperB->setButtonListener([]() {
-			if (s_model && (s_reindexmap[s_model] >= 0) && (s_curboneno >= 0) && s_rigidWnd && 
-				s_lkradio && s_akradio && s_lkSlider && s_akSlider) {
-				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-				if (curbone) {
-					CBone* parentbone = curbone->GetParent(false);
-					if (parentbone && parentbone->IsSkeleton()) {
-						int lindex = s_lkradio->getSelectIndex();
-						int aindex = s_akradio->getSelectIndex();
-						float cuslk = (float)s_lkSlider->getValue();
-						float cusak = (float)s_akSlider->getValue();
-						int gid = -1;
-						s_model->SetKDataReq(gid, s_reindexmap[s_model], curbone, lindex, aindex ,cuslk, cusak);
-						s_rigidWnd->callRewrite();						//再描画
-					}
-				}
-			}
-			});
-		s_akradio->setSelectListener([]() {
-			if (s_model && s_rigidWnd && s_akradio) {
-				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-				if (curre) {
-					int val = s_akradio->getSelectIndex();
-					curre->SetAKindex(val);
-				}
-				s_rigidWnd->callRewrite();						//再描画
-			}
-			});
-
-		s_kB->setButtonListener([]() {
-			if (s_model && s_lkradio && s_akradio && s_lkSlider && s_akSlider && s_groupcheck) {
-				int lindex = s_lkradio->getSelectIndex();
-				int aindex = s_akradio->getSelectIndex();
-				float cuslk = (float)s_lkSlider->getValue();
-				float cusak = (float)s_akSlider->getValue();
-				int chkg = (int)s_groupcheck->getValue();
-				int gid = -1;
-				if (chkg) {
-					CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-					if (curre) {
-						gid = curre->GetGroupid();
-					}
-					else {
-						gid = -1;
-					}
-				}
-				s_model->SetAllKData(gid, s_reindexmap[s_model], lindex, aindex, cuslk, cusak);
-			}
-			});
-		s_restB->setButtonListener([]() {
-			if (s_model && s_restSlider && s_fricSlider && s_groupcheck) {
-				float rest = (float)s_restSlider->getValue();
-				float fric = (float)s_fricSlider->getValue();
-				int chkg = (int)s_groupcheck->getValue();
-				int gid = -1;
-				if (chkg) {
-					CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-					if (curre) {
-						gid = curre->GetGroupid();
-					}
-					else {
-						gid = -1;
-					}
-				}
-				s_model->SetAllRestData(gid, s_reindexmap[s_model], rest, fric);
-			}
-			});
-		s_dmpB->setButtonListener([]() {
-			if (s_model && s_ldmpSlider && s_admpSlider && s_groupcheck) {
-				float ldmp = (float)s_ldmpSlider->getValue();
-				float admp = (float)s_admpSlider->getValue();
-				int chkg = (int)s_groupcheck->getValue();
-				int gid = -1;
-				if (chkg) {
-					CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-					if (curre) {
-						gid = curre->GetGroupid();
-					}
-					else {
-						gid = -1;
-					}
-				}
-				s_model->SetAllDmpData(gid, s_reindexmap[s_model], ldmp, admp);
-			}
-			});
-
-		s_groupB->setButtonListener([]() {
-			if (s_model) {
-				CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-				if (curre) {
-					CColiIDDlg dlg(curre);
-					s_pcolidlg = &dlg;
-					s_undercolidlg = true;
-
-					dlg.DoModal();
-					if (dlg.m_setgroup == 1) {
-						if (s_model) {
-							s_model->SetColiIDtoGroup(curre);
-						}
-					}
-
-					s_undercolidlg = false;
-					s_pcolidlg = 0;
-
-				}
-			}
-			});
-		s_coliidDeeperB->setButtonListener([]() {
-			if (s_model) {
-				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-				if (curbone) {
-					CBone* parentbone = curbone->GetParent(false);
-					if (parentbone && parentbone->IsSkeleton()) {
-						CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-						if (curre) {
-							int groupid = curre->GetGroupid();
-							int coliidsize = curre->GetColiidsSize();
-							vector<int> coliids;
-							int index1;
-							for (index1 = 0; index1 < coliidsize; index1++) {
-								coliids.push_back(curre->GetColiids(index1));
-							}
-							//int myselfflag = curre->GetMyselfflag();
-							s_model->SetColiidDataReq(s_reindexmap[s_model], curbone, groupid, coliids);// , myselfflag);
-						}
-					}
-				}
-			}
-			});
-		s_gcoliB->setButtonListener([]() {
-			if (s_model) {
-				if (s_bpWorld) {
-					//CGColiIDDlg dlg(s_bpWorld->m_coliids, s_bpWorld->m_myselfflag);
-					CGColiIDDlg dlg(s_bpWorld->m_coliids);
-					s_pgcolidlg = &dlg;
-					s_undergcolidlg = true;
-
-					int dlgret = (int)dlg.DoModal();
-					if (dlgret == IDOK) {
-						s_bpWorld->m_coliids = dlg.m_coliids;
-						//s_bpWorld->m_myselfflag = dlg.m_myself;
-						s_bpWorld->RemakeG();
-					}
-
-					s_undergcolidlg = false;
-					s_pgcolidlg = 0;
-				}
-			}
-			});
-
-		s_massB->setButtonListener([]() {
-			if (s_model && s_massSlider && s_groupcheck) {
-				float mass = (float)s_massSlider->getValue();
-				int chkg = (int)s_groupcheck->getValue();
-				int gid = -1;
-				if (chkg) {
-					CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-					if (curre) {
-						gid = curre->GetGroupid();
-					}
-					else {
-						gid = -1;
-					}
-				}
-				s_model->SetAllMassData(gid, s_reindexmap[s_model], mass);
-			}
-			//		_ASSERT( 0 );
-			});
-		s_thicknessB->setButtonListener([]() {
-			if (s_model && s_sphrateSlider && s_groupcheck) {
-				float sphrate = (float)s_sphrateSlider->getValue();
-				int chkg = (int)s_groupcheck->getValue();
-				int gid = -1;
-				if (chkg) {
-					CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-					if (curre) {
-						gid = curre->GetGroupid();
-					}
-					else {
-						gid = -1;
-					}
-				}
-				s_model->SetAllSphrateData(gid, s_reindexmap[s_model], sphrate);
-			}
-			//		_ASSERT( 0 );
-			});
-		s_depthB->setButtonListener([]() {
-			if (s_model && s_boxzSlider && s_groupcheck) {
-				float boxzrate = (float)s_boxzSlider->getValue();
-				int chkg = (int)s_groupcheck->getValue();
-				int gid = -1;
-				if (chkg) {
-					CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-					if (curre) {
-						gid = curre->GetGroupid();
-					}
-					else {
-						gid = -1;
-					}
-				}
-				s_model->SetAllBoxzrateData(gid, s_reindexmap[s_model], boxzrate);
-			}
-			//		_ASSERT( 0 );
-			});
-		s_btgB->setButtonListener([]() {
-			if (s_model && s_btgSlider && s_groupcheck) {
-				float btg = (float)s_btgSlider->getValue();
-				int chkg = (int)s_groupcheck->getValue();
-				int gid = -1;
-				if (chkg) {
-					CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
-					if (curre) {
-						gid = curre->GetGroupid();
-					}
-					else {
-						gid = -1;
-					}
-				}
-				s_model->SetAllBtgData(gid, s_reindexmap[s_model], btg);
-			}
-			});
-		s_btforceB->setButtonListener([]() {
-			if (s_model && s_btforce) {
-				bool kinflag = s_btforce->getValue();
-				s_model->SetAllBtforceData(s_reindexmap[s_model], kinflag);
-			}
-			});
-
-
-
-		//s_rigidSc->autoResize();
-
-		s_rigidWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
-		s_rigidWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
-
-		//１クリック目問題対応
-		s_rigidWnd->refreshPosAndSize();//2022/09/20
-
-
-		s_rigidWnd->callRewrite();						//再描画
-		s_rigidWnd->setVisible(false);
-
-		s_rcrigidwnd.top = s_sidemenuheight;
-		s_rcrigidwnd.left = 0;
-
-		s_rcrigidwnd.bottom = s_sideheight;
-		s_rcrigidwnd.right = s_sidewidth;
-
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-
-	
-	return 0;
-}
 
 void DestroyShaderTypeWnd()
 {
@@ -50695,7 +48323,60 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	case WM_COMMAND:
 	{
-		if (menuid == (ID_RMENU_0 + 97)) {
+		if (menuid == (ID_RMENU_0 + MENUOFFSET_RIGIDPARAMSDLG)) {
+			int opekind = (int)lParam;
+			if (opekind == RIGIDPARAMSDLG_OPE_CLOSE) {
+				s_rigidparamsdlg.SetVisible(false);
+				if (s_bpWorld) {
+					s_bpWorld->setGlobalERP(btScalar(g_erp));
+				}
+				if (s_model) {
+					CallF(s_model->CreateBtObject(g_limitdegflag, 0), return 1);
+				}
+			}
+			else if (opekind == RIGIDPARAMSDLG_OPE_COLIDLG) {
+				if (s_model) {
+					CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
+					if (curre) {
+						CColiIDDlg dlg(curre);
+						s_pcolidlg = &dlg;
+						s_undercolidlg = true;
+
+						dlg.DoModal();
+						if (dlg.m_setgroup == 1) {
+							if (s_model) {
+								s_model->SetColiIDtoGroup(curre);
+							}
+						}
+
+						s_undercolidlg = false;
+						s_pcolidlg = 0;
+					}
+				}
+			}
+			else if (opekind == RIGIDPARAMSDLG_OPE_GCOLIDLG) {
+				if (s_model) {
+					if (s_bpWorld) {
+						//CGColiIDDlg dlg(m_bpWorld->m_coliids, m_bpWorld->m_myselfflag);
+						CGColiIDDlg dlg(s_bpWorld->m_coliids);
+						s_pgcolidlg = &dlg;
+						s_undergcolidlg = true;
+
+						int dlgret = (int)dlg.DoModal();
+						if (dlgret == IDOK) {
+							s_bpWorld->m_coliids = dlg.m_coliids;
+							//s_bpWorld->m_myselfflag = dlg.m_myself;
+							s_bpWorld->RemakeG();
+						}
+
+						s_undergcolidlg = false;
+						s_pgcolidlg = 0;
+					}
+				}
+			}
+
+		}
+		else if (menuid == (ID_RMENU_0 + MENUOFFSET_CPINFODLG)) {
 			s_undercpinfodlg2 = false;
 
 			int dlgresult = (int)lParam;
@@ -50707,12 +48388,12 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				}
 			}
 		}
-		else if (menuid == (ID_RMENU_0 + 98)) {
+		else if (menuid == (ID_RMENU_0 + MENUOFFSET_DOLLYHISTORYDLG)) {
 			if (s_dollyhistorydlg2.GetCreatedFlag()) {
 				s_dollyhistorydlg2.OnSaveDolly();
 			}
 		}
-		else if (menuid == (ID_RMENU_0 + 99)) {
+		else if (menuid == (ID_RMENU_0 + MENUOFFSET_COPYHISTORYDLG)) {
 			if (s_copyhistorydlg2.GetCreatedFlag()) {
 				s_copyhistorydlg2.OnSearch();
 			}
@@ -52682,24 +50363,12 @@ void ShowRigidWnd(bool srcflag)
 		//if (s_model) {
 		if (s_bpWorld) {
 			s_model->SetCurrentRigidElem(s_reindexmap[s_model]);
-
-			//CallF(s_model->CreateBtObject(0), return);
 			CallF(s_model->CreateBtObject(g_limitdegflag, 1), return);
 
-
-			//s_impWnd->setVisible(0);
-			//s_gpWnd->setVisible(0);
-			//s_dmpanimWnd->setVisible(0);
-
-			//s_ikkind = 3;
-			s_rigidWnd->setVisible(srcflag);
-			SetRigidLeng();
-			RigidElem2WndParam();
+			s_rigidparamsdlg.SetModel(s_model, s_curboneno, s_reindexmap, s_rgdindexmap);
+			s_rigidparamsdlg.SetVisible(srcflag);
 
 			s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].state = srcflag;
-			//s_sprigidsw[1].state = false;
-			//s_sprigidsw[2].state = false;
-			//s_sprigidsw[3].state = false;
 		}
 	}
 }
@@ -56209,9 +53878,9 @@ void DSCrossButtonSelectRigidCtrls(bool firstctrlselect)
 	//	return;
 	//}
 
-	if (!s_rigidWnd) {
-		return;
-	}
+	//if (!s_rigidWnd) {
+	//	return;
+	//}
 
 	////select control
 	////十字キー移動ブロック
@@ -59412,8 +57081,8 @@ void ChangeMouseSetCapture()
 			}
 			else if (s_platemenukind == SPPLATEMENUKIND_RIGID) {
 				if (s_platemenuno == (SPRIGIDSW_RIGIDPARAMS + 1)) {
-					if (s_rigidWnd) {
-						SetCapture(s_rigidWnd->getHWnd());
+					if (s_rigidparamsdlg.GetHWnd()) {
+						SetCapture(s_rigidparamsdlg.GetHWnd());
 					}
 				}
 				else if (s_platemenuno == (SPRIGIDSW_IMPULSE + 1)) {
@@ -59544,8 +57213,8 @@ void OrgWindowListenMouse(bool srcflag)
 	if (s_placefolderWnd) {
 		s_placefolderWnd->setListenMouse(srcflag);
 	}
-	if (s_rigidWnd) {
-		s_rigidWnd->setListenMouse(srcflag);
+	if (s_rigidparamsdlg.GetVisible()) {
+		s_rigidparamsdlg.ListenMouse(srcflag);
 	}
 	if (s_shadertypeWnd) {
 		s_shadertypeWnd->setListenMouse(srcflag);
@@ -75289,3 +72958,49 @@ bool ChkEnableIK()
 //	}
 //}
 
+int SetModel2Dlgs(CModel* srcmodel)
+{
+	if (srcmodel) {
+		CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg(false);
+		if (!curcpdlg) {
+			curcpdlg = new CFrameCopyDlg();
+			if (!curcpdlg) {
+				_ASSERT(0);
+				s_underselectmodel = false;
+				return 1;//!!!!!!!!!
+			}
+			s_selbonedlgmap[srcmodel] = curcpdlg;
+			curcpdlg->SetModel(srcmodel);
+		}
+
+		if (s_materialratedlgwnd) {
+			if (srcmodel) {
+				SetModel2MaterialRateDlg(srcmodel);
+			}
+		}
+
+		if (s_modelworldmatdlgwnd) {
+			if (srcmodel) {
+				SetModel2ModelWorldMatDlg(srcmodel);
+			}
+		}
+
+		if (InterlockedAdd(&g_retargetbatchflag, 0) == 0) {
+			{
+				GetCPTFileName(s_cptfilename);
+				s_copyhistorydlg2.SetNames(srcmodel, s_cptfilename);
+			}
+		}
+
+		if (s_st_paramsWnd) {
+			if (srcmodel) {
+				SetMaterial2ShaderTypeParamsDlg(nullptr);
+			}
+		}
+
+		s_rigidparamsdlg.SetModel(srcmodel, s_curboneno, s_reindexmap, s_rgdindexmap);
+	}
+
+
+	return 0;
+}

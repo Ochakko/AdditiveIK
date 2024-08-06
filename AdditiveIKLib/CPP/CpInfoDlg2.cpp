@@ -481,12 +481,12 @@ int CCpInfoDlg2::CreateOWPWnd(POINT setpoint)
 		m_okB->setButtonListener([=, this]() {
 			EnableWindow(g_mainhwnd, TRUE);//!!!!!!!!!!!! 疑似モーダル解除
 			OnOK();
-			::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + 97), (LPARAM)m_dlgresult);
+			::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_CPINFODLG), (LPARAM)m_dlgresult);
 		});
 		m_cancelB->setButtonListener([=, this]() {
 			EnableWindow(g_mainhwnd, TRUE);//!!!!!!!!!!!! 疑似モーダル解除
 			OnCancel();
-			::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + 97), (LPARAM)m_dlgresult);
+			::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_CPINFODLG), (LPARAM)m_dlgresult);
 		});
 		m_dlgwnd->setCloseListener([]() {
 			EnableWindow(g_mainhwnd, TRUE);//!!!!!!!!!!!! 疑似モーダル解除
