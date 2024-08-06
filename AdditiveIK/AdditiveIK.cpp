@@ -73,6 +73,7 @@
 #include <DollyHistoryDlg2.h>
 #include <RigidParamsDlg.h>
 #include <DispLimitsDlg.h>
+#include <BulletDlg.h>
 #include <CpInfoDlg2.h>
 
 #include <math.h>
@@ -962,6 +963,7 @@ static CDollyHistoryDlg2 s_dollyhistorydlg2;
 
 static CRigidParamsDlg s_rigidparamsdlg;
 static CDispLimitsDlg s_displimitsdlg;
+static CBulletDlg s_bulletdlg;
 
 static bool s_undercpinfodlg2;
 static CCpInfoDlg2 s_cpinfodlg2;
@@ -1230,27 +1232,6 @@ static OWP_EditBox* s_polaryEdit[8];
 static OWP_Separator* s_lightsapplysp = 0;
 static OWP_Label* s_lightsspace1Label = 0;
 static OWP_Button* s_lightsapplyB = 0;
-
-static OrgWindow* s_bulletWnd = 0;
-static OWP_Label* s_bulletcalccntLabel = 0;
-static OWP_Slider* s_bulletcalccntSlider = 0;
-static OWP_Label* s_bulletERPLabel = 0;
-static OWP_Slider* s_bulletERPSlider = 0;
-static OWP_Label* s_bulletlimitrateLabel = 0;
-static OWP_Slider* s_bulletlimitrateSlider = 0;
-static OWP_Label* s_bulletmvrateLabel = 0;
-static OWP_Slider* s_bulletmvrateSlider = 0;
-static OWP_Label* s_bulletspringscaleLabel = 0;
-static OWP_Slider* s_bulletspringscaleSlider = 0;
-static OWP_Label* s_bulletrigidspeedLabel = 0;
-static OWP_Slider* s_bulletrigidspeedSlider = 0;
-static OWP_Label* s_bulletcommentLabel = 0;
-static OWP_Label* s_bulletspacer1Label = 0;
-static OWP_Label* s_bulletspacer2Label = 0;
-static OWP_Label* s_bulletspacer3Label = 0;
-static OWP_Label* s_bulletspacer4Label = 0;
-static OWP_Label* s_bulletspacer5Label = 0;
-static OWP_Label* s_bulletspacer6Label = 0;
 
 
 static OrgWindow* s_lodWnd = 0;
@@ -2306,7 +2287,6 @@ static bool s_topslidersBrushMirrorUFlag = false;
 static bool s_topslidersBrushMirrorVFlag = false;
 
 
-static bool s_changeAngleSpringScaleFlag = false;
 
 
 
@@ -2879,6 +2859,8 @@ ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わら�
 //#####################
 
 //Dlgからのメニューオフセットはcoef.hに
+//// (94)はCBulletDlgをトリガーとする呼び出し用に確保
+//#define MENUOFFSET_BULLETDLG			(94)
 //// (95)はCDispLimitsDlgをトリガーとする呼び出し用に確保
 //#define MENUOFFSET_DISPLIMITSDLG		(95)
 //// (96)はCRigidParamsDlgをトリガーとする呼び出し用に確保
@@ -3335,7 +3317,6 @@ static int ConvPolarCoord2Dir(float srcxzdeg, float srcydeg, float* dstdirx, flo
 
 //static int CreateGUIDlgBrushes();
 static int Brushes2Dlg(HWND hDlgWnd);
-static int CreateGUIDlgBullet();
 static int CreateGUIDlgLOD();
 static int LODParams2Dlg();
 
@@ -4281,8 +4262,6 @@ INT WINAPI wWinMain(
 	CreateTopSlidersWnd();
 
 	CreateLightsWnd();
-	
-	CreateGUIDlgBullet();
 	CreateGUIDlgLOD();
 	
 
@@ -4611,6 +4590,7 @@ int CheckResolution()
 		s_dollyhistorydlg2.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_rigidparamsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_displimitsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+		s_bulletdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 	}
 
 	return 0;
@@ -4638,6 +4618,7 @@ void InitApp()
 	}
 	s_rigidparamsdlg.InitParams();
 	s_displimitsdlg.InitParams();
+	s_bulletdlg.InitParams();
 
 	s_undercpinfodlg2 = false;
 	s_cpinfodlg2.InitParams();
@@ -5233,29 +5214,6 @@ void InitApp()
 		s_lightsapplysp = 0;
 		s_lightsspace1Label = 0;
 		s_lightsapplyB = 0;
-	}
-
-	{
-		s_bulletWnd = 0;
-		s_bulletcalccntLabel = 0;
-		s_bulletcalccntSlider = 0;
-		s_bulletERPLabel = 0;
-		s_bulletERPSlider = 0;
-		s_bulletlimitrateLabel = 0;
-		s_bulletlimitrateSlider = 0;
-		s_bulletmvrateLabel = 0;
-		s_bulletmvrateSlider = 0;
-		s_bulletspringscaleLabel = 0;
-		s_bulletspringscaleSlider = 0;
-		s_bulletrigidspeedLabel = 0;
-		s_bulletrigidspeedSlider = 0;
-		s_bulletcommentLabel = 0;
-		s_bulletspacer1Label = 0;
-		s_bulletspacer2Label = 0;
-		s_bulletspacer3Label = 0;
-		s_bulletspacer4Label = 0;
-		s_bulletspacer5Label = 0;
-		s_bulletspacer6Label = 0;
 	}
 
 	{
@@ -6301,7 +6259,6 @@ void InitApp()
 	s_topslidersBrushRepeatsFlag = false;
 	s_topslidersBrushMirrorUFlag = false;
 	s_topslidersBrushMirrorVFlag = false;
-	s_changeAngleSpringScaleFlag = false;
 
 
 
@@ -7183,6 +7140,7 @@ void OnDestroyDevice()
 	s_dollyhistorydlg2.DestroyObjs();
 	s_rigidparamsdlg.DestroyObjs();
 	s_displimitsdlg.DestroyObjs();
+	s_bulletdlg.DestroyObjs();
 	s_cpinfodlg2.DestroyObjs();
 
 
@@ -7709,90 +7667,6 @@ void OnDestroyDevice()
 		if (s_lightsWnd) {
 			delete s_lightsWnd;
 			s_lightsWnd = 0;
-		}
-	}
-
-	{
-		if (s_bulletcalccntLabel) {
-			delete s_bulletcalccntLabel;
-			s_bulletcalccntLabel = 0;
-		}
-		if (s_bulletcalccntSlider) {
-			delete s_bulletcalccntSlider;
-			s_bulletcalccntSlider = 0;
-		}
-		if (s_bulletERPLabel) {
-			delete s_bulletERPLabel;
-			s_bulletERPLabel = 0;
-		}
-		if (s_bulletERPSlider) {
-			delete s_bulletERPSlider;
-			s_bulletERPSlider = 0;
-		}
-		if (s_bulletlimitrateLabel) {
-			delete s_bulletlimitrateLabel;
-			s_bulletlimitrateLabel = 0;
-		}
-		if (s_bulletlimitrateSlider) {
-			delete s_bulletlimitrateSlider;
-			s_bulletlimitrateSlider = 0;
-		}
-		if (s_bulletmvrateLabel) {
-			delete s_bulletmvrateLabel;
-			s_bulletmvrateLabel = 0;
-		}
-		if (s_bulletmvrateSlider) {
-			delete s_bulletmvrateSlider;
-			s_bulletmvrateSlider = 0;
-		}
-		if (s_bulletspringscaleLabel) {
-			delete s_bulletspringscaleLabel;
-			s_bulletspringscaleLabel = 0;
-		}
-		if (s_bulletspringscaleSlider) {
-			delete s_bulletspringscaleSlider;
-			s_bulletspringscaleSlider = 0;
-		}
-		if (s_bulletrigidspeedLabel) {
-			delete s_bulletrigidspeedLabel;
-			s_bulletrigidspeedLabel = 0;
-		}
-		if (s_bulletrigidspeedSlider) {
-			delete s_bulletrigidspeedSlider;
-			s_bulletrigidspeedSlider = 0;
-		}
-		if (s_bulletcommentLabel) {
-			delete s_bulletcommentLabel;
-			s_bulletcommentLabel = 0;
-		}
-		if (s_bulletspacer1Label) {
-			delete s_bulletspacer1Label;
-			s_bulletspacer1Label = 0;
-		}
-		if (s_bulletspacer2Label) {
-			delete s_bulletspacer2Label;
-			s_bulletspacer2Label = 0;
-		}
-		if (s_bulletspacer3Label) {
-			delete s_bulletspacer3Label;
-			s_bulletspacer3Label = 0;
-		}
-		if (s_bulletspacer4Label) {
-			delete s_bulletspacer4Label;
-			s_bulletspacer4Label = 0;
-		}
-		if (s_bulletspacer5Label) {
-			delete s_bulletspacer5Label;
-			s_bulletspacer5Label = 0;
-		}
-		if (s_bulletspacer6Label) {
-			delete s_bulletspacer6Label;
-			s_bulletspacer6Label = 0;
-		}
-
-		if (s_bulletWnd) {
-			delete s_bulletWnd;
-			s_bulletWnd = 0;
 		}
 	}
 
@@ -23647,21 +23521,7 @@ int PostOpenChaFile()
 	
 	ChangeCameraDist(g_camdist , s_moveeyepos, false);
 
-
-	if (s_bulletWnd) {
-		if (s_bulletlimitrateSlider) {
-			s_bulletlimitrateSlider->setValue(g_physicalLimitScale, false);
-		}
-		if (s_bulletmvrateSlider) {
-			s_bulletmvrateSlider->setValue((double)g_physicalMovableRate, false);
-		}
-		if (s_bulletspringscaleSlider) {
-			s_bulletspringscaleSlider->setValue((double)g_akscale, false);
-		}
-		if (s_bulletrigidspeedSlider) {
-			s_bulletrigidspeedSlider->setValue(g_physicalVeloScale, false);
-		}
-	}
+	s_bulletdlg.ParamsToDlg();
 
 	if (s_chascene && 
 		((g_boneaxis < BONEAXIS_CURRENT) || (g_boneaxis > BONEAXIS_BINDPOSE))) {//g_boneaxisがchafileで設定されなかった場合
@@ -28005,222 +27865,7 @@ int RollBackEditRange(int prevrangeFlag, int nextrangeFlag)
 //	return 0;
 //
 //}
-int CreateGUIDlgBullet()
-{
-	if (s_bulletWnd) {
-		_ASSERT(0);
-		return 0;//作成済
-	}
 
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-	s_bulletWnd = new OrgWindow(
-		0,
-		_T("BulletDlg"),		//ウィンドウクラス名
-		GetModuleHandle(NULL),	//インスタンスハンドル
-		WindowPos(windowposx, s_sidemenuheight),
-		WindowSize(s_sidewidth, s_sideheight),		//サイズ
-		_T("BulletDlg"),	//タイトル
-		g_mainhwnd,	//親ウィンドウハンドル
-		false,					//表示・非表示状態
-		//70, 50, 70,				//カラー
-		0, 0, 0,				//カラー
-		true,					//閉じられるか否か
-		true);					//サイズ変更の可否
-
-	int labelheight;
-	if (g_4kresolution) {
-		labelheight = 28;
-	}
-	else {
-		labelheight = 20;
-	}
-
-	if (s_bulletWnd) {
-		s_bulletcalccntLabel = new OWP_Label(L"BulletPhysics Calclation Count", labelheight);
-		if (!s_bulletcalccntLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletcalccntSlider = new OWP_Slider((double)((int)g_btcalccnt), 10.0, 1.0, labelheight);
-		if (!s_bulletcalccntSlider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletERPLabel = new OWP_Label(L"ERP Position Correcting Rate", labelheight);
-		if (!s_bulletERPLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletERPSlider = new OWP_Slider(g_erp, 1.0, 0.0);
-		if (!s_bulletERPSlider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletlimitrateLabel = new OWP_Label(L"Scale of PhysicalLimitRate", labelheight);
-		if (!s_bulletlimitrateLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletlimitrateSlider = new OWP_Slider(g_physicalLimitScale, 1.0, 0.0, labelheight);
-		if (!s_bulletlimitrateSlider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletmvrateLabel = new OWP_Label(L"Movable Rate on MovableRange", labelheight);
-		if (!s_bulletmvrateLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletmvrateSlider = new OWP_Slider((double)g_physicalMovableRate, 100.0, 0.0, labelheight);
-		if (!s_bulletmvrateSlider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletspringscaleLabel = new OWP_Label(L"Scale of PhysicalSpringCoef", labelheight);
-		if (!s_bulletspringscaleLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletspringscaleSlider = new OWP_Slider((double)g_akscale, 10.0, 0.0, labelheight);
-		if (!s_bulletspringscaleSlider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletrigidspeedLabel = new OWP_Label(L"Scale of RigidSpeed on MovalbeRange", labelheight);
-		if (!s_bulletrigidspeedLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletrigidspeedSlider = new OWP_Slider(g_physicalVeloScale, 1.0, 0.0, labelheight);
-		if (!s_bulletrigidspeedSlider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletcommentLabel = new OWP_Label(L"(SpeedScale on UnmovableRange is 0.1 fixed)", labelheight);
-		if (!s_bulletcommentLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletspacer1Label = new OWP_Label(L"      ", labelheight);
-		if (!s_bulletspacer1Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletspacer2Label = new OWP_Label(L"      ", labelheight);
-		if (!s_bulletspacer2Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletspacer3Label = new OWP_Label(L"      ", labelheight);
-		if (!s_bulletspacer3Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletspacer4Label = new OWP_Label(L"      ", labelheight);
-		if (!s_bulletspacer4Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletspacer5Label = new OWP_Label(L"      ", labelheight);
-		if (!s_bulletspacer5Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_bulletspacer6Label = new OWP_Label(L"      ", labelheight);
-		if (!s_bulletspacer6Label) {
-			_ASSERT(0);
-			abort();
-		}
-
-
-		s_bulletWnd->addParts(*s_bulletcalccntLabel);
-		s_bulletWnd->addParts(*s_bulletcalccntSlider);
-		s_bulletWnd->addParts(*s_bulletspacer1Label);
-
-		s_bulletWnd->addParts(*s_bulletERPLabel);
-		s_bulletWnd->addParts(*s_bulletERPSlider);
-		s_bulletWnd->addParts(*s_bulletspacer2Label);
-
-		s_bulletWnd->addParts(*s_bulletlimitrateLabel);
-		s_bulletWnd->addParts(*s_bulletlimitrateSlider);//g_physicalLimitScale: 0,1
-		s_bulletWnd->addParts(*s_bulletspacer3Label);
-
-		s_bulletWnd->addParts(*s_bulletmvrateLabel);
-		s_bulletWnd->addParts(*s_bulletmvrateSlider);//g_physicalMovableRate: 0, 100
-		s_bulletWnd->addParts(*s_bulletspacer4Label);
-
-		s_bulletWnd->addParts(*s_bulletspringscaleLabel);
-		s_bulletWnd->addParts(*s_bulletspringscaleSlider);//g_akscale: 0, 10
-		s_bulletWnd->addParts(*s_bulletspacer5Label);
-
-		s_bulletWnd->addParts(*s_bulletrigidspeedLabel);
-		s_bulletWnd->addParts(*s_bulletrigidspeedSlider);//g_physicalVeloScale: 0, 1
-		s_bulletWnd->addParts(*s_bulletspacer6Label);
-
-		s_bulletWnd->addParts(*s_bulletcommentLabel);
-
-
-		//##########
-		//Slider
-		//##########
-		s_bulletcalccntSlider->setCursorListener([]() {
-			double value = s_bulletcalccntSlider->getValue();
-			g_btcalccnt = (int)(value + 0.0001);
-			s_bulletcalccntSlider->setValue((double)g_btcalccnt, false);//intに丸めてセットし直し
-		});
-
-		s_bulletERPSlider->setCursorListener([]() {
-			double value = s_bulletERPSlider->getValue();
-			g_erp = value;
-		});
-
-		s_bulletlimitrateSlider->setCursorListener([]() {
-			double value = s_bulletlimitrateSlider->getValue();
-			g_physicalLimitScale = value;
-		});
-
-		s_bulletmvrateSlider->setCursorListener([]() {
-			double value = s_bulletmvrateSlider->getValue();
-			g_physicalMovableRate = (int)(value + 0.0001);
-			s_bulletmvrateSlider->setValue((double)g_physicalMovableRate, false);//intに丸めてセットし直し
-		});
-
-		s_bulletspringscaleSlider->setCursorListener([]() {
-			double value = s_bulletspringscaleSlider->getValue();
-			g_akscale = (float)value;
-		});
-		s_bulletspringscaleSlider->setLUpListener([]() {
-			s_changeAngleSpringScaleFlag = true;
-		});
-
-		s_bulletrigidspeedSlider->setCursorListener([]() {
-			double value = s_bulletrigidspeedSlider->getValue();
-			g_physicalVeloScale = value;
-		});
-
-
-		s_bulletWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
-		s_bulletWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
-
-		//１クリック目問題対応
-		s_bulletWnd->refreshPosAndSize();
-
-		s_bulletWnd->callRewrite();
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-
-	return 0;
-}
 int CreateGUIDlgLOD()
 {
 	if (s_lodWnd) {
@@ -28660,12 +28305,6 @@ int CreateGUIDlgLOD()
 			SetCamera3DFromEyePos();//2023/12/30			
 		});
 
-
-		s_bulletcalccntSlider->setCursorListener([]() {
-			double value = s_bulletcalccntSlider->getValue();
-			g_btcalccnt = (int)(value + 0.0001);
-			s_bulletcalccntSlider->setValue((double)g_btcalccnt, false);//intに丸めてセットし直し
-			});
 
 
 		s_lodWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
@@ -34014,12 +33653,6 @@ int OnFrameUtCheckBox()
 	}
 
 
-	if (s_changeAngleSpringScaleFlag) {
-		if (s_chascene) {
-			s_chascene->ChangeAngleSpringScale();
-		}
-		s_changeAngleSpringScaleFlag = false;
-	}
 
 	if (s_utBrushRepeatsFlag) {//値が変わって　かつ　マウスアップのとき
 		//WCHAR sz[100] = { 0L };
@@ -47480,7 +47113,12 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	case WM_COMMAND:
 	{
 		
-		if (menuid == (ID_RMENU_0 + MENUOFFSET_DISPLIMITSDLG)) {
+		if (menuid == (ID_RMENU_0 + MENUOFFSET_BULLETDLG)) {
+			if (s_chascene) {
+				s_chascene->ChangeAngleSpringScale();
+			}
+		}
+		else if (menuid == (ID_RMENU_0 + MENUOFFSET_DISPLIMITSDLG)) {
 			ChangeUpdateMatrixThreads();
 		}
 		else if (menuid == (ID_RMENU_0 + MENUOFFSET_RIGIDPARAMSDLG)) {
@@ -49340,17 +48978,8 @@ void ShowGUIDlgDispParams(bool srcflag)
 //}
 void ShowGUIDlgBullet(bool srcflag)
 {
-	if (s_bulletWnd) {
-		if (srcflag == true) {
-			s_bulletWnd->setVisible(true);
-			s_bulletWnd->setListenMouse(true);
-			s_bulletWnd->callRewrite();
-		}
-		else {
-			s_bulletWnd->setVisible(false);
-			s_bulletWnd->setListenMouse(false);
-		}
-	}
+
+	s_bulletdlg.SetVisible(srcflag);
 
 	s_spguisw[SPGUISW_BULLETPHYSICS].state = srcflag;
 }
@@ -56367,6 +55996,9 @@ void OrgWindowListenMouse(bool srcflag)
 	}
 	if (s_displimitsdlg.GetVisible()) {
 		s_displimitsdlg.ListenMouse(srcflag);
+	}
+	if (s_bulletdlg.GetVisible()) {
+		s_bulletdlg.ListenMouse(srcflag);
 	}
 	if (s_shadertypeWnd) {
 		s_shadertypeWnd->setListenMouse(srcflag);

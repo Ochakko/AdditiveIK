@@ -179,6 +179,7 @@
     <ClCompile Include="..\CPP\BntFile.cpp" />
     <ClCompile Include="..\CPP\Bone.cpp" />
     <ClCompile Include="..\CPP\BtObject.cpp" />
+    <ClCompile Include="..\CPP\BulletDlg.cpp" />
     <ClCompile Include="..\CPP\BVHelem.cpp" />
     <ClCompile Include="..\CPP\BVHFile.cpp" />
     <ClCompile Include="..\CPP\CameraFbx.cpp" />
@@ -566,6 +567,7 @@
     <ClInclude Include="..\INCLUDE\BntFile.h" />
     <ClInclude Include="..\INCLUDE\Bone.h" />
     <ClInclude Include="..\INCLUDE\BtObject.h" />
+    <ClInclude Include="..\INCLUDE\BulletDlg.h" />
     <ClInclude Include="..\INCLUDE\BVHelem.h" />
     <ClInclude Include="..\INCLUDE\BVHFile.h" />
     <ClInclude Include="..\INCLUDE\CameraFbx.h" />

@@ -314,19 +314,8 @@ void CDispLimitsDlg::SetVisible(bool srcflag)
 
 			m_dlgWnd->setListenMouse(true);
 			m_dlgWnd->setVisible(true);
-			if (m_lightsChk) {
-				//############
-				//2024/07/24
-				//############
-				//int showposline = m_dlgSc->getShowPosLine();
-				//m_dlgSc->setShowPosLine(showposline);
-				//コピー履歴をスクロールしてチェック-->他の右ペインウインドウを表示-->再びコピー履歴表示としたときに
-				//ラベルは表示されたがセパレータの中にあるチェックボックスとボタンが表示されなかった
-				//スクロールバーを少し動かすと全て表示された
-				//スクロール処理のsetShowPosLine()から呼び出していたautoResize()が必要だった
-				m_lightsChk->autoResize();
-			}
-			m_dlgWnd->callRewrite();//2024/07/24
+
+			m_dlgWnd->callRewrite();
 		}
 	}
 	else {

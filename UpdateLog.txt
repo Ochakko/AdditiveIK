@@ -8,6 +8,8 @@ https://github.com/Ochakko/AdditiveIK
 
 　DispAndLimitsウインドウをCDispLimitsDlgにクラス化
 
+　BulletウインドウをCBulletDlgにクラス化
+
 
 　予定
 　　AdditiveIK.cppにスタティックメンバとして大量に記述しているOWP関係のソースをクラス化していく予定
