@@ -2,6 +2,15 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/08/07
+　BlendShapeウインドウをCBlendShapeDlgにクラス化
+
+
+　予定
+　　AdditiveIK.cppにスタティックメンバとして大量に記述しているOWP関係のソースをクラス化していく予定
+　　大量にあるのでそれなりに時間がかかると思われる
+
+
 
 2024/08/06
 　RigidWnd(剛体設定ウインドウ)をCRigidParamsDlgにクラス化
@@ -11,12 +20,6 @@ https://github.com/Ochakko/AdditiveIK
 　BulletウインドウをCBulletDlgにクラス化
 
 　ProjLODウインドウをCProjLodDlgにクラス化
-
-
-　予定
-　　AdditiveIK.cppにスタティックメンバとして大量に記述しているOWP関係のソースをクラス化していく予定
-　　大量にあるのでそれなりに時間がかかると思われる
-
 
 
 

@@ -246,6 +246,9 @@
     <ClCompile Include="..\CPP\ProjLodDlg.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
+    <ClCompile Include="..\CPP\BlendShapeDlg.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
@@ -1397,6 +1400,9 @@
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\INCLUDE\ProjLodDlg.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\BlendShapeDlg.h">
       <Filter>GUI</Filter>
     </ClInclude>
   </ItemGroup>

@@ -21564,7 +21564,8 @@ void CModel::SetCameraMotionFrame(int cameramotid, double srcframe)
 		miptr->curframe = setframe;
 	}
 	else {
-		_ASSERT(0);
+		//_ASSERT(0);
+		int dbgflag1 = 1;
 	}
 
 }

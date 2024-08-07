@@ -28,6 +28,8 @@ class CMQOMaterial;
 //ID_RMENU_0を足して使う
 //#####################
 //Dlgからのメニューオフセットはcoef.hに　100以降はAdditiveIK.cppに
+// (92)はCBlendShapeDlgをトリガーとする呼び出し用に確保
+#define MENUOFFSET_BLENDSHAPEDLG		(92)
 // (93)はCProjLodDlgをトリガーとする呼び出し用に確保
 #define MENUOFFSET_PROJLODDLG			(93)
 // (94)はCBulletDlgをトリガーとする呼び出し用に確保

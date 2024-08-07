@@ -75,6 +75,7 @@
 #include <DispLimitsDlg.h>
 #include <BulletDlg.h>
 #include <ProjLodDlg.h>
+#include <BlendShapeDlg.h>
 #include <CpInfoDlg2.h>
 
 #include <math.h>
@@ -640,31 +641,40 @@ extern HANDLE g_hUnderTrackingThread;
 
 bool g_enableDS = false;
 static void InitDSValues();
-static void GetDSValues();
-static void DSColorAndVibration();
-static void DSSelectWindowAndCtrl();//L1, square, triangle
-static void DSSelectCharactor();//(L2 or R2) and L1
-static void DSCrossButton(bool firstctrlselect);
+
+//###########################################################
+//ゲームパッドはキャラクターに対する操作テストなどに使用していく予定
+//ゲームパッドでのウインドウコントロール操作関数は削除
+//マウス、キーボード、マウスパッド共存の方向で.
+//###########################################################
+//static void GetDSValues();
+//static void DSColorAndVibration();
+//static void DSSelectWindowAndCtrl();//L1, square, triangle
+//static void DSSelectCharactor();//(L2 or R2) and L1
+//static void DSCrossButton(bool firstctrlselect);
 static void DSCrossButtonSelectTree(bool firstctrlselect);
-static void DSCrossButtonSelectUTGUI(bool firstctrlselect);
-static void DSCrossButtonSelectToolCtrls(bool firstctrlselect);
-static void DSCrossButtonSelectPlayerBtns(bool firstctrlselect);
-static void DSCrossButtonSelectRigidCtrls(bool firstctrlselect);
-static void DSCrossButtonSelectImpulseCtrls(bool firstctrlselect);
-static void DSCrossButtonSelectGPCtrls(bool firstctrlselect);
-static void DSCrossButtonSelectDampCtrls(bool firstctrlselect);
-static void DSCrossButtonSelectRetargetCtrls(bool firstctrlselect);
-static void DSCrossButtonSelectEulLimitCtrls(bool firstctrlselect);
-static void DSOptionButtonRightClick();
-static void DSR1ButtonSelectCurrentBone();//R1
-static void DSR1ButtonSelectMotion();//(L2 or R2) and R1
-static void DSAxisLMouseMove();
-//static void DSAxisLSelectingPopupMenu();
-static void DSAxisRMainMenuBar();
-static void DSAimBarOK();
-static void DSOButtonSelectedPopupMenu();
-static void DSXButtonCancel();
-static void DSL3R3ButtonMouseHere();
+//static void DSCrossButtonSelectUTGUI(bool firstctrlselect);
+//static void DSCrossButtonSelectToolCtrls(bool firstctrlselect);
+//static void DSCrossButtonSelectPlayerBtns(bool firstctrlselect);
+//static void DSCrossButtonSelectRigidCtrls(bool firstctrlselect);
+//static void DSCrossButtonSelectImpulseCtrls(bool firstctrlselect);
+//static void DSCrossButtonSelectGPCtrls(bool firstctrlselect);
+//static void DSCrossButtonSelectDampCtrls(bool firstctrlselect);
+//static void DSCrossButtonSelectRetargetCtrls(bool firstctrlselect);
+//static void DSCrossButtonSelectEulLimitCtrls(bool firstctrlselect);
+//static void DSOptionButtonRightClick();
+//static void DSR1ButtonSelectCurrentBone();//R1
+//static void DSR1ButtonSelectMotion();//(L2 or R2) and R1
+//static void DSAxisLMouseMove();
+////static void DSAxisLSelectingPopupMenu();
+//static void DSAxisRMainMenuBar();
+//static void DSAimBarOK();
+//static void DSOButtonSelectedPopupMenu();
+//static void DSXButtonCancel();
+//static void DSL3R3ButtonMouseHere();
+void OnDSUpdate();
+//static void OnDSMouseHereApeal();
+static void OnArrowKey();//DS関数でキーボードの矢印キーに対応
 
 
 static void SelectNextWindow(int nextwndid);
@@ -917,7 +927,7 @@ static bool s_dispthreshold = false;
 //static HWND s_lightsforeditdlg = 0;
 //static HWND s_latertransparentdlg = 0;
 //static HWND s_shadowparamsdlg = 0;
-static HWND s_guidlg[GUIDLGNUM];
+//static HWND s_guidlg[GUIDLGNUM];
 
 static HWND s_rotaxisdlg = 0;
 static int s_rotaxiskind = AXIS_X;
@@ -967,7 +977,7 @@ static CRigidParamsDlg s_rigidparamsdlg;
 static CDispLimitsDlg s_displimitsdlg;
 static CBulletDlg s_bulletdlg;
 static CProjLodDlg s_projloddlg;
-
+static CBlendShapeDlg s_blendshapedlg;
 
 static bool s_undercpinfodlg2;
 static CCpInfoDlg2 s_cpinfodlg2;
@@ -2110,29 +2120,6 @@ static int s_onlyoneobjno = -1;//for test button of groupWnd
 
 
 static bool InBlendShapeMode(CModel** ppmodel, CMQOObject** ppmqoobj, int* pchannelindex);
-static OrgWindow* s_blendshapeWnd = 0;
-static OWP_ScrollWnd* s_blendshapeSCWnd = 0;
-static OWP_Separator* s_blendshapesp0 = 0;
-static OWP_Separator* s_blendshapesp1 = 0;
-static OWP_CheckBoxA* s_blendshapeadditive = 0;
-static OWP_Label* s_blendshapemodelname = 0;
-static OWP_Label* s_blendshapeemptyLabel = 0;
-static OWP_Separator* s_blendshapedistsp = 0;
-static OWP_Label* s_blendshapedistLabel = 0;
-static OWP_Slider* s_blendshapedistSlider = 0;
-static std::vector<OWP_Button*> s_blendshapeButton;
-static std::vector<OWP_Slider*> s_blendshapeSlider;
-static std::vector<CBlendShapeElem> s_blendshapeelemvec;
-static int s_blendshapelinenum = 0;
-static bool s_blendshapeUnderEdit = false;
-static bool s_blendshapePostEdit = false;
-static bool s_blendshapeUnderSelect = false;
-static bool s_blendshapeUnderSelectFromUndo = false;
-static bool s_blendshapeUnderSelectFromRefresh = false;
-static int s_blendshapeOpeIndex = 0;
-static float s_blendshapeBefore = 0.0f;
-static float s_blendshapeAfter = 0.0f;
-static int s_blendshapeUndoOpeIndex = 0;
 
 static bool s_SpriteButtonDown = false;
 static bool s_SpriteButtonDownUndoRedo = false;
@@ -2144,7 +2131,6 @@ static bool s_closemodelFlag = false;
 static bool s_closecameraFlag = false;
 static bool s_closemotionFlag = false;
 static bool s_closeconvboneFlag = false;
-static bool s_closeblendshapeFlag = false;
 static bool s_DcloseFlag = false;
 static bool s_ScloseFlag = false;
 static bool s_IcloseFlag = false;
@@ -2754,9 +2740,6 @@ ChaVector3 g_vCenter(0.0f, 0.0f, 0.0f);
 std::vector<void*> g_eulpool;//allocate EULPOOLBLKLEN EulKey at onse and pool 
 std::vector<void*> g_keypool;//allocate KEYPOOLBLKLEN Key at onse and pool 
 
-void OnDSUpdate();
-static void OnDSMouseHereApeal();
-static void OnArrowKey();//DS関数でキーボードの矢印キーに対応
 
 //static bool IsEditingCameraAnim();
 static MOTINFO GetCameraMotInfo();
@@ -2810,6 +2793,8 @@ ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わら�
 //#####################
 
 //Dlgからのメニューオフセットはcoef.hに
+//// (92)はCBlendShapeDlgをトリガーとする呼び出し用に確保
+//#define MENUOFFSET_BLENDSHAPEDLG		(92)
 //// (93)はCProjLodDlgをトリガーとする呼び出し用に確保
 //#define MENUOFFSET_PROJLODDLG			(93)
 //// (94)はCBulletDlgをトリガーとする呼び出し用に確保
@@ -3225,7 +3210,6 @@ static void RollbackBrushState(BRUSHSTATE srcbrushstate);
 static void RollbackUndoCamera(UNDOCAMERA srcundocamera);
 static int OnFrameUndo(bool fromds, int fromdskind);
 static int OnSpriteUndo();
-static void OnGUIEventSpeed();
 static int SetShowPosTime();
 //static int CallFilterFunc(int callnum);
 static int FilterFuncDlg();
@@ -3236,8 +3220,6 @@ static void SetButtonStartEndFromPlaying();
 
 static void AutoCameraTarget();
 
-static int CreateUtDialog();
-static int VisibleUtDialog();
 static bool UnderDragOperation_L();
 static bool UnderDragOperation_R();
 static bool IsClickedSpriteButton();
@@ -3286,9 +3268,6 @@ static int CheckSimilarMenu();
 static int CheckSimilarGroup(int opetype);
 static int TrimLeadingAlnum(bool secondtokenflag, WCHAR* srcstr, int srclen, WCHAR* dststr, int dstlen, bool secondcallflag);
 
-static int CreateBlendShapeWnd();
-static int DestroyBlendShapeWnd();
-static int BlendShapeAnim2Dlg();
 static int OnFrameBlendShape();
 
 static int UpdateCameraPosAndTarget();
@@ -3676,7 +3655,6 @@ static void CreateMarkReq(int curboneno, int broflag);
 static int SetLTimelineMark(int curboneno);
 static int SetTimelineMark();
 static int CreateMotionBrush(double srcstart, double srcend, bool onrefreshflag);
-static int UpdateTopPosText();
 static int SetBrushName();
 
 static int ExportBntFile();
@@ -4213,7 +4191,6 @@ INT WINAPI wWinMain(
 	CreateLightsWnd();	
 
 	CreateDispGroupWnd();
-	CreateBlendShapeWnd();
 	//CreateLaterTransparentWnd();//s_modelが設定されてから作成する
 
 	CreateMaterialRateWnd();
@@ -4539,6 +4516,7 @@ int CheckResolution()
 		s_displimitsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_bulletdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_projloddlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+		s_blendshapedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 	}
 
 	return 0;
@@ -4568,6 +4546,7 @@ void InitApp()
 	s_displimitsdlg.InitParams();
 	s_bulletdlg.InitParams();
 	s_projloddlg.InitParams();
+	s_blendshapedlg.InitParams();
 
 	s_undercpinfodlg2 = false;
 	s_cpinfodlg2.InitParams();
@@ -5080,37 +5059,6 @@ void InitApp()
 		s_disponlyoneobj = false;//for test button of groupWnd
 		s_onlyoneobjno = -1;//for test button of groupWnd
 	}
-
-	{
-		s_blendshapeWnd = 0;
-		s_blendshapeSCWnd = 0;
-		s_blendshapesp0 = 0;
-		s_blendshapesp1 = 0;
-		s_blendshapeadditive = 0;
-		s_blendshapemodelname = 0;
-		s_blendshapeemptyLabel = 0;
-		s_blendshapedistsp = 0;
-		s_blendshapedistLabel = 0;
-		s_blendshapedistSlider = 0;
-
-		s_blendshapeButton.clear();
-		s_blendshapeSlider.clear();
-		s_blendshapeelemvec.clear();
-		s_blendshapelinenum = 0;
-
-		g_blendshapeAddtiveMode = false;
-		g_blendshapedist = 1.0f;
-		s_blendshapeBefore = 0.0f;
-		s_blendshapeAfter = 0.0f;
-		s_blendshapeOpeIndex = 0;
-		s_blendshapeUnderEdit = false;
-		s_blendshapePostEdit = false;
-		s_blendshapeUnderSelect = false;
-		s_blendshapeUnderSelectFromUndo = false;
-		s_blendshapeUnderSelectFromRefresh = false;
-		s_blendshapeUndoOpeIndex = 0;
-	}
-
 
 	{
 		s_shadertypeparamsFlag = false;
@@ -6068,7 +6016,6 @@ void InitApp()
 	s_closemotionFlag = false;
 	s_closecameraFlag = false;
 	s_closeconvboneFlag = false;
-	s_closeblendshapeFlag = false;
 	s_DcloseFlag = false;
 	s_ScloseFlag = false;
 	s_IcloseFlag = false;
@@ -6451,10 +6398,10 @@ void InitApp()
 	//s_lightsforeditdlg = 0;
 	//s_latertransparentdlg = 0;
 	//s_shadowparamsdlg = 0;
-	int dlgno;
-	for (dlgno = 0; dlgno < GUIDLGNUM; dlgno++) {
-		s_guidlg[GUIDLGNUM] = nullptr;
-	}
+	//int dlgno;
+	//for (dlgno = 0; dlgno < GUIDLGNUM; dlgno++) {
+	//	s_guidlg[GUIDLGNUM] = nullptr;
+	//}
 	
 
 	s_rotaxisdlg = 0;
@@ -7011,14 +6958,14 @@ void OnDestroyDevice()
 	//	}
 	//	s_shadowparamsdlg = nullptr;
 	//}
-	int guidlgno;
-	for (guidlgno = 0; guidlgno < GUIDLGNUM; guidlgno++) {
-		HWND delhwnd = s_guidlg[guidlgno];
-		if ((delhwnd != nullptr) && IsWindow(delhwnd)) {
-			DestroyWindow(delhwnd);
-		}
-		s_guidlg[guidlgno] = nullptr;
-	}
+	//int guidlgno;
+	//for (guidlgno = 0; guidlgno < GUIDLGNUM; guidlgno++) {
+	//	HWND delhwnd = s_guidlg[guidlgno];
+	//	if ((delhwnd != nullptr) && IsWindow(delhwnd)) {
+	//		DestroyWindow(delhwnd);
+	//	}
+	//	s_guidlg[guidlgno] = nullptr;
+	//}
 
 
 	if (s_rotaxisdlg) {
@@ -7037,6 +6984,7 @@ void OnDestroyDevice()
 	s_displimitsdlg.DestroyObjs();
 	s_bulletdlg.DestroyObjs();
 	s_projloddlg.DestroyObjs();
+	s_blendshapedlg.DestroyObjs();
 	s_cpinfodlg2.DestroyObjs();
 
 
@@ -7323,7 +7271,6 @@ void OnDestroyDevice()
 
 
 	DestroyDispGroupWnd();
-	DestroyBlendShapeWnd();
 	DestroyShaderTypeWnd();
 	DestroyShaderTypeParamsDlg();
 	DestroySkyParamsDlg();
@@ -8977,7 +8924,7 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 			OnFrameLightsForEdit();
 		}
 
-		OnDSMouseHereApeal();
+		//OnDSMouseHereApeal();
 
 
 		//s_tum.WaitUpdateMatrix();
@@ -9525,9 +9472,10 @@ void PrepairUndo_SelectModel(CModel* befmodel, CModel* nextmodel)
 	//2024/07/02
 	CBlendShapeElem blendshapeelem;
 	blendshapeelem.Init();
-	int blendshapenum = (int)s_blendshapeelemvec.size();
-	if ((s_blendshapeOpeIndex >= 0) && (s_blendshapeOpeIndex < blendshapenum)) {
-		blendshapeelem = s_blendshapeelemvec[s_blendshapeOpeIndex];
+	int blendshapenum = s_blendshapedlg.GetBlendShapeLineNum();
+	int blendshapeindex = s_blendshapedlg.GetBlendShapeOpeIndex();
+	if ((blendshapeindex >= 0) && (blendshapeindex < blendshapenum)) {
+		blendshapeelem = s_blendshapedlg.GetBlendShapeElem(blendshapeindex);
 		//if (blendshapeelem.validflag && blendshapeelem.model && blendshapeelem.mqoobj) {
 		//}
 	}
@@ -9597,9 +9545,10 @@ void PrepairUndo()
 			//2024/07/02
 			CBlendShapeElem blendshapeelem;
 			blendshapeelem.Init();
-			int blendshapenum = (int)s_blendshapeelemvec.size();
-			if ((s_blendshapeOpeIndex >= 0) && (s_blendshapeOpeIndex < blendshapenum)) {
-				blendshapeelem = s_blendshapeelemvec[s_blendshapeOpeIndex];
+			int blendshapenum = s_blendshapedlg.GetBlendShapeLineNum();
+			int blendshapeindex = s_blendshapedlg.GetBlendShapeOpeIndex();
+			if ((blendshapeindex >= 0) && (blendshapeindex < blendshapenum)) {
+				blendshapeelem = s_blendshapedlg.GetBlendShapeElem(blendshapeindex);
 				//if (blendshapeelem.validflag && blendshapeelem.model && blendshapeelem.mqoobj) {
 				//}
 			}
@@ -16194,9 +16143,10 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 
 			if (s_spguisw[SPGUISW_BLENDSHAPE].state && 
 				!s_undoFlag && !s_redoFlag && 
-				!s_blendshapeUnderSelectFromUndo && !s_blendshapeUnderSelectFromRefresh) {
+				!s_blendshapedlg.GetBlendShapeUnderSelectFromUndo() && 
+				!s_blendshapedlg.GetBlendShapeUnderSelectFromRefresh()) {
 				//2024/06/30 モデル切替モーション切り替え時に　BlendShapeの操作中ターゲットのグラフを表示
-				s_blendshapeUnderSelect = true;
+				s_blendshapedlg.SetBlendShapeUnderSelect(true);
 			}
 		}
 	}
@@ -19086,157 +19036,6 @@ LRESULT CALLBACK MotPropDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	return TRUE;
 
 }
-
-//########################################################
-//2023/08/23 DollyHistoryDlg.h, DollyHistoryDlg.cppに移行
-//########################################################
-//LRESULT CALLBACK CameraDollyDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
-//{
-//	float posvalue = 0.0f;
-//	WCHAR strpos[256] = { 0L };
-//
-//	switch (msg) {
-//	case WM_INITDIALOG:
-//	{
-//		SetDlgPosDesktopCenter(hDlgWnd, HWND_TOPMOST);
-//
-//		swprintf_s(strpos, 256, L"%.3f", g_camEye.x);
-//		SetDlgItemTextW(hDlgWnd, IDC_DOLLYX, strpos);
-//		swprintf_s(strpos, 256, L"%.3f", g_camEye.y);
-//		SetDlgItemTextW(hDlgWnd, IDC_DOLLYY, strpos);
-//		swprintf_s(strpos, 256, L"%.3f", g_camEye.z);
-//		SetDlgItemTextW(hDlgWnd, IDC_DOLLYZ, strpos);
-//
-//		swprintf_s(strpos, 256, L"%.3f", g_camtargetpos.x);
-//		SetDlgItemTextW(hDlgWnd, IDC_DOLLYX2, strpos);
-//		swprintf_s(strpos, 256, L"%.3f", g_camtargetpos.y);
-//		SetDlgItemTextW(hDlgWnd, IDC_DOLLYY2, strpos);
-//		swprintf_s(strpos, 256, L"%.3f", g_camtargetpos.z);
-//		SetDlgItemTextW(hDlgWnd, IDC_DOLLYZ2, strpos);
-//
-//
-//		//RECT dlgrect;
-//		//GetWindowRect(hDlgWnd, &dlgrect);
-//		//SetCursorPos(dlgrect.left + 25, dlgrect.top + 10);
-//
-//		s_cameradollydlgwnd = hDlgWnd;
-//	}
-//	//SetDlgItemText( hDlgWnd, IDC_MULT, strmult );
-//	return FALSE;
-//
-//	case WM_COMMAND:
-//		switch (LOWORD(wp)) {
-//		case IDOK:
-//			ShowWindow(hDlgWnd, SW_HIDE);
-//			break;
-//		case IDCANCEL:
-//			ShowWindow(hDlgWnd, SW_HIDE);
-//			break;
-//		case IDC_GETDOLLY:
-//		{
-//			swprintf_s(strpos, 256, L"%.3f", g_camEye.x);
-//			SetDlgItemTextW(hDlgWnd, IDC_DOLLYX, strpos);
-//			swprintf_s(strpos, 256, L"%.3f", g_camEye.y);
-//			SetDlgItemTextW(hDlgWnd, IDC_DOLLYY, strpos);
-//			swprintf_s(strpos, 256, L"%.3f", g_camEye.z);
-//			SetDlgItemTextW(hDlgWnd, IDC_DOLLYZ, strpos);
-//
-//			swprintf_s(strpos, 256, L"%.3f", g_camtargetpos.x);
-//			SetDlgItemTextW(hDlgWnd, IDC_DOLLYX2, strpos);
-//			swprintf_s(strpos, 256, L"%.3f", g_camtargetpos.y);
-//			SetDlgItemTextW(hDlgWnd, IDC_DOLLYY2, strpos);
-//			swprintf_s(strpos, 256, L"%.3f", g_camtargetpos.z);
-//			SetDlgItemTextW(hDlgWnd, IDC_DOLLYZ2, strpos);
-//		}
-//			break;
-//
-//		case IDC_APPLYDOLLY:
-//		{
-//			ChaVector3 savecameye = g_camEye;
-//			ChaVector3 savetarget = g_camtargetpos;
-//			g_befcamtargetpos = g_camtargetpos;
-//
-//			GetDlgItemTextW(hDlgWnd, IDC_DOLLYX, strpos, 256);
-//			posvalue = (float)_wtof(strpos);
-//			if ((posvalue >= -FLT_MAX) && (posvalue <= FLT_MAX)) {
-//				g_camEye.x = posvalue;
-//			}
-//			GetDlgItemTextW(hDlgWnd, IDC_DOLLYY, strpos, 256);
-//			posvalue = (float)_wtof(strpos);
-//			if ((posvalue >= -FLT_MAX) && (posvalue <= FLT_MAX)) {
-//				g_camEye.y = posvalue;
-//			}
-//			GetDlgItemTextW(hDlgWnd, IDC_DOLLYZ, strpos, 256);
-//			posvalue = (float)_wtof(strpos);
-//			if ((posvalue >= -FLT_MAX) && (posvalue <= FLT_MAX)) {
-//				g_camEye.z = posvalue;
-//			}
-//
-//
-//			GetDlgItemTextW(hDlgWnd, IDC_DOLLYX2, strpos, 256);
-//			posvalue = (float)_wtof(strpos);
-//			if ((posvalue >= -FLT_MAX) && (posvalue <= FLT_MAX)) {
-//				g_camtargetpos.x = posvalue;
-//			}
-//			GetDlgItemTextW(hDlgWnd, IDC_DOLLYY2, strpos, 256);
-//			posvalue = (float)_wtof(strpos);
-//			if ((posvalue >= -FLT_MAX) && (posvalue <= FLT_MAX)) {
-//				g_camtargetpos.y = posvalue;
-//			}
-//			GetDlgItemTextW(hDlgWnd, IDC_DOLLYZ2, strpos, 256);
-//			posvalue = (float)_wtof(strpos);
-//			if ((posvalue >= -FLT_MAX) && (posvalue <= FLT_MAX)) {
-//				g_camtargetpos.z = posvalue;
-//			}
-//
-//			
-//			ChaVector3 diffv;
-//			diffv = g_camEye - g_camtargetpos;
-//			g_camdist = (float)ChaVector3LengthDbl(&diffv);
-//			if (g_camdist <= 1e-4) {
-//				//rollback
-//
-//				g_camEye = savecameye;
-//				g_camtargetpos = savetarget;
-//				ChaVector3 diffv2;
-//				diffv2 = g_camEye - g_camtargetpos;
-//				g_camdist = (float)ChaVector3LengthDbl(&diffv2);
-//
-//				swprintf_s(strpos, 256, L"%.3f", g_camEye.x);
-//				SetDlgItemTextW(hDlgWnd, IDC_DOLLYX, strpos);
-//				swprintf_s(strpos, 256, L"%.3f", g_camEye.y);
-//				SetDlgItemTextW(hDlgWnd, IDC_DOLLYY, strpos);
-//				swprintf_s(strpos, 256, L"%.3f", g_camEye.z);
-//				SetDlgItemTextW(hDlgWnd, IDC_DOLLYZ, strpos);
-//
-//				swprintf_s(strpos, 256, L"%.3f", g_camtargetpos.x);
-//				SetDlgItemTextW(hDlgWnd, IDC_DOLLYX2, strpos);
-//				swprintf_s(strpos, 256, L"%.3f", g_camtargetpos.y);
-//				SetDlgItemTextW(hDlgWnd, IDC_DOLLYY2, strpos);
-//				swprintf_s(strpos, 256, L"%.3f", g_camtargetpos.z);
-//				SetDlgItemTextW(hDlgWnd, IDC_DOLLYZ2, strpos);
-//			}
-//
-//			//#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-//			//#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-//			//#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
-//
-//		}
-//			break;
-//		default:
-//			return FALSE;
-//		}
-//		break;
-//	case WM_CLOSE:
-//		ShowWindow(hDlgWnd, SW_HIDE);
-//		break;
-//	default:
-//		DefWindowProc(hDlgWnd, msg, wp, lp);
-//		return FALSE;
-//	}
-//	return TRUE;
-//
-//}
 
 
 
@@ -26941,7 +26740,7 @@ int CreateMotionBrush(double srcstart, double srcend, bool onrefreshflag)
 	}
 
 
-	UpdateTopPosText();
+	//UpdateTopPosText();
 
 	SavePlayingStartEnd();
 
@@ -33514,13 +33313,6 @@ int OnFrameCloseFlag()
 {
 	// 終了フラグを確認
 
-	if (s_closeblendshapeFlag) {
-		s_closeblendshapeFlag = false;
-		if (s_blendshapeWnd) {
-			s_blendshapeWnd->setVisible(0);
-		}
-	}
-
 	if (s_closeFlag) {
 		s_closeFlag = false;
 		s_dispmw = false;
@@ -33847,9 +33639,9 @@ int OnFrameTimeLineWnd()
 			//s_LrefeshEditTargetの処理が終わった時点まで　s_blendshapeUnderSelectFromUndoをリセットしない
 			//s_LrefeshEditTargetが終わった時点で　s_blendshapeUnderSelectFromUndoをリセットしてs_blendshapeUnderSelectFromRefreshを立てる
 			//そしてs_blendshapeUnderSelectFromRefreshをみて　PrepairUndo_BlendShape()無しのBlendShapeのSelChangeを行う
-			if (s_blendshapeUnderSelectFromUndo) {
-				s_blendshapeUnderSelectFromUndo = false;
-				s_blendshapeUnderSelectFromRefresh = true;
+			if (s_blendshapedlg.GetBlendShapeUnderSelectFromUndo()) {
+				s_blendshapedlg.SetBlendShapeUnderSelectFromUndo(false);
+				s_blendshapedlg.SetBlendShapeUnderSelectFromRefresh(true);
 			}
 		}
 	}
@@ -34178,7 +33970,7 @@ int OnFrameTimeLineWnd()
 		//モーフスライダーの位置を更新
 		//毎フレーム呼ぶと重いので　フレーム変更時に呼ぶ
 		if (g_edittarget == EDITTARGET_MORPH) {
-			BlendShapeAnim2Dlg();
+			s_blendshapedlg.ParamsToDlg();
 		}
 
 
@@ -36324,8 +36116,8 @@ int OnSpriteUndo()
 		blendshapeelem.model && (blendshapeelem.model == s_model) &&
 		blendshapeelem.mqoobj && (blendshapeelem.channelindex >= 0)) {
 
-		s_blendshapeUndoOpeIndex = blendshapeelem.channelindex;
-		s_blendshapeUnderSelectFromUndo = true;//2024/07/02 SelChange BlendShape
+		s_blendshapedlg.SetBlendShapeUndoOpeIndex(blendshapeelem.channelindex);
+		s_blendshapedlg.SetBlendShapeUnderSelectFromUndo(true);//2024/07/02 SelChange BlendShape
 	}
 
 
@@ -36475,7 +36267,7 @@ int OnSpriteUndo()
 		SetLTimelineMark(s_curboneno);
 	}
 
-	OnGUIEventSpeed();
+	//OnGUIEventSpeed();
 
 	if (s_model->ExistCurrentMotion()) {
 
@@ -36921,597 +36713,6 @@ bool UnderDragOperation_R()
 	return false;
 }
 
-
-
-int VisibleUtDialog()
-{
-	bool visibleflag = !(UnderDragOperation_R() || UnderDragOperation_L());
-
-	if (visibleflag != s_utcontrolvisible) {
-
-		//g_SampleUI.SetVisible(visibleflag);
-
-		s_utcontrolvisible = visibleflag;
-	}
-
-	return 0;
-}
-
-
-int CreateUtDialog()
-{
-
-//	// Initialize dialogs
-//	//g_SettingsDlg.Init(&g_DialogResourceManager);
-//	g_SampleUI.Init(&g_DialogResourceManager);
-//
-//	int iY;
-//	g_SampleUI.SetCallback(OnGUIEvent);
-//	//iY = 15;
-//	iY = 0;
-//
-//	int ctrlh = 25;
-//	int addh = ctrlh + 2;
-//
-//	int ctrlxlen = 120;
-//	int checkboxxlen = 120;
-//
-//	WCHAR sz[100];
-//	//################
-//	//utguikind == 0
-//	//################
-//		//iY += 24;
-//
-//	int iX0;
-//
-//	if (g_4kresolution) {
-//		//iY = s_mainheight - (520 - TOPSLIDERSWNDH);
-//		//iY = s_mainheight - 210 - addh - 10;
-//		//iY = s_mainheight - 210 - 10;
-//
-//		//iY = s_mainheight - 210 - 10 - 3 * addh;
-//		//iY = s_mainheight - 210 - 2 * addh - 10;
-//		iY = s_mainheight - 210 - 10 - addh - 10;
-//		iX0 = s_mainwidth / 2 - 180 - 2 * 180 - 30;
-//	}
-//	else {
-//		//iY = 0;
-//		iY = 0;
-//		//iY = addh;
-//		iX0 = 0;
-//	}
-//
-//
-//	s_dsutgui0.clear();
-//	s_dsutguiid0.clear();
-//
-//
-//	if (g_4kresolution) {
-//
-//		//2022/11/08
-//		//4KTVでウインドウ大を選んだ場合　コンボボックスは見切れないように　一番上に配置
-//
-//		g_SampleUI.AddComboBox(IDC_COMBO_IKLEVEL, iX0 + 35, 20, ctrlxlen, ctrlh);//Comboの要素が見切れないようになるべく上方に配置
-//		s_ui_iklevel = g_SampleUI.GetControl(IDC_COMBO_IKLEVEL);
-//		_ASSERT(s_ui_iklevel);
-//		s_dsutgui0.push_back(s_ui_iklevel);
-//		s_dsutguiid0.push_back(IDC_COMBO_IKLEVEL);
-//		CDXUTComboBox* pComboBox0 = g_SampleUI.GetComboBox(IDC_COMBO_IKLEVEL);
-//		pComboBox0->RemoveAllItems();
-//		int level;
-//		for (level = 0; level < 15; level++) {
-//			ULONG levelval = (ULONG)level;
-//			WCHAR strlevel[256];
-//			swprintf_s(strlevel, 256, L"%02d", level);
-//			pComboBox0->AddItem(strlevel, ULongToPtr(levelval));
-//		}
-//		pComboBox0->SetSelectedByData(ULongToPtr(1));
-//
-//		g_SampleUI.AddComboBox(IDC_COMBO_BONEAXIS, (s_mainwidth / 2 - 180 - 180 - 40 + 35), 20, ctrlxlen, ctrlh);
-//		s_ui_boneaxis = g_SampleUI.GetControl(IDC_COMBO_BONEAXIS);
-//		_ASSERT(s_ui_boneaxis);
-//		s_dsutgui0.push_back(s_ui_boneaxis);
-//		s_dsutguiid0.push_back(IDC_COMBO_BONEAXIS);
-//		CDXUTComboBox* pComboBox3 = g_SampleUI.GetComboBox(IDC_COMBO_BONEAXIS);
-//		pComboBox3->RemoveAllItems();
-//		WCHAR straxis[256];
-//		ULONG boneaxisindex;
-//		swprintf_s(straxis, 256, L"Current");
-//		boneaxisindex = BONEAXIS_CURRENT;
-//		pComboBox3->AddItem(straxis, ULongToPtr(boneaxisindex));
-//		swprintf_s(straxis, 256, L"Parent");
-//		boneaxisindex = BONEAXIS_PARENT;
-//		pComboBox3->AddItem(straxis, ULongToPtr(boneaxisindex));
-//		swprintf_s(straxis, 256, L"Global");
-//		boneaxisindex = BONEAXIS_GLOBAL;
-//		pComboBox3->AddItem(straxis, ULongToPtr(boneaxisindex));
-//		swprintf_s(straxis, 256, L"BindPose");
-//		boneaxisindex = BONEAXIS_BINDPOSE;
-//		pComboBox3->AddItem(straxis, ULongToPtr(boneaxisindex));
-//		pComboBox3->SetSelectedByData(ULongToPtr((LONG)g_boneaxis));
-//	}
-//
-//
-//	g_SampleUI.AddComboBox(IDC_COMBO_FPS, iX0 + 25, iY, ctrlxlen, ctrlh);//Comboの要素が見切れないようになるべく上方に配置
-//	s_ui_fpskind = g_SampleUI.GetControl(IDC_COMBO_FPS);
-//	_ASSERT(s_ui_fpskind);
-//	s_dsutgui0.push_back(s_ui_fpskind);
-//	s_dsutguiid0.push_back(IDC_COMBO_FPS);
-//	CDXUTComboBox* pComboBoxFps = g_SampleUI.GetComboBox(IDC_COMBO_FPS);
-//	pComboBoxFps->RemoveAllItems();
-//	WCHAR strfpskind[256];
-//	swprintf_s(strfpskind, 256, L"free fps");
-//	pComboBoxFps->AddItem(strfpskind, ULongToPtr(0));
-//	swprintf_s(strfpskind, 256, L"100fps");
-//	pComboBoxFps->AddItem(strfpskind, ULongToPtr(1));
-//	swprintf_s(strfpskind, 256, L"60fps");
-//	pComboBoxFps->AddItem(strfpskind, ULongToPtr(2));
-//	swprintf_s(strfpskind, 256, L"30fps");
-//	pComboBoxFps->AddItem(strfpskind, ULongToPtr(3));
-//	swprintf_s(strfpskind, 256, L"15fps");
-//	pComboBoxFps->AddItem(strfpskind, ULongToPtr(4));
-//	pComboBoxFps->SetSelectedByData(ULongToPtr(0));
-//	g_fpskind = 0;
-//	g_VSync = false;
-//
-//
-//	swprintf_s(sz, 100, L"Lighting");
-//	g_SampleUI.AddCheckBox(IDC_LIGHTING, sz, iX0 + 25, iY += addh, 
-//		checkboxxlen, 16, (bool)g_lightflag, 0U, false, &s_LightingCheckBox);
-//	s_ui_lighting = g_SampleUI.GetControl(IDC_LIGHTING);
-//	_ASSERT(s_ui_lighting);
-//	s_dsutgui0.push_back(s_ui_lighting);//s_dsutgui1
-//	s_dsutguiid0.push_back(IDC_LIGHTING);//s_dsutgui1
-//
-//	g_SampleUI.AddSlider(IDC_LIGHT_SCALE, iX0 + 25, iY += addh, 100, ctrlh, 0, 20, (int)(g_fLightScale * 10.0f));
-//	s_ui_lightscale = g_SampleUI.GetControl(IDC_LIGHT_SCALE);
-//	_ASSERT(s_ui_lightscale);
-//	s_dsutgui0.push_back(s_ui_lightscale);
-//	s_dsutguiid0.push_back(IDC_LIGHT_SCALE);
-//
-//	g_SampleUI.AddCheckBox(IDC_BMARK, L"DispBone", iX0 + 25, iY += addh, 
-//		checkboxxlen, 16, true, 0U, false, &s_BoneMarkCheckBox);
-//	s_ui_dispbone = g_SampleUI.GetControl(IDC_BMARK);
-//	_ASSERT(s_ui_dispbone);
-//	s_dsutgui0.push_back(s_ui_dispbone);
-//	s_dsutguiid0.push_back(IDC_BMARK);
-//	g_SampleUI.AddCheckBox(IDC_RMARK, L"DispRigid", iX0 + 25, iY += addh, checkboxxlen, 16, true, 0U, false, &s_RigidMarkCheckBox);
-//	s_ui_disprigid = g_SampleUI.GetControl(IDC_RMARK);
-//	_ASSERT(s_ui_disprigid);
-//	s_dsutgui0.push_back(s_ui_disprigid);
-//	s_dsutguiid0.push_back(IDC_RMARK);
-//
-//
-//	s_savebonemarkflag = 1;
-//	s_saverigidmarkflag = 1;
-//
-//
-//	g_SampleUI.AddCheckBox(IDC_CAMTARGET, L"LockToSel", iX0 + 25, iY += addh, ctrlxlen, 16, false, 0U, false, &s_CamTargetCheckBox);
-//	s_ui_locktosel = g_SampleUI.GetControl(IDC_CAMTARGET);
-//	_ASSERT(s_ui_locktosel);
-//	s_dsutgui0.push_back(s_ui_locktosel);
-//	s_dsutguiid0.push_back(IDC_CAMTARGET);
-//
-//
-//	//iY += addh;
-//
-//	if (g_4kresolution == false) {
-//		//2022/11/08
-//		//4KTVではない場合　コンボボックスはコンパクトに見切れない程度に上に配置　(g_4kresolution == true時は上述)
-//
-//		g_SampleUI.AddComboBox(IDC_COMBO_IKLEVEL, iX0 + 25, iY += addh, ctrlxlen, ctrlh);
-//		s_ui_iklevel = g_SampleUI.GetControl(IDC_COMBO_IKLEVEL);
-//		_ASSERT(s_ui_iklevel);
-//		s_dsutgui0.push_back(s_ui_iklevel);
-//		s_dsutguiid0.push_back(IDC_COMBO_IKLEVEL);
-//		CDXUTComboBox* pComboBox0 = g_SampleUI.GetComboBox(IDC_COMBO_IKLEVEL);
-//		pComboBox0->RemoveAllItems();
-//		int level;
-//		for (level = 0; level < 15; level++) {
-//			ULONG levelval = (ULONG)level;
-//			WCHAR strlevel[256];
-//			swprintf_s(strlevel, 256, L"%02d", level);
-//			pComboBox0->AddItem(strlevel, ULongToPtr(levelval));
-//		}
-//		pComboBox0->SetSelectedByData(ULongToPtr(1));
-//
-//		g_SampleUI.AddComboBox(IDC_COMBO_BONEAXIS, iX0 + 25, iY += addh, ctrlxlen, ctrlh);
-//		s_ui_boneaxis = g_SampleUI.GetControl(IDC_COMBO_BONEAXIS);
-//		_ASSERT(s_ui_boneaxis);
-//		s_dsutgui0.push_back(s_ui_boneaxis);
-//		s_dsutguiid0.push_back(IDC_COMBO_BONEAXIS);
-//		CDXUTComboBox* pComboBox3 = g_SampleUI.GetComboBox(IDC_COMBO_BONEAXIS);
-//		pComboBox3->RemoveAllItems();
-//		WCHAR straxis[256];
-//		ULONG boneaxisindex;
-//		swprintf_s(straxis, 256, L"Current");
-//		boneaxisindex = BONEAXIS_CURRENT;
-//		pComboBox3->AddItem(straxis, ULongToPtr(boneaxisindex));
-//		swprintf_s(straxis, 256, L"Parent");
-//		boneaxisindex = BONEAXIS_PARENT;
-//		pComboBox3->AddItem(straxis, ULongToPtr(boneaxisindex));
-//		swprintf_s(straxis, 256, L"Global");
-//		boneaxisindex = BONEAXIS_GLOBAL;
-//		pComboBox3->AddItem(straxis, ULongToPtr(boneaxisindex));
-//		swprintf_s(straxis, 256, L"BindPose");
-//		boneaxisindex = BONEAXIS_BINDPOSE;
-//		pComboBox3->AddItem(straxis, ULongToPtr(boneaxisindex));
-//		pComboBox3->SetSelectedByData(ULongToPtr((LONG)g_boneaxis));
-//	}
-//
-//	g_SampleUI.AddCheckBox(IDC_PRECISEONPREVIEWTOO, L"PreciseOnPreviewToo", iX0 + 25, iY += addh, checkboxxlen, 16, g_preciseOnPreviewToo, 0U, false, &s_PreciseCheckBox);
-//	s_ui_precise = g_SampleUI.GetControl(IDC_PRECISEONPREVIEWTOO);
-//	_ASSERT(s_ui_precise);
-//	s_dsutgui0.push_back(s_ui_precise);
-//	s_dsutguiid0.push_back(IDC_PRECISEONPREVIEWTOO);
-//
-//
-//	g_SampleUI.AddCheckBox(IDC_X180, L"X180", 
-//		iX0 + 25, iY += addh, checkboxxlen / 2 - 5, 16, 
-//		g_x180flag, 0U, false, &s_X180CheckBox);
-//	s_ui_x180 = g_SampleUI.GetControl(IDC_X180);
-//	_ASSERT(s_ui_x180);
-//	s_dsutgui0.push_back(s_ui_x180);
-//	s_dsutguiid0.push_back(IDC_X180);
-//
-//
-//	g_SampleUI.AddCheckBox(IDC_TRAROT, L"TRot", 
-//		iX0 + checkboxxlen / 2 + 5 + 30, iY, checkboxxlen / 2 - 5, 16,
-//		g_rotatetanim, 0U, false, &s_TraRotCheckBox);
-//	s_ui_trarot = g_SampleUI.GetControl(IDC_TRAROT);
-//	_ASSERT(s_ui_trarot);
-//	s_dsutgui0.push_back(s_ui_trarot);
-//	s_dsutguiid0.push_back(IDC_TRAROT);
-//
-//	if (g_4kresolution) {
-//		//iY = s_mainheight - (520 - TOPSLIDERSWNDH);
-//		//iY = s_mainheight - 210 - 3 * addh - 10;
-//		//iY = s_mainheight - 210 - 4 * addh - 10;
-//
-//		//iY = s_mainheight - 210 - 2 * addh - 10;
-//		//iY = s_mainheight - 210 - 3 * addh - 10;
-//		iY = s_mainheight - 210 - addh - 10;
-//		iX0 = s_mainwidth / 2 - 180 - 180 - 40;
-//	}
-//	else {
-//		//そのまま続き
-//		//iY += addh;
-//		iX0 = 0;
-//	}
-//
-//	{//2-->1移動
-//		swprintf_s(sz, 100, L"UpdateThreads : %d", g_UpdateMatrixThreads);
-//		//g_SampleUI.AddStatic(IDC_STATIC_NUMTHREAD, sz, iX0, iY += addh2, ctrlxlen, ctrlh);
-//		g_SampleUI.AddStatic(IDC_STATIC_UMTHREADS, sz, iX0 + 35, iY += addh, ctrlxlen, 18);
-//		s_ui_umthreads = g_SampleUI.GetControl(IDC_STATIC_UMTHREADS);
-//		_ASSERT(s_ui_umthreads);
-//		s_dsutgui0.push_back(s_ui_umthreads);//s_dsutgui1
-//		s_dsutguiid0.push_back(IDC_STATIC_UMTHREADS);//s_dsutgui1
-//		//g_SampleUI.AddSlider(IDC_SL_NUMTHREAD, iX0, iY += addh2, 100, ctrlh, 1, 4, g_numthread);
-//		g_SampleUI.AddSlider(IDC_SL_UMTHREADS, iX0 + 35, iY += (18 + 2), 100, ctrlh, 1, MAXUPDATEMATRIXTHREAD, g_UpdateMatrixThreads);
-//		s_ui_slumthreads = g_SampleUI.GetControl(IDC_SL_UMTHREADS);
-//		_ASSERT(s_ui_slumthreads);
-//		s_dsutgui0.push_back(s_ui_slumthreads);//s_dsutgui1
-//		s_dsutguiid0.push_back(IDC_SL_UMTHREADS);//s_dsutgui1
-//
-//		g_SampleUI.AddCheckBox(IDC_HIGHRPM, L"high rpm", iX0 + 35, iY += addh, checkboxxlen, 16, false, 0U, false, &s_HighRpmCheckBox);
-//		s_ui_highrpmon = g_SampleUI.GetControl(IDC_HIGHRPM);
-//		_ASSERT(s_ui_highrpmon);
-//		s_dsutgui0.push_back(s_ui_highrpmon);
-//		s_dsutguiid0.push_back(IDC_HIGHRPM);
-//
-//		swprintf_s(sz, 100, L"Speed: %0.2f", g_dspeed);
-//		//g_SampleUI.AddStatic(IDC_SPEED_STATIC, sz, iX0, iY += addh, ctrlxlen, ctrlh);
-//		g_SampleUI.AddStatic(IDC_SPEED_STATIC, sz, iX0 + 35, iY += addh, ctrlxlen, 18);
-//		s_ui_texspeed = g_SampleUI.GetControl(IDC_SPEED_STATIC);
-//		_ASSERT(s_ui_texspeed);
-//		s_dsutgui0.push_back(s_ui_texspeed);//s_dsutgui1
-//		s_dsutguiid0.push_back(IDC_SPEED_STATIC);//s_dsutgui1
-//		//g_SampleUI.AddSlider(IDC_SPEED, iX0, iY += addh, 100, ctrlh, 0, 700, (int)(g_dspeed * 100.0f));
-//		g_SampleUI.AddSlider(IDC_SPEED, iX0 + 35, iY += (18 + 2), 100, ctrlh, 0, 700, (int)(g_dspeed * 100.0f));
-//		s_ui_speed = g_SampleUI.GetControl(IDC_SPEED);
-//		_ASSERT(s_ui_speed);
-//		s_dsutgui0.push_back(s_ui_speed);//!!!!!!!!!!!!!!!! dsutgui1
-//		s_dsutguiid0.push_back(IDC_SPEED);
-//
-//		//g_SampleUI.AddCheckBox(IDC_PSEUDOLOCAL, L"PseudoLocal", iX0, iY += addh, checkboxxlen, 16, true, 0U, false, &s_PseudoLocalCheckBox);
-//		//s_ui_pseudolocal = g_SampleUI.GetControl(IDC_PSEUDOLOCAL);
-//		//_ASSERT(s_ui_pseudolocal);
-//		//s_dsutgui0.push_back(s_ui_pseudolocal);
-//		//s_dsutguiid0.push_back(IDC_PSEUDOLOCAL);
-//
-//		////g_SampleUI.AddCheckBox(IDC_LIMITDEG, L"LimitEul", iX0, iY += addh, checkboxxlen, 16, true, 0U, false, &s_LimitDegCheckBox);
-//		//g_SampleUI.AddCheckBox(IDC_LIMITDEG, L"LimitEul", iX0 + 35, iY += addh, checkboxxlen, 16, g_limitdegflag, 0U, false, &s_LimitDegCheckBox);
-//		//s_ui_limiteul = g_SampleUI.GetControl(IDC_LIMITDEG);
-//		//_ASSERT(s_ui_limiteul);
-//		//s_dsutgui0.push_back(s_ui_limiteul);
-//		//s_dsutguiid0.push_back(IDC_LIMITDEG);
-//		//g_SampleUI.AddCheckBox(IDC_ABS_IK, L"AbsIKOn", iX0, iY += addh, checkboxxlen, 16, false, 0U, false, &s_AbsIKCheckBox);
-//		//s_ui_absikon = g_SampleUI.GetControl(IDC_ABS_IK);
-//		//_ASSERT(s_ui_absikon);
-//		//s_dsutgui0.push_back(s_ui_absikon);
-//		//s_dsutguiid0.push_back(IDC_ABS_IK);
-//
-//		//g_SampleUI.AddCheckBox(IDC_WALLSCRAPINGIK, L"WallScrapingIK", iX0 + 35, iY += addh, checkboxxlen, 16, (g_wallscrapingikflag == 1), 0U, false, &s_WallScrapingIKCheckBox);
-//		//s_ui_wallscrapingik = g_SampleUI.GetControl(IDC_WALLSCRAPINGIK);
-//		//_ASSERT(s_ui_wallscrapingik);
-//		//s_dsutgui0.push_back(s_ui_wallscrapingik);
-//		//s_dsutguiid0.push_back(IDC_WALLSCRAPINGIK);
-//
-//	}
-//
-//	{//3-->1移動
-//		swprintf_s(sz, 100, L"EditRate : %.3f", g_physicsmvrate);
-//		//g_SampleUI.AddStatic(IDC_STATIC_PHYSICS_MV_SLIDER, sz, iX0, iY += addh, ctrlxlen, ctrlh);
-//		g_SampleUI.AddStatic(IDC_STATIC_PHYSICS_MV_SLIDER, sz, iX0 + 35, iY += addh, ctrlxlen, 18);
-//		s_ui_texphysmv = g_SampleUI.GetControl(IDC_STATIC_PHYSICS_MV_SLIDER);
-//		_ASSERT(s_ui_texphysmv);
-//		s_dsutgui0.push_back(s_ui_texphysmv);//s_dsutgui1
-//		s_dsutguiid0.push_back(IDC_STATIC_PHYSICS_MV_SLIDER);//s_dsutgui1
-//		//g_SampleUI.AddSlider(IDC_PHYSICS_MV_SLIDER, iX0, iY += addh, 100, ctrlh, 0, 100, (int)(g_physicsmvrate * 100.0f));
-//		g_SampleUI.AddSlider(IDC_PHYSICS_MV_SLIDER, iX0 + 35, iY += (18 + 2), 100, ctrlh, 0, 100, (int)(g_physicsmvrate * 100.0f));
-//		s_ui_slphysmv = g_SampleUI.GetControl(IDC_PHYSICS_MV_SLIDER);
-//		_ASSERT(s_ui_slphysmv);
-//		s_dsutgui0.push_back(s_ui_slphysmv);
-//		s_dsutguiid0.push_back(IDC_PHYSICS_MV_SLIDER);
-//	}
-//
-//
-//
-//	//################
-//	//utguikind == 1
-//	//################
-//		//Left Bottom
-//	s_dsutgui1.clear();
-//	s_dsutguiid1.clear();
-//
-//	//iY = s_mainheight - 210;
-//	iY = s_mainheight - 190;
-//	int startx = s_mainwidth / 2 - 180;
-//
-//	int brushmethody;
-//	if (g_4kresolution) {
-//		brushmethody = 20;
-//	}
-//	else {
-//		brushmethody = 56;
-//	}
-//
-//	{// 1-->2移動
-//		g_SampleUI.AddComboBox(IDC_COMBO_MOTIONBRUSH_METHOD, startx - 15, brushmethody, ctrlxlen + 25, ctrlh);//ドロップダウンリストが全部表示されるように上方に配置
-//		s_ui_motionbrush = g_SampleUI.GetControl(IDC_COMBO_MOTIONBRUSH_METHOD);
-//		_ASSERT(s_ui_motionbrush);
-//		s_dsutgui1.push_back(s_ui_motionbrush);
-//		s_dsutguiid1.push_back(IDC_COMBO_MOTIONBRUSH_METHOD);
-//		InitPluginMenu();
-//
-//
-//		//swprintf_s(sz, 100, L"TopPos : %d%% ", g_applyrate);
-//		CEditRange::SetApplyRate((double)g_applyrate);
-//
-//		swprintf_s(sz, 100, L"TopPos:%d%%:%d", g_applyrate, 1);// current frame is 1 at first.
-//		//g_SampleUI.AddStatic(IDC_STATIC_APPLYRATE, sz, 35, iY += addh, ctrlxlen, ctrlh);
-//		g_SampleUI.AddStatic(IDC_STATIC_APPLYRATE, sz, startx, iY += addh, ctrlxlen, 18);
-//		s_ui_texapplyrate = g_SampleUI.GetControl(IDC_STATIC_APPLYRATE);
-//		_ASSERT(s_ui_texapplyrate);
-//		s_dsutgui1.push_back(s_ui_texapplyrate);
-//		s_dsutguiid1.push_back(IDC_STATIC_APPLYRATE);
-//		//g_SampleUI.AddSlider(IDC_SL_APPLYRATE, 50, iY += addh, 100, ctrlh, 0, 100, g_applyrate);
-//		g_SampleUI.AddSlider(IDC_SL_APPLYRATE, startx, iY += (18 + 2), 100, ctrlh, 0, 100, g_applyrate);
-//		s_ui_slapplyrate = g_SampleUI.GetControl(IDC_SL_APPLYRATE);
-//		_ASSERT(s_ui_slapplyrate);
-//		//CEditRange::SetApplyRate(g_applyrate);
-//		s_dsutgui1.push_back(s_ui_slapplyrate);
-//		s_dsutguiid1.push_back(IDC_SL_APPLYRATE);
-//
-//		//swprintf_s( sz, 100, L"IK First Rate : %f", g_ikfirst );
-//		swprintf_s(sz, 100, L"Brush Repeats : %d", g_brushrepeats);
-//		//g_SampleUI.AddStatic(IDC_STATIC_BRUSHREPEATS, sz, 35, iY += addh, ctrlxlen, ctrlh);
-//		g_SampleUI.AddStatic(IDC_STATIC_BRUSHREPEATS, sz, startx, iY += addh, ctrlxlen, 18);
-//		s_ui_texbrushrepeats = g_SampleUI.GetControl(IDC_STATIC_BRUSHREPEATS);
-//		_ASSERT(s_ui_texbrushrepeats);
-//		s_dsutgui1.push_back(s_ui_texbrushrepeats);
-//		s_dsutguiid1.push_back(IDC_STATIC_BRUSHREPEATS);
-//		//g_SampleUI.AddSlider(IDC_SL_BRUSHREPEATS, 50, iY += addh, 100, ctrlh, 0, 10, (int)g_brushrepeats);
-//		g_SampleUI.AddSlider(IDC_SL_BRUSHREPEATS, startx, iY += (18 + 2), 100, ctrlh, 0, 10, (int)g_brushrepeats);
-//		s_ui_brushrepeats = g_SampleUI.GetControl(IDC_SL_BRUSHREPEATS);
-//		_ASSERT(s_ui_brushrepeats);
-//		s_dsutgui1.push_back(s_ui_brushrepeats);
-//		s_dsutguiid1.push_back(IDC_SL_BRUSHREPEATS);
-//
-//		g_SampleUI.AddCheckBox(IDC_BRUSH_MIRROR_U, L"U", startx, iY += addh, checkboxxlen / 2 - 5, 16, false, 0U, false, &s_BrushMirrorUCheckBox);
-//		s_ui_brushmirroru = g_SampleUI.GetControl(IDC_BRUSH_MIRROR_U);
-//		_ASSERT(s_ui_brushmirroru);
-//		s_dsutgui1.push_back(s_ui_brushmirroru);
-//		s_dsutguiid1.push_back(IDC_BRUSH_MIRROR_U);
-//
-//		g_SampleUI.AddCheckBox(IDC_BRUSH_MIRROR_V, L"V", startx + checkboxxlen / 2 + 5, iY, checkboxxlen / 2 - 5, 16, false, 0U, false, &s_BrushMirrorVCheckBox);
-//		s_ui_brushmirrorv = g_SampleUI.GetControl(IDC_BRUSH_MIRROR_V);
-//		_ASSERT(s_ui_brushmirrorv);
-//		s_dsutgui1.push_back(s_ui_brushmirrorv);
-//		s_dsutguiid1.push_back(IDC_BRUSH_MIRROR_V);
-//	}
-//
-//
-//
-//
-//
-//
-//	//################
-//	//utguikind == 2
-//	//################
-//		//CenterRight Bottom
-//	s_dsutgui2.clear();
-//	s_dsutguiid2.clear();
-//
-//	//Center Bottom
-//	//iY = s_mainheight - 210;
-//	iY = s_mainheight - 155;
-//	startx = s_mainwidth / 2 - 50;
-//
-//	int addh2 = 27;
-//
-//	//g_SampleUI.AddCheckBox(IDC_EDGESMP, L"edge sampling",
-//	//	startx, iY += addh, checkboxxlen, 16,
-//	//	g_edgesmp, 0U, false, &s_EdgeSmpCheckBox);
-//	//s_ui_edgesmp = g_SampleUI.GetControl(IDC_EDGESMP);
-//	//_ASSERT(s_ui_edgesmp);
-//	//s_dsutgui1.push_back(s_ui_edgesmp);
-//	//s_dsutguiid1.push_back(IDC_EDGESMP);
-//
-//
-//	//iY += 10;
-//	g_SampleUI.AddButton(IDC_BTSTART, L"BT start", startx, iY += addh, 100, ctrlh);
-//	s_ui_btstart = g_SampleUI.GetControl(IDC_BTSTART);
-//	_ASSERT(s_ui_btstart);
-//	s_dsutgui2.push_back(s_ui_btstart);
-//	s_dsutguiid2.push_back(IDC_BTSTART);
-//
-//	//iY += 3;
-//	g_SampleUI.AddButton(IDC_BTRECSTART, L"BT REC", startx, iY += addh2, 100, ctrlh);
-//	s_ui_btrecstart = g_SampleUI.GetControl(IDC_BTRECSTART);
-//	_ASSERT(s_ui_btrecstart);
-//	s_dsutgui2.push_back(s_ui_btrecstart);
-//	s_dsutguiid2.push_back(IDC_BTRECSTART);
-//
-//	//iY += 3;
-//	g_SampleUI.AddButton(IDC_STOP_BT, L"STOP BT", startx, iY += addh2, 100, ctrlh);
-//	s_ui_stopbt = g_SampleUI.GetControl(IDC_STOP_BT);
-//	_ASSERT(s_ui_stopbt);
-//	s_dsutgui2.push_back(s_ui_stopbt);
-//	s_dsutguiid2.push_back(IDC_STOP_BT);
-//
-//
-//
-//
-//
-//	//iY = s_mainheight - 210;
-//	//iY = s_mainheight - 210 - addh;
-//	iY = s_mainheight - 155 - addh;
-//	startx = s_mainwidth / 2 - 50 + 130;
-//
-//	swprintf_s(sz, 100, L"BT CalcCnt: %0.2f", g_btcalccnt);
-//	//g_SampleUI.AddStatic(IDC_STATIC_BTCALCCNT, sz, startx, iY += addh, ctrlxlen, ctrlh);
-//	g_SampleUI.AddStatic(IDC_STATIC_BTCALCCNT, sz, startx, iY += addh, ctrlxlen, 18);
-//	s_ui_texbtcalccnt = g_SampleUI.GetControl(IDC_STATIC_BTCALCCNT);
-//	_ASSERT(s_ui_texbtcalccnt);
-//	s_dsutgui2.push_back(s_ui_texbtcalccnt);
-//	s_dsutguiid2.push_back(IDC_STATIC_BTCALCCNT);
-//	//g_SampleUI.AddSlider(IDC_BTCALCCNT, startx, iY += addh, 100, ctrlh, 1, 100, (int)(g_btcalccnt));
-//	g_SampleUI.AddSlider(IDC_BTCALCCNT, startx, iY += (18 + 2), 100, ctrlh, 1, 100, (int)(g_btcalccnt));
-//	s_ui_btcalccnt = g_SampleUI.GetControl(IDC_BTCALCCNT);
-//	_ASSERT(s_ui_btcalccnt);
-//	s_dsutgui2.push_back(s_ui_btcalccnt);
-//	s_dsutguiid2.push_back(IDC_BTCALCCNT);
-//
-//	swprintf_s(sz, 100, L"BT ERP: %0.5f", g_erp);
-//	//g_SampleUI.AddStatic(IDC_STATIC_ERP0, sz, startx, iY += addh, ctrlxlen, ctrlh);
-//	g_SampleUI.AddStatic(IDC_STATIC_ERP0, sz, startx, iY += addh, ctrlxlen, 18);
-//	s_ui_texerp = g_SampleUI.GetControl(IDC_STATIC_ERP0);
-//	_ASSERT(s_ui_texerp);
-//	s_dsutgui2.push_back(s_ui_texerp);
-//	s_dsutguiid2.push_back(IDC_STATIC_ERP0);
-//	//g_SampleUI.AddSlider(IDC_ERP, startx, iY += addh, 100, ctrlh, 0, 5000, (int)(g_erp * 5000.0 + 0.4));
-//	g_SampleUI.AddSlider(IDC_ERP, startx, iY += (18 + 2), 100, ctrlh, 0, 5000, (int)(g_erp * 5000.0 + 0.4));
-//	s_ui_erp = g_SampleUI.GetControl(IDC_ERP);
-//	_ASSERT(s_ui_erp);
-//	s_dsutgui2.push_back(s_ui_erp);
-//	s_dsutguiid2.push_back(IDC_ERP);
-//
-//	//swprintf_s(sz, 100, L"ThreadNum : %d(%d)", g_numthread, gNumIslands);
-//	////g_SampleUI.AddStatic(IDC_STATIC_NUMTHREAD, sz, startx, iY += addh2, ctrlxlen, ctrlh);
-//	//g_SampleUI.AddStatic(IDC_STATIC_NUMTHREAD, sz, startx, iY += addh2, ctrlxlen, 18);
-//	//s_ui_texthreadnum = g_SampleUI.GetControl(IDC_STATIC_NUMTHREAD);
-//	//_ASSERT(s_ui_texthreadnum);
-//	//s_dsutgui2.push_back(s_ui_texthreadnum);
-//	//s_dsutguiid2.push_back(IDC_STATIC_NUMTHREAD);
-//	////g_SampleUI.AddSlider(IDC_SL_NUMTHREAD, startx, iY += addh2, 100, ctrlh, 1, 4, g_numthread);
-//	//g_SampleUI.AddSlider(IDC_SL_NUMTHREAD, startx, iY += (18 + 2), 100, ctrlh, 1, 4, g_numthread);
-//	//s_ui_slthreadnum = g_SampleUI.GetControl(IDC_SL_NUMTHREAD);
-//	//_ASSERT(s_ui_slthreadnum);
-//	//s_dsutgui2.push_back(s_ui_slthreadnum);
-//	//s_dsutguiid2.push_back(IDC_SL_NUMTHREAD);
-//
-//
-////################
-////utguikind == 3
-////################
-//	//Right Bottom
-//	s_dsutgui3.clear();
-//	s_dsutguiid3.clear();
-//
-//	if (g_4kresolution) {
-//		//iY = s_mainheight - 210 - addh;
-//		//iY = s_mainheight - 170 - addh;
-//		iY = s_mainheight - 155 - addh;
-//		startx = s_mainwidth / 2 - 50 + 130 + 140;
-//	}
-//	else {
-//		//iY = s_mainheight - 210 - addh;
-//		//iY = s_mainheight - 170 - addh;
-//		iY = s_mainheight - 155 - addh;
-//		startx = s_mainwidth - 150;
-//	}
-//
-//	{//Experimental新規
-//		//g_SampleUI.AddCheckBox(IDC_VSYNC, L"VSync", startx, iY + addh, checkboxxlen / 2, 16, g_VSync, 0U, false, &s_VSyncCheckBox);
-//		//s_ui_vsync = g_SampleUI.GetControl(IDC_VSYNC);
-//		//_ASSERT(s_ui_vsync);
-//		//s_dsutgui3.push_back(s_ui_vsync);
-//		//s_dsutguiid3.push_back(IDC_VSYNC);
-//
-//	}
-//
-//	{//1-->Experimental
-//		swprintf_s(sz, 100, L"ReferencePos : %d", g_refposstep);
-//		//g_SampleUI.AddStatic(IDC_STATIC_IKRATE, sz, 35, iY += addh, ctrlxlen, ctrlh);
-//		g_SampleUI.AddStatic(IDC_STATIC_REF, sz, startx, iY += addh, ctrlxlen, 18);
-//		s_ui_texref = g_SampleUI.GetControl(IDC_STATIC_REF);
-//		_ASSERT(s_ui_texref);
-//		s_dsutgui3.push_back(s_ui_texref);
-//		s_dsutguiid3.push_back(IDC_STATIC_REF);
-//		//g_SampleUI.AddSlider(IDC_SL_IKRATE, 50, iY += addh, 100, ctrlh, 0, 100, (int)(g_ikrate * 100.0f));
-//		g_SampleUI.AddSlider(IDC_SL_REFPOSSTEP, startx, iY += (18 + 2), 100, ctrlh, 1, 50, g_refposstep);
-//		s_ui_slirefpos = g_SampleUI.GetControl(IDC_SL_REFPOSSTEP);
-//		g_SampleUI.AddSlider(IDC_SL_REFALPHA, startx, iY += (18 + 2), 100, ctrlh, 1, 100, g_refalpha);
-//		s_ui_slirefalpha = g_SampleUI.GetControl(IDC_SL_REFALPHA);
-//		_ASSERT(s_ui_slirefalpha);
-//		s_dsutgui3.push_back(s_ui_slirefpos);
-//		s_dsutguiid3.push_back(IDC_SL_REFPOSSTEP);
-//		s_dsutgui3.push_back(s_ui_slirefalpha);
-//		s_dsutguiid3.push_back(IDC_SL_REFALPHA);
-//	}
-//
-//
-//	//if (g_usephysik == 1) {//EditMot%d.iniファイルを編集してUsePhysIKに１を指定した時のみのオプション機能（乱れやすい。少しだけ動かして物理的なノイズを加える位の役には立つかもしれないのでオプションとして残す。）
-//	//	iY += 10;
-//	//	g_SampleUI.AddButton(IDC_PHYSICS_IK, L"PhysRotStart", startx, iY += addh, 100, ctrlh);
-//	//	s_ui_physrotstart = g_SampleUI.GetControl(IDC_PHYSICS_IK);
-//	//	_ASSERT(s_ui_physrotstart);
-//	//	s_dsutgui3.push_back(s_ui_physrotstart);
-//	//	s_dsutguiid3.push_back(IDC_PHYSICS_IK);
-//	//	iY += 5;
-//	//	g_SampleUI.AddButton(IDC_PHYSICS_MV_IK, L"PhysMvStart", startx, iY += addh, 100, ctrlh);
-//	//	s_ui_physmvstart = g_SampleUI.GetControl(IDC_PHYSICS_MV_IK);
-//	//	_ASSERT(s_ui_physmvstart);
-//	//	s_dsutgui3.push_back(s_ui_physmvstart);
-//	//	s_dsutguiid3.push_back(IDC_PHYSICS_MV_IK);
-//	//	iY += 5;
-//	//	g_SampleUI.AddButton(IDC_PHYSICS_IK_STOP, L"PhysIkStop", startx, iY += addh, 100, ctrlh);
-//	//	s_ui_physikstop = g_SampleUI.GetControl(IDC_PHYSICS_IK_STOP);
-//	//	_ASSERT(s_ui_physikstop);
-//	//	s_dsutgui3.push_back(s_ui_physikstop);
-//	//	s_dsutguiid3.push_back(IDC_PHYSICS_IK_STOP);
-//	//}
-//
-//
-//	//iY += 5;
-//	//g_SampleUI.AddButton(IDC_APPLY_BT, L"Apply BT", startx, iY += addh, 100, ctrlh);
-
-
-	return 0;
-
-}
 
 int CreateTimelineWnd()
 {
@@ -39366,440 +38567,7 @@ int CreateDispGroupWnd()
 	return 0;
 }
 
-int BlendShapeAnim2Dlg()
-{
-	if (!s_model) {
-		return 0;
-	}
-	if (!s_blendshapeWnd) {
-		return 0;
-	}
-	if (s_spguisw[SPGUISW_BLENDSHAPE].state != true) {
-		return 0;
-	}
-	if (s_model->ExistCurrentMotion() != true) {
-		return 0;
-	}
 
-	int blendelemnum = (int)s_blendshapeelemvec.size();
-	int blendelemindex;
-	for (blendelemindex = 0; blendelemindex < blendelemnum; blendelemindex++) {
-		CBlendShapeElem blendelem = s_blendshapeelemvec[blendelemindex];
-		if (blendelem.validflag && blendelem.model && blendelem.mqoobj) {
-			int curmotid = blendelem.model->GetCurrentMotID();
-			double curframe = blendelem.model->GetCurrentFrame();
-			float value = blendelem.mqoobj->GetShapeAnimWeight(curmotid, IntTime(curframe), blendelem.channelindex);
-
-			int slidernum = (int)s_blendshapeSlider.size();
-			if ((blendelemindex >= 0) && (blendelemindex < slidernum) && s_blendshapeSlider[blendelemindex]) {
-				s_blendshapeSlider[blendelemindex]->setValue(value, false);
-			}
-		}
-	}
-
-	s_blendshapeWnd->callRewrite();
-
-	return 0;
-}
-int CreateBlendShapeWnd()
-{
-
-
-	if (!s_model) {
-		return 0;
-	}
-
-	DestroyBlendShapeWnd();
-
-
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-	s_blendshapeWnd = new OrgWindow(
-		0,
-		_T("BlendShapeWindow"),		//ウィンドウクラス名
-		GetModuleHandle(NULL),	//インスタンスハンドル
-		WindowPos(windowposx, s_sidemenuheight),
-		WindowSize(s_sidewidth, s_sideheight),		//サイズ
-		_T("BlendShapeWindow"),	//タイトル
-		g_mainhwnd,	//親ウィンドウハンドル
-		true,					//表示・非表示状態
-		//70, 50, 70,				//カラー
-		0, 0, 0,				//カラー
-		true, true);					//サイズ変更の可否
-
-	if (s_blendshapeWnd) {
-
-		s_guidlg[GUIDLG_BLENDSHAPE] = s_blendshapeWnd->getHWnd();
-
-		s_blendshapeWnd->setSizeMin(WindowSize(150, 150));		// 最小サイズを設定
-
-/*
-static OrgWindow* s_blendshapeWnd = 0;
-static OWP_ScrollWnd* s_blendshapeSCWnd = 0;
-static OWP_Separator* s_blendshapesp0 = 0;
-static std::vector<OWP_Button*> s_blendshapeButton;
-static std::vector<OWP_Slider*> s_blendshapeSlider;
-static std::vector<CBlendShapeElem> s_blendshapeelemvec;
-static int s_blendshapelinenum = 0;
-*/
-
-		s_blendshapeButton.clear();
-		s_blendshapeSlider.clear();
-		s_blendshapeelemvec.clear();
-
-		int result = s_model->SetBlendShapeGUI(s_blendshapeelemvec);
-		if (result != 0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_blendshapelinenum = (int)s_blendshapeelemvec.size();
-
-		if (s_blendshapelinenum <= 0) {
-			return 0;
-		}
-
-		double centerrate;
-		int linedatasize;
-		if (g_4kresolution) {
-			//centerrate = (double)3 / (double)140;
-			centerrate = (double)7 / (double)140;
-			//linedatasize = max(140, linenum + 12);
-			//linedatasize = max(106, (linenum + 12));
-			linedatasize = (int)((double)s_blendshapelinenum * 1.50);
-		}
-		else {
-			//centerrate = (double)3 / (double)70;
-			centerrate = (double)7 / (double)70;
-			//linedatasize = max(70, linenum + 12);
-			//linedatasize = max(54, (linenum + 12));
-			linedatasize = (int)((double)s_blendshapelinenum * 1.50);
-		}
-		//centerrate = 1.0 / (double)linedatasize;
-
-
-		//スクロールウインドウ		
-		s_blendshapeSCWnd = new OWP_ScrollWnd(L"BlendShapeScWnd", true, 20);
-		if (!s_blendshapeSCWnd) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_blendshapeSCWnd->setLineDataSize(linedatasize);//!!!!!!!!!!!!!
-		//s_blendshapeWnd->addParts(*s_blendshapeSCWnd);
-
-
-		//s_blendshapesp0 = new OWP_Separator(s_blendshapeWnd, false, centerrate, false, s_blendshapeSCWnd);
-		s_blendshapesp0 = new OWP_Separator(s_blendshapeWnd, true, centerrate, false);
-		if (!s_blendshapesp0) {
-			_ASSERT(0);
-			return 1;
-		}
-		//s_blendshapeSCWnd->addParts(*s_blendshapesp0);
-
-		//s_blendshapesp1 = new OWP_Separator(s_blendshapeWnd, true, 0.3, true, s_blendshapeSCWnd);
-		//s_blendshapesp1 = new OWP_Separator(s_blendshapeWnd, true, 0.38, true, s_blendshapeSCWnd);
-		s_blendshapesp1 = new OWP_Separator(s_blendshapeWnd, true, 0.50, true, s_blendshapeSCWnd);
-		if (!s_blendshapesp0) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		s_blendshapemodelname = new OWP_Label(s_model->GetFileName(), 20);
-		if (!s_blendshapemodelname) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		s_blendshapedistsp = new OWP_Separator(s_blendshapeWnd, true, 0.3, true);
-		if (!s_blendshapedistsp) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		s_blendshapeemptyLabel = new OWP_Label(L"          ", 20);
-		if (!s_blendshapeemptyLabel) {
-			_ASSERT(0);
-			return 0;
-		}
-
-		s_blendshapedistLabel = new OWP_Label(L"MorphDist", 20);
-		if (!s_blendshapedistLabel) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		s_blendshapedistSlider = new OWP_Slider(g_blendshapedist, 1.0, 0.0);
-		if (!s_blendshapedistSlider) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		s_blendshapeadditive = new OWP_CheckBoxA(L"AdditiveMode", g_blendshapeAddtiveMode, 20, false);
-		if (!s_blendshapeadditive) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_blendshapeadditive->setActive(false);//!!!!!!!!!!!!!!!!!!
-
-
-
-		s_blendshapeWnd->addParts(*s_blendshapesp0);
-
-		s_blendshapesp0->addParts1(*s_blendshapemodelname);
-		s_blendshapesp0->addParts1(*s_blendshapeemptyLabel);
-		s_blendshapesp0->addParts1(*s_blendshapedistsp);
-		s_blendshapedistsp->addParts1(*s_blendshapedistLabel);
-		s_blendshapedistsp->addParts2(*s_blendshapedistSlider);
-		//s_blendshapesp0->addParts1(*s_blendshapeadditive);
-
-		s_blendshapesp0->addParts2(*s_blendshapeSCWnd);
-		s_blendshapeSCWnd->addParts(*s_blendshapesp1);
-
-
-		
-		int lineno;
-		for (lineno = 0; lineno < s_blendshapelinenum; lineno++) {
-			CBlendShapeElem curblendshape = s_blendshapeelemvec[lineno];
-			if (curblendshape.validflag) {
-				OWP_Slider* newslider = new OWP_Slider(0.0, 100.0, 0.0);
-				if (!newslider) {
-					_ASSERT(0);
-					return 1;
-				}
-				s_blendshapeSlider.push_back(newslider);
-
-				//WindowSize slidersize = newslider->getSize();//autoResize()が走るまでsizeは(0,0)
-				
-				WCHAR strlabel[512] = { 0 };
-				ZeroMemory(strlabel, sizeof(WCHAR) * 512);
-				if (curblendshape.mqoobj && curblendshape.mqoobj->GetName() && curblendshape.targetname) {
-					char mqoobjname[256] = { 0 };
-					WCHAR wmqoobjname[256] = { 0L };
-					strcpy_s(mqoobjname, 256, curblendshape.mqoobj->GetName());
-					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
-						mqoobjname, -1, wmqoobjname, 256);
-					WCHAR wtargetname[256] = { 0L };
-					wcscpy_s(wtargetname, 256, curblendshape.targetname);
-					
-					//2024/06/08
-					//obj名:ターゲット名の長さが長すぎてスライダーに被ることがあったので文字数制限
-					//obj名は12文字まで、ターゲット名は最後の .の後から表示
-					int objnameleng = (int)wcsnlen_s(wmqoobjname, 256);
-					int cp_objnameleng = max(0, min(12, objnameleng));//!!!!!!!!!!
-					wmqoobjname[cp_objnameleng] = 0L;//!!!!!!!!!
-
-					//WCHAR printwtargetname[256] = { 0L };
-					//ZeroMemory(printwtargetname, sizeof(WCHAR) * 256);
-					//int targetnameleng = (int)wcsnlen_s(wtargetname, 256);
-					//int cp_targetnameleng = max(0, min(28, targetnameleng));//!!!!!!!!
-					//if (cp_targetnameleng > 28) {
-					//	int offsetpos = cp_targetnameleng - 28;
-					//	wcscpy_s(printwtargetname, 256, (wtargetname + offsetpos));
-					//}
-					//else {
-					//	wcscpy_s(printwtargetname, 256, wtargetname);
-					//}
-
-					WCHAR printwtargetname[256] = { 0L };
-					ZeroMemory(printwtargetname, sizeof(WCHAR) * 256);
-					WCHAR wch[2] = L".";
-					WCHAR* lastdot = wcsrchr(wtargetname, wch[0]);
-					int offsetpos = 0;
-					if (lastdot) {
-						offsetpos = (int)(lastdot - wtargetname);
-						offsetpos = max(0, min(254, offsetpos));
-					}
-					else {
-						offsetpos = 0;
-					}
-					wcscpy_s(printwtargetname, 256, (wtargetname + offsetpos));
-
-
-					ZeroMemory(strlabel, sizeof(WCHAR) * 512);
-					wcscpy_s(strlabel, 512, wmqoobjname);
-					wcscat_s(strlabel, 512, L":");
-					//wcscat_s(strlabel, 512, wtargetname);
-					wcscat_s(strlabel, 512, printwtargetname);
-					
-
-					//swprintf_s(strlabel, 512, L"%s:%s",
-					//	wmqoobjname, curblendshape.targetname);
-
-				}
-				else {
-					wcscpy_s(strlabel, 256, L"Unknown Name");
-				}
-
-				int sliderheight = 20;
-				OWP_Button* newbutton = new OWP_Button(strlabel, sliderheight);//左右カラムの高さ合わせ
-				if (!newbutton) {
-					_ASSERT(0);
-					return 1;
-				}
-				s_blendshapeButton.push_back(newbutton);
-
-			}
-			else {
-				_ASSERT(0);
-				return 1;
-			}
-		}
-
-		{
-			int labelnum = (int)s_blendshapeButton.size();
-			int slidernum = (int)s_blendshapeSlider.size();
-			if (labelnum == slidernum) {
-				int guino;
-				for (guino = 0; guino < labelnum; guino++) {
-					OWP_Button* addbutton = s_blendshapeButton[guino];
-					OWP_Slider* addslider = s_blendshapeSlider[guino];
-					if (!addbutton || !addslider) {
-						_ASSERT(0);
-						return 1;
-					}
-					s_blendshapesp1->addParts1(*addbutton);
-					s_blendshapesp1->addParts2(*addslider);
-				}
-			}
-			else {
-				_ASSERT(0);
-				return 1;
-			}
-		}
-
-		s_blendshapeWnd->setCloseListener([]() {
-			s_closeblendshapeFlag = true;
-		});
-
-
-		if (s_blendshapedistSlider) {
-			s_blendshapedistSlider->setCursorListener([]() {
-				if (s_model && s_blendshapeWnd && s_blendshapedistSlider) {
-					g_blendshapedist = s_blendshapedistSlider->getValue();
-
-					s_blendshapeWnd->callRewrite();						//再描画
-				}
-			});
-		}
-
-		{
-			int lineno;
-			for (lineno = 0; lineno < s_blendshapelinenum; lineno++) {
-				CBlendShapeElem curblendshape = s_blendshapeelemvec[lineno];
-				if (curblendshape.validflag) {
-					if (s_blendshapeSlider[lineno]) {
-						s_blendshapeSlider[lineno]->setCursorListener([lineno]() {
-							OWP_Slider* thisslider = s_blendshapeSlider[lineno];
-							if (s_model && s_blendshapeWnd && thisslider) {
-								CBlendShapeElem curblendshape = s_blendshapeelemvec[lineno];
-								if (curblendshape.validflag && curblendshape.mqoobj) {
-									float value = (float)thisslider->getValue();
-									//int curmotid = s_model->GetCurrentMotID();
-									//double curframe = s_model->GetCurrentFrame();
-									//curblendshape.mqoobj->SetShapeAnimWeight(curblendshape.channelindex, 
-									//	curmotid, IntTime(curframe), value);
-
-									if (s_blendshapeOpeIndex != lineno) {
-										//選択が切り替わったときには　PrepairUndo_BlendShape()有りのSelChangeイベント
-										s_blendshapeUnderSelect = true;
-									}
-
-									s_blendshapeOpeIndex = lineno;
-									s_blendshapeAfter = value;
-									s_blendshapeUnderEdit = true;
-								}
-								s_blendshapeWnd->callRewrite();						//再描画
-							}
-						});
-
-						s_blendshapeSlider[lineno]->setLDownListener([lineno]() {
-							OWP_Slider* thisslider = s_blendshapeSlider[lineno];
-							if (s_model && s_blendshapeWnd && thisslider) {
-								CBlendShapeElem curblendshape = s_blendshapeelemvec[lineno];
-								if (curblendshape.validflag && curblendshape.mqoobj) {
-									float value = (float)thisslider->getValue();
-									s_blendshapeBefore = value;//!!!!!!!!
-								}
-								s_blendshapeWnd->callRewrite();						//再描画
-							}
-						});
-
-
-						s_blendshapeSlider[lineno]->setLUpListener([lineno]() {
-							OWP_Slider* thisslider = s_blendshapeSlider[lineno];
-							if (s_model && s_blendshapeWnd && thisslider) {
-								CBlendShapeElem curblendshape = s_blendshapeelemvec[lineno];
-								if (curblendshape.validflag && curblendshape.mqoobj) {
-									float value = (float)thisslider->getValue();
-									s_blendshapeOpeIndex = lineno;
-									s_blendshapeAfter = value;
-									s_blendshapePostEdit = true;
-								}
-								s_blendshapeWnd->callRewrite();						//再描画
-							}
-						});
-
-
-						//s_blendshapeBefore = 0.0f;
-					}
-
-
-					if (s_blendshapeButton[lineno]) {
-						s_blendshapeButton[lineno]->setButtonListener([lineno]() {
-							OWP_Button* thisbutton = s_blendshapeButton[lineno];
-							if (s_model && s_blendshapeWnd && thisbutton) {
-								CBlendShapeElem curblendshape = s_blendshapeelemvec[lineno];
-								if (curblendshape.validflag && curblendshape.mqoobj &&
-									!s_undoFlag && !s_redoFlag &&
-									!s_blendshapeUnderSelectFromUndo && !s_blendshapeUnderSelectFromRefresh) {
-
-									s_blendshapeOpeIndex = lineno;
-									s_blendshapeUnderSelect = true;//2024/06/30
-								}
-								s_blendshapeWnd->callRewrite();						//再描画
-							}
-						});
-					}
-
-				}
-				else {
-					_ASSERT(0);
-					return 1;
-				}
-			}
-		}
-
-
-
-		////autoResizeしないと　チェックボックス４段目以下が反応なかった
-		s_blendshapeSCWnd->autoResize();
-		s_blendshapedistsp->autoResize();
-		s_blendshapesp1->autoResize();
-		s_blendshapesp0->autoResize();
-		
-		s_blendshapeWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
-		s_blendshapeWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
-		//１クリック目問題対応
-		s_blendshapeWnd->refreshPosAndSize();
-		s_blendshapeWnd->autoResizeAllParts();
-		s_blendshapeWnd->setVisible(false);
-
-		//#######
-		//for dbg
-		//#######
-		//WindowSize dbgsize = s_blendshapeSlider[0]->getSize();
-		//int dbgflag1 = 1;
-	}
-
-
-	return 0;
-}
 
 
 int TrimLeadingAlnum(bool secondtokenflag, WCHAR* srcstr, int srclen, WCHAR* dststr, int dstlen, bool secondcallflag)
@@ -40110,94 +38878,6 @@ int CheckSimilarMenu()
 	return 0;
 }
 
-
-
-int DestroyBlendShapeWnd()
-{
-
-	s_guidlg[GUIDLG_BLENDSHAPE] = 0;
-
-
-	if (s_blendshapeWnd) {
-		//s_blendshapeWnd->setListenMouse(false);
-		s_blendshapeWnd->setVisible(false);
-	}
-	if (s_blendshapeSCWnd) {
-		delete s_blendshapeSCWnd;
-		s_blendshapeSCWnd = 0;
-	}
-	if (s_blendshapesp0) {
-		delete s_blendshapesp0;
-		s_blendshapesp0 = 0;
-	}
-	if (s_blendshapesp1) {
-		delete s_blendshapesp1;
-		s_blendshapesp1 = 0;
-	}
-	if (s_blendshapeadditive) {
-		delete s_blendshapeadditive;
-		s_blendshapeadditive = 0;
-	}
-	if (s_blendshapemodelname) {
-		delete s_blendshapemodelname;
-		s_blendshapemodelname = 0;
-	}
-	if (s_blendshapeemptyLabel) {
-		delete s_blendshapeemptyLabel;
-		s_blendshapeemptyLabel = 0;
-	}
-	if (s_blendshapedistSlider) {
-		delete s_blendshapedistSlider;
-		s_blendshapedistSlider = 0;
-	}
-	if (s_blendshapedistLabel) {
-		delete s_blendshapedistLabel;
-		s_blendshapedistLabel = 0;
-	}
-	if (s_blendshapedistsp) {
-		delete s_blendshapedistsp;
-		s_blendshapedistsp = 0;
-	}
-
-
-	int labelnum = (int)s_blendshapeButton.size();
-	int labelindex;
-	for (labelindex = 0; labelindex < labelnum; labelindex++) {
-		OWP_Button* delbutton = s_blendshapeButton[labelindex];
-		if (delbutton) {
-			delete delbutton;
-		}
-	}
-	s_blendshapeButton.clear();
-
-	int slidernum = (int)s_blendshapeSlider.size();
-	int sliderindex;
-	for (sliderindex = 0; sliderindex < slidernum; sliderindex++) {
-		OWP_Slider* delslider = s_blendshapeSlider[sliderindex];
-		if (delslider) {
-			delete delslider;
-		}
-	}
-	s_blendshapeSlider.clear();
-
-	s_blendshapeelemvec.clear();
-
-	s_blendshapelinenum = 0;
-
-	s_blendshapeOpeIndex = 0;
-	s_blendshapeBefore = 0.0f;
-	s_blendshapeAfter = 0.0f;
-	s_blendshapeUnderEdit = false;
-	s_blendshapePostEdit = false;
-
-
-	if (s_blendshapeWnd) {
-		delete s_blendshapeWnd;
-		s_blendshapeWnd = 0;
-	}
-
-	return 0;
-}
 
 int DestroyDispGroupWnd()
 {
@@ -45908,7 +44588,7 @@ int OnTimeLineSelectFromSelectedKey()
 				AddEditRangeHistory();
 			}
 
-			UpdateTopPosText();
+			//UpdateTopPosText();
 		}
 	}
 
@@ -46223,7 +44903,7 @@ int OnTimeLineWheel()
 
 		}
 
-		UpdateTopPosText();
+		//UpdateTopPosText();
 	}
 
 	return 0;
@@ -46282,8 +44962,19 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	case WM_COMMAND:
 	{
-		
-		if (menuid == (ID_RMENU_0 + MENUOFFSET_PROJLODDLG)) {
+		if (menuid == (ID_RMENU_0 + MENUOFFSET_BLENDSHAPEDLG)) {
+			int blendshapeindex = (int)lParam;
+			CBlendShapeElem curblendshape = s_blendshapedlg.GetBlendShapeElem(blendshapeindex);
+			if (curblendshape.validflag && curblendshape.mqoobj &&
+				!s_undoFlag && !s_redoFlag &&
+				!s_blendshapedlg.GetBlendShapeUnderSelectFromUndo() && 
+				!s_blendshapedlg.GetBlendShapeUnderSelectFromRefresh()) {
+
+				s_blendshapedlg.SetBlendShapeOpeIndex(blendshapeindex);
+				s_blendshapedlg.SetBlendShapeUnderSelect(true);//2024/06/30
+			}
+		}
+		else if (menuid == (ID_RMENU_0 + MENUOFFSET_PROJLODDLG)) {
 			SetCamera3DFromEyePos();
 		}
 		else if (menuid == (ID_RMENU_0 + MENUOFFSET_BULLETDLG)) {
@@ -48168,13 +46859,11 @@ void ShowGUIDlgBlendShape(bool srcflag)
 
 		g_edittarget = EDITTARGET_MORPH;//2024/06/09　グラフモード変更
 
-		CreateBlendShapeWnd();
-		BlendShapeAnim2Dlg();
-
-		if (s_blendshapeWnd) {
-			s_blendshapeWnd->setListenMouse(true);
-			s_blendshapeWnd->setVisible(true);
+		if (s_model) {
+			s_blendshapedlg.SetModel(s_model);
+			s_blendshapedlg.SetVisible(srcflag);
 		}
+
 		refreshEulerGraph();
 
 		if (s_LrefreshEditTarget == 0) {
@@ -48183,12 +46872,13 @@ void ShowGUIDlgBlendShape(bool srcflag)
 
 		//2024/06/30 BlendShapeの操作中ターゲットのグラフを表示
 		if (!s_undoFlag && !s_redoFlag &&
-			!s_blendshapeUnderSelectFromUndo && !s_blendshapeUnderSelectFromRefresh) {
+			!s_blendshapedlg.GetBlendShapeUnderSelectFromUndo() && 
+			!s_blendshapedlg.GetBlendShapeUnderSelectFromRefresh()) {
 
 			//s_blendshapeUnderSelect = true;
 			
 			//2024/07/02 RollBackUndoMotionの一連の動作でUndoが走ってしまわないようにFromUndoフラグを使用
-			s_blendshapeUnderSelectFromUndo = true;
+			s_blendshapedlg.SetBlendShapeUnderSelectFromUndo(true);
 		}
 	}
 	else {
@@ -48204,11 +46894,8 @@ void ShowGUIDlgBlendShape(bool srcflag)
 		//	changedflag = true;
 		//}
 
-		//DestroyBlendShapeWnd();
-		if (s_blendshapeWnd) {
-			s_blendshapeWnd->setListenMouse(false);
-			s_blendshapeWnd->setVisible(false);
-		}
+		s_blendshapedlg.SetVisible(srcflag);
+
 		refreshEulerGraph();
 
 		//2024/07/02
@@ -49133,808 +47820,6 @@ void GetDSValues()
 
 
 }
-
-void DSColorAndVibration()
-{
-	if (!g_enableDS || (s_dsdeviceid < 0) || (s_dsdeviceid >= 3)) {
-		//DS deviceが無い場合には何もせずにリターン
-		return;
-	}
-
-
-	//int buttonno;
-	////for (buttonno = 0; buttonno < MB3D_DSBUTTONNUM - 2; buttonno++) {//L3, R3は別処理！！！！！
-	//for (buttonno = 0; buttonno < MB3D_DSBUTTONNUM; buttonno++) {//L3, R3は別処理！！！！！
-	//	int curbuttondown = s_dsbuttondown[buttonno];
-	//	int curbuttonup = s_dsbuttonup[buttonno];
-
-	//	if (curbuttondown >= 1) {
-	//		ChangeColor(s_dsdeviceid, 255, 0, 0);
-	//		//ChangeVibration(s_dsdeviceid, 200, 200);
-	//		//OutputToInfoWnd(INFOCOLOR_INFO, L"Button Down %d", buttonno);
-	//	}
-	//	else if (curbuttonup >= 1) {
-	//		ChangeColor(s_dsdeviceid, 0, 0, 255);
-	//		//ChangeVibration(s_dsdeviceid, 0, 0);
-	//		//OutputToInfoWnd(INFOCOLOR_INFO, L"Button Up %d", buttonno);
-	//	}
-	//}
-
-	//bool existon = false;
-	//static bool s_bef_existon = false;
-
-
-	//int axisno;
-	//for (axisno = 0; axisno < MB3D_DSAXISNUM; axisno++) {
-	//	bool curbuttondown = ((bool)s_dsaxisOverSrh[axisno] || (bool)s_dsaxisMOverSrh[axisno]);
-	//	if (curbuttondown) {
-	//		existon = true;
-	//		break;
-	//	}
-	//}
-	//if (existon) {
-	//	ChangeColor(s_dsdeviceid, 255, 0, 0);
-	//	//ChangeVibration(s_dsdeviceid, 200, 200);
-	//	//OutputToInfoWnd(INFOCOLOR_INFO, L"Axis On %d", axisno);
-	//}
-	//else if ((existon == false) && (s_bef_existon == true)) {
-	//	ChangeColor(s_dsdeviceid, 0, 0, 255);
-	//	//ChangeVibration(s_dsdeviceid, 0, 0);
-	//	//OutputToInfoWnd(INFOCOLOR_INFO, L"Axis Off %d", axisno);
-	//}
-
-	//s_bef_existon = existon;
-
-}
-
-void DSR1ButtonSelectMotion()
-{
-	//R1ボタン：３Dウインドウ選択、カレントボーン位置へマウスジャンプ
-	if (!g_enableDS || (s_dsdeviceid < 0) || (s_dsdeviceid >= 3)) {
-		//DS deviceが無い場合には何もせずにリターン
-		return;
-	}
-
-	if (!s_model) {
-		//モデル読み込み前は処理しないでリターン
-		return;
-	}
-
-	if (!s_3dwnd) {
-		return;
-	}
-
-
-	//int buttonR1 = 9;
-	//int curbuttondown = s_dsbuttondown[buttonR1];
-	//int curbuttonup = s_dsbuttonup[buttonR1];
-
-	//int accelaxisid1 = 4;//axisid
-	//int accelaxisid2 = 5;//axisid
-	//bool accelaxis1 = 0;
-	//bool accelaxis2 = 0;
-	//bool accelflag = false;
-	//bool accelbothflag = false;
-	//accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-	//accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
-	//accelflag = accelaxis1 || accelaxis2;
-	//accelbothflag = accelaxis1 && accelaxis2;
-
-	//if ((accelflag != 0) && (curbuttonup >= 1)) {//アクセル有り
-	//	int cAnimSets = (int)s_tlarray.size();
-	//	int nextmotionindex;
-	//	nextmotionindex = s_motmenuindexmap[s_model] + 1;
-
-	//	if (nextmotionindex < 0) {
-	//		nextmotionindex = cAnimSets - 1;
-	//	}
-	//	else if (nextmotionindex >= cAnimSets) {
-	//		nextmotionindex = 0;
-	//	}
-
-	//	OnAnimMenu(true, nextmotionindex);
-	//}
-
-}
-
-
-void DSR1ButtonSelectCurrentBone()
-{
-	//R1ボタン：３Dウインドウ選択、カレントボーン位置へマウスジャンプ
-	if (!g_enableDS || (s_dsdeviceid < 0) || (s_dsdeviceid >= 3)) {
-		//DS deviceが無い場合には何もせずにリターン
-		return;
-	}
-
-	if (!s_model) {
-		//モデル読み込み前は処理しないでリターン
-		return;
-	}
-
-	if (!s_3dwnd) {
-		return;
-	}
-
-	////###################################################
-	////R1ボタンを押して、jointとprev_selected_windowを往復する
-	////###################################################
-
-	//int buttonR1 = 9;
-	//int curbuttondown = s_dsbuttondown[buttonR1];
-	//int curbuttonup = s_dsbuttonup[buttonR1];
-
-	//int accelaxisid1 = 4;//axisid
-	//int accelaxisid2 = 5;//axisid
-	//bool accelaxis1 = 0;
-	//bool accelaxis2 = 0;
-	//bool accelflag = false;
-	//bool accelbothflag = false;
-	//accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-	//accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
-	//accelflag = accelaxis1 || accelaxis2;
-	//accelbothflag = accelaxis1 && accelaxis2;
-
-	//if ((accelflag == 0) && (curbuttonup >= 1)) {//アクセル無し
-
-	//	::SetWindowPos(s_3dwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-
-	//	if (s_topSlidersWnd) {
-	//		s_topSlidersWnd->setBackGroundColor(false);
-	//	}
-
-	//	if (s_timelineWnd) {
-	//		s_timelineWnd->setBackGroundColor(false);
-	//	}
-	//	if (s_toolWnd) {
-	//		s_toolWnd->setBackGroundColor(false);
-	//	}
-	//	if (s_LtimelineWnd) {
-	//		s_LtimelineWnd->setBackGroundColor(false);
-	//	}
-	//	if (s_sidemenuWnd) {
-	//		s_sidemenuWnd->setBackGroundColor(false);
-	//	}
-
-
-	//	if ((s_restorewndid <= 0) || !s_restorehwnd) {
-	//		if (s_model && (s_curboneno >= 0)) {
-	//			CBone* boneptr = s_model->GetBoneByID(s_curboneno);
-	//			if (boneptr) {
-	//				ChaVector3 jointpos;
-	//				jointpos = s_selectmat.GetTranslation();
-
-	//				ChaMatrix bcmat;
-	//				bcmat = boneptr->GetCurMp().GetWorldMat();
-	//				ChaMatrix transmat = bcmat * s_matVP;
-	//				ChaVector3 scpos;
-	//				ChaVector3 firstpos = boneptr->GetJointFPos();
-	//				ChaVector3TransformCoord(&scpos, &firstpos, &transmat);
-	//				scpos.z = 0.0f;
-	//				POINT mousepos = { 0, 0 };
-	//				mousepos.x = (LONG)((scpos.x + 1.0f) * 0.5f * s_mainwidth);
-	//				mousepos.y = (LONG)((-scpos.y + 1.0f) * 0.5f * s_mainheight);
-
-	//				s_restorewndid = s_currentwndid;
-	//				s_restorehwnd = s_currenthwnd;
-	//				::GetCursorPos(&s_restorecursorpos);
-	//				s_currentwndid = MB3D_WND_3D;
-	//				s_currenthwnd = s_3dwnd;
-
-	//				GUISetVisible_Sel3D();//3DWindowを選択しているかどうかのマークを右上隅に表示
-
-	//				::ClientToScreen(s_3dwnd, &mousepos);
-	//				::SetCursorPos(mousepos.x, mousepos.y);
-
-	//			}
-	//		}
-	//	}
-	//	else {
-	//		int nextwndid;
-	//		nextwndid = s_restorewndid;
-
-	//		SelectNextWindow(nextwndid);
-
-	//		::SetCursorPos(s_restorecursorpos.x, s_restorecursorpos.y);
-
-	//		//!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//		s_restorewndid = 0;
-	//		s_restorehwnd = 0;
-	//	}
-	//}
-}
-
-
-void SelectNextWindow(int nextwndid)
-{
-	HWND tmptlwnd = 0;
-	if (s_timelineWnd) {
-		tmptlwnd = s_timelineWnd->getHWnd();
-	}
-	else {
-		tmptlwnd = 0;
-	}
-	HWND tmptoolwnd = 0;
-	if (s_toolWnd) {
-		tmptoolwnd = s_toolWnd->getHWnd();
-	}
-	else {
-		tmptoolwnd = 0;
-	}
-	HWND tmplongtlwnd = 0;
-	if (s_LtimelineWnd) {
-		tmplongtlwnd = s_LtimelineWnd->getHWnd();
-	}
-	else {
-		tmplongtlwnd = 0;
-	}
-	HWND tmpsidewnd = 0;
-	if (s_sidemenuWnd) {
-		tmpsidewnd = s_sidemenuWnd->getHWnd();
-	}
-	else {
-		tmpsidewnd = 0;
-	}
-	HWND tmptopsliderswnd = 0;
-	if (s_topSlidersWnd) {
-		tmptopsliderswnd = s_topSlidersWnd->getHWnd();
-	}
-	else {
-		tmptopsliderswnd = 0;
-	}
-
-
-	HWND hwnds[MB3D_WND_MAX];
-	ZeroMemory(hwnds, sizeof(HWND) * MB3D_WND_MAX);
-	//hwnds[MB3D_WND_MAIN] = g_mainhwnd;
-	hwnds[MB3D_WND_MAIN] = tmptopsliderswnd;
-	hwnds[MB3D_WND_3D] = s_3dwnd;
-	hwnds[MB3D_WND_TREE] = tmptlwnd;
-	hwnds[MB3D_WND_TOOL] = tmptoolwnd;
-	hwnds[MB3D_WND_TIMELINE] = tmplongtlwnd;
-	hwnds[MB3D_WND_SIDE] = tmpsidewnd;
-
-	int dbgcnt = 0;
-	HWND nexthwnd = 0;
-	nexthwnd = hwnds[nextwndid];
-	//while (nexthwnd == 0) {
-	//	nextwndid++;
-	//	if (nextwndid >= MB3D_WND_MAX) {
-	//		nextwndid = 0;
-	//	}
-	//	dbgcnt++;
-	//	if (dbgcnt >= MB3D_WND_MAX) {
-	//		nextwndid = 0;
-	//		break;
-	//	}
-	//	nexthwnd = hwnds[nextwndid];
-	//}
-
-	if ((nextwndid >= 0) && (nextwndid < MB3D_WND_MAX) && nexthwnd) {
-
-		BYTE selectR = 255;
-		BYTE selectG = 128;
-		BYTE selectB = 64;
-
-		BYTE unselectR = 70;
-		BYTE unselectG = 50;
-		BYTE unselectB = 70;
-
-		HBRUSH selectbrush = CreateSolidBrush(RGB(selectR, selectG, selectB));
-		HBRUSH unselectbrush = CreateSolidBrush(RGB(unselectR, unselectG, unselectB));
-
-		::SetFocus(nexthwnd);
-
-		if (nextwndid == MB3D_WND_MAIN) {
-			//:: SetClassLongPtr(hwnds[0], GCLP_HBRBACKGROUND, (LONG_PTR)selectbrush);
-			//::SetClassLongPtr(hwnds[1], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
-
-			//SetThemeAppProperties(STAP_ALLOW_NONCLIENT | STAP_ALLOW_CONTROLS | STAP_ALLOW_WEBCONTENT);//STAP_ALLOW_WEBCONTENT
-			//SendMessage(hwnds[0], WM_THEMECHANGED, 0, 0);
-			//RedrawWindow(hwnds[0], 0, 0, RDW_UPDATENOW);
-
-
-			//::SetWindowPos(hwnds[0], HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-			::SetWindowPos(g_mainhwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-			if (s_topSlidersWnd) {
-				s_topSlidersWnd->setBackGroundColor(true);
-			}
-
-			if (s_timelineWnd) {
-				s_timelineWnd->setBackGroundColor(false);
-			}
-			if (s_toolWnd) {
-				s_toolWnd->setBackGroundColor(false);
-			}
-			if (s_LtimelineWnd) {
-				s_LtimelineWnd->setBackGroundColor(false);
-			}
-			if (s_sidemenuWnd) {
-				s_sidemenuWnd->setBackGroundColor(false);
-			}
-		}
-		else if (nextwndid == MB3D_WND_3D) {
-			//::SetClassLongPtr(hwnds[1], GCLP_HBRBACKGROUND, (LONG_PTR)selectbrush);
-			//::SetClassLongPtr(hwnds[0], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
-
-			//SetThemeAppProperties(STAP_ALLOW_NONCLIENT | STAP_ALLOW_CONTROLS | STAP_ALLOW_WEBCONTENT);//STAP_ALLOW_WEBCONTENT
-			//SendMessage(hwnds[1], WM_THEMECHANGED, 0, 0);
-			//RedrawWindow(hwnds[1], 0, 0, RDW_UPDATENOW);
-
-			::SetWindowPos(hwnds[1], HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-
-			if (s_topSlidersWnd) {
-				s_topSlidersWnd->setBackGroundColor(false);
-			}
-
-
-			if (s_timelineWnd) {
-				s_timelineWnd->setBackGroundColor(false);
-			}
-			if (s_toolWnd) {
-				s_toolWnd->setBackGroundColor(false);
-			}
-			if (s_LtimelineWnd) {
-				s_LtimelineWnd->setBackGroundColor(false);
-			}
-			if (s_sidemenuWnd) {
-				s_sidemenuWnd->setBackGroundColor(false);
-			}
-		}
-		else if (nextwndid == MB3D_WND_TREE) {
-			//::SetClassLongPtr(hwnds[1], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
-			//::SetClassLongPtr(hwnds[0], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
-
-			if (s_topSlidersWnd) {
-				s_topSlidersWnd->setBackGroundColor(false);
-			}
-
-			if (s_timelineWnd) {
-				s_timelineWnd->setBackGroundColor(true);
-				::SetWindowPos(nexthwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-			}
-			if (s_toolWnd) {
-				s_toolWnd->setBackGroundColor(false);
-			}
-			if (s_LtimelineWnd) {
-				s_LtimelineWnd->setBackGroundColor(false);
-			}
-			if (s_sidemenuWnd) {
-				s_sidemenuWnd->setBackGroundColor(false);
-			}
-		}
-		else if (nextwndid == MB3D_WND_TOOL) {
-			//::SetClassLongPtr(hwnds[1], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
-			//::SetClassLongPtr(hwnds[0], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
-
-			if (s_topSlidersWnd) {
-				s_topSlidersWnd->setBackGroundColor(false);
-			}
-
-			if (s_timelineWnd) {
-				s_timelineWnd->setBackGroundColor(false);
-			}
-			if (s_toolWnd) {
-				s_toolWnd->setBackGroundColor(true);
-				::SetWindowPos(nexthwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-			}
-			if (s_LtimelineWnd) {
-				s_LtimelineWnd->setBackGroundColor(false);
-			}
-			if (s_sidemenuWnd) {
-				s_sidemenuWnd->setBackGroundColor(false);
-			}
-		}
-		else if (nextwndid == MB3D_WND_TIMELINE) {
-			//::SetClassLongPtr(hwnds[1], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
-			//::SetClassLongPtr(hwnds[0], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
-
-			if (s_topSlidersWnd) {
-				s_topSlidersWnd->setBackGroundColor(false);
-			}
-
-			if (s_timelineWnd) {
-				s_timelineWnd->setBackGroundColor(false);
-			}
-			if (s_toolWnd) {
-				s_toolWnd->setBackGroundColor(false);
-			}
-			if (s_LtimelineWnd) {
-				s_LtimelineWnd->setBackGroundColor(true);
-				::SetWindowPos(nexthwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-			}
-			if (s_sidemenuWnd) {
-				s_sidemenuWnd->setBackGroundColor(false);
-			}
-		}
-		else if (nextwndid == MB3D_WND_SIDE) {
-			//::SetClassLongPtr(hwnds[1], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
-			//::SetClassLongPtr(hwnds[0], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
-
-			if (s_topSlidersWnd) {
-				s_topSlidersWnd->setBackGroundColor(false);
-			}
-
-			if (s_timelineWnd) {
-				s_timelineWnd->setBackGroundColor(false);
-			}
-			if (s_toolWnd) {
-				s_toolWnd->setBackGroundColor(false);
-			}
-			if (s_LtimelineWnd) {
-				s_LtimelineWnd->setBackGroundColor(false);
-			}
-			if (s_sidemenuWnd) {
-				s_sidemenuWnd->setBackGroundColor(true);
-				::SetWindowPos(nexthwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-			}
-		}
-		else {
-			_ASSERT(0);
-		}
-
-
-
-
-		DeleteObject(selectbrush);
-		DeleteObject(unselectbrush);
-
-
-		//if (s_befactivehwnd) {
-		//	ReleaseCapture();
-		//}
-		//SetCapture(nexthwnd);
-
-		//SetForegroundWindow(nexthwnd);
-
-		//if (s_befactivehwnd) {
-		//	ReleaseCapture();
-		//}
-		//::SetWindowPos(nexthwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-		//HWND befactive;
-		//befactive = ::SetActiveWindow(nexthwnd);
-		//SetCapture(nexthwnd);
-
-
-		//SetCaptureWindow !!!!!!!!!!!!!!!!!
-
-		s_currentwndid = nextwndid;
-		if ((s_currentwndid >= 0) && (s_currentwndid < MB3D_WND_MAX)) {
-			s_currenthwnd = hwnds[s_currentwndid];
-		}
-
-		bool firstctrlselect = true;
-		DSCrossButton(firstctrlselect);
-
-		GUISetVisible_Sel3D();//3DWindowを選択しているかどうかのマークを右上隅に表示
-
-	}
-	//OutputToInfoWnd(INFOCOLOR_INFO, L"Button Down %d", buttonL1);
-}
-
-void DSSelectCharactor()
-{
-	if (!g_enableDS || (s_dsdeviceid < 0) || (s_dsdeviceid >= 3)) {
-		//DS deviceが無い場合には何もせずにリターン
-		return;
-	}
-
-	if (!s_model || !s_chascene) {
-		//モデル読み込み前は処理しないでリターン
-		return;
-	}
-
-	if (!s_3dwnd) {
-		return;
-	}
-
-	int buttonL1 = 8;
-	int curbuttondown = s_dsbuttondown[buttonL1];
-	int curbuttonup = s_dsbuttonup[buttonL1];
-
-
-	int accelaxisid1 = 4;//axisid
-	int accelaxisid2 = 5;//axisid
-	bool accelaxis1 = 0;
-	bool accelaxis2 = 0;
-	bool accelflag = false;
-	bool accelbothflag = false;
-	accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-	accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
-	accelflag = accelaxis1 || accelaxis2;
-	accelbothflag = accelaxis1 && accelaxis2;
-
-	//L1 Button Up（L2, R2 not pushed）
-	if ((accelflag != 0) && (curbuttonup >= 1)) {
-		int modelnum = s_chascene->GetModelNum();
-		if (modelnum > 0) {
-			int nextmodelindex;
-			nextmodelindex = s_curmodelmenuindex + 1;
-			if (nextmodelindex < 0) {
-				nextmodelindex = modelnum - 1;
-			}
-			else if (nextmodelindex >= modelnum) {
-				nextmodelindex = 0;
-			}
-
-			s_modelpanel.modelindex = nextmodelindex;
-			//OnModelMenu(true, s_modelpanel.modelindex, 1);
-			bool forceflag = true;
-			bool callundo = true;
-			OnChangeModel(s_modelpanel.modelindex, forceflag, callundo);
-			s_modelpanel.panel->callRewrite();
-
-		}
-	}
-}
-
-void DSSelectWindowAndCtrl()
-{
-
-	if (!g_enableDS || (s_dsdeviceid < 0) || (s_dsdeviceid >= 3)) {
-		//DS deviceが無い場合には何もせずにリターン
-		return;
-	}
-
-	if (!s_model) {
-		//モデル読み込み前は処理しないでリターン
-		return;
-	}
-
-	if (!s_3dwnd) {
-		return;
-	}
-
-	//static HWND s_befactivehwnd = 0;
-
-
-	bool doneflag = false;
-
-	//ウインドウ選択ブロック
-	{
-		//static int s_currentwndid = 0;
-		//s_currentwndid = 0;
-		//s_currenthwnd = 0;
-		//s_currentctrlid = 0;
-		//s_currentctrlhwnd = 0;
-
-		int buttonL1 = 8;
-		int curbuttondown = s_dsbuttondown[buttonL1];
-		int curbuttonup = s_dsbuttonup[buttonL1];
-
-
-		int accelaxisid1 = 4;//axisid
-		int accelaxisid2 = 5;//axisid
-		bool accelaxis1 = 0;
-		bool accelaxis2 = 0;
-		bool accelflag = false;
-		bool accelbothflag = false;
-		accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-		accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
-		accelflag = accelaxis1 || accelaxis2;
-		accelbothflag = accelaxis1 && accelaxis2;
-
-		//L1 Button Up（L2, R2 not pushed）
-		if ((accelflag == 0) && (curbuttonup >= 1)) {
-			int nextwndid = 0;
-			nextwndid = s_currentwndid + 1;
-
-			if (nextwndid >= MB3D_WND_MAX) {
-				nextwndid = 0;
-			}
-			if (nextwndid < 0) {
-				nextwndid = MB3D_WND_MAX - 1;
-			}
-
-			SelectNextWindow(nextwndid);//マウスカーソルをプレート位置に移動する前に呼ぶ（この関数ではコントロール位置にマウスは移動する）
-
-			doneflag = true;
-		}
-	}
-
-	//R1モードに関係なく
-	//カエルボタン　プレートメニュー選択ブロック
-	//R1モードによって機能が変わる場合には別関数にする
-	if (!doneflag) {
-		int frogbuttonid = 3;
-		int platebuttonid = 0;
-		int frogbutton;
-		int platebutton;
-		frogbutton = s_dsbuttonup[frogbuttonid];
-		platebutton = s_dsbuttonup[platebuttonid];
-
-
-		int platemenukind = s_platemenukind;
-		int platemenuno = s_platemenuno;
-		int nextplatemenukind = 0;
-		int nextplateno = -1;
-
-		//frogButton ret2prev
-		if (frogbutton >= 1) {
-			POINT frogbuttonpos;
-			frogbuttonpos = s_spret2prev.dispcenter;
-
-			GUIGetNextMenu(frogbuttonpos, platemenukind, &nextplatemenukind, &nextplateno);
-			if ((nextplatemenukind >= 0) && (nextplateno >= 0)) {
-				s_platemenukind = nextplatemenukind;
-				s_platemenuno = nextplateno;
-				GUIMenuSetVisible(s_platemenukind, nextplateno);
-
-				s_curaimbarno = 0;
-				GUISetVisible_AimBar();
-
-				//if (s_platemenukind == SPPLATEMENUKIND_GUI) {
-				//	SelectNextWindow(MB3D_WND_3D);
-				//}
-				//else 
-				if (s_platemenukind == SPPLATEMENUKIND_DISP) {
-					SelectNextWindow(MB3D_WND_SIDE);
-				}
-				else if (s_platemenukind == SPPLATEMENUKIND_RIGID) {
-					SelectNextWindow(MB3D_WND_SIDE);
-				}
-				else if (s_platemenukind == SPPLATEMENUKIND_RETARGET) {
-					SelectNextWindow(MB3D_WND_SIDE);
-				}
-				else if (s_platemenukind == SPPLATEMENUKIND_EFFECT) {
-					SelectNextWindow(MB3D_WND_SIDE);
-				}
-				else {
-					_ASSERT(0);
-				}
-
-				doneflag = true;
-			}
-		}
-
-		/*
-		#define SPAXISNUM	3
-		//#define SPCAMNUM	3	//Coef.h : SPR_CAM_MAX
-		#define SPRIGMAX	2
-		#define SPGUISWNUM	5
-		#define SPRIGIDSWNUM	4
-		#define SPRETARGETSWNUM	2
-		#define SPAIMBARNUM	5
-		*/
-
-		//move aimbar
-		if ((platebutton >= 1) && (s_curaimbarno >= 0)) {
-			if ((platemenukind >= 0) && (platemenuno >= 0)) {
-				int nextaimbarno;
-				if (s_firstmoveaimbar) {
-					nextaimbarno = s_curaimbarno;
-					s_firstmoveaimbar = false;
-				}
-				else {
-					nextaimbarno = s_curaimbarno + 1;
-				}
-
-				//if (platemenukind == SPPLATEMENUKIND_GUI) {
-				//	if (nextaimbarno >= SPGUISWNUM) {
-				//		nextaimbarno = 0;
-				//	}
-				//}
-				//else 
-				if (platemenukind == SPPLATEMENUKIND_DISP) {
-					if (nextaimbarno >= SPDISPSWNUM) {
-						nextaimbarno = 0;
-					}
-				}
-				else if (platemenukind == SPPLATEMENUKIND_RIGID) {
-					if (nextaimbarno >= SPRIGIDSWNUM) {
-						nextaimbarno = 0;
-					}
-				}
-				else if (platemenukind == SPPLATEMENUKIND_RETARGET) {
-					if (nextaimbarno >= SPRETARGETSWNUM) {
-						nextaimbarno = 0;
-					}
-				}
-				else if (platemenukind == SPPLATEMENUKIND_EFFECT) {
-					if (nextaimbarno >= SPEFFECTSWNUM) {
-						nextaimbarno = 0;
-					}
-				}
-				else {
-					nextaimbarno = -1;
-				}
-
-
-				if ((nextaimbarno >= 0) && (nextaimbarno < SPAIMBARNUM)) {
-					s_curaimbarno = nextaimbarno;
-
-
-					SelectNextWindow(MB3D_WND_3D);//マウスカーソルをプレート位置に移動する前に呼ぶ（この関数ではコントロール位置にマウスは移動する）
-
-					//POINT buttonpos;
-					//buttonpos = s_spaimbar[s_curaimbarno].dispcenter;
-					//buttonpos.y -= (28 / 2 + 6 / 2);
-					//ClientToScreen(s_3dwnd, &buttonpos);
-					//::SetCursorPos(buttonpos.x, buttonpos.y);
-
-					//GUISetVisible_AimBar();
-				}
-			}
-		}
-	}
-
-
-}
-
-void DSCrossButton(bool firstctrlselect)
-{
-
-	if (!g_enableDS || (s_dsdeviceid < 0) || (s_dsdeviceid >= 3)) {
-		//DS deviceが無い場合には何もせずにリターン
-		return;
-	}
-
-	//選択ウインドウ依存
-	//十字キー処理
-	{
-		if (s_currentwndid == MB3D_WND_3D) {
-			DSCrossButtonSelectUTGUI(firstctrlselect);
-		}
-		else if (s_currentwndid == MB3D_WND_TREE) {
-			DSCrossButtonSelectTree(firstctrlselect);
-		}
-		else if (s_currentwndid == MB3D_WND_TOOL) {
-			DSCrossButtonSelectToolCtrls(firstctrlselect);
-		}
-		else if (s_currentwndid == MB3D_WND_TIMELINE) {
-			DSCrossButtonSelectPlayerBtns(firstctrlselect);
-		}
-		else if (s_currentwndid == MB3D_WND_SIDE) {
-			if (s_platemenukind == SPPLATEMENUKIND_DISP) {
-				switch (s_platemenuno) {
-				case (SPDISPSW_LIGHTS + 1):
-					//後で対応
-					break;
-				case (SPDISPSW_DISPGROUP + 1):
-					//後で対応
-					break;
-				case (SPDISPSW_LATERTRANSPARENT + 1):
-					//後で対応
-					break;
-				default:
-					break;
-				}
-			}
-			else if (s_platemenukind == SPPLATEMENUKIND_RIGID) {
-				switch (s_platemenuno) {
-				case (SPRIGIDSW_RIGIDPARAMS + 1):
-					DSCrossButtonSelectRigidCtrls(firstctrlselect);
-					break;
-				case (SPRIGIDSW_IMPULSE + 1):
-					DSCrossButtonSelectImpulseCtrls(firstctrlselect);
-					break;
-				case (SPRIGIDSW_GROUNDPLANE + 1):
-					DSCrossButtonSelectGPCtrls(firstctrlselect);
-					break;
-				case (SPRIGIDSW_DAMPANIM + 1):
-					DSCrossButtonSelectDampCtrls(firstctrlselect);
-					break;
-				default:
-					break;
-				}
-			}
-			else if (s_platemenukind == SPPLATEMENUKIND_RETARGET) {
-				switch (s_platemenuno) {
-				case (SPRETARGETSW_RETARGET + 1):
-					DSCrossButtonSelectRetargetCtrls(firstctrlselect);
-					break;
-				case (SPRETARGETSW_LIMITEULER + 1):
-					DSCrossButtonSelectEulLimitCtrls(firstctrlselect);
-					break;
-				default:
-					break;
-				}
-			}
-		}
-	}
-}
-
-
-
 void DSCrossButtonSelectTree(bool firstctrlselect)
 {
 	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
@@ -50222,3001 +48107,273 @@ void DSCrossButtonSelectTree(bool firstctrlselect)
 
 
 
-
-void DSCrossButtonSelectUTGUI(bool firstctrlselect)
+void SelectNextWindow(int nextwndid)
 {
-
-
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	if (!s_3dwnd) {
-		return;
+	HWND tmptlwnd = 0;
+	if (s_timelineWnd) {
+		tmptlwnd = s_timelineWnd->getHWnd();
 	}
-	if (!IsWindow(s_3dwnd)) {
-		return;
+	else {
+		tmptlwnd = 0;
 	}
-
-	////select control
-	////十字キー移動ブロック
-	//{
-	//	if ((s_currentwndid == 1) && (s_currenthwnd != 0)) {
-
-
-	//		int parentbuttonid = 4;
-	//		int sisterbuttonid = 5;
-	//		int childbuttonid = 6;
-	//		int brotherbuttonid = 7;
-	//		int accelaxisid1 = 4;//axisid
-	//		int accelaxisid2 = 5;//axisid
-
-	//		int parentbutton = 0;
-	//		int sisterbutton = 0;
-	//		int childbutton = 0;
-	//		int brotherbutton = 0;
-	//		int accelaxis1 = 0;
-	//		int accelaxis2 = 0;
-
-	//		parentbutton = s_dsbuttonup[parentbuttonid];
-	//		sisterbutton = s_dsbuttonup[sisterbuttonid];
-	//		childbutton = s_dsbuttonup[childbuttonid];
-	//		brotherbutton = s_dsbuttonup[brotherbuttonid];
-
-	//		accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-	//		accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
-
-	//		bool changeflag = false;
-	//		bool chkflag = false;
-
-	//		//WS_TABSTOP
-	//		//VK_TAB
-	//		//WS_GROUP
-	//		//または
-	//		//HWND SetFocus(HWND hWnd);
-
-	//		//static int s_curdsutguikind = 0;
-	//		//static int s_curdsutguino = 0;
-
-
-
-
-	//		if (s_currentwndid == MB3D_WND_3D) {
-	//			if (s_model && (s_curboneno >= 0)) {
-	//				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-	//				int curdsutguikind = s_curdsutguikind;
-	//				int curdsutguino = s_curdsutguino;
-
-
-	//				if (firstctrlselect) {
-	//					parentbutton = 0;
-	//					sisterbutton = 0;
-	//					childbutton = 0;
-	//					brotherbutton = 0;
-
-	//					accelaxis1 = 0;
-	//					accelaxis2 = 0;
-
-	//					changeflag = true;
-	//					chkflag = true;
-	//				}
-
-
-
-	//				//############################################################################################################################
-	//				//STL.size()の返り値はunsigned。-1との比較の際には0xFFFFFFFFとsize()との比較になり、意図しない結果を招きやすい。signedに代入してから-1と比較する。
-	//				//############################################################################################################################
-	//				int guisize0 = (int)s_dsutgui0.size();
-	//				int guisize1 = (int)s_dsutgui1.size();
-	//				int guisize2 = (int)s_dsutgui2.size();
-	//				int guisize3 = (int)s_dsutgui3.size();
-
-	//				if (curbone) {
-
-
-	//					if (parentbutton >= 1) {
-	//						curdsutguino--;
-	//						int guigroupid = curdsutguikind;//guikindからSPGUISW?_*への変換。guikind(1)がSPGUISW_DISP_AND_LIMITS(1)で、guikind(3)がSPGUISW_PROJ_AND_LOD(3)
-	//						switch (guigroupid) {
-	//						case SPGUISW_CAMERA_AND_IK:
-	//						{
-	//							if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
-	//								if (curdsutguino >= SPR_CAM_MAX) {
-	//									curdsutguino = 0;//size >= 1は関数先頭で確認　ring
-	//								}
-	//								else if (curdsutguino < 0) {
-	//									curdsutguino = SPR_CAM_MAX - 1;//ring
-	//								}
-	//								changeflag = true;
-	//								chkflag = true;
-	//							}
-	//							else {
-	//								changeflag = false;
-	//								chkflag = true;
-	//							}
-	//						}
-	//						break;
-	//						case SPGUISW_DISP_AND_LIMITS:
-	//						{
-	//							if (s_spguisw[SPGUISW_DISP_AND_LIMITS].state) {
-	//								if (curdsutguino >= guisize0) {
-	//									curdsutguino = 0;//size >= 1は関数先頭で確認　ring
-	//								}
-	//								else if (curdsutguino < 0) {
-	//									curdsutguino = guisize0 - 1;//ring
-	//								}
-	//								changeflag = true;
-	//								chkflag = true;
-	//							}
-	//							else {
-	//								changeflag = false;
-	//								chkflag = true;
-	//							}
-	//						}
-	//						break;
-
-	//						case SPGUISW_BRUSHPARAMS:
-	//						{
-	//							if (s_spguisw[SPGUISW_BRUSHPARAMS].state) {
-	//								if (curdsutguino >= guisize1) {
-	//									curdsutguino = 0;//size >= 1は関数先頭で確認　ring
-	//								}
-	//								else if (curdsutguino < 0) {
-	//									curdsutguino = guisize1 - 1;//ring
-	//								}
-	//								changeflag = true;
-	//								chkflag = true;
-	//							}
-	//							else {
-	//								changeflag = false;
-	//								chkflag = true;
-	//							}
-	//						}
-	//						break;
-
-	//						case SPGUISW_BULLETPHYSICS:
-	//						{
-	//							if (s_spguisw[SPGUISW_BULLETPHYSICS].state) {
-	//								if (curdsutguino >= guisize2) {
-	//									curdsutguino = 0;//size >= 1は関数先頭で確認　ring
-	//								}
-	//								else if (curdsutguino < 0) {
-	//									curdsutguino = guisize2 - 1;//ring
-	//								}
-	//								changeflag = true;
-	//								chkflag = true;
-	//							}
-	//							else {
-	//								changeflag = false;
-	//								chkflag = true;
-	//							}
-	//						}
-	//						break;
-
-	//						case SPGUISW_PROJ_AND_LOD:
-	//						{
-	//							if (s_spguisw[SPGUISW_PROJ_AND_LOD].state) {
-	//								if (curdsutguino >= guisize3) {
-	//									curdsutguino = 0;//size >= 1は関数先頭で確認 ring
-	//								}
-	//								else if (curdsutguino < 0) {
-	//									curdsutguino = guisize3 - 1;//ring
-	//								}
-	//								changeflag = true;
-	//								chkflag = true;
-	//							}
-	//							else {
-	//								changeflag = false;
-	//								chkflag = true;
-	//							}
-	//						}
-	//						break;
-
-	//						default:
-	//							_ASSERT(0);
-	//							changeflag = false;
-	//							chkflag = true;
-	//							break;
-	//						}
-	//					}
-	//					else if (sisterbutton >= 1) {
-	//						curdsutguikind++;
-	//						curdsutguino = 0;
-	//						int dbgcnt = 0;
-	//						while (chkflag == false) {
-	//							int curgroupid = curdsutguikind;
-	//							if ((curgroupid >= SPGUISW_CAMERA_AND_IK) && (curgroupid <= SPGUISW_PROJ_AND_LOD)) {
-	//								if (s_spguisw[curgroupid].state) {
-	//									changeflag = true;
-	//									chkflag = true;
-	//									break;
-	//								}
-	//								else {
-	//									curdsutguikind++;//!!!!!!!!!!!
-	//								}
-	//							}
-	//							else {
-	//								curdsutguikind = 0;//ring
-	//								//changeflag = false;
-	//								//chkflag = true;
-	//								//break;
-	//							}
-	//							dbgcnt++;
-	//							if (dbgcnt >= (SPGUISW_PROJ_AND_LOD - SPGUISW_CAMERA_AND_IK + 1)) {//1周分チェックしたら抜ける
-	//								changeflag = false;
-	//								chkflag = true;
-	//								break;
-	//							}
-	//						}
-	//					}
-	//					else if (childbutton >= 1) {
-	//						//if ((accelaxis1 >= 1) || (accelaxis2 >= 1)) {
-	//						//	//アクセル　L2またはL3がオンのとき　
-
-	//						//}
-	//						//else {
-
-	//						//}
-	//						curdsutguino++;
-	//						int guigroupid = curdsutguikind;//guikindからSPGUISW?_*への変換。
-	//						switch (guigroupid) {
-	//						case SPGUISW_CAMERA_AND_IK:
-	//						{
-	//							if (s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
-	//								if (curdsutguino >= SPR_CAM_MAX) {
-	//									curdsutguino = 0;//size >= 1は関数先頭で確認 ring
-	//								}
-	//								else if (curdsutguino < 0) {
-	//									curdsutguino = SPR_CAM_MAX - 1;//ring
-	//								}
-	//								changeflag = true;
-	//								chkflag = true;
-	//							}
-	//							else {
-	//								changeflag = false;
-	//								chkflag = true;
-	//							}
-	//						}
-	//						break;
-
-	//						case SPGUISW_DISP_AND_LIMITS:
-	//						{
-	//							if (s_spguisw[SPGUISW_DISP_AND_LIMITS].state) {
-	//								if (curdsutguino >= guisize0) {
-	//									curdsutguino = 0;//size >= 1は関数先頭で確認　ring
-	//								}
-	//								else if (curdsutguino < 0) {
-	//									curdsutguino = guisize0 - 1;//ring
-	//								}
-	//								changeflag = true;
-	//								chkflag = true;
-	//							}
-	//							else {
-	//								changeflag = false;
-	//								chkflag = true;
-	//							}
-	//						}
-	//						break;
-
-	//						case SPGUISW_BRUSHPARAMS:
-	//						{
-	//							if (s_spguisw[SPGUISW_BRUSHPARAMS].state) {
-	//								if (curdsutguino >= guisize1) {
-	//									curdsutguino = 0;//size >= 1は関数先頭で確認　ring
-	//								}
-	//								else if (curdsutguino < 0) {
-	//									curdsutguino = guisize1 - 1;//ring
-	//								}
-	//								changeflag = true;
-	//								chkflag = true;
-	//							}
-	//							else {
-	//								changeflag = false;
-	//								chkflag = true;
-	//							}
-	//						}
-	//						break;
-
-	//						case SPGUISW_BULLETPHYSICS:
-	//						{
-	//							if (s_spguisw[SPGUISW_BULLETPHYSICS].state) {
-	//								if (curdsutguino >= guisize2) {
-	//									curdsutguino = 0;//size >= 1は関数先頭で確認　ring
-	//								}
-	//								else if (curdsutguino < 0) {
-	//									curdsutguino = guisize2 - 1;//ring
-	//								}
-	//								changeflag = true;
-	//								chkflag = true;
-	//							}
-	//							else {
-	//								changeflag = false;
-	//								chkflag = true;
-	//							}
-	//						}
-	//						break;
-
-	//						case SPGUISW_PROJ_AND_LOD:
-	//						{
-	//							if (s_spguisw[SPGUISW_PROJ_AND_LOD].state) {
-	//								if (curdsutguino >= guisize3) {
-	//									curdsutguino = 0;//size >= 1は関数先頭で確認　ring
-	//								}
-	//								else if (curdsutguino < 0) {
-	//									curdsutguino = guisize3 - 1;//ring
-	//								}
-	//								changeflag = true;
-	//								chkflag = true;
-	//							}
-	//							else {
-	//								changeflag = false;
-	//								chkflag = true;
-	//							}
-	//						}
-	//						break;
-
-	//						default:
-	//							_ASSERT(0);
-	//							changeflag = false;
-	//							chkflag = true;
-	//							break;
-	//						}
-
-	//					}
-	//					else if (brotherbutton >= 1) {
-	//						curdsutguikind--;
-	//						curdsutguino = 0;
-	//						int dbgcnt = 0;
-	//						while (chkflag == false) {
-	//							int curgroupid = curdsutguikind;
-	//							if ((curgroupid >= SPGUISW_CAMERA_AND_IK) && (curgroupid <= SPGUISW_PROJ_AND_LOD)) {
-	//								if (s_spguisw[curgroupid].state) {
-	//									changeflag = true;
-	//									chkflag = true;
-	//									break;
-	//								}
-	//								else {
-	//									curdsutguikind--;//!!!!!!!!!!!
-	//								}
-	//							}
-	//							else {
-	//								curdsutguikind = SPGUISW_PROJ_AND_LOD;//ring
-	//								//changeflag = false;
-	//								//chkflag = true;
-	//								//break;
-	//							}
-	//							dbgcnt++;
-	//							if (dbgcnt >= (SPGUISW_PROJ_AND_LOD - SPGUISW_CAMERA_AND_IK + 1)) {//1周分チェックしたら抜ける
-	//								changeflag = false;
-	//								chkflag = true;
-	//								break;
-	//							}
-	//						}
-	//					}
-
-
-	//					/*
-	//					enum DXUT_CONTROL_TYPE
-	//					{
-	//						DXUT_CONTROL_BUTTON,
-	//						DXUT_CONTROL_STATIC,
-	//						DXUT_CONTROL_CHECKBOX,
-	//						DXUT_CONTROL_RADIOBUTTON,
-	//						DXUT_CONTROL_COMBOBOX,
-	//						DXUT_CONTROL_SLIDER,
-	//						DXUT_CONTROL_EDITBOX,
-	//						DXUT_CONTROL_IMEEDITBOX,
-	//						DXUT_CONTROL_LISTBOX,
-	//						DXUT_CONTROL_SCROLLBAR,
-	//					};
-	//					*/
-
-	//					/*
-	//					//#####################################################################################################
-	//					//プレート上で〇ボタンを押したときにマウスがコントロールへ飛ぶ。プレート上にマウスが残った方が便利だったのでコメントアウト
-	//					//#####################################################################################################
-	//					*
-	//					*
-	//											if (chkflag && changeflag && (s_curboneno >= 0)) {
-	//												if ((curdsutguikind >= SPGUISW_CAMERA_AND_IK) && (curdsutguikind <= SPGUISW_PROJ_AND_LOD)) {
-
-	//													s_curdsutguikind = curdsutguikind;
-	//													s_curdsutguino = curdsutguino;
-	//													int guigroupid = s_curdsutguikind;
-	//													switch (guigroupid) {
-	//													case SPGUISW_CAMERA_AND_IK:
-	//													{
-	//														if ((s_curdsutguino >= 0) && (s_curdsutguino < SPR_CAM_MAX)) {
-	//															POINT ctrlpos;
-	//															ctrlpos.x = s_spcam[s_curdsutguino].dispcenter.x;
-	//															ctrlpos.y = s_spcam[s_curdsutguino].dispcenter.y;
-
-	//															ClientToScreen(s_3dwnd, &ctrlpos);
-	//															::SetCursorPos(ctrlpos.x, ctrlpos.y);
-	//														}
-	//													}
-	//													break;
-
-	//													case SPGUISW_DISP_AND_LIMITS:
-	//														if ((s_curdsutguino >= 0) && (s_curdsutguino < guisize0) && s_dsutgui0[s_curdsutguino]) {
-	//															//s_dsutgui0[s_curdsutguino]->SetTextColor(0xFF0000FF);
-	//															//s_dsutgui0[s_curdsutguino]->OnFocusIn();
-	//															POINT ctrlpos;
-	//															s_dsutgui0[s_curdsutguino]->GetLocation(&ctrlpos);
-	//															//s_dsutgui0[s_curdsutguino]->GetLocation(&ctrlpos);
-	//															UINT type = s_dsutgui0[s_curdsutguino]->GetType();
-	//															switch (type) {
-	//															case DXUT_CONTROL_CHECKBOX:
-	//															case DXUT_CONTROL_RADIOBUTTON:
-	//																ctrlpos.x += 6;
-	//																ctrlpos.y += 6;
-	//																break;
-	//															case DXUT_CONTROL_BUTTON:
-	//															case DXUT_CONTROL_COMBOBOX:
-	//																ctrlpos.x += (100 / 2);
-	//																ctrlpos.y += (25 / 2);
-	//																break;
-	//															case DXUT_CONTROL_STATIC:
-	//																break;
-
-	//															case DXUT_CONTROL_SLIDER:
-	//															{
-	//																int slmin = 0;
-	//																int slmax = 0;
-	//																int slvalue = 0;
-	//																((CDXUTSlider*)s_dsutgui0[s_curdsutguino])->GetRange(slmin, slmax);
-	//																slvalue = ((CDXUTSlider*)s_dsutgui0[s_curdsutguino])->GetValue();
-	//																float rate = 0.0f;
-	//																int length = slmax - slmin;
-	//																if (length != 0) {
-	//																	rate = (float)(slvalue - slmin) / (float)length;
-	//																}
-	//																else {
-	//																	rate = 0.0f;
-	//																}
-
-	//																ctrlpos.x += (int)(100.0f * rate);//100.0f : ctrl width
-	//																ctrlpos.y += (25 / 2);
-	//															}
-	//															break;
-	//															case DXUT_CONTROL_EDITBOX:
-	//															case DXUT_CONTROL_IMEEDITBOX:
-	//															case DXUT_CONTROL_LISTBOX:
-	//															case DXUT_CONTROL_SCROLLBAR:
-	//																break;
-	//															}
-	//															ClientToScreen(s_3dwnd, &ctrlpos);
-	//															::SetCursorPos(ctrlpos.x, ctrlpos.y);
-	//														}
-	//														break;
-
-	//													case SPGUISW_BRUSHPARAMS:
-	//														if ((s_curdsutguino >= 0) && (s_curdsutguino < guisize1) && s_dsutgui1[s_curdsutguino]) {
-	//															//s_dsutgui1[s_curdsutguino]->SetTextColor(0xFF0000FF);
-	//															//s_dsutgui1[s_curdsutguino]->OnFocusIn();
-	//															POINT ctrlpos;
-	//															s_dsutgui1[s_curdsutguino]->GetLocation(&ctrlpos);
-	//															UINT type = s_dsutgui1[s_curdsutguino]->GetType();
-	//															switch (type) {
-	//															case DXUT_CONTROL_CHECKBOX:
-	//															case DXUT_CONTROL_RADIOBUTTON:
-	//																ctrlpos.x += 6;
-	//																ctrlpos.y += 6;
-	//																break;
-	//															case DXUT_CONTROL_BUTTON:
-	//															case DXUT_CONTROL_COMBOBOX:
-	//																ctrlpos.x += (100 / 2);
-	//																ctrlpos.y += (25 / 2);
-	//																break;
-	//															case DXUT_CONTROL_STATIC:
-	//																break;
-
-	//															case DXUT_CONTROL_SLIDER:
-	//															{
-	//																int slmin = 0;
-	//																int slmax = 0;
-	//																int slvalue = 0;
-	//																((CDXUTSlider*)s_dsutgui1[s_curdsutguino])->GetRange(slmin, slmax);
-	//																slvalue = ((CDXUTSlider*)s_dsutgui1[s_curdsutguino])->GetValue();
-	//																float rate = 0.0f;
-	//																int length = slmax - slmin;
-	//																if (length != 0) {
-	//																	rate = (float)(slvalue - slmin) / (float)length;
-	//																}
-	//																else {
-	//																	rate = 0.0f;
-	//																}
-
-	//																ctrlpos.x += (int)(100.0f * rate);
-	//																ctrlpos.y += (25 / 2);
-	//															}
-	//															break;
-	//															case DXUT_CONTROL_EDITBOX:
-	//															case DXUT_CONTROL_IMEEDITBOX:
-	//															case DXUT_CONTROL_LISTBOX:
-	//															case DXUT_CONTROL_SCROLLBAR:
-	//																break;
-	//															}
-	//															ClientToScreen(s_3dwnd, &ctrlpos);
-	//															::SetCursorPos(ctrlpos.x, ctrlpos.y);
-	//														}
-	//														break;
-
-	//													case SPGUISW_BULLETPHYSICS:
-	//														if ((s_curdsutguino >= 0) && (s_curdsutguino < guisize2) && s_dsutgui2[s_curdsutguino]) {
-	//															//s_dsutgui2[s_curdsutguino]->SetTextColor(0xFF0000FF);
-	//															//s_dsutgui2[s_curdsutguino]->OnFocusIn();
-	//															POINT ctrlpos;
-	//															s_dsutgui2[s_curdsutguino]->GetLocation(&ctrlpos);
-	//															UINT type = s_dsutgui2[s_curdsutguino]->GetType();
-	//															switch (type) {
-	//															case DXUT_CONTROL_CHECKBOX:
-	//															case DXUT_CONTROL_RADIOBUTTON:
-	//																ctrlpos.x += 6;
-	//																ctrlpos.y += 6;
-	//																break;
-	//															case DXUT_CONTROL_BUTTON:
-	//															case DXUT_CONTROL_COMBOBOX:
-	//																ctrlpos.x += (100 / 2);
-	//																ctrlpos.y += (25 / 2);
-	//																break;
-	//															case DXUT_CONTROL_STATIC:
-	//																break;
-
-	//															case DXUT_CONTROL_SLIDER:
-	//															{
-	//																int slmin = 0;
-	//																int slmax = 0;
-	//																int slvalue = 0;
-	//																((CDXUTSlider*)s_dsutgui2[s_curdsutguino])->GetRange(slmin, slmax);
-	//																slvalue = ((CDXUTSlider*)s_dsutgui2[s_curdsutguino])->GetValue();
-	//																float rate = 0.0f;
-	//																int length = slmax - slmin;
-	//																if (length != 0) {
-	//																	rate = (float)(slvalue - slmin) / (float)length;
-	//																}
-	//																else {
-	//																	rate = 0.0f;
-	//																}
-
-	//																ctrlpos.x += (int)(100.0f * rate);
-	//																ctrlpos.y += (25 / 2);
-	//															}
-	//															break;
-	//															case DXUT_CONTROL_EDITBOX:
-	//															case DXUT_CONTROL_IMEEDITBOX:
-	//															case DXUT_CONTROL_LISTBOX:
-	//															case DXUT_CONTROL_SCROLLBAR:
-	//																break;
-	//															}
-	//															ClientToScreen(s_3dwnd, &ctrlpos);
-	//															::SetCursorPos(ctrlpos.x, ctrlpos.y);
-
-	//														}
-	//														break;
-
-	//													case SPGUISW_PROJ_AND_LOD:
-	//														if ((s_curdsutguino >= 0) && (s_curdsutguino < guisize3) && s_dsutgui3[s_curdsutguino]) {
-	//															//s_dsutgui3[s_curdsutguino]->SetTextColor(0xFF0000FF);
-	//															//s_dsutgui3[s_curdsutguino]->OnFocusIn();
-	//															POINT ctrlpos;
-	//															s_dsutgui3[s_curdsutguino]->GetLocation(&ctrlpos);
-	//															UINT type = s_dsutgui3[s_curdsutguino]->GetType();
-	//															switch (type) {
-	//															case DXUT_CONTROL_CHECKBOX:
-	//															case DXUT_CONTROL_RADIOBUTTON:
-	//																ctrlpos.x += 6;
-	//																ctrlpos.y += 6;
-	//																break;
-	//															case DXUT_CONTROL_BUTTON:
-	//															case DXUT_CONTROL_COMBOBOX:
-	//																ctrlpos.x += (100 / 2);
-	//																ctrlpos.y += (25 / 2);
-	//																break;
-	//															case DXUT_CONTROL_STATIC:
-	//																break;
-
-	//															case DXUT_CONTROL_SLIDER:
-	//															{
-	//																int slmin = 0;
-	//																int slmax = 0;
-	//																int slvalue = 0;
-	//																((CDXUTSlider*)s_dsutgui3[s_curdsutguino])->GetRange(slmin, slmax);
-	//																slvalue = ((CDXUTSlider*)s_dsutgui3[s_curdsutguino])->GetValue();
-	//																float rate = 0.0f;
-	//																int length = slmax - slmin;
-	//																if (length != 0) {
-	//																	rate = (float)(slvalue - slmin) / (float)length;
-	//																}
-	//																else {
-	//																	rate = 0.0f;
-	//																}
-
-	//																ctrlpos.x += (int)(100.0f * rate);
-	//																ctrlpos.y += (25 / 2);
-	//															}
-	//															break;
-	//															case DXUT_CONTROL_EDITBOX:
-	//															case DXUT_CONTROL_IMEEDITBOX:
-	//															case DXUT_CONTROL_LISTBOX:
-	//															case DXUT_CONTROL_SCROLLBAR:
-	//																break;
-	//															}
-	//															ClientToScreen(s_3dwnd, &ctrlpos);
-	//															::SetCursorPos(ctrlpos.x, ctrlpos.y);
-
-	//														}
-	//														break;
-
-
-	//													default:
-	//														break;
-	//													}
-	//												}
-
-	//												//if (s_owpTimeline) {
-	//												//	s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
-	//												//}
-	//												//ChangeCurrentBone();
-	//											}
-	//					*/
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-
-}
-
-
-void DSCrossButtonSelectEulLimitCtrls(bool firstctrlselect)
-{
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	if (!s_limitWnd) {
-		return;
+	HWND tmptoolwnd = 0;
+	if (s_toolWnd) {
+		tmptoolwnd = s_toolWnd->getHWnd();
 	}
-
-	////select control
-	////十字キー移動ブロック
-	//{
-	//	if ((s_currentwndid == MB3D_WND_SIDE) && (s_currenthwnd != 0)) {
-
-
-	//		int parentbuttonid = 4;
-	//		int sisterbuttonid = 5;
-	//		int childbuttonid = 6;
-	//		int brotherbuttonid = 7;
-	//		int accelaxisid1 = 4;//axisid
-	//		int accelaxisid2 = 5;//axisid
-
-	//		int parentbutton = 0;
-	//		int sisterbutton = 0;
-	//		int childbutton = 0;
-	//		int brotherbutton = 0;
-	//		int accelaxis1 = 0;
-	//		int accelaxis2 = 0;
-
-	//		parentbutton = s_dsbuttonup[parentbuttonid];
-	//		sisterbutton = s_dsbuttonup[sisterbuttonid];
-	//		childbutton = s_dsbuttonup[childbuttonid];
-	//		brotherbutton = s_dsbuttonup[brotherbuttonid];
-
-	//		accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-	//		accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
-
-	//		bool changeflag = false;
-	//		bool chkflag = false;
-
-	//		//WS_TABSTOP
-	//		//VK_TAB
-	//		//WS_GROUP
-	//		//または
-	//		//HWND SetFocus(HWND hWnd);
-
-	//		//static int s_curdsutguikind = 0;
-	//		//static int s_curdsutguino = 0;
-
-
-	//		if (firstctrlselect) {
-	//			parentbutton = 0;
-	//			sisterbutton = 0;
-	//			childbutton = 0;
-	//			brotherbutton = 0;
-
-	//			accelaxis1 = 0;
-	//			accelaxis2 = 0;
-
-	//			changeflag = true;
-	//			chkflag = true;
-	//		}
-
-
-	//		if (s_currentwndid == MB3D_WND_SIDE) {
-	//			if (s_model && (s_curboneno >= 0)) {
-	//				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-	//				int curdsctrlno = s_curdseullimitctrlno;
-	//				if (curbone) {
-
-	//					if (parentbutton >= 1) {
-	//						curdsctrlno--;
-	//						if (curdsctrlno < 0) {
-	//							curdsctrlno = (int)s_dseullimitctrls.size() - 1;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (sisterbutton >= 1) {
-	//						curdsctrlno++;
-	//						if (curdsctrlno >= (int)s_dseullimitctrls.size()) {
-	//							curdsctrlno = 0;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (childbutton >= 1) {
-	//						curdsctrlno++;
-	//						if (curdsctrlno >= (int)s_dseullimitctrls.size()) {
-	//							curdsctrlno = 0;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (brotherbutton >= 1) {
-	//						curdsctrlno--;
-	//						if (curdsctrlno < 0) {
-	//							curdsctrlno = (int)s_dseullimitctrls.size() - 1;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-
-
-	//					/*
-	//					enum DXUT_CONTROL_TYPE
-	//					{
-	//						DXUT_CONTROL_BUTTON,
-	//						DXUT_CONTROL_STATIC,
-	//						DXUT_CONTROL_CHECKBOX,
-	//						DXUT_CONTROL_RADIOBUTTON,
-	//						DXUT_CONTROL_COMBOBOX,
-	//						DXUT_CONTROL_SLIDER,
-	//						DXUT_CONTROL_EDITBOX,
-	//						DXUT_CONTROL_IMEEDITBOX,
-	//						DXUT_CONTROL_LISTBOX,
-	//						DXUT_CONTROL_SCROLLBAR,
-	//					};
-	//					*/
-	//					if (chkflag && changeflag && (s_curboneno >= 0)) {
-	//						if (((curdsctrlno) >= 0) && ((curdsctrlno) < s_dseullimitctrls.size())) {
-
-	//							s_curdseullimitctrlno = curdsctrlno;
-
-
-	//							if (s_anglelimitdlg && IsWindow(s_anglelimitdlg) &&
-	//								(s_curdseullimitctrlno >= 0) && (s_curdseullimitctrlno < s_dseullimitctrls.size()) && (s_dseullimitctrls[s_curdseullimitctrlno])) {
-
-
-	//								POINT ctrlpos = { 0, 0 };
-
-	//								HWND ctrlwnd = ::GetDlgItem(s_anglelimitdlg, s_dseullimitctrls[s_curdseullimitctrlno]);
-	//								if (ctrlwnd) {
-	//									RECT ctrlrect;
-	//									::GetWindowRect(ctrlwnd, &ctrlrect);
-	//									if (s_curdseullimitctrlno == 0) {
-	//										ctrlpos.x = ctrlrect.left + 175;
-	//										ctrlpos.y = ctrlrect.top + 20 / 2;
-	//									}
-	//									else if (s_curdseullimitctrlno == (s_dseullimitctrls.size() - 1)) {
-	//										ctrlpos.x = ctrlrect.left + 100 / 2;
-	//										ctrlpos.y = ctrlrect.top + 20 / 2;
-	//									}
-	//									else {
-	//										int slidervalue;
-	//										slidervalue = (int)::SendMessage(ctrlwnd, TBM_GETPOS, 0, 0);
-	//										int sliderposx = (int)((float)(slidervalue + 180) / 360.0f * 274.0f);
-	//										ctrlpos.x = ctrlrect.left + sliderposx + 12;
-	//										ctrlpos.y = ctrlrect.top + 20 / 2;
-	//									}
-
-	//									//ClientToScreen(s_anglelimitdlg, &ctrlpos);
-
-	//									::SetCursorPos(ctrlpos.x, ctrlpos.y);
-	//								}
-	//							}
-	//						}
-
-	//						//if (s_owpTimeline) {
-	//						//	s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
-	//						//}
-	//						//ChangeCurrentBone();
-	//					}
-
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-
-}
-
-void DSCrossButtonSelectRetargetCtrls(bool firstctrlselect)
-{
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	if (!s_convboneWnd) {
-		return;
+	else {
+		tmptoolwnd = 0;
 	}
-
-	////select control
-	////十字キー移動ブロック
-	//{
-	//	if ((s_currentwndid == MB3D_WND_SIDE) && (s_currenthwnd != 0)) {
-
-
-	//		int parentbuttonid = 4;
-	//		int sisterbuttonid = 5;
-	//		int childbuttonid = 6;
-	//		int brotherbuttonid = 7;
-	//		int accelaxisid1 = 4;//axisid
-	//		int accelaxisid2 = 5;//axisid
-
-	//		int parentbutton = 0;
-	//		int sisterbutton = 0;
-	//		int childbutton = 0;
-	//		int brotherbutton = 0;
-	//		int accelaxis1 = 0;
-	//		int accelaxis2 = 0;
-
-	//		parentbutton = s_dsbuttonup[parentbuttonid];
-	//		sisterbutton = s_dsbuttonup[sisterbuttonid];
-	//		childbutton = s_dsbuttonup[childbuttonid];
-	//		brotherbutton = s_dsbuttonup[brotherbuttonid];
-
-	//		accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-	//		accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
-
-	//		bool changeflag = false;
-	//		bool chkflag = false;
-
-	//		//WS_TABSTOP
-	//		//VK_TAB
-	//		//WS_GROUP
-	//		//または
-	//		//HWND SetFocus(HWND hWnd);
-
-	//		//static int s_curdsutguikind = 0;
-	//		//static int s_curdsutguino = 0;
-
-	//		if (firstctrlselect) {
-	//			parentbutton = 0;
-	//			sisterbutton = 0;
-	//			childbutton = 0;
-	//			brotherbutton = 0;
-
-	//			accelaxis1 = 0;
-	//			accelaxis2 = 0;
-
-	//			changeflag = true;
-	//			chkflag = true;
-	//		}
-
-	//		if (s_currentwndid == MB3D_WND_SIDE) {
-	//			if (s_model && (s_curboneno >= 0)) {
-	//				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-	//				int curdsctrlno = s_curdsretargetctrlno;
-	//				if (curbone) {
-
-	//					if (parentbutton >= 1) {
-	//						curdsctrlno--;
-	//						if (curdsctrlno < 0) {
-	//							curdsctrlno = (int)s_dsretargetctrls.size() - 1;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (sisterbutton >= 1) {
-	//						curdsctrlno++;
-	//						if (curdsctrlno >= (int)s_dsretargetctrls.size()) {
-	//							curdsctrlno = 0;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (childbutton >= 1) {
-	//						curdsctrlno++;
-	//						if (curdsctrlno >= (int)s_dsretargetctrls.size()) {
-	//							curdsctrlno = 0;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (brotherbutton >= 1) {
-	//						curdsctrlno--;
-	//						if (curdsctrlno < 0) {
-	//							curdsctrlno = (int)s_dsretargetctrls.size() - 1;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-
-
-	//					/*
-	//					enum DXUT_CONTROL_TYPE
-	//					{
-	//						DXUT_CONTROL_BUTTON,
-	//						DXUT_CONTROL_STATIC,
-	//						DXUT_CONTROL_CHECKBOX,
-	//						DXUT_CONTROL_RADIOBUTTON,
-	//						DXUT_CONTROL_COMBOBOX,
-	//						DXUT_CONTROL_SLIDER,
-	//						DXUT_CONTROL_EDITBOX,
-	//						DXUT_CONTROL_IMEEDITBOX,
-	//						DXUT_CONTROL_LISTBOX,
-	//						DXUT_CONTROL_SCROLLBAR,
-	//					};
-	//					*/
-	//					if (chkflag && changeflag && (s_curboneno >= 0)) {
-	//						if (((curdsctrlno) >= 0) && ((curdsctrlno) < s_dsretargetctrls.size())) {
-	//							s_curdsretargetctrlno = curdsctrlno;
-
-	//							OrgWinGUI::WindowPos ctrlwinpos;
-	//							POINT ctrlpos = { 0, 0 };
-	//							ctrlwinpos = s_dsretargetctrls[s_curdsretargetctrlno]->getPos();
-	//							ctrlpos.x = ctrlwinpos.x;
-	//							ctrlpos.y = ctrlwinpos.y;
-
-	//							//s_dsutgui0[s_curdsutguino]->GetLocation(&ctrlpos);
-	//							//UINT type = s_dsutgui0[s_curdsutguino]->GetType();
-	//							if (s_convboneWnd && IsWindow(s_convboneWnd->getHWnd()) &&
-	//								(s_curdsretargetctrlno >= 0) && (s_curdsretargetctrlno < s_dsretargetctrls.size()) && (s_dsretargetctrls[s_curdsretargetctrlno])) {
-
-	//								bool isslider;
-	//								isslider = ((OrgWinGUI::OrgWindowParts*)s_dsretargetctrls[s_curdsretargetctrlno])->getIsSlider();
-	//								if (isslider) {
-	//									//sizex : 350, sizey : 20, window with 450
-
-	//									double minval;
-	//									double maxval;
-	//									double curval;
-	//									double length;
-	//									minval = ((OrgWinGUI::OWP_Slider*)s_dsretargetctrls[s_curdsretargetctrlno])->getMinValue();
-	//									maxval = ((OrgWinGUI::OWP_Slider*)s_dsretargetctrls[s_curdsretargetctrlno])->getMaxValue();
-	//									curval = ((OrgWinGUI::OWP_Slider*)s_dsretargetctrls[s_curdsretargetctrlno])->getValue();
-	//									length = maxval - minval;
-	//									if (length != 0.0) {
-	//										double rate;
-	//										rate = (curval - minval) / length;
-	//										//ctrlpos.x += (LONG)(350.0 * rate);
-	//										//pos1x+ (int)((value - minValue) * (float)(pos2x - pos1x) / (maxValue - minValue) + 0.5f);
-	//										int pos2xpos1x = 450 - 6 - 65 - 5;
-	//										ctrlpos.x += (5 + (int)((curval - minval) * (float)(pos2xpos1x) / (maxval - minval) + 0.5f));//LABEL_SIZE_X : 65.0, AXIS_POS_X : 5.0
-	//										ctrlpos.y += (int)(20.0 / 2.0);
-	//										//ClientToScreen(s_rigidWnd->getHWnd(), &ctrlpos);
-	//									}
-	//									else {
-	//										//if button
-	//										ctrlpos.x += 6;
-	//										ctrlpos.y += 6;
-	//										//ClientToScreen(s_rigidWnd->getHWnd(), &ctrlpos);
-	//									}
-	//								}
-	//								else {
-	//									//if button
-	//									ctrlpos.x += 6;
-	//									ctrlpos.y += 6;
-	//									//ClientToScreen(s_rigidWnd->getHWnd(), &ctrlpos);
-	//								}
-
-	//								WindowPos retargetpos;
-	//								retargetpos = s_convboneWnd->getPos();
-	//								ctrlpos.x += retargetpos.x;
-	//								ctrlpos.y += retargetpos.y;
-	//								::SetCursorPos(ctrlpos.x, ctrlpos.y);
-	//							}
-	//						}
-
-	//						//if (s_owpTimeline) {
-	//						//	s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
-	//						//}
-	//						//ChangeCurrentBone();
-	//					}
-
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-
-}
-
-void DSCrossButtonSelectDampCtrls(bool firstctrlselect)
-{
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	if (!s_dmpanimWnd) {
-		return;
+	HWND tmplongtlwnd = 0;
+	if (s_LtimelineWnd) {
+		tmplongtlwnd = s_LtimelineWnd->getHWnd();
 	}
-
-	////select control
-	////十字キー移動ブロック
-	//{
-	//	if ((s_currentwndid == MB3D_WND_SIDE) && (s_currenthwnd != 0)) {
-
-
-	//		int parentbuttonid = 4;
-	//		int sisterbuttonid = 5;
-	//		int childbuttonid = 6;
-	//		int brotherbuttonid = 7;
-	//		int accelaxisid1 = 4;//axisid
-	//		int accelaxisid2 = 5;//axisid
-
-	//		int parentbutton = 0;
-	//		int sisterbutton = 0;
-	//		int childbutton = 0;
-	//		int brotherbutton = 0;
-	//		int accelaxis1 = 0;
-	//		int accelaxis2 = 0;
-
-	//		parentbutton = s_dsbuttonup[parentbuttonid];
-	//		sisterbutton = s_dsbuttonup[sisterbuttonid];
-	//		childbutton = s_dsbuttonup[childbuttonid];
-	//		brotherbutton = s_dsbuttonup[brotherbuttonid];
-
-	//		accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-	//		accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
-
-	//		bool changeflag = false;
-	//		bool chkflag = false;
-
-	//		//WS_TABSTOP
-	//		//VK_TAB
-	//		//WS_GROUP
-	//		//または
-	//		//HWND SetFocus(HWND hWnd);
-
-	//		//static int s_curdsutguikind = 0;
-	//		//static int s_curdsutguino = 0;
-
-	//		if (firstctrlselect) {
-	//			parentbutton = 0;
-	//			sisterbutton = 0;
-	//			childbutton = 0;
-	//			brotherbutton = 0;
-
-	//			accelaxis1 = 0;
-	//			accelaxis2 = 0;
-
-	//			changeflag = true;
-	//			chkflag = true;
-	//		}
-
-
-	//		if (s_currentwndid == MB3D_WND_SIDE) {
-	//			if (s_model && (s_curboneno >= 0)) {
-	//				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-	//				int curdsctrlno = s_curdsdampctrlno;
-	//				if (curbone) {
-
-	//					if (parentbutton >= 1) {
-	//						curdsctrlno--;
-	//						if (curdsctrlno < 0) {
-	//							curdsctrlno = (int)s_dsdampctrls.size() - 1;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (sisterbutton >= 1) {
-	//						curdsctrlno++;
-	//						if (curdsctrlno >= (int)s_dsdampctrls.size()) {
-	//							curdsctrlno = 0;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (childbutton >= 1) {
-	//						curdsctrlno++;
-	//						if (curdsctrlno >= (int)s_dsdampctrls.size()) {
-	//							curdsctrlno = 0;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (brotherbutton >= 1) {
-	//						curdsctrlno--;
-	//						if (curdsctrlno < 0) {
-	//							curdsctrlno = (int)s_dsdampctrls.size() - 1;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-
-
-	//					/*
-	//					enum DXUT_CONTROL_TYPE
-	//					{
-	//						DXUT_CONTROL_BUTTON,
-	//						DXUT_CONTROL_STATIC,
-	//						DXUT_CONTROL_CHECKBOX,
-	//						DXUT_CONTROL_RADIOBUTTON,
-	//						DXUT_CONTROL_COMBOBOX,
-	//						DXUT_CONTROL_SLIDER,
-	//						DXUT_CONTROL_EDITBOX,
-	//						DXUT_CONTROL_IMEEDITBOX,
-	//						DXUT_CONTROL_LISTBOX,
-	//						DXUT_CONTROL_SCROLLBAR,
-	//					};
-	//					*/
-	//					if (chkflag && changeflag && (s_curboneno >= 0)) {
-	//						if (((curdsctrlno) >= 0) && ((curdsctrlno) < s_dsdampctrls.size())) {
-	//							s_curdsdampctrlno = curdsctrlno;
-
-	//							OrgWinGUI::WindowPos ctrlwinpos;
-	//							POINT ctrlpos = { 0, 0 };
-	//							ctrlwinpos = s_dsdampctrls[s_curdsdampctrlno]->getPos();
-	//							ctrlpos.x = ctrlwinpos.x;
-	//							ctrlpos.y = ctrlwinpos.y;
-
-	//							//s_dsutgui0[s_curdsutguino]->GetLocation(&ctrlpos);
-	//							//UINT type = s_dsutgui0[s_curdsutguino]->GetType();
-	//							if (s_dmpanimWnd && IsWindow(s_dmpanimWnd->getHWnd()) &&
-	//								(s_curdsdampctrlno >= 0) && (s_curdsdampctrlno < s_dsdampctrls.size()) && (s_dsdampctrls[s_curdsdampctrlno])) {
-
-	//								bool isslider;
-	//								isslider = ((OrgWinGUI::OrgWindowParts*)s_dsdampctrls[s_curdsdampctrlno])->getIsSlider();
-	//								if (isslider) {
-	//									//sizex : 350, sizey : 20, window with 450
-
-	//									double minval;
-	//									double maxval;
-	//									double curval;
-	//									double length;
-	//									minval = ((OrgWinGUI::OWP_Slider*)s_dsdampctrls[s_curdsdampctrlno])->getMinValue();
-	//									maxval = ((OrgWinGUI::OWP_Slider*)s_dsdampctrls[s_curdsdampctrlno])->getMaxValue();
-	//									curval = ((OrgWinGUI::OWP_Slider*)s_dsdampctrls[s_curdsdampctrlno])->getValue();
-	//									length = maxval - minval;
-	//									if (length != 0.0) {
-	//										double rate;
-	//										rate = (curval - minval) / length;
-	//										//ctrlpos.x += (LONG)(350.0 * rate);
-	//										//pos1x+ (int)((value - minValue) * (float)(pos2x - pos1x) / (maxValue - minValue) + 0.5f);
-	//										int pos2xpos1x = 450 - 6 - 65 - 5;
-	//										ctrlpos.x += (5 + (int)((curval - minval) * (float)(pos2xpos1x) / (maxval - minval) + 0.5f));//LABEL_SIZE_X : 65.0, AXIS_POS_X : 5.0
-	//										ctrlpos.y += (int)(20.0 / 2.0);
-	//										//ClientToScreen(s_rigidWnd->getHWnd(), &ctrlpos);
-	//									}
-	//									else {
-	//										//if button
-	//										ctrlpos.x += 6;
-	//										ctrlpos.y += 6;
-	//										//ClientToScreen(s_rigidWnd->getHWnd(), &ctrlpos);
-	//									}
-	//								}
-	//								else {
-	//									//if button
-	//									ctrlpos.x += 6;
-	//									ctrlpos.y += 6;
-	//									//ClientToScreen(s_rigidWnd->getHWnd(), &ctrlpos);
-	//								}
-
-	//								WindowPos damppos;
-	//								damppos = s_dmpanimWnd->getPos();
-	//								ctrlpos.x += damppos.x;
-	//								ctrlpos.y += damppos.y;
-	//								::SetCursorPos(ctrlpos.x, ctrlpos.y);
-	//							}
-	//						}
-
-	//						//if (s_owpTimeline) {
-	//						//	s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
-	//						//}
-	//						//ChangeCurrentBone();
-	//					}
-
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-
-}
-
-void DSCrossButtonSelectGPCtrls(bool firstctrlselect)
-{
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	if (!s_gpWnd) {
-		return;
+	else {
+		tmplongtlwnd = 0;
 	}
-
-	////select control
-	////十字キー移動ブロック
-	//{
-	//	if ((s_currentwndid == MB3D_WND_SIDE) && (s_currenthwnd != 0)) {
-
-
-	//		int parentbuttonid = 4;
-	//		int sisterbuttonid = 5;
-	//		int childbuttonid = 6;
-	//		int brotherbuttonid = 7;
-	//		int accelaxisid1 = 4;//axisid
-	//		int accelaxisid2 = 5;//axisid
-
-	//		int parentbutton = 0;
-	//		int sisterbutton = 0;
-	//		int childbutton = 0;
-	//		int brotherbutton = 0;
-	//		int accelaxis1 = 0;
-	//		int accelaxis2 = 0;
-
-	//		parentbutton = s_dsbuttonup[parentbuttonid];
-	//		sisterbutton = s_dsbuttonup[sisterbuttonid];
-	//		childbutton = s_dsbuttonup[childbuttonid];
-	//		brotherbutton = s_dsbuttonup[brotherbuttonid];
-
-	//		accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-	//		accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
-
-	//		bool changeflag = false;
-	//		bool chkflag = false;
-
-	//		//WS_TABSTOP
-	//		//VK_TAB
-	//		//WS_GROUP
-	//		//または
-	//		//HWND SetFocus(HWND hWnd);
-
-	//		//static int s_curdsutguikind = 0;
-	//		//static int s_curdsutguino = 0;
-
-	//		if (firstctrlselect) {
-	//			parentbutton = 0;
-	//			sisterbutton = 0;
-	//			childbutton = 0;
-	//			brotherbutton = 0;
-
-	//			accelaxis1 = 0;
-	//			accelaxis2 = 0;
-
-	//			changeflag = true;
-	//			chkflag = true;
-	//		}
-
-
-	//		if (s_currentwndid == MB3D_WND_SIDE) {
-	//			if (s_model && (s_curboneno >= 0)) {
-	//				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-	//				int curdsctrlno = s_curdsgpctrlno;
-	//				if (curbone) {
-
-	//					if (parentbutton >= 1) {
-	//						curdsctrlno--;
-	//						if (curdsctrlno < 0) {
-	//							curdsctrlno = (int)s_dsgpctrls.size() - 1;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (sisterbutton >= 1) {
-	//						curdsctrlno++;
-	//						if (curdsctrlno >= (int)s_dsgpctrls.size()) {
-	//							curdsctrlno = 0;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (childbutton >= 1) {
-	//						curdsctrlno++;
-	//						if (curdsctrlno >= (int)s_dsgpctrls.size()) {
-	//							curdsctrlno = 0;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (brotherbutton >= 1) {
-	//						curdsctrlno--;
-	//						if (curdsctrlno < 0) {
-	//							curdsctrlno = (int)s_dsgpctrls.size() - 1;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-
-
-	//					/*
-	//					enum DXUT_CONTROL_TYPE
-	//					{
-	//						DXUT_CONTROL_BUTTON,
-	//						DXUT_CONTROL_STATIC,
-	//						DXUT_CONTROL_CHECKBOX,
-	//						DXUT_CONTROL_RADIOBUTTON,
-	//						DXUT_CONTROL_COMBOBOX,
-	//						DXUT_CONTROL_SLIDER,
-	//						DXUT_CONTROL_EDITBOX,
-	//						DXUT_CONTROL_IMEEDITBOX,
-	//						DXUT_CONTROL_LISTBOX,
-	//						DXUT_CONTROL_SCROLLBAR,
-	//					};
-	//					*/
-	//					if (chkflag && changeflag && (s_curboneno >= 0)) {
-	//						if (((curdsctrlno) >= 0) && ((curdsctrlno) < s_dsgpctrls.size())) {
-	//							s_curdsgpctrlno = curdsctrlno;
-
-	//							OrgWinGUI::WindowPos ctrlwinpos;
-	//							POINT ctrlpos = { 0, 0 };
-	//							ctrlwinpos = s_dsgpctrls[s_curdsgpctrlno]->getPos();
-	//							ctrlpos.x = ctrlwinpos.x;
-	//							ctrlpos.y = ctrlwinpos.y;
-
-	//							//s_dsutgui0[s_curdsutguino]->GetLocation(&ctrlpos);
-	//							//UINT type = s_dsutgui0[s_curdsutguino]->GetType();
-	//							if (s_gpWnd && IsWindow(s_gpWnd->getHWnd()) &&
-	//								(s_curdsgpctrlno >= 0) && (s_curdsgpctrlno < s_dsgpctrls.size()) && (s_dsgpctrls[s_curdsgpctrlno])) {
-
-	//								bool isslider;
-	//								isslider = ((OrgWinGUI::OrgWindowParts*)s_dsgpctrls[s_curdsgpctrlno])->getIsSlider();
-	//								if (isslider) {
-	//									//sizex : 350, sizey : 20, window with 450
-
-	//									double minval;
-	//									double maxval;
-	//									double curval;
-	//									double length;
-	//									minval = ((OrgWinGUI::OWP_Slider*)s_dsgpctrls[s_curdsgpctrlno])->getMinValue();
-	//									maxval = ((OrgWinGUI::OWP_Slider*)s_dsgpctrls[s_curdsgpctrlno])->getMaxValue();
-	//									curval = ((OrgWinGUI::OWP_Slider*)s_dsgpctrls[s_curdsgpctrlno])->getValue();
-	//									length = maxval - minval;
-	//									if (length != 0.0) {
-	//										double rate;
-	//										rate = (curval - minval) / length;
-	//										//ctrlpos.x += (LONG)(350.0 * rate);
-	//										//pos1x+ (int)((value - minValue) * (float)(pos2x - pos1x) / (maxValue - minValue) + 0.5f);
-	//										int pos2xpos1x = 450 - 6 - 65 - 5;
-	//										ctrlpos.x += (5 + (int)((curval - minval) * (float)(pos2xpos1x) / (maxval - minval) + 0.5f));//LABEL_SIZE_X : 65.0, AXIS_POS_X : 5.0
-	//										ctrlpos.y += (int)(20.0 / 2.0);
-	//										//ClientToScreen(s_rigidWnd->getHWnd(), &ctrlpos);
-	//									}
-	//									else {
-	//										//if button
-	//										ctrlpos.x += 6;
-	//										ctrlpos.y += 6;
-	//										//ClientToScreen(s_rigidWnd->getHWnd(), &ctrlpos);
-	//									}
-	//								}
-	//								else {
-	//									//if button
-	//									ctrlpos.x += 6;
-	//									ctrlpos.y += 6;
-	//									//ClientToScreen(s_rigidWnd->getHWnd(), &ctrlpos);
-	//								}
-
-	//								WindowPos gppos;
-	//								gppos = s_gpWnd->getPos();
-	//								ctrlpos.x += gppos.x;
-	//								ctrlpos.y += gppos.y;
-	//								::SetCursorPos(ctrlpos.x, ctrlpos.y);
-	//							}
-	//						}
-
-	//						//if (s_owpTimeline) {
-	//						//	s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
-	//						//}
-	//						//ChangeCurrentBone();
-	//					}
-
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-
-}
-void DSCrossButtonSelectImpulseCtrls(bool firstctrlselect)
-{
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	if (!s_impWnd) {
-		return;
+	HWND tmpsidewnd = 0;
+	if (s_sidemenuWnd) {
+		tmpsidewnd = s_sidemenuWnd->getHWnd();
 	}
-
-	////select control
-	////十字キー移動ブロック
-	//{
-	//	if ((s_currentwndid == MB3D_WND_SIDE) && (s_currenthwnd != 0)) {
-
-
-	//		int parentbuttonid = 4;
-	//		int sisterbuttonid = 5;
-	//		int childbuttonid = 6;
-	//		int brotherbuttonid = 7;
-	//		int accelaxisid1 = 4;//axisid
-	//		int accelaxisid2 = 5;//axisid
-
-	//		int parentbutton = 0;
-	//		int sisterbutton = 0;
-	//		int childbutton = 0;
-	//		int brotherbutton = 0;
-	//		int accelaxis1 = 0;
-	//		int accelaxis2 = 0;
-
-	//		parentbutton = s_dsbuttonup[parentbuttonid];
-	//		sisterbutton = s_dsbuttonup[sisterbuttonid];
-	//		childbutton = s_dsbuttonup[childbuttonid];
-	//		brotherbutton = s_dsbuttonup[brotherbuttonid];
-
-	//		accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-	//		accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
-
-	//		bool changeflag = false;
-	//		bool chkflag = false;
-
-	//		//WS_TABSTOP
-	//		//VK_TAB
-	//		//WS_GROUP
-	//		//または
-	//		//HWND SetFocus(HWND hWnd);
-
-	//		//static int s_curdsutguikind = 0;
-	//		//static int s_curdsutguino = 0;
-
-	//		if (firstctrlselect) {
-	//			parentbutton = 0;
-	//			sisterbutton = 0;
-	//			childbutton = 0;
-	//			brotherbutton = 0;
-
-	//			accelaxis1 = 0;
-	//			accelaxis2 = 0;
-
-	//			changeflag = true;
-	//			chkflag = true;
-	//		}
-
-
-	//		if (s_currentwndid == MB3D_WND_SIDE) {
-	//			if (s_model && (s_curboneno >= 0)) {
-	//				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-	//				int curdsctrlno = s_curdsimpulsectrlno;
-	//				if (curbone) {
-
-	//					if (parentbutton >= 1) {
-	//						curdsctrlno--;
-	//						if (curdsctrlno < 0) {
-	//							curdsctrlno = (int)s_dsimpulsectrls.size() - 1;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (sisterbutton >= 1) {
-	//						curdsctrlno++;
-	//						if (curdsctrlno >= (int)s_dsimpulsectrls.size()) {
-	//							curdsctrlno = 0;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (childbutton >= 1) {
-	//						curdsctrlno++;
-	//						if (curdsctrlno >= (int)s_dsimpulsectrls.size()) {
-	//							curdsctrlno = 0;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (brotherbutton >= 1) {
-	//						curdsctrlno--;
-	//						if (curdsctrlno < 0) {
-	//							curdsctrlno = (int)s_dsimpulsectrls.size() - 1;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-
-
-	//					/*
-	//					enum DXUT_CONTROL_TYPE
-	//					{
-	//						DXUT_CONTROL_BUTTON,
-	//						DXUT_CONTROL_STATIC,
-	//						DXUT_CONTROL_CHECKBOX,
-	//						DXUT_CONTROL_RADIOBUTTON,
-	//						DXUT_CONTROL_COMBOBOX,
-	//						DXUT_CONTROL_SLIDER,
-	//						DXUT_CONTROL_EDITBOX,
-	//						DXUT_CONTROL_IMEEDITBOX,
-	//						DXUT_CONTROL_LISTBOX,
-	//						DXUT_CONTROL_SCROLLBAR,
-	//					};
-	//					*/
-	//					if (chkflag && changeflag && (s_curboneno >= 0)) {
-	//						if (((curdsctrlno) >= 0) && ((curdsctrlno) < s_dsimpulsectrls.size())) {
-	//							s_curdsimpulsectrlno = curdsctrlno;
-
-	//							OrgWinGUI::WindowPos ctrlwinpos;
-	//							POINT ctrlpos = { 0, 0 };
-	//							ctrlwinpos = s_dsimpulsectrls[s_curdsimpulsectrlno]->getPos();
-	//							ctrlpos.x = ctrlwinpos.x;
-	//							ctrlpos.y = ctrlwinpos.y;
-
-	//							//s_dsutgui0[s_curdsutguino]->GetLocation(&ctrlpos);
-	//							//UINT type = s_dsutgui0[s_curdsutguino]->GetType();
-	//							if (s_impWnd && IsWindow(s_impWnd->getHWnd()) &&
-	//								(s_curdsimpulsectrlno >= 0) && (s_curdsimpulsectrlno < s_dsimpulsectrls.size()) && (s_dsimpulsectrls[s_curdsimpulsectrlno])) {
-
-	//								bool isslider;
-	//								isslider = ((OrgWinGUI::OrgWindowParts*)s_dsimpulsectrls[s_curdsimpulsectrlno])->getIsSlider();
-	//								if (isslider) {
-	//									//sizex : 350, sizey : 20, window with 450
-
-	//									double minval;
-	//									double maxval;
-	//									double curval;
-	//									double length;
-	//									minval = ((OrgWinGUI::OWP_Slider*)s_dsimpulsectrls[s_curdsimpulsectrlno])->getMinValue();
-	//									maxval = ((OrgWinGUI::OWP_Slider*)s_dsimpulsectrls[s_curdsimpulsectrlno])->getMaxValue();
-	//									curval = ((OrgWinGUI::OWP_Slider*)s_dsimpulsectrls[s_curdsimpulsectrlno])->getValue();
-	//									length = maxval - minval;
-	//									if (length != 0.0) {
-	//										double rate;
-	//										rate = (curval - minval) / length;
-	//										//ctrlpos.x += (LONG)(350.0 * rate);
-	//										//pos1x+ (int)((value - minValue) * (float)(pos2x - pos1x) / (maxValue - minValue) + 0.5f);
-	//										int pos2xpos1x = 450 - 6 - 65 - 5;
-	//										ctrlpos.x += (5 + (int)((curval - minval) * (float)(pos2xpos1x) / (maxval - minval) + 0.5f));//LABEL_SIZE_X : 65.0, AXIS_POS_X : 5.0
-	//										ctrlpos.y += (int)(20.0 / 2.0);
-	//										//ClientToScreen(s_rigidWnd->getHWnd(), &ctrlpos);
-	//									}
-	//									else {
-	//										//if button
-	//										ctrlpos.x += 6;
-	//										ctrlpos.y += 6;
-	//										//ClientToScreen(s_rigidWnd->getHWnd(), &ctrlpos);
-	//									}
-	//								}
-	//								else {
-	//									//if button
-	//									ctrlpos.x += 6;
-	//									ctrlpos.y += 6;
-	//									//ClientToScreen(s_rigidWnd->getHWnd(), &ctrlpos);
-	//								}
-
-	//								WindowPos impulsepos;
-	//								impulsepos = s_impWnd->getPos();
-	//								ctrlpos.x += impulsepos.x;
-	//								ctrlpos.y += impulsepos.y;
-	//								::SetCursorPos(ctrlpos.x, ctrlpos.y);
-	//							}
-	//						}
-
-	//						//if (s_owpTimeline) {
-	//						//	s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
-	//						//}
-	//						//ChangeCurrentBone();
-	//					}
-
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-
-}
-
-void DSCrossButtonSelectRigidCtrls(bool firstctrlselect)
-{
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	//if (!s_rigidWnd) {
-	//	return;
-	//}
-
-	////select control
-	////十字キー移動ブロック
-	//{
-	//	if ((s_currentwndid == MB3D_WND_SIDE) && (s_currenthwnd != 0)) {
-
-
-	//		int parentbuttonid = 4;
-	//		int sisterbuttonid = 5;
-	//		int childbuttonid = 6;
-	//		int brotherbuttonid = 7;
-	//		int accelaxisid1 = 4;//axisid
-	//		int accelaxisid2 = 5;//axisid
-
-	//		int parentbutton = 0;
-	//		int sisterbutton = 0;
-	//		int childbutton = 0;
-	//		int brotherbutton = 0;
-	//		int accelaxis1 = 0;
-	//		int accelaxis2 = 0;
-
-	//		parentbutton = s_dsbuttonup[parentbuttonid];
-	//		sisterbutton = s_dsbuttonup[sisterbuttonid];
-	//		childbutton = s_dsbuttonup[childbuttonid];
-	//		brotherbutton = s_dsbuttonup[brotherbuttonid];
-
-	//		accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-	//		accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
-
-	//		bool changeflag = false;
-	//		bool chkflag = false;
-
-	//		//WS_TABSTOP
-	//		//VK_TAB
-	//		//WS_GROUP
-	//		//または
-	//		//HWND SetFocus(HWND hWnd);
-
-	//		//static int s_curdsutguikind = 0;
-	//		//static int s_curdsutguino = 0;
-
-	//		if (firstctrlselect) {
-	//			parentbutton = 0;
-	//			sisterbutton = 0;
-	//			childbutton = 0;
-	//			brotherbutton = 0;
-
-	//			accelaxis1 = 0;
-	//			accelaxis2 = 0;
-
-	//			changeflag = true;
-	//			chkflag = true;
-	//		}
-
-
-
-	//		if (s_currentwndid == MB3D_WND_SIDE) {
-	//			if (s_model && (s_curboneno >= 0)) {
-	//				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-	//				int curdsctrlno = s_curdsrigidctrlno;
-	//				if (curbone) {
-
-	//					if (parentbutton >= 1) {
-	//						curdsctrlno--;
-	//						if (curdsctrlno < 0) {
-	//							curdsctrlno = (int)s_dsrigidctrls.size() - 1;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (sisterbutton >= 1) {
-	//						curdsctrlno++;
-	//						if (curdsctrlno >= (int)s_dsrigidctrls.size()) {
-	//							curdsctrlno = 0;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (childbutton >= 1) {
-	//						curdsctrlno++;
-	//						if (curdsctrlno >= (int)s_dsrigidctrls.size()) {
-	//							curdsctrlno = 0;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (brotherbutton >= 1) {
-	//						curdsctrlno--;
-	//						if (curdsctrlno < 0) {
-	//							curdsctrlno = (int)s_dsrigidctrls.size() - 1;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-
-
-	//					/*
-	//					enum DXUT_CONTROL_TYPE
-	//					{
-	//						DXUT_CONTROL_BUTTON,
-	//						DXUT_CONTROL_STATIC,
-	//						DXUT_CONTROL_CHECKBOX,
-	//						DXUT_CONTROL_RADIOBUTTON,
-	//						DXUT_CONTROL_COMBOBOX,
-	//						DXUT_CONTROL_SLIDER,
-	//						DXUT_CONTROL_EDITBOX,
-	//						DXUT_CONTROL_IMEEDITBOX,
-	//						DXUT_CONTROL_LISTBOX,
-	//						DXUT_CONTROL_SCROLLBAR,
-	//					};
-	//					*/
-	//					if (chkflag && changeflag && (s_curboneno >= 0)) {
-	//						if (((curdsctrlno) >= 0) && ((curdsctrlno) < s_dsrigidctrls.size())) {
-	//							s_curdsrigidctrlno = curdsctrlno;
-
-	//							OrgWinGUI::WindowPos ctrlwinpos;
-	//							POINT ctrlpos = { 0, 0 };
-	//							ctrlwinpos = s_dsrigidctrls[s_curdsrigidctrlno]->getPos();
-	//							ctrlpos.x = ctrlwinpos.x;
-	//							ctrlpos.y = ctrlwinpos.y;
-
-	//							//s_dsutgui0[s_curdsutguino]->GetLocation(&ctrlpos);
-	//							//UINT type = s_dsutgui0[s_curdsutguino]->GetType();
-	//							if (s_rigidWnd && IsWindow(s_rigidWnd->getHWnd()) &&
-	//								(s_curdsrigidctrlno >= 0) && (s_curdsrigidctrlno < s_dsrigidctrls.size()) && (s_dsrigidctrls[s_curdsrigidctrlno])) {
-
-	//								bool isslider;
-	//								isslider = ((OrgWinGUI::OrgWindowParts*)s_dsrigidctrls[s_curdsrigidctrlno])->getIsSlider();
-	//								if (isslider) {
-	//									//sizex : 350, sizey : 20, window with 450
-
-	//									double minval;
-	//									double maxval;
-	//									double curval;
-	//									double length;
-	//									minval = ((OrgWinGUI::OWP_Slider*)s_dsrigidctrls[s_curdsrigidctrlno])->getMinValue();
-	//									maxval = ((OrgWinGUI::OWP_Slider*)s_dsrigidctrls[s_curdsrigidctrlno])->getMaxValue();
-	//									curval = ((OrgWinGUI::OWP_Slider*)s_dsrigidctrls[s_curdsrigidctrlno])->getValue();
-	//									length = maxval - minval;
-	//									if (length != 0.0) {
-	//										double rate;
-	//										rate = (curval - minval) / length;
-	//										//ctrlpos.x += (LONG)(350.0 * rate);
-	//										//pos1x+ (int)((value - minValue) * (float)(pos2x - pos1x) / (maxValue - minValue) + 0.5f);
-	//										int pos2xpos1x = 450 - 6 - 65 - 5;
-	//										ctrlpos.x += (5 + (int)((curval - minval) * (float)(pos2xpos1x) / (maxval - minval) + 0.5f));//LABEL_SIZE_X : 65.0, AXIS_POS_X : 5.0
-	//										ctrlpos.y += (int)(20.0 / 2.0);
-	//										//ClientToScreen(s_rigidWnd->getHWnd(), &ctrlpos);
-	//									}
-	//									else {
-	//										//if button
-	//										ctrlpos.x += 6;
-	//										ctrlpos.y += 6;
-	//										//ClientToScreen(s_rigidWnd->getHWnd(), &ctrlpos);
-	//									}
-	//								}
-	//								else {
-	//									//if button
-	//									ctrlpos.x += 6;
-	//									ctrlpos.y += 6;
-	//									//ClientToScreen(s_rigidWnd->getHWnd(), &ctrlpos);
-	//								}
-
-	//								WindowPos rigidpos;
-	//								rigidpos = s_rigidWnd->getPos();
-	//								ctrlpos.x += rigidpos.x;
-	//								ctrlpos.y += rigidpos.y;
-	//								::SetCursorPos(ctrlpos.x, ctrlpos.y);
-	//							}
-	//						}
-
-	//						//if (s_owpTimeline) {
-	//						//	s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
-	//						//}
-	//						//ChangeCurrentBone();
-	//					}
-
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-
-}
-
-void DSCrossButtonSelectToolCtrls(bool firstctrlselect)
-{
-
-
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	if (!s_toolWnd) {
-		return;
+	else {
+		tmpsidewnd = 0;
 	}
-
-	////select control
-	////十字キー移動ブロック
-	//{
-	//	if ((s_currentwndid == MB3D_WND_TOOL) && (s_currenthwnd != 0)) {
-
-
-	//		int parentbuttonid = 4;
-	//		int sisterbuttonid = 5;
-	//		int childbuttonid = 6;
-	//		int brotherbuttonid = 7;
-	//		int accelaxisid1 = 4;//axisid
-	//		int accelaxisid2 = 5;//axisid
-
-	//		int parentbutton = 0;
-	//		int sisterbutton = 0;
-	//		int childbutton = 0;
-	//		int brotherbutton = 0;
-	//		int accelaxis1 = 0;
-	//		int accelaxis2 = 0;
-
-	//		parentbutton = s_dsbuttonup[parentbuttonid];
-	//		sisterbutton = s_dsbuttonup[sisterbuttonid];
-	//		childbutton = s_dsbuttonup[childbuttonid];
-	//		brotherbutton = s_dsbuttonup[brotherbuttonid];
-
-	//		accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-	//		accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
-
-	//		bool changeflag = false;
-	//		bool chkflag = false;
-
-	//		//WS_TABSTOP
-	//		//VK_TAB
-	//		//WS_GROUP
-	//		//または
-	//		//HWND SetFocus(HWND hWnd);
-
-	//		//static int s_curdsutguikind = 0;
-	//		//static int s_curdsutguino = 0;
-
-	//		if (firstctrlselect) {
-	//			parentbutton = 0;
-	//			sisterbutton = 0;
-	//			childbutton = 0;
-	//			brotherbutton = 0;
-
-	//			accelaxis1 = 0;
-	//			accelaxis2 = 0;
-
-	//			changeflag = true;
-	//			chkflag = true;
-	//		}
-
-
-	//		if (s_currentwndid == MB3D_WND_TOOL) {
-	//			if (s_model && (s_curboneno >= 0)) {
-	//				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-	//				int curdsctrlno = s_curdstoolctrlno;
-	//				if (curbone) {
-
-	//					if (parentbutton >= 1) {
-	//						curdsctrlno--;
-	//						if (curdsctrlno < 0) {
-	//							curdsctrlno = (int)s_dstoolctrls.size() - 1;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (sisterbutton >= 1) {
-	//						curdsctrlno++;
-	//						if (curdsctrlno >= (int)s_dstoolctrls.size()) {
-	//							curdsctrlno = 0;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (childbutton >= 1) {
-	//						curdsctrlno++;
-	//						if (curdsctrlno >= (int)s_dstoolctrls.size()) {
-	//							curdsctrlno = 0;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (brotherbutton >= 1) {
-	//						curdsctrlno--;
-	//						if (curdsctrlno < 0) {
-	//							curdsctrlno = (int)s_dstoolctrls.size() - 1;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-
-
-	//					/*
-	//					enum DXUT_CONTROL_TYPE
-	//					{
-	//						DXUT_CONTROL_BUTTON,
-	//						DXUT_CONTROL_STATIC,
-	//						DXUT_CONTROL_CHECKBOX,
-	//						DXUT_CONTROL_RADIOBUTTON,
-	//						DXUT_CONTROL_COMBOBOX,
-	//						DXUT_CONTROL_SLIDER,
-	//						DXUT_CONTROL_EDITBOX,
-	//						DXUT_CONTROL_IMEEDITBOX,
-	//						DXUT_CONTROL_LISTBOX,
-	//						DXUT_CONTROL_SCROLLBAR,
-	//					};
-	//					*/
-	//					if (chkflag && changeflag && (s_curboneno >= 0)) {
-	//						if (((curdsctrlno) >= 0) && ((curdsctrlno) < s_dstoolctrls.size())) {
-	//							s_curdstoolctrlno = curdsctrlno;
-
-	//							OrgWinGUI::WindowPos ctrlwinpos;
-	//							POINT ctrlpos = { 0, 0 };
-	//							ctrlwinpos = s_dstoolctrls[s_curdstoolctrlno]->getPos();
-	//							ctrlpos.x = ctrlwinpos.x;
-	//							ctrlpos.y = ctrlwinpos.y;
-
-
-	//							//if button
-	//							ctrlpos.x += 6;
-	//							ctrlpos.y += 6;
-
-
-	//							//s_dsutgui0[s_curdsutguino]->GetLocation(&ctrlpos);
-	//							//UINT type = s_dsutgui0[s_curdsutguino]->GetType();
-	//							if (s_toolWnd && IsWindow(s_toolWnd->getHWnd())) {
-	//								ClientToScreen(s_toolWnd->getHWnd(), &ctrlpos);
-	//								::SetCursorPos(ctrlpos.x, ctrlpos.y);
-	//							}
-	//						}
-
-	//						//if (s_owpTimeline) {
-	//						//	s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
-	//						//}
-	//						//ChangeCurrentBone();
-	//					}
-
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-
-}
-
-
-void DSCrossButtonSelectPlayerBtns(bool firstctrlselect)
-{
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	if (!s_LtimelineWnd) {
-		return;
+	HWND tmptopsliderswnd = 0;
+	if (s_topSlidersWnd) {
+		tmptopsliderswnd = s_topSlidersWnd->getHWnd();
 	}
-
-	if (!s_owpPlayerButton) {
-		return;
+	else {
+		tmptopsliderswnd = 0;
 	}
 
 
-	////select control
-	////十字キー移動ブロック
-	//{
-	//	if ((s_currentwndid == MB3D_WND_TIMELINE) && (s_currenthwnd != 0)) {
+	HWND hwnds[MB3D_WND_MAX];
+	ZeroMemory(hwnds, sizeof(HWND) * MB3D_WND_MAX);
+	//hwnds[MB3D_WND_MAIN] = g_mainhwnd;
+	hwnds[MB3D_WND_MAIN] = tmptopsliderswnd;
+	hwnds[MB3D_WND_3D] = s_3dwnd;
+	hwnds[MB3D_WND_TREE] = tmptlwnd;
+	hwnds[MB3D_WND_TOOL] = tmptoolwnd;
+	hwnds[MB3D_WND_TIMELINE] = tmplongtlwnd;
+	hwnds[MB3D_WND_SIDE] = tmpsidewnd;
 
-
-	//		int parentbuttonid = 4;
-	//		int sisterbuttonid = 5;
-	//		int childbuttonid = 6;
-	//		int brotherbuttonid = 7;
-	//		int accelaxisid1 = 4;//axisid
-	//		int accelaxisid2 = 5;//axisid
-
-	//		int parentbutton = 0;
-	//		int sisterbutton = 0;
-	//		int childbutton = 0;
-	//		int brotherbutton = 0;
-	//		int accelaxis1 = 0;
-	//		int accelaxis2 = 0;
-
-	//		parentbutton = s_dsbuttonup[parentbuttonid];
-	//		sisterbutton = s_dsbuttonup[sisterbuttonid];
-	//		childbutton = s_dsbuttonup[childbuttonid];
-	//		brotherbutton = s_dsbuttonup[brotherbuttonid];
-
-	//		accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-	//		accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
-
-	//		bool changeflag = false;
-	//		bool chkflag = false;
-
-	//		//WS_TABSTOP
-	//		//VK_TAB
-	//		//WS_GROUP
-	//		//または
-	//		//HWND SetFocus(HWND hWnd);
-
-	//		//static int s_curdsutguikind = 0;
-	//		//static int s_curdsutguino = 0;
-
-	//		if (firstctrlselect) {
-	//			parentbutton = 0;
-	//			sisterbutton = 0;
-	//			childbutton = 0;
-	//			brotherbutton = 0;
-
-	//			accelaxis1 = 0;
-	//			accelaxis2 = 0;
-
-	//			changeflag = true;
-	//			chkflag = true;
-	//		}
-
-
-	//		if (s_currentwndid == MB3D_WND_TIMELINE) {
-	//			if (s_model && (s_curboneno >= 0)) {
-	//				CBone* curbone = s_model->GetBoneByID(s_curboneno);
-	//				int curdsctrlno = s_curdsplayerbtnno;
-	//				if (curbone) {
-
-	//					if (parentbutton >= 1) {
-	//						curdsctrlno--;
-	//						if (curdsctrlno < 0) {
-	//							curdsctrlno = SPPLAYERBUTTONNUM - 1;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (sisterbutton >= 1) {
-	//						curdsctrlno++;
-	//						if (curdsctrlno >= SPPLAYERBUTTONNUM) {
-	//							curdsctrlno = 0;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (childbutton >= 1) {
-	//						curdsctrlno++;
-	//						if (curdsctrlno >= SPPLAYERBUTTONNUM) {
-	//							curdsctrlno = 0;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-	//					else if (brotherbutton >= 1) {
-	//						curdsctrlno--;
-	//						if (curdsctrlno < 0) {
-	//							curdsctrlno = SPPLAYERBUTTONNUM - 1;//Ring
-	//						}
-	//						changeflag = true;
-	//						chkflag = true;
-	//					}
-
-
-	//					/*
-	//					enum DXUT_CONTROL_TYPE
-	//					{
-	//						DXUT_CONTROL_BUTTON,
-	//						DXUT_CONTROL_STATIC,
-	//						DXUT_CONTROL_CHECKBOX,
-	//						DXUT_CONTROL_RADIOBUTTON,
-	//						DXUT_CONTROL_COMBOBOX,
-	//						DXUT_CONTROL_SLIDER,
-	//						DXUT_CONTROL_EDITBOX,
-	//						DXUT_CONTROL_IMEEDITBOX,
-	//						DXUT_CONTROL_LISTBOX,
-	//						DXUT_CONTROL_SCROLLBAR,
-	//					};
-	//					*/
-	//					if (chkflag && changeflag && (s_curboneno >= 0)) {
-	//						if (((curdsctrlno) >= 0) && ((curdsctrlno) < SPPLAYERBUTTONNUM)) {
-	//							s_curdsplayerbtnno = curdsctrlno;
-
-	//							OrgWinGUI::WindowPos ctrlwinpos;
-	//							POINT ctrlpos = { 0, 0 };
-	//							ctrlwinpos = s_owpPlayerButton->getButtonPos(s_curdsplayerbtnno);
-	//							ctrlpos.x = ctrlwinpos.x;
-	//							ctrlpos.y = ctrlwinpos.y;
-
-	//							//if button
-	//							//ctrlpos.x += 10;
-	//							//ctrlpos.y += 10;
-
-
-	//							//s_dsutgui0[s_curdsutguino]->GetLocation(&ctrlpos);
-	//							//UINT type = s_dsutgui0[s_curdsutguino]->GetType();
-	//							if (s_owpPlayerButton && s_LtimelineWnd && IsWindow(s_LtimelineWnd->getHWnd())) {
-	//								ClientToScreen(s_LtimelineWnd->getHWnd(), &ctrlpos);
-	//								::SetCursorPos(ctrlpos.x, ctrlpos.y);
-	//							}
-	//						}
-
-	//						//if (s_owpTimeline) {
-	//						//	s_owpTimeline->setCurrentLine(s_boneno2lineno[s_curboneno], true);
-	//						//}
-	//						//ChangeCurrentBone();
-	//					}
-
-	//				}
-	//			}
-	//		}
+	int dbgcnt = 0;
+	HWND nexthwnd = 0;
+	nexthwnd = hwnds[nextwndid];
+	//while (nexthwnd == 0) {
+	//	nextwndid++;
+	//	if (nextwndid >= MB3D_WND_MAX) {
+	//		nextwndid = 0;
 	//	}
+	//	dbgcnt++;
+	//	if (dbgcnt >= MB3D_WND_MAX) {
+	//		nextwndid = 0;
+	//		break;
+	//	}
+	//	nexthwnd = hwnds[nextwndid];
 	//}
 
+	if ((nextwndid >= 0) && (nextwndid < MB3D_WND_MAX) && nexthwnd) {
+
+		BYTE selectR = 255;
+		BYTE selectG = 128;
+		BYTE selectB = 64;
+
+		BYTE unselectR = 70;
+		BYTE unselectG = 50;
+		BYTE unselectB = 70;
+
+		HBRUSH selectbrush = CreateSolidBrush(RGB(selectR, selectG, selectB));
+		HBRUSH unselectbrush = CreateSolidBrush(RGB(unselectR, unselectG, unselectB));
+
+		::SetFocus(nexthwnd);
+
+		if (nextwndid == MB3D_WND_MAIN) {
+			//:: SetClassLongPtr(hwnds[0], GCLP_HBRBACKGROUND, (LONG_PTR)selectbrush);
+			//::SetClassLongPtr(hwnds[1], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
+
+			//SetThemeAppProperties(STAP_ALLOW_NONCLIENT | STAP_ALLOW_CONTROLS | STAP_ALLOW_WEBCONTENT);//STAP_ALLOW_WEBCONTENT
+			//SendMessage(hwnds[0], WM_THEMECHANGED, 0, 0);
+			//RedrawWindow(hwnds[0], 0, 0, RDW_UPDATENOW);
+
+
+			//::SetWindowPos(hwnds[0], HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+			::SetWindowPos(g_mainhwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+			if (s_topSlidersWnd) {
+				s_topSlidersWnd->setBackGroundColor(true);
+			}
+
+			if (s_timelineWnd) {
+				s_timelineWnd->setBackGroundColor(false);
+			}
+			if (s_toolWnd) {
+				s_toolWnd->setBackGroundColor(false);
+			}
+			if (s_LtimelineWnd) {
+				s_LtimelineWnd->setBackGroundColor(false);
+			}
+			if (s_sidemenuWnd) {
+				s_sidemenuWnd->setBackGroundColor(false);
+			}
+		}
+		else if (nextwndid == MB3D_WND_3D) {
+			//::SetClassLongPtr(hwnds[1], GCLP_HBRBACKGROUND, (LONG_PTR)selectbrush);
+			//::SetClassLongPtr(hwnds[0], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
+
+			//SetThemeAppProperties(STAP_ALLOW_NONCLIENT | STAP_ALLOW_CONTROLS | STAP_ALLOW_WEBCONTENT);//STAP_ALLOW_WEBCONTENT
+			//SendMessage(hwnds[1], WM_THEMECHANGED, 0, 0);
+			//RedrawWindow(hwnds[1], 0, 0, RDW_UPDATENOW);
+
+			::SetWindowPos(hwnds[1], HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+
+			if (s_topSlidersWnd) {
+				s_topSlidersWnd->setBackGroundColor(false);
+			}
+
+
+			if (s_timelineWnd) {
+				s_timelineWnd->setBackGroundColor(false);
+			}
+			if (s_toolWnd) {
+				s_toolWnd->setBackGroundColor(false);
+			}
+			if (s_LtimelineWnd) {
+				s_LtimelineWnd->setBackGroundColor(false);
+			}
+			if (s_sidemenuWnd) {
+				s_sidemenuWnd->setBackGroundColor(false);
+			}
+		}
+		else if (nextwndid == MB3D_WND_TREE) {
+			//::SetClassLongPtr(hwnds[1], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
+			//::SetClassLongPtr(hwnds[0], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
+
+			if (s_topSlidersWnd) {
+				s_topSlidersWnd->setBackGroundColor(false);
+			}
+
+			if (s_timelineWnd) {
+				s_timelineWnd->setBackGroundColor(true);
+				::SetWindowPos(nexthwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+			}
+			if (s_toolWnd) {
+				s_toolWnd->setBackGroundColor(false);
+			}
+			if (s_LtimelineWnd) {
+				s_LtimelineWnd->setBackGroundColor(false);
+			}
+			if (s_sidemenuWnd) {
+				s_sidemenuWnd->setBackGroundColor(false);
+			}
+		}
+		else if (nextwndid == MB3D_WND_TOOL) {
+			//::SetClassLongPtr(hwnds[1], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
+			//::SetClassLongPtr(hwnds[0], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
+
+			if (s_topSlidersWnd) {
+				s_topSlidersWnd->setBackGroundColor(false);
+			}
+
+			if (s_timelineWnd) {
+				s_timelineWnd->setBackGroundColor(false);
+			}
+			if (s_toolWnd) {
+				s_toolWnd->setBackGroundColor(true);
+				::SetWindowPos(nexthwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+			}
+			if (s_LtimelineWnd) {
+				s_LtimelineWnd->setBackGroundColor(false);
+			}
+			if (s_sidemenuWnd) {
+				s_sidemenuWnd->setBackGroundColor(false);
+			}
+		}
+		else if (nextwndid == MB3D_WND_TIMELINE) {
+			//::SetClassLongPtr(hwnds[1], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
+			//::SetClassLongPtr(hwnds[0], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
+
+			if (s_topSlidersWnd) {
+				s_topSlidersWnd->setBackGroundColor(false);
+			}
+
+			if (s_timelineWnd) {
+				s_timelineWnd->setBackGroundColor(false);
+			}
+			if (s_toolWnd) {
+				s_toolWnd->setBackGroundColor(false);
+			}
+			if (s_LtimelineWnd) {
+				s_LtimelineWnd->setBackGroundColor(true);
+				::SetWindowPos(nexthwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+			}
+			if (s_sidemenuWnd) {
+				s_sidemenuWnd->setBackGroundColor(false);
+			}
+		}
+		else if (nextwndid == MB3D_WND_SIDE) {
+			//::SetClassLongPtr(hwnds[1], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
+			//::SetClassLongPtr(hwnds[0], GCLP_HBRBACKGROUND, (LONG_PTR)unselectbrush);
+
+			if (s_topSlidersWnd) {
+				s_topSlidersWnd->setBackGroundColor(false);
+			}
+
+			if (s_timelineWnd) {
+				s_timelineWnd->setBackGroundColor(false);
+			}
+			if (s_toolWnd) {
+				s_toolWnd->setBackGroundColor(false);
+			}
+			if (s_LtimelineWnd) {
+				s_LtimelineWnd->setBackGroundColor(false);
+			}
+			if (s_sidemenuWnd) {
+				s_sidemenuWnd->setBackGroundColor(true);
+				::SetWindowPos(nexthwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+			}
+		}
+		else {
+			_ASSERT(0);
+		}
+
+
+
+
+		DeleteObject(selectbrush);
+		DeleteObject(unselectbrush);
+
+
+		//if (s_befactivehwnd) {
+		//	ReleaseCapture();
+		//}
+		//SetCapture(nexthwnd);
+
+		//SetForegroundWindow(nexthwnd);
+
+		//if (s_befactivehwnd) {
+		//	ReleaseCapture();
+		//}
+		//::SetWindowPos(nexthwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+		//HWND befactive;
+		//befactive = ::SetActiveWindow(nexthwnd);
+		//SetCapture(nexthwnd);
+
+
+		//SetCaptureWindow !!!!!!!!!!!!!!!!!
+
+		s_currentwndid = nextwndid;
+		if ((s_currentwndid >= 0) && (s_currentwndid < MB3D_WND_MAX)) {
+			s_currenthwnd = hwnds[s_currentwndid];
+		}
+
+		//bool firstctrlselect = true;
+		//DSCrossButton(firstctrlselect);
+
+		GUISetVisible_Sel3D();//3DWindowを選択しているかどうかのマークを右上隅に表示
+
+	}
+	//OutputToInfoWnd(INFOCOLOR_INFO, L"Button Down %d", buttonL1);
 }
 
-
-void DSAxisRMainMenuBar()
-{
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	//POINT cursorpos;
-	//::GetCursorPos(&cursorpos);
-
-	//int upbutton;
-	//int downbutton;
-	//int leftbutton;
-	//int rightbutton;
-	//int accelaxisid1 = 4;//axisid
-	//int accelaxisid2 = 5;//axisid
-	//bool accelaxis1 = 0;
-	//bool accelaxis2 = 0;
-	//bool accelflag = false;
-	//bool accelbothflag = false;
-
-	//upbutton = s_dsaxisMOverSrh[1];
-	//downbutton = s_dsaxisOverSrh[1];
-	//leftbutton = s_dsaxisMOverSrh[0];
-	//rightbutton = s_dsaxisOverSrh[0];
-
-	//accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-	//accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
-	//accelflag = accelaxis1 || accelaxis2;
-	//accelbothflag = accelaxis1 && accelaxis2;
-
-
-	////if (s_undertrackingRMenu == 0) {
-	//bool changeflag = false;
-
-	//int delta = 1;
-	////if (accelflag) {
-	////	delta = 4;
-	////}
-	////else {
-	////	delta = 2;
-	////}
-
-
-
-	//int nextsubmenuid;
-
-	//nextsubmenuid = g_currentsubmenuid;
-
-	//if (upbutton >= 1) {
-	//	changeflag = true;
-	//}
-	//if (downbutton >= 1) {
-	//	changeflag = true;
-	//}
-	//if (leftbutton >= 1) {
-	//	nextsubmenuid -= delta;
-	//	changeflag = true;
-	//}
-	//if (rightbutton >= 1) {
-	//	nextsubmenuid += delta;
-	//	changeflag = true;
-	//}
-
-	//if (nextsubmenuid >= SPMENU_MAX) {
-	//	nextsubmenuid = 0;//ring
-	//}
-	//if (nextsubmenuid < 0) {
-	//	nextsubmenuid = (SPMENU_MAX - 1);//ring
-	//}
-
-	//if (changeflag == true) {
-
-	//	if (g_undertrackingRMenu == 1) {
-	//		//多重トラックポップアップ禁止（多重ポップアップするとプログラムからマウス移動できなくなる）
-	//		return;
-	//	}
-
-
-	//	SelectNextWindow(MB3D_WND_MAIN);//TopSlidersWndをハイライト
-
-
-	//	g_currentsubmenuid = nextsubmenuid;
-	//	s_currentsubmenuitemid = 0;
-
-
-	//	if ((g_currentsubmenuid >= 0) && (g_currentsubmenuid < SPMENU_MAX)) {
-
-	//		HMENU mainmenu;
-	//		mainmenu = GetMenu(g_mainhwnd);
-	//		int menuno = g_currentsubmenuid;
-	//		s_cursubmenu = GetSubMenu(mainmenu, menuno);
-	//		if (s_cursubmenu) {
-	//			int curmenuitemid;
-	//			curmenuitemid = ::GetMenuItemID(s_cursubmenu, 0);
-	//			if (curmenuitemid >= 0) {
-	//				RECT rc;
-	//				GetMenuItemRect(g_mainhwnd, mainmenu, menuno, &rc);//rcはスクリーン座標
-	//				g_submenuwidth = rc.right - rc.left;//org:140
-
-	//				::SetCursorPos(rc.left, rc.bottom + 22);
-	//				g_currentsubmenupos.x = rc.left;
-	//				g_currentsubmenupos.y = rc.bottom + 16;
-
-	//				Sleep(200);
-	//			}
-	//		}
-	//	}
-
-
-
-	//	//HMENU mainmenu;
-	//	////HMENU cursubmenu;
-	//	//mainmenu = GetMenu(g_mainhwnd);
-	//	//s_cursubmenu = GetSubMenu(mainmenu, g_currentsubmenuid);
-	//	//if (s_cursubmenu) {
-	//	//	int curmenuitemid;
-	//	//	curmenuitemid = ::GetMenuItemID(s_cursubmenu, 0);
-	//	//	if (curmenuitemid >= 0) {
-	//	//		
-	//	//		//::SendMessage(g_mainhwnd, WM_NOTIFY, 0, (LPARAM)&nmtoolbara);
-	//	//		////::SendMessage(g_mainhwnd, WM_COMMAND, curmenuitemid, 0);//選択決定時のコマンド
-
-	//	//		RECT rc;
-	//	//		TPMPARAMS tpm;
-	//	//		GetMenuItemRect(g_mainhwnd, mainmenu, g_currentsubmenuid, &rc);
-	//	//		tpm.cbSize = sizeof(TPMPARAMS);//
-	//	//		tpm.rcExclude = rc;//
-
-	//	//		POINT mousepoint;
-	//	//		mousepoint.x = rc.left + 30;
-	//	//		mousepoint.y = rc.bottom + 10;
-	//	//		::SetCursorPos(mousepoint.x, mousepoint.y);
-
-	//	//		//HMENU hMenuLoaded = LoadMenu(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MENU1));//
-	//	//		//HMENU hPopupMenu = GetSubMenu(s_mainmenu, g_currentsubmenuid);//
-	//	//		InterlockedExchange(&g_undertrackingRMenu, 1);
-
-	//	//		//#################
-	//	//		//選択決定成功例その２
-	//	//		//#################
-	//	//		//第2項目（インデックス値 = 1, ID = 0x2711）を選択したところ、
-	//	//		//wParam = 0x00012711
-	//	//		//のように、上位2バイトにインデックス値が、下位2バイトにIDが入ります。
-	//	//		//WPARAM wparam;
-	//	//		//wparam = (g_currentsubmenuid << 16) | curmenuitemid;
-	//	//		//LPARAM lparam;
-	//	//		//lparam = (LPARAM)mainmenu;
-	//	//		//::SendMessage(g_mainhwnd, WM_COMMAND, wparam, lparam);
-
-
-
-	//	//		//wparam = ((MF_POPUP | MF_MOUSESELECT) << 16) | (WORD)g_currentsubmenuid;//g_currentsubmenuid, curmenuitemid
-	//	//		//::SendMessage(g_mainhwnd, WM_MENUSELECT, wparam, (LPARAM)mainmenu);//GetMenu(g_mainhwnd), cursubmenu
-
-
-
-
-	//	//		//TrackPopupMenuEx(cursubmenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_VERTICAL,
-	//	//		//	rc.left, rc.bottom, g_mainhwnd, &tpm);//
-	//	//		//SetCapture(s_3dwnd);
-
-	//	//		SetForegroundWindow(g_mainhwnd);//この処理をしないと範囲外クリックでPopupが閉じない
-
-	//	//		int retmenuid = ::TrackPopupMenu(s_cursubmenu, TPM_RETURNCMD | TPM_LEFTALIGN, rc.left, rc.bottom, 0, g_mainhwnd, NULL);
-
-	//	//		//ReleaseCapture();
-
-	//	//		InterlockedExchange(&g_undertrackingRMenu, 0);
-
-	//	//		//int retmenuid = ::TrackPopupMenu(hPopupMenu, TPM_RETURNCMD | TPM_LEFTALIGN, pt.x, pt.y, 0, m_menuwnd, NULL);
-	//	//		//DestroyMenu(hMenuLoaded);//
-	//	//	}
-	//	//}
-
-	//	//LPARAM lparam;
-	//	//lparam = (cursorpos.y << 16) | cursorpos.x;
-
-	//	//HWND desktopwnd;
-	//	//desktopwnd = ::GetDesktopWindow();
-	//	//if (desktopwnd) {
-	//	//	RECT desktoprect;
-	//	//	::GetClientRect(desktopwnd, &desktoprect);
-	//	//	::ClipCursor(&desktoprect);
-
-
-	//	//	::SetCursorPos(cursorpos.x, cursorpos.y);
-	//	//	//::SetCursorPos(cursorpos.x, cursorpos.y);
-
-	//	//	if (s_3dwnd) {
-	//	//		POINT client3dpoint;
-	//	//		client3dpoint = cursorpos;
-	//	//		::ScreenToClient(s_3dwnd, &client3dpoint);
-	//	//		LPARAM threelparam;
-	//	//		threelparam = (client3dpoint.y << 16) | client3dpoint.x;
-	//	//		::SendMessage(s_3dwnd, WM_MOUSEMOVE, 0, threelparam);
-	//	//	}
-	//	//	if (g_mainhwnd) {
-	//	//		POINT clientpoint;
-	//	//		clientpoint = cursorpos;
-	//	//		::ScreenToClient(g_mainhwnd, &clientpoint);
-	//	//		LPARAM mainlparam;
-	//	//		mainlparam = (clientpoint.y << 16) | clientpoint.x;
-	//	//		::SendMessage(g_mainhwnd, WM_MOUSEMOVE, 0, mainlparam);
-	//	//	}
-	//	//	HWND dlghwnd;
-	//	//	dlghwnd = g_SampleUI.GetHWnd();
-	//	//	if (dlghwnd) {
-	//	//		POINT clientpoint;
-	//	//		clientpoint = cursorpos;
-	//	//		::ScreenToClient(dlghwnd, &clientpoint);
-	//	//		LPARAM dlglparam;
-	//	//		dlglparam = (clientpoint.y << 16) | clientpoint.x;
-	//	//		::SendMessage(dlghwnd, WM_MOUSEMOVE, 0, dlglparam);
-	//	//	}
-	//	//
-	//	//	//::SendMessage(desktopwnd, WM_MOUSEMOVE, 0, (LPARAM)lparam);
-	//	//}
-	//}
-
-}
-
-void DSAxisLSelectingPopupMenu()
-{
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	//if (!s_cursubmenu) {
-	//	return;
-	//}
-
-	//int upbutton;
-	//int downbutton;
-	//int leftbutton;
-	//int rightbutton;
-	//int accelaxisid1 = 4;//axisid
-	//int accelaxisid2 = 5;//axisid
-	//bool accelaxis1 = 0;
-	//bool accelaxis2 = 0;
-	//bool accelflag = false;
-	//bool accelbothflag = false;
-
-	//upbutton = s_dsaxisMOverSrh[3];
-	//downbutton = s_dsaxisOverSrh[3];
-	//leftbutton = s_dsaxisMOverSrh[2];
-	//rightbutton = s_dsaxisOverSrh[2];
-
-	//accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-	//accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
-	//accelflag = accelaxis1 || accelaxis2;
-
-	////if (s_undertrackingRMenu == 0) {
-	//bool changeflag = false;
-	//int currentsubmenuitemid;
-	//currentsubmenuitemid = s_currentsubmenuitemid;
-
-	//int delta = 0;
-
-	//if (upbutton >= 1) {
-	//	currentsubmenuitemid -= 1;
-	//	changeflag = true;
-	//}
-	//if (downbutton >= 1) {
-	//	currentsubmenuitemid += 1;
-	//	changeflag = true;
-	//}
-
-
-	//int submenuitemnum;
-	//submenuitemnum = GetMenuItemCount(s_cursubmenu);
-
-
-	//if (currentsubmenuitemid >= submenuitemnum) {
-	//	currentsubmenuitemid = 0;//ring
-	//}
-	//if (currentsubmenuitemid < 0) {
-	//	currentsubmenuitemid = submenuitemnum - 1;//ring
-	//}
-
-	///*
-	//typedef struct tagMENUITEMINFO {
-	//	UINT    cbSize;
-	//	UINT    fMask;
-	//	UINT    fType;
-	//	UINT    fState;
-	//	UINT    wID;
-	//	HMENU   hSubMenu;
-	//	HBITMAP hbmpChecked;
-	//	HBITMAP hbmpUnchecked;
-	//	DWORD   dwItemData;
-	//	LPTSTR  dwTypeData;
-	//	UINT    cch;
-	//} MENUITEMINFO, FAR* LPMENUITEMINFO;
-	//cbSize は、この構造体のサイズをバイト単位
-
-
-	//fState は、メニュー項目の状態を表す定数を組み合わせて指定します
-	//定数は、次のものを指定できます
-	//定数	解説
-	//MFS_CHECKED	項目をチェックする
-	//MFS_DEFAULT	項目はデフォルトである
-	//MFS_DISABLED	項目を無効状態にする
-	//MFS_ENABLED	項目を有効状態にする（デフォルト）
-	//MFS_GRAYED	項目をグレー状態にする
-	//MFS_HILITE	項目をハイライト状態にする//#################
-	//MFS_UNCHECKED	項目のチェックを外す
-	//MFS_UNHILITE	項目のハイライトを削除する
-
-	//fByPosition が TRUE ならば uItem はインデックスだと判断し
-	//FALSE ならば、uItem がメニューアイテムの ID であると判断されます
-
-	//BOOL SetMenuItemInfo(
-	//	HMENU hMenu , UINT uItem ,
-	//	BOOL fByPosition , LPMENUITEMINFO lpmii
-	//);
-
-	//BOOL GetMenuItemInfo(
-	//	HMENU hMenu , UINT uItem ,
-	//	BOOL fByPosition , LPMENUITEMINFO lpmii
-	//);
-
-	//UINT GetMenuState(
-	//  HMENU hMenu,
-	//  UINT  uId,
-	//  UINT  uFlags
-	//);
-	//*/
-
-	////if (changeflag == true) {
-	////	if (g_undertrackingRMenu == 1) {
-	////		MENUITEMINFO menuiteminfo;
-	////		ZeroMemory(&menuiteminfo, sizeof(MENUITEMINFO));
-	////		menuiteminfo.cbSize = sizeof(MENUITEMINFO);
-
-
-	////		//typedef struct tagMENUITEMINFO {
-	////		//	UINT    cbSize;
-	////		//	UINT    fMask;
-	////		//	UINT    fType;
-	////		//	UINT    fState;
-	////		//	UINT    wID;
-	////		//	HMENU   hSubMenu;
-	////		//	HBITMAP hbmpChecked;
-	////		//	HBITMAP hbmpUnchecked;
-	////		//	DWORD   dwItemData;
-	////		//	LPTSTR  dwTypeData;
-	////		//	UINT    cch;
-	////		//} MENUITEMINFO, FAR* LPMENUITEMINFO;
-
-
-	////			/*
-	////			IDR_MENU1 MENU
-	////			BEGIN
-	////				POPUP "File"
-	////				BEGIN
-	////					MENUITEM "Open",                        ID_FILE_OPEN40001
-	////					POPUP "Save"
-	////					BEGIN
-	////						MENUITEM "Project(*.cha)",              ID_SAVEPROJ_40035
-	////						MENUITEM "RigidParams(*ref)",           ID_RESAVE_40028
-	////						MENUITEM "ImpulseParams(*.imp)",        ID_IMPSAVE_40030
-	////						MENUITEM "GroundParams(*.gco)",         ID_SAVEGCOLI_40033
-	////					END
-	////					MENUITEM "bvh2FBX",                     ID_FILE_BVH2FBX
-	////					MENUITEM "Export bnt",                  ID_FILE_EXPORTBNT
-	////				END
-	////				POPUP "表示(disp)"
-	////				BEGIN
-	////					MENUITEM "モーションウインドウ(motion)",          ID_DISPMW40002
-	////					MENUITEM "ツールウインドウ(tool)",              4007
-	////					MENUITEM "モデルパネル(model)",               40026
-	////					MENUITEM "オブジェクトパネル(object)",           40012
-	////					MENUITEM "地面オブジェクト(ground)",            ID_DISPGROUND
-	////				END
-	////				POPUP "モーション(motion)"
-	////				BEGIN
-	////					MENUITEM "新規空モーション(new empty)",         40004
-	////					MENUITEM "編集中モーションの削除(del under editting)", 40006
-	////					MENUITEM SEPARATOR
-	////					POPUP "モーションの選択(select)"
-	////					BEGIN
-	////						MENUITEM "PlacingFolder",               ID_40062
-	////					END
-	////				END
-	////				POPUP "モデル(model)"
-	////				BEGIN
-	////					MENUITEM "編集中のモデルを削除(del under editting)", ID_DELMODEL
-	////					MENUITEM "全モデル削除(del all)",             ID_DELALLMODEL
-	////					MENUITEM SEPARATOR
-	////					POPUP "モデルの選択(select)"
-	////					BEGIN
-	////						MENUITEM "PlacingFolder",               0
-	////					END
-	////				END
-	////				POPUP "編集・変換(edit, conv)"
-	////				BEGIN
-	////					MENUITEM "ボーン軸をXに再計算(RecalcAxisX)",     ID_40047
-	////					MENUITEM "モーションのリターゲット(retarget)",      ID_40048
-	////					MENUITEM "オイラー角　角度制限(limit euler)",     ID_40049
-	////					MENUITEM "ボーン座標軸回転(rot axis)",          ID_40050
-	////				END
-	////				POPUP "剛体設定切り替え(select rigid)"
-	////				BEGIN
-	////					MENUITEM "PlacingFolder",               0
-	////				END
-	////				POPUP "ragdoll剛体選択(select ragdoll)"
-	////				BEGIN
-	////					MENUITEM "PlacingFolder",               0
-	////				END
-	////				POPUP "ragdollモーフ選択(ragdoll morph)"
-	////				BEGIN
-	////					MENUITEM "PlacingFolder",               0
-	////				END
-	////				POPUP "Imp選択(impulse)"
-	////				BEGIN
-	////					MENUITEM "PlacingFolder",               64500
-	////				END
-	////				POPUP "HELP"
-	////				BEGIN
-	////					MENUITEM "Regist",                      29800
-	////				END
-	////			END
-
-	////			IDR_RMENU MENU
-	////			BEGIN
-	////				POPUP "RMenu"
-	////				BEGIN
-	////					MENUITEM "menutitle",                   ID_RMENU_0
-	////				END
-	////			END
-
-	////			IDR_MENU3 MENU
-	////			BEGIN
-	////				POPUP "RMenu2"
-	////				BEGIN
-	////					MENUITEM "全ボーン(all bones)",             ID_RMENU2_40051
-	////					MENUITEM "選択ボーン１つ(one bone)",           ID_RMENU2_40052
-	////					MENUITEM "選択ボーンと子供ボーン(selected and children)", ID_RMENU2_40053
-	////				END
-	////			END
-
-	////			IDR_MENU4 MENU
-	////			BEGIN
-	////				POPUP "RMenu3"
-	////				BEGIN
-	////					MENUITEM "Rigの設定(set)",                 ID_RMENU3_RIG40055
-	////					MENUITEM "Rigの実行(run)",                 ID_RMENU3_RIG40056
-	////				END
-	////			END
-
-	////			*/
-
-	////		}
-	////	}
-	////}
-
-}
-
-void DSAxisLMouseMove()
-{
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-
-	////each of plate button
-	////int okbuttonid = 2;
-	////int okbuttondown;
-	////int okbuttonup;
-
-	////okbuttondown = s_dsbuttondown[okbuttonid];
-	////okbuttonup = s_dsbuttonup[okbuttonid];
-
-
-	//POINT cursorpos;
-	//::GetCursorPos(&cursorpos);
-
-	//float axisX;
-	//float axisY;
-
-	////int upbutton;
-	////int downbutton;
-	////int leftbutton;
-	////int rightbutton;
-	//int accelaxisid1 = 4;//axisid
-	//int accelaxisid2 = 5;//axisid
-	//bool accelaxis1 = 0;
-	//bool accelaxis2 = 0;
-	//bool accelflag = false;
-	//bool accelbothflag = false;
-
-	////upbutton = s_dsaxisMOverSrh[3];
-	////downbutton = s_dsaxisOverSrh[3];
-	////leftbutton = s_dsaxisMOverSrh[2];
-	////rightbutton = s_dsaxisOverSrh[2];
-
-	//axisX = s_dsaxisvalue[2];//float
-	//axisY = s_dsaxisvalue[3];//float
-
-	//accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-	//accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
-	//accelflag = accelaxis1 || accelaxis2;
-	//accelbothflag = accelaxis1 && accelaxis2;
-
-	////if (g_undertrackingRMenu == 0) {
-	//bool changeflag = false;
-
-	//float deltascale = 1.0f;
-	//int deltax = 0;
-	//int deltay = 0;
-	//if (accelbothflag) {
-	//	deltascale = 10.0f;
-	//}
-	//else if (accelflag) {
-	//	deltascale = 4.0f;
-	//}
-	//else {
-	//	deltascale = 1.5f;
-	//}
-
-
-
-	//if (axisX != 0.0f) {
-	//	deltax = (int)(axisX * deltascale);
-	//	changeflag = true;
-	//}
-	//if (axisY != 0.0f) {
-	//	deltay = (int)(axisY * deltascale);
-	//	changeflag = true;
-	//}
-
-
-	////if (upbutton >= 1) {
-	////	deltay = -deltascale;
-	////	changeflag = true;
-	////}
-	////if (downbutton >= 1) {
-	////	deltay = deltascale;
-	////	changeflag = true;
-	////}
-	////if (leftbutton >= 1) {
-	////	deltax = -deltascale;
-	////	changeflag = true;
-	////}
-	////if (rightbutton >= 1) {
-	////	deltax = deltascale;
-	////	changeflag = true;
-	////}
-
-
-	//if (changeflag == true) {
-	//	LPARAM lparam;
-	//	lparam = (cursorpos.y << 16) | cursorpos.x;
-
-
-	//	HWND desktopwnd;
-	//	desktopwnd = ::GetDesktopWindow();
-	//	if (desktopwnd) {
-	//		RECT desktoprect;
-	//		//::GetClientRect(desktopwnd, &desktoprect);
-	//		::GetWindowRect(desktopwnd, &desktoprect);
-	//		::ClipCursor(&desktoprect);
-
-	//		//WM_MENUSELECT
-	//		//MF_MOUSESELECT(上位)
-	//		//下位はメニューID
-	//		//WPARAM wparam = ((MF_MOUSESELECT | MF_SYSMENU) << 16) | 40026;
-	//		//WPARAM wparam = (MF_SYSMENU << 16) | 40026;
-	//		//WPARAM wparam = (MF_SYSMENU << 16) | 2;
-	//		//WPARAM wparam = ((MF_MOUSESELECT | MF_SYSMENU) << 16) | 3;
-
-	//		//HMENU motmenu = GetSubMenu(s_mainmenu, 2);
-	//		//::SendMessage(g_mainhwnd, WM_MENUSELECT, wparam, (LPARAM)motmenu);
-	//		//::SendMessage(g_mainhwnd, WM_MENUSELECT, wparam, (LPARAM)s_mainmenu);
-	//		//::SendMessage(g_mainhwnd, WM_MENUSELECT, wparam, (LPARAM)40026);
-
-
-
-	//		//::SetCursorPos(cursorpos.x, cursorpos.y);
-
-	//		::SetCursorPos(cursorpos.x + deltax, cursorpos.y + deltay);
-
-
-
-	//		//::SendMessage(g_mainhwnd, WM_KEYDOWN, VK_DOWN, 0);
-
-
-	//		//const double ScaleX = 0xffff / GetSystemMetrics(SM_CXSCREEN);
-	//		//const double ScaleY = 0xffff / GetSystemMetrics(SM_CYSCREEN);
-	//		//const double ScaleX = (double)0xffff / (double)GetSystemMetrics(SM_CXSCREEN);
-	//		//const double ScaleY = (double)0xffff / (double)GetSystemMetrics(SM_CYSCREEN);
-	//		//const double ScaleX = (double)0xffff / (double)(desktoprect.right - desktoprect.left);
-	//		//const double ScaleY = (double)0xffff / (double)(desktoprect.bottom - desktoprect.top);
-
-
-
-	//		//WM_MOUSEMOVEはカメラ操作時などのときに画面が	MB3D_WND_3Dでドラッグする場合に必要
-	//		if (s_3dwnd) {
-	//			POINT client3dpoint;
-	//			client3dpoint = cursorpos;
-	//			::ScreenToClient(s_3dwnd, &client3dpoint);
-	//			LPARAM threelparam;
-	//			threelparam = (client3dpoint.y << 16) | client3dpoint.x;
-	//			::SendMessage(s_3dwnd, WM_MOUSEMOVE, 0, threelparam);
-	//		}
-	//		if (g_mainhwnd) {
-	//			POINT clientpoint;
-	//			clientpoint = cursorpos;
-	//			::ScreenToClient(g_mainhwnd, &clientpoint);
-	//			LPARAM mainlparam;
-	//			mainlparam = (clientpoint.y << 16) | clientpoint.x;
-	//			::SendMessage(g_mainhwnd, WM_MOUSEMOVE, 0, mainlparam);
-	//		}
-	//		HWND dlghwnd;
-	//		dlghwnd = g_SampleUI.GetHWnd();
-	//		if (dlghwnd) {
-	//			POINT clientpoint;
-	//			clientpoint = cursorpos;
-	//			::ScreenToClient(dlghwnd, &clientpoint);
-	//			LPARAM dlglparam;
-	//			dlglparam = (clientpoint.y << 16) | clientpoint.x;
-	//			::SendMessage(dlghwnd, WM_MOUSEMOVE, 0, dlglparam);
-	//		}
-
-
-	//		//dialog ctrlのドラッグは　enter buttonを押している間だけ
-	//		if (s_dspushedOK >= 1) {
-	//			HWND ctrlwnd = GetOFWnd(cursorpos);
-	//			if (ctrlwnd) {
-	//				WCHAR wclassname[MAX_PATH] = { 0L };
-	//				::GetClassNameW(ctrlwnd, wclassname, MAX_PATH);
-	//				//::DSMessageBox(s_anglelimitdlg, wclassname, L"check!!!", MB_OK);
-	//				if (wcscmp(L"msctls_trackbar32", wclassname) == 0) {
-	//					//Slider
-	//					RECT sliderloc;
-	//					::GetWindowRect(ctrlwnd, &sliderloc);
-	//					POINT cappoint = cursorpos;
-	//					::ScreenToClient(ctrlwnd, &cappoint);
-
-	//					float rangemin;
-	//					float rangemax;
-	//					rangemin = (float)::SendMessage(ctrlwnd, TBM_GETRANGEMIN, 0, 0);
-	//					rangemax = (float)::SendMessage(ctrlwnd, TBM_GETRANGEMAX, 0, 0);
-
-	//					float thumblength;
-	//					thumblength = (float)::SendMessage(ctrlwnd, TBM_GETTHUMBLENGTH, 0, 0);
-
-	//					//int sliderpos = (int)((float)(cappoint.x - 12 - 274 / 2) / 274.0f * 360.0f);
-	//					int sliderpos = (int)((float)(cappoint.x - thumblength / 2.0f) / (float)(sliderloc.right - sliderloc.left - thumblength) * (float)(rangemax - rangemin) + rangemin);
-
-	//					::SendMessage(ctrlwnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-	//					::SendMessage(s_ofhwnd, WM_HSCROLL, 0, (LPARAM)ctrlwnd);
-	//				}
-	//				//else if (wcsstr(wclassname, L"ListBox") != 0) {
-	//				else {
-	//					POINT clientpoint;
-	//					clientpoint = cursorpos;
-	//					::ScreenToClient(ctrlwnd, &clientpoint);
-	//					LPARAM dlglparam;
-	//					dlglparam = (clientpoint.y << 16) | clientpoint.x;
-	//					::SendMessage(ctrlwnd, WM_MOUSEMOVE, 0, dlglparam);
-
-	//				}
-	//			}
-	//			else if (s_getfilenamehwnd) {
-
-	//				//###############################################################################################################################################
-	//				// GetOpenFileNameのダイアログの２つあるリストボックスの垂直スクロールバー(スクロールバーはFindWindowExで取得できず。EnumChildProcでもクライアントエリア内に入らなかった)
-	//				//###############################################################################################################################################
-
-	//				//ctrlwnd == 0
-	//				//scrollwnd = FindWindowEx(s_getfilenamehwnd, 0, L"ScrollBar", 0);//   scrollwnd == 0
-	//				//s_ofhwnd = 0;
-	//				s_enumdist.clear();
-	//				::EnumChildWindows(s_getfilenamehwnd, EnumTreeViewProc, (LPARAM)&ctrlwnd);
-	//				//ctrlwnd = GetNearestEnumDist();
-	//				std::vector<ENUMDIST>::iterator itrenumdist;
-	//				for (itrenumdist = s_enumdist.begin(); itrenumdist != s_enumdist.end(); itrenumdist++) {
-	//					HWND listboxwnd = itrenumdist->hwnd;
-
-	//					//POINT clientpoint;
-	//					//clientpoint = cursorpos;
-	//					//::ScreenToClient(listboxwnd, &clientpoint);
-	//					//LPARAM dlglparam;
-	//					//dlglparam = (clientpoint.y << 16) | clientpoint.x;
-	//					//::SendMessage(listboxwnd, WM_VSCROLL, SB_THUMBTRACK, (LPARAM)dlglparam);
-
-	//					if (deltay > 0) {
-	//						::SendMessage(listboxwnd, WM_VSCROLL, SB_LINEDOWN, (LPARAM)0);
-	//					}
-	//					else if (deltay < 0) {
-	//						::SendMessage(listboxwnd, WM_VSCROLL, SB_LINEUP, (LPARAM)0);
-	//					}
-	//				}
-
-	//			}
-	//		}
-
-
-
-	//		//::SendMessage(desktopwnd, WM_MOUSEMOVE, 0, (LPARAM)lparam);
-	//	}
-	//}
-
-}
-
-void DSL3R3ButtonMouseHere()
-{
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	//static HCURSOR s_prevcursor = 0;
-
-	//if ((s_dspushedL3 == 1) || (s_dspushedR3 == 1)) {
-	//	if (g_dsmousewait == 0) {
-	//		s_prevcursor = ::SetCursor(LoadCursor(NULL, IDC_WAIT));
-	//		g_dsmousewait = 1;
-	//	}
-	//}
-	//else if ((s_dspushedL3 == 0) && (s_dspushedR3 == 0)) {
-	//	if (g_dsmousewait == 1) {
-	//		if (s_prevcursor) {
-	//			::SetCursor(s_prevcursor);
-	//		}
-	//		g_dsmousewait = 0;
-	//	}
-	//}
-
-
-	//if (g_dsmousewait == 1) {
-	//	if (s_timelineWnd) {
-	//		s_timelineWnd->callRewrite();
-	//	}
-	//	if (s_toolWnd) {
-	//		s_toolWnd->callRewrite();
-	//	}
-	//	if (s_LtimelineWnd) {
-	//		s_LtimelineWnd->callRewrite();
-	//	}
-	//	if (s_placefolderWnd && s_placefolderWnd->getVisible()) {
-	//		s_placefolderWnd->callRewrite();
-	//	}
-	//	if (s_rigidWnd && s_rigidWnd->getVisible()) {
-	//		s_rigidWnd->callRewrite();
-	//	}
-	//	if (s_impWnd && s_impWnd->getVisible()) {
-	//		s_impWnd->callRewrite();
-	//	}
-	//	if (s_gpWnd && s_gpWnd->getVisible()) {
-	//		s_gpWnd->callRewrite();
-	//	}
-	//	if (s_dmpanimWnd && s_dmpanimWnd->getVisible()) {
-	//		s_dmpanimWnd->callRewrite();
-	//	}
-	//	if (s_convboneWnd && s_convboneWnd->getVisible()) {
-	//		s_convboneWnd->callRewrite();
-	//	}
-	//	if (s_anglelimitdlg && s_spretargetsw[SPRETARGETSW_LIMITEULER].state) {
-	//		//POINT mousepoint;
-	//		//::GetCursorPos(&mousepoint);			
-	//		//::ScreenToClient(s_anglelimitdlg, &mousepoint);
-	//		//PAINTSTRUCT ps;
-	//		//HDC hdc = BeginPaint(s_anglelimitdlg, &ps);
-	//		//// メモリデバイスコンテキストを作成する
-	//		//HDC hCompatDC = CreateCompatibleDC(hdc);
-	//		//// ロードしたビットマップを選択する
-	//		//HBITMAP hPrevBitmap = (HBITMAP)SelectObject(hCompatDC, g_mouseherebmp);
-	//		//BITMAP bmp;
-	//		//GetObject(g_mouseherebmp, sizeof(BITMAP), &bmp);
-	//		//int BMP_W = (int)bmp.bmWidth;
-	//		//int BMP_H = (int)bmp.bmHeight;
-	//		//BitBlt(hdc, mousepoint.x, mousepoint.y, BMP_W, BMP_H, hCompatDC, 0, 0, SRCCOPY);
-	//		//DeleteDC(hCompatDC);
-	//		////EndPaint(hWnd, &ps);
-	//	}
-	//}
-}
-
-void OnDSMouseHereApeal()
-{
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	//if (!s_3dwnd) {
-	//	return;
-	//}
-
-	//static float s_mousehereval = 0.0f;
-	//static int s_mouseheredir = 0;
-
-	////if (g_dsmousewait >= 1) {
-	//POINT cursorpos;
-	//::GetCursorPos(&cursorpos);
-	//::ScreenToClient(s_3dwnd, &cursorpos);
-	//if (s_spmousehere.sprite) {
-
-	//	float spawidth = 52.0f;
-	//	int spashift = 50;
-
-	//	s_spmousehere.dispcenter.x = cursorpos.x + 52 / 2;
-	//	s_spmousehere.dispcenter.y = cursorpos.y + 50 / 2;
-
-
-	//	ChaVector3 disppos;
-	//	disppos.x = (float)(s_spmousehere.dispcenter.x);
-	//	disppos.y = (float)(s_spmousehere.dispcenter.y);
-	//	disppos.z = 0.0f;
-	//	ChaVector2 dispsize.SetParams(spawidth / (float)s_mainwidth * 2.0f, spawidth / (float)s_mainheight * 2.0f);
-	//	if (s_spmousehere.sprite) {
-	//		CallF(s_spmousehere.sprite->SetPos(disppos), return);
-	//		CallF(s_spmousehere.sprite->SetSize(dispsize), return);
-
-	//		if (s_mouseheredir == 0) {
-	//			s_mousehereval += 0.08f;
-	//		}
-	//		else if (s_mouseheredir == 1) {
-	//			s_mousehereval -= 0.08f;
-	//		}
-
-	//		if (s_mousehereval >= 1.0f) {
-	//			s_mousehereval = 1.0;
-	//			s_mouseheredir = 1;
-	//		}
-	//		else if (s_mousehereval <= 0.0f) {
-	//			s_mousehereval = 0.0f;
-	//			s_mouseheredir = 0;
-	//		}
-	//		g_mouseherealpha = s_mousehereval * s_mousehereval;
-
-	//		ChaVector4 spritecol.SetParams(1.0f, 1.0f, 1.0f, g_mouseherealpha);
-	//		CallF(s_spmousehere.sprite->SetColor(spritecol), return);
-	//	}
-	//	else {
-	//		_ASSERT(0);
-	//	}
-
-	//}
-	////}
-}
-
-void DSXButtonCancel()
-{
-	//Cancel button : メニューのドロップダウンをキャンセルする　Cancel dropdown menu. L2 + X --> Undo, R2 + X --> Redo.
-
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	//if (!g_mainhwnd) {
-	//	return;
-	//}
-	//if (!s_3dwnd) {
-	//	return;
-	//}
-
-	//int cancelbuttonid = 1;
-	//int accelaxisid1 = 4;//axisid
-	//int accelaxisid2 = 5;//axisid
-
-	//int cancelbuttondown;
-	//int cancelbuttonup;
-	//int accelaxis1 = 0;
-	//int accelaxis2 = 0;
-
-	//cancelbuttondown = s_dsbuttondown[cancelbuttonid];
-	//cancelbuttonup = s_dsbuttonup[cancelbuttonid];
-	//accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-	//accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
-
-
-	//if (cancelbuttondown >= 1) {
-	//	if (accelaxis1 >= 1) {
-	//		//Undo
-	//		OnFrameUndo(true, 0);//fromds, fromdskind
-	//	}
-	//	else if (accelaxis2 >= 1) {
-	//		//Redo
-	//		OnFrameUndo(true, 1);//fromds, fromdskind
-	//	}
-	//	else {
-	//		//TrackPopupMenuの前でSetForegrandWindow(g_mainhwnd)をしている場合に次の関数でpopupを閉じることが出来る。
-	//		PostMessage(g_mainhwnd, WM_KEYDOWN, VK_ESCAPE, 0);
-	//		PostMessage(s_3dwnd, WM_KEYDOWN, VK_ESCAPE, 0);
-
-	//	}
-	//}
-}
 
 
 void GetHiLiteSubmenu(HMENU* pcommandsubmenu, int* pcommandsubmenunum, int* pcommandsubmenuno)
@@ -53402,650 +48559,6 @@ void CALLBACK WinEventProc(HWINEVENTHOOK hWinEventHook, DWORD event, HWND hwnd, 
 	return;
 }
 
-void DSOButtonSelectedPopupMenu()
-{
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	//if (!s_cursubmenu) {
-	//	return;
-	//}
-
-	//static HWINEVENTHOOK s_eventhook = 0;
-
-	//int okbuttonid = 2;
-	//int okbuttondown;
-	//int okbuttonup;
-
-	//int cancelbuttonid = 1;
-	//int cancelbuttondown;
-	//int cancelbuttonup;
-
-	//okbuttondown = s_dsbuttondown[okbuttonid];
-	//okbuttonup = s_dsbuttonup[okbuttonid];
-
-	//cancelbuttondown = s_dsbuttondown[cancelbuttonid];
-	//cancelbuttonup = s_dsbuttonup[cancelbuttonid];
-
-
-	//if (okbuttonup >= 1) {
-	//	POINT cursorpos;
-	//	::GetCursorPos(&cursorpos);
-	//	LPARAM lparam;
-	//	lparam = (cursorpos.y << 16) | cursorpos.x;
-
-	//	//if (g_undertrackingRMenu == 1) {
-	//	if (InterlockedAdd(&g_undertrackingRMenu, 0) == 1) {
-
-
-	//		HMENU commandsubmenu = 0;
-	//		int commandsubmenunum = 0;
-	//		int	commandsubmenuno = -1;
-	//		GetHiLiteSubmenu(&commandsubmenu, &commandsubmenunum, &commandsubmenuno);
-	//		if (commandsubmenu && (commandsubmenunum >= 1) && (commandsubmenuno >= 0)) {
-
-
-	//			InterlockedExchange(&g_undertrackingRMenu, (LONG)0);//コマンド発行が決まったらトラッキングフラグ解除!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-	//			//::PostMessage(g_mainhwnd, WM_KEYDOWN, VK_RETURN, 0);
-
-
-	//			//if (commandsubmenunum == 1) {
-	//				//メニュー項目が１つだけの場合にはポップアップを解除してからWM_COMMANDを呼んでみる
-	//				//TrackPopupMenuの前でSetForegrandWindow(g_mainhwnd)をしている場合に次の関数でpopupを閉じることが出来る。
-	//			PostMessage(g_mainhwnd, WM_KEYDOWN, VK_ESCAPE, 0);
-	//			PostMessage(s_3dwnd, WM_KEYDOWN, VK_ESCAPE, 0);
-	//			//}
-
-	//			int commandmenuid;
-	//			commandmenuid = GetMenuItemID(commandsubmenu, commandsubmenuno);
-	//			WPARAM wparam;
-	//			//wparam = (selectedsubmenuitemno << 16) | selectedmenuid;
-	//			//wparam = (commandsubmenuno << 16) | commandmenuid;
-	//			wparam = commandmenuid;
-
-
-	//			//LPARAM lparam;
-	//			////lparam = (LPARAM)s_mainmenu;
-	//			//lparam = (LPARAM)commandsubmenu;
-
-
-	//			//::SendMessage(g_mainhwnd, WM_COMMAND, wparam, lparam);
-	//			//::SendMessage(s_3dwnd, WM_COMMAND, wparam, lparam);//menuのMsgProcはs_3dwndのメッセージプロック
-	//			::SendMessage(s_3dwnd, WM_COMMAND, wparam, 0);//menuのMsgProcはs_3dwndのメッセージプロック
-	//		}
-	//		else {
-
-	//			if (s_messageboxhwnd) {
-	//				HWND ctrlwnd = 0;
-	//				::EnumChildWindows(s_messageboxhwnd, EnumIDOKProc, (LPARAM)&ctrlwnd);
-	//				if (ctrlwnd) {
-	//					s_messageboxpushcnt++;
-
-	//					//一回目はダイアログを出すときのクリック。２回目でIDOKを押す。
-	//					if (s_messageboxpushcnt >= 2) {
-	//						//WPARAM wparam;
-	//						//wparam = (BN_CLICKED << 16) | IDOK;
-	//						//::SendMessage(s_messageboxhwnd, WM_COMMAND, wparam, (LPARAM)ctrlwnd);
-	//						SendMessage(ctrlwnd, BM_CLICK, 0, 0);
-	//					}
-	//				}
-	//				//::SendMessage(s_messageboxhwnd, WM_COMMAND, IDOK, 0);
-	//				//	SendMessage(hwndChild, BM_CLICK, 0, 0);
-	//			}
-	//			else {
-	//				HWND ctrlwnd = 0;
-	//				ctrlwnd = GetOFWnd(cursorpos);
-	//				//s_ofhwnd = 0;
-	//				//s_enumdist.clear();
-	//				//::EnumChildWindows(s_getfilenamehwnd, EnumTreeViewProc, (LPARAM)&ctrlwnd);
-	//				//ctrlwnd = GetNearestEnumDist();
-	//				if (ctrlwnd) {
-
-	//					int ctrlid;
-	//					ctrlid = GetDlgCtrlID(ctrlwnd);
-
-	//					//::SendMessage(s_getfilenametreeview, WM_COMMAND, wparam, (LPARAM)ctrlwnd);
-
-	//					POINT dlgpoint;
-	//					dlgpoint = cursorpos;
-	//					::ScreenToClient(s_ofhwnd, &dlgpoint);
-	//					LPARAM dlglparam;
-	//					dlglparam = (dlgpoint.y << 16) | dlgpoint.x;
-	//					::SendMessage(s_ofhwnd, WM_LBUTTONUP, MK_LBUTTON, dlglparam);
-	//					//::SendMessage(s_ofhwnd, WM_LBUTTONDBLCLK, MK_LBUTTON, dlglparam);//!!!!!!!!!!!!!!
-
-	//					WPARAM wparam;
-	//					wparam = (BN_CLICKED << 16) | ctrlid;
-	//					::SendMessage(s_ofhwnd, WM_COMMAND, wparam, (LPARAM)ctrlwnd);
-
-	//					POINT dlgpoint2;
-	//					dlgpoint2 = cursorpos;
-	//					::ScreenToClient(ctrlwnd, &dlgpoint2);
-	//					LPARAM dlglparam2;
-	//					dlglparam2 = (dlgpoint2.y << 16) | dlgpoint2.x;
-	//					//::SendMessage(ctrlwnd, WM_LBUTTONDOWN, MK_LBUTTON, dlglparam2);
-	//					::SendMessage(ctrlwnd, WM_LBUTTONUP, MK_LBUTTON, dlglparam2);
-	//					//::SendMessage(ctrlwnd, WM_LBUTTONDOWN, MK_LBUTTON, dlglparam2);
-	//					//::SendMessage(ctrlwnd, WM_LBUTTONUP, MK_LBUTTON, dlglparam2);
-	//					//::SendMessage(ctrlwnd, WM_LBUTTONDBLCLK, MK_LBUTTON, dlglparam2);//!!!!!!!!!
-
-
-	//					SendMessage(ctrlwnd, BM_CLICK, 0, 0);
-	//					//SendMessage(ctrlwnd, BM_CLICK, 0, 0);
-
-
-	//					WCHAR ctrlclassname[MAX_PATH] = { 0L };
-	//					GetClassName(ctrlwnd, ctrlclassname, MAX_PATH);
-	//					if (wcsstr(L"ListBox", ctrlclassname) != 0) {
-
-	//						//WCHAR ctrlwintext[MAX_PATH] = { 0L };
-	//						//GetWindowText(ctrlwnd, ctrlwintext, MAX_PATH);//L""
-
-	//						POINT lbpoint;
-	//						lbpoint = cursorpos;
-	//						::ScreenToClient(ctrlwnd, &lbpoint);
-	//						LPARAM lblparam;
-	//						lblparam = (lbpoint.y << 16) | lbpoint.x;
-	//						DWORD hitinfo = (DWORD)SendMessage(ctrlwnd, LB_ITEMFROMPOINT, 0, lblparam);
-	//						WORD hitflag;
-	//						WORD hitindex;
-	//						hitflag = HIWORD(hitinfo);
-	//						hitindex = LOWORD(hitinfo);
-	//						if (hitflag == 0) {
-
-
-	//							//ディレクトリ指定用のListBoxのときにはエンターキーを押して展開表示する。
-	//							//int itrcnt = 0;
-	//							//int findindex = 0;
-	//							//if (s_enumdist.size() >= 2) {
-	//							//	std::vector<ENUMDIST>::iterator itrenumdist;
-	//							//	for (itrenumdist = s_enumdist.begin(); itrenumdist != s_enumdist.end(); itrenumdist++) {
-	//							//		if (itrenumdist->hwnd == ctrlwnd) {
-	//							//			findindex = itrcnt;
-	//							//			break;
-	//							//		}
-	//							//		itrcnt++;
-	//							//	}
-	//							//}
-	//							//if (findindex == 0) {
-	//							//	::PostMessage(ctrlwnd, WM_KEYDOWN, VK_RETURN, 0);
-	//							//}
-
-
-
-	//							//ディレクトリ指定用のListBoxのときにはエンターキーを押して展開表示する。
-	//							RECT ctrlrect;
-	//							GetWindowRect(ctrlwnd, &ctrlrect);
-	//							POINT ctrllefttop = { 0, 0 };
-	//							ctrllefttop.x = ctrlrect.left;
-	//							ctrllefttop.y = ctrlrect.top;
-	//							ScreenToClient(s_getfilenamehwnd, &ctrllefttop);
-	//							if (ctrllefttop.x > 150) {
-	//								::PostMessage(ctrlwnd, WM_KEYDOWN, VK_RETURN, 0);
-	//							}
-
-
-
-
-
-	//							//SendMessage(ctrlwnd, WM_CHAR, VK_RETURN, 0);
-	//							//SendMessage(s_ofhwnd, WM_CHAR, VK_RETURN, 0);
-	//							//SendMessage(s_getfilenamehwnd, WM_CHAR, VK_RETURN, 0);
-
-	//							//SendMessage(ctrlwnd, LB_SETSEL, (WPARAM)FALSE, (LPARAM)hitindex);
-	//							//SendMessage(ctrlwnd, LB_SETSEL, (WPARAM)TRUE, (LPARAM)hitindex);
-
-
-
-
-	//							//SendMessage(ctrlwnd, LB_SETCURSEL, (WPARAM)hitindex, (LPARAM)0);
-
-	//							//::SendMessage(ctrlwnd, WM_LBUTTONDBLCLK, MK_LBUTTON, dlglparam2);//!!!!!!!!!
-
-	//							//WCHAR itembuf[MAX_PATH] = { 0L };
-	//							//LVITEM item;
-	//							//ZeroMemory(&item, sizeof(LVITEM));
-	//							//item.mask = LVIF_STATE | LVIF_TEXT;
-	//							//item.state = 0;
-	//							//item.stateMask = LVIS_SELECTED | LVIS_FOCUSED;
-	//							//item.iItem = hitindex;
-	//							//item.iSubItem = 0;          //取得するサブアイテムの番号
-	//							//item.pszText = itembuf;         //格納するテキストバッファ
-	//							//item.cchTextMax = MAX_PATH; //バッファ容量
-	//							//ListView_GetItem(ctrlwnd, &item);
-	//							//if (item.state & LVIS_SELECTED) {
-	//							//	SendMessage(ctrlwnd, LB_SETSEL, (WPARAM)FALSE, (LPARAM)hitindex);
-	//							//}
-	//							//else if (item.state & LVIS_FOCUSED) {
-	//							//	SendMessage(ctrlwnd, LB_SETSEL, (WPARAM)FALSE, (LPARAM)hitindex);
-	//							//}
-	//							//else {
-	//							//	SendMessage(ctrlwnd, LB_SETSEL, (WPARAM)TRUE, (LPARAM)hitindex);
-	//							//}
-
-
-	//							//DWORD itemstate = ListView_GetItemState(ctrlwnd, hitindex, LVIS_SELECTED | LVIS_FOCUSED);
-	//							//if ((itemstate & LVIS_SELECTED) != 0) {
-	//							//	//ListView_SetItemState(ctrlwnd, hitindex, 0, LVIS_SELECTED);
-	//							//	SendMessage(ctrlwnd, LB_SETSEL, (WPARAM)FALSE, (LPARAM)hitindex);
-	//							//}
-	//							//else if ((itemstate & LVIS_FOCUSED) != 0) {
-	//							//	SendMessage(ctrlwnd, LB_SETSEL, (WPARAM)FALSE, (LPARAM)hitindex);
-	//							//}
-	//							//else {
-	//							//	SendMessage(ctrlwnd, LB_SETSEL, (WPARAM)TRUE, (LPARAM)hitindex);
-	//							//}
-	//						}
-	//					}
-	//					else if ((wcsstr(L"TreeView", ctrlclassname) != 0) || (wcsstr(L"SysTreeView32", ctrlclassname) != 0)) {
-	//						//for SHGetSpecialFolderLocation
-	//						//select : click text
-	//						//expand tree : click triangleMark
-
-	//						POINT tvpoint;
-	//						tvpoint = cursorpos;
-	//						::ScreenToClient(ctrlwnd, &tvpoint);
-	//						LPARAM tvlparam;
-	//						tvlparam = (tvpoint.y << 16) | tvpoint.x;
-
-	//						TVHITTESTINFO ht;
-	//						ZeroMemory(&ht, sizeof(TVHITTESTINFO));
-	//						ht.flags = TVHT_ONITEM;
-	//						ht.hItem = NULL;
-	//						ht.pt = tvpoint;
-	//						HTREEITEM hItem = TreeView_HitTest(ctrlwnd, &ht);
-	//						if (ht.flags & TVHT_ONITEM) {
-	//							TreeView_SelectItem(ctrlwnd, ht.hItem);
-	//						}
-	//					}
-
-
-	//					//WPARAM wparam;
-	//					//wparam = (BN_CLICKED << 16) | ctrlid;
-	//					////wparam = (BN_PUSHED << 16) | ctrlid;
-	//					//::SendMessage(s_ofhwnd, WM_COMMAND, wparam, (LPARAM)ctrlwnd);
-	//					//::SendMessage(ctrlwnd, BM_CLICK, 0, 0);
-
-	//					//HWND hList = ctrlwnd;
-	//					//LV_HITTESTINFO lvinfo;
-	//					//WCHAR buf[MAX_PATH];
-	//					//ZeroMemory(&lvinfo, sizeof(LV_HITTESTINFO));
-	//					//GetCursorPos((LPPOINT)&lvinfo.pt);
-	//					//ScreenToClient(hList, &lvinfo.pt);
-	//					//ListView_HitTest(hList, &lvinfo);
-	//					//if ((lvinfo.flags & LVHT_ONITEM) != 0)
-	//					//{
-	//					//	LVITEM item;
-	//					//	ZeroMemory(&item, sizeof(LVITEM));
-	//					//	item.mask = TVIF_HANDLE | TVIF_TEXT;
-	//					//	item.iItem = lvinfo.iItem;
-	//					//	item.iSubItem = 0;          //取得するサブアイテムの番号
-	//					//	item.pszText = buf;         //格納するテキストバッファ
-	//					//	item.cchTextMax = MAX_PATH; //バッファ容量
-	//					//	ListView_GetItem(hList, &item);
-	//					//	DSMessageBox(s_3dwnd, buf, L"選択したデータ", MB_OK);
-	//					//}
-
-
-
-	//					//dHWND treeviewhwnd = 0;
-	//					//::EnumChildWindows(s_ofhwnd, EnumTreeViewProc, (LPARAM)&treeviewhwnd);
-	//					//if (treeviewhwnd) {
-	//					//	s_getfilenametreeview = treeviewhwnd;
-
-	//					//	::SendMessage(s_getfilenametreeview, WM_COMMAND, wparam, (LPARAM)ctrlwnd);
-
-	//					//	POINT dlgpoint;
-	//					//	dlgpoint = cursorpos;
-	//					//	::ScreenToClient(s_ofhwnd, &dlgpoint);
-	//					//	LPARAM dlglparam;
-	//					//	dlglparam = (dlgpoint.y << 16) | dlgpoint.x;
-	//					//	::SendMessage(s_ofhwnd, WM_LBUTTONUP, MK_LBUTTON, dlglparam);
-
-	//					//	POINT dlgpoint2;
-	//					//	dlgpoint2 = cursorpos;
-	//					//	::ScreenToClient(s_getfilenametreeview, &dlgpoint2);
-	//					//	LPARAM dlglparam2;
-	//					//	dlglparam2 = (dlgpoint2.y << 16) | dlgpoint2.x;
-	//					//	::SendMessage(s_getfilenametreeview, WM_LBUTTONUP, MK_LBUTTON, dlglparam2);
-	//					//}
-	//				}
-	//			}
-
-
-
-	//			//if(s_eventhook){
-	//			//	//UnhookWinEvent(s_eventhook);
-	//			//	s_eventhook = 0;
-	//			//}
-	//			//m_event = nullptr;
-	//		}
-	//	}
-
-
-	//	//int selectedsubmenuitemno = -1;
-	//	//int submenuitemnum;
-	//	//submenuitemnum = GetMenuItemCount(s_cursubmenu);
-	//	//int submenuitemcnt;
-	//	//for (submenuitemcnt = 0; submenuitemcnt < submenuitemnum; submenuitemcnt++) {
-	//	//	UINT submenuitemstate;
-	//	//	submenuitemstate = GetMenuState(s_cursubmenu, submenuitemcnt, MF_BYPOSITION);
-	//	//	if (submenuitemstate == MF_HILITE) {
-	//	//		selectedsubmenuitemno = submenuitemcnt;
-	//	//		break;
-	//	//	}
-	//	//}
-	//			//if (selectedmenuid >= 0) {
-	//			//	//#################
-	//			//	//選択決定成功例その２
-	//			//	//#################
-	//			//	//第2項目（インデックス値 = 1, ID = 0x2711）を選択したところ、
-	//			//	//wParam = 0x00012711
-	//			//	//のように、上位2バイトにインデックス値が、下位2バイトにIDが入ります。
-	//			//	//WPARAM wparam;
-	//			//	//wparam = (g_currentsubmenuid << 16) | curmenuitemid;
-	//			//	//LPARAM lparam;
-	//			//	//lparam = (LPARAM)mainmenu;
-	//			//	//::SendMessage(g_mainhwnd, WM_COMMAND, wparam, lparam);
-
-	//			//	if ((submenuitemnum == 1) && (selectedsubmenuitemno >= 0) && (g_currentsubmenuid >= 0)) {
-	//			//		//メニュー項目が１つだけの場合にはポップアップを解除してからWM_COMMANDを呼んでみる
-	//			//		//TrackPopupMenuの前でSetForegrandWindow(g_mainhwnd)をしている場合に次の関数でpopupを閉じることが出来る。
-	//			//		PostMessage(g_mainhwnd, WM_KEYDOWN, VK_ESCAPE, 0);
-	//			//		PostMessage(s_3dwnd, WM_KEYDOWN, VK_ESCAPE, 0);
-	//			//	}
-	//			//	
-	//			//	int commandmenuid;
-	//			//	commandmenuid = GetMenuItemID(s_cursubmenu, selectedsubmenuitemno);
-	//			//	WPARAM wparam;
-	//			//	//wparam = (selectedsubmenuitemno << 16) | selectedmenuid;
-	//			//	wparam = (selectedsubmenuitemno << 16) | commandmenuid;
-	//			//	LPARAM lparam;
-	//			//	//lparam = (LPARAM)s_mainmenu;
-	//			//	lparam = (LPARAM)s_cursubmenu;
-	//			//	::SendMessage(g_mainhwnd, WM_COMMAND, wparam, lparam);
-	//			//}
-	//}
-
-
-	//if (okbuttondown >= 1) {
-	//	POINT cursorpos;
-	//	::GetCursorPos(&cursorpos);
-	//	LPARAM lparam;
-	//	lparam = (cursorpos.y << 16) | cursorpos.x;
-
-	//	//if (g_undertrackingRMenu == 1) {
-	//	if (InterlockedAdd(&g_undertrackingRMenu, 0) == 1) {
-	//		HMENU commandsubmenu = 0;
-	//		int commandsubmenunum = 0;
-	//		int	commandsubmenuno = -1;
-	//		GetHiLiteSubmenu(&commandsubmenu, &commandsubmenunum, &commandsubmenuno);
-	//		if (commandsubmenu && (commandsubmenunum >= 1) && (commandsubmenuno >= 0)) {
-	//			//
-	//		}
-	//		else {
-	//			HWND ctrlwnd = 0;
-	//			ctrlwnd = GetOFWnd(cursorpos);
-	//			//s_ofhwnd = 0;
-	//			//s_enumdist.clear();
-	//			//::EnumChildWindows(s_getfilenamehwnd, EnumTreeViewProc, (LPARAM)&ctrlwnd);
-	//			//ctrlwnd = GetNearestEnumDist();
-	//			if (ctrlwnd) {
-
-	//				int ctrlid;
-	//				ctrlid = GetDlgCtrlID(ctrlwnd);
-
-	//				//::SendMessage(s_getfilenametreeview, WM_COMMAND, wparam, (LPARAM)ctrlwnd);
-
-	//				POINT dlgpoint;
-	//				dlgpoint = cursorpos;
-	//				::ScreenToClient(s_ofhwnd, &dlgpoint);
-	//				LPARAM dlglparam;
-	//				dlglparam = (dlgpoint.y << 16) | dlgpoint.x;
-	//				::SendMessage(s_ofhwnd, WM_LBUTTONDOWN, MK_LBUTTON, dlglparam);
-	//				//::SendMessage(s_ofhwnd, WM_LBUTTONDBLCLK, MK_LBUTTON, dlglparam);//!!!!!!!!!!!!!!
-
-	//				WPARAM wparam;
-	//				wparam = (BN_CLICKED << 16) | ctrlid;
-	//				//::SendMessage(s_ofhwnd, WM_COMMAND, wparam, (LPARAM)ctrlwnd);
-
-	//				POINT dlgpoint2;
-	//				dlgpoint2 = cursorpos;
-	//				::ScreenToClient(ctrlwnd, &dlgpoint2);
-	//				LPARAM dlglparam2;
-	//				dlglparam2 = (dlgpoint2.y << 16) | dlgpoint2.x;
-	//				//::SendMessage(ctrlwnd, WM_LBUTTONDOWN, MK_LBUTTON, dlglparam2);
-	//				::SendMessage(ctrlwnd, WM_LBUTTONDOWN, MK_LBUTTON, dlglparam2);
-	//			}
-
-
-
-
-
-
-
-
-	//			//HWND treeviewhwnd = 0;
-	//			//treeviewhwnd = FindWindowExW(s_getfilenamehwnd, 0, WC_LISTVIEW, 0);
-
-	//			//WCHAR dlgclassname[MAX_PATH] = { 0L };
-	//			//GetClassName(s_getfilenamehwnd, dlgclassname, MAX_PATH);
-	//			//WCHAR dlgwintext[MAX_PATH] = { 0L };
-	//			//GetWindowText(s_getfilenamehwnd, dlgwintext, MAX_PATH);
-
-
-
-	//			//HWND ctrlwnd = 0;
-	//			//ctrlwnd = GetOFWnd(cursorpos);
-	//			//if (ctrlwnd) {
-	//			//	WCHAR ctrlclassname[MAX_PATH] = { 0L };
-	//			//	GetClassName(ctrlwnd, ctrlclassname, MAX_PATH);
-	//			//	WCHAR ctrlwintext[MAX_PATH] = { 0L };
-	//			//	GetWindowText(ctrlwnd, ctrlwintext, MAX_PATH);
-
-	//			//	int ctrlid;
-	//			//	ctrlid = GetDlgCtrlID(ctrlwnd);
-	//			//	WPARAM wparam;
-	//			//	wparam = (BN_CLICKED << 16) | ctrlid;
-	//			//	//wparam = (BN_PUSHED << 16) | ctrlid;
-	//			//	//::SendMessage(s_ofhwnd, WM_COMMAND, wparam, (LPARAM)ctrlwnd);
-	//			//	//::SendMessage(ctrlwnd, BM_CLICK, 0, 0);
-
-	//			//	//HWND parenthwnd = 0;
-	//			//	//parenthwnd = GetParent(ctrlwnd);
-	//			//	//if (parenthwnd) {
-	//			//	//	WCHAR parentclassname[MAX_PATH] = { 0L };
-	//			//	//	GetClassName(parenthwnd, parentclassname, MAX_PATH);
-	//			//	//	WCHAR parentwintext[MAX_PATH] = { 0L };
-	//			//	//	GetWindowText(parenthwnd, parentwintext, MAX_PATH);
-
-	//			//	//	int dbgcnt;
-	//			//	//	dbgcnt = 0;
-	//			//	//	//{
-	//			//	//	//	LVCOLUMN lvcol;
-	//			//	//	//	LVITEM item;
-	//			//	//	//	UINT i;
-	//			//	//	//	//HWND hList = parenthwnd;
-	//			//	//	//	//HWND hList = ctrlwnd;
-	//			//	//	//	HWND hList = s_getfilenamehwnd;
-	//			//	//	//	LV_HITTESTINFO lvinfo;
-	//			//	//	//	WCHAR buf[MAX_PATH];
-
-	//			//	//	//	ZeroMemory(&lvinfo, sizeof(LV_HITTESTINFO));
-
-	//			//	//	//	GetCursorPos((LPPOINT)&lvinfo.pt);
-	//			//	//	//	ScreenToClient(hList, &lvinfo.pt);
-	//			//	//	//	ListView_HitTest(hList, &lvinfo);
-	//			//	//	//	if ((lvinfo.flags & LVHT_ONITEM) != 0)
-	//			//	//	//	{
-	//			//	//	//		item.mask = TVIF_HANDLE | TVIF_TEXT;
-	//			//	//	//		item.iItem = lvinfo.iItem;
-	//			//	//	//		item.iSubItem = 0;          //取得するサブアイテムの番号
-	//			//	//	//		item.pszText = buf;         //格納するテキストバッファ
-	//			//	//	//		item.cchTextMax = MAX_PATH; //バッファ容量
-	//			//	//	//		ListView_GetItem(hList, &item);
-	//			//	//	//		DSMessageBox(s_3dwnd, buf, L"選択したデータ", MB_OK);
-	//			//	//	//	}
-	//			//	//	//}
-	//			//	//	//int hotitem;
-	//			//	//	//int parenthotitem;
-	//			//	//	//hotitem = ListView_GetHotItem(ctrlwnd);
-	//			//	//	//parenthotitem = ListView_GetHotItem(parenthwnd);
-	//			//	//	//if (hotitem > 0) {
-	//			//	//	//	_ASSERT(0);
-	//			//	//	//}
-	//			//	//	//if (parenthotitem > 0) {
-	//			//	//	//	_ASSERT(0);
-	//			//	//	//}
-
-	//			//	//	//s_getfilenametreeview = parenthwnd;
-
-
-	//			//	//	//POINT treepos;
-	//			//	//	//treepos = cursorpos;
-	//			//	//	////ScreenToClient(ctrlwnd, &treepos);
-	//			//	//	////ScreenToClient(s_getfilenametreeview, &treepos);
-	//			//	//	////ScreenToClient(s_ofhwnd, &treepos);
-	//			//	//	//TVHITTESTINFO ht;
-	//			//	//	//ZeroMemory(&ht, sizeof(TVHITTESTINFO));
-	//			//	//	//ht.flags = TVHT_ONITEM;
-	//			//	//	//ht.hItem = NULL;
-	//			//	//	//ht.pt = treepos;
-	//			//	//	////ht.pt.x = cursorpos.x;
-	//			//	//	////ht.pt.y = cursorpos.y;
-	//			//	//	////TreeView_HitTest(s_getfilenametreeview, &ht);
-	//			//	//	//HTREEITEM hItem = TreeView_HitTest(ctrlwnd, &ht);
-	//			//	//	//if (ht.flags & TVHT_ONITEM) {
-	//			//	//	//	//TreeView_SelectItem(s_getfilenametreeview, hititem);
-
-	//			//	//	//	//TVITEM ti;
-	//			//	//	//	//ZeroMemory(&ti, sizeof(TVITEM));
-	//			//	//	//	//ti.mask = TVIF_HANDLE | TVIF_PARAM;
-	//			//	//	//	//ti.hItem = hititem;
-	//			//	//	//	//TreeView_GetItem(s_getfilenametreeview, &ti);
-	//			//	//	//	//int clickno = (int)tvi.lParam;
-
-	//			//	//	//	//TreeView_Select(s_getfilenametreeview, ht.hItem, TVGN_CARET);
-	//			//	//	//	TreeView_Select(ctrlwnd, ht.hItem, TVGN_CARET);
-
-
-	//			//	//	//	int dbgcnt = 0;
-	//			//	//	//}
-	//			//	//}
-
-
-	//			//	//s_ofhwnd = 0;
-	//			//	//s_enumdist.clear();
-	//			//	//::EnumChildWindows(s_getfilenamehwnd, EnumTreeViewProc, (LPARAM)&treeviewhwnd);
-	//			//	//treeviewhwnd = GetNearestEnumDist();
-	//			////if (treeviewhwnd) {
-	//			//	//s_getfilenametreeview = treeviewhwnd;
-
-
-	//			//	//POINT dlgpoint;
-	//			//	//dlgpoint = cursorpos;
-	//			//	//::ScreenToClient(s_ofhwnd, &dlgpoint);
-	//			//	//LPARAM dlglparam;
-	//			//	//dlglparam = (dlgpoint.y << 16) | dlgpoint.x;
-	//			//	//::SendMessage(s_ofhwnd, WM_LBUTTONDOWN, MK_LBUTTON, dlglparam);
-
-	//			//	//POINT dlgpoint2;
-	//			//	//dlgpoint2 = cursorpos;
-	//			//	//::ScreenToClient(s_getfilenametreeview, &dlgpoint2);
-	//			//	//LPARAM dlglparam2;
-	//			//	//dlglparam2 = (dlgpoint2.y << 16) | dlgpoint2.x;
-	//			//	//::SendMessage(s_getfilenametreeview, WM_LBUTTONDOWN, MK_LBUTTON, dlglparam2);
-
-
-
-
-	//			//}
-	//			//}
-	//				//if (!s_eventhook) {
-	//				//	s_eventhook = SetWinEventHook(
-	//				//		EVENT_SYSTEM_DIALOGSTART,
-	//				//		//EVENT_SYSTEM_DIALOGSTART,
-	//				//		EVENT_SYSTEM_DIALOGEND,
-	//				//		NULL,
-	//				//		WinEventProc,
-	//				//		//GetDlgItemInt(IDC_PROCESSID),
-	//				//		//GetProcessId(GetModuleHandle(NULL)),
-	//				//		//GetThreadId(g_hUnderTrackingThread),
-	//				//		//GetThreadId(s_messageboxthread),
-	//				//		0,
-	//				//		0,
-	//				//		WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS
-	//				//	);
-	//				//}
-	//				/*if (m_event != nullptr)
-	//				{
-	//					SetDlgItemText(IDOK, _T("停止"));
-	//				}*/
-	//		}
-	//	}
-	//}
-
-
-	//if (cancelbuttonup >= 1) {
-	//	POINT cursorpos;
-	//	::GetCursorPos(&cursorpos);
-	//	LPARAM lparam;
-	//	lparam = (cursorpos.y << 16) | cursorpos.x;
-
-	//	//if (g_undertrackingRMenu == 1) {
-	//	if (InterlockedAdd(&g_undertrackingRMenu, 0) == 1) {
-	//		if (s_messageboxhwnd) {
-	//		}
-	//		else {
-	//			HWND ctrlwnd = 0;
-	//			ctrlwnd = GetOFWnd(cursorpos);
-	//			if (ctrlwnd) {
-	//				int ctrlid;
-	//				ctrlid = GetDlgCtrlID(ctrlwnd);
-	//				WCHAR ctrlclassname[MAX_PATH] = { 0L };
-	//				GetClassName(ctrlwnd, ctrlclassname, MAX_PATH);
-	//				if (wcscmp(L"ListBox", ctrlclassname) == 0) {
-
-	//					POINT lbpoint;
-	//					lbpoint = cursorpos;
-	//					::ScreenToClient(ctrlwnd, &lbpoint);
-	//					LPARAM lblparam;
-	//					lblparam = (lbpoint.y << 16) | lbpoint.x;
-	//					DWORD hitinfo = (DWORD)SendMessage(ctrlwnd, LB_ITEMFROMPOINT, 0, lblparam);
-	//					WORD hitflag;
-	//					WORD hitindex;
-	//					hitflag = HIWORD(hitinfo);
-	//					hitindex = LOWORD(hitinfo);
-	//					if (hitflag == 0) {
-	//						//X buttonで  selectをCancel
-	//						SendMessage(ctrlwnd, LB_SETSEL, (WPARAM)FALSE, (LPARAM)hitindex);
-	//					}
-	//				}
-	//				/*else if (wcscmp(L"TreeView", ctrlclassname) == 0) {
-	//					POINT tvpoint;
-	//					tvpoint = cursorpos;
-	//					::ScreenToClient(ctrlwnd, &tvpoint);
-	//					LPARAM tvlparam;
-	//					tvlparam = (tvpoint.y << 16) | tvpoint.x;
-
-	//					TVHITTESTINFO ht;
-	//					ZeroMemory(&ht, sizeof(TVHITTESTINFO));
-	//					ht.flags = TVHT_ONITEM;
-	//					ht.hItem = NULL;
-	//					ht.pt = tvpoint;
-	//					HTREEITEM hItem = TreeView_HitTest(ctrlwnd, &ht);
-	//					if (ht.flags & TVHT_ONITEM) {
-	//						TreeView_SelectItem(ctrlwnd, ht.hItem);
-	//					}
-	//				}*/
-	//			}
-	//		}
-	//	}
-	//}
-}
 
 BOOL CALLBACK EnumChildProc(HWND hwnd, LPARAM lParam)
 {
@@ -54168,34 +48681,6 @@ BOOL CALLBACK EnumIDOKProc(HWND hwnd, LPARAM lParam)
 }
 
 
-//BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
-//{
-//	if (!lParam) {
-//		return FALSE;
-//	}
-//	HWND* rethwnd = (HWND*)lParam;
-//	//*rethwnd = 0;
-//
-//	WCHAR szBuff[512];
-//	GetWindowTextW(hwnd, szBuff, 512);
-//	int cmp;
-//	cmp = wcscmp(L"OpenMqoDlg", szBuff);
-//	if (cmp == 0) {
-//		//HWND hbtn = NULL;
-//		//::EnumChildWindows(hwnd, EnumChildProcOF, reinterpret_cast<LPARAM>(&hbtn));
-//		//if (hbtn) {
-//		*rethwnd = hwnd;
-//		return FALSE;
-//		//}
-//		//else {
-//		//	return TRUE;
-//		//}
-//	}
-//	else {
-//		//*rethwnd = 0;
-//		return TRUE;
-//	}
-//}
 
 HWND GetNearestEnumDist()
 {
@@ -54369,769 +48854,7 @@ HWND GetOFWnd(POINT srcpoint)
 
 }
 
-void DSOptionButtonRightClick()
-{
-	////optionボタンは右クリック相当
-	////カーソルがジョイント位置にあるときに右クリックするとコンテクストメニューが出る。
 
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	//int optbuttonid = 11;
-	//int optbuttondown;
-	//int optbuttonup;
-
-	//optbuttondown = s_dsbuttondown[optbuttonid];
-	//optbuttonup = s_dsbuttonup[optbuttonid];
-
-	//if (optbuttondown >= 1) {
-	//	POINT cursorpos;
-	//	::GetCursorPos(&cursorpos);
-	//	LPARAM lparam;
-	//	lparam = (cursorpos.y << 16) | cursorpos.x;
-
-	//	if (g_undertrackingRMenu == 0) {
-	//		if ((s_currentwndid == MB3D_WND_3D) && (s_curboneno >= 0)) {
-	//			POINT cappoint;
-	//			cappoint = cursorpos;
-	//			::ScreenToClient(s_3dwnd, &cappoint);
-	//			LPARAM caplparam;
-	//			caplparam = (cappoint.y << 16) | cappoint.x;
-
-	//			::SendMessage(s_3dwnd, WM_RBUTTONDOWN, MK_RBUTTON, caplparam);
-	//		}
-	//	}
-	//}
-
-	//if (optbuttonup >= 1) {
-	//	POINT cursorpos;
-	//	::GetCursorPos(&cursorpos);
-	//	LPARAM lparam;
-	//	lparam = (cursorpos.y << 16) | cursorpos.x;
-
-	//	if (g_undertrackingRMenu == 0) {
-	//		if ((s_currentwndid == MB3D_WND_3D) && (s_curboneno >= 0)) {
-	//			POINT cappoint;
-	//			cappoint = cursorpos;
-	//			::ScreenToClient(s_3dwnd, &cappoint);
-	//			LPARAM caplparam;
-	//			caplparam = (cappoint.y << 16) | cappoint.x;
-
-	//			::SendMessage(s_3dwnd, WM_RBUTTONUP, MK_RBUTTON, caplparam);
-	//		}
-	//	}
-	//}
-
-}
-
-
-void DSAimBarOK()
-{
-
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	//int okbuttonid = 2;
-	//int okbuttondown;
-	//int okbuttonup;
-
-	//okbuttondown = s_dsbuttondown[okbuttonid];
-	//okbuttonup = s_dsbuttonup[okbuttonid];
-
-	//if (okbuttondown >= 1) {
-	//	POINT cursorpos;
-	//	::GetCursorPos(&cursorpos);
-	//	LPARAM lparam;
-	//	lparam = (cursorpos.y << 16) | cursorpos.x;
-
-	//	//if (g_undertrackingRMenu == 0) {
-	//	if (InterlockedAdd(&g_undertrackingRMenu, 0) == 0) {
-	//		{
-	//			//dialog ctrl
-	//			HWND ctrlwnd;
-	//			ctrlwnd = GetOFWnd(cursorpos);
-	//			if (ctrlwnd) {
-
-	//				WCHAR wclassname[MAX_PATH] = { 0L };
-	//				::GetClassNameW(ctrlwnd, wclassname, MAX_PATH);
-	//				//::DSMessageBox(s_anglelimitdlg, wclassname, L"check!!!", MB_OK);
-	//				if (wcscmp(L"ComboBox", wclassname) == 0) {
-	//					//COMBOBOX
-	//					::SendMessage(ctrlwnd, CB_SHOWDROPDOWN, TRUE, 0);
-
-	//					//HWND caphwnd;
-	//					//caphwnd = ::GetCapture();
-	//					//if (caphwnd && IsWindow(caphwnd)) {
-	//					//	::SendMessage(caphwnd, CB_SHOWDROPDOWN, TRUE, 0);
-	//					//}
-	//				}
-	//				else if (wcscmp(L"msctls_trackbar32", wclassname) == 0) {
-	//					//Slider
-	//					RECT sliderloc;
-	//					::GetWindowRect(ctrlwnd, &sliderloc);
-	//					POINT cappoint = cursorpos;
-	//					::ScreenToClient(ctrlwnd, &cappoint);
-
-	//					float rangemin;
-	//					float rangemax;
-	//					rangemin = (float)::SendMessage(ctrlwnd, TBM_GETRANGEMIN, 0, 0);
-	//					rangemax = (float)::SendMessage(ctrlwnd, TBM_GETRANGEMAX, 0, 0);
-
-	//					float thumblength;
-	//					thumblength = (float)::SendMessage(ctrlwnd, TBM_GETTHUMBLENGTH, 0, 0);
-
-	//					//int sliderpos = (int)((float)(cappoint.x - 12 - 274 / 2) / 274.0f * 360.0f);
-	//					int sliderpos = (int)((float)(cappoint.x - thumblength / 2.0f) / (float)(sliderloc.right - sliderloc.left - thumblength) * (float)(rangemax - rangemin) + rangemin);
-
-	//					::SendMessage(ctrlwnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-	//					::SendMessage(s_ofhwnd, WM_HSCROLL, 0, (LPARAM)ctrlwnd);
-	//				}
-	//				else {
-	//					POINT dlgpoint;
-	//					dlgpoint = cursorpos;
-	//					::ScreenToClient(s_ofhwnd, &dlgpoint);
-	//					LPARAM dlglparam;
-	//					dlglparam = (dlgpoint.y << 16) | dlgpoint.x;
-	//					::SendMessage(s_ofhwnd, WM_LBUTTONDOWN, MK_LBUTTON, dlglparam);
-
-	//					POINT cappoint;
-	//					cappoint = cursorpos;
-	//					::ScreenToClient(ctrlwnd, &cappoint);
-	//					LPARAM caplparam;
-	//					caplparam = (cappoint.y << 16) | cappoint.x;
-	//					::SendMessage(ctrlwnd, WM_LBUTTONDOWN, MK_LBUTTON, caplparam);
-	//				}
-	//			}
-	//			else {
-	//				bool doneflag1 = false;
-	//				if (s_dispmodel && s_modelpanel.panel && s_modelpanel.panel->getHWnd()) {
-	//					RECT panelrect;
-	//					GetWindowRect(s_modelpanel.panel->getHWnd(), &panelrect);
-	//					if ((cursorpos.x >= panelrect.left) && (cursorpos.x <= panelrect.right) &&
-	//						(cursorpos.y >= panelrect.top) && (cursorpos.y <= panelrect.bottom)) {
-	//						POINT cappoint;
-	//						cappoint = cursorpos;
-	//						::ScreenToClient(s_modelpanel.panel->getHWnd(), &cappoint);
-	//						LPARAM caplparam;
-	//						caplparam = (cappoint.y << 16) | cappoint.x;
-	//						::SendMessage(s_modelpanel.panel->getHWnd(), WM_LBUTTONDOWN, MK_LBUTTON, caplparam);
-	//						SetCapture(s_modelpanel.panel->getHWnd());
-	//						doneflag1 = true;
-	//					}
-	//				}
-	//				if (!doneflag1) {
-	//					if (s_dispobj && s_layerWnd && s_layerWnd->getHWnd()) {
-	//						RECT panelrect;
-	//						GetWindowRect(s_layerWnd->getHWnd(), &panelrect);
-	//						if ((cursorpos.x >= panelrect.left) && (cursorpos.x <= panelrect.right) &&
-	//							(cursorpos.y >= panelrect.top) && (cursorpos.y <= panelrect.bottom)) {
-	//							POINT cappoint;
-	//							cappoint = cursorpos;
-	//							::ScreenToClient(s_layerWnd->getHWnd(), &cappoint);
-	//							LPARAM caplparam;
-	//							caplparam = (cappoint.y << 16) | cappoint.x;
-	//							::SendMessage(s_layerWnd->getHWnd(), WM_LBUTTONDOWN, MK_LBUTTON, caplparam);
-	//							SetCapture(s_layerWnd->getHWnd());
-	//							doneflag1 = true;
-	//						}
-	//					}
-	//				}
-	//				if (!doneflag1) {
-	//					//aimbar
-	//					HWND caphwnd;
-	//					caphwnd = ::GetCapture();
-	//					if (caphwnd && IsWindow(caphwnd)) {
-	//						POINT cappoint;
-	//						cappoint = cursorpos;
-	//						::ScreenToClient(caphwnd, &cappoint);
-	//						LPARAM caplparam;
-	//						caplparam = (cappoint.y << 16) | cappoint.x;
-	//						::SendMessage(caphwnd, WM_LBUTTONDOWN, MK_LBUTTON, caplparam);
-	//					}
-	//				}
-	//			}
-	//		}
-
-	//	}
-	//}
-
-	////g_DialogResourceManager.MsgProc(hWnd, uMsg, wParam, lParam);
-
-
-	//if (okbuttonup >= 1) {
-	//	POINT cursorpos;
-	//	::GetCursorPos(&cursorpos);
-	//	LPARAM lparam;
-	//	lparam = (cursorpos.y << 16) | cursorpos.x;
-
-	//	//if (g_undertrackingRMenu == 0) {
-	//	if (InterlockedAdd(&g_undertrackingRMenu, 0) == 0) {
-	//		//dialog ctrl
-	//		HWND ctrlwnd;
-	//		ctrlwnd = GetOFWnd(cursorpos);
-	//		if (ctrlwnd) {
-	//			::SendMessage(ctrlwnd, WM_LBUTTONUP, 0, 0);
-	//			if (s_ofhwnd) {
-	//				POINT cappoint;
-	//				cappoint = cursorpos;
-	//				::ScreenToClient(ctrlwnd, &cappoint);
-	//				LPARAM caplparam;
-	//				caplparam = (cappoint.y << 16) | cappoint.x;
-
-	//				//int ctrlid;
-	//				//ctrlid = GetDlgCtrlID(ctrlwnd);
-	//				//::SendMessage(s_ofhwnd, WM_COMMAND, ctrlid, 0);//WM_COMMANDはマウスのUPよりも後で呼ばないとUPでコマンドが終了してしまうことがある。
-
-
-	//				WCHAR wclassname[MAX_PATH] = { 0L };
-	//				::GetClassNameW(ctrlwnd, wclassname, MAX_PATH);
-	//				//::DSMessageBox(s_anglelimitdlg, wclassname, L"check!!!", MB_OK);
-	//				if (wcscmp(L"ComboBox", wclassname) == 0) {
-	//					//	//COMBOBOX
-	//					//	::SendMessage(ctrlwnd, CB_SHOWDROPDOWN, TRUE, 0);//DOWNのときに処理する
-	//				}
-	//				else if (wcscmp(L"msctls_trackbar32", wclassname) == 0) {
-	//					//Slider
-	//					RECT sliderloc;
-	//					::GetWindowRect(ctrlwnd, &sliderloc);
-	//					POINT cappoint2 = cursorpos;
-	//					::ScreenToClient(ctrlwnd, &cappoint2);
-
-	//					float rangemin;
-	//					float rangemax;
-	//					rangemin = (float)::SendMessage(ctrlwnd, TBM_GETRANGEMIN, 0, 0);
-	//					rangemax = (float)::SendMessage(ctrlwnd, TBM_GETRANGEMAX, 0, 0);
-
-	//					float thumblength;
-	//					thumblength = (float)::SendMessage(ctrlwnd, TBM_GETTHUMBLENGTH, 0, 0);
-
-	//					//int sliderpos = (int)((float)(cappoint2.x - 12 - 274 / 2) / 274.0f * 360.0f);
-	//					int sliderpos = (int)((float)(cappoint2.x - thumblength / 2.0f) / (float)(sliderloc.right - sliderloc.left - thumblength) * (float)(rangemax - rangemin) + rangemin);
-
-	//					::SendMessage(ctrlwnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderpos);
-	//					::SendMessage(s_ofhwnd, WM_HSCROLL, 0, (LPARAM)ctrlwnd);
-	//				}
-	//				else if (wcscmp(L"Button", wclassname) == 0) {
-	//					POINT dlgpoint;
-	//					dlgpoint = cursorpos;
-	//					::ScreenToClient(s_ofhwnd, &dlgpoint);
-	//					LPARAM dlglparam;
-	//					dlglparam = (dlgpoint.y << 16) | dlgpoint.x;
-	//					::SendMessage(s_ofhwnd, WM_LBUTTONUP, MK_LBUTTON, dlglparam);
-
-	//					POINT cappoint2;
-	//					cappoint2 = cursorpos;
-	//					::ScreenToClient(ctrlwnd, &cappoint2);
-	//					LPARAM caplparam2;
-	//					caplparam2 = (cappoint2.y << 16) | cappoint2.x;
-	//					::SendMessage(ctrlwnd, WM_LBUTTONUP, MK_LBUTTON, caplparam2);
-
-	//					//::SendMessage(ctrlwnd, WM_LBUTTONUP, MK_LBUTTON, caplparam);
-
-	//					//int check1 = SendMessage(ctrlwnd, BM_GETCHECK, 0, 0);
-	//					//if (check1 == 0) {
-	//					//	SendMessage(ctrlwnd,
-	//					//		BM_SETCHECK,
-	//					//		BST_CHECKED,    // チェックをつける
-	//					//		0);
-	//					//}
-	//					//else if (check1 == 1) {
-	//					//	SendMessage(ctrlwnd,
-	//					//		BM_SETCHECK,
-	//					//		BST_UNCHECKED,    // チェックをはずす
-	//					//		0);
-	//					//}
-	//				}
-	//				else {
-	//					POINT dlgpoint;
-	//					dlgpoint = cursorpos;
-	//					::ScreenToClient(s_ofhwnd, &dlgpoint);
-	//					LPARAM dlglparam;
-	//					dlglparam = (dlgpoint.y << 16) | dlgpoint.x;
-	//					::SendMessage(s_ofhwnd, WM_LBUTTONUP, MK_LBUTTON, dlglparam);
-
-	//					POINT cappoint2;
-	//					cappoint2 = cursorpos;
-	//					::ScreenToClient(ctrlwnd, &cappoint2);
-	//					LPARAM caplparam2;
-	//					caplparam2 = (cappoint2.y << 16) | cappoint2.x;
-	//					::SendMessage(ctrlwnd, WM_LBUTTONUP, MK_LBUTTON, caplparam2);
-
-	//					//::SendMessage(ctrlwnd, WM_LBUTTONUP, MK_LBUTTON, caplparam);
-	//				}
-
-	//				int ctrlid;
-	//				ctrlid = GetDlgCtrlID(ctrlwnd);
-	//				::SendMessage(s_ofhwnd, WM_COMMAND, ctrlid, 0);//WM_COMMANDはマウスのUPよりも後で呼ばないとUPでコマンドが終了してしまうことがある。
-
-	//			}
-	//		}
-	//		else {
-
-	//			bool doneflag1 = false;
-	//			if (s_dispmodel && s_modelpanel.panel && s_modelpanel.panel->getHWnd()) {
-	//				RECT panelrect;
-	//				GetWindowRect(s_modelpanel.panel->getHWnd(), &panelrect);
-	//				if ((cursorpos.x >= panelrect.left) && (cursorpos.x <= panelrect.right) &&
-	//					(cursorpos.y >= panelrect.top) && (cursorpos.y <= panelrect.bottom)) {
-	//					POINT cappoint;
-	//					cappoint = cursorpos;
-	//					::ScreenToClient(s_modelpanel.panel->getHWnd(), &cappoint);
-	//					LPARAM caplparam;
-	//					caplparam = (cappoint.y << 16) | cappoint.x;
-	//					::SendMessage(s_modelpanel.panel->getHWnd(), WM_LBUTTONUP, MK_LBUTTON, caplparam);
-	//					ReleaseCapture();
-	//					doneflag1 = true;
-	//				}
-	//			}
-	//			if (!doneflag1) {
-	//				if (s_dispobj && s_layerWnd && s_layerWnd->getHWnd()) {
-	//					RECT panelrect;
-	//					GetWindowRect(s_layerWnd->getHWnd(), &panelrect);
-	//					if ((cursorpos.x >= panelrect.left) && (cursorpos.x <= panelrect.right) &&
-	//						(cursorpos.y >= panelrect.top) && (cursorpos.y <= panelrect.bottom)) {
-	//						POINT cappoint;
-	//						cappoint = cursorpos;
-	//						::ScreenToClient(s_layerWnd->getHWnd(), &cappoint);
-	//						LPARAM caplparam;
-	//						caplparam = (cappoint.y << 16) | cappoint.x;
-	//						::SendMessage(s_layerWnd->getHWnd(), WM_LBUTTONUP, MK_LBUTTON, caplparam);
-	//						ReleaseCapture();
-	//						doneflag1 = true;
-	//					}
-	//				}
-	//			}
-	//			if (!doneflag1) {
-	//				//aim bar
-	//				HWND caphwnd;
-	//				caphwnd = ::GetCapture();
-	//				if (caphwnd && IsWindow(caphwnd)) {
-	//					//WPARAM wparam = (0xFFFF << 16) | (WORD)g_currentsubmenuid;//g_currentsubmenuid, curmenuitemid
-	//					//::SendMessage(g_mainhwnd, WM_MENUSELECT, wparam, (LPARAM)GetMenu(g_mainhwnd));//GetMenu(g_mainhwnd), cursubmenu
-	//					POINT cappoint;
-	//					cappoint = cursorpos;
-	//					::ScreenToClient(caphwnd, &cappoint);
-	//					LPARAM caplparam;
-	//					caplparam = (cappoint.y << 16) | cappoint.x;
-	//					::SendMessage(caphwnd, WM_LBUTTONUP, MK_LBUTTON, caplparam);
-	//				}
-
-	//				//TopSliders
-	//				if ((s_currentwndid == MB3D_WND_MAIN) && s_cursubmenu && (g_currentsubmenuid >= 0) && (g_currentsubmenuid < SPMENU_MAX)) {
-	//					//SelectNextWindow(MB3D_WND_3D);//続いて　O button を押したときにメニューが開かないように。//プレート選択時に該当ウインドウをハイライトするようにしたので必要ない。
-	//					InterlockedExchange(&g_undertrackingRMenu, (LONG)1);
-	//					//SetForegroundWindow(g_mainhwnd);//この処理をしないと範囲外クリックでPopupが閉じない
-	//					SetForegroundWindow(s_3dwnd);//この処理をしないと範囲外クリックでPopupが閉じない
-	//					//int retmenuid = ::TrackPopupMenu(s_cursubmenu, TPM_RETURNCMD | TPM_LEFTALIGN, g_currentsubmenupos.x, g_currentsubmenupos.y, 0, g_mainhwnd, NULL);
-	//					int retmenuid = ::TrackPopupMenu(s_cursubmenu, TPM_RETURNCMD | TPM_LEFTALIGN, g_currentsubmenupos.x, g_currentsubmenupos.y, 0, s_3dwnd, NULL);
-	//					InterlockedExchange(&g_undertrackingRMenu, (LONG)0);
-	//				}
-	//			}
-	//		}
-
-	//		//MainWindow MsgProc ; Prepair For Undo
-	//		PrepairUndo();//メニューバーOK後の保存
-
-	//		s_wmlbuttonup = 1;
-
-	//	}
-
-	//}
-
-}
-
-
-
-void ChangeMouseSetCapture()
-{
-
-	static bool s_firstflag = true;
-	static int s_capwndid = -1;
-
-	//if ((s_dsutgui0.size() <= 0) || (s_dsutgui1.size() <= 0) || (s_dsutgui2.size() <= 0) || (s_dsutgui3.size() <= 0)) {
-	//	return;
-	//}
-
-	if (!g_mainhwnd) {
-		return;
-	}
-
-	int dragbuttondown;
-	int dragbuttonup;
-
-	dragbuttondown = s_dsbuttondown[2];
-	dragbuttonup = s_dsbuttonup[2];
-
-
-	//〇ボタン押していないときには何もしないでリターン
-	if (!dragbuttondown) {
-		return;
-	}
-
-
-	POINT mousepoint;
-	::GetCursorPos(&mousepoint);
-	POINT clientpoint = mousepoint;
-	::ScreenToClient(g_mainhwnd, &clientpoint);
-
-	int chkx = clientpoint.x;
-	int chky = clientpoint.y;
-
-
-	//static RECT s_rcmainwnd;
-	//static RECT s_rc3dwnd;
-	//static RECT s_rctreewnd;
-	//static RECT s_rctoolwnd;
-	//static RECT s_rcltwnd;
-	//static RECT s_rcsidemenuwnd;
-	//static RECT s_rcrigidwnd;
-	//static RECT s_rcinfownd;
-
-
-	int nextcapwndid = -1;
-
-	////check mainwnd
-	{
-		int wndtop = 0;
-		int wndleft = 0;
-		int wndbottom = s_rcmainwnd.bottom;
-		int wndright = s_rcmainwnd.right;
-
-		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-			nextcapwndid = 0;
-		}
-	}
-
-	//check 3dwnd
-	{
-		int wndtop = s_rc3dwnd.top;
-		int wndleft = s_rctreewnd.right;
-		int wndbottom = s_rc3dwnd.bottom;
-		int wndright = wndleft + s_rc3dwnd.right;
-
-		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-			nextcapwndid = 1;
-		}
-	}
-
-	//check treewnd
-	{
-		int wndtop = s_rctreewnd.top;
-		int wndleft = 0;
-		int wndbottom = s_rctreewnd.bottom;
-		int wndright = s_rctreewnd.right;
-
-		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-			nextcapwndid = 2;
-		}
-	}
-
-	//check toolwnd
-	{
-		int wndtop = s_rctreewnd.bottom;
-		int wndleft = 0;
-		int wndbottom = s_rctreewnd.bottom + s_rctoolwnd.bottom;
-		int wndright = s_rctoolwnd.right;
-
-		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-			nextcapwndid = 3;
-		}
-	}
-
-	//check ltwnd
-	{
-		int wndtop = s_rctreewnd.bottom;
-		int wndleft = s_rctoolwnd.right;
-		int wndbottom = s_rctreewnd.bottom + s_rcltwnd.bottom;
-		int wndright = s_rctoolwnd.right + s_rcltwnd.right;
-
-		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-			nextcapwndid = 4;
-		}
-	}
-
-	//check sidemenuwnd
-	{
-		int wndtop = 0;
-		int wndleft = s_rctreewnd.right + s_rc3dwnd.right;
-		int wndbottom = s_rcsidemenuwnd.bottom;
-		int wndright = s_rctreewnd.right + s_rc3dwnd.right + s_rcsidemenuwnd.right;
-
-		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-			nextcapwndid = 5;
-		}
-	}
-
-	//check rigidwnd
-	{
-		int wndtop = s_rcsidemenuwnd.bottom;
-		int wndleft = s_rctreewnd.right + s_rc3dwnd.right;
-		int wndbottom = s_rcsidemenuwnd.bottom + s_rcrigidwnd.bottom;
-		int wndright = s_rctreewnd.right + s_rc3dwnd.right + s_rcrigidwnd.right;
-
-		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-			nextcapwndid = 6;
-		}
-	}
-
-	//check infownd
-	{
-		int wndtop = s_rc3dwnd.bottom;
-		int wndleft = s_rctreewnd.right;
-		int wndbottom = s_rc3dwnd.bottom + s_rcinfownd.bottom;
-		int wndright = s_rctreewnd.right + s_rcinfownd.right;
-
-		if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-			nextcapwndid = 7;
-		}
-	}
-
-	if (s_dispmodel) {
-		//check modelpanel
-		{
-			int wndtop = s_rcmodelpanel.top;
-			int wndleft = s_rcmodelpanel.left;
-			int wndbottom = s_rcmodelpanel.bottom;
-			int wndright = s_rcmodelpanel.right;
-
-			if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-				nextcapwndid = 8;
-			}
-		}
-	}
-	if (s_dispmotion) {
-		//check motionpanel
-		{
-			int wndtop = s_rcmotionpanel.top;
-			int wndleft = s_rcmotionpanel.left;
-			int wndbottom = s_rcmotionpanel.bottom;
-			int wndright = s_rcmotionpanel.right;
-
-			if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-				nextcapwndid = 9;
-			}
-		}
-	}
-	if (s_dispcamera) {
-		//check camerapanel
-		{
-			int wndtop = s_rccamerapanel.top;
-			int wndleft = s_rccamerapanel.left;
-			int wndbottom = s_rccamerapanel.bottom;
-			int wndright = s_rccamerapanel.right;
-
-			if ((chkx >= wndleft) && (chkx <= wndright) && (chky >= wndtop) && (chky <= wndbottom)) {
-				nextcapwndid = 10;
-			}
-		}
-	}
-
-
-	///////////////
-	///////////////
-
-	//if ((s_pickinfo.buttonflag == PICK_CAMMOVE) || (s_pickinfo.buttonflag == PICK_CAMROT) || (s_pickinfo.buttonflag == PICK_CAMDIST)) {
-	//	//ここでは、カメラスプライトをドラッグ中はマウスキャプチャーをいじらない
-	//}
-	//if ((nextcapwndid != s_capwndid) || (s_wmlbuttonup == 1) || (s_dspushedOK == 0) || (g_undertrackingRMenu == 0)) {
-	//else if ((nextcapwndid != s_capwndid) || (s_wmlbuttonup == 1) || (s_dspushedOK == 0)) {
-
-
-	if (dragbuttondown >= 1) {//〇ボタンを押したときにキャプチャーオン
-
-		//if ((nextcapwndid != s_capwndid) || (s_wmlbuttonup == 1)) {//常にではなく、〇ボタンを押したときだけ処理。同じウインドウでも必要なことがある。
-		switch (nextcapwndid) {
-		case 0:
-			if (g_mainhwnd) {
-				if (g_mainhwnd) {
-					SetCapture(g_mainhwnd);
-				}
-			}
-			break;
-
-		case 1:
-			//if (s_3dwnd) {
-			//	//SetCapture(s_3dwnd);
-			//	HWND dlghwnd;
-			//	dlghwnd = g_SampleUI.GetHWnd();
-			//	if (dlghwnd) {
-			//		SetCapture(dlghwnd);
-			//	}
-			//}
-			break;
-		case 2:
-			if (s_timelineWnd) {
-				SetCapture(s_timelineWnd->getHWnd());
-			}
-			break;
-		case 3:
-			if (s_toolWnd) {
-				SetCapture(s_toolWnd->getHWnd());
-			}
-			break;
-		case 4:
-			if (s_LtimelineWnd) {
-				SetCapture(s_LtimelineWnd->getHWnd());
-			}
-			break;
-		case 5:
-			if (s_sidemenuWnd) {
-				SetCapture(s_sidemenuWnd->getHWnd());
-			}
-			break;
-		case 6:
-			//plate menuで場合分け必要
-			//if (s_platemenukind == SPPLATEMENUKIND_GUI) {
-			//	if (g_mainhwnd) {
-			//		SetCapture(g_mainhwnd);
-			//	}
-			//}
-			//else
-			if (s_platemenukind == SPPLATEMENUKIND_DISP) {
-				if (s_platemenuno == (SPDISPSW_LIGHTS + 1)) {
-					if (s_lightsWnd) {
-						SetCapture(s_lightsWnd->getHWnd());
-					}
-				}
-				else if (s_platemenuno == (SPDISPSW_DISPGROUP + 1)) {
-					if (s_groupWnd) {
-						SetCapture(s_groupWnd->getHWnd());
-					}
-				}
-				else if (s_platemenuno == (SPDISPSW_LATERTRANSPARENT + 1)) {
-					if (s_laterWnd) {
-						SetCapture(s_laterWnd->getHWnd());
-					}
-				}
-				else if (s_platemenuno == (SPDISPSW_SHADERTYPE + 1)) {
-					if (s_st_paramsWnd && s_st_paramsWnd->getVisible()) {
-						SetCapture(s_st_paramsWnd->getHWnd());
-					}
-					else if (s_shadertypeWnd) {
-						SetCapture(s_shadertypeWnd->getHWnd());
-					}
-				}
-				else if (s_platemenuno == (SPDISPSW_SHADOWPARAMS + 1)) {
-					if (s_shadowWnd) {
-						SetCapture(s_shadowWnd->getHWnd());
-					}
-				}
-			}
-			else if (s_platemenukind == SPPLATEMENUKIND_RIGID) {
-				if (s_platemenuno == (SPRIGIDSW_RIGIDPARAMS + 1)) {
-					if (s_rigidparamsdlg.GetHWnd()) {
-						SetCapture(s_rigidparamsdlg.GetHWnd());
-					}
-				}
-				else if (s_platemenuno == (SPRIGIDSW_IMPULSE + 1)) {
-					if (s_impWnd) {
-						SetCapture(s_impWnd->getHWnd());
-					}
-				}
-				else if (s_platemenuno == (SPRIGIDSW_GROUNDPLANE + 1)) {
-					if (s_gpWnd) {
-						SetCapture(s_gpWnd->getHWnd());
-					}
-				}
-				else if (s_platemenuno == (SPRIGIDSW_DAMPANIM + 1)) {
-					if (s_dmpanimWnd) {
-						SetCapture(s_dmpanimWnd->getHWnd());
-					}
-				}
-			}
-			else if (s_platemenukind == SPPLATEMENUKIND_RETARGET) {
-				if (s_platemenuno == (SPRETARGETSW_RETARGET + 1)) {
-					if (s_convboneWnd) {
-						SetCapture(s_convboneWnd->getHWnd());
-					}
-				}
-				else if (s_platemenuno == (SPRETARGETSW_LIMITEULER + 1)) {
-					if (s_limitWnd) {
-						SetCapture(s_limitWnd->getHWnd());
-					}
-				}
-			}
-			else if (s_platemenukind == SPPLATEMENUKIND_EFFECT) {
-				if (s_platemenuno == (SPEFFECTSW_SKY + 1)) {
-					if (s_skyst_paramsWnd) {
-						SetCapture(s_skyst_paramsWnd->getHWnd());
-					}
-				}
-				else if (s_platemenuno == (SPEFFECTSW_FOG + 1)) {
-					if (s_fogWnd) {
-						SetCapture(s_fogWnd->getHWnd());
-					}
-				}
-				else if (s_platemenuno == (SPEFFECTSW_DOF + 1)) {
-					if (s_dofWnd) {
-						SetCapture(s_dofWnd->getHWnd());
-					}
-				}
-			}
-			break;
-		case 7:
-			if (g_infownd) {
-				SetCapture(g_infownd->GetHWnd());
-			}
-			break;
-		case 8:
-			if (s_modelpanel.panel) {
-				SetCapture(s_modelpanel.panel->getHWnd());
-			}
-			break;
-		case 9:
-			if (s_motionpanel.panel) {
-				SetCapture(s_motionpanel.panel->getHWnd());
-			}
-			break;
-		case 10:
-			if (s_camerapanel.panel) {
-				SetCapture(s_camerapanel.panel->getHWnd());
-			}
-			break;
-
-		default:
-			if (g_mainhwnd) {
-				SetCapture(g_mainhwnd);
-			}
-			//if (g_mainhwnd) {
-			//	if (!s_firstflag) {
-			//		ReleaseCapture();
-			//		s_firstflag = false;
-			//	}
-			//	SetCapture(g_mainhwnd);
-			//}
-			break;
-		}
-
-		s_capwndid = nextcapwndid;
-		s_wmlbuttonup = 0;
-		//}
-	}
-}
-
-
-void ChangeMouseReleaseCapture()
-{
-	//if (!g_mainhwnd) {
-	//	return;
-	//}
-
-	//int dragbuttondown;
-	//int dragbuttonup;
-
-	//dragbuttondown = s_dsbuttondown[2];
-	//dragbuttonup = s_dsbuttonup[2];
-
-
-	////〇ボタンを話した時にリリースキャプチャしてリターン
-	//if (dragbuttonup >= 1) {
-	//	ReleaseCapture();
-	//	return;
-	//}
-}
 
 void OrgWindowListenMouse(bool srcflag)
 {
@@ -55272,79 +48995,6 @@ void SetMainWindowTitle()
 
 }
 
-
-void OnGUIEventSpeed()
-{
-	//if (!s_chascene) {
-	//	return;
-	//}
-
-	//RollbackCurBoneNo();
-	//g_dspeed = (float)((double)g_SampleUI.GetSlider(IDC_SPEED)->GetValue() * 0.010);
-
-
-	////for (modelno = 0; modelno < modelnum; modelno++) {
-	////	s_modelindex[modelno].modelptr->SetMotionSpeed(g_dspeed);
-	////}
-
-	////SetMotionSpeed() : モーションごとのスピード
-	////SetTmpMotSpeed() : モーションが変わってもスライダー指定のスピード
-
-	//s_chascene->SetMotionSpeed(-1, g_dspeed);
-
-	//WCHAR sz[100] = { 0L };
-	//swprintf_s(sz, 100, L"Speed: %0.4f", g_dspeed);
-	//g_SampleUI.GetStatic(IDC_SPEED_STATIC)->SetText(sz);
-}
-
-//void WaitRetargetThreads()
-//{
-//	//if ((g_retargetbatchflag == 2) || (g_retargetbatchflag == 3)) {//2はダイアログでのキャンセル
-//	if ((InterlockedAdd(&g_retargetbatchflag, 0) == 2) || (InterlockedAdd(&g_retargetbatchflag, 0) == 3)) {//2はダイアログでのキャンセル
-//		InterlockedExchange(&g_retargetbatchflag, (LONG)0);
-//		if (s_retargetbatchwnd) {
-//			SendMessage(s_retargetbatchwnd, WM_CLOSE, 0, 0);
-//		}
-//		s_retargetcnt = 0;
-//		InterlockedExchange(&g_retargetbatchflag, (LONG)0);//WM_CLOSEで変わる可能性あり
-//
-//		ChangeLimitDegFlag(s_savelimitdegflag, true, true);
-//		//g_limitdegflag = s_savelimitdegflag;
-//		//if (s_LimitDegCheckBox) {
-//		//	s_LimitDegCheckBox->SetChecked(g_limitdegflag);
-//		//}
-//
-//		OnModelMenu(true, s_saveretargetmodel, 1);
-//	}
-//
-//}
-
-//void WaitMotionCacheThreads()
-//{
-//	//if ((g_motioncachebatchflag == 2) || (g_motioncachebatchflag == 3)) {//2はダイアログでのキャンセル
-//	if ((InterlockedAdd(&g_motioncachebatchflag, 0) == 2) || (InterlockedAdd(&g_motioncachebatchflag, 0) == 3)) {//2はダイアログでのキャンセル
-//		InterlockedExchange(&g_motioncachebatchflag, (LONG)0);
-//		if (s_motioncachebatchwnd) {
-//			SendMessage(s_motioncachebatchwnd, WM_CLOSE, 0, 0);
-//		}
-//		s_motioncachecnt = 0;
-//		InterlockedExchange(&g_motioncachebatchflag, (LONG)0);//WM_CLOSEで変わる可能性あり
-//	}
-//
-//}
-
-//void WaitBvh2FbxThreads()
-//{
-//	//if ((g_bvh2fbxbatchflag == 2) || (g_bvh2fbxbatchflag == 3)) {//2はダイアログでのキャンセル
-//	if ((InterlockedAdd(&g_bvh2fbxbatchflag, 0) == 2) || (InterlockedAdd(&g_bvh2fbxbatchflag, 0) == 3)) {//2はダイアログでのキャンセル
-//		InterlockedExchange(&g_bvh2fbxbatchflag, (LONG)0);
-//		if (s_bvh2fbxbatchwnd) {
-//			SendMessage(s_bvh2fbxbatchwnd, WM_CLOSE, 0, 0);
-//		}
-//		s_bvh2fbxcnt = 0;
-//		InterlockedExchange(&g_bvh2fbxbatchflag, (LONG)0);//WM_CLOSEで変わる可能性あり
-//	}
-//}
 
 int SaveRtgHistory(WCHAR* selectname)
 {
@@ -57455,7 +51105,6 @@ void OnArrowKey()
 	if (arrowkeypushed == true) {
 		bool firstctrlselect = false;
 		DSCrossButtonSelectTree(firstctrlselect);
-
 	}
 
 }
@@ -61278,16 +54927,18 @@ int OnFrameBlendShape()
 {
 
 
-	if (s_blendshapeUnderSelect) { //2024/06/30 Means SelChange
+	if (s_blendshapedlg.GetBlendShapeUnderSelect()) { //2024/06/30 Means SelChange
 
 		//undoFlagが立っていた場合にもフラグをリセット
-		s_blendshapeUnderSelect = false;
+		s_blendshapedlg.SetBlendShapeUnderSelect(false);
 
 		if (!s_undoFlag && !s_redoFlag && //2024/07/02
-			!s_blendshapeUnderSelectFromUndo && !s_blendshapeUnderSelectFromRefresh) {
+			!s_blendshapedlg.GetBlendShapeUnderSelectFromUndo() && 
+			!s_blendshapedlg.GetBlendShapeUnderSelectFromRefresh()) {
 
-			if ((s_blendshapeOpeIndex >= 0) && (s_blendshapeOpeIndex < (int)s_blendshapeelemvec.size())) {
-				CBlendShapeElem blendshapeelem = s_blendshapeelemvec[s_blendshapeOpeIndex];
+			int blendshapeindex = s_blendshapedlg.GetBlendShapeOpeIndex();
+			if ((blendshapeindex >= 0) && (blendshapeindex < s_blendshapedlg.GetBlendShapeLineNum())) {
+				CBlendShapeElem blendshapeelem = s_blendshapedlg.GetBlendShapeElem(blendshapeindex);
 				if (blendshapeelem.validflag && blendshapeelem.model && blendshapeelem.mqoobj) {
 
 					SetLTimelineMark(s_curboneno);//playerbuttonのshape名更新
@@ -61299,18 +54950,19 @@ int OnFrameBlendShape()
 		}
 	}
 
-	if (s_blendshapeUnderSelectFromRefresh) {//2024/07/02 Means SelChange From Undo
-		s_blendshapeUnderSelectFromRefresh = false;
+	if (s_blendshapedlg.GetBlendShapeUnderSelectFromRefresh()) {//2024/07/02 Means SelChange From Undo
+		s_blendshapedlg.SetBlendShapeUnderSelectFromRefresh(false);
 
-		int blendshapenum = (int)s_blendshapeelemvec.size();
-		if ((s_blendshapeUndoOpeIndex >= 0) && (s_blendshapeUndoOpeIndex < blendshapenum)) {
-			s_blendshapeOpeIndex = s_blendshapeUndoOpeIndex;
-			CBlendShapeElem blendshapeelem = s_blendshapeelemvec[s_blendshapeOpeIndex];
+		int blendshapenum = s_blendshapedlg.GetBlendShapeLineNum();
+		int blendshapeUndoindex = s_blendshapedlg.GetBlendShapeUndoOpeIndex();
+		if ((blendshapeUndoindex >= 0) && (blendshapeUndoindex < blendshapenum)) {
+			s_blendshapedlg.SetBlendShapeOpeIndex(blendshapeUndoindex);
+			CBlendShapeElem blendshapeelem = s_blendshapedlg.GetBlendShapeElem(blendshapeUndoindex);
 			if (blendshapeelem.validflag && blendshapeelem.model && blendshapeelem.mqoobj) {
 				SetLTimelineMark(s_curboneno);//playerbuttonのshape名更新
 				UpdateEditedEuler();
 
-				BlendShapeAnim2Dlg();//valueの変更操作よりも後で呼ぶ
+				s_blendshapedlg.ParamsToDlg();//valueの変更操作よりも後で呼ぶ
 
 				//!!!! Undoからトリガーされるので　PrepairUndo_BlendShape()呼び出しは無し
 			}
@@ -61318,35 +54970,42 @@ int OnFrameBlendShape()
 	}
 
 
-	if (s_blendshapeUnderEdit) {//スライダードラッグ中処理
-		s_blendshapeUnderEdit = false;
+	if (s_blendshapedlg.GetBlendShapeUnderEdit()) {//スライダードラッグ中処理
+		s_blendshapedlg.SetBlendShapeUnderEdit(false);
 
-		if ((s_blendshapeOpeIndex >= 0) && (s_blendshapeOpeIndex < (int)s_blendshapeelemvec.size())) {
-			CBlendShapeElem blendshapeelem = s_blendshapeelemvec[s_blendshapeOpeIndex];
+		int blendshapeindex = s_blendshapedlg.GetBlendShapeOpeIndex();
+		int blendshapenum = s_blendshapedlg.GetBlendShapeLineNum();
+		if ((blendshapeindex >= 0) && (blendshapeindex < blendshapenum)) {
+			CBlendShapeElem blendshapeelem = s_blendshapedlg.GetBlendShapeElem(blendshapeindex);
 			if (blendshapeelem.validflag && blendshapeelem.model && blendshapeelem.mqoobj) {
 				int curmotid = s_model->GetCurrentMotID();
 				double curframe = s_model->GetCurrentFrame();
 				blendshapeelem.mqoobj->SetShapeAnimWeight(blendshapeelem.channelindex,
-					curmotid, IntTime(curframe), s_blendshapeAfter);
+					curmotid, IntTime(curframe), s_blendshapedlg.GetBlendShapeAfter());
 
 				//SetLTimelineMark(s_curboneno);//playerbuttonのshape名更新
 				UpdateEditedEuler();
 
-				BlendShapeAnim2Dlg();//valueの変更操作よりも後で呼ぶ
+				s_blendshapedlg.ParamsToDlg();//valueの変更操作よりも後で呼ぶ
 			}
 		}
 	}
-	if (s_blendshapePostEdit) {//スライダードラッグ終了処理
-		s_blendshapePostEdit = false;
+	if (s_blendshapedlg.GetBlendShapePostEdit()) {//スライダードラッグ終了処理
+		s_blendshapedlg.SetBlendShapePostEdit(false);
 		if (s_model) {
-			if ((s_blendshapeOpeIndex >= 0) && (s_blendshapeOpeIndex < (int)s_blendshapeelemvec.size())) {
-				CBlendShapeElem blendshapeelem = s_blendshapeelemvec[s_blendshapeOpeIndex];
+			int blendshapeindex = s_blendshapedlg.GetBlendShapeOpeIndex();
+			int blendshapenum = s_blendshapedlg.GetBlendShapeLineNum();
+			if ((blendshapeindex >= 0) && (blendshapeindex < blendshapenum)) {
+				CBlendShapeElem blendshapeelem = s_blendshapedlg.GetBlendShapeElem(blendshapeindex);
 				if (blendshapeelem.validflag && blendshapeelem.model && blendshapeelem.mqoobj) {
 
-					if (fabs(s_blendshapeAfter - s_blendshapeBefore) >= 0.020f) {//クリックしただけのときに処理が走らないように、ある程度値が変化した時だけ処理
+					float befval = s_blendshapedlg.GetBlendShapeBefore();
+					float aftval = s_blendshapedlg.GetBlendShapeAfter();
+
+					if (fabs(aftval - befval) >= 0.020f) {//クリックしただけのときに処理が走らないように、ある程度値が変化した時だけ処理
 
 						int result1 = blendshapeelem.model->OnBlendWeightChanged(&s_editrange,
-							blendshapeelem.mqoobj, s_blendshapeOpeIndex, s_blendshapeAfter);
+							blendshapeelem.mqoobj, blendshapeindex, aftval);
 						if (result1 != 0) {
 							_ASSERT(0);
 						}
@@ -61355,7 +55014,7 @@ int OnFrameBlendShape()
 					SetLTimelineMark(s_curboneno);//playerbuttonのshape名更新
 					UpdateEditedEuler();
 
-					BlendShapeAnim2Dlg();//valueの変更操作よりも後で呼ぶ
+					s_blendshapedlg.ParamsToDlg();//valueの変更操作よりも後で呼ぶ
 
 					PrepairUndo_BlendShape(blendshapeelem);
 				}
@@ -61366,7 +55025,7 @@ int OnFrameBlendShape()
 	//2024/06/09 ここでBlendShapeAnim2Dlgを呼ぶと
 	//毎フレームの処理が重すぎて　描画速度が極端に遅くなる
 	//変更があったときのみ処理するように修正
-	//BlendShapeAnim2Dlg();//valueの変更操作よりも後で呼ぶ
+	//s_blendshapedlg.ParamsToDlg();//valueの変更操作よりも後で呼ぶ
 
 	return 0;
 }
@@ -70458,20 +64117,6 @@ void CloseTheFirstRowGUI()
 	}
 }
 
-int UpdateTopPosText()
-{
-	////BrushesウインドウのTopPosスライダーの　フレーム番号表示を更新
-	//if (s_guidlg[GUIDLG_BRUSHPARAMS]) {
-	//	HWND topposslider = GetDlgItem(s_guidlg[GUIDLG_BRUSHPARAMS], IDC_SLIDER_TOPPOS);
-	//	HWND toppostext = GetDlgItem(s_guidlg[GUIDLG_BRUSHPARAMS], IDC_STATIC_TOPPOS);
-	//	if (topposslider || toppostext) {
-	//		WCHAR strdlg[256] = { 0L };
-	//		swprintf_s(strdlg, 256, L"TopPos %.1f%% : %d", g_applyrate, IntTime(g_motionbrush_applyframe));
-	//		SetDlgItemText(s_guidlg[GUIDLG_BRUSHPARAMS], IDC_STATIC_TOPPOS, strdlg);
-	//	}
-	//}
-	return 0;
-}
 
 void InitPickInfo(UIPICKINFO* ppickinfo)
 {
@@ -70605,16 +64250,19 @@ bool InBlendShapeMode(CModel** ppmodel, CMQOObject** ppmqoobj, int* pchannelinde
 	*ppmqoobj = 0;
 	*pchannelindex = -1;
 
-	if (s_blendshapeWnd && s_spguisw[SPGUISW_BLENDSHAPE].state &&
-		!s_blendshapeelemvec.empty() && (s_blendshapeOpeIndex >= 0)) {
+	//if (s_blendshapeWnd && s_spguisw[SPGUISW_BLENDSHAPE].state &&
+	//	!s_blendshapeelemvec.empty() && (s_blendshapeOpeIndex >= 0)) {
+	if (s_blendshapedlg.GetVisible() && s_spguisw[SPGUISW_BLENDSHAPE].state &&
+		(s_blendshapedlg.GetBlendShapeLineNum() > 0) && (s_blendshapedlg.GetBlendShapeOpeIndex() >= 0)) {
 
-		int blendshapenum = (int)s_blendshapeelemvec.size();
-		if ((s_blendshapeOpeIndex >= 0) && (s_blendshapeOpeIndex < blendshapenum)) {
-			CBlendShapeElem blendshape = s_blendshapeelemvec[s_blendshapeOpeIndex];
+		int blendshapenum = s_blendshapedlg.GetBlendShapeLineNum();
+		int blendshapeindex = s_blendshapedlg.GetBlendShapeOpeIndex();
+		if ((blendshapeindex >= 0) && (blendshapeindex < blendshapenum)) {
+			CBlendShapeElem blendshape = s_blendshapedlg.GetBlendShapeElem(blendshapeindex);
 			if (blendshape.validflag && blendshape.model && blendshape.mqoobj) {
 				*ppmodel = blendshape.model;
 				*ppmqoobj = blendshape.mqoobj;
-				*pchannelindex = s_blendshapeOpeIndex;
+				*pchannelindex = blendshapeindex;
 
 				return true;//!!!!!!!!!!!!
 			}
@@ -70871,39 +64519,6 @@ bool ChkEnableIK()
 	return true;
 }
 
-//bool IsEditingCameraAnim()
-//{
-//	if (!s_cameramodel) {
-//		return false;
-//	}
-//	
-//	int cameramotid = s_cameramodel->GetCameraMotionId();
-//	if (cameramotid <= 0) {
-//		return false;
-//	}
-//	MOTINFO camerami = s_cameramodel->GetMotInfo(cameramotid);
-//	int cameraframeleng = IntTime(camerami.frameleng);
-//	if (cameraframeleng <= 0) {
-//		return false;
-//	}
-//	CAMERANODE* cnptr = s_cameramodel->GetCAMERANODE(cameramotid);
-//	if (!cnptr) {
-//		return false;
-//	}
-//	if (!cnptr->pbone) {
-//		return false;
-//	}
-//
-//	if (s_spcameramode.state || (g_edittarget == EDITTARGET_CAMERA)) {
-//		//2024/08/02
-//		//カメラアニメスイッチがオンの場合　または　グラフモードがカメラモードの場合に　カメラアニメを編集する
-//		return true;
-//	}
-//	else {
-//		return false;
-//	}
-//}
-
 int SetModel2Dlgs(CModel* srcmodel)
 {
 	if (srcmodel) {
@@ -70945,6 +64560,10 @@ int SetModel2Dlgs(CModel* srcmodel)
 		}
 
 		s_rigidparamsdlg.SetModel(srcmodel, s_curboneno, s_reindexmap, s_rgdindexmap);
+
+		if (s_blendshapedlg.GetVisible()) {
+			s_blendshapedlg.SetModel(srcmodel);
+		}
 	}
 
 
