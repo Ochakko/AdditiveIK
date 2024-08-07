@@ -77,6 +77,7 @@
 #include <ProjLodDlg.h>
 #include <BlendShapeDlg.h>
 #include <LightsDlg.h>
+#include <DispGroupDlg.h>
 #include <CpInfoDlg2.h>
 
 #include <math.h>
@@ -980,6 +981,7 @@ static CBulletDlg s_bulletdlg;
 static CProjLodDlg s_projloddlg;
 static CBlendShapeDlg s_blendshapedlg;
 static CLightsDlg s_lightsdlg;
+static CDispGroupDlg s_dispgroupdlg;
 
 static bool s_undercpinfodlg2;
 static CCpInfoDlg2 s_cpinfodlg2;
@@ -2065,36 +2067,6 @@ static OWP_Button* s_rtgfileload = 0;
 static OrgWindow* s_layerWnd = 0;
 static OWP_LayerTable* s_owpLayerTable = 0;
 
-//#define MAXDISPOBJNUM	4098 //vector<>に変更したため不要に
-//#define MAXDISPGROUPNUM	20 //coef.hに移動
-static OrgWindow* s_groupWnd = 0;
-static OWP_ScrollWnd* s_groupSCWnd = 0;
-static OWP_Separator* s_groupsp0 = 0;
-static OWP_Separator* s_groupsp = 0;
-static OWP_Separator* s_groupsp1 = 0;
-static OWP_Separator* s_groupsp2 = 0;
-static OWP_Separator* s_groupsp3 = 0;
-static OWP_CheckBoxA* s_groupselect[MAXDISPGROUPNUM];
-static OWP_Button* s_groupsetB = 0;
-static OWP_Button* s_groupgetB = 0;
-static OWP_Button* s_grouponB = 0;
-static OWP_Button* s_groupoffB = 0;
-static OWP_Button* s_groupclearB = 0;
-static OWP_Label* s_grouplabel11 = 0;
-static OWP_Label* s_grouplabel12 = 0;
-static OWP_Label* s_grouplabel21 = 0;
-static OWP_Label* s_grouplabel22 = 0;
-static bool s_groupUnderGetting = false;//s_groupgetBボタンの処理中は　groupobjvecのチェック処理をスキップ
-//static OWP_CheckBoxA* s_groupobj[MAXDISPOBJNUM];
-//static OWP_Button* s_grouptestB[MAXDISPOBJNUM];
-static std::vector<OWP_CheckBoxA*> s_groupobjvec;
-static std::vector<OWP_Button*> s_grouptestBvec;
-static std::vector<CMQOObject*> s_groupmqoobjvec;
-static int s_grouplinenum = 0;
-static bool s_disponlyoneobj = false;//for test button of groupWnd
-static int s_onlyoneobjno = -1;//for test button of groupWnd
-
-
 static bool InBlendShapeMode(CModel** ppmodel, CMQOObject** ppmqoobj, int* pchannelindex);
 
 static bool s_SpriteButtonDown = false;
@@ -2184,9 +2156,6 @@ static int s_LrefreshEditTarget = 0;
 static bool s_LchangeTarget2Camera = false;
 //static int s_LstopDoneCount = 0;
 static bool s_retargetguiFlag = false;
-
-static int s_checksimilarFlag = false;
-static int s_checksimilarobjno = 0;
 
 static int s_calclimitedwmState = 0;
 
@@ -3232,12 +3201,7 @@ static int CreateShadowParamsWnd();
 static int ShadowParams2Dlg();
 static void CheckShadowDirectionButton(int srcshadowdir);
 
-
-static int CreateDispGroupWnd();
-static int DestroyDispGroupWnd();
-static int CheckSimilarMenu();
-static int CheckSimilarGroup(int opetype);
-static int TrimLeadingAlnum(bool secondtokenflag, WCHAR* srcstr, int srclen, WCHAR* dststr, int dstlen, bool secondcallflag);
+static int CheckSimilarMenu();//context menu
 
 static int OnFrameBlendShape();
 
@@ -4159,7 +4123,6 @@ INT WINAPI wWinMain(
 	CreateSideMenuWnd();
 	CreateTopSlidersWnd();
 
-	CreateDispGroupWnd();
 	//CreateLaterTransparentWnd();//s_modelが設定されてから作成する
 
 	CreateMaterialRateWnd();
@@ -4487,6 +4450,7 @@ int CheckResolution()
 		s_projloddlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_blendshapedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_lightsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+		s_dispgroupdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 	}
 
 	return 0;
@@ -4518,6 +4482,7 @@ void InitApp()
 	s_projloddlg.InitParams();
 	s_blendshapedlg.InitParams();
 	s_lightsdlg.InitParams();
+	s_dispgroupdlg.InitParams();
 
 	s_undercpinfodlg2 = false;
 	s_cpinfodlg2.InitParams();
@@ -4994,43 +4959,9 @@ void InitApp()
 		s_sky = NULL;
 	}
 
-
-
-
 	s_layerWnd = 0;
 	s_owpLayerTable = 0;
 	
-
-	{
-		s_groupWnd = 0;
-		s_groupSCWnd = 0;
-		s_groupsp0 = 0;
-		s_groupsp = 0;
-		s_groupsp1 = 0;
-		s_groupsp2 = 0;
-		s_groupsp3 = 0;
-		ZeroMemory(s_groupselect, sizeof(OWP_CheckBoxA*)* MAXDISPGROUPNUM);
-		s_groupsetB = 0;
-		s_groupgetB = 0;
-		s_grouponB = 0;
-		s_groupoffB = 0;
-		s_groupclearB = 0;
-		s_grouplabel11 = 0;
-		s_grouplabel12 = 0;
-		s_grouplabel21 = 0;
-		s_grouplabel22 = 0;
-		s_groupUnderGetting = false;//s_groupgetBボタンの処理中は　groupobjvecのチェック処理をスキップ
-		//ZeroMemory(s_groupobj, sizeof(OWP_CheckBoxA*) * MAXDISPOBJNUM);
-		//ZeroMemory(s_grouptestB, sizeof(OWP_Button*)* MAXDISPOBJNUM);
-		s_groupobjvec.clear();
-		s_grouptestBvec.clear();
-		s_groupmqoobjvec.clear();
-
-		s_grouplinenum = 0;
-		s_disponlyoneobj = false;//for test button of groupWnd
-		s_onlyoneobjno = -1;//for test button of groupWnd
-	}
-
 	{
 		s_shadertypeparamsFlag = false;
 		s_shadertypeparamsindex = -1;//index==0は全てのマテリアルに設定. それ以外はindex - 1のマテリアルに設定
@@ -6037,8 +5968,6 @@ void InitApp()
 	s_calclimitedwmState = 0;
 	s_180DegFlag = false;
 	s_scaleAllInitFlag = false;
-	s_checksimilarFlag = false;
-	s_checksimilarobjno = 0;
 	s_topslidersEditRateFlag = false;
 	s_topslidersSpeedFlag = false;
 	s_topslidersTopPosFlag = false;
@@ -6930,6 +6859,7 @@ void OnDestroyDevice()
 	s_projloddlg.DestroyObjs();
 	s_blendshapedlg.DestroyObjs();
 	s_lightsdlg.DestroyObjs();
+	s_dispgroupdlg.DestroyObjs();
 	s_cpinfodlg2.DestroyObjs();
 
 
@@ -7214,8 +7144,6 @@ void OnDestroyDevice()
 		s_owpLayerTable = 0;
 	}
 
-
-	DestroyDispGroupWnd();
 	DestroyShaderTypeWnd();
 	DestroyShaderTypeParamsDlg();
 	DestroySkyParamsDlg();
@@ -9070,7 +8998,7 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 		!s_underdelmodel && !s_underdelmotion && 
 		!s_underselectmodel && !s_underselectmotion && !s_underselectcamera && !s_underdispmodel && !g_changeUpdateThreadsNum) {
 
-		if (s_disponlyoneobj == false) {
+		if (s_dispgroupdlg.GetDispGroupOnlyOneObjFlag() == false) {
 
 			if (g_skydispflag) {
 				OnRenderSky(re, rc);//透過テクスチャの奥に空がみえるように　空は一番最初に描画する
@@ -9678,9 +9606,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		}
 		else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_CHECKSIMILARGROUP)) &&
 			(menuid <= (ID_RMENU_0 + MENUOFFSET_CHECKSIMILARGROUP + 7))) {
-			if (s_model && s_groupWnd) {
+			if (s_model && s_dispgroupdlg.GetVisible()) {
 				int opetype = menuid - (ID_RMENU_0 + MENUOFFSET_CHECKSIMILARGROUP);
-				CheckSimilarGroup(opetype);
+				s_dispgroupdlg.CheckSimilarGroup(opetype);
 			}
 		}
 		//else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_INITMPFROMTOOL)) && (menuid <= (ID_RMENU_0 + 3 * 3 + MENUOFFSET_INITMPFROMTOOL))) {
@@ -16215,6 +16143,7 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 
 		s_model = 0;
 		s_curboneno = -1;
+		SetModel2Dlgs(nullptr);
 
 		if (s_owpTimeline && dorefreshtl) {
 			refreshTimeline(*s_owpTimeline);
@@ -16227,6 +16156,7 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		DispMotionPanel();
 		DispCameraPanel();
 
+
 		SetMainWindowTitle();
 		ShowDispGroupWnd(s_spdispsw[SPDISPSW_DISPGROUP].state);
 		ShowLaterTransparentWnd(s_spdispsw[SPDISPSW_LATERTRANSPARENT].state);
@@ -16234,7 +16164,6 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		ShowShadowParamsWnd(s_spdispsw[SPDISPSW_SHADOWPARAMS].state);
 		ShowGUIDlgBlendShape(s_spguisw[SPGUISW_BLENDSHAPE].state);
 
-		SetModel2Dlgs(nullptr);
 
 		s_underselectmodel = false;
 		return 0;//!!!!!!!!!
@@ -16251,6 +16180,8 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		OrgWindowListenMouse(false);
 
 		s_model = 0;
+		SetModel2Dlgs(nullptr);
+
 		if (s_owpTimeline && dorefreshtl) {
 			refreshTimeline(*s_owpTimeline);
 		}
@@ -16268,7 +16199,6 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		ShowShadowParamsWnd(s_spdispsw[SPDISPSW_SHADOWPARAMS].state);
 		ShowGUIDlgBlendShape(s_spguisw[SPGUISW_BLENDSHAPE].state);
 
-		SetModel2Dlgs(nullptr);
 
 		s_underselectmodel = false;
 		return 0;//!!!!!!!!!!!!!!!!!!!
@@ -16298,6 +16228,9 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 			_ASSERT(0);
 			s_model = 0;
 		}
+
+		SetModel2Dlgs(s_model);
+
 		if (s_model && s_chascene) {
 			s_chascene->GetTimelineArray(selindex, s_tlarray);
 			s_motmenuindexmap[s_model] = s_chascene->GetMotMenuIndex(selindex);
@@ -16321,7 +16254,6 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		ClampTimelineSelection();//2024/06/23
 
 
-		SetModel2Dlgs(s_model);
 
 
 		if (s_model) {
@@ -33623,9 +33555,9 @@ int OnFrameToolWnd()
 
 
 	//DispGroupWnd チェックボックスを右クリック　類似をチェックするためのコンテクストメニューを出す
-	if (s_checksimilarFlag) {
+	if (s_dispgroupdlg.GetDispGroupCheckSimilarFlag()) {
 		CheckSimilarMenu();
-		s_checksimilarFlag = false;
+		s_dispgroupdlg.SetDispGroupCheckSimilarFlag(false);
 	}
 
 
@@ -37317,858 +37249,7 @@ int CreatePlaceFolderWnd()
 
 }
 
-
-int CreateDispGroupWnd()
-{
-
-
-	if (!s_model) {
-		return 0;
-	}
-
-	HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));//数秒時間がかかることがあるので砂時計カーソルにする
-
-
-	DestroyDispGroupWnd();
-
-
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-	s_groupWnd = new OrgWindow(
-		0,
-		_T("DispGroupWindow"),		//ウィンドウクラス名
-		GetModuleHandle(NULL),	//インスタンスハンドル
-		WindowPos(windowposx, s_sidemenuheight),
-		WindowSize(s_sidewidth, s_sideheight),		//サイズ
-		_T("DispGroupWindow"),	//タイトル
-		g_mainhwnd,	//親ウィンドウハンドル
-		true,					//表示・非表示状態
-		//70, 50, 70,				//カラー
-		0, 0, 0,				//カラー
-		true, true);					//サイズ変更の可否
-
-	int labelheight;
-	if (g_4kresolution) {
-		labelheight = 24;
-	}
-	else {
-		labelheight = 20;
-	}
-
-	if (s_groupWnd) {
-
-		s_groupWnd->setSizeMin(WindowSize(150, 150));		// 最小サイズを設定
-
-
-		s_groupsetB = new OWP_Button(L"Set", labelheight);
-		if (!s_groupsetB) {
-			_ASSERT(0);
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-			return 1;
-		}
-		s_groupgetB = new OWP_Button(L"Get", labelheight);
-		if (!s_groupgetB) {
-			_ASSERT(0);
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-			return 1;
-		}
-		//s_grouptestB = new OWP_Button(L"Test");
-		//if (!s_grouptestB) {
-		//	_ASSERT(0);
-		//	return 1;
-		//}
-		s_grouponB = new OWP_Button(L"ON", labelheight);
-		if (!s_grouponB) {
-			_ASSERT(0);
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-			return 1;
-		}
-		s_groupoffB = new OWP_Button(L"OFF", labelheight);
-		if (!s_groupoffB) {
-			_ASSERT(0);
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-			return 1;
-		}
-		s_groupclearB = new OWP_Button(L"Clear", labelheight);
-		if (!s_groupclearB) {
-			_ASSERT(0);
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-			return 1;
-		}
-		s_grouplabel11 = new OWP_Label(L"---------", labelheight);
-		if (!s_grouplabel11) {
-			_ASSERT(0);
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-			return 1;
-		}
-		s_grouplabel12 = new OWP_Label(L"---------", labelheight);
-		if (!s_grouplabel12) {
-			_ASSERT(0);
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-			return 1;
-		}
-		s_grouplabel21 = new OWP_Label(L"---------", labelheight);
-		if (!s_grouplabel21) {
-			_ASSERT(0);
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-			return 1;
-		}
-		s_grouplabel22 = new OWP_Label(L"---------", labelheight);
-		if (!s_grouplabel22) {
-			_ASSERT(0);
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-			return 1;
-		}
-
-
-		int groupindex0;
-		for (groupindex0 = 0; groupindex0 < MAXDISPGROUPNUM; groupindex0++) {
-			WCHAR groupname[256] = { 0L };
-			swprintf_s(groupname, 256, L"%02d", groupindex0 + 1);
-			s_groupselect[groupindex0] = new OWP_CheckBoxA(groupname, false, labelheight, true);
-			if (!s_groupselect[groupindex0]) {
-				_ASSERT(0);
-				if (oldcursor != NULL) {
-					SetCursor(oldcursor);
-				}
-				return 1;
-			}
-		}
-
-		int result = s_model->SetDispGroupGUI(s_groupobjvec, s_groupmqoobjvec, labelheight);
-		if (result != 0) {
-			_ASSERT(0);
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-			return 1;
-		}
-		s_grouplinenum = (int)s_groupobjvec.size();
-
-		if (s_grouplinenum <= 0) {
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-			return 0;
-		}
-
-
-		double centerrate;
-		int linedatasize;
-		if (g_4kresolution) {
-			//centerrate = (double)12 / (double)140;
-			centerrate = (double)12 / (double)140 * 1.50;
-			//linedatasize = max(140, linenum + 12);
-			//linedatasize = max(106, (linenum + 12));
-			linedatasize = (int)((double)s_grouplinenum * 1.5);
-		}
-		else {
-			//centerrate = (double)12 / (double)70;
-			centerrate = (double)12 / (double)70 * 1.50;
-			//linedatasize = max(70, linenum + 12);
-			//linedatasize = max(54, (linenum + 12));
-			linedatasize = (int)((double)s_grouplinenum * 1.5);
-		}
-
-
-
-		//スクロールウインドウ		
-		s_groupSCWnd = new OWP_ScrollWnd(L"DispGroupScWnd", true, labelheight);
-		if (!s_groupSCWnd) {
-			_ASSERT(0);
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-			return 1;
-		}
-		s_groupSCWnd->setLineDataSize(linedatasize);//!!!!!!!!!!!!!
-		//s_groupWnd->addParts(*s_groupSCWnd);
-
-
-		
-		//s_groupsp0 = new OWP_Separator(s_groupWnd, false, centerrate, false);//上段と下段を格納
-		s_groupsp0 = new OWP_Separator(s_groupWnd, true, centerrate, false);//上段と下段を格納
-		if (!s_groupsp0) {
-			_ASSERT(0);
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-			return 1;
-		}
-		//s_groupSCWnd->addParts(*s_groupsp0);
-		s_groupWnd->addParts(*s_groupsp0);
-		
-
-		//s_groupsp = new OWP_Separator(s_groupWnd, false, 0.5, true);//ウインドウ上段部分用
-		s_groupsp = new OWP_Separator(s_groupWnd, true, 0.5, true);//ウインドウ上段部分用
-		if (!s_groupsp) {
-			_ASSERT(0);
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-			return 1;
-		}
-		s_groupsp0->addParts1(*s_groupsp);
-
-
-		s_groupsp0->addParts2(*s_groupSCWnd);
-		//s_groupsp3 = new OWP_Separator(s_groupWnd, false, 0.8, true, s_groupSCWnd);//parent : s_groupSCWnd　下段　objチェックボックスとtestボタン用
-		s_groupsp3 = new OWP_Separator(s_groupWnd, true, 0.8, true, s_groupSCWnd);//parent : s_groupSCWnd　下段　objチェックボックスとtestボタン用
-		if (!s_groupsp3) {
-			_ASSERT(0);
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-			return 1;
-		}
-		s_groupSCWnd->addParts(*s_groupsp3);
-		int lineno;
-		for (lineno = 0; lineno < s_grouplinenum; lineno++) {
-			s_groupsp3->addParts1(*(s_groupobjvec[lineno]));
-
-			OWP_Button* testbutton = new OWP_Button(L"Test", labelheight);
-			if (!testbutton) {
-				_ASSERT(0);
-				if (oldcursor != NULL) {
-					SetCursor(oldcursor);
-				}
-				return 1;
-			}
-			s_grouptestBvec.push_back(testbutton);
-			s_groupsp3->addParts2(*(s_grouptestBvec[lineno]));
-		}
-
-
-		//s_groupsp1 = new OWP_Separator(s_groupWnd, false, 0.5, true);//上段　グループ番号チェックボックス用
-		s_groupsp1 = new OWP_Separator(s_groupWnd, true, 0.5, true);//上段　グループ番号チェックボックス用
-		if (!s_groupsp1) {
-			_ASSERT(0);
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-			return 1;
-		}
-		s_groupsp->addParts1(*s_groupsp1);
-
-		//s_groupsp2 = new OWP_Separator(s_groupWnd, false, 0.5, true);//上段　グループ番号チェックボックス用
-		s_groupsp2 = new OWP_Separator(s_groupWnd, true, 0.5, true);//上段　グループ番号チェックボックス用
-		if (!s_groupsp2) {
-			_ASSERT(0);
-			if (oldcursor != NULL) {
-				SetCursor(oldcursor);
-			}
-			return 1;
-		}
-		s_groupsp->addParts2(*s_groupsp2);
-
-		for (groupindex0 = 0; groupindex0 < MAXDISPGROUPNUM; groupindex0++) {
-			int colno = groupindex0 % 4;
-			if (colno == 0) {
-				s_groupsp1->addParts1(*s_groupselect[groupindex0]);
-			}
-			else if (colno == 1) {
-				s_groupsp1->addParts2(*s_groupselect[groupindex0]);
-			}
-			else if (colno == 2) {
-				s_groupsp2->addParts1(*s_groupselect[groupindex0]);
-			}
-			else {
-				s_groupsp2->addParts2(*s_groupselect[groupindex0]);
-			}
-		}
-		
-		s_groupsp1->addParts1(*s_grouplabel11);
-		s_groupsp1->addParts2(*s_grouplabel12);
-		s_groupsp2->addParts1(*s_grouplabel21);
-		s_groupsp2->addParts2(*s_grouplabel22);
-
-		s_groupsp1->addParts1(*s_groupsetB);
-		s_groupsp1->addParts2(*s_groupgetB);
-		s_groupsp1->addParts1(*s_groupclearB);
-		s_groupsp2->addParts1(*s_grouponB);
-		s_groupsp2->addParts2(*s_groupoffB);
-
-		//s_groupsp2->addParts2(*s_grouptestB);
-
-		{//testボタンのラムダ関数
-			int lineno1;
-			for (lineno1 = 0; lineno1 < s_grouplinenum; lineno1++) {
-				if (s_grouptestBvec[lineno1]) {
-					s_grouptestBvec[lineno1]->setButtonListener([lineno1]() {
-
-						HCURSOR oldcursor1 = SetCursor(LoadCursor(NULL, IDC_WAIT));
-
-						//ボタンのtext色をリセット
-						int lineno;
-						for (lineno = 0; lineno < s_grouplinenum; lineno++) {
-							COLORREF normalcol = RGB(255, 255, 255);
-							s_grouptestBvec[lineno]->setTextColor(normalcol);
-						}
-
-						bool currentstate = s_disponlyoneobj;
-
-						if (lineno1 == s_onlyoneobjno) {
-							//現在表示中のobjをオフにした場合にだけ　s_disponlyoneobjをオフにする
-							//他のobjのTestボタンを押した場合には　s_disponlyoneobjオンのまま　表示objを変更する
-							
-							s_disponlyoneobj = false;//!!!!!!!!
-							s_onlyoneobjno = -1;//!!!!!!!!
-						}
-						else {
-							s_disponlyoneobj = true;//!!!!!!!!
-							s_onlyoneobjno = lineno1;//!!!!!!!!
-
-							COLORREF importantcol = RGB(168, 129, 129);
-							s_grouptestBvec[lineno1]->setTextColor(importantcol);
-						}
-
-						if (oldcursor1) {
-							SetCursor(oldcursor1);
-						}
-					});
-				}
-			}
-		}
-
-		{//groupselectボタンのラムダ関数
-			int groupindex;
-			for (groupindex = 0; groupindex < MAXDISPGROUPNUM; groupindex++) {
-				if (s_groupselect[groupindex]) {
-					s_groupselect[groupindex]->setButtonListener([groupindex]() {
-						bool ischecked = s_groupselect[groupindex]->getValue();
-						if (ischecked) {
-							//チェックの場合には　他のグループセレクトボタンはチェックを外す(排他的)
-							int groupindex2;
-							for (groupindex2 = 0; groupindex2 < MAXDISPGROUPNUM; groupindex2++) {
-								if ((groupindex2 != groupindex) && s_groupselect[groupindex2]) {
-									s_groupselect[groupindex2]->setValue(false, false);
-								}
-							}
-						}
-						if (s_groupWnd) {
-							s_groupWnd->callRewrite();
-						}
-					});
-				}
-			}
-		}
-
-		{//setボタンのラムダ関数
-			if (s_groupsetB) {
-				s_groupsetB->setButtonListener([]() {
-					if (s_model) {
-
-						HCURSOR oldcursor1 = SetCursor(LoadCursor(NULL, IDC_WAIT));
-
-						//選択中のグループ番号を取得
-						int selectedgroupno = 0;
-						int groupindex;
-						for (groupindex = 0; groupindex < MAXDISPGROUPNUM; groupindex++) {
-							if (s_groupselect[groupindex] && s_groupselect[groupindex]->getValue()) {
-								selectedgroupno = groupindex + 1;//groupno = groupindex + 1
-								break;
-							}
-						}
-
-						//チェックの付いているobjectに対してselectedgroupindexを設定
-						if (selectedgroupno >= 1) {
-							int lineno1;
-							for (lineno1 = 0; lineno1 < s_grouplinenum; lineno1++) {
-								if (s_groupobjvec[lineno1] && s_groupobjvec[lineno1]->getValue()) {
-									s_model->SetDispGroup(selectedgroupno - 1, lineno1);
-								}
-							}
-							s_model->MakeDispGroupForRender();
-						}
-
-						if (oldcursor1) {
-							SetCursor(oldcursor1);
-						}
-
-					}
-				});
-			}
-		}
-
-		{//getボタンのラムダ関数
-			if (s_groupgetB) {
-				s_groupgetB->setButtonListener([]() {
-					if (s_model) {
-
-						s_groupUnderGetting = true;//s_groupgetBボタンの処理中は　groupobjvecのチェック処理をスキップ
-
-						HCURSOR oldcursor1 = SetCursor(LoadCursor(NULL, IDC_WAIT));
-
-
-						//objectのチェックを全てリセット
-						int lineno1;
-						for (lineno1 = 0; lineno1 < s_grouplinenum; lineno1++) {
-							if (s_groupobjvec[lineno1]) {
-								bool calllistener = false;
-								s_groupobjvec[lineno1]->setValue(false, calllistener);
-							}
-						}
-
-
-						//選択中のグループ番号を取得
-						int selectedgroupno = 0;
-						int groupindex;
-						for (groupindex = 0; groupindex < MAXDISPGROUPNUM; groupindex++) {
-							if (s_groupselect[groupindex] && s_groupselect[groupindex]->getValue()) {
-								selectedgroupno = groupindex + 1;//groupno = groupindex + 1
-								break;
-							}
-						}
-
-						//selectedgroupnoに属するgroupobjvecチェックボックスにチェックを入れる
-						if (selectedgroupno >= 1) {
-
-							//selectedgroupnoに属するobjectを取得
-							vector<DISPGROUPELEM> digvec;
-							digvec.clear();
-							s_model->GetDispGroupForRender(selectedgroupno - 1, digvec);//groupindex = groupno - 1
-
-							//objvecにチェックを入れる
-							int digvecsize = (int)digvec.size();
-							int digno;
-							for (digno = 0; digno < digvecsize; digno++) {
-								DISPGROUPELEM digelem = digvec[digno];
-								int objno = digelem.objno;
-								if ((objno >= 0) && (objno < s_grouplinenum) && s_groupobjvec[objno]) {
-									bool calllistener = false;
-									s_groupobjvec[objno]->setValue(true, calllistener);
-								}
-							}
-							if (s_groupWnd) {
-								s_groupWnd->callRewrite();
-							}
-						}
-
-						if (oldcursor1) {
-							SetCursor(oldcursor1);
-						}
-
-						s_groupUnderGetting = false;//s_groupgetBボタンの処理中は　groupobjvecのチェック処理をスキップ
-					}
-				});
-			}
-		}
-
-		{//ONボタン
-			if(s_grouponB){
-				s_grouponB->setButtonListener([]() {
-					if (s_model) {
-						HCURSOR oldcursor1 = SetCursor(LoadCursor(NULL, IDC_WAIT));
-
-						//選択中のグループ番号を取得
-						int selectedgroupno = 0;
-						int groupindex;
-						for (groupindex = 0; groupindex < MAXDISPGROUPNUM; groupindex++) {
-							if (s_groupselect[groupindex] && s_groupselect[groupindex]->getValue()) {
-								selectedgroupno = groupindex + 1;//groupno = groupindex + 1
-								break;
-							}
-						}
-
-						//selectedgroupnoの表示をオン
-						if (selectedgroupno >= 1) {//groupindex = groupno - 1
-							s_model->SetDispGroupON(selectedgroupno - 1, true);
-						}
-
-						if (oldcursor1) {
-							SetCursor(oldcursor1);
-						}
-					}
-				});
-			}
-		}
-
-		{//OFFボタン
-			if (s_groupoffB) {
-				s_groupoffB->setButtonListener([]() {
-					if (s_model) {
-
-						HCURSOR oldcursor1 = SetCursor(LoadCursor(NULL, IDC_WAIT));
-
-						//選択中のグループ番号を取得
-						int selectedgroupno = 0;
-						int groupindex;
-						for (groupindex = 0; groupindex < MAXDISPGROUPNUM; groupindex++) {
-							if (s_groupselect[groupindex] && s_groupselect[groupindex]->getValue()) {
-								selectedgroupno = groupindex + 1;//groupno = groupindex + 1
-								break;
-							}
-						}
-
-						//selectedgroupnoの表示をオフ
-						if (selectedgroupno >= 1) {//groupindex = groupno - 1
-							s_model->SetDispGroupON(selectedgroupno - 1, false);
-						}
-
-						if (oldcursor1) {
-							SetCursor(oldcursor1);
-						}
-
-					}
-				});
-			}
-		}
-
-		{//Clearボタン
-			if (s_groupclearB) {
-				s_groupclearB->setButtonListener([]() {
-					HCURSOR oldcursor1 = SetCursor(LoadCursor(NULL, IDC_WAIT));
-
-					int objno1;
-					for (objno1 = 0; objno1 < s_grouplinenum; objno1++) {
-						if (s_groupobjvec[objno1]) {
-							bool calllistener = false;
-							s_groupobjvec[objno1]->setValue(false, calllistener);
-						}
-					}
-
-					if (oldcursor1) {
-						SetCursor(oldcursor1);
-					}
-
-				});
-			}
-		}
-
-
-		{//objvecボタン
-
-			//チェックを入れたobjectの子供treeも一緒にチェックを入れる
-			int objno1;
-			for (objno1 = 0; objno1 < s_grouplinenum; objno1++) {
-				if (s_groupobjvec[objno1]) {
-
-					//左クリックで　チェックボックスのチェックをオンオフ
-					s_groupobjvec[objno1]->setButtonListener([objno1]() {
-						if (s_model) {
-							if (s_groupUnderGetting == false) {//s_groupgetBボタンの処理中は　groupobjvecのチェック処理をスキップ)								
-								HCURSOR oldcursor1 = SetCursor(LoadCursor(NULL, IDC_WAIT));
-
-								vector<int> selectedobjtree;
-								selectedobjtree.clear();
-								s_model->GetSelectedObjTree(objno1, selectedobjtree);//objno1の子供のobjectTreeを取得
-
-
-								bool newstate;
-								if (s_groupobjvec[objno1] && s_groupobjvec[objno1]->getValue()) {
-									newstate = true;
-								}
-								else {
-									newstate = false;
-								}
-
-
-								int selectedobjnum = (int)selectedobjtree.size();
-								int objindex;
-								for (objindex = 0; objindex < selectedobjnum; objindex++) {
-									int selectedobjno = selectedobjtree[objindex];
-									if ((selectedobjno >= 0) && (selectedobjno < s_grouplinenum) && (selectedobjno != objno1)) {
-										bool calllistener = false;
-										s_groupobjvec[selectedobjno]->setValue(newstate, calllistener);
-									}
-								}
-
-								if (oldcursor1) {
-									SetCursor(oldcursor1);
-								}
-							}
-						}
-					});
-
-
-					//右クリックメニュー
-					s_groupobjvec[objno1]->setContextMenuListener([objno1]() {
-						if (s_model && (s_groupUnderGetting == false) && (s_checksimilarFlag == false)) {//s_groupgetBボタンの処理中は　groupobjvecのチェック処理をスキップ)								
-								s_checksimilarFlag = true;
-								s_checksimilarobjno = objno1;
-						}
-					});
-
-				}
-			}
-		}
-
-
-
-		//autoResizeしないと　チェックボックス４段目以下が反応なかった
-		//s_groupSCWnd->autoResize();
-		//s_groupsp3->autoResize();
-		//s_groupsp1->autoResize();
-		//s_groupsp2->autoResize();
-		//s_groupsp->autoResize();
-		//s_groupsp0->autoResize();
-
-		s_groupWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
-		s_groupWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
-		//１クリック目問題対応
-		s_groupWnd->refreshPosAndSize();
-		s_groupWnd->autoResizeAllParts();
-		s_groupWnd->setVisible(false);
-	}
-
-
-	if (oldcursor != NULL) {
-		SetCursor(oldcursor);
-	}
-
-	return 0;
-}
-
-
-
-
-int TrimLeadingAlnum(bool secondtokenflag, WCHAR* srcstr, int srclen, WCHAR* dststr, int dstlen, bool secondcallflag)
-{
-	if (!srcstr || !dststr) {
-		_ASSERT(0);
-		return 1;
-	}
-	if ((srclen < 0) || (srclen >= 2048) || (dstlen < 0) || (dstlen >= 2048)) {
-		_ASSERT(0);
-		return 1;
-	}
-
-
-	*dststr = 0L;
-
-	WCHAR trimstr0[2048];
-	int tokenloopcount;
-	if (secondtokenflag) {
-		tokenloopcount = 2;
-	}
-	else {
-		tokenloopcount = 1;
-	}
-	int index0;
-	int srcstartindex = 0;
-	int dstindex = 0;
-	int loopindex;
-	for (loopindex = 0; loopindex < tokenloopcount; loopindex++) {
-		ZeroMemory(trimstr0, sizeof(WCHAR) * 2048);
-		dstindex = 0;
-
-		bool starttrim = false;
-		for (index0 = srcstartindex; index0 < srclen; index0++) {
-			WCHAR* pchkstr = srcstr + index0;
-			if (starttrim == false) {
-				if (iswalnum(*pchkstr) == 0) {
-					continue;
-				}
-				else {
-					starttrim = true;
-				}
-			}
-			if (starttrim == true) {
-				if (*pchkstr == TEXT('_')) {
-					srcstartindex = index0 + 1;
-					break;
-				}
-				if (dstindex < (dstlen - 1)) {
-					trimstr0[dstindex] = *pchkstr;
-					trimstr0[dstindex + 1] = 0L;
-					dstindex++;
-				}
-				else {
-					srcstartindex = index0 + 1;
-					break;
-				}
-			}
-		}
-		srcstartindex = index0 + 1;
-	}
-
-	if (secondcallflag == false) {//再帰呼び出しは１回まで
-
-		//パターンの先頭がPrefabだった場合には、次のアンダーバーまでをパターンとする
-
-		WCHAR* nextptr = 0L;
-		if (wcscmp(trimstr0, L"Prefab") == 0) {
-			nextptr = wcsstr(srcstr, L"Prefab");
-			if (nextptr) {
-				nextptr += (wcslen(L"Prefab") + 1);//+1 : '_'の分
-			}
-		}
-		else if (wcscmp(trimstr0, L"prefab") == 0) {
-			nextptr = wcsstr(srcstr, L"prefab");
-			if (nextptr) {
-				nextptr += (wcslen(L"prefab") + 1);//+1 : '_'の分
-			}
-		}
-
-		if (nextptr && (*nextptr != 0L)) {
-			bool prefab2ndwordflag = false;
-			WCHAR trimstr1[2048];
-			ZeroMemory(trimstr1, sizeof(WCHAR) * 2048);
-			int result2 = TrimLeadingAlnum(prefab2ndwordflag, nextptr, (int)wcslen(nextptr), trimstr1, 2048, true);
-			if ((result2 == 0) && (trimstr1[0] != 0L)) {
-				wcscat_s(trimstr0, 2048, L"_");//!!!!!
-				wcscat_s(trimstr0, 2048, trimstr1);
-			}
-		}
-	}
-
-	trimstr0[dstlen - 1] = 0L;
-	wcscpy_s(dststr, dstlen, trimstr0);
-
-	return 0;
-}
-
-
-int CheckSimilarGroup(int opetype)
-{
-	if (!s_model) {
-		return 0;
-	}
-
-	if ((s_grouplinenum > 0) && 
-		(opetype >= 0) && (opetype <= 7) && 
-		(s_checksimilarobjno >= 0) && (s_checksimilarobjno < s_grouplinenum)) {
-		
-		OWP_CheckBoxA* srccheckbox = s_groupobjvec[s_checksimilarobjno];
-		if (srccheckbox) {
-			WCHAR objname[512] = { 0L };
-			int result = srccheckbox->getName(objname, 512);
-			if ((result == 0) && (objname[0] != 0L)) {
-				bool secondtokenflag;
-				if (opetype <= 3) {
-					secondtokenflag = false;
-				}
-				else {
-					secondtokenflag = true;
-				}
-				WCHAR similarpattern[512] = { 0L };
-				int result1 = TrimLeadingAlnum(secondtokenflag, objname, 512, similarpattern, 512, false);
-				if ((result1 == 0) && (similarpattern[0] != 0L)) {
-
-					int pattern0len = (int)wcslen(similarpattern);
-
-					if ((opetype == 0) || (opetype == 1) ||
-						(opetype == 4) || (opetype == 5)) {
-						//#####################
-						//pattern include num
-						//#####################
-
-						int objno1;
-						for (objno1 = 0; objno1 < s_grouplinenum; objno1++) {
-							if (s_groupobjvec[objno1]) {
-								WCHAR chkname[512] = { 0L };
-								int result1 = s_groupobjvec[objno1]->getName(chkname, 512);
-								if ((result == 0) && (chkname[0] != 0L)) {
-									WCHAR* findptr = wcsstr(chkname, similarpattern);//check if pattern is included
-									if (findptr) {
-										bool calllistener = false;
-										if ((opetype == 0) || (opetype == 4)) {
-											s_groupobjvec[objno1]->setValue(true, calllistener);
-										}
-										else if ((opetype == 1) || (opetype == 5)) {
-											s_groupobjvec[objno1]->setValue(false, calllistener);
-										}
-										else {
-											_ASSERT(0);
-											return 1;
-										}
-									}
-								}
-							}
-						}
-					}
-					else if ((opetype == 2) || (opetype == 3) || 
-						(opetype == 6) || (opetype == 7)) {
-						//#####################
-						//pattern exclude num
-						//#####################
-
-						bool numflag = true;
-						int findpos = pattern0len - 1;
-						while (numflag && (findpos > 1)) {
-							WCHAR chkwc = similarpattern[findpos];
-							if ((chkwc == TEXT('0')) || (chkwc == TEXT('1')) || (chkwc == TEXT('2')) || (chkwc == TEXT('3')) || (chkwc == TEXT('4')) ||
-								(chkwc == TEXT('5')) || (chkwc == TEXT('6')) || (chkwc == TEXT('7')) || (chkwc == TEXT('8')) || (chkwc == TEXT('9'))) {
-								findpos--;
-							}
-							else {
-								numflag = false;
-								break;
-							}
-						}
-						if ((findpos >= 0) && (findpos < pattern0len)) {
-							similarpattern[findpos + 1] = 0L;
-
-							int objno1;
-							for (objno1 = 0; objno1 < s_grouplinenum; objno1++) {
-								if (s_groupobjvec[objno1]) {
-									WCHAR chkname[512] = { 0L };
-									int result1 = s_groupobjvec[objno1]->getName(chkname, 512);
-									if ((result == 0) && (chkname[0] != 0L)) {
-										WCHAR* findptr = wcsstr(chkname, similarpattern);//check if pattern is included
-										if (findptr) {
-											bool calllistener = false;
-											if ((opetype == 2) || (opetype == 6)) {
-												s_groupobjvec[objno1]->setValue(true, calllistener);
-											}
-											else if ((opetype == 3) || (opetype == 7)) {
-												s_groupobjvec[objno1]->setValue(false, calllistener);
-											}
-											else {
-												_ASSERT(0);
-												return 1;
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-					else {
-						_ASSERT(0);
-						return 1;
-					}
-				}
-			}
-		}
-		else {
-			_ASSERT(0);
-			return 1;
-		}
-	}
-	else {
-		return 1;
-	}
-
-	return 0;
-}
-
-
-int CheckSimilarMenu()
+int CheckSimilarMenu()//context menu
 {
 	if (!s_model) {
 		return 0;
@@ -38253,124 +37334,6 @@ int CheckSimilarMenu()
 
 	return 0;
 }
-
-
-int DestroyDispGroupWnd()
-{
-	if (s_groupWnd) {
-		s_groupWnd->setListenMouse(false);
-		s_groupWnd->setVisible(false);
-		//delete s_groupWnd;
-		//s_groupWnd = 0;
-	}
-
-
-	if (s_groupsetB) {
-		delete s_groupsetB;
-		s_groupsetB = 0;
-	}
-	if (s_groupgetB) {
-		delete s_groupgetB;
-		s_groupgetB = 0;
-	}
-	if (s_grouponB) {
-		delete s_grouponB;
-		s_grouponB = 0;
-	}
-	if (s_groupoffB) {
-		delete s_groupoffB;
-		s_groupoffB = 0;
-	}
-	if (s_groupclearB) {
-		delete s_groupclearB;
-		s_groupclearB = 0;
-	}
-	if (s_grouplabel11) {
-		delete s_grouplabel11;
-		s_grouplabel11 = 0;
-	}
-	if (s_grouplabel12) {
-		delete s_grouplabel12;
-		s_grouplabel12 = 0;
-	}
-	if (s_grouplabel21) {
-		delete s_grouplabel21;
-		s_grouplabel21 = 0;
-	}
-	if (s_grouplabel22) {
-		delete s_grouplabel22;
-		s_grouplabel22 = 0;
-	}
-
-	int selno;
-	for (selno = 0; selno < MAXDISPGROUPNUM; selno++) {
-		if (s_groupselect[selno]) {
-			delete s_groupselect[selno];
-		}
-	}
-	ZeroMemory(s_groupselect, sizeof(OWP_CheckBoxA*) * MAXDISPGROUPNUM);
-
-	
-
-	int objno;
-	size_t objnum = s_groupobjvec.size();
-	for (objno = 0; objno < objnum; objno++) {
-		if (s_groupobjvec[objno]) {
-			delete s_groupobjvec[objno];
-		}
-	}
-	s_groupobjvec.clear();
-
-	int testno;
-	size_t testnum = s_grouptestBvec.size();
-	for (testno = 0; testno < testnum; testno++) {
-		if (s_grouptestBvec[testno]) {
-			delete s_grouptestBvec[testno];
-		}
-	}
-	s_grouptestBvec.clear();
-
-	s_grouplinenum = 0;
-
-
-	if (s_groupsp3) {
-		delete s_groupsp3;
-		s_groupsp3 = 0;
-	}
-	if (s_groupsp2) {
-		delete s_groupsp2;
-		s_groupsp2 = 0;
-	}
-	if (s_groupsp1) {
-		delete s_groupsp1;
-		s_groupsp1 = 0;
-	}
-	if (s_groupsp) {
-		delete s_groupsp;
-		s_groupsp = 0;
-	}
-	if (s_groupsp0) {
-		delete s_groupsp0;
-		s_groupsp0 = 0;
-	}
-	if (s_groupSCWnd) {
-		delete s_groupSCWnd;
-		s_groupSCWnd = 0;
-	}
-
-	if (s_groupWnd) {
-		delete s_groupWnd;
-		s_groupWnd = 0;
-	}
-
-
-	s_disponlyoneobj = false;
-	s_onlyoneobjno = -1;
-
-
-	return 0;
-}
-
 
 void DestroyShaderTypeWnd()
 {
@@ -41058,7 +40021,8 @@ int OnRenderOnlyOneObj(myRenderer::RenderingEngine* re, RenderContext* rc)
 			diffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 			int btflag = 0;
 
-			curmodel->RenderTest(withalpha, s_chascene, g_lightflag, diffusemult, s_onlyoneobjno);
+			curmodel->RenderTest(withalpha, s_chascene, g_lightflag, diffusemult, 
+				s_dispgroupdlg.GetDispGroupOnlyOneObjNo());
 		}
 	}
 
@@ -46323,32 +45287,9 @@ void ShowLaterTransparentWnd(bool srcflag)
 
 void ShowDispGroupWnd(bool srcflag)
 {
-	if (s_model) {
-		//s_rigidWnd->setVisible(srcflag);
+	s_dispgroupdlg.SetVisible(srcflag);
 
-	}
-
-	if (s_model) {
-
-		s_spdispsw[SPDISPSW_DISPGROUP].state = srcflag;
-
-		if (srcflag == true) {
-
-			CreateDispGroupWnd();
-
-			if (s_groupWnd) {
-				s_groupWnd->setListenMouse(true);
-				s_groupWnd->setVisible(true);
-			}
-		}
-		else {
-			if (s_groupWnd) {
-				s_groupWnd->setListenMouse(false);
-				s_groupWnd->setVisible(false);
-			}
-		}
-	}
-
+	s_spdispsw[SPDISPSW_DISPGROUP].state = srcflag;
 }
 
 
@@ -51733,24 +50674,13 @@ bool PickAndSelectMeshOfDispGroupDlg()
 			bool callundo = true;
 			OnChangeModel(s_pickmodel, forceflag, callundo);
 
-			WCHAR objname[256] = { 0L };
-			char tmpobjname[256] = { 0 };
-			strcpy_s(tmpobjname, 256, s_pickmqoobj->GetName());
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, tmpobjname, 256, objname, 256);
+			//WCHAR objname[256] = { 0L };
+			//char tmpobjname[256] = { 0 };
+			//strcpy_s(tmpobjname, 256, s_pickmqoobj->GetName());
+			//MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, tmpobjname, 256, objname, 256);
 
-			int selectlineindex = -1;
-			int lineno;
-			for (lineno = 0; lineno < s_grouplinenum; lineno++) {
-				if (s_groupmqoobjvec[lineno]) {
-					if (s_groupmqoobjvec[lineno] == s_pickmqoobj) {
-						selectlineindex = lineno;
-						break;
-					}
-				}
-			}
-			if (s_groupWnd && (selectlineindex >= 0)) {
-				s_groupSCWnd->setShowPosLine(selectlineindex);
-			}
+			s_dispgroupdlg.ShowPosLineMqoObject(s_pickmodel, s_pickmqoobj);
+
 		}
 	}
 
@@ -63928,6 +62858,8 @@ int SetModel2Dlgs(CModel* srcmodel)
 		}
 
 		s_rigidparamsdlg.SetModel(srcmodel, s_curboneno, s_reindexmap, s_rgdindexmap);
+
+		s_dispgroupdlg.SetModel(srcmodel);
 
 		if (s_blendshapedlg.GetVisible()) {
 			s_blendshapedlg.SetModel(srcmodel);

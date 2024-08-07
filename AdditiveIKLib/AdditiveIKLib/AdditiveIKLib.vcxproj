@@ -196,6 +196,7 @@
     <ClCompile Include="..\CPP\CSChkInView.cpp" />
     <ClCompile Include="..\CPP\CSDeform.cpp" />
     <ClCompile Include="..\CPP\dbg.cpp" />
+    <ClCompile Include="..\CPP\DispGroupDlg.cpp" />
     <ClCompile Include="..\CPP\DispGroupFile.cpp" />
     <ClCompile Include="..\CPP\DispLimitsDlg.cpp" />
     <ClCompile Include="..\CPP\DispObj.cpp" />
@@ -590,6 +591,7 @@
     <ClInclude Include="..\INCLUDE\CSChkInView.h" />
     <ClInclude Include="..\INCLUDE\CSDeform.h" />
     <ClInclude Include="..\INCLUDE\dbg.h" />
+    <ClInclude Include="..\INCLUDE\DispGroupDlg.h" />
     <ClInclude Include="..\INCLUDE\DispGroupFile.h" />
     <ClInclude Include="..\INCLUDE\DispLimitsDlg.h" />
     <ClInclude Include="..\INCLUDE\DispObj.h" />
