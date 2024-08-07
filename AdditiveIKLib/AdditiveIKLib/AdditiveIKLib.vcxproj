@@ -214,6 +214,7 @@
     <ClCompile Include="..\CPP\ImpFile.cpp" />
     <ClCompile Include="..\CPP\InfBone.cpp" />
     <ClCompile Include="..\CPP\InfoWindow.cpp" />
+    <ClCompile Include="..\CPP\LightsDlg.cpp" />
     <ClCompile Include="..\CPP\LightsForEditFile.cpp" />
     <ClCompile Include="..\CPP\LIMFile.cpp" />
     <ClCompile Include="..\CPP\lmtFile.cpp" />
@@ -608,6 +609,7 @@
     <ClInclude Include="..\INCLUDE\ImpFile.h" />
     <ClInclude Include="..\INCLUDE\InfBone.h" />
     <ClInclude Include="..\INCLUDE\InfoWindow.h" />
+    <ClInclude Include="..\INCLUDE\LightsDlg.h" />
     <ClInclude Include="..\INCLUDE\LightsForEditFile.h" />
     <ClInclude Include="..\INCLUDE\LIMFile.h" />
     <ClInclude Include="..\INCLUDE\lmtFile.h" />

@@ -76,6 +76,7 @@
 #include <BulletDlg.h>
 #include <ProjLodDlg.h>
 #include <BlendShapeDlg.h>
+#include <LightsDlg.h>
 #include <CpInfoDlg2.h>
 
 #include <math.h>
@@ -978,6 +979,7 @@ static CDispLimitsDlg s_displimitsdlg;
 static CBulletDlg s_bulletdlg;
 static CProjLodDlg s_projloddlg;
 static CBlendShapeDlg s_blendshapedlg;
+static CLightsDlg s_lightsdlg;
 
 static bool s_undercpinfodlg2;
 static CCpInfoDlg2 s_cpinfodlg2;
@@ -1220,32 +1222,6 @@ static OWP_Slider* s_dmpanimLSlider = 0;
 static OWP_Label* s_dmpanimAlabel = 0;
 static OWP_Slider* s_dmpanimASlider = 0;
 static OWP_Button* s_dmpanimB = 0;
-
-
-static OrgWindow* s_lightsWnd = 0;
-static OWP_Separator* s_lightsslotsp = 0;
-static OWP_ComboBoxA* s_lightsslotCombo = 0;
-static OWP_Label* s_lightsslotLabel = 0;
-//static OWP_GroupBox* s_lightsgroup[8];
-static OWP_Label* s_lightsgroupLabel[8];
-static OWP_Separator* s_lightschecksp[8];
-static OWP_CheckBoxA* s_lightsenableChk[8];
-static OWP_CheckBoxA* s_lightsviewrotChk[8];
-static OWP_Separator* s_lightscolorsp[8];
-static OWP_ColorBox* s_lightscolorBox[8];
-static OWP_Slider* s_lightsmultSlider[8];
-static OWP_Separator* s_polarsp0[8];
-static OWP_Separator* s_polarsp1[8];
-static OWP_Separator* s_polarsp2[8];
-static OWP_Label* s_polarxzLabel[8];
-static OWP_EditBox* s_polarxzEdit[8];
-//static OWP_Button* s_polarxzEdit[8];
-static OWP_Label* s_polaryLabel[8];
-static OWP_EditBox* s_polaryEdit[8];
-//static OWP_Button* s_polaryEdit[8];
-static OWP_Separator* s_lightsapplysp = 0;
-static OWP_Label* s_lightsspace1Label = 0;
-static OWP_Button* s_lightsapplyB = 0;
 
 
 static OrgWindow* s_shadowWnd = 0;
@@ -2793,6 +2769,8 @@ ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わら�
 //#####################
 
 //Dlgからのメニューオフセットはcoef.hに
+//// (91)はCLightsDlgをトリガーとする呼び出し用に確保
+//#define MENUOFFSET_LIGHTSDLG		(91)
 //// (92)はCBlendShapeDlgをトリガーとする呼び出し用に確保
 //#define MENUOFFSET_BLENDSHAPEDLG		(92)
 //// (93)はCProjLodDlgをトリガーとする呼び出し用に確保
@@ -3241,13 +3219,6 @@ static int CreateDollyHistoryDlg();
 
 static void InitTimelineSelection();
 static void ClampTimelineSelection();
-
-static int CreateLightsWnd();
-static int Lights2Dlg();
-static int Dlg2Lights();
-static int CheckStr_float(const WCHAR* srcstr);
-static int ConvDir2PolarCoord(float srcdirx, float srcdiry, float srcdirz, float* dstxzdeg, float* dstydeg);
-static int ConvPolarCoord2Dir(float srcxzdeg, float srcydeg, float* dstdirx, float* dstdiry, float* dstdirz);
 
 //static int CreateGUIDlgBrushes();
 static int Brushes2Dlg(HWND hDlgWnd);
@@ -4188,8 +4159,6 @@ INT WINAPI wWinMain(
 	CreateSideMenuWnd();
 	CreateTopSlidersWnd();
 
-	CreateLightsWnd();	
-
 	CreateDispGroupWnd();
 	//CreateLaterTransparentWnd();//s_modelが設定されてから作成する
 
@@ -4517,6 +4486,7 @@ int CheckResolution()
 		s_bulletdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_projloddlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_blendshapedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+		s_lightsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 	}
 
 	return 0;
@@ -4547,6 +4517,7 @@ void InitApp()
 	s_bulletdlg.InitParams();
 	s_projloddlg.InitParams();
 	s_blendshapedlg.InitParams();
+	s_lightsdlg.InitParams();
 
 	s_undercpinfodlg2 = false;
 	s_cpinfodlg2.InitParams();
@@ -5084,33 +5055,6 @@ void InitApp()
 			//s_metalcoeflabel[objno] = 0;//+1は見出しの分
 			//s_lightscalelabel[objno] = 0;//+1は見出しの分
 		}
-	}
-
-	{
-		s_lightsWnd = 0;
-		s_lightsslotsp = 0;
-		s_lightsslotCombo = 0;
-		s_lightsslotLabel = 0;
-		int lightindex;
-		for (lightindex = 0; lightindex < 8; lightindex++) {
-			s_lightsgroupLabel[lightindex] = 0;
-			s_lightschecksp[lightindex] = 0;
-			s_lightsenableChk[lightindex] = 0;
-			s_lightsviewrotChk[lightindex] = 0;
-			s_lightscolorsp[lightindex] = 0;
-			s_lightscolorBox[lightindex] = 0;
-			s_lightsmultSlider[lightindex] = 0;
-			s_polarsp0[lightindex] = 0;
-			s_polarsp1[lightindex] = 0;
-			s_polarsp2[lightindex] = 0;
-			s_polarxzLabel[lightindex] = 0;
-			s_polarxzEdit[lightindex] = 0;
-			s_polaryLabel[lightindex] = 0;
-			s_polaryEdit[lightindex] = 0;
-		}
-		s_lightsapplysp = 0;
-		s_lightsspace1Label = 0;
-		s_lightsapplyB = 0;
 	}
 
 	{
@@ -6985,6 +6929,7 @@ void OnDestroyDevice()
 	s_bulletdlg.DestroyObjs();
 	s_projloddlg.DestroyObjs();
 	s_blendshapedlg.DestroyObjs();
+	s_lightsdlg.DestroyObjs();
 	s_cpinfodlg2.DestroyObjs();
 
 
@@ -7421,98 +7366,6 @@ void OnDestroyDevice()
 		delete s_dmpanimWnd;
 		s_dmpanimWnd = 0;
 	}
-
-
-	{
-		if (s_lightsslotsp) {
-			delete s_lightsslotsp;
-			s_lightsslotsp = 0;
-		}
-		if (s_lightsslotCombo) {
-			delete s_lightsslotCombo;
-			s_lightsslotCombo = 0;
-		}
-		if (s_lightsslotLabel) {
-			delete s_lightsslotLabel;
-			s_lightsslotLabel = 0;
-		}
-		int lightindex;
-		for (lightindex = 0; lightindex < 8; lightindex++) {
-			if (s_lightsgroupLabel[lightindex]) {
-				delete s_lightsgroupLabel[lightindex];
-				s_lightsgroupLabel[lightindex] = 0;
-			}
-			if (s_lightschecksp[lightindex]) {
-				delete s_lightschecksp[lightindex];
-				s_lightschecksp[lightindex] = 0;
-			}
-			if (s_lightsenableChk[lightindex]) {
-				delete s_lightsenableChk[lightindex];
-				s_lightsenableChk[lightindex] = 0;
-			}
-			if (s_lightsviewrotChk[lightindex]) {
-				delete s_lightsviewrotChk[lightindex];
-				s_lightsviewrotChk[lightindex] = 0;
-			}
-			if (s_lightscolorsp[lightindex]) {
-				delete s_lightscolorsp[lightindex];
-				s_lightscolorsp[lightindex] = 0;
-			}
-			if (s_lightscolorBox[lightindex]) {
-				delete s_lightscolorBox[lightindex];
-				s_lightscolorBox[lightindex] = 0;
-			}
-			if (s_lightsmultSlider[lightindex]) {
-				delete s_lightsmultSlider[lightindex];
-				s_lightsmultSlider[lightindex] = 0;
-			}
-			if (s_polarsp0[lightindex]) {
-				delete s_polarsp0[lightindex];
-				s_polarsp0[lightindex] = 0;
-			}
-			if (s_polarsp1[lightindex]) {
-				delete s_polarsp1[lightindex];
-				s_polarsp1[lightindex] = 0;
-			}
-			if (s_polarsp2[lightindex]) {
-				delete s_polarsp2[lightindex];
-				s_polarsp2[lightindex] = 0;
-			}
-			if (s_polarxzLabel[lightindex]) {
-				delete s_polarxzLabel[lightindex];
-				s_polarxzLabel[lightindex] = 0;
-			}
-			if (s_polarxzEdit[lightindex]) {
-				delete s_polarxzEdit[lightindex];
-				s_polarxzEdit[lightindex] = 0;
-			}
-			if (s_polaryLabel[lightindex]) {
-				delete s_polaryLabel[lightindex];
-				s_polaryLabel[lightindex] = 0;
-			}
-			if (s_polaryEdit[lightindex]) {
-				delete s_polaryEdit[lightindex];
-				s_polaryEdit[lightindex] = 0;
-			}
-		}
-		if (s_lightsapplysp) {
-			delete s_lightsapplysp;
-			s_lightsapplysp = 0;
-		}
-		if (s_lightsspace1Label) {
-			delete s_lightsspace1Label;
-			s_lightsspace1Label = 0;
-		}
-		if (s_lightsapplyB) {
-			delete s_lightsapplyB;
-			s_lightsapplyB = 0;
-		}
-		if (s_lightsWnd) {
-			delete s_lightsWnd;
-			s_lightsWnd = 0;
-		}
-	}
-
 
 	{
 		if (s_shadowslotsp) {
@@ -27356,278 +27209,6 @@ int RollBackEditRange(int prevrangeFlag, int nextrangeFlag)
 //}
 
 
-
-int CreateLightsWnd()
-{
-	if (s_lightsWnd) {
-		_ASSERT(0);
-		return 0;//作成済
-	}
-
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-	s_lightsWnd = new OrgWindow(
-		0,
-		_T("LightsForEditDlg"),		//ウィンドウクラス名
-		GetModuleHandle(NULL),	//インスタンスハンドル
-		WindowPos(windowposx, s_sidemenuheight),
-		WindowSize(s_sidewidth, s_sideheight),		//サイズ
-		_T("LightsForEditDlg"),	//タイトル
-		g_mainhwnd,	//親ウィンドウハンドル
-		false,					//表示・非表示状態
-		//70, 50, 70,				//カラー
-		0, 0, 0,				//カラー
-		true,					//閉じられるか否か
-		true);					//サイズ変更の可否
-
-	int labelheight;
-	if (g_4kresolution) {
-		labelheight = 28;
-	}
-	else {
-		labelheight = 20;
-	}
-
-	if (s_lightsWnd) {
-		double rate1 = 0.350;
-		double rate50 = 0.50;
-
-		s_lightsslotsp = new OWP_Separator(s_lightsWnd, true, rate50, true);
-		if (!s_lightsslotsp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lightsslotCombo = new OWP_ComboBoxA(L"LightsSlot", labelheight);
-		if (!s_lightsslotCombo) {
-			_ASSERT(0);
-			abort();
-		}
-		int slotindex;
-		for (slotindex = 0; slotindex < 8; slotindex++) {
-			char strslot[128] = { 0 };
-			sprintf_s(strslot, 128, "Slot_%d", slotindex);
-			s_lightsslotCombo->addString(strslot);
-		}
-		s_lightsslotCombo->setSelectedCombo(g_lightSlot);
-
-
-		s_lightsslotLabel = new OWP_Label(L"PolarCoordDeg(極座標)", labelheight);
-		if (!s_lightsslotLabel) {
-			_ASSERT(0);
-			abort();
-		}
-
-		int lightindex;
-		for (lightindex = 0; lightindex < 8; lightindex++) {
-			WCHAR groupname[256] = { 0L };
-			swprintf_s(groupname, 256, L"Light_%d", lightindex + 1);
-			s_lightsgroupLabel[lightindex] = new OWP_Label(groupname, labelheight);
-			if (!s_lightsgroupLabel[lightindex]) {
-				_ASSERT(0);
-				abort();
-			}
-			s_lightschecksp[lightindex] = new OWP_Separator(s_lightsWnd, true, rate50, true);
-			if (!s_lightschecksp[lightindex]) {
-				_ASSERT(0);
-				abort();
-			}
-			s_lightsenableChk[lightindex] = new OWP_CheckBoxA(L"Enable", g_lightEnable[g_lightSlot][lightindex], labelheight, true);
-			if (!s_lightsenableChk[lightindex]) {
-				_ASSERT(0);
-				abort();
-			}
-			s_lightsviewrotChk[lightindex] = new OWP_CheckBoxA(L"RotWithView", g_lightDirWithView[g_lightSlot][lightindex], labelheight, false);
-			if (!s_lightsviewrotChk[lightindex]) {
-				_ASSERT(0);
-				abort();
-			}
-			s_lightscolorsp[lightindex] = new OWP_Separator(s_lightsWnd, true, rate50, true);
-			if (!s_lightscolorsp[lightindex]) {
-				_ASSERT(0);
-				abort();
-			}
-			s_lightscolorBox[lightindex] = new OWP_ColorBox(g_lightDiffuse[g_lightSlot][lightindex].ColorRef(), labelheight);//g_lightDiffuse[g_lightSlot][lightindex].SetParams(fr, fg, fb);
-			if (!s_lightscolorBox[lightindex]) {
-				_ASSERT(0);
-				abort();
-			}
-			s_lightsmultSlider[lightindex] = new OWP_Slider(g_lightScale[g_lightSlot][lightindex], 3.0, 0.0, labelheight);
-			if (!s_lightsmultSlider[lightindex]) {
-				_ASSERT(0);
-				abort();
-			}
-			s_polarsp0[lightindex] = new OWP_Separator(s_lightsWnd, true, rate50, true);
-			if (!s_polarsp0[lightindex]) {
-				_ASSERT(0);
-				abort();
-			}
-			s_polarsp1[lightindex] = new OWP_Separator(s_lightsWnd, true, rate50, true);
-			if (!s_polarsp1[lightindex]) {
-				_ASSERT(0);
-				abort();
-			}
-			s_polarsp2[lightindex] = new OWP_Separator(s_lightsWnd, true, rate50, true);
-			if (!s_polarsp2[lightindex]) {
-				_ASSERT(0);
-				abort();
-			}
-			s_polarxzLabel[lightindex] = new OWP_Label(L"XZ(-180,180]", labelheight);
-			if (!s_polarxzLabel[lightindex]) {
-				_ASSERT(0);
-				abort();
-			}
-			s_polarxzEdit[lightindex] = new OWP_EditBox(true, L"XZ Edit", labelheight, EDIT_BUFLEN_NUM);
-			if (!s_polarxzEdit[lightindex]) {
-				_ASSERT(0);
-				abort();
-			}
-			s_polaryLabel[lightindex] = new OWP_Label(L"Y(-90,90]", labelheight);
-			if (!s_polaryLabel[lightindex]) {
-				_ASSERT(0);
-				abort();
-			}
-			s_polaryEdit[lightindex] = new OWP_EditBox(true, L"Y Edit", labelheight, EDIT_BUFLEN_NUM);
-			if (!s_polaryEdit[lightindex]) {
-				_ASSERT(0);
-				abort();
-			}
-		}
-		s_lightsapplysp = new OWP_Separator(s_lightsWnd, true, rate50, true);
-		if (!s_lightsapplysp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lightsspace1Label = new OWP_Label(L"     ", 24);
-		if (!s_lightsspace1Label) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lightsapplyB = new OWP_Button(L"Apply(適用)", 38);
-		if (!s_lightsapplyB) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lightsapplyB->setTextColor(RGB(168, 129, 129));
-
-
-		s_lightsWnd->addParts(*s_lightsslotsp);
-		s_lightsslotsp->addParts1(*s_lightsslotCombo);
-		s_lightsslotsp->addParts2(*s_lightsslotLabel);
-		int lightindex2;
-		for (lightindex2 = 0; lightindex2 < 8; lightindex2++) {
-			s_lightsWnd->addParts(*s_lightsgroupLabel[lightindex2]);
-			s_lightsWnd->addParts(*s_lightschecksp[lightindex2]);
-			s_lightschecksp[lightindex2]->addParts1(*s_lightsenableChk[lightindex2]);
-			s_lightschecksp[lightindex2]->addParts2(*s_lightsviewrotChk[lightindex2]);
-			s_lightsWnd->addParts(*s_lightscolorsp[lightindex2]);
-			s_lightscolorsp[lightindex2]->addParts1(*s_lightscolorBox[lightindex2]);
-			s_lightscolorsp[lightindex2]->addParts2(*s_lightsmultSlider[lightindex2]);
-			s_lightsWnd->addParts(*s_polarsp0[lightindex2]);
-			s_polarsp0[lightindex2]->addParts1(*s_polarsp1[lightindex2]);
-			s_polarsp0[lightindex2]->addParts2(*s_polarsp2[lightindex2]);
-			s_polarsp1[lightindex2]->addParts1(*s_polarxzLabel[lightindex2]);
-			s_polarsp1[lightindex2]->addParts2(*s_polarxzEdit[lightindex2]);
-			s_polarsp2[lightindex2]->addParts1(*s_polaryLabel[lightindex2]);
-			s_polarsp2[lightindex2]->addParts2(*s_polaryEdit[lightindex2]);
-		}
-		s_lightsWnd->addParts(*s_lightsspace1Label);
-		s_lightsWnd->addParts(*s_lightsapplysp);
-		s_lightsapplysp->addParts2(*s_lightsapplyB);
-
-
-		//############
-		//ComboBox
-		//############
-		s_lightsslotCombo->setButtonListener([]() {
-			int comboid = s_lightsslotCombo->trackPopUpMenu();
-			g_lightSlot = comboid;
-
-			Lights2Dlg();
-			if (s_lightsWnd) {
-				s_lightsWnd->callRewrite();
-			}
-			SetLightDirection();
-		});
-
-		int lightindex3;
-		for (lightindex3 = 0; lightindex3 < 8; lightindex3++) {
-			//###########
-			//CheckBox
-			//###########
-			s_lightsenableChk[lightindex3]->setButtonListener([lightindex3]() {
-				bool value = s_lightsenableChk[lightindex3]->getValue();
-				g_lightEnable[g_lightSlot][lightindex3] = value;
-				SetLightDirection();
-			});
-			
-			s_lightsviewrotChk[lightindex3]->setButtonListener([lightindex3]() {
-				bool value = s_lightsviewrotChk[lightindex3]->getValue();
-				g_lightDirWithView[g_lightSlot][lightindex3] = value;
-				SetLightDirection();
-			});
-
-
-			//##########
-			//Slider
-			//##########
-			s_lightsmultSlider[lightindex3]->setCursorListener([lightindex3]() {
-				double value = s_lightsmultSlider[lightindex3]->getValue();
-				g_lightScale[g_lightSlot][lightindex3] = (float)value;
-				SetLightDirection();
-			});
-
-			//##########
-			//ColorBox
-			//##########
-			s_lightscolorBox[lightindex3]->setButtonListener([lightindex3]() {
-				COLORREF choosedcolor = s_lightscolorBox[lightindex3]->getColor();
-				float fr, fg, fb;
-				fr = (float)((double)GetRValue(choosedcolor) / 255.0);
-				fr = (float)fmin(1.0f, fr);
-				fr = (float)fmax(0.0f, fr);
-				fg = (float)((double)GetGValue(choosedcolor) / 255.0);
-				fg = (float)fmin(1.0f, fg);
-				fg = (float)fmax(0.0f, fg);
-				fb = (float)((double)GetBValue(choosedcolor) / 255.0);
-				fb = (float)fmin(1.0f, fb);
-				fb = (float)fmax(0.0f, fb);
-
-				g_lightDiffuse[g_lightSlot][lightindex3].SetParams(fr, fg, fb);
-				SetLightDirection();
-
-				s_lightscolorBox[lightindex3]->callRewrite();
-			});
-		}
-
-		s_lightsapplyB->setButtonListener([]() {
-			Dlg2Lights();
-			SetLightDirection();
-		});
-
-
-
-		s_lightsWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
-		s_lightsWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
-
-		//１クリック目問題対応
-		s_lightsWnd->refreshPosAndSize();
-
-		s_lightsWnd->callRewrite();
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-
-	return 0;
-}
-
 int CreateLaterTransparentWnd()
 {
 	if (s_laterWnd) {
@@ -29892,44 +29473,6 @@ int CheckStr_SInt(const WCHAR* srcstr)
 	}
 }
 
-int CheckStr_float(const WCHAR* srcstr)
-{
-	if (!srcstr) {
-		return 1;
-	}
-	size_t strleng = wcslen(srcstr);
-	if ((strleng <= 0) || (strleng >= 256)) {
-		_ASSERT(0);
-		return 1;
-	}
-
-	bool errorflag = false;
-	size_t strindex;
-	for (strindex = 0; strindex < strleng; strindex++) {
-		WCHAR curwc = *(srcstr + strindex);
-		if ((curwc >= TEXT('0')) && (curwc <= TEXT('9')) || (curwc == TEXT('+')) || (curwc == TEXT('-')) ||
-			(curwc == TEXT('.'))
-			) {
-
-		}
-		else {
-			errorflag = true;
-			break;
-		}
-	}
-
-
-
-	if (errorflag == false) {
-		return 0;
-	}
-	else {
-		return 1;
-	}
-}
-
-
-
 int GetAngleLimitEditIntOWP(OWP_EditBox* srcedit, int* dstlimit)
 {
 	if (!srcedit || !dstlimit) {
@@ -29999,173 +29542,6 @@ int GetAngleLimitEditInt(HWND hDlgWnd, int editresid, int* dstlimit)
 }
 
 
-int ConvDir2PolarCoord(float srcdirx, float srcdiry, float srcdirz, float* dstxzdeg, float* dstydeg)
-{
-	if (!dstxzdeg || !dstydeg) {
-		_ASSERT(0);
-		return 1;
-	}
-	ChaVector3 srcdir;
-	srcdir.SetParams(srcdirx, srcdiry, srcdirz);
-	ChaVector3 ndir;
-	ndir.SetZeroVec3();
-	ChaVector3Normalize(&ndir, &srcdir);
-
-	//float degy = (float)(-asin(ndir.y) * PAI2DEG);//srcdiry
-	float degy = (float)(asin(ndir.y) * PAI2DEG);//srcdiry
-	float degxz = (float)(-atan2(ndir.x, ndir.z) * PAI2DEG - 180.0f);//本来はX軸が０度だが、Z軸が０度になるように計算。左回りに。
-	float setdegxz = degxz;
-	if (degxz > 180.0f) {
-		setdegxz -= 360.0f;
-	}
-	else if (degxz < -180.0f) {
-		setdegxz += 360.0f;
-	}
-	*dstxzdeg = setdegxz;
-	*dstydeg = degy;
-
-	return 0;
-}
-int ConvPolarCoord2Dir(float srcxzdeg, float srcydeg, float* dstdirx, float* dstdiry, float* dstdirz)
-{
-	if (!dstdirx || !dstdiry || !dstdirz) {
-		_ASSERT(0);
-		return 1;
-	}
-
-	float diry = (float)sin(srcydeg * DEG2PAI);
-	float dirycos = (float)cos(srcydeg * DEG2PAI);
-	float dirx = (float)sin(srcxzdeg * DEG2PAI) * dirycos;//本来はX軸が０度だが、Z軸が０度になるように計算。左回りに。
-	float dirz = (float)-cos(srcxzdeg * DEG2PAI) * dirycos;//本来はX軸が０度だが、Z軸が０度になるように計算。左回りに。
-
-	ChaVector3 calcdir;
-	calcdir.SetParams(dirx, diry, dirz);
-	ChaVector3 ndir;
-	ndir.SetZeroVec3();
-	ChaVector3Normalize(&ndir, &calcdir);
-
-	*dstdirx = ndir.x;
-	*dstdiry = ndir.y;
-	*dstdirz = ndir.z;
-
-	return 0;
-}
-
-
-int Lights2Dlg()
-{
-	if (s_lightsWnd != 0) {
-
-
-		if ((g_lightSlot < 0) || (g_lightSlot >= LIGHTSLOTNUM)) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		if (s_lightsslotCombo) {
-			s_lightsslotCombo->setSelectedCombo(g_lightSlot);
-		}
-
-		int lightindex;
-		for (lightindex = 0; lightindex < 8; lightindex++) {
-			if (s_lightsenableChk[lightindex]) {
-				s_lightsenableChk[lightindex]->setValue(g_lightEnable[g_lightSlot][lightindex], false);
-			}
-
-			if (s_lightsviewrotChk[lightindex]) {
-				s_lightsviewrotChk[lightindex]->setValue(g_lightDirWithView[g_lightSlot][lightindex], false);
-			}
-
-			if (s_lightsmultSlider[lightindex]) {
-				s_lightsmultSlider[lightindex]->setValue((double)g_lightScale[g_lightSlot][lightindex], false);
-			}
-
-
-			float degxz = 0.0f;
-			float degy = 0.0f;
-			ConvDir2PolarCoord(g_lightDir[g_lightSlot][lightindex].x, g_lightDir[g_lightSlot][lightindex].y, g_lightDir[g_lightSlot][lightindex].z,
-				&degxz, &degy);
-
-			WCHAR strdirx[256] = { 0L };
-			swprintf_s(strdirx, 256, L"%.4f", degxz);
-			if (s_polarxzEdit[lightindex]) {
-				s_polarxzEdit[lightindex]->setName(strdirx);
-			}
-			WCHAR strdiry[256] = { 0L };
-			swprintf_s(strdiry, 256, L"%.4f", degy);
-			if (s_polaryEdit[lightindex]) {
-				s_polaryEdit[lightindex]->setName(strdiry);
-			}
-
-
-			COLORREF col = g_lightDiffuse[g_lightSlot][lightindex].ColorRef();
-			if (s_lightscolorBox[lightindex]) {
-				s_lightscolorBox[lightindex]->setColor(col);
-			}
-
-		}
-
-		s_lightsWnd->callRewrite();
-	}
-	return 0;
-}
-
-
-
-int Dlg2Lights()
-{
-	if (s_lightsWnd != 0) {
-		if ((g_lightSlot < 0) || (g_lightSlot >= LIGHTSLOTNUM)) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		int lightindex;
-		for (lightindex = 0; lightindex < 8; lightindex++) {
-			WCHAR strdegxz[256] = { 0L };
-			if (s_polarxzEdit[lightindex]) {
-				s_polarxzEdit[lightindex]->getName(strdegxz, 256);
-			}
-			WCHAR strdegy[256] = { 0L };
-			if (s_polaryEdit[lightindex]) {
-				s_polaryEdit[lightindex]->getName(strdegy, 256);
-			}
-			int chkx, chky;
-			chkx = CheckStr_float(strdegxz);
-			chky = CheckStr_float(strdegy);
-			if ((chkx != 0) || (chky != 0)) {
-				_ASSERT(0);
-				return 2;//!!!!!! input error
-			}
-			float degxz, degy;
-			degxz = (float)_wtof(strdegxz);
-			degy = (float)_wtof(strdegy);
-			
-			float dirx = 0.0f;
-			float diry = 0.0f;
-			float dirz = 0.0f;
-			ConvPolarCoord2Dir(degxz, degy, &dirx, &diry, &dirz);
-			g_lightDir[g_lightSlot][lightindex].SetParams(dirx, diry, dirz);
-
-			if (s_lightsenableChk[lightindex]) {
-				g_lightEnable[g_lightSlot][lightindex] = s_lightsenableChk[lightindex]->getValue();
-			}
-
-			if (s_lightsviewrotChk[lightindex]) {
-				g_lightDirWithView[g_lightSlot][lightindex] = s_lightsviewrotChk[lightindex]->getValue();
-			}
-
-			if (s_lightsmultSlider[lightindex]) {
-				g_lightScale[g_lightSlot][lightindex] = (float)s_lightsmultSlider[lightindex]->getValue();
-			}
-		}
-
-
-	}
-
-	return 0;
-}
 
 
 int LaterTransparent2Dlg()
@@ -44962,7 +44338,10 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	case WM_COMMAND:
 	{
-		if (menuid == (ID_RMENU_0 + MENUOFFSET_BLENDSHAPEDLG)) {
+		if (menuid == (ID_RMENU_0 + MENUOFFSET_LIGHTSDLG)) {
+			SetLightDirection();
+		}
+		else if (menuid == (ID_RMENU_0 + MENUOFFSET_BLENDSHAPEDLG)) {
 			int blendshapeindex = (int)lParam;
 			CBlendShapeElem curblendshape = s_blendshapedlg.GetBlendShapeElem(blendshapeindex);
 			if (curblendshape.validflag && curblendshape.mqoobj &&
@@ -46915,18 +46294,7 @@ void ShowGUIDlgBlendShape(bool srcflag)
 
 void ShowLightsWnd(bool srcflag)
 {
-	if (s_lightsWnd) {
-		if (srcflag == true) {
-			Lights2Dlg();
-			s_lightsWnd->setVisible(true);
-			s_lightsWnd->setListenMouse(true);
-			s_lightsWnd->callRewrite();
-		}
-		else {
-			s_lightsWnd->setVisible(false);
-			s_lightsWnd->setListenMouse(false);
-		}
-	}
+	s_lightsdlg.SetVisible(srcflag);
 
 	s_spdispsw[SPDISPSW_LIGHTS].state = srcflag;
 }

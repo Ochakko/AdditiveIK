@@ -5,6 +5,9 @@ https://github.com/Ochakko/AdditiveIK
 2024/08/07
 　BlendShapeウインドウをCBlendShapeDlgにクラス化
 
+　LightsウインドウをCLightsDlgにクラス化
+
+
 
 　予定
 　　AdditiveIK.cppにスタティックメンバとして大量に記述しているOWP関係のソースをクラス化していく予定

@@ -3818,10 +3818,10 @@ void s_dummyfunc()
 				//ボタンを押すアニメーションを再生中に　ボタンを削除しないように　待機ループ
 				Sleep(1);
 			}
-			if (name) {
-				delete[] name;
-				name = nullptr;
-			}
+			//if (name) {//OWP_ColorBoxにはnameメンバー無し
+			//	delete[] name;
+			//	name = nullptr;
+			//}
 		}
 
 		int ChooseColor();
@@ -3909,30 +3909,30 @@ void s_dummyfunc()
 		void setButtonListener(std::function<void()> listener) {
 			this->buttonListener = listener;
 		}
-		void setName(const TCHAR* value) {
-			if (name && value) {
-				size_t tclen = _tcslen(value);
-				size_t cplen;
-				if (tclen != 0) {
-					if (tclen <= 255) {
-						cplen = tclen;
-					}
-					else {
-						cplen = 255;
-					}
-					_tcsncpy_s(name, 256, value, cplen);
-					name[cplen] = (TCHAR)0;
-				}
-				else {
-					_tcscpy_s(name, 256, TEXT("NoName"));
-				}
-			}
-
-			callRewrite();
-		}
+		//void setName(const TCHAR* value) {
+		//	if (name && value) {
+		//		size_t tclen = _tcslen(value);
+		//		size_t cplen;
+		//		if (tclen != 0) {
+		//			if (tclen <= 255) {
+		//				cplen = tclen;
+		//			}
+		//			else {
+		//				cplen = 255;
+		//			}
+		//			_tcsncpy_s(name, 256, value, cplen);
+		//			name[cplen] = (TCHAR)0;
+		//		}
+		//		else {
+		//			_tcscpy_s(name, 256, TEXT("NoName"));
+		//		}
+		//	}
+		//
+		//	callRewrite();
+		//}
 	private:
 		////////////////////////// MemberVar /////////////////////////////
-		TCHAR* name;
+		//TCHAR* name;
 
 		bool buttonPush;
 		std::function<void()> buttonListener;
