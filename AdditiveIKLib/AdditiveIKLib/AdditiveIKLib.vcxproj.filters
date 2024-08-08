@@ -258,6 +258,9 @@
     <ClCompile Include="..\CPP\LaterTransparentDlg.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
+    <ClCompile Include="..\CPP\ShaderTypeDlg.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
@@ -1421,6 +1424,9 @@
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\INCLUDE\LaterTransparentDlg.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ShaderTypeDlg.h">
       <Filter>GUI</Filter>
     </ClInclude>
   </ItemGroup>

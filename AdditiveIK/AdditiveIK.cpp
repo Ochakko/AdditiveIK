@@ -79,6 +79,7 @@
 #include <LightsDlg.h>
 #include <DispGroupDlg.h>
 #include <LaterTransparentDlg.h>
+#include <ShaderTypeDlg.h>
 #include <CpInfoDlg2.h>
 
 #include <math.h>
@@ -692,16 +693,13 @@ static RECT s_rctoolwnd;
 static RECT s_rcltwnd;
 static RECT s_rcsidemenuwnd;
 static RECT s_rcrigidwnd;
-static RECT s_rcshadertypewnd;
+//static RECT s_rcshadertypewnd;
 static RECT s_rcshadertypeparamswnd;
 static RECT s_rcinfownd;
 static RECT s_rctopsliderswnd;
 static RECT s_rcmodelpanel;
 static RECT s_rcmotionpanel;
 static RECT s_rccamerapanel;
-
-static void ChangeMouseSetCapture();
-static void ChangeMouseReleaseCapture();
 
 
 #define MB3D_DSBUTTONNUM	14
@@ -984,6 +982,7 @@ static CBlendShapeDlg s_blendshapedlg;
 static CLightsDlg s_lightsdlg;
 static CDispGroupDlg s_dispgroupdlg;
 static CLaterTransparentDlg s_latertransparentdlg;
+static CShaderTypeDlg s_shadertypedlg;
 
 static bool s_undercpinfodlg2;
 static CCpInfoDlg2 s_cpinfodlg2;
@@ -1502,22 +1501,6 @@ static OrgWindow* s_placefolderWnd = 0;
 //#define SHORTCUTTEXTNUM	49
 #define SHORTCUTTEXTNUM	50
 static OWP_Label* s_shortcuttext[SHORTCUTTEXTNUM];
-
-
-static OrgWindow* s_shadertypeWnd = 0;
-static OWP_ScrollWnd* s_SCshadertype = 0;
-static OWP_Separator* s_shadersp1 = 0;
-static OWP_Separator* s_shadersp2 = 0;
-static OWP_Separator* s_shadersp3 = 0;
-static OWP_Label* s_modelnamelabel = 0;
-static OWP_Button* s_materialnameB[MAXMATERIALNUM + 1];//+1は見出しの分
-static OWP_Label* s_shadertypelabel[MAXMATERIALNUM + 1];//+1は見出しの分
-//static OWP_Label* s_metalcoeflabel[MAXMATERIALNUM + 1];//+1は見出しの分
-//static OWP_Label* s_lightscalelabel[MAXMATERIALNUM + 1];//+1は見出しの分
-static bool s_shadertypeparamsFlag = false;
-static int s_shadertypeparamsindex = -1;//index==0は全てのマテリアルに設定. それ以外はindex - 1のマテリアルに設定
-
-
 
 
 static OrgWindow* s_st_paramsWnd = 0;
@@ -3043,12 +3026,9 @@ static int ShowJumpGravityDlg();
 //ShaderPlateMenuプッシュで表示するOWPのShaderTypeWnd
 //#################################################
 static void ShowShaderTypeWnd(bool srcflag);//マテリアルリストの方
-static int ModalShaderTypeDlg();//マテリアルリストの方
-static int CreateShaderTypeWnd();//マテリアルリストの方
-static void DestroyShaderTypeWnd();//マテリアルリストの方
 
 //#######################################################
-//OWPのShaderTypeWndウインドウから呼び出すWin32のparamsDlg
+//OWPのShaderTypeWndウインドウから呼び出すparamsDlg
 //#######################################################
 static int CreateShaderTypeParamsDlg();//params設定用
 static void DestroyShaderTypeParamsDlg();//params設定用
@@ -4094,7 +4074,6 @@ INT WINAPI wWinMain(
 	CreateToolWnd();
 	CreateLongTimelineWnd();
 	CreateDmpAnimWnd();
-	CreateShaderTypeWnd();
 	CreateImpulseWnd();
 	CreateGPlaneWnd();
 	CreateLayerWnd();
@@ -4431,6 +4410,7 @@ int CheckResolution()
 		s_lightsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_dispgroupdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_latertransparentdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+		s_shadertypedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 	}
 
 	return 0;
@@ -4464,6 +4444,7 @@ void InitApp()
 	s_lightsdlg.InitParams();
 	s_dispgroupdlg.InitParams();
 	s_latertransparentdlg.InitParams();
+	s_shadertypedlg.InitParams();
 
 	s_undercpinfodlg2 = false;
 	s_cpinfodlg2.InitParams();
@@ -4944,29 +4925,9 @@ void InitApp()
 	s_owpLayerTable = 0;
 	
 	{
-		s_shadertypeparamsFlag = false;
-		s_shadertypeparamsindex = -1;//index==0は全てのマテリアルに設定. それ以外はindex - 1のマテリアルに設定
 		s_skyparamsFlag = false;
 		s_fogparamsFlag = false;
 		s_dofparamsFlag = false;
-
-		s_shadertypeWnd = 0;
-		s_SCshadertype = 0;
-
-		s_shadersp1 = 0;
-		s_shadersp2 = 0;
-		s_shadersp3 = 0;
-
-		s_modelnamelabel = 0;
-
-		//+1は見出しの分
-		int objno;
-		for (objno = 0; objno < (MAXMATERIALNUM + 1); objno++) {
-			s_materialnameB[objno] = 0;//+1は見出しの分
-			s_shadertypelabel[objno] = 0;//+1は見出しの分
-			//s_metalcoeflabel[objno] = 0;//+1は見出しの分
-			//s_lightscalelabel[objno] = 0;//+1は見出しの分
-		}
 	}
 
 	{
@@ -6066,10 +6027,10 @@ void InitApp()
 	s_rcrigidwnd.left = 0;
 	s_rcrigidwnd.bottom = 0;
 	s_rcrigidwnd.right = 0;
-	s_rcshadertypewnd.top = 0;
-	s_rcshadertypewnd.left = 0;
-	s_rcshadertypewnd.bottom = 0;
-	s_rcshadertypewnd.right = 0;
+	//s_rcshadertypewnd.top = 0;
+	//s_rcshadertypewnd.left = 0;
+	//s_rcshadertypewnd.bottom = 0;
+	//s_rcshadertypewnd.right = 0;
 	s_rcshadertypeparamswnd.top = 0;
 	s_rcshadertypeparamswnd.left = 0;
 	s_rcshadertypeparamswnd.bottom = 0;
@@ -6822,6 +6783,7 @@ void OnDestroyDevice()
 	s_lightsdlg.DestroyObjs();
 	s_dispgroupdlg.DestroyObjs();
 	s_latertransparentdlg.DestroyObjs();
+	s_shadertypedlg.DestroyObjs();
 	s_cpinfodlg2.DestroyObjs();
 
 
@@ -7106,7 +7068,6 @@ void OnDestroyDevice()
 		s_owpLayerTable = 0;
 	}
 
-	DestroyShaderTypeWnd();
 	DestroyShaderTypeParamsDlg();
 	DestroySkyParamsDlg();
 
@@ -36922,57 +36883,6 @@ int CheckSimilarMenu()//context menu
 	return 0;
 }
 
-void DestroyShaderTypeWnd()
-{
-	if (s_modelnamelabel) {
-		delete s_modelnamelabel;
-		s_modelnamelabel = 0;
-	}
-
-	int index;
-	for (index = 0; index < (MAXMATERIALNUM + 1); index++) {
-		if (s_materialnameB[index]) {
-			delete s_materialnameB[index];
-			s_materialnameB[index] = 0;
-		}
-		if (s_shadertypelabel[index]) {
-			delete s_shadertypelabel[index];
-			s_shadertypelabel[index] = 0;
-		}
-		//if (s_metalcoeflabel[index]) {
-		//	delete s_metalcoeflabel[index];
-		//	s_metalcoeflabel[index] = 0;
-		//}
-		//if (s_lightscalelabel[index]) {
-		//	delete s_lightscalelabel[index];
-		//	s_lightscalelabel[index] = 0;
-		//}
-	}
-
-
-	if (s_shadersp2) {
-		delete s_shadersp2;
-		s_shadersp2 = 0;
-	}
-	if (s_shadersp3) {
-		delete s_shadersp3;
-		s_shadersp3 = 0;
-	}
-	if (s_shadersp1) {
-		delete s_shadersp1;
-		s_shadersp1 = 0;
-	}
-	if (s_SCshadertype) {
-		delete s_SCshadertype;
-		s_SCshadertype = 0;
-	}
-
-	if (s_shadertypeWnd) {
-		delete s_shadertypeWnd;
-		s_shadertypeWnd = 0;
-	}
-
-}
 
 void DestroyShaderTypeParamsDlg()
 {
@@ -38210,287 +38120,6 @@ void DestroySkyParamsDlg()
 		s_skyst_paramsWnd = 0;
 	}
 }
-
-int CreateShaderTypeWnd()
-{
-	DestroyShaderTypeWnd();
-
-
-	//s_dsrigidctrls.clear();
-
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-	s_shadertypeWnd = new OrgWindow(
-		0,
-		_T("ShaderTypeWindow"),		//ウィンドウクラス名
-		GetModuleHandle(NULL),	//インスタンスハンドル
-		WindowPos(windowposx, s_sidemenuheight),
-		WindowSize(s_sidewidth, s_sideheight),		//サイズ
-		_T("ShderTypeWindow"),	//タイトル
-		g_mainhwnd,	//親ウィンドウハンドル
-		true,					//表示・非表示状態
-		//70, 50, 70,				//カラー
-		0, 0, 0,				//カラー
-		true, true);					//サイズ変更の可否
-
-
-
-	if (!s_model) {
-		//モデルが無い場合には　ウインドウ枠だけ作成してリターン
-		return 0;
-	}
-
-	int materialnum = s_model->GetMQOMaterialSize();
-	if (materialnum == 0) {
-		return 0;
-	}
-	if ((materialnum < 0) || (materialnum >= MAXMATERIALNUM)) {
-		//2024/03/03
-		MessageBoxW(s_3dwnd, L"ERROR : MaterialNum Overflow.", L"Can't open dialog for settings.", MB_OK | MB_ICONERROR);
-		return 1;
-	}
-
-
-
-	if (s_shadertypeWnd) {
-		int linedatasize;
-		linedatasize = (int)((double)(materialnum + 1) * 1.2);
-
-
-		s_SCshadertype = new OWP_ScrollWnd(L"ShaderTypeScWnd", true, 20);
-		if (!s_SCshadertype) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_SCshadertype->setLineDataSize(linedatasize);//!!!!!!!!!!!!!
-		s_shadertypeWnd->addParts(*s_SCshadertype);
-
-
-		//s_shadersp1 = new OWP_Separator(s_shadertypeWnd, false, 0.75, true);
-		//s_shadersp1 = new OWP_Separator(s_shadertypeWnd, false, 0.75, true, s_SCshadertype);//2023/12/22
-		s_shadersp1 = new OWP_Separator(s_shadertypeWnd, true, 0.75, true, s_SCshadertype);//2024/05/25 contentsSize true
-		if (!s_shadersp1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_SCshadertype->addParts(*s_shadersp1);
-
-		//s_shadersp2 = new OWP_Separator(s_shadertypeWnd, false, 0.80, true, s_SCshadertype);
-		//if (!s_shadersp2) {
-		//	_ASSERT(0);
-		//	return 1;
-		//}
-		//s_shadersp1->addParts1(*s_shadersp2);
-
-		//s_shadersp3 = new OWP_Separator(s_shadertypeWnd, false, 0.5, true, s_SCshadertype);
-		//if (!s_shadersp3) {
-		//	_ASSERT(0);
-		//	return 1;
-		//}
-		//s_shadersp1->addParts2(*s_shadersp3);
-
-		//見出し行　見出し行のs_materialnameBは全てのマテリアルに適用するためのボタン
-		//OrgWinGUI::OrgWindowParts::color_tag colorforindex;//RGB(168, 129, 129)
-		//colorforindex.r = 168;
-		//colorforindex.g = 129;
-		//colorforindex.b = 129;
-		COLORREF indexcolor = RGB(168, 129, 129);
-		s_materialnameB[0] = new OWP_Button(L"MaterialName", 25);
-		if (!s_materialnameB[0]) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_materialnameB[0]->setTextColor(indexcolor);
-		s_shadertypelabel[0] = new OWP_Label(L"ShaderType", 25);
-		if (!s_shadertypelabel[0]) {
-			_ASSERT(0);
-			return 1;
-		}
-		//s_shadertypelabel[0]->setTextColor(indexcolor);
-		//s_metalcoeflabel[0] = new OWP_Label(L"MetalCoef");
-		//if (!s_metalcoeflabel[0]) {
-		//	_ASSERT(0);
-		//	return 1;
-		//}
-		//s_metalcoeflabel[0]->setTextColor(indexcolor);
-		//s_lightscalelabel[0] = new OWP_Label(L"LightScale");
-		//if (!s_lightscalelabel[0]) {
-		//	_ASSERT(0);
-		//	return 1;
-		//}
-		//s_lightscalelabel[0]->setTextColor(indexcolor);
-
-		//s_shadersp2->addParts1(*(s_materialnameB[0]));
-		//s_shadersp2->addParts2(*(s_shadertypelabel[0]));
-		//s_shadersp3->addParts1(*(s_metalcoeflabel[0]));
-		//s_shadersp3->addParts2(*(s_lightscalelabel[0]));
-
-		s_shadersp1->addParts1(*(s_materialnameB[0]));
-		s_shadersp1->addParts2(*(s_shadertypelabel[0]));
-
-
-
-		int setindex;
-		for (setindex = 1; setindex < (materialnum + 1); setindex++) {
-
-			if (setindex == materialnum) {
-				int dbgflag2 = 1;
-			}
-
-			int materialindex = setindex - 1;
-			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
-			if (!curmqomat) {
-				_ASSERT(0);
-				return 1;
-			}
-
-
-			char name[256] = { 0 };
-			strcpy_s(name, 256, curmqomat->GetName());
-			WCHAR wname[256] = { 0L };
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, 256, wname, 256);
-			s_materialnameB[setindex] = new OWP_Button(wname, 20);
-			if (!s_materialnameB[setindex]) {
-				_ASSERT(0);
-				return 1;
-			}
-
-
-			int shadertype = curmqomat->GetShaderType();
-			WCHAR strshadertype[256] = { 0L };
-			switch (shadertype) {
-			case MQOSHADER_PBR:
-				wcscpy_s(strshadertype, 256, L"PBR");
-				break;
-			case MQOSHADER_STD:
-				wcscpy_s(strshadertype, 256, L"STD");
-				break;
-			case MQOSHADER_TOON:
-				wcscpy_s(strshadertype, 256, L"TOON");
-				break;
-			case -1:
-			case -2:
-				wcscpy_s(strshadertype, 256, L"AUTO");
-				break;
-			default:
-				_ASSERT(0);
-				wcscpy_s(strshadertype, 256, L"Unknown");
-				break;
-			}
-			s_shadertypelabel[setindex] = new OWP_Label(strshadertype, 20);
-			if (!s_shadertypelabel[setindex]) {
-				_ASSERT(0);
-				return 1;
-			}
-			
-			//float metalcoef = curmqomat->GetMetalCoef();
-			//WCHAR strmetalcoef[256] = { 0L };
-			//swprintf_s(strmetalcoef, 256, L"%.3f", metalcoef);
-			//s_metalcoeflabel[setindex] = new OWP_Label(strmetalcoef);
-			//if (!s_metalcoeflabel[setindex]) {
-			//	_ASSERT(0);
-			//	return 1;
-			//}
-
-			//WCHAR strlightscale[256] = { 0L };
-			//bool isedited = false;
-			//int litno5;
-			//for (litno5 = 0; litno5 < LIGHTNUMMAX; litno5++) {
-			//	float curscale = curmqomat->GetLightScale(litno5);
-			//	if ((curscale >= (1.0f - 0.0001f)) && (curscale <= (1.0f + 0.0001f))) {
-			//		//1.0f
-			//	}
-			//	else {
-			//		isedited = true;
-			//		break;
-			//	}
-			//}
-			//if (isedited) {
-			//	wcscpy_s(strlightscale, 256, L"***");
-			//}
-			//else {
-			//	wcscpy_s(strlightscale, 256, L"1.00");
-			//}
-			//s_lightscalelabel[setindex] = new OWP_Label(strlightscale);
-			//if (!s_lightscalelabel[setindex]) {
-			//	_ASSERT(0);
-			//	return 1;
-			//}
-
-
-			////s_shadersp2->addParts1(*(s_materialnameB[materialindex]));
-			////s_shadersp2->addParts2(*(s_shadertypelabel[materialindex]));
-			////s_shadersp3->addParts1(*(s_metalcoeflabel[materialindex]));
-			////s_shadersp3->addParts2(*(s_lightscalelabel[materialindex]));
-			//s_shadersp2->addParts1(*(s_materialnameB[setindex]));
-			//s_shadersp2->addParts2(*(s_shadertypelabel[setindex]));
-			//s_shadersp3->addParts1(*(s_metalcoeflabel[setindex]));
-			//s_shadersp3->addParts2(*(s_lightscalelabel[setindex]));
-
-
-			s_shadersp1->addParts1(*(s_materialnameB[setindex]));
-			s_shadersp1->addParts2(*(s_shadertypelabel[setindex]));
-
-		}
-
-
-		//ボタンのラムダ関数
-		int setindex2;
-		for (setindex2 = 0; setindex2 < (materialnum + 1); setindex2++) {
-
-			if (setindex2 == materialnum) {
-				int dbgflag3 = 1;
-			}
-
-			//int materialindex = setindex2 - 1;	
-			if (s_materialnameB[setindex2]) {
-				s_materialnameB[setindex2]->setButtonListener([setindex2]() {
-					if (!s_shadertypeparamsFlag) {
-						s_shadertypeparamsindex = setindex2;//index==0は全てのマテリアルに設定. それ以外はindex - 1のマテリアルに設定
-						s_shadertypeparamsFlag = true;
-					}
-					if (s_shadertypeWnd) {
-						s_shadertypeWnd->callRewrite();//再描画
-					}
-				});
-			}
-		}
-
-
-		//autoResizeしないと　チェックボックス４段目以下が反応なかった
-		//s_SCshadertype->autoResize();
-		//s_shadersp3->autoResize();
-		//s_shadersp2->autoResize();
-		//s_shadersp1->autoResize();
-
-		s_shadertypeWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
-		s_shadertypeWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
-		//１クリック目問題対応
-		s_shadertypeWnd->refreshPosAndSize();
-		s_shadertypeWnd->autoResizeAllParts();
-		s_shadertypeWnd->setVisible(false);
-
-
-
-		s_rcshadertypewnd.bottom = s_sideheight;
-		s_rcshadertypewnd.right = s_sidewidth;
-
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-
-
-	return 0;
-}
-
 
 int CreateImpulseWnd()
 {
@@ -44885,53 +44514,22 @@ void ShowRigidWnd(bool srcflag)
 
 void ShowShaderTypeWnd(bool srcflag)
 {
-	//if (s_model) {
-	//	s_shadertypeWnd->setVisible(srcflag);
-	//	s_spdispsw[SPDISPSW_SHADERTYPE].state = srcflag;
-	//}
 
-	if (s_model) {
-		if (srcflag == true) {
-			int result = CreateShaderTypeWnd();
-			if (result == 0) {
-				
-				//paramsの方は閉じる
-				ShowShaderTypeParamsDlg(false);
+	//paramsの方は閉じる
+	ShowShaderTypeParamsDlg(false);
 
-				if (s_shadertypeWnd) {
-					s_shadertypeWnd->setListenMouse(true);
-					s_shadertypeWnd->setVisible(true);
-				}
-				s_spdispsw[SPDISPSW_SHADERTYPE].state = true;
-			}
-			else {
-				//############################
-				//### ERROR 
-				//### materialnum range error
-				//############################
-				//_ASSERT(0);
-				CloseAllAndDispPlaceFolder();
-				return;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			}
-		}
-		else {
-			if (s_shadertypeWnd) {
-				s_shadertypeWnd->setListenMouse(false);
-				s_shadertypeWnd->setVisible(false);
-			}
-			s_spdispsw[SPDISPSW_SHADERTYPE].state = false;
+	s_shadertypedlg.SetVisible(srcflag);
 
+	s_spdispsw[SPDISPSW_SHADERTYPE].state = srcflag;
 
-			//############################
-			//2023/12/22 ParamsDlgも閉じる
-			//############################
-			ShowShaderTypeParamsDlg(false);
-
-			//2023/12/30 以下２行　ここで呼び出すと２回目にSW_SHOWしても表示されないことがあるので　コメントアウト
-			// WindowProcを回す必要があるため
-			//s_shadertypeparamsindex = -1;
-			//s_shadertypeparamsFlag = false;
-		}
+	{
+		////############################
+		////### ERROR 
+		////### materialnum range error
+		////############################
+		////_ASSERT(0);
+		//CloseAllAndDispPlaceFolder();
+		//return;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	}
 
 }
@@ -44957,16 +44555,6 @@ void ShowShadowParamsWnd(bool srcflag)
 	s_spdispsw[SPDISPSW_SHADOWPARAMS].state = srcflag;
 
 }
-
-
-int ModalShaderTypeDlg()
-{
-	//IDD_MODALSHADERTYPEDLG
-
-
-	return 0;
-}
-
 
 void ShowImpulseWnd(bool srcflag)
 {
@@ -46767,8 +46355,8 @@ void OrgWindowListenMouse(bool srcflag)
 	if (s_bulletdlg.GetVisible()) {
 		s_bulletdlg.ListenMouse(srcflag);
 	}
-	if (s_shadertypeWnd) {
-		s_shadertypeWnd->setListenMouse(srcflag);
+	if (s_shadertypedlg.GetVisible()) {
+		s_shadertypedlg.ListenMouse(srcflag);
 	}
 	if (s_impWnd) {
 		s_impWnd->setListenMouse(srcflag);
@@ -50383,20 +49971,7 @@ bool PickAndSelectMaterialOfShaderTypeDlg()
 			bool callundo = true;
 			OnChangeModel(s_pickmodel, forceflag, callundo);
 
-			int materialnum = s_model->GetMQOMaterialSize();
-			int materialindex;
-			for (materialindex = 0; materialindex < materialnum; materialindex++) {
-				CMQOMaterial* chkmaterial = s_model->GetMQOMaterialByIndex(materialindex);
-				if (chkmaterial && (chkmaterial == s_pickmaterial)) {
-					if (s_SCshadertype) {
-						s_SCshadertype->setShowPosLine(materialindex + 1);
-					}
-
-					s_shadertypeparamsindex = materialindex + 1;//index==0は全てのマテリアルに設定. それ以外はindex - 1のマテリアルに設定
-					s_shadertypeparamsFlag = true;
-					break;
-				}
-			}
+			s_shadertypedlg.SelectMaterial(s_pickmodel, s_pickmaterial);
 		}
 	}
 
@@ -51230,23 +50805,6 @@ int CreateJumpGravityWnd()
 
 int CreateShaderTypeParamsDlg()
 {
-	//HWND hDlgWnd = CreateDialogW((HMODULE)GetModuleHandle(NULL),
-	//	//MAKEINTRESOURCE(IDD_SHADERTYPEDLG2), g_mainhwnd, (DLGPROC)ShaderTypeParamsDlgProc);
-	//	MAKEINTRESOURCE(IDD_SHADERTYPEDLG2), s_3dwnd, (DLGPROC)ShaderTypeParamsDlgProc);
-	//if (hDlgWnd != NULL) {
-	//	s_shadertypeparamsdlgwnd = hDlgWnd;
-	//	ShowWindow(s_shadertypeparamsdlgwnd, SW_HIDE);
-	//	s_shadertypeparamsindex = -1;
-	//	s_shadertypeparamsFlag = false;
-	//	return 0;
-	//}
-	//else {
-	//	s_shadertypeparamsdlgwnd = NULL;
-	//	s_shadertypeparamsindex = -1;
-	//	s_shadertypeparamsFlag = false;
-	//	return 1;
-	//}
-
 
 	DestroyShaderTypeParamsDlg();
 
@@ -52903,24 +52461,25 @@ int OnFrameBlendShape()
 
 int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 {
-	if (s_shadertypeparamsFlag) {
-		s_shadertypeparamsFlag = false;
+	if (s_shadertypedlg.GetShaderTypeParamsFlag()) {
+		s_shadertypedlg.SetShaderTypeParamsFlag(false);
 
 		//CloseAllRightPainWindow();//<--これを呼ぶと　SPDISPSW_SHADERTYPE].stateがfalseになってしまい　windowが反応しなくなる
 
 		//s_shadertypeparamsFlagがtrueになるのは
 		//s_shadertypeWndからマテリアル名ボタンを押した場合と　PickAndSetでマテリアルを選択した場合
 
-		if (s_shadertypeWnd) {
-			//s_shadertypeWnd->setListenMouse(false);//<--- CloseAllRightPainWindow()を呼んだ時にwindowが反応しなくなるのはこの呼び出しが原因だった
-			s_shadertypeWnd->setVisible(false);
-		}
+		//if (s_shadertypeWnd) {
+		//	//s_shadertypeWnd->setListenMouse(false);//<--- CloseAllRightPainWindow()を呼んだ時にwindowが反応しなくなるのはこの呼び出しが原因だった
+		//	s_shadertypeWnd->setVisible(false);
+		//}
+		s_shadertypedlg.SetVisible(false);
 
 		ShowShaderTypeParamsDlg(true);
 
 		//	if (s_model) {
 		//		//int materialnum = s_model->GetMQOMaterialSize();
-		//		//if ((s_shadertypeparamsindex >= 0) && (s_shadertypeparamsindex < (materialnum + 1))) {
+		//		//if ((s_shadertypedlg.GetShaderTypeParamsIndex() >= 0) && (s_shadertypedlg.GetShaderTypeParamsIndex() < (materialnum + 1))) {
 		//		//	ShowShaderTypeParamsDlg(true);
 		//		//}
 		//	}
@@ -52934,137 +52493,26 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 	if (s_st_stradioFlag) {
 		s_st_stradioFlag = false;
 		if (s_st_shadertyperadio && s_model) {
-
-			int materialnum = s_model->GetMQOMaterialSize();
-			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
-			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
-
 			int shadertype = s_st_shadertyperadio->getSelectIndex();
 			switch (shadertype) {
 			case 0:
-				if (curmqomat) {
-					curmqomat->SetShaderType(-1);
-					s_shadertypeparams.shadertype = -1;
-
-					if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-						if (s_shadertypelabel[s_shadertypeparamsindex]) {
-							WCHAR strdlg2[256] = { 0L };
-							wcscpy_s(strdlg2, 256, L"AUTO");
-							s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
-						}
-					}
-				}
-				else {
-					int materialindex5;
-					for (materialindex5 = 0; materialindex5 < materialnum; materialindex5++) {
-						CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex5);
-						if (setmqomat) {
-							setmqomat->SetShaderType(-1);
-						}
-
-						if (s_shadertypelabel[materialindex5 + 1]) {
-							WCHAR strdlg2[256] = { 0L };
-							wcscpy_s(strdlg2, 256, L"AUTO");
-							s_shadertypelabel[materialindex5 + 1]->setName(strdlg2);
-						}
-					}
-				}
+				s_shadertypeparams.shadertype = -1;
 				break;
 			case 1:
 				s_shadertypeparams.shadertype = MQOSHADER_PBR;
-
-				if (curmqomat) {
-					curmqomat->SetShaderType(MQOSHADER_PBR);
-
-					if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-						if (s_shadertypelabel[s_shadertypeparamsindex]) {
-							WCHAR strdlg2[256] = { 0L };
-							wcscpy_s(strdlg2, 256, L"PBR");
-							s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
-						}
-					}
-				}
-				else {
-					int materialindex6;
-					for (materialindex6 = 0; materialindex6 < materialnum; materialindex6++) {
-						CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex6);
-						if (setmqomat) {
-							setmqomat->SetShaderType(MQOSHADER_PBR);
-						}
-
-						if (s_shadertypelabel[materialindex6 + 1]) {
-							WCHAR strdlg2[256] = { 0L };
-							wcscpy_s(strdlg2, 256, L"PBR");
-							s_shadertypelabel[materialindex6 + 1]->setName(strdlg2);
-						}
-					}
-				}
 				break;
 			case 2:
 				s_shadertypeparams.shadertype = MQOSHADER_STD;
-
-				if (curmqomat) {
-					curmqomat->SetShaderType(MQOSHADER_STD);
-
-					if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-						if (s_shadertypelabel[s_shadertypeparamsindex]) {
-							WCHAR strdlg2[256] = { 0L };
-							wcscpy_s(strdlg2, 256, L"STD");
-							s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
-						}
-					}
-				}
-				else {
-					int materialindex7;
-					for (materialindex7 = 0; materialindex7 < materialnum; materialindex7++) {
-						CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex7);
-						if (setmqomat) {
-							setmqomat->SetShaderType(MQOSHADER_STD);
-						}
-
-						if (s_shadertypelabel[materialindex7 + 1]) {
-							WCHAR strdlg2[256] = { 0L };
-							wcscpy_s(strdlg2, 256, L"STD");
-							s_shadertypelabel[materialindex7 + 1]->setName(strdlg2);
-						}
-					}
-				}
 				break;
 			case 3:
 				s_shadertypeparams.shadertype = MQOSHADER_TOON;
-
-				if (curmqomat) {
-					curmqomat->SetShaderType(MQOSHADER_TOON);
-
-					if ((s_shadertypeparamsindex >= 1) && (s_shadertypeparamsindex < (materialnum + 1))) {
-						if (s_shadertypelabel[s_shadertypeparamsindex]) {
-							WCHAR strdlg2[256] = { 0L };
-							wcscpy_s(strdlg2, 256, L"TOON");
-							s_shadertypelabel[s_shadertypeparamsindex]->setName(strdlg2);
-						}
-					}
-				}
-				else {
-					int materialindex8;
-					for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
-						CMQOMaterial* setmqomat = s_model->GetMQOMaterialByIndex(materialindex8);
-						if (setmqomat) {
-							setmqomat->SetShaderType(MQOSHADER_TOON);
-						}
-
-						if (s_shadertypelabel[materialindex8 + 1]) {
-							WCHAR strdlg2[256] = { 0L };
-							wcscpy_s(strdlg2, 256, L"TOON");
-							s_shadertypelabel[materialindex8 + 1]->setName(strdlg2);
-						}
-					}
-				}
 				break;
 			default:
 				_ASSERT(0);
 				break;
 			}
+
+			s_shadertypedlg.SetShaderType(shadertype);
 		}
 	}
 	if (s_st_lightchkFlag) {
@@ -53072,7 +52520,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_lightflagchk && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			bool ischecked = s_st_lightflagchk->getValue();
@@ -53102,7 +52550,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_shadowcasterchk && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			bool ischecked = s_st_shadowcasterchk->getValue();
@@ -53132,7 +52580,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_normaly0chk && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			bool ischecked = s_st_normaly0chk->getValue();
@@ -53162,7 +52610,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_spccoefslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			float newspcscale = (float)s_st_spccoefslider->getValue();
@@ -53188,7 +52636,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_emissionchk && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			bool ischecked = s_st_emissionchk->getValue();
@@ -53219,7 +52667,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_emissionslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			float newemiscale = (float)s_st_emissionslider->getValue();
@@ -53245,7 +52693,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_metalslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			float newmetalcoef = (float)s_st_metalslider->getValue();
@@ -53271,7 +52719,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_smoothslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			float newsmoothcoef = (float)s_st_smoothslider->getValue();
@@ -53297,7 +52745,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_litscaleslider1 && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			int litno4 = 0;//!!!
@@ -53324,7 +52772,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_litscaleslider2 && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			int litno4 = 1;//!!!
@@ -53351,7 +52799,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_litscaleslider1 && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			int litno4 = 2;//!!!
@@ -53378,7 +52826,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_litscaleslider4 && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			int litno4 = 3;//!!!
@@ -53405,7 +52853,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_litscaleslider1 && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			int litno4 = 4;//!!!
@@ -53432,7 +52880,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_litscaleslider6 && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			int litno4 = 5;//!!!
@@ -53459,7 +52907,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_litscaleslider7 && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			int litno4 = 6;//!!!
@@ -53486,7 +52934,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_litscaleslider8 && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			int litno4 = 7;//!!!
@@ -53513,7 +52961,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_toonlitradio && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			int lightindex = s_st_toonlitradio->getSelectIndex();
@@ -53539,7 +52987,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_toonhiaddrslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			float hicolorh = (float)s_st_toonhiaddrslider->getValue();
@@ -53566,7 +53014,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_toonhiaddrslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			if (curmqomat) {
@@ -53584,7 +53032,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_toonlowaddrslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			float lowcolorh = (float)s_st_toonhiaddrslider->getValue();
@@ -53611,7 +53059,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_gradationchk && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			bool ischecked = s_st_gradationchk->getValue();
@@ -53651,7 +53099,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_powertoonchk && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			bool ischecked = s_st_powertoonchk->getValue();
@@ -53691,7 +53139,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_toonbaseHslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			s_shadertypeparams.hsvtoon.basehsv.x = (float)s_st_toonbaseHslider->getValue();
@@ -53717,7 +53165,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_toonbaseSslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			s_shadertypeparams.hsvtoon.basehsv.y = (float)s_st_toonbaseSslider->getValue();
@@ -53743,7 +53191,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_toonbaseVslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			s_shadertypeparams.hsvtoon.basehsv.z = (float)s_st_toonbaseVslider->getValue();
@@ -53769,7 +53217,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_toonbaseAslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			s_shadertypeparams.hsvtoon.basehsv.w = (float)s_st_toonbaseAslider->getValue();
@@ -53795,7 +53243,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_toonhiHslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			float newvalue = (float)s_st_toonhiHslider->getValue();
@@ -53822,7 +53270,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_toonhiSslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			float newvalue = (float)s_st_toonhiSslider->getValue();
@@ -53849,7 +53297,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_toonhiVslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			float newvalue = (float)s_st_toonhiVslider->getValue();
@@ -53876,7 +53324,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_toonhiAslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			float newvalue = (float)s_st_toonhiAslider->getValue();
@@ -53903,7 +53351,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_toonlowHslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 
@@ -53931,7 +53379,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_toonlowSslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 
@@ -53959,7 +53407,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_toonlowVslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 
@@ -53987,7 +53435,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_toonlowAslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 
@@ -54015,7 +53463,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_tilingUslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			int newvalue = (int)(s_st_tilingUslider->getValue() + 0.0001);
@@ -54051,7 +53499,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_tilingVslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			int newvalue = (int)(s_st_tilingVslider->getValue() + 0.0001);
@@ -54087,7 +53535,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_alphatestslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			s_shadertypeparams.alphatest = s_st_alphatestslider->getValue();
@@ -54112,7 +53560,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_distortionchk && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			bool ischecked = s_st_distortionchk->getValue();
@@ -54143,7 +53591,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_distortionscaleslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			double newvalue = s_st_distortionscaleslider->getValue();
@@ -54169,7 +53617,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_riverradio && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			int riverorsea = s_st_riverradio->getSelectIndex();
@@ -54195,7 +53643,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_seacenterUslider && s_st_seacenterVslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			float newvalueU = (float)s_st_seacenterUslider->getValue();
@@ -54222,7 +53670,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_seacenterUslider && s_st_seacenterVslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			float newvalueU = (float)s_st_seacenterUslider->getValue();
@@ -54249,7 +53697,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_riverdirUslider && s_st_riverdirVslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			float newvalueU = (float)s_st_riverdirUslider->getValue();
@@ -54276,7 +53724,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_riverdirUslider && s_st_riverdirVslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			float newvalueU = (float)s_st_riverdirUslider->getValue();
@@ -54303,7 +53751,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_flowrateslider && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			double newvalue = s_st_flowrateslider->getValue();
@@ -54330,7 +53778,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 		if (s_st_distortionmapradio && s_model) {
 			int materialnum = s_model->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
-			int materialindex = s_shadertypeparamsindex - 1;
+			int materialindex = s_shadertypedlg.GetShaderTypeParamsIndex() - 1;
 			CMQOMaterial* curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 
 			int maptype = s_st_distortionmapradio->getSelectIndex();
@@ -55485,10 +54933,10 @@ int CreateSkyParamsDlg()
 						s_skyst_slotindex = setindex2;
 						s_skyst_slotFlag = true;
 					}
-					if (s_shadertypeWnd) {
-						s_shadertypeWnd->callRewrite();//再描画
+					if (s_skyst_paramsWnd) {
+						s_skyst_paramsWnd->callRewrite();//再描画
 					}
-				});
+					});
 			}
 		}
 
@@ -58991,8 +58439,9 @@ int ShowShaderTypeParamsDlg(bool srcflag)
 
 			if ((materialnum > 0) && (materialnum < MAXMATERIALNUM)) {//2024/03/03
 				CMQOMaterial* curmqomat = nullptr;
-				if ((s_shadertypeparamsindex >= 0) && (s_shadertypeparamsindex < (materialnum + 1))) {
-					int materialindex = s_shadertypeparamsindex - 1;
+				int shadertypeparamsindex = s_shadertypedlg.GetShaderTypeParamsIndex();
+				if ((shadertypeparamsindex >= 0) && (shadertypeparamsindex < (materialnum + 1))) {
+					int materialindex = shadertypeparamsindex - 1;
 					if (materialindex >= 0) {
 						curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
 					}
@@ -62435,6 +61884,8 @@ int SetModel2Dlgs(CModel* srcmodel)
 		s_dispgroupdlg.SetModel(srcmodel);
 
 		s_latertransparentdlg.SetModel(srcmodel);
+
+		s_shadertypedlg.SetModel(srcmodel);
 
 		if (s_blendshapedlg.GetVisible()) {
 			s_blendshapedlg.SetModel(srcmodel);
