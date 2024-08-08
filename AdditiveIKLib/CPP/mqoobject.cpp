@@ -2393,14 +2393,21 @@ int CMQOObject::CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglo
 		face_count = 0;
 		return 0;
 	}
-	if (face_count > (int)(12 * 1.5)) {//バウンダリーの面数 x 1.5より面数が多い場合だけ　バウンダリーで予備判定
-		//2024/05/11
-		//まずはバウンダリーで粗く判定
-		int collibb = CollisionLocal_Ray_BB(startlocal, dirlocal);
-		if (collibb == 0) {
-			return 0;
-		}
-	}
+
+
+	//2024/08/09
+	//バウンダリーは読込時頂点座標　startlocal, dirlocalはmatWorldは逆変換済だがモーションについて逆変換していない
+	//つまりモーションで全体移動していると次の計算ではヒットしない
+	//よってとりあえずコメントアウト
+	//
+	//if (face_count > (int)(12 * 1.5)) {//バウンダリーの面数 x 1.5より面数が多い場合だけ　バウンダリーで予備判定
+	//	//2024/05/11
+	//	//まずはバウンダリーで粗く判定
+	//	int collibb = CollisionLocal_Ray_BB(startlocal, dirlocal);
+	//	if (collibb == 0) {
+	//		return 0;
+	//	}
+	//}
 
 
 	return dispobj->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex, dsthitpos);

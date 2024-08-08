@@ -609,7 +609,9 @@ int CSDeform::ComputeDeform(myRenderer::RENDEROBJ renderobj)
 	}
 
 	Matrix mWorld, mView, mProj;
-	mWorld = renderobj.mWorld;
+	//mWorld = renderobj.mWorld;
+	mWorld = renderobj.pmodel->GetWorldMat().TKMatrix();//2024/08/09
+	
 	//if ((renderobj.renderkind != RENDERKIND_SHADOWMAP)) {
 		mView = renderobj.pmodel->GetViewMat().TKMatrix();//2024/03/02
 		mProj = renderobj.pmodel->GetProjMat().TKMatrix();//2024/03/02
