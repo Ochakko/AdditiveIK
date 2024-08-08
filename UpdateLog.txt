@@ -2,11 +2,15 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
 2024/08/08
 　DispGroupウインドウをCDispGroupDlgにクラス化
 
+　LaterTransparentウインドウをCLaterTransparentDlgにクラス化
+
 
 　予定
+　　メインファイルのソースの見通し改善のため
 　　AdditiveIK.cppにスタティックメンバとして大量に記述しているOWP関係のソースをクラス化していく予定
 　　大量にあるのでそれなりに時間がかかると思われる
 

@@ -78,6 +78,7 @@
 #include <BlendShapeDlg.h>
 #include <LightsDlg.h>
 #include <DispGroupDlg.h>
+#include <LaterTransparentDlg.h>
 #include <CpInfoDlg2.h>
 
 #include <math.h>
@@ -982,6 +983,7 @@ static CProjLodDlg s_projloddlg;
 static CBlendShapeDlg s_blendshapedlg;
 static CLightsDlg s_lightsdlg;
 static CDispGroupDlg s_dispgroupdlg;
+static CLaterTransparentDlg s_latertransparentdlg;
 
 static bool s_undercpinfodlg2;
 static CCpInfoDlg2 s_cpinfodlg2;
@@ -1450,24 +1452,6 @@ static OWP_CheckBoxA* s_dofskyChk = 0;
 static OWP_Label* s_dofspacerLabel3 = 0;
 static OWP_Separator* s_dofapplysp = 0;
 static OWP_Button* s_dofapplyB = 0;
-
-static OrgWindow* s_laterWnd = 0;
-static OWP_Label* s_laterlistLabel = 0;
-static OWP_ScrollWnd* s_laterlist1Sc = 0;
-static OWP_ListBox* s_laterlist1List = 0;
-static OWP_Label* s_laterspacerLabel1 = 0;
-static OWP_Button* s_lateraddB = 0;
-static OWP_Label* s_laterspacerLabel2 = 0;
-static OWP_ScrollWnd* s_laterlist2Sc = 0;
-static OWP_ListBox* s_laterlist2List = 0;
-static OWP_Label* s_laterspacerLabel3 = 0;
-static OWP_Separator* s_latersp1 = 0;
-static OWP_Separator* s_latersp2 = 0;
-static OWP_Separator* s_latersp3 = 0;
-static OWP_Button* s_laterdelallB = 0;
-static OWP_Button* s_laterdelB = 0;
-static OWP_Button* s_laterupB = 0;
-static OWP_Button* s_laterdownB = 0;
 
 
 static OrgWindow* s_sidemenuWnd = 0;
@@ -3192,11 +3176,6 @@ static void ClampTimelineSelection();
 //static int CreateGUIDlgBrushes();
 static int Brushes2Dlg(HWND hDlgWnd);
 
-
-static int CreateLaterTransparentWnd();
-static int LaterTransparent2Dlg();
-static int Dlg2LaterTransparent();
-
 static int CreateShadowParamsWnd();
 static int ShadowParams2Dlg();
 static void CheckShadowDirectionButton(int srcshadowdir);
@@ -4451,6 +4430,7 @@ int CheckResolution()
 		s_blendshapedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_lightsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_dispgroupdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+		s_latertransparentdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 	}
 
 	return 0;
@@ -4483,6 +4463,7 @@ void InitApp()
 	s_blendshapedlg.InitParams();
 	s_lightsdlg.InitParams();
 	s_dispgroupdlg.InitParams();
+	s_latertransparentdlg.InitParams();
 
 	s_undercpinfodlg2 = false;
 	s_cpinfodlg2.InitParams();
@@ -5222,26 +5203,6 @@ void InitApp()
 		s_dofspacerLabel3 = 0;
 		s_dofapplysp = 0;
 		s_dofapplyB = 0;
-	}
-
-	{
-		s_laterWnd = 0;
-		s_laterlistLabel = 0;
-		s_laterlist1Sc = 0;
-		s_laterlist1List = 0;
-		s_laterspacerLabel1 = 0;
-		s_lateraddB = 0;
-		s_laterspacerLabel2 = 0;
-		s_laterlist2Sc = 0;
-		s_laterlist2List = 0;
-		s_laterspacerLabel3 = 0;
-		s_latersp1 = 0;
-		s_latersp2 = 0;
-		s_latersp3 = 0;
-		s_laterdelallB = 0;
-		s_laterdelB = 0;
-		s_laterupB = 0;
-		s_laterdownB = 0;
 	}
 
 	{
@@ -6860,6 +6821,7 @@ void OnDestroyDevice()
 	s_blendshapedlg.DestroyObjs();
 	s_lightsdlg.DestroyObjs();
 	s_dispgroupdlg.DestroyObjs();
+	s_latertransparentdlg.DestroyObjs();
 	s_cpinfodlg2.DestroyObjs();
 
 
@@ -8191,80 +8153,6 @@ void OnDestroyDevice()
 			s_dofWnd = 0;
 		}
 	}
-
-
-	{
-		if (s_laterlistLabel) {
-			delete s_laterlistLabel;
-			s_laterlistLabel = 0;
-		}
-		if (s_laterlist1Sc) {
-			delete s_laterlist1Sc;
-			s_laterlist1Sc = 0;
-		}
-		if (s_laterlist1List) {
-			delete s_laterlist1List;
-			s_laterlist1List = 0;
-		}
-		if (s_laterspacerLabel1) {
-			delete s_laterspacerLabel1;
-			s_laterspacerLabel1 = 0;
-		}
-		if (s_lateraddB) {
-			delete s_lateraddB;
-			s_lateraddB = 0;
-		}
-		if (s_laterspacerLabel2) {
-			delete s_laterspacerLabel2;
-			s_laterspacerLabel2 = 0;
-		}
-		if (s_laterlist2Sc) {
-			delete s_laterlist2Sc;
-			s_laterlist2Sc = 0;
-		}
-		if (s_laterlist2List) {
-			delete s_laterlist2List;
-			s_laterlist2List = 0;
-		}
-		if (s_laterspacerLabel3) {
-			delete s_laterspacerLabel3;
-			s_laterspacerLabel3 = 0;
-		}
-		if (s_latersp1) {
-			delete s_latersp1;
-			s_latersp1 = 0;
-		}
-		if (s_latersp2) {
-			delete s_latersp2;
-			s_latersp2 = 0;
-		}
-		if (s_latersp3) {
-			delete s_latersp3;
-			s_latersp3 = 0;
-		}
-		if (s_laterdelallB) {
-			delete s_laterdelallB;
-			s_laterdelallB = 0;
-		}
-		if (s_laterdelB) {
-			delete s_laterdelB;
-			s_laterdelB = 0;
-		}
-		if (s_laterupB) {
-			delete s_laterupB;
-			s_laterupB = 0;
-		}
-		if (s_laterdownB) {
-			delete s_laterdownB;
-			s_laterdownB = 0;
-		}
-
-		if (s_laterWnd) {
-			delete s_laterWnd;
-			s_laterWnd = 0;
-		}
-	}
-
 
 	if (s_impgroupcheck) {
 		delete s_impgroupcheck;
@@ -27140,210 +27028,6 @@ int RollBackEditRange(int prevrangeFlag, int nextrangeFlag)
 //
 //}
 
-
-int CreateLaterTransparentWnd()
-{
-	if (s_laterWnd) {
-		//_ASSERT(0);
-		return 0;//作成済
-	}
-
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-	s_laterWnd = new OrgWindow(
-		0,
-		_T("LaterTransparentDlg"),		//ウィンドウクラス名
-		GetModuleHandle(NULL),	//インスタンスハンドル
-		WindowPos(windowposx, s_sidemenuheight),
-		WindowSize(s_sidewidth, s_sideheight),		//サイズ
-		_T("LaterTransparentDlg"),	//タイトル
-		g_mainhwnd,	//親ウィンドウハンドル
-		false,					//表示・非表示状態
-		//70, 50, 70,				//カラー
-		0, 0, 0,				//カラー
-		true,					//閉じられるか否か
-		true);					//サイズ変更の可否
-
-	int labelheight;
-	if (g_4kresolution) {
-		labelheight = 28;
-	}
-	else {
-		labelheight = 20;
-	}
-
-	if (s_laterWnd) {
-		double rate50 = 0.50;
-		int initlinenum = 10;
-
-		s_laterlistLabel = new OWP_Label(L"Texture Files", labelheight);
-		if (!s_laterlistLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		//s_laterlist1Sc = new OWP_ScrollWnd(L"List1Scroll", false, labelheight);
-		//if (!s_laterlist1Sc) {
-		//	_ASSERT(0);
-		//	abort();
-		//}
-		s_laterlist1List = new OWP_ListBox(L"List1", initlinenum, labelheight);
-		if (!s_laterlist1List) {
-			_ASSERT(0);
-			abort();
-		}
-		s_laterspacerLabel1 = new OWP_Label(L"     ", labelheight);
-		if (!s_laterspacerLabel1) {
-			_ASSERT(0);
-			abort();
-		}
-		s_lateraddB = new OWP_Button(L"↓Add to LaterTransparent", 32);
-		if (!s_lateraddB) {
-			_ASSERT(0);
-			abort();
-		}
-		s_laterspacerLabel2 = new OWP_Label(L"     ", labelheight);
-		if (!s_laterspacerLabel2) {
-			_ASSERT(0);
-			abort();
-		}
-		//s_laterlist2Sc = new OWP_ScrollWnd(L"List2Scroll", false, labelheight);
-		//if (!s_laterlist2Sc) {
-		//	_ASSERT(0);
-		//	abort();
-		//}
-		s_laterlist2List = new OWP_ListBox(L"List2", initlinenum, labelheight);
-		if (!s_laterlist2List) {
-			_ASSERT(0);
-			abort();
-		}
-		s_laterspacerLabel3 = new OWP_Label(L"     ", labelheight);
-		if (!s_laterspacerLabel3) {
-			_ASSERT(0);
-			abort();
-		}
-		s_latersp1 = new OWP_Separator(s_laterWnd, true, rate50, true);
-		if (!s_latersp1) {
-			_ASSERT(0);
-			abort();
-		}
-		s_latersp2 = new OWP_Separator(s_laterWnd, true, rate50, true);
-		if (!s_latersp2) {
-			_ASSERT(0);
-			abort();
-		}
-		s_latersp3 = new OWP_Separator(s_laterWnd, true, rate50, true);
-		if (!s_latersp3) {
-			_ASSERT(0);
-			abort();
-		}
-		s_laterdelallB = new OWP_Button(L"Delete All", labelheight);
-		if (!s_laterdelallB) {
-			_ASSERT(0);
-			abort();
-		}
-		s_laterdelB = new OWP_Button(L"Delete", labelheight);
-		if (!s_laterdelB) {
-			_ASSERT(0);
-			abort();
-		}
-		s_laterupB = new OWP_Button(L"↑ Up", labelheight);;
-		if (!s_laterupB) {
-			_ASSERT(0);
-			abort();
-		}
-		s_laterdownB = new OWP_Button(L"↓ Down", labelheight);
-		if (!s_laterdownB) {
-			_ASSERT(0);
-			abort();
-		}
-
-
-
-		s_laterWnd->addParts(*s_laterlistLabel);
-		//s_laterWnd->addParts(*s_laterlist1Sc);
-		//s_laterlist1Sc->addParts(*s_laterlist1List);
-		s_laterWnd->addParts(*s_laterlist1List);
-		s_laterWnd->addParts(*s_laterspacerLabel1);
-		s_laterWnd->addParts(*s_lateraddB);
-		s_laterWnd->addParts(*s_laterspacerLabel2);
-		//s_laterWnd->addParts(*s_laterlist2Sc);
-		//s_laterlist2Sc->addParts(*s_laterlist2List);
-		s_laterWnd->addParts(*s_laterlist2List);
-		s_laterWnd->addParts(*s_laterspacerLabel3);
-		s_laterWnd->addParts(*s_latersp1);
-		s_latersp1->addParts1(*s_latersp2);
-		s_latersp1->addParts2(*s_latersp3);
-		s_latersp2->addParts1(*s_laterdelallB);
-		s_latersp2->addParts2(*s_laterdelB);
-		s_latersp3->addParts1(*s_laterupB);
-		s_latersp3->addParts2(*s_laterdownB);
-
-		s_lateraddB->setButtonListener([]() {
-			if (s_laterlist1List && s_laterlist2List) {
-				wstring strlist1 = s_laterlist1List->getCurrentLineName();
-				if (!s_laterlist2List->existName(strlist1)) {
-					s_laterlist2List->newLine(strlist1);
-					s_laterlist2List->setCurrentLineName(strlist1);
-					Dlg2LaterTransparent();
-				}
-			}
-		});
-		s_laterdelallB->setButtonListener([]() {
-			if (s_laterlist2List) {
-				s_laterlist2List->deleteLine();
-			}
-		});
-		s_laterdelB->setButtonListener([]() {
-			if (s_laterlist2List) {
-				int currentline = s_laterlist2List->getCurrentLine();
-				if (currentline >= 0) {
-					s_laterlist2List->deleteLine(currentline);
-					Dlg2LaterTransparent();
-				}
-			}
-		});
-		s_laterupB->setButtonListener([]() {
-			if (s_laterlist2List) {
-				int currentline = s_laterlist2List->getCurrentLine();
-				if (currentline >= 0) {
-					s_laterlist2List->upLine(currentline);
-					Dlg2LaterTransparent();
-				}
-			}
-		});
-		s_laterdownB->setButtonListener([]() {
-			if (s_laterlist2List) {
-				int currentline = s_laterlist2List->getCurrentLine();
-				if (currentline >= 0) {
-					s_laterlist2List->downLine(currentline);
-					Dlg2LaterTransparent();
-				}
-			}
-		});
-
-
-		s_laterWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
-		s_laterWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
-
-		//１クリック目問題対応
-		s_laterWnd->refreshPosAndSize();
-
-		s_laterWnd->callRewrite();
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-
-	return 0;
-}
-
 int CreateShadowParamsWnd()
 {
 	if (s_shadowWnd) {
@@ -29473,103 +29157,6 @@ int GetAngleLimitEditInt(HWND hDlgWnd, int editresid, int* dstlimit)
 	}
 }
 
-
-
-
-int LaterTransparent2Dlg()
-{
-	if (!s_laterWnd) {
-		_ASSERT(0);
-		return 1;
-	}
-	if (!s_laterlist1List || !s_laterlist2List) {
-		_ASSERT(0);
-		return 1;
-	}
-	s_laterlist1List->deleteLine();
-	s_laterlist2List->deleteLine();
-
-	if (!s_model) {
-		return 0;
-	}
-
-	vector<string> modelstexturevec;
-	int result = s_model->GetTextureNameVec(modelstexturevec);
-	if (result == 0) {
-		int texturenum = (int)modelstexturevec.size();
-
-		int listno;
-		for (listno = 0; listno < texturenum; listno++) {
-			string curtexname = modelstexturevec[listno];
-			if (curtexname.c_str() && (*curtexname.c_str() != 0)) {
-				char mbtexname[512] = { 0 };
-				strcpy_s(mbtexname, 512, curtexname.c_str());
-				WCHAR wctexname[512] = { 0L };
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mbtexname, 512, wctexname, 512);
-
-				s_laterlist1List->newLine(wctexname);
-			}
-		}
-
-
-		int laternum = s_model->GetLaterTransparentNum();
-		int listno2;
-		for (listno2 = 0; listno2 < laternum; listno2++) {
-			string curlatername = s_model->GetLaterTransparent(listno2);
-			if (curlatername.c_str() && (*curlatername.c_str() != 0)) {
-				char mblastername[512] = { 0 };
-				strcpy_s(mblastername, 512, curlatername.c_str());
-				WCHAR wclatername[512] = { 0L };
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mblastername, 512, wclatername, 512);
-
-				s_laterlist2List->newLine(wclatername);
-			}
-		}
-
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-
-
-
-	return 0;
-}
-
-
-int Dlg2LaterTransparent()
-{
-	if (!s_model) {
-		return 0;
-	}
-
-	if (!s_laterWnd || !s_laterlist2List) {
-		_ASSERT(0);
-		return 1;
-	}
-
-
-	int elemnum = s_laterlist2List->getLineNum();
-
-	//リスト２をsavelist2に格納
-	vector<wstring> savelist2;
-	int elemno;
-	for (elemno = 0; elemno < elemnum; elemno++) {
-		wstring currentname = s_laterlist2List->getName(elemno);
-		if (currentname.c_str() && (*currentname.c_str() != 0L) &&(currentname != L"NoData")) {
-			savelist2.push_back(currentname);
-		}
-	}
-
-	int result2 = s_model->SetLaterTransparentVec(savelist2);//丸ごと設定
-	if (result2 != 0) {
-		_ASSERT(0);
-		return 1;
-	}
-
-	return 0;
-}
 
 int ShadowParams2Dlg()
 {
@@ -45265,21 +44852,7 @@ void ShowLightsWnd(bool srcflag)
 
 void ShowLaterTransparentWnd(bool srcflag)
 {
-	if (srcflag == true) {
-		int result1 = CreateLaterTransparentWnd();
-		if ((result1 == 0) && s_laterWnd) {
-			LaterTransparent2Dlg();
-
-			s_laterWnd->setVisible(true);
-			s_laterWnd->setListenMouse(true);
-		}
-	}
-	else {
-		if (s_laterWnd) {
-			s_laterWnd->setVisible(false);
-			s_laterWnd->setListenMouse(false);
-		}
-	}
+	s_latertransparentdlg.SetVisible(srcflag);
 
 	s_spdispsw[SPDISPSW_LATERTRANSPARENT].state = srcflag;
 }
@@ -62861,11 +62434,12 @@ int SetModel2Dlgs(CModel* srcmodel)
 
 		s_dispgroupdlg.SetModel(srcmodel);
 
+		s_latertransparentdlg.SetModel(srcmodel);
+
 		if (s_blendshapedlg.GetVisible()) {
 			s_blendshapedlg.SetModel(srcmodel);
 		}
 	}
-
 
 	return 0;
 }
