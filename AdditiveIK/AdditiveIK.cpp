@@ -82,6 +82,7 @@
 #include <ShaderTypeDlg.h>
 #include <ShaderParamsDlg.h>
 #include <SkyParamsDlg.h>
+#include <RetargetDlg.h>
 #include <CpInfoDlg2.h>
 
 #include <math.h>
@@ -579,6 +580,7 @@ HANDLE s_retargethandle1;
 HANDLE s_retargethandle2;
 //static void WaitRetargetThreads();
 static int s_convbone_model_batch_selindex;
+CModel* s_convbone_model_batch = nullptr;
 
 
 LONG g_calclimitedwmflag;
@@ -987,6 +989,7 @@ static CLaterTransparentDlg s_latertransparentdlg;
 static CShaderTypeDlg s_shadertypedlg;
 static CShaderParamsDlg s_shaderparamsdlg;
 static CSkyParamsDlg s_skyparamsdlg;
+static CRetargetDlg s_retargetdlg;
 
 static bool s_undercpinfodlg2;
 static CCpInfoDlg2 s_cpinfodlg2;
@@ -1565,34 +1568,6 @@ static OWP_Button* s_toolModelWorldMatB = 0;
 //2023/07/08 TheHunt のアセット読み込み時にボーン数制限オーバーしたので　値を大きく
 //#define CONVBONEMAX		1024//MAXBONENUM 2048;を使う
 
-static OrgWindow* s_convboneWnd = 0;
-static OWP_ScrollWnd* s_convboneSCWnd = 0;
-static int s_convbonenum = 0;
-static OWP_Label* s_cbselmodel = 0;
-static OWP_Button* s_cbselbvh = 0;
-static OWP_Label* s_convbonemidashi[2];
-static OWP_Label* s_modelbone[MAXBONENUM];
-static OWP_Button* s_bvhbone[MAXBONENUM];
-static OWP_Separator* s_convbonesp = 0;
-static OWP_Button* s_convboneconvert = 0;
-static OWP_Label* s_convbonespace1 = 0;
-static OWP_Label* s_convbonespace2 = 0;
-static OWP_Label* s_convbonespace3 = 0;
-static OWP_Label* s_convbonespace4 = 0;
-static OWP_Label* s_convbonespace5 = 0;
-static CModel* s_convbone_model = 0;
-static CModel* s_convbone_model_batch = 0;
-static CModel* s_convbone_bvh = 0;
-static int s_maxboneno = 0;
-static CBone* s_modelbone_bone[MAXBONENUM];
-static CBone* s_bvhbone_bone[MAXBONENUM];
-static map<CBone*, CBone*> s_convbonemap;
-static map<int, int> s_bvhbone_bonenomap;//<メニューインデックス, ボーン番号>  eNullなどは除外してs_bvhbone_boneにセットする
-static int s_bvhbone_cbno = 0;
-static OWP_Button* s_rtgfilesave = 0;
-static OWP_Button* s_rtgfileload = 0;
-
-
 static OrgWindow* s_layerWnd = 0;
 static OWP_LayerTable* s_owpLayerTable = 0;
 
@@ -1607,7 +1582,6 @@ static bool s_closeobjFlag = false;
 static bool s_closemodelFlag = false;
 static bool s_closecameraFlag = false;
 static bool s_closemotionFlag = false;
-static bool s_closeconvboneFlag = false;
 static bool s_DcloseFlag = false;
 static bool s_ScloseFlag = false;
 static bool s_IcloseFlag = false;
@@ -1684,7 +1658,6 @@ static bool s_LchangeTargetFlag = false;
 static int s_LrefreshEditTarget = 0;
 static bool s_LchangeTarget2Camera = false;
 //static int s_LstopDoneCount = 0;
-static bool s_retargetguiFlag = false;
 
 static int s_calclimitedwmState = 0;
 
@@ -2267,8 +2240,10 @@ ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わら�
 //#####################
 
 //Dlgからのメニューオフセットはcoef.hに
+//// (90)はCRetargetDlgをトリガーとする呼び出し用に確保
+//#define MENUOFFSET_RETARGETDLG		(90)
 //// (91)はCLightsDlgをトリガーとする呼び出し用に確保
-//#define MENUOFFSET_LIGHTSDLG		(91)
+//#define MENUOFFSET_LIGHTSDLG			(91)
 //// (92)はCBlendShapeDlgをトリガーとする呼び出し用に確保
 //#define MENUOFFSET_BLENDSHAPEDLG		(92)
 //// (93)はCProjLodDlgをトリガーとする呼び出し用に確保
@@ -2620,7 +2595,7 @@ LRESULT CALLBACK MaterialRateDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ModelWorldMatDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK JumpGravityDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ShaderTypeParamsDlgProc(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK SkyParamsDlgProc(HWND, UINT, WPARAM, LPARAM);
+//LRESULT CALLBACK SkyParamsDlgProc(HWND, UINT, WPARAM, LPARAM);
 //LRESULT CALLBACK FogParamsDlgProc(HWND, UINT, WPARAM, LPARAM);
 //LRESULT CALLBACK DofParamsDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK OpenBvhDlgProc(HWND, UINT, WPARAM, LPARAM);
@@ -2944,8 +2919,8 @@ static int CreateMotionPanel();
 static int DestroyMotionPanel();
 static int CreateCameraPanel();
 static int DestroyCameraPanel();
-static int CreateConvBoneWnd();
-static int DestroyConvBoneWnd();
+//static int CreateConvBoneWnd();
+//static int DestroyConvBoneWnd();
 static int SetConvBoneModel();
 static int SetConvBoneBvh();
 static int SetConvBone(int cbno);
@@ -3745,8 +3720,10 @@ INT WINAPI wWinMain(
 			//SetWindowText(g_mainhwnd, strmaintitle);
 			if (g_underWriteFbx == false) {//2024/02/10
 
-				s_chascene->SetUpdateSlot();//2023/03/13
-				//s_chascene->ResetCSFirstDispatchFlag();
+				//2024/08/09
+				//リターゲットバッチ中にタイミングでエラー　OnUserFrameMove()の中に入れて バッチ中はスキップ
+				//s_chascene->SetUpdateSlot();//2023/03/13 
+				////s_chascene->ResetCSFirstDispatchFlag();
 
 				//ドキュメント更新
 				int loopstartflag = 0;
@@ -3964,6 +3941,7 @@ int CheckResolution()
 		s_shadertypedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_shaderparamsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_skyparamsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+		s_retargetdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 	}
 
 	return 0;
@@ -4000,6 +3978,7 @@ void InitApp()
 	s_shadertypedlg.InitParams();
 	s_shaderparamsdlg.InitParams();
 	s_skyparamsdlg.InitParams();
+	s_retargetdlg.InitParams();
 
 	s_undercpinfodlg2 = false;
 	s_cpinfodlg2.InitParams();
@@ -4758,7 +4737,6 @@ void InitApp()
 	//g_underIKRotApplyFrame = false;
 	g_fpsforce30 = false;
 	//g_underRetargetFlag = false;
-	s_retargetguiFlag = false;
 	s_smoothBefRetarget = false;
 
 	g_underWriteFbx = false;
@@ -4921,7 +4899,6 @@ void InitApp()
 	s_closemodelFlag = false;
 	s_closemotionFlag = false;
 	s_closecameraFlag = false;
-	s_closeconvboneFlag = false;
 	s_DcloseFlag = false;
 	s_ScloseFlag = false;
 	s_IcloseFlag = false;
@@ -5415,25 +5392,7 @@ void InitApp()
 	ChaMatrixIdentity(&s_ikselectmat);
 	s_selectuserscale = 100;
 
-
-	s_convbone_model = 0;
 	s_convbone_model_batch = 0;
-	s_convbone_bvh = 0;
-	s_maxboneno = 0;
-	int cbno;
-	for (cbno = 0; cbno < MAXBONENUM; cbno++) {
-		s_modelbone[cbno] = 0;
-		s_bvhbone[cbno] = 0;
-		s_modelbone_bone[cbno] = 0;
-		s_bvhbone_bone[cbno] = 0;
-	}
-	s_convbonemidashi[0] = 0;
-	s_convbonemidashi[1] = 0;
-	s_convbonemap.clear();
-	s_bvhbone_bonenomap.clear();
-
-	s_bvhbone_cbno = 0;
-
 
 	{
 		s_toolspritemode = 0;
@@ -5895,6 +5854,7 @@ void OnDestroyDevice()
 	s_shadertypedlg.DestroyObjs();
 	s_shaderparamsdlg.DestroyObjs();
 	s_skyparamsdlg.DestroyObjs();
+	s_retargetdlg.DestroyObjs();
 	s_cpinfodlg2.DestroyObjs();
 
 
@@ -7331,7 +7291,6 @@ void OnDestroyDevice()
 	DestroyModelPanel();
 	DestroyMotionPanel();
 	DestroyCameraPanel();
-	DestroyConvBoneWnd();
 
 	//DestroySdkObjects();
 
@@ -7411,6 +7370,12 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		OnFrameBatchThread();
 		return;//!!!!!!!!!!!!!!!!!!!
 	}
+
+
+	//2024/08/09
+	//リターゲットバッチ中にタイミングでエラー(ChaSceneのm_modelindexのCModel*の値が不正)　OnUserFrameMove()の中に入れて バッチ中はスキップ
+	s_chascene->SetUpdateSlot();
+
 
 	//DisplayApplyRateText();//2024/02/02　コメントアウト 毎フレーム呼ぶとちらつく　コンボボックス選択中にも更新が入って選択できない
 
@@ -8468,27 +8433,28 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		if ((menuid >= (ID_RMENU_0 + MENUOFFSET_SETCONVBONEBVH)) && (menuid < (ID_RMENU_0 + modelnum + MENUOFFSET_SETCONVBONEBVH))) {
 			int modelindex = menuid - ID_RMENU_0 - MENUOFFSET_SETCONVBONEBVH;
 			if (s_chascene) {
-				s_convbone_bvh = s_chascene->GetModel(modelindex);
+				s_retargetdlg.SetRetargetBvh(s_chascene->GetModel(modelindex));
 			}
 			else {
-				s_convbone_bvh = 0;
+				s_retargetdlg.SetRetargetBvh(nullptr);
 			}
 
 			WCHAR strmes[1024] = { 0L };
-			if (!s_convbone_bvh) {
+			if (!s_retargetdlg.GetRetargetBvh()) {
 				swprintf_s(strmes, 1024, L"convbone : sel model : modelptr NULL !!!");
 				::DSMessageBox(NULL, strmes, L"check!!!", MB_OK);
-				s_maxboneno = 0;
+				//s_maxboneno = 0;
 			}
 			else {
 				//swprintf_s(strmes, 1024, L"%s", s_convbone_bvh->GetFileName());
-				ShortenNameW(s_convbone_bvh->GetFileName(), strmes, 1024, 21);
-				s_cbselbvh->setName(strmes);
+				ShortenNameW(s_retargetdlg.GetRetargetBvh()->GetFileName(), strmes, 1024, 21);
+				//s_cbselbvh->setName(strmes);
 				COLORREF importantcol = RGB(168, 129, 129);
-				s_cbselbvh->setTextColor(importantcol);
-				//s_maxboneno = s_convbone_bvh->GetBoneListSize();
-				//s_maxboneno = s_convbone_bvh->GetBoneForMotionSize();
-				s_maxboneno = s_convbone_bvh->GetMaxBoneNo();
+				//s_cbselbvh->setTextColor(importantcol);
+				////s_maxboneno = s_convbone_bvh->GetBoneListSize();
+				////s_maxboneno = s_convbone_bvh->GetBoneForMotionSize();
+				//s_maxboneno = s_convbone_bvh->GetMaxBoneNo();
+				s_retargetdlg.SetBvhName(strmes, importantcol);
 			}
 		}
 
@@ -11519,13 +11485,13 @@ int RetargetFile(char* fbxpath)
 			OnChangeModel(s_convbone_model_batch, forceflag, callundo);
 
 			s_model = s_convbone_model_batch;
-			s_convbone_model = s_convbone_model_batch;
-			s_convbone_bvh = newmodel;
-			//s_maxboneno = s_convbone_bvh->GetBoneListSize();
-			//s_maxboneno = s_convbone_bvh->GetBoneForMotionSize();
-			s_maxboneno = s_convbone_bvh->GetMaxBoneNo();
+			s_retargetdlg.SetModel(s_convbone_model_batch);
+			s_retargetdlg.SetRetargetBvh(newmodel);
+			////s_maxboneno = s_convbone_bvh->GetBoneListSize();
+			////s_maxboneno = s_convbone_bvh->GetBoneForMotionSize();
+			//s_maxboneno = s_convbone_bvh->GetMaxBoneNo();
 
-			if (s_model && s_convbone_model && s_convbone_bvh) {
+			if (s_model && s_retargetdlg.GetRetargetModel() && s_retargetdlg.GetRetargetBvh()) {
 				WCHAR wretargetfilename[MAX_PATH] = { 0L };
 				char retargetfilename[MAX_PATH] = { 0 };
 				sprintf_s(retargetfilename, MAX_PATH, "%sretarget.rtg", directorypath);
@@ -15273,14 +15239,15 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		//swprintf_s(sz, 100, L"Speed: %0.4f", g_dspeed);
 		//g_SampleUI.GetStatic(IDC_SPEED_STATIC)->SetText(sz);
 
-		//if (!g_bvh2fbxbatchflag && !g_motioncachebatchflag && !g_retargetbatchflag) {
-		//if ((InterlockedAdd(&g_bvh2fbxbatchflag, 0) == 0) && (InterlockedAdd(&g_motioncachebatchflag, 0) == 0) && (InterlockedAdd(&g_retargetbatchflag, 0) == 0)) {
-		if (!s_retargetguiFlag && //2024/06/27 GUIからのリターゲット実行中に設定を初期化しないようにスキップ
-			((s_dispconvbone == true) && 
-			(InterlockedAdd(&g_bvh2fbxbatchflag, 0) == 0) && (InterlockedAdd(&g_retargetbatchflag, 0) == 0))
-			) {
-			CreateConvBoneWnd();//!!!!!!!!!!!!! モデル選択変更によりリターゲットウインドウ作り直し
-		}
+		//SetModel2Dlgs()へ移動		
+		////if (!g_bvh2fbxbatchflag && !g_motioncachebatchflag && !g_retargetbatchflag) {
+		////if ((InterlockedAdd(&g_bvh2fbxbatchflag, 0) == 0) && (InterlockedAdd(&g_motioncachebatchflag, 0) == 0) && (InterlockedAdd(&g_retargetbatchflag, 0) == 0)) {
+		//if (!s_retargetdlg.GetRetargetRetargetGUIFlag() && //2024/06/27 GUIからのリターゲット実行中に設定を初期化しないようにスキップ
+		//	((s_dispconvbone == true) && 
+		//	(InterlockedAdd(&g_bvh2fbxbatchflag, 0) == 0) && (InterlockedAdd(&g_retargetbatchflag, 0) == 0))
+		//	) {
+		//	CreateConvBoneWnd();//!!!!!!!!!!!!! モデル選択変更によりリターゲットウインドウ作り直し
+		//}
 
 		SetTimelineHasRigFlag();
 
@@ -19608,480 +19575,6 @@ int CreateMotionPanel()
 	return 0;
 }
 
-
-int DestroyConvBoneWnd()
-{
-	s_convbone_model = 0;
-	s_convbone_bvh = 0;
-	s_convbonemap.clear();
-	s_bvhbone_bonenomap.clear();
-
-	if (s_convboneWnd) {
-		s_convboneWnd->setListenMouse(false);
-		s_convboneWnd->setVisible(false);
-		delete s_convboneWnd;
-		s_convboneWnd = 0;
-	}
-	if (s_convboneSCWnd) {
-		delete s_convboneSCWnd;
-		s_convboneSCWnd = 0;
-	}
-
-	int cbno;
-	for (cbno = 0; cbno < MAXBONENUM; cbno++) {
-		if (s_modelbone[cbno]) {
-			delete s_modelbone[cbno];
-			s_modelbone[cbno] = 0;
-		}
-		if (s_bvhbone[cbno]) {
-			delete s_bvhbone[cbno];
-			s_bvhbone[cbno] = 0;
-		}
-		s_modelbone_bone[cbno] = 0;
-		s_bvhbone_bone[cbno] = 0;
-	}
-
-	if (s_cbselmodel) {
-		delete s_cbselmodel;
-		s_cbselmodel = 0;
-	}
-	if (s_cbselbvh) {
-		delete s_cbselbvh;
-		s_cbselbvh = 0;
-	}
-
-	if (s_convboneconvert) {
-		delete s_convboneconvert;
-		s_convboneconvert = 0;
-	}
-	if (s_convbonespace1) {
-		delete s_convbonespace1;
-		s_convbonespace1 = 0;
-	}
-	if (s_convbonespace2) {
-		delete s_convbonespace2;
-		s_convbonespace2 = 0;
-	}
-	if (s_convbonespace3) {
-		delete s_convbonespace3;
-		s_convbonespace3 = 0;
-	}
-	if (s_convbonespace4) {
-		delete s_convbonespace4;
-		s_convbonespace4 = 0;
-	}
-	if (s_convbonespace5) {
-		delete s_convbonespace5;
-		s_convbonespace5 = 0;
-	}
-	if (s_rtgfilesave) {
-		delete s_rtgfilesave;
-		s_rtgfilesave = 0;
-	}
-	if (s_rtgfileload) {
-		delete s_rtgfileload;
-		s_rtgfileload = 0;
-	}
-
-	if (s_convbonesp) {
-		delete s_convbonesp;
-		s_convbonesp = 0;
-	}
-
-	if (s_convbonemidashi[0]) {
-		delete s_convbonemidashi[0];
-		s_convbonemidashi[0] = 0;
-	}
-	if (s_convbonemidashi[1]) {
-		delete s_convbonemidashi[1];
-		s_convbonemidashi[1] = 0;
-	}
-
-	s_convbonenum = 0;
-
-	return 0;
-}
-
-
-int CreateConvBoneWnd()
-{
-	DestroyConvBoneWnd();
-
-	s_dsretargetctrls.clear();
-
-	if (!s_model) {
-		_ASSERT(0);
-		::MessageBox(g_mainhwnd, L"modelメニューでmodelを選択して下さい", L"model not selected !!!", MB_OK);
-		return 0;
-	}
-	//if (s_model->GetBoneListSize() <= 1) {
-	if (s_model->GetBoneForMotionSize() <= 1) {
-		return 0;
-	}
-
-
-	s_convbone_model = s_model;
-
-	//s_convbonenum = s_model->GetBoneListSize();
-	s_convbonenum = s_model->GetBoneForMotionSize();
-	if (s_convbonenum >= MAXBONENUM) {
-		_ASSERT(0);
-		return 1;
-	}
-
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-	s_convboneWnd = new OrgWindow(
-		0,
-		L"convbone0",		//ウィンドウクラス名
-		GetModuleHandle(NULL),	//インスタンスハンドル
-		WindowPos(windowposx, s_sidemenuheight),		//位置
-		WindowSize(s_sidewidth, s_sideheight),	//サイズ
-		L"ConvBoneWnd",	//タイトル
-		g_mainhwnd,					//親ウィンドウハンドル
-		false,					//表示・非表示状態
-		//true,					//表示・非表示状態
-		//70, 50, 70,				//カラー
-		0, 0, 0,				//カラー
-		true,					//閉じられるか否か
-		true);					//サイズ変更の可否
-	if (s_convboneWnd) {
-		s_convboneWnd->setSizeMin(WindowSize(150, 150));		// 最小サイズを設定
-
-		//スクロールウインドウ
-		s_convboneSCWnd = new OWP_ScrollWnd(L"ConvBoneScWnd", true, 20);
-		if (!s_convboneSCWnd) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		//s_convboneSCWnd->setLineDataSize(s_convbonenum + 4);
-		//2023/02/14
-		//要素数が変わったときには指定し忘れないように！！！
-		s_convboneSCWnd->setLineDataSize(s_convbonenum + 8);
-		s_convboneWnd->addParts(*s_convboneSCWnd);
-
-
-		WCHAR bvhbonename[MAX_PATH];
-		int listno = 0;
-		int cbno = 0;
-		map<int, CBone*>::iterator itrbone;
-		for (itrbone = s_model->GetBoneListBegin(); itrbone != s_model->GetBoneListEnd(); itrbone++) {
-			CBone* curbone = itrbone->second;
-			if (curbone && (curbone->IsSkeleton())) {
-				const WCHAR* wbonename = curbone->GetWBoneName();
-				_ASSERT(wbonename);
-				s_modelbone[cbno] = new OWP_Label(wbonename, 20);
-				if (s_modelbone[cbno]) {
-					s_modelbone_bone[cbno] = curbone;
-
-					swprintf_s(bvhbonename, MAX_PATH, L"NotSet_%03d", cbno);
-					s_bvhbone[cbno] = new OWP_Button(bvhbonename, 20);
-					if (s_bvhbone[cbno]) {
-						s_bvhbone_bone[cbno] = 0;
-						s_convbonemap[curbone] = 0;
-#ifndef NDEBUG
-						DbgOut(L"convbone %d : (%s,  %s)\n", cbno, wbonename, bvhbonename);
-#endif
-					}
-					else {
-						_ASSERT(0);
-						return 1;
-					}
-				}
-				else {
-					_ASSERT(0);
-					return 1;
-				}
-
-				cbno++;
-			}
-			listno++;
-		}
-#ifndef NDEBUG
-		DbgOut(L"\n\n");
-#endif
-		if (cbno != s_convbonenum) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		//s_convbonesp = new OWP_Separator(s_convboneWnd, false, 0.5, true, s_convboneSCWnd);// セパレータ1（境界線による横方向2分割）
-		s_convbonesp = new OWP_Separator(s_convboneWnd, true, 0.5, true, s_convboneSCWnd);// セパレータ1（境界線による横方向2分割）
-		if (!s_convbonesp) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		//s_cbselmodel = new OWP_Button(L"SelectShapeModel");
-		WCHAR strtext[256] = { 0L };
-		//swprintf_s(strtext, 256, L"Model: %s", s_model->GetFileName());
-		ShortenNameW(s_model->GetFileName(), strtext, 256, 21);//2024/07/13 21文字まで
-		s_cbselmodel = new OWP_Label(strtext, 20);
-		if (!s_cbselmodel) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		s_cbselbvh = new OWP_Button(L"SelectMotionModel", 20);
-		if (!s_cbselbvh) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_convboneconvert = new OWP_Button(L"ConvertButton", 20);
-		if (!s_convboneconvert) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_convbonespace1 = new OWP_Label(L"--------------", 20);
-		if (!s_convbonespace1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_convbonespace2 = new OWP_Label(L"--------------", 20);
-		if (!s_convbonespace2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_convbonespace3 = new OWP_Label(L"--------------", 20);
-		if (!s_convbonespace3) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_convbonespace4 = new OWP_Label(L"--------------", 20);
-		if (!s_convbonespace4) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_convbonespace5 = new OWP_Label(L"              ", 20);
-		if (!s_convbonespace5) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_rtgfilesave = new OWP_Button(L"Save RtgFile", 20);
-		if (!s_rtgfilesave) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_rtgfileload = new OWP_Button(L"Load RtgFile", 20);
-		if (!s_rtgfileload) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_convbonemidashi[0] = new OWP_Label(L"ShapeSide", 20);
-		if (!s_convbonemidashi) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_convbonemidashi[1] = new OWP_Label(L"MotionSide", 20);
-		if (!s_convbonemidashi) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		COLORREF importantcolR = RGB(168, 129, 129);
-		COLORREF importantcolG = RGB(0, 240, 0);
-		COLORREF importantcolW = RGB(240, 240, 240);
-		if (s_convboneconvert) {
-			s_convboneconvert->setTextColor(importantcolG);
-		}
-		if (s_rtgfilesave) {
-			s_rtgfilesave->setTextColor(importantcolG);
-		}
-		if (s_rtgfileload) {
-			s_rtgfileload->setTextColor(importantcolG);
-		}
-		if (s_cbselbvh) {
-			s_cbselbvh->setTextColor(importantcolR);
-		}
-		if (s_cbselmodel) {
-			s_cbselmodel->setTextColor(importantcolR);
-		}
-		if (s_convbonespace1) {
-			s_convbonespace1->setTextColor(importantcolW);
-		}
-		if (s_convbonespace2) {
-			s_convbonespace2->setTextColor(importantcolW);
-		}
-		if (s_convbonespace3) {
-			s_convbonespace3->setTextColor(importantcolW);
-		}
-
-		if (s_convboneSCWnd && s_convbonesp) {
-			s_convboneSCWnd->addParts(*s_convbonesp);
-		}
-		if (s_convbonesp && s_convbonemidashi[0]) {
-			s_convbonesp->addParts1(*s_convbonemidashi[0]);
-		}
-		if (s_convbonesp && s_cbselmodel) {
-			s_convbonesp->addParts1(*s_cbselmodel);
-		}
-		if (s_convbonesp && s_convbonemidashi[1]) {
-			s_convbonesp->addParts2(*s_convbonemidashi[1]);
-		}
-		if (s_convbonesp && s_cbselbvh) {
-			s_convbonesp->addParts2(*s_cbselbvh);
-		}
-		if (s_cbselmodel) {
-			s_dsretargetctrls.push_back(s_cbselmodel);
-		}
-		if (s_cbselbvh) {
-			s_dsretargetctrls.push_back(s_cbselbvh);
-		}
-
-
-		//2023/02/14
-		//convert実行、rtgファイル読み込みボタンは
-		//ボーン名対応表よりも　上に配置
-		//一番下までスクロールしなくても　操作できることが多くなるように
-		if (s_convbonesp && s_convboneconvert) {
-			s_convbonesp->addParts1(*s_convboneconvert);
-		}
-		if (s_convboneconvert) {
-			s_dsretargetctrls.push_back(s_convboneconvert);
-		}
-		if (s_convbonesp && s_rtgfileload) {
-			s_convbonesp->addParts2(*s_rtgfileload);
-		}
-		if (s_rtgfileload) {
-			s_dsretargetctrls.push_back(s_rtgfileload);
-		}
-
-		//2023/02/14
-		//境目に　空白
-		if (s_convbonesp && s_convbonespace1) {
-			s_convbonesp->addParts1(*s_convbonespace1);
-		}
-		if (s_convbonesp && s_convbonespace2) {
-			s_convbonesp->addParts2(*s_convbonespace2);
-		}
-
-		for (cbno = 0; cbno < s_convbonenum; cbno++) {
-			if (s_convbonesp && s_modelbone[cbno]) {
-				s_convbonesp->addParts1(*s_modelbone[cbno]);
-			}
-			if (s_convbonesp && s_bvhbone[cbno]) {
-				s_convbonesp->addParts2(*s_bvhbone[cbno]);
-			}
-
-			//s_dsretargetctrls.push_back(s_modelbone[cbno]);
-			if (s_bvhbone[cbno]) {
-				s_dsretargetctrls.push_back(s_bvhbone[cbno]);
-			}
-		}
-
-		//2023/02/14
-		//境目に　空白
-		if (s_convbonesp && s_convbonespace3) {
-			s_convbonesp->addParts1(*s_convbonespace3);
-		}
-		if (s_convbonesp && s_convbonespace4) {
-			s_convbonesp->addParts2(*s_convbonespace4);
-		}
-
-		//Rtgファイル保存ボタンは　設定し終わってから押すので　一番下のまま
-		if (s_convbonesp && s_rtgfilesave) {
-			s_convbonesp->addParts1(*s_rtgfilesave);
-			s_dsretargetctrls.push_back(s_rtgfilesave);
-		}
-		if (s_convbonesp && s_convbonespace5) {
-			s_convbonesp->addParts2(*s_convbonespace5);
-		}
-
-		if (s_convboneWnd) {
-			s_convboneWnd->setListenMouse(false);
-			s_convboneWnd->setVisible(0);//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		}
-
-		////////////
-		if (s_convboneWnd) {
-			s_convboneWnd->setCloseListener([]() {
-				if (s_model) {
-					s_closeconvboneFlag = true;
-				}
-				});
-		}
-
-		//s_cbselmodel->setButtonListener([](){
-		//	if (s_model) {
-		//		SetConvBoneModel();
-		//		s_convboneWnd->callRewrite();
-		//	}
-		//});
-		if (s_cbselbvh) {
-			s_cbselbvh->setButtonListener([]() {
-				if (s_model) {
-					if (!s_convbone_model || (s_convbone_model != s_model)) {
-						::DSMessageBox(g_mainhwnd, L"Retry after selecting ShapeModel using ModelMenu Of MainWindow.", L"error!!!", MB_OK);
-					}
-					else {
-						SetConvBoneBvh();
-					}
-					s_convboneWnd->callRewrite();
-				}
-				});
-		}
-
-		for (cbno = 0; cbno < s_convbonenum; cbno++) {
-			if (s_bvhbone[cbno]) {
-				s_bvhbone[cbno]->setButtonListener([cbno]() {
-					if (s_model) {
-						SetConvBone(cbno);
-						//CModel* curmodel = s_modelindex[modelcnt].modelptr;
-						//curmodel->SetModelDisp(s_modelpanel.checkvec[modelcnt]->getValue());
-						s_convboneWnd->callRewrite();
-					}
-				});
-			}
-		}
-
-		if (s_convboneconvert) {
-			s_convboneconvert->setButtonListener([]() {
-				if (s_model) {
-					if (s_retargetguiFlag == false) {
-						s_retargetguiFlag = true;
-					}
-				}
-				});
-		}
-
-		if (s_rtgfilesave) {
-			s_rtgfilesave->setButtonListener([]() {
-				if (s_model) {
-					SaveRetargetFile();
-				}
-				});
-		}
-		if (s_rtgfileload) {
-			s_rtgfileload->setButtonListener([]() {
-				if (s_model) {
-					LoadRetargetFile(0);
-				}
-				});
-		}
-		if (s_convboneWnd) {
-			s_convboneWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
-			s_convboneWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
-			//１クリック目問題対応
-			s_convboneWnd->refreshPosAndSize();//2022/09/20
-
-			s_convboneWnd->setVisible(false);
-		}
-	}
-	else{
-		_ASSERT(0);
-		return 1;
-	}
-
-	return 0;
-}
-
 //int SetConvBoneModel()
 //{
 //	int modelnum = (int)s_modelindex.size();
@@ -20232,18 +19725,18 @@ int SetConvBoneBvh()
 	delete rmenu;
 	InterlockedExchange(&g_undertrackingRMenu, (LONG)0);
 
-	if (s_convboneWnd) {
+	if (s_retargetdlg.GetVisible()) {
 		//2023/10/15
 		//OrgWindowのLisner関数でコンテクストメニューを出した場合　メニュー終了時にLBUTTONUPを呼び出す必要有り
 		//呼び出さなかった場合　SetCaptureとReleaseCaptureのバランスが崩れて　スクロールバーを画面外でBUTTONUPしたときに処理されない
-		::SendMessage(s_convboneWnd->getHWnd(), WM_LBUTTONUP, 0, 0);
+		::SendMessage(s_retargetdlg.GetHWnd(), WM_LBUTTONUP, 0, 0);
 	}
 
 	return 0;
 }
 int SetConvBone(int cbno)
 {
-	s_bvhbone_cbno = cbno;
+	s_retargetdlg.SetRetargetBvhBoneCBNo(cbno);
 
 	if (!s_chascene) {
 		_ASSERT(0);
@@ -20255,7 +19748,7 @@ int SetConvBone(int cbno)
 		return 0;
 	}
 
-	if (!s_convbone_model || !s_convbone_bvh) {
+	if (!s_retargetdlg.GetRetargetModel() || !s_retargetdlg.GetRetargetBvh()) {
 		return 0;
 	}
 
@@ -20293,12 +19786,14 @@ int SetConvBone(int cbno)
 	int bvhcbno = 0;
 	int maxboneno = 0;
 	map<int, CBone*>::iterator itrbone;
-	for (itrbone = s_convbone_bvh->GetBoneListBegin(); itrbone != s_convbone_bvh->GetBoneListEnd(); itrbone++) {
+	for (itrbone = s_retargetdlg.GetRetargetBvh()->GetBoneListBegin(); 
+		itrbone != s_retargetdlg.GetRetargetBvh()->GetBoneListEnd(); itrbone++) {
 		CBone* curbone = itrbone->second;
 		if (curbone && (curbone->IsSkeleton())) {
 			int boneno = curbone->GetBoneNo();
 
-			s_bvhbone_bonenomap[bvhcbno] = boneno;//2024/07/07 メニューのインデックス-->ボーン番号　変換表
+			//s_bvhbone_bonenomap[bvhcbno] = boneno;//2024/07/07 メニューのインデックス-->ボーン番号　変換表
+			s_retargetdlg.SetRetargetBvhBoneCBNo(bvhcbno, boneno);//2024/07/07 メニューのインデックス-->ボーン番号　変換表
 
 			//int setmenuid = ID_RMENU_0 + boneno + 1;
 			int setmenuid = ID_RMENU_0 + bvhcbno + 1;//2024/07/07
@@ -20310,9 +19805,9 @@ int SetConvBone(int cbno)
 			bvhcbno++;//2024/07/07
 		}
 	}
-	//s_maxboneno = s_convbone_bvh->GetBoneListSize();
-	//s_maxboneno = s_convbone_bvh->GetBoneForMotionSize();
-	s_maxboneno = s_convbone_bvh->GetMaxBoneNo();
+	////s_maxboneno = s_convbone_bvh->GetBoneListSize();
+	////s_maxboneno = s_convbone_bvh->GetBoneForMotionSize();
+	//s_maxboneno = s_convbone_bvh->GetMaxBoneNo();
 
 	POINT pt;
 	GetCursorPos(&pt);
@@ -20329,55 +19824,23 @@ int SetConvBone(int cbno)
 	delete rmenu;
 	InterlockedExchange(&g_undertrackingRMenu, (LONG)0);
 
-	if (s_convboneWnd) {
+	if (s_retargetdlg.GetVisible()) {
 		//2023/10/15
 		//OrgWindowのLisner関数でコンテクストメニューを出した場合　メニュー終了時にLBUTTONUPを呼び出す必要有り
 		//呼び出さなかった場合　SetCaptureとReleaseCaptureのバランスが崩れて　スクロールバーを画面外でBUTTONUPしたときに処理されない
-		::SendMessage(s_convboneWnd->getHWnd(), WM_LBUTTONUP, 0, 0);
+		::SendMessage(s_retargetdlg.GetHWnd(), WM_LBUTTONUP, 0, 0);
 	}
 
+	int bvhbone_cbno = s_retargetdlg.GetRetargetBvhBoneCBNo();
 	if ((menuid >= (ID_RMENU_0)) && (menuid < (ID_RMENU_0 + MAXBONENUM))) {
-		if ((s_bvhbone_cbno >= 0) && (s_bvhbone_cbno < MAXBONENUM)) {
+		if ((bvhbone_cbno >= 0) && (bvhbone_cbno < MAXBONENUM)) {
 			if (menuid == (ID_RMENU_0 + 0)) {
 				//未設定
-				s_bvhbone_bone[s_bvhbone_cbno] = 0;
-				CBone* modelbone = s_modelbone_bone[s_bvhbone_cbno];
-				_ASSERT(modelbone);
-				if (modelbone) {
-					s_convbonemap[modelbone] = 0;
-				}
-				s_bvhbone[s_bvhbone_cbno]->setName(L"NotSet");
-				s_bvhbone[s_bvhbone_cbno]->callRewrite();
+				s_retargetdlg.SetConvBone_NoSet();
 			}
 			else {
 				int bvhcbno = menuid - ID_RMENU_0 - 1;
-				int boneno = s_bvhbone_bonenomap[bvhcbno];//2024/07/07 変換表
-				CBone* curbone = s_convbone_bvh->GetBoneByID(boneno);
-				WCHAR strmes[1024];
-				if (!curbone) {
-					s_bvhbone_bone[s_bvhbone_cbno] = 0;
-					CBone* modelbone = s_modelbone_bone[s_bvhbone_cbno];
-					_ASSERT(modelbone);
-					if (modelbone) {
-						s_convbonemap[modelbone] = 0;
-					}
-					s_bvhbone[s_bvhbone_cbno]->setName(L"NotSet");
-					s_bvhbone[s_bvhbone_cbno]->callRewrite();
-
-					swprintf_s(strmes, 1024, L"convbone : sel bvh bone : curbone NULL !!!");
-					::DSMessageBox(NULL, strmes, L"check!!!", MB_OK);
-				}
-				else {
-					swprintf_s(strmes, 1024, L"%s", curbone->GetWBoneName());
-					s_bvhbone[s_bvhbone_cbno]->setName(strmes);
-					s_bvhbone[s_bvhbone_cbno]->callRewrite();
-					s_bvhbone_bone[s_bvhbone_cbno] = curbone;
-
-					CBone* modelbone = s_modelbone_bone[s_bvhbone_cbno];
-					if (modelbone) {
-						s_convbonemap[modelbone] = curbone;
-					}
-				}
+				s_retargetdlg.SetConvBone_Set(bvhcbno);
 			}
 		}
 
@@ -20388,67 +19851,20 @@ int SetConvBone(int cbno)
 
 int InitJointPair2ConvBoneWnd()
 {
-	if (!s_model) {
-		return 0;
-	}
 
-	s_convbonemap.clear();
-
-
-	WCHAR bvhbonename[MAX_PATH];
-	int cbno = 0;
-	map<int, CBone*>::iterator itrbone;
-	for (itrbone = s_model->GetBoneListBegin(); itrbone != s_model->GetBoneListEnd(); itrbone++) {
-		CBone* curbone = itrbone->second;
-		if (curbone && (curbone->IsSkeleton())) {
-			swprintf_s(bvhbonename, MAX_PATH, L"NotSet_%03d", cbno);
-			(s_bvhbone[cbno])->setName(bvhbonename);
-			s_bvhbone_bone[cbno] = 0;
-
-			cbno++;
-		}
-	}
+	s_retargetdlg.InitJointPair2ConvBoneWnd();
 
 	return 0;
 }
 
 int SetJointPair2ConvBoneWnd()
 {
-	if (s_convbonemap.empty()) {
-		return 0;
-	}
 	if (!s_model) {
 		return 0;
 	}
-	if (!s_convbone_bvh) {
-		return 0;
-	}
 
-	WCHAR bvhbonename[MAX_PATH];
-	int cbno = 0;
-	map<int, CBone*>::iterator itrbone;
-	for (itrbone = s_model->GetBoneListBegin(); itrbone != s_model->GetBoneListEnd(); itrbone++) {
-		CBone* curbone = itrbone->second;
-		if (curbone && (curbone->IsSkeleton())) {
-			CBone* bvhbone = s_convbonemap[curbone];
-			if (bvhbone) {
-				swprintf_s(bvhbonename, MAX_PATH, bvhbone->GetWBoneName());
-				(s_bvhbone[cbno])->setName(bvhbonename);
-				s_bvhbone_bone[cbno] = bvhbone;
-			}
-			else {
-				swprintf_s(bvhbonename, MAX_PATH, L"NotSet_%03d", cbno);
-				(s_bvhbone[cbno])->setName(bvhbonename);
-				s_bvhbone_bone[cbno] = 0;
-			}
-
-			cbno++;
-		}
-	}
-
-	_ASSERT(cbno == s_convbonenum);
-
-	return 0;
+	int result = s_retargetdlg.SetJointPair2ConvBoneWnd();
+	return result;
 }
 
 
@@ -20584,8 +20000,12 @@ int SaveRetargetFile()
 
 		MoveMemory(savepath, g_tmpmqopath, sizeof(WCHAR) * MAX_PATH);//MULTIPATHではない
 
+		std::map<CBone*, CBone*> convbonemap;
+		s_retargetdlg.GetRetargetConvBoneMap(convbonemap);
+
 		CRetargetFile rtgfile;
-		result = rtgfile.WriteRetargetFile(g_tmpmqopath, s_convbone_model, s_convbone_bvh, s_convbonemap);
+		result = rtgfile.WriteRetargetFile(g_tmpmqopath, 
+			s_retargetdlg.GetRetargetModel(), s_retargetdlg.GetRetargetBvh(), convbonemap);
 		if (result != 0) {
 			::MessageBox(NULL, L"保存に失敗しました。\n書き込み禁止ディレクトリの可能性があります。\n保存場所を変えて再試行してみてください。", L"エラー", MB_OK);
 			InterlockedExchange(&g_undertrackingRMenu, (LONG)0);
@@ -20612,14 +20032,16 @@ int SaveRetargetFile()
 }
 int LoadRetargetFile(WCHAR* srcfilename)
 {
-	if (!s_convbone_model || !s_convbone_bvh) {
+	if (!s_retargetdlg.GetRetargetModel() || !s_retargetdlg.GetRetargetBvh()) {
 		_ASSERT(0);
 		return 1;
 	}
 
 	ChangeCurDirFromMameMediaToTest();
 
-	s_convbonemap.clear();
+	
+	//s_convbonemap.clear();
+	InitJointPair2ConvBoneWnd();
 
 
 	//OPENFILENAME ofn;
@@ -20682,9 +20104,13 @@ int LoadRetargetFile(WCHAR* srcfilename)
 
 		//rtgファイルを読み込む
 		CRetargetFile rtgfile;
-		result = rtgfile.LoadRetargetFile(g_tmpmqopath, s_convbone_model, s_convbone_bvh, s_convbonemap);
+		std::map<CBone*, CBone*> convbonemap;
+		result = rtgfile.LoadRetargetFile(g_tmpmqopath, 
+			s_retargetdlg.GetRetargetModel(), s_retargetdlg.GetRetargetBvh(), convbonemap);
 		if (result == 0) {
-			//if (g_retargetbatchflag == 0) {
+
+			s_retargetdlg.SetRetargetConvBoneMap(convbonemap);
+
 			if (InterlockedAdd(&g_retargetbatchflag, 0) == 0) {
 				SetJointPair2ConvBoneWnd();
 			}
@@ -20724,9 +20150,13 @@ int LoadRetargetFile(WCHAR* srcfilename)
 		//バッチからも呼ばれる
 
 		CRetargetFile rtgfile;
-		result = rtgfile.LoadRetargetFile(srcfilename, s_convbone_model, s_convbone_bvh, s_convbonemap);
+		std::map<CBone*, CBone*> convbonemap;
+		result = rtgfile.LoadRetargetFile(srcfilename,
+			s_retargetdlg.GetRetargetModel(), s_retargetdlg.GetRetargetBvh(), convbonemap);
 		if (result == 0) {
-			//if (g_retargetbatchflag == 0) {
+			
+			s_retargetdlg.SetRetargetConvBoneMap(convbonemap);
+
 			if (InterlockedAdd(&g_retargetbatchflag, 0) == 0) {
 				SetJointPair2ConvBoneWnd();
 			}
@@ -20747,30 +20177,30 @@ int RetargetMotion()
 	//static CModel* s_convbone_model_batch = 0;
 	//static CModel* s_convbone_bvh = 0;
 
-	if (!s_convbone_model || !s_convbone_bvh) {
+	if (!s_retargetdlg.GetRetargetModel() || !s_retargetdlg.GetRetargetBvh()) {
 		return 0;
 	}
 
-	if (s_model != s_convbone_model) {
+	if (s_model != s_retargetdlg.GetRetargetModel()) {
 		::DSMessageBox(NULL, L"Retry After Selectiong ShapeModel using ModelMenu Of MainWindow.", L"error!!!", MB_OK);
-		s_convbone_model->SetUnderRetarget(false);
-		s_convbone_bvh->SetUnderRetarget(false);
+		s_retargetdlg.GetRetargetModel()->SetUnderRetarget(false);
+		s_retargetdlg.GetRetargetBvh()->SetUnderRetarget(false);
 		return 1;
 	}
 
 
 	//2024/06/22_2
 	//src, dst両方にリターゲットフラグを立てて　UpdateMatrixにて強制的に視野内と判定する必要有(いくつかの処理がスキップされないように)
-	s_convbone_model->SetUnderRetarget(true);
-	s_convbone_bvh->SetUnderRetarget(true);
+	s_retargetdlg.GetRetargetModel()->SetUnderRetarget(true);
+	s_retargetdlg.GetRetargetBvh()->SetUnderRetarget(true);
 
 
 	//2024/06/21
 	//UnderRetagetFlagをtrueにした状態でUpdateMatrixを呼んでからリターゲット処理をする
-	ChaMatrix modelwm = s_convbone_model->GetWorldMat();
-	s_convbone_model->UpdateMatrix(false, &modelwm, &s_matView, &s_matProj, true, 0);
-	ChaMatrix bvhwm = s_convbone_bvh->GetWorldMat();
-	s_convbone_bvh->UpdateMatrix(false, &bvhwm, &s_matView, &s_matProj, true, 0);
+	ChaMatrix modelwm = s_retargetdlg.GetRetargetModel()->GetWorldMat();
+	s_retargetdlg.GetRetargetModel()->UpdateMatrix(false, &modelwm, &s_matView, &s_matProj, true, 0);
+	ChaMatrix bvhwm = s_retargetdlg.GetRetargetBvh()->GetWorldMat();
+	s_retargetdlg.GetRetargetBvh()->UpdateMatrix(false, &bvhwm, &s_matView, &s_matProj, true, 0);
 
 
 
@@ -20780,18 +20210,20 @@ int RetargetMotion()
 	//OnChangeModel(s_convbone_model, forceflag, callundo);
 
 
-
-	int result = s_convbone_model->Retarget(s_convbone_bvh, s_matView, s_matProj, s_convbonemap, AddMotion);
+	std::map<CBone*, CBone*> convbonemap;
+	s_retargetdlg.GetRetargetConvBoneMap(convbonemap);
+	int result = s_retargetdlg.GetRetargetModel()->Retarget(
+		s_retargetdlg.GetRetargetBvh(), s_matView, s_matProj, convbonemap, AddMotion);
 	if (result) {
 		_ASSERT(0);
 		//g_underRetargetFlag = false;
-		s_convbone_model->SetUnderRetarget(false);
-		s_convbone_bvh->SetUnderRetarget(false);
+		s_retargetdlg.GetRetargetModel()->SetUnderRetarget(false);
+		s_retargetdlg.GetRetargetBvh()->SetUnderRetarget(false);
 		return 1;
 	}
 	//g_underRetargetFlag = false;
-	s_convbone_model->SetUnderRetarget(false);
-	s_convbone_bvh->SetUnderRetarget(false);
+	s_retargetdlg.GetRetargetModel()->SetUnderRetarget(false);
+	s_retargetdlg.GetRetargetBvh()->SetUnderRetarget(false);
 
 
 	if (g_limitdegflag == true) {
@@ -31328,13 +30760,10 @@ int OnFrameCloseFlag()
 			s_motionpanel.panel->setVisible(0);
 		}
 	}
-	if (s_closeconvboneFlag) {
-		s_closeconvboneFlag = false;
+	if (s_retargetdlg.GetRetargetCloseFlag()) {
+		s_retargetdlg.SetRetargetCloseFlag(false);
 		s_dispconvbone = false;
-		if (s_convboneWnd) {
-			s_convboneWnd->setVisible(false);
-			s_convboneWnd->setListenMouse(false);
-		}
+		s_retargetdlg.SetVisible(false);
 	}
 	if (s_DcloseFlag) {
 		s_DcloseFlag = false;
@@ -32733,7 +32162,7 @@ int OnFrameToolWnd()
 		s_motpropFlag = false;
 	}
 
-	if (s_retargetguiFlag) {
+	if (s_retargetdlg.GetRetargetRetargetGUIFlag()) {
 		if (s_model && s_model->ExistCurrentMotion()) {
 
 			HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
@@ -32756,7 +32185,7 @@ int OnFrameToolWnd()
 			}
 		}
 
-		s_retargetguiFlag = false;
+		s_retargetdlg.SetRetargetRetargetGUIFlag(false);
 	}
 
 
@@ -40388,7 +39817,31 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	case WM_COMMAND:
 	{
-		if (menuid == (ID_RMENU_0 + MENUOFFSET_LIGHTSDLG)) {
+
+
+
+		if (menuid == (ID_RMENU_0 + MENUOFFSET_RETARGETDLG)) {
+			int opekind = (int)lParam;
+			switch (opekind) {
+			case RETARGETDLG_OPE_SELECTBVH:
+				SetConvBoneBvh();
+				break;
+			case RETARGETDLG_OPE_SELECTBONE:
+				SetConvBone(s_retargetdlg.GetRetargetSelectBoneIndex());
+				break;
+			//case RETARGETDLG_OPE_RETARGETGUI:
+			//	break;
+			case RETARGETDLG_OPE_SAVEFILE:
+				SaveRetargetFile();
+				break;
+			case RETARGETDLG_OPE_LOADFILE:
+				LoadRetargetFile(0);
+				break;
+			default:
+				break;
+			}
+		}
+		else if (menuid == (ID_RMENU_0 + MENUOFFSET_LIGHTSDLG)) {
 			SetLightDirection();
 		}
 		else if (menuid == (ID_RMENU_0 + MENUOFFSET_BLENDSHAPEDLG)) {
@@ -42162,26 +41615,18 @@ void ShowRetargetWnd(bool srcflag)
 	if (s_model && (s_curboneno >= 0)) {
 		if (s_bpWorld) {
 			if (srcflag == true) {
-				//if (!s_convboneWnd) {
-				CreateConvBoneWnd();
-				//}
-				if (s_convboneWnd) {
-					s_convboneWnd->setListenMouse(true);
-					s_convboneWnd->setVisible(true);
-				}
-				s_spretargetsw[SPRETARGETSW_RETARGET].state = true;
-				s_dispconvbone = true;
+				s_retargetdlg.SetModel(s_model);
+				s_retargetdlg.SetVisible(true);
 			}
 			else {
-				if (s_convboneWnd) {
-					s_convboneWnd->setListenMouse(false);
-					s_convboneWnd->setVisible(false);
-				}
-				s_spretargetsw[SPRETARGETSW_RETARGET].state = false;
-				s_dispconvbone = false;
+				s_retargetdlg.SetVisible(false);
 			}
 		}
 	}
+
+	s_spretargetsw[SPRETARGETSW_RETARGET].state = srcflag;
+	s_dispconvbone = srcflag;
+
 }
 
 void ShowLimitEulerWnd(bool srcflag)
@@ -44237,14 +43682,11 @@ void OrgWindowListenMouse(bool srcflag)
 	if (s_toolWnd) {
 		s_toolWnd->setListenMouse(srcflag);
 	}
-	if (s_convboneWnd) {
-		s_convboneWnd->setListenMouse(srcflag);
+	if (s_retargetdlg.GetVisible()) {
+		s_retargetdlg.ListenMouse(srcflag);
 	}
 	if (s_layerWnd) {
 		s_layerWnd->setListenMouse(srcflag);
-	}
-	if (s_convboneWnd) {
-		s_convboneWnd->setListenMouse(srcflag);
 	}
 
 	//anglelimitdlgはWindowsDialog
@@ -55873,6 +55315,15 @@ int SetModel2Dlgs(CModel* srcmodel)
 		if (s_blendshapedlg.GetVisible()) {
 			s_blendshapedlg.SetModel(srcmodel);
 		}
+
+		if (!s_retargetdlg.GetRetargetRetargetGUIFlag() && //2024/06/27 GUIからのリターゲット実行中に設定を初期化しないようにスキップ
+			((s_dispconvbone == true) && 
+			(InterlockedAdd(&g_bvh2fbxbatchflag, 0) == 0) && (InterlockedAdd(&g_retargetbatchflag, 0) == 0))
+			) {
+			//CreateConvBoneWnd();//!!!!!!!!!!!!! モデル選択変更によりリターゲットウインドウ作り直し
+			s_retargetdlg.SetModel(srcmodel);
+		}
+
 	}
 
 	return 0;

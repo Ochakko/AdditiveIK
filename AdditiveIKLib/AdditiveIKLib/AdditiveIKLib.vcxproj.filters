@@ -267,6 +267,9 @@
     <ClCompile Include="..\CPP\SkyParamsDlg.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
+    <ClCompile Include="..\CPP\RetargetDlg.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
@@ -1439,6 +1442,9 @@
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\INCLUDE\SkyParamsDlg.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\RetargetDlg.h">
       <Filter>GUI</Filter>
     </ClInclude>
   </ItemGroup>

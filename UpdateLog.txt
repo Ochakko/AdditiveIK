@@ -7,6 +7,7 @@ https://github.com/Ochakko/AdditiveIK
 　
 　SkyウインドウをCSkyParamsDlgにクラス化
 
+　RetargetウインドウをCRetargetDlgにクラス化
 
 
 　不具合修正

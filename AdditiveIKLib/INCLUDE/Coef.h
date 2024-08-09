@@ -28,8 +28,10 @@ class CMQOMaterial;
 //ID_RMENU_0を足して使う
 //#####################
 //Dlgからのメニューオフセットはcoef.hに　100以降はAdditiveIK.cppに
+// (90)はCRetargetDlgをトリガーとする呼び出し用に確保
+#define MENUOFFSET_RETARGETDLG			(90)
 // (91)はCLightsDlgをトリガーとする呼び出し用に確保
-#define MENUOFFSET_LIGHTSDLG		(91)
+#define MENUOFFSET_LIGHTSDLG			(91)
 // (92)はCBlendShapeDlgをトリガーとする呼び出し用に確保
 #define MENUOFFSET_BLENDSHAPEDLG		(92)
 // (93)はCProjLodDlgをトリガーとする呼び出し用に確保
@@ -56,6 +58,16 @@ enum {
 	RIGIDPARAMSDLG_OPE_GCOLIDLG,
 	RIGIDPARAMSDLG_OPE_MAX
 };
+//lParam
+enum {
+	RETARGETDLG_OPE_SELECTBVH,
+	RETARGETDLG_OPE_SELECTBONE,
+	RETARGETDLG_OPE_RETARGETGUI,
+	RETARGETDLG_OPE_SAVEFILE,
+	RETARGETDLG_OPE_LOADFILE,
+	RETARGETDLG_OPE_MAX
+};
+
 
 #define HISTORYCOMMENTLEN	32
 #define EDIT_BUFLEN_NUM		20

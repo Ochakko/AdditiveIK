@@ -233,6 +233,7 @@
     <ClCompile Include="..\CPP\polymesh3.cpp" />
     <ClCompile Include="..\CPP\polymesh4.cpp" />
     <ClCompile Include="..\CPP\ProjLodDlg.cpp" />
+    <ClCompile Include="..\CPP\RetargetDlg.cpp" />
     <ClCompile Include="..\CPP\RetargetFile.cpp" />
     <ClCompile Include="..\CPP\RigFile.cpp" />
     <ClCompile Include="..\CPP\RigidElem.cpp" />
@@ -633,6 +634,7 @@
     <ClInclude Include="..\INCLUDE\polymesh3.h" />
     <ClInclude Include="..\INCLUDE\polymesh4.h" />
     <ClInclude Include="..\INCLUDE\ProjLodDlg.h" />
+    <ClInclude Include="..\INCLUDE\RetargetDlg.h" />
     <ClInclude Include="..\INCLUDE\RetargetFile.h" />
     <ClInclude Include="..\INCLUDE\RigFile.h" />
     <ClInclude Include="..\INCLUDE\RigidElem.h" />
