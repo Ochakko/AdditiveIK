@@ -81,6 +81,7 @@
 #include <LaterTransparentDlg.h>
 #include <ShaderTypeDlg.h>
 #include <ShaderParamsDlg.h>
+#include <SkyParamsDlg.h>
 #include <CpInfoDlg2.h>
 
 #include <math.h>
@@ -985,6 +986,7 @@ static CDispGroupDlg s_dispgroupdlg;
 static CLaterTransparentDlg s_latertransparentdlg;
 static CShaderTypeDlg s_shadertypedlg;
 static CShaderParamsDlg s_shaderparamsdlg;
+static CSkyParamsDlg s_skyparamsdlg;
 
 static bool s_undercpinfodlg2;
 static CCpInfoDlg2 s_cpinfodlg2;
@@ -1504,237 +1506,9 @@ static OrgWindow* s_placefolderWnd = 0;
 #define SHORTCUTTEXTNUM	50
 static OWP_Label* s_shortcuttext[SHORTCUTTEXTNUM];
 
-
-static OrgWindow* s_skyst_paramsWnd = 0;
-static OWP_ScrollWnd* s_skyst_Sc = 0;
-static OWP_Separator* s_skyst_spall = 0;
-static OWP_Label* s_skyst_spacerLabel01 = 0;
-static OWP_Label* s_skyst_spacerLabel02 = 0;
-static OWP_Label* s_skyst_spacerLabel03 = 0;
-static OWP_Label* s_skyst_spacerLabel04 = 0;
-static OWP_Label* s_skyst_spacerLabel05 = 0;
-static OWP_Label* s_skyst_spacerLabel06 = 0;
-static OWP_Separator* s_skyst_namesp = 0;
-static OWP_Button* s_skyst_backB = 0;
-static OWP_Label* s_skyst_namelabel = 0;
-static OWP_Separator* s_skyst_slotsp1_0 = 0;
-static OWP_Separator* s_skyst_slotsp1_1 = 0;
-static OWP_Separator* s_skyst_slotsp1_2 = 0;
-static OWP_Separator* s_skyst_slotsp2_0 = 0;
-static OWP_Separator* s_skyst_slotsp2_1 = 0;
-static OWP_Separator* s_skyst_slotsp2_2 = 0;
-static OWP_Button* s_skyst_slotB[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-static OWP_RadioButton* s_skyst_shadertyperadio = 0;
-static OWP_Separator* s_skyst_litflagsp = 0;
-static OWP_CheckBoxA* s_skyst_lightflagchk = 0;
-static OWP_CheckBoxA* s_skyst_shadowcasterchk = 0;
-static OWP_CheckBoxA* s_skyst_normaly0chk = 0;
-static OWP_Separator* s_skyst_spccoefsp0 = 0;
-static OWP_Separator* s_skyst_spccoefsp1 = 0;
-static OWP_Separator* s_skyst_spccoefsp2 = 0;
-static OWP_Label* s_skyst_spccoeflabel = 0;
-static OWP_Slider* s_skyst_spccoefslider = 0;
-static OWP_CheckBoxA* s_skyst_emissionchk = 0;
-static OWP_Slider* s_skyst_emissionslider = 0;
-static OWP_Separator* s_skyst_metalsp0 = 0;
-static OWP_Separator* s_skyst_metalsp1 = 0;
-static OWP_Separator* s_skyst_metalsp2 = 0;
-static OWP_Label* s_skyst_metallabel = 0;
-static OWP_Slider* s_skyst_metalslider = 0;
-static OWP_Label* s_skyst_smoothlabel = 0;
-static OWP_Slider* s_skyst_smoothslider = 0;
-
-static OWP_Separator* s_skyst_litscalesp1_0 = 0;
-static OWP_Separator* s_skyst_litscalesp1_1 = 0;
-static OWP_Separator* s_skyst_litscalesp1_2 = 0;
-static OWP_Label* s_skyst_litscalelabel1 = 0;
-static OWP_Slider* s_skyst_litscaleslider1 = 0;
-static OWP_Label* s_skyst_litscalelabel2 = 0;
-static OWP_Slider* s_skyst_litscaleslider2 = 0;
-
-static OWP_Separator* s_skyst_litscalesp3_0 = 0;
-static OWP_Separator* s_skyst_litscalesp3_1 = 0;
-static OWP_Separator* s_skyst_litscalesp3_2 = 0;
-static OWP_Label* s_skyst_litscalelabel3 = 0;
-static OWP_Slider* s_skyst_litscaleslider3 = 0;
-static OWP_Label* s_skyst_litscalelabel4 = 0;
-static OWP_Slider* s_skyst_litscaleslider4 = 0;
-
-static OWP_Separator* s_skyst_litscalesp5_0 = 0;
-static OWP_Separator* s_skyst_litscalesp5_1 = 0;
-static OWP_Separator* s_skyst_litscalesp5_2 = 0;
-static OWP_Label* s_skyst_litscalelabel5 = 0;
-static OWP_Slider* s_skyst_litscaleslider5 = 0;
-static OWP_Label* s_skyst_litscalelabel6 = 0;
-static OWP_Slider* s_skyst_litscaleslider6 = 0;
-
-static OWP_Separator* s_skyst_litscalesp7_0 = 0;
-static OWP_Separator* s_skyst_litscalesp7_1 = 0;
-static OWP_Separator* s_skyst_litscalesp7_2 = 0;
-static OWP_Label* s_skyst_litscalelabel7 = 0;
-static OWP_Slider* s_skyst_litscaleslider7 = 0;
-static OWP_Label* s_skyst_litscalelabel8 = 0;
-static OWP_Slider* s_skyst_litscaleslider8 = 0;
-
-static OWP_RadioButton* s_skyst_toonlitradio = 0;
-
-static OWP_Separator* s_skyst_toonaddrsp0 = 0;
-static OWP_Separator* s_skyst_toonaddrsp1 = 0;
-static OWP_Separator* s_skyst_toonaddrsp2 = 0;
-static OWP_Label* s_skyst_toonhiaddrlabel = 0;
-static OWP_Slider* s_skyst_toonhiaddrslider = 0;
-static OWP_Label* s_skyst_toonlowaddrlabel = 0;
-static OWP_Slider* s_skyst_toonlowaddrslider = 0;
-
-static OWP_Separator* s_skyst_gradationsp0 = 0;
-static OWP_CheckBoxA* s_skyst_gradationchk = 0;
-static OWP_CheckBoxA* s_skyst_powertoonchk = 0;
-
-static OWP_Separator* s_skyst_toonbasesp1_0 = 0;
-static OWP_Separator* s_skyst_toonbasesp1_1 = 0;
-static OWP_Separator* s_skyst_toonbasesp1_2 = 0;
-static OWP_Label* s_skyst_toonbaseHlabel = 0;
-static OWP_Slider* s_skyst_toonbaseHslider = 0;
-static OWP_Label* s_skyst_toonbaseSlabel = 0;
-static OWP_Slider* s_skyst_toonbaseSslider = 0;
-static OWP_Separator* s_skyst_toonbasesp2_0 = 0;
-static OWP_Separator* s_skyst_toonbasesp2_1 = 0;
-static OWP_Separator* s_skyst_toonbasesp2_2 = 0;
-static OWP_Label* s_skyst_toonbaseVlabel = 0;
-static OWP_Slider* s_skyst_toonbaseVslider = 0;
-static OWP_Label* s_skyst_toonbaseAlabel = 0;
-static OWP_Slider* s_skyst_toonbaseAslider = 0;
-
-static OWP_Separator* s_skyst_toonhisp1_0 = 0;
-static OWP_Separator* s_skyst_toonhisp1_1 = 0;
-static OWP_Separator* s_skyst_toonhisp1_2 = 0;
-static OWP_Label* s_skyst_toonhiHlabel = 0;
-static OWP_Slider* s_skyst_toonhiHslider = 0;
-static OWP_Label* s_skyst_toonhiSlabel = 0;
-static OWP_Slider* s_skyst_toonhiSslider = 0;
-static OWP_Separator* s_skyst_toonhisp2_0 = 0;
-static OWP_Separator* s_skyst_toonhisp2_1 = 0;
-static OWP_Separator* s_skyst_toonhisp2_2 = 0;
-static OWP_Label* s_skyst_toonhiVlabel = 0;
-static OWP_Slider* s_skyst_toonhiVslider = 0;
-static OWP_Label* s_skyst_toonhiAlabel = 0;
-static OWP_Slider* s_skyst_toonhiAslider = 0;
-
-static OWP_Separator* s_skyst_toonlowsp1_0 = 0;
-static OWP_Separator* s_skyst_toonlowsp1_1 = 0;
-static OWP_Separator* s_skyst_toonlowsp1_2 = 0;
-static OWP_Label* s_skyst_toonlowHlabel = 0;
-static OWP_Slider* s_skyst_toonlowHslider = 0;
-static OWP_Label* s_skyst_toonlowSlabel = 0;
-static OWP_Slider* s_skyst_toonlowSslider = 0;
-static OWP_Separator* s_skyst_toonlowsp2_0 = 0;
-static OWP_Separator* s_skyst_toonlowsp2_1 = 0;
-static OWP_Separator* s_skyst_toonlowsp2_2 = 0;
-static OWP_Label* s_skyst_toonlowVlabel = 0;
-static OWP_Slider* s_skyst_toonlowVslider = 0;
-static OWP_Label* s_skyst_toonlowAlabel = 0;
-static OWP_Slider* s_skyst_toonlowAslider = 0;
-
-static OWP_Separator* s_skyst_tilingsp0 = 0;
-static OWP_Separator* s_skyst_tilingsp1 = 0;
-static OWP_Separator* s_skyst_tilingsp2 = 0;
-static OWP_Label* s_skyst_tilingUlabel = 0;
-static OWP_Slider* s_skyst_tilingUslider = 0;
-static OWP_Label* s_skyst_tilingVlabel = 0;
-static OWP_Slider* s_skyst_tilingVslider = 0;
-
-static OWP_Separator* s_skyst_alphatestsp0 = 0;
-static OWP_Separator* s_skyst_alphatestsp1 = 0;
-static OWP_Label* s_skyst_alphatestlabel = 0;
-static OWP_Slider* s_skyst_alphatestslider = 0;
-
-static OWP_Separator* s_skyst_distortionsp0 = 0;
-static OWP_Separator* s_skyst_distortionsp1 = 0;
-static OWP_CheckBoxA* s_skyst_distortionchk = 0;
-static OWP_Label* s_skyst_distortionscalelabel = 0;
-static OWP_Slider* s_skyst_distortionscaleslider = 0;
-
-static OWP_RadioButton* s_skyst_riverradio = 0;
-
-static OWP_Separator* s_skyst_seacentersp0 = 0;
-static OWP_Separator* s_skyst_seacentersp1 = 0;
-static OWP_Label* s_skyst_seacenterlabel = 0;
-static OWP_Slider* s_skyst_seacenterUslider = 0;
-static OWP_Slider* s_skyst_seacenterVslider = 0;
-
-static OWP_Separator* s_skyst_riverdirsp0 = 0;
-static OWP_Separator* s_skyst_riverdirsp1 = 0;
-static OWP_Label* s_skyst_riverdirlabel = 0;
-static OWP_Slider* s_skyst_riverdirUslider = 0;
-static OWP_Slider* s_skyst_riverdirVslider = 0;
-
-static OWP_Separator* s_skyst_flowratesp0 = 0;
-static OWP_Label* s_skyst_flowratelabel = 0;
-static OWP_Slider* s_skyst_flowrateslider = 0;
-
-static OWP_RadioButton* s_skyst_distortionmapradio = 0;
-
-static bool s_skyst_closeFlag = false;
-static bool s_skyst_remakeToonTextureFlag = false;
-static bool s_skyst_backFlag = false;
-static bool s_skyst_stradioFlag = false;
-static int s_skyst_slotindex = 0;
-static bool s_skyst_slotFlag = false;
-static bool s_skyst_lightchkFlag = false;
-static bool s_skyst_shadowcasterchkFlag = false;
-static bool s_skyst_normaly0chkFlag = false;
-static bool s_skyst_spccoefsliderFlag = false;
-static bool s_skyst_emissionchkFlag = false;
-static bool s_skyst_emissionsliderFlag = false;
-static bool s_skyst_metalsliderFlag = false;
-static bool s_skyst_smoothsliderFlag = false;
-static bool s_skyst_litscale1Flag = false;
-static bool s_skyst_litscale2Flag = false;
-static bool s_skyst_litscale3Flag = false;
-static bool s_skyst_litscale4Flag = false;
-static bool s_skyst_litscale5Flag = false;
-static bool s_skyst_litscale6Flag = false;
-static bool s_skyst_litscale7Flag = false;
-static bool s_skyst_litscale8Flag = false;
-static bool s_skyst_toonlitradioFlag = false;
-static bool s_skyst_toonhiaddrsliderFlag = false;
-static bool s_skyst_toonlowaddrsliderFlag = false;
-static bool s_skyst_gradationchkFlag = false;
-static bool s_skyst_powertoonchkFlag = false;
-static bool s_skyst_toolbaseHsliderFlag = false;
-static bool s_skyst_toolbaseSsliderFlag = false;
-static bool s_skyst_toolbaseVsliderFlag = false;
-static bool s_skyst_toolbaseAsliderFlag = false;
-static bool s_skyst_toolhiHsliderFlag = false;
-static bool s_skyst_toolhiSsliderFlag = false;
-static bool s_skyst_toolhiVsliderFlag = false;
-static bool s_skyst_toolhiAsliderFlag = false;
-static bool s_skyst_toollowHsliderFlag = false;
-static bool s_skyst_toollowSsliderFlag = false;
-static bool s_skyst_toollowVsliderFlag = false;
-static bool s_skyst_toollowAsliderFlag = false;
-static bool s_skyst_tilingUsliderFlag = false;
-static bool s_skyst_tilingVsliderFlag = false;
-static bool s_skyst_tilingUsliderUpFlag = false;
-static bool s_skyst_tilingVsliderUpFlag = false;
-static bool s_skyst_alphatestesliderFlag = false;
-static bool s_skyst_distortionchkFlag = false;
-static bool s_skyst_distortionscalesliderFlag = false;
-static bool s_skyst_riverradioFlag = false;
-static bool s_skyst_seacenterUsliderFlag = false;
-static bool s_skyst_seacenterVsliderFlag = false;
-static bool s_skyst_riverdirUsliderFlag = false;
-static bool s_skyst_riverdirVsliderFlag = false;
-static bool s_skyst_flowratesliderFlag = false;
-static bool s_skyst_distortionmapradioFlag = false;
-
-
-
 static bool s_skyparamsFlag = false;
 static bool s_fogparamsFlag = false;
 static bool s_dofparamsFlag = false;
-
-
 
 static OrgWindow* s_impWnd = 0;
 static OWP_CheckBoxA* s_impgroupcheck = 0;
@@ -2818,18 +2592,9 @@ static void ShowShaderTypeWnd(bool srcflag);//マテリアルリストの方
 //#######################################################
 //OWPのShaderTypeWndウインドウから呼び出すparamsDlg
 //#######################################################
-//static int CreateShaderTypeParamsDlg();//params設定用
-//static void DestroyShaderTypeParamsDlg();//params設定用
-//static int SetMaterial2ShaderTypeParamsDlg(CMQOMaterial* srcmat);//params設定用
 static int ShowShaderTypeParamsDlg(bool srcflag);//params設定用
 static int OnFrameShaderTypeParamsDlg();//params設定用　//OnFrameToolWnd()から呼び出す
 
-//static void CheckShaderTypeParamsButton(HWND hDlgWnd, int srcshadertype);//params設定用　OWPでは無い方
-//static void CheckToonLightButton(HWND hDlgWnd, int srclightindex);
-
-static int CreateSkyParamsDlg();
-static void DestroySkyParamsDlg();
-static int SetMaterial2SkyParamsDlg(CMQOMaterial* srcmat);
 static int SetSkyParamsToSky(CShaderTypeParams srcparams);//ファイルからの設定用
 static void ShowSkyWnd(bool srcflag);
 static int OnFrameSkyParamsDlg();//OnFrameToolWnd()から呼び出す
@@ -3874,7 +3639,6 @@ INT WINAPI wWinMain(
 	CreateMaterialRateWnd();
 	CreateModelWorldMatWnd();
 	CreateJumpGravityWnd();
-	CreateSkyParamsDlg();
 	CreateFogParamsDlg();
 	CreateDofParamsDlg();
 
@@ -4199,6 +3963,7 @@ int CheckResolution()
 		s_latertransparentdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_shadertypedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_shaderparamsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+		s_skyparamsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 	}
 
 	return 0;
@@ -4234,6 +3999,7 @@ void InitApp()
 	s_latertransparentdlg.InitParams();
 	s_shadertypedlg.InitParams();
 	s_shaderparamsdlg.InitParams();
+	s_skyparamsdlg.InitParams();
 
 	s_undercpinfodlg2 = false;
 	s_cpinfodlg2.InitParams();
@@ -4954,236 +4720,6 @@ void InitApp()
 		s_dofapplysp = 0;
 		s_dofapplyB = 0;
 	}
-
-	{
-		s_skyst_closeFlag = false;
-		s_skyst_remakeToonTextureFlag = false;
-		s_skyst_backFlag = false;
-		s_skyst_stradioFlag = false;
-		s_skyst_slotindex = 0;
-		s_skyst_slotFlag = false;
-		s_skyst_lightchkFlag = false;
-		s_skyst_shadowcasterchkFlag = false;
-		s_skyst_normaly0chkFlag = false;
-		s_skyst_spccoefsliderFlag = false;
-		s_skyst_emissionchkFlag = false;
-		s_skyst_emissionsliderFlag = false;
-		s_skyst_metalsliderFlag = false;
-		s_skyst_smoothsliderFlag = false;
-		s_skyst_litscale1Flag = false;
-		s_skyst_litscale2Flag = false;
-		s_skyst_litscale3Flag = false;
-		s_skyst_litscale4Flag = false;
-		s_skyst_litscale5Flag = false;
-		s_skyst_litscale6Flag = false;
-		s_skyst_litscale7Flag = false;
-		s_skyst_litscale8Flag = false;
-		s_skyst_toonlitradioFlag = false;
-		s_skyst_toonhiaddrsliderFlag = false;
-		s_skyst_toonlowaddrsliderFlag = false;
-		s_skyst_gradationchkFlag = false;
-		s_skyst_powertoonchkFlag = false;
-		s_skyst_toolbaseHsliderFlag = false;
-		s_skyst_toolbaseSsliderFlag = false;
-		s_skyst_toolbaseVsliderFlag = false;
-		s_skyst_toolbaseAsliderFlag = false;
-		s_skyst_toolhiHsliderFlag = false;
-		s_skyst_toolhiSsliderFlag = false;
-		s_skyst_toolhiVsliderFlag = false;
-		s_skyst_toolhiAsliderFlag = false;
-		s_skyst_toollowHsliderFlag = false;
-		s_skyst_toollowSsliderFlag = false;
-		s_skyst_toollowVsliderFlag = false;
-		s_skyst_toollowAsliderFlag = false;
-		s_skyst_tilingUsliderFlag = false;
-		s_skyst_tilingVsliderFlag = false;
-		s_skyst_tilingUsliderUpFlag = false;
-		s_skyst_tilingVsliderUpFlag = false;
-		s_skyst_alphatestesliderFlag = false;
-		s_skyst_distortionchkFlag = false;
-		s_skyst_distortionscalesliderFlag = false;
-		s_skyst_riverradioFlag = false;
-		s_skyst_seacenterUsliderFlag = false;
-		s_skyst_seacenterVsliderFlag = false;
-		s_skyst_riverdirUsliderFlag = false;
-		s_skyst_riverdirVsliderFlag = false;
-		s_skyst_flowratesliderFlag = false;
-		s_skyst_distortionmapradioFlag = false;
-
-
-		s_skyst_paramsWnd = 0;
-		s_skyst_Sc = 0;
-		s_skyst_spall = 0;
-		s_skyst_spacerLabel01 = 0;
-		s_skyst_spacerLabel02 = 0;
-		s_skyst_spacerLabel03 = 0;
-		s_skyst_spacerLabel04 = 0;
-		s_skyst_spacerLabel05 = 0;
-		s_skyst_spacerLabel06 = 0;
-		s_skyst_namesp = 0;
-		s_skyst_backB = 0;
-		s_skyst_namelabel = 0;
-		s_skyst_slotsp1_0 = 0;
-		s_skyst_slotsp1_1 = 0;
-		s_skyst_slotsp1_2 = 0;
-		s_skyst_slotsp2_0 = 0;
-		s_skyst_slotsp2_1 = 0;
-		s_skyst_slotsp2_2 = 0;
-		int slotindex;
-		for (slotindex = 0; slotindex < 8; slotindex++) {
-			s_skyst_slotB[slotindex] = nullptr;
-		}
-		s_skyst_shadertyperadio = 0;
-		s_skyst_litflagsp = 0;
-		s_skyst_lightflagchk = 0;
-		s_skyst_shadowcasterchk = 0;
-		s_skyst_normaly0chk = 0;
-		s_skyst_spccoefsp0 = 0;
-		s_skyst_spccoefsp1 = 0;
-		s_skyst_spccoefsp2 = 0;
-		s_skyst_spccoeflabel = 0;
-		s_skyst_spccoefslider = 0;
-		s_skyst_emissionchk = 0;
-		s_skyst_emissionslider = 0;
-		s_skyst_metalsp0 = 0;
-		s_skyst_metalsp1 = 0;
-		s_skyst_metalsp2 = 0;
-		s_skyst_metallabel = 0;
-		s_skyst_metalslider = 0;
-		s_skyst_smoothlabel = 0;
-		s_skyst_smoothslider = 0;
-
-		s_skyst_litscalesp1_0 = 0;
-		s_skyst_litscalesp1_1 = 0;
-		s_skyst_litscalesp1_2 = 0;
-		s_skyst_litscalelabel1 = 0;
-		s_skyst_litscaleslider1 = 0;
-		s_skyst_litscalelabel2 = 0;
-		s_skyst_litscaleslider2 = 0;
-
-		s_skyst_litscalesp3_0 = 0;
-		s_skyst_litscalesp3_1 = 0;
-		s_skyst_litscalesp3_2 = 0;
-		s_skyst_litscalelabel3 = 0;
-		s_skyst_litscaleslider3 = 0;
-		s_skyst_litscalelabel4 = 0;
-		s_skyst_litscaleslider4 = 0;
-
-		s_skyst_litscalesp5_0 = 0;
-		s_skyst_litscalesp5_1 = 0;
-		s_skyst_litscalesp5_2 = 0;
-		s_skyst_litscalelabel5 = 0;
-		s_skyst_litscaleslider5 = 0;
-		s_skyst_litscalelabel6 = 0;
-		s_skyst_litscaleslider6 = 0;
-
-		s_skyst_litscalesp7_0 = 0;
-		s_skyst_litscalesp7_1 = 0;
-		s_skyst_litscalesp7_2 = 0;
-		s_skyst_litscalelabel7 = 0;
-		s_skyst_litscaleslider7 = 0;
-		s_skyst_litscalelabel8 = 0;
-		s_skyst_litscaleslider8 = 0;
-
-		s_skyst_toonlitradio = 0;
-
-		s_skyst_toonaddrsp0 = 0;
-		s_skyst_toonaddrsp1 = 0;
-		s_skyst_toonaddrsp2 = 0;
-		s_skyst_toonhiaddrlabel = 0;
-		s_skyst_toonhiaddrslider = 0;
-		s_skyst_toonlowaddrlabel = 0;
-		s_skyst_toonlowaddrslider = 0;
-
-		s_skyst_gradationsp0 = 0;
-		s_skyst_gradationchk = 0;
-		s_skyst_powertoonchk = 0;
-
-		s_skyst_toonbasesp1_0 = 0;
-		s_skyst_toonbasesp1_1 = 0;
-		s_skyst_toonbasesp1_2 = 0;
-		s_skyst_toonbaseHlabel = 0;
-		s_skyst_toonbaseHslider = 0;
-		s_skyst_toonbaseSlabel = 0;
-		s_skyst_toonbaseSslider = 0;
-		s_skyst_toonbasesp2_0 = 0;
-		s_skyst_toonbasesp2_1 = 0;
-		s_skyst_toonbasesp2_2 = 0;
-		s_skyst_toonbaseVlabel = 0;
-		s_skyst_toonbaseVslider = 0;
-		s_skyst_toonbaseAlabel = 0;
-		s_skyst_toonbaseAslider = 0;
-
-		s_skyst_toonhisp1_0 = 0;
-		s_skyst_toonhisp1_1 = 0;
-		s_skyst_toonhisp1_2 = 0;
-		s_skyst_toonhiHlabel = 0;
-		s_skyst_toonhiHslider = 0;
-		s_skyst_toonhiSlabel = 0;
-		s_skyst_toonhiSslider = 0;
-		s_skyst_toonhisp2_0 = 0;
-		s_skyst_toonhisp2_1 = 0;
-		s_skyst_toonhisp2_2 = 0;
-		s_skyst_toonhiVlabel = 0;
-		s_skyst_toonhiVslider = 0;
-		s_skyst_toonhiAlabel = 0;
-		s_skyst_toonhiAslider = 0;
-
-		s_skyst_toonlowsp1_0 = 0;
-		s_skyst_toonlowsp1_1 = 0;
-		s_skyst_toonlowsp1_2 = 0;
-		s_skyst_toonlowHlabel = 0;
-		s_skyst_toonlowHslider = 0;
-		s_skyst_toonlowSlabel = 0;
-		s_skyst_toonlowSslider = 0;
-		s_skyst_toonlowsp2_0 = 0;
-		s_skyst_toonlowsp2_1 = 0;
-		s_skyst_toonlowsp2_2 = 0;
-		s_skyst_toonlowVlabel = 0;
-		s_skyst_toonlowVslider = 0;
-		s_skyst_toonlowAlabel = 0;
-		s_skyst_toonlowAslider = 0;
-
-		s_skyst_tilingsp0 = 0;
-		s_skyst_tilingsp1 = 0;
-		s_skyst_tilingsp2 = 0;
-		s_skyst_tilingUlabel = 0;
-		s_skyst_tilingUslider = 0;
-		s_skyst_tilingVlabel = 0;
-		s_skyst_tilingVslider = 0;
-
-		s_skyst_alphatestsp0 = 0;
-		s_skyst_alphatestsp1 = 0;
-		s_skyst_alphatestlabel = 0;
-		s_skyst_alphatestslider = 0;
-
-		s_skyst_distortionsp0 = 0;
-		s_skyst_distortionsp1 = 0;
-		s_skyst_distortionchk = 0;
-		s_skyst_distortionscalelabel = 0;
-		s_skyst_distortionscaleslider = 0;
-
-		s_skyst_riverradio = 0;
-
-		s_skyst_seacentersp0 = 0;
-		s_skyst_seacentersp1 = 0;
-		s_skyst_seacenterlabel = 0;
-		s_skyst_seacenterUslider = 0;
-		s_skyst_seacenterVslider = 0;
-
-		s_skyst_riverdirsp0 = 0;
-		s_skyst_riverdirsp1 = 0;
-		s_skyst_riverdirlabel = 0;
-		s_skyst_riverdirUslider = 0;
-		s_skyst_riverdirVslider = 0;
-
-		s_skyst_flowratesp0 = 0;
-		s_skyst_flowratelabel = 0;
-		s_skyst_flowrateslider = 0;
-
-		s_skyst_distortionmapradio = 0;
-	}
-
 
 	{
 		s_placefolderWnd = 0;
@@ -6358,6 +5894,7 @@ void OnDestroyDevice()
 	s_latertransparentdlg.DestroyObjs();
 	s_shadertypedlg.DestroyObjs();
 	s_shaderparamsdlg.DestroyObjs();
+	s_skyparamsdlg.DestroyObjs();
 	s_cpinfodlg2.DestroyObjs();
 
 
@@ -6641,8 +6178,6 @@ void OnDestroyDevice()
 		delete s_owpLayerTable;
 		s_owpLayerTable = 0;
 	}
-
-	DestroySkyParamsDlg();
 
 	//if (s_placefolderlabel_1) {
 	//	delete s_placefolderlabel_1;
@@ -31819,8 +31354,8 @@ int OnFrameCloseFlag()
 		s_shaderparamsdlg.SetShaderCloseFlag(false);
 		ShowShaderTypeParamsDlg(false);
 	}
-	if (s_skyst_closeFlag) {
-		s_skyst_closeFlag = false;
+	if (s_skyparamsdlg.GetSkyCloseFlag()) {
+		s_skyparamsdlg.SetSkyCloseFlag(false);
 		ShowSkyWnd(false);
 	}
 	if (s_ScloseFlag) {
@@ -36454,641 +35989,6 @@ int CheckSimilarMenu()//context menu
 	InterlockedExchange(&g_undertrackingRMenu, (LONG)0);
 
 	return 0;
-}
-
-
-
-void DestroySkyParamsDlg()
-{
-	if (s_skyst_paramsWnd) {
-		s_skyst_paramsWnd->setListenMouse(false);
-		s_skyst_paramsWnd->setVisible(false);
-	}
-
-
-	if (s_skyst_Sc) {
-		delete s_skyst_Sc;
-		s_skyst_Sc = 0;
-	}
-	if (s_skyst_spall) {
-		delete s_skyst_spall;
-		s_skyst_spall = 0;
-	}
-	if (s_skyst_spacerLabel01) {
-		delete s_skyst_spacerLabel01;
-		s_skyst_spacerLabel01 = 0;
-	}
-	if (s_skyst_spacerLabel02) {
-		delete s_skyst_spacerLabel02;
-		s_skyst_spacerLabel02 = 0;
-	}
-	if (s_skyst_spacerLabel03) {
-		delete s_skyst_spacerLabel03;
-		s_skyst_spacerLabel03 = 0;
-	}
-	if (s_skyst_spacerLabel04) {
-		delete s_skyst_spacerLabel04;
-		s_skyst_spacerLabel04 = 0;
-	}
-	if (s_skyst_spacerLabel05) {
-		delete s_skyst_spacerLabel05;
-		s_skyst_spacerLabel05 = 0;
-	}
-	if (s_skyst_spacerLabel06) {
-		delete s_skyst_spacerLabel06;
-		s_skyst_spacerLabel06 = 0;
-	}
-	if (s_skyst_namesp) {
-		delete s_skyst_namesp;
-		s_skyst_namesp = 0;
-	}
-	if (s_skyst_backB) {
-		delete s_skyst_backB;
-		s_skyst_backB = 0;
-	}
-	if (s_skyst_namelabel) {
-		delete s_skyst_namelabel;
-		s_skyst_namelabel = 0;
-	}
-	if (s_skyst_slotsp1_0) {
-		delete s_skyst_slotsp1_0;
-		s_skyst_slotsp1_0 = 0;
-	}
-	if (s_skyst_slotsp1_1) {
-		delete s_skyst_slotsp1_1;
-		s_skyst_slotsp1_1 = 0;
-	}
-	if (s_skyst_slotsp1_2) {
-		delete s_skyst_slotsp1_2;
-		s_skyst_slotsp1_2 = 0;
-	}
-	if (s_skyst_slotsp2_0) {
-		delete s_skyst_slotsp2_0;
-		s_skyst_slotsp2_0 = 0;
-	}
-	if (s_skyst_slotsp2_1) {
-		delete s_skyst_slotsp2_1;
-		s_skyst_slotsp2_1 = 0;
-	}
-	if (s_skyst_slotsp2_2) {
-		delete s_skyst_slotsp2_2;
-		s_skyst_slotsp2_2 = 0;
-	}
-	int slotindex;
-	for (slotindex = 0; slotindex < 8; slotindex++) {
-		if (s_skyst_slotB[slotindex]) {
-			delete s_skyst_slotB[slotindex];
-			s_skyst_slotB[slotindex] = nullptr;
-		}
-	}
-	if (s_skyst_shadertyperadio) {
-		delete s_skyst_shadertyperadio;
-		s_skyst_shadertyperadio = 0;
-	}
-	if (s_skyst_litflagsp) {
-		delete s_skyst_litflagsp;
-		s_skyst_litflagsp = 0;
-	}
-	if (s_skyst_lightflagchk) {
-		delete s_skyst_lightflagchk;
-		s_skyst_lightflagchk = 0;
-	}
-	if (s_skyst_shadowcasterchk) {
-		delete s_skyst_shadowcasterchk;
-		s_skyst_shadowcasterchk = 0;
-	}
-	if (s_skyst_normaly0chk) {
-		delete s_skyst_normaly0chk;
-		s_skyst_normaly0chk = 0;
-	}
-	if (s_skyst_spccoefsp0) {
-		delete s_skyst_spccoefsp0;
-		s_skyst_spccoefsp0 = 0;
-	}
-	if (s_skyst_spccoefsp1) {
-		delete s_skyst_spccoefsp1;
-		s_skyst_spccoefsp1 = 0;
-	}
-	if (s_skyst_spccoefsp2) {
-		delete s_skyst_spccoefsp2;
-		s_skyst_spccoefsp2 = 0;
-	}
-	if (s_skyst_spccoeflabel) {
-		delete s_skyst_spccoeflabel;
-		s_skyst_spccoeflabel = 0;
-	}
-	if (s_skyst_spccoefslider) {
-		delete s_skyst_spccoefslider;
-		s_skyst_spccoefslider = 0;
-	}
-	if (s_skyst_emissionchk) {
-		delete s_skyst_emissionchk;
-		s_skyst_emissionchk = 0;
-	}
-	if (s_skyst_emissionslider) {
-		delete s_skyst_emissionslider;
-		s_skyst_emissionslider = 0;
-	}
-	if (s_skyst_metalsp0) {
-		delete s_skyst_metalsp0;
-		s_skyst_metalsp0 = 0;
-	}
-	if (s_skyst_metalsp1) {
-		delete s_skyst_metalsp1;
-		s_skyst_metalsp1 = 0;
-	}
-	if (s_skyst_metalsp2) {
-		delete s_skyst_metalsp2;
-		s_skyst_metalsp2 = 0;
-	}
-	if (s_skyst_metallabel) {
-		delete s_skyst_metallabel;
-		s_skyst_metallabel = 0;
-	}
-	if (s_skyst_metalslider) {
-		delete s_skyst_metalslider;
-		s_skyst_metalslider = 0;
-	}
-	if (s_skyst_smoothlabel) {
-		delete s_skyst_smoothlabel;
-		s_skyst_smoothlabel = 0;
-	}
-	if (s_skyst_smoothslider) {
-		delete s_skyst_smoothslider;
-		s_skyst_smoothslider = 0;
-	}
-
-	if (s_skyst_litscalesp1_0) {
-		delete s_skyst_litscalesp1_0;
-		s_skyst_litscalesp1_0 = 0;
-	}
-	if (s_skyst_litscalesp1_1) {
-		delete s_skyst_litscalesp1_1;
-		s_skyst_litscalesp1_1 = 0;
-	}
-	if (s_skyst_litscalesp1_2) {
-		delete s_skyst_litscalesp1_2;
-		s_skyst_litscalesp1_2 = 0;
-	}
-	if (s_skyst_litscalelabel1) {
-		delete s_skyst_litscalelabel1;
-		s_skyst_litscalelabel1 = 0;
-	}
-	if (s_skyst_litscaleslider1) {
-		delete s_skyst_litscaleslider1;
-		s_skyst_litscaleslider1 = 0;
-	}
-	if (s_skyst_litscalelabel2) {
-		delete s_skyst_litscalelabel2;
-		s_skyst_litscalelabel2 = 0;
-	}
-	if (s_skyst_litscaleslider2) {
-		delete s_skyst_litscaleslider2;
-		s_skyst_litscaleslider2 = 0;
-	}
-
-	if (s_skyst_litscalesp3_0) {
-		delete s_skyst_litscalesp3_0;
-		s_skyst_litscalesp3_0 = 0;
-	}
-	if (s_skyst_litscalesp3_1) {
-		delete s_skyst_litscalesp3_1;
-		s_skyst_litscalesp3_1 = 0;
-	}
-	if (s_skyst_litscalesp3_2) {
-		delete s_skyst_litscalesp3_2;
-		s_skyst_litscalesp3_2 = 0;
-	}
-	if (s_skyst_litscalelabel3) {
-		delete s_skyst_litscalelabel3;
-		s_skyst_litscalelabel3 = 0;
-	}
-	if (s_skyst_litscaleslider3) {
-		delete s_skyst_litscaleslider3;
-		s_skyst_litscaleslider3 = 0;
-	}
-	if (s_skyst_litscalelabel4) {
-		delete s_skyst_litscalelabel4;
-		s_skyst_litscalelabel4 = 0;
-	}
-	if (s_skyst_litscaleslider4) {
-		delete s_skyst_litscaleslider4;
-		s_skyst_litscaleslider4 = 0;
-	}
-
-	if (s_skyst_litscalesp5_0) {
-		delete s_skyst_litscalesp5_0;
-		s_skyst_litscalesp5_0 = 0;
-	}
-	if (s_skyst_litscalesp5_1) {
-		delete s_skyst_litscalesp5_1;
-		s_skyst_litscalesp5_1 = 0;
-	}
-	if (s_skyst_litscalesp5_2) {
-		delete s_skyst_litscalesp5_2;
-		s_skyst_litscalesp5_2 = 0;
-	}
-	if (s_skyst_litscalelabel5) {
-		delete s_skyst_litscalelabel5;
-		s_skyst_litscalelabel5 = 0;
-	}
-	if (s_skyst_litscaleslider5) {
-		delete s_skyst_litscaleslider5;
-		s_skyst_litscaleslider5 = 0;
-	}
-	if (s_skyst_litscalelabel6) {
-		delete s_skyst_litscalelabel6;
-		s_skyst_litscalelabel6 = 0;
-	}
-	if (s_skyst_litscaleslider6) {
-		delete s_skyst_litscaleslider6;
-		s_skyst_litscaleslider6 = 0;
-	}
-
-	if (s_skyst_litscalesp7_0) {
-		delete s_skyst_litscalesp7_0;
-		s_skyst_litscalesp7_0 = 0;
-	}
-	if (s_skyst_litscalesp7_1) {
-		delete s_skyst_litscalesp7_1;
-		s_skyst_litscalesp7_1 = 0;
-	}
-	if (s_skyst_litscalesp7_2) {
-		delete s_skyst_litscalesp7_2;
-		s_skyst_litscalesp7_2 = 0;
-	}
-	if (s_skyst_litscalelabel7) {
-		delete s_skyst_litscalelabel7;
-		s_skyst_litscalelabel7 = 0;
-	}
-	if (s_skyst_litscaleslider7) {
-		delete s_skyst_litscaleslider7;
-		s_skyst_litscaleslider7 = 0;
-	}
-	if (s_skyst_litscalelabel8) {
-		delete s_skyst_litscalelabel8;
-		s_skyst_litscalelabel8 = 0;
-	}
-	if (s_skyst_litscaleslider8) {
-		delete s_skyst_litscaleslider8;
-		s_skyst_litscaleslider8 = 0;
-	}
-
-	if (s_skyst_toonlitradio) {
-		delete s_skyst_toonlitradio;
-		s_skyst_toonlitradio = 0;
-	}
-
-	if (s_skyst_toonaddrsp0) {
-		delete s_skyst_toonaddrsp0;
-		s_skyst_toonaddrsp0 = 0;
-	}
-	if (s_skyst_toonaddrsp1) {
-		delete s_skyst_toonaddrsp1;
-		s_skyst_toonaddrsp1 = 0;
-	}
-	if (s_skyst_toonaddrsp2) {
-		delete s_skyst_toonaddrsp2;
-		s_skyst_toonaddrsp2 = 0;
-	}
-	if (s_skyst_toonhiaddrlabel) {
-		delete s_skyst_toonhiaddrlabel;
-		s_skyst_toonhiaddrlabel = 0;
-	}
-	if (s_skyst_toonhiaddrslider) {
-		delete s_skyst_toonhiaddrslider;
-		s_skyst_toonhiaddrslider = 0;
-	}
-	if (s_skyst_toonlowaddrlabel) {
-		delete s_skyst_toonlowaddrlabel;
-		s_skyst_toonlowaddrlabel = 0;
-	}
-	if (s_skyst_toonlowaddrslider) {
-		delete s_skyst_toonlowaddrslider;
-		s_skyst_toonlowaddrslider = 0;
-	}
-
-	if (s_skyst_gradationsp0) {
-		delete s_skyst_gradationsp0;
-		s_skyst_gradationsp0 = 0;
-	}
-	if (s_skyst_gradationchk) {
-		delete s_skyst_gradationchk;
-		s_skyst_gradationchk = 0;
-	}
-	if (s_skyst_powertoonchk) {
-		delete s_skyst_powertoonchk;
-		s_skyst_powertoonchk = 0;
-	}
-
-	if (s_skyst_toonbasesp1_0) {
-		delete s_skyst_toonbasesp1_0;
-		s_skyst_toonbasesp1_0 = 0;
-	}
-	if (s_skyst_toonbasesp1_1) {
-		delete s_skyst_toonbasesp1_1;
-		s_skyst_toonbasesp1_1 = 0;
-	}
-	if (s_skyst_toonbasesp1_2) {
-		delete s_skyst_toonbasesp1_2;
-		s_skyst_toonbasesp1_2 = 0;
-	}
-	if (s_skyst_toonbaseHlabel) {
-		delete s_skyst_toonbaseHlabel;
-		s_skyst_toonbaseHlabel = 0;
-	}
-	if (s_skyst_toonbaseHslider) {
-		delete s_skyst_toonbaseHslider;
-		s_skyst_toonbaseHslider = 0;
-	}
-	if (s_skyst_toonbaseSlabel) {
-		delete s_skyst_toonbaseSlabel;
-		s_skyst_toonbaseSlabel = 0;
-	}
-	if (s_skyst_toonbaseSslider) {
-		delete s_skyst_toonbaseSslider;
-		s_skyst_toonbaseSslider = 0;
-	}
-	if (s_skyst_toonbasesp2_0) {
-		delete s_skyst_toonbasesp2_0;
-		s_skyst_toonbasesp2_0 = 0;
-	}
-	if (s_skyst_toonbasesp2_1) {
-		delete s_skyst_toonbasesp2_1;
-		s_skyst_toonbasesp2_1 = 0;
-	}
-	if (s_skyst_toonbasesp2_2) {
-		delete s_skyst_toonbasesp2_2;
-		s_skyst_toonbasesp2_2 = 0;
-	}
-	if (s_skyst_toonbaseVlabel) {
-		delete s_skyst_toonbaseVlabel;
-		s_skyst_toonbaseVlabel = 0;
-	}
-	if (s_skyst_toonbaseVslider) {
-		delete s_skyst_toonbaseVslider;
-		s_skyst_toonbaseVslider = 0;
-	}
-	if (s_skyst_toonbaseAlabel) {
-		delete s_skyst_toonbaseAlabel;
-		s_skyst_toonbaseAlabel = 0;
-	}
-	if (s_skyst_toonbaseAslider) {
-		delete s_skyst_toonbaseAslider;
-		s_skyst_toonbaseAslider = 0;
-	}
-
-	if (s_skyst_toonhisp1_0) {
-		delete s_skyst_toonhisp1_0;
-		s_skyst_toonhisp1_0 = 0;
-	}
-	if (s_skyst_toonhisp1_1) {
-		delete s_skyst_toonhisp1_1;
-		s_skyst_toonhisp1_1 = 0;
-	}
-	if (s_skyst_toonhisp1_2) {
-		delete s_skyst_toonhisp1_2;
-		s_skyst_toonhisp1_2 = 0;
-	}
-	if (s_skyst_toonhiHlabel) {
-		delete s_skyst_toonhiHlabel;
-		s_skyst_toonhiHlabel = 0;
-	}
-	if (s_skyst_toonhiHslider) {
-		delete s_skyst_toonhiHslider;
-		s_skyst_toonhiHslider = 0;
-	}
-	if (s_skyst_toonhiSlabel) {
-		delete s_skyst_toonhiSlabel;
-		s_skyst_toonhiSlabel = 0;
-	}
-	if (s_skyst_toonhiSslider) {
-		delete s_skyst_toonhiSslider;
-		s_skyst_toonhiSslider = 0;
-	}
-	if (s_skyst_toonhisp2_0) {
-		delete s_skyst_toonhisp2_0;
-		s_skyst_toonhisp2_0 = 0;
-	}
-	if (s_skyst_toonhisp2_1) {
-		delete s_skyst_toonhisp2_1;
-		s_skyst_toonhisp2_1 = 0;
-	}
-	if (s_skyst_toonhisp2_2) {
-		delete s_skyst_toonhisp2_2;
-		s_skyst_toonhisp2_2 = 0;
-	}
-	if (s_skyst_toonhiVlabel) {
-		delete s_skyst_toonhiVlabel;
-		s_skyst_toonhiVlabel = 0;
-	}
-	if (s_skyst_toonhiVslider) {
-		delete s_skyst_toonhiVslider;
-		s_skyst_toonhiVslider = 0;
-	}
-	if (s_skyst_toonhiAlabel) {
-		delete s_skyst_toonhiAlabel;
-		s_skyst_toonhiAlabel = 0;
-	}
-	if (s_skyst_toonhiAslider) {
-		delete s_skyst_toonhiAslider;
-		s_skyst_toonhiAslider = 0;
-	}
-
-	if (s_skyst_toonlowsp1_0) {
-		delete s_skyst_toonlowsp1_0;
-		s_skyst_toonlowsp1_0 = 0;
-	}
-	if (s_skyst_toonlowsp1_1) {
-		delete s_skyst_toonlowsp1_1;
-		s_skyst_toonlowsp1_1 = 0;
-	}
-	if (s_skyst_toonlowsp1_2) {
-		delete s_skyst_toonlowsp1_2;
-
-		s_skyst_toonlowsp1_2 = 0;
-	}
-	if (s_skyst_toonlowHlabel) {
-		delete s_skyst_toonlowHlabel;
-		s_skyst_toonlowHlabel = 0;
-	}
-	if (s_skyst_toonlowHslider) {
-		delete s_skyst_toonlowHslider;
-		s_skyst_toonlowHslider = 0;
-	}
-	if (s_skyst_toonlowSlabel) {
-		delete s_skyst_toonlowSlabel;
-		s_skyst_toonlowSlabel = 0;
-	}
-	if (s_skyst_toonlowSslider) {
-		delete s_skyst_toonlowSslider;
-		s_skyst_toonlowSslider = 0;
-	}
-	if (s_skyst_toonlowsp2_0) {
-		delete s_skyst_toonlowsp2_0;
-		s_skyst_toonlowsp2_0 = 0;
-	}
-	if (s_skyst_toonlowsp2_1) {
-		delete s_skyst_toonlowsp2_1;
-		s_skyst_toonlowsp2_1 = 0;
-	}
-	if (s_skyst_toonlowsp2_2) {
-		delete s_skyst_toonlowsp2_2;
-		s_skyst_toonlowsp2_2 = 0;
-	}
-	if (s_skyst_toonlowVlabel) {
-		delete s_skyst_toonlowVlabel;
-		s_skyst_toonlowVlabel = 0;
-	}
-	if (s_skyst_toonlowVslider) {
-		delete s_skyst_toonlowVslider;
-		s_skyst_toonlowVslider = 0;
-	}
-	if (s_skyst_toonlowAlabel) {
-		delete s_skyst_toonlowAlabel;
-		s_skyst_toonlowAlabel = 0;
-	}
-	if (s_skyst_toonlowAslider) {
-		delete s_skyst_toonlowAslider;
-		s_skyst_toonlowAslider = 0;
-	}
-
-	if (s_skyst_tilingsp0) {
-		delete s_skyst_tilingsp0;
-		s_skyst_tilingsp0 = 0;
-	}
-	if (s_skyst_tilingsp1) {
-		delete s_skyst_tilingsp1;
-		s_skyst_tilingsp1 = 0;
-	}
-	if (s_skyst_tilingsp2) {
-		delete s_skyst_tilingsp2;
-		s_skyst_tilingsp2 = 0;
-	}
-	if (s_skyst_tilingUlabel) {
-		delete s_skyst_tilingUlabel;
-		s_skyst_tilingUlabel = 0;
-	}
-	if (s_skyst_tilingUslider) {
-		delete s_skyst_tilingUslider;
-		s_skyst_tilingUslider = 0;
-	}
-	if (s_skyst_tilingVlabel) {
-		delete s_skyst_tilingVlabel;
-		s_skyst_tilingVlabel = 0;
-	}
-	if (s_skyst_tilingVslider) {
-		delete s_skyst_tilingVslider;
-		s_skyst_tilingVslider = 0;
-	}
-
-	if (s_skyst_alphatestsp0) {
-		delete s_skyst_alphatestsp0;
-		s_skyst_alphatestsp0 = 0;
-	}
-	if (s_skyst_alphatestsp1) {
-		delete s_skyst_alphatestsp1;
-		s_skyst_alphatestsp1 = 0;
-	}
-	if (s_skyst_alphatestlabel) {
-		delete s_skyst_alphatestlabel;
-		s_skyst_alphatestlabel = 0;
-	}
-	if (s_skyst_alphatestslider) {
-		delete s_skyst_alphatestslider;
-		s_skyst_alphatestslider = 0;
-	}
-
-	if (s_skyst_distortionsp0) {
-		delete s_skyst_distortionsp0;
-		s_skyst_distortionsp0 = 0;
-	}
-	if (s_skyst_distortionsp1) {
-		delete s_skyst_distortionsp1;
-		s_skyst_distortionsp1 = 0;
-	}
-	if (s_skyst_distortionchk) {
-		delete s_skyst_distortionchk;
-		s_skyst_distortionchk = 0;
-	}
-	if (s_skyst_distortionscalelabel) {
-		delete s_skyst_distortionscalelabel;
-		s_skyst_distortionscalelabel = 0;
-	}
-	if (s_skyst_distortionscaleslider) {
-		delete s_skyst_distortionscaleslider;
-		s_skyst_distortionscaleslider = 0;
-	}
-
-	if (s_skyst_riverradio) {
-		delete s_skyst_riverradio;
-		s_skyst_riverradio = 0;
-	}
-
-	if (s_skyst_seacentersp0) {
-		delete s_skyst_seacentersp0;
-		s_skyst_seacentersp0 = 0;
-	}
-	if (s_skyst_seacentersp1) {
-		delete s_skyst_seacentersp1;
-		s_skyst_seacentersp1 = 0;
-	}
-	if (s_skyst_seacenterlabel) {
-		delete s_skyst_seacenterlabel;
-		s_skyst_seacenterlabel = 0;
-	}
-	if (s_skyst_seacenterUslider) {
-		delete s_skyst_seacenterUslider;
-		s_skyst_seacenterUslider = 0;
-	}
-	if (s_skyst_seacenterVslider) {
-		delete s_skyst_seacenterVslider;
-		s_skyst_seacenterVslider = 0;
-	}
-
-	if (s_skyst_riverdirsp0) {
-		delete s_skyst_riverdirsp0;
-		s_skyst_riverdirsp0 = 0;
-	}
-	if (s_skyst_riverdirsp1) {
-		delete s_skyst_riverdirsp1;
-		s_skyst_riverdirsp1 = 0;
-	}
-	if (s_skyst_riverdirlabel) {
-		delete s_skyst_riverdirlabel;
-		s_skyst_riverdirlabel = 0;
-	}
-	if (s_skyst_riverdirUslider) {
-		delete s_skyst_riverdirUslider;
-		s_skyst_riverdirUslider = 0;
-	}
-	if (s_skyst_riverdirVslider) {
-		delete s_skyst_riverdirVslider;
-		s_skyst_riverdirVslider = 0;
-	}
-
-	if (s_skyst_flowratesp0) {
-		delete s_skyst_flowratesp0;
-		s_skyst_flowratesp0 = 0;
-	}
-	if (s_skyst_flowratelabel) {
-		delete s_skyst_flowratelabel;
-		s_skyst_flowratelabel = 0;
-	}
-	if (s_skyst_flowrateslider) {
-		delete s_skyst_flowrateslider;
-		s_skyst_flowrateslider = 0;
-	}
-
-	if (s_skyst_distortionmapradio) {
-		delete s_skyst_distortionmapradio;
-		s_skyst_distortionmapradio = 0;
-	}
-
-	if (s_skyst_paramsWnd) {
-		delete s_skyst_paramsWnd;
-		s_skyst_paramsWnd = 0;
-	}
 }
 
 int CreateImpulseWnd()
@@ -51223,1680 +50123,7 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 	return 0;
 }
 
-
-int CreateSkyParamsDlg()
-{
-
-	//HWND hDlgWnd = CreateDialogW((HMODULE)GetModuleHandle(NULL),
-	//	//MAKEINTRESOURCE(IDD_SHADERTYPEDLG2), g_mainhwnd, (DLGPROC)ShaderTypeParamsDlgProc);
-	//	MAKEINTRESOURCE(IDD_SKYPARAMS), s_3dwnd, (DLGPROC)SkyParamsDlgProc);
-	//if (hDlgWnd != NULL) {
-	//	s_skyparamsdlgwnd = hDlgWnd;
-
-	//	RECT dlgrect;
-	//	GetWindowRect(g_mainhwnd, &dlgrect);
-	//	int windowposx;
-	//	if (g_4kresolution) {
-	//		windowposx = dlgrect.left + s_totalwndwidth * 3 / 4;
-	//	}
-	//	else {
-	//		windowposx = dlgrect.left + s_totalwndwidth / 2 + 50;
-	//	}
-
-	//	//SetParent(s_skyparamsdlgwnd, g_mainhwnd);
-	//	SetWindowPos(
-	//		s_skyparamsdlgwnd,
-	//		HWND_TOP,
-	//		windowposx,
-	//		dlgrect.top,
-	//		0,
-	//		0,
-	//		SWP_NOSIZE
-	//	);
-
-	//	//SetParent(s_skyparamsdlgwnd, g_mainhwnd);
-	//	ShowWindow(s_skyparamsdlgwnd, SW_HIDE);
-	//	s_skyparamsFlag = false;
-	//	return 0;
-	//}
-	//else {
-	//	s_skyparamsdlgwnd = NULL;
-	//	s_skyparamsFlag = false;
-	//	return 1;
-	//}
-
-	DestroySkyParamsDlg();
-
-
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-	s_skyst_paramsWnd = new OrgWindow(
-		0,
-		_T("ShaderSkyParamsWindow"),		//ウィンドウクラス名
-		GetModuleHandle(NULL),	//インスタンスハンドル
-		WindowPos(windowposx, s_sidemenuheight),
-		WindowSize(s_sidewidth, s_sideheight),		//サイズ
-		_T("ShaderSkyParamsWindow"),	//タイトル
-		g_mainhwnd,	//親ウィンドウハンドル
-		false,					//表示・非表示状態
-		//70, 50, 70,				//カラー
-		0, 0, 0,				//カラー
-		true, true);					//サイズ変更の可否
-
-	int labelheight;
-	if (g_4kresolution) {
-		labelheight = 28;
-	}
-	else {
-		labelheight = 20;
-	}
-
-	if (s_skyst_paramsWnd) {
-		bool limitradionamelen = true;
-		double separaterate = 0.24;
-		double separateratelit = 0.35;
-
-
-		s_skyst_Sc = new OWP_ScrollWnd(L"ShaderParamsScroll", false, labelheight);//wheelフラグOFF：ホイールでスライダーを動かしたいから
-		if (!s_skyst_Sc) {
-			_ASSERT(0);
-			return 1;
-		}
-		int linedatasize = (int)(40.0 * 1.25);
-		s_skyst_Sc->setLineDataSize(linedatasize);//!!!!!!!!!!!!
-		s_skyst_paramsWnd->addParts(*s_skyst_Sc);
-
-
-		//スクロールするGUI全てを束ねるセパレータは必要
-		s_skyst_spall = new OWP_Separator(s_skyst_paramsWnd, true, 0.995, false, s_skyst_Sc);
-		if (!s_skyst_spall) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_Sc->addParts(*s_skyst_spall);
-
-		s_skyst_spacerLabel01 = new OWP_Label(L"     ", labelheight);
-		if (!s_skyst_spacerLabel01) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_spacerLabel02 = new OWP_Label(L"     ", labelheight);
-		if (!s_skyst_spacerLabel02) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_spacerLabel03 = new OWP_Label(L"     ", labelheight);
-		if (!s_skyst_spacerLabel03) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_spacerLabel04 = new OWP_Label(L"     ", labelheight);
-		if (!s_skyst_spacerLabel04) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_spacerLabel05 = new OWP_Label(L"     ", labelheight);
-		if (!s_skyst_spacerLabel05) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_spacerLabel06 = new OWP_Label(L"     ", labelheight);
-		if (!s_skyst_spacerLabel06) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		s_skyst_namesp = new OWP_Separator(s_skyst_paramsWnd, true, 0.2, true);
-		if (!s_skyst_namesp) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_backB = new OWP_Button(L"<-Back", labelheight);
-		if (!s_skyst_backB) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_namelabel = new OWP_Label(L"MaterialName", labelheight);
-		if (!s_skyst_namelabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		//COLORREF colorToAll = RGB(64, 128 + 32, 128 + 32);
-		//COLORREF colorValidInvalid = RGB(168, 129, 129);
-		//COLORREF colorToDeeper = RGB(24, 126, 176);
-		COLORREF colorCaution = RGB(168, 129, 129);
-		s_skyst_namelabel->setTextColor(colorCaution);
-
-
-		s_skyst_slotsp1_0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_slotsp1_0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_slotsp1_1 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_slotsp1_1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_slotsp1_2 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_slotsp1_2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_slotsp2_0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_slotsp2_0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_slotsp2_1 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_slotsp2_1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_slotsp2_2 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_slotsp2_2) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		int slotindex;
-		for (slotindex = 0; slotindex < 8; slotindex++) {
-			WCHAR strslotno[256] = { 0L };
-			swprintf_s(strslotno, 256, L"Slot%d", (slotindex + 1));
-			s_skyst_slotB[slotindex] = new OWP_Button(strslotno, labelheight);
-			if (!s_skyst_slotB[slotindex]) {
-				_ASSERT(0);
-				return 1;
-			}
-		}
-		
-
-		s_skyst_shadertyperadio = new OWP_RadioButton(L"Auto", limitradionamelen, labelheight);
-		if (!s_skyst_shadertyperadio) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_shadertyperadio->addLine(L"PBR");
-		s_skyst_shadertyperadio->addLine(L"Std.");
-		s_skyst_shadertyperadio->addLine(L"HSV Toon");
-		
-
-		s_skyst_litflagsp = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_litflagsp) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_lightflagchk = new OWP_CheckBoxA(L"Lighting", 0, labelheight, false);
-		if (!s_skyst_lightflagchk) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_shadowcasterchk = new OWP_CheckBoxA(L"ShadowCaster", 0, labelheight, false);
-		if (!s_skyst_shadowcasterchk) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_normaly0chk = new OWP_CheckBoxA(L"NormalY0", 0, labelheight, false);
-		if (!s_skyst_normaly0chk) {
-			_ASSERT(0);
-			return 1;
-		}
-		
-
-
-		s_skyst_spccoefsp0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_spccoefsp0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_spccoefsp1 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
-		if (!s_skyst_spccoefsp1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_spccoefsp2 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
-		if (!s_skyst_spccoefsp2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_spccoeflabel = new OWP_Label(L"Specular", labelheight);
-		if (!s_skyst_spccoeflabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_spccoefslider = new OWP_Slider(0.0, 2.0, 0.0, labelheight);
-		if (!s_skyst_spccoefslider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_emissionchk = new OWP_CheckBoxA(L"Emi", 0, labelheight, false);
-		if (!s_skyst_emissionchk) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_emissionslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
-		if (!s_skyst_emissionslider) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		s_skyst_metalsp0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_metalsp0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_metalsp1 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
-		if (!s_skyst_metalsp1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_metalsp2 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
-		if (!s_skyst_metalsp2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_metallabel = new OWP_Label(L"Metal", labelheight);
-		if (!s_skyst_metallabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_metalslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
-		if (!s_skyst_metalslider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_smoothlabel = new OWP_Label(L"Smooth", labelheight);
-		if (!s_skyst_smoothlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_smoothslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
-		if (!s_skyst_smoothslider) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-
-		s_skyst_litscalesp1_0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_litscalesp1_0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscalesp1_1 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
-		if (!s_skyst_litscalesp1_1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscalesp1_2 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
-		if (!s_skyst_litscalesp1_2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscalelabel1 = new OWP_Label(L"Lit1", labelheight);
-		if (!s_skyst_litscalelabel1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscaleslider1 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
-		if (!s_skyst_litscaleslider1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscalelabel2 = new OWP_Label(L"Lit2", labelheight);
-		if (!s_skyst_litscalelabel2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscaleslider2 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
-		if (!s_skyst_litscaleslider2) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		s_skyst_litscalesp3_0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_litscalesp3_0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscalesp3_1 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
-		if (!s_skyst_litscalesp3_1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscalesp3_2 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
-		if (!s_skyst_litscalesp3_2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscalelabel3 = new OWP_Label(L"Lit3", labelheight);
-		if (!s_skyst_litscalelabel3) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscaleslider3 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
-		if (!s_skyst_litscaleslider3) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscalelabel4 = new OWP_Label(L"Lit4", labelheight);
-		if (!s_skyst_litscalelabel4) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscaleslider4 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
-		if (!s_skyst_litscaleslider4) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-
-		s_skyst_litscalesp5_0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_litscalesp5_0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscalesp5_1 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
-		if (!s_skyst_litscalesp5_1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscalesp5_2 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
-		if (!s_skyst_litscalesp5_2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscalelabel5 = new OWP_Label(L"Lit5", labelheight);
-		if (!s_skyst_litscalelabel5) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscaleslider5 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
-		if (!s_skyst_litscaleslider5) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscalelabel6 = new OWP_Label(L"Lit6", labelheight);
-		if (!s_skyst_litscalelabel6) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscaleslider6 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
-		if (!s_skyst_litscaleslider6) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-
-		s_skyst_litscalesp7_0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_litscalesp7_0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscalesp7_1 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
-		if (!s_skyst_litscalesp7_1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscalesp7_2 = new OWP_Separator(s_skyst_paramsWnd, true, separateratelit, true);
-		if (!s_skyst_litscalesp7_2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscalelabel7 = new OWP_Label(L"Lit7", labelheight);
-		if (!s_skyst_litscalelabel7) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscaleslider7 = new OWP_Slider(0.0, 5.0, 0.0);
-		if (!s_skyst_litscaleslider7) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscalelabel8 = new OWP_Label(L"Lit8", labelheight);
-		if (!s_skyst_litscalelabel8) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_litscaleslider8 = new OWP_Slider(0.0, 5.0, 0.0, labelheight);
-		if (!s_skyst_litscaleslider8) {
-			_ASSERT(0);
-			return 1;
-		}
-		
-
-		s_skyst_toonlitradio = new OWP_RadioButton(L"ToonLit1", limitradionamelen, labelheight);
-		if (!s_skyst_toonlitradio) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonlitradio->addLine(L"ToonLit2");
-		s_skyst_toonlitradio->addLine(L"ToonLit3");
-		s_skyst_toonlitradio->addLine(L"ToonLit4");
-		s_skyst_toonlitradio->addLine(L"ToonLit5");
-		s_skyst_toonlitradio->addLine(L"ToonLit6");
-		s_skyst_toonlitradio->addLine(L"ToonLit7");
-		s_skyst_toonlitradio->addLine(L"ToonLit8");
-
-
-		s_skyst_toonaddrsp0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_toonaddrsp0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonaddrsp1 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_toonaddrsp1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonaddrsp2 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_toonaddrsp2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonhiaddrlabel = new OWP_Label(L"HiAddr", labelheight);
-		if (!s_skyst_toonhiaddrlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonhiaddrslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
-		if (!s_skyst_toonhiaddrslider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonlowaddrlabel = new OWP_Label(L"LowAddr", labelheight);
-		if (!s_skyst_toonlowaddrlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonlowaddrslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
-		if (!s_skyst_litscaleslider8) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		s_skyst_gradationsp0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_gradationsp0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_gradationchk = new OWP_CheckBoxA(L"Gradation", 0, labelheight, false);
-		if (!s_skyst_gradationchk) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_powertoonchk = new OWP_CheckBoxA(L"PowerToon", 0, labelheight, false);
-		if (!s_skyst_powertoonchk) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-
-		s_skyst_toonbasesp1_0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_toonbasesp1_0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonbasesp1_1 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_toonbasesp1_1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonbasesp1_2 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_toonbasesp1_2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonbaseHlabel = new OWP_Label(L"BaseH", labelheight);
-		if (!s_skyst_toonbaseHlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonbaseHslider = new OWP_Slider(0.0, 360.0, 0.0, labelheight);
-		if (!s_skyst_toonbaseHslider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonbaseSlabel = new OWP_Label(L"BaseS", labelheight);
-		if (!s_skyst_toonbaseSlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonbaseSslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
-		if (!s_skyst_toonbaseSslider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonbasesp2_0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_toonbasesp2_0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonbasesp2_1 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_toonbasesp2_1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonbasesp2_2 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_toonbasesp2_2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonbaseVlabel = new OWP_Label(L"BaseV", labelheight);
-		if (!s_skyst_toonbaseVlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonbaseVslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
-		if (!s_skyst_toonbaseVslider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonbaseAlabel = new OWP_Label(L"BaseA", labelheight);
-		if (!s_skyst_toonbaseAlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonbaseAslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
-		if (!s_skyst_toonbaseAslider) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		s_skyst_toonhisp1_0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_toonhisp1_0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonhisp1_1 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_toonhisp1_1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonhisp1_2 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_toonhisp1_2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonhiHlabel = new OWP_Label(L"HighH", labelheight);
-		if (!s_skyst_toonhiHlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonhiHslider = new OWP_Slider(0.0, 360.0, -360.0, labelheight);
-		if (!s_skyst_toonhiHslider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonhiSlabel = new OWP_Label(L"HighS", labelheight);
-		if (!s_skyst_toonhiSlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonhiSslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
-		if (!s_skyst_toonhiSslider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonhisp2_0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_toonhisp2_0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonhisp2_1 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_toonhisp2_1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonhisp2_2 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_toonhisp2_2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonhiVlabel = new OWP_Label(L"HighV", labelheight);
-		if (!s_skyst_toonhiVlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonhiVslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
-		if (!s_skyst_toonhiVslider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonhiAlabel = new OWP_Label(L"HighA", labelheight);
-		if (!s_skyst_toonhiAlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonhiAslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
-		if (!s_skyst_toonhiAslider) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		s_skyst_toonlowsp1_0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_toonlowsp1_0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonlowsp1_1 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_toonlowsp1_1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonlowsp1_2 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_toonlowsp1_2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonlowHlabel = new OWP_Label(L"LowH", labelheight);
-		if (!s_skyst_toonlowHlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonlowHslider = new OWP_Slider(0.0, 360.0, -360.0, labelheight);
-		if (!s_skyst_toonlowHslider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonlowSlabel = new OWP_Label(L"LowS", labelheight);
-		if (!s_skyst_toonlowSlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonlowSslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
-		if (!s_skyst_toonlowSslider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonlowsp2_0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_toonlowsp2_0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonlowsp2_1 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_toonlowsp2_1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonlowsp2_2 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_toonlowsp2_2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonlowVlabel = new OWP_Label(L"LowV", labelheight);
-		if (!s_skyst_toonlowVlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonlowVslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
-		if (!s_skyst_toonlowVslider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonlowAlabel = new OWP_Label(L"LowA", labelheight);
-		if (!s_skyst_toonlowAlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_toonlowAslider = new OWP_Slider(0.0, 1.0, -1.0, labelheight);
-		if (!s_skyst_toonlowAslider) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		s_skyst_tilingsp0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_tilingsp0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_tilingsp1 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_tilingsp1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_tilingsp2 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_tilingsp2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_tilingUlabel = new OWP_Label(L"TileU", labelheight);
-		if (!s_skyst_tilingUlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_tilingUslider = new OWP_Slider(0.0, 100.0, 0.0, labelheight);
-		if (!s_skyst_tilingUslider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_tilingVlabel = new OWP_Label(L"TileV", labelheight);
-		if (!s_skyst_tilingVlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_tilingVslider = new OWP_Slider(0.0, 100.0, 0.0, labelheight);
-		if (!s_skyst_tilingVslider) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		s_skyst_alphatestsp0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_alphatestsp0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_alphatestsp1 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_alphatestsp1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_alphatestlabel = new OWP_Label(L"ATest", labelheight);
-		if (!s_skyst_alphatestlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_alphatestslider = new OWP_Slider(0.0, 1.0, 0.0);
-		if (!s_skyst_alphatestslider) {
-			_ASSERT(0);
-			return 1;
-		}
-		
-
-		s_skyst_distortionsp0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_distortionsp0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_distortionsp1 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_distortionsp1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_distortionchk = new OWP_CheckBoxA(L"distortion", 0, labelheight, false);
-		if (!s_skyst_distortionchk) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_distortionscalelabel = new OWP_Label(L"Scale", labelheight);
-		if (!s_skyst_distortionscalelabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_distortionscaleslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
-		if (!s_skyst_distortionscaleslider) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		s_skyst_riverradio = new OWP_RadioButton(L"river", limitradionamelen, labelheight);
-		if (!s_skyst_riverradio) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_riverradio->addLine(L"sea");
-
-
-		s_skyst_seacentersp0 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_seacentersp0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_seacentersp1 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_seacentersp1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_seacenterlabel = new OWP_Label(L"SeaCenterUV", labelheight);
-		if (!s_skyst_seacenterlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_seacenterUslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
-		if (!s_skyst_seacenterUslider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_seacenterVslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
-		if (!s_skyst_seacenterVslider) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		s_skyst_riverdirsp0 = new OWP_Separator(s_skyst_paramsWnd, true, separaterate, true);
-		if (!s_skyst_riverdirsp0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_riverdirsp1 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_riverdirsp1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_riverdirlabel = new OWP_Label(L"SeaCenterUV", labelheight);
-		if (!s_skyst_riverdirlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_riverdirUslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
-		if (!s_skyst_riverdirUslider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_riverdirVslider = new OWP_Slider(0.0, 1.0, 0.0, labelheight);
-		if (!s_skyst_riverdirVslider) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		s_skyst_flowratesp0 = new OWP_Separator(s_skyst_paramsWnd, true, 0.5, true);
-		if (!s_skyst_flowratesp0) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_flowratelabel = new OWP_Label(L"SeaCenterUV", labelheight);
-		if (!s_skyst_flowratelabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_flowrateslider = new OWP_Slider(1.0, 2.0, -2.0, labelheight);
-		if (!s_skyst_flowrateslider) {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-
-		s_skyst_distortionmapradio = new OWP_RadioButton(L"RG", limitradionamelen, labelheight);
-		if (!s_skyst_distortionmapradio) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_skyst_distortionmapradio->addLine(L"GB");
-		s_skyst_distortionmapradio->addLine(L"RB");
-
-
-		s_skyst_spall->addParts1(*s_skyst_namesp);
-		//s_skyst_namesp->addParts1(*s_skyst_backB);
-		s_skyst_namesp->addParts2(*s_skyst_namelabel);
-
-		s_skyst_spall->addParts1(*s_skyst_slotsp1_0);
-		s_skyst_slotsp1_0->addParts1(*s_skyst_slotsp1_1);
-		s_skyst_slotsp1_0->addParts2(*s_skyst_slotsp1_2);
-		s_skyst_slotsp1_1->addParts1(*s_skyst_slotB[0]);
-		s_skyst_slotsp1_1->addParts2(*s_skyst_slotB[1]);
-		s_skyst_slotsp1_2->addParts1(*s_skyst_slotB[2]);
-		s_skyst_slotsp1_2->addParts2(*s_skyst_slotB[3]);
-
-		s_skyst_spall->addParts1(*s_skyst_slotsp2_0);
-		s_skyst_slotsp2_0->addParts1(*s_skyst_slotsp2_1);
-		s_skyst_slotsp2_0->addParts2(*s_skyst_slotsp2_2);
-		s_skyst_slotsp2_1->addParts1(*s_skyst_slotB[4]);
-		s_skyst_slotsp2_1->addParts2(*s_skyst_slotB[5]);
-		s_skyst_slotsp2_2->addParts1(*s_skyst_slotB[6]);
-		s_skyst_slotsp2_2->addParts2(*s_skyst_slotB[7]);
-		s_skyst_spall->addParts1(*s_skyst_spacerLabel01);
-
-
-		s_skyst_spall->addParts1(*s_skyst_shadertyperadio);
-		s_skyst_spall->addParts1(*s_skyst_spacerLabel02);
-
-		s_skyst_spall->addParts1(*s_skyst_litflagsp);
-		s_skyst_litflagsp->addParts1(*s_skyst_lightflagchk);
-		s_skyst_litflagsp->addParts2(*s_skyst_shadowcasterchk);
-		s_skyst_spall->addParts1(*s_skyst_normaly0chk);
-		s_skyst_spall->addParts1(*s_skyst_spacerLabel03);
-
-		s_skyst_spall->addParts1(*s_skyst_spccoefsp0);
-		s_skyst_spccoefsp0->addParts1(*s_skyst_spccoefsp1);
-		s_skyst_spccoefsp1->addParts1(*s_skyst_spccoeflabel);
-		s_skyst_spccoefsp1->addParts2(*s_skyst_spccoefslider);
-		s_skyst_spccoefsp0->addParts2(*s_skyst_spccoefsp2);
-		s_skyst_spccoefsp2->addParts1(*s_skyst_emissionchk);
-		s_skyst_spccoefsp2->addParts2(*s_skyst_emissionslider);
-
-		s_skyst_spall->addParts1(*s_skyst_metalsp0);
-		s_skyst_metalsp0->addParts1(*s_skyst_metalsp1);
-		s_skyst_metalsp1->addParts1(*s_skyst_metallabel);
-		s_skyst_metalsp1->addParts2(*s_skyst_metalslider);
-		s_skyst_metalsp0->addParts2(*s_skyst_metalsp2);
-		s_skyst_metalsp2->addParts1(*s_skyst_smoothlabel);
-		s_skyst_metalsp2->addParts2(*s_skyst_smoothslider);
-
-		s_skyst_spall->addParts1(*s_skyst_litscalesp1_0);
-		s_skyst_litscalesp1_0->addParts1(*s_skyst_litscalesp1_1);
-		s_skyst_litscalesp1_1->addParts1(*s_skyst_litscalelabel1);
-		s_skyst_litscalesp1_1->addParts2(*s_skyst_litscaleslider1);
-		s_skyst_litscalesp1_0->addParts2(*s_skyst_litscalesp1_2);
-		s_skyst_litscalesp1_2->addParts1(*s_skyst_litscalelabel2);
-		s_skyst_litscalesp1_2->addParts2(*s_skyst_litscaleslider2);
-
-		s_skyst_spall->addParts1(*s_skyst_litscalesp3_0);
-		s_skyst_litscalesp3_0->addParts1(*s_skyst_litscalesp3_1);
-		s_skyst_litscalesp3_1->addParts1(*s_skyst_litscalelabel3);
-		s_skyst_litscalesp3_1->addParts2(*s_skyst_litscaleslider3);
-		s_skyst_litscalesp3_0->addParts2(*s_skyst_litscalesp3_2);
-		s_skyst_litscalesp3_2->addParts1(*s_skyst_litscalelabel4);
-		s_skyst_litscalesp3_2->addParts2(*s_skyst_litscaleslider4);
-
-
-		s_skyst_spall->addParts1(*s_skyst_litscalesp5_0);
-		s_skyst_litscalesp5_0->addParts1(*s_skyst_litscalesp5_1);
-		s_skyst_litscalesp5_1->addParts1(*s_skyst_litscalelabel5);
-		s_skyst_litscalesp5_1->addParts2(*s_skyst_litscaleslider5);
-		s_skyst_litscalesp5_0->addParts2(*s_skyst_litscalesp5_2);
-		s_skyst_litscalesp5_2->addParts1(*s_skyst_litscalelabel6);
-		s_skyst_litscalesp5_2->addParts2(*s_skyst_litscaleslider6);
-
-
-		s_skyst_spall->addParts1(*s_skyst_litscalesp7_0);
-		s_skyst_litscalesp7_0->addParts1(*s_skyst_litscalesp7_1);
-		s_skyst_litscalesp7_1->addParts1(*s_skyst_litscalelabel7);
-		s_skyst_litscalesp7_1->addParts2(*s_skyst_litscaleslider7);
-		s_skyst_litscalesp7_0->addParts2(*s_skyst_litscalesp7_2);
-		s_skyst_litscalesp7_2->addParts1(*s_skyst_litscalelabel8);
-		s_skyst_litscalesp7_2->addParts2(*s_skyst_litscaleslider8);
-		s_skyst_spall->addParts1(*s_skyst_spacerLabel04);
-
-		s_skyst_spall->addParts1(*s_skyst_toonlitradio);
-		s_skyst_spall->addParts1(*s_skyst_spacerLabel05);
-
-		s_skyst_spall->addParts1(*s_skyst_toonaddrsp0);
-		s_skyst_toonaddrsp0->addParts1(*s_skyst_toonaddrsp1);
-		s_skyst_toonaddrsp1->addParts1(*s_skyst_toonhiaddrlabel);
-		s_skyst_toonaddrsp1->addParts2(*s_skyst_toonhiaddrslider);
-		s_skyst_toonaddrsp0->addParts2(*s_skyst_toonaddrsp2);
-		s_skyst_toonaddrsp2->addParts1(*s_skyst_toonlowaddrlabel);
-		s_skyst_toonaddrsp2->addParts2(*s_skyst_toonlowaddrslider);
-
-
-		s_skyst_spall->addParts1(*s_skyst_gradationsp0);
-		s_skyst_gradationsp0->addParts1(*s_skyst_gradationchk);
-		s_skyst_gradationsp0->addParts2(*s_skyst_powertoonchk);
-
-
-		s_skyst_spall->addParts1(*s_skyst_toonbasesp1_0);
-		s_skyst_toonbasesp1_0->addParts1(*s_skyst_toonbasesp1_1);
-		s_skyst_toonbasesp1_1->addParts1(*s_skyst_toonbaseHlabel);
-		s_skyst_toonbasesp1_1->addParts2(*s_skyst_toonbaseHslider);
-		s_skyst_toonbasesp1_0->addParts2(*s_skyst_toonbasesp1_2);
-		s_skyst_toonbasesp1_2->addParts1(*s_skyst_toonbaseSlabel);
-		s_skyst_toonbasesp1_2->addParts2(*s_skyst_toonbaseSslider);
-		s_skyst_spall->addParts1(*s_skyst_toonbasesp2_0);
-		s_skyst_toonbasesp2_0->addParts1(*s_skyst_toonbasesp2_1);
-		s_skyst_toonbasesp2_1->addParts1(*s_skyst_toonbaseVlabel);
-		s_skyst_toonbasesp2_1->addParts2(*s_skyst_toonbaseVslider);
-		s_skyst_toonbasesp2_0->addParts2(*s_skyst_toonbasesp2_2);
-		s_skyst_toonbasesp2_2->addParts1(*s_skyst_toonbaseAlabel);
-		s_skyst_toonbasesp2_2->addParts2(*s_skyst_toonbaseAslider);
-
-
-		s_skyst_spall->addParts1(*s_skyst_toonhisp1_0);
-		s_skyst_toonhisp1_0->addParts1(*s_skyst_toonhisp1_1);
-		s_skyst_toonhisp1_1->addParts1(*s_skyst_toonhiHlabel);
-		s_skyst_toonhisp1_1->addParts2(*s_skyst_toonhiHslider);
-		s_skyst_toonhisp1_0->addParts2(*s_skyst_toonhisp1_2);
-		s_skyst_toonhisp1_2->addParts1(*s_skyst_toonhiSlabel);
-		s_skyst_toonhisp1_2->addParts2(*s_skyst_toonhiSslider);
-		s_skyst_spall->addParts1(*s_skyst_toonhisp2_0);
-		s_skyst_toonhisp2_0->addParts1(*s_skyst_toonhisp2_1);
-		s_skyst_toonhisp2_1->addParts1(*s_skyst_toonhiVlabel);
-		s_skyst_toonhisp2_1->addParts2(*s_skyst_toonhiVslider);
-		s_skyst_toonhisp2_0->addParts2(*s_skyst_toonhisp2_2);
-		s_skyst_toonhisp2_2->addParts1(*s_skyst_toonhiAlabel);
-		s_skyst_toonhisp2_2->addParts2(*s_skyst_toonhiAslider);
-
-
-		s_skyst_spall->addParts1(*s_skyst_toonlowsp1_0);
-		s_skyst_toonlowsp1_0->addParts1(*s_skyst_toonlowsp1_1);
-		s_skyst_toonlowsp1_1->addParts1(*s_skyst_toonlowHlabel);
-		s_skyst_toonlowsp1_1->addParts2(*s_skyst_toonlowHslider);
-		s_skyst_toonlowsp1_0->addParts2(*s_skyst_toonlowsp1_2);
-		s_skyst_toonlowsp1_2->addParts1(*s_skyst_toonlowSlabel);
-		s_skyst_toonlowsp1_2->addParts2(*s_skyst_toonlowSslider);
-		s_skyst_spall->addParts1(*s_skyst_toonlowsp2_0);
-		s_skyst_toonlowsp2_0->addParts1(*s_skyst_toonlowsp2_1);
-		s_skyst_toonlowsp2_1->addParts1(*s_skyst_toonlowVlabel);
-		s_skyst_toonlowsp2_1->addParts2(*s_skyst_toonlowVslider);
-		s_skyst_toonlowsp2_0->addParts2(*s_skyst_toonlowsp2_2);
-		s_skyst_toonlowsp2_2->addParts1(*s_skyst_toonlowAlabel);
-		s_skyst_toonlowsp2_2->addParts2(*s_skyst_toonlowAslider);
-
-
-		s_skyst_spall->addParts1(*s_skyst_tilingsp0);
-		s_skyst_tilingsp0->addParts1(*s_skyst_tilingsp1);
-		s_skyst_tilingsp1->addParts1(*s_skyst_tilingUlabel);
-		s_skyst_tilingsp1->addParts2(*s_skyst_tilingUslider);
-		s_skyst_tilingsp0->addParts2(*s_skyst_tilingsp2);
-		s_skyst_tilingsp2->addParts1(*s_skyst_tilingVlabel);
-		s_skyst_tilingsp2->addParts2(*s_skyst_tilingVslider);
-
-		s_skyst_spall->addParts1(*s_skyst_alphatestsp0);
-		s_skyst_alphatestsp0->addParts1(*s_skyst_alphatestsp1);
-		s_skyst_alphatestsp1->addParts1(*s_skyst_alphatestlabel);
-		s_skyst_alphatestsp1->addParts2(*s_skyst_alphatestslider);
-		s_skyst_spall->addParts1(*s_skyst_spacerLabel06);
-
-		s_skyst_spall->addParts1(*s_skyst_distortionsp0);
-		s_skyst_distortionsp0->addParts1(*s_skyst_distortionchk);
-		s_skyst_distortionsp0->addParts2(*s_skyst_distortionsp1);
-		s_skyst_distortionsp1->addParts1(*s_skyst_distortionscalelabel);
-		s_skyst_distortionsp1->addParts2(*s_skyst_distortionscaleslider);
-
-		//s_skyst_spall->addParts1(*s_skyst_riverradio);
-
-		//s_skyst_spall->addParts1(*s_skyst_seacentersp0);
-		//s_skyst_seacentersp0->addParts1(*s_skyst_seacenterlabel);
-		//s_skyst_seacentersp0->addParts2(*s_skyst_seacentersp1);
-		//s_skyst_seacentersp1->addParts1(*s_skyst_seacenterUslider);
-		//s_skyst_seacentersp1->addParts2(*s_skyst_seacenterVslider);
-
-		//s_skyst_spall->addParts1(*s_skyst_riverdirsp0);
-		//s_skyst_riverdirsp0->addParts1(*s_skyst_riverdirlabel);
-		//s_skyst_riverdirsp0->addParts2(*s_skyst_riverdirsp1);
-		//s_skyst_riverdirsp1->addParts1(*s_skyst_riverdirUslider);
-		//s_skyst_riverdirsp1->addParts2(*s_skyst_riverdirVslider);
-
-
-		//s_skyst_spall->addParts1(*s_skyst_flowratesp0);
-		//s_skyst_flowratesp0->addParts1(*s_skyst_flowratelabel);
-		//s_skyst_flowratesp0->addParts2(*s_skyst_flowrateslider);
-
-		//s_skyst_spall->addParts1(*s_skyst_distortionmapradio);
-
-
-
-
-
-		if (s_skyst_paramsWnd) {
-			s_skyst_paramsWnd->setCloseListener([]() {
-				if (s_model) {
-					s_skyst_closeFlag = true;
-				}
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		//if (s_skyst_backB) {
-		//	s_skyst_backB->setButtonListener([]() {
-		//		s_skyst_backFlag = true;
-		//		if (s_skyst_paramsWnd) {
-		//			s_skyst_paramsWnd->callRewrite();//再描画
-		//		}
-		//		});
-		//}
-
-		int setindex2;
-		for (setindex2 = 0; setindex2 < 8; setindex2++) {
-			if (s_skyst_slotB[setindex2]) {
-				s_skyst_slotB[setindex2]->setButtonListener([setindex2]() {
-					if (!s_skyst_slotFlag) {
-						s_skyst_slotindex = setindex2;
-						s_skyst_slotFlag = true;
-					}
-					if (s_skyst_paramsWnd) {
-						s_skyst_paramsWnd->callRewrite();//再描画
-					}
-					});
-			}
-		}
-
-		if (s_skyst_shadertyperadio) {
-			s_skyst_shadertyperadio->setSelectListener([]() {
-				s_skyst_stradioFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_lightflagchk) {
-			s_skyst_lightflagchk->setButtonListener([]() {
-				s_skyst_lightchkFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_shadowcasterchk) {
-			s_skyst_shadowcasterchk->setButtonListener([]() {
-				s_skyst_shadowcasterchkFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_normaly0chk) {
-			s_skyst_normaly0chk->setButtonListener([]() {
-				s_skyst_normaly0chkFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_spccoefslider) {
-			s_skyst_spccoefslider->setCursorListener([]() {
-				s_skyst_spccoefsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_emissionchk) {
-			s_skyst_emissionchk->setButtonListener([]() {
-				s_skyst_emissionchkFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_emissionslider) {
-			s_skyst_emissionslider->setCursorListener([]() {
-				s_skyst_emissionsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_metalslider) {
-			s_skyst_metalslider->setCursorListener([]() {
-				s_skyst_metalsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_smoothslider) {
-			s_skyst_smoothslider->setCursorListener([]() {
-				s_skyst_smoothsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_litscaleslider1) {
-			s_skyst_litscaleslider1->setCursorListener([]() {
-				s_skyst_litscale1Flag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_litscaleslider2) {
-			s_skyst_litscaleslider2->setCursorListener([]() {
-				s_skyst_litscale2Flag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_litscaleslider3) {
-			s_skyst_litscaleslider3->setCursorListener([]() {
-				s_skyst_litscale3Flag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_litscaleslider4) {
-			s_skyst_litscaleslider4->setCursorListener([]() {
-				s_skyst_litscale4Flag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_litscaleslider5) {
-			s_skyst_litscaleslider5->setCursorListener([]() {
-				s_skyst_litscale5Flag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_litscaleslider6) {
-			s_skyst_litscaleslider6->setCursorListener([]() {
-				s_skyst_litscale6Flag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_litscaleslider7) {
-			s_skyst_litscaleslider7->setCursorListener([]() {
-				s_skyst_litscale7Flag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_litscaleslider8) {
-			s_skyst_litscaleslider8->setCursorListener([]() {
-				s_skyst_litscale8Flag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonlitradio) {
-			s_skyst_toonlitradio->setSelectListener([]() {
-				s_skyst_toonlitradioFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonhiaddrslider) {
-			s_skyst_toonhiaddrslider->setCursorListener([]() {
-				s_skyst_toonhiaddrsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-			s_skyst_toonhiaddrslider->setLUpListener([]() {
-				s_skyst_remakeToonTextureFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonlowaddrslider) {
-			s_skyst_toonlowaddrslider->setCursorListener([]() {
-				s_skyst_toonlowaddrsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-			s_skyst_toonlowaddrslider->setLUpListener([]() {
-				s_skyst_remakeToonTextureFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_gradationchk) {
-			s_skyst_gradationchk->setButtonListener([]() {
-				s_skyst_gradationchkFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_powertoonchk) {
-			s_skyst_powertoonchk->setButtonListener([]() {
-				s_skyst_powertoonchkFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonbaseHslider) {
-			s_skyst_toonbaseHslider->setCursorListener([]() {
-				s_skyst_toolbaseHsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonbaseSslider) {
-			s_skyst_toonbaseSslider->setCursorListener([]() {
-				s_skyst_toolbaseSsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonbaseVslider) {
-			s_skyst_toonbaseVslider->setCursorListener([]() {
-				s_skyst_toolbaseVsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonbaseAslider) {
-			s_skyst_toonbaseAslider->setCursorListener([]() {
-				s_skyst_toolbaseAsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonbaseHslider) {
-			s_skyst_toonbaseHslider->setLUpListener([]() {
-				s_skyst_remakeToonTextureFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonbaseSslider) {
-			s_skyst_toonbaseSslider->setLUpListener([]() {
-				s_skyst_remakeToonTextureFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonbaseVslider) {
-			s_skyst_toonbaseVslider->setLUpListener([]() {
-				s_skyst_remakeToonTextureFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonbaseAslider) {
-			s_skyst_toonbaseAslider->setLUpListener([]() {
-				s_skyst_remakeToonTextureFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-
-		if (s_skyst_toonhiHslider) {
-			s_skyst_toonhiHslider->setCursorListener([]() {
-				s_skyst_toolhiHsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonhiSslider) {
-			s_skyst_toonhiSslider->setCursorListener([]() {
-				s_skyst_toolhiSsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonhiVslider) {
-			s_skyst_toonhiVslider->setCursorListener([]() {
-				s_skyst_toolhiVsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonhiAslider) {
-			s_skyst_toonhiAslider->setCursorListener([]() {
-				s_skyst_toolhiAsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonhiHslider) {
-			s_skyst_toonhiHslider->setLUpListener([]() {
-				s_skyst_remakeToonTextureFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonhiSslider) {
-			s_skyst_toonhiSslider->setLUpListener([]() {
-				s_skyst_remakeToonTextureFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonhiVslider) {
-			s_skyst_toonhiVslider->setLUpListener([]() {
-				s_skyst_remakeToonTextureFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonhiAslider) {
-			s_skyst_toonhiAslider->setLUpListener([]() {
-				s_skyst_remakeToonTextureFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-
-		if (s_skyst_toonlowHslider) {
-			s_skyst_toonlowHslider->setCursorListener([]() {
-				s_skyst_toollowHsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonlowSslider) {
-			s_skyst_toonlowSslider->setCursorListener([]() {
-				s_skyst_toollowSsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonlowVslider) {
-			s_skyst_toonlowVslider->setCursorListener([]() {
-				s_skyst_toollowVsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonlowAslider) {
-			s_skyst_toonlowAslider->setCursorListener([]() {
-				s_skyst_toollowAsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonlowHslider) {
-			s_skyst_toonlowHslider->setLUpListener([]() {
-				s_skyst_remakeToonTextureFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonlowSslider) {
-			s_skyst_toonlowSslider->setLUpListener([]() {
-				s_skyst_remakeToonTextureFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonlowVslider) {
-			s_skyst_toonlowVslider->setLUpListener([]() {
-				s_skyst_remakeToonTextureFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_toonlowAslider) {
-			s_skyst_toonlowAslider->setLUpListener([]() {
-				s_skyst_remakeToonTextureFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-
-		if (s_skyst_tilingUslider) {
-			s_skyst_tilingUslider->setCursorListener([]() {
-				s_skyst_tilingUsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-			s_skyst_tilingUslider->setLUpListener([]() {
-				s_skyst_tilingUsliderUpFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_tilingVslider) {
-			s_skyst_tilingVslider->setCursorListener([]() {
-				s_skyst_tilingVsliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-			s_skyst_tilingVslider->setLUpListener([]() {
-				s_skyst_tilingVsliderUpFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-
-		if (s_skyst_alphatestslider) {
-			s_skyst_alphatestslider->setCursorListener([]() {
-				s_skyst_alphatestesliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-
-		if (s_skyst_distortionchk) {
-			s_skyst_distortionchk->setButtonListener([]() {
-				s_skyst_distortionchkFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-		if (s_skyst_distortionscaleslider) {
-			s_skyst_distortionscaleslider->setCursorListener([]() {
-				s_skyst_distortionscalesliderFlag = true;
-				if (s_skyst_paramsWnd) {
-					s_skyst_paramsWnd->callRewrite();//再描画
-				}
-				});
-		}
-
-		//if (s_skyst_riverradio) {
-		//	s_skyst_riverradio->setSelectListener([]() {
-		//		s_skyst_riverradioFlag = true; 			
-		//		if (s_skyst_paramsWnd) {
-		//			s_skyst_paramsWnd->callRewrite();//再描画
-		//		}
-		//	});
-		//}
-
-		//if (s_skyst_seacenterUslider) {
-		//	s_skyst_seacenterUslider->setCursorListener([]() {
-		//		s_skyst_seacenterUsliderFlag = true; 			
-		//		if (s_skyst_paramsWnd) {
-		//			s_skyst_paramsWnd->callRewrite();//再描画
-		//		}
-		//	});
-		//}
-		//if (s_skyst_seacenterVslider) {
-		//	s_skyst_seacenterVslider->setCursorListener([]() {
-		//		s_skyst_seacenterVsliderFlag = true; 			
-		//		if (s_skyst_paramsWnd) {
-		//			s_skyst_paramsWnd->callRewrite();//再描画
-		//		}
-		//	});
-		//}
-
-		//if (s_skyst_riverdirUslider) {
-		//	s_skyst_riverdirUslider->setCursorListener([]() {
-		//		s_skyst_riverdirUsliderFlag = true; 			
-		//		if (s_skyst_paramsWnd) {
-		//			s_skyst_paramsWnd->callRewrite();//再描画
-		//		}
-		//	});
-		//}
-		//if (s_skyst_riverdirVslider) {
-		//	s_skyst_riverdirVslider->setCursorListener([]() {
-		//		s_skyst_riverdirVsliderFlag = true; 			
-		//		if (s_skyst_paramsWnd) {
-		//			s_skyst_paramsWnd->callRewrite();//再描画
-		//		}
-		//	});
-		//}
-
-		//if (s_skyst_flowrateslider) {
-		//	s_skyst_flowrateslider->setCursorListener([]() {
-		//		s_skyst_flowratesliderFlag = true; 			
-		//		if (s_skyst_paramsWnd) {
-		//			s_skyst_paramsWnd->callRewrite();//再描画
-		//		}
-		//	});
-		//}
-
-		//if (s_skyst_distortionmapradio) {
-		//	s_skyst_distortionmapradio->setSelectListener([]() {
-		//		s_skyst_distortionmapradioFlag = true;
-		//		if (s_skyst_paramsWnd) {
-		//			s_skyst_paramsWnd->callRewrite();//再描画
-		//		}
-		//	});
-		//}
-
-
-
-		s_skyst_paramsWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
-		s_skyst_paramsWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
-
-		//１クリック目問題対応
-		s_skyst_slotsp1_0->autoResize();//_1, _2よりも前で
-		s_skyst_slotsp1_1->autoResize();
-		s_skyst_slotsp1_2->autoResize();
-		s_skyst_slotsp2_0->autoResize();//_1, _2よりも前で
-		s_skyst_slotsp2_1->autoResize();
-		s_skyst_slotsp2_2->autoResize();
-
-		s_skyst_paramsWnd->refreshPosAndSize();//2022/09/20
-
-
-		s_skyst_paramsWnd->callRewrite();						//再描画
-		//s_skyst_paramsWnd->setVisible(false);
-
-
-		s_rcshadertypeparamswnd.top = s_sidemenuheight;
-		s_rcshadertypeparamswnd.left = 0;
-		s_rcshadertypeparamswnd.bottom = s_sideheight;
-		s_rcshadertypeparamswnd.right = s_sidewidth;
-
-
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-
-	return 0;
-
-}
-
-int OnFrameSkyParamsDlg()
+int OnFrameSkyParamsDlg()//OnFrameToolWnd()から呼び出す
 {
 	if (s_skyparamsFlag) {
 		s_skyparamsFlag = false;
@@ -52908,19 +50135,19 @@ int OnFrameSkyParamsDlg()
 		}
 	}
 
-	//static int s_skyst_slotindex = 0;
-	//static bool s_skyst_slotFlag = false;
-	if (s_skyst_slotFlag) {
-		s_skyst_slotFlag = false;
-		if ((s_skyst_slotindex >= 0) && (s_skyst_slotindex < 8)) {
-			g_skyindex = s_skyst_slotindex;
+	if (s_skyparamsdlg.GetSkySlotFlag()) {
+		s_skyparamsdlg.SetSkySlotFlag(false);
+		int slotindex = s_skyparamsdlg.GetSkySlotIndex();
+		if ((slotindex >= 0) && (slotindex < 8)) {
+			g_skyindex = slotindex;
 
 			SetSkyParamsToSky(s_skyparams[g_skyindex]);
-			if (s_sky) {
-				CMQOMaterial* curmqomat = nullptr;
-				curmqomat = s_sky->GetMQOMaterialByIndex(0);
-				SetMaterial2SkyParamsDlg(curmqomat);
-			}
+			//if (s_sky) {
+			//	CMQOMaterial* curmqomat = nullptr;
+			//	curmqomat = s_sky->GetMQOMaterialByIndex(0);
+			//	s_skyparamsdlg.ParamsToDlg(s_sky, curmqomat, &(s_skyparams[g_skyindex]));
+			//}
+			ShowSkyWnd(true);
 		}
 		else {
 			_ASSERT(0);
@@ -52928,16 +50155,16 @@ int OnFrameSkyParamsDlg()
 	}
 
 
-	if (s_skyst_stradioFlag) {
-		s_skyst_stradioFlag = false;
-		if (s_skyst_shadertyperadio && s_sky) {
+	if (s_skyparamsdlg.GetSkyStRadioFlag()) {
+		s_skyparamsdlg.SetSkyStRadioFlag(false);
+		if (s_sky) {
 
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			int shadertype = s_skyst_shadertyperadio->getSelectIndex();
+			int shadertype = s_skyparamsdlg.GetSkyTypeRadio();
 			switch (shadertype) {
 			case 0:
 				if (curmqomat) {
@@ -53006,17 +50233,18 @@ int OnFrameSkyParamsDlg()
 				_ASSERT(0);
 				break;
 			}
+
 		}
 	}
-	if (s_skyst_lightchkFlag) {
-		s_skyst_lightchkFlag = false;
-		if (s_skyst_lightflagchk && s_sky) {
+	if (s_skyparamsdlg.GetSkyLightChkFlag()) {
+		s_skyparamsdlg.SetSkyLightChkFlag(false);
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			bool ischecked = s_skyst_lightflagchk->getValue();
+			bool ischecked = s_skyparamsdlg.GetSkyLightFlagChk();
 			if (ischecked) {
 				s_skyparams[g_skyindex].lightingmat = true;
 			}
@@ -53038,15 +50266,15 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_shadowcasterchkFlag) {
-		s_skyst_shadowcasterchkFlag = false;
-		if (s_skyst_shadowcasterchk && s_sky) {
+	if (s_skyparamsdlg.GetSkyShadowCasterChkFlag()) {
+		s_skyparamsdlg.SetSkyShadowCasterChkFlag(false);
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			bool ischecked = s_skyst_shadowcasterchk->getValue();
+			bool ischecked = s_skyparamsdlg.GetSkyShadowCasterChk();
 			if (ischecked) {
 				s_skyparams[g_skyindex].shadowcasterflag = true;
 			}
@@ -53068,15 +50296,15 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_normaly0chkFlag) {
-		s_skyst_normaly0chkFlag = false;
-		if (s_skyst_normaly0chk && s_sky) {
+	if (s_skyparamsdlg.GetSkyNormalY0ChkFlag()) {
+		s_skyparamsdlg.SetSkyNormalY0ChkFlag(false);
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			bool ischecked = s_skyst_normaly0chk->getValue();
+			bool ischecked = s_skyparamsdlg.GetShadowNormalY0Chk();
 			if (ischecked) {
 				s_skyparams[g_skyindex].normaly0flag = true;
 			}
@@ -53098,15 +50326,15 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_spccoefsliderFlag) {
-		s_skyst_spccoefsliderFlag = false;
-		if (s_skyst_spccoefslider && s_sky) {
+	if (s_skyparamsdlg.GetSkySpcCoefSliderFlag()) {
+		s_skyparamsdlg.SetSkySpcCoefSliderFlag(false);
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			float newspcscale = (float)s_skyst_spccoefslider->getValue();
+			float newspcscale = s_skyparamsdlg.GetSkySpcCoefSlider();
 			s_skyparams[g_skyindex].specularcoef = newspcscale;
 
 			if (curmqomat) {
@@ -53123,16 +50351,16 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_emissionchkFlag) {
-		s_skyst_emissionchkFlag = false;
+	if (s_skyparamsdlg.GetSkyEmissionChkFlag()) {
+		s_skyparamsdlg.SetSkyEmissionChkFlag(false);
 
-		if (s_skyst_emissionchk && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			bool ischecked = s_skyst_emissionchk->getValue();
+			bool ischecked = s_skyparamsdlg.GetSkyEmissionChk();
 			if (ischecked) {
 				s_skyparams[g_skyindex].enableEmission = true;
 			}
@@ -53154,16 +50382,16 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_emissionsliderFlag) {
-		s_skyst_emissionsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyEmissionSliderFlag()) {
+		s_skyparamsdlg.SetSkyEmissionSliderFlag(false);
 
-		if (s_skyst_emissionslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			float newemiscale = (float)s_skyst_emissionslider->getValue();
+			float newemiscale = s_skyparamsdlg.GetSkyEmissionSlider();
 			s_skyparams[g_skyindex].emissiveScale = newemiscale;
 
 			if (curmqomat) {
@@ -53180,16 +50408,16 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_metalsliderFlag) {
-		s_skyst_metalsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyMetalSliderFlag()) {
+		s_skyparamsdlg.SetSkyMetalSliderFlag(false);
 
-		if (s_skyst_metalslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			float newmetalcoef = (float)s_skyst_metalslider->getValue();
+			float newmetalcoef = s_skyparamsdlg.GetSkyMetalSlider();
 			s_skyparams[g_skyindex].metalcoef = newmetalcoef;
 
 			if (curmqomat) {
@@ -53206,16 +50434,16 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_smoothsliderFlag) {
-		s_skyst_smoothsliderFlag = false;
+	if (s_skyparamsdlg.GetSkySmoothSliderFlag()) {
+		s_skyparamsdlg.SetSkySmoothSliderFlag(false);
 
-		if (s_skyst_smoothslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			float newsmoothcoef = (float)s_skyst_smoothslider->getValue();
+			float newsmoothcoef = s_skyparamsdlg.GetSkySmoothSlider();
 			s_skyparams[g_skyindex].smoothcoef = newsmoothcoef;
 
 			if (curmqomat) {
@@ -53232,17 +50460,17 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_litscale1Flag) {
-		s_skyst_litscale1Flag = false;
+	if (s_skyparamsdlg.GetSkyLitScale1Flag()) {
+		s_skyparamsdlg.SetSkyLitScale1Flag(false);
 
-		if (s_skyst_litscaleslider1 && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
 			int litno4 = 0;//!!!
-			float newlitscale = (float)s_skyst_litscaleslider1->getValue();
+			float newlitscale = s_skyparamsdlg.GetSkyLitScaleSlider1();
 			s_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
 
 			if (curmqomat) {
@@ -53259,17 +50487,17 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_litscale2Flag) {
-		s_skyst_litscale2Flag = false;
+	if (s_skyparamsdlg.GetSkyLitScale2Flag()) {
+		s_skyparamsdlg.SetSkyLitScale2Flag(false);
 
-		if (s_skyst_litscaleslider2 && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
 			int litno4 = 1;//!!!
-			float newlitscale = (float)s_skyst_litscaleslider2->getValue();
+			float newlitscale = s_skyparamsdlg.GetSkyLitScaleSlider2();
 			s_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
 
 			if (curmqomat) {
@@ -53286,17 +50514,17 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_litscale3Flag) {
-		s_skyst_litscale3Flag = false;
+	if (s_skyparamsdlg.GetSkyLitScale3Flag()) {
+		s_skyparamsdlg.SetSkyLitScale3Flag(false);
 
-		if (s_skyst_litscaleslider1 && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
 			int litno4 = 2;//!!!
-			float newlitscale = (float)s_skyst_litscaleslider3->getValue();
+			float newlitscale = s_skyparamsdlg.GetSkyLitScaleSlider3();
 			s_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
 
 			if (curmqomat) {
@@ -53313,17 +50541,17 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_litscale4Flag) {
-		s_skyst_litscale4Flag = false;
+	if (s_skyparamsdlg.GetSkyLitScale4Flag()) {
+		s_skyparamsdlg.SetSkyLitScale4Flag(false);
 
-		if (s_skyst_litscaleslider4 && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
 			int litno4 = 3;//!!!
-			float newlitscale = (float)s_skyst_litscaleslider4->getValue();
+			float newlitscale = s_skyparamsdlg.GetSkyLitScaleSlider4();
 			s_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
 
 			if (curmqomat) {
@@ -53340,17 +50568,17 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_litscale5Flag) {
-		s_skyst_litscale5Flag = false;
+	if (s_skyparamsdlg.GetSkyLitScale5Flag()) {
+		s_skyparamsdlg.SetSkyLitScale5Flag(false);
 
-		if (s_skyst_litscaleslider1 && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
 			int litno4 = 4;//!!!
-			float newlitscale = (float)s_skyst_litscaleslider5->getValue();
+			float newlitscale = s_skyparamsdlg.GetSkyLitScaleSlider5();
 			s_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
 
 			if (curmqomat) {
@@ -53367,17 +50595,17 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_litscale6Flag) {
-		s_skyst_litscale6Flag = false;
+	if (s_skyparamsdlg.GetSkyLitScale6Flag()) {
+		s_skyparamsdlg.SetSkyLitScale6Flag(false);
 
-		if (s_skyst_litscaleslider6 && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
 			int litno4 = 5;//!!!
-			float newlitscale = (float)s_skyst_litscaleslider6->getValue();
+			float newlitscale = s_skyparamsdlg.GetSkyLitScaleSlider6();
 			s_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
 
 			if (curmqomat) {
@@ -53394,17 +50622,17 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_litscale7Flag) {
-		s_skyst_litscale7Flag = false;
+	if (s_skyparamsdlg.GetSkyLitScale7Flag()) {
+		s_skyparamsdlg.SetSkyLitScale7Flag(false);
 
-		if (s_skyst_litscaleslider7 && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
 			int litno4 = 6;//!!!
-			float newlitscale = (float)s_skyst_litscaleslider7->getValue();
+			float newlitscale = s_skyparamsdlg.GetSkyLitScaleSlider7();
 			s_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
 
 			if (curmqomat) {
@@ -53421,17 +50649,17 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_litscale8Flag) {
-		s_skyst_litscale8Flag = false;
+	if (s_skyparamsdlg.GetSkyLitScale8Flag()) {
+		s_skyparamsdlg.SetSkyLitScale8Flag(false);
 
-		if (s_skyst_litscaleslider8 && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
 			int litno4 = 7;//!!!
-			float newlitscale = (float)s_skyst_litscaleslider8->getValue();
+			float newlitscale = s_skyparamsdlg.GetSkyLitScaleSlider8();
 			s_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
 
 			if (curmqomat) {
@@ -53448,16 +50676,16 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_toonlitradioFlag) {
-		s_skyst_toonlitradioFlag = false;
+	if (s_skyparamsdlg.GetSkyToonLitRadioFlag()) {
+		s_skyparamsdlg.SetSkyToonLitRadioFlag(false);
 
-		if (s_skyst_toonlitradio && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			int lightindex = s_skyst_toonlitradio->getSelectIndex();
+			int lightindex = s_skyparamsdlg.GetSkyToonLitRadio();
 			s_skyparams[g_skyindex].hsvtoon.lightindex = lightindex;
 
 			if (curmqomat) {
@@ -53474,16 +50702,16 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_toonhiaddrsliderFlag) {
-		s_skyst_toonhiaddrsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyToonHiAddrSliderFlag()) {
+		s_skyparamsdlg.SetSkyToonHiAddrSliderFlag(false);
 
-		if (s_skyst_toonhiaddrslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			float hicolorh = (float)s_skyst_toonhiaddrslider->getValue();
+			float hicolorh = s_skyparamsdlg.GetSkyToonHiAddrSlider();
 			s_skyparams[g_skyindex].hsvtoon.hicolorh = hicolorh;
 
 			if (curmqomat) {
@@ -53501,10 +50729,10 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_remakeToonTextureFlag) {
-		s_skyst_remakeToonTextureFlag = false;
+	if (s_skyparamsdlg.GetSkyRemakeToonTextureFlag()) {
+		s_skyparamsdlg.SetSkyRemakeToonTextureFlag(false);
 
-		if (s_skyst_toonhiaddrslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
@@ -53519,16 +50747,16 @@ int OnFrameSkyParamsDlg()
 			s_toonparamchange = true;
 		}
 	}
-	if (s_skyst_toonlowaddrsliderFlag) {
-		s_skyst_toonlowaddrsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyToonLowAddrSliderFlag()) {
+		s_skyparamsdlg.SetSkyToonLowAddrSliderFlag(false);
 
-		if (s_skyst_toonlowaddrslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			float lowcolorh = (float)s_skyst_toonhiaddrslider->getValue();
+			float lowcolorh = s_skyparamsdlg.GetSkyToonLowAddrSlider();
 			s_skyparams[g_skyindex].hsvtoon.lowcolorh = lowcolorh;
 
 			if (curmqomat) {
@@ -53546,16 +50774,16 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_gradationchkFlag) {
-		s_skyst_gradationchkFlag = false;
+	if (s_skyparamsdlg.GetSkyGradationChkFlag()) {
+		s_skyparamsdlg.SetSkyGradationChkFlag(false);
 
-		if (s_skyst_gradationchk && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			bool ischecked = s_skyst_gradationchk->getValue();
+			bool ischecked = s_skyparamsdlg.GetSkyGradationChk();
 			if (ischecked) {
 				s_skyparams[g_skyindex].hsvtoon.gradationflag = true;
 			}
@@ -53586,16 +50814,16 @@ int OnFrameSkyParamsDlg()
 			s_toonparamchange = true;
 		}
 	}
-	if (s_skyst_powertoonchkFlag) {
-		s_skyst_powertoonchkFlag = false;
+	if (s_skyparamsdlg.GetSkyPowerToonChkFlag()) {
+		s_skyparamsdlg.SetSkyPowerToonChkFlag(false);
 
-		if (s_skyst_powertoonchk && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			bool ischecked = s_skyst_powertoonchk->getValue();
+			bool ischecked = s_skyparamsdlg.GetSkyPowerToonChk();
 			if (ischecked) {
 				s_skyparams[g_skyindex].hsvtoon.powertoon = true;
 			}
@@ -53626,16 +50854,16 @@ int OnFrameSkyParamsDlg()
 			s_toonparamchange = true;
 		}
 	}
-	if (s_skyst_toolbaseHsliderFlag) {
-		s_skyst_toolbaseHsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyToonBaseHSliderFlag()) {
+		s_skyparamsdlg.SetSkyToonBaseHSliderFlag(false);
 
-		if (s_skyst_toonbaseHslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			s_skyparams[g_skyindex].hsvtoon.basehsv.x = (float)s_skyst_toonbaseHslider->getValue();
+			s_skyparams[g_skyindex].hsvtoon.basehsv.x = s_skyparamsdlg.GetSkyToonBaseHSlider();
 
 			if (curmqomat) {
 				curmqomat->SetToonBaseH(s_skyparams[g_skyindex].hsvtoon.basehsv.x);
@@ -53652,16 +50880,16 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_toolbaseSsliderFlag) {
-		s_skyst_toolbaseSsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyToonBaseSSliderFlag()) {
+		s_skyparamsdlg.SetSkyToonBaseSSliderFlag(false);
 
-		if (s_skyst_toonbaseSslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			s_skyparams[g_skyindex].hsvtoon.basehsv.y = (float)s_skyst_toonbaseSslider->getValue();
+			s_skyparams[g_skyindex].hsvtoon.basehsv.y = s_skyparamsdlg.GetSkyToonBaseSSlider();
 
 			if (curmqomat) {
 				curmqomat->SetToonBaseS(s_skyparams[g_skyindex].hsvtoon.basehsv.y);
@@ -53678,16 +50906,16 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_toolbaseVsliderFlag) {
-		s_skyst_toolbaseVsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyToonBaseVSliderFlag()) {
+		s_skyparamsdlg.SetSkyToonBaseVSliderFlag(false);
 
-		if (s_skyst_toonbaseVslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			s_skyparams[g_skyindex].hsvtoon.basehsv.z = (float)s_skyst_toonbaseVslider->getValue();
+			s_skyparams[g_skyindex].hsvtoon.basehsv.z = s_skyparamsdlg.GetSkyToonBaseVSlider();
 
 			if (curmqomat) {
 				curmqomat->SetToonBaseV(s_skyparams[g_skyindex].hsvtoon.basehsv.z);
@@ -53704,16 +50932,16 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_toolbaseAsliderFlag) {
-		s_skyst_toolbaseAsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyToonBaseASliderFlag()) {
+		s_skyparamsdlg.SetSkyToonBaseASliderFlag(false);
 
-		if (s_skyst_toonbaseAslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			s_skyparams[g_skyindex].hsvtoon.basehsv.w = (float)s_skyst_toonbaseAslider->getValue();
+			s_skyparams[g_skyindex].hsvtoon.basehsv.w = s_skyparamsdlg.GetSkyToonBaseASlider();
 
 			if (curmqomat) {
 				curmqomat->SetToonBaseA(s_skyparams[g_skyindex].hsvtoon.basehsv.w);
@@ -53730,16 +50958,16 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_toolhiHsliderFlag) {
-		s_skyst_toolhiHsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyToonHiHSliderFlag()) {
+		s_skyparamsdlg.SetSkyToonHiHSliderFlag(false);
 
-		if (s_skyst_toonhiHslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			float newvalue = (float)s_skyst_toonhiHslider->getValue();
+			float newvalue = s_skyparamsdlg.GetSkyToonHiHSlider();
 			s_skyparams[g_skyindex].hsvtoon.hiaddhsv.x = newvalue;
 
 			if (curmqomat) {
@@ -53757,16 +50985,16 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_toolhiSsliderFlag) {
-		s_skyst_toolhiSsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyToonHiSSliderFlag()) {
+		s_skyparamsdlg.SetSkyToonHiSSliderFlag(false);
 
-		if (s_skyst_toonhiSslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			float newvalue = (float)s_skyst_toonhiSslider->getValue();
+			float newvalue = s_skyparamsdlg.GetSkyToonHiSSlider();
 			s_skyparams[g_skyindex].hsvtoon.hiaddhsv.y = newvalue;
 
 			if (curmqomat) {
@@ -53784,16 +51012,16 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_toolhiVsliderFlag) {
-		s_skyst_toolhiVsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyToonHiVSliderFlag()) {
+		s_skyparamsdlg.SetSkyToonHiVSliderFlag(false);
 
-		if (s_skyst_toonhiVslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			float newvalue = (float)s_skyst_toonhiVslider->getValue();
+			float newvalue = s_skyparamsdlg.GetSkyToonHiVSlider();
 			s_skyparams[g_skyindex].hsvtoon.hiaddhsv.z = newvalue;
 
 			if (curmqomat) {
@@ -53811,16 +51039,16 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_toolhiAsliderFlag) {
-		s_skyst_toolhiAsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyToonHiASliderFlag()) {
+		s_skyparamsdlg.SetSkyToonHiASliderFlag(false);
 
-		if (s_skyst_toonhiAslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			float newvalue = (float)s_skyst_toonhiAslider->getValue();
+			float newvalue = s_skyparamsdlg.GetSkyToonHiASlider();
 			s_skyparams[g_skyindex].hsvtoon.hiaddhsv.w = newvalue;
 
 			if (curmqomat) {
@@ -53838,17 +51066,17 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_toollowHsliderFlag) {
-		s_skyst_toollowHsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyToonLowHSliderFlag()) {
+		s_skyparamsdlg.SetSkyToonLowHSliderFlag(false);
 
-		if (s_skyst_toonlowHslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
 
-			float newvalue = (float)s_skyst_toonlowHslider->getValue();
+			float newvalue = s_skyparamsdlg.GetSkyToonLowHSlider();
 			s_skyparams[g_skyindex].hsvtoon.lowaddhsv.x = newvalue;
 
 			if (curmqomat) {
@@ -53866,17 +51094,17 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_toollowSsliderFlag) {
-		s_skyst_toollowSsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyToonLowSSliderFlag()) {
+		s_skyparamsdlg.SetSkyToonLowSSliderFlag(false);
 
-		if (s_skyst_toonlowSslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
 
-			float newvalue = (float)s_skyst_toonlowSslider->getValue();
+			float newvalue = s_skyparamsdlg.GetSkyToonLowSSlider();
 			s_skyparams[g_skyindex].hsvtoon.lowaddhsv.y = newvalue;
 
 			if (curmqomat) {
@@ -53894,17 +51122,17 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_toollowVsliderFlag) {
-		s_skyst_toollowVsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyToonLowVSliderFlag()) {
+		s_skyparamsdlg.SetSkyToonLowVSliderFlag(false);
 
-		if (s_skyst_toonlowVslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
 
-			float newvalue = (float)s_skyst_toonlowVslider->getValue();
+			float newvalue = s_skyparamsdlg.GetSkyToonLowVSlider();
 			s_skyparams[g_skyindex].hsvtoon.lowaddhsv.z = newvalue;
 
 			if (curmqomat) {
@@ -53922,17 +51150,17 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_toollowAsliderFlag) {
-		s_skyst_toollowAsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyToonLowASliderFlag()) {
+		s_skyparamsdlg.SetSkyToonLowASliderFlag(false);
 
-		if (s_skyst_toonlowAslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
 
-			float newvalue = (float)s_skyst_toonlowAslider->getValue();
+			float newvalue = s_skyparamsdlg.GetSkyToonLowASlider();
 			s_skyparams[g_skyindex].hsvtoon.lowaddhsv.w = newvalue;
 
 			if (curmqomat) {
@@ -53950,16 +51178,16 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_tilingUsliderFlag) {
-		s_skyst_tilingUsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyTilingUSliderFlag()) {
+		s_skyparamsdlg.SetSkyTilingUSliderFlag(false);
 
-		if (s_skyst_tilingUslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			int newvalue = (int)(s_skyst_tilingUslider->getValue() + 0.0001);
+			int newvalue = s_skyparamsdlg.GetSkyTilingUSlider();
 			s_skyparams[g_skyindex].uvscale.x = (double)newvalue;
 
 			if (curmqomat) {
@@ -53976,26 +51204,26 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_tilingUsliderUpFlag) {
-		s_skyst_tilingUsliderUpFlag = false;
+	if (s_skyparamsdlg.GetSkyTilingUSliderUpFlag()) {
+		s_skyparamsdlg.SetSkyTilingUSliderUpFlag(false);
 
-		if (s_skyst_tilingUslider && s_sky) {
-			int newvalue = (int)(s_skyst_tilingUslider->getValue() + 0.0001);
+		if (s_sky) {
+			int newvalue = s_skyparamsdlg.GetSkyTilingUSlider();
 			s_skyparams[g_skyindex].uvscale.x = (double)newvalue;
-
-			s_skyst_tilingUslider->setValue(s_skyparams[g_skyindex].uvscale.x, false);//!!! マウスを離したときにintに丸めた値をセットし直す
+			s_skyparamsdlg.SetSkyTilingUSlider(newvalue);
+			//s_st_tilingUslider->setValue(s_skyparams[g_skyindex].uvscale.x, false);//!!! マウスを離したときにintに丸めた値をセットし直す
 		}
 	}
-	if (s_skyst_tilingVsliderFlag) {
-		s_skyst_tilingVsliderFlag = false;
+	if (s_skyparamsdlg.GetSkyTilingVSliderFlag()) {
+		s_skyparamsdlg.SetSkyTilingVSliderFlag(false);
 
-		if (s_skyst_tilingVslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			int newvalue = (int)(s_skyst_tilingVslider->getValue() + 0.0001);
+			int newvalue = s_skyparamsdlg.GetSkyTilingVSlider();
 			s_skyparams[g_skyindex].uvscale.y = (double)newvalue;
 
 			if (curmqomat) {
@@ -54012,26 +51240,27 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_tilingVsliderUpFlag) {
-		s_skyst_tilingVsliderUpFlag = false;
+	if (s_skyparamsdlg.GetSkyTilingVSliderUpFlag()) {
+		s_skyparamsdlg.SetSkyTilingVSliderUpFlag(false);
 
-		if (s_skyst_tilingVslider && s_sky) {
-			int newvalue = (int)(s_skyst_tilingVslider->getValue() + 0.0001);
+		if (s_sky) {
+			int newvalue = s_skyparamsdlg.GetSkyTilingVSlider();
 			s_skyparams[g_skyindex].uvscale.y = (double)newvalue;
 
-			s_skyst_tilingVslider->setValue(s_skyparams[g_skyindex].uvscale.y, false);//!!! マウスを離したときにintに丸めた値をセットし直す
+			//s_st_tilingVslider->setValue(s_skyparams[g_skyindex].uvscale.y, false);//!!! マウスを離したときにintに丸めた値をセットし直す
+			s_skyparamsdlg.SetSkyTilingVSlider(newvalue);
 		}
 	}
-	if (s_skyst_alphatestesliderFlag) {
-		s_skyst_alphatestesliderFlag = false;
+	if (s_skyparamsdlg.GetSkyAlphaTestSliderFlag()) {
+		s_skyparamsdlg.SetSkyAlphaTestSliderFlag(false);
 
-		if (s_skyst_alphatestslider && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			s_skyparams[g_skyindex].alphatest = s_skyst_alphatestslider->getValue();
+			s_skyparams[g_skyindex].alphatest = s_skyparamsdlg.GetSkyAlphaTestSlider();
 
 			if (curmqomat) {
 				curmqomat->SetAlphaTestClipVal(s_skyparams[g_skyindex].alphatest);
@@ -54047,16 +51276,16 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_distortionchkFlag) {
-		s_skyst_distortionchkFlag = false;
+	if (s_skyparamsdlg.GetSkyDistortionChkFlag()) {
+		s_skyparamsdlg.SetSkyDistortionChkFlag(false);
 
-		if (s_skyst_distortionchk && s_sky) {
+		if (s_sky) {
 			int materialnum = s_sky->GetMQOMaterialSize();
 			materialnum = min(materialnum, MAXMATERIALNUM);
 			int materialindex = 0;//s_skyの最初のマテリアル
 			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
 
-			bool ischecked = s_skyst_distortionchk->getValue();
+			bool ischecked = s_skyparamsdlg.GetSkyDistortionChk();
 			if (ischecked) {
 				s_skyparams[g_skyindex].distortionflag = true;
 			}
@@ -54078,30 +51307,244 @@ int OnFrameSkyParamsDlg()
 			}
 		}
 	}
-	if (s_skyst_distortionscalesliderFlag) {
-		s_skyst_distortionscalesliderFlag = false;
+	if (s_skyparamsdlg.GetSkyDistortionScaleSliderFlag()) {
+		s_skyparamsdlg.SetSkyDistortionScaleSliderFlag(false);
+
+		if (s_sky) {
+			int materialnum = s_sky->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//s_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
+
+			double newvalue = s_skyparamsdlg.GetSkyDistortonScaleSlider();
+			s_skyparams[g_skyindex].distortionscale = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetDistortionScale(s_skyparams[g_skyindex].distortionscale);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetDistortionScale(s_skyparams[g_skyindex].distortionscale);
+					}
+				}
+			}
+		}
 	}
-	if (s_skyst_riverradioFlag) {
-		s_skyst_riverradioFlag = false;
-	}
-	if (s_skyst_seacenterUsliderFlag) {
-		s_skyst_seacenterUsliderFlag = false;
-	}
-	if (s_skyst_seacenterVsliderFlag) {
-		s_skyst_seacenterVsliderFlag = false;
-	}
-	if (s_skyst_riverdirUsliderFlag) {
-		s_skyst_riverdirUsliderFlag = false;
-	}
-	if (s_skyst_riverdirVsliderFlag) {
-		s_skyst_riverdirVsliderFlag = false;
-	}
-	if (s_skyst_flowratesliderFlag) {
-		s_skyst_flowratesliderFlag = false;
-	}
-	if (s_skyst_distortionmapradioFlag) {
-		s_skyst_distortionmapradioFlag = false;
-	}
+	//if (s_skyparamsdlg.GetSkyRiverRadioFlag()) {
+	//	s_skyparamsdlg.SetSkyRiverRadioFlag(false);
+
+	//	if (s_sky) {
+	//		int materialnum = s_sky->GetMQOMaterialSize();
+	//		materialnum = min(materialnum, MAXMATERIALNUM);
+	//		int materialindex = 0;//s_skyの最初のマテリアル
+	//		CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
+
+	//		int riverorsea = s_skyparamsdlg.GetSkyRiverRadio();
+	//		s_skyparams[g_skyindex].riverorsea = riverorsea;
+
+	//		if (curmqomat) {
+	//			curmqomat->SetRiverOrSea(riverorsea);
+	//		}
+	//		else {
+	//			int materialindex8;
+	//			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
+	//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex8);
+	//				if (setmqomat) {
+	//					setmqomat->SetRiverOrSea(riverorsea);
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//if (s_skyparamsdlg.GetSkySeaCenterUSliderFlag()) {
+	//	s_skyparamsdlg.SetSkySeaCenterUSliderFlag(false);
+
+	//	if (s_sky) {
+	//		int materialnum = s_sky->GetMQOMaterialSize();
+	//		materialnum = min(materialnum, MAXMATERIALNUM);
+	//		int materialindex = 0;//s_skyの最初のマテリアル
+	//		CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
+
+	//		float newvalueU = s_skyparamsdlg.GetSkySeaCenterUSlider();
+	//		float newvalueV = s_skyparamsdlg.GetSkySeaCenterVSlider();
+	//		s_skyparams[g_skyindex].seacenter.SetParams(newvalueU, newvalueV);
+
+	//		if (curmqomat) {
+	//			curmqomat->SetSeaCenter(s_skyparams[g_skyindex].seacenter);
+	//		}
+	//		else {
+	//			int materialindex9;
+	//			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+	//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex9);
+	//				if (setmqomat) {
+	//					setmqomat->SetSeaCenter(s_skyparams[g_skyindex].seacenter);
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//if (s_skyparamsdlg.GetSkySeaCenterVSliderFlag()) {
+	//	s_skyparamsdlg.SetSkySeaCenterVSliderFlag(false);
+
+	//	if (s_sky) {
+	//		int materialnum = s_sky->GetMQOMaterialSize();
+	//		materialnum = min(materialnum, MAXMATERIALNUM);
+	//		int materialindex = 0;//s_skyの最初のマテリアル
+	//		CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
+
+	//		float newvalueU = s_skyparamsdlg.GetSkySeaCenterUSlider();
+	//		float newvalueV = s_skyparamsdlg.GetSkySeaCenterVSlider();
+	//		s_skyparams[g_skyindex].seacenter.SetParams(newvalueU, newvalueV);
+
+	//		if (curmqomat) {
+	//			curmqomat->SetSeaCenter(s_skyparams[g_skyindex].seacenter);
+	//		}
+	//		else {
+	//			int materialindex9;
+	//			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+	//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex9);
+	//				if (setmqomat) {
+	//					setmqomat->SetSeaCenter(s_skyparams[g_skyindex].seacenter);
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//if (s_skyparamsdlg.GetSkyRiverDirUSliderFlag()) {
+	//	s_skyparamsdlg.SetSkyRiverDirUSliderFlag(false);
+
+	//	if (s_sky) {
+	//		int materialnum = s_sky->GetMQOMaterialSize();
+	//		materialnum = min(materialnum, MAXMATERIALNUM);
+	//		int materialindex = 0;//s_skyの最初のマテリアル
+	//		CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
+
+	//		float newvalueU = s_skyparamsdlg.GetSkyRiverDirUSlider();
+	//		float newvalueV = s_skyparamsdlg.GetSkyRiverDirVSlider();
+	//		s_skyparams[g_skyindex].riverdir.SetParams(newvalueU, newvalueV);
+
+	//		if (curmqomat) {
+	//			curmqomat->SetRiverDir(s_skyparams[g_skyindex].riverdir);
+	//		}
+	//		else {
+	//			int materialindex9;
+	//			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+	//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex9);
+	//				if (setmqomat) {
+	//					setmqomat->SetRiverDir(s_skyparams[g_skyindex].riverdir);
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//if (s_skyparamsdlg.GetSkyRiverDirVSliderFlag()) {
+	//	s_skyparamsdlg.SetSkyRiverDirVSliderFlag(false);
+
+	//	if (s_sky) {
+	//		int materialnum = s_sky->GetMQOMaterialSize();
+	//		materialnum = min(materialnum, MAXMATERIALNUM);
+	//		int materialindex = 0;//s_skyの最初のマテリアル
+	//		CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
+
+	//		float newvalueU = s_skyparamsdlg.GetSkyRiverDirUSlider();
+	//		float newvalueV = s_skyparamsdlg.GetSkyRiverDirVSlider();
+	//		s_skyparams[g_skyindex].riverdir.SetParams(newvalueU, newvalueV);
+
+	//		if (curmqomat) {
+	//			curmqomat->SetRiverDir(s_skyparams[g_skyindex].riverdir);
+	//		}
+	//		else {
+	//			int materialindex9;
+	//			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+	//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex9);
+	//				if (setmqomat) {
+	//					setmqomat->SetRiverDir(s_skyparams[g_skyindex].riverdir);
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//if (s_skyparamsdlg.GetSkyFlowRateSliderFlag()) {
+	//	s_skyparamsdlg.SetSkyFlowRateSliderFlag(false);
+
+	//	if (s_sky) {
+	//		int materialnum = s_sky->GetMQOMaterialSize();
+	//		materialnum = min(materialnum, MAXMATERIALNUM);
+	//		int materialindex = 0;//s_skyの最初のマテリアル
+	//		CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
+
+	//		double newvalue = s_skyparamsdlg.GetSkyFlowRateSlider();
+	//		s_skyparams[g_skyindex].riverflowrate = newvalue;
+
+	//		if (curmqomat) {
+	//			curmqomat->SetRiverFlowRate(s_skyparams[g_skyindex].riverflowrate);
+	//		}
+	//		else {
+	//			int materialindex9;
+	//			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+	//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex9);
+	//				if (setmqomat) {
+	//					setmqomat->SetRiverFlowRate(s_skyparams[g_skyindex].riverflowrate);
+	//				}
+	//			}
+	//		}
+	//	}
+
+	//}
+	//if (s_skyparamsdlg.GetSkyDistortionMapRadioFlag()) {
+	//	s_skyparamsdlg.SetSkyDistortionMapRadioFlag(false);
+
+	//	if (s_sky) {
+	//		int materialnum = s_sky->GetMQOMaterialSize();
+	//		materialnum = min(materialnum, MAXMATERIALNUM);
+	//		int materialindex = 0;//s_skyの最初のマテリアル
+	//		CMQOMaterial* curmqomat = s_sky->GetMQOMaterialByIndex(materialindex);
+
+	//		int maptype = s_skyparamsdlg.GetSkyDistortionMapRadio();
+	//		s_skyparams[g_skyindex].distortionmaptype = maptype;
+
+	//		if (curmqomat) {
+	//			curmqomat->SetDistortionMapType(maptype);
+	//		}
+	//		else {
+	//			int materialindex8;
+	//			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
+	//				CMQOMaterial* setmqomat = s_sky->GetMQOMaterialByIndex(materialindex8);
+	//				if (setmqomat) {
+	//					setmqomat->SetDistortionMapType(maptype);
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+
+	//if (m_skyst_distortionscalesliderFlag) {
+	//	m_skyst_distortionscalesliderFlag = false;
+	//}
+	//if (m_skyst_riverradioFlag) {
+	//	m_skyst_riverradioFlag = false;
+	//}
+	//if (m_skyst_seacenterUsliderFlag) {
+	//	m_skyst_seacenterUsliderFlag = false;
+	//}
+	//if (m_skyst_seacenterVsliderFlag) {
+	//	m_skyst_seacenterVsliderFlag = false;
+	//}
+	//if (m_skyst_riverdirUsliderFlag) {
+	//	m_skyst_riverdirUsliderFlag = false;
+	//}
+	//if (m_skyst_riverdirVsliderFlag) {
+	//	m_skyst_riverdirVsliderFlag = false;
+	//}
+	//if (m_skyst_flowratesliderFlag) {
+	//	m_skyst_flowratesliderFlag = false;
+	//}
+	//if (m_skyst_distortionmapradioFlag) {
+	//	m_skyst_distortionmapradioFlag = false;
+	//}
 
 	return 0;
 }
@@ -54743,7 +52186,6 @@ int SetModel2ModelWorldMatDlg(CModel* srcmodel)
 	return 0;
 }
 
-
 int SetSkyParamsToSky(CShaderTypeParams srcparams)
 {
 	if (!s_sky) {
@@ -54798,278 +52240,6 @@ int SetSkyParamsToSky(CShaderTypeParams srcparams)
 
 	return 0;
 }
-
-
-int SetMaterial2SkyParamsDlg(CMQOMaterial* srcmat)
-{
-	if (!s_sky) {
-		_ASSERT(0);
-		return 1;
-	}
-	//############################################################
-	//srcmat == nullptrの場合にはs_skyの最初のマテリアルシェーダを表示
-	//############################################################
-
-	if (!s_sky || (s_skyst_paramsWnd == NULL)) {
-		_ASSERT(0);
-		return 1;
-	}
-
-
-	int materialnum = s_sky->GetMQOMaterialSize();
-	if (materialnum == 0) {
-		return 0;
-	}
-	if ((materialnum < 0) || (materialnum >= MAXMATERIALNUM)) {
-		//2024/03/03
-		::MessageBoxW(s_3dwnd, L"ERROR : MaterialNum Overflow.", L"Can't open dialog for settings.",
-			MB_OK | MB_ICONERROR);
-
-		s_skyst_paramsWnd->setListenMouse(false);
-		s_skyst_paramsWnd->setVisible(false);
-
-		return 1;
-	}
-
-
-	s_skyparams[g_skyindex].SetMaterial(srcmat);
-
-	//######
-	//Text
-	//######
-	if (s_skyst_namelabel) {
-		//if (srcmat) {
-		//	WCHAR wmatname[MAX_PATH] = { 0L };
-		//	char matname[MAX_PATH] = { 0 };
-		//	strcpy_s(matname, MAX_PATH, srcmat->GetName());
-		//	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, matname, MAX_PATH, wmatname, MAX_PATH);
-		//	s_skyst_namelabel->setName(wmatname);
-		//}
-		//else {
-		//	s_skyst_namelabel->setName(L"All");
-		//}
-		
-		WCHAR strslotno[256] = { 0L };
-		swprintf_s(strslotno, 256, L"Sky : Slot%d", (g_skyindex + 1));
-		s_skyst_namelabel->setName(strslotno);
-	}
-
-	//#######
-	//Button
-	//#######
-	if (s_skyst_shadertyperadio) {
-		switch (s_skyparams[g_skyindex].shadertype) {
-		case -1:
-			s_skyst_shadertyperadio->setSelectIndex(0, false);
-			break;
-		case MQOSHADER_PBR://case 0
-			s_skyst_shadertyperadio->setSelectIndex(1, false);
-			break;
-		case MQOSHADER_STD://case 1
-			s_skyst_shadertyperadio->setSelectIndex(2, false);
-			break;
-		case MQOSHADER_TOON://case 2
-			s_skyst_shadertyperadio->setSelectIndex(3, false);
-			break;
-		default:
-			_ASSERT(0);
-			s_skyst_shadertyperadio->setSelectIndex(0, false);
-			break;
-		}
-	}
-
-	if (s_skyst_toonlitradio) {
-		if ((s_skyparams[g_skyindex].hsvtoon.lightindex >= 0) && (s_skyparams[g_skyindex].hsvtoon.lightindex <= 7)) {
-			s_skyst_toonlitradio->setSelectIndex(s_skyparams[g_skyindex].hsvtoon.lightindex, false);
-		}
-		else {
-			_ASSERT(0);
-			s_skyst_toonlitradio->setSelectIndex(0, false);
-		}
-	}
-
-
-	//#######
-	//Slider
-	//#######
-	if (s_skyst_metalslider) {
-		s_skyst_metalslider->setValue(s_skyparams[g_skyindex].metalcoef, false);
-	}
-	if (s_skyst_smoothslider) {
-		s_skyst_smoothslider->setValue(s_skyparams[g_skyindex].smoothcoef, false);
-	}
-
-
-	if (s_skyst_litscaleslider1) {
-		s_skyst_litscaleslider1->setValue(s_skyparams[g_skyindex].lightscale[0], false);
-	}
-	if (s_skyst_litscaleslider2) {
-		s_skyst_litscaleslider2->setValue(s_skyparams[g_skyindex].lightscale[1], false);
-	}
-	if (s_skyst_litscaleslider3) {
-		s_skyst_litscaleslider3->setValue(s_skyparams[g_skyindex].lightscale[2], false);
-	}
-	if (s_skyst_litscaleslider4) {
-		s_skyst_litscaleslider4->setValue(s_skyparams[g_skyindex].lightscale[3], false);
-	}
-	if (s_skyst_litscaleslider5) {
-		s_skyst_litscaleslider5->setValue(s_skyparams[g_skyindex].lightscale[4], false);
-	}
-	if (s_skyst_litscaleslider6) {
-		s_skyst_litscaleslider6->setValue(s_skyparams[g_skyindex].lightscale[5], false);
-	}
-	if (s_skyst_litscaleslider7) {
-		s_skyst_litscaleslider7->setValue(s_skyparams[g_skyindex].lightscale[6], false);
-	}
-	if (s_skyst_litscaleslider8) {
-		s_skyst_litscaleslider8->setValue(s_skyparams[g_skyindex].lightscale[7], false);
-	}
-
-	if (s_skyst_emissionslider) {
-		s_skyst_emissionslider->setValue(s_skyparams[g_skyindex].emissiveScale, false);
-	}
-
-	if (s_skyst_toonhiaddrslider) {
-		s_skyst_toonhiaddrslider->setValue(s_skyparams[g_skyindex].hsvtoon.hicolorh, false);
-	}
-	if (s_skyst_toonlowaddrslider) {
-		s_skyst_toonlowaddrslider->setValue(s_skyparams[g_skyindex].hsvtoon.lowcolorh, false);
-	}
-
-
-	if (s_skyst_toonbaseHslider) {
-		s_skyst_toonbaseHslider->setValue(s_skyparams[g_skyindex].hsvtoon.basehsv.x, false);
-	}
-	if (s_skyst_toonbaseSslider) {
-		s_skyst_toonbaseSslider->setValue(s_skyparams[g_skyindex].hsvtoon.basehsv.y, false);
-	}
-	if (s_skyst_toonbaseVslider) {
-		s_skyst_toonbaseVslider->setValue(s_skyparams[g_skyindex].hsvtoon.basehsv.z, false);
-	}
-	if (s_skyst_toonbaseAslider) {
-		s_skyst_toonbaseAslider->setValue(s_skyparams[g_skyindex].hsvtoon.basehsv.w, false);
-	}
-
-	if (s_skyst_toonhiHslider) {
-		s_skyst_toonhiHslider->setValue(s_skyparams[g_skyindex].hsvtoon.hiaddhsv.x, false);
-	}
-	if (s_skyst_toonhiSslider) {
-		s_skyst_toonhiSslider->setValue(s_skyparams[g_skyindex].hsvtoon.hiaddhsv.y, false);
-	}
-	if (s_skyst_toonhiVslider) {
-		s_skyst_toonhiVslider->setValue(s_skyparams[g_skyindex].hsvtoon.hiaddhsv.z, false);
-	}
-	if (s_skyst_toonhiAslider) {
-		s_skyst_toonhiAslider->setValue(s_skyparams[g_skyindex].hsvtoon.hiaddhsv.w, false);
-	}
-
-	if (s_skyst_toonlowHslider) {
-		s_skyst_toonlowHslider->setValue(s_skyparams[g_skyindex].hsvtoon.lowaddhsv.x, false);
-	}
-	if (s_skyst_toonlowSslider) {
-		s_skyst_toonlowSslider->setValue(s_skyparams[g_skyindex].hsvtoon.lowaddhsv.y, false);
-	}
-	if (s_skyst_toonlowVslider) {
-		s_skyst_toonlowVslider->setValue(s_skyparams[g_skyindex].hsvtoon.lowaddhsv.z, false);
-	}
-	if (s_skyst_toonlowAslider) {
-		s_skyst_toonlowAslider->setValue(s_skyparams[g_skyindex].hsvtoon.lowaddhsv.w, false);
-	}
-
-	if (s_skyst_spccoefslider) {
-		s_skyst_spccoefslider->setValue(s_skyparams[g_skyindex].specularcoef, false);
-	}
-
-	if (s_skyst_tilingUslider) {
-		s_skyst_tilingUslider->setValue((int)(s_skyparams[g_skyindex].uvscale.x + 0.0001), false);
-	}
-	if (s_skyst_tilingVslider) {
-		s_skyst_tilingVslider->setValue((int)(s_skyparams[g_skyindex].uvscale.y + 0.0001), false);
-	}
-
-	if (s_skyst_alphatestslider) {
-		s_skyst_alphatestslider->setValue(s_skyparams[g_skyindex].alphatest, false);
-	}
-
-
-	//#########
-	//CheckBox
-	//#########
-	if (s_skyst_emissionchk) {
-		if ((bool)s_skyparams[g_skyindex].enableEmission == true) {
-			s_skyst_emissionchk->setValue(true, false);
-		}
-		else {
-			s_skyst_emissionchk->setValue(false, false);
-		}
-	}
-
-	if (s_skyst_gradationchk) {
-		if (s_skyparams[g_skyindex].hsvtoon.gradationflag == true) {
-			s_skyst_gradationchk->setValue(true, false);
-
-			if (s_skyst_powertoonchk) {
-				s_skyst_powertoonchk->setActive(true);
-			}
-		}
-		else {
-			s_skyst_gradationchk->setValue(false, false);
-
-			if (s_skyst_powertoonchk) {
-				s_skyst_powertoonchk->setActive(false);
-			}
-		}
-	}
-
-	if (s_skyst_powertoonchk) {
-		if (s_skyparams[g_skyindex].hsvtoon.powertoon == true) {
-			s_skyst_powertoonchk->setValue(true, false);
-		}
-		else {
-			s_skyst_powertoonchk->setValue(false, false);
-		}
-	}
-
-	if (s_skyst_normaly0chk) {
-		if (s_skyparams[g_skyindex].normaly0flag == true) {
-			s_skyst_normaly0chk->setValue(true, false);
-		}
-		else {
-			s_skyst_normaly0chk->setValue(false, false);
-		}
-	}
-
-	if (s_skyst_shadowcasterchk) {
-		if (s_skyparams[g_skyindex].shadowcasterflag == true) {
-			s_skyst_shadowcasterchk->setValue(true, false);
-		}
-		else {
-			s_skyst_shadowcasterchk->setValue(false, false);
-		}
-	}
-
-	if (s_skyst_lightflagchk) {
-		if (s_skyparams[g_skyindex].lightingmat == true) {
-			s_skyst_lightflagchk->setValue(true, false);
-		}
-		else {
-			s_skyst_lightflagchk->setValue(false, false);
-		}
-	}
-
-	if (s_skyst_distortionchk) {
-		if (s_skyparams[g_skyindex].distortionflag == true) {
-			s_skyst_distortionchk->setValue(true, false);
-		}
-		else {
-			s_skyst_distortionchk->setValue(false, false);
-		}
-	}
-
-	return 0;
-
-}
-
 
 int FogParams2Dlg()
 {
@@ -55294,34 +52464,31 @@ int ShowShaderTypeParamsDlg(bool srcflag)
 
 void ShowSkyWnd(bool srcflag)
 {
-	if (s_skyst_paramsWnd) {
+	if (s_sky && srcflag) {
 
-		if (s_sky && srcflag) {
+		int materialnum = s_sky->GetMQOMaterialSize();
 
-			int materialnum = s_sky->GetMQOMaterialSize();
+		if ((materialnum > 0) && (materialnum < MAXMATERIALNUM)) {//2024/03/03
+			CMQOMaterial* curmqomat = nullptr;
+			curmqomat = s_sky->GetMQOMaterialByIndex(0);
 
-			if ((materialnum > 0) && (materialnum < MAXMATERIALNUM)) {//2024/03/03
-				CMQOMaterial* curmqomat = nullptr;
-				curmqomat = s_sky->GetMQOMaterialByIndex(0);
-
-				SetMaterial2SkyParamsDlg(curmqomat);
-
-				s_skyst_paramsWnd->setListenMouse(true);
-				s_skyst_paramsWnd->setVisible(true);
-			}
-			else {
-				//2024/03/03
-				if (materialnum != 0) {
-					MessageBoxW(s_3dwnd, L"ERROR : MaterialNum Overflow.", L"Can't open dialog for settings.", MB_OK | MB_ICONERROR);
-				}
-				//s_skyst_paramsWnd->setListenMouse(false);
-				s_skyst_paramsWnd->setVisible(false);
-			}
+			s_skyparamsdlg.ParamsToDlg(s_sky, curmqomat, &(s_skyparams[g_skyindex]));
+			s_skyparamsdlg.SetVisible(srcflag);
 		}
 		else {
-			//s_skyst_paramsWnd->setListenMouse(false);
-			s_skyst_paramsWnd->setVisible(false);
+			//2024/03/03
+			if (materialnum != 0) {
+				MessageBoxW(s_3dwnd, L"ERROR : MaterialNum Overflow.", L"Can't open dialog for settings.", MB_OK | MB_ICONERROR);
+			}
+			////m_skyst_paramsWnd->setListenMouse(false);
+			//m_skyst_paramsWnd->setVisible(false);
+			s_skyparamsdlg.SetVisible(false);
 		}
+	}
+	else {
+		////m_skyst_paramsWnd->setListenMouse(false);
+		//m_skyst_paramsWnd->setVisible(false);
+		s_skyparamsdlg.SetVisible(false);
 	}
 
 	s_speffectsw[SPEFFECTSW_SKY].state = srcflag;

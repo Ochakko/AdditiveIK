@@ -5,6 +5,9 @@ https://github.com/Ochakko/AdditiveIK
 2024/08/09
 　ShaderTypeParamsウインドウをCShaderParamsDlgにクラス化
 　
+　SkyウインドウをCSkyParamsDlgにクラス化
+
+
 
 　不具合修正
 　　ShaderParamsダイアログのLowAddrスライダーの値としてHiAddrスライダーの値を渡していた記述ミスを修正

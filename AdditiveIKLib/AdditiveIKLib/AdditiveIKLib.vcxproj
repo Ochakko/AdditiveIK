@@ -242,6 +242,7 @@
     <ClCompile Include="..\CPP\ShaderTypeDlg.cpp" />
     <ClCompile Include="..\CPP\ShaderTypeFile.cpp" />
     <ClCompile Include="..\CPP\ShadowParamsFile.cpp" />
+    <ClCompile Include="..\CPP\SkyParamsDlg.cpp" />
     <ClCompile Include="..\CPP\SkyParamsFile.cpp" />
     <ClCompile Include="..\CPP\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -641,6 +642,7 @@
     <ClInclude Include="..\INCLUDE\ShaderTypeDlg.h" />
     <ClInclude Include="..\INCLUDE\ShaderTypeFile.h" />
     <ClInclude Include="..\INCLUDE\ShadowParamsFile.h" />
+    <ClInclude Include="..\INCLUDE\SkyParamsDlg.h" />
     <ClInclude Include="..\INCLUDE\SkyParamsFile.h" />
     <ClInclude Include="..\INCLUDE\stdafx.h" />
     <ClInclude Include="..\INCLUDE\StrMisc.h" />
