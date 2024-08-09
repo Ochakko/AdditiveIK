@@ -219,6 +219,7 @@
     <ClCompile Include="..\CPP\LightsDlg.cpp" />
     <ClCompile Include="..\CPP\LightsForEditFile.cpp" />
     <ClCompile Include="..\CPP\LIMFile.cpp" />
+    <ClCompile Include="..\CPP\LimitEulDlg.cpp" />
     <ClCompile Include="..\CPP\lmtFile.cpp" />
     <ClCompile Include="..\CPP\MNLFile.cpp" />
     <ClCompile Include="..\CPP\Model.cpp" />
@@ -620,6 +621,7 @@
     <ClInclude Include="..\INCLUDE\LightsDlg.h" />
     <ClInclude Include="..\INCLUDE\LightsForEditFile.h" />
     <ClInclude Include="..\INCLUDE\LIMFile.h" />
+    <ClInclude Include="..\INCLUDE\LimitEulDlg.h" />
     <ClInclude Include="..\INCLUDE\lmtFile.h" />
     <ClInclude Include="..\INCLUDE\MNLFile.h" />
     <ClInclude Include="..\INCLUDE\Model.h" />

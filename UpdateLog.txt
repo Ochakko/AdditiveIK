@@ -9,12 +9,16 @@ https://github.com/Ochakko/AdditiveIK
 
 　RetargetウインドウをCRetargetDlgにクラス化
 
+　AngleLimitウインドウをCLimitEulDlgにクラス化
+
 
 　不具合修正
 　　ShaderParamsダイアログのLowAddrスライダーの値としてHiAddrスライダーの値を渡していた記述ミスを修正
 
 　　スキンメッシュモデルの位置を原点以外にした場合にピック出来なくなっていたのを修正
 　　　非スキンメッシュについては既に解決済だった
+
+　　LimitEulダイアログのY軸最大角度の値にX軸最大角度の値を渡していた記述ミスを修正
 
 
 
