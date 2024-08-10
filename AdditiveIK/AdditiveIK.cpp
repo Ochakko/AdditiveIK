@@ -89,6 +89,7 @@
 #include <GPlaneDlg.h>
 #include <DampAnimDlg.h>
 #include <ThresholdDlg.h>
+#include <FogDlg.h>
 #include <CpInfoDlg2.h>
 
 #include <math.h>
@@ -907,17 +908,6 @@ static ChaVector4 s_matyellowmat;
 static ChaVector4 s_ringyellowmat;
 
 
-
-static bool s_dispthreshold = false;
-//static HWND s_thresholddlg = 0;
-
-
-
-//static HWND s_lightsforeditdlg = 0;
-//static HWND s_latertransparentdlg = 0;
-//static HWND s_shadowparamsdlg = 0;
-//static HWND s_guidlg[GUIDLGNUM];
-
 static HWND s_rotaxisdlg = 0;
 static int s_rotaxiskind = AXIS_X;
 static float s_rotaxisdeg = 0.0f;
@@ -980,6 +970,7 @@ static CImpulseDlg s_impulsedlg;
 static CGPlaneDlg s_gplanedlg;
 static CDampAnimDlg s_dampanimdlg;
 static CThresholdDlg s_thresholddlg;
+static CFogDlg s_fogdlg;
 
 static bool s_undercpinfodlg2;
 static CCpInfoDlg2 s_cpinfodlg2;
@@ -1215,41 +1206,6 @@ static OWP_Timeline* s_owpLTimeline = 0;
 static OWP_EulerGraph* s_owpEulerGraph = 0;
 static OWP_Separator* s_LTSeparator = 0;
 
-static OrgWindow* s_fogWnd = 0;
-static OWP_ComboBoxA* s_fogslotCombo = 0;
-static OWP_Separator* s_fogkindsp1 = 0;
-static OWP_Separator* s_fogkindsp2 = 0;
-static OWP_Separator* s_fogkindsp3 = 0;
-static OWP_CheckBoxA* s_fogkindnoChk = 0;
-static OWP_CheckBoxA* s_fogkinddistChk = 0;
-static OWP_CheckBoxA* s_fogkindheightChk = 0;
-static OWP_Label* s_fogspacerLabel1 = 0;
-static OWP_Label* s_fogdistLabel = 0;
-static OWP_Separator* s_fogdistsp1 = 0;
-static OWP_Separator* s_fogdistsp2 = 0;
-static OWP_Separator* s_fogdistsp3 = 0;
-static OWP_Label* s_fogdistnearLabel = 0;
-static OWP_EditBox* s_fogdistnearEdit = 0;
-static OWP_Label* s_fogdistfarLabel = 0;
-static OWP_EditBox* s_fogdistfarEdit = 0;
-static OWP_Separator* s_fogdistsp4 = 0;
-static OWP_ColorBox* s_fogdistColor = 0;
-static OWP_Slider* s_fogdistSlider = 0;
-static OWP_Label* s_fogspacerLabel2 = 0;
-static OWP_Separator* s_fogheightsp1 = 0;
-static OWP_Separator* s_fogheightsp2 = 0;
-static OWP_Separator* s_fogheightsp3 = 0;
-static OWP_Label* s_fogheightminLabel = 0;
-static OWP_EditBox* s_fogheightminEdit = 0;
-static OWP_Label* s_fogheightmaxLabel = 0;
-static OWP_EditBox* s_fogheightmaxEdit = 0;
-static OWP_Separator* s_fogheightsp4 = 0;
-static OWP_ColorBox* s_fogheightColor = 0;
-static OWP_Slider* s_fogheightSlider = 0;
-static OWP_Label* s_fogspacerLabel3 = 0;
-static OWP_Separator* s_fogapplysp = 0;
-static OWP_Button* s_fogapplyB = 0;
-
 static OrgWindow* s_dofWnd = 0;
 static OWP_Label* s_dofLabel = 0;
 static OWP_ComboBoxA* s_dofslotCombo = 0;
@@ -1266,7 +1222,6 @@ static OWP_CheckBoxA* s_dofskyChk = 0;
 static OWP_Label* s_dofspacerLabel3 = 0;
 static OWP_Separator* s_dofapplysp = 0;
 static OWP_Button* s_dofapplyB = 0;
-
 
 static OrgWindow* s_sidemenuWnd = 0;
 //static OWP_Separator* s_sidemenusp = 0;
@@ -2355,11 +2310,6 @@ static int SetSkyParamsToSky(CShaderTypeParams srcparams);//ファイルから�
 static void ShowSkyWnd(bool srcflag);
 static int OnFrameSkyParamsDlg();//OnFrameToolWnd()から呼び出す
 
-
-static int CreateFogParamsDlg();
-static int FogParams2Dlg();
-static void CheckFogKindParamsButton(int srckind);
-
 static int CreateDofParamsDlg();//params設定用　OWPでは無い方
 static int DofParams2Dlg();//params設定用　OWPでは無い方
 
@@ -3338,7 +3288,6 @@ INT WINAPI wWinMain(
 	CreateMaterialRateWnd();
 	CreateModelWorldMatWnd();
 	CreateJumpGravityWnd();
-	CreateFogParamsDlg();
 	CreateDofParamsDlg();
 
 
@@ -3672,6 +3621,7 @@ int CheckResolution()
 		s_gplanedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_dampanimdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_thresholddlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+		s_fogdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 	}
 
 	return 0;
@@ -3713,6 +3663,7 @@ void InitApp()
 	s_gplanedlg.InitParams();
 	s_dampanimdlg.InitParams();
 	s_thresholddlg.InitParams();
+	s_fogdlg.InitParams();
 
 	s_limiteuldlg.InitParams();
 	s_limiteuldlg.SetFunctions(PrepairUndo, UpdateAfterEditAngleLimit);
@@ -4201,43 +4152,6 @@ void InitApp()
 		s_skyparamsFlag = false;
 		s_fogparamsFlag = false;
 		s_dofparamsFlag = false;
-	}
-
-	{
-		s_fogWnd = 0;
-		s_fogslotCombo = 0;
-		s_fogkindsp1 = 0;
-		s_fogkindsp2 = 0;
-		s_fogkindsp3 = 0;
-		s_fogkindnoChk = 0;
-		s_fogkinddistChk = 0;
-		s_fogkindheightChk = 0;
-		s_fogspacerLabel1 = 0;
-		s_fogdistLabel = 0;
-		s_fogdistsp1 = 0;
-		s_fogdistsp2 = 0;
-		s_fogdistsp3 = 0;
-		s_fogdistnearLabel = 0;
-		s_fogdistnearEdit = 0;
-		s_fogdistfarLabel = 0;
-		s_fogdistfarEdit = 0;
-		s_fogdistsp4 = 0;
-		s_fogdistColor = 0;
-		s_fogdistSlider = 0;
-		s_fogspacerLabel2 = 0;
-		s_fogheightsp1 = 0;
-		s_fogheightsp2 = 0;
-		s_fogheightsp3 = 0;
-		s_fogheightminLabel = 0;
-		s_fogheightminEdit = 0;
-		s_fogheightmaxLabel = 0;
-		s_fogheightmaxEdit = 0;
-		s_fogheightsp4 = 0;
-		s_fogheightColor = 0;
-		s_fogheightSlider = 0;
-		s_fogspacerLabel3 = 0;
-		s_fogapplysp = 0;
-		s_fogapplyB = 0;
 	}
 
 	{
@@ -5407,6 +5321,7 @@ void OnDestroyDevice()
 	s_gplanedlg.DestroyObjs();
 	s_dampanimdlg.DestroyObjs();
 	s_thresholddlg.DestroyObjs();
+	s_fogdlg.DestroyObjs();
 	s_cpinfodlg2.DestroyObjs();
 
 
@@ -5805,146 +5720,6 @@ void OnDestroyDevice()
 	//	delete s_mainmenulabel;
 	//	s_mainmenulabel = 0;
 	//}
-
-	{
-		if (s_fogslotCombo) {
-			delete s_fogslotCombo;
-			s_fogslotCombo = 0;
-		}
-		if (s_fogkindsp1) {
-			delete s_fogkindsp1;
-			s_fogkindsp1 = 0;
-		}
-		if (s_fogkindsp2) {
-			delete s_fogkindsp2;
-			s_fogkindsp2 = 0;
-		}
-		if (s_fogkindsp3) {
-			delete s_fogkindsp3;
-			s_fogkindsp3 = 0;
-		}
-		if (s_fogkindnoChk) {
-			delete s_fogkindnoChk;
-			s_fogkindnoChk = 0;
-		}
-		if (s_fogkinddistChk) {
-			delete s_fogkinddistChk;
-			s_fogkinddistChk = 0;
-		}
-		if (s_fogkindheightChk) {
-			delete s_fogkindheightChk;
-			s_fogkindheightChk = 0;
-		}
-		if (s_fogspacerLabel1) {
-			delete s_fogspacerLabel1;
-			s_fogspacerLabel1 = 0;
-		}
-		if (s_fogdistLabel) {
-			delete s_fogdistLabel;
-			s_fogdistLabel = 0;
-		}
-		if (s_fogdistsp1) {
-			delete s_fogdistsp1;
-			s_fogdistsp1 = 0;
-		}
-		if (s_fogdistsp2) {
-			delete s_fogdistsp2;
-			s_fogdistsp2 = 0;
-		}
-		if (s_fogdistsp3) {
-			delete s_fogdistsp3;
-			s_fogdistsp3 = 0;
-		}
-		if (s_fogdistnearLabel) {
-			delete s_fogdistnearLabel;
-			s_fogdistnearLabel = 0;
-		}
-		if (s_fogdistnearEdit) {
-			delete s_fogdistnearEdit;
-			s_fogdistnearEdit = 0;
-		}
-		if (s_fogdistfarLabel) {
-			delete s_fogdistfarLabel;
-			s_fogdistfarLabel = 0;
-		}
-		if (s_fogdistfarEdit) {
-			delete s_fogdistfarEdit;
-			s_fogdistfarEdit = 0;
-		}
-		if (s_fogdistsp4) {
-			delete s_fogdistsp4;
-			s_fogdistsp4 = 0;
-		}
-		if (s_fogdistColor) {
-			delete s_fogdistColor;
-			s_fogdistColor = 0;
-		}
-		if (s_fogdistSlider) {
-			delete s_fogdistSlider;
-			s_fogdistSlider = 0;
-		}
-		if (s_fogspacerLabel2) {
-			delete s_fogspacerLabel2;
-			s_fogspacerLabel2 = 0;
-		}
-		if (s_fogheightsp1) {
-			delete s_fogheightsp1;
-			s_fogheightsp1 = 0;
-		}
-		if (s_fogheightsp2) {
-			delete s_fogheightsp2;
-			s_fogheightsp2 = 0;
-		}
-		if (s_fogheightsp3) {
-			delete s_fogheightsp3;
-			s_fogheightsp3 = 0;
-		}
-		if (s_fogheightminLabel) {
-			delete s_fogheightminLabel;
-			s_fogheightminLabel = 0;
-		}
-		if (s_fogheightminEdit) {
-			delete s_fogheightminEdit;
-			s_fogheightminEdit = 0;
-		}
-		if (s_fogheightmaxLabel) {
-			delete s_fogheightmaxLabel;
-			s_fogheightmaxLabel = 0;
-		}
-		if (s_fogheightmaxEdit) {
-			delete s_fogheightmaxEdit;
-			s_fogheightmaxEdit = 0;
-		}
-		if (s_fogheightsp4) {
-			delete s_fogheightsp4;
-			s_fogheightsp4 = 0;
-		}
-		if (s_fogheightColor) {
-			delete s_fogheightColor;
-			s_fogheightColor = 0;
-		}
-		if (s_fogheightSlider) {
-			delete s_fogheightSlider;
-			s_fogheightSlider = 0;
-		}
-		if (s_fogspacerLabel3) {
-			delete s_fogspacerLabel3;
-			s_fogspacerLabel3 = 0;
-		}
-		if (s_fogapplysp) {
-			delete s_fogapplysp;
-			s_fogapplysp = 0;
-		}
-		if (s_fogapplyB) {
-			delete s_fogapplyB;
-			s_fogapplyB = 0;
-		}
-
-		if (s_fogWnd) {
-			delete s_fogWnd;
-			s_fogWnd = 0;
-		}
-	}
 
 	{
 		if (s_dofLabel) {
@@ -24257,349 +24032,6 @@ LRESULT CALLBACK MaterialRateDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 	return TRUE;
 
 }
-
-
-//int OwnerDrawFogColorBar(HWND hDlgWnd, int fogkind, int idcolorbar)
-//{
-//	if (!hDlgWnd) {
-//		_ASSERT(0);
-//		return 1;
-//	}
-//	if ((fogkind <= 0) || (fogkind > 2)) {
-//		_ASSERT(0);
-//		return 1;
-//	}
-//	if ((g_fogindex < 0) || (g_fogindex >= FOGSLOTNUM)) {
-//		_ASSERT(0);
-//		return 1;
-//	}
-//
-//
-//	ChaVector4 fogcolor;
-//	if (fogkind == 1) {
-//		fogcolor = g_fogparams[g_fogindex].GetDistColor();
-//	}
-//	else if (fogkind == 2) {
-//		fogcolor = g_fogparams[g_fogindex].GetHeightColor();
-//	}
-//	else {
-//		_ASSERT(0);
-//		return 1;
-//	}
-//	unsigned char ur, ug, ub;
-//	ur = (unsigned char)(fogcolor.x * 255.0f + 0.0001f);
-//	ur = min(255, max(0, ur));
-//	ug = (unsigned char)(fogcolor.y * 255.0f + 0.0001f);
-//	ug = min(255, max(0, ug));
-//	ub = (unsigned char)(fogcolor.z * 255.0f + 0.0001f);
-//	ub = min(255, max(0, ub));
-//
-//
-//	HBRUSH hBrush = CreateSolidBrush(col);
-//	HWND hwnd = GetDlgItem(hDlgWnd, idcolorbar);
-//	HDC hdc = GetDC(hwnd);
-//	RECT rect;
-//	GetClientRect(hwnd, &rect);
-//	FillRect(hdc, &rect, hBrush);
-//	ReleaseDC(hwnd, hdc);
-//	DeleteObject(hBrush);
-//
-//	return 0;
-//}
-//
-//
-//
-//int ChooseFogColorBar(HWND hDlgWnd, int fogkind, int idcolorbar)
-//{
-//	if (!hDlgWnd) {
-//		_ASSERT(0);
-//		return 1;
-//	}
-//	if ((fogkind <= 0) || (fogkind > 2)) {
-//		_ASSERT(0);
-//		return 1;
-//	}
-//	if ((g_fogindex < 0) || (g_fogindex >= FOGSLOTNUM)) {
-//		_ASSERT(0);
-//		return 1;
-//	}
-//
-//	ChaVector4 fogcolor;
-//	if (fogkind == 1) {
-//		fogcolor = g_fogparams[g_fogindex].GetDistColor();
-//	}
-//	else if (fogkind == 2) {
-//		fogcolor = g_fogparams[g_fogindex].GetHeightColor();
-//	}
-//	else {
-//		_ASSERT(0);
-//		return 1;
-//	}
-//	unsigned char ur, ug, ub;
-//	ur = (unsigned char)(fogcolor.x * 255.0f + 0.0001f);
-//	ur = min(255, max(0, ur));
-//	ug = (unsigned char)(fogcolor.y * 255.0f + 0.0001f);
-//	ug = min(255, max(0, ug));
-//	ub = (unsigned char)(fogcolor.z * 255.0f + 0.0001f);
-//	ub = min(255, max(0, ub));
-//
-//	COLORREF colrgb;
-//	colrgb = RGB(ur, ug, ub);
-//	int dlgret = g_coldlg.Choose(hDlgWnd, &colrgb);
-//	if (dlgret == 1) {
-//		float fr, fg, fb;
-//		fr = (float)((double)GetRValue(colrgb) / 255.0);
-//		fr = min(1.0f, fr);
-//		fr = max(0.0f, fr);
-//		fg = (float)((double)GetGValue(colrgb) / 255.0);
-//		fg = min(1.0f, fg);
-//		fg = max(0.0f, fg);
-//		fb = (float)((double)GetBValue(colrgb) / 255.0);
-//		fb = min(1.0f, fb);
-//		fb = max(0.0f, fb);
-//
-//		if (fogkind == 1) {
-//			g_fogparams[g_fogindex].SetDistColor(ChaVector4(fr, fg, fb, 1.0f));
-//		}
-//		else if (fogkind == 2) {
-//			g_fogparams[g_fogindex].SetHeightColor(ChaVector4(fr, fg, fb, 1.0f));
-//		}
-//		else {
-//			_ASSERT(0);
-//			return 1;
-//		}
-//
-//		HWND ctrlwnd = GetDlgItem(hDlgWnd, idcolorbar);
-//		RECT rect;
-//		GetClientRect(ctrlwnd, &rect);
-//		InvalidateRect(ctrlwnd, &rect, true);
-//	}
-//
-//	return 0;
-//}
-//
-
-
-//void CheckShaderTypeButton(HWND hDlgWnd, int srcshadertype)
-//{
-//	//############################
-//	//DispAndLimitプレートメニュー用
-//	//############################
-//
-//	switch (srcshadertype) {
-//	case -1:
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, TRUE, 0);//!!!!!!
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
-//		//g_shadertype = srcshadertype;
-//		break;
-//	case MQOSHADER_PBR:
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, TRUE, 0);//!!!!
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
-//		//g_shadertype = srcshadertype;
-//		break;
-//	case MQOSHADER_STD:
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, TRUE, 0);//!!!!!!!
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
-//		//g_shadertype = srcshadertype;
-//		break;
-//	case MQOSHADER_TOON:
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, TRUE, 0);//!!!!!!
-//		//g_shadertype = srcshadertype;
-//		break;
-//	default:
-//		_ASSERT(0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO), BM_SETSTATE, TRUE, 0);//!!!!
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT), BM_SETSTATE, FALSE, 0);
-//		//g_shadertype = -1;
-//		break;
-//	}
-//}
-
-void CheckFogKindParamsButton(int srckind)
-{
-	if (!s_fogkindnoChk || !s_fogkinddistChk || !s_fogkindheightChk) {
-		_ASSERT(0);
-		return;
-	}
-
-	switch (srckind) {
-	case 0:
-		s_fogkindnoChk->setValue(true, false);
-		s_fogkinddistChk->setValue(false, false);
-		s_fogkindheightChk->setValue(false, false);
-		break;
-	case 1:
-		s_fogkindnoChk->setValue(false, false);
-		s_fogkinddistChk->setValue(true, false);
-		s_fogkindheightChk->setValue(false, false);
-		break;
-	case 2:
-		s_fogkindnoChk->setValue(false, false);
-		s_fogkinddistChk->setValue(false, false);
-		s_fogkindheightChk->setValue(true, false);
-		break;
-	default:
-		_ASSERT(0);
-		s_fogkindnoChk->setValue(true, false);
-		s_fogkinddistChk->setValue(false, false);
-		s_fogkindheightChk->setValue(false, false);
-		break;
-	}
-}
-
-
-//void CheckShaderTypeParamsButton(HWND hDlgWnd, int srcshadertype)
-//{
-//	//###############################################
-//	//Shaderプレートメニューから呼び出すparamsダイアログ用
-//	//###############################################
-//
-//	switch (srcshadertype) {
-//	case -1:
-//	case -2:
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO2), BM_SETSTATE, TRUE, 0);//!!!!!!
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT2), BM_SETSTATE, FALSE, 0);
-//		break;
-//	case MQOSHADER_PBR:
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR2), BM_SETSTATE, TRUE, 0);//!!!!
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT2), BM_SETSTATE, FALSE, 0);
-//		break;
-//	case MQOSHADER_STD:
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD2), BM_SETSTATE, TRUE, 0);//!!!!!!!
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT2), BM_SETSTATE, FALSE, 0);
-//		break;
-//	case MQOSHADER_TOON:
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT2), BM_SETSTATE, TRUE, 0);//!!!!!!
-//		break;
-//	default:
-//		//_ASSERT(0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_AUTO2), BM_SETSTATE, TRUE, 0);//!!!!
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_PBR2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_STD2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_SHADER_NOLIGHT2), BM_SETSTATE, FALSE, 0);
-//		break;
-//	}
-//}
-//
-//static void CheckToonLightButton(HWND hDlgWnd, int lightindex)
-//{
-//	//########################################################
-//	//Shaderプレートメニューから呼び出すShaderTypeParamsダイアログ用
-//	//########################################################
-//
-//	switch (lightindex) {
-//	case 0:
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT1), BM_SETSTATE, TRUE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT3), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT4), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT5), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT6), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT7), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT8), BM_SETSTATE, FALSE, 0);
-//		break;
-//	case 1:
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT1), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT2), BM_SETSTATE, TRUE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT3), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT4), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT5), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT6), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT7), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT8), BM_SETSTATE, FALSE, 0);
-//		break;
-//	case 2:
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT1), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT3), BM_SETSTATE, TRUE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT4), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT5), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT6), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT7), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT8), BM_SETSTATE, FALSE, 0);
-//		break;
-//	case 3:
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT1), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT3), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT4), BM_SETSTATE, TRUE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT5), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT6), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT7), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT8), BM_SETSTATE, FALSE, 0);
-//		break;
-//	case 4:
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT1), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT3), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT4), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT5), BM_SETSTATE, TRUE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT6), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT7), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT8), BM_SETSTATE, FALSE, 0);
-//		break;
-//	case 5:
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT1), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT3), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT4), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT5), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT6), BM_SETSTATE, TRUE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT7), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT8), BM_SETSTATE, FALSE, 0);
-//		break;
-//	case 6:
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT1), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT3), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT4), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT5), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT6), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT7), BM_SETSTATE, TRUE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT8), BM_SETSTATE, FALSE, 0);
-//		break;
-//	case 7:
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT1), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT3), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT4), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT5), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT6), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT7), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT8), BM_SETSTATE, TRUE, 0);
-//		break;
-//	default:
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT1), BM_SETSTATE, TRUE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT2), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT3), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT4), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT5), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT6), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT7), BM_SETSTATE, FALSE, 0);
-//		SendMessage(GetDlgItem(hDlgWnd, IDC_TOONLIGHT8), BM_SETSTATE, FALSE, 0);
-//		break;
-//	}
-//}
 
 int DispRotAxisDlg()
 {
@@ -45764,385 +45196,6 @@ int OnFrameSkyParamsDlg()//OnFrameToolWnd()から呼び出す
 	return 0;
 }
 
-
-
-int CreateFogParamsDlg()
-{
-
-	if (s_fogWnd) {
-		//_ASSERT(0);
-		return 0;//作成済
-	}
-
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-	s_fogWnd = new OrgWindow(
-		0,
-		_T("FogDlg"),		//ウィンドウクラス名
-		GetModuleHandle(NULL),	//インスタンスハンドル
-		WindowPos(windowposx, s_sidemenuheight),
-		WindowSize(s_sidewidth, s_sideheight),		//サイズ
-		_T("FogDlg"),	//タイトル
-		g_mainhwnd,	//親ウィンドウハンドル
-		false,					//表示・非表示状態
-		//70, 50, 70,				//カラー
-		0, 0, 0,				//カラー
-		true,					//閉じられるか否か
-		true);					//サイズ変更の可否
-
-	int labelheight;
-	if (g_4kresolution) {
-		labelheight = 28;
-	}
-	else {
-		labelheight = 20;
-	}
-
-	if (s_fogWnd) {
-		double rate50 = 0.50;
-
-		s_fogslotCombo = new OWP_ComboBoxA(L"FogSlot", labelheight);
-		if (!s_fogslotCombo) {
-			_ASSERT(0);
-			abort();
-		}
-		int slotindex;
-		for (slotindex = 0; slotindex < 8; slotindex++) {
-			char strslot[128] = { 0 };
-			sprintf_s(strslot, 128, "Slot_%d", slotindex);
-			s_fogslotCombo->addString(strslot);
-		}
-		s_fogslotCombo->setSelectedCombo(g_lightSlot);
-
-		s_fogkindsp1 = new OWP_Separator(s_fogWnd, true, 0.667, true);
-		if (!s_fogkindsp1) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogkindsp2 = new OWP_Separator(s_fogWnd, true, rate50, true);
-		if (!s_fogkindsp2) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogkindsp3 = new OWP_Separator(s_fogWnd, true, 0.95, true);
-		if (!s_fogkindsp3) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogkindnoChk = new OWP_CheckBoxA(L"NoFog", false, labelheight, true);
-		if (!s_fogkindnoChk) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogkinddistChk = new OWP_CheckBoxA(L"DistFog", false, labelheight, true);
-		if (!s_fogkinddistChk) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogkindheightChk = new OWP_CheckBoxA(L"HeightFog", false, labelheight, true);
-		if (!s_fogkindheightChk) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogspacerLabel1 = new OWP_Label(L"     ", 34);
-		if (!s_fogspacerLabel1) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogdistLabel = new OWP_Label(L"Dist Fog Params", labelheight);
-		if (!s_fogdistLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogdistsp1 = new OWP_Separator(s_fogWnd, true, rate50, true);
-		if (!s_fogdistsp1) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogdistsp2 = new OWP_Separator(s_fogWnd, true, rate50, true);
-		if (!s_fogdistsp2) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogdistsp3 = new OWP_Separator(s_fogWnd, true, rate50, true);
-		if (!s_fogdistsp3) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogdistnearLabel = new OWP_Label(L"near", labelheight);
-		if (!s_fogdistnearLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogdistnearEdit = new OWP_EditBox(true, L"nearEdit", labelheight, EDIT_BUFLEN_NUM);
-		if (!s_fogdistnearEdit) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogdistfarLabel = new OWP_Label(L"far", labelheight);
-		if (!s_fogdistfarLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogdistfarEdit = new OWP_EditBox(true, L"nearEdit", labelheight, EDIT_BUFLEN_NUM);
-		if (!s_fogdistfarEdit) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogdistsp4 = new OWP_Separator(s_fogWnd, true, rate50, true);
-		if (!s_fogdistsp4) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogdistColor = new OWP_ColorBox(RGB(0, 0, 0), labelheight);
-		if (!s_fogdistColor) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogdistSlider = new OWP_Slider(g_fogparams[g_fogindex].GetDistRate(), 1.0, 0.0);
-		if (!s_fogdistSlider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogspacerLabel2 = new OWP_Label(L"     ", 34);
-		if (!s_fogspacerLabel2) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogheightsp1 = new OWP_Separator(s_fogWnd, true, rate50, true);
-		if (!s_fogheightsp1) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogheightsp2 = new OWP_Separator(s_fogWnd, true, rate50, true);
-		if (!s_fogheightsp2) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogheightsp3 = new OWP_Separator(s_fogWnd, true, rate50, true);
-		if (!s_fogheightsp3) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogheightminLabel = new OWP_Label(L"min", labelheight);
-		if (!s_fogheightminLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogheightminEdit = new OWP_EditBox(true, L"minEdit", labelheight, EDIT_BUFLEN_NUM);
-		if (!s_fogheightminEdit) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogheightmaxLabel = new OWP_Label(L"max", labelheight);
-		if (!s_fogheightmaxLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogheightmaxEdit = new OWP_EditBox(true, L"maxEdit", labelheight, EDIT_BUFLEN_NUM);
-		if (!s_fogheightmaxEdit) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogheightsp4 = new OWP_Separator(s_fogWnd, true, rate50, true);
-		if (!s_fogheightsp4) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogheightColor = new OWP_ColorBox(RGB(0, 0, 0), labelheight);
-		if (!s_fogheightColor) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogheightSlider = new OWP_Slider(g_fogparams[g_fogindex].GetHeightRate(), 1.0, 0.0);
-		if (!s_fogheightSlider) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogspacerLabel3 = new OWP_Label(L"     ", 34);
-		if (!s_fogspacerLabel3) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogapplysp = new OWP_Separator(s_fogWnd, true, rate50, true);
-		if (!s_fogapplysp) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogapplyB = new OWP_Button(L"Apply(適用)", labelheight);
-		if (!s_fogapplyB) {
-			_ASSERT(0);
-			abort();
-		}
-		s_fogapplyB->setTextColor(RGB(168, 129, 129));
-
-
-		s_fogWnd->addParts(*s_fogslotCombo);
-		s_fogWnd->addParts(*s_fogkindsp1);
-		s_fogkindsp1->addParts1(*s_fogkindsp2);
-		s_fogkindsp1->addParts2(*s_fogkindsp3);
-		s_fogkindsp2->addParts1(*s_fogkindnoChk);
-		s_fogkindsp2->addParts2(*s_fogkinddistChk);
-		s_fogkindsp3->addParts1(*s_fogkindheightChk);
-		s_fogWnd->addParts(*s_fogspacerLabel1);
-		s_fogWnd->addParts(*s_fogdistLabel);
-		s_fogWnd->addParts(*s_fogdistsp1);
-		s_fogdistsp1->addParts1(*s_fogdistsp2);
-		s_fogdistsp1->addParts2(*s_fogdistsp3);
-		s_fogdistsp2->addParts1(*s_fogdistnearLabel);
-		s_fogdistsp2->addParts2(*s_fogdistnearEdit);
-		s_fogdistsp3->addParts1(*s_fogdistfarLabel);
-		s_fogdistsp3->addParts2(*s_fogdistfarEdit);
-		s_fogWnd->addParts(*s_fogdistsp4);
-		s_fogdistsp4->addParts1(*s_fogdistColor);
-		s_fogdistsp4->addParts2(*s_fogdistSlider);
-		s_fogWnd->addParts(*s_fogspacerLabel2);
-		s_fogWnd->addParts(*s_fogheightsp1);
-		s_fogheightsp1->addParts1(*s_fogheightsp2);
-		s_fogheightsp1->addParts2(*s_fogheightsp3);
-		s_fogheightsp2->addParts1(*s_fogheightminLabel);
-		s_fogheightsp2->addParts2(*s_fogheightminEdit);
-		s_fogheightsp3->addParts1(*s_fogheightmaxLabel);
-		s_fogheightsp3->addParts2(*s_fogheightmaxEdit);
-		s_fogWnd->addParts(*s_fogheightsp4);
-		s_fogheightsp4->addParts1(*s_fogheightColor);//g_fogparams[g_fogindex].GetHeightColor()
-		s_fogheightsp4->addParts2(*s_fogheightSlider);//g_fogparams[g_fogindex].GetHeightRate()
-		s_fogWnd->addParts(*s_fogspacerLabel3);
-		s_fogWnd->addParts(*s_fogapplysp);
-		s_fogapplysp->addParts2(*s_fogapplyB);
-
-
-
-		s_fogslotCombo->setButtonListener([]() {
-			int comboid = s_fogslotCombo->trackPopUpMenu();
-			if ((comboid >= 0) && (comboid < FOGSLOTNUM)) {
-				g_fogindex = comboid;
-				FogParams2Dlg();
-			}
-		});
-		s_fogkindnoChk->setButtonListener([]() {
-			CheckFogKindParamsButton(0);
-			g_fogparams[g_fogindex].SetFogKind(0);
-		});
-		s_fogkinddistChk->setButtonListener([]() {
-			CheckFogKindParamsButton(1);
-			g_fogparams[g_fogindex].SetFogKind(1);
-		});
-		s_fogkindheightChk->setButtonListener([]() {
-			CheckFogKindParamsButton(2);
-			g_fogparams[g_fogindex].SetFogKind(2);
-		});
-
-		s_fogdistColor->setButtonListener([]() {
-			COLORREF choosedcolor = s_fogdistColor->getColor();
-			float fr, fg, fb;
-			fr = (float)((double)GetRValue(choosedcolor) / 255.0);
-			fr = (float)fmin(1.0f, fr);
-			fr = (float)fmax(0.0f, fr);
-			fg = (float)((double)GetGValue(choosedcolor) / 255.0);
-			fg = (float)fmin(1.0f, fg);
-			fg = (float)fmax(0.0f, fg);
-			fb = (float)((double)GetBValue(choosedcolor) / 255.0);
-			fb = (float)fmin(1.0f, fb);
-			fb = (float)fmax(0.0f, fb);
-
-			ChaVector4 setcol;
-			setcol.SetParams(fr, fg, fb, 1.0);
-			g_fogparams[g_fogindex].SetDistColor(setcol);
-			s_fogdistColor->callRewrite();
-		});
-		s_fogheightColor->setButtonListener([]() {
-			COLORREF choosedcolor = s_fogheightColor->getColor();
-			float fr, fg, fb;
-			fr = (float)((double)GetRValue(choosedcolor) / 255.0);
-			fr = (float)fmin(1.0f, fr);
-			fr = (float)fmax(0.0f, fr);
-			fg = (float)((double)GetGValue(choosedcolor) / 255.0);
-			fg = (float)fmin(1.0f, fg);
-			fg = (float)fmax(0.0f, fg);
-			fb = (float)((double)GetBValue(choosedcolor) / 255.0);
-			fb = (float)fmin(1.0f, fb);
-			fb = (float)fmax(0.0f, fb);
-
-			ChaVector4 setcol;
-			setcol.SetParams(fr, fg, fb, 1.0);
-			g_fogparams[g_fogindex].SetHeightColor(setcol);
-			s_fogheightColor->callRewrite();
-		});
-
-		s_fogdistSlider->setCursorListener([]() {
-			double value = s_fogdistSlider->getValue();
-			g_fogparams[g_fogindex].SetDistRate((float)value);
-		});
-		s_fogheightSlider->setCursorListener([]() {
-			double value = s_fogheightSlider->getValue();
-			g_fogparams[g_fogindex].SetHeightRate((float)value);
-		});
-
-		s_fogapplyB->setButtonListener([]() {
-			WCHAR streditbox[256] = { 0L };
-			float tempeditvalue;
-
-			if (s_fogdistnearEdit) {
-				s_fogdistnearEdit->getName(streditbox, 256);
-				tempeditvalue = (float)_wtof(streditbox);
-				if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-					g_fogparams[g_fogindex].SetDistNear(tempeditvalue);
-				}
-				else {
-					if (s_fogWnd) {
-						::MessageBox(s_fogWnd->getHWnd(), L"invalid editbox value : Near", L"Invalid Value", MB_OK);
-					}
-				}
-			}
-			if (s_fogdistfarEdit) {
-				s_fogdistfarEdit->getName(streditbox, 256);
-				tempeditvalue = (float)_wtof(streditbox);
-				if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-					g_fogparams[g_fogindex].SetDistFar(tempeditvalue);
-				}
-				else {
-					if (s_fogWnd) {
-						::MessageBox(s_fogWnd->getHWnd(), L"invalid editbox value : Far", L"Invalid Value", MB_OK);
-					}
-				}
-			}
-			if (s_fogheightmaxEdit) {
-				s_fogheightmaxEdit->getName(streditbox, 256);
-				tempeditvalue = (float)_wtof(streditbox);
-				if ((tempeditvalue >= -500000.0f) && (tempeditvalue <= 500000.0f)) {
-					g_fogparams[g_fogindex].SetHeightHigh(tempeditvalue);
-				}
-				else {
-					if (s_fogWnd) {
-						::MessageBox(s_fogWnd->getHWnd(), L"invalid editbox value : Max Height", L"Invalid Value", MB_OK);
-					}
-				}
-			}
-		});
-
-
-		s_fogWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
-		s_fogWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
-
-		//１クリック目問題対応
-		s_fogWnd->refreshPosAndSize();
-
-		s_fogWnd->callRewrite();
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-
-	return 0;
-}
 int CreateDofParamsDlg()
 {
 
@@ -46456,106 +45509,6 @@ int SetSkyParamsToSky(CShaderTypeParams srcparams)
 	return 0;
 }
 
-int FogParams2Dlg()
-{
-	if (!s_fogWnd) {
-		_ASSERT(0);
-		return 1;
-	}
-
-	if ((g_fogindex < 0) || (g_fogindex >= FOGSLOTNUM)) {
-		_ASSERT(0);
-		return 1;
-	}
-
-	//#########
-	//ComboBox
-	//#########
-	if (s_fogslotCombo) {
-		s_fogslotCombo->setSelectedCombo(g_fogindex);
-	}
-
-	//#######
-	//Button
-	//#######
-	CheckFogKindParamsButton(g_fogparams[g_fogindex].GetFogKind());
-
-	//#######
-	//Slider
-	//#######
-	if (s_fogdistSlider) {
-		s_fogdistSlider->setValue((double)g_fogparams[g_fogindex].GetDistRate(), false);
-	}
-	if (s_fogheightSlider) {
-		s_fogheightSlider->setValue((double)g_fogparams[g_fogindex].GetHeightRate(), false);
-	}
-
-	//#####
-	//Text
-	//#####
-	WCHAR strdlg[256] = { 0L };
-	swprintf_s(strdlg, 256, L"%.1f", g_fogparams[g_fogindex].GetDistNear());
-	if (s_fogdistnearEdit) {
-		s_fogdistnearEdit->setName(strdlg);
-	}
-	swprintf_s(strdlg, 256, L"%.1f", g_fogparams[g_fogindex].GetDistFar());
-	if (s_fogdistfarEdit) {
-		s_fogdistfarEdit->setName(strdlg);
-	}
-
-	swprintf_s(strdlg, 256, L"0.0");
-	if (s_fogheightminEdit) {
-		s_fogheightminEdit->setName(strdlg);
-		s_fogheightminEdit->setActive(false);//!!!!!
-	}
-	swprintf_s(strdlg, 256, L"%.1f", g_fogparams[g_fogindex].GetHeightHigh());
-	if (s_fogheightmaxEdit) {
-		s_fogheightmaxEdit->setName(strdlg);
-	}
-
-	//##########
-	//ColorBar
-	//##########
-	{
-		ChaVector4 fogcolor;
-		fogcolor = g_fogparams[g_fogindex].GetDistColor();
-		unsigned char ur, ug, ub;
-		ur = (unsigned char)(fogcolor.x * 255.0f + 0.0001f);
-		ur = min(255, max(0, ur));
-		ug = (unsigned char)(fogcolor.y * 255.0f + 0.0001f);
-		ug = min(255, max(0, ug));
-		ub = (unsigned char)(fogcolor.z * 255.0f + 0.0001f);
-		ub = min(255, max(0, ub));
-		COLORREF col;
-		col = RGB(ur, ug, ub);
-		if (s_fogdistColor) {
-			s_fogdistColor->setColor(col);
-			s_fogdistColor->callRewrite();
-		}
-	}
-
-	{
-		ChaVector4 fogcolor = g_fogparams[g_fogindex].GetHeightColor();
-		unsigned char ur, ug, ub;
-		ur = (unsigned char)(fogcolor.x * 255.0f + 0.0001f);
-		ur = min(255, max(0, ur));
-		ug = (unsigned char)(fogcolor.y * 255.0f + 0.0001f);
-		ug = min(255, max(0, ug));
-		ub = (unsigned char)(fogcolor.z * 255.0f + 0.0001f);
-		ub = min(255, max(0, ub));
-		COLORREF col;
-		col = RGB(ur, ug, ub);
-		if (s_fogheightColor) {
-			s_fogheightColor->setColor(col);
-			s_fogheightColor->callRewrite();
-		}
-	}
-
-	s_fogWnd->callRewrite();
-
-	return 0;
-}
-
 int DofParams2Dlg()
 {
 	if (!s_dofWnd) {
@@ -46711,24 +45664,9 @@ void ShowSkyWnd(bool srcflag)
 }
 void ShowFogWnd(bool srcflag)
 {
-	if (srcflag == true) {
-		int result1 = CreateFogParamsDlg();
-		if ((result1 == 0) && s_fogWnd) {
-			FogParams2Dlg();
-
-			s_fogWnd->setVisible(true);
-			s_fogWnd->setListenMouse(true);
-		}
-	}
-	else {
-		if (s_fogWnd) {
-			s_fogWnd->setVisible(false);
-			s_fogWnd->setListenMouse(false);
-		}
-	}
+	s_fogdlg.SetVisible(srcflag);
 
 	s_speffectsw[SPEFFECTSW_FOG].state = srcflag;
-
 }
 void ShowDofWnd(bool srcflag)
 {

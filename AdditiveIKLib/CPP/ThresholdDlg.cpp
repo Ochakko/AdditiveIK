@@ -166,11 +166,6 @@ int CThresholdDlg::DestroyObjs()
 	}
 
 
-	m_model = nullptr;
-	m_curboneno = -1;
-	m_rgdindexmap.clear();
-
-
 	return 0;
 }
 
@@ -184,9 +179,6 @@ void CThresholdDlg::InitParams()
 	m_sizex = 150;
 	m_sizey = 150;
 
-	m_model = nullptr;
-	m_curboneno = -1;
-	m_rgdindexmap.clear();
 	m_closeFlag = false;
 
 

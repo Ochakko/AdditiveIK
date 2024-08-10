@@ -13,6 +13,8 @@ https://github.com/Ochakko/AdditiveIK
 
 　Q2Eul_ThresholdウインドウをCThresholdDlgにクラス化
 
+　FogウインドウをCFogDlgにクラス化
+
 
 　不具合修正
 　　Shadowウインドウで設定したパラメータを適用するために呼び出す関数を間違えていた

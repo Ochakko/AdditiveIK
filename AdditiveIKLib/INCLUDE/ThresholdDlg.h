@@ -82,10 +82,6 @@ private:
 	int m_sizex;
 	int m_sizey;
 
-	CModel* m_model;
-	int m_curboneno;
-	std::map<CModel*, int> m_rgdindexmap;
-
 	bool m_closeFlag;
 
 
