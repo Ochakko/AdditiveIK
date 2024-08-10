@@ -2,6 +2,11 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/08/11
+　DofウインドウをCDofDlgにクラス化
+
+
+
 2024/08/10
 　ShadowウインドウをCShadowDlgにクラス化
 
@@ -25,17 +30,10 @@ https://github.com/Ochakko/AdditiveIK
 　　　入れ替わっていた文字列を取得して閾値にセットしていたことにもなる　ぐるぐる＠...
 
 
-　予定
-　　メインファイルのソースの見通し改善のため
-　　AdditiveIK.cppにスタティックメンバとして大量に記述しているOWP関係のソースをクラス化していく予定
-　　大量にあるのでそれなりに時間がかかると思われる
-
-
 　メモ
 　　Impulseメニュー、GrandPlaneメニュー、DampAnimメニュー(の機能)については現在メンテナンスしていない
 　　　ImpulseとGrandPlaneはラグドール機能の試験中に使用し、ラグドール機能休止と共に未メンテナンスに.
 　　　DampAnimメニューは今よりも物理シミュが乱れて使えなかった頃に乱れを収めるために使用していたが現在未メンテナンスに.
-
 
 
 
