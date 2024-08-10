@@ -87,6 +87,7 @@
 #include <ShadowDlg.h>
 #include <ImpulseDlg.h>
 #include <GPlaneDlg.h>
+#include <DampAnimDlg.h>
 #include <CpInfoDlg2.h>
 
 #include <math.h>
@@ -976,6 +977,7 @@ static CLimitEulDlg s_limiteuldlg;
 static CShadowDlg s_shadowdlg;
 static CImpulseDlg s_impulsedlg;
 static CGPlaneDlg s_gplanedlg;
+static CDampAnimDlg s_dampanimdlg;
 
 static bool s_undercpinfodlg2;
 static CCpInfoDlg2 s_cpinfodlg2;
@@ -1210,14 +1212,6 @@ static OrgWindow* s_LtimelineWnd = 0;
 static OWP_Timeline* s_owpLTimeline = 0;
 static OWP_EulerGraph* s_owpEulerGraph = 0;
 static OWP_Separator* s_LTSeparator = 0;
-
-static OrgWindow* s_dmpanimWnd = 0;
-static OWP_CheckBoxA* s_dmpgroupcheck = 0;
-static OWP_Label* s_dmpanimLlabel = 0;
-static OWP_Slider* s_dmpanimLSlider = 0;
-static OWP_Label* s_dmpanimAlabel = 0;
-static OWP_Slider* s_dmpanimASlider = 0;
-static OWP_Button* s_dmpanimB = 0;
 
 static OrgWindow* s_thWnd = 0;
 static OWP_Label* s_ththLabel = 0;
@@ -2467,7 +2461,6 @@ static bool UnderDragOperation_R();
 static bool IsClickedSpriteButton();
 static int CreateTimelineWnd();
 static int CreateLongTimelineWnd();
-static int CreateDmpAnimWnd();
 static int CreateSideMenuWnd();
 static int Params2SideMenuWnd();
 static int CreateTopSlidersWnd();
@@ -2720,8 +2713,6 @@ static int SetCamera6Angle();
 static bool PickAndSelectMeshOfDispGroupDlg();
 static bool PickAndSelectMaterialOfShaderTypeDlg();
 static bool PickAndPut();
-
-static int SetDmpWndParams();
 
 static int SetSpParams();
 static int SetSpSel3DParams();
@@ -3370,7 +3361,6 @@ INT WINAPI wWinMain(
 	CreateTimelineWnd();
 	CreateToolWnd();
 	CreateLongTimelineWnd();
-	CreateDmpAnimWnd();
 	CreateLayerWnd();
 	CreateInfoWnd();
 	CreateSideMenuWnd();
@@ -3713,6 +3703,7 @@ int CheckResolution()
 		s_shadowdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_impulsedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_gplanedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+		s_dampanimdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 	}
 
 	return 0;
@@ -3752,6 +3743,7 @@ void InitApp()
 	s_retargetdlg.InitParams();
 	s_impulsedlg.InitParams();
 	s_gplanedlg.InitParams();
+	s_dampanimdlg.InitParams();
 
 	s_limiteuldlg.InitParams();
 	s_limiteuldlg.SetFunctions(PrepairUndo, UpdateAfterEditAngleLimit);
@@ -5476,6 +5468,7 @@ void OnDestroyDevice()
 	s_shadowdlg.DestroyObjs();
 	s_impulsedlg.DestroyObjs();
 	s_gplanedlg.DestroyObjs();
+	s_dampanimdlg.DestroyObjs();
 	s_cpinfodlg2.DestroyObjs();
 
 
@@ -5870,42 +5863,10 @@ void OnDestroyDevice()
 		s_owpBrushMirrorV = 0;
 	}
 
-
-
 	//if (s_mainmenulabel) {
 	//	delete s_mainmenulabel;
 	//	s_mainmenulabel = 0;
 	//}
-
-
-	if (s_dmpgroupcheck) {
-		delete s_dmpgroupcheck;
-		s_dmpgroupcheck = 0;
-	}
-	if (s_dmpanimLlabel) {
-		delete s_dmpanimLlabel;
-		s_dmpanimLlabel = 0;
-	}
-	if (s_dmpanimLSlider) {
-		delete s_dmpanimLSlider;
-		s_dmpanimLSlider = 0;
-	}
-	if (s_dmpanimAlabel) {
-		delete s_dmpanimAlabel;
-		s_dmpanimAlabel = 0;
-	}
-	if (s_dmpanimASlider) {
-		delete s_dmpanimASlider;
-		s_dmpanimASlider = 0;
-	}
-	if (s_dmpanimB) {
-		delete s_dmpanimB;
-		s_dmpanimB = 0;
-	}
-	if (s_dmpanimWnd) {
-		delete s_dmpanimWnd;
-		s_dmpanimWnd = 0;
-	}
 
 	{
 		if (s_ththLabel) {
@@ -8843,11 +8804,11 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 
 		if (s_model && (s_curboneno >= 0)) {
-			SetDmpWndParams();
 			s_rigidparamsdlg.SetModel(s_model, s_curboneno, s_reindexmap, s_rgdindexmap);
 			s_limiteuldlg.SetModel(s_model, s_curboneno);
 			s_impulsedlg.SetModel(s_model, s_curboneno, s_rgdindexmap);
 			s_gplanedlg.SetModel(s_gplane, s_bpWorld);
+			s_dampanimdlg.SetModel(s_model, s_curboneno, s_rgdindexmap);
 		}
 
 	}
@@ -19296,40 +19257,6 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 	return 0;
 }
 
-int SetDmpWndParams()
-{
-	if (s_curboneno < 0) {
-		return 0;
-	}
-	if (!s_model) {
-		return 0;
-	}
-	if (s_rgdindexmap[s_model] < 0) {
-		return 0;
-	}
-
-
-	CBone* curbone = s_model->GetBoneByID(s_curboneno);
-	if (curbone) {
-		CBone* parentbone = curbone->GetParent(false);
-		if (parentbone && parentbone->IsSkeleton()) {
-			char* filename = s_model->GetRigidElemInfo(s_rgdindexmap[s_model]).filename;
-			CRigidElem* curre = parentbone->GetRigidElemOfMap(filename, curbone);
-			if (curre) {
-				if (s_dmpanimLSlider) {
-					s_dmpanimLSlider->setValue(curre->GetDampanimL(), false);
-				}
-				if (s_dmpanimASlider) {
-					s_dmpanimASlider->setValue(curre->GetDampanimA(), false);
-				}
-			}
-		}
-	}
-
-	s_dmpanimWnd->callRewrite();
-
-	return 0;
-}
 
 int SaveProject()
 {
@@ -25539,10 +25466,11 @@ int ChangeCurrentBone(int prepairundoflag)
 			//	}
 			//}
 
-			SetDmpWndParams();
+
 			s_rigidparamsdlg.SetModel(s_model, s_curboneno, s_reindexmap, s_rgdindexmap);
 			s_limiteuldlg.SetModel(s_model, s_curboneno);
 			s_impulsedlg.SetModel(s_model, s_curboneno, s_rgdindexmap);
+			s_dampanimdlg.SetModel(s_model, s_curboneno, s_rgdindexmap);
 
 			//if (s_befbone != curbone) {
 			//	refreshEulerGraph();
@@ -26869,9 +26797,9 @@ int OnFrameCloseFlag()
 		s_dispconvbone = false;
 		s_retargetdlg.SetVisible(false);
 	}
-	if (s_DcloseFlag) {
-		s_DcloseFlag = false;
-		s_dmpanimWnd->setVisible(0);
+	if (s_dampanimdlg.GetDampAnimCloseFlag()) {
+		s_dampanimdlg.SetDampAnimCloseFlag(false);
+		s_dampanimdlg.SetVisible(false);
 		if (s_bpWorld) {
 			s_bpWorld->setGlobalERP(btScalar(g_erp));
 		}
@@ -30594,173 +30522,6 @@ int CreateLongTimelineWnd()
 
 	return 0;
 }
-
-int CreateDmpAnimWnd()
-{
-
-	s_dsdampctrls.clear();
-
-	/////////
-
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-	s_dmpanimWnd = new OrgWindow(
-		0,
-		_T("dampAnimWindow"),		//ウィンドウクラス名
-		GetModuleHandle(NULL),	//インスタンスハンドル
-		WindowPos(windowposx, s_sidemenuheight),
-		WindowSize(s_sidewidth, s_sideheight),		//サイズ
-		_T("AnimOfDumping"),	//タイトル
-		g_mainhwnd,	//親ウィンドウハンドル
-		false,					//表示・非表示状態
-		//70, 50, 70,				//カラー
-		0, 0, 0,				//カラー
-		true,					//閉じられるか否か
-		true);					//サイズ変更の可否
-
-	if (s_dmpanimWnd) {
-
-		s_dmpgroupcheck = new OWP_CheckBoxA(L"SetToAllRigidsMeansToSetToSameGroup", 0, 15, false);
-		if (!s_dmpgroupcheck) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_dmpanimLlabel = new OWP_Label(L"posSpringDumpingPerFrame", 15);
-		if (!s_dmpanimLlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_dmpanimLSlider = new OWP_Slider(0.0, 1.0, 0.0);
-		if (!s_dmpanimLSlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_dmpanimAlabel = new OWP_Label(L"rotSpringDumpingPerFrame", 15);
-		if (!s_dmpanimAlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_dmpanimASlider = new OWP_Slider(0.0, 1.0, 0.0);
-		if (!s_dmpanimASlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_dmpanimB = new OWP_Button(L"SetToAllRigids");
-		if (!s_dmpanimB) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		int slw2 = 500;
-		if (s_dmpanimLSlider) {
-			s_dmpanimLSlider->setSize(WindowSize(slw2, 40));
-			s_dmpanimASlider->setSize(WindowSize(slw2, 40));
-		}
-
-		if (s_dmpanimWnd) {
-			if (s_dmpgroupcheck) {
-				s_dmpanimWnd->addParts(*s_dmpgroupcheck);
-			}
-			if (s_dmpanimLlabel) {
-				s_dmpanimWnd->addParts(*s_dmpanimLlabel);
-			}
-			if (s_dmpanimLSlider) {
-				s_dmpanimWnd->addParts(*s_dmpanimLSlider);
-			}
-			if (s_dmpanimAlabel) {
-				s_dmpanimWnd->addParts(*s_dmpanimAlabel);
-			}
-			if (s_dmpanimASlider) {
-				s_dmpanimWnd->addParts(*s_dmpanimASlider);
-			}
-			if (s_dmpanimB) {
-				s_dmpanimWnd->addParts(*s_dmpanimB);
-			}
-		}
-
-
-		s_dsdampctrls.push_back(s_dmpgroupcheck);
-		s_dsdampctrls.push_back(s_dmpanimLlabel);
-		s_dsdampctrls.push_back(s_dmpanimLSlider);
-		s_dsdampctrls.push_back(s_dmpanimAlabel);
-		s_dsdampctrls.push_back(s_dmpanimASlider);
-		s_dsdampctrls.push_back(s_dmpanimB);
-
-		if (s_dmpanimWnd) {
-			s_dmpanimWnd->setCloseListener([]() {
-				if (s_model) {
-					s_DcloseFlag = true;
-				}
-				});
-
-			if (s_dmpanimLSlider) {
-				s_dmpanimLSlider->setCursorListener([]() {
-					if (s_model) {
-						CRigidElem* curre = s_model->GetRgdRigidElem(s_rgdindexmap[s_model], s_curboneno);
-						if (curre) {
-							float val = (float)s_dmpanimLSlider->getValue();
-							curre->SetDampanimL(val);
-						}
-						s_dmpanimWnd->callRewrite();						//再描画
-					}
-					});
-			}
-			if (s_dmpanimASlider) {
-				s_dmpanimASlider->setCursorListener([]() {
-					if (s_model) {
-						CRigidElem* curre = s_model->GetRgdRigidElem(s_rgdindexmap[s_model], s_curboneno);
-						if (curre) {
-							float val = (float)s_dmpanimASlider->getValue();
-							curre->SetDampanimA(val);
-						}
-						s_dmpanimWnd->callRewrite();						//再描画
-					}
-					});
-			}
-			if (s_dmpanimB) {
-				s_dmpanimB->setButtonListener([]() {
-					if (s_model && (s_rgdindexmap[s_model] >= 0)) {
-						float valL = (float)s_dmpanimLSlider->getValue();
-						float valA = (float)s_dmpanimASlider->getValue();
-						int chkg = (int)s_dmpgroupcheck->getValue();
-						int gid = -1;
-						if (chkg) {
-							CRigidElem* curre = s_model->GetRgdRigidElem(s_rgdindexmap[s_model], s_curboneno);
-							if (curre) {
-								gid = curre->GetGroupid();
-							}
-							else {
-								gid = -1;
-							}
-						}
-						s_model->SetAllDampAnimData(gid, s_rgdindexmap[s_model], valL, valA);
-					}
-					});
-			}
-
-			s_dmpanimWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
-			s_dmpanimWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
-
-			//１クリック目問題対応
-			s_dmpanimWnd->refreshPosAndSize();//2022/09/20
-
-			s_dmpanimWnd->callRewrite();
-		}
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-
-	return 0;
-}
-
 
 int Params2SideMenuWnd()//2024/06/06
 {
@@ -37551,16 +37312,11 @@ void ShowImpulseWnd(bool srcflag)
 void ShowGroundWnd(bool srcflag)
 {
 	//if (s_model && (s_curboneno >= 0)) {
-	if (srcflag && s_gplane && s_model) {
-		if (s_bpWorld) {
-			CallF(s_model->CreateBtObject(g_limitdegflag, 0), return);
+	if (srcflag && s_gplane && s_model && s_bpWorld) {
+		CallF(s_model->CreateBtObject(g_limitdegflag, 0), return);
 
-			s_gplanedlg.SetModel(s_gplane, s_bpWorld);
-			s_gplanedlg.SetVisible(true);
-		}
-		else {
-			s_gplanedlg.SetVisible(false);
-		}
+		s_gplanedlg.SetModel(s_gplane, s_bpWorld);
+		s_gplanedlg.SetVisible(true);
 	}
 	else {
 		s_gplanedlg.SetVisible(false);
@@ -37572,26 +37328,16 @@ void ShowGroundWnd(bool srcflag)
 void ShowDampAnimWnd(bool srcflag)
 {
 	//if (s_model && (s_curboneno >= 0)) {
-	if (s_model) {
-		if (s_bpWorld) {
-			CallF(s_model->CreateBtObject(g_limitdegflag, 0), return);
+	if (srcflag && s_model && s_bpWorld) {
+		CallF(s_model->CreateBtObject(g_limitdegflag, 0), return);
 
-			//s_rigidWnd->setVisible(0);
-			//s_impWnd->setVisible(0);
-			//s_gpWnd->setVisible(0);
-
-			//s_ikkind = 6;
-			s_dmpanimWnd->setVisible(srcflag);
-
-			SetDmpWndParams();
-			s_dmpanimWnd->callRewrite();
-
-			//s_sprigidsw[0].state = false;
-			//s_sprigidsw[1].state = false;
-			//s_sprigidsw[2].state = false;
-			s_sprigidsw[SPRIGIDSW_DAMPANIM].state = srcflag;
-		}
+		s_dampanimdlg.SetVisible(true);
 	}
+	else {
+		s_dampanimdlg.SetVisible(false);
+	}
+
+	s_sprigidsw[SPRIGIDSW_DAMPANIM].state = srcflag;
 }
 
 
@@ -39297,8 +39043,8 @@ void OrgWindowListenMouse(bool srcflag)
 	if (s_LtimelineWnd) {
 		s_LtimelineWnd->setListenMouse(srcflag);
 	}
-	if (s_dmpanimWnd) {
-		s_dmpanimWnd->setListenMouse(srcflag);
+	if (s_dampanimdlg.GetVisible()) {
+		s_dampanimdlg.ListenMouse(srcflag);
 	}
 	if (s_sidemenuWnd) {
 		s_sidemenuWnd->setListenMouse(srcflag);
