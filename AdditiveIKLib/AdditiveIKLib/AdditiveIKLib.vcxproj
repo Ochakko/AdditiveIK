@@ -243,6 +243,7 @@
     <ClCompile Include="..\CPP\ShaderParamsDlg.cpp" />
     <ClCompile Include="..\CPP\ShaderTypeDlg.cpp" />
     <ClCompile Include="..\CPP\ShaderTypeFile.cpp" />
+    <ClCompile Include="..\CPP\ShadowDlg.cpp" />
     <ClCompile Include="..\CPP\ShadowParamsFile.cpp" />
     <ClCompile Include="..\CPP\SkyParamsDlg.cpp" />
     <ClCompile Include="..\CPP\SkyParamsFile.cpp" />
@@ -645,6 +646,7 @@
     <ClInclude Include="..\INCLUDE\ShaderParamsDlg.h" />
     <ClInclude Include="..\INCLUDE\ShaderTypeDlg.h" />
     <ClInclude Include="..\INCLUDE\ShaderTypeFile.h" />
+    <ClInclude Include="..\INCLUDE\ShadowDlg.h" />
     <ClInclude Include="..\INCLUDE\ShadowParamsFile.h" />
     <ClInclude Include="..\INCLUDE\SkyParamsDlg.h" />
     <ClInclude Include="..\INCLUDE\SkyParamsFile.h" />
