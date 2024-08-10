@@ -88,6 +88,7 @@
 #include <ImpulseDlg.h>
 #include <GPlaneDlg.h>
 #include <DampAnimDlg.h>
+#include <ThresholdDlg.h>
 #include <CpInfoDlg2.h>
 
 #include <math.h>
@@ -978,6 +979,7 @@ static CShadowDlg s_shadowdlg;
 static CImpulseDlg s_impulsedlg;
 static CGPlaneDlg s_gplanedlg;
 static CDampAnimDlg s_dampanimdlg;
+static CThresholdDlg s_thresholddlg;
 
 static bool s_undercpinfodlg2;
 static CCpInfoDlg2 s_cpinfodlg2;
@@ -1212,36 +1214,6 @@ static OrgWindow* s_LtimelineWnd = 0;
 static OWP_Timeline* s_owpLTimeline = 0;
 static OWP_EulerGraph* s_owpEulerGraph = 0;
 static OWP_Separator* s_LTSeparator = 0;
-
-static OrgWindow* s_thWnd = 0;
-static OWP_Label* s_ththLabel = 0;
-static OWP_Separator* s_ththsp1 = 0;
-static OWP_Separator* s_ththsp2 = 0;
-static OWP_Separator* s_ththsp3 = 0;
-static OWP_Label* s_ththnoendjLabel = 0;
-static OWP_EditBox* s_ththnoendjEdit = 0;
-static OWP_Label* s_ththendjLabel = 0;
-static OWP_EditBox* s_ththendjEdit = 0;
-static OWP_Label* s_throundLabel = 0;
-static OWP_Separator* s_throundsp1 = 0;
-static OWP_Separator* s_throundsp2 = 0;
-static OWP_Separator* s_throundsp2a = 0;
-static OWP_Separator* s_throundsp2b = 0;
-static OWP_Separator* s_throundsp3 = 0;
-static OWP_Separator* s_throundsp3a = 0;
-static OWP_Label* s_throundxLabel = 0;
-static OWP_EditBox* s_throundxEdit = 0;
-static OWP_Label* s_throundyLabel = 0;
-static OWP_EditBox* s_throundyEdit = 0;
-static OWP_Label* s_throundzLabel = 0;
-static OWP_EditBox* s_throundzEdit = 0;
-static OWP_Label* s_thspacerLabel = 0;
-static OWP_Separator* s_thapplysp1 = 0;
-static OWP_Separator* s_thapplysp2 = 0;
-static OWP_Button* s_thapplyB = 0;
-static OWP_Button* s_thdefaultB = 0;
-static OWP_Label* s_thspacerLabel1 = 0;
-static OWP_Label* s_thspacerLabel2 = 0;
 
 static OrgWindow* s_fogWnd = 0;
 static OWP_ComboBoxA* s_fogslotCombo = 0;
@@ -2610,7 +2582,6 @@ static int DispObjPanel();
 static int DispModelPanel();
 static int DispMotionPanel();
 static int DispCameraPanel();
-static int CreateThresholdDlg();
 static int DispRotAxisDlg();
 static int DispCustomRigDlg(int rigno);
 static int InvalidateCustomRig(int rigno);
@@ -2631,10 +2602,6 @@ static int EnableRigAxisUV(HWND hDlgWnd);
 static int UpdateAfterEditAngleLimit(int limit2boneflag, bool setcursorflag = true);//2022/12/06
 
 
-int GetThresholdEditIntOWP(OrgWinGUI::OWP_EditBox* srcedit, int* dstlimit);
-int CheckStr_SInt(const WCHAR* srcstr);
-static int Global2ThresholdDlg();
-static int ThresholdDlg2Global();
 static int CopyWorldToLimitedWorld(CModel* srcmodel);
 static int CopyLimitedWorldToWorld(CModel* srcmodel, bool allframeflag, bool setcursorflag,
 	int operatingjointno, bool onpasteflag);
@@ -3704,6 +3671,7 @@ int CheckResolution()
 		s_impulsedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_gplanedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_dampanimdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+		s_thresholddlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 	}
 
 	return 0;
@@ -3744,6 +3712,7 @@ void InitApp()
 	s_impulsedlg.InitParams();
 	s_gplanedlg.InitParams();
 	s_dampanimdlg.InitParams();
+	s_thresholddlg.InitParams();
 
 	s_limiteuldlg.InitParams();
 	s_limiteuldlg.SetFunctions(PrepairUndo, UpdateAfterEditAngleLimit);
@@ -4232,38 +4201,6 @@ void InitApp()
 		s_skyparamsFlag = false;
 		s_fogparamsFlag = false;
 		s_dofparamsFlag = false;
-	}
-
-	{
-		s_thWnd = 0;
-		s_ththLabel = 0;
-		s_ththsp1 = 0;
-		s_ththsp2 = 0;
-		s_ththsp3 = 0;
-		s_ththnoendjLabel = 0;
-		s_ththnoendjEdit = 0;
-		s_ththendjLabel = 0;
-		s_ththendjEdit = 0;
-		s_throundLabel = 0;
-		s_throundsp1 = 0;
-		s_throundsp2 = 0;
-		s_throundsp2a = 0;
-		s_throundsp2b = 0;
-		s_throundsp3 = 0;
-		s_throundsp3a = 0;
-		s_throundxLabel = 0;
-		s_throundxEdit = 0;
-		s_throundyLabel = 0;
-		s_throundyEdit = 0;
-		s_throundzLabel = 0;
-		s_throundzEdit = 0;
-		s_thspacerLabel = 0;
-		s_thspacerLabel1 = 0;
-		s_thspacerLabel2 = 0;
-		s_thapplysp1 = 0;
-		s_thapplysp2 = 0;
-		s_thapplyB = 0;
-		s_thdefaultB = 0;
 	}
 
 	{
@@ -5469,6 +5406,7 @@ void OnDestroyDevice()
 	s_impulsedlg.DestroyObjs();
 	s_gplanedlg.DestroyObjs();
 	s_dampanimdlg.DestroyObjs();
+	s_thresholddlg.DestroyObjs();
 	s_cpinfodlg2.DestroyObjs();
 
 
@@ -5867,126 +5805,6 @@ void OnDestroyDevice()
 	//	delete s_mainmenulabel;
 	//	s_mainmenulabel = 0;
 	//}
-
-	{
-		if (s_ththLabel) {
-			delete s_ththLabel;
-			s_ththLabel = 0;
-		}
-		if (s_ththsp1) {
-			delete s_ththsp1;
-			s_ththsp1 = 0;
-		}
-		if (s_ththsp2) {
-			delete s_ththsp2;
-			s_ththsp2 = 0;
-		}
-		if (s_ththsp3) {
-			delete s_ththsp3;
-			s_ththsp3 = 0;
-		}
-		if (s_ththnoendjLabel) {
-			delete s_ththnoendjLabel;
-			s_ththnoendjLabel = 0;
-		}
-		if (s_ththnoendjEdit) {
-			delete s_ththnoendjEdit;
-			s_ththnoendjEdit = 0;
-		}
-		if (s_ththendjLabel) {
-			delete s_ththendjLabel;
-			s_ththendjLabel = 0;
-		}
-		if (s_ththendjEdit) {
-			delete s_ththendjEdit;
-			s_ththendjEdit = 0;
-		}
-		if (s_throundLabel) {
-			delete s_throundLabel;
-			s_throundLabel = 0;
-		}
-		if (s_throundsp1) {
-			delete s_throundsp1;
-			s_throundsp1 = 0;
-		}
-		if (s_throundsp2) {
-			delete s_throundsp2;
-			s_throundsp2 = 0;
-		}
-		if (s_throundsp2a) {
-			delete s_throundsp2a;
-			s_throundsp2a = 0;
-		}
-		if (s_throundsp2b) {
-			delete s_throundsp2b;
-			s_throundsp2b = 0;
-		}
-		if (s_throundsp3) {
-			delete s_throundsp3;
-			s_throundsp3 = 0;
-		}
-		if (s_throundsp3a) {
-			delete s_throundsp3a;
-			s_throundsp3a = 0;
-		}
-		if (s_throundxLabel) {
-			delete s_throundxLabel;
-			s_throundxLabel = 0;
-		}
-		if (s_throundxEdit) {
-			delete s_throundxEdit;
-			s_throundxEdit = 0;
-		}
-		if (s_throundyLabel) {
-			delete s_throundyLabel;
-			s_throundyLabel = 0;
-		}
-		if (s_throundyEdit) {
-			delete s_throundyEdit;
-			s_throundyEdit = 0;
-		}
-		if (s_throundzLabel) {
-			delete s_throundzLabel;
-			s_throundzLabel = 0;
-		}
-		if (s_throundzEdit) {
-			delete s_throundzEdit;
-			s_throundzEdit = 0;
-		}
-		if (s_thspacerLabel) {
-			delete s_thspacerLabel;
-			s_thspacerLabel = 0;
-		}
-		if (s_thspacerLabel1) {
-			delete s_thspacerLabel1;
-			s_thspacerLabel1 = 0;
-		}
-		if (s_thspacerLabel2) {
-			delete s_thspacerLabel2;
-			s_thspacerLabel2 = 0;
-		}
-		if (s_thapplysp1) {
-			delete s_thapplysp1;
-			s_thapplysp1 = 0;
-		}
-		if (s_thapplysp2) {
-			delete s_thapplysp2;
-			s_thapplysp2 = 0;
-		}
-		if (s_thapplyB) {
-			delete s_thapplyB;
-			s_thapplyB = 0;
-		}
-		if (s_thdefaultB) {
-			delete s_thdefaultB;
-			s_thdefaultB = 0;
-		}
-
-		if (s_thWnd) {
-			delete s_thWnd;
-			s_thWnd = 0;
-		}
-	}
 
 	{
 		if (s_fogslotCombo) {
@@ -23867,404 +23685,6 @@ int RollBackEditRange(int prevrangeFlag, int nextrangeFlag)
 	return 0;
 }
 
-
-//int CreateGUIDlgBrushes()
-//{
-//	if (s_guidlg[GUIDLG_BRUSHPARAMS]) {
-//		//already opened
-//		return 0;
-//	}
-//
-//	s_guidlg[GUIDLG_BRUSHPARAMS] = CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_GUIBRUSHESDLG), g_mainhwnd, (DLGPROC)GUIBrushesDlgProc);
-//	if (!s_guidlg[GUIDLG_BRUSHPARAMS]) {
-//		_ASSERT(0);
-//		return 1;
-//	}
-//
-//	int windowposx;
-//	if (g_4kresolution) {
-//		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-//	}
-//	else {
-//		windowposx = s_timelinewidth + s_mainwidth;
-//	}
-//
-//	SetParent(s_guidlg[GUIDLG_BRUSHPARAMS], g_mainhwnd);
-//	SetWindowPos(
-//		s_guidlg[GUIDLG_BRUSHPARAMS],
-//		HWND_TOP,
-//		windowposx,
-//		s_sidemenuheight,
-//		s_sidewidth,
-//		s_sideheight,
-//		SWP_SHOWWINDOW
-//	);
-//
-//	ShowWindow(s_guidlg[GUIDLG_BRUSHPARAMS], SW_HIDE);
-//	return 0;
-//
-//}
-
-int CreateThresholdDlg()
-{
-	if (s_thWnd) {
-		//_ASSERT(0);
-		return 0;//作成済
-	}
-
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-	s_thWnd = new OrgWindow(
-		0,
-		_T("ThresholdDlg"),		//ウィンドウクラス名
-		GetModuleHandle(NULL),	//インスタンスハンドル
-		WindowPos(windowposx, s_sidemenuheight),
-		WindowSize(s_sidewidth, s_sideheight),		//サイズ
-		_T("ThresholdDlg"),	//タイトル
-		g_mainhwnd,	//親ウィンドウハンドル
-		false,					//表示・非表示状態
-		//70, 50, 70,				//カラー
-		0, 0, 0,				//カラー
-		true,					//閉じられるか否か
-		true);					//サイズ変更の可否
-
-	int labelheight;
-	if (g_4kresolution) {
-		labelheight = 28;
-	}
-	else {
-		labelheight = 20;
-	}
-
-	if (s_thWnd) {
-		double rate50 = 0.50;
-
-		s_ththLabel = new OWP_Label(L"Threshold Degree", labelheight);
-		if (!s_ththLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_ththsp1 = new OWP_Separator(s_thWnd, true, rate50, true);
-		if (!s_ththsp1) {
-			_ASSERT(0);
-			abort();
-		}
-		s_ththsp2 = new OWP_Separator(s_thWnd, true, rate50, true);
-		if (!s_ththsp2) {
-			_ASSERT(0);
-			abort();
-		}
-		s_ththsp3 = new OWP_Separator(s_thWnd, true, rate50, true);
-		if (!s_ththsp3) {
-			_ASSERT(0);
-			abort();
-		}
-		s_ththnoendjLabel = new OWP_Label(L"NoEndJoint", labelheight);
-		if (!s_ththnoendjLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_ththnoendjEdit = new OWP_EditBox(true, L"NoEndJ Edit", labelheight, EDIT_BUFLEN_NUM);//g_thdeg
-		if (!s_ththnoendjEdit) {
-			_ASSERT(0);
-			abort();
-		}
-		s_ththendjLabel = new OWP_Label(L"EndJoint", labelheight);
-		if (!s_ththendjLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_ththendjEdit = new OWP_EditBox(true, L"EndJ Edit", labelheight, EDIT_BUFLEN_NUM);//g_thdeg_endjoint
-		if (!s_ththendjEdit) {
-			_ASSERT(0);
-			abort();
-		}
-		s_throundLabel = new OWP_Label(L"Rounding Degree", labelheight);
-		if (!s_throundLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_throundsp1 = new OWP_Separator(s_thWnd, true, 0.667, true);
-		if (!s_throundsp1) {
-			_ASSERT(0);
-			abort();
-		}
-		s_throundsp2 = new OWP_Separator(s_thWnd, true, rate50, true);
-		if (!s_throundsp2) {
-			_ASSERT(0);
-			abort();
-		}
-		s_throundsp2a = new OWP_Separator(s_thWnd, true, rate50, true);
-		if (!s_throundsp2a) {
-			_ASSERT(0);
-			abort();
-		}
-		s_throundsp2b = new OWP_Separator(s_thWnd, true, rate50, true);
-		if (!s_throundsp2b) {
-			_ASSERT(0);
-			abort();
-		}
-		s_throundsp3 = new OWP_Separator(s_thWnd, true, 0.95, true);
-		if (!s_throundsp3) {
-			_ASSERT(0);
-			abort();
-		}
-		s_throundsp3a = new OWP_Separator(s_thWnd, true, rate50, true);
-		if (!s_throundsp3a) {
-			_ASSERT(0);
-			abort();
-		}
-		s_throundxLabel = new OWP_Label(L"X Round", labelheight);
-		if (!s_throundxLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_throundxEdit = new OWP_EditBox(true, L"XEdit", labelheight, EDIT_BUFLEN_NUM);//g_thRoundX
-		if (!s_throundxEdit) {
-			_ASSERT(0);
-			abort();
-		}
-		s_throundyLabel = new OWP_Label(L"Y Round", labelheight);
-		if (!s_throundyLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_throundyEdit = new OWP_EditBox(true, L"YEdit", labelheight, EDIT_BUFLEN_NUM);//g_thRoundY
-		if (!s_throundyEdit) {
-			_ASSERT(0);
-			abort();
-		}
-		s_throundzLabel = new OWP_Label(L"Z Round", labelheight);
-		if (!s_throundzLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_throundzEdit = new OWP_EditBox(true, L"ZEdit", labelheight, EDIT_BUFLEN_NUM);//g_thRoundZ
-		if (!s_throundzEdit) {
-			_ASSERT(0);
-			abort();
-		}
-		s_thspacerLabel = new OWP_Label(L"     ", labelheight);
-		if (!s_thspacerLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		s_thspacerLabel1 = new OWP_Label(L"     ", labelheight);
-		if (!s_thspacerLabel1) {
-			_ASSERT(0);
-			abort();
-		}
-		s_thspacerLabel2 = new OWP_Label(L"     ", labelheight);
-		if (!s_thspacerLabel2) {
-			_ASSERT(0);
-			abort();
-		}
-		s_thapplysp1 = new OWP_Separator(s_thWnd, true, rate50, true);
-		if (!s_thapplysp1) {
-			_ASSERT(0);
-			abort();
-		}
-		s_thapplysp2 = new OWP_Separator(s_thWnd, true, rate50, true);
-		if (!s_thapplysp2) {
-			_ASSERT(0);
-			abort();
-		}
-		s_thapplyB = new OWP_Button(L"Apply", 32);
-		if (!s_thapplyB) {
-			_ASSERT(0);
-			abort();
-		}
-		s_thapplyB->setTextColor(RGB(168, 129, 129));
-		s_thdefaultB = new OWP_Button(L"Default", 32);
-		if (!s_thdefaultB) {
-			_ASSERT(0);
-			abort();
-		}
-		s_thdefaultB->setTextColor(RGB(168, 129, 129));
-
-
-		s_thWnd->addParts(*s_ththLabel);
-		s_thWnd->addParts(*s_ththsp1);
-		s_ththsp1->addParts1(*s_ththsp2);
-		s_ththsp1->addParts2(*s_ththsp3);
-		s_ththsp2->addParts1(*s_ththnoendjLabel);
-		s_ththsp2->addParts2(*s_ththnoendjEdit);
-		s_ththsp3->addParts1(*s_ththendjLabel);
-		s_ththsp3->addParts2(*s_ththendjEdit);
-		s_thWnd->addParts(*s_thspacerLabel1);
-		s_thWnd->addParts(*s_thspacerLabel2);
-		s_thWnd->addParts(*s_throundLabel);
-		s_thWnd->addParts(*s_throundsp1);
-		s_throundsp1->addParts1(*s_throundsp2);
-		s_throundsp2->addParts1(*s_throundsp2a);
-		s_throundsp2->addParts2(*s_throundsp2b);
-		s_throundsp1->addParts2(*s_throundsp3);
-		s_throundsp3->addParts1(*s_throundsp3a);
-		s_throundsp2a->addParts1(*s_throundxLabel);
-		s_throundsp2a->addParts2(*s_throundxEdit);
-		s_throundsp2b->addParts1(*s_throundyLabel);
-		s_throundsp2b->addParts2(*s_throundyEdit);
-		s_throundsp3a->addParts1(*s_throundzLabel);
-		s_throundsp3a->addParts2(*s_throundzEdit);
-		s_thWnd->addParts(*s_thspacerLabel);
-		s_thWnd->addParts(*s_thapplysp1);
-		s_thapplysp1->addParts2(*s_thapplysp2);
-		s_thapplysp2->addParts1(*s_thapplyB);
-		s_thapplysp2->addParts2(*s_thdefaultB);
-
-
-
-		s_thapplyB->setButtonListener([]() {
-			//s_changelimitangleFlag = true;
-			//PrepairUndo();//全フレーム変更の前に全フレーム保存
-
-			ThresholdDlg2Global();
-
-			//PrepairUndo();//全フレーム変更後に全フレーム保存
-			//s_changelimitangleFlag = false;
-		});
-		s_thdefaultB->setButtonListener([]() {
-			g_thdeg = 181.0f;
-			g_thdeg_endjoint = 159.0f;
-			g_thRoundX = 179.0f;
-			g_thRoundY = 179.0f;
-			g_thRoundZ = 179.0f;
-
-			Global2ThresholdDlg();
-		});
-
-
-		s_thWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
-		s_thWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
-
-		//１クリック目問題対応
-		s_thWnd->refreshPosAndSize();
-
-		s_thWnd->callRewrite();
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-
-	return 0;
-}
-
-int Global2ThresholdDlg()
-{
-	if (s_thWnd != 0) {
-		WCHAR stredit[256] = { 0L };
-
-		swprintf_s(stredit, 256, L"%d", Float2Int(g_thdeg_endjoint));
-		if (s_ththnoendjEdit) {
-			s_ththnoendjEdit->setName(stredit);
-		}
-		swprintf_s(stredit, 256, L"%d", Float2Int(g_thdeg));
-		if (s_ththendjEdit) {
-			s_ththendjEdit->setName(stredit);
-		}
-
-
-		swprintf_s(stredit, 256, L"%d", Float2Int(g_thRoundX));
-		if (s_throundxEdit) {
-			s_throundxEdit->setName(stredit);
-		}
-		swprintf_s(stredit, 256, L"%d", Float2Int(g_thRoundY));
-		if (s_throundyEdit) {
-			s_throundyEdit->setName(stredit);
-		}
-		swprintf_s(stredit, 256, L"%d", Float2Int(g_thRoundZ));
-		if (s_throundzEdit) {
-			s_throundzEdit->setName(stredit);
-		}
-
-		s_thWnd->callRewrite();
-	}
-	else {
-		_ASSERT(0);
-	}
-
-	return 0;
-}
-
-int ThresholdDlg2Global()
-{
-	int result_thdeg, result_thdeg_endjoint;
-	int result_xround, result_yround, result_zround;
-	int val_thdeg, val_thdeg_endjoint;
-	int val_xround, val_yround, val_zround;
-
-	result_thdeg = 1;
-	result_thdeg_endjoint = 1;
-	result_xround = 1;
-	result_yround = 1;
-	result_zround = 1;
-	val_thdeg = Float2Int(g_thdeg);
-	val_thdeg_endjoint = Float2Int(g_thdeg_endjoint);
-	val_xround = Float2Int(g_thRoundX);
-	val_yround = Float2Int(g_thRoundY);
-	val_zround = Float2Int(g_thRoundZ);
-	bool errorflag = false;
-
-	if (s_ththnoendjEdit) {
-		result_thdeg = GetThresholdEditIntOWP(s_ththnoendjEdit, &val_thdeg);
-		if (result_thdeg != 0) {
-			::MessageBox(g_mainhwnd, L"ThresholdDlgのNotEndJointの入力値が不正です。", L"入力し直してください。", MB_OK);
-			errorflag = true;
-		}
-	}
-	if (s_ththendjEdit) {
-		result_thdeg_endjoint = GetThresholdEditIntOWP(s_ththendjEdit, &val_thdeg_endjoint);
-		if (result_thdeg_endjoint != 0) {
-			::MessageBox(g_mainhwnd, L"ThresholdDlgのEndJointの入力値が不正です。", L"入力し直してください。", MB_OK);
-			errorflag = true;
-		}
-	}
-
-	if (s_throundxEdit) {
-		result_xround = GetThresholdEditIntOWP(s_throundxEdit, &val_xround);
-		if (result_xround != 0) {
-			::MessageBox(g_mainhwnd, L"ThresholdDlgのXRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
-			errorflag = true;
-		}
-	}
-	if (s_throundyEdit) {
-		result_yround = GetThresholdEditIntOWP(s_throundyEdit, &val_yround);
-		if (result_yround != 0) {
-			::MessageBox(g_mainhwnd, L"ThresholdDlgのYRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
-			errorflag = true;
-		}
-	}
-	if (s_throundzEdit) {
-		result_zround = GetThresholdEditIntOWP(s_throundzEdit, &val_zround);
-		if (result_zround != 0) {
-			::MessageBox(g_mainhwnd, L"ThresholdDlgのZRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
-			errorflag = true;
-		}
-	}
-
-
-	if (errorflag == false) {
-		g_thdeg = (float)val_thdeg;
-		g_thdeg_endjoint = (float)val_thdeg_endjoint;
-		g_thRoundX = (float)val_xround;
-		g_thRoundY = (float)val_yround;
-		g_thRoundZ = (float)val_zround;
-
-		return 0;
-	}
-	else {
-		return 1;
-	}
-
-}
-
 int CopyLimitedWorldToWorld(CModel* srcmodel, bool allframeflag, bool setcursorflag, int operatingjointno, bool onpasteflag)
 {
 	HCURSOR oldcursor = NULL;
@@ -37116,27 +36536,9 @@ void ShowLimitEulerWnd(bool srcflag)
 
 void ShowThresholdWnd(bool srcflag)
 {
-	if (s_model && (s_curboneno >= 0)) {
-		if (s_bpWorld) {
-			if (srcflag == true) {
-				int result1 = CreateThresholdDlg();
-				if ((result1 == 0) && s_thWnd) {
-					Global2ThresholdDlg();
+	s_thresholddlg.SetVisible(srcflag);
 
-					s_thWnd->setVisible(true);
-					s_thWnd->setListenMouse(true);
-				}
-			}
-			else {
-				if (s_thWnd) {
-					s_thWnd->setVisible(false);
-					s_thWnd->setListenMouse(false);
-				}
-			}
-
-			s_spretargetsw[SPRETARGETSW_THRESHOLD].state = srcflag;
-		}
-	}
+	s_spretargetsw[SPRETARGETSW_THRESHOLD].state = srcflag;
 }
 
 
@@ -50699,71 +50101,4 @@ int SetModel2Dlgs(CModel* srcmodel)
 	}
 
 	return 0;
-}
-
-int GetThresholdEditIntOWP(OWP_EditBox* srcedit, int* dstlimit)
-{
-	if (!srcedit || !dstlimit) {
-		_ASSERT(0);
-		return 1;
-	}
-
-	WCHAR stredit[ANGLEDLGEDITLEN] = { 0L };
-	::ZeroMemory(stredit, sizeof(WCHAR) * ANGLEDLGEDITLEN);
-	srcedit->getName(stredit, ANGLEDLGEDITLEN);
-
-	stredit[ANGLEDLGEDITLEN - 1] = 0L;
-	int result1;
-	result1 = CheckStr_SInt(stredit);
-	if (result1 == 0) {
-		stredit[ANGLEDLGEDITLEN - 1] = 0L;
-
-		SetLastError(0);
-		int tmpint = _wtoi(stredit);
-		DWORD dwresult = GetLastError();
-		if (dwresult == 0) {
-			*dstlimit = tmpint;
-			return 0;
-		}
-		else {
-			_ASSERT(0);
-			*dstlimit = 0;
-			return 1;
-		}
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-}
-int CheckStr_SInt(const WCHAR* srcstr)
-{
-	if (!srcstr) {
-		return 1;
-	}
-	size_t strleng = wcslen(srcstr);
-	if ((strleng <= 0) || (strleng >= ANGLEDLGEDITLEN)) {
-		_ASSERT(0);
-		return 1;
-	}
-
-	bool errorflag = false;
-	size_t strindex;
-	for (strindex = 0; strindex < strleng; strindex++) {
-		WCHAR curwc = *(srcstr + strindex);
-		if (((curwc >= TEXT('0')) && (curwc <= TEXT('9'))) || (curwc == TEXT('+')) || (curwc == TEXT('-'))) {
-
-		}
-		else {
-			errorflag = true;
-			break;
-		}
-	}
-
-	if (errorflag == false) {
-		return 0;
-	}
-	else {
-		return 1;
-	}
 }
