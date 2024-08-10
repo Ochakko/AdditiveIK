@@ -211,6 +211,7 @@
     <ClCompile Include="..\CPP\FogParamsFile.cpp" />
     <ClCompile Include="..\CPP\GColiFile.cpp" />
     <ClCompile Include="..\CPP\GetMaterial.cpp" />
+    <ClCompile Include="..\CPP\GPlaneDlg.cpp" />
     <ClCompile Include="..\CPP\GrassElem.cpp" />
     <ClCompile Include="..\CPP\ImpFile.cpp" />
     <ClCompile Include="..\CPP\ImpulseDlg.cpp" />
@@ -615,6 +616,7 @@
     <ClInclude Include="..\INCLUDE\GColiFile.h" />
     <ClInclude Include="..\INCLUDE\GetMaterial.h" />
     <ClInclude Include="..\INCLUDE\GlobalVar.h" />
+    <ClInclude Include="..\INCLUDE\GPlaneDlg.h" />
     <ClInclude Include="..\INCLUDE\GrassElem.h" />
     <ClInclude Include="..\INCLUDE\ImpFile.h" />
     <ClInclude Include="..\INCLUDE\ImpulseDlg.h" />

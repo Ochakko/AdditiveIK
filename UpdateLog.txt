@@ -7,6 +7,9 @@ https://github.com/Ochakko/AdditiveIK
 
 　ImpulseウインドウをCImpulseDlgにクラス化
 
+　GPlaneウインドウをCGPlaneDlgにクラス化
+
+
 
 　不具合修正
 　　Shadowウインドウで設定したパラメータを適用するために呼び出す関数を間違えていた
