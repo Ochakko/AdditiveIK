@@ -85,6 +85,7 @@
 #include <RetargetDlg.h>
 #include <LimitEulDlg.h>
 #include <ShadowDlg.h>
+#include <ImpulseDlg.h>
 #include <CpInfoDlg2.h>
 
 #include <math.h>
@@ -972,6 +973,7 @@ static CSkyParamsDlg s_skyparamsdlg;
 static CRetargetDlg s_retargetdlg;
 static CLimitEulDlg s_limiteuldlg;
 static CShadowDlg s_shadowdlg;
+static CImpulseDlg s_impulsedlg;
 
 static bool s_undercpinfodlg2;
 static CCpInfoDlg2 s_cpinfodlg2;
@@ -1351,19 +1353,6 @@ static bool s_skyparamsFlag = false;
 static bool s_fogparamsFlag = false;
 static bool s_dofparamsFlag = false;
 
-static OrgWindow* s_impWnd = 0;
-static OWP_CheckBoxA* s_impgroupcheck = 0;
-static OWP_Slider* s_impxSlider = 0;
-static OWP_Slider* s_impySlider = 0;
-static OWP_Slider* s_impzSlider = 0;
-static OWP_Slider* s_impscaleSlider = 0;
-static OWP_Label* s_impxlabel = 0;
-static OWP_Label* s_impylabel = 0;
-static OWP_Label* s_impzlabel = 0;
-static OWP_Label* s_impscalelabel = 0;
-static OWP_Button* s_impallB = 0;
-
-
 static OrgWindow* s_gpWnd = 0;
 static OWP_Slider* s_ghSlider = 0;
 static OWP_Slider* s_gsizexSlider = 0;
@@ -1422,7 +1411,6 @@ static bool s_closecameraFlag = false;
 static bool s_closemotionFlag = false;
 static bool s_DcloseFlag = false;
 static bool s_ScloseFlag = false;
-static bool s_IcloseFlag = false;
 static bool s_GcloseFlag = false;
 static bool s_displimitscloseFlag = false;
 static bool s_undoFlag = false;
@@ -2495,7 +2483,6 @@ static int CreateSideMenuWnd();
 static int Params2SideMenuWnd();
 static int CreateTopSlidersWnd();
 static int Params2TopSlidersWnd();
-static int CreateImpulseWnd();
 static int CreateGPlaneWnd();
 static int CreateToolWnd();
 static int CreateLayerWnd();
@@ -2747,7 +2734,6 @@ static bool PickAndSelectMaterialOfShaderTypeDlg();
 static bool PickAndPut();
 
 
-static int SetImpWndParams();
 static int SetGpWndParams();
 static int SetDmpWndParams();
 
@@ -3399,7 +3385,6 @@ INT WINAPI wWinMain(
 	CreateToolWnd();
 	CreateLongTimelineWnd();
 	CreateDmpAnimWnd();
-	CreateImpulseWnd();
 	CreateGPlaneWnd();
 	CreateLayerWnd();
 	CreateInfoWnd();
@@ -3741,6 +3726,7 @@ int CheckResolution()
 		s_retargetdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_limiteuldlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_shadowdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+		s_impulsedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 	}
 
 	return 0;
@@ -3778,6 +3764,7 @@ void InitApp()
 	s_shaderparamsdlg.InitParams();
 	s_skyparamsdlg.InitParams();
 	s_retargetdlg.InitParams();
+	s_impulsedlg.InitParams();
 
 	s_limiteuldlg.InitParams();
 	s_limiteuldlg.SetFunctions(PrepairUndo, UpdateAfterEditAngleLimit);
@@ -4552,7 +4539,6 @@ void InitApp()
 	s_closecameraFlag = false;
 	s_DcloseFlag = false;
 	s_ScloseFlag = false;
-	s_IcloseFlag = false;
 	s_GcloseFlag = false;
 	s_displimitscloseFlag = false;
 	s_undoFlag = false;
@@ -5501,6 +5487,7 @@ void OnDestroyDevice()
 	s_retargetdlg.DestroyObjs();
 	s_limiteuldlg.DestroyObjs();
 	s_shadowdlg.DestroyObjs();
+	s_impulsedlg.DestroyObjs();
 	s_cpinfodlg2.DestroyObjs();
 
 
@@ -6260,50 +6247,6 @@ void OnDestroyDevice()
 		}
 	}
 
-	if (s_impgroupcheck) {
-		delete s_impgroupcheck;
-		s_impgroupcheck = 0;
-	}
-	if (s_impzSlider) {
-		delete s_impzSlider;
-		s_impzSlider = 0;
-	}
-	if (s_impySlider) {
-		delete s_impySlider;
-		s_impySlider = 0;
-	}
-	if (s_impxSlider) {
-		delete s_impxSlider;
-		s_impxSlider = 0;
-	}
-	if (s_impzlabel) {
-		delete s_impzlabel;
-		s_impzlabel = 0;
-	}
-	if (s_impylabel) {
-		delete s_impylabel;
-		s_impylabel = 0;
-	}
-	if (s_impxlabel) {
-		delete s_impxlabel;
-		s_impxlabel = 0;
-	}
-	if (s_impscaleSlider) {
-		delete s_impscaleSlider;
-		s_impscaleSlider = 0;
-	}
-	if (s_impscalelabel) {
-		delete s_impscalelabel;
-		s_impscalelabel = 0;
-	}
-	if (s_impallB) {
-		delete s_impallB;
-		s_impallB = 0;
-	}
-	if (s_impWnd) {
-		delete s_impWnd;
-		s_impWnd = 0;
-	}
 	if (s_gpWnd) {
 		delete s_gpWnd;
 		s_gpWnd = 0;
@@ -8963,10 +8906,10 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 
 		if (s_model && (s_curboneno >= 0)) {
-			SetImpWndParams();
 			SetDmpWndParams();
 			s_rigidparamsdlg.SetModel(s_model, s_curboneno, s_reindexmap, s_rgdindexmap);
 			s_limiteuldlg.SetModel(s_model, s_curboneno);
+			s_impulsedlg.SetModel(s_model, s_curboneno, s_rgdindexmap);
 		}
 
 	}
@@ -19415,58 +19358,6 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 	return 0;
 }
 
-
-
-
-int SetImpWndParams()
-{
-	if (s_curboneno < 0) {
-		return 0;
-	}
-	if (!s_model) {
-		return 0;
-	}
-	if (s_rgdindexmap[s_model] < 0) {
-		return 0;
-	}
-
-
-	CBone* curbone = s_model->GetBoneByID(s_curboneno);
-	if (curbone) {
-		CBone* parentbone = curbone->GetParent(false);
-		if (parentbone && parentbone->IsSkeleton()) {
-			ChaVector3 setimp(0.0f, 0.0f, 0.0f);
-
-
-			int impnum = parentbone->GetImpMapSize();
-			if ((s_model->GetCurImpIndex() >= 0) && (s_model->GetCurImpIndex() < impnum)) {
-				string curimpname = s_model->GetImpInfo(s_model->GetCurImpIndex());
-				setimp = parentbone->GetImpMap(curimpname, curbone);
-			}
-			else {
-				//_ASSERT(0);
-			}
-
-			if (s_impzSlider) {
-				s_impzSlider->setValue(setimp.z, false);
-			}
-			if (s_impySlider) {
-				s_impySlider->setValue(setimp.y, false);
-			}
-			if (s_impxSlider) {
-				s_impxSlider->setValue(setimp.x, false);
-			}
-			if (s_impscaleSlider) {
-				s_impscaleSlider->setValue(g_impscale, false);
-			}
-		}
-	}
-
-	s_impWnd->callRewrite();
-
-	return 0;
-}
-
 int SetDmpWndParams()
 {
 	if (s_curboneno < 0) {
@@ -25742,10 +25633,10 @@ int ChangeCurrentBone(int prepairundoflag)
 			//	}
 			//}
 
-			SetImpWndParams();
 			SetDmpWndParams();
 			s_rigidparamsdlg.SetModel(s_model, s_curboneno, s_reindexmap, s_rgdindexmap);
 			s_limiteuldlg.SetModel(s_model, s_curboneno);
+			s_impulsedlg.SetModel(s_model, s_curboneno, s_rgdindexmap);
 
 			//if (s_befbone != curbone) {
 			//	refreshEulerGraph();
@@ -27100,11 +26991,9 @@ int OnFrameCloseFlag()
 			s_sidemenuWnd->setVisible(0);
 		}
 	}
-	if (s_IcloseFlag) {
-		s_IcloseFlag = false;
-		if (s_impWnd) {
-			s_impWnd->setVisible(0);
-		}
+	if (s_impulsedlg.GetImpulseCloseFlag()) {
+		s_impulsedlg.SetImpulseCloseFlag(false);
+		s_impulsedlg.SetVisible(false);
 		if (s_bpWorld) {
 			s_bpWorld->setGlobalERP(btScalar(g_erp));
 		}
@@ -31721,194 +31610,6 @@ int CheckSimilarMenu()//context menu
 	delete rmenu;
 	InterlockedExchange(&g_undertrackingRMenu, (LONG)0);
 
-	return 0;
-}
-
-int CreateImpulseWnd()
-{
-
-	s_dsimpulsectrls.clear();
-
-	int windowposx;
-	if (g_4kresolution) {
-		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-	}
-	else {
-		windowposx = s_timelinewidth + s_mainwidth;
-	}
-
-	//////////
-	s_impWnd = new OrgWindow(
-		0,
-		_T("ImpulseWindow"),		//ウィンドウクラス名
-		GetModuleHandle(NULL),	//インスタンスハンドル
-		WindowPos(windowposx, s_sidemenuheight),
-		WindowSize(s_sidewidth, s_sideheight),		//サイズ
-		_T("ImpulseWindow"),	//タイトル
-		g_mainhwnd,	//親ウィンドウハンドル
-		false,					//表示・非表示状態
-		//70, 50, 70,				//カラー
-		0, 0, 0,				//カラー
-		true,					//閉じられるか否か
-		true);					//サイズ変更の可否
-
-	if (s_impWnd) {
-		s_impgroupcheck = new OWP_CheckBoxA(L"SetToAllRigidSMeansToSetSameGroup", 0, 15, false);
-		if (!s_impgroupcheck) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_impxSlider = new OWP_Slider(0.0, 50.0, -50.0);
-		if (!s_impxSlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_impySlider = new OWP_Slider(0.0, 50.0, -50.0);
-		if (!s_impySlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_impzSlider = new OWP_Slider(0.0, 50.0, -50.0);
-		if (!s_impzSlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_impscaleSlider = new OWP_Slider(1.0, 10.0, 0.0);
-		if (!s_impscaleSlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_impxlabel = new OWP_Label(L"Impulse X", 15);
-		if (!s_impxlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_impylabel = new OWP_Label(L"Impulse Y", 15);
-		if (!s_impylabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_impzlabel = new OWP_Label(L"Impulse Z", 15);
-		if (!s_impzlabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_impscalelabel = new OWP_Label(L"ScaleOfImpulse ", 15);
-		if (!s_impscalelabel) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_impallB = new OWP_Button(L"SetImpulseToAllRigies");
-		if (!s_impallB) {
-			_ASSERT(0);
-			return 1;
-		}
-
-		int slw = 350;
-
-		s_impzSlider->setSize(WindowSize(slw, 40));
-		s_impySlider->setSize(WindowSize(slw, 40));
-
-		s_impWnd->addParts(*s_impgroupcheck);
-		s_impWnd->addParts(*s_impxlabel);
-		s_impWnd->addParts(*s_impxSlider);
-		s_impWnd->addParts(*s_impylabel);
-		s_impWnd->addParts(*s_impySlider);
-		s_impWnd->addParts(*s_impzlabel);
-		s_impWnd->addParts(*s_impzSlider);
-		s_impWnd->addParts(*s_impscalelabel);
-		s_impWnd->addParts(*s_impscaleSlider);
-		s_impWnd->addParts(*s_impallB);
-		/////////
-		s_dsimpulsectrls.push_back(s_impgroupcheck);
-		s_dsimpulsectrls.push_back(s_impxlabel);
-		s_dsimpulsectrls.push_back(s_impxSlider);
-		s_dsimpulsectrls.push_back(s_impylabel);
-		s_dsimpulsectrls.push_back(s_impySlider);
-		s_dsimpulsectrls.push_back(s_impzlabel);
-		s_dsimpulsectrls.push_back(s_impzSlider);
-		s_dsimpulsectrls.push_back(s_impscalelabel);
-		s_dsimpulsectrls.push_back(s_impscaleSlider);
-		s_dsimpulsectrls.push_back(s_impallB);
-
-
-		s_impWnd->setCloseListener([]() {
-			if (s_model) {
-				s_IcloseFlag = true;
-			}
-			});
-
-		s_impzSlider->setCursorListener([]() {
-			if (s_model && s_impWnd && s_impzSlider) {
-				float val = (float)s_impzSlider->getValue();
-				if (s_model) {
-					s_model->SetImp(s_curboneno, 2, val);
-				}
-				s_impWnd->callRewrite();						//再描画
-			}
-			});
-		s_impySlider->setCursorListener([]() {
-			if (s_model && s_impWnd && s_impySlider) {
-				float val = (float)s_impySlider->getValue();
-				if (s_model) {
-					s_model->SetImp(s_curboneno, 1, val);
-				}
-				s_impWnd->callRewrite();						//再描画
-			}
-			});
-		s_impxSlider->setCursorListener([]() {
-			if (s_model && s_impWnd && s_impxSlider) {
-				float val = (float)s_impxSlider->getValue();
-				if (s_model) {
-					s_model->SetImp(s_curboneno, 0, val);
-				}
-				s_impWnd->callRewrite();						//再描画
-			}
-			});
-		s_impscaleSlider->setCursorListener([]() {
-			if (s_model && s_impWnd && s_impscaleSlider) {
-				float scale = (float)s_impscaleSlider->getValue();
-				g_impscale = scale;
-				s_impWnd->callRewrite();						//再描画
-			}
-			});
-		s_impallB->setButtonListener([]() {
-			if (s_model && s_impxSlider && s_impySlider && s_impzSlider && s_impgroupcheck) {
-				float impx = (float)s_impxSlider->getValue();
-				float impy = (float)s_impySlider->getValue();
-				float impz = (float)s_impzSlider->getValue();
-				int chkg = (int)s_impgroupcheck->getValue();
-				int gid = -1;
-				if (chkg) {
-					CRigidElem* curre = s_model->GetRgdRigidElem(s_rgdindexmap[s_model], s_curboneno);
-					if (curre) {
-						gid = curre->GetGroupid();
-					}
-					else {
-						gid = -1;
-					}
-				}
-				s_model->SetAllImpulseData(gid, impx, impy, impz);
-			}
-			});
-		//////////
-
-
-		s_impWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
-		s_impWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
-
-		//１クリック目問題対応
-		s_impWnd->refreshPosAndSize();//2022/09/20
-
-		s_impWnd->callRewrite();
-
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-
-	
 	return 0;
 }
 
@@ -38137,27 +37838,22 @@ void ShowShadowParamsWnd(bool srcflag)
 void ShowImpulseWnd(bool srcflag)
 {
 	//if (s_model && (s_curboneno >= 0)) {
-	if (s_model) {
+	if (srcflag && s_model) {
 		if (s_bpWorld) {
 			CallF(s_model->CreateBtObject(g_limitdegflag, 0), return);
 
-			//s_rigidWnd->setVisible(0);
-			//s_gpWnd->setVisible(0);
-			//s_dmpanimWnd->setVisible(0);
-
-			//s_ikkind = 4;
-			s_impWnd->setVisible(srcflag);
-
-			SetImpWndParams();
-			s_impWnd->callRewrite();
-
-			//s_sprigidsw[0].state = false;
-			s_sprigidsw[SPRIGIDSW_IMPULSE].state = srcflag;
-			//s_sprigidsw[2].state = false;
-			//s_sprigidsw[3].state = false;
-
+			s_impulsedlg.SetVisible(true);
+		}
+		else {
+			s_impulsedlg.SetVisible(false);
 		}
 	}
+	else {
+		s_impulsedlg.SetVisible(false);
+	}
+
+	s_sprigidsw[SPRIGIDSW_IMPULSE].state = srcflag;
+
 }
 void ShowGroundWnd(bool srcflag)
 {
@@ -39936,8 +39632,8 @@ void OrgWindowListenMouse(bool srcflag)
 	if (s_shadertypedlg.GetVisible()) {
 		s_shadertypedlg.ListenMouse(srcflag);
 	}
-	if (s_impWnd) {
-		s_impWnd->setListenMouse(srcflag);
+	if (s_impulsedlg.GetVisible()) {
+		s_impulsedlg.ListenMouse(srcflag);
 	}
 	if (s_gpWnd) {
 		s_gpWnd->setListenMouse(srcflag);

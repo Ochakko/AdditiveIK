@@ -5,6 +5,9 @@ https://github.com/Ochakko/AdditiveIK
 2024/08/10
 　ShadowウインドウをCShadowDlgにクラス化
 
+　ImpulseウインドウをCImpulseDlgにクラス化
+
+
 　不具合修正
 　　Shadowウインドウで設定したパラメータを適用するために呼び出す関数を間違えていた
 　　　シャドウカメラ更新用の関数を呼ぶべきところをライト変更用の関数を呼んでいた
@@ -15,6 +18,13 @@ https://github.com/Ochakko/AdditiveIK
 　　メインファイルのソースの見通し改善のため
 　　AdditiveIK.cppにスタティックメンバとして大量に記述しているOWP関係のソースをクラス化していく予定
 　　大量にあるのでそれなりに時間がかかると思われる
+
+
+　メモ
+　　Impulseメニュー、GrandPlaneメニュー、DampAnimメニュー(の機能)については現在メンテナンスしていない
+　　　ImpulseとGrandPlaneはラグドール機能の試験中に使用し、ラグドール機能休止と共に未メンテナンスに.
+　　　DampAnimメニューは今よりも物理シミュが乱れて使えなかった頃に乱れを収めるために使用していたが現在未メンテナンスに.
+
 
 
 

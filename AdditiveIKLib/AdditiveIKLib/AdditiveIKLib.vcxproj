@@ -213,6 +213,7 @@
     <ClCompile Include="..\CPP\GetMaterial.cpp" />
     <ClCompile Include="..\CPP\GrassElem.cpp" />
     <ClCompile Include="..\CPP\ImpFile.cpp" />
+    <ClCompile Include="..\CPP\ImpulseDlg.cpp" />
     <ClCompile Include="..\CPP\InfBone.cpp" />
     <ClCompile Include="..\CPP\InfoWindow.cpp" />
     <ClCompile Include="..\CPP\LaterTransparentDlg.cpp" />
@@ -616,6 +617,7 @@
     <ClInclude Include="..\INCLUDE\GlobalVar.h" />
     <ClInclude Include="..\INCLUDE\GrassElem.h" />
     <ClInclude Include="..\INCLUDE\ImpFile.h" />
+    <ClInclude Include="..\INCLUDE\ImpulseDlg.h" />
     <ClInclude Include="..\INCLUDE\InfBone.h" />
     <ClInclude Include="..\INCLUDE\InfoWindow.h" />
     <ClInclude Include="..\INCLUDE\LaterTransparentDlg.h" />
