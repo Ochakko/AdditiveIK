@@ -1438,7 +1438,6 @@ private:
 	
 };
 
-
 class CShaderTypeParams
 {
 public:
@@ -1448,6 +1447,37 @@ public:
 		InitParams(initoon);
 	};
 	~CShaderTypeParams() {};
+
+	CShaderTypeParams operator= (CShaderTypeParams v) {
+		this->mqomat = v.mqomat;
+		this->shadertype = v.shadertype;
+		this->lightingmat = v.lightingmat;
+		this->metalcoef = v.metalcoef;
+		this->smoothcoef = v.smoothcoef;
+		int lightindex;
+		for (lightindex = 0; lightindex < LIGHTNUMMAX; lightindex++) {
+			this->lightscale[lightindex] = v.lightscale[lightindex];
+		}
+		this->enableEmission = v.enableEmission;
+		this->emissiveScale = v.emissiveScale;
+		this->specularcoef = v.specularcoef;
+		this->normaly0flag = v.normaly0flag;
+		this->shadowcasterflag = v.shadowcasterflag;
+		this->uvscale = v.uvscale;
+		wcscpy_s(wmaterialname, 256, v.wmaterialname);
+		this->hsvtoon = v.hsvtoon;
+		this->alphatest = v.alphatest;
+		this->distortionflag = v.distortionflag;
+		this->distortionscale = v.distortionscale;
+		this->riverorsea = v.riverorsea;
+		this->seacenter = v.seacenter;
+		this->riverdir = v.riverdir;
+		this->riverflowrate = v.riverflowrate;
+		this->distortionmaptype = v.distortionmaptype;
+
+		return *this; 
+	};
+
 
 	void InitParams(HSVTOON srctoon) {
 
@@ -1544,5 +1574,7 @@ public:
 	double riverflowrate;//2024/05/01 velocity
 	int distortionmaptype;//2024/05/01 0:rg, 1:rb, 2:gb
 };
+
+
 
 #endif

@@ -5,13 +5,14 @@
 
 #include <Model.h>
 #include <mqoobject.h>
-#include <mqomaterial.h>
+//#include <mqomaterial.h>
 #include <Bone.h>
 #include <RigidElem.h>
 #include <BtObject.h>
 #include <OrgWindow.h>
 #include <GlobalVar.h>
 
+#include <ShaderTypeDlg.h>
 
 #define DBGH
 #include <dbg.h>
@@ -656,6 +657,12 @@ void CShaderParamsDlg::InitParams()
 
 	m_model = nullptr;
 
+	m_toonmqomaterial = nullptr;//toonスライダーを離した後の処理用
+	m_toonparamchange = false;//toonスライダーを離した後の処理用
+	m_hsvtoonforall.Init();
+	m_shadertypeparams.InitParams(m_hsvtoonforall);
+
+
 	m_st_closeFlag = false;
 	m_st_remakeToonTextureFlag = false;
 	m_st_backFlag = false;
@@ -883,13 +890,11 @@ int CShaderParamsDlg::SetPosAndSize(int srcposx, int srcposy, int srcsizex, int 
 	return 0;
 }
 
-void CShaderParamsDlg::SetModel(CModel* srcmodel, CShaderTypeParams* srcshadertypeparams)
+void CShaderParamsDlg::SetModel(CModel* srcmodel)
 {
 	m_model = srcmodel;
 	CreateShaderParamsWnd();
-	if (srcshadertypeparams) {
-		ParamsToDlg(nullptr, srcshadertypeparams);
-	}
+	ParamsToDlg(nullptr);
 
 	if (m_dlgWnd && m_dlgWnd->getVisible()) {
 		if (m_st_Sc) {
@@ -2478,15 +2483,11 @@ int CShaderParamsDlg::CreateShaderParamsWnd()
 	return 0;
 }
 
-int CShaderParamsDlg::ParamsToDlg(CMQOMaterial* srcmat, CShaderTypeParams* srcshadertypeparams)
+int CShaderParamsDlg::ParamsToDlg(CMQOMaterial* srcmat)
 {
 	//############################################################
 	//srcmat == nullptrの場合にはm_modelの最初のマテリアルシェーダを表示
 	//############################################################
-	if (!srcshadertypeparams) {
-		_ASSERT(0);
-		return 1;
-	}
 
 	if (!m_model || (m_dlgWnd == NULL)) {
 		_ASSERT(0);
@@ -2509,7 +2510,7 @@ int CShaderParamsDlg::ParamsToDlg(CMQOMaterial* srcmat, CShaderTypeParams* srcsh
 		return 1;
 	}
 
-	srcshadertypeparams->SetMaterial(srcmat);
+	m_shadertypeparams.SetMaterial(srcmat);
 
 	//######
 	//Text
@@ -2531,7 +2532,7 @@ int CShaderParamsDlg::ParamsToDlg(CMQOMaterial* srcmat, CShaderTypeParams* srcsh
 	//Button
 	//#######
 	if (m_st_shadertyperadio) {
-		switch (srcshadertypeparams->shadertype) {
+		switch (m_shadertypeparams.shadertype) {
 		case -1:
 			m_st_shadertyperadio->setSelectIndex(0, false);
 			break;
@@ -2552,8 +2553,8 @@ int CShaderParamsDlg::ParamsToDlg(CMQOMaterial* srcmat, CShaderTypeParams* srcsh
 	}
 
 	if (m_st_toonlitradio) {
-		if ((srcshadertypeparams->hsvtoon.lightindex >= 0) && (srcshadertypeparams->hsvtoon.lightindex <= 7)) {
-			m_st_toonlitradio->setSelectIndex(srcshadertypeparams->hsvtoon.lightindex, false);
+		if ((m_shadertypeparams.hsvtoon.lightindex >= 0) && (m_shadertypeparams.hsvtoon.lightindex <= 7)) {
+			m_st_toonlitradio->setSelectIndex(m_shadertypeparams.hsvtoon.lightindex, false);
 		}
 		else {
 			_ASSERT(0);
@@ -2562,8 +2563,8 @@ int CShaderParamsDlg::ParamsToDlg(CMQOMaterial* srcmat, CShaderTypeParams* srcsh
 	}
 
 	if (m_st_riverradio) {
-		if ((srcshadertypeparams->riverorsea >= 0) && (srcshadertypeparams->riverorsea <= 1)) {
-			m_st_riverradio->setSelectIndex(srcshadertypeparams->riverorsea, false);
+		if ((m_shadertypeparams.riverorsea >= 0) && (m_shadertypeparams.riverorsea <= 1)) {
+			m_st_riverradio->setSelectIndex(m_shadertypeparams.riverorsea, false);
 		}
 		else {
 			_ASSERT(0);
@@ -2572,8 +2573,8 @@ int CShaderParamsDlg::ParamsToDlg(CMQOMaterial* srcmat, CShaderTypeParams* srcsh
 	}
 
 	if (m_st_distortionmapradio) {
-		if ((srcshadertypeparams->distortionmaptype >= 0) && (srcshadertypeparams->distortionmaptype <= 2)) {
-			m_st_distortionmapradio->setSelectIndex(srcshadertypeparams->distortionmaptype, false);
+		if ((m_shadertypeparams.distortionmaptype >= 0) && (m_shadertypeparams.distortionmaptype <= 2)) {
+			m_st_distortionmapradio->setSelectIndex(m_shadertypeparams.distortionmaptype, false);
 		}
 		else {
 			_ASSERT(0);
@@ -2586,121 +2587,121 @@ int CShaderParamsDlg::ParamsToDlg(CMQOMaterial* srcmat, CShaderTypeParams* srcsh
 	//Slider
 	//#######
 	if (m_st_metalslider) {
-		m_st_metalslider->setValue(srcshadertypeparams->metalcoef, false);
+		m_st_metalslider->setValue(m_shadertypeparams.metalcoef, false);
 	}
 	if (m_st_smoothslider) {
-		m_st_smoothslider->setValue(srcshadertypeparams->smoothcoef, false);
+		m_st_smoothslider->setValue(m_shadertypeparams.smoothcoef, false);
 	}
 
 
 	if (m_st_litscaleslider1) {
-		m_st_litscaleslider1->setValue(srcshadertypeparams->lightscale[0], false);
+		m_st_litscaleslider1->setValue(m_shadertypeparams.lightscale[0], false);
 	}
 	if (m_st_litscaleslider2) {
-		m_st_litscaleslider2->setValue(srcshadertypeparams->lightscale[1], false);
+		m_st_litscaleslider2->setValue(m_shadertypeparams.lightscale[1], false);
 	}
 	if (m_st_litscaleslider3) {
-		m_st_litscaleslider3->setValue(srcshadertypeparams->lightscale[2], false);
+		m_st_litscaleslider3->setValue(m_shadertypeparams.lightscale[2], false);
 	}
 	if (m_st_litscaleslider4) {
-		m_st_litscaleslider4->setValue(srcshadertypeparams->lightscale[3], false);
+		m_st_litscaleslider4->setValue(m_shadertypeparams.lightscale[3], false);
 	}
 	if (m_st_litscaleslider5) {
-		m_st_litscaleslider5->setValue(srcshadertypeparams->lightscale[4], false);
+		m_st_litscaleslider5->setValue(m_shadertypeparams.lightscale[4], false);
 	}
 	if (m_st_litscaleslider6) {
-		m_st_litscaleslider6->setValue(srcshadertypeparams->lightscale[5], false);
+		m_st_litscaleslider6->setValue(m_shadertypeparams.lightscale[5], false);
 	}
 	if (m_st_litscaleslider7) {
-		m_st_litscaleslider7->setValue(srcshadertypeparams->lightscale[6], false);
+		m_st_litscaleslider7->setValue(m_shadertypeparams.lightscale[6], false);
 	}
 	if (m_st_litscaleslider8) {
-		m_st_litscaleslider8->setValue(srcshadertypeparams->lightscale[7], false);
+		m_st_litscaleslider8->setValue(m_shadertypeparams.lightscale[7], false);
 	}
 
 	if (m_st_emissionslider) {
-		m_st_emissionslider->setValue(srcshadertypeparams->emissiveScale, false);
+		m_st_emissionslider->setValue(m_shadertypeparams.emissiveScale, false);
 	}
 
 	if (m_st_toonhiaddrslider) {
-		m_st_toonhiaddrslider->setValue(srcshadertypeparams->hsvtoon.hicolorh, false);
+		m_st_toonhiaddrslider->setValue(m_shadertypeparams.hsvtoon.hicolorh, false);
 	}
 	if (m_st_toonlowaddrslider) {
-		m_st_toonlowaddrslider->setValue(srcshadertypeparams->hsvtoon.lowcolorh, false);
+		m_st_toonlowaddrslider->setValue(m_shadertypeparams.hsvtoon.lowcolorh, false);
 	}
 
 
 	if (m_st_toonbaseHslider) {
-		m_st_toonbaseHslider->setValue(srcshadertypeparams->hsvtoon.basehsv.x, false);
+		m_st_toonbaseHslider->setValue(m_shadertypeparams.hsvtoon.basehsv.x, false);
 	}
 	if (m_st_toonbaseSslider) {
-		m_st_toonbaseSslider->setValue(srcshadertypeparams->hsvtoon.basehsv.y, false);
+		m_st_toonbaseSslider->setValue(m_shadertypeparams.hsvtoon.basehsv.y, false);
 	}
 	if (m_st_toonbaseVslider) {
-		m_st_toonbaseVslider->setValue(srcshadertypeparams->hsvtoon.basehsv.z, false);
+		m_st_toonbaseVslider->setValue(m_shadertypeparams.hsvtoon.basehsv.z, false);
 	}
 	if (m_st_toonbaseAslider) {
-		m_st_toonbaseAslider->setValue(srcshadertypeparams->hsvtoon.basehsv.w, false);
+		m_st_toonbaseAslider->setValue(m_shadertypeparams.hsvtoon.basehsv.w, false);
 	}
 
 	if (m_st_toonhiHslider) {
-		m_st_toonhiHslider->setValue(srcshadertypeparams->hsvtoon.hiaddhsv.x, false);
+		m_st_toonhiHslider->setValue(m_shadertypeparams.hsvtoon.hiaddhsv.x, false);
 	}
 	if (m_st_toonhiSslider) {
-		m_st_toonhiSslider->setValue(srcshadertypeparams->hsvtoon.hiaddhsv.y, false);
+		m_st_toonhiSslider->setValue(m_shadertypeparams.hsvtoon.hiaddhsv.y, false);
 	}
 	if (m_st_toonhiVslider) {
-		m_st_toonhiVslider->setValue(srcshadertypeparams->hsvtoon.hiaddhsv.z, false);
+		m_st_toonhiVslider->setValue(m_shadertypeparams.hsvtoon.hiaddhsv.z, false);
 	}
 	if (m_st_toonhiAslider) {
-		m_st_toonhiAslider->setValue(srcshadertypeparams->hsvtoon.hiaddhsv.w, false);
+		m_st_toonhiAslider->setValue(m_shadertypeparams.hsvtoon.hiaddhsv.w, false);
 	}
 
 	if (m_st_toonlowHslider) {
-		m_st_toonlowHslider->setValue(srcshadertypeparams->hsvtoon.lowaddhsv.x, false);
+		m_st_toonlowHslider->setValue(m_shadertypeparams.hsvtoon.lowaddhsv.x, false);
 	}
 	if (m_st_toonlowSslider) {
-		m_st_toonlowSslider->setValue(srcshadertypeparams->hsvtoon.lowaddhsv.y, false);
+		m_st_toonlowSslider->setValue(m_shadertypeparams.hsvtoon.lowaddhsv.y, false);
 	}
 	if (m_st_toonlowVslider) {
-		m_st_toonlowVslider->setValue(srcshadertypeparams->hsvtoon.lowaddhsv.z, false);
+		m_st_toonlowVslider->setValue(m_shadertypeparams.hsvtoon.lowaddhsv.z, false);
 	}
 	if (m_st_toonlowAslider) {
-		m_st_toonlowAslider->setValue(srcshadertypeparams->hsvtoon.lowaddhsv.w, false);
+		m_st_toonlowAslider->setValue(m_shadertypeparams.hsvtoon.lowaddhsv.w, false);
 	}
 
 	if (m_st_spccoefslider) {
-		m_st_spccoefslider->setValue(srcshadertypeparams->specularcoef, false);
+		m_st_spccoefslider->setValue(m_shadertypeparams.specularcoef, false);
 	}
 
 	if (m_st_tilingUslider) {
-		m_st_tilingUslider->setValue((int)(srcshadertypeparams->uvscale.x + 0.0001), false);
+		m_st_tilingUslider->setValue((int)(m_shadertypeparams.uvscale.x + 0.0001), false);
 	}
 	if (m_st_tilingVslider) {
-		m_st_tilingVslider->setValue((int)(srcshadertypeparams->uvscale.y + 0.0001), false);
+		m_st_tilingVslider->setValue((int)(m_shadertypeparams.uvscale.y + 0.0001), false);
 	}
 
 	if (m_st_alphatestslider) {
-		m_st_alphatestslider->setValue(srcshadertypeparams->alphatest, false);
+		m_st_alphatestslider->setValue(m_shadertypeparams.alphatest, false);
 	}
 
 	if (m_st_distortionscaleslider) {
-		m_st_distortionscaleslider->setValue(srcshadertypeparams->distortionscale, false);
+		m_st_distortionscaleslider->setValue(m_shadertypeparams.distortionscale, false);
 	}
 	if (m_st_seacenterUslider) {
-		m_st_seacenterUslider->setValue(srcshadertypeparams->seacenter.x, false);
+		m_st_seacenterUslider->setValue(m_shadertypeparams.seacenter.x, false);
 	}
 	if (m_st_seacenterVslider) {
-		m_st_seacenterVslider->setValue(srcshadertypeparams->seacenter.y, false);
+		m_st_seacenterVslider->setValue(m_shadertypeparams.seacenter.y, false);
 	}
 	if (m_st_riverdirUslider) {
-		m_st_riverdirUslider->setValue(srcshadertypeparams->riverdir.x, false);
+		m_st_riverdirUslider->setValue(m_shadertypeparams.riverdir.x, false);
 	}
 	if (m_st_riverdirVslider) {
-		m_st_riverdirVslider->setValue(srcshadertypeparams->riverdir.y, false);
+		m_st_riverdirVslider->setValue(m_shadertypeparams.riverdir.y, false);
 	}
 	if (m_st_flowrateslider) {
-		m_st_flowrateslider->setValue(srcshadertypeparams->riverflowrate, false);
+		m_st_flowrateslider->setValue(m_shadertypeparams.riverflowrate, false);
 	}
 
 
@@ -2708,7 +2709,7 @@ int CShaderParamsDlg::ParamsToDlg(CMQOMaterial* srcmat, CShaderTypeParams* srcsh
 	//CheckBox
 	//#########
 	if (m_st_emissionchk) {
-		if ((bool)srcshadertypeparams->enableEmission == true) {
+		if ((bool)m_shadertypeparams.enableEmission == true) {
 			m_st_emissionchk->setValue(true, false);
 		}
 		else {
@@ -2717,7 +2718,7 @@ int CShaderParamsDlg::ParamsToDlg(CMQOMaterial* srcmat, CShaderTypeParams* srcsh
 	}
 
 	if (m_st_gradationchk) {
-		if (srcshadertypeparams->hsvtoon.gradationflag == true) {
+		if (m_shadertypeparams.hsvtoon.gradationflag == true) {
 			m_st_gradationchk->setValue(true, false);
 
 			if (m_st_powertoonchk) {
@@ -2734,7 +2735,7 @@ int CShaderParamsDlg::ParamsToDlg(CMQOMaterial* srcmat, CShaderTypeParams* srcsh
 	}
 
 	if (m_st_powertoonchk) {
-		if (srcshadertypeparams->hsvtoon.powertoon == true) {
+		if (m_shadertypeparams.hsvtoon.powertoon == true) {
 			m_st_powertoonchk->setValue(true, false);
 		}
 		else {
@@ -2743,7 +2744,7 @@ int CShaderParamsDlg::ParamsToDlg(CMQOMaterial* srcmat, CShaderTypeParams* srcsh
 	}
 
 	if (m_st_normaly0chk) {
-		if (srcshadertypeparams->normaly0flag == true) {
+		if (m_shadertypeparams.normaly0flag == true) {
 			m_st_normaly0chk->setValue(true, false);
 		}
 		else {
@@ -2752,7 +2753,7 @@ int CShaderParamsDlg::ParamsToDlg(CMQOMaterial* srcmat, CShaderTypeParams* srcsh
 	}
 
 	if (m_st_shadowcasterchk) {
-		if (srcshadertypeparams->shadowcasterflag == true) {
+		if (m_shadertypeparams.shadowcasterflag == true) {
 			m_st_shadowcasterchk->setValue(true, false);
 		}
 		else {
@@ -2761,7 +2762,7 @@ int CShaderParamsDlg::ParamsToDlg(CMQOMaterial* srcmat, CShaderTypeParams* srcsh
 	}
 
 	if (m_st_lightflagchk) {
-		if (srcshadertypeparams->lightingmat == true) {
+		if (m_shadertypeparams.lightingmat == true) {
 			m_st_lightflagchk->setValue(true, false);
 		}
 		else {
@@ -2770,7 +2771,7 @@ int CShaderParamsDlg::ParamsToDlg(CMQOMaterial* srcmat, CShaderTypeParams* srcsh
 	}
 
 	if (m_st_distortionchk) {
-		if (srcshadertypeparams->distortionflag == true) {
+		if (m_shadertypeparams.distortionflag == true) {
 			m_st_distortionchk->setValue(true, false);
 		}
 		else {
@@ -2781,6 +2782,1351 @@ int CShaderParamsDlg::ParamsToDlg(CMQOMaterial* srcmat, CShaderTypeParams* srcsh
 	return 0;
 }
 
+int CShaderParamsDlg::OnFrameShaperTypeParamsDlg(CShaderTypeDlg* pshadertypedlg)
+{
+	//if (!pshadertypedlg || !pshadertypeparams || !phsvtoonforall || !pptoonmqomaterial) {
+	//	_ASSERT(0);
+	//	return 1;
+	//}
+	if (!pshadertypedlg) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	if (GetShaderStRadioFlag()) {
+		SetShaderStRadioFlag(false);
+		if (m_model) {
+			int shadertype = GetShaderTypeRadio();
+			switch (shadertype) {
+			case 0:
+				m_shadertypeparams.shadertype = -1;
+				break;
+			case 1:
+				m_shadertypeparams.shadertype = MQOSHADER_PBR;
+				break;
+			case 2:
+				m_shadertypeparams.shadertype = MQOSHADER_STD;
+				break;
+			case 3:
+				m_shadertypeparams.shadertype = MQOSHADER_TOON;
+				break;
+			default:
+				_ASSERT(0);
+				break;
+			}
+			pshadertypedlg->SetShaderType(shadertype);
+		}
+	}
+	if (GetShaderLightChkFlag()) {
+		SetShaderLightChkFlag(false);
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			bool ischecked = GetShaderLightFlagChk();
+			if (ischecked) {
+				m_shadertypeparams.lightingmat = true;
+			}
+			else {
+				m_shadertypeparams.lightingmat = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetLightingFlag(m_shadertypeparams.lightingmat);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetLightingFlag(m_shadertypeparams.lightingmat);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderShadowCasterChkFlag()) {
+		SetShaderShadowCasterChkFlag(false);
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			bool ischecked = GetShaderShadowCasterChk();
+			if (ischecked) {
+				m_shadertypeparams.shadowcasterflag = true;
+			}
+			else {
+				m_shadertypeparams.shadowcasterflag = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetShadowCasterFlag(m_shadertypeparams.shadowcasterflag);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetShadowCasterFlag(m_shadertypeparams.shadowcasterflag);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderNormalY0ChkFlag()) {
+		SetShaderNormalY0ChkFlag(false);
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			bool ischecked = GetShadowNormalY0Chk();
+			if (ischecked) {
+				m_shadertypeparams.normaly0flag = true;
+			}
+			else {
+				m_shadertypeparams.normaly0flag = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetNormalY0Flag(m_shadertypeparams.normaly0flag);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetNormalY0Flag(m_shadertypeparams.normaly0flag);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderSpcCoefSliderFlag()) {
+		SetShaderSpcCoefSliderFlag(false);
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newspcscale = GetShaderSpcCoefSlider();
+			m_shadertypeparams.specularcoef = newspcscale;
+
+			if (curmqomat) {
+				curmqomat->SetSpecularCoef(newspcscale);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetSpecularCoef(newspcscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderEmissionChkFlag()) {
+		SetShaderEmissionChkFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			bool ischecked = GetShaderEmissionChk();
+			if (ischecked) {
+				m_shadertypeparams.enableEmission = true;
+			}
+			else {
+				m_shadertypeparams.enableEmission = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetEnableEmission(m_shadertypeparams.enableEmission);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetEnableEmission(m_shadertypeparams.enableEmission);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderEmissionSliderFlag()) {
+		SetShaderEmissionSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newemiscale = GetShaderEmissionSlider();
+			m_shadertypeparams.emissiveScale = newemiscale;
+
+			if (curmqomat) {
+				curmqomat->SetEmissiveScale(newemiscale);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetEmissiveScale(newemiscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderMetalSliderFlag()) {
+		SetShaderMetalSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newmetalcoef = GetShaderMetalSlider();
+			m_shadertypeparams.metalcoef = newmetalcoef;
+
+			if (curmqomat) {
+				curmqomat->SetMetalAdd(newmetalcoef);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetMetalAdd(newmetalcoef);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderSmoothSliderFlag()) {
+		SetShaderSmoothSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newsmoothcoef = GetShaderSmoothSlider();
+			m_shadertypeparams.smoothcoef = newsmoothcoef;
+
+			if (curmqomat) {
+				curmqomat->SetSmoothCoef(newsmoothcoef);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetSmoothCoef(newsmoothcoef);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderLitScale1Flag()) {
+		SetShaderLitScale1Flag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int litno4 = 0;//!!!
+			float newlitscale = GetShaderLitScaleSlider1();
+			m_shadertypeparams.lightscale[litno4] = newlitscale;
+
+			if (curmqomat) {
+				curmqomat->SetLightScale(litno4, newlitscale);
+			}
+			else {
+				int materialindex4;
+				for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex4);
+					if (setmqomat) {
+						setmqomat->SetLightScale(litno4, newlitscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderLitScale2Flag()) {
+		SetShaderLitScale2Flag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int litno4 = 1;//!!!
+			float newlitscale = GetShaderLitScaleSlider2();
+			m_shadertypeparams.lightscale[litno4] = newlitscale;
+
+			if (curmqomat) {
+				curmqomat->SetLightScale(litno4, newlitscale);
+			}
+			else {
+				int materialindex4;
+				for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex4);
+					if (setmqomat) {
+						setmqomat->SetLightScale(litno4, newlitscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderLitScale3Flag()) {
+		SetShaderLitScale3Flag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int litno4 = 2;//!!!
+			float newlitscale = GetShaderLitScaleSlider3();
+			m_shadertypeparams.lightscale[litno4] = newlitscale;
+
+			if (curmqomat) {
+				curmqomat->SetLightScale(litno4, newlitscale);
+			}
+			else {
+				int materialindex4;
+				for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex4);
+					if (setmqomat) {
+						setmqomat->SetLightScale(litno4, newlitscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderLitScale4Flag()) {
+		SetShaderLitScale4Flag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int litno4 = 3;//!!!
+			float newlitscale = GetShaderLitScaleSlider4();
+			m_shadertypeparams.lightscale[litno4] = newlitscale;
+
+			if (curmqomat) {
+				curmqomat->SetLightScale(litno4, newlitscale);
+			}
+			else {
+				int materialindex4;
+				for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex4);
+					if (setmqomat) {
+						setmqomat->SetLightScale(litno4, newlitscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderLitScale5Flag()) {
+		SetShaderLitScale5Flag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int litno4 = 4;//!!!
+			float newlitscale = GetShaderLitScaleSlider5();
+			m_shadertypeparams.lightscale[litno4] = newlitscale;
+
+			if (curmqomat) {
+				curmqomat->SetLightScale(litno4, newlitscale);
+			}
+			else {
+				int materialindex4;
+				for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex4);
+					if (setmqomat) {
+						setmqomat->SetLightScale(litno4, newlitscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderLitScale6Flag()) {
+		SetShaderLitScale6Flag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int litno4 = 5;//!!!
+			float newlitscale = GetShaderLitScaleSlider6();
+			m_shadertypeparams.lightscale[litno4] = newlitscale;
+
+			if (curmqomat) {
+				curmqomat->SetLightScale(litno4, newlitscale);
+			}
+			else {
+				int materialindex4;
+				for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex4);
+					if (setmqomat) {
+						setmqomat->SetLightScale(litno4, newlitscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderLitScale7Flag()) {
+		SetShaderLitScale7Flag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int litno4 = 6;//!!!
+			float newlitscale = GetShaderLitScaleSlider7();
+			m_shadertypeparams.lightscale[litno4] = newlitscale;
+
+			if (curmqomat) {
+				curmqomat->SetLightScale(litno4, newlitscale);
+			}
+			else {
+				int materialindex4;
+				for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex4);
+					if (setmqomat) {
+						setmqomat->SetLightScale(litno4, newlitscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderLitScale8Flag()) {
+		SetShaderLitScale8Flag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int litno4 = 7;//!!!
+			float newlitscale = GetShaderLitScaleSlider8();
+			m_shadertypeparams.lightscale[litno4] = newlitscale;
+
+			if (curmqomat) {
+				curmqomat->SetLightScale(litno4, newlitscale);
+			}
+			else {
+				int materialindex4;
+				for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex4);
+					if (setmqomat) {
+						setmqomat->SetLightScale(litno4, newlitscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderToonLitRadioFlag()) {
+		SetShaderToonLitRadioFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int lightindex = GetShaderToonLitRadio();
+			m_shadertypeparams.hsvtoon.lightindex = lightindex;
+
+			if (curmqomat) {
+				curmqomat->SetToonLightIndex(lightindex);
+			}
+			else {
+				int materialindex8;
+				for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex8);
+					if (setmqomat) {
+						setmqomat->SetToonLightIndex(lightindex);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderToonHiAddrSliderFlag()) {
+		SetShaderToonHiAddrSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float hicolorh = GetShaderToonHiAddrSlider();
+			m_shadertypeparams.hsvtoon.hicolorh = hicolorh;
+
+			if (curmqomat) {
+				curmqomat->SetToonHiAddrH(m_shadertypeparams.hsvtoon.hicolorh);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonHiAddrH(m_shadertypeparams.hsvtoon.hicolorh);
+						m_hsvtoonforall.hicolorh = m_shadertypeparams.hsvtoon.hicolorh;
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderRemakeToonTextureFlag()) {
+		SetShaderRemakeToonTextureFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			if (curmqomat) {
+				m_toonmqomaterial = curmqomat;
+			}
+			else {
+				m_toonmqomaterial = nullptr;
+			}
+			m_toonparamchange = true;
+		}
+	}
+	if (GetShaderToonLowAddrSliderFlag()) {
+		SetShaderToonLowAddrSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float lowcolorh = GetShaderToonLowAddrSlider();
+			m_shadertypeparams.hsvtoon.lowcolorh = lowcolorh;
+
+			if (curmqomat) {
+				curmqomat->SetToonLowAddrH(m_shadertypeparams.hsvtoon.lowcolorh);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonLowAddrH(m_shadertypeparams.hsvtoon.lowcolorh);
+						m_hsvtoonforall.lowcolorh = m_shadertypeparams.hsvtoon.lowcolorh;
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderGradationChkFlag()) {
+		SetShaderGradationChkFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			bool ischecked = GetShaderGradationChk();
+			if (ischecked) {
+				m_shadertypeparams.hsvtoon.gradationflag = true;
+			}
+			else {
+				m_shadertypeparams.hsvtoon.gradationflag = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetToonGradationFlag(m_shadertypeparams.hsvtoon.gradationflag);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonGradationFlag(m_shadertypeparams.hsvtoon.gradationflag);
+						m_hsvtoonforall.gradationflag = m_shadertypeparams.hsvtoon.gradationflag;
+					}
+				}
+			}
+
+			if (curmqomat) {
+				m_toonmqomaterial = curmqomat;
+			}
+			else {
+				m_toonmqomaterial = nullptr;
+			}
+			m_toonparamchange = true;
+		}
+	}
+	if (GetShaderPowerToonChkFlag()) {
+		SetShaderPowerToonChkFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			bool ischecked = GetShaderPowerToonChk();
+			if (ischecked) {
+				m_shadertypeparams.hsvtoon.powertoon = true;
+			}
+			else {
+				m_shadertypeparams.hsvtoon.powertoon = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetToonPowerToon(m_shadertypeparams.hsvtoon.powertoon);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonPowerToon(m_shadertypeparams.hsvtoon.powertoon);
+						m_hsvtoonforall.powertoon = m_shadertypeparams.hsvtoon.powertoon;
+					}
+				}
+			}
+
+			if (curmqomat) {
+				m_toonmqomaterial = curmqomat;
+			}
+			else {
+				m_toonmqomaterial = nullptr;
+			}
+			m_toonparamchange = true;
+		}
+	}
+	if (GetShaderToonBaseHSliderFlag()) {
+		SetShaderToonBaseHSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			m_shadertypeparams.hsvtoon.basehsv.x = GetShaderToonBaseHSlider();
+
+			if (curmqomat) {
+				curmqomat->SetToonBaseH(m_shadertypeparams.hsvtoon.basehsv.x);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonBaseH(m_shadertypeparams.hsvtoon.basehsv.x);
+						m_hsvtoonforall.basehsv.x = m_shadertypeparams.hsvtoon.basehsv.x;
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderToonBaseSSliderFlag()) {
+		SetShaderToonBaseSSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			m_shadertypeparams.hsvtoon.basehsv.y = GetShaderToonBaseSSlider();
+
+			if (curmqomat) {
+				curmqomat->SetToonBaseS(m_shadertypeparams.hsvtoon.basehsv.y);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonBaseS(m_shadertypeparams.hsvtoon.basehsv.y);
+						m_hsvtoonforall.basehsv.y = m_shadertypeparams.hsvtoon.basehsv.y;
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderToonBaseVSliderFlag()) {
+		SetShaderToonBaseVSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			m_shadertypeparams.hsvtoon.basehsv.z = GetShaderToonBaseVSlider();
+
+			if (curmqomat) {
+				curmqomat->SetToonBaseV(m_shadertypeparams.hsvtoon.basehsv.z);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonBaseV(m_shadertypeparams.hsvtoon.basehsv.z);
+						m_hsvtoonforall.basehsv.z = m_shadertypeparams.hsvtoon.basehsv.z;
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderToonBaseASliderFlag()) {
+		SetShaderToonBaseASliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			m_shadertypeparams.hsvtoon.basehsv.w = GetShaderToonBaseASlider();
+
+			if (curmqomat) {
+				curmqomat->SetToonBaseA(m_shadertypeparams.hsvtoon.basehsv.w);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonBaseA(m_shadertypeparams.hsvtoon.basehsv.w);
+						m_hsvtoonforall.basehsv.w = m_shadertypeparams.hsvtoon.basehsv.w;
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderToonHiHSliderFlag()) {
+		SetShaderToonHiHSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newvalue = GetShaderToonHiHSlider();
+			m_shadertypeparams.hsvtoon.hiaddhsv.x = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetToonHiAddH(m_shadertypeparams.hsvtoon.hiaddhsv.x);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonHiAddH(m_shadertypeparams.hsvtoon.hiaddhsv.x);
+						m_hsvtoonforall.hiaddhsv.x = m_shadertypeparams.hsvtoon.hiaddhsv.x;
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderToonHiSSliderFlag()) {
+		SetShaderToonHiSSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newvalue = GetShaderToonHiSSlider();
+			m_shadertypeparams.hsvtoon.hiaddhsv.y = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetToonHiAddS(m_shadertypeparams.hsvtoon.hiaddhsv.y);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonHiAddS(m_shadertypeparams.hsvtoon.hiaddhsv.y);
+						m_hsvtoonforall.hiaddhsv.y = m_shadertypeparams.hsvtoon.hiaddhsv.y;
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderToonHiVSliderFlag()) {
+		SetShaderToonHiVSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newvalue = GetShaderToonHiVSlider();
+			m_shadertypeparams.hsvtoon.hiaddhsv.z = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetToonHiAddV(m_shadertypeparams.hsvtoon.hiaddhsv.z);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonHiAddV(m_shadertypeparams.hsvtoon.hiaddhsv.z);
+						m_hsvtoonforall.hiaddhsv.z = m_shadertypeparams.hsvtoon.hiaddhsv.z;
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderToonHiASliderFlag()) {
+		SetShaderToonHiASliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newvalue = GetShaderToonHiASlider();
+			m_shadertypeparams.hsvtoon.hiaddhsv.w = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetToonHiAddA(m_shadertypeparams.hsvtoon.hiaddhsv.w);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonHiAddA(m_shadertypeparams.hsvtoon.hiaddhsv.w);
+						m_hsvtoonforall.hiaddhsv.w = m_shadertypeparams.hsvtoon.hiaddhsv.w;
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderToonLowHSliderFlag()) {
+		SetShaderToonLowHSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+
+			float newvalue = GetShaderToonLowHSlider();
+			m_shadertypeparams.hsvtoon.lowaddhsv.x = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetToonLowAddH(m_shadertypeparams.hsvtoon.lowaddhsv.x);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonLowAddH(m_shadertypeparams.hsvtoon.lowaddhsv.x);
+						m_hsvtoonforall.lowaddhsv.x = m_shadertypeparams.hsvtoon.lowaddhsv.x;
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderToonLowSSliderFlag()) {
+		SetShaderToonLowSSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+
+			float newvalue = GetShaderToonLowSSlider();
+			m_shadertypeparams.hsvtoon.lowaddhsv.y = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetToonLowAddS(m_shadertypeparams.hsvtoon.lowaddhsv.y);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonLowAddS(m_shadertypeparams.hsvtoon.lowaddhsv.y);
+						m_hsvtoonforall.lowaddhsv.y = m_shadertypeparams.hsvtoon.lowaddhsv.y;
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderToonLowVSliderFlag()) {
+		SetShaderToonLowVSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+
+			float newvalue = GetShaderToonLowVSlider();
+			m_shadertypeparams.hsvtoon.lowaddhsv.z = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetToonLowAddV(m_shadertypeparams.hsvtoon.lowaddhsv.z);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonLowAddV(m_shadertypeparams.hsvtoon.lowaddhsv.z);
+						m_hsvtoonforall.lowaddhsv.z = m_shadertypeparams.hsvtoon.lowaddhsv.z;
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderToonLowASliderFlag()) {
+		SetShaderToonLowASliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+
+			float newvalue = GetShaderToonLowASlider();
+			m_shadertypeparams.hsvtoon.lowaddhsv.w = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetToonLowAddA(m_shadertypeparams.hsvtoon.lowaddhsv.w);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonLowAddA(m_shadertypeparams.hsvtoon.lowaddhsv.w);
+						m_hsvtoonforall.lowaddhsv.w = m_shadertypeparams.hsvtoon.lowaddhsv.w;
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderTilingUSliderFlag()) {
+		SetShaderTilingUSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int newvalue = GetShaderTilingUSlider();
+			m_shadertypeparams.uvscale.x = (double)newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetUVScale(m_shadertypeparams.uvscale);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetUVScale(m_shadertypeparams.uvscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderTilingUSliderUpFlag()) {
+		SetShaderTilingUSliderUpFlag(false);
+
+		if (m_model) {
+			int newvalue = GetShaderTilingUSlider();
+			m_shadertypeparams.uvscale.x = (double)newvalue;
+			SetShaderTilingUSlider(newvalue);
+			//m_st_tilingUslider->setValue(m_shadertypeparams.uvscale.x, false);//!!! マウスを離したときにintに丸めた値をセットし直す
+		}
+	}
+	if (GetShaderTilingVSliderFlag()) {
+		SetShaderTilingVSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int newvalue = GetShaderTilingVSlider();
+			m_shadertypeparams.uvscale.y = (double)newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetUVScale(m_shadertypeparams.uvscale);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetUVScale(m_shadertypeparams.uvscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderTilingVSliderUpFlag()) {
+		SetShaderTilingVSliderUpFlag(false);
+
+		if (m_model) {
+			int newvalue = GetShaderTilingVSlider();
+			m_shadertypeparams.uvscale.y = (double)newvalue;
+
+			//m_st_tilingVslider->setValue(m_shadertypeparams.uvscale.y, false);//!!! マウスを離したときにintに丸めた値をセットし直す
+			SetShaderTilingVSlider(newvalue);
+		}
+	}
+	if (GetShaderAlphaTestSliderFlag()) {
+		SetShaderAlphaTestSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			m_shadertypeparams.alphatest = GetShaderAlphaTestSlider();
+
+			if (curmqomat) {
+				curmqomat->SetAlphaTestClipVal(m_shadertypeparams.alphatest);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetAlphaTestClipVal(m_shadertypeparams.alphatest);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderDistortionChkFlag()) {
+		SetShaderDistortionChkFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			bool ischecked = GetShaderDistortionChk();
+			if (ischecked) {
+				m_shadertypeparams.distortionflag = true;
+			}
+			else {
+				m_shadertypeparams.distortionflag = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetDistortionFlag(m_shadertypeparams.distortionflag);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetDistortionFlag(m_shadertypeparams.distortionflag);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderDistortionScaleSliderFlag()) {
+		SetShaderDistortionScaleSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			double newvalue = GetShaderDistortonScaleSlider();
+			m_shadertypeparams.distortionscale = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetDistortionScale(m_shadertypeparams.distortionscale);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetDistortionScale(m_shadertypeparams.distortionscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderRiverRadioFlag()) {
+		SetShaderRiverRadioFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int riverorsea = GetShaderRiverRadio();
+			m_shadertypeparams.riverorsea = riverorsea;
+
+			if (curmqomat) {
+				curmqomat->SetRiverOrSea(riverorsea);
+			}
+			else {
+				int materialindex8;
+				for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex8);
+					if (setmqomat) {
+						setmqomat->SetRiverOrSea(riverorsea);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderSeaCenterUSliderFlag()) {
+		SetShaderSeaCenterUSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newvalueU = GetShaderSeaCenterUSlider();
+			float newvalueV = GetShaderSeaCenterVSlider();
+			m_shadertypeparams.seacenter.SetParams(newvalueU, newvalueV);
+
+			if (curmqomat) {
+				curmqomat->SetSeaCenter(m_shadertypeparams.seacenter);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetSeaCenter(m_shadertypeparams.seacenter);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderSeaCenterVSliderFlag()) {
+		SetShaderSeaCenterVSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newvalueU = GetShaderSeaCenterUSlider();
+			float newvalueV = GetShaderSeaCenterVSlider();
+			m_shadertypeparams.seacenter.SetParams(newvalueU, newvalueV);
+
+			if (curmqomat) {
+				curmqomat->SetSeaCenter(m_shadertypeparams.seacenter);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetSeaCenter(m_shadertypeparams.seacenter);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderRiverDirUSliderFlag()) {
+		SetShaderRiverDirUSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newvalueU = GetShaderRiverDirUSlider();
+			float newvalueV = GetShaderRiverDirVSlider();
+			m_shadertypeparams.riverdir.SetParams(newvalueU, newvalueV);
+
+			if (curmqomat) {
+				curmqomat->SetRiverDir(m_shadertypeparams.riverdir);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetRiverDir(m_shadertypeparams.riverdir);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderRiverDirVSliderFlag()) {
+		SetShaderRiverDirVSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newvalueU = GetShaderRiverDirUSlider();
+			float newvalueV = GetShaderRiverDirVSlider();
+			m_shadertypeparams.riverdir.SetParams(newvalueU, newvalueV);
+
+			if (curmqomat) {
+				curmqomat->SetRiverDir(m_shadertypeparams.riverdir);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetRiverDir(m_shadertypeparams.riverdir);
+					}
+				}
+			}
+		}
+	}
+	if (GetShaderFlowRateSliderFlag()) {
+		SetShaderFlowRateSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			double newvalue = GetShaderFlowRateSlider();
+			m_shadertypeparams.riverflowrate = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetRiverFlowRate(m_shadertypeparams.riverflowrate);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetRiverFlowRate(m_shadertypeparams.riverflowrate);
+					}
+				}
+			}
+		}
+
+	}
+	if (GetShaderDistortionMapRadioFlag()) {
+		SetShaderDistortionMapRadioFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = pshadertypedlg->GetShaderTypeParamsIndex() - 1;
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int maptype = GetShaderDistortionMapRadio();
+			m_shadertypeparams.distortionmaptype = maptype;
+
+			if (curmqomat) {
+				curmqomat->SetDistortionMapType(maptype);
+			}
+			else {
+				int materialindex8;
+				for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex8);
+					if (setmqomat) {
+						setmqomat->SetDistortionMapType(maptype);
+					}
+				}
+			}
+		}
+	}
+
+
+
+
+	if (m_toonparamchange) {
+		m_toonparamchange = false;
+		if (m_model) {
+			if (m_toonmqomaterial) {
+				m_toonmqomaterial->RemakeDiffuseTexture();
+			}
+			else {
+				int materialnum = m_model->GetMQOMaterialSize();
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->RemakeDiffuseTexture();
+					}
+				}
+			}
+		}
+	}
+
+
+	return 0;
+}
 
 const HWND CShaderParamsDlg::GetHWnd()
 {

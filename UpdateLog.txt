@@ -5,6 +5,13 @@ https://github.com/Ochakko/AdditiveIK
 2024/08/11
 　DofウインドウをCDofDlgにクラス化
 
+　OnFrameShaderTypeParamsDlg()の中身をCShaderParamsDlgクラス内に移動.
+
+　OnFrameSkyParamsDlg()の中身をCSkyParamsDlgクラス内に移動.
+　　CSkyParamsDlgのメンバを使うべきところにCShaderParamsDlgのメンバを使っていた部分を修正
+　　コピペして未編集のミス
+
+
 
 
 2024/08/10

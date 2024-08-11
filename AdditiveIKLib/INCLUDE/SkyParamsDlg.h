@@ -5,6 +5,7 @@
 #include <windows.h>
 
 #include <ChaVecCalc.h>
+#include <mqomaterial.h>
 
 #include "../../AdditiveIK/resource.h"       // メイン シンボル
 
@@ -39,9 +40,9 @@ public:
 	};
 
 	//void SetModel(CModel* srcmodel, CShaderTypeParams* srcshadertypeparams);
-	int ParamsToDlg(CModel* srcmodel, CMQOMaterial* srcmat, CShaderTypeParams* srcshadertypeparams);
+	int ParamsToDlg(CModel* srcmodel, CMQOMaterial* srcmat);
 	void SetVisible(bool srcflag);
-	int OnFrameSkyParams();
+	int OnFrameSkyParamsDlg();
 
 	void InitParams();
 	int DestroyObjs();
@@ -362,6 +363,12 @@ public:
 		m_skyst_distortionmapradioFlag = srcval;
 	};
 
+	bool GetSkyToonParamChangeFlag() {
+		return m_skytoonparamchange;
+	};
+	void SetSkyToonParamChangeFlag(bool srcval) {
+		m_skytoonparamchange = srcval;
+	};
 
 	//##########
 	//GUI state
@@ -816,6 +823,28 @@ public:
 		}
 	};
 
+
+	CShaderTypeParams GetSkyParams(int srcindex)
+	{
+		if ((srcindex >= 0) && (srcindex < SKYSLOTNUM)) {
+			return m_skyparams[srcindex];
+		}
+		else {
+			CShaderTypeParams initparams;
+			initparams.InitParams(m_skyhsvtoonforall);
+			return initparams;
+		}
+	};
+	void SetSkyParams(int srcindex, CShaderTypeParams srcparams)
+	{
+		if ((srcindex >= 0) && (srcindex < SKYSLOTNUM)) {
+			m_skyparams[srcindex] = srcparams;
+		}
+		else {
+			_ASSERT(0);
+		}
+	};
+
 	//###########
 	//Slot
 	//###########
@@ -1003,6 +1032,13 @@ private:
 	OrgWinGUI::OWP_Slider* m_skyst_flowrateslider;
 
 	OrgWinGUI::OWP_RadioButton* m_skyst_distortionmapradio;
+
+	
+	CMQOMaterial* m_skytoonmqomaterial;//toonスライダーを離した後の処理用
+	bool m_skytoonparamchange;//toonスライダーを離した後の処理用
+	HSVTOON m_skyhsvtoonforall;//s_skt用の設定内容を保存
+	CShaderTypeParams m_skyparams[SKYSLOTNUM];
+
 
 	bool m_skyst_closeFlag;
 	bool m_skyst_remakeToonTextureFlag;

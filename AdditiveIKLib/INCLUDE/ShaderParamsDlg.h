@@ -5,6 +5,7 @@
 #include <windows.h>
 
 #include <ChaVecCalc.h>
+#include <mqomaterial.h>
 
 #include "../../AdditiveIK/resource.h"       // メイン シンボル
 
@@ -21,7 +22,9 @@ class OrgWinGUI::OWP_EditBox;
 class OrgWinGUI::OWP_Separator;
 class OrgWinGUI::OWP_ScrollWnd;
 
-class CShaderTypeParams;
+class CShaderTypeDlg;
+//class CShaderTypeParams;
+//struct tag_hsvtoon;
 
 /////////////////////////////////////////////////////////////////////////////
 // CShaderParamsDlg
@@ -38,9 +41,10 @@ public:
 		return m_createdflag;
 	};
 
-	void SetModel(CModel* srcmodel, CShaderTypeParams* srcshadertypeparams);
-	int ParamsToDlg(CMQOMaterial* srcmat, CShaderTypeParams* srcshadertypeparams);
+	void SetModel(CModel* srcmodel);
+	int ParamsToDlg(CMQOMaterial* srcmat);
 	void SetVisible(bool srcflag);
+	int OnFrameShaperTypeParamsDlg(CShaderTypeDlg* pshadertypedlg);
 
 	void InitParams();
 	int DestroyObjs();
@@ -359,6 +363,13 @@ public:
 	};
 	void SetShaderDistortionMapRadioFlag(bool srcval) {
 		m_st_distortionmapradioFlag = srcval;
+	};
+
+	bool GetShaderToonParamChangeFlag() {
+		return m_toonparamchange;
+	};
+	void SetShaderToonParamChangeFlag(bool srcval) {
+		m_toonparamchange = srcval;
 	};
 
 
@@ -989,6 +1000,13 @@ private:
 	OrgWinGUI::OWP_Slider* m_st_flowrateslider;
 
 	OrgWinGUI::OWP_RadioButton* m_st_distortionmapradio;
+
+
+	CMQOMaterial* m_toonmqomaterial;//toonスライダーを離した後の処理用
+	bool m_toonparamchange;//toonスライダーを離した後の処理用
+	HSVTOON m_hsvtoonforall;//mqomaterial指定が無い場合の設定内容を保存
+	CShaderTypeParams m_shadertypeparams;
+
 
 	bool m_st_closeFlag;
 	bool m_st_remakeToonTextureFlag;

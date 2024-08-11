@@ -693,6 +693,15 @@ void CSkyParamsDlg::InitParams()
 
 	m_model = nullptr;
 
+	m_skytoonmqomaterial = nullptr;//toonスライダーを離した後の処理用
+	m_skytoonparamchange = false;//toonスライダーを離した後の処理用
+	m_skyhsvtoonforall.Init();
+	int skyindex;
+	for (skyindex = 0; skyindex < SKYSLOTNUM; skyindex++) {
+		m_skyparams[skyindex].InitParams(m_skyhsvtoonforall);
+	}
+
+
 	m_skyst_closeFlag = false;
 	m_skyst_remakeToonTextureFlag = false;
 	m_skyst_backFlag = false;
@@ -2605,12 +2614,12 @@ int CSkyParamsDlg::CreateSkyParamsWnd()
 	return 0;
 }
 
-int CSkyParamsDlg::ParamsToDlg(CModel* srcmodel, CMQOMaterial* srcmat, CShaderTypeParams* srcshadertypeparams)
+int CSkyParamsDlg::ParamsToDlg(CModel* srcmodel, CMQOMaterial* srcmat)
 {
 	//############################################################
 	//srcmat == nullptrの場合にはm_modelの最初のマテリアルシェーダを表示
 	//############################################################
-	if (!srcmodel || !srcshadertypeparams) {
+	if (!srcmodel) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -2639,7 +2648,7 @@ int CSkyParamsDlg::ParamsToDlg(CModel* srcmodel, CMQOMaterial* srcmat, CShaderTy
 		return 1;
 	}
 
-	srcshadertypeparams->SetMaterial(srcmat);
+	m_skyparams[g_skyindex].SetMaterial(srcmat);
 
 	//######
 	//Text
@@ -2661,7 +2670,7 @@ int CSkyParamsDlg::ParamsToDlg(CModel* srcmodel, CMQOMaterial* srcmat, CShaderTy
 	//Button
 	//#######
 	if (m_skyst_shadertyperadio) {
-		switch (srcshadertypeparams->shadertype) {
+		switch (m_skyparams[g_skyindex].shadertype) {
 		case -1:
 			m_skyst_shadertyperadio->setSelectIndex(0, false);
 			break;
@@ -2682,8 +2691,8 @@ int CSkyParamsDlg::ParamsToDlg(CModel* srcmodel, CMQOMaterial* srcmat, CShaderTy
 	}
 
 	if (m_skyst_toonlitradio) {
-		if ((srcshadertypeparams->hsvtoon.lightindex >= 0) && (srcshadertypeparams->hsvtoon.lightindex <= 7)) {
-			m_skyst_toonlitradio->setSelectIndex(srcshadertypeparams->hsvtoon.lightindex, false);
+		if ((m_skyparams[g_skyindex].hsvtoon.lightindex >= 0) && (m_skyparams[g_skyindex].hsvtoon.lightindex <= 7)) {
+			m_skyst_toonlitradio->setSelectIndex(m_skyparams[g_skyindex].hsvtoon.lightindex, false);
 		}
 		else {
 			_ASSERT(0);
@@ -2692,8 +2701,8 @@ int CSkyParamsDlg::ParamsToDlg(CModel* srcmodel, CMQOMaterial* srcmat, CShaderTy
 	}
 
 	if (m_skyst_riverradio) {
-		if ((srcshadertypeparams->riverorsea >= 0) && (srcshadertypeparams->riverorsea <= 1)) {
-			m_skyst_riverradio->setSelectIndex(srcshadertypeparams->riverorsea, false);
+		if ((m_skyparams[g_skyindex].riverorsea >= 0) && (m_skyparams[g_skyindex].riverorsea <= 1)) {
+			m_skyst_riverradio->setSelectIndex(m_skyparams[g_skyindex].riverorsea, false);
 		}
 		else {
 			_ASSERT(0);
@@ -2702,8 +2711,8 @@ int CSkyParamsDlg::ParamsToDlg(CModel* srcmodel, CMQOMaterial* srcmat, CShaderTy
 	}
 
 	if (m_skyst_distortionmapradio) {
-		if ((srcshadertypeparams->distortionmaptype >= 0) && (srcshadertypeparams->distortionmaptype <= 2)) {
-			m_skyst_distortionmapradio->setSelectIndex(srcshadertypeparams->distortionmaptype, false);
+		if ((m_skyparams[g_skyindex].distortionmaptype >= 0) && (m_skyparams[g_skyindex].distortionmaptype <= 2)) {
+			m_skyst_distortionmapradio->setSelectIndex(m_skyparams[g_skyindex].distortionmaptype, false);
 		}
 		else {
 			_ASSERT(0);
@@ -2716,121 +2725,121 @@ int CSkyParamsDlg::ParamsToDlg(CModel* srcmodel, CMQOMaterial* srcmat, CShaderTy
 	//Slider
 	//#######
 	if (m_skyst_metalslider) {
-		m_skyst_metalslider->setValue(srcshadertypeparams->metalcoef, false);
+		m_skyst_metalslider->setValue(m_skyparams[g_skyindex].metalcoef, false);
 	}
 	if (m_skyst_smoothslider) {
-		m_skyst_smoothslider->setValue(srcshadertypeparams->smoothcoef, false);
+		m_skyst_smoothslider->setValue(m_skyparams[g_skyindex].smoothcoef, false);
 	}
 
 
 	if (m_skyst_litscaleslider1) {
-		m_skyst_litscaleslider1->setValue(srcshadertypeparams->lightscale[0], false);
+		m_skyst_litscaleslider1->setValue(m_skyparams[g_skyindex].lightscale[0], false);
 	}
 	if (m_skyst_litscaleslider2) {
-		m_skyst_litscaleslider2->setValue(srcshadertypeparams->lightscale[1], false);
+		m_skyst_litscaleslider2->setValue(m_skyparams[g_skyindex].lightscale[1], false);
 	}
 	if (m_skyst_litscaleslider3) {
-		m_skyst_litscaleslider3->setValue(srcshadertypeparams->lightscale[2], false);
+		m_skyst_litscaleslider3->setValue(m_skyparams[g_skyindex].lightscale[2], false);
 	}
 	if (m_skyst_litscaleslider4) {
-		m_skyst_litscaleslider4->setValue(srcshadertypeparams->lightscale[3], false);
+		m_skyst_litscaleslider4->setValue(m_skyparams[g_skyindex].lightscale[3], false);
 	}
 	if (m_skyst_litscaleslider5) {
-		m_skyst_litscaleslider5->setValue(srcshadertypeparams->lightscale[4], false);
+		m_skyst_litscaleslider5->setValue(m_skyparams[g_skyindex].lightscale[4], false);
 	}
 	if (m_skyst_litscaleslider6) {
-		m_skyst_litscaleslider6->setValue(srcshadertypeparams->lightscale[5], false);
+		m_skyst_litscaleslider6->setValue(m_skyparams[g_skyindex].lightscale[5], false);
 	}
 	if (m_skyst_litscaleslider7) {
-		m_skyst_litscaleslider7->setValue(srcshadertypeparams->lightscale[6], false);
+		m_skyst_litscaleslider7->setValue(m_skyparams[g_skyindex].lightscale[6], false);
 	}
 	if (m_skyst_litscaleslider8) {
-		m_skyst_litscaleslider8->setValue(srcshadertypeparams->lightscale[7], false);
+		m_skyst_litscaleslider8->setValue(m_skyparams[g_skyindex].lightscale[7], false);
 	}
 
 	if (m_skyst_emissionslider) {
-		m_skyst_emissionslider->setValue(srcshadertypeparams->emissiveScale, false);
+		m_skyst_emissionslider->setValue(m_skyparams[g_skyindex].emissiveScale, false);
 	}
 
 	if (m_skyst_toonhiaddrslider) {
-		m_skyst_toonhiaddrslider->setValue(srcshadertypeparams->hsvtoon.hicolorh, false);
+		m_skyst_toonhiaddrslider->setValue(m_skyparams[g_skyindex].hsvtoon.hicolorh, false);
 	}
 	if (m_skyst_toonlowaddrslider) {
-		m_skyst_toonlowaddrslider->setValue(srcshadertypeparams->hsvtoon.lowcolorh, false);
+		m_skyst_toonlowaddrslider->setValue(m_skyparams[g_skyindex].hsvtoon.lowcolorh, false);
 	}
 
 
 	if (m_skyst_toonbaseHslider) {
-		m_skyst_toonbaseHslider->setValue(srcshadertypeparams->hsvtoon.basehsv.x, false);
+		m_skyst_toonbaseHslider->setValue(m_skyparams[g_skyindex].hsvtoon.basehsv.x, false);
 	}
 	if (m_skyst_toonbaseSslider) {
-		m_skyst_toonbaseSslider->setValue(srcshadertypeparams->hsvtoon.basehsv.y, false);
+		m_skyst_toonbaseSslider->setValue(m_skyparams[g_skyindex].hsvtoon.basehsv.y, false);
 	}
 	if (m_skyst_toonbaseVslider) {
-		m_skyst_toonbaseVslider->setValue(srcshadertypeparams->hsvtoon.basehsv.z, false);
+		m_skyst_toonbaseVslider->setValue(m_skyparams[g_skyindex].hsvtoon.basehsv.z, false);
 	}
 	if (m_skyst_toonbaseAslider) {
-		m_skyst_toonbaseAslider->setValue(srcshadertypeparams->hsvtoon.basehsv.w, false);
+		m_skyst_toonbaseAslider->setValue(m_skyparams[g_skyindex].hsvtoon.basehsv.w, false);
 	}
 
 	if (m_skyst_toonhiHslider) {
-		m_skyst_toonhiHslider->setValue(srcshadertypeparams->hsvtoon.hiaddhsv.x, false);
+		m_skyst_toonhiHslider->setValue(m_skyparams[g_skyindex].hsvtoon.hiaddhsv.x, false);
 	}
 	if (m_skyst_toonhiSslider) {
-		m_skyst_toonhiSslider->setValue(srcshadertypeparams->hsvtoon.hiaddhsv.y, false);
+		m_skyst_toonhiSslider->setValue(m_skyparams[g_skyindex].hsvtoon.hiaddhsv.y, false);
 	}
 	if (m_skyst_toonhiVslider) {
-		m_skyst_toonhiVslider->setValue(srcshadertypeparams->hsvtoon.hiaddhsv.z, false);
+		m_skyst_toonhiVslider->setValue(m_skyparams[g_skyindex].hsvtoon.hiaddhsv.z, false);
 	}
 	if (m_skyst_toonhiAslider) {
-		m_skyst_toonhiAslider->setValue(srcshadertypeparams->hsvtoon.hiaddhsv.w, false);
+		m_skyst_toonhiAslider->setValue(m_skyparams[g_skyindex].hsvtoon.hiaddhsv.w, false);
 	}
 
 	if (m_skyst_toonlowHslider) {
-		m_skyst_toonlowHslider->setValue(srcshadertypeparams->hsvtoon.lowaddhsv.x, false);
+		m_skyst_toonlowHslider->setValue(m_skyparams[g_skyindex].hsvtoon.lowaddhsv.x, false);
 	}
 	if (m_skyst_toonlowSslider) {
-		m_skyst_toonlowSslider->setValue(srcshadertypeparams->hsvtoon.lowaddhsv.y, false);
+		m_skyst_toonlowSslider->setValue(m_skyparams[g_skyindex].hsvtoon.lowaddhsv.y, false);
 	}
 	if (m_skyst_toonlowVslider) {
-		m_skyst_toonlowVslider->setValue(srcshadertypeparams->hsvtoon.lowaddhsv.z, false);
+		m_skyst_toonlowVslider->setValue(m_skyparams[g_skyindex].hsvtoon.lowaddhsv.z, false);
 	}
 	if (m_skyst_toonlowAslider) {
-		m_skyst_toonlowAslider->setValue(srcshadertypeparams->hsvtoon.lowaddhsv.w, false);
+		m_skyst_toonlowAslider->setValue(m_skyparams[g_skyindex].hsvtoon.lowaddhsv.w, false);
 	}
 
 	if (m_skyst_spccoefslider) {
-		m_skyst_spccoefslider->setValue(srcshadertypeparams->specularcoef, false);
+		m_skyst_spccoefslider->setValue(m_skyparams[g_skyindex].specularcoef, false);
 	}
 
 	if (m_skyst_tilingUslider) {
-		m_skyst_tilingUslider->setValue((int)(srcshadertypeparams->uvscale.x + 0.0001), false);
+		m_skyst_tilingUslider->setValue((int)(m_skyparams[g_skyindex].uvscale.x + 0.0001), false);
 	}
 	if (m_skyst_tilingVslider) {
-		m_skyst_tilingVslider->setValue((int)(srcshadertypeparams->uvscale.y + 0.0001), false);
+		m_skyst_tilingVslider->setValue((int)(m_skyparams[g_skyindex].uvscale.y + 0.0001), false);
 	}
 
 	if (m_skyst_alphatestslider) {
-		m_skyst_alphatestslider->setValue(srcshadertypeparams->alphatest, false);
+		m_skyst_alphatestslider->setValue(m_skyparams[g_skyindex].alphatest, false);
 	}
 
 	if (m_skyst_distortionscaleslider) {
-		m_skyst_distortionscaleslider->setValue(srcshadertypeparams->distortionscale, false);
+		m_skyst_distortionscaleslider->setValue(m_skyparams[g_skyindex].distortionscale, false);
 	}
 	if (m_skyst_seacenterUslider) {
-		m_skyst_seacenterUslider->setValue(srcshadertypeparams->seacenter.x, false);
+		m_skyst_seacenterUslider->setValue(m_skyparams[g_skyindex].seacenter.x, false);
 	}
 	if (m_skyst_seacenterVslider) {
-		m_skyst_seacenterVslider->setValue(srcshadertypeparams->seacenter.y, false);
+		m_skyst_seacenterVslider->setValue(m_skyparams[g_skyindex].seacenter.y, false);
 	}
 	if (m_skyst_riverdirUslider) {
-		m_skyst_riverdirUslider->setValue(srcshadertypeparams->riverdir.x, false);
+		m_skyst_riverdirUslider->setValue(m_skyparams[g_skyindex].riverdir.x, false);
 	}
 	if (m_skyst_riverdirVslider) {
-		m_skyst_riverdirVslider->setValue(srcshadertypeparams->riverdir.y, false);
+		m_skyst_riverdirVslider->setValue(m_skyparams[g_skyindex].riverdir.y, false);
 	}
 	if (m_skyst_flowrateslider) {
-		m_skyst_flowrateslider->setValue(srcshadertypeparams->riverflowrate, false);
+		m_skyst_flowrateslider->setValue(m_skyparams[g_skyindex].riverflowrate, false);
 	}
 
 
@@ -2838,7 +2847,7 @@ int CSkyParamsDlg::ParamsToDlg(CModel* srcmodel, CMQOMaterial* srcmat, CShaderTy
 	//CheckBox
 	//#########
 	if (m_skyst_emissionchk) {
-		if ((bool)srcshadertypeparams->enableEmission == true) {
+		if ((bool)m_skyparams[g_skyindex].enableEmission == true) {
 			m_skyst_emissionchk->setValue(true, false);
 		}
 		else {
@@ -2847,7 +2856,7 @@ int CSkyParamsDlg::ParamsToDlg(CModel* srcmodel, CMQOMaterial* srcmat, CShaderTy
 	}
 
 	if (m_skyst_gradationchk) {
-		if (srcshadertypeparams->hsvtoon.gradationflag == true) {
+		if (m_skyparams[g_skyindex].hsvtoon.gradationflag == true) {
 			m_skyst_gradationchk->setValue(true, false);
 
 			if (m_skyst_powertoonchk) {
@@ -2864,7 +2873,7 @@ int CSkyParamsDlg::ParamsToDlg(CModel* srcmodel, CMQOMaterial* srcmat, CShaderTy
 	}
 
 	if (m_skyst_powertoonchk) {
-		if (srcshadertypeparams->hsvtoon.powertoon == true) {
+		if (m_skyparams[g_skyindex].hsvtoon.powertoon == true) {
 			m_skyst_powertoonchk->setValue(true, false);
 		}
 		else {
@@ -2873,7 +2882,7 @@ int CSkyParamsDlg::ParamsToDlg(CModel* srcmodel, CMQOMaterial* srcmat, CShaderTy
 	}
 
 	if (m_skyst_normaly0chk) {
-		if (srcshadertypeparams->normaly0flag == true) {
+		if (m_skyparams[g_skyindex].normaly0flag == true) {
 			m_skyst_normaly0chk->setValue(true, false);
 		}
 		else {
@@ -2882,7 +2891,7 @@ int CSkyParamsDlg::ParamsToDlg(CModel* srcmodel, CMQOMaterial* srcmat, CShaderTy
 	}
 
 	if (m_skyst_shadowcasterchk) {
-		if (srcshadertypeparams->shadowcasterflag == true) {
+		if (m_skyparams[g_skyindex].shadowcasterflag == true) {
 			m_skyst_shadowcasterchk->setValue(true, false);
 		}
 		else {
@@ -2891,7 +2900,7 @@ int CSkyParamsDlg::ParamsToDlg(CModel* srcmodel, CMQOMaterial* srcmat, CShaderTy
 	}
 
 	if (m_skyst_lightflagchk) {
-		if (srcshadertypeparams->lightingmat == true) {
+		if (m_skyparams[g_skyindex].lightingmat == true) {
 			m_skyst_lightflagchk->setValue(true, false);
 		}
 		else {
@@ -2900,13 +2909,1430 @@ int CSkyParamsDlg::ParamsToDlg(CModel* srcmodel, CMQOMaterial* srcmat, CShaderTy
 	}
 
 	if (m_skyst_distortionchk) {
-		if (srcshadertypeparams->distortionflag == true) {
+		if (m_skyparams[g_skyindex].distortionflag == true) {
 			m_skyst_distortionchk->setValue(true, false);
 		}
 		else {
 			m_skyst_distortionchk->setValue(false, false);
 		}
 	}
+
+	return 0;
+}
+
+int CSkyParamsDlg::OnFrameSkyParamsDlg()
+{
+	if (GetSkyStRadioFlag()) {
+		SetSkyStRadioFlag(false);
+		if (m_model) {
+
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int shadertype = GetSkyTypeRadio();
+			switch (shadertype) {
+			case 0:
+				if (curmqomat) {
+					curmqomat->SetShaderType(-1);
+					m_skyparams[g_skyindex].shadertype = -1;
+				}
+				else {
+					int materialindex5;
+					for (materialindex5 = 0; materialindex5 < materialnum; materialindex5++) {
+						CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex5);
+						if (setmqomat) {
+							setmqomat->SetShaderType(-1);
+						}
+					}
+				}
+				break;
+			case 1:
+				m_skyparams[g_skyindex].shadertype = MQOSHADER_PBR;
+
+				if (curmqomat) {
+					curmqomat->SetShaderType(MQOSHADER_PBR);
+				}
+				else {
+					int materialindex6;
+					for (materialindex6 = 0; materialindex6 < materialnum; materialindex6++) {
+						CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex6);
+						if (setmqomat) {
+							setmqomat->SetShaderType(MQOSHADER_PBR);
+						}
+					}
+				}
+				break;
+			case 2:
+				m_skyparams[g_skyindex].shadertype = MQOSHADER_STD;
+
+				if (curmqomat) {
+					curmqomat->SetShaderType(MQOSHADER_STD);
+				}
+				else {
+					int materialindex7;
+					for (materialindex7 = 0; materialindex7 < materialnum; materialindex7++) {
+						CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex7);
+						if (setmqomat) {
+							setmqomat->SetShaderType(MQOSHADER_STD);
+						}
+					}
+				}
+				break;
+			case 3:
+				m_skyparams[g_skyindex].shadertype = MQOSHADER_TOON;
+
+				if (curmqomat) {
+					curmqomat->SetShaderType(MQOSHADER_TOON);
+				}
+				else {
+					int materialindex8;
+					for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
+						CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex8);
+						if (setmqomat) {
+							setmqomat->SetShaderType(MQOSHADER_TOON);
+						}
+					}
+				}
+				break;
+			default:
+				_ASSERT(0);
+				break;
+			}
+
+		}
+	}
+	if (GetSkyLightChkFlag()) {
+		SetSkyLightChkFlag(false);
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			bool ischecked = GetSkyLightFlagChk();
+			if (ischecked) {
+				m_skyparams[g_skyindex].lightingmat = true;
+			}
+			else {
+				m_skyparams[g_skyindex].lightingmat = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetLightingFlag(m_skyparams[g_skyindex].lightingmat);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetLightingFlag(m_skyparams[g_skyindex].lightingmat);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyShadowCasterChkFlag()) {
+		SetSkyShadowCasterChkFlag(false);
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			bool ischecked = GetSkyShadowCasterChk();
+			if (ischecked) {
+				m_skyparams[g_skyindex].shadowcasterflag = true;
+			}
+			else {
+				m_skyparams[g_skyindex].shadowcasterflag = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetShadowCasterFlag(m_skyparams[g_skyindex].shadowcasterflag);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetShadowCasterFlag(m_skyparams[g_skyindex].shadowcasterflag);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyNormalY0ChkFlag()) {
+		SetSkyNormalY0ChkFlag(false);
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			bool ischecked = GetShadowNormalY0Chk();
+			if (ischecked) {
+				m_skyparams[g_skyindex].normaly0flag = true;
+			}
+			else {
+				m_skyparams[g_skyindex].normaly0flag = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetNormalY0Flag(m_skyparams[g_skyindex].normaly0flag);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetNormalY0Flag(m_skyparams[g_skyindex].normaly0flag);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkySpcCoefSliderFlag()) {
+		SetSkySpcCoefSliderFlag(false);
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newspcscale = GetSkySpcCoefSlider();
+			m_skyparams[g_skyindex].specularcoef = newspcscale;
+
+			if (curmqomat) {
+				curmqomat->SetSpecularCoef(newspcscale);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetSpecularCoef(newspcscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyEmissionChkFlag()) {
+		SetSkyEmissionChkFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			bool ischecked = GetSkyEmissionChk();
+			if (ischecked) {
+				m_skyparams[g_skyindex].enableEmission = true;
+			}
+			else {
+				m_skyparams[g_skyindex].enableEmission = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetEnableEmission(m_skyparams[g_skyindex].enableEmission);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetEnableEmission(m_skyparams[g_skyindex].enableEmission);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyEmissionSliderFlag()) {
+		SetSkyEmissionSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newemiscale = GetSkyEmissionSlider();
+			m_skyparams[g_skyindex].emissiveScale = newemiscale;
+
+			if (curmqomat) {
+				curmqomat->SetEmissiveScale(newemiscale);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetEmissiveScale(newemiscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyMetalSliderFlag()) {
+		SetSkyMetalSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newmetalcoef = GetSkyMetalSlider();
+			m_skyparams[g_skyindex].metalcoef = newmetalcoef;
+
+			if (curmqomat) {
+				curmqomat->SetMetalAdd(newmetalcoef);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetMetalAdd(newmetalcoef);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkySmoothSliderFlag()) {
+		SetSkySmoothSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newsmoothcoef = GetSkySmoothSlider();
+			m_skyparams[g_skyindex].smoothcoef = newsmoothcoef;
+
+			if (curmqomat) {
+				curmqomat->SetSmoothCoef(newsmoothcoef);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetSmoothCoef(newsmoothcoef);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyLitScale1Flag()) {
+		SetSkyLitScale1Flag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int litno4 = 0;//!!!
+			float newlitscale = GetSkyLitScaleSlider1();
+			m_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
+
+			if (curmqomat) {
+				curmqomat->SetLightScale(litno4, newlitscale);
+			}
+			else {
+				int materialindex4;
+				for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex4);
+					if (setmqomat) {
+						setmqomat->SetLightScale(litno4, newlitscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyLitScale2Flag()) {
+		SetSkyLitScale2Flag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int litno4 = 1;//!!!
+			float newlitscale = GetSkyLitScaleSlider2();
+			m_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
+
+			if (curmqomat) {
+				curmqomat->SetLightScale(litno4, newlitscale);
+			}
+			else {
+				int materialindex4;
+				for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex4);
+					if (setmqomat) {
+						setmqomat->SetLightScale(litno4, newlitscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyLitScale3Flag()) {
+		SetSkyLitScale3Flag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int litno4 = 2;//!!!
+			float newlitscale = GetSkyLitScaleSlider3();
+			m_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
+
+			if (curmqomat) {
+				curmqomat->SetLightScale(litno4, newlitscale);
+			}
+			else {
+				int materialindex4;
+				for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex4);
+					if (setmqomat) {
+						setmqomat->SetLightScale(litno4, newlitscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyLitScale4Flag()) {
+		SetSkyLitScale4Flag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int litno4 = 3;//!!!
+			float newlitscale = GetSkyLitScaleSlider4();
+			m_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
+
+			if (curmqomat) {
+				curmqomat->SetLightScale(litno4, newlitscale);
+			}
+			else {
+				int materialindex4;
+				for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex4);
+					if (setmqomat) {
+						setmqomat->SetLightScale(litno4, newlitscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyLitScale5Flag()) {
+		SetSkyLitScale5Flag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int litno4 = 4;//!!!
+			float newlitscale = GetSkyLitScaleSlider5();
+			m_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
+
+			if (curmqomat) {
+				curmqomat->SetLightScale(litno4, newlitscale);
+			}
+			else {
+				int materialindex4;
+				for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex4);
+					if (setmqomat) {
+						setmqomat->SetLightScale(litno4, newlitscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyLitScale6Flag()) {
+		SetSkyLitScale6Flag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int litno4 = 5;//!!!
+			float newlitscale = GetSkyLitScaleSlider6();
+			m_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
+
+			if (curmqomat) {
+				curmqomat->SetLightScale(litno4, newlitscale);
+			}
+			else {
+				int materialindex4;
+				for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex4);
+					if (setmqomat) {
+						setmqomat->SetLightScale(litno4, newlitscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyLitScale7Flag()) {
+		SetSkyLitScale7Flag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int litno4 = 6;//!!!
+			float newlitscale = GetSkyLitScaleSlider7();
+			m_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
+
+			if (curmqomat) {
+				curmqomat->SetLightScale(litno4, newlitscale);
+			}
+			else {
+				int materialindex4;
+				for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex4);
+					if (setmqomat) {
+						setmqomat->SetLightScale(litno4, newlitscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyLitScale8Flag()) {
+		SetSkyLitScale8Flag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int litno4 = 7;//!!!
+			float newlitscale = GetSkyLitScaleSlider8();
+			m_skyparams[g_skyindex].lightscale[litno4] = newlitscale;
+
+			if (curmqomat) {
+				curmqomat->SetLightScale(litno4, newlitscale);
+			}
+			else {
+				int materialindex4;
+				for (materialindex4 = 0; materialindex4 < materialnum; materialindex4++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex4);
+					if (setmqomat) {
+						setmqomat->SetLightScale(litno4, newlitscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyToonLitRadioFlag()) {
+		SetSkyToonLitRadioFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int lightindex = GetSkyToonLitRadio();
+			m_skyparams[g_skyindex].hsvtoon.lightindex = lightindex;
+
+			if (curmqomat) {
+				curmqomat->SetToonLightIndex(lightindex);
+			}
+			else {
+				int materialindex8;
+				for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex8);
+					if (setmqomat) {
+						setmqomat->SetToonLightIndex(lightindex);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyToonHiAddrSliderFlag()) {
+		SetSkyToonHiAddrSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float hicolorh = GetSkyToonHiAddrSlider();
+			m_skyparams[g_skyindex].hsvtoon.hicolorh = hicolorh;
+
+			if (curmqomat) {
+				curmqomat->SetToonHiAddrH(m_skyparams[g_skyindex].hsvtoon.hicolorh);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonHiAddrH(m_skyparams[g_skyindex].hsvtoon.hicolorh);
+						m_skyhsvtoonforall.hicolorh = m_skyparams[g_skyindex].hsvtoon.hicolorh;
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyRemakeToonTextureFlag()) {
+		SetSkyRemakeToonTextureFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			if (curmqomat) {
+				m_skytoonmqomaterial = curmqomat;
+			}
+			else {
+				m_skytoonmqomaterial = nullptr;
+			}
+			m_skytoonparamchange = true;
+		}
+	}
+	if (GetSkyToonLowAddrSliderFlag()) {
+		SetSkyToonLowAddrSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float lowcolorh = GetSkyToonLowAddrSlider();
+			m_skyparams[g_skyindex].hsvtoon.lowcolorh = lowcolorh;
+
+			if (curmqomat) {
+				curmqomat->SetToonLowAddrH(m_skyparams[g_skyindex].hsvtoon.lowcolorh);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonLowAddrH(m_skyparams[g_skyindex].hsvtoon.lowcolorh);
+						m_skyhsvtoonforall.lowcolorh = m_skyparams[g_skyindex].hsvtoon.lowcolorh;
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyGradationChkFlag()) {
+		SetSkyGradationChkFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			bool ischecked = GetSkyGradationChk();
+			if (ischecked) {
+				m_skyparams[g_skyindex].hsvtoon.gradationflag = true;
+			}
+			else {
+				m_skyparams[g_skyindex].hsvtoon.gradationflag = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetToonGradationFlag(m_skyparams[g_skyindex].hsvtoon.gradationflag);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonGradationFlag(m_skyparams[g_skyindex].hsvtoon.gradationflag);
+						m_skyhsvtoonforall.gradationflag = m_skyparams[g_skyindex].hsvtoon.gradationflag;
+					}
+				}
+			}
+
+			if (curmqomat) {
+				m_skytoonmqomaterial = curmqomat;
+			}
+			else {
+				m_skytoonmqomaterial = nullptr;
+			}
+			m_skytoonparamchange = true;
+		}
+	}
+	if (GetSkyPowerToonChkFlag()) {
+		SetSkyPowerToonChkFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			bool ischecked = GetSkyPowerToonChk();
+			if (ischecked) {
+				m_skyparams[g_skyindex].hsvtoon.powertoon = true;
+			}
+			else {
+				m_skyparams[g_skyindex].hsvtoon.powertoon = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetToonPowerToon(m_skyparams[g_skyindex].hsvtoon.powertoon);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonPowerToon(m_skyparams[g_skyindex].hsvtoon.powertoon);
+						m_skyhsvtoonforall.powertoon = m_skyparams[g_skyindex].hsvtoon.powertoon;
+					}
+				}
+			}
+
+			if (curmqomat) {
+				m_skytoonmqomaterial = curmqomat;
+			}
+			else {
+				m_skytoonmqomaterial = nullptr;
+			}
+			m_skytoonparamchange = true;
+		}
+	}
+	if (GetSkyToonBaseHSliderFlag()) {
+		SetSkyToonBaseHSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			m_skyparams[g_skyindex].hsvtoon.basehsv.x = GetSkyToonBaseHSlider();
+
+			if (curmqomat) {
+				curmqomat->SetToonBaseH(m_skyparams[g_skyindex].hsvtoon.basehsv.x);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonBaseH(m_skyparams[g_skyindex].hsvtoon.basehsv.x);
+						m_skyhsvtoonforall.basehsv.x = m_skyparams[g_skyindex].hsvtoon.basehsv.x;
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyToonBaseSSliderFlag()) {
+		SetSkyToonBaseSSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			m_skyparams[g_skyindex].hsvtoon.basehsv.y = GetSkyToonBaseSSlider();
+
+			if (curmqomat) {
+				curmqomat->SetToonBaseS(m_skyparams[g_skyindex].hsvtoon.basehsv.y);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonBaseS(m_skyparams[g_skyindex].hsvtoon.basehsv.y);
+						m_skyhsvtoonforall.basehsv.y = m_skyparams[g_skyindex].hsvtoon.basehsv.y;
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyToonBaseVSliderFlag()) {
+		SetSkyToonBaseVSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			m_skyparams[g_skyindex].hsvtoon.basehsv.z = GetSkyToonBaseVSlider();
+
+			if (curmqomat) {
+				curmqomat->SetToonBaseV(m_skyparams[g_skyindex].hsvtoon.basehsv.z);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonBaseV(m_skyparams[g_skyindex].hsvtoon.basehsv.z);
+						m_skyhsvtoonforall.basehsv.z = m_skyparams[g_skyindex].hsvtoon.basehsv.z;
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyToonBaseASliderFlag()) {
+		SetSkyToonBaseASliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			m_skyparams[g_skyindex].hsvtoon.basehsv.w = GetSkyToonBaseASlider();
+
+			if (curmqomat) {
+				curmqomat->SetToonBaseA(m_skyparams[g_skyindex].hsvtoon.basehsv.w);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonBaseA(m_skyparams[g_skyindex].hsvtoon.basehsv.w);
+						m_skyhsvtoonforall.basehsv.w = m_skyparams[g_skyindex].hsvtoon.basehsv.w;
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyToonHiHSliderFlag()) {
+		SetSkyToonHiHSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newvalue = GetSkyToonHiHSlider();
+			m_skyparams[g_skyindex].hsvtoon.hiaddhsv.x = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetToonHiAddH(m_skyparams[g_skyindex].hsvtoon.hiaddhsv.x);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonHiAddH(m_skyparams[g_skyindex].hsvtoon.hiaddhsv.x);
+						m_skyhsvtoonforall.hiaddhsv.x = m_skyparams[g_skyindex].hsvtoon.hiaddhsv.x;
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyToonHiSSliderFlag()) {
+		SetSkyToonHiSSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newvalue = GetSkyToonHiSSlider();
+			m_skyparams[g_skyindex].hsvtoon.hiaddhsv.y = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetToonHiAddS(m_skyparams[g_skyindex].hsvtoon.hiaddhsv.y);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonHiAddS(m_skyparams[g_skyindex].hsvtoon.hiaddhsv.y);
+						m_skyhsvtoonforall.hiaddhsv.y = m_skyparams[g_skyindex].hsvtoon.hiaddhsv.y;
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyToonHiVSliderFlag()) {
+		SetSkyToonHiVSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newvalue = GetSkyToonHiVSlider();
+			m_skyparams[g_skyindex].hsvtoon.hiaddhsv.z = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetToonHiAddV(m_skyparams[g_skyindex].hsvtoon.hiaddhsv.z);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonHiAddV(m_skyparams[g_skyindex].hsvtoon.hiaddhsv.z);
+						m_skyhsvtoonforall.hiaddhsv.z = m_skyparams[g_skyindex].hsvtoon.hiaddhsv.z;
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyToonHiASliderFlag()) {
+		SetSkyToonHiASliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			float newvalue = GetSkyToonHiASlider();
+			m_skyparams[g_skyindex].hsvtoon.hiaddhsv.w = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetToonHiAddA(m_skyparams[g_skyindex].hsvtoon.hiaddhsv.w);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonHiAddA(m_skyparams[g_skyindex].hsvtoon.hiaddhsv.w);
+						m_skyhsvtoonforall.hiaddhsv.w = m_skyparams[g_skyindex].hsvtoon.hiaddhsv.w;
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyToonLowHSliderFlag()) {
+		SetSkyToonLowHSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+
+			float newvalue = GetSkyToonLowHSlider();
+			m_skyparams[g_skyindex].hsvtoon.lowaddhsv.x = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetToonLowAddH(m_skyparams[g_skyindex].hsvtoon.lowaddhsv.x);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonLowAddH(m_skyparams[g_skyindex].hsvtoon.lowaddhsv.x);
+						m_skyhsvtoonforall.lowaddhsv.x = m_skyparams[g_skyindex].hsvtoon.lowaddhsv.x;
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyToonLowSSliderFlag()) {
+		SetSkyToonLowSSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+
+			float newvalue = GetSkyToonLowSSlider();
+			m_skyparams[g_skyindex].hsvtoon.lowaddhsv.y = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetToonLowAddS(m_skyparams[g_skyindex].hsvtoon.lowaddhsv.y);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonLowAddS(m_skyparams[g_skyindex].hsvtoon.lowaddhsv.y);
+						m_skyhsvtoonforall.lowaddhsv.y = m_skyparams[g_skyindex].hsvtoon.lowaddhsv.y;
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyToonLowVSliderFlag()) {
+		SetSkyToonLowVSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+
+			float newvalue = GetSkyToonLowVSlider();
+			m_skyparams[g_skyindex].hsvtoon.lowaddhsv.z = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetToonLowAddV(m_skyparams[g_skyindex].hsvtoon.lowaddhsv.z);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonLowAddV(m_skyparams[g_skyindex].hsvtoon.lowaddhsv.z);
+						m_skyhsvtoonforall.lowaddhsv.z = m_skyparams[g_skyindex].hsvtoon.lowaddhsv.z;
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyToonLowASliderFlag()) {
+		SetSkyToonLowASliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+
+			float newvalue = GetSkyToonLowASlider();
+			m_skyparams[g_skyindex].hsvtoon.lowaddhsv.w = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetToonLowAddA(m_skyparams[g_skyindex].hsvtoon.lowaddhsv.w);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetToonLowAddA(m_skyparams[g_skyindex].hsvtoon.lowaddhsv.w);
+						m_skyhsvtoonforall.lowaddhsv.w = m_skyparams[g_skyindex].hsvtoon.lowaddhsv.w;
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyTilingUSliderFlag()) {
+		SetSkyTilingUSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int newvalue = GetSkyTilingUSlider();
+			m_skyparams[g_skyindex].uvscale.x = (double)newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetUVScale(m_skyparams[g_skyindex].uvscale);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetUVScale(m_skyparams[g_skyindex].uvscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyTilingUSliderUpFlag()) {
+		SetSkyTilingUSliderUpFlag(false);
+
+		if (m_model) {
+			int newvalue = GetSkyTilingUSlider();
+			m_skyparams[g_skyindex].uvscale.x = (double)newvalue;
+			SetSkyTilingUSlider(newvalue);
+			//m_st_tilingUslider->setValue(m_skyparams[g_skyindex].uvscale.x, false);//!!! マウスを離したときにintに丸めた値をセットし直す
+		}
+	}
+	if (GetSkyTilingVSliderFlag()) {
+		SetSkyTilingVSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			int newvalue = GetSkyTilingVSlider();
+			m_skyparams[g_skyindex].uvscale.y = (double)newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetUVScale(m_skyparams[g_skyindex].uvscale);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetUVScale(m_skyparams[g_skyindex].uvscale);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyTilingVSliderUpFlag()) {
+		SetSkyTilingVSliderUpFlag(false);
+
+		if (m_model) {
+			int newvalue = GetSkyTilingVSlider();
+			m_skyparams[g_skyindex].uvscale.y = (double)newvalue;
+
+			//m_st_tilingVslider->setValue(m_skyparams[g_skyindex].uvscale.y, false);//!!! マウスを離したときにintに丸めた値をセットし直す
+			SetSkyTilingVSlider(newvalue);
+		}
+	}
+	if (GetSkyAlphaTestSliderFlag()) {
+		SetSkyAlphaTestSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			m_skyparams[g_skyindex].alphatest = GetSkyAlphaTestSlider();
+
+			if (curmqomat) {
+				curmqomat->SetAlphaTestClipVal(m_skyparams[g_skyindex].alphatest);
+			}
+			else {
+				int materialindex2;
+				for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+					if (setmqomat) {
+						setmqomat->SetAlphaTestClipVal(m_skyparams[g_skyindex].alphatest);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyDistortionChkFlag()) {
+		SetSkyDistortionChkFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			bool ischecked = GetSkyDistortionChk();
+			if (ischecked) {
+				m_skyparams[g_skyindex].distortionflag = true;
+			}
+			else {
+				m_skyparams[g_skyindex].distortionflag = false;
+			}
+
+			if (curmqomat) {
+				curmqomat->SetDistortionFlag(m_skyparams[g_skyindex].distortionflag);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetDistortionFlag(m_skyparams[g_skyindex].distortionflag);
+					}
+				}
+			}
+		}
+	}
+	if (GetSkyDistortionScaleSliderFlag()) {
+		SetSkyDistortionScaleSliderFlag(false);
+
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			materialnum = min(materialnum, MAXMATERIALNUM);
+			int materialindex = 0;//m_skyの最初のマテリアル
+			CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+			double newvalue = GetSkyDistortonScaleSlider();
+			m_skyparams[g_skyindex].distortionscale = newvalue;
+
+			if (curmqomat) {
+				curmqomat->SetDistortionScale(m_skyparams[g_skyindex].distortionscale);
+			}
+			else {
+				int materialindex9;
+				for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+					CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+					if (setmqomat) {
+						setmqomat->SetDistortionScale(m_skyparams[g_skyindex].distortionscale);
+					}
+				}
+			}
+		}
+	}
+
+
+
+	if (m_skytoonparamchange) {
+		m_skytoonparamchange = false;
+		if (m_model) {
+			int materialnum = m_model->GetMQOMaterialSize();
+			int materialindex2;
+			for (materialindex2 = 0; materialindex2 < materialnum; materialindex2++) {
+				CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex2);
+				if (setmqomat) {
+					setmqomat->RemakeDiffuseTexture();
+				}
+			}
+		}
+	}
+
+
+
+
+	//if (GetSkyRiverRadioFlag()) {
+	//	SetSkyRiverRadioFlag(false);
+
+	//	if (m_model) {
+	//		int materialnum = m_model->GetMQOMaterialSize();
+	//		materialnum = min(materialnum, MAXMATERIALNUM);
+	//		int materialindex = 0;//m_skyの最初のマテリアル
+	//		CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+	//		int riverorsea = GetSkyRiverRadio();
+	//		m_skyparams[g_skyindex].riverorsea = riverorsea;
+
+	//		if (curmqomat) {
+	//			curmqomat->SetRiverOrSea(riverorsea);
+	//		}
+	//		else {
+	//			int materialindex8;
+	//			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
+	//				CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex8);
+	//				if (setmqomat) {
+	//					setmqomat->SetRiverOrSea(riverorsea);
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//if (GetSkySeaCenterUSliderFlag()) {
+	//	SetSkySeaCenterUSliderFlag(false);
+
+	//	if (m_model) {
+	//		int materialnum = m_model->GetMQOMaterialSize();
+	//		materialnum = min(materialnum, MAXMATERIALNUM);
+	//		int materialindex = 0;//m_skyの最初のマテリアル
+	//		CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+	//		float newvalueU = GetSkySeaCenterUSlider();
+	//		float newvalueV = GetSkySeaCenterVSlider();
+	//		m_skyparams[g_skyindex].seacenter.SetParams(newvalueU, newvalueV);
+
+	//		if (curmqomat) {
+	//			curmqomat->SetSeaCenter(m_skyparams[g_skyindex].seacenter);
+	//		}
+	//		else {
+	//			int materialindex9;
+	//			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+	//				CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+	//				if (setmqomat) {
+	//					setmqomat->SetSeaCenter(m_skyparams[g_skyindex].seacenter);
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//if (GetSkySeaCenterVSliderFlag()) {
+	//	SetSkySeaCenterVSliderFlag(false);
+
+	//	if (m_model) {
+	//		int materialnum = m_model->GetMQOMaterialSize();
+	//		materialnum = min(materialnum, MAXMATERIALNUM);
+	//		int materialindex = 0;//m_skyの最初のマテリアル
+	//		CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+	//		float newvalueU = GetSkySeaCenterUSlider();
+	//		float newvalueV = GetSkySeaCenterVSlider();
+	//		m_skyparams[g_skyindex].seacenter.SetParams(newvalueU, newvalueV);
+
+	//		if (curmqomat) {
+	//			curmqomat->SetSeaCenter(m_skyparams[g_skyindex].seacenter);
+	//		}
+	//		else {
+	//			int materialindex9;
+	//			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+	//				CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+	//				if (setmqomat) {
+	//					setmqomat->SetSeaCenter(m_skyparams[g_skyindex].seacenter);
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//if (GetSkyRiverDirUSliderFlag()) {
+	//	SetSkyRiverDirUSliderFlag(false);
+
+	//	if (m_model) {
+	//		int materialnum = m_model->GetMQOMaterialSize();
+	//		materialnum = min(materialnum, MAXMATERIALNUM);
+	//		int materialindex = 0;//m_skyの最初のマテリアル
+	//		CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+	//		float newvalueU = GetSkyRiverDirUSlider();
+	//		float newvalueV = GetSkyRiverDirVSlider();
+	//		m_skyparams[g_skyindex].riverdir.SetParams(newvalueU, newvalueV);
+
+	//		if (curmqomat) {
+	//			curmqomat->SetRiverDir(m_skyparams[g_skyindex].riverdir);
+	//		}
+	//		else {
+	//			int materialindex9;
+	//			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+	//				CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+	//				if (setmqomat) {
+	//					setmqomat->SetRiverDir(m_skyparams[g_skyindex].riverdir);
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//if (GetSkyRiverDirVSliderFlag()) {
+	//	SetSkyRiverDirVSliderFlag(false);
+
+	//	if (m_model) {
+	//		int materialnum = m_model->GetMQOMaterialSize();
+	//		materialnum = min(materialnum, MAXMATERIALNUM);
+	//		int materialindex = 0;//m_skyの最初のマテリアル
+	//		CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+	//		float newvalueU = GetSkyRiverDirUSlider();
+	//		float newvalueV = GetSkyRiverDirVSlider();
+	//		m_skyparams[g_skyindex].riverdir.SetParams(newvalueU, newvalueV);
+
+	//		if (curmqomat) {
+	//			curmqomat->SetRiverDir(m_skyparams[g_skyindex].riverdir);
+	//		}
+	//		else {
+	//			int materialindex9;
+	//			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+	//				CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+	//				if (setmqomat) {
+	//					setmqomat->SetRiverDir(m_skyparams[g_skyindex].riverdir);
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//if (GetSkyFlowRateSliderFlag()) {
+	//	SetSkyFlowRateSliderFlag(false);
+
+	//	if (m_model) {
+	//		int materialnum = m_model->GetMQOMaterialSize();
+	//		materialnum = min(materialnum, MAXMATERIALNUM);
+	//		int materialindex = 0;//m_skyの最初のマテリアル
+	//		CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+	//		double newvalue = GetSkyFlowRateSlider();
+	//		m_skyparams[g_skyindex].riverflowrate = newvalue;
+
+	//		if (curmqomat) {
+	//			curmqomat->SetRiverFlowRate(m_skyparams[g_skyindex].riverflowrate);
+	//		}
+	//		else {
+	//			int materialindex9;
+	//			for (materialindex9 = 0; materialindex9 < materialnum; materialindex9++) {
+	//				CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex9);
+	//				if (setmqomat) {
+	//					setmqomat->SetRiverFlowRate(m_skyparams[g_skyindex].riverflowrate);
+	//				}
+	//			}
+	//		}
+	//	}
+
+	//}
+	//if (GetSkyDistortionMapRadioFlag()) {
+	//	SetSkyDistortionMapRadioFlag(false);
+
+	//	if (m_model) {
+	//		int materialnum = m_model->GetMQOMaterialSize();
+	//		materialnum = min(materialnum, MAXMATERIALNUM);
+	//		int materialindex = 0;//m_skyの最初のマテリアル
+	//		CMQOMaterial* curmqomat = m_model->GetMQOMaterialByIndex(materialindex);
+
+	//		int maptype = GetSkyDistortionMapRadio();
+	//		m_skyparams[g_skyindex].distortionmaptype = maptype;
+
+	//		if (curmqomat) {
+	//			curmqomat->SetDistortionMapType(maptype);
+	//		}
+	//		else {
+	//			int materialindex8;
+	//			for (materialindex8 = 0; materialindex8 < materialnum; materialindex8++) {
+	//				CMQOMaterial* setmqomat = m_model->GetMQOMaterialByIndex(materialindex8);
+	//				if (setmqomat) {
+	//					setmqomat->SetDistortionMapType(maptype);
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+
+	//if (m_skyst_distortionscalesliderFlag) {
+	//	m_skyst_distortionscalesliderFlag = false;
+	//}
+	//if (m_skyst_riverradioFlag) {
+	//	m_skyst_riverradioFlag = false;
+	//}
+	//if (m_skyst_seacenterUsliderFlag) {
+	//	m_skyst_seacenterUsliderFlag = false;
+	//}
+	//if (m_skyst_seacenterVsliderFlag) {
+	//	m_skyst_seacenterVsliderFlag = false;
+	//}
+	//if (m_skyst_riverdirUsliderFlag) {
+	//	m_skyst_riverdirUsliderFlag = false;
+	//}
+	//if (m_skyst_riverdirVsliderFlag) {
+	//	m_skyst_riverdirVsliderFlag = false;
+	//}
+	//if (m_skyst_flowratesliderFlag) {
+	//	m_skyst_flowratesliderFlag = false;
+	//}
+	//if (m_skyst_distortionmapradioFlag) {
+	//	m_skyst_distortionmapradioFlag = false;
+	//}
+
 
 	return 0;
 }
