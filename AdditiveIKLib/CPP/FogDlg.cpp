@@ -653,6 +653,18 @@ int CFogDlg::CreateFogWnd()
 					}
 				}
 			}
+			if (m_fogheightminEdit) {
+				m_fogheightminEdit->getName(streditbox, 256);
+				tempeditvalue = (float)_wtof(streditbox);
+				if ((tempeditvalue >= -500000.0f) && (tempeditvalue <= 500000.0f)) {
+					g_fogparams[g_fogindex].SetHeightLow(tempeditvalue);
+				}
+				else {
+					if (m_dlgWnd) {
+						::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Min Height", L"Invalid Value", MB_OK);
+					}
+				}
+			}
 			if (m_fogheightmaxEdit) {
 				m_fogheightmaxEdit->getName(streditbox, 256);
 				tempeditvalue = (float)_wtof(streditbox);
@@ -735,7 +747,7 @@ int CFogDlg::ParamsToDlg()
 	swprintf_s(strdlg, 256, L"0.0");
 	if (m_fogheightminEdit) {
 		m_fogheightminEdit->setName(strdlg);
-		m_fogheightminEdit->setActive(false);//!!!!!
+		//m_fogheightminEdit->setActive(false);//!!!!!
 	}
 	swprintf_s(strdlg, 256, L"%.1f", g_fogparams[g_fogindex].GetHeightHigh());
 	if (m_fogheightmaxEdit) {

@@ -161,8 +161,8 @@ float CalcVSFog(float4 worldpos)
 {
     worldpos /= worldpos.w;
     float4 fogpos = worldpos - eyePos;
-    float fogy = worldpos.y * vFog.y;
-    float fog = (vFog.w < 1.1f) ? (vFog.z * length(fogpos.xyz) * vFog.x) : (vFog.z - vFog.z * fogy * fogy);
+    float fogy = (worldpos.y - vFog.y) * vFog.x;
+    float fog = (vFog.w < 1.1f) ? (vFog.z * (length(fogpos.xyz) - vFog.y) * vFog.x) : (vFog.z - vFog.z * fogy * fogy);
     return fog;
 }
 float4 CalcPSFog(float4 pscol, float fog)

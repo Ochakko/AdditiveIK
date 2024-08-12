@@ -3529,12 +3529,13 @@ void CMQOMaterial::SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBuff
 		else {
 			pcbLights->fog.x = 0.0f;
 		}
-		if (fabs(g_fogparams[g_fogindex].GetDistFar()) >= 1e-4) {
-			pcbLights->fog.y = 1.0f / g_fogparams[g_fogindex].GetDistFar();
-		}
-		else {
-			pcbLights->fog.y = 0.0f;
-		}
+		//if (fabs(g_fogparams[g_fogindex].GetDistFar()) >= 1e-4) {
+		//	pcbLights->fog.y = 1.0f / g_fogparams[g_fogindex].GetDistFar();
+		//}
+		//else {
+		//	pcbLights->fog.y = 0.0f;
+		//}
+		pcbLights->fog.y = g_fogparams[g_fogindex].GetDistNear();
 		pcbLights->fog.z = g_fogparams[g_fogindex].GetDistRate();
 	}
 	else if (fogkind == 1) {
@@ -3548,12 +3549,13 @@ void CMQOMaterial::SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBuff
 		else {
 			pcbLights->fog.x = 0.0f;
 		}
-		if (fabs(g_fogparams[g_fogindex].GetDistFar()) >= 1e-4) {
-			pcbLights->fog.y = 1.0f / g_fogparams[g_fogindex].GetDistFar();
-		}
-		else {
-			pcbLights->fog.y = 0.0f;
-		}
+		//if (fabs(g_fogparams[g_fogindex].GetDistFar()) >= 1e-4) {
+		//	pcbLights->fog.y = 1.0f / g_fogparams[g_fogindex].GetDistFar();
+		//}
+		//else {
+		//	pcbLights->fog.y = 0.0f;
+		//}
+		pcbLights->fog.y = g_fogparams[g_fogindex].GetDistNear();
 		pcbLights->fog.z = g_fogparams[g_fogindex].GetDistRate();
 	}
 	else if (fogkind == 2) {
@@ -3561,13 +3563,13 @@ void CMQOMaterial::SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBuff
 		//height fog
 		//###########
 		pcbLights->fogcolor = g_fogparams[g_fogindex].GetHeightColor();
-		pcbLights->fog.x = 0.0f;
-		if (fabs(g_fogparams[g_fogindex].GetDistFar()) >= 1e-4) {
-			pcbLights->fog.y = 1.0f / g_fogparams[g_fogindex].GetHeightHigh();
+		if (fabs(g_fogparams[g_fogindex].GetHeightHigh() - g_fogparams[g_fogindex].GetHeightLow()) >= 1e-4) {
+			pcbLights->fog.x = 1.0f / (g_fogparams[g_fogindex].GetHeightHigh() - g_fogparams[g_fogindex].GetHeightLow());
 		}
 		else {
-			pcbLights->fog.y = 0.0f;
+			pcbLights->fog.x = 0.0f;
 		}
+		pcbLights->fog.y = g_fogparams[g_fogindex].GetHeightLow();
 		pcbLights->fog.z = g_fogparams[g_fogindex].GetHeightRate();
 	}
 	else {
@@ -3581,12 +3583,13 @@ void CMQOMaterial::SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBuff
 		else {
 			pcbLights->fog.x = 0.0f;
 		}
-		if (fabs(g_fogparams[g_fogindex].GetDistFar()) >= 1e-4) {
-			pcbLights->fog.y = 1.0f / g_fogparams[g_fogindex].GetDistFar();
-		}
-		else {
-			pcbLights->fog.y = 0.0f;
-		}
+		//if (fabs(g_fogparams[g_fogindex].GetDistFar()) >= 1e-4) {
+		//	pcbLights->fog.y = 1.0f / g_fogparams[g_fogindex].GetDistFar();
+		//}
+		//else {
+		//	pcbLights->fog.y = 0.0f;
+		//}
+		pcbLights->fog.y = g_fogparams[g_fogindex].GetDistNear();
 		pcbLights->fog.z = g_fogparams[g_fogindex].GetDistRate();
 	}
 }

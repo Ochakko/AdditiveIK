@@ -1285,6 +1285,12 @@ public:
 	ChaVector4 GetHeightColor() {
 		return m_heightcolor;
 	};
+	void SetHeightLow(float srcval) {
+		m_heightparams.x = srcval;
+	};
+	float GetHeightLow() {
+		return m_heightparams.x;
+	}
 	void SetHeightHigh(float srcval) {
 		m_heightparams.y = srcval;
 	};

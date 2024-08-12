@@ -140,8 +140,8 @@ float CalcVSFog(float4 worldpos)
 {
     worldpos /= worldpos.w;
     float4 fogpos = worldpos - eyePos;
-    float fogy = worldpos.y * vFog.y;
-    float fog = (vFog.w < 1.1f) ? (vFog.z * length(fogpos.xyz) * vFog.x) : (vFog.z - vFog.z * fogy * fogy);
+    float fogy = (worldpos.y - vFog.y) * vFog.x;
+    float fog = (vFog.w < 1.1f) ? (vFog.z * (length(fogpos.xyz) - vFog.y) * vFog.x) : (vFog.z - vFog.z * fogy * fogy);
     return fog;
 }
 float4 CalcPSFog(float4 pscol, float fog)
@@ -151,7 +151,6 @@ float4 CalcPSFog(float4 pscol, float fog)
     float3 outcolor = lerp(pscol.xyz, fogcolor, fograte);
     return float4(outcolor, pscol.w);
 }
-
 float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir)
 {
     float3 normaly0 = (lightsnum.w == 1) ? normalize(float3(meshnormal.x, 0.0f, meshnormal.z)) : meshnormal;
