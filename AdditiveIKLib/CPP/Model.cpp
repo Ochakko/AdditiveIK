@@ -16166,7 +16166,7 @@ int CModel::CameraRotateAxisDelta(
 }
 
 int CModel::CameraTranslateAxisDelta(
-	CEditRange* erptr, int axiskind, float delta, ChaMatrix matView)
+	CEditRange* erptr, int axiskind, float delta, ChaMatrix matView, int lock2joint)
 {
 	ChaVector3 basevec;
 	ChaVector3 vecx(1.0f, 0.0f, 0.0f);
@@ -16194,11 +16194,11 @@ int CModel::CameraTranslateAxisDelta(
 	ChaVector3 addtra;
 	addtra = basevec * delta * g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
 
-	return CameraTranslateAxis(erptr, addtra);
+	return CameraTranslateAxis(erptr, addtra, lock2joint);
 
 }
 int CModel::CameraTranslateAxis(
-	CEditRange* erptr, ChaVector3 addtra)
+	CEditRange* erptr, ChaVector3 addtra, int lock2joint)
 {
 	if (!erptr) {
 		_ASSERT(0);
@@ -16263,7 +16263,7 @@ int CModel::CameraTranslateAxis(
 				if (cameramp) {
 					ChaMatrix localnodeanimmat = cameramp->GetLocalMat();
 					ChaMatrix newcameramat = localnodeanimmat * newparentGlobalNodeMat;
-
+					
 					enullmp->SetLocalMat(newparentLocalNodeAnimMat);
 					enullmp->SetWorldMat(newparentGlobalNodeMat);
 					enullmp->SetLimitedWM(newparentGlobalNodeMat);
@@ -16271,9 +16271,40 @@ int CModel::CameraTranslateAxis(
 					cameramp->SetWorldMat(newcameramat);
 					cameramp->SetLimitedWM(newcameramat);
 
-					//ChaVector3 neweul;
-					//neweul = enullbone->CalcLocalEulXYZ(limitdegflag, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
-					//enullmp->SetLocalEul(neweul);
+
+					if (lock2joint) {//CameraAnimDiffRotMatView()にならってbefmatViewからnewmatViewへの変化分だけ回転する
+						ChaVector3 tmpcamEye, tmpcamtarget, tmpcamupdir;
+						GetCameraAnimParams(cameramotid, RoundingTime(curframe), g_camdist,
+							&tmpcamEye, &tmpcamtarget, &tmpcamupdir, 0, g_cameraInheritMode);//g_camdist
+
+						ChaMatrix befmatView;
+						befmatView.MakeLookAt(tmpcamEye, tmpcamtarget, tmpcamupdir);//tmpcamtarget
+						ChaMatrix newmatView;
+						newmatView.MakeLookAt(tmpcamEye, g_camtargetpos, tmpcamupdir);//g_camtargetpos
+
+						ChaMatrix rotmat0;
+						rotmat0 = befmatView * ChaMatrixInv(newmatView);//2024/07/30 inv(inv(bef)) * inv(new) : カメラをプラス回転することは世界をマイナス回転させること　つまりそれは逆行列
+						CQuaternion rotq0;
+						rotq0.RotationMatrix(rotmat0);
+
+						ChaVector3 savecamerapos = newcameramat.GetTranslation();
+						ChaMatrix finalcameramat = newcameramat * rotq0.MakeRotMatX();
+						finalcameramat.SetRow(3, savecamerapos);//位置は変えない
+
+						ChaMatrix finalparentGlobalNodeMat = ChaMatrixInv(cameramp->GetLocalMat()) * finalcameramat;
+						ChaMatrix finalparentLocalNodeAnimMat = finalparentGlobalNodeMat * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
+
+						enullmp->SetLocalMat(finalparentLocalNodeAnimMat);
+						enullmp->SetWorldMat(finalparentGlobalNodeMat);
+						enullmp->SetLimitedWM(finalparentGlobalNodeMat);
+
+						cameramp->SetWorldMat(finalcameramat);
+						cameramp->SetLimitedWM(finalcameramat);
+
+						ChaVector3 neweul;
+						neweul = enullbone->CalcLocalEulXYZ(false, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
+						enullmp->SetLocalEul(neweul);
+					}
 				}
 			}
 
@@ -16314,9 +16345,39 @@ int CModel::CameraTranslateAxis(
 				cameramp->SetWorldMat(newcameramat);
 				cameramp->SetLimitedWM(newcameramat);
 
-				//ChaVector3 neweul;
-				//neweul = enullbone->CalcLocalEulXYZ(limitdegflag, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
-				//enullmp->SetLocalEul(neweul);
+				if (lock2joint) {//CameraAnimDiffRotMatView()にならってbefmatViewからnewmatViewへの変化分だけ回転する
+					ChaVector3 tmpcamEye, tmpcamtarget, tmpcamupdir;
+					GetCameraAnimParams(cameramotid, RoundingTime(curframe), g_camdist,
+						&tmpcamEye, &tmpcamtarget, &tmpcamupdir, 0, g_cameraInheritMode);//g_camdist
+
+					ChaMatrix befmatView;
+					befmatView.MakeLookAt(tmpcamEye, tmpcamtarget, tmpcamupdir);//tmpcamtarget
+					ChaMatrix newmatView;
+					newmatView.MakeLookAt(tmpcamEye, g_camtargetpos, tmpcamupdir);//g_camtargetpos
+
+					ChaMatrix rotmat0;
+					rotmat0 = befmatView * ChaMatrixInv(newmatView);//2024/07/30 inv(inv(bef)) * inv(new) : カメラをプラス回転することは世界をマイナス回転させること　つまりそれは逆行列
+					CQuaternion rotq0;
+					rotq0.RotationMatrix(rotmat0);
+
+					ChaVector3 savecamerapos = newcameramat.GetTranslation();
+					ChaMatrix finalcameramat = newcameramat * rotq0.MakeRotMatX();
+					finalcameramat.SetRow(3, savecamerapos);//位置は変えない
+
+					ChaMatrix finalparentGlobalNodeMat = ChaMatrixInv(cameramp->GetLocalMat()) * finalcameramat;
+					ChaMatrix finalparentLocalNodeAnimMat = finalparentGlobalNodeMat * ChaMatrixInv(parentGlobalNodeMat) * parentLocalNodeAnimMat;
+
+					enullmp->SetLocalMat(finalparentLocalNodeAnimMat);
+					enullmp->SetWorldMat(finalparentGlobalNodeMat);
+					enullmp->SetLimitedWM(finalparentGlobalNodeMat);
+
+					cameramp->SetWorldMat(finalcameramat);
+					cameramp->SetLimitedWM(finalcameramat);
+
+					ChaVector3 neweul;
+					neweul = enullbone->CalcLocalEulXYZ(false, -1, cameramotid, curframe, BEFEUL_BEFFRAME);
+					enullmp->SetLocalEul(neweul);
+				}
 			}
 		}
 

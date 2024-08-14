@@ -8339,6 +8339,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		g_fpsforce30 = false;
 		int editmotionflag = s_editmotionflag;
+		int editcameraflag = s_editcameraflag;//camera
 
 		if (g_edittarget != EDITTARGET_CAMERA) {
 			if (ChkEnableIK() && (s_undoFlag == false) && (s_redoFlag == false)) {
@@ -8451,7 +8452,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		else {
 			if ((s_undoFlag == false) && (s_redoFlag == false)) {
 				//if (((s_ikkind == 0) || (s_ikkind == 1) || (s_ikkind == 2)) && (s_editcameraflag >= 0)) {//2024/06/16 ドリー編集も対象に
-				if (s_cameramodel && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editmotionflag >= 0)) {//2024/08/05 s_cameraeditkind : OnCameraAnimMouseMove()呼び出し時のopekind
+				//if (s_cameramodel && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editmotionflag >= 0)) {//2024/08/05 s_cameraeditkind : OnCameraAnimMouseMove()呼び出し時のopekind
+				if (s_cameramodel && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editcameraflag >= 0)) {//2024/08/14 editCAMERAflag
 					ikdoneflag = true;
 				}
 			}
@@ -45758,7 +45760,7 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 		}
 		else if (opekind == CAMERAANIMEDIT_MV) {
 			s_editcameraflag = s_cameramodel->CameraTranslateAxisDelta(
-				&s_editrange, pickxyz - PICK_X, deltax, s_matView);
+				&s_editrange, pickxyz - PICK_X, deltax, s_matView, s_camtargetflag);
 
 			doneflag = true;
 		}

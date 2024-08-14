@@ -666,8 +666,8 @@ public:
 		int axiskind,
 		float delta, int ikcnt);
 	int CameraTranslateAxisDelta(
-		CEditRange* erptr, int axiskind, float delta, ChaMatrix matView);
-	int CameraTranslateAxis(CEditRange* erptr, ChaVector3 addtra);
+		CEditRange* erptr, int axiskind, float delta, ChaMatrix matView, int lock2joint);
+	int CameraTranslateAxis(CEditRange* erptr, ChaVector3 addtra, int lock2joint);
 	int CameraTranslateAxis(double curframe, ChaVector3 addtra);
 	int CameraDistDelta(CEditRange* erptr, float delta, bool lock2joint);
 	int CameraTwistDelta(CEditRange* erptr, float delta);
