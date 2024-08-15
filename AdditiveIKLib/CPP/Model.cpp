@@ -15467,6 +15467,9 @@ int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, Ch
 	CQuaternion rotq0;
 	rotq0.RotationMatrix(rotmat0);
 
+	ChaMatrix applycameramat = camerabone->GetWorldMat(false, cameramotid, RoundingTime(applyframe), 0);
+	CQuaternion applyviewrotq = ChaMatrixInv(applycameramat).GetRotQ();
+
 	if (keynum >= 2) {
 		int keyno = 0;
 		double curframe;
@@ -15479,15 +15482,15 @@ int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, Ch
 			endq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 			rotq0.Slerp2(endq, 1.0 - changerate, &qForRot);
 
-			//ChaMatrix befrot, aftrot;
-			//befrot.SetIdentity();
-			//aftrot.SetIdentity();
-			////befrot.SetTranslation(-g_camtargetpos);
-			////aftrot.SetTranslation(g_camtargetpos);
-			//befrot.SetTranslation(-g_camEye);
-			//aftrot.SetTranslation(g_camEye);
-			ChaMatrix rotmat = qForRot.MakeRotMatX();
-			//ChaMatrix addrot = befrot * rotmat * aftrot;//2024/07/31 回転中心をセットする方法から　回転してから元のtranslationを復元する方法に変更
+			////ChaMatrix befrot, aftrot;
+			////befrot.SetIdentity();
+			////aftrot.SetIdentity();
+			//////befrot.SetTranslation(-g_camtargetpos);
+			//////aftrot.SetTranslation(g_camtargetpos);
+			////befrot.SetTranslation(-g_camEye);
+			////aftrot.SetTranslation(g_camEye);
+			//ChaMatrix rotmat = qForRot.MakeRotMatX();
+			////ChaMatrix addrot = befrot * rotmat * aftrot;//2024/07/31 回転中心をセットする方法から　回転してから元のtranslationを復元する方法に変更
 
 			CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
 			if (enullmp) {
@@ -15504,10 +15507,18 @@ int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, Ch
 
 				CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
 				if (cameramp) {
-					ChaMatrix cameramat = cameramp->GetWorldMat();
-					ChaVector3 savecamerapos = cameramat.GetTranslation();
-					//ChaMatrix newcameramat = cameramat * addrot;
-					ChaMatrix newcameramat = cameramat * rotmat;
+					ChaMatrix befcameramat = cameramp->GetWorldMat();
+					ChaVector3 savecamerapos = befcameramat.GetTranslation();
+
+					//2024/08/15
+					//例えば　すでに360度回転しているアニメに対して処理をする場合
+					//180度回転したフレームに対する適切な追加の回転は　180度回転したフレームの座標系に変換した回転である
+					//ボーン回転時(IKRotate*)にスードローカル(疑似ローカル)という呼び方で開発したやり方と同じやり方で対応
+					ChaMatrix transformmat0 = ChaMatrixInv(befcameramat) * applycameramat * qForRot.MakeRotMatX() * ChaMatrixInv(applycameramat) * befcameramat;
+					ChaMatrix transformrotmat = transformmat0.GetRotQ().MakeRotMatX();
+					//ChaMatrix transformmat = befrot * transformrotmat * aftrot;
+					ChaMatrix newcameramat = befcameramat * transformrotmat;
+					
 					newcameramat.SetRow(3, savecamerapos);//2024/07/31 位置は変えない
 
 					//2024/07/31
@@ -16040,9 +16051,8 @@ int CModel::CameraRotateAxisDelta(
 	ChaVector3Normalize(&axis0, &axis0);
 	localq.SetAxisAndRot(axis0, rotrad2);
 
-
-	//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-	//camerabone->SaveSRT(limitdegflag, cameramotid, startframe);
+	ChaMatrix applycameramat = camerabone->GetWorldMat(false, cameramotid, RoundingTime(applyframe), 0);
+	CQuaternion applyviewrotq = ChaMatrixInv(applycameramat).GetRotQ();
 
 	//式2024/06/04_1 : ChaMatrix newparentGlobalNodeMat = newparentLocalNodeAnimMat * ChaMatrixInv(parentLocalNodeAnimMat) * parentGlobalNodeMat;
 
@@ -16058,13 +16068,14 @@ int CModel::CameraRotateAxisDelta(
 			endq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 			localq.Slerp2(endq, 1.0 - changerate, &qForRot);
 
+
 			ChaMatrix befrot, aftrot;
 			befrot.SetIdentity();
 			aftrot.SetIdentity();
 			befrot.SetTranslation(-g_camtargetpos);
 			aftrot.SetTranslation(g_camtargetpos);
-			ChaMatrix rotmat = qForRot.MakeRotMatX();
-			ChaMatrix addrot = befrot * rotmat * aftrot;
+			//ChaMatrix rotmat = qForRot.MakeRotMatX();
+			//ChaMatrix addrot = befrot * rotmat * aftrot;
 
 			CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
 			if (enullmp) {
@@ -16073,7 +16084,17 @@ int CModel::CameraRotateAxisDelta(
 
 				CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
 				if (cameramp) {
-					ChaMatrix newcameramat = cameramp->GetWorldMat() * addrot;
+					ChaMatrix befcameramat = cameramp->GetWorldMat();
+
+					//2024/08/15
+					//例えば　すでに360度回転しているアニメに対して処理をする場合
+					//180度回転したフレームに対する適切な追加の回転は　180度回転したフレームの座標系に変換した回転である
+					//ボーン回転時(IKRotate*)にスードローカル(疑似ローカル)という呼び方で開発したやり方と同じやり方で対応
+					ChaMatrix transformmat0 = ChaMatrixInv(befcameramat) * applycameramat * qForRot.MakeRotMatX() * ChaMatrixInv(applycameramat) * befcameramat;
+					ChaMatrix transformrotmat = transformmat0.GetRotQ().MakeRotMatX();
+					ChaMatrix transformmat = befrot * transformrotmat * aftrot;
+
+					ChaMatrix newcameramat = befcameramat * transformmat;
 
 					//ChaMatrix newcameramat = calcmatView;
 					//ChaVector3 aftupvec = ChaMatrixInv(newmatView).GetRow(1);
