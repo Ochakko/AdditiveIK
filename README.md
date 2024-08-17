@@ -249,6 +249,9 @@ Smooth平滑化<br>
 [屋根の上に飛べますか？ 2024/06/20](https://youtu.be/YLJxziIqBsQ "Usage example6")<br>
 
 [fbxカメラ基本編集機能の修正と確認 2024/08/02](https://youtu.be/rb1UI_p5Acc "Usage example7")<br>
+
+[カメラがくるっと周った後の編集について 2024/08/18](https://youtu.be/VrAYFkpyVwc "Usage example8")<br>
+<br>
 <br>
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")

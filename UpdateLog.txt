@@ -2,6 +2,12 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/08/18
+　ショートムービー
+　　カメラがくるっと周った後の編集について
+　　https://youtu.be/VrAYFkpyVwc
+
+
 2024/08/16
 　AdditiveIK 1.0.0.30 release
 　　1.0.0.29からの変更点
