@@ -2,6 +2,17 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+
+2024/08/18
+　ドキュメント追加
+　　AdditiveIKについてA4一枚で説明
+　　Documents/AdditiveIK_A4_20240818.jpeg
+
+
+
+
+
 2024/08/18
 　ショートムービー
 　　カメラがくるっと周った後の編集について
