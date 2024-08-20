@@ -671,6 +671,7 @@ public:
 	int CameraTranslateAxis(double curframe, ChaVector3 addtra);
 	int CameraDistDelta(CEditRange* erptr, float delta, bool lock2joint);
 	int CameraTwistDelta(CEditRange* erptr, float delta);
+	int CameraTwistReset(CEditRange* erptr);
 	int CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, ChaMatrix newmatView);
 	int CameraAnimPaste(double curframe, ChaMatrix newmatView);
 	int CameraAnimLock2Joint(CEditRange* erptr, CModel* srcmodel, int srcboneno);//s_editrange全範囲に対してウェイト1.0でLock2Joint処理. ジョイントのモーションにも対応

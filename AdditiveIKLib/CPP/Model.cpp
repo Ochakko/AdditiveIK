@@ -15744,6 +15744,61 @@ int CModel::CameraTwistDelta(CEditRange* erptr, float delta) {
 	return camerabone->GetBoneNo();
 }
 
+int CModel::CameraTwistReset(CEditRange* erptr) {
+
+	if (!erptr) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	ChaCalcFunc chacalcfunc;
+
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int cameramotid = GetCameraMotionId();
+	MOTINFO camerami = GetMotInfo(cameramotid);
+	if (camerami.motid <= 0) {
+		return 0;
+	}
+	int curframeleng = IntTime(camerami.frameleng);
+
+
+	CBone* camerabone = nullptr;
+	CBone* enullbone = nullptr;
+	CAMERANODE* cnptr = GetCAMERANODE(cameramotid);
+	if (cnptr && cnptr->pbone && cnptr->pbone->GetParent(false)) {
+		camerabone = cnptr->pbone;
+		enullbone = cnptr->pbone->GetParent(false);
+	}
+	else {
+		_ASSERT(0);
+		return 0;
+	}
+
+	int keynum;
+	double startframe, endframe, applyframe;
+	erptr->GetRange(&keynum, &startframe, &endframe, &applyframe);
+
+	ChaVector3 savetargetpos = g_camtargetpos;
+
+	g_cameraupdir.SetParams(0.0f, 1.0f, 0.0f);//!!!!!!!!!!!!!!!
+
+	double curframe;
+	for (curframe = startframe; curframe <= endframe; curframe += 1.0) {
+
+		ChaVector3 tmpcamEye, tmpcamtarget, tmpcamupdir;
+		GetCameraAnimParams(cameramotid, RoundingTime(curframe), g_camdist,
+			&tmpcamEye, &tmpcamtarget, &tmpcamupdir, 0, g_cameraInheritMode);//g_camdist
+
+		ChaMatrix newmatView;
+		newmatView.MakeLookAt(tmpcamEye, tmpcamtarget, g_cameraupdir);//!!!!! g_cameraupdirはループの外で(0,1,0)にセット
+
+		CameraAnimPaste(curframe, newmatView);
+	}
+
+	return camerabone->GetBoneNo();
+}
 
 int CModel::CameraAnimPaste(double curframe, ChaMatrix newmatView)
 {

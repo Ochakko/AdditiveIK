@@ -184,6 +184,7 @@ enum {//OnCameraAnimMouseMove()
 	CAMERAANIMEDIT_MV,
 	CAMERAANIMEDIT_DIST,
 	CAMERAANIMEDIT_TWIST,
+	CAMERAANIMEDIT_TWISTRESET,//2024/08/20
 	CAMERAANIMEDIT_MAX
 };
 
@@ -8714,15 +8715,20 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		//カメラの回転を　右ダブルクリックした場合は　カメラのupvecを初期化する
 		if (PickSpCam(ptCursor) == PICK_CAMROT) {
-			g_cameraupdir.SetParams(0.0f, 1.0f, 0.0f);
+			if (g_edittarget != EDITTARGET_CAMERA) {
+				g_cameraupdir.SetParams(0.0f, 1.0f, 0.0f);
 
-			//////#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-			////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-			////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
-			g_befcamEye = g_camEye;
-			ChaVector3 diffv;
-			diffv = g_camEye - g_camtargetpos;
-			g_camdist = (float)ChaVector3LengthDbl(&diffv);
+				//////#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
+				////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
+				////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
+				g_befcamEye = g_camEye;
+				ChaVector3 diffv;
+				diffv = g_camEye - g_camtargetpos;
+				g_camdist = (float)ChaVector3LengthDbl(&diffv);
+			}
+			else {
+				OnCameraAnimMouseMove(CAMERAANIMEDIT_TWISTRESET, PICK_Z, 0.0f);
+			}
 		}
 	}
 	else if (uMsg == WM_RBUTTONUP) {
@@ -11480,7 +11486,7 @@ int UpdateEditedEuler()
 
 
 			int graphkind = 0;
-			if ((s_ikkind == 0) || (s_cameraeditkind == CAMERAANIMEDIT_ROT) || (s_cameraeditkind == CAMERAANIMEDIT_TWIST)) {//回転
+			if ((s_ikkind == 0) || (s_cameraeditkind == CAMERAANIMEDIT_ROT) || (s_cameraeditkind == CAMERAANIMEDIT_TWIST) || (s_cameraeditkind == CAMERAANIMEDIT_TWISTRESET)) {//回転
 				graphkind = 0;
 			}
 			else if ((s_ikkind == 1) || (s_cameraeditkind == CAMERAANIMEDIT_MV) || (s_cameraeditkind == CAMERAANIMEDIT_DIST)) {//移動
@@ -11769,7 +11775,7 @@ int refreshEulerGraph()
 
 
 				int graphkind = 0;
-				if ((s_ikkind == 0) || (s_cameraeditkind == CAMERAANIMEDIT_ROT) || (s_cameraeditkind == CAMERAANIMEDIT_TWIST)) {//回転
+				if ((s_ikkind == 0) || (s_cameraeditkind == CAMERAANIMEDIT_ROT) || (s_cameraeditkind == CAMERAANIMEDIT_TWIST) || (s_cameraeditkind == CAMERAANIMEDIT_TWISTRESET)) {//回転
 					graphkind = 0;
 				}
 				else if ((s_ikkind == 1) || (s_cameraeditkind == CAMERAANIMEDIT_MV) || (s_cameraeditkind == CAMERAANIMEDIT_DIST)) {//移動
@@ -45756,6 +45762,11 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 				&s_editrange, pickxyz,
 				deltax, s_matView);
 
+			if (s_camtargetflag) {//2024/08/20 AlwasyLockにチェックが入っている場合
+				//always s_editrange全範囲に対してウェイト1.0でLock2Joint処理.ジョイントのモーションにも対応
+				s_editcameraflag = s_cameramodel->CameraAnimLock2Joint(&s_editrange, s_model, s_curboneno);
+			}
+
 			doneflag = true;
 		}
 		else if (opekind == CAMERAANIMEDIT_MV) {
@@ -45780,6 +45791,11 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 		}
 		else if (opekind == CAMERAANIMEDIT_TWIST) {
 			s_editcameraflag = s_cameramodel->CameraTwistDelta(&s_editrange, deltax);
+
+			doneflag = true;
+		}
+		else if (opekind == CAMERAANIMEDIT_TWISTRESET) {
+			s_editcameraflag = s_cameramodel->CameraTwistReset(&s_editrange);
 
 			doneflag = true;
 		}
