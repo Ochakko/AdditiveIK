@@ -4,16 +4,24 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+
+2024/08/20
+　カメラ回転を更に修正
+　　カメラの回転軸が回転前の姿勢の軸になっていなかったのを修正.
+　　Documents/AdditiveIK_A4_20240818.jpegの仕様の通りの回転軸に.
+　　
+
+
+
+
 2024/08/18
+　TechnicalSpecsのリンクをREADMEに追加
+　　https://ochakkolab.jp/diary_win.html#AdditiveIK_2024_08_18
+
 　ドキュメント追加
 　　AdditiveIKについてA4一枚で説明
 　　Documents/AdditiveIK_A4_20240818.jpeg
 
-
-
-
-
-2024/08/18
 　ショートムービー
 　　カメラがくるっと周った後の編集について
 　　https://youtu.be/VrAYFkpyVwc

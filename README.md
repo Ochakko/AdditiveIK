@@ -231,7 +231,7 @@ Smooth平滑化<br>
 <br>
 <br>
 # Description
-[Description at OchakoLAB](https://ochakkolab.jp/LABMenu/AdditiveIK.html "Desc-1")<br>
+[Description at OchakoLAB](https://ochakkolab.jp/LABMenu/AdditiveIK.html "Desc-1")<br><br>
 [Technical Specs 2024/08/18](https://ochakkolab.jp/diary_win.html#AdditiveIK_2024_08_18 "Desc-2")<br>
 <br>
 # Explaining Movie

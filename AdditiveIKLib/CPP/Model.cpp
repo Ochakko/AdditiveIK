@@ -15963,7 +15963,7 @@ int CModel::CameraAnimLock2Joint(CEditRange* erptr, CModel* srclockmodel, int sr
 int CModel::CameraRotateAxisDelta(
 	bool limitdegflag, CEditRange* erptr,
 	int axiskind,
-	float delta, int ikcnt)
+	float delta, ChaMatrix matView)
 {
 	if (!erptr) {
 		_ASSERT(0);
@@ -16032,8 +16032,9 @@ int CModel::CameraRotateAxisDelta(
 	CQuaternion localq;
 
 	ChaMatrix selectmat;
-	selectmat.SetIdentity();//!!!!!!!!!!!!!!
-	
+	//selectmat.SetIdentity();//!!!!!!!!!!!!!!
+	selectmat = ChaMatrixInv(matView);//2024/08/20 transformmatをapplyframeの姿勢に後ろから掛けるので　applyframeの軸が必要
+
 	if ((axiskind == PICK_X) || (axiskind == PICK_SPA_X)) {
 		axis0 = selectmat.GetRow(0);
 	}
