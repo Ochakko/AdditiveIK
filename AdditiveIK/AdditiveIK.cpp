@@ -43705,14 +43705,14 @@ int CreateSprites()
 			L"MameMedia\\num9_48.png",
 			L"MameMedia\\num_period_48.png",
 			L"MameMedia\\num_signe_48.png",
-			L"MameMedia\\num_BS_48.png",
-			L"MameMedia\\num_Clear_48.png",
 			L"MameMedia\\num_cp1_48.png",
 			L"MameMedia\\num_cp2_48.png",
 			L"MameMedia\\num_cp3_48.png",
 			L"MameMedia\\num_ps1_48.png",
 			L"MameMedia\\num_ps2_48.png",
 			L"MameMedia\\num_ps3_48.png",
+			L"MameMedia\\num_Clear_48.png",
+			L"MameMedia\\num_BS_48.png",
 			L"MameMedia\\num_close_48.png"
 		};
 		WCHAR filename_pushed[SKNUMBUTTON_MAX][MAX_PATH] = {
@@ -43728,14 +43728,14 @@ int CreateSprites()
 			L"MameMedia\\num9_48_pushed.png",
 			L"MameMedia\\num_period_48_pushed.png",
 			L"MameMedia\\num_signe_48_pushed.png",
-			L"MameMedia\\num_BS_48_pushed.png",
-			L"MameMedia\\num_Clear_48_pushed.png",
 			L"MameMedia\\num_cp1_48_pushed.png",
 			L"MameMedia\\num_cp2_48_pushed.png",
 			L"MameMedia\\num_cp3_48_pushed.png",
 			L"MameMedia\\num_ps1_48_pushed.png",
 			L"MameMedia\\num_ps2_48_pushed.png",
 			L"MameMedia\\num_ps3_48_pushed.png",
+			L"MameMedia\\num_Clear_48_pushed.png",
+			L"MameMedia\\num_BS_48_pushed.png",
 			L"MameMedia\\num_close_48_pushed.png"
 		};
 
@@ -43812,14 +43812,15 @@ int CreateSprites()
 			L"MameMedia\\num9_48.png",
 			L"MameMedia\\num_period_48.png",
 			L"MameMedia\\num_signe_48.png",
-			L"MameMedia\\num_BS_48.png",
-			L"MameMedia\\num_Clear_48.png",
 			L"MameMedia\\num_cp1_48.png",
 			L"MameMedia\\num_cp2_48.png",
 			L"MameMedia\\num_cp3_48.png",
 			L"MameMedia\\num_ps1_48.png",
 			L"MameMedia\\num_ps2_48.png",
 			L"MameMedia\\num_ps3_48.png",
+			L"MameMedia\\num_LorS_48.png",
+			L"MameMedia\\num_Clear_48.png",
+			L"MameMedia\\num_BS_48.png",
 			L"MameMedia\\num_close_48.png"
 		};
 
@@ -43863,14 +43864,15 @@ int CreateSprites()
 			L"MameMedia\\num9_48_pushed.png",
 			L"MameMedia\\num_period_48_pushed.png",
 			L"MameMedia\\num_signe_48_pushed.png",
-			L"MameMedia\\num_BS_48_pushed.png",
-			L"MameMedia\\num_Clear_48_pushed.png",
 			L"MameMedia\\num_cp1_48_pushed.png",
 			L"MameMedia\\num_cp2_48_pushed.png",
 			L"MameMedia\\num_cp3_48_pushed.png",
 			L"MameMedia\\num_ps1_48_pushed.png",
 			L"MameMedia\\num_ps2_48_pushed.png",
 			L"MameMedia\\num_ps3_48_pushed.png",
+			L"MameMedia\\num_LorS_48_pushed.png",
+			L"MameMedia\\num_Clear_48_pushed.png",
+			L"MameMedia\\num_BS_48_pushed.png",
 			L"MameMedia\\num_close_48_pushed.png"
 		};
 

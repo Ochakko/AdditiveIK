@@ -4004,16 +4004,51 @@ void s_dummyfunc()
 		{
 			WindowPos retpos;
 
-			if ((buttonno >= SKNUMBUTTON_0) && (buttonno < SKNUMBUTTON_CLOSE)) {
+			if ((buttonno >= SKNUMBUTTON_0) && (buttonno <= SKNUMBUTTON_PS3)) {
 				int lineindex;
 				lineindex = buttonno / 10;
 				int leftindex = buttonno - lineindex * 10;
+
+				if (buttonno >= SKNUMBUTTON_CP1) {
+					leftindex++;//１つ空白
+				}
+				if (buttonno >= SKNUMBUTTON_PS1) {
+					leftindex++;//１つ空白
+				}
 
 				//ボタンの四隅になる座標を求める
 				int pos1x = OFFSET_X + pos.x + PNG_W * leftindex;
 				int pos1y = pos.y + lineindex * PNG_H;
 				int pos2x = OFFSET_X + pos.x + PNG_W * (leftindex + 1);
 				int pos2y = pos.y + (lineindex + 1) * PNG_H;
+
+				retpos.x = pos1x;
+				retpos.y = pos1y;
+			}
+			else if (buttonno == SKNUMBUTTON_CLEAR) {
+				//クリアボタンは３段目
+				int lineindex = 2;
+				int leftindex = 0;
+				int offsety = 15;
+
+				int pos1x = OFFSET_X + pos.x + PNG_W * leftindex;
+				int pos1y = pos.y + lineindex * PNG_H + offsety;
+				int pos2x = OFFSET_X + pos.x + PNG_W * (leftindex + 1);
+				int pos2y = pos.y + (lineindex + 1) * PNG_H + offsety;
+
+				retpos.x = pos1x;
+				retpos.y = pos1y;
+			}
+			else if (buttonno == SKNUMBUTTON_BACKSPACE) {
+				//バックスペースボタンは３段目
+				int lineindex = 2;
+				int leftindex = 1;
+				int offsety = 15;
+
+				int pos1x = OFFSET_X + pos.x + PNG_W * leftindex;
+				int pos1y = pos.y + lineindex * PNG_H + offsety;
+				int pos2x = OFFSET_X + pos.x + PNG_W * (leftindex + 1);
+				int pos2y = pos.y + (lineindex + 1) * PNG_H + offsety;
 
 				retpos.x = pos1x;
 				retpos.y = pos1y;
@@ -4216,6 +4251,8 @@ void s_dummyfunc()
 			copymap[0] = std::wstring(L"0");
 			copymap[1] = std::wstring(L"0");
 			copymap[2] = std::wstring(L"0");
+
+			LSpushed = false;
 		}
 		~OWP_SoftAlNumKey() {
 		}
@@ -4285,6 +4322,13 @@ void s_dummyfunc()
 				int lineindex = 4;
 				int leftindex = buttonno - SKALNUM_PERIOD;
 
+				if (buttonno >= SKALNUM_CP1) {
+					leftindex++;//１つ空白
+				}
+				if (buttonno >= SKALNUM_PS1) {
+					leftindex++;//１つ空白
+				}
+
 				//ボタンの四隅になる座標を求める
 				int pos1x = OFFSET_X + pos.x + PNG_W * leftindex;
 				int pos1y = pos.y + lineindex * PNG_H;
@@ -4294,6 +4338,48 @@ void s_dummyfunc()
 				retpos.x = pos1x;
 				retpos.y = pos1y;
 			}
+			else if (buttonno == SKALNUM_LS) {
+				//LS(大文字小文字切替)ボタンは６段目
+				int lineindex = 5;
+				int leftindex = 0;
+				int offsety = 15;
+
+				int pos1x = OFFSET_X + pos.x + PNG_W * leftindex;
+				int pos1y = pos.y + lineindex * PNG_H + offsety;
+				int pos2x = OFFSET_X + pos.x + PNG_W * (leftindex + 1);
+				int pos2y = pos.y + (lineindex + 1) * PNG_H + offsety;
+
+				retpos.x = pos1x;
+				retpos.y = pos1y;
+			}
+			else if (buttonno == SKALNUM_CLEAR) {
+				//クリアボタンは６段目
+				int lineindex = 5;
+				int leftindex = 2;
+				int offsety = 15;
+
+				int pos1x = OFFSET_X + pos.x + PNG_W * leftindex;
+				int pos1y = pos.y + lineindex * PNG_H + offsety;
+				int pos2x = OFFSET_X + pos.x + PNG_W * (leftindex + 1);
+				int pos2y = pos.y + (lineindex + 1) * PNG_H + offsety;
+
+				retpos.x = pos1x;
+				retpos.y = pos1y;
+			}
+			else if (buttonno == SKALNUM_BACKSPACE) {
+				//バックスペースボタンは６段目
+				int lineindex = 5;
+				int leftindex = 3;
+				int offsety = 15;
+
+				int pos1x = OFFSET_X + pos.x + PNG_W * leftindex;
+				int pos1y = pos.y + lineindex * PNG_H + offsety;
+				int pos2x = OFFSET_X + pos.x + PNG_W * (leftindex + 1);
+				int pos2y = pos.y + (lineindex + 1) * PNG_H + offsety;
+
+				retpos.x = pos1x;
+				retpos.y = pos1y;
+				}
 			else if (buttonno == SKALNUM_CLOSE) {
 				//閉じるボタンは６段目の一番右
 				int lineindex = 5;
@@ -4372,7 +4458,12 @@ void s_dummyfunc()
 				OneButtonParam* btnPrm;
 				btnPrm = &(numkeyparam[i]);
 				if (btnPrm) {
-					drawAlNum(numkeypos, numkeysize, i, btnPrm->buttonPush);
+					if (i == SKALNUM_LS) {
+						drawAlNum(numkeypos, numkeysize, i, LSpushed);
+					}
+					else {
+						drawAlNum(numkeypos, numkeysize, i, btnPrm->buttonPush);
+					}
 				}
 			}
 
@@ -4442,6 +4533,8 @@ void s_dummyfunc()
 		int BOX_WIDTH;
 		int OFFSET_X;
 		int pushnum;
+		bool LSpushed;
+
 
 		static const int PNG_W = 48;
 		static const int PNG_H = 34;
@@ -4456,7 +4549,8 @@ void s_dummyfunc()
 			Sleep(100);
 			OWP_SoftAlNumKey* thisClass = (OWP_SoftAlNumKey*)pParam;
 			if (thisClass) {
-				if ((thisClass->pushnum >= SKNUMBUTTON_0) && (thisClass->pushnum < SKALNUM_MAX)) {
+				if ((thisClass->pushnum >= SKALNUM_Q) && (thisClass->pushnum < SKALNUM_MAX) &&
+					(thisClass->pushnum != SKALNUM_LS)) {
 					thisClass->numkeyparam[thisClass->pushnum].buttonPush = false;
 					thisClass->callRewrite();
 				}

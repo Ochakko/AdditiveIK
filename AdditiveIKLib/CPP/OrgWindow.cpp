@@ -39,6 +39,20 @@ namespace OrgWinGUI{
 	static OrgWindow* s_psoftalnumWnd = nullptr;
 	static OWP_SoftAlNumKey* s_psoftalnumkey = nullptr;
 
+	static WCHAR s_alkey_L[SKALNUM_M + 1] = {
+		TEXT('Q'), TEXT('W'), TEXT('E'), TEXT('R'), TEXT('T'), TEXT('Y'), TEXT('U'), TEXT('I'), TEXT('O'), TEXT('P'),
+		TEXT('A'), TEXT('S'), TEXT('D'), TEXT('F'), TEXT('G'), TEXT('H'), TEXT('J'), TEXT('K'), TEXT('L'),
+		TEXT('Z'), TEXT('X'), TEXT('C'), TEXT('V'), TEXT('B'), TEXT('N'), TEXT('M')
+	};
+	static WCHAR s_alkey_S[SKALNUM_M + 1] = {
+		TEXT('q'), TEXT('w'), TEXT('e'), TEXT('r'), TEXT('t'), TEXT('y'), TEXT('u'), TEXT('i'), TEXT('o'), TEXT('p'),
+		TEXT('a'), TEXT('s'), TEXT('d'), TEXT('f'), TEXT('g'), TEXT('h'), TEXT('j'), TEXT('k'), TEXT('l'),
+		TEXT('z'), TEXT('x'), TEXT('c'), TEXT('v'), TEXT('b'), TEXT('n'), TEXT('m')
+	};
+	static WCHAR s_numkey[SKALNUM_9 - SKALNUM_0 + 1] = {
+		TEXT('0'), TEXT('1'), TEXT('2'), TEXT('3'), TEXT('4'),
+		TEXT('5'), TEXT('6'), TEXT('7'), TEXT('8'), TEXT('9')
+	};
 
 
 	void OrgWindow::allPaint() {
@@ -2330,34 +2344,35 @@ namespace OrgWinGUI{
 				//	(btnPrm->buttonListener)();
 				//}
 
-				//ボタン押下状態をONにする
-				btnPrm->buttonPush = true;
-
-				//再描画通知
-				callRewrite();//2024/07/24 重くなるがボタンを押したときにボタンを反転表示するために必要
-
-				//ボタンアップアニメーションのためのスレッド作成
 				pushnum = i;
-				_beginthread(drawAlNumButtonUpThread, 0, (void*)this);
+
+				if (pushnum != SKALNUM_LS) {
+					//ボタン押下状態をONにする
+					btnPrm->buttonPush = true;
+
+					//再描画通知
+					callRewrite();//2024/07/24 重くなるがボタンを押したときにボタンを反転表示するために必要
+
+					//ボタンアップアニメーションのためのスレッド作成
+					_beginthread(drawAlNumButtonUpThread, 0, (void*)this);
+				}
 
 				if (peditbox) {
 					if ((pushnum >= SKALNUM_Q) && (pushnum <= SKALNUM_M)) {
-						WCHAR alkey[SKALNUM_M + 1] = {
-							TEXT('Q'), TEXT('W'), TEXT('E'), TEXT('R'), TEXT('T'), TEXT('Y'), TEXT('U'), TEXT('I'), TEXT('O'), TEXT('P'),
-							TEXT('A'), TEXT('S'), TEXT('D'), TEXT('F'), TEXT('G'), TEXT('H'), TEXT('J'), TEXT('K'), TEXT('L'), 
-							TEXT('Z'), TEXT('X'), TEXT('C'), TEXT('V'), TEXT('B'), TEXT('N'), TEXT('M')
-						};
-						WCHAR srcwc = alkey[pushnum - SKALNUM_Q];
+						WCHAR srcwc = 0L;
+						if (LSpushed) {
+							srcwc = s_alkey_S[pushnum - SKALNUM_Q];
+						}
+						else {
+							srcwc = s_alkey_L[pushnum - SKALNUM_Q];
+						}
+
 						if (srcwc != 0L) {
 							peditbox->addChar(srcwc);
 						}
 					}
 					else if ((pushnum >= SKALNUM_0) && (pushnum <= SKALNUM_9)) {
-						WCHAR numkey[SKALNUM_9 - SKALNUM_0 + 1] = {
-							TEXT('0'), TEXT('1'), TEXT('2'), TEXT('3'), TEXT('4'),
-							TEXT('5'), TEXT('6'), TEXT('7'), TEXT('8'), TEXT('9')
-						};
-						WCHAR srcwc = numkey[pushnum - SKALNUM_0];
+						WCHAR srcwc = s_numkey[pushnum - SKALNUM_0];
 						if (srcwc != 0L) {
 							peditbox->addChar(srcwc);
 						}
@@ -2400,6 +2415,12 @@ namespace OrgWinGUI{
 					}
 					else if (pushnum == SKALNUM_PS3) {
 						peditbox->setNameString(copymap[2]);
+					}
+					else if (pushnum == SKALNUM_LS) {
+						//LSボタン　大文字小文字切替
+						LSpushed = !LSpushed;//反転セット
+						//再描画通知
+						callRewrite();//2024/07/24 重くなるがボタンを押したときにボタンを反転表示するために必要
 					}
 					else {
 						_ASSERT(0);

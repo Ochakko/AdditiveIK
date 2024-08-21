@@ -3,6 +3,13 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/08/21
+　ソフトキーパッド修正
+　　アルファベット付ソフトキーにL/S(大文字小文字切り替え)ボタン追加
+　　クリア(CL)とバックスペース(BS)ボタンを押しやすく
+　　レイアウトをみやすく
+
+
 
 
 2024/08/20
@@ -18,9 +25,6 @@ https://github.com/Ochakko/AdditiveIK
 　AlwaysLockにチェックを入れている場合
 　　カメラ移動操作とAlwaysLockは連動して働いていたが、カメラ回転操作とAlwaysLockは互いに独立していた
 　　カメラ回転操作時にもAlwaysLockにチェックしている場合にはAlwaysLockと連動するように修正
-
-
-
 
 
 2024/08/18
