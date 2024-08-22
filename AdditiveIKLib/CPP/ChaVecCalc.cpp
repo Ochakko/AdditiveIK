@@ -4109,6 +4109,93 @@ int CQuaternion::Q2EulXYZusingQ(bool srcunderIKRot, bool srcunderRetarget,
 //	return 0;
 //}
 
+
+EULERMULT CalcEulerMult(ChaMatrix srcmat, float multrad, CQuaternion* axisq)
+{
+	CQuaternion rotq;
+	rotq.RotationMatrix(srcmat);
+
+	int isfirstbone = 0;
+	int isendbone = 0;
+	int notmodify180flag = 1;
+	bool underikrot = false;
+	bool underretarget = false;
+	
+	BEFEUL befeul;
+	ChaVector3 eulxyz;
+	befeul.Init();
+	eulxyz.SetZeroVec3();
+	rotq.Q2EulXYZusingQ(underikrot, underretarget, axisq, befeul, &eulxyz, isfirstbone, isendbone, notmodify180flag);
+
+	CQuaternion qx, qy, qz;
+	qx.SetRotationXYZ(0, eulxyz.x, 0.0f, 0.0f);
+	qy.SetRotationXYZ(0, 0.0f, eulxyz.y, 0.0f);
+	qz.SetRotationXYZ(0, 0.0f, 0.0f, eulxyz.z);
+
+	//float newdegx = eulxyz.x + (float)((double)multrad * 180.0 / PI);
+	//float newdegy = eulxyz.y + (float)((double)multrad * 180.0 / PI);
+	//float newdegz = eulxyz.z + (float)((double)multrad * 180.0 / PI);
+	//CQuaternion newqx, newqy, newqz;
+	//newqx.SetRotationXYZ(0, newdegx, 0.0f, 0.0f);
+	//newqy.SetRotationXYZ(0, 0.0f, newdegy, 0.0f);
+	//newqz.SetRotationXYZ(0, 0.0f, 0.0f, newdegz);
+
+	float multdeg = (float)((double)multrad * 180.0 / PI);
+	CQuaternion multqx, multqy, multqz;
+	multqx.SetRotationXYZ(0, multdeg, 0.0f, 0.0f);
+	multqy.SetRotationXYZ(0, 0.0f, multdeg, 0.0f);
+	multqz.SetRotationXYZ(0, 0.0f, 0.0f, multdeg);
+
+
+	//CQuaternion newqX = qz * qy * newqx;
+	//CQuaternion newqY = qz * newqy * qx;
+	//CQuaternion newqZ = newqz * qy * qx;
+
+	CQuaternion qxyz = qz * qy * qx;
+
+	EULERMULT eulermult;
+	eulermult.Init();
+	//eulermult.multqx = newqX * qxyz.inverse();
+	//eulermult.multqy = newqY * qxyz.inverse();
+	//eulermult.multqz = newqZ * qxyz.inverse();
+	//eulermult.multqx = qxyz.inverse() * newqX;
+	//eulermult.multqy = qxyz.inverse() * newqY;
+	//eulermult.multqz = qxyz.inverse() * newqZ;
+	//eulermult.multqx = qxyz.inverse() * multqx * qxyz;
+	//eulermult.multqy = qxyz.inverse() * multqy * qxyz;
+	//eulermult.multqz = qxyz.inverse() * multqz * qxyz;
+	//eulermult.multqx = qxyz * multqx * qxyz.inverse();
+	//eulermult.multqy = qxyz * multqy * qxyz.inverse();
+	//eulermult.multqz = qxyz * multqz * qxyz.inverse();
+	//eulermult.multqx = qxyz * multqx;
+	//eulermult.multqy = qxyz * multqy;
+	//eulermult.multqz = qxyz * multqz;
+	eulermult.multqx = multqx * qxyz;
+	eulermult.multqy = multqy * qxyz;
+	eulermult.multqz = multqz * qxyz;
+
+
+	//eulermult.invzinvy_newx_yz = qz * qy * multqx * qy.inverse() * qz.inverse();
+	//eulermult.invz_newy_z = qz * multqy * qz.inverse();
+	//eulermult.newz = multqz;
+
+	//eulermult.multqx = qz * qy * newqx;
+	//eulermult.multqy = qz * newqy * qx;
+	//eulermult.multqz = newqz * qy * qx;
+
+	//eulermult.multqx = qz.inverse() * qy.inverse() * multqx * qy * qz;
+	//eulermult.multqy = qz.inverse() * multqy * qz;
+	//eulermult.multqz = multqz;
+
+	//CQuaternion qyz = qz * qy;
+	//eulermult.multqx = multqx * qz * qy;
+	//eulermult.multqy = multqy * qz;
+	//eulermult.multqz = multqz;
+
+
+	return eulermult;
+}
+
 BOOL IsValidNewEul(ChaVector3 srcneweul, ChaVector3 srcbefeul)
 {
 	//とりあえず

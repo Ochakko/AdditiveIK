@@ -16082,31 +16082,6 @@ int CModel::CameraRotateAxisDelta(
 
 
 
-
-	ChaVector3 axis0;
-	CQuaternion localq;
-
-	ChaMatrix selectmat;
-	//selectmat.SetIdentity();//!!!!!!!!!!!!!!
-	selectmat = ChaMatrixInv(matView);//2024/08/20 transformmatをapplyframeの姿勢に後ろから掛けるので　applyframeの軸が必要
-
-	if ((axiskind == PICK_X) || (axiskind == PICK_SPA_X)) {
-		axis0 = selectmat.GetRow(0);
-	}
-	else if ((axiskind == PICK_Y) || (axiskind == PICK_SPA_Y)) {
-		axis0 = selectmat.GetRow(1);
-	}
-	else if ((axiskind == PICK_Z) || (axiskind == PICK_SPA_Z)) {
-		axis0 = selectmat.GetRow(2);
-	}
-	else {
-		_ASSERT(0);
-		//g_underIKRot = false;//2023/01/14 parent limited or not
-		return 1;
-	}
-	ChaVector3Normalize(&axis0, &axis0);
-	localq.SetAxisAndRot(axis0, rotrad2);
-
 	ChaMatrix applycameramat = camerabone->GetWorldMat(false, cameramotid, RoundingTime(applyframe), 0);
 	CQuaternion applyviewrotq = ChaMatrixInv(applycameramat).GetRotQ();
 
@@ -16116,14 +16091,12 @@ int CModel::CameraRotateAxisDelta(
 		int keyno = 0;
 		double curframe;
 		for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
-
 			double changerate;
 			changerate = (double)(*(g_motionbrush_value + (int)curframe));
-			CQuaternion endq;
-			CQuaternion qForRot;
-			endq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-			localq.Slerp2(endq, 1.0 - changerate, &qForRot);
-
+			//CQuaternion endq;
+			//CQuaternion qForRot;
+			//endq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+			//localq.Slerp2(endq, 1.0 - changerate, &qForRot);
 
 			ChaMatrix befrot, aftrot;
 			befrot.SetIdentity();
@@ -16142,11 +16115,61 @@ int CModel::CameraRotateAxisDelta(
 				if (cameramp) {
 					ChaMatrix befcameramat = cameramp->GetWorldMat();
 
+					CQuaternion applymultedq;
+					if (g_boneaxis == BONEAXIS_GLOBAL) {
+						//2024/08/23
+						//DispAndLimitsメニューのBoneAxisでGlobalを選択した場合
+						//X, Z回転で地面が傾いている状態からのY回転をすると　傾いている平面に平行に回転することが可能
+						EULERMULT eulermult;
+						eulermult.Init();
+						//eulermult = CalcEulerMult(ChaMatrixInv(matView), rotrad2 * (float)changerate, 0);
+						eulermult = CalcEulerMult(applycameramat, rotrad2 * (float)changerate, 0);
+						if ((axiskind == PICK_X) || (axiskind == PICK_SPA_X)) {
+							applymultedq = eulermult.multqx;
+						}
+						else if ((axiskind == PICK_Y) || (axiskind == PICK_SPA_Y)) {
+							applymultedq = eulermult.multqy;
+						}
+						else if ((axiskind == PICK_Z) || (axiskind == PICK_SPA_Z)) {
+							applymultedq = eulermult.multqz;
+						}
+						else {
+							_ASSERT(0);
+							applymultedq = eulermult.multqx;
+							return 1;
+						}
+					}
+					else {
+						//2024/08/23
+						//常にカメラ正面に対してのXYZ軸(つまりカメラ姿勢の軸)で回転することが可能
+						ChaVector3 multaxis;
+						if ((axiskind == PICK_X) || (axiskind == PICK_SPA_X)) {
+							multaxis = ChaMatrixInv(matView).GetRow(0);
+						}
+						else if ((axiskind == PICK_Y) || (axiskind == PICK_SPA_Y)) {
+							multaxis = ChaMatrixInv(matView).GetRow(1);
+						}
+						else if ((axiskind == PICK_Z) || (axiskind == PICK_SPA_Z)) {
+							multaxis = ChaMatrixInv(matView).GetRow(2);
+						}
+						else {
+							_ASSERT(0);
+							multaxis = ChaMatrixInv(matView).GetRow(0);
+							return 1;
+						}
+						ChaVector3Normalize(&multaxis, &multaxis);
+						CQuaternion multq;
+						multq.SetAxisAndRot(multaxis, rotrad2 * (float)changerate);
+						applymultedq = multq * applycameramat.GetRotQ();
+
+					}
+
 					//2024/08/15
 					//例えば　すでに360度回転しているアニメに対して処理をする場合
 					//180度回転したフレームに対する適切な追加の回転は　180度回転したフレームの座標系に変換した回転である
 					//ボーン回転時(IKRotate*)にスードローカル(疑似ローカル)という呼び方で開発したやり方と同じやり方で対応
-					ChaMatrix transformmat0 = ChaMatrixInv(befcameramat) * applycameramat * qForRot.MakeRotMatX() * ChaMatrixInv(applycameramat) * befcameramat;
+					//ChaMatrix transformmat0 = ChaMatrixInv(befcameramat) * applycameramat * multrotq.MakeRotMatX() * ChaMatrixInv(applycameramat) * befcameramat;
+					ChaMatrix transformmat0 = ChaMatrixInv(befcameramat) * applymultedq.MakeRotMatX() * ChaMatrixInv(applycameramat) * befcameramat;
 					ChaMatrix transformrotmat = transformmat0.GetRotQ().MakeRotMatX();
 					ChaMatrix transformmat = befrot * transformrotmat * aftrot;
 
@@ -16186,8 +16209,8 @@ int CModel::CameraRotateAxisDelta(
 		aftrot.SetIdentity();
 		befrot.SetTranslation(-g_camtargetpos);
 		aftrot.SetTranslation(g_camtargetpos);
-		ChaMatrix rotmat = localq.MakeRotMatX();
-		ChaMatrix addrot = befrot * rotmat * aftrot;
+		//ChaMatrix rotmat = multrotq.MakeRotMatX();
+		//ChaMatrix addrot = befrot * rotmat * aftrot;
 
 		CMotionPoint* enullmp = enullbone->GetMotionPoint(cameramotid, curframe, false);
 		if (enullmp) {
@@ -16196,7 +16219,58 @@ int CModel::CameraRotateAxisDelta(
 
 			CMotionPoint* cameramp = camerabone->GetMotionPoint(cameramotid, curframe, false);
 			if (cameramp) {
-				ChaMatrix newcameramat = cameramp->GetWorldMat() * addrot;
+				ChaMatrix befcameramat = cameramp->GetWorldMat();
+
+				CQuaternion applymultedq;
+				if (g_boneaxis == BONEAXIS_GLOBAL) {
+					//2024/08/23
+					//DispAndLimitsメニューのBoneAxisでGlobalを選択した場合
+					//X, Z回転で地面が傾いている状態からのY回転をすると　傾いている平面に平行に回転することが可能
+					EULERMULT eulermult;
+					eulermult.Init();
+					//eulermult = CalcEulerMult(ChaMatrixInv(matView), rotrad2 * (float)changerate, 0);
+					eulermult = CalcEulerMult(applycameramat, rotrad2, 0);
+					if ((axiskind == PICK_X) || (axiskind == PICK_SPA_X)) {
+						applymultedq = eulermult.multqx;
+					}
+					else if ((axiskind == PICK_Y) || (axiskind == PICK_SPA_Y)) {
+						applymultedq = eulermult.multqy;
+					}
+					else if ((axiskind == PICK_Z) || (axiskind == PICK_SPA_Z)) {
+						applymultedq = eulermult.multqz;
+					}
+					else {
+						_ASSERT(0);
+						applymultedq = eulermult.multqx;
+						return 1;
+					}
+				}
+				else {
+					//2024/08/23
+					//常にカメラ正面に対してのXYZ軸(つまりカメラ姿勢の軸)で回転することが可能
+					ChaVector3 multaxis;
+					if ((axiskind == PICK_X) || (axiskind == PICK_SPA_X)) {
+						multaxis = ChaMatrixInv(matView).GetRow(0);
+					}
+					else if ((axiskind == PICK_Y) || (axiskind == PICK_SPA_Y)) {
+						multaxis = ChaMatrixInv(matView).GetRow(1);
+					}
+					else if ((axiskind == PICK_Z) || (axiskind == PICK_SPA_Z)) {
+						multaxis = ChaMatrixInv(matView).GetRow(2);
+					}
+					else {
+						_ASSERT(0);
+						multaxis = ChaMatrixInv(matView).GetRow(0);
+						return 1;
+					}
+					ChaVector3Normalize(&multaxis, &multaxis);
+					CQuaternion multq;
+					multq.SetAxisAndRot(multaxis, rotrad2);
+					applymultedq = multq * applycameramat.GetRotQ();
+
+				}
+				//ChaMatrix newcameramat = befcameramat * befrot * multrotq.MakeRotMatX() * aftrot;
+				ChaMatrix newcameramat = befrot * applymultedq.MakeRotMatX() * aftrot;
 
 				//ChaMatrix newcameramat = ChaMatrixInv(newmatView);
 				//ChaVector3 aftupvec = ChaMatrixInv(newmatView).GetRow(1);
