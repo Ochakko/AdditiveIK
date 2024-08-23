@@ -957,35 +957,8 @@ typedef  struct tag_modelbound
 	};
 }MODELBOUND;
 
-typedef struct tag_eulermult
-{
-public:
-	void Init()
-	{
-		eul.SetParams(0.0f, 0.0f, 0.0f);
-		//invzinvy_newx_yz.InitParams();
-		//invz_newy_z.InitParams();
-		//newz.InitParams();
-		multqx.InitParams();
-		multqy.InitParams();
-		multqz.InitParams();
-	};
-	tag_eulermult() {
-		Init();
-	};
-public:
-	ChaVector3 eul;
-	//CQuaternion invzinvy_newx_yz;
-	//CQuaternion invz_newy_z;
-	//CQuaternion newz;
-	CQuaternion multqx;
-	CQuaternion multqy;
-	CQuaternion multqz;
-}EULERMULT;
-
 
 #ifdef CHACALCCPP
-EULERMULT CalcEulerMult(ChaMatrix srcmat, float multrad, CQuaternion* axisq);
 BOOL IsValidNewEul(ChaVector3 srcneweul, ChaVector3 srcbefeul);
 ChaMatrix ChaMatrixTranspose(ChaMatrix srcmat);
 
@@ -1082,7 +1055,6 @@ ChaMatrix ChaMatrixFromFbxAMatrix(FbxAMatrix srcmat);
 ChaMatrix CalcAxisMatX(ChaVector3 vecx, ChaVector3 srcpos, ChaMatrix srcmat);
 
 #else
-extern EULERMULT CalcEulerMult(ChaMatrix srcmat, float multrad, CQuaternion* axisq);
 extern BOOL IsValidNewEul(ChaVector3 srcneweul, ChaVector3 srcbefeul);
 extern ChaMatrix ChaMatrixTranspose(ChaMatrix srcmat);
 

@@ -4,7 +4,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/08/23
-　AdditiveIK 1.0.0.31 RC2(リリース候補2)
+　AdditiveIK 1.0.0.31 RC3(リリース候補3)
 　　1.0.0.30からの変更点
 　　　カメラ回転を更に修正
 　　　　カレントカメラの正面に対してXYZ軸で回転したい場合と、グローバル軸で回転したい場合(特にY軸回転)があるので対応.
@@ -34,6 +34,9 @@ https://github.com/Ochakko/AdditiveIK
 　　カメラの回転軸をGLOBALとそれ以外で場合分け.
 　　回転軸はDispAndLimitsメニューの軸の種類コンボボックスで指定.
 　　0_AboutCameraAnim.docx更新
+　RC3:
+　　軸がGLOBALではない場合のカメラ回転をテスト＆修正
+　　軸がGLOBALの場合のカメラ回転をテスト＆OK
 
 
 
