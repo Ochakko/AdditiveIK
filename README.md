@@ -252,6 +252,9 @@ Smooth平滑化<br>
 [fbxカメラ基本編集機能の修正と確認 2024/08/02](https://youtu.be/rb1UI_p5Acc "Usage example7")<br>
 
 [カメラがくるっと周った後の編集について 2024/08/18](https://youtu.be/VrAYFkpyVwc "Usage example8")<br>
+
+[OXの風景 2024/08/26](https://youtu.be/HZxVflJui40 "Usage example9")<br>
+<br>
 <br>
 <br>
 # Site

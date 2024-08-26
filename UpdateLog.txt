@@ -3,6 +3,14 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/08/26
+　ショートムービーのリンクをREADME.mdに追加
+　　OXの風景
+　　https://youtu.be/HZxVflJui40
+
+
+
+
 2024/08/23
 　AdditiveIK 1.0.0.31 release
 　　1.0.0.30からの変更点
