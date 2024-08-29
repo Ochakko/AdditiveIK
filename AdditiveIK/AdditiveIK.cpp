@@ -252,6 +252,7 @@ enum {
 	SPRETARGETSW_RETARGET,
 	SPRETARGETSW_LIMITEULER,
 	SPRETARGETSW_THRESHOLD,//2024/02/20
+	SPRETARGETSW_FOOTRIG,//2024/08/29
 	SPRETARGETSWNUM
 };
 //#define SPRETARGETSWNUM	2
@@ -1561,6 +1562,8 @@ static Texture* s_spritetex90 = 0;
 static Texture* s_spritetex91 = 0;
 static Texture* s_spritetex92 = 0;
 static Texture* s_spritetex93 = 0;
+static Texture* s_spritetex94 = 0;
+static Texture* s_spritetex95 = 0;
 
 static Texture* s_spritetex_pushed1 = 0;
 static Texture* s_spritetex_pushed2 = 0;
@@ -2188,6 +2191,7 @@ static void GUIRetargetSetVisible(int srcplateno);
 static void ShowRetargetWnd(bool srcflag);
 static void ShowLimitEulerWnd(bool srcflag);
 static void ShowThresholdWnd(bool srcflag);
+static void ShowFootRigWnd(bool srcflag);
 static void GUIEffectSetVisible(int srcplateno);
 static void ShowSkyWnd(bool srcflag);
 static void ShowFogWnd(bool srcflag);
@@ -5993,7 +5997,7 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		OnFrameInitBtWorld();
 
 
-		if (s_spretargetsw[1].state == true) {
+		if (s_spretargetsw[SPRETARGETSW_LIMITEULER].state == true) {
 			bool updateonlycheckeul = true;
 			OnFrameAngleLimit(updateonlycheckeul);//2022/12/30 AngleLimitDlgのcheck値のリアルタイム更新のため
 		}
@@ -19485,6 +19489,9 @@ int SetSpRetargetSWParams()
 
 	s_spretargetsw[SPRETARGETSW_THRESHOLD].dispcenter.x = s_spretargetsw[SPRETARGETSW_LIMITEULER].dispcenter.x + (int)spgwidth + spgshift;
 	s_spretargetsw[SPRETARGETSW_THRESHOLD].dispcenter.y = s_spretargetsw[SPRETARGETSW_RETARGET].dispcenter.y;
+
+	s_spretargetsw[SPRETARGETSW_FOOTRIG].dispcenter.x = s_spretargetsw[SPRETARGETSW_THRESHOLD].dispcenter.x + (int)spgwidth + spgshift;
+	s_spretargetsw[SPRETARGETSW_FOOTRIG].dispcenter.y = s_spretargetsw[SPRETARGETSW_RETARGET].dispcenter.y;
 
 	int sprcnt;
 	for (sprcnt = 0; sprcnt < SPRETARGETSWNUM; sprcnt++) {
@@ -35429,21 +35436,31 @@ void GUIRetargetSetVisible(int srcplateno)
 		ShowRetargetWnd(true);
 		ShowLimitEulerWnd(false);
 		ShowThresholdWnd(false);
+		ShowFootRigWnd(false);
 	}
 	else if (srcplateno == 2) {
 		ShowRetargetWnd(false);
 		ShowLimitEulerWnd(true);
 		ShowThresholdWnd(false);
+		ShowFootRigWnd(false);
 	}
 	else if (srcplateno == 3) {
 		ShowRetargetWnd(false);
 		ShowLimitEulerWnd(false);
 		ShowThresholdWnd(true);
+		ShowFootRigWnd(false);
+	}
+	else if (srcplateno == 4) {
+		ShowRetargetWnd(false);
+		ShowLimitEulerWnd(false);
+		ShowThresholdWnd(false);
+		ShowFootRigWnd(true);
 	}
 	else if (srcplateno == -2) {
 		ShowRetargetWnd(false);
 		ShowLimitEulerWnd(false);
 		ShowThresholdWnd(false);
+		ShowFootRigWnd(false);
 	}
 	else {
 		_ASSERT(0);
@@ -35812,6 +35829,12 @@ void ShowThresholdWnd(bool srcflag)
 	s_spretargetsw[SPRETARGETSW_THRESHOLD].state = srcflag;
 }
 
+void ShowFootRigWnd(bool srcflag)
+{
+	//s_thresholddlg.SetVisible(srcflag);
+
+	s_spretargetsw[SPRETARGETSW_FOOTRIG].state = srcflag;
+}
 
 void ShowGUIDlgDispParams(bool srcflag)
 {
@@ -43527,6 +43550,21 @@ int CreateSprites()
 	s_spretargetsw[SPRETARGETSW_THRESHOLD].spriteOFF.Init(spriteinitdata, screenvertexflag);
 
 	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_FootRig140ON.png");
+	s_spritetex94 = new Texture();
+	s_spritetex94->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex94;
+	s_spretargetsw[SPRETARGETSW_FOOTRIG].spriteON.Init(spriteinitdata, screenvertexflag);
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_FootRig140OFF.png");
+	s_spritetex95 = new Texture();
+	s_spritetex95->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex95;
+	s_spretargetsw[SPRETARGETSW_FOOTRIG].spriteOFF.Init(spriteinitdata, screenvertexflag);
+
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Sky140ON.png");
 	s_spritetex86 = new Texture();
 	s_spritetex86->InitFromWICFile(filepath);
@@ -44381,6 +44419,8 @@ void InitSprites()
 	s_spritetex91 = 0;
 	s_spritetex92 = 0;
 	s_spritetex93 = 0;
+	s_spritetex94 = 0;
+	s_spritetex95 = 0;
 }
 
 void DestroySprites()
@@ -44780,6 +44820,14 @@ void DestroySprites()
 	if (s_spritetex93) {
 		delete s_spritetex93;
 		s_spritetex93 = 0;
+	}
+	if (s_spritetex94) {
+		delete s_spritetex94;
+		s_spritetex94 = 0;
+	}
+	if (s_spritetex95) {
+		delete s_spritetex95;
+		s_spritetex95 = 0;
 	}
 
 

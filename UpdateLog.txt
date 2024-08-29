@@ -4,14 +4,21 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/08/29
+　FootRigのプレートメニュー
+　　とりあえずメニューから
+　　Retarget, LimitEul, Q2Eul_Thresholdメニューの並びの右側にFootRigメニューを配置
+　　まだメニューだけ
+
+
+
+
+
 2024/08/28
   FootRigの仕様書ver0.0.1
 　　歩くモーションをするモデルの足の高さ調整のための仕様
 　　仕様の通り実装してみてから 仕様も修正していく
 　　Documents/FootRig_TechSpec.docx
-
-
-
 
 2024/08/26
 　ショートムービーのリンクをREADME.mdに追加
