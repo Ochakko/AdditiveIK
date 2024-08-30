@@ -3525,10 +3525,25 @@ void s_dummyfunc()
 		int getSelectedCombo() {
 			return selectedcombo;
 		};
+		std::string getSelectedComboStr() {
+			int curcombo = getSelectedCombo();
+			if ((curcombo >= 0) && (curcombo < combovec.size())) {
+				return combovec[curcombo];
+			}
+			else {
+				_ASSERT(0);
+				std::string strerror = "error";
+				return strerror;
+			}
+		};
 		void setSelectedCombo(int value) {
 			if ((value >= 0) && (value < combovec.size())) {
 				selectedcombo = value;
 			}
+		};
+		void ResetCombo() {
+			combovec.clear();
+			selectedcombo = 0;
 		};
 	private:
 		////////////////////////// MemberVar /////////////////////////////

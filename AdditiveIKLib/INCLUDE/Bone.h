@@ -1320,6 +1320,7 @@ public: //accesser
 	CUSTOMRIG GetFreeCustomRig();
 	int InvalidateCustomRig(int rigno);
 	CUSTOMRIG GetCustomRig(int rigno);
+	CUSTOMRIG GetCustomRig(std::string strrig);
 	void SetCustomRig(CUSTOMRIG srccr);
 
 	ChaMatrix GetTmpSymMat()

@@ -294,6 +294,9 @@
     <ClCompile Include="..\CPP\DofDlg.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
+    <ClCompile Include="..\CPP\FootRigDlg.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
@@ -1493,6 +1496,9 @@
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\INCLUDE\DofDlg.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\FootRigDlg.h">
       <Filter>GUI</Filter>
     </ClInclude>
   </ItemGroup>

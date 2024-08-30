@@ -78,6 +78,7 @@
 #include <BlendShapeDlg.h>
 #include <LightsDlg.h>
 #include <DispGroupDlg.h>
+#include <FootRigDlg.h>
 #include <LaterTransparentDlg.h>
 #include <ShaderTypeDlg.h>
 #include <ShaderParamsDlg.h>
@@ -953,6 +954,7 @@ static CProjLodDlg s_projloddlg;
 static CBlendShapeDlg s_blendshapedlg;
 static CLightsDlg s_lightsdlg;
 static CDispGroupDlg s_dispgroupdlg;
+static CFootRigDlg s_footrigdlg;
 static CLaterTransparentDlg s_latertransparentdlg;
 static CShaderTypeDlg s_shadertypedlg;
 static CShaderParamsDlg s_shaderparamsdlg;
@@ -3574,6 +3576,7 @@ int CheckResolution()
 		s_blendshapedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_lightsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_dispgroupdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+		s_footrigdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_latertransparentdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_shadertypedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
 		s_shaderparamsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
@@ -3619,6 +3622,7 @@ void InitApp()
 	s_blendshapedlg.InitParams();
 	s_lightsdlg.InitParams();
 	s_dispgroupdlg.InitParams();
+	s_footrigdlg.InitParams();
 	s_latertransparentdlg.InitParams();
 	s_shadertypedlg.InitParams();
 	s_shaderparamsdlg.InitParams();
@@ -5245,6 +5249,7 @@ void OnDestroyDevice()
 	s_blendshapedlg.DestroyObjs();
 	s_lightsdlg.DestroyObjs();
 	s_dispgroupdlg.DestroyObjs();
+	s_footrigdlg.DestroyObjs();
 	s_latertransparentdlg.DestroyObjs();
 	s_shadertypedlg.DestroyObjs();
 	s_shaderparamsdlg.DestroyObjs();
@@ -35831,7 +35836,7 @@ void ShowThresholdWnd(bool srcflag)
 
 void ShowFootRigWnd(bool srcflag)
 {
-	//s_thresholddlg.SetVisible(srcflag);
+	s_footrigdlg.SetVisible(srcflag);
 
 	s_spretargetsw[SPRETARGETSW_FOOTRIG].state = srcflag;
 }
@@ -45963,6 +45968,7 @@ int SetModel2Dlgs(CModel* srcmodel)
 		s_limiteuldlg.SetModel(srcmodel, s_curboneno);
 
 		s_dispgroupdlg.SetModel(srcmodel);
+		s_footrigdlg.SetModel(s_chascene, srcmodel);
 
 		s_latertransparentdlg.SetModel(srcmodel);
 

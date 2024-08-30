@@ -4,15 +4,27 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/08/30
+　FootRigの右ペインウインドウ
+　　FootRigプレートメニュークリックで設定ウインドウを右ペインに表示
+　　まだGUIだけでFootRigとしては機能していない
+　　設定の保存読み込みもまだ
+
+　　ヒント
+　　　Rigが設定済のモデルでしか機能しない
+　　　あらかじめ足を持ち上げるためのRigを設定しておく
+　　　FootRig設定ウインドウにおいて　Rigの選択よりも前にJointの選択をする
+　　　RigのコンボボックスにはJointコンボボックスで選択したジョイントに関連付いているRig名しか表示されない
+　　　Rigが設定されているJointは左ペインのツリービューの項目名が緑色で表示されている
+
+
+
+
 2024/08/29
 　FootRigのプレートメニュー
 　　とりあえずメニューから
 　　Retarget, LimitEul, Q2Eul_Thresholdメニューの並びの右側にFootRigメニューを配置
 　　まだメニューだけ
-
-
-
-
 
 2024/08/28
   FootRigの仕様書ver0.0.1

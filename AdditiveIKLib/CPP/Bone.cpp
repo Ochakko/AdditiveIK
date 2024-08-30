@@ -5478,6 +5478,23 @@ CUSTOMRIG CBone::GetCustomRig(int rigno)
 		return dummycr;
 	}
 }
+CUSTOMRIG CBone::GetCustomRig(string strrig)
+{
+	int rigno;
+	for (rigno = 0; rigno < MAXRIGNUM; rigno++) {
+		CUSTOMRIG chkcustomrig = m_customrig[rigno];
+		char mbrigname[MAX_PATH] = { 0 };
+		WideCharToMultiByte(CP_ACP, 0, chkcustomrig.rigname, -1, mbrigname, MAX_PATH, NULL, NULL);
+		if (strcmp(mbrigname, strrig.c_str()) == 0) {
+			return chkcustomrig;
+		}
+	}
+
+	_ASSERT(0);
+	CUSTOMRIG dummycr;
+	::InitCustomRig(&dummycr, 0, 0);
+	return dummycr;
+}
 void CBone::SetCustomRig(CUSTOMRIG srccr)
 {
 	int isvalid = IsValidCustomRig(m_parmodel, srccr, this);

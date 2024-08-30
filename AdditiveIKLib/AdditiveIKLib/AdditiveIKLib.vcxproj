@@ -212,6 +212,7 @@
     <ClCompile Include="..\CPP\FbxMisc.cpp" />
     <ClCompile Include="..\CPP\FogDlg.cpp" />
     <ClCompile Include="..\CPP\FogParamsFile.cpp" />
+    <ClCompile Include="..\CPP\FootRigDlg.cpp" />
     <ClCompile Include="..\CPP\GColiFile.cpp" />
     <ClCompile Include="..\CPP\GetMaterial.cpp" />
     <ClCompile Include="..\CPP\GPlaneDlg.cpp" />
@@ -620,6 +621,7 @@
     <ClInclude Include="..\INCLUDE\FbxMisc.h" />
     <ClInclude Include="..\INCLUDE\FogDlg.h" />
     <ClInclude Include="..\INCLUDE\FogParamsFile.h" />
+    <ClInclude Include="..\INCLUDE\FootRigDlg.h" />
     <ClInclude Include="..\INCLUDE\GColiFile.h" />
     <ClInclude Include="..\INCLUDE\GetMaterial.h" />
     <ClInclude Include="..\INCLUDE\GlobalVar.h" />
