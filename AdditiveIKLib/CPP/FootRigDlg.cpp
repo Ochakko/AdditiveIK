@@ -11,6 +11,8 @@
 #include <OrgWindow.h>
 #include <GlobalVar.h>
 
+#include <FootRigFile.h>
+
 
 #define DBGH
 #include <dbg.h>
@@ -245,7 +247,6 @@ void CFootRigDlg::InitParams()
 	m_sizex = 150;
 	m_sizey = 150;
 
-	m_enablefootrig = false;
 	m_model = nullptr;
 	m_chascene = nullptr;
 	m_footrigelem.clear();
@@ -407,7 +408,7 @@ int CFootRigDlg::CreateFootRigWnd()
 		double rate1 = 0.350;
 		double rate50 = 0.50;
 
-		m_enableChk = new OWP_CheckBoxA(L"Eanble FootRig", m_enablefootrig, labelheight, false);
+		m_enableChk = new OWP_CheckBoxA(L"Eanble FootRig", false, labelheight, false);
 		if (!m_enableChk) {
 			_ASSERT(0);
 			abort();
@@ -852,7 +853,13 @@ int CFootRigDlg::CreateFootRigWnd()
 		//###########
 		m_enableChk->setButtonListener([=, this]() {
 			bool value = m_enableChk->getValue();
-			m_enablefootrig = value;
+			if (m_model) {
+				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				itrelem = m_footrigelem.find(m_model);
+				if (itrelem != m_footrigelem.end()) {
+					itrelem->second.enablefootrig = value;
+				}
+			}
 			});
 
 		m_applyB->setButtonListener([=, this]() {
@@ -899,11 +906,6 @@ int CFootRigDlg::ParamsToDlg()
 			m_modellabel->setName(modelname);
 		}
 
-		if (m_enableChk) {
-			m_enableChk->setValue(m_enablefootrig, false);
-		}
-
-
 		FOOTRIGELEM curfootrigelem;
 		curfootrigelem.Init();
 		std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
@@ -913,6 +915,10 @@ int CFootRigDlg::ParamsToDlg()
 		}
 		else {
 			curfootrigelem.Init();
+		}
+
+		if (m_enableChk) {
+			m_enableChk->setValue(curfootrigelem.enablefootrig, false);
 		}
 
 		if (m_groundCombo) {
@@ -1231,4 +1237,62 @@ void CFootRigDlg::ListenMouse(bool srcflag)
 		m_dlgWnd->setListenMouse(srcflag);
 	}
 }
+
+int CFootRigDlg::SaveFootRigFile(WCHAR* srcprojectdir, WCHAR* srcprojectname, ChaScene* srcchascene)
+{
+	if (!srcprojectdir || !srcprojectname || !srcchascene) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+	for (itrelem = m_footrigelem.begin(); itrelem != m_footrigelem.end(); itrelem++) {
+		CModel* curmodel = itrelem->first;
+		FOOTRIGELEM curelem = itrelem->second;
+		if (curmodel) {
+			WCHAR friname[MAX_PATH] = { 0L };
+			swprintf_s(friname, MAX_PATH, L"%s\\%s\\%s.fri", 
+				srcprojectdir, srcprojectname, curmodel->GetFileName());
+			CFootRigFile footrigfile;
+			int result = footrigfile.WriteFootRigFile(friname, itrelem->second);
+			if (result != 0) {
+				_ASSERT(0);
+			}		
+		}
+	}
+
+	return 0;
+}
+int CFootRigDlg::LoadFootRigFile(WCHAR* savechadir, WCHAR* saveprojname)
+{
+	if (!m_chascene || !savechadir || !saveprojname) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+	for (itrelem = m_footrigelem.begin(); itrelem != m_footrigelem.end(); itrelem++) {
+		CModel* curmodel = itrelem->first;
+		if (curmodel) {
+			FOOTRIGELEM tmpelem;
+			tmpelem.Init();
+
+			WCHAR friname[MAX_PATH] = { 0L };
+			swprintf_s(friname, MAX_PATH, L"%s\\%s\\%s.fri", 
+				savechadir, saveprojname, curmodel->GetFileName());
+			CFootRigFile footrigfile;
+			int result = footrigfile.LoadFootRigFile(friname, curmodel, m_chascene, &tmpelem);
+			if (result == 0) {
+				itrelem->second = tmpelem;
+			}
+			else {
+				//_ASSERT(0);
+				int dbgflag1 = 1;
+			}
+		}
+	}
+
+	return 0;
+}
+
 

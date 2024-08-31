@@ -18793,6 +18793,10 @@ int SaveProject()
 	}
 
 
+	//全てのモデルが読み込まれた後で*.friを書き込む
+	s_footrigdlg.SaveFootRigFile(s_projectdir, s_projectname, s_chascene);
+
+
 	//書き込み処理が成功してから履歴を保存する。chaファイルだけ。
 	size_t savepathlen;
 	saveprojpath[MAX_PATH - 1] = 0L;
@@ -19020,6 +19024,7 @@ LRESULT CALLBACK SaveChaDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 int PostOpenChaFile()
 {
+
 	//2024/04/17 常駐スライダーなどにchaファイル読込値を反映する
 
 	if (s_owpEditRateSlider) {
@@ -19163,6 +19168,10 @@ int OpenChaFile()
 		return 1;
 	}
 	//OnAddMotion(s_model->GetCurMotInfo()->motid);
+
+	//全てのモデルが読み込まれた後で*.friを読み込む
+	s_footrigdlg.LoadFootRigFile(s_chasavedir, s_chasavename);
+
 
 	PostOpenChaFile();//2024/04/17 常駐スライダーなどにchaファイル読込値を反映する
 

@@ -196,6 +196,23 @@ public:
 			return 0;
 		}
 	};
+	CModel* GetModel(WCHAR* wfilename)
+	{
+		if (wfilename) {
+			int modelnum = GetModelNum();
+			int modelindex;
+			for (modelindex = 0; modelindex < modelnum; modelindex++) {
+				CModel* chkmodel = GetModel(modelindex);
+				if (chkmodel && (wcscmp(wfilename, chkmodel->GetFileName()) == 0)) {
+					return chkmodel;
+				}
+			}
+			return nullptr;
+		}
+		else {
+			return nullptr;
+		}
+	};
 	MODELELEM GetModelElem(int srcmodelindex)
 	{
 		MODELELEM retelem;

@@ -21,42 +21,6 @@ class OrgWinGUI::OWP_EditBox;
 class OrgWinGUI::OWP_Separator;
 class OrgWinGUI::OWP_ScrollWnd;
 
-typedef struct tag_footrigelem
-{
-	CModel* groundmodel;
-	CBone* leftfootbone;
-	CBone* rightfootbone;
-	CUSTOMRIG leftrig;
-	CUSTOMRIG rightrig;
-	int leftdir;
-	int rightdir;
-	float leftoffset;
-	float rightoffset;
-	float hdiffmax;
-	float rigstep;
-
-	void Init() {
-		groundmodel = nullptr;
-		leftfootbone = nullptr;
-		rightfootbone = nullptr;
-		leftrig.Init();
-		rightrig.Init();
-		leftdir = 0;
-		rightdir = 0;
-		leftoffset = 0.0f;
-		rightoffset = 0.0f;
-		hdiffmax = 50.0f;
-		rigstep = 0.15f;
-	};
-
-	tag_footrigelem()
-	{
-		Init();
-	};
-
-}FOOTRIGELEM;
-
-
 
 /////////////////////////////////////////////////////////////////////////////
 // CFootRigDlg
@@ -86,6 +50,10 @@ public:
 
 	int CreateFootRigWnd();
 
+
+	int SaveFootRigFile(WCHAR* srcprojectdir, WCHAR* srcprojectname, ChaScene* srcchascene);
+	int LoadFootRigFile(WCHAR* savechadir, WCHAR* saveprojname);
+
 private:
 	int Dlg2Params();
 	int ParamsToDlg_LeftRig();
@@ -100,7 +68,6 @@ private:
 	int m_sizex;
 	int m_sizey;
 
-	bool m_enablefootrig;
 	CModel* m_model;
 	ChaScene* m_chascene;
 	std::map<CModel*, FOOTRIGELEM> m_footrigelem;

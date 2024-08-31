@@ -597,6 +597,44 @@ typedef struct tag_customrig
 	};
 }CUSTOMRIG;
 
+typedef struct tag_footrigelem
+{
+	bool enablefootrig;
+	CModel* groundmodel;
+	CBone* leftfootbone;
+	CBone* rightfootbone;
+	CUSTOMRIG leftrig;
+	CUSTOMRIG rightrig;
+	int leftdir;
+	int rightdir;
+	float leftoffset;
+	float rightoffset;
+	float hdiffmax;
+	float rigstep;
+
+	void Init() {
+		enablefootrig = false;
+		groundmodel = nullptr;
+		leftfootbone = nullptr;
+		rightfootbone = nullptr;
+		leftrig.Init();
+		rightrig.Init();
+		leftdir = 0;
+		rightdir = 0;
+		leftoffset = 0.0f;
+		rightoffset = 0.0f;
+		hdiffmax = 50.0f;
+		rigstep = 0.15f;
+	};
+
+	tag_footrigelem()
+	{
+		Init();
+	};
+
+}FOOTRIGELEM;
+
+
 typedef struct tag_hinfo
 {
 	float minh;

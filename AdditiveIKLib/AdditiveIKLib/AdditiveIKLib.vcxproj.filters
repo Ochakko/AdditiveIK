@@ -297,6 +297,9 @@
     <ClCompile Include="..\CPP\FootRigDlg.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
+    <ClCompile Include="..\CPP\FootRigFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
@@ -1500,6 +1503,9 @@
     </ClInclude>
     <ClInclude Include="..\INCLUDE\FootRigDlg.h">
       <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\FootRigFile.h">
+      <Filter>FileIO</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
