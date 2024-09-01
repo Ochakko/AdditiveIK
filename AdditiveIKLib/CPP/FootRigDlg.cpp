@@ -676,12 +676,12 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_rightdirsp->addParts2(*m_rightdirCombo);
 
 		m_dlgWnd->addParts(*m_spacerlabel3);
+		m_dlgWnd->addParts(*m_hdiffmaxlabel);
 		m_dlgWnd->addParts(*m_hdiffmaxsp);
-		m_hdiffmaxsp->addParts1(*m_hdiffmaxlabel);
 		m_hdiffmaxsp->addParts2(*m_hdiffmaxEdit);
 		m_dlgWnd->addParts(*m_spacerlabel4);
+		m_dlgWnd->addParts(*m_rigsteplabel);
 		m_dlgWnd->addParts(*m_rigstepsp);
-		m_rigstepsp->addParts1(*m_rigsteplabel);
 		m_rigstepsp->addParts2(*m_rigstepEdit);
 		m_dlgWnd->addParts(*m_spacerlabel5);
 
@@ -1249,7 +1249,11 @@ int CFootRigDlg::SaveFootRigFile(WCHAR* srcprojectdir, WCHAR* srcprojectname, Ch
 	for (itrelem = m_footrigelem.begin(); itrelem != m_footrigelem.end(); itrelem++) {
 		CModel* curmodel = itrelem->first;
 		FOOTRIGELEM curelem = itrelem->second;
-		if (curmodel) {
+
+		//curmodelが削除済でないことを確認する
+		int chkmodelindex = srcchascene->FindModelIndex(curmodel);
+		
+		if (curmodel && (chkmodelindex >= 0)) {//curmodelが削除済でないことを確認する
 			WCHAR friname[MAX_PATH] = { 0L };
 			swprintf_s(friname, MAX_PATH, L"%s\\%s\\%s.fri", 
 				srcprojectdir, srcprojectname, curmodel->GetFileName());

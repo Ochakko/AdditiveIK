@@ -3,13 +3,30 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/09/02
+　FootRig機能作成時のテスト用プロジェクト作成
+　　Test/Test_FootRig_6/Test_FootRig_6.cha
+　　FootRig機能作成はこれから取り掛かる
+
+　不具合修正
+　　モデルを削除してからプロジェクトを保存すると落ちていた
+　　　FootRigファイルを保存する際にモデル削除を確認するように修正
+
+　FootRigDlgのレイアウトを少し修正
+　　途中までしか表示されていないラベルがあったので修正
+
+　仕様書更新
+　　図１を差し替え
+　　Documents/FootRig_TechSpec.docx
+
+
+
+
 2024/09/01
 　FootRigの設定の保存読み込み
 　　プロジェクト保存読み込みと一緒に保存読み込み
 　　モデルをまたいで設定するのでプロジェクトフォルダ直下に保存(*.fri)
 　　機能実装時の試行錯誤を楽にするために先にGUIを作ったところ　FootRigはまだ機能していない
-
-
 
 
 2024/08/30
