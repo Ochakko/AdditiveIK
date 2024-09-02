@@ -7,7 +7,7 @@
   </FileInfo>
   <Material>
     <MaterialName>phong1</MaterialName>
-    <ShaderType>-2</ShaderType>
+    <ShaderType>1</ShaderType>
     <MetalCoef>0.250000</MetalCoef>
     <SmoothCoef>0.250000</SmoothCoef>
     <AlphaTestClipVal>0.031373</AlphaTestClipVal>
@@ -32,14 +32,14 @@
     <ToonLowAddV>-0.20</ToonLowAddV>
     <ToonLowAddA>0.00</ToonLowAddA>
     <ToonLightIndex>0</ToonLightIndex>
-    <ToonBaseH>0.00</ToonBaseH>
-    <ToonBaseS>0.00</ToonBaseS>
+    <ToonBaseH>83.66</ToonBaseH>
+    <ToonBaseS>0.55</ToonBaseS>
     <ToonBaseV>0.80</ToonBaseV>
     <ToonBaseA>1.00</ToonBaseA>
     <Gradation>1</Gradation>
     <PowerToon>1</PowerToon>
     <SpecularCoef>0.125</SpecularCoef>
-    <NormalY0>0</NormalY0>
+    <NormalY0>1</NormalY0>
     <ShadowCaster>1</ShadowCaster>
     <Lighting>1</Lighting>
     <SimpleWater>0</SimpleWater>

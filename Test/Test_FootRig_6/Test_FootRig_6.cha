@@ -17,7 +17,7 @@
   <PlayingSpeed>4.003</PlayingSpeed>
   <PhysicalLimitScale>0.000</PhysicalLimitScale>
   <BtMovableRate>100</BtMovableRate>
-  <CameraDist>4287.564</CameraDist>
+  <CameraDist>4287.553</CameraDist>
   <AKScale>1.000</AKScale>
   <BtVScaleOnLimitEul>0.200</BtVScaleOnLimitEul>
   <BoneAxis>0</BoneAxis>
@@ -50,9 +50,8 @@
     <IKStopName>UpperLeg</IKStopName>
     <RGDMORPH>0</RGDMORPH>
     <CURRE>0</CURRE>
-    <RGD>0</RGD>
-    <RefNum>1</RefNum>
-    <RefFile>default_ref.ref</RefFile>
+    <RGD>-1</RGD>
+    <RefNum>0</RefNum>
     <ImpNum>1</ImpNum>
     <ImpFile>default_imp.imp</ImpFile>
   </Chara>

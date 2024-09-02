@@ -20,6 +20,10 @@ https://github.com/Ochakko/AdditiveIK
 　　Documents/FootRig_TechSpec.docx
 
 
+　既知の問題に追記
+　　Documents/TroubleShooting/00_KnownIssue.docx
+
+
 
 
 2024/09/01
