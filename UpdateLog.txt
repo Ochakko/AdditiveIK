@@ -12,6 +12,10 @@ https://github.com/Ochakko/AdditiveIK
 　　モデルを削除してからプロジェクトを保存すると落ちていた
 　　　FootRigファイルを保存する際にモデル削除を確認するように修正
 
+　　カメラのパン操作修正
+　　　パンの際にAlwaysLockがオフにならない症状が出ていたので修正
+
+
 　FootRigDlgのレイアウトを少し修正
 　　途中までしか表示されていないラベルがあったので修正
 
@@ -22,6 +26,8 @@ https://github.com/Ochakko/AdditiveIK
 
 　既知の問題に追記
 　　Documents/TroubleShooting/00_KnownIssue.docx
+
+
 
 
 

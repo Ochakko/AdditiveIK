@@ -45835,7 +45835,12 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 		}
 		else if (opekind == CAMERAANIMEDIT_MV) {
 			s_editcameraflag = s_cameramodel->CameraTranslateAxisDelta(
-				&s_editrange, pickxyz - PICK_X, deltax, s_matView, s_camtargetflag);
+				&s_editrange, pickxyz - PICK_X, deltax, s_matView);
+
+			if (s_camtargetflag) {//2024/09/02 AlwasyLockにチェックが入っている場合
+				//always s_editrange全範囲に対してウェイト1.0でLock2Joint処理.ジョイントのモーションにも対応
+				s_editcameraflag = s_cameramodel->CameraAnimLock2Joint(&s_editrange, s_model, s_curboneno);
+			}
 
 			doneflag = true;
 		}
