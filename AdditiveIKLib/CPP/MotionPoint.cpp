@@ -70,6 +70,7 @@ int CMotionPoint::InitParams()
 	m_savermat.SetIdentity();
 	m_savetmat.SetIdentity();
 	m_savetanimmat.SetIdentity();
+	m_savewm.SetIdentity();
 
 	m_prev = 0;
 	m_next = 0;
@@ -355,7 +356,7 @@ CMotionPoint CMotionPoint::operator= (CMotionPoint mp)
 	m_savermat = mp.m_savermat;
 	m_savetmat = mp.m_savetmat;
 	m_savetanimmat = mp.m_savetanimmat;
-	
+	m_savewm = mp.m_savewm;
 
 	//2023/02/05 チェインはそのままに
 	//m_prev = mp.m_prev;

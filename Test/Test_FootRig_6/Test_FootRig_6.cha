@@ -14,10 +14,10 @@
   <ProjFar>425101.562</ProjFar>
   <PickDistRate>0.50</PickDistRate>
   <EditRate>1.733</EditRate>
-  <PlayingSpeed>4.003</PlayingSpeed>
+  <PlayingSpeed>1.007</PlayingSpeed>
   <PhysicalLimitScale>0.000</PhysicalLimitScale>
   <BtMovableRate>100</BtMovableRate>
-  <CameraDist>4287.553</CameraDist>
+  <CameraDist>382.660</CameraDist>
   <AKScale>1.000</AKScale>
   <BtVScaleOnLimitEul>0.200</BtVScaleOnLimitEul>
   <BoneAxis>0</BoneAxis>
@@ -51,8 +51,10 @@
     <RGDMORPH>0</RGDMORPH>
     <CURRE>0</CURRE>
     <RGD>-1</RGD>
-    <RefNum>0</RefNum>
-    <ImpNum>1</ImpNum>
+    <RefNum>1</RefNum>
+    <RefFile>default_ref.ref</RefFile>
+    <ImpNum>2</ImpNum>
+    <ImpFile>default_imp.imp</ImpFile>
     <ImpFile>default_imp.imp</ImpFile>
   </Chara>
   <Chara>

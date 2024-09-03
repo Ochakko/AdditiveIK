@@ -54,6 +54,16 @@ public:
 	int SaveFootRigFile(WCHAR* srcprojectdir, WCHAR* srcprojectname, ChaScene* srcchascene);
 	int LoadFootRigFile(WCHAR* savechadir, WCHAR* saveprojname);
 
+	int Update();
+	void FootRig(bool secondcalling,
+		FOOTRIGELEM curelem,
+		CBone* lowerfoot, CBone* higherfoot,
+		CUSTOMRIG lowerrig, CUSTOMRIG higherrig,
+		ChaVector3 lowerjointpos, ChaVector3 higherjointpos,
+		ChaVector3 lowergpos, ChaVector3 highergpos,
+		float loweroffset, float higheroffset
+	);
+
 private:
 	int Dlg2Params();
 	int ParamsToDlg_LeftRig();
@@ -125,6 +135,11 @@ private:
 	OrgWinGUI::OWP_Label* m_spacerlabel3;
 	OrgWinGUI::OWP_Label* m_spacerlabel4;
 	OrgWinGUI::OWP_Label* m_spacerlabel5;
+	OrgWinGUI::OWP_Label* m_spacerlabel6;
+
+	OrgWinGUI::OWP_Label* m_leftinfolabel;
+	OrgWinGUI::OWP_Label* m_rightinfolabel;
+
 
 };
 

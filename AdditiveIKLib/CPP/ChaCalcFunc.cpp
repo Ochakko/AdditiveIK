@@ -496,7 +496,8 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, CEditRange
 	int ismovable = 1;
 
 
-	if (!srcmodel || !erptr || !rotbone || !parentbone) {
+	//if (!srcmodel || !erptr || !rotbone || !parentbone) {
+	if (!srcmodel || !rotbone || !parentbone) {
 		_ASSERT(0);
 		return 0;//not move
 	}
@@ -550,7 +551,7 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, CEditRange
 		ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
 			infooutflag, 0, srcmotid, curframe, qForRot, qForHipsRot, fromiktarget);
 
-		if ((fromiktarget != true) && (postflag != true)) {
+		if ((fromiktarget != true) && (postflag != true) && erptr) {
 			IKTargetVec(srcmodel, limitdegflag, erptr, srcmotid, curframe, postflag);
 		}
 	}
@@ -616,7 +617,7 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, CEditRange
 		//}
 
 
-		if ((fromiktarget != true) && (postflag != true)) {
+		if ((fromiktarget != true) && (postflag != true) && erptr) {
 			IKTargetVec(srcmodel, limitdegflag, erptr, srcmotid, curframe, postflag);
 		}
 	}

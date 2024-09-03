@@ -3158,7 +3158,7 @@ INT WINAPI wWinMain(
 		_ASSERT(0);
 		return 1;
 	}
-
+	s_chascene->SetFootRigDlg(&s_footrigdlg);
 
 	//CreateUtDialog();
 	//int spgno;

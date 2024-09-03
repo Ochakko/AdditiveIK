@@ -45,6 +45,7 @@
 #include <ThreadingMotion2Bt.h>
 #include <ThreadingSetBtMotion.h>
 
+#include <FootRigDlg.h>
 
 #define DBGH
 #include <dbg.h>
@@ -146,6 +147,8 @@ void ChaScene::InitParams()
 	m_created_SetBtMotionThreadsNum = 0;
 
 	ClearRenderObjs();
+
+	m_footrigdlg = nullptr;
 }
 void ChaScene::DestroyObjs()
 {
@@ -846,6 +849,14 @@ void ChaScene::WaitForUpdateMatrixModels()
 	//	//プレビュー中以外に　タイムラインのフレームを移動する場合に　前フレーム以前の表示が気になるので
 	//	//プレビュー中以外のときには同期する(UpdaetMatrixModelsの終わりで終了待機)　Render()においてはcalcslotflag=trueで描画
 	//}
+
+
+	//2024/09/03
+	//UpdateMatrixの計算が終わってからFootRigのアップデートをする
+	if (m_footrigdlg && m_footrigdlg->GetVisible()) {
+		m_footrigdlg->Update();
+	}
+
 
 }
 

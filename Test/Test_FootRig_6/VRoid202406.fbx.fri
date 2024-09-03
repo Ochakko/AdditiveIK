@@ -14,9 +14,9 @@
     <RightFootRig>RLeg_YFront</RightFootRig>
     <LeftDir>1</LeftDir>
     <RightDir>1</RightDir>
-    <LeftOffset>0.00</LeftOffset>
-    <RightOffset>0.00</RightOffset>
+    <LeftOffset>-5.00</LeftOffset>
+    <RightOffset>-5.00</RightOffset>
     <HDiffMax>50.00</HDiffMax>
-    <RigStep>0.15</RigStep>
+    <RigStep>3.00</RigStep>
   </FootRigElem>
 </FOOTRIG>

@@ -210,6 +210,14 @@ public:
 		
 		return 0;
 	}
+	void SaveWM()
+	{
+		m_savewm = m_worldmat;
+	};
+	void RestoreWM()
+	{
+		m_worldmat = m_savewm;
+	};
 
 	void SetAnimMat(ChaMatrix srcmat)
 	{
@@ -312,7 +320,7 @@ private:
 	ChaMatrix m_savermat;
 	ChaMatrix m_savetmat;
 	ChaMatrix m_savetanimmat;
-
+	ChaMatrix m_savewm;
 
 
 	CMotionPoint* m_prev;

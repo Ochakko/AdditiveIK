@@ -3,6 +3,16 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/09/03
+　FootRig機能
+　　とりあえず実装
+　　右ペインにFootRigウインドウを表示していてかつEnableFootRigにチェックが入っているときのみ動作
+　　
+　　もっと急激な段差のステージで試してデバッグする必要がありそう
+
+
+
+
 2024/09/02
 　FootRig機能作成時のテスト用プロジェクト作成
 　　Test/Test_FootRig_6/Test_FootRig_6.cha
@@ -26,10 +36,6 @@ https://github.com/Ochakko/AdditiveIK
 
 　既知の問題に追記
 　　Documents/TroubleShooting/00_KnownIssue.docx
-
-
-
-
 
 
 2024/09/01

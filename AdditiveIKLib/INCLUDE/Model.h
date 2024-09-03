@@ -430,6 +430,9 @@ public:
 		int refposindex);
 	void SetUpdateSlotReq(CBone* srcbone, int srcslot);
 
+	void UpdateModelWM(ChaMatrix newwm);
+	void UpdateModelWMReq(CBone* srcbone, ChaMatrix newwm, ChaMatrix befwm);
+
 	int ChkInView(int refposindex);
 	//int SwapCurrentMotionPoint();
 	int HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone, 
@@ -779,6 +782,9 @@ public:
 	//CPU版　polymesh3
 	int CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex, ChaVector3* dsthitpos);
 
+	//FootRigから地面の高さ取得用
+	int CollisionPolyMesh3_Ray(ChaVector3 startglobal, ChaVector3 endglobal, ChaVector3* dsthitpos);
+
 
 /**
  * @fn
@@ -989,6 +995,12 @@ public:
 		int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig, int buttonflag);
 	int RigControlPostRig(bool limitdegflag, int depthcnt, CEditRange* erptr,
 		int srcboneno, int uvno, CUSTOMRIG ikcustomrig, int buttonflag);
+	int RigControlOneFrame(bool limitdegflag, int depthcnt, double curframe,
+		int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig, int buttonflag);
+
+	void SaveBoneMotionWM();
+	void RestoreBoneMotionWM();
+
 
 
 	//int PhysicsRigControl(int depthcnt, CEditRange* erptr, int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig);

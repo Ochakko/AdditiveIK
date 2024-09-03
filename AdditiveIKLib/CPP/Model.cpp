@@ -2518,6 +2518,34 @@ void CModel::UpdateMatrixReq(bool limitdegflag, CBone* srcbone, int srcmotid, do
 	}
 }
 
+void CModel::UpdateModelWM(ChaMatrix newwm)
+{
+	ChaMatrix befwm = m_matWorld;
+	m_matWorld = newwm;
+
+	UpdateModelWMReq(GetTopBone(false), newwm, befwm);
+}
+void CModel::UpdateModelWMReq(CBone* srcbone, ChaMatrix newwm, ChaMatrix befwm)
+{
+	if (srcbone) {
+		bool calcslotflag = true;
+		CMotionPoint curmp = srcbone->GetCurMp(calcslotflag);
+		ChaMatrix curwm = curmp.GetWorldMat();
+
+		ChaMatrix setwm = curwm * ChaMatrixInv(befwm) * newwm;
+		curmp.SetWorldMat(setwm);
+		srcbone->SetCurMp(curmp);
+
+		if (srcbone->GetChild(false)) {
+			UpdateModelWMReq(srcbone->GetChild(false), newwm, befwm);
+		}
+		if (srcbone->GetBrother(false)) {
+			UpdateModelWMReq(srcbone->GetBrother(false), newwm, befwm);
+		}
+	}
+}
+
+
 int CModel::CopyLimitedWorldToWorldOne(CBone* srcbone, int srcmotid, double srcframe)
 {
 	if (srcbone && srcbone->IsSkeleton()) {
@@ -4005,6 +4033,66 @@ int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, 
 
 }
 
+int CModel::CollisionPolyMesh3_Ray(ChaVector3 startglobal, ChaVector3 endglobal, ChaVector3* dsthitpos)
+{
+
+	//*hitfaceindex = -1;
+	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
+
+	ChaMatrix invwm;
+	invwm = ChaMatrixInv(m_matWorld);
+	ChaVector3 startlocal, endlocal, dirlocal;
+	ChaVector3TransformCoord(&startlocal, &startglobal, &invwm);
+	ChaVector3TransformCoord(&endlocal, &endglobal, &invwm);
+	dirlocal = endlocal - startlocal;
+	ChaVector3Normalize(&dirlocal, &dirlocal);
+
+
+	vector<ChaVector3> hitposvec;
+
+	map<int, CMQOObject*>::iterator itr;
+	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+		CMQOObject* curobj = itr->second;
+		if (curobj) {
+			bool excludeinvface = true;
+			int colli = 0;
+			int hitfaceindex = -1;
+			ChaVector3 tmphitpos;
+			tmphitpos.SetParams(0.0f, 0.0f, 0.0f);
+			colli = curobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, excludeinvface, &hitfaceindex, &tmphitpos);
+			if (colli != 0) {
+				ChaVector3 hitpos;
+				ChaVector3TransformCoord(&hitpos, &tmphitpos, &m_matWorld);
+				hitposvec.push_back(hitpos);
+			}
+		}
+	}
+
+	if (hitposvec.empty()) {
+		return 0;
+	}
+	else {
+		double nearestdist = FLT_MAX;
+		ChaVector3 nearestpos;
+		nearestpos.SetZeroVec3();
+
+		int hitnum = (int)hitposvec.size();
+		int hitindex;
+		for (hitindex = 0; hitindex < hitnum; hitindex++) {
+			ChaVector3 chkpos = hitposvec[hitindex];
+			ChaVector3 diffpos = startglobal - chkpos;
+			double chkdist = ChaVector3LengthDbl(&diffpos);
+			if (chkdist < nearestdist) {
+				nearestdist = chkdist;
+				nearestpos = chkpos;
+			}
+		}
+
+		dsthitpos->SetParams(nearestpos);
+
+		return 1;
+	}
+}
 
 
 int CModel::GetResultOfPickRay(CMQOObject* pickobj, int* hitfaceindex, ChaVector3* dsthitpos)
@@ -14573,6 +14661,248 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 	}
 }
 
+int CModel::RigControlOneFrame(bool limitdegflag, int depthcnt,
+	double srccurframe, int srcboneno,
+	int uvno, float srcdelta,
+	CUSTOMRIG ikcustomrig, int buttonflag)
+{
+	ChaCalcFunc chacalcfunc;
+
+	SetIKTargetVec();
+
+
+	if (depthcnt >= 10) {
+		_ASSERT(0);
+		return -1;//!!!!!!!!!!!!!!!!!
+	}
+	depthcnt++;
+
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
+
+	//rigからrigを呼ぶので　再入禁止には別手段が必要
+	//if (g_underIKRot == true) {
+	//	return 0;//2023/01/27　再入禁止でギザギザは無くなるかどうかテスト
+	//}
+	//g_underIKRot = true;//2023/01/14 parent limited or not
+
+
+	//float rotrad = srcdelta / 10.0f * (float)PAI / 12.0f;// / (float)calcnum;
+	float rotrad = srcdelta / 10.0f * (float)PAI / 20.0f * g_physicsmvrate;//2023/03/04
+	//if (fabs(rotrad) < (0.020 * DEG2PAI)) {//2023/02/11
+	if (fabs(rotrad) < (0.010 * DEG2PAI)) {//2023/03/04
+		return 0;
+	}
+	if (fabs(rotrad) > (0.0550 * DEG2PAI)) {//2023/03/04
+		rotrad = 0.0550f * fabs(rotrad) / rotrad;
+	}
+
+	CBone* curbone = m_bonelist[srcboneno];
+	if (!curbone) {
+		//g_underIKRot = false;//2023/01/14 parent limited or not
+		return -1;
+	}
+	if (curbone->IsNotSkeleton()) {
+		return -1;
+	}
+
+
+	CBone* parentbone = 0;
+	CBone* lastbone = 0;
+
+
+	double applyframe = RoundingTime(srccurframe);
+
+	//int calccnt;
+	//for (calccnt = 0; calccnt < calcnum; calccnt++){
+	//double firstframe = 0.0;
+
+	int elemno;
+	for (elemno = 0; elemno < ikcustomrig.elemnum; elemno++) {
+		RIGELEM currigelem = ikcustomrig.rigelem[elemno];
+
+		//2023/03/04
+		//同じ軸で２倍回転しないように　重複処理はスキップ
+		if ((uvno == 1) &&
+			(currigelem.transuv[0].enable == 1) && (currigelem.transuv[1].enable == 1) &&
+			(currigelem.transuv[0].axiskind == currigelem.transuv[1].axiskind)) {
+			continue;
+		}
+
+		if (currigelem.rigrigboneno >= 0) {
+			//rigのrig
+			CBone* rigrigbone = GetBoneByID(currigelem.rigrigboneno);
+			if (rigrigbone) {
+				int rigrigno = currigelem.rigrigno;
+				if ((rigrigno >= 0) && (rigrigno < MAXRIGNUM)) {
+					if (currigelem.transuv[uvno].enable == 1) {
+						CUSTOMRIG rigrig = rigrigbone->GetCustomRig(rigrigno);
+						RigControlOneFrame(limitdegflag, depthcnt, srccurframe, rigrigbone->GetBoneNo(),
+							uvno, srcdelta * currigelem.transuv[uvno].applyrate, rigrig, buttonflag);
+					}
+				}
+			}
+		}
+		else {
+			//rigelem
+			curbone = GetBoneByID(currigelem.boneno);
+			if (curbone) {
+				lastbone = curbone;
+				parentbone = curbone->GetParent(false);
+
+				CBone* aplybone;
+				if (parentbone && parentbone->IsSkeleton()) {
+					aplybone = parentbone;
+				}
+				else {
+					aplybone = curbone;
+				}
+
+
+				int rigaxiskind = currigelem.transuv[uvno].axiskind;
+				int rigaxis0, rigaxis1;
+				rigaxis0 = rigaxiskind / 3;//BONEAXIS_CURRENT, BONEAXIS_PARENT, BONEAXIS_GLOBAL, BONEAXIS_BINDPOSE
+				rigaxis1 = rigaxiskind % 3;//AXIS_X, AXIS_Y, AXIS_Z
+
+				float rotrad2 = rotrad * currigelem.transuv[uvno].applyrate;
+				if (currigelem.transuv[uvno].enable == 1) {
+
+					ChaVector3 axis0;
+					CQuaternion localq;
+
+					ChaMatrix selectmat;
+					ChaMatrix invselectmat;
+					selectmat.SetIdentity();
+					invselectmat.SetIdentity();
+					if (curbone && curbone->GetParent(false)) {
+						//curbone->GetParent(false)->CalcAxisMatX_Manipulator(limitdegflag, g_boneaxis, 0, curbone, &selectmat, 0);
+
+						//2024/01/09
+						curbone->GetParent(false)->CalcAxisMatX_Manipulator(limitdegflag, rigaxis0, 0, curbone, &selectmat, 0);
+					}
+					else {
+						selectmat.SetIdentity();
+					}
+					ChaMatrixInverse(&invselectmat, NULL, &selectmat);
+					if (rigaxis1 == AXIS_X) {
+						axis0 = selectmat.GetRow(0);
+					}
+					else if (rigaxis1 == AXIS_Y) {
+						axis0 = selectmat.GetRow(1);
+					}
+					else if (rigaxis1 == AXIS_Z) {
+						axis0 = selectmat.GetRow(2);
+					}
+					else {
+						_ASSERT(0);
+						//g_underIKRot = false;//2023/01/14 parent limited or not
+						return -1;
+					}
+					ChaVector3Normalize(&axis0, &axis0);
+
+
+					//if (fabs(rotrad2) >= (0.020 * DEG2PAI)) {//2023/02/11
+					if (fabs(rotrad2) >= (0.010 * DEG2PAI)) {//2023/03/04
+
+						if (fabs(rotrad2) > (0.0550 * DEG2PAI)) {//2023/02/11
+							rotrad2 = 0.0550f * fabs(rotrad2) / rotrad2;
+						}
+						localq.SetAxisAndRot(axis0, rotrad2);
+
+						CQuaternion qForRot;
+						CQuaternion qForHipsRot;
+
+						////curbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
+						//// 
+						//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
+						//curbone->SaveSRT(limitdegflag, curmotid, startframe);
+
+						int ismovable2 = 1;
+
+						bool keynum1flag = true;
+						bool postflag = false;
+						bool fromiktarget = false;
+						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, nullptr,
+							0,
+							//curbone, aplybone,
+							curbone, curbone,//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
+							curmotid, GetCurrentFrame(), applyframe, applyframe,
+							localq, keynum1flag, postflag, fromiktarget);
+
+
+						//2023/03/04 制限角度に引っ掛かった場合には　やめて　次のジョイントの回転へ
+						if ((ismovable2 == 0) && (g_wallscrapingikflag == 0)) {
+							continue;
+						}
+
+						//curboneのrotqを保存
+						IKROTREC currotrec;
+						currotrec.rotq = localq;
+						currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
+						currotrec.lessthanthflag = false;
+						if (uvno == 0) {
+							curbone->AddIKRotRec_U(currotrec);
+						}
+						else if (uvno == 1) {
+							curbone->AddIKRotRec_V(currotrec);
+						}
+						else {
+							_ASSERT(0);
+							return -1;
+						}
+
+						if (g_applyendflag == 1) {
+							//curmotinfo->curframeから最後までcurmotinfo->curframeの姿勢を適用
+							if (GetTopBone(false)) {
+								int tolast;
+								for (tolast = (int)GetCurrentFrame() + 1; tolast < curframeleng; tolast++) {
+									GetTopBone(false)->PasteRotReq(limitdegflag, curmotid, GetCurrentFrame(), tolast);
+								}
+							}
+						}
+					}
+					else {
+						//rotqの回転角度が1e-4より小さい場合
+						//ウェイトが小さいフレームにおいても　IKTargetが走るように記録する必要がある
+						if (fabs(rotrad2) > (0.0550 * DEG2PAI)) {//2023/02/11
+							rotrad2 = 0.0550f * fabs(rotrad2) / rotrad2;
+						}
+						localq.SetAxisAndRot(axis0, rotrad2);
+
+						IKROTREC currotrec;
+						currotrec.rotq = localq;
+						currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
+						currotrec.lessthanthflag = true;//!!!!!!!!!!!
+						if (uvno == 0) {
+							curbone->AddIKRotRec_U(currotrec);
+						}
+						else if (uvno == 1) {
+							curbone->AddIKRotRec_V(currotrec);
+						}
+						else {
+							_ASSERT(0);
+							return -1;
+						}
+					}
+				}
+			}
+			else {
+				_ASSERT(0);
+			}
+		}
+	}
+
+	if (lastbone) {
+		return lastbone->GetBoneNo();
+	}
+	else {
+		return srcboneno;
+	}
+}
+
 int CModel::RigControlPostRig(bool limitdegflag, int depthcnt, 
 	CEditRange* erptr, int srcboneno, 
 	int uvno,
@@ -23254,3 +23584,37 @@ const WCHAR* CModel::GetWBoneName(int srcboneno) {
 		return nullptr;
 	}
 }
+
+void CModel::SaveBoneMotionWM()
+{
+	int curmotid = GetCurrentMotID();
+	double curframe = GetCurrentFrame();
+
+	map<int, CBone*>::iterator itrbone;
+	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
+		CBone* curbone = itrbone->second;
+		if (curbone && curbone->IsSkeleton()) {
+			CMotionPoint* curmp = curbone->GetMotionPoint(curmotid, curframe);
+			if (curmp) {
+				curmp->SaveWM();
+			}
+		}
+	}
+}
+void CModel::RestoreBoneMotionWM()
+{
+	int curmotid = GetCurrentMotID();
+	double curframe = GetCurrentFrame();
+
+	map<int, CBone*>::iterator itrbone;
+	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
+		CBone* curbone = itrbone->second;
+		if (curbone && curbone->IsSkeleton()) {
+			CMotionPoint* curmp = curbone->GetMotionPoint(curmotid, curframe);
+			if (curmp) {
+				curmp->RestoreWM();
+			}
+		}
+	}
+}
+

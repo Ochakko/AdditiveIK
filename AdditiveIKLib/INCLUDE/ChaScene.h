@@ -31,6 +31,7 @@ class CModel;
 class BPWorld;
 class CThreadingMotion2Bt;
 class CThreadingSetBtMotion;
+class CFootRigDlg;
 
 class ChaScene
 {
@@ -71,6 +72,7 @@ public:
 	//		return 1;
 	//	}
 	//};
+
 
 	void SetUpdateSlot();
 	void ResetCSFirstDispatchFlag();
@@ -161,10 +163,14 @@ private:
 
 
 public:
+	void SetFootRigDlg(CFootRigDlg* srcfootrigdlg)
+	{
+		m_footrigdlg = srcfootrigdlg;
+	};
 	int GetUpdateSlot()
 	{
 		return m_updateslot;
-	}
+	};
 	bool ModelEmpty()
 	{
 		if (m_modelindex.empty()) {
@@ -465,7 +471,7 @@ private:
 
 	//myRenderer::RenderingEngine* m_renderingEngine;
 
-
+	CFootRigDlg* m_footrigdlg;//外部データ
 };
 
 

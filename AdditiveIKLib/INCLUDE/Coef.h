@@ -624,12 +624,29 @@ typedef struct tag_footrigelem
 		leftoffset = 0.0f;
 		rightoffset = 0.0f;
 		hdiffmax = 50.0f;
-		rigstep = 0.15f;
+		rigstep = 3.0f;
 	};
 
 	tag_footrigelem()
 	{
 		Init();
+	};
+
+	bool IsEnable()
+	{
+		if (enablefootrig) {
+			if (leftfootbone && (leftrig.useflag == 2) &&
+				rightfootbone && (rightrig.useflag == 2) &&
+				groundmodel) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			return false;
+		}
 	};
 
 }FOOTRIGELEM;
