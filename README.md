@@ -254,7 +254,8 @@ Smooth平滑化<br>
 [カメラがくるっと周った後の編集について 2024/08/18](https://youtu.be/VrAYFkpyVwc "Usage example8")<br>
 
 [OXの風景 2024/08/26](https://youtu.be/HZxVflJui40 "Usage example9")<br>
-<br>
+
+[FootRigで接地して歩く 2024/09/04](https://youtu.be/TJjTwD0gioI "Usage example10")<br>
 <br>
 <br>
 # Site

@@ -13,6 +13,10 @@ https://github.com/Ochakko/AdditiveIK
 　　　Documents/FootRig_TechSpec.docx更新
 
 　　　　
+　ショートムービー
+　　FootRigで接地して歩く
+　　https://youtu.be/TJjTwD0gioI
+
 
 
 
