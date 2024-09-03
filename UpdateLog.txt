@@ -2,15 +2,26 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/09/04
+　FootRig機能(その２)仕様修正実装修正
+　　良さそうな具合？になってきた
+
+　　テストステージアップデート
+　　　Test/Test_FootRig_6_2
+
+　　仕様修正
+　　　Documents/FootRig_TechSpec.docx更新
+
+　　　　
+
+
 
 2024/09/03
-　FootRig機能
+　FootRig機能(その１)
 　　とりあえず実装
 　　右ペインにFootRigウインドウを表示していてかつEnableFootRigにチェックが入っているときのみ動作
 　　
 　　もっと急激な段差のステージで試してデバッグする必要がありそう
-
-
 
 
 2024/09/02

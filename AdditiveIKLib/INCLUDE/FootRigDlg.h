@@ -58,10 +58,12 @@ public:
 	void FootRig(bool secondcalling,
 		FOOTRIGELEM curelem,
 		CBone* lowerfoot, CBone* higherfoot,
+		CBone* lowerupdatebone, CBone* higherupdatebone,
 		CUSTOMRIG lowerrig, CUSTOMRIG higherrig,
 		ChaVector3 lowerjointpos, ChaVector3 higherjointpos,
 		ChaVector3 lowergpos, ChaVector3 highergpos,
-		float loweroffset, float higheroffset
+		float loweroffset, float higheroffset,
+		int lowerdir, int higherdir
 	);
 
 private:

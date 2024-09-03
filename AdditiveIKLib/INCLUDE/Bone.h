@@ -140,6 +140,10 @@ public:
 		bool callingbythread, int refposindex);// , int updateslot = 0);
 	//int SwapCurrentMotionPoint();
 
+	int UpdateMatrixRoundingTime(int srcmotid, double srcframe,
+		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
+
+
 
 	//int UpdateMatrixFromEul(int srcmotid, double srcframe, ChaVector3 neweul, ChaMatrix* wmat, ChaMatrix* vpmat);
 

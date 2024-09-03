@@ -2518,6 +2518,28 @@ void CModel::UpdateMatrixReq(bool limitdegflag, CBone* srcbone, int srcmotid, do
 	}
 }
 
+void CModel::UpdateMatrixRoundingTimeReq(CBone* srcbone,
+	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat)
+{
+	if (srcbone) {
+
+		if (srcbone->IsSkeleton()) {
+			int srcmotid = GetCurrentMotID();
+			double srcframe = GetCurrentFrame();
+			srcbone->UpdateMatrixRoundingTime(srcmotid, srcframe, wmat, vmat, pmat);
+		}
+
+		if (srcbone->GetChild(false)) {
+			UpdateMatrixRoundingTimeReq(srcbone->GetChild(false), wmat, vmat, pmat);
+		}
+		if (srcbone->GetBrother(false)) {
+			UpdateMatrixRoundingTimeReq(srcbone->GetBrother(false), wmat, vmat, pmat);
+		}
+	}
+
+}
+
+
 void CModel::UpdateModelWM(ChaMatrix newwm)
 {
 	ChaMatrix befwm = m_matWorld;
@@ -2535,6 +2557,17 @@ void CModel::UpdateModelWMReq(CBone* srcbone, ChaMatrix newwm, ChaMatrix befwm)
 		ChaMatrix setwm = curwm * ChaMatrixInv(befwm) * newwm;
 		curmp.SetWorldMat(setwm);
 		srcbone->SetCurMp(curmp);
+
+		ChaVector3 jpos = srcbone->GetJointFPos();
+		ChaVector3 childworld;
+		ChaVector3TransformCoord(&childworld, &jpos, &setwm);
+		ChaMatrix vpmat = m_matView * m_matProj;
+		ChaMatrix wvpmat = setwm * vpmat;
+		ChaVector3 childscreen;
+		ChaVector3TransformCoord(&childscreen, &childworld, &vpmat);//wmatで変換した位置に対して　vp変換
+		srcbone->SetChildWorld(childworld);
+		srcbone->SetChildScreen(childscreen);
+
 
 		if (srcbone->GetChild(false)) {
 			UpdateModelWMReq(srcbone->GetChild(false), newwm, befwm);
@@ -14690,15 +14723,18 @@ int CModel::RigControlOneFrame(bool limitdegflag, int depthcnt,
 	//g_underIKRot = true;//2023/01/14 parent limited or not
 
 
-	//float rotrad = srcdelta / 10.0f * (float)PAI / 12.0f;// / (float)calcnum;
-	float rotrad = srcdelta / 10.0f * (float)PAI / 20.0f * g_physicsmvrate;//2023/03/04
-	//if (fabs(rotrad) < (0.020 * DEG2PAI)) {//2023/02/11
-	if (fabs(rotrad) < (0.010 * DEG2PAI)) {//2023/03/04
-		return 0;
-	}
+	float rotrad = srcdelta * (float)PAI / 180.0f;
+
+	////float rotrad = srcdelta / 10.0f * (float)PAI / 12.0f;// / (float)calcnum;
+	//float rotrad = srcdelta / 10.0f * (float)PAI / 20.0f * g_physicsmvrate;//2023/03/04
+	////if (fabs(rotrad) < (0.020 * DEG2PAI)) {//2023/02/11
+	//if (fabs(rotrad) < (0.010 * DEG2PAI)) {//2023/03/04
+	//	return 0;
+	//}
 	if (fabs(rotrad) > (0.0550 * DEG2PAI)) {//2023/03/04
 		rotrad = 0.0550f * fabs(rotrad) / rotrad;
 	}
+
 
 	CBone* curbone = m_bonelist[srcboneno];
 	if (!curbone) {
@@ -14724,13 +14760,13 @@ int CModel::RigControlOneFrame(bool limitdegflag, int depthcnt,
 	for (elemno = 0; elemno < ikcustomrig.elemnum; elemno++) {
 		RIGELEM currigelem = ikcustomrig.rigelem[elemno];
 
-		//2023/03/04
-		//同じ軸で２倍回転しないように　重複処理はスキップ
-		if ((uvno == 1) &&
-			(currigelem.transuv[0].enable == 1) && (currigelem.transuv[1].enable == 1) &&
-			(currigelem.transuv[0].axiskind == currigelem.transuv[1].axiskind)) {
-			continue;
-		}
+		////2023/03/04
+		////同じ軸で２倍回転しないように　重複処理はスキップ
+		//if ((uvno == 1) &&
+		//	(currigelem.transuv[0].enable == 1) && (currigelem.transuv[1].enable == 1) &&
+		//	(currigelem.transuv[0].axiskind == currigelem.transuv[1].axiskind)) {
+		//	continue;
+		//}
 
 		if (currigelem.rigrigboneno >= 0) {
 			//rigのrig
