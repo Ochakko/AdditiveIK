@@ -495,12 +495,14 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, CEditRange
 	//for return value
 	int ismovable = 1;
 
-
 	//if (!srcmodel || !erptr || !rotbone || !parentbone) {
 	if (!srcmodel || !rotbone || !parentbone) {
 		_ASSERT(0);
 		return 0;//not move
 	}
+
+	bool underfootrig = srcmodel->GetUnderFootRig();//FootRig時にはinfooutしないように
+
 
 	if (rotbone->IsNotSkeleton() && !rotbone->IsNullAndChildIsCamera()) {
 		return 0;//not move
@@ -528,7 +530,7 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, CEditRange
 		endq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 		qForRot.Slerp2(endq, 0.080f, &curqForRot);
 		curqForHipsRot = curqForRot;
-		bool infooutflag = true;
+		bool infooutflag = !underfootrig;
 		ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
 			infooutflag, 0, srcmotid, curframe, curqForRot, curqForHipsRot, fromiktarget);
 
@@ -547,7 +549,7 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, CEditRange
 		//	parentbone, parentbone,
 		//	&qForRot, &qForHipsRot);
 
-		bool infooutflag = true;
+		bool infooutflag = !underfootrig;
 		ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
 			infooutflag, 0, srcmotid, curframe, qForRot, qForHipsRot, fromiktarget);
 
@@ -579,7 +581,7 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, CEditRange
 
 		bool infooutflag;
 		if (curframe == applyframe) {
-			infooutflag = true;
+			infooutflag = !underfootrig;
 		}
 		else {
 			infooutflag = false;

@@ -506,6 +506,8 @@ int CModel::InitParams()
 	m_refposflag = false;
 	m_updateslot = 0;
 
+	m_underfootrig = false;
+
 	m_csfirstdispatchflag = true;
 
 
@@ -2534,6 +2536,26 @@ void CModel::UpdateMatrixRoundingTimeReq(CBone* srcbone,
 		}
 		if (srcbone->GetBrother(false)) {
 			UpdateMatrixRoundingTimeReq(srcbone->GetBrother(false), wmat, vmat, pmat);
+		}
+	}
+
+}
+void CModel::BlendSaveBoneMotionReq(CBone* srcbone, float srcblend)
+{
+
+	if (srcbone) {
+
+		if (srcbone->IsSkeleton()) {
+			int srcmotid = GetCurrentMotID();
+			double srcframe = RoundingTime(GetCurrentFrame());
+			srcbone->BlendSaveBoneMotion(srcmotid, srcframe, srcblend);
+		}
+
+		if (srcbone->GetChild(false)) {
+			BlendSaveBoneMotionReq(srcbone->GetChild(false), srcblend);
+		}
+		if (srcbone->GetBrother(false)) {
+			BlendSaveBoneMotionReq(srcbone->GetBrother(false), srcblend);
 		}
 	}
 
@@ -14694,11 +14716,13 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 	}
 }
 
-int CModel::RigControlOneFrame(bool limitdegflag, int depthcnt,
+int CModel::RigControlFootRig(bool limitdegflag, int depthcnt,
 	double srccurframe, int srcboneno,
 	int uvno, float srcdelta,
 	CUSTOMRIG ikcustomrig, int buttonflag)
 {
+	SetUnderFootRig(true);
+
 	ChaCalcFunc chacalcfunc;
 
 	SetIKTargetVec();
@@ -14706,11 +14730,13 @@ int CModel::RigControlOneFrame(bool limitdegflag, int depthcnt,
 
 	if (depthcnt >= 10) {
 		_ASSERT(0);
+		SetUnderFootRig(false);
 		return -1;//!!!!!!!!!!!!!!!!!
 	}
 	depthcnt++;
 
 	if (!ExistCurrentMotion()) {
+		SetUnderFootRig(false);
 		return 0;
 	}
 	int curmotid = GetCurrentMotID();
@@ -14718,6 +14744,7 @@ int CModel::RigControlOneFrame(bool limitdegflag, int depthcnt,
 
 	//rigからrigを呼ぶので　再入禁止には別手段が必要
 	//if (g_underIKRot == true) {
+	//  SetUnderFootRig(false);
 	//	return 0;//2023/01/27　再入禁止でギザギザは無くなるかどうかテスト
 	//}
 	//g_underIKRot = true;//2023/01/14 parent limited or not
@@ -14729,6 +14756,7 @@ int CModel::RigControlOneFrame(bool limitdegflag, int depthcnt,
 	//float rotrad = srcdelta / 10.0f * (float)PAI / 20.0f * g_physicsmvrate;//2023/03/04
 	////if (fabs(rotrad) < (0.020 * DEG2PAI)) {//2023/02/11
 	//if (fabs(rotrad) < (0.010 * DEG2PAI)) {//2023/03/04
+	//  SetUnderFootRig(false);
 	//	return 0;
 	//}
 	if (fabs(rotrad) > (0.0550 * DEG2PAI)) {//2023/03/04
@@ -14739,9 +14767,11 @@ int CModel::RigControlOneFrame(bool limitdegflag, int depthcnt,
 	CBone* curbone = m_bonelist[srcboneno];
 	if (!curbone) {
 		//g_underIKRot = false;//2023/01/14 parent limited or not
+		SetUnderFootRig(false);
 		return -1;
 	}
 	if (curbone->IsNotSkeleton()) {
+		SetUnderFootRig(false);
 		return -1;
 	}
 
@@ -14776,7 +14806,7 @@ int CModel::RigControlOneFrame(bool limitdegflag, int depthcnt,
 				if ((rigrigno >= 0) && (rigrigno < MAXRIGNUM)) {
 					if (currigelem.transuv[uvno].enable == 1) {
 						CUSTOMRIG rigrig = rigrigbone->GetCustomRig(rigrigno);
-						RigControlOneFrame(limitdegflag, depthcnt, srccurframe, rigrigbone->GetBoneNo(),
+						RigControlFootRig(limitdegflag, depthcnt, srccurframe, rigrigbone->GetBoneNo(),
 							uvno, srcdelta * currigelem.transuv[uvno].applyrate, rigrig, buttonflag);
 					}
 				}
@@ -14835,6 +14865,7 @@ int CModel::RigControlOneFrame(bool limitdegflag, int depthcnt,
 					else {
 						_ASSERT(0);
 						//g_underIKRot = false;//2023/01/14 parent limited or not
+						SetUnderFootRig(false);
 						return -1;
 					}
 					ChaVector3Normalize(&axis0, &axis0);
@@ -14874,31 +14905,32 @@ int CModel::RigControlOneFrame(bool limitdegflag, int depthcnt,
 							continue;
 						}
 
-						//curboneのrotqを保存
-						IKROTREC currotrec;
-						currotrec.rotq = localq;
-						currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
-						currotrec.lessthanthflag = false;
-						if (uvno == 0) {
-							curbone->AddIKRotRec_U(currotrec);
-						}
-						else if (uvno == 1) {
-							curbone->AddIKRotRec_V(currotrec);
-						}
-						else {
-							_ASSERT(0);
-							return -1;
-						}
+						////curboneのrotqを保存
+						//IKROTREC currotrec;
+						//currotrec.rotq = localq;
+						//currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
+						//currotrec.lessthanthflag = false;
+						//if (uvno == 0) {
+						//	curbone->AddIKRotRec_U(currotrec);
+						//}
+						//else if (uvno == 1) {
+						//	curbone->AddIKRotRec_V(currotrec);
+						//}
+						//else {
+						//	_ASSERT(0);
+						//  SetUnderFootRig(false);
+						//	return -1;
+						//}
 
-						if (g_applyendflag == 1) {
-							//curmotinfo->curframeから最後までcurmotinfo->curframeの姿勢を適用
-							if (GetTopBone(false)) {
-								int tolast;
-								for (tolast = (int)GetCurrentFrame() + 1; tolast < curframeleng; tolast++) {
-									GetTopBone(false)->PasteRotReq(limitdegflag, curmotid, GetCurrentFrame(), tolast);
-								}
-							}
-						}
+						//if (g_applyendflag == 1) {
+						//	//curmotinfo->curframeから最後までcurmotinfo->curframeの姿勢を適用
+						//	if (GetTopBone(false)) {
+						//		int tolast;
+						//		for (tolast = (int)GetCurrentFrame() + 1; tolast < curframeleng; tolast++) {
+						//			GetTopBone(false)->PasteRotReq(limitdegflag, curmotid, GetCurrentFrame(), tolast);
+						//		}
+						//	}
+						//}
 					}
 					else {
 						//rotqの回転角度が1e-4より小さい場合
@@ -14908,20 +14940,21 @@ int CModel::RigControlOneFrame(bool limitdegflag, int depthcnt,
 						}
 						localq.SetAxisAndRot(axis0, rotrad2);
 
-						IKROTREC currotrec;
-						currotrec.rotq = localq;
-						currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
-						currotrec.lessthanthflag = true;//!!!!!!!!!!!
-						if (uvno == 0) {
-							curbone->AddIKRotRec_U(currotrec);
-						}
-						else if (uvno == 1) {
-							curbone->AddIKRotRec_V(currotrec);
-						}
-						else {
-							_ASSERT(0);
-							return -1;
-						}
+						//IKROTREC currotrec;
+						//currotrec.rotq = localq;
+						//currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
+						//currotrec.lessthanthflag = true;//!!!!!!!!!!!
+						//if (uvno == 0) {
+						//	curbone->AddIKRotRec_U(currotrec);
+						//}
+						//else if (uvno == 1) {
+						//	curbone->AddIKRotRec_V(currotrec);
+						//}
+						//else {
+						//	_ASSERT(0);
+						//  SetUnderFootRig(false);
+						//	return -1;
+						//}
 					}
 				}
 			}
@@ -14931,6 +14964,8 @@ int CModel::RigControlOneFrame(bool limitdegflag, int depthcnt,
 		}
 	}
 
+
+	SetUnderFootRig(false);
 	if (lastbone) {
 		return lastbone->GetBoneNo();
 	}
@@ -23624,7 +23659,7 @@ const WCHAR* CModel::GetWBoneName(int srcboneno) {
 void CModel::SaveBoneMotionWM()
 {
 	int curmotid = GetCurrentMotID();
-	double curframe = GetCurrentFrame();
+	double curframe = RoundingTime(GetCurrentFrame());
 
 	map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
@@ -23640,7 +23675,7 @@ void CModel::SaveBoneMotionWM()
 void CModel::RestoreBoneMotionWM()
 {
 	int curmotid = GetCurrentMotID();
-	double curframe = GetCurrentFrame();
+	double curframe = RoundingTime(GetCurrentFrame());
 
 	map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {

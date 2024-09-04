@@ -142,7 +142,7 @@ public:
 
 	int UpdateMatrixRoundingTime(int srcmotid, double srcframe,
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
-
+	int BlendSaveBoneMotion(int srcmotid, double srcframe, float srcblend);
 
 
 	//int UpdateMatrixFromEul(int srcmotid, double srcframe, ChaVector3 neweul, ChaMatrix* wmat, ChaMatrix* vpmat);

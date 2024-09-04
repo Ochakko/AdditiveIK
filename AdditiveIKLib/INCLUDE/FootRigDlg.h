@@ -66,11 +66,16 @@ public:
 		int lowerdir, int higherdir
 	);
 
+	void SetSaveModelWM(CModel* srcmodel, ChaMatrix srcmat);
+	ChaMatrix GetSaveModelWM(CModel* srcmodel);
+	bool IsEnableFootRig(CModel* srcmodel);
+
 private:
 	int Dlg2Params();
 	int ParamsToDlg_LeftRig();
 	int ParamsToDlg_RightRig();
 
+	ChaMatrix BlendSaveModelWM(CModel* srcmodel, ChaMatrix srcmat, float blendrate);
 private:
 	bool m_createdflag;
 	bool m_visible;
@@ -83,6 +88,7 @@ private:
 	CModel* m_model;
 	ChaScene* m_chascene;
 	std::map<CModel*, FOOTRIGELEM> m_footrigelem;
+	std::map<CModel*, ChaMatrix> m_savemodelwm;
 
 	OrgWinGUI::OrgWindow* m_dlgWnd;
 

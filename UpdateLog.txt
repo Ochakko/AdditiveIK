@@ -2,6 +2,24 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/09/04その２
+　FootRig機能(その３)仕様修正実装修正
+　　FootRigをゆっくり再生すると元モーションのグラフがジャギーになる不具合修正
+　　　フレーム時間を丸めていなかったことによる不具合
+　　FootRig再生時に前回の結果とブレンドするように修正
+　　出来るだけ低い方の地面に接地して高い方の足をFootRigで曲げるように修正
+　　　hdiffmaxの値を大きくしてFootRig()の２回目を呼ぶことにより高い方の足が曲がりやすく
+　　条件文をすり抜けて足が地面に潜るケースにも対応
+　　急すぎる斜面を歩くと足が滑る感じになるがそれは採用
+
+　　テストステージアップデート
+　　　Test/Test_FootRig_6_2
+
+　　仕様修正
+　　　Documents/FootRig_TechSpec.docx更新
+
+
+
 2024/09/04
 　FootRig機能(その２)仕様修正実装修正
 　　良さそうな具合？になってきた
@@ -16,9 +34,6 @@ https://github.com/Ochakko/AdditiveIK
 　ショートムービー
 　　FootRigで接地して歩く
 　　https://youtu.be/TJjTwD0gioI
-
-
-
 
 2024/09/03
 　FootRig機能(その１)

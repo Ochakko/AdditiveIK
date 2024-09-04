@@ -210,6 +210,10 @@ public:
 		
 		return 0;
 	}
+	ChaMatrix GetSaveWM()
+	{
+		return m_savewm;
+	};
 	void SaveWM()
 	{
 		m_savewm = m_worldmat;

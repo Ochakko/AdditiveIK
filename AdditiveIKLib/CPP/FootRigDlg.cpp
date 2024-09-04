@@ -23,6 +23,8 @@
 using namespace std;
 using namespace OrgWinGUI;
 
+#define FOOTRIGPICKHEIGHT	1000.0f
+
 
 extern HWND g_mainhwnd;//アプリケーションウインドウハンドル
 
@@ -262,7 +264,7 @@ void CFootRigDlg::InitParams()
 	m_model = nullptr;
 	m_chascene = nullptr;
 	m_footrigelem.clear();
-
+	m_savemodelwm.clear();
 
 	m_dlgWnd = nullptr;
 
@@ -344,6 +346,10 @@ int CFootRigDlg::SetModel(ChaScene* srcchascene, CModel* srcmodel)
 			newfootelem.Init();
 			m_footrigelem[m_model] = newfootelem;
 		}
+
+		ChaMatrix newmodelwm;
+		newmodelwm = m_model->GetWorldMat();
+		SetSaveModelWM(m_model, newmodelwm);
 
 		CreateFootRigWnd();//作成済の場合は０リターン
 		ParamsToDlg();
@@ -1366,8 +1372,8 @@ int CFootRigDlg::Update()
 
 				if (curelem.groundmodel) {
 					int hitflag = 0;
-					ChaVector3 startglobal = leftjointpos + ChaVector3(0.0f, 600.0f, 0.0f);
-					ChaVector3 endglobal = leftjointpos - ChaVector3(0.0f, 600.0f, 0.0f);
+					ChaVector3 startglobal = leftjointpos + ChaVector3(0.0f, FOOTRIGPICKHEIGHT, 0.0f);
+					ChaVector3 endglobal = leftjointpos - ChaVector3(0.0f, FOOTRIGPICKHEIGHT, 0.0f);
 					hitflag = curelem.groundmodel->CollisionPolyMesh3_Ray(
 						startglobal, endglobal, &leftgpos);
 				}
@@ -1382,8 +1388,8 @@ int CFootRigDlg::Update()
 
 				if (curelem.groundmodel) {
 					int hitflag = 0;
-					ChaVector3 startglobal = rightjointpos + ChaVector3(0.0f, 600.0f, 0.0f);
-					ChaVector3 endglobal = rightjointpos - ChaVector3(0.0f, 600.0f, 0.0f);
+					ChaVector3 startglobal = rightjointpos + ChaVector3(0.0f, FOOTRIGPICKHEIGHT, 0.0f);
+					ChaVector3 endglobal = rightjointpos - ChaVector3(0.0f, FOOTRIGPICKHEIGHT, 0.0f);
 					hitflag = curelem.groundmodel->CollisionPolyMesh3_Ray(
 						startglobal, endglobal, &rightgpos);
 				}
@@ -1527,6 +1533,30 @@ void CFootRigDlg::FootRig(bool secondcalling,
 	int lowerdir, int higherdir
 ) 
 {
+	if (!m_model || !lowerfoot || !higherfoot || !lowerupdatebone || !higherupdatebone) {
+		//_ASSERT(0);
+		int dbgflag1 = 1;
+		return;
+	}
+
+
+	float ROUNDINGPOS = 2.0f;
+	float MODELWMBLEND = 0.1f;
+	float BONEMOTIONBLEND = 0.75f;
+
+
+	float hdiffoffset;
+	if (!secondcalling) {
+		hdiffoffset = 0.0f;
+	}
+	else {
+		//どちらかの足が地面の下に潜っていた場合にsecondcallingでもう一度呼ばれる
+		//その際には地面の上に足を出すためのRigControlFootRig()呼び出しの確率が上がるように　hdiffmaxを大きくする
+		hdiffoffset = 10.0f;
+	}
+	float hdiffmax = curelem.hdiffmax + hdiffoffset;
+	float higherhdiffoffset = 10.0f;
+
 	ChaMatrix modelwm = m_model->GetWorldMat();
 	ChaMatrix matView = m_model->GetViewMat();
 	ChaMatrix matProj = m_model->GetProjMat();
@@ -1555,38 +1585,46 @@ void CFootRigDlg::FootRig(bool secondcalling,
 
 		bool lowerdoneflag = false;
 		bool higherdoneflag = false;
+		bool forcehigherfootrig = false;
 
-		if (!secondcalling &&
-			((hipspos.y - lowergpos.y) > curelem.hdiffmax)) {
-
-			float diffy = lowergpos.y - (lowerjointpos.y + loweroffset);
-			ChaMatrix modelwm2 = modelwm;
-			modelwm2.data[MATI_42] = modelwm2.data[MATI_42] + diffy;
-			m_model->UpdateModelWM(modelwm2);
-			modelwm = modelwm2;
-
-			hipspos.y += diffy;
-			lowerjointpos.y += diffy;
-			higherjointpos.y += diffy;
-
-			lowerdoneflag = true;
-		}
-
-		if (!secondcalling &&
-			((hipspos.y - highergpos.y) > curelem.hdiffmax)) {
+		if (//!secondcalling &&
+			((hipspos.y - highergpos.y) > (hdiffmax + ROUNDINGPOS))) {
 
 			float diffy = highergpos.y - (higherjointpos.y + higheroffset);
 			ChaMatrix modelwm2 = modelwm;
 			modelwm2.data[MATI_42] = modelwm2.data[MATI_42] + diffy;
-			m_model->UpdateModelWM(modelwm2);
-			modelwm = modelwm2;
+			ChaMatrix modelwm3 = BlendSaveModelWM(m_model, modelwm2, MODELWMBLEND);//プルプル震えるのを軽減するために１回前とブレンドする
+			m_model->UpdateModelWM(modelwm3);
+			modelwm = modelwm3;
 
-			hipspos.y += diffy;
-			lowerjointpos.y += diffy;
-			higherjointpos.y += diffy;
+			float diffy2 = modelwm3.data[MATI_42] - modelwm2.data[MATI_42];
+			hipspos.y += diffy2;
+			lowerjointpos.y += diffy2;
+			higherjointpos.y += diffy2;
 
 			higherdoneflag = true;
+		}
 
+		if (//!secondcalling &&
+			((hipspos.y - lowergpos.y) > (hdiffmax + ROUNDINGPOS))) {
+
+			float diffy = lowergpos.y - (lowerjointpos.y + loweroffset);
+			ChaMatrix modelwm2 = modelwm;
+			modelwm2.data[MATI_42] = modelwm2.data[MATI_42] + diffy;
+			ChaMatrix modelwm3 = BlendSaveModelWM(m_model, modelwm2, MODELWMBLEND);//プルプル震えるのを軽減するために１回前とブレンドする
+			m_model->UpdateModelWM(modelwm3);
+			modelwm = modelwm3;
+
+			float diffy2 = modelwm3.data[MATI_42] - modelwm2.data[MATI_42];
+			hipspos.y += diffy2;
+			lowerjointpos.y += diffy2;
+			higherjointpos.y += diffy2;
+
+			lowerdoneflag = true;
+			if (higherdoneflag) {
+				//低い方の地面に接地した場合には　強制的に高い方の足を曲げる処理をする
+				forcehigherfootrig = true;
+			}
 		}
 
 		//!!!!!!!!!!!!
@@ -1594,8 +1632,8 @@ void CFootRigDlg::FootRig(bool secondcalling,
 		//!!!!!!!!!!!!
 
 		if (!lowerdoneflag &&
-			((hipspos.y - lowergpos.y) <= curelem.hdiffmax) &&
-			((lowerjointpos.y + loweroffset) <= lowergpos.y)) {
+			((hipspos.y - lowergpos.y) <= (hdiffmax + higherhdiffoffset)) &&
+			((lowerjointpos.y + loweroffset) <= (lowergpos.y + ROUNDINGPOS))) {
 
 			float lowermultstep = 1.0f;
 			//if (lowerfoot == curelem.rightfootbone) {
@@ -1605,8 +1643,9 @@ void CFootRigDlg::FootRig(bool secondcalling,
 			ChaVector3 lowernewpos;
 			lowernewpos.SetParams(lowerjointpos);
 			int dbgcnt = 0;
-			while (((lowernewpos.y + loweroffset) < lowergpos.y) && (dbgcnt <= 50)) {//円を描くように下がってから上がることが多い　回数は多めに
-				m_model->RigControlOneFrame(
+			//while (((lowernewpos.y + loweroffset) < lowergpos.y) && (dbgcnt <= 50)) {//円を描くように下がってから上がることが多い　回数は多めに
+			while (((lowernewpos.y + loweroffset) < (lowergpos.y - ROUNDINGPOS)) && (dbgcnt <= 50)) {//円を描くように下がってから上がることが多い　回数は多めに
+				m_model->RigControlFootRig(
 					g_limitdegflag, 0, curframe,
 					lowerfoot->GetBoneNo(),
 					lowerdir, 
@@ -1620,6 +1659,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				//	curmotid, curframe,
 				//	&modelwm, &matView, &matProj, 0);
 				//m_model->UpdateMatrixRoundingTimeReq(m_model->GetTopBone(false), &modelwm, &matView, &matProj);
+				m_model->BlendSaveBoneMotionReq(lowerupdatebone, BONEMOTIONBLEND);//プルプル震え防止のための１回前とのブレンド
 				m_model->UpdateMatrixRoundingTimeReq(lowerupdatebone, &modelwm, &matView, &matProj);
 				CMotionPoint lowermp = lowerfoot->GetCurMp(calcslotflag);
 				ChaMatrix lowerwm = lowermp.GetWorldMat();
@@ -1628,19 +1668,22 @@ void CFootRigDlg::FootRig(bool secondcalling,
 
 
 				int hitflag = 0;
-				ChaVector3 startglobal = lowernewpos + ChaVector3(0.0f, 600.0f, 0.0f);
-				ChaVector3 endglobal = lowernewpos - ChaVector3(0.0f, 600.0f, 0.0f);
+				ChaVector3 startglobal = lowernewpos + ChaVector3(0.0f, FOOTRIGPICKHEIGHT, 0.0f);
+				ChaVector3 endglobal = lowernewpos - ChaVector3(0.0f, FOOTRIGPICKHEIGHT, 0.0f);
 				hitflag = curelem.groundmodel->CollisionPolyMesh3_Ray(
 					startglobal, endglobal, &lowergpos);
 
 				dbgcnt++;
 			}
+
+			lowerjointpos = lowernewpos;
 			lowerdoneflag = true;
 		}
 
-		if (!higherdoneflag &&
-			((hipspos.y - highergpos.y) <= curelem.hdiffmax) &&
-			((higherjointpos.y + higheroffset) <= highergpos.y)
+		if (forcehigherfootrig ||
+			(!higherdoneflag &&
+			((hipspos.y - highergpos.y) <= hdiffmax) &&
+			((higherjointpos.y + higheroffset) <= highergpos.y))
 			)
 		{
 
@@ -1652,8 +1695,9 @@ void CFootRigDlg::FootRig(bool secondcalling,
 			ChaVector3 highernewpos;
 			highernewpos.SetParams(higherjointpos);
 			int dbgcnt = 0;
-			while (((highernewpos.y + higheroffset) < highergpos.y) && (dbgcnt <= 50)) {//円を描くように下がってから上がることが多い　回数は多めに
-				m_model->RigControlOneFrame(
+			//while (((highernewpos.y + higheroffset) < highergpos.y) && (dbgcnt <= 50)) {//円を描くように下がってから上がることが多い　回数は多めに
+			while (((highernewpos.y + higheroffset) < (highergpos.y - ROUNDINGPOS)) && (dbgcnt <= 50)) {//円を描くように下がってから上がることが多い　回数は多めに
+				m_model->RigControlFootRig(
 					g_limitdegflag, 0, curframe,
 					higherfoot->GetBoneNo(),
 					higherdir, 
@@ -1667,6 +1711,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				//	curmotid, curframe,
 				//	&modelwm, &matView, &matProj, 0);
 				//m_model->UpdateMatrixRoundingTimeReq(m_model->GetTopBone(false), &modelwm, &matView, &matProj);
+				m_model->BlendSaveBoneMotionReq(higherupdatebone, BONEMOTIONBLEND);//プルプル震え防止のための１回前とのブレンド
 				m_model->UpdateMatrixRoundingTimeReq(higherupdatebone, &modelwm, &matView, &matProj);
 				CMotionPoint highermp = higherfoot->GetCurMp(calcslotflag);
 				ChaMatrix higherwm = highermp.GetWorldMat();
@@ -1674,14 +1719,15 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				ChaVector3TransformCoord(&highernewpos, &higherfpos, &higherwm);
 
 				int hitflag = 0;
-				ChaVector3 startglobal = highernewpos + ChaVector3(0.0f, 600.0f, 0.0f);
-				ChaVector3 endglobal = highernewpos - ChaVector3(0.0f, 600.0f, 0.0f);
+				ChaVector3 startglobal = highernewpos + ChaVector3(0.0f, FOOTRIGPICKHEIGHT, 0.0f);
+				ChaVector3 endglobal = highernewpos - ChaVector3(0.0f, FOOTRIGPICKHEIGHT, 0.0f);
 				hitflag = curelem.groundmodel->CollisionPolyMesh3_Ray(
 					startglobal, endglobal, &highergpos);
 
 				dbgcnt++;
 			}
 
+			higherjointpos = highernewpos;
 			higherdoneflag = true;
 		}
 
@@ -1690,50 +1736,125 @@ void CFootRigDlg::FootRig(bool secondcalling,
 		//!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-		//if (!secondcalling &&
-		//	!lowerdoneflag &&
-		//	!higherdoneflag) {
+		
+		//########################
+		//check and secondcalling
+		//########################
+		if ((((higherjointpos.y + higheroffset) < (highergpos.y - ROUNDINGPOS)) ||
+			((lowerjointpos.y + loweroffset) < (lowergpos.y - ROUNDINGPOS)))) {
 
-		//	//float diffy = (lowerjointpos.y + loweroffset) - lowergpos.y;
-		//	//ChaMatrix modelwm2 = modelwm;
-		//	//modelwm2.data[MATI_42] = modelwm2.data[MATI_42] - diffy;
-		//	//m_model->UpdateModelWM(modelwm2);
-		//	//lowerjointpos.y -= diffy;
-		//	//higherjointpos.y -= diffy;
-		//	//FootRig(true,//secondcalling
-		//	//	curelem, lowerfoot, higherfoot,
-		//	//	lowerrig, higherrig,
-		//	//	lowerjointpos, higherjointpos,
-		//	//	lowergpos, highergpos,
-		//	//	loweroffset, higheroffset,
-		//	//	lowerdir, higherdir);
+			if (!secondcalling) {
+				//足が潜っていた場合　２回目の呼び出しをする
+				FootRig(true,//secondcalling !!!!
+					curelem,
+					lowerfoot, higherfoot,
+					lowerupdatebone, higherupdatebone,
+					lowerrig, higherrig,
+					lowerjointpos, higherjointpos,
+					lowergpos, highergpos,
+					loweroffset, higheroffset,
+					lowerdir, higherdir);
+			}
+			else {
+				//２回の実行でも足が地面に潜っている場合
+				//高い方の地面の位置に合わせる
+				if (highergpos.y >= lowergpos.y) {
+					float diffy = highergpos.y - (higherjointpos.y + higheroffset);
+					ChaMatrix modelwm2 = modelwm;
+					modelwm2.data[MATI_42] = modelwm2.data[MATI_42] + diffy;
+					ChaMatrix modelwm3 = BlendSaveModelWM(m_model, modelwm2, MODELWMBLEND);//プルプル震えるのを軽減するために１回前とブレンドする
+					m_model->UpdateModelWM(modelwm3);
+					modelwm = modelwm3;
+				}
+				else {
+					float diffy = lowergpos.y - (lowerjointpos.y + loweroffset);
+					ChaMatrix modelwm2 = modelwm;
+					modelwm2.data[MATI_42] = modelwm2.data[MATI_42] + diffy;
+					ChaMatrix modelwm3 = BlendSaveModelWM(m_model, modelwm2, MODELWMBLEND);//プルプル震えるのを軽減するために１回前とブレンドする
+					m_model->UpdateModelWM(modelwm3);
+					modelwm = modelwm3;
+				}
+			}
+		}
 
 
-		//	if (highergpos.y > lowergpos.y) {
-		//		float diffy = highergpos.y - (higherjointpos.y + higheroffset);
-		//		ChaMatrix modelwm2 = modelwm;
-		//		modelwm2.data[MATI_42] = modelwm2.data[MATI_42] + diffy;
-		//		m_model->UpdateModelWM(modelwm2);
-
-		//		lowerjointpos.y += diffy;
-		//		higherjointpos.y += diffy;
-
-		//		higherdoneflag = true;
-		//	}
-		//	else {
-		//		float diffy = lowergpos.y - (lowerjointpos.y + loweroffset);
-		//		ChaMatrix modelwm2 = modelwm;
-		//		modelwm2.data[MATI_42] = modelwm2.data[MATI_42] + diffy;
-		//		m_model->UpdateModelWM(modelwm2);
-
-		//		lowerjointpos.y += diffy;
-		//		higherjointpos.y += diffy;
-
-		//		lowerdoneflag = true;
-		//	}
-
-		//}
-
+		ChaMatrix newmodelwm = m_model->GetWorldMat();
+		SetSaveModelWM(m_model, newmodelwm);
 	}
 
 }
+
+void CFootRigDlg::SetSaveModelWM(CModel* srcmodel, ChaMatrix srcmat)
+{
+	if (srcmodel) {
+		std::map<CModel*, ChaMatrix>::iterator itrsavewm;
+		itrsavewm = m_savemodelwm.find(srcmodel);
+		if (itrsavewm != m_savemodelwm.end()) {
+			itrsavewm->second = srcmat;
+		}
+		else {
+			_ASSERT(0);
+		}
+	}
+	else {
+		_ASSERT(0);
+	}
+
+}
+
+ChaMatrix CFootRigDlg::GetSaveModelWM(CModel* srcmodel)
+{
+	if (srcmodel) {
+		std::map<CModel*, ChaMatrix>::iterator itrsavewm;
+		itrsavewm = m_savemodelwm.find(srcmodel);
+		if (itrsavewm != m_savemodelwm.end()) {
+			//１回前のFootRig計算によるmodelworldmatの変更を元に戻す
+			ChaMatrix savewm = itrsavewm->second;
+			return savewm;
+		}
+		else {
+			ChaMatrix curwm = srcmodel->GetWorldMat();
+			return curwm;
+		}
+	}
+	else {
+		_ASSERT(0);
+		ChaMatrix iniwm;
+		iniwm.SetIdentity();
+		return iniwm;
+	}
+}
+
+bool CFootRigDlg::IsEnableFootRig(CModel* srcmodel)
+{
+	std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+	itrelem = m_footrigelem.find(m_model);
+	if (itrelem != m_footrigelem.end()) {
+
+		FOOTRIGELEM curelem = itrelem->second;
+		if (curelem.IsEnable()) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	else {
+		return false;
+	}
+}
+
+ChaMatrix CFootRigDlg::BlendSaveModelWM(CModel* srcmodel, ChaMatrix srcmat, float blendrate)
+{
+	if (srcmodel) {
+		ChaMatrix savemat = GetSaveModelWM(srcmodel);
+		ChaMatrix blendmat = srcmat * blendrate + savemat * (1.0f - blendrate);
+		return blendmat;
+	}
+	else {
+		_ASSERT(0);
+		return srcmat;
+	}
+}
+
+

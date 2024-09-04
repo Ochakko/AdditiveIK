@@ -233,6 +233,13 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* 
 					curmodel->SetMotionFrame(srcframe);//refposの場合にも必要
 				}
 
+
+				//if (m_footrigdlg && m_footrigdlg->IsEnableFootRig(curmodel)) {
+				//	//１回前のFootRig計算によるmodelworldmatの変更を元に戻す
+				//	curmodel->SetWorldMat(m_footrigdlg->GetSaveModelWM(curmodel));
+				//}
+
+
 				if (curmodel->GetRefPosFlag() == false) {//2024/02/06
 					ChaMatrix wmat = curmodel->GetWorldMat();
 					curmodel->UpdateMatrix(limitdegflag, &wmat, vmat, pmat, needwaitflag, 0);// , updateslot);

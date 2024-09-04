@@ -997,12 +997,12 @@ public:
 		int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig, int buttonflag);
 	int RigControlPostRig(bool limitdegflag, int depthcnt, CEditRange* erptr,
 		int srcboneno, int uvno, CUSTOMRIG ikcustomrig, int buttonflag);
-	int RigControlOneFrame(bool limitdegflag, int depthcnt, double curframe,
+	int RigControlFootRig(bool limitdegflag, int depthcnt, double curframe,
 		int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig, int buttonflag);
 
 	void SaveBoneMotionWM();
 	void RestoreBoneMotionWM();
-
+	void BlendSaveBoneMotionReq(CBone* srcbone, float srcblend);
 
 
 	//int PhysicsRigControl(int depthcnt, CEditRange* erptr, int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig);
@@ -2328,6 +2328,10 @@ public: //accesser
 	//	//m_worldmat = CalcModelWorldMatOnLoad();
 	//	//return m_worldmat;
 	//};
+	void SetWorldMat(ChaMatrix srcmat)
+	{
+		m_matWorld = srcmat;
+	};
 	ChaMatrix GetWorldMat()
 	{
 		return m_matWorld;
@@ -3010,7 +3014,14 @@ public: //accesser
 		CBone* pbone = GetBoneByID(m_selectedboneno);
 		return pbone;
 	}
-
+	void SetUnderFootRig(bool srcflag)
+	{
+		m_underfootrig = srcflag;
+	};
+	bool GetUnderFootRig()
+	{
+		return m_underfootrig;
+	};
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];
@@ -3032,7 +3043,7 @@ private:
 	bool m_updatefl4x4flag;
 	bool m_csfirstdispatchflag;
 
-
+	bool m_underfootrig;
 
 	int m_vrmtexcount;
 

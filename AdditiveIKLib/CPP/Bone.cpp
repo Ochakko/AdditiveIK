@@ -1048,7 +1048,23 @@ int CBone::UpdateMatrixRoundingTime(int srcmotid, double srcframe,
 
 }
 
+int CBone::BlendSaveBoneMotion(int srcmotid, double srcframe, float srcblend)
+{
+	double roundingframe = RoundingTime(srcframe);
 
+	CMotionPoint* curmp = GetMotionPoint(srcmotid, roundingframe);
+	if (curmp) {
+		ChaMatrix curwm = curmp->GetWorldMat();
+		ChaMatrix savewm = curmp->GetSaveWM();
+		ChaMatrix blendwm = curwm * srcblend + savewm * (1.0f - srcblend);
+
+		curmp->SetWorldMat(blendwm);
+	}
+	else {
+		_ASSERT(0);
+	}
+	return 0;
+}
 
 int CBone::CopyLimitedWorldToWorld(int srcmotid, double srcframe)//制限角度有りの姿勢を制限無しの姿勢にコピーする
 {

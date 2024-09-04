@@ -623,8 +623,8 @@ typedef struct tag_footrigelem
 		rightdir = 0;
 		leftoffset = 0.0f;
 		rightoffset = 0.0f;
-		hdiffmax = 50.0f;
-		rigstep = 3.0f;
+		hdiffmax = 40.0f;
+		rigstep = 0.25f;
 	};
 
 	tag_footrigelem()
