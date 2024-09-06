@@ -1884,13 +1884,13 @@ ChaVector3 CFootRigDlg::GetGroundPos(CModel* groundmodel, ChaVector3 basepos)
 ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy)
 {
 	//モデルworldmatのブレンド率　このブレンドをしないと上下に小刻みに揺れる
-	float MODELWMBLEND;// = 0.30f;
-	if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-		MODELWMBLEND = 0.30f;
-	}
-	else {
-		MODELWMBLEND = 0.05f;
-	}
+	float MODELWMBLEND = 0.30f;
+	//if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
+	//	MODELWMBLEND = 0.30f;
+	//}
+	//else {
+	//	MODELWMBLEND = 0.05f;
+	//}
 
 	ChaMatrix retmat;
 	retmat.SetIdentity();
