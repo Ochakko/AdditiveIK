@@ -11,6 +11,38 @@
 ////#define MPPOOLBLKLEN	8192
 ////#define MPPOOLBLKLEN	32768
 
+
+typedef struct tag_savemotion
+{
+	ChaVector3 tra;
+	CQuaternion q;
+	ChaVector3 localeul;
+	ChaVector3 scale;//2024/01/31
+	ChaMatrix worldmat;//ワールド変換と親の影響を受けたマトリックス
+	ChaMatrix localmat;//local matrix : CameraAnimのeNullとeCameraノードのローカル姿勢を保存、書き出しに使う
+	ChaMatrix animmat;
+	ChaMatrix limitedwm;
+	ChaVector3 limitedlocaleul;
+	ChaMatrix absmat;
+
+	void Init() {
+		tra.SetZeroVec3();
+		q.InitParams();
+		localeul.SetZeroVec3();
+		scale.SetParams(1.0f, 1.0f, 1.0f);
+		worldmat.SetIdentity();
+		localmat.SetIdentity();
+		animmat.SetIdentity();
+		limitedwm.SetIdentity();
+		limitedlocaleul.SetZeroVec3();
+		absmat.SetIdentity();
+	};
+	tag_savemotion() {
+		Init();
+	};
+}SAVEMOTION;
+
+
 class CBone;
 
 
@@ -33,6 +65,7 @@ public:
 	int LeaveFromChain( int srcmotid = -1, CBone* boneptr = 0 );
 
 	int CopyMP( CMotionPoint* srcmp );
+	int CopyMPforFootRig(CMotionPoint* srcmp);
 
 	int CalcQandTra( ChaMatrix srcmat, CBone* boneptr, float hrate = 1.0f );
 	//int SetFirstFrameBaseMat(ChaMatrix srcfirstmat);
@@ -210,18 +243,8 @@ public:
 		
 		return 0;
 	}
-	ChaMatrix GetSaveWM()
-	{
-		return m_savewm;
-	};
-	void SaveWM()
-	{
-		m_savewm = m_worldmat;
-	};
-	void RestoreWM()
-	{
-		m_worldmat = m_savewm;
-	};
+
+
 
 	void SetAnimMat(ChaMatrix srcmat)
 	{
@@ -254,6 +277,36 @@ public:
 	//{
 	//	return m_setbefworldmatflag;
 	//}
+
+	SAVEMOTION GetSaveMotionForFootRig() {
+		return m_saveforfootrig;
+	};
+	void SaveMotionForFootRig() {
+		m_saveforfootrig.tra = GetTra();
+		m_saveforfootrig.q = GetQ();
+		m_saveforfootrig.localeul = GetLocalEul();
+		m_saveforfootrig.scale = GetLocalScale();
+		m_saveforfootrig.worldmat = GetWorldMat();
+		m_saveforfootrig.localmat = GetLocalMat();
+		m_saveforfootrig.animmat = GetAnimMat();
+		m_saveforfootrig.limitedwm = GetLimitedWM();
+		m_saveforfootrig.limitedlocaleul = GetLimitedLocalEul();
+		m_saveforfootrig.absmat = GetAbsMat();
+	};
+	void RestoreMotionForFootRig() {
+		//SetTra(m_saveforfootrig.tra);
+		//SetQ(m_saveforfootrig.q);
+		SetLocalEul(m_saveforfootrig.localeul);
+		//SetLocalScale(m_saveforfootrig.scale);
+		SetWorldMat(m_saveforfootrig.worldmat);
+		//SetLocalMat(m_saveforfootrig.localmat);
+		//SetAnimMat(m_saveforfootrig.animmat);
+		SetLimitedWM(m_saveforfootrig.limitedwm);
+		SetLimitedLocalEul(m_saveforfootrig.limitedlocaleul);
+		SetAbsMat(m_saveforfootrig.absmat);
+	};
+
+
 
 	static CMotionPoint* GetNewMP();
 	static void InvalidateMotionPoint(CMotionPoint* srcmp);
@@ -324,7 +377,8 @@ private:
 	ChaMatrix m_savermat;
 	ChaMatrix m_savetmat;
 	ChaMatrix m_savetanimmat;
-	ChaMatrix m_savewm;
+
+	SAVEMOTION m_saveforfootrig;
 
 
 	CMotionPoint* m_prev;

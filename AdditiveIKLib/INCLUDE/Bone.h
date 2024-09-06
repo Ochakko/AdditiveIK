@@ -62,7 +62,6 @@ typedef struct tag_ikrotrec
 
 
 
-
 class CBone
 {
 public:
@@ -140,7 +139,7 @@ public:
 		bool callingbythread, int refposindex);// , int updateslot = 0);
 	//int SwapCurrentMotionPoint();
 
-	int UpdateMatrixRoundingTime(int srcmotid, double srcframe,
+	int UpdateMatrixFootRig(int srcmotid, double srcframe,
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
 	int BlendSaveBoneMotion(int srcmotid, double srcframe, float srcblend);
 
@@ -348,6 +347,9 @@ public:
 		ChaMatrix srcsmat, ChaMatrix srcrmat, ChaMatrix srctanimmat, ChaVector3 oneframetraanim);
 
 	int SaveSRT(bool limitdegflag, int srcmotid, double srcframe);
+	int SaveMotionForFootRig(int srcmotid, double srcframe);
+	int RestoreMotionForFootRig(int srcmotid, double srcframe);
+
 
 	//CMotionPoint* RotBoneQCurrentReq(bool infooutflag, CBone* parbone, int srcmotid, double srcframe, CQuaternion rotq, CBone* bvhbone = 0, ChaVector3 traanim.SetParams(0.0f, 0.0f, 0.0f), int setmatflag = 0, ChaMatrix* psetmat = 0);
 
@@ -1372,9 +1374,19 @@ public: //accesser
 			m_btmat[0] = srcmat;
 			m_btmat[1] = srcmat;
 		}
+
+		////2024/09/05
+		//CMotionPoint curmp = GetCurMp();
+		//curmp.SetWorldMat(srcmat);
+		//curmp.SetLimitedWM(srcmat);
 	};
 	void SetBtEul(ChaVector3 srceul) {
 		m_bteul = srceul;
+
+		////2024/09/05
+		//CMotionPoint curmp = GetCurMp();
+		//curmp.SetLocalEul(m_bteul);
+		//curmp.SetLimitedLocalEul(m_bteul);
 	}
 	ChaVector3 GetBtEul() {
 		return m_bteul;
@@ -1804,6 +1816,14 @@ public: //accesser
 		return m_isbtmovable;
 	}
 
+	void SetFootRigUpdated(bool srcval) {
+		m_footrigupdated = srcval;
+	};
+	bool GetFootRigUpdated()
+	{
+		return m_footrigupdated;
+	}
+
 public:
 	CRITICAL_SECTION m_CritSection_GetBefNext;
 	//CRITICAL_SECTION m_CritSection_GetBefNext2;
@@ -1817,7 +1837,7 @@ private:
 	int m_allocheadflag;//1: head pointer at allocated
 
 
-
+	bool m_footrigupdated;
 
 	//int m_posconstraint;
 	//int m_mass0;
@@ -1900,6 +1920,7 @@ private:
 	//CQuaternion m_addlimitq;
 
 	ChaMatrix m_btmat[2];
+	ChaMatrix m_savebtmat;//for footrig
 	bool m_isbtmovable;//2024/05/02
 	//ChaMatrix m_befbtmat[2];
 	int m_setbtflag;
@@ -1987,6 +2008,7 @@ private:
 
 	bool m_pastedoneflag;
 	int m_matrixindex;//for constant buffer
+
 
 	CBone* m_parent;
 	CBone* m_child;

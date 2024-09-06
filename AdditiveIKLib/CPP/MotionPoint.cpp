@@ -70,7 +70,8 @@ int CMotionPoint::InitParams()
 	m_savermat.SetIdentity();
 	m_savetmat.SetIdentity();
 	m_savetanimmat.SetIdentity();
-	m_savewm.SetIdentity();
+
+	m_saveforfootrig.Init();
 
 	m_prev = 0;
 	m_next = 0;
@@ -289,6 +290,38 @@ int CMotionPoint::CopyMP( CMotionPoint* srcmp )
 	return 0;
 }
 
+int CMotionPoint::CopyMPforFootRig(CMotionPoint* srcmp)
+{
+	if (!srcmp) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	//m_frame = srcmp->m_frame;
+	m_tra = srcmp->m_tra;
+	//m_firstframetra = srcmp->m_firstframetra;
+	m_q = srcmp->m_q;
+	m_worldmat = srcmp->m_worldmat;
+	m_localeul = srcmp->m_localeul;
+	m_absmat = srcmp->m_absmat;
+	//m_localmatflag = srcmp->m_localmatflag;
+	m_useflag = srcmp->m_useflag;//0: not use, 1: in use
+	//m_indexofpool = srcmp->m_indexofpool;//index of pool vector
+	//m_allocheadflag = srcmp->m_allocheadflag;//1: head pointer at allocated
+	//m_undovalidflag = srcmp->m_undovalidflag;
+	m_localmat = srcmp->m_localmat;//local matrix
+	//m_befworldmat = srcmp->m_befworldmat;
+	m_befeditmat = srcmp->m_befeditmat;
+	//m_SRT = srcmp->m_SRT;
+	m_calclimitedwm = srcmp->m_calclimitedwm;
+	m_limitedwm = srcmp->m_limitedwm;
+	m_limitedlocaleul = srcmp->m_limitedlocaleul;
+	m_calclimitedwm = srcmp->m_calclimitedwm;
+
+	return 0;
+}
+
+
 int CMotionPoint::CalcQandTra( ChaMatrix srcmat, CBone* boneptr, float hrate )
 {
 	////ChaVector3 svec, tvec;
@@ -356,7 +389,8 @@ CMotionPoint CMotionPoint::operator= (CMotionPoint mp)
 	m_savermat = mp.m_savermat;
 	m_savetmat = mp.m_savetmat;
 	m_savetanimmat = mp.m_savetanimmat;
-	m_savewm = mp.m_savewm;
+
+	m_saveforfootrig = mp.m_saveforfootrig;//!!!
 
 	//2023/02/05 チェインはそのままに
 	//m_prev = mp.m_prev;

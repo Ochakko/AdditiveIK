@@ -19,7 +19,7 @@
   <BtMovableRate>100</BtMovableRate>
   <CameraDist>381.397</CameraDist>
   <AKScale>1.000</AKScale>
-  <BtVScaleOnLimitEul>0.200</BtVScaleOnLimitEul>
+  <BtVScaleOnLimitEul>1.00</BtVScaleOnLimitEul>
   <BoneAxis>3</BoneAxis>
   <2L_LOD0>0.01</2L_LOD0>
   <2L_LOD1>1.00</2L_LOD1>

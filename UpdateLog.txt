@@ -2,6 +2,28 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2024/09/06
+　FootRig機能修正
+　　FootRigのチェックボックスがオンの場合には設定ウインドウを出していなくてもFootRigを機能させるように.
+　　FootRigと物理シミュの併用に対応
+　　　物理シミュ時に非物理時と同様にFootRigで曲げると変化が急すぎてどうしても乱れる
+　　　物理シミュ時には１回前の結果とブレンドして乱れないようにしたが、足を曲げたいときに曲がりにくく、急斜面で足が地面に潜ることがある
+　　　物理シミュ時には地面の傾斜がきついところは歩かせないようにする必要有
+　　モーションにFootRigの結果が残る不具合がまだ出ていたので修正
+　　
+　　テストステージアップデート
+　　　Test/Test_FootRig_6_2
+　　　FootRig実行の影響を受けていないfbxに戻した
+
+　物理シミュ修正
+　　Kinematic剛体のSetBtMotionを修正
+　　　モーションそのままの姿勢に.
+　　　乱れにくくなったのでBullet設定のRigidSpeedの値を大きく出来るようになった
+
+
+
+
 2024/09/04その２
 　FootRig機能(その３)仕様修正実装修正
 　　FootRigをゆっくり再生すると元モーションのグラフがジャギーになる不具合修正
@@ -17,7 +39,6 @@ https://github.com/Ochakko/AdditiveIK
 
 　　仕様修正
 　　　Documents/FootRig_TechSpec.docx更新
-
 
 
 2024/09/04

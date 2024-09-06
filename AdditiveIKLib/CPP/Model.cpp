@@ -2520,22 +2520,34 @@ void CModel::UpdateMatrixReq(bool limitdegflag, CBone* srcbone, int srcmotid, do
 	}
 }
 
-void CModel::UpdateMatrixRoundingTimeReq(CBone* srcbone,
+void CModel::ResetFootRigUpdated()
+{
+	map<int, CBone*>::iterator itrbone;
+	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
+		CBone* curbone = itrbone->second;
+		if (curbone) {
+			curbone->SetFootRigUpdated(false);
+		}
+	}
+}
+
+
+void CModel::UpdateMatrixFootRigReq(CBone* srcbone,
 	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat)
 {
-	if (srcbone) {
+	if (srcbone && wmat && vmat && pmat) {
 
 		if (srcbone->IsSkeleton()) {
 			int srcmotid = GetCurrentMotID();
-			double srcframe = GetCurrentFrame();
-			srcbone->UpdateMatrixRoundingTime(srcmotid, srcframe, wmat, vmat, pmat);
+			double srcframe = RoundingTime(GetCurrentFrame());
+			srcbone->UpdateMatrixFootRig(srcmotid, srcframe, wmat, vmat, pmat);
 		}
 
 		if (srcbone->GetChild(false)) {
-			UpdateMatrixRoundingTimeReq(srcbone->GetChild(false), wmat, vmat, pmat);
+			UpdateMatrixFootRigReq(srcbone->GetChild(false), wmat, vmat, pmat);
 		}
 		if (srcbone->GetBrother(false)) {
-			UpdateMatrixRoundingTimeReq(srcbone->GetBrother(false), wmat, vmat, pmat);
+			UpdateMatrixFootRigReq(srcbone->GetBrother(false), wmat, vmat, pmat);
 		}
 	}
 
@@ -2579,6 +2591,17 @@ void CModel::UpdateModelWMReq(CBone* srcbone, ChaMatrix newwm, ChaMatrix befwm)
 		ChaMatrix setwm = curwm * ChaMatrixInv(befwm) * newwm;
 		curmp.SetWorldMat(setwm);
 		srcbone->SetCurMp(curmp);
+
+
+		//ChaMatrix curbtmat = srcbone->GetBtMat(true);
+		//ChaMatrix setbtmat = curbtmat * ChaMatrixInv(befwm) * newwm;
+		//srcbone->SetBtMat(setbtmat, true);
+
+		//ChaMatrix curbtmat2 = srcbone->GetBtMat(false);
+		//ChaMatrix setbtmat2 = curbtmat2 * ChaMatrixInv(befwm) * newwm;
+		//srcbone->SetBtMat(setbtmat2, false);
+
+
 
 		ChaVector3 jpos = srcbone->GetJointFPos();
 		ChaVector3 childworld;
@@ -14896,8 +14919,9 @@ int CModel::RigControlFootRig(bool limitdegflag, int depthcnt,
 							0,
 							//curbone, aplybone,
 							curbone, curbone,//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
-							curmotid, GetCurrentFrame(), applyframe, applyframe,
+							curmotid, applyframe, applyframe, applyframe,
 							localq, keynum1flag, postflag, fromiktarget);
+
 
 
 						//2023/03/04 制限角度に引っ掛かった場合には　やめて　次のジョイントの回転へ
@@ -23664,11 +23688,9 @@ void CModel::SaveBoneMotionWM()
 	map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* curbone = itrbone->second;
-		if (curbone && curbone->IsSkeleton()) {
-			CMotionPoint* curmp = curbone->GetMotionPoint(curmotid, curframe);
-			if (curmp) {
-				curmp->SaveWM();
-			}
+		//if (curbone && curbone->IsSkeleton()) {
+		if (curbone) {
+			curbone->SaveMotionForFootRig(curmotid, curframe);
 		}
 	}
 }
@@ -23680,11 +23702,9 @@ void CModel::RestoreBoneMotionWM()
 	map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* curbone = itrbone->second;
-		if (curbone && curbone->IsSkeleton()) {
-			CMotionPoint* curmp = curbone->GetMotionPoint(curmotid, curframe);
-			if (curmp) {
-				curmp->RestoreWM();
-			}
+		//if (curbone && curbone->IsSkeleton()) {
+		if (curbone) {
+			curbone->RestoreMotionForFootRig(curmotid, curframe);
 		}
 	}
 }

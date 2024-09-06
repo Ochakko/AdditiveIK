@@ -429,7 +429,9 @@ public:
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat,
 		int refposindex);
 	void SetUpdateSlotReq(CBone* srcbone, int srcslot);
-	void UpdateMatrixRoundingTimeReq(CBone* srcbone,
+
+	void ResetFootRigUpdated();
+	void UpdateMatrixFootRigReq(CBone* srcbone,
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
 
 	void UpdateModelWM(ChaMatrix newwm);

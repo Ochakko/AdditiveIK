@@ -25915,7 +25915,7 @@ int OnFrameTimeLineWnd()
 		if (s_owpLTimeline) {
 			s_owpLTimeline->setCurrentTime(s_buttonselectstart, false);
 		}
-		if (s_chascene) {
+		if (s_chascene && (g_previewFlag != 4) && (g_previewFlag != 5)) {
 			int loopstartflag = 1;
 			s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, s_buttonselectstart, loopstartflag);
 		}

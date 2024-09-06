@@ -55,7 +55,9 @@ public:
 	int LoadFootRigFile(WCHAR* savechadir, WCHAR* saveprojname);
 
 	int Update();
+	int Update(CModel* srcmodel);
 	void FootRig(bool secondcalling,
+		CModel* srcmodel,
 		FOOTRIGELEM curelem,
 		CBone* lowerfoot, CBone* higherfoot,
 		CBone* lowerupdatebone, CBone* higherupdatebone,
@@ -76,6 +78,11 @@ private:
 	int ParamsToDlg_RightRig();
 
 	ChaMatrix BlendSaveModelWM(CModel* srcmodel, ChaMatrix srcmat, float blendrate);
+	ChaMatrix GetJointWM(CModel* srcmodel, CBone* srcbone, bool multmodelwm);
+	ChaVector3 GetJointPos(CModel* srcmodel, CBone* srcbone);
+	ChaVector3 GetGroundPos(CModel* groundmodel, ChaVector3 basepos);
+	ChaMatrix ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy);
+	void UpdateParentWM(CModel* srcmodel, CBone* srcbone, ChaMatrix befparentwm, ChaMatrix aftparentwm);
 private:
 	bool m_createdflag;
 	bool m_visible;

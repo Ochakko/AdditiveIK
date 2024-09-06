@@ -860,10 +860,44 @@ void ChaScene::WaitForUpdateMatrixModels()
 
 	//2024/09/03
 	//UpdateMatrixの計算が終わってからFootRigのアップデートをする
-	if (m_footrigdlg && m_footrigdlg->GetVisible()) {
+	//BtSimu中(previewFlag 4 or 5)は　Motion2Bt()からFootRigのアップデートを呼ぶ
+	if ((g_previewFlag != 4) && (g_previewFlag != 5) && m_footrigdlg) {
+		{
+			int modelnum = (int)m_modelindex.size();
+			int modelindex;
+			for (modelindex = 0; modelindex < modelnum; modelindex++) {
+				CModel* curmodel = m_modelindex[modelindex].modelptr;
+				if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
+					curmodel->ResetFootRigUpdated();
+					curmodel->SaveBoneMotionWM();
+				}
+			}
+		}
+
 		m_footrigdlg->Update();
+
 	}
 
+	//bt時もここでRestore
+	{
+		int modelnum = (int)m_modelindex.size();
+		int modelindex;
+		for (modelindex = 0; modelindex < modelnum; modelindex++) {
+			CModel* curmodel = m_modelindex[modelindex].modelptr;
+			if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
+				if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
+					ChaMatrix wmat = curmodel->GetWorldMat();
+					ChaMatrix vmat = curmodel->GetViewMat();
+					ChaMatrix pmat = curmodel->GetProjMat();
+					bool needwait = true;
+					int refposindex = 0;
+					curmodel->UpdateMatrix(false, &wmat, &vmat, &pmat, needwait, refposindex);
+				}
+
+				curmodel->RestoreBoneMotionWM();
+			}
+		}
+	}
 
 }
 
@@ -1793,7 +1827,7 @@ int ChaScene::Motion2Bt(bool secondcall, bool limitdegflag, bool updatematrixfla
 			for (modelindex = 0; modelindex < modelnum; modelindex++) {
 				CModel* curmodel = m_modelindex[modelindex].modelptr;
 				if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
-					curmodel->SetSecondCallOfMotion2Bt(secondcall);
+					curmodel->SetSecondCallOfMotion2Bt(secondcall);//フラグ
 				}
 			}
 		}
@@ -1849,6 +1883,10 @@ int ChaScene::SetBtMotion(bool limitdegflag, double nextframe,
 
 
 	if (!m_modelindex.empty()) {
+		
+		//2024/09/05
+		//この関数を呼び出す前にMotion2Bt()を先に呼び出す　その際にUpdateMatrixを呼んでいる　ここで呼ぶとFootRigの更新が上書きされてしまうので　コメントアウト
+		
 		//2024/04/06
 		// モーションが無いモデルの場合にはcurupdate->SetBtMotionからCModel::UpdateMatrixだけを呼び出していた
 		// CModel::UpdateMatrixのChkInViewを複数スレッドから同時に呼び出すことは出来ない
@@ -1925,6 +1963,28 @@ int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe,
 		return 1;
 	}
 
+	{
+		int modelnum = (int)m_modelindex.size();
+		int modelindex;
+		for (modelindex = 0; modelindex < modelnum; modelindex++) {
+			CModel* curmodel = m_modelindex[modelindex].modelptr;
+			if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
+				curmodel->ResetFootRigUpdated();
+				curmodel->SaveBoneMotionWM();
+			}
+		}
+	}
+
+	//########
+	//FootRig
+	//########
+	//previewFlag 4 or 5の場合のFootRig
+	//BtSimu以外のときのFootRigはWaitForUpdateMatrixModels()から呼ぶ
+	if (m_footrigdlg) {
+		m_footrigdlg->Update();
+	}
+
+
 	bool secondcall = false;
 	bool updatematrixflag = true;
 	Motion2Bt(secondcall, limitdegflag, updatematrixflag, 
@@ -1982,6 +2042,19 @@ int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe,
 		}
 
 	}
+
+
+	//WaitForUpdateMatrixModels()でRestore
+	//{
+	//	int modelnum = (int)m_modelindex.size();
+	//	int modelindex;
+	//	for (modelindex = 0; modelindex < modelnum; modelindex++) {
+	//		CModel* curmodel = m_modelindex[modelindex].modelptr;
+	//		if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
+	//			curmodel->RestoreBoneMotionWM();
+	//		}
+	//	}
+	//}
 
 	return 0;
 }
