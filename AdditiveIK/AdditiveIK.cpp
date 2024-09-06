@@ -18527,8 +18527,6 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 					//決め打ち
 					s_btWorld->setGravity(btVector3(0.0f, -9.8f, 0.0f)); // 重力加速度の設定　//SetBtKinFlagReqにて剛体ごとにも設定
 
-
-
 					//s_btWorld->setGravity(btVector3(0.0, 0.0, 0.0)); // 重力加速度の設定
 					s_bpWorld->setGlobalERP(btScalar(g_erp));// ERP
 
@@ -18669,7 +18667,7 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 
 				s_btstartframe = curframe;
 
-				//CallF(curmodel->CreateBtObject(s_coldisp, 0), return 1);
+				////CallF(curmodel->CreateBtObject(s_coldisp, 0), return 1);
 				CallF(pmodel->CreateBtObject(g_limitdegflag, 1), return 1);
 
 

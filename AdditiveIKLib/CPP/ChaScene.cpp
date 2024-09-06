@@ -843,7 +843,7 @@ void ChaScene::WaitForUpdateMatrixModels()
 	if (g_previewFlag != 4) {//2024/03/12
 		WaitUpdateThreads();
 	}
-	//else if (g_previewFlag == 4) {
+	////else if (g_previewFlag == 4) {
 	else {//2024/03/12
 		WaitSetBtMotionFinished();//!!!!!!!!!!!!!!!!
 	}
@@ -875,25 +875,16 @@ void ChaScene::WaitForUpdateMatrixModels()
 		}
 
 		m_footrigdlg->Update();
-
 	}
 
-	//bt時もここでRestore
+
+	//previewFlag == 4のときにも実行
 	{
 		int modelnum = (int)m_modelindex.size();
 		int modelindex;
 		for (modelindex = 0; modelindex < modelnum; modelindex++) {
 			CModel* curmodel = m_modelindex[modelindex].modelptr;
 			if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
-				if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-					ChaMatrix wmat = curmodel->GetWorldMat();
-					ChaMatrix vmat = curmodel->GetViewMat();
-					ChaMatrix pmat = curmodel->GetProjMat();
-					bool needwait = true;
-					int refposindex = 0;
-					curmodel->UpdateMatrix(false, &wmat, &vmat, &pmat, needwait, refposindex);
-				}
-
 				curmodel->RestoreBoneMotionWM();
 			}
 		}
@@ -1971,6 +1962,11 @@ int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe,
 			if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
 				curmodel->ResetFootRigUpdated();
 				curmodel->SaveBoneMotionWM();
+
+				//ChaMatrix wmat = curmodel->GetWorldMat();
+				//bool needwait = true;
+				//int refposindex = 0;
+				//curmodel->UpdateMatrix(false, &wmat, pmView, pmProj, needwait, refposindex);
 			}
 		}
 	}
@@ -1983,7 +1979,6 @@ int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe,
 	if (m_footrigdlg) {
 		m_footrigdlg->Update();
 	}
-
 
 	bool secondcall = false;
 	bool updatematrixflag = true;
@@ -2043,8 +2038,9 @@ int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe,
 
 	}
 
+	//WaitSetBtMotionFinished();//!!!!!!!!!!!!!!!!2024/09/06
 
-	//WaitForUpdateMatrixModels()でRestore
+	////WaitForUpdateMatrixModels()でRestore
 	//{
 	//	int modelnum = (int)m_modelindex.size();
 	//	int modelindex;

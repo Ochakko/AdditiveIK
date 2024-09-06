@@ -9585,7 +9585,8 @@ int CModel::SetBtMotionOnBt(bool limitdegflag,
 	map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* curbone = itrbone->second;
-		if (curbone) {
+		//if (curbone) {
+		if (curbone && !curbone->GetFootRigUpdated()) {//2024/09/06
 			//CMotionPoint curmp = curbone->GetCurMp();
 			curbone->SetBtFlag(0);
 			//curbone->SetCurMp( curmp );
@@ -9701,7 +9702,8 @@ int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag,
 		map<int, CBone*>::iterator itrbone;
 		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 			CBone* curbone = itrbone->second;
-			if (curbone) {
+			//if (curbone) {
+			if (curbone && !curbone->GetFootRigUpdated()) {//2024/09/06
 				//CMotionPoint curmp = curbone->GetCurMp();
 				curbone->SetBtFlag(0);
 				//curbone->SetCurMp( curmp );
@@ -14867,23 +14869,14 @@ int CModel::RigControlFootRig(bool limitdegflag, int depthcnt,
 					selectmat.SetIdentity();
 					invselectmat.SetIdentity();
 
-					if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-						if (curbone && curbone->GetParent(false)) {
-							//curbone->GetParent(false)->CalcAxisMatX_Manipulator(limitdegflag, g_boneaxis, 0, curbone, &selectmat, 0);
+					if (curbone && curbone->GetParent(false)) {
+						//curbone->GetParent(false)->CalcAxisMatX_Manipulator(limitdegflag, g_boneaxis, 0, curbone, &selectmat, 0);
 
-							//2024/01/09
-							curbone->GetParent(false)->CalcAxisMatX_Manipulator(limitdegflag, rigaxis0, 0, curbone, &selectmat, 0);
-						}
-						else {
-							selectmat.SetIdentity();
-						}
+						//2024/01/09
+						curbone->GetParent(false)->CalcAxisMatX_Manipulator(limitdegflag, rigaxis0, 0, curbone, &selectmat, 0);
 					}
 					else {
-						//##################################################################################
-						//2024/09/06
-						//keynum1flagで使用する場合　フレーム間姿勢による補正を行わないのでダイレクトにNodeMatを指定する
-						//##################################################################################
-						selectmat = curbone->GetNodeMat();
+						selectmat.SetIdentity();
 					}
 
 
@@ -14921,6 +14914,7 @@ int CModel::RigControlFootRig(bool limitdegflag, int depthcnt,
 						//// 
 						//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
 						//curbone->SaveSRT(limitdegflag, curmotid, startframe);
+						curbone->SaveSRT(limitdegflag, curmotid, applyframe);//2024/09/06
 
 						int ismovable2 = 1;
 

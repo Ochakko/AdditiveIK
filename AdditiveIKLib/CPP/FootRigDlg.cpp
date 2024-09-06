@@ -1656,7 +1656,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 
 				dbgcnt++;
 			}
-			ChaMatrix aftrigbonewm = GetJointWM(srcmodel, lowerfoot, false);
+			//ChaMatrix aftrigbonewm = GetJointWM(srcmodel, lowerfoot, false);
 			//UpdateParentWM(srcmodel, lowerendjoint, befrigbonewm, aftrigbonewm);
 
 			lowerjointpos = lowernewpos;
@@ -1701,7 +1701,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 
 				dbgcnt++;
 			}
-			ChaMatrix aftrigbonewm = GetJointWM(srcmodel, higherfoot, false);
+			//ChaMatrix aftrigbonewm = GetJointWM(srcmodel, higherfoot, false);
 			//UpdateParentWM(srcmodel, higherendjoint, befrigbonewm, aftrigbonewm);
 
 			higherjointpos = highernewpos;
@@ -1884,7 +1884,13 @@ ChaVector3 CFootRigDlg::GetGroundPos(CModel* groundmodel, ChaVector3 basepos)
 ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy)
 {
 	//モデルworldmatのブレンド率　このブレンドをしないと上下に小刻みに揺れる
-	float MODELWMBLEND = 0.30f;
+	float MODELWMBLEND;// = 0.30f;
+	if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
+		MODELWMBLEND = 0.30f;
+	}
+	else {
+		MODELWMBLEND = 0.05f;
+	}
 
 	ChaMatrix retmat;
 	retmat.SetIdentity();
@@ -1904,11 +1910,16 @@ ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diff
 }
 void CFootRigDlg::UpdateParentWM(CModel* srcmodel, CBone* srcbone, ChaMatrix befparentwm, ChaMatrix aftparentwm)
 {
-	ChaMatrix curwm = GetJointWM(srcmodel, srcbone, false);
-	ChaMatrix newwm = curwm * ChaMatrixInv(befparentwm) * aftparentwm;
+	//ChaMatrix curwm = GetJointWM(srcmodel, srcbone, false);
+	//ChaMatrix newwm = curwm * ChaMatrixInv(befparentwm) * aftparentwm;
+	//int curmotid = srcmodel->GetCurrentMotID();
+	//double curframe = RoundingTime(srcmodel->GetCurrentFrame());
+	//srcbone->SetWorldMat(false, curmotid, curframe, newwm, 0);
+
 	int curmotid = srcmodel->GetCurrentMotID();
 	double curframe = RoundingTime(srcmodel->GetCurrentFrame());
-	srcbone->SetWorldMat(false, curmotid, curframe, newwm, 0);
+	srcbone->SetWorldMat(false, curmotid, curframe, aftparentwm, 0);
+
 }
 
 

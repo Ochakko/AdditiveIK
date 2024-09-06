@@ -4,15 +4,23 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/09/07
+　FootRig機能修正
+　　物理との併用時に物理オフ時の挙動と同様に足を曲げるようになった.
+　　　うまくいっていなかった原因は、UpdateCurrentWM(), UpdateParentWM()などにおいて物理オンの時にworldmatを変更していなかったことが原因
+　　　物理オンの場合にはBtMatだけでなくworldmatも変更するように修正して直った.
+　　　もう１つ原因はRigControlFootRig()中のSaveSRT()をコメントアウトしていたが必要だったことが原因.
+　　　RigControlFootRig()の回転軸は元に戻した.
+
+
+　
+
 2024/09/06その２
 　FootRig機能修正
 　　物理と併用時のRigControllFootRig()の回転軸を修正
 　　　足が変な風には曲がらなくなった
 　　　乱れなくなったのでFootRigの足を曲げる部分のブレンドが必要無くなった
 　　　物理オフの時とは挙動が変わって、モデル位置がすぐに変わってしまいなかなか足が曲がらない
-
-
-
 
 
 2024/09/06
@@ -32,8 +40,6 @@ https://github.com/Ochakko/AdditiveIK
 　　Kinematic剛体のSetBtMotionを修正
 　　　モーションそのままの姿勢に.
 　　　乱れにくくなったのでBullet設定のRigidSpeedの値を大きく出来るようになった
-
-
 
 
 2024/09/04その２
