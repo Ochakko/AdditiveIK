@@ -1543,11 +1543,11 @@ void CFootRigDlg::FootRig(bool secondcalling,
 	//位置補正のトリガーを少し緩めるために使用
 	float ROUNDINGPOS = 2.0f;
 	//FootRigによる回転によるプルプル震え防止のための１回前とのブレンド率
-	float BONEMOTIONBLEND = 0.70f;
+	//float BONEMOTIONBLEND = 1.0f;
 
 	float rigstepmult = 1.0f;
 	//if ((g_previewFlag == 4) || (g_previewFlag == 5)) {
-	//	rigstepmult = 0.05f;
+	//	rigstepmult = 25.0f;
 	//}
 
 	float hdiffoffset;
@@ -1646,9 +1646,9 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				//	curmotid, curframe,
 				//	&modelwm, &matView, &matProj, 0);
 				//srcmodel->UpdateMatrixRoundingTimeReq(srcmodel->GetTopBone(false), &modelwm, &matView, &matProj);
-				if ((g_previewFlag == 4) || (g_previewFlag == 5)) {
-					srcmodel->BlendSaveBoneMotionReq(lowerupdatebone, BONEMOTIONBLEND);//プルプル震え防止のための１回前とのブレンド
-				}
+				//if ((g_previewFlag == 4) || (g_previewFlag == 5)) {
+				//	srcmodel->BlendSaveBoneMotionReq(lowerupdatebone, BONEMOTIONBLEND);//プルプル震え防止のための１回前とのブレンド
+				//}
 				srcmodel->UpdateMatrixFootRigReq(lowerupdatebone, &modelwm, &matView, &matProj);
 				//srcmodel->UpdateMatrixFootRigReq(srcmodel->GetTopBone(false), &modelwm, &matView, &matProj);
 				lowernewpos = GetJointPos(srcmodel, lowerfoot);
@@ -1691,9 +1691,9 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				//	curmotid, curframe,
 				//	&modelwm, &matView, &matProj, 0);
 				//srcmodel->UpdateMatrixRoundingTimeReq(srcmodel->GetTopBone(false), &modelwm, &matView, &matProj);
-				if ((g_previewFlag == 4) || (g_previewFlag == 5)) {
-					srcmodel->BlendSaveBoneMotionReq(higherupdatebone, BONEMOTIONBLEND);//プルプル震え防止のための１回前とのブレンド
-				}
+				//if ((g_previewFlag == 4) || (g_previewFlag == 5)) {
+				//	srcmodel->BlendSaveBoneMotionReq(higherupdatebone, BONEMOTIONBLEND);//プルプル震え防止のための１回前とのブレンド
+				//}
 				srcmodel->UpdateMatrixFootRigReq(higherupdatebone, &modelwm, &matView, &matProj);
 				//srcmodel->UpdateMatrixFootRigReq(srcmodel->GetTopBone(false), &modelwm, &matView, &matProj);
 				highernewpos = GetJointPos(srcmodel, higherfoot);

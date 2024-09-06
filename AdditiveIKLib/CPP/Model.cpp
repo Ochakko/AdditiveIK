@@ -14866,15 +14866,27 @@ int CModel::RigControlFootRig(bool limitdegflag, int depthcnt,
 					ChaMatrix invselectmat;
 					selectmat.SetIdentity();
 					invselectmat.SetIdentity();
-					if (curbone && curbone->GetParent(false)) {
-						//curbone->GetParent(false)->CalcAxisMatX_Manipulator(limitdegflag, g_boneaxis, 0, curbone, &selectmat, 0);
 
-						//2024/01/09
-						curbone->GetParent(false)->CalcAxisMatX_Manipulator(limitdegflag, rigaxis0, 0, curbone, &selectmat, 0);
+					if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
+						if (curbone && curbone->GetParent(false)) {
+							//curbone->GetParent(false)->CalcAxisMatX_Manipulator(limitdegflag, g_boneaxis, 0, curbone, &selectmat, 0);
+
+							//2024/01/09
+							curbone->GetParent(false)->CalcAxisMatX_Manipulator(limitdegflag, rigaxis0, 0, curbone, &selectmat, 0);
+						}
+						else {
+							selectmat.SetIdentity();
+						}
 					}
 					else {
-						selectmat.SetIdentity();
+						//##################################################################################
+						//2024/09/06
+						//keynum1flagで使用する場合　フレーム間姿勢による補正を行わないのでダイレクトにNodeMatを指定する
+						//##################################################################################
+						selectmat = curbone->GetNodeMat();
 					}
+
+
 					ChaMatrixInverse(&invselectmat, NULL, &selectmat);
 					if (rigaxis1 == AXIS_X) {
 						axis0 = selectmat.GetRow(0);
