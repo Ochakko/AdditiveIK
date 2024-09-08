@@ -39,6 +39,7 @@ public:
 
 	int SetModel(ChaScene* srcchascene, CModel* srcmodel);
 	void SetVisible(bool srcflag);
+	int SetEditedRig(CModel* srcmodel, CBone* srcrigbone, CUSTOMRIG updatedrig);
 
 	void InitParams();
 	int DestroyObjs();

@@ -15186,7 +15186,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.31\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.32\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -32405,6 +32405,12 @@ int CustomRig2Bone()
 			return 0;
 		}
 		s_customrigbone->SetCustomRig(s_customrig);
+
+
+		//2024/09/09
+		//FootRigDlgで選択しているリグと編集したリグが同じ場合に　FootRigDlgのリグ情報を更新
+		s_footrigdlg.SetEditedRig(s_model, s_customrigbone, s_customrig);
+
 	}
 	else {
 		_ASSERT(0);

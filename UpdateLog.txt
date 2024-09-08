@@ -2,6 +2,73 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/09/09
+　AdditiveIK 1.0.0.32 RC1(リリース候補1)
+　　1.0.0.31からの変更点
+　　　FootRig(フットリグ)機能追加
+　　　　モーションしている足を自動的に曲げて地面に接地
+　　　　FootRigプレートメニュークリックで右ペインに設定ウインドウを表示
+　　　　角度制限、物理シミュのと併用可能
+　　　　FootRigの設定は拡張子(*.fri)のファイルに保存(モデルを横断するのでプロジェクトフォルダ直下に)
+　　　　　friファイルの入出力はプロジェクト保存時と読み込み時に行う
+　　　　テストモデル追加
+　　　　　Test/Test_FootRig_7
+
+　　　物理シミュ修正
+　　　　Kinematic剛体のSetBtMotionを修正
+　　　　　揺れ物以外はモーションそのままの姿勢に.
+　　　　　多少乱れにくくなったのでBullet設定のRigidSpeedの値を大きく出来るようになった
+　　　　物理シミュ中のIK操作処理に関わる関数を修正
+　　　　　ただし物理IK機能は休止中
+
+　　　不具合修正
+　　　　カメラのパン操作修正
+　　　　　パンの際にAlwaysLockがオフにならない症状が出ていたので修正
+
+　　　既知の問題に追記
+　　　　Documents/TroubleShooting/00_KnownIssue.docx
+
+　　　テストモデル修正
+　　　　Test/0_VRoid202406_Cam004　の物理とリグの設定を修正
+
+
+　ヒント
+　　FootRigについて
+　　　AdditiveIKによるCustomRigが設定済のモデルでしか機能しない
+　　　あらかじめ足を持ち上げるためのRigをCustomRigDlgで設定しておく
+　　　FootRig設定ウインドウにおいて　Rigの選択よりも前にJointの選択をする
+　　　RigのコンボボックスにはJointコンボボックスで選択したジョイントに関連付いているRig名しか表示されない
+　　　Rigが設定されているJointは左ペインのツリービューの項目名が緑色で表示されている
+
+　ヒント
+　　FootRig機能を有効にしている場合には
+　　モデル全体の位置を地面より高い位置(1000よりは低く)にModel'sPosAndDirショートカットボタンで設定しておくこと.
+　　Model'sPosAndDir設定はchaファイルにモデルごとにテキスト出力されている.
+　　地面より低い位置からスタートするとしゃがむ姿勢になったり地面の下にもぐることがある.
+
+
+
+　ショートムービー
+　　両足自動接地＋物理シミュ(モーキャプ編集ツール)
+　　　https://youtu.be/s5FfdE8ct-g
+　　OXの風景
+　　　https://youtu.be/HZxVflJui40
+
+
+
+
+2024/09/09
+　FootRig機能修正
+　　CustomRigDlgでの設定結果をFootRigDlgに反映するように.
+
+　　仕様に追記
+　　　Documents/FootRig_TechSpec.docx更新
+
+　　テストモデルアップデート
+　　　ヘアなどの物理設定を修正
+　　　Test/Test_FootRig_7
+
+
 
 2024/09/08
 　FootRig機能修正
@@ -21,7 +88,7 @@ https://github.com/Ochakko/AdditiveIK
 　　FootRig機能を有効にしている場合には
 　　モデル全体の位置を地面より高い位置(1000よりは低く)にModel'sPosAndDirショートカットボタンで設定しておくこと.
 　　Model'sPosAndDir設定はchaファイルにモデルごとにテキスト出力されている.
-　　地面より低い位置からスタートすると足が曲がり過ぎたり地面の下にもぐることがある.
+　　地面より低い位置からスタートするとしゃがむ姿勢になったり地面の下にもぐることがある.
 
 
 

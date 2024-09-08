@@ -383,7 +383,56 @@ int CFootRigDlg::SetModel(ChaScene* srcchascene, CModel* srcmodel)
 	return 0;
 }
 
+int CFootRigDlg::SetEditedRig(CModel* srcmodel, CBone* srcrigbone, CUSTOMRIG updatedrig)
+{
 
+	//AdditiveIK.cppでのCUSTOMRIGの編集結果をCFootRigDlgの保持データに反映する
+
+	CBone* rigbone[2] = { nullptr, nullptr };
+	CUSTOMRIG customrig[2];
+	std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+	itrelem = m_footrigelem.find(m_model);
+	if (itrelem != m_footrigelem.end()) {
+
+		rigbone[0] = itrelem->second.leftfootbone;
+		rigbone[1] = itrelem->second.rightfootbone;
+		customrig[0] = itrelem->second.leftrig;
+		customrig[1] = itrelem->second.rightrig;
+
+		int rigindex;
+		for (rigindex = 0; rigindex < 2; rigindex++) {
+			if (srcrigbone && (srcrigbone == rigbone[rigindex])) {//FootRigDlgで選択したfootboneと編集したリグボーンが同じ場合
+				CBone* chkbone = srcmodel->GetBoneByID(updatedrig.rigboneno);
+				if (chkbone && (chkbone == rigbone[rigindex])) {//FootRigDlgで選択したfootboneと編集したリグボーンが同じ場合
+					if (customrig[rigindex].rigname[0] && updatedrig.rigname[0] &&
+						(wcscmp(customrig[rigindex].rigname, updatedrig.rigname) == 0)) {//FootRigDlgで選択したリグの名前と編集したリグの名前が同じ場合
+						if (rigindex == 0) {
+							itrelem->second.leftrig = updatedrig;
+						}
+						else if (rigindex == 1) {
+							itrelem->second.rightrig = updatedrig;
+						}
+					}
+				}
+			}
+		}
+
+		//CBone* curbone = itrelem->second.leftfootbone;
+		//if (curbone) {
+		//	string curcombo = m_leftrigCombo->getSelectedComboStr();
+		//	CUSTOMRIG setrig = curbone->GetCustomRig(curcombo);
+		//	itrelem->second.leftrig = setrig;
+		//}
+		//else {
+		//	itrelem->second.leftrig.Init();
+		//}
+	}
+
+
+
+
+	return 0;
+}
 
 void CFootRigDlg::SetVisible(bool srcflag)
 {
