@@ -83,7 +83,10 @@ int CFootRigFile::WriteFootRigFile(const WCHAR* srcfilepath, FOOTRIGELEM srcfoot
 int CFootRigFile::WriteFileInfo()
 {
 
-	CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0001</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0001</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+
+	//2024/09/08 ver1002
+	CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	return 0;
 }
@@ -145,6 +148,10 @@ int CFootRigFile::WriteFootRigElem(FOOTRIGELEM srcfootrigelem)
 		srcfootrigelem.hdiffmax), return 1);
 	CallF(Write2File("    <RigStep>%.2f</RigStep>\r\n",
 		srcfootrigelem.rigstep), return 1);
+
+	CallF(Write2File("    <MaxCalcCount>%d</MaxCalcCount>\r\n",
+		srcfootrigelem.maxcalccount), return 1);//2024/09/08 ver1002
+
 
 	CallF(Write2File("  </FootRigElem>\r\n"), return 1);
 
@@ -285,6 +292,9 @@ int CFootRigFile::ReadFootRigElem(CModel* srcmodel, ChaScene* srcchascene, FOOTR
 	float rigstep = 0;
 	getrigstep = Read_Float(xmlbuf, "<RigStep>", "</RigStep>", &rigstep);
 
+	int getmaxcalccount = 0;
+	int maxcalccount = 50;
+	getmaxcalccount = Read_Int(xmlbuf, "<MaxCalcCount>", "</MaxCalcCount>", &maxcalccount);//2024/09/08 ver1002
 
 
 	dstfootrigelem->Init();
@@ -344,7 +354,9 @@ int CFootRigFile::ReadFootRigElem(CModel* srcmodel, ChaScene* srcchascene, FOOTR
 	if (getrigstep == 0) {
 		dstfootrigelem->rigstep = rigstep;
 	}
-
+	if (getmaxcalccount == 0) {
+		dstfootrigelem->maxcalccount = maxcalccount;
+	}
 
 	return 0;
 }

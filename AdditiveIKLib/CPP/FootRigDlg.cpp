@@ -25,6 +25,9 @@ using namespace OrgWinGUI;
 
 #define FOOTRIGPICKHEIGHT	1000.0f
 
+//位置補正のトリガーを少し緩めるために使用
+#define ROUNDINGPOS	2.0f
+
 
 extern HWND g_mainhwnd;//アプリケーションウインドウハンドル
 
@@ -153,12 +156,20 @@ int CFootRigDlg::DestroyObjs()
 		delete m_rigstepEdit;
 		m_rigstepEdit = nullptr;
 	}
+	if (m_maxcountlabel) {
+		delete m_maxcountlabel;
+		m_maxcountlabel = nullptr;
+	}
+	if (m_maxcountEdit) {
+		delete m_maxcountEdit;
+		m_maxcountEdit = nullptr;
+	}
 	if (m_applyB) {
 		delete m_applyB;
 		m_applyB = nullptr;
 	}
 
-
+	//separator sp
 	if (m_groundmeshsp) {
 		delete m_groundmeshsp;
 		m_groundmeshsp = nullptr;
@@ -203,6 +214,12 @@ int CFootRigDlg::DestroyObjs()
 		delete m_rigstepsp;
 		m_rigstepsp = nullptr;
 	}
+	if (m_maxcountsp) {
+		delete m_maxcountsp;
+		m_maxcountsp = nullptr;
+	}
+
+	//spacer
 	if (m_spacerlabel0) {
 		delete m_spacerlabel0;
 		m_spacerlabel0 = nullptr;
@@ -231,6 +248,8 @@ int CFootRigDlg::DestroyObjs()
 		delete m_spacerlabel6;
 		m_spacerlabel6 = nullptr;
 	}
+
+
 
 	if (m_leftinfolabel) {
 		delete m_leftinfolabel;
@@ -294,6 +313,8 @@ void CFootRigDlg::InitParams()
 	m_hdiffmaxEdit = nullptr;
 	m_rigsteplabel = nullptr;
 	m_rigstepEdit = nullptr;
+	m_maxcountlabel = nullptr;
+	m_maxcountEdit = nullptr;
 	m_applyB = nullptr;
 
 	m_groundmeshsp = nullptr;
@@ -307,6 +328,7 @@ void CFootRigDlg::InitParams()
 	m_rightdirsp = nullptr;
 	m_hdiffmaxsp = nullptr;
 	m_rigstepsp = nullptr;
+	m_maxcountsp = nullptr;
 	m_spacerlabel0 = nullptr;
 	m_spacerlabel1 = nullptr;
 	m_spacerlabel2 = nullptr;
@@ -566,6 +588,16 @@ int CFootRigDlg::CreateFootRigWnd()
 			_ASSERT(0);
 			abort();
 		}
+		m_maxcountlabel = new OWP_Label(L"MaxCalcCount", labelheight);
+		if (!m_maxcountlabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_maxcountEdit = new OWP_EditBox(true, L"MaxCalcCount", labelheight, EDIT_BUFLEN_NUM);
+		if (!m_maxcountEdit) {
+			_ASSERT(0);
+			abort();
+		}
 		m_applyB = new OWP_Button(L"Apply(適用)", 38);
 		if (!m_applyB) {
 			_ASSERT(0);
@@ -626,6 +658,11 @@ int CFootRigDlg::CreateFootRigWnd()
 		}
 		m_rigstepsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
 		if (!m_rigstepsp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_maxcountsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_maxcountsp) {
 			_ASSERT(0);
 			abort();
 		}
@@ -720,9 +757,12 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_dlgWnd->addParts(*m_hdiffmaxsp);
 		m_hdiffmaxsp->addParts2(*m_hdiffmaxEdit);
 		m_dlgWnd->addParts(*m_spacerlabel4);
-		m_dlgWnd->addParts(*m_rigsteplabel);
 		m_dlgWnd->addParts(*m_rigstepsp);
+		m_rigstepsp->addParts1(*m_rigsteplabel);
 		m_rigstepsp->addParts2(*m_rigstepEdit);
+		m_dlgWnd->addParts(*m_maxcountsp);
+		m_maxcountsp->addParts1(*m_maxcountlabel);
+		m_maxcountsp->addParts2(*m_maxcountEdit);
 		m_dlgWnd->addParts(*m_spacerlabel5);
 
 		m_dlgWnd->addParts(*m_leftinfolabel);
@@ -1088,6 +1128,11 @@ int CFootRigDlg::ParamsToDlg()
 			swprintf_s(strrigstep, EDIT_BUFLEN_NUM, L"%.2f", curfootrigelem.rigstep);
 			m_rigstepEdit->setName(strrigstep);
 		}
+		if (m_maxcountEdit) {
+			WCHAR strmaxcount[EDIT_BUFLEN_NUM] = { 0L };
+			swprintf_s(strmaxcount, EDIT_BUFLEN_NUM, L"%d", curfootrigelem.maxcalccount);
+			m_maxcountEdit->setName(strmaxcount);
+		}
 
 		m_dlgWnd->callRewrite();
 	}
@@ -1241,6 +1286,19 @@ int CFootRigDlg::Dlg2Params()
 				itrelem = m_footrigelem.find(m_model);
 				if (itrelem != m_footrigelem.end()) {
 					itrelem->second.rigstep = stepval;
+				}
+			}
+		}
+
+		if (m_maxcountEdit) {
+			WCHAR strmaxcount[EDIT_BUFLEN_NUM] = { 0L };
+			m_maxcountEdit->getName(strmaxcount, EDIT_BUFLEN_NUM);
+			int countval = _wtoi(strmaxcount);
+			if (m_model) {
+				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				itrelem = m_footrigelem.find(m_model);
+				if (itrelem != m_footrigelem.end()) {
+					itrelem->second.maxcalccount = countval;
 				}
 			}
 		}
@@ -1441,24 +1499,18 @@ int CFootRigDlg::Update(CModel* srcmodel)
 					higherdir = curelem.leftdir;
 				}
 
+				int lowerrignum = 0;
 				if (lowerfoot) {
-					lowerupdatebone = lowerfoot;
-					int levelcnt = 0;
-					while ((levelcnt < 2) && lowerupdatebone->GetParent(false)) {//!!!!!!!! 注意：2階層上までの決め打ち
-						lowerupdatebone = lowerupdatebone->GetParent(false);
-						levelcnt++;
-					}
+					//Rigで回転するボーンの内の一番親のボーンを取得
+					lowerupdatebone = GetUpdateBone(srcmodel, lowerfoot, lowerrig, lowerdir, &lowerrignum);
 				}
 				else {
 					lowerupdatebone = nullptr;
 				}
+				int higherrignum = 0;
 				if (higherfoot) {
-					higherupdatebone = higherfoot;
-					int levelcnt = 0;
-					while ((levelcnt < 2) && higherupdatebone->GetParent(false)) {//!!!!!!!! 注意：2階層上までの決め打ち
-						higherupdatebone = higherupdatebone->GetParent(false);
-						levelcnt++;
-					}
+					//Rigで回転するボーンの内の一番親のボーンを取得
+					higherupdatebone = GetUpdateBone(srcmodel, higherfoot, higherrig, higherdir, &higherrignum);
 				}
 				else {
 					higherupdatebone = nullptr;
@@ -1474,7 +1526,8 @@ int CFootRigDlg::Update(CModel* srcmodel)
 					lowerjointpos, higherjointpos,
 					lowergpos, highergpos,
 					loweroffset, higheroffset,
-					lowerdir, higherdir);
+					lowerdir, higherdir,
+					lowerrignum, higherrignum);
 
 			}
 
@@ -1530,7 +1583,8 @@ void CFootRigDlg::FootRig(bool secondcalling,
 	ChaVector3 lowerjointpos, ChaVector3 higherjointpos,
 	ChaVector3 lowergpos, ChaVector3 highergpos,
 	float loweroffset, float higheroffset,
-	int lowerdir, int higherdir
+	int lowerdir, int higherdir,
+	int lowerrignum, int higherrignum
 )
 {
 	if (!srcmodel || !lowerfoot || !higherfoot || !lowerupdatebone || !higherupdatebone) {
@@ -1538,17 +1592,6 @@ void CFootRigDlg::FootRig(bool secondcalling,
 		int dbgflag1 = 1;
 		return;
 	}
-
-
-	//位置補正のトリガーを少し緩めるために使用
-	float ROUNDINGPOS = 2.0f;
-	//FootRigによる回転によるプルプル震え防止のための１回前とのブレンド率
-	//float BONEMOTIONBLEND = 1.0f;
-
-	float rigstepmult = 1.0f;
-	//if ((g_previewFlag == 4) || (g_previewFlag == 5)) {
-	//	rigstepmult = 25.0f;
-	//}
 
 	float hdiffoffset;
 	if (!secondcalling) {
@@ -1626,38 +1669,14 @@ void CFootRigDlg::FootRig(bool secondcalling,
 			((hipspos.y - lowergpos.y) <= hdiffmax) &&
 			((lowerjointpos.y + loweroffset) <= (lowergpos.y + ROUNDINGPOS))) {
 
+			//低い方の足をFootRigで曲げて接地
 			ChaVector3 lowernewpos;
-			lowernewpos.SetParams(lowerjointpos);
-			int dbgcnt = 0;
-			ChaMatrix befrigbonewm = GetJointWM(srcmodel, lowerfoot, false);
-			//while (((lowernewpos.y + loweroffset) < lowergpos.y) && (dbgcnt <= 50)) {//円を描くように下がってから上がることが多い　回数は多めに
-			while (((lowernewpos.y + loweroffset) < (lowergpos.y - ROUNDINGPOS)) && (dbgcnt <= 50)) {//円を描くように下がってから上がることが多い　回数は多めに
-				srcmodel->RigControlFootRig(
-					false, 0, curframe,
-					lowerfoot->GetBoneNo(),
-					lowerdir,
-					curelem.rigstep * rigstepmult,
-					lowerrig, 0);
-				//srcmodel->UpdateMatrix(g_limitdegflag, &modelwm, &matView, &matProj, true, 0);
-				//srcmodel->HierarchyRouteUpdateMatrix(g_limitdegflag, lowerendjoint,
-				//	&modelwm, &matView, &matProj,
-				//	0);
-				//srcmodel->UpdateMatrixReq(g_limitdegflag, lowerupdatebone,
-				//	curmotid, curframe,
-				//	&modelwm, &matView, &matProj, 0);
-				//srcmodel->UpdateMatrixRoundingTimeReq(srcmodel->GetTopBone(false), &modelwm, &matView, &matProj);
-				//if ((g_previewFlag == 4) || (g_previewFlag == 5)) {
-				//	srcmodel->BlendSaveBoneMotionReq(lowerupdatebone, BONEMOTIONBLEND);//プルプル震え防止のための１回前とのブレンド
-				//}
-				srcmodel->UpdateMatrixFootRigReq(lowerupdatebone, &modelwm, &matView, &matProj);
-				//srcmodel->UpdateMatrixFootRigReq(srcmodel->GetTopBone(false), &modelwm, &matView, &matProj);
-				lowernewpos = GetJointPos(srcmodel, lowerfoot);
-				lowergpos = GetGroundPos(curelem.groundmodel, lowernewpos);
-
-				dbgcnt++;
-			}
-			//ChaMatrix aftrigbonewm = GetJointWM(srcmodel, lowerfoot, false);
-			//UpdateParentWM(srcmodel, lowerendjoint, befrigbonewm, aftrigbonewm);
+			lowernewpos = RigControlFootRig(srcmodel, lowerfoot, lowerupdatebone, curframe,
+				lowerjointpos,
+				lowerdir, loweroffset, curelem.rigstep, curelem.maxcalccount, 
+				lowerrig, lowerrignum,
+				modelwm, matView, matProj,
+				curelem.groundmodel, &lowergpos);
 
 			lowerjointpos = lowernewpos;
 			lowerdoneflag = true;
@@ -1670,39 +1689,14 @@ void CFootRigDlg::FootRig(bool secondcalling,
 			)
 		{
 
+			//高い方の足をFootRigで曲げて接地
 			ChaVector3 highernewpos;
-			highernewpos.SetParams(higherjointpos);
-			int dbgcnt = 0;
-			ChaMatrix befrigbonewm = GetJointWM(srcmodel, higherfoot, false);
-			//while (((highernewpos.y + higheroffset) < highergpos.y) && (dbgcnt <= 50)) {//円を描くように下がってから上がることが多い　回数は多めに
-			while (((highernewpos.y + higheroffset) < (highergpos.y - ROUNDINGPOS)) && (dbgcnt <= 50)) {//円を描くように下がってから上がることが多い　回数は多めに				
-				srcmodel->RigControlFootRig(
-					false, 0, curframe,
-					higherfoot->GetBoneNo(),
-					higherdir,
-					curelem.rigstep * rigstepmult,
-					higherrig, 0);
-
-				//srcmodel->UpdateMatrix(g_limitdegflag, &modelwm, &matView, &matProj, true, 0);
-				//srcmodel->HierarchyRouteUpdateMatrix(g_limitdegflag, higherendjoint,
-				//	&modelwm, &matView, &matProj,
-				//	0);
-				//srcmodel->UpdateMatrixReq(g_limitdegflag, higherupdatebone,
-				//	curmotid, curframe,
-				//	&modelwm, &matView, &matProj, 0);
-				//srcmodel->UpdateMatrixRoundingTimeReq(srcmodel->GetTopBone(false), &modelwm, &matView, &matProj);
-				//if ((g_previewFlag == 4) || (g_previewFlag == 5)) {
-				//	srcmodel->BlendSaveBoneMotionReq(higherupdatebone, BONEMOTIONBLEND);//プルプル震え防止のための１回前とのブレンド
-				//}
-				srcmodel->UpdateMatrixFootRigReq(higherupdatebone, &modelwm, &matView, &matProj);
-				//srcmodel->UpdateMatrixFootRigReq(srcmodel->GetTopBone(false), &modelwm, &matView, &matProj);
-				highernewpos = GetJointPos(srcmodel, higherfoot);
-				highergpos = GetGroundPos(curelem.groundmodel, highernewpos);
-
-				dbgcnt++;
-			}
-			//ChaMatrix aftrigbonewm = GetJointWM(srcmodel, higherfoot, false);
-			//UpdateParentWM(srcmodel, higherendjoint, befrigbonewm, aftrigbonewm);
+			highernewpos = RigControlFootRig(srcmodel, higherfoot, higherupdatebone, curframe,
+				higherjointpos,
+				higherdir, higheroffset, curelem.rigstep, curelem.maxcalccount, 
+				higherrig, higherrignum,
+				modelwm, matView, matProj,
+				curelem.groundmodel, &highergpos);
 
 			higherjointpos = highernewpos;
 			higherdoneflag = true;
@@ -1717,16 +1711,33 @@ void CFootRigDlg::FootRig(bool secondcalling,
 
 			if (!secondcalling) {
 				//足が潜っていた場合　２回目の呼び出しをする
-				FootRig(true,//secondcalling !!!!
-					srcmodel,
-					curelem,
-					lowerfoot, higherfoot,
-					lowerupdatebone, higherupdatebone,
-					lowerrig, higherrig,
-					lowerjointpos, higherjointpos,
-					lowergpos, highergpos,
-					loweroffset, higheroffset,
-					lowerdir, higherdir);
+				if (highergpos.y >= lowergpos.y) {
+					FootRig(true,//secondcalling !!!!
+						srcmodel,
+						curelem,
+						lowerfoot, higherfoot,
+						lowerupdatebone, higherupdatebone,
+						lowerrig, higherrig,
+						lowerjointpos, higherjointpos,
+						lowergpos, highergpos,
+						loweroffset, higheroffset,
+						lowerdir, higherdir,
+						lowerrignum, higherrignum);
+				}
+				else {
+					//高低入れ替えて呼び出し
+					FootRig(true,//secondcalling !!!!
+						srcmodel,
+						curelem,
+						higherfoot, lowerfoot,
+						higherupdatebone, lowerupdatebone,
+						higherrig, lowerrig,
+						higherjointpos, lowerjointpos,
+						highergpos, lowergpos,
+						higheroffset, loweroffset,
+						higherdir, lowerdir,
+						higherrignum, lowerrignum);
+				}
 			}
 			else {
 				//２回の実行でも足が地面に潜っている場合
@@ -1885,12 +1896,6 @@ ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diff
 {
 	//モデルworldmatのブレンド率　このブレンドをしないと上下に小刻みに揺れる
 	float MODELWMBLEND = 0.30f;
-	//if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-	//	MODELWMBLEND = 0.30f;
-	//}
-	//else {
-	//	MODELWMBLEND = 0.05f;
-	//}
 
 	ChaMatrix retmat;
 	retmat.SetIdentity();
@@ -1908,18 +1913,99 @@ ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diff
 
 	return retmat;
 }
-void CFootRigDlg::UpdateParentWM(CModel* srcmodel, CBone* srcbone, ChaMatrix befparentwm, ChaMatrix aftparentwm)
+
+ChaVector3 CFootRigDlg::RigControlFootRig(CModel* srcmodel, CBone* footbone, CBone* updatebone, double curframe,
+	ChaVector3 bonepos,
+	int rigdir, float posoffset, float rigstep, int maxcalccount, 
+	CUSTOMRIG footrig, int rignum,
+	ChaMatrix modelwm, ChaMatrix matView, ChaMatrix matProj,
+	CModel* groundmodel, ChaVector3* pgroundpos)
 {
-	//ChaMatrix curwm = GetJointWM(srcmodel, srcbone, false);
-	//ChaMatrix newwm = curwm * ChaMatrixInv(befparentwm) * aftparentwm;
-	//int curmotid = srcmodel->GetCurrentMotID();
-	//double curframe = RoundingTime(srcmodel->GetCurrentFrame());
-	//srcbone->SetWorldMat(false, curmotid, curframe, newwm, 0);
 
-	int curmotid = srcmodel->GetCurrentMotID();
-	double curframe = RoundingTime(srcmodel->GetCurrentFrame());
-	srcbone->SetWorldMat(false, curmotid, curframe, aftparentwm, 0);
+	//float BONEMOTIONBLEND = 0.05f;
 
+	ChaVector3 newbonepos;
+	newbonepos.SetParams(bonepos);
+
+	if (!srcmodel || !footbone || !updatebone || !groundmodel || !pgroundpos) {
+		_ASSERT(0);
+		return newbonepos;
+	}
+
+	int maxcount = min(100, max(0, maxcalccount));//2024/09/08 計算回数の最大数もGUIから指定するように変更した
+
+	int calccount = 0;
+	//while (((lowernewpos.y + loweroffset) < lowergpos.y) && (dbgcnt <= 50)) {//円を描くように下がってから上がることが多い　回数は多めに
+	while (((newbonepos.y + posoffset) < (pgroundpos->y - ROUNDINGPOS)) && (calccount < maxcount)) {//円を描くように下がってから上がることが多い　回数は多めに
+		
+		int notmovecount = srcmodel->RigControlFootRig(
+			false,//リグの指定と高さの閾値でリミット済とする　limitdegflag = trueで処理すると可動フレームで止まるのでパタパタしすぎる　ブレンドしてもパタパタし過ぎる
+			0, curframe,
+			footbone->GetBoneNo(),
+			rigdir,
+			rigstep,
+			footrig, 0);
+
+		//if ((g_previewFlag == 4) || (g_previewFlag == 5)) {
+		//if (g_limitdegflag) {
+		//	srcmodel->BlendSaveBoneMotionReq(updatebone, BONEMOTIONBLEND);//プルプル震え防止のための１回前とのブレンド
+		//}
+
+		srcmodel->UpdateMatrixFootRigReq(updatebone, &modelwm, &matView, &matProj);//角度制限あり無し両方に　現状の姿勢を格納
+		newbonepos = GetJointPos(srcmodel, footbone);
+		*pgroundpos = GetGroundPos(groundmodel, newbonepos);
+
+		calccount++;
+
+		if ((notmovecount < 0) || (notmovecount >= rignum)) {
+			//エラーが起きた場合　または　角度制限機能により１つのジョイントも回転しなかった場合は処理を抜ける
+			break;
+		}
+	}
+
+	return newbonepos;
 }
 
+CBone* CFootRigDlg::GetUpdateBone(CModel* srcmodel, CBone* footbone, CUSTOMRIG footrig, int rigdir, int* prignum)
+{
+	//########################################
+	//Rigで回転するボーンの内の一番親のボーンを返す
+	//########################################
 
+	if (!srcmodel || !footbone || !prignum ||
+		(footrig.useflag != 2) || ((rigdir) != 0) && (rigdir != 1)) {
+		return nullptr;
+	}
+
+	*prignum = 0;
+	CBone* retbone = nullptr;
+
+	int rignum = 0;
+	int elemno;
+	for (elemno = 0; elemno < footrig.elemnum; elemno++) {
+		//elemnoが１つ増えるとボーンは１階層親になる
+		RIGELEM currigelem = footrig.rigelem[elemno];
+
+		if ((currigelem.rigrigboneno < 0) && //FootRigではrigのrigは想定していない.　通常のリグの場合に対応
+			(currigelem.boneno >= 0) && 
+			(currigelem.transuv[rigdir].enable == 1) && 
+			(fabs(currigelem.transuv[rigdir].applyrate) >= 1e-4)) {
+			CBone* curbone = srcmodel->GetBoneByID(currigelem.boneno);
+			if (curbone) {
+				retbone = curbone;//上書き
+				rignum++;
+			}
+		}
+	}
+
+	*prignum = rignum;
+	return retbone;
+
+	//lowerupdatebone = lowerfoot;
+	//int levelcnt = 0;
+	//while ((levelcnt < 2) && lowerupdatebone->GetParent(false)) {//!!!!!!!! 注意：2階層上までの決め打ち
+	//	lowerupdatebone = lowerupdatebone->GetParent(false);
+	//	levelcnt++;
+	//}
+
+}

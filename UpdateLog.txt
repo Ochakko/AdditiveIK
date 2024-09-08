@@ -3,6 +3,28 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
+2024/09/08
+　FootRig機能修正
+　　角度制限機能(LimitEul)を有効にできるように.
+　　　LimitEulオンの時にはFootRig以外を角度制限
+　　　FootRigに関してはリグの指定と高さの閾値でリミット済とする
+　　　理由
+　　　　FootRigは変動が大きいためLimitEulを適用すると可動フレームで止まりパタパタしすぎる
+　　　　ブレンドしてもパタパタし過ぎる
+　　テストモデルに制限角度を設定してアップデート
+　　　Test/Test_FootRig_7
+　　RigControlFootRig()呼び出しループを関数化
+　　FootRig中のUpdateMatrix用のupdateboneをrigの内容をみて決めるように修正
+　　２回目のFootRig()呼び出し前にhigherとlowerの比較をして必要に応じて入れ替えて呼び出し
+
+　　(注意)
+　　FootRig機能を有効にしている場合には
+　　モデル全体の位置を地面より高い位置(1000よりは低く)にModel'sPosAndDirショートカットボタンで設定しておくこと.
+　　Model'sPosAndDir設定はchaファイルにモデルごとにテキスト出力されている.
+　　地面より低い位置からスタートすると足が曲がり過ぎたり地面の下にもぐることがある.
+
+
+
 
 2024/09/07
 　FootRig機能修正
@@ -12,8 +34,6 @@ https://github.com/Ochakko/AdditiveIK
 　　　もう１つ原因はRigControlFootRig()中のSaveSRT()をコメントアウトしていたが必要だったことが原因.
 　　　RigControlFootRig()の回転軸は元に戻した.
 
-
-　
 
 2024/09/06その２
 　FootRig機能修正

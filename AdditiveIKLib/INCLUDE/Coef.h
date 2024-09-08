@@ -611,6 +611,7 @@ typedef struct tag_footrigelem
 	float rightoffset;
 	float hdiffmax;
 	float rigstep;
+	int maxcalccount;//2024/09/08
 
 	void Init() {
 		enablefootrig = false;
@@ -625,6 +626,7 @@ typedef struct tag_footrigelem
 		rightoffset = 0.0f;
 		hdiffmax = 40.0f;
 		rigstep = 0.25f;
+		maxcalccount = 50;
 	};
 
 	tag_footrigelem()
@@ -637,7 +639,8 @@ typedef struct tag_footrigelem
 		if (enablefootrig) {
 			if (leftfootbone && (leftrig.useflag == 2) &&
 				rightfootbone && (rightrig.useflag == 2) &&
-				groundmodel) {
+				groundmodel &&
+				(maxcalccount > 0) && (maxcalccount <= 100)) {
 				return true;
 			}
 			else {

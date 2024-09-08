@@ -978,7 +978,15 @@ int CBone::UpdateMatrixFootRig(int srcmotid, double srcframe,
 	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat)
 {
 
+	//######################################
+	//角度制限あり無し両方に　現状の姿勢を格納
+	//リグの指定と高さの閾値でリミット済とする　
+	//limitdegflag = trueで処理すると可動フレームで止まるのでパタパタしすぎる　ブレンドしてもパタパタし過ぎる
+
 	bool limitdegflag = false;
+	
+	//######################################
+
 
 	SetFootRigUpdated(true);//2024/09/05
 
@@ -1009,7 +1017,11 @@ int CBone::UpdateMatrixFootRig(int srcmotid, double srcframe,
 		newworldmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 		m_curmp[m_updateslot].SetAnimMat(newworldmat);
 		ChaMatrix tmpmat = newworldmat * *wmat; // !!!!!!!!!!!!!!!!!!!!!!!!!!!
-		SetWorldMat(limitdegflag, srcmotid, roundingframe, tmpmat, &(m_curmp[m_updateslot]));//roundingframe!!!!
+
+		//SetWorldMat(limitdegflag, srcmotid, roundingframe, tmpmat, &(m_curmp[m_updateslot]));//roundingframe!!!!
+		m_curmp[m_updateslot].SetWorldMat(tmpmat);//modelwmが掛かっている
+		m_curmp[m_updateslot].SetLimitedWM(tmpmat);//modelwmが掛かっている
+
 
 		if (limitdegflag == true) {
 			m_curmp[m_updateslot].SetCalcLimitedWM(2);
@@ -1026,7 +1038,9 @@ int CBone::UpdateMatrixFootRig(int srcmotid, double srcframe,
 		m_curmp[m_updateslot].InitParams();
 		m_curmp[m_updateslot].SetWorldMat(*wmat);
 		m_curmp[m_updateslot].SetFrame(roundingframe);
-		SetWorldMat(limitdegflag, srcmotid, roundingframe, *wmat, &(m_curmp[m_updateslot]));//roundingframe!!!!
+		//SetWorldMat(limitdegflag, srcmotid, roundingframe, *wmat, &(m_curmp[m_updateslot]));//roundingframe!!!!
+		m_curmp[m_updateslot].SetWorldMat(*wmat);//modelwmが掛かっている
+		m_curmp[m_updateslot].SetLimitedWM(*wmat);//modelwmが掛かっている
 	}
 
 	if (m_parmodel && (m_parmodel->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
@@ -1046,6 +1060,7 @@ int CBone::UpdateMatrixFootRig(int srcmotid, double srcframe,
 
 		bool settobothflag = false;
 		ChaMatrix matforbt = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot]));
+		//SetBtMatLimited(limitdegflag, true, false, matforbt);
 		SetBtMat(matforbt, settobothflag);
 		SetBtEul(m_curmp[m_updateslot].GetLocalEul());
 		SetBtFlag(1);

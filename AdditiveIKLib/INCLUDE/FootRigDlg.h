@@ -65,7 +65,8 @@ public:
 		ChaVector3 lowerjointpos, ChaVector3 higherjointpos,
 		ChaVector3 lowergpos, ChaVector3 highergpos,
 		float loweroffset, float higheroffset,
-		int lowerdir, int higherdir
+		int lowerdir, int higherdir,
+		int lowerrignum, int higherrignum
 	);
 
 	void SetSaveModelWM(CModel* srcmodel, ChaMatrix srcmat);
@@ -82,7 +83,14 @@ private:
 	ChaVector3 GetJointPos(CModel* srcmodel, CBone* srcbone);
 	ChaVector3 GetGroundPos(CModel* groundmodel, ChaVector3 basepos);
 	ChaMatrix ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy);
-	void UpdateParentWM(CModel* srcmodel, CBone* srcbone, ChaMatrix befparentwm, ChaMatrix aftparentwm);
+	ChaVector3 RigControlFootRig(CModel* srcmodel, CBone* footbone, CBone* updatebone, double curframe,
+		ChaVector3 bonepos,
+		int rigdir, float posoffset, float rigstep, int maxcalccount, 
+		CUSTOMRIG footrig, int rignum,
+		ChaMatrix modelwm, ChaMatrix matView, ChaMatrix matProj,
+		CModel* groundmodel, ChaVector3* pgroundpos);
+	CBone* GetUpdateBone(CModel* srcmodel, CBone* footbone, CUSTOMRIG footrig, int rigdir, int* prignum);//Rigで回転するボーンの内の一番親のボーンを返す
+
 private:
 	bool m_createdflag;
 	bool m_visible;
@@ -129,6 +137,8 @@ private:
 	OrgWinGUI::OWP_EditBox* m_hdiffmaxEdit;
 	OrgWinGUI::OWP_Label* m_rigsteplabel;
 	OrgWinGUI::OWP_EditBox* m_rigstepEdit;
+	OrgWinGUI::OWP_Label* m_maxcountlabel;//2024/09/08
+	OrgWinGUI::OWP_EditBox* m_maxcountEdit;//2024/09/08
 
 	OrgWinGUI::OWP_Button* m_applyB;
 
@@ -143,6 +153,7 @@ private:
 	OrgWinGUI::OWP_Separator* m_rightdirsp;
 	OrgWinGUI::OWP_Separator* m_hdiffmaxsp;
 	OrgWinGUI::OWP_Separator* m_rigstepsp;
+	OrgWinGUI::OWP_Separator* m_maxcountsp;//2024/09/08
 
 	OrgWinGUI::OWP_Label* m_spacerlabel0;
 	OrgWinGUI::OWP_Label* m_spacerlabel1;

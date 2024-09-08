@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="Shift_JIS"?>
+<FootRig>
+  <FileInfo>
+    <kind>FootRigFile</kind>
+    <version>0002</version>
+    <type>0</type>
+  </FileInfo>
+  <FootRigElem>
+    <EnableFootRig>0</EnableFootRig>
+    <LeftDir>0</LeftDir>
+    <RightDir>0</RightDir>
+    <LeftOffset>0.00</LeftOffset>
+    <RightOffset>0.00</RightOffset>
+    <HDiffMax>50.00</HDiffMax>
+    <RigStep>0.15</RigStep>
+    <MaxCalcCount>50</MaxCalcCount>
+  </FootRigElem>
+</FOOTRIG>

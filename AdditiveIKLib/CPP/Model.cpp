@@ -2535,6 +2535,9 @@ void CModel::ResetFootRigUpdated()
 void CModel::UpdateMatrixFootRigReq(CBone* srcbone,
 	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat)
 {
+
+	//角度制限あり無し両方に　現状の姿勢を格納
+
 	if (srcbone && wmat && vmat && pmat) {
 
 		if (srcbone->IsSkeleton()) {
@@ -14746,6 +14749,12 @@ int CModel::RigControlFootRig(bool limitdegflag, int depthcnt,
 	int uvno, float srcdelta,
 	CUSTOMRIG ikcustomrig, int buttonflag)
 {
+	//##########################################
+	//2024/09/08 角度制限で動かなかったrigの数を返す
+	//##########################################
+
+	int notmovecount = 0;
+
 	SetUnderFootRig(true);
 
 	ChaCalcFunc chacalcfunc;
@@ -14932,6 +14941,7 @@ int CModel::RigControlFootRig(bool limitdegflag, int depthcnt,
 
 						//2023/03/04 制限角度に引っ掛かった場合には　やめて　次のジョイントの回転へ
 						if ((ismovable2 == 0) && (g_wallscrapingikflag == 0)) {
+							notmovecount++;//2024/09/08 動かなかったリグの数をカウント
 							continue;
 						}
 
@@ -14996,12 +15006,14 @@ int CModel::RigControlFootRig(bool limitdegflag, int depthcnt,
 
 
 	SetUnderFootRig(false);
-	if (lastbone) {
-		return lastbone->GetBoneNo();
-	}
-	else {
-		return srcboneno;
-	}
+	//if (lastbone) {
+	//	return lastbone->GetBoneNo();
+	//}
+	//else {
+	//	return srcboneno;
+	//}
+
+	return notmovecount;//2024/09/08 角度制限により動かなかったリグの数を返す
 }
 
 int CModel::RigControlPostRig(bool limitdegflag, int depthcnt, 

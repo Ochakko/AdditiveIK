@@ -999,8 +999,12 @@ public:
 		int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig, int buttonflag);
 	int RigControlPostRig(bool limitdegflag, int depthcnt, CEditRange* erptr,
 		int srcboneno, int uvno, CUSTOMRIG ikcustomrig, int buttonflag);
+	
+
+	//2024/09/08 角度制限で動かなかったrigの数を返す
 	int RigControlFootRig(bool limitdegflag, int depthcnt, double curframe,
 		int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig, int buttonflag);
+
 
 	void SaveBoneMotionWM();
 	void RestoreBoneMotionWM();
@@ -1704,20 +1708,24 @@ public: //accesser
 		return m_bonelist.end();
 	};
 	CBone* GetBoneByID( int srcid ){
+		if (srcid < 0) {
+			_ASSERT(0);
+			return nullptr;
+		}
 		std::map<int, CBone*>::iterator itrbone;
 		itrbone = m_bonelist.find(srcid);
 		if (itrbone != m_bonelist.end()){
 			return itrbone->second;
 		}
 		else{
-			return 0;
+			return nullptr;
 		}
 		//return m_bonelist[ srcid ];
 	};
 	CBone* GetBoneByZeroBaseIndex(int srcindex) {
 		int bonenum = (int)m_bonelist.size();
 		if ((srcindex < 0) || (srcindex >= bonenum)) {
-			return 0;
+			return nullptr;
 		}
 		std::map<int, CBone*>::iterator itrbone;
 		int curindex = 0;
@@ -1725,7 +1733,7 @@ public: //accesser
 		while (curindex < srcindex) {
 			itrbone++;
 			if (itrbone == m_bonelist.end()) {
-				return 0;
+				return nullptr;
 			}
 			curindex++;
 		}
@@ -1733,7 +1741,7 @@ public: //accesser
 			return itrbone->second;
 		}
 		else {
-			return 0;
+			return nullptr;
 		}
 	};
 

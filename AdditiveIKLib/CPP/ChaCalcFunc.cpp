@@ -3401,7 +3401,8 @@ void ChaCalcFunc::UpdateCurrentWM(CBone* srcbone, bool limitdegflag, int srcmoti
 	//	befparentwm.SetIdentity();
 	//}
 
-	//if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
+	//if ((g_previewFlag != 4) && (g_previewFlag != 5)) 
+	{//btSimuの際にも必要な処理
 		bool directsetflag = true;//directset !!!
 		bool infooutflag = false;
 		int setchildflag = 0;
@@ -3414,7 +3415,7 @@ void ChaCalcFunc::UpdateCurrentWM(CBone* srcbone, bool limitdegflag, int srcmoti
 		if (curmp) {
 			curmp->SetAbsMat(srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp));
 		}
-	//}
+	}
 	//else {
 	if ((g_previewFlag == 4) || (g_previewFlag == 5)) {
 		//bool directsetflag = true;
@@ -3490,7 +3491,8 @@ void ChaCalcFunc::UpdateParentWMReq(CBone* srcbone, bool limitdegflag, bool setb
 
 	if (srcbone->IsSkeleton() || srcbone->IsCamera() || //2023/05/23
 		srcbone->IsNullAndChildIsCamera()) {
-		//if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
+		//if ((g_previewFlag != 4) && (g_previewFlag != 5)) 
+		{//btSimuの際にも必要な処理
 			currentbefwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 			currentnewwm = currentbefwm * ChaMatrixInv(oldparentwm) * newparentwm;
 
@@ -3506,7 +3508,7 @@ void ChaCalcFunc::UpdateParentWMReq(CBone* srcbone, bool limitdegflag, bool setb
 			if (curmp) {
 				curmp->SetAbsMat(srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp));
 			}
-		//}
+		}
 		//else {
 		if ((g_previewFlag == 4) || (g_previewFlag == 5)) {
 			currentbefwm = srcbone->GetBtMat(true);
