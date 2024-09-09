@@ -119,7 +119,7 @@ int CGrassElem::AddGrassPosition(ChaVector3 srcpos, ChaVector3 srcdir)
 
 	GetGrass()->SetModelPosition(srcpos);
 	GetGrass()->SetModelRotation(srcdir);
-	GetGrass()->CalcModelWorldMatOnLoad();
+	GetGrass()->CalcModelWorldMatOnLoad(nullptr);
 
 	ChaMatrix scalemat;
 	scalemat.SetIdentity();

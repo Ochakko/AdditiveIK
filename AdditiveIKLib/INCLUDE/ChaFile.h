@@ -14,6 +14,7 @@ class CModel;
 class BPWorld;
 class CFrameCopyDlg;
 class CGrassElem;
+class CFootRigDlg;
 
 class CChaFile : public CXMLIO
 {
@@ -25,7 +26,8 @@ public:
 		std::vector<MODELELEM>& srcmodelindex, float srcmotspeed, 
 		std::map<CModel*, CFrameCopyDlg*> srcselbonedlgmap,
 		std::vector<CGrassElem*> srcgrasselemvec);
-	int LoadChaFile(bool limitdegflag, WCHAR* strpath, 
+	int LoadChaFile(bool limitdegflag, WCHAR* strpath,
+		CFootRigDlg* srcfootrigdlg,
 		CModel* (*srcfbxfunc)( bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname, bool srcgrassflag ),
 		int (*srcReffunc)(), int (*srcImpFunc)(), int (*srcGcoFunc)(),
 		int (*srcReMenu)( int selindex1, int callbymenu1 ), 
@@ -57,6 +59,7 @@ private:
 	WCHAR m_wloaddir[MAX_PATH];
 	char m_mloaddir[MAX_PATH];
 
+	CFootRigDlg* m_footrigdlg;//外部データ
 
 	CModel* (*m_FbxFunc)(bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname, bool srcgrassflag);
 	int (*m_RefFunc)();

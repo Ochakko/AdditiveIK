@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/09/09
-　AdditiveIK 1.0.0.32 RC1(リリース候補1)
+　AdditiveIK 1.0.0.32 RC2(リリース候補2)
 　　1.0.0.31からの変更点
 　　　FootRig(フットリグ)機能追加
 　　　　モーションしている足を自動的に曲げて地面に接地
@@ -53,6 +53,19 @@ https://github.com/Ochakko/AdditiveIK
 　　　https://youtu.be/s5FfdE8ct-g
 　　OXの風景
 　　　https://youtu.be/HZxVflJui40
+
+
+　RC2:
+　　モデルを削除するとアプリが落ちる不具合を修正
+　　　FootRigのUpdate()で削除済のモデルを参照していたのが原因
+　　　Update()時などに削除済かどうかを確認するように修正
+　　プロジェクト読み込み時にModel'sPosAndDir設定が効かなくなっていたのを修正
+　　　FootRigのUpdateが走り、ワールドマトリクスが補間されて途中位置までしか移動していなかったのが原因
+　　LimitEulオン＋BtSimuオン＋FootRigオンの時に足のエンドジョイントが動きに付いてこないことがあったのを修正
+　　　UpdateModelWMFootRig()処理はFootRigに対してのみ行うように修正
+　　　UpdateModelWMFootRig()内でbtmatもセットするように修正
+　　FootRigのモデル全体位置のブレンド率を調整
+
 
 
 

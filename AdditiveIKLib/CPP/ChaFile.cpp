@@ -30,6 +30,8 @@
 #include <DispGroupFile.h>
 #include <ShaderTypeFile.h>
 
+#include <FootRigDlg.h>
+
 #include "..\\..\\AdditiveIK\FrameCopyDlg.h"
 
 
@@ -76,7 +78,7 @@ int CChaFile::InitParams()
 
 	m_motspeed = 1.0f;
 
-
+	m_footrigdlg = nullptr;
 
 	return 0;
 }
@@ -612,6 +614,7 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 }
 
 int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath, 
+	CFootRigDlg* srcfootrigdlg,
 	CModel* (*srcfbxfunc)( bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname, bool srcgrassflag),
 	int (*srcReffunc)(), int (*srcImpFunc)(), int (*srcGcoFunc)(),
 	int (*srcReMenu)( int selindex1, int callbymenu1 ), 
@@ -628,6 +631,8 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	m_RgdMenu = srcRgdMenu;
 	m_MorphMenu = srcMorphMenu;
 	m_ImpMenu = srcImpMenu;
+
+	m_footrigdlg = srcfootrigdlg;
 
 	wcscpy_s( m_wloaddir, MAX_PATH, strpath );
 	WCHAR* lasten;
@@ -1119,7 +1124,7 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 
 	newmodel->SetModelPosition(ChaVector3(posx, posy, posz));
 	newmodel->SetModelRotation(ChaVector3(rotx, roty, rotz));
-	newmodel->CalcModelWorldMatOnLoad();
+	newmodel->CalcModelWorldMatOnLoad(m_footrigdlg);
 	newmodel->SetMaterialDispRate(materialdisprate);
 
 

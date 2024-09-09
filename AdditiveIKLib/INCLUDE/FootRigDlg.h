@@ -56,6 +56,31 @@ public:
 	int LoadFootRigFile(WCHAR* savechadir, WCHAR* saveprojname);
 
 	int Update();
+	void SetSaveModelWM(CModel* srcmodel, ChaMatrix srcmat);
+
+	bool IsEnableFootRig(CModel* srcmodel);
+
+private:
+	int Dlg2Params();
+	int ParamsToDlg_LeftRig();
+	int ParamsToDlg_RightRig();
+
+	ChaMatrix BlendSaveModelWM(CModel* srcmodel, ChaMatrix srcmat, float blendrate);
+	ChaMatrix GetJointWM(CModel* srcmodel, CBone* srcbone, bool multmodelwm);
+	ChaVector3 GetJointPos(CModel* srcmodel, CBone* srcbone);
+	ChaVector3 GetGroundPos(CModel* groundmodel, ChaVector3 basepos);
+	ChaMatrix ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy, bool blendflag);
+	ChaVector3 RigControlFootRig(CModel* srcmodel, CBone* footbone, CBone* updatebone, double curframe,
+		ChaVector3 bonepos,
+		int rigdir, float posoffset, float rigstep, int maxcalccount, 
+		CUSTOMRIG footrig, int rignum,
+		ChaMatrix modelwm, ChaMatrix matView, ChaMatrix matProj,
+		CModel* groundmodel, ChaVector3* pgroundpos);
+	CBone* GetUpdateBone(CModel* srcmodel, CBone* footbone, CUSTOMRIG footrig, int rigdir, int* prignum);//Rigで回転するボーンの内の一番親のボーンを返す
+
+	bool IsValidModel(CModel* srcmodel);//modelが削除されている場合はfalseを返す
+
+
 	int Update(CModel* srcmodel);
 	void FootRig(bool secondcalling,
 		CModel* srcmodel,
@@ -70,28 +95,7 @@ public:
 		int lowerrignum, int higherrignum
 	);
 
-	void SetSaveModelWM(CModel* srcmodel, ChaMatrix srcmat);
 	ChaMatrix GetSaveModelWM(CModel* srcmodel);
-	bool IsEnableFootRig(CModel* srcmodel);
-
-private:
-	int Dlg2Params();
-	int ParamsToDlg_LeftRig();
-	int ParamsToDlg_RightRig();
-
-	ChaMatrix BlendSaveModelWM(CModel* srcmodel, ChaMatrix srcmat, float blendrate);
-	ChaMatrix GetJointWM(CModel* srcmodel, CBone* srcbone, bool multmodelwm);
-	ChaVector3 GetJointPos(CModel* srcmodel, CBone* srcbone);
-	ChaVector3 GetGroundPos(CModel* groundmodel, ChaVector3 basepos);
-	ChaMatrix ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy);
-	ChaVector3 RigControlFootRig(CModel* srcmodel, CBone* footbone, CBone* updatebone, double curframe,
-		ChaVector3 bonepos,
-		int rigdir, float posoffset, float rigstep, int maxcalccount, 
-		CUSTOMRIG footrig, int rignum,
-		ChaMatrix modelwm, ChaMatrix matView, ChaMatrix matProj,
-		CModel* groundmodel, ChaVector3* pgroundpos);
-	CBone* GetUpdateBone(CModel* srcmodel, CBone* footbone, CUSTOMRIG footrig, int rigdir, int* prignum);//Rigで回転するボーンの内の一番親のボーンを返す
-
 private:
 	bool m_createdflag;
 	bool m_visible;

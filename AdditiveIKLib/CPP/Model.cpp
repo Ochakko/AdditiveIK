@@ -55,6 +55,7 @@
 #include <RigidElem.h>
 #include <ChaScene.h>
 #include <CSChkInView.h>
+#include <FootRigDlg.h>
 
 #include <string>
 
@@ -2577,51 +2578,55 @@ void CModel::BlendSaveBoneMotionReq(CBone* srcbone, float srcblend)
 }
 
 
-void CModel::UpdateModelWM(ChaMatrix newwm)
+void CModel::UpdateModelWMFootRig(ChaMatrix newwm)
 {
 	ChaMatrix befwm = m_matWorld;
 	m_matWorld = newwm;
 
-	UpdateModelWMReq(GetTopBone(false), newwm, befwm);
+	UpdateModelWMFootRigReq(GetTopBone(false), newwm, befwm);
 }
-void CModel::UpdateModelWMReq(CBone* srcbone, ChaMatrix newwm, ChaMatrix befwm)
+void CModel::UpdateModelWMFootRigReq(CBone* srcbone, ChaMatrix newwm, ChaMatrix befwm)
 {
 	if (srcbone) {
-		bool calcslotflag = true;
-		CMotionPoint curmp = srcbone->GetCurMp(calcslotflag);
-		ChaMatrix curwm = curmp.GetWorldMat();
 
-		ChaMatrix setwm = curwm * ChaMatrixInv(befwm) * newwm;
-		curmp.SetWorldMat(setwm);
-		srcbone->SetCurMp(curmp);
+		if (srcbone->GetFootRigUpdated()) {//2024/09/09 FootRigだけに処理　他の部分に処理をすると　LimitEul+BtSimu時に他の部分がびよーーんとなる
+			bool calcslotflag = true;
+			CMotionPoint curmp = srcbone->GetCurMp(calcslotflag);
+			ChaMatrix curwm = curmp.GetWorldMat();
 
-
-		//ChaMatrix curbtmat = srcbone->GetBtMat(true);
-		//ChaMatrix setbtmat = curbtmat * ChaMatrixInv(befwm) * newwm;
-		//srcbone->SetBtMat(setbtmat, true);
-
-		//ChaMatrix curbtmat2 = srcbone->GetBtMat(false);
-		//ChaMatrix setbtmat2 = curbtmat2 * ChaMatrixInv(befwm) * newwm;
-		//srcbone->SetBtMat(setbtmat2, false);
+			ChaMatrix setwm = curwm * ChaMatrixInv(befwm) * newwm;
+			curmp.SetWorldMat(setwm);
+			curmp.SetLimitedWM(setwm);//2024/09/09
+			srcbone->SetCurMp(curmp);
 
 
+			srcbone->SetBtMat(setwm, false);
 
-		ChaVector3 jpos = srcbone->GetJointFPos();
-		ChaVector3 childworld;
-		ChaVector3TransformCoord(&childworld, &jpos, &setwm);
-		ChaMatrix vpmat = m_matView * m_matProj;
-		ChaMatrix wvpmat = setwm * vpmat;
-		ChaVector3 childscreen;
-		ChaVector3TransformCoord(&childscreen, &childworld, &vpmat);//wmatで変換した位置に対して　vp変換
-		srcbone->SetChildWorld(childworld);
-		srcbone->SetChildScreen(childscreen);
 
+			//ChaMatrix curbtmat = srcbone->GetBtMat(true);
+			//ChaMatrix setbtmat = curbtmat * ChaMatrixInv(befwm) * newwm;
+			//srcbone->SetBtMat(setbtmat, true);
+
+			//ChaMatrix curbtmat2 = srcbone->GetBtMat(false);
+			//ChaMatrix setbtmat2 = curbtmat2 * ChaMatrixInv(befwm) * newwm;
+			//srcbone->SetBtMat(setbtmat2, false);
+
+			ChaVector3 jpos = srcbone->GetJointFPos();
+			ChaVector3 childworld;
+			ChaVector3TransformCoord(&childworld, &jpos, &setwm);
+			ChaMatrix vpmat = m_matView * m_matProj;
+			ChaMatrix wvpmat = setwm * vpmat;
+			ChaVector3 childscreen;
+			ChaVector3TransformCoord(&childscreen, &childworld, &vpmat);//wmatで変換した位置に対して　vp変換
+			srcbone->SetChildWorld(childworld);
+			srcbone->SetChildScreen(childscreen);
+		}
 
 		if (srcbone->GetChild(false)) {
-			UpdateModelWMReq(srcbone->GetChild(false), newwm, befwm);
+			UpdateModelWMFootRigReq(srcbone->GetChild(false), newwm, befwm);
 		}
 		if (srcbone->GetBrother(false)) {
-			UpdateModelWMReq(srcbone->GetBrother(false), newwm, befwm);
+			UpdateModelWMFootRigReq(srcbone->GetBrother(false), newwm, befwm);
 		}
 	}
 }
@@ -21642,7 +21647,7 @@ void CModel::GetHipsBoneReq(CBone* srcbone, CBone** dstppbone)
 	chacalcfunc.GetHipsBoneReq(this, srcbone, dstppbone);
 }
 
-void CModel::CalcModelWorldMatOnLoad()
+void CModel::CalcModelWorldMatOnLoad(CFootRigDlg* srcfootrigdlg)
 {
 	ChaMatrix scalemat;
 	scalemat.SetIdentity();
@@ -21657,10 +21662,17 @@ void CModel::CalcModelWorldMatOnLoad()
 
 	ChaMatrix worldmatonload;
 	worldmatonload.SetIdentity();
-	worldmatonload = ChaMatrixFromSRT(true, true, modelnodemat, &scalemat, &rotmat, &tramat);
+	//worldmatonload = ChaMatrixFromSRT(true, true, modelnodemat, &scalemat, &rotmat, &tramat);
+	worldmatonload = rotmat * tramat;
 
-	//m_worldmat = worldmatonload;
+
+	//2024/09/09
+	//FootRigDlgのUpdate()により設定したmatWorldが補間されて途中までしか動かない不具合を解消
+	if (srcfootrigdlg) {
+		srcfootrigdlg->SetSaveModelWM(this, worldmatonload);
+	}
 	m_matWorld = worldmatonload;
+
 }
 
 CBone* CModel::GetTopBone(bool excludenullflag)//default : excludenullflag = true

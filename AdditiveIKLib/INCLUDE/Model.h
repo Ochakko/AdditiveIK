@@ -53,6 +53,7 @@ class CThreadingRetarget;
 class CThreadingInitMp;
 class CNodeOnLoad;
 class CSChkInView;
+class CFootRigDlg;
 
 typedef struct funcmpparams
 {
@@ -434,8 +435,8 @@ public:
 	void UpdateMatrixFootRigReq(CBone* srcbone,
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
 
-	void UpdateModelWM(ChaMatrix newwm);
-	void UpdateModelWMReq(CBone* srcbone, ChaMatrix newwm, ChaMatrix befwm);
+	void UpdateModelWMFootRig(ChaMatrix newwm);
+	void UpdateModelWMFootRigReq(CBone* srcbone, ChaMatrix newwm, ChaMatrix befwm);
 
 	int ChkInView(int refposindex);
 	//int SwapCurrentMotionPoint();
@@ -2315,7 +2316,7 @@ public: //accesser
 	ChaVector3 GetModelRotation() {
 		return m_modelrotation;
 	};
-	void CalcModelWorldMatOnLoad();
+	void CalcModelWorldMatOnLoad(CFootRigDlg* srcfootrigdlg);
 
 
 	//void SetWorldMatFromCamera(ChaMatrix srcmat){

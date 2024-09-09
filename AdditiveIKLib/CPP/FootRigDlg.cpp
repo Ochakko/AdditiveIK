@@ -1474,6 +1474,11 @@ int CFootRigDlg::Update(CModel* srcmodel)
 		return 0;
 	}
 
+	if (!IsValidModel(srcmodel)) {
+		//srcmodelは削除済
+		return 0;
+	}
+
 	if (!srcmodel->GetLoadedFlag())
 	{
 		return 0;
@@ -1485,6 +1490,14 @@ int CFootRigDlg::Update(CModel* srcmodel)
 
 		FOOTRIGELEM curelem = itrelem->second;
 		if (curelem.IsEnable()) {
+
+
+			CModel* chkgroundmodel = curelem.groundmodel;
+			if (!IsValidModel(chkgroundmodel)) {
+				return 0;//groundmodelは削除済
+			}
+
+
 			ChaVector3 leftjointpos, rightjointpos;
 			ChaVector3 leftgpos, rightgpos;
 			leftjointpos.SetZeroVec3();
@@ -1684,7 +1697,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 			((hipspos.y - highergpos.y) > (hdiffmax + ROUNDINGPOS))) {
 
 			float diffy = highergpos.y - (higherjointpos.y + higheroffset);
-			ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy);
+			ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true);//wmをブレンドする　この処理後に地面に潜っていても　後処理で地面位置まで上げる
 
 			float diffy2 = modelwm3.data[MATI_42] - modelwm.data[MATI_42];
 			modelwm = modelwm3;
@@ -1699,7 +1712,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 			((hipspos.y - lowergpos.y) > (hdiffmax + ROUNDINGPOS))) {
 
 			float diffy = lowergpos.y - (lowerjointpos.y + loweroffset);
-			ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy);
+			ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true);//wmをブレンドする　この処理後に地面に潜っていても　後処理で地面位置まで上げる
 
 			float diffy2 = modelwm3.data[MATI_42] - modelwm.data[MATI_42];
 			modelwm = modelwm3;
@@ -1793,13 +1806,15 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				//高い方の地面の位置に合わせる
 				if (highergpos.y >= lowergpos.y) {
 					float diffy = highergpos.y - (higherjointpos.y + higheroffset);
-					ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy);
+					//ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, false);//wmをブレンドしない　この処理後に地面に潜らないように
+					ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true);//遅めの環境でもカクカクしないために　やっぱりブレンドフラグtrueに
 					modelwm = modelwm3;
 
 				}
 				else {
 					float diffy = lowergpos.y - (lowerjointpos.y + loweroffset);
-					ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy);
+					//ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, false);//wmをブレンドしない　この処理後に地面に潜らないように
+					ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true);//遅めの環境でもカクカクしないために　やっぱりブレンドフラグtrueに
 					modelwm = modelwm3;
 				}
 			}
@@ -1853,13 +1868,25 @@ ChaMatrix CFootRigDlg::GetSaveModelWM(CModel* srcmodel)
 
 bool CFootRigDlg::IsEnableFootRig(CModel* srcmodel)
 {
+	if (!IsValidModel(srcmodel)) {
+		//srcmodelは削除済
+		return false;
+	}
+
 	std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
 	itrelem = m_footrigelem.find(m_model);
 	if (itrelem != m_footrigelem.end()) {
 
 		FOOTRIGELEM curelem = itrelem->second;
 		if (curelem.IsEnable()) {
-			return true;
+			CModel* chkground = curelem.groundmodel;
+			if (!IsValidModel(chkground)) {
+				//groundmodelは削除済
+				return false;
+			}
+			else {
+				return true;
+			}
 		}
 		else {
 			return false;
@@ -1941,10 +1968,11 @@ ChaVector3 CFootRigDlg::GetGroundPos(CModel* groundmodel, ChaVector3 basepos)
 	return retpos;
 }
 
-ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy)
+ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy, bool blendflag)
 {
 	//モデルworldmatのブレンド率　このブレンドをしないと上下に小刻みに揺れる
-	float MODELWMBLEND = 0.30f;
+	//float MODELWMBLEND = 0.30f;
+	float MODELWMBLEND = 0.50f;
 
 	ChaMatrix retmat;
 	retmat.SetIdentity();
@@ -1955,8 +1983,15 @@ ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diff
 
 	ChaMatrix modelwm2 = befwm;
 	modelwm2.data[MATI_42] = modelwm2.data[MATI_42] + diffy;
-	ChaMatrix modelwm3 = BlendSaveModelWM(srcmodel, modelwm2, MODELWMBLEND);//プルプル震えるのを軽減するために１回前とブレンドする
-	srcmodel->UpdateModelWM(modelwm3);
+	ChaMatrix modelwm3;
+	if (blendflag) {
+		//フラグしていのときのみブレンドする
+		modelwm3 = BlendSaveModelWM(srcmodel, modelwm2, MODELWMBLEND);//プルプル震えるのを軽減するために１回前とブレンドする
+	}
+	else {
+		modelwm3 = modelwm2;
+	}
+	srcmodel->UpdateModelWMFootRig(modelwm3);
 	retmat = modelwm3;
 	SetSaveModelWM(srcmodel, retmat);
 
@@ -2057,4 +2092,22 @@ CBone* CFootRigDlg::GetUpdateBone(CModel* srcmodel, CBone* footbone, CUSTOMRIG f
 	//	levelcnt++;
 	//}
 
+}
+
+
+bool CFootRigDlg::IsValidModel(CModel* srcmodel)
+{
+	//modelが削除されている場合はfalseを返す
+	if (!m_chascene || !srcmodel) {
+		return false;
+	}
+
+	int modelindex = m_chascene->FindModelIndex(srcmodel);
+	if (modelindex >= 0) {
+		return true;
+	}
+	else {
+		//srcmodelは削除されていた
+		return false;
+	}
 }

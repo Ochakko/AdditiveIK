@@ -19154,9 +19154,10 @@ int OpenChaFile()
 
 
 
-
+	
 	CChaFile chafile;
 	int ret = chafile.LoadChaFile(g_limitdegflag, g_tmpmqopath,
+		&s_footrigdlg,
 		OpenFBXFile, OpenREFile, OpenImpFile, OpenGcoFile,
 		OnREMenu, OnRgdMenu, OnRgdMorphMenu, OnImpMenu,
 		s_grassElemVec);
@@ -41277,7 +41278,7 @@ int SetModelWorldMat()
 				s_model->SetModelPosition(tmppos);
 			}
 			s_model->SetModelRotation(tmprot);
-			s_model->CalcModelWorldMatOnLoad();
+			s_model->CalcModelWorldMatOnLoad(&s_footrigdlg);
 		}
 		else {
 			if (s_removegrassflag == false) {
