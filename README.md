@@ -255,7 +255,7 @@ Smooth平滑化<br>
 
 [OXの風景 2024/08/26](https://youtu.be/HZxVflJui40 "Usage example9")<br>
 
-[両足自動接地＋物理シミュ 2024/09/07](https://youtu.be/s5FfdE8ct-g "Usage example10")<br>
+[歩きの足を自動で曲げて階段上り 2024/09/09](https://youtu.be/IV9gZEhIi5E "Usage example10")<br>
 <br>
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")

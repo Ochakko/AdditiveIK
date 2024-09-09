@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/09/09
-　AdditiveIK 1.0.0.32 RC2(リリース候補2)
+　AdditiveIK 1.0.0.32 RC3(リリース候補3)
 　　1.0.0.31からの変更点
 　　　FootRig(フットリグ)機能追加
 　　　　モーションしている足を自動的に曲げて地面に接地
@@ -49,8 +49,9 @@ https://github.com/Ochakko/AdditiveIK
 
 
 　ショートムービー
-　　両足自動接地＋物理シミュ(モーキャプ編集ツール)
-　　　https://youtu.be/s5FfdE8ct-g
+　　歩きの足を自動で曲げて階段上り
+　　　https://youtu.be/IV9gZEhIi5E
+
 　　OXの風景
 　　　https://youtu.be/HZxVflJui40
 
@@ -66,6 +67,9 @@ https://github.com/Ochakko/AdditiveIK
 　　　UpdateModelWMFootRig()内でbtmatもセットするように修正
 　　FootRigのモデル全体位置のブレンド率を調整
 
+　RC3:
+　　ショートムービーを追加して古いリンクを変更
+　　README.mdのショートムービーリンクも更新
 
 
 
