@@ -25875,7 +25875,8 @@ int OnFrameTimeLineWnd()
 			if (s_model) {//2024/06/17 カメラモーションだけの場合もある
 				MOTINFO curmi = GetEditTargetMotInfo();
 				if (curmi.motid > 0) {
-					s_buttonselectend = s_model->GetCurMotInfo().frameleng - 1.0;
+					//s_buttonselectend = s_model->GetCurMotInfo().frameleng - 1.0;//2024/09/10コメントアウト
+					s_buttonselectend = curmi.frameleng - 1.0;//2024/09/10 カメラモーション編集中はカメラのモーション長
 				}
 				else {
 					s_buttonselectend = s_buttonselectstart;
@@ -40670,9 +40671,11 @@ int ClearLimitedWM(CModel* srcmodel)
 	}
 
 	if (srcmodel && srcmodel->ExistCurrentMotion()) {
-		int curmotid = srcmodel->GetCurrentMotID();
-		MOTINFO curmi = GetEditTargetMotInfo();
+		//int curmotid = srcmodel->GetCurrentMotID();
+		//MOTINFO curmi = GetEditTargetMotInfo();//2024/09/10コメントアウト
+		MOTINFO curmi = srcmodel->GetCurMotInfo();//2024/09/10 ClearLimitedWMはボーンモーションに対して処理を行う
 		if (curmi.motid > 0) {
+			int curmotid = curmi.motid;
 			double frameleng = curmi.frameleng;
 			double curframe;
 			for (curframe = 0.0; curframe < frameleng; curframe += 1.0) {

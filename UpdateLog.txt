@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/09/09
-　AdditiveIK 1.0.0.32 RC3(リリース候補3)
+　AdditiveIK 1.0.0.32 RC4(リリース候補4)
 　　1.0.0.31からの変更点
 　　　FootRig(フットリグ)機能追加
 　　　　モーションしている足を自動的に曲げて地面に接地
@@ -24,7 +24,9 @@ https://github.com/Ochakko/AdditiveIK
 　　　不具合修正
 　　　　カメラのパン操作修正
 　　　　　パンの際にAlwaysLockがオフにならない症状が出ていたので修正
-
+　　　　カメラグラフモードにて　最終フレームまで選択ボタン　を押した際に最後まで選択されないことがある不具合を修正
+　　　　　プレイヤーボタンの　｜｜ボタンを押したときの処理の修正
+　　　　　
 　　　既知の問題に追記
 　　　　Documents/TroubleShooting/00_KnownIssue.docx
 
@@ -46,11 +48,19 @@ https://github.com/Ochakko/AdditiveIK
 　　Model'sPosAndDir設定はchaファイルにモデルごとにテキスト出力されている.
 　　地面より低い位置からスタートするとしゃがむ姿勢になったり地面の下にもぐることがある.
 
-
+　ヒント
+　　FootRigは地面指定したモデルとレイの当たり判定を使用しています
+　　通常のゲームにおいては　地面として指定するのは　非表示のローポリデータです
+　　表示用の詳細モデルの上を歩かせると　ショートムービー[歩きの足を自動で曲げて階段上り]のように
+　　階段の隙間に落っこちて動きがガクガクすることがあります
+　　
 
 　ショートムービー
 　　歩きの足を自動で曲げて階段上り
 　　　https://youtu.be/IV9gZEhIi5E
+
+　　FootRigで接地して歩く
+　　　https://youtu.be/TJjTwD0gioI
 
 　　OXの風景
 　　　https://youtu.be/HZxVflJui40
@@ -71,6 +81,10 @@ https://github.com/Ochakko/AdditiveIK
 　　ショートムービーを追加して古いリンクを変更
 　　README.mdのショートムービーリンクも更新
 
+　RC4:
+　　不具合修正
+　　　プレイヤーボタンの　｜｜ボタンを押したときの処理の修正
+　　ヒント追記
 
 
 
