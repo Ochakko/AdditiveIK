@@ -2,8 +2,8 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
-2024/09/09
-　AdditiveIK 1.0.0.32 RC4(リリース候補4)
+2024/09/10
+　AdditiveIK 1.0.0.32 release
 　　1.0.0.31からの変更点
 　　　FootRig(フットリグ)機能追加
 　　　　モーションしている足を自動的に曲げて地面に接地
@@ -85,6 +85,9 @@ https://github.com/Ochakko/AdditiveIK
 　　不具合修正
 　　　プレイヤーボタンの　｜｜ボタンを押したときの処理の修正
 　　ヒント追記
+　release:
+　　Documents/FootRig_TechSpec.docxのFootRig仕様書に使用上のヒントを追記してバージョン1.0.0とした.
+　　Documents/TroubleShooting/00_KnownIssue.docxに既知の問題14追記
 
 
 
