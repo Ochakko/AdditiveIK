@@ -1582,6 +1582,11 @@ int ChaScene::DelModel(int srcmodelindex, std::vector<CGrassElem*>& grasselemvec
 
 			CBone::OnDelModel(delmodel);
 
+
+			if (m_footrigdlg) {
+				m_footrigdlg->OnDelModel(delmodel);//2024/09/12
+			}
+
 			//FbxScene* pscene = delmodel->GetScene();
 			//if (pscene){
 			//	pscene->Destroy();
@@ -1618,6 +1623,12 @@ int ChaScene::DelAllModel()
 	if (mdlnum <= 0) {
 		return 0;
 	}
+
+
+	if (m_footrigdlg) {
+		m_footrigdlg->OnDellAllModel();//2024/09/12
+	}
+
 
 	vector<MODELELEM>::iterator itrmodel;
 	for (itrmodel = m_modelindex.begin(); itrmodel != m_modelindex.end(); itrmodel++) {

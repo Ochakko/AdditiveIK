@@ -59,6 +59,8 @@ public:
 	void SetSaveModelWM(CModel* srcmodel, ChaMatrix srcmat);
 
 	bool IsEnableFootRig(CModel* srcmodel);
+	int OnDelModel(CModel* srcmodel);
+	int OnDellAllModel();
 
 private:
 	int Dlg2Params();

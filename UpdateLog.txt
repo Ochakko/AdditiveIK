@@ -1,6 +1,11 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2024/09/12
+　モデル削除時にFootRigDlgのCModelをキーにするデータも消すように修正
+　　不要データで重くならないように削除
+
+
 
 2024/09/10
 　AdditiveIK 1.0.0.32 release

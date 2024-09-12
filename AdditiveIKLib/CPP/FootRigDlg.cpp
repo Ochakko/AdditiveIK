@@ -2111,3 +2111,35 @@ bool CFootRigDlg::IsValidModel(CModel* srcmodel)
 		return false;
 	}
 }
+
+int CFootRigDlg::OnDelModel(CModel* srcmodel)
+{
+	if (!srcmodel) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+	itrelem = m_footrigelem.find(srcmodel);
+	if (itrelem != m_footrigelem.end()) {
+		m_footrigelem.erase(itrelem);
+	}
+
+	std::map<CModel*, ChaMatrix>::iterator itrwm;
+	itrwm = m_savemodelwm.find(srcmodel);
+	if (itrwm != m_savemodelwm.end()) {
+		m_savemodelwm.erase(itrwm);
+	}
+
+
+
+	return 0;
+}
+int CFootRigDlg::OnDellAllModel()
+{
+	m_footrigelem.clear();
+	m_savemodelwm.clear();
+
+	return 0;
+}
+
