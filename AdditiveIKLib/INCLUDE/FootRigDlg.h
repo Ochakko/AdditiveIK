@@ -55,7 +55,7 @@ public:
 	int SaveFootRigFile(WCHAR* srcprojectdir, WCHAR* srcprojectname, ChaScene* srcchascene);
 	int LoadFootRigFile(WCHAR* savechadir, WCHAR* saveprojname);
 
-	int Update();
+	int Update(bool limitdegflag);
 	void SetSaveModelWM(CModel* srcmodel, ChaMatrix srcmat);
 
 	bool IsEnableFootRig(CModel* srcmodel);
@@ -68,11 +68,11 @@ private:
 	int ParamsToDlg_RightRig();
 
 	ChaMatrix BlendSaveModelWM(CModel* srcmodel, ChaMatrix srcmat, float blendrate);
-	ChaMatrix GetJointWM(CModel* srcmodel, CBone* srcbone, bool multmodelwm);
-	ChaVector3 GetJointPos(CModel* srcmodel, CBone* srcbone);
+	ChaMatrix GetJointWM(bool limitdegflag, CModel* srcmodel, CBone* srcbone, bool multmodelwm);
+	ChaVector3 GetJointPos(bool limitdegflag, CModel* srcmodel, CBone* srcbone);
 	ChaVector3 GetGroundPos(CModel* groundmodel, ChaVector3 basepos);
 	ChaMatrix ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy, bool blendflag);
-	ChaVector3 RigControlFootRig(CModel* srcmodel, CBone* footbone, CBone* updatebone, double curframe,
+	ChaVector3 RigControlFootRig(bool limitdegflag, CModel* srcmodel, CBone* footbone, CBone* updatebone, double curframe,
 		ChaVector3 bonepos,
 		int rigdir, float posoffset, float rigstep, int maxcalccount, 
 		CUSTOMRIG footrig, int rignum,
@@ -83,9 +83,9 @@ private:
 	bool IsValidModel(CModel* srcmodel);//modelが削除されている場合はfalseを返す
 
 
-	int Update(CModel* srcmodel);
+	int Update(bool limitdegflag, CModel* srcmodel);
 	void FootRig(bool secondcalling,
-		CModel* srcmodel,
+		bool limitdegflag, CModel* srcmodel,
 		FOOTRIGELEM curelem,
 		CBone* lowerfoot, CBone* higherfoot,
 		CBone* lowerupdatebone, CBone* higherupdatebone,

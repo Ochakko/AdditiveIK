@@ -2154,7 +2154,8 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, int wallscraping
 
 		//if (g_limitdegflag == true) {
 		if (!srcbone->IsNullAndChildIsCamera() && 
-			(limitdegflag == true) && (srcbone->GetBtForce() == 0)) {//2023/01/28 物理シミュは　自前では制限しない
+			//(limitdegflag == true) && (srcbone->GetBtForce() == 0)) {//2023/01/28 物理シミュは　自前では制限しない
+			(limitdegflag == true)) {//2024/09/13 物理シミュも　自前で制限する
 			ismovable = srcbone->ChkMovableEul(neweul);
 		}
 		else {
@@ -2183,7 +2184,7 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, int wallscraping
 					//　遊び付きリミテッドIK
 					//############################################
 					ChaVector3 limiteul;
-					bool limitdegOnLimitEul1 = false;//2023/02/07 befeulはunlimited. 何回転もする場合にオーバー１８０度の角度で制限するために.
+					//bool limitdegOnLimitEul1 = false;//2023/02/07 befeulはunlimited. 何回転もする場合にオーバー１８０度の角度で制限するために.
 					//limiteul = LimitEul(neweul, GetBefEul(limitdegOnLimitEul1, srcmotid, roundingframe));
 					limiteul = srcbone->LimitEul(neweul);
 					int inittraflag0 = 0;
@@ -2194,6 +2195,9 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, int wallscraping
 					if (limitdegflag == true) {
 						curmp->SetCalcLimitedWM(2);
 					}
+
+					ismovable = 1;//2024/09/13 壁すりでも動けば1をセット
+
 				}
 				else {
 					//if (g_underIKRot == true) {
@@ -2499,7 +2503,7 @@ int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag,
 			//	//　遊び付きリミテッドIK
 			//	//############################################
 			ChaVector3 limiteul;
-			limiteul = srcbone->LimitEul(neweul);
+			limiteul = srcbone->LimitEul(neweul);//壁すり
 			CQuaternion limitq;
 			limitq.SetRotationXYZ(&axisq, limiteul);
 			CQuaternion saveq;

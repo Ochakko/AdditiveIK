@@ -1450,14 +1450,23 @@ int CFootRigDlg::LoadFootRigFile(WCHAR* savechadir, WCHAR* saveprojname)
 	return 0;
 }
 
-int CFootRigDlg::Update()
+int CFootRigDlg::Update(bool limitdegflag)
 {
+	//###########################################################################
+	//2024/09/13 LimitEul角度制限のオンオフに対応　制限オンの時には強制的に壁すりIKもオン
+	//しかし、limiteulオフで計算した方が綺麗に動く
+	//limiteulオンで足を上げると足を戻す動作の変化率が大きくなり(速くなり)綺麗にはみえなかった
+	//Rigの動作範囲は確認可能であり、FootRigの設定で制限した方が綺麗に動くのでそうすることに
+	//よって、FootRigに関しては、Update関数内でlimitdegflag = falseに上書きして使用する
+	//###########################################################################
+	limitdegflag = false;
+
 	int result = 0;
 	std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
 	for (itrelem = m_footrigelem.begin(); itrelem != m_footrigelem.end(); itrelem++) {
 		CModel* curmodel = itrelem->first;
 		if (curmodel) {
-			result += Update(curmodel);
+			result += Update(limitdegflag, curmodel);
 			if (result != 0) {
 				_ASSERT(0);
 			}
@@ -1468,8 +1477,18 @@ int CFootRigDlg::Update()
 }
 
 
-int CFootRigDlg::Update(CModel* srcmodel)
+int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 {
+	//#####################################################################################
+	//2024/09/13 LimitEul角度制限のオンオフに対応　制限オンの時には強制的に壁すりIKもオン
+	//しかし、limiteulオフで計算した方が綺麗に動く
+	//limiteulオンで足を上げると足を戻す動作の変化率が大きくなり(速くなり)綺麗にはみえなかった
+	//Rigの動作範囲は確認可能であり、FootRigの設定で制限した方が綺麗に動くのでそうすることに
+	//角度制限に対応したが、FootRigに関してはUpdate関数内でlimitdegflag = falseに上書きして使用する
+	//#####################################################################################
+	limitdegflag = false;
+
+
 	if (!srcmodel) {
 		return 0;
 	}
@@ -1506,7 +1525,7 @@ int CFootRigDlg::Update(CModel* srcmodel)
 			rightgpos.SetZeroVec3();
 
 			if (curelem.leftfootbone) {
-				leftjointpos = GetJointPos(srcmodel, curelem.leftfootbone);
+				leftjointpos = GetJointPos(limitdegflag, srcmodel, curelem.leftfootbone);
 
 				if (curelem.groundmodel) {
 					leftgpos = GetGroundPos(curelem.groundmodel, leftjointpos);
@@ -1514,7 +1533,7 @@ int CFootRigDlg::Update(CModel* srcmodel)
 			}
 
 			if (curelem.rightfootbone) {
-				rightjointpos = GetJointPos(srcmodel, curelem.rightfootbone);
+				rightjointpos = GetJointPos(limitdegflag, srcmodel, curelem.rightfootbone);
 
 				if (curelem.groundmodel) {
 					rightgpos = GetGroundPos(curelem.groundmodel, rightjointpos);
@@ -1580,7 +1599,7 @@ int CFootRigDlg::Update(CModel* srcmodel)
 
 
 				FootRig(false,
-					srcmodel,
+					limitdegflag, srcmodel,
 					curelem,
 					lowerfoot, higherfoot,
 					lowerupdatebone, higherupdatebone,
@@ -1596,7 +1615,7 @@ int CFootRigDlg::Update(CModel* srcmodel)
 
 			if ((srcmodel == m_model) && GetVisible()) {
 				if (m_leftinfolabel) {
-					ChaVector3 newleftjointpos = GetJointPos(srcmodel, curelem.leftfootbone);
+					ChaVector3 newleftjointpos = GetJointPos(limitdegflag, srcmodel, curelem.leftfootbone);
 
 					WCHAR strlabel[MAX_PATH] = { 0L };
 					swprintf_s(strlabel, MAX_PATH, L"LeftFoot(%.2f, %.2f), LeftGround %.2f",
@@ -1604,7 +1623,7 @@ int CFootRigDlg::Update(CModel* srcmodel)
 					m_leftinfolabel->setName(strlabel);
 				}
 				if (m_rightinfolabel) {
-					ChaVector3 newrightjointpos = GetJointPos(srcmodel, curelem.rightfootbone);
+					ChaVector3 newrightjointpos = GetJointPos(limitdegflag, srcmodel, curelem.rightfootbone);
 
 					WCHAR strlabel[MAX_PATH] = { 0L };
 					swprintf_s(strlabel, MAX_PATH, L"RightFoot(%.2f, %.2f), RightGround %.2f",
@@ -1637,7 +1656,7 @@ int CFootRigDlg::Update(CModel* srcmodel)
 
 
 void CFootRigDlg::FootRig(bool secondcalling,
-	CModel* srcmodel,
+	bool limitdegflag, CModel* srcmodel,
 	FOOTRIGELEM curelem,
 	CBone* lowerfoot, CBone* higherfoot,
 	CBone* lowerupdatebone, CBone* higherupdatebone,
@@ -1677,7 +1696,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 	CBone* hipsjoint = nullptr;
 	srcmodel->GetHipsBoneReq(srcmodel->GetTopBone(), &hipsjoint);
 	if (hipsjoint) {
-		ChaVector3 hipspos = GetJointPos(srcmodel, hipsjoint);
+		ChaVector3 hipspos = GetJointPos(limitdegflag, srcmodel, hipsjoint);
 
 		CBone* lowerendjoint = lowerfoot;
 		while (lowerendjoint->GetChild(false)) {
@@ -1733,7 +1752,8 @@ void CFootRigDlg::FootRig(bool secondcalling,
 
 			//低い方の足をFootRigで曲げて接地
 			ChaVector3 lowernewpos;
-			lowernewpos = RigControlFootRig(srcmodel, lowerfoot, lowerupdatebone, curframe,
+			lowernewpos = RigControlFootRig(limitdegflag, srcmodel, 
+				lowerfoot, lowerupdatebone, curframe,
 				lowerjointpos,
 				lowerdir, loweroffset, curelem.rigstep, curelem.maxcalccount, 
 				lowerrig, lowerrignum,
@@ -1753,7 +1773,8 @@ void CFootRigDlg::FootRig(bool secondcalling,
 
 			//高い方の足をFootRigで曲げて接地
 			ChaVector3 highernewpos;
-			highernewpos = RigControlFootRig(srcmodel, higherfoot, higherupdatebone, curframe,
+			highernewpos = RigControlFootRig(limitdegflag, srcmodel, 
+				higherfoot, higherupdatebone, curframe,
 				higherjointpos,
 				higherdir, higheroffset, curelem.rigstep, curelem.maxcalccount, 
 				higherrig, higherrignum,
@@ -1775,7 +1796,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				//足が潜っていた場合　２回目の呼び出しをする
 				if (highergpos.y >= lowergpos.y) {
 					FootRig(true,//secondcalling !!!!
-						srcmodel,
+						limitdegflag, srcmodel,
 						curelem,
 						lowerfoot, higherfoot,
 						lowerupdatebone, higherupdatebone,
@@ -1789,7 +1810,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				else {
 					//高低入れ替えて呼び出し
 					FootRig(true,//secondcalling !!!!
-						srcmodel,
+						limitdegflag, srcmodel,
 						curelem,
 						higherfoot, lowerfoot,
 						higherupdatebone, lowerupdatebone,
@@ -1909,7 +1930,7 @@ ChaMatrix CFootRigDlg::BlendSaveModelWM(CModel* srcmodel, ChaMatrix srcmat, floa
 		return srcmat;
 	}
 }
-ChaMatrix CFootRigDlg::GetJointWM(CModel* srcmodel, CBone* srcbone, bool multmodelwm)
+ChaMatrix CFootRigDlg::GetJointWM(bool limitdegflag, CModel* srcmodel, CBone* srcbone, bool multmodelwm)
 {
 	bool calcslotflag = true;
 	ChaMatrix retmat;
@@ -1921,7 +1942,7 @@ ChaMatrix CFootRigDlg::GetJointWM(CModel* srcmodel, CBone* srcbone, bool multmod
 
 	int curmotid = srcmodel->GetCurrentMotID();
 	double curframe = RoundingTime(srcmodel->GetCurrentFrame());
-	ChaMatrix curwm = srcbone->GetWorldMat(false, curmotid, curframe, 0);
+	ChaMatrix curwm = srcbone->GetWorldMat(limitdegflag, curmotid, curframe, 0);
 	ChaMatrix modelwm = srcmodel->GetWorldMat();
 	if (multmodelwm) {
 		retmat = curwm * modelwm;
@@ -1933,7 +1954,7 @@ ChaMatrix CFootRigDlg::GetJointWM(CModel* srcmodel, CBone* srcbone, bool multmod
 	return retmat;
 }
 
-ChaVector3 CFootRigDlg::GetJointPos(CModel* srcmodel, CBone* srcbone)
+ChaVector3 CFootRigDlg::GetJointPos(bool limitdegflag, CModel* srcmodel, CBone* srcbone)
 {
 	bool calcslotflag = true;
 	ChaVector3 retpos;
@@ -1944,7 +1965,7 @@ ChaVector3 CFootRigDlg::GetJointPos(CModel* srcmodel, CBone* srcbone)
 	}
 
 	ChaVector3 jointfpos = srcbone->GetJointFPos();
-	ChaMatrix transmat = GetJointWM(srcmodel, srcbone, true);
+	ChaMatrix transmat = GetJointWM(limitdegflag, srcmodel, srcbone, true);
 	ChaVector3TransformCoord(&retpos, &jointfpos, &transmat);
 
 	return retpos;
@@ -1998,7 +2019,8 @@ ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diff
 	return retmat;
 }
 
-ChaVector3 CFootRigDlg::RigControlFootRig(CModel* srcmodel, CBone* footbone, CBone* updatebone, double curframe,
+ChaVector3 CFootRigDlg::RigControlFootRig(bool limitdegflag, CModel* srcmodel, 
+	CBone* footbone, CBone* updatebone, double curframe,
 	ChaVector3 bonepos,
 	int rigdir, float posoffset, float rigstep, int maxcalccount, 
 	CUSTOMRIG footrig, int rignum,
@@ -2022,10 +2044,17 @@ ChaVector3 CFootRigDlg::RigControlFootRig(CModel* srcmodel, CBone* footbone, CBo
 	//while (((lowernewpos.y + loweroffset) < lowergpos.y) && (dbgcnt <= 50)) {//円を描くように下がってから上がることが多い　回数は多めに
 	while (((newbonepos.y + posoffset) < (pgroundpos->y - ROUNDINGPOS)) && (calccount < maxcount)) {//円を描くように下がってから上がることが多い　回数は多めに
 		
-		int wallscrapingikflag = 0;//limitdegflag=true, wallscrapingikflag=1にしてテスト予定
-
+		int wallscrapingikflag = 1;
+	
+		//#####################################################################################
+		//2024/09/13 LimitEul角度制限のオンオフに対応　制限オンの時には強制的に壁すりIKもオン
+		//しかし、limiteulオフで計算した方が綺麗に動く
+		//limiteulオンで足を上げると足を戻す動作の変化率が大きくなり(速くなり)綺麗にはみえなかった
+		//Rigの動作範囲は確認可能であり、FootRigの設定で制限した方が綺麗に動くのでそうすることに
+		//角度制限に対応したが、FootRigに関してはUpdate関数内でlimitdegflag = falseに上書きして使用する
+		//#####################################################################################
 		int notmovecount = srcmodel->RigControlFootRig(
-			false,//リグの指定と高さの閾値でリミット済とする　limitdegflag = trueで処理すると可動フレームで止まるのでパタパタしすぎる　ブレンドしてもパタパタし過ぎる
+			limitdegflag,
 			wallscrapingikflag,
 			0, curframe,
 			footbone->GetBoneNo(),
@@ -2033,21 +2062,22 @@ ChaVector3 CFootRigDlg::RigControlFootRig(CModel* srcmodel, CBone* footbone, CBo
 			rigstep,
 			footrig, 0);
 
-		//if ((g_previewFlag == 4) || (g_previewFlag == 5)) {
+		////if ((g_previewFlag == 4) || (g_previewFlag == 5)) {
 		//if (g_limitdegflag) {
 		//	srcmodel->BlendSaveBoneMotionReq(updatebone, BONEMOTIONBLEND);//プルプル震え防止のための１回前とのブレンド
 		//}
 
-		srcmodel->UpdateMatrixFootRigReq(updatebone, &modelwm, &matView, &matProj);//角度制限あり無し両方に　現状の姿勢を格納
-		newbonepos = GetJointPos(srcmodel, footbone);
+		srcmodel->UpdateMatrixFootRigReq(limitdegflag, updatebone, &modelwm, &matView, &matProj);//角度制限あり無し両方に　現状の姿勢を格納
+		newbonepos = GetJointPos(limitdegflag, srcmodel, footbone);
 		*pgroundpos = GetGroundPos(groundmodel, newbonepos);
 
 		calccount++;
 
-		if ((notmovecount < 0) || (notmovecount >= rignum)) {
-			//エラーが起きた場合　または　角度制限機能により１つのジョイントも回転しなかった場合は処理を抜ける
-			break;
-		}
+		//2024/09/13 壁すりをオンにしたので次のif文はコメントアウト
+		//if ((notmovecount < 0) || (notmovecount >= rignum)) {
+		//	//エラーが起きた場合　または　角度制限機能により１つのジョイントも回転しなかった場合は処理を抜ける
+		//	break;
+		//}
 	}
 
 	return newbonepos;

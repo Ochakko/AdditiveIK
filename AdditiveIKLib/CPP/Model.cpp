@@ -2533,7 +2533,7 @@ void CModel::ResetFootRigUpdated()
 }
 
 
-void CModel::UpdateMatrixFootRigReq(CBone* srcbone,
+void CModel::UpdateMatrixFootRigReq(bool limitdegflag, CBone* srcbone,
 	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat)
 {
 
@@ -2544,14 +2544,14 @@ void CModel::UpdateMatrixFootRigReq(CBone* srcbone,
 		if (srcbone->IsSkeleton()) {
 			int srcmotid = GetCurrentMotID();
 			double srcframe = RoundingTime(GetCurrentFrame());
-			srcbone->UpdateMatrixFootRig(srcmotid, srcframe, wmat, vmat, pmat);
+			srcbone->UpdateMatrixFootRig(limitdegflag, srcmotid, srcframe, wmat, vmat, pmat);
 		}
 
 		if (srcbone->GetChild(false)) {
-			UpdateMatrixFootRigReq(srcbone->GetChild(false), wmat, vmat, pmat);
+			UpdateMatrixFootRigReq(limitdegflag, srcbone->GetChild(false), wmat, vmat, pmat);
 		}
 		if (srcbone->GetBrother(false)) {
-			UpdateMatrixFootRigReq(srcbone->GetBrother(false), wmat, vmat, pmat);
+			UpdateMatrixFootRigReq(limitdegflag, srcbone->GetBrother(false), wmat, vmat, pmat);
 		}
 	}
 

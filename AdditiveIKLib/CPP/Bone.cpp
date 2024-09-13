@@ -974,7 +974,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 }
 
 
-int CBone::UpdateMatrixFootRig(int srcmotid, double srcframe,
+int CBone::UpdateMatrixFootRig(bool limitdegflag, int srcmotid, double srcframe,
 	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat)
 {
 
@@ -982,8 +982,7 @@ int CBone::UpdateMatrixFootRig(int srcmotid, double srcframe,
 	//角度制限あり無し両方に　現状の姿勢を格納
 	//リグの指定と高さの閾値でリミット済とする　
 	//limitdegflag = trueで処理すると可動フレームで止まるのでパタパタしすぎる　ブレンドしてもパタパタし過ぎる
-
-	bool limitdegflag = false;
+	//bool limitdegflag = false;//2024/09/13 引数化　制限してかつパタパタしないようにデバッグ
 	
 	//######################################
 

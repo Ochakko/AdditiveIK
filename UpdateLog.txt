@@ -7,6 +7,17 @@ https://github.com/Ochakko/AdditiveIK
 
 　README.mdに1.0.0.32のスクリーンショット追加
 
+　FootRigの角度制限をもう一度試したが以下の理由で採用せしない、仕組みだけ残しておく
+　　LimitEul角度制限のオンオフに対応　制限オンの時には強制的に壁すりIKもオン
+　　しかし、limiteulオフで計算した方が綺麗に動く
+　　limiteulオンで足を上げると足を戻す動作の変化が大きくなり(速くなり)綺麗にはみえなかった
+　　Rigの動作範囲は確認可能であり、FootRigの設定で制限した方が綺麗に動くのでそうすることに
+　　角度制限に対応したが、FootRigに関してはUpdate関数内でlimitdegflag = falseに上書きして使用する
+
+　LimitEulオン時の物理シミュに関わる修正
+　　SetWorldMat()内において物理シミュ中もChkMovableEul()で制限角度チェックをするように修正
+　　物理に対して自前の角度制限を行っていなかった昔のif文が残っていたので修正
+
 
 
 

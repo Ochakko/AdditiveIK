@@ -874,7 +874,7 @@ void ChaScene::WaitForUpdateMatrixModels()
 			}
 		}
 
-		m_footrigdlg->Update();
+		m_footrigdlg->Update(g_limitdegflag);
 	}
 
 
@@ -1988,7 +1988,7 @@ int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe,
 	//previewFlag 4 or 5の場合のFootRig
 	//BtSimu以外のときのFootRigはWaitForUpdateMatrixModels()から呼ぶ
 	if (m_footrigdlg) {
-		m_footrigdlg->Update();
+		m_footrigdlg->Update(g_limitdegflag);
 	}
 
 	bool secondcall = false;
