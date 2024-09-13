@@ -486,7 +486,7 @@ int ChaCalcFunc::GetBefNextMP(CBone* srcbone, int srcmotid, double srcframe, CMo
 	return 0;
 }
 
-int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, CEditRange* erptr,
+int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 	int keyno, CBone* rotbone, CBone* parentbone,
 	int srcmotid, double curframe, double startframe, double applyframe,
 	CQuaternion rotq0, bool keynum1flag, bool postflag, bool fromiktarget)
@@ -531,7 +531,7 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, CEditRange
 		qForRot.Slerp2(endq, 0.080f, &curqForRot);
 		curqForHipsRot = curqForRot;
 		bool infooutflag = !underfootrig;
-		ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
+		ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag, 0, RoundingTime(startframe),
 			infooutflag, 0, srcmotid, curframe, curqForRot, curqForHipsRot, fromiktarget);
 
 		////bool infooutflag = true;
@@ -550,11 +550,11 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, CEditRange
 		//	&qForRot, &qForHipsRot);
 
 		bool infooutflag = !underfootrig;
-		ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
+		ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag, 0, RoundingTime(startframe),
 			infooutflag, 0, srcmotid, curframe, qForRot, qForHipsRot, fromiktarget);
 
 		if ((fromiktarget != true) && (postflag != true) && erptr) {
-			IKTargetVec(srcmodel, limitdegflag, erptr, srcmotid, curframe, postflag);
+			IKTargetVec(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcmotid, curframe, postflag);
 		}
 	}
 	else {
@@ -600,11 +600,11 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, CEditRange
 			qForRot.Slerp2(endq, 1.0 - changerate, &curqForRot);
 			qForHipsRot.Slerp2(endq, 1.0 - changerate, &curqForHipsRot);
 
-			ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
+			ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag, 0, RoundingTime(startframe),
 				infooutflag, 0, srcmotid, curframe, curqForRot, curqForHipsRot, fromiktarget);
 		}
 		else {
-			ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
+			ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag, 0, RoundingTime(startframe),
 				infooutflag, 0, srcmotid, curframe, qForRot, qForHipsRot, fromiktarget);
 		}
 		//}
@@ -620,7 +620,7 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, CEditRange
 
 
 		if ((fromiktarget != true) && (postflag != true) && erptr) {
-			IKTargetVec(srcmodel, limitdegflag, erptr, srcmotid, curframe, postflag);
+			IKTargetVec(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcmotid, curframe, postflag);
 		}
 	}
 
@@ -777,7 +777,8 @@ bool ChaCalcFunc::CalcAxisAndRotForIKRotateAxis(CModel* srcmodel, int limitdegfl
 }
 
 
-int ChaCalcFunc::RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int* onlycheckptr,
+int ChaCalcFunc::RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int wallscrapingikflag, 
+	int* onlycheckptr, 
 	double srcstartframe, bool infooutflag, CBone* parentbone, int srcmotid, double srcframe,
 	CQuaternion qForRot, CQuaternion qForHipsRot, bool fromiktarget)
 {
@@ -921,7 +922,7 @@ int ChaCalcFunc::RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int* onlyc
 		if (onlycheckptr) {
 			bool directsetflag = false;
 			int onlycheckflag = 1;
-			ismovable = srcbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, 0,
+			ismovable = srcbone->SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, 0,
 				srcmotid, roundingframe, newwm, onlycheckflag, fromiktarget);
 			*onlycheckptr = ismovable;
 			//if (ismovable == 0) {
@@ -933,7 +934,7 @@ int ChaCalcFunc::RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int* onlyc
 			bool directsetflag = false;
 			int onlycheckflag = 0;
 			int setchildflag = 1;
-			ismovable = srcbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, setchildflag,
+			ismovable = srcbone->SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, setchildflag,
 				srcmotid, roundingframe, newwm, onlycheckflag, fromiktarget);
 		}
 		currentnewwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
@@ -995,7 +996,7 @@ int ChaCalcFunc::RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int* onlyc
 		if (onlycheckptr) {
 			bool directsetflag = false;
 			int onlycheckflag = 1;
-			ismovable = srcbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, 0,
+			ismovable = srcbone->SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, 0,
 				srcmotid, roundingframe, newwm, onlycheckflag, fromiktarget);
 			*onlycheckptr = ismovable;
 			//if (ismovable == 0) {
@@ -1011,7 +1012,7 @@ int ChaCalcFunc::RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int* onlyc
 			bool directsetflag = false;
 			int onlycheckflag = 0;
 			int setchildflag = 1;//2023/02/12 ２段目の前に再帰する必要
-			ismovable = srcbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, setchildflag,
+			ismovable = srcbone->SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, setchildflag,
 				srcmotid, roundingframe, newwm, onlycheckflag, fromiktarget);
 		}
 		currentnewwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
@@ -1064,7 +1065,7 @@ int ChaCalcFunc::RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int* onlyc
 			bool directsetflag2 = true;
 			int setchildflag2 = 1;//2023/02/12
 			int onlycheck2 = 0;
-			srcbone->SetWorldMat(limitdegflag, directsetflag2, infooutflag, setchildflag2,
+			srcbone->SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag2, infooutflag, setchildflag2,
 				srcmotid, roundingframe, newwm, onlycheck2, fromiktarget);
 			currentnewwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 		}
@@ -1090,7 +1091,8 @@ int ChaCalcFunc::RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int* onlyc
 	return ismovable;
 }
 
-int ChaCalcFunc::IKTargetVec(CModel* srcmodel, bool limitdegflag, CEditRange* erptr, int srcmotid, double srcframe, bool postflag)
+int ChaCalcFunc::IKTargetVec(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, 
+	CEditRange* erptr, int srcmotid, double srcframe, bool postflag)
 {
 	if (!srcmodel || !erptr) {
 		_ASSERT(0);
@@ -1108,7 +1110,7 @@ int ChaCalcFunc::IKTargetVec(CModel* srcmodel, bool limitdegflag, CEditRange* er
 			const int calccountmax = 30;
 			for (calccount = 0; calccount < calccountmax; calccount++) {
 				int maxlevel = 0;
-				IKRotateForIKTarget(srcmodel, limitdegflag, erptr, srcbone->GetBoneNo(), srcmotid,
+				IKRotateForIKTarget(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcbone->GetBoneNo(), srcmotid,
 					iktargetpos, maxlevel, srcframe, postflag);
 			}
 		}
@@ -1117,7 +1119,8 @@ int ChaCalcFunc::IKTargetVec(CModel* srcmodel, bool limitdegflag, CEditRange* er
 	return 0;
 }
 
-int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, CEditRange* erptr,
+int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, 
+	CEditRange* erptr,
 	int srcboneno, int srcmotid, ChaVector3 targetpos, int maxlevel, double directframe, bool postflag)
 {
 	if (!srcmodel) {
@@ -1263,7 +1266,8 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, CEditR
 					int keyno = 0;
 					bool keynum1flag = false;
 					bool fromiktarget = true;
-					IKRotateOneFrame(srcmodel, limitdegflag, erptr,
+					IKRotateOneFrame(srcmodel, limitdegflag, wallscrapingikflag, 
+						erptr,
 						keyno,
 						parentbone, parentbone,
 						srcmotid, curframe, startframe, applyframe,
@@ -1302,7 +1306,7 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, CEditR
 
 		//絶対モードの場合
 		if ((calccnt == calcnum) && g_absikflag && lastpar) {
-			AdjustBoneTra(srcmodel, limitdegflag, erptr, lastpar, srcmotid);
+			AdjustBoneTra(srcmodel, limitdegflag, wallscrapingikflag, erptr, lastpar, srcmotid);
 		}
 	}
 
@@ -1325,7 +1329,7 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, CEditR
 }
 
 
-int ChaCalcFunc::AdjustBoneTra(CModel* srcmodel, bool limitdegflag, CEditRange* erptr, CBone* lastpar, int srcmotid)
+int ChaCalcFunc::AdjustBoneTra(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, CEditRange* erptr, CBone* lastpar, int srcmotid)
 {
 	int keynum = erptr->GetKeyNum();
 	double startframe = erptr->GetStartFrame();
@@ -1365,7 +1369,8 @@ int ChaCalcFunc::AdjustBoneTra(CModel* srcmodel, bool limitdegflag, CEditRange* 
 					tmplist.push_back(tmpki);
 					tmper.SetRange(tmplist, curframe);
 					//FKBoneTra( 0, &tmper, lastpar->GetBoneNo(), diffpos );
-					FKBoneTra(srcmodel, limitdegflag, 1, &tmper, lastpar->GetBoneNo(), srcmotid, diffpos);//2022/11/07 FKBoneTra内でframeno loopしないように　onlyoneflag = 1
+					FKBoneTra(srcmodel, limitdegflag, wallscrapingikflag, 
+						1, &tmper, lastpar->GetBoneNo(), srcmotid, diffpos);//2022/11/07 FKBoneTra内でframeno loopしないように　onlyoneflag = 1
 				}
 			}
 			keyno++;
@@ -1376,7 +1381,8 @@ int ChaCalcFunc::AdjustBoneTra(CModel* srcmodel, bool limitdegflag, CEditRange* 
 }
 
 
-int ChaCalcFunc::FKBoneTra(CModel* srcmodel, bool limitdegflag, int onlyoneflag, CEditRange* erptr,
+int ChaCalcFunc::FKBoneTra(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, 
+	int onlyoneflag, CEditRange* erptr,
 	int srcboneno, int srcmotid, ChaVector3 addtra, double onlyoneframe)
 {
 
@@ -1451,23 +1457,23 @@ int ChaCalcFunc::FKBoneTra(CModel* srcmodel, bool limitdegflag, int onlyoneflag,
 					//ChaVector3 curtra;
 					//curtra = (1.0 - currate2) * addtra;
 
-					curbone->AddBoneTraReq(limitdegflag, 0, srcmotid, curframe, curtra, dummyparentwm, dummyparentwm);
+					curbone->AddBoneTraReq(limitdegflag, wallscrapingikflag, 0, srcmotid, curframe, curtra, dummyparentwm, dummyparentwm);
 				}
 				else {
-					curbone->AddBoneTraReq(limitdegflag, 0, srcmotid, curframe, addtra, dummyparentwm, dummyparentwm);
+					curbone->AddBoneTraReq(limitdegflag, wallscrapingikflag, 0, srcmotid, curframe, addtra, dummyparentwm, dummyparentwm);
 				}
 			}
 			else {
 				if (keyno == 0) {
-					curbone->AddBoneTraReq(limitdegflag, 0, srcmotid, curframe, addtra, dummyparentwm, dummyparentwm);
+					curbone->AddBoneTraReq(limitdegflag, wallscrapingikflag, 0, srcmotid, curframe, addtra, dummyparentwm, dummyparentwm);
 				}
 				else {
-					curbone->SetAbsMatReq(limitdegflag, 0, srcmotid, curframe, firstframe);
+					curbone->SetAbsMatReq(limitdegflag, wallscrapingikflag, 0, srcmotid, curframe, firstframe);
 				}
 			}
 
 			bool postflag = false;
-			IKTargetVec(srcmodel, limitdegflag, erptr, srcmotid, curframe, postflag);
+			IKTargetVec(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcmotid, curframe, postflag);
 
 
 			keyno++;
@@ -1475,10 +1481,10 @@ int ChaCalcFunc::FKBoneTra(CModel* srcmodel, bool limitdegflag, int onlyoneflag,
 		}
 	}
 	else {
-		curbone->AddBoneTraReq(limitdegflag, 0, srcmotid, startframe, addtra, dummyparentwm, dummyparentwm);
+		curbone->AddBoneTraReq(limitdegflag, wallscrapingikflag, 0, srcmotid, startframe, addtra, dummyparentwm, dummyparentwm);
 
 		bool postflag = false;
-		IKTargetVec(srcmodel, limitdegflag, erptr, srcmotid, startframe, postflag);
+		IKTargetVec(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcmotid, startframe, postflag);
 	}
 
 
@@ -1486,8 +1492,8 @@ int ChaCalcFunc::FKBoneTra(CModel* srcmodel, bool limitdegflag, int onlyoneflag,
 }
 
 
-int ChaCalcFunc::FKBoneTraOneFrame(CModel* srcmodel, bool limitdegflag, CEditRange* erptr,
-	int srcboneno, int srcmotid, double srcframe, ChaVector3 addtra)
+int ChaCalcFunc::FKBoneTraOneFrame(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, 
+	CEditRange* erptr, int srcboneno, int srcmotid, double srcframe, ChaVector3 addtra)
 {
 
 	if (!srcmodel || (srcboneno < 0)) {
@@ -1561,23 +1567,23 @@ int ChaCalcFunc::FKBoneTraOneFrame(CModel* srcmodel, bool limitdegflag, CEditRan
 					//ChaVector3 curtra;
 					//curtra = (1.0 - currate2) * addtra;
 
-					curbone->AddBoneTraReq(limitdegflag, 0, srcmotid, curframe, curtra, dummyparentwm, dummyparentwm);
+					curbone->AddBoneTraReq(limitdegflag, wallscrapingikflag, 0, srcmotid, curframe, curtra, dummyparentwm, dummyparentwm);
 				}
 				else {
-					curbone->AddBoneTraReq(limitdegflag, 0, srcmotid, curframe, addtra, dummyparentwm, dummyparentwm);
+					curbone->AddBoneTraReq(limitdegflag, wallscrapingikflag, 0, srcmotid, curframe, addtra, dummyparentwm, dummyparentwm);
 				}
 			}
 			else {
 				if (keyno == 0) {
-					curbone->AddBoneTraReq(limitdegflag, 0, srcmotid, curframe, addtra, dummyparentwm, dummyparentwm);
+					curbone->AddBoneTraReq(limitdegflag, wallscrapingikflag, 0, srcmotid, curframe, addtra, dummyparentwm, dummyparentwm);
 				}
 				else {
-					curbone->SetAbsMatReq(limitdegflag, 0, srcmotid, curframe, firstframe);
+					curbone->SetAbsMatReq(limitdegflag, wallscrapingikflag, 0, srcmotid, curframe, firstframe);
 				}
 			}
 
 			bool postflag = false;
-			IKTargetVec(srcmodel, limitdegflag, erptr, srcmotid, curframe, postflag);
+			IKTargetVec(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcmotid, curframe, postflag);
 
 
 			keyno++;
@@ -1594,7 +1600,8 @@ int ChaCalcFunc::FKBoneTraOneFrame(CModel* srcmodel, bool limitdegflag, CEditRan
 	return curbone->GetBoneNo();
 }
 
-CMotionPoint* ChaCalcFunc::AddBoneTraReq(CBone* srcbone, bool limitdegflag, CMotionPoint* parmp, int srcmotid, double srcframe, ChaVector3 srctra, ChaMatrix befparentwm, ChaMatrix newparentwm)
+CMotionPoint* ChaCalcFunc::AddBoneTraReq(CBone* srcbone, bool limitdegflag, int wallscrapingikflag, 
+	CMotionPoint* parmp, int srcmotid, double srcframe, ChaVector3 srctra, ChaMatrix befparentwm, ChaMatrix newparentwm)
 {
 	if (!srcbone) {
 		_ASSERT(0);
@@ -1637,7 +1644,7 @@ CMotionPoint* ChaCalcFunc::AddBoneTraReq(CBone* srcbone, bool limitdegflag, CMot
 		bool directsetflag = true;
 		int onlycheck = 0;
 		bool fromiktarget = false;
-		srcbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, 0, srcmotid, roundingframe, tmpmat, onlycheck, fromiktarget);
+		srcbone->SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, 0, srcmotid, roundingframe, tmpmat, onlycheck, fromiktarget);
 
 		currentnewwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 	}
@@ -1649,7 +1656,7 @@ CMotionPoint* ChaCalcFunc::AddBoneTraReq(CBone* srcbone, bool limitdegflag, CMot
 		bool directsetflag = true;
 		int onlycheck = 0;
 		bool fromiktarget = false;
-		srcbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, 0, srcmotid, roundingframe, tmpmat, onlycheck, fromiktarget);
+		srcbone->SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, 0, srcmotid, roundingframe, tmpmat, onlycheck, fromiktarget);
 
 		currentnewwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 	}
@@ -1657,10 +1664,12 @@ CMotionPoint* ChaCalcFunc::AddBoneTraReq(CBone* srcbone, bool limitdegflag, CMot
 	curmp->SetAbsMat(srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp));
 
 	if (srcbone->GetChild(false)) {
-		srcbone->GetChild(false)->AddBoneTraReq(limitdegflag, curmp, srcmotid, roundingframe, srctra, currentbefwm, currentnewwm);
+		srcbone->GetChild(false)->AddBoneTraReq(limitdegflag, wallscrapingikflag, 
+			curmp, srcmotid, roundingframe, srctra, currentbefwm, currentnewwm);
 	}
 	if (srcbone->GetBrother(false) && parmp) {
-		srcbone->GetBrother(false)->AddBoneTraReq(limitdegflag, parmp, srcmotid, roundingframe, srctra, befparentwm, newparentwm);
+		srcbone->GetBrother(false)->AddBoneTraReq(limitdegflag, wallscrapingikflag, 
+			parmp, srcmotid, roundingframe, srctra, befparentwm, newparentwm);
 	}
 	return curmp;
 
@@ -2058,7 +2067,7 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 	//}
 }
 
-int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, bool directsetflag,
+int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, int wallscrapingikflag, bool directsetflag,
 	bool infooutflag, int setchildflag,
 	int srcmotid, double srcframe, ChaMatrix srcmat, int onlycheck, bool fromiktarget)
 {
@@ -2169,7 +2178,7 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, bool directsetfl
 				}
 			}
 			else {
-				if ((g_wallscrapingikflag == 1) || (fromiktarget == true)) {//PosConstraint用の回転時には　自動で壁すり処理をする
+				if ((wallscrapingikflag == 1) || (fromiktarget == true)) {//PosConstraint用の回転時には　自動で壁すり処理をする
 					//############################################
 					//　遊び付きリミテッドIK
 					//############################################
@@ -2269,7 +2278,8 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, bool directsetfl
 			if (setchildflag == 1) {
 				if (srcbone->GetChild(false)) {
 					bool setbroflag = true;
-					srcbone->GetChild(false)->UpdateParentWMReq(limitdegflag, setbroflag, srcmotid, roundingframe,
+					srcbone->GetChild(false)->UpdateParentWMReq(limitdegflag,
+						setbroflag, srcmotid, roundingframe,
 						saveworldmat, srcmat);
 				}
 			}
@@ -2285,7 +2295,8 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, bool directsetfl
 	return ismovable;
 }
 
-int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directsetflag, bool setchildflag, ChaMatrix srcmat)
+int ChaCalcFunc::SetBtMatLimited(CBone* srcbone, bool limitdegflag, 
+	bool directsetflag, bool setchildflag, ChaMatrix srcmat)
 {
 	//2024/04/13メモ
 	//物理を柔らかく揺らすために剛体の結合を柔らかく設定した
@@ -2663,7 +2674,8 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag,
 	return 0;
 }
 
-int ChaCalcFunc::SetWorldMatFromEulAndScaleAndTra(CBone* srcbone, bool limitdegflag, int inittraflag, int setchildflag,
+int ChaCalcFunc::SetWorldMatFromEulAndScaleAndTra(CBone* srcbone, bool limitdegflag, 
+	int inittraflag, int setchildflag,
 	ChaMatrix befwm, ChaVector3 srceul, ChaVector3 srcscale, ChaVector3 srctra, int srcmotid, double srcframe)
 {
 	if (!srcbone) {
@@ -2753,7 +2765,8 @@ int ChaCalcFunc::SetWorldMatFromEulAndScaleAndTra(CBone* srcbone, bool limitdegf
 		if (setchildflag == 1) {
 			if (srcbone->GetChild(false)) {
 				bool setbroflag = true;
-				srcbone->GetChild(false)->UpdateParentWMReq(limitdegflag, setbroflag,
+				srcbone->GetChild(false)->UpdateParentWMReq(limitdegflag, 
+					setbroflag,
 					srcmotid, roundingframe, befwm, newmat);
 			}
 		}
@@ -3336,6 +3349,7 @@ int ChaCalcFunc::CopyWorldToLimitedWorld(CBone* srcbone, int srcmotid, double sr
 		//SetWorldMat(limitdegflag, directsetflag, infooutflag, setchildflag, srcmotid, roundingframe, newwm);
 
 		bool limitdegflag = true;
+		int wallscrapingikflag = 0;//directsetの場合は関係ない
 		srcbone->UpdateCurrentWM(limitdegflag, srcmotid, roundingframe, newwm);
 
 	}
@@ -3349,8 +3363,8 @@ int ChaCalcFunc::CopyWorldToLimitedWorld(CBone* srcbone, int srcmotid, double sr
 
 }
 
-void ChaCalcFunc::UpdateCurrentWM(CBone* srcbone, bool limitdegflag, int srcmotid, double srcframe,
-	ChaMatrix newwm)
+void ChaCalcFunc::UpdateCurrentWM(CBone* srcbone, bool limitdegflag, 
+	int srcmotid, double srcframe, ChaMatrix newwm)
 {
 	if (!srcbone) {
 		_ASSERT(0);
@@ -3404,11 +3418,12 @@ void ChaCalcFunc::UpdateCurrentWM(CBone* srcbone, bool limitdegflag, int srcmoti
 	//if ((g_previewFlag != 4) && (g_previewFlag != 5)) 
 	{//btSimuの際にも必要な処理
 		bool directsetflag = true;//directset !!!
+		int wallscrapingikflag = 0;//directsetのときは関係ない
 		bool infooutflag = false;
 		int setchildflag = 0;
 		int onlycheck = 0;
 		bool fromiktarget = false;
-		srcbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, setchildflag,
+		srcbone->SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, setchildflag,
 			srcmotid, roundingframe, newwm, onlycheck, fromiktarget);
 
 		CMotionPoint* curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
@@ -3463,7 +3478,8 @@ void ChaCalcFunc::UpdateCurrentWM(CBone* srcbone, bool limitdegflag, int srcmoti
 
 	if (srcbone->GetChild(false)) {
 		bool setbroflag2 = true;
-		UpdateParentWMReq(srcbone->GetChild(false), limitdegflag, setbroflag2, srcmotid, roundingframe,
+		UpdateParentWMReq(srcbone->GetChild(false), limitdegflag, 
+			setbroflag2, srcmotid, roundingframe,
 			befwm, newwm);
 	}
 	//if (GetBrother() && (setbroflag == true)) {
@@ -3472,8 +3488,8 @@ void ChaCalcFunc::UpdateCurrentWM(CBone* srcbone, bool limitdegflag, int srcmoti
 	//}
 }
 
-void ChaCalcFunc::UpdateParentWMReq(CBone* srcbone, bool limitdegflag, bool setbroflag, int srcmotid, double srcframe,
-	ChaMatrix oldparentwm, ChaMatrix newparentwm)
+void ChaCalcFunc::UpdateParentWMReq(CBone* srcbone, bool limitdegflag, 
+	bool setbroflag, int srcmotid, double srcframe, ChaMatrix oldparentwm, ChaMatrix newparentwm)
 {
 	if (!srcbone) {
 		_ASSERT(0);
@@ -3497,11 +3513,12 @@ void ChaCalcFunc::UpdateParentWMReq(CBone* srcbone, bool limitdegflag, bool setb
 			currentnewwm = currentbefwm * ChaMatrixInv(oldparentwm) * newparentwm;
 
 			bool directsetflag = true;//directset !!!
+			int wallscrapingikflag = 0;//directsetの場合は関係ない
 			bool infooutflag = false;
 			int setchildflag = 0;
 			int onlycheck = 0;
 			bool fromiktarget = false;
-			srcbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, setchildflag,
+			srcbone->SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, setchildflag,
 				srcmotid, roundingframe, currentnewwm, onlycheck, fromiktarget);
 
 			CMotionPoint* curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
@@ -3515,6 +3532,7 @@ void ChaCalcFunc::UpdateParentWMReq(CBone* srcbone, bool limitdegflag, bool setb
 			currentnewwm = currentbefwm * ChaMatrixInv(oldparentwm) * newparentwm;
 
 			bool directsetflag = true;
+			int wallscrapingikflag = 0;//directsetの場合は関係ない
 			bool setchildflag = false;//この後ろの部分でUpdateParentWMReqを明示的に呼び出すので、ここのsetchildflagはfalse
 			srcbone->SetBtMatLimited(limitdegflag, directsetflag, setchildflag, currentnewwm);
 		}
@@ -3533,11 +3551,13 @@ void ChaCalcFunc::UpdateParentWMReq(CBone* srcbone, bool limitdegflag, bool setb
 
 	if (srcbone->GetChild(false)) {
 		bool setbroflag2 = true;
-		UpdateParentWMReq(srcbone->GetChild(false), limitdegflag, setbroflag2, srcmotid, roundingframe,
+		UpdateParentWMReq(srcbone->GetChild(false), limitdegflag, 
+			setbroflag2, srcmotid, roundingframe,
 			currentbefwm, currentnewwm);
 	}
 	if (srcbone->GetBrother(false) && (setbroflag == true)) {
-		UpdateParentWMReq(srcbone->GetBrother(false), limitdegflag, setbroflag, srcmotid, roundingframe,
+		UpdateParentWMReq(srcbone->GetBrother(false), limitdegflag, 
+			setbroflag, srcmotid, roundingframe,
 			oldparentwm, newparentwm);
 	}
 
@@ -3638,7 +3658,7 @@ int ChaCalcFunc::ConvBoneRotation(CModel* srcmodel, CModel* srcbvhmodel, int sel
 
 	//retargetは　unlimitedに対して行い　unlimitedにセットする
 	bool limitdegflag = false;
-
+	int wallscrapingikflag = 0;//リターゲットの際には関係ない
 
 	//2023/03/27 : 対応bvhboneが無い場合には　InitMPの姿勢のままにする
 	if (!bvhbone) {
@@ -4023,7 +4043,7 @@ int ChaCalcFunc::ConvBoneRotation(CModel* srcmodel, CModel* srcbvhmodel, int sel
 		if (bvhbone) {
 			int reqflag = 1;//!!!!!!!!! 編集結果を再帰的に子供に伝えるので　bvhboneが無い場合には処理をしないで良い
 			int traanimflag = 1;
-			srcmodel->FKRotate(limitdegflag, onretarget, reqflag, bvhbone,
+			srcmodel->FKRotate(limitdegflag, wallscrapingikflag, onretarget, reqflag, bvhbone,
 				traanimflag, traanim, roundingframe, curboneno, rotq);
 		}
 		else {
@@ -4105,7 +4125,8 @@ void ChaCalcFunc::GetHipsBoneReq(CModel* srcmodel, CBone* srcbone, CBone** dstpp
 	}
 }
 
-int ChaCalcFunc::FKRotate(CModel* srcmodel, bool limitdegflag, bool onretarget, int reqflag,
+int ChaCalcFunc::FKRotate(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, 
+	bool onretarget, int reqflag,
 	CBone* bvhbone, int traflag, ChaVector3 traanim, double srcframe, int srcboneno,
 	CQuaternion rotq)
 {
@@ -4162,18 +4183,20 @@ int ChaCalcFunc::FKRotate(CModel* srcmodel, bool limitdegflag, bool onretarget, 
 		ChaMatrix dummyparentwm;
 		dummyparentwm.SetIdentity();
 		bool infooutflag = true;
-		curbone->RotBoneQReq(limitdegflag, infooutflag, 0, curmotid, roundingframe, rotq, dummyparentwm, dummyparentwm,
+		curbone->RotBoneQReq(limitdegflag, wallscrapingikflag, 
+			infooutflag, 0, curmotid, roundingframe, rotq, dummyparentwm, dummyparentwm,
 			bvhbone, traanim);// , setmatflag, psetmat, onretarget);
 	}
 	else if (bvhbone) {
 		ChaMatrix setmat = bvhbone->GetTmpMat();
-		curbone->RotBoneQOne(limitdegflag, parentbone, parmp, curmotid, roundingframe, setmat);
+		curbone->RotBoneQOne(limitdegflag, wallscrapingikflag, 
+			parentbone, parmp, curmotid, roundingframe, setmat);
 	}
 
 	return curbone->GetBoneNo();
 }
 
-CMotionPoint* ChaCalcFunc::RotBoneQReq(CBone* srcbone, bool limitdegflag, bool infooutflag,
+CMotionPoint* ChaCalcFunc::RotBoneQReq(CBone* srcbone, bool limitdegflag, int wallscrapingikflag, bool infooutflag,
 	CBone* parentbone, int srcmotid, double srcframe,
 	CQuaternion rotq, ChaMatrix srcbefparentwm, ChaMatrix srcnewparentwm,
 	CBone* bvhbone, ChaVector3 traanim)// , int setmatflag, ChaMatrix* psetmat, bool onretarget)
@@ -4246,7 +4269,7 @@ CMotionPoint* ChaCalcFunc::RotBoneQReq(CBone* srcbone, bool limitdegflag, bool i
 	int setchildflag = 0;
 	int onlycheck = 0;
 	bool fromiktarget = false;
-	srcbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, setchildflag,
+	srcbone->SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, setchildflag,
 		srcmotid, roundingframe, newwm, onlycheck, fromiktarget);
 
 	if (bvhbone) {

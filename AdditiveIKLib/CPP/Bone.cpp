@@ -1263,6 +1263,7 @@ int CBone::ApplyNewLimitsToWM(int srcmotid, double srcframe, ChaMatrix befeditpa
 		
 		//2023/02/03 LimitEulにチェックが入っていない場合にも　limitedに対して操作
 		bool limitdegflag = true;//!!!!!!!!!!!!!
+		int wallscrapingikflag = 0;//directsetの場合は関係ない
 
 		curwm = GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp);
 
@@ -1292,7 +1293,7 @@ int CBone::ApplyNewLimitsToWM(int srcmotid, double srcframe, ChaMatrix befeditpa
 		int onlycheck = 0;
 		bool fromiktarget = false;
 		
-		SetWorldMat(limitdegflag, directsetflag, infooutflag, setchildflag, srcmotid, roundingframe, curwm, onlycheck, fromiktarget);
+		SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, setchildflag, srcmotid, roundingframe, curwm, onlycheck, fromiktarget);
 		
 		//curmp->SetLimitedWM(newwm);
 		//curmp->SetLimitedLocalEul(neweul);
@@ -3006,15 +3007,15 @@ int CBone::SetCurrentRigidElem( std::string curname )
 }
 
 
-CMotionPoint* CBone::AddBoneTraReq(bool limitdegflag, CMotionPoint* parmp, int srcmotid, double srcframe, 
+CMotionPoint* CBone::AddBoneTraReq(bool limitdegflag, int wallscrapingikflag, CMotionPoint* parmp, int srcmotid, double srcframe,
 	ChaVector3 srctra, ChaMatrix befparentwm, ChaMatrix newparentwm)
 {
 	ChaCalcFunc chacalcfunc;
-	return chacalcfunc.AddBoneTraReq(this, limitdegflag, parmp, srcmotid, srcframe, srctra, befparentwm, newparentwm);
+	return chacalcfunc.AddBoneTraReq(this, limitdegflag, wallscrapingikflag, parmp, srcmotid, srcframe, srctra, befparentwm, newparentwm);
 }
 
 
-CMotionPoint* CBone::AddBoneScaleReq(bool limitdegflag, CMotionPoint* parmp, int srcmotid, double srcframe, ChaVector3 srcscale, ChaMatrix befparentwm, ChaMatrix newparentwm)
+CMotionPoint* CBone::AddBoneScaleReq(bool limitdegflag, int wallscrapingikflag, CMotionPoint* parmp, int srcmotid, double srcframe, ChaVector3 srcscale, ChaMatrix befparentwm, ChaMatrix newparentwm)
 {
 
 
@@ -3057,7 +3058,7 @@ CMotionPoint* CBone::AddBoneScaleReq(bool limitdegflag, CMotionPoint* parmp, int
 		bool directsetflag = true;
 		int onlycheck = 0;
 		bool fromiktarget = false;
-		SetWorldMat(limitdegflag, directsetflag, infooutflag, 0, srcmotid, roundingframe, tmpmat, onlycheck, fromiktarget);
+		SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, 0, srcmotid, roundingframe, tmpmat, onlycheck, fromiktarget);
 
 		currentnewwm = GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 	}
@@ -3079,7 +3080,7 @@ CMotionPoint* CBone::AddBoneScaleReq(bool limitdegflag, CMotionPoint* parmp, int
 		bool directsetflag = true;
 		int onlycheck = 0;
 		bool fromiktarget = false;
-		SetWorldMat(limitdegflag, directsetflag, infooutflag, 0, srcmotid, roundingframe, tmpmat, onlycheck, fromiktarget);
+		SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, 0, srcmotid, roundingframe, tmpmat, onlycheck, fromiktarget);
 
 		currentnewwm = GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 
@@ -3156,10 +3157,12 @@ CMotionPoint* CBone::AddBoneScaleReq(bool limitdegflag, CMotionPoint* parmp, int
 	curmp->SetAbsMat(GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp));
 
 	if (GetChild(false)) {
-		GetChild(false)->AddBoneScaleReq(limitdegflag, curmp, srcmotid, roundingframe, srcscale, currentbefwm, currentnewwm);
+		GetChild(false)->AddBoneScaleReq(limitdegflag, wallscrapingikflag, 
+			curmp, srcmotid, roundingframe, srcscale, currentbefwm, currentnewwm);
 	}
 	if (GetBrother(false) && parmp) {
-		GetBrother(false)->AddBoneScaleReq(limitdegflag, parmp, srcmotid, roundingframe, srcscale, befparentwm, newparentwm);
+		GetBrother(false)->AddBoneScaleReq(limitdegflag, wallscrapingikflag, 
+			parmp, srcmotid, roundingframe, srcscale, befparentwm, newparentwm);
 	}
 
 	return curmp;
@@ -3295,11 +3298,12 @@ void CBone::UpdateCurrentWM(bool limitdegflag, int srcmotid, double srcframe,
 
 
 
-void CBone::UpdateParentWMReq(bool limitdegflag, bool setbroflag, int srcmotid, double srcframe, 
+void CBone::UpdateParentWMReq(bool limitdegflag, bool setbroflag, int srcmotid, double srcframe,
 	ChaMatrix oldparentwm, ChaMatrix newparentwm)
 {
 	ChaCalcFunc chacalcfunc;
-	chacalcfunc.UpdateParentWMReq(this, limitdegflag, setbroflag, srcmotid, srcframe, oldparentwm, newparentwm);
+	chacalcfunc.UpdateParentWMReq(this, limitdegflag, 
+		setbroflag, srcmotid, srcframe, oldparentwm, newparentwm);
 }
 
 
@@ -3309,13 +3313,13 @@ void CBone::UpdateParentWMReq(bool limitdegflag, bool setbroflag, int srcmotid, 
 //CBone::RotBoneQReq()
 //引数rotqはグローバル回転　引数traanimはローカル移動アニメ
 //##########################################################
-CMotionPoint* CBone::RotBoneQReq(bool limitdegflag, bool infooutflag, 
+CMotionPoint* CBone::RotBoneQReq(bool limitdegflag, int wallscrapingikflag, bool infooutflag,
 	CBone* parentbone, int srcmotid, double srcframe, 
 	CQuaternion rotq, ChaMatrix srcbefparentwm, ChaMatrix srcnewparentwm,
 	CBone* bvhbone, ChaVector3 traanim)// , int setmatflag, ChaMatrix* psetmat, bool onretarget)
 {
 	ChaCalcFunc chacalcfunc;
-	return chacalcfunc.RotBoneQReq(this, limitdegflag, infooutflag,
+	return chacalcfunc.RotBoneQReq(this, limitdegflag, wallscrapingikflag, infooutflag,
 		parentbone, srcmotid, srcframe,
 		rotq, srcbefparentwm, srcnewparentwm,
 		bvhbone, traanim);
@@ -3394,7 +3398,7 @@ int CBone::SaveSRT(bool limitdegflag, int srcmotid, double srcframe)
 //###############################
 //2023/03/04 ismovableをリターン
 //###############################
-int CBone::RotAndTraBoneQReq(bool limitdegflag, int* onlycheckptr,
+int CBone::RotAndTraBoneQReq(bool limitdegflag, int wallscrapingikflag, int* onlycheckptr,
 	double srcstartframe, bool infooutflag, CBone* parentbone, int srcmotid, double srcframe,
 	CQuaternion qForRot, CQuaternion qForHipsRot, bool fromiktarget)
 {
@@ -3412,7 +3416,7 @@ int CBone::RotAndTraBoneQReq(bool limitdegflag, int* onlycheckptr,
 
 
 	ChaCalcFunc chacalcfunc;
-	return chacalcfunc.RotAndTraBoneQReq(this, limitdegflag, onlycheckptr,
+	return chacalcfunc.RotAndTraBoneQReq(this, limitdegflag, wallscrapingikflag, onlycheckptr,
 		srcstartframe, infooutflag, parentbone, srcmotid, srcframe,
 		qForRot, qForHipsRot, fromiktarget);
 }
@@ -3561,7 +3565,7 @@ int CBone::RotAndTraBoneQReq(bool limitdegflag, int* onlycheckptr,
 
 
 
-CMotionPoint* CBone::RotBoneQOne(bool limitdegflag, CBone* srcparentbone, CMotionPoint* parmp, int srcmotid, double srcframe, ChaMatrix srcmat)
+CMotionPoint* CBone::RotBoneQOne(bool limitdegflag, int wallscrapingikflag, CBone* srcparentbone, CMotionPoint* parmp, int srcmotid, double srcframe, ChaMatrix srcmat)
 {
 	if (!srcparentbone) {
 		_ASSERT(0);
@@ -3592,14 +3596,14 @@ CMotionPoint* CBone::RotBoneQOne(bool limitdegflag, CBone* srcparentbone, CMotio
 		bool directsetflag = true;
 		int onlycheck = 0;
 		bool fromiktarget = false;
-		SetWorldMat(limitdegflag, directsetflag, infooutflag, 0, srcmotid, roundingframe, 
+		SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, 0, srcmotid, roundingframe,
 			srcparentbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, parmp),
 			onlycheck, fromiktarget);
 	} else{
 		bool directsetflag = true;
 		int onlycheck = 0;
 		bool fromiktarget = false;
-		SetWorldMat(limitdegflag, directsetflag, infooutflag, 0, 
+		SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, 0,
 			srcmotid, roundingframe, srcmat,
 			onlycheck, fromiktarget);
 	}
@@ -3610,8 +3614,8 @@ CMotionPoint* CBone::RotBoneQOne(bool limitdegflag, CBone* srcparentbone, CMotio
 }
 
 
-CMotionPoint* CBone::SetAbsMatReq(bool limitdegflag, int broflag, 
-	int srcmotid, double srcframe, double firstframe )
+CMotionPoint* CBone::SetAbsMatReq(bool limitdegflag, int wallscrapingikflag, 
+	int broflag, int srcmotid, double srcframe, double firstframe )
 {
 	double roundingframe = RoundingTime(srcframe);
 
@@ -3642,15 +3646,15 @@ CMotionPoint* CBone::SetAbsMatReq(bool limitdegflag, int broflag,
 	bool directsetflag = true;
 	int onlycheck = 0;
 	bool fromiktarget = false;
-	SetWorldMat(limitdegflag, directsetflag, infooutflag, 0, 
+	SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, 0,
 		srcmotid, roundingframe, firstmp->GetAbsMat(),
 		onlycheck, fromiktarget);
 
 	if(GetChild(false)){
-		GetChild(false)->SetAbsMatReq(limitdegflag, 1, srcmotid, roundingframe, firstframe);
+		GetChild(false)->SetAbsMatReq(limitdegflag, wallscrapingikflag, 1, srcmotid, roundingframe, firstframe);
 	}
 	if(GetBrother(false) && broflag){
-		GetBrother(false)->SetAbsMatReq(limitdegflag, 1, srcmotid, roundingframe, firstframe);
+		GetBrother(false)->SetAbsMatReq(limitdegflag, wallscrapingikflag, 1, srcmotid, roundingframe, firstframe);
 	}
 	return curmp;
 }
@@ -4879,7 +4883,8 @@ int CBone::SetWorldMatFromEul(bool limitdegflag, int inittraflag, int setchildfl
 		if (setchildflag == 1){
 			if (GetChild(false)){
 				bool setbroflag = true;
-				GetChild(false)->UpdateParentWMReq(limitdegflag, setbroflag,
+				GetChild(false)->UpdateParentWMReq(limitdegflag, 
+					setbroflag,
 					srcmotid, roundingframe, befwm, newworldmat);
 			}
 		}
@@ -5122,18 +5127,21 @@ ChaMatrix CBone::CalcWorldMatFromEul(bool limitdegflag, int inittraflag, int set
 
 
 
-int CBone::SetWorldMatFromEulAndScaleAndTra(bool limitdegflag, int inittraflag, int setchildflag, 
+int CBone::SetWorldMatFromEulAndScaleAndTra(bool limitdegflag, 
+	int inittraflag, int setchildflag,
 	ChaMatrix befwm, ChaVector3 srceul, ChaVector3 srcscale, ChaVector3 srctra, int srcmotid, double srcframe)
 {
 	ChaCalcFunc chacalcfunc;
-	return chacalcfunc.SetWorldMatFromEulAndScaleAndTra(this, limitdegflag, inittraflag, setchildflag,
+	return chacalcfunc.SetWorldMatFromEulAndScaleAndTra(this, limitdegflag, 
+		inittraflag, setchildflag,
 		befwm, srceul, srcscale, srctra, srcmotid, srcframe);
 }
 
 
 
 
-int CBone::SetWorldMatFromQAndTra(bool limitdegflag, int setchildflag, 
+int CBone::SetWorldMatFromQAndTra(bool limitdegflag, 
+	int setchildflag,
 	ChaMatrix befwm, CQuaternion axisq, CQuaternion srcq, ChaVector3 srctra, int srcmotid, double srcframe)
 {
 	if (!GetChild(false)){
@@ -5209,7 +5217,8 @@ int CBone::SetWorldMatFromQAndTra(bool limitdegflag, int setchildflag,
 		if (setchildflag == 1) {
 			if (GetChild(false)) {
 				bool setbroflag = true;
-				GetChild(false)->UpdateParentWMReq(limitdegflag, setbroflag,
+				GetChild(false)->UpdateParentWMReq(limitdegflag, 
+					setbroflag,
 					srcmotid, roundingframe, befwm, newmat);
 			}
 		}
@@ -5222,7 +5231,8 @@ int CBone::SetWorldMatFromQAndTra(bool limitdegflag, int setchildflag,
 }
 
 
-int CBone::SetWorldMatFromQAndScaleAndTra(bool limitdegflag, int setchildflag,
+int CBone::SetWorldMatFromQAndScaleAndTra(bool limitdegflag, 
+	int setchildflag,
 	ChaMatrix befwm, CQuaternion axisq, 
 	CQuaternion srcq, ChaVector3 srcscale, ChaVector3 srctra, int srcmotid, double srcframe)
 {
@@ -5303,7 +5313,8 @@ int CBone::SetWorldMatFromQAndScaleAndTra(bool limitdegflag, int setchildflag,
 		if (setchildflag == 1) {
 			if (GetChild(false)) {
 				bool setbroflag = true;
-				GetChild(false)->UpdateParentWMReq(limitdegflag, setbroflag,
+				GetChild(false)->UpdateParentWMReq(limitdegflag, 
+					setbroflag,
 					srcmotid, roundingframe, befwm, newmat);
 			}
 		}
@@ -5317,7 +5328,8 @@ int CBone::SetWorldMatFromQAndScaleAndTra(bool limitdegflag, int setchildflag,
 
 
 
-int CBone::SetWorldMatFromEulAndTra(bool limitdegflag, int setchildflag, 
+int CBone::SetWorldMatFromEulAndTra(bool limitdegflag, 
+	int setchildflag,
 	ChaMatrix befwm, ChaVector3 srceul, ChaVector3 srctra, int srcmotid, double srcframe)
 {
 	//anglelimitをした後のオイラー角が渡される。anglelimitはCBone::SetWorldMatで処理する。
@@ -5397,7 +5409,8 @@ int CBone::SetWorldMatFromEulAndTra(bool limitdegflag, int setchildflag,
 		if (setchildflag == 1) {
 			if (GetChild(false)) {
 				bool setbroflag = true;
-				GetChild(false)->UpdateParentWMReq(limitdegflag, setbroflag,
+				GetChild(false)->UpdateParentWMReq(limitdegflag, 
+					setbroflag,
 					srcmotid, roundingframe, befwm, newmat);
 			}
 		}
@@ -5422,19 +5435,20 @@ ChaVector3 CBone::GetLocalEul(bool limitdegflag, int srcmotid, double srcframe, 
 	return chacalcfunc.GetLocalEul(this, limitdegflag, srcmotid, srcframe, srcmp);
 }
 
-int CBone::SetWorldMat(bool limitdegflag, bool directsetflag, 
+int CBone::SetWorldMat(bool limitdegflag, int wallscrapingikflag, bool directsetflag,
 	bool infooutflag, int setchildflag, 
 	int srcmotid, double srcframe, ChaMatrix srcmat, int onlycheck, bool fromiktarget)
 {
 	ChaCalcFunc chacalcfunc;
-	return chacalcfunc.SetWorldMat(this, limitdegflag, directsetflag,
+	return chacalcfunc.SetWorldMat(this, limitdegflag, wallscrapingikflag, directsetflag,
 		infooutflag, setchildflag,
 		srcmotid, srcframe, srcmat, onlycheck, fromiktarget);
 }
 int CBone::SetBtMatLimited(bool limitdegflag, bool directsetflag, bool setchildflag, ChaMatrix srcmat)
 {
 	ChaCalcFunc chacalcfunc;
-	return chacalcfunc.SetBtMatLimited(this, limitdegflag, directsetflag, setchildflag, srcmat);
+	return chacalcfunc.SetBtMatLimited(this, limitdegflag, 
+		directsetflag, setchildflag, srcmat);
 }
 
 

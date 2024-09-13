@@ -12275,7 +12275,7 @@ void CModel::ClearIKRotRecUVReq(CBone* srcbone)
 	}
 }
 
-int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
+int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 	int srcboneno, ChaVector3 targetpos, int maxlevel)
 {
 	ChaCalcFunc chacalcfunc;
@@ -12390,9 +12390,10 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 					//2023/01/22 : topposスライダーの位置のフレーム(３D表示中のフレーム)において　
 					//制限角度により　回転出来ない場合は　リターンする
 					//if (g_limitdegflag != 0) {
-					if ((limitdegflag != false) && (g_wallscrapingikflag == 0)) {//2023/01/23
+					if ((limitdegflag != false) && (wallscrapingikflag == 0)) {//2023/01/23
 						//2023/01/28 IK時は　GetBtForce()チェックはしない　BtForce == 1でも角度制限する
-						int ismovable = IsMovableRot(limitdegflag, curmotid, applyframe, applyframe,
+						int ismovable = IsMovableRot(limitdegflag, wallscrapingikflag, 
+							curmotid, applyframe, applyframe,
 							rotq0, parentbone, parentbone);
 						if (ismovable == 0) {
 							////g_underIKRot = false;//2023/01/14 parent limited or not
@@ -12414,7 +12415,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 						bool keynum1flag = false;
 						bool postflag = false;
 						bool fromiktarget = false;
-						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
+						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 							keyno, 
 							parentbone, parentbone,
 							curmotid, curframe, startframe, applyframe,
@@ -12426,7 +12427,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 						bool keynum1flag = true;
 						bool postflag = false;
 						bool fromiktarget = false;
-						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
+						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 							0, 
 							parentbone, parentbone,
 							curmotid, GetCurrentFrame(), startframe, applyframe,
@@ -12435,7 +12436,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 
 
 					//2023/03/04 制限角度に引っ掛かった場合には　やめて　次のジョイントの回転へ
-					if ((ismovable2 == 0) && (g_wallscrapingikflag == 0)) {
+					if ((ismovable2 == 0) && (wallscrapingikflag == 0)) {
 						continue;
 					}
 
@@ -12491,7 +12492,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
 
 		//絶対モードの場合
 		if ((calccnt == (calcnum - 1)) && g_absikflag && lastpar) {
-			chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastpar, curmotid);
+			chacalcfunc.AdjustBoneTra(this, limitdegflag, wallscrapingikflag, erptr, lastpar, curmotid);
 		}
 	}
 
@@ -12550,7 +12551,7 @@ int CModel::OnBlendWeightChanged(CEditRange* erptr, CMQOObject* srcmqoobj, int c
 	return 0;
 }
 
-int CModel::IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
+int CModel::IKRotatePostIK(bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 	int srcboneno, int maxlevel)
 {
 	ChaCalcFunc chacalcfunc;
@@ -12671,7 +12672,7 @@ int CModel::IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
 									int updatecount;
 									for (updatecount = 0; updatecount < POSTIK_THREADSNUM; updatecount++) {
 										CThreadingPostIK* curupdate = m_PostIKThreads + updatecount;
-										curupdate->IKRotateOneFrame(this, limitdegflag, erptr,
+										curupdate->IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 											keyno,
 											parentbone, parentbone,
 											curmotid, startframe, applyframe,
@@ -12749,14 +12750,14 @@ int CModel::IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
 		for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
 			if (curframe != applyframe) {
 				bool postflag = true;
-				chacalcfunc.IKTargetVec(this, limitdegflag, erptr, curmotid, curframe, postflag);
+				chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, postflag);
 			}
 		}
 	}
 
 	//絶対モードの場合
 	if ((calccnt == (calcnum - 1)) && g_absikflag && lastpar) {
-		chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastpar, curmotid);
+		chacalcfunc.AdjustBoneTra(this, limitdegflag, wallscrapingikflag, erptr, lastpar, curmotid);
 	}
 
 
@@ -12771,7 +12772,7 @@ int CModel::IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
 
 }
 
-int CModel::IKRotate(bool limitdegflag, CEditRange* erptr, 
+int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 	int srcboneno, ChaVector3 targetpos, int maxlevel, double directframe)//default : directframe = -1.0
 {
 	ChaCalcFunc chacalcfunc;
@@ -12888,9 +12889,10 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 					//2023/01/22 : topposスライダーの位置のフレーム(３D表示中のフレーム)において　
 					//制限角度により　回転出来ない場合は　リターンする
 					//if (g_limitdegflag != 0) {
-					if ((limitdegflag != false) && (g_wallscrapingikflag == 0)) {//2023/01/23
+					if ((limitdegflag != false) && (wallscrapingikflag == 0)) {//2023/01/23
 						//2023/01/28 IK時は　GetBtForce()チェックはしない　BtForce == 1でも角度制限する
-						int ismovable = IsMovableRot(limitdegflag, curmotid, applyframe, applyframe,
+						int ismovable = IsMovableRot(limitdegflag, wallscrapingikflag, 
+							curmotid, applyframe, applyframe,
 							rotq0, parentbone, parentbone);
 						if (ismovable == 0) {
 							//g_underIKRot = false;//2023/01/14 parent limited or not
@@ -12912,7 +12914,7 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 							bool keynum1flag = false;
 							bool postflag = false;
 							bool fromiktarget = false;
-							chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
+							chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 								keyno, 
 								parentbone, parentbone, 
 								curmotid, curframe, startframe, applyframe,
@@ -12925,7 +12927,7 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 						bool keynum1flag = true;
 						bool postflag = false;
 						bool fromiktarget = false;
-						chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
+						chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 							0, 
 							parentbone, parentbone,
 							curmotid, GetCurrentFrame(), startframe, applyframe,
@@ -12965,7 +12967,7 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 
 		//絶対モードの場合
 		if( (calccnt == (calcnum - 1)) && g_absikflag && lastpar ){
-			chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastpar, curmotid);
+			chacalcfunc.AdjustBoneTra(this, limitdegflag, wallscrapingikflag, erptr, lastpar, curmotid);
 		}
 	}
 
@@ -14169,7 +14171,7 @@ int CModel::IKRotate(bool limitdegflag, CEditRange* erptr,
 
 
 
-int CModel::RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig, int buttonflag)
+int CModel::RigControl(bool limitdegflag, int wallscrapingikflag, int depthcnt, CEditRange* erptr, int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig, int buttonflag)
 {
 	ChaCalcFunc chacalcfunc;
 
@@ -14241,7 +14243,8 @@ int CModel::RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, int s
 					if ((rigrigno >= 0) && (rigrigno < MAXRIGNUM)){
 						if (currigelem.transuv[uvno].enable == 1){
 							CUSTOMRIG rigrig = rigrigbone->GetCustomRig(rigrigno);
-							RigControl(limitdegflag, depthcnt, erptr, rigrigbone->GetBoneNo(), 
+							RigControl(limitdegflag, wallscrapingikflag, 
+								depthcnt, erptr, rigrigbone->GetBoneNo(),
 								uvno, srcdelta * currigelem.transuv[uvno].applyrate, rigrig, buttonflag);
 						}
 					}
@@ -14360,7 +14363,7 @@ int CModel::RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, int s
 							////2023/01/22 : topposスライダーの位置のフレーム(３D表示中のフレーム)において　
 							////制限角度により　回転出来ない場合は　リターンする
 							////if (g_limitdegflag != false) {
-							//if ((g_limitdegflag != false) && (g_wallscrapingikflag == 0)) {//2023/01/23
+							//if ((g_limitdegflag != false) && (wallscrapingikflag == 0)) {//2023/01/23
 							//	int ismovable = IsMovableRot(m_curmotinfo->motid, applyframe, applyframe, 
 							//		localq, curbone, aplybone);
 							//	if (ismovable == 0) {
@@ -14422,24 +14425,28 @@ int CModel::RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, int s
 											qForRot.Slerp2(endq, 1.0 - changerate, &curqForRot);
 											qForHipsRot.Slerp2(endq, 1.0 - changerate, &curqForHipsRot);
 
-											curbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
+											curbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag, 
+												0, RoundingTime(startframe),
 												infooutflag, 0, curmotid, curframe, 
 												curqForRot, curqForHipsRot, fromiktarget);
 										}
 										else{
-											curbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
+											curbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag,
+												0, RoundingTime(startframe),
 												infooutflag, 0, curmotid, curframe, 
 												qForRot, qForHipsRot, fromiktarget);
 										}
 									}
 									else{
 										if (keyno == 0){
-											curbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
+											curbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag,
+												0, RoundingTime(startframe),
 												infooutflag, 0, curmotid, curframe, 
 												qForRot, qForHipsRot, fromiktarget);
 										}
 										else{
-											curbone->SetAbsMatReq(limitdegflag, 0, curmotid, curframe, firstframe);
+											curbone->SetAbsMatReq(limitdegflag, wallscrapingikflag, 
+												0, curmotid, curframe, firstframe);
 										}
 									}
 									keyno++;
@@ -14450,7 +14457,8 @@ int CModel::RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, int s
 								bool infooutflag = true;
 								qForRot = localq;
 								qForHipsRot = localq;
-								curbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
+								curbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag, 
+									0, RoundingTime(startframe),
 									infooutflag, 0, curmotid, GetCurrentFrame(),
 									qForRot, qForHipsRot, fromiktarget);
 							}
@@ -14488,7 +14496,7 @@ int CModel::RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, int s
 	}
 }
 
-int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt, 
+int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int depthcnt,
 	CEditRange* erptr, int srcboneno, 
 	int uvno, float srcdelta, 
 	CUSTOMRIG ikcustomrig, int buttonflag)
@@ -14571,7 +14579,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 				if ((rigrigno >= 0) && (rigrigno < MAXRIGNUM)) {
 					if (currigelem.transuv[uvno].enable == 1) {
 						CUSTOMRIG rigrig = rigrigbone->GetCustomRig(rigrigno);
-						RigControlUnderRig(limitdegflag, depthcnt, erptr, rigrigbone->GetBoneNo(),
+						RigControlUnderRig(limitdegflag, wallscrapingikflag, depthcnt, erptr, rigrigbone->GetBoneNo(),
 							uvno, srcdelta * currigelem.transuv[uvno].applyrate, rigrig, buttonflag);
 					}
 				}
@@ -14659,7 +14667,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 							bool keynum1flag = false;
 							bool postflag = false;
 							bool fromiktarget = false;
-							ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
+							ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 								keyno, 
 								//curbone, aplybone,
 								curbone, curbone,//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
@@ -14670,7 +14678,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 							bool keynum1flag = true;
 							bool postflag = false;
 							bool fromiktarget = false;
-							ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
+							ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 								0, 
 								//curbone, aplybone,
 								curbone, curbone,//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
@@ -14680,7 +14688,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 
 
 						//2023/03/04 制限角度に引っ掛かった場合には　やめて　次のジョイントの回転へ
-						if ((ismovable2 == 0) && (g_wallscrapingikflag == 0)) {
+						if ((ismovable2 == 0) && (wallscrapingikflag == 0)) {
 							continue;
 						}
 
@@ -14749,7 +14757,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int depthcnt,
 	}
 }
 
-int CModel::RigControlFootRig(bool limitdegflag, int depthcnt,
+int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int depthcnt,
 	double srccurframe, int srcboneno,
 	int uvno, float srcdelta,
 	CUSTOMRIG ikcustomrig, int buttonflag)
@@ -14845,7 +14853,7 @@ int CModel::RigControlFootRig(bool limitdegflag, int depthcnt,
 				if ((rigrigno >= 0) && (rigrigno < MAXRIGNUM)) {
 					if (currigelem.transuv[uvno].enable == 1) {
 						CUSTOMRIG rigrig = rigrigbone->GetCustomRig(rigrigno);
-						RigControlFootRig(limitdegflag, depthcnt, srccurframe, rigrigbone->GetBoneNo(),
+						RigControlFootRig(limitdegflag, wallscrapingikflag, depthcnt, srccurframe, rigrigbone->GetBoneNo(),
 							uvno, srcdelta * currigelem.transuv[uvno].applyrate, rigrig, buttonflag);
 					}
 				}
@@ -14935,7 +14943,7 @@ int CModel::RigControlFootRig(bool limitdegflag, int depthcnt,
 						bool keynum1flag = true;
 						bool postflag = false;
 						bool fromiktarget = false;
-						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, nullptr,
+						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, nullptr,
 							0,
 							//curbone, aplybone,
 							curbone, curbone,//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
@@ -14945,7 +14953,7 @@ int CModel::RigControlFootRig(bool limitdegflag, int depthcnt,
 
 
 						//2023/03/04 制限角度に引っ掛かった場合には　やめて　次のジョイントの回転へ
-						if ((ismovable2 == 0) && (g_wallscrapingikflag == 0)) {
+						if ((ismovable2 == 0) && (wallscrapingikflag == 0)) {
 							notmovecount++;//2024/09/08 動かなかったリグの数をカウント
 							continue;
 						}
@@ -15021,7 +15029,7 @@ int CModel::RigControlFootRig(bool limitdegflag, int depthcnt,
 	return notmovecount;//2024/09/08 角度制限により動かなかったリグの数を返す
 }
 
-int CModel::RigControlPostRig(bool limitdegflag, int depthcnt, 
+int CModel::RigControlPostRig(bool limitdegflag, int wallscrapingikflag, int depthcnt,
 	CEditRange* erptr, int srcboneno, 
 	int uvno,
 	CUSTOMRIG ikcustomrig, int buttonflag)
@@ -15099,7 +15107,7 @@ int CModel::RigControlPostRig(bool limitdegflag, int depthcnt,
 				if ((rigrigno >= 0) && (rigrigno < MAXRIGNUM)) {
 					if (currigelem.transuv[uvno].enable == 1) {
 						CUSTOMRIG rigrig = rigrigbone->GetCustomRig(rigrigno);
-						RigControlPostRig(limitdegflag, depthcnt, erptr, rigrigbone->GetBoneNo(),
+						RigControlPostRig(limitdegflag, wallscrapingikflag, depthcnt, erptr, rigrigbone->GetBoneNo(),
 							uvno, rigrig, buttonflag);
 					}
 				}
@@ -15167,7 +15175,7 @@ int CModel::RigControlPostRig(bool limitdegflag, int depthcnt,
 									int updatecount;
 									for (updatecount = 0; updatecount < POSTIK_THREADSNUM; updatecount++) {
 										CThreadingPostIK* curupdate = m_PostIKThreads + updatecount;
-										curupdate->IKRotateOneFrame(this, limitdegflag, erptr,
+										curupdate->IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 											keyno,
 											//curbone, aplybone,
 											curbone, curbone,//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
@@ -15204,7 +15212,7 @@ int CModel::RigControlPostRig(bool limitdegflag, int depthcnt,
 		for (curframe = roundingstartframe; curframe <= roundingendframe; curframe += 1.0) {
 			if (curframe != roundingapplyframe) {
 				bool postflag = true;
-				chacalcfunc.IKTargetVec(this, limitdegflag, erptr, curmotid, curframe, postflag);
+				chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, postflag);
 			}
 		}
 	}
@@ -15219,7 +15227,8 @@ int CModel::RigControlPostRig(bool limitdegflag, int depthcnt,
 
 
 
-int CModel::InterpolateBetweenSelection(bool limitdegflag, int curmotid, double srcstartframe, double srcendframe, 
+int CModel::InterpolateBetweenSelection(bool limitdegflag, 
+	int curmotid, double srcstartframe, double srcendframe,
 	CBone* interpolatebone, int srckind)
 {
 	//2023/02/06
@@ -15273,7 +15282,7 @@ int CModel::InterpolateBetweenSelection(bool limitdegflag, int curmotid, double 
 	return operatingjointno;
 }
 
-void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone, 
+void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone,
 	int curmotid,
 	double srcstartframe, double srcendframe, bool oneflag, bool broflag)
 {
@@ -15340,7 +15349,8 @@ void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone,
 				ChaMatrix befwm = srcbone->GetWorldMat(limitdegflag, curmotid, frame, 0);
 
 				//2024/01/31 support scale!
-				srcbone->SetWorldMatFromQAndScaleAndTra(limitdegflag, setchildflag1, befwm, iniq, setq, setsc, settra, curmotid, frame);
+				srcbone->SetWorldMatFromQAndScaleAndTra(limitdegflag, 
+					setchildflag1, befwm, iniq, setq, setsc, settra, curmotid, frame);
 			}
 		}
 		else if (srcbone->IsCamera() || srcbone->IsNullAndChildIsCamera()) {
@@ -15449,11 +15459,11 @@ void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone,
 		if (oneflag == false) {
 			if (srcbone->GetChild(false)) {
 				bool broflag2 = true;
-				InterpolateBetweenSelectionReq(limitdegflag, srcbone->GetChild(false), 
+				InterpolateBetweenSelectionReq(limitdegflag, srcbone->GetChild(false),
 					curmotid, roundingstartframe, roundingendframe, oneflag, broflag2);
 			}
 			if (srcbone->GetBrother(false) && broflag) {
-				InterpolateBetweenSelectionReq(limitdegflag, srcbone->GetBrother(false), 
+				InterpolateBetweenSelectionReq(limitdegflag, srcbone->GetBrother(false),
 					curmotid, roundingstartframe, roundingendframe, oneflag, broflag);
 			}
 		}
@@ -15761,7 +15771,7 @@ void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone,
 //}
 
 
-int CModel::IsMovableRot(bool limitdegflag, int srcmotid, double srcframe, double srcapplyframe, CQuaternion srcaddrot,
+int CModel::IsMovableRot(bool limitdegflag, int wallscrapingikflag, int srcmotid, double srcframe, double srcapplyframe, CQuaternion srcaddrot,
 	CBone* srcrotbone, CBone* srcaplybone)
 {
 	ChaCalcFunc chacalcfunc;
@@ -15812,7 +15822,7 @@ int CModel::IsMovableRot(bool limitdegflag, int srcmotid, double srcframe, doubl
 	dummyparentwm.SetIdentity();
 	double dummystartframe = 0.0;
 	int onlycheckIsMovable = 0;
-	srcrotbone->RotAndTraBoneQReq(limitdegflag, &onlycheckIsMovable, dummystartframe,
+	srcrotbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag, &onlycheckIsMovable, dummystartframe,
 		infooutflag, 0, srcmotid, roundingframe, 
 		curqForRot, curqForHipsRot, fromiktarget);
 
@@ -16983,7 +16993,7 @@ int CModel::CameraTranslateAxis(double curframe, ChaVector3 addtra)
 
 
 int CModel::IKRotateAxisDeltaUnderIK( 
-	bool limitdegflag, CEditRange* erptr, 
+	bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 	int axiskind, int srcboneno, float delta, int maxlevel, int ikcnt, ChaMatrix selectmat)
 {
 	//####################################################################################################
@@ -17164,9 +17174,9 @@ int CModel::IKRotateAxisDeltaUnderIK(
 				//2023/01/22 : topposスライダーの位置のフレーム(３D表示中のフレーム)において　
 				//制限角度により　回転出来ない場合は　リターンする
 				//if (g_limitdegflag != false) {
-				if ((limitdegflag != false) && (g_wallscrapingikflag == 0)) {//2023/01/23
+				if ((limitdegflag != false) && (wallscrapingikflag == 0)) {//2023/01/23
 					//2023/01/28 IK時は　GetBtForce()チェックはしない　BtForce == 1でも角度制限する
-					int ismovable = IsMovableRot(limitdegflag, curmotid, applyframe, applyframe, localq, aplybone, aplybone);
+					int ismovable = IsMovableRot(limitdegflag, wallscrapingikflag, curmotid, applyframe, applyframe, localq, aplybone, aplybone);
 					if (ismovable == 0) {
 						////g_underIKRot = false;//2023/01/14 parent limited or not
 						//if (editboneforret) {
@@ -17194,7 +17204,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 					bool keynum1flag = false;
 					bool postflag = false;
 					bool fromiktarget = false;
-					ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
+					ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 						keyno, 
 						aplybone, aplybone,
 						curmotid, curframe, startframe, applyframe,
@@ -17211,7 +17221,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 					bool keynum1flag = true;
 					bool postflag = false;
 					bool fromiktarget = false;
-					ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
+					ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 						0, 
 						aplybone, aplybone,
 						curmotid, GetCurrentFrame(), startframe, applyframe,
@@ -17220,7 +17230,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 
 
 				//2023/03/04 制限角度に引っ掛かった場合には　やめて　次のジョイントの回転へ
-				if ((ismovable2 == 0) && (g_wallscrapingikflag == 0)) {
+				if ((ismovable2 == 0) && (wallscrapingikflag == 0)) {
 
 					//2023/03/14 continueの前にすべきこと追加
 					//RotAndTraBoneQReq内でGetMotionPointがNULLの場合にも　ismovable2 == 0
@@ -17279,7 +17289,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 
 		//絶対モードの場合
 		if ((calccnt == (calcnum - 1)) && g_absikflag && lastbone) {
-			chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastbone, curmotid);
+			chacalcfunc.AdjustBoneTra(this, limitdegflag, wallscrapingikflag, erptr, lastbone, curmotid);
 		}
 	}
 
@@ -17295,7 +17305,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 }
 
 int CModel::IKRotateAxisDeltaPostIK(
-	bool limitdegflag, CEditRange* erptr,
+	bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 	int axiskind, int srcboneno, int maxlevel, int ikcnt)
 {
 	ChaCalcFunc chacalcfunc;
@@ -17435,7 +17445,7 @@ int CModel::IKRotateAxisDeltaPostIK(
 								int updatecount;
 								for (updatecount = 0; updatecount < POSTIK_THREADSNUM; updatecount++) {
 									CThreadingPostIK* curupdate = m_PostIKThreads + updatecount;
-									curupdate->IKRotateOneFrame(this, limitdegflag, erptr,
+									curupdate->IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 										keyno,
 										aplybone, aplybone,
 										curmotid, startframe, applyframe,
@@ -17522,7 +17532,7 @@ int CModel::IKRotateAxisDeltaPostIK(
 		for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
 			if (curframe != applyframe) {
 				bool postflag = true;
-				chacalcfunc.IKTargetVec(this, limitdegflag, erptr, curmotid, curframe, postflag);
+				chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, postflag);
 			}
 		}
 
@@ -17531,7 +17541,7 @@ int CModel::IKRotateAxisDeltaPostIK(
 
 	//絶対モードの場合
 	if ((calccnt == (calcnum - 1)) && g_absikflag && lastbone) {
-		chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastbone, curmotid);
+		chacalcfunc.AdjustBoneTra(this, limitdegflag, wallscrapingikflag, erptr, lastbone, curmotid);
 	}
 
 	//g_underIKRot = false;//2023/01/14 parent limited or not
@@ -17545,7 +17555,8 @@ int CModel::IKRotateAxisDeltaPostIK(
 }
 
 
-int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind, int srcboneno, float delta, int maxlevel, int ikcnt, ChaMatrix selectmat)
+int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag, 
+	CEditRange* erptr, int axiskind, int srcboneno, float delta, int maxlevel, int ikcnt, ChaMatrix selectmat)
 {
 	//####################################################################################################
 	//2022/11/04
@@ -17716,9 +17727,9 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind
 			//2023/01/22 : topposスライダーの位置のフレーム(３D表示中のフレーム)において　
 			//制限角度により　回転出来ない場合は　リターンする
 			//if (g_limitdegflag != false) {
-			if ((limitdegflag != false) && (g_wallscrapingikflag == 0)) {//2023/01/23
+			if ((limitdegflag != false) && (wallscrapingikflag == 0)) {//2023/01/23
 				//2023/01/28 IK時は　GetBtForce()チェックはしない　BtForce == 1でも角度制限する
-				int ismovable = IsMovableRot(limitdegflag, curmotid, applyframe, applyframe, localq, aplybone, aplybone);
+				int ismovable = IsMovableRot(limitdegflag, wallscrapingikflag, curmotid, applyframe, applyframe, localq, aplybone, aplybone);
 				if (ismovable == 0) {
 					////g_underIKRot = false;//2023/01/14 parent limited or not
 					//if (editboneforret) {
@@ -17745,7 +17756,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind
 					bool keynum1flag = false;
 					bool postflag = false;
 					bool fromiktarget = false;
-					chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
+					chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 						keyno, 
 						aplybone, aplybone,
 						curmotid, curframe, startframe, applyframe,
@@ -17762,7 +17773,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind
 				bool keynum1flag = true;
 				bool postflag = false;
 				bool fromiktarget = false;
-				chacalcfunc.IKRotateOneFrame(this, limitdegflag, erptr,
+				chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 					0, 
 					aplybone, aplybone,
 					curmotid, GetCurrentFrame(), startframe, applyframe,
@@ -17789,7 +17800,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind
 
 		//絶対モードの場合
 		if ((calccnt == (calcnum - 1)) && g_absikflag && lastbone){
-			chacalcfunc.AdjustBoneTra(this, limitdegflag, erptr, lastbone, curmotid);
+			chacalcfunc.AdjustBoneTra(this, limitdegflag, wallscrapingikflag, erptr, lastbone, curmotid);
 		}
 	}
 
@@ -17947,18 +17958,20 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind
 
 
 //int CModel::FKRotate( double srcframe, int srcboneno, ChaMatrix srcmat )
-int CModel::FKRotate(bool limitdegflag, bool onretarget, int reqflag, 
+int CModel::FKRotate(bool limitdegflag, int wallscrapingikflag, bool onretarget, int reqflag,
 	CBone* bvhbone, int traflag, ChaVector3 traanim, double srcframe, int srcboneno, 
 	CQuaternion rotq)//, int setmatflag, ChaMatrix* psetmat)
 {
 	ChaCalcFunc chacalcfunc;
-	return chacalcfunc.FKRotate(this, limitdegflag, onretarget, reqflag,
+	return chacalcfunc.FKRotate(this, limitdegflag, wallscrapingikflag, 
+		onretarget, reqflag,
 		bvhbone, traflag, traanim, srcframe, srcboneno,
 		rotq);
 }
 
 int CModel::FKBoneTraAxisUnderFK(
-	bool limitdegflag, CEditRange* erptr, int srcboneno, int axiskind, float delta, ChaMatrix selectmat)
+	bool limitdegflag, int wallscrapingikflag, 
+	CEditRange* erptr, int srcboneno, int axiskind, float delta, ChaMatrix selectmat)
 {
 	if ((srcboneno < 0) && !GetTopBone()) {
 		return 0;
@@ -17995,13 +18008,13 @@ int CModel::FKBoneTraAxisUnderFK(
 	ChaVector3 addtra;
 	addtra = basevec * delta * g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
 
-	FKBoneTraUnderFK(limitdegflag, erptr, srcboneno, addtra);
+	FKBoneTraUnderFK(limitdegflag, wallscrapingikflag, erptr, srcboneno, addtra);
 
 	return 0;
 }
 
 int CModel::FKBoneTraAxisPostFK(
-	bool limitdegflag, CEditRange* erptr, int srcboneno)
+	bool limitdegflag, int wallscrapingikflag, CEditRange* erptr, int srcboneno)
 {
 	if ((srcboneno < 0) && !GetTopBone()) {
 		return 0;
@@ -18013,13 +18026,14 @@ int CModel::FKBoneTraAxisPostFK(
 		return 0;
 	}
 
-	FKBoneTraPostFK(limitdegflag, erptr, srcboneno);
+	FKBoneTraPostFK(limitdegflag, wallscrapingikflag, erptr, srcboneno);
 
 	return 0;
 }
 
 
-int CModel::FKBoneTraAxis(bool limitdegflag, int onlyoneflag, CEditRange* erptr, int srcboneno, int axiskind, float delta, ChaMatrix selectmat)
+int CModel::FKBoneTraAxis(bool limitdegflag, int wallscrapingikflag, 
+	int onlyoneflag, CEditRange* erptr, int srcboneno, int axiskind, float delta, ChaMatrix selectmat)
 {
 	ChaCalcFunc chacalcfunc;
 
@@ -18062,13 +18076,14 @@ int CModel::FKBoneTraAxis(bool limitdegflag, int onlyoneflag, CEditRange* erptr,
 	ChaVector3 addtra;
 	addtra = basevec * delta;
 
-	chacalcfunc.FKBoneTra(this, limitdegflag, 0, erptr, srcboneno, curmotid, addtra);
+	chacalcfunc.FKBoneTra(this, limitdegflag, wallscrapingikflag, 
+		0, erptr, srcboneno, curmotid, addtra);
 
 	return 0;
 }
 
 int CModel::FKBoneTraUnderFK(
-	bool limitdegflag, CEditRange* erptr,
+	bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 	int srcboneno, ChaVector3 addtra)
 {
 	ChaCalcFunc chacalcfunc;
@@ -18131,17 +18146,17 @@ int CModel::FKBoneTraUnderFK(
 			if (g_absikflag == 0) {
 				if (g_slerpoffflag == 0) {
 					translation = addtra * (float)changerate;
-					curbone->AddBoneTraReq(limitdegflag, 0, curmotid, curframe, translation, dummyparentwm, dummyparentwm);
+					curbone->AddBoneTraReq(limitdegflag, wallscrapingikflag, 0, curmotid, curframe, translation, dummyparentwm, dummyparentwm);
 				}
 				else {
 					translation = addtra;
-					curbone->AddBoneTraReq(limitdegflag, 0, curmotid, curframe, translation, dummyparentwm, dummyparentwm);
+					curbone->AddBoneTraReq(limitdegflag, wallscrapingikflag, 0, curmotid, curframe, translation, dummyparentwm, dummyparentwm);
 				}
 			}
 			else {
 				if (keyno == 0) {
 					translation = addtra;
-					curbone->AddBoneTraReq(limitdegflag, 0, curmotid, curframe, translation, dummyparentwm, dummyparentwm);
+					curbone->AddBoneTraReq(limitdegflag, wallscrapingikflag, 0, curmotid, curframe, translation, dummyparentwm, dummyparentwm);
 				}
 				//else {
 				//	curbone->SetAbsMatReq(limitdegflag, 0, m_curmotinfo->motid, curframe, firstframe);
@@ -18149,7 +18164,7 @@ int CModel::FKBoneTraUnderFK(
 			}
 
 			bool postflag = false;
-			chacalcfunc.IKTargetVec(this, limitdegflag, erptr, curmotid, curframe, postflag);
+			chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, postflag);
 
 
 			keyno++;
@@ -18158,10 +18173,10 @@ int CModel::FKBoneTraUnderFK(
 	}
 	else {
 		translation = addtra;
-		curbone->AddBoneTraReq(limitdegflag, 0, curmotid, startframe, translation, dummyparentwm, dummyparentwm);
+		curbone->AddBoneTraReq(limitdegflag, wallscrapingikflag, 0, curmotid, startframe, translation, dummyparentwm, dummyparentwm);
 
 		bool postflag = false;
-		chacalcfunc.IKTargetVec(this, limitdegflag, erptr, curmotid, startframe, postflag);
+		chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, startframe, postflag);
 
 	}
 
@@ -18175,7 +18190,7 @@ int CModel::FKBoneTraUnderFK(
 }
 
 int CModel::FKBoneTraPostFK(
-	bool limitdegflag, CEditRange* erptr,
+	bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 	int srcboneno)
 {
 
@@ -18234,7 +18249,7 @@ int CModel::FKBoneTraPostFK(
 					int updatecount;
 					for (updatecount = 0; updatecount < POSTFKTRA_THREADSNUM; updatecount++) {
 						CThreadingFKTra* curupdate = m_FKTraThreads + updatecount;
-						curupdate->FKBoneTraOneFrame(this, limitdegflag, erptr,
+						curupdate->FKBoneTraOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 							curbone->GetBoneNo(), curmotid, translation);
 					}
 					WaitFKTraFinished();
@@ -18252,7 +18267,7 @@ int CModel::FKBoneTraPostFK(
 	for (curframe = RoundingTime(startframe); curframe <= RoundingTime(endframe); curframe += 1.0) {
 		if (curframe != RoundingTime(applyframe)) {
 			bool postflag = true;
-			chacalcfunc.IKTargetVec(this, limitdegflag, erptr, curmotid, curframe, postflag);
+			chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, postflag);
 		}
 	}
 
@@ -18334,7 +18349,7 @@ int CModel::RefreshPosConstraint()
 	return 0;
 }
 
-int CModel::PosConstraintExecuteFromButton(bool limitdegflag, CEditRange* erptr)
+int CModel::PosConstraintExecuteFromButton(bool limitdegflag, int wallscrapingikflag, CEditRange* erptr)
 {
 	ChaCalcFunc chacalcfunc;
 
@@ -18359,7 +18374,7 @@ int CModel::PosConstraintExecuteFromButton(bool limitdegflag, CEditRange* erptr)
 			bool postflag = true;
 			int calccount;
 			for (calccount = 0; calccount < 1; calccount++) {//IKTargetVecでも複数回計算している
-				chacalcfunc.IKTargetVec(this, limitdegflag, erptr, curmotid, curframe, postflag);
+				chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, postflag);
 			}
 		}
 	}
@@ -18372,7 +18387,8 @@ int CModel::PosConstraintExecuteFromButton(bool limitdegflag, CEditRange* erptr)
 }
 
 
-int CModel::FKBoneScaleAxis(bool limitdegflag, int onlyoneflag, CEditRange* erptr, int srcboneno, int axiskind, float scaleval)
+int CModel::FKBoneScaleAxis(bool limitdegflag, int wallscrapingikflag, 
+	int onlyoneflag, CEditRange* erptr, int srcboneno, int axiskind, float scaleval)
 {
 	if ((srcboneno < 0) && !GetTopBone()) {
 		return 0;
@@ -18482,12 +18498,13 @@ int CModel::FKBoneScaleAxis(bool limitdegflag, int onlyoneflag, CEditRange* erpt
 	//	scalevec.z = 0.0001f;
 	//}
 
-	FKBoneScale(limitdegflag, 0, erptr, srcboneno, scalevec);
+	FKBoneScale(limitdegflag, wallscrapingikflag, 0, erptr, srcboneno, scalevec);
 
 	return 0;
 }
 
-int CModel::FKBoneScale(bool limitdegflag, int onlyoneflag, CEditRange* erptr, int srcboneno, ChaVector3 scalevec)
+int CModel::FKBoneScale(bool limitdegflag, int wallscrapingikflag, 
+	int onlyoneflag, CEditRange* erptr, int srcboneno, ChaVector3 scalevec)
 {
 
 	if (srcboneno < 0) {
@@ -18572,24 +18589,27 @@ int CModel::FKBoneScale(bool limitdegflag, int onlyoneflag, CEditRange* erptr, i
 					//ChaVector3 curtra;
 					//curtra = (1.0 - currate2) * addtra;
 
-					curbone->AddBoneScaleReq(limitdegflag, 0, 
+					curbone->AddBoneScaleReq(limitdegflag, wallscrapingikflag, 
+						0,
 						curmotid, RoundingTime(curframe), 
 						curscale, dummyparentwm, dummyparentwm);
 				}
 				else {
-					curbone->AddBoneScaleReq(limitdegflag, 0, 
+					curbone->AddBoneScaleReq(limitdegflag, wallscrapingikflag, 
+						0,
 						curmotid, RoundingTime(curframe),
 						scalevec, dummyparentwm, dummyparentwm);
 				}
 			}
 			else {
 				if (keyno == 0) {
-					curbone->AddBoneScaleReq(limitdegflag, 0, 
+					curbone->AddBoneScaleReq(limitdegflag, wallscrapingikflag, 
+						0,
 						curmotid, RoundingTime(curframe),
 						scalevec, dummyparentwm, dummyparentwm);
 				}
 				else {
-					curbone->SetAbsMatReq(limitdegflag, 0, 
+					curbone->SetAbsMatReq(limitdegflag, wallscrapingikflag, 0,
 						curmotid, RoundingTime(curframe), firstframe);
 				}
 			}
@@ -18598,7 +18618,8 @@ int CModel::FKBoneScale(bool limitdegflag, int onlyoneflag, CEditRange* erptr, i
 		}
 	}
 	else {
-		curbone->AddBoneScaleReq(limitdegflag, 0, 
+		curbone->AddBoneScaleReq(limitdegflag, wallscrapingikflag, 
+			0,
 			curmotid, RoundingTime(startframe), 
 			scalevec, dummyparentwm, dummyparentwm);
 	}
@@ -19699,14 +19720,14 @@ void CModel::SetKinematicTmpLowerReq(CBone* srcbone, bool srcflag)
 //}
 
 
-int CModel::ApplyBtToMotion(bool limitdegflag)
+int CModel::ApplyBtToMotion(bool limitdegflag, int wallscrapingikflag)
 {
-	ApplyBtToMotionReq(limitdegflag, GetTopBone(false));
+	ApplyBtToMotionReq(limitdegflag, wallscrapingikflag, GetTopBone(false));
 
 	return 0;
 }
 
-void CModel::ApplyBtToMotionReq(bool limitdegflag, CBone* srcbone)
+void CModel::ApplyBtToMotionReq(bool limitdegflag, int wallscrapingikflag, CBone* srcbone)
 {
 	if (!srcbone)
 		return;
@@ -19744,17 +19765,17 @@ void CModel::ApplyBtToMotionReq(bool limitdegflag, CBone* srcbone)
 		bool directsetflag = true;
 		int onlycheck = 0;
 		bool fromiktarget = false;
-		srcbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, 0, 
+		srcbone->SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, 0,
 			curmotid, GetCurrentFrame(), setmat,
 			onlycheck, fromiktarget);
 
 	}
 
 	if (srcbone->GetChild(false)){
-		ApplyBtToMotionReq(limitdegflag, srcbone->GetChild(false));
+		ApplyBtToMotionReq(limitdegflag, wallscrapingikflag, srcbone->GetChild(false));
 	}
 	if (srcbone->GetBrother(false)){
-		ApplyBtToMotionReq(limitdegflag, srcbone->GetBrother(false));
+		ApplyBtToMotionReq(limitdegflag, wallscrapingikflag, srcbone->GetBrother(false));
 	}
 
 }
@@ -19925,7 +19946,7 @@ void CModel::PhysIKRecReq(bool limitdegflag, CBone* srcbone, double srcrectime)
 }
 
 
-void CModel::ApplyPhysIkRec(bool limitdegflag)
+void CModel::ApplyPhysIkRec(bool limitdegflag, int wallscrapingikflag)
 {
 	if (!GetTopBone()) {
 		return;
@@ -19967,7 +19988,7 @@ void CModel::ApplyPhysIkRec(bool limitdegflag)
 				currectime = (double)((int)fmax(0.0, currectime));
 			}
 
-			ApplyPhysIkRecReq(limitdegflag, GetTopBone(false), curframe, currectime);
+			ApplyPhysIkRecReq(limitdegflag, wallscrapingikflag, GetTopBone(false), curframe, currectime);
 		}
 	}
 	else {
@@ -19982,7 +20003,7 @@ void CModel::ApplyPhysIkRec(bool limitdegflag)
 			currectime = (double)((int)fmin(currectime, (m_phyikrectime - 1.0)));
 			currectime = (double)((int)fmax(0.0, currectime));
 
-			ApplyPhysIkRecReq(limitdegflag, GetTopBone(false), curframe, currectime);
+			ApplyPhysIkRecReq(limitdegflag, wallscrapingikflag, GetTopBone(false), curframe, currectime);
 
 		}
 	}
@@ -19990,7 +20011,8 @@ void CModel::ApplyPhysIkRec(bool limitdegflag)
 	return;
 }
 
-void CModel::ApplyPhysIkRecReq(bool limitdegflag, CBone* srcbone, double srcframe, double srcrectime)
+void CModel::ApplyPhysIkRecReq(bool limitdegflag, int wallscrapingikflag, 
+	CBone* srcbone, double srcframe, double srcrectime)
 {
 	if (!srcbone)
 		return;
@@ -20124,7 +20146,7 @@ void CModel::ApplyPhysIkRecReq(bool limitdegflag, CBone* srcbone, double srcfram
 				if (btbone->GetChild(false)) {
 					int onlycheck = 0;
 					bool fromiktarget = false;
-					btbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, 0,
+					btbone->SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, 0,
 						curmotid, roundingframe, setmat,
 						onlycheck, fromiktarget);
 				}
@@ -20139,7 +20161,7 @@ void CModel::ApplyPhysIkRecReq(bool limitdegflag, CBone* srcbone, double srcfram
 					else {
 						parsetmat = setmat;
 					}
-					btbone->SetWorldMat(limitdegflag, directsetflag, infooutflag, 0,
+					btbone->SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, 0,
 						curmotid, roundingframe, parsetmat,
 						onlycheck, fromiktarget);
 					//btbone->SetWorldMat(1, curmi->motid, roundingframe, parsetmat);
@@ -20154,10 +20176,10 @@ void CModel::ApplyPhysIkRecReq(bool limitdegflag, CBone* srcbone, double srcfram
 	}
 
 	if (srcbone->GetChild(false)) {
-		ApplyPhysIkRecReq(limitdegflag, srcbone->GetChild(false), roundingframe, srcrectime);
+		ApplyPhysIkRecReq(limitdegflag, wallscrapingikflag, srcbone->GetChild(false), roundingframe, srcrectime);
 	}
 	if (srcbone->GetBrother(false)) {
-		ApplyPhysIkRecReq(limitdegflag, srcbone->GetBrother(false), roundingframe, srcrectime);
+		ApplyPhysIkRecReq(limitdegflag, wallscrapingikflag, srcbone->GetBrother(false), roundingframe, srcrectime);
 	}
 
 }

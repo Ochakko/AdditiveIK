@@ -7503,7 +7503,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				delta = GET_WHEEL_DELTA_WPARAM(wParam);
 				s_ikselectmat = s_selm;
 				//s_editmotionflag = s_model->TwistBoneAxisDelta(&s_editrange, s_curboneno, (float)delta, g_iklevel, s_ikcnt, s_ikselectmat);
-				s_editmotionflag = s_model->IKRotateAxisDelta(g_limitdegflag,
+				s_editmotionflag = s_model->IKRotateAxisDelta(g_limitdegflag, g_wallscrapingikflag,
 					&s_editrange, PICK_X, s_curboneno, (float)delta, g_iklevel, s_ikcnt, s_ikselectmat);
 
 				//ClearLimitedWM(s_model);//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
@@ -8357,7 +8357,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					if ((s_ikkind == 0) && (editmotionflag >= 0)) {
 						if (s_pickinfo.buttonflag == PICK_CENTER) {
 							HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
-							s_editmotionflag = s_model->IKRotatePostIK(g_limitdegflag,
+							s_editmotionflag = s_model->IKRotatePostIK(g_limitdegflag, g_wallscrapingikflag,
 								&s_editrange, s_pickinfo.pickobjno, g_iklevel);
 
 							if (oldcursor != NULL) {
@@ -8374,7 +8374,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
 							s_editmotionflag = s_model->IKRotateAxisDeltaPostIK(
-								g_limitdegflag,
+								g_limitdegflag, g_wallscrapingikflag,
 								&s_editrange, s_pickinfo.buttonflag, s_pickinfo.pickobjno,
 								g_iklevel, s_ikcnt);
 
@@ -8392,7 +8392,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							//g_underPostFKTra = true;
 							s_model->SetUnderPostFKTra(true);
 
-							s_model->FKBoneTraPostFK(g_limitdegflag,
+							s_model->FKBoneTraPostFK(g_limitdegflag, g_wallscrapingikflag,
 								&s_editrange, s_curboneno);
 							s_editmotionflag = s_curboneno;
 
@@ -8416,7 +8416,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							s_model->SetUnderPostFKTra(true);
 
 							s_model->FKBoneTraAxisPostFK(
-								g_limitdegflag,
+								g_limitdegflag, g_wallscrapingikflag,
 								&s_editrange, s_curboneno);
 							s_editmotionflag = s_curboneno;
 
@@ -8437,13 +8437,13 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
 						s_ikcustomrig = s_customrigbone->GetCustomRig(s_customrigno);
-						s_model->RigControlPostRig(g_limitdegflag,
+						s_model->RigControlPostRig(g_limitdegflag, g_wallscrapingikflag,
 							0, &s_editrange, s_pickinfo.pickobjno,
 							0,
 							s_ikcustomrig, s_pickinfo.buttonflag);
 						ChaMatrix tmpwm = s_model->GetWorldMat();
 						s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
-						s_model->RigControlPostRig(g_limitdegflag,
+						s_model->RigControlPostRig(g_limitdegflag, g_wallscrapingikflag,
 							0, &s_editrange, s_pickinfo.pickobjno,
 							1,
 							s_ikcustomrig, s_pickinfo.buttonflag);
@@ -8483,7 +8483,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			//s_model->SetBtKinFlagReq(s_model->GetTopBt(), 1);
 			s_model->BulletSimulationStop();
 			g_previewFlag = 0;
-			s_model->ApplyPhysIkRec(g_limitdegflag);
+			s_model->ApplyPhysIkRec(g_limitdegflag, g_wallscrapingikflag);
 		}
 
 
@@ -12041,7 +12041,7 @@ int AddBoneTra2(ChaVector3 diffvec)
 		return 0;
 	}
 
-	s_model->FKBoneTraUnderFK(g_limitdegflag, &s_editrange, s_curboneno, diffvec);
+	s_model->FKBoneTraUnderFK(g_limitdegflag, g_wallscrapingikflag, &s_editrange, s_curboneno, diffvec);
 
 	s_editmotionflag = s_curboneno;
 
@@ -12082,7 +12082,7 @@ int AddBoneTra(int kind, float srctra)
 	}
 
 	s_model->FKBoneTraAxisUnderFK(
-		g_limitdegflag,
+		g_limitdegflag, g_wallscrapingikflag,
 		&s_editrange, s_curboneno, kind, srctra, s_ikselectmat);
 	s_editmotionflag = s_curboneno;
 
@@ -12154,7 +12154,7 @@ int AddBoneScale2(ChaVector3 diffvec)
 	scalevec.y = scaleval;
 	scalevec.z = scaleval;
 
-	s_model->FKBoneScale(g_limitdegflag, 0, &s_editrange, s_curboneno, scalevec);
+	s_model->FKBoneScale(g_limitdegflag, g_wallscrapingikflag, 0, &s_editrange, s_curboneno, scalevec);
 
 	s_editmotionflag = s_curboneno;
 
@@ -12185,7 +12185,7 @@ int AddBoneScale(int kind, float srcscale)
 		scaleval = downval;
 	}
 
-	s_model->FKBoneScaleAxis(g_limitdegflag,
+	s_model->FKBoneScaleAxis(g_limitdegflag, g_wallscrapingikflag,
 		0, &s_editrange, s_curboneno, kind, scaleval);
 
 
@@ -23483,7 +23483,8 @@ int ApplyNewLimitsToWM(CModel* srcmodel)
 			//for (curframe = 0.0; curframe < curmi->frameleng; curframe += 1.0) {
 			for (curframe2 = 1.0; curframe2 < srcmodel->GetCurrentMaxFrame(); curframe2 += 1.0) {
 				srcmodel->SetMotionFrame(curframe2);
-				srcmodel->ApplyNewLimitsToWMReq(srcmodel->GetTopBone(false), srcmodel->GetCurrentMotID(), curframe2, befeditparentmat);
+				srcmodel->ApplyNewLimitsToWMReq(srcmodel->GetTopBone(false), 
+					srcmodel->GetCurrentMotID(), curframe2, befeditparentmat);
 				//srcmodel->UpdateMatrix(&tmpwm, &s_matVP);
 			}
 		}
@@ -25236,7 +25237,7 @@ int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopsta
 int StopBtRec()
 {
 	StopBt();
-	s_model->ApplyPhysIkRec(g_limitdegflag);
+	s_model->ApplyPhysIkRec(g_limitdegflag, g_wallscrapingikflag);
 	refreshEulerGraph();
 	PrepairUndo();//物理REC用保存
 	g_btsimurecflag = false;
@@ -26977,7 +26978,7 @@ int OnFrameToolWnd()
 			HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 			OnTimeLineButtonSelectFromSelectStartEnd(0);
 			OnTimeLineSelectFromSelectedKey();
-			s_model->PosConstraintExecuteFromButton(g_limitdegflag, &s_editrange);
+			s_model->PosConstraintExecuteFromButton(g_limitdegflag, g_wallscrapingikflag, &s_editrange);
 
 			//ギザギザを平滑化
 			MOTINFO curmi = s_model->GetCurMotInfo();
@@ -34402,7 +34403,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				delta = GET_WHEEL_DELTA_WPARAM(wParam);
 				s_ikselectmat = s_selm;
 				//s_editmotionflag = s_model->TwistBoneAxisDelta(&s_editrange, s_curboneno, (float)delta, g_iklevel, s_ikcnt, s_ikselectmat);
-				s_editmotionflag = s_model->IKRotateAxisDelta(g_limitdegflag,
+				s_editmotionflag = s_model->IKRotateAxisDelta(g_limitdegflag, g_wallscrapingikflag,
 					&s_editrange, PICK_X, s_curboneno, (float)delta, g_iklevel, s_ikcnt, s_ikselectmat);
 
 				//ClearLimitedWM(s_model);//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
@@ -34958,7 +34959,7 @@ int OnMouseMoveFunc()
 							//CallF(CalcTargetPos(&targetpos), return 1);
 							CalcTargetPos(&targetpos);
 							if (s_ikkind == 0) {
-								s_editmotionflag = s_model->IKRotateUnderIK(g_limitdegflag,
+								s_editmotionflag = s_model->IKRotateUnderIK(g_limitdegflag, g_wallscrapingikflag,
 									&s_editrange, s_pickinfo.pickobjno, targetpos, g_iklevel);
 
 								//ClearLimitedWM(s_model);//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
@@ -34996,13 +34997,13 @@ int OnMouseMoveFunc()
 								}
 
 								s_ikcustomrig = s_customrigbone->GetCustomRig(s_customrigno);
-								s_model->RigControlUnderRig(g_limitdegflag,
+								s_model->RigControlUnderRig(g_limitdegflag, g_wallscrapingikflag,
 									0, &s_editrange, s_pickinfo.pickobjno,
 									0, deltau,
 									s_ikcustomrig, s_pickinfo.buttonflag);
 								ChaMatrix tmpwm = s_model->GetWorldMat();
 								s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
-								s_model->RigControlUnderRig(g_limitdegflag,
+								s_model->RigControlUnderRig(g_limitdegflag, g_wallscrapingikflag,
 									0, &s_editrange, s_pickinfo.pickobjno,
 									1, deltav,
 									s_ikcustomrig, s_pickinfo.buttonflag);
@@ -35055,7 +35056,7 @@ int OnMouseMoveFunc()
 						if (ChkEnableIK()) {
 							if (s_ikkind == 0) {
 								s_editmotionflag = s_model->IKRotateAxisDeltaUnderIK(
-									g_limitdegflag,
+									g_limitdegflag, g_wallscrapingikflag,
 									&s_editrange, s_pickinfo.buttonflag, s_pickinfo.pickobjno,
 									deltax, g_iklevel, s_ikcnt, s_ikselectmat);
 
@@ -35153,7 +35154,7 @@ int OnMouseMoveFunc()
 						if (ChkEnableIK()) {
 							if (s_ikkind == 0) {
 								s_editmotionflag = s_model->IKRotateAxisDeltaUnderIK(
-									g_limitdegflag,
+									g_limitdegflag, g_wallscrapingikflag,
 									&s_editrange, buttonflagForIkFunc, s_pickinfo.pickobjno,
 									deltax, g_iklevel, s_ikcnt, s_ikselectmat);
 

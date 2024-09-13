@@ -54,6 +54,7 @@ int CThreadingFKTra::InitParams()
 	m_model = 0;
 
 	limitdegflag = 0;
+	wallscrapingikflag = 0;
 	erptr = 0;
 	boneno = 0;
 	motid = 0;
@@ -108,7 +109,8 @@ int CThreadingFKTra::ThreadFunc()
 								ChaCalcFunc chacalcfunc;
 
 								double curframe = m_framenovec[frameindex];
-								chacalcfunc.FKBoneTraOneFrame(m_model, limitdegflag, erptr,
+								chacalcfunc.FKBoneTraOneFrame(m_model, limitdegflag, wallscrapingikflag, 
+									erptr,
 									boneno, motid, curframe, addtra);
 
 							}
@@ -159,7 +161,8 @@ int CThreadingFKTra::ThreadFunc()
 								ChaCalcFunc chacalcfunc;
 
 								double curframe = m_framenovec[frameindex];
-								chacalcfunc.FKBoneTraOneFrame(m_model, limitdegflag, erptr,
+								chacalcfunc.FKBoneTraOneFrame(m_model, limitdegflag, wallscrapingikflag, 
+									erptr,
 									boneno, motid, curframe, addtra);
 
 							}
@@ -221,7 +224,8 @@ int CThreadingFKTra::AddFramenoList(double srcframeno)
 	return 0;
 }
 
-void CThreadingFKTra::FKBoneTraOneFrame(CModel* srcmodel, bool srclimitdegflag, CEditRange* srcerptr,
+void CThreadingFKTra::FKBoneTraOneFrame(CModel* srcmodel, bool srclimitdegflag, int srcwallscrapingikflag, 
+	CEditRange* srcerptr,
 	int srcboneno, int srcmotid, ChaVector3 srcaddtra)
 {
 
@@ -236,6 +240,7 @@ void CThreadingFKTra::FKBoneTraOneFrame(CModel* srcmodel, bool srclimitdegflag, 
 		EnterCriticalSection(&m_CritSection);
 
 		limitdegflag = srclimitdegflag;
+		wallscrapingikflag = srcwallscrapingikflag;
 		erptr = srcerptr;
 		boneno = srcboneno;
 		motid = srcmotid;

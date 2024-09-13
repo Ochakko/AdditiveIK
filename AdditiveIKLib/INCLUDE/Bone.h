@@ -305,10 +305,11 @@ public:
  * @return 計算した姿勢を格納したCMotionPointのポインタを返すが再帰関数であることに注意。ポインタはチェインにセットされたものである。
  * @detail 想定している使い方としては、外部からの呼び出し時にはparmpを０にする。この関数内での再帰呼び出し時にparmpに親をセットする。
  */
-	CMotionPoint* AddBoneTraReq(bool limitdegflag, CMotionPoint* parmp, int srcmotid, double srcframe, ChaVector3 srctra, ChaMatrix befparentwm, ChaMatrix newparentwm);
+	CMotionPoint* AddBoneTraReq(bool limitdegflag, int wallscrapingikflag, CMotionPoint* parmp, int srcmotid, double srcframe, ChaVector3 srctra, ChaMatrix befparentwm, ChaMatrix newparentwm);
 
 
-	CMotionPoint* AddBoneScaleReq(bool limitdegflag, CMotionPoint* parmp, int srcmotid, double srcframe, ChaVector3 srcscale, ChaMatrix befparentwm, ChaMatrix newparentwm);
+	CMotionPoint* AddBoneScaleReq(bool limitdegflag, int wallscrapingikflag, 
+		CMotionPoint* parmp, int srcmotid, double srcframe, ChaVector3 srcscale, ChaMatrix befparentwm, ChaMatrix newparentwm);
 
 /**
  * @fn
@@ -325,19 +326,21 @@ public:
  //CBone::RotBoneQReq()
  //引数rotqはグローバル回転　引数traanimはローカル移動アニメ
  //##########################################################
-	CMotionPoint* RotBoneQReq(bool limitdegflag, bool infooutflag, CBone* parentbone, int srcmotid, double srcframe, 
+	CMotionPoint* RotBoneQReq(bool limitdegflag, int wallscrapingikflag, bool infooutflag, CBone* parentbone, int srcmotid, double srcframe,
 		CQuaternion rotq, ChaMatrix srcbefparentwm, ChaMatrix srcnewparentwm, 
 		CBone* bvhbone = 0, ChaVector3 traanim = ChaVector3(0.0f, 0.0f, 0.0f));// , int setmatflag = 0, ChaMatrix* psetmat = 0, bool onretarget = false);
-	int RotAndTraBoneQReq(bool limitdegflag, int* onlycheckptr, double srcstartframe, bool infooutflag, CBone* parentbone, int srcmotid, double srcframe,
+	int RotAndTraBoneQReq(bool limitdegflag, int wallscrapingikflag, 
+		int* onlycheckptr, double srcstartframe, bool infooutflag, CBone* parentbone, int srcmotid, double srcframe,
 		CQuaternion qForRot, CQuaternion qForHipsRot, bool fromiktarget);
 
 	//directsetで　parentの姿勢を更新　再帰
-	void UpdateParentWMReq(bool limitdegflag, bool setbroflag, int srcmotid, double srcframe,
+	void UpdateParentWMReq(bool limitdegflag, 
+		bool setbroflag, int srcmotid, double srcframe,
 		ChaMatrix oldparentwm, ChaMatrix newparentwm);
 	
 	//directsetで　ツリーの姿勢を更新　再帰
-	void UpdateCurrentWM(bool limitdegflag, int srcmotid, double srcframe,
-		ChaMatrix newwm);
+	void UpdateCurrentWM(bool limitdegflag, 
+		int srcmotid, double srcframe, ChaMatrix newwm);
 
 
 	ChaMatrix CalcNewLocalRotMatFromQofIK(bool limitdegflag, 
@@ -356,7 +359,8 @@ public:
 /**
 
 */
-	CMotionPoint* RotBoneQOne(bool limitdegflag, CBone* srcparentbone, CMotionPoint* parmp, int srcmotid, double srcframe, ChaMatrix srcmat);
+	CMotionPoint* RotBoneQOne(bool limitdegflag, int wallscrapingikflag, 
+		CBone* srcparentbone, CMotionPoint* parmp, int srcmotid, double srcframe, ChaMatrix srcmat);
 
 /**
  * @fn
@@ -381,7 +385,8 @@ public:
  * @return 編集が適用されたボーンのCMotionPointのポインタが返される。ただし再帰的にである。
  * @detail この関数は絶対IK機能として呼ばれる。絶対IKと相対IKの説明はMain.cppの冒頭の説明を読むこと。
  */
-	CMotionPoint* SetAbsMatReq(bool limitdegflag, int broflag, int srcmotid, double srcframe, double firstframe);
+	CMotionPoint* SetAbsMatReq(bool limitdegflag, int wallscrapingikflag, 
+		int broflag, int srcmotid, double srcframe, double firstframe);
 
 
 /**
@@ -481,14 +486,20 @@ public:
 	ChaVector3 GetLimitedLocalEul(int srcmotid, double srcframe);
 	ChaVector3 GetUnlimitedLocalEul(int srcmotid, double srcframe);
 	int SetWorldMat(bool limitdegflag, int srcmotid, double srcframe, ChaMatrix srcmat, CMotionPoint* srcmp);
-	int SetWorldMat(bool limitdegflag, bool directsetflag, bool infooutflag, int setchildflag, 
+	int SetWorldMat(bool limitdegflag, int wallscrapingikflag, bool directsetflag, bool infooutflag, int setchildflag,
 		int srcmotid, double srcframe, ChaMatrix srcmat, int onlycheck, bool fromiktarget);
-	int SetBtMatLimited(bool limitdegflag, bool directsetflag, bool setchildflag, ChaMatrix srcmat);
-	int SetWorldMatFromEul(bool limitdegflag, int inittraflag, int setchildflag, ChaMatrix befwm, ChaVector3 srceul, int srcmotid, double srcframe, int initscaleflag = 0);
-	int SetWorldMatFromEulAndScaleAndTra(bool limitdegflag, int inittraflag, int setchildflag, ChaMatrix befwm, ChaVector3 srceul, ChaVector3 srcscale, ChaVector3 srctra, int srcmotid, double srcframe);
-	int SetWorldMatFromEulAndTra(bool limitdegflag, int setchildflag, ChaMatrix befwm, ChaVector3 srceul, ChaVector3 srctra, int srcmotid, double srcframe);
-	int SetWorldMatFromQAndTra(bool limitdegflag, int setchildflag, ChaMatrix befwm, CQuaternion axisq, CQuaternion srcq, ChaVector3 srctra, int srcmotid, double srcframe);
-	int SetWorldMatFromQAndScaleAndTra(bool limitdegflag, int setchildflag, ChaMatrix befwm, CQuaternion axisq, CQuaternion srcq, ChaVector3 srcscale, ChaVector3 srctra, int srcmotid, double srcframe);
+	int SetBtMatLimited(bool limitdegflag, 
+		bool directsetflag, bool setchildflag, ChaMatrix srcmat);
+	int SetWorldMatFromEul(bool limitdegflag, 
+		int inittraflag, int setchildflag, ChaMatrix befwm, ChaVector3 srceul, int srcmotid, double srcframe, int initscaleflag = 0);
+	int SetWorldMatFromEulAndScaleAndTra(bool limitdegflag, 
+		int inittraflag, int setchildflag, ChaMatrix befwm, ChaVector3 srceul, ChaVector3 srcscale, ChaVector3 srctra, int srcmotid, double srcframe);
+	int SetWorldMatFromEulAndTra(bool limitdegflag, 
+		int setchildflag, ChaMatrix befwm, ChaVector3 srceul, ChaVector3 srctra, int srcmotid, double srcframe);
+	int SetWorldMatFromQAndTra(bool limitdegflag, 
+		int setchildflag, ChaMatrix befwm, CQuaternion axisq, CQuaternion srcq, ChaVector3 srctra, int srcmotid, double srcframe);
+	int SetWorldMatFromQAndScaleAndTra(bool limitdegflag,
+		int setchildflag, ChaMatrix befwm, CQuaternion axisq, CQuaternion srcq, ChaVector3 srcscale, ChaVector3 srctra, int srcmotid, double srcframe);
 	int SetLocalEul(bool limitdegflag, int srcmotid, double srcframe, ChaVector3 srceul, CMotionPoint* srcmp);
 	//int SetLimitedLocalEul(int srcmotid, double srcframe, ChaVector3 srceul);
 

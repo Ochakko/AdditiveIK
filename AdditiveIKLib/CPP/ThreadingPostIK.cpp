@@ -54,6 +54,7 @@ int CThreadingPostIK::InitParams()
 	m_model = 0;
 
 	limitdegflag = 0;
+	wallscrapingikflag = 0;
 	erptr = 0;
 	keyno = 0;
 	rotbone = 0;
@@ -124,7 +125,7 @@ int CThreadingPostIK::ThreadFunc()
 										dummykeyno = 1;
 									}
 
-									chacalcfunc.IKRotateOneFrame(m_model, limitdegflag, erptr,
+									chacalcfunc.IKRotateOneFrame(m_model, limitdegflag, wallscrapingikflag, erptr,
 										dummykeyno,
 										rotbone, parentbone,
 										motid, curframe, startframe, applyframe,
@@ -187,7 +188,7 @@ int CThreadingPostIK::ThreadFunc()
 										dummykeyno = 1;
 									}
 
-									chacalcfunc.IKRotateOneFrame(m_model, limitdegflag, erptr,
+									chacalcfunc.IKRotateOneFrame(m_model, limitdegflag, wallscrapingikflag, erptr,
 										dummykeyno,
 										rotbone, parentbone,
 										motid, curframe, startframe, applyframe,
@@ -252,7 +253,7 @@ int CThreadingPostIK::AddFramenoList(double srcframeno)
 	return 0;
 }
 
-void CThreadingPostIK::IKRotateOneFrame(CModel* srcmodel, int srclimitdegflag, CEditRange* srcerptr,
+void CThreadingPostIK::IKRotateOneFrame(CModel* srcmodel, int srclimitdegflag, int srcwallscrapingikflag, CEditRange* srcerptr,
 	int srckeyno, CBone* srcrotbone, CBone* srcparentbone,
 	int srcmotid, double srcstartframe, double srcapplyframe,
 	CQuaternion srcrotq0, bool srckeynum1flag, bool srcpostflag, bool srcfromiktarget)
@@ -269,6 +270,7 @@ void CThreadingPostIK::IKRotateOneFrame(CModel* srcmodel, int srclimitdegflag, C
 		EnterCriticalSection(&m_CritSection);
 
 		limitdegflag = srclimitdegflag;
+		wallscrapingikflag = srcwallscrapingikflag;
 		erptr = srcerptr;
 		keyno = srckeyno;
 		rotbone = srcrotbone;

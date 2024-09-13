@@ -30,7 +30,8 @@ public:
 	int ClearFrameList();
 	int SetModel(CModel* srcmodel);
 	int AddFramenoList(double srcframeno);
-	void FKBoneTraOneFrame(CModel* srcmodel, bool srclimitdegflag, CEditRange* srcerptr,
+	void FKBoneTraOneFrame(CModel* srcmodel, bool srclimitdegflag, int srcwallscrapingikflag, 
+		CEditRange* srcerptr,
 		int srcboneno, int srcmotid, ChaVector3 srcaddtra);
 
 private:
@@ -49,6 +50,7 @@ private:
 	CModel* m_model;
 
 	int limitdegflag;
+	int wallscrapingikflag;
 	CEditRange* erptr;
 	int boneno;
 	int motid;

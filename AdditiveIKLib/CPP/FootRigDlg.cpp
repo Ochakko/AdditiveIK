@@ -2022,8 +2022,11 @@ ChaVector3 CFootRigDlg::RigControlFootRig(CModel* srcmodel, CBone* footbone, CBo
 	//while (((lowernewpos.y + loweroffset) < lowergpos.y) && (dbgcnt <= 50)) {//円を描くように下がってから上がることが多い　回数は多めに
 	while (((newbonepos.y + posoffset) < (pgroundpos->y - ROUNDINGPOS)) && (calccount < maxcount)) {//円を描くように下がってから上がることが多い　回数は多めに
 		
+		int wallscrapingikflag = 0;//limitdegflag=true, wallscrapingikflag=1にしてテスト予定
+
 		int notmovecount = srcmodel->RigControlFootRig(
 			false,//リグの指定と高さの閾値でリミット済とする　limitdegflag = trueで処理すると可動フレームで止まるのでパタパタしすぎる　ブレンドしてもパタパタし過ぎる
+			wallscrapingikflag,
 			0, curframe,
 			footbone->GetBoneNo(),
 			rigdir,

@@ -597,9 +597,9 @@ public:
  * @detail AdditiveIKにおいては、マニピュレータの中央の黄色をドラッグした時に呼ばれる。
  */
 
-	int IKRotateUnderIK(bool limitdegflag, CEditRange* erptr,
+	int IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 		int srcboneno, ChaVector3 targetpos, int maxlevel);
-	int IKRotatePostIK(bool limitdegflag, CEditRange* erptr,
+	int IKRotatePostIK(bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 		int srcboneno, int maxlevel);
 
 	int OnBlendWeightChanged(CEditRange* erptr, CMQOObject* srcmqoobj, int channelindex, float srcvalue);
@@ -609,7 +609,8 @@ public:
 	void ClearIKRotRecUV();
 
 
-	int IKRotate(bool limitdegflag, CEditRange* erptr, int srcboneno, ChaVector3 targetpos, int maxlevel, double directframe = -1.0);
+	int IKRotate(bool limitdegflag, int wallscrapingikflag, 
+		CEditRange* erptr, int srcboneno, ChaVector3 targetpos, int maxlevel, double directframe = -1.0);
 	
 	//2023/10/17 ChaCalcFuncに移動
 	//int IKRotateForIKTarget(bool limitdegflag, CEditRange* erptr, int srcboneno, ChaVector3 targetpos, 
@@ -620,7 +621,7 @@ public:
 
 	int SetIKTargetVec();
 	void SetIKTargetVecReq(CBone* srcbone);
-	int PosConstraintExecuteFromButton(bool limitdegflag, CEditRange* erptr);
+	int PosConstraintExecuteFromButton(bool limitdegflag, int wallscrapingikflag, CEditRange* erptr);
 	int RefreshPosConstraint();
 
 	bool CheckIKTarget();
@@ -662,10 +663,10 @@ public:
  * @detail AdditiveIKにおいては、マニピュレータのリングまたは球をドラッグした時に呼ばれる。
  */
 	int IKRotateAxisDeltaUnderIK(
-		bool limitdegflag, CEditRange* erptr, 
+		bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 		int axiskind, int srcboneno, float delta, int maxlevel, int ikcnt, ChaMatrix selectmat);
 	int IKRotateAxisDeltaPostIK(
-		bool limitdegflag, CEditRange* erptr, 
+		bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 		int axiskind, int srcboneno, int maxlevel, int ikcnt);
 
 
@@ -694,7 +695,8 @@ public:
 
 
 
-	int IKRotateAxisDelta(bool limitdegflag, CEditRange* erptr, int axiskind, int srcboneno, float delta, int maxlevel, int ikcnt, ChaMatrix selectmat);
+	int IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag, 
+		CEditRange* erptr, int axiskind, int srcboneno, float delta, int maxlevel, int ikcnt, ChaMatrix selectmat);
 	//int TwistBoneAxisDelta(CEditRange* erptr, int srcboneno, float delta, int maxlevel, int ikcnt, ChaMatrix selectmat);
 
 
@@ -723,7 +725,8 @@ public:
  * @param (CQuaternion rotq) IN 回転を表すクォータニオン。
  * @return 成功したら０。
  */
-	int FKRotate(bool limitdegflag, bool onretarget, int reqflag,
+	int FKRotate(bool limitdegflag, int wallscrapingikflag, 
+		bool onretarget, int reqflag,
 		CBone* bvhbone, int traflag, ChaVector3 traanim, double srcframe, int srcboneno,
 		CQuaternion srcq);//, int setmatflag = 0, ChaMatrix* psetmat = 0);
 	//int FKRotate(double srcframe, int srcboneno, ChaMatrix srcmat);
@@ -738,10 +741,10 @@ public:
  * @return 成功したら０。
  */
 	int FKBoneTraUnderFK(
-		bool limitdegflag, CEditRange* erptr,
+		bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 		int srcboneno, ChaVector3 addtra);
 	int FKBoneTraPostFK(
-		bool limitdegflag, CEditRange* erptr,
+		bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 		int srcboneno);
 
 	//2023/10/17 ChaCalcFuncに移動
@@ -751,20 +754,23 @@ public:
 
 
 	int FKBoneTraAxisUnderFK(
-		bool limitdegflag, CEditRange* erptr,
+		bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 		int srcboneno, int axiskind, float delta, ChaMatrix selectmat);
 	int FKBoneTraAxisPostFK(
-		bool limitdegflag, CEditRange* erptr,
+		bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 		int srcboneno);
-	int FKBoneTraAxis(bool limitdegflag, int onlyoneflag, CEditRange* erptr, 
+	int FKBoneTraAxis(bool limitdegflag, int wallscrapingikflag, 
+		int onlyoneflag, CEditRange* erptr,
 		int srcboneno, int axiskind, float delta, ChaMatrix selectmat);
 
 
 
-	int FKBoneScale(bool limitdegflag, int onlyoneflag, CEditRange* erptr, 
+	int FKBoneScale(bool limitdegflag, int wallscrapingikflag, 
+		int onlyoneflag, CEditRange* erptr,
 		int srcboneno, ChaVector3 scalevec);
 
-	int FKBoneScaleAxis(bool limitdegflag, int onlyoneflag, CEditRange* erptr, 
+	int FKBoneScaleAxis(bool limitdegflag, int wallscrapingikflag, 
+		int onlyoneflag, CEditRange* erptr,
 		int srcboneno, int axiskind, float scaleval);
 
 
@@ -994,16 +1000,16 @@ public:
 	void CalcBoneEulReq(bool limitdegflag, CBone* curbone, int srcmotid, double startframe, double endframe);
 
 
-	int RigControl(bool limitdegflag, int depthcnt, CEditRange* erptr, 
+	int RigControl(bool limitdegflag, int wallscrapingikflag, int depthcnt, CEditRange* erptr,
 		int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig, int buttonflag);
-	int RigControlUnderRig(bool limitdegflag, int depthcnt, CEditRange* erptr,
+	int RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int depthcnt, CEditRange* erptr,
 		int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig, int buttonflag);
-	int RigControlPostRig(bool limitdegflag, int depthcnt, CEditRange* erptr,
+	int RigControlPostRig(bool limitdegflag, int wallscrapingikflag, int depthcnt, CEditRange* erptr,
 		int srcboneno, int uvno, CUSTOMRIG ikcustomrig, int buttonflag);
 	
 
 	//2024/09/08 角度制限で動かなかったrigの数を返す
-	int RigControlFootRig(bool limitdegflag, int depthcnt, double curframe,
+	int RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int depthcnt, double curframe,
 		int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig, int buttonflag);
 
 
@@ -1018,12 +1024,13 @@ public:
 
 	CBone* GetSymPosBone(CBone* srcbone);
 
-	int InterpolateBetweenSelection(bool limitdegflag, int curmotid, double srcstartframe, double srcendframe, 
+	int InterpolateBetweenSelection(bool limitdegflag, 
+		int curmotid, double srcstartframe, double srcendframe,
 		CBone* srcbone, int srckind);
 
 	int BulletSimulationStop();
 	int BulletSimulationStart();
-	int ApplyBtToMotion(bool limitdegflag);
+	int ApplyBtToMotion(bool limitdegflag, int wallscrapingikflag);
 	void CalcBtAxismat(int onfirstcreate);
 	//void CalcRigidElem();
 	int CalcRigidElemParamsOnBt();
@@ -1040,8 +1047,8 @@ public:
 
 	void PhysIKRec(bool limitdegflag, double srcrectime);
 	void PhysIKRecReq(bool limitdegflag, CBone* srcbone, double srcrectime);
-	void ApplyPhysIkRec(bool limitdegflag);
-	void ApplyPhysIkRecReq(bool limitdegflag, CBone* srcbone, double srcframe, double srcrectime);
+	void ApplyPhysIkRec(bool limitdegflag, int wallscrapingikflag);
+	void ApplyPhysIkRecReq(bool limitdegflag, int wallscrapingikflag, CBone* srcbone, double srcframe, double srcrectime);
 
 	int ResetAngleLimit(bool excludebt, int srcval, CBone* srcbone = 0);
 	int AngleLimitReplace180to170(CBone* srcbone = 0);
@@ -1353,7 +1360,7 @@ private:
 	//int AdjustBoneTra(bool limitdegflag, CEditRange* erptr, CBone* lastpar);
 
 	void SetFirstFrameBonePosReq(CBone* srcbone, int srcmotid, HINFO* phinfo);
-	void InterpolateBetweenSelectionReq(bool limitdegflag, CBone* interpolatebone, 
+	void InterpolateBetweenSelectionReq(bool limitdegflag, CBone* interpolatebone,
 		int curmotid,
 		double srcstartframe, double srcendframe, bool oneflag, bool broflag);
 
@@ -1373,7 +1380,7 @@ private:
 	//int WithConstraint(CBone* srcbone);
 	void BulletSimulationStopReq(CBtObject* srcbto);
 	void BulletSimulationStartReq(CBtObject* srcbto);
-	void ApplyBtToMotionReq(bool limitdegflag, CBone* srcbone);
+	void ApplyBtToMotionReq(bool limitdegflag, int wallscrapingikflag, CBone* srcbone);
 
 	void SetCurrentRigidElemReq(CBone* srcbone, std::string curname);
 
@@ -1382,7 +1389,8 @@ private:
 	//	int srcmotid, double srcframe, double srcapplyframe, CQuaternion srcaddrot,
 	//	CBone* srcrotbone, CBone* srcaplybone, 
 	//	CQuaternion* dstqForRot, CQuaternion* dstqForHipsRot);
-	int IsMovableRot(bool limitdegflag, int srcmotid, double srcframe, double srcapplyframe, 
+	int IsMovableRot(bool limitdegflag, int wallscrapingikflag, 
+		int srcmotid, double srcframe, double srcapplyframe,
 		CQuaternion srcaddrot, CBone* srcrotbone, CBone* srcaplybone);
 
 	//2023/10/17 ChaCalcFuncに移動

@@ -25,30 +25,36 @@ public:
 	int GetBefNextMP(CBone* srcbone, int srcmotid, double srcframe, CMotionPoint** ppbef, CMotionPoint** ppnext, int* existptr, bool onaddmotion = false);
 
 
-	int IKRotateOneFrame(CModel* srcmodel, int limitdegflag, CEditRange* erptr,
+	int IKRotateOneFrame(CModel* srcmodel, int limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 		int keyno, CBone* rotbone, CBone* parentbone,
 		int srcmotid, double curframe, double startframe, double applyframe,
 		CQuaternion rotq0, bool keynum1flag, bool postflag, bool fromiktarget);
-	int RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int* onlycheckptr,
+	int RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int wallscrapingikflag, 
+		int* onlycheckptr,
 		double srcstartframe, bool infooutflag, CBone* parentbone, int srcmotid, double srcframe,
 		CQuaternion qForRot, CQuaternion qForHipsRot, bool fromiktarget);
 
 
-	int IKTargetVec(CModel* srcmodel, bool limitdegflag, CEditRange* erptr, int srcmotid, double srcframe, bool postflag);
-	int IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, CEditRange* erptr,
+	int IKTargetVec(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, 
+		CEditRange* erptr, int srcmotid, double srcframe, bool postflag);
+	int IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, 
+		CEditRange* erptr,
 		int srcboneno, int srcmotid, ChaVector3 targetpos, int maxlevel, double directframe, bool postflag);
 
-	int AdjustBoneTra(CModel* srcmodel, bool limitdegflag, CEditRange* erptr, CBone* lastpar, int srcmotid);
+	int AdjustBoneTra(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, 
+		CEditRange* erptr, CBone* lastpar, int srcmotid);
 
 
-	int FKBoneTra(CModel* srcmodel, bool limitdegflag, int onlyoneflag, CEditRange* erptr,
+	int FKBoneTra(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, 
+		int onlyoneflag, CEditRange* erptr,
 		int srcboneno, int srcmotid, ChaVector3 addtra, double onlyonefarme = 0.0);
 
 	//for threading
-	int FKBoneTraOneFrame(CModel* srcmodel, bool limitdegflag, CEditRange* erptr,
-		int srcboneno, int srcmotid, double srcframe, ChaVector3 addtra);
+	int FKBoneTraOneFrame(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, 
+		CEditRange* erptr, int srcboneno, int srcmotid, double srcframe, ChaVector3 addtra);
 
-	CMotionPoint* AddBoneTraReq(CBone* srcbone, bool limitdegflag, CMotionPoint* parmp, int srcmotid, double srcframe, ChaVector3 srctra, ChaMatrix befparentwm, ChaMatrix newparentwm);
+	CMotionPoint* AddBoneTraReq(CBone* srcbone, bool limitdegflag, int wallscrapingikflag, 
+		CMotionPoint* parmp, int srcmotid, double srcframe, ChaVector3 srctra, ChaMatrix befparentwm, ChaMatrix newparentwm);
 
 
 	int CalcQForRot(bool limitdegflag, bool calcaplyflag,
@@ -76,10 +82,13 @@ public:
 	ChaVector3 LimitEul(CBone* srcbone, ChaVector3 srceul);
 
 	int SetWorldMat(CBone* srcbone, bool limitdegflag, int srcmotid, double srcframe, ChaMatrix srcmat, CMotionPoint* srcmp);
-	int SetWorldMat(CBone* srcbone, bool limitdegflag, bool directsetflag, bool infooutflag, int setchildflag, 
+	int SetWorldMat(CBone* srcbone, bool limitdegflag, int wallscrapingikflag, bool directsetflag, bool infooutflag, int setchildflag,
 		int srcmotid, double srcframe, ChaMatrix srcmat, int onlycheck, bool fromiktarget);
-	int SetBtMatLimited(CBone* srcbone, bool limitdegflag, bool directsetflag, bool setchildflag, ChaMatrix srcmat);
-	int SetWorldMatFromEulAndScaleAndTra(CBone* srcbone, bool limitdegflag, int inittraflag, int setchildflag, ChaMatrix befwm, ChaVector3 srceul, ChaVector3 srcscale, ChaVector3 srctra, int srcmotid, double srcframe);
+	int SetBtMatLimited(CBone* srcbone, bool limitdegflag, 
+		bool directsetflag, bool setchildflag, ChaMatrix srcmat);
+	int SetWorldMatFromEulAndScaleAndTra(CBone* srcbone, bool limitdegflag, 
+		int inittraflag, int setchildflag, 
+		ChaMatrix befwm, ChaVector3 srceul, ChaVector3 srcscale, ChaVector3 srctra, int srcmotid, double srcframe);
 
 	CMotionPoint* GetMotionPoint(CBone* srcbone, int srcmotid, double srcframe, bool onaddmotion = false);
 	ChaMatrix GetWorldMat(CBone* srcbone, bool limitdegflag, int srcmotid, double srcframe, CMotionPoint* srcmp, ChaVector3* dsteul = 0);
@@ -87,10 +96,10 @@ public:
 	int CopyWorldToLimitedWorldOne(CModel* srcmodel, CBone* srcbone, int srcmotid, double srcframe);
 	void CopyWorldToLimitedWorldReq(CModel* srcmodel, CBone* srcbone, int srcmotid, double srcframe);
 	int CopyWorldToLimitedWorld(CBone* srcbone, int srcmotid, double srcframe);
-	void UpdateCurrentWM(CBone* srcbone, bool limitdegflag, int srcmotid, double srcframe,
-		ChaMatrix newwm);
-	void UpdateParentWMReq(CBone* srcbone, bool limitdegflag, bool setbroflag, int srcmotid, double srcframe,
-		ChaMatrix oldparentwm, ChaMatrix newparentwm);
+	void UpdateCurrentWM(CBone* srcbone, bool limitdegflag, 
+		int srcmotid, double srcframe, ChaMatrix newwm);
+	void UpdateParentWMReq(CBone* srcbone, bool limitdegflag, 
+		bool setbroflag, int srcmotid, double srcframe, ChaMatrix oldparentwm, ChaMatrix newparentwm);
 
 
 	int Motion2Bt(CModel* srcmodel, bool limitdegflag, double nextframe, 
@@ -103,14 +112,15 @@ public:
 public:
 	void RetargetReq(CModel* srcmodel, CModel* srcbvhmodel, CBone* modelbone,
 		double srcframe, CBone* befbvhbone, float hrate, std::map<CBone*, CBone*>& sconvbonemap);
-	CMotionPoint* RotBoneQReq(CBone* srcbone, bool limitdegflag, bool infooutflag,
+	CMotionPoint* RotBoneQReq(CBone* srcbone, bool limitdegflag, int wallscrapingikflag, bool infooutflag,
 		CBone* parentbone, int srcmotid, double srcframe,
 		CQuaternion rotq, ChaMatrix srcbefparentwm, ChaMatrix srcnewparentwm,
 		CBone* bvhbone, ChaVector3 traanim);
 	ChaMatrix CalcNewLocalRotMatFromQofIK(CBone* srcbone, bool limitdegflag, int srcmotid, double srcframe,
 		CQuaternion qForRot, ChaMatrix* dstsmat, ChaMatrix* dstrmat, ChaMatrix* dsttanimmat);
 	ChaMatrix GetCurrentZeroFrameMat(CBone* srcbone, bool limitdegflag, int updateflag);
-	int FKRotate(CModel* srcmodel, bool limitdegflag, bool onretarget, int reqflag,
+	int FKRotate(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, 
+		bool onretarget, int reqflag,
 		CBone* bvhbone, int traflag, ChaVector3 traanim, double srcframe, int srcboneno,
 		CQuaternion rotq);
 	void GetHipsBoneReq(CModel* srcmodel, CBone* srcbone, CBone** dstppbone);

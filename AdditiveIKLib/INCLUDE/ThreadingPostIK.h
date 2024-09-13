@@ -30,7 +30,7 @@ public:
 	int ClearFrameList();
 	int SetModel(CModel* srcmodel);
 	int AddFramenoList(double srcframeno);
-	void IKRotateOneFrame(CModel* srcmodel, int srclimitdegflag, CEditRange* srcerptr,
+	void IKRotateOneFrame(CModel* srcmodel, int srclimitdegflag, int srcwallscrapingikflag, CEditRange* srcerptr,
 		int srckeyno, CBone* srcrotbone, CBone* srcparentbone,
 		int srcmotid, double srcstartframe, double srcapplyframe,
 		CQuaternion srcrotq0, bool srckeynum1flag, bool srcpostflag, bool srcfromiktarget);
@@ -51,6 +51,7 @@ private:
 	CModel* m_model;
 
 	int limitdegflag;
+	int wallscrapingikflag;
 	CEditRange* erptr;
 	int keyno;
 	CBone* rotbone;
