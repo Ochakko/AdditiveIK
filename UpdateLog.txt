@@ -5,6 +5,8 @@ https://github.com/Ochakko/AdditiveIK
 2024/09/13
 　wallscrapingikflagを引数にして処理ごとに指定可能に.
 
+　README.mdに1.0.0.32のスクリーンショット追加
+
 
 
 

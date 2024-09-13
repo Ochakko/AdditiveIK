@@ -30,6 +30,9 @@ Fig.5 PlayFbxCameraAnim (UnityAsset TheHuntを読込. model:VRoid).<br>
 ![TopFig6](ScreenShots/SS_For10031/AdditiveIK_10031_OX_1_900.png "トップ絵6")<br>
 Fig.6 (UnityAsset FantasyTownを読込  model:VRoid).<br>
 <br>
+![TopFig7](ScreenShots/SS_For10032/SS_AdditiveIK_To10032_FootRigWithBtSimu_Annotation3.png "トップ絵7")<br>
+Fig.7 (FootRigで足を曲げて自動接地  model:VRoid).<br>
+<br>
 <br>
 # 免責<br>
 このソフトにより問題が起きたとしてもその責任は持ちません。<br>
