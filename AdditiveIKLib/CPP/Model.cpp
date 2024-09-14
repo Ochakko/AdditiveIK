@@ -5148,7 +5148,6 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 		DbgOut(L"mesh %s, materialNum_ %d\r\n", wnodename, materialNum_);
 
 
-
 		// マテリアル情報を取得
 		//for( int i = 0; i < materialNum_; ++i ) {
 		for (int i = 0; i < materialNum_; i++) {
@@ -5641,32 +5640,225 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 	tmpamb.z = (float)lAmbient[2] * g_AmbientFactorAtLoading;
 	newmqomat->SetAmb3F( tmpamb );
 
-	char* diffusetex = 0;
-    const FbxDouble3 lDiffuse = FbxGetMaterialProperty(pMaterial,
-        FbxSurfaceMaterial::sDiffuse, FbxSurfaceMaterial::sDiffuseFactor, &diffusetex);
-	if( diffusetex ){
-		//strcpy_s( newmqomat->tex, 256, diffusetex );
-		DbgOut( L"SetMQOMaterial : diffusetexture find\r\n" );
-	}
-	ChaVector4 tmpdif;
-	tmpdif.x = (float)lDiffuse[0] * g_DiffuseFactorAtLoading;
-	tmpdif.y = (float)lDiffuse[1] * g_DiffuseFactorAtLoading;
-	tmpdif.z = (float)lDiffuse[2] * g_DiffuseFactorAtLoading;
-	tmpdif.w = 1.0f;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!　alpha値はtexture依存　透過オンはTransparencyFactor!=0.0で
-	newmqomat->SetDif4F( tmpdif );
 
 
-	char* spctex = 0;
-    const FbxDouble3 lSpecular = FbxGetMaterialProperty(pMaterial,
-        FbxSurfaceMaterial::sSpecular, FbxSurfaceMaterial::sSpecularFactor, &spctex);
-	if( spctex ){
-		DbgOut( L"SetMQOMaterial : spctexture find\r\n" );
-	}
-	ChaVector3 tmpspc;
-	tmpspc.x = (float)lSpecular[0] * g_SpecularFactorAtLoading;
-	tmpspc.y = (float)lSpecular[1] * g_SpecularFactorAtLoading;
-	tmpspc.z = (float)lSpecular[2] * g_SpecularFactorAtLoading;
-	newmqomat->SetSpc3F( tmpspc );
+	//FbxProperty baseColorProp1 = pMaterial->FindProperty("Color");
+	//if (baseColorProp1.IsValid()) {
+	//	int dbgflag1 = 1;
+	//}
+	//FbxProperty baseColorProp2 = pMaterial->FindProperty("Base");
+	//if (baseColorProp2.IsValid()) {
+	//	int dbgflag1 = 1;
+	//}
+	//FbxProperty baseColorProp3 = pMaterial->FindProperty("BasicColor");
+	//if (baseColorProp3.IsValid()) {
+	//	int dbgflag1 = 1;
+	//}
+	//FbxProperty baseColorProp4 = pMaterial->FindProperty("StandardColor");
+	//if (baseColorProp4.IsValid()) {
+	//	int dbgflag1 = 1;
+	//}
+	//FbxProperty baseColorProp5 = pMaterial->FindProperty("StandardBaseColor");
+	//if (baseColorProp5.IsValid()) {
+	//	int dbgflag1 = 1;
+	//}
+	//FbxProperty baseColorProp6 = pMaterial->FindProperty("StandarcBasicColor");
+	//if (baseColorProp6.IsValid()) {
+	//	int dbgflag1 = 1;
+	//}
+
+	//{
+	//	char* ptex = 0;
+	//	const FbxDouble3 lval = FbxGetMaterialProperty(pMaterial,
+	//		"StandardSurface", "BaseColor", &ptex);
+	//	int dbgflag1 = 1;
+	//}
+	//{
+	//	char* ptex = 0;
+	//	const FbxDouble3 lval = FbxGetMaterialProperty(pMaterial,
+	//		"StandardSurface", "Color", &ptex);
+	//	int dbgflag1 = 1;
+	//}
+	//{
+	//	char* ptex = 0;
+	//	const FbxDouble3 lval = FbxGetMaterialProperty(pMaterial,
+	//		"StandardSurface", "Base", &ptex);
+	//	int dbgflag1 = 1;
+	//}
+	//{
+	//	char* ptex = 0;
+	//	const FbxDouble3 lval = FbxGetMaterialProperty(pMaterial,
+	//		"Standard", "BaseColor", &ptex);
+	//	int dbgflag1 = 1;
+	//}
+	//{
+	//	char* ptex = 0;
+	//	const FbxDouble3 lval = FbxGetMaterialProperty(pMaterial,
+	//		"Standard", "Color", &ptex);
+	//	int dbgflag1 = 1;
+	//}
+	//{
+	//	char* ptex = 0;
+	//	const FbxDouble3 lval = FbxGetMaterialProperty(pMaterial,
+	//		"Standard", "Base", &ptex);
+	//	int dbgflag1 = 1;
+	//}
+	//{
+	//	char* ptex = 0;
+	//	const FbxDouble3 lval = FbxGetMaterialProperty(pMaterial,
+	//		"Base", "BaseColor", &ptex);
+	//	int dbgflag1 = 1;
+	//}
+	//{
+	//	char* ptex = 0;
+	//	const FbxDouble3 lval = FbxGetMaterialProperty(pMaterial,
+	//		"Base", "Color", &ptex);
+	//	int dbgflag1 = 1;
+	//}
+	//{
+	//	char* ptex = 0;
+	//	const FbxDouble3 lval = FbxGetMaterialProperty(pMaterial,
+	//		"Base", "Base", &ptex);
+	//	int dbgflag1 = 1;
+	//}
+	//{
+	//	char* ptex = 0;
+	//	const FbxDouble3 lval = FbxGetMaterialProperty(pMaterial,
+	//		"base", "color", &ptex);
+	//	int dbgflag1 = 1;
+	//}
+
+
+
+
+
+	//{
+	//	FbxProperty baseColorProp = pMaterial->FindProperty("BaseColor", FbxDouble3DT);
+	//	if (baseColorProp.IsValid()) {
+	//		int dbgflag1 = 1;
+	//	}
+	//}
+	//{
+	//	FbxProperty baseColorProp = pMaterial->FindProperty("Base", FbxDouble3DT);
+	//	if (baseColorProp.IsValid()) {
+	//		int dbgflag1 = 1;
+	//	}
+	//}
+	//{
+	//	FbxProperty baseColorProp = pMaterial->FindProperty("Color", FbxDouble3DT);
+	//	if (baseColorProp.IsValid()) {
+	//		int dbgflag1 = 1;
+	//	}
+	//}
+	//{
+	//	FbxProperty baseColorProp = pMaterial->FindProperty("StandardColor", FbxDouble3DT);
+	//	if (baseColorProp.IsValid()) {
+	//		int dbgflag1 = 1;
+	//	}
+	//}
+	//{
+	//	FbxProperty baseColorProp = pMaterial->FindProperty("StandardBase", FbxDouble3DT);
+	//	if (baseColorProp.IsValid()) {
+	//		int dbgflag1 = 1;
+	//	}
+	//}
+	//{
+	//	FbxProperty baseColorProp = pMaterial->FindProperty("StandardBaseColor", FbxDouble3DT);
+	//	if (baseColorProp.IsValid()) {
+	//		int dbgflag1 = 1;
+	//	}
+	//}
+
+	//{
+	//	FbxProperty baseColorProp = pMaterial->FindProperty("BaseColor");
+	//	FbxDouble3 baseColor = baseColorProp.Get<FbxDouble3>();
+	//	int dbgflag1 = 1;
+	//}
+	//{
+	//	FbxProperty baseColorProp = pMaterial->FindProperty("basecolor");
+	//	FbxDouble3 baseColor = baseColorProp.Get<FbxDouble3>();
+	//	int dbgflag1 = 1;
+	//}
+	//{
+	//	FbxProperty baseColorProp = pMaterial->FindProperty("color");
+	//	FbxDouble3 baseColor = baseColorProp.Get<FbxDouble3>();
+	//	int dbgflag1 = 1;
+	//}
+
+
+	//##############################################################################################################
+	//2024/09/14
+	//FbxSurfaceMaterial::s*の中にStandardSurface用の文字列がみつからない
+	//StandardSurfaceを読み込んでも落ちなくなった(TransparencyFactor読込修正により)が　StandardSurfaceマテリアルの読み込み方はまだ謎
+	//##############################################################################################################
+
+
+
+
+	//FbxProperty baseColorProp = pMaterial->FindProperty("BaseColor");//プロパティ名が違うみたい
+	//if (baseColorProp.IsValid()) {
+	//	//#####################
+	//	//StandardSurfaceの場合
+	//	//#####################
+	//	FbxDouble3 baseColor = baseColorProp.Get<FbxDouble3>();
+	//	ChaVector4 tmpdif;
+	//	tmpdif.x = (float)baseColor[0] * g_DiffuseFactorAtLoading;
+	//	tmpdif.y = (float)baseColor[1] * g_DiffuseFactorAtLoading;
+	//	tmpdif.z = (float)baseColor[2] * g_DiffuseFactorAtLoading;
+	//	tmpdif.w = 1.0f;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!　alpha値はtexture依存　透過オンはTransparencyFactor!=0.0で
+	//	newmqomat->SetDif4F(tmpdif);
+	//
+	//}
+	//else {
+		//##################
+		//PhongSurfaceの場合
+		//##################
+		char* diffusetex = 0;
+		const FbxDouble3 lDiffuse = FbxGetMaterialProperty(pMaterial,
+			FbxSurfaceMaterial::sDiffuse, FbxSurfaceMaterial::sDiffuseFactor, &diffusetex);
+		if (diffusetex) {
+			//strcpy_s( newmqomat->tex, 256, diffusetex );
+			DbgOut(L"SetMQOMaterial : diffusetexture find\r\n");
+		}
+		ChaVector4 tmpdif;
+		tmpdif.x = (float)lDiffuse[0] * g_DiffuseFactorAtLoading;
+		tmpdif.y = (float)lDiffuse[1] * g_DiffuseFactorAtLoading;
+		tmpdif.z = (float)lDiffuse[2] * g_DiffuseFactorAtLoading;
+		tmpdif.w = 1.0f;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!　alpha値はtexture依存　透過オンはTransparencyFactor!=0.0で
+		newmqomat->SetDif4F(tmpdif);
+	//}
+
+
+
+	//FbxProperty spcColorProp = pMaterial->FindProperty("SpaculearColor");//プロパティ名が違うみたい
+	//if (spcColorProp.IsValid()) {
+	//	//#####################
+	//	//StandardSurfaceの場合
+	//	//#####################
+	//	FbxDouble3 spcColor = spcColorProp.Get<FbxDouble3>();
+	//	ChaVector3 tmpspc;
+	//	tmpspc.x = (float)spcColor[0] * g_SpecularFactorAtLoading;
+	//	tmpspc.y = (float)spcColor[1] * g_SpecularFactorAtLoading;
+	//	tmpspc.z = (float)spcColor[2] * g_SpecularFactorAtLoading;
+	//	newmqomat->SetSpc3F(tmpspc);
+	//}
+	//else {
+		//##################
+		//PhongSurfaceの場合
+		//##################
+		char* spctex = 0;
+		const FbxDouble3 lSpecular = FbxGetMaterialProperty(pMaterial,
+			FbxSurfaceMaterial::sSpecular, FbxSurfaceMaterial::sSpecularFactor, &spctex);
+		if (spctex) {
+			DbgOut(L"SetMQOMaterial : spctexture find\r\n");
+		}
+		ChaVector3 tmpspc;
+		tmpspc.x = (float)lSpecular[0] * g_SpecularFactorAtLoading;
+		tmpspc.y = (float)lSpecular[1] * g_SpecularFactorAtLoading;
+		tmpspc.z = (float)lSpecular[2] * g_SpecularFactorAtLoading;
+		newmqomat->SetSpc3F(tmpspc);
+	//}
+
 
     //FbxProperty lShininessProperty = pMaterial->FindProperty(FbxSurfaceMaterial::sShininess);//<-- link error : AdditiveIKLib.lib外だから？　
 	//char* shininesstex = 0;
@@ -5701,7 +5893,18 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 
 	//2023/09/24 VRoidの服の裾(すそ)に透過の印を付ける
 	//次に続くtexture読み込み部分でも　_13.png, _15.pngについてもSetTransparent(1)
-	FbxDouble transparent = ((FbxSurfacePhong*)pMaterial)->TransparencyFactor;//ちゃんとセットされる保証なし
+	//FbxDouble transparent = ((FbxSurfacePhong*)pMaterial)->TransparencyFactor;//ちゃんとセットされる保証なし　Phong以外のマテリアルの場合に落ちる　次のように修正
+
+	//2024/09/14 Phong以外のマテリアルで落ちないように修正
+	FbxDouble transparent;
+	FbxProperty transparencyProp = pMaterial->FindProperty(FbxSurfaceMaterial::sTransparencyFactor);
+	if (transparencyProp.IsValid()) {
+		transparent = transparencyProp.Get<FbxDouble>();
+	}
+	else {
+		transparent = 0.0;//TransparencyFacctor設定なしの場合は不透明扱い
+	}
+
 
 	bool oldtransparent = false;
 	if (m_pscene) {

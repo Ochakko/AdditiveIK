@@ -1766,10 +1766,8 @@ void CFootRigDlg::FootRig(bool secondcalling,
 
 		if (forcehigherfootrig ||
 			(!higherdoneflag &&
-				((hipspos.y - highergpos.y) <= (hdiffmax + +higherhdiffoffset)) &&
-				((higherjointpos.y + higheroffset) <= highergpos.y))
-			)
-		{
+			((hipspos.y - highergpos.y) <= (hdiffmax + +higherhdiffoffset)) &&
+			((higherjointpos.y + higheroffset) <= highergpos.y))) {
 
 			//高い方の足をFootRigで曲げて接地
 			ChaVector3 highernewpos;
@@ -1827,14 +1825,14 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				//高い方の地面の位置に合わせる
 				if (highergpos.y >= lowergpos.y) {
 					float diffy = highergpos.y - (higherjointpos.y + higheroffset);
-					//ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, false);//wmをブレンドしない　この処理後に地面に潜らないように
+					//ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, false);//wmをブレンドしない　この処理後に地面に潜らないように. ブレンド無しは階段でガクガクし過ぎる
 					ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true);//遅めの環境でもカクカクしないために　やっぱりブレンドフラグtrueに
 					modelwm = modelwm3;
 
 				}
 				else {
 					float diffy = lowergpos.y - (lowerjointpos.y + loweroffset);
-					//ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, false);//wmをブレンドしない　この処理後に地面に潜らないように
+					//ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, false);//wmをブレンドしない　この処理後に地面に潜らないように. ブレンド無しは階段でガクガクし過ぎる
 					ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true);//遅めの環境でもカクカクしないために　やっぱりブレンドフラグtrueに
 					modelwm = modelwm3;
 				}
