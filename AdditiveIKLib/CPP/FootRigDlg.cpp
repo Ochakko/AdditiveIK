@@ -367,21 +367,40 @@ int CFootRigDlg::SetModel(ChaScene* srcchascene, CModel* srcmodel)
 	m_model = srcmodel;
 	m_chascene = srcchascene;
 	if (m_model && m_chascene) {
+		int mindex = m_chascene->FindModelIndex(m_model);//削除されていないことを確認
+		if (mindex >= 0) {
+			std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+			itrelem = m_footrigelem.find(m_model);
+			if (itrelem == m_footrigelem.end()) {
+				FOOTRIGELEM newfootelem;
+				newfootelem.Init();
+				m_footrigelem[m_model] = newfootelem;
+			}
+			else {
+				bool gpuinteraction = itrelem->second.gpuinteraction;
+				CModel* groundmodel = itrelem->second.groundmodel;
+				if (groundmodel) {
+					int gindex = m_chascene->FindModelIndex(groundmodel);//削除されていないことを確認
+					if (gindex >= 0) {
+						int result = groundmodel->SetGPUInteraction(gpuinteraction);//当たり判定シェーダの準備
+						if (result != 0) {
+							_ASSERT(0);
+						}
+					}
+				}
+			}
 
-		std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
-		itrelem = m_footrigelem.find(m_model);
-		if (itrelem == m_footrigelem.end()) {
-			FOOTRIGELEM newfootelem;
-			newfootelem.Init();
-			m_footrigelem[m_model] = newfootelem;
+			ChaMatrix newmodelwm;
+			newmodelwm = m_model->GetWorldMat();
+			SetSaveModelWM(m_model, newmodelwm);
+
+			CreateFootRigWnd();//作成済の場合は０リターン
+			ParamsToDlg();
 		}
-
-		ChaMatrix newmodelwm;
-		newmodelwm = m_model->GetWorldMat();
-		SetSaveModelWM(m_model, newmodelwm);
-
-		CreateFootRigWnd();//作成済の場合は０リターン
-		ParamsToDlg();
+		else {
+			_ASSERT(0);
+			return 1;
+		}
 	}
 	else {
 		_ASSERT(0);

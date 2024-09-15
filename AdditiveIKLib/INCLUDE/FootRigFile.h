@@ -1,4 +1,4 @@
-#ifndef FOOTRIGFILEH
+﻿#ifndef FOOTRIGFILEH
 #define FOOTRIGFILEH
 
 #include <ChaVecCalc.h>

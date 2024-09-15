@@ -18,7 +18,7 @@ https://github.com/Ochakko/AdditiveIK
 　　原則としてシェーダでの当たり判定(DispGroupメニューとShaderメニューも)はスキンメッシュ(ボーン入りメッシュ)だけですが
 　　FootRig設定でGPUIntaraction指定した地面データに対してもシェーダで判定を行う
 
-
+　　プロジェクト保存時と読み込み時に　FootRigDlgのGPUInteraction設定を保存読み込み
 
 
 

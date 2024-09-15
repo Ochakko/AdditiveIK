@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <math.h>
@@ -86,7 +86,10 @@ int CFootRigFile::WriteFileInfo()
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0001</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	//2024/09/08 ver1002
-	CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+
+	//2024/09/15 ver1003 <GPUInteraction>追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0003</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	return 0;
 }
@@ -151,6 +154,12 @@ int CFootRigFile::WriteFootRigElem(FOOTRIGELEM srcfootrigelem)
 
 	CallF(Write2File("    <MaxCalcCount>%d</MaxCalcCount>\r\n",
 		srcfootrigelem.maxcalccount), return 1);//2024/09/08 ver1002
+
+	int gpuinteraction;
+	gpuinteraction = (srcfootrigelem.gpuinteraction) ? 1 : 0;
+	CallF(Write2File("    <GPUInteraction>%d</GPUInteraction>\r\n",
+		gpuinteraction), return 1);//2024/09/15 ver1003
+
 
 
 	CallF(Write2File("  </FootRigElem>\r\n"), return 1);
@@ -296,6 +305,11 @@ int CFootRigFile::ReadFootRigElem(CModel* srcmodel, ChaScene* srcchascene, FOOTR
 	int maxcalccount = 50;
 	getmaxcalccount = Read_Int(xmlbuf, "<MaxCalcCount>", "</MaxCalcCount>", &maxcalccount);//2024/09/08 ver1002
 
+	int getgpuinteraction = 0;
+	int gpuinteraction = 0;
+	getgpuinteraction = Read_Int(xmlbuf, "<GPUInteraction>", "</GPUInteraction>", &gpuinteraction);//2024/09/15 ver1003
+
+
 
 	dstfootrigelem->Init();
 
@@ -356,6 +370,17 @@ int CFootRigFile::ReadFootRigElem(CModel* srcmodel, ChaScene* srcchascene, FOOTR
 	}
 	if (getmaxcalccount == 0) {
 		dstfootrigelem->maxcalccount = maxcalccount;
+	}
+	if (getgpuinteraction == 0) {
+		dstfootrigelem->gpuinteraction = (gpuinteraction == 1) ? true : false;
+
+		//friファイル読込はfootrigdlg->SetModel()後に呼ばれるので　読込時に以下の処理が必要
+		if (dstfootrigelem->groundmodel) {
+			int result = dstfootrigelem->groundmodel->SetGPUInteraction(dstfootrigelem->gpuinteraction);
+			if (result != 0) {
+				_ASSERT(0);
+			}
+		}
 	}
 
 	return 0;
