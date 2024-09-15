@@ -612,6 +612,7 @@ typedef struct tag_footrigelem
 	float hdiffmax;
 	float rigstep;
 	int maxcalccount;//2024/09/08
+	bool gpuinteraction;//2024/09/15
 
 	void Init() {
 		enablefootrig = false;
@@ -627,6 +628,7 @@ typedef struct tag_footrigelem
 		hdiffmax = 40.0f;
 		rigstep = 0.25f;
 		maxcalccount = 50;
+		gpuinteraction = false;
 	};
 
 	tag_footrigelem()

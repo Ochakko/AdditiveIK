@@ -333,6 +333,8 @@ void CMQOObject::InitParams()
 		m_frustum[index0].InitParams();
 	}
 
+	m_gpuinteractionflag = false;
+
 //	next = 0;
 }
 
@@ -1092,6 +1094,26 @@ int CMQOObject::MakeDispObj(ID3D12Device* pdev, int hasbone, bool grassflag)
 
 	return 0;
 }
+
+int CMQOObject::SetGPUInteraction(bool srcflag)
+{
+	int result = 0;
+	CPolyMesh3* pm3 = GetPm3();
+	CDispObj* dispobj = GetDispObj();
+	if (pm3 && dispobj) {
+		result = dispobj->SetGPUInteraction(srcflag);
+	}
+
+	if (srcflag && (result == 0)) {
+		SetGPUInteractionFlag(true);
+	}
+	else {
+		SetGPUInteractionFlag(false);
+	}
+
+	return result;
+}
+
 
 int CMQOObject::HasPolygon()
 {
@@ -2336,6 +2358,11 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 	int justflag;
 	//float justval = 0.01f;
 	float justval = 0.0001f;//2024/03/31 Test/1009_1モデルのpickでjustvalの誤動作(大きく外れているのに当たった)をしたので値を小さくした
+	ChaVector3 nearesthitpos;
+	nearesthitpos.SetParams(startlocal);
+	float nearestdist = FLT_MAX;
+	int nearestfaceindex = -1;
+	bool findflag = false;
 	for (fno = 0; fno < face_count; fno++) {
 		hitflag = 0;
 		justflag = 0;
@@ -2345,25 +2372,42 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 		index1 = *(dispindex + fno * 3 + 1);
 		index2 = *(dispindex + fno * 3 + 2);
 
+		ChaVector3 tmphitpos;
+		tmphitpos.SetParams(0.0f, 0.0f, 0.0f);
 		hitflag = ChkRay(allowrev, 
 			index0, index1, index2,
-			dispv, startlocal, dirlocal, justval, &justflag, dsthitpos);
+			dispv, startlocal, dirlocal, justval, &justflag, &tmphitpos);
 		if (hitflag || justflag) {
-			*hitfaceindex = fno;
-			return 1;
+		//if (hitflag) {
+			ChaVector3 curdistvec = tmphitpos - startlocal;
+			float curdist = (float)ChaVector3LengthDbl(&curdistvec);
+			if (curdist < nearestdist) {//2024/09/15 全部の面を調べて一番近い当りを返す
+				nearestdist = curdist;
+				nearesthitpos = tmphitpos;
+				nearestfaceindex = fno;
+				findflag = true;
+			}
 		}
 	}
 
-	return 0;
+
+	if (findflag) {
+		*dsthitpos = nearesthitpos;
+		*hitfaceindex = nearestfaceindex;
+		return 1;
+	}
+	else {
+		return 0;
+	}
 }
 
 int CMQOObject::CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglobal,
 	ChaVector3 startlocal, ChaVector3 dirlocal,
-	bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos)
+	bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist)
 {
 	//ComputeShader版　polymesh3, polymesh4両方OK
 
-	if (!hitfaceindex || !dsthitpos) {
+	if (!hitfaceindex || !dsthitpos || !dstdist) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -2410,14 +2454,14 @@ int CMQOObject::CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglo
 	//}
 
 
-	return dispobj->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex, dsthitpos);
+	return dispobj->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex, dsthitpos, dstdist);
 }
 
-int CMQOObject::GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos)
+int CMQOObject::GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist)
 {
 	//ComputeShader版　polymesh3, polymesh4両方OK
 
-	if (!hitfaceindex || !dsthitpos) {
+	if (!hitfaceindex || !dsthitpos || !dstdist) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -2435,7 +2479,7 @@ int CMQOObject::GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos)
 		return 0;
 	}
 
-	return dispobj->GetResultOfPickRay(hitfaceindex, dsthitpos);
+	return dispobj->GetResultOfPickRay(hitfaceindex, dsthitpos, dstdist);
 }
 
 int CMQOObject::AddInfBone( int srcboneno, int srcvno, float srcweight, int isadditive )

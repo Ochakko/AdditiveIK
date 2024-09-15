@@ -4057,18 +4057,20 @@ void CModel::SetSelectFlagReq( CBone* boneptr, int broflag )
 	}
 }
 
-int CModel::CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex, ChaVector3* dsthitpos)
+int CModel::CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, 
+	int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist)
 {
 	//当たったら１、当たらなかったら０を返す。エラーも０を返す。
 
 	//ComputeShader版　polymesh4用
 
-	if (!pickinfo || !pickobj || !hitfaceindex || !dsthitpos) {
+	if (!pickinfo || !pickobj || !hitfaceindex || !dsthitpos || !dstdist) {
 		_ASSERT(0);
 		return 0;
 	}
 	*hitfaceindex = -1;
 	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
+	*dstdist = FLT_MAX;
 
 	ChaVector3 startglobal, dirglobal;
 	CalcMouseGlobalRay(pickinfo, &startglobal, &dirglobal);
@@ -4079,7 +4081,7 @@ int CModel::CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, i
 	bool excludeinvface = true;
 	int colli = 0;
 	colli = pickobj->CollisionGlobal_Ray_Pm(startglobal, dirglobal, startlocal, dirlocal,
-		excludeinvface, hitfaceindex, dsthitpos);//polymesh4の場合のhitposはグローバル座標系で返ってくる
+		excludeinvface, hitfaceindex, dsthitpos, dstdist);//polymesh4の場合のhitposはグローバル座標系で返ってくる
 
 	return colli;
 
@@ -4104,7 +4106,16 @@ int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, 
 	int colli = 0;
 	ChaVector3 tmphitpos;
 	tmphitpos.SetParams(0.0f, 0.0f, 0.0f);
-	colli = pickobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, excludeinvface, hitfaceindex, &tmphitpos);
+	float tmpdist = FLT_MAX;
+	if (pickobj->GetGPUInteractionFlag()) {
+		//### GPU ###
+		colli = pickobj->CollisionGlobal_Ray_Pm(startlocal, dirlocal, startlocal, dirlocal,//pm3の場合はmodelwmを掛けていない頂点に対してPickするのでlocalを渡す
+			excludeinvface, hitfaceindex, &tmphitpos, &tmpdist);
+	}
+	else {
+		//### CPU ###
+		colli = pickobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, excludeinvface, hitfaceindex, &tmphitpos);
+	}
 
 
 	//2024/06/16
@@ -4119,11 +4130,15 @@ int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, 
 
 }
 
-int CModel::CollisionPolyMesh3_Ray(ChaVector3 startglobal, ChaVector3 endglobal, ChaVector3* dsthitpos)
+int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVector3 endglobal, ChaVector3* dsthitpos)
 {
 
 	//*hitfaceindex = -1;
 	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
+
+	ChaVector3 dirglobal;
+	dirglobal = endglobal - startglobal;
+	ChaVector3Normalize(&dirglobal, &dirglobal);
 
 	ChaMatrix invwm;
 	invwm = ChaMatrixInv(m_matWorld);
@@ -4134,7 +4149,12 @@ int CModel::CollisionPolyMesh3_Ray(ChaVector3 startglobal, ChaVector3 endglobal,
 	ChaVector3Normalize(&dirlocal, &dirlocal);
 
 
-	vector<ChaVector3> hitposvec;
+	//vector<ChaVector3> hitposvec;
+
+	ChaVector3 nearesthitpos;
+	nearesthitpos.SetParams(startglobal);
+	float nearestdist = FLT_MAX;
+	bool findflag = false;
 
 	map<int, CMQOObject*>::iterator itr;
 	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
@@ -4145,57 +4165,66 @@ int CModel::CollisionPolyMesh3_Ray(ChaVector3 startglobal, ChaVector3 endglobal,
 			int hitfaceindex = -1;
 			ChaVector3 tmphitpos;
 			tmphitpos.SetParams(0.0f, 0.0f, 0.0f);
-			colli = curobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, excludeinvface, &hitfaceindex, &tmphitpos);
-			if (colli != 0) {
-				ChaVector3 hitpos;
-				ChaVector3TransformCoord(&hitpos, &tmphitpos, &m_matWorld);
-				hitposvec.push_back(hitpos);
+			if (!gpuflag) {//### CPU ###
+				colli = curobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, excludeinvface, &hitfaceindex, &tmphitpos);
+
+				if (colli != 0) {
+					ChaVector3 curdistvec = tmphitpos - startlocal;
+					float curdist = (float)ChaVector3LengthDbl(&curdistvec);
+					if (curdist < nearestdist) {
+						ChaVector3 hitpos;
+						ChaVector3TransformCoord(&hitpos, &tmphitpos, &m_matWorld);
+
+						nearestdist = curdist;
+						nearesthitpos = hitpos;
+						findflag = true;
+					}
+				}
+			}
+			else {//### GPU ###
+				float tmpdist = FLT_MAX;
+				//colli = curobj->CollisionGlobal_Ray_Pm(startglobal, dirglobal, startlocal, dirlocal,
+				colli = curobj->CollisionGlobal_Ray_Pm(startlocal, dirlocal, startlocal, dirlocal,//pm3の場合はmodelwmを掛けていない頂点に対してPickするのでlocalを渡す
+					excludeinvface, &hitfaceindex, &tmphitpos, &tmpdist);
+
+				if ((colli != 0) && (tmpdist < nearestdist)) {
+					ChaVector3 hitpos;
+					ChaVector3TransformCoord(&hitpos, &tmphitpos, &m_matWorld);
+
+					nearestdist = tmpdist;
+					nearesthitpos = hitpos;
+					findflag = true;
+				}
 			}
 		}
 	}
 
-	if (hitposvec.empty()) {
-		return 0;
+	if (findflag) {
+		dsthitpos->SetParams(nearesthitpos);
+		return 1;
 	}
 	else {
-		double nearestdist = FLT_MAX;
-		ChaVector3 nearestpos;
-		nearestpos.SetZeroVec3();
-
-		int hitnum = (int)hitposvec.size();
-		int hitindex;
-		for (hitindex = 0; hitindex < hitnum; hitindex++) {
-			ChaVector3 chkpos = hitposvec[hitindex];
-			ChaVector3 diffpos = startglobal - chkpos;
-			double chkdist = ChaVector3LengthDbl(&diffpos);
-			if (chkdist < nearestdist) {
-				nearestdist = chkdist;
-				nearestpos = chkpos;
-			}
-		}
-
-		dsthitpos->SetParams(nearestpos);
-
-		return 1;
+		return 0;
 	}
 }
 
 
-int CModel::GetResultOfPickRay(CMQOObject* pickobj, int* hitfaceindex, ChaVector3* dsthitpos)
+int CModel::GetResultOfPickRay(CMQOObject* pickobj, int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist)
 {
 	//当たったら１、当たらなかったら０を返す。エラーも０を返す。
 
 	//ComputeShader版　polymesh3, polymesh4両方OK
 
-	if (!pickobj || !hitfaceindex || !dsthitpos) {
+	if (!pickobj || !hitfaceindex || !dsthitpos || !dstdist) {
 		_ASSERT(0);
 		return 0;
 	}
 	*hitfaceindex = -1;
 	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
+	*dstdist = FLT_MAX;
 
 	int colli = 0;
-	colli = pickobj->GetResultOfPickRay(hitfaceindex, dsthitpos);
+	colli = pickobj->GetResultOfPickRay(hitfaceindex, dsthitpos, dstdist);
 	return colli;
 
 }
@@ -5642,27 +5671,27 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 
 
 
-	//FbxProperty baseColorProp1 = pMaterial->FindProperty("Color");
+	//FbxProperty baseColorProp1 = pMaterial->FindProperty("color", false);
 	//if (baseColorProp1.IsValid()) {
 	//	int dbgflag1 = 1;
 	//}
-	//FbxProperty baseColorProp2 = pMaterial->FindProperty("Base");
+	//FbxProperty baseColorProp2 = pMaterial->FindProperty("base", false);
 	//if (baseColorProp2.IsValid()) {
 	//	int dbgflag1 = 1;
 	//}
-	//FbxProperty baseColorProp3 = pMaterial->FindProperty("BasicColor");
+	//FbxProperty baseColorProp3 = pMaterial->FindProperty("basicColor", false);
 	//if (baseColorProp3.IsValid()) {
 	//	int dbgflag1 = 1;
 	//}
-	//FbxProperty baseColorProp4 = pMaterial->FindProperty("StandardColor");
+	//FbxProperty baseColorProp4 = pMaterial->FindProperty("standardColor", false);
 	//if (baseColorProp4.IsValid()) {
 	//	int dbgflag1 = 1;
 	//}
-	//FbxProperty baseColorProp5 = pMaterial->FindProperty("StandardBaseColor");
+	//FbxProperty baseColorProp5 = pMaterial->FindProperty("standardBaseColor", false);
 	//if (baseColorProp5.IsValid()) {
 	//	int dbgflag1 = 1;
 	//}
-	//FbxProperty baseColorProp6 = pMaterial->FindProperty("StandarcBasicColor");
+	//FbxProperty baseColorProp6 = pMaterial->FindProperty("standarcBasicColor", false);
 	//if (baseColorProp6.IsValid()) {
 	//	int dbgflag1 = 1;
 	//}
@@ -5724,7 +5753,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 	//{
 	//	char* ptex = 0;
 	//	const FbxDouble3 lval = FbxGetMaterialProperty(pMaterial,
-	//		"base", "color", &ptex);
+	//		"base", "Color", &ptex);
 	//	int dbgflag1 = 1;
 	//}
 
@@ -5794,22 +5823,21 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 
 
 
-
-	//FbxProperty baseColorProp = pMaterial->FindProperty("BaseColor");//プロパティ名が違うみたい
-	//if (baseColorProp.IsValid()) {
-	//	//#####################
-	//	//StandardSurfaceの場合
-	//	//#####################
-	//	FbxDouble3 baseColor = baseColorProp.Get<FbxDouble3>();
-	//	ChaVector4 tmpdif;
-	//	tmpdif.x = (float)baseColor[0] * g_DiffuseFactorAtLoading;
-	//	tmpdif.y = (float)baseColor[1] * g_DiffuseFactorAtLoading;
-	//	tmpdif.z = (float)baseColor[2] * g_DiffuseFactorAtLoading;
-	//	tmpdif.w = 1.0f;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!　alpha値はtexture依存　透過オンはTransparencyFactor!=0.0で
-	//	newmqomat->SetDif4F(tmpdif);
-	//
-	//}
-	//else {
+	FbxProperty baseColorProp = pMaterial->FindProperty("baseColor");//プロパティ名が違うみたい
+	if (baseColorProp.IsValid()) {
+		//#####################
+		//StandardSurfaceの場合
+		//#####################
+		FbxDouble3 baseColor = baseColorProp.Get<FbxDouble3>();
+		ChaVector4 tmpdif;
+		tmpdif.x = (float)baseColor[0] * g_DiffuseFactorAtLoading;
+		tmpdif.y = (float)baseColor[1] * g_DiffuseFactorAtLoading;
+		tmpdif.z = (float)baseColor[2] * g_DiffuseFactorAtLoading;
+		tmpdif.w = 1.0f;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!　alpha値はtexture依存　透過オンはTransparencyFactor!=0.0で
+		newmqomat->SetDif4F(tmpdif);
+	
+	}
+	else {
 		//##################
 		//PhongSurfaceの場合
 		//##################
@@ -5826,23 +5854,23 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 		tmpdif.z = (float)lDiffuse[2] * g_DiffuseFactorAtLoading;
 		tmpdif.w = 1.0f;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!　alpha値はtexture依存　透過オンはTransparencyFactor!=0.0で
 		newmqomat->SetDif4F(tmpdif);
-	//}
+	}
 
 
 
-	//FbxProperty spcColorProp = pMaterial->FindProperty("SpaculearColor");//プロパティ名が違うみたい
-	//if (spcColorProp.IsValid()) {
-	//	//#####################
-	//	//StandardSurfaceの場合
-	//	//#####################
-	//	FbxDouble3 spcColor = spcColorProp.Get<FbxDouble3>();
-	//	ChaVector3 tmpspc;
-	//	tmpspc.x = (float)spcColor[0] * g_SpecularFactorAtLoading;
-	//	tmpspc.y = (float)spcColor[1] * g_SpecularFactorAtLoading;
-	//	tmpspc.z = (float)spcColor[2] * g_SpecularFactorAtLoading;
-	//	newmqomat->SetSpc3F(tmpspc);
-	//}
-	//else {
+	FbxProperty spcColorProp = pMaterial->FindProperty("specularColor");//プロパティ名が違うみたい
+	if (spcColorProp.IsValid()) {
+		//#####################
+		//StandardSurfaceの場合
+		//#####################
+		FbxDouble3 spcColor = spcColorProp.Get<FbxDouble3>();
+		ChaVector3 tmpspc;
+		tmpspc.x = (float)spcColor[0] * g_SpecularFactorAtLoading;
+		tmpspc.y = (float)spcColor[1] * g_SpecularFactorAtLoading;
+		tmpspc.z = (float)spcColor[2] * g_SpecularFactorAtLoading;
+		newmqomat->SetSpc3F(tmpspc);
+	}
+	else {
 		//##################
 		//PhongSurfaceの場合
 		//##################
@@ -5857,7 +5885,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 		tmpspc.y = (float)lSpecular[1] * g_SpecularFactorAtLoading;
 		tmpspc.z = (float)lSpecular[2] * g_SpecularFactorAtLoading;
 		newmqomat->SetSpc3F(tmpspc);
-	//}
+	}
 
 
     //FbxProperty lShininessProperty = pMaterial->FindProperty(FbxSurfaceMaterial::sShininess);//<-- link error : AdditiveIKLib.lib外だから？　
@@ -23963,4 +23991,26 @@ void CModel::RestoreBoneMotionWM()
 		}
 	}
 }
+
+int CModel::SetGPUInteraction(bool srcflag)
+{
+	map<int, CMQOObject*>::iterator itr;
+	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+		CMQOObject* curobj = itr->second;
+		if (curobj && curobj->GetPm3()) {
+			curobj->SetGPUInteraction(srcflag);
+
+			//if (srcflag) {
+			//	myRenderer::RENDEROBJ currenderobj;
+			//	currenderobj.Init();
+			//	currenderobj.pmodel = this;
+			//	currenderobj.mqoobj = curobj;
+			//	curobj->GetDispObj()->ComputeDeform(currenderobj);
+			//}
+		}
+	}
+
+	return 0;
+}
+
 

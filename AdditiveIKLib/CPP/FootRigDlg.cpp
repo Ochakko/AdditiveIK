@@ -68,6 +68,10 @@ int CFootRigDlg::DestroyObjs()
 		delete m_groundCombo;
 		m_groundCombo = nullptr;
 	}
+	if (m_gpuChk) {
+		delete m_gpuChk;
+		m_gpuChk = nullptr;
+	}
 	if (m_leftfootlabel) {
 		delete m_leftfootlabel;
 		m_leftfootlabel = nullptr;
@@ -219,6 +223,7 @@ int CFootRigDlg::DestroyObjs()
 		m_maxcountsp = nullptr;
 	}
 
+
 	//spacer
 	if (m_spacerlabel0) {
 		delete m_spacerlabel0;
@@ -291,6 +296,7 @@ void CFootRigDlg::InitParams()
 	m_modellabel = nullptr;
 	m_groundlabel = nullptr;
 	m_groundCombo = nullptr;
+	m_gpuChk = nullptr;
 	m_leftfootlabel = nullptr;
 	m_leftfootBonelabel = nullptr;
 	m_leftfootBoneCombo = nullptr;
@@ -329,6 +335,7 @@ void CFootRigDlg::InitParams()
 	m_hdiffmaxsp = nullptr;
 	m_rigstepsp = nullptr;
 	m_maxcountsp = nullptr;
+
 	m_spacerlabel0 = nullptr;
 	m_spacerlabel1 = nullptr;
 	m_spacerlabel2 = nullptr;
@@ -522,6 +529,12 @@ int CFootRigDlg::CreateFootRigWnd()
 			_ASSERT(0);
 			abort();
 		}
+		m_gpuChk = new OWP_CheckBoxA(L"GPU Interaction", false, labelheight, false);
+		if (!m_gpuChk) {
+			_ASSERT(0);
+			abort();
+		}
+
 
 		m_leftfootlabel = new OWP_Label(L"LeftFoot", labelheight);
 		if (!m_leftfootlabel) {
@@ -770,6 +783,7 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_dlgWnd->addParts(*m_groundmeshsp);
 		m_groundmeshsp->addParts1(*m_groundlabel);
 		m_groundmeshsp->addParts2(*m_groundCombo);
+		m_dlgWnd->addParts(*m_gpuChk);
 
 		m_dlgWnd->addParts(*m_spacerlabel1);
 		m_dlgWnd->addParts(*m_leftfootlabel);
@@ -1084,6 +1098,10 @@ int CFootRigDlg::ParamsToDlg()
 			}
 		}
 
+		if (m_gpuChk) {
+			bool value = curfootrigelem.gpuinteraction;
+			m_gpuChk->setValue(value, false);
+		}
 
 
 		if (m_leftfootBoneCombo) {
@@ -1286,6 +1304,26 @@ int CFootRigDlg::Dlg2Params()
 		//	_ASSERT(0);
 		//	return 1;
 		//}
+
+
+		if (m_gpuChk) {//2024/09/15
+			bool value = m_gpuChk->getValue();
+			if (m_model) {
+				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				itrelem = m_footrigelem.find(m_model);
+				if (itrelem != m_footrigelem.end()) {
+					itrelem->second.gpuinteraction = value;
+					CModel* groundmodel = itrelem->second.groundmodel;
+					if (groundmodel) {
+						int result = groundmodel->SetGPUInteraction(value);
+						if (result != 0) {
+							_ASSERT(0);
+						}
+					}
+				}
+			}
+		}
+
 
 		if (m_leftoffsetEdit) {
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
@@ -1528,7 +1566,7 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 				leftjointpos = GetJointPos(limitdegflag, srcmodel, curelem.leftfootbone);
 
 				if (curelem.groundmodel) {
-					leftgpos = GetGroundPos(curelem.groundmodel, leftjointpos);
+					leftgpos = GetGroundPos(curelem.groundmodel, leftjointpos, curelem.gpuinteraction);
 				}
 			}
 
@@ -1536,7 +1574,7 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 				rightjointpos = GetJointPos(limitdegflag, srcmodel, curelem.rightfootbone);
 
 				if (curelem.groundmodel) {
-					rightgpos = GetGroundPos(curelem.groundmodel, rightjointpos);
+					rightgpos = GetGroundPos(curelem.groundmodel, rightjointpos, curelem.gpuinteraction);
 				}
 			}
 
@@ -1758,7 +1796,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				lowerdir, loweroffset, curelem.rigstep, curelem.maxcalccount, 
 				lowerrig, lowerrignum,
 				modelwm, matView, matProj,
-				curelem.groundmodel, &lowergpos);
+				curelem.groundmodel, curelem.gpuinteraction, &lowergpos);
 
 			lowerjointpos = lowernewpos;
 			lowerdoneflag = true;
@@ -1777,7 +1815,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				higherdir, higheroffset, curelem.rigstep, curelem.maxcalccount, 
 				higherrig, higherrignum,
 				modelwm, matView, matProj,
-				curelem.groundmodel, &highergpos);
+				curelem.groundmodel, curelem.gpuinteraction, &highergpos);
 
 			higherjointpos = highernewpos;
 			higherdoneflag = true;
@@ -1969,7 +2007,7 @@ ChaVector3 CFootRigDlg::GetJointPos(bool limitdegflag, CModel* srcmodel, CBone* 
 	return retpos;
 }
 
-ChaVector3 CFootRigDlg::GetGroundPos(CModel* groundmodel, ChaVector3 basepos)
+ChaVector3 CFootRigDlg::GetGroundPos(CModel* groundmodel, ChaVector3 basepos, bool gpuflag)
 {
 	int hitflag = 0;
 	ChaVector3 retpos;
@@ -1981,7 +2019,9 @@ ChaVector3 CFootRigDlg::GetGroundPos(CModel* groundmodel, ChaVector3 basepos)
 
 	ChaVector3 startglobal = basepos + ChaVector3(0.0f, FOOTRIGPICKHEIGHT, 0.0f);
 	ChaVector3 endglobal = basepos - ChaVector3(0.0f, FOOTRIGPICKHEIGHT, 0.0f);
+
 	hitflag = groundmodel->CollisionPolyMesh3_Ray(
+		gpuflag,
 		startglobal, endglobal, &retpos);
 
 	return retpos;
@@ -2023,7 +2063,7 @@ ChaVector3 CFootRigDlg::RigControlFootRig(bool limitdegflag, CModel* srcmodel,
 	int rigdir, float posoffset, float rigstep, int maxcalccount, 
 	CUSTOMRIG footrig, int rignum,
 	ChaMatrix modelwm, ChaMatrix matView, ChaMatrix matProj,
-	CModel* groundmodel, ChaVector3* pgroundpos)
+	CModel* groundmodel, bool gpuflag, ChaVector3* pgroundpos)
 {
 
 	//float BONEMOTIONBLEND = 0.05f;
@@ -2067,7 +2107,7 @@ ChaVector3 CFootRigDlg::RigControlFootRig(bool limitdegflag, CModel* srcmodel,
 
 		srcmodel->UpdateMatrixFootRigReq(limitdegflag, updatebone, &modelwm, &matView, &matProj);//角度制限あり無し両方に　現状の姿勢を格納
 		newbonepos = GetJointPos(limitdegflag, srcmodel, footbone);
-		*pgroundpos = GetGroundPos(groundmodel, newbonepos);
+		*pgroundpos = GetGroundPos(groundmodel, newbonepos, gpuflag);
 
 		calccount++;
 

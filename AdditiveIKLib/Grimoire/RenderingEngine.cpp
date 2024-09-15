@@ -480,7 +480,6 @@ namespace myRenderer
                     if (currenderobj.mqoobj->GetPm3()) {
                         
                         //2024/04/03 ビデオメモリ不足でTheHuntが読めなくなったので　pm3についてはComputeDeformしないで済むように
-                        
                         //currenderobj.mqoobj->GetDispObj()->ComputeDeform(currenderobj);
                     }
                     else if (currenderobj.mqoobj->GetPm4()) {

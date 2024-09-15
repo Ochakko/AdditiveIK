@@ -787,14 +787,15 @@ public:
 	int CollisionNoBoneObj_Mouse(UIPICKINFO* pickinfo, const char* objnameptr, bool excludeinvface);
 
 	//ComputeShader版　polymesh4
-	int CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex, ChaVector3* dsthitpos);
-	int GetResultOfPickRay(CMQOObject* pickobj, int* hitfaceindex, ChaVector3* dsthitpos);
+	int CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, 
+		int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist);
+	int GetResultOfPickRay(CMQOObject* pickobj, int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist);
 
 	//CPU版　polymesh3
 	int CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex, ChaVector3* dsthitpos);
 
 	//FootRigから地面の高さ取得用
-	int CollisionPolyMesh3_Ray(ChaVector3 startglobal, ChaVector3 endglobal, ChaVector3* dsthitpos);
+	int CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVector3 endglobal, ChaVector3* dsthitpos);
 
 
 /**
@@ -1017,6 +1018,7 @@ public:
 	void RestoreBoneMotionWM();
 	void BlendSaveBoneMotionReq(CBone* srcbone, float srcblend);
 
+	int SetGPUInteraction(bool srcflag);
 
 	//int PhysicsRigControl(int depthcnt, CEditRange* erptr, int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig);
 

@@ -51,7 +51,7 @@ struct CSPickResult
 		hitpos[0] = 0.0f;
 		hitpos[1] = 0.0f;
 		hitpos[2] = 0.0f;
-		hitpos[3] = 0.0f;
+		hitpos[3] = FLT_MAX;//2024/09/15 mStartからの距離
 	};
 };
 
@@ -117,21 +117,21 @@ public:
 	int CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4);
 	int CreateDispObj(ID3D12Device* pdev, CExtLine* extline);
 	int CreateIOBuffers(ID3D12Device* pdev, int vertextype);
+	int DestroyObjs();
 
 	int ComputeDeform(myRenderer::RENDEROBJ renderobj);
 	int CopyCSDeform();
 
 
 	int PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
-		bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos);
-	int GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos);
+		bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist);
+	int GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist);
 
 	int GetDeformedDispV(int srcvertindex, BINORMALDISPV* dstv);
 
 private:
 
 	int InitParams();
-	int DestroyObjs();
 	int CreateIMCompute(ID3D12Device* pdev);
 
 private:

@@ -81,6 +81,8 @@ public:
 	int MakeExtLine(CModel* srcmodel);
 	int MakeDispObj(ID3D12Device* pdev, int hasbone, bool grassflag);
 //	int MakeExtLine( map<int,CMQOMaterial*>& srcmat );
+	int SetGPUInteraction(bool srcflag);
+
 
 	int HasPolygon();
 	int HasLine();
@@ -112,8 +114,8 @@ public:
 	//ComputeShader版　polymesh3, polymesh4両方OK
 	int CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglobal,
 		ChaVector3 startlocal, ChaVector3 dirlocal,
-		bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos);
-	int GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos);
+		bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist);
+	int GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist);
 
 
 	//CPU計算　polymesh3用
@@ -524,7 +526,14 @@ public:
 	{
 		return m_cancelshadow;
 	}
-
+	void SetGPUInteractionFlag(bool srcflag)
+	{
+		m_gpuinteractionflag = srcflag;
+	}
+	bool GetGPUInteractionFlag()
+	{
+		return m_gpuinteractionflag;
+	}
 
 private:
 	int m_objfrom;
@@ -621,6 +630,8 @@ private:
 	int m_dbgcount;
 
 	std::vector<LATERMATERIAL> m_latermaterial;
+	bool m_gpuinteractionflag;
+
 
 	int m_lodnum;
 	int m_getuvnum;

@@ -28,6 +28,7 @@ struct CSOutputData_PickNoBone
 {
     int4 result;//0:hitflag, 1:justflag, 2:hitfaceno, 3:未使用0
     int4 dbginfo;//0:return code, 1:index1, 2:index2, 3:index3
+    float4 hitpos;//2024/09/15
 };
 
 ///////////////////////////////////////////
@@ -58,9 +59,11 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     if (faceIndex >= mBufferSize[1])//facenoチェック
         return;
     
-    //当りが既にみつかっていたばあいにはすぐにリターン
-    if ((g_output_PickNoBone[0].result[0] != 0) || (g_output_PickNoBone[0].result[1] != 0))
-        return;
+    
+    //2024/09/15 mStartから一番近い当りを探すために　次のif文をコメントアウト
+    //if ((g_output_PickNoBone[0].result[0] != 0) || (g_output_PickNoBone[0].result[1] != 0))
+    //    return;
+    
     
 
     //########################################################################################
@@ -128,7 +131,8 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     
     float3 q;
     q = v1 + ev * k;
-
+ 
+    
     float3 g0, g1, cA, cB, cC;
 
     g1 = point2 - point1;
@@ -154,10 +158,25 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     if ((abs(dota) < 0.05f) && (abs(dotb) < 0.05f) && (abs(dotc) < 0.05f))//zero
     {
         //(*justptr)++;
-        g_output_PickNoBone[0].result[0] = 1;
-        g_output_PickNoBone[0].result[1] = 1;
-        g_output_PickNoBone[0].result[2] = faceIndex;
+        float befdist = g_output_PickNoBone[0].hitpos.w;
+        float3 curdistvec = q - mStartglobal.xyz;
+        float curdist = length(curdistvec);
+
+        //2024/09/15
+        //mStartから一番近い当りをセット
+        //clip(befdist - curdist); //!!!!!!!
+        if (curdist < befdist)
+        {
+            g_output_PickNoBone[0].hitpos.x = q.x;
+            g_output_PickNoBone[0].hitpos.y = q.y;
+            g_output_PickNoBone[0].hitpos.z = q.z;
+            g_output_PickNoBone[0].hitpos.w = curdist; //2024/09/15 mStartからの距離をセット
+
+            g_output_PickNoBone[0].result[0] = 1;
+            g_output_PickNoBone[0].result[1] = 1;
+            g_output_PickNoBone[0].result[2] = faceIndex;
         //g_output_PickNoBone[0].dbginfo[0] = 4;
+        }
         return;
     }
 
@@ -165,10 +184,25 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 		((dota >= 0.50f) && (dotb >= 0.50f) && (dotc >= 0.50f))
         )
     {
-        g_output_PickNoBone[0].result[0] = 1;
-        g_output_PickNoBone[0].result[1] = 0;
-        g_output_PickNoBone[0].result[2] = faceIndex;
-        //g_output_PickNoBone[0].dbginfo[0] = 5;
+        float befdist = g_output_PickNoBone[0].hitpos.w;
+        float3 curdistvec = q - mStartglobal.xyz;
+        float curdist = length(curdistvec);
+
+        //2024/09/15
+        //mStartから一番近い当りをセット
+        //clip(befdist - curdist); //!!!!!!!            
+        if (curdist < befdist)
+        {
+            g_output_PickNoBone[0].hitpos.x = q.x;
+            g_output_PickNoBone[0].hitpos.y = q.y;
+            g_output_PickNoBone[0].hitpos.z = q.z;
+            g_output_PickNoBone[0].hitpos.w = curdist; //2024/09/15 mStartからの距離をセット
+
+            g_output_PickNoBone[0].result[0] = 1;
+            g_output_PickNoBone[0].result[1] = 0;
+            g_output_PickNoBone[0].result[2] = faceIndex;
+            //g_output_PickNoBone[0].dbginfo[0] = 5;
+        }
         return;
     }
     else

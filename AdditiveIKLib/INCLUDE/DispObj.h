@@ -47,7 +47,7 @@ public:
 	 * @return 成功したら０。
 	 */
 	int CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, int srcuvnum, bool grassflag);
-
+	int SetGPUInteraction(bool srcflag);
 
 	/**
 	 * @fn
@@ -140,8 +140,8 @@ public:
 	int ComputeDeform(myRenderer::RENDEROBJ renderobj);
 	int CopyCSDeform();
 	int PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
-		bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos);
-	int GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos);
+		bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist);
+	int GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist);
 
 
 	void ResetScaleInstancing();

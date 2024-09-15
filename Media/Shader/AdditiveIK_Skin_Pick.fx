@@ -133,11 +133,6 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     
     float3 q;
     q = v1 + ev * k;
-
-    g_output_PickSkined[0].hitpos.x = q.x;
-    g_output_PickSkined[0].hitpos.y = q.y;
-    g_output_PickSkined[0].hitpos.z = q.z;
-    g_output_PickSkined[0].hitpos.w = 1.0f;
     
     float3 g0, g1, cA, cB, cC;
 
@@ -164,10 +159,25 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     if ((abs(dota) < 0.05f) && (abs(dotb) < 0.05f) && (abs(dotc) < 0.05f))//zero
     {
         //(*justptr)++;
-        g_output_PickSkined[0].result[0] = 1;
-        g_output_PickSkined[0].result[1] = 1;
-        g_output_PickSkined[0].result[2] = faceIndex;
-        //g_output_PickSkined[0].dbginfo[0] = 4;                
+        float befdist = g_output_PickSkined[0].hitpos.w;
+        float3 curdistvec = q - mStartglobal.xyz;
+        float curdist = length(curdistvec);
+
+        //2024/09/15
+        //mStartから一番近い当りをセット
+        //clip(befdist - curdist); //!!!!!!!
+        if (curdist < befdist)
+        {
+            g_output_PickSkined[0].hitpos.x = q.x;
+            g_output_PickSkined[0].hitpos.y = q.y;
+            g_output_PickSkined[0].hitpos.z = q.z;
+            g_output_PickSkined[0].hitpos.w = curdist; //2024/09/15 mStartからの距離をセット
+
+            g_output_PickSkined[0].result[0] = 1;
+            g_output_PickSkined[0].result[1] = 1;
+            g_output_PickSkined[0].result[2] = faceIndex;
+            //g_output_PickSkined[0].dbginfo[0] = 4;                
+        }
         return;
     }
 
@@ -175,10 +185,25 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 		((dota >= 0.50f) && (dotb >= 0.50f) && (dotc >= 0.50f))
         )
     {
-        g_output_PickSkined[0].result[0] = 1;
-        g_output_PickSkined[0].result[1] = 0;
-        g_output_PickSkined[0].result[2] = faceIndex;
-        //g_output_PickSkined[0].dbginfo[0] = 5;
+        float befdist = g_output_PickSkined[0].hitpos.w;
+        float3 curdistvec = q - mStartglobal.xyz;
+        float curdist = length(curdistvec);
+
+        //2024/09/15
+        //mStartから一番近い当りをセット
+        //clip(befdist - curdist); //!!!!!!!
+        if (curdist < befdist)
+        {
+            g_output_PickSkined[0].hitpos.x = q.x;
+            g_output_PickSkined[0].hitpos.y = q.y;
+            g_output_PickSkined[0].hitpos.z = q.z;
+            g_output_PickSkined[0].hitpos.w = curdist; //2024/09/15 mStartからの距離をセット
+
+            g_output_PickSkined[0].result[0] = 1;
+            g_output_PickSkined[0].result[1] = 0;
+            g_output_PickSkined[0].result[2] = faceIndex;
+            //g_output_PickSkined[0].dbginfo[0] = 5;
+        }
         return;
     }
     else

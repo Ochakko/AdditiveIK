@@ -70,14 +70,14 @@ private:
 	ChaMatrix BlendSaveModelWM(CModel* srcmodel, ChaMatrix srcmat, float blendrate);
 	ChaMatrix GetJointWM(bool limitdegflag, CModel* srcmodel, CBone* srcbone, bool multmodelwm);
 	ChaVector3 GetJointPos(bool limitdegflag, CModel* srcmodel, CBone* srcbone);
-	ChaVector3 GetGroundPos(CModel* groundmodel, ChaVector3 basepos);
+	ChaVector3 GetGroundPos(CModel* groundmodel, ChaVector3 basepos, bool gpuflag);
 	ChaMatrix ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy, bool blendflag);
 	ChaVector3 RigControlFootRig(bool limitdegflag, CModel* srcmodel, CBone* footbone, CBone* updatebone, double curframe,
 		ChaVector3 bonepos,
 		int rigdir, float posoffset, float rigstep, int maxcalccount, 
 		CUSTOMRIG footrig, int rignum,
 		ChaMatrix modelwm, ChaMatrix matView, ChaMatrix matProj,
-		CModel* groundmodel, ChaVector3* pgroundpos);
+		CModel* groundmodel, bool gpuflag, ChaVector3* pgroundpos);
 	CBone* GetUpdateBone(CModel* srcmodel, CBone* footbone, CUSTOMRIG footrig, int rigdir, int* prignum);//Rigで回転するボーンの内の一番親のボーンを返す
 
 	bool IsValidModel(CModel* srcmodel);//modelが削除されている場合はfalseを返す
@@ -119,6 +119,7 @@ private:
 	OrgWinGUI::OWP_Label* m_modellabel;
 	OrgWinGUI::OWP_Label* m_groundlabel;
 	OrgWinGUI::OWP_ComboBoxA* m_groundCombo;
+	OrgWinGUI::OWP_CheckBoxA* m_gpuChk;//2024/09/15
 
 	OrgWinGUI::OWP_Label* m_leftfootlabel;
 	OrgWinGUI::OWP_Label* m_leftfootBonelabel;

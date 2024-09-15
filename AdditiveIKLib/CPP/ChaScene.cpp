@@ -387,7 +387,8 @@ bool ChaScene::PickPolyMesh(int pickkind,
 							//座標変換　ボーン変形　即時実行のコンピュータシェーダ
 							curobj->GetDispObj()->ComputeDeform(pickobj);
 						}
-						colli = curmodel->CollisionPolyMesh_Mouse(&pickinfo, curobj, &hitfaceindex, &curhitpos);
+						float tmpdist = FLT_MAX;
+						colli = curmodel->CollisionPolyMesh_Mouse(&pickinfo, curobj, &hitfaceindex, &curhitpos, &tmpdist);
 					}
 					else {
 						colli = 0;
@@ -522,7 +523,8 @@ bool ChaScene::GetResultOfPickRay(int pickkind,
 					int hitfaceindex = -1;
 					int colli = 0;
 					if (curobj->GetPm3() || curobj->GetPm4()) {
-						colli = curobj->GetResultOfPickRay(&hitfaceindex, &curhitpos);
+						float tmpdist = FLT_MAX;
+						colli = curobj->GetResultOfPickRay(&hitfaceindex, &curhitpos, &tmpdist);
 					}
 					else {
 						colli = 0;

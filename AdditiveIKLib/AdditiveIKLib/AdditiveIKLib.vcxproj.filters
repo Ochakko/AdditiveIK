@@ -294,11 +294,11 @@
     <ClCompile Include="..\CPP\DofDlg.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\CPP\FootRigDlg.cpp">
-      <Filter>GUI</Filter>
-    </ClCompile>
     <ClCompile Include="..\CPP\FootRigFile.cpp">
       <Filter>FileIO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\FootRigDlg.cpp">
+      <Filter>FootRig</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1501,11 +1501,11 @@
     <ClInclude Include="..\INCLUDE\DofDlg.h">
       <Filter>GUI</Filter>
     </ClInclude>
-    <ClInclude Include="..\INCLUDE\FootRigDlg.h">
-      <Filter>GUI</Filter>
-    </ClInclude>
     <ClInclude Include="..\INCLUDE\FootRigFile.h">
       <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\FootRigDlg.h">
+      <Filter>FootRig</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1587,6 +1587,9 @@
     </Filter>
     <Filter Include="BlendShape">
       <UniqueIdentifier>{dc0494c8-759f-48d6-ac4a-8c1e7ea80e43}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FootRig">
+      <UniqueIdentifier>{adcd4986-16bd-4af3-904c-10ad4f724bc1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

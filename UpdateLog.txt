@@ -2,14 +2,31 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/09/15
+　Pickシェーダ修正
+　　今までは最初にみつかった当たりの面の情報を返していたが
+　　今回からはメッシュの中の一番近い当り面の情報を返す
+　　ただし数字キーを押しながらのNumPick機能についてはそのまま(メッシュの中心との距離でソート).
+
+　FootRigの地面の高さ計算部分をシェーダで計算可能に.
+　　FootRig設定ウインドウにGPUIntaractionチェックボックスを追加
+　　チェックを入れてApplyボタンを押すと地面との当たり判定をコンピュートシェーダで行う
+　　地面のポリゴン数が多いほどGPUに切り替えた方が速くなる
+　　(地面のポリゴン数が少ない場合にはGPUにしない方が速い)
+
+　　大きいシーン読み込み時にメモリ不足で落ちないように
+　　原則としてシェーダでの当たり判定(DispGroupメニューとShaderメニューも)はスキンメッシュ(ボーン入りメッシュ)だけですが
+　　FootRig設定でGPUIntaraction指定した地面データに対してもシェーダで判定を行う
+
+
+
+
 
 2024/09/14
 　既知の問題13への対応
 　　マテリアルとしてPhong以外が割り当てられているfbxを読み込んでも落ちなくなった
 　　しかしPhong以外のマテリアルの場合は読み込み後にAdditiveIKのShaderメニューでマテリアルの再設定が必要
 　　Documents/TroubleShooting/00_KnownIssue.docx更新
-
-
 
 
 2024/09/13
@@ -27,8 +44,6 @@ https://github.com/Ochakko/AdditiveIK
 　LimitEulオン時の物理シミュに関わる修正
 　　SetWorldMat()内において物理シミュ中もChkMovableEul()で制限角度チェックをするように修正
 　　物理に対して自前の角度制限を行っていなかった昔のif文が残っていたので修正
-
-
 
 
 2024/09/12

@@ -317,11 +317,41 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, in
 		_ASSERT(0);
 		return 1;
 	}
-	CallF(m_csdeform->CreateDispObj(pdev, pm3), return 1);
+
+	//大きいアセット読込でdescriptorheap数の上限を越えるので　SetGPUInteraction()で必要に応じて呼び出す
+	//CallF(m_csdeform->CreateDispObj(pdev, pm3), return 1);
 
 
 	return 0;
 }
+
+int CDispObj::SetGPUInteraction(bool srcflag)
+{
+	//大きいアセット読込でdescriptorheap数の上限を越えるので　必要に応じて呼び出す
+
+	if (m_csdeform && m_pdev) {
+		if (m_pm3) {
+			if (srcflag) {
+				CallF(m_csdeform->CreateDispObj(m_pdev, m_pm3), return 1);
+			}
+			else {
+				m_csdeform->DestroyObjs();
+			}
+		}
+		else {
+			//何もしない
+			//pm4についてはCreateDispObjで作成済
+		}
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+
+	return 0;
+}
+
+
 int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, int srcuvnum)
 {
 	DestroyObjs();
@@ -1190,24 +1220,24 @@ int CDispObj::CopyCSDeform()
 }
 
 int CDispObj::PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
-	bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos)
+	bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist)
 {
-	if (!m_csdeform || !hitfaceindex || !dsthitpos) {
+	if (!m_csdeform || !hitfaceindex || !dsthitpos || !dstdist) {
 		_ASSERT(0);
 		return 0;
 	}
 
-	return m_csdeform->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex, dsthitpos);
+	return m_csdeform->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex, dsthitpos, dstdist);
 }
 
-int CDispObj::GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos)
+int CDispObj::GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist)
 {
-	if (!m_csdeform || !hitfaceindex || !dsthitpos) {
+	if (!m_csdeform || !hitfaceindex || !dsthitpos || !dstdist) {
 		_ASSERT(0);
 		return 0;
 	}
 
-	return m_csdeform->GetResultOfPickRay(hitfaceindex, dsthitpos);
+	return m_csdeform->GetResultOfPickRay(hitfaceindex, dsthitpos, dstdist);
 }
 
 
