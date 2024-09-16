@@ -528,11 +528,11 @@ public:
 	}
 	void SetGPUInteractionFlag(bool srcflag)
 	{
-		m_gpuinteractionflag = srcflag;
+		m_gpucollisionflag = srcflag;
 	}
 	bool GetGPUInteractionFlag()
 	{
-		return m_gpuinteractionflag;
+		return m_gpucollisionflag;
 	}
 
 private:
@@ -630,7 +630,7 @@ private:
 	int m_dbgcount;
 
 	std::vector<LATERMATERIAL> m_latermaterial;
-	bool m_gpuinteractionflag;
+	bool m_gpucollisionflag;
 
 
 	int m_lodnum;

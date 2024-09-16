@@ -71,7 +71,7 @@ private:
 	ChaMatrix GetJointWM(bool limitdegflag, CModel* srcmodel, CBone* srcbone, bool multmodelwm);
 	ChaVector3 GetJointPos(bool limitdegflag, CModel* srcmodel, CBone* srcbone);
 	ChaVector3 GetGroundPos(CModel* groundmodel, ChaVector3 basepos, bool gpuflag);
-	ChaMatrix ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy, bool blendflag);
+	ChaMatrix ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy, bool blendflag, bool savewmflag);
 	ChaVector3 RigControlFootRig(bool limitdegflag, CModel* srcmodel, CBone* footbone, CBone* updatebone, double curframe,
 		ChaVector3 bonepos,
 		int rigdir, float posoffset, float rigstep, int maxcalccount, 
@@ -147,6 +147,8 @@ private:
 	OrgWinGUI::OWP_EditBox* m_rigstepEdit;
 	OrgWinGUI::OWP_Label* m_maxcountlabel;//2024/09/08
 	OrgWinGUI::OWP_EditBox* m_maxcountEdit;//2024/09/08
+	OrgWinGUI::OWP_Label* m_hopypersteplabel;//2024/09/16
+	OrgWinGUI::OWP_EditBox* m_hopyperstepEdit;//2024/09/16
 
 	OrgWinGUI::OWP_Button* m_applyB;
 
@@ -162,6 +164,8 @@ private:
 	OrgWinGUI::OWP_Separator* m_hdiffmaxsp;
 	OrgWinGUI::OWP_Separator* m_rigstepsp;
 	OrgWinGUI::OWP_Separator* m_maxcountsp;//2024/09/08
+	OrgWinGUI::OWP_Separator* m_gpusp;//2024/09/16
+	OrgWinGUI::OWP_Separator* m_hopyperstepsp;//2024/09/16
 
 	OrgWinGUI::OWP_Label* m_spacerlabel0;
 	OrgWinGUI::OWP_Label* m_spacerlabel1;

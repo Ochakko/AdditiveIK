@@ -168,6 +168,14 @@ int CFootRigDlg::DestroyObjs()
 		delete m_maxcountEdit;
 		m_maxcountEdit = nullptr;
 	}
+	if (m_hopypersteplabel) {
+		delete m_hopypersteplabel;
+		m_hopypersteplabel = nullptr;
+	}
+	if (m_hopyperstepEdit) {
+		delete m_hopyperstepEdit;
+		m_hopyperstepEdit = nullptr;
+	}
 	if (m_applyB) {
 		delete m_applyB;
 		m_applyB = nullptr;
@@ -222,7 +230,14 @@ int CFootRigDlg::DestroyObjs()
 		delete m_maxcountsp;
 		m_maxcountsp = nullptr;
 	}
-
+	if (m_gpusp) {
+		delete m_gpusp;
+		m_gpusp = nullptr;
+	}
+	if (m_hopyperstepsp) {
+		delete m_hopyperstepsp;
+		m_hopyperstepsp = nullptr;
+	}
 
 	//spacer
 	if (m_spacerlabel0) {
@@ -321,6 +336,8 @@ void CFootRigDlg::InitParams()
 	m_rigstepEdit = nullptr;
 	m_maxcountlabel = nullptr;
 	m_maxcountEdit = nullptr;
+	m_hopypersteplabel = nullptr;
+	m_hopyperstepEdit = nullptr;
 	m_applyB = nullptr;
 
 	m_groundmeshsp = nullptr;
@@ -334,7 +351,9 @@ void CFootRigDlg::InitParams()
 	m_rightdirsp = nullptr;
 	m_hdiffmaxsp = nullptr;
 	m_rigstepsp = nullptr;
+	m_hopyperstepsp = nullptr;
 	m_maxcountsp = nullptr;
+	m_gpusp = nullptr;
 
 	m_spacerlabel0 = nullptr;
 	m_spacerlabel1 = nullptr;
@@ -377,12 +396,12 @@ int CFootRigDlg::SetModel(ChaScene* srcchascene, CModel* srcmodel)
 				m_footrigelem[m_model] = newfootelem;
 			}
 			else {
-				bool gpuinteraction = itrelem->second.gpuinteraction;
+				bool gpucollision = itrelem->second.gpucollision;
 				CModel* groundmodel = itrelem->second.groundmodel;
 				if (groundmodel) {
 					int gindex = m_chascene->FindModelIndex(groundmodel);//削除されていないことを確認
 					if (gindex >= 0) {
-						int result = groundmodel->SetGPUInteraction(gpuinteraction);//当たり判定シェーダの準備
+						int result = groundmodel->SetGPUInteraction(gpucollision);//当たり判定シェーダの準備
 						if (result != 0) {
 							_ASSERT(0);
 						}
@@ -548,7 +567,7 @@ int CFootRigDlg::CreateFootRigWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_gpuChk = new OWP_CheckBoxA(L"GPU Interaction", false, labelheight, false);
+		m_gpuChk = new OWP_CheckBoxA(L"GPU Collision", false, labelheight, false);
 		if (!m_gpuChk) {
 			_ASSERT(0);
 			abort();
@@ -679,6 +698,16 @@ int CFootRigDlg::CreateFootRigWnd()
 			_ASSERT(0);
 			abort();
 		}
+		m_hopypersteplabel = new OWP_Label(L"Hop Y per Step", labelheight);
+		if (!m_hopypersteplabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_hopyperstepEdit = new OWP_EditBox(true, L"hopyperstepEdit", labelheight, EDIT_BUFLEN_NUM);
+		if (!m_hopyperstepEdit) {
+			_ASSERT(0);
+			abort();
+		}
 		m_applyB = new OWP_Button(L"Apply(適用)", 38);
 		if (!m_applyB) {
 			_ASSERT(0);
@@ -747,6 +776,16 @@ int CFootRigDlg::CreateFootRigWnd()
 			_ASSERT(0);
 			abort();
 		}
+		m_gpusp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_gpusp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_hopyperstepsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_hopyperstepsp) {
+			_ASSERT(0);
+			abort();
+		}
 		m_spacerlabel0 = new OWP_Label(L"     ", labelheight);
 		if (!m_spacerlabel0) {
 			_ASSERT(0);
@@ -802,7 +841,8 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_dlgWnd->addParts(*m_groundmeshsp);
 		m_groundmeshsp->addParts1(*m_groundlabel);
 		m_groundmeshsp->addParts2(*m_groundCombo);
-		m_dlgWnd->addParts(*m_gpuChk);
+		m_dlgWnd->addParts(*m_gpusp);
+		m_gpusp->addParts2(*m_gpuChk);
 
 		m_dlgWnd->addParts(*m_spacerlabel1);
 		m_dlgWnd->addParts(*m_leftfootlabel);
@@ -845,6 +885,9 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_dlgWnd->addParts(*m_maxcountsp);
 		m_maxcountsp->addParts1(*m_maxcountlabel);
 		m_maxcountsp->addParts2(*m_maxcountEdit);
+		m_dlgWnd->addParts(*m_hopyperstepsp);
+		m_hopyperstepsp->addParts1(*m_hopypersteplabel);
+		m_hopyperstepsp->addParts2(*m_hopyperstepEdit);
 		m_dlgWnd->addParts(*m_spacerlabel5);
 
 		m_dlgWnd->addParts(*m_leftinfolabel);
@@ -1118,7 +1161,7 @@ int CFootRigDlg::ParamsToDlg()
 		}
 
 		if (m_gpuChk) {
-			bool value = curfootrigelem.gpuinteraction;
+			bool value = curfootrigelem.gpucollision;
 			m_gpuChk->setValue(value, false);
 		}
 
@@ -1219,6 +1262,11 @@ int CFootRigDlg::ParamsToDlg()
 			swprintf_s(strmaxcount, EDIT_BUFLEN_NUM, L"%d", curfootrigelem.maxcalccount);
 			m_maxcountEdit->setName(strmaxcount);
 		}
+		if (m_hopyperstepEdit) {
+			WCHAR strhopyperstep[EDIT_BUFLEN_NUM] = { 0L };
+			swprintf_s(strhopyperstep, EDIT_BUFLEN_NUM, L"%.2f", curfootrigelem.hopyperstep);
+			m_hopyperstepEdit->setName(strhopyperstep);
+		}
 
 		m_dlgWnd->callRewrite();
 	}
@@ -1318,6 +1366,10 @@ int CFootRigDlg::ParamsToDlg_RightRig()
 
 int CFootRigDlg::Dlg2Params()
 {
+	//###############################
+	//Applyボタンを押された場合に呼ばれる
+	//###############################
+
 	if (m_dlgWnd != 0) {
 		//if ((g_lightSlot < 0) || (g_lightSlot >= LIGHTSLOTNUM)) {
 		//	_ASSERT(0);
@@ -1325,18 +1377,21 @@ int CFootRigDlg::Dlg2Params()
 		//}
 
 
-		if (m_gpuChk) {//2024/09/15
+		if (m_gpuChk && m_chascene) {//2024/09/15
 			bool value = m_gpuChk->getValue();
 			if (m_model) {
 				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
 				itrelem = m_footrigelem.find(m_model);
 				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.gpuinteraction = value;
+					itrelem->second.gpucollision = value;
 					CModel* groundmodel = itrelem->second.groundmodel;
 					if (groundmodel) {
-						int result = groundmodel->SetGPUInteraction(value);
-						if (result != 0) {
-							_ASSERT(0);
+						int gindex = m_chascene->FindModelIndex(groundmodel);
+						if (gindex >= 0) {
+							int result = groundmodel->SetGPUInteraction(value);
+							if (result != 0) {
+								_ASSERT(0);
+							}
 						}
 					}
 				}
@@ -1405,6 +1460,19 @@ int CFootRigDlg::Dlg2Params()
 				itrelem = m_footrigelem.find(m_model);
 				if (itrelem != m_footrigelem.end()) {
 					itrelem->second.maxcalccount = countval;
+				}
+			}
+		}
+
+		if (m_hopyperstepEdit) {
+			WCHAR strstep[EDIT_BUFLEN_NUM] = { 0L };
+			m_hopyperstepEdit->getName(strstep, EDIT_BUFLEN_NUM);
+			float stepval = (float)_wtof(strstep);
+			if (m_model) {
+				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				itrelem = m_footrigelem.find(m_model);
+				if (itrelem != m_footrigelem.end()) {
+					itrelem->second.hopyperstep = stepval;
 				}
 			}
 		}
@@ -1585,7 +1653,7 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 				leftjointpos = GetJointPos(limitdegflag, srcmodel, curelem.leftfootbone);
 
 				if (curelem.groundmodel) {
-					leftgpos = GetGroundPos(curelem.groundmodel, leftjointpos, curelem.gpuinteraction);
+					leftgpos = GetGroundPos(curelem.groundmodel, leftjointpos, curelem.gpucollision);
 				}
 			}
 
@@ -1593,7 +1661,7 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 				rightjointpos = GetJointPos(limitdegflag, srcmodel, curelem.rightfootbone);
 
 				if (curelem.groundmodel) {
-					rightgpos = GetGroundPos(curelem.groundmodel, rightjointpos, curelem.gpuinteraction);
+					rightgpos = GetGroundPos(curelem.groundmodel, rightjointpos, curelem.gpucollision);
 				}
 			}
 
@@ -1769,11 +1837,24 @@ void CFootRigDlg::FootRig(bool secondcalling,
 		bool forcehigherfootrig = false;
 
 
+		if (!secondcalling) {//### Hop Y per step ###
+			//2024/09/16 上り坂の傾斜を上る際に足が曲がり過ぎないように　毎回ホップする
+			float diffy = curelem.hopyperstep;
+			ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, false, false);//wmをブレンドしない　保存しない
+			float diffy2 = modelwm3.data[MATI_42] - modelwm.data[MATI_42];
+			modelwm = modelwm3;
+			hipspos.y += diffy2;
+			lowerjointpos.y += diffy2;
+			higherjointpos.y += diffy2;
+		}
+
+
 		if (//!secondcalling &&
 			((hipspos.y - highergpos.y) > (hdiffmax + ROUNDINGPOS))) {
 
-			float diffy = highergpos.y - (higherjointpos.y + higheroffset);
-			ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true);//wmをブレンドする　この処理後に地面に潜っていても　後処理で地面位置まで上げる
+			//float diffy = highergpos.y - (higherjointpos.y + higheroffset);
+			float diffy = -(hipspos.y - highergpos.y - hdiffmax);//2024/09/16 hdiffmax設定で足の曲がり方が調整できるように修正　地面とhipsの高さがhdiffmax以下になるようにShiftする
+			ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true, true);//wmをブレンドする　この処理後に地面に潜っていても　後処理で地面位置まで上げる
 
 			float diffy2 = modelwm3.data[MATI_42] - modelwm.data[MATI_42];
 			modelwm = modelwm3;
@@ -1787,8 +1868,9 @@ void CFootRigDlg::FootRig(bool secondcalling,
 		if (//!secondcalling &&
 			((hipspos.y - lowergpos.y) > (hdiffmax + ROUNDINGPOS))) {
 
-			float diffy = lowergpos.y - (lowerjointpos.y + loweroffset);
-			ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true);//wmをブレンドする　この処理後に地面に潜っていても　後処理で地面位置まで上げる
+			//float diffy = lowergpos.y - (lowerjointpos.y + loweroffset);
+			float diffy = -(hipspos.y - lowergpos.y - hdiffmax);//2024/09/16 hdiffmax設定で足の曲がり方が調整できるように修正　地面とhipsの高さがhdiffmax以下になるようにShiftする
+			ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true, true);//wmをブレンドする　この処理後に地面に潜っていても　後処理で地面位置まで上げる
 
 			float diffy2 = modelwm3.data[MATI_42] - modelwm.data[MATI_42];
 			modelwm = modelwm3;
@@ -1815,7 +1897,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				lowerdir, loweroffset, curelem.rigstep, curelem.maxcalccount, 
 				lowerrig, lowerrignum,
 				modelwm, matView, matProj,
-				curelem.groundmodel, curelem.gpuinteraction, &lowergpos);
+				curelem.groundmodel, curelem.gpucollision, &lowergpos);
 
 			lowerjointpos = lowernewpos;
 			lowerdoneflag = true;
@@ -1834,7 +1916,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				higherdir, higheroffset, curelem.rigstep, curelem.maxcalccount, 
 				higherrig, higherrignum,
 				modelwm, matView, matProj,
-				curelem.groundmodel, curelem.gpuinteraction, &highergpos);
+				curelem.groundmodel, curelem.gpucollision, &highergpos);
 
 			higherjointpos = highernewpos;
 			higherdoneflag = true;
@@ -1883,14 +1965,14 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				if (highergpos.y >= lowergpos.y) {
 					float diffy = highergpos.y - (higherjointpos.y + higheroffset);
 					//ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, false);//wmをブレンドしない　この処理後に地面に潜らないように. ブレンド無しは階段でガクガクし過ぎる
-					ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true);//遅めの環境でもカクカクしないために　やっぱりブレンドフラグtrueに
+					ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true, true);//遅めの環境でもカクカクしないために　やっぱりブレンドフラグtrueに
 					modelwm = modelwm3;
 
 				}
 				else {
 					float diffy = lowergpos.y - (lowerjointpos.y + loweroffset);
 					//ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, false);//wmをブレンドしない　この処理後に地面に潜らないように. ブレンド無しは階段でガクガクし過ぎる
-					ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true);//遅めの環境でもカクカクしないために　やっぱりブレンドフラグtrueに
+					ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true, true);//遅めの環境でもカクカクしないために　やっぱりブレンドフラグtrueに
 					modelwm = modelwm3;
 				}
 			}
@@ -2046,7 +2128,8 @@ ChaVector3 CFootRigDlg::GetGroundPos(CModel* groundmodel, ChaVector3 basepos, bo
 	return retpos;
 }
 
-ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy, bool blendflag)
+ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy, 
+	bool blendflag, bool savewmflag)
 {
 	//モデルworldmatのブレンド率　このブレンドをしないと上下に小刻みに揺れる
 	//float MODELWMBLEND = 0.30f;
@@ -2071,7 +2154,10 @@ ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diff
 	}
 	srcmodel->UpdateModelWMFootRig(modelwm3);
 	retmat = modelwm3;
-	SetSaveModelWM(srcmodel, retmat);
+
+	if (savewmflag) {
+		SetSaveModelWM(srcmodel, retmat);
+	}
 
 	return retmat;
 }

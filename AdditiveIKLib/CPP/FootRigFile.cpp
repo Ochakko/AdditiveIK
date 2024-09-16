@@ -89,7 +89,10 @@ int CFootRigFile::WriteFileInfo()
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	//2024/09/15 ver1003 <GPUInteraction>追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0003</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0003</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+
+	//2024/09/16 ver1004 <HopYPerStep>追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0004</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	return 0;
 }
@@ -155,11 +158,13 @@ int CFootRigFile::WriteFootRigElem(FOOTRIGELEM srcfootrigelem)
 	CallF(Write2File("    <MaxCalcCount>%d</MaxCalcCount>\r\n",
 		srcfootrigelem.maxcalccount), return 1);//2024/09/08 ver1002
 
-	int gpuinteraction;
-	gpuinteraction = (srcfootrigelem.gpuinteraction) ? 1 : 0;
+	int gpucollision;
+	gpucollision = (srcfootrigelem.gpucollision) ? 1 : 0;
 	CallF(Write2File("    <GPUInteraction>%d</GPUInteraction>\r\n",
-		gpuinteraction), return 1);//2024/09/15 ver1003
+		gpucollision), return 1);//2024/09/15 ver1003
 
+	CallF(Write2File("    <HopYPerStep>%.2f</HopYPerStep>\r\n",
+		srcfootrigelem.hopyperstep), return 1);
 
 
 	CallF(Write2File("  </FootRigElem>\r\n"), return 1);
@@ -305,10 +310,13 @@ int CFootRigFile::ReadFootRigElem(CModel* srcmodel, ChaScene* srcchascene, FOOTR
 	int maxcalccount = 50;
 	getmaxcalccount = Read_Int(xmlbuf, "<MaxCalcCount>", "</MaxCalcCount>", &maxcalccount);//2024/09/08 ver1002
 
-	int getgpuinteraction = 0;
-	int gpuinteraction = 0;
-	getgpuinteraction = Read_Int(xmlbuf, "<GPUInteraction>", "</GPUInteraction>", &gpuinteraction);//2024/09/15 ver1003
+	int getgpucollision = 0;
+	int gpucollision = 0;
+	getgpucollision = Read_Int(xmlbuf, "<GPUInteraction>", "</GPUInteraction>", &gpucollision);//2024/09/15 ver1003
 
+	int gethopyperstep = 0;
+	float hopyperstep = 0;
+	gethopyperstep = Read_Float(xmlbuf, "<HopYPerStep>", "</HopYPerStep>", &hopyperstep);//2024/09/16 ver1004
 
 
 	dstfootrigelem->Init();
@@ -371,12 +379,16 @@ int CFootRigFile::ReadFootRigElem(CModel* srcmodel, ChaScene* srcchascene, FOOTR
 	if (getmaxcalccount == 0) {
 		dstfootrigelem->maxcalccount = maxcalccount;
 	}
-	if (getgpuinteraction == 0) {
-		dstfootrigelem->gpuinteraction = (gpuinteraction == 1) ? true : false;
+	if (gethopyperstep == 0) {
+		dstfootrigelem->hopyperstep = hopyperstep;
+	}
+
+	if (getgpucollision == 0) {
+		dstfootrigelem->gpucollision = (gpucollision == 1) ? true : false;
 
 		//friファイル読込はfootrigdlg->SetModel()後に呼ばれるので　読込時に以下の処理が必要
 		if (dstfootrigelem->groundmodel) {
-			int result = dstfootrigelem->groundmodel->SetGPUInteraction(dstfootrigelem->gpuinteraction);
+			int result = dstfootrigelem->groundmodel->SetGPUInteraction(dstfootrigelem->gpucollision);
 			if (result != 0) {
 				_ASSERT(0);
 			}

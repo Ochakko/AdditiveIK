@@ -333,7 +333,7 @@ void CMQOObject::InitParams()
 		m_frustum[index0].InitParams();
 	}
 
-	m_gpuinteractionflag = false;
+	m_gpucollisionflag = false;
 
 //	next = 0;
 }

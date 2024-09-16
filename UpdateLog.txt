@@ -1,6 +1,15 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2024/09/16
+　FootRigの仕様をver1.1.0にバージョンアップ
+　　足の曲がり具合を調整しやすくしたバージョン
+　　Documents\FootRig_TechSpec.docxを更新
+　　Documents\TroubleShooting\0_HowToSettingFootRig.docxを追加
+　　Test/Test_FootRig_7を更新
+　　FootRigDlgのgpuinteractionをgpucollisionに表記変更
+
+
 
 2024/09/15
 　Pickシェーダ修正

@@ -2,7 +2,7 @@
 <FootRig>
   <FileInfo>
     <kind>FootRigFile</kind>
-    <version>0002</version>
+    <version>0004</version>
     <type>0</type>
   </FileInfo>
   <FootRigElem>
@@ -14,5 +14,7 @@
     <HDiffMax>50.00</HDiffMax>
     <RigStep>0.15</RigStep>
     <MaxCalcCount>50</MaxCalcCount>
+    <GPUInteraction>0</GPUInteraction>
+    <HopYPerStep>100.00</HopYPerStep>
   </FootRigElem>
 </FOOTRIG>
