@@ -15037,8 +15037,13 @@ int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int dep
 	//  SetUnderFootRig(false);
 	//	return 0;
 	//}
-	if (fabs(rotrad) > (0.0550 * DEG2PAI)) {//2023/03/04
-		rotrad = 0.0550f * fabs(rotrad) / rotrad;
+
+
+	//if (fabs(rotrad) > (0.0550 * DEG2PAI)) {//2023/03/04
+	//	rotrad = 0.0550f * fabs(rotrad) / rotrad;
+	//}
+	if (fabs(rotrad) > (10.0 * DEG2PAI)) {//2024/09/17 FootRig時は　最大10degreeを一度に動かせるように
+		rotrad = 10.0f * (float)DEG2PAI * fabs(rotrad) / rotrad;
 	}
 
 
@@ -15155,9 +15160,13 @@ int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int dep
 					//if (fabs(rotrad2) >= (0.020 * DEG2PAI)) {//2023/02/11
 					if (fabs(rotrad2) >= (0.010 * DEG2PAI)) {//2023/03/04
 
-						if (fabs(rotrad2) > (0.0550 * DEG2PAI)) {//2023/02/11
-							rotrad2 = 0.0550f * fabs(rotrad2) / rotrad2;
+						//if (fabs(rotrad2) > (0.0550 * DEG2PAI)) {//2023/02/11
+						//	rotrad2 = 0.0550f * fabs(rotrad2) / rotrad2;
+						//}
+						if (fabs(rotrad2) > (10.0 * DEG2PAI)) {//2024/09/17 FootRig時は　最大10degreeを一度に動かせるように
+							rotrad2 = 10.0f * (float)DEG2PAI * fabs(rotrad2) / rotrad2;
 						}
+
 						localq.SetAxisAndRot(axis0, rotrad2);
 
 						CQuaternion qForRot;
@@ -15219,9 +15228,9 @@ int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int dep
 					else {
 						//rotqの回転角度が1e-4より小さい場合
 						//ウェイトが小さいフレームにおいても　IKTargetが走るように記録する必要がある
-						if (fabs(rotrad2) > (0.0550 * DEG2PAI)) {//2023/02/11
-							rotrad2 = 0.0550f * fabs(rotrad2) / rotrad2;
-						}
+						//if (fabs(rotrad2) > (0.0550 * DEG2PAI)) {//2023/02/11
+						//	rotrad2 = 0.0550f * (float)DEG2PAI * fabs(rotrad2) / rotrad2;
+						//}
 						localq.SetAxisAndRot(axis0, rotrad2);
 
 						//IKROTREC currotrec;

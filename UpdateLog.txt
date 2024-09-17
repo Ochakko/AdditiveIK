@@ -1,6 +1,55 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+
+
+2024/09/17
+　AdditiveIK 1.0.0.33 RC1(リリース候補1)
+　　1.0.0.32からの変更点
+　　　FootRig(フットリグ)バージョンアップ
+　　　　FootRigのバージョンを1.0.0から1.1.0にアップ
+　　　　　足の曲げ方を調整可能に.
+　　　　　height difference maxの値を小さくするほど足をたくさん曲げて接地.
+　　　　　height difference maxの値に互換性が無くなったので設定し直しが必要
+　　　　GPU当たり判定オプションを追加
+　　　　　GPU Collisionにチェックを入れてApplyボタンを押すと当たり判定をコンピュートシェーダで計算
+　　　　　地面として指定したfbxの面の数が多いほど何倍にも高速化
+　　　　　地面のメッシュの面数が少ない場合はGPUオプションで遅くなることもあります
+　　　　RigStepの設定が効くように修正
+　　　　　指定したdegree * リグで設定した倍率の角度ずつ回転
+　　　　　一度に曲がる最大角度は約10.0度
+　　　　Hop Y per step設定項目を追加
+　　　　　坂を上るほどしゃがんでしまうような動きなるのを防ぐために、ステップごとに(上方向に)ホップ
+　　　　モデル削除時にFootRigDlgのCModelをキーにするデータも消すように修正
+　　　　　不要データで重くならないように削除
+　　　　Documents\TroubleShooting\0_HowToSettingFootRig.docxを追加(使い方：インストーラにも同梱)
+　　　　Documents\FootRig_TechSpec.docxを更新(仕様：OSSのみ)
+　　　　FootRigのテストシーン更新
+　　　　　Test/Test_FootRig_7を更新
+
+　　　既知の問題13への対応
+　　　　マテリアルとしてPhong以外が割り当てられているfbxを読み込んでも落ちなくなった
+　　　　しかしPhong以外のマテリアルの場合は読み込み後にAdditiveIKのShaderメニューでマテリアルの再設定が必要
+　　　　Documents/TroubleShooting/00_KnownIssue.docx更新
+
+　　　Pickシェーダ修正
+　　　　今までは最初にみつかった当たりの面の情報を返していたが
+　　　　今回からはメッシュの中の一番近い当り面の情報を返す
+　　　　ただし数字キーを押しながらのNumPick機能についてはそのまま(メッシュの中心との距離でソート).
+
+　　　LimitEulオン時の物理シミュに関わる修正
+　　　　昔の仕様のためのif文が残っていたのを修正
+
+
+
+
+2024/09/17
+　FootRig修正
+　　RigStepの指定が効くように.
+　　　最大約10degreeまでのリミッター付きで指定通り回転
+　　　Rigの設定で倍率を指定している場合には　回転角度=RigStep * rigmultで回転
+　　　RigStepに何を設定しても2.8degreeのずつ回転していたのを修正
+
 2024/09/16
 　FootRigの仕様をver1.1.0にバージョンアップ
 　　足の曲がり具合を調整しやすくしたバージョン
@@ -8,8 +57,6 @@ https://github.com/Ochakko/AdditiveIK
 　　Documents\TroubleShooting\0_HowToSettingFootRig.docxを追加
 　　Test/Test_FootRig_7を更新
 　　FootRigDlgのgpuinteractionをgpucollisionに表記変更
-
-
 
 2024/09/15
 　Pickシェーダ修正
@@ -28,8 +75,6 @@ https://github.com/Ochakko/AdditiveIK
 　　FootRig設定でGPUIntaraction指定した地面データに対してもシェーダで判定を行う
 
 　　プロジェクト保存時と読み込み時に　FootRigDlgのGPUInteraction設定を保存読み込み
-
-
 
 2024/09/14
 　既知の問題13への対応
