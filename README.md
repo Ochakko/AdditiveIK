@@ -33,6 +33,9 @@ Fig.6 (UnityAsset FantasyTownを読込  model:VRoid).<br>
 ![TopFig7](ScreenShots/SS_For10032/SS_AdditiveIK_To10032_FootRigWithBtSimu_Annotation3.png "トップ絵7")<br>
 Fig.7 (FootRigで足を曲げて自動接地  model:VRoid).<br>
 <br>
+![TopFig8](ScreenShots/SS_For10033/FootRig_HDiffMax_Cmp3_1_Annotation.png "トップ絵8")<br>
+Fig.8 (足曲げを調整可能なFootRig model:VRoid).<br>
+<br>
 <br>
 # 免責<br>
 このソフトにより問題が起きたとしてもその責任は持ちません。<br>

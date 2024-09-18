@@ -3,8 +3,12 @@ https://github.com/Ochakko/AdditiveIK
 
 
 
-2024/09/17
-　AdditiveIK 1.0.0.33 RC2(リリース候補2)
+2024/09/18 その２
+　README.mdに1.0.0.33(リリースしました)のスクリーンショットを追加
+
+
+2024/09/18
+　AdditiveIK 1.0.0.33 release
 　　1.0.0.32からの変更点
 　　　FootRig(フットリグ)バージョンアップ
 　　　　FootRigのバージョンを1.0.0から1.1.0にアップ
@@ -22,8 +26,9 @@ https://github.com/Ochakko/AdditiveIK
 　　　　　坂を上るほどしゃがんでしまうような動きなるのを防ぐために、ステップごとに(上方向に)ホップ
 　　　　モデル削除時にFootRigDlgのCModelをキーにするデータも消すように修正
 　　　　　不要データで重くならないように削除
-　　　　Documents\TroubleShooting\0_HowToSettingFootRig.docxを追加(使い方：インストーラにも同梱)
-　　　　Documents\FootRig_TechSpec.docxを更新(仕様：OSSのみ)
+　　　　ドキュメント
+　　　　　Documents\TroubleShooting\0_HowToSettingFootRig.docxを追加(使い方：インストーラにも同梱)
+　　　　　Documents\FootRig_TechSpec.docxを更新(仕様：OSSのみ)
 　　　　FootRigのテストシーン更新
 　　　　　Test/Test_FootRig_7を更新
 
