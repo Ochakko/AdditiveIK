@@ -2,10 +2,12 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/09/21
+　FootRig設定の初期値(未設定時の数値)を変更
+
 
 2024/09/18 その２
 　README.mdに1.0.0.33(リリースしました)のスクリーンショットを追加
-
 
 2024/09/18
 　AdditiveIK 1.0.0.33 release

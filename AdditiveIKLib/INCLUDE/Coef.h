@@ -626,9 +626,9 @@ typedef struct tag_footrigelem
 		rightdir = 0;
 		leftoffset = 0.0f;
 		rightoffset = 0.0f;
-		hdiffmax = 40.0f;
-		rigstep = 0.25f;
-		maxcalccount = 50;
+		hdiffmax = 100.0f;//2024/09/21 40-->100
+		rigstep = 1.0f;//2024/09/21 0.25-->1.0
+		maxcalccount = 15;//2024/09/21 50-->15
 		gpucollision = false;
 		hopyperstep = 100.0f;
 	};
