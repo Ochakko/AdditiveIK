@@ -3,6 +3,7 @@
 class ChaVector4;
 struct tag_hsvtoon;
 
+
 class Texture  : public IShaderResource{
 public:
 	/// <summary>
@@ -65,6 +66,10 @@ public:
 	/// <param name="resrouce">D3Dリソース。</param>
 	int InitToonFromCustomColor(tag_hsvtoon* phsvtoon);
 	int WriteToonToSubResource(tag_hsvtoon* phsvtoon, ID3D12Resource* srctexbuff);
+
+	int InitTextureFromRawImage(int srcwidth, int srcheight, unsigned char* pdata);
+	int WriteRawImageToSubResource(int srcwidth, int srcheight, unsigned char* pdata, ID3D12Resource* srctexbuff);
+
 
 	/// <summary>
 	/// SRVに登録。

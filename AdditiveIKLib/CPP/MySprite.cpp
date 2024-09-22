@@ -168,7 +168,7 @@ int CMySprite::Create(const WCHAR* srcpath, const WCHAR* srcname, int srctranspa
 	}
 
 	//g_texbank->AddTex( srcpath, srcname, srctransparent, srcpool, srccol, &m_texid );
-	g_texbank->AddTex(srcpath, srcname, srctransparent, srcpool, &m_texid);
+	g_texbank->AddTex(nullptr, srcpath, srcname, srctransparent, srcpool, &m_texid);
 	if( m_texid < 0 ){
 		_ASSERT( 0 );
 		return 1;

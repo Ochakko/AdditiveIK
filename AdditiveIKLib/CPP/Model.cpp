@@ -88,6 +88,8 @@
 
 #include <OrgWindow.h>
 
+#include <gltfLoader.h>
+
 #include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
 #include "../../MiniEngine/TResourceBank.h"
 
@@ -97,6 +99,8 @@
 
 //for __nop()
 #include <intrin.h>
+
+
 
 
 using namespace std;
@@ -676,6 +680,8 @@ int CModel::InitParams()
 
 	m_secondCallOfMotion2Bt = false;
 
+	m_gltfloader = nullptr;
+
 	return 0;
 }
 
@@ -734,6 +740,10 @@ int CModel::DestroyObjs()
 		m_chkinview = nullptr;
 	}
 
+	if (m_gltfloader) {
+		delete m_gltfloader;
+		m_gltfloader = nullptr;
+	}
 
 	InitParams();
 
@@ -1041,6 +1051,10 @@ int CModel::LoadFBX(int skipdefref, ID3D12Device* pdev, const WCHAR* wfile, cons
 		(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_POLYGROUP, true);
 
 
+		//2024/09/22 fbmフォルダ内のvrmからテクスチャを読み込むために　embedded対応開始
+		(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_EXTRACT_EMBEDDED_DATA, true);
+
+
 		//(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_MATERIAL, true);
 		//(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_TEXTURE, true);
 		//(*(m_psdk->GetIOSettings())).SetBoolProp(IMP_FBX_LINK, false);
@@ -1093,6 +1107,60 @@ int CModel::LoadFBX(int skipdefref, ID3D12Device* pdev, const WCHAR* wfile, cons
 
 
 //	CallF( InitFBXManager( &pSdkManager, &pImporter, &pScene, utf8path ), return 1 );
+
+
+
+	//######################################################################
+	//2024/09/22 
+	// Unity3DでVRM1.0をfbx出力するとテクスチャファイルが出力されない
+	// 出力時にembedオプションをオンにすることによりfbxファイルにvrmファイルが同梱される
+	// そのファイルをFBX SDKでインポートすると(fbxfilename).fbmという名前のフォルダが作成され
+	// そのfbmフォルダの中にvrmファイルが出力される
+	// fbmフォルダ内のvrmからテクスチャを読み込むために　embedded対応開始
+	// tinygltfという外部ライブラリを使用　まずはvrmを読み込むテストから始める
+	//######################################################################
+	WCHAR namefbm[MAX_PATH] = { 0L };
+	ZeroMemory(namefbm, sizeof(WCHAR)* MAX_PATH);
+	int fbxfullnameleng = (int)wcslen(m_fbxfullname);
+	if ((fbxfullnameleng >= 5) && (fbxfullnameleng < MAX_PATH)) {
+		wcsncpy_s(namefbm, MAX_PATH, m_fbxfullname, (fbxfullnameleng - 4));
+		namefbm[fbxfullnameleng] = 0L;
+		wcscat_s(namefbm, MAX_PATH, L".fbm");
+		DWORD fattr;
+		fattr = GetFileAttributes(namefbm);
+		if ((fattr != -1) && ((fattr & FILE_ATTRIBUTE_DIRECTORY) != 0)) {//fbmフォルダが存在する場合
+			WCHAR namevrm[MAX_PATH] = { 0L };
+			WCHAR vrmpath[MAX_PATH] = { 0L };
+
+			swprintf_s(namevrm, MAX_PATH, L"%s\\*.vrm", namefbm);//fbmフォルダの中のvrmファイルだけを対象とする
+			WIN32_FIND_DATA FindFileData;
+			HANDLE hFind;
+			hFind = FindFirstFile(namevrm, &FindFileData);
+			if (hFind != INVALID_HANDLE_VALUE) {
+				swprintf_s(vrmpath, MAX_PATH, L"%s\\%s", namefbm, FindFileData.cFileName);//最初にみつかったvrmファイル
+				//BOOL bret = 1;
+				//while (bret != 0) {
+				//	bret = FindNextFile(hFind, &FindFileData);
+				//	if (bret != 0) {
+				//	}
+				//}
+				FindClose(hFind);
+
+				if (!m_gltfloader) {
+					m_gltfloader = new CGltfLoader();
+					if (!m_gltfloader) {
+						_ASSERT(0);
+					}
+				}
+				if (m_gltfloader) {
+					int resultgltf0 = m_gltfloader->LoadEmbeddedVrm(vrmpath);//vrmpath
+					int dbgflag1 = 1;
+				}
+			}
+		}
+	}
+
+
 
 
 	m_bone2node.clear();
@@ -6016,7 +6084,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 						char tempname[256];
 						strcpy_s(tempname, 256, lLayeredTexture->GetName());
 						bool emissiveflag = false;
-						SetMaterialTexNames(newmqomat, tempname,
+						SetMaterialTexNames(0, newmqomat, tempname,
 							lLayeredTexture->GetWrapModeU(), lLayeredTexture->GetWrapModeV(),
 							chauvscale, chauvoffset, emissiveflag);	
 						break;
@@ -6047,7 +6115,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 							char tempname[256];
 							strcpy_s(tempname, 256, nameptr);
 							bool emissiveflag = false;
-							SetMaterialTexNames(newmqomat, tempname,
+							SetMaterialTexNames(0, newmqomat, tempname,
 								lTexture->GetWrapModeU(), lTexture->GetWrapModeV(),
 								chauvscale, chauvoffset, emissiveflag);
 						}
@@ -6081,7 +6149,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 						char tempname[256];
 						strcpy_s(tempname, 256, lLayeredTexture->GetName());
 						bool emissiveflag = false;
-						SetMaterialTexNames(newmqomat, tempname,
+						SetMaterialTexNames(1, newmqomat, tempname,
 							lLayeredTexture->GetWrapModeU(), lLayeredTexture->GetWrapModeV(),
 							chauvscale, chauvoffset, emissiveflag);
 						break;
@@ -6112,7 +6180,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 							char tempname[256];
 							strcpy_s(tempname, 256, nameptr);
 							bool emissiveflag = false;
-							SetMaterialTexNames(newmqomat, tempname,
+							SetMaterialTexNames(1, newmqomat, tempname,
 								lTexture->GetWrapModeU(), lTexture->GetWrapModeV(),
 								chauvscale, chauvoffset, emissiveflag);
 						}
@@ -6146,7 +6214,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 						char tempname[256];
 						strcpy_s(tempname, 256, lLayeredTexture->GetName());
 						bool emissiveflag = true;
-						SetMaterialTexNames(newmqomat, tempname,
+						SetMaterialTexNames(2, newmqomat, tempname,
 							lLayeredTexture->GetWrapModeU(), lLayeredTexture->GetWrapModeV(),
 							chauvscale, chauvoffset, emissiveflag);
 						break;
@@ -6177,7 +6245,7 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
 							char tempname[256];
 							strcpy_s(tempname, 256, nameptr);
 							bool emissiveflag = true;
-							SetMaterialTexNames(newmqomat, tempname,
+							SetMaterialTexNames(2, newmqomat, tempname,
 								lTexture->GetWrapModeU(), lTexture->GetWrapModeV(),
 								chauvscale, chauvoffset, emissiveflag);
 						}
@@ -6244,11 +6312,22 @@ int CModel::SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* pMateri
    return 0;
 }
 
-int CModel::SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname,
+int CModel::SetMaterialTexNames(int textype, CMQOMaterial* newmqomat, char* tempname,
 	FbxTexture::EWrapMode addressU, FbxTexture::EWrapMode addressV,
 	ChaVectorDbl2 chauvscale, ChaVectorDbl2 chauvoffset,
 	bool emissiveflag)
 {
+	//######################################################
+	//textype : 0-->diffuse, 1-->normalmap, 2-->emissivemap
+	//######################################################
+
+
+	if (!newmqomat || !tempname) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
 	char temptexname[256] = {0};
 
 	char* lastslash = strrchr(tempname, '/');
@@ -6264,6 +6343,8 @@ int CModel::SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname,
 		strcpy_s(temptexname, 256, tempname);
 	}
 
+	bool gltftexture = false;
+
 	//char* lastp = strrchr((char*)newmqomat->GetTex(), '.');
 	char* lastp = strrchr(temptexname, '.');
 	if (!lastp) {
@@ -6278,46 +6359,67 @@ int CModel::SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname,
 		// テクスチャとしてUnityでみえるのは　*.texture2Dファイル
 		// .texture2DファイルはUnityスクリプトでpngに変換可能なので　そのようにしたpngをユーザが用意していることを想定
 		// 2023/08/28現在はVRM0.0もサポートされていて　VRM0.0をUnityに読み込むとテクスチャはpngのものが生成される
+		//m_vrmtexcount++;
+		//if (m_vrmtexcount == 5) {
+		//	//char convname[256] = { 0 };
+		//	//strcpy_s(convname, 256, "_05.normal.png");
+		//	//newmqomat->SetTex(convname);
 
-		m_vrmtexcount++;
-		if (m_vrmtexcount == 5) {
-			//char convname[256] = { 0 };
-			//strcpy_s(convname, 256, "_05.normal.png");
-			//newmqomat->SetTex(convname);
+		//	m_vrmtexcount++;
 
-			m_vrmtexcount++;
+		//	char convname[256] = { 0 };
+		//	//sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
+		//	sprintf_s(convname, 256, "_%02d", m_vrmtexcount);
+		//	//newmqomat->SetTex(convname);
+		//	strcpy_s(temptexname, convname);
+		//	gltftexture = true;
+		//}
+		//else if (m_vrmtexcount == 8) {
 
-			char convname[256] = { 0 };
-			sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-			//newmqomat->SetTex(convname);
-			strcpy_s(temptexname, convname);
-		}
-		else if (m_vrmtexcount == 8) {
+		//	m_vrmtexcount++;
 
-			m_vrmtexcount++;
+		//	char convname[256] = { 0 };
+		//	//sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
+		//	sprintf_s(convname, 256, "_%02d", m_vrmtexcount);
+		//	//newmqomat->SetTex(convname);
+		//	strcpy_s(temptexname, convname);
+		//	gltftexture = true;
+		//}
+		//else if (m_vrmtexcount == 11) {
+		//	////char convname[256] = { 0 };
+		//	////strcpy_s(convname, 256, "_11.normal.png");
+		//	////newmqomat->SetTex(convname);
 
-			char convname[256] = { 0 };
-			sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-			//newmqomat->SetTex(convname);
-			strcpy_s(temptexname, convname);
-		}
-		else if (m_vrmtexcount == 11) {
-			////char convname[256] = { 0 };
-			////strcpy_s(convname, 256, "_11.normal.png");
-			////newmqomat->SetTex(convname);
+		//	m_vrmtexcount++;
 
-			m_vrmtexcount++;
+		//	char convname[256] = { 0 };
+		//	//sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
+		//	sprintf_s(convname, 256, "_%02d", m_vrmtexcount);
+		//	//newmqomat->SetTex(convname);
+		//	strcpy_s(temptexname, convname);
+		//	gltftexture = true;
+		//}
+		//else {
+		//	char convname[256] = { 0 };
+		//	//sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
+		//	sprintf_s(convname, 256, "_%02d", m_vrmtexcount);
+		//	//newmqomat->SetTex(convname);
+		//	strcpy_s(temptexname, convname);
+		//	gltftexture = true;
+		//}
+		//if (gltftexture && m_gltfloader && m_gltfloader->GetLoadedFlag()) {
+		//	newmqomat->SetGltfLoader(m_gltfloader);
+		//}
 
-			char convname[256] = { 0 };
-			sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-			//newmqomat->SetTex(convname);
-			strcpy_s(temptexname, convname);
+		if (m_gltfloader && m_gltfloader->GetLoadedFlag()) {
+			const char* materialname = newmqomat->GetName();
+			int retgltf = m_gltfloader->GetTexNameByMaterialName(textype, materialname, temptexname, 256);
+			if (retgltf == 0) {
+				newmqomat->SetGltfLoader(m_gltfloader);//!!!!!!!!!!
+			}
 		}
 		else {
-			char convname[256] = { 0 };
-			sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-			//newmqomat->SetTex(convname);
-			strcpy_s(temptexname, convname);
+			strcpy_s(temptexname, 256, "notfound");
 		}
 	}
 	else {
@@ -6365,7 +6467,7 @@ int CModel::SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname,
 		newmqomat->SetMetalTex(temptexname);
 		newmqomat->SetAddressU_metal(addressU);
 		newmqomat->SetAddressV_metal(addressV);
-	}else if (newmqomat->GetTex() && !(newmqomat->GetTex()[0])) {
+	}else if (newmqomat->GetTex() && !(newmqomat->GetTex()[0]) && (strstr(temptexname, "NoneBlack") == nullptr)) {
 		//TexNameに一回もセットされていない場合に　TexNameにtemptexnameをセット
 		newmqomat->SetTex(temptexname);
 		newmqomat->SetAddressU_albedo(addressU);

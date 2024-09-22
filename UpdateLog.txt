@@ -2,6 +2,20 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2024/09/23
+　VRM1.0のVRoidをUnity3Dでfbx形式で出力したものを読み込めるように.
+　　今まで通りに読み込むとテクスチャファイルが無いので真っ赤になってしまう。
+　　VRM1.0をfbxにするときにUnity3Dの出力オプションでEmbedをオンにした場合
+　　fbxにvrmファイルが埋め込まれる
+　　埋め込まれたvrm1.0ファイルからテクスチャだけ読み込んで機能補間
+　　vrm1.0読込にはsyoyoさんのtinygltfを使用
+　　3rd_LINCENSEフォルダにtinygltf追加、README.mdにtinygltfの記述を追加
+
+　　一応テクスチャは表示されたが、まだ動いたばかりでデバッグビルド状態
+
+
+
 2024/09/21
 　FootRig設定の初期値(未設定時の数値)を変更
 

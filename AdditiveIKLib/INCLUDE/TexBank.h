@@ -11,6 +11,7 @@
 //class ID3D12Device;
 //class D3DXCOLOR;
 class CTexElem;
+class CGltfLoader;
 
 class CTexBank
 {
@@ -19,7 +20,8 @@ public:
 	~CTexBank();
 
 	//int AddTex( WCHAR* srcpath, WCHAR* srcname, int srctransparent, int srcpool, D3DXCOLOR* srccol, int* dstid );
-	int AddTex(const WCHAR* srcpath, const WCHAR* srcname, int srctransparent, int srcpool, int* dstid);
+	int AddTex(CGltfLoader* srcloader,
+		const WCHAR* srcpath, const WCHAR* srcname, int srctransparent, int srcpool, int* dstid);
 
 	//int Invalidate( int invalmode );
 	//int Restore(RenderContext* pRenderContext);

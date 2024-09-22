@@ -23,6 +23,8 @@
 #include "../../MiniEngine/MiniEngine.h"
 #include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
 
+#include <gltfLoader.h>
+
 
 extern GraphicsEngine* g_graphicsEngine;	//グラフィックスエンジン
 
@@ -86,7 +88,7 @@ int CTexElem::DestroyObjs()
 }
 
 
-int CTexElem::CreateTexData(ID3D12Device* pdev)
+int CTexElem::CreateTexData(ID3D12Device* pdev, CGltfLoader* srcloader)
 {
 	if (m_texture) {
 		//return 0;
@@ -122,7 +124,48 @@ int CTexElem::CreateTexData(ID3D12Device* pdev)
 	wcscpy_s(pattga, 256, L".tga");
 	WCHAR* finddds = wcsstr(m_name, patdds);
 	WCHAR* findtga = wcsstr(m_name, pattga);
-	if (findtga) {
+
+	if (srcloader) {
+		char strtexname[256] = { 0 };
+		WideCharToMultiByte(CP_ACP, 0, m_name, -1, strtexname, 256, NULL, NULL);
+		tinygltf::Image curimage;
+		int resultloader0 = srcloader->GetImageByTexName(strtexname, &curimage);
+		if (resultloader0 == 0) {
+			m_texture = new Texture();
+			if (m_texture) {
+				int width = curimage.width;
+				int height = curimage.height;
+				unsigned char* data = curimage.image.data();
+				if (data && ((width * 4 * height) == (int)curimage.image.size())) {
+					int resultloader1 = m_texture->InitTextureFromRawImage(width, height, data);
+					if (resultloader1 != 0) {
+						_ASSERT(0);
+						SetNullTexture();
+						return -1;
+					}
+				}
+				else {
+					_ASSERT(0);
+					SetNullTexture();
+					return -1;
+				}
+			}
+			else {
+				_ASSERT(0);
+				SetNullTexture();
+				return -1;
+			}
+		}
+		else {
+			_ASSERT(0);
+			SetNullTexture();
+			return -1;
+		}
+
+
+
+	}
+	else if (findtga) {
 		DirectX::TexMetadata metadata;
 		//DirectX::ScratchImage scratchImg;
 		std::unique_ptr<DirectX::ScratchImage> scratchImg(new DirectX::ScratchImage);

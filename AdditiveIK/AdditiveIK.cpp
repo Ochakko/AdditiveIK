@@ -158,7 +158,6 @@
 
 #include "DXUTmisc/DXUTmisc.h"
 
-
 using namespace std;
 
 
@@ -3329,8 +3328,9 @@ INT WINAPI wWinMain(
 	}
 
 
-	
-
+	//CGltfLoader gltfloader;
+	//int resulttest = gltfloader.LoadTest();
+	//int dbgflag1 = 1;
 
 	int dbgcount = 0;
 	while (DispatchWindowMessage())

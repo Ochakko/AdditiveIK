@@ -25,6 +25,7 @@
 
 class ConstantBuffer;//定数バッファ。
 class RootSignature;//ルートシグネチャ。
+class CGltfLoader;
 
 enum {
 	MQOSHADER_PBR,
@@ -1229,6 +1230,14 @@ public:
 		return m_alphatestclipval;
 	}
 
+	void SetGltfLoader(CGltfLoader* srcloader) {
+		m_gltfloader = srcloader;
+	}
+	CGltfLoader* GetGltfLoader()
+	{
+		return m_gltfloader;
+	}
+
 public:
 	//###################################################
 	//CreateDecl()内で　頂点フォーマットによって　定数を設定する
@@ -1435,7 +1444,8 @@ private:
 
 	int m_convnamenum;
 	char** m_ppconvname;
-	
+
+	CGltfLoader* m_gltfloader;
 };
 
 class CShaderTypeParams

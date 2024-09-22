@@ -30,7 +30,6 @@
 #include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
 #include "../../MiniEngine/InstancedSprite.h"
 
-
 //using namespace std;
 
 class CMQOMaterial;
@@ -54,6 +53,7 @@ class CThreadingInitMp;
 class CNodeOnLoad;
 class CSChkInView;
 class CFootRigDlg;
+class CGltfLoader;
 
 typedef struct funcmpparams
 {
@@ -1282,7 +1282,7 @@ private:
 	//int ComputeShapeDeformation2(FbxNode* pNode, FbxMesh* pMesh, FbxTime& pTime, FbxAnimLayer * pAnimLayer, CMQOObject* curobj, char* takename );
 
 	int SetMQOMaterial( CMQOMaterial* newmqomat, FbxSurfaceMaterial* material );
-	int SetMaterialTexNames(CMQOMaterial* newmqomat, char* tempname,
+	int SetMaterialTexNames(int textype, CMQOMaterial* newmqomat, char* tempname,
 		FbxTexture::EWrapMode addressU, FbxTexture::EWrapMode addressV, 
 		ChaVectorDbl2 chauvscale, ChaVectorDbl2 chauvoffset, bool emissiveflag);
 	void CreateFBXBoneReq(FbxScene* pScene, FbxNode* pNode, FbxNode* parnode );
@@ -3257,6 +3257,8 @@ private:
 	int m_selectedboneno;//undo,redoに使用
 
 	bool m_secondCallOfMotion2Bt;
+
+	CGltfLoader* m_gltfloader;
 
 };
 

@@ -158,6 +158,137 @@ void Texture::ReleaseTexture()
 //
 //}
 
+int Texture::InitTextureFromRawImage(int srcwidth, int srcheight, unsigned char* pdata)
+{
+	if (!g_graphicsEngine) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (!g_graphicsEngine->GetD3DDevice()) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (!pdata) {
+		_ASSERT(0);
+		return 1;
+	}
+	ReleaseTexture();
+
+	UINT texW, texH;
+	texW = srcwidth;
+	texH = srcheight;
+
+	//WriteToSubresourceで転送する用のヒープ設定
+	D3D12_HEAP_PROPERTIES texHeapProp = {};
+	texHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;//特殊な設定なのでdefaultでもuploadでもなく
+	texHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;//ライトバックで
+	texHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;//転送がL0つまりCPU側から直で
+	texHeapProp.CreationNodeMask = 0;//単一アダプタのため0
+	texHeapProp.VisibleNodeMask = 0;//単一アダプタのため0
+
+	D3D12_RESOURCE_DESC resDesc = {};
+	//resDesc.Format = metadata.format;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット
+	resDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット
+	//resDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;//RGBAフォーマット
+	//resDesc.Width = static_cast<UINT>(metadata.width);//幅
+	//resDesc.Height = static_cast<UINT>(metadata.height);//高さ
+	//resDesc.DepthOrArraySize = static_cast<uint16_t>(metadata.arraySize);//2Dで配列でもないので１
+	resDesc.Width = texW;//幅
+	resDesc.Height = texH;//高さ
+	resDesc.DepthOrArraySize = 1;//2Dで配列でもないので１
+	resDesc.SampleDesc.Count = 1;//通常テクスチャなのでアンチェリしない
+	resDesc.SampleDesc.Quality = 0;//
+	//resDesc.MipLevels = static_cast<uint16_t>(metadata.mipLevels);//ミップマップしないのでミップ数は１つ
+	resDesc.MipLevels = 1;//ミップマップしないのでミップ数は１つ
+	//resDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);//2Dテクスチャ用
+	resDesc.Dimension = D3D12_RESOURCE_DIMENSION::D3D12_RESOURCE_DIMENSION_TEXTURE2D;//2Dテクスチャ用
+	resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;//レイアウトについては決定しない
+	resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;//とくにフラグなし
+
+	ID3D12Resource* texbuff = nullptr;
+	HRESULT hr0 = g_graphicsEngine->GetD3DDevice()->CreateCommittedResource(
+		&texHeapProp,
+		D3D12_HEAP_FLAG_NONE,//特に指定なし
+		&resDesc,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,//テクスチャ用(ピクセルシェーダから見る用)
+		nullptr,
+		IID_PPV_ARGS(&texbuff)
+	);
+	if (FAILED(hr0) || !texbuff) {
+		::MessageBoxA(NULL, "CreateTexture error. App must exit.",
+			"Texture::InitTextureFromRawImage Error", MB_OK | MB_ICONERROR);
+		_ASSERT(0);
+		abort();
+		//return 1;
+	}
+
+	texbuff->SetName(L"Texture:InitTextureFromRawImage:texbuff");
+
+	int result1 = WriteRawImageToSubResource(srcwidth, srcheight, pdata, texbuff);
+	if (result1 != 0) {
+		_ASSERT(0);
+		::MessageBoxA(NULL, "WriteRawImageToSubResource error. App must exit.",
+			"Texture::InitTextureFromRawImage Error", MB_OK | MB_ICONERROR);
+		abort();
+		//return 1;
+	}
+
+
+	InitFromD3DResource(texbuff);
+	texbuff->Release();
+	texbuff = nullptr;
+
+
+	return 0;
+
+
+
+}
+int Texture::WriteRawImageToSubResource(int srcwidth, int srcheight, unsigned char* pdata,
+	ID3D12Resource* srctexbuff)
+{
+	if (!pdata) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	ID3D12Resource* texbuff = nullptr;
+	UINT texW, texH;
+	if (srctexbuff != nullptr) {
+		texbuff = srctexbuff;
+	}
+	else {
+		texbuff = m_texture;
+	}
+	if (!texbuff) {
+		_ASSERT(0);
+		return 1;
+	}
+	D3D12_RESOURCE_DESC textureDesc;
+	textureDesc = texbuff->GetDesc();
+	texW = (UINT)textureDesc.Width;
+	texH = (UINT)textureDesc.Height;
+
+	HRESULT hr1 = texbuff->WriteToSubresource(0,
+		nullptr,//全領域へコピー
+		//img->pixels,//元データアドレス
+		(const void*)pdata,
+		texW * 4,//1ラインサイズ
+		texW * texH * 4//全サイズ
+	);
+	if (FAILED(hr1)) {
+		_ASSERT(0);
+		::MessageBoxA(NULL, "Write To VideoMemory error. App must exit.",
+			"Texture::WriteRawImageToSubResource Error", MB_OK | MB_ICONERROR);
+		abort();
+		//return 1;
+	}
+
+	return 0;
+}
+
+
+
 //ToonTexture
 int Texture::InitToonFromCustomColor(tag_hsvtoon* phsvtoon)
 {

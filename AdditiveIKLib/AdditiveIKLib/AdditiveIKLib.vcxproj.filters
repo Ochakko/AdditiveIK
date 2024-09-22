@@ -300,6 +300,9 @@
     <ClCompile Include="..\CPP\FootRigDlg.cpp">
       <Filter>FootRig</Filter>
     </ClCompile>
+    <ClCompile Include="..\CPP\gltfLoader.cpp">
+      <Filter>gltf</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
@@ -1507,6 +1510,21 @@
     <ClInclude Include="..\INCLUDE\FootRigDlg.h">
       <Filter>FootRig</Filter>
     </ClInclude>
+    <ClInclude Include="..\INCLUDE\gltfLoader.h">
+      <Filter>gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\tinygltf\json.hpp">
+      <Filter>gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\tinygltf\stb_image.h">
+      <Filter>gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\tinygltf\stb_image_write.h">
+      <Filter>gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\tinygltf\tiny_gltf.h">
+      <Filter>gltf</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\BTSRC\BulletInverseDynamics\premake4.lua">
@@ -1590,6 +1608,9 @@
     </Filter>
     <Filter Include="FootRig">
       <UniqueIdentifier>{adcd4986-16bd-4af3-904c-10ad4f724bc1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gltf">
+      <UniqueIdentifier>{e3262f0e-bbb0-46b8-94cb-81f5c23960d9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

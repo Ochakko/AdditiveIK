@@ -27,6 +27,8 @@
 #include <polymesh4.h>
 #include <ExtLine.h>
 
+#include <gltfLoader.h>
+
 #include "../../AdditiveIK/DXUTmisc/DXUTmisc.h"
 
 //extern CTexBank* g_texbank;
@@ -415,6 +417,8 @@ int CMQOMaterial::InitParams()
 	m_lightingflag = true;//2024/03/07
 
 	m_alphatestclipval = (8.0 / 255.0);//2024/03/22
+
+	m_gltfloader = nullptr;
 
 	return 0;
 }
@@ -1082,7 +1086,7 @@ int CMQOMaterial::CreateTexture( WCHAR* dirname, int texpool )
 		MultiByteToWideChar( CP_ACP, MB_PRECOMPOSED, m_albedotex, 256, wname, 256 );
 
 		//g_texbank->AddTex( dirname, wname, m_transparent, texpool, 0, &m_texid );
-		g_texbank->AddTex(dirname, wname, m_transparent, texpool, &m_albedotexid);
+		g_texbank->AddTex(m_gltfloader, dirname, wname, m_transparent, texpool, &m_albedotexid);
 
 		CTexElem* findtex = g_texbank->GetTexElem(GetAlbedoTexID());
 		if(findtex){
@@ -1098,7 +1102,7 @@ int CMQOMaterial::CreateTexture( WCHAR* dirname, int texpool )
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_tex, 256, wname, 256);
 
 			//g_texbank->AddTex( dirname, wname, m_transparent, texpool, 0, &m_texid );
-			g_texbank->AddTex(dirname, wname, m_transparent, texpool, &m_albedotexid);
+			g_texbank->AddTex(m_gltfloader, dirname, wname, m_transparent, texpool, &m_albedotexid);
 
 			CTexElem* findtex = g_texbank->GetTexElem(GetAlbedoTexID());
 			if (findtex) {
@@ -1120,7 +1124,7 @@ int CMQOMaterial::CreateTexture( WCHAR* dirname, int texpool )
 		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_normaltex, 256, wname, 256);
 
 		//g_texbank->AddTex( dirname, wname, m_transparent, texpool, 0, &m_texid );
-		g_texbank->AddTex(dirname, wname, m_transparent, texpool, &m_normaltexid);
+		g_texbank->AddTex(m_gltfloader, dirname, wname, m_transparent, texpool, &m_normaltexid);
 
 		CTexElem* findtex = g_texbank->GetTexElem(GetNormalTexID());
 		if (findtex) {
@@ -1139,7 +1143,7 @@ int CMQOMaterial::CreateTexture( WCHAR* dirname, int texpool )
 		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_metaltex, 256, wname, 256);
 
 		//g_texbank->AddTex( dirname, wname, m_transparent, texpool, 0, &m_texid );
-		g_texbank->AddTex(dirname, wname, m_transparent, texpool, &m_metaltexid);
+		g_texbank->AddTex(m_gltfloader, dirname, wname, m_transparent, texpool, &m_metaltexid);
 
 		CTexElem* findtex = g_texbank->GetTexElem(GetMetalTexID());
 		if (findtex) {
@@ -1159,7 +1163,7 @@ int CMQOMaterial::CreateTexture( WCHAR* dirname, int texpool )
 		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_emissivetex, 256, wname, 256);
 
 		//g_texbank->AddTex( dirname, wname, m_transparent, texpool, 0, &m_texid );
-		g_texbank->AddTex(dirname, wname, m_transparent, texpool, &m_emissivetexid);
+		g_texbank->AddTex(m_gltfloader, dirname, wname, m_transparent, texpool, &m_emissivetexid);
 
 		CTexElem* findtex = g_texbank->GetTexElem(GetEmissiveTexID());
 		if (findtex) {

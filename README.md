@@ -224,6 +224,9 @@ Smooth平滑化<br>
 <br>
 　MicrosoftのDXUT11のDXUTTimerを使っています.<br>
 <br>
+　gltf(vrm)の読み込みにtinygltfを使用 https://github.com/syoyo/tinygltf<br>
+　ライセンスは3rd_LICENSE/tinygltf_LICENSE<br>
+<br>
 <br>
 　Testディレクトリのモデル作成にVRoidStudioを使用します<br>
 　https://vroid.com/studio<br>

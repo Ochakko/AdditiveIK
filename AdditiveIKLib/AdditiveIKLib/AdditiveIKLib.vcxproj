@@ -89,7 +89,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>CONVD3DX11;__MAMEBAKE3DLIB;_ITERATOR_DEBUG_LEVEL=2;WIN32;_WIN64;_WINDOWS;_DEBUG;_LIB;FBXSDK_NEW_API;FBXSDK_SHARED;BT_USE_PPL;BT_THREADSAFE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>..\INCLUDE;..\BTMANAGER;..\BTSRC;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.4\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\INCLUDE;..\BTMANAGER;..\BTSRC;..\..\tinygltf;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.4\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StructMemberAlignment>8Bytes</StructMemberAlignment>
       <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
       <DisableSpecificWarnings>
@@ -138,7 +138,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>CONVD3DX11;__MAMEBAKE3DLIB;_ITERATOR_DEBUG_LEVEL=0;WIN32;_WIN64;_WINDOWS;NDEBUG;_LIB;FBXSDK_NEW_API;FBXSDK_SHARED;BT_USE_PPL;BT_THREADSAFE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>..\INCLUDE;..\BTMANAGER;..\BTSRC;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.4\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\INCLUDE;..\BTMANAGER;..\BTSRC;..\..\tinygltf;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.4\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StructMemberAlignment>8Bytes</StructMemberAlignment>
       <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
       <DisableSpecificWarnings>
@@ -216,6 +216,7 @@
     <ClCompile Include="..\CPP\FootRigFile.cpp" />
     <ClCompile Include="..\CPP\GColiFile.cpp" />
     <ClCompile Include="..\CPP\GetMaterial.cpp" />
+    <ClCompile Include="..\CPP\gltfLoader.cpp" />
     <ClCompile Include="..\CPP\GPlaneDlg.cpp" />
     <ClCompile Include="..\CPP\GrassElem.cpp" />
     <ClCompile Include="..\CPP\ImpFile.cpp" />
@@ -283,6 +284,10 @@
     <ClCompile Include="..\CPP\XMLIO.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\tinygltf\json.hpp" />
+    <ClInclude Include="..\..\tinygltf\stb_image.h" />
+    <ClInclude Include="..\..\tinygltf\stb_image_write.h" />
+    <ClInclude Include="..\..\tinygltf\tiny_gltf.h" />
     <ClInclude Include="..\BTMANAGER\BPWorld.h" />
     <ClInclude Include="..\BTSRC\btBulletCollisionCommon.h" />
     <ClInclude Include="..\BTSRC\btBulletDynamicsCommon.h" />
@@ -627,6 +632,7 @@
     <ClInclude Include="..\INCLUDE\GColiFile.h" />
     <ClInclude Include="..\INCLUDE\GetMaterial.h" />
     <ClInclude Include="..\INCLUDE\GlobalVar.h" />
+    <ClInclude Include="..\INCLUDE\gltfLoader.h" />
     <ClInclude Include="..\INCLUDE\GPlaneDlg.h" />
     <ClInclude Include="..\INCLUDE\GrassElem.h" />
     <ClInclude Include="..\INCLUDE\ImpFile.h" />

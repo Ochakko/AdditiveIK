@@ -17,6 +17,8 @@
 
 #include <TexBank.h>
 #include <TexElem.h>
+#include <gltfLoader.h>
+
 
 #include <algorithm>
 #include <iostream>
@@ -88,7 +90,8 @@ CTexElem* CTexBank::ExistTex( const WCHAR* srcpath, const WCHAR* srcname, int sr
 }
 
 //int CTexBank::AddTex( WCHAR* srcpath, WCHAR* srcname, int srctransparent, int srcpool, D3DXCOLOR* srccol, int* dstid )
-int CTexBank::AddTex(const WCHAR* srcpath, const WCHAR* srcname, int srctransparent, int srcpool, int* dstid)
+int CTexBank::AddTex(CGltfLoader* srcloader,
+	const WCHAR* srcpath, const WCHAR* srcname, int srctransparent, int srcpool, int* dstid)
 {
 	*dstid = -1;
 
@@ -141,7 +144,7 @@ int CTexBank::AddTex(const WCHAR* srcpath, const WCHAR* srcname, int srctranspar
 
 
 
-	int result1 = newelem->CreateTexData(m_pdev);
+	int result1 = newelem->CreateTexData(m_pdev, srcloader);
 	if (result1 == 0) {
 		newelem->SetValidFlag(true);
 	}

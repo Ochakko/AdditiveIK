@@ -12,13 +12,15 @@
 
 #include "../../MiniEngine/Texture.h"
 
+class CGltfLoader;
+
 class CTexElem
 {
 public:
 	CTexElem();
 	~CTexElem();
 
-	int CreateTexData( ID3D12Device* pdev );
+	int CreateTexData(ID3D12Device* pdev, CGltfLoader* srcloader);
 	int InvalidateTexData();
 
 private:
