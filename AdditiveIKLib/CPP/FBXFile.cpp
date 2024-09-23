@@ -36,6 +36,8 @@
 #include <NodeOnLoad.h>
 #include <FbxMisc.h>
 
+#include <gltfLoader.h>
+
 #include <GlobalVar.h>
 
 #define KARCH_ENV_WIN
@@ -3084,26 +3086,31 @@ FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMateri
 		ptex = texturename;
 	}
 
-	//2023/08/29
-	//lTexture->SetFileNameに相対パスだけを入れておくと　別フォルダの同名テクスチャへのパスがセットされることがあった
-	//よって　FBXのTexture->SetFileNameにはフルパスを入れる
-	char utf8path[MAX_PATH] = { 0 };
-	::WideCharToMultiByte(CP_UTF8, 0, srcmodel->GetDirName(), -1, utf8path, MAX_PATH, NULL, NULL);
-	strcat_s(utf8path, MAX_PATH, "\\");
-	strcat_s(utf8path, MAX_PATH, ptex);
-	FbxString lTexPath = utf8path;
 
-    // Set texture properties.
-    lTexture->SetFileName(lTexPath.Buffer());
-    //lTexture->SetName("Diffuse Texture");
-	
+	if (mqomat->GetGltfLoader() == nullptr) {
+		//2023/08/29
+		//lTexture->SetFileNameに相対パスだけを入れておくと　別フォルダの同名テクスチャへのパスがセットされることがあった
+		//よって　FBXのTexture->SetFileNameにはフルパスを入れる
+		char utf8path[MAX_PATH] = { 0 };
+		::WideCharToMultiByte(CP_UTF8, 0, srcmodel->GetDirName(), -1, utf8path, MAX_PATH, NULL, NULL);
+		strcat_s(utf8path, MAX_PATH, "\\");
+		strcat_s(utf8path, MAX_PATH, ptex);
+		FbxString lTexPath = utf8path;
 
-	//lTexture->SetName(mqomat->GetTex());
-	lTexture->SetName(ptex);//2023/08/29 名前はファイル名だけ
+		lTexture->SetFileName(lTexPath.Buffer());
+		lTexture->SetName(ptex);//2023/08/29 名前はファイル名だけ
+	}
+	else {
+		char utf8path[MAX_PATH] = { 0 };
+		::WideCharToMultiByte(CP_UTF8, 0, mqomat->GetGltfLoader()->GetVrmPath(), -1, 
+			utf8path, MAX_PATH, NULL, NULL);
+		char utf8name[MAX_PATH] = { 0 };
+		::WideCharToMultiByte(CP_UTF8, 0, mqomat->GetGltfLoader()->GetVrmName(), -1,
+			utf8name, MAX_PATH, NULL, NULL);
 
-
-	//::MessageBoxA(NULL, ptex, "TextureName", MB_OK);
-
+		lTexture->SetFileName(utf8path);
+		lTexture->SetName(utf8name);
+	}
 
 
     lTexture->SetTextureUse(FbxTexture::eStandard);

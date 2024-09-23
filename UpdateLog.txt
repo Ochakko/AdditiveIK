@@ -12,8 +12,8 @@ https://github.com/Ochakko/AdditiveIK
 　　vrm1.0読込にはsyoyoさんのtinygltfを使用
 　　3rd_LINCENSEフォルダにtinygltf追加、README.mdにtinygltfの記述を追加
 
-　　一応テクスチャは表示されたが、まだ動いたばかりでデバッグビルド状態
-
+　　VRM1.0からコンバートしたfbxを含むプロジェクトの保存に対応
+　　
 
 
 2024/09/21

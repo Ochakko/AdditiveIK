@@ -3043,6 +3043,10 @@ public: //accesser
 	{
 		return m_underfootrig;
 	};
+	CGltfLoader* GetGltfLoader()
+	{
+		return m_gltfloader;
+	};
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];

@@ -1153,7 +1153,7 @@ int CModel::LoadFBX(int skipdefref, ID3D12Device* pdev, const WCHAR* wfile, cons
 					}
 				}
 				if (m_gltfloader) {
-					int resultgltf0 = m_gltfloader->LoadEmbeddedVrm(vrmpath);//vrmpath
+					int resultgltf0 = m_gltfloader->LoadEmbeddedVrm(vrmpath, FindFileData.cFileName);//vrmpath
 					int dbgflag1 = 1;
 				}
 			}
@@ -6355,62 +6355,7 @@ int CModel::SetMaterialTexNames(int textype, CMQOMaterial* newmqomat, char* temp
 		strcpy(lastp, ".png");
 	}
 	else if (strcmp(lastp, ".vrm") == 0) {
-		//VRM1.0のテクスチャパスは　vrmファイルの絶対パス(全テクスチャ名が同じvrmパス)
-		// テクスチャとしてUnityでみえるのは　*.texture2Dファイル
-		// .texture2DファイルはUnityスクリプトでpngに変換可能なので　そのようにしたpngをユーザが用意していることを想定
-		// 2023/08/28現在はVRM0.0もサポートされていて　VRM0.0をUnityに読み込むとテクスチャはpngのものが生成される
-		//m_vrmtexcount++;
-		//if (m_vrmtexcount == 5) {
-		//	//char convname[256] = { 0 };
-		//	//strcpy_s(convname, 256, "_05.normal.png");
-		//	//newmqomat->SetTex(convname);
-
-		//	m_vrmtexcount++;
-
-		//	char convname[256] = { 0 };
-		//	//sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-		//	sprintf_s(convname, 256, "_%02d", m_vrmtexcount);
-		//	//newmqomat->SetTex(convname);
-		//	strcpy_s(temptexname, convname);
-		//	gltftexture = true;
-		//}
-		//else if (m_vrmtexcount == 8) {
-
-		//	m_vrmtexcount++;
-
-		//	char convname[256] = { 0 };
-		//	//sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-		//	sprintf_s(convname, 256, "_%02d", m_vrmtexcount);
-		//	//newmqomat->SetTex(convname);
-		//	strcpy_s(temptexname, convname);
-		//	gltftexture = true;
-		//}
-		//else if (m_vrmtexcount == 11) {
-		//	////char convname[256] = { 0 };
-		//	////strcpy_s(convname, 256, "_11.normal.png");
-		//	////newmqomat->SetTex(convname);
-
-		//	m_vrmtexcount++;
-
-		//	char convname[256] = { 0 };
-		//	//sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-		//	sprintf_s(convname, 256, "_%02d", m_vrmtexcount);
-		//	//newmqomat->SetTex(convname);
-		//	strcpy_s(temptexname, convname);
-		//	gltftexture = true;
-		//}
-		//else {
-		//	char convname[256] = { 0 };
-		//	//sprintf_s(convname, 256, "_%02d.png", m_vrmtexcount);
-		//	sprintf_s(convname, 256, "_%02d", m_vrmtexcount);
-		//	//newmqomat->SetTex(convname);
-		//	strcpy_s(temptexname, convname);
-		//	gltftexture = true;
-		//}
-		//if (gltftexture && m_gltfloader && m_gltfloader->GetLoadedFlag()) {
-		//	newmqomat->SetGltfLoader(m_gltfloader);
-		//}
-
+		//VRM1.0のテクスチャパスは　内包vrmファイル名(全テクスチャ名が同じvrm名)
 		if (m_gltfloader && m_gltfloader->GetLoadedFlag()) {
 			const char* materialname = newmqomat->GetName();
 			int retgltf = m_gltfloader->GetTexNameByMaterialName(textype, materialname, temptexname, 256);

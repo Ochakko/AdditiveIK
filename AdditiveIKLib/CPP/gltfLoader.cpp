@@ -118,6 +118,8 @@ CGltfLoader::~CGltfLoader()
 void CGltfLoader::InitParams()
 {
 	m_loadedflag = false;
+	ZeroMemory(m_vrmpath, sizeof(WCHAR) * MAX_PATH);
+	ZeroMemory(m_vrmname, sizeof(WCHAR) * MAX_PATH);
 }
 void CGltfLoader::DestroyObjs()
 {
@@ -145,21 +147,24 @@ void CGltfLoader::DestroyObjs()
 //}
 
 
-int CGltfLoader::LoadEmbeddedVrm(WCHAR* srcwfilename)
+int CGltfLoader::LoadEmbeddedVrm(const WCHAR* srcwfilename, const WCHAR* srcvrmname)
 {
 	m_loadedflag = false;
 
-	if (!srcwfilename) {
+	if (!srcwfilename || !srcvrmname) {
 		_ASSERT(0);
 		return 1;
 	}
 
+	wcscpy_s(m_vrmpath, MAX_PATH, srcwfilename);
+	wcscpy_s(m_vrmname, MAX_PATH, srcvrmname);
+
+
 	WCHAR tmpwname[MAX_PATH] = { 0L };
 	char filename[MAX_PATH] = { 0 };
 	wcscpy_s(tmpwname, MAX_PATH, srcwfilename);
-
-	char cbasedir[MAX_PATH] = { 0 };
 	WideCharToMultiByte(CP_ACP, 0, tmpwname, -1, filename, MAX_PATH, NULL, NULL);
+
 
 	std::string err, warn;
 	bool ret = m_gltfloader.LoadBinaryFromFile(&m_gltfmodel, &err, &warn, filename);

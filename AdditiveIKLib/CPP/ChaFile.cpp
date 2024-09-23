@@ -31,6 +31,7 @@
 #include <ShaderTypeFile.h>
 
 #include <FootRigDlg.h>
+#include <gltfLoader.h>
 
 #include "..\\..\\AdditiveIK\FrameCopyDlg.h"
 
@@ -501,7 +502,7 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 						}
 					}
 				}
-				
+
 				if (*(curmqomat->GetNormalTex()) && (curmqomat->GetNormalTexID() >= 0)) {
 					WCHAR wtex[256] = { 0L };
 					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, curmqomat->GetNormalTex(), 256, wtex, 256);
@@ -557,7 +558,52 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 		}
 	}
 
+	{
+		//VRM1.0からembed textureオプションでコンバートしたfbxの場合
+		//(fbxname).fbm/*.vrmファイルをコピーする
+		CGltfLoader* gltfloader = curmodel->GetGltfLoader();
+		if (gltfloader && gltfloader->GetVrmName() && (*(gltfloader->GetVrmName()) != 0L)) {
+			WCHAR fbmname[MAX_PATH] = { 0L };
+			wcscpy_s(fbmname, MAX_PATH, curmodel->GetFileName());
+			int fbmnameleng = (int)wcslen(fbmname);
+			if ((fbmnameleng >= 5) && (fbmnameleng < MAX_PATH)) {
+				fbmname[fbmnameleng - 1] = TEXT('m');//.fbxを.fbmに加工
+			}
 
+			//(fbxname).fbmフォルダが無ければ作成
+			WCHAR fbmfolder[MAX_PATH] = { 0L };
+			swprintf_s(fbmfolder, MAX_PATH, L"%s\\%s\\%s", m_newdirname, curmodel->GetModelFolder(), fbmname);
+			DWORD fattr2;
+			fattr2 = GetFileAttributes(fbmfolder);
+			if ((fattr2 == -1) || ((fattr2 & FILE_ATTRIBUTE_DIRECTORY) == 0)) {
+				int bret2;
+				bret2 = CreateDirectory(fbmfolder, NULL);
+				if (bret2 == 0) {
+					::MessageBox(NULL, L"ディレクトリの作成に失敗しました。\n書き込み禁止ディレクトリの可能性があります。\n保存場所を変えて再試行してみてください。", L"エラー", MB_OK);
+					_ASSERT(0);
+					return 1;
+				}
+			}
+
+			BOOL bret;
+			BOOL bcancel;
+			WCHAR srcpath[MAX_PATH] = { 0L };
+			WCHAR dstpath[MAX_PATH] = { 0L };
+
+			wcscpy_s(srcpath, MAX_PATH, gltfloader->GetVrmPath());
+			swprintf_s(dstpath, MAX_PATH, L"%s\\%s", fbmfolder, gltfloader->GetVrmName());
+
+			int chksame = wcscmp(srcpath, dstpath);
+			if (chksame != 0) {
+				bcancel = FALSE;
+				bret = CopyFileEx(srcpath, dstpath, NULL, NULL, &bcancel, 0);
+				if (bret == 0) {
+					_ASSERT(0);
+					//return 1;
+				}
+			}
+		}
+	}
 
 
 	{
