@@ -18,89 +18,12 @@
 #include <gltfLoader.h>
 
 #include <Model.h>
-#include <polymesh3.h>
-#include <polymesh4.h>
-#include <ExtLine.h>
-
-#include <GetMaterial.h>
-
-#include <mqofile.h>
-#include <mqomaterial.h>
-#include <mqoobject.h>
-
-#include <Bone.h>
-#include <mqoface.h>
-
-#include <InfoWindow.h>
-
-#include <FbxFile.h>
-
-#include <EGPFile.h>
 
 #define DBGH
 #include <dbg.h>
 
-//#include <DXUT.h>
-//#include <DXUTcamera.h>
-//#include <DXUTgui.h>
-//#include <DXUTsettingsdlg.h>
-//#include <SDKmisc.h>
-
-#include <DispObj.h>
-#include <MySprite.h>
-
-#include <MotionPoint.h>
-//#include <quaternion.h>
-//#include <ChaVecCalc.h>//TheadingCalcEul.hでChaCalcFunc.hからChaVecCalc.hはインクルート
-
-#include <Collision.h>
-#include <EngName.h>
-
-#include <RigidElem.h>
-#include <ChaScene.h>
-#include <CSChkInView.h>
-#include <FootRigDlg.h>
-
 #include <string>
-
-#include <fbxsdk.h>
-#include <fbxsdk/scene/shading/fbxlayeredtexture.h>
-#include <fbxsdk/scene/animation/fbxanimevaluator.h>
-
-#include "btBulletDynamicsCommon.h"
-#include "LinearMath/btIDebugDraw.h"
-
-
-#include <BopFile.h>
-#include <BtObject.h>
-#include <FbxMisc.h>
-
-#include <collision.h>
-#include <EditRange.h>
-//#include <BoneProp.h>
-
-#include <ThreadingLoadFbx.h>
-#include <ThreadingUpdateMatrix.h>
-#include <ThreadingPostIK.h>
-#include <ThreadingFKTra.h>
-#include <ThreadingCopyW2LW.h>
-#include <ThreadingCalcEul.h>
-#include <ThreadingRetarget.h>
-#include <ThreadingInitMp.h>
-
-#include <NodeOnLoad.h>
-
-#include <OrgWindow.h>
-
-#include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
-#include "../../MiniEngine/TResourceBank.h"
-
-//#include <DXUT.h>
 #include <io.h>
-
-
-//for __nop()
-#include <intrin.h>
 
 
 using namespace std;

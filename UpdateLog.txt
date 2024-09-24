@@ -2,6 +2,24 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/09/25
+　AdditiveIK 1.0.0.34 RC1(リリース候補1)
+　　1.0.0.33からの変更点
+　　　VRM1.0限定のfbx内包テクスチャ対応
+　　　　VRM1.0をfbxにしてもテクスチャは別ファイルとしては出力されない
+　　　　VRM1.0をfbxにするときにUnity3Dの出力オプションでEmbedTextureをオンにして
+　　　　fbxにvrmファイルを内包する
+　　　　内包したvrmファイルからテクスチャを読み込む
+　　　　　
+　　　　ドキュメント
+　　　　　Documents/TroubleShooting/DisplayedInBrightRedWhenLoadingFBX.docx
+
+　　　FootRig設定の初期値(未設定時の数値)を変更
+　　　　VRoidに対してFootRigを使用する際に足を曲げ過ぎないような設定に.
+
+
+
+
 2024/09/24
 　ドキュメント追加
 　　Documents/TroubleShooting/DisplayedInBrightRedWhenLoadingFBX.docx

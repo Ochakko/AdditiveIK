@@ -14,29 +14,6 @@
 #include <tiny_gltf.h>
 
 
-class CMQOMaterial;
-class CMQOObject;
-class CMQOFace;
-class CBone;
-class CMySprite;
-class CMotionPoint;
-class CQuaternion;
-class CBtObject;
-class CRigidElem;
-class CEditRange;
-class CThreadingLoadFbx;
-class CThreadingUpdateMatrix;
-class CThreadingPostIK;
-class CThreadingCalcEul;
-class CThreadingFKTra;
-class CThreadingCopyW2LW;
-class CThreadingRetarget;
-class CThreadingInitMp;
-class CNodeOnLoad;
-class CSChkInView;
-class CFootRigDlg;
-
-
 class CGltfLoader
 {
 public:
