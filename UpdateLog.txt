@@ -2,6 +2,10 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/09/24
+　ドキュメント追加
+　　Documents/TroubleShooting/DisplayedInBrightRedWhenLoadingFBX.docx
+
 
 2024/09/23
 　VRM1.0のVRoidをUnity3Dでfbx形式で出力したものを読み込めるように.
