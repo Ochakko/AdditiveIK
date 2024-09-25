@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2024/09/25
-　AdditiveIK 1.0.0.34 RC1(リリース候補1)
+　AdditiveIK 1.0.0.34 relase
 　　1.0.0.33からの変更点
 　　　VRM1.0限定のfbx内包テクスチャ対応
 　　　　VRM1.0をfbxにしてもテクスチャは別ファイルとしては出力されない
