@@ -2,6 +2,15 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/10/01
+　SonyPlayStation用のゲームコントローラDualSense対応復活
+　　https://github.com/sonichope/DS4HidInput (MIT LICENSE)を使用
+　　キャラクターの移動やモーション切り替えのテストに使用する予定
+　　以前のようにアプリのGUI操作のためには使わない予定
+
+
+
+
 2024/09/25
 　AdditiveIK 1.0.0.34 relase
 　　1.0.0.33からの変更点

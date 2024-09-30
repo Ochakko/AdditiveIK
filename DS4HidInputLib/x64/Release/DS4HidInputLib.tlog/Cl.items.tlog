@@ -1,0 +1,10 @@
+E:\PG\AdditiveIK\DS4HidInputLib\dllmain.cpp;E:\PG\AdditiveIK\DS4HidInputLib\x64\Release\dllmain.obj
+E:\PG\AdditiveIK\DS4HidInputLib\DS4Device.cpp;E:\PG\AdditiveIK\DS4HidInputLib\x64\Release\DS4Device.obj
+E:\PG\AdditiveIK\DS4HidInputLib\DSButton.cpp;E:\PG\AdditiveIK\DS4HidInputLib\x64\Release\DSButton.obj
+E:\PG\AdditiveIK\DS4HidInputLib\DSenseButton.cpp;E:\PG\AdditiveIK\DS4HidInputLib\x64\Release\DSenseButton.obj
+E:\PG\AdditiveIK\DS4HidInputLib\DSenseDevice.cpp;E:\PG\AdditiveIK\DS4HidInputLib\x64\Release\DSenseDevice.obj
+E:\PG\AdditiveIK\DS4HidInputLib\DSInput_dll.cpp;E:\PG\AdditiveIK\DS4HidInputLib\x64\Release\DSInput_dll.obj
+E:\PG\AdditiveIK\DS4HidInputLib\DSManager.cpp;E:\PG\AdditiveIK\DS4HidInputLib\x64\Release\DSManager.obj
+E:\PG\AdditiveIK\DS4HidInputLib\HidDevice.cpp;E:\PG\AdditiveIK\DS4HidInputLib\x64\Release\HidDevice.obj
+E:\PG\AdditiveIK\DS4HidInputLib\Led.cpp;E:\PG\AdditiveIK\DS4HidInputLib\x64\Release\Led.obj
+E:\PG\AdditiveIK\DS4HidInputLib\pch.cpp;E:\PG\AdditiveIK\DS4HidInputLib\x64\Release\pch.obj

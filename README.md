@@ -227,6 +227,9 @@ Smooth平滑化<br>
 　gltf(vrm)の読み込みにtinygltfを使用 https://github.com/syoyo/tinygltf<br>
 　ライセンスは3rd_LICENSE/tinygltf_LICENSE<br>
 <br>
+　SonyPlayStation用のゲームパッドDualSenseを使用するために
+　sonichopeさんのDS4HidInputを使用　https://github.com/sonichope/DS4HidInput<br>
+　ライセンスは3rd_LICENSE/DS4HidInput_LICENSE<br>
 <br>
 　Testディレクトリのモデル作成にVRoidStudioを使用します<br>
 　https://vroid.com/studio<br>

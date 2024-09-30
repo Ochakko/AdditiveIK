@@ -1793,6 +1793,29 @@ void CFootRigDlg::FootRig(bool secondcalling,
 	int lowerrignum, int higherrignum
 )
 {
+	//##############################################################################################
+	//2024/09/30
+	//#### 注意 ####
+	//詳細な地面データに対しては、ローポリゴンの当たり判定用の地面データを用意して
+	//それを非表示にしつつFootRig用の地面として選択する方法が良い
+	//(ローポリゴンがバレないようにキーになる地形で当たり判定用地面のポリゴンを多くするのも良いかもしれない)
+	//
+	//#### 理由 ####
+	//ディテールがあるようなレベルの地面データ(例えば階段データ)は
+	//リアリティを増すために欠けている部分が存在することがある
+	//そのような地面を当たり判定地面として選んでこの関数で歩くと
+	//欠けている部分から頻繁に下に落ちて　動きがカクついてしまう
+	//
+	//落下距離の最大値を決めて試したりしたが、落ちたときには無視できないくらいカクカクした動きになった
+	//
+	//地面の高さの測定点を複数取る方法(足の裏の大きさ分サンプリングする方法)も考えられた
+	//しかし、測定点を２倍にすると２倍重くなり、大きい隙間に対応すると踏んでいないものを踏んだことになることは
+	//試さないでも予測できる
+	// 
+	//##############################################################################################
+
+
+
 	if (!srcmodel || !lowerfoot || !higherfoot || !lowerupdatebone || !higherupdatebone) {
 		//_ASSERT(0);
 		int dbgflag1 = 1;
@@ -1848,9 +1871,8 @@ void CFootRigDlg::FootRig(bool secondcalling,
 			higherjointpos.y += diffy2;
 		}
 
-
 		if (//!secondcalling &&
-			((hipspos.y - highergpos.y) > (hdiffmax + ROUNDINGPOS))) {
+			(hipspos.y - highergpos.y) > (hdiffmax + ROUNDINGPOS)) {
 
 			//float diffy = highergpos.y - (higherjointpos.y + higheroffset);
 			float diffy = -(hipspos.y - highergpos.y - hdiffmax);//2024/09/16 hdiffmax設定で足の曲がり方が調整できるように修正　地面とhipsの高さがhdiffmax以下になるようにShiftする
@@ -1866,7 +1888,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 		}
 
 		if (//!secondcalling &&
-			((hipspos.y - lowergpos.y) > (hdiffmax + ROUNDINGPOS))) {
+			(hipspos.y - lowergpos.y) > (hdiffmax + ROUNDINGPOS)) {
 
 			//float diffy = lowergpos.y - (lowerjointpos.y + loweroffset);
 			float diffy = -(hipspos.y - lowergpos.y - hdiffmax);//2024/09/16 hdiffmax設定で足の曲がり方が調整できるように修正　地面とhipsの高さがhdiffmax以下になるようにShiftする

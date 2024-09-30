@@ -10,6 +10,11 @@
 
 #pragma once
 
+
+//2024/10/01 define
+#define USING_XINPUT
+
+
 #if !defined(USING_XINPUT) && !defined(USING_GAMEINPUT) && !defined(USING_WINDOWS_GAMING_INPUT)
 
 #ifdef _GAMING_DESKTOP

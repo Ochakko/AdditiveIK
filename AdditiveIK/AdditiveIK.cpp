@@ -158,6 +158,9 @@
 
 #include "DXUTmisc/DXUTmisc.h"
 
+
+#include "..\DS4HidInputLib\DSInput_dll.h"
+
 using namespace std;
 
 
@@ -653,7 +656,7 @@ static void InitDSValues();
 //ゲームパッドでのウインドウコントロール操作関数は削除
 //マウス、キーボード、マウスパッド共存の方向で.
 //###########################################################
-//static void GetDSValues();
+static void GetDSValues();
 //static void DSColorAndVibration();
 //static void DSSelectWindowAndCtrl();//L1, square, triangle
 //static void DSSelectCharactor();//(L2 or R2) and L1
@@ -790,10 +793,10 @@ static int s_dsbuttonup[MB3D_DSBUTTONNUM];
 static int s_bef_dsbuttonup[MB3D_DSBUTTONNUM];
 static float s_dsaxisvalue[MB3D_DSAXISNUM];
 static float s_bef_dsaxisvalue[MB3D_DSAXISNUM];
-static int s_dsaxisOverSrh[MB3D_DSAXISNUM];
-static int s_bef_dsaxisOverSrh[MB3D_DSAXISNUM];
-static int s_dsaxisMOverSrh[MB3D_DSAXISNUM];
-static int s_bef_dsaxisMOverSrh[MB3D_DSAXISNUM];
+static int s_dsaxisOverTh[MB3D_DSAXISNUM];
+static int s_bef_dsaxisOverTh[MB3D_DSAXISNUM];
+static int s_dsaxisMOverTh[MB3D_DSAXISNUM];
+static int s_bef_dsaxisMOverTh[MB3D_DSAXISNUM];
 static int s_dspushedOK = 0;
 static int s_dspushedL3 = 0;
 static int s_dspushedR3 = 0;
@@ -2206,7 +2209,7 @@ static void DestroySprites();
 
 
 //#################################
-//For DualSence GamePad Controller
+//For DualSense GamePad Controller
 //#################################
 static HWND GetOFWnd(POINT srcpoint);
 static BOOL CALLBACK EnumChildProc(HWND hwnd, LPARAM lParam);
@@ -3342,6 +3345,13 @@ INT WINAPI wWinMain(
 			//g_camera3D->MoveForward(g_pad[0]->GetLStickYF());
 			//g_camera3D->MoveRight(g_pad[0]->GetLStickXF());
 			//g_camera3D->MoveUp(g_pad[0]->GetRStickYF());
+			//float stickLX = g_pad[0]->GetLStickXF();
+			//float stickLY = g_pad[0]->GetLStickYF();
+			//float stickRX = g_pad[0]->GetRStickXF();
+			//float stickRY = g_pad[0]->GetRStickYF();
+
+
+
 
 			//double fTime = 0.0;
 			//float fElapsedTime = 0.0;
@@ -4640,27 +4650,29 @@ void InitApp()
 
 
 
-	//bool bsuccess1 = false;
-	//bool bsuccess2 = false;
-	//if ((s_appcnt == 0) && (s_launchbyc4 == 0)) {//C4から起動時にはゲームパッド未対応。//2021/08/30
-	//	bsuccess1 = StartDS4();
-	//}
-	//else {
-	//	bsuccess1 = false;
-	//}
-	//if (bsuccess1) {
-	//	bsuccess2 = GetController();
-	//}
-	//if (bsuccess1 && bsuccess2) {
-	//	g_enableDS = true;
-	//	s_dsdeviceid = 0;
-	//	s_curaimbarno = 0;
-	//}
-	//else {
+	bool bsuccess1 = false;
+	bool bsuccess2 = false;
+	if ((s_appcnt == 0) && (s_launchbyc4 == 0)) {//C4から起動時にはゲームパッド未対応。//2021/08/30
+		bsuccess1 = StartDS4();
+	}
+	else {
+		bsuccess1 = false;
+	}
+	if (bsuccess1) {
+		bsuccess2 = GetController();
+	}
+	if (bsuccess1 && bsuccess2) {
+		g_enableDS = true;
+		s_dsdeviceid = 0;
+		s_curaimbarno = 0;
+	}
+	else {
 		g_enableDS = false;
 		s_dsdeviceid = -1;
 		s_curaimbarno = -1;
-	//}
+	}
+
+
 
 
 	CRigidElem::InitRigidElems();
@@ -6381,6 +6393,32 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 
 		OnRenderFontForTip(re, rc);
 
+
+		//ゲームコントローラDualSenseの左右スティックの値の確認
+		//if (g_enableDS && (s_dsdeviceid >= 0)) {
+		//	WCHAR straxisval[512] = { 0L };
+		//	//int axisno;
+		//	//for (axisno = 0; axisno < MB3D_DSAXISNUM; axisno++) {
+		//	//	//s_dsaxisvalue[axisno] = GetAxis(s_dsdeviceid, axisno);
+		//	//	//s_dsaxisOverTh[axisno] = (int)(s_dsaxisvalue[axisno] >= MB3D_DSAXISSRH);
+		//	//	//s_dsaxisMOverTh[axisno] = (int)(s_dsaxisvalue[axisno] <= -(MB3D_DSAXISSRH));
+		//	//}
+		//	swprintf_s(straxisval, 512, L"%.2f, %.2f, %.2f, %.2f, %.2f, %.2f",
+		//		s_dsaxisvalue[0], s_dsaxisvalue[1], s_dsaxisvalue[2], s_dsaxisvalue[3], s_dsaxisvalue[4], s_dsaxisvalue[5]);
+
+		//	myRenderer::RENDERFONT renderfont;
+		//	renderfont.Init();
+		//	renderfont.pfont = &s_fontfortip;
+		//	//swprintf_s(renderfont.strfont, 512, L"connect %d, A %d, B %d, X %d, Y %d",
+		//	//	padconnected, pressA, pressB, pressX, pressY);
+		//	wcscpy_s(renderfont.strfont, 512, straxisval);
+		//	renderfont.disppos = Vector2(0.0f, 0.0f);
+		//	renderfont.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+		//	renderfont.rotation = 0.0f;
+		//	renderfont.scale = 1.0f;
+		//	renderfont.pivot = Vector2(0.0f, 0.0f);
+		//	s_chascene->AddFontToForwardRenderPass(renderfont);
+		//}
 	}
 	else {
 		OnRenderNowLoading();
@@ -30981,7 +31019,6 @@ int OnRenderFontForTip(myRenderer::RenderingEngine* re, RenderContext* rc)
 		float fontposy = -((float)tipposy - (float)winy / 2.0f);// *2.0f;
 		disppos.Set(fontposx, fontposy);
 
-
 		myRenderer::RENDERFONT renderfont;
 		renderfont.Init();
 		renderfont.pfont = &s_fontfortip;
@@ -31111,81 +31148,81 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
 
-	//aimbar
-	if (g_enableDS && (s_dsdeviceid >= 0)) {
+	////aimbar
+	//if (g_enableDS && (s_dsdeviceid >= 0)) {
 
-		int platemenukind = s_platemenukind;
-		int platenomax = 0;
+	//	int platemenukind = s_platemenukind;
+	//	int platenomax = 0;
 
-		switch (platemenukind) {
-		//case SPPLATEMENUKIND_GUI:
-		//	platenomax = SPGUISWNUM;
-		//	break;
-		case SPPLATEMENUKIND_DISP:
-			platenomax = SPDISPSWNUM;
-			break;
-		case SPPLATEMENUKIND_RIGID:
-			platenomax = SPRIGIDSWNUM;
-			break;
-		case SPPLATEMENUKIND_RETARGET:
-			platenomax = SPRETARGETSWNUM;
-			break;
-		case SPPLATEMENUKIND_EFFECT:
-			platenomax = SPEFFECTSWNUM;
-			break;
-		default:
-			platenomax = 0;
-			break;
-		}
+	//	switch (platemenukind) {
+	//	//case SPPLATEMENUKIND_GUI:
+	//	//	platenomax = SPGUISWNUM;
+	//	//	break;
+	//	case SPPLATEMENUKIND_DISP:
+	//		platenomax = SPDISPSWNUM;
+	//		break;
+	//	case SPPLATEMENUKIND_RIGID:
+	//		platenomax = SPRIGIDSWNUM;
+	//		break;
+	//	case SPPLATEMENUKIND_RETARGET:
+	//		platenomax = SPRETARGETSWNUM;
+	//		break;
+	//	case SPPLATEMENUKIND_EFFECT:
+	//		platenomax = SPEFFECTSWNUM;
+	//		break;
+	//	default:
+	//		platenomax = 0;
+	//		break;
+	//	}
 
-		{
-			myRenderer::RENDERSPRITE rendersprite;
-			rendersprite.Init();
-			rendersprite.psprite = s_spsel3d.GetSpriteForRender();
-			s_chascene->AddSpriteToForwardRenderPass(rendersprite);
-		}
-		//{
-		//	int spgcnt;
-		//	int chkplatenomax;
-		//	chkplatenomax = min(SPAIMBARNUM, platenomax);
-		//	for (spgcnt = 0; spgcnt < chkplatenomax; spgcnt++) {
-		//		if (s_spaimbar[spgcnt].state) {
-		//			s_spaimbar[spgcnt].spriteON.DrawScreen(pRenderContext);
-		//		}
-		//		else {
-		//			s_spaimbar[spgcnt].spriteOFF.DrawScreen(pRenderContext);
-		//		}
-		//	}
-		//}
-		//{
-		//	if (s_topSlidersWnd) {
-		//		s_topSlidersWnd->callRewrite();
-		//	}
+	//	{
+	//		myRenderer::RENDERSPRITE rendersprite;
+	//		rendersprite.Init();
+	//		rendersprite.psprite = s_spsel3d.GetSpriteForRender();
+	//		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+	//	}
+	//	//{
+	//	//	int spgcnt;
+	//	//	int chkplatenomax;
+	//	//	chkplatenomax = min(SPAIMBARNUM, platenomax);
+	//	//	for (spgcnt = 0; spgcnt < chkplatenomax; spgcnt++) {
+	//	//		if (s_spaimbar[spgcnt].state) {
+	//	//			s_spaimbar[spgcnt].spriteON.DrawScreen(pRenderContext);
+	//	//		}
+	//	//		else {
+	//	//			s_spaimbar[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+	//	//		}
+	//	//	}
+	//	//}
+	//	//{
+	//	//	if (s_topSlidersWnd) {
+	//	//		s_topSlidersWnd->callRewrite();
+	//	//	}
 
 
-		//	//int spgcnt;
-		//	//for (spgcnt = 0; spgcnt < SPMENU_MAX; spgcnt++) {
-		//	//	//TopSlidersWndの背景色は、非選択時に茶色、選択時にオレンジ。オレンジはspriteONの色。よってスプライト表示のオンとオフを入れ替える。
-		//	//	if (s_spmenuaimbar[spgcnt].state) {
-		//	//		if (s_spmenuaimbar[spgcnt].spriteOFF) {//ONのときにOFF色
-		//	//			s_spmenuaimbar[spgcnt].spriteOFF.DrawScreen(pRenderContext);
-		//	//		}
-		//	//		else {
-		//	//			_ASSERT(0);
-		//	//		}
-		//	//	}
-		//	//	else {
-		//	//		if (s_spmenuaimbar[spgcnt].spriteON) {//OFFのときにON色
-		//	//			s_spmenuaimbar[spgcnt].spriteON.DrawScreen(pRenderContext);
-		//	//		}
-		//	//		else {
-		//	//			_ASSERT(0);
-		//	//		}
-		//	//	}
-		//	//}
-		//}
+	//	//	//int spgcnt;
+	//	//	//for (spgcnt = 0; spgcnt < SPMENU_MAX; spgcnt++) {
+	//	//	//	//TopSlidersWndの背景色は、非選択時に茶色、選択時にオレンジ。オレンジはspriteONの色。よってスプライト表示のオンとオフを入れ替える。
+	//	//	//	if (s_spmenuaimbar[spgcnt].state) {
+	//	//	//		if (s_spmenuaimbar[spgcnt].spriteOFF) {//ONのときにOFF色
+	//	//	//			s_spmenuaimbar[spgcnt].spriteOFF.DrawScreen(pRenderContext);
+	//	//	//		}
+	//	//	//		else {
+	//	//	//			_ASSERT(0);
+	//	//	//		}
+	//	//	//	}
+	//	//	//	else {
+	//	//	//		if (s_spmenuaimbar[spgcnt].spriteON) {//OFFのときにON色
+	//	//	//			s_spmenuaimbar[spgcnt].spriteON.DrawScreen(pRenderContext);
+	//	//	//		}
+	//	//	//		else {
+	//	//	//			_ASSERT(0);
+	//	//	//		}
+	//	//	//	}
+	//	//	//}
+	//	//}
 
-	}
+	//}
 
 
 
@@ -34519,7 +34556,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.34 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.35 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -36448,10 +36485,10 @@ void InitDSValues()
 	//static int s_bef_dsbuttonup[MB3D_DSBUTTONNUM];
 	//static float s_dsaxisvalue[MB3D_DSAXISNUM];
 	//static float s_bef_dsaxisvalue[MB3D_DSAXISNUM];
-	//static int s_dsaxisOverSrh[MB3D_DSAXISNUM];
-	//static int s_bef_dsaxisOverSrh[MB3D_DSAXISNUM];
-	//static int s_dsaxisMOverSrh[MB3D_DSAXISNUM];
-	//static int s_bef_dsaxisMOverSrh[MB3D_DSAXISNUM];
+	//static int s_dsaxisOverTh[MB3D_DSAXISNUM];
+	//static int s_bef_dsaxisOverTh[MB3D_DSAXISNUM];
+	//static int s_dsaxisMOverTh[MB3D_DSAXISNUM];
+	//static int s_bef_dsaxisMOverTh[MB3D_DSAXISNUM];
 
 	g_enableDS = false;
 	s_dsdeviceid = -1;
@@ -36547,10 +36584,10 @@ void InitDSValues()
 	ZeroMemory(s_dsaxisvalue, sizeof(float) * MB3D_DSAXISNUM);
 	ZeroMemory(s_bef_dsaxisvalue, sizeof(float) * MB3D_DSAXISNUM);
 
-	ZeroMemory(s_dsaxisOverSrh, sizeof(int) * MB3D_DSAXISNUM);
-	ZeroMemory(s_bef_dsaxisOverSrh, sizeof(int) * MB3D_DSAXISNUM);
-	ZeroMemory(s_dsaxisMOverSrh, sizeof(int) * MB3D_DSAXISNUM);
-	ZeroMemory(s_bef_dsaxisMOverSrh, sizeof(int) * MB3D_DSAXISNUM);
+	ZeroMemory(s_dsaxisOverTh, sizeof(int) * MB3D_DSAXISNUM);
+	ZeroMemory(s_bef_dsaxisOverTh, sizeof(int) * MB3D_DSAXISNUM);
+	ZeroMemory(s_dsaxisMOverTh, sizeof(int) * MB3D_DSAXISNUM);
+	ZeroMemory(s_bef_dsaxisMOverTh, sizeof(int) * MB3D_DSAXISNUM);
 
 
 }
@@ -36566,7 +36603,7 @@ void OnDSUpdate()
 	}
 
 
-	//GetDSValues();
+	GetDSValues();
 
 	//ChangeMouseSetCapture();//処理前にキャプチャーをセット
 
@@ -36633,10 +36670,10 @@ void GetDSValues()
 	//static int s_bef_dsbuttonup[MB3D_DSBUTTONNUM];
 	//static float s_dsaxisvalue[MB3D_DSAXISNUM];
 	//static float s_bef_dsaxisvalue[MB3D_DSAXISNUM];
-	//static int s_dsaxisOverSrh[MB3D_DSAXISNUM];
-	//static int s_bef_dsaxisOverSrh[MB3D_DSAXISNUM];
-	//static int s_dsaxisMOverSrh[MB3D_DSAXISNUM];
-	//static int s_bef_dsaxisMOverSrh[MB3D_DSAXISNUM];
+	//static int s_dsaxisOverTh[MB3D_DSAXISNUM];
+	//static int s_bef_dsaxisOverTh[MB3D_DSAXISNUM];
+	//static int s_dsaxisMOverTh[MB3D_DSAXISNUM];
+	//static int s_bef_dsaxisMOverTh[MB3D_DSAXISNUM];
 
 
 	if (!g_enableDS || (s_dsdeviceid < 0) || (s_dsdeviceid >= 3)) {
@@ -36644,75 +36681,75 @@ void GetDSValues()
 		return;
 	}
 
-	//UpdateInputReport();
-	//SendOutput(0);
+	UpdateInputReport();
+	SendOutput(0);
 
-	////bool GetButtonDown(int id, UCHAR key);
-	////bool GetButtonUp(int id, UCHAR key);
+	//bool GetButtonDown(int id, UCHAR key);
+	//bool GetButtonUp(int id, UCHAR key);
 
-	//int buttonno;
-	//for (buttonno = 0; buttonno < MB3D_DSBUTTONNUM; buttonno++) {
-	//	s_bef_dsbuttondown[buttonno] = s_dsbuttondown[buttonno];
-	//	s_bef_dsbuttonup[buttonno] = s_dsbuttonup[buttonno];
+	int buttonno;
+	for (buttonno = 0; buttonno < MB3D_DSBUTTONNUM; buttonno++) {
+		s_bef_dsbuttondown[buttonno] = s_dsbuttondown[buttonno];
+		s_bef_dsbuttonup[buttonno] = s_dsbuttonup[buttonno];
 
-	//	if (GetButtonDown(s_dsdeviceid, buttonno)) {
-	//		s_dsbuttondown[buttonno] = GetButtonDown(s_dsdeviceid, buttonno);
-	//	}
-	//	else {
-	//		s_dsbuttondown[buttonno] = 0;
-	//	}
+		if (GetButtonDown(s_dsdeviceid, buttonno)) {
+			s_dsbuttondown[buttonno] = GetButtonDown(s_dsdeviceid, buttonno);
+		}
+		else {
+			s_dsbuttondown[buttonno] = 0;
+		}
 
-	//	if (GetButtonUp(s_dsdeviceid, buttonno)) {
-	//		s_dsbuttonup[buttonno] = GetButtonUp(s_dsdeviceid, buttonno);
-	//	}
-	//	else {
-	//		s_dsbuttonup[buttonno] = 0;
-	//	}
+		if (GetButtonUp(s_dsdeviceid, buttonno)) {
+			s_dsbuttonup[buttonno] = GetButtonUp(s_dsdeviceid, buttonno);
+		}
+		else {
+			s_dsbuttonup[buttonno] = 0;
+		}
 
-	//}
+	}
 
-	//int axisno;
-	//for (axisno = 0; axisno < MB3D_DSAXISNUM; axisno++) {
+	int axisno;
+	for (axisno = 0; axisno < MB3D_DSAXISNUM; axisno++) {
 
-	//	////for debug
-	//	//{
-	//	//	if (s_dsbuttonup[4] >= 1) {
-	//	//		_ASSERT(0);
-	//	//	}
-	//	//}
-
-
-	//	s_bef_dsaxisvalue[axisno] = s_dsaxisvalue[axisno];
-	//	s_bef_dsaxisOverSrh[axisno] = s_dsaxisOverSrh[axisno];
-	//	s_bef_dsaxisMOverSrh[axisno] = s_dsaxisMOverSrh[axisno];
-
-	//	s_dsaxisvalue[axisno] = GetAxis(s_dsdeviceid, axisno);
-
-	//	s_dsaxisOverSrh[axisno] = (int)(s_dsaxisvalue[axisno] >= MB3D_DSAXISSRH);
-	//	s_dsaxisMOverSrh[axisno] = (int)(s_dsaxisvalue[axisno] <= -(MB3D_DSAXISSRH));
-	//}
+		////for debug
+		//{
+		//	if (s_dsbuttonup[4] >= 1) {
+		//		_ASSERT(0);
+		//	}
+		//}
 
 
-	//if (s_dsbuttondown[2] >= 1) {
-	//	s_dspushedOK = 1;
-	//}
-	//if (s_dsbuttonup[2] >= 1) {
-	//	s_dspushedOK = 0;
-	//}
+		s_bef_dsaxisvalue[axisno] = s_dsaxisvalue[axisno];
+		s_bef_dsaxisOverTh[axisno] = s_dsaxisOverTh[axisno];
+		s_bef_dsaxisMOverTh[axisno] = s_dsaxisMOverTh[axisno];
+
+		s_dsaxisvalue[axisno] = GetAxis(s_dsdeviceid, axisno);
+
+		s_dsaxisOverTh[axisno] = (int)(s_dsaxisvalue[axisno] >= MB3D_DSAXISSRH);
+		s_dsaxisMOverTh[axisno] = (int)(s_dsaxisvalue[axisno] <= -(MB3D_DSAXISSRH));
+	}
 
 
-	//if (s_dsbuttondown[12] >= 1) {
-	//	s_dspushedL3 = 1;
-	//}
-	//if (s_dsbuttonup[12] >= 1) {
-	//	s_dspushedL3 = 0;
-	//}
-	//if (s_dsbuttondown[13] >= 1) {
-	//	s_dspushedR3 = 1;
-	//}
-	//if (s_dsbuttonup[13] >= 1) {
-	//	s_dspushedR3 = 0;
-	//}
+	if (s_dsbuttondown[2] >= 1) {
+		s_dspushedOK = 1;
+	}
+	if (s_dsbuttonup[2] >= 1) {
+		s_dspushedOK = 0;
+	}
+
+
+	if (s_dsbuttondown[12] >= 1) {
+		s_dspushedL3 = 1;
+	}
+	if (s_dsbuttonup[12] >= 1) {
+		s_dspushedL3 = 0;
+	}
+	if (s_dsbuttondown[13] >= 1) {
+		s_dspushedR3 = 1;
+	}
+	if (s_dsbuttonup[13] >= 1) {
+		s_dspushedR3 = 0;
+	}
 
 
 
@@ -36753,8 +36790,8 @@ void DSCrossButtonSelectTree(bool firstctrlselect)
 			childbutton = s_dsbuttonup[childbuttonid];
 			brotherbutton = s_dsbuttonup[brotherbuttonid];
 
-			accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-			accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
+			accelaxis1 = ((bool)(s_dsaxisOverTh[accelaxisid1] + s_dsaxisMOverTh[accelaxisid1]));
+			accelaxis2 = ((bool)(s_dsaxisOverTh[accelaxisid2] + s_dsaxisMOverTh[accelaxisid2]));
 
 			bool changeflag = false;
 
@@ -37845,7 +37882,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.34 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.35 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (s_model && s_chascene) {
@@ -39951,8 +39988,8 @@ void OnArrowKey()
 	//childbutton = s_dsbuttonup[childbuttonid];
 	//brotherbutton = s_dsbuttonup[brotherbuttonid];
 
-	//accelaxis1 = ((bool)(s_dsaxisOverSrh[accelaxisid1] + s_dsaxisMOverSrh[accelaxisid1]));
-	//accelaxis2 = ((bool)(s_dsaxisOverSrh[accelaxisid2] + s_dsaxisMOverSrh[accelaxisid2]));
+	//accelaxis1 = ((bool)(s_dsaxisOverTh[accelaxisid1] + s_dsaxisMOverTh[accelaxisid1]));
+	//accelaxis2 = ((bool)(s_dsaxisOverTh[accelaxisid2] + s_dsaxisMOverTh[accelaxisid2]));
 
 	s_dsbuttonup[parentbuttonid] = 0;
 	s_dsbuttonup[sisterbuttonid] = 0;
