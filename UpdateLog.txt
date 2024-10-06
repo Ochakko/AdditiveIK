@@ -2,6 +2,11 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/10/07
+　FootRig修正
+　　ブレンド率に0.0以外を指定した場合のブレンド計算を修正
+　　　GUIのラベルをBlendRateにしたので、blendrateと1.0-blendrateを逆にした
+
 
 2024/10/06
 　FootRig修正

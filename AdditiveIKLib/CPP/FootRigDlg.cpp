@@ -2143,7 +2143,11 @@ ChaMatrix CFootRigDlg::BlendSaveModelWM(CModel* srcmodel, ChaMatrix srcmat, floa
 {
 	if (srcmodel) {
 		ChaMatrix savemat = GetSaveModelWM(srcmodel);
-		ChaMatrix blendmat = srcmat * blendrate + savemat * (1.0f - blendrate);
+
+		//ChaMatrix blendmat = srcmat * blendrate + savemat * (1.0f - blendrate);
+
+		//2024/10/07 blendrateをGUIから指定可能にし0.0をブレンド無しとした
+		ChaMatrix blendmat = srcmat * (1.0f - blendrate) + savemat * blendrate;
 		return blendmat;
 	}
 	else {
