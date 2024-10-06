@@ -2,13 +2,22 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2024/10/06
+　FootRig修正
+　　階段を歩く動画で足が階段にめり込んでいた症状に対して改善策
+　　　FootRigメニューのGUIにBlendRate of ModelWMスライダーを追加
+　　　モデルの高さを１回前のモデルの高さとブレンドする際のブレンド率を設定可能に.
+　　　足がめり込んでいた直接の原因はモデルの高さのブレンドにあった
+　　　なぜブレンドが必要かという根本的原因としては、地面に隙間があってそこに落ちてがくがくすることがあったっため
+　　　今後は、FootRigの当たり判定用地面として隙間が空いていないデータを用意し、高さのブレンド率は通常0.0にする
+
+
 2024/10/01
 　SonyPlayStation用のゲームコントローラDualSense対応復活
 　　https://github.com/sonichope/DS4HidInput (MIT LICENSE)を使用
 　　キャラクターの移動やモーション切り替えのテストに使用する予定
 　　以前のようにアプリのGUI操作のためには使わない予定
-
-
 
 
 2024/09/25

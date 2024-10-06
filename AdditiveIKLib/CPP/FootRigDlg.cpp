@@ -176,6 +176,14 @@ int CFootRigDlg::DestroyObjs()
 		delete m_hopyperstepEdit;
 		m_hopyperstepEdit = nullptr;
 	}
+	if (m_wmblendlabel) {
+		delete m_wmblendlabel;
+		m_wmblendlabel = nullptr;
+	}
+	if (m_wmblendSlider) {
+		delete m_wmblendSlider;
+		m_wmblendSlider = nullptr;
+	}
 	if (m_applyB) {
 		delete m_applyB;
 		m_applyB = nullptr;
@@ -237,6 +245,10 @@ int CFootRigDlg::DestroyObjs()
 	if (m_hopyperstepsp) {
 		delete m_hopyperstepsp;
 		m_hopyperstepsp = nullptr;
+	}
+	if (m_wmblendsp) {
+		delete m_wmblendsp;
+		m_wmblendsp = nullptr;
 	}
 
 	//spacer
@@ -338,6 +350,8 @@ void CFootRigDlg::InitParams()
 	m_maxcountEdit = nullptr;
 	m_hopypersteplabel = nullptr;
 	m_hopyperstepEdit = nullptr;
+	m_wmblendlabel = nullptr;
+	m_wmblendSlider = nullptr;
 	m_applyB = nullptr;
 
 	m_groundmeshsp = nullptr;
@@ -352,6 +366,7 @@ void CFootRigDlg::InitParams()
 	m_hdiffmaxsp = nullptr;
 	m_rigstepsp = nullptr;
 	m_hopyperstepsp = nullptr;
+	m_wmblendsp = nullptr;
 	m_maxcountsp = nullptr;
 	m_gpusp = nullptr;
 
@@ -708,6 +723,16 @@ int CFootRigDlg::CreateFootRigWnd()
 			_ASSERT(0);
 			abort();
 		}
+		m_wmblendlabel = new OWP_Label(L"BlendRate WM", labelheight);
+		if (!m_wmblendlabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_wmblendSlider = new OWP_Slider(0.0f, 1.0f, 0.0f, labelheight);
+		if (!m_wmblendSlider) {
+			_ASSERT(0);
+			abort();
+		}
 		m_applyB = new OWP_Button(L"Apply(適用)", 38);
 		if (!m_applyB) {
 			_ASSERT(0);
@@ -783,6 +808,11 @@ int CFootRigDlg::CreateFootRigWnd()
 		}
 		m_hopyperstepsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
 		if (!m_hopyperstepsp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_wmblendsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_wmblendsp) {
 			_ASSERT(0);
 			abort();
 		}
@@ -888,6 +918,9 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_dlgWnd->addParts(*m_hopyperstepsp);
 		m_hopyperstepsp->addParts1(*m_hopypersteplabel);
 		m_hopyperstepsp->addParts2(*m_hopyperstepEdit);
+		m_dlgWnd->addParts(*m_wmblendsp);
+		m_wmblendsp->addParts1(*m_wmblendlabel);
+		m_wmblendsp->addParts2(*m_wmblendSlider);
 		m_dlgWnd->addParts(*m_spacerlabel5);
 
 		m_dlgWnd->addParts(*m_leftinfolabel);
@@ -1080,6 +1113,19 @@ int CFootRigDlg::CreateFootRigWnd()
 			//}
 			});
 
+		//#######
+		//Slider
+		//#######
+		m_wmblendSlider->setCursorListener([=, this]() {
+			float value = (float)m_wmblendSlider->getValue();
+			if (m_model) {
+				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				itrelem = m_footrigelem.find(m_model);
+				if (itrelem != m_footrigelem.end()) {
+					itrelem->second.wmblend = value;
+				}
+			}
+			});
 
 
 		m_dlgWnd->setSize(WindowSize(m_sizex, m_sizey));
@@ -1267,6 +1313,11 @@ int CFootRigDlg::ParamsToDlg()
 			swprintf_s(strhopyperstep, EDIT_BUFLEN_NUM, L"%.2f", curfootrigelem.hopyperstep);
 			m_hopyperstepEdit->setName(strhopyperstep);
 		}
+
+		if (m_wmblendSlider) {
+			m_wmblendSlider->setValue(curfootrigelem.wmblend, false);
+		}
+
 
 		m_dlgWnd->callRewrite();
 	}
@@ -1473,6 +1524,17 @@ int CFootRigDlg::Dlg2Params()
 				itrelem = m_footrigelem.find(m_model);
 				if (itrelem != m_footrigelem.end()) {
 					itrelem->second.hopyperstep = stepval;
+				}
+			}
+		}
+
+		if (m_wmblendSlider) {
+			float value = (float)m_wmblendSlider->getValue();
+			if (m_model) {
+				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				itrelem = m_footrigelem.find(m_model);
+				if (itrelem != m_footrigelem.end()) {
+					itrelem->second.wmblend = value;
 				}
 			}
 		}
@@ -1863,7 +1925,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 		if (!secondcalling) {//### Hop Y per step ###
 			//2024/09/16 上り坂の傾斜を上る際に足が曲がり過ぎないように　毎回ホップする
 			float diffy = curelem.hopyperstep;
-			ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, false, false);//wmをブレンドしない　保存しない
+			ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, 0.0f, false);//wmをブレンドしない　保存しない
 			float diffy2 = modelwm3.data[MATI_42] - modelwm.data[MATI_42];
 			modelwm = modelwm3;
 			hipspos.y += diffy2;
@@ -1876,7 +1938,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 
 			//float diffy = highergpos.y - (higherjointpos.y + higheroffset);
 			float diffy = -(hipspos.y - highergpos.y - hdiffmax);//2024/09/16 hdiffmax設定で足の曲がり方が調整できるように修正　地面とhipsの高さがhdiffmax以下になるようにShiftする
-			ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true, true);//wmをブレンドする　この処理後に地面に潜っていても　後処理で地面位置まで上げる
+			ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, curelem.wmblend, true);//wmをブレンドする　この処理後に地面に潜っていても　後処理で地面位置まで上げる
 
 			float diffy2 = modelwm3.data[MATI_42] - modelwm.data[MATI_42];
 			modelwm = modelwm3;
@@ -1892,7 +1954,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 
 			//float diffy = lowergpos.y - (lowerjointpos.y + loweroffset);
 			float diffy = -(hipspos.y - lowergpos.y - hdiffmax);//2024/09/16 hdiffmax設定で足の曲がり方が調整できるように修正　地面とhipsの高さがhdiffmax以下になるようにShiftする
-			ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true, true);//wmをブレンドする　この処理後に地面に潜っていても　後処理で地面位置まで上げる
+			ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, curelem.wmblend, true);//wmをブレンドする　この処理後に地面に潜っていても　後処理で地面位置まで上げる
 
 			float diffy2 = modelwm3.data[MATI_42] - modelwm.data[MATI_42];
 			modelwm = modelwm3;
@@ -1987,14 +2049,14 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				if (highergpos.y >= lowergpos.y) {
 					float diffy = highergpos.y - (higherjointpos.y + higheroffset);
 					//ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, false);//wmをブレンドしない　この処理後に地面に潜らないように. ブレンド無しは階段でガクガクし過ぎる
-					ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true, true);//遅めの環境でもカクカクしないために　やっぱりブレンドフラグtrueに
+					ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, curelem.wmblend, true);//遅めの環境でもカクカクしないために　やっぱりブレンドフラグtrueに
 					modelwm = modelwm3;
 
 				}
 				else {
 					float diffy = lowergpos.y - (lowerjointpos.y + loweroffset);
 					//ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, false);//wmをブレンドしない　この処理後に地面に潜らないように. ブレンド無しは階段でガクガクし過ぎる
-					ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, true, true);//遅めの環境でもカクカクしないために　やっぱりブレンドフラグtrueに
+					ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, curelem.wmblend, true);//遅めの環境でもカクカクしないために　やっぱりブレンドフラグtrueに
 					modelwm = modelwm3;
 				}
 			}
@@ -2151,11 +2213,11 @@ ChaVector3 CFootRigDlg::GetGroundPos(CModel* groundmodel, ChaVector3 basepos, bo
 }
 
 ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy, 
-	bool blendflag, bool savewmflag)
+	float blendrate, bool savewmflag)
 {
 	//モデルworldmatのブレンド率　このブレンドをしないと上下に小刻みに揺れる
 	//float MODELWMBLEND = 0.30f;
-	float MODELWMBLEND = 0.50f;
+	//float MODELWMBLEND = 0.50f;
 
 	ChaMatrix retmat;
 	retmat.SetIdentity();
@@ -2167,9 +2229,9 @@ ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diff
 	ChaMatrix modelwm2 = befwm;
 	modelwm2.data[MATI_42] = modelwm2.data[MATI_42] + diffy;
 	ChaMatrix modelwm3;
-	if (blendflag) {
+	if (blendrate != 0.0f) {
 		//フラグしていのときのみブレンドする
-		modelwm3 = BlendSaveModelWM(srcmodel, modelwm2, MODELWMBLEND);//プルプル震えるのを軽減するために１回前とブレンドする
+		modelwm3 = BlendSaveModelWM(srcmodel, modelwm2, blendrate);//プルプル震えるのを軽減するために１回前とブレンドする
 	}
 	else {
 		modelwm3 = modelwm2;

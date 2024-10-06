@@ -92,7 +92,10 @@ int CFootRigFile::WriteFileInfo()
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0003</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	//2024/09/16 ver1004 <HopYPerStep>追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0004</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0004</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+
+	//2024/10/06 ver1005 <WMBlend>追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0005</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	return 0;
 }
@@ -166,6 +169,8 @@ int CFootRigFile::WriteFootRigElem(FOOTRIGELEM srcfootrigelem)
 	CallF(Write2File("    <HopYPerStep>%.2f</HopYPerStep>\r\n",
 		srcfootrigelem.hopyperstep), return 1);
 
+	CallF(Write2File("    <WMBlend>%.2f</WMBlend>\r\n",
+		srcfootrigelem.wmblend), return 1);
 
 	CallF(Write2File("  </FootRigElem>\r\n"), return 1);
 
@@ -318,6 +323,9 @@ int CFootRigFile::ReadFootRigElem(CModel* srcmodel, ChaScene* srcchascene, FOOTR
 	float hopyperstep = 0;
 	gethopyperstep = Read_Float(xmlbuf, "<HopYPerStep>", "</HopYPerStep>", &hopyperstep);//2024/09/16 ver1004
 
+	int getwmblend = 0;
+	float wmblend = 0;
+	getwmblend = Read_Float(xmlbuf, "<WMBlend>", "</WMBlend>", &wmblend);//2024/10/06 ver1005
 
 	dstfootrigelem->Init();
 
@@ -381,6 +389,9 @@ int CFootRigFile::ReadFootRigElem(CModel* srcmodel, ChaScene* srcchascene, FOOTR
 	}
 	if (gethopyperstep == 0) {
 		dstfootrigelem->hopyperstep = hopyperstep;
+	}
+	if (getwmblend == 0) {
+		dstfootrigelem->wmblend = wmblend;
 	}
 
 	if (getgpucollision == 0) {

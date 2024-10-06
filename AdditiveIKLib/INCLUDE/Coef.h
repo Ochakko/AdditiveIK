@@ -614,6 +614,7 @@ typedef struct tag_footrigelem
 	int maxcalccount;//2024/09/08
 	bool gpucollision;//2024/09/15
 	float hopyperstep;//2024/09/16 hop Y per step
+	float wmblend;//2024/10/06 blend rate of ModelWorldMat
 
 	void Init() {
 		enablefootrig = false;
@@ -631,6 +632,7 @@ typedef struct tag_footrigelem
 		maxcalccount = 15;//2024/09/21 50-->15
 		gpucollision = false;
 		hopyperstep = 100.0f;
+		wmblend = 0.0f;
 	};
 
 	tag_footrigelem()
