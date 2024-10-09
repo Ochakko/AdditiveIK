@@ -269,7 +269,7 @@ Smooth平滑化<br>
 
 [FootRigで接地して歩く 2024/09/04](https://youtu.be/TJjTwD0gioI "Usage example10")<br>
 
-[歩きの足を自動で曲げて階段上り 2024/09/09](https://youtu.be/IV9gZEhIi5E "Usage example11")<br>
+[階段に足が潜らないFootRig⚡ 2024/10/09](https://youtu.be/yc2aLPMbkaw "Usage example11")<br>
 <br>
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")

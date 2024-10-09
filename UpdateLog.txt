@@ -2,6 +2,13 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2024/10/09
+　ショートムービー
+　階段に足が潜らないFootRig⚡
+　https://youtu.be/yc2aLPMbkaw
+
+
 2024/10/07
 　FootRig修正
 　　ブレンド率に0.0以外を指定した場合のブレンド計算を修正
