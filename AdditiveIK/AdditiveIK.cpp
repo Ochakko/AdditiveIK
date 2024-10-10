@@ -3023,6 +3023,8 @@ INT WINAPI wWinMain(
 	//_CrtSetBreakAlloc(46773535);
 	//_CrtSetBreakAlloc(46773550);
 
+	//_CrtSetBreakAlloc(964);
+
 
 	SetBaseDir();
 
@@ -5126,7 +5128,7 @@ void OnDestroyDevice()
 	//	s_dsupdater = 0;
 	//}
 
-	//EndDS4();
+	EndDS4();
 
 	if (g_mouseherebmp) {
 		::DeleteObject(g_mouseherebmp);

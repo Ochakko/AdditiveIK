@@ -4258,7 +4258,7 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 				if ((colli != 0) && (tmpdist < nearestdist)) {
 					ChaVector3 hitpos;
 					ChaVector3TransformCoord(&hitpos, &tmphitpos, &m_matWorld);
-
+				
 					nearestdist = tmpdist;
 					nearesthitpos = hitpos;
 					findflag = true;

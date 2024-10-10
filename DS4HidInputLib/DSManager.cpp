@@ -12,7 +12,7 @@
 DSManager::DSManager()
 {
 	for (int i = 0; i < 4; i++) {
-		dsDevice[i] = 0;
+		dsDevice[i] = nullptr;
 	}
 	initflag = true;
 }

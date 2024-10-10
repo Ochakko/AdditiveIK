@@ -179,13 +179,13 @@ private:
 	PipelineState m_CSPickPipelineState;//for pick
 
 	CSIndices* m_csindices;//for pick length:createfacenum
-	CSPickResult m_cspickOutPut1;//for pick 要素数1
-	CSPickResult m_cspickOutPut1_save;//for pick 要素数1
+	CSPickResult* m_cspickOutPut1;//for pick length:createfacenum
+	CSPickResult* m_cspickOutPut1_save;//for pick length:createfacenum
 	int m_csfacenum;//for pick
 	int m_cscreatefacenum;//for pick
 
 	StructuredBuffer m_inputIndicesSB;//for pick
-	RWStructuredBuffer m_outputPickSB1;//for pick length:1 要素数1
+	RWStructuredBuffer m_outputPickSB1;//for pick length:createfacenum
 	Shader* m_csPick = nullptr;//for pick
 
 	ConstantBuffer m_cbPick;//for pick

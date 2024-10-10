@@ -332,10 +332,23 @@ int CDispObj::SetGPUInteraction(bool srcflag)
 	if (m_csdeform && m_pdev) {
 		if (m_pm3) {
 			if (srcflag) {
+				//CallF(m_csdeform->CreateDispObj(m_pdev, m_pm3), return 1);
+				delete m_csdeform;
+				m_csdeform = new CSDeform();
+				if (!m_csdeform) {
+					_ASSERT(0);
+					return 1;
+				}
 				CallF(m_csdeform->CreateDispObj(m_pdev, m_pm3), return 1);
 			}
 			else {
-				m_csdeform->DestroyObjs();
+				//m_csdeform->DestroyObjs();
+				delete m_csdeform;
+				m_csdeform = new CSDeform();
+				if (!m_csdeform) {
+					_ASSERT(0);
+					return 1;
+				}
 			}
 		}
 		else {
