@@ -106,6 +106,14 @@ struct CSConstantBufferPick {
 	};
 };
 
+//struct CSConstantBufferPickResult {
+//	int mBufferSize[4];//0:vertexnum, 1:facenum, 2:indicesnum, 3:未使用0
+//	void Init() {
+//		ZeroMemory(mBufferSize, sizeof(int) * 4);
+//	};
+//};
+
+
 class CSDeform
 {
 public:
@@ -125,7 +133,10 @@ public:
 
 	int PickRay(ChaVector3 startglobal, ChaVector3 dirglobal,
 		bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist);
+	
+	//int PickResult(int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist);
 	int GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist);
+
 
 	int GetDeformedDispV(int srcvertindex, BINORMALDISPV* dstv);
 
@@ -143,8 +154,11 @@ private:
 
 	bool m_workingDeform;
 	bool m_workingPick;
+	//bool m_workingPickResult;
 	IMCompute* m_IMDeform;
 	IMCompute* m_IMPick;
+	//IMCompute* m_IMPickResult;
+
 
 
 	//###########
@@ -191,6 +205,26 @@ private:
 	ConstantBuffer m_cbPick;//for pick
 	CSConstantBufferPick m_cbPickCPU;//for pick
 	DescriptorHeap m_CSPickdescriptorHeap;//for pick
+
+
+	////###############
+	////for pickresult
+	////2024/10/14 pickの結果検索をGPUでやってみた　ローポリ地面とミドルポリ地面で試したが速くはならなかったのでコメントアウト
+	////###############
+	//int m_pickresultstate;//0:inital, 1:DispatchCS, 2:GetResult
+	//RootSignature m_CSPickResultrootSignature;//for pick
+	//PipelineState m_CSPickResultPipelineState;//for pick
+	//
+	//CSPickResult m_cspickresultOutPut1;//for pickresult length:1
+	//CSPickResult m_cspickresultOutPut1_save;//for pickresult length:1
+	//
+	//RWStructuredBuffer m_outputPickResultSB1;//for pickresult length:1
+	//Shader* m_csPickResult = nullptr;//for pickresult
+	//
+	//ConstantBuffer m_cbPickResult;//for pickresult
+	//CSConstantBufferPickResult m_cbPickResultCPU;//for pickresult
+	//DescriptorHeap m_CSPickResultdescriptorHeap;//for pickresult
+
 
 };
 
