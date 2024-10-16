@@ -95,7 +95,10 @@ int CFootRigFile::WriteFileInfo()
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0004</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	//2024/10/06 ver1005 <WMBlend>追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0005</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0005</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+
+	//2024/10/16 ver1006 Left(Right)Offsetを　Left(Right)OffsetYとLeft(Right)OffsetZに
+	CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0006</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	return 0;
 }
@@ -149,9 +152,13 @@ int CFootRigFile::WriteFootRigElem(FOOTRIGELEM srcfootrigelem)
 		srcfootrigelem.rightdir), return 1);
 
 	CallF(Write2File("    <LeftOffset>%.2f</LeftOffset>\r\n",
-		srcfootrigelem.leftoffset), return 1);
+		srcfootrigelem.leftoffsetY), return 1);
+	CallF(Write2File("    <LeftOffsetZ>%.2f</LeftOffsetZ>\r\n",
+		srcfootrigelem.leftoffsetZ), return 1);
 	CallF(Write2File("    <RightOffset>%.2f</RightOffset>\r\n",
-		srcfootrigelem.rightoffset), return 1);
+		srcfootrigelem.rightoffsetY), return 1);
+	CallF(Write2File("    <RightOffsetZ>%.2f</RightOffsetZ>\r\n",
+		srcfootrigelem.rightoffsetZ), return 1);
 
 	CallF(Write2File("    <HDiffMax>%.2f</HDiffMax>\r\n",
 		srcfootrigelem.hdiffmax), return 1);
@@ -295,13 +302,20 @@ int CFootRigFile::ReadFootRigElem(CModel* srcmodel, ChaScene* srcchascene, FOOTR
 	int rightdir = 0;
 	getrightdir = Read_Int(xmlbuf, "<RightDir>", "</RightDir>", &rightdir);
 
-	int getleftoffset = 0;
-	float leftoffset = 0;
-	getleftoffset = Read_Float(xmlbuf, "<LeftOffset>", "</LeftOffset>", &leftoffset);
+	int getleftoffsetY = 0;
+	float leftoffsetY = 0;
+	getleftoffsetY = Read_Float(xmlbuf, "<LeftOffset>", "</LeftOffset>", &leftoffsetY);
+	int getleftoffsetZ = 0;
+	float leftoffsetZ = 0;
+	getleftoffsetZ = Read_Float(xmlbuf, "<LeftOffsetZ>", "</LeftOffsetZ>", &leftoffsetZ);
 
-	int getrightoffset = 0;
-	float rightoffset = 0;
-	getrightoffset = Read_Float(xmlbuf, "<RightOffset>", "</RightOffset>", &rightoffset);
+
+	int getrightoffsetY = 0;
+	float rightoffsetY = 0;
+	getrightoffsetY = Read_Float(xmlbuf, "<RightOffset>", "</RightOffset>", &rightoffsetY);
+	int getrightoffsetZ = 0;
+	float rightoffsetZ = 0;
+	getrightoffsetZ = Read_Float(xmlbuf, "<RightOffsetZ>", "</RightOffsetZ>", &rightoffsetZ);
 
 	int gethdiffmax = 0;
 	float hdiffmax = 0;
@@ -371,12 +385,20 @@ int CFootRigFile::ReadFootRigElem(CModel* srcmodel, ChaScene* srcchascene, FOOTR
 		dstfootrigelem->rightdir = rightdir;
 	}
 
-	if (getleftoffset == 0) {
-		dstfootrigelem->leftoffset = leftoffset;
+	
+	if (getleftoffsetY == 0) {
+		dstfootrigelem->leftoffsetY = leftoffsetY;
 	}
-	if (getrightoffset == 0) {
-		dstfootrigelem->rightoffset = rightoffset;
+	if (getleftoffsetZ == 0) {
+		dstfootrigelem->leftoffsetZ = leftoffsetZ;
 	}
+	if (getrightoffsetY == 0) {
+		dstfootrigelem->rightoffsetY = rightoffsetY;
+	}
+	if (getrightoffsetZ == 0) {
+		dstfootrigelem->rightoffsetZ = rightoffsetZ;
+	}
+
 
 	if (gethdiffmax == 0) {
 		dstfootrigelem->hdiffmax = hdiffmax;

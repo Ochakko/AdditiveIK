@@ -607,8 +607,10 @@ typedef struct tag_footrigelem
 	CUSTOMRIG rightrig;
 	int leftdir;
 	int rightdir;
-	float leftoffset;
-	float rightoffset;
+	float leftoffsetY;
+	float leftoffsetZ;
+	float rightoffsetY;
+	float rightoffsetZ;
 	float hdiffmax;
 	float rigstep;
 	int maxcalccount;//2024/09/08
@@ -625,8 +627,10 @@ typedef struct tag_footrigelem
 		rightrig.Init();
 		leftdir = 0;
 		rightdir = 0;
-		leftoffset = 0.0f;
-		rightoffset = 0.0f;
+		leftoffsetY = 0.0f;
+		leftoffsetZ = 0.0f;
+		rightoffsetY = 0.0f;
+		rightoffsetZ = 0.0f;
 		hdiffmax = 100.0f;//2024/09/21 40-->100
 		rigstep = 1.0f;//2024/09/21 0.25-->1.0
 		maxcalccount = 15;//2024/09/21 50-->15

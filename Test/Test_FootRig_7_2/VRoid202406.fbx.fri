@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="Shift_JIS"?>
+<FootRig>
+  <FileInfo>
+    <kind>FootRigFile</kind>
+    <version>0006</version>
+    <type>0</type>
+  </FileInfo>
+  <FootRigElem>
+    <EnableFootRig>1</EnableFootRig>
+    <GroundModel>Fanta_Stair_Low_20_5.fbx</GroundModel>
+    <LeftFootBone>J_Bip_L_ToeBase</LeftFootBone>
+    <RightFootBone>J_Bip_R_ToeBase</RightFootBone>
+    <LeftFootRig>LLeg_YFront</LeftFootRig>
+    <RightFootRig>RLeg_YFront</RightFootRig>
+    <LeftDir>1</LeftDir>
+    <RightDir>1</RightDir>
+    <LeftOffset>-4.50</LeftOffset>
+    <LeftOffsetZ>-5.00</LeftOffsetZ>
+    <RightOffset>-4.50</RightOffset>
+    <RightOffsetZ>-5.00</RightOffsetZ>
+    <HDiffMax>93.00</HDiffMax>
+    <RigStep>1.50</RigStep>
+    <MaxCalcCount>8</MaxCalcCount>
+    <GPUInteraction>0</GPUInteraction>
+    <HopYPerStep>150.00</HopYPerStep>
+    <WMBlend>0.00</WMBlend>
+  </FootRigElem>
+</FOOTRIG>

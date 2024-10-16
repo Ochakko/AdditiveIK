@@ -69,12 +69,12 @@ private:
 
 	ChaMatrix BlendSaveModelWM(CModel* srcmodel, ChaMatrix srcmat, float blendrate);
 	ChaMatrix GetJointWM(bool limitdegflag, CModel* srcmodel, CBone* srcbone, bool multmodelwm);
-	ChaVector3 GetJointPos(bool limitdegflag, CModel* srcmodel, CBone* srcbone);
+	ChaVector3 GetJointPos(bool limitdegflag, CModel* srcmodel, CBone* srcbone, ChaVector3 srcoffset);
 	ChaVector3 GetGroundPos(CModel* groundmodel, ChaVector3 basepos, bool gpuflag);
 	ChaMatrix ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy, float blendrate, bool savewmflag);
 	ChaVector3 RigControlFootRig(bool limitdegflag, CModel* srcmodel, CBone* footbone, CBone* updatebone, double curframe,
 		ChaVector3 bonepos,
-		int rigdir, float posoffset, float rigstep, int maxcalccount, 
+		int rigdir, ChaVector3 posoffset, float rigstep, int maxcalccount, 
 		CUSTOMRIG footrig, int rignum,
 		ChaMatrix modelwm, ChaMatrix matView, ChaMatrix matProj,
 		CModel* groundmodel, bool gpuflag, ChaVector3* pgroundpos);
@@ -92,7 +92,7 @@ private:
 		CUSTOMRIG lowerrig, CUSTOMRIG higherrig,
 		ChaVector3 lowerjointpos, ChaVector3 higherjointpos,
 		ChaVector3 lowergpos, ChaVector3 highergpos,
-		float loweroffset, float higheroffset,
+		ChaVector3 loweroffset, ChaVector3 higheroffset,
 		int lowerdir, int higherdir,
 		int lowerrignum, int higherrignum
 	);
@@ -124,8 +124,10 @@ private:
 	OrgWinGUI::OWP_Label* m_leftfootlabel;
 	OrgWinGUI::OWP_Label* m_leftfootBonelabel;
 	OrgWinGUI::OWP_ComboBoxA* m_leftfootBoneCombo;
-	OrgWinGUI::OWP_Label* m_leftoffsetLabel;
-	OrgWinGUI::OWP_EditBox* m_leftoffsetEdit;
+	OrgWinGUI::OWP_Label* m_leftoffsetLabelY;
+	OrgWinGUI::OWP_EditBox* m_leftoffsetEditY;
+	OrgWinGUI::OWP_Label* m_leftoffsetLabelZ;
+	OrgWinGUI::OWP_EditBox* m_leftoffsetEditZ;
 	OrgWinGUI::OWP_Label* m_leftriglabel;
 	OrgWinGUI::OWP_ComboBoxA* m_leftrigCombo;
 	OrgWinGUI::OWP_Label* m_leftdirlabel;
@@ -134,8 +136,10 @@ private:
 	OrgWinGUI::OWP_Label* m_rightfootlabel;
 	OrgWinGUI::OWP_Label* m_rightfootBonelabel;
 	OrgWinGUI::OWP_ComboBoxA* m_rightfootBoneCombo;
-	OrgWinGUI::OWP_Label* m_rightoffsetLabel;
-	OrgWinGUI::OWP_EditBox* m_rightoffsetEdit;
+	OrgWinGUI::OWP_Label* m_rightoffsetLabelY;
+	OrgWinGUI::OWP_EditBox* m_rightoffsetEditY;
+	OrgWinGUI::OWP_Label* m_rightoffsetLabelZ;
+	OrgWinGUI::OWP_EditBox* m_rightoffsetEditZ;
 	OrgWinGUI::OWP_Label* m_rightriglabel;
 	OrgWinGUI::OWP_ComboBoxA* m_rightrigCombo;
 	OrgWinGUI::OWP_Label* m_rightdirlabel;
@@ -156,11 +160,13 @@ private:
 
 	OrgWinGUI::OWP_Separator* m_groundmeshsp;
 	OrgWinGUI::OWP_Separator* m_leftfootbonesp;
-	OrgWinGUI::OWP_Separator* m_leftoffsetsp;
+	OrgWinGUI::OWP_Separator* m_leftoffsetspY;
+	OrgWinGUI::OWP_Separator* m_leftoffsetspZ;
 	OrgWinGUI::OWP_Separator* m_leftrigsp;
 	OrgWinGUI::OWP_Separator* m_leftdirsp;
 	OrgWinGUI::OWP_Separator* m_rightfootbonesp;
-	OrgWinGUI::OWP_Separator* m_rightoffsetsp;
+	OrgWinGUI::OWP_Separator* m_rightoffsetspY;
+	OrgWinGUI::OWP_Separator* m_rightoffsetspZ;
 	OrgWinGUI::OWP_Separator* m_rightrigsp;
 	OrgWinGUI::OWP_Separator* m_rightdirsp;
 	OrgWinGUI::OWP_Separator* m_hdiffmaxsp;

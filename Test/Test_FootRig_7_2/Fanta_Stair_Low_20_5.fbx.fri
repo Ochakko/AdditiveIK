@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="Shift_JIS"?>
+<FootRig>
+  <FileInfo>
+    <kind>FootRigFile</kind>
+    <version>0006</version>
+    <type>0</type>
+  </FileInfo>
+  <FootRigElem>
+    <EnableFootRig>0</EnableFootRig>
+    <LeftDir>0</LeftDir>
+    <RightDir>0</RightDir>
+    <LeftOffset>0.00</LeftOffset>
+    <LeftOffsetZ>0.00</LeftOffsetZ>
+    <RightOffset>0.00</RightOffset>
+    <RightOffsetZ>0.00</RightOffsetZ>
+    <HDiffMax>100.00</HDiffMax>
+    <RigStep>1.00</RigStep>
+    <MaxCalcCount>15</MaxCalcCount>
+    <GPUInteraction>0</GPUInteraction>
+    <HopYPerStep>100.00</HopYPerStep>
+    <WMBlend>0.00</WMBlend>
+  </FootRigElem>
+</FOOTRIG>
