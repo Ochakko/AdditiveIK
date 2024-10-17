@@ -21,6 +21,14 @@ class OrgWinGUI::OWP_EditBox;
 class OrgWinGUI::OWP_Separator;
 class OrgWinGUI::OWP_ScrollWnd;
 
+class CFootInfo;
+
+enum {
+	FOOTRIG_LR_LEFT,
+	FOOTRIG_LR_RIGHT,
+	FOOTRIG_LR_MAX
+};
+
 
 /////////////////////////////////////////////////////////////////////////////
 // CFootRigDlg
@@ -62,6 +70,11 @@ public:
 	int OnDelModel(CModel* srcmodel);
 	int OnDellAllModel();
 
+
+	ChaVector3 GetJointPos(bool limitdegflag, CModel* srcmodel, CBone* srcbone, ChaVector3 srcoffset, bool istoebase);
+	ChaVector3 GetGroundPos(CModel* groundmodel, ChaVector3 basepos, bool gpuflag);
+
+
 private:
 	int Dlg2Params();
 	int ParamsToDlg_LeftRig();
@@ -69,16 +82,7 @@ private:
 
 	ChaMatrix BlendSaveModelWM(CModel* srcmodel, ChaMatrix srcmat, float blendrate);
 	ChaMatrix GetJointWM(bool limitdegflag, CModel* srcmodel, CBone* srcbone, bool multmodelwm);
-	ChaVector3 GetJointPos(bool limitdegflag, CModel* srcmodel, CBone* srcbone, ChaVector3 srcoffset);
-	ChaVector3 GetGroundPos(CModel* groundmodel, ChaVector3 basepos, bool gpuflag);
 	ChaMatrix ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy, float blendrate, bool savewmflag);
-	ChaVector3 RigControlFootRig(bool limitdegflag, CModel* srcmodel, CBone* footbone, CBone* updatebone, double curframe,
-		ChaVector3 bonepos,
-		int rigdir, ChaVector3 posoffset, float rigstep, int maxcalccount, 
-		CUSTOMRIG footrig, int rignum,
-		ChaMatrix modelwm, ChaMatrix matView, ChaMatrix matProj,
-		CModel* groundmodel, bool gpuflag, ChaVector3* pgroundpos);
-	CBone* GetUpdateBone(CModel* srcmodel, CBone* footbone, CUSTOMRIG footrig, int rigdir, int* prignum);//Rigで回転するボーンの内の一番親のボーンを返す
 
 	bool IsValidModel(CModel* srcmodel);//modelが削除されている場合はfalseを返す
 
@@ -87,14 +91,7 @@ private:
 	void FootRig(bool secondcalling,
 		bool limitdegflag, CModel* srcmodel,
 		FOOTRIGELEM curelem,
-		CBone* lowerfoot, CBone* higherfoot,
-		CBone* lowerupdatebone, CBone* higherupdatebone,
-		CUSTOMRIG lowerrig, CUSTOMRIG higherrig,
-		ChaVector3 lowerjointpos, ChaVector3 higherjointpos,
-		ChaVector3 lowergpos, ChaVector3 highergpos,
-		ChaVector3 loweroffset, ChaVector3 higheroffset,
-		int lowerdir, int higherdir,
-		int lowerrignum, int higherrignum
+		CFootInfo* lowerfootinfo, CFootInfo* higherfootinfo
 	);
 
 	ChaMatrix GetSaveModelWM(CModel* srcmodel);
@@ -124,10 +121,14 @@ private:
 	OrgWinGUI::OWP_Label* m_leftfootlabel;
 	OrgWinGUI::OWP_Label* m_leftfootBonelabel;
 	OrgWinGUI::OWP_ComboBoxA* m_leftfootBoneCombo;
-	OrgWinGUI::OWP_Label* m_leftoffsetLabelY;
-	OrgWinGUI::OWP_EditBox* m_leftoffsetEditY;
-	OrgWinGUI::OWP_Label* m_leftoffsetLabelZ;
-	OrgWinGUI::OWP_EditBox* m_leftoffsetEditZ;
+	OrgWinGUI::OWP_Label* m_leftoffsetLabelY1;
+	OrgWinGUI::OWP_EditBox* m_leftoffsetEditY1;
+	OrgWinGUI::OWP_Label* m_leftoffsetLabelZ1;
+	OrgWinGUI::OWP_EditBox* m_leftoffsetEditZ1;
+	OrgWinGUI::OWP_Label* m_leftoffsetLabelY2;
+	OrgWinGUI::OWP_EditBox* m_leftoffsetEditY2;
+	OrgWinGUI::OWP_Label* m_leftoffsetLabelZ2;
+	OrgWinGUI::OWP_EditBox* m_leftoffsetEditZ2;
 	OrgWinGUI::OWP_Label* m_leftriglabel;
 	OrgWinGUI::OWP_ComboBoxA* m_leftrigCombo;
 	OrgWinGUI::OWP_Label* m_leftdirlabel;
@@ -136,10 +137,14 @@ private:
 	OrgWinGUI::OWP_Label* m_rightfootlabel;
 	OrgWinGUI::OWP_Label* m_rightfootBonelabel;
 	OrgWinGUI::OWP_ComboBoxA* m_rightfootBoneCombo;
-	OrgWinGUI::OWP_Label* m_rightoffsetLabelY;
-	OrgWinGUI::OWP_EditBox* m_rightoffsetEditY;
-	OrgWinGUI::OWP_Label* m_rightoffsetLabelZ;
-	OrgWinGUI::OWP_EditBox* m_rightoffsetEditZ;
+	OrgWinGUI::OWP_Label* m_rightoffsetLabelY1;
+	OrgWinGUI::OWP_EditBox* m_rightoffsetEditY1;
+	OrgWinGUI::OWP_Label* m_rightoffsetLabelZ1;
+	OrgWinGUI::OWP_EditBox* m_rightoffsetEditZ1;
+	OrgWinGUI::OWP_Label* m_rightoffsetLabelY2;
+	OrgWinGUI::OWP_EditBox* m_rightoffsetEditY2;
+	OrgWinGUI::OWP_Label* m_rightoffsetLabelZ2;
+	OrgWinGUI::OWP_EditBox* m_rightoffsetEditZ2;
 	OrgWinGUI::OWP_Label* m_rightriglabel;
 	OrgWinGUI::OWP_ComboBoxA* m_rightrigCombo;
 	OrgWinGUI::OWP_Label* m_rightdirlabel;
@@ -160,13 +165,17 @@ private:
 
 	OrgWinGUI::OWP_Separator* m_groundmeshsp;
 	OrgWinGUI::OWP_Separator* m_leftfootbonesp;
-	OrgWinGUI::OWP_Separator* m_leftoffsetspY;
-	OrgWinGUI::OWP_Separator* m_leftoffsetspZ;
+	OrgWinGUI::OWP_Separator* m_leftoffsetspY1;
+	OrgWinGUI::OWP_Separator* m_leftoffsetspZ1;
+	OrgWinGUI::OWP_Separator* m_leftoffsetspY2;
+	OrgWinGUI::OWP_Separator* m_leftoffsetspZ2;
 	OrgWinGUI::OWP_Separator* m_leftrigsp;
 	OrgWinGUI::OWP_Separator* m_leftdirsp;
 	OrgWinGUI::OWP_Separator* m_rightfootbonesp;
-	OrgWinGUI::OWP_Separator* m_rightoffsetspY;
-	OrgWinGUI::OWP_Separator* m_rightoffsetspZ;
+	OrgWinGUI::OWP_Separator* m_rightoffsetspY1;
+	OrgWinGUI::OWP_Separator* m_rightoffsetspZ1;
+	OrgWinGUI::OWP_Separator* m_rightoffsetspY2;
+	OrgWinGUI::OWP_Separator* m_rightoffsetspZ2;
 	OrgWinGUI::OWP_Separator* m_rightrigsp;
 	OrgWinGUI::OWP_Separator* m_rightdirsp;
 	OrgWinGUI::OWP_Separator* m_hdiffmaxsp;
@@ -189,5 +198,270 @@ private:
 
 
 };
+
+
+//######################################################
+//2024/10/17
+//片足ずつ処理をしやすいように　あえて別クラス(CFootInfo)を作成
+//######################################################
+class CFootInfo
+{
+public:
+	CFootInfo(CFootRigDlg* srcdlg) {
+		InitParams();
+		m_footrigdlg = srcdlg;
+	};
+	~CFootInfo() {
+		DestroyObjs();
+	}
+	void InitParams() {
+		m_footrigdlg = nullptr;
+		m_toebasejoint = nullptr;
+		m_toebasepos.SetZeroVec3();
+		m_footjoint = nullptr;
+		m_footpos.SetZeroVec3();
+
+		m_updatebone = nullptr;
+		m_rignum = 0;
+
+		m_offset1.SetZeroVec3();
+		m_offset2.SetZeroVec3();
+		m_toebaseGpos.SetZeroVec3();
+		m_footGpos.SetZeroVec3();
+		m_rig.Init();
+		m_rigdir = 0;
+		m_groundmodel = nullptr;
+		m_gpucollision = false;
+	};
+	void DestroyObjs() { InitParams(); };
+
+	bool IsValid() {
+		if (m_footrigdlg && m_toebasejoint && m_footjoint &&
+			m_updatebone && m_groundmodel) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	};
+
+	int CalcPos(int limitdegflag);
+	bool IsHigherGPos(CFootInfo* cmpinfo);
+	bool IsHigherFootThanGround(float cmpdiff) {
+		bool highertoebase = (((m_toebasepos.y + m_offset1.y) - m_toebaseGpos.y) >= cmpdiff);
+		bool higherfoot = (((m_footpos.y + m_offset2.y) - m_footGpos.y) >= cmpdiff);
+		if (highertoebase && higherfoot) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	};
+	int AddFootHeight(float srcdiffy) {
+		m_toebasepos.y += srcdiffy;
+		m_footpos.y += srcdiffy;
+		return 0;
+	};
+
+	int RigControlFootRig(bool limitdegflag, CModel* srcmodel, double curframe,
+		float rigstep, int maxcalccount,
+		ChaMatrix modelwm, ChaMatrix matView, ChaMatrix matProj);
+
+
+public:
+	void SetFootInfo(int footrigLR, FOOTRIGELEM srcelem);
+
+	ChaVector3 GetFootOffset1() {
+		return m_offset1;
+	};
+	ChaVector3 GetFootOffset2() {
+		return m_offset2;
+	};
+	ChaVector3 GetLowerFootOffset()
+	{
+		ChaVector3 retpos;
+		retpos.SetZeroVec3();
+
+		if (m_toebasejoint) {
+			if (m_footjoint) {
+				if (m_toebaseGpos.y <= m_footGpos.y) {
+					//return m_toebaseGpos;
+					return m_offset1;
+				}
+				else {
+					//return m_footGpos;
+					return m_offset2;
+				}
+			}
+			else {
+				_ASSERT(0);
+			}
+		}
+		else {
+			_ASSERT(0);
+		}
+
+		return retpos;
+	};
+	ChaVector3 GetHigherFootOffset()
+	{
+		ChaVector3 retpos;
+		retpos.SetZeroVec3();
+
+		if (m_toebasejoint) {
+			if (m_footjoint) {
+				if (m_toebaseGpos.y >= m_footGpos.y) {
+					//return m_toebaseGpos;
+					return m_offset1;
+				}
+				else {
+					//return m_footGpos;
+					return m_offset2;
+				}
+			}
+			else {
+				_ASSERT(0);
+			}
+		}
+		else {
+			_ASSERT(0);
+		}
+
+		return retpos;
+	};
+
+
+
+
+
+	ChaVector3 GetHigherGPos()
+	{
+		ChaVector3 retpos;
+		retpos.SetZeroVec3();
+
+		if (m_toebasejoint) {
+			if (m_footjoint) {
+				if (m_toebaseGpos.y >= m_footGpos.y) {
+					return m_toebaseGpos;
+				}
+				else {
+					return m_footGpos;
+				}
+			}
+			else {
+				_ASSERT(0);
+			}
+		}
+		else {
+			_ASSERT(0);
+		}
+
+		return retpos;
+	};
+	ChaVector3 GetLowerGPos()
+	{
+		ChaVector3 retpos;
+		retpos.SetZeroVec3();
+
+		if (m_toebasejoint) {
+			if (m_footjoint) {
+				if (m_toebaseGpos.y <= m_footGpos.y) {
+					return m_toebaseGpos;
+				}
+				else {
+					return m_footGpos;
+				}
+			}
+			else {
+				_ASSERT(0);
+			}
+		}
+		else {
+			_ASSERT(0);
+		}
+
+		return retpos;
+	};
+
+	float GetDiffBetweenHigherGPosAndFoot()
+	{
+		float retdiff = 0.0f;
+
+		if (m_toebasejoint) {
+			if (m_footjoint) {
+				if (m_toebaseGpos.y >= m_footGpos.y) {
+					retdiff = m_toebaseGpos.y - (m_toebasepos.y + m_offset1.y);
+				}
+				else {
+					retdiff = m_footGpos.y - (m_footpos.y + m_offset2.y);
+				}
+			}
+			else {
+				_ASSERT(0);
+			}
+		}
+		else {
+			_ASSERT(0);
+		}
+
+		return retdiff;
+	};
+	float GetDiffBetweenLowerGPosAndFoot()
+	{
+		float retdiff = 0.0f;
+
+		if (m_toebasejoint) {
+			if (m_footjoint) {
+				if (m_toebaseGpos.y <= m_footGpos.y) {
+					retdiff = m_toebaseGpos.y - (m_toebasepos.y + m_offset1.y);
+				}
+				else {
+					retdiff = m_footGpos.y - (m_footpos.y + m_offset2.y);
+				}
+			}
+			else {
+				_ASSERT(0);
+			}
+		}
+		else {
+			_ASSERT(0);
+		}
+
+		return retdiff;
+	};
+
+
+
+
+private:
+	CBone* GetUpdateBone(CModel* srcmodel, CBone* footbone, CUSTOMRIG footrig, int rigdir, int* prignum);//Rigで回転するボーンの内の一番親のボーンを返す
+
+	int RigControlFootRigFunc(bool istoebase, 
+		bool limitdegflag, CModel* srcmodel, double curframe,
+		float rigstep, int maxcalccount,
+		ChaMatrix modelwm, ChaMatrix matView, ChaMatrix matProj);
+
+
+private:
+	CFootRigDlg* m_footrigdlg;
+	CBone* m_toebasejoint;
+	CBone* m_footjoint;
+
+	CBone* m_updatebone;
+	int m_rignum;
+	
+	ChaVector3 m_toebasepos;
+	ChaVector3 m_footpos;
+	ChaVector3 m_offset1;
+	ChaVector3 m_offset2;
+	ChaVector3 m_toebaseGpos;
+	ChaVector3 m_footGpos;
+	CUSTOMRIG m_rig;
+	int m_rigdir;
+	CModel* m_groundmodel;
+	bool m_gpucollision;
+};
+
+
 
 #endif //__ColiIDDlg_H_

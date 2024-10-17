@@ -432,7 +432,7 @@ public:
 	void SetUpdateSlotReq(CBone* srcbone, int srcslot);
 
 	void ResetFootRigUpdated();
-	void UpdateMatrixFootRigReq(bool limitdegflag, CBone* srcbone,
+	void UpdateMatrixFootRigReq(bool istoebase, bool limitdegflag, CBone* srcbone,
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
 
 	void UpdateModelWMFootRig(ChaMatrix newwm);

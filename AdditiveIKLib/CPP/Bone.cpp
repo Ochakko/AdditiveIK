@@ -974,7 +974,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 }
 
 
-int CBone::UpdateMatrixFootRig(bool limitdegflag, int srcmotid, double srcframe,
+int CBone::UpdateMatrixFootRig(bool istoebase, bool limitdegflag, int srcmotid, double srcframe,
 	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat)
 {
 
@@ -985,7 +985,6 @@ int CBone::UpdateMatrixFootRig(bool limitdegflag, int srcmotid, double srcframe,
 	//bool limitdegflag = false;//2024/09/13 引数化　制限してかつパタパタしないようにデバッグ
 	
 	//######################################
-
 
 	SetFootRigUpdated(true);//2024/09/05
 

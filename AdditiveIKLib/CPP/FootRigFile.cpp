@@ -97,8 +97,12 @@ int CFootRigFile::WriteFileInfo()
 	//2024/10/06 ver1005 <WMBlend>追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0005</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
-	//2024/10/16 ver1006 Left(Right)Offsetを　Left(Right)OffsetYとLeft(Right)OffsetZに
-	CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0006</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	////2024/10/16 ver1006 Left(Right)Offsetを　Left(Right)OffsetYとLeft(Right)OffsetZに
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0006</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+
+	//2024/10/17 ver1007 toebaseのoffsetをOffset1に　footのoffsetをOffset2に
+	CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0007</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+
 
 	return 0;
 }
@@ -152,13 +156,24 @@ int CFootRigFile::WriteFootRigElem(FOOTRIGELEM srcfootrigelem)
 		srcfootrigelem.rightdir), return 1);
 
 	CallF(Write2File("    <LeftOffset>%.2f</LeftOffset>\r\n",
-		srcfootrigelem.leftoffsetY), return 1);
+		srcfootrigelem.leftoffsetY1), return 1);
 	CallF(Write2File("    <LeftOffsetZ>%.2f</LeftOffsetZ>\r\n",
-		srcfootrigelem.leftoffsetZ), return 1);
+		srcfootrigelem.leftoffsetZ1), return 1);
 	CallF(Write2File("    <RightOffset>%.2f</RightOffset>\r\n",
-		srcfootrigelem.rightoffsetY), return 1);
+		srcfootrigelem.rightoffsetY1), return 1);
 	CallF(Write2File("    <RightOffsetZ>%.2f</RightOffsetZ>\r\n",
-		srcfootrigelem.rightoffsetZ), return 1);
+		srcfootrigelem.rightoffsetZ1), return 1);
+
+	CallF(Write2File("    <LeftOffset2>%.2f</LeftOffset2>\r\n",
+		srcfootrigelem.leftoffsetY2), return 1);
+	CallF(Write2File("    <LeftOffsetZ2>%.2f</LeftOffsetZ2>\r\n",
+		srcfootrigelem.leftoffsetZ2), return 1);
+	CallF(Write2File("    <RightOffset2>%.2f</RightOffset2>\r\n",
+		srcfootrigelem.rightoffsetY2), return 1);
+	CallF(Write2File("    <RightOffsetZ2>%.2f</RightOffsetZ2>\r\n",
+		srcfootrigelem.rightoffsetZ2), return 1);
+
+
 
 	CallF(Write2File("    <HDiffMax>%.2f</HDiffMax>\r\n",
 		srcfootrigelem.hdiffmax), return 1);
@@ -309,13 +324,27 @@ int CFootRigFile::ReadFootRigElem(CModel* srcmodel, ChaScene* srcchascene, FOOTR
 	float leftoffsetZ = 0;
 	getleftoffsetZ = Read_Float(xmlbuf, "<LeftOffsetZ>", "</LeftOffsetZ>", &leftoffsetZ);
 
-
 	int getrightoffsetY = 0;
 	float rightoffsetY = 0;
 	getrightoffsetY = Read_Float(xmlbuf, "<RightOffset>", "</RightOffset>", &rightoffsetY);
 	int getrightoffsetZ = 0;
 	float rightoffsetZ = 0;
 	getrightoffsetZ = Read_Float(xmlbuf, "<RightOffsetZ>", "</RightOffsetZ>", &rightoffsetZ);
+
+	int getleftoffsetY2 = 0;
+	float leftoffsetY2 = 0;
+	getleftoffsetY2 = Read_Float(xmlbuf, "<LeftOffset2>", "</LeftOffset2>", &leftoffsetY2);
+	int getleftoffsetZ2 = 0;
+	float leftoffsetZ2 = 0;
+	getleftoffsetZ2 = Read_Float(xmlbuf, "<LeftOffsetZ2>", "</LeftOffsetZ2>", &leftoffsetZ2);
+
+	int getrightoffsetY2 = 0;
+	float rightoffsetY2 = 0;
+	getrightoffsetY2 = Read_Float(xmlbuf, "<RightOffset2>", "</RightOffset2>", &rightoffsetY2);
+	int getrightoffsetZ2 = 0;
+	float rightoffsetZ2 = 0;
+	getrightoffsetZ2 = Read_Float(xmlbuf, "<RightOffsetZ2>", "</RightOffsetZ2>", &rightoffsetZ2);
+
 
 	int gethdiffmax = 0;
 	float hdiffmax = 0;
@@ -387,17 +416,36 @@ int CFootRigFile::ReadFootRigElem(CModel* srcmodel, ChaScene* srcchascene, FOOTR
 
 	
 	if (getleftoffsetY == 0) {
-		dstfootrigelem->leftoffsetY = leftoffsetY;
+		dstfootrigelem->leftoffsetY1 = leftoffsetY;
 	}
 	if (getleftoffsetZ == 0) {
-		dstfootrigelem->leftoffsetZ = leftoffsetZ;
+		dstfootrigelem->leftoffsetZ1 = leftoffsetZ;
 	}
 	if (getrightoffsetY == 0) {
-		dstfootrigelem->rightoffsetY = rightoffsetY;
+		dstfootrigelem->rightoffsetY1 = rightoffsetY;
 	}
 	if (getrightoffsetZ == 0) {
-		dstfootrigelem->rightoffsetZ = rightoffsetZ;
+		dstfootrigelem->rightoffsetZ1 = rightoffsetZ;
 	}
+
+
+	dstfootrigelem->leftoffsetY2 = dstfootrigelem->leftoffsetY1;//旧ファイル対応
+	dstfootrigelem->leftoffsetZ2 = dstfootrigelem->leftoffsetZ1;//旧ファイル対応
+	dstfootrigelem->rightoffsetY2 = dstfootrigelem->rightoffsetY1;//旧ファイル対応
+	dstfootrigelem->rightoffsetZ2 = dstfootrigelem->rightoffsetZ1;//旧ファイル対応
+	if (getleftoffsetY2 == 0) {
+		dstfootrigelem->leftoffsetY2 = leftoffsetY2;
+	}
+	if (getleftoffsetZ2 == 0) {
+		dstfootrigelem->leftoffsetZ2 = leftoffsetZ2;
+	}
+	if (getrightoffsetY2 == 0) {
+		dstfootrigelem->rightoffsetY2 = rightoffsetY2;
+	}
+	if (getrightoffsetZ2 == 0) {
+		dstfootrigelem->rightoffsetZ2 = rightoffsetZ2;
+	}
+
 
 
 	if (gethdiffmax == 0) {

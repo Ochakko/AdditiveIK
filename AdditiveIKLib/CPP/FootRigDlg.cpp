@@ -26,10 +26,15 @@ using namespace OrgWinGUI;
 #define FOOTRIGPICKHEIGHT	1000.0f
 
 //位置補正のトリガーを少し緩めるために使用
-#define ROUNDINGPOS	2.0f
+//#define ROUNDINGPOS	2.0f
+#define ROUNDINGPOS	0.05f
 
 
 extern HWND g_mainhwnd;//アプリケーションウインドウハンドル
+
+
+CFootInfo* s_leftfootinfo = nullptr;
+CFootInfo* s_rightfootinfo = nullptr;
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -51,6 +56,16 @@ int CFootRigDlg::DestroyObjs()
 		m_dlgWnd->setVisible(false);
 		m_dlgWnd->setListenMouse(false);
 	}
+
+	if (s_leftfootinfo) {
+		delete s_leftfootinfo;
+		s_leftfootinfo = nullptr;
+	}
+	if (s_rightfootinfo) {
+		delete s_rightfootinfo;
+		s_rightfootinfo = nullptr;
+	}
+
 
 	if (m_enableChk) {
 		delete m_enableChk;
@@ -84,21 +99,37 @@ int CFootRigDlg::DestroyObjs()
 		delete m_leftfootBoneCombo;
 		m_leftfootBoneCombo = nullptr;
 	}
-	if (m_leftoffsetLabelY) {
-		delete m_leftoffsetLabelY;
-		m_leftoffsetLabelY = nullptr;
+	if (m_leftoffsetLabelY1) {
+		delete m_leftoffsetLabelY1;
+		m_leftoffsetLabelY1 = nullptr;
 	}
-	if (m_leftoffsetLabelZ) {
-		delete m_leftoffsetLabelZ;
-		m_leftoffsetLabelZ = nullptr;
+	if (m_leftoffsetLabelZ1) {
+		delete m_leftoffsetLabelZ1;
+		m_leftoffsetLabelZ1 = nullptr;
 	}
-	if (m_leftoffsetEditY) {
-		delete m_leftoffsetEditY;
-		m_leftoffsetEditY = nullptr;
+	if (m_leftoffsetLabelY2) {
+		delete m_leftoffsetLabelY2;
+		m_leftoffsetLabelY2 = nullptr;
 	}
-	if (m_leftoffsetEditZ) {
-		delete m_leftoffsetEditZ;
-		m_leftoffsetEditZ = nullptr;
+	if (m_leftoffsetLabelZ2) {
+		delete m_leftoffsetLabelZ2;
+		m_leftoffsetLabelZ2 = nullptr;
+	}
+	if (m_leftoffsetEditY1) {
+		delete m_leftoffsetEditY1;
+		m_leftoffsetEditY1 = nullptr;
+	}
+	if (m_leftoffsetEditZ1) {
+		delete m_leftoffsetEditZ1;
+		m_leftoffsetEditZ1 = nullptr;
+	}
+	if (m_leftoffsetEditY2) {
+		delete m_leftoffsetEditY2;
+		m_leftoffsetEditY2 = nullptr;
+	}
+	if (m_leftoffsetEditZ2) {
+		delete m_leftoffsetEditZ2;
+		m_leftoffsetEditZ2 = nullptr;
 	}
 	if (m_leftriglabel) {
 		delete m_leftriglabel;
@@ -128,21 +159,37 @@ int CFootRigDlg::DestroyObjs()
 		delete m_rightfootBoneCombo;
 		m_rightfootBoneCombo = nullptr;
 	}
-	if (m_rightoffsetLabelY) {
-		delete m_rightoffsetLabelY;
-		m_rightoffsetLabelY = nullptr;
+	if (m_rightoffsetLabelY1) {
+		delete m_rightoffsetLabelY1;
+		m_rightoffsetLabelY1 = nullptr;
 	}
-	if (m_rightoffsetLabelZ) {
-		delete m_rightoffsetLabelZ;
-		m_rightoffsetLabelZ = nullptr;
+	if (m_rightoffsetLabelZ1) {
+		delete m_rightoffsetLabelZ1;
+		m_rightoffsetLabelZ1 = nullptr;
 	}
-	if (m_rightoffsetEditY) {
-		delete m_rightoffsetEditY;
-		m_rightoffsetEditY = nullptr;
+	if (m_rightoffsetLabelY2) {
+		delete m_rightoffsetLabelY2;
+		m_rightoffsetLabelY2 = nullptr;
 	}
-	if (m_rightoffsetEditZ) {
-		delete m_rightoffsetEditZ;
-		m_rightoffsetEditZ = nullptr;
+	if (m_rightoffsetLabelZ2) {
+		delete m_rightoffsetLabelZ2;
+		m_rightoffsetLabelZ2 = nullptr;
+	}
+	if (m_rightoffsetEditY1) {
+		delete m_rightoffsetEditY1;
+		m_rightoffsetEditY1 = nullptr;
+	}
+	if (m_rightoffsetEditZ1) {
+		delete m_rightoffsetEditZ1;
+		m_rightoffsetEditZ1 = nullptr;
+	}
+	if (m_rightoffsetEditY2) {
+		delete m_rightoffsetEditY2;
+		m_rightoffsetEditY2 = nullptr;
+	}
+	if (m_rightoffsetEditZ2) {
+		delete m_rightoffsetEditZ2;
+		m_rightoffsetEditZ2 = nullptr;
 	}
 	if (m_rightriglabel) {
 		delete m_rightriglabel;
@@ -214,13 +261,21 @@ int CFootRigDlg::DestroyObjs()
 		delete m_leftfootbonesp;
 		m_leftfootbonesp = nullptr;
 	}
-	if (m_leftoffsetspY) {
-		delete m_leftoffsetspY;
-		m_leftoffsetspY = nullptr;
+	if (m_leftoffsetspY1) {
+		delete m_leftoffsetspY1;
+		m_leftoffsetspY1 = nullptr;
 	}
-	if (m_leftoffsetspZ) {
-		delete m_leftoffsetspZ;
-		m_leftoffsetspZ = nullptr;
+	if (m_leftoffsetspZ1) {
+		delete m_leftoffsetspZ1;
+		m_leftoffsetspZ1 = nullptr;
+	}
+	if (m_leftoffsetspY2) {
+		delete m_leftoffsetspY2;
+		m_leftoffsetspY2 = nullptr;
+	}
+	if (m_leftoffsetspZ2) {
+		delete m_leftoffsetspZ2;
+		m_leftoffsetspZ2 = nullptr;
 	}
 	if (m_leftrigsp) {
 		delete m_leftrigsp;
@@ -234,13 +289,21 @@ int CFootRigDlg::DestroyObjs()
 		delete m_rightfootbonesp;
 		m_rightfootbonesp = nullptr;
 	}
-	if (m_rightoffsetspY) {
-		delete m_rightoffsetspY;
-		m_rightoffsetspY = nullptr;
+	if (m_rightoffsetspY1) {
+		delete m_rightoffsetspY1;
+		m_rightoffsetspY1 = nullptr;
 	}
-	if (m_rightoffsetspZ) {
-		delete m_rightoffsetspZ;
-		m_rightoffsetspZ = nullptr;
+	if (m_rightoffsetspZ1) {
+		delete m_rightoffsetspZ1;
+		m_rightoffsetspZ1 = nullptr;
+	}
+	if (m_rightoffsetspY2) {
+		delete m_rightoffsetspY2;
+		m_rightoffsetspY2 = nullptr;
+	}
+	if (m_rightoffsetspZ2) {
+		delete m_rightoffsetspZ2;
+		m_rightoffsetspZ2 = nullptr;
 	}
 	if (m_rightrigsp) {
 		delete m_rightrigsp;
@@ -351,10 +414,14 @@ void CFootRigDlg::InitParams()
 	m_leftfootlabel = nullptr;
 	m_leftfootBonelabel = nullptr;
 	m_leftfootBoneCombo = nullptr;
-	m_leftoffsetLabelY = nullptr;
-	m_leftoffsetLabelZ = nullptr;
-	m_leftoffsetEditY = nullptr;
-	m_leftoffsetEditZ = nullptr;
+	m_leftoffsetLabelY1 = nullptr;
+	m_leftoffsetLabelZ1 = nullptr;
+	m_leftoffsetEditY1 = nullptr;
+	m_leftoffsetEditZ1 = nullptr;
+	m_leftoffsetLabelY2 = nullptr;
+	m_leftoffsetLabelZ2 = nullptr;
+	m_leftoffsetEditY2 = nullptr;
+	m_leftoffsetEditZ2 = nullptr;
 	m_leftriglabel = nullptr;
 	m_leftrigCombo = nullptr;
 	m_leftdirlabel = nullptr;
@@ -362,10 +429,14 @@ void CFootRigDlg::InitParams()
 	m_rightfootlabel = nullptr;
 	m_rightfootBonelabel = nullptr;
 	m_rightfootBoneCombo = nullptr;
-	m_rightoffsetLabelY = nullptr;
-	m_rightoffsetLabelZ = nullptr;
-	m_rightoffsetEditY = nullptr;
-	m_rightoffsetEditZ = nullptr;
+	m_rightoffsetLabelY1 = nullptr;
+	m_rightoffsetLabelZ1 = nullptr;
+	m_rightoffsetEditY1 = nullptr;
+	m_rightoffsetEditZ1 = nullptr;
+	m_rightoffsetLabelY2 = nullptr;
+	m_rightoffsetLabelZ2 = nullptr;
+	m_rightoffsetEditY2 = nullptr;
+	m_rightoffsetEditZ2 = nullptr;
 	m_rightriglabel = nullptr;
 	m_rightrigCombo = nullptr;
 	m_rightdirlabel = nullptr;
@@ -384,13 +455,17 @@ void CFootRigDlg::InitParams()
 
 	m_groundmeshsp = nullptr;
 	m_leftfootbonesp = nullptr;
-	m_leftoffsetspY = nullptr;
-	m_leftoffsetspZ = nullptr;
+	m_leftoffsetspY1 = nullptr;
+	m_leftoffsetspZ1 = nullptr;
+	m_leftoffsetspY2 = nullptr;
+	m_leftoffsetspZ2 = nullptr;
 	m_leftrigsp = nullptr;
 	m_leftdirsp = nullptr;
 	m_rightfootbonesp = nullptr;
-	m_rightoffsetspY = nullptr;
-	m_rightoffsetspZ = nullptr;
+	m_rightoffsetspY1 = nullptr;
+	m_rightoffsetspZ1 = nullptr;
+	m_rightoffsetspY2 = nullptr;
+	m_rightoffsetspZ2 = nullptr;
 	m_rightrigsp = nullptr;
 	m_rightdirsp = nullptr;
 	m_hdiffmaxsp = nullptr;
@@ -562,6 +637,23 @@ void CFootRigDlg::SetVisible(bool srcflag)
 
 int CFootRigDlg::CreateFootRigWnd()
 {
+	if (!s_leftfootinfo) {
+		s_leftfootinfo = new CFootInfo(this);
+		if (!s_leftfootinfo) {
+			_ASSERT(0);
+			return 1;
+		}
+	}
+	if (!s_rightfootinfo) {
+		s_rightfootinfo = new CFootInfo(this);
+		if (!s_rightfootinfo) {
+			_ASSERT(0);
+			return 1;
+		}
+	}
+
+
+
 	if (m_dlgWnd) {
 		return 0;
 	}
@@ -634,23 +726,43 @@ int CFootRigDlg::CreateFootRigWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_leftoffsetLabelY = new OWP_Label(L"Height OffsetY", labelheight);
-		if (!m_leftoffsetLabelY) {
+		m_leftoffsetLabelY1 = new OWP_Label(L"Height OffsetY1", labelheight);
+		if (!m_leftoffsetLabelY1) {
 			_ASSERT(0);
 			abort();
 		}
-		m_leftoffsetLabelZ = new OWP_Label(L"Height OffsetZ", labelheight);
-		if (!m_leftoffsetLabelZ) {
+		m_leftoffsetLabelZ1 = new OWP_Label(L"Height OffsetZ1", labelheight);
+		if (!m_leftoffsetLabelZ1) {
 			_ASSERT(0);
 			abort();
 		}
-		m_leftoffsetEditY = new OWP_EditBox(true, L"leftoffsetEditY", labelheight, EDIT_BUFLEN_NUM);
-		if (!m_leftoffsetEditY) {
+		m_leftoffsetLabelY2 = new OWP_Label(L"Height OffsetY2", labelheight);
+		if (!m_leftoffsetLabelY2) {
 			_ASSERT(0);
 			abort();
 		}
-		m_leftoffsetEditZ = new OWP_EditBox(true, L"leftoffsetEditZ", labelheight, EDIT_BUFLEN_NUM);
-		if (!m_leftoffsetEditZ) {
+		m_leftoffsetLabelZ2 = new OWP_Label(L"Height OffsetZ2", labelheight);
+		if (!m_leftoffsetLabelZ2) {
+			_ASSERT(0);
+			abort();
+		}
+		m_leftoffsetEditY1 = new OWP_EditBox(true, L"leftoffsetEditY1", labelheight, EDIT_BUFLEN_NUM);
+		if (!m_leftoffsetEditY1) {
+			_ASSERT(0);
+			abort();
+		}
+		m_leftoffsetEditZ1 = new OWP_EditBox(true, L"leftoffsetEditZ1", labelheight, EDIT_BUFLEN_NUM);
+		if (!m_leftoffsetEditZ1) {
+			_ASSERT(0);
+			abort();
+		}
+		m_leftoffsetEditY2 = new OWP_EditBox(true, L"leftoffsetEditY2", labelheight, EDIT_BUFLEN_NUM);
+		if (!m_leftoffsetEditY2) {
+			_ASSERT(0);
+			abort();
+		}
+		m_leftoffsetEditZ2 = new OWP_EditBox(true, L"leftoffsetEditZ2", labelheight, EDIT_BUFLEN_NUM);
+		if (!m_leftoffsetEditZ2) {
 			_ASSERT(0);
 			abort();
 		}
@@ -691,23 +803,43 @@ int CFootRigDlg::CreateFootRigWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_rightoffsetLabelY = new OWP_Label(L"Height OffsetY", labelheight);
-		if (!m_rightoffsetLabelY) {
+		m_rightoffsetLabelY1 = new OWP_Label(L"Height OffsetY1", labelheight);
+		if (!m_rightoffsetLabelY1) {
 			_ASSERT(0);
 			abort();
 		}
-		m_rightoffsetLabelZ = new OWP_Label(L"Height OffsetZ", labelheight);
-		if (!m_rightoffsetLabelZ) {
+		m_rightoffsetLabelZ1 = new OWP_Label(L"Height OffsetZ1", labelheight);
+		if (!m_rightoffsetLabelZ1) {
 			_ASSERT(0);
 			abort();
 		}
-		m_rightoffsetEditY = new OWP_EditBox(true, L"rightoffsetEditY", labelheight, EDIT_BUFLEN_NUM);
-		if (!m_rightoffsetEditY) {
+		m_rightoffsetLabelY2 = new OWP_Label(L"Height OffsetY2", labelheight);
+		if (!m_rightoffsetLabelY2) {
 			_ASSERT(0);
 			abort();
 		}
-		m_rightoffsetEditZ = new OWP_EditBox(true, L"rightoffsetEditZ", labelheight, EDIT_BUFLEN_NUM);
-		if (!m_rightoffsetEditZ) {
+		m_rightoffsetLabelZ2 = new OWP_Label(L"Height OffsetZ2", labelheight);
+		if (!m_rightoffsetLabelZ2) {
+			_ASSERT(0);
+			abort();
+		}
+		m_rightoffsetEditY1 = new OWP_EditBox(true, L"rightoffsetEditY1", labelheight, EDIT_BUFLEN_NUM);
+		if (!m_rightoffsetEditY1) {
+			_ASSERT(0);
+			abort();
+		}
+		m_rightoffsetEditZ1 = new OWP_EditBox(true, L"rightoffsetEditZ1", labelheight, EDIT_BUFLEN_NUM);
+		if (!m_rightoffsetEditZ1) {
+			_ASSERT(0);
+			abort();
+		}
+		m_rightoffsetEditY2 = new OWP_EditBox(true, L"rightoffsetEditY2", labelheight, EDIT_BUFLEN_NUM);
+		if (!m_rightoffsetEditY2) {
+			_ASSERT(0);
+			abort();
+		}
+		m_rightoffsetEditZ2 = new OWP_EditBox(true, L"rightoffsetEditZ2", labelheight, EDIT_BUFLEN_NUM);
+		if (!m_rightoffsetEditZ2) {
 			_ASSERT(0);
 			abort();
 		}
@@ -801,13 +933,23 @@ int CFootRigDlg::CreateFootRigWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_leftoffsetspY = new OWP_Separator(m_dlgWnd, true, rate1, true);
-		if (!m_leftoffsetspY) {
+		m_leftoffsetspY1 = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_leftoffsetspY1) {
 			_ASSERT(0);
 			abort();
 		}
-		m_leftoffsetspZ = new OWP_Separator(m_dlgWnd, true, rate1, true);
-		if (!m_leftoffsetspZ) {
+		m_leftoffsetspZ1 = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_leftoffsetspZ1) {
+			_ASSERT(0);
+			abort();
+		}
+		m_leftoffsetspY2 = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_leftoffsetspY2) {
+			_ASSERT(0);
+			abort();
+		}
+		m_leftoffsetspZ2 = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_leftoffsetspZ2) {
 			_ASSERT(0);
 			abort();
 		}
@@ -826,13 +968,23 @@ int CFootRigDlg::CreateFootRigWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_rightoffsetspY = new OWP_Separator(m_dlgWnd, true, rate1, true);
-		if (!m_rightoffsetspY) {
+		m_rightoffsetspY1 = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_rightoffsetspY1) {
 			_ASSERT(0);
 			abort();
 		}
-		m_rightoffsetspZ = new OWP_Separator(m_dlgWnd, true, rate1, true);
-		if (!m_rightoffsetspZ) {
+		m_rightoffsetspZ1 = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_rightoffsetspZ1) {
+			_ASSERT(0);
+			abort();
+		}
+		m_rightoffsetspY2 = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_rightoffsetspY2) {
+			_ASSERT(0);
+			abort();
+		}
+		m_rightoffsetspZ2 = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_rightoffsetspZ2) {
 			_ASSERT(0);
 			abort();
 		}
@@ -939,12 +1091,21 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_dlgWnd->addParts(*m_leftfootbonesp);
 		m_leftfootbonesp->addParts1(*m_leftfootBonelabel);
 		m_leftfootbonesp->addParts2(*m_leftfootBoneCombo);
-		m_dlgWnd->addParts(*m_leftoffsetspY);
-		m_leftoffsetspY->addParts1(*m_leftoffsetLabelY);
-		m_leftoffsetspY->addParts2(*m_leftoffsetEditY);
-		m_dlgWnd->addParts(*m_leftoffsetspZ);
-		m_leftoffsetspZ->addParts1(*m_leftoffsetLabelZ);
-		m_leftoffsetspZ->addParts2(*m_leftoffsetEditZ);
+
+		m_dlgWnd->addParts(*m_leftoffsetspY1);
+		m_leftoffsetspY1->addParts1(*m_leftoffsetLabelY1);
+		m_leftoffsetspY1->addParts2(*m_leftoffsetEditY1);
+		m_dlgWnd->addParts(*m_leftoffsetspZ1);
+		m_leftoffsetspZ1->addParts1(*m_leftoffsetLabelZ1);
+		m_leftoffsetspZ1->addParts2(*m_leftoffsetEditZ1);
+
+		m_dlgWnd->addParts(*m_leftoffsetspY2);
+		m_leftoffsetspY2->addParts1(*m_leftoffsetLabelY2);
+		m_leftoffsetspY2->addParts2(*m_leftoffsetEditY2);
+		m_dlgWnd->addParts(*m_leftoffsetspZ2);
+		m_leftoffsetspZ2->addParts1(*m_leftoffsetLabelZ2);
+		m_leftoffsetspZ2->addParts2(*m_leftoffsetEditZ2);
+
 		m_dlgWnd->addParts(*m_leftrigsp);
 		m_leftrigsp->addParts1(*m_leftriglabel);
 		m_leftrigsp->addParts2(*m_leftrigCombo);
@@ -957,12 +1118,21 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_dlgWnd->addParts(*m_rightfootbonesp);
 		m_rightfootbonesp->addParts1(*m_rightfootBonelabel);
 		m_rightfootbonesp->addParts2(*m_rightfootBoneCombo);
-		m_dlgWnd->addParts(*m_rightoffsetspY);
-		m_rightoffsetspY->addParts1(*m_rightoffsetLabelY);
-		m_rightoffsetspY->addParts2(*m_rightoffsetEditY);
-		m_dlgWnd->addParts(*m_rightoffsetspZ);
-		m_rightoffsetspZ->addParts1(*m_rightoffsetLabelZ);
-		m_rightoffsetspZ->addParts2(*m_rightoffsetEditZ);
+
+		m_dlgWnd->addParts(*m_rightoffsetspY1);
+		m_rightoffsetspY1->addParts1(*m_rightoffsetLabelY1);
+		m_rightoffsetspY1->addParts2(*m_rightoffsetEditY1);
+		m_dlgWnd->addParts(*m_rightoffsetspZ1);
+		m_rightoffsetspZ1->addParts1(*m_rightoffsetLabelZ1);
+		m_rightoffsetspZ1->addParts2(*m_rightoffsetEditZ1);
+		
+		m_dlgWnd->addParts(*m_rightoffsetspY2);
+		m_rightoffsetspY2->addParts1(*m_rightoffsetLabelY2);
+		m_rightoffsetspY2->addParts2(*m_rightoffsetEditY2);
+		m_dlgWnd->addParts(*m_rightoffsetspZ2);
+		m_rightoffsetspZ2->addParts1(*m_rightoffsetLabelZ2);
+		m_rightoffsetspZ2->addParts2(*m_rightoffsetEditZ2);
+
 		m_dlgWnd->addParts(*m_rightrigsp);
 		m_rightrigsp->addParts1(*m_rightriglabel);
 		m_rightrigsp->addParts2(*m_rightrigCombo);
@@ -1302,15 +1472,25 @@ int CFootRigDlg::ParamsToDlg()
 			}
 		}
 
-		if (m_leftoffsetEditY) {
+		if (m_leftoffsetEditY1) {
 			WCHAR wleftoffset[EDIT_BUFLEN_NUM] = { 0L };
-			swprintf_s(wleftoffset, EDIT_BUFLEN_NUM, L"%.2f", curfootrigelem.leftoffsetY);
-			m_leftoffsetEditY->setName(wleftoffset);
+			swprintf_s(wleftoffset, EDIT_BUFLEN_NUM, L"%.2f", curfootrigelem.leftoffsetY1);
+			m_leftoffsetEditY1->setName(wleftoffset);
 		}
-		if (m_leftoffsetEditZ) {
+		if (m_leftoffsetEditZ1) {
 			WCHAR wleftoffset[EDIT_BUFLEN_NUM] = { 0L };
-			swprintf_s(wleftoffset, EDIT_BUFLEN_NUM, L"%.2f", curfootrigelem.leftoffsetZ);
-			m_leftoffsetEditZ->setName(wleftoffset);
+			swprintf_s(wleftoffset, EDIT_BUFLEN_NUM, L"%.2f", curfootrigelem.leftoffsetZ1);
+			m_leftoffsetEditZ1->setName(wleftoffset);
+		}
+		if (m_leftoffsetEditY2) {
+			WCHAR wleftoffset[EDIT_BUFLEN_NUM] = { 0L };
+			swprintf_s(wleftoffset, EDIT_BUFLEN_NUM, L"%.2f", curfootrigelem.leftoffsetY2);
+			m_leftoffsetEditY2->setName(wleftoffset);
+		}
+		if (m_leftoffsetEditZ2) {
+			WCHAR wleftoffset[EDIT_BUFLEN_NUM] = { 0L };
+			swprintf_s(wleftoffset, EDIT_BUFLEN_NUM, L"%.2f", curfootrigelem.leftoffsetZ2);
+			m_leftoffsetEditZ2->setName(wleftoffset);
 		}
 
 		ParamsToDlg_LeftRig();
@@ -1348,15 +1528,25 @@ int CFootRigDlg::ParamsToDlg()
 			}
 		}
 
-		if (m_rightoffsetEditY) {
+		if (m_rightoffsetEditY1) {
 			WCHAR wrightoffset[EDIT_BUFLEN_NUM] = { 0L };
-			swprintf_s(wrightoffset, EDIT_BUFLEN_NUM, L"%.2f", curfootrigelem.rightoffsetY);
-			m_rightoffsetEditY->setName(wrightoffset);
+			swprintf_s(wrightoffset, EDIT_BUFLEN_NUM, L"%.2f", curfootrigelem.rightoffsetY1);
+			m_rightoffsetEditY1->setName(wrightoffset);
 		}
-		if (m_rightoffsetEditZ) {
+		if (m_rightoffsetEditZ1) {
 			WCHAR wrightoffset[EDIT_BUFLEN_NUM] = { 0L };
-			swprintf_s(wrightoffset, EDIT_BUFLEN_NUM, L"%.2f", curfootrigelem.rightoffsetZ);
-			m_rightoffsetEditZ->setName(wrightoffset);
+			swprintf_s(wrightoffset, EDIT_BUFLEN_NUM, L"%.2f", curfootrigelem.rightoffsetZ1);
+			m_rightoffsetEditZ1->setName(wrightoffset);
+		}
+		if (m_rightoffsetEditY2) {
+			WCHAR wrightoffset[EDIT_BUFLEN_NUM] = { 0L };
+			swprintf_s(wrightoffset, EDIT_BUFLEN_NUM, L"%.2f", curfootrigelem.rightoffsetY2);
+			m_rightoffsetEditY2->setName(wrightoffset);
+		}
+		if (m_rightoffsetEditZ2) {
+			WCHAR wrightoffset[EDIT_BUFLEN_NUM] = { 0L };
+			swprintf_s(wrightoffset, EDIT_BUFLEN_NUM, L"%.2f", curfootrigelem.rightoffsetZ2);
+			m_rightoffsetEditZ2->setName(wrightoffset);
 		}
 
 		ParamsToDlg_RightRig();
@@ -1526,51 +1716,101 @@ int CFootRigDlg::Dlg2Params()
 		}
 
 
-		if (m_leftoffsetEditY) {
+		if (m_leftoffsetEditY1) {
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
-			m_leftoffsetEditY->getName(stroffset, EDIT_BUFLEN_NUM);
+			m_leftoffsetEditY1->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
 			if (m_model) {
 				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
 				itrelem = m_footrigelem.find(m_model);
 				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.leftoffsetY = offsetval;
+					itrelem->second.leftoffsetY1 = offsetval;
 				}
 			}
 		}
-		if (m_leftoffsetEditZ) {
+		if (m_leftoffsetEditZ1) {
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
-			m_leftoffsetEditZ->getName(stroffset, EDIT_BUFLEN_NUM);
+			m_leftoffsetEditZ1->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
 			if (m_model) {
 				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
 				itrelem = m_footrigelem.find(m_model);
 				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.leftoffsetZ = offsetval;
+					itrelem->second.leftoffsetZ1 = offsetval;
 				}
 			}
 		}
-		if (m_rightoffsetEditY) {
+		if (m_rightoffsetEditY1) {
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
-			m_rightoffsetEditY->getName(stroffset, EDIT_BUFLEN_NUM);
+			m_rightoffsetEditY1->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
 			if (m_model) {
 				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
 				itrelem = m_footrigelem.find(m_model);
 				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.rightoffsetY = offsetval;
+					itrelem->second.rightoffsetY1 = offsetval;
 				}
 			}
 		}
-		if (m_rightoffsetEditZ) {
+		if (m_rightoffsetEditZ1) {
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
-			m_rightoffsetEditZ->getName(stroffset, EDIT_BUFLEN_NUM);
+			m_rightoffsetEditZ1->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
 			if (m_model) {
 				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
 				itrelem = m_footrigelem.find(m_model);
 				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.rightoffsetZ = offsetval;
+					itrelem->second.rightoffsetZ1 = offsetval;
+				}
+			}
+		}
+
+
+		if (m_leftoffsetEditY2) {
+			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
+			m_leftoffsetEditY2->getName(stroffset, EDIT_BUFLEN_NUM);
+			float offsetval = (float)_wtof(stroffset);
+			if (m_model) {
+				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				itrelem = m_footrigelem.find(m_model);
+				if (itrelem != m_footrigelem.end()) {
+					itrelem->second.leftoffsetY2 = offsetval;
+				}
+			}
+		}
+		if (m_leftoffsetEditZ2) {
+			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
+			m_leftoffsetEditZ2->getName(stroffset, EDIT_BUFLEN_NUM);
+			float offsetval = (float)_wtof(stroffset);
+			if (m_model) {
+				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				itrelem = m_footrigelem.find(m_model);
+				if (itrelem != m_footrigelem.end()) {
+					itrelem->second.leftoffsetZ2 = offsetval;
+				}
+			}
+		}
+		if (m_rightoffsetEditY2) {
+			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
+			m_rightoffsetEditY2->getName(stroffset, EDIT_BUFLEN_NUM);
+			float offsetval = (float)_wtof(stroffset);
+			if (m_model) {
+				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				itrelem = m_footrigelem.find(m_model);
+				if (itrelem != m_footrigelem.end()) {
+					itrelem->second.rightoffsetY2 = offsetval;
+				}
+			}
+		}
+		if (m_rightoffsetEditZ2) {
+			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
+			m_rightoffsetEditZ2->getName(stroffset, EDIT_BUFLEN_NUM);
+			float offsetval = (float)_wtof(stroffset);
+			if (m_model) {
+				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				itrelem = m_footrigelem.find(m_model);
+				if (itrelem != m_footrigelem.end()) {
+					itrelem->second.rightoffsetZ2 = offsetval;
 				}
 			}
 		}
@@ -1790,6 +2030,12 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 		return 0;
 	}
 
+	if (!s_leftfootinfo || !s_rightfootinfo) {
+		_ASSERT(0);
+		return 0;
+	}
+
+
 	std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
 	itrelem = m_footrigelem.find(srcmodel);
 	if (itrelem != m_footrigelem.end()) {
@@ -1803,137 +2049,58 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 				return 0;//groundmodelは削除済
 			}
 
-
-			ChaVector3 leftjointpos, rightjointpos;
-			ChaVector3 leftgpos, rightgpos;
-			leftjointpos.SetZeroVec3();
-			rightjointpos.SetZeroVec3();
-			leftgpos.SetZeroVec3();
-			rightgpos.SetZeroVec3();
+			s_leftfootinfo->SetFootInfo(FOOTRIG_LR_LEFT, curelem);
+			s_rightfootinfo->SetFootInfo(FOOTRIG_LR_RIGHT, curelem);
 
 			if (curelem.leftfootbone) {
-				ChaVector3 leftoffset;
-				leftoffset.SetParams(0.0f, curelem.leftoffsetY, curelem.leftoffsetZ);
-				leftjointpos = GetJointPos(limitdegflag, srcmodel, curelem.leftfootbone, leftoffset);
-
-				if (curelem.groundmodel) {
-					leftgpos = GetGroundPos(curelem.groundmodel, leftjointpos, curelem.gpucollision);
-				}
+				s_leftfootinfo->CalcPos(limitdegflag);
 			}
-
 			if (curelem.rightfootbone) {
-				ChaVector3 rightoffset;
-				rightoffset.SetParams(0.0f, curelem.rightoffsetY, curelem.rightoffsetZ);
-				rightjointpos = GetJointPos(limitdegflag, srcmodel, curelem.rightfootbone, rightoffset);
-
-				if (curelem.groundmodel) {
-					rightgpos = GetGroundPos(curelem.groundmodel, rightjointpos, curelem.gpucollision);
-				}
+				s_rightfootinfo->CalcPos(limitdegflag);
 			}
 
 			{
-				CBone* lowerfoot;
-				CBone* higherfoot;
-				CBone* lowerupdatebone;
-				CBone* higherupdatebone;
-				CUSTOMRIG lowerrig, higherrig;
-				ChaVector3 lowerjointpos, higherjointpos;
-				ChaVector3 lowergpos, highergpos;
-				ChaVector3 loweroffset, higheroffset;
-				int lowerdir, higherdir;
+				CFootInfo* lowerfootinfo = nullptr;
+				CFootInfo* higherfootinfo = nullptr;
 				//if (leftjointpos.y <= rightjointpos.y) {
-				if (leftgpos.y <= rightgpos.y) {
-					lowerfoot = curelem.leftfootbone;
-					higherfoot = curelem.rightfootbone;
-					lowerrig = curelem.leftrig;
-					higherrig = curelem.rightrig;
-					lowerjointpos = leftjointpos;
-					higherjointpos = rightjointpos;
-					lowergpos = leftgpos;
-					highergpos = rightgpos;
-					loweroffset.x = 0.0f;
-					loweroffset.y = curelem.leftoffsetY;
-					loweroffset.z = curelem.leftoffsetZ;
-					higheroffset.x = 0.0f;
-					higheroffset.y = curelem.rightoffsetY;
-					higheroffset.z = curelem.rightoffsetZ;
-					lowerdir = curelem.leftdir;
-					higherdir = curelem.rightdir;
+				if (s_leftfootinfo->IsHigherGPos(s_rightfootinfo)) {
+					lowerfootinfo = s_rightfootinfo;
+					higherfootinfo = s_leftfootinfo;
 				}
 				else {
-					lowerfoot = curelem.rightfootbone;
-					higherfoot = curelem.leftfootbone;
-					lowerrig = curelem.rightrig;
-					higherrig = curelem.leftrig;
-					lowerjointpos = rightjointpos;
-					higherjointpos = leftjointpos;
-					lowergpos = rightgpos;
-					highergpos = leftgpos;
-					loweroffset.x = 0.0f;
-					loweroffset.y = curelem.rightoffsetY;
-					loweroffset.z = curelem.rightoffsetZ;
-					higheroffset.x = 0.0f;
-					higheroffset.y = curelem.leftoffsetY;
-					higheroffset.z = curelem.leftoffsetZ;
-					lowerdir = curelem.rightdir;
-					higherdir = curelem.leftdir;
+					lowerfootinfo = s_leftfootinfo;
+					higherfootinfo = s_rightfootinfo;
 				}
-
-				int lowerrignum = 0;
-				if (lowerfoot) {
-					//Rigで回転するボーンの内の一番親のボーンを取得
-					lowerupdatebone = GetUpdateBone(srcmodel, lowerfoot, lowerrig, lowerdir, &lowerrignum);
-				}
-				else {
-					lowerupdatebone = nullptr;
-				}
-				int higherrignum = 0;
-				if (higherfoot) {
-					//Rigで回転するボーンの内の一番親のボーンを取得
-					higherupdatebone = GetUpdateBone(srcmodel, higherfoot, higherrig, higherdir, &higherrignum);
-				}
-				else {
-					higherupdatebone = nullptr;
-				}
-
-
 				FootRig(false,
 					limitdegflag, srcmodel,
 					curelem,
-					lowerfoot, higherfoot,
-					lowerupdatebone, higherupdatebone,
-					lowerrig, higherrig,
-					lowerjointpos, higherjointpos,
-					lowergpos, highergpos,
-					loweroffset, higheroffset,
-					lowerdir, higherdir,
-					lowerrignum, higherrignum);
+					lowerfootinfo, higherfootinfo);
 
 			}
 
 
-			if ((srcmodel == m_model) && GetVisible()) {
-				if (m_leftinfolabel) {
-					ChaVector3 leftoffset;
-					leftoffset.SetParams(0.0f, curelem.leftoffsetY, curelem.leftoffsetZ);
-					ChaVector3 newleftjointpos = GetJointPos(limitdegflag, srcmodel, curelem.leftfootbone, leftoffset);
+			//if ((srcmodel == m_model) && GetVisible()) {
+			//	if (m_leftinfolabel) {
+			//		ChaVector3 leftoffset;
+			//		leftoffset.SetParams(0.0f, curelem.leftoffsetY, curelem.leftoffsetZ);
+			//		ChaVector3 newleftjointpos = GetJointPos(limitdegflag, srcmodel, curelem.leftfootbone, leftoffset);
 
-					WCHAR strlabel[MAX_PATH] = { 0L };
-					swprintf_s(strlabel, MAX_PATH, L"LeftFoot(%.2f, %.2f), LeftGround %.2f",
-						leftjointpos.y, newleftjointpos.y, leftgpos.y);
-					m_leftinfolabel->setName(strlabel);
-				}
-				if (m_rightinfolabel) {
-					ChaVector3 rightoffset;
-					rightoffset.SetParams(0.0f, curelem.rightoffsetY, curelem.rightoffsetZ);
-					ChaVector3 newrightjointpos = GetJointPos(limitdegflag, srcmodel, curelem.rightfootbone, rightoffset);
+			//		WCHAR strlabel[MAX_PATH] = { 0L };
+			//		swprintf_s(strlabel, MAX_PATH, L"LeftFoot(%.2f, %.2f), LeftGround %.2f",
+			//			leftjointpos.y, newleftjointpos.y, leftgpos.y);
+			//		m_leftinfolabel->setName(strlabel);
+			//	}
+			//	if (m_rightinfolabel) {
+			//		ChaVector3 rightoffset;
+			//		rightoffset.SetParams(0.0f, curelem.rightoffsetY, curelem.rightoffsetZ);
+			//		ChaVector3 newrightjointpos = GetJointPos(limitdegflag, srcmodel, curelem.rightfootbone, rightoffset);
 
-					WCHAR strlabel[MAX_PATH] = { 0L };
-					swprintf_s(strlabel, MAX_PATH, L"RightFoot(%.2f, %.2f), RightGround %.2f",
-						rightjointpos.y, newrightjointpos.y, rightgpos.y);
-					m_rightinfolabel->setName(strlabel);
-				}
-			}
+			//		WCHAR strlabel[MAX_PATH] = { 0L };
+			//		swprintf_s(strlabel, MAX_PATH, L"RightFoot(%.2f, %.2f), RightGround %.2f",
+			//			rightjointpos.y, newrightjointpos.y, rightgpos.y);
+			//		m_rightinfolabel->setName(strlabel);
+			//	}
+			//}
 		}
 		else {
 
@@ -1961,14 +2128,7 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 void CFootRigDlg::FootRig(bool secondcalling,
 	bool limitdegflag, CModel* srcmodel,
 	FOOTRIGELEM curelem,
-	CBone* lowerfoot, CBone* higherfoot,
-	CBone* lowerupdatebone, CBone* higherupdatebone,
-	CUSTOMRIG lowerrig, CUSTOMRIG higherrig,
-	ChaVector3 lowerjointpos, ChaVector3 higherjointpos,
-	ChaVector3 lowergpos, ChaVector3 highergpos,
-	ChaVector3 loweroffset, ChaVector3 higheroffset,
-	int lowerdir, int higherdir,
-	int lowerrignum, int higherrignum
+	CFootInfo* lowerfootinfo, CFootInfo* higherfootinfo
 )
 {
 	//##############################################################################################
@@ -1994,11 +2154,16 @@ void CFootRigDlg::FootRig(bool secondcalling,
 
 
 
-	if (!srcmodel || !lowerfoot || !higherfoot || !lowerupdatebone || !higherupdatebone) {
+	if (!srcmodel || !lowerfootinfo || !higherfootinfo) {
 		//_ASSERT(0);
 		int dbgflag1 = 1;
 		return;
 	}
+	if (!lowerfootinfo->IsValid() || !higherfootinfo->IsValid()) {
+		int dbgflag1 = 1;
+		return;
+	}
+
 
 	float hdiffoffset;
 	if (!secondcalling) {
@@ -2024,21 +2189,11 @@ void CFootRigDlg::FootRig(bool secondcalling,
 	if (hipsjoint) {
 		ChaVector3 hipsoffset;
 		hipsoffset.SetZeroVec3();
-		ChaVector3 hipspos = GetJointPos(limitdegflag, srcmodel, hipsjoint, hipsoffset);
-
-		CBone* lowerendjoint = lowerfoot;
-		while (lowerendjoint->GetChild(false)) {
-			lowerendjoint = lowerendjoint->GetChild(false);
-		}
-		CBone* higherendjoint = higherfoot;
-		while (higherendjoint->GetChild(false)) {
-			higherendjoint = higherendjoint->GetChild(false);
-		}
+		ChaVector3 hipspos = GetJointPos(limitdegflag, srcmodel, hipsjoint, hipsoffset, false);
 
 		bool lowerdoneflag = false;
 		bool higherdoneflag = false;
 		bool forcehigherfootrig = false;
-
 
 		if (!secondcalling) {//### Hop Y per step ###
 			//2024/09/16 上り坂の傾斜を上る際に足が曲がり過ぎないように　毎回ホップする
@@ -2047,80 +2202,74 @@ void CFootRigDlg::FootRig(bool secondcalling,
 			float diffy2 = modelwm3.data[MATI_42] - modelwm.data[MATI_42];
 			modelwm = modelwm3;
 			hipspos.y += diffy2;
-			lowerjointpos.y += diffy2;
-			higherjointpos.y += diffy2;
+			higherfootinfo->CalcPos(limitdegflag);
+			lowerfootinfo->CalcPos(limitdegflag);
 		}
 
 		if (//!secondcalling &&
-			(hipspos.y - highergpos.y) > (hdiffmax + ROUNDINGPOS)) {
+			(hipspos.y - higherfootinfo->GetLowerGPos().y) > (hdiffmax + ROUNDINGPOS)) {
 
 			//float diffy = highergpos.y - (higherjointpos.y + higheroffset);
-			float diffy = -(hipspos.y - highergpos.y - hdiffmax);//2024/09/16 hdiffmax設定で足の曲がり方が調整できるように修正　地面とhipsの高さがhdiffmax以下になるようにShiftする
+			//float diffy = -(hipspos.y - higherfootinfo->GetLowerGPos().y - hdiffmax);//2024/09/16 hdiffmax設定で足の曲がり方が調整できるように修正　地面とhipsの高さがhdiffmax以下になるようにShiftする
+			float diffy = -(hipspos.y - higherfootinfo->GetLowerGPos().y - hdiffmax) - higherfootinfo->GetLowerFootOffset().y;//2024/10/17
 			ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, curelem.wmblend, true);//wmをブレンドする　この処理後に地面に潜っていても　後処理で地面位置まで上げる
 
 			float diffy2 = modelwm3.data[MATI_42] - modelwm.data[MATI_42];
 			modelwm = modelwm3;
 			hipspos.y += diffy2;
-			lowerjointpos.y += diffy2;
-			higherjointpos.y += diffy2;
+			higherfootinfo->CalcPos(limitdegflag);
+			lowerfootinfo->CalcPos(limitdegflag);
 
-			higherdoneflag = true;
+			//higherdoneflag = true;
 		}
 
 		if (//!secondcalling &&
-			(hipspos.y - lowergpos.y) > (hdiffmax + ROUNDINGPOS)) {
+			(hipspos.y - lowerfootinfo->GetLowerGPos().y) > (hdiffmax + ROUNDINGPOS)) {
 
 			//float diffy = lowergpos.y - (lowerjointpos.y + loweroffset);
-			float diffy = -(hipspos.y - lowergpos.y - hdiffmax);//2024/09/16 hdiffmax設定で足の曲がり方が調整できるように修正　地面とhipsの高さがhdiffmax以下になるようにShiftする
+			//float diffy = -(hipspos.y - lowerfootinfo->GetLowerGPos().y - hdiffmax);//2024/09/16 hdiffmax設定で足の曲がり方が調整できるように修正　地面とhipsの高さがhdiffmax以下になるようにShiftする
+			float diffy = -(hipspos.y - lowerfootinfo->GetLowerGPos().y - hdiffmax) - lowerfootinfo->GetLowerFootOffset().y;//2024/10/17
 			ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, curelem.wmblend, true);//wmをブレンドする　この処理後に地面に潜っていても　後処理で地面位置まで上げる
 
 			float diffy2 = modelwm3.data[MATI_42] - modelwm.data[MATI_42];
 			modelwm = modelwm3;
 			hipspos.y += diffy2;
-			lowerjointpos.y += diffy2;
-			higherjointpos.y += diffy2;
+			higherfootinfo->CalcPos(limitdegflag);
+			lowerfootinfo->CalcPos(limitdegflag);
 
-			lowerdoneflag = true;
-			if (higherdoneflag) {
-				//低い方の地面に接地した場合には　強制的に高い方の足を曲げる処理をする
-				forcehigherfootrig = true;
-			}
+			//lowerdoneflag = true;
+			//if (higherdoneflag) {
+			//	//低い方の地面に接地した場合には　強制的に高い方の足を曲げる処理をする
+			//	forcehigherfootrig = true;
+			//}
 		}
 
 		if (!lowerdoneflag &&
-			((hipspos.y - lowergpos.y) <= hdiffmax) &&
-			(lowerjointpos.y <= (lowergpos.y + ROUNDINGPOS))) {
+			//((hipspos.y - lowerfootinfo->GetHigherGPos().y) <= hdiffmax) &&
+			!lowerfootinfo->IsHigherFootThanGround(ROUNDINGPOS)
+			) {
 
 			//低い方の足をFootRigで曲げて接地
-			ChaVector3 lowernewpos;
-			lowernewpos = RigControlFootRig(limitdegflag, srcmodel, 
-				lowerfoot, lowerupdatebone, curframe,
-				lowerjointpos,
-				lowerdir, loweroffset, curelem.rigstep, curelem.maxcalccount, 
-				lowerrig, lowerrignum,
-				modelwm, matView, matProj,
-				curelem.groundmodel, curelem.gpucollision, &lowergpos);
+			lowerfootinfo->RigControlFootRig(limitdegflag, srcmodel, curframe,
+				curelem.rigstep, curelem.maxcalccount,
+				modelwm, matView, matProj);
 
-			lowerjointpos = lowernewpos;
 			lowerdoneflag = true;
 		}
 
 		if (forcehigherfootrig ||
-			(!higherdoneflag &&
-			((hipspos.y - highergpos.y) <= (hdiffmax + higherhdiffoffset)) &&
-			(higherjointpos.y <= highergpos.y))) {
+			(
+			!higherdoneflag &&
+			//((hipspos.y - higherfootinfo->GetHigherGPos().y) <= (hdiffmax + higherhdiffoffset)) &&
+			!higherfootinfo->IsHigherFootThanGround(0.0f)
+			)
+			) {
 
 			//高い方の足をFootRigで曲げて接地
-			ChaVector3 highernewpos;
-			highernewpos = RigControlFootRig(limitdegflag, srcmodel, 
-				higherfoot, higherupdatebone, curframe,
-				higherjointpos,
-				higherdir, higheroffset, curelem.rigstep, curelem.maxcalccount, 
-				higherrig, higherrignum,
-				modelwm, matView, matProj,
-				curelem.groundmodel, curelem.gpucollision, &highergpos);
+			higherfootinfo->RigControlFootRig(limitdegflag, srcmodel, curframe,
+				curelem.rigstep, curelem.maxcalccount, 
+				modelwm, matView, matProj);
 
-			higherjointpos = highernewpos;
 			higherdoneflag = true;
 		}
 
@@ -2128,56 +2277,46 @@ void CFootRigDlg::FootRig(bool secondcalling,
 		//########################
 		//check and secondcalling
 		//########################
-		if (((higherjointpos.y < (highergpos.y - ROUNDINGPOS)) ||
-			(lowerjointpos.y < (lowergpos.y - ROUNDINGPOS)))) {
+		if (!lowerfootinfo->IsHigherFootThanGround(ROUNDINGPOS) ||
+			!higherfootinfo->IsHigherFootThanGround(ROUNDINGPOS)) {
 
-			if (!secondcalling) {
-				//足が潜っていた場合　２回目の呼び出しをする
-				if (highergpos.y >= lowergpos.y) {
-					FootRig(true,//secondcalling !!!!
-						limitdegflag, srcmodel,
-						curelem,
-						lowerfoot, higherfoot,
-						lowerupdatebone, higherupdatebone,
-						lowerrig, higherrig,
-						lowerjointpos, higherjointpos,
-						lowergpos, highergpos,
-						loweroffset, higheroffset,
-						lowerdir, higherdir,
-						lowerrignum, higherrignum);
-				}
-				else {
-					//高低入れ替えて呼び出し
-					FootRig(true,//secondcalling !!!!
-						limitdegflag, srcmodel,
-						curelem,
-						higherfoot, lowerfoot,
-						higherupdatebone, lowerupdatebone,
-						higherrig, lowerrig,
-						higherjointpos, lowerjointpos,
-						highergpos, lowergpos,
-						higheroffset, loweroffset,
-						higherdir, lowerdir,
-						higherrignum, lowerrignum);
-				}
-			}
-			else {
+			//if (!secondcalling) {
+			//	//足が潜っていた場合　２回目の呼び出しをする
+			//	if (higherfootinfo->IsHigherGPos(lowerfootinfo)) {
+			//		FootRig(true,//secondcalling !!!!
+			//			limitdegflag, srcmodel,
+			//			curelem,
+			//			lowerfootinfo, higherfootinfo);
+			//	}
+			//	else {
+			//		//高低入れ替えて呼び出し
+			//		FootRig(true,//secondcalling !!!!
+			//			limitdegflag, srcmodel,
+			//			curelem,
+			//			higherfootinfo, lowerfootinfo);
+			//	}
+			//}
+			//else {
 				//２回の実行でも足が地面に潜っている場合
 				//高い方の地面の位置に合わせる
-				if (highergpos.y >= lowergpos.y) {
-					float diffy = highergpos.y - higherjointpos.y;
+				if (higherfootinfo->IsHigherGPos(lowerfootinfo)) {
+					float diffy = higherfootinfo->GetDiffBetweenHigherGPosAndFoot();
 					//ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, false);//wmをブレンドしない　この処理後に地面に潜らないように. ブレンド無しは階段でガクガクし過ぎる
 					ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, curelem.wmblend, true);//遅めの環境でもカクカクしないために　やっぱりブレンドフラグtrueに
 					modelwm = modelwm3;
 
 				}
 				else {
-					float diffy = lowergpos.y - lowerjointpos.y;
+					float diffy = lowerfootinfo->GetDiffBetweenHigherGPosAndFoot();
 					//ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, false);//wmをブレンドしない　この処理後に地面に潜らないように. ブレンド無しは階段でガクガクし過ぎる
 					ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, curelem.wmblend, true);//遅めの環境でもカクカクしないために　やっぱりブレンドフラグtrueに
 					modelwm = modelwm3;
 				}
-			}
+
+				higherfootinfo->CalcPos(limitdegflag);
+				lowerfootinfo->CalcPos(limitdegflag);
+
+			//}
 		}
 
 	}
@@ -2297,7 +2436,7 @@ ChaMatrix CFootRigDlg::GetJointWM(bool limitdegflag, CModel* srcmodel, CBone* sr
 	return retmat;
 }
 
-ChaVector3 CFootRigDlg::GetJointPos(bool limitdegflag, CModel* srcmodel, CBone* srcbone, ChaVector3 srcoffset)
+ChaVector3 CFootRigDlg::GetJointPos(bool limitdegflag, CModel* srcmodel, CBone* srcbone, ChaVector3 srcoffset, bool istoebase)
 {
 	bool calcslotflag = true;
 	ChaVector3 retpos;
@@ -2307,12 +2446,14 @@ ChaVector3 CFootRigDlg::GetJointPos(bool limitdegflag, CModel* srcmodel, CBone* 
 		return retpos;
 	}
 
-	ChaVector3 offsetZ;
-	offsetZ.SetParams(0.0f, 0.0f, srcoffset.z);
-	ChaVector3 jointfpos = srcbone->GetJointFPos() + offsetZ;//2024/10/16 +offsetZ : offsetZは回転に依存させる
+
+	//ChaVector3 offsetZ;
+	//offsetZ.SetParams(0.0f, 0.0f, srcoffset.z);
+	//ChaVector3 jointfpos = srcbone->GetJointFPos() + offsetZ;//2024/10/16 +offsetZ : offsetZは回転に依存させる
+	ChaVector3 jointfpos = srcbone->GetJointFPos() + srcoffset;//2024/10/17 つま先とカカトの２点で計算するようにした　回転前に足さないとつま先の角度でオフセット効果が違い過ぎるため
 	ChaMatrix transmat = GetJointWM(limitdegflag, srcmodel, srcbone, true);
 	ChaVector3TransformCoord(&retpos, &jointfpos, &transmat);
-	retpos.y += srcoffset.y;//offsetYは回転に依存させない　：　階段を上る際など、足首回転でつま先が持ち上がっても高さのオフセットはそのままの方が都合が良い
+	//retpos.y += srcoffset.y;//offsetYは回転に依存させない　：　階段を上る際など、足首回転でつま先が持ち上がっても高さのオフセットはそのままの方が都合が良い
 
 	return retpos;
 }
@@ -2371,114 +2512,6 @@ ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diff
 	return retmat;
 }
 
-ChaVector3 CFootRigDlg::RigControlFootRig(bool limitdegflag, CModel* srcmodel, 
-	CBone* footbone, CBone* updatebone, double curframe,
-	ChaVector3 bonepos,
-	int rigdir, ChaVector3 posoffset, float rigstep, int maxcalccount, 
-	CUSTOMRIG footrig, int rignum,
-	ChaMatrix modelwm, ChaMatrix matView, ChaMatrix matProj,
-	CModel* groundmodel, bool gpuflag, ChaVector3* pgroundpos)
-{
-
-	//float BONEMOTIONBLEND = 0.05f;
-
-	ChaVector3 newbonepos;
-	newbonepos.SetParams(bonepos);
-
-	if (!srcmodel || !footbone || !updatebone || !groundmodel || !pgroundpos) {
-		_ASSERT(0);
-		return newbonepos;
-	}
-
-	int maxcount = min(100, max(0, maxcalccount));//2024/09/08 計算回数の最大数もGUIから指定するように変更した
-
-	int calccount = 0;
-	//while (((lowernewpos.y + loweroffset) < lowergpos.y) && (dbgcnt <= 50)) {//円を描くように下がってから上がることが多い　回数は多めに
-	while ((newbonepos.y < (pgroundpos->y - ROUNDINGPOS)) && (calccount < maxcount)) {//円を描くように下がってから上がることが多い　回数は多めに
-		
-		int wallscrapingikflag = 1;
-	
-		//#####################################################################################
-		//2024/09/13 LimitEul角度制限のオンオフに対応　制限オンの時には強制的に壁すりIKもオン
-		//しかし、limiteulオフで計算した方が綺麗に動く
-		//limiteulオンで足を上げると足を戻す動作の変化率が大きくなり(速くなり)綺麗にはみえなかった
-		//Rigの動作範囲は確認可能であり、FootRigの設定で制限した方が綺麗に動くのでそうすることに
-		//角度制限に対応したが、FootRigに関してはUpdate関数内でlimitdegflag = falseに上書きして使用する
-		//#####################################################################################
-		int notmovecount = srcmodel->RigControlFootRig(
-			limitdegflag,
-			wallscrapingikflag,
-			0, curframe,
-			footbone->GetBoneNo(),
-			rigdir,
-			rigstep,
-			footrig, 0);
-
-		////if ((g_previewFlag == 4) || (g_previewFlag == 5)) {
-		//if (g_limitdegflag) {
-		//	srcmodel->BlendSaveBoneMotionReq(updatebone, BONEMOTIONBLEND);//プルプル震え防止のための１回前とのブレンド
-		//}
-
-		srcmodel->UpdateMatrixFootRigReq(limitdegflag, updatebone, &modelwm, &matView, &matProj);//角度制限あり無し両方に　現状の姿勢を格納
-		newbonepos = GetJointPos(limitdegflag, srcmodel, footbone, posoffset);
-		*pgroundpos = GetGroundPos(groundmodel, newbonepos, gpuflag);
-
-		calccount++;
-
-		//2024/09/13 壁すりをオンにしたので次のif文はコメントアウト
-		//if ((notmovecount < 0) || (notmovecount >= rignum)) {
-		//	//エラーが起きた場合　または　角度制限機能により１つのジョイントも回転しなかった場合は処理を抜ける
-		//	break;
-		//}
-	}
-
-	return newbonepos;
-}
-
-CBone* CFootRigDlg::GetUpdateBone(CModel* srcmodel, CBone* footbone, CUSTOMRIG footrig, int rigdir, int* prignum)
-{
-	//########################################
-	//Rigで回転するボーンの内の一番親のボーンを返す
-	//########################################
-
-	if (!srcmodel || !footbone || !prignum ||
-		(footrig.useflag != 2) || ((rigdir) != 0) && (rigdir != 1)) {
-		return nullptr;
-	}
-
-	*prignum = 0;
-	CBone* retbone = nullptr;
-
-	int rignum = 0;
-	int elemno;
-	for (elemno = 0; elemno < footrig.elemnum; elemno++) {
-		//elemnoが１つ増えるとボーンは１階層親になる
-		RIGELEM currigelem = footrig.rigelem[elemno];
-
-		if ((currigelem.rigrigboneno < 0) && //FootRigではrigのrigは想定していない.　通常のリグの場合に対応
-			(currigelem.boneno >= 0) && 
-			(currigelem.transuv[rigdir].enable == 1) && 
-			(fabs(currigelem.transuv[rigdir].applyrate) >= 1e-4)) {
-			CBone* curbone = srcmodel->GetBoneByID(currigelem.boneno);
-			if (curbone) {
-				retbone = curbone;//上書き
-				rignum++;
-			}
-		}
-	}
-
-	*prignum = rignum;
-	return retbone;
-
-	//lowerupdatebone = lowerfoot;
-	//int levelcnt = 0;
-	//while ((levelcnt < 2) && lowerupdatebone->GetParent(false)) {//!!!!!!!! 注意：2階層上までの決め打ち
-	//	lowerupdatebone = lowerupdatebone->GetParent(false);
-	//	levelcnt++;
-	//}
-
-}
-
 
 bool CFootRigDlg::IsValidModel(CModel* srcmodel)
 {
@@ -2524,6 +2557,217 @@ int CFootRigDlg::OnDellAllModel()
 {
 	m_footrigelem.clear();
 	m_savemodelwm.clear();
+
+	return 0;
+}
+
+/////////////////////////
+/////////////////////////
+
+void CFootInfo::SetFootInfo(int footrigLR, FOOTRIGELEM srcelem) {
+	if (footrigLR == FOOTRIG_LR_LEFT) {
+		m_toebasejoint = srcelem.leftfootbone;
+		if (m_toebasejoint) {
+			m_footjoint = m_toebasejoint->GetParent(false);
+		}
+		m_offset1.SetParams(0.0f, srcelem.leftoffsetY1, srcelem.leftoffsetZ1);
+		m_offset2.SetParams(0.0f, srcelem.leftoffsetY2, srcelem.leftoffsetZ2);
+		m_rig = srcelem.leftrig;
+		m_rigdir = srcelem.leftdir;
+
+		m_rignum = 0;
+		m_updatebone = GetUpdateBone(m_toebasejoint->GetParModel(),
+			m_toebasejoint, m_rig, m_rigdir, &m_rignum);
+
+	}
+	else if (footrigLR == FOOTRIG_LR_RIGHT) {
+		m_toebasejoint = srcelem.rightfootbone;
+		if (m_toebasejoint) {
+			m_footjoint = m_toebasejoint->GetParent(false);
+		}
+		m_offset1.SetParams(0.0f, srcelem.rightoffsetY1, srcelem.rightoffsetZ1);
+		m_offset2.SetParams(0.0f, srcelem.rightoffsetY2, srcelem.rightoffsetZ2);
+		m_rig = srcelem.rightrig;
+		m_rigdir = srcelem.rightdir;
+
+		m_rignum = 0;
+		m_updatebone = GetUpdateBone(m_footjoint->GetParModel(),
+			m_footjoint, m_rig, m_rigdir, &m_rignum);
+	}
+	else {
+		_ASSERT(0);
+	}
+	m_groundmodel = srcelem.groundmodel;
+	m_gpucollision = srcelem.gpucollision;
+};
+
+
+int CFootInfo::CalcPos(int limitdegflag)
+{
+	if (m_footrigdlg && m_toebasejoint && m_footjoint) {
+		{
+			ChaVector3 jointpos = m_footrigdlg->GetJointPos(limitdegflag, m_toebasejoint->GetParModel(), m_toebasejoint, m_offset1, true);
+			m_toebasepos = jointpos;
+			if (m_groundmodel) {
+				ChaVector3 gpos = m_footrigdlg->GetGroundPos(m_groundmodel, m_toebasepos, m_gpucollision);
+				m_toebaseGpos = gpos;
+			}
+		}
+
+		{
+			ChaVector3 jointpos = m_footrigdlg->GetJointPos(limitdegflag, m_footjoint->GetParModel(), m_footjoint, m_offset2, false);
+			m_footpos = jointpos;
+			if (m_groundmodel) {
+				ChaVector3 gpos = m_footrigdlg->GetGroundPos(m_groundmodel, m_footpos, m_gpucollision);
+				m_footGpos = gpos;
+			}
+		}
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+
+	return 0;
+}
+
+bool CFootInfo::IsHigherGPos(CFootInfo* cmpinfo)
+{
+	if (cmpinfo) {
+		ChaVector3 highergpos = GetHigherGPos();
+		ChaVector3 cmpgpos = cmpinfo->GetHigherGPos();
+		if (highergpos.y >= cmpgpos.y) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	else {
+		_ASSERT(0);
+		return true;
+	}
+}
+
+CBone* CFootInfo::GetUpdateBone(CModel* srcmodel, CBone* footbone, CUSTOMRIG footrig, int rigdir, int* prignum)
+{
+	//########################################
+	//Rigで回転するボーンの内の一番親のボーンを返す
+	//########################################
+
+	if (!srcmodel || !footbone || !prignum ||
+		(footrig.useflag != 2) || ((rigdir) != 0) && (rigdir != 1)) {
+		return nullptr;
+	}
+
+	*prignum = 0;
+	CBone* retbone = nullptr;
+
+	int rignum = 0;
+	int elemno;
+	for (elemno = 0; elemno < footrig.elemnum; elemno++) {
+		//elemnoが１つ増えるとボーンは１階層親になる
+		RIGELEM currigelem = footrig.rigelem[elemno];
+
+		if ((currigelem.rigrigboneno < 0) && //FootRigではrigのrigは想定していない.　通常のリグの場合に対応
+			(currigelem.boneno >= 0) &&
+			(currigelem.transuv[rigdir].enable == 1) &&
+			(fabs(currigelem.transuv[rigdir].applyrate) >= 1e-4)) {
+			CBone* curbone = srcmodel->GetBoneByID(currigelem.boneno);
+			if (curbone) {
+				retbone = curbone;//上書き
+				rignum++;
+			}
+		}
+	}
+
+	*prignum = rignum;
+	return retbone;
+
+	//lowerupdatebone = lowerfoot;
+	//int levelcnt = 0;
+	//while ((levelcnt < 2) && lowerupdatebone->GetParent(false)) {//!!!!!!!! 注意：2階層上までの決め打ち
+	//	lowerupdatebone = lowerupdatebone->GetParent(false);
+	//	levelcnt++;
+	//}
+
+}
+
+int CFootInfo::RigControlFootRig(bool limitdegflag, CModel* srcmodel, double curframe,
+	float rigstep, int maxcalccount,
+	ChaMatrix modelwm, ChaMatrix matView, ChaMatrix matProj)
+{
+	if (!srcmodel) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	CalcPos(limitdegflag);
+
+	RigControlFootRigFunc(false, 
+		limitdegflag, srcmodel, curframe,
+		rigstep, maxcalccount,
+		modelwm, matView, matProj);
+
+	return 0;
+}
+
+int CFootInfo::RigControlFootRigFunc(bool istoebase,
+	bool limitdegflag, CModel* srcmodel, double curframe,
+	float rigstep, int maxcalccount,
+	ChaMatrix modelwm, ChaMatrix matView, ChaMatrix matProj)
+{
+
+	if (!srcmodel || !IsValid()) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int maxcount = min(100, max(0, maxcalccount));//2024/09/08 計算回数の最大数もGUIから指定するように変更した
+
+
+	int calccount = 0;
+	while ((!IsHigherFootThanGround(ROUNDINGPOS)) && (calccount < maxcount)) {//円を描くように下がってから上がることが多い　回数は多めに
+
+		int wallscrapingikflag = 1;
+
+		//#####################################################################################
+		//2024/09/13 LimitEul角度制限のオンオフに対応　制限オンの時には強制的に壁すりIKもオン
+		//しかし、limiteulオフで計算した方が綺麗に動く
+		//limiteulオンで足を上げると足を戻す動作の変化率が大きくなり(速くなり)綺麗にはみえなかった
+		//Rigの動作範囲は確認可能であり、FootRigの設定で制限した方が綺麗に動くのでそうすることに
+		//角度制限に対応したが、FootRigに関してはUpdate関数内でlimitdegflag = falseに上書きして使用する
+		//#####################################################################################
+		int notmovecount = srcmodel->RigControlFootRig(
+			limitdegflag,
+			wallscrapingikflag,
+			0, curframe,
+			//footbone->GetBoneNo(),
+			m_toebasejoint->GetBoneNo(),//!!!!!!!!! 高さ比較は引数のbone. rigboneはtoebase
+			m_rigdir,
+			rigstep,
+			m_rig, 0);
+
+		////if ((g_previewFlag == 4) || (g_previewFlag == 5)) {
+		//if (g_limitdegflag) {
+		//	srcmodel->BlendSaveBoneMotionReq(updatebone, BONEMOTIONBLEND);//プルプル震え防止のための１回前とのブレンド
+		//}
+
+		srcmodel->UpdateMatrixFootRigReq(istoebase, limitdegflag, m_updatebone, &modelwm, &matView, &matProj);//角度制限あり無し両方に　現状の姿勢を格納
+
+		CalcPos(limitdegflag);
+		//newbonepos = m_footrigdlg->GetJointPos(limitdegflag, srcmodel, footbone, posoffset, istoebase);
+		//*pgroundpos = m_footrigdlg->GetGroundPos(groundmodel, newbonepos, gpuflag);
+
+
+		calccount++;
+
+		//2024/09/13 壁すりをオンにしたので次のif文はコメントアウト
+		//if ((notmovecount < 0) || (notmovecount >= rignum)) {
+		//	//エラーが起きた場合　または　角度制限機能により１つのジョイントも回転しなかった場合は処理を抜ける
+		//	break;
+		//}
+	}
 
 	return 0;
 }

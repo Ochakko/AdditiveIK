@@ -139,7 +139,7 @@ public:
 		bool callingbythread, int refposindex);// , int updateslot = 0);
 	//int SwapCurrentMotionPoint();
 
-	int UpdateMatrixFootRig(bool limitdegflag, int srcmotid, double srcframe,
+	int UpdateMatrixFootRig(bool istoebase, bool limitdegflag, int srcmotid, double srcframe,
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
 	int BlendSaveBoneMotion(int srcmotid, double srcframe, float srcblend);
 

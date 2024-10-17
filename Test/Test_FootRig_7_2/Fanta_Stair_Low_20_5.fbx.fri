@@ -2,7 +2,7 @@
 <FootRig>
   <FileInfo>
     <kind>FootRigFile</kind>
-    <version>0006</version>
+    <version>0007</version>
     <type>0</type>
   </FileInfo>
   <FootRigElem>
@@ -13,6 +13,10 @@
     <LeftOffsetZ>0.00</LeftOffsetZ>
     <RightOffset>0.00</RightOffset>
     <RightOffsetZ>0.00</RightOffsetZ>
+    <LeftOffset2>0.00</LeftOffset2>
+    <LeftOffsetZ2>0.00</LeftOffsetZ2>
+    <RightOffset2>0.00</RightOffset2>
+    <RightOffsetZ2>0.00</RightOffsetZ2>
     <HDiffMax>100.00</HDiffMax>
     <RigStep>1.00</RigStep>
     <MaxCalcCount>15</MaxCalcCount>

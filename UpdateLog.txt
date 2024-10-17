@@ -2,6 +2,20 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/10/17
+　FootRig1.2.0
+　　ver1.2.0
+　　前バージョンまでは足の基準点がつま先１点だった
+　　ver1.2.0からは足の基準点をつま先とカカトの２点にした
+　　足の裏へのオフセットもつま先Offset1とカカトOffset2の２つ用意しGUIも対応
+　　GUIによるパラメータの設定により以前より格段に足が地面に潜らなくなった
+
+　Test/Test_FootRig_7_2更新
+
+　FootRig仕様書も更新
+　　Documents/FootRig_TechSpec.docx
+
+
 
 2024/10/16
 　Try and Omit about PickingShader.
