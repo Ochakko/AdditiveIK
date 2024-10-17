@@ -15,6 +15,10 @@ https://github.com/Ochakko/AdditiveIK
 　FootRig仕様書も更新
 　　Documents/FootRig_TechSpec.docx
 
+　ショートムービー
+　　リアルタイムFootRig 1.2.0 at AdditiveIK
+　　https://youtu.be/VH21YgC-jvA
+
 
 
 2024/10/16
