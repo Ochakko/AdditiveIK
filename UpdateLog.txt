@@ -2,6 +2,13 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/10/20
+　FootRigDlgのOffsetのラベル修正
+　　ドキュメント内のFootRigDlgのスクリーンショット更新
+　　　Documents/FootRig_TechSpec.docx
+　　　Documents/TroubleShooting/0_HowToSettingFootRig.docx
+
+
 2024/10/17
 　FootRig1.2.0
 　　ver1.2.0

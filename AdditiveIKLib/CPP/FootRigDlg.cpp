@@ -726,22 +726,22 @@ int CFootRigDlg::CreateFootRigWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_leftoffsetLabelY1 = new OWP_Label(L"Height OffsetY1", labelheight);
+		m_leftoffsetLabelY1 = new OWP_Label(L"toebaseL OffsetY", labelheight);
 		if (!m_leftoffsetLabelY1) {
 			_ASSERT(0);
 			abort();
 		}
-		m_leftoffsetLabelZ1 = new OWP_Label(L"Height OffsetZ1", labelheight);
+		m_leftoffsetLabelZ1 = new OWP_Label(L"toebaseL OffsetZ", labelheight);
 		if (!m_leftoffsetLabelZ1) {
 			_ASSERT(0);
 			abort();
 		}
-		m_leftoffsetLabelY2 = new OWP_Label(L"Height OffsetY2", labelheight);
+		m_leftoffsetLabelY2 = new OWP_Label(L"footL OffsetY", labelheight);
 		if (!m_leftoffsetLabelY2) {
 			_ASSERT(0);
 			abort();
 		}
-		m_leftoffsetLabelZ2 = new OWP_Label(L"Height OffsetZ2", labelheight);
+		m_leftoffsetLabelZ2 = new OWP_Label(L"footL OffsetZ", labelheight);
 		if (!m_leftoffsetLabelZ2) {
 			_ASSERT(0);
 			abort();
@@ -803,22 +803,22 @@ int CFootRigDlg::CreateFootRigWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_rightoffsetLabelY1 = new OWP_Label(L"Height OffsetY1", labelheight);
+		m_rightoffsetLabelY1 = new OWP_Label(L"toebaseR OffsetY", labelheight);
 		if (!m_rightoffsetLabelY1) {
 			_ASSERT(0);
 			abort();
 		}
-		m_rightoffsetLabelZ1 = new OWP_Label(L"Height OffsetZ1", labelheight);
+		m_rightoffsetLabelZ1 = new OWP_Label(L"toebaseR OffsetZ", labelheight);
 		if (!m_rightoffsetLabelZ1) {
 			_ASSERT(0);
 			abort();
 		}
-		m_rightoffsetLabelY2 = new OWP_Label(L"Height OffsetY2", labelheight);
+		m_rightoffsetLabelY2 = new OWP_Label(L"footR OffsetY", labelheight);
 		if (!m_rightoffsetLabelY2) {
 			_ASSERT(0);
 			abort();
 		}
-		m_rightoffsetLabelZ2 = new OWP_Label(L"Height OffsetZ2", labelheight);
+		m_rightoffsetLabelZ2 = new OWP_Label(L"footR OffsetZ", labelheight);
 		if (!m_rightoffsetLabelZ2) {
 			_ASSERT(0);
 			abort();
