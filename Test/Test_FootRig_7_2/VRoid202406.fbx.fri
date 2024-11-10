@@ -19,9 +19,9 @@
     <RightOffset>-4.00</RightOffset>
     <RightOffsetZ>5.00</RightOffsetZ>
     <LeftOffset2>-4.50</LeftOffset2>
-    <LeftOffsetZ2>5.00</LeftOffsetZ2>
+    <LeftOffsetZ2>1.00</LeftOffsetZ2>
     <RightOffset2>-4.50</RightOffset2>
-    <RightOffsetZ2>5.00</RightOffsetZ2>
+    <RightOffsetZ2>1.00</RightOffsetZ2>
     <HDiffMax>93.00</HDiffMax>
     <RigStep>0.50</RigStep>
     <MaxCalcCount>60</MaxCalcCount>

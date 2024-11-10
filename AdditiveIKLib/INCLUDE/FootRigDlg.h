@@ -387,13 +387,31 @@ public:
 	{
 		float retdiff = 0.0f;
 
+		//低い方の足を高い方の地面にまで上げるための計算
+
 		if (m_toebasejoint) {
 			if (m_footjoint) {
 				if (m_toebaseGpos.y >= m_footGpos.y) {
-					retdiff = m_toebaseGpos.y - (m_toebasepos.y + m_offset1.y);
+					//地面の高さとして高い方を採用
+
+					//足の高さとして低い方を採用
+					//retdiff = m_toebaseGpos.y - (m_toebasepos.y + m_offset1.y);
+					if ((m_toebasepos.y + m_offset1.y) <= (m_footpos.y + m_offset2.y)) {
+						retdiff = m_toebaseGpos.y - (m_toebasepos.y + m_offset1.y);
+					}
+					else {
+						retdiff = m_toebaseGpos.y - (m_toebasepos.y + m_offset1.y);
+					}					
 				}
 				else {
-					retdiff = m_footGpos.y - (m_footpos.y + m_offset2.y);
+					//retdiff = m_footGpos.y - (m_footpos.y + m_offset2.y);
+					if ((m_toebasepos.y + m_offset1.y) <= (m_footpos.y + m_offset2.y)) {
+						retdiff = m_footGpos.y - (m_toebasepos.y + m_offset1.y);
+					}
+					else {
+						retdiff = m_footGpos.y - (m_toebasepos.y + m_offset1.y);
+					}
+
 				}
 			}
 			else {
@@ -406,29 +424,29 @@ public:
 
 		return retdiff;
 	};
-	float GetDiffBetweenLowerGPosAndFoot()
-	{
-		float retdiff = 0.0f;
-
-		if (m_toebasejoint) {
-			if (m_footjoint) {
-				if (m_toebaseGpos.y <= m_footGpos.y) {
-					retdiff = m_toebaseGpos.y - (m_toebasepos.y + m_offset1.y);
-				}
-				else {
-					retdiff = m_footGpos.y - (m_footpos.y + m_offset2.y);
-				}
-			}
-			else {
-				_ASSERT(0);
-			}
-		}
-		else {
-			_ASSERT(0);
-		}
-
-		return retdiff;
-	};
+	//float GetDiffBetweenLowerGPosAndFoot()
+	//{
+	//	float retdiff = 0.0f;
+	//
+	//	if (m_toebasejoint) {
+	//		if (m_footjoint) {
+	//			if (m_toebaseGpos.y <= m_footGpos.y) {
+	//				retdiff = m_toebaseGpos.y - (m_toebasepos.y + m_offset1.y);
+	//			}
+	//			else {
+	//				retdiff = m_footGpos.y - (m_footpos.y + m_offset2.y);
+	//			}
+	//		}
+	//		else {
+	//			_ASSERT(0);
+	//		}
+	//	}
+	//	else {
+	//		_ASSERT(0);
+	//	}
+	//
+	//	return retdiff;
+	//};
 
 
 

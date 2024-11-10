@@ -2,6 +2,16 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2024/11/10
+　FootRig修正
+　　足の位置の最終修正時の計算を修正
+　　　高い方の地面に低い方の足(つま先orフット)の位置を合わせるように.
+　　　階段上り下り時にも足がほとんど潜らなくなった(FootRigメニューで数値を調整する必要はある)
+
+　Test/Test_FootRig_7_2更新
+
+
+
 2024/10/20
 　FootRigDlgのOffsetのラベル修正
 　　ドキュメント内のFootRigDlgのスクリーンショット更新
