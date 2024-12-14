@@ -14,12 +14,12 @@
   <ProjFar>5000.000</ProjFar>
   <PickDistRate>0.50</PickDistRate>
   <EditRate>3.218</EditRate>
-  <PlayingSpeed>3.575</PlayingSpeed>
-  <PhysicalLimitScale>0.468</PhysicalLimitScale>
-  <BtMovableRate>68</BtMovableRate>
+  <PlayingSpeed>1.203</PlayingSpeed>
+  <PhysicalLimitScale>0.153</PhysicalLimitScale>
+  <BtMovableRate>100</BtMovableRate>
   <CameraDist>290.553</CameraDist>
   <AKScale>1.000</AKScale>
-  <BtVScaleOnLimitEul>0.118</BtVScaleOnLimitEul>
+  <BtVScaleOnLimitEul>0.750</BtVScaleOnLimitEul>
   <BoneAxis>0</BoneAxis>
   <2L_LOD0>0.01</2L_LOD0>
   <2L_LOD1>1.00</2L_LOD1>
