@@ -116,7 +116,13 @@ void ErrorMessage(const WCHAR* szMessage, HRESULT hr)
 int OpenDbgFile(int srcappcnt)
 {
 	WCHAR dbgfilename[MAX_PATH] = { 0L };
-	swprintf_s(dbgfilename, MAX_PATH, L"dbg%d.txt", srcappcnt);//ï°êîÇÃAdditiveIKÇóßÇøè„Ç∞ÇÈÇΩÇﬂ
+	WCHAR appfolder[MAX_PATH] = { 0L };
+	bool resgetappfolder = GetAppFolderPathOchakkoLAB(appfolder, MAX_PATH);
+	if (!resgetappfolder || (appfolder[0] == 0L)) {
+		_ASSERT(0);
+		return 1;
+	}
+	swprintf_s(dbgfilename, MAX_PATH, L"%sdbg%d.txt", appfolder, srcappcnt);//ï°êîÇÃAdditiveIKÇóßÇøè„Ç∞ÇÈÇΩÇﬂ
 
 	if (!dbgfile) {
 		//dbgfile = CreateFile(L"dbg.txt", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS,
@@ -136,7 +142,8 @@ int OpenDbgFile(int srcappcnt)
 		GetLocalTime(&st);
 
 		WCHAR infofilename[MAX_PATH] = { 0L };
-		swprintf_s(infofilename, MAX_PATH, L"info%d_%4u_%02u_%02u_%02u_%02u_%02u.txt",
+		swprintf_s(infofilename, MAX_PATH, L"%sinfo%d_%4u_%02u_%02u_%02u_%02u_%02u.txt",
+			appfolder,
 			srcappcnt,//ï°êîÇÃAdditiveIKÇóßÇøè„Ç∞ÇÈÇΩÇﬂ
 			st.wYear, st.wMonth, st.wDay,
 			st.wHour, st.wMinute, st.wSecond);

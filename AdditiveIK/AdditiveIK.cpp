@@ -11009,7 +11009,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 			SYSTEMTIME localtime;
 			GetLocalTime(&localtime);
 			WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
-			swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%s\\MB3DOpenProj_%04u%02u%02u%02u%02u%02u.txt",
+			swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProj_%04u%02u%02u%02u%02u%02u.txt",
 				s_appFolder,
 				localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 			HANDLE hfile;
@@ -18895,7 +18895,7 @@ int SaveProject()
 			SYSTEMTIME localtime;
 			GetLocalTime(&localtime);
 			WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
-			swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%s\\MB3DOpenProj_%04u%02u%02u%02u%02u%02u.txt",
+			swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProj_%04u%02u%02u%02u%02u%02u.txt",
 				s_appFolder,
 				localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 			HANDLE hfile;
@@ -19157,7 +19157,7 @@ int OpenChaFile()
 			SYSTEMTIME localtime;
 			GetLocalTime(&localtime);
 			WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
-			swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%s\\MB3DOpenProj_%04u%02u%02u%02u%02u%02u.txt",
+			swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProj_%04u%02u%02u%02u%02u%02u.txt",
 				s_appFolder,
 				localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 			HANDLE hfile;
@@ -37989,7 +37989,7 @@ int SaveRtgHistory(WCHAR* selectname)
 	SYSTEMTIME localtime;
 	GetLocalTime(&localtime);
 	WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
-	swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%s\\MB3DOpenProjRtgDir_%04u%02u%02u%02u%02u%02u.txt",
+	swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProjRtgDir_%04u%02u%02u%02u%02u%02u.txt",
 		s_appFolder,
 		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 	HANDLE hfile;
@@ -38024,7 +38024,7 @@ int Savebvh2FBXHistory(WCHAR* selectname)
 	SYSTEMTIME localtime;
 	GetLocalTime(&localtime);
 	WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
-	swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%s\\MB3DOpenProjBvhDir_%04u%02u%02u%02u%02u%02u.txt",
+	swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProjBvhDir_%04u%02u%02u%02u%02u%02u.txt",
 		s_appFolder,
 		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 	HANDLE hfile;
@@ -38058,7 +38058,7 @@ int SaveBatchHistory(WCHAR* selectname)
 	SYSTEMTIME localtime;
 	GetLocalTime(&localtime);
 	WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
-	swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%s\\MB3DOpenProjBatchDir_%04u%02u%02u%02u%02u%02u.txt",
+	swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProjBatchDir_%04u%02u%02u%02u%02u%02u.txt",
 		s_appFolder,
 		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 	HANDLE hfile;
@@ -39188,7 +39188,7 @@ int WriteCPTFile(WCHAR* dstfilename)
 
 
 	//2024/06/07 PM8:30頃　ファイルバージョンアップ AdditiveIK1.0.0.23へ向けて
-	swprintf_s(cptfilename, MAX_PATH, L"%s\\MB3DTempCopyFrames_v1.0.0.23_%04u%02u%02u%02u%02u%02u.cpt",//ファイルのバージョン
+	swprintf_s(cptfilename, MAX_PATH, L"%sMB3DTempCopyFrames_v1.0.0.23_%04u%02u%02u%02u%02u%02u.cpt",//ファイルのバージョン
 		s_appFolder,
 		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 
@@ -40456,7 +40456,7 @@ int LoadThreshold()
 {
 	int result = 0;
 	WCHAR filepath[MAX_PATH] = { 0L };
-	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjThreshold_0.txt", s_appFolder);
+	swprintf_s(filepath, MAX_PATH, L"%sMB3DOpenProjThreshold_0.txt", s_appFolder);
 
 	CThresholdFile thresholdfile;
 	result = thresholdfile.LoadThresholdFile(filepath);
@@ -40470,7 +40470,7 @@ int LoadLightsForEdit()
 	int slotindex;
 	for (slotindex = 0; slotindex < LIGHTSLOTNUM; slotindex++) {
 		WCHAR lightfilepath[MAX_PATH] = { 0L };
-		swprintf_s(lightfilepath, MAX_PATH, L"%s\\MB3DOpenProjLightsForEdit_%d.txt", s_appFolder, slotindex);
+		swprintf_s(lightfilepath, MAX_PATH, L"%sMB3DOpenProjLightsForEdit_%d.txt", s_appFolder, slotindex);
 
 		CLightsForEditFile lightfile;
 		result += lightfile.LoadLightsForEditFile(lightfilepath, slotindex);
@@ -40485,7 +40485,7 @@ int LoadShadowParamsFile()
 	int result = 0;
 
 	WCHAR filepath[MAX_PATH] = { 0L };
-	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjShadowParams_0.txt", s_appFolder);
+	swprintf_s(filepath, MAX_PATH, L"%sMB3DOpenProjShadowParams_0.txt", s_appFolder);
 
 	CShadowParamsFile shadowparamsfile;
 	result = shadowparamsfile.LoadShadowParamsFile(filepath);
@@ -40501,7 +40501,7 @@ int LoadSkyParamsFile()
 		int slotindex;
 		for (slotindex = 0; slotindex < SKYSLOTNUM; slotindex++) {
 			WCHAR filepath[MAX_PATH] = { 0L };
-			swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjSkyParams_%d.txt", s_appFolder, slotindex);
+			swprintf_s(filepath, MAX_PATH, L"%sMB3DOpenProjSkyParams_%d.txt", s_appFolder, slotindex);
 
 			CSkyParamsFile skyparamsfile;
 			HSVTOON inittoon;
@@ -40537,7 +40537,7 @@ int LoadFogParamsFile()
 	int slotindex;
 	for (slotindex = 0; slotindex < FOGSLOTNUM; slotindex++) {
 		WCHAR filepath[MAX_PATH] = { 0L };
-		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjFogParams_%d.txt", s_appFolder, slotindex);
+		swprintf_s(filepath, MAX_PATH, L"%sMB3DOpenProjFogParams_%d.txt", s_appFolder, slotindex);
 
 		CFogParamsFile fogparamsfile;
 		result += fogparamsfile.LoadFogParamsFile(filepath, slotindex);
@@ -40556,7 +40556,7 @@ int LoadDofParamsFile()
 	int slotindex;
 	for (slotindex = 0; slotindex < DOFSLOTNUM; slotindex++) {
 		WCHAR filepath[MAX_PATH] = { 0L };
-		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjDofParams_%d.txt", s_appFolder, slotindex);
+		swprintf_s(filepath, MAX_PATH, L"%sMB3DOpenProjDofParams_%d.txt", s_appFolder, slotindex);
 
 		CDofParamsFile fogparamsfile;
 		result += fogparamsfile.LoadDofParamsFile(filepath, slotindex);
@@ -40651,7 +40651,7 @@ int LoadChooseColor()
 	COLORREF savedcolorref[16];
 	ZeroMemory(&savedcolorref, sizeof(COLORREF) * 16);
 	WCHAR colorfilepath[MAX_PATH] = { 0L };
-	swprintf_s(colorfilepath, MAX_PATH, L"%s\\MB3DOpenProjChooseColor_0.txt", s_appFolder);
+	swprintf_s(colorfilepath, MAX_PATH, L"%sMB3DOpenProjChooseColor_0.txt", s_appFolder);
 	CChooseColorFile colorfile;
 	int resultcolfile = colorfile.LoadChooseColorFile(colorfilepath, &(savedcolorref[0]));
 	if (resultcolfile == 0) {
@@ -40682,7 +40682,7 @@ int LoadIniFile()
 	*last2en = 0L;
 
 	WCHAR inifilepath[MAX_PATH] = { 0L };
-	swprintf_s(inifilepath, MAX_PATH, L"%s\\AdditiveIK%d.ini", path, s_appcnt);
+	swprintf_s(inifilepath, MAX_PATH, L"%sAdditiveIK%d.ini", s_appFolder, s_appcnt);
 
 	CIniFile inifile;
 	inifile.LoadIniFile(inifilepath);
@@ -40694,7 +40694,7 @@ int SaveThreshold()
 {
 	int result = 0;
 	WCHAR filepath[MAX_PATH] = { 0L };
-	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjThreshold_0.txt", s_appFolder);
+	swprintf_s(filepath, MAX_PATH, L"%sMB3DOpenProjThreshold_0.txt", s_appFolder);
 
 	CThresholdFile thresholdfile;
 	result = thresholdfile.WriteThresholdFile(filepath);
@@ -40710,7 +40710,7 @@ int SaveLightsForEdit()
 	int slotindex;
 	for (slotindex = 0; slotindex < LIGHTSLOTNUM; slotindex++) {
 		WCHAR lightfilepath[MAX_PATH] = { 0L };
-		swprintf_s(lightfilepath, MAX_PATH, L"%s\\MB3DOpenProjLightsForEdit_%d.txt", s_appFolder, slotindex);
+		swprintf_s(lightfilepath, MAX_PATH, L"%sMB3DOpenProjLightsForEdit_%d.txt", s_appFolder, slotindex);
 
 		CLightsForEditFile lightfile;
 		result += lightfile.WriteLightsForEditFile(lightfilepath, slotindex);
@@ -40724,7 +40724,7 @@ int SaveShadowParamsFile()
 	int result = 0;
 
 	WCHAR filepath[MAX_PATH] = { 0L };
-	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjShadowParams_0.txt", s_appFolder);
+	swprintf_s(filepath, MAX_PATH, L"%sMB3DOpenProjShadowParams_0.txt", s_appFolder);
 
 	CShadowParamsFile shadowparamsfile;
 	result = shadowparamsfile.WriteShadowParamsFile(filepath);
@@ -40741,7 +40741,7 @@ int SaveSkyParamsFile()
 		int slotindex;
 		for (slotindex = 0; slotindex < SKYSLOTNUM; slotindex++) {
 			WCHAR filepath[MAX_PATH] = { 0L };
-			swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjSkyParams_%d.txt", s_appFolder, slotindex);
+			swprintf_s(filepath, MAX_PATH, L"%sMB3DOpenProjSkyParams_%d.txt", s_appFolder, slotindex);
 
 			CSkyParamsFile skyparamsfile;
 			result += skyparamsfile.WriteSkyParamsFile(filepath, s_skyparamsdlg.GetSkyParams(slotindex), slotindex);
@@ -40762,7 +40762,7 @@ int SaveFogParamsFile()
 	int slotindex;
 	for (slotindex = 0; slotindex < FOGSLOTNUM; slotindex++) {
 		WCHAR filepath[MAX_PATH] = { 0L };
-		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjFogParams_%d.txt", s_appFolder, slotindex);
+		swprintf_s(filepath, MAX_PATH, L"%sMB3DOpenProjFogParams_%d.txt", s_appFolder, slotindex);
 
 		CFogParamsFile fogparamsfile;
 		result += fogparamsfile.WriteFogParamsFile(filepath, slotindex);
@@ -40777,7 +40777,7 @@ int SaveDofParamsFile()
 	int slotindex;
 	for (slotindex = 0; slotindex < DOFSLOTNUM; slotindex++) {
 		WCHAR filepath[MAX_PATH] = { 0L };
-		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjDofParams_%d.txt", s_appFolder, slotindex);
+		swprintf_s(filepath, MAX_PATH, L"%sMB3DOpenProjDofParams_%d.txt", s_appFolder, slotindex);
 
 		CDofParamsFile fogparamsfile;
 		result = fogparamsfile.WriteDofParamsFile(filepath, slotindex);
@@ -40795,7 +40795,7 @@ int SaveChooseColor()
 	int resultgetcol = g_coldlg.GetCustomColor(16, &(colforsave[0]));
 	if (resultgetcol == 0) {
 		WCHAR colorfilepath[MAX_PATH] = { 0L };
-		swprintf_s(colorfilepath, MAX_PATH, L"%s\\MB3DOpenProjChooseColor_0.txt", s_appFolder);
+		swprintf_s(colorfilepath, MAX_PATH, L"%sMB3DOpenProjChooseColor_0.txt", s_appFolder);
 		CChooseColorFile colorfile;
 		int resultcolfile = colorfile.WriteChooseColorFile(colorfilepath, colforsave);
 		_ASSERT(resultcolfile == 0);
@@ -40825,7 +40825,7 @@ int SaveIniFile()
 	*last2en = 0L;
 
 	WCHAR inifilepath[MAX_PATH] = { 0L };
-	swprintf_s(inifilepath, MAX_PATH, L"%s\\AdditiveIK%d.ini", path, s_appcnt);
+	swprintf_s(inifilepath, MAX_PATH, L"%sAdditiveIK%d.ini", s_appFolder, s_appcnt);
 
 	CIniFile inifile;
 	inifile.WriteIniFile(inifilepath);
