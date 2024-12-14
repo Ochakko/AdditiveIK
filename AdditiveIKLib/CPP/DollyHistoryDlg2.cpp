@@ -3,6 +3,8 @@
 #include <DollyHistoryDlg2.h>
 #include "../../AdditiveIK/SetDlgPos.h"
 
+#include <StrMisc.h>
+
 #include <Model.h>
 #include <OrgWindow.h>
 #include <GlobalVar.h>
@@ -1337,8 +1339,9 @@ int CDollyHistoryDlg2::OnSaveDolly()
 
 
 		WCHAR temppath[MAX_PATH] = { 0L };
-		::GetTempPathW(MAX_PATH, temppath);
-		if (temppath[0] != 0L) {
+		//::GetTempPathW(MAX_PATH, temppath);
+		bool resgetappfolder = GetAppFolderPathOchakkoLAB(temppath, MAX_PATH);
+		if (resgetappfolder && (temppath[0] != 0L)) {
 			SYSTEMTIME localtime;
 			GetLocalTime(&localtime);
 			WCHAR dollyfilepath[MAX_PATH] = { 0L };
@@ -1407,8 +1410,9 @@ int CDollyHistoryDlg2::LoadDollyHistory_ver1(std::vector<DOLLYELEM2>& vecdolly)
 	//vecdolly.clear();
 
 	WCHAR temppath[MAX_PATH] = { 0L };
-	::GetTempPathW(MAX_PATH, temppath);
-	if (temppath[0] != 0L) {
+	//::GetTempPathW(MAX_PATH, temppath);
+	bool resgetappfolder = GetAppFolderPathOchakkoLAB(temppath, MAX_PATH);
+	if (resgetappfolder && (temppath[0] != 0L)) {
 		WCHAR searchfilename[MAX_PATH] = { 0L };
 		searchfilename[0] = { 0L };
 		//#### ver1 ####
@@ -1524,8 +1528,9 @@ int CDollyHistoryDlg2::LoadDollyHistory_ver2(std::vector<DOLLYELEM2>& vecdolly)
 	//vecdolly.clear();
 
 	WCHAR temppath[MAX_PATH] = { 0L };
-	::GetTempPathW(MAX_PATH, temppath);
-	if (temppath[0] != 0L) {
+	//::GetTempPathW(MAX_PATH, temppath);
+	bool resgetappfolder = GetAppFolderPathOchakkoLAB(temppath, MAX_PATH);
+	if (resgetappfolder && (temppath[0] != 0L)) {
 		WCHAR searchfilename[MAX_PATH] = { 0L };
 		searchfilename[0] = { 0L };
 		//#### ver2 ####

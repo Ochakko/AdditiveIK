@@ -1,6 +1,14 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2024/12/14
+　履歴ファイルと設定ファイルの保存場所をAppData/Local/Programs/OchakkoLAB/AdditiveIKに変更
+　　AppData/Local/Tempフォルダに保存していましたが、アップデートなどでファイルが頻繁に消えるようになったので対応。
+　　(特に履歴ファイルの内容としてchaファイル名が記述されているとすぐに履歴ファイルが消えるようになったので対応。)
+　　昔の保存場所から新しい保存場所にコピーするボタン(Copy HistoryFiles From TempFolderボタン)をファイルを開くときのダイアログに追加。
+　　ただし、dbg.txtファイルとiniファイルに関しては未対応.
+
+
 
 2024/11/10
 　FootRig修正

@@ -638,7 +638,7 @@ enum {
 static int s_savebonemarkflag = 1;
 static int s_saverigidmarkflag = 1;
 
-static WCHAR s_temppath[MAX_PATH] = { 0L };
+static WCHAR s_appFolder[MAX_PATH] = { 0L };
 
 
 //static CDSUpdateUnderTracking* s_dsupdater = 0;
@@ -2478,10 +2478,12 @@ static int SaveBatchHistory(WCHAR* selectname);
 static int GetBatchHistoryDir(WCHAR* dstname, int dstlen);
 static int Savebvh2FBXHistory(WCHAR* selectname);
 static int SaveRtgHistory(WCHAR* selectname);
-static int GetbvhHistoryDir(std::vector<wstring>& dstvecopenfilename);
-static int GetchaHistoryDir(std::vector<wstring>& dstvecopenfilename, int filter_cha);
+static int GetbvhHistoryDir(std::vector<wstring>& dstvecopenfilename);//appfolder
+static int GetchaHistoryDir(std::vector<wstring>& dstvecopenfilename, int filter_cha);//appfolder
 static int GetCPTFileName(std::vector<HISTORYELEM>& dstcptfilename);
-static int GetRtgHistoryDir(std::vector<wstring>& dstvecopenfilename);
+static int GetRtgHistoryDir(std::vector<wstring>& dstvecopenfilename);//appfolder
+static int GetMB3DFilesAtTempFolder(std::vector<wstring>& dstvecopenfilename);//tempfolder
+static int CopyMB3DFilesFromTempToAppFolder();
 static int SaveProject();
 static int SaveREFile();
 static int SaveImpFile();
@@ -4416,14 +4418,11 @@ void InitApp()
 
 	g_refposflag = false;
 
-	s_temppath[0] = 0L;
-	::GetTempPathW(MAX_PATH, s_temppath);
-	_ASSERT(s_temppath[0]);
 	s_cptfilename.clear();
-	GetCPTFileName(s_cptfilename);//s_temppathセットより後。初回。
+	GetCPTFileName(s_cptfilename);//s_appFolderセットより後。初回。
 
 
-	LoadChooseColor();//s_temppathのセットよりも後
+	LoadChooseColor();//s_appFolderのセットよりも後
 
 
 	InitDSValues();
@@ -9134,6 +9133,12 @@ int SetBaseDir()
 	}
 	DbgOut(L"SetBaseDir : %s\r\n", g_basedir);
 
+
+	s_appFolder[0] = 0L;
+	//::GetTempPathW(MAX_PATH, s_appFolder);
+	bool resgetappfolder = GetAppFolderPathOchakkoLAB(s_appFolder, MAX_PATH);
+	_ASSERT(resgetappfolder && s_appFolder[0]);
+
 	return 0;
 }
 
@@ -11005,7 +11010,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 			GetLocalTime(&localtime);
 			WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
 			swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%s\\MB3DOpenProj_%04u%02u%02u%02u%02u%02u.txt",
-				s_temppath,
+				s_appFolder,
 				localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 			HANDLE hfile;
 			hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
@@ -14753,6 +14758,49 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	return FALSE;
 	case WM_COMMAND:
 		switch (LOWORD(wp)) {
+		case IDC_COPYFROMTEMP:
+		{
+			CopyMB3DFilesFromTempToAppFolder();
+
+			if (s_filterindex == 5) {
+				//bvh2FBXの単体ファイル履歴
+
+				EnableWindow(GetDlgItem(hDlgWnd, IDC_FILTER_CHA), FALSE);
+				EnableWindow(GetDlgItem(hDlgWnd, IDC_FILTER_FBX), FALSE);
+				EnableWindow(GetDlgItem(hDlgWnd, IDC_FILTER_RTG), FALSE);
+
+				std::vector<wstring> vecopenfilename;
+				pagenum = GetbvhHistoryDir(vecopenfilename);
+
+				SetDlgHistory(hDlgWnd, vecopenfilename, pagenum, currentpage);
+			}
+			else if (s_filterindex == 7) {
+				//retarget fileの単体ファイル履歴
+
+				EnableWindow(GetDlgItem(hDlgWnd, IDC_FILTER_CHA), FALSE);
+				EnableWindow(GetDlgItem(hDlgWnd, IDC_FILTER_FBX), FALSE);
+				EnableWindow(GetDlgItem(hDlgWnd, IDC_FILTER_RTG), TRUE);
+
+				std::vector<wstring> vecopenfilename;
+				pagenum = GetRtgHistoryDir(vecopenfilename);
+
+				SetDlgHistory(hDlgWnd, vecopenfilename, pagenum, currentpage);
+			}
+			else {
+				//cha, fbxファイル履歴
+
+				EnableWindow(GetDlgItem(hDlgWnd, IDC_FILTER_CHA), TRUE);
+				EnableWindow(GetDlgItem(hDlgWnd, IDC_FILTER_FBX), TRUE);
+				EnableWindow(GetDlgItem(hDlgWnd, IDC_FILTER_RTG), FALSE);
+
+				std::vector<wstring> vecopenfilename;
+				pagenum = GetchaHistoryDir(vecopenfilename, s_filter_cha);
+
+				SetDlgHistory(hDlgWnd, vecopenfilename, pagenum, currentpage);
+			}
+
+		}
+			break;
 		case IDOK:
 			GetDlgItemText(hDlgWnd, IDC_MULT, strmult, 256);
 			g_tmpmqomult = (float)_wtof(strmult);
@@ -18848,7 +18896,7 @@ int SaveProject()
 			GetLocalTime(&localtime);
 			WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
 			swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%s\\MB3DOpenProj_%04u%02u%02u%02u%02u%02u.txt",
-				s_temppath,
+				s_appFolder,
 				localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 			HANDLE hfile;
 			hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
@@ -19110,7 +19158,7 @@ int OpenChaFile()
 			GetLocalTime(&localtime);
 			WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
 			swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%s\\MB3DOpenProj_%04u%02u%02u%02u%02u%02u.txt",
-				s_temppath,
+				s_appFolder,
 				localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 			HANDLE hfile;
 			hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
@@ -27371,11 +27419,11 @@ int CopyMotionFunc(CModel* srcmodel, MOTINFO* curmi)
 			result1 = WriteCPTFile(retcptfilename);
 			if (result1 == 0) {
 				result2 = WriteCPIFile(srcmodel, curmi, retcptfilename);//cp info
-				if ((result2 != 0) && (retcptfilename[0] != 0)) {
+				if ((result2 != 0) && (retcptfilename[0] != 0)) {//result2がエラーでかつcptfileを作成した場合
 					//ダイアログでコピーをCancelした場合含む
 					//invalidな履歴はその場で削除
 					BOOL bexist;
-					bexist = PathFileExists(retcptfilename);
+					bexist = PathFileExists(retcptfilename);//存在する場合にTRUE
 					if (bexist) {
 						DeleteFileW(retcptfilename);
 					}
@@ -37942,7 +37990,7 @@ int SaveRtgHistory(WCHAR* selectname)
 	GetLocalTime(&localtime);
 	WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
 	swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%s\\MB3DOpenProjRtgDir_%04u%02u%02u%02u%02u%02u.txt",
-		s_temppath,
+		s_appFolder,
 		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 	HANDLE hfile;
 	hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
@@ -37977,7 +38025,7 @@ int Savebvh2FBXHistory(WCHAR* selectname)
 	GetLocalTime(&localtime);
 	WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
 	swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%s\\MB3DOpenProjBvhDir_%04u%02u%02u%02u%02u%02u.txt",
-		s_temppath,
+		s_appFolder,
 		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 	HANDLE hfile;
 	hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
@@ -38011,7 +38059,7 @@ int SaveBatchHistory(WCHAR* selectname)
 	GetLocalTime(&localtime);
 	WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
 	swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%s\\MB3DOpenProjBatchDir_%04u%02u%02u%02u%02u%02u.txt",
-		s_temppath,
+		s_appFolder,
 		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 	HANDLE hfile;
 	hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
@@ -38037,6 +38085,106 @@ bool FindAtTheLast(std::wstring const& strsource, std::wstring const& strpat) {
 	return (strsource.rfind(strpat) == (strsource.size() - strpat.size()));
 }
 
+
+int GetMB3DFilesAtTempFolder(std::vector<wstring>& dstvecopenfilename)
+{
+	dstvecopenfilename.clear();
+	WCHAR temppath[MAX_PATH] = { 0L };
+	::GetTempPathW(MAX_PATH, temppath);
+
+	{
+		WCHAR searchfilename[MAX_PATH] = { 0L };
+		swprintf_s(searchfilename, MAX_PATH, L"%sMB3DOpenProj_*.txt", temppath);//!!!! temppath !!!!!
+		HANDLE hFind;
+		WIN32_FIND_DATA win32fd;
+		hFind = FindFirstFileW(searchfilename, &win32fd);
+
+		if (hFind != INVALID_HANDLE_VALUE) {
+			do {
+				if ((win32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
+					WCHAR tempfilename[MAX_PATH] = { 0L };
+					wcscpy_s(tempfilename, MAX_PATH, win32fd.cFileName);//!!!! temppath !!!!!
+					dstvecopenfilename.push_back(tempfilename);
+				}
+			} while (FindNextFile(hFind, &win32fd));
+			FindClose(hFind);
+		}
+	}
+
+	{
+		WCHAR searchfilename[MAX_PATH] = { 0L };
+		swprintf_s(searchfilename, MAX_PATH, L"%sMB3DTempCopyFrames*.cpi", temppath);
+		HANDLE hFind;
+		WIN32_FIND_DATA win32fd;
+		hFind = FindFirstFileW(searchfilename, &win32fd);
+
+		if (hFind != INVALID_HANDLE_VALUE) {
+			do {
+				if ((win32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
+					WCHAR tempfilename[MAX_PATH] = { 0L };
+					wcscpy_s(tempfilename, MAX_PATH, win32fd.cFileName);//!!!! temppath !!!!!
+					dstvecopenfilename.push_back(tempfilename);
+				}
+			} while (FindNextFile(hFind, &win32fd));
+			FindClose(hFind);
+		}
+	}
+
+	{
+		WCHAR searchfilename[MAX_PATH] = { 0L };
+		swprintf_s(searchfilename, MAX_PATH, L"%sMB3DTempCopyFrames*.cpt", temppath);
+		HANDLE hFind;
+		WIN32_FIND_DATA win32fd;
+		hFind = FindFirstFileW(searchfilename, &win32fd);
+
+		if (hFind != INVALID_HANDLE_VALUE) {
+			do {
+				if ((win32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
+					WCHAR tempfilename[MAX_PATH] = { 0L };
+					wcscpy_s(tempfilename, MAX_PATH, win32fd.cFileName);//!!!! temppath !!!!!
+					dstvecopenfilename.push_back(tempfilename);
+				}
+			} while (FindNextFile(hFind, &win32fd));
+			FindClose(hFind);
+		}
+	}
+
+
+	return 0;
+}
+
+int CopyMB3DFilesFromTempToAppFolder()
+{
+	std::vector<wstring> vectempfilename;
+	GetMB3DFilesAtTempFolder(vectempfilename);
+
+	if (!vectempfilename.empty()) {
+		WCHAR temppath[MAX_PATH] = { 0L };
+		::GetTempPathW(MAX_PATH, temppath);
+
+		int filenum = (int)vectempfilename.size();
+		int fileindex;
+		for (fileindex = 0; fileindex < filenum; fileindex++) {
+			WCHAR srcpath[MAX_PATH] = { 0L };
+			WCHAR dstpath[MAX_PATH] = { 0L };
+			swprintf_s(srcpath, MAX_PATH, L"%s%s", temppath, vectempfilename[fileindex].c_str());
+			swprintf_s(dstpath, MAX_PATH, L"%s%s", s_appFolder, vectempfilename[fileindex].c_str());
+
+			int chksame = wcscmp(srcpath, dstpath);
+			if (chksame != 0) {
+				BOOL bcancel = FALSE;
+				BOOL bret = CopyFileEx(srcpath, dstpath, NULL, NULL, &bcancel, 0);
+				if (bret == 0) {
+					_ASSERT(0);
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
+
 int GetchaHistoryDir(std::vector<wstring>& dstvecopenfilename, int filter_cha)
 {
 	//##################################
@@ -38048,7 +38196,7 @@ int GetchaHistoryDir(std::vector<wstring>& dstvecopenfilename, int filter_cha)
 
 	//MB3DOpenProj_20210410215628.txt
 	WCHAR searchfilename[MAX_PATH] = { 0L };
-	swprintf_s(searchfilename, MAX_PATH, L"%sMB3DOpenProj_*.txt", s_temppath);
+	swprintf_s(searchfilename, MAX_PATH, L"%sMB3DOpenProj_*.txt", s_appFolder);
 	HANDLE hFind;
 	WIN32_FIND_DATA win32fd;
 	hFind = FindFirstFileW(searchfilename, &win32fd);
@@ -38069,7 +38217,7 @@ int GetchaHistoryDir(std::vector<wstring>& dstvecopenfilename, int filter_cha)
 
 				//printf("%s\n", win32fd.cFileName);
 				curelem.wfilename[MAX_PATH - 1] = { 0L };
-				swprintf_s(curelem.wfilename, MAX_PATH, L"%s%s", s_temppath, win32fd.cFileName);
+				swprintf_s(curelem.wfilename, MAX_PATH, L"%s%s", s_appFolder, win32fd.cFileName);
 
 				vechistory.push_back(curelem);
 			}
@@ -38211,7 +38359,7 @@ int GetRtgHistoryDir(std::vector<wstring>& dstvecopenfilename)
 
 	//MB3DOpenProj_20210410215628.txt
 	WCHAR searchfilename[MAX_PATH] = { 0L };
-	swprintf_s(searchfilename, MAX_PATH, L"%sMB3DOpenProjRtgDir_*.txt", s_temppath);
+	swprintf_s(searchfilename, MAX_PATH, L"%sMB3DOpenProjRtgDir_*.txt", s_appFolder);
 	HANDLE hFind;
 	WIN32_FIND_DATA win32fd;
 	hFind = FindFirstFileW(searchfilename, &win32fd);
@@ -38232,7 +38380,7 @@ int GetRtgHistoryDir(std::vector<wstring>& dstvecopenfilename)
 				//printf("%s\n", win32fd.cFileName);
 				curelem.wfilename[0] = { 0L };
 				curelem.wfilename[MAX_PATH - 1] = { 0L };
-				swprintf_s(curelem.wfilename, MAX_PATH, L"%s%s", s_temppath, win32fd.cFileName);
+				swprintf_s(curelem.wfilename, MAX_PATH, L"%s%s", s_appFolder, win32fd.cFileName);
 
 				vechistory.push_back(curelem);
 			}
@@ -38360,7 +38508,7 @@ int GetbvhHistoryDir(std::vector<wstring>& dstvecopenfilename)
 
 	//MB3DOpenProj_20210410215628.txt
 	WCHAR searchfilename[MAX_PATH] = { 0L };
-	swprintf_s(searchfilename, MAX_PATH, L"%sMB3DOpenProjBvhDir_*.txt", s_temppath);
+	swprintf_s(searchfilename, MAX_PATH, L"%sMB3DOpenProjBvhDir_*.txt", s_appFolder);
 	HANDLE hFind;
 	WIN32_FIND_DATA win32fd;
 	hFind = FindFirstFileW(searchfilename, &win32fd);
@@ -38381,7 +38529,7 @@ int GetbvhHistoryDir(std::vector<wstring>& dstvecopenfilename)
 				//printf("%s\n", win32fd.cFileName);
 				curelem.wfilename[0] = { 0L };
 				curelem.wfilename[MAX_PATH - 1] = { 0L };
-				swprintf_s(curelem.wfilename, MAX_PATH, L"%s%s", s_temppath, win32fd.cFileName);
+				swprintf_s(curelem.wfilename, MAX_PATH, L"%s%s", s_appFolder, win32fd.cFileName);
 
 				vechistory.push_back(curelem);
 			}
@@ -38504,7 +38652,7 @@ int GetCPTFileName(std::vector<HISTORYELEM>& dstvecopenfilename)
 		//MB3DOpenProj_20210410215628.txt
 		WCHAR searchfilename[MAX_PATH] = { 0L };
 		searchfilename[0] = { 0L };
-		swprintf_s(searchfilename, MAX_PATH, L"%sMB3DTempCopyFrames_v1.0.0.18_*.cpt", s_temppath);
+		swprintf_s(searchfilename, MAX_PATH, L"%sMB3DTempCopyFrames_v1.0.0.18_*.cpt", s_appFolder);
 		HANDLE hFind;
 		WIN32_FIND_DATA win32fd;
 		hFind = FindFirstFileW(searchfilename, &win32fd);
@@ -38521,7 +38669,7 @@ int GetCPTFileName(std::vector<HISTORYELEM>& dstvecopenfilename)
 					//printf("%s\n", win32fd.cFileName);
 					curelem.wfilename[MAX_PATH - 1] = { 0L };
 					curelem.wfilename[0] = { 0L };
-					swprintf_s(curelem.wfilename, MAX_PATH, L"%s%s", s_temppath, win32fd.cFileName);
+					swprintf_s(curelem.wfilename, MAX_PATH, L"%s%s", s_appFolder, win32fd.cFileName);
 
 					vechistory.push_back(curelem);
 				}
@@ -38533,7 +38681,7 @@ int GetCPTFileName(std::vector<HISTORYELEM>& dstvecopenfilename)
 		//MB3DOpenProj_20210410215628.txt
 		WCHAR searchfilename[MAX_PATH] = { 0L };
 		searchfilename[0] = { 0L };
-		swprintf_s(searchfilename, MAX_PATH, L"%sMB3DTempCopyFrames_v1.0.0.23_*.cpt", s_temppath);//ファイルのバージョン
+		swprintf_s(searchfilename, MAX_PATH, L"%sMB3DTempCopyFrames_v1.0.0.23_*.cpt", s_appFolder);//ファイルのバージョン
 		HANDLE hFind;
 		WIN32_FIND_DATA win32fd;
 		hFind = FindFirstFileW(searchfilename, &win32fd);
@@ -38550,7 +38698,7 @@ int GetCPTFileName(std::vector<HISTORYELEM>& dstvecopenfilename)
 					//printf("%s\n", win32fd.cFileName);
 					curelem.wfilename[MAX_PATH - 1] = { 0L };
 					curelem.wfilename[0] = { 0L };
-					swprintf_s(curelem.wfilename, MAX_PATH, L"%s%s", s_temppath, win32fd.cFileName);
+					swprintf_s(curelem.wfilename, MAX_PATH, L"%s%s", s_appFolder, win32fd.cFileName);
 
 					vechistory.push_back(curelem);
 				}
@@ -38596,7 +38744,7 @@ int GetBatchHistoryDir(WCHAR* dstname, int dstlen)
 
 	//MB3DOpenProj_20210410215628.txt
 	WCHAR searchfilename[MAX_PATH] = { 0L };
-	swprintf_s(searchfilename, MAX_PATH, L"%sMB3DOpenProjBatchDir_*.txt", s_temppath);
+	swprintf_s(searchfilename, MAX_PATH, L"%sMB3DOpenProjBatchDir_*.txt", s_appFolder);
 	HANDLE hFind;
 	WIN32_FIND_DATA win32fd;
 	hFind = FindFirstFileW(searchfilename, &win32fd);
@@ -38616,7 +38764,7 @@ int GetBatchHistoryDir(WCHAR* dstname, int dstlen)
 
 				//printf("%s\n", win32fd.cFileName);
 				curelem.wfilename[MAX_PATH - 1] = { 0L };
-				swprintf_s(curelem.wfilename, MAX_PATH, L"%s%s", s_temppath, win32fd.cFileName);
+				swprintf_s(curelem.wfilename, MAX_PATH, L"%s%s", s_appFolder, win32fd.cFileName);
 
 				vechistory.push_back(curelem);
 			}
@@ -39035,13 +39183,13 @@ int WriteCPTFile(WCHAR* dstfilename)
 	WCHAR cptfilename[MAX_PATH] = { 0L };
 
 	//swprintf_s(cptfilename, MAX_PATH, L"%s\\MB3DTempCopyFrames_v1.0.0.18_%04u%02u%02u%02u%02u%02u.cpt",
-	//	s_temppath,
+	//	s_appFolder,
 	//	localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 
 
 	//2024/06/07 PM8:30頃　ファイルバージョンアップ AdditiveIK1.0.0.23へ向けて
 	swprintf_s(cptfilename, MAX_PATH, L"%s\\MB3DTempCopyFrames_v1.0.0.23_%04u%02u%02u%02u%02u%02u.cpt",//ファイルのバージョン
-		s_temppath,
+		s_appFolder,
 		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 
 
@@ -40308,7 +40456,7 @@ int LoadThreshold()
 {
 	int result = 0;
 	WCHAR filepath[MAX_PATH] = { 0L };
-	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjThreshold_0.txt", s_temppath);
+	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjThreshold_0.txt", s_appFolder);
 
 	CThresholdFile thresholdfile;
 	result = thresholdfile.LoadThresholdFile(filepath);
@@ -40322,7 +40470,7 @@ int LoadLightsForEdit()
 	int slotindex;
 	for (slotindex = 0; slotindex < LIGHTSLOTNUM; slotindex++) {
 		WCHAR lightfilepath[MAX_PATH] = { 0L };
-		swprintf_s(lightfilepath, MAX_PATH, L"%s\\MB3DOpenProjLightsForEdit_%d.txt", s_temppath, slotindex);
+		swprintf_s(lightfilepath, MAX_PATH, L"%s\\MB3DOpenProjLightsForEdit_%d.txt", s_appFolder, slotindex);
 
 		CLightsForEditFile lightfile;
 		result += lightfile.LoadLightsForEditFile(lightfilepath, slotindex);
@@ -40337,7 +40485,7 @@ int LoadShadowParamsFile()
 	int result = 0;
 
 	WCHAR filepath[MAX_PATH] = { 0L };
-	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjShadowParams_0.txt", s_temppath);
+	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjShadowParams_0.txt", s_appFolder);
 
 	CShadowParamsFile shadowparamsfile;
 	result = shadowparamsfile.LoadShadowParamsFile(filepath);
@@ -40353,15 +40501,18 @@ int LoadSkyParamsFile()
 		int slotindex;
 		for (slotindex = 0; slotindex < SKYSLOTNUM; slotindex++) {
 			WCHAR filepath[MAX_PATH] = { 0L };
-			swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjSkyParams_%d.txt", s_temppath, slotindex);
+			swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjSkyParams_%d.txt", s_appFolder, slotindex);
 
 			CSkyParamsFile skyparamsfile;
 			HSVTOON inittoon;
 			inittoon.Init();
 			CShaderTypeParams skyparams;
 			skyparams.InitParams(inittoon);
-			result += skyparamsfile.LoadSkyParamsFile(filepath, &skyparams);
-			_ASSERT(result == 0);
+			BOOL existfile = PathFileExists(filepath);//存在する場合にTRUE
+			if (existfile) {
+				result += skyparamsfile.LoadSkyParamsFile(filepath, &skyparams);
+				_ASSERT(result == 0);
+			}
 			s_skyparamsdlg.SetSkyParams(slotindex, skyparams);
 		}
 		if ((g_skyindex >= 0) && (g_skyindex < SKYSLOTNUM)) {
@@ -40386,7 +40537,7 @@ int LoadFogParamsFile()
 	int slotindex;
 	for (slotindex = 0; slotindex < FOGSLOTNUM; slotindex++) {
 		WCHAR filepath[MAX_PATH] = { 0L };
-		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjFogParams_%d.txt", s_temppath, slotindex);
+		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjFogParams_%d.txt", s_appFolder, slotindex);
 
 		CFogParamsFile fogparamsfile;
 		result += fogparamsfile.LoadFogParamsFile(filepath, slotindex);
@@ -40405,7 +40556,7 @@ int LoadDofParamsFile()
 	int slotindex;
 	for (slotindex = 0; slotindex < DOFSLOTNUM; slotindex++) {
 		WCHAR filepath[MAX_PATH] = { 0L };
-		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjDofParams_%d.txt", s_temppath, slotindex);
+		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjDofParams_%d.txt", s_appFolder, slotindex);
 
 		CDofParamsFile fogparamsfile;
 		result += fogparamsfile.LoadDofParamsFile(filepath, slotindex);
@@ -40495,12 +40646,12 @@ int PickManipulator(UIPICKINFO* ppickinfo, bool pickring)
 
 int LoadChooseColor()
 {
-	//s_temppathのセットよりも後
+	//s_appFolderのセットよりも後
 
 	COLORREF savedcolorref[16];
 	ZeroMemory(&savedcolorref, sizeof(COLORREF) * 16);
 	WCHAR colorfilepath[MAX_PATH] = { 0L };
-	swprintf_s(colorfilepath, MAX_PATH, L"%s\\MB3DOpenProjChooseColor_0.txt", s_temppath);
+	swprintf_s(colorfilepath, MAX_PATH, L"%s\\MB3DOpenProjChooseColor_0.txt", s_appFolder);
 	CChooseColorFile colorfile;
 	int resultcolfile = colorfile.LoadChooseColorFile(colorfilepath, &(savedcolorref[0]));
 	if (resultcolfile == 0) {
@@ -40543,7 +40694,7 @@ int SaveThreshold()
 {
 	int result = 0;
 	WCHAR filepath[MAX_PATH] = { 0L };
-	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjThreshold_0.txt", s_temppath);
+	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjThreshold_0.txt", s_appFolder);
 
 	CThresholdFile thresholdfile;
 	result = thresholdfile.WriteThresholdFile(filepath);
@@ -40559,7 +40710,7 @@ int SaveLightsForEdit()
 	int slotindex;
 	for (slotindex = 0; slotindex < LIGHTSLOTNUM; slotindex++) {
 		WCHAR lightfilepath[MAX_PATH] = { 0L };
-		swprintf_s(lightfilepath, MAX_PATH, L"%s\\MB3DOpenProjLightsForEdit_%d.txt", s_temppath, slotindex);
+		swprintf_s(lightfilepath, MAX_PATH, L"%s\\MB3DOpenProjLightsForEdit_%d.txt", s_appFolder, slotindex);
 
 		CLightsForEditFile lightfile;
 		result += lightfile.WriteLightsForEditFile(lightfilepath, slotindex);
@@ -40573,7 +40724,7 @@ int SaveShadowParamsFile()
 	int result = 0;
 
 	WCHAR filepath[MAX_PATH] = { 0L };
-	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjShadowParams_0.txt", s_temppath);
+	swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjShadowParams_0.txt", s_appFolder);
 
 	CShadowParamsFile shadowparamsfile;
 	result = shadowparamsfile.WriteShadowParamsFile(filepath);
@@ -40590,7 +40741,7 @@ int SaveSkyParamsFile()
 		int slotindex;
 		for (slotindex = 0; slotindex < SKYSLOTNUM; slotindex++) {
 			WCHAR filepath[MAX_PATH] = { 0L };
-			swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjSkyParams_%d.txt", s_temppath, slotindex);
+			swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjSkyParams_%d.txt", s_appFolder, slotindex);
 
 			CSkyParamsFile skyparamsfile;
 			result += skyparamsfile.WriteSkyParamsFile(filepath, s_skyparamsdlg.GetSkyParams(slotindex), slotindex);
@@ -40611,7 +40762,7 @@ int SaveFogParamsFile()
 	int slotindex;
 	for (slotindex = 0; slotindex < FOGSLOTNUM; slotindex++) {
 		WCHAR filepath[MAX_PATH] = { 0L };
-		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjFogParams_%d.txt", s_temppath, slotindex);
+		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjFogParams_%d.txt", s_appFolder, slotindex);
 
 		CFogParamsFile fogparamsfile;
 		result += fogparamsfile.WriteFogParamsFile(filepath, slotindex);
@@ -40626,7 +40777,7 @@ int SaveDofParamsFile()
 	int slotindex;
 	for (slotindex = 0; slotindex < DOFSLOTNUM; slotindex++) {
 		WCHAR filepath[MAX_PATH] = { 0L };
-		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjDofParams_%d.txt", s_temppath, slotindex);
+		swprintf_s(filepath, MAX_PATH, L"%s\\MB3DOpenProjDofParams_%d.txt", s_appFolder, slotindex);
 
 		CDofParamsFile fogparamsfile;
 		result = fogparamsfile.WriteDofParamsFile(filepath, slotindex);
@@ -40644,7 +40795,7 @@ int SaveChooseColor()
 	int resultgetcol = g_coldlg.GetCustomColor(16, &(colforsave[0]));
 	if (resultgetcol == 0) {
 		WCHAR colorfilepath[MAX_PATH] = { 0L };
-		swprintf_s(colorfilepath, MAX_PATH, L"%s\\MB3DOpenProjChooseColor_0.txt", s_temppath);
+		swprintf_s(colorfilepath, MAX_PATH, L"%s\\MB3DOpenProjChooseColor_0.txt", s_appFolder);
 		CChooseColorFile colorfile;
 		int resultcolfile = colorfile.WriteChooseColorFile(colorfilepath, colforsave);
 		_ASSERT(resultcolfile == 0);

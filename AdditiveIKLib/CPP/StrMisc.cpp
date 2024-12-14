@@ -16,6 +16,82 @@
 #define DBGH
 #include <dbg.h>
 
+#include <shlobj.h> //shell
+#include <shlobj_core.h>
+#include <objbase.h>
+#include <Knownfolders.h>
+
+bool GetAppFolderPathOchakkoLAB(WCHAR* dstpath, int pathleng)
+{
+	if (!dstpath || (pathleng < MAX_PATH)) {
+		_ASSERT(0);
+		return false;
+	}
+
+	*dstpath = 0L;
+	
+	//::GetTempPathW(MAX_PATH, s_appFolder);
+	
+	//FOLDERID_AppsFolder
+	//FOLDERID_Desktop
+	//FOLDERID_LocalAppData
+	//FOLDERID_ProgramData
+	WCHAR* pknownfolder = 0;
+	SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &pknownfolder);//2024/12/14 #### AppDataのパス ####
+	if (pknownfolder) {
+		wcscpy_s(dstpath, MAX_PATH, pknownfolder);
+
+		wcscat_s(dstpath, MAX_PATH, L"\\Programs");
+		DWORD fattr1;
+		fattr1 = GetFileAttributes(dstpath);
+		if ((fattr1 == -1) || ((fattr1 & FILE_ATTRIBUTE_DIRECTORY) == 0)) {
+			int bret;
+			bret = CreateDirectory(dstpath, NULL);
+			if (bret == 0) {
+				::MessageBox(NULL, L"履歴保存用ディレクトリの作成に失敗しました。\n終了します。", L"エラー", MB_OK);
+				_ASSERT(0);
+				return false;
+			}
+		}
+
+		wcscat_s(dstpath, MAX_PATH, L"\\OchakkoLAB");
+		DWORD fattr2;
+		fattr2 = GetFileAttributes(dstpath);
+		if ((fattr2 == -1) || ((fattr2 & FILE_ATTRIBUTE_DIRECTORY) == 0)) {
+			int bret;
+			bret = CreateDirectory(dstpath, NULL);
+			if (bret == 0) {
+				::MessageBox(NULL, L"履歴保存用ディレクトリの作成に失敗しました。\n終了します。", L"エラー", MB_OK);
+				_ASSERT(0);
+				return false;
+			}
+		}
+
+		wcscat_s(dstpath, MAX_PATH, L"\\AdditiveIK");
+		DWORD fattr3;
+		fattr3 = GetFileAttributes(dstpath);
+		if ((fattr3 == -1) || ((fattr3 & FILE_ATTRIBUTE_DIRECTORY) == 0)) {
+			int bret;
+			bret = CreateDirectory(dstpath, NULL);
+			if (bret == 0) {
+				::MessageBox(NULL, L"履歴保存用ディレクトリの作成に失敗しました。\n終了します。", L"エラー", MB_OK);
+				_ASSERT(0);
+				return false;
+			}
+		}
+
+		wcscat_s(dstpath, MAX_PATH, L"\\");
+
+	}
+	else {
+		_ASSERT(0);
+		return false;
+	}
+	
+	return true;
+}
+
+
 
 //GUI表示文字数制限
 //名前を最大cpmaxleng文字までコピーする

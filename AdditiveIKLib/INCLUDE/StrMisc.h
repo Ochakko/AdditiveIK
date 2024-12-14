@@ -20,6 +20,8 @@
 		int posx, int posy, int labelheight, 
 		COLORREF textcol, bool underlineflag);
 
+	bool GetAppFolderPathOchakkoLAB(WCHAR* dstpath, int pathleng);
+
 #else
 
 	extern int ShortenNameW(const WCHAR* srcname, WCHAR* dstname, int dstbufleng, int cpmaxleng);
@@ -35,6 +37,8 @@
 	extern bool DrawGdiText(HDC hDC, const WCHAR* srctext,
 		int posx, int posy, int labelheight,
 		COLORREF textcol, bool underlineflag);
+
+	extern bool GetAppFolderPathOchakkoLAB(WCHAR* dstpath, int pathleng);
 
 #endif
 
