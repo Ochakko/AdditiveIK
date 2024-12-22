@@ -10,6 +10,9 @@ MITランセンス.<br>
 ![TopFig0](ScreenShots/0_AdditiveIK_1003_IndexOfMovie_0_W800.png "トップ絵0")<br>
 Fig.0 New Feature of AdditiveIK.<br>
 <br>
+![TopFigA](ScreenShots/SS_For10035/AdditiveIK_10035_W860.png "トップ絵A")<br>
+Fig.A モーションキャプチャ＋物理シミュをベイク (model:VRoid).<br>
+<br>
 ![TopFig1](ScreenShots/1009_Shaders_Annotation.png "トップ絵1")<br>
 Fig.1 ver1.0.0.9以降のシェーダまとめの図 (model:VRoid).<br>
 <br>
