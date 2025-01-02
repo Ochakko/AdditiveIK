@@ -79,6 +79,7 @@
 #include <LightsDlg.h>
 #include <DispGroupDlg.h>
 #include <FootRigDlg.h>
+#include <MotChangeDlg.h>
 #include <LaterTransparentDlg.h>
 #include <ShaderTypeDlg.h>
 #include <ShaderParamsDlg.h>
@@ -256,6 +257,7 @@ enum {
 	SPRETARGETSW_LIMITEULER,
 	SPRETARGETSW_THRESHOLD,//2024/02/20
 	SPRETARGETSW_FOOTRIG,//2024/08/29
+	SPRETARGETSW_MOA,//2025/01/03
 	SPRETARGETSWNUM
 };
 //#define SPRETARGETSWNUM	2
@@ -957,6 +959,7 @@ static CBlendShapeDlg s_blendshapedlg;
 static CLightsDlg s_lightsdlg;
 static CDispGroupDlg s_dispgroupdlg;
 static CFootRigDlg s_footrigdlg;
+static CMotChangeDlg s_motchangedlg;
 static CLaterTransparentDlg s_latertransparentdlg;
 static CShaderTypeDlg s_shadertypedlg;
 static CShaderParamsDlg s_shaderparamsdlg;
@@ -1568,6 +1571,8 @@ static Texture* s_spritetex92 = 0;
 static Texture* s_spritetex93 = 0;
 static Texture* s_spritetex94 = 0;
 static Texture* s_spritetex95 = 0;
+static Texture* s_spritetex96 = 0;
+static Texture* s_spritetex97 = 0;
 
 static Texture* s_spritetex_pushed1 = 0;
 static Texture* s_spritetex_pushed2 = 0;
@@ -2196,6 +2201,7 @@ static void ShowRetargetWnd(bool srcflag);
 static void ShowLimitEulerWnd(bool srcflag);
 static void ShowThresholdWnd(bool srcflag);
 static void ShowFootRigWnd(bool srcflag);
+static void ShowMOAWnd(bool srcflag);
 static void GUIEffectSetVisible(int srcplateno);
 static void ShowSkyWnd(bool srcflag);
 static void ShowFogWnd(bool srcflag);
@@ -3168,6 +3174,10 @@ INT WINAPI wWinMain(
 		return 1;
 	}
 	s_chascene->SetFootRigDlg(&s_footrigdlg);
+	s_motchangedlg.SetChaScene(s_chascene);
+	s_motchangedlg.Create(g_mainhwnd);
+	SetParent(s_motchangedlg.m_hWnd, g_mainhwnd);
+	s_motchangedlg.SetVisible(false);
 
 	//CreateUtDialog();
 	//int spgno;
@@ -3640,6 +3650,7 @@ void InitApp()
 	s_lightsdlg.InitParams();
 	s_dispgroupdlg.InitParams();
 	s_footrigdlg.InitParams();
+	s_motchangedlg.InitParams();
 	s_latertransparentdlg.InitParams();
 	s_shadertypedlg.InitParams();
 	s_shaderparamsdlg.InitParams();
@@ -5266,6 +5277,7 @@ void OnDestroyDevice()
 	s_lightsdlg.DestroyObjs();
 	s_dispgroupdlg.DestroyObjs();
 	s_footrigdlg.DestroyObjs();
+	s_motchangedlg.DestroyObjs();
 	s_latertransparentdlg.DestroyObjs();
 	s_shadertypedlg.DestroyObjs();
 	s_shaderparamsdlg.DestroyObjs();
@@ -19603,6 +19615,9 @@ int SetSpRetargetSWParams()
 
 	s_spretargetsw[SPRETARGETSW_FOOTRIG].dispcenter.x = s_spretargetsw[SPRETARGETSW_THRESHOLD].dispcenter.x + (int)spgwidth + spgshift;
 	s_spretargetsw[SPRETARGETSW_FOOTRIG].dispcenter.y = s_spretargetsw[SPRETARGETSW_RETARGET].dispcenter.y;
+
+	s_spretargetsw[SPRETARGETSW_MOA].dispcenter.x = s_spretargetsw[SPRETARGETSW_FOOTRIG].dispcenter.x + (int)spgwidth + spgshift;
+	s_spretargetsw[SPRETARGETSW_MOA].dispcenter.y = s_spretargetsw[SPRETARGETSW_RETARGET].dispcenter.y;
 
 	int sprcnt;
 	for (sprcnt = 0; sprcnt < SPRETARGETSWNUM; sprcnt++) {
@@ -35555,30 +35570,42 @@ void GUIRetargetSetVisible(int srcplateno)
 		ShowLimitEulerWnd(false);
 		ShowThresholdWnd(false);
 		ShowFootRigWnd(false);
+		ShowMOAWnd(false);
 	}
 	else if (srcplateno == 2) {
 		ShowRetargetWnd(false);
 		ShowLimitEulerWnd(true);
 		ShowThresholdWnd(false);
 		ShowFootRigWnd(false);
+		ShowMOAWnd(false);
 	}
 	else if (srcplateno == 3) {
 		ShowRetargetWnd(false);
 		ShowLimitEulerWnd(false);
 		ShowThresholdWnd(true);
 		ShowFootRigWnd(false);
+		ShowMOAWnd(false);
 	}
 	else if (srcplateno == 4) {
 		ShowRetargetWnd(false);
 		ShowLimitEulerWnd(false);
 		ShowThresholdWnd(false);
 		ShowFootRigWnd(true);
+		ShowMOAWnd(false);
+	}
+	else if (srcplateno == 5) {
+		ShowRetargetWnd(false);
+		ShowLimitEulerWnd(false);
+		ShowThresholdWnd(false);
+		ShowFootRigWnd(false);
+		ShowMOAWnd(true);
 	}
 	else if (srcplateno == -2) {
 		ShowRetargetWnd(false);
 		ShowLimitEulerWnd(false);
 		ShowThresholdWnd(false);
 		ShowFootRigWnd(false);
+		ShowMOAWnd(false);
 	}
 	else {
 		_ASSERT(0);
@@ -35953,6 +35980,31 @@ void ShowFootRigWnd(bool srcflag)
 
 	s_spretargetsw[SPRETARGETSW_FOOTRIG].state = srcflag;
 }
+
+void ShowMOAWnd(bool srcflag)
+{
+	s_motchangedlg.SetVisible(srcflag);
+
+	if (srcflag) {
+		int windowposx;
+		if (g_4kresolution) {
+			windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
+		}
+		else {
+			windowposx = s_timelinewidth + s_mainwidth;
+		}
+		s_motchangedlg.SetWindowPos(HWND_TOP,
+			windowposx,
+			s_sidemenuheight,
+			s_sidewidth,
+			s_sideheight,
+			SWP_SHOWWINDOW
+		);
+	}
+
+	s_spretargetsw[SPRETARGETSW_MOA].state = srcflag;
+}
+
 
 void ShowGUIDlgDispParams(bool srcflag)
 {
@@ -43786,6 +43838,19 @@ int CreateSprites()
 	spriteinitdata.m_textures[0] = s_spritetex95;
 	s_spretargetsw[SPRETARGETSW_FOOTRIG].spriteOFF.Init(spriteinitdata, screenvertexflag);
 
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlateMOA140ON.png");
+	s_spritetex96 = new Texture();
+	s_spritetex96->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex96;
+	s_spretargetsw[SPRETARGETSW_MOA].spriteON.Init(spriteinitdata, screenvertexflag);
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlateMOA140OFF.png");
+	s_spritetex97 = new Texture();
+	s_spritetex97->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex97;
+	s_spretargetsw[SPRETARGETSW_MOA].spriteOFF.Init(spriteinitdata, screenvertexflag);
 
 	wcscpy_s(filepath, MAX_PATH, mpath);
 	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Sky140ON.png");
@@ -44644,6 +44709,8 @@ void InitSprites()
 	s_spritetex93 = 0;
 	s_spritetex94 = 0;
 	s_spritetex95 = 0;
+	s_spritetex96 = 0;
+	s_spritetex97 = 0;
 }
 
 void DestroySprites()
@@ -45051,6 +45118,14 @@ void DestroySprites()
 	if (s_spritetex95) {
 		delete s_spritetex95;
 		s_spritetex95 = 0;
+	}
+	if (s_spritetex96) {
+		delete s_spritetex96;
+		s_spritetex96 = 0;
+	}
+	if (s_spritetex97) {
+		delete s_spritetex97;
+		s_spritetex97 = 0;
 	}
 
 
@@ -46192,6 +46267,10 @@ int SetModel2Dlgs(CModel* srcmodel)
 
 		s_dispgroupdlg.SetModel(srcmodel);
 		s_footrigdlg.SetModel(s_chascene, srcmodel);
+
+		if (s_motchangedlg.GetVisible()) {
+			ShowMOAWnd(true);
+		}
 
 		s_latertransparentdlg.SetModel(srcmodel);
 

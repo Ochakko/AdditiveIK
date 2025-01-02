@@ -25,11 +25,11 @@
 #include <GetDlgParams.h>
 #include <GlobalVar.h>
 
-static char s_strkey[40][3] = {
-	"←", "→", "↑", "↓", "1", "2", "3", "4", "5", "6",
-	"7", "8", "9", "0", "A", "B", "C", "D", "E", "F",
-	"G", "H", "I", "J", "K", "L", "M", "N", "O", "P",
-	"Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"
+static WCHAR s_strkey[40][3] = {
+	L"←", L"→", L"↑", L"↓", L"1", L"2", L"3", L"4", L"5", L"6",
+	L"7", L"8", L"9", L"0", L"A", L"B", L"C", L"D", L"E", L"F",
+	L"G", L"H", L"I", L"J", L"K", L"L", L"M", L"N", L"O", L"P",
+	L"Q", L"R", L"S", L"T", L"U", L"V", L"W", L"X", L"Y", L"Z"
 };
 static int s_vkkey[40] = {
 	VK_LEFT, VK_RIGHT, VK_UP, VK_DOWN, '1', '2', '3', '4', '5', '6',
@@ -47,7 +47,12 @@ static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
 /////////////////////////////////////////////////////////////////////////////
 // CMotChangeDlg
 
-CMotChangeDlg::CMotChangeDlg(ChaScene* srcchascene)
+CMotChangeDlg::CMotChangeDlg()
+{
+	InitParams();
+}
+
+void CMotChangeDlg::InitParams()
 {
 	m_hImageList = 0;
 	m_iImage = 0;
@@ -56,13 +61,13 @@ CMotChangeDlg::CMotChangeDlg(ChaScene* srcchascene)
 	m_TI = 0;
 	m_selecteditem = 0;
 	m_selectedno = 0;
-	
+
 
 	//m_papp = papp;
 ////	m_thandler = papp->m_thandler;
 ////	m_shandler = papp->m_shandler;
 	//m_apphwnd = papp->m_hWnd;
-	m_chascene = srcchascene;
+	m_chascene = nullptr;
 
 
 	m_cmdshow = SW_HIDE;
@@ -72,7 +77,7 @@ CMotChangeDlg::CMotChangeDlg(ChaScene* srcchascene)
 
 	m_firstmake = 0;
 
-	ZeroMemory( m_idlingname, sizeof(char) * MAX_PATH );
+	ZeroMemory(m_idlingname, sizeof(char) * MAX_PATH);
 
 	m_overwritekind = OW_YES;
 
@@ -81,48 +86,66 @@ CMotChangeDlg::CMotChangeDlg(ChaScene* srcchascene)
 	//if( papp->m_mhandler ){
 	//	m_fuleng = papp->m_mhandler->m_fuleng;
 	//}else{
-		m_fuleng = 10;
+	m_fuleng = 10;
 	//}
 
 	m_cpelemnum = 0;
-	ZeroMemory( m_cpelem, sizeof( MCELEM ) * MAXMCCOPYNUM );
+	ZeroMemory(m_cpelem, sizeof(MCELEM) * MAXMCCOPYNUM);
 
 	m_singleevent = 1;
 }
-
-CMotChangeDlg::~CMotChangeDlg()
+void CMotChangeDlg::DestroyObjs()
 {
-	ImageList_Destroy( m_hImageList );
-	if( m_TI ){
-		free( m_TI );
+	if (m_hImageList) {
+		ImageList_Destroy(m_hImageList);
+		m_hImageList = nullptr;
+	}
+
+	if (m_TI) {
+		free(m_TI);
 		m_TI = 0;
 	}
-	
-	if( m_rmenu ){
+
+	if (m_rmenu) {
 		m_rmenu->Destroy();
 		delete m_rmenu;
 		m_rmenu = 0;
 	}
 }
 
-int CMotChangeDlg::ShowDlg( int cmdshow )
+CMotChangeDlg::~CMotChangeDlg()
+{
+	DestroyObjs();
+}
+
+int CMotChangeDlg::SetChaScene(ChaScene* srcchascene)
+{
+	m_chascene = srcchascene;
+	return 0;
+}
+int CMotChangeDlg::SetVisible(bool srcflag)
 {
 	int ret;
 
 	BOOL dummy;
 	OnStop( 0, 0, 0, dummy );
 
-	m_cmdshow = cmdshow;
-	ShowWindow( m_cmdshow );
+	if (srcflag) {
+		m_cmdshow = SW_SHOW;
+	}
+	else {
+		m_cmdshow = SW_HIDE;
+	}
+	ShowWindow(m_cmdshow);
 
-	if( cmdshow != SW_HIDE ){
-		//InitTree();
+	if( m_cmdshow != SW_HIDE ){
+		////InitTree();
 
-		//if( m_papp->m_mhandler ){
-		//	m_fuleng = m_papp->m_mhandler->m_fuleng;
-		//}else{
+		////if( m_papp->m_mhandler ){
+		////	m_fuleng = m_papp->m_mhandler->m_fuleng;
+		////}else{
 			m_fuleng = 10;
-		//}
+		////}
 
 		m_undertreeedit = 0;
 
@@ -134,7 +157,7 @@ int CMotChangeDlg::ShowDlg( int cmdshow )
 
 		ret = InitMC();
 		if( ret ){
-			DbgOut( L"motchangedlg : ShowDlg : InitMC error !!!\n" );
+			DbgOut( L"motchangedlg : SetVisible : InitMC error !!!\n" );
 			_ASSERT( 0 );
 			return 1;
 		}
@@ -205,19 +228,17 @@ LRESULT CMotChangeDlg::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 		_ASSERT(0);
 		return 0;
 	}
-	CModel* currentmodel = GetCurrentModel();
-	if (!currentmodel) {
-		_ASSERT(0);
-		return 0;
-	}
-
-
-	ret = currentmodel->CreateMotChangeHandlerIfNot();
-	if (ret) {
-		DbgOut(L"motchangedlg : OnInitDialog : CreateMotChangeHandlerIfNot error !!!\n");
-		_ASSERT(0);
-		return 0;
-	}
+	//CModel* currentmodel = GetCurrentModel();
+	//if (!currentmodel) {
+	//	_ASSERT(0);
+	//	return 0;
+	//}
+	//ret = currentmodel->CreateMotChangeHandlerIfNot();
+	//if (ret) {
+	//	DbgOut(L"motchangedlg : OnInitDialog : CreateMotChangeHandlerIfNot error !!!\n");
+	//	_ASSERT(0);
+	//	return 0;
+	//}
 
 //	_ASSERT( g_motdlg );
 //	_ASSERT( g_motdlg->m_motparamdlg );
@@ -243,13 +264,17 @@ LRESULT CMotChangeDlg::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 
 	m_dlg_wnd = m_hWnd;
 	m_tree_wnd = GetDlgItem( IDC_TREE1 );
+	_ASSERT(m_tree_wnd);
 	m_list_wnd = GetDlgItem( IDC_LIST1 );
+	_ASSERT(m_list_wnd);
 	m_event_wnd = GetDlgItem( IDC_EVENT );
+	_ASSERT(m_event_wnd);
 	m_combokey_wnd = GetDlgItem( IDC_COMBOKEY );
+	_ASSERT(m_combokey_wnd);
 	m_comboidle_wnd = GetDlgItem( IDC_COMBOIDLE );
-	_ASSERT( m_comboidle_wnd );
+	_ASSERT(m_comboidle_wnd);
 	m_fuleng_wnd = GetDlgItem( IDC_FULENG );
-
+	_ASSERT(m_fuleng_wnd);
 
 	InitComboKey();
 	CreateImageList();
@@ -273,7 +298,7 @@ LRESULT CMotChangeDlg::OnOK(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 
 //	EndDialog(wID);
 
-	ShowDlg( SW_HIDE );
+	SetVisible(SW_HIDE);
 
 	return 0;
 }
@@ -282,7 +307,7 @@ LRESULT CMotChangeDlg::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 {
 //	EndDialog(wID);
 
-	ShowDlg( SW_HIDE );
+	SetVisible(SW_HIDE);
 
 	return 0;
 }
@@ -840,7 +865,7 @@ LRESULT CMotChangeDlg::OnDel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHa
 
 
 	int motnum = currentmodel->GetMotInfoSize();
-	if (motnum >= 0) {
+	if (motnum <= 0) {
 		return 0;
 	}
 
@@ -918,7 +943,7 @@ LRESULT CMotChangeDlg::OnProp(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	}
 
 	int motnum = currentmodel->GetMotInfoSize();
-	if (motnum >= 0) {
+	if (motnum <= 0) {
 		return 0;
 	}
 
@@ -1123,7 +1148,7 @@ LRESULT CMotChangeDlg::OnCopy(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	}
 
 	int motnum = currentmodel->GetMotInfoSize();
-	if (motnum >= 0) {
+	if (motnum <= 0) {
 		return 0;
 	}
 	//int ret;
@@ -1186,7 +1211,7 @@ LRESULT CMotChangeDlg::OnPaste(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 	}
 
 	int motnum = currentmodel->GetMotInfoSize();
-	if (motnum >= 0) {
+	if (motnum <= 0) {
 		return 0;
 	}
 
@@ -1344,7 +1369,7 @@ int CMotChangeDlg::AddParentMC( int addcookie, int srcidling, int srcev0idle, in
 	}
 
 	int motnum = currentmodel->GetMotInfoSize();
-	if (motnum >= 0) {
+	if (motnum <= 0) {
 		return 0;
 	}
 
@@ -1570,7 +1595,7 @@ int CMotChangeDlg::AddChildMC( int parentcookie, MCELEM childmc )
 	}
 
 	int motnum = currentmodel->GetMotInfoSize();
-	if (motnum >= 0) {
+	if (motnum <= 0) {
 		return 0;
 	}
 
@@ -1655,7 +1680,7 @@ int CMotChangeDlg::InitList()
 	}
 
 	int motnum = currentmodel->GetMotInfoSize();
-	if (motnum >= 0) {
+	if (motnum <= 0) {
 		return 0;
 	}
 	CEventKey* ekptr = currentmodel->GetEventKey();
@@ -1667,7 +1692,7 @@ int CMotChangeDlg::InitList()
 	LRESULT lres;
 	int kno;
 	for( kno = 0; kno < ekptr->m_keynum; kno++ ){
-		char mes[256];
+		WCHAR mes[256];
 		int eventno = ekptr->m_ekey[kno].eventno;
 		int combono = ekptr->m_ekey[kno].combono;
 		if( (combono < 0) || (combono >= 40) ){
@@ -1677,14 +1702,14 @@ int CMotChangeDlg::InitList()
 		}
 
 
-		char singlestr[256];
+		WCHAR singlestr[256];
 		if( ekptr->m_ekey[kno].singleevent == 1 ){
-			sprintf_s( singlestr, 256, "単発：" );
+			swprintf_s( singlestr, 256, L"単発：" );
 		}else{
-			sprintf_s( singlestr, 256, "長押：" );
+			swprintf_s( singlestr, 256, L"長押：" );
 		}
 
-		sprintf_s( mes, 256, "%s eventno : %d, key : %s", singlestr, eventno, &( s_strkey[combono][0] ) );
+		swprintf_s( mes, 256, L"%s eventno : %d, key : %s", singlestr, eventno, &( s_strkey[combono][0] ) );
 
 		lres = m_list_wnd.SendMessage( LB_ADDSTRING, 0, (LPARAM)mes );
 		if( (lres == LB_ERR) || (lres == LB_ERRSPACE) ){
@@ -1728,7 +1753,7 @@ LRESULT CMotChangeDlg::OnDefault10(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 	}
 
 	int motnum = currentmodel->GetMotInfoSize();
-	if (motnum >= 0) {
+	if (motnum <= 0) {
 		return 0;
 	}
 	CEventKey* ekptr = currentmodel->GetEventKey();
@@ -1764,15 +1789,15 @@ LRESULT CMotChangeDlg::OnDefault10(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 			}
 			LRESULT lres;
 
-			char singlestr[256];
+			WCHAR singlestr[256];
 			if( ek.singleevent == 1 ){
-				sprintf_s( singlestr, 256, "単発：" );
+				swprintf_s( singlestr, 256, L"単発：" );
 			}else{
-				sprintf_s( singlestr, 256, "長押：" );
+				swprintf_s( singlestr, 256, L"長押：" );
 			}
 
-			char mes[256];
-			sprintf_s( mes, 256, "%s eventno : %d, key : %s", singlestr, ek.eventno, &( s_strkey[ek.combono][0] ) );
+			WCHAR mes[256];
+			swprintf_s( mes, 256, L"%s eventno : %d, key : %s", singlestr, ek.eventno, &( s_strkey[ek.combono][0] ) );
 			lres = m_list_wnd.SendMessage( LB_ADDSTRING, 0, (LPARAM)mes );
 			if( (lres == LB_ERR) || (lres == LB_ERRSPACE) ){
 				_ASSERT( 0 );
@@ -1816,7 +1841,7 @@ LRESULT CMotChangeDlg::OnAddList(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 	}
 
 	int motnum = currentmodel->GetMotInfoSize();
-	if (motnum >= 0) {
+	if (motnum <= 0) {
 		return 0;
 	}
 	CEventKey* ekptr = currentmodel->GetEventKey();
@@ -1900,15 +1925,15 @@ LRESULT CMotChangeDlg::OnAddList(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 		}
 		LRESULT lres;
 
-		char singlestr[256];
+		WCHAR singlestr[256];
 		if( ek.singleevent == 1 ){
-			sprintf_s( singlestr, 256, "単発：" );
+			swprintf_s( singlestr, 256, L"単発：" );
 		}else{
-			sprintf_s( singlestr, 256, "長押：" );
+			swprintf_s( singlestr, 256, L"長押：" );
 		}
 
-		char mes[256];
-		sprintf_s( mes, 256, "%s eventno : %d, key : %s", singlestr, ek.eventno, &( s_strkey[ek.combono][0] ) );
+		WCHAR mes[256];
+		swprintf_s( mes, 256, L"%s eventno : %d, key : %s", singlestr, ek.eventno, &( s_strkey[ek.combono][0] ) );
 		lres = m_list_wnd.SendMessage( LB_ADDSTRING, 0, (LPARAM)mes );
 		if( (lres == LB_ERR) || (lres == LB_ERRSPACE) ){
 			_ASSERT( 0 );
@@ -1949,7 +1974,7 @@ LRESULT CMotChangeDlg::OnDelList(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 	}
 
 	int motnum = currentmodel->GetMotInfoSize();
-	if (motnum >= 0) {
+	if (motnum <= 0) {
 		return 0;
 	}
 	CEventKey* ekptr = currentmodel->GetEventKey();
@@ -2017,7 +2042,7 @@ LRESULT CMotChangeDlg::OnAllDelList(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
 	}
 
 	int motnum = currentmodel->GetMotInfoSize();
-	if (motnum >= 0) {
+	if (motnum <= 0) {
 		return 0;
 	}
 	CEventKey* ekptr = currentmodel->GetEventKey();
@@ -2070,7 +2095,7 @@ LRESULT CMotChangeDlg::OnApplyFULeng(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 	}
 
 	int motnum = currentmodel->GetMotInfoSize();
-	if (motnum >= 0) {
+	if (motnum <= 0) {
 		return 0;
 	}
 
@@ -2116,7 +2141,7 @@ LRESULT CMotChangeDlg::OnPlay(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	}
 
 	int motnum = currentmodel->GetMotInfoSize();
-	if (motnum >= 0) {
+	if (motnum <= 0) {
 		return 0;
 	}
 
@@ -2218,11 +2243,12 @@ int CMotChangeDlg::InitComboIdle()
 	int setno = 0;
 	int idlesetno = -1;
 	int mno;
-	char tmpmotname[MAX_PATH];
+	WCHAR tmpmotname[MAX_PATH];
 	for( mno = 0; mno < motnum; mno++ ){
 		MOTINFO currentmi = currentmodel->GetMotInfoByIndex(mno);
 		if(currentmi.motid > 0){
-			strcpy_s(tmpmotname, MAX_PATH, currentmi.motname);
+			//strcpy_s(tmpmotname, MAX_PATH, currentmi.motname);
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, currentmi.motname, -1, tmpmotname, MAX_PATH);
 
 			m_comboidle_wnd.SendMessage(CB_ADDSTRING, 0, (LPARAM)tmpmotname);
 			m_comboidle_wnd.SendMessage(CB_SETITEMDATA, setno, (LPARAM)(DWORD)currentmi.motid);
@@ -2295,7 +2321,7 @@ LRESULT CMotChangeDlg::OnChangeIdle(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
 	}
 
 	int motnum = currentmodel->GetMotInfoSize();
-	if (motnum >= 0) {
+	if (motnum <= 0) {
 		return 0;
 	}
 

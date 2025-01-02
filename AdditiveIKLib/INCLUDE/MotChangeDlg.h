@@ -21,8 +21,11 @@ class CMotChangeDlg :
 	public CAxDialogImpl<CMotChangeDlg>
 {
 public:
-	CMotChangeDlg(ChaScene* srcchascene);
+	CMotChangeDlg();
 	~CMotChangeDlg();
+
+	void InitParams();
+	void DestroyObjs();
 
 	//int CreateLists();
 
@@ -84,7 +87,16 @@ END_MSG_MAP()
 
 
 public:
-	int ShowDlg( int cmdshow );
+	int SetChaScene(ChaScene* srcchascene);
+	int SetVisible(bool srcflag);
+	bool GetVisible() {
+		if (m_cmdshow != SW_HIDE) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	};
 
 	int DestroyMCElem( int delcookie );
 	int InitMC();

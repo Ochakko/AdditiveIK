@@ -24092,6 +24092,40 @@ int CModel::CreateMotChangeHandlerIfNot()
 			_ASSERT(0);
 			return 1;
 		}
+
+		//trunkを作成する
+		int setno = 0;
+		int motnum = GetMotInfoSize();
+		int miindex;
+		for (miindex = 0; miindex < motnum; miindex++) {
+			MOTINFO currentmi = GetMotInfoByIndex(miindex);
+			if (currentmi.motid > 0) {
+				int ret;
+
+				int srcidling;
+				//if (setno == 0) {
+				//	srcidling = 1;
+				//}
+				//else {
+				//	srcidling = 0;
+				//}
+				srcidling = 0;
+				int srcev0idle = 0;
+				int srccommonid = 0;
+				int srcforbidnum = 0;
+				int* srcforbidid = nullptr;
+				int srcnotfu = 0;
+
+				ret = m_mch->AddParentMC(currentmi.motid, 
+					srcidling, srcev0idle, srccommonid, srcforbidnum, srcforbidid, srcnotfu);
+				if (ret) {
+					DbgOut(L"motchangeldg : AddParentMC : mch AddParentMC error !!!\n");
+					_ASSERT(0);
+					return 1;
+				}
+				setno++;
+			}
+		}
 	}
 
 	if (!m_eventkey) {

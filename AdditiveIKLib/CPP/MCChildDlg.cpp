@@ -63,7 +63,14 @@ LRESULT CMCChildDlg::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	int miindex;
 	for (miindex = 0; miindex < motnum; miindex++) {
 		MOTINFO currentmi = m_model->GetMotInfoByIndex(miindex);
-		m_name_wnd.SendMessage(CB_ADDSTRING, 0, (LPARAM)currentmi.motname);
+		if (currentmi.motid > 0) {
+			WCHAR tmpmotname[MAX_PATH];
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, currentmi.motname, -1, tmpmotname, MAX_PATH);
+			m_name_wnd.SendMessage(CB_ADDSTRING, 0, (LPARAM)tmpmotname);
+		}
+		else {
+			_ASSERT(0);
+		}
 	}
 	m_name_wnd.SendMessage(CB_SETCURSEL, m_cookie, 0);
 

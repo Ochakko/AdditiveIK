@@ -787,8 +787,7 @@ int CMCHandler::GetIdlingMotID(char* dstname, int dstleng)
 					strcpy_s(dstname, dstleng, idlingmi.motname);
 				}
 				else {
-					_ASSERT(0);
-					return -1;
+					//dstname引数を渡されていない場合はセットしない　エラーではない
 				}
 			}
 			else {
@@ -819,7 +818,8 @@ int CMCHandler::ChangeIdlingMotion(CModel* srcmodel, int srcmotid)
 	}
 
 	int ret;
-	ret = SetIdlingMotion(srcmodel, 1);
+	//ret = SetIdlingMotion(srcmodel, 1);
+	ret = SetIdlingMotion(srcmodel, 0);//notfuモーション対策は不要なので２番目の引数は０
 	if( ret ){
 		DbgOut( L"mch : ChangeIdlingMotion : SetIdlingMotion error !!!\n" );
 		//_ASSERT( 0 );
