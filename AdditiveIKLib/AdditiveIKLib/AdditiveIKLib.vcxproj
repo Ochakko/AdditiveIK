@@ -188,6 +188,7 @@
     <ClCompile Include="..\CPP\ChaFile.cpp" />
     <ClCompile Include="..\CPP\ChaScene.cpp" />
     <ClCompile Include="..\CPP\ChaVecCalc.cpp" />
+    <ClCompile Include="..\CPP\ChkOWDlg.cpp" />
     <ClCompile Include="..\CPP\ChooseColorFile.cpp" />
     <ClCompile Include="..\CPP\ColDlg.cpp" />
     <ClCompile Include="..\CPP\Collision.cpp" />
@@ -206,6 +207,7 @@
     <ClCompile Include="..\CPP\DollyHistoryDlg2.cpp" />
     <ClCompile Include="..\CPP\EditRange.cpp" />
     <ClCompile Include="..\CPP\EngName.cpp" />
+    <ClCompile Include="..\CPP\EventKey.cpp" />
     <ClCompile Include="..\CPP\ExtLine.cpp" />
     <ClCompile Include="..\CPP\FBXBone.cpp" />
     <ClCompile Include="..\CPP\FBXFile.cpp" />
@@ -214,7 +216,9 @@
     <ClCompile Include="..\CPP\FogParamsFile.cpp" />
     <ClCompile Include="..\CPP\FootRigDlg.cpp" />
     <ClCompile Include="..\CPP\FootRigFile.cpp" />
+    <ClCompile Include="..\CPP\forbidid.cpp" />
     <ClCompile Include="..\CPP\GColiFile.cpp" />
+    <ClCompile Include="..\CPP\GetDlgParams.cpp" />
     <ClCompile Include="..\CPP\GetMaterial.cpp" />
     <ClCompile Include="..\CPP\gltfLoader.cpp" />
     <ClCompile Include="..\CPP\GPlaneDlg.cpp" />
@@ -229,8 +233,14 @@
     <ClCompile Include="..\CPP\LIMFile.cpp" />
     <ClCompile Include="..\CPP\LimitEulDlg.cpp" />
     <ClCompile Include="..\CPP\lmtFile.cpp" />
+    <ClCompile Include="..\CPP\MAFile.cpp" />
+    <ClCompile Include="..\CPP\MCChildDlg.cpp" />
+    <ClCompile Include="..\CPP\MCHandler.cpp" />
+    <ClCompile Include="..\CPP\MCParentDlg.cpp" />
+    <ClCompile Include="..\CPP\MCRMenu.cpp" />
     <ClCompile Include="..\CPP\MNLFile.cpp" />
     <ClCompile Include="..\CPP\Model.cpp" />
+    <ClCompile Include="..\CPP\MotChangeDlg.cpp" />
     <ClCompile Include="..\CPP\MotionPoint.cpp" />
     <ClCompile Include="..\CPP\mqoface.cpp" />
     <ClCompile Include="..\CPP\mqofile.cpp" />
@@ -600,6 +610,7 @@
     <ClInclude Include="..\INCLUDE\ChaFile.h" />
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
     <ClInclude Include="..\INCLUDE\ChaVecCalc.h" />
+    <ClInclude Include="..\INCLUDE\ChkOWDlg.h" />
     <ClInclude Include="..\INCLUDE\ChooseColorFile.h" />
     <ClInclude Include="..\INCLUDE\Coef.h" />
     <ClInclude Include="..\INCLUDE\coef_r.h" />
@@ -621,6 +632,7 @@
     <ClInclude Include="..\INCLUDE\DollyHistoryDlg2.h" />
     <ClInclude Include="..\INCLUDE\EditRange.h" />
     <ClInclude Include="..\INCLUDE\EngName.h" />
+    <ClInclude Include="..\INCLUDE\EventKey.h" />
     <ClInclude Include="..\INCLUDE\ExtLine.h" />
     <ClInclude Include="..\INCLUDE\FBXBone.h" />
     <ClInclude Include="..\INCLUDE\FBXFile.h" />
@@ -629,7 +641,9 @@
     <ClInclude Include="..\INCLUDE\FogParamsFile.h" />
     <ClInclude Include="..\INCLUDE\FootRigDlg.h" />
     <ClInclude Include="..\INCLUDE\FootRigFile.h" />
+    <ClInclude Include="..\INCLUDE\forbidid.h" />
     <ClInclude Include="..\INCLUDE\GColiFile.h" />
+    <ClInclude Include="..\INCLUDE\GetDlgParams.h" />
     <ClInclude Include="..\INCLUDE\GetMaterial.h" />
     <ClInclude Include="..\INCLUDE\GlobalVar.h" />
     <ClInclude Include="..\INCLUDE\gltfLoader.h" />
@@ -645,8 +659,14 @@
     <ClInclude Include="..\INCLUDE\LIMFile.h" />
     <ClInclude Include="..\INCLUDE\LimitEulDlg.h" />
     <ClInclude Include="..\INCLUDE\lmtFile.h" />
+    <ClInclude Include="..\INCLUDE\MAFile.h" />
+    <ClInclude Include="..\INCLUDE\MCChildDlg.h" />
+    <ClInclude Include="..\INCLUDE\MCHandler.h" />
+    <ClInclude Include="..\INCLUDE\MCParentDlg.h" />
+    <ClInclude Include="..\INCLUDE\MCRMenu.h" />
     <ClInclude Include="..\INCLUDE\MNLFile.h" />
     <ClInclude Include="..\INCLUDE\Model.h" />
+    <ClInclude Include="..\INCLUDE\MotChangeDlg.h" />
     <ClInclude Include="..\INCLUDE\MotionPoint.h" />
     <ClInclude Include="..\INCLUDE\mqoface.h" />
     <ClInclude Include="..\INCLUDE\mqofile.h" />

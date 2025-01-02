@@ -303,6 +303,36 @@
     <ClCompile Include="..\CPP\gltfLoader.cpp">
       <Filter>gltf</Filter>
     </ClCompile>
+    <ClCompile Include="..\CPP\MCHandler.cpp">
+      <Filter>MotionAccelerator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\MAFile.cpp">
+      <Filter>MotionAccelerator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\ChkOWDlg.cpp">
+      <Filter>MotionAccelerator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\MCChildDlg.cpp">
+      <Filter>MotionAccelerator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\MCParentDlg.cpp">
+      <Filter>MotionAccelerator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\MCRMenu.cpp">
+      <Filter>MotionAccelerator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\MotChangeDlg.cpp">
+      <Filter>MotionAccelerator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\GetDlgParams.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\EventKey.cpp">
+      <Filter>MotionAccelerator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPP\forbidid.cpp">
+      <Filter>MotionAccelerator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
@@ -1525,6 +1555,36 @@
     <ClInclude Include="..\..\tinygltf\tiny_gltf.h">
       <Filter>gltf</Filter>
     </ClInclude>
+    <ClInclude Include="..\INCLUDE\MCHandler.h">
+      <Filter>MotionAccelerator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\MAFile.h">
+      <Filter>MotionAccelerator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ChkOWDlg.h">
+      <Filter>MotionAccelerator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\MCChildDlg.h">
+      <Filter>MotionAccelerator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\MCParentDlg.h">
+      <Filter>MotionAccelerator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\MCRMenu.h">
+      <Filter>MotionAccelerator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\MotChangeDlg.h">
+      <Filter>MotionAccelerator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\GetDlgParams.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\EventKey.h">
+      <Filter>MotionAccelerator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\forbidid.h">
+      <Filter>MotionAccelerator</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\BTSRC\BulletInverseDynamics\premake4.lua">
@@ -1611,6 +1671,9 @@
     </Filter>
     <Filter Include="gltf">
       <UniqueIdentifier>{e3262f0e-bbb0-46b8-94cb-81f5c23960d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MotionAccelerator">
+      <UniqueIdentifier>{65bf669e-782f-4ac1-b5e3-51628de31044}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

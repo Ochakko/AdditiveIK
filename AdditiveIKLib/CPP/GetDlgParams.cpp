@@ -11,7 +11,7 @@
 #include <coef.h>
 #include <crtdbg.h>
 
-#include "GetDlgParams.h"
+#include <GetDlgParams.h>
 
 #define DBGH
 #include <dbg.h>
@@ -107,6 +107,7 @@ int GetDouble( CWindow srcwnd, double* dstptr )
 
 	return 0;
 }
+***/
 
 int GetInt( CWindow srcwnd, int* dstptr )
 {
@@ -115,15 +116,15 @@ int GetInt( CWindow srcwnd, int* dstptr )
 	if( (textleng == 0) || (textleng >= 50) )
 		return 1;
 
-	char tempchar[50];
-	ZeroMemory( tempchar, 50 );
-	srcwnd.GetWindowText( tempchar, textleng + 1 );
+	WCHAR tempchar[50];
+	ZeroMemory(tempchar, sizeof(WCHAR) * 50);
+	srcwnd.GetWindowText(tempchar, textleng + 1);
 	
-	*dstptr = atoi( tempchar );
+	*dstptr = _wtoi(tempchar);
 
 	return 0;
 }
-***/
+
 
 
 

@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "ColiIDDlg.h"
-#include "GetDlgParams.h"
+#include <GetDlgParams.h>
 
 #include "SetDlgPos.h"
 

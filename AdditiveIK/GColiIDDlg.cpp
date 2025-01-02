@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "GColiIDDlg.h"
-#include "GetDlgParams.h"
+#include <GetDlgParams.h>
 
 #include <RigidElem.h>
 

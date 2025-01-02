@@ -149,6 +149,7 @@ void ChaScene::InitParams()
 	ClearRenderObjs();
 
 	m_footrigdlg = nullptr;
+	m_currentmodel = nullptr;
 }
 void ChaScene::DestroyObjs()
 {

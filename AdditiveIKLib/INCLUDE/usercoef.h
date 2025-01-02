@@ -241,6 +241,64 @@ public:
 	};
 } RDBColor3f;
 
+
+typedef struct tag_moainfo
+{
+	char name[256];
+	int id;
+
+	void Init() {
+		ZeroMemory(name, sizeof(char) * 256);
+		id = 0;
+	};
+	tag_moainfo() {
+		Init();
+	};
+} MOAINFO;
+
+typedef struct tag_moatrunkinfo
+{
+	int idling;
+	int ev0idle;
+	int comid;
+	int notcomnum;
+	int* notcomid;
+	int branchnum;
+
+	void Init() {
+		idling = 0;
+		ev0idle = 0;
+		comid = 0;
+		notcomnum = 0;
+		notcomid = nullptr;
+		branchnum = 0;
+	};
+	tag_moatrunkinfo() {
+		Init();
+	};
+} MOATRUNKINFO;
+
+typedef struct tag_moabranchinfo
+{
+	int motid;
+	int eventno;
+	int frameno1;
+	int frameno2;
+	int notfu;
+
+	void Init() {
+		motid = 0;
+		eventno = 0;
+		frameno1 = 0;
+		frameno2 = 0;
+		notfu = 0;
+	};
+	tag_moabranchinfo() {
+		Init();
+	};
+} MOABRANCHINFO;
+
+
 enum tag_calcmode
 {
 	CALCMODE_NONE,//ñ¢ê›íË

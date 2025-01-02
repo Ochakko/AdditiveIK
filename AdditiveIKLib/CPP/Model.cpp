@@ -75,6 +75,9 @@
 #include <EditRange.h>
 //#include <BoneProp.h>
 
+#include <MCHandler.h>
+#include <EventKey.h>
+
 #include <ThreadingLoadFbx.h>
 #include <ThreadingUpdateMatrix.h>
 #include <ThreadingPostIK.h>
@@ -681,6 +684,9 @@ int CModel::InitParams()
 	m_secondCallOfMotion2Bt = false;
 
 	m_gltfloader = nullptr;
+	
+	m_mch = nullptr;
+	m_eventkey = nullptr;
 
 	return 0;
 }
@@ -743,6 +749,15 @@ int CModel::DestroyObjs()
 	if (m_gltfloader) {
 		delete m_gltfloader;
 		m_gltfloader = nullptr;
+	}
+
+	if (m_mch) {
+		delete m_mch;
+		m_mch = nullptr;
+	}
+	if (m_eventkey) {
+		delete m_eventkey;
+		m_eventkey = nullptr;
 	}
 
 	InitParams();
@@ -24069,4 +24084,37 @@ int CModel::SetGPUInteraction(bool srcflag)
 	return 0;
 }
 
+int CModel::CreateMotChangeHandlerIfNot()
+{
+	if (!m_mch) {
+		m_mch = new CMCHandler(this, 10);
+		if (!m_mch) {
+			_ASSERT(0);
+			return 1;
+		}
+	}
+
+	if (!m_eventkey) {
+		m_eventkey = new CEventKey();
+		if (!m_eventkey) {
+			_ASSERT(0);
+			return 1;
+		}
+	}
+
+
+	return 0;
+}
+
+int CModel::ChangeIdlingMotion(int srcmotid)
+{
+	if (m_mch) {
+		m_mch->ChangeIdlingMotion(this, srcmotid);
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+	return 0;
+}
 

@@ -54,6 +54,8 @@ class CNodeOnLoad;
 class CSChkInView;
 class CFootRigDlg;
 class CGltfLoader;
+class CMCHandler;
+class CEventKey;
 
 typedef struct funcmpparams
 {
@@ -1802,6 +1804,27 @@ public: //accesser
 		//	return 0;
 		//}
 	};
+	MOTINFO GetMotInfoByName(char* srcname)
+	{
+		MOTINFO retmi;
+		retmi.Init();
+
+		if (!srcname) {
+			return retmi;
+		}
+
+		int motnum = GetMotInfoSize();
+		int miindex;
+		for (miindex = 0; miindex < motnum; miindex++) {
+			if (m_motinfo[miindex]) {
+				if (strcmp(srcname, m_motinfo[miindex]->motname) == 0) {
+					retmi = *m_motinfo[miindex];
+					break;
+				}
+			}
+		}
+		return retmi;
+	};
 	MOTINFO GetMotInfoByIndex(int srcindex)//by array index
 	{
 		if ((srcindex >= 0) && (srcindex < GetMotInfoSize())) {
@@ -1823,7 +1846,7 @@ public: //accesser
 			dummymi.Init();
 			return dummymi;
 		}
-	}
+	};
 	MOTINFO GetMotInfo(int srcid){//motidは1から
 		//return m_motinfo[srcid - 1];
 
@@ -2729,6 +2752,16 @@ public: //accesser
 		}
 	}
 
+
+	int CreateMotChangeHandlerIfNot();
+	CMCHandler* GetMotChangeHandler() {
+		return m_mch;
+	};
+	int ChangeIdlingMotion(int srcmotid);
+	CEventKey* GetEventKey() {
+		return m_eventkey;
+	};
+
 	void SetUnderMotion2Bt(bool srcflag)
 	{
 		m_Under_Motion2Bt = srcflag;
@@ -3264,6 +3297,8 @@ private:
 
 	CGltfLoader* m_gltfloader;
 
+	CMCHandler* m_mch;
+	CEventKey* m_eventkey;
 };
 
 

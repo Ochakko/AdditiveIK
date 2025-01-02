@@ -444,6 +444,13 @@ public:
 		return retobj;
 	};
 
+	void SetCurrentModel(CModel* srcmodel)
+	{
+		m_currentmodel = srcmodel;
+	};
+	CModel* GetCurrentModel() {
+		return m_currentmodel;
+	};
 
 private:
 	std::vector<MODELELEM> m_modelindex;
@@ -470,6 +477,9 @@ private:
 	std::vector<myRenderer::RENDEROBJ> m_refpos_transparent;
 
 	//myRenderer::RenderingEngine* m_renderingEngine;
+
+	CModel* m_currentmodel;
+
 
 	CFootRigDlg* m_footrigdlg;//外部データ
 };

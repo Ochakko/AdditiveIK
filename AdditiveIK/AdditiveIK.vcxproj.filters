@@ -174,9 +174,6 @@
     <ClInclude Include="GColiIDDlg.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="GetDlgParams.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="IniFile.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -330,9 +327,6 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="GColiIDDlg.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="GetDlgParams.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="IniFile.cpp">

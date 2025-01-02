@@ -201,7 +201,6 @@
     <ClInclude Include="FrameCopyDlg.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="GColiIDDlg.h" />
-    <ClInclude Include="GetDlgParams.h" />
     <ClInclude Include="IniFile.h" />
     <ClInclude Include="MBPlugin.h" />
     <ClInclude Include="MotFilter.h" />
@@ -260,7 +259,6 @@
     <ClCompile Include="FpsSprite.cpp" />
     <ClCompile Include="FrameCopyDlg.cpp" />
     <ClCompile Include="GColiIDDlg.cpp" />
-    <ClCompile Include="GetDlgParams.cpp" />
     <ClCompile Include="IniFile.cpp" />
     <ClCompile Include="MotFilter.cpp" />
     <ClCompile Include="PluginElem.cpp" />

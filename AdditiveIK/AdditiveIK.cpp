@@ -1125,7 +1125,7 @@ static int s_guibarX0 = 120;
 
 static ID3D12Device* s_pdev = 0;
 
-static CModel* s_model = NULL;
+//static CModel* s_model = NULL;//2024/12/30 ChaScene::SetCurrentModel(), GetCurrentModel()で扱うように変更
 static CModel* s_cameramodel = NULL;
 static CModel* s_select = NULL;
 static CModel* s_select_posture = NULL;
@@ -2320,11 +2320,14 @@ LRESULT CALLBACK ProgressDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 
 
 
-
 bool ChkEnableIK();
 
 //HRESULT LoadMesh( ID3D12Device* pd3dDevice, WCHAR* strFileName, ID3DXMesh** ppMesh );
 void CalcFps(double fTime);
+
+static void SetCurrentModel(CModel* srcmodel);
+static CModel* GetCurrentModel();
+
 static int RetargetFile(char* fbxpath);
 
 static int OnMouseMoveFunc();
@@ -4118,7 +4121,7 @@ void InitApp()
 	}
 
 	{
-		s_model = NULL;
+		//s_model = NULL;
 		s_curmodelmenuindex = -1;
 		s_cameramodel = NULL;//2023/05/23
 		s_select = NULL;
@@ -5337,7 +5340,7 @@ void OnDestroyDevice()
 		delete s_chascene;
 		s_chascene = nullptr;
 	}
-	s_model = nullptr;
+	//s_model = nullptr;
 
 
 	DestroyGrassElem();
@@ -5790,8 +5793,8 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		OnFrameCloseFlag();
 		OnFrameToolWnd();
 
-		if (s_model) {
-			if (s_model->GetBefInView(0) != s_model->GetInView(0)) {
+		if (GetCurrentModel()) {
+			if (GetCurrentModel()->GetBefInView(0) != GetCurrentModel()->GetInView(0)) {
 				if (s_owpEulerGraph) {
 					//2023/08/27 オイラーグラフの表示非表示の条件が変わった場合には　再描画
 					//オイラーグラフのdraw()は OrgWindow.cppにある
@@ -5877,7 +5880,7 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 			//#####################################################
 			//タイムラインを範囲指定してプレビュー中に　範囲の最初に戻る場合
 			//#####################################################
-			double curmotframe = s_model->GetCurrentFrame();
+			double curmotframe = GetCurrentModel()->GetCurrentFrame();
 			if ((s_editrange.GetStartFrame() != s_editrange.GetEndFrame()) && (curmotframe == s_editrange.GetStartFrame())) 
 			{
 				cameranextframe = curmotframe;
@@ -5962,10 +5965,10 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 			else {
 				//2024/06/06
 				//カメラグラフ表示中にカメラアニメが存在しない場合　targetmi.motid == 0　その場合にはカレントモーションのカレントフレームを表示
-				previewframe = s_model->GetCurrentFrame();
+				previewframe = GetCurrentModel()->GetCurrentFrame();
 			}
 
-			if (s_model && s_model->ExistCurrentMotion()) {
+			if (GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
 				if (g_previewFlag <= 3) {
 					OnFramePreviewNormal(previewframe, difftime, endflag, loopstartflag);
 				}
@@ -5992,8 +5995,8 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		}
 		
 
-		if (s_model) {
-			if (s_model->GetBefInView(0) != s_model->GetInView(0)) {
+		if (GetCurrentModel()) {
+			if (GetCurrentModel()->GetBefInView(0) != GetCurrentModel()->GetInView(0)) {
 				if (s_owpEulerGraph) {
 					//2023/08/27 オイラーグラフの表示非表示の条件が変わった場合には　再描画
 					//オイラーグラフのdraw()は OrgWindow.cppにある
@@ -6126,7 +6129,7 @@ int InsertSymMP(bool limitdegflag, CBone* curbone, double curframe, int symrootm
 	if (curbone && (curbone->IsSkeleton())) {
 
 		ChaMatrix symmat = curbone->CalcSymXMat2(limitdegflag,
-			s_model->GetCurMotInfo().motid, curframe, symrootmode);
+			GetCurrentModel()->GetCurMotInfo().motid, curframe, symrootmode);
 
 		CPELEM2 cpelem;
 		ZeroMemory(&cpelem, sizeof(CPELEM2));
@@ -6270,7 +6273,7 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 		return;
 	}
 	if ((s_chascene->GetModelNum() > 0) && 
-		s_model && s_model->GetLoadedFlag() && (s_nowloading == false)) {
+		GetCurrentModel() && GetCurrentModel()->GetLoadedFlag() && (s_nowloading == false)) {
 		SetCamera3DFromEyePos();
 	}
 	else {
@@ -6333,14 +6336,14 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 				btflag = 1;
 			}
 
-			if (s_model) {
+			if (GetCurrentModel()) {
 				if (s_sprefpos.state) {
-					//s_model->SetRefPosFlag(true);
-					s_chascene->SetRefPosFlag(s_model);//s_modelにtrue, 他のモデルにfalse
+					//GetCurrentModel()->SetRefPosFlag(true);
+					s_chascene->SetRefPosFlag(GetCurrentModel());//s_modelにtrue, 他のモデルにfalse
 					g_refposflag = true;
 				}
 				else {
-					//s_model->SetRefPosFlag(false);
+					//GetCurrentModel()->SetRefPosFlag(false);
 					s_chascene->SetRefPosFlag(nullptr);
 					g_refposflag = false;
 				}
@@ -6348,8 +6351,8 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 			bool calcslotflag = false;
 			//bool calcslotflag = true;
 			s_chascene->SetBoneMatrixForShader(btflag, calcslotflag);
-			if (s_model && s_sprefpos.state) {
-				OnRenderRefPos(re, s_model);
+			if (GetCurrentModel() && s_sprefpos.state) {
+				OnRenderRefPos(re, GetCurrentModel());
 			}
 			s_chascene->RenderModels(re, lightflag, diffusemult, btflag);
 
@@ -6522,8 +6525,8 @@ void PrepairUndo_BlendShape(CBlendShapeElem srcblendshapeelem)
 	undocamera.camdist = g_camdist;
 	undocamera.cameramodel = s_cameramodel;
 
-	if (s_model) {
-		int result = s_model->SaveUndoBlendShapeMotion(
+	if (GetCurrentModel()) {
+		int result = GetCurrentModel()->SaveUndoBlendShapeMotion(
 			g_limitdegflag, s_curboneno, s_curbaseno,
 			g_edittarget, &s_editrange, g_applyrate,
 			brushstate, undocamera, srcblendshapeelem);
@@ -6625,7 +6628,7 @@ void PrepairUndo_SelectModel(CModel* befmodel, CModel* nextmodel)
 
 void PrepairUndo()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return;
 	}
 
@@ -6640,7 +6643,7 @@ void PrepairUndo()
 		//よって次のif文はコメントアウト
 		//if ((s_editmotionflag >= 0) || (g_btsimurecflag == true)) {
 
-		if (s_model) {
+		if (GetCurrentModel()) {
 			//CreateTimeLineMark();
 			SetLTimelineMark(s_curboneno);
 
@@ -6696,10 +6699,10 @@ void PrepairUndo()
 			}
 
 			//##################################################################################
-			//2024/06/24 s_model->SaveUndoMotion()は　BoneMotionとCameraAnimの両方をSaveするように.
+			//2024/06/24 GetCurrentModel()->SaveUndoMotion()は　BoneMotionとCameraAnimの両方をSaveするように.
 			//##################################################################################
 			//2023/10/27 1.2.0.27 RC5 : s_LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
-			s_model->SaveUndoMotion(undoselect,
+			GetCurrentModel()->SaveUndoMotion(undoselect,
 				s_LimitDegCheckBoxFlag, g_limitdegflag, s_curboneno, s_curbaseno,
 				g_edittarget, &s_editrange, g_applyrate, 
 				brushstate, undocamera, blendshapeelem,
@@ -6778,9 +6781,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	//if (g_retargetbatchflag == 0) {
 	if (InterlockedAdd(&g_retargetbatchflag, 0) == 0) {
 		//int maxboneno = 0;
-		if (s_model && (s_curboneno >= 0)) {
-			curbone = s_model->GetBoneByID(s_curboneno);
-			curre = s_model->GetRigidElem(s_curboneno);
+		if (GetCurrentModel() && (s_curboneno >= 0)) {
+			curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
+			curre = GetCurrentModel()->GetRigidElem(s_curboneno);
 		}
 		else {
 			curbone = 0;
@@ -6799,7 +6802,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 
 		////if (g_retargetbatchflag == 0) {
-		//if (s_model && s_convbone_bvh) {
+		//if (GetCurrentModel() && s_convbone_bvh) {
 		//	map<int, CBone*>::iterator itrbone;
 		//	for (itrbone = s_convbone_bvh->GetBoneListBegin(); itrbone != s_convbone_bvh->GetBoneListEnd(); itrbone++) {
 		//		CBone* curbone = itrbone->second;
@@ -6930,18 +6933,18 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_INTERPOLATEFROMTOOL)) && 
 			(menuid < (ID_RMENU_0 + MENUOFFSET_INTERPOLATEFROMTOOL + 3))) {
-			if (s_model && s_model->GetTopBone() && curbone) {
+			if (GetCurrentModel() && GetCurrentModel()->GetTopBone() && curbone) {
 				s_interpolateState = (menuid - ID_RMENU_0 - MENUOFFSET_INTERPOLATEFROMTOOL + 1);
 
-				MOTINFO curmi = s_model->GetCurMotInfo();
-				InterpolateMotionFunc(s_model, &curmi);
+				MOTINFO curmi = GetCurrentModel()->GetCurMotInfo();
+				InterpolateMotionFunc(GetCurrentModel(), &curmi);
 			
 			}
 			s_interpolateFlag = false;//!!!!!
 		}
 		else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_FILTERFROMTOOL)) &&
 			(menuid < (ID_RMENU_0 + MENUOFFSET_FILTERFROMTOOL + 3))) {
-			if (s_model && s_model->GetTopBone() && curbone && (s_underfilteringbymenu == false)) {
+			if (GetCurrentModel() && GetCurrentModel()->GetTopBone() && curbone && (s_underfilteringbymenu == false)) {
 				s_underfilteringbymenu = true;
 				s_filterState = (menuid - ID_RMENU_0 - MENUOFFSET_FILTERFROMTOOL + 1);
 				FilterFuncDlg();
@@ -6951,14 +6954,14 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		}
 		else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_CHECKSIMILARGROUP)) &&
 			(menuid <= (ID_RMENU_0 + MENUOFFSET_CHECKSIMILARGROUP + 7))) {
-			if (s_model && s_dispgroupdlg.GetVisible()) {
+			if (GetCurrentModel() && s_dispgroupdlg.GetVisible()) {
 				int opetype = menuid - (ID_RMENU_0 + MENUOFFSET_CHECKSIMILARGROUP);
 				s_dispgroupdlg.CheckSimilarGroup(opetype);
 			}
 		}
 		//else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_INITMPFROMTOOL)) && (menuid <= (ID_RMENU_0 + 3 * 3 + MENUOFFSET_INITMPFROMTOOL))) {
 		else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_INITMPFROMTOOL)) && (menuid <= (ID_RMENU_0 + 4 * 4 + MENUOFFSET_INITMPFROMTOOL))) {//### 2022/07/04
-			if (s_model) {
+			if (GetCurrentModel()) {
 				int subid = (menuid - ID_RMENU_0 - MENUOFFSET_INITMPFROMTOOL) / 4;//4 * 3 / 4 --> 0, 1, 2, 3 : submenu
 							//int initmode = (menuid - ID_RMENU_0 - MENUOFFSET_INITMPFROMTOOL) - subid * 4;//0, 1, 2, 3
 				int initmode = (menuid - ID_RMENU_0 - MENUOFFSET_INITMPFROMTOOL) % 4;//0, 1, 2, 3 //### 2022/07/04 : subsubmenu
@@ -6966,8 +6969,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				CModel* srcmodel;
 				MOTINFO curmi;
 				if (s_initmpFlag) {
-					srcmodel = s_model;
-					curmi = s_model->GetCurMotInfo();
+					srcmodel = GetCurrentModel();
+					curmi = GetCurrentModel()->GetCurMotInfo();
 				}
 				else if (s_initmpcameraFlag) {
 					srcmodel = s_cameramodel;
@@ -6979,7 +6982,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 
 				if (srcmodel && (curmi.motid > 0)) {
-				//if (s_model->ExistCurrentMotion()) {
+				//if (GetCurrentModel()->ExistCurrentMotion()) {
 					s_copymotvec.clear();
 					s_copyKeyInfoList.clear();
 					//s_copyKeyInfoList = s_owpLTimeline->getSelectedKey();
@@ -7050,7 +7053,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						CopyLimitedWorldToWorld(srcmodel, allframeflag, setcursorflag, updatejointno, onpasteflag);
 					}
 
-					//s_model->CalcBoneEul(g_limitdegflag, s_model->GetCurrentMotID());//2023/11/07
+					//GetCurrentModel()->CalcBoneEul(g_limitdegflag, GetCurrentModel()->GetCurrentMotID());//2023/11/07
 					srcmodel->CalcBoneEul(g_limitdegflag, curmi.motid);
 
 					refreshEulerGraph();
@@ -7063,9 +7066,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 
 		else if ((menuid >= (MENUOFFSET_BRUSHESCONTEXTMENU)) && (menuid < (MENUOFFSET_BRUSHESCONTEXTMENU + MAXPLUGIN))) {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				int subid = menuid - MENUOFFSET_BRUSHESCONTEXTMENU;
-				if (s_model->ExistCurrentMotion()) {
+				if (GetCurrentModel()->ExistCurrentMotion()) {
 					if (s_plugin && ((s_plugin + subid)->validflag == 1)) {
 
 						RollbackCurBoneNo();//2024/04/22 右クリックで初期化されてしまったジョイント選択を復元
@@ -7132,58 +7135,58 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 		}
 		//else if (menuid == (ID_RMENU_KINEMATIC_ON_LOWER + MENUOFFSET_BONERCLICK)) {
-		//	if (s_model && curbone) {
-		//		s_model->SetKinematicTmpLower(curbone, true);
+		//	if (GetCurrentModel() && curbone) {
+		//		GetCurrentModel()->SetKinematicTmpLower(curbone, true);
 		//	}
 		//}
 		//else if (menuid == (ID_RMENU_KINEMATIC_OFF_LOWER + MENUOFFSET_BONERCLICK)) {
-		//	if (s_model && curbone) {
-		//		s_model->SetKinematicTmpLower(curbone, false);
+		//	if (GetCurrentModel() && curbone) {
+		//		GetCurrentModel()->SetKinematicTmpLower(curbone, false);
 		//	}
 		//}
 		//else if (menuid == (ID_RMENU_MASS0_ON_ALL + MENUOFFSET_BONERCLICK)) {
-		//	if (s_model && curbone) {
-		//		s_model->Mass0_All(true);
+		//	if (GetCurrentModel() && curbone) {
+		//		GetCurrentModel()->Mass0_All(true);
 		//	}
 		//}
 		//else if (menuid == (ID_RMENU_MASS0_OFF_ALL + MENUOFFSET_BONERCLICK)) {
-		//	if (s_model && curbone) {
-		//		s_model->Mass0_All(false);
+		//	if (GetCurrentModel() && curbone) {
+		//		GetCurrentModel()->Mass0_All(false);
 		//	}
 		//}
 		//else if (menuid == (ID_RMENU_MASS0_ON_UPPER + MENUOFFSET_BONERCLICK)) {
-		//	if (s_model && curbone) {
-		//		s_model->Mass0_Upper(true, curbone);
+		//	if (GetCurrentModel() && curbone) {
+		//		GetCurrentModel()->Mass0_Upper(true, curbone);
 		//	}
 		//}
 		//else if (menuid == (ID_RMENU_MASS0_OFF_UPPER + MENUOFFSET_BONERCLICK)) {
-		//	if (s_model && curbone) {
-		//		s_model->Mass0_Upper(false, curbone);
+		//	if (GetCurrentModel() && curbone) {
+		//		GetCurrentModel()->Mass0_Upper(false, curbone);
 		//	}
 		//}
 		//else if (menuid == (ID_RMENU_MASS0_ON_LOWER + MENUOFFSET_BONERCLICK)) {
-		//	if (s_model && curbone) {
-		//		s_model->Mass0_Lower(true, curbone);
+		//	if (GetCurrentModel() && curbone) {
+		//		GetCurrentModel()->Mass0_Lower(true, curbone);
 		//	}
 		//}
 		//else if (menuid == (ID_RMENU_MASS0_OFF_LOWER + MENUOFFSET_BONERCLICK)) {
-		//	if (s_model && curbone) {
-		//		s_model->Mass0_Lower(false, curbone);
+		//	if (GetCurrentModel() && curbone) {
+		//		GetCurrentModel()->Mass0_Lower(false, curbone);
 		//	}
 		//}
 		//else if (menuid == (ID_RMENU_MASS0 + MENUOFFSET_BONERCLICK)) {
-		//	if (s_model && curbone) {
+		//	if (GetCurrentModel() && curbone) {
 		//		//toggle
 		//		if (curbone->GetMass0() == 0) {
-		//			s_model->SetMass0(curbone);
+		//			GetCurrentModel()->SetMass0(curbone);
 		//		}
 		//		else {
-		//			s_model->RestoreMass(curbone);
+		//			GetCurrentModel()->RestoreMass(curbone);
 		//		}
 		//	}
 		//}
 		//else if (menuid == (ID_RMENU_EXCLUDE_MV + MENUOFFSET_BONERCLICK)) {
-		//	if (s_model && curbone) {
+		//	if (GetCurrentModel() && curbone) {
 		//		//toggle
 		//		if (curbone->GetExcludeMv() == 0) {
 		//			curbone->SetExcludeMv(1);
@@ -7194,23 +7197,23 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		//	}
 		//}
 		//else if (menuid == (ID_RMENU_FORBIDROT_ONE + MENUOFFSET_BONERCLICK)) {
-		//	if (s_model && curre) {
+		//	if (GetCurrentModel() && curre) {
 		//		curre->SetForbidRotFlag(1);
 		//	}
 		//}
 		//else if (menuid == (ID_RMENU_ENABLEROT_ONE + MENUOFFSET_BONERCLICK)) {
-		//	if (s_model && curre) {
+		//	if (GetCurrentModel() && curre) {
 		//		curre->SetForbidRotFlag(0);
 		//	}
 		//}
 		//else if (menuid == (ID_RMENU_FORBIDROT_CHILDREN + MENUOFFSET_BONERCLICK)) {
-		//	if (s_model && curre) {
-		//		s_model->EnableRotChildren(curbone, false);
+		//	if (GetCurrentModel() && curre) {
+		//		GetCurrentModel()->EnableRotChildren(curbone, false);
 		//	}
 		//}
 		//else if (menuid == (ID_RMENU_ENABLEROT_CHILDREN + MENUOFFSET_BONERCLICK)) {
-		//	if (s_model && curre) {
-		//		s_model->EnableRotChildren(curbone, true);
+		//	if (GetCurrentModel() && curre) {
+		//		GetCurrentModel()->EnableRotChildren(curbone, true);
 		//	}
 		//}
 		else if (menuid == (ID_RMENU_0 + MENUOFFSET_BONERCLICK)) {
@@ -7512,9 +7515,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				////return 0;
 				break;
 			case ID_DELCURMOT:
-				if (s_model) {
+				if (GetCurrentModel()) {
 					s_delcurmotFlag = true;
-					//OnDelMotion(s_motmenuindexmap[s_model]);
+					//OnDelMotion(s_motmenuindexmap[GetCurrentModel()]);
 				}
 				//return 0;
 				break;
@@ -7535,17 +7538,17 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	}
 	else if (uMsg == WM_MOUSEWHEEL) {
 		if ((g_keybuf['T'] & 0x80) != 0) {
-			if (s_model && (s_curboneno > 0) && ChkEnableIK()) {
+			if (GetCurrentModel() && (s_curboneno > 0) && ChkEnableIK()) {
 				s_tkeyflag = 1;
 
 				int delta;
 				delta = GET_WHEEL_DELTA_WPARAM(wParam);
 				s_ikselectmat = s_selm;
-				//s_editmotionflag = s_model->TwistBoneAxisDelta(&s_editrange, s_curboneno, (float)delta, g_iklevel, s_ikcnt, s_ikselectmat);
-				s_editmotionflag = s_model->IKRotateAxisDelta(g_limitdegflag, g_wallscrapingikflag,
+				//s_editmotionflag = GetCurrentModel()->TwistBoneAxisDelta(&s_editrange, s_curboneno, (float)delta, g_iklevel, s_ikcnt, s_ikselectmat);
+				s_editmotionflag = GetCurrentModel()->IKRotateAxisDelta(g_limitdegflag, g_wallscrapingikflag,
 					&s_editrange, PICK_X, s_curboneno, (float)delta, g_iklevel, s_ikcnt, s_ikselectmat);
 
-				//ClearLimitedWM(s_model);//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
+				//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
 				//UpdateEditedEuler();
 			}
 		}
@@ -7573,8 +7576,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				delta = -1.0f * radstep;
 			}
 
-			if( s_model && s_model->GetTopBt() ){
-//s_model->CalcBtAxismat( delta );//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			if( GetCurrentModel() && GetCurrentModel()->GetTopBt() ){
+//GetCurrentModel()->CalcBtAxismat( delta );//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			}
 		}
 		*/
@@ -7593,7 +7596,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			return 0;//!!!!!!!!!!!!!!!!
 		}
 
-		if (!s_model) {
+		if (!GetCurrentModel()) {
 			//!!!!!!!!!!!!!! 
 			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 		}
@@ -7611,9 +7614,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		s_reccnt = 0;
 
 		
-		if (s_model) {
-			s_model->ClearIKRotRec();
-			s_model->ClearIKRotRecUV();
+		if (GetCurrentModel()) {
+			GetCurrentModel()->ClearIKRotRec();
+			GetCurrentModel()->ClearIKRotRecUV();
 		}
 
 		//!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -7720,7 +7723,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 			}
 			if ((pickflag == false) && (PickSpCameraDolly(ptCursor) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_cameradollyFlag == false) {
 						s_cameradollyFlag = true;
 						s_spcameradolly.ButtonDown();
@@ -7848,7 +7851,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 
 			if ((pickflag == false) && (PickSpFrog2(ptCursor) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					s_spret2prev2.ButtonDown();
 					s_SpriteButtonDown = true;
 					ChangeToolSpriteMode();
@@ -7857,7 +7860,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 
 			if ((pickflag == false) && (PickSpCopyCamera(ptCursor) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_copycameraFlag == false) {
 						s_copycameraFlag = true;
 						s_spcopy_camera.ButtonDown();
@@ -7867,7 +7870,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				pickflag = true;
 			}
 			if ((pickflag == false) && (PickSpPasteCamera(ptCursor) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_pastecameraFlag == false) {
 						s_pastecameraFlag = true;
 						s_sppaste_camera.ButtonDown();
@@ -7877,7 +7880,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				pickflag = true;
 			}
 			if ((pickflag == false) && (PickSpInitCamera(ptCursor) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_initmpcameraFlag == false) {
 						s_initmpcameraFlag = true;
 						s_spinit_camera.ButtonDown();
@@ -7887,7 +7890,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				pickflag = true;
 			}
 			if ((pickflag == false) && (PickSpInterpolateCamera(ptCursor) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_interpolatecameraFlag == false) {
 						s_interpolatecameraFlag = true;
 						s_spinterpolate_camera.ButtonDown();
@@ -7897,7 +7900,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				pickflag = true;
 			}
 			if ((pickflag == false) && (PickSpSmoothCamera(ptCursor) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_smoothcameraFlag == false) {
 						s_smoothcameraFlag = true;
 						s_spsmooth_camera.ButtonDown();
@@ -7909,7 +7912,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 
 			if ((pickflag == false) && (PickSpCopy(ptCursor) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_copyFlag == false) {
 						s_copyFlag = true;
 						s_spcopy.ButtonDown();
@@ -7919,7 +7922,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				pickflag = true;
 			}
 			if ((pickflag == false) && (PickSpSymCopy(ptCursor) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_symcopyFlag == false) {
 						s_symcopyFlag = true;
 						s_spsymcopy.ButtonDown();
@@ -7929,7 +7932,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				pickflag = true;
 			}
 			if ((pickflag == false) && (PickSpPaste(ptCursor) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_pasteFlag == false) {
 						s_pasteFlag = true;
 						s_sppaste.ButtonDown();
@@ -7939,7 +7942,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				pickflag = true;
 			}
 			if ((pickflag == false) && (PickSpCopyHistory(ptCursor) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_selCopyHisotryFlag == false) {
 						s_selCopyHisotryFlag = true;
 						s_spcopyhistory.ButtonDown();
@@ -7951,7 +7954,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 			int pickinterpolate = 0;
 			if ((pickflag == false) && ((pickinterpolate = PickSpInterpolate(ptCursor)) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (pickinterpolate == 1) {
 						if (s_interpolateFlag == false) {
 							s_interpolateFlag = true;
@@ -7973,7 +7976,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				pickflag = true;
 			}
 			if ((pickflag == false) && (PickSpInit(ptCursor) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_initmpFlag == false) {
 						s_initmpFlag = true;
 						s_spinit.ButtonDown();
@@ -7983,7 +7986,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				pickflag = true;
 			}
 			if ((pickflag == false) && (PickSpScaleInit(ptCursor) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_scaleAllInitFlag == false) {
 						s_scaleAllInitFlag = true;
 						s_spscaleinit.ButtonDown();
@@ -7993,7 +7996,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				pickflag = true;
 			}
 			if ((pickflag == false) && (PickSpProperty(ptCursor) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_motpropFlag == false) {
 						s_motpropFlag = true;
 						s_spproperty.ButtonDown();
@@ -8004,7 +8007,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 
 			if ((pickflag == false) && (PickSpZeroFrame(ptCursor) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_zeroFrameFlag == false) {
 						s_LstopFlag = true;
 						g_previewFlag = 0;
@@ -8017,7 +8020,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				pickflag = true;
 			}
 			if ((pickflag == false) && (PickSpModelPosDir(ptCursor) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_modelworldmatFlag == false) {
 						s_modelworldmatFlag = true;
 						s_spmodelposdir.ButtonDown();
@@ -8027,7 +8030,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				pickflag = true;
 			}
 			if ((pickflag == false) && (PickSpMaterialRate(ptCursor) != 0)) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_materialrateFlag == false) {
 						s_materialrateFlag = true;
 						s_spmaterialrate.ButtonDown();
@@ -8087,7 +8090,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 			//s_curboneno = -1;//Sprite Menuより後で。Rigid作成に選択済s_curbonenoが必要。
 
-			if (s_model) {
+			if (GetCurrentModel()) {
 				int spakind = 0;
 				//int pickrigflag = 0;
 				if ((pickflag == false) && s_spguisw[SPGUISW_CAMERA_AND_IK].state) {
@@ -8114,8 +8117,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 							//g_underIKRot = true;//2023/10/14 !!!!! 設定し忘れていた
 							//g_underIKRotApplyFrame = true;//2023/10/14 !!!!! 設定し忘れていた
-							s_model->SetUnderIKRot(true);
-							s_model->SetUnderIKRotApplyFrame(true);
+							GetCurrentModel()->SetUnderIKRot(true);
+							GetCurrentModel()->SetUnderIKRotApplyFrame(true);
 
 
 							//} else if ((oprigdoneflag == 0) && (pickrigflag == 1)){
@@ -8131,8 +8134,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							s_pickinfo.buttonflag = spakind;
 							s_pickinfo.pickobjno = opebone->GetBoneNo();
 
-							s_model->SetUnderIKRot(true);
-							s_model->SetUnderIKRotApplyFrame(true);
+							GetCurrentModel()->SetUnderIKRot(true);
+							GetCurrentModel()->SetUnderIKRotApplyFrame(true);
 						}
 						else {
 							s_pickinfo.pickobjno = -1;
@@ -8155,23 +8158,23 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						ChangeCurrentBone(true);
 
 
-						//if (s_model->GetInitAxisMatX() == 0){//OnAnimMenuに移動
+						//if (GetCurrentModel()->GetInitAxisMatX() == 0){//OnAnimMenuに移動
 						//	s_owpLTimeline->setCurrentTime(0.0, true);
 						//	s_owpEulerGraph->setCurrentTime(0.0, false);
-						//	s_model->SetMotionFrame(0.0);
-						//	s_model->UpdateMatrix(&s_model->GetWorldMat(), &s_matVP);
+						//	GetCurrentModel()->SetMotionFrame(0.0);
+						//	GetCurrentModel()->UpdateMatrix(&GetCurrentModel()->GetWorldMat(), &s_matVP);
 						//	//ここでAxisMatXの初期化
-						//	s_model->CreateBtObject(1);
-						//	s_model->CalcBtAxismat(2);//2
-						//	s_model->SetInitAxisMatX(1);
+						//	GetCurrentModel()->CreateBtObject(1);
+						//	GetCurrentModel()->CalcBtAxismat(2);//2
+						//	GetCurrentModel()->SetInitAxisMatX(1);
 						//}
 
 						s_pickinfo.buttonflag = PICK_CENTER;//!!!!!!!!!!!!!
 						if (g_edittarget == EDITTARGET_BONE) {
 							//g_underIKRot = true;
 							//g_underIKRotApplyFrame = true;
-							s_model->SetUnderIKRot(true);
-							s_model->SetUnderIKRotApplyFrame(true);
+							GetCurrentModel()->SetUnderIKRot(true);
+							GetCurrentModel()->SetUnderIKRotApplyFrame(true);
 						}
 
 						//IK中は30fpsにする
@@ -8195,8 +8198,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							if (g_edittarget == EDITTARGET_BONE) {
 								//g_underIKRot = true;
 								//g_underIKRotApplyFrame = true;
-								s_model->SetUnderIKRot(true);
-								s_model->SetUnderIKRotApplyFrame(true);
+								GetCurrentModel()->SetUnderIKRot(true);
+								GetCurrentModel()->SetUnderIKRotApplyFrame(true);
 							}
 
 							//IK中は30fpsにする
@@ -8224,8 +8227,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						if (g_edittarget == EDITTARGET_BONE) {
 							//g_underIKRot = true;
 							//g_underIKRotApplyFrame = true;
-							s_model->SetUnderIKRot(true);
-							s_model->SetUnderIKRotApplyFrame(true);
+							GetCurrentModel()->SetUnderIKRot(true);
+							GetCurrentModel()->SetUnderIKRotApplyFrame(true);
 						}
 
 						//IK中は30fpsにする
@@ -8258,8 +8261,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 
 		//ChaMatrixIdentity(&s_ikselectmat);
-		if (s_model && (s_curboneno >= 0)) {
-			curbone = s_model->GetBoneByID(s_curboneno);
+		if (GetCurrentModel() && (s_curboneno >= 0)) {
+			curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 			//_ASSERT(curbone);//<-- ジョイント以外クリックで普通に通る場所　コメントアウト
 			if (curbone) {
 				s_saveboneno = s_curboneno;
@@ -8268,7 +8271,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					AutoCameraTarget();
 				}
 
-				if (s_model->ExistCurrentMotion()) {
+				if (GetCurrentModel()->ExistCurrentMotion()) {
 					//int multworld = 1;
 					//s_ikselectmat = curbone->CalcManipulatorMatrix(0, 0, multworld, curmi->motid, curmi->curframe);//curmotinfo!!!
 					s_ikselectmat = s_selm;
@@ -8299,22 +8302,22 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		float newcamdist = (float)ChaVector3LengthDbl(&diffv);
 		ChangeCameraDist(newcamdist, true, false);
 
-		//if (s_model && (s_pickinfo.pickobjno >= 0) && (g_previewFlag == 5)){
-		if (s_model && (g_previewFlag == 5)) {
+		//if (GetCurrentModel() && (s_pickinfo.pickobjno >= 0) && (g_previewFlag == 5)){
+		if (GetCurrentModel() && (g_previewFlag == 5)) {
 			if ((s_pickinfo.pickobjno >= 0)) {// && 
 				//((s_spguisw[SPGUISW_CAMERA_AND_IK].state == false)) || (PickSpBt(ptCursor) == 0))){//物理IK中でジョイントをクリックしていて、Applyボタンを押していないとき
-				StartBt(s_model, TRUE, 1, 1);
-				//s_model->BulletSimulationStart();
+				StartBt(GetCurrentModel(), TRUE, 1, 1);
+				//GetCurrentModel()->BulletSimulationStart();
 			}
 		}
 
 
-		if (s_model && (s_curboneno >= 0)) {
-			s_rigidparamsdlg.SetModel(s_model, s_curboneno, s_reindexmap, s_rgdindexmap);
-			s_limiteuldlg.SetModel(s_model, s_curboneno);
-			s_impulsedlg.SetModel(s_model, s_curboneno, s_rgdindexmap);
+		if (GetCurrentModel() && (s_curboneno >= 0)) {
+			s_rigidparamsdlg.SetModel(GetCurrentModel(), s_curboneno, s_reindexmap, s_rgdindexmap);
+			s_limiteuldlg.SetModel(GetCurrentModel(), s_curboneno);
+			s_impulsedlg.SetModel(GetCurrentModel(), s_curboneno, s_rgdindexmap);
 			s_gplanedlg.SetModel(s_gplane, s_bpWorld);
-			s_dampanimdlg.SetModel(s_model, s_curboneno, s_rgdindexmap);
+			s_dampanimdlg.SetModel(GetCurrentModel(), s_curboneno, s_rgdindexmap);
 		}
 
 	}
@@ -8332,7 +8335,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			return 0;
 		}
 
-		if (!s_model) {
+		if (!GetCurrentModel()) {
 			//!!!!!!!!!!!!!! 
 			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 		}
@@ -8384,7 +8387,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		//マウスによるIKとFKの後処理　applyframe以外のフレームの処理
 		//g_underIKRotApplyFrame = false;
-		s_model->SetUnderIKRotApplyFrame(false);
+		GetCurrentModel()->SetUnderIKRotApplyFrame(false);
 
 		g_fpsforce30 = false;
 		int editmotionflag = s_editmotionflag;
@@ -8396,7 +8399,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					if ((s_ikkind == 0) && (editmotionflag >= 0)) {
 						if (s_pickinfo.buttonflag == PICK_CENTER) {
 							HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
-							s_editmotionflag = s_model->IKRotatePostIK(g_limitdegflag, g_wallscrapingikflag,
+							s_editmotionflag = GetCurrentModel()->IKRotatePostIK(g_limitdegflag, g_wallscrapingikflag,
 								&s_editrange, s_pickinfo.pickobjno, g_iklevel);
 
 							if (oldcursor != NULL) {
@@ -8412,7 +8415,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							(s_pickinfo.buttonflag == PICK_SPA_Z)) {
 							HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
-							s_editmotionflag = s_model->IKRotateAxisDeltaPostIK(
+							s_editmotionflag = GetCurrentModel()->IKRotateAxisDeltaPostIK(
 								g_limitdegflag, g_wallscrapingikflag,
 								&s_editrange, s_pickinfo.buttonflag, s_pickinfo.pickobjno,
 								g_iklevel, s_ikcnt);
@@ -8429,14 +8432,14 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
 							//g_underPostFKTra = true;
-							s_model->SetUnderPostFKTra(true);
+							GetCurrentModel()->SetUnderPostFKTra(true);
 
-							s_model->FKBoneTraPostFK(g_limitdegflag, g_wallscrapingikflag,
+							GetCurrentModel()->FKBoneTraPostFK(g_limitdegflag, g_wallscrapingikflag,
 								&s_editrange, s_curboneno);
 							s_editmotionflag = s_curboneno;
 
 							//g_underPostFKTra = false;
-							s_model->SetUnderPostFKTra(false);
+							GetCurrentModel()->SetUnderPostFKTra(false);
 
 							if (oldcursor != NULL) {
 								SetCursor(oldcursor);
@@ -8452,15 +8455,15 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
 							//g_underPostFKTra = true;
-							s_model->SetUnderPostFKTra(true);
+							GetCurrentModel()->SetUnderPostFKTra(true);
 
-							s_model->FKBoneTraAxisPostFK(
+							GetCurrentModel()->FKBoneTraAxisPostFK(
 								g_limitdegflag, g_wallscrapingikflag,
 								&s_editrange, s_curboneno);
 							s_editmotionflag = s_curboneno;
 
 							//g_underPostFKTra = false;
-							s_model->SetUnderPostFKTra(false);
+							GetCurrentModel()->SetUnderPostFKTra(false);
 
 							if (oldcursor != NULL) {
 								SetCursor(oldcursor);
@@ -8476,18 +8479,18 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
 						s_ikcustomrig = s_customrigbone->GetCustomRig(s_customrigno);
-						s_model->RigControlPostRig(g_limitdegflag, g_wallscrapingikflag,
+						GetCurrentModel()->RigControlPostRig(g_limitdegflag, g_wallscrapingikflag,
 							0, &s_editrange, s_pickinfo.pickobjno,
 							0,
 							s_ikcustomrig, s_pickinfo.buttonflag);
-						ChaMatrix tmpwm = s_model->GetWorldMat();
-						s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
-						s_model->RigControlPostRig(g_limitdegflag, g_wallscrapingikflag,
+						ChaMatrix tmpwm = GetCurrentModel()->GetWorldMat();
+						GetCurrentModel()->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
+						GetCurrentModel()->RigControlPostRig(g_limitdegflag, g_wallscrapingikflag,
 							0, &s_editrange, s_pickinfo.pickobjno,
 							1,
 							s_ikcustomrig, s_pickinfo.buttonflag);
-						tmpwm = s_model->GetWorldMat();
-						s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
+						tmpwm = GetCurrentModel()->GetWorldMat();
+						GetCurrentModel()->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 						s_editmotionflag = s_curboneno;
 
 						if (oldcursor != NULL) {
@@ -8510,19 +8513,19 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 
 		//g_underIKRot = false;
-		s_model->SetUnderIKRot(false);
+		GetCurrentModel()->SetUnderIKRot(false);
 
 
 		s_wmlbuttonup = 1;//ゲームパッド用フラグ
 
 		s_befdeltax = 0.0f;
 
-		if (s_model && (s_onragdollik != 0)) {
-			//s_model->BulletSimulationStop();
-			//s_model->SetBtKinFlagReq(s_model->GetTopBt(), 1);
-			s_model->BulletSimulationStop();
+		if (GetCurrentModel() && (s_onragdollik != 0)) {
+			//GetCurrentModel()->BulletSimulationStop();
+			//GetCurrentModel()->SetBtKinFlagReq(GetCurrentModel()->GetTopBt(), 1);
+			GetCurrentModel()->BulletSimulationStop();
 			g_previewFlag = 0;
-			s_model->ApplyPhysIkRec(g_limitdegflag, g_wallscrapingikflag);
+			GetCurrentModel()->ApplyPhysIkRec(g_limitdegflag, g_wallscrapingikflag);
 		}
 
 
@@ -8551,7 +8554,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		if ((s_undoFlag == false) && (s_redoFlag == false)) {
 
 			//2023//11/06 CopyLimitedWorldToWorldよりも後ろに移動
-			//if (s_model && ikdoneflag) {
+			//if (GetCurrentModel() && ikdoneflag) {
 			//	//############################################################################################################
 			//	//2023/10/16 - 2023/10/19
 			//	//マルチスレッドのコンテクストを　揃っている情報と要求される計算順序によって決めた
@@ -8562,9 +8565,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			//	// ！！！！！　g_underIKRot = falseとした後で　！！！！！
 			//	//後処理として　befeul.befframeeulで　ボーンごとのマルチスレッドで計算して正しいオイラーにする
 			//	//############################################################################################################
-			//	MOTINFO* curmi = s_model->GetCurMotInfo();
+			//	MOTINFO* curmi = GetCurrentModel()->GetCurMotInfo();
 			//	if (curmi) {
-			//		s_model->CalcBoneEul(g_limitdegflag, curmi->motid);
+			//		GetCurrentModel()->CalcBoneEul(g_limitdegflag, curmi->motid);
 			//	}
 			//}
 
@@ -8577,12 +8580,12 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				bool onpasteflag = false;
 
 
-				//CopyLimitedWorldToWorld(s_model, allframeflag, setcursorflag, s_editmotionflag, onpasteflag);
+				//CopyLimitedWorldToWorld(GetCurrentModel(), allframeflag, setcursorflag, s_editmotionflag, onpasteflag);
 
 				//2023/03/04
 				//rigの場合や　IKTargetの場合があるので　operatingjointnoはTopBoneの番号
-				CopyLimitedWorldToWorld(s_model, allframeflag, setcursorflag,
-					s_model->GetTopBone(false)->GetBoneNo(), onpasteflag);
+				CopyLimitedWorldToWorld(GetCurrentModel(), allframeflag, setcursorflag,
+					GetCurrentModel()->GetTopBone(false)->GetBoneNo(), onpasteflag);
 			}
 
 			//if (s_cameramodel && (g_edittarget == EDITTARGET_CAMERA) && ikdoneflag) {
@@ -8590,7 +8593,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			//}
 			//2023//11/06 CopyLimitedWorldToWorldよりも後ろに移動
 			//else 
-			if (s_model && ikdoneflag) {
+			if (GetCurrentModel() && ikdoneflag) {
 				//############################################################################################################
 				//2023/10/16 - 2023/10/19
 				//マルチスレッドのコンテクストを　揃っている情報と要求される計算順序によって決めた
@@ -8601,9 +8604,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				// ！！！！！　g_underIKRot = falseとした後で　！！！！！
 				//後処理として　befeul.befframeeulで　ボーンごとのマルチスレッドで計算して正しいオイラーにする
 				//############################################################################################################
-				if (s_model->ExistCurrentMotion()) {
+				if (GetCurrentModel()->ExistCurrentMotion()) {
 					if (g_edittarget != EDITTARGET_CAMERA) {
-						s_model->CalcBoneEul(g_limitdegflag, s_model->GetCurrentMotID());
+						GetCurrentModel()->CalcBoneEul(g_limitdegflag, GetCurrentModel()->GetCurrentMotID());
 					}
 					else if (s_cameramodel) {
 						s_cameramodel->CalcBoneEul(false, s_cameramodel->GetCameraMotionId());
@@ -8720,7 +8723,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				if (doneflag == false) {
 					//ペーストスプライトボタン右クリック：操作対象ボーン設定ダイアログを出した後にペースト処理
 					if (PickSpPaste(ptCursor) != 0) {
-						if (s_model) {
+						if (GetCurrentModel()) {
 							if ((s_selboneFlag == false) && (s_selboneAndPasteFlag == false)) {
 								s_selboneFlag = true;
 								s_selboneAndPasteFlag = true;
@@ -8904,8 +8907,8 @@ int RollbackCurBoneNo()
 {
 	if ((s_curboneno < 0) && (s_saveboneno >= 0)) {
 		s_curboneno = s_saveboneno;
-		//if (s_model) {
-		//	s_model->SetSelectedBoneNo(s_curboneno);
+		//if (GetCurrentModel()) {
+		//	GetCurrentModel()->SetSelectedBoneNo(s_curboneno);
 		//}
 		if (s_owpTimeline) {
 			//2024/04/24
@@ -9145,7 +9148,7 @@ int SetBaseDir()
 
 int OpenMNLFile()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 
@@ -9154,7 +9157,7 @@ int OpenMNLFile()
 	}
 
 	CMNLFile mnlfile;
-	CallF(mnlfile.LoadMNLFile(g_tmpmqopath, s_model), return 1);
+	CallF(mnlfile.LoadMNLFile(g_tmpmqopath, GetCurrentModel()), return 1);
 
 	CallF(OnAnimMenu(true, 0), return 1);
 
@@ -9189,10 +9192,10 @@ int OpenGcoFile()
 
 int OpenImpFile()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
-	if (!s_model->GetTopBone()) {
+	if (!GetCurrentModel()->GetTopBone()) {
 		return 0;
 	}
 
@@ -9201,9 +9204,9 @@ int OpenImpFile()
 	}
 
 	CImpFile impfile;
-	CallF(impfile.LoadImpFile(g_tmpmqopath, s_model), return 1);
+	CallF(impfile.LoadImpFile(g_tmpmqopath, GetCurrentModel()), return 1);
 
-	int impnum = s_model->GetImpInfoSize();
+	int impnum = GetCurrentModel()->GetImpInfoSize();
 	if (impnum > 0) {
 		OnImpMenu(impnum - 1);
 	}
@@ -9217,10 +9220,10 @@ int OpenImpFile()
 
 int OpenREFile()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
-	if (!s_model->GetTopBone()) {
+	if (!GetCurrentModel()->GetTopBone()) {
 		return 0;
 	}
 
@@ -9228,22 +9231,22 @@ int OpenREFile()
 		return 0;
 	}
 
-	if (s_model->GetRigidElemInfoSize() >= (MAXRENUM - 1)) {
+	if (GetCurrentModel()->GetRigidElemInfoSize() >= (MAXRENUM - 1)) {
 		::DSMessageBox(s_3dwnd, L"Overflow Loading(Limit under 99 files)", L"warning!!!", MB_OK);
 		return 0;
 	}
 
 	CRigidElemFile refile;
-	CallF(refile.LoadRigidElemFile(g_tmpmqopath, s_model), return 1);
+	CallF(refile.LoadRigidElemFile(g_tmpmqopath, GetCurrentModel()), return 1);
 
 
-	int renum = s_model->GetRigidElemInfoSize();
+	int renum = GetCurrentModel()->GetRigidElemInfoSize();
 	if (renum > 0) {
 
 		//RgidElemFileのLoad時にしている
-		//if (s_model && (renum == 1)) {//初回のref読み込み後にRigidElemを作成
+		//if (GetCurrentModel() && (renum == 1)) {//初回のref読み込み後にRigidElemを作成
 		//	int chkret;
-		//	chkret = s_model->CreateRigidElem();
+		//	chkret = GetCurrentModel()->CreateRigidElem();
 		//	_ASSERT(!chkret);
 		//}
 
@@ -9281,13 +9284,13 @@ int SaveGcoFile()
 
 int SaveImpFile()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
-	if (!s_model->GetTopBone()) {
+	if (!GetCurrentModel()->GetTopBone()) {
 		return 0;
 	}
-	if (s_rgdindexmap[s_model] < 0) {
+	if (s_rgdindexmap[GetCurrentModel()] < 0) {
 		::DSMessageBox(s_3dwnd, L"Save Only RagdollImpulse.\nRetry after Setting of Ragdoll", L"error!!!", MB_OK);
 		return 0;
 	}
@@ -9301,9 +9304,9 @@ int SaveImpFile()
 	}
 
 	CImpFile impfile;
-	CallF(impfile.WriteImpFile(s_Impname, s_model), return 1);
+	CallF(impfile.WriteImpFile(s_Impname, GetCurrentModel()), return 1);
 
-	int impnum = s_model->GetImpInfoSize();
+	int impnum = GetCurrentModel()->GetImpInfoSize();
 	if (impnum > 0) {
 		OnImpMenu(impnum - 1);
 	}
@@ -9318,10 +9321,10 @@ int SaveImpFile()
 
 int SaveREFile()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
-	if (!s_model->GetTopBone()) {
+	if (!GetCurrentModel()->GetTopBone()) {
 		return 0;
 	}
 
@@ -9333,7 +9336,7 @@ int SaveREFile()
 	}
 
 	CRigidElemFile refile;
-	CallF(refile.WriteRigidElemFile(s_REname, s_model, s_model->GetCurReIndex()), return 1);
+	CallF(refile.WriteRigidElemFile(s_REname, GetCurrentModel(), GetCurrentModel()->GetCurReIndex()), return 1);
 
 	return 0;
 }
@@ -9438,6 +9441,12 @@ int RetargetFile(char* fbxpath)
 {
 	//RenderContext* pRenderContext = DXUTGetD3D11DeviceContext();
 
+	if (!s_chascene) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
 	char directorypath[MAX_PATH] = { 0 };
 	ZeroMemory(directorypath, sizeof(char) * MAX_PATH);
 	char* pfind;
@@ -9462,7 +9471,7 @@ int RetargetFile(char* fbxpath)
 		bool grassflag = false;
 		newmodel = OpenFBXFile(false, false, 0, 1, ikstopname, grassflag);
 		if (newmodel) {
-			//s_model = s_convbone_model_batch;
+			//GetCurrentModel() = s_convbone_model_batch;
 
 
 			if(s_smoothBefRetarget && newmodel->ExistCurrentMotion()){
@@ -9470,7 +9479,7 @@ int RetargetFile(char* fbxpath)
 				//2023/10/12 retarget前にsmoothするオプション RetargetBatch()のダイアログで選択
 				//ノイズによって　180度裏返り機能の閾値を越えないようにする
 				//##############################################################################
-				s_model = newmodel;
+				SetCurrentModel(newmodel);
 				MOTINFO curmi = newmodel->GetCurMotInfo();
 				if (curmi.motid > 0) {
 					int saveFilterState = s_filterState;
@@ -9481,7 +9490,7 @@ int RetargetFile(char* fbxpath)
 					s_buttonselectstart = 1.0;
 					s_buttonselectend = curmi.frameleng - 1.0;
 
-					FilterNoDlg(false, s_model, curmi.motid);
+					FilterNoDlg(false, GetCurrentModel(), curmi.motid);
 
 					s_filterState = saveFilterState;
 					s_buttonselectstart = savestart;
@@ -9498,14 +9507,14 @@ int RetargetFile(char* fbxpath)
 			//OnChangeModel(s_convbone_model_batch_selindex, forceflag, callundo);
 			OnChangeModel(s_convbone_model_batch, forceflag, callundo);
 
-			s_model = s_convbone_model_batch;
+			SetCurrentModel(s_convbone_model_batch);
 			s_retargetdlg.SetModel(s_convbone_model_batch);
 			s_retargetdlg.SetRetargetBvh(newmodel);
 			////s_maxboneno = s_convbone_bvh->GetBoneListSize();
 			////s_maxboneno = s_convbone_bvh->GetBoneForMotionSize();
 			//s_maxboneno = s_convbone_bvh->GetMaxBoneNo();
 
-			if (s_model && s_retargetdlg.GetRetargetModel() && s_retargetdlg.GetRetargetBvh()) {
+			if (GetCurrentModel() && s_retargetdlg.GetRetargetModel() && s_retargetdlg.GetRetargetBvh()) {
 				WCHAR wretargetfilename[MAX_PATH] = { 0L };
 				char retargetfilename[MAX_PATH] = { 0 };
 				sprintf_s(retargetfilename, MAX_PATH, "%sretarget.rtg", directorypath);
@@ -9586,7 +9595,7 @@ unsigned __stdcall ThreadFunc_Retarget(LPVOID lpThreadParam)
 
 int RetargetBatch()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -9622,10 +9631,10 @@ int RetargetBatch()
 
 	//if (!s_convbone_model || !s_convbone_bvh) {
 	//}
-	//if (s_model != s_convbone_model) {
+	//if (GetCurrentModel() != s_convbone_model) {
 	//}
 
-	s_convbone_model_batch = s_model;
+	s_convbone_model_batch = GetCurrentModel();
 	s_convbone_model_batch_selindex = s_curmodelmenuindex;
 
 
@@ -10323,7 +10332,7 @@ CModel* OpenMQOFile()
 			return 0;
 		}
 	}
-	//if (s_model && (s_curmodelmenuindex >= 0) && s_chascene && (s_chascene->GetModelNum() != 0)) {
+	//if (GetCurrentModel() && (s_curmodelmenuindex >= 0) && s_chascene && (s_chascene->GetModelNum() != 0)) {
 	//	s_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
 	//	s_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
 	//}
@@ -10349,10 +10358,10 @@ CModel* OpenMQOFile()
 		return 0;
 	}
 	else {
-		s_model = newmodel;
+		SetCurrentModel(newmodel);
 	}
-	//CallF(s_model->MakeDispObj(), return 0);
-	CallF(s_model->DbgDump(), return 0);
+	//CallF(GetCurrentModel()->MakeDispObj(), return 0);
+	CallF(GetCurrentModel()->DbgDump(), return 0);
 
 	int mindex;
 	if (s_chascene) {
@@ -10362,7 +10371,7 @@ CModel* OpenMQOFile()
 		mindex = 0;
 	}
 	MODELELEM modelelem;
-	modelelem.modelptr = s_model;
+	modelelem.modelptr = GetCurrentModel();
 	modelelem.motmenuindex = 0;
 	if (s_chascene) {
 		s_chascene->AddModelElem(modelelem);
@@ -10373,7 +10382,7 @@ CModel* OpenMQOFile()
 	   //pComboBox->RemoveAllItems();
 
 	   //map<int, CBone*>::iterator itrbone;
-	   //for( itrbone = s_model->GetBoneListBegin(); itrbone != s_model->GetBoneListEnd(); itrbone++ ){
+	   //for( itrbone = GetCurrentModel()->GetBoneListBegin(); itrbone != GetCurrentModel()->GetBoneListEnd(); itrbone++ ){
 	   //	ULONG boneno = (ULONG)itrbone->first;
 	   //	CBone* curbone = itrbone->second;
 	   //	if( curbone && (boneno >= 0) ){
@@ -10583,7 +10592,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 			return 0;
 		}
 	}
-	//if (s_model && (s_curmodelmenuindex >= 0) && s_chascene && (s_chascene->GetModelNum() != 0)) {
+	//if (GetCurrentModel() && (s_curmodelmenuindex >= 0) && s_chascene && (s_chascene->GetModelNum() != 0)) {
 	//	s_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
 	//	s_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
 	//}
@@ -10638,7 +10647,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 		return 0;
 	}
 	else {
-		s_model = newmodel;
+		SetCurrentModel(newmodel);
 
 		if (srcgrassflag && (callfromcha == false)) {//chaファイル読込時にはChaFile内でCGrassElemを作成してセットする
 			CGrassElem* newgrasselem = new CGrassElem(newmodel);
@@ -10671,7 +10680,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 		OnRenderNowLoading();
 	}
 
-	//CallF(s_model->MakeDispObj(), return 0);
+	//CallF(GetCurrentModel()->MakeDispObj(), return 0);
 
 	if (s_nowloading && s_3dwnd) {
 		OnRenderNowLoading();
@@ -10685,7 +10694,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 		mindex = 0;
 	}
 	MODELELEM modelelem;
-	modelelem.modelptr = s_model;
+	modelelem.modelptr = GetCurrentModel();
 	modelelem.motmenuindex = 0;
 	if (s_chascene) {
 		s_chascene->AddModelElem(modelelem);
@@ -10695,7 +10704,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	   //pComboBox->RemoveAllItems();
 
 	   //map<int, CBone*>::iterator itrbone;
-	   //for( itrbone = s_model->GetBoneListBegin(); itrbone != s_model->GetBoneListEnd(); itrbone++ ){
+	   //for( itrbone = GetCurrentModel()->GetBoneListBegin(); itrbone != GetCurrentModel()->GetBoneListEnd(); itrbone++ ){
 	   //	ULONG boneno = (ULONG)itrbone->first;
 	   //	CBone* curbone = itrbone->second;
 	   //	if( curbone && (boneno >= 0) ){
@@ -10750,8 +10759,8 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 		OnRenderNowLoading();
 	}
 
-	//CallF( s_model->LoadFBXAnim( s_psdk, pImporter, pScene, OnAddMotion ), return 0 );
-	CallF(s_model->LoadFBXAnim(s_psdk, pScene, NULL, motioncachebatchflag), return 0);
+	//CallF( GetCurrentModel()->LoadFBXAnim( s_psdk, pImporter, pScene, OnAddMotion ), return 0 );
+	CallF(GetCurrentModel()->LoadFBXAnim(s_psdk, pScene, NULL, motioncachebatchflag), return 0);
 	//if( (int)s_modelindex.size() >= 2 )
 	//	_ASSERT( 0 );
 
@@ -10772,7 +10781,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 		OnRenderNowLoading();
 	}
 
-	//if( s_model->GetMotInfoSize() >= 2 ){
+	//if( GetCurrentModel()->GetMotInfoSize() >= 2 ){
 	//	OnDelMotion( 0 );//初期状態のダミーモーションを削除
 	//}
 
@@ -10780,10 +10789,10 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 
 	//OnAnimMenuでCreateRigidElemを呼ぶ前に、default_ref.refを読む
 	if (skipdefref == 1) {//プロジェクトファイルから呼ばれて、かつ、default_ref.refが存在する場合
-		if (s_model->GetMotInfoSize() > 0) {
-			MOTINFO firstmi = s_model->GetMotInfo(1);
+		if (GetCurrentModel()->GetMotInfoSize() > 0) {
+			MOTINFO firstmi = GetCurrentModel()->GetMotInfo(1);
 			if (firstmi.motid > 0) {
-				s_model->SetCurrentMotion(firstmi.motid);
+				GetCurrentModel()->SetCurrentMotion(firstmi.motid);
 
 				WCHAR savetmpmqopath[MAX_PATH];
 				wcscpy_s(savetmpmqopath, MAX_PATH, g_tmpmqopath);
@@ -10809,7 +10818,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 		//if (inittimelineflag == 1)//inittimelineflag は 最後のキャラの時に１
 	{
 		int lastmotid = -1;
-		int motnum = s_model->GetMotInfoSize();
+		int motnum = GetCurrentModel()->GetMotInfoSize();
 		if (motnum > 0) {
 			int motindex;
 			for (motindex = 0; motindex < motnum; motindex++) {
@@ -10818,11 +10827,11 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 				//swprintf_s(strchk, 256, L"check 3 : %d / %d", motno, motnum);
 				//::MessageBox(g_mainhwnd, strchk, L"check!!!", MB_OK);
 
-				//MOTINFO curmi = s_model->GetMotInfo(motno + 1);
-				MOTINFO curmi = s_model->GetMotInfoByIndex(motindex);//2024/06/27
+				//MOTINFO curmi = GetCurrentModel()->GetMotInfo(motno + 1);
+				MOTINFO curmi = GetCurrentModel()->GetMotInfoByIndex(motindex);//2024/06/27
 				if (curmi.motid > 0) {
 					lastmotid = curmi.motid;
-					s_model->SetCurrentMotion(lastmotid);
+					GetCurrentModel()->SetCurrentMotion(lastmotid);
 					//OnAddMotion(curmi->motid, (motno == 0));
 					// 
 					//Main.cppのOnAddMotion()は　メニューの追加のみ
@@ -10841,16 +10850,16 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 			//ファイルを開いた直後には、ボーンモーション編集可能なモーションを選択しておく
 			//カメラアニメしか無い場合は次の処理はしない
 			bool cameraanimflag = false;
-			MOTINFO firstvalidmi = s_model->GetFirstValidMotInfo(cameraanimflag);
+			MOTINFO firstvalidmi = GetCurrentModel()->GetFirstValidMotInfo(cameraanimflag);
 			if (firstvalidmi.motid > 0) {
-				int selindex = s_chascene->MotID2SelIndex(s_chascene->FindModelIndex(s_model), firstvalidmi.motid);
+				int selindex = s_chascene->MotID2SelIndex(s_chascene->FindModelIndex(GetCurrentModel()), firstvalidmi.motid);
 				if (selindex >= 0) {
 					OnAnimMenu(dorefreshtl, selindex);
 				}
 			}
 
 		}
-		//s_model->SetCurrentMotion(lastmotid);
+		//GetCurrentModel()->SetCurrentMotion(lastmotid);
 	}
 	//}
 
@@ -10863,12 +10872,12 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	// CModel::AddMotion()からInitMPが呼ばれるためには　GetLoadedFlag() == trueである必要
 	// よってモデルとアニメ読み込み後　かつ motnum == 0処理よりも前に　SetLoadedFlag(true)する必要
 	// 下方から移動
-	s_model->SetLoadedFlag(true);
+	GetCurrentModel()->SetLoadedFlag(true);
 
 
 	//Handle a model not has motion.
-	int motnum = s_model->GetMotInfoSize();
-	//if ((motnum == 0) && (s_model->GetNoBoneFlag() == false)) {
+	int motnum = GetCurrentModel()->GetMotInfoSize();
+	//if ((motnum == 0) && (GetCurrentModel()->GetNoBoneFlag() == false)) {
 	if (motnum == 0) {
 		CallF(AddMotion(0), return 0);//モーション無しfbxを読み込んだ場合のInitMP呼び出しでモーションポイント作成
 		if (s_chascene) {
@@ -10894,8 +10903,8 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 
 	//	SetCapture( s_3dwnd );
 
-	if (s_model && s_model->ExistCurrentMotion()) {
-		MOTINFO curmi = s_model->GetCurMotInfo();
+	if (GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
+		MOTINFO curmi = GetCurrentModel()->GetCurMotInfo();
 		if (curmi.motid > 0) {
 			s_curmotid = curmi.motid;
 		}
@@ -10910,42 +10919,42 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 		OnRenderNowLoading();
 	}
 
-	if (s_model->GetOldAxisFlagAtLoading() == 0) {
+	if (GetCurrentModel()->GetOldAxisFlagAtLoading() == 0) {
 		CLmtFile lmtfile;
 		WCHAR lmtname[MAX_PATH];
 		swprintf_s(lmtname, MAX_PATH, L"%s.lmt", g_tmpmqopath);
 		char fbxcomment[MAX_PATH] = { 0 };
 		int chkretcomment;
-		chkretcomment = s_model->GetFbxComment(fbxcomment, MAX_PATH);
+		chkretcomment = GetCurrentModel()->GetFbxComment(fbxcomment, MAX_PATH);
 		if (chkretcomment == 0) {
 			int chkret1;
-			chkret1 = lmtfile.LoadLmtFile(lmtname, s_model, fbxcomment);
+			chkret1 = lmtfile.LoadLmtFile(lmtname, GetCurrentModel(), fbxcomment);
 			//_ASSERT(chkret1 == 0);
 		}
 		WCHAR rigname[MAX_PATH] = { 0L };
 		swprintf_s(rigname, MAX_PATH, L"%s.rig", g_tmpmqopath);
 		CRigFile rigfile;
 		int chkret2;
-		chkret2 = rigfile.LoadRigFile(rigname, s_model);
+		chkret2 = rigfile.LoadRigFile(rigname, GetCurrentModel());
 		//_ASSERT(chkret2 == 0);
 	}
 
 	//::MessageBox(g_mainhwnd, L"check 6", L"check!!!", MB_OK);
 
 
-	s_model->SetMotionSpeed(g_dspeed);
+	GetCurrentModel()->SetMotionSpeed(g_dspeed);
 
 	DispModelPanel();
 
 
 	//OnAnimMenuで呼ぶ
 	//if (skipdefref == 0) {
-	//	s_model->CreateBtObject(1);//初回
-	//	s_model->CalcBoneEul(-1);
+	//	GetCurrentModel()->CreateBtObject(1);//初回
+	//	GetCurrentModel()->CalcBoneEul(-1);
 	//}
 
 	CBone* hipsbone = nullptr;
-	s_model->GetHipsBoneReq(s_model->GetTopBone(false), &hipsbone);
+	GetCurrentModel()->GetHipsBoneReq(GetCurrentModel()->GetTopBone(false), &hipsbone);
 	if (hipsbone) {
 		g_befcamtargetpos = g_camtargetpos;
 		g_camtargetpos = hipsbone->GetChildWorld();
@@ -10953,12 +10962,12 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	}
 
 #ifndef NDEBUG
-	CallF(s_model->DbgDump(), return 0);
+	CallF(GetCurrentModel()->DbgDump(), return 0);
 #endif
 
 	g_dbgloadcnt++;
 
-	//s_model->DestroyScene();
+	//GetCurrentModel()->DestroyScene();
 
 	//2023/10/27
 	// モーション無しのfbxを読み込んだ場合　motidは作成されるがモーションポイントは１つも無い
@@ -10966,7 +10975,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	// CModel::AddMotion()からInitMPが呼ばれるためには　GetLoadedFlag() == trueである必要
 	// よってモデルとアニメ読み込み後　かつ motnum == 0処理よりも前に　SetLoadedFlag(true)する必要
 	// 上方へ移動
-	//s_model->SetLoadedFlag(true);
+	//GetCurrentModel()->SetLoadedFlag(true);
 
 	//ShowRigidWnd(true);
 
@@ -10976,10 +10985,10 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 
 	//2022/11/23
 	//VRoidの髪の毛ジョイントが多く　顔がみえなくなるので　読み込み時に自動的に　頭のジョイントマークをスキップ設定
-	CBone* vroidheadjoint = s_model->FindBoneByName("J_Bip_C_Head");
+	CBone* vroidheadjoint = GetCurrentModel()->FindBoneByName("J_Bip_C_Head");
 	if (vroidheadjoint) {
 		SkipJointMarkReq(1, vroidheadjoint, false);
-		s_model->SetBtObjectVec();//2024/06/16
+		GetCurrentModel()->SetBtObjectVec();//2024/06/16
 	}
 
 
@@ -11042,14 +11051,14 @@ int InitCurMotion(int selectflag, double expandmotion)
 
 	//モーションプロパティ機能はモーションパネルで選択中のモーションに対して処理をする
 	//カメラパネル内のモーションはモーションパネル内にも存在するので　カメラモーションの長さを変える場合にも　モーションパネルで選択して実行する
-	MOTINFO curmi = s_model->GetCurMotInfo();
+	MOTINFO curmi = GetCurrentModel()->GetCurMotInfo();
 	if (curmi.motid > 0) {
-		if (s_model) {
-			if (s_model->ExistCurrentMotion()) {
-				//CallF(s_model->FillUpEmptyMotion(curmi->motid), return 0);
-				CBone* topbone = s_model->GetTopBone(false);
-				if (topbone && (s_model->GetNoBoneFlag() == false)) {
-					double motleng = s_model->GetCurrentMotLeng();
+		if (GetCurrentModel()) {
+			if (GetCurrentModel()->ExistCurrentMotion()) {
+				//CallF(GetCurrentModel()->FillUpEmptyMotion(curmi->motid), return 0);
+				CBone* topbone = GetCurrentModel()->GetTopBone(false);
+				if (topbone && (GetCurrentModel()->GetNoBoneFlag() == false)) {
+					double motleng = GetCurrentModel()->GetCurrentMotLeng();
 					//_ASSERT(0);
 
 					if (selectflag == 1) {//called from tool panel : init selected time range
@@ -11066,7 +11075,7 @@ int InitCurMotion(int selectflag, double expandmotion)
 							endframe = itrcp->time;
 						}
 
-						s_model->InitMpFrame(limitdegflag, curmi.motid, topbone, startframe, endframe);
+						GetCurrentModel()->InitMpFrame(limitdegflag, curmi.motid, topbone, startframe, endframe);
 
 					}
 					else if (expandmotion > 0) {//モーション長を長くした際に、長くなった分の初期化をする
@@ -11079,17 +11088,17 @@ int InitCurMotion(int selectflag, double expandmotion)
 						//double frame;
 						//for (frame = oldframeleng; frame < motleng; frame += 1.0) {
 						//	if (topbone) {
-						//		s_model->SetMotionFrame(frame);
-						//		s_model->InitMPReq(limitdegflag, topbone, curmi->motid, frame);
+						//		GetCurrentModel()->SetMotionFrame(frame);
+						//		GetCurrentModel()->InitMPReq(limitdegflag, topbone, curmi->motid, frame);
 						//	}
 						//}
 
 						if (oldframeleng < motleng) {
-							s_model->InitMpFrame(limitdegflag, curmi.motid, topbone, oldframeleng, RoundingTime(motleng - 1.0));
+							GetCurrentModel()->InitMpFrame(limitdegflag, curmi.motid, topbone, oldframeleng, RoundingTime(motleng - 1.0));
 						}
 
 						int errorcount = 0;
-						s_model->CreateIndexedMotionPoint(
+						GetCurrentModel()->CreateIndexedMotionPoint(
 							curmi.motid, motleng, &errorcount);
 						if (errorcount != 0) {
 							_ASSERT(0);
@@ -11099,15 +11108,15 @@ int InitCurMotion(int selectflag, double expandmotion)
 						//double frame;
 						//for (frame = 0.0; frame < motleng; frame += 1.0) {
 						//	if (topbone) {
-						//		s_model->SetMotionFrame(frame);
-						//		s_model->InitMPReq(limitdegflag, topbone, curmi->motid, frame);
+						//		GetCurrentModel()->SetMotionFrame(frame);
+						//		GetCurrentModel()->InitMPReq(limitdegflag, topbone, curmi->motid, frame);
 						//	}
 						//}
 
-						s_model->InitMpFrame(limitdegflag, curmi.motid, topbone, 0.0, RoundingTime(motleng - 1.0));
+						GetCurrentModel()->InitMpFrame(limitdegflag, curmi.motid, topbone, 0.0, RoundingTime(motleng - 1.0));
 
 						int errorcount = 0;
-						s_model->CreateIndexedMotionPoint(
+						GetCurrentModel()->CreateIndexedMotionPoint(
 							curmi.motid, motleng, &errorcount);
 						if (errorcount != 0) {
 							_ASSERT(0);
@@ -11120,7 +11129,7 @@ int InitCurMotion(int selectflag, double expandmotion)
 					//	bool allframeflag = true;//全フレーム
 					//	bool setcursorflag = false;
 					//	bool onpasteflag = false;
-					//	CopyLimitedWorldToWorld(s_model, allframeflag, setcursorflag, s_editmotionflag, onpasteflag);
+					//	CopyLimitedWorldToWorld(GetCurrentModel(), allframeflag, setcursorflag, s_editmotionflag, onpasteflag);
 					//}
 
 				}
@@ -11145,9 +11154,9 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 	EnterCriticalSection(&s_CritSection_LTimeline);
 
 	//EraseKeyList();
-	////if (s_model && s_model->GetBoneListSize() > 0) {
-	//if (s_model && (s_model->GetBoneForMotionSize() > 0)) {
-	if (s_model && s_chascene) {
+	////if (GetCurrentModel() && GetCurrentModel()->GetBoneListSize() > 0) {
+	//if (GetCurrentModel() && (GetCurrentModel()->GetBoneForMotionSize() > 0)) {
+	if (GetCurrentModel() && s_chascene) {
 		if (!s_owpTimeline) {
 			//OWP_Timeline* owpTimeline = 0;
 			//タイムラインのGUIパーツを生成
@@ -11166,7 +11175,7 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 			// カーソル移動時のイベントリスナーに
 			// カーソル移動フラグcursorFlagをオンにするラムダ関数を登録する
 			s_owpTimeline->setCursorListener([]() {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					s_cursorFlag = true;
 					if (s_undoFlag || s_redoFlag) {
 						s_cursorUnderUndo = true;
@@ -11179,7 +11188,7 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 			//s_owpTimeline->setSelectListener([](){ s_selectFlag = true; });//LTimelineへ移動
 
 			s_owpTimeline->setMouseRUpListener([]() {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					s_timelineRUpFlag = true;
 				}
 				});
@@ -11187,7 +11196,7 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 			//// キー移動時のイベントリスナーに
 			//// キー移動フラグkeyShiftFlagをオンにして、キー移動量をコピーするラムダ関数を登録する
 			//s_owpTimeline->setKeyShiftListener([]() {
-			//	if (s_model) {
+			//	if (GetCurrentModel()) {
 			//		s_keyShiftFlag = true;
 			//		s_keyShiftTime = s_owpTimeline->getShiftKeyTime();
 			//	}
@@ -11214,7 +11223,7 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 		}
 
 		if (s_owpTimeline) {
-			int currentmodelindex = s_chascene->FindModelIndex(s_model);
+			int currentmodelindex = s_chascene->FindModelIndex(GetCurrentModel());
 			if (currentmodelindex >= 0) {
 				//#######################################################
 				//2024/06/27 s_tlarrayの操作前にカレントモデルのtlarrayを取得
@@ -11230,7 +11239,7 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 				s_tlarray.push_back(newtle);
 
 				s_chascene->SetTimelineArray(currentmodelindex, s_tlarray);
-				s_model->SetCurrentMotion(newmotid);
+				GetCurrentModel()->SetCurrentMotion(newmotid);
 			}
 		}
 
@@ -11258,17 +11267,17 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 					//s_LtimelineWnd->addParts(*s_owpLTimeline);//playerbuttonより後
 					s_LTSeparator->addParts1(*s_owpLTimeline);
 					s_owpLTimeline->setCursorListener([]() {
-						if (s_model) {
+						if (GetCurrentModel()) {
 							s_LcursorFlag = true;
 						}
 						});
 					s_owpLTimeline->setSelectListener([]() {
-						if (s_model && (s_selectFlag == false)) {
+						if (GetCurrentModel() && (s_selectFlag == false)) {
 							s_selectFlag = true;
 						}
 						});
 					s_owpLTimeline->setMouseMDownListener([]() {
-						if (s_model) {
+						if (GetCurrentModel()) {
 							s_timelinembuttonFlag = true;
 							//if (s_mbuttoncnt == 0) {
 							//	s_mbuttoncnt = 1;
@@ -11279,7 +11288,7 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 						}
 						});
 					s_owpLTimeline->setMouseWheelListener([]() {
-						if (s_model) {
+						if (GetCurrentModel()) {
 							if ((g_keybuf['S'] & 0x80) == 0) {//Scroll の S
 								if (s_timelinewheelFlag == false) {
 									s_timelinewheelFlag = true;
@@ -11296,14 +11305,14 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 						}
 						});
 					s_owpLTimeline->setMouseRDownListener([]() {
-						if (s_model) {
+						if (GetCurrentModel()) {
 							if (!s_LTimelineApplyFrameFlag) {
 								s_LTimelineApplyFrameFlag = true;
 							}
 						}
 						});
 					s_owpLTimeline->setMouseRUpListener([]() {
-						if (s_model) {
+						if (GetCurrentModel()) {
 							//if (!s_LTimelineApplyFrameFlag) {
 							//	s_LTimelineApplyFrameFlag = true;
 							//}
@@ -11311,7 +11320,7 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 						}
 						});
 					s_owpLTimeline->setMouseRMoveListener([]() {
-						if (s_model) {
+						if (GetCurrentModel()) {
 							if (!s_LTimelineApplyFrameFlag) {
 								s_LTimelineApplyFrameFlag = true;
 							}
@@ -11327,7 +11336,7 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 					//s_LtimelineWnd->addParts(*s_parentcheck);
 					//s_LTSeparator->addParts2(*s_parentcheck);//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!parentwindow libfbxdll error 2021/03/04 comment out tmp
 					//s_parentcheck->setButtonListener([]() { 
-					//	if (s_model) {
+					//	if (GetCurrentModel()) {
 					//		refreshEulerGraph();
 					//	}
 					//});
@@ -11348,7 +11357,7 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 					//OrgWinGUI::WindowPos graphpos = OrgWinGUI::WindowPos(0, 16);
 					//s_owpEulerGraph->setPos(graphpos);
 					//s_owpEulerGraph->setCursorListener([]() { 
-					//	if (s_model) {
+					//	if (GetCurrentModel()) {
 					//		s_LcursorFlag = true;
 					//	}
 					//});
@@ -11393,23 +11402,23 @@ int UpdateEditedEuler()
 
 	if (s_owpEulerGraph) {
 		if (g_edittarget != EDITTARGET_CAMERA) {
-			s_owpEulerGraph->SetCurrentModel(s_model);
+			s_owpEulerGraph->SetCurrentModel(GetCurrentModel());
 		}
 		else {
 			s_owpEulerGraph->SetCurrentModel(s_cameramodel);
 		}
 	}
 
-	if (!s_model || !s_owpLTimeline || !s_owpEulerGraph) {
+	if (!GetCurrentModel() || !s_owpLTimeline || !s_owpEulerGraph) {
 		return 0;
 	}
 
 
-	if (!s_model->ExistCurrentMotion()) {
+	if (!GetCurrentModel()->ExistCurrentMotion()) {
 		return 0;
 	}
 
-	//if (s_model && (s_model->GetLoadedFlag() == false)) {
+	//if (GetCurrentModel() && (GetCurrentModel()->GetLoadedFlag() == false)) {
 	//	return 0;
 	//}
 
@@ -11431,7 +11440,7 @@ int UpdateEditedEuler()
 		float maxval = 100.0;
 
 		int curmotid = pmodel->GetCurrentMotID();
-		MOTINFO curmi = s_model->GetCurMotInfo();
+		MOTINFO curmi = GetCurrentModel()->GetCurMotInfo();
 		if (curmi.motid > 0) {
 			int startframe, endframe, frameleng;
 			frameleng = IntTime(curmi.frameleng);
@@ -11678,22 +11687,22 @@ int refreshEulerGraph()
 
 	if (s_owpEulerGraph) {
 		if (g_edittarget != EDITTARGET_CAMERA) {
-			s_owpEulerGraph->SetCurrentModel(s_model);
+			s_owpEulerGraph->SetCurrentModel(GetCurrentModel());
 		}
 		else {
 			s_owpEulerGraph->SetCurrentModel(s_cameramodel);
 		}		
 	}
 
-	if (!s_model || !s_owpLTimeline || !s_owpEulerGraph) {
+	if (!GetCurrentModel() || !s_owpLTimeline || !s_owpEulerGraph) {
 		return 0;
 	}
 
-	//if (s_model && (s_model->GetLoadedFlag() == false)) {
+	//if (GetCurrentModel() && (GetCurrentModel()->GetLoadedFlag() == false)) {
 	//	return;
 	//}
 
-	if (!s_model->ExistCurrentMotion()) {
+	if (!GetCurrentModel()->ExistCurrentMotion()) {
 		return 0;
 	}
 
@@ -11702,7 +11711,7 @@ int refreshEulerGraph()
 	int eultiptime = (int)(s_owpEulerGraph->getCurrentTime() + 0.0001);
 
 
-	if (s_model) {
+	if (GetCurrentModel()) {
 
 		//if (!g_motionbrush_value || (g_motionbrush_frameleng != frameleng)) {
 		int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
@@ -11732,8 +11741,8 @@ int refreshEulerGraph()
 			s_owpEulerGraph->setInBlendShapeMode(true);
 			s_owpEulerGraph->newLine(0, 0, _T("X"));
 			s_owpEulerGraph->newLine(0, 0, _T("S"));
-			//s_owpLTimeline->setMaxTime( s_model->m_curmotinfo->frameleng - 1.0 );
-			s_owpEulerGraph->setMaxTime(s_model->GetCurrentMaxFrame());//左端の１マスを選んだ状態がフレーム０を選んだ状態だから　-1 しない。
+			//s_owpLTimeline->setMaxTime( GetCurrentModel()->m_curmotinfo->frameleng - 1.0 );
+			s_owpEulerGraph->setMaxTime(GetCurrentModel()->GetCurrentMaxFrame());//左端の１マスを選んだ状態がフレーム０を選んだ状態だから　-1 しない。
 
 
 			int curtime;
@@ -11741,7 +11750,7 @@ int refreshEulerGraph()
 			float maxval = 100.0;
 
 			int curmotid = pmodel->GetCurrentMotID();
-			int frameleng = IntTime(s_model->GetCurrentMaxFrame());
+			int frameleng = IntTime(GetCurrentModel()->GetCurrentMaxFrame());
 
 			for (curtime = 0; curtime < frameleng; curtime++) {
 				float currentvalue = pmqoobj->GetShapeAnimWeight(curmotid, curtime, channelindex);
@@ -11800,8 +11809,8 @@ int refreshEulerGraph()
 			s_owpEulerGraph->newLine(0, 0, _T("Y"));
 			s_owpEulerGraph->newLine(0, 0, _T("Z"));
 			s_owpEulerGraph->newLine(0, 0, _T("S"));
-			////s_owpLTimeline->setMaxTime( s_model->m_curmotinfo->frameleng - 1.0 );
-			//s_owpEulerGraph->setMaxTime(s_model->GetCurrentMaxFrame());//左端の１マスを選んだ状態がフレーム０を選んだ状態だから　-1 しない。
+			////s_owpLTimeline->setMaxTime( GetCurrentModel()->m_curmotinfo->frameleng - 1.0 );
+			//s_owpEulerGraph->setMaxTime(GetCurrentModel()->GetCurrentMaxFrame());//左端の１マスを選んだ状態がフレーム０を選んだ状態だから　-1 しない。
 
 			int frameleng = 100;
 			int graphmotid = 0;
@@ -11965,14 +11974,14 @@ int refreshEulerGraph()
 void refreshTimeline(OWP_Timeline& timeline) 
 {
 	if (s_owpEulerGraph) {
-		s_owpEulerGraph->SetCurrentModel(s_model);
+		s_owpEulerGraph->SetCurrentModel(GetCurrentModel());
 	}
 
-	if (!s_model || !s_owpLTimeline || !s_owpEulerGraph) {
+	if (!GetCurrentModel() || !s_owpLTimeline || !s_owpEulerGraph) {
 		return;
 	}
 
-	//if (s_model && (s_model->GetLoadedFlag() == false)) {
+	//if (GetCurrentModel() && (GetCurrentModel()->GetLoadedFlag() == false)) {
 	//	return;
 	//}
 
@@ -11986,7 +11995,7 @@ void refreshTimeline(OWP_Timeline& timeline)
 
 	int savecurrentline;// = timeline.getCurrentLine();
 	if (s_curboneno >= 0) {
-		const WCHAR* pbonename = s_model->GetWBoneName(s_curboneno);
+		const WCHAR* pbonename = GetCurrentModel()->GetWBoneName(s_curboneno);
 		if (pbonename) {
 			savecurrentline = timeline.getLineIndex(pbonename);
 		}
@@ -12002,7 +12011,7 @@ void refreshTimeline(OWP_Timeline& timeline)
 
 
 	//時刻幅を設定
-	if (s_model) {
+	if (GetCurrentModel()) {
 		timeline.setMaxTime(curmi.frameleng);
 
 		s_owpLTimeline->deleteKey();
@@ -12014,7 +12023,7 @@ void refreshTimeline(OWP_Timeline& timeline)
 		s_owpLTimeline->newLine(0, 0, false, false, s_strmark);
 		//s_owpLTimeline->newKey( s_strmark, 0.0, 0 );
 
-		//s_owpLTimeline->setMaxTime( s_model->m_curmotinfo->frameleng - 1.0 );
+		//s_owpLTimeline->setMaxTime( GetCurrentModel()->m_curmotinfo->frameleng - 1.0 );
 		s_owpLTimeline->setMaxTime(curmi.frameleng);//左端の１マスを選んだ状態がフレーム０を選んだ状態だから　-1 しない。
 
 
@@ -12032,10 +12041,10 @@ void refreshTimeline(OWP_Timeline& timeline)
 	s_boneno2lineno.clear();
 
 
-	CBone* topbone = s_model->GetTopBone();
+	CBone* topbone = GetCurrentModel()->GetTopBone();
 
-	if (s_model && s_model->GetTopBone()) {
-		CallF(s_model->FillTimeLine(timeline, s_lineno2boneno, s_boneno2lineno), return);
+	if (GetCurrentModel() && GetCurrentModel()->GetTopBone()) {
+		CallF(GetCurrentModel()->FillTimeLine(timeline, s_lineno2boneno, s_boneno2lineno), return);
 	}
 	else {
 		WCHAR label[256];
@@ -12051,9 +12060,9 @@ void refreshTimeline(OWP_Timeline& timeline)
 
  //   CDXUTComboBox* pComboBox = g_SampleUI.GetComboBox( IDC_COMBO_BONE );
 	//pComboBox->RemoveAllItems();
-	//if( s_model ){
+	//if( GetCurrentModel() ){
 	//	map<int, CBone*>::iterator itrbone;
-	//	for( itrbone = s_model->GetBoneListBegin(); itrbone != s_model->GetBoneListEnd(); itrbone++ ){
+	//	for( itrbone = GetCurrentModel()->GetBoneListBegin(); itrbone != GetCurrentModel()->GetBoneListEnd(); itrbone++ ){
 	//		ULONG boneno = (ULONG)itrbone->first;
 	//		CBone* opebone = itrbone->second;
 	//		if( opebone && (boneno >= 0) ){
@@ -12076,17 +12085,17 @@ void refreshTimeline(OWP_Timeline& timeline)
 
 int AddBoneTra2(ChaVector3 diffvec)
 {
-	if (!s_model || (s_curboneno < 0) && !s_model->GetTopBone()) {
+	if (!GetCurrentModel() || (s_curboneno < 0) && !GetCurrentModel()->GetTopBone()) {
 		return 0;
 	}
 
-	CBone* curbone = s_model->GetBoneByID(s_curboneno);
+	CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 	if (!curbone) {
 		_ASSERT(0);
 		return 0;
 	}
 
-	s_model->FKBoneTraUnderFK(g_limitdegflag, g_wallscrapingikflag, &s_editrange, s_curboneno, diffvec);
+	GetCurrentModel()->FKBoneTraUnderFK(g_limitdegflag, g_wallscrapingikflag, &s_editrange, s_curboneno, diffvec);
 
 	s_editmotionflag = s_curboneno;
 
@@ -12096,17 +12105,17 @@ int AddBoneTra2(ChaVector3 diffvec)
 /*
 int ImpulseBonePhysics(ChaVector3 diffvec)
 {
-	if (!s_model || (s_curboneno < 0) && !s_model->GetTopBone()){
+	if (!GetCurrentModel() || (s_curboneno < 0) && !GetCurrentModel()->GetTopBone()){
 		return 0;
 	}
 
-	CBone* curbone = s_model->GetBoneByID(s_curboneno);
+	CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 	if (!curbone){
 		_ASSERT(0);
 		return 0;
 	}
 
-	s_model->ImpulseBoneRagdoll(0, &s_editrange, s_curboneno, diffvec);
+	GetCurrentModel()->ImpulseBoneRagdoll(0, &s_editrange, s_curboneno, diffvec);
 
 	s_editmotionflag = s_curboneno;
 
@@ -12116,17 +12125,17 @@ int ImpulseBonePhysics(ChaVector3 diffvec)
 
 int AddBoneTra(int kind, float srctra)
 {
-	if (!s_model || (s_curboneno < 0) && !s_model->GetTopBone()) {
+	if (!GetCurrentModel() || (s_curboneno < 0) && !GetCurrentModel()->GetTopBone()) {
 		return 0;
 	}
 
-	CBone* curbone = s_model->GetBoneByID(s_curboneno);
+	CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 	if (!curbone) {
 		_ASSERT(0);
 		return 0;
 	}
 
-	s_model->FKBoneTraAxisUnderFK(
+	GetCurrentModel()->FKBoneTraAxisUnderFK(
 		g_limitdegflag, g_wallscrapingikflag,
 		&s_editrange, s_curboneno, kind, srctra, s_ikselectmat);
 	s_editmotionflag = s_curboneno;
@@ -12136,11 +12145,11 @@ int AddBoneTra(int kind, float srctra)
 
 int AddBoneScale2(ChaVector3 diffvec)
 {
-	if (!s_model || (s_curboneno < 0) && !s_model->GetTopBone()) {
+	if (!GetCurrentModel() || (s_curboneno < 0) && !GetCurrentModel()->GetTopBone()) {
 		return 0;
 	}
 
-	CBone* curbone = s_model->GetBoneByID(s_curboneno);
+	CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 	if (!curbone) {
 		_ASSERT(0);
 		return 0;
@@ -12199,7 +12208,7 @@ int AddBoneScale2(ChaVector3 diffvec)
 	scalevec.y = scaleval;
 	scalevec.z = scaleval;
 
-	s_model->FKBoneScale(g_limitdegflag, g_wallscrapingikflag, 0, &s_editrange, s_curboneno, scalevec);
+	GetCurrentModel()->FKBoneScale(g_limitdegflag, g_wallscrapingikflag, 0, &s_editrange, s_curboneno, scalevec);
 
 	s_editmotionflag = s_curboneno;
 
@@ -12208,11 +12217,11 @@ int AddBoneScale2(ChaVector3 diffvec)
 
 int AddBoneScale(int kind, float srcscale)
 {
-	if (!s_model || (s_curboneno < 0) && !s_model->GetTopBone()) {
+	if (!GetCurrentModel() || (s_curboneno < 0) && !GetCurrentModel()->GetTopBone()) {
 		return 0;
 	}
 
-	CBone* curbone = s_model->GetBoneByID(s_curboneno);
+	CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 	if (!curbone) {
 		_ASSERT(0);
 		return 0;
@@ -12230,7 +12239,7 @@ int AddBoneScale(int kind, float srcscale)
 		scaleval = downval;
 	}
 
-	s_model->FKBoneScaleAxis(g_limitdegflag, g_wallscrapingikflag,
+	GetCurrentModel()->FKBoneScaleAxis(g_limitdegflag, g_wallscrapingikflag,
 		0, &s_editrange, s_curboneno, kind, scaleval);
 
 
@@ -12474,10 +12483,10 @@ int EraseKeyList()
 
 int AddMotion(const WCHAR* wfilename, double srcmotleng)
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
-	//if (s_model->GetNoBoneFlag() == true) {
+	//if (GetCurrentModel()->GetNoBoneFlag() == true) {
 	//	return 0;
 	//}
 
@@ -12512,7 +12521,7 @@ int AddMotion(const WCHAR* wfilename, double srcmotleng)
 		motleng = srcmotleng;
 	}
 
-	s_model->WaitUpdateMatrixFinished();//2022/08/18
+	GetCurrentModel()->WaitUpdateMatrixFinished();//2022/08/18
 	const WCHAR* addwfilename;
 	if (wfilename) {
 		addwfilename = wfilename;
@@ -12520,8 +12529,8 @@ int AddMotion(const WCHAR* wfilename, double srcmotleng)
 	else {
 		addwfilename = L"ForEmpty";
 	}
-	//CallF( s_model->AddMotion( motionname, wfilename, motleng, &newmotid ), return 1 );
-	CallF(s_model->AddMotion(motionname, addwfilename, motleng, &newmotid), return 1);
+	//CallF( GetCurrentModel()->AddMotion( motionname, wfilename, motleng, &newmotid ), return 1 );
+	CallF(GetCurrentModel()->AddMotion(motionname, addwfilename, motleng, &newmotid), return 1);
 	//_ASSERT(0);
 
 
@@ -12542,7 +12551,7 @@ int AddMotion(const WCHAR* wfilename, double srcmotleng)
 
 int OnRgdMorphMenu(int selindex)
 {
-	s_model->SetRgdMorphIndex(selindex);
+	GetCurrentModel()->SetRgdMorphIndex(selindex);
 
 	if (selindex < 0) {
 		return 0;//!!!!!!!!!
@@ -12557,7 +12566,7 @@ int OnRgdMorphMenu(int selindex)
 		RemoveMenu(s_morphmenu, 0, MF_BYPOSITION);
 	}
 
-	if (!s_model || !s_owpTimeline) {
+	if (!GetCurrentModel() || !s_owpTimeline) {
 		return 0;//!!!!!!!!!!!!!!!!!!
 	}
 
@@ -12574,7 +12583,7 @@ int OnRgdMorphMenu(int selindex)
 		int motid;
 		motid = s_tlarray[iAnimSet].motionid;
 
-		MOTINFO curmi = s_model->GetMotInfo(motid);
+		MOTINFO curmi = GetCurrentModel()->GetMotInfo(motid);
 		if ((curmi.motid > 0) && (curmi.motname[0] != 0)) {
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, curmi.motname, 256, wname, 256);
 			AppendMenu(s_morphmenu, MF_STRING, 64000 + iAnimSet, wname);
@@ -12606,7 +12615,7 @@ int OnCameraMenu(bool dorefreshflag, int selindex, int saveundoflag)
 	//大きいフレーム位置のまま小さいフレーム長のデータを読み込んだ時にエラーにならないように。
 	//InitTimelineSelection();
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		_ASSERT(0);
 		SetMainWindowTitle();
 		s_underselectcamera = false;
@@ -12616,7 +12625,7 @@ int OnCameraMenu(bool dorefreshflag, int selindex, int saveundoflag)
 		return 0;
 	}
 
-	s_cameramenuindexmap[s_model] = selindex;
+	s_cameramenuindexmap[GetCurrentModel()] = selindex;
 
 	if (selindex < 0) {
 		SetMainWindowTitle();
@@ -12628,7 +12637,7 @@ int OnCameraMenu(bool dorefreshflag, int selindex, int saveundoflag)
 	}
 
 
-	//if (!s_model || !s_owpTimeline) {//LoadFbxAnimの後に呼び出した場合　まだtimelineはNULL
+	//if (!GetCurrentModel() || !s_owpTimeline) {//LoadFbxAnimの後に呼び出した場合　まだtimelineはNULL
 	//	s_curmotid = -1;
 	//	SetMainWindowTitle();
 	//	s_underselectcamera = false;
@@ -12683,16 +12692,16 @@ int OnCameraMenu(bool dorefreshflag, int selindex, int saveundoflag)
 
 
 	//if (saveundoflag == 1) {
-	//	//if( s_model ){
-	//	//	s_model->SaveUndoMotion(s_curboneno, s_curbaseno, &s_editrange, (double)g_applyrate);
+	//	//if( GetCurrentModel() ){
+	//	//	GetCurrentModel()->SaveUndoMotion(s_curboneno, s_curbaseno, &s_editrange, (double)g_applyrate);
 	//	//}
-	//	if (s_model) {
+	//	if (GetCurrentModel()) {
 	//		PrepairUndo();
 	//	}
 	//}
 	//else {
-	//	if (s_model && s_owpLTimeline && s_owpEulerGraph) {
-	//		//double curframe = s_model->GetCurMotInfo()->curframe;
+	//	if (GetCurrentModel() && s_owpLTimeline && s_owpEulerGraph) {
+	//		//double curframe = GetCurrentModel()->GetCurMotInfo()->curframe;
 	//		double curframe = 1.0;
 	//		s_owpLTimeline->setCurrentTime(curframe, true);
 	//		s_owpEulerGraph->setCurrentTime(curframe, false);
@@ -12741,7 +12750,7 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 	//InitTimelineSelection();
 	ClampTimelineSelection();//2024/06/23
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		_ASSERT(0);
 		SetMainWindowTitle();
 		s_underselectmotion = false;
@@ -12751,7 +12760,7 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 		return 0;
 	}
 
-	s_motmenuindexmap[s_model] = selindex;
+	s_motmenuindexmap[GetCurrentModel()] = selindex;
 
 	if (selindex < 0) {
 		SetMainWindowTitle();
@@ -12772,7 +12781,7 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 	}
 
 
-	if (!s_model || !s_owpTimeline) {
+	if (!GetCurrentModel() || !s_owpTimeline) {
 		s_curmotid = -1;
 		SetMainWindowTitle();
 		s_underselectmotion = false;
@@ -12802,7 +12811,7 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 	{
 		int motid;
 		motid = s_tlarray[iAnimSet].motionid;
-		MOTINFO curmi = s_model->GetMotInfo(motid);
+		MOTINFO curmi = GetCurrentModel()->GetMotInfo(motid);
 		if ((curmi.motid > 0) && (curmi.motname[0] != 0)) {
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, curmi.motname, 256, wname, 256);
 			AppendMenu(s_animmenu, MF_STRING, 59900 + iAnimSet, wname);
@@ -12819,7 +12828,7 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 		selmotid = s_tlarray[selindex].motionid;
 		if (selmotid > 0) {
 			int chkresult;
-			chkresult = s_model->SetCurrentMotion(selmotid);
+			chkresult = GetCurrentModel()->SetCurrentMotion(selmotid);
 			if (chkresult != 0) {
 				_ASSERT(0);
 				if (oldcursor) {
@@ -12836,27 +12845,27 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 			s_curmotid = selmotid;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 			if (dorefreshflag) {
-				s_model->CreateBtObject(g_limitdegflag, 1);
-				//s_model->CalcBoneEul(-1);
+				GetCurrentModel()->CreateBtObject(g_limitdegflag, 1);
+				//GetCurrentModel()->CalcBoneEul(-1);
 
 				//2023/10/26　コメントアウト
-				//s_model->CalcBoneEul(g_limitdegflag, selmotid);//2021/08/25
+				//GetCurrentModel()->CalcBoneEul(g_limitdegflag, selmotid);//2021/08/25
 			}
 
 
 			//2023/01/29 初回物理再生のために必要
 			//s_savelimitdegflag = g_limitdegflag;
 			//g_limitdegflag = true;
-			//ClearLimitedWM(s_model);
-			//ApplyNewLimitsToWM(s_model);
+			//ClearLimitedWM(GetCurrentModel());
+			//ApplyNewLimitsToWM(GetCurrentModel());
 			//g_limitdegflag = s_savelimitdegflag;
 
 
 			//2023/02/08
 			if (g_limitdegflag == true) {
-				ClearLimitedWM(s_model);
-				CopyWorldToLimitedWorld(s_model);
-				ApplyNewLimitsToWM(s_model);
+				ClearLimitedWM(GetCurrentModel());
+				CopyWorldToLimitedWorld(GetCurrentModel());
+				ApplyNewLimitsToWM(GetCurrentModel());
 			}
 
 			if (s_spguisw[SPGUISW_BLENDSHAPE].state && 
@@ -12879,16 +12888,16 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 
 	OnSetMotSpeed();//2022/09/16
 
-	//MOTINFO* curmi = s_model->GetCurMotInfo();
+	//MOTINFO* curmi = GetCurrentModel()->GetCurMotInfo();
 	//if (curmi) {
 	//	OnAddMotion(curmi->motid);
 	//}
 
 	if (saveundoflag == 1) {
-		//if( s_model ){
-		//	s_model->SaveUndoMotion(s_curboneno, s_curbaseno, &s_editrange, (double)g_applyrate);
+		//if( GetCurrentModel() ){
+		//	GetCurrentModel()->SaveUndoMotion(s_curboneno, s_curbaseno, &s_editrange, (double)g_applyrate);
 		//}
-		if ((InterlockedAdd(&g_retargetbatchflag, 0) == 0) && s_model) {
+		if ((InterlockedAdd(&g_retargetbatchflag, 0) == 0) && GetCurrentModel()) {
 
 			//#####################################################################
 			//2024/06/05
@@ -12898,8 +12907,8 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 		}
 	}
 	else {
-		if (s_model && s_owpLTimeline && s_owpEulerGraph) {
-			//double curframe = s_model->GetCurMotInfo()->curframe;
+		if (GetCurrentModel() && s_owpLTimeline && s_owpEulerGraph) {
+			//double curframe = GetCurrentModel()->GetCurMotInfo()->curframe;
 			double curframe = 1.0;
 			s_owpLTimeline->setCurrentTime(curframe, true);
 			s_owpEulerGraph->setCurrentTime(curframe, false);
@@ -12940,20 +12949,20 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 	}
 
 
-	if (s_model->GetInitAxisMatX() == 0) {//OnAnimMenuに移動
+	if (GetCurrentModel()->GetInitAxisMatX() == 0) {//OnAnimMenuに移動
 		if (s_owpLTimeline) {
 			s_owpLTimeline->setCurrentTime(0.0, true);
 		}
 		if (s_owpEulerGraph) {
 			s_owpEulerGraph->setCurrentTime(0.0, false);
 		}
-		s_model->SetMotionFrame(0.0);
-		ChaMatrix tmpwm = s_model->GetWorldMat();
-		s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
+		GetCurrentModel()->SetMotionFrame(0.0);
+		ChaMatrix tmpwm = GetCurrentModel()->GetWorldMat();
+		GetCurrentModel()->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 		//ここでAxisMatXの初期化
-		s_model->CreateBtObject(g_limitdegflag, 1);
-		s_model->CalcBtAxismat(2);//2
-		s_model->SetInitAxisMatX(1);
+		GetCurrentModel()->CreateBtObject(g_limitdegflag, 1);
+		GetCurrentModel()->CalcBtAxismat(2);//2
+		GetCurrentModel()->SetInitAxisMatX(1);
 	}
 
 	if (oldcursor) {
@@ -12981,11 +12990,11 @@ int OnChangeModel(int selindex, bool forceflag, bool callundo)
 }
 int OnChangeModel(CModel* selmodel, bool forceflag, bool callundo)
 {
-	if (!s_chascene || !s_model) {
+	if (!s_chascene || !GetCurrentModel()) {
 		return 0;
 	}
 
-	if (!forceflag && (s_model == selmodel)) {
+	if (!forceflag && (GetCurrentModel() == selmodel)) {
 		//2024/02/09
 		//操作中にモーションやカメラの状態が変わるのを出来るだけ防ぐために
 		//選択状態が変わらない場合には　OnModelMenuを呼ばないで　すぐに0リターンする
@@ -12993,7 +13002,7 @@ int OnChangeModel(CModel* selmodel, bool forceflag, bool callundo)
 	}
 
 	if (callundo) {
-		PrepairUndo_SelectModel(s_model, selmodel);//2024/06/25
+		PrepairUndo_SelectModel(GetCurrentModel(), selmodel);//2024/06/25
 	}
 
 
@@ -13058,7 +13067,7 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 
 
 	//if (callbymenu == 1) {
-	//	if (s_model && (s_curmodelmenuindex >= 0) && s_chascene && (s_chascene->GetModelNum() != 0)) {
+	//	if (GetCurrentModel() && (s_curmodelmenuindex >= 0) && s_chascene && (s_chascene->GetModelNum() != 0)) {
 	//		s_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
 	//		s_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
 	//	}
@@ -13074,10 +13083,10 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		RemoveMenu(s_modelmenu, 0, MF_BYPOSITION);
 	}
 
-	if ((selindex < 0) || !s_model) {
+	if ((selindex < 0) || !GetCurrentModel()) {
 		OrgWindowListenMouse(false);
 
-		s_model = 0;
+		SetCurrentModel(nullptr);
 		s_curboneno = -1;
 		SetModel2Dlgs(nullptr);
 
@@ -13115,7 +13124,7 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 	if (cMdlSets <= 0) {
 		OrgWindowListenMouse(false);
 
-		s_model = 0;
+		SetCurrentModel(nullptr);
 		SetModel2Dlgs(nullptr);
 
 		if (s_owpTimeline && dorefreshtl) {
@@ -13158,18 +13167,18 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		CheckMenuItem(s_mainmenu, 61000 + selindex, MF_CHECKED);
 
 		if (s_chascene) {
-			s_model = s_chascene->GetModel(selindex);
+			SetCurrentModel(s_chascene->GetModel(selindex));
 		}
 		else {
 			_ASSERT(0);
-			s_model = 0;
+			////chascene null : s_chascene->SetCurrentModel(nullptr);
 		}
 
-		SetModel2Dlgs(s_model);
+		SetModel2Dlgs(GetCurrentModel());
 
-		if (s_model && s_chascene) {
+		if (GetCurrentModel() && s_chascene) {
 			s_chascene->GetTimelineArray(selindex, s_tlarray);
-			s_motmenuindexmap[s_model] = s_chascene->GetMotMenuIndex(selindex);
+			s_motmenuindexmap[GetCurrentModel()] = s_chascene->GetMotMenuIndex(selindex);
 			s_chascene->GetLineno2Boneno(selindex, s_lineno2boneno, s_boneno2lineno);
 
 			//s_dispobj = false;
@@ -13181,7 +13190,7 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 			ShowShadowParamsWnd(s_spdispsw[SPDISPSW_SHADOWPARAMS].state);
 			ShowGUIDlgBlendShape(s_spguisw[SPGUISW_BLENDSHAPE].state);
 
-			OnAnimMenu(dorefreshtl, s_motmenuindexmap[s_model]);
+			OnAnimMenu(dorefreshtl, s_motmenuindexmap[GetCurrentModel()]);
 		}
 
 
@@ -13192,8 +13201,8 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 
 
 
-		if (s_model) {
-			if (s_model->GetRigidElemInfoSize() > 0) {
+		if (GetCurrentModel()) {
+			if (GetCurrentModel()->GetRigidElemInfoSize() > 0) {
 				int result1 = OnREMenu(0, 0);
 				if (result1) {
 					s_underselectmodel = false;
@@ -13276,12 +13285,12 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 
 int OnREMenu(int selindex, int callbymenu)
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		_ASSERT(0);
 		SetMainWindowTitle();
 		return 0;
 	}
-	s_reindexmap[s_model] = selindex;
+	s_reindexmap[GetCurrentModel()] = selindex;
 
 	_ASSERT(s_remenu);
 	int iReSet, cReSets;
@@ -13291,16 +13300,16 @@ int OnREMenu(int selindex, int callbymenu)
 		RemoveMenu(s_remenu, 0, MF_BYPOSITION);
 	}
 
-	if ((selindex < 0) || !s_model) {
+	if ((selindex < 0) || !GetCurrentModel()) {
 		AppendMenu(s_remenu, MF_STRING, 62000, L"NotLoaded");
 		SetMainWindowTitle();
 		return 0;//!!!!!!!!!
 	}
 
-	cReSets = s_model->GetRigidElemInfoSize();
+	cReSets = GetCurrentModel()->GetRigidElemInfoSize();
 	if (cReSets <= 0) {
-		if (s_model) {
-			s_reindexmap[s_model] = -1;
+		if (GetCurrentModel()) {
+			s_reindexmap[GetCurrentModel()] = -1;
 		}
 		AppendMenu(s_remenu, MF_STRING, 62000, L"NotLoaded");
 		SetMainWindowTitle();
@@ -13311,7 +13320,7 @@ int OnREMenu(int selindex, int callbymenu)
 	for (iReSet = 0; iReSet < cReSets; iReSet++)
 	{
 		ZeroMemory(wname, sizeof(WCHAR) * MAX_PATH);
-		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, s_model->GetRigidElemInfo(iReSet).filename, MAX_PATH, wname, MAX_PATH);
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, GetCurrentModel()->GetRigidElemInfo(iReSet).filename, MAX_PATH, wname, MAX_PATH);
 		AppendMenu(s_remenu, MF_STRING, 62000 + iReSet, wname);
 		DbgOut(L"OnREMenu : addmenu %s\r\n", wname);
 	}
@@ -13320,9 +13329,9 @@ int OnREMenu(int selindex, int callbymenu)
 		CheckMenuItem(s_mainmenu, 62000 + selindex, MF_CHECKED);
 	}
 
-	CallF(s_model->SetCurrentRigidElem(s_reindexmap[s_model]), return 1);
+	CallF(GetCurrentModel()->SetCurrentRigidElem(s_reindexmap[GetCurrentModel()]), return 1);
 
-	s_rigidparamsdlg.SetModel(s_model, s_curboneno, s_reindexmap, s_rgdindexmap);
+	s_rigidparamsdlg.SetModel(GetCurrentModel(), s_curboneno, s_reindexmap, s_rgdindexmap);
 
 	SetMainWindowTitle();
 
@@ -13331,14 +13340,14 @@ int OnREMenu(int selindex, int callbymenu)
 
 int OnRgdMenu(int selindex, int callbymenu)
 {
-	if (s_model) {
-		s_model->SetRgdIndex(selindex);
+	if (GetCurrentModel()) {
+		GetCurrentModel()->SetRgdIndex(selindex);
 	}
 	else {
 		_ASSERT(0);
 		return 0;
 	}
-	s_rgdindexmap[s_model] = selindex;
+	s_rgdindexmap[GetCurrentModel()] = selindex;
 
 	_ASSERT(s_rgdmenu);
 	int iReSet, cReSets;
@@ -13348,14 +13357,14 @@ int OnRgdMenu(int selindex, int callbymenu)
 		RemoveMenu(s_rgdmenu, 0, MF_BYPOSITION);
 	}
 
-	if ((selindex < 0) || !s_model) {
+	if ((selindex < 0) || !GetCurrentModel()) {
 		AppendMenu(s_rgdmenu, MF_STRING, 63000, L"NotLoaded");
 		return 0;//!!!!!!!!!
 	}
 
-	cReSets = s_model->GetRigidElemInfoSize();
+	cReSets = GetCurrentModel()->GetRigidElemInfoSize();
 	if (cReSets <= 0) {
-		s_rgdindexmap[s_model] = -1;
+		s_rgdindexmap[GetCurrentModel()] = -1;
 		AppendMenu(s_rgdmenu, MF_STRING, 63000, L"NotLoaded");
 		return 0;//!!!!!!!!!!!!!!!!!!!
 	}
@@ -13364,7 +13373,7 @@ int OnRgdMenu(int selindex, int callbymenu)
 	for (iReSet = 0; iReSet < cReSets; iReSet++)
 	{
 		ZeroMemory(wname, sizeof(WCHAR) * MAX_PATH);
-		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, s_model->GetRigidElemInfo(iReSet).filename, MAX_PATH, wname, MAX_PATH);
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, GetCurrentModel()->GetRigidElemInfo(iReSet).filename, MAX_PATH, wname, MAX_PATH);
 		AppendMenu(s_rgdmenu, MF_STRING, 63000 + iReSet, wname);
 	}
 
@@ -13372,14 +13381,14 @@ int OnRgdMenu(int selindex, int callbymenu)
 		CheckMenuItem(s_mainmenu, 63000 + selindex, MF_CHECKED);
 	}
 
-	//	CallF( s_model->SetCurrentRigidElem( s_curreindex ), return 1 );
+	//	CallF( GetCurrentModel()->SetCurrentRigidElem( s_curreindex ), return 1 );
 
 	return 0;
 }
 int OnImpMenu(int selindex)
 {
-	if (s_model) {
-		s_model->SetCurImpIndex(selindex);
+	if (GetCurrentModel()) {
+		GetCurrentModel()->SetCurImpIndex(selindex);
 	}
 
 	_ASSERT(s_impmenu);
@@ -13390,14 +13399,14 @@ int OnImpMenu(int selindex)
 		RemoveMenu(s_impmenu, 0, MF_BYPOSITION);
 	}
 
-	if ((selindex < 0) || !s_model) {
+	if ((selindex < 0) || !GetCurrentModel()) {
 		AppendMenu(s_impmenu, MF_STRING, 64500, L"NotLoaded");
 		return 0;//!!!!!!!!!
 	}
 
-	cReSets = s_model->GetImpInfoSize();
+	cReSets = GetCurrentModel()->GetImpInfoSize();
 	if (cReSets <= 0) {
-		s_model->SetCurImpIndex(0);
+		GetCurrentModel()->SetCurImpIndex(0);
 		AppendMenu(s_impmenu, MF_STRING, 64500, L"NotLoaded");
 		return 0;//!!!!!!!!!!!!!!!!!!!
 	}
@@ -13406,7 +13415,7 @@ int OnImpMenu(int selindex)
 	for (iReSet = 0; iReSet < cReSets; iReSet++)
 	{
 		ZeroMemory(wname, sizeof(WCHAR) * MAX_PATH);
-		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, s_model->GetImpInfo(iReSet).c_str(), -1, wname, MAX_PATH);
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, GetCurrentModel()->GetImpInfo(iReSet).c_str(), -1, wname, MAX_PATH);
 		AppendMenu(s_impmenu, MF_STRING, 64500 + iReSet, wname);
 	}
 
@@ -13444,8 +13453,8 @@ int OnDelMotion(int delmenuindex, bool ondelbutton)//default : ondelbutton = fal
 
 	int delmotid = s_tlarray[delmenuindex].motionid;
 	int result;
-	s_model->WaitUpdateMatrixFinished();//2022/08/18
-	result = s_model->DeleteMotion(delmotid);
+	GetCurrentModel()->WaitUpdateMatrixFinished();//2022/08/18
+	result = GetCurrentModel()->DeleteMotion(delmotid);
 	//if (result) {
 	//	//s_underdelmotion = false;
 	//	return 1;
@@ -13477,7 +13486,7 @@ int OnDelMotion(int delmenuindex, bool ondelbutton)//default : ondelbutton = fal
 
 
 	//2022/09/13
-	int currentmodelindex = s_chascene->FindModelIndex(s_model);
+	int currentmodelindex = s_chascene->FindModelIndex(GetCurrentModel());
 	if (s_chascene && (currentmodelindex >= 0)) {
 		s_chascene->SetTimelineArray(currentmodelindex, s_tlarray);
 	}
@@ -13554,7 +13563,7 @@ int OnDelModel(int delmenuindex, bool ondelbutton)//default : ondelbutton == fal
 
 	if (s_chascene->ModelEmpty()) {
 		s_curboneno = -1;
-		s_model = 0;
+		SetCurrentModel(nullptr);
 		s_curmodelmenuindex = -1;
 		s_tlarray.clear();
 		s_motmenuindexmap.clear();
@@ -13564,9 +13573,9 @@ int OnDelModel(int delmenuindex, bool ondelbutton)//default : ondelbutton == fal
 	}
 	else {
 		s_curboneno = -1;
-		s_model = s_chascene->GetModel(0);
-		if (s_model) {
-			s_motmenuindexmap[s_model] = s_chascene->GetMotMenuIndex(0);
+		SetCurrentModel(s_chascene->GetModel(0));
+		if (GetCurrentModel()) {
+			s_motmenuindexmap[GetCurrentModel()] = s_chascene->GetMotMenuIndex(0);
 		}
 		s_chascene->GetTimelineArray(0, s_tlarray);
 		s_chascene->GetLineno2Boneno(0, s_lineno2boneno, s_boneno2lineno);
@@ -13580,7 +13589,7 @@ int OnDelModel(int delmenuindex, bool ondelbutton)//default : ondelbutton == fal
 
 	DispModelPanel();
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		OrgWindowListenMouse(false);
 	}
 
@@ -13606,7 +13615,7 @@ int OnDelAllModel()
 	s_cameramodel = 0;//2023/06/02
 
 	s_curboneno = -1;
-	s_model = 0;
+	SetCurrentModel(nullptr);
 	s_curmodelmenuindex = -1;
 	s_tlarray.clear();
 	s_motmenuindexmap.clear();
@@ -13640,8 +13649,8 @@ int refreshModelPanel()
 	WCHAR label[256];
 	int objnum = 0;
 
-	if (s_model) {
-		objnum = s_model->GetMqoObjectSize();
+	if (GetCurrentModel()) {
+		objnum = GetCurrentModel()->GetMqoObjectSize();
 	}
 	else {
 		objnum = 0;
@@ -13649,7 +13658,7 @@ int refreshModelPanel()
 
 	if (objnum > 0) {
 		map<int, CMQOObject*>::iterator itrobj;
-		for (itrobj = s_model->GetMqoObjectBegin(); itrobj != s_model->GetMqoObjectEnd(); itrobj++) {
+		for (itrobj = GetCurrentModel()->GetMqoObjectBegin(); itrobj != GetCurrentModel()->GetMqoObjectEnd(); itrobj++) {
 			CMQOObject* curobj = itrobj->second;
 			WCHAR wname[256];
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char*)curobj->GetName(), 256, wname, 256);
@@ -13686,14 +13695,14 @@ int refreshModelPanel()
 
 float CalcSelectScale()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0.0f;
 	}
 
 	MODELBOUND mb;
 	mb.Init();
-	//s_model->GetModelBound(&mb);//計算する　非常に重い
-	mb = s_model->GetCalclatedModelBound();
+	//GetCurrentModel()->GetModelBound(&mb);//計算する　非常に重い
+	mb = GetCurrentModel()->GetCalclatedModelBound();
 	double modelr;
 	if (mb.IsValid()) {
 		modelr = (double)mb.r;
@@ -13754,7 +13763,7 @@ int RenderSelectMark(myRenderer::RenderingEngine* re, RenderContext* pRenderCont
 		return 1;
 	}
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 
@@ -13763,11 +13772,11 @@ int RenderSelectMark(myRenderer::RenderingEngine* re, RenderContext* pRenderCont
 			return 0;
 		}
 
-		if (!s_model->ExistCurrentMotion()) {
+		if (!GetCurrentModel()->ExistCurrentMotion()) {
 			return 0;
 		}
 
-		CBone* curboneptr = s_model->GetBoneByID(s_curboneno);
+		CBone* curboneptr = GetCurrentModel()->GetBoneByID(s_curboneno);
 		if (curboneptr) {
 			if (s_onragdollik == 0) {
 				int multworld = 1;
@@ -13792,11 +13801,11 @@ int RenderSelectMark(myRenderer::RenderingEngine* re, RenderContext* pRenderCont
 			ChaMatrixIdentity(&scalemat);
 			ChaMatrixScaling(&scalemat, s_selectscale, s_selectscale, s_selectscale);
 
-			ChaVector3 bonepos = curboneptr->GetWorldPos(g_limitdegflag, s_model->GetCurrentMotID(), s_model->GetCurrentFrame());
+			ChaVector3 bonepos = curboneptr->GetWorldPos(g_limitdegflag, GetCurrentModel()->GetCurrentMotID(), GetCurrentModel()->GetCurrentFrame());
 
 			//s_selectmat = scalemat * s_selm;
 			//s_selectmat = s_selm;
-			s_selectmat = s_selm * s_model->GetWorldMat();//2023/03/34
+			s_selectmat = s_selm * GetCurrentModel()->GetWorldMat();//2023/03/34
 			ChaMatrixNormalizeRot(&s_selectmat);
 			s_selectmat = scalemat * s_selectmat;
 
@@ -13917,7 +13926,7 @@ int RenderSelectPostureFunc(myRenderer::RenderingEngine* re)
 
 CFrameCopyDlg* GetCurrentFrameCopyDlg(bool cameraflag)
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -13927,7 +13936,7 @@ CFrameCopyDlg* GetCurrentFrameCopyDlg(bool cameraflag)
 		srcmodel = s_cameramodel;
 	}
 	else {
-		srcmodel = s_model;
+		srcmodel = GetCurrentModel();
 	}
 
 	CFrameCopyDlg* curcpdlg = 0;
@@ -14116,7 +14125,7 @@ int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderCon
 	}
 
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 
@@ -14129,13 +14138,13 @@ int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderCon
 	s_rigopemark_ringZ->ResetInstancingParams();
 
 	int rendercount = 0;
-	if (s_model->ExistCurrentMotion()) {
-		int curmotid = s_model->GetCurrentMotID();
-		//double curframe = s_model->GetCurrentFrame();
-		double renderframe = s_model->GetRenderSlotFrame();//2024/03/29 表示用スロットのフレーム
+	if (GetCurrentModel()->ExistCurrentMotion()) {
+		int curmotid = GetCurrentModel()->GetCurrentMotID();
+		//double curframe = GetCurrentModel()->GetCurrentFrame();
+		double renderframe = GetCurrentModel()->GetRenderSlotFrame();//2024/03/29 表示用スロットのフレーム
 
 		std::map<int, CBone*>::iterator itrbone;
-		for (itrbone = s_model->GetBoneListBegin(); itrbone != s_model->GetBoneListEnd(); itrbone++) {
+		for (itrbone = GetCurrentModel()->GetBoneListBegin(); itrbone != GetCurrentModel()->GetBoneListEnd(); itrbone++) {
 			CBone* curbone = (CBone*)itrbone->second;
 			if (curbone && (curbone->IsSkeleton())) {
 				int rigno;
@@ -14217,13 +14226,13 @@ int CalcTargetPos(ChaVector3* dstpos)
 	ChaVector3 targetwm = start3d * (1.0f - t) + end3d * t;
 	ChaVector3 targetlocal; 
 	ChaMatrix invmodelwm;
-	if (s_model) {
+	if (GetCurrentModel()) {
 		//########################################################
 		//2023/03/24
 		//model座標系で計算：modelのWorldMatの影響を無くして計算
 		//########################################################
 
-		invmodelwm = ChaMatrixInv(s_model->GetWorldMat());
+		invmodelwm = ChaMatrixInv(GetCurrentModel()->GetWorldMat());
 		ChaVector3TransformCoord(&targetlocal, &targetwm, &invmodelwm);
 	}
 	else {
@@ -15734,8 +15743,8 @@ LRESULT CALLBACK MotPropDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	{
 		SetDlgPosDesktopCenter(hDlgWnd, HWND_TOPMOST);
 
-		if (s_model) {
-			MOTINFO curmi = s_model->GetCurMotInfo();
+		if (GetCurrentModel()) {
+			MOTINFO curmi = GetCurrentModel()->GetCurMotInfo();
 			if (curmi.motid > 0) {
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
 					curmi.motname, 256, s_tmpmotname, 256);
@@ -16093,7 +16102,7 @@ LRESULT CALLBACK SaveGcoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		SetDlgPosDesktopCenter(hDlgWnd, HWND_TOPMOST);
 
-		if (s_model && s_model->GetTopBone()) {
+		if (GetCurrentModel() && GetCurrentModel()->GetTopBone()) {
 			SetDlgItemText(hDlgWnd, IDC_FILENAME, s_Gconame);
 		}
 
@@ -16224,7 +16233,7 @@ LRESULT CALLBACK SaveImpDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	case WM_INITDIALOG:
 		SetDlgPosDesktopCenter(hDlgWnd, HWND_TOPMOST);
 
-		if (s_model && s_model->GetTopBone()) {
+		if (GetCurrentModel() && GetCurrentModel()->GetTopBone()) {
 			SetDlgItemText(hDlgWnd, IDC_FILENAME, s_Impname);
 		}
 		RECT dlgrect;
@@ -16356,7 +16365,7 @@ LRESULT CALLBACK SaveREDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		SetDlgPosDesktopCenter(hDlgWnd, HWND_TOPMOST);
 
-		if (s_model && s_model->GetTopBone()) {
+		if (GetCurrentModel() && GetCurrentModel()->GetTopBone()) {
 			SetDlgItemText(hDlgWnd, IDC_FILENAME, s_REname);
 		}
 		RECT dlgrect;
@@ -16886,7 +16895,7 @@ int CreateModelPanel()
 	////////////
 		if (s_modelpanel.panel) {
 			s_modelpanel.panel->setCloseListener([]() {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					s_closemodelFlag = true;
 				}
 				});
@@ -16895,7 +16904,7 @@ int CreateModelPanel()
 		for (modelcnt = 0; modelcnt < modelnum; modelcnt++) {
 			if (s_modelpanel.checkvec[modelcnt]) {
 				s_modelpanel.checkvec[modelcnt]->setButtonListener([modelcnt]() {
-					if (s_model && s_chascene) {
+					if (GetCurrentModel() && s_chascene) {
 						if (modelcnt < s_chascene->GetModelNum()) {
 							CModel* curmodel = s_chascene->GetModel(modelcnt);
 							if ((s_underdelmotion == false) && (s_opedelmotioncnt < 0) && //Motion削除と同時は禁止 
@@ -16914,7 +16923,7 @@ int CreateModelPanel()
 
 			if (s_modelpanel.delbutton[modelcnt]) {
 				s_modelpanel.delbutton[modelcnt]->setButtonListener([modelcnt]() {
-					if (s_model && s_chascene) {
+					if (GetCurrentModel() && s_chascene) {
 						if ((modelcnt < s_chascene->GetModelNum()) && (s_chascene->GetModelNum() >= 2)) {//全部消すときはメインメニューから
 							CModel* curmodel = s_chascene->GetModel(modelcnt);
 							if ((s_underdelmotion == false) && (s_opedelmotioncnt < 0) && //Motion削除と同時は禁止 
@@ -16926,7 +16935,7 @@ int CreateModelPanel()
 								//ここでOnDelModelを呼ぶとOrgWindowの関数を実行中にparentWindowがNULLになるなどしてエラーになる.フラグを立ててループで呼ぶ
 								s_opedelmodelcnt = modelcnt;
 
-								s_model = 0;//カレントモデルに影響しないように
+								SetCurrentModel(nullptr);//カレントモデルに影響しないように
 
 								Sleep(100);//ボタン連打でメニューのモーション数が実際より減ることがあったので
 							}
@@ -16938,7 +16947,7 @@ int CreateModelPanel()
 
 		if (s_modelpanel.radiobutton) {
 			s_modelpanel.radiobutton->setSelectListener([]() {
-				if (s_model && s_chascene) {
+				if (GetCurrentModel() && s_chascene) {
 					int curindex = s_modelpanel.radiobutton->getSelectIndex();
 					if ((s_opeselectmodelcnt < 0) && !s_underselectmodel && 
 						(s_underdelmotion == false) && (s_opedelmotioncnt < 0) &&
@@ -17386,8 +17395,8 @@ int CreateMotionPanel()
 	//	return 0;
 	//}
 	int motionnum;
-	if (s_model) {
-		motionnum = s_model->GetMotInfoSize();
+	if (GetCurrentModel()) {
+		motionnum = GetCurrentModel()->GetMotInfoSize();
 	}
 	else {
 		motionnum = 0;
@@ -17465,7 +17474,7 @@ int CreateMotionPanel()
 
 
 
-		if (s_model) {
+		if (GetCurrentModel()) {
 			s_motionpanel.separator = new OWP_Separator(s_motionpanel.panel, true, 0.8, true, s_motionpanel.scroll);// セパレータ1（境界線による横方向2分割）
 			if (!s_motionpanel.separator) {
 				_ASSERT(0);
@@ -17476,9 +17485,9 @@ int CreateMotionPanel()
 			int motioncnt = 0;
 			int minum;
 			int miindex;
-			minum = s_model->GetMotInfoSize();
+			minum = GetCurrentModel()->GetMotInfoSize();
 			for (miindex = 0; miindex < minum; miindex++) {
-				MOTINFO curmi = s_model->GetMotInfoByIndex(miindex);
+				MOTINFO curmi = GetCurrentModel()->GetMotInfoByIndex(miindex);
 
 				WCHAR wmotname[MAX_PATH] = { 0L };
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, curmi.motname, 256, wmotname, MAX_PATH);
@@ -17512,7 +17521,7 @@ int CreateMotionPanel()
 
 
 			for (miindex = 0; miindex < minum; miindex++) {
-				MOTINFO curmi = s_model->GetMotInfoByIndex(miindex);
+				MOTINFO curmi = GetCurrentModel()->GetMotInfoByIndex(miindex);
 				OWP_Button* owpButton = new OWP_Button(L"delete", 20);
 				if (owpButton) {
 					s_motionpanel.delbutton.push_back(owpButton);
@@ -17527,11 +17536,11 @@ int CreateMotionPanel()
 
 			s_motionpanel.modelindex = s_curmodelmenuindex;
 			//s_motionpanel.radiobutton->setSelectIndex(0);
-			if (s_model) {
+			if (GetCurrentModel()) {
 				if (s_motionpanel.radiobutton) {
-					s_motionpanel.radiobutton->setSelectIndex(s_motmenuindexmap[s_model], false);//!!!!
+					s_motionpanel.radiobutton->setSelectIndex(s_motmenuindexmap[GetCurrentModel()], false);//!!!!
 				}
-				//s_motionpanel.scroll->inView(s_motmenuindexmap[s_model]);
+				//s_motionpanel.scroll->inView(s_motmenuindexmap[GetCurrentModel()]);
 				if (s_motionpanel.scroll) {
 					s_motionpanel.scroll->setShowPosLine(s_savemotionpanelshowposline);
 				}
@@ -17544,7 +17553,7 @@ int CreateMotionPanel()
 		}
 		else {
 			//_ASSERT(0);
-			return 0;//s_model == NULL : 0 return
+			return 0;//GetCurrentModel() == NULL : 0 return
 		}
 
 
@@ -17552,21 +17561,21 @@ int CreateMotionPanel()
 			s_motionpanel.panel->setVisible(false);//作成中非表示
 
 			s_motionpanel.panel->setCloseListener([]() {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					s_closemotionFlag = true;
 				}
 				});
 
 		}
 
-		if (s_model) {
+		if (GetCurrentModel()) {
 			int delmenuindex = 0;
-			for (delmenuindex = 0; delmenuindex < s_model->GetMotInfoSize(); delmenuindex++) {
+			for (delmenuindex = 0; delmenuindex < GetCurrentModel()->GetMotInfoSize(); delmenuindex++) {
 				if (s_motionpanel.delbutton[delmenuindex]) {
 					s_motionpanel.delbutton[delmenuindex]->setButtonListener([delmenuindex]() {
 						if ((s_underdelmodel == false) && (s_opedelmodelcnt < 0) && //Model削除と同時は禁止
 							(s_opedelmotioncnt < 0) && !s_underdelmotion && 
-							s_model && (s_model->GetMotInfoSize() >= 2)) {//全部消すときはメインメニューから
+							GetCurrentModel() && (GetCurrentModel()->GetMotInfoSize() >= 2)) {//全部消すときはメインメニューから
 							s_opedelmotioncnt = delmenuindex;
 							s_underdelmotion = true;
 							//bool ondelbutton = true;
@@ -17587,9 +17596,9 @@ int CreateMotionPanel()
 
 		if (s_motionpanel.radiobutton) {
 			s_motionpanel.radiobutton->setSelectListener([]() {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					int curindex = s_motionpanel.radiobutton->getSelectIndex();
-					if ((s_opeselectmotioncnt < 0) && !s_underselectmotion && (curindex >= 0) && (curindex < s_model->GetMotInfoSize())) {
+					if ((s_opeselectmotioncnt < 0) && !s_underselectmotion && (curindex >= 0) && (curindex < GetCurrentModel()->GetMotInfoSize())) {
 						s_opeselectmotioncnt = curindex;
 						s_underselectmotion = true;
 						//int motionindex = curindex;
@@ -17916,7 +17925,7 @@ int InitJointPair2ConvBoneWnd()
 
 int SetJointPair2ConvBoneWnd()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 
@@ -17977,7 +17986,7 @@ int SaveMotionNameListFile()
 	if (GetOpenFileNameW(ofn) == IDOK) {
 		CMNLFile mnlfile;
 		int result;
-		result = mnlfile.WriteMNLFile(g_tmpmqopath, s_model);
+		result = mnlfile.WriteMNLFile(g_tmpmqopath, GetCurrentModel());
 	}
 
 	InterlockedExchange(&g_undertrackingRMenu, (LONG)0);
@@ -18238,7 +18247,7 @@ int RetargetMotion()
 		return 0;
 	}
 
-	if (s_model != s_retargetdlg.GetRetargetModel()) {
+	if (GetCurrentModel() != s_retargetdlg.GetRetargetModel()) {
 		::DSMessageBox(NULL, L"Retry After Selectiong ShapeModel using ModelMenu Of MainWindow.", L"error!!!", MB_OK);
 		s_retargetdlg.GetRetargetModel()->SetUnderRetarget(false);
 		s_retargetdlg.GetRetargetBvh()->SetUnderRetarget(false);
@@ -18284,8 +18293,8 @@ int RetargetMotion()
 
 
 	if (g_limitdegflag == true) {
-		CopyWorldToLimitedWorld(s_model);
-		ApplyNewLimitsToWM(s_model);
+		CopyWorldToLimitedWorld(GetCurrentModel());
+		ApplyNewLimitsToWM(GetCurrentModel());
 	}
 
 
@@ -18405,7 +18414,7 @@ int OnAddMotion(int srcmotid, bool dorefreshtl)
 	static int s_dbgcnt = 0;
 	s_dbgcnt++;
 
-	//MOTINFO* newmotinfo = s_model->GetMotInfo( srcmotid );
+	//MOTINFO* newmotinfo = GetCurrentModel()->GetMotInfo( srcmotid );
 
 //WCHAR strchk[256] = { 0L };
 //swprintf_s(strchk, 256, L"check OnAddMotion : 1 : %d, %d", srcmotid, (int)dorefreshtl);
@@ -18455,11 +18464,11 @@ int StopBt()
 
 int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 {
-	if (!s_model || !curmodel || !s_chascene) {
+	if (!GetCurrentModel() || !curmodel || !s_chascene) {
 		return 0;
 	}
 
-	if (s_model->GetNoBoneFlag()) {
+	if (GetCurrentModel()->GetNoBoneFlag()) {
 		return 0;
 	}
 	if (!s_owpTimeline || !s_owpLTimeline || !s_owpEulerGraph) {
@@ -18621,7 +18630,7 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 
 
 
-					//s_model->SetAllKData(-1, s_curreindex, 3, 3, 800.0, 20.0);
+					//GetCurrentModel()->SetAllKData(-1, s_curreindex, 3, 3, 800.0, 20.0);
 					//curmodel->SetAllKData(-1, s_curreindex, 3, 3, 1000.0, 30.0);
 
 
@@ -18712,38 +18721,38 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 
 
 				//ラグドールの時のバネは決め打ち
-					//s_model->SetAllKData(-1, s_rgdindex, 3, 3, 1e4, 10.0);
-					//s_model->SetAllKData(-1, s_rgdindex, 3, 3, 230.0, 30.0);
-					//s_model->SetAllKData(-1, s_rgdindex, 3, 3, 600.0, 60.0);
-					//s_model->SetAllKData(-1, s_rgdindex, 3, 3, 600.0, 30.0);
-					//s_model->SetAllKData(-1, s_rgdindex, 3, 3, 600.0, 10.0);
-					//s_model->SetAllKData(-1, s_rgdindex, 3, 3, 400.0, 10.0);
+					//GetCurrentModel()->SetAllKData(-1, s_rgdindex, 3, 3, 1e4, 10.0);
+					//GetCurrentModel()->SetAllKData(-1, s_rgdindex, 3, 3, 230.0, 30.0);
+					//GetCurrentModel()->SetAllKData(-1, s_rgdindex, 3, 3, 600.0, 60.0);
+					//GetCurrentModel()->SetAllKData(-1, s_rgdindex, 3, 3, 600.0, 30.0);
+					//GetCurrentModel()->SetAllKData(-1, s_rgdindex, 3, 3, 600.0, 10.0);
+					//GetCurrentModel()->SetAllKData(-1, s_rgdindex, 3, 3, 400.0, 10.0);
 
-					//s_model->SetAllMassData(-1, s_rgdindex, 1e-9);
-					//s_model->SetAllMassData(-1, s_rgdindex, 0.5);
-					//s_model->SetAllMassData(-1, s_rgdindex, 1.0);
-					//s_model->SetAllMassData(-1, s_rgdindex, 10.0);
+					//GetCurrentModel()->SetAllMassData(-1, s_rgdindex, 1e-9);
+					//GetCurrentModel()->SetAllMassData(-1, s_rgdindex, 0.5);
+					//GetCurrentModel()->SetAllMassData(-1, s_rgdindex, 1.0);
+					//GetCurrentModel()->SetAllMassData(-1, s_rgdindex, 10.0);
 
 
 					//if (s_physicskind == 0) {
-					//	//s_model->SetAllKData(-1, s_rgdindex, 3, 3, 800.0, 30.0);
+					//	//GetCurrentModel()->SetAllKData(-1, s_rgdindex, 3, 3, 800.0, 30.0);
 						curmodel->SetAllKData(-1, s_rgdindex, 3, 3, 800.0, 20.0);
-					//	//s_model->SetAllKData(-1, s_rgdindex, 3, 3, 1600.0, 20.0);
+					//	//GetCurrentModel()->SetAllKData(-1, s_rgdindex, 3, 3, 1600.0, 20.0);
 					//}
 					//else {
-					//	//s_model->SetAllKData(-1, s_rgdindex, 3, 3, 1000.0, 60.0);
-					//	//s_model->SetAllKData(-1, s_rgdindex, 3, 3, 2000.0, 60.0);
-					//	//s_model->SetAllKData(-1, s_rgdindex, 3, 3, 10000.0, 60.0);
-					//	//s_model->SetAllKData(-1, s_rgdindex, 3, 3, 13000.0, 200.0);
-					//	//s_model->SetAllKData(-1, s_rgdindex, 3, 3, 40000.0, 100.0);
+					//	//GetCurrentModel()->SetAllKData(-1, s_rgdindex, 3, 3, 1000.0, 60.0);
+					//	//GetCurrentModel()->SetAllKData(-1, s_rgdindex, 3, 3, 2000.0, 60.0);
+					//	//GetCurrentModel()->SetAllKData(-1, s_rgdindex, 3, 3, 10000.0, 60.0);
+					//	//GetCurrentModel()->SetAllKData(-1, s_rgdindex, 3, 3, 13000.0, 200.0);
+					//	//GetCurrentModel()->SetAllKData(-1, s_rgdindex, 3, 3, 40000.0, 100.0);
 					//	curmodel->SetAllKData(-1, s_rgdindex, 3, 3, 1000.0, 30.0);
 					//}
 
 					//curmodel->SetAllKData(-1, s_rgdindex, 3, 3, 0.0, 20.0);
 
-					//s_model->SetAllMassData(-1, s_rgdindex, 100.0);
-					//s_model->SetAllMassData(-1, s_rgdindex, 30.0);
-					//s_model->SetAllKData(-1, s_rgdindex, 3, 3, 800.0, 30.0);
+					//GetCurrentModel()->SetAllMassData(-1, s_rgdindex, 100.0);
+					//GetCurrentModel()->SetAllMassData(-1, s_rgdindex, 30.0);
+					//GetCurrentModel()->SetAllKData(-1, s_rgdindex, 3, 3, 800.0, 30.0);
 */
 //決め打ち
 					pmodel->SetAllMassDataByBoneLeng(-1, s_rgdindexmap[pmodel], 30.0);
@@ -18769,15 +18778,15 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 
 
 				//s_bpWorld->clientResetScene();
-				//if( s_model ){
-				//	s_model->ResetBt();
+				//if( GetCurrentModel() ){
+				//	GetCurrentModel()->ResetBt();
 				//}
 				//int firstflag = 1;
-				//s_model->Motion2Bt(firstflag, s_coldisp, s_btstartframe, &s_matW, &s_matVP);
+				//GetCurrentModel()->Motion2Bt(firstflag, s_coldisp, s_btstartframe, &s_matW, &s_matVP);
 				//int rgdollflag = 0;
 				//double difftime = 0.0;
-				//s_model->SetBtMotion(rgdollflag, s_btstartframe, &s_matW, &s_matVP);
-				//s_model->ResetBt();
+				//GetCurrentModel()->SetBtMotion(rgdollflag, s_btstartframe, &s_matW, &s_matVP);
+				//GetCurrentModel()->ResetBt();
 
 
 
@@ -18789,7 +18798,7 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 				//}
 
 				//if( g_previewFlag == 5 ){
-				//	s_model->SetBtImpulse();
+				//	GetCurrentModel()->SetBtImpulse();
 				//}
 
 
@@ -18806,7 +18815,7 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 	}
 
 	//curmodel : 引数で渡されたmodel
-	if (s_model && (curmodel == s_model)) {
+	if (GetCurrentModel() && (curmodel == GetCurrentModel())) {
 		PrepairUndo();//物理REC様に保存
 	}
 
@@ -18917,10 +18926,10 @@ int SaveProject()
 
 
 	//2024/06/17 各パネル選択状態がずれないように
-	if (s_model) {
+	if (GetCurrentModel()) {
 		bool forceflag = true;
 		bool callundo = true;
-		OnChangeModel(s_model, forceflag, callundo);
+		OnChangeModel(GetCurrentModel(), forceflag, callundo);
 	}
 
 
@@ -18954,8 +18963,8 @@ LRESULT CALLBACK SaveChaDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		SetDlgPosDesktopCenter(hDlgWnd, HWND_TOPMOST);
 
-		//if (s_model && s_model->ExistCurrentMotion()) {
-		if (s_model) {
+		//if (GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
+		if (GetCurrentModel()) {
 			if (s_chasavename[0]) {
 				SetDlgItemText(hDlgWnd, IDC_PROJNAME, s_chasavename);
 			}
@@ -19255,7 +19264,7 @@ int OpenChaFile()
 		SetCursor(oldcursor);
 		return 1;
 	}
-	//OnAddMotion(s_model->GetCurMotInfo()->motid);
+	//OnAddMotion(GetCurrentModel()->GetCurMotInfo()->motid);
 
 	//全てのモデルが読み込まれた後で*.friを読み込む
 	s_footrigdlg.LoadFootRigFile(s_chasavedir, s_chasavename);
@@ -19273,13 +19282,13 @@ int OpenChaFile()
 
 int OnSetMotSpeed()
 {
-	//s_model->GetCurMotInfo()->speed = s_model->GetTmpMotSpeed();//!!!!!!!!!!!!!!!!!!!
-	//g_dspeed = s_model->GetTmpMotSpeed();
+	//GetCurrentModel()->GetCurMotInfo()->speed = GetCurrentModel()->GetTmpMotSpeed();//!!!!!!!!!!!!!!!!!!!
+	//g_dspeed = GetCurrentModel()->GetTmpMotSpeed();
 
-	if (!s_model || !s_chascene) {
+	if (!GetCurrentModel() || !s_chascene) {
 		return 0;
 	}
-	if (!s_model->ExistCurrentMotion()) {
+	if (!GetCurrentModel()->ExistCurrentMotion()) {
 		return 0;
 	}
 	//if (!g_SampleUI.GetSlider(IDC_SPEED)) {
@@ -19307,8 +19316,8 @@ int OnSetMotSpeed()
 	////SetMotionSpeed() : モーションごとのスピード
 	////SetTmpMotSpeed() : モーションが変わってもスライダー指定のスピード
 	////モーションが変わってもスライダー指定のスピードを維持するようにする
-	////g_dspeed = s_model->GetCurMotInfo()->speed;
-	//g_dspeed = s_model->GetTmpMotSpeed();
+	////g_dspeed = GetCurrentModel()->GetCurMotInfo()->speed;
+	//g_dspeed = GetCurrentModel()->GetTmpMotSpeed();
 	s_chascene->SetMotionSpeed(-1, g_dspeed);
 
 
@@ -20820,7 +20829,7 @@ int PickSpUndo(POINT srcpos)
 	//	return 0;
 	//}
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 	if (s_spguisw[SPGUISW_CAMERA_AND_IK].state == false) {
@@ -22314,8 +22323,8 @@ int SetSelectState()
 		return 0;
 	}
 
-	//if( !s_select || !s_model || g_previewFlag ){
-	if (!s_select || !s_model || (g_previewFlag == 5)) {
+	//if( !s_select || !GetCurrentModel() || g_previewFlag ){
+	if (!s_select || !GetCurrentModel() || (g_previewFlag == 5)) {
 		return 0;
 	}
 
@@ -22666,7 +22675,7 @@ int CreateTimeLineMark(int topboneno)
 		return 0;
 	}
 
-	if (s_model && s_owpTimeline && s_owpLTimeline) {
+	if (GetCurrentModel() && s_owpTimeline && s_owpLTimeline) {
 		if (topboneno < 0) {
 			CreateMarkReq(s_editmotionflag, 0);
 		}
@@ -22695,11 +22704,11 @@ int CreateMotionBrush(double srcstart, double srcend, bool onrefreshflag)
 	SetBrushName();//2024/03/26
 
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		//return -1;
 		return 2;//2023/10/05 
 	}
-	if (!s_model->ExistCurrentMotion()) {
+	if (!GetCurrentModel()->ExistCurrentMotion()) {
 		//return -1;
 		return 2;//2023/10/05 
 	}
@@ -22892,7 +22901,7 @@ int SetBrushName()
 
 int SetTimelineMark()
 {
-	if (!s_model || !s_owpTimeline || !s_owpLTimeline) {
+	if (!GetCurrentModel() || !s_owpTimeline || !s_owpLTimeline) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -22908,13 +22917,13 @@ int SetTimelineMark()
 //	s_owpTimeline->deleteKey();
 
 	//map<int,CBone*>::iterator itrbone;
-	//for( itrbone = s_model->GetBoneListBegin(); itrbone != s_model->GetBoneListEnd(); itrbone++ ){
+	//for( itrbone = GetCurrentModel()->GetBoneListBegin(); itrbone != GetCurrentModel()->GetBoneListEnd(); itrbone++ ){
 	//	CBone* curbone = itrbone->second;
 	//	if( curbone ){
 	//		int curlineno = s_boneno2lineno[ curbone->GetBoneNo() ];
 	//		if( curlineno >= 0 ){
 	//			double curframe;
-	//			for( curframe = 0.0; curframe < s_model->GetCurMotInfo()->frameleng; curframe += 1.0 ){
+	//			for( curframe = 0.0; curframe < GetCurrentModel()->GetCurMotInfo()->frameleng; curframe += 1.0 ){
 	//				KeyInfo chkki = s_owpTimeline->ExistKey( curlineno, curframe );
 	//				if( chkki.lineIndex >= 0 ){
 	//					s_owpTimeline->deleteKey( curlineno, curframe );
@@ -22925,13 +22934,13 @@ int SetTimelineMark()
 	//}
 
 	//map<int, CBone*>::iterator itrbone;
-	//for( itrbone = s_model->GetBoneListBegin(); itrbone != s_model->GetBoneListEnd(); itrbone++ ){
+	//for( itrbone = GetCurrentModel()->GetBoneListBegin(); itrbone != GetCurrentModel()->GetBoneListEnd(); itrbone++ ){
 	//	CBone* curbone = itrbone->second;
 	//	if( curbone ){
 	//		int curlineno = s_boneno2lineno[ curbone->GetBoneNo() ];
 	//		if( curlineno >= 0 ){
 	//			map<int, map<double, int>>::iterator itrcur;
-	//			itrcur = curbone->FindMotMarkOfMap( s_model->GetCurMotInfo()->motid );
+	//			itrcur = curbone->FindMotMarkOfMap( GetCurrentModel()->GetCurMotInfo()->motid );
 	//			if( itrcur != curbone->GetMotMarkOfMapBegin() ){
 	//				map<double, int>::iterator itrmark;
 	//				for( itrmark = itrcur->second.begin(); itrmark != itrcur->second.end(); itrmark++ ){
@@ -22955,7 +22964,7 @@ void CreateMarkReq(int curboneno, int broflag)
 	if (curboneno < 0) {
 		return;
 	}
-	CBone* curbone = s_model->GetBoneByID(curboneno);
+	CBone* curbone = GetCurrentModel()->GetBoneByID(curboneno);
 	if (curbone) {
 		if (curbone->IsSkeleton()) {
 			int curlineno = s_boneno2lineno[curboneno];
@@ -22963,7 +22972,7 @@ void CreateMarkReq(int curboneno, int broflag)
 				int keynum;
 				double startframe, endframe;
 				s_editrange.GetRange(&keynum, &startframe, &endframe);
-				s_model->AddBoneMotMark(s_owpTimeline, curboneno, curlineno, startframe, endframe, 1);
+				GetCurrentModel()->AddBoneMotMark(s_owpTimeline, curboneno, curlineno, startframe, endframe, 1);
 			}
 		}
 
@@ -22983,7 +22992,7 @@ int SetLTimelineMark(int curboneno)
 	if (g_previewFlag != 0) {
 		return 0;
 	}
-	if (!s_model || !s_owpTimeline || !s_owpLTimeline) {
+	if (!GetCurrentModel() || !s_owpTimeline || !s_owpLTimeline) {
 		return 0;
 	}
 
@@ -23013,7 +23022,7 @@ int SetLTimelineMark(int curboneno)
 	}
 	else if (g_edittarget == EDITTARGET_BONE) {
 		if (curboneno >= 0) {
-			CBone* opebone = s_model->GetBoneByID(curboneno);
+			CBone* opebone = GetCurrentModel()->GetBoneByID(curboneno);
 			if (opebone) {
 				CBone* parentbone = opebone->GetParent(false);
 				if (s_ikkind == 0) {
@@ -23046,7 +23055,7 @@ int SetLTimelineMark(int curboneno)
 
 						//if (s_owpTimeline && s_owpLTimeline) {
 						//	double frame;
-						//	for (frame = 0.0; frame < s_model->GetCurMotInfo()->frameleng; frame += 1.0) {
+						//	for (frame = 0.0; frame < GetCurrentModel()->GetCurMotInfo()->frameleng; frame += 1.0) {
 						//		KeyInfo chkki = s_owpTimeline->ExistKey(curlineno, frame);
 						//		if (chkki.lineIndex >= 0) {
 						//			s_owpLTimeline->newKey(markname, frame, 0);
@@ -23146,7 +23155,7 @@ int SetLTimelineMark(int curboneno)
 
 int ExportFBXFile()
 {
-	if (!s_model || !s_owpLTimeline || !s_chascene) {
+	if (!GetCurrentModel() || !s_owpLTimeline || !s_chascene) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -23211,14 +23220,14 @@ int ExportFBXFile()
 
 	{
 		s_owpLTimeline->setCurrentTime(0.0, true);
-		s_model->SetMotionFrame(0.0);
-		ChaMatrix tmpwm = s_model->GetWorldMat();
-		s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
+		GetCurrentModel()->SetMotionFrame(0.0);
+		ChaMatrix tmpwm = GetCurrentModel()->GetWorldMat();
+		GetCurrentModel()->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 
 		//ここでAxisMatXの初期化
-		s_model->CreateBtObject(g_limitdegflag, 1);
-		s_model->CalcBtAxismat(2);//2
-		s_model->SetInitAxisMatX(1);
+		GetCurrentModel()->CreateBtObject(g_limitdegflag, 1);
+		GetCurrentModel()->CalcBtAxismat(2);//2
+		GetCurrentModel()->SetInitAxisMatX(1);
 	}
 
 
@@ -23227,33 +23236,33 @@ int ExportFBXFile()
 	char fbxdate[MAX_PATH] = { 0L };
 	sprintf_s(fbxdate, MAX_PATH, "CommentForEGP_%04u%02u%02u%02u%02u%02u",
 		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
-	//CallF( WriteFBXFile( s_model, fbxpath, s_dummytri, mb, g_tmpmqomult, s_fbxbunki ), return 1 );
-	int result = WriteFBXFile(g_limitdegflag, s_psdk, s_model, fbxpath, fbxdate);
+	//CallF( WriteFBXFile( GetCurrentModel(), fbxpath, s_dummytri, mb, g_tmpmqomult, s_fbxbunki ), return 1 );
+	int result = WriteFBXFile(g_limitdegflag, s_psdk, GetCurrentModel(), fbxpath, fbxdate);
 	if (result != 0) {
 		::MessageBox(NULL, L"保存に失敗しました。\n書き込み禁止ディレクトリの可能性があります。\n保存場所を変えて再試行してみてください。", L"エラー", MB_OK);
 		_ASSERT(0);
 		return 1;
 	}
 
-	if (s_model->GetOldAxisFlagAtLoading() == 0) {
+	if (GetCurrentModel()->GetOldAxisFlagAtLoading() == 0) {
 		WCHAR lmtname[MAX_PATH] = { 0L };
 		swprintf_s(lmtname, MAX_PATH, L"%s.lmt", filename);
 		CLmtFile lmtfile;
-		lmtfile.WriteLmtFile(lmtname, s_model, fbxdate);
+		lmtfile.WriteLmtFile(lmtname, GetCurrentModel(), fbxdate);
 
 		WCHAR rigname[MAX_PATH] = { 0L };
 		swprintf_s(rigname, MAX_PATH, L"%s.rig", filename);
 		CRigFile rigfile;
-		rigfile.WriteRigFile(rigname, s_model);
+		rigfile.WriteRigFile(rigname, GetCurrentModel());
 
 	}
 
 
 	//2024/06/17 各パネル選択状態がずれないように
-	if (s_model) {
+	if (GetCurrentModel()) {
 		bool forceflag = true;
 		bool callundo = true;
-		OnChangeModel(s_model, forceflag, callundo);
+		OnChangeModel(GetCurrentModel(), forceflag, callundo);
 	}
 
 
@@ -23262,7 +23271,7 @@ int ExportFBXFile()
 
 int ExportBntFile()
 {
-	if (!s_model || !s_owpLTimeline || !s_chascene) {
+	if (!GetCurrentModel() || !s_owpLTimeline || !s_chascene) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -23589,9 +23598,9 @@ int ApplyNewLimitsToWM(CModel* srcmodel)
 
 int ApplyNewLimitsToWMSelected()
 {
-	if (s_model) {
-		ChaMatrix tmpwm = s_model->GetWorldMat();
-		if (s_model->ExistCurrentMotion()) {
+	if (GetCurrentModel()) {
+		ChaMatrix tmpwm = GetCurrentModel()->GetWorldMat();
+		if (GetCurrentModel()->ExistCurrentMotion()) {
 
 			int selectednum;
 			double startframe, endframe;
@@ -23602,15 +23611,15 @@ int ApplyNewLimitsToWMSelected()
 			iendframe = IntTime(endframe);
 			int curframe;
 			for (curframe = istartframe; curframe <= iendframe; curframe++) {
-				s_model->SetMotionFrame((double)curframe);
-				s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
+				GetCurrentModel()->SetMotionFrame((double)curframe);
+				GetCurrentModel()->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 			}
 		}
 
 		if (s_owpLTimeline) {
 			double curframe = s_owpLTimeline->getCurrentTime();
-			s_model->SetMotionFrame(curframe);
-			s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
+			GetCurrentModel()->SetMotionFrame(curframe);
+			GetCurrentModel()->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 		}
 	}
 
@@ -23640,16 +23649,16 @@ int UpdateAfterEditAngleLimit(int limit2boneflag, bool setcursorflag)//default :
 		break;
 	}
 
-	if (s_model) {
-		ClearLimitedWM(s_model);
-		CopyWorldToLimitedWorld(s_model);
-		ApplyNewLimitsToWM(s_model);
+	if (GetCurrentModel()) {
+		ClearLimitedWM(GetCurrentModel());
+		CopyWorldToLimitedWorld(GetCurrentModel());
+		ApplyNewLimitsToWM(GetCurrentModel());
 	}
 
 
-	//if (s_model && s_model->GetCurMotInfo()) {
-	//	int curmotid = s_model->GetCurMotInfo()->motid;
-	//	s_model->CalcBoneEul(curmotid);
+	//if (GetCurrentModel() && GetCurrentModel()->GetCurMotInfo()) {
+	//	int curmotid = GetCurrentModel()->GetCurMotInfo()->motid;
+	//	GetCurrentModel()->CalcBoneEul(curmotid);
 	//}
 
 	//読み込みなおし：lowerとupperは大小関係で入れ替わることがあるため適用後読み込みなおす。
@@ -23680,20 +23689,20 @@ int GetModelWorldMat(ChaVector3* dstpos, ChaVector3* dstrot)
 		_ASSERT(0);
 		return 1;
 	}
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 1;
 	}
 
 	HWND hDlgWnd = s_modelworldmatdlgwnd;
 
-	ChaVector3 tmppos = s_model->GetModelPosition();
-	ChaVector3 tmprot = s_model->GetModelRotation();
+	ChaVector3 tmppos = GetCurrentModel()->GetModelPosition();
+	ChaVector3 tmprot = GetCurrentModel()->GetModelRotation();
 	WCHAR strval[256] = { 0L };
 	float value = 0.0f;
 
-	if (s_model) {
-		tmppos = s_model->GetModelPosition();
-		tmprot = s_model->GetModelRotation();
+	if (GetCurrentModel()) {
+		tmppos = GetCurrentModel()->GetModelPosition();
+		tmprot = GetCurrentModel()->GetModelRotation();
 		const float maxvalue = 100000.0f;
 		const float minvalue = -maxvalue;
 		const float maxvalue2 = 10000.0f;
@@ -23754,8 +23763,8 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 	{
 		SetDlgPosDesktopCenter(hDlgWnd, HWND_TOPMOST);
 
-		if (s_model) {
-			SetModel2ModelWorldMatDlg(s_model);
+		if (GetCurrentModel()) {
+			SetModel2ModelWorldMatDlg(GetCurrentModel());
 		}
 
 		//RECT dlgrect;
@@ -23936,8 +23945,8 @@ LRESULT CALLBACK MaterialRateDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 	{
 		SetDlgPosDesktopCenter(hDlgWnd, HWND_TOPMOST);
 
-		if (s_model) {
-			ChaVector4 materialdisprate = s_model->GetMaterialDispRate();
+		if (GetCurrentModel()) {
+			ChaVector4 materialdisprate = GetCurrentModel()->GetMaterialDispRate();
 
 			swprintf_s(strval, 256, L"%.3f", materialdisprate.x);
 			SetDlgItemTextW(hDlgWnd, IDC_EDIT_DIFFUSERATE, strval);
@@ -23968,8 +23977,8 @@ LRESULT CALLBACK MaterialRateDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 			break;
 		case IDC_APPLYMATERIALRATE:
 		{
-			if (s_model) {
-				tmpmaterialrate = s_model->GetMaterialDispRate();
+			if (GetCurrentModel()) {
+				tmpmaterialrate = GetCurrentModel()->GetMaterialDispRate();
 
 				const float maxvalue = 10000.0f;
 
@@ -23994,7 +24003,7 @@ LRESULT CALLBACK MaterialRateDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 					tmpmaterialrate.w = value;
 				}
 
-				s_model->SetMaterialDispRate(tmpmaterialrate);
+				GetCurrentModel()->SetMaterialDispRate(tmpmaterialrate);
 
 			}
 
@@ -24021,17 +24030,17 @@ int DispRotAxisDlg()
 		//already opened
 		return 0;
 	}
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 	if (s_curboneno < 0) {
 		return 0;
 	}
-	if (!s_model->GetTopBone()) {
+	if (!GetCurrentModel()->GetTopBone()) {
 		return 0;
 	}
 
-	if (s_model->GetOldAxisFlagAtLoading() == 1) {
+	if (GetCurrentModel()->GetOldAxisFlagAtLoading() == 1) {
 		::DSMessageBox(s_3dwnd, L"Work Only After Setting Of Axis.\nRetry After Saving FBX file.", L"error", MB_OK);
 		return 0;
 	}
@@ -24075,17 +24084,17 @@ int InitRotAxis()
 	if (!s_rotaxisdlg) {
 		return 0;
 	}
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 	if (s_curboneno < 0) {
 		return 0;
 	}
-	if (!s_model->GetTopBone()) {
+	if (!GetCurrentModel()->GetTopBone()) {
 		return 0;
 	}
 
-	CBone* curbone = s_model->GetBoneByID(s_curboneno);
+	CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 	if (curbone) {
 		RecalcBoneAxisX(curbone);
 	}
@@ -24098,17 +24107,17 @@ int RotAxis(HWND hDlgWnd)
 	if (!s_rotaxisdlg) {
 		return 0;
 	}
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 	if (s_curboneno < 0) {
 		return 0;
 	}
-	if (!s_model->GetTopBone()) {
+	if (!GetCurrentModel()->GetTopBone()) {
 		return 0;
 	}
 
-	CBone* curbone = s_model->GetBoneByID(s_curboneno);
+	CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 	if (!curbone) {
 		return 0;
 	}
@@ -24176,8 +24185,8 @@ int RotAxis(HWND hDlgWnd)
 
 			curbone->SetNodeMat(newnodemat);
 
-			if (s_model->ExistCurrentMotion()) {
-				s_model->CalcBoneEul(g_limitdegflag, s_model->GetCurrentMotID());
+			if (GetCurrentModel()->ExistCurrentMotion()) {
+				GetCurrentModel()->CalcBoneEul(g_limitdegflag, GetCurrentModel()->GetCurrentMotID());
 			}
 			//WCHAR strmes[256];
 			//swprintf_s(strmes, 256, L"rotaxis %d, rotdeg %.3f", s_rotaxiskind, s_rotaxisdeg);
@@ -24201,7 +24210,7 @@ LRESULT CALLBACK RotAxisDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 		swprintf_s(strdeg, 256, L"0");
 		SetWindowText(GetDlgItem(hDlgWnd, IDC_EDITDEG), strdeg);
 
-		CBone* curbone = s_model->GetBoneByID(s_curboneno);
+		CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 		if (curbone) {
 			SetWindowText(GetDlgItem(hDlgWnd, IDC_BONENAME), curbone->GetWBoneName());
 		}
@@ -24266,10 +24275,10 @@ int ChangeCurrentBone(int prepairundoflag)
 	static CModel* s_befmodel = 0;
 	static CBone* s_befbone = 0;
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
-	if (s_model->GetLoadedFlag() == false) {//2021/08/23
+	if (GetCurrentModel()->GetLoadedFlag() == false) {//2021/08/23
 		return 0;
 	}
 	if (s_nowloading == true) {
@@ -24280,16 +24289,16 @@ int ChangeCurrentBone(int prepairundoflag)
 	//if (g_retargetbatchflag == 0) {
 	if (InterlockedAdd(&g_retargetbatchflag, 0) == 0) {
 
-		if (s_model) {
+		if (GetCurrentModel()) {
 			//CDXUTComboBox* pComboBox;
 			//pComboBox = g_SampleUI.GetComboBox(IDC_COMBO_BONE);
 			//CBone* pBone;
-			//pBone = s_model->GetBoneByID(s_curboneno);
+			//pBone = GetCurrentModel()->GetBoneByID(s_curboneno);
 			//if (pBone) {
 			//	pComboBox->SetSelectedByData(ULongToPtr(s_curboneno));
 			//}
 
-			CBone* curbone = s_model->GetBoneByID(s_curboneno);
+			CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 			//if (curbone) {
 			//	CDXUTComboBox* pComboBox3 = g_SampleUI.GetComboBox(IDC_COMBO_BONEAXIS);
 			//	if (pComboBox3) {
@@ -24301,10 +24310,10 @@ int ChangeCurrentBone(int prepairundoflag)
 			//}
 
 
-			s_rigidparamsdlg.SetModel(s_model, s_curboneno, s_reindexmap, s_rgdindexmap);
-			s_limiteuldlg.SetModel(s_model, s_curboneno);
-			s_impulsedlg.SetModel(s_model, s_curboneno, s_rgdindexmap);
-			s_dampanimdlg.SetModel(s_model, s_curboneno, s_rgdindexmap);
+			s_rigidparamsdlg.SetModel(GetCurrentModel(), s_curboneno, s_reindexmap, s_rgdindexmap);
+			s_limiteuldlg.SetModel(GetCurrentModel(), s_curboneno);
+			s_impulsedlg.SetModel(GetCurrentModel(), s_curboneno, s_rgdindexmap);
+			s_dampanimdlg.SetModel(GetCurrentModel(), s_curboneno, s_rgdindexmap);
 
 			//if (s_befbone != curbone) {
 			//	refreshEulerGraph();
@@ -24312,7 +24321,7 @@ int ChangeCurrentBone(int prepairundoflag)
 
 
 			//選択ボーンに変更が有った場合
-			if ((s_befbone != curbone) || (s_befmodel != s_model)) {
+			if ((s_befbone != curbone) || (s_befmodel != GetCurrentModel())) {
 				//if (s_owpTimeline) {
 					//refreshTimeline(*s_owpTimeline);
 
@@ -24327,15 +24336,15 @@ int ChangeCurrentBone(int prepairundoflag)
 				}
 			}
 
-			s_model->SetSelectedBoneNo(s_curboneno);
+			GetCurrentModel()->SetSelectedBoneNo(s_curboneno);
 			s_saveboneno = s_curboneno;//2024/04/24 //curbone->GetBoneNo();
 			s_befbone = curbone;
-			s_befmodel = s_model;
+			s_befmodel = GetCurrentModel();
 		}
 		else {
 			s_saveboneno = -1;//2024/04/24
 			s_befbone = 0;
-			s_befmodel = s_model;
+			s_befmodel = GetCurrentModel();
 		}
 	}
 
@@ -24370,10 +24379,10 @@ int ChangeLimitDegFlag(bool srcflag, bool setcheckflag, bool updateeulflag)
 
 	if (updateeulflag) {
 
-		if (s_model && (g_limitdegflag == true)) {
-			ClearLimitedWM(s_model);
-			CopyWorldToLimitedWorld(s_model);
-			ApplyNewLimitsToWM(s_model);
+		if (GetCurrentModel() && (g_limitdegflag == true)) {
+			ClearLimitedWM(GetCurrentModel());
+			CopyWorldToLimitedWorld(GetCurrentModel());
+			ApplyNewLimitsToWM(GetCurrentModel());
 		}
 
 		//if (g_limitdegflag == true) {
@@ -24389,8 +24398,8 @@ int ChangeLimitDegFlag(bool srcflag, bool setcheckflag, bool updateeulflag)
 
 
 		//2023/11/06 IK直後のグラフと　LimitEulオンオフ後のグラフが同一になるように
-		if (s_model->ExistCurrentMotion()) {
-			s_model->CalcBoneEul(g_limitdegflag, s_model->GetCurrentMotID());
+		if (GetCurrentModel()->ExistCurrentMotion()) {
+			GetCurrentModel()->CalcBoneEul(g_limitdegflag, GetCurrentModel()->GetCurrentMotID());
 		}
 
 
@@ -24398,9 +24407,9 @@ int ChangeLimitDegFlag(bool srcflag, bool setcheckflag, bool updateeulflag)
 		UpdateEditedEuler();
 	}
 
-	//if (s_model && s_model->GetCurMotInfo()) {
-	//	int curmotid = s_model->GetCurMotInfo()->motid;
-	//	s_model->CalcBoneEul(curmotid);
+	//if (GetCurrentModel() && GetCurrentModel()->GetCurMotInfo()) {
+	//	int curmotid = GetCurrentModel()->GetCurMotInfo()->motid;
+	//	GetCurrentModel()->CalcBoneEul(curmotid);
 	//	refreshEulerGraph();
 	//}
 	//else {
@@ -24623,14 +24632,14 @@ int OnFrameKeyboard()
 
 
 		//if ((g_keybuf[VK_F9] & 0x80) && ((g_savekeybuf[VK_F9] & 0x80) == 0)) {
-		//	StartBt(s_model, TRUE, 0, 1);
+		//	StartBt(GetCurrentModel(), TRUE, 0, 1);
 		//}
 		//if ((g_keybuf[VK_F10] & 0x80) && ((g_savekeybuf[VK_F10] & 0x80) == 0)) {
-		//	StartBt(s_model, TRUE, 1, 1);
+		//	StartBt(GetCurrentModel(), TRUE, 1, 1);
 		//}
 		//if ((g_keybuf[' '] & 0x80) && ((g_savekeybuf[' '] & 0x80) == 0)) {
-		//	if (s_bpWorld && s_model) {
-		//		StartBt(s_model, TRUE, 2, 1);
+		//	if (s_bpWorld && GetCurrentModel()) {
+		//		StartBt(GetCurrentModel(), TRUE, 2, 1);
 		//	}
 		//}
 		if (g_keybuf[VK_CONTROL] & 0x80) {
@@ -24765,7 +24774,7 @@ int OnFrameKeyboard()
 
 
 		/////// all model bone
-		if (s_model && g_controlkey && (g_keybuf['A'] & 0x80) && !(g_savekeybuf['A'] & 0x80)) {
+		if (GetCurrentModel() && g_controlkey && (g_keybuf['A'] & 0x80) && !(g_savekeybuf['A'] & 0x80)) {
 			s_allmodelbone = !s_allmodelbone;
 		}
 
@@ -24834,7 +24843,7 @@ int OnFrameUtCheckBox()
 	//if (s_WallScrapingIKCheckBox && s_WallScrapingCheckBoxFlag) {
 	if (s_WallScrapingCheckBoxFlag) {
 		//g_wallscrapingikflag = (int)s_WallScrapingIKCheckBox->GetChecked();
-		if (s_model && (save_wallscrapingikflag != g_wallscrapingikflag)) {
+		if (GetCurrentModel() && (save_wallscrapingikflag != g_wallscrapingikflag)) {
 			PrepairUndo();
 		}
 		save_wallscrapingikflag = g_wallscrapingikflag;
@@ -24845,9 +24854,9 @@ int OnFrameUtCheckBox()
 	//if (s_LimitDegCheckBox && s_LimitDegCheckBoxFlag) {
 	if (s_LimitDegCheckBoxFlag) {
 		//g_limitdegflag = s_LimitDegCheckBox->GetChecked();
-		////if (s_model && s_model->GetCurMotInfo() && (s_curboneno >= 0) && (g_limitdegflag != s_beflimitdegflag)) {
-		if (s_model && s_model->ExistCurrentMotion() && (g_limitdegflag != s_limiteuldlg.GetBefLimitDegFlag())) {
-			////s_model->CalcBoneEul(s_model->GetCurMotInfo()->motid);
+		////if (GetCurrentModel() && GetCurrentModel()->GetCurMotInfo() && (s_curboneno >= 0) && (g_limitdegflag != s_beflimitdegflag)) {
+		if (GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion() && (g_limitdegflag != s_limiteuldlg.GetBefLimitDegFlag())) {
+			////GetCurrentModel()->CalcBoneEul(GetCurrentModel()->GetCurMotInfo()->motid);
 			////refreshEulerGraph();
 			//////s_tum.UpdateEditedEuler(refreshEulerGraph);//非ブロッキング
 
@@ -24861,7 +24870,7 @@ int OnFrameUtCheckBox()
 
 	if (s_BrushMirrorUCheckBoxFlag) {
 		//g_brushmirrorUflag = (int)s_BrushMirrorUCheckBox->GetChecked();
-		if (s_model && (save_brushmirrorUflag != g_brushmirrorUflag)) {
+		if (GetCurrentModel() && (save_brushmirrorUflag != g_brushmirrorUflag)) {
 			PrepairUndo();
 		}
 		save_brushmirrorUflag = g_brushmirrorUflag;
@@ -24869,7 +24878,7 @@ int OnFrameUtCheckBox()
 	}
 	if (s_BrushMirrorVCheckBoxFlag) {
 		//g_brushmirrorVflag = (int)s_BrushMirrorVCheckBox->GetChecked();
-		if (s_model && (save_brushmirrorVflag != g_brushmirrorVflag)) {
+		if (GetCurrentModel() && (save_brushmirrorVflag != g_brushmirrorVflag)) {
 			PrepairUndo();
 		}
 		save_brushmirrorVflag = g_brushmirrorVflag;
@@ -24877,7 +24886,7 @@ int OnFrameUtCheckBox()
 	}
 	if (s_IfMirrorVDiv2CheckBoxFlag) {
 		//g_ifmirrorVDiv2flag = (int)s_IfMirrorVDiv2CheckBox->GetChecked();
-		if (s_model && (save_ifmirrorVDiv2flag != g_ifmirrorVDiv2flag)) {
+		if (GetCurrentModel() && (save_ifmirrorVDiv2flag != g_ifmirrorVDiv2flag)) {
 			PrepairUndo();
 		}
 		save_ifmirrorVDiv2flag = g_ifmirrorVDiv2flag;
@@ -24891,7 +24900,7 @@ int OnFrameUtCheckBox()
 		//g_brushrepeats = (int)(g_SampleUI.GetSlider(IDC_SL_BRUSHREPEATS)->GetValue());
 		//swprintf_s(sz, 100, L"Brush Repeats : %d", g_brushrepeats);
 		//g_SampleUI.GetStatic(IDC_STATIC_BRUSHREPEATS)->SetText(sz);
-		if (s_model && (save_brushrepeats != g_brushrepeats)) {
+		if (GetCurrentModel() && (save_brushrepeats != g_brushrepeats)) {
 			PrepairUndo();
 		}
 		save_brushrepeats = g_brushrepeats;
@@ -24905,7 +24914,7 @@ int OnFrameUtCheckBox()
 		//CEditRange::SetApplyRate((double)g_applyrate);
 		//swprintf_s(sz, 100, L"TopPos : %d%% : %d", g_applyrate, (int)(s_editrange.GetApplyFrame()));
 		//g_SampleUI.GetStatic(IDC_STATIC_APPLYRATE)->SetText(sz);
-		if (s_model && (save_applyrate != g_applyrate)) {
+		if (GetCurrentModel() && (save_applyrate != g_applyrate)) {
 			PrepairUndo();
 		}
 		save_applyrate = g_applyrate;
@@ -24916,7 +24925,7 @@ int OnFrameUtCheckBox()
 
 	if (s_utBrushMethodFlag) {//2024/02/02
 		//値が変わって　かつ　マウスアップのとき
-		if (s_model && (save_brushmethod != g_motionbrush_method)) {
+		if (GetCurrentModel() && (save_brushmethod != g_motionbrush_method)) {
 			PrepairUndo();
 		}
 		save_brushmethod = g_motionbrush_method;
@@ -24943,8 +24952,8 @@ int OnFrameLightsForEdit()
 int OnFrameAngleLimit(bool updateonlycheckeul)
 {
 	if (s_limiteuldlg.GetVisible()) {
-		if (s_model && (s_limiteuldlg.GetAngleLimitUnderHScroll() == 0)) {//HScroll中に値を取得して設定するとスライダーが動かないから
-			//s_model->UpdateMatrix(&s_model->GetWorldMat(), &s_matVP);//commentout
+		if (GetCurrentModel() && (s_limiteuldlg.GetAngleLimitUnderHScroll() == 0)) {//HScroll中に値を取得して設定するとスライダーが動かないから
+			//GetCurrentModel()->UpdateMatrix(&GetCurrentModel()->GetWorldMat(), &s_matVP);//commentout
 
 
 			s_limiteuldlg.Bone2AngleLimit(s_curboneno);
@@ -24972,15 +24981,15 @@ int OnFrameProcessTime(double difftime, double* pnextframe, int* pendflag, int* 
 		return 1;
 	}
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
-	if (!s_model->ExistCurrentMotion()) {
+	if (!GetCurrentModel()->ExistCurrentMotion()) {
 		return 0;
 	}
 	
 	//プレビューしていなくてもセット必要
-	s_model->SetRenderSlotFrame(s_model->GetCurrentFrame());//2024/03/13 変更前に保存　RenderBoneMarkで使用
+	GetCurrentModel()->SetRenderSlotFrame(GetCurrentModel()->GetCurrentFrame());//2024/03/13 変更前に保存　RenderBoneMarkで使用
 
 	if (g_previewFlag != 0) {
 		if (s_savepreviewFlag == 0) {
@@ -24993,14 +25002,14 @@ int OnFrameProcessTime(double difftime, double* pnextframe, int* pendflag, int* 
 			else {
 				rangestart = s_previewrange.GetStartFrame();
 			}
-			s_model->SetMotionFrame(rangestart);
+			GetCurrentModel()->SetMotionFrame(rangestart);
 			*pnextframe = 0.0;
 		}
-		s_model->AdvanceTime(0, s_previewrange, g_previewFlag, difftime, pnextframe, pendflag, ploopstartflag, -1);
+		GetCurrentModel()->AdvanceTime(0, s_previewrange, g_previewFlag, difftime, pnextframe, pendflag, ploopstartflag, -1);
 		if (*pendflag == 1) {
 			g_previewFlag = 0;
 		}
-		s_model->SetMotionFrame(*pnextframe);
+		GetCurrentModel()->SetMotionFrame(*pnextframe);
 	}
 
 	return 0;
@@ -25012,14 +25021,14 @@ int OnFrameProcessCameraTime(double difftime, double* pnextframe, int* pendflag,
 		_ASSERT(0);
 		return 1;
 	}
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 
 	if (!s_cameramodel) {//2024/01/31
 		return 0;
 	}
-	//int cameramotid = s_model->GetCameraMotionId();
+	//int cameramotid = GetCurrentModel()->GetCameraMotionId();
 	int cameramotid = s_cameramodel->GetCameraMotionId();//2024/01/31
 	if (cameramotid <= 0) {
 		return 0;
@@ -25036,11 +25045,11 @@ int OnFrameProcessCameraTime(double difftime, double* pnextframe, int* pendflag,
 			else {
 				rangestart = s_previewrange.GetStartFrame();
 			}
-			//s_model->SetMotionFrame(cameramotid, rangestart);
+			//GetCurrentModel()->SetMotionFrame(cameramotid, rangestart);
 			s_cameramodel->SetCameraMotionFrame(cameramotid, rangestart);
 			*pnextframe = 0.0;
 		}
-		//s_model->AdvanceTime(0, s_previewrange, g_previewFlag, difftime, pnextframe, pendflag, ploopstartflag, cameramotid);//!!! cameramotid !!!
+		//GetCurrentModel()->AdvanceTime(0, s_previewrange, g_previewFlag, difftime, pnextframe, pendflag, ploopstartflag, cameramotid);//!!! cameramotid !!!
 		s_cameramodel->AdvanceTime(0, s_previewrange, g_previewFlag, difftime, pnextframe, pendflag, ploopstartflag, cameramotid);//!!! cameramotid !!!
 		s_cameramodel->SetCameraMotionFrame(cameramotid, *pnextframe);
 	}
@@ -25057,8 +25066,8 @@ int OnFrameProcessCameraTime(double difftime, double* pnextframe, int* pendflag,
 	//}
 
 	
-	//s_model->SetMotionSpeed(cameramotid, g_dspeed);
-	//s_model->SetMotionFrame(cameramotid, *pnextframe);
+	//GetCurrentModel()->SetMotionSpeed(cameramotid, g_dspeed);
+	//GetCurrentModel()->SetMotionFrame(cameramotid, *pnextframe);
 	s_cameramodel->SetMotionSpeed(cameramotid, g_dspeed);
 	s_cameramodel->SetMotionFrame(cameramotid, *pnextframe);
 
@@ -25075,7 +25084,7 @@ int OnFramePreviewCamera(double srcnextframe)
 		return 0;
 	}
 
-	//if ((g_edittarget == EDITTARGET_CAMERA) && (s_model->GetUnderIKRot())) {
+	//if ((g_edittarget == EDITTARGET_CAMERA) && (GetCurrentModel()->GetUnderIKRot())) {
 	//	//カメラアニメ編集中はスキップ
 	//	return 0;
 	//}
@@ -25188,14 +25197,14 @@ int OnFramePreviewNormal(double nextframe, double difftime, int endflag, int loo
 	//		else {
 	//			rangestart = s_previewrange.GetStartFrame();
 	//		}
-	//		s_model->SetMotionFrame(rangestart);
+	//		GetCurrentModel()->SetMotionFrame(rangestart);
 	//		*pdifftime = 0.0;
 	//	}
 	//}
 
 	//int endflag = 0;
 	//int loopstartflag = 0;
-	//s_model->AdvanceTime(s_onefps, s_previewrange, g_previewFlag, *pdifftime, pnextframe, &endflag, &loopstartflag, -1);
+	//GetCurrentModel()->AdvanceTime(s_onefps, s_previewrange, g_previewFlag, *pdifftime, pnextframe, &endflag, &loopstartflag, -1);
 	//if (endflag == 1) {
 	//	g_previewFlag = 0;
 	//}
@@ -25247,7 +25256,7 @@ int OnFramePreviewNormal(double nextframe, double difftime, int endflag, int loo
 
 int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopstartflag)
 {
-	if (!s_model || !s_chascene) {
+	if (!GetCurrentModel() || !s_chascene) {
 		return 0;
 	}
 
@@ -25275,10 +25284,10 @@ int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopsta
 				//curmodel->SetBtEquilibriumPoint();
 			}
 
-			if ((curmodel == s_model) && (s_model->GetBtCnt() == 0)) {
+			if ((curmodel == GetCurrentModel()) && (GetCurrentModel()->GetBtCnt() == 0)) {
 				s_rectime = 0.0;
 				s_reccnt = 0;
-				s_model->PhysIKRec(g_limitdegflag, s_rectime);
+				GetCurrentModel()->PhysIKRec(g_limitdegflag, s_rectime);
 			}
 
 			if ((g_btsimurecflag == true) && ((loopstartflag == 1) || (endflag == 1))) {
@@ -25310,11 +25319,11 @@ int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopsta
 
 	//2023/11/03 モデル単位マルチスレッド＆ダブルバッファ
 	s_chascene->UpdateBtFunc(g_limitdegflag, nextframe, 
-		&s_matView, &s_matProj, loopstartflag, s_model, recstopflag, s_bpWorld, s_reccnt, StopBtRec);
+		&s_matView, &s_matProj, loopstartflag, GetCurrentModel(), recstopflag, s_bpWorld, s_reccnt, StopBtRec);
 
 
 	//60 x 60 frames limit : 60 sec limit
-	if ((s_model->GetBtCnt() > 0) && (s_reccnt < MAXPHYSIKRECCNT)) {
+	if ((GetCurrentModel()->GetBtCnt() > 0) && (s_reccnt < MAXPHYSIKRECCNT)) {
 		s_reccnt += 1.0;
 	}
 
@@ -25325,7 +25334,7 @@ int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopsta
 int StopBtRec()
 {
 	StopBt();
-	s_model->ApplyPhysIkRec(g_limitdegflag, g_wallscrapingikflag);
+	GetCurrentModel()->ApplyPhysIkRec(g_limitdegflag, g_wallscrapingikflag);
 	refreshEulerGraph();
 	PrepairUndo();//物理REC用保存
 	g_btsimurecflag = false;
@@ -25343,9 +25352,9 @@ int StopBtRec()
 //			curmodel->SetBtMotion(g_limitdegflag, curmodel->GetBoneByID(s_curboneno), 0, nextframe, &tmpwm, &s_matVP);
 //
 //			//60 x 30 frames limit : 30 sec limit
-//			if ((curmodel == s_model) && (s_model->GetBtCnt() > 0) && (s_reccnt < MAXPHYSIKRECCNT)) {
+//			if ((curmodel == GetCurrentModel()) && (GetCurrentModel()->GetBtCnt() > 0) && (s_reccnt < MAXPHYSIKRECCNT)) {
 //				s_rectime = (double)((int)s_reccnt);
-//				s_model->PhysIKRec(s_rectime);
+//				GetCurrentModel()->PhysIKRec(s_rectime);
 //				s_reccnt++;
 //			}
 //		}
@@ -25384,10 +25393,10 @@ int StopBtRec()
 //
 //	int endflag = 0;
 //
-//	if (!s_model){
+//	if (!GetCurrentModel()){
 //		return 0;
 //	}
-//	CModel* curmodel = s_model;
+//	CModel* curmodel = GetCurrentModel();
 //
 //	//BOOL isstartframe = FALSE;
 //	//double rangestart = 1.0;
@@ -25440,7 +25449,7 @@ int StopBtRec()
 //			if (curmodel->GetBtCnt() == 0) {
 //				s_rectime = 0.0;
 //				s_reccnt = 0;
-//				s_model->PhysIKRec(s_rectime);
+//				GetCurrentModel()->PhysIKRec(s_rectime);
 //				SetKinematicToHand(curmodel, true);//指が変にならないように
 //			}
 //		}
@@ -25472,7 +25481,7 @@ int StopBtRec()
 //			ChaVector3 targetpos(0.0f, 0.0f, 0.0f);
 //			CallF(CalcTargetPos(&targetpos), return 1);
 //
-//			s_model->SetDofRotAxis(s_pickinfo.buttonflag);//!!!!!!!!!!!!!!!!!!!!!!!
+//			GetCurrentModel()->SetDofRotAxis(s_pickinfo.buttonflag);//!!!!!!!!!!!!!!!!!!!!!!!
 //
 //
 //			if (s_physicskind == 0) {
@@ -25485,8 +25494,8 @@ int StopBtRec()
 //					if (g_controlkey == true) {
 //						deltax *= 0.250f;
 //					}
-//					//s_editmotionflag = s_model->PhysicsRotAxisDelta(&s_editrange, s_pickinfo.buttonflag, s_pickinfo.pickobjno, deltax, g_iklevel, s_ikcnt, s_ikselectmat);
-//					s_editmotionflag = s_model->PhysicsRotAxisDelta(&s_editrange, s_pickinfo.buttonflag, s_curboneno, deltax, g_iklevel, s_ikcnt, s_ikselectmat);
+//					//s_editmotionflag = GetCurrentModel()->PhysicsRotAxisDelta(&s_editrange, s_pickinfo.buttonflag, s_pickinfo.pickobjno, deltax, g_iklevel, s_ikcnt, s_ikselectmat);
+//					s_editmotionflag = GetCurrentModel()->PhysicsRotAxisDelta(&s_editrange, s_pickinfo.buttonflag, s_curboneno, deltax, g_iklevel, s_ikcnt, s_ikselectmat);
 //					s_ikcnt++;
 //				}
 //
@@ -25506,7 +25515,7 @@ int StopBtRec()
 //		}
 //
 //
-//		CBone* curbone = s_model->GetBoneByID(s_curboneno);
+//		CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 //		if (curbone) {
 //			CBone* parentbone = curbone->GetParent();
 //			if (parentbone) {
@@ -25551,7 +25560,7 @@ int StopBtRec()
 //			//60 x 30 frames limit : 30 sec limit
 //			if ((curmodel->GetBtCnt() > g_prepcntonphysik) && (s_reccnt < MAXPHYSIKRECCNT)) {
 //				s_rectime = (double)((int)s_reccnt);
-//				s_model->PhysIKRec(s_rectime);
+//				GetCurrentModel()->PhysIKRec(s_rectime);
 //				s_reccnt++;
 //			}
 //		}
@@ -25637,8 +25646,8 @@ int OnFrameCloseFlag()
 		if (s_bpWorld) {
 			s_bpWorld->setGlobalERP(btScalar(g_erp));
 		}
-		if (s_model) {
-			CallF(s_model->CreateBtObject(g_limitdegflag, 0), return 1);
+		if (GetCurrentModel()) {
+			CallF(GetCurrentModel()->CreateBtObject(g_limitdegflag, 0), return 1);
 		}
 	}
 	if (s_displimitscloseFlag) {
@@ -25665,8 +25674,8 @@ int OnFrameCloseFlag()
 		if (s_bpWorld) {
 			s_bpWorld->setGlobalERP(btScalar(g_erp));
 		}
-		if (s_model) {
-			CallF(s_model->CreateBtObject(g_limitdegflag, 0), return 1);
+		if (GetCurrentModel()) {
+			CallF(GetCurrentModel()->CreateBtObject(g_limitdegflag, 0), return 1);
 		}
 	}
 	if (s_gplanedlg.GetGPlaneCloseFlag()) {
@@ -25679,7 +25688,7 @@ int OnFrameCloseFlag()
 
 int GetCurrentBoneFromTimeline(int* dstboneno)
 {
-	if (s_model && s_owpTimeline) {
+	if (GetCurrentModel() && s_owpTimeline) {
 		int curlineno = s_owpTimeline->getCurrentLine();// 選択行
 		if (curlineno >= 0) {
 			*dstboneno = s_lineno2boneno[curlineno];//*(&s_curboneno)
@@ -25701,7 +25710,7 @@ int GetCurrentBoneFromTimeline(int* dstboneno)
 
 int TimelineCursorToMotion()
 {
-	if (s_chascene && s_owpTimeline && s_model && s_model->ExistCurrentMotion()) {
+	if (s_chascene && s_owpTimeline && GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
 
 		GetCurrentBoneFromTimeline(&s_curboneno);
 
@@ -25739,7 +25748,7 @@ int OnFrameTimeLineWnd()
 	}
 
 	if (s_zeroFrameFlag) {
-		if (s_model) {
+		if (GetCurrentModel()) {
 			if (s_owpTimeline && s_owpLTimeline && s_owpEulerGraph) {
 				s_buttonselectstart = 0.0;
 				s_buttonselectend = 0.0;
@@ -25813,8 +25822,8 @@ int OnFrameTimeLineWnd()
 				}
 				GUIMenuSetVisible(s_platemenukind, s_platemenuno);
 			}
-			if (s_model) {
-				s_curboneno = s_model->GetSelectedBoneNo();//2024/06/06
+			if (GetCurrentModel()) {
+				s_curboneno = GetCurrentModel()->GetSelectedBoneNo();//2024/06/06
 			}
 			SetLTimelineMark(s_curboneno);
 			if (s_owpTimeline) {
@@ -25911,7 +25920,7 @@ int OnFrameTimeLineWnd()
 	}
 
 	if (s_firstkeyFlag) {
-		if (s_model) {
+		if (GetCurrentModel()) {
 			s_buttonselectstart = 1.0;
 			s_buttonselectend = 1.0;
 			s_buttonselecttothelast = 0;
@@ -25932,7 +25941,7 @@ int OnFrameTimeLineWnd()
 	}
 
 	if (s_lastkeyFlag) {
-		if (s_model && s_model->ExistCurrentMotion()) {
+		if (GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
 			double lastframe;
 			MOTINFO curmi = GetEditTargetMotInfo();
 			if (curmi.motid > 0) {
@@ -25959,13 +25968,13 @@ int OnFrameTimeLineWnd()
 	}
 
 	if (g_selecttolastFlag) {
-		if (s_model && s_owpLTimeline) {
+		if (GetCurrentModel() && s_owpLTimeline) {
 			s_buttonselectstart = s_owpLTimeline->getCurrentTime();
-			//if (s_model && s_model->ExistCurrentMotion()) {
-			if (s_model) {//2024/06/17 カメラモーションだけの場合もある
+			//if (GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
+			if (GetCurrentModel()) {//2024/06/17 カメラモーションだけの場合もある
 				MOTINFO curmi = GetEditTargetMotInfo();
 				if (curmi.motid > 0) {
-					//s_buttonselectend = s_model->GetCurMotInfo().frameleng - 1.0;//2024/09/10コメントアウト
+					//s_buttonselectend = GetCurrentModel()->GetCurMotInfo().frameleng - 1.0;//2024/09/10コメントアウト
 					s_buttonselectend = curmi.frameleng - 1.0;//2024/09/10 カメラモーション編集中はカメラのモーション長
 				}
 				else {
@@ -26215,7 +26224,7 @@ int OnFrameTimeLineWnd()
 	if (s_LcursorFlag) {
 		OnTimeLineCursor();
 
-		if (s_chascene && s_owpLTimeline && s_model && s_model->ExistCurrentMotion()) {
+		if (s_chascene && s_owpLTimeline && GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
 			if (g_previewFlag == 0) {//underchecking
 				double curframe = s_owpLTimeline->getCurrentTime();// 選択時刻
 				s_chascene->SetMotionFrame(-1, curframe);
@@ -26426,10 +26435,10 @@ int OnFrameToolWnd()
 	}
 
 	if (s_camtargetOnceflag) {	
-		if (s_model && (s_curboneno >= 0)) {
+		if (GetCurrentModel() && (s_curboneno >= 0)) {
 
-			int curmotid = s_model->GetCurrentMotID();
-			bool cameraanimflag = s_model->IsCameraMotion(curmotid);
+			int curmotid = GetCurrentModel()->GetCurrentMotID();
+			bool cameraanimflag = GetCurrentModel()->IsCameraMotion(curmotid);
 			if (cameraanimflag) {
 				//jointの位置はjointのモーションに依存するから
 				::MessageBox(s_3dwnd, L"カメラモーション以外を選択してから再試行してください.", L"CurrentMotion is Camera warning",
@@ -26443,7 +26452,7 @@ int OnFrameToolWnd()
 				if (s_cameramodel && (s_spcameramode.state || (g_edittarget == EDITTARGET_CAMERA))) {
 					if (s_camtargetflag) {
 						//always s_editrange全範囲に対してウェイト1.0でLock2Joint処理.ジョイントのモーションにも対応
-						s_editcameraflag = s_cameramodel->CameraAnimLock2Joint(&s_editrange, s_model, s_curboneno);
+						s_editcameraflag = s_cameramodel->CameraAnimLock2Joint(&s_editrange, GetCurrentModel(), s_curboneno);
 					}
 					else {
 						//once applyframeに対してLock2Joint、applyframe以外はbrushウェイト分だけLock2Joint.applyframe時のジョイント位置を使用
@@ -26479,11 +26488,11 @@ int OnFrameToolWnd()
 
 
 	if (s_selecthand == 1) {
-		if (s_model) {
+		if (GetCurrentModel()) {
 			CBone* selbone = 0;
-			selbone = s_model->FindBoneByPattern("L_Hand");
+			selbone = GetCurrentModel()->FindBoneByPattern("L_Hand");
 			if (!selbone) {
-				selbone = s_model->FindBoneByPattern("LeftHand");
+				selbone = GetCurrentModel()->FindBoneByPattern("LeftHand");
 			}
 			if (selbone) {
 				s_curboneno = selbone->GetBoneNo();
@@ -26498,11 +26507,11 @@ int OnFrameToolWnd()
 		s_selecthand = 0;
 	}
 	if (s_selecthand == 2) {
-		if (s_model) {
+		if (GetCurrentModel()) {
 			CBone* selbone = 0;
-			selbone = s_model->FindBoneByPattern("R_Hand");
+			selbone = GetCurrentModel()->FindBoneByPattern("R_Hand");
 			if (!selbone) {
-				selbone = s_model->FindBoneByPattern("RightHand");
+				selbone = GetCurrentModel()->FindBoneByPattern("RightHand");
 			}
 			if (selbone) {
 				s_curboneno = selbone->GetBoneNo();
@@ -26517,11 +26526,11 @@ int OnFrameToolWnd()
 		s_selecthand = 0;
 	}
 	if (s_selectfoot == 1) {
-		if (s_model) {
+		if (GetCurrentModel()) {
 			CBone* selbone = 0;
-			selbone = s_model->FindBoneByPattern("L_Foot");
+			selbone = GetCurrentModel()->FindBoneByPattern("L_Foot");
 			if (!selbone) {
-				selbone = s_model->FindBoneByPattern("LeftFoot");
+				selbone = GetCurrentModel()->FindBoneByPattern("LeftFoot");
 			}
 			if (selbone) {
 				s_curboneno = selbone->GetBoneNo();
@@ -26536,11 +26545,11 @@ int OnFrameToolWnd()
 		s_selectfoot = 0;
 	}
 	if (s_selectfoot == 2) {
-		if (s_model) {
+		if (GetCurrentModel()) {
 			CBone* selbone = 0;
-			selbone = s_model->FindBoneByPattern("R_Foot");
+			selbone = GetCurrentModel()->FindBoneByPattern("R_Foot");
 			if (!selbone) {
-				selbone = s_model->FindBoneByPattern("RightFoot");
+				selbone = GetCurrentModel()->FindBoneByPattern("RightFoot");
 			}
 			if (selbone) {
 				s_curboneno = selbone->GetBoneNo();
@@ -26563,10 +26572,10 @@ int OnFrameToolWnd()
 	if (s_selboneFlag) {
 		int result = -1;
 
-		if (s_model && s_owpTimeline && s_owpLTimeline) {
+		if (GetCurrentModel() && s_owpTimeline && s_owpLTimeline) {
 			CFrameCopyDlg* curcpdlg = GetCurrentFrameCopyDlg(false);
 			if (curcpdlg) {
-				curcpdlg->SetModel(s_model);
+				curcpdlg->SetModel(GetCurrentModel());
 				s_underframecopydlg = true;
 				result = (int)curcpdlg->DoModal();
 				s_underframecopydlg = false;
@@ -26581,11 +26590,11 @@ int OnFrameToolWnd()
 	}
 
 	//if (s_180DegFlag) {
-	//	//if (s_model && (s_curboneno >= 0)) {
+	//	//if (GetCurrentModel() && (s_curboneno >= 0)) {
 	//	//	CBone* curbone = 0;
 	//	//	CBone* adjustbone = 0;
 	//	//	if (s_curboneno >= 0) {
-	//	//		curbone = s_model->GetBoneByID(s_curboneno);
+	//	//		curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 	//	//	}
 	//	//	else {
 	//	//		curbone = 0;
@@ -26600,7 +26609,7 @@ int OnFrameToolWnd()
 	//	//	}
 
 	//	//	if (adjustbone) {
-	//	//		s_model->Adjust180DegReq(adjustbone);
+	//	//		GetCurrentModel()->Adjust180DegReq(adjustbone);
 	//	//		refreshEulerGraph();
 	//	//		PrepairUndo();//2022/10/27
 	//	//	}
@@ -26609,20 +26618,20 @@ int OnFrameToolWnd()
 	//}
 
 	if (s_scaleAllInitFlag) {
-		if (s_model && s_model->ExistCurrentMotion()) {
+		if (GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
 
 			PrepairUndo();//全フレーム変更の前に全フレーム保存
 
 			//長いフレームの処理は数秒時間がかかることがあるので砂時計カーソルにする
 			HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
-			double motleng = s_model->GetCurrentMaxFrame();
+			double motleng = GetCurrentModel()->GetCurrentMaxFrame();
 			double frame;
 			for (frame = 0.0; frame < motleng; frame += 1.0) {
-				if (s_model->GetTopBone()) {
-					s_model->SetMotionFrame(frame);
+				if (GetCurrentModel()->GetTopBone()) {
+					GetCurrentModel()->SetMotionFrame(frame);
 					bool broflag = false;
-					InitMpByEulReq(INITMP_SCALE, s_model->GetTopBone(false), s_model->GetCurrentMotID(), frame, broflag);
+					InitMpByEulReq(INITMP_SCALE, GetCurrentModel()->GetTopBone(false), GetCurrentModel()->GetCurrentMotID(), frame, broflag);
 				}
 			}
 
@@ -26630,9 +26639,9 @@ int OnFrameToolWnd()
 			////フィルターで滑らかに
 			//int callnum = 1;
 			//CallFilterFunc(callnum);
-			MOTINFO curmi = s_model->GetCurMotInfo();
+			MOTINFO curmi = GetCurrentModel()->GetCurMotInfo();
 			bool copylw2w = true;
-			FilterNoDlg(copylw2w, s_model, curmi.motid);
+			FilterNoDlg(copylw2w, GetCurrentModel(), curmi.motid);
 
 			//カーソルを元に戻す
 			SetCursor(oldcursor);
@@ -26645,7 +26654,7 @@ int OnFrameToolWnd()
 
 	if (s_markFlag) {
 
-		if (s_model && s_owpTimeline && s_owpLTimeline) {
+		if (GetCurrentModel() && s_owpTimeline && s_owpLTimeline) {
 			double curltime = s_owpLTimeline->getCurrentTime();
 			KeyInfo ki = s_owpLTimeline->ExistKey(2, curltime);
 			if (ki.lineIndex < 0) {
@@ -26667,36 +26676,36 @@ int OnFrameToolWnd()
 
 	if (s_skipJointMark != 0) {
 
-		if (s_model && s_owpTimeline && s_owpLTimeline && s_model->ExistCurrentMotion()) {
+		if (GetCurrentModel() && s_owpTimeline && s_owpLTimeline && GetCurrentModel()->ExistCurrentMotion()) {
 			CBone* curbone = 0;
 			if (s_curboneno >= 0) {
-				curbone = s_model->GetBoneByID(s_curboneno);
+				curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 			}
 			else {
 				curbone = 0;
 			}
 
 			SkipJointMarkReq(s_skipJointMark, curbone, false);
-			s_model->SetBtObjectVec();//2024/06/16
+			GetCurrentModel()->SetBtObjectVec();//2024/06/16
 		}
 
 		s_skipJointMark = 0;
 	}
 
 	if (s_cameradollyFlag) {
-		if (s_model) {
+		if (GetCurrentModel()) {
 			ShowCameraDollyDlg();
 		}
 		s_cameradollyFlag = false;
 	}
 	if (s_materialrateFlag) {
-		if (s_model) {
+		if (GetCurrentModel()) {
 			ShowMaterialRateDlg();
 		}
 		s_materialrateFlag = false;
 	}
 	if (s_modelworldmatFlag) {
-		if (s_model) {
+		if (GetCurrentModel()) {
 			ShowModelWorldMatDlg();
 		}
 		s_modelworldmatFlag = false;
@@ -26726,7 +26735,7 @@ int OnFrameToolWnd()
 	}
 
 	if (s_interpolateFlag) {
-		if (s_model && s_owpTimeline && s_owpLTimeline && s_model->ExistCurrentMotion()) {
+		if (GetCurrentModel() && s_owpTimeline && s_owpLTimeline && GetCurrentModel()->ExistCurrentMotion()) {
 			InterpolateFromTool();//コンテクストメニューを出してから処理
 		}
 		s_interpolateFlag = false;
@@ -26745,7 +26754,7 @@ int OnFrameToolWnd()
 	}
 
 	if (s_jumpinterpolateFlag) {
-		if (s_model && s_owpTimeline && s_owpLTimeline && s_model->ExistCurrentMotion()) {
+		if (GetCurrentModel() && s_owpTimeline && s_owpLTimeline && GetCurrentModel()->ExistCurrentMotion()) {
 			s_jumpgravityFlag = true;//<-- gravity設定モードレスダイアログ表示トリガー
 			JumpInterpolateFromTool();
 		}
@@ -26812,13 +26821,13 @@ int OnFrameToolWnd()
 		//GUIMenuSetVisible(-1, -1);
 		bool closefirstrow = true;
 		CloseAllRightPainWindow(closefirstrow);//対応ウインドウを開く前に　１段目と２段目を全部閉じる
-		if (s_model) {
+		if (GetCurrentModel()) {
 			//2024/07/25
 			//OnModelMenu()とモーションコピー時にSetNames()を呼んでいるのでここでは呼ばない
 			//ここで呼ばない方がウインドウ状態を閉じる前と同じ状態にすることができる
 			//int result1 = GetCPTFileName(s_cptfilename);
 			//_ASSERT(result1 == 0);
-			//int result2 = s_copyhistorydlg2.SetNames(s_model, s_cptfilename);
+			//int result2 = s_copyhistorydlg2.SetNames(GetCurrentModel(), s_cptfilename);
 			//_ASSERT(result2 == 0);
 
 			s_copyhistorydlg2.SetVisible(true);
@@ -26828,16 +26837,16 @@ int OnFrameToolWnd()
 	}
 
 	if (s_copyLW2WFlag) {
-		if (s_model && s_model->GetTopBone()) {
+		if (GetCurrentModel() && GetCurrentModel()->GetTopBone()) {
 
-			int operatingjointno = s_model->GetTopBone(false)->GetBoneNo();
+			int operatingjointno = GetCurrentModel()->GetTopBone(false)->GetBoneNo();
 
 			PrepairUndo();//全フレーム変更するので　変更前にも保存
 
 			bool allframeflag = true;
 			bool setcursorflag = true;
 			bool onpasteflag = false;
-			CopyLimitedWorldToWorld(s_model, allframeflag, setcursorflag, operatingjointno, onpasteflag);
+			CopyLimitedWorldToWorld(GetCurrentModel(), allframeflag, setcursorflag, operatingjointno, onpasteflag);
 
 			PrepairUndo();//変更後を保存
 
@@ -26847,11 +26856,11 @@ int OnFrameToolWnd()
 	}
 
 	if (s_copyFlag) {
-		if (s_model && s_owpTimeline && s_owpLTimeline && s_model->ExistCurrentMotion()) {
-			MOTINFO curmi = s_model->GetCurMotInfo();
+		if (GetCurrentModel() && s_owpTimeline && s_owpLTimeline && GetCurrentModel()->ExistCurrentMotion()) {
+			MOTINFO curmi = GetCurrentModel()->GetCurMotInfo();
 			if (curmi.motid > 0) {
-				//CopyMotionFunc(s_model, &curmi);
-				DispCpInfoDlg2(s_model, &curmi, 0);
+				//CopyMotionFunc(GetCurrentModel(), &curmi);
+				DispCpInfoDlg2(GetCurrentModel(), &curmi, 0);
 			}
 		}
 		s_copyFlag = false;
@@ -26862,7 +26871,7 @@ int OnFrameToolWnd()
 			MOTINFO curmi = GetCameraMotInfo();
 			if (curmi.motid > 0) {
 				//CopyMotionFunc(s_cameramodel, &curmi);
-				DispCpInfoDlg2(s_model, &curmi, 1);
+				DispCpInfoDlg2(GetCurrentModel(), &curmi, 1);
 			}
 		}
 		s_copycameraFlag = false;
@@ -26873,10 +26882,10 @@ int OnFrameToolWnd()
 
 		//s_symcopyFlagでメニューを出し　１周回ってからのコンテクストメニュー実行後の　s_symcopyFlag2
 
-		if (s_model && s_owpTimeline && s_owpLTimeline && s_model->ExistCurrentMotion()) {
-			MOTINFO curmi = s_model->GetCurMotInfo();
+		if (GetCurrentModel() && s_owpTimeline && s_owpLTimeline && GetCurrentModel()->ExistCurrentMotion()) {
+			MOTINFO curmi = GetCurrentModel()->GetCurMotInfo();
 			if (curmi.motid > 0) {
-				DispCpInfoDlg2(s_model, &curmi, 2);
+				DispCpInfoDlg2(GetCurrentModel(), &curmi, 2);
 			}
 		}
 
@@ -26886,7 +26895,7 @@ int OnFrameToolWnd()
 	}
 
 	if (s_symcopyFlag) {
-		if (s_model && s_owpTimeline && s_owpLTimeline && s_model->ExistCurrentMotion()) {
+		if (GetCurrentModel() && s_owpTimeline && s_owpLTimeline && GetCurrentModel()->ExistCurrentMotion()) {
 			
 			GetSymRootMode();//この関数が返った時点では　まだMsgProcでs_getsym_retmodeがセットされていない
 
@@ -26914,10 +26923,10 @@ int OnFrameToolWnd()
 
 		HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));//長いフレームの保存は数秒時間がかかることがあるので砂時計カーソルにする
 
-		if (s_model) {
-			MOTINFO curmi = s_model->GetCurMotInfo();
+		if (GetCurrentModel()) {
+			MOTINFO curmi = GetCurrentModel()->GetCurMotInfo();
 			if (curmi.motid > 0) {
-				PasteMotionFunc(s_model, &curmi);
+				PasteMotionFunc(GetCurrentModel(), &curmi);
 			}
 		}
 
@@ -26950,7 +26959,7 @@ int OnFrameToolWnd()
 
 	if (s_motpropFlag) {
 
-		if (s_model && s_model->ExistCurrentMotion()) {
+		if (GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
 			int dlgret;
 			dlgret = (int)DialogBoxW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_MOTPROPDLG),
 				s_3dwnd, (DLGPROC)MotPropDlgProc);
@@ -26960,31 +26969,31 @@ int OnFrameToolWnd()
 
 				//モーションプロパティ機能はモーションパネルで選択中のモーションに対して処理をする
 				//カメラパネル内のモーションはモーションパネル内にも存在するので　カメラモーションの名前を変える場合にも　モーションパネルで選択して実行する
-				MOTINFO curmi = s_model->GetCurMotInfo();
+				MOTINFO curmi = GetCurrentModel()->GetCurMotInfo();
 				if (curmi.motid > 0) {
-					if (s_model) {//motpropはs_modelのカレントモーションに対して処理
+					if (GetCurrentModel()) {//motpropはGetCurrentModel()のカレントモーションに対して処理
 						
 						char newmotionname[256] = { 0L };
 						WideCharToMultiByte(CP_ACP, 0, s_tmpmotname, -1, newmotionname, 256, NULL, NULL);
 						newmotionname[255] = 0;
 						int newnamelen = (int)strlen(newmotionname);
 						if (newnamelen > 0) {
-							s_model->SetMotionName(curmi.motid, newmotionname);
+							GetCurrentModel()->SetMotionName(curmi.motid, newmotionname);
 						}
 						
-						//s_model->m_curmotinfo->frameleng = s_tmpmotframeleng;
-						//s_model->SetMotInfoLoopFlagByIndex(curmi.motid, s_tmpmotloop);//!!! index
-						s_model->SetMotInfoLoopFlagByID(curmi.motid, s_tmpmotloop);//!!! motid
+						//GetCurrentModel()->m_curmotinfo->frameleng = s_tmpmotframeleng;
+						//GetCurrentModel()->SetMotInfoLoopFlagByIndex(curmi.motid, s_tmpmotloop);//!!! index
+						GetCurrentModel()->SetMotInfoLoopFlagByID(curmi.motid, s_tmpmotloop);//!!! motid
 						double oldframeleng = curmi.frameleng;
 
 						if (s_owpTimeline) {
 							s_owpTimeline->setMaxTime(s_tmpmotframeleng);
 						}
-						s_model->ChangeMotFrameLeng(curmi.motid, s_tmpmotframeleng);//はみ出たmpも削除
+						GetCurrentModel()->ChangeMotFrameLeng(curmi.motid, s_tmpmotframeleng);//はみ出たmpも削除
 						InitCurMotion(0, oldframeleng);
 
 						//メニュー書き換え, timeline update
-						OnAnimMenu(true, s_motmenuindexmap[s_model]);
+						OnAnimMenu(true, s_motmenuindexmap[GetCurrentModel()]);
 					}
 				}
 			}
@@ -26994,7 +27003,7 @@ int OnFrameToolWnd()
 	}
 
 	if (s_retargetdlg.GetRetargetRetargetGUIFlag()) {
-		if (s_model && s_model->ExistCurrentMotion()) {
+		if (GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
 
 			HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
@@ -27026,14 +27035,14 @@ int OnFrameToolWnd()
 	}
 
 	if (s_smoothFlag) {//s_spsmoothボタン用
-		if (s_model && s_model->ExistCurrentMotion()) {
-			MOTINFO curmi = s_model->GetCurMotInfo();
+		if (GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
+			MOTINFO curmi = GetCurrentModel()->GetCurMotInfo();
 			if (curmi.motid > 0) {
 				//PrepairUndo();
 
 				//ギザギザを平滑化
 				bool copylw2w = true;
-				FilterNoDlg(copylw2w, s_model, curmi.motid);
+				FilterNoDlg(copylw2w, GetCurrentModel(), curmi.motid);
 
 				//PrepairUndo();//FilterNoDlg内部から呼ぶ
 			}
@@ -27061,17 +27070,17 @@ int OnFrameToolWnd()
 	}
 
 	if (s_constexeFlag) {//s_spconstexeボタン用
-		if (s_model && s_model->ExistCurrentMotion() && s_model->GetTopBone()) {
+		if (GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion() && GetCurrentModel()->GetTopBone()) {
 
 			HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 			OnTimeLineButtonSelectFromSelectStartEnd(0);
 			OnTimeLineSelectFromSelectedKey();
-			s_model->PosConstraintExecuteFromButton(g_limitdegflag, g_wallscrapingikflag, &s_editrange);
+			GetCurrentModel()->PosConstraintExecuteFromButton(g_limitdegflag, g_wallscrapingikflag, &s_editrange);
 
 			//ギザギザを平滑化
-			MOTINFO curmi = s_model->GetCurMotInfo();
+			MOTINFO curmi = GetCurrentModel()->GetCurMotInfo();
 			bool copylw2w = true;
-			FilterNoDlg(copylw2w, s_model, curmi.motid);
+			FilterNoDlg(copylw2w, GetCurrentModel(), curmi.motid);
 
 			if (oldcursor) {
 				SetCursor(oldcursor);
@@ -27080,9 +27089,9 @@ int OnFrameToolWnd()
 		s_constexeFlag = false;
 	}
 	if (s_constrefreshFlag) {//s_spconstexeボタン用
-		if (s_model && s_model->ExistCurrentMotion()) {
+		if (GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
 
-			s_model->RefreshPosConstraint();
+			GetCurrentModel()->RefreshPosConstraint();
 
 			//PrepairUndo();
 		}
@@ -27091,8 +27100,8 @@ int OnFrameToolWnd()
 
 
 	if (s_btresetFlag == true) {
-		if (s_model) {
-			StartBt(s_model, TRUE, 2, 1);//flag = 2 --> resetflag = 1
+		if (GetCurrentModel()) {
+			StartBt(GetCurrentModel(), TRUE, 2, 1);//flag = 2 --> resetflag = 1
 		}
 
 		s_btresetFlag = false;
@@ -27105,7 +27114,7 @@ int OnFrameToolWnd()
 
 	if (s_delcurmotFlag == true) {
 		s_underdelmotion = true;
-		OnDelMotion(s_motmenuindexmap[s_model]);
+		OnDelMotion(s_motmenuindexmap[GetCurrentModel()]);
 		s_underdelmotion = false;
 		s_delcurmotFlag = false;
 	}
@@ -27127,10 +27136,10 @@ int OnFrameToolWnd()
 	if (s_deleteFlag) {
 		s_deleteFlag = false;
 		/***
-		if( s_model && s_owpTimeline && s_model->m_curmotinfo){
+		if( GetCurrentModel() && s_owpTimeline && GetCurrentModel()->m_curmotinfo){
 		s_owpTimeline->deleteKey();
 		//motionpointのdeleteはdelete Listenerでする。
-		s_model->SaveUndoMotion(s_curboneno, s_curbaseno, &s_editrange, (double)g_applyrate);
+		GetCurrentModel()->SaveUndoMotion(s_curboneno, s_curbaseno, &s_editrange, (double)g_applyrate);
 		}
 		***/
 	}
@@ -27141,8 +27150,8 @@ int OnFrameToolWnd()
 		s_deletedKeyInfoList.pop_front()) {
 		/***
 		CMotionPoint* mpptr = (CMotionPoint*)( s_deletedKeyInfoList.begin()->object );
-		CBone* boneptr = s_model->m_bonelist[ s_lineno2boneno[ s_deletedKeyInfoList.begin()->lineIndex ] ];
-		mpptr->LeaveFromChain( s_model->m_curmotinfo->motid, boneptr );
+		CBone* boneptr = GetCurrentModel()->m_bonelist[ s_lineno2boneno[ s_deletedKeyInfoList.begin()->lineIndex ] ];
+		mpptr->LeaveFromChain( GetCurrentModel()->m_curmotinfo->motid, boneptr );
 		//_ASSERT( 0 );
 		delete mpptr;
 		***/
@@ -27155,11 +27164,11 @@ int SetRJoint(int srcboneno)
 {
 	s_pasteRJoint.clear();
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 
-	CBone* startbone = s_model->GetBoneByID(srcboneno);
+	CBone* startbone = GetCurrentModel()->GetBoneByID(srcboneno);
 	if (startbone) {
 		AddRJointReq(startbone);
 	}
@@ -27168,7 +27177,7 @@ int SetRJoint(int srcboneno)
 }
 void AddRJointReq(CBone* srcbone)
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return;
 	}
 
@@ -27213,9 +27222,9 @@ void AddRJointReq(CBone* srcbone)
 //
 //	s_copyhistorydlg.ShowWindow(SW_HIDE);
 //
-//	s_copyhistorydlg.ParamsToDlg(s_model);
+//	s_copyhistorydlg.ParamsToDlg(GetCurrentModel());
 //	GetCPTFileName(s_cptfilename);
-//	s_copyhistorydlg.SetNames(s_model, s_cptfilename);
+//	s_copyhistorydlg.SetNames(GetCurrentModel(), s_cptfilename);
 //
 //	return 0;
 //}
@@ -27235,7 +27244,7 @@ int CreateDollyHistoryDlg()
 
 void ResetPasteDoneFlagReq(CBone* srcbone)
 {
-	if (!s_model || !srcbone) {
+	if (!GetCurrentModel() || !srcbone) {
 		_ASSERT(0);
 		return;
 	}
@@ -27255,7 +27264,7 @@ CMotionPoint CalcPasteMotionPoint(CBone* srcbone, double srcframe, double srcfra
 	CMotionPoint retmp;
 	retmp.InitParams();
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		_ASSERT(0);
 		return retmp;
 	}
@@ -27532,7 +27541,7 @@ int PasteMotionFunc(CModel* srcmodel, MOTINFO* curmi)
 
 int PasteMotionPoint(int curmotid, CBone* srcbone, CMotionPoint srcmp, double newframe)
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -27609,8 +27618,8 @@ int PasteMotionPoint(int curmotid, CBone* srcbone, CMotionPoint srcmp, double ne
 	if (srcbone && 
 		((srcbone->IsSkeleton() && (docopyflag == 1)) || srcbone->IsCamera() || srcbone->IsNullAndChildIsCamera())
 		) {
-		//if (s_model->ExistCurrentMotion()) {
-		//	int curmotid = s_model->GetCurMotInfo().motid;
+		//if (GetCurrentModel()->ExistCurrentMotion()) {
+		//	int curmotid = GetCurrentModel()->GetCurMotInfo().motid;
 			srcbone->PasteMotionPoint(g_limitdegflag, curmotid, RoundingTime(newframe), srcmp);
 		//}
 	}
@@ -28212,7 +28221,7 @@ int OnFrameStartPreview(double curtime, double* psavetime)
 	//bullet simulation start
 	if (s_calclimitedwmState == 107) {
 		s_calclimitedwmState = 0;
-		StartBt(s_model, TRUE, 0, 1);
+		StartBt(GetCurrentModel(), TRUE, 0, 1);
 		*psavetime = curtime;
 	}
 	if ((s_calclimitedwmState >= 103) && (s_calclimitedwmState <= 106)) {
@@ -28289,21 +28298,21 @@ int OnSpriteUndo()
 	}
 
 	int newselectedboneno;
-	if (s_model) {
-		newselectedboneno = s_model->GetSelectedBoneNo();//ただの初期化　RollBackUndoMotionにて新しい状態へと上書きされる
+	if (GetCurrentModel()) {
+		newselectedboneno = GetCurrentModel()->GetSelectedBoneNo();//ただの初期化　RollBackUndoMotionにて新しい状態へと上書きされる
 	}
 	else {
 		newselectedboneno = 0;//ただの初期化　RollBackUndoMotionにて新しい状態へと上書きされる
 	}
 
 	///////////// undo
-	if (s_model && (s_undoFlag == true)) {
+	if (GetCurrentModel() && (s_undoFlag == true)) {
 		//undo
 		StopBt();
 		//#########################################################################################
-		//2024/06/24 s_model->RollBackUndoMotion()は BoneMotionとCameraAnimの両方をRollBackするように.
+		//2024/06/24 GetCurrentModel()->RollBackUndoMotion()は BoneMotionとCameraAnimの両方をRollBackするように.
 		//#########################################################################################
-		s_model->RollBackUndoMotion(s_chascene, g_limitdegflag, g_mainhwnd,
+		GetCurrentModel()->RollBackUndoMotion(s_chascene, g_limitdegflag, g_mainhwnd,
 			0, &newedittarget, &newselectedboneno, &s_curbaseno,
 			&undoselect,
 			&brushstate, &undocamera, &undomotid, &blendshapeelem);//!!!!!!!!!!!
@@ -28312,14 +28321,14 @@ int OnSpriteUndo()
 		Params2TopSlidersWnd();
 		undodoneflag = true;
 	}
-	else if (s_model && (s_redoFlag == true))
+	else if (GetCurrentModel() && (s_redoFlag == true))
 	{
 		//redo
 		StopBt();
 		//#########################################################################################
-		//2024/06/24 s_model->RollBackUndoMotion()は BoneMotionとCameraAnimの両方をRollBackするように.
+		//2024/06/24 GetCurrentModel()->RollBackUndoMotion()は BoneMotionとCameraAnimの両方をRollBackするように.
 		//#########################################################################################
-		s_model->RollBackUndoMotion(s_chascene, g_limitdegflag, g_mainhwnd,
+		GetCurrentModel()->RollBackUndoMotion(s_chascene, g_limitdegflag, g_mainhwnd,
 			1, &newedittarget, &newselectedboneno, &s_curbaseno,
 			&undoselect,
 			&brushstate, &undocamera, &undomotid, &blendshapeelem);//!!!!!!!!!!!
@@ -28337,7 +28346,7 @@ int OnSpriteUndo()
 
 	//2024/07/02 BlendShape選択状態の復元の１段階目のトリガーを立てる　UndoからPrepairUndo_BlendShape()を呼び出すことを抑止する
 	if (blendshapeelem.validflag && 
-		blendshapeelem.model && (blendshapeelem.model == s_model) &&
+		blendshapeelem.model && (blendshapeelem.model == GetCurrentModel()) &&
 		blendshapeelem.mqoobj && (blendshapeelem.channelindex >= 0)) {
 
 		s_blendshapedlg.SetBlendShapeUndoOpeIndex(blendshapeelem.channelindex);
@@ -28384,7 +28393,7 @@ int OnSpriteUndo()
 	else {
 		g_edittarget = newedittarget;
 
-		if (s_model) {
+		if (GetCurrentModel()) {
 			//s_copyKeyInfoList.clear();
 			//s_deletedKeyInfoList.clear();
 			//s_selectKeyInfoList.clear();
@@ -28413,21 +28422,21 @@ int OnSpriteUndo()
 			}
 
 
-			int selindex = s_chascene->MotID2SelIndex(s_chascene->FindModelIndex(s_model), undomotid.bonemotid);
+			int selindex = s_chascene->MotID2SelIndex(s_chascene->FindModelIndex(GetCurrentModel()), undomotid.bonemotid);
 			if (selindex >= 0) {
 				bool dorefreshtl = true;
 				int saveundoflag = 0;
 				OnAnimMenu(dorefreshtl, selindex, saveundoflag);
 			}
 
-			//if (s_model->ExistCurrentMotion() && (s_model->GetCurMotInfo().motid != undomotid.bonemotid)) {
+			//if (GetCurrentModel()->ExistCurrentMotion() && (GetCurrentModel()->GetCurMotInfo().motid != undomotid.bonemotid)) {
 			//	int chkcnt = 0;
 			//	int findflag = 0;
 			//	int minum;
 			//	int miindex;
-			//	minum = s_model->GetMotInfoSize();
+			//	minum = GetCurrentModel()->GetMotInfoSize();
 			//	for (miindex = 0; miindex < minum; miindex++) {
-			//		MOTINFO curmi = s_model->GetMotInfoByIndex(miindex);
+			//		MOTINFO curmi = GetCurrentModel()->GetMotInfoByIndex(miindex);
 			//		if (curmi.motid == undomotid.bonemotid) {
 			//			findflag = 1;
 			//			break;
@@ -28442,9 +28451,9 @@ int OnSpriteUndo()
 			//	}
 			//}
 			//else {
-			//	if (s_model) {
+			//	if (GetCurrentModel()) {
 			//		//メニュー書き換え, timeline update
-			//		OnAnimMenu(true, s_motmenuindexmap[s_model], 0);
+			//		OnAnimMenu(true, s_motmenuindexmap[GetCurrentModel()], 0);
 			//	}
 			//}
 
@@ -28454,9 +28463,9 @@ int OnSpriteUndo()
 					(s_cameramodel->GetCameraMotionId() != undomotid.cameramotid)) {
 
 					if (s_camerapanel.radiobutton) {
-						int cameramotindex = s_model->MotionID2CameraIndex(undomotid.cameramotid);
+						int cameramotindex = GetCurrentModel()->MotionID2CameraIndex(undomotid.cameramotid);
 						if (cameramotindex >= 0) {
-							s_cameramenuindexmap[s_model] = cameramotindex;
+							s_cameramenuindexmap[GetCurrentModel()] = cameramotindex;
 							s_camerapanel.radiobutton->setSelectIndex(cameramotindex, false);
 						}
 					}
@@ -28493,14 +28502,14 @@ int OnSpriteUndo()
 
 	//OnGUIEventSpeed();
 
-	if (s_model->ExistCurrentMotion()) {
+	if (GetCurrentModel()->ExistCurrentMotion()) {
 
 		if (g_edittarget != EDITTARGET_CAMERA) {
 			s_buttonselectstart = fmax(0.0, undomotid.startframe);
-			s_buttonselectstart = fmin(s_model->GetCurrentMaxFrame(), s_buttonselectstart);
+			s_buttonselectstart = fmin(GetCurrentModel()->GetCurrentMaxFrame(), s_buttonselectstart);
 
 			s_buttonselectend = fmax(0.0, undomotid.endframe);
-			s_buttonselectend = fmin(s_model->GetCurrentMaxFrame(), s_buttonselectend);
+			s_buttonselectend = fmin(GetCurrentModel()->GetCurrentMaxFrame(), s_buttonselectend);
 		}
 		else if (s_cameramodel) {
 			MOTINFO camerami = s_cameramodel->GetMotInfo(s_cameramodel->GetCameraMotionId());
@@ -28513,10 +28522,10 @@ int OnSpriteUndo()
 			}
 			else {
 				s_buttonselectstart = fmax(0.0, undomotid.startframe);
-				s_buttonselectstart = fmin(s_model->GetCurrentMaxFrame(), s_buttonselectstart);
+				s_buttonselectstart = fmin(GetCurrentModel()->GetCurrentMaxFrame(), s_buttonselectstart);
 
 				s_buttonselectend = fmax(0.0, undomotid.endframe);
-				s_buttonselectend = fmin(s_model->GetCurrentMaxFrame(), s_buttonselectend);
+				s_buttonselectend = fmin(GetCurrentModel()->GetCurrentMaxFrame(), s_buttonselectend);
 			}
 		}
 		g_applyrate = undomotid.applyrate;
@@ -28554,8 +28563,8 @@ int OnSpriteUndo()
 		//保存時とは制限角度が異なっている可能性があるので　制限角度のために再計算
 		//#########################################################################
 		//if (g_limitdegflag == true) {
-		//	ClearLimitedWM(s_model);
-		//	ApplyNewLimitsToWM(s_model);//2022/12/18
+		//	ClearLimitedWM(GetCurrentModel());
+		//	ApplyNewLimitsToWM(GetCurrentModel());//2022/12/18
 		//}
 
 
@@ -28565,16 +28574,16 @@ int OnSpriteUndo()
 			bool setcursorflag = false;
 			bool onpasteflag = false;
 			int operatingjointno = 0;
-			if (s_model && s_model->GetTopBone()) {
-				operatingjointno = s_model->GetTopBone(false)->GetBoneNo();
+			if (GetCurrentModel() && GetCurrentModel()->GetTopBone()) {
+				operatingjointno = GetCurrentModel()->GetTopBone(false)->GetBoneNo();
 			}
-			CopyLimitedWorldToWorld(s_model, allframeflag, setcursorflag, operatingjointno, onpasteflag);
+			CopyLimitedWorldToWorld(GetCurrentModel(), allframeflag, setcursorflag, operatingjointno, onpasteflag);
 		}
 
 
 		if (g_edittarget != EDITTARGET_CAMERA) {
 			//2023/11/03 hipsを３回転してアンドゥしたときに　編集範囲の境目で　オイラーグラフが連続するために必要
-			s_model->CalcBoneEul(g_limitdegflag, s_model->GetCurrentMotID());
+			GetCurrentModel()->CalcBoneEul(g_limitdegflag, GetCurrentModel()->GetCurrentMotID());
 		}
 		else if (s_cameramodel) {
 
@@ -28661,7 +28670,7 @@ int OnFrameUndo(bool fromds, int fromdskind)
 		OnSpriteUndo();
 	}
 	//keyboard event
-	else if (fromds || (s_model && g_controlkey && (g_keybuf['Z'] & 0x80) && !(g_savekeybuf['Z'] & 0x80))) {
+	else if (fromds || (GetCurrentModel() && g_controlkey && (g_keybuf['Z'] & 0x80) && !(g_savekeybuf['Z'] & 0x80))) {
 
 		if (((fromds && (fromdskind == 1)) || (g_keybuf[VK_SHIFT] & 0x80)) && (s_undoFlag == false) && (s_redoFlag == false)) {
 			//redo
@@ -28702,11 +28711,11 @@ int OnFrameUpdateGround()
 
 int OnFrameInitBtWorld()
 {
-	if (!s_model || !s_btWorld) {
+	if (!GetCurrentModel() || !s_btWorld) {
 		return 0;
 	}
 
-	CModel* curmodel = s_model;
+	CModel* curmodel = GetCurrentModel();
 
 
 	//vector<MODELELEM>::iterator itrmodel;
@@ -28967,7 +28976,7 @@ int CreateTimelineWnd()
 		// ウィンドウの閉じるボタンのイベントリスナーに
 		// 終了フラグcloseFlagをオンにするラムダ関数を登録する
 		s_timelineWnd->setCloseListener([]() {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				s_closeFlag = true;
 			}
 			});
@@ -28978,7 +28987,7 @@ int CreateTimelineWnd()
 		// コピー等のキーボードを使用する処理はキーボードイベントリスナーを使用しなくても
 		// メインループ内でマイフレームキー状態を監視することで作成可能である。
 		s_timelineWnd->setKeyboardEventListener([](const KeyboardEvent& e) {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				if (e.ctrlKey && !e.repeat && e.onDown) {
 					//switch (e.keyCode) {
 					//###############################################################################################################
@@ -29070,12 +29079,12 @@ int CreateLongTimelineWnd()
 			s_LtimelineWnd->addParts(*s_owpPlayerButton);//owp_timelineより前
 
 			s_owpPlayerButton->setPhysicsPlayButtonListener([]() {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					s_calclimitedwmState = 101;
 				}
 				});
 			s_owpPlayerButton->setPhysicsRecButtonListener([]() {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (g_motionbrush_numframe < 10) {
 						WCHAR strmes[1024] = { 0L };
 						swprintf_s(strmes, 1024, L"複数フレームを選択してから再試行してください。\nPlease select more than 10 frames and try again.");
@@ -29088,13 +29097,13 @@ int CreateLongTimelineWnd()
 				});
 
 			s_owpPlayerButton->setFrontPlayButtonListener([]() {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					s_calclimitedwmState = 1; s_LstartFlag = true; s_LcursorFlag = true;
 					//s_LtimelineWnd->setDoneFlag(1);
 				}
 				});
 			s_owpPlayerButton->setBackPlayButtonListener([]() {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					s_calclimitedwmState = 11; s_LstartFlag = true; s_LcursorFlag = true;
 					//s_LtimelineWnd->setDoneFlag(1);
 				}
@@ -29105,7 +29114,7 @@ int CreateLongTimelineWnd()
 				//##################################
 				//means to step to the last frame
 				//##################################
-				if (s_model) {
+				if (GetCurrentModel()) {
 					//s_LstartFlag = true; s_LcursorFlag = true; s_lastkeyFlag = true;
 					//s_LtimelineWnd->setDoneFlag(1);
 
@@ -29119,7 +29128,7 @@ int CreateLongTimelineWnd()
 				//##################################
 				//means to step to the first frame
 				//##################################
-				if (s_model) {
+				if (GetCurrentModel()) {
 					//s_LstartFlag = true; s_LcursorFlag = true; s_firstkeyFlag = true;
 					//s_LtimelineWnd->setDoneFlag(1);
 
@@ -29132,7 +29141,7 @@ int CreateLongTimelineWnd()
 
 
 			//s_owpPlayerButton->setOneFpsButtonListener([]() {
-			//	if (s_model) {
+			//	if (GetCurrentModel()) {
 
 			//		int tmponefps;
 			//		if (s_onefps == 0) {
@@ -29153,7 +29162,7 @@ int CreateLongTimelineWnd()
 			//	}
 			//	});
 			//s_owpPlayerButton->setStopButtonListener([]() {
-			//	if (s_model) {
+			//	if (GetCurrentModel()) {
 			//		s_LstopFlag = true; s_LcursorFlag = true; g_previewFlag = 0;
 			//		//s_LtimelineWnd->setDoneFlag(1);
 			//	}
@@ -29162,7 +29171,7 @@ int CreateLongTimelineWnd()
 				//##############################################
 				// means to stop preview and step to first key 
 				//##############################################
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_owpLTimeline) {
 						s_LstopFlag = true;
 						g_previewFlag = 0;
@@ -29174,7 +29183,7 @@ int CreateLongTimelineWnd()
 				});
 
 			s_owpPlayerButton->setSelectToLastButtonListener([]() {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					//g_underselecttolast = true;  s_LcursorFlag = true; g_selecttolastFlag = true;
 					//g_underselecttolast = false;  s_LcursorFlag = true; g_selecttolastFlag = true;
 					////s_LtimelineWnd->setDoneFlag(1);
@@ -29190,21 +29199,21 @@ int CreateLongTimelineWnd()
 				});
 
 			s_owpPlayerButton->setChangeTargetButtonListener([]() {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					s_LchangeTargetFlag = true;
 				}
 				});
 
 
 			//s_owpPlayerButton->setBtResetButtonListener([]() {
-			//	if (s_model) {
+			//	if (GetCurrentModel()) {
 			//		s_btresetFlag = true;
-			//		//StartBt(s_model, TRUE, 0, 1);
+			//		//StartBt(GetCurrentModel(), TRUE, 0, 1);
 			//		//s_LtimelineWnd->setDoneFlag(1);
 			//	}
 			//	});
 			//s_owpPlayerButton->setPrevRangeButtonListener([]() {
-			//	if (s_model) {
+			//	if (GetCurrentModel()) {
 			//		//g_undereditrange = true; s_prevrangeFlag = true;
 			//		////s_LtimelineWnd->setDoneFlag(1);
 
@@ -29217,7 +29226,7 @@ int CreateLongTimelineWnd()
 			//	}
 			//	});
 			//s_owpPlayerButton->setNextRangeButtonListener([]() {
-			//	if (s_model) {
+			//	if (GetCurrentModel()) {
 			//		//g_undereditrange = true; s_nextrangeFlag = true;
 			//		////s_LtimelineWnd->setDoneFlag(1);
 
@@ -29230,7 +29239,7 @@ int CreateLongTimelineWnd()
 			//	}
 			//	});
 			//s_owpPlayerButton->setPlusDispButtonListener([]() {
-			//	if (s_model && s_owpEulerGraph) {
+			//	if (GetCurrentModel() && s_owpEulerGraph) {
 			//		s_owpEulerGraph->PlusDisp();
 			//		s_owpEulerGraph->MinusOffset();//上に動かすにはオフセットを減らす
 			//		s_owpEulerGraph->MinusOffset();//上に動かすにはオフセットを減らす
@@ -29240,7 +29249,7 @@ int CreateLongTimelineWnd()
 			//	}
 			//	});
 			//s_owpPlayerButton->setMinusDispButtonListener([]() {
-			//	if (s_model && s_owpEulerGraph) {
+			//	if (GetCurrentModel() && s_owpEulerGraph) {
 			//		s_owpEulerGraph->MinusDisp();
 			//		s_owpEulerGraph->PlusOffset();//下に動かすにはオフセットを増やす
 			//		s_owpEulerGraph->PlusOffset();//下に動かすにはオフセットを増やす
@@ -29250,19 +29259,19 @@ int CreateLongTimelineWnd()
 			//	}
 			//	});
 			//s_owpPlayerButton->setPlusOffsetDispButtonListener([]() {
-			//	if (s_model && s_owpEulerGraph) {
+			//	if (GetCurrentModel() && s_owpEulerGraph) {
 			//		s_owpEulerGraph->MinusOffset();//上に動かすにはオフセットを減らす
 			//		//s_LtimelineWnd->setDoneFlag(1);
 			//	}
 			//	});
 			//s_owpPlayerButton->setMinusOffsetDispButtonListener([]() {
-			//	if (s_model && s_owpEulerGraph) {
+			//	if (GetCurrentModel() && s_owpEulerGraph) {
 			//		s_owpEulerGraph->PlusOffset();//下に動かすにはオフセットを増やす
 			//		//s_LtimelineWnd->setDoneFlag(1);
 			//	}
 			//	});
 			//s_owpPlayerButton->setResetDispButtonListener([]() {
-			//	if (s_model && s_owpEulerGraph) {
+			//	if (GetCurrentModel() && s_owpEulerGraph) {
 			//		s_owpEulerGraph->ResetScaleAndOffset();
 			//		//s_LtimelineWnd->setDoneFlag(1);
 			//	}
@@ -29296,17 +29305,17 @@ int CreateLongTimelineWnd()
 		//s_LtimelineWndのラムダ　s_owpLTimelineではない。
 		//####################################
 		s_LtimelineWnd->setCloseListener([]() {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				s_LcloseFlag = true;
 			}
 			});
 		s_LtimelineWnd->setLDownListener([]() {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				g_underselectingframe = 1;
 			}
 			});
 		s_LtimelineWnd->setLUpListener([]() {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				s_LupFlag = true;
 			}
 			});
@@ -29706,7 +29715,7 @@ int CreateSideMenuWnd()
 
 
 		s_sidemenuWnd->setCloseListener([]() {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				s_ScloseFlag = true;
 			}
 			});
@@ -29715,9 +29724,9 @@ int CreateSideMenuWnd()
 			s_sidemenu_sellock->setButtonListener([]() {
 				bool value = s_sidemenu_sellock->getValue();
 				if (value) {
-					if (s_model) {
-						int curmotid = s_model->GetCurrentMotID();
-						bool cameraanimflag = s_model->IsCameraMotion(curmotid);
+					if (GetCurrentModel()) {
+						int curmotid = GetCurrentModel()->GetCurrentMotID();
+						bool cameraanimflag = GetCurrentModel()->IsCameraMotion(curmotid);
 						if (cameraanimflag) {
 							//jointの位置はjointのモーションに依存するから
 							::MessageBox(s_3dwnd, L"カメラモーション以外を選択してから再試行してください.", L"CurrentMotion is Camera warning",
@@ -29748,9 +29757,9 @@ int CreateSideMenuWnd()
 		}
 		if (s_sidemenu_sellockOnce) {
 			s_sidemenu_sellockOnce->setButtonListener([]() {
-				if (s_model) {
-					int curmotid = s_model->GetCurrentMotID();
-					bool cameraanimflag = s_model->IsCameraMotion(curmotid);
+				if (GetCurrentModel()) {
+					int curmotid = GetCurrentModel()->GetCurrentMotID();
+					bool cameraanimflag = GetCurrentModel()->IsCameraMotion(curmotid);
 					if (cameraanimflag) {
 						//jointの位置はjointのモーションに依存するから
 						::MessageBox(s_3dwnd, L"カメラモーション以外を選択してから再試行してください.", L"CurrentMotion is Camera warning",
@@ -29998,7 +30007,7 @@ int CreatePlaceFolderWnd()
 
 int CheckSimilarMenu()//context menu
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 
@@ -30241,7 +30250,7 @@ int CreateToolWnd()
 
 
 		s_toolWnd->setCloseListener([]() {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				if (s_closetoolFlag == false) {
 					s_closetoolFlag = true;
 				}
@@ -30250,21 +30259,21 @@ int CreateToolWnd()
 		//s_toolWnd->setHoverListener([]() { SetCapture(s_toolWnd->getHWnd()); });
 		//s_toolWnd->setLeaveListener([]() { ReleaseCapture(); });
 		s_toolSelectCopyFileName->setButtonListener([]() {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				if (s_selCopyHisotryFlag == false) {
 					s_selCopyHisotryFlag = true;
 				}
 			}
 			});
 		s_toolCopyB->setButtonListener([]() {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				if (s_copyFlag == false) {
 					s_copyFlag = true;
 				}
 			}
 			});
 		s_toolZeroFrameB->setButtonListener([]() {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				if (s_owpLTimeline) {
 					if (s_zeroFrameFlag == false) {
 						s_LstopFlag = true;
@@ -30277,21 +30286,21 @@ int CreateToolWnd()
 			});
 
 		s_toolSymCopyB->setButtonListener([]() {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				if (s_symcopyFlag == false) {
 					s_symcopyFlag = true;
 				}
 			}
 			});
 		s_toolPasteB->setButtonListener([]() {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				if (s_pasteFlag == false) {
 					s_pasteFlag = true;
 				}
 			}
 			});
 		s_toolMotPropB->setButtonListener([]() {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				if (s_motpropFlag == false) {
 					s_motpropFlag = true;
 				}
@@ -30299,63 +30308,63 @@ int CreateToolWnd()
 			});
 		//s_toolMarkB->setButtonListener( [](){ s_markFlag = true; } );
 		s_toolSelBoneB->setButtonListener([]() {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				if (s_selboneFlag == false) {
 					s_selboneFlag = true;
 				}
 			}
 			});
 		s_toolInitMPB->setButtonListener([]() {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				if (s_initmpFlag == false) {
 					s_initmpFlag = true;
 				}
 			}
 			});
 		s_toolFilterB->setButtonListener([]() {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				if (s_filterFlag == false) {
 					s_filterFlag = true;
 				}
 			}
 			});
 		s_toolInterpolateB->setButtonListener([]() {
-			if (s_model && (s_interpolateFlag == false)) {
+			if (GetCurrentModel() && (s_interpolateFlag == false)) {
 				s_interpolateFlag = true;
 			}
 			});
 		s_toolSkipRenderBoneMarkB->setButtonListener([]() {
-			if (s_model && (s_skipJointMark == 0)) {
+			if (GetCurrentModel() && (s_skipJointMark == 0)) {
 				s_skipJointMark = 1;//deeper
 			}
 			});
 		s_toolSkipRenderBoneMarkB2->setButtonListener([]() {
-			if (s_model && (s_skipJointMark == 0)) {
+			if (GetCurrentModel() && (s_skipJointMark == 0)) {
 				s_skipJointMark = 2;//deeper
 			}
 			});
 		//s_tool180deg->setButtonListener([]() {
-		//	if (s_model && (s_180DegFlag == false)) {
+		//	if (GetCurrentModel() && (s_180DegFlag == false)) {
 		//		s_180DegFlag = true;
 		//	}
 		//});
 		s_toolScaleInitAllB->setButtonListener([]() {
-			if (s_model && (s_scaleAllInitFlag == false)) {
+			if (GetCurrentModel() && (s_scaleAllInitFlag == false)) {
 				s_scaleAllInitFlag = true;
 			}
 			});
 		s_toolCameraDollyB->setButtonListener([]() {
-			if (s_model && (s_cameradollyFlag == false)) {
+			if (GetCurrentModel() && (s_cameradollyFlag == false)) {
 				s_cameradollyFlag = true;
 			}
 			});
 		s_toolMaterialRateB->setButtonListener([]() {
-			if (s_model && (s_materialrateFlag == false)) {
+			if (GetCurrentModel() && (s_materialrateFlag == false)) {
 				s_materialrateFlag = true;
 			}
 			});
 		s_toolModelWorldMatB->setButtonListener([]() {
-			if (s_model && (s_modelworldmatFlag == false)) {
+			if (GetCurrentModel() && (s_modelworldmatFlag == false)) {
 				s_modelworldmatFlag = true;
 			}
 			});
@@ -30468,7 +30477,7 @@ int CreateLayerWnd()
 
 
 		s_layerWnd->setCloseListener([]() {
-			if (s_model) {
+			if (GetCurrentModel()) {
 				s_closeobjFlag = true;
 			}
 			});
@@ -30487,7 +30496,7 @@ int CreateLayerWnd()
 
 		//レイヤーの可視状態変更リスナー
 		s_owpLayerTable->setChangeVisibleListener([](int index) {
-			if (s_model && s_owpLayerTable) {
+			if (GetCurrentModel() && s_owpLayerTable) {
 				CMQOObject* curobj = (CMQOObject*)(s_owpLayerTable->getObj(index));
 				if (curobj) {
 					if (s_owpLayerTable->getVisible(index)) {
@@ -30548,7 +30557,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 	}
 
 	if (s_sprefpos.state) {
-		if ((curmodel == s_model) && (curmodel->GetGrassFlag() == false)) {
+		if ((curmodel == GetCurrentModel()) && (curmodel->GetGrassFlag() == false)) {
 
 			//int keynum;
 			//double startframe, endframe, applyframe;
@@ -30561,17 +30570,17 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 			roundingendframe = RoundingTime(g_motionbrush_endframe);
 			roundingapplyframe = RoundingTime(g_motionbrush_applyframe);
 
-			if (s_model->ExistCurrentMotion()) {
-				int curmotid = s_model->GetCurrentMotID();
-				double currentframe = s_model->GetCurrentFrame();
-				CBone* curbone = s_model->GetBoneByID(s_curboneno);
+			if (GetCurrentModel()->ExistCurrentMotion()) {
+				int curmotid = GetCurrentModel()->GetCurrentMotID();
+				double currentframe = GetCurrentModel()->GetCurrentFrame();
+				CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 				if (curbone) {
 
 					std::vector<ChaVector3> vecbonepos;
 					vecbonepos.clear();
 					ChaVector3 curbonepos;
 
-					ChaMatrix modelwm = s_model->GetWorldMat();
+					ChaMatrix modelwm = GetCurrentModel()->GetWorldMat();
 
 					double renderleng = roundingendframe - roundingstartframe;
 
@@ -30589,14 +30598,14 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 
 						if ((addcurrentjointpos == false) && (roundingrenderframe >= currentframe)) {
 							double roundingcurrentframe = RoundingTime(currentframe);
-							s_model->SetMotionFrame(roundingcurrentframe);
+							GetCurrentModel()->SetMotionFrame(roundingcurrentframe);
 							ChaVector3 tmpfpos = curbone->GetJointFPos();
 							ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingcurrentframe, 0) * modelwm;
 							ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
 							vecbonepos.push_back(curbonepos);
 							addcurrentjointpos = true;
 						}
-						s_model->SetMotionFrame(roundingrenderframe);
+						GetCurrentModel()->SetMotionFrame(roundingrenderframe);
 						ChaVector3 tmpfpos = curbone->GetJointFPos();
 						ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingrenderframe, 0) * modelwm;
 						ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
@@ -30608,17 +30617,17 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 						//refframeのポーズを表示
 						int btflag1 = 0;
 
-						s_model->SetMotionFrame(roundingrenderframe);
-						//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
-						s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matView, &s_matProj,
+						GetCurrentModel()->SetMotionFrame(roundingrenderframe);
+						//GetCurrentModel()->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
+						s_chascene->UpdateMatrixOneModel(GetCurrentModel(), g_limitdegflag, &modelwm, &s_matView, &s_matProj,
 							roundingrenderframe, refposindex);
 
 
 						bool calcslotflag;
 						calcslotflag = true;//2024/03/20
 						//calcslotflag = false;
-						s_model->SetShaderConst(btflag1, calcslotflag);
-						s_model->SetRefPosFl4x4ToDispObj(refposindex);
+						GetCurrentModel()->SetShaderConst(btflag1, calcslotflag);
+						GetCurrentModel()->SetRefPosFl4x4ToDispObj(refposindex);
 
 						//カレントフレームから離れるほど　透明度を薄くする
 						//const double refstartalpha = 0.80f;
@@ -30635,9 +30644,9 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 						int btflag = 0;
 						bool zcmpalways = true;
 						bool zenable = true;
-						//s_chascene->RenderOneModel(s_model, forcewithalpha, re,
+						//s_chascene->RenderOneModel(GetCurrentModel(), forcewithalpha, re,
 						//	lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
-						s_chascene->AddToRefPos(s_model, forcewithalpha, re,
+						s_chascene->AddToRefPos(GetCurrentModel(), forcewithalpha, re,
 							lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
 
 					}
@@ -30647,16 +30656,16 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 							////カレントフレームをレンダー
 							int btflag1 = 0;
 
-							s_model->SetMotionFrame(currentframe);
-							//s_model->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
-							s_chascene->UpdateMatrixOneModel(s_model, g_limitdegflag, &modelwm, &s_matView, &s_matProj,
+							GetCurrentModel()->SetMotionFrame(currentframe);
+							//GetCurrentModel()->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
+							s_chascene->UpdateMatrixOneModel(GetCurrentModel(), g_limitdegflag, &modelwm, &s_matView, &s_matProj,
 								currentframe, refposindex);
 
 							bool calcslotflag;
 							calcslotflag = true;//2024/03/20
 							//calcslotflag = false;
-							s_model->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
-							s_model->SetRefPosFl4x4ToDispObj(refposindex);
+							GetCurrentModel()->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
+							GetCurrentModel()->SetRefPosFl4x4ToDispObj(refposindex);
 
 							ChaVector4 refdiffusemult;
 							refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
@@ -30667,10 +30676,10 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 							//bool zcmpalways = false;
 							bool zcmpalways = g_zalways;//2024/02/08 DispAndLimitsプレートメニューのチェックボックス
 							bool zenable = true;
-							//s_chascene->RenderOneModel(s_model, forcewithalpha, re,
+							//s_chascene->RenderOneModel(GetCurrentModel(), forcewithalpha, re,
 							//	lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
 
-							s_chascene->AddToRefPos(s_model, forcewithalpha, re,
+							s_chascene->AddToRefPos(GetCurrentModel(), forcewithalpha, re,
 								lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
 
 							refposindex++;
@@ -30690,7 +30699,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 
 							curbone->GetRefPosMark()->RenderRefArrow(g_limitdegflag,
 								re, s_chascene, s_matVP, curbone, arrowdiffusemult, 1, vecbonepos);
-							//s_model->RenderBoneCircleOne(g_limitdegflag,
+							//GetCurrentModel()->RenderBoneCircleOne(g_limitdegflag,
 							//	pRenderContext, s_bcircle, s_curboneno);
 						}
 					}
@@ -30722,7 +30731,7 @@ int OnRenderModel(RenderContext* pRenderContext)
 	//	return 0;
 	//}
 
-	//if (!s_model || !s_chascene) {
+	//if (!GetCurrentModel() || !s_chascene) {
 	//	return 0;
 	//}
 
@@ -30747,7 +30756,7 @@ int OnRenderModel(RenderContext* pRenderContext)
 
 	//s_chascene->RenderModels(pRenderContext, lightflag, diffusemult, btflag);
 	//if (s_sprefpos.state) {
-	//	OnRenderLOD(pRenderContext, s_model);
+	//	OnRenderLOD(pRenderContext, GetCurrentModel());
 	//}
 
 	return 0;
@@ -30771,10 +30780,10 @@ int OnRenderOnlyOneObj(myRenderer::RenderingEngine* re, RenderContext* rc)
 		return 0;
 	}
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
-	if (s_model->GetGrassFlag()) {
+	if (GetCurrentModel()->GetGrassFlag()) {
 		return 0;
 	}
 
@@ -30788,7 +30797,7 @@ int OnRenderOnlyOneObj(myRenderer::RenderingEngine* re, RenderContext* rc)
 			withalpha = true;
 		}
 
-		CModel* curmodel = s_model;
+		CModel* curmodel = GetCurrentModel();
 
 		//if (curmodel && curmodel->GetLoadedFlag() && curmodel->GetModelDisp()){
 		if (curmodel && curmodel->m_loadedflag && curmodel->m_modeldisp) {//curmodelが作成途中の場合を考えて、先頭から２つのpublicデータメンバーを参照する
@@ -30874,7 +30883,7 @@ int OnRenderGround(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 	if (!s_chascene) {
 		return 0;
 	}
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 
@@ -30916,26 +30925,26 @@ int OnRenderBoneMark(myRenderer::RenderingEngine* re, RenderContext* rc)
 		//アップデート用スレッド数を変更中
 		return 0;
 	}
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 
 
 	//GetBoneForMotionSize()が重い　全体の負荷の１％近く持っていくこともあるようだ　コメントアウト
-	//if (!s_model->GetLoadedFlag() || (s_model->GetBoneForMotionSize() == 0) || 
-	//	(s_model->GetBoneForMotionSize() >= RIGMULTINDEXMAX)) {
+	//if (!GetCurrentModel()->GetLoadedFlag() || (GetCurrentModel()->GetBoneForMotionSize() == 0) || 
+	//	(GetCurrentModel()->GetBoneForMotionSize() >= RIGMULTINDEXMAX)) {
 	//	//インスタンシング最大数を越えた場合にもリターン0
 	//	return 0;
 	//}
 
-	if (!s_model->GetLoadedFlag()) {
+	if (!GetCurrentModel()->GetLoadedFlag()) {
 		return 0;
 	}
 
 
 
 
-	if (s_model->GetGrassFlag()) {
+	if (GetCurrentModel()->GetGrassFlag()) {
 		return 0;
 	}
 
@@ -30943,14 +30952,14 @@ int OnRenderBoneMark(myRenderer::RenderingEngine* re, RenderContext* rc)
 
 		//if (s_allmodelbone == false) {
 			//if ((g_previewFlag != 1) && (g_previewFlag != -1) && (g_previewFlag != 4)){
-			if (s_model && s_model->GetModelDisp()) {
+			if (GetCurrentModel() && GetCurrentModel()->GetModelDisp()) {
 				//if (s_ikkind >= 3){
-				s_model->RenderBoneMark(g_limitdegflag, &s_bcircle,
+				GetCurrentModel()->RenderBoneMark(g_limitdegflag, &s_bcircle,
 					s_curboneno, s_chascene, s_matVP);
 
 				//}
 				//else{
-				//	s_model->RenderBoneMark(s_pdev, s_bmark, s_bcircle, 0, s_curboneno);
+				//	GetCurrentModel()->RenderBoneMark(s_pdev, s_bmark, s_bcircle, 0, s_curboneno);
 				//}
 			}
 			//}
@@ -30963,7 +30972,7 @@ int OnRenderBoneMark(myRenderer::RenderingEngine* re, RenderContext* rc)
 			//	if (curmodel) {
 			//		curmodel->RenderBoneMark(g_limitdegflag,
 			//			pRenderContext, s_bmark, s_bcircle, 0, s_curboneno);
-			//		s_model->RenderBoneMark(re, rc, g_limitdegflag,
+			//		GetCurrentModel()->RenderBoneMark(re, rc, g_limitdegflag,
 			//			s_bmark, s_bcircle, s_curboneno);
 
 			//	}
@@ -30980,16 +30989,16 @@ int OnRenderSelect(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		return 1;
 	}
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
-	if (s_model->GetGrassFlag()) {
+	if (GetCurrentModel()->GetGrassFlag()) {
 		return 0;
 	}
 
 	if (s_camtargetdisp == false) {
 		if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-			if (s_select && (s_curboneno >= 0) && (g_previewFlag == 0) && (s_model && s_model->GetModelDisp()) && (g_bonemarkflag != 0)) {//underchecking
+			if (s_select && (s_curboneno >= 0) && (g_previewFlag == 0) && (GetCurrentModel() && GetCurrentModel()->GetModelDisp()) && (g_bonemarkflag != 0)) {//underchecking
 				//SetSelectCol();
 				SetSelectState();
 				RenderSelectMark(re, pRenderContext, 1);
@@ -30997,7 +31006,7 @@ int OnRenderSelect(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		}
 		//else if ((g_previewFlag == 5) && (s_oprigflag == 1)){
 		else if (g_previewFlag == 5) {
-			if (s_select && (s_curboneno >= 0) && (s_model && s_model->GetModelDisp())) {
+			if (s_select && (s_curboneno >= 0) && (GetCurrentModel() && GetCurrentModel()->GetModelDisp())) {
 				//SetSelectCol();
 				SetSelectState();
 				RenderSelectMark(re, pRenderContext, 1);
@@ -31014,7 +31023,7 @@ int OnRenderSelect(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 
 	//プレビュー中　物理中は　リグマークは表示しない
 	if (g_previewFlag == 0) {
-		if ((s_model && s_model->GetModelDisp()) && (s_oprigflag != 0)) {
+		if ((GetCurrentModel() && GetCurrentModel()->GetModelDisp()) && (s_oprigflag != 0)) {
 			RenderRigMarkFunc(re, pRenderContext);
 		}
 	}
@@ -31143,11 +31152,11 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 	}
 
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 
-	if (s_model) {
+	if (GetCurrentModel()) {
 		int dispfps = (int)(s_avrgfps + 0.5);
 		//s_fpssprite.DrawScreen(pRenderContext, dispfps);
 
@@ -31159,8 +31168,8 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 	}
 
 	////Undoの読み込みポイントW と書き込みポイントR を表示
-	if (s_model && (g_previewFlag == 0)) {
-		//s_undosprite.DrawScreen(pRenderContext, s_model->GetCurrentUndoR(), s_model->GetCurrentUndoW());
+	if (GetCurrentModel() && (g_previewFlag == 0)) {
+		//s_undosprite.DrawScreen(pRenderContext, GetCurrentModel()->GetCurrentUndoR(), GetCurrentModel()->GetCurrentUndoW());
 
 		myRenderer::RENDERSPRITE rendersprite;
 		rendersprite.Init();
@@ -31169,8 +31178,8 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		//2024/06/24
 		//カメラアニメのアンドゥデータは　選択中のモデルに格納することにした　EDITTARGET_CAMERA時にも　選択中のモデルアンドゥ番号を表示する
 		//if (g_edittarget != EDITTARGET_CAMERA) {
-			rendersprite.userint1 = s_model->GetCurrentUndoR();
-			rendersprite.userint2 = s_model->GetCurrentUndoW();
+			rendersprite.userint1 = GetCurrentModel()->GetCurrentUndoR();
+			rendersprite.userint2 = GetCurrentModel()->GetCurrentUndoW();
 		//}
 		//else if (s_cameramodel) {
 		//	rendersprite.userint1 = s_cameramodel->GetCurrentUndoR();
@@ -31818,13 +31827,13 @@ int FilterFromTool()
 	if (s_curboneno < 0) {
 		return 0;
 	}
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 	if (!s_owpTimeline || !s_owpLTimeline) {
 		return 0;
 	}
-	if (!s_model->ExistCurrentMotion()) {
+	if (!GetCurrentModel()->ExistCurrentMotion()) {
 		return 0;
 	}
 
@@ -31905,13 +31914,13 @@ int JumpInterpolateFromTool()
 	if (s_curboneno < 0) {
 		return 0;
 	}
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 	if (!s_owpTimeline || !s_owpLTimeline) {
 		return 0;
 	}
-	if (!s_model->ExistCurrentMotion()) {
+	if (!GetCurrentModel()->ExistCurrentMotion()) {
 		return 0;
 	}
 
@@ -31928,11 +31937,11 @@ int JumpInterpolateFromTool()
 	}
 
 	CBone* hipsbone = 0;
-	s_model->GetHipsBoneReq(s_model->GetTopBone(false), &hipsbone);
+	GetCurrentModel()->GetHipsBoneReq(GetCurrentModel()->GetTopBone(false), &hipsbone);
 	if (hipsbone) {
 		ChaVector3 hipsjointpos;
 		hipsjointpos = hipsbone->GetJointFPos();
-		int curmotid = s_model->GetCurrentMotID();
+		int curmotid = GetCurrentModel()->GetCurrentMotID();
 		//##############################
 		//hipsなのでローカルと同じように計算
 		//##############################
@@ -32009,13 +32018,13 @@ int InterpolateFromTool()
 	if (s_curboneno < 0) {
 		return 0;
 	}
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 	if (!s_owpTimeline || !s_owpLTimeline) {
 		return 0;
 	}
-	if (s_interpolateFlag && !s_model->ExistCurrentMotion()) {
+	if (s_interpolateFlag && !GetCurrentModel()->ExistCurrentMotion()) {
 		return 0;
 	}
 
@@ -32097,13 +32106,13 @@ int InitMpFromTool()
 	if (s_curboneno < 0) {
 		return 0;
 	}
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 	if (!s_owpTimeline || !s_owpLTimeline) {
 		return 0;
 	}
-	if (s_initmpFlag && !s_model->ExistCurrentMotion()) {
+	if (s_initmpFlag && !GetCurrentModel()->ExistCurrentMotion()) {
 		return 0;
 	}
 
@@ -32340,16 +32349,16 @@ void InitMpByEulEndJointReq(int initmode, CBone* curbone, int srcmotid, double s
 /// CustomRigDlg
 int DispCustomRigDlg(int rigno)
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 	if (s_curboneno < 0) {
 		return 0;
 	}
-	if (!s_model->GetTopBone()) {
+	if (!GetCurrentModel()->GetTopBone()) {
 		return 0;
 	}
-	if (s_model->GetOldAxisFlagAtLoading() == 1) {
+	if (GetCurrentModel()->GetOldAxisFlagAtLoading() == 1) {
 		::DSMessageBox(s_3dwnd, L"Work Only After Setting Of Axis.\nRetry After Saving Of FBX file.", L"error!!!", MB_OK);
 		return 0;
 	}
@@ -32405,21 +32414,21 @@ int DispCustomRigDlg(int rigno)
 
 int InvalidateCustomRig(int rigno)
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 	if (s_curboneno < 0) {
 		return 0;
 	}
-	if (!s_model->GetTopBone()) {
+	if (!GetCurrentModel()->GetTopBone()) {
 		return 0;
 	}
-	if (s_model->GetOldAxisFlagAtLoading() == 1) {
+	if (GetCurrentModel()->GetOldAxisFlagAtLoading() == 1) {
 		::DSMessageBox(s_3dwnd, L"Work Only After Setting Of Axis.\nRetry After Saving Of FBX file.", L"error!!!", MB_OK);
 		return 0;
 	}
 
-	s_customrigbone = s_model->GetBoneByID(s_curboneno);
+	s_customrigbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 	if (s_customrigbone) {
 		if ((rigno >= 0) && (rigno < MAXRIGNUM)) {
 			s_customrigbone->InvalidateCustomRig(rigno);
@@ -32445,17 +32454,17 @@ int InvalidateCustomRig(int rigno)
 
 int Bone2CustomRig(int rigno)
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 	if (s_curboneno < 0) {
 		return 0;
 	}
-	if (!s_model->GetTopBone()) {
+	if (!GetCurrentModel()->GetTopBone()) {
 		return 0;
 	}
 
-	s_customrigbone = s_model->GetBoneByID(s_curboneno);
+	s_customrigbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 	if (s_customrigbone) {
 		if ((rigno >= 0) && (rigno < MAXRIGNUM)) {
 			s_customrig = s_customrigbone->GetCustomRig(rigno);
@@ -32478,19 +32487,19 @@ int Bone2CustomRig(int rigno)
 
 int CustomRig2Bone()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 	if (!s_customrigbone) {
 		return 0;
 	}
-	if (!s_model->GetTopBone()) {
+	if (!GetCurrentModel()->GetTopBone()) {
 		return 0;
 	}
 
 
 	if (s_customrigbone) {
-		int isvalid = IsValidCustomRig(s_model, s_customrig, s_customrigbone);
+		int isvalid = IsValidCustomRig(GetCurrentModel(), s_customrig, s_customrigbone);
 		if (isvalid == 0) {
 			::DSMessageBox(s_3dwnd, L"Invalid Parameter", L"error!!!", MB_OK);
 			return 0;
@@ -32500,7 +32509,7 @@ int CustomRig2Bone()
 
 		//2024/09/09
 		//FootRigDlgで選択しているリグと編集したリグが同じ場合に　FootRigDlgのリグ情報を更新
-		s_footrigdlg.SetEditedRig(s_model, s_customrigbone, s_customrig);
+		s_footrigdlg.SetEditedRig(GetCurrentModel(), s_customrigbone, s_customrig);
 
 	}
 	else {
@@ -32663,7 +32672,7 @@ int CustomRig2Dlg(HWND hDlgWnd)
 			RIGELEM currigelem = s_customrig.rigelem[elemno];
 			CBone* curbone = 0;
 			if (elemno < elemnum) {
-				curbone = s_model->GetBoneByID(currigelem.boneno);
+				curbone = GetCurrentModel()->GetBoneByID(currigelem.boneno);
 				if (curbone) {
 					SetDlgItemText(hDlgWnd, gpboxid[elemno], (LPCWSTR)curbone->GetWBoneName());
 				}
@@ -32779,7 +32788,7 @@ int CheckRigRigCombo(HWND hDlgWnd, int elemno)
 	int gpboxid[5] = { IDC_CHILD1, IDC_CHILD2, IDC_CHILD3, IDC_CHILD4, IDC_CHILD5 };
 	s_customrig.rigelem[elemno].rigrigboneno = -1;
 	s_customrig.rigelem[elemno].rigrigno = -1;
-	CBone* levelbone = s_model->GetBoneByID(s_customrig.rigelem[elemno].boneno);
+	CBone* levelbone = GetCurrentModel()->GetBoneByID(s_customrig.rigelem[elemno].boneno);
 	if (levelbone) {
 		SetDlgItemText(hDlgWnd, gpboxid[elemno], (LPCWSTR)levelbone->GetWBoneName());
 	}
@@ -32831,7 +32840,7 @@ int CheckRigRigCombo(HWND hDlgWnd, int elemno)
 							//	swprintf_s(strdbg, 256, L"rigrigbonename %s", rigrigbonename);
 							//	::DSMessageBox(hDlgWnd, strdbg, L"rigrigbonename", MB_OK);
 							//}
-							CBone* rigrigbone = s_model->GetBoneByWName(rigrigbonename);
+							CBone* rigrigbone = GetCurrentModel()->GetBoneByWName(rigrigbonename);
 							if (rigrigbone) {
 								s_customrig.rigelem[elemno].rigrigboneno = rigrigbone->GetBoneNo();
 
@@ -33015,7 +33024,7 @@ LRESULT CALLBACK CustomRigDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				}
 
 
-				int isvalid = IsValidCustomRig(s_model, s_customrig, s_customrigbone);
+				int isvalid = IsValidCustomRig(GetCurrentModel(), s_customrig, s_customrigbone);
 				if (isvalid == 0) {
 					::DSMessageBox(hDlgWnd, L"Invalid Parameter", L"error!!!", MB_OK);
 					return 0;
@@ -33057,10 +33066,10 @@ LRESULT CALLBACK CustomRigDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 int BrushesContextMenu()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
-	if (!s_model->GetTopBone()) {
+	if (!GetCurrentModel()->GetTopBone()) {
 		return 0;
 	}
 
@@ -33141,10 +33150,10 @@ int BoneRClick(int srcboneno)
 	int pickflag = 0;//return value
 
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return pickflag;
 	}
-	if (!s_model->GetTopBone()) {
+	if (!GetCurrentModel()->GetTopBone()) {
 		return pickflag;
 	}
 
@@ -33196,7 +33205,7 @@ int BoneRClick(int srcboneno)
 		ChangeCurrentBone(true);
 
 		if (s_curboneno >= 0) {
-			CBone* curbone = s_model->GetBoneByID(s_curboneno);
+			CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 			if (curbone) {
 				HWND parwnd;
 				//parwnd = s_3dwnd;
@@ -33373,10 +33382,10 @@ int SetRigRigCombo(HWND hDlgWnd, int elemno)
 		SendMessage(GetDlgItem(hDlgWnd, rigrigcomboid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
 		int setcombono = 1;
 
-		CBone* rigrigbone = s_model->GetBoneByID(currigelem.rigrigboneno);
+		CBone* rigrigbone = GetCurrentModel()->GetBoneByID(currigelem.rigrigboneno);
 		CBone* currigrigbone;
 		map<int, CBone*>::iterator itrcurrigrigbone;
-		for (itrcurrigrigbone = s_model->GetBoneListBegin(); itrcurrigrigbone != s_model->GetBoneListEnd(); itrcurrigrigbone++) {
+		for (itrcurrigrigbone = GetCurrentModel()->GetBoneListBegin(); itrcurrigrigbone != GetCurrentModel()->GetBoneListEnd(); itrcurrigrigbone++) {
 			currigrigbone = itrcurrigrigbone->second;
 			if (currigrigbone && (currigrigbone->IsSkeleton())) {
 				WCHAR rigrigbonename[256];
@@ -33386,7 +33395,7 @@ int SetRigRigCombo(HWND hDlgWnd, int elemno)
 				for (rigrigno = 0; rigrigno < MAXRIGNUM; rigrigno++) {
 					CUSTOMRIG rigrig = currigrigbone->GetCustomRig(rigrigno);
 					if (rigrig.useflag == 2) {
-						int isvalid = IsValidCustomRig(s_model, rigrig, currigrigbone);
+						int isvalid = IsValidCustomRig(GetCurrentModel(), rigrig, currigrigbone);
 						if (isvalid == 1) {
 							swprintf_s(strcombo, 256, L"[%d]%s[|]%s", rigrigno, rigrigbonename, rigrig.rigname);
 							SendMessage(GetDlgItem(hDlgWnd, rigrigcomboid[elemno]), CB_ADDSTRING, 0, (LPARAM)strcombo);
@@ -33408,13 +33417,13 @@ int SetRigRigCombo(HWND hDlgWnd, int elemno)
 
 int SetCustomRigDlgLevel(HWND hDlgWnd, int levelnum)
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 	if (!s_customrigbone) {
 		return 0;
 	}
-	if (!s_model->GetTopBone()) {
+	if (!GetCurrentModel()->GetTopBone()) {
 		return 0;
 	}
 	if (!s_customrigdlg) {
@@ -33609,8 +33618,8 @@ int GetSymRootMode()
 void AutoCameraTarget()
 {
 	//s_camtargetflag = (int)s_CamTargetCheckBox->GetChecked();
-	if (s_model && (s_curboneno >= 0) && (s_camtargetflag || s_camtargetOnceflag)) {
-		CBone* curbone = s_model->GetBoneByID(s_curboneno);
+	if (GetCurrentModel() && (s_curboneno >= 0) && (s_camtargetflag || s_camtargetOnceflag)) {
+		CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 		_ASSERT(curbone);
 		if (curbone) {
 			g_befcamtargetpos = g_camtargetpos;
@@ -33677,7 +33686,7 @@ int OnTimeLineSelectFromSelectedKey()
 	}
 
 	s_editrange.Clear();
-	if (s_model && s_model->ExistCurrentMotion()) {
+	if (GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
 		if (s_owpTimeline && s_owpLTimeline && s_owpEulerGraph) {
 			s_editrange.SetRange(s_owpLTimeline->getSelectedKey(), s_owpLTimeline->getCurrentTime());
 			//CEditRange::SetApplyRate(g_applyrate);
@@ -33752,7 +33761,7 @@ int OnTimeLineButtonSelectFromSelectStartEnd(int tothelastflag)
 
 int OnTimeLineCursorFunc()
 {
-	if (s_owpLTimeline && s_model && s_model->ExistCurrentMotion()) {
+	if (s_owpLTimeline && GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
 		double curframe;
 		curframe = s_owpLTimeline->getCurrentTime();// 選択時刻
 		if (s_owpTimeline) {
@@ -33775,7 +33784,7 @@ int OnTimeLineCursor()
 		(s_opedelmodelcnt < 0) && (s_opedelmotioncnt < 0) && (s_opeselectmodelcnt < 0) && (s_opeselectmotioncnt < 0) && (s_opeselectcameracnt < 0) &&
 		(s_underdelmotion == false) && (s_underdelmodel == false) 
 		)// &&
-		//s_model && (s_model->GetLoadedFlag() == true) && 
+		//GetCurrentModel() && (GetCurrentModel()->GetLoadedFlag() == true) && 
 		//(g_underRetargetFlag == false))
 	{
 		OnTimeLineCursorFunc();
@@ -33811,7 +33820,7 @@ int OnTimeLineCursor()
 	//	return 0;
 	//}
 
-	//if (s_owpLTimeline && s_model && s_model->GetCurMotInfo()) {
+	//if (s_owpLTimeline && GetCurrentModel() && GetCurrentModel()->GetCurMotInfo()) {
 	//	double curframe;
 	//	if (mbuttonflag != 2) {
 	//		curframe = s_owpLTimeline->getCurrentTime();// 選択時刻
@@ -34140,13 +34149,13 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				if (s_bpWorld) {
 					s_bpWorld->setGlobalERP(btScalar(g_erp));
 				}
-				if (s_model) {
-					CallF(s_model->CreateBtObject(g_limitdegflag, 0), return 1);
+				if (GetCurrentModel()) {
+					CallF(GetCurrentModel()->CreateBtObject(g_limitdegflag, 0), return 1);
 				}
 			}
 			else if (opekind == RIGIDPARAMSDLG_OPE_COLIDLG) {
-				if (s_model) {
-					CRigidElem* curre = s_model->GetRigidElem(s_curboneno);
+				if (GetCurrentModel()) {
+					CRigidElem* curre = GetCurrentModel()->GetRigidElem(s_curboneno);
 					if (curre) {
 						CColiIDDlg dlg(curre);
 						s_pcolidlg = &dlg;
@@ -34154,8 +34163,8 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 						dlg.DoModal();
 						if (dlg.m_setgroup == 1) {
-							if (s_model) {
-								s_model->SetColiIDtoGroup(curre);
+							if (GetCurrentModel()) {
+								GetCurrentModel()->SetColiIDtoGroup(curre);
 							}
 						}
 
@@ -34165,7 +34174,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				}
 			}
 			else if (opekind == RIGIDPARAMSDLG_OPE_GCOLIDLG) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (s_bpWorld) {
 						//CGColiIDDlg dlg(m_bpWorld->m_coliids, m_bpWorld->m_myselfflag);
 						CGColiIDDlg dlg(s_bpWorld->m_coliids);
@@ -34191,9 +34200,9 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 			int dlgresult = (int)lParam;
 			if (dlgresult == 0) {
-				if (s_model && s_owpTimeline && s_owpLTimeline && s_model->ExistCurrentMotion()) {
+				if (GetCurrentModel() && s_owpTimeline && s_owpLTimeline && GetCurrentModel()->ExistCurrentMotion()) {
 					if (s_cpmotinfo.motid > 0) {
-						CopyMotionFunc(s_model, &s_cpmotinfo);
+						CopyMotionFunc(GetCurrentModel(), &s_cpmotinfo);
 					}
 				}
 			}
@@ -34457,9 +34466,9 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				//return 0;
 				break;
 			case ID_DELCURMOT:
-				if (s_model) {
+				if (GetCurrentModel()) {
 					s_delcurmotFlag = true;
-					//OnDelMotion(s_motmenuindexmap[s_model]);
+					//OnDelMotion(s_motmenuindexmap[GetCurrentModel()]);
 				}
 				//return 0;
 				break;
@@ -34483,17 +34492,17 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	case WM_MOUSEWHEEL:
 	{
 		if ((g_keybuf['T'] & 0x80) != 0) {
-			if (ChkEnableIK() && s_model && (s_curboneno > 0)) {
+			if (ChkEnableIK() && GetCurrentModel() && (s_curboneno > 0)) {
 				s_tkeyflag = 1;
 
 				int delta;
 				delta = GET_WHEEL_DELTA_WPARAM(wParam);
 				s_ikselectmat = s_selm;
-				//s_editmotionflag = s_model->TwistBoneAxisDelta(&s_editrange, s_curboneno, (float)delta, g_iklevel, s_ikcnt, s_ikselectmat);
-				s_editmotionflag = s_model->IKRotateAxisDelta(g_limitdegflag, g_wallscrapingikflag,
+				//s_editmotionflag = GetCurrentModel()->TwistBoneAxisDelta(&s_editrange, s_curboneno, (float)delta, g_iklevel, s_ikcnt, s_ikselectmat);
+				s_editmotionflag = GetCurrentModel()->IKRotateAxisDelta(g_limitdegflag, g_wallscrapingikflag,
 					&s_editrange, PICK_X, s_curboneno, (float)delta, g_iklevel, s_ikcnt, s_ikselectmat);
 
-				//ClearLimitedWM(s_model);//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
+				//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
 				//UpdateEditedEuler();
 			}
 		}
@@ -34921,20 +34930,20 @@ CInfoWindow* CreateInfoWnd()
 
 int RecalcBoneAxisX(CBone* srcbone)
 {
-	if (s_model && (s_model->GetOldAxisFlagAtLoading() == 1)) {
+	if (GetCurrentModel() && (GetCurrentModel()->GetOldAxisFlagAtLoading() == 1)) {
 		::DSMessageBox(s_3dwnd, L"Retry After Saving And Loading.", L"error!!!", MB_OK);
 		return 0;
 	}
 
-	s_model->RecalcBoneAxisX(srcbone);
+	GetCurrentModel()->RecalcBoneAxisX(srcbone);
 
 	return 0;
 }
 
 void RecalcAxisX_All()
 {
-	if (s_model) {
-		if (s_model && (s_model->GetOldAxisFlagAtLoading() == 1)) {
+	if (GetCurrentModel()) {
+		if (GetCurrentModel() && (GetCurrentModel()->GetOldAxisFlagAtLoading() == 1)) {
 			::DSMessageBox(s_3dwnd, L"Retry After Saving And Loding.", L"error!!!", MB_OK);
 			return;
 		}
@@ -34945,14 +34954,14 @@ void RecalcAxisX_All()
 		if (s_owpEulerGraph) {
 			s_owpEulerGraph->setCurrentTime(0.0, false);
 		}
-		s_model->SetMotionFrame(0.0);
-		ChaMatrix tmpwm = s_model->GetWorldMat();
-		s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
+		GetCurrentModel()->SetMotionFrame(0.0);
+		ChaMatrix tmpwm = GetCurrentModel()->GetWorldMat();
+		GetCurrentModel()->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 
 		//ここでAxisMatXの初期化
-		s_model->CreateBtObject(g_limitdegflag, 1);
-		s_model->CalcBtAxismat(2);//2
-		s_model->SetInitAxisMatX(1);
+		GetCurrentModel()->CreateBtObject(g_limitdegflag, 1);
+		GetCurrentModel()->CalcBtAxismat(2);//2
+		GetCurrentModel()->SetInitAxisMatX(1);
 	}
 }
 
@@ -35021,7 +35030,7 @@ int OnMouseMoveFunc()
 		}
 	}
 	else if ((s_pickinfo.pickobjno >= 0) && (s_pickinfo.buttonflag == PICK_CENTER)) {
-		if (s_model) {
+		if (GetCurrentModel()) {
 			if (g_previewFlag == 0) {
 
 				s_pickinfo.mousebefpos = s_pickinfo.mousepos;
@@ -35031,7 +35040,7 @@ int OnMouseMoveFunc()
 				s_pickinfo.mousepos = ptCursor;
 
 				ChaVector3 tmpsc;
-				s_model->TransformBone(s_pickinfo.winx, s_pickinfo.winy, s_curboneno, &s_pickinfo.objworld, &tmpsc, &s_pickinfo.objscreen);
+				GetCurrentModel()->TransformBone(s_pickinfo.winx, s_pickinfo.winy, s_curboneno, &s_pickinfo.objworld, &tmpsc, &s_pickinfo.objscreen);
 
 				if (g_edittarget == EDITTARGET_MORPH) {
 					//::MessageBox(s_3dwnd, L"EdittingMorph mode now. \nClick red frog and change graph mode!", 
@@ -35040,23 +35049,23 @@ int OnMouseMoveFunc()
 					OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change graph mode! ###");
 				}
 				else if (g_edittarget == EDITTARGET_BONE) {
-					if (s_model && ChkEnableIK()) {
+					if (GetCurrentModel() && ChkEnableIK()) {
 						if (s_oprigflag == 0) {
 							ChaVector3 targetpos(0.0f, 0.0f, 0.0f);
 							//CallF(CalcTargetPos(&targetpos), return 1);
 							CalcTargetPos(&targetpos);
 							if (s_ikkind == 0) {
-								s_editmotionflag = s_model->IKRotateUnderIK(g_limitdegflag, g_wallscrapingikflag,
+								s_editmotionflag = GetCurrentModel()->IKRotateUnderIK(g_limitdegflag, g_wallscrapingikflag,
 									&s_editrange, s_pickinfo.pickobjno, targetpos, g_iklevel);
 
-								//ClearLimitedWM(s_model);//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
+								//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
 								//UpdateEditedEuler();
 							}
 							else if (s_ikkind == 1) {
 								//ChaVector3 diffvec = targetpos - s_pickinfo.objworld;
 
 								ChaVector3 modelobjworld;
-								ChaMatrix invmodelwm = ChaMatrixInv(s_model->GetWorldMat());
+								ChaMatrix invmodelwm = ChaMatrixInv(GetCurrentModel()->GetWorldMat());
 								ChaVector3TransformCoord(&modelobjworld, &s_pickinfo.objworld, &invmodelwm);
 								ChaVector3 diffvec = targetpos - modelobjworld;
 								AddBoneTra2(diffvec);
@@ -35066,7 +35075,7 @@ int OnMouseMoveFunc()
 								//ChaVector3 diffvec = targetpos - s_pickinfo.objworld;
 
 								ChaVector3 modelobjworld;
-								ChaMatrix invmodelwm = ChaMatrixInv(s_model->GetWorldMat());
+								ChaMatrix invmodelwm = ChaMatrixInv(GetCurrentModel()->GetWorldMat());
 								ChaVector3TransformCoord(&modelobjworld, &s_pickinfo.objworld, &invmodelwm);
 								ChaVector3 diffvec = targetpos - modelobjworld;
 								AddBoneScale2(diffvec);
@@ -35084,17 +35093,17 @@ int OnMouseMoveFunc()
 								}
 
 								s_ikcustomrig = s_customrigbone->GetCustomRig(s_customrigno);
-								s_model->RigControlUnderRig(g_limitdegflag, g_wallscrapingikflag,
+								GetCurrentModel()->RigControlUnderRig(g_limitdegflag, g_wallscrapingikflag,
 									0, &s_editrange, s_pickinfo.pickobjno,
 									0, deltau,
 									s_ikcustomrig, s_pickinfo.buttonflag);
-								ChaMatrix tmpwm = s_model->GetWorldMat();
-								s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
-								s_model->RigControlUnderRig(g_limitdegflag, g_wallscrapingikflag,
+								ChaMatrix tmpwm = GetCurrentModel()->GetWorldMat();
+								GetCurrentModel()->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
+								GetCurrentModel()->RigControlUnderRig(g_limitdegflag, g_wallscrapingikflag,
 									0, &s_editrange, s_pickinfo.pickobjno,
 									1, deltav,
 									s_ikcustomrig, s_pickinfo.buttonflag);
-								s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
+								GetCurrentModel()->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
 								s_editmotionflag = s_curboneno;
 								//s_editmotionflag = 0;//これを０にすると　oprigflag == 1の状態でアンドゥした時に　アンドゥ用の保存が走って　保存が増えて状態が戻らない
 							}
@@ -35104,7 +35113,7 @@ int OnMouseMoveFunc()
 				}
 			}
 			else if (g_previewFlag == 5) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					//if (s_onragdollik == 0){
 					//	StartBt(1, 1);
 					//}
@@ -35116,7 +35125,7 @@ int OnMouseMoveFunc()
 	else if ((s_pickinfo.pickobjno >= 0) && 
 		((s_pickinfo.buttonflag == PICK_X) || (s_pickinfo.buttonflag == PICK_Y) || (s_pickinfo.buttonflag == PICK_Z))
 		) {
-		if (s_model) {
+		if (GetCurrentModel()) {
 			if (g_previewFlag == 0) {
 				s_pickinfo.mousebefpos = s_pickinfo.mousepos;
 				POINT ptCursor;
@@ -35125,7 +35134,7 @@ int OnMouseMoveFunc()
 				s_pickinfo.mousepos = ptCursor;
 
 				ChaVector3 tmpsc;
-				s_model->TransformBone(s_pickinfo.winx, s_pickinfo.winy, s_curboneno, &s_pickinfo.objworld, &tmpsc, &s_pickinfo.objscreen);
+				GetCurrentModel()->TransformBone(s_pickinfo.winx, s_pickinfo.winy, s_curboneno, &s_pickinfo.objworld, &tmpsc, &s_pickinfo.objscreen);
 
 				if (g_previewFlag == 0) {
 					float deltax = (float)((s_pickinfo.mousepos.x - s_pickinfo.mousebefpos.x) + (s_pickinfo.mousepos.y - s_pickinfo.mousebefpos.y)) * 0.5f;
@@ -35142,12 +35151,12 @@ int OnMouseMoveFunc()
 					else if (g_edittarget == EDITTARGET_BONE) {
 						if (ChkEnableIK()) {
 							if (s_ikkind == 0) {
-								s_editmotionflag = s_model->IKRotateAxisDeltaUnderIK(
+								s_editmotionflag = GetCurrentModel()->IKRotateAxisDeltaUnderIK(
 									g_limitdegflag, g_wallscrapingikflag,
 									&s_editrange, s_pickinfo.buttonflag, s_pickinfo.pickobjno,
 									deltax, g_iklevel, s_ikcnt, s_ikselectmat);
 
-								//ClearLimitedWM(s_model);//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
+								//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
 								//UpdateEditedEuler();
 							}
 							else if (s_ikkind == 1) {
@@ -35192,7 +35201,7 @@ int OnMouseMoveFunc()
 				}
 			}
 			else if (g_previewFlag == 5) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					s_onragdollik = 2;
 				}
 			}
@@ -35204,7 +35213,7 @@ int OnMouseMoveFunc()
 
 		//OutputToInfoWnd(INFOCOLOR_INFO, L"AdditiveIK.cpp : MouseMoveFunc 2");
 
-		if (s_model) {
+		if (GetCurrentModel()) {
 			if (g_previewFlag == 0) {
 
 				//s_pickinfo.buttonflag = s_pickinfo.buttonflag - PICK_SPA_X + PICK_X;
@@ -35218,7 +35227,7 @@ int OnMouseMoveFunc()
 				s_pickinfo.mousepos = ptCursor;
 
 				ChaVector3 tmpsc;
-				s_model->TransformBone(s_pickinfo.winx, s_pickinfo.winy, s_curboneno, &s_pickinfo.objworld, &tmpsc, &s_pickinfo.objscreen);
+				GetCurrentModel()->TransformBone(s_pickinfo.winx, s_pickinfo.winy, s_curboneno, &s_pickinfo.objworld, &tmpsc, &s_pickinfo.objscreen);
 
 				//OutputToInfoWnd(INFOCOLOR_INFO, L"AdditiveIK.cpp : MouseMoveFunc 3");
 
@@ -35240,12 +35249,12 @@ int OnMouseMoveFunc()
 					else if (g_edittarget == EDITTARGET_BONE) {
 						if (ChkEnableIK()) {
 							if (s_ikkind == 0) {
-								s_editmotionflag = s_model->IKRotateAxisDeltaUnderIK(
+								s_editmotionflag = GetCurrentModel()->IKRotateAxisDeltaUnderIK(
 									g_limitdegflag, g_wallscrapingikflag,
 									&s_editrange, buttonflagForIkFunc, s_pickinfo.pickobjno,
 									deltax, g_iklevel, s_ikcnt, s_ikselectmat);
 
-								//ClearLimitedWM(s_model);//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
+								//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
 								//UpdateEditedEuler();
 							}
 							else if (s_ikkind == 1) {
@@ -35291,7 +35300,7 @@ int OnMouseMoveFunc()
 				}
 			}
 			else if (g_previewFlag == 5) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					s_onragdollik = 3;
 				}
 			}
@@ -35435,8 +35444,8 @@ int OnMouseMoveFunc()
 					ChaVector3Cross(&rotaxisy, (const ChaVector3*)&viewvec, (const ChaVector3*)&rotaxisxz);
 					ChaVector3Normalize(&rotaxisy, &rotaxisy);
 
-					if (s_model && (s_curboneno >= 0) && s_camtargetflag) {
-						CBone* curbone = s_model->GetBoneByID(s_curboneno);
+					if (GetCurrentModel() && (s_curboneno >= 0) && s_camtargetflag) {
+						CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 						_ASSERT(curbone);
 						if (curbone) {
 							g_befcamtargetpos = g_camtargetpos;
@@ -35481,8 +35490,8 @@ int OnMouseMoveFunc()
 			}
 		}
 		else {
-			if (s_model && (s_curboneno >= 0) && s_camtargetflag) {
-				CBone* curbone = s_model->GetBoneByID(s_curboneno);
+			if (GetCurrentModel() && (s_curboneno >= 0) && s_camtargetflag) {
+				CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 				_ASSERT(curbone);
 				if (curbone) {
 					g_befcamtargetpos = g_camtargetpos;
@@ -35888,10 +35897,10 @@ void GUISetVisible_BlendShape()
 
 void ShowRetargetWnd(bool srcflag)
 {
-	if (s_model && (s_curboneno >= 0)) {
+	if (GetCurrentModel() && (s_curboneno >= 0)) {
 		if (s_bpWorld) {
 			if (srcflag == true) {
-				s_retargetdlg.SetModel(s_model);
+				s_retargetdlg.SetModel(GetCurrentModel());
 				s_retargetdlg.SetVisible(true);
 			}
 			else {
@@ -35907,19 +35916,19 @@ void ShowRetargetWnd(bool srcflag)
 
 void ShowLimitEulerWnd(bool srcflag)
 {
-	if (s_model && (s_curboneno >= 0) && s_bpWorld) {
+	if (GetCurrentModel() && (s_curboneno >= 0) && s_bpWorld) {
 		if (srcflag == true) {
-			if (!s_model->GetTopBone()) {
+			if (!GetCurrentModel()->GetTopBone()) {
 				return;
 			}
-			if (s_model->GetOldAxisFlagAtLoading() == 1) {
+			if (GetCurrentModel()->GetOldAxisFlagAtLoading() == 1) {
 				::DSMessageBox(s_3dwnd, L"Work Only After Setting Of Axis.\nRetry after Saving FBX file.", L"error!!!", MB_OK);
 				return;
 			}
 			////s_dseullimitctrls.clear();
-			//ChaMatrix tmpwm = s_model->GetWorldMat();
-			//s_model->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
-			//s_limiteuldlg.SetModel(s_model, s_curboneno);
+			//ChaMatrix tmpwm = GetCurrentModel()->GetWorldMat();
+			//GetCurrentModel()->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
+			//s_limiteuldlg.SetModel(GetCurrentModel(), s_curboneno);
 
 			s_limiteuldlg.SetVisible(true);
 		}
@@ -35971,8 +35980,8 @@ void ShowGUIDlgBlendShape(bool srcflag)
 
 		g_edittarget = EDITTARGET_MORPH;//2024/06/09　グラフモード変更
 
-		if (s_model) {
-			s_blendshapedlg.SetModel(s_model);
+		if (GetCurrentModel()) {
+			s_blendshapedlg.SetModel(GetCurrentModel());
 			s_blendshapedlg.SetVisible(srcflag);
 		}
 
@@ -36050,13 +36059,13 @@ void ShowDispGroupWnd(bool srcflag)
 
 void ShowRigidWnd(bool srcflag)
 {
-	if (s_model && (s_curboneno >= 0)) {
-		//if (s_model) {
+	if (GetCurrentModel() && (s_curboneno >= 0)) {
+		//if (GetCurrentModel()) {
 		if (s_bpWorld) {
-			s_model->SetCurrentRigidElem(s_reindexmap[s_model]);
-			CallF(s_model->CreateBtObject(g_limitdegflag, 1), return);
+			GetCurrentModel()->SetCurrentRigidElem(s_reindexmap[GetCurrentModel()]);
+			CallF(GetCurrentModel()->CreateBtObject(g_limitdegflag, 1), return);
 
-			s_rigidparamsdlg.SetModel(s_model, s_curboneno, s_reindexmap, s_rgdindexmap);
+			s_rigidparamsdlg.SetModel(GetCurrentModel(), s_curboneno, s_reindexmap, s_rgdindexmap);
 			s_rigidparamsdlg.SetVisible(srcflag);
 
 			s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].state = srcflag;
@@ -36096,10 +36105,10 @@ void ShowShadowParamsWnd(bool srcflag)
 
 void ShowImpulseWnd(bool srcflag)
 {
-	//if (s_model && (s_curboneno >= 0)) {
-	if (srcflag && s_model) {
+	//if (GetCurrentModel() && (s_curboneno >= 0)) {
+	if (srcflag && GetCurrentModel()) {
 		if (s_bpWorld) {
-			CallF(s_model->CreateBtObject(g_limitdegflag, 0), return);
+			CallF(GetCurrentModel()->CreateBtObject(g_limitdegflag, 0), return);
 
 			s_impulsedlg.SetVisible(true);
 		}
@@ -36116,9 +36125,9 @@ void ShowImpulseWnd(bool srcflag)
 }
 void ShowGroundWnd(bool srcflag)
 {
-	//if (s_model && (s_curboneno >= 0)) {
-	if (srcflag && s_gplane && s_model && s_bpWorld) {
-		CallF(s_model->CreateBtObject(g_limitdegflag, 0), return);
+	//if (GetCurrentModel() && (s_curboneno >= 0)) {
+	if (srcflag && s_gplane && GetCurrentModel() && s_bpWorld) {
+		CallF(GetCurrentModel()->CreateBtObject(g_limitdegflag, 0), return);
 
 		s_gplanedlg.SetModel(s_gplane, s_bpWorld);
 		s_gplanedlg.SetVisible(true);
@@ -36132,9 +36141,9 @@ void ShowGroundWnd(bool srcflag)
 }
 void ShowDampAnimWnd(bool srcflag)
 {
-	//if (s_model && (s_curboneno >= 0)) {
-	if (srcflag && s_model && s_bpWorld) {
-		CallF(s_model->CreateBtObject(g_limitdegflag, 0), return);
+	//if (GetCurrentModel() && (s_curboneno >= 0)) {
+	if (srcflag && GetCurrentModel() && s_bpWorld) {
+		CallF(GetCurrentModel()->CreateBtObject(g_limitdegflag, 0), return);
 
 		s_dampanimdlg.SetVisible(true);
 	}
@@ -36279,7 +36288,7 @@ void ChangeToNextPlateMenuKind(int srcmenukind, int srcmenuno)
 	//カエルボタンが押された場合　または　スペースキーが押された場合
 	//###############################################################
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return;
 	}
 
@@ -36326,7 +36335,7 @@ void ChangeToNextPlateMenuPlate(int srcmenukind, int srcmenuno)
 {
 	//Cキーを押し続けながらスペースキーが押された場合
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return;
 	}
 
@@ -36865,8 +36874,8 @@ void DSCrossButtonSelectTree(bool firstctrlselect)
 
 
 			if (s_currentwndid == MB3D_WND_TREE) {
-				if (s_model && (s_curboneno >= 0)) {
-					CBone* curbone = s_model->GetBoneByID(s_curboneno);
+				if (GetCurrentModel() && (s_curboneno >= 0)) {
+					CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 					if (curbone) {
 						if (parentbutton >= 1) {
 							if ((accelaxis1 >= 1) || (accelaxis2 >= 1)) {
@@ -36929,7 +36938,7 @@ void DSCrossButtonSelectTree(bool firstctrlselect)
 									if (leftpos != std::string::npos) {
 										//Leftの部分をRightに変えてボーンが存在すればそのボーンに移動
 										chkLeft.replace(leftpos, strLeft.length(), strRight);
-										CBone* rightbone = s_model->FindBoneByName(chkLeft.c_str());
+										CBone* rightbone = GetCurrentModel()->FindBoneByName(chkLeft.c_str());
 										if (rightbone) {
 											int nextboneno = rightbone->GetBoneNo();
 											if (nextboneno >= 0) {
@@ -36943,7 +36952,7 @@ void DSCrossButtonSelectTree(bool firstctrlselect)
 										if (rightpos != std::string::npos) {
 											//Rightの部分をLeftに変えてボーンが存在すればそのボーンに移動
 											chkRight.replace(rightpos, strRight.length(), strLeft);
-											CBone* leftbone = s_model->FindBoneByName(chkRight.c_str());
+											CBone* leftbone = GetCurrentModel()->FindBoneByName(chkRight.c_str());
 											if (leftbone) {
 												int nextboneno = leftbone->GetBoneNo();
 												if (nextboneno >= 0) {
@@ -37022,7 +37031,7 @@ void DSCrossButtonSelectTree(bool firstctrlselect)
 								if (leftpos != std::string::npos) {
 									//Leftの部分をRightに変えてボーンが存在すればそのボーンに移動
 									chkLeft.replace(leftpos, strLeft.length(), strRight);
-									CBone* rightbone = s_model->FindBoneByName(chkLeft.c_str());
+									CBone* rightbone = GetCurrentModel()->FindBoneByName(chkLeft.c_str());
 									if (rightbone) {
 										int nextboneno = rightbone->GetBoneNo();
 										if (nextboneno >= 0) {
@@ -37036,7 +37045,7 @@ void DSCrossButtonSelectTree(bool firstctrlselect)
 									if (rightpos != std::string::npos) {
 										//Rightの部分をLeftに変えてボーンが存在すればそのボーンに移動
 										chkRight.replace(rightpos, strRight.length(), strLeft);
-										CBone* leftbone = s_model->GetBoneByName(chkRight.c_str());
+										CBone* leftbone = GetCurrentModel()->GetBoneByName(chkRight.c_str());
 										if (leftbone) {
 											int nextboneno = leftbone->GetBoneNo();
 											if (nextboneno >= 0) {
@@ -37935,7 +37944,7 @@ void SetMainWindowTitle()
 	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.36 : No.%d : ", s_appcnt);//本体のバージョン
 
 
-	if (s_model && s_chascene) {
+	if (GetCurrentModel() && s_chascene) {
 		//WCHAR strcharactor[MAX_PATH * 3] = { 0L };
 		WCHAR strindexedcharactor[MAX_PATH * 3] = { 0L };
 		char strmotionA[MAX_PATH * 3] = { 0 };
@@ -37960,7 +37969,7 @@ void SetMainWindowTitle()
 
 				int retrefindex = -1;
 				REINFO reinfo;
-				reinfo = s_model->GetCurrentRigidElemInfo(&retrefindex);
+				reinfo = GetCurrentModel()->GetCurrentRigidElemInfo(&retrefindex);
 				if (retrefindex >= 0) {
 					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, reinfo.filename, (MAX_PATH * 3), strrefW, (MAX_PATH * 3));
 					wcscat_s(strmaintitle, (MAX_PATH * 3), strrefW);
@@ -39165,10 +39174,10 @@ int WriteCPTFile(WCHAR* dstfilename)
 	if (cpelemnum <= 0) {
 		return 0;
 	}
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
-	if (!s_model->ExistCurrentMotion()) {
+	if (!GetCurrentModel()->ExistCurrentMotion()) {
 		return 0;
 	}
 
@@ -39339,7 +39348,7 @@ int DispCpInfoDlg2(CModel* srcmodel, MOTINFO* curmi, int srctype)
 		list<KeyInfo>::iterator itrcp;
 		for (itrcp = s_copyKeyInfoList.begin(); itrcp != s_copyKeyInfoList.end(); itrcp++) {
 			double curframe = RoundingTime(itrcp->time);
-			InsertSymMPReq(g_limitdegflag, s_model->GetTopBone(false), curframe, s_getsym_retmode);//s_getsym_retmode!!!
+			InsertSymMPReq(g_limitdegflag, GetCurrentModel()->GetTopBone(false), curframe, s_getsym_retmode);//s_getsym_retmode!!!
 		}
 	}
 
@@ -39369,7 +39378,7 @@ int DispCpInfoDlg2(CModel* srcmodel, MOTINFO* curmi, int srctype)
 
 	char motname[MAX_PATH] = { 0 };
 	strcpy_s(motname, MAX_PATH, curmi->motname);
-	//s_model->GetCurrentMotName(motname, MAX_PATH);
+	//GetCurrentModel()->GetCurrentMotName(motname, MAX_PATH);
 	WCHAR wmotname[MAX_PATH] = { 0L };
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, motname, 256, wmotname, MAX_PATH);
 	wcscpy_s(s_cpinfo.motionname, MAX_PATH, wmotname);
@@ -39395,7 +39404,7 @@ int WriteCPIFile(CModel* srcmodel, MOTINFO* curmi, WCHAR* srccptfilename)
 	if (!srcmodel) {
 		return 0;
 	}
-	//if (!s_model->ExistCurrentMotion()) {
+	//if (!GetCurrentModel()->ExistCurrentMotion()) {
 	//	return 0;
 	//}
 	if (!curmi) {
@@ -39751,7 +39760,7 @@ bool LoadCPTFile(CModel* srcmodel)
 		_ASSERT(0);
 		return false;
 	}
-	//if (!s_model->ExistCurrentMotion()) {
+	//if (!GetCurrentModel()->ExistCurrentMotion()) {
 	//	_ASSERT(0);
 	//	return false;
 	//}
@@ -39762,7 +39771,7 @@ bool LoadCPTFile(CModel* srcmodel)
 	//std::vector<HISTORYELEM> cptfilename;
 	s_cptfilename.clear();
 	GetCPTFileName(s_cptfilename);
-	s_copyhistorydlg2.SetNames(srcmodel, s_cptfilename);//2024/06/23 srcmodelがs_model以外の場合(s_cameramodel)があるのでセットし直す
+	s_copyhistorydlg2.SetNames(srcmodel, s_cptfilename);//2024/06/23 srcmodelがGetCurrentModel()以外の場合(s_cameramodel)があるのでセットし直す
 
 	if (s_cptfilename.empty()) {
 		_ASSERT(0);
@@ -40014,11 +40023,11 @@ void InitTimelineSelection()
 		s_owpLTimeline->setCurrentTime(1.0, false);
 	}
 
-	//if (s_model) {
+	//if (GetCurrentModel()) {
 	//	MOTINFO* curmi;
-	//	curmi = s_model->GetCurMotInfo();
+	//	curmi = GetCurrentModel()->GetCurMotInfo();
 	//	if (curmi) {
-	//		s_model->SetMotionFrame(1.0);
+	//		GetCurrentModel()->SetMotionFrame(1.0);
 	//	}
 	//}
 
@@ -40029,12 +40038,12 @@ void InitTimelineSelection()
 
 void ClampTimelineSelection()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		InitTimelineSelection();
 		return;
 	}
 
-	//if (!s_model->ExistCurrentMotion()) {
+	//if (!GetCurrentModel()->ExistCurrentMotion()) {
 	//	InitTimelineSelection();
 	//	return;
 	//}
@@ -40089,11 +40098,11 @@ void ClampTimelineSelection()
 		s_owpLTimeline->setCurrentTime(newapplyframe, false);
 	}
 
-	//if (s_model) {
+	//if (GetCurrentModel()) {
 	//	MOTINFO* curmi;
-	//	curmi = s_model->GetCurMotInfo();
+	//	curmi = GetCurrentModel()->GetCurMotInfo();
 	//	if (curmi) {
-	//		s_model->SetMotionFrame(1.0);
+	//		GetCurrentModel()->SetMotionFrame(1.0);
 	//	}
 	//}
 
@@ -40338,7 +40347,7 @@ ChaMatrix CalcRigMat(CUSTOMRIG* currig, CBone* curbone, int curmotid, double cur
 
 int PickRigBone(UIPICKINFO* ppickinfo, bool forrigtip, int* dstrigno)//default:forrigtip = false, dstrigno = 0
 {
-	if (!s_model || !ppickinfo) {
+	if (!GetCurrentModel() || !ppickinfo) {
 		return -1;
 	}
 
@@ -40353,12 +40362,12 @@ int PickRigBone(UIPICKINFO* ppickinfo, bool forrigtip, int* dstrigno)//default:f
 
 
 	ResetRigModelNum();
-	if (s_model->ExistCurrentMotion()) {
-		int curmotid = s_model->GetCurrentMotID();
-		double curframe = s_model->GetCurrentFrame();
+	if (GetCurrentModel()->ExistCurrentMotion()) {
+		int curmotid = GetCurrentModel()->GetCurrentMotID();
+		double curframe = GetCurrentModel()->GetCurrentFrame();
 
 		std::map<int, CBone*>::iterator itrbone;
-		for (itrbone = s_model->GetBoneListBegin(); itrbone != s_model->GetBoneListEnd(); itrbone++) {
+		for (itrbone = GetCurrentModel()->GetBoneListBegin(); itrbone != GetCurrentModel()->GetBoneListEnd(); itrbone++) {
 			CBone* curbone = (CBone*)itrbone->second;
 			if (curbone && (curbone->IsSkeleton())) {
 				int rigno;
@@ -40398,7 +40407,7 @@ int PickRigBone(UIPICKINFO* ppickinfo, bool forrigtip, int* dstrigno)//default:f
 									*ppickinfo = chkpickinfo;
 									s_curboneno = chkboneno;
 
-									CBone* chkbone = s_model->GetBoneByID(s_curboneno);
+									CBone* chkbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 									if (chkbone != s_customrigbone) {
 										//開いている設定ダイアログを閉じないと、設定ダイアログのrigboneと新たなrigboneが異なってしまい、Applyボタンで異なるリグを保存することがある
 										if (s_customrigdlg) {
@@ -40583,7 +40592,7 @@ int PickManipulator(UIPICKINFO* ppickinfo, bool pickring)
 		//カメラターゲット位置にマニピュレータ表示時にはpickしない
 		return -1;
 	}
-	if (FindGrassElem(s_model) != nullptr) {
+	if (FindGrassElem(GetCurrentModel()) != nullptr) {
 		//2024/06/22 草選択時にはPickManipulatorしない
 		//草選択時にPickManipulator判定をすると
 		//読み込み直後に草が選択されている場合に　Model'sPosAndDirでPickAndPutしようとしても　この関数がhit状態を返すのでPickAndPut出来なかった
@@ -40838,16 +40847,16 @@ int SetTimelineHasRigFlag()
 	if (!s_owpTimeline) {
 		return 0;
 	}
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 
 
 	std::map<int, CBone*>::iterator itrbone;
-	for (itrbone = s_model->GetBoneListBegin(); itrbone != s_model->GetBoneListEnd(); itrbone++) {
+	for (itrbone = GetCurrentModel()->GetBoneListBegin(); itrbone != GetCurrentModel()->GetBoneListEnd(); itrbone++) {
 		CBone* curbone = (CBone*)itrbone->second;
 		if (curbone && (curbone->IsSkeleton())) {
-			bool hasrigflag = s_model->ChkBoneHasRig(curbone);
+			bool hasrigflag = GetCurrentModel()->ChkBoneHasRig(curbone);
 			s_owpTimeline->setHasRigFlag(curbone->GetWBoneName(), hasrigflag);
 		}
 	}
@@ -41124,15 +41133,15 @@ int FilterNoDlg(bool copylw2w, CModel* srcmodel, int curmotid)
 int FilterFuncDlg()
 {
 	if ((s_filterState == 1) || (s_filterState == 2) || (s_filterState == 3)) {
-		//if (s_model){
-		//	s_model->SaveUndoMotion(s_curboneno, s_curbaseno, &s_editrange, (double)g_applyrate);
+		//if (GetCurrentModel()){
+		//	GetCurrentModel()->SaveUndoMotion(s_curboneno, s_curbaseno, &s_editrange, (double)g_applyrate);
 		//}
 
-		//if (s_model && (s_filternodlg == false)) {
+		//if (GetCurrentModel() && (s_filternodlg == false)) {
 		//	PrepairUndo();
 		//}
 
-		if (s_model && s_model->ExistCurrentMotion()) {
+		if (GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
 			if (s_owpTimeline && s_owpLTimeline) {
 				s_editrange.Clear();
 				//s_editrange.SetRange(s_owpLTimeline->getSelectedKey(), s_owpLTimeline->getCurrentTime());
@@ -41147,7 +41156,7 @@ int FilterFuncDlg()
 				CBone* opebone = 0;
 				if (s_curboneno >= 0) {
 					CBone* curbone = 0;
-					curbone = s_model->GetBoneByID(s_curboneno);
+					curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 					if (curbone) {
 						if ((s_ikkind == 0) && curbone->GetParent(false) && curbone->GetParent(false)->IsSkeleton()) {
 							opebone = curbone->GetParent(false);
@@ -41172,14 +41181,14 @@ int FilterFuncDlg()
 						edgesmp = true;
 					}
 					else {
-						edgesmp = s_model->CheckIKTarget();
+						edgesmp = GetCurrentModel()->CheckIKTarget();
 					}
 
 					if (keynum >= 2) {
 						CMotFilter motfilter;
-						motfilter.Filter(edgesmp, g_limitdegflag, s_model, opebone,
+						motfilter.Filter(edgesmp, g_limitdegflag, GetCurrentModel(), opebone,
 							s_filterState,
-							s_model->GetCurMotInfo().motid,
+							GetCurrentModel()->GetCurMotInfo().motid,
 							IntTime(startframe), IntTime(endframe));
 
 
@@ -41188,7 +41197,7 @@ int FilterFuncDlg()
 							bool setcursorflag = false;
 							int operatingjointno = opebone->GetBoneNo();
 							bool onpasteflag = false;
-							CopyLimitedWorldToWorld(s_model, allframeflag, setcursorflag, operatingjointno, onpasteflag);
+							CopyLimitedWorldToWorld(GetCurrentModel(), allframeflag, setcursorflag, operatingjointno, onpasteflag);
 						}
 						refreshEulerGraph();
 						PrepairUndo();
@@ -41210,7 +41219,7 @@ int FilterFuncDlg()
 
 //int CallFilterFunc(int callnum)
 //{
-//	if (s_model && s_model->GetCurMotInfo()) {
+//	if (GetCurrentModel() && GetCurrentModel()->GetCurMotInfo()) {
 //
 //		if (g_iklevel == 1) {
 //			s_filterState = 2;//one
@@ -41233,7 +41242,7 @@ int FilterFuncDlg()
 //			bool onpasteflag = false;
 //
 //			int operatingjointno = 0;
-//			CBone* curbone = s_model->GetBoneByID(s_curboneno);
+//			CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 //			if (curbone) {
 //				if (curbone->GetParent()) {
 //					operatingjointno = curbone->GetParent()->GetBoneNo();
@@ -41243,11 +41252,11 @@ int FilterFuncDlg()
 //				}
 //			}
 //			else {
-//				if (s_model->GetTopBone()) {
-//					operatingjointno = s_model->GetTopBone()->GetBoneNo();
+//				if (GetCurrentModel()->GetTopBone()) {
+//					operatingjointno = GetCurrentModel()->GetTopBone()->GetBoneNo();
 //				}
 //			}
-//			CopyLimitedWorldToWorld(s_model, allframeflag, setcursorflag, operatingjointno, onpasteflag);
+//			CopyLimitedWorldToWorld(GetCurrentModel(), allframeflag, setcursorflag, operatingjointno, onpasteflag);
 //		}
 //
 //
@@ -41411,7 +41420,7 @@ int CreateTipRig(CBone* currigbone, int currigno, POINT ptCursor)
 
 bool PickAndSelectMeshOfDispGroupDlg()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return false;
 	}
 	if (g_previewFlag != 0) {
@@ -41449,7 +41458,7 @@ bool PickAndSelectMeshOfDispGroupDlg()
 
 int SetModelWorldMat()
 {
-	CGrassElem* curgrasselem = FindGrassElem(s_model);
+	CGrassElem* curgrasselem = FindGrassElem(GetCurrentModel());
 
 	if (curgrasselem && (s_removegrassflag == false)) {
 		int grassnum = curgrasselem->GetGrassNum();
@@ -41467,13 +41476,13 @@ int SetModelWorldMat()
 	if (result == 0) {
 		if (!curgrasselem) {
 			if (s_pickmodelworldmat) {
-				s_model->SetModelPosition(s_pickhitpos);//tmpposではなくs_pickhitpos
+				GetCurrentModel()->SetModelPosition(s_pickhitpos);//tmpposではなくs_pickhitpos
 			}
 			else {
-				s_model->SetModelPosition(tmppos);
+				GetCurrentModel()->SetModelPosition(tmppos);
 			}
-			s_model->SetModelRotation(tmprot);
-			s_model->CalcModelWorldMatOnLoad(&s_footrigdlg);
+			GetCurrentModel()->SetModelRotation(tmprot);
+			GetCurrentModel()->CalcModelWorldMatOnLoad(&s_footrigdlg);
 		}
 		else {
 			if (s_removegrassflag == false) {
@@ -41511,7 +41520,7 @@ bool PickAndPut()
 	//上段カエルボタンの行のModelWorldMatショートカットボタンを押して出すダイアログで
 	//Pick&Setにチェックを入れた場合は　マウスクリック位置にモデルを配置する
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return false;
 	}
 	if (g_previewFlag != 0) {
@@ -41550,7 +41559,7 @@ bool PickAndPut()
 
 bool PickAndSelectMaterialOfShaderTypeDlg()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return false;
 	}
 	if (g_previewFlag != 0) {
@@ -41583,7 +41592,7 @@ int DispToolTip()
 	s_dispfontfortip = false;
 
 
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 
@@ -41826,7 +41835,7 @@ bool DispTipUI()
 	{
 		if (dispfontfortip == false) {
 			if (PickSpCopyCamera(ptCursor) != 0) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					dispfontfortip = true;
 					wcscpy_s(sz512, 512, L"Copy Camera Motion");
 					//CreateToolTip(ptCursor, s_strfortip);
@@ -41836,7 +41845,7 @@ bool DispTipUI()
 
 		if (dispfontfortip == false) {
 			if (PickSpPasteCamera(ptCursor) != 0) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					dispfontfortip = true;
 					wcscpy_s(sz512, 512, L"Paste Camera Motion");
 					//CreateToolTip(ptCursor, s_strfortip);
@@ -41846,7 +41855,7 @@ bool DispTipUI()
 
 		if (dispfontfortip == false) {
 			if (PickSpInterpolateCamera(ptCursor) != 0) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					dispfontfortip = true;
 					wcscpy_s(sz512, 512, L"Interpolate Camera Motion");
 					//CreateToolTip(ptCursor, s_strfortip);
@@ -41856,7 +41865,7 @@ bool DispTipUI()
 
 		if (dispfontfortip == false) {
 			if (PickSpInitCamera(ptCursor) != 0) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					dispfontfortip = true;
 					wcscpy_s(sz512, 512, L"Init Camera MotionPoint");
 					//CreateToolTip(ptCursor, s_strfortip);
@@ -41881,7 +41890,7 @@ bool DispTipUI()
 	if (s_toolspritemode == 0) {//ToolShortCut : 0
 		if (dispfontfortip == false) {
 			if (PickSpCopy(ptCursor) != 0) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					dispfontfortip = true;
 					wcscpy_s(sz512, 512, L"Copy Motion");
 					//CreateToolTip(ptCursor, s_strfortip);
@@ -41891,7 +41900,7 @@ bool DispTipUI()
 
 		if (dispfontfortip == false) {
 			if (PickSpSymCopy(ptCursor) != 0) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					dispfontfortip = true;
 					wcscpy_s(sz512, 512, L"SymCopy Motion");
 					//CreateToolTip(ptCursor, s_strfortip);
@@ -41901,7 +41910,7 @@ bool DispTipUI()
 
 		if (dispfontfortip == false) {
 			if (PickSpPaste(ptCursor) != 0) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					dispfontfortip = true;
 					wcscpy_s(sz512, 512, L"LBtn:Paste Motion, RBtn;Settings And Paste Motion");
 					//CreateToolTip(ptCursor, s_strfortip);
@@ -41911,7 +41920,7 @@ bool DispTipUI()
 
 		if (dispfontfortip == false) {
 			if (PickSpCopyHistory(ptCursor) != 0) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					dispfontfortip = true;
 					wcscpy_s(sz512, 512, L"Disp CopyHistory at Right Pain");
 					//CreateToolTip(ptCursor, s_strfortip);
@@ -41923,7 +41932,7 @@ bool DispTipUI()
 		if (dispfontfortip == false) {
 			int pickinterpolate = 0;
 			if ((pickinterpolate = PickSpInterpolate(ptCursor)) != 0) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					if (pickinterpolate == 1) {
 						dispfontfortip = true;
 						wcscpy_s(sz512, 512, L"Interpolate Motion");
@@ -41943,7 +41952,7 @@ bool DispTipUI()
 
 		if (dispfontfortip == false) {
 			if (PickSpInit(ptCursor) != 0) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					dispfontfortip = true;
 					wcscpy_s(sz512, 512, L"Init MotionPoint");
 					//CreateToolTip(ptCursor, s_strfortip);
@@ -41953,7 +41962,7 @@ bool DispTipUI()
 
 		if (dispfontfortip == false) {
 			if (PickSpScaleInit(ptCursor) != 0) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					dispfontfortip = true;
 					wcscpy_s(sz512, 512, L"Init All Scale");
 					//CreateToolTip(ptCursor, s_strfortip);
@@ -41963,7 +41972,7 @@ bool DispTipUI()
 
 		if (dispfontfortip == false) {
 			if (PickSpProperty(ptCursor) != 0) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					dispfontfortip = true;
 					wcscpy_s(sz512, 512, L"Property of Motion");
 					//CreateToolTip(ptCursor, s_strfortip);
@@ -41974,7 +41983,7 @@ bool DispTipUI()
 	else if (s_toolspritemode == 2) {//ToolShortCut : 2
 		if (dispfontfortip == false) {
 			if (PickSpZeroFrame(ptCursor) != 0) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					dispfontfortip = true;
 					wcscpy_s(sz512, 512, L"Edit 0 Frame");
 					//CreateToolTip(ptCursor, s_strfortip);
@@ -41984,7 +41993,7 @@ bool DispTipUI()
 
 		if (dispfontfortip == false) {
 			if (PickSpCameraDolly(ptCursor) != 0) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					dispfontfortip = true;
 					wcscpy_s(sz512, 512, L"Camera Dolly History");
 					//CreateToolTip(ptCursor, s_strfortip);
@@ -41994,7 +42003,7 @@ bool DispTipUI()
 
 		if (dispfontfortip == false) {
 			if (PickSpModelPosDir(ptCursor) != 0) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					dispfontfortip = true;
 					wcscpy_s(sz512, 512, L"Model's Pos and Dir");
 					//CreateToolTip(ptCursor, s_strfortip);
@@ -42004,7 +42013,7 @@ bool DispTipUI()
 
 		if (dispfontfortip == false) {
 			if (PickSpMaterialRate(ptCursor) != 0) {
-				if (s_model) {
+				if (GetCurrentModel()) {
 					dispfontfortip = true;
 					wcscpy_s(sz512, 512, L"Material Rate");
 					//CreateToolTip(ptCursor, s_strfortip);
@@ -42167,7 +42176,7 @@ bool DispTipBone()
 	}
 	if (tmppickinfo.pickobjno >= 0) {
 		int curboneno = tmppickinfo.pickobjno;
-		CBone* curbone = s_model->GetBoneByID(curboneno);
+		CBone* curbone = GetCurrentModel()->GetBoneByID(curboneno);
 		if (curbone) {
 			dispfontfortip = true;
 			swprintf_s(s_strfortip, 512, L"Joint : %s", curbone->GetWBoneName());
@@ -42181,7 +42190,7 @@ bool DispTipBone()
 
 bool DispTipRig()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return false;
 	}
 
@@ -42209,7 +42218,7 @@ bool DispTipRig()
 		int currigno = -1;
 		int pickrigboneno = PickRigBone(&tmppickinfo, forrigtip, &currigno);
 		if ((pickrigboneno >= 0) && (currigno >= 0)) {
-			CBone* currigbone = s_model->GetBoneByID(pickrigboneno);
+			CBone* currigbone = GetCurrentModel()->GetBoneByID(pickrigboneno);
 			if (currigbone) {
 
 				s_tiprigboneno = pickrigboneno;
@@ -42231,7 +42240,7 @@ bool DispTipRig()
 
 bool DispTipMesh()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return false;
 	}
 
@@ -42290,7 +42299,7 @@ bool DispTipMesh()
 
 bool DispTipMaterial()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return false;
 	}
 
@@ -42456,8 +42465,8 @@ int OnFrameBlendShape()
 		if ((blendshapeindex >= 0) && (blendshapeindex < blendshapenum)) {
 			CBlendShapeElem blendshapeelem = s_blendshapedlg.GetBlendShapeElem(blendshapeindex);
 			if (blendshapeelem.validflag && blendshapeelem.model && blendshapeelem.mqoobj) {
-				int curmotid = s_model->GetCurrentMotID();
-				double curframe = s_model->GetCurrentFrame();
+				int curmotid = GetCurrentModel()->GetCurrentMotID();
+				double curframe = GetCurrentModel()->GetCurrentFrame();
 				blendshapeelem.mqoobj->SetShapeAnimWeight(blendshapeelem.channelindex,
 					curmotid, IntTime(curframe), s_blendshapedlg.GetBlendShapeAfter());
 
@@ -42470,7 +42479,7 @@ int OnFrameBlendShape()
 	}
 	if (s_blendshapedlg.GetBlendShapePostEdit()) {//スライダードラッグ終了処理
 		s_blendshapedlg.SetBlendShapePostEdit(false);
-		if (s_model) {
+		if (GetCurrentModel()) {
 			int blendshapeindex = s_blendshapedlg.GetBlendShapeOpeIndex();
 			int blendshapenum = s_blendshapedlg.GetBlendShapeLineNum();
 			if ((blendshapeindex >= 0) && (blendshapeindex < blendshapenum)) {
@@ -42526,8 +42535,8 @@ int OnFrameShaderTypeParamsDlg()//OnFrameToolWnd()から呼び出す
 
 		ShowShaderTypeParamsDlg(true);
 
-		//	if (s_model) {
-		//		//int materialnum = s_model->GetMQOMaterialSize();
+		//	if (GetCurrentModel()) {
+		//		//int materialnum = GetCurrentModel()->GetMQOMaterialSize();
 		//		//if ((s_shadertypedlg.GetShaderTypeParamsIndex() >= 0) && (s_shadertypedlg.GetShaderTypeParamsIndex() < (materialnum + 1))) {
 		//		//	ShowShaderTypeParamsDlg(true);
 		//		//}
@@ -42699,8 +42708,8 @@ int ShowModelWorldMatDlg()
 {
 
 	if (s_modelworldmatdlgwnd) {
-		if (s_model) {
-			SetModel2ModelWorldMatDlg(s_model);
+		if (GetCurrentModel()) {
+			SetModel2ModelWorldMatDlg(GetCurrentModel());
 
 			ShowWindow(s_modelworldmatdlgwnd, SW_SHOW);
 			UpdateWindow(s_modelworldmatdlgwnd);
@@ -42715,7 +42724,7 @@ int ShowJumpGravityDlg()
 {
 
 	if (s_jumpgravitydlgwnd) {
-		if (s_model) {
+		if (GetCurrentModel()) {
 			ShowWindow(s_jumpgravitydlgwnd, SW_SHOW);
 			UpdateWindow(s_jumpgravitydlgwnd);
 		}
@@ -42727,9 +42736,9 @@ int ShowJumpGravityDlg()
 
 int ShowShaderTypeParamsDlg(bool srcflag)
 {
-	if (s_model && srcflag) {
+	if (GetCurrentModel() && srcflag) {
 
-		int materialnum = s_model->GetMQOMaterialSize();
+		int materialnum = GetCurrentModel()->GetMQOMaterialSize();
 
 		if ((materialnum > 0) && (materialnum < MAXMATERIALNUM)) {//2024/03/03
 			CMQOMaterial* curmqomat = nullptr;
@@ -42737,7 +42746,7 @@ int ShowShaderTypeParamsDlg(bool srcflag)
 			if ((shadertypeparamsindex >= 0) && (shadertypeparamsindex < (materialnum + 1))) {
 				int materialindex = shadertypeparamsindex - 1;
 				if (materialindex >= 0) {
-					curmqomat = s_model->GetMQOMaterialByIndex(materialindex);
+					curmqomat = GetCurrentModel()->GetMQOMaterialByIndex(materialindex);
 				}
 			}
 			if (!curmqomat) {
@@ -42868,8 +42877,8 @@ int SetModel2MaterialRateDlg(CModel* srcmodel)
 int ShowMaterialRateDlg()
 {
 	if (s_materialratedlgwnd) {
-		if (s_model) {
-			SetModel2MaterialRateDlg(s_model);
+		if (GetCurrentModel()) {
+			SetModel2MaterialRateDlg(GetCurrentModel());
 
 			ShowWindow(s_materialratedlgwnd, SW_SHOW);
 			UpdateWindow(s_materialratedlgwnd);
@@ -43150,8 +43159,8 @@ void SetCamera3DFromEyePos()
 	g_camera3D->SetHeight((float)g_graphicsEngine->GetFrameBufferHeight());//2023/11/20
 	g_camera3D->Update();
 
-	if (s_model) {
-		s_matWorld = s_model->GetWorldMat();
+	if (GetCurrentModel()) {
+		s_matWorld = GetCurrentModel()->GetWorldMat();
 	}
 	else {
 		s_matWorld.SetIdentity();
@@ -43162,14 +43171,14 @@ void SetCamera3DFromEyePos()
 
 
 //// camera for shadowmap
-	if (s_model) {
+	if (GetCurrentModel()) {
 		ChaVector3 dirright;
 		dirright.SetParams(g_camera3D->GetRight());
 		ChaVector3 dirup;
 		dirup.SetParams(g_camera3D->GetUp());
 		ChaVector3 dirforward;
 		dirforward.SetParams(g_camera3D->GetForward());
-		ChaVector3 modelpos = ChaMatrixTraVec(s_model->GetWorldMat());
+		ChaVector3 modelpos = ChaMatrixTraVec(GetCurrentModel()->GetWorldMat());
 		ChaVector3 camdiff = g_camtargetpos - g_camEye;
 
 		g_cameraShadow->Update();
@@ -45741,7 +45750,7 @@ void InitPickInfo(UIPICKINFO* ppickinfo)
 
 int PickBone(UIPICKINFO* ppickinfo)
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return 0;
 	}
 	if (!ppickinfo) {
@@ -45758,7 +45767,7 @@ int PickBone(UIPICKINFO* ppickinfo)
 		return 0;
 	}
 
-	int result0 = s_model->PickBone(ppickinfo);
+	int result0 = GetCurrentModel()->PickBone(ppickinfo);
 	return result0;
 }
 
@@ -45928,7 +45937,7 @@ MOTINFO GetEditTargetMotInfo()
 		}
 	}
 	else {
-		curmi = s_model->GetCurMotInfo();
+		curmi = GetCurrentModel()->GetCurMotInfo();
 	}
 	if (curmi.motid <= 0) {
 		curmi.Init();
@@ -45948,19 +45957,19 @@ CBone* GetEditTargetOpeBone(int* pmotid, int* pframeleng)
 	CBone* opebone = nullptr;
 	if (g_edittarget == EDITTARGET_BONE) {
 
-		graphmotid = s_model->GetCurrentMotID();
-		frameleng = IntTime(s_model->GetCurrentMaxFrame());
+		graphmotid = GetCurrentModel()->GetCurrentMotID();
+		frameleng = IntTime(GetCurrentModel()->GetCurrentMaxFrame());
 
 		if (s_curboneno < 0) {
-			CBone* topbone = s_model->GetTopBone();
+			CBone* topbone = GetCurrentModel()->GetTopBone();
 			if (topbone) {
 				//選択状態がない場合にはtopboneのオイラーグラフを表示する。
 				s_curboneno = topbone->GetBoneNo();
 			}
 		}
 
-		if (s_model && (s_curboneno >= 0)) {
-			opebone = s_model->GetBoneByID(s_curboneno);
+		if (GetCurrentModel() && (s_curboneno >= 0)) {
+			opebone = GetCurrentModel()->GetBoneByID(s_curboneno);
 			if (opebone) {
 				CBone* parentbone = opebone->GetParent(false);
 				if (s_ikkind == 0) {
@@ -46028,7 +46037,7 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 
 			if (s_camtargetflag) {//2024/08/20 AlwasyLockにチェックが入っている場合
 				//always s_editrange全範囲に対してウェイト1.0でLock2Joint処理.ジョイントのモーションにも対応
-				s_editcameraflag = s_cameramodel->CameraAnimLock2Joint(&s_editrange, s_model, s_curboneno);
+				s_editcameraflag = s_cameramodel->CameraAnimLock2Joint(&s_editrange, GetCurrentModel(), s_curboneno);
 			}
 
 			doneflag = true;
@@ -46039,7 +46048,7 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 
 			if (s_camtargetflag) {//2024/09/02 AlwasyLockにチェックが入っている場合
 				//always s_editrange全範囲に対してウェイト1.0でLock2Joint処理.ジョイントのモーションにも対応
-				s_editcameraflag = s_cameramodel->CameraAnimLock2Joint(&s_editrange, s_model, s_curboneno);
+				s_editcameraflag = s_cameramodel->CameraAnimLock2Joint(&s_editrange, GetCurrentModel(), s_curboneno);
 			}
 
 			doneflag = true;
@@ -46123,11 +46132,11 @@ int OnCameraAnimPaste()
 
 bool ChkEnableIK()
 {
-	if (!s_model) {
+	if (!GetCurrentModel()) {
 		return false;
 	}
 
-	int curmotid = s_model->GetCurrentMotID();
+	int curmotid = GetCurrentModel()->GetCurrentMotID();
 	if (curmotid <= 0) {
 		return false;
 	}
@@ -46136,7 +46145,7 @@ bool ChkEnableIK()
 		return false;
 	}
 
-	bool cameraanimflag = s_model->IsCameraMotion(curmotid);
+	bool cameraanimflag = GetCurrentModel()->IsCameraMotion(curmotid);
 	if (cameraanimflag) {
 		return false;
 	}
@@ -46205,4 +46214,26 @@ int SetModel2Dlgs(CModel* srcmodel)
 	}
 
 	return 0;
+}
+
+
+
+void SetCurrentModel(CModel* srcmodel)
+{
+	if (s_chascene) {
+		s_chascene->SetCurrentModel(srcmodel);
+	}
+	else {
+		_ASSERT(0);
+	}
+}
+CModel* GetCurrentModel()
+{
+	if (s_chascene) {
+		return s_chascene->GetCurrentModel();
+	}
+	else {
+		_ASSERT(0);
+		return nullptr;
+	}
 }

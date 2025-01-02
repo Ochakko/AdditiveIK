@@ -2,6 +2,20 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2025/01/02
+　MOA(MotionAccelerator)について作業中(その１)
+　　途中経過をコミット
+　　まずはクラスを揃えてデバッグビルドでビルドが通るように。
+
+　　## 予定(To Do) ##
+　　　プレートメニューで設定画面表示
+　　　fbxファイル名に.moa拡張子を付けて保存、読み込み
+　　　MOAのPlayとStopの実装(モーション変化時にブレンド無し)
+　　　MOAのPlayとStopの実装(モーション変化時にブレンド有り)
+
+
+
 2024/12/14
 　AdditiveIK 1.0.0.35 release
 　　1.0.0.34からの変更点

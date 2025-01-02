@@ -69,10 +69,12 @@ enum {
 };
 
 
+
 #define HISTORYCOMMENTLEN	32
 #define EDIT_BUFLEN_NUM		20
 #define EDIT_BUFLEN_MEMO	(HISTORYCOMMENTLEN)
 
+#define MAXFORBIDNUM	256
 
 //2023/12/13, 2023/12/14
 //for shadowmap
@@ -470,6 +472,50 @@ enum {
 	BONEAXIS_MAX
 };
 
+enum {
+	MOAT_IDLING,
+	MOAT_EV0IDLE,
+	MOAT_COMID,
+	MOAT_NOTCOMID,
+	MOAT_BRANCHNUM,
+	MOAT_MAX
+};
+
+enum {
+	MOAB_MOTID,
+	MOAB_EVENTID,
+	MOAB_FRAME1,
+	MOAB_FRAME2,
+	MOAB_NOTFU,
+	MOAB_MAX
+};
+
+typedef struct tag_ekey
+{
+	int eventno;
+	int key;
+	int combono;
+	int validflag;
+	int singleevent;
+
+	void Init() {
+		eventno = 0;
+		key = 0;
+		combono = 0;
+		validflag = 0;
+		singleevent = 0;
+	};
+	tag_ekey() {
+		Init();
+	};
+}EKEY;
+
+enum {//For OverWrite. ChkOWDlg.h, cpp
+	OW_YES,
+	OW_NO,
+	OW_ALLYES,
+	OW_ALLNO
+};
 
 
 typedef struct tag_anglelimit
@@ -853,6 +899,56 @@ typedef struct tag_motinfo
 }MOTINFO;
 
 
+#define MAXMCCOPYNUM	100
+
+typedef struct MCELEM
+{
+	int setno;//lParam
+	int id;//motcookie
+	int idling;
+	int ev0idle;//eventno 0 でアイドリングに戻す
+	int commonid;//共通分岐イベント番号
+
+	int forbidnum;//共通分岐禁止イベント番号の要素数。
+	int* forbidid;//共通分岐禁止イベント番号
+
+	int childnum;
+	MCELEM* childmc;
+
+	int frameno1;
+	int frameno2;//拡張用
+	int eventno1;
+	int eventno2;//拡張用
+	int notfu;//補間なし
+
+	int closetree;
+	int nottoidle;
+
+	void Init() {
+		setno = 0;
+		id = 0;
+		idling = 0;
+		ev0idle = 0;
+		commonid = 0;
+		forbidnum = 0;
+		forbidid = nullptr;
+		childnum = 0;
+		childmc = nullptr;
+		frameno1 = 0;
+		frameno2 = 0;
+		eventno1 = 0;
+		eventno2 = 0;
+		notfu = 0;
+		closetree = 0;
+		nottoidle = 0;
+	};
+
+	MCELEM() {
+		Init();
+	};
+} MCELEM;
+
+
 #define INFSCOPEMAX	10
 #define INFNUMMAX	4
 
@@ -964,12 +1060,32 @@ typedef struct tag_mqobuf
 
 	tag_mqobuf() {
 		hfile = INVALID_HANDLE_VALUE;
-		buf = 0;
+		buf = nullptr;
 		bufleng = 0;
 		pos = 0;
 		isend = 0;
 	};
 } MQOBUF;
+
+typedef struct tag_mabuf
+{
+	HANDLE hfile;
+	char* buf;
+	DWORD bufleng;
+	DWORD pos;
+	int isend;
+
+	void Init() {
+		hfile = INVALID_HANDLE_VALUE;
+		buf = nullptr;
+		bufleng = 0;
+		pos = 0;
+		isend = 0;
+	};
+	tag_mabuf() {
+		Init();
+	};
+} MABUF, TO1BUF;
 
 
 enum
