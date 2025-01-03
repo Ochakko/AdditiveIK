@@ -230,7 +230,7 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* 
 					int dbgflag1 = 1;
 				}
 
-				if (curmodel->ExistCurrentMotion()) {
+				if (curmodel->ExistCurrentMotion() && (g_previewMOA == 0)) {
 					curmodel->SetMotionFrame(srcframe);//refposの場合にも必要
 				}
 

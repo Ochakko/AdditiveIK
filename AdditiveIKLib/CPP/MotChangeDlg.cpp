@@ -86,7 +86,7 @@ void CMotChangeDlg::InitParams()
 	//if( papp->m_mhandler ){
 	//	m_fuleng = papp->m_mhandler->m_fuleng;
 	//}else{
-	m_fuleng = 10;
+	m_fuleng = g_defaultFillUpMOA;
 	//}
 
 	m_cpelemnum = 0;
@@ -144,7 +144,7 @@ int CMotChangeDlg::SetVisible(bool srcflag)
 		////if( m_papp->m_mhandler ){
 		////	m_fuleng = m_papp->m_mhandler->m_fuleng;
 		////}else{
-			m_fuleng = 10;
+			m_fuleng = g_defaultFillUpMOA;
 		////}
 
 		m_undertreeedit = 0;
@@ -812,6 +812,8 @@ LRESULT CMotChangeDlg::OnAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHa
 			_ASSERT( 0 );
 			return 1;
 		}
+		currentmodel->SetMotInfoLoopFlagByID(dlg.m_cookie, 0);
+
 
 		///////////////////////////
 
@@ -1241,6 +1243,7 @@ LRESULT CMotChangeDlg::OnPaste(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 				_ASSERT( 0 );
 				return 1;
 			}
+			currentmodel->SetMotInfoLoopFlagByID(curchild->id, 0);
 		}
 
 		if( m_cpelemnum > 0 ){
@@ -1387,7 +1390,7 @@ int CMotChangeDlg::AddParentMC( int addcookie, int srcidling, int srcev0idle, in
 			_ASSERT(0);
 			return 1;
 		}
-
+		currentmodel->SetMotInfoLoopFlagByID(addcookie, 0);
 
 		ret = FillTree();
 		if (ret) {
@@ -1622,6 +1625,9 @@ int CMotChangeDlg::AddChildMC( int parentcookie, MCELEM childmc )
 		_ASSERT( 0 );
 		return 1;
 	}
+	currentmodel->SetMotInfoLoopFlagByID(childmc.id, 0);
+
+
 
 	///////////////////////////
 
@@ -2161,6 +2167,15 @@ LRESULT CMotChangeDlg::OnPlay(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 		return 0;
 	}
 
+	int idlingmotid = mch->GetIdlingMotID(nullptr, 0);
+	if (idlingmotid > 0) {
+		currentmodel->SetCurrentMotion(idlingmotid);
+		currentmodel->SetUnderBlending(false);
+		g_previewMOA = 1;
+		g_previewFlag = 1;
+	}
+
+
 	//BOOL dummy;
 	//g_motdlg->m_motparamdlg->m_mch = m_mch;
 	//ret = g_motdlg->m_motparamdlg->OnPreview( 0, 0, 0, dummy );
@@ -2177,9 +2192,12 @@ LRESULT CMotChangeDlg::OnPlay(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 LRESULT CMotChangeDlg::OnStop(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 
-	if( g_previewFlag == 0 ){
-		return 0;
-	}
+	//if( g_previewFlag == 0 ){
+	//	return 0;
+	//}
+
+	g_previewFlag = 0;
+	g_previewMOA = 0;
 
 	//int ret;
 	//BOOL dummy;

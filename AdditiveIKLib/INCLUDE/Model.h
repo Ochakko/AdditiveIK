@@ -433,6 +433,7 @@ public:
 		int refposindex);
 	void SetUpdateSlotReq(CBone* srcbone, int srcslot);
 
+
 	void ResetFootRigUpdated();
 	void UpdateMatrixFootRigReq(bool istoebase, bool limitdegflag, CBone* srcbone,
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
@@ -508,7 +509,7 @@ public:
  */
 	int SetMotionFrame(double srcframe);
 	int SetMotionFrame(int srcmotid, double srcframe);
-
+	int GetMotionFrame(int* dstmotid, double* dstframe);
 
 /**
  * @fn
@@ -1469,7 +1470,7 @@ private:
 			else {
 				//_ASSERT(0);
 				int dbgflag1 = 1;
-				return 0;
+				return nullptr;
 			}
 		//}
 		//else {
@@ -3127,6 +3128,13 @@ public: //accesser
 	{
 		return m_gltfloader;
 	};
+	void SetUnderBlending(bool srcval) {
+		m_moa_underblending = srcval;
+	};
+	bool GetUnderBlending() {
+		return m_moa_underblending;
+	};
+
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];
@@ -3346,6 +3354,9 @@ private:
 
 	CMCHandler* m_mch;
 	CEventKey* m_eventkey;
+	bool m_moa_underblending;
+	int m_moa_nextmotid;
+	int m_moa_nextframe;
 };
 
 

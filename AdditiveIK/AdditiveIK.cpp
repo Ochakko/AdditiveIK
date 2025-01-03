@@ -94,6 +94,8 @@
 #include <FogDlg.h>
 #include <DofDlg.h>
 #include <CpInfoDlg2.h>
+#include <EventKey.h>
+#include <MCHandler.h>
 
 #include <math.h>
 #include <stdio.h>
@@ -687,6 +689,10 @@ void OnDSUpdate();
 //static void OnDSMouseHereApeal();
 static void OnArrowKey();//DS関数でキーボードの矢印キーに対応
 
+static int SetNewPoseByMoa();
+static int ChangeMotionWithGUI(int srcmotid);
+static int s_moa_nextmotid;
+static int s_moa_nextframe;
 
 static void SelectNextWindow(int nextwndid);
 
@@ -3674,6 +3680,10 @@ void InitApp()
 	s_cpmotinfo.Init();
 
 
+	s_moa_nextmotid = 0;
+	s_moa_nextframe = 0;
+
+
 	g_edittarget = EDITTARGET_BONE;
 	s_LchangeTargetFlag = false;
 	s_LrefreshEditTarget = 0;
@@ -4104,6 +4114,8 @@ void InitApp()
 
 
 	g_previewFlag = 0;
+	g_previewMOA = 0;
+	g_defaultFillUpMOA = 2;
 	s_savepreviewFlag = 0;
 	g_cameraanimmode = 0;//0: OFF, 1:ON
 	s_savecameraanimmode = 0;
@@ -11187,7 +11199,7 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 			// カーソル移動時のイベントリスナーに
 			// カーソル移動フラグcursorFlagをオンにするラムダ関数を登録する
 			s_owpTimeline->setCursorListener([]() {
-				if (GetCurrentModel()) {
+				if (GetCurrentModel() && (g_previewMOA == 0)) {
 					s_cursorFlag = true;
 					if (s_undoFlag || s_redoFlag) {
 						s_cursorUnderUndo = true;
@@ -11279,7 +11291,7 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 					//s_LtimelineWnd->addParts(*s_owpLTimeline);//playerbuttonより後
 					s_LTSeparator->addParts1(*s_owpLTimeline);
 					s_owpLTimeline->setCursorListener([]() {
-						if (GetCurrentModel()) {
+						if (GetCurrentModel() && (g_previewMOA == 0)) {
 							s_LcursorFlag = true;
 						}
 						});
@@ -11410,6 +11422,11 @@ int UpdateEditedEuler()
 	//if (s_pickinfo.buttonflag == 0) {
 	//	return 0;
 	//}
+
+
+	if (g_previewMOA != 0) {
+		return 0;
+	}
 
 
 	if (s_owpEulerGraph) {
@@ -11696,6 +11713,12 @@ int refreshEulerGraph()
 {
 	//オイラーグラフのキーを作成しなおさない場合はUpdateEditedEuler()
 
+	if (g_previewMOA != 0) {
+		if (s_owpEulerGraph) {
+			s_owpEulerGraph->setMaxTime(GetCurrentModel()->GetCurrentMaxFrame());
+		}
+		return 0;
+	}
 
 	if (s_owpEulerGraph) {
 		if (g_edittarget != EDITTARGET_CAMERA) {
@@ -11985,6 +12008,15 @@ int refreshEulerGraph()
 //タイムラインにモーションデータのキーを設定する
 void refreshTimeline(OWP_Timeline& timeline) 
 {
+	if (g_previewMOA != 0) {
+		timeline.setMaxTime(GetCurrentModel()->GetCurrentMaxFrame());
+		if (s_owpLTimeline) {
+			s_owpLTimeline->setMaxTime(GetCurrentModel()->GetCurrentMaxFrame());
+		}
+		return;
+	}
+
+
 	if (s_owpEulerGraph) {
 		s_owpEulerGraph->SetCurrentModel(GetCurrentModel());
 	}
@@ -22877,12 +22909,14 @@ int CreateMotionBrush(double srcstart, double srcend, bool onrefreshflag)
 		if (s_owpLTimeline)
 			s_owpLTimeline->setMaxTime(frameleng);//!!!!!!!!!!!!!!!!!!!!!
 
-		if (s_owpTimeline)
-			s_owpTimeline->setCurrentTime(g_motionbrush_applyframe, false);//!!!!!!!!!!!!!!!!!!!!!
-		if (s_owpLTimeline)
-			s_owpLTimeline->setCurrentTime(g_motionbrush_applyframe, false);//!!!!!!!!!!!!!!!!!!!!!
-		if (s_owpEulerGraph)
-			s_owpEulerGraph->setCurrentTime(g_motionbrush_applyframe, false);//!!!!!!!!!!!!!!!!!!!!!
+		if (g_previewMOA == 0) {
+			if (s_owpTimeline)
+				s_owpTimeline->setCurrentTime(g_motionbrush_applyframe, false);//!!!!!!!!!!!!!!!!!!!!!
+			if (s_owpLTimeline)
+				s_owpLTimeline->setCurrentTime(g_motionbrush_applyframe, false);//!!!!!!!!!!!!!!!!!!!!!
+			if (s_owpEulerGraph)
+				s_owpEulerGraph->setCurrentTime(g_motionbrush_applyframe, false);//!!!!!!!!!!!!!!!!!!!!!
+		}
 
 		UpdateEditedEuler();
 	}
@@ -25021,7 +25055,7 @@ int OnFrameProcessTime(double difftime, double* pnextframe, int* pendflag, int* 
 			*pnextframe = 0.0;
 		}
 		GetCurrentModel()->AdvanceTime(0, s_previewrange, g_previewFlag, difftime, pnextframe, pendflag, ploopstartflag, -1);
-		if (*pendflag == 1) {
+		if ((*pendflag == 1) && (g_previewMOA == 0)) {
 			g_previewFlag = 0;
 		}
 		GetCurrentModel()->SetMotionFrame(*pnextframe);
@@ -25084,7 +25118,7 @@ int OnFrameProcessCameraTime(double difftime, double* pnextframe, int* pendflag,
 	//GetCurrentModel()->SetMotionSpeed(cameramotid, g_dspeed);
 	//GetCurrentModel()->SetMotionFrame(cameramotid, *pnextframe);
 	s_cameramodel->SetMotionSpeed(cameramotid, g_dspeed);
-	s_cameramodel->SetMotionFrame(cameramotid, *pnextframe);
+	//s_cameramodel->SetMotionFrame(cameramotid, *pnextframe);//2025/01/04 comment out
 
 	return 0;
 }
@@ -25224,6 +25258,10 @@ int OnFramePreviewNormal(double nextframe, double difftime, int endflag, int loo
 	//	g_previewFlag = 0;
 	//}
 
+
+	if (g_previewMOA != 0) {
+		SetNewPoseByMoa();
+	}
 	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, nextframe, loopstartflag);
 
 #ifndef SKIP_EULERGRAPH__
@@ -25730,7 +25768,7 @@ int TimelineCursorToMotion()
 		GetCurrentBoneFromTimeline(&s_curboneno);
 
 		// カーソル位置を姿勢に反映。
-		if (g_previewFlag == 0) {//underchecking
+		if ((g_previewFlag == 0) && (g_previewMOA == 0)) {//underchecking
 			double curframe = s_owpTimeline->getCurrentTime();// 選択時刻
 
 			s_chascene->SetMotionFrame(-1, curframe);
@@ -26240,7 +26278,7 @@ int OnFrameTimeLineWnd()
 		OnTimeLineCursor();
 
 		if (s_chascene && s_owpLTimeline && GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
-			if (g_previewFlag == 0) {//underchecking
+			if ((g_previewFlag == 0) && (g_previewMOA == 0)) {//underchecking
 				double curframe = s_owpLTimeline->getCurrentTime();// 選択時刻
 				s_chascene->SetMotionFrame(-1, curframe);
 			}
@@ -46315,4 +46353,202 @@ CModel* GetCurrentModel()
 		_ASSERT(0);
 		return nullptr;
 	}
+}
+
+
+int SetNewPoseByMoa()
+{
+
+	CModel* currentmodel = GetCurrentModel();
+	if (!currentmodel) {
+		return 0;
+	}
+	CEventKey* eventkey = currentmodel->GetEventKey();
+	if (!eventkey) {
+		return 0;
+	}
+	CMCHandler* mch = currentmodel->GetMotChangeHandler();
+	if (!mch) {
+		return 0;
+	}
+
+
+	int ret;
+	int eventno = 0;
+	int cno;
+	for (cno = 0; cno < 256; cno++) {
+		if (g_keybuf[cno] & 0x80) {
+			int count;
+			if (g_savekeybuf[cno] & 0x80) {
+				count = 2;//２回目以降
+			}
+			else {
+				count = 1;//初回
+			}
+			eventno = eventkey->GetEventNo(cno, count);
+			//_ASSERT( 0 );
+			if (eventno != 0) {
+				int dbgflag1 = 1;
+			}
+			break;
+		}
+	}
+	//////////////		
+
+
+	int curmotid = -1;
+	double curframe = 0;
+	double curframeleng = 0;
+	ret = currentmodel->GetMotionFrame(&curmotid, &curframe);
+	if (ret || (curmotid < 0)) {
+		DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mh GetMotionFrameNo error !!!\n");
+		_ASSERT(0);
+		return 1;
+	}
+
+	curframeleng = currentmodel->GetCurrentMotLeng();
+
+	int idlingmotid = mch->GetIdlingMotID(nullptr, 0);
+	double fillupleng = mch->GetFillUpLeng();
+
+	//int curmottype = -1;
+	//ret = m_mhandler->GetMotionType(curmotid, &curmottype);
+	//if (ret) {
+	//	DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : GetMotionType error !!!\n");
+	//	_ASSERT(0);
+	//	return 1;
+	//}
+
+
+	////DbgOut( "check !!! : hs : SetNewPoseByMOA : curmotid %d, curframe %d, FILLUPMOTIONID %d\r\n",
+	////	curmotid, curframe, FILLUPMOTIONID );
+
+	int nextframeleng = 0;
+
+	int befmotid = -1;
+	int befframe = 0;
+
+	int fillupflag = 0;
+	int notfu = 0;
+	int ev0idle = 0;
+	int nottoidle = 0;
+
+	int tmpnottoidle = 0;
+
+	if (!currentmodel->GetUnderBlending()) {
+		ret = mch->GetNextMotion(curmotid, IntTime(curframe), eventno, 
+			&s_moa_nextmotid, &s_moa_nextframe, &notfu, &tmpnottoidle);
+		if (ret) {
+			DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetNextMotion error !!!\n");
+			_ASSERT(0);
+			return 1;
+		}
+
+		if (tmpnottoidle < 0) {
+			nottoidle = 0;
+			//	m_mhandler->GetNotToIdle(-1, &nottoidle);
+		}
+		else {
+			nottoidle = tmpnottoidle;
+			//	m_mhandler->SetNotToIdle(-1, nottoidle);
+		}
+
+
+		ret = mch->GetEv0Idle(curmotid, &ev0idle);
+		if (ret) {
+			DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetEv0Idle 0 error !!!\n");
+			_ASSERT(0);
+			return 1;
+		}
+
+		if ((eventno == 0) && (ev0idle != 0)) {
+			s_moa_nextmotid = idlingmotid;
+			s_moa_nextframe = 0;
+			notfu = 0;
+			if (s_moa_nextmotid < 0) {
+				DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetIdlingMotID 0 : idling motion not exist error !!!\n");
+				_ASSERT(0);
+				return 1;
+			}
+			fillupflag = 1;
+		}
+		else if (curmotid != s_moa_nextmotid) {
+			//イベント番号の指示通りのs_moa_nextmotidへ変化させる
+			s_moa_nextframe = 0;
+			notfu = 0;
+			if (s_moa_nextmotid < 0) {
+				DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetIdlingMotID 0 : idling motion not exist error !!!\n");
+				_ASSERT(0);
+				return 1;
+			}
+			fillupflag = 1;
+		}
+		else {
+			if ((curframe >= (curframeleng - fillupleng)) && (nottoidle == 0)) {
+				s_moa_nextmotid = idlingmotid;
+				s_moa_nextframe = 0;
+				notfu = 0;
+				if (s_moa_nextmotid < 0) {
+					DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetIdlingMotID 1 : idling motion not exist error !!!\n");
+					_ASSERT(0);
+					return 1;
+				}
+				fillupflag = 1;
+			}
+		}
+	}
+	else {
+		fillupflag = 1;
+	}
+
+	if (fillupflag == 1) {
+
+		if (notfu == 0) {
+			MOTINFO nextmi = currentmodel->GetMotInfo(s_moa_nextmotid);
+			if (nextmi.motid > 0) {
+				//###########
+				//ブレンド予定
+				//###########
+				//nextframeleng = IntTime(nextmi.frameleng);
+				//int filluppoint;
+				//filluppoint = min((nextframeleng - 1), (s_moa_nextframe + (int)fillupleng - 1));
+				//double motionrate1, motionrate2;
+				//motionrate1 = min(1.0, max(0.0, (double)(curframeleng - curframe - 1) / (double)fillupleng));
+				//motionrate2 = 1.0 - motionrate1;
+
+				//currentmodel->SetCurrentMotion(s_moa_nextmotid);
+				ChangeMotionWithGUI(s_moa_nextmotid);
+				currentmodel->SetMotionFrame(s_moa_nextframe);
+				currentmodel->SetUnderBlending(false);
+			}
+		}
+		else {
+			// notfu != 0  direct change
+			//currentmodel->SetCurrentMotion(s_moa_nextmotid);
+			ChangeMotionWithGUI(s_moa_nextmotid);
+			currentmodel->SetMotionFrame(s_moa_nextframe);
+
+			currentmodel->SetUnderBlending(false);
+		}
+	}
+
+	return 0;
+}
+
+
+int ChangeMotionWithGUI(int srcmotid)
+{
+	if (!s_chascene) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int selindex = s_chascene->MotID2SelIndex(s_chascene->FindModelIndex(GetCurrentModel()), srcmotid);
+	if (selindex >= 0) {
+		bool dorefreshtl = false;
+		OnAnimMenu(dorefreshtl, selindex);
+	}
+
+	return 0;
+
 }

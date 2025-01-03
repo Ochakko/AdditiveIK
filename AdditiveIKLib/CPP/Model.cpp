@@ -687,6 +687,9 @@ int CModel::InitParams()
 	
 	m_mch = nullptr;
 	m_eventkey = nullptr;
+	m_moa_underblending = false;
+	m_moa_nextmotid = 0;
+	m_moa_nextframe = 0;
 
 	return 0;
 }
@@ -2428,18 +2431,17 @@ int CModel::UpdateMatrix(bool limitdegflag,
 	m_matView = *vmat;
 	m_matProj = *pmat;
 	m_matVP = m_matView * m_matProj;
-
 	
+
 	ChkInView(refposindex);//2023/08/25 //2024/03/24
-	if (GetInView(refposindex) == false) {
-		return 0;
-	}
-
-
 	if(!ExistCurrentMotion()){
 		return 0;//!!!!!!!!!!!!
 	}
-
+	else {
+		if (GetInView(refposindex) == false) {
+			return 0;
+		}
+	}
 
 	//morphアニメがあるかもしれないので、ボーンが無くてもリターンしない
 	//if (GetBoneForMotionSize() <= 0) {
@@ -3640,6 +3642,7 @@ int CModel::SetCurrentMotion( int srcmotid )
 		return 0;
 	}
 }
+
 int CModel::SetMotionFrame(double srcframe)
 {
 	if( !m_curmotinfo ){
@@ -3679,6 +3682,32 @@ int CModel::SetMotionFrame(int srcmotid, double srcframe)
 
 	return 0;
 }
+int CModel::GetMotionFrame(int* dstmotid, double* dstframe)
+{
+	if (!dstmotid || !dstframe) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	if (!m_curmotinfo) {
+		if (GetNoBoneFlag()) {
+			//return 0;//エラーではない　ボーンが無いだけ
+			//エラーの可能性がある
+			_ASSERT(0);
+			return 1;
+		}
+		else {
+			//エラーの可能性がある
+			_ASSERT(0);
+			return 1;
+		}
+	}
+
+	*dstmotid = m_curmotinfo->motid;
+	*dstframe = m_curmotinfo->curframe;
+	return 0;
+}
+
 
 int CModel::SetMotionName(int srcmotid, char* srcname)
 {

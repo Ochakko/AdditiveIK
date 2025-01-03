@@ -248,8 +248,11 @@ float g_a_dmp = 0.50f;
 
 //int g_shadertype = -1;//マテリアル毎に設定することに
 int g_previewFlag = 0;			// プレビューフラグ
+int g_previewMOA = 0;
+int g_defaultFillUpMOA = 2;
 int g_cameraanimmode = 0;//0: OFF, 1:ON, 2:ON and RootMotionOption ON
 int g_cameraInheritMode = CAMERA_INHERIT_ALL;
+
 
 int g_applyendflag = 0;
 int g_slerpoffflag = 0;
@@ -533,6 +536,8 @@ extern float g_a_dmp;
 
 //extern int g_shadertype;////マテリアル毎に設定することに
 extern int g_previewFlag;			// プレビューフラグ
+extern int g_previewMOA;
+extern int g_defaultFillUpMOA;
 extern int g_cameraanimmode;//0: OFF, 1:ON, 2:ON and RootMotionOption ON
 extern int g_cameraInheritMode;
 

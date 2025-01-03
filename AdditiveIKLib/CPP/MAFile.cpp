@@ -21,6 +21,7 @@
 #include <forbidid.h>
 #include <MotChangeDlg.h>
 
+#include <GlobalVar.h>
 
 static char s_maheader[256] = "Motion Accelerator File ver1.0 type01\r\n";
 static char s_maheader2[256] = "Motion Accelerator File ver2.0 type01\r\n";
@@ -54,7 +55,7 @@ int CMAFile::InitParams()
 	m_moaversion = 0;
 
 	m_quamult = 1.0f;
-	m_fuleng = 10;
+	m_fuleng = g_defaultFillUpMOA;
 
 	return 0;
 }
@@ -1107,7 +1108,7 @@ int CMAFile::ReadFULeng()
 		if( (getleng >= 3) && (strstr( m_linechar, "}\r\n" ) != NULL) ){
 			findend = 1;
 		}else{
-			m_fuleng = 10;
+			m_fuleng = g_defaultFillUpMOA;
 			ret = GetInt( &m_fuleng, m_linechar, pos, MALINELENG, &stepnum );
 			if( ret ){
 				DbgOut(  L"mafile : ReadFULeng : GetInt fuleng error !!!\n" );
@@ -1289,6 +1290,8 @@ int CMAFile::ReadTrunk()
 				}
 				matrunk.forbidnum = 0;
 
+
+				m_model->SetMotInfoLoopFlagByID(addmi.motid, 0);
 			}
 			else {
 				_ASSERT(0);
@@ -1401,6 +1404,8 @@ int CMAFile::ReadBranch()
 				_ASSERT( 0 );
 				return 1;
 			}
+
+			m_model->SetMotInfoLoopFlagByID(childcookie, 0);
 
 	//DbgOut(  L"check !!! : mafile : ReadBranch : %s, %d, %d, %d\r\n", mabranch.motname, mabranch.eventno, mabranch.frameno1, mabranch.frameno2 );
 

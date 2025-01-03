@@ -2,6 +2,20 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/01/04
+　MOA(MotionAccelerator)について作業中(その５)
+
+　　MOAのPlayとStopの実装(モーション変化時にブレンド無し)
+　　　Test/1_MOA_B1のプロジェクトを読み込んだ後に
+　　　MOAプレートメニューを押して右ペインのダイアログのPlayボタンを押すとMOA再生モードになります
+　　　キーボードの０から９とA,Bボタンで動くサンプルです
+
+　　Test/1_MOA_B1のサンプルを更新　　　
+
+　　## 予定(To Do) ##
+　　　使い方のドキュメント
+　　　MOAのPlayとStopの実装(モーション変化時にブレンド有り)<---次のバージョン以降？？
+
 
 2025/01/03
 　MOA(MotionAccelerator)について作業中(その３)
