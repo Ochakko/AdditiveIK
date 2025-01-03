@@ -1825,6 +1825,52 @@ public: //accesser
 		}
 		return retmi;
 	};
+	MOTINFO GetMotInfoByNameMOA(char* srcname)
+	{
+		MOTINFO retmi2;
+		retmi2.Init();
+		if (!srcname) {
+			return retmi2;
+		}
+
+		MOTINFO retmi1 = GetMotInfoByName(srcname);
+		if (retmi1.motid > 0) {
+			//motionnameとmoanameの完全一致の場合
+			return retmi1;
+		}
+		else {
+			int motnum = GetMotInfoSize();
+			int miindex;
+			for (miindex = 0; miindex < motnum; miindex++) {
+				if (m_motinfo[miindex]) {
+					char motionname0[MAX_PATH] = { 0 };
+					char motionname1[MAX_PATH] = { 0 };
+					char moaname[MAX_PATH] = { 0 };
+					char rearname[MAX_PATH] = { 0 };
+					strcpy_s(motionname0, MAX_PATH, m_motinfo[miindex]->motname);
+					strcpy_s(motionname1, MAX_PATH, m_motinfo[miindex]->motname);
+					strcpy_s(moaname, MAX_PATH, srcname);
+
+					int motionnameleng = (int)strlen(motionname0);
+					int moanameleng = (int)strlen(moaname);
+					if (motionnameleng > moanameleng) {
+						motionname1[moanameleng] = 0;//motionnameをmoanameと同じ長さにする
+						if (strcmp(motionname1, moaname) == 0) {//motionnameの始めの部分にとmoanameが含まれている場合
+							int sameleng = (int)strlen(srcname);
+							if ((sameleng >= 0) && (sameleng < 1024)) {
+								char* rearptr = motionname0 + moanameleng;//motionnameの後ろの部分
+								if (strncmp(rearptr, "_max", 4) == 0) {//motionnameの後ろの部分に_maxが含まれている場合
+									retmi2 = *m_motinfo[miindex];
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return retmi2;
+	};
 	MOTINFO GetMotInfoByIndex(int srcindex)//by array index
 	{
 		if ((srcindex >= 0) && (srcindex < GetMotInfoSize())) {

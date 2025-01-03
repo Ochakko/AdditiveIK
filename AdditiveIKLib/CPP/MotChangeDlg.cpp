@@ -2222,7 +2222,7 @@ int CMotChangeDlg::InitComboIdle()
 	}else{
 		if( m_idlingname[0] != 0 ){
 
-			MOTINFO idlingmi = currentmodel->GetMotInfoByName(m_idlingname);
+			MOTINFO idlingmi = currentmodel->GetMotInfoByNameMOA(m_idlingname);
 			if (idlingmi.motid > 0) {
 				initidling = idlingmi.motid;
 			}

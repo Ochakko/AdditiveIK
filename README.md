@@ -278,12 +278,16 @@ Smooth平滑化<br>
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")
 <br>
 <br>
-<br>
-<br>
-<br>
-<br>
 メール：info@ochakkolab.jp<br>
 Author: おちゃっこ@おちゃっこLAB<br>
+<br>
+<br>
+# Special thunks<br>
+　Test/1_MOA_B1フォルダのサンプルのB.fbxは、ぼおんさん著作のbucho.sigファイルをfbxにしたものです。<br>
+<br>
+<br>
+<br>
+<br>
 <br>
 <br>
 <br>

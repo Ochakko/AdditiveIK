@@ -2,15 +2,23 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
 2025/01/03
-　MOA(MotionAccelerator)について作業中(その２)
+　MOA(MotionAccelerator)について作業中(その３)
 　　プレートメニュー(MOAプレート)で設定画面表示
 　　fbxファイル名に.moa拡張子を付けて保存読み込み(プロジェクトファイル読み書き時)
+　　RokDeBone2で出力したmoaファイルの読み込みに対応
+　　　プロジェクト保存後に所定の位置にfilename.fbx.moa形式の名前にして置けばRokDeBone2のmoaファイルも読み込み可能
+　　Testフォルダにサンプルを追加
+　　　1_MOA_B1というフォルダです
+　　　moaの再生テスト用(再生機能はこれから作成)
+　　　B.fbxはぼおんさん著作のbucho.sigファイルをfbxにしたものです。
+　　　
 
 　　## 予定(To Do) ##
-　　　RokDeBone2で出力したmoaファイルの読み込みに対応
 　　　MOAのPlayとStopの実装(モーション変化時にブレンド無し)
 　　　MOAのPlayとStopの実装(モーション変化時にブレンド有り)
+　　　使い方のドキュメント
 
 
 2025/01/02

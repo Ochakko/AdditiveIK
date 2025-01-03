@@ -1276,7 +1276,7 @@ int CMAFile::ReadTrunk()
 
 			//DbgOut(  L"check !!! mafile : ReadTrunk : fullname %s\r\n", fullname );
 
-			MOTINFO addmi = m_model->GetMotInfoByName(matrunk.motname);
+			MOTINFO addmi = m_model->GetMotInfoByNameMOA(matrunk.motname);
 			if (addmi.motid > 0) {
 				mch->AddParentMC(addmi.motid,
 					matrunk.idling, matrunk.ev0idle, matrunk.commonid, matrunk.forbidnum, matrunk.forbidid, matrunk.notfu);
@@ -1339,7 +1339,7 @@ int CMAFile::ReadBranch()
 //DbgOut(  L"check !!! mafile : ReadBranch : parentname %s\r\n", parentname );
 
 
-	MOTINFO parentmi = m_model->GetMotInfoByName(parentname);
+	MOTINFO parentmi = m_model->GetMotInfoByNameMOA(parentname);
 	if (parentmi.motid <= 0) {
 		DbgOut(L"mafile : ReadBranch : mh GetMotionIDByName %s error !!!\n", parentname);
 		_ASSERT(0);
@@ -1381,7 +1381,7 @@ int CMAFile::ReadBranch()
 			}
 
 
-			MOTINFO childmi = m_model->GetMotInfoByName(mabranch.motname);
+			MOTINFO childmi = m_model->GetMotInfoByNameMOA(mabranch.motname);
 			if (childmi.motid <= 0) {
 				DbgOut(L"mafile : ReadBranch : mh GetMotionIDByName child %s error !!!\n", mabranch.motname);
 				_ASSERT(0);
