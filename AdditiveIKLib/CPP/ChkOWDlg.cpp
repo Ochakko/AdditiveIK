@@ -1,4 +1,4 @@
-// ChkOWDlg.cpp : CChkOWDlg ‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+ï»¿// ChkOWDlg.cpp : CChkOWDlg ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 #include "stdafx.h"
 #include "ChkOWDlg.h"
 
@@ -23,7 +23,7 @@ LRESULT CChkOWDlg::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
 	ParamsToDlg();
 
-	return 1;  // ƒVƒXƒeƒ€‚ÉƒtƒH[ƒJƒX‚ğİ’è‚³‚¹‚Ü‚·
+	return 1;  // ã‚·ã‚¹ãƒ†ãƒ ã«ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ã‚’è¨­å®šã•ã›ã¾ã™
 }
 
 LRESULT CChkOWDlg::OnOK(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)

@@ -24116,10 +24116,10 @@ int CModel::CreateMotChangeHandlerIfNot()
 				int* srcforbidid = nullptr;
 				int srcnotfu = 0;
 
-				ret = m_mch->AddParentMC(currentmi.motid, 
+				ret = m_mch->AddParentMC(currentmi.motid,
 					srcidling, srcev0idle, srccommonid, srcforbidnum, srcforbidid, srcnotfu);
 				if (ret) {
-					DbgOut(L"motchangeldg : AddParentMC : mch AddParentMC error !!!\n");
+					DbgOut(L"CModel::CreateMotChangeHandlerIfNot : mch AddParentMC error !!!\n");
 					_ASSERT(0);
 					return 1;
 				}
@@ -24127,6 +24127,87 @@ int CModel::CreateMotChangeHandlerIfNot()
 			}
 		}
 	}
+	else {
+
+		//##############################
+		//Retargetで増えたモーションに対応
+		//##############################
+		{
+			vector<MCELEM> addmcelem;
+			int motnum = GetMotInfoSize();
+			int miindex;
+			for (miindex = 0; miindex < motnum; miindex++) {
+				MOTINFO currentmi = GetMotInfoByIndex(miindex);
+				if (currentmi.motid > 0) {
+
+					int existsetno = m_mch->ExistMotIdInTrunk(currentmi.motid);
+					if (existsetno < 0) {
+						MCELEM mcelem;
+						mcelem.Init();
+						mcelem.id = currentmi.motid;
+						mcelem.idling = 0;
+						mcelem.ev0idle = 0;
+						mcelem.commonid = 0;
+						mcelem.forbidnum = 0;
+						mcelem.forbidid = nullptr;
+						mcelem.notfu = 0;
+						addmcelem.push_back(mcelem);
+					}
+				}
+			}
+			int addnum = (int)addmcelem.size();
+			int addindex;
+			for (addindex = 0; addindex < addnum; addindex++) {
+				MCELEM mcelem = addmcelem[addindex];
+				if (mcelem.id > 0) {
+					int ret;
+					ret = m_mch->AddParentMC(mcelem.id,
+						mcelem.idling, mcelem.ev0idle, mcelem.commonid, mcelem.forbidnum, mcelem.forbidid, mcelem.notfu);
+					if (ret) {
+						DbgOut(L"CModel::CreateMotChangeHandlerIfNot : mch AddParentMC error !!!\n");
+						_ASSERT(0);
+						return 1;
+					}
+				}
+			}
+		}
+	
+		//###########################
+		//Deleteで減ったモーションに対応
+		//###########################
+		{
+			vector<int> delsetno;
+			int mcenum = m_mch->GetMCNum();
+			int mceindex;
+			for (mceindex = 0; mceindex < mcenum; mceindex++) {
+				MCELEM* chkmce = m_mch->GetMCElem(mceindex);
+				if (chkmce) {
+					MOTINFO mi = GetMotInfo(chkmce->id);
+					if ((mi.motid < 0) || (mi.motid != chkmce->id)) {
+						delsetno.push_back(chkmce->setno);
+					}
+				}
+			}
+
+			int delnum = (int)delsetno.size();
+			int delindex;
+			for (delindex = 0; delindex < delnum; delindex++) {
+				int delno = delsetno[delindex];
+				if (delno > 0) {
+					int ret;
+					ret = m_mch->DeleteMCElem(delno);
+					if (ret) {
+						DbgOut(L"CModel::CreateMotChangeHandlerIfNot : mch DeleteMCElem error !!!\n");
+						_ASSERT(0);
+						return 1;
+					}
+				}
+			}
+		}
+	}
+
+
+
 
 	if (!m_eventkey) {
 		m_eventkey = new CEventKey();
@@ -24139,6 +24220,18 @@ int CModel::CreateMotChangeHandlerIfNot()
 
 	return 0;
 }
+
+int CModel::ResetMotChangeHandler()
+{
+	if (m_mch) {
+		m_mch->DestroyObjs();
+	}
+	if (m_eventkey) {
+		m_eventkey->DestroyObjs();
+	}
+	return 0;
+}
+
 
 int CModel::ChangeIdlingMotion(int srcmotid)
 {

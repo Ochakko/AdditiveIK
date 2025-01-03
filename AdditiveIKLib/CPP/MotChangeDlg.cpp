@@ -1,4 +1,4 @@
-// MotChangeDlg.cpp : CMotChangeDlg ‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+ï»¿// MotChangeDlg.cpp : CMotChangeDlg ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 #include "stdafx.h"
 #include "MotChangeDlg.h"
 
@@ -26,7 +26,7 @@
 #include <GlobalVar.h>
 
 static WCHAR s_strkey[40][3] = {
-	L"©", L"¨", L"ª", L"«", L"1", L"2", L"3", L"4", L"5", L"6",
+	L"â†", L"â†’", L"â†‘", L"â†“", L"1", L"2", L"3", L"4", L"5", L"6",
 	L"7", L"8", L"9", L"0", L"A", L"B", L"C", L"D", L"E", L"F",
 	L"G", L"H", L"I", L"J", L"K", L"L", L"M", L"N", L"O", L"P",
 	L"Q", L"R", L"S", L"T", L"U", L"V", L"W", L"X", L"Y", L"Z"
@@ -289,12 +289,12 @@ LRESULT CMotChangeDlg::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 //	_ASSERT( !ret );
 
 
-	return 1;  // ƒVƒXƒeƒ€‚ÉƒtƒH[ƒJƒX‚ğİ’è‚³‚¹‚Ü‚·
+	return 1;  // ã‚·ã‚¹ãƒ†ãƒ ã«ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ã‚’è¨­å®šã•ã›ã¾ã™
 }
 
 LRESULT CMotChangeDlg::OnOK(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-	//ŠO•”ƒNƒ‰ƒX‚©‚çAwNotifyCode = 999 ‚ÅŒÄ‚Ño‚³‚ê‚é‚±‚Æ‚ª‚ ‚éBiƒ_ƒCƒAƒƒO‚Í•\¦‚³‚ê‚Ä‚¢‚È‚¢ó‘Ôj
+	//å¤–éƒ¨ã‚¯ãƒ©ã‚¹ã‹ã‚‰ã€wNotifyCode = 999 ã§å‘¼ã³å‡ºã•ã‚Œã‚‹ã“ã¨ãŒã‚ã‚‹ã€‚ï¼ˆãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã¯è¡¨ç¤ºã•ã‚Œã¦ã„ãªã„çŠ¶æ…‹ï¼‰
 
 //	EndDialog(wID);
 
@@ -432,8 +432,8 @@ int CMotChangeDlg::AddMCToTree( HTREEITEM hRoot )
 			nameptr = currentmi.motname;
 
 			char parname[1024];
-			//sprintf_s( parname, 1024, "%s (‹¤%d,‹Ö%d)", nameptr, curmce->commonid, curmce->forbidcommonid );
-			sprintf_s(parname, 1024, "%s (‹¤%d)", nameptr, curmce->commonid);
+			//sprintf_s( parname, 1024, "%s (å…±%d,ç¦%d)", nameptr, curmce->commonid, curmce->forbidcommonid );
+			sprintf_s(parname, 1024, "%s (å…±%d)", nameptr, curmce->commonid);
 
 
 			HTREEITEM newTI;
@@ -487,7 +487,7 @@ int CMotChangeDlg::AddMCToTree( HTREEITEM hRoot )
 
 HTREEITEM CMotChangeDlg::TVAdd( HTREEITEM parentTI, char* srcname, int srcno, int imageno, int selectno, int addtolast )
 {
-	//‚±‚±‚ÌDbg•¶‚Íæ‚èœ‚©‚È‚¢B
+	//ã“ã“ã®Dbgæ–‡ã¯å–ã‚Šé™¤ã‹ãªã„ã€‚
 	DbgOut( L"MotChangeDlg : TVAdd : srcname %s, srcno %d, imageno %d, selectno %d, addtolast %d\n",
 		srcname, srcno, imageno, selectno, addtolast );
 
@@ -627,7 +627,7 @@ LRESULT CMotChangeDlg::OnExpandedTree1(int idCtrl, LPNMHDR pnmh, BOOL& bHandled)
 
 
 
-	// TODO : ºİÄÛ°Ù‚Ì’Ê’mÊİÄŞ×—p‚Ìº°ÄŞ‚ğ’Ç‰Á‚µ‚Ä‚­‚¾‚³‚¢B
+	// TODO : ï½ºï¾ï¾„ï¾›ï½°ï¾™ã®é€šçŸ¥ï¾Šï¾ï¾„ï¾ï¾—ç”¨ã®ï½ºï½°ï¾„ï¾ã‚’è¿½åŠ ã—ã¦ãã ã•ã„ã€‚
 	NMTREEVIEW* pnmtv = (NMTREEVIEW*)pnmh;
 	TVITEM tvi = pnmtv->itemNew;
 
@@ -667,7 +667,7 @@ LRESULT CMotChangeDlg::OnSelchangedTree1(int idCtrl, LPNMHDR pnmh, BOOL& bHandle
 	}
 
 
-	// TODO : ºİÄÛ°Ù‚Ì’Ê’mÊİÄŞ×—p‚Ìº°ÄŞ‚ğ’Ç‰Á‚µ‚Ä‚­‚¾‚³‚¢B
+	// TODO : ï½ºï¾ï¾„ï¾›ï½°ï¾™ã®é€šçŸ¥ï¾Šï¾ï¾„ï¾ï¾—ç”¨ã®ï½ºï½°ï¾„ï¾ã‚’è¿½åŠ ã—ã¦ãã ã•ã„ã€‚
 	NMTREEVIEW* pnmtv = (NMTREEVIEW*)pnmh;
 	TVITEM tvi = pnmtv->itemNew;
 
@@ -887,10 +887,10 @@ LRESULT CMotChangeDlg::OnDel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHa
 	nameptr = currentmi.motname;
 
 	char messtr[256];
-	sprintf_s( messtr, 256, "%s‚ğAƒcƒŠ[‚©‚çíœ‚µ‚Ü‚·B‚æ‚ë‚µ‚¢‚Å‚µ‚å‚¤‚©B", nameptr );
+	sprintf_s( messtr, 256, "%sã‚’ã€ãƒ„ãƒªãƒ¼ã‹ã‚‰å‰Šé™¤ã—ã¾ã™ã€‚ã‚ˆã‚ã—ã„ã§ã—ã‚‡ã†ã‹ã€‚", nameptr );
 
 	int dlgret;
-	dlgret = ::MessageBoxA( m_hWnd, messtr, "Šm”F", MB_OKCANCEL );
+	dlgret = ::MessageBoxA( m_hWnd, messtr, "ç¢ºèª", MB_OKCANCEL );
 	if( dlgret != IDOK ){
 		return 0;//!!!!!!!!!!!!!!!
 	}
@@ -1026,7 +1026,7 @@ LRESULT CMotChangeDlg::OnProp(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 
 			int changename = 0;
 
-			//idlingİ’è‚ÌXV
+			//idlingè¨­å®šã®æ›´æ–°
 			if( curmce->idling ){
 				//strcpy_s( m_idlingname, MAX_PATH, fname );
 				strcpy_s(m_idlingname, MAX_PATH, mname);//2025/01/02
@@ -1081,7 +1081,7 @@ LRESULT CMotChangeDlg::OnProp(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 			//curmotid->notfu = curmce->notfu;
 
 
-			////–¼‘O‚Ìƒ`ƒFƒbƒN‚Æ•ÏX
+			////åå‰ã®ãƒã‚§ãƒƒã‚¯ã¨å¤‰æ›´
 			//int cmp;
 			//cmp = strcmp( mname, dlg.GetName() );
 			//if( (cmp != 0) || changename ){
@@ -1166,11 +1166,11 @@ LRESULT CMotChangeDlg::OnCopy(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	}
 
 	if( parti ){
-		//q‹Ÿ‚PŒÂƒRƒs[
+		//å­ä¾›ï¼‘å€‹ã‚³ãƒ”ãƒ¼
 		m_cpelemnum = 1;
 		m_cpelem[0] = *curmce;
 	}else{
-		//q‹Ÿ‘S•”‚ğƒRƒs[
+		//å­ä¾›å…¨éƒ¨ã‚’ã‚³ãƒ”ãƒ¼
 		if( curmce->childnum < MAXMCCOPYNUM ){
 			m_cpelemnum = curmce->childnum;
 		}else{
@@ -1228,7 +1228,7 @@ LRESULT CMotChangeDlg::OnPaste(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 	}
 
 	if( parti ){
-		::MessageBox( NULL, L"q‹Ÿ—v‘f‚É‚Íƒy[ƒXƒg‚Å‚«‚Ü‚¹‚ñBe‚ğ‘I‚ñ‚ÅÄs‚µ‚Ä‚­‚¾‚³‚¢B", L"ƒGƒ‰[", MB_OK );
+		::MessageBox( NULL, L"å­ä¾›è¦ç´ ã«ã¯ãƒšãƒ¼ã‚¹ãƒˆã§ãã¾ã›ã‚“ã€‚è¦ªã‚’é¸ã‚“ã§å†è©¦è¡Œã—ã¦ãã ã•ã„ã€‚", L"ã‚¨ãƒ©ãƒ¼", MB_OK );
 		return 0;
 	}else{
 		int cpno;
@@ -1428,12 +1428,12 @@ int CMotChangeDlg::SaveMAFile( char* srcdirname, char* srcmafname, int overwrite
 
 	//ret = mafile->SaveMAFile( maffilename, m_papp->m_mhandler, m_mch, m_hWnd, overwriteflag );
 	//if( ret == -1 ){
-	//	::MessageBox( m_hWnd, L"“¯‚¶ƒ‚[ƒVƒ‡ƒ“–¼‚ª•¡”‚ ‚é‚ÆAmoa‚ğ‘‚«o‚¹‚Ü‚¹‚ñB\n–¼‘O‚ğ•Ï‚¦‚ÄAÄs‚µ‚Ä‚­‚¾‚³‚¢B", L"–¼‘OƒGƒ‰[", MB_OK );
+	//	::MessageBox( m_hWnd, L"åŒã˜ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³åãŒè¤‡æ•°ã‚ã‚‹ã¨ã€moaã‚’æ›¸ãå‡ºã›ã¾ã›ã‚“ã€‚\nåå‰ã‚’å¤‰ãˆã¦ã€å†è©¦è¡Œã—ã¦ãã ã•ã„ã€‚", L"åå‰ã‚¨ãƒ©ãƒ¼", MB_OK );
 	//	delete mafile;
 	//	mafile = 0;
 	//	return 0;
 	//}else if( ret == -2 ){
-	//	::MessageBox( m_hWnd, L"ƒAƒCƒhƒŠƒ“ƒOİ’è‚Ìƒ‚[ƒVƒ‡ƒ“‚ªA‚P‚Â‚¾‚¯‘¶İ‚·‚é•K—v‚ª‚ ‚è‚Ü‚·B\nİ’è‚ğ’¼‚µ‚ÄAÄs‚µ‚Ä‚­‚¾‚³‚¢B", L"ƒAƒCƒhƒŠƒ“ƒOƒGƒ‰[", MB_OK );
+	//	::MessageBox( m_hWnd, L"ã‚¢ã‚¤ãƒ‰ãƒªãƒ³ã‚°è¨­å®šã®ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ãŒã€ï¼‘ã¤ã ã‘å­˜åœ¨ã™ã‚‹å¿…è¦ãŒã‚ã‚Šã¾ã™ã€‚\nè¨­å®šã‚’ç›´ã—ã¦ã€å†è©¦è¡Œã—ã¦ãã ã•ã„ã€‚", L"ã‚¢ã‚¤ãƒ‰ãƒªãƒ³ã‚°ã‚¨ãƒ©ãƒ¼", MB_OK );
 	//	delete mafile;
 	//	mafile = 0;
 	//	return 0;
@@ -1449,7 +1449,7 @@ int CMotChangeDlg::SaveMAFile( char* srcdirname, char* srcmafname, int overwrite
 	//mafile = 0;
 
 
-	/////////////////// qua‚Ì•Û‘¶
+	/////////////////// quaã®ä¿å­˜
 
 	//if( !m_papp->m_mhandler || !m_papp->m_shandler ){
 	//	return 0;//!!!!!!!!!!!!!!!!!!
@@ -1490,7 +1490,7 @@ int CMotChangeDlg::SaveMAFile( char* srcdirname, char* srcmafname, int overwrite
 
 	//		newqualeng = (int)strlen( srcdirname ) + (int)strlen( curname ) + 5;
 	//		if( newqualeng >= MAX_PATH ){
-	//			::MessageBox( m_hWnd, L"quaƒtƒ@ƒCƒ‹–¼‚ª’·‚·‚¬‚Ä•Û‘¶‚Å‚«‚Ü‚¹‚ñB\nƒ‚[ƒVƒ‡ƒ“–¼‚ğ’Z‚­‚·‚é‚©A‚à‚µ‚­‚ÍA\nƒfƒBƒŒƒNƒgƒŠ‚ÌŠK‘w‚ğó‚­w’è‚µ‚ÄAÄs‚µ‚Ä‚­‚¾‚³‚¢B", L"¸”s", MB_OK );
+	//			::MessageBox( m_hWnd, L"quaãƒ•ã‚¡ã‚¤ãƒ«åãŒé•·ã™ãã¦ä¿å­˜ã§ãã¾ã›ã‚“ã€‚\nãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³åã‚’çŸ­ãã™ã‚‹ã‹ã€ã‚‚ã—ãã¯ã€\nãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®éšå±¤ã‚’æµ…ãæŒ‡å®šã—ã¦ã€å†è©¦è¡Œã—ã¦ãã ã•ã„ã€‚", L"å¤±æ•—", MB_OK );
 	//			return 1;//!!!!!!!!!!!
 	//		}
 
@@ -1520,14 +1520,14 @@ int CMotChangeDlg::WriteQuaFile( char* srcfilename, int srccookie, int srcstart,
 	//if( (overwriteflag == 0) && (m_overwritekind != OW_ALLYES) && (m_overwritekind != OW_ALLNO) ){
 	//	DWORD fattr;
 	//	fattr = GetFileAttributes( srcfilename );
-	//	if( (fattr & FILE_ATTRIBUTE_DIRECTORY) == 0 ){//ƒtƒ@ƒCƒ‹‚ªŒ©‚Â‚©‚Á‚½ê‡
+	//	if( (fattr & FILE_ATTRIBUTE_DIRECTORY) == 0 ){//ãƒ•ã‚¡ã‚¤ãƒ«ãŒè¦‹ã¤ã‹ã£ãŸå ´åˆ
 
 	//		/***
 	//		char messtr[1024];
-	//		sprintf_s( messtr, 1024, "%s‚ÍAŠù‚É‘¶İ‚µ‚Ü‚·B\nã‘‚«‚µ‚Ü‚·‚©H", srcfilename );
+	//		sprintf_s( messtr, 1024, "%sã¯ã€æ—¢ã«å­˜åœ¨ã—ã¾ã™ã€‚\nä¸Šæ›¸ãã—ã¾ã™ã‹ï¼Ÿ", srcfilename );
 
 	//		int dlgret;
-	//		dlgret = (int)::MessageBox( m_hWnd, messtr, "ã‘‚«Šm”F", MB_OKCANCEL );
+	//		dlgret = (int)::MessageBox( m_hWnd, messtr, "ä¸Šæ›¸ãç¢ºèª", MB_OKCANCEL );
 	//		if( dlgret != IDOK ){
 	//			return 0;//!!!!!!!!!!!!!!!!!!
 	//		}
@@ -1691,10 +1691,10 @@ int CMotChangeDlg::InitList()
 
 	LRESULT lres;
 	int kno;
-	for( kno = 0; kno < ekptr->m_keynum; kno++ ){
+	for( kno = 0; kno < ekptr->GetKeyNum(); kno++ ){
 		WCHAR mes[256];
-		int eventno = ekptr->m_ekey[kno].eventno;
-		int combono = ekptr->m_ekey[kno].combono;
+		int eventno = ekptr->GetEventNo(kno);
+		int combono = ekptr->GetComboNo(kno);
 		if( (combono < 0) || (combono >= 40) ){
 			DbgOut( L"mcdlg : InitList : combono out of range error !!!\n" );
 			_ASSERT( 0 );
@@ -1703,10 +1703,10 @@ int CMotChangeDlg::InitList()
 
 
 		WCHAR singlestr[256];
-		if( ekptr->m_ekey[kno].singleevent == 1 ){
-			swprintf_s( singlestr, 256, L"’P”­F" );
+		if( ekptr->GetSingleEvent(kno) == 1 ){
+			swprintf_s( singlestr, 256, L"å˜ç™ºï¼š" );
 		}else{
-			swprintf_s( singlestr, 256, L"’·‰ŸF" );
+			swprintf_s( singlestr, 256, L"é•·æŠ¼ï¼š" );
 		}
 
 		swprintf_s( mes, 256, L"%s eventno : %d, key : %s", singlestr, eventno, &( s_strkey[combono][0] ) );
@@ -1773,8 +1773,8 @@ LRESULT CMotChangeDlg::OnDefault10(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 		ek.singleevent = 1;
 
 
-		if( ekptr->m_keynum >= 255 ){
-			::MessageBox( m_hWnd, L"ƒCƒxƒ“ƒgƒL[‚Í‚Q‚T‚UŒÂ‚Ü‚Å‚µ‚©ì¬‚Å‚«‚Ü‚¹‚ñB", L"ƒGƒ‰[", MB_OK );
+		if( ekptr->GetKeyNum() >= 255) {
+			::MessageBox( m_hWnd, L"ã‚¤ãƒ™ãƒ³ãƒˆã‚­ãƒ¼ã¯ï¼’ï¼•ï¼–å€‹ã¾ã§ã—ã‹ä½œæˆã§ãã¾ã›ã‚“ã€‚", L"ã‚¨ãƒ©ãƒ¼", MB_OK );
 			return 0;
 		}
 
@@ -1791,9 +1791,9 @@ LRESULT CMotChangeDlg::OnDefault10(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 
 			WCHAR singlestr[256];
 			if( ek.singleevent == 1 ){
-				swprintf_s( singlestr, 256, L"’P”­F" );
+				swprintf_s( singlestr, 256, L"å˜ç™ºï¼š" );
 			}else{
-				swprintf_s( singlestr, 256, L"’·‰ŸF" );
+				swprintf_s( singlestr, 256, L"é•·æŠ¼ï¼š" );
 			}
 
 			WCHAR mes[256];
@@ -1856,7 +1856,7 @@ LRESULT CMotChangeDlg::OnAddList(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 
 	ret = GetInt( m_event_wnd, &tmpint );
 	if( ret || (tmpint <= 0) ){
-		::MessageBox( m_hWnd, L"ƒCƒxƒ“ƒg”Ô†‚ª•s³‚Å‚·B‚O‚æ‚è‘å‚«‚¢®”‚ğ‘‚¢‚Ä‚­‚¾‚³‚¢B", L"“ü—ÍƒGƒ‰[", MB_OK );
+		::MessageBox( m_hWnd, L"ã‚¤ãƒ™ãƒ³ãƒˆç•ªå·ãŒä¸æ­£ã§ã™ã€‚ï¼ã‚ˆã‚Šå¤§ãã„æ•´æ•°ã‚’æ›¸ã„ã¦ãã ã•ã„ã€‚", L"å…¥åŠ›ã‚¨ãƒ©ãƒ¼", MB_OK );
 		return 0;
 	}
 	ek.eventno = tmpint;
@@ -1883,8 +1883,8 @@ LRESULT CMotChangeDlg::OnAddList(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 		ek.singleevent = 0;
 	}
 
-	if( ekptr->m_keynum >= 255 ){
-		::MessageBox( m_hWnd, L"ƒCƒxƒ“ƒgƒL[‚Í‚Q‚T‚UŒÂ‚Ü‚Å‚µ‚©ì¬‚Å‚«‚Ü‚¹‚ñB", L"ƒGƒ‰[", MB_OK );
+	if( ekptr->GetKeyNum() >= 255) {
+		::MessageBox( m_hWnd, L"ã‚¤ãƒ™ãƒ³ãƒˆã‚­ãƒ¼ã¯ï¼’ï¼•ï¼–å€‹ã¾ã§ã—ã‹ä½œæˆã§ãã¾ã›ã‚“ã€‚", L"ã‚¨ãƒ©ãƒ¼", MB_OK );
 		return 0;
 	}
 
@@ -1895,7 +1895,7 @@ LRESULT CMotChangeDlg::OnAddList(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 
 	if( kindex >= 0 ){
 		int dlgret;
-		dlgret = (int)::MessageBox( m_hWnd, L"“¯‚¶ƒL[‚ªŠù‚Ég‚í‚ê‚Ä‚¢‚Ü‚·Bíœ‚µ‚Ä‚©‚çV‹K‚Éì¬‚µ‚Ü‚·‚©H", L"Šm”F", MB_OKCANCEL );
+		dlgret = (int)::MessageBox( m_hWnd, L"åŒã˜ã‚­ãƒ¼ãŒæ—¢ã«ä½¿ã‚ã‚Œã¦ã„ã¾ã™ã€‚å‰Šé™¤ã—ã¦ã‹ã‚‰æ–°è¦ã«ä½œæˆã—ã¾ã™ã‹ï¼Ÿ", L"ç¢ºèª", MB_OKCANCEL );
 		if( dlgret == IDOK ){
 
 			LRESULT lret;
@@ -1927,9 +1927,9 @@ LRESULT CMotChangeDlg::OnAddList(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 
 		WCHAR singlestr[256];
 		if( ek.singleevent == 1 ){
-			swprintf_s( singlestr, 256, L"’P”­F" );
+			swprintf_s( singlestr, 256, L"å˜ç™ºï¼š" );
 		}else{
-			swprintf_s( singlestr, 256, L"’·‰ŸF" );
+			swprintf_s( singlestr, 256, L"é•·æŠ¼ï¼š" );
 		}
 
 		WCHAR mes[256];
@@ -1987,8 +1987,8 @@ LRESULT CMotChangeDlg::OnDelList(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 	int selindex;
 	selindex = (int)m_list_wnd.SendMessage( LB_GETCURSEL, 0, 0 );
 	if( selindex == LB_ERR ){
-		//‰½‚à‘I‘ğ‚µ‚Ä‚¢‚È‚¢‚Æ‚«‚àLB_ERR‚ª•Ô‚é
-		::MessageBox( m_hWnd, L"ƒŠƒXƒg‚Ì—v‘f‚ğ‘I‘ğ‚µ‚Ä‚©‚çíœƒ{ƒ^ƒ“‚ğ‰Ÿ‚µ‚Ä‚­‚¾‚³‚¢B", L"Œx", MB_OK );
+		//ä½•ã‚‚é¸æŠã—ã¦ã„ãªã„ã¨ãã‚‚LB_ERRãŒè¿”ã‚‹
+		::MessageBox( m_hWnd, L"ãƒªã‚¹ãƒˆã®è¦ç´ ã‚’é¸æŠã—ã¦ã‹ã‚‰å‰Šé™¤ãƒœã‚¿ãƒ³ã‚’æŠ¼ã—ã¦ãã ã•ã„ã€‚", L"è­¦å‘Š", MB_OK );
 		return 0;
 	}
 	if( (selindex < 0) || (selindex >= 40) ){
@@ -2102,7 +2102,7 @@ LRESULT CMotChangeDlg::OnApplyFULeng(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 	int tmpint;
 	ret = GetInt( m_fuleng_wnd, &tmpint );
 	if( ret || (tmpint <= 0) ){
-		::MessageBox( m_hWnd, L"ƒCƒxƒ“ƒg”Ô†‚ª•s³‚Å‚·B‚O‚æ‚è‘å‚«‚¢®”‚ğ‘‚¢‚Ä‚­‚¾‚³‚¢B", L"“ü—ÍƒGƒ‰[", MB_OK );
+		::MessageBox( m_hWnd, L"ã‚¤ãƒ™ãƒ³ãƒˆç•ªå·ãŒä¸æ­£ã§ã™ã€‚ï¼ã‚ˆã‚Šå¤§ãã„æ•´æ•°ã‚’æ›¸ã„ã¦ãã ã•ã„ã€‚", L"å…¥åŠ›ã‚¨ãƒ©ãƒ¼", MB_OK );
 		return 0;
 	}
 	
@@ -2156,7 +2156,7 @@ LRESULT CMotChangeDlg::OnPlay(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 
 	ret = mafile->CheckIdlingMotion( mch );
 	if( ret ){
-		::MessageBox( m_hWnd, L"ƒAƒCƒhƒŠƒ“ƒOİ’è‚Ìƒ‚[ƒVƒ‡ƒ“‚ªA‚P‚Â‚¾‚¯‘¶İ‚·‚é•K—v‚ª‚ ‚è‚Ü‚·B\nİ’è‚ğ’¼‚µ‚ÄAÄs‚µ‚Ä‚­‚¾‚³‚¢B", L"ƒAƒCƒhƒŠƒ“ƒOƒGƒ‰[", MB_OK );
+		::MessageBox( m_hWnd, L"ã‚¢ã‚¤ãƒ‰ãƒªãƒ³ã‚°è¨­å®šã®ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ãŒã€ï¼‘ã¤ã ã‘å­˜åœ¨ã™ã‚‹å¿…è¦ãŒã‚ã‚Šã¾ã™ã€‚\nè¨­å®šã‚’ç›´ã—ã¦ã€å†è©¦è¡Œã—ã¦ãã ã•ã„ã€‚", L"ã‚¢ã‚¤ãƒ‰ãƒªãƒ³ã‚°ã‚¨ãƒ©ãƒ¼", MB_OK );
 		delete mafile;
 		return 0;
 	}
@@ -2211,7 +2211,7 @@ int CMotChangeDlg::InitComboIdle()
 	int motnum;
 	motnum = currentmodel->GetMotInfoSize();
 
-	int doneidle = 0;//‚·‚Å‚Émch‚Éidling‚ªİ’è‚³‚ê‚Ä‚¢‚ê‚Î‚P
+	int doneidle = 0;//ã™ã§ã«mchã«idlingãŒè¨­å®šã•ã‚Œã¦ã„ã‚Œã°ï¼‘
 	int initidling = -1;
 	int tmpidling;
 	tmpidling = mch->GetIdlingMotID(m_idlingname, MAX_PATH);

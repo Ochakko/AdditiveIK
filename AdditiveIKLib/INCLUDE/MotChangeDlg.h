@@ -1,9 +1,9 @@
-// InfluenceDlg.h : CMotChangeDlg ‚ÌéŒ¾
+ï»¿// InfluenceDlg.h : CMotChangeDlg ã®å®£è¨€
 
 #ifndef __MOTCHANGEDLG_H_
 #define __MOTCHANGEDLG_H_
 
-#include "../AdditiveIK/resource.h"       // ƒƒCƒ“ ƒVƒ“ƒ{ƒ‹
+#include "../AdditiveIK/resource.h"       // ãƒ¡ã‚¤ãƒ³ ã‚·ãƒ³ãƒœãƒ«
 #include <atlhost.h>
 
 class CMCHandler;
@@ -56,7 +56,7 @@ BEGIN_MSG_MAP(CMotChangeDlg)
 	
 
 END_MSG_MAP()
-// ƒnƒ“ƒhƒ‰‚Ìƒvƒƒgƒ^ƒCƒv:
+// ãƒãƒ³ãƒ‰ãƒ©ã®ãƒ—ãƒ­ãƒˆã‚¿ã‚¤ãƒ—:
 //  LRESULT MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 //  LRESULT CommandHandler(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 //  LRESULT NotifyHandler(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);

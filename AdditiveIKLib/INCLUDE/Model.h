@@ -2754,6 +2754,7 @@ public: //accesser
 
 
 	int CreateMotChangeHandlerIfNot();
+	int ResetMotChangeHandler();
 	CMCHandler* GetMotChangeHandler() {
 		return m_mch;
 	};

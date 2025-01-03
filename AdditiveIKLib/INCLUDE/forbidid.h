@@ -1,4 +1,4 @@
-#ifndef FORBIDIDH
+﻿#ifndef FORBIDIDH
 #define FORBIDIDH
 
 #include <coef.h>

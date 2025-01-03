@@ -1,4 +1,4 @@
-// MCParentDlg.cpp : CMCParentDlg ‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+ï»¿// MCParentDlg.cpp : CMCParentDlg ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 
 //#define NOTWINDOWSH
 //#define NEEDMFCH
@@ -71,7 +71,7 @@ LRESULT CMCParentDlg::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 	ParamsToDlg();
 
-	return 1;  // ƒVƒXƒeƒ€‚ÉƒtƒH[ƒJƒX‚ğİ’è‚³‚¹‚Ü‚·
+	return 1;  // ã‚·ã‚¹ãƒ†ãƒ ã«ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ã‚’è¨­å®šã•ã›ã¾ã™
 }
 
 LRESULT CMCParentDlg::OnOK(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
@@ -82,7 +82,7 @@ LRESULT CMCParentDlg::OnOK(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHand
 	WCHAR tempchar[256] = { 0L };
 	ret = GetTextW( m_name_wnd, tempchar, 256 );
 	if( ret || (tempchar[0] == 0L) ){
-		MessageBox( L"sig‚Ìƒtƒ@ƒCƒ‹–¼‚ª•s³‚Å‚·B", L"“ü—ÍƒGƒ‰[", MB_OK );
+		MessageBox( L"sigã®ãƒ•ã‚¡ã‚¤ãƒ«åãŒä¸æ­£ã§ã™ã€‚", L"å…¥åŠ›ã‚¨ãƒ©ãƒ¼", MB_OK );
 		return 0;		
 	}
 	ZeroMemory( name, sizeof(char) * 256 );
@@ -110,7 +110,7 @@ LRESULT CMCParentDlg::OnOK(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHand
 	int tempint = 0;
 	ret = GetInt( m_commonid_wnd, &tempint );
 	if( ret || (tempint < 0) ){
-		MessageBox( L"‹¤’Ê•ªŠòƒCƒxƒ“ƒg”Ô†‚ª•s³‚Å‚·B", L"“ü—ÍƒGƒ‰[", MB_OK );
+		MessageBox( L"å…±é€šåˆ†å²ã‚¤ãƒ™ãƒ³ãƒˆç•ªå·ãŒä¸æ­£ã§ã™ã€‚", L"å…¥åŠ›ã‚¨ãƒ©ãƒ¼", MB_OK );
 		return 0;
 	}
 	commonid = tempint;
@@ -203,7 +203,7 @@ LRESULT CMCParentDlg::OnAddForbid(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 	}
 
 	if( (forbidnum + 1) > MAXFORBIDNUM ){
-		MessageBox( L"‚±‚êˆÈã’Ç‰Á‚Å‚«‚Ü‚¹‚ñBiŒÂ”§ŒÀj", L"ƒGƒ‰[", MB_OK );
+		MessageBox( L"ã“ã‚Œä»¥ä¸Šè¿½åŠ ã§ãã¾ã›ã‚“ã€‚ï¼ˆå€‹æ•°åˆ¶é™ï¼‰", L"ã‚¨ãƒ©ãƒ¼", MB_OK );
 		return 0;//!!!!!!!!!!!!!!!!!!!!!!!
 	}
 
@@ -226,7 +226,7 @@ LRESULT CMCParentDlg::OnDelForbid(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 	selindex = (int)m_list1_wnd.SendMessage( LB_GETCURSEL, 0, 0 );
 	if( selindex == LB_ERR ){
 		
-		//‰½‚à‘I‘ğ‚µ‚Ä‚¢‚È‚¢‚Æ‚«‚àLB_ERR‚ª•Ô‚é
+		//ä½•ã‚‚é¸æŠã—ã¦ã„ãªã„ã¨ãã‚‚LB_ERRãŒè¿”ã‚‹
 		return 0;
 	}
 	if( (selindex < 0) || (selindex >= forbidnum) ){

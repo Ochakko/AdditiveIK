@@ -5,9 +5,10 @@ https://github.com/Ochakko/AdditiveIK
 2025/01/03
 　MOA(MotionAccelerator)について作業中(その２)
 　　プレートメニュー(MOAプレート)で設定画面表示
+　　fbxファイル名に.moa拡張子を付けて保存読み込み(プロジェクトファイル読み書き時)
 
 　　## 予定(To Do) ##
-　　　fbxファイル名に.moa拡張子を付けて保存、読み込み
+　　　RokDeBone2で出力したmoaファイルの読み込みに対応
 　　　MOAのPlayとStopの実装(モーション変化時にブレンド無し)
 　　　MOAのPlayとStopの実装(モーション変化時にブレンド有り)
 

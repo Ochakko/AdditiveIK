@@ -1,4 +1,4 @@
-#ifndef MCHANDLERH
+﻿#ifndef MCHANDLERH
 #define MCHANDLERH
 
 #include <coef.h>
@@ -46,6 +46,7 @@ public:
 	int SetBranchFrame2( int tmotid, int bmotid, int frame2 );
 	int SetTrunkNotComID( int motid, int arrayleng, int* srcid );
 
+	int ExistMotIdInTrunk(int srcmotid);
 
 public:
 	int GetMCNum() {

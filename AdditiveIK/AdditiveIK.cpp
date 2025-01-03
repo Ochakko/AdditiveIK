@@ -18901,7 +18901,7 @@ int SaveProject()
 	}
 
 
-	//全てのモデルが読み込まれた後で*.friを書き込む
+	//全てのモデルが書き込まれた後で*.friを書き込む
 	s_footrigdlg.SaveFootRigFile(s_projectdir, s_projectname, s_chascene);
 
 

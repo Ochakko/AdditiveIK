@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 
 #include <MCHandler.h>
 #include <forbidid.h>
@@ -124,7 +124,7 @@ int CMCHandler::DestroyObjs()
 //
 //	}else{
 //		if( m_mcnum == motnum ){
-//			//‰½‚à‚µ‚È‚¢
+//			//ä½•ã‚‚ã—ãªã„
 //		}else if( m_mcnum < motnum ){
 //
 //			m_mcarray = (MCELEM*)realloc( m_mcarray, sizeof( MCELEM ) * motnum );
@@ -155,7 +155,7 @@ int CMCHandler::DestroyObjs()
 //				(m_mcarray + mcno)->ev0idle = (motidarray + mcno)->ev0idle;
 //				(m_mcarray + mcno)->commonid = (motidarray + mcno)->commonid;
 //
-//				(m_mcarray + mcno)->forbidid = 0;//‰Šú‰»
+//				(m_mcarray + mcno)->forbidid = 0;//åˆæœŸåŒ–
 //				ret = SetMCEForbidID( m_mcarray + mcno, (motidarray + mcno)->forbidnum, (motidarray + mcno)->forbidid );
 //				if( ret ){
 //					DbgOut(  L"mch : InitMCArray : SetMCEForbidID error !!!\n" );
@@ -171,7 +171,7 @@ int CMCHandler::DestroyObjs()
 //			m_mcnum = motnum;
 //
 //			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//			//setno‚Ì•t‚¯’¼‚µ
+//			//setnoã®ä»˜ã‘ç›´ã—
 //			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //
 //			ReorderSetno();
@@ -317,7 +317,7 @@ int CMCHandler::AddChild( int parentsetno, int srccookie, int srcalways, int src
 	setmc->notfu = srcnotfu;
 	setmc->nottoidle = srcnottoidle;
 
-	//ˆÈ‰º‚R‚Â‚Íe—pƒƒ“ƒo[
+	//ä»¥ä¸‹ï¼“ã¤ã¯è¦ªç”¨ãƒ¡ãƒ³ãƒãƒ¼
 	setmc->ev0idle = 0;
 	setmc->commonid = 0;
 	setmc->forbidnum = 0;
@@ -508,7 +508,7 @@ int CMCHandler::DeleteMCElem( int srcsetno )
 		//ReorderSetno();
 
 
-		//q‹Ÿ€–Ú‚Ìíœ
+		//å­ä¾›é …ç›®ã®å‰Šé™¤
 		for( mcno = 0; mcno < m_mcnum; mcno++ ){
 			MCELEM* curmce;
 			curmce = m_mcarray + mcno;
@@ -549,7 +549,7 @@ int CMCHandler::DeleteMCElem( int srcsetno )
 		ReorderSetno();
 
 
-		//mce->id‚ÌU‚è‚È‚¨‚µ
+		//mce->idã®æŒ¯ã‚ŠãªãŠã—
 		int* old2newid;
 		old2newid = (int*)malloc( sizeof( int ) * (m_mcnum + 1) );
 		if( !old2newid ){
@@ -691,7 +691,7 @@ int compareMCE( void *context, const void *elem1, const void *elem2)
 		if( mce1->frameno1 != mce2->frameno1 ){
 			return ( mce1->frameno1 - mce2->frameno1 );
 		}else{
-			//frameno1‚ª“¯‚¶‚Æ‚«‚ÍAƒCƒxƒ“ƒg”Ô†‚Ì‘å‚«‚³‚Åƒ\[ƒg
+			//frameno1ãŒåŒã˜ã¨ãã¯ã€ã‚¤ãƒ™ãƒ³ãƒˆç•ªå·ã®å¤§ãã•ã§ã‚½ãƒ¼ãƒˆ
 
 			return ( mce1->eventno1 - mce2->eventno1 );
 		}
@@ -787,7 +787,7 @@ int CMCHandler::GetIdlingMotID(char* dstname, int dstleng)
 					strcpy_s(dstname, dstleng, idlingmi.motname);
 				}
 				else {
-					//dstnameˆø”‚ğ“n‚³‚ê‚Ä‚¢‚È‚¢ê‡‚ÍƒZƒbƒg‚µ‚È‚¢@ƒGƒ‰[‚Å‚Í‚È‚¢
+					//dstnameå¼•æ•°ã‚’æ¸¡ã•ã‚Œã¦ã„ãªã„å ´åˆã¯ã‚»ãƒƒãƒˆã—ãªã„ã€€ã‚¨ãƒ©ãƒ¼ã§ã¯ãªã„
 				}
 			}
 			else {
@@ -819,7 +819,7 @@ int CMCHandler::ChangeIdlingMotion(CModel* srcmodel, int srcmotid)
 
 	int ret;
 	//ret = SetIdlingMotion(srcmodel, 1);
-	ret = SetIdlingMotion(srcmodel, 0);//notfuƒ‚[ƒVƒ‡ƒ“‘Îô‚Í•s—v‚È‚Ì‚Å‚Q”Ô–Ú‚Ìˆø”‚Í‚O
+	ret = SetIdlingMotion(srcmodel, 0);//notfuãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³å¯¾ç­–ã¯ä¸è¦ãªã®ã§ï¼’ç•ªç›®ã®å¼•æ•°ã¯ï¼
 	if( ret ){
 		DbgOut( L"mch : ChangeIdlingMotion : SetIdlingMotion error !!!\n" );
 		//_ASSERT( 0 );
@@ -870,7 +870,7 @@ int CMCHandler::GetNextMotion( int srccurmotid, int srccurframe, int srceventno,
 	}
 
 
-	//‹¤’Ê•ªŠòƒ`ƒFƒbƒN
+	//å…±é€šåˆ†å²ãƒã‚§ãƒƒã‚¯
 	MCELEM* nextmce = 0;
 	MCELEM* chkmce;
 	for( mcno = 0; mcno < m_mcnum; mcno++ ){
@@ -894,7 +894,7 @@ int CMCHandler::GetNextMotion( int srccurmotid, int srccurframe, int srceventno,
 	}
 
 
-	//Branchİ’èƒ`ƒFƒbƒN
+	//Branchè¨­å®šãƒã‚§ãƒƒã‚¯
 	int chilno;
 	for( chilno = 0; chilno < parentmce->childnum; chilno++ ){
 		MCELEM* chilmce;
@@ -1042,8 +1042,40 @@ int CMCHandler::GetTrunkInfo( int motid, MOATRUNKINFO* trunkptr )
 
 }
 
+int CMCHandler::ExistMotIdInTrunk(int srcmotid)
+{
+	//###########
+	//setnoã‚’è¿”ã™
+	//###########
+
+	int mcno;
+	MCELEM* parentmce = 0;
+	for (mcno = 0; mcno < m_mcnum; mcno++) {
+		MCELEM* curmce;
+		curmce = m_mcarray + mcno;
+
+		if (curmce->id == srcmotid) {
+			parentmce = curmce;
+			break;
+		}
+	}
+
+	if (parentmce) {
+		return parentmce->setno;
+	}
+	else {
+		return -1;
+	}
+}
+
+
 int CMCHandler::GetTrunkInfo( int motid, int* infoptr )
 {
+	if (!infoptr) {
+		_ASSERT(0);
+		return 1;
+	}
+
 	int mcno;
 	MCELEM* parentmce = 0;
 	for( mcno = 0; mcno < m_mcnum; mcno++ ){

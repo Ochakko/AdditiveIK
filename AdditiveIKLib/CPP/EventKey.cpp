@@ -1,4 +1,4 @@
-#include "stdafx.h" //ƒ_ƒ~[
+ï»¿#include "stdafx.h" //ãƒ€ãƒŸãƒ¼
 
 #include <stdio.h>
 #include <stdlib.h>

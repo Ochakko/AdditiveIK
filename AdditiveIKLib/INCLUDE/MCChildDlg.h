@@ -1,9 +1,9 @@
-// MCChildDlg.h : CMCChildDlg ‚ÌéŒ¾
+ï»¿// MCChildDlg.h : CMCChildDlg ã®å®£è¨€
 
 #ifndef MCCHILDDLGH
 #define MCCHILDDLGH
 
-#include "../AdditiveIK/resource.h"       // ƒƒCƒ“ ƒVƒ“ƒ{ƒ‹
+#include "../AdditiveIK/resource.h"       // ãƒ¡ã‚¤ãƒ³ ã‚·ãƒ³ãƒœãƒ«
 #include <atlhost.h>
 
 #include <coef.h>
@@ -31,7 +31,7 @@ BEGIN_MSG_MAP(CMCChildDlg)
 	//COMMAND_ID_HANDLER(IDC_SWITCHOFF, OnSwitchoff)
 END_MSG_MAP()
 
-// ƒnƒ“ƒhƒ‰‚Ìƒvƒƒgƒ^ƒCƒv:
+// ãƒãƒ³ãƒ‰ãƒ©ã®ãƒ—ãƒ­ãƒˆã‚¿ã‚¤ãƒ—:
 //  LRESULT MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 //  LRESULT CommandHandler(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 //  LRESULT NotifyHandler(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);

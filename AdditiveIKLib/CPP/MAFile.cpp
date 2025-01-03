@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 
 #include <string.h>
 #include <ctype.h>
@@ -62,7 +62,7 @@ int CMAFile::DestroyObjs()
 {
 	if( mabuf.hfile != INVALID_HANDLE_VALUE ){
 		if( mabuf.buf == 0 ){
-			//‘‚«‚İ‚¾‚¯
+			//æ›¸ãè¾¼ã¿æ™‚ã ã‘
 			FlushFileBuffers( mabuf.hfile );
 			SetEndOfFile( mabuf.hfile );
 		}
@@ -127,9 +127,10 @@ int CMAFile::WriteEventKey()
 		}
 
 		int kindex;
-		for (kindex = 0; kindex < ekptr->m_keynum; kindex++) {
+		for (kindex = 0; kindex < ekptr->GetKeyNum(); kindex++) {
 			sprintf_s(m_linechar, MALINELENG, "%d, %d, %d, %d",
-				ekptr->m_ekey[kindex].eventno, ekptr->m_ekey[kindex].key, ekptr->m_ekey[kindex].combono, ekptr->m_ekey[kindex].singleevent);
+				ekptr->GetEventNo(kindex), ekptr->GetKey(kindex), 
+				ekptr->GetComboNo(kindex), ekptr->GetSingleEvent(kindex));
 			ret = WriteLinechar(1);
 			if (ret) {
 				_ASSERT(0);
@@ -173,7 +174,7 @@ int CMAFile::WriteLinechar( int addreturn )
 	return 0;
 }
 
-int CMAFile::SaveMAFile( char* srcfilename, CModel* srcmodel, HWND srchwnd, int overwriteflag )
+int CMAFile::SaveMAFile( WCHAR* srcfilename, CModel* srcmodel, HWND srchwnd, int overwriteflag )
 
 {
 
@@ -186,8 +187,8 @@ int CMAFile::SaveMAFile( char* srcfilename, CModel* srcmodel, HWND srchwnd, int 
 
 	CMCHandler* mch = GetMotChangeHandler();
 	if (!mch) {
-		_ASSERT(0);
-		return 1;
+		//æœªè¨­å®šãƒ¢ãƒ‡ãƒ«(ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ç„¡ã—)ã®å ´åˆã«ã¯ï¼ãƒªã‚¿ãƒ¼ãƒ³ã€€ã‚¨ãƒ©ãƒ¼ã«ã¯ã—ãªã„
+		return 0;
 	}
 
 	ret = CheckSameMotionName();
@@ -213,21 +214,21 @@ int CMAFile::SaveMAFile( char* srcfilename, CModel* srcmodel, HWND srchwnd, int 
 
 	if( overwriteflag == 0 ){
 		DWORD fattr;
-		fattr = GetFileAttributesA( srcfilename );
-		if( (fattr & FILE_ATTRIBUTE_DIRECTORY) == 0 ){//ƒtƒ@ƒCƒ‹‚ªŒ©‚Â‚©‚Á‚½ê‡
-			char messtr[1024];
-			sprintf_s( messtr, 1024, "%s‚ÍAŠù‚É‘¶İ‚µ‚Ü‚·B\nã‘‚«‚µ‚Ü‚·‚©H", srcfilename );
+		fattr = GetFileAttributes( srcfilename );
+		if( (fattr & FILE_ATTRIBUTE_DIRECTORY) == 0 ){//ãƒ•ã‚¡ã‚¤ãƒ«ãŒè¦‹ã¤ã‹ã£ãŸå ´åˆ
+			WCHAR messtr[1024];
+			swprintf_s( messtr, 1024, L"%sã¯ã€æ—¢ã«å­˜åœ¨ã—ã¾ã™ã€‚\nä¸Šæ›¸ãã—ã¾ã™ã‹ï¼Ÿ", srcfilename );
 
 			int dlgret;
-			dlgret = (int)MessageBoxA( srchwnd, messtr, "ã‘‚«Šm”F", MB_OKCANCEL );
+			dlgret = (int)MessageBox( srchwnd, messtr, L"ä¸Šæ›¸ãç¢ºèª", MB_OKCANCEL );
 			if( dlgret != IDOK ){
 				return 0;//!!!!!!!!!!!!!!!!!!
 			}
 		}
 	}
 
-	mabuf.hfile = CreateFile( (LPCTSTR)srcfilename, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
-		FILE_FLAG_SEQUENTIAL_SCAN, NULL );
+	mabuf.hfile = CreateFile(srcfilename, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
+		FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 	if( mabuf.hfile == INVALID_HANDLE_VALUE ){
 		DbgOut(  L"mafile : SaveMAFile : CreateFile error !!! %s\n", srcfilename );
 		_ASSERT( 0 );
@@ -396,39 +397,31 @@ int CMAFile::CheckCommonid( HWND srchwnd )
 	for( mcno = 0; mcno < mch->GetMCNum(); mcno++ ){
 		MCELEM* parmce;
 		parmce = mch->GetMCElem(mcno);
-		if (parmce && parmce->childmc) {
+		if (parmce && parmce->childmc && (parmce->childnum > 0)) {
+			int parentmotid = parmce->id;
+		
 			int childno;
 			for (childno = 0; childno < parmce->childnum; childno++) {
 				MCELEM* childmce;
 				childmce = parmce->childmc + childno;
+				int childmotid = childmce->id;
 
-				int chkno;
-				for (chkno = 0; chkno < mch->GetMCNum(); chkno++) {
-					MCELEM* chkmce;
-					chkmce = mch->GetMCElem(chkno);
-					if (chkmce) {
-						if ((HitTestForbidID(parmce, chkmce->commonid) == 0) && (childmce->eventno1 == chkmce->commonid)) {
-							MOTINFO parentmi = m_model->GetMotInfo(parmce->id);
-							MOTINFO childmi = m_model->GetMotInfo(childmce->id);
-							if ((parentmi.motid > 0) && (childmi.motid > 0)) {
-								char tmpline[2048];
-								sprintf_s(tmpline, 2048, "•ªŠòƒ‚[ƒVƒ‡ƒ“‚Ì’†‚ÉA‹¤’Ê•ªŠòID‚Æ“¯‚¶ID‚ªŒ©‚Â‚©‚è‚Ü‚µ‚½B\ne€–Ú %s\nq€–Ú %s\nƒCƒxƒ“ƒgID %d",
-									parentmi.motname, childmi.motname, chkmce->commonid);
-								::MessageBoxA(srchwnd, tmpline, "Œx", MB_OK);
-							}
-						}
-					}
-					else {
+				if ((parentmotid > 0) && (childmotid > 0) && (parentmotid != childmotid)) {
+					if ((HitTestForbidID(parmce, childmce->eventno1) == 0) && (childmce->eventno1 == parmce->commonid)) {
+						MOTINFO parentmi = m_model->GetMotInfo(parmce->id);
+						MOTINFO childmi = m_model->GetMotInfo(childmce->id);
+						char tmpline[2048];
+						sprintf_s(tmpline, 2048, "åˆ†å²ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ã®ä¸­ã«ã€å…±é€šåˆ†å²IDã¨åŒã˜IDãŒè¦‹ã¤ã‹ã‚Šã¾ã—ãŸã€‚\nè¦ªé …ç›® %s\nå­é …ç›® %s\nã‚¤ãƒ™ãƒ³ãƒˆID %d",
+							parentmi.motname, childmi.motname, parmce->commonid);
+						::MessageBoxA(srchwnd, tmpline, "è­¦å‘Š", MB_OK);
 						_ASSERT(0);
-						return 1;
 					}
 				}
 			}
 
 		}
 		else {
-			_ASSERT(0);
-			return 1;
+			//åˆ†å²ãŒï¼‘ã¤ã‚‚ãªã„ã‚±ãƒ¼ã‚¹ã€€ã‚¨ãƒ©ãƒ¼ã§ã¯ãªã„
 		}
 	}
 
@@ -547,17 +540,13 @@ int CMAFile::WriteBranch()
 		return 0;
 	}
 
-	strcpy_s(m_linechar, MALINELENG, "#TRUNK {");
-	ret = WriteLinechar(1);
-	_ASSERT(!ret);
-
 
 	int mcno;
 	for (mcno = 0; mcno < mch->GetMCNum(); mcno++) {
 		MCELEM* parmce;
 		parmce = mch->GetMCElem(mcno);
 		if (parmce) {
-			MOTINFO currentmi = m_model->GetMotInfo(mcno);
+			MOTINFO currentmi = m_model->GetMotInfo(parmce->id);
 			if (currentmi.motid > 0) {
 				char* parname;
 				parname = currentmi.motname;
@@ -611,12 +600,12 @@ int CMAFile::WriteBranch()
 	return 0;
 }
 
-int CMAFile::SetBuffer( char* srcfilename )
+int CMAFile::SetBuffer( WCHAR* srcfilename )
 {
 	DestroyObjs();
 
-	mabuf.hfile = CreateFile( (LPCTSTR)srcfilename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-		FILE_FLAG_SEQUENTIAL_SCAN, NULL );
+	mabuf.hfile = CreateFile(srcfilename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
+		FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 	if( mabuf.hfile == INVALID_HANDLE_VALUE ){
 		_ASSERT( 0 );
 		return 1;
@@ -666,22 +655,22 @@ int CMAFile::SetBuffer( char* srcfilename )
 
 	/////////////
 
-	char* lasten;
-	lasten = strrchr( srcfilename, '\\' );
-	if( lasten ){
-		int cpleng;
-		cpleng = (int)( lasten - srcfilename );
-		if( cpleng >= MAX_PATH ){
-			DbgOut(  L"mafile : SetBuffer : mediadir path too long error !!!\n" );
-			_ASSERT( 0 );
-			return 1;
-		}
-		strncpy_s( m_mediadir, MAX_PATH, srcfilename, cpleng );
-		m_mediadir[cpleng] = 0;
-
-	}else{
-		m_mediadir[0] = 0;
-	}
+	//char* lasten;
+	//lasten = strrchr( srcfilename, '\\' );
+	//if( lasten ){
+	//	int cpleng;
+	//	cpleng = (int)( lasten - srcfilename );
+	//	if( cpleng >= MAX_PATH ){
+	//		DbgOut(  L"mafile : SetBuffer : mediadir path too long error !!!\n" );
+	//		_ASSERT( 0 );
+	//		return 1;
+	//	}
+	//	strncpy_s( m_mediadir, MAX_PATH, srcfilename, cpleng );
+	//	m_mediadir[cpleng] = 0;
+	//
+	//}else{
+	//	m_mediadir[0] = 0;
+	//}
 
 
 	return 0;
@@ -704,7 +693,7 @@ int CMAFile::GetLine( int* getlen )
 	}
 
 	if( notfound == 0 ){
-		stepno++; //\n‚Ì•ª
+		stepno++; //\nã®åˆ†
 	}
 
 	if( MALINELENG > stepno ){
@@ -778,7 +767,7 @@ int CMAFile::CheckFileVersion()
 	if( ret ){
 		//if( m_apphwnd )
 		//	::SendMessage( m_apphwnd, WM_USER_ENABLE_MENU, 0, 0 );
-		::MessageBoxA( m_apphwnd, "moaƒtƒ@ƒCƒ‹‚Å‚Í‚ ‚è‚Ü‚¹‚ñB\n“Ç‚İ‚ß‚Ü‚¹‚ñB", "“Ç‚İ‚İƒGƒ‰[", MB_OK );
+		::MessageBoxA( m_apphwnd, "moaãƒ•ã‚¡ã‚¤ãƒ«ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚\nèª­ã¿è¾¼ã‚ã¾ã›ã‚“ã€‚", "èª­ã¿è¾¼ã¿ã‚¨ãƒ©ãƒ¼", MB_OK );
 		//if( m_apphwnd )
 		//	::SendMessage( m_apphwnd, WM_USER_ENABLE_MENU, 1, 0 );
 
@@ -795,7 +784,7 @@ int CMAFile::CheckFileVersion()
 	if( cmp1 && cmp2 && cmp3 && cmp4 && cmp5 && cmp6 ){
 		//if( m_apphwnd )
 		//	::SendMessage( m_apphwnd, WM_USER_ENABLE_MENU, 0, 0 );
-		::MessageBoxA( m_apphwnd, "moaƒtƒ@ƒCƒ‹‚Å‚Í‚ ‚è‚Ü‚¹‚ñB\n“Ç‚İ‚ß‚Ü‚¹‚ñB", "“Ç‚İ‚İƒGƒ‰[", MB_OK );
+		::MessageBoxA( m_apphwnd, "moaãƒ•ã‚¡ã‚¤ãƒ«ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚\nèª­ã¿è¾¼ã‚ã¾ã›ã‚“ã€‚", "èª­ã¿è¾¼ã¿ã‚¨ãƒ©ãƒ¼", MB_OK );
 		//if( m_apphwnd )
 		//	::SendMessage( m_apphwnd, WM_USER_ENABLE_MENU, 1, 0 );
 		return 0;
@@ -957,7 +946,7 @@ int CMAFile::SkipChunk()
 	return 0;
 }
 
-int CMAFile::LoadMAFile( char* srcfilename, CModel* srcmodel )
+int CMAFile::LoadMAFile( WCHAR* srcfilename, CModel* srcmodel )
 {
 	if (!srcfilename || !srcmodel) {
 		_ASSERT(0);
@@ -970,6 +959,14 @@ int CMAFile::LoadMAFile( char* srcfilename, CModel* srcmodel )
 
 	//m_apphwnd = srcpapp->m_hWnd;
 
+
+	BOOL bexist;
+	bexist = PathFileExists(srcfilename);//ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã™ã‚‹å ´åˆã«TRUE
+	if (!bexist) {
+		//ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã—ãªã„å ´åˆã¯ï¼ãƒªã‚¿ãƒ¼ãƒ³ã€€ã‚¨ãƒ©ãƒ¼ã«ã¯ã—ãªã„
+		return 0;
+	}
+
 	ret = LoadMAFile_aft( srcfilename );
 	if( ret ){
 		DbgOut(  L"mafile : LoadMAFile : LoadMAFile_aft error !!!\n" );
@@ -981,9 +978,28 @@ int CMAFile::LoadMAFile( char* srcfilename, CModel* srcmodel )
 }
 
 
-int CMAFile::LoadMAFile_aft( char* srcfilename )
+int CMAFile::LoadMAFile_aft( WCHAR* srcfilename )
 {
 	int ret;
+
+	if (!m_model) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	ret = m_model->CreateMotChangeHandlerIfNot();
+	if (ret) {
+		DbgOut(L"mafile : LoadMAFile : CreateMotChangeHandlerIfNot error !!!\n");
+		_ASSERT(0);
+		return 1;
+	}
+	ret = m_model->ResetMotChangeHandler();
+	if (ret) {
+		DbgOut(L"mafile : LoadMAFile : ResetMotChangeHandler error !!!\n");
+		_ASSERT(0);
+		return 1;
+	}
+
 
 	ret = SetBuffer( srcfilename );
 	if( ret ){
@@ -1220,16 +1236,12 @@ int CMAFile::ReadTrunk()
 		_ASSERT(0);
 		return 0;
 	}
-	ret = m_model->CreateMotChangeHandlerIfNot();
-	if (ret) {
-		_ASSERT(0);
-		return 1;
-	}
 	CMCHandler* mch = GetMotChangeHandler();
 	if (!mch) {
 		_ASSERT(0);
 		return 0;
 	}
+
 
 	int findend = 0;
 	int getleng;
@@ -1334,6 +1346,12 @@ int CMAFile::ReadBranch()
 		return 1;
 	}
 	int parentcookie = parentmi.motid;
+	int parentsetno = mch->ExistMotIdInTrunk(parentmi.motid);
+	if (parentsetno < 0) {
+		DbgOut(L"mafile : ReadBranch : mh ExistMotIdInTrunk %s Not Exist !!!\n", parentname);
+		_ASSERT(0);
+		return 1;
+	}
 
 	//DbgOut(  L"check !!! : mafile : ReadBranch : parentname %s\r\n", parentname );
 
@@ -1375,7 +1393,7 @@ int CMAFile::ReadBranch()
 			int srcalways = 0;//!!!!!!!!!!!!!!!!!!!!
 			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-			ret = mch->AddChild(parentcookie, childcookie,
+			ret = mch->AddChild(parentsetno, childcookie,
 				srcalways, mabranch.frameno1, mabranch.frameno2,
 				mabranch.eventno, mabranch.notfu, mabranch.nottoidle);
 			if( ret ){

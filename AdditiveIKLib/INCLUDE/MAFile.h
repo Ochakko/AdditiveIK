@@ -1,4 +1,4 @@
-#ifndef MAFILEH
+ï»¿#ifndef MAFILEH
 #define MAFILEH
 
 
@@ -7,7 +7,7 @@
 class CModel;
 class CEventKey;
 
-typedef enum tag_mastate {//ƒtƒ@ƒCƒ‹“üo—Í—p
+typedef enum tag_mastate {//ãƒ•ã‚¡ã‚¤ãƒ«å…¥å‡ºåŠ›ç”¨
 	MA_NONE,
 	MA_FINDCHUNK,
 	MA_TRUNK,
@@ -19,7 +19,7 @@ typedef enum tag_mastate {//ƒtƒ@ƒCƒ‹“üo—Í—p
 	MA_MAX
 } MASTATE;
 
-typedef struct tag_matrunk//ƒtƒ@ƒCƒ‹“üo—Í—p
+typedef struct tag_matrunk//ãƒ•ã‚¡ã‚¤ãƒ«å…¥å‡ºåŠ›ç”¨
 {
 	char motname[MAX_PATH];
 	char filename[MAX_PATH];
@@ -45,7 +45,7 @@ typedef struct tag_matrunk//ƒtƒ@ƒCƒ‹“üo—Í—p
 	};
 } MATRUNK;
 
-typedef struct tag_mabranch//ƒtƒ@ƒCƒ‹“üo—Í—p
+typedef struct tag_mabranch//ãƒ•ã‚¡ã‚¤ãƒ«å…¥å‡ºåŠ›ç”¨
 {
 	char motname[MAX_PATH];
 	int eventno;
@@ -78,17 +78,8 @@ public:
 	CMAFile();
 	~CMAFile();
 
-	int SaveMAFile( char* srcfilename, CModel* srcmodel, HWND srchwnd, int overwriteflag );
-
-
-//#ifdef INEASY3D
-//	int LoadMAFile( char* srcfilename, HWND srchwnd, CHandlerSet* srchs, float mvmult );
-//#else
-	int LoadMAFile( char* srcfilename, CModel* srcmodel );
-//#endif
-
-	//int LoadMAFileFromPnd( CPanda* panda, int pndid, char* srcfilename, HWND srchwnd, CHandlerSet* srchs, float mvmult );
-
+	int SaveMAFile( WCHAR* srcfilename, CModel* srcmodel, HWND srchwnd, int overwriteflag );
+	int LoadMAFile( WCHAR* srcfilename, CModel* srcmodel );
 
 	int CheckIdlingMotion( CMCHandler* mch );
 	int CheckSameMotionName();
@@ -107,7 +98,7 @@ private:
 	int WriteMAHeader();
 	int WriteLinechar( int addreturn );
 ///////////
-	int SetBuffer( char* srcfilename );
+	int SetBuffer( WCHAR* srcfilename );
 	//int SetBuffer( CPanda* panda, int pndid, char* srcfilename );
 	int GetLine( int* getlen );
 	int CheckFileVersion();
@@ -128,7 +119,7 @@ private:
 	int GetInt( int* dstint, char* srcchar, int pos, int srcleng, int* stepnum );
 	int GetFloat( float* dstfloat, char* srcchar, int pos, int srcleng, int* stepnum );
 
-	int LoadMAFile_aft( char* srcfilename );
+	int LoadMAFile_aft( WCHAR* srcfilename );
 
 	CMCHandler* GetMotChangeHandler();
 	CEventKey* GetEventKey();
@@ -146,7 +137,7 @@ private:
 	HWND m_apphwnd;
 	CModel* m_model;
 
-	char m_mediadir[ MAX_PATH ];
+	//char m_mediadir[ MAX_PATH ];
 
 	float m_quamult;
 };

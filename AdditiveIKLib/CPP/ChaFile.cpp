@@ -29,6 +29,7 @@
 #include <LIMFIle.h>
 #include <DispGroupFile.h>
 #include <ShaderTypeFile.h>
+#include <MAFile.h>
 
 #include <FootRigDlg.h>
 #include <gltfLoader.h>
@@ -44,6 +45,7 @@
 using namespace std;
 
 
+extern HWND g_mainhwnd;//アプリケーションウインドウハンドル AdditiveIK.cpp
 extern float g_tmpmqomult;
 extern WCHAR g_tmpmqopath[MULTIPATH];
 
@@ -618,6 +620,17 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 		CallF(digfile.WriteDispGroupFile(pathname, curmodel), return 1);
 	}
 
+	{
+		WCHAR wfilename[MAX_PATH] = { 0L };
+		ZeroMemory(wfilename, sizeof(WCHAR) * 256);
+		swprintf_s(wfilename, 256, L"%s.moa", curmodel->GetFileName());
+
+		WCHAR pathname[MAX_PATH] = { 0L };
+		swprintf_s(pathname, MAX_PATH, L"%s\\%s", charafolder, wfilename);
+
+		CMAFile moafile;
+		CallF(moafile.SaveMAFile(pathname, curmodel, g_mainhwnd, 1), return 1);
+	}
 
 
 	int savecurreindex = curmodel->GetCurReIndex();
@@ -1183,7 +1196,7 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 
 	{
 		WCHAR stfilename[MAX_PATH] = { 0L };
-		ZeroMemory(stfilename, sizeof(WCHAR) * 256);
+		ZeroMemory(stfilename, sizeof(WCHAR) * MAX_PATH);
 		swprintf_s(stfilename, 256, L"%s.stf", newmodel->GetFileName());
 
 		WCHAR pathname[MAX_PATH] = { 0L };
@@ -1197,7 +1210,7 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 
 	{
 		WCHAR digfilename[MAX_PATH] = { 0L };
-		ZeroMemory(digfilename, sizeof(WCHAR) * 256);
+		ZeroMemory(digfilename, sizeof(WCHAR) * MAX_PATH);
 		swprintf_s(digfilename, 256, L"%s.dig", newmodel->GetFileName());
 
 		WCHAR pathname[MAX_PATH] = { 0L };
@@ -1206,6 +1219,19 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 		CDispGroupFile digfile;
 		digfile.LoadDispGroupFile(pathname, newmodel);
 	}
+
+	{
+		WCHAR moafilename[MAX_PATH] = { 0L };
+		ZeroMemory(moafilename, sizeof(WCHAR) * MAX_PATH);
+		swprintf_s(moafilename, 256, L"%s.moa", newmodel->GetFileName());
+
+		WCHAR pathname[MAX_PATH] = { 0L };
+		swprintf_s(pathname, MAX_PATH, L"%s\\%s\\%s", m_wloaddir, wmodelfolder, moafilename);
+
+		CMAFile moafile;
+		moafile.LoadMAFile(pathname, newmodel);
+	}
+
 
 	if( refnum > 0 ){
 		int refcnt;

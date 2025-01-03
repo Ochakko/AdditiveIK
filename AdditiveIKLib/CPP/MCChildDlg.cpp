@@ -1,4 +1,4 @@
-// CMCChildDlg ‚ÌƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“
+ï»¿// CMCChildDlg ã®ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³
 #include "stdafx.h"
 #include "MCChildDlg.h"
 
@@ -78,7 +78,7 @@ LRESULT CMCChildDlg::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	ret = Params2Dlg();
 	_ASSERT( !ret );
 
-	return 1;  // ƒVƒXƒeƒ€‚ÉƒtƒH[ƒJƒX‚ğİ’è‚³‚¹‚Ü‚·
+	return 1;  // ã‚·ã‚¹ãƒ†ãƒ ã«ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ã‚’è¨­å®šã•ã›ã¾ã™
 }
 
 int CMCChildDlg::Params2Dlg()
@@ -144,7 +144,7 @@ LRESULT CMCChildDlg::OnOK(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandl
 	if( m_always == 0 ){
 		ret = GetInt( m_fixframe_wnd, &tmpint );
 		if( ret ){
-			::MessageBox( m_hWnd, L"•ªŠòŒ³ƒtƒŒ[ƒ€”Ô†‚ª•s³‚Å‚·B", L"“ü—ÍƒGƒ‰[", MB_OK );
+			::MessageBox( m_hWnd, L"åˆ†å²å…ƒãƒ•ãƒ¬ãƒ¼ãƒ ç•ªå·ãŒä¸æ­£ã§ã™ã€‚", L"å…¥åŠ›ã‚¨ãƒ©ãƒ¼", MB_OK );
 			return 0;//!!!!!!!!!!!!
 		}
 		m_frameno1 = tmpint;
@@ -152,7 +152,7 @@ LRESULT CMCChildDlg::OnOK(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandl
 
 	ret = GetInt( m_jumpto_wnd, &tmpint );
 	if( ret || (tmpint < 0) ){
-		::MessageBox( m_hWnd, L"•ªŠòæƒtƒŒ[ƒ€”Ô†‚ª•s³‚Å‚·B", L"“ü—ÍƒGƒ‰[", MB_OK );
+		::MessageBox( m_hWnd, L"åˆ†å²å…ˆãƒ•ãƒ¬ãƒ¼ãƒ ç•ªå·ãŒä¸æ­£ã§ã™ã€‚", L"å…¥åŠ›ã‚¨ãƒ©ãƒ¼", MB_OK );
 		return 0;//!!!!!!!!!!!
 	}
 	m_frameno2 = tmpint;
@@ -160,7 +160,7 @@ LRESULT CMCChildDlg::OnOK(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandl
 
 	ret = GetInt( m_eventno_wnd, &tmpint );
 	if( ret || (tmpint < 0) ){
-		::MessageBox( m_hWnd, L"ƒCƒxƒ“ƒg”Ô†‚ª•s³‚Å‚·B", L"“ü—ÍƒGƒ‰[", MB_OK );
+		::MessageBox( m_hWnd, L"ã‚¤ãƒ™ãƒ³ãƒˆç•ªå·ãŒä¸æ­£ã§ã™ã€‚", L"å…¥åŠ›ã‚¨ãƒ©ãƒ¼", MB_OK );
 		return 0;//!!!!!!!!!!!!
 	}
 	m_eventno1 = tmpint;
@@ -172,7 +172,10 @@ LRESULT CMCChildDlg::OnOK(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandl
 		_ASSERT( 0 );
 		return 1;
 	}
-	m_cookie = combono;
+	//m_cookie = combono;
+	MOTINFO currentmi = m_model->GetMotInfoByIndex(combono);
+	m_cookie = currentmi.motid;
+	_ASSERT(m_cookie > 0);
 
 
 	ischecked = m_dlg_wnd.IsDlgButtonChecked( IDC_CHECK_NOFU );
