@@ -12,6 +12,10 @@ https://github.com/Ochakko/AdditiveIK
 
 　　Test/1_MOA_B1のサンプルを更新　　　
 
+　　ショートムービー
+　　　MOA(MotionAccelerator) at AdditiveIK
+　　　https://youtu.be/2O1zKXg-GXw
+
 　　## 予定(To Do) ##
 　　　使い方のドキュメント
 　　　MOAのPlayとStopの実装(モーション変化時にブレンド有り)<---次のバージョン以降？？
