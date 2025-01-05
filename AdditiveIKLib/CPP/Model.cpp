@@ -690,6 +690,7 @@ int CModel::InitParams()
 	m_moa_underblending = false;
 	m_moa_nextmotid = 0;
 	m_moa_nextframe = 0;
+	m_moa_startfillupframe = 1.0;
 
 	return 0;
 }
@@ -2605,6 +2606,43 @@ void CModel::UpdateMatrixReq(bool limitdegflag, CBone* srcbone, int srcmotid, do
 		}
 	}
 }
+
+void CModel::UpdateMatrixTargetReq(bool limitdegflag, CBone* srcbone, int srcmotid, double srcframe,
+	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat,
+	int refposindex)
+{
+	if (srcbone) {
+
+		if (srcbone->IsSkeleton()) {
+			srcbone->UpdateMatrixTarget(limitdegflag, srcmotid, srcframe, wmat, vmat, pmat, refposindex);
+		}
+
+		if (srcbone->GetChild(false)) {
+			UpdateMatrixTargetReq(limitdegflag, srcbone->GetChild(false), srcmotid, srcframe, wmat, vmat, pmat, refposindex);
+		}
+		if (srcbone->GetBrother(false)) {
+			UpdateMatrixTargetReq(limitdegflag, srcbone->GetBrother(false), srcmotid, srcframe, wmat, vmat, pmat, refposindex);
+		}
+	}
+}
+
+void CModel::UpdateMatrixTargetRateReq(CBone* srcbone, double srcrate1)
+{
+	if (srcbone) {
+
+		if (srcbone->IsSkeleton()) {
+			srcbone->UpdateMatrixTargetRate(srcrate1);
+		}
+
+		if (srcbone->GetChild(false)) {
+			UpdateMatrixTargetRateReq(srcbone->GetChild(false), srcrate1);
+		}
+		if (srcbone->GetBrother(false)) {
+			UpdateMatrixTargetRateReq(srcbone->GetBrother(false), srcrate1);
+		}
+	}
+}
+
 
 void CModel::ResetFootRigUpdated()
 {
@@ -24273,4 +24311,27 @@ int CModel::ChangeIdlingMotion(int srcmotid)
 	}
 	return 0;
 }
+
+int CModel::CalcFillupTarget(int nextmotid, int filluppoint, double motionrate1, bool calcwm)
+{
+	//if (!GetUnderBlending()) {
+		ChaMatrix wmat = GetWorldMat();
+		ChaMatrix vmat = GetViewMat();
+		ChaMatrix pmat = GetProjMat();
+		int refposindex = 0;
+
+		if (calcwm) {
+			UpdateMatrixTargetReq(g_limitdegflag, GetTopBone(false),
+				nextmotid, (double)filluppoint,
+				&wmat, &vmat, &pmat, refposindex);
+		}
+		UpdateMatrixTargetRateReq(GetTopBone(false), motionrate1);
+	//}
+	//else {
+	//	UpdateMatrixTargetRateReq(GetTopBone(false), motionrate1);
+	//}
+
+	return 0;
+}
+
 

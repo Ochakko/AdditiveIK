@@ -431,8 +431,13 @@ public:
 	void UpdateMatrixReq(bool limitdegflag, CBone* srcbone, int srcmotid, double srcframe, 
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat,
 		int refposindex);
+	void UpdateMatrixTargetReq(bool limitdegflag, CBone* srcbone, int srcmotid, double srcframe,
+		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat,
+		int refposindex);
+	void UpdateMatrixTargetRateReq(CBone* srcbone, double srcrate1);
 	void SetUpdateSlotReq(CBone* srcbone, int srcslot);
 
+	int CalcFillupTarget(int nextmotid, int filluppoint, double motionrate1, bool calcwm);
 
 	void ResetFootRigUpdated();
 	void UpdateMatrixFootRigReq(bool istoebase, bool limitdegflag, CBone* srcbone,
@@ -3134,6 +3139,12 @@ public: //accesser
 	bool GetUnderBlending() {
 		return m_moa_underblending;
 	};
+	void SetMoaStartFillUpFrame(double srcval) {
+		m_moa_startfillupframe = srcval;
+	};
+	double GetMoaStartFillUpFrame() {
+		return m_moa_startfillupframe;
+	};
 
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
@@ -3357,6 +3368,7 @@ private:
 	bool m_moa_underblending;
 	int m_moa_nextmotid;
 	int m_moa_nextframe;
+	double m_moa_startfillupframe;
 };
 
 

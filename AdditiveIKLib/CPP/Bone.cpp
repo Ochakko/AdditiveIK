@@ -366,6 +366,8 @@ int CBone::InitParams()
 
 	m_curmp[0].InitParams();
 	m_curmp[1].InitParams();
+	m_targetmp.InitParams();
+	m_targetrate1 = 1.0;
 	m_updateslot = 0;
 	//m_calccurmp.InitParams();
 	m_axisq.InitParams();
@@ -779,9 +781,208 @@ int CBone::AddChild( CBone* childptr )
 	return 0;
 }
 
+int CBone::UpdateMatrixTargetRate(double srcrate1)
+{
+	m_targetrate1 = srcrate1;
 
-int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe, 
+	return 0;
+}
+
+int CBone::UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe, 
 	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, 
+	int refposindex)//, int updateslot)
+	//default : callingbythread = false, updateslot = 0
+{
+	if (!wmat || !vmat || !pmat) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	//###########################
+	if (GetFootRigUpdated()) {//2024/09/06
+		return 0;
+	}
+
+
+
+	//2023/08/26
+	if (GetParModel() && (GetParModel()->GetInView(refposindex) == false)) {
+		return 0;
+	}
+
+
+	//2023/01/18 注意書修正
+	//UpdateMatrixのsrcframeは経過時間計算を考慮した　浮動小数有りの時間が渡される
+	//GetMotionPoint, GetWorldMatは intに丸めてからdoubleにして検索する justでtimeが一致しないとMotionPointが返らない
+	//一方で　GetBefNextMPには　フレーム間姿勢の補間のために　小数有りの時間を渡す　justが無くても　befとnextを返す
+
+	double roundingframe = RoundingTime(srcframe);
+
+	//2023/04/28
+	if (IsNotSkeleton()) {
+		return 0;
+	}
+
+
+	//2024/06/09
+	//カメラモーションの場合
+	//カメラモーションにはskeletonのモーションポイントが存在しない
+	//モーションパネルでカメラモーションをセレクトして　カメラモーションの長さを変えた場合に
+	//モデル表示が消えないように　初期状態をセットしてリターン
+	if (GetParModel() && GetParModel()->IsCameraMotion(srcmotid)) {
+		//ChaMatrix initwm;
+		//initwm.SetIdentity();
+		//ChaMatrix modelwm = *wmat;
+		//ChaVector3 zeroeul;
+		//zeroeul.SetParams(0.0f, 0.0f, 0.0f);
+		//m_curmp[m_updateslot].InitParams();
+		//m_curmp[m_updateslot].SetFrame(roundingframe);
+		//m_curmp[m_updateslot].SetWorldMat(modelwm);
+		//m_curmp[m_updateslot].SetLimitedWM(modelwm);
+		//m_curmp[m_updateslot].SetLocalMat(initwm);
+		//m_curmp[m_updateslot].SetAnimMat(initwm);
+		//m_curmp[m_updateslot].SetLocalEul(zeroeul);
+		//m_curmp[m_updateslot].SetCalcLimitedWM(2);
+		//SetBtMat(modelwm, true);
+
+		return 0;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	}
+
+
+
+	int existflag = 0;
+
+	if ((g_previewFlag != 5) || (m_parmodel && (m_parmodel->GetBtCnt() == 0))){
+		if (srcframe >= 0.0) {
+			ChaMatrix newworldmat;
+			ChaMatrixIdentity(&newworldmat);
+
+			//###################################
+			//補間のためにroundingframeではない
+			//###################################
+			if (GetFootRigUpdated() || (GetParent(false) && GetParent(false)->GetFootRigUpdated())) {
+				//2024/09/06
+				newworldmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+			}
+			else {
+				CallF(CalcFBXMotion(limitdegflag, srcmotid, srcframe, &(m_targetmp), &existflag), return 1);
+				//newworldmat = m_curmp.GetWorldMat();// **wmat;
+				newworldmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_targetmp));
+			}
+
+			//2023/02/03
+			//計算済を取得して補間するだけなので　m_curmp以外にはセットしない
+			////2022/12/17
+			////オイラー角情報更新
+			////if (callingbythread == false) {//worldmatに変更が無いときにthreadで呼ばれる　よってローカル計算可能
+			//CMotionPoint* mpptr = GetMotionPoint(srcmotid, roundingframe);
+			//if (mpptr) {
+			//	ChaMatrix wm = GetWorldMat(srcmotid, roundingframe, mpptr);
+			//	ChaVector3 cureul = CalcLocalEulXYZ(-1, srcmotid, roundingframe, BEFEUL_BEFFRAME);
+			//	SetLocalEul(srcmotid, roundingframe, cureul, mpptr);
+			//	if (g_limitdegflag == true) {
+			//		mpptr->SetCalcLimitedWM(2);
+			//	}
+			//}
+			//else {
+			//	_ASSERT(0);
+			//}
+
+
+		//2023/02/02
+		//modelのworldmatが掛かっていないアニメ姿勢も保存　GetCurrent..., CalcCurrent...用
+			m_targetmp.SetAnimMat(newworldmat);
+
+
+		//modelのworldmatを掛ける
+			//skinmeshの変換の際にはシェーダーでg_hmWorldは掛けない　すでにg_hmWorldが掛かっている必要有
+			ChaMatrix tmpmat = newworldmat * *wmat; // !!!!!!!!!!!!!!!!!!!!!!!!!!!
+			SetWorldMat(limitdegflag, srcmotid, roundingframe, tmpmat, &m_targetmp);//roundingframe!!!!
+
+			if (limitdegflag == true) {
+				m_targetmp.SetCalcLimitedWM(2);
+			}
+
+			//ChaVector3 jpos = GetJointFPos();
+			//ChaVector3TransformCoord(&m_childworld, &jpos, &tmpmat);
+			//ChaMatrix vpmat = *vmat * *pmat;
+			//ChaMatrix wvpmat = tmpmat * vpmat;
+			//ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);//wmatで変換した位置に対して　vp変換
+		}
+		else {
+			_ASSERT(0);
+			m_targetmp.InitParams();
+			m_targetmp.SetWorldMat(*wmat);
+			m_targetmp.SetFrame(roundingframe);
+			SetWorldMat(limitdegflag, srcmotid, roundingframe, *wmat, &m_targetmp);//roundingframe!!!!
+		}
+
+		//if (updateslot >= 2) {
+		//	//2024/03/12 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
+		//	int otherslot = (int)(!(m_updateslot != 0));
+		//	m_curmp[otherslot].SetWorldMat(m_curmp[m_updateslot].GetWorldMat());
+		//	m_curmp[otherslot].SetLimitedWM(m_curmp[m_updateslot].GetLimitedWM());
+		//	m_curmp[otherslot].SetAnimMat(m_curmp[m_updateslot].GetAnimMat());
+		//	m_curmp[otherslot].SetFrame(m_curmp[m_updateslot].GetFrame());
+		//	if (limitdegflag == true) {
+		//		m_curmp[otherslot].SetCalcLimitedWM(2);
+		//	}
+		//}
+
+
+		if (m_parmodel && (m_parmodel->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
+			bool settobothflag = true;//2023/11/04 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
+			SetBtMat(GetWorldMat(limitdegflag, srcmotid, roundingframe, &m_targetmp), settobothflag);
+			SetBtFlag(1);
+		}
+
+		//2024/09/06
+		//if (GetFootRigUpdated() || 
+		//	(GetParent(false) && GetParent(false)->GetFootRigUpdated()) || 
+		//	(GetBtKinFlag() != 0)) 
+		{
+			//2024/09/06
+			//物理乱れ防止
+			//FootRigジョイントの場合とkinematicジョイントの場合にはCBtObject::SetBtMotion()が処理をしないので　ここでSetBtMatする
+
+			bool settobothflag = false;
+			ChaMatrix matforbt = GetWorldMat(limitdegflag, srcmotid, roundingframe, &m_targetmp);
+			SetBtMat(matforbt, settobothflag);
+			SetBtEul(m_targetmp.GetLocalEul());
+			//SetBtFlag(1);
+		}
+
+	}
+	else{
+		////RagdollIK時のボーン選択対策
+		//ChaVector3 jpos = GetJointFPos();
+
+		//ChaMatrix wmat2, wvpmat;
+		//if (GetParent(true)){
+		//	wmat2 = GetParent(true)->GetBtMat(true);// **wmat;
+		//}
+		//else{
+		//	wmat2 = GetBtMat(true);// **wmat;
+		//}
+		//ChaMatrix vpmat = *vmat * *pmat;
+		//wvpmat = wmat2 * vpmat;
+
+
+		////ChaVector3TransformCoord(&m_childscreen, &m_childworld, &wvpmat);
+		////ChaVector3TransformCoord(&m_childworld, &jpos, &wmat);
+		//ChaVector3TransformCoord(&m_childworld, &jpos, &wmat2);
+		//
+		////ChaVector3TransformCoord(&m_childworld, &jpos, &(GetBtMat()));
+		//ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);
+	}
+
+	//m_befupdatetime = srcframe;
+
+	return 0;
+}
+
+int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
+	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat,
 	bool callingbythread, int refposindex)//, int updateslot)
 	//default : callingbythread = false, updateslot = 0
 {
@@ -844,10 +1045,11 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 	int existflag = 0;
 
-	if ((g_previewFlag != 5) || (m_parmodel && (m_parmodel->GetBtCnt() == 0))){
+	if ((g_previewFlag != 5) || (m_parmodel && (m_parmodel->GetBtCnt() == 0))) {
 		if (srcframe >= 0.0) {
 			ChaMatrix newworldmat;
 			ChaMatrixIdentity(&newworldmat);
+
 
 			//###################################
 			//補間のためにroundingframeではない
@@ -881,13 +1083,19 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 			//}
 
 
+			//2025/01/05
+			if (GetParModel()->GetUnderBlending()) {
+				newworldmat = newworldmat * m_targetrate1 + m_targetmp.GetAnimMat() * (1.0 - m_targetrate1);
+			}
+
+
 		//2023/02/02
 		//modelのworldmatが掛かっていないアニメ姿勢も保存　GetCurrent..., CalcCurrent...用
 			m_curmp[m_updateslot].SetAnimMat(newworldmat);
 
 
-		//modelのworldmatを掛ける
-			//skinmeshの変換の際にはシェーダーでg_hmWorldは掛けない　すでにg_hmWorldが掛かっている必要有
+			//modelのworldmatを掛ける
+				//skinmeshの変換の際にはシェーダーでg_hmWorldは掛けない　すでにg_hmWorldが掛かっている必要有
 			ChaMatrix tmpmat = newworldmat * *wmat; // !!!!!!!!!!!!!!!!!!!!!!!!!!!
 			SetWorldMat(limitdegflag, srcmotid, roundingframe, tmpmat, &(m_curmp[m_updateslot]));//roundingframe!!!!
 
@@ -945,15 +1153,15 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 		}
 
 	}
-	else{
+	else {
 		//RagdollIK時のボーン選択対策
 		ChaVector3 jpos = GetJointFPos();
 
 		ChaMatrix wmat2, wvpmat;
-		if (GetParent(true)){
+		if (GetParent(true)) {
 			wmat2 = GetParent(true)->GetBtMat(true);// **wmat;
 		}
-		else{
+		else {
 			wmat2 = GetBtMat(true);// **wmat;
 		}
 		ChaMatrix vpmat = *vmat * *pmat;
@@ -963,7 +1171,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 		//ChaVector3TransformCoord(&m_childscreen, &m_childworld, &wvpmat);
 		//ChaVector3TransformCoord(&m_childworld, &jpos, &wmat);
 		ChaVector3TransformCoord(&m_childworld, &jpos, &wmat2);
-		
+
 		//ChaVector3TransformCoord(&m_childworld, &jpos, &(GetBtMat()));
 		ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);
 	}
@@ -972,7 +1180,6 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 	return 0;
 }
-
 
 int CBone::UpdateMatrixFootRig(bool istoebase, bool limitdegflag, int srcmotid, double srcframe,
 	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat)

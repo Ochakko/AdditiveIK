@@ -2,6 +2,22 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/01/05
+　MOA(MotionAccelerator)について作業(その６)
+
+　　MOAのモーションの変わり目を補間するように。
+　　　ターゲット姿勢との間を補間します
+　　MOAのモーション変化時にタメを作るモード追加
+　　　MOAのダイアログにFreeze for a moment when changing motionというチェックボックスを追加
+　　　チェックを入れると動きの変わり目で少しの間フリーズします。
+　　　この設定はまだ実験的なのでファイルに保存はしていません。
+
+　　Test/1_MOA_B1のサンプルを更新　　　
+
+　　## 予定(To Do) ##
+　　　使い方のドキュメント
+
+
 2025/01/04
 　MOA(MotionAccelerator)について作業中(その５)
 

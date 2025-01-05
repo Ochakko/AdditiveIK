@@ -2365,3 +2365,14 @@ CModel* CMotChangeDlg::GetCurrentModel()
 	}
 }
 
+bool CMotChangeDlg::GetFreezeOption()
+{
+	UINT ischecked;
+	ischecked = m_dlg_wnd.IsDlgButtonChecked(IDC_FREEZE);
+	if (ischecked == BST_CHECKED) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}

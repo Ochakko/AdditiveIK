@@ -4115,7 +4115,9 @@ void InitApp()
 
 	g_previewFlag = 0;
 	g_previewMOA = 0;
-	g_defaultFillUpMOA = 2;
+	g_defaultFillUpMOA = 4;//短いモーションを考慮して短め
+	g_endmotionMargin = 1;//0にするとMOAでモーションの終わりを検知出来ないこと有
+	g_moa_Freeze_for_a_moment = false;//モーション変化時にタメを作る
 	s_savepreviewFlag = 0;
 	g_cameraanimmode = 0;//0: OFF, 1:ON
 	s_savecameraanimmode = 0;
@@ -46464,6 +46466,7 @@ int SetNewPoseByMoa()
 		if ((eventno == 0) && (ev0idle != 0)) {
 			s_moa_nextmotid = idlingmotid;
 			s_moa_nextframe = 0;
+			currentmodel->SetMoaStartFillUpFrame(curframe);
 			notfu = 0;
 			if (s_moa_nextmotid < 0) {
 				DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetIdlingMotID 0 : idling motion not exist error !!!\n");
@@ -46474,7 +46477,8 @@ int SetNewPoseByMoa()
 		}
 		else if (curmotid != s_moa_nextmotid) {
 			//イベント番号の指示通りのs_moa_nextmotidへ変化させる
-			s_moa_nextframe = 0;
+			//s_moa_nextframe = 0;
+			currentmodel->SetMoaStartFillUpFrame(curframe);
 			notfu = 0;
 			if (s_moa_nextmotid < 0) {
 				DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetIdlingMotID 0 : idling motion not exist error !!!\n");
@@ -46484,9 +46488,11 @@ int SetNewPoseByMoa()
 			fillupflag = 1;
 		}
 		else {
-			if ((curframe >= (curframeleng - fillupleng)) && (nottoidle == 0)) {
+			if ((!currentmodel->GetUnderBlending()) && 
+				(curframe >= (curframeleng - g_endmotionMargin)) && (nottoidle == 0)) {
 				s_moa_nextmotid = idlingmotid;
 				s_moa_nextframe = 0;
+				currentmodel->SetMoaStartFillUpFrame(curframe);
 				notfu = 0;
 				if (s_moa_nextmotid < 0) {
 					DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetIdlingMotID 1 : idling motion not exist error !!!\n");
@@ -46497,9 +46503,14 @@ int SetNewPoseByMoa()
 			}
 		}
 	}
-	else {
+	//else {
+
+	if (currentmodel->GetUnderBlending()) {
 		fillupflag = 1;
 	}
+
+	s_moa_nextframe = max(1, s_moa_nextframe);//モーションフレームは１から。フレーム０はバインドポーズ。
+
 
 	if (fillupflag == 1) {
 
@@ -46509,17 +46520,90 @@ int SetNewPoseByMoa()
 				//###########
 				//ブレンド予定
 				//###########
-				//nextframeleng = IntTime(nextmi.frameleng);
-				//int filluppoint;
+				nextframeleng = IntTime(nextmi.frameleng);
+				int filluppoint;
 				//filluppoint = min((nextframeleng - 1), (s_moa_nextframe + (int)fillupleng - 1));
-				//double motionrate1, motionrate2;
+				//filluppoint = max(1, min(nextframeleng - fillupleng - 3, (s_moa_nextframe + (int)fillupleng - 1)));
+				//filluppoint = max(1, min(nextframeleng - (int)fillupleng, (s_moa_nextframe + (int)fillupleng - 1)));
+				filluppoint = max(1, min((nextframeleng - (int)currentmodel->GetMoaStartFillUpFrame() - 1), (s_moa_nextframe + (int)fillupleng - 1)));
+				//int actualfillupleng = filluppoint;
+				int actualfillupleng = max(1, min((int)(curframe - currentmodel->GetMoaStartFillUpFrame()), (int)fillupleng));
+				double motionrate1 , motionrate2;
 				//motionrate1 = min(1.0, max(0.0, (double)(curframeleng - curframe - 1) / (double)fillupleng));
 				//motionrate2 = 1.0 - motionrate1;
+				motionrate2 = fmin(1.0, fmax(0.0, (curframe - currentmodel->GetMoaStartFillUpFrame()) / (double)actualfillupleng));
+				motionrate1 = 1.0 - motionrate2;
 
-				//currentmodel->SetCurrentMotion(s_moa_nextmotid);
-				ChangeMotionWithGUI(s_moa_nextmotid);
-				currentmodel->SetMotionFrame(s_moa_nextframe);
-				currentmodel->SetUnderBlending(false);
+
+				g_moa_Freeze_for_a_moment = s_motchangedlg.GetFreezeOption();//モーション変化時にタメを作る
+
+
+				if (!g_moa_Freeze_for_a_moment) {
+					//##########
+					//通常モード
+					//##########
+					if (currentmodel->GetUnderBlending() &&
+						((int)(curframe - currentmodel->GetMoaStartFillUpFrame()) >= actualfillupleng)
+						) {
+						//補間計算終了　nextmotidへ遷移
+						ChangeMotionWithGUI(s_moa_nextmotid);
+						currentmodel->SetMotionFrame((double)filluppoint);
+						//currentmodel->SetMotionFrame(s_moa_nextframe);
+						currentmodel->SetUnderBlending(false);
+					}
+					else if (!currentmodel->GetUnderBlending() &&
+						((int)(curframeleng - curframe) <= g_endmotionMargin)
+						) {
+						//アイドリングへ戻る
+						ChangeMotionWithGUI(idlingmotid);
+						currentmodel->SetMotionFrame(1);
+						currentmodel->SetUnderBlending(false);
+					}
+					else if ((int)(curframe - currentmodel->GetMoaStartFillUpFrame()) < actualfillupleng) {
+						//補間計算期間
+						currentmodel->CalcFillupTarget(s_moa_nextmotid, filluppoint, motionrate1,
+							IsJustEqualTime(curframe, currentmodel->GetMoaStartFillUpFrame()));
+						//currentmodel->CalcFillupTarget(s_moa_nextmotid, s_moa_nextframe, motionrate1, IsJustEqualTime(curframe, curstartfillupframe));
+						currentmodel->SetMotionFrame(curframe);
+						currentmodel->SetUnderBlending(true);
+					}
+				}
+				else {
+					//##########
+					//タメモード
+					//##########
+					if (currentmodel->GetUnderBlending() &&
+						(curframe >= (curframeleng - g_endmotionMargin))
+						) {
+						//補間計算終了　nextmotidへ遷移
+						ChangeMotionWithGUI(s_moa_nextmotid);
+						currentmodel->SetMotionFrame((double)filluppoint);
+						//currentmodel->SetMotionFrame(s_moa_nextframe);
+						currentmodel->SetUnderBlending(false);
+					}
+					else if (!currentmodel->GetUnderBlending() &&
+						(curframe >= (curframeleng - g_endmotionMargin))
+						) {
+						//アイドリングへ戻る
+						ChangeMotionWithGUI(idlingmotid);
+						currentmodel->SetMotionFrame(1);
+						currentmodel->SetUnderBlending(false);
+					}
+					else if ((curframe - currentmodel->GetMoaStartFillUpFrame()) < g_endmotionMargin) {
+						//補間計算期間
+						currentmodel->CalcFillupTarget(s_moa_nextmotid, filluppoint, motionrate1,
+							IsJustEqualTime(curframe, currentmodel->GetMoaStartFillUpFrame()));
+						//currentmodel->CalcFillupTarget(s_moa_nextmotid, s_moa_nextframe, motionrate1, IsJustEqualTime(curframe, curstartfillupframe));
+						currentmodel->SetMotionFrame(curframe);
+						currentmodel->SetUnderBlending(true);
+					}
+
+				}
+
+				////currentmodel->SetCurrentMotion(s_moa_nextmotid);
+				//ChangeMotionWithGUI(s_moa_nextmotid);
+				//currentmodel->SetMotionFrame(s_moa_nextframe);
+				//currentmodel->SetUnderBlending(false);
 			}
 		}
 		else {

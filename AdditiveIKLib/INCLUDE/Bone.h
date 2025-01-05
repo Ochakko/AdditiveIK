@@ -137,6 +137,10 @@ public:
 	int UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe, 
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, 
 		bool callingbythread, int refposindex);// , int updateslot = 0);
+	int UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe,
+		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat,
+		int refposindex);// , int updateslot = 0);
+	int UpdateMatrixTargetRate(double srcrate1);
 	//int SwapCurrentMotionPoint();
 
 	int UpdateMatrixFootRig(bool istoebase, bool limitdegflag, int srcmotid, double srcframe,
@@ -1885,6 +1889,8 @@ private:
 
 	std::map<int, CMotionPoint*> m_motionkey;//m_motionkey[ モーションID ]でモーションの最初のフレームの姿勢にアクセスできる。
 	CMotionPoint m_curmp[2];//現在のWVP適用後の姿勢データ。 ### 計算済 ###
+	CMotionPoint m_targetmp;//2025/01/05 for fillup motion of MOA
+	double m_targetrate1;//2025/01/05 for fillup motion of MOA
 	int m_updateslot;
 	//CMotionPoint m_calccurmp;////現在のWVP適用後の姿勢データ。 ### 計算中 ###
 	//CMotionPoint m_befmp;//一回前の姿勢データ。
