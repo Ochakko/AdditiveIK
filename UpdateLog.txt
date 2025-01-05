@@ -14,6 +14,10 @@ https://github.com/Ochakko/AdditiveIK
 
 　　Test/1_MOA_B1のサンプルを更新　　　
 
+　　ショートムービー
+　　　MOA2.0 AdditiveIKのモーションアクセラレータ
+　　　https://youtu.be/3aYcuhKP9MI
+
 　　## 予定(To Do) ##
 　　　使い方のドキュメント
 

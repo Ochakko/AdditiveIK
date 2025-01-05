@@ -273,8 +273,8 @@ Smooth平滑化<br>
 [FootRigで接地して歩く 2024/09/04](https://youtu.be/TJjTwD0gioI "Usage example10")<br>
 
 [リアルタイムFootRig 1.2.0 at AdditiveIK 2024/10/17](https://youtu.be/VH21YgC-jvA "Usage example11")<br>
-<br>
-[MOA(MotionAccelerator) at AdditiveIK 2025/01/04](https://youtu.be/2O1zKXg-GXw "Usage example12")<br>
+
+[MOA2.0 AdditiveIKのモーションアクセラレータ 2025/01/05](https://youtu.be/3aYcuhKP9MI "Usage example12")<br>
 <br>
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")
