@@ -3,6 +3,19 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2025/01/05
+　AdditiveIK 1.0.0.36 RC1
+　　1.0.0.35からの変更点
+　　　MOA2.0(MotionAccelerator)の搭載
+　　　ドキュメント　　　
+　　　　Documents/TroubleShooting/0_MOA2.docx
+　　　サンプル
+　　　　Test/1_MOA_B1
+　　　ショートムービー
+　　　　MOA2.0 AdditiveIKのモーションアクセラレータ
+　　　　https://youtu.be/3aYcuhKP9MI
+
+
+2025/01/05
 　MOA(MotionAccelerator)について作業(その６)
 
 　　MOAのモーションの変わり目を補間するように。
