@@ -205,6 +205,14 @@ int CDispLimitsDlg::DestroyObjs()
 		delete m_skydispChk;
 		m_skydispChk = nullptr;
 	}
+	if (m_dispsp5) {
+		delete m_dispsp5;
+		m_dispsp5 = nullptr;
+	}
+	if (m_graphskipMOAChk) {
+		delete m_graphskipMOAChk;
+		m_graphskipMOAChk = nullptr;
+	}
 	if (m_dispspacerLabel001) {
 		delete m_dispspacerLabel001;
 		m_dispspacerLabel001 = nullptr;
@@ -280,6 +288,8 @@ void CDispLimitsDlg::InitParams()
 	m_dispsp4 = nullptr;
 	m_freefpsChk = nullptr;
 	m_skydispChk = nullptr;
+	m_dispsp5 = nullptr;
+	m_graphskipMOAChk = nullptr;
 	m_dispspacerLabel001 = nullptr;
 	m_dispspacerLabel002 = nullptr;
 	m_dispspacerLabel003 = nullptr;
@@ -587,6 +597,18 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 			_ASSERT(0);
 			abort();
 		}
+
+		m_dispsp5 = new OWP_Separator(m_dlgWnd, true, rate50, true);
+		if (!m_dispsp5) {
+			_ASSERT(0);
+			abort();
+		}
+		m_graphskipMOAChk = new OWP_CheckBoxA(L"GraphSkip On MOA", g_previewMOA_SkipGraph, labelheight, false);
+		if (!m_graphskipMOAChk) {
+			_ASSERT(0);
+			abort();
+		}
+
 		m_dispspacerLabel001 = new OWP_Label(L"     ", 32);
 		if (!m_dispspacerLabel001) {
 			_ASSERT(0);
@@ -647,6 +669,8 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 		m_dlgWnd->addParts(*m_dispsp4);
 		m_dispsp4->addParts1(*m_freefpsChk);
 		m_dispsp4->addParts2(*m_skydispChk);
+		m_dlgWnd->addParts(*m_dispsp5);
+		m_dispsp5->addParts1(*m_graphskipMOAChk);
 
 		//###########
 		//CheckBox
@@ -713,6 +737,10 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 		m_skydispChk->setButtonListener([=, this]() {
 			bool value = m_skydispChk->getValue();
 			g_skydispflag = value;
+			});
+		m_graphskipMOAChk->setButtonListener([=, this]() {
+			bool value = m_graphskipMOAChk->getValue();
+			g_previewMOA_SkipGraph = value;
 			});
 
 		//##########

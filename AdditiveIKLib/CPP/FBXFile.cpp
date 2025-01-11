@@ -4568,7 +4568,12 @@ int AnimateMorph(FbxScene* pScene, CModel* pmodel)
 		return 0;
 	}
 
-	double timescale = 30.0;
+	if (!pScene || !pmodel) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	double timescale = pmodel->GetFbxTimeScale();
 //	double timescale = 300.0;
 
 	int aino;
@@ -5381,9 +5386,13 @@ void LinkDummyMeshToSkeleton(CFBXBone* fbxbone, FbxSkin* lSkin, FbxScene* pScene
 
 int WriteFBXAnimTra(bool limitdegflag, CFBXBone* fbxbone, FbxAnimLayer* lAnimLayer, int curmotid, int maxframe, int axiskind)
 {
+	if (!fbxbone || !lAnimLayer) {
+		_ASSERT(0);
+		return 1;
+	}
+
 	FbxTime lTime;
 	int lKeyIndex = 0;
-	double timescale = 30.0;
 
 
 	CBone* curbone = fbxbone->GetBone();
@@ -5394,6 +5403,12 @@ int WriteFBXAnimTra(bool limitdegflag, CFBXBone* fbxbone, FbxAnimLayer* lAnimLay
 			_ASSERT(0);
 			return 1;
 		}
+		if (!curbone->GetParModel()) {
+			_ASSERT(0);
+			return 1;
+		}
+		double timescale = curbone->GetParModel()->GetFbxTimeScale();
+
 
 		FbxAnimCurve* lCurve;
 		int frameno;
@@ -5486,8 +5501,11 @@ int WriteFBXAnimRot(bool limitdegflag, CFBXBone* fbxbone, FbxAnimLayer* lAnimLay
 {
 	FbxTime lTime;
 	int lKeyIndex = 0;
-	double timescale = 30.0;
 
+	if (!fbxbone || !lAnimLayer) {
+		_ASSERT(0);
+		return 1;
+	}
 
 	CBone* curbone = fbxbone->GetBone();
 	if (curbone){
@@ -5497,6 +5515,11 @@ int WriteFBXAnimRot(bool limitdegflag, CFBXBone* fbxbone, FbxAnimLayer* lAnimLay
 			_ASSERT(0);
 			return 1;
 		}
+		if (!curbone->GetParModel()) {
+			_ASSERT(0);
+			return 1;
+		}
+		double timescale = curbone->GetParModel()->GetFbxTimeScale();
 
 		FbxAnimCurve* lCurve;
 		int frameno;
@@ -5563,8 +5586,11 @@ int WriteFBXAnimScale(bool limitdegflag, CFBXBone* fbxbone, FbxAnimLayer* lAnimL
 {
 	FbxTime lTime;
 	int lKeyIndex = 0;
-	double timescale = 30.0;
 
+	if (!fbxbone || !lAnimLayer) {
+		_ASSERT(0);
+		return 1;
+	}
 
 	CBone* curbone = fbxbone->GetBone();
 	if (curbone) {
@@ -5574,6 +5600,11 @@ int WriteFBXAnimScale(bool limitdegflag, CFBXBone* fbxbone, FbxAnimLayer* lAnimL
 			_ASSERT(0);
 			return 1;
 		}
+		if (!curbone->GetParModel()) {
+			_ASSERT(0);
+			return 1;
+		}
+		double timescale = curbone->GetParModel()->GetFbxTimeScale();
 
 		FbxAnimCurve* lCurve;
 		int frameno;

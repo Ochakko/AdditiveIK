@@ -102,6 +102,8 @@ private:
 	OrgWinGUI::OWP_Separator* m_dispsp4;
 	OrgWinGUI::OWP_CheckBoxA* m_freefpsChk;
 	OrgWinGUI::OWP_CheckBoxA* m_skydispChk;
+	OrgWinGUI::OWP_Separator* m_dispsp5;
+	OrgWinGUI::OWP_CheckBoxA* m_graphskipMOAChk;
 	OrgWinGUI::OWP_Label* m_dispspacerLabel001;
 	OrgWinGUI::OWP_Label* m_dispspacerLabel002;
 	OrgWinGUI::OWP_Label* m_dispspacerLabel003;

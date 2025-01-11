@@ -6553,6 +6553,10 @@ ChaVector3 CBone::CalcFbxScaleAnim(bool limitdegflag, int srcmotid, double srcfr
 	ChaVector3 iniscale;
 	iniscale.SetParams(1.0f, 1.0f, 1.0f);
 
+	if (!GetParModel()) {
+		_ASSERT(0);
+		return iniscale;
+	}
 
 	//ChaMatrix wmanim = GetNodeMat() * GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 	//
@@ -6598,7 +6602,7 @@ ChaVector3 CBone::CalcFbxScaleAnim(bool limitdegflag, int srcmotid, double srcfr
 		if (GetFbxNodeOnLoad()) {
 			EnterCriticalSection(&g_CritSection_FbxSdk);
 			FbxTime fbxtime;
-			fbxtime.SetSecondDouble(roundingframe / 30.0);
+			fbxtime.SetSecondDouble(roundingframe / GetParModel()->GetFbxTimeScale());
 			FbxVector4 fbxcamerascl = GetFbxNodeOnLoad()->EvaluateLocalScaling(fbxtime, FbxNode::eSourcePivot, true, true);
 			svec.SetParams(fbxcamerascl);
 			LeaveCriticalSection(&g_CritSection_FbxSdk);
@@ -6856,6 +6860,10 @@ ChaVector3 CBone::CalcFBXTra(bool limitdegflag, int srcmotid, double srcframe)
 	// NodeMatを掛けた姿勢を書き出す。
 	//############################################################################
 
+	if (!GetParModel()) {
+		_ASSERT(0);
+		return ChaVector3(0.0f, 0.0f, 0.0f);
+	}
 
 	double roundingframe = RoundingTime(srcframe);
 
@@ -6915,7 +6923,7 @@ ChaVector3 CBone::CalcFBXTra(bool limitdegflag, int srcmotid, double srcframe)
 		if (GetParModel() && GetFbxNodeOnLoad()) {
 			EnterCriticalSection(&g_CritSection_FbxSdk);
 			FbxTime fbxtime;
-			fbxtime.SetSecondDouble(roundingframe / 30.0);
+			fbxtime.SetSecondDouble(roundingframe / GetParModel()->GetFbxTimeScale());
 			FbxVector4 fbxtra = GetFbxNodeOnLoad()->EvaluateLocalTranslation(fbxtime, FbxNode::eSourcePivot, true, true);
 			ChaVector3 tra;
 			tra.SetParams(fbxtra, false);
@@ -8983,7 +8991,7 @@ int CBone::GetFBXAnim(FbxNode* pNode, int animno, int motid, double animleng, bo
 
 
 			FbxTime fbxtime;
-			fbxtime.SetSecondDouble(framecnt / 30.0);
+			fbxtime.SetSecondDouble(framecnt / GetParModel()->GetFbxTimeScale());
 
 			ChaMatrix chaGlobalSRT;
 			chaGlobalSRT.SetIdentity();
@@ -9484,11 +9492,15 @@ int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, double srcfra
 		return 0;
 	}
 
+	if (!GetParModel()) {
+		_ASSERT(0);
+		return 0;
+	}
 
 	FbxTime fbxtime;
-	//fbxtime.SetSecondDouble((double)((int)(srcframe + 0.0001)) / 30.0);
+	//fbxtime.SetSecondDouble((double)((int)(srcframe + 0.0001)) / GetParModel()->GetFbxTimeScale());
 	//2024/01/31 NotRoundingTime
-	fbxtime.SetSecondDouble(srcframe / 30.0);
+	fbxtime.SetSecondDouble(srcframe / GetParModel()->GetFbxTimeScale());
 
 
 	//2023/07/04
@@ -9921,7 +9933,7 @@ ChaMatrix CBone::GetTransformMat(int srcmotid, double srctime, bool forceanimfla
 //	FbxNode* eNullNode = GetFbxNodeOnLoad();
 //	if (eNullNode) {
 //		FbxTime time0;
-//		time0.SetSecondDouble(srctime / 30.0);
+//		time0.SetSecondDouble(srctime / GetParModel()->GetFbxTimeScale());
 //		FbxAMatrix lGlobalSRT = eNullNode->EvaluateGlobalTransform(time0, FbxNode::eSourcePivot, true, true);
 //		ChaMatrix retmat = ChaMatrixFromFbxAMatrix(lGlobalSRT);
 //		return retmat;

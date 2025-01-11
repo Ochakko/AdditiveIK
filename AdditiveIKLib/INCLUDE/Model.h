@@ -505,6 +505,9 @@ public:
  * @return 成功したら０。
  */
 	int SetCurrentMotion( int srcmotid );
+	int BackUpLoopFlag();
+	int RestoreLoopFlag();
+
 /**
  * @fn
  * SetMotionFrame
@@ -2064,6 +2067,27 @@ public: //accesser
 			return 1;
 		}
 	}
+	int SetMotInfoLoopFlagAll(int srcloopflag)
+	{
+		//int motnum;
+		//motnum = (int)m_motinfo.size();
+		//int miindex;
+		//for (miindex = 0; miindex < motnum; miindex++) {
+		//	MOTINFO* currentmi = m_motinfo[miindex];
+		//	if (currentmi) {
+		//		currentmi->loopflag = srcloopflag;
+		//	}
+		//}
+		std::map<int, MOTINFO*>::iterator itrmi;
+		for (itrmi = m_motinfo.begin(); itrmi != m_motinfo.end(); itrmi++) {
+			MOTINFO* miptr = itrmi->second;
+			if (miptr) {
+				miptr->loopflag = srcloopflag;
+			}
+		}
+
+		return 0;
+	}
 
 	//std::map<int,MOTINFO*>::iterator GetMotInfoBegin(){
 	//	return m_motinfo.begin();
@@ -3139,11 +3163,58 @@ public: //accesser
 	bool GetUnderBlending() {
 		return m_moa_underblending;
 	};
+	void SetMoaNextMotId(int srcval) {
+		m_moa_nextmotid = srcval;
+	};
+	int GetMoaNextMotId() {
+		return m_moa_nextmotid;
+	};
+	void SetMoaNextFrame(int srcval) {
+		m_moa_nextframe = srcval;
+	};
+	int GetMoaNextFrame() {
+		return m_moa_nextframe;
+	};
 	void SetMoaStartFillUpFrame(double srcval) {
 		m_moa_startfillupframe = srcval;
 	};
 	double GetMoaStartFillUpFrame() {
 		return m_moa_startfillupframe;
+	};
+	void SetRokDeBoneUser(bool srcval) {
+		m_rokdeboneuser = srcval;
+	};
+	bool GetRokDeBoneUser() {
+		return m_rokdeboneuser;
+	};
+	double GetFbxTimeScale() {
+		if (GetRokDeBoneUser()) {
+			m_fbxtimescale = 60.0;
+		}
+		else {
+			m_fbxtimescale = 30.0;
+		}
+		return m_fbxtimescale;
+	};
+	void SetMoaFreezeCount(int srcval) {
+		m_moa_freezecount = srcval;
+	};
+	int GetMoaFreezeCount() {
+		return m_moa_freezecount;
+	};
+	int IncrementMoaFreezeCount() {
+		m_moa_freezecount++;
+		return m_moa_freezecount;
+	};
+	void SetMoaFillupCount(int srcval) {
+		m_moa_fillupcount = srcval;
+	};
+	int GetMoaFillupCount() {
+		return m_moa_fillupcount;
+	};
+	int IncrementMoaFillupCount() {
+		m_moa_fillupcount++;
+		return m_moa_fillupcount;
 	};
 
 public:
@@ -3177,6 +3248,8 @@ private:
 	float m_loadmult;//表示倍率
 	int m_oldaxis_atloading;//FBX読み込み時に旧データ互換チェックボックスにチェックをしていたかどうか。
 	int m_hasbindpose;
+	bool m_rokdeboneuser;
+	double m_fbxtimescale;
 
 	bool m_fromBvh;
 	bool m_fromNoBindPose;
@@ -3369,6 +3442,8 @@ private:
 	int m_moa_nextmotid;
 	int m_moa_nextframe;
 	double m_moa_startfillupframe;
+	int m_moa_freezecount;
+	int m_moa_fillupcount;
 };
 
 

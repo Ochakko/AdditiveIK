@@ -55,7 +55,7 @@ int CMAFile::InitParams()
 	m_moaversion = 0;
 
 	m_quamult = 1.0f;
-	m_fuleng = g_defaultFillUpMOA;
+	m_fuleng = g_currentFillUpMOA;
 
 	return 0;
 }
@@ -1108,7 +1108,7 @@ int CMAFile::ReadFULeng()
 		if( (getleng >= 3) && (strstr( m_linechar, "}\r\n" ) != NULL) ){
 			findend = 1;
 		}else{
-			m_fuleng = g_defaultFillUpMOA;
+			m_fuleng = g_currentFillUpMOA;
 			ret = GetInt( &m_fuleng, m_linechar, pos, MALINELENG, &stepnum );
 			if( ret ){
 				DbgOut(  L"mafile : ReadFULeng : GetInt fuleng error !!!\n" );
@@ -1118,8 +1118,10 @@ int CMAFile::ReadFULeng()
 
 			if( m_fuleng > 0 ){
 				mch->SetFillUpLeng(m_fuleng);
+				g_currentFillUpMOA = m_fuleng;
 			}else{
 				mch->SetFillUpLeng(10);
+				g_currentFillUpMOA = 10;
 			}
 		}
 	}
@@ -1291,7 +1293,7 @@ int CMAFile::ReadTrunk()
 				matrunk.forbidnum = 0;
 
 
-				m_model->SetMotInfoLoopFlagByID(addmi.motid, 0);
+				//m_model->SetMotInfoLoopFlagByID(addmi.motid, 0);//MOAのオンオフ時に処理することにした
 			}
 			else {
 				_ASSERT(0);
@@ -1405,7 +1407,7 @@ int CMAFile::ReadBranch()
 				return 1;
 			}
 
-			m_model->SetMotInfoLoopFlagByID(childcookie, 0);
+			//m_model->SetMotInfoLoopFlagByID(childcookie, 0);//MOAのオンオフ時に処理することにした
 
 	//DbgOut(  L"check !!! : mafile : ReadBranch : %s, %d, %d, %d\r\n", mabranch.motname, mabranch.eventno, mabranch.frameno1, mabranch.frameno2 );
 

@@ -2032,7 +2032,7 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 			if (srcbone->GetFbxNodeOnLoad()) {
 				EnterCriticalSection(&g_CritSection_FbxSdk);
 				FbxTime fbxtime;
-				fbxtime.SetSecondDouble(roundingframe / 30.0);
+				fbxtime.SetSecondDouble(roundingframe / srcbone->GetParModel()->GetFbxTimeScale());
 				FbxVector4 orgfbxeul = srcbone->GetFbxNodeOnLoad()->EvaluateLocalRotation(fbxtime, FbxNode::eSourcePivot, true, true);
 				cureul.SetParams(orgfbxeul, false);
 				//####  rotorder注意  #####

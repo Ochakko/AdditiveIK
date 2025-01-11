@@ -230,10 +230,10 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* 
 					int dbgflag1 = 1;
 				}
 
-				if (curmodel->ExistCurrentMotion() && (g_previewMOA == 0)) {
+				if (curmodel->ExistCurrentMotion() && 
+					((g_previewMOA == 0) || ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == false)))) {
 					curmodel->SetMotionFrame(srcframe);//refposの場合にも必要
 				}
-
 
 				//if (m_footrigdlg && m_footrigdlg->IsEnableFootRig(curmodel)) {
 				//	//１回前のFootRig計算によるmodelworldmatの変更を元に戻す

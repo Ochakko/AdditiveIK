@@ -378,7 +378,7 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(CModel* cameramodel, int cameramotid
 	m_time = nextframe;
 
 	FbxTime fbxtime;
-	fbxtime.SetSecondDouble(m_time / 30.0);
+	fbxtime.SetSecondDouble(m_time / cameramodel->GetFbxTimeScale());
 
 
 	FbxNode* cameranode = curcamera->pnode;//IsValid()で非Nullチェック済
@@ -675,7 +675,6 @@ ChaVector3 CCameraFbx::CalcCameraFbxEulXYZ(int cameramotid, double srcframe)
 	double roundingframe = RoundingTime(srcframe);
 	m_time = roundingframe;
 	FbxTime fbxtime;
-	fbxtime.SetSecondDouble(m_time / 30.0);
 	ChaVector3 zeropos;
 	zeropos.SetParams(0.0f, 0.0f, 0.0f);
 
@@ -692,7 +691,8 @@ ChaVector3 CCameraFbx::CalcCameraFbxEulXYZ(int cameramotid, double srcframe)
 		if (cameramotid > 0) {
 			FbxNode* cameranode = curcamera->pnode;
 			CBone* camerabone = curcamera->pbone;
-			if (cameranode && camerabone) {
+			if (cameranode && camerabone && camerabone->GetParModel()) {
+				fbxtime.SetSecondDouble(m_time / camerabone->GetParModel()->GetFbxTimeScale());
 
 				EFbxRotationOrder rotationorder;
 				cameranode->GetRotationOrder(FbxNode::eSourcePivot, rotationorder);

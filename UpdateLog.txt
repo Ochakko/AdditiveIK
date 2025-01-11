@@ -2,17 +2,29 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
-2025/01/05
-　AdditiveIK 1.0.0.36 RC1
+2025/01/11
+　AdditiveIK 1.0.0.36 RC2
 　　1.0.0.35からの変更点
 　　　MOA2.0(MotionAccelerator)の搭載
 　　　ドキュメント　　　
 　　　　Documents/TroubleShooting/0_MOA2.docx
-　　　サンプル
-　　　　Test/1_MOA_B1
+　　　サンプル更新
+　　　　Test/1_MOA_B2
 　　　ショートムービー
-　　　　MOA2.0 AdditiveIKのモーションアクセラレータ
-　　　　https://youtu.be/3aYcuhKP9MI
+　　　　準備中
+
+　RC2:
+　　RokDeBone2で出力したばかりのfbxを読み込む際にフレーム長を２倍に(60fpsで).
+　　　AdditiveIKで保存した後は変化はありません。
+　　　RokDeBone2で出力したfbxのモーションフレーム長が読み込み時に1/2になっていたので対応。
+　　MOA2.0を処理するSetNewPoseByMoa()関数をコメントを付けて書き直し
+　　MOA再生中にフレーム番号がMOAによる処理以前の値に戻る不具合を修正
+　　　MOA処理呼び出し元にフレーム番号を返しました。
+　　MOA再生中のタイムライン処理修正
+　　　DispAndLimitsで"GraphSkipOnMOA"を選んでいるときだけ処理を省略、それ以外の場合はタイムライン描画
+　　MOA読み込み時のモーションループフラグに関する修正
+　　　モーション読み込み時に自動的にループをオン
+　　　MOAの再生時にループをオフ、再生終了時にループフラグを再生前の状態に復元
 
 
 2025/01/05

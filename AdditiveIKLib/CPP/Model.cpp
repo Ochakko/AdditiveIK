@@ -598,6 +598,8 @@ int CModel::InitParams()
 	m_useegpfile = false;
 
 	m_hasbindpose = 1;
+	m_rokdeboneuser = false;
+	m_fbxtimescale = 30.0;
 
 	//ZeroMemory(m_armpparams, sizeof(FUNCMPPARAMS*) * 6);
 	//ZeroMemory(m_arhthread, sizeof(HANDLE) * 6);
@@ -639,7 +641,7 @@ int CModel::InitParams()
 	m_matView.SetIdentity();
 	m_matProj.SetIdentity();
 
-	m_curmotinfo = 0;
+	m_curmotinfo = nullptr;
 
 	m_modeldisp = true;
 	m_topbone = 0;
@@ -691,6 +693,8 @@ int CModel::InitParams()
 	m_moa_nextmotid = 0;
 	m_moa_nextframe = 0;
 	m_moa_startfillupframe = 1.0;
+	m_moa_freezecount = 0;
+	m_moa_fillupcount = 0;
 
 	return 0;
 }
@@ -806,7 +810,7 @@ int CModel::DestroyAllMotionInfo()
 	}
 	m_motinfo.clear();
 
-	m_curmotinfo = 0;
+	m_curmotinfo = nullptr;
 
 	return 0;
 }
@@ -1097,6 +1101,12 @@ int CModel::LoadFBX(int skipdefref, ID3D12Device* pdev, const WCHAR* wfile, cons
 	if (sceneinfo) {
 		m_fbxcomment = sceneinfo->mComment;
 		m_oldaxis_atloading = 0;
+
+		FbxString fbxtitle = "scene made by RokDeBone2";
+		if (sceneinfo->mTitle == fbxtitle) {
+			SetRokDeBoneUser(true);
+		}
+
 		if (forcenewaxisflag == 0) {
 			FbxString oldauthor = "OpenRDB user";
 			if (sceneinfo->mAuthor == oldauthor) {
@@ -1359,7 +1369,7 @@ _ASSERT(m_bonelist[0]);
 
 	//m_ktime0.SetTime(0, 0, 0, 1, 0, pScene->GetGlobalSettings().GetTimeMode());
 //	m_ktime0.SetSecondDouble( 1.0 / 300.0 );
-//	m_ktime0.SetSecondDouble( 1.0 / 30.0 );
+//	m_ktime0.SetSecondDouble( 1.0 / GetFbxTimeScale() );
 
 
 	if (motioncachebatchflag == FALSE) {
@@ -2569,7 +2579,7 @@ int CModel::UpdateMatrix(bool limitdegflag,
    
 
 	FbxTime lTime;
-	lTime.SetSecondDouble( m_curmotinfo->curframe / 30.0 );
+	lTime.SetSecondDouble( m_curmotinfo->curframe / GetFbxTimeScale() );
 	//lTime.SetSecondDouble( m_curmotinfo->curframe / 300.0 );
 
 	map<int, CMQOObject*>::iterator itrobj;
@@ -3198,7 +3208,7 @@ int CModel::GetFBXShapeAnim(FbxMesh* pMesh, CMQOObject* curobj, FbxAnimLayer* pA
 						if (lFCurve) {
 							int framecnt;
 							for (framecnt = 0; framecnt < animleng; framecnt++) {
-								double timescale = 30.0;
+								double timescale = GetFbxTimeScale();
 								FbxTime lTime;
 								lTime.SetSecondDouble((double)framecnt / timescale);
 								lWeight = lFCurve->Evaluate(lTime);
@@ -3499,7 +3509,8 @@ int CModel::AddMotion(const char* srcname, const WCHAR* wfilename, double srclen
 		_ASSERT(0);
 		return 1;
 	}
-	::ZeroMemory(newmi, sizeof(MOTINFO));
+	//::ZeroMemory(newmi, sizeof(MOTINFO));
+	newmi->Init();
 
 	//if (samenamecount == 0) {
 		strcpy_s(newmi->motname, 256, srcname);
@@ -3522,6 +3533,7 @@ int CModel::AddMotion(const char* srcname, const WCHAR* wfilename, double srclen
 	newmi->curframe = 1.0;
 	newmi->speed = 1.0;
 	newmi->loopflag = 1;
+	newmi->saveloopflagMOA = newmi->loopflag;
 
 	m_motinfo[(int)m_motinfo.size()] = newmi;//2021/08/26 eraseすることがあるのでindex = motid - 1とは限らない
 
@@ -3621,6 +3633,33 @@ int CModel::AddMotion(const char* srcname, const WCHAR* wfilename, double srclen
 }
 
 
+int CModel::BackUpLoopFlag()
+{
+	int motnum;
+	motnum = (int)m_motinfo.size();
+	int miindex;
+	for (miindex = 0; miindex < motnum; miindex++) {
+		MOTINFO* currentmi = m_motinfo[miindex];
+		if (currentmi) {
+			currentmi->BackUpLoopFlag();
+		}
+	}
+	return 0;
+}
+int CModel::RestoreLoopFlag()
+{
+	int motnum;
+	motnum = (int)m_motinfo.size();
+	int miindex;
+	for (miindex = 0; miindex < motnum; miindex++) {
+		MOTINFO* currentmi = m_motinfo[miindex];
+		if (currentmi) {
+			currentmi->RestoreLoopFlag();
+		}
+	}
+	return 0;
+}
+
 int CModel::SetCurrentMotion( int srcmotid )
 {
 	int motnum;
@@ -3683,6 +3722,8 @@ int CModel::SetCurrentMotion( int srcmotid )
 
 int CModel::SetMotionFrame(double srcframe)
 {
+	//m_curmotinfo = GetCurMotInfoPtr();
+
 	if( !m_curmotinfo ){
 		if (GetNoBoneFlag()) {
 			//return 0;//エラーではない　ボーンが無いだけ
@@ -3697,8 +3738,8 @@ int CModel::SetMotionFrame(double srcframe)
 		}
 	}
 
+	m_curmotinfo->befframe = m_curmotinfo->curframe;
 	m_curmotinfo->curframe = fmax(0.0, fmin((m_curmotinfo->frameleng - 1.0), srcframe));
-
 	return 0;
 }
 int CModel::SetMotionFrame(int srcmotid, double srcframe)
@@ -3706,6 +3747,8 @@ int CModel::SetMotionFrame(int srcmotid, double srcframe)
 	MOTINFO* curmi = GetMotInfoPtr(srcmotid);
 	if (curmi) {
 		curmi->curframe = fmax(0.0, fmin((curmi->frameleng - 1.0), srcframe));
+		curmi->befframe = m_curmotinfo->curframe;
+		m_curmotinfo = curmi;//2025/01/11 m_curmotinfoの更新
 	}
 	else {
 		if (GetNoBoneFlag()) {
@@ -3726,6 +3769,8 @@ int CModel::GetMotionFrame(int* dstmotid, double* dstframe)
 		_ASSERT(0);
 		return 1;
 	}
+
+	//m_curmotinfo = GetCurMotInfoPtr();
 
 	if (!m_curmotinfo) {
 		if (GetNoBoneFlag()) {
@@ -4598,8 +4643,9 @@ int CModel::AdvanceTime( int onefps, CEditRange srcrange, int previewflag, doubl
 	curframe = curmotinfo.curframe;//2024/06/02
 
 	double nextframe;
-	double oneframe = 1.0 / 30.0;
-	//double oneframe = 1.0 / 300.0;
+	//double oneframe = 1.0 / 30.0;
+	////double oneframe = 1.0 / 300.0;
+	double oneframe = 1.0 / GetFbxTimeScale();
 
 	double rangestart, rangeend;
 	rangestart = srcrange.GetStartFrame();
@@ -4619,7 +4665,7 @@ int CModel::AdvanceTime( int onefps, CEditRange srcrange, int previewflag, doubl
 		else {
 			nextframe = curframe + 1.0;
 		}
-		if( nextframe > rangeend ){
+		if( nextframe >= rangeend ){
 			if( loopflag == 0 ){
 				nextframe = rangeend;
 				*endflagptr = 1;
@@ -4635,7 +4681,7 @@ int CModel::AdvanceTime( int onefps, CEditRange srcrange, int previewflag, doubl
 		else {
 			nextframe = curframe + 1.0;
 		}
-		if( nextframe < rangestart ){
+		if( nextframe <= rangestart ){
 			if( loopflag == 0 ){
 				nextframe = rangestart;
 				*endflagptr = 1;
@@ -5075,7 +5121,7 @@ ChaMatrix CModel::CalcLocalMeshMat(FbxNode* pNode, double srctime)
 
 	FbxTime fbxtime;
 	//fbxtime.SetSecondDouble(0.0);
-	fbxtime.SetSecondDouble(srctime / 30.0);
+	fbxtime.SetSecondDouble(srctime / GetFbxTimeScale());
 
 	bool fbxRotationActive = pNode->GetRotationActive();//lclrot入りかどうかはGetRotationActive()で判断
 
@@ -7038,13 +7084,13 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 			//		int animleng = (int)mStop.GetFrame();// - mStart.GetFrame() + 1;		
 					//mFrameTime.SetTime(0, 0, 0, 1, 0, pScene->GetGlobalSettings().GetTimeMode());
 					//mFrameTime2.SetTime(0, 0, 0, 1, 0, pScene->GetGlobalSettings().GetTimeMode());
-			mFrameTime.SetSecondDouble(1.0 / 30.0);
-			mFrameTime2.SetSecondDouble(1.0 / 30.0);
+			mFrameTime.SetSecondDouble(1.0 / GetFbxTimeScale());
+			mFrameTime2.SetSecondDouble(1.0 / GetFbxTimeScale());
 			//mFrameTime.SetSecondDouble( 1.0 / 300.0 );
 			//mFrameTime2.SetSecondDouble( 1.0 / 300.0 );
 
 
-			double animleng = (int)((mStop.GetSecondDouble() - mStart.GetSecondDouble()) * 30.0);
+			double animleng = (int)((mStop.GetSecondDouble() - mStart.GetSecondDouble()) * GetFbxTimeScale());
 
 			DbgOut(L"FBX anim %d, animleng %lf\r\n", animno, animleng);
 
@@ -10216,7 +10262,7 @@ int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag,
    
 
 			FbxTime lTime;
-			lTime.SetSecondDouble( rgdmorphinfo->curframe / 30.0 );
+			lTime.SetSecondDouble( rgdmorphinfo->curframe / GetFbxTimeScale() );
 //			lTime.SetSecondDouble( rgdmorphinfo->curframe / 300.0 );
 			//lTime.SetTime(0, 0, 0, (int)rgdmorphinfo->curframe, 0, m_pscene->GetGlobalSettings().GetTimeMode());
 

@@ -86,7 +86,7 @@ void CMotChangeDlg::InitParams()
 	//if( papp->m_mhandler ){
 	//	m_fuleng = papp->m_mhandler->m_fuleng;
 	//}else{
-	m_fuleng = g_defaultFillUpMOA;
+	m_fuleng = g_currentFillUpMOA;
 	//}
 
 	m_cpelemnum = 0;
@@ -141,11 +141,27 @@ int CMotChangeDlg::SetVisible(bool srcflag)
 	if( m_cmdshow != SW_HIDE ){
 		////InitTree();
 
-		////if( m_papp->m_mhandler ){
-		////	m_fuleng = m_papp->m_mhandler->m_fuleng;
-		////}else{
-			m_fuleng = g_defaultFillUpMOA;
-		////}
+		CModel* currentmodel = GetCurrentModel();
+		if (currentmodel) {
+			int ret2;
+			ret2 = currentmodel->CreateMotChangeHandlerIfNot();
+			if (ret2) {
+				DbgOut(L"motchangedlg : SetVisible : CreateMotChangeHandlerIfNot error !!!\n");
+				_ASSERT(0);
+				return 0;
+			}
+			CMCHandler* mch = currentmodel->GetMotChangeHandler();
+			if (mch) {
+				m_fuleng = mch->GetFillUpLeng();
+			}
+			else {
+				m_fuleng = g_currentFillUpMOA;
+			}
+		}
+		else {
+			m_fuleng = g_currentFillUpMOA;
+		}
+
 
 		m_undertreeedit = 0;
 
@@ -812,7 +828,7 @@ LRESULT CMotChangeDlg::OnAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHa
 			_ASSERT( 0 );
 			return 1;
 		}
-		currentmodel->SetMotInfoLoopFlagByID(dlg.m_cookie, 0);
+		//currentmodel->SetMotInfoLoopFlagByID(dlg.m_cookie, 0);//MOAのオンオフ時に処理することにした
 
 
 		///////////////////////////
@@ -1243,7 +1259,7 @@ LRESULT CMotChangeDlg::OnPaste(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 				_ASSERT( 0 );
 				return 1;
 			}
-			currentmodel->SetMotInfoLoopFlagByID(curchild->id, 0);
+			//currentmodel->SetMotInfoLoopFlagByID(curchild->id, 0);//MOAのオンオフ時に処理することにした
 		}
 
 		if( m_cpelemnum > 0 ){
@@ -1390,7 +1406,7 @@ int CMotChangeDlg::AddParentMC( int addcookie, int srcidling, int srcev0idle, in
 			_ASSERT(0);
 			return 1;
 		}
-		currentmodel->SetMotInfoLoopFlagByID(addcookie, 0);
+		//currentmodel->SetMotInfoLoopFlagByID(addcookie, 0);//MOAのオンオフ時に処理することにした
 
 		ret = FillTree();
 		if (ret) {
@@ -1625,7 +1641,7 @@ int CMotChangeDlg::AddChildMC( int parentcookie, MCELEM childmc )
 		_ASSERT( 0 );
 		return 1;
 	}
-	currentmodel->SetMotInfoLoopFlagByID(childmc.id, 0);
+	//currentmodel->SetMotInfoLoopFlagByID(childmc.id, 0);//MOAのオンオフ時に処理することにした
 
 
 
@@ -2171,21 +2187,17 @@ LRESULT CMotChangeDlg::OnPlay(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	if (idlingmotid > 0) {
 		currentmodel->SetCurrentMotion(idlingmotid);
 		currentmodel->SetUnderBlending(false);
+
+		currentmodel->BackUpLoopFlag();//モーションのリピートを変える前にバックアップ
+		currentmodel->SetMotInfoLoopFlagAll(0);//モーションのリピートはSetNewPoseMoa()で制御するため　リピート無しに設定
+
 		g_previewMOA = 1;
 		g_previewFlag = 1;
 	}
 
-
-	//BOOL dummy;
-	//g_motdlg->m_motparamdlg->m_mch = m_mch;
-	//ret = g_motdlg->m_motparamdlg->OnPreview( 0, 0, 0, dummy );
-	//if( ret ){
-	//	_ASSERT( 0 );
-	//	delete mafile;
-	//	return 1;
-	//}
-
-	delete mafile;
+	if (mafile) {
+		delete mafile;
+	}
 
 	return 0;
 }
@@ -2196,16 +2208,26 @@ LRESULT CMotChangeDlg::OnStop(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	//	return 0;
 	//}
 
+	if (!m_chascene) {
+		_ASSERT(0);
+		return 1;
+	}
+	CModel* currentmodel = GetCurrentModel();
+	if (!currentmodel) {
+		//_ASSERT(0);//OnStop()はモデル設定前にも呼び出される
+
+		g_previewFlag = 0;
+		g_previewMOA = 0;
+		return 1;
+	}
+
+	if (g_previewMOA != 0) {
+		//再生していた場合だけモーションのループフラグを復元する
+		currentmodel->RestoreLoopFlag();
+	}
+
 	g_previewFlag = 0;
 	g_previewMOA = 0;
-
-	//int ret;
-	//BOOL dummy;
-	//ret = g_motdlg->m_motparamdlg->OnStop( 0, 0, 0, dummy );
-	//if( ret ){
-	//	_ASSERT( 0 );
-	//	return 1;
-	//}
 
 	return 0;
 }
@@ -2244,16 +2266,6 @@ int CMotChangeDlg::InitComboIdle()
 			if (idlingmi.motid > 0) {
 				initidling = idlingmi.motid;
 			}
-
-			//for( mno = 0; mno < motnum; mno++ ){
-			//	int cmp0;
-			//	MOTID* curmotid = motidarray + mno;
-			//	cmp0 = strcmp( curmotid->filename, m_idlingname );
-			//	if( cmp0 == 0 ){
-			//		initidling = curmotid->id;
-			//		break;
-			//	}
-			//}
 		}
 	}
 

@@ -876,6 +876,7 @@ typedef struct tag_motinfo
 	double befframe;
 	double speed;
 	int loopflag;
+	int saveloopflagMOA;//2025/01/10 MOAの前後でバックアップと復元をするため
 	int fbxanimno;//fbxファイルの中で何番目のモーションとして読み込んだか　0から始まる番号
 	bool cameramotion;
 
@@ -889,6 +890,7 @@ typedef struct tag_motinfo
 		befframe = 0.0;
 		speed = 1.0;
 		loopflag = 0;
+		saveloopflagMOA = 0;
 		fbxanimno = -1;
 		cameramotion = false;
 	};
@@ -896,6 +898,14 @@ typedef struct tag_motinfo
 	tag_motinfo() {
 		Init();
 	};
+
+	void BackUpLoopFlag() {
+		saveloopflagMOA = loopflag;
+	};
+	void RestoreLoopFlag() {
+		loopflag = saveloopflagMOA;
+	};
+
 }MOTINFO;
 
 

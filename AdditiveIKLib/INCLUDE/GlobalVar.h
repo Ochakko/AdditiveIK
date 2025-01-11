@@ -249,7 +249,10 @@ float g_a_dmp = 0.50f;
 //int g_shadertype = -1;//マテリアル毎に設定することに
 int g_previewFlag = 0;			// プレビューフラグ
 int g_previewMOA = 0;
+int g_befpreviewMOA = 0;
+bool g_previewMOA_SkipGraph = false;
 int g_defaultFillUpMOA = 4;//短いモーションを考慮して短め
+int g_currentFillUpMOA = 4;//短いモーションを考慮して短め
 int g_endmotionMargin = 1;//0にするとMOAでモーションの終わりを検知出来ないこと有
 bool g_moa_Freeze_for_a_moment = false;//モーション変化時にタメを作る
 int g_cameraanimmode = 0;//0: OFF, 1:ON, 2:ON and RootMotionOption ON
@@ -539,7 +542,10 @@ extern float g_a_dmp;
 //extern int g_shadertype;////マテリアル毎に設定することに
 extern int g_previewFlag;			// プレビューフラグ
 extern int g_previewMOA;
+extern int g_befpreviewMOA;
+extern bool g_previewMOA_SkipGraph;
 extern int g_defaultFillUpMOA;
+extern int g_currentFillUpMOA;
 extern int g_endmotionMargin;
 extern bool g_moa_Freeze_for_a_moment;//モーション変化時にタメを作る
 extern int g_cameraanimmode;//0: OFF, 1:ON, 2:ON and RootMotionOption ON

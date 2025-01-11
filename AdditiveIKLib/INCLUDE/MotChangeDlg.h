@@ -160,9 +160,7 @@ private:
 	//HWND	m_apphwnd;
 	ChaScene* m_chascene;
 
-
 	//int* m_serial2cookie;
-
 	CMCRMenu* m_rmenu;
 
 	int m_undertreeedit;
