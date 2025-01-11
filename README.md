@@ -274,7 +274,7 @@ Smooth平滑化<br>
 
 [リアルタイムFootRig 1.2.0 at AdditiveIK 2024/10/17](https://youtu.be/VH21YgC-jvA "Usage example11")<br>
 
-[MOA2.0 AdditiveIKのモーションアクセラレータ 2025/01/05](https://youtu.be/3aYcuhKP9MI "Usage example12")<br>
+[モーションアクセラレータMOA2.0 2025/01/11](https://youtu.be/l3JZnAI50YI "Usage example12")<br>
 <br>
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")
@@ -285,7 +285,7 @@ Author: おちゃっこ@おちゃっこLAB<br>
 <br>
 <br>
 # Special thunks<br>
-　Test/1_MOA_B1フォルダのサンプルのB.fbxは、ぼおんさん著作のbucho.sigファイルをfbxにしたものです。<br>
+　Test/1_MOA_B2フォルダのサンプルのB2.fbxは、ぼおんさん著作のbucho.sigファイルをfbxにしたものです。<br>
 <br>
 <br>
 <br>

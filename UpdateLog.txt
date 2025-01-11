@@ -3,15 +3,16 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2025/01/11
-　AdditiveIK 1.0.0.36 RC2
+　AdditiveIK 1.0.0.36 RC3
 　　1.0.0.35からの変更点
 　　　MOA2.0(MotionAccelerator)の搭載
 　　　ドキュメント　　　
 　　　　Documents/TroubleShooting/0_MOA2.docx
 　　　サンプル更新
 　　　　Test/1_MOA_B2
-　　　ショートムービー
-　　　　準備中
+　　　ショートムービー更新
+　　　　モーションアクセラレータ2.0
+　　　　https://youtu.be/l3JZnAI50YI
 
 　RC2:
 　　RokDeBone2で出力したばかりのfbxを読み込む際にフレーム長を２倍に(60fpsで).
@@ -25,7 +26,11 @@ https://github.com/Ochakko/AdditiveIK
 　　MOA読み込み時のモーションループフラグに関する修正
 　　　モーション読み込み時に自動的にループをオン
 　　　MOAの再生時にループをオフ、再生終了時にループフラグを再生前の状態に復元
-
+　RC3:
+　　ショートムービー更新
+　　　モーションアクセラレータ2.0
+　　　https://youtu.be/l3JZnAI50YI
+　
 
 2025/01/05
 　MOA(MotionAccelerator)について作業(その６)
