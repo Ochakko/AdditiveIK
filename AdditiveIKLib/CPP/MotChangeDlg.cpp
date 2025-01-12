@@ -2388,3 +2388,16 @@ bool CMotChangeDlg::GetFreezeOption()
 		return false;
 	}
 }
+
+bool CMotChangeDlg::GetPlusRandMoa()
+{
+	UINT ischecked;
+	ischecked = m_dlg_wnd.IsDlgButtonChecked(IDC_PLUSRAND);
+	if (ischecked == BST_CHECKED) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+

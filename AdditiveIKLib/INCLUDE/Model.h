@@ -3163,6 +3163,12 @@ public: //accesser
 	bool GetUnderBlending() {
 		return m_moa_underblending;
 	};
+	void SetChangeUnderBlending(bool srcval) {
+		m_moa_changeunderblending = srcval;
+	};
+	bool GetChangeUnderBlending() {
+		return m_moa_changeunderblending;
+	};
 	void SetMoaNextMotId(int srcval) {
 		m_moa_nextmotid = srcval;
 	};
@@ -3216,7 +3222,15 @@ public: //accesser
 		m_moa_fillupcount++;
 		return m_moa_fillupcount;
 	};
-
+	void SetMoaRand1() {
+		m_moa_rand1 = rand() % 4;
+		if ((rand() % 2) == 1) {
+			m_moa_rand1 *= -1;
+		}
+	};
+	int GetMoaRand1() {
+		return m_moa_rand1;
+	};
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];
@@ -3439,11 +3453,13 @@ private:
 	CMCHandler* m_mch;
 	CEventKey* m_eventkey;
 	bool m_moa_underblending;
+	bool m_moa_changeunderblending;
 	int m_moa_nextmotid;
 	int m_moa_nextframe;
 	double m_moa_startfillupframe;
 	int m_moa_freezecount;
 	int m_moa_fillupcount;
+	int m_moa_rand1;
 };
 
 

@@ -1,7 +1,7 @@
 Motion Accelerator File ver6.0 type01
 
 #FULENG {
-	5
+	4
 }
 
 #EVENTKEY {
@@ -73,168 +73,168 @@ Motion Accelerator File ver6.0 type01
 }
 
 #BRANCH "pick_up_max19" {
-	"pick_up_max19", 1, -1, 0, 0, 0
-	"pick_down_max19", 2, -1, 0, 0, 0
-	"pick_down2_max19", 3, -1, 0, 0, 0
-	"pick_dance3_max19", 4, -1, 0, 0, 0
-	"pick_outside_max19", 5, -1, 0, 0, 0
-	"pick_inside_max29", 6, -1, 0, 0, 0
-	"pick_dance_max29", 7, -1, 0, 0, 0
-	"pick_dance2_max29", 8, -1, 0, 0, 0
-	"nobi_max19", 9, -1, 0, 0, 0
-	"long_max59", 10, -1, 0, 0, 0
-	"intro_max89", 11, -1, 0, 0, 0
-	"shakehip_max59", 12, -1, 0, 0, 0
+	"pick_up_max19", 2, -1, 0, 0, 0
+	"pick_down_max19", 3, -1, 0, 0, 0
+	"pick_down2_max19", 4, -1, 0, 0, 0
+	"pick_dance3_max19", 5, -1, 0, 0, 0
+	"pick_outside_max19", 6, -1, 0, 0, 0
+	"pick_inside_max29", 7, -1, 0, 0, 0
+	"pick_dance_max29", 8, -1, 0, 0, 0
+	"pick_dance2_max29", 9, -1, 0, 0, 0
+	"nobi_max19", 10, -1, 0, 0, 0
+	"long_max59", 11, -1, 0, 0, 0
+	"intro_max89", 12, -1, 0, 0, 0
+	"shakehip_max59", 1, -1, 0, 0, 0
 }
 
 #BRANCH "pick_down_max19" {
-	"pick_up_max19", 1, -1, 0, 0, 0
-	"pick_down_max19", 2, -1, 0, 0, 0
-	"pick_down2_max19", 3, -1, 0, 0, 0
-	"pick_dance3_max19", 4, -1, 0, 0, 0
-	"pick_outside_max19", 5, -1, 0, 0, 0
-	"pick_inside_max29", 6, -1, 0, 0, 0
-	"pick_dance_max29", 7, -1, 0, 0, 0
-	"pick_dance2_max29", 8, -1, 0, 0, 0
-	"nobi_max19", 9, -1, 0, 0, 0
-	"long_max59", 10, -1, 0, 0, 0
-	"intro_max89", 11, -1, 0, 0, 0
-	"shakehip_max59", 12, -1, 0, 0, 0
+	"pick_up_max19", 3, -1, 0, 0, 0
+	"pick_down_max19", 4, -1, 0, 0, 0
+	"pick_down2_max19", 5, -1, 0, 0, 0
+	"pick_dance3_max19", 6, -1, 0, 0, 0
+	"pick_outside_max19", 7, -1, 0, 0, 0
+	"pick_inside_max29", 8, -1, 0, 0, 0
+	"pick_dance_max29", 9, -1, 0, 0, 0
+	"pick_dance2_max29", 10, -1, 0, 0, 0
+	"nobi_max19", 11, -1, 0, 0, 0
+	"long_max59", 12, -1, 0, 0, 0
+	"intro_max89", 1, -1, 0, 0, 0
+	"shakehip_max59", 2, -1, 0, 0, 0
 }
 
 #BRANCH "pick_down2_max19" {
-	"pick_up_max19", 1, -1, 0, 0, 0
-	"pick_down_max19", 2, -1, 0, 0, 0
-	"pick_down2_max19", 3, -1, 0, 0, 0
-	"pick_dance3_max19", 4, -1, 0, 0, 0
-	"pick_outside_max19", 5, -1, 0, 0, 0
-	"pick_inside_max29", 6, -1, 0, 0, 0
-	"pick_dance_max29", 7, -1, 0, 0, 0
-	"pick_dance2_max29", 8, -1, 0, 0, 0
-	"nobi_max19", 9, -1, 0, 0, 0
-	"long_max59", 10, -1, 0, 0, 0
-	"intro_max89", 11, -1, 0, 0, 0
-	"shakehip_max59", 12, -1, 0, 0, 0
+	"pick_up_max19", 4, -1, 0, 0, 0
+	"pick_down_max19", 5, -1, 0, 0, 0
+	"pick_down2_max19", 6, -1, 0, 0, 0
+	"pick_dance3_max19", 7, -1, 0, 0, 0
+	"pick_outside_max19", 8, -1, 0, 0, 0
+	"pick_inside_max29", 9, -1, 0, 0, 0
+	"pick_dance_max29", 10, -1, 0, 0, 0
+	"pick_dance2_max29", 11, -1, 0, 0, 0
+	"nobi_max19", 12, -1, 0, 0, 0
+	"long_max59", 1, -1, 0, 0, 0
+	"intro_max89", 2, -1, 0, 0, 0
+	"shakehip_max59", 3, -1, 0, 0, 0
 }
 
 #BRANCH "pick_inside_max29" {
-	"pick_up_max19", 1, -1, 0, 0, 0
-	"pick_down_max19", 2, -1, 0, 0, 0
-	"pick_down2_max19", 3, -1, 0, 0, 0
-	"pick_dance3_max19", 4, -1, 0, 0, 0
-	"pick_outside_max19", 5, -1, 0, 0, 0
-	"pick_inside_max29", 6, -1, 0, 0, 0
-	"pick_dance_max29", 7, -1, 0, 0, 0
-	"pick_dance2_max29", 8, -1, 0, 0, 0
-	"nobi_max19", 9, -1, 0, 0, 0
-	"long_max59", 10, -1, 0, 0, 0
-	"intro_max89", 11, -1, 0, 0, 0
-	"shakehip_max59", 12, -1, 0, 0, 0
+	"pick_up_max19", 5, -1, 0, 0, 0
+	"pick_down_max19", 6, -1, 0, 0, 0
+	"pick_down2_max19", 7, -1, 0, 0, 0
+	"pick_dance3_max19", 8, -1, 0, 0, 0
+	"pick_outside_max19", 9, -1, 0, 0, 0
+	"pick_inside_max29", 10, -1, 0, 0, 0
+	"pick_dance_max29", 11, -1, 0, 0, 0
+	"pick_dance2_max29", 12, -1, 0, 0, 0
+	"nobi_max19", 1, -1, 0, 0, 0
+	"long_max59", 2, -1, 0, 0, 0
+	"intro_max89", 3, -1, 0, 0, 0
+	"shakehip_max59", 4, -1, 0, 0, 0
 }
 
 #BRANCH "pick_outside_max19" {
-	"pick_up_max19", 1, -1, 0, 0, 0
-	"pick_down_max19", 2, -1, 0, 0, 0
-	"pick_down2_max19", 3, -1, 0, 0, 0
-	"pick_dance3_max19", 4, -1, 0, 0, 0
-	"pick_outside_max19", 5, -1, 0, 0, 0
-	"pick_inside_max29", 6, -1, 0, 0, 0
-	"pick_dance_max29", 7, -1, 0, 0, 0
-	"pick_dance2_max29", 8, -1, 0, 0, 0
-	"nobi_max19", 9, -1, 0, 0, 0
-	"long_max59", 10, -1, 0, 0, 0
-	"intro_max89", 11, -1, 0, 0, 0
-	"shakehip_max59", 12, -1, 0, 0, 0
+	"pick_up_max19", 6, -1, 0, 0, 0
+	"pick_down_max19", 7, -1, 0, 0, 0
+	"pick_down2_max19", 8, -1, 0, 0, 0
+	"pick_dance3_max19", 9, -1, 0, 0, 0
+	"pick_outside_max19", 10, -1, 0, 0, 0
+	"pick_inside_max29", 11, -1, 0, 0, 0
+	"pick_dance_max29", 12, -1, 0, 0, 0
+	"pick_dance2_max29", 1, -1, 0, 0, 0
+	"nobi_max19", 2, -1, 0, 0, 0
+	"long_max59", 3, -1, 0, 0, 0
+	"intro_max89", 4, -1, 0, 0, 0
+	"shakehip_max59", 5, -1, 0, 0, 0
 }
 
 #BRANCH "pick_dance_max29" {
-	"pick_up_max19", 1, -1, 0, 0, 0
-	"pick_down_max19", 2, -1, 0, 0, 0
-	"pick_down2_max19", 3, -1, 0, 0, 0
-	"pick_dance3_max19", 4, -1, 0, 0, 0
-	"pick_outside_max19", 5, -1, 0, 0, 0
-	"pick_inside_max29", 6, -1, 0, 0, 0
-	"pick_dance_max29", 7, -1, 0, 0, 0
-	"pick_dance2_max29", 8, -1, 0, 0, 0
-	"nobi_max19", 9, -1, 0, 0, 0
-	"long_max59", 10, -1, 0, 0, 0
-	"intro_max89", 11, -1, 0, 0, 0
-	"shakehip_max59", 12, -1, 0, 0, 0
+	"pick_up_max19", 7, -1, 0, 0, 0
+	"pick_down_max19", 8, -1, 0, 0, 0
+	"pick_down2_max19", 9, -1, 0, 0, 0
+	"pick_dance3_max19", 10, -1, 0, 0, 0
+	"pick_outside_max19", 11, -1, 0, 0, 0
+	"pick_inside_max29", 12, -1, 0, 0, 0
+	"pick_dance_max29", 1, -1, 0, 0, 0
+	"pick_dance2_max29", 2, -1, 0, 0, 0
+	"nobi_max19", 3, -1, 0, 0, 0
+	"long_max59", 4, -1, 0, 0, 0
+	"intro_max89", 5, -1, 0, 0, 0
+	"shakehip_max59", 6, -1, 0, 0, 0
 }
 
 #BRANCH "pick_dance2_max29" {
-	"pick_up_max19", 1, -1, 0, 0, 0
-	"pick_down_max19", 2, -1, 0, 0, 0
-	"pick_down2_max19", 3, -1, 0, 0, 0
-	"pick_dance3_max19", 4, -1, 0, 0, 0
-	"pick_outside_max19", 5, -1, 0, 0, 0
-	"pick_inside_max29", 6, -1, 0, 0, 0
-	"pick_dance_max29", 7, -1, 0, 0, 0
-	"pick_dance2_max29", 8, -1, 0, 0, 0
-	"nobi_max19", 9, -1, 0, 0, 0
-	"long_max59", 10, -1, 0, 0, 0
-	"intro_max89", 11, -1, 0, 0, 0
-	"shakehip_max59", 12, -1, 0, 0, 0
+	"pick_up_max19", 8, -1, 0, 0, 0
+	"pick_down_max19", 9, -1, 0, 0, 0
+	"pick_down2_max19", 10, -1, 0, 0, 0
+	"pick_dance3_max19", 11, -1, 0, 0, 0
+	"pick_outside_max19", 12, -1, 0, 0, 0
+	"pick_inside_max29", 1, -1, 0, 0, 0
+	"pick_dance_max29", 2, -1, 0, 0, 0
+	"pick_dance2_max29", 3, -1, 0, 0, 0
+	"nobi_max19", 4, -1, 0, 0, 0
+	"long_max59", 5, -1, 0, 0, 0
+	"intro_max89", 6, -1, 0, 0, 0
+	"shakehip_max59", 7, -1, 0, 0, 0
 }
 
 #BRANCH "pick_dance3_max19" {
-	"pick_up_max19", 1, -1, 0, 0, 0
-	"pick_down_max19", 2, -1, 0, 0, 0
-	"pick_down2_max19", 3, -1, 0, 0, 0
-	"pick_dance3_max19", 4, -1, 0, 0, 0
-	"pick_outside_max19", 5, -1, 0, 0, 0
-	"pick_inside_max29", 6, -1, 0, 0, 0
-	"pick_dance_max29", 7, -1, 0, 0, 0
-	"pick_dance2_max29", 8, -1, 0, 0, 0
-	"nobi_max19", 9, -1, 0, 0, 0
-	"long_max59", 10, -1, 0, 0, 0
-	"intro_max89", 11, -1, 0, 0, 0
-	"shakehip_max59", 12, -1, 0, 0, 0
+	"pick_up_max19", 9, -1, 0, 0, 0
+	"pick_down_max19", 10, -1, 0, 0, 0
+	"pick_down2_max19", 11, -1, 0, 0, 0
+	"pick_dance3_max19", 12, -1, 0, 0, 0
+	"pick_outside_max19", 1, -1, 0, 0, 0
+	"pick_inside_max29", 2, -1, 0, 0, 0
+	"pick_dance_max29", 3, -1, 0, 0, 0
+	"pick_dance2_max29", 4, -1, 0, 0, 0
+	"nobi_max19", 5, -1, 0, 0, 0
+	"long_max59", 6, -1, 0, 0, 0
+	"intro_max89", 7, -1, 0, 0, 0
+	"shakehip_max59", 8, -1, 0, 0, 0
 }
 
 #BRANCH "nobi_max19" {
-	"pick_up_max19", 1, -1, 0, 0, 0
-	"pick_down_max19", 2, -1, 0, 0, 0
-	"pick_down2_max19", 3, -1, 0, 0, 0
-	"pick_dance3_max19", 4, -1, 0, 0, 0
-	"pick_outside_max19", 5, -1, 0, 0, 0
-	"pick_inside_max29", 6, -1, 0, 0, 0
-	"pick_dance_max29", 7, -1, 0, 0, 0
-	"pick_dance2_max29", 8, -1, 0, 0, 0
-	"nobi_max19", 9, -1, 0, 0, 0
-	"long_max59", 10, -1, 0, 0, 0
-	"intro_max89", 11, -1, 0, 0, 0
-	"shakehip_max59", 12, -1, 0, 0, 0
+	"pick_up_max19", 10, -1, 0, 0, 0
+	"pick_down_max19", 11, -1, 0, 0, 0
+	"pick_down2_max19", 12, -1, 0, 0, 0
+	"pick_dance3_max19", 1, -1, 0, 0, 0
+	"pick_outside_max19", 2, -1, 0, 0, 0
+	"pick_inside_max29", 3, -1, 0, 0, 0
+	"pick_dance_max29", 4, -1, 0, 0, 0
+	"pick_dance2_max29", 5, -1, 0, 0, 0
+	"nobi_max19", 6, -1, 0, 0, 0
+	"long_max59", 7, -1, 0, 0, 0
+	"intro_max89", 8, -1, 0, 0, 0
+	"shakehip_max59", 9, -1, 0, 0, 0
 }
 
 #BRANCH "jump_left_max29" {
-	"pick_up_max19", 1, -1, 0, 0, 0
-	"pick_down_max19", 2, -1, 0, 0, 0
-	"pick_down2_max19", 3, -1, 0, 0, 0
-	"pick_dance3_max19", 4, -1, 0, 0, 0
-	"pick_outside_max19", 5, -1, 0, 0, 0
-	"pick_inside_max29", 6, -1, 0, 0, 0
-	"pick_dance_max29", 7, -1, 0, 0, 0
-	"pick_dance2_max29", 8, -1, 0, 0, 0
-	"nobi_max19", 9, -1, 0, 0, 0
-	"long_max59", 10, -1, 0, 0, 0
-	"intro_max89", 11, -1, 0, 0, 0
-	"shakehip_max59", 12, -1, 0, 0, 0
+	"pick_up_max19", 11, -1, 0, 0, 0
+	"pick_down_max19", 12, -1, 0, 0, 0
+	"pick_down2_max19", 1, -1, 0, 0, 0
+	"pick_dance3_max19", 2, -1, 0, 0, 0
+	"pick_outside_max19", 3, -1, 0, 0, 0
+	"pick_inside_max29", 4, -1, 0, 0, 0
+	"pick_dance_max29", 5, -1, 0, 0, 0
+	"pick_dance2_max29", 6, -1, 0, 0, 0
+	"nobi_max19", 7, -1, 0, 0, 0
+	"long_max59", 8, -1, 0, 0, 0
+	"intro_max89", 9, -1, 0, 0, 0
+	"shakehip_max59", 10, -1, 0, 0, 0
 }
 
 #BRANCH "jump_right_max29" {
-	"pick_up_max19", 1, -1, 0, 0, 0
-	"pick_down_max19", 2, -1, 0, 0, 0
-	"pick_down2_max19", 3, -1, 0, 0, 0
-	"pick_dance3_max19", 4, -1, 0, 0, 0
-	"pick_outside_max19", 5, -1, 0, 0, 0
-	"pick_inside_max29", 6, -1, 0, 0, 0
-	"pick_dance_max29", 7, -1, 0, 0, 0
-	"pick_dance2_max29", 8, -1, 0, 0, 0
-	"nobi_max19", 9, -1, 0, 0, 0
-	"long_max59", 10, -1, 0, 0, 0
-	"intro_max89", 11, -1, 0, 0, 0
-	"shakehip_max59", 12, -1, 0, 0, 0
+	"pick_up_max19", 12, -1, 0, 0, 0
+	"pick_down_max19", 1, -1, 0, 0, 0
+	"pick_down2_max19", 2, -1, 0, 0, 0
+	"pick_dance3_max19", 3, -1, 0, 0, 0
+	"pick_outside_max19", 4, -1, 0, 0, 0
+	"pick_inside_max29", 5, -1, 0, 0, 0
+	"pick_dance_max29", 6, -1, 0, 0, 0
+	"pick_dance2_max29", 7, -1, 0, 0, 0
+	"nobi_max19", 8, -1, 0, 0, 0
+	"long_max59", 9, -1, 0, 0, 0
+	"intro_max89", 10, -1, 0, 0, 0
+	"shakehip_max59", 11, -1, 0, 0, 0
 }
 
 #BRANCH "intro_max89" {

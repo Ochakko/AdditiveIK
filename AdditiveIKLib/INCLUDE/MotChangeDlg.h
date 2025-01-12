@@ -108,6 +108,7 @@ public:
 	int SaveMAFile( char* srcdirname, char* srcmafname, int overwriteflag );
 
 	bool GetFreezeOption();
+	bool GetPlusRandMoa();
 private:
 	int FillTree();
 	//void AddBoneToTree( int srcseri, int addbroflag, int addtolast );

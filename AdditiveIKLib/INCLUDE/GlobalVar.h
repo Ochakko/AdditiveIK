@@ -251,6 +251,7 @@ int g_previewFlag = 0;			// プレビューフラグ
 int g_previewMOA = 0;
 int g_befpreviewMOA = 0;
 bool g_previewMOA_SkipGraph = false;
+bool g_plusrandMOA = false;
 int g_defaultFillUpMOA = 4;//短いモーションを考慮して短め
 int g_currentFillUpMOA = 4;//短いモーションを考慮して短め
 int g_endmotionMargin = 1;//0にするとMOAでモーションの終わりを検知出来ないこと有
@@ -544,6 +545,7 @@ extern int g_previewFlag;			// プレビューフラグ
 extern int g_previewMOA;
 extern int g_befpreviewMOA;
 extern bool g_previewMOA_SkipGraph;
+extern bool g_plusrandMOA;
 extern int g_defaultFillUpMOA;
 extern int g_currentFillUpMOA;
 extern int g_endmotionMargin;

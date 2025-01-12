@@ -910,6 +910,11 @@ int CMCHandler::GetNextMotion( int srccurmotid, int srccurframe, int srceventno,
 	}
 
 
+	////for debug
+	//if ((srccurmotid != 13) && (srceventno != 0)) {
+	//	int dbgflag1 = 1;
+	//}
+
 
 	if( nextmce ){
 		*nextmotidptr = nextmce->id;
@@ -917,8 +922,10 @@ int CMCHandler::GetNextMotion( int srccurmotid, int srccurframe, int srceventno,
 		*notfuptr = nextmce->notfu;
 		*nottoidleptr = nextmce->nottoidle;
 	}else{
-		*nextmotidptr = srccurmotid;
-		*nextframeptr = srccurframe;
+		//*nextmotidptr = srccurmotid;
+		//*nextframeptr = srccurframe;
+		*nextmotidptr = -1;//分岐無しの場合と　同じモーションの違うフレームに変化する場合を区別　ここでは分岐無し
+		*nextframeptr = 0;
 		*notfuptr = 0;
 		*nottoidleptr = -1;
 	}

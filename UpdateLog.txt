@@ -2,8 +2,8 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
-2025/01/11
-　AdditiveIK 1.0.0.36 RC3
+2025/01/12
+　AdditiveIK 1.0.0.36 RC4
 　　1.0.0.35からの変更点
 　　　MOA2.0(MotionAccelerator)の搭載
 　　　ドキュメント　　　
@@ -11,8 +11,7 @@ https://github.com/Ochakko/AdditiveIK
 　　　サンプル更新
 　　　　Test/1_MOA_B2
 　　　ショートムービー更新
-　　　　モーションアクセラレータ2.0
-　　　　https://youtu.be/l3JZnAI50YI
+　　　　準備中
 
 　RC2:
 　　RokDeBone2で出力したばかりのfbxを読み込む際にフレーム長を２倍に(60fpsで).
@@ -30,7 +29,16 @@ https://github.com/Ochakko/AdditiveIK
 　　ショートムービー更新
 　　　モーションアクセラレータ2.0
 　　　https://youtu.be/l3JZnAI50YI
-　
+　RC4:
+　　MOA修正
+　　　キーボード連打に対応
+　　　MOAの分岐設定が働いていなかった不具合修正
+　　　設定のコツはモーションに対するイベント番号を分岐ごとに変えることにより１つのキーの連打でいろいろに動く
+　　MOAフリーズモードをフリーズビッグモードに変更
+　　　間違えが面白かったので　間違えが間違えとして正しく動くようにして採用
+　　サンプル更新
+　　　Test/1_MOA_B2　
+
 
 2025/01/05
 　MOA(MotionAccelerator)について作業(その６)

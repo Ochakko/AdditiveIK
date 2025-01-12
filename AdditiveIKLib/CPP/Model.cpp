@@ -690,11 +690,13 @@ int CModel::InitParams()
 	m_mch = nullptr;
 	m_eventkey = nullptr;
 	m_moa_underblending = false;
-	m_moa_nextmotid = 0;
+	m_moa_changeunderblending = false;
+	m_moa_nextmotid = -1;
 	m_moa_nextframe = 0;
 	m_moa_startfillupframe = 1.0;
 	m_moa_freezecount = 0;
 	m_moa_fillupcount = 0;
+	m_moa_rand1 = 0;
 
 	return 0;
 }
