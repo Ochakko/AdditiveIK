@@ -46682,10 +46682,6 @@ int SetNewPoseByMoa(double* pnextframe)
 					motionrate1 = 1.0 - motionrate2;
 
 
-					
-					//##########
-					//通常モード
-					//##########
 					if (!currentmodel->GetUnderBlending() &&
 						((int)(curframeleng - curframe - 0.0001) <= g_endmotionMargin)
 						) {
@@ -46733,7 +46729,6 @@ int SetNewPoseByMoa(double* pnextframe)
 							//フリーズビッグモード
 							//####################
 							
-							double freezemotionrate1;
 							int freezecount;
 							if (IsJustEqualTime(curframe, currentmodel->GetMoaStartFillUpFrame())) {
 								currentmodel->SetMoaFreezeCount(0);
@@ -46748,10 +46743,12 @@ int SetNewPoseByMoa(double* pnextframe)
 							//else {
 							//	freezemotionrate1 = 0.0;//ターゲット姿勢１００％で　fillupleng - 2の間　止めて表示する
 							//}
-							freezemotionrate1 = 0.0;//ターゲット姿勢１００％で　止めて表示する
+							//freezemotionrate1 = 0.0;//ターゲット姿勢１００％で　止めて表示する
 
-							//2025/01/12 CalcFillUpTarget()にfreezemotionrate1ではなく　freezecountを渡すことにした Be Big！！
-							currentmodel->CalcFillupTarget(model_nextmotid, filluppoint, freezecount, //motionrate1,
+							double freezebigrate1 = fmin(3.9, (double)freezecount);
+
+							//2025/01/12 Be Big!!!
+							currentmodel->CalcFillupTarget(model_nextmotid, filluppoint, freezebigrate1, //motionrate1,
 								IsJustEqualTime(curframe, currentmodel->GetMoaStartFillUpFrame()));
 						}
 						currentmodel->SetMotionFrame(curframe);
