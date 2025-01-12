@@ -1759,7 +1759,12 @@ bool CreateScene(bool limitdegflag, FbxManager* pSdkManager, FbxScene* pScene, C
 	// create scene info
 	FbxDocumentInfo* sceneInfo = FbxDocumentInfo::Create(pSdkManager, "SceneInfo");
 	if (sceneInfo) {
-		sceneInfo->mTitle = "scene made by AdditiveIK";
+		if (pmodel->GetRokDeBoneUser()) {
+			sceneInfo->mTitle = "scene made by RokDeBone2";
+		}
+		else {
+			sceneInfo->mTitle = "scene made by AdditiveIK";
+		}
 		sceneInfo->mSubject = "skinmesh and animation";
 		sceneInfo->mAuthor = "OchakkoLab";
 		//sceneInfo->mRevision = "rev. 2.2";
