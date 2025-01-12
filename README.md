@@ -39,7 +39,7 @@ Fig.7 (FootRigで足を曲げて自動接地  model:VRoid).<br>
 ![TopFig8](ScreenShots/SS_For10033/FootRig_HDiffMax_Cmp3_1_Annotation.png "トップ絵8")<br>
 Fig.8 (足曲げを調整可能なFootRig model:VRoid).<br>
 <br>
-![TopFig9](ScreenShots\SS_For10036\SS_AdditiveIK_10036_MOA2_FreezeBig_1.png "トップ絵9")<br>
+![TopFig9](ScreenShots/SS_For10036/SS_AdditiveIK_10036_MOA2_FreezeBig_1.png "トップ絵9")<br>
 Fig.9 (モーションアクセラレータMOA2.0 model作成:ぼおんさん).<br>
 MOA2.0フリーズビッグモード　https://youtu.be/GFEmF8dnV_M<br>
 <br>
