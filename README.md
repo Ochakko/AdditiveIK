@@ -39,9 +39,9 @@ Fig.7 (FootRigで足を曲げて自動接地  model:VRoid).<br>
 ![TopFig8](ScreenShots/SS_For10033/FootRig_HDiffMax_Cmp3_1_Annotation.png "トップ絵8")<br>
 Fig.8 (足曲げを調整可能なFootRig model:VRoid).<br>
 <br>
-![TopFig9](ScreenShots/SS_For10036/SS_AdditiveIK_10036_MOA2_FreezeBig_1.png "トップ絵9")<br>
+![TopFig9](ScreenShots/SS_For10036/SS_AdditiveIK_10036_MOA2_1_Trim.png "トップ絵9")<br>
 Fig.9 (モーションアクセラレータMOA2.0 model作成:ぼおんさん).<br>
-MOA2.0フリーズビッグモード　https://youtu.be/GFEmF8dnV_M<br>
+MOA2.0 https://youtu.be/GFEmF8dnV_M<br>
 <br>
 # 免責<br>
 このソフトにより問題が起きたとしてもその責任は持ちません。<br>
@@ -277,7 +277,7 @@ Smooth平滑化<br>
 
 [リアルタイムFootRig 1.2.0 at AdditiveIK 2024/10/17](https://youtu.be/VH21YgC-jvA "Usage example11")<br>
 
-[MOA2.0フリーズビッグモード 2025/01/13](https://youtu.be/GFEmF8dnV_M "Usage example12")<br>
+[MOA2.0 2025/01/13](https://youtu.be/GFEmF8dnV_M "Usage example12")<br>
 <br>
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")
