@@ -46469,28 +46469,45 @@ int SetNewPoseByMoa(double* pnextframe)
 	//#############################################################
 	//キーボード入力が無くゲームパッドSonyDualSenseが接続認識されている場合
 	//#############################################################
+
+	//注意 s_dsbuttondown[], s_bef_dsbuttondown[]のインデックスは　0からMB3D_DSBUTTONNUM(14)
+	//注意 s_dsaxisvalue[][, s_dsaxisOverTh[], s_dsaxisMOverTh[], s_bef_dsaxisOverTh[], s_bef_dsaxisMOverTh[]のインデックスは 0からMB3D_DSAXISNUM(6)
+	//注意 EVENTPAD.padの値は　0からMOA_PADNUM(20)
+
 	if ((eventno == 0) && (g_enableDS == true)) {
 		int padno;
 		for (padno = 0; padno < MOA_PADNUM; padno++) {
-			if (s_dsbuttondown[padno]) {
-				if (s_bef_dsbuttondown[padno]) {
-					s_moaeventrepeats_pad[padno] = s_moaeventrepeats_pad[padno] + 1;//２回目以降
+			if (padno < MB3D_DSBUTTONNUM) {
+				if (s_dsbuttondown[padno]) {
+					if (s_bef_dsbuttondown[padno]) {
+						s_moaeventrepeats_pad[padno] = s_moaeventrepeats_pad[padno] + 1;//２回目以降
+					}
+					else {
+						s_moaeventrepeats_pad[padno] = 1;//初回
+					}
+					eventno = eventpad->GetEventNo(padno, s_moaeventrepeats_pad[padno]);
+					findindex = padno;//moaeventrepeats初期化時のヒント用
+					break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
 				}
-				else {
-					s_moaeventrepeats_pad[padno] = 1;//初回
-				}
-				eventno = eventpad->GetEventNo(padno, s_moaeventrepeats_pad[padno]);
-				//_ASSERT( 0 );
-				//if (eventno != 0) {
-				//	int dbgflag1 = 1;
-				//}
-				findindex = padno;//moaeventrepeats初期化時のヒント用
-				break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
 			}
-			//else {
-				//s_moaeventrepeats_pad[padno] = 0;
-				//初期化は別ループで
-			//}
+			else {
+				//####################################################################
+				//アナログスティックはボタンと併用することがある　今回は排他的にどちらかだけに対応
+				//####################################################################
+				int analogno = padno - MB3D_DSBUTTONNUM;
+				if ((s_dsaxisOverTh[analogno] != 0) || (s_dsaxisMOverTh[analogno] != 0)){
+					//float value = s_dsaxisvalue[analogno];
+					if ((s_bef_dsaxisOverTh[analogno] != 0) || (s_bef_dsaxisMOverTh[analogno] != 0)) {
+						s_moaeventrepeats_pad[padno] = s_moaeventrepeats_pad[padno] + 1;//２回目以降
+					}
+					else {
+						s_moaeventrepeats_pad[padno] = 1;//初回
+					}
+					eventno = eventpad->GetEventNo(padno, s_moaeventrepeats_pad[padno]);
+					findindex = padno;//moaeventrepeats初期化時のヒント用
+					break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
+				}
+			}
 		}
 		for (padno = 0; padno < MOA_PADNUM; padno++) {
 			if ((findindex >= 0) && (padno != findindex)) {
