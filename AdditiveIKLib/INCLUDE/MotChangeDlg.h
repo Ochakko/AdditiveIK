@@ -47,6 +47,7 @@ BEGIN_MSG_MAP(CMotChangeDlg)
 
 	COMMAND_ID_HANDLER(IDC_ADD, OnAddList)
 	COMMAND_ID_HANDLER(IDC_DEFAULT10, OnDefault10)
+	COMMAND_ID_HANDLER(IDC_DEFAULTPAD, OnDefaultPAD)
 	COMMAND_ID_HANDLER(IDC_DEL, OnDelList)
 	COMMAND_ID_HANDLER(IDC_ALLDEL, OnAllDelList)
 	COMMAND_ID_HANDLER(IDC_APPLY, OnApplyFULeng)
@@ -77,6 +78,7 @@ END_MSG_MAP()
 
 	LRESULT OnAddList(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnDefault10(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnDefaultPAD(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnDelList(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnAllDelList(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnApplyFULeng(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
@@ -124,6 +126,7 @@ private:
 
 	int InitComboKey();
 	int InitList();
+	int InitListPad();
 
 	int InitComboIdle();
 
@@ -140,6 +143,7 @@ private:
 	CWindow m_dlg_wnd;
 	CWindow m_tree_wnd;
 	CWindow m_list_wnd;
+	CWindow m_listpad_wnd;
 	CWindow m_event_wnd;
 	CWindow m_combokey_wnd;
 	CWindow m_comboidle_wnd;

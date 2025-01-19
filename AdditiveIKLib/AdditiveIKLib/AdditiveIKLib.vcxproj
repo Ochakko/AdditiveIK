@@ -208,6 +208,7 @@
     <ClCompile Include="..\CPP\EditRange.cpp" />
     <ClCompile Include="..\CPP\EngName.cpp" />
     <ClCompile Include="..\CPP\EventKey.cpp" />
+    <ClCompile Include="..\CPP\EventPAD.cpp" />
     <ClCompile Include="..\CPP\ExtLine.cpp" />
     <ClCompile Include="..\CPP\FBXBone.cpp" />
     <ClCompile Include="..\CPP\FBXFile.cpp" />
@@ -633,6 +634,7 @@
     <ClInclude Include="..\INCLUDE\EditRange.h" />
     <ClInclude Include="..\INCLUDE\EngName.h" />
     <ClInclude Include="..\INCLUDE\EventKey.h" />
+    <ClInclude Include="..\INCLUDE\EventPAD.h" />
     <ClInclude Include="..\INCLUDE\ExtLine.h" />
     <ClInclude Include="..\INCLUDE\FBXBone.h" />
     <ClInclude Include="..\INCLUDE\FBXFile.h" />

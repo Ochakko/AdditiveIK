@@ -19,12 +19,16 @@
 
 #include <forbidid.h>
 #include <EventKey.h>
+#include <EventPad.h>
 
 #include <ChaScene.h>
 
 #include <GetDlgParams.h>
 #include <GlobalVar.h>
 
+//#########
+//Keyboard
+//#########
 static WCHAR s_strkey[40][3] = {
 	L"←", L"→", L"↑", L"↓", L"1", L"2", L"3", L"4", L"5", L"6",
 	L"7", L"8", L"9", L"0", L"A", L"B", L"C", L"D", L"E", L"F",
@@ -36,6 +40,19 @@ static int s_vkkey[40] = {
 	'7', '8', '9', '0', 'A', 'B', 'C', 'D', 'E', 'F',
 	'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
 	'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+};
+
+
+//######################################
+//GamePad SonyDualSense Connected to PC
+//######################################
+static WCHAR s_strpad[MOA_PADNUM][20] = {
+	L"□", L"X", L"O", L"△", L"↑", L"→", L"↓", L"←", L"L1", L"R1",
+	L"InfoL", L"InfoR", L"L3", L"R3", L"AnalogRight_LR", L"AnalogRight_UD", L"AnalogLeft_LR", L"AnalogLeft_UD", L"L2", L"R2"
+};
+static int s_vkpad[MOA_PADNUM] = {
+	0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+	10, 11, 12, 13, 14, 15, 16, 17, 18, 19
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -170,6 +187,8 @@ int CMotChangeDlg::SetVisible(bool srcflag)
 
 		ret = InitList();
 		_ASSERT( !ret );
+		ret = InitListPad();
+		_ASSERT(!ret);
 
 		ret = InitMC();
 		if( ret ){
@@ -291,6 +310,8 @@ LRESULT CMotChangeDlg::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 	_ASSERT(m_comboidle_wnd);
 	m_fuleng_wnd = GetDlgItem( IDC_FULENG );
 	_ASSERT(m_fuleng_wnd);
+	m_listpad_wnd = GetDlgItem(IDC_LIST3);
+	_ASSERT(m_listpad_wnd);
 
 	InitComboKey();
 	CreateImageList();
@@ -1744,6 +1765,79 @@ int CMotChangeDlg::InitList()
 	return 0;
 }
 
+int CMotChangeDlg::InitListPad()
+{
+	m_listpad_wnd.SendMessage(LB_RESETCONTENT, 0, 0);
+
+	if (!m_chascene) {
+		_ASSERT(0);
+		return 1;
+	}
+	CModel* currentmodel = GetCurrentModel();
+	if (!currentmodel) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int ret;
+	ret = currentmodel->CreateMotChangeHandlerIfNot();
+	if (ret) {
+		DbgOut(L"motchangedlg : InitList : CreateMotChangeHandlerIfNot error !!!\n");
+		_ASSERT(0);
+		return 1;
+	}
+
+	CMCHandler* mch = currentmodel->GetMotChangeHandler();
+	if (!mch) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int motnum = currentmodel->GetMotInfoSize();
+	if (motnum <= 0) {
+		return 0;
+	}
+	CEventPad* epptr = currentmodel->GetEventPad();
+	if (!epptr) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	LRESULT lres;
+	int kno;
+	for (kno = 0; kno < epptr->GetPadNum(); kno++) {
+		WCHAR mes[256];
+		int eventno = epptr->GetEventNo(kno);
+		int combono = epptr->GetComboNo(kno);
+		if ((combono < 0) || (combono >= MOA_PADNUM)) {
+			DbgOut(L"mcdlg : InitList : combono out of range error !!!\n");
+			_ASSERT(0);
+			return 1;
+		}
+
+
+		WCHAR singlestr[256];
+		if (epptr->GetSingleEvent(kno) == 1) {
+			swprintf_s(singlestr, 256, L"単発：");
+		}
+		else {
+			swprintf_s(singlestr, 256, L"長押：");
+		}
+
+		swprintf_s(mes, 256, L"%s eventno : %d, pad : %s", singlestr, eventno, &(s_strpad[combono][0]));
+
+		lres = m_listpad_wnd.SendMessage(LB_ADDSTRING, 0, (LPARAM)mes);
+		if ((lres == LB_ERR) || (lres == LB_ERRSPACE)) {
+			_ASSERT(0);
+			return 1;
+		}
+	}
+
+
+	return 0;
+}
+
+
 LRESULT CMotChangeDlg::OnDefault10(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	if (g_previewFlag != 0) {
@@ -1823,6 +1917,94 @@ LRESULT CMotChangeDlg::OnDefault10(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 			lres = m_list_wnd.SendMessage( LB_ADDSTRING, 0, (LPARAM)mes );
 			if( (lres == LB_ERR) || (lres == LB_ERRSPACE) ){
 				_ASSERT( 0 );
+				return 1;
+			}
+		}
+	}
+
+	return 0;
+}
+
+LRESULT CMotChangeDlg::OnDefaultPAD(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	if (g_previewFlag != 0) {
+		return 0;
+	}
+
+	if (!m_chascene) {
+		_ASSERT(0);
+		return 1;
+	}
+	CModel* currentmodel = GetCurrentModel();
+	if (!currentmodel) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int ret;
+	ret = currentmodel->CreateMotChangeHandlerIfNot();
+	if (ret) {
+		DbgOut(L"motchangedlg : OnDefaultPAD : CreateMotChangeHandlerIfNot error !!!\n");
+		_ASSERT(0);
+		return 1;
+	}
+
+	CMCHandler* mch = currentmodel->GetMotChangeHandler();
+	if (!mch) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int motnum = currentmodel->GetMotInfoSize();
+	if (motnum <= 0) {
+		return 0;
+	}
+	CEventPad* epptr = currentmodel->GetEventPad();
+	if (!epptr) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int combono;
+	for (combono = 0; combono < MOA_PADNUM; combono++) {
+		EPAD ep;
+		ZeroMemory(&ep, sizeof(EPAD));
+		ep.eventno = combono + 1;//!!!!!!!!!!
+		m_combono = combono;
+		ep.combono = combono;
+		ep.pad = s_vkpad[combono];
+		ep.singleevent = 1;
+
+
+		if (epptr->GetPadNum() >= MOA_PADNUM) {
+			::MessageBox(m_hWnd, L"イベントキーは20個までしか作成できません。", L"エラー", MB_OK);
+			return 0;
+		}
+
+		int kindex = -1;
+		epptr->CheckSamePad(ep.pad, &kindex);
+		if (kindex < 0) {
+			ret = epptr->AddEPad(ep);
+			if (ret) {
+				DbgOut(L"mcldg : OnDefault10: ep AddEPad error !!!\n");
+				_ASSERT(0);
+				return 1;
+			}
+			LRESULT lres;
+
+			WCHAR singlestr[256];
+			if (ep.singleevent == 1) {
+				swprintf_s(singlestr, 256, L"単発：");
+			}
+			else {
+				swprintf_s(singlestr, 256, L"長押：");
+			}
+
+			WCHAR mes[256];
+			swprintf_s(mes, 256, L"%s eventno : %d, pad : %s", singlestr, ep.eventno, &(s_strpad[ep.combono][0]));
+			lres = m_listpad_wnd.SendMessage(LB_ADDSTRING, 0, (LPARAM)mes);
+			if ((lres == LB_ERR) || (lres == LB_ERRSPACE)) {
+				_ASSERT(0);
 				return 1;
 			}
 		}

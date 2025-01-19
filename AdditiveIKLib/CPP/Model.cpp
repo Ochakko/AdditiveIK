@@ -77,6 +77,7 @@
 
 #include <MCHandler.h>
 #include <EventKey.h>
+#include <EventPad.h>
 
 #include <ThreadingLoadFbx.h>
 #include <ThreadingUpdateMatrix.h>
@@ -689,6 +690,7 @@ int CModel::InitParams()
 	
 	m_mch = nullptr;
 	m_eventkey = nullptr;
+	m_eventpad = nullptr;
 	m_moa_underblending = false;
 	m_moa_changeunderblending = false;
 	m_moa_nextmotid = -1;
@@ -768,6 +770,10 @@ int CModel::DestroyObjs()
 	if (m_eventkey) {
 		delete m_eventkey;
 		m_eventkey = nullptr;
+	}
+	if (m_eventpad) {
+		delete m_eventpad;
+		m_eventpad = nullptr;
 	}
 
 	InitParams();
@@ -24331,6 +24337,13 @@ int CModel::CreateMotChangeHandlerIfNot()
 			return 1;
 		}
 	}
+	if (!m_eventpad) {
+		m_eventpad = new CEventPad();
+		if (!m_eventpad) {
+			_ASSERT(0);
+			return 1;
+		}
+	}
 
 
 	return 0;
@@ -24343,6 +24356,9 @@ int CModel::ResetMotChangeHandler()
 	}
 	if (m_eventkey) {
 		m_eventkey->DestroyObjs();
+	}
+	if (m_eventpad) {
+		m_eventpad->DestroyObjs();
 	}
 	return 0;
 }

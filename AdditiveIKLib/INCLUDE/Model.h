@@ -56,6 +56,7 @@ class CFootRigDlg;
 class CGltfLoader;
 class CMCHandler;
 class CEventKey;
+class CEventPad;
 
 typedef struct funcmpparams
 {
@@ -2838,6 +2839,9 @@ public: //accesser
 	CEventKey* GetEventKey() {
 		return m_eventkey;
 	};
+	CEventPad* GetEventPad() {
+		return m_eventpad;
+	};
 
 	void SetUnderMotion2Bt(bool srcflag)
 	{
@@ -3452,6 +3456,7 @@ private:
 
 	CMCHandler* m_mch;
 	CEventKey* m_eventkey;
+	CEventPad* m_eventpad;
 	bool m_moa_underblending;
 	bool m_moa_changeunderblending;
 	int m_moa_nextmotid;

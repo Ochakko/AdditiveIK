@@ -333,6 +333,9 @@
     <ClCompile Include="..\CPP\forbidid.cpp">
       <Filter>MotionAccelerator</Filter>
     </ClCompile>
+    <ClCompile Include="..\CPP\EventPAD.cpp">
+      <Filter>MotionAccelerator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
@@ -1583,6 +1586,9 @@
       <Filter>MotionAccelerator</Filter>
     </ClInclude>
     <ClInclude Include="..\INCLUDE\forbidid.h">
+      <Filter>MotionAccelerator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\EventPAD.h">
       <Filter>MotionAccelerator</Filter>
     </ClInclude>
   </ItemGroup>

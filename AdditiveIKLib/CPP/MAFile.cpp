@@ -13,6 +13,7 @@
 #include <MCHandler.h>
 #include <Model.h>
 #include <EventKey.h>
+#include <EventPad.h>
 
 #define DBGH
 #include <dbg.h>
@@ -150,6 +151,41 @@ int CMAFile::WriteEventKey()
 	return 0;
 }
 
+int CMAFile::WriteEventPad()
+{
+	int ret;
+
+	CEventPad* epptr = GetEventPad();
+	if (epptr) {
+		strcpy_s(m_linechar, MALINELENG, "#EVENTPAD {");
+		ret = WriteLinechar(1);
+		if (ret) {
+			_ASSERT(0);
+			return 1;
+		}
+
+		int kindex;
+		for (kindex = 0; kindex < epptr->GetPadNum(); kindex++) {
+			sprintf_s(m_linechar, MALINELENG, "%d, %d, %d, %d",
+				epptr->GetEventNo(kindex), epptr->GetPad(kindex),
+				epptr->GetComboNo(kindex), epptr->GetSingleEvent(kindex));
+			ret = WriteLinechar(1);
+			if (ret) {
+				_ASSERT(0);
+				return 1;
+			}
+		}
+
+		strcpy_s(m_linechar, MALINELENG, "}\r\n");
+		ret = WriteLinechar(1);
+		if (ret) {
+			_ASSERT(0);
+			return 1;
+		}
+	}
+
+	return 0;
+}
 
 
 int CMAFile::WriteLinechar( int addreturn )
@@ -254,6 +290,12 @@ int CMAFile::SaveMAFile( WCHAR* srcfilename, CModel* srcmodel, HWND srchwnd, int
 	if( ret ){
 		DbgOut(  L"mafile : SaveMAFile : WriteEventKey error !!!\n" );
 		_ASSERT( 0 );
+		return 1;
+	}
+	ret = WriteEventPad();
+	if (ret) {
+		DbgOut(L"mafile : SaveMAFile : WriteEventPad error !!!\n");
+		_ASSERT(0);
 		return 1;
 	}
 
@@ -868,17 +910,18 @@ int CMAFile::GetChunkType( char* chunkname, int nameleng )
 		namehead++;
 	}
 
-	char chunkpat[4][20] =
+	char chunkpat[5][20] =
 	{
 		"#TRUNK",
 		"#BRANCH",
 		"#FULENG",
-		"#EVENTKEY"
+		"#EVENTKEY",
+		"#EVENTPAD"
 	};
 
 	int isfind = 0;
 	int patno;
-	for( patno = 0; patno < 4; patno++ ){
+	for( patno = 0; patno < 5; patno++ ){
 		if( isfind == 1 )
 			break;
 
@@ -901,6 +944,9 @@ int CMAFile::GetChunkType( char* chunkname, int nameleng )
 					break;
 				case 3:
 					m_state = MA_EVENTKEY;
+					break;
+				case 4:
+					m_state = MA_EVENTPAD;
 					break;
 				default:
 					break;
@@ -1051,6 +1097,13 @@ int CMAFile::LoadMAFile_aft( WCHAR* srcfilename )
 			ret = ReadEventKey();
 			if( ret ){
 				_ASSERT( 0 );
+				return 1;
+			}
+			break;
+		case MA_EVENTPAD:
+			ret = ReadEventPad();
+			if (ret) {
+				_ASSERT(0);
 				return 1;
 			}
 			break;
@@ -1230,6 +1283,108 @@ int CMAFile::ReadEventKey()
 	return 0;
 }
 
+int CMAFile::ReadEventPad()
+{
+	if (!m_model) {
+		_ASSERT(0);
+		return 0;
+	}
+	CMCHandler* mch = GetMotChangeHandler();
+	if (!mch) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	CEventPad* eventpad = GetEventPad();
+	if (!eventpad) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	int ret;
+	int findend = 0;
+	int getleng;
+	int pos, stepnum;
+
+	ret = eventpad->DelEPadByIndex(-1);
+	if (ret) {
+		DbgOut(L"mafile : ReadEventPad : ep DelEPadByIndex all error !!!\n");
+		_ASSERT(0);
+		return 1;
+	}
+
+	while (findend == 0) {
+		ret = GetLine(&getleng);
+		if (ret)
+			return ret;
+
+		pos = 0;
+		stepnum = 0;
+
+		if ((getleng >= 3) && (strstr(m_linechar, "}\r\n") != NULL)) {
+			findend = 1;
+		}
+		else {
+			EPAD ep;
+			ZeroMemory(&ep, sizeof(EPAD));
+
+			ret = GetInt(&ep.eventno, m_linechar, pos, MALINELENG, &stepnum);
+			if (ret) {
+				DbgOut(L"mafile : ReadEventPad : GetInt eventno error !!!\n");
+				_ASSERT(0);
+				return 1;
+			}
+			pos += stepnum;
+
+			ret = GetInt(&ep.pad, m_linechar, pos, MALINELENG, &stepnum);
+			if (ret) {
+				DbgOut(L"mafile : ReadEventPad : GetInt pad error !!!\n");
+				_ASSERT(0);
+				return 1;
+			}
+			pos += stepnum;
+
+			ret = GetInt(&ep.combono, m_linechar, pos, MALINELENG, &stepnum);
+			if (ret) {
+				DbgOut(L"mafile : ReadEventPad : GetInt combono error !!!\n");
+				_ASSERT(0);
+				return 1;
+			}
+			pos += stepnum;
+
+			if (m_moaversion >= 60) {
+				int tmpsingle = 1;
+				ret = GetInt(&tmpsingle, m_linechar, pos, MALINELENG, &stepnum);
+				if (ret) {
+					DbgOut(L"mafile : ReadEventPad : GetInt singleevent error !!!\n");
+					_ASSERT(0);
+					return 1;
+				}
+				pos += stepnum;
+
+				if (tmpsingle == 0) {
+					ep.singleevent = 0;
+				}
+				else {
+					ep.singleevent = 1;
+				}
+			}
+			else {
+				ep.singleevent = 1;
+			}
+
+			ret = eventpad->AddEPad(ep);
+			if (ret) {
+				DbgOut(L"mafile : ReadEventPad : ep AddEPad error !!!\n");
+				_ASSERT(0);
+				return 1;
+			}
+		}
+	}
+	m_state = MA_FINDCHUNK;
+
+	return 0;
+}
 
 int CMAFile::ReadTrunk()
 {
@@ -1822,6 +1977,15 @@ CEventKey* CMAFile::GetEventKey()
 {
 	if (m_model) {
 		return m_model->GetEventKey();
+	}
+	else {
+		return nullptr;
+	}
+}
+CEventPad* CMAFile::GetEventPad()
+{
+	if (m_model) {
+		return m_model->GetEventPad();
 	}
 	else {
 		return nullptr;

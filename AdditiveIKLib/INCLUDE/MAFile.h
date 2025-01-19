@@ -14,6 +14,7 @@ typedef enum tag_mastate {//ファイル入出力用
 	MA_BRANCH,
 	MA_FULENG,
 	MA_EVENTKEY,
+	MA_EVENTPAD,//2025/01/19
 	MA_FINISH,
 	MA_UNKCHUNK,
 	MA_MAX
@@ -92,6 +93,7 @@ private:
 
 	int WriteFULeng();
 	int WriteEventKey();
+	int WriteEventPad();
 	int WriteTrunk();
 	int WriteBranch();
 
@@ -109,6 +111,7 @@ private:
 
 	int ReadFULeng();
 	int ReadEventKey();
+	int ReadEventPad();
 	//int ReadTrunk( CPanda* panda = 0, int pndid = 0 );
 	int ReadTrunk();
 	int ReadBranch();
@@ -123,6 +126,7 @@ private:
 
 	CMCHandler* GetMotChangeHandler();
 	CEventKey* GetEventKey();
+	CEventPad* GetEventPad();
 
 private:
 	int m_loadtrunknum;

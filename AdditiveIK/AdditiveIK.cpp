@@ -95,6 +95,7 @@
 #include <DofDlg.h>
 #include <CpInfoDlg2.h>
 #include <EventKey.h>
+#include <EventPad.h>
 #include <MCHandler.h>
 
 #include <math.h>
@@ -118,7 +119,7 @@
 
 #include <StrMisc.h>
 
-#include "DSUpdateUnderTracking.h"
+//#include "DSUpdateUnderTracking.h"
 #include "PluginElem.h"
 
 #include "SelectLSDlg.h"
@@ -308,6 +309,7 @@ static float s_fElapsedTime = 0.0;
 static double s_befftime = 0.0;
 static double s_moaeventtime = 0.0;//最後にeventno != 0を処理した時間
 static int s_moaeventrepeats[256];
+static int s_moaeventrepeats_pad[MOA_PADNUM];
 static double s_mousemoveBefTime = 0.0;
 static double s_fps100[FPSSAVENUM];
 static int s_fps100index = 0;
@@ -716,10 +718,11 @@ static RECT s_rcmodelpanel;
 static RECT s_rcmotionpanel;
 static RECT s_rccamerapanel;
 
+//2025/01/19 次の３つのゲームパッド用定数はcoef.hに移動
+//#define MB3D_DSBUTTONNUM	14
+//#define MB3D_DSAXISNUM		6
+//#define MB3D_DSAXISSRH		(0.70f)
 
-#define MB3D_DSBUTTONNUM	14
-#define MB3D_DSAXISNUM		6
-#define MB3D_DSAXISSRH		(0.70f)
 static int s_curaimbarno = -1;
 static int s_dsdeviceid = -1;
 static int s_currentwndid = 0;
@@ -4233,6 +4236,7 @@ void InitApp()
 	s_fElapsedTime = 0.0;
 	s_moaeventtime = 0.0;//最後にeventno != 0を処理した時間
 	ZeroMemory(&s_moaeventrepeats, sizeof(int) * 256);
+	ZeroMemory(&s_moaeventrepeats_pad, sizeof(int) * MOA_PADNUM);
 
 
 	int saveno;
@@ -34701,7 +34705,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.36 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.37 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -36876,6 +36880,7 @@ void GetDSValues()
 
 		if (GetButtonDown(s_dsdeviceid, buttonno)) {
 			s_dsbuttondown[buttonno] = GetButtonDown(s_dsdeviceid, buttonno);
+			int dbgflag1 = 1;
 		}
 		else {
 			s_dsbuttondown[buttonno] = 0;
@@ -36883,6 +36888,7 @@ void GetDSValues()
 
 		if (GetButtonUp(s_dsdeviceid, buttonno)) {
 			s_dsbuttonup[buttonno] = GetButtonUp(s_dsdeviceid, buttonno);
+			int dbgflag2 = 1;
 		}
 		else {
 			s_dsbuttonup[buttonno] = 0;
@@ -36909,6 +36915,14 @@ void GetDSValues()
 
 		s_dsaxisOverTh[axisno] = (int)(s_dsaxisvalue[axisno] >= MB3D_DSAXISSRH);
 		s_dsaxisMOverTh[axisno] = (int)(s_dsaxisvalue[axisno] <= -(MB3D_DSAXISSRH));
+
+		if (s_dsaxisOverTh[axisno] != 0) {
+			int dbgflag3 = 1;
+		}
+		if (s_dsaxisMOverTh[axisno] != 0) {
+			int dbgflag4 = 1;
+		}
+
 	}
 
 
@@ -38064,7 +38078,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.36 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.37 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && s_chascene) {
@@ -46407,6 +46421,10 @@ int SetNewPoseByMoa(double* pnextframe)
 	if (!eventkey) {
 		return 0;
 	}
+	CEventPad* eventpad = currentmodel->GetEventPad();
+	if (!eventpad) {
+		return 0;
+	}
 	CMCHandler* mch = currentmodel->GetMotChangeHandler();
 	if (!mch) {
 		return 0;
@@ -46441,13 +46459,47 @@ int SetNewPoseByMoa(double* pnextframe)
 			//初期化は別ループで
 		//}
 	}
-
 	for (cno = 0; cno < 256; cno++) {
 		if ((findindex >= 0) && (cno != findindex)) {
 			//採用イベント以外のリピート情報を初期化　2025/01/12
 			s_moaeventrepeats[cno] = 0;
 		}
 	}
+
+	//#############################################################
+	//キーボード入力が無くゲームパッドSonyDualSenseが接続認識されている場合
+	//#############################################################
+	if ((eventno == 0) && (g_enableDS == true)) {
+		int padno;
+		for (padno = 0; padno < MOA_PADNUM; padno++) {
+			if (s_dsbuttondown[padno]) {
+				if (s_bef_dsbuttondown[padno]) {
+					s_moaeventrepeats_pad[padno] = s_moaeventrepeats_pad[padno] + 1;//２回目以降
+				}
+				else {
+					s_moaeventrepeats_pad[padno] = 1;//初回
+				}
+				eventno = eventpad->GetEventNo(padno, s_moaeventrepeats_pad[padno]);
+				//_ASSERT( 0 );
+				//if (eventno != 0) {
+				//	int dbgflag1 = 1;
+				//}
+				findindex = padno;//moaeventrepeats初期化時のヒント用
+				break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
+			}
+			//else {
+				//s_moaeventrepeats_pad[padno] = 0;
+				//初期化は別ループで
+			//}
+		}
+		for (padno = 0; padno < MOA_PADNUM; padno++) {
+			if ((findindex >= 0) && (padno != findindex)) {
+				//採用イベント以外のリピート情報を初期化　2025/01/12
+				s_moaeventrepeats_pad[padno] = 0;
+			}
+		}
+	}
+
 
 
 	//////////////		

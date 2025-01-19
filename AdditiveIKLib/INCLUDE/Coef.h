@@ -24,6 +24,42 @@ class CMQOMaterial;
 #define	u_long	unsigned long
 
 
+//######################
+//GamePad SonyDualSense
+//######################
+#define MB3D_DSAXISSRH		(0.70f)
+enum {//s_dsbuttondown[], s_dsbuttonup[]のインデックス
+	//順番はGameController Sony Dual Senseの設定に依るので変更しないように.
+	//ボタン
+	MB3D_DSBUTTON_SQUARE,
+	MB3D_DSBUTTON_X,
+	MB3D_DSBUTTON_O,
+	MB3D_DSBUTTON_TRIANGLE,
+	MB3D_DSBUTTON_CROSS_UP,
+	MB3D_DSBUTTON_CROSS_RIGHT,
+	MB3D_DSBUTTON_CROSS_DOWN,
+	MB3D_DSBUTTON_CROSS_LEFT,
+	MB3D_DSBUTTON_L1,
+	MB3D_DSBUTTON_R1,
+	MB3D_DSBUTTON_LEFTINFO,
+	MB3D_DSBUTTON_RIGHTINFO,
+	MB3D_DSBUTTON_L3,
+	MB3D_DSBUTTON_R3,
+	MB3D_DSBUTTONNUM
+};
+enum {//s_dsaxisvalue[], s_dsaxisOverTh[], s_dsaxisMOverTh[]のインデックス
+	//順番はGameController Sony Dual Senseの設定に依るので変更しないように.
+	//アナログスティック
+	MB3D_DSAXIS_RIGHT_LR,
+	MB3D_DSAXIS_RIGHT_UPDOWN,
+	MB3D_DSAXIS_LEFT_LR,
+	MB3D_DSAXIS_LEFT_UPDOWN,
+	MB3D_DSAXIS_L2,
+	MB3D_DSAXIS_R2,
+	MB3D_DSAXISNUM
+};
+#define MOA_PADNUM (MB3D_DSBUTTONNUM + MB3D_DSAXISNUM)
+
 //#####################
 //ID_RMENU_0を足して使う
 //#####################
@@ -509,6 +545,27 @@ typedef struct tag_ekey
 		Init();
 	};
 }EKEY;
+
+typedef struct tag_epad
+{
+	int eventno;
+	//int key;
+	int pad;
+	int combono;
+	int validflag;
+	int singleevent;
+
+	void Init() {
+		eventno = 0;
+		pad = 0;
+		combono = 0;
+		validflag = 0;
+		singleevent = 0;
+	};
+	tag_epad() {
+		Init();
+	};
+}EPAD;
 
 enum {//For OverWrite. ChkOWDlg.h, cpp
 	OW_YES,
