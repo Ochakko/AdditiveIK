@@ -2,14 +2,21 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/01/25
+　AdditiveIK 1.0.0.37 RC1(リリース候補1)
+　　1.0.0.36からの変更点
+　　　MOA2.0のゲームパッド対応
+　　　　PCにSonyDualSenseを接続してMOAプレートメニューで設定してプレイ
+　　　サンプル更新
+　　　　Test/1_MOA_B2_3
+
+
 2025/01/19
 　MOA2.0をゲームパッドSonyDualSesnseに対応させました
 　　PCにつないだSony DualSenseに対応
 
 　ゲームパッドの設定をしたテストモデル
 　　Test/1_MOA_B2_3
-
-
 
 2025/01/16
 　README.mdの絵の差し替え

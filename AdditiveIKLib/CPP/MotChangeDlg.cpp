@@ -100,6 +100,8 @@ void CMotChangeDlg::InitParams()
 
 	m_eventno = 1;
 	m_combono = 0;
+	m_eventnopad = 1;
+	m_combonopad = 0;
 	//if( papp->m_mhandler ){
 	//	m_fuleng = papp->m_mhandler->m_fuleng;
 	//}else{
@@ -110,6 +112,7 @@ void CMotChangeDlg::InitParams()
 	ZeroMemory(m_cpelem, sizeof(MCELEM) * MAXMCCOPYNUM);
 
 	m_singleevent = 1;
+	m_singleeventpad = 1;
 }
 void CMotChangeDlg::DestroyObjs()
 {
@@ -300,20 +303,28 @@ LRESULT CMotChangeDlg::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 	m_dlg_wnd = m_hWnd;
 	m_tree_wnd = GetDlgItem( IDC_TREE1 );
 	_ASSERT(m_tree_wnd);
+
 	m_list_wnd = GetDlgItem( IDC_LIST1 );
 	_ASSERT(m_list_wnd);
 	m_event_wnd = GetDlgItem( IDC_EVENT );
 	_ASSERT(m_event_wnd);
 	m_combokey_wnd = GetDlgItem( IDC_COMBOKEY );
 	_ASSERT(m_combokey_wnd);
+
+	m_listpad_wnd = GetDlgItem(IDC_LIST3);
+	_ASSERT(m_listpad_wnd);
+	m_eventpad_wnd = GetDlgItem(IDC_EVENT2);
+	_ASSERT(m_eventpad_wnd);
+	m_combokeypad_wnd = GetDlgItem(IDC_COMBOKEY2);
+	_ASSERT(m_combokeypad_wnd);
+
 	m_comboidle_wnd = GetDlgItem( IDC_COMBOIDLE );
 	_ASSERT(m_comboidle_wnd);
 	m_fuleng_wnd = GetDlgItem( IDC_FULENG );
 	_ASSERT(m_fuleng_wnd);
-	m_listpad_wnd = GetDlgItem(IDC_LIST3);
-	_ASSERT(m_listpad_wnd);
 
 	InitComboKey();
+	InitComboKeyPad();
 	CreateImageList();
 
 //	ret = FillTree();
@@ -619,13 +630,21 @@ int CMotChangeDlg::ParamsToDlg()
 
 	swprintf_s( mes, 256, L"%d", m_eventno );
 	m_event_wnd.SetWindowText( mes );
-
 	m_combokey_wnd.SendMessage( CB_SETCURSEL, m_combono, 0 );
-
 	if( m_singleevent ){
 		::CheckDlgButton( m_dlg_wnd, IDC_SINGLEEVENT, BST_CHECKED );
 	}else{
 		::CheckDlgButton( m_dlg_wnd, IDC_SINGLEEVENT, BST_UNCHECKED );
+	}
+
+	swprintf_s(mes, 256, L"%d", m_eventnopad);
+	m_eventpad_wnd.SetWindowText(mes);
+	m_combokeypad_wnd.SendMessage(CB_SETCURSEL, m_combonopad, 0);
+	if (m_singleeventpad) {
+		::CheckDlgButton(m_dlg_wnd, IDC_SINGLEEVENT2, BST_CHECKED);
+	}
+	else {
+		::CheckDlgButton(m_dlg_wnd, IDC_SINGLEEVENT2, BST_UNCHECKED);
 	}
 
 	return 0;
@@ -1689,7 +1708,17 @@ int CMotChangeDlg::InitComboKey()
 	}
 	m_combokey_wnd.SendMessage(CB_SETCURSEL, 0, 0);
 
+	return 0;
+}
+int CMotChangeDlg::InitComboKeyPad()
+{
+	m_combokeypad_wnd.SendMessage(CB_RESETCONTENT, 0, 0);
 
+	int kno;
+	for (kno = 0; kno < MOA_PADNUM; kno++) {
+		m_combokeypad_wnd.SendMessage(CB_ADDSTRING, 0, (LPARAM) & (s_strpad[kno][0]));
+	}
+	m_combokeypad_wnd.SendMessage(CB_SETCURSEL, 0, 0);
 
 	return 0;
 }
@@ -2267,6 +2296,267 @@ LRESULT CMotChangeDlg::OnAllDelList(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
 
 	return 0;
 }
+
+
+LRESULT CMotChangeDlg::OnAddList2(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	if (g_previewFlag != 0) {
+		return 0;
+	}
+
+	if (!m_chascene) {
+		_ASSERT(0);
+		return 1;
+	}
+	CModel* currentmodel = GetCurrentModel();
+	if (!currentmodel) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int ret;
+	ret = currentmodel->CreateMotChangeHandlerIfNot();
+	if (ret) {
+		DbgOut(L"motchangedlg : OnAddList2 : CreateMotChangeHandlerIfNot error !!!\n");
+		_ASSERT(0);
+		return 1;
+	}
+
+	CMCHandler* mch = currentmodel->GetMotChangeHandler();
+	if (!mch) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int motnum = currentmodel->GetMotInfoSize();
+	if (motnum <= 0) {
+		return 0;
+	}
+	CEventPad* epptr = currentmodel->GetEventPad();
+	if (!epptr) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int tmpint;
+	EPAD ep;
+	ep.Init();
+
+	ret = GetInt(m_eventpad_wnd, &tmpint);
+	if (ret || (tmpint <= 0)) {
+		::MessageBox(m_hWnd, L"イベント番号が不正です。０より大きい整数を書いてください。", L"入力エラー", MB_OK);
+		return 0;
+	}
+	ep.eventno = tmpint;
+
+	int combono;
+	combono = (int)m_combokeypad_wnd.SendMessage(CB_GETCURSEL, 0, 0);
+	if (combono == CB_ERR) {
+		_ASSERT(0);
+		return 0;
+	}
+	if ((combono < 0) || (combono >= MOA_PADNUM)) {
+		_ASSERT(0);
+		return 0;
+	}
+	m_combono = combono;
+	ep.combono = combono;
+	ep.pad = s_vkpad[combono];
+
+	UINT ischecked;
+	ischecked = m_dlg_wnd.IsDlgButtonChecked(IDC_SINGLEEVENT2);
+	if (ischecked == BST_CHECKED) {
+		ep.singleevent = 1;
+	}
+	else {
+		ep.singleevent = 0;
+	}
+
+	if (epptr->GetPadNum() >= 255) {
+		::MessageBox(m_hWnd, L"イベントキーは２５６個までしか作成できません。", L"エラー", MB_OK);
+		return 0;
+	}
+
+	int kindex = -1;
+	epptr->CheckSamePad(ep.pad, &kindex);
+
+	int doadd = 1;
+
+	if (kindex >= 0) {
+		int dlgret;
+		dlgret = (int)::MessageBox(m_hWnd, L"同じキーが既に使われています。削除してから新規に作成しますか？", L"確認", MB_OKCANCEL);
+		if (dlgret == IDOK) {
+
+			LRESULT lret;
+			lret = m_listpad_wnd.SendMessage(LB_DELETESTRING, (WPARAM)kindex, 0);
+			if (lret == LB_ERR) {
+				_ASSERT(0);
+				return 1;
+			}
+
+			ret = epptr->DelEPadByIndex(kindex);
+			if (ret) {
+				DbgOut(L"mcdlg : OnAddList2 : ek DelEPadByIndex error !!!\n");
+				_ASSERT(0);
+				return 1;
+			}
+		}
+		else {
+			doadd = 0;
+		}
+	}
+
+	if (doadd == 1) {
+		ret = epptr->AddEPad(ep);
+		if (ret) {
+			DbgOut(L"mcldg : OnAddList2 : ek AddEPad error !!!\n");
+			_ASSERT(0);
+			return 1;
+		}
+		LRESULT lres;
+
+		WCHAR singlestr[256];
+		if (ep.singleevent == 1) {
+			swprintf_s(singlestr, 256, L"単発：");
+		}
+		else {
+			swprintf_s(singlestr, 256, L"長押：");
+		}
+
+		WCHAR mes[256];
+		swprintf_s(mes, 256, L"%s eventno : %d, key : %s", singlestr, ep.eventno, &(s_strpad[ep.combono][0]));
+		lres = m_listpad_wnd.SendMessage(LB_ADDSTRING, 0, (LPARAM)mes);
+		if ((lres == LB_ERR) || (lres == LB_ERRSPACE)) {
+			_ASSERT(0);
+			return 1;
+		}
+	}
+
+	return 0;
+}
+LRESULT CMotChangeDlg::OnDelList2(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	if (g_previewFlag != 0) {
+		return 0;
+	}
+
+	if (!m_chascene) {
+		_ASSERT(0);
+		return 1;
+	}
+	CModel* currentmodel = GetCurrentModel();
+	if (!currentmodel) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int ret;
+	ret = currentmodel->CreateMotChangeHandlerIfNot();
+	if (ret) {
+		DbgOut(L"motchangedlg : OnDelList2 : CreateMotChangeHandlerIfNot error !!!\n");
+		_ASSERT(0);
+		return 1;
+	}
+
+	CMCHandler* mch = currentmodel->GetMotChangeHandler();
+	if (!mch) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int motnum = currentmodel->GetMotInfoSize();
+	if (motnum <= 0) {
+		return 0;
+	}
+	CEventPad* epptr = currentmodel->GetEventPad();
+	if (!epptr) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	int selindex;
+	selindex = (int)m_listpad_wnd.SendMessage(LB_GETCURSEL, 0, 0);
+	if (selindex == LB_ERR) {
+		//何も選択していないときもLB_ERRが返る
+		::MessageBox(m_hWnd, L"リストの要素を選択してから削除ボタンを押してください。", L"警告", MB_OK);
+		return 0;
+	}
+	if ((selindex < 0) || (selindex >= 40)) {
+		_ASSERT(0);
+		return -1;
+	}
+
+	ret = (int)m_listpad_wnd.SendMessage(LB_DELETESTRING, (WPARAM)selindex, 0);
+	if (ret == LB_ERR) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	ret = epptr->DelEPadByIndex(selindex);
+	if (ret) {
+		DbgOut(L"mcdlg : OnDelList2 : ek DelEPadByIndex error !!!\n");
+		_ASSERT(0);
+		return 1;
+	}
+
+	return 0;
+}
+LRESULT CMotChangeDlg::OnAllDelList2(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	if (g_previewFlag != 0) {
+		return 0;
+	}
+
+	if (!m_chascene) {
+		_ASSERT(0);
+		return 1;
+	}
+	CModel* currentmodel = GetCurrentModel();
+	if (!currentmodel) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int ret;
+	ret = currentmodel->CreateMotChangeHandlerIfNot();
+	if (ret) {
+		DbgOut(L"motchangedlg : OnAllDelList2 : CreateMotChangeHandlerIfNot error !!!\n");
+		_ASSERT(0);
+		return 1;
+	}
+
+	CMCHandler* mch = currentmodel->GetMotChangeHandler();
+	if (!mch) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int motnum = currentmodel->GetMotInfoSize();
+	if (motnum <= 0) {
+		return 0;
+	}
+	CEventPad* epptr = currentmodel->GetEventPad();
+	if (!epptr) {
+		_ASSERT(0);
+		return 1;
+	}
+
+
+	m_listpad_wnd.SendMessage(LB_RESETCONTENT, 0, 0);
+
+	ret = epptr->DelEPadByIndex(-1);
+	if (ret) {
+		DbgOut(L"mcdlg : OnAllDelList2 : ek DelEPadByIndex error !!!\n");
+		_ASSERT(0);
+		return 1;
+	}
+
+	return 0;
+}
+
+
+
 LRESULT CMotChangeDlg::OnApplyFULeng(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	
