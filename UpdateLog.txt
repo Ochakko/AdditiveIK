@@ -2,6 +2,15 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/02/02
+　ゲームコントローラSonyDualSense接続時の描画速度低下を回避
+　　DualSenseを接続してモーションを再生すると描画速度が低下していた
+　　例えば120fpsが83fpsにまで落ちていた
+　　現在バイブレーション機能を使用していないのでアプリケーションとしてのデバイスへの書き込みをスキップしたところ
+　　描画速度が低下しなくなった
+
+
+
 2025/01/25
 　AdditiveIK 1.0.0.37 relase
 　　1.0.0.36からの変更点

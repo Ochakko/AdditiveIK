@@ -150,6 +150,6 @@ int CFilterDlg::SetCombo()
 
 LRESULT CFilterDlg::OnTimer(UINT, WPARAM, LPARAM, BOOL&)
 {
-	OnDSUpdate();
+	//OnDSUpdate();
 	return TRUE;
 }

@@ -823,7 +823,7 @@ LRESULT CFrameCopyDlg::OnSelCombo(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 
 LRESULT CFrameCopyDlg::OnTimer(UINT, WPARAM, LPARAM, BOOL&)
 {
-	OnDSUpdate();
+	//OnDSUpdate();
 	return TRUE;
 }
 

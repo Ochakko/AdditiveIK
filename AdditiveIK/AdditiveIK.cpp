@@ -15612,10 +15612,10 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			return FALSE;
 		}
 		break;
-	case WM_TIMER:
-		OnDSUpdate();
-		return FALSE;
-		break;
+	//case WM_TIMER:
+	//	OnDSUpdate();
+	//	return FALSE;
+	//	break;
 	case WM_CLOSE:
 		s_mqodlghwnd = 0;
 		g_tmpmqopath[0] = 0L;
@@ -15750,10 +15750,10 @@ LRESULT CALLBACK OpenBvhDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			return FALSE;
 		}
 		break;
-	case WM_TIMER:
-		OnDSUpdate();
-		return FALSE;
-		break;
+	//case WM_TIMER:
+	//	OnDSUpdate();
+	//	return FALSE;
+	//	break;
 	case WM_CLOSE:
 		s_bvhdlghwnd = 0;
 		KillTimer(hDlgWnd, s_openbvhproctimer);
@@ -15875,9 +15875,9 @@ LRESULT CALLBACK MotPropDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			return FALSE;
 		}
 		break;
-	case WM_TIMER:
-		OnDSUpdate();
-		break;
+	//case WM_TIMER:
+	//	OnDSUpdate();
+	//	break;
 	case WM_CLOSE:
 		KillTimer(hDlgWnd, s_motproptimerid);
 		s_motpropdlghwnd = 0;
@@ -16244,10 +16244,10 @@ LRESULT CALLBACK SaveGcoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			return FALSE;
 		}
 		break;
-	case WM_TIMER:
-		OnDSUpdate();
-		return FALSE;
-		break;
+	//case WM_TIMER:
+	//	OnDSUpdate();
+	//	return FALSE;
+	//	break;
 	case WM_CLOSE:
 		s_savegcodlghwnd = 0;
 		KillTimer(hDlgWnd, s_savegcoproctimer);
@@ -16374,10 +16374,10 @@ LRESULT CALLBACK SaveImpDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			return FALSE;
 		}
 		break;
-	case WM_TIMER:
-		OnDSUpdate();
-		return FALSE;
-		break;
+	//case WM_TIMER:
+	//	OnDSUpdate();
+	//	return FALSE;
+	//	break;
 	case WM_CLOSE:
 		s_saveimpdlghwnd = 0;
 		KillTimer(hDlgWnd, s_saveimpproctimer);
@@ -16508,10 +16508,10 @@ LRESULT CALLBACK SaveREDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			return FALSE;
 		}
 		break;
-	case WM_TIMER:
-		OnDSUpdate();
-		return FALSE;
-		break;
+	//case WM_TIMER:
+	//	OnDSUpdate();
+	//	return FALSE;
+	//	break;
 	case WM_CLOSE:
 		s_saveredlghwnd = 0;
 		KillTimer(hDlgWnd, s_savereproctimer);
@@ -16640,10 +16640,10 @@ LRESULT CALLBACK ExportXDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			return FALSE;
 		}
 		break;
-	case WM_TIMER:
-		OnDSUpdate();
-		return FALSE;
-		break;
+	//case WM_TIMER:
+	//	OnDSUpdate();
+	//	return FALSE;
+	//	break;
 	case WM_CLOSE:
 		s_exportxdlghwnd = 0;
 		KillTimer(hDlgWnd, s_exportxproctimer);
@@ -19176,10 +19176,10 @@ LRESULT CALLBACK SaveChaDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 			return FALSE;
 		}
 		break;
-	case WM_TIMER:
-		OnDSUpdate();
-		return FALSE;
-		break;
+	//case WM_TIMER:
+	//	OnDSUpdate();
+	//	return FALSE;
+	//	break;
 	case WM_CLOSE:
 		s_savechadlghwnd = 0;
 		KillTimer(hDlgWnd, s_savechaproctimer);
@@ -34705,7 +34705,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.37 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.38 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -36782,12 +36782,9 @@ void OnDSUpdate()
 
 	if (!g_enableDS || (s_dsdeviceid < 0) || (s_dsdeviceid >= 3)) {
 		//DS deviceが無い場合にはDS関数でキーボードの矢印キーに対応
-
 		OnArrowKey();
-
-		return;
+		return;//!!!!!
 	}
-
 
 	GetDSValues();
 
@@ -36867,11 +36864,24 @@ void GetDSValues()
 		return;
 	}
 
-	UpdateInputReport();
-	SendOutput(0);
+	UpdateInputReport();//必須　アプリケーションとしてのデバイスのReadFile
+	
+	//#############
+	//2025/02/02
+	//#############
+	//SendOutput()をコメントアウト
+	//SendOutputを呼び出すとフレームレートが落ちた　例えば120fps程の表示速度が83fpsにまで落ちた
+	//VisualStudioから実行する場合にはフレームレートは落ちなかった
+	//現状、ユーザーからSonyDualSenseへのバイブレーション出力などはしていないため
+	//SendOutputはスキップすることにした
+	//これによりSonyDualSense接続時にも表示速度が落ちなくなった
+	//SendOutput(0);//今のところ必須ではない　アプリケーションとしてのデバイスへのWriteFile
+
 
 	//bool GetButtonDown(int id, UCHAR key);
 	//bool GetButtonUp(int id, UCHAR key);
+
+
 
 	int buttonno;
 	for (buttonno = 0; buttonno < MB3D_DSBUTTONNUM; buttonno++) {
@@ -38078,7 +38088,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.37 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.38 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && s_chascene) {
@@ -40328,6 +40338,7 @@ void OnArrowKey()
 			arrowkeypushed = true;
 		}
 	}
+
 
 	if (arrowkeypushed == true) {
 		bool firstctrlselect = false;

@@ -224,6 +224,6 @@ LRESULT CGColiIDDlg::OnDel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHand
 
 LRESULT CGColiIDDlg::OnTimer(UINT, WPARAM, LPARAM, BOOL&)
 {
-	OnDSUpdate();
+	//OnDSUpdate();
 	return TRUE;
 }
