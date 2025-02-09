@@ -27,7 +27,8 @@ class CMQOMaterial;
 //######################
 //GamePad SonyDualSense
 //######################
-#define MB3D_DSAXISSRH		(0.70f)
+#define MB3D_DSAXISSRH		(0.10f)
+
 enum {//s_dsbuttondown[], s_dsbuttonup[]のインデックス
 	//順番はGameController Sony Dual Senseの設定に依るので変更しないように.
 	//ボタン

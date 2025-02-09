@@ -1199,6 +1199,8 @@ public:
 
 	int GetChildCameraBoneAndNode(CBone* enullbone, CBone** ppbone, FbxNode** ppnode);
 
+	ChaMatrix Move2HipsPos(int nextmotid, double nextframe);
+	ChaMatrix RotMocapWalk(double srcrot);
 
 private:
 	int InitParams();
@@ -3237,6 +3239,14 @@ public: //accesser
 	int GetMoaRand1() {
 		return m_moa_rand1;
 	};
+
+	void SetMocapWalkFlag(bool srcflag) {
+		m_mocapwalk = srcflag;
+	};
+	bool GetMocapWalkFlag() {
+		return m_mocapwalk;
+	};
+
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];
@@ -3468,6 +3478,8 @@ private:
 	int m_moa_freezecount;
 	int m_moa_fillupcount;
 	int m_moa_rand1;
+
+	bool m_mocapwalk;
 };
 
 

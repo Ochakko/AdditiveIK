@@ -701,6 +701,8 @@ int CModel::InitParams()
 	m_moa_fillupcount = 0;
 	m_moa_rand1 = 0;
 
+	m_mocapwalk = false;
+
 	return 0;
 }
 
@@ -24421,4 +24423,52 @@ int CModel::CalcFillupTarget(int nextmotid, int filluppoint, double motionrate1,
 	return 0;
 }
 
+ChaMatrix CModel::Move2HipsPos(int nextmotid, double nextframe)
+{
+	ChaMatrix wm = m_matWorld;
+	ChaVector3 savepos = ChaMatrixTraVec(wm);
 
+	CBone* hipsbone = nullptr;
+	GetHipsBoneReq(GetTopBone(false), &hipsbone);
+	if (!hipsbone) {
+		return wm;
+	}
+
+	ChaMatrix currenthipswm = hipsbone->GetCurMp().GetWorldMat();
+	ChaVector3 currenthipspos = ChaMatrixTraVec(currenthipswm);
+	ChaMatrix nexthipsanimmat = hipsbone->GetWorldMat(g_limitdegflag, nextmotid, nextframe, nullptr);
+	ChaVector3 nexthipsanimpos = ChaMatrixTraVec(nexthipsanimmat);
+
+	//ChaMatrix nextwm;
+	//nexthipsanimmat* nextwm = currenthipswm;
+	//nextwm = ChaMatrixInv(nexthipsanimmat) * currenthipswm;
+	//ChaVector3 nextpos = ChaMatrixTraVec(nextwm);
+
+	ChaVector3 pos;
+	//nexthipsanimpos + pos = currenthipspos;
+	pos = currenthipspos - nexthipsanimpos;
+	pos.y = savepos.y;
+	wm.SetTranslation(pos);
+
+	SetWorldMat(wm);
+
+	return wm;
+}
+ChaMatrix CModel::RotMocapWalk(double srcrot)
+{
+	ChaMatrix wm = m_matWorld;
+	ChaVector3 pos = ChaMatrixTraVec(wm);
+	wm.SetTranslationZero();
+
+	float maxrotval = 0.20f;
+
+	ChaMatrix roty;
+	roty.SetIdentity();
+	roty.SetXYZRotation(nullptr, ChaVector3(0.0f, maxrotval * (float)-srcrot, 0.0f));
+	wm = roty * wm;
+	wm.SetTranslation(pos);
+
+	SetWorldMat(wm);
+
+	return wm;
+}

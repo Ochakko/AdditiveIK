@@ -2,6 +2,15 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/02/10
+　MocapWalkLoop機能追加
+　　全体移動が含まれている歩くモーキャプループモーションを前提にして移動させます
+　　SonyDualSenseの左アナログスティックで歩くことを想定
+　　MocapWalkLoop機能はMOA2.0機能の一部です　　
+
+　　サンプルモデル
+　　　Test/1_MOA_B2_6
+
 
 2025/02/09
 　不具合修正

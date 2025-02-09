@@ -721,7 +721,7 @@ static RECT s_rccamerapanel;
 //2025/01/19 次の３つのゲームパッド用定数はcoef.hに移動
 //#define MB3D_DSBUTTONNUM	14
 //#define MB3D_DSAXISNUM		6
-//#define MB3D_DSAXISSRH		(0.70f)
+//#define MB3D_DSAXISSRH		(0.10f)
 
 static int s_curaimbarno = -1;
 static int s_dsdeviceid = -1;
@@ -46460,7 +46460,7 @@ int SetNewPoseByMoa(double* pnextframe)
 		if (g_keybuf[cno] & 0x80) {
 			if (g_savekeybuf[cno] & 0x80) {
 				s_moaeventrepeats[cno] = s_moaeventrepeats[cno] + 1;//２回目以降
-			}
+			} 
 			else {
 				s_moaeventrepeats[cno] = 1;//初回
 			}
@@ -46493,46 +46493,93 @@ int SetNewPoseByMoa(double* pnextframe)
 	//注意 EVENTPAD.padの値は　0からMOA_PADNUM(20)
 
 	if ((eventno == 0) && (g_enableDS == true)) {
-		int padno;
-		for (padno = 0; padno < MOA_PADNUM; padno++) {
-			if (padno < MB3D_DSBUTTONNUM) {
-				if (s_dsbuttondown[padno]) {
-					if (s_bef_dsbuttondown[padno]) {
-						s_moaeventrepeats_pad[padno] = s_moaeventrepeats_pad[padno] + 1;//２回目以降
-					}
-					else {
-						s_moaeventrepeats_pad[padno] = 1;//初回
-					}
-					eventno = eventpad->GetEventNo(padno, s_moaeventrepeats_pad[padno]);
-					findindex = padno;//moaeventrepeats初期化時のヒント用
-					break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
-				}
+
+		if ((s_dsaxisOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) || (s_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0)) {
+			
+			//MocapWalkLoop
+				
+			int padno_leftud = MB3D_DSBUTTONNUM + MB3D_DSAXIS_LEFT_UPDOWN;
+			if ((s_bef_dsaxisOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) || (s_bef_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0)) {
+				s_moaeventrepeats_pad[padno_leftud] = s_moaeventrepeats_pad[padno_leftud] + 1;//２回目以降
 			}
 			else {
-				//####################################################################
-				//アナログスティックはボタンと併用することがある　今回は排他的にどちらかだけに対応
-				//####################################################################
-				int analogno = padno - MB3D_DSBUTTONNUM;
-				if ((s_dsaxisOverTh[analogno] != 0) || (s_dsaxisMOverTh[analogno] != 0)){
-					//float value = s_dsaxisvalue[analogno];
-					if ((s_bef_dsaxisOverTh[analogno] != 0) || (s_bef_dsaxisMOverTh[analogno] != 0)) {
-						s_moaeventrepeats_pad[padno] = s_moaeventrepeats_pad[padno] + 1;//２回目以降
+				s_moaeventrepeats_pad[padno_leftud] = 1;//初回
+			}
+			eventno = eventpad->GetEventNo(padno_leftud, s_moaeventrepeats_pad[padno_leftud]);
+			findindex = padno_leftud;//moaeventrepeats初期化時のヒント用
+
+			if (eventno != 0) {
+				currentmodel->SetMocapWalkFlag(true);
+			}
+		}
+		else {
+			int padno;
+			for (padno = 0; padno < MOA_PADNUM; padno++) {
+
+				if (padno < MB3D_DSBUTTONNUM) {
+					if (s_dsbuttondown[padno]) {
+						if (s_bef_dsbuttondown[padno]) {
+							s_moaeventrepeats_pad[padno] = s_moaeventrepeats_pad[padno] + 1;//２回目以降
+						}
+						else {
+							s_moaeventrepeats_pad[padno] = 1;//初回
+						}
+						eventno = eventpad->GetEventNo(padno, s_moaeventrepeats_pad[padno]);
+						findindex = padno;//moaeventrepeats初期化時のヒント用
+						break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
 					}
-					else {
-						s_moaeventrepeats_pad[padno] = 1;//初回
+				}
+				else {
+
+					//####################################################################
+					//アナログスティックはボタンと併用することがある　今回は排他的にどちらかだけに対応
+					//####################################################################
+					int analogno = padno - MB3D_DSBUTTONNUM;
+					if ((analogno != MB3D_DSAXIS_LEFT_UPDOWN) && 
+						((s_dsaxisOverTh[analogno] != 0) || (s_dsaxisMOverTh[analogno] != 0))) {
+						//float value = s_dsaxisvalue[analogno];
+						if ((s_bef_dsaxisOverTh[analogno] != 0) || (s_bef_dsaxisMOverTh[analogno] != 0)) {
+							s_moaeventrepeats_pad[padno] = s_moaeventrepeats_pad[padno] + 1;//２回目以降
+						}
+						else {
+							s_moaeventrepeats_pad[padno] = 1;//初回
+						}
+						eventno = eventpad->GetEventNo(padno, s_moaeventrepeats_pad[padno]);
+						findindex = padno;//moaeventrepeats初期化時のヒント用
+
+
+						//2025/02/09
+						if ((eventno != 0) && (analogno == MB3D_DSAXIS_LEFT_UPDOWN)) {
+							currentmodel->SetMocapWalkFlag(true);
+						}
+
+						break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
 					}
-					eventno = eventpad->GetEventNo(padno, s_moaeventrepeats_pad[padno]);
-					findindex = padno;//moaeventrepeats初期化時のヒント用
-					break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
 				}
 			}
 		}
-		for (padno = 0; padno < MOA_PADNUM; padno++) {
-			if ((findindex >= 0) && (padno != findindex)) {
+
+		int padno2;
+		for (padno2 = 0; padno2 < MOA_PADNUM; padno2++) {
+			if ((findindex >= 0) && (padno2 != findindex)) {
 				//採用イベント以外のリピート情報を初期化　2025/01/12
-				s_moaeventrepeats_pad[padno] = 0;
+				s_moaeventrepeats_pad[padno2] = 0;
 			}
 		}
+
+
+		//MocapWalkLoop Rotation
+		if (s_dsaxisOverTh[MB3D_DSAXIS_LEFT_LR] != 0) {
+			double orgval = s_dsaxisvalue[MB3D_DSAXIS_LEFT_LR];
+			double rotval = (orgval - MB3D_DSAXISSRH) / (1.0 - MB3D_DSAXISSRH);
+			s_matWorld = currentmodel->RotMocapWalk(rotval);
+		}
+		else if (s_dsaxisMOverTh[MB3D_DSAXIS_LEFT_LR] != 0) {
+			double orgval = s_dsaxisvalue[MB3D_DSAXIS_LEFT_LR];
+			double rotval = (orgval + MB3D_DSAXISSRH) / (1.0 - MB3D_DSAXISSRH);
+			s_matWorld = currentmodel->RotMocapWalk(rotval);
+		}
+
 	}
 
 
@@ -46683,10 +46730,16 @@ int SetNewPoseByMoa(double* pnextframe)
 			else if (//(!currentmodel->GetUnderBlending()) && 
 				//(currentmodel->GetMoaNextMotId() == -1) && //モーション遷移決定後に　現在のモーションが最終フレームに来た場合には　idlingではなくnextmotidへ遷移させるので　blending中はここを通らない 
 				(curframe >= (curframeleng - 1.0 - g_endmotionMargin - 0.0001)) && (nottoidle == 0)) {
-				//############################################
-				//モーションを最後まで再生したので　アイドリングに戻す
-				//############################################
-				if ((currentmodel->GetMoaNextMotId() == -1)) {
+				//###########################################################
+				//モーションを最後まで再生したので　アイドリングに戻す　またはループする
+				//###########################################################
+				if (currentmodel->GetMocapWalkFlag()) {
+					//MocapWalk Loop
+					currentmodel->SetMoaNextMotId(currentmodel->GetCurrentMotID());
+					currentmodel->SetMoaNextFrame(1);
+					currentmodel->SetMoaStartFillUpFrame(curframe);
+				}
+				else if ((currentmodel->GetMoaNextMotId() == -1)) {
 					currentmodel->SetMoaNextMotId(idlingmotid);
 					currentmodel->SetMoaNextFrame(1);
 					currentmodel->SetMoaStartFillUpFrame(curframe);
@@ -46734,7 +46787,7 @@ int SetNewPoseByMoa(double* pnextframe)
 		int model_nextframe = currentmodel->GetMoaNextFrame();
 
 		if (model_nextmotid >= 0) {
-			if (notfu == 0) {
+			if ((notfu == 0) && (currentmodel->GetMocapWalkFlag() == false)) {
 				MOTINFO nextmi = currentmodel->GetMotInfo(model_nextmotid);
 				if (nextmi.motid > 0) {
 					//########################################################################################
@@ -46777,6 +46830,10 @@ int SetNewPoseByMoa(double* pnextframe)
 						//UnderBlendingではない場合の処理
 						//UnderBlendingの場合は　if分の最後で処理
 						//#####################################
+						if (currentmodel->GetMocapWalkFlag()) {
+							s_matWorld = currentmodel->Move2HipsPos(idlingmotid, 1.0);
+							currentmodel->SetMocapWalkFlag(false);
+						}
 						ChangeMotionWithGUI(idlingmotid);
 						currentmodel->SetMotionFrame(1.0);
 						currentmodel->SetMoaStartFillUpFrame(1.0);
@@ -46784,6 +46841,7 @@ int SetNewPoseByMoa(double* pnextframe)
 						currentmodel->SetUnderBlending(false);
 						currentmodel->SetMoaNextMotId(-1);
 						currentmodel->SetMoaFillupCount(0);
+
 					}
 					else if (currentmodel->GetUnderBlending() &&
 						(
@@ -46862,6 +46920,10 @@ int SetNewPoseByMoa(double* pnextframe)
 						//###########################
 						//補間計算終了　nextmotidへ遷移
 						//###########################
+						if (currentmodel->GetMocapWalkFlag()) {
+							s_matWorld = currentmodel->Move2HipsPos(model_nextmotid, (double)filluppoint);
+							currentmodel->SetMocapWalkFlag(false);
+						}
 						ChangeMotionWithGUI(model_nextmotid);
 						currentmodel->SetMotionFrame((double)filluppoint);
 						//currentmodel->SetMotionFrame(model_nextframe);
@@ -46878,6 +46940,10 @@ int SetNewPoseByMoa(double* pnextframe)
 						//アイドリングへ戻る
 						//UnderBlending処理の最後で処理
 						//############################
+						if (currentmodel->GetMocapWalkFlag()) {
+							s_matWorld = currentmodel->Move2HipsPos(idlingmotid, 1.0);
+							currentmodel->SetMocapWalkFlag(false);
+						}
 						ChangeMotionWithGUI(idlingmotid);
 						currentmodel->SetMotionFrame(1.0);
 						currentmodel->SetMoaStartFillUpFrame(1.0);
@@ -46903,6 +46969,10 @@ int SetNewPoseByMoa(double* pnextframe)
 				//###############################
 				//補間無しですぐにモーション遷移を実行
 				//###############################
+				if (currentmodel->GetMocapWalkFlag()) {
+					s_matWorld = currentmodel->Move2HipsPos(model_nextmotid, 1.0);
+					currentmodel->SetMocapWalkFlag(false);
+				}
 				ChangeMotionWithGUI(model_nextmotid);
 				currentmodel->SetMotionFrame(1.0);
 				currentmodel->SetMoaStartFillUpFrame(1.0);
