@@ -21,7 +21,7 @@ public:
 
 	int AddChild( int parentsetno, int srccookie, int srcalways, int srcframeno1, int srcframeno2, int srceventno1, int srcnotfu, int srcnottoidle );
 	int SetMCElem( int srcsetno, int srccookie, int srcalways, int srcframeno1, int srcframeno2, int srceventno1, int srcnotfu, int srcidling, int srcnottoidle );
-	int DeleteMCElem( int srcsetno );
+	int DeleteMCElem( int srcsetno, bool reordersetnoflag );
 
 	int DestroyObjs();
 
@@ -47,6 +47,7 @@ public:
 	int SetTrunkNotComID( int motid, int arrayleng, int* srcid );
 
 	int ExistMotIdInTrunk(int srcmotid);
+	void ReorderSetno();
 
 public:
 	int GetMCNum() {
@@ -75,7 +76,6 @@ public:
 
 private:
 	int InitParams();
-	void ReorderSetno();
 
 	int DeleteChild( MCELEM* parmce, MCELEM* chilmce );
 

@@ -212,7 +212,7 @@ int g_physicalMovableRate = 100;//2024/05/02 LimitEulオンで物理シミュを
 double g_physicalVeloScale = 0.20;//2024/05/04 LimitEulオンで物理シミュする場合の　剛体速度スケール
 
 //bool g_wmatDirectSetFlag = false;
-//bool g_underRetargetFlag = false;
+bool g_underRetargetFlag = false;
 
 float g_impscale = 1.0f;
 float g_initmass = 1.0f;
@@ -509,7 +509,7 @@ extern double g_physicalVeloScale;//2024/05/04 LimitEulオンで物理シミュ�
 
 
 //extern bool g_wmatDirectSetFlag;
-//extern bool g_underRetargetFlag;
+extern bool g_underRetargetFlag;
 
 extern float g_impscale;
 extern float g_initmass;

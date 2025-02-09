@@ -3198,12 +3198,14 @@ public: //accesser
 		return m_rokdeboneuser;
 	};
 	double GetFbxTimeScale() {
-		if (GetRokDeBoneUser()) {
-			m_fbxtimescale = 60.0;
-		}
-		else {
-			m_fbxtimescale = 30.0;
-		}
+		//if (GetRokDeBoneUser()) {
+		//	m_fbxtimescale = 60.0;//2025/02/09 新しいRokDeBone2のfbxはそのまま30.0でOK
+		//}
+		//else {
+		//	m_fbxtimescale = 30.0;
+		//}
+		
+		m_fbxtimescale = 30.0;
 		return m_fbxtimescale;
 	};
 	void SetMoaFreezeCount(int srcval) {
@@ -3244,6 +3246,7 @@ public:
 	bool m_modeldisp;//表示するかどうか
 	bool m_createbtflag;//CreateBtObjectを読んだことがあればtrue。
 	CRITICAL_SECTION m_CritSection_Node;
+	CRITICAL_SECTION m_CritSection_MCE;
 
 private:
 	bool m_inview[REFPOSMAXNUM];

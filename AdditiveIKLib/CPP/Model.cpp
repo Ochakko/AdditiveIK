@@ -485,6 +485,7 @@ static DWORD s_rigidflag = 0;
 CModel::CModel() : m_camerafbx(), m_frustum(), m_undomotion(), m_undocamera(), m_undoblendshape()
 {
 	InitializeCriticalSection(&m_CritSection_Node);
+	InitializeCriticalSection(&m_CritSection_MCE);
 
 	InitParams();
 	s_alloccnt++;
@@ -775,6 +776,10 @@ int CModel::DestroyObjs()
 		delete m_eventpad;
 		m_eventpad = nullptr;
 	}
+
+
+	DeleteCriticalSection(&m_CritSection_MCE);//2025/02/09
+
 
 	InitParams();
 
@@ -3950,6 +3955,8 @@ int CModel::DeleteMotion( int motid )
 			m_undoblendshape[undono].SetValidFlag(0);
 		}
 	}
+
+	CreateMotChangeHandlerIfNot();//2025/02/09 MOA用データ　モーションの増減に対応
 
 	ResetMotionCache();
 
@@ -24207,10 +24214,17 @@ int CModel::SetGPUInteraction(bool srcflag)
 
 int CModel::CreateMotChangeHandlerIfNot()
 {
+	//####################################################################
+	//2025/02/09 モーションのdelボタン連打で再入してエラーになることがあったので対応
+	//####################################################################
+	EnterCriticalSection(&m_CritSection_MCE);//2025/02/09
+
+
 	if (!m_mch) {
 		m_mch = new CMCHandler(this, 10);
 		if (!m_mch) {
 			_ASSERT(0);
+			LeaveCriticalSection(&m_CritSection_MCE);//2025/02/09
 			return 1;
 		}
 
@@ -24242,6 +24256,7 @@ int CModel::CreateMotChangeHandlerIfNot()
 				if (ret) {
 					DbgOut(L"CModel::CreateMotChangeHandlerIfNot : mch AddParentMC error !!!\n");
 					_ASSERT(0);
+					LeaveCriticalSection(&m_CritSection_MCE);//2025/02/09
 					return 1;
 				}
 				setno++;
@@ -24287,6 +24302,7 @@ int CModel::CreateMotChangeHandlerIfNot()
 					if (ret) {
 						DbgOut(L"CModel::CreateMotChangeHandlerIfNot : mch AddParentMC error !!!\n");
 						_ASSERT(0);
+						LeaveCriticalSection(&m_CritSection_MCE);//2025/02/09
 						return 1;
 					}
 				}
@@ -24316,14 +24332,18 @@ int CModel::CreateMotChangeHandlerIfNot()
 				int delno = delsetno[delindex];
 				if (delno > 0) {
 					int ret;
-					ret = m_mch->DeleteMCElem(delno);
+					bool reordersetnoflag = false;//2025/02/09 複数削除中にsetnoが変わらないようにする
+					ret = m_mch->DeleteMCElem(delno, reordersetnoflag);//2025/02/09 複数削除中にsetnoが変わらないようにする
 					if (ret) {
 						DbgOut(L"CModel::CreateMotChangeHandlerIfNot : mch DeleteMCElem error !!!\n");
 						_ASSERT(0);
+						LeaveCriticalSection(&m_CritSection_MCE);//2025/02/09
 						return 1;
 					}
 				}
 			}
+			m_mch->ReorderSetno();//2025/02/09 複数削除が終了してから呼ぶ
+
 		}
 	}
 
@@ -24334,6 +24354,7 @@ int CModel::CreateMotChangeHandlerIfNot()
 		m_eventkey = new CEventKey();
 		if (!m_eventkey) {
 			_ASSERT(0);
+			LeaveCriticalSection(&m_CritSection_MCE);//2025/02/09
 			return 1;
 		}
 	}
@@ -24341,10 +24362,12 @@ int CModel::CreateMotChangeHandlerIfNot()
 		m_eventpad = new CEventPad();
 		if (!m_eventpad) {
 			_ASSERT(0);
+			LeaveCriticalSection(&m_CritSection_MCE);//2025/02/09
 			return 1;
 		}
 	}
 
+	LeaveCriticalSection(&m_CritSection_MCE);//2025/02/09
 
 	return 0;
 }

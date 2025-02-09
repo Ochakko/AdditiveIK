@@ -2,6 +2,24 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2025/02/09
+　不具合修正
+　　MOA2.0実装の変更により操作中にエラーで落ちる不具合が出ていたのを修正
+　　　リターゲット中にエラー終了するのを修正
+　　　モーション削除中にエラー終了するのを修正
+　　　モーション削除後にプロジェクト保存するとエラー終了するのを修正
+　
+　サンプルモデル更新
+　　Test/1_MOA_B2_3　
+　　　RokDeBone2で出力したfbxのジョイント名を英語に.
+　　　歩くモーキャプをリターゲットしてモーション追加.
+
+　リターゲットファイル追加
+　　Test/RetargetSettingFileExample/B2eng_bvh.rtg
+　　　Test/1_MOA_B2_3のB2_eng.fbx用のリターゲットファイル
+
+
 2025/02/02
 　ゲームコントローラSonyDualSense接続時の描画速度低下を回避
 　　DualSenseを接続してモーションを再生すると描画速度が低下していた

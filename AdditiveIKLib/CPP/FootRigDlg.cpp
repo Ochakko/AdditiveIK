@@ -1979,6 +1979,12 @@ int CFootRigDlg::LoadFootRigFile(WCHAR* savechadir, WCHAR* saveprojname)
 
 int CFootRigDlg::Update(bool limitdegflag)
 {
+	if (g_underRetargetFlag) {
+		//2025/02/09 Retarget中はFootRigしない
+		return 0;
+	}
+
+
 	//###########################################################################
 	//2024/09/13 LimitEul角度制限のオンオフに対応　制限オンの時には強制的に壁すりIKもオン
 	//しかし、limiteulオフで計算した方が綺麗に動く
@@ -2006,6 +2012,11 @@ int CFootRigDlg::Update(bool limitdegflag)
 
 int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 {
+	if (g_underRetargetFlag) {
+		//2025/02/09 Retarget中はFootRigしない
+		return 0;
+	}
+
 	//#####################################################################################
 	//2024/09/13 LimitEul角度制限のオンオフに対応　制限オンの時には強制的に壁すりIKもオン
 	//しかし、limiteulオフで計算した方が綺麗に動く
@@ -2131,6 +2142,12 @@ void CFootRigDlg::FootRig(bool secondcalling,
 	CFootInfo* lowerfootinfo, CFootInfo* higherfootinfo
 )
 {
+	if (g_underRetargetFlag) {
+		//2025/02/09 Retarget中はFootRigしない
+		return;
+	}
+
+
 	//##############################################################################################
 	//2024/09/30
 	//#### 注意 ####

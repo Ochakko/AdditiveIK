@@ -86,7 +86,9 @@ int ConvEngName( int type, char* srcname, int srcleng, char* dstname, int dstlen
 		for (nameno = 0; nameno < namelen; nameno++) {
 			curc = namepm[nameno];
 			if (((curc >= 'a') && (curc <= 'z')) || ((curc >= 'A') && (curc <= 'Z')) || ((curc >= '0') && (curc <= '9')) ||
-				(curc == '_')) {
+				(curc == '_') || 
+				(curc == '[') || (curc == ']')//2025/02/08 for [L], [R]
+				) {
 				alnum = 1;
 			}
 			else {

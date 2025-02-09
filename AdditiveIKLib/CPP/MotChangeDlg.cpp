@@ -953,7 +953,8 @@ LRESULT CMotChangeDlg::OnDel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHa
 		return 0;//!!!!!!!!!!!!!!!
 	}
 
-	ret = mch->DeleteMCElem( m_selectedno );
+	bool reordersetnoflag = true;//2025/02/09
+	ret = mch->DeleteMCElem( m_selectedno, reordersetnoflag );
 	if( ret ){
 		DbgOut( L"motchangedlg : OnDel : mch DeleteMCElem error !!!\n" );
 		_ASSERT( 0 );
@@ -1366,7 +1367,8 @@ int CMotChangeDlg::DestroyMCElem( int delcookie )
 
 //DbgOut( "check !!! : motchangedlg : DestroyMCElem : delcookie %d, delsetno %d\r\n", delcookie, delsetno );
 
-		ret = mch->DeleteMCElem( delsetno );
+		bool reordersetnoflag = true;//2025/02/09
+		ret = mch->DeleteMCElem( delsetno, reordersetnoflag );
 		if( ret ){
 			DbgOut( L"motchangedlg : DestroyMCElem : mch DeleteMCElem error !!!\n" );
 			_ASSERT( 0 );

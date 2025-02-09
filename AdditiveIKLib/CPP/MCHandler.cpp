@@ -433,7 +433,7 @@ int CMCHandler::DeleteChild( MCELEM* parmce, MCELEM* chilmce )
 	return 0;
 }
 
-int CMCHandler::DeleteMCElem( int srcsetno )
+int CMCHandler::DeleteMCElem( int srcsetno, bool reordersetnoflag)
 {
 	int ret;
 	MCELEM* delmce;
@@ -462,7 +462,9 @@ int CMCHandler::DeleteMCElem( int srcsetno )
 			return 1;
 		}
 
-		ReorderSetno();
+		if (reordersetnoflag) {//2025/02/09 複数削除中にsetnoが変わらないようにする
+			ReorderSetno();
+		}
 
 	}else{
 
@@ -545,51 +547,52 @@ int CMCHandler::DeleteMCElem( int srcsetno )
 			}
 		}
 
-
-		ReorderSetno();
-
-
-		//mce->idの振りなおし
-		int* old2newid;
-		old2newid = (int*)malloc( sizeof( int ) * (m_mcnum + 1) );
-		if( !old2newid ){
-			DbgOut( L"mchandler : DeleteMCElem : old2newid alloc error !!!\n" );
-			_ASSERT( 0 );
-			return 1;
-		}
-		
-		int setno4 = 0;
-		for( mcno = 0; mcno < (m_mcnum + 1); mcno++ ){
-			if( mcno != delcookie ){
-				*(old2newid + mcno) = setno4;
-				setno4++;
-			}else{
-				*(old2newid + mcno) = -1;
-			}
+		if (reordersetnoflag) {//2025/02/09 複数削除中にsetnoが変わらないようにする
+			ReorderSetno();
 		}
 
-		for( mcno = 0; mcno < m_mcnum; mcno++ ){
-			MCELEM* curmce;
-			curmce = m_mcarray + mcno;
-			
-			curmce->id = *(old2newid + curmce->id);
-			if( curmce->id == -1 ){
-				_ASSERT( 0 );
-			}
-
-			int cno;
-			for( cno = 0; cno < curmce->childnum; cno++ ){
-				MCELEM* curchild;
-				curchild = curmce->childmc + cno;
-
-				curchild->id = *(old2newid + curchild->id);
-				if( curchild->id == -1 ){
-					_ASSERT( 0 );
-				}
-			}
-		}
-
-		free( old2newid );
+		//#######################################################
+		//2025/02/09 motionidは振り直さない　連続していない番号でも良し
+		//id振り直しはコメントアウト
+		//#######################################################
+		////mce->idの振りなおし
+		//int* old2newid;
+		//old2newid = (int*)malloc( sizeof( int ) * (m_mcnum + 1) );
+		//if( !old2newid ){
+		//	DbgOut( L"mchandler : DeleteMCElem : old2newid alloc error !!!\n" );
+		//	_ASSERT( 0 );
+		//	return 1;
+		//}	
+		//int setno4 = 0;
+		//for( mcno = 0; mcno < (m_mcnum + 1); mcno++ ){
+		//	if( mcno != delcookie ){
+		//		*(old2newid + mcno) = setno4;
+		//		setno4++;
+		//	}else{
+		//		*(old2newid + mcno) = -1;
+		//	}
+		//}
+		//for( mcno = 0; mcno < m_mcnum; mcno++ ){
+		//	MCELEM* curmce;
+		//	curmce = m_mcarray + mcno;
+		//	
+		//	curmce->id = *(old2newid + curmce->id);
+		//	if( curmce->id == -1 ){
+		//		_ASSERT( 0 );
+		//	}
+		//
+		//	int cno;
+		//	for( cno = 0; cno < curmce->childnum; cno++ ){
+		//		MCELEM* curchild;
+		//		curchild = curmce->childmc + cno;
+		//
+		//		curchild->id = *(old2newid + curchild->id);
+		//		if( curchild->id == -1 ){
+		//			_ASSERT( 0 );
+		//		}
+		//	}
+		//}
+		//free( old2newid );
 
 
 	}

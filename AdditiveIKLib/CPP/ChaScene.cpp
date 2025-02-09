@@ -864,7 +864,8 @@ void ChaScene::WaitForUpdateMatrixModels()
 	//2024/09/03
 	//UpdateMatrixの計算が終わってからFootRigのアップデートをする
 	//BtSimu中(previewFlag 4 or 5)は　Motion2Bt()からFootRigのアップデートを呼ぶ
-	if ((g_previewFlag != 4) && (g_previewFlag != 5) && m_footrigdlg) {
+	bool underRetarget = false;
+	if ((g_underRetargetFlag == false) && (g_previewFlag != 4) && (g_previewFlag != 5) && m_footrigdlg) {//2025/02/09 retarget中は実行しない
 		{
 			int modelnum = (int)m_modelindex.size();
 			int modelindex;
@@ -877,12 +878,14 @@ void ChaScene::WaitForUpdateMatrixModels()
 			}
 		}
 
-		m_footrigdlg->Update(g_limitdegflag);
+		if (g_underRetargetFlag == false) {//2025/02/09 retarget中は実行しない
+			m_footrigdlg->Update(g_limitdegflag);
+		}
 	}
 
-
+	//2025/02/09 retarget中は実行しない
 	//previewFlag == 4のときにも実行
-	{
+	if (g_underRetargetFlag == false) {
 		int modelnum = (int)m_modelindex.size();
 		int modelindex;
 		for (modelindex = 0; modelindex < modelnum; modelindex++) {

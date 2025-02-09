@@ -4214,7 +4214,7 @@ void InitApp()
 	//g_underIKRot = false;
 	//g_underIKRotApplyFrame = false;
 	g_fpsforce30 = false;
-	//g_underRetargetFlag = false;
+	g_underRetargetFlag = false;
 	s_smoothBefRetarget = false;
 
 	g_underWriteFbx = false;
@@ -9784,6 +9784,7 @@ int RetargetBatch()
 		if (outnum > 0)
 		{
 			InterlockedExchange(&g_retargetbatchflag, (LONG)1);
+			g_underRetargetFlag = true;
 
 			CreateDialogW((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG2), NULL, (DLGPROC)RetargetBatchDlgProc);
 			RECT rect;
@@ -12604,6 +12605,7 @@ int AddMotion(const WCHAR* wfilename, double srcmotleng)
 	CallF(GetCurrentModel()->AddMotion(motionname, addwfilename, motleng, &newmotid), return 1);
 	//_ASSERT(0);
 
+	GetCurrentModel()->CreateMotChangeHandlerIfNot();//2025/02/09 MOA用データ　モーションの増減に対応
 
 
 	CallF(AddTimeLine(newmotid, true), return 1);
@@ -18361,12 +18363,11 @@ int RetargetMotion()
 		s_retargetdlg.GetRetargetBvh(), s_matView, s_matProj, convbonemap, AddMotion);
 	if (result) {
 		_ASSERT(0);
-		//g_underRetargetFlag = false;
+		g_underRetargetFlag = false;//エラーの時もフラグリセット
 		s_retargetdlg.GetRetargetModel()->SetUnderRetarget(false);
 		s_retargetdlg.GetRetargetBvh()->SetUnderRetarget(false);
 		return 1;
 	}
-	//g_underRetargetFlag = false;
 	s_retargetdlg.GetRetargetModel()->SetUnderRetarget(false);
 	s_retargetdlg.GetRetargetBvh()->SetUnderRetarget(false);
 
@@ -18376,6 +18377,10 @@ int RetargetMotion()
 		ApplyNewLimitsToWM(GetCurrentModel());
 	}
 
+	if ((InterlockedAdd(&g_retargetbatchflag, 0) == 0)) {
+		//バッチではない場合　フラグリセット
+		g_underRetargetFlag = false;
+	}
 
 	return 0;
 
@@ -28242,10 +28247,12 @@ int OnFrameBatchThread()
 	}
 	else if ((InterlockedAdd(&g_retargetbatchflag, 0) == 2) || (InterlockedAdd(&g_retargetbatchflag, 0) == 3)) {//2はダイアログでのキャンセル
 		InterlockedExchange(&g_retargetbatchflag, (LONG)0);
+		g_underRetargetFlag = false;
 		if (s_retargetbatchwnd) {
 			SendMessage(s_retargetbatchwnd, WM_CLOSE, 0, 0);
 		}
 		InterlockedExchange(&g_retargetbatchflag, (LONG)0);//WM_CLOSEで変わる可能性あり
+		g_underRetargetFlag = false;
 		InterlockedExchange(&s_retargetcnt, 0);
 		InterlockedExchange(&s_retargetnum, 0);
 		InterlockedExchange(&s_befretargetnum, 0);
