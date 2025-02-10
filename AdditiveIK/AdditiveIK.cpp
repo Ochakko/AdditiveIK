@@ -805,6 +805,8 @@ static int s_bef_dsbuttondown[MB3D_DSBUTTONNUM];
 static int s_dsbuttonup[MB3D_DSBUTTONNUM];
 static int s_bef_dsbuttonup[MB3D_DSBUTTONNUM];
 static float s_dsaxisvalue[MB3D_DSAXISNUM];
+static float s_dsaxisvalueAnalogLeft;//UDとLRの合成ベクトルの大きさ
+static float s_dsaxisvalueAnalogRight;//UDとLRの合成ベクトルの大きさ
 static float s_bef_dsaxisvalue[MB3D_DSAXISNUM];
 static int s_dsaxisOverTh[MB3D_DSAXISNUM];
 static int s_bef_dsaxisOverTh[MB3D_DSAXISNUM];
@@ -3789,6 +3791,7 @@ void InitApp()
 	s_befftime = 0.0;
 	s_mousemoveBefTime = 0.0;
 	g_dspeed = 1.0;//2024/01/13  3.0-->1.0に変更
+	g_dspeedsave = 1.0;
 	g_physicsmvrate = 0.3f;
 
 
@@ -36782,6 +36785,8 @@ void InitDSValues()
 	ZeroMemory(s_dsaxisMOverTh, sizeof(int) * MB3D_DSAXISNUM);
 	ZeroMemory(s_bef_dsaxisMOverTh, sizeof(int) * MB3D_DSAXISNUM);
 
+	s_dsaxisvalueAnalogLeft = 0.0f;//UDとLRの合成ベクトルの大きさ
+	s_dsaxisvalueAnalogRight = 0.0f;//UDとLRの合成ベクトルの大きさ
 
 }
 void OnDSUpdate()
@@ -36940,6 +36945,21 @@ void GetDSValues()
 			int dbgflag4 = 1;
 		}
 
+	}
+
+	double analogLeftMag = s_dsaxisvalue[MB3D_DSAXIS_LEFT_UPDOWN] * s_dsaxisvalue[MB3D_DSAXIS_LEFT_UPDOWN] + s_dsaxisvalue[MB3D_DSAXIS_LEFT_LR] * s_dsaxisvalue[MB3D_DSAXIS_LEFT_LR];
+	if (analogLeftMag > 0.00010f) {
+		s_dsaxisvalueAnalogLeft = (float)sqrt(analogLeftMag);//UDとLRの合成ベクトルの大きさ
+	}
+	else {
+		s_dsaxisvalueAnalogLeft = 0.0f;
+	}
+	double analogRightMag = s_dsaxisvalue[MB3D_DSAXIS_RIGHT_UPDOWN] * s_dsaxisvalue[MB3D_DSAXIS_RIGHT_UPDOWN] + s_dsaxisvalue[MB3D_DSAXIS_RIGHT_LR] * s_dsaxisvalue[MB3D_DSAXIS_RIGHT_LR];
+	if (analogRightMag > 0.00010f) {
+		s_dsaxisvalueAnalogRight = (float)sqrt(analogRightMag);//UDとLRの合成ベクトルの大きさ
+	}
+	else {
+		s_dsaxisvalueAnalogRight = 0.0f;
 	}
 
 
@@ -46455,6 +46475,11 @@ int SetNewPoseByMoa(double* pnextframe)
 	int ret;
 	int eventno = 0;
 	int findindex = -1;
+	int findindex2 = -1;
+	int findindex3 = -1;
+	int findindex4 = -1;
+	double motionspeed = g_dspeed;
+	//bool backplay = false;
 	int cno;
 	for (cno = 0; cno < 256; cno++) {
 		if (g_keybuf[cno] & 0x80) {
@@ -46494,7 +46519,8 @@ int SetNewPoseByMoa(double* pnextframe)
 
 	if ((eventno == 0) && (g_enableDS == true)) {
 
-		if ((s_dsaxisOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) || (s_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0)) {
+		if ((s_dsaxisOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) || (s_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) ||
+			(s_dsaxisOverTh[MB3D_DSAXIS_LEFT_LR] != 0) || (s_dsaxisMOverTh[MB3D_DSAXIS_LEFT_LR] != 0)) {
 			
 			//MocapWalkLoop
 				
@@ -46505,8 +46531,32 @@ int SetNewPoseByMoa(double* pnextframe)
 			else {
 				s_moaeventrepeats_pad[padno_leftud] = 1;//初回
 			}
-			eventno = eventpad->GetEventNo(padno_leftud, s_moaeventrepeats_pad[padno_leftud]);
-			findindex = padno_leftud;//moaeventrepeats初期化時のヒント用
+			int padno_leftlr = MB3D_DSBUTTONNUM + MB3D_DSAXIS_LEFT_LR;
+			if ((s_bef_dsaxisOverTh[MB3D_DSAXIS_LEFT_LR] != 0) || (s_bef_dsaxisMOverTh[MB3D_DSAXIS_LEFT_LR] != 0)) {
+				s_moaeventrepeats_pad[padno_leftlr] = s_moaeventrepeats_pad[padno_leftlr] + 1;//２回目以降
+			}
+			else {
+				s_moaeventrepeats_pad[padno_leftlr] = 1;//初回
+			}
+			int eventrepeats = max(s_moaeventrepeats_pad[padno_leftud], s_moaeventrepeats_pad[padno_leftlr]);
+
+			eventno = eventpad->GetEventNo(padno_leftud, eventrepeats);
+
+			motionspeed = s_dsaxisvalueAnalogLeft * g_dspeed * 2.0;
+			//if (s_bef_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) {
+			//	backplay = true;
+			//}
+			//else {
+			//	backplay = false;
+			//}
+
+
+			if ((s_dsaxisOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) || (s_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0)) {
+				findindex = padno_leftud;//moaeventrepeats初期化時のヒント用
+			}
+			if ((s_dsaxisOverTh[MB3D_DSAXIS_LEFT_LR] != 0) || (s_dsaxisMOverTh[MB3D_DSAXIS_LEFT_LR] != 0)) {
+				findindex2 = padno_leftlr;//moaeventrepeats初期化時のヒント用
+			}
 
 			if (eventno != 0) {
 				currentmodel->SetMocapWalkFlag(true);
@@ -46535,7 +46585,7 @@ int SetNewPoseByMoa(double* pnextframe)
 					//アナログスティックはボタンと併用することがある　今回は排他的にどちらかだけに対応
 					//####################################################################
 					int analogno = padno - MB3D_DSBUTTONNUM;
-					if ((analogno != MB3D_DSAXIS_LEFT_UPDOWN) && 
+					if ((analogno != MB3D_DSAXIS_LEFT_UPDOWN) && (analogno != MB3D_DSAXIS_LEFT_LR) &&
 						((s_dsaxisOverTh[analogno] != 0) || (s_dsaxisMOverTh[analogno] != 0))) {
 						//float value = s_dsaxisvalue[analogno];
 						if ((s_bef_dsaxisOverTh[analogno] != 0) || (s_bef_dsaxisMOverTh[analogno] != 0)) {
@@ -46544,24 +46594,28 @@ int SetNewPoseByMoa(double* pnextframe)
 						else {
 							s_moaeventrepeats_pad[padno] = 1;//初回
 						}
+
 						eventno = eventpad->GetEventNo(padno, s_moaeventrepeats_pad[padno]);
 						findindex = padno;//moaeventrepeats初期化時のヒント用
-
-
-						//2025/02/09
-						if ((eventno != 0) && (analogno == MB3D_DSAXIS_LEFT_UPDOWN)) {
-							currentmodel->SetMocapWalkFlag(true);
-						}
 
 						break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
 					}
 				}
 			}
+
+			if ((s_dsaxisOverTh[MB3D_DSAXIS_RIGHT_UPDOWN] != 0) || (s_dsaxisMOverTh[MB3D_DSAXIS_RIGHT_UPDOWN] != 0)) {
+				findindex3 = MB3D_DSBUTTONNUM + MB3D_DSAXIS_RIGHT_UPDOWN;//moaeventrepeats初期化時のヒント用
+			}
+			if ((s_dsaxisOverTh[MB3D_DSAXIS_RIGHT_LR] != 0) || (s_dsaxisMOverTh[MB3D_DSAXIS_RIGHT_LR] != 0)) {
+				findindex4 = MB3D_DSBUTTONNUM + MB3D_DSAXIS_RIGHT_LR;//moaeventrepeats初期化時のヒント用
+			}
+
 		}
 
 		int padno2;
 		for (padno2 = 0; padno2 < MOA_PADNUM; padno2++) {
-			if ((findindex >= 0) && (padno2 != findindex)) {
+			if ((padno2 != findindex) && (padno2 != findindex2) || 
+				(padno2 != findindex3) && (padno2 != findindex4)) {
 				//採用イベント以外のリピート情報を初期化　2025/01/12
 				s_moaeventrepeats_pad[padno2] = 0;
 			}
@@ -46991,6 +47045,19 @@ int SetNewPoseByMoa(double* pnextframe)
 		*pnextframe = currentmodel->GetCurrentFrame();
 	}
 
+	if (GetCurrentModel()) {
+		MOTINFO curmi = GetCurrentModel()->GetCurMotInfo();
+		if (curmi.motid > 0) {
+			GetCurrentModel()->SetMotionSpeed(curmi.motid, motionspeed);
+
+			//if (backplay == false) {
+			//	g_previewFlag = 1;
+			//}
+			//else {
+			//	g_previewFlag = -1;//loop条件が変わるのでそのままだと固まる　最終フレーム-->フレーム1.0　後ろ歩きモーションの方が良い？　後ほど対応
+			//}
+		}
+	}
 
 	return 0;
 }

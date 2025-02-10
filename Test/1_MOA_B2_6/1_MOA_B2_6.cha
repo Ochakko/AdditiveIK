@@ -17,7 +17,7 @@
   <PlayingSpeed>1.000</PlayingSpeed>
   <PhysicalLimitScale>0.000</PhysicalLimitScale>
   <BtMovableRate>100</BtMovableRate>
-  <CameraDist>415.328</CameraDist>
+  <CameraDist>709.176</CameraDist>
   <AKScale>1.000</AKScale>
   <BtVScaleOnLimitEul>0.200</BtVScaleOnLimitEul>
   <BoneAxis>0</BoneAxis>

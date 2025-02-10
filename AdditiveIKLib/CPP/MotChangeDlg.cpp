@@ -2622,6 +2622,8 @@ LRESULT CMotChangeDlg::OnPlay(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 		return 1;
 	}
 
+	//g_dspeedsave = g_dspeed;
+
 	int ret;
 	ret = currentmodel->CreateMotChangeHandlerIfNot();
 	if (ret) {
@@ -2699,6 +2701,9 @@ LRESULT CMotChangeDlg::OnStop(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 		//再生していた場合だけモーションのループフラグを復元する
 		currentmodel->RestoreLoopFlag();
 	}
+
+	//g_dspeed = g_dspeedsave;
+
 
 	g_previewFlag = 0;
 	g_previewMOA = 0;

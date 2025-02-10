@@ -24460,7 +24460,7 @@ ChaMatrix CModel::RotMocapWalk(double srcrot)
 	ChaVector3 pos = ChaMatrixTraVec(wm);
 	wm.SetTranslationZero();
 
-	float maxrotval = 0.20f;
+	float maxrotval = 0.40f;
 
 	ChaMatrix roty;
 	roty.SetIdentity();

@@ -335,9 +335,8 @@ BYTE g_savekeybuf[256];
 
 WCHAR g_basedir[MAX_PATH] = { 0 };
 
-double						g_dspeed = 1.0;
-//double						g_dspeed = 0.0;
-
+double g_dspeed = 1.0;
+double g_dspeedsave = 1.0;
 
 float g_ikfirst = 1.0f;
 float g_ikrate = 1.0f;
@@ -626,9 +625,8 @@ extern BYTE g_savekeybuf[256];
 
 extern WCHAR g_basedir[MAX_PATH];
 
-extern double						g_dspeed;
-//double						g_dspeed = 0.0;
-
+extern double g_dspeed;
+extern double g_dspeedsave;
 
 extern float g_ikfirst;
 extern float g_ikrate;
