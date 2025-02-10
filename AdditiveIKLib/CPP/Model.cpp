@@ -24457,16 +24457,33 @@ ChaMatrix CModel::Move2HipsPos(int nextmotid, double nextframe)
 ChaMatrix CModel::RotMocapWalk(double srcrot)
 {
 	ChaMatrix wm = m_matWorld;
-	ChaVector3 pos = ChaMatrixTraVec(wm);
-	wm.SetTranslationZero();
+	ChaVector3 savepos = ChaMatrixTraVec(wm);
 
-	float maxrotval = 0.40f;
+	CBone* hipsbone = nullptr;
+	GetHipsBoneReq(GetTopBone(false), &hipsbone);
+	if (!hipsbone) {
+		return wm;
+	}
 
-	ChaMatrix roty;
-	roty.SetIdentity();
-	roty.SetXYZRotation(nullptr, ChaVector3(0.0f, maxrotval * (float)-srcrot, 0.0f));
-	wm = roty * wm;
-	wm.SetTranslation(pos);
+	//ChaMatrix currenthipswm = hipsbone->GetCurMp().GetWorldMat();
+	ChaMatrix currenthipswm = hipsbone->GetCurMp().GetAnimMat();
+	ChaVector3 currenthipspos = ChaMatrixTraVec(currenthipswm);//回転の中心
+
+	ChaMatrix befrot, aftrot, rotmat;
+	befrot.SetIdentity();
+	aftrot.SetIdentity();
+	rotmat.SetIdentity();
+	
+	float maxrotval = 1.0f;//120fpsでだいたいでテストした値
+	if (g_avrgfps <= 1.0) {
+		return wm;
+	}
+	float rotdeg = maxrotval * (float)-srcrot * (120.0f / (float)g_avrgfps);//fpsが変わっても同じ位 回転するように
+
+	befrot.SetTranslation(-currenthipspos);
+	aftrot.SetTranslation(currenthipspos);
+	rotmat.SetXYZRotation(nullptr, ChaVector3(0.0f, rotdeg, 0.0f));
+	wm = befrot * rotmat * aftrot * wm;
 
 	SetWorldMat(wm);
 

@@ -313,7 +313,7 @@ static int s_moaeventrepeats_pad[MOA_PADNUM];
 static double s_mousemoveBefTime = 0.0;
 static double s_fps100[FPSSAVENUM];
 static int s_fps100index = 0;
-static double s_avrgfps = 0.0;
+//static double g_avrgfps = 0.0;
 static double s_rectime = 0.0;
 static double s_reccnt = 0;
 
@@ -447,8 +447,8 @@ private:
 	int GetPushedMaxCount()
 	{
 		//2024/06/23
-		//60fpsのときBUTTONPUSHEDMAXCOUNT回の間反転表示　現在の表示速度(s_avrgfps)においてはretmaxcount回の間反転表示
-		int retmaxcount = (int)((double)(BUTTONPUSHEDMAXCOUNT) * (s_avrgfps / 60.0));
+		//60fpsのときBUTTONPUSHEDMAXCOUNT回の間反転表示　現在の表示速度(g_avrgfps)においてはretmaxcount回の間反転表示
+		int retmaxcount = (int)((double)(BUTTONPUSHEDMAXCOUNT) * (g_avrgfps / 60.0));
 		return retmaxcount;
 	};
 public:
@@ -3395,7 +3395,7 @@ INT WINAPI wWinMain(
 			
 			////for tmp check
 			//WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-			//int dispfps = (int)(s_avrgfps + 0.5);
+			//int dispfps = (int)(g_avrgfps + 0.5);
 			//swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.1 : No.%d : fps %d", s_appcnt, dispfps);
 			//SetWindowText(g_mainhwnd, strmaintitle);
 			if (g_underWriteFbx == false) {//2024/02/10
@@ -4247,7 +4247,7 @@ void InitApp()
 		s_fps100[saveno] = 60.0;
 	}
 	s_fps100index = 0;
-	s_avrgfps = 0.0;
+	g_avrgfps = 0.0;
 
 	s_utBrushRepeatsFlag = false;//UTDialogのBrushRepeatsスライダー値変更
 	s_utApplyRateFlag = false;//UTDialogのApplyRateスライダー値変更
@@ -6533,12 +6533,12 @@ void CalcFps(double fTime)
 	//2023/12/15
 	//表示用の数字の更新は10fps程にしておく
 	if ((s_befftime == 0.0) || ((fTime - s_befftime) >= 0.10)) {
-		s_avrgfps = 0.0;
+		g_avrgfps = 0.0;
 		int saveno;
 		for (saveno = 0; saveno < FPSSAVENUM; saveno++) {
-			s_avrgfps += s_fps100[saveno];
+			g_avrgfps += s_fps100[saveno];
 		}
-		s_avrgfps /= (double)FPSSAVENUM;
+		g_avrgfps /= (double)FPSSAVENUM;
 
 		s_befftime = fTime;//値を更新した時だけセット
 	}
@@ -25360,7 +25360,7 @@ int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopsta
 
 	//安定のために　シミュ開始時の姿勢で　キネマティックしている回数
 	int INITTERM;
-	INITTERM = max(10, (int)(s_avrgfps * 0.1));
+	INITTERM = max(10, (int)(g_avrgfps * 0.1));
 
 	bool recstopflag = false;
 	BOOL firstmodelflag = TRUE;
@@ -31257,7 +31257,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 	}
 
 	if (GetCurrentModel()) {
-		int dispfps = (int)(s_avrgfps + 0.5);
+		int dispfps = (int)(g_avrgfps + 0.5);
 		//s_fpssprite.DrawScreen(pRenderContext, dispfps);
 
 		myRenderer::RENDERSPRITE rendersprite;

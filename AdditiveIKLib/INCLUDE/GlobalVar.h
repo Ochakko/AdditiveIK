@@ -80,6 +80,7 @@ double g_pickdistrate = 0.5;
 
 bool g_hdrpbloom = true;
 bool g_alphablending = true;
+double g_avrgfps = 0.0;
 bool g_freefps = true;
 bool g_zalways = false;
 
@@ -394,6 +395,7 @@ extern double g_pickdistrate;
 
 extern bool g_hdrpbloom;
 extern bool g_alphablending;
+extern double g_avrgfps;
 extern bool g_freefps;
 extern bool g_zalways;
 
