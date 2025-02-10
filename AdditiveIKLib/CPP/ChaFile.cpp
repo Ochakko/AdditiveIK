@@ -35,6 +35,7 @@
 #include <gltfLoader.h>
 
 #include "..\\..\\AdditiveIK\FrameCopyDlg.h"
+//#include "..\\..\\AdditiveIK\StructHistory.h"
 
 
 #include <GlobalVar.h>
@@ -98,10 +99,16 @@ int CChaFile::DestroyObjs()
 int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, WCHAR* projname, 
 	std::vector<MODELELEM>& srcmodelindex, float srcmotspeed, 
 	map<CModel*, CFrameCopyDlg*> srcselbonedlgmap,
-	std::vector<CGrassElem*> srcgrasselemvec)
+	std::vector<CGrassElem*> srcgrasselemvec,
+	DOLLYELEM2* srccameraonload)
 {
 	m_modelindex = srcmodelindex;
 	m_mode = XMLIO_WRITE;
+
+	if (!srcbpw || !projdir || !projname || !srccameraonload) {
+		_ASSERT(0);
+		return 1;
+	}
 
 
 	WCHAR strpath[MAX_PATH];
@@ -160,7 +167,21 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 	CallF(Write2File("  <PlayingSpeed>%.3f</PlayingSpeed>\r\n", g_dspeed), return 1);
 	CallF(Write2File("  <PhysicalLimitScale>%.3f</PhysicalLimitScale>\r\n", g_physicalLimitScale), return 1);
 	CallF(Write2File("  <BtMovableRate>%d</BtMovableRate>\r\n", g_physicalMovableRate), return 1);
+
+	CallF(Write2File("  <CameraPos>%.3f, %.3f, %.3f</CameraPos>\r\n", 
+		srccameraonload->elem1.camerapos.x,
+		srccameraonload->elem1.camerapos.y, 
+		srccameraonload->elem1.camerapos.z), return 1);
+	CallF(Write2File("  <CameraTarget>%.3f, %.3f, %.3f</CameraTarget>\r\n",
+		srccameraonload->elem1.cameratarget.x,
+		srccameraonload->elem1.cameratarget.y,
+		srccameraonload->elem1.cameratarget.z), return 1);
+	CallF(Write2File("  <CameraUpVec>%.3f, %.3f, %.3f</CameraUpVec>\r\n",
+		srccameraonload->upvec.x,
+		srccameraonload->upvec.y,
+		srccameraonload->upvec.z), return 1);
 	CallF(Write2File("  <CameraDist>%.3f</CameraDist>\r\n", g_camdist), return 1);
+
 	CallF(Write2File("  <AKScale>%.3f</AKScale>\r\n", g_akscale), return 1);
 	CallF(Write2File("  <BtVScaleOnLimitEul>%.3f</BtVScaleOnLimitEul>\r\n", g_physicalVeloScale), return 1);
 
@@ -230,7 +251,9 @@ int CChaFile::WriteFileInfo()
 	//version 1011 : 2024/05/04 1.0.0.19へ向けて  <BtVScaleOnLimitEul>追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1011</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1012 : 2024/05/12 1.0.0.20へ向けて  <GrassFlag>, <GrassMat>追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1012</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1012</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1013 : 2025/02/11 1.0.0.38へ向けて  <CameraPos>, <CameraTarget>, <CameraUpVec>追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1013</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -679,7 +702,8 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	int (*srcReMenu)( int selindex1, int callbymenu1 ), 
 	int (*srcRgdMenu)( int selindex2, int callbymenu2 ), 
 	int (*srcMorphMenu)( int selindex3 ), int (*srcImpMenu)( int selindex4 ),
-	std::vector<CGrassElem*>& dstgrasselemvec)
+	std::vector<CGrassElem*>& dstgrasselemvec,
+	DOLLYELEM2* dstcameraonload)
 {
 	m_mode = XMLIO_LOAD;
 	m_FbxFunc = srcfbxfunc;
@@ -692,6 +716,14 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	m_ImpMenu = srcImpMenu;
 
 	m_footrigdlg = srcfootrigdlg;
+
+	if (!strpath || !srcfootrigdlg ||
+		!srcfbxfunc || !srcReffunc || !srcImpFunc || !srcGcoFunc ||
+		!srcReMenu || !srcRgdMenu || !srcMorphMenu || !srcImpMenu ||
+		!dstcameraonload) {
+		_ASSERT(0);
+		return 1;
+	}
 
 	wcscpy_s( m_wloaddir, MAX_PATH, strpath );
 	WCHAR* lasten;
@@ -804,13 +836,32 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 		getveloscale = true;//ReadCharaより後でセット
 	}
 
-
+	bool getcamerapos = false;
+	ChaVector3 tempcamerapos = ChaVector3(0.0f, 0.0f, 0.0f);
+	result = Read_Vec3(&m_xmliobuf, "<CameraPos>", "</CameraPos>", &tempcamerapos);
+	if (result == 0) {
+		getcamerapos = true;//ReadCharaより後でセット
+	}
+	bool getcameratarget = false;
+	ChaVector3 tempcameratarget = ChaVector3(0.0f, 0.0f, 0.0f);
+	result = Read_Vec3(&m_xmliobuf, "<CameraTarget>", "</CameraTarget>", &tempcameratarget);
+	if (result == 0) {
+		getcameratarget = true;//ReadCharaより後でセット
+	}
+	bool getcameraupvec = false;
+	ChaVector3 tempcameraupvec = ChaVector3(0.0f, 1.0f, 0.0f);
+	result = Read_Vec3(&m_xmliobuf, "<CameraUpVec>", "</CameraUpVec>", &tempcameraupvec);
+	if (result == 0) {
+		getcameraupvec = true;//ReadCharaより後でセット
+	}
 	bool getcameradist = false;
 	float tempcameradist = (float)g_camdist;
 	result = Read_Float(&m_xmliobuf, "<CameraDist>", "</CameraDist>", &tempcameradist);
 	if (result == 0) {
 		getcameradist = true;//ReadCharaより後でセット
 	}
+
+
 	bool getakscale = false;
 	float tempakscale = (float)g_akscale;
 	result = Read_Float(&m_xmliobuf, "<AKScale>", "</AKScale>", &tempakscale);
@@ -905,9 +956,24 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	if (getveloscale) {
 		g_physicalVeloScale = (double)tempveloscale;//2024/05/04
 	}
+
+	if (getcamerapos && getcameratarget && getcameraupvec) {
+		dstcameraonload->elem1.camerapos = tempcamerapos;
+		dstcameraonload->elem1.cameratarget = tempcameratarget;
+		dstcameraonload->upvec = tempcameraupvec;
+		dstcameraonload->elem1.validflag = true;
+		dstcameraonload->noupvecflag = false;
+	}
+	else {
+		dstcameraonload->elem1.validflag = false;
+	}
+
 	if (getcameradist) {
 		g_camdist = tempcameradist;
 	}
+
+
+
 	if (getakscale) {
 		g_akscale = tempakscale;
 	}

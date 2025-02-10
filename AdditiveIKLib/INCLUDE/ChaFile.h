@@ -16,6 +16,8 @@ class CFrameCopyDlg;
 class CGrassElem;
 class CFootRigDlg;
 
+#include "../AdditiveIK/StructHistory.h"
+
 class CChaFile : public CXMLIO
 {
 public:
@@ -25,7 +27,8 @@ public:
 	int WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, WCHAR* projname, 
 		std::vector<MODELELEM>& srcmodelindex, float srcmotspeed, 
 		std::map<CModel*, CFrameCopyDlg*> srcselbonedlgmap,
-		std::vector<CGrassElem*> srcgrasselemvec);
+		std::vector<CGrassElem*> srcgrasselemvec,
+		DOLLYELEM2* srccameraonload);
 	int LoadChaFile(bool limitdegflag, WCHAR* strpath,
 		CFootRigDlg* srcfootrigdlg,
 		CModel* (*srcfbxfunc)( bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname, bool srcgrassflag ),
@@ -33,7 +36,8 @@ public:
 		int (*srcReMenu)( int selindex1, int callbymenu1 ), 
 		int (*srcRgdMenu)( int selindex2, int callbymenu2 ), 
 		int (*srcMorphMenu)( int selindex3 ), int (*srcImpMenu)( int selindex4 ),
-		std::vector<CGrassElem*>& dstgrasselemvec);
+		std::vector<CGrassElem*>& dstgrasselemvec,
+		DOLLYELEM2* dstcameraonload);
 
 private:
 	virtual int InitParams();

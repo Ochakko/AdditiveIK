@@ -10,7 +10,6 @@
 
 
 #include <Coef.h>
-#include "StructHistory.h"
 
 #include <ChaScene.h>
 #include <Model.h>
@@ -134,6 +133,9 @@
 
 #include "SetDlgPos.h"
 #include "ColDlg.h"
+
+#include "StructHistory.h"
+
 
 //#include <uxtheme.h>
 //#pragma ( lib, "UxTheme.lib" )
@@ -15368,7 +15370,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.37\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.38\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -18964,9 +18966,16 @@ int SaveProject()
 
 	vector<MODELELEM> writemodelindex;
 	s_chascene->GetModelIndex(writemodelindex);
+	DOLLYELEM2 cameraonload;
+	cameraonload.Init();
+	cameraonload.elem1.camerapos = g_camEye;
+	cameraonload.elem1.cameratarget = g_camtargetpos;
+	cameraonload.elem1.validflag = true;
+	cameraonload.upvec = g_cameraupdir;
+	cameraonload.noupvecflag = false;
 	CChaFile chafile;
 	int result = chafile.WriteChaFile(g_bakelimiteulonsave, s_bpWorld, s_projectdir, s_projectname,
-		writemodelindex, (float)g_dspeed, s_selbonedlgmap, s_grassElemVec);
+		writemodelindex, (float)g_dspeed, s_selbonedlgmap, s_grassElemVec, &cameraonload);
 	if (result) {
 		::MessageBox(g_mainhwnd, L"保存に失敗しました。", L"Error", MB_OK);
 		if (oldcursor) {
@@ -19341,16 +19350,25 @@ int OpenChaFile()
 
 	
 	CChaFile chafile;
+	DOLLYELEM2 cameraonload;
+	cameraonload.Init();
 	int ret = chafile.LoadChaFile(g_limitdegflag, g_tmpmqopath,
 		&s_footrigdlg,
 		OpenFBXFile, OpenREFile, OpenImpFile, OpenGcoFile,
 		OnREMenu, OnRgdMenu, OnRgdMorphMenu, OnImpMenu,
-		s_grassElemVec);
+		s_grassElemVec, &cameraonload);
 	if (ret == 1) {
 		_ASSERT(0);
 		SetCursor(oldcursor);
 		return 1;
 	}
+
+	if (cameraonload.elem1.validflag) {
+		g_camEye = cameraonload.elem1.camerapos;
+		g_camtargetpos = cameraonload.elem1.cameratarget;
+		g_cameraupdir = cameraonload.upvec;
+	}
+
 	//OnAddMotion(GetCurrentModel()->GetCurMotInfo()->motid);
 
 	//全てのモデルが読み込まれた後で*.friを読み込む
