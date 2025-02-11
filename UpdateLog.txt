@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2025/02/11
-　AdditiveIK 1.0.0.38 RC1(リリース候補1)
+　AdditiveIK 1.0.0.38 release
 　　1.0.0.37からの変更点
 　　　不具合修正
 　　　　MOA2.0実装の変更により操作中にエラーで落ちる不具合が出ていたのを修正
@@ -28,12 +28,18 @@ https://github.com/Ochakko/AdditiveIK
 
 　　　プロジェクト保存時にカメラ位置と向きを保存して読み込み時に復元するように
 
+　　　オカルト部部長モデル(B2_eng.fbx)へbvhモーションをリターゲットする際の設定ファイル追加
+　　　　Test/RetargetSettingFileExample/B2eng_bvh.rtg
+
 　　　サンプルモデル修正
 　　　　MOA2.0設定とMocapWalkLoop設定例
 　　　　　Test/1_MOA_B2_6
 　　　　MOA2.0設定とMocapWalkLoop設定とFootRig設定の組み合わせ例
 　　　　　Test/2_B2Stair_1　
 
+　　　ショートムービー
+　　　　SonyDualSenseでリアルタイム階段接地
+　　　　https://youtu.be/WTpdyVGKlcs
 
 
 2025/02/10 その４

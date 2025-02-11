@@ -279,7 +279,7 @@ Smooth平滑化<br>
 
 [MOA2.0 2025/01/13](https://youtu.be/GFEmF8dnV_M "Usage example12")<br>
 
-[アナログスティックとモーキャプループモーションで歩いてみた 2025/02/10](https://youtu.be/Qgioc00XN2A "Usage example13")<br>
+[SonyDualSenseでリアルタイム階段接地 2025/02/11](https://youtu.be/WTpdyVGKlcs "Usage example13")<br>
 <br>
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")
