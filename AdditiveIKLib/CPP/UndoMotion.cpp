@@ -55,9 +55,9 @@ int CUndoMotion::InitParams()
 
 	m_undoselect.Init();
 
-	ZeroMemory( &m_savemotinfo, sizeof( MOTINFO ) );
+	m_savemotinfo.Init();
 	m_savemotinfo.motid = -1;
-	ZeroMemory(&m_savecameramotinfo, sizeof(MOTINFO));
+	m_savecameramotinfo.Init();
 	m_savecameramotinfo.motid = -1;
 
 	m_bone2mp.clear();

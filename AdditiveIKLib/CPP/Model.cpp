@@ -24235,8 +24235,8 @@ int CModel::CreateMotChangeHandlerIfNot()
 		int motnum = GetMotInfoSize();
 		int miindex;
 		for (miindex = 0; miindex < motnum; miindex++) {
-			MOTINFO currentmi = GetMotInfoByIndex(miindex);
-			if (currentmi.motid > 0) {
+			MOTINFO* pcurrentmi = GetMotInfoPtrByIndex(miindex);
+			if (pcurrentmi && (pcurrentmi->motid > 0)) {
 				int ret;
 
 				int srcidling;
@@ -24253,7 +24253,9 @@ int CModel::CreateMotChangeHandlerIfNot()
 				int* srcforbidid = nullptr;
 				int srcnotfu = 0;
 
-				ret = m_mch->AddParentMC(currentmi.motid,
+				pcurrentmi->SetJumpFlag();//2025/02/16
+
+				ret = m_mch->AddParentMC(pcurrentmi->motid,
 					srcidling, srcev0idle, srccommonid, srcforbidnum, srcforbidid, srcnotfu);
 				if (ret) {
 					DbgOut(L"CModel::CreateMotChangeHandlerIfNot : mch AddParentMC error !!!\n");

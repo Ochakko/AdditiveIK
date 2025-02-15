@@ -1,43 +1,46 @@
-###############
-ƒTƒ“ƒvƒ‹‚Ìà–¾
+ï»¿###############
+ã‚µãƒ³ãƒ—ãƒ«ã®èª¬æ˜Ž
 ###############
 
 0_VRoid202406_Cam04
-@ƒvƒŒƒrƒ…[ƒ{ƒ^ƒ“‚ð‰Ÿ‚·‚ÆƒJƒƒ‰ƒAƒjƒ‚ÆƒLƒƒƒ‰ƒNƒ^[ƒ‚[ƒVƒ‡ƒ“‚ðÄ¶
-@ƒuƒŒƒ“ƒhƒVƒFƒCƒvƒAƒjƒ(ƒ‚[ƒtƒAƒjƒ)‚Å•\î‚à•Ï‰»
+ã€€ãƒ—ãƒ¬ãƒ“ãƒ¥ãƒ¼ãƒœã‚¿ãƒ³ã‚’æŠ¼ã™ã¨ã‚«ãƒ¡ãƒ©ã‚¢ãƒ‹ãƒ¡ã¨ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ã‚’å†ç”Ÿ
+ã€€ãƒ–ãƒ¬ãƒ³ãƒ‰ã‚·ã‚§ã‚¤ãƒ—ã‚¢ãƒ‹ãƒ¡(ãƒ¢ãƒ¼ãƒ•ã‚¢ãƒ‹ãƒ¡)ã§è¡¨æƒ…ã‚‚å¤‰åŒ–
 
 
 1_MOA_B2_6
-@ƒ‚[ƒVƒ‡ƒ“ƒAƒNƒZƒ‰ƒŒ[ƒ^MOA2.0‚ÌÝ’è—á
-@MOAƒvƒŒ[ƒgƒƒjƒ…[‚ðƒNƒŠƒbƒN‚µ‚Ä‰EƒyƒCƒ“‚Éƒ_ƒCƒAƒƒO‚ðo‚µ
-@ƒ_ƒCƒAƒƒO‚ÌPlayƒ{ƒ^ƒ“‚ð‰Ÿ‚µ‚½Œã‚Å@ƒL[ƒ{[ƒh‚Ì”ŽšƒL[‚ð‰Ÿ‚·‚Æ—x‚é
-@SonyDualSense‚ðPC‚ÉŒq‚¢‚Å‚¢‚éê‡‚É‚ÍDualSense‚É‰ž“š‚µ‚Ä—x‚é
-@SonyDualSense‚ðŽg‚¤ê‡‚É‚ÍAdditiveIK‹N“®‘O‚ÉŒq‚¢‚Å‚¨‚­•K—v—L
-@
+ã€€ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ã‚¢ã‚¯ã‚»ãƒ©ãƒ¬ãƒ¼ã‚¿MOA2.0ã®è¨­å®šä¾‹
+ã€€MOAãƒ—ãƒ¬ãƒ¼ãƒˆãƒ¡ãƒ‹ãƒ¥ãƒ¼ã‚’ã‚¯ãƒªãƒƒã‚¯ã—ã¦å³ãƒšã‚¤ãƒ³ã«ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’å‡ºã—
+ã€€ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã®Playãƒœã‚¿ãƒ³ã‚’æŠ¼ã—ãŸå¾Œã§ã€€ã‚­ãƒ¼ãƒœãƒ¼ãƒ‰ã®æ•°å­—ã‚­ãƒ¼ã‚’æŠ¼ã™ã¨è¸Šã‚‹
+ã€€SonyDualSenseã‚’PCã«ç¹‹ã„ã§ã„ã‚‹å ´åˆã«ã¯DualSenseã«å¿œç­”ã—ã¦è¸Šã‚‹
+ã€€SonyDualSenseã‚’ä½¿ã†å ´åˆã«ã¯AdditiveIKèµ·å‹•å‰ã«ç¹‹ã„ã§ãŠãå¿…è¦æœ‰
+ã€€
 
-2_B2Stair_1
-@SonyDualSense‚Ì¶ƒAƒiƒƒOƒXƒeƒBƒbƒN‚ÅŠK’iƒXƒe[ƒW‚ð•à‚«‰ñ‚éƒTƒ“ƒvƒ‹
-@MOAƒvƒŒ[ƒgƒƒjƒ…[‚ðƒNƒŠƒbƒN‚µ‚Ä‰EƒyƒCƒ“‚Éƒ_ƒCƒAƒƒO‚ðo‚µ
-@ƒ_ƒCƒAƒƒO‚ÌPlayƒ{ƒ^ƒ“‚ð‰Ÿ‚µ‚½Œã‚Å
-@DualSense‚Ì¶ƒAƒiƒƒOƒXƒeƒBƒbƒN‚ð“|‚·‚Æ•à‚«‰ñ‚é
-@DualSense‚Ìƒ{ƒ^ƒ“‚ð‰Ÿ‚·‚Æ—x‚é
-@ŠK’i‚Ì’i·‚É‘Î‚µ‚Ä‚ÍƒŠƒAƒ‹ƒ^ƒCƒ€ƒtƒbƒgƒŠƒO‹@”\‚ª“­‚«‘«‚ªŽ©“®‚Å’i·‚É‡‚í‚¹‚é
-@
+2_B2Stair_2_3
+ã€€SonyDualSenseã®å·¦ã‚¢ãƒŠãƒ­ã‚°ã‚¹ãƒ†ã‚£ãƒƒã‚¯ã§éšŽæ®µã‚¹ãƒ†ãƒ¼ã‚¸ã‚’æ­©ãå›žã‚‹ã‚µãƒ³ãƒ—ãƒ«
+ã€€MOAãƒ—ãƒ¬ãƒ¼ãƒˆãƒ¡ãƒ‹ãƒ¥ãƒ¼ã‚’ã‚¯ãƒªãƒƒã‚¯ã—ã¦å³ãƒšã‚¤ãƒ³ã«ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’å‡ºã—
+ã€€ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã®Playãƒœã‚¿ãƒ³ã‚’æŠ¼ã—ãŸå¾Œã§
+ã€€DualSenseã®å·¦ã‚¢ãƒŠãƒ­ã‚°ã‚¹ãƒ†ã‚£ãƒƒã‚¯ã‚’å€’ã™ã¨æ­©ãå›žã‚‹
+ã€€DualSenseã®ãƒœã‚¿ãƒ³ã‚’æŠ¼ã™ã¨è¸Šã‚‹
+ã€€éšŽæ®µã®æ®µå·®ã«å¯¾ã—ã¦ã¯ãƒªã‚¢ãƒ«ã‚¿ã‚¤ãƒ ãƒ•ãƒƒãƒˆãƒªã‚°æ©Ÿèƒ½ãŒåƒãè¶³ãŒè‡ªå‹•ã§æ®µå·®ã«åˆã‚ã›ã‚‹
+ã€€
+ã€€Jumpæ©Ÿèƒ½ã‚’é–‹ç™ºä¸­
+ã€€ã€€DualSenseã®L2, R2ãƒˆãƒªã‚¬ãƒ¼ãƒœã‚¿ãƒ³ã§ã‚¸ãƒ£ãƒ³ãƒ—ã€€æ®µå·®ã«ã‚‚å¯¾å¿œã€€
+
 
 BoySporty_2
-@ƒ{ƒNƒVƒ“ƒO­”N‚ªÔ‚¢–_‚ð‘ŠŽè‚ÉƒgƒŒ[ƒjƒ“ƒO‚·‚éƒTƒ“ƒvƒ‹
-@ƒOƒŒ[‚ÌƒvƒŒƒCƒ{ƒ^ƒ“‚ð‰Ÿ‚·‚Æ•¨—ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚ªŽn‚Ü‚é
-@MotionSpeedƒXƒ‰ƒCƒ_[‚ð‘å‚«‚¢’l‚É‚µ‚Ä‘¬“x‚ð’²®
-@
+ã€€ãƒœã‚¯ã‚·ãƒ³ã‚°å°‘å¹´ãŒèµ¤ã„æ£’ã‚’ç›¸æ‰‹ã«ãƒˆãƒ¬ãƒ¼ãƒ‹ãƒ³ã‚°ã™ã‚‹ã‚µãƒ³ãƒ—ãƒ«
+ã€€ã‚°ãƒ¬ãƒ¼ã®ãƒ—ãƒ¬ã‚¤ãƒœã‚¿ãƒ³ã‚’æŠ¼ã™ã¨ç‰©ç†ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ãŒå§‹ã¾ã‚‹
+ã€€MotionSpeedã‚¹ãƒ©ã‚¤ãƒ€ãƒ¼ã‚’å¤§ãã„å€¤ã«ã—ã¦é€Ÿåº¦ã‚’èª¿æ•´
+ã€€
 
 Test_FootRig_7
-@ƒŠƒAƒ‹ƒ^ƒCƒ€‚Å’i·‚É‘«‚ð‡‚í‚¹‚éƒTƒ“ƒvƒ‹
-@SonyDualSense‚ª–³‚­‚Ä‚àŽŽ‚·‚±‚Æ‚ª‰Â”\
-@
-@
+ã€€ãƒªã‚¢ãƒ«ã‚¿ã‚¤ãƒ ã§æ®µå·®ã«è¶³ã‚’åˆã‚ã›ã‚‹ã‚µãƒ³ãƒ—ãƒ«
+ã€€SonyDualSenseãŒç„¡ãã¦ã‚‚è©¦ã™ã“ã¨ãŒå¯èƒ½
+ã€€
+ã€€
 RetargetSettingsFileExample
-@ƒŠƒ^[ƒQƒbƒgŽž‚ÌÝ’èƒtƒ@ƒCƒ‹
-@‚»‚ê‚¼‚ê‚Ìƒtƒ@ƒCƒ‹‚É‚ÍƒeƒLƒXƒg‚Åƒ‚ƒfƒ‹‘¤‚ÌƒWƒ‡ƒCƒ“ƒg–¼‚Æƒ‚[ƒVƒ‡ƒ“‘¤‚ÌƒWƒ‡ƒCƒ“ƒg–¼‚Ì‘Î‰ž•\‚ª‘‚¢‚Ä‚ ‚é
-@ƒŠƒ^[ƒQƒbƒg‚Ìƒ‚ƒfƒ‹‚Æƒ‚[ƒVƒ‡ƒ“‚É‰ž‚¶‚Ärtgƒtƒ@ƒCƒ‹‚ð‚P‚Â‘I‚ñ‚ÅŽg—p‚·‚é
-@
-@
+ã€€ãƒªã‚¿ãƒ¼ã‚²ãƒƒãƒˆæ™‚ã®è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«
+ã€€ãã‚Œãžã‚Œã®ãƒ•ã‚¡ã‚¤ãƒ«ã«ã¯ãƒ†ã‚­ã‚¹ãƒˆã§ãƒ¢ãƒ‡ãƒ«å´ã®ã‚¸ãƒ§ã‚¤ãƒ³ãƒˆåã¨ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³å´ã®ã‚¸ãƒ§ã‚¤ãƒ³ãƒˆåã®å¯¾å¿œè¡¨ãŒæ›¸ã„ã¦ã‚ã‚‹
+ã€€ãƒªã‚¿ãƒ¼ã‚²ãƒƒãƒˆã®ãƒ¢ãƒ‡ãƒ«ã¨ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ã«å¿œã˜ã¦rtgãƒ•ã‚¡ã‚¤ãƒ«ã‚’ï¼‘ã¤é¸ã‚“ã§ä½¿ç”¨ã™ã‚‹
+ã€€
+ã€€

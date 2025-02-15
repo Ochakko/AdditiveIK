@@ -34733,7 +34733,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.38 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.39 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -38133,7 +38133,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.38 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.39 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && s_chascene) {
@@ -46486,6 +46486,14 @@ int SetNewPoseByMoa(double* pnextframe)
 		return 0;
 	}
 
+	bool jumpflag0;
+	MOTINFO mi0 = currentmodel->GetCurMotInfo();
+	if ((mi0.motid > 0) && mi0.GetJumpFlag()) {
+		jumpflag0 = true;
+	}
+	else {
+		jumpflag0 = false;
+	}
 
 	//#################################
 	//キーボード入力をイベント番号に変換する
@@ -46558,7 +46566,13 @@ int SetNewPoseByMoa(double* pnextframe)
 			}
 			int eventrepeats = max(s_moaeventrepeats_pad[padno_leftud], s_moaeventrepeats_pad[padno_leftlr]);
 
-			eventno = eventpad->GetEventNo(padno_leftud, eventrepeats);
+
+			if (jumpflag0 == false) {
+				eventno = eventpad->GetEventNo(padno_leftud, eventrepeats);
+			}
+			else {
+				eventno = 0;
+			}
 
 			motionspeed = s_dsaxisvalueAnalogLeft * g_dspeed * 2.0;
 			//if (s_bef_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) {
@@ -46576,7 +46590,7 @@ int SetNewPoseByMoa(double* pnextframe)
 				findindex2 = padno_leftlr;//moaeventrepeats初期化時のヒント用
 			}
 
-			if (eventno != 0) {
+			if ((jumpflag0 == false) && (eventno != 0)) {
 				currentmodel->SetMocapWalkFlag(true);
 			}
 		}
@@ -46857,9 +46871,18 @@ int SetNewPoseByMoa(double* pnextframe)
 		//################################################################################################
 		int model_nextmotid = currentmodel->GetMoaNextMotId();
 		int model_nextframe = currentmodel->GetMoaNextFrame();
+		
+		bool jumpflag;
+		MOTINFO currentmi = currentmodel->GetCurMotInfo();
+		if ((currentmi.motid > 0) && currentmi.GetJumpFlag()) {
+			jumpflag = true;
+		}
+		else {
+			jumpflag = false;
+		}
 
 		if (model_nextmotid >= 0) {
-			if ((notfu == 0) && (currentmodel->GetMocapWalkFlag() == false)) {
+			if ((notfu == 0) && (currentmodel->GetMocapWalkFlag() == false) && (jumpflag == false)) {
 				MOTINFO nextmi = currentmodel->GetMotInfo(model_nextmotid);
 				if (nextmi.motid > 0) {
 					//########################################################################################
@@ -47041,7 +47064,7 @@ int SetNewPoseByMoa(double* pnextframe)
 				//###############################
 				//補間無しですぐにモーション遷移を実行
 				//###############################
-				if (currentmodel->GetMocapWalkFlag()) {
+				if (currentmodel->GetMocapWalkFlag() || jumpflag) {
 					s_matWorld = currentmodel->Move2HipsPos(model_nextmotid, 1.0);
 					currentmodel->SetMocapWalkFlag(false);
 				}

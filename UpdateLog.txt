@@ -2,6 +2,13 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/02/16
+　ジャンプ機能開発開始
+　　モーション名にJumpを含ませることによりジャンプモーションとして認識
+　　MOA2.0のジャンプモーション対応
+　　FootRigのジャンプモーション対応
+
+
 2025/02/11
 　AdditiveIK 1.0.0.38 release
 　　1.0.0.37からの変更点

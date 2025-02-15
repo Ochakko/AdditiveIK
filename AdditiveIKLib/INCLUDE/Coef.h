@@ -937,6 +937,7 @@ typedef struct tag_motinfo
 	int saveloopflagMOA;//2025/01/10 MOAの前後でバックアップと復元をするため
 	int fbxanimno;//fbxファイルの中で何番目のモーションとして読み込んだか　0から始まる番号
 	bool cameramotion;
+	bool jumpflag;//2025/02/16 モーション名にJumpが含まれている場合　FootRigでの接地に影響
 
 	void Init() {
 		ZeroMemory(motname, sizeof(char) * 256);
@@ -951,6 +952,7 @@ typedef struct tag_motinfo
 		saveloopflagMOA = 0;
 		fbxanimno = -1;
 		cameramotion = false;
+		jumpflag = false;
 	};
 
 	tag_motinfo() {
@@ -963,7 +965,21 @@ typedef struct tag_motinfo
 	void RestoreLoopFlag() {
 		loopflag = saveloopflagMOA;
 	};
-
+	bool SetJumpFlag() {
+		char uppername[256] = { 0 };
+		strcpy_s(uppername, 256, motname);
+		CharUpperA(uppername);
+		if (strstr(uppername, "JUMP") != nullptr) {
+			jumpflag = true;
+		}
+		else {
+			jumpflag = false;
+		}
+		return jumpflag;
+	};
+	bool GetJumpFlag() {
+		return jumpflag;
+	};
 }MOTINFO;
 
 

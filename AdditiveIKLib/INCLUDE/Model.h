@@ -1489,6 +1489,27 @@ private:
 		//	return 0;
 		//}
 	};
+	MOTINFO* GetMotInfoPtrByIndex(int srcindex)//by array index
+	{
+
+		//#####################
+		//for private function
+		//#####################
+
+		if ((srcindex >= 0) && (srcindex < GetMotInfoSize())) {
+			if (m_motinfo[srcindex]) {
+				return m_motinfo[srcindex];
+			}
+			else {
+				_ASSERT(0);
+				return nullptr;
+			}
+		}
+		else {
+			_ASSERT(0);
+			return nullptr;
+		}
+	};
 
 
 

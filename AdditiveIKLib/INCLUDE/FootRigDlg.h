@@ -95,6 +95,7 @@ private:
 	);
 
 	ChaMatrix GetSaveModelWM(CModel* srcmodel);
+	bool GetJumpFlag(CModel* srcmodel);
 private:
 	bool m_createdflag;
 	bool m_visible;
