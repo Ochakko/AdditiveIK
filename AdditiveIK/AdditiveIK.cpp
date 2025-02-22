@@ -18364,6 +18364,14 @@ int RetargetMotion()
 
 	std::map<CBone*, CBone*> convbonemap;
 	s_retargetdlg.GetRetargetConvBoneMap(convbonemap);
+	if (convbonemap.empty()) {
+		_ASSERT(0);
+		g_underRetargetFlag = false;//エラーの時もフラグリセット
+		s_retargetdlg.GetRetargetModel()->SetUnderRetarget(false);
+		s_retargetdlg.GetRetargetBvh()->SetUnderRetarget(false);
+		return 1;
+	}
+
 	int result = s_retargetdlg.GetRetargetModel()->Retarget(
 		s_retargetdlg.GetRetargetBvh(), s_matView, s_matProj, convbonemap, AddMotion);
 	if (result) {
@@ -46925,7 +46933,7 @@ int SetNewPoseByMoa(double* pnextframe)
 						//UnderBlendingではない場合の処理
 						//UnderBlendingの場合は　if分の最後で処理
 						//#####################################
-						if (currentmodel->GetMocapWalkFlag()) {
+						if (currentmodel->GetMocapWalkFlag() || jumpflag) {
 							s_matWorld = currentmodel->Move2HipsPos(idlingmotid, 1.0);
 							currentmodel->SetMocapWalkFlag(false);
 						}

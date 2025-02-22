@@ -9369,6 +9369,13 @@ bool CBone::IsHipsBone()
 		return false;
 	}
 
+	if (GetParent(false) && (GetParent(false)->IsHipsBone() == true)) {
+		//2025/02/22
+		//RokDeBone2においてはHipsという名前の子供ボーンにHips_(ChildJointName)_Jointという名前が付く
+		//親ボーンがHipsの場合　その子供ボーンはHipsではない(とする)
+		return false;
+	}
+
 	const char strpat[20] = "Hips";
 	const char* hipsptr = strstr(GetBoneName(), strpat);//strstr
 	if (hipsptr) {

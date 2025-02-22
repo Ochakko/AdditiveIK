@@ -2,7 +2,7 @@
 <CHA>
   <FileInfo>
     <kind>AdditiveIK_ProjectFile</kind>
-    <version>1012</version>
+    <version>1013</version>
     <type>0</type>
   </FileInfo>
   <ProjectInfo>
@@ -17,7 +17,10 @@
   <PlayingSpeed>1.000</PlayingSpeed>
   <PhysicalLimitScale>0.000</PhysicalLimitScale>
   <BtMovableRate>100</BtMovableRate>
-  <CameraDist>709.176</CameraDist>
+  <CameraPos>0.000, 97.356, 417.625</CameraPos>
+  <CameraTarget>-8.873, 105.708, -2.113</CameraTarget>
+  <CameraUpVec>0.000, 1.000, 0.000</CameraUpVec>
+  <CameraDist>419.915</CameraDist>
   <AKScale>1.000</AKScale>
   <BtVScaleOnLimitEul>0.200</BtVScaleOnLimitEul>
   <BoneAxis>0</BoneAxis>

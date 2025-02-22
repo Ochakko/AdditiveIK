@@ -63,9 +63,7 @@ Motion Accelerator File ver6.0 type01
 	"talk_cool_max59", "talk_cool_max59.qua", "Normal0", 0, 0, 0, 0
 	"Walk1_Loop1", "Walk1_Loop1.qua", "Normal0", 1, 0, 0, 0
 	"Jump01", "Jump01.qua", "Normal0", 0, 0, 0, 0
-	"Jump02", "Jump02.qua", "Normal0", 0, 0, 0, 0
-	"Jump03", "Jump03.qua", "Normal0", 0, 0, 0, 0
-	"Jump04", "Jump04.qua", "Normal0", 0, 0, 0, 0
+	"intro_max89", "intro_max89.qua", "Normal0", 0, 0, 0, 0
 }
 
 #BRANCH "walk_max79" {

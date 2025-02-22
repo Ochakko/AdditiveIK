@@ -87,6 +87,13 @@ enum {//s_dsaxisvalue[], s_dsaxisOverTh[], s_dsaxisMOverTh[]のインデック�
 #define MENUOFFSET_COPYHISTORYDLG		(99)
 
 
+//GetFbxTimeScale()用
+enum {
+	TIMESCALE_ONLOAD,
+	TIMESCALE_ONSAVE,
+	TIMESCALE_MAX
+};
+
 
 //lParam
 enum {

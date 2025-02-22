@@ -7056,6 +7056,13 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 			}
 
 
+			mStart = lCurrentAnimationStack->LocalStart;
+			mStop = lCurrentAnimationStack->LocalStop;
+			double dstart = mStart.GetSecondDouble();
+			double dstop = mStop.GetSecondDouble();
+			int animleng = (int)(dstop * GetFbxTimeScale() + 0.5) + 1;//2025/02/23 fbx入出力を繰り返してもモーション長がぴったり合うように.
+
+
 			////RokDeBone2のデータを読み込んだ場合にはZXYをXYZにコンバートする
 			//pScene->GetRootNode()->ConvertPivotAnimationRecursive(lCurrentAnimationStack, FbxNode::eDestinationPivot, 30.0, true);//2022/07/28コメントアウト
 
@@ -7069,45 +7076,37 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 			//pScene->GetAnimationEvaluator()->SetContext(lCurrentAnimationStack);
 
 
-
 			//pScene->GetRootNode()->ConvertPivotAnimationRecursive( mAnimStackNameArray[animno]->Buffer(), FbxNode::eDestinationPivot, 30.0, true );
 			//pScene->GetRootNode()->ConvertPivotAnimationRecursive( mAnimStackNameArray[animno]->Buffer(), FbxNode::eSourcePivot, 30.0, true );
-
-
 			//const char* cameraname = pScene->GlobalCameraSettings().GetDefaultCamera();
 
 
-			FbxTakeInfo* lCurrentTakeInfo = pScene->GetTakeInfo(*(mAnimStackNameArray[animno]));
-			if (lCurrentTakeInfo)
-			{
-				mStart = lCurrentTakeInfo->mLocalTimeSpan.GetStart();
-				mStop = lCurrentTakeInfo->mLocalTimeSpan.GetStop();
-
-				double dstart = mStart.GetSecondDouble();
-				double dstop = mStop.GetSecondDouble();
-				//_ASSERT( 0 );
-			}
-			else
-			{
-				_ASSERT(0);
-				// Take the time line value
-				FbxTimeSpan lTimeLineTimeSpan;
-				pScene->GetGlobalSettings().GetTimelineDefaultTimeSpan(lTimeLineTimeSpan);
-				mStart = lTimeLineTimeSpan.GetStart();
-				mStop = lTimeLineTimeSpan.GetStop();
-			}
-
-
-			//		int animleng = (int)mStop.GetFrame();// - mStart.GetFrame() + 1;		
-					//mFrameTime.SetTime(0, 0, 0, 1, 0, pScene->GetGlobalSettings().GetTimeMode());
-					//mFrameTime2.SetTime(0, 0, 0, 1, 0, pScene->GetGlobalSettings().GetTimeMode());
-			mFrameTime.SetSecondDouble(1.0 / GetFbxTimeScale());
-			mFrameTime2.SetSecondDouble(1.0 / GetFbxTimeScale());
-			//mFrameTime.SetSecondDouble( 1.0 / 300.0 );
-			//mFrameTime2.SetSecondDouble( 1.0 / 300.0 );
-
-
-			double animleng = (int)((mStop.GetSecondDouble() - mStart.GetSecondDouble()) * GetFbxTimeScale());
+			//FbxTakeInfo* lCurrentTakeInfo = pScene->GetTakeInfo(*(mAnimStackNameArray[animno]));
+			//if (lCurrentTakeInfo)
+			//{
+			//	mStart = lCurrentTakeInfo->mLocalTimeSpan.GetStart();
+			//	mStop = lCurrentTakeInfo->mLocalTimeSpan.GetStop();
+			//	double dstart = mStart.GetSecondDouble();
+			//	double dstop = mStop.GetSecondDouble();
+			//	//_ASSERT( 0 );
+			//}
+			//else
+			//{
+			//	_ASSERT(0);
+			//	// Take the time line value
+			//	FbxTimeSpan lTimeLineTimeSpan;
+			//	pScene->GetGlobalSettings().GetTimelineDefaultTimeSpan(lTimeLineTimeSpan);
+			//	mStart = lTimeLineTimeSpan.GetStart();
+			//	mStop = lTimeLineTimeSpan.GetStop();
+			//}
+			////		int animleng = (int)mStop.GetFrame();// - mStart.GetFrame() + 1;		
+			//		//mFrameTime.SetTime(0, 0, 0, 1, 0, pScene->GetGlobalSettings().GetTimeMode());
+			//		//mFrameTime2.SetTime(0, 0, 0, 1, 0, pScene->GetGlobalSettings().GetTimeMode());
+			//mFrameTime.SetSecondDouble(1.0 / GetFbxTimeScale());
+			//mFrameTime2.SetSecondDouble(1.0 / GetFbxTimeScale());
+			////mFrameTime.SetSecondDouble( 1.0 / 300.0 );
+			////mFrameTime2.SetSecondDouble( 1.0 / 300.0 );
+			//double animleng = (int)((mStop.GetSecondDouble() - mStart.GetSecondDouble()) * GetFbxTimeScale());
 
 			DbgOut(L"FBX anim %d, animleng %lf\r\n", animno, animleng);
 
@@ -24491,3 +24490,21 @@ ChaMatrix CModel::RotMocapWalk(double srcrot)
 
 	return wm;
 }
+
+double CModel::GetFbxTimeScale() {
+	//if (g_underWriteFbx) {
+	//	if (GetRokDeBoneUser()) {
+	//		m_fbxtimescale = 60.0;
+	//	}
+	//	else {
+	//		m_fbxtimescale = 30.0;
+	//	}
+	//}
+	//else {
+	//	m_fbxtimescale = 30.0;
+	//}
+
+	m_fbxtimescale = 30.0;
+
+	return m_fbxtimescale;
+};

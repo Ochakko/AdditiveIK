@@ -2314,7 +2314,8 @@ FbxNode* CreateFbxMesh(FbxManager* pSdkManager, FbxScene* pScene,
 	FbxVector4* lloadcp = lLoadMesh->GetControlPoints();
 	FbxVector4* lsavecp = lSaveMesh->GetControlPoints();
 	if (!lloadcp || !lsavecp) {
-		_ASSERT(0);
+		//ダミー影響度のための　NDTriがここを通る
+		//_ASSERT(0);
 		return lNode;
 	}
 	int cpno;
@@ -3750,11 +3751,17 @@ void AnimateSkeleton(bool limitdegflag, FbxScene* pScene, CModel* pmodel)
 		FbxAnimStack* lAnimStack = FbxAnimStack::Create(pScene, lAnimStackName);
 		FbxAnimLayer* lAnimLayer = FbxAnimLayer::Create(pScene, layername);
 		//FbxTakeInfo takeinfo;
-	
 
 		curai->animlayer = lAnimLayer;
         //lAnimStack->AddMember(lAnimLayer);
 		lAnimStack->AddMember(lAnimLayer);
+
+
+		FbxTime starttime, endtime;
+		starttime.SetSecondDouble(0.0);
+		endtime.SetSecondDouble((double)maxframe / pmodel->GetFbxTimeScale());
+		lAnimStack->LocalStart = starttime;
+		lAnimStack->LocalStop = endtime;
 
 
 		pmodel->SetCurrentMotion( curmotid );
@@ -5610,6 +5617,7 @@ int WriteFBXAnimScale(bool limitdegflag, CFBXBone* fbxbone, FbxAnimLayer* lAnimL
 			return 1;
 		}
 		double timescale = curbone->GetParModel()->GetFbxTimeScale();
+
 
 		FbxAnimCurve* lCurve;
 		int frameno;

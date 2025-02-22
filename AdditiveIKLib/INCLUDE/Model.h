@@ -3220,17 +3220,8 @@ public: //accesser
 	bool GetRokDeBoneUser() {
 		return m_rokdeboneuser;
 	};
-	double GetFbxTimeScale() {
-		//if (GetRokDeBoneUser()) {
-		//	m_fbxtimescale = 60.0;//2025/02/09 新しいRokDeBone2のfbxはそのまま30.0でOK
-		//}
-		//else {
-		//	m_fbxtimescale = 30.0;
-		//}
-		
-		m_fbxtimescale = 30.0;
-		return m_fbxtimescale;
-	};
+	double GetFbxTimeScale();
+
 	void SetMoaFreezeCount(int srcval) {
 		m_moa_freezecount = srcval;
 	};
