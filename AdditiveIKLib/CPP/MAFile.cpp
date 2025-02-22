@@ -235,10 +235,10 @@ int CMAFile::SaveMAFile( WCHAR* srcfilename, CModel* srcmodel, HWND srchwnd, int
 		return -1;//!!!!!!!!!!!
 	}
 
-	ret = CheckIdlingMotion(mch);
+	ret = CheckIdlingMotion(mch);//2025/02/23 MOA未設定の場合は　IdlingMotion未設定のエラーでリターンする　通常使用として有り得る
 	if( ret ){
 		DbgOut(  L"mafile : SaveMAFile : CheckIdlingMotion : idling setting error !!!\n" );
-		_ASSERT( 0 );
+		//_ASSERT( 0 );
 		return -2;//!!!!!!!!!!!!
 	}
 
@@ -276,6 +276,7 @@ int CMAFile::SaveMAFile( WCHAR* srcfilename, CModel* srcmodel, HWND srchwnd, int
 	if( ret ){
 		DbgOut(  L"mafile : SaveMAFile : WriteMAHeader error !!!\n" );
 		_ASSERT( 0 );
+		DeleteFileW(srcfilename);//2025/02/23 書き出し失敗時にはファイルを削除する
 		return 1;
 	}
 
@@ -283,6 +284,7 @@ int CMAFile::SaveMAFile( WCHAR* srcfilename, CModel* srcmodel, HWND srchwnd, int
 	if( ret ){
 		DbgOut(  L"mafile : SaveMAFile : WriteFULeng error !!!\n" );
 		_ASSERT( 0 );
+		DeleteFileW(srcfilename);//2025/02/23 書き出し失敗時にはファイルを削除する
 		return 1;
 	}
 
@@ -290,12 +292,14 @@ int CMAFile::SaveMAFile( WCHAR* srcfilename, CModel* srcmodel, HWND srchwnd, int
 	if( ret ){
 		DbgOut(  L"mafile : SaveMAFile : WriteEventKey error !!!\n" );
 		_ASSERT( 0 );
+		DeleteFileW(srcfilename);//2025/02/23 書き出し失敗時にはファイルを削除する
 		return 1;
 	}
 	ret = WriteEventPad();
 	if (ret) {
 		DbgOut(L"mafile : SaveMAFile : WriteEventPad error !!!\n");
 		_ASSERT(0);
+		DeleteFileW(srcfilename);//2025/02/23 書き出し失敗時にはファイルを削除する
 		return 1;
 	}
 
@@ -304,6 +308,7 @@ int CMAFile::SaveMAFile( WCHAR* srcfilename, CModel* srcmodel, HWND srchwnd, int
 	if( ret ){
 		DbgOut(  L"mafile : SaveMAFile : WriteTrunk error !!!\n" );
 		_ASSERT( 0 );
+		DeleteFileW(srcfilename);//2025/02/23 書き出し失敗時にはファイルを削除する
 		return 1;
 	}
 
@@ -311,6 +316,7 @@ int CMAFile::SaveMAFile( WCHAR* srcfilename, CModel* srcmodel, HWND srchwnd, int
 	if( ret ){
 		DbgOut(  L"mafile : SaveMAFile : WriteBranch error !!!\n" );
 		_ASSERT( 0 );
+		DeleteFileW(srcfilename);//2025/02/23 書き出し失敗時にはファイルを削除する
 		return 1;
 	}
 

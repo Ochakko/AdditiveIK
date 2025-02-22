@@ -652,7 +652,15 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 		swprintf_s(pathname, MAX_PATH, L"%s\\%s", charafolder, wfilename);
 
 		CMAFile moafile;
-		CallF(moafile.SaveMAFile(pathname, curmodel, g_mainhwnd, 1), return 1);
+		//2025/02/23
+		//MAO未設定でここが呼び出された場合、IdlingMotionが無いのでエラー終了する
+		//MOA未設定は通常使用で有り得る
+		//よってMOAファイル書き出し失敗時にはreturn 1しないで処理を続けるように.
+		//CallF(moafile.SaveMAFile(pathname, curmodel, g_mainhwnd, 1), return 1);
+		int resultmafile = moafile.SaveMAFile(pathname, curmodel, g_mainhwnd, 1);
+		if (resultmafile != 0) {
+			int dbgflag1 = 1;
+		}
 	}
 
 
