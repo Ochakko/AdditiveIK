@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2025/02/23
-　AdditiveIK 1.0.0.39 RC1(リリース候補2)
+　AdditiveIK 1.0.0.39 release
 　　1.0.0.38からの変更点
 　　　不具合修正
 　　　　fbxの入出力の度にモーションフレーム長が短くなっていく不具合を修正
@@ -25,6 +25,7 @@ https://github.com/Ochakko/AdditiveIK
 　　　Hipsボーンかどうかの判定関数を修正
 　　　　Hipsという文字列が含まれるジョイントが複数階層連続して存在する場合には一番親のHipsを返すように.
 
+　release: B2_eng.fbxの歩くモーションを微妙に調整
 
 
 2025/02/23
