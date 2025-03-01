@@ -28,7 +28,9 @@ public:
 	int IKRotateOneFrame(CModel* srcmodel, int limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 		int keyno, CBone* rotbone, CBone* parentbone,
 		int srcmotid, double curframe, double startframe, double applyframe,
-		CQuaternion rotq0, bool keynum1flag, bool postflag, bool fromiktarget);
+		CQuaternion rotq0, bool keynum1flag, bool postflag, bool fromiktarget,
+		ChaMatrix* srcapplymat//2025/02/24
+	);
 	int RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int wallscrapingikflag, 
 		int* onlycheckptr,
 		double srcstartframe, bool infooutflag, CBone* parentbone, int srcmotid, double srcframe,
@@ -60,7 +62,9 @@ public:
 	int CalcQForRot(bool limitdegflag, bool calcaplyflag,
 		int srcmotid, double srcframe, double srcapplyframe, CQuaternion srcaddrot,
 		CBone* srcrotbone, CBone* srcaplybone,
-		CQuaternion* dstqForRot, CQuaternion* dstqForHipsRot);
+		CQuaternion* dstqForRot, CQuaternion* dstqForHipsRot,
+		ChaMatrix* srcapplymat, bool srcfromiktarget//2025/02/24
+	);
 	bool CalcAxisAndRotForIKRotateAxis(CModel* srcmodel, int limitdegflag,
 		CBone* parentbone, CBone* firstbone,
 		int srcmotid, double curframe, ChaVector3 targetpos,

@@ -489,7 +489,9 @@ int ChaCalcFunc::GetBefNextMP(CBone* srcbone, int srcmotid, double srcframe, CMo
 int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 	int keyno, CBone* rotbone, CBone* parentbone,
 	int srcmotid, double curframe, double startframe, double applyframe,
-	CQuaternion rotq0, bool keynum1flag, bool postflag, bool fromiktarget)
+	CQuaternion rotq0, bool keynum1flag, bool postflag, bool fromiktarget,
+	ChaMatrix* srcapplymat
+)
 {
 
 	//for return value
@@ -563,7 +565,7 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, int wallsc
 			CalcQForRot(limitdegflag, calcaplyflag,
 				srcmotid, curframe, applyframe, rotq0,
 				rotbone, parentbone,
-				&qForRot, &qForHipsRot);
+				&qForRot, &qForHipsRot, srcapplymat, fromiktarget);
 		}
 		else {
 			qForRot = rotq0;
@@ -571,16 +573,17 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, int wallsc
 		}
 
 		double changerate;
-		if (fromiktarget == false) {
-			changerate = (double)(*(g_motionbrush_value + (int)curframe));
-		}
-		else {
-			changerate = 1.0;
-		}
+		//if ((srcapplymat != nullptr) && (fromiktarget == false)) {
+		//	changerate = (double)(*(g_motionbrush_value + (int)curframe));
+		//}
+		//else {
+		//	changerate = 1.0;
+		//}
+		changerate = 1.0;
 
 
 		bool infooutflag;
-		if (curframe == applyframe) {
+		if (IsEqualRoundingTime(curframe, applyframe)) {
 			infooutflag = !underfootrig;
 		}
 		else {
@@ -597,8 +600,20 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, int wallsc
 			CQuaternion curqForRot;
 			CQuaternion curqForHipsRot;
 			endq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-			qForRot.Slerp2(endq, 1.0 - changerate, &curqForRot);
-			qForHipsRot.Slerp2(endq, 1.0 - changerate, &curqForHipsRot);
+
+
+			curqForRot = qForRot;
+			curqForHipsRot = qForHipsRot;
+
+			//addrotだけにウェイトを掛ける必要があるので　ここではslerpしない
+			//qForRot.Slerp2(endq, 1.0 - changerate, &curqForRot);
+			//qForHipsRot.Slerp2(endq, 1.0 - changerate, &curqForHipsRot);
+
+			//curqForRot = qForRot * changerate + endq * (1.0 - changerate);
+			//curqForRot.normalize();
+			//curqForHipsRot = qForHipsRot * changerate + endq * (1.0 - changerate);
+			//curqForHipsRot.normalize();
+
 
 			ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag, 0, RoundingTime(startframe),
 				infooutflag, 0, srcmotid, curframe, curqForRot, curqForHipsRot, fromiktarget);
@@ -631,9 +646,12 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, int wallsc
 int ChaCalcFunc::CalcQForRot(bool limitdegflag, bool calcaplyflag,
 	int srcmotid, double srcframe, double srcapplyframe, CQuaternion srcaddrot,
 	CBone* srcrotbone, CBone* srcaplybone,
-	CQuaternion* dstqForRot, CQuaternion* dstqForHipsRot)
+	CQuaternion* dstqForRot, CQuaternion* dstqForHipsRot,
+	ChaMatrix* srcapplymat, bool srcfromiktarget
+)
 {
 	if (!srcrotbone || !srcaplybone || !dstqForRot || !dstqForHipsRot) {
+		//srcapplymatはnullptrも有
 		_ASSERT(0);
 		return 1;
 	}
@@ -648,24 +666,47 @@ int ChaCalcFunc::CalcQForRot(bool limitdegflag, bool calcaplyflag,
 	double roundingapplyframe = RoundingTime(srcapplyframe);
 
 	//ChaMatrix curparrotmat = curparmp->GetWorldMat();
-	ChaMatrix curparrotmat = srcrotbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
-	curparrotmat.SetTranslationZero();
+	ChaMatrix currotmat = srcrotbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+	//currotmat.SetTranslationZero();
 	//ChaMatrix invcurparrotmat = curparmp->GetInvWorldMat();
-	ChaMatrix invcurparrotmat = ChaMatrixInv(curparrotmat);
-	invcurparrotmat.SetTranslationZero();
+	ChaMatrix invcurrotmat = ChaMatrixInv(currotmat);
+	//invcurrotmat.SetTranslationZero();
 
-	//ChaMatrix aplyparrotmat = aplyparmp->GetWorldMat();
-	ChaMatrix aplyparrotmat = srcaplybone->GetWorldMat(limitdegflag, srcmotid, roundingapplyframe, 0);
-	aplyparrotmat.SetTranslationZero();
-	//ChaMatrix invaplyparrotmat = aplyparmp->GetInvWorldMat();
-	ChaMatrix invaplyparrotmat = ChaMatrixInv(aplyparrotmat);
-	invaplyparrotmat.SetTranslationZero();
+	ChaMatrix aplyparrotmat, invaplyparrotmat;
+	if (srcapplymat == nullptr) {
+		if (srcaplybone) {
+			aplyparrotmat = srcaplybone->GetWorldMat(limitdegflag, srcmotid, roundingapplyframe, 0);
+			aplyparrotmat.SetTranslationZero();
+			invaplyparrotmat = ChaMatrixInv(aplyparrotmat);
+			//invaplyparrotmat.SetTranslationZero();
+		}
+		else {
+			aplyparrotmat.SetIdentity();
+			invaplyparrotmat.SetIdentity();
+		}
+		//if (srcrotbone) {
+		//	aplyparrotmat = srcrotbone->GetWorldMat(limitdegflag, srcmotid, roundingapplyframe, 0);
+		//	aplyparrotmat.SetTranslationZero();
+		//	invaplyparrotmat = ChaMatrixInv(aplyparrotmat);
+		//	invaplyparrotmat.SetTranslationZero();
+		//}
+		//else {
+		//	aplyparrotmat.SetIdentity();
+		//	invaplyparrotmat.SetIdentity();
+		//}
+	}
+	else {
+		aplyparrotmat = *srcapplymat;
+		aplyparrotmat.SetTranslationZero();
+		invaplyparrotmat = ChaMatrixInv(aplyparrotmat);
+		//invaplyparrotmat.SetTranslationZero();
+	}
 
-	CQuaternion invcurparrotq, aplyparrotq, invaplyparrotq, curparrotq;
-	invcurparrotq.RotationMatrix(invcurparrotmat);
-	aplyparrotq.RotationMatrix(aplyparrotmat);
-	invaplyparrotq.RotationMatrix(invaplyparrotmat);
-	curparrotq.RotationMatrix(curparrotmat);
+	//CQuaternion invcurparrotq, aplyparrotq, invaplyparrotq, curparrotq;
+	//invcurparrotq.RotationMatrix(invcurparrotmat);
+	//aplyparrotq.RotationMatrix(aplyparrotmat);
+	//invaplyparrotq.RotationMatrix(invaplyparrotmat);
+	//curparrotq.RotationMatrix(curparrotmat);
 
 
 	//意味：RotBoneQReq()にrotqを渡し　currentworldmatの後ろに　invpivot * rotq * pivotを掛ける
@@ -683,18 +724,63 @@ int ChaCalcFunc::CalcQForRot(bool limitdegflag, bool calcaplyflag,
 	//ToDo : RotQBoneReq2()を作って　引数として上記２つの回転情報を渡す
 	//####################################################################
 
-	if (calcaplyflag == true) {
-		transmat2ForRot = invcurparrotmat * aplyparrotmat * srcaddrot.MakeRotMatX() * invaplyparrotmat * curparrotmat;//bef
+	//if (calcaplyflag == true) {
+	//	transmat2ForRot = invcurparrotmat * aplyparrotmat * srcaddrot.MakeRotMatX() * invaplyparrotmat * curparrotmat;//bef
+	//}
+	//else {
+	//	transmat2ForRot = invcurparrotmat * srcaddrot.MakeRotMatX() * curparrotmat;//bef
+	//	//transmat2ForRot = srcaddrot.MakeRotMatX();//bef
+	//}
+
+
+	//##################################
+	//ブラシのウェイトはAddRotにだけ適用する
+	//##################################
+	CQuaternion addrotq2;
+	double changerate;
+	if ((srcapplymat != nullptr) && (srcfromiktarget == false)) {
+		changerate = (double)(*(g_motionbrush_value + (int)srcframe));
+		CQuaternion endq;
+		endq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+		srcaddrot.Slerp2(endq, 1.0 - changerate, &addrotq2);
 	}
 	else {
-		transmat2ForRot = invcurparrotmat * srcaddrot.MakeRotMatX() * curparrotmat;//bef
+		changerate = 1.0;
+		addrotq2 = srcaddrot;
 	}
 
-	transmat2ForHipsRot = srcaddrot.MakeRotMatX();//for hips edit
+	//if (IsEqualRoundingTime(srcframe, srcapplyframe) == false) {
+	ChaMatrix nodemat = srcrotbone->GetNodeMat();
+	ChaMatrix invnodemat = ChaMatrix(nodemat);
+	//transmat2ForRot = invcurrotmat * aplyparrotmat * invnodemat * addrotq2.MakeRotMatX() * nodemat * invaplyparrotmat * currotmat;
+	//transmat2ForRot = invcurrotmat * nodemat * aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat * currotmat;
+	
+	//if (IsInitRot(currotmat) == false) {
+	//	if (IsInitRot(aplyparrotmat) == false) {
+	//		transmat2ForRot = invcurrotmat * aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat * currotmat;
+	//	}
+	//	else {
+	//		transmat2ForRot = invcurrotmat * addrotq2.MakeRotMatX() * currotmat;
+	//	}
+	//}
+	//else {
+	//	if (IsInitRot(aplyparrotmat) == false) {
+	//		transmat2ForRot = aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat;
+	//	}
+	//	else {
+	//		transmat2ForRot = addrotq2.MakeRotMatX();
+	//	}
+	//}
+	transmat2ForRot = invcurrotmat * aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat * currotmat;
 
 	dstqForRot->RotationMatrix(transmat2ForRot);
-	dstqForHipsRot->RotationMatrix(transmat2ForHipsRot);
 
+	//transmat2ForHipsRot = srcaddrot.MakeRotMatX();//for hips edit
+	//dstqForHipsRot->RotationMatrix(transmat2ForHipsRot);
+	*dstqForHipsRot = addrotq2;
+
+	dstqForRot->normalize();
+	dstqForHipsRot->normalize();
 
 
 	return 0;
@@ -1258,7 +1344,14 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wa
 					// 
 					//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
 					parentbone->SaveSRT(limitdegflag, srcmotid, startframe);
-
+					ChaMatrix saveapplyframemat;
+					//if (parentbone->GetParent(false)) {
+					//	saveapplyframemat = parentbone->GetParent(false)->GetWorldMat(limitdegflag, srcmotid, RoundingTime(applyframe), 0);//2025/02/24
+					//}
+					//else {
+					//	saveapplyframemat = parentbone->GetWorldMat(limitdegflag, srcmotid, RoundingTime(applyframe), 0);//2025/02/24
+					//}
+					saveapplyframemat = parentbone->GetWorldMat(limitdegflag, srcmotid, RoundingTime(applyframe), 0);//2025/02/24
 
 					//IKRotateは壁すりIKで行うので　回転可能かどうかのチェックはここではしない
 
@@ -1269,9 +1362,9 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wa
 					IKRotateOneFrame(srcmodel, limitdegflag, wallscrapingikflag, 
 						erptr,
 						keyno,
-						parentbone, parentbone,
+						parentbone, parentbone, //parentbone->GetParent(false),
 						srcmotid, curframe, startframe, applyframe,
-						rotq0, keynum1flag, postflag, fromiktarget);
+						rotq0, keynum1flag, postflag, fromiktarget, &saveapplyframemat);
 					keyno++;
 
 					//if (g_applyendflag == 1) {

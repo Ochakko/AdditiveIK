@@ -2,6 +2,13 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/03/02
+　マルチスレッドIKのリファクタリング
+　　IK履歴の構造体にできるだけ条件を保存して、スレッド実行時にはその条件で実行するように.
+　　
+　MOAプレイ中はアンドゥ用の処理をスキップ
+　
+
 2025/02/23
 　AdditiveIK 1.0.0.39 release
 　　1.0.0.38からの変更点

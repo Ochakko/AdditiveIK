@@ -63,6 +63,7 @@ int CThreadingPostIK::InitParams()
 	startframe = 0.0;
 	applyframe = 0.0;
 	rotq0.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+	applymat.SetIdentity();
 	keynum1flag = false;
 	postflag = true;
 	fromiktarget = false;
@@ -116,20 +117,20 @@ int CThreadingPostIK::ThreadFunc()
 							for (frameindex = 0; frameindex < framenum; frameindex++) {
 								ChaCalcFunc chacalcfunc;
 								double curframe = m_framenovec[frameindex];
-								if (curframe != applyframe) {
-									int dummykeyno;
-									if (curframe == 0.0) {
-										dummykeyno = 0;
-									}
-									else {
-										dummykeyno = 1;
-									}
-
+								int dummykeyno;
+								if (curframe == 0.0) {
+									dummykeyno = 0;
+								}
+								else {
+									dummykeyno = 1;
+								}
+								if (IsEqualRoundingTime(curframe, applyframe) == false) {
 									chacalcfunc.IKRotateOneFrame(m_model, limitdegflag, wallscrapingikflag, erptr,
 										dummykeyno,
-										rotbone, parentbone,
+										rotbone, rotbone, //parentbone,
 										motid, curframe, startframe, applyframe,
-										rotq0, keynum1flag, postflag, fromiktarget);
+										rotq0, keynum1flag, postflag, fromiktarget,
+										&applymat);
 								}
 							}
 						}
@@ -178,21 +179,21 @@ int CThreadingPostIK::ThreadFunc()
 							for (frameindex = 0; frameindex < framenum; frameindex++) {
 								ChaCalcFunc chacalcfunc;
 								double curframe = m_framenovec[frameindex];
-
-								if (curframe != applyframe) {
-									int dummykeyno;
-									if (curframe == 0.0) {
-										dummykeyno = 0;
-									}
-									else {
-										dummykeyno = 1;
-									}
-
+								int dummykeyno;
+								if (curframe == 0.0) {
+									dummykeyno = 0;
+								}
+								else {
+									dummykeyno = 1;
+								}
+								if (IsEqualRoundingTime(curframe, applyframe) == false) {
+									//if (fabs(curframe - applyframe) > 1e-4) {
 									chacalcfunc.IKRotateOneFrame(m_model, limitdegflag, wallscrapingikflag, erptr,
 										dummykeyno,
-										rotbone, parentbone,
+										rotbone, rotbone, //parentbone,
 										motid, curframe, startframe, applyframe,
-										rotq0, keynum1flag, postflag, fromiktarget);
+										rotq0, keynum1flag, postflag, fromiktarget,
+										&applymat);
 								}
 							}
 						}
@@ -256,7 +257,8 @@ int CThreadingPostIK::AddFramenoList(double srcframeno)
 void CThreadingPostIK::IKRotateOneFrame(CModel* srcmodel, int srclimitdegflag, int srcwallscrapingikflag, CEditRange* srcerptr,
 	int srckeyno, CBone* srcrotbone, CBone* srcparentbone,
 	int srcmotid, double srcstartframe, double srcapplyframe,
-	CQuaternion srcrotq0, bool srckeynum1flag, bool srcpostflag, bool srcfromiktarget)
+	CQuaternion srcrotq0, ChaMatrix srcapplymat,
+	bool srckeynum1flag, bool srcpostflag, bool srcfromiktarget)
 {
 
 	if (!m_model) {
@@ -279,6 +281,7 @@ void CThreadingPostIK::IKRotateOneFrame(CModel* srcmodel, int srclimitdegflag, i
 		startframe = srcstartframe;
 		applyframe = srcapplyframe;
 		rotq0 = srcrotq0;
+		applymat = srcapplymat;
 		keynum1flag = srckeynum1flag;
 		postflag = srcpostflag;
 		fromiktarget = srcfromiktarget;

@@ -6555,6 +6555,9 @@ void PrepairUndo_BlendShape(CBlendShapeElem srcblendshapeelem)
 		(srcblendshapeelem.channelindex < 0)) {
 		return;
 	}
+	if (g_previewMOA) {//2025/03/02
+		return;
+	}
 
 
 	BRUSHSTATE brushstate;
@@ -6592,6 +6595,9 @@ void PrepairUndo_SelectModel(CModel* befmodel, CModel* nextmodel)
 {
 	if (befmodel == nextmodel) {
 		//選択モデルに変化が無い場合はすぐにリターン
+		return;
+	}
+	if (g_previewMOA) {//2025/03/02
 		return;
 	}
 
@@ -6683,6 +6689,9 @@ void PrepairUndo_SelectModel(CModel* befmodel, CModel* nextmodel)
 void PrepairUndo()
 {
 	if (!GetCurrentModel()) {
+		return;
+	}
+	if (g_previewMOA) {//2025/03/02
 		return;
 	}
 

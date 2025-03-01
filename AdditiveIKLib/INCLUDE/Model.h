@@ -203,6 +203,37 @@ typedef struct tag_instancingparams
 }INSTANCINGPARAMS;
 
 
+typedef struct tag_ikrotrec
+{
+	CBone* rotbone;
+	CBone* aplybone;
+	ChaVector3 targetpos;
+	CQuaternion rotq;
+
+	//rotqの回転角度が1e-4より小さい場合にtrue. 
+	//ウェイトが小さいフレームにおいても　IKTargetが走るように記録する必要がある
+	bool lessthanthflag;
+
+	ChaMatrix applyframemat;
+	ChaVector3 applyframeeul;
+
+	void Init() {
+		rotbone = nullptr;
+		aplybone = nullptr;
+
+		targetpos.SetParams(0.0f, 0.0f, 0.0f);
+		rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+		lessthanthflag = true;
+
+		applyframemat.SetIdentity();
+		applyframeeul.SetParams(0.0f, 0.0f, 0.0f);
+	}
+
+	tag_ikrotrec() {
+		Init();
+	};
+}IKROTREC;
+
 
 
 #define MAXPHYSIKRECCNT		(60 * 60)
@@ -615,10 +646,6 @@ public:
 		int srcboneno, int maxlevel);
 
 	int OnBlendWeightChanged(CEditRange* erptr, CMQOObject* srcmqoobj, int channelindex, float srcvalue);
-
-
-	void ClearIKRotRec();
-	void ClearIKRotRecUV();
 
 
 	int IKRotate(bool limitdegflag, int wallscrapingikflag, 
@@ -1407,7 +1434,8 @@ private:
 	//	CQuaternion* dstqForRot, CQuaternion* dstqForHipsRot);
 	int IsMovableRot(bool limitdegflag, int wallscrapingikflag, 
 		int srcmotid, double srcframe, double srcapplyframe,
-		CQuaternion srcaddrot, CBone* srcrotbone, CBone* srcaplybone);
+		CQuaternion srcaddrot, ChaMatrix srcapplymat,
+		CBone* srcrotbone, CBone* srcaplybone);
 
 	//2023/10/17 ChaCalcFuncに移動
 	//bool CalcAxisAndRotForIKRotateAxis(int limitdegflag,
@@ -1431,9 +1459,6 @@ private:
 	//	int keyno, CBone* rotbone, CBone* parentbone,
 	//	double curframe, double startframe, double applyframe,
 	//	CQuaternion rotq0, bool keynum1flag, bool postflag, bool fromiktarget);
-
-	void ClearIKRotRecReq(CBone* srcbone);
-	void ClearIKRotRecUVReq(CBone* srcbone);
 
 
 	//int GetFreeThreadIndex();
@@ -3259,6 +3284,92 @@ public: //accesser
 		return m_mocapwalk;
 	};
 
+
+
+	void ClearIKRotRec()
+	{
+		m_ikrotrec.clear();
+	};
+	void AddIKRotRec(IKROTREC srcrotrec)
+	{
+		m_ikrotrec.push_back(srcrotrec);
+	};
+	int GetIKRotRecSize()
+	{
+		return (int)m_ikrotrec.size();
+	};
+	IKROTREC GetIKRotRec(int srcindex)
+	{
+		if ((srcindex >= 0) && (srcindex < GetIKRotRecSize())) {
+			return m_ikrotrec[srcindex];
+		}
+		else {
+			IKROTREC norec;
+			norec.rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+			norec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
+			norec.lessthanthflag = true;
+			return norec;
+		}
+	};
+	void ClearIKRotRecU()
+	{
+		m_ikrotrec_u.clear();
+	};
+	void ClearIKRotRecV()
+	{
+		m_ikrotrec_v.clear();
+	};
+	void ClearIKRotRecUV()
+	{
+		ClearIKRotRecU();
+		ClearIKRotRecV();
+	};
+	void AddIKRotRec_U(IKROTREC srcrotrec)
+	{
+		m_ikrotrec_u.push_back(srcrotrec);
+	};
+	void AddIKRotRec_V(IKROTREC srcrotrec)
+	{
+		m_ikrotrec_v.push_back(srcrotrec);
+	};
+	int GetIKRotRecSize_U()
+	{
+		return (int)m_ikrotrec_u.size();
+	};
+	int GetIKRotRecSize_V()
+	{
+		return (int)m_ikrotrec_v.size();
+	};
+	IKROTREC GetIKRotRec_U(int srcindex)
+	{
+		if ((srcindex >= 0) && (srcindex < GetIKRotRecSize_U())) {
+			return m_ikrotrec_u[srcindex];
+		}
+		else {
+			IKROTREC norec;
+			norec.Init();
+			norec.rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+			norec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
+			norec.lessthanthflag = true;
+			return norec;
+		}
+	};
+	IKROTREC GetIKRotRec_V(int srcindex)
+	{
+		if ((srcindex >= 0) && (srcindex < GetIKRotRecSize_V())) {
+			return m_ikrotrec_v[srcindex];
+		}
+		else {
+			IKROTREC norec;
+			norec.Init();
+			norec.rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+			norec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
+			norec.lessthanthflag = true;
+			return norec;
+		}
+	};
+
+
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];
@@ -3492,6 +3603,11 @@ private:
 	int m_moa_rand1;
 
 	bool m_mocapwalk;
+
+
+	std::vector<IKROTREC> m_ikrotrec;
+	std::vector<IKROTREC> m_ikrotrec_u;
+	std::vector<IKROTREC> m_ikrotrec_v;
 };
 
 

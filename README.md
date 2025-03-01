@@ -244,9 +244,9 @@ Smooth平滑化<br>
 # 開発環境(ハードウェア)<br>
 2025/3/1からの環境<br>
 　一世代前のIntelCPU 20コア 28スレッド<br>
-　GeForce RTX 4070 12GB<br>
-　32GB RAM<br>
-　1T SSD<br>
+　　GeForce RTX 4070 12GB<br>
+　　32GB RAM(多分足りない　増設予定)<br>
+　　1T SSD(多分足りない　増設予定)<br>
 2025/2/28までの環境<br>
 　古めの８コアIntelマシン<br>
 　　GeForce RTX 2080 8GB<br>

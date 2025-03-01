@@ -509,9 +509,9 @@ int CBone::InitParams()
 	m_iktargetflag = false;
 	m_iktargetpos.SetParams(0.0f, 0.0f, 0.0f);
 
-	m_ikrotrec.clear();
-	m_ikrotrec_u.clear();
-	m_ikrotrec_v.clear();
+	//m_ikrotrec.clear();
+	//m_ikrotrec_u.clear();
+	//m_ikrotrec_v.clear();
 
 
 	return 0;

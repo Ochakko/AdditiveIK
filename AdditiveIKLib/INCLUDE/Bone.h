@@ -34,34 +34,6 @@ class CBtObject;
 class CModel;
 class ChaScene;
 
-typedef struct tag_ikrotrec
-{
-	ChaVector3 targetpos;
-	CQuaternion rotq;
-
-	//rotqの回転角度が1e-4より小さい場合にtrue. 
-	//ウェイトが小さいフレームにおいても　IKTargetが走るように記録する必要がある
-	bool lessthanthflag;
-
-	ChaMatrix applyframemat;
-	ChaVector3 applyframeeul;
-
-	void Init() {
-		targetpos.SetParams(0.0f, 0.0f, 0.0f);
-		rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-		lessthanthflag = true;
-		
-		applyframemat.SetIdentity();
-		applyframeeul.SetParams(0.0f, 0.0f, 0.0f);
-	}
-
-	tag_ikrotrec() {
-		Init();
-	};
-}IKROTREC;
-
-
-
 class CBone
 {
 public:
@@ -1586,80 +1558,6 @@ public: //accesser
 	void CalcNodePostureReq(bool bindposeflag, FbxNode* pNode, double srcframe, ChaMatrix* plocalnodemat, ChaMatrix* plocalnodeanimmat);
 
 
-	void ClearIKRotRec()
-	{
-		m_ikrotrec.clear();
-	}
-	void AddIKRotRec(IKROTREC srcrotrec)
-	{
-		m_ikrotrec.push_back(srcrotrec);
-	}
-	int GetIKRotRecSize()
-	{
-		return (int)m_ikrotrec.size();
-	}
-	IKROTREC GetIKRotRec(int srcindex)
-	{
-		if ((srcindex >= 0) && (srcindex < GetIKRotRecSize())) {
-			return m_ikrotrec[srcindex];
-		}
-		else {
-			IKROTREC norec;
-			norec.rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-			norec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
-			norec.lessthanthflag = true;
-			return norec;
-		}
-	}
-
-	void ClearIKRotRecUV()
-	{
-		m_ikrotrec_u.clear();
-		m_ikrotrec_v.clear();
-	}
-	void AddIKRotRec_U(IKROTREC srcrotrec)
-	{
-		m_ikrotrec_u.push_back(srcrotrec);
-	}
-	void AddIKRotRec_V(IKROTREC srcrotrec)
-	{
-		m_ikrotrec_v.push_back(srcrotrec);
-	}
-	int GetIKRotRecSize_U()
-	{
-		return (int)m_ikrotrec_u.size();
-	}
-	int GetIKRotRecSize_V()
-	{
-		return (int)m_ikrotrec_v.size();
-	}
-	IKROTREC GetIKRotRec_U(int srcindex)
-	{
-		if ((srcindex >= 0) && (srcindex < GetIKRotRecSize_U())) {
-			return m_ikrotrec_u[srcindex];
-		}
-		else {
-			IKROTREC norec;
-			norec.rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-			norec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
-			norec.lessthanthflag = true;
-			return norec;
-		}
-	}
-	IKROTREC GetIKRotRec_V(int srcindex)
-	{
-		if ((srcindex >= 0) && (srcindex < GetIKRotRecSize_V())) {
-			return m_ikrotrec_v[srcindex];
-		}
-		else {
-			IKROTREC norec;
-			norec.rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-			norec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
-			norec.lessthanthflag = true;
-			return norec;
-		}
-	}
-
 
 	FbxDouble3 GetFbxLclPos() {
 		return m_fbxLclPos;
@@ -2016,10 +1914,6 @@ private:
 	bool m_ikstopflag;
 	bool m_iktargetflag;
 	ChaVector3 m_iktargetpos;
-
-	std::vector<IKROTREC> m_ikrotrec;
-	std::vector<IKROTREC> m_ikrotrec_u;
-	std::vector<IKROTREC> m_ikrotrec_v;
 
 	int m_dbgcount;
 

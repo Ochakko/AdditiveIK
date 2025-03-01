@@ -33,7 +33,8 @@ public:
 	void IKRotateOneFrame(CModel* srcmodel, int srclimitdegflag, int srcwallscrapingikflag, CEditRange* srcerptr,
 		int srckeyno, CBone* srcrotbone, CBone* srcparentbone,
 		int srcmotid, double srcstartframe, double srcapplyframe,
-		CQuaternion srcrotq0, bool srckeynum1flag, bool srcpostflag, bool srcfromiktarget);
+		CQuaternion srcrotq0, ChaMatrix srcsaveapplymat,
+		bool srckeynum1flag, bool srcpostflag, bool srcfromiktarget);
 
 private:
 	//static unsigned __stdcall ThreadFuncCaller(LPVOID lpThreadParam);
@@ -60,6 +61,7 @@ private:
 	double startframe;
 	double applyframe;
 	CQuaternion rotq0;
+	ChaMatrix applymat;
 	bool keynum1flag;
 	bool postflag;
 	bool fromiktarget;

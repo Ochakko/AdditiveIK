@@ -1979,6 +1979,8 @@ int CQuaternion::SetAxisAndRot(ChaVector3 srcaxis, float phai)
 }
 int CQuaternion::SetAxisAndRot(ChaVector3 srcaxis, double phai)
 {
+	srcaxis.Normalize();
+
 	double phai2;
 	double cos_phai2, sin_phai2;
 
@@ -1990,6 +1992,8 @@ int CQuaternion::SetAxisAndRot(ChaVector3 srcaxis, double phai)
 	x = (float)((double)srcaxis.x * sin_phai2);
 	y = (float)((double)srcaxis.y * sin_phai2);
 	z = (float)((double)srcaxis.z * sin_phai2);
+
+	normalize();
 
 	return 0;
 }
@@ -2461,7 +2465,8 @@ CQuaternion CQuaternion::normalize() {
 		return *this;
 	}
 	else {
-		return CQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
+		SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+		return *this;
 	}
 }
 
@@ -2573,6 +2578,7 @@ void CQuaternion::RotationMatrix(ChaMatrix srcmat)
 		tmpq.y = (float)(((double)m[2][0] - (double)m[0][2]) / (2.0 * sqrt(trace)));
 		tmpq.z = (float)(((double)m[0][1] - (double)m[1][0]) / (2.0 * sqrt(trace)));
 		tmpq.w = (float)(sqrt(trace) / 2.0);
+		tmpq.normalize();//2025/02/24
 		*this = tmpq;
 		return;//!!!!!!!!!!!!!!!!!!!!!!!!!
 	}
@@ -2625,6 +2631,7 @@ void CQuaternion::RotationMatrix(ChaMatrix srcmat)
 		}
 		break;
 	}
+	tmpq.normalize();//2025/02/24
 	*this = tmpq;
 
 
@@ -2737,8 +2744,13 @@ double CQuaternion::CalcRad(CQuaternion srcq)
 		dot = 1.0;
 	if (dot < -1.0)
 		dot = -1.0;
-	retrad = acos(dot);
-
+	
+	if (fabs(dot) <= 1e-4) {//2025/02/24
+		retrad = 0.0;
+	}
+	else {
+		retrad = acos(dot);
+	}
 	return retrad;
 }
 
@@ -2746,11 +2758,23 @@ int CQuaternion::Slerp2(CQuaternion endq, double t, CQuaternion* dstq)
 {
 	dstq->SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 
-	if (t == 1.0) {
+
+	normalize();//2025/02/24
+	endq.normalize();//2025/02/24
+
+	//if (t == 1.0) {
+	//	*dstq = endq;
+	//	return 0;//!!!!!!!!!!!!!!!!!!!!!!!!!
+	//}
+	//else if (t == 0.0) {
+	//	*dstq = *this;
+	//	return 0;//!!!!!!!!!!!!!!!!!!!!!!!!!
+	//}
+	if (fabs(t - 1.0) <= 1e-4) {
 		*dstq = endq;
 		return 0;//!!!!!!!!!!!!!!!!!!!!!!!!!
 	}
-	else if (t == 0.0) {
+	else if (fabs(t) <= 1e-4) {
 		*dstq = *this;
 		return 0;//!!!!!!!!!!!!!!!!!!!!!!!!!
 	}
@@ -2758,17 +2782,29 @@ int CQuaternion::Slerp2(CQuaternion endq, double t, CQuaternion* dstq)
 	double kaku;
 	kaku = this->CalcRad(endq);
 
-	if (kaku > (PI * 0.5)) {
-		//片方を-qにすれば、(PI * 0.5f)より小さくなる。（最短コースをたどれる）
-		endq = -endq;
-		kaku = this->CalcRad(endq);
-		_ASSERT(kaku <= (PI * 0.5));
-	}
+	//if (kaku > (PI * 0.5)) {
+	//	//片方を-qにすれば、(PI * 0.5f)より小さくなる。（最短コースをたどれる）
+	//	endq = -endq;
+	//	kaku = this->CalcRad(endq);
+	//	//_ASSERT(kaku <= (PI * 0.5));
+	//}
 
 	// sin( kaku ) == 0.0 付近を調整。
 	//180度にはならないので（ならないようにするので）０度のみケア
 	int kaku0flag = 0;
-	if ((kaku <= 1e-4) && (kaku >= -1e-4)) {
+	//if ((kaku <= 1e-4) && (kaku >= -1e-4)) {
+	//	kaku0flag = 1;
+	//}
+
+	double sinkaku = sin(kaku);
+	if (sinkaku < -1.0) {
+		sinkaku = -1.0;
+	}
+	else if (sinkaku > 1.0) {
+		sinkaku = 1.0;
+	}
+
+	if (fabs(sinkaku) <= 1e-4) {
 		kaku0flag = 1;
 	}
 
@@ -2777,8 +2813,8 @@ int CQuaternion::Slerp2(CQuaternion endq, double t, CQuaternion* dstq)
 
 	double alpha, beta;
 	if (kaku0flag == 0) {
-		alpha = sin(kaku * (1.0 - t)) / sin(kaku);
-		beta = sin(kaku * t) / sin(kaku);
+		alpha = sin(kaku * (1.0 - t)) / sinkaku;
+		beta = sin(kaku * t) / sinkaku;
 
 		dstq->x = (float)((double)tmpq.x * alpha + (double)endq.x * beta);
 		dstq->y = (float)((double)tmpq.y * alpha + (double)endq.y * beta);
@@ -2786,9 +2822,10 @@ int CQuaternion::Slerp2(CQuaternion endq, double t, CQuaternion* dstq)
 		dstq->w = (float)((double)tmpq.w * alpha + (double)endq.w * beta);
 		//		retq = tmpq * alpha + endq * beta;
 
+		dstq->normalize();//2025/02/24
 	}
 	else {
-		*dstq = tmpq;
+		*dstq = *this;
 	}
 	return 0;
 }
