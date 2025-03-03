@@ -127,7 +127,9 @@ int CThreadingPostIK::ThreadFunc()
 								if (IsEqualRoundingTime(curframe, applyframe) == false) {
 									chacalcfunc.IKRotateOneFrame(m_model, limitdegflag, wallscrapingikflag, erptr,
 										dummykeyno,
-										rotbone, rotbone, //parentbone,
+										rotbone, 
+										//rotbone, 
+										parentbone,
 										motid, curframe, startframe, applyframe,
 										rotq0, keynum1flag, postflag, fromiktarget,
 										&applymat);
@@ -190,7 +192,9 @@ int CThreadingPostIK::ThreadFunc()
 									//if (fabs(curframe - applyframe) > 1e-4) {
 									chacalcfunc.IKRotateOneFrame(m_model, limitdegflag, wallscrapingikflag, erptr,
 										dummykeyno,
-										rotbone, rotbone, //parentbone,
+										rotbone, 
+										//rotbone, 
+										parentbone,
 										motid, curframe, startframe, applyframe,
 										rotq0, keynum1flag, postflag, fromiktarget,
 										&applymat);

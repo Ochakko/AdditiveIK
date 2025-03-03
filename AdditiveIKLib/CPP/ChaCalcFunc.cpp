@@ -665,42 +665,82 @@ int ChaCalcFunc::CalcQForRot(bool limitdegflag, bool calcaplyflag,
 	double roundingframe = RoundingTime(srcframe);
 	double roundingapplyframe = RoundingTime(srcapplyframe);
 
-	//ChaMatrix curparrotmat = curparmp->GetWorldMat();
-	ChaMatrix currotmat = srcrotbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
-	//currotmat.SetTranslationZero();
-	//ChaMatrix invcurparrotmat = curparmp->GetInvWorldMat();
-	ChaMatrix invcurrotmat = ChaMatrixInv(currotmat);
-	//invcurrotmat.SetTranslationZero();
+
+	ChaMatrix currotmat;
+	ChaMatrix invcurrotmat;
+	//if (srcaplybone != nullptr) {
+	//	currotmat = srcaplybone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+	//	//currotmat.SetTranslationZero();
+	//	invcurrotmat = ChaMatrixInv(currotmat);
+	//	//invcurrotmat.SetTranslationZero();
+	//}
+	//else {
+		currotmat = srcrotbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+		//currotmat.SetTranslationZero();
+		invcurrotmat = ChaMatrixInv(currotmat);
+		//invcurrotmat.SetTranslationZero();
+	//}
+
+
+
+
+
 
 	ChaMatrix aplyparrotmat, invaplyparrotmat;
+	ChaMatrix curparmat, invcurparmat;
+	//aplyparrotmat = srcrotbone->GetWorldMat(limitdegflag, srcmotid, roundingapplyframe, 0);
+	////aplyparrotmat.SetTranslationZero();
+	//invaplyparrotmat = ChaMatrixInv(aplyparrotmat);
+	////invaplyparrotmat.SetTranslationZero();
+
 	if (srcapplymat == nullptr) {
-		if (srcaplybone) {
+		if (srcaplybone != nullptr) {
 			aplyparrotmat = srcaplybone->GetWorldMat(limitdegflag, srcmotid, roundingapplyframe, 0);
-			aplyparrotmat.SetTranslationZero();
+			//aplyparrotmat.SetTranslationZero();
 			invaplyparrotmat = ChaMatrixInv(aplyparrotmat);
 			//invaplyparrotmat.SetTranslationZero();
+
+			curparmat = srcaplybone->GetWorldMat(limitdegflag, srcmotid, RoundingTime(srcframe), nullptr);
+			invcurparmat = ChaMatrixInv(curparmat);
 		}
 		else {
-			aplyparrotmat.SetIdentity();
-			invaplyparrotmat.SetIdentity();
+			//aplyparrotmat.SetIdentity();
+			//invaplyparrotmat.SetIdentity();
+			aplyparrotmat = srcrotbone->GetWorldMat(limitdegflag, srcmotid, roundingapplyframe, 0);
+			//aplyparrotmat.SetTranslationZero();
+			invaplyparrotmat = ChaMatrixInv(aplyparrotmat);
+			//invaplyparrotmat.SetTranslationZero();
+
+			curparmat.SetIdentity();;
+			invcurparmat.SetIdentity();
 		}
-		//if (srcrotbone) {
-		//	aplyparrotmat = srcrotbone->GetWorldMat(limitdegflag, srcmotid, roundingapplyframe, 0);
-		//	aplyparrotmat.SetTranslationZero();
-		//	invaplyparrotmat = ChaMatrixInv(aplyparrotmat);
-		//	invaplyparrotmat.SetTranslationZero();
-		//}
-		//else {
-		//	aplyparrotmat.SetIdentity();
-		//	invaplyparrotmat.SetIdentity();
-		//}
+	//	if (srcrotbone) {
+	//		aplyparrotmat = srcrotbone->GetWorldMat(limitdegflag, srcmotid, roundingapplyframe, 0);
+	//		aplyparrotmat.SetTranslationZero();
+	//		invaplyparrotmat = ChaMatrixInv(aplyparrotmat);
+	//		invaplyparrotmat.SetTranslationZero();
+	//	}
+	//	else {
+	//		aplyparrotmat.SetIdentity();
+	//		invaplyparrotmat.SetIdentity();
+	//	}
 	}
 	else {
 		aplyparrotmat = *srcapplymat;
-		aplyparrotmat.SetTranslationZero();
+		//aplyparrotmat.SetTranslationZero();
 		invaplyparrotmat = ChaMatrixInv(aplyparrotmat);
 		//invaplyparrotmat.SetTranslationZero();
+
+		if (srcaplybone != nullptr) {
+			curparmat = srcaplybone->GetWorldMat(limitdegflag, srcmotid, RoundingTime(srcframe), nullptr);
+			invcurparmat = ChaMatrixInv(curparmat);
+		}
+		else {
+			curparmat.SetIdentity();;
+			invcurparmat.SetIdentity();
+		}
 	}
+
 
 	//CQuaternion invcurparrotq, aplyparrotq, invaplyparrotq, curparrotq;
 	//invcurparrotq.RotationMatrix(invcurparrotmat);
@@ -750,8 +790,18 @@ int ChaCalcFunc::CalcQForRot(bool limitdegflag, bool calcaplyflag,
 	}
 
 	//if (IsEqualRoundingTime(srcframe, srcapplyframe) == false) {
-	ChaMatrix nodemat = srcrotbone->GetNodeMat();
-	ChaMatrix invnodemat = ChaMatrix(nodemat);
+	ChaMatrix nodemat;
+	ChaMatrix invnodemat;
+	if (srcaplybone != nullptr) {
+		nodemat = srcaplybone->GetNodeMat();
+		invnodemat = ChaMatrix(nodemat);
+	}
+	else {
+		nodemat = srcrotbone->GetNodeMat();
+		invnodemat = ChaMatrix(nodemat);
+	}
+
+
 	//transmat2ForRot = invcurrotmat * aplyparrotmat * invnodemat * addrotq2.MakeRotMatX() * nodemat * invaplyparrotmat * currotmat;
 	//transmat2ForRot = invcurrotmat * nodemat * aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat * currotmat;
 	
@@ -771,7 +821,23 @@ int ChaCalcFunc::CalcQForRot(bool limitdegflag, bool calcaplyflag,
 	//		transmat2ForRot = addrotq2.MakeRotMatX();
 	//	}
 	//}
-	transmat2ForRot = invcurrotmat * aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat * currotmat;
+
+	ChaMatrix rotmat0 = srcrotbone->GetWorldMat(limitdegflag, srcmotid, srcframe, nullptr);
+	ChaMatrix invrotmat0 = ChaMatrixInv(rotmat0);
+
+	//transmat2ForRot = addrotq2.MakeRotMatX() * currotmat;
+
+	//transmat2ForRot = invaplyparrotmat * addrotq2.MakeRotMatX() * aplyparrotmat * currotmat;
+	//transmat2ForRot = aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat * currotmat;
+	//transmat2ForRot = addrotq2.MakeRotMatX() * rotmat0 * invaplyparrotmat * currotmat;
+
+	//if (srcapplymat != nullptr) {
+		//transmat2ForRot = invcurrotmat * aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat * currotmat;
+		transmat2ForRot = rotmat0 * invaplyparrotmat * addrotq2.MakeRotMatX() * aplyparrotmat * invrotmat0;
+	//}
+	//else {
+	//	//transmat2ForRot = invcurrotmat * nodemat * addrotq2.MakeRotMatX() * currotmat;
+	//}
 
 	dstqForRot->RotationMatrix(transmat2ForRot);
 
@@ -1345,13 +1411,13 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wa
 					//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
 					parentbone->SaveSRT(limitdegflag, srcmotid, startframe);
 					ChaMatrix saveapplyframemat;
-					//if (parentbone->GetParent(false)) {
-					//	saveapplyframemat = parentbone->GetParent(false)->GetWorldMat(limitdegflag, srcmotid, RoundingTime(applyframe), 0);//2025/02/24
-					//}
-					//else {
-					//	saveapplyframemat = parentbone->GetWorldMat(limitdegflag, srcmotid, RoundingTime(applyframe), 0);//2025/02/24
-					//}
-					saveapplyframemat = parentbone->GetWorldMat(limitdegflag, srcmotid, RoundingTime(applyframe), 0);//2025/02/24
+					if (parentbone->GetParent(false)) {
+						saveapplyframemat = parentbone->GetParent(false)->GetWorldMat(limitdegflag, srcmotid, RoundingTime(applyframe), 0);//2025/02/24
+					}
+					else {
+						saveapplyframemat = parentbone->GetWorldMat(limitdegflag, srcmotid, RoundingTime(applyframe), 0);//2025/02/24
+					}
+					//saveapplyframemat = parentbone->GetWorldMat(limitdegflag, srcmotid, RoundingTime(applyframe), 0);//2025/02/24
 
 					//IKRotateは壁すりIKで行うので　回転可能かどうかのチェックはここではしない
 
@@ -1362,7 +1428,9 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wa
 					IKRotateOneFrame(srcmodel, limitdegflag, wallscrapingikflag, 
 						erptr,
 						keyno,
-						parentbone, parentbone, //parentbone->GetParent(false),
+						parentbone, 
+						//parentbone, 
+						parentbone->GetParent(false),
 						srcmotid, curframe, startframe, applyframe,
 						rotq0, keynum1flag, postflag, fromiktarget, &saveapplyframemat);
 					keyno++;
