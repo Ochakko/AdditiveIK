@@ -3691,6 +3691,7 @@ void InitApp()
 	s_cpinfo.Init();
 	s_cpmotinfo.Init();
 
+	g_ikrate = 0.20f;
 
 	s_moa_nextmotid = 0;
 	s_moa_nextframe = 0;

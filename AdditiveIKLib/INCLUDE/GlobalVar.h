@@ -340,7 +340,8 @@ double g_dspeed = 1.0;
 double g_dspeedsave = 1.0;
 
 float g_ikfirst = 1.0f;
-float g_ikrate = 1.0f;
+//float g_ikrate = 1.0f;
+float g_ikrate = 0.20f;
 double g_applyrate = 50.0;
 int g_refposstep = 10;
 int g_refalpha = 50;
