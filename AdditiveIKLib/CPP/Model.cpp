@@ -12835,8 +12835,8 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 							parentbone->GetParent(false),
 							curmotid, applyframe, startframe, applyframe,
 							rotq0, keynum1flag, postflag, fromiktarget, 
-							//&saveapplyframemat
-							nullptr
+							&saveapplyframemat
+							//nullptr
 						);
 
 						keyno++;
@@ -12852,8 +12852,8 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 							parentbone->GetParent(false),
 							curmotid, GetCurrentFrame(), startframe, applyframe,
 							rotq0, keynum1flag, postflag, fromiktarget, 
-							//&saveapplyframemat
-							nullptr
+							&saveapplyframemat
+							//nullptr
 						);
 					}
 
@@ -15055,16 +15055,16 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 
 					ChaMatrix saveapplyframemat;
 					ChaVector3 saveapplyframeeul;
-					if (curbone->GetParent(false)) {
-						saveapplyframemat = curbone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
-						saveapplyframeeul = curbone->GetParent(false)->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
-					}
-					else {
-						saveapplyframemat = curbone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
-						saveapplyframeeul = curbone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
-					}
-					//saveapplyframemat = curbone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
-					//saveapplyframeeul = curbone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+					//if (curbone->GetParent(false)) {
+					//	saveapplyframemat = curbone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+					//	saveapplyframeeul = curbone->GetParent(false)->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+					//}
+					//else {
+					//	saveapplyframemat = curbone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+					//	saveapplyframeeul = curbone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+					//}
+					saveapplyframemat = curbone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+					saveapplyframeeul = curbone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 
 
 					//if (fabs(rotrad2) >= (0.020 * DEG2PAI)) {//2023/02/11
@@ -15095,8 +15095,8 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 								keyno, 
 								//curbone, aplybone,
 								curbone, 
-								//curbone, 
-								curbone->GetParent(false),//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
+								curbone,//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
+								//curbone->GetParent(false),
 								curmotid, curframe, startframe, applyframe,
 								localq, keynum1flag, postflag, fromiktarget, nullptr);
 						}
@@ -15108,8 +15108,8 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 								0, 
 								//curbone, aplybone,
 								curbone, 
-								//curbone, 
-								curbone->GetParent(false),//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
+								curbone,//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
+								//curbone->GetParent(false),
 								curmotid, GetCurrentFrame(), startframe, applyframe,
 								localq, keynum1flag, postflag, fromiktarget, nullptr);
 						}
@@ -15124,7 +15124,8 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 						IKROTREC currotrec;
 						currotrec.Init();
 						currotrec.rotbone = curbone;
-						currotrec.aplybone = curbone->GetParent(false);
+						currotrec.aplybone = curbone;
+						//currotrec.aplybone = curbone->GetParent(false);
 						currotrec.applyframemat = saveapplyframemat;//2025/02/24 変更前のapplymatが必要
 						currotrec.rotq = localq;
 						currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
@@ -15161,7 +15162,8 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 						IKROTREC currotrec;
 						currotrec.Init();
 						currotrec.rotbone = curbone;
-						currotrec.aplybone = curbone->GetParent(false);
+						currotrec.aplybone = curbone;
+						//currotrec.aplybone = curbone->GetParent(false);
 						currotrec.applyframemat = saveapplyframemat;
 						currotrec.rotq = localq;
 						currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
@@ -17500,7 +17502,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 		}
 		lastbone = curbone;
 
-		float currate = 1.0f;
+		float currate = g_ikrate * 0.50f;
 
 		double firstframe = 0.0;
 		int levelcnt = 0;
@@ -17580,16 +17582,16 @@ int CModel::IKRotateAxisDeltaUnderIK(
 
 			ChaMatrix saveapplyframemat;
 			ChaVector3 saveapplyframeeul;
-			if (aplybone->GetParent(false)) {
-				saveapplyframemat = aplybone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
-				saveapplyframeeul = aplybone->GetParent(false)->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
-			}
-			else {
-				saveapplyframemat = aplybone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
-				saveapplyframeeul = aplybone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
-			}
-			//saveapplyframemat = aplybone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
-			//saveapplyframeeul = aplybone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+			//if (aplybone->GetParent(false)) {
+			//	saveapplyframemat = aplybone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+			//	saveapplyframeeul = aplybone->GetParent(false)->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+			//}
+			//else {
+			//	saveapplyframemat = aplybone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+			//	saveapplyframeeul = aplybone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+			//}
+			saveapplyframemat = aplybone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+			saveapplyframeeul = aplybone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 
 			if (fabs(rotrad2) >= 1e-4) {
 				CQuaternion qForRot;
@@ -17609,8 +17611,10 @@ int CModel::IKRotateAxisDeltaUnderIK(
 					//2023/01/28 IK時は　GetBtForce()チェックはしない　BtForce == 1でも角度制限する
 					int ismovable = IsMovableRot(limitdegflag, wallscrapingikflag, curmotid, applyframe, applyframe, 
 						localq, saveapplyframemat,
-						aplybone, 
-						aplybone->GetParent(false));
+						aplybone,
+						aplybone
+						//aplybone->GetParent(false)
+						);
 					if (ismovable == 0) {
 						////g_underIKRot = false;//2023/01/14 parent limited or not
 						//if (editboneforret) {
@@ -17641,10 +17645,13 @@ int CModel::IKRotateAxisDeltaUnderIK(
 					ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 						keyno, 
 						aplybone, 
-						//aplybone, 
-						aplybone->GetParent(false),
+						aplybone, 
+						//aplybone->GetParent(false),
 						curmotid, curframe, startframe, applyframe,
-						localq, keynum1flag, postflag, fromiktarget, nullptr);
+						localq, keynum1flag, postflag, fromiktarget, 
+						&saveapplyframemat
+						//nullptr
+					);
 
 					keyno++;
 					//}
@@ -17660,10 +17667,13 @@ int CModel::IKRotateAxisDeltaUnderIK(
 					ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 						0, 
 						aplybone, 
-						//aplybone, 
-						aplybone->GetParent(false),
+						aplybone, 
+						//aplybone->GetParent(false),
 						curmotid, GetCurrentFrame(), startframe, applyframe,
-						localq, keynum1flag, false, fromiktarget, nullptr);
+						localq, keynum1flag, false, fromiktarget, 
+						&saveapplyframemat
+						//nullptr
+					);
 				}
 
 
@@ -17695,7 +17705,8 @@ int CModel::IKRotateAxisDeltaUnderIK(
 				IKROTREC currotrec;
 				currotrec.Init();
 				currotrec.rotbone = aplybone;
-				currotrec.aplybone = aplybone->GetParent(false);
+				currotrec.aplybone = aplybone;
+				//currotrec.aplybone = aplybone->GetParent(false);
 				//currotrec.applyframemat = aplybone->GetWorldMat(limitdegflag, curmotid, applyframe, 0);
 				currotrec.applyframemat = saveapplyframemat;//2025/02/24 変更前のapplymatが必要
 				currotrec.applyframeeul = saveapplyframeeul;//2025/02/24 変更前のapplymatが必要
@@ -17710,7 +17721,8 @@ int CModel::IKRotateAxisDeltaUnderIK(
 				IKROTREC currotrec;
 				currotrec.Init();
 				currotrec.rotbone = aplybone;
-				currotrec.aplybone = aplybone->GetParent(false);
+				currotrec.aplybone = aplybone;
+				//currotrec.aplybone = aplybone->GetParent(false);
 				//currotrec.applyframemat = aplybone->GetWorldMat(limitdegflag, curmotid, applyframe, 0);
 				currotrec.applyframemat = saveapplyframemat;//2025/02/24 変更前のapplymatが必要
 				currotrec.applyframeeul = saveapplyframeeul;//2025/02/24 変更前のapplymatが必要

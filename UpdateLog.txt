@@ -1,6 +1,13 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2025/03/06
+　マルチスレッドAdditiveIKのリファクタリング　その４
+　　
+　　マニピュレータ軸指定IKの軸が修正により合わなくなっていたので対応
+　　　
+　　マニピュレータ中央ドラッグ処理は修正を採用(そのまま)
+
 
 2025/03/04
 　マルチスレッドIKのリファクタリング　その３

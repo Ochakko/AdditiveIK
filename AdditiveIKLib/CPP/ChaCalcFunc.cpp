@@ -839,6 +839,7 @@ int ChaCalcFunc::CalcQForRot(bool limitdegflag, bool calcaplyflag,
 	//}
 	//else {
 	//	//transmat2ForRot = invcurrotmat * nodemat * addrotq2.MakeRotMatX() * currotmat;
+	//	transmat2ForRot = invrotmat0 * addrotq2.MakeRotMatX() * rotmat0;
 	//}
 
 	dstqForRot->RotationMatrix(transmat2ForRot);
