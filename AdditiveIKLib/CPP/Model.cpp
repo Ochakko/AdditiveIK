@@ -12667,6 +12667,14 @@ int CModel::CalcAxisAndRotForIKRotateVert(int limitdegflag,
 int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 	int srcboneno, ChaVector3 targetpos, int maxlevel)
 {
+	static bool s_undercalling = false;
+	if (s_undercalling) {
+		_ASSERT(0);
+		return 0;
+	}
+	s_undercalling = true;
+
+
 	ChaCalcFunc chacalcfunc;
 
 	SetIKTargetVec();
@@ -12675,17 +12683,21 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 	if (!firstbone) {
 		_ASSERT(0);
 		////g_underIKRot = false;//2023/01/14 parent limited or not
+		s_undercalling = false;
 		return -1;
 	}
 
 	if (firstbone->IsNotSkeleton()) {
+		s_undercalling = false;
 		return -1;
 	}
 
 	if (!ExistCurrentMotion()) {
+		s_undercalling = false;
 		return 0;
 	}
 	if (GetNoBoneFlag()) {
+		s_undercalling = false;
 		return 0;
 	}
 
@@ -12733,7 +12745,8 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 		lastpar = curbone;
 
 		int levelcnt = 0;
-		float currate = g_ikrate;
+		float ikrate = g_ikrate * 120.0f / (float)g_avrgfps;
+		float currate = ikrate;
 
 		while (curbone && lastpar && lastpar->GetParent(false) && ((maxlevel == 0) || (levelcnt < maxlevel)))
 		{
@@ -12756,7 +12769,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 						lastpar = parentbone;
 					}
 					levelcnt++;
-					currate = (float)pow((double)g_ikrate, (double)g_ikfirst * (double)levelcnt);
+					currate = (float)pow((double)ikrate, (double)g_ikfirst * (double)levelcnt);
 					continue;
 				}
 
@@ -12811,9 +12824,11 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 						if (ismovable == 0) {
 							////g_underIKRot = false;//2023/01/14 parent limited or not
 							if (editboneforret) {
+								s_undercalling = false;
 								return editboneforret->GetBoneNo();
 							}
 							else {
+								s_undercalling = false;
 								return srcboneno;
 							}
 						}
@@ -12868,6 +12883,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 					IKROTREC currotrec;
 					currotrec.Init();
 					currotrec.rotbone = parentbone;
+					//currotrec.aplybone = parentbone;
 					currotrec.aplybone = parentbone->GetParent(false);
 					//currotrec.applyframemat = parentbone->GetWorldMat(limitdegflag, curmotid, applyframe, 0);
 					currotrec.applyframemat = saveapplyframemat;//2025/02/24 変更前のapplymatが必要
@@ -12897,6 +12913,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 					IKROTREC currotrec;
 					currotrec.Init();
 					currotrec.rotbone = parentbone;
+					//currotrec.aplybone = parentbone;
 					currotrec.aplybone = parentbone->GetParent(false);
 					//currotrec.applyframemat = parentbone->GetWorldMat(limitdegflag, curmotid, applyframe, 0);
 					currotrec.applyframemat = saveapplyframemat;//2025/02/24 変更前のapplymatが必要
@@ -12921,7 +12938,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 
 			levelcnt++;
 
-			currate = (float)pow((double)g_ikrate, (double)g_ikfirst * (double)levelcnt);
+			currate = (float)pow((double)ikrate, (double)g_ikfirst * (double)levelcnt);
 		}
 
 		//絶対モードの場合
@@ -12933,9 +12950,11 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 	//g_underIKRot = false;//2023/01/14 parent limited or not
 	if (editboneforret)
 	{
+		s_undercalling = false;
 		return editboneforret->GetBoneNo();
 	}
 	else {
+		s_undercalling = false;
 		return srcboneno;
 	}
 
@@ -13206,7 +13225,8 @@ int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erpt
 		lastpar = curbone;
 
 		int levelcnt = 0;
-		float currate = g_ikrate;
+		float ikrate = g_ikrate * 120.0f / (float)g_avrgfps;
+		float currate = ikrate;
 
 		while( curbone && lastpar && lastpar->GetParent(false) && ((maxlevel == 0) || (levelcnt < maxlevel)) )
 		{
@@ -13229,7 +13249,7 @@ int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erpt
 						lastpar = parentbone;
 					}
 					levelcnt++;
-					currate = (float)pow((double)g_ikrate, (double)g_ikfirst * (double)levelcnt);
+					currate = (float)pow((double)ikrate, (double)g_ikfirst * (double)levelcnt);
 					continue;
 				}
 
@@ -13349,7 +13369,7 @@ int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erpt
 
 			levelcnt++;
 
-			currate = (float)pow( (double)g_ikrate, (double)g_ikfirst * (double)levelcnt );
+			currate = (float)pow( (double)ikrate, (double)g_ikfirst * (double)levelcnt );
 		}
 
 		//絶対モードの場合
@@ -13711,7 +13731,7 @@ int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erpt
 //		CRigidElem* curre = GetRigidElem(curbone->GetBoneNo());
 //		if (curre && curre->GetForbidRotFlag() != 0) {
 //			//回転禁止の場合処理をスキップ
-//			currate = (float)pow((double)g_ikrate, (double)g_ikfirst * (double)levelcnt);
+//			currate = (float)pow((double)ikrate, (double)g_ikfirst * (double)levelcnt);
 //			lastbone = curbone;
 //			curbone = curbone->GetParent();
 //			levelcnt++;
@@ -14664,8 +14684,8 @@ int CModel::RigControl(bool limitdegflag, int wallscrapingikflag, int depthcnt, 
 						//if (fabs(rotrad2) >= (0.020 * DEG2PAI)){
 						if (fabs(rotrad2) >= (0.020 * DEG2PAI)) {//2023/02/11
 
-							if (fabs(rotrad2) > (0.0550 * DEG2PAI)) {//2023/02/11
-								rotrad2 = 0.0550f * fabs(rotrad2) / rotrad2;
+							if (fabs(rotrad2) > (float)(10.0 * DEG2PAI)) {//2023/02/11
+								rotrad2 = (float)(10.0 * DEG2PAI) * fabs(rotrad2) / rotrad2;
 							}
 
 							ChaVector3 axis0;
@@ -14933,12 +14953,12 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 
 	//float rotrad = srcdelta / 10.0f * (float)PAI / 12.0f;// / (float)calcnum;
 	float rotrad = srcdelta / 10.0f * (float)PAI / 20.0f * g_physicsmvrate;//2023/03/04
-	//if (fabs(rotrad) < (0.020 * DEG2PAI)) {//2023/02/11
-	if (fabs(rotrad) < (0.010 * DEG2PAI)) {//2023/03/04
-		return 0;
-	}
-	if (fabs(rotrad) > (0.0550 * DEG2PAI)) {//2023/03/04
-		rotrad = 0.0550f * fabs(rotrad) / rotrad;
+	////if (fabs(rotrad) < (0.020 * DEG2PAI)) {//2023/02/11
+	//if (fabs(rotrad) < (0.010 * DEG2PAI)) {//2023/03/04
+	//	return 0;
+	//}
+	if (fabs(rotrad) > (float)(10.0 * DEG2PAI)) {//2023/03/04
+		rotrad = (float)(10.0 * DEG2PAI) * fabs(rotrad) / rotrad;
 	}
 
 
@@ -15070,8 +15090,8 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 					//if (fabs(rotrad2) >= (0.020 * DEG2PAI)) {//2023/02/11
 					if (fabs(rotrad2) >= (0.010 * DEG2PAI)) {//2023/03/04
 
-						if (fabs(rotrad2) > (0.0550 * DEG2PAI)) {//2023/02/11
-							rotrad2 = 0.0550f * fabs(rotrad2) / rotrad2;
+						if (fabs(rotrad2) > (float)(10.0 * DEG2PAI)) {//2023/02/11
+							rotrad2 = (float)(10.0 * DEG2PAI) * fabs(rotrad2) / rotrad2;
 						}
 						localq.SetAxisAndRot(axis0, rotrad2);
 
@@ -15154,8 +15174,8 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 					else {
 						//rotqの回転角度が1e-4より小さい場合
 						//ウェイトが小さいフレームにおいても　IKTargetが走るように記録する必要がある
-						if (fabs(rotrad2) > (0.0550 * DEG2PAI)) {//2023/02/11
-							rotrad2 = 0.0550f * fabs(rotrad2) / rotrad2;
+						if (fabs(rotrad2) > (float)(10.0 * DEG2PAI)) {//2023/02/11
+							rotrad2 = (float)(10.0 * DEG2PAI) * fabs(rotrad2) / rotrad2;
 						}
 						localq.SetAxisAndRot(axis0, rotrad2);
 
@@ -15960,7 +15980,7 @@ void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone,
 //			CRigidElem* curre = GetRigidElem(curbone->GetBoneNo());
 //			if (curre && curre->GetForbidRotFlag() != 0) {
 //				//回転禁止の場合処理をスキップ
-//				currate = (float)pow((double)g_ikrate, (double)g_ikfirst * (double)levelcnt);
+//				currate = (float)pow((double)ikrate, (double)g_ikfirst * (double)levelcnt);
 //				lastbone = curbone;
 //				curbone = curbone->GetParent();
 //				levelcnt++;
@@ -16161,7 +16181,7 @@ void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone,
 //				}
 //			}
 //
-//			currate = (float)pow((double)g_ikrate, (double)g_ikfirst * (double)levelcnt);
+//			currate = (float)pow((double)ikrate, (double)g_ikfirst * (double)levelcnt);
 //			lastbone = curbone;
 //			curbone = curbone->GetParent();
 //			levelcnt++;
@@ -16928,13 +16948,13 @@ int CModel::CameraRotateAxisDelta(
 
 	//int calcnum = 4;//ctrlを押しながらドラッグでdelta * 0.25になっている.多フレーム選択時の重さを考えると処理を重くすることは出来ないのでゆっくりドラッグする他ない.
 	float rotrad2 = delta / 10.0f * (float)PAI / 12.0f * g_physicsmvrate;//PhysicsIKプレートのEditRateスライダーで倍率設定.
-	//if (fabs(rotrad) < (0.020 * DEG2PAI)) {
-	if (fabs(rotrad2) < (0.020 * DEG2PAI)) {//2023/02/11
-		//g_underIKRot = false;//2023/01/14 parent limited or not
-		return 0;
-	}
-	if (fabs(rotrad2) > (0.0550 * DEG2PAI)) {//2023/02/11
-		rotrad2 = 0.0550f * fabs(rotrad2) / rotrad2;
+	////if (fabs(rotrad) < (0.020 * DEG2PAI)) {
+	//if (fabs(rotrad2) < (0.020 * DEG2PAI)) {//2023/02/11
+	//	//g_underIKRot = false;//2023/01/14 parent limited or not
+	//	return 0;
+	//}
+	if (fabs(rotrad2) > (float)(10.0 * DEG2PAI)) {//2023/02/11
+		rotrad2 = (float)(10.0 * DEG2PAI) * fabs(rotrad2) / rotrad2;
 	}
 
 	//if (fabs(rotrad2) < (0.010 * DEG2PAI)) {
@@ -17421,12 +17441,22 @@ int CModel::IKRotateAxisDeltaUnderIK(
 	//スードローカル動作確認 : 体全体を回転しながら　足をRectブラシで開くと　体が反対を向いても足が開く
 	//####################################################################################################
 
+	static bool s_undercalling = false;
+	if (s_undercalling) {
+		_ASSERT(0);
+		return 0;
+	}
+	s_undercalling = true;
+
+
 	ChaCalcFunc chacalcfunc;
 
 	if (!ExistCurrentMotion()) {
+		s_undercalling = false;
 		return 0;
 	}
 	if (GetNoBoneFlag()) {
+		s_undercalling = false;
 		return 0;
 	}
 
@@ -17446,12 +17476,13 @@ int CModel::IKRotateAxisDeltaUnderIK(
 	//int calcnum = 4;//ctrlを押しながらドラッグでdelta * 0.25になっている.多フレーム選択時の重さを考えると処理を重くすることは出来ないのでゆっくりドラッグする他ない.
 	//float rotrad = delta / 10.0f * (float)PAI / 12.0f * g_physicsmvrate;//PhysicsIKプレートのEditRateスライダーで倍率設定.
 	float rotrad = delta / 10.0f * (float)PAI / 20.0f * g_physicsmvrate;//2023/03/04
-	//if (fabs(rotrad) < (0.020 * DEG2PAI)) {//2023/02/11
-	if (fabs(rotrad) < (0.010 * DEG2PAI)) {//2023/03/04
-		return 0;
-	}
-	if (fabs(rotrad) > (0.0550 * DEG2PAI)) {//2023/02/11
-		rotrad = 0.0550f * fabs(rotrad) / rotrad;
+	////if (fabs(rotrad) < (0.020 * DEG2PAI)) {//2023/02/11
+	//if (fabs(rotrad) < (0.010 * DEG2PAI)) {//2023/03/04
+	//	s_undercalling = false;
+	//	return 0;
+	//}
+	if (fabs(rotrad) > (float)(10.0 * DEG2PAI)) {//2023/02/11
+		rotrad = (float)(10.0 * DEG2PAI) * fabs(rotrad) / rotrad;
 	}
 
 
@@ -17467,9 +17498,11 @@ int CModel::IKRotateAxisDeltaUnderIK(
 	CBone* curbone = m_bonelist[srcboneno];
 	if (!curbone) {
 		//g_underIKRot = false;//2023/01/14 parent limited or not
+		s_undercalling = false;
 		return 0;
 	}
 	if (curbone->IsNotSkeleton()) {
+		s_undercalling = false;
 		return 0;
 	}
 
@@ -17498,11 +17531,13 @@ int CModel::IKRotateAxisDeltaUnderIK(
 		curbone = firstbone;
 		if (!curbone) {
 			//g_underIKRot = false;//2023/01/14 parent limited or not
+			s_undercalling = false;
 			return 0;
 		}
 		lastbone = curbone;
 
-		float currate = g_ikrate * 0.50f;
+		float ikrate = g_ikrate * 120.0f / (float)g_avrgfps;
+		float currate = ikrate;
 
 		double firstframe = 0.0;
 		int levelcnt = 0;
@@ -17523,17 +17558,17 @@ int CModel::IKRotateAxisDeltaUnderIK(
 			float rotrad2 = currate * rotrad;
 			////float rotrad2 = rotrad;
 			////if (fabs(rotrad2) < (0.020 * DEG2PAI)){
-			if (fabs(rotrad2) < (0.020 * DEG2PAI)) {
-				break;
-			}
-			if (fabs(rotrad2) > (0.0550 * DEG2PAI)) {//2023/02/11
-				rotrad2 = 0.0550f * fabs(rotrad2) / rotrad2;
+			//if (fabs(rotrad2) < (0.010 * DEG2PAI)) {
+			//	break;
+			//}
+			if (fabs(rotrad2) > (float)(10.0 * DEG2PAI)) {//2023/02/11
+				rotrad2 = (float)(10.0 * DEG2PAI) * fabs(rotrad2) / rotrad2;
 			}
 
 			CRigidElem* curre = GetRigidElem(curbone->GetBoneNo());
 			if (curre && curre->GetForbidRotFlag() != 0) {
 				//回転禁止の場合処理をスキップ
-				currate = (float)pow((double)g_ikrate, (double)g_ikfirst * (double)levelcnt);
+				currate = (float)pow((double)ikrate, (double)g_ikfirst * (double)levelcnt);
 				lastbone = curbone;
 				curbone = curbone->GetParent(false);
 				levelcnt++;
@@ -17550,7 +17585,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 
 			if (aplybone->IsNotSkeleton()) {
 				//eNullの場合処理をスキップ
-				currate = (float)pow((double)g_ikrate, (double)g_ikfirst * (double)levelcnt);
+				currate = (float)pow((double)ikrate, (double)g_ikfirst * (double)levelcnt);
 				lastbone = curbone;
 				curbone = curbone->GetParent(false);
 				levelcnt++;
@@ -17573,6 +17608,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 			else {
 				_ASSERT(0);
 				//g_underIKRot = false;//2023/01/14 parent limited or not
+				s_undercalling = false;
 				return 1;
 			}
 			ChaVector3Normalize(&axis0, &axis0);
@@ -17580,16 +17616,18 @@ int CModel::IKRotateAxisDeltaUnderIK(
 			//ChaMatrix transmat;
 			//transmat = localq.MakeRotMatX();
 
-			ChaMatrix saveapplyframemat;
-			ChaVector3 saveapplyframeeul;
+			//ChaMatrix saveapplyframematpar;
+			//ChaVector3 saveapplyframeeulpar;
 			//if (aplybone->GetParent(false)) {
-			//	saveapplyframemat = aplybone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
-			//	saveapplyframeeul = aplybone->GetParent(false)->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+			//	saveapplyframematpar = aplybone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+			//	saveapplyframeeulpar = aplybone->GetParent(false)->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 			//}
 			//else {
-			//	saveapplyframemat = aplybone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
-			//	saveapplyframeeul = aplybone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+			//	saveapplyframematpar = aplybone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+			//	saveapplyframeeulpar = aplybone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 			//}
+			ChaMatrix saveapplyframemat;
+			ChaVector3 saveapplyframeeul;
 			saveapplyframemat = aplybone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 			saveapplyframeeul = aplybone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 
@@ -17626,6 +17664,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 
 
 						//2023/02/12 returnやめ　動くボーンは動かすことに
+						currate = (float)pow((double)ikrate, (double)g_ikfirst * (double)levelcnt);
 						lastbone = curbone;
 						curbone = curbone->GetParent(false);
 						levelcnt++;
@@ -17649,8 +17688,9 @@ int CModel::IKRotateAxisDeltaUnderIK(
 						//aplybone->GetParent(false),
 						curmotid, curframe, startframe, applyframe,
 						localq, keynum1flag, postflag, fromiktarget, 
-						&saveapplyframemat
-						//nullptr
+						//&saveapplyframemat
+						//&saveapplyframematpar
+						nullptr
 					);
 
 					keyno++;
@@ -17671,8 +17711,9 @@ int CModel::IKRotateAxisDeltaUnderIK(
 						//aplybone->GetParent(false),
 						curmotid, GetCurrentFrame(), startframe, applyframe,
 						localq, keynum1flag, false, fromiktarget, 
-						&saveapplyframemat
-						//nullptr
+						//&saveapplyframemat
+						//&saveapplyframematpar
+						nullptr
 					);
 				}
 
@@ -17682,10 +17723,10 @@ int CModel::IKRotateAxisDeltaUnderIK(
 
 					//2023/03/14 continueの前にすべきこと追加
 					//RotAndTraBoneQReq内でGetMotionPointがNULLの場合にも　ismovable2 == 0
+					currate = (float)pow((double)ikrate, (double)g_ikfirst * (double)levelcnt);
 					lastbone = curbone;
 					curbone = curbone->GetParent(false);
 					levelcnt++;
-					
 					continue;
 				}
 
@@ -17739,7 +17780,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 			}
 
 
-			currate = (float)pow((double)g_ikrate, (double)g_ikfirst * (double)levelcnt);
+			currate = (float)pow((double)ikrate, (double)g_ikfirst * (double)levelcnt);
 			lastbone = curbone;
 			curbone = curbone->GetParent(false);
 			levelcnt++;
@@ -17754,9 +17795,11 @@ int CModel::IKRotateAxisDeltaUnderIK(
 
 	//g_underIKRot = false;//2023/01/14 parent limited or not
 	if (editboneforret) {
+		s_undercalling = false;
 		return editboneforret->GetBoneNo();
 	}
 	else {
+		s_undercalling = false;
 		return srcboneno;
 	}
 
@@ -17955,8 +17998,8 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 		//g_underIKRot = false;//2023/01/14 parent limited or not
 		return 0;
 	}
-	if (fabs(rotrad) > (0.0550 * DEG2PAI)) {//2023/02/11
-		rotrad = 0.0550f * fabs(rotrad) / rotrad;
+	if (fabs(rotrad) > (float)(10.0 * DEG2PAI)) {//2023/02/11
+		rotrad = (float)(10.0 * DEG2PAI) * fabs(rotrad) / rotrad;
 	}
 
 
@@ -18002,7 +18045,8 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 		}
 		lastbone = curbone;
 
-		float currate = 1.0f;
+		float ikrate = g_ikrate * 120.0f / (float)g_avrgfps;
+		float currate = ikrate;
 
 		double firstframe = 0.0;
 		int levelcnt = 0;
@@ -18021,19 +18065,19 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 			}
 
 			float rotrad2 = currate * rotrad;
-			////float rotrad2 = rotrad;
-			////if (fabs(rotrad2) < (0.020 * DEG2PAI)){
-			if (fabs(rotrad2) < (0.020 * DEG2PAI)) {
-				break;
-			}
-			if (fabs(rotrad2) > (0.0550 * DEG2PAI)) {//2023/02/11
-				rotrad2 = 0.0550f * fabs(rotrad2) / rotrad2;
+			//////float rotrad2 = rotrad;
+			//////if (fabs(rotrad2) < (0.020 * DEG2PAI)){
+			//if (fabs(rotrad2) < (0.020 * DEG2PAI)) {
+			//	break;
+			//}
+			if (fabs(rotrad2) > (float)(10.0 * DEG2PAI)) {//2023/02/11
+				rotrad2 = (float)(10.0 * DEG2PAI) * fabs(rotrad2) / rotrad2;
 			}
 
 			CRigidElem* curre = GetRigidElem(curbone->GetBoneNo());
 			if (curre && curre->GetForbidRotFlag() != 0) {
 				//回転禁止の場合処理をスキップ
-				currate = (float)pow((double)g_ikrate, (double)g_ikfirst * (double)levelcnt);
+				currate = (float)pow((double)ikrate, (double)g_ikfirst * (double)levelcnt);
 				lastbone = curbone;
 				curbone = curbone->GetParent(false);
 				levelcnt++;
@@ -18050,7 +18094,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 
 			if (aplybone->IsNotSkeleton()) {
 				//eNullの場合処理をスキップ
-				currate = (float)pow((double)g_ikrate, (double)g_ikfirst * (double)levelcnt);
+				currate = (float)pow((double)ikrate, (double)g_ikfirst * (double)levelcnt);
 				lastbone = curbone;
 				curbone = curbone->GetParent(false);
 				levelcnt++;
@@ -18171,7 +18215,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 				}
 			}
 
-			currate = (float)pow((double)g_ikrate, (double)g_ikfirst * (double)levelcnt);
+			currate = (float)pow((double)ikrate, (double)g_ikfirst * (double)levelcnt);
 			lastbone = curbone;
 			curbone = curbone->GetParent(false);
 			levelcnt++;
