@@ -12745,7 +12745,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 		lastpar = curbone;
 
 		int levelcnt = 0;
-		float ikrate = g_ikrate * 120.0f / (float)g_avrgfps;
+		float ikrate = g_ikrate * fmin(1.0f, 120.0f / (float)g_avrgfps);
 		float currate = ikrate;
 
 		while (curbone && lastpar && lastpar->GetParent(false) && ((maxlevel == 0) || (levelcnt < maxlevel)))
@@ -13225,7 +13225,7 @@ int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erpt
 		lastpar = curbone;
 
 		int levelcnt = 0;
-		float ikrate = g_ikrate * 120.0f / (float)g_avrgfps;
+		float ikrate = g_ikrate * fmin(1.0f, 120.0f / (float)g_avrgfps);
 		float currate = ikrate;
 
 		while( curbone && lastpar && lastpar->GetParent(false) && ((maxlevel == 0) || (levelcnt < maxlevel)) )
@@ -15081,12 +15081,6 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 						return -1;
 					}
 					ChaVector3Normalize(&axis0, &axis0);
-					CQuaternion localq0;
-					localq0.SetAxisAndRot(axis0, rotrad2);
-					ChaMatrix axismat = ChaMatrixInv(selectmat) * localq0.MakeRotMatX() * selectmat;//2025/03/08 selectmat座標系
-					//localq.SetAxisAndRot(axis0, rotrad2);
-					localq = axismat.GetRotQ();
-
 
 					ChaMatrix saveapplyframemat;
 					ChaVector3 saveapplyframeeul;
@@ -15108,7 +15102,11 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 						if (fabs(rotrad2) > (float)(10.0 * DEG2PAI)) {//2023/02/11
 							rotrad2 = (float)(10.0 * DEG2PAI) * fabs(rotrad2) / rotrad2;
 						}
-						localq.SetAxisAndRot(axis0, rotrad2);
+						CQuaternion localq0;
+						localq0.SetAxisAndRot(axis0, rotrad2);
+						ChaMatrix axismat = ChaMatrixInv(selectmat) * localq0.MakeRotMatX() * selectmat;//2025/03/08 selectmat座標系
+						//localq.SetAxisAndRot(axis0, rotrad2);
+						localq = axismat.GetRotQ();
 
 						CQuaternion qForRot;
 						CQuaternion qForHipsRot;
@@ -15133,7 +15131,10 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 								curbone,//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
 								//curbone->GetParent(false),
 								curmotid, curframe, startframe, applyframe,
-								localq, keynum1flag, postflag, fromiktarget, nullptr);
+								localq, keynum1flag, postflag, fromiktarget, 
+								&saveapplyframemat
+								//nullptr
+							);
 						}
 						else {
 							bool keynum1flag = true;
@@ -15146,7 +15147,10 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 								curbone,//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
 								//curbone->GetParent(false),
 								curmotid, GetCurrentFrame(), startframe, applyframe,
-								localq, keynum1flag, postflag, fromiktarget, nullptr);
+								localq, keynum1flag, postflag, fromiktarget, 
+								&saveapplyframemat
+								//nullptr
+							);
 						}
 
 
@@ -15382,13 +15386,16 @@ int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int dep
 
 					ChaMatrixInverse(&invselectmat, NULL, &selectmat);
 					if (rigaxis1 == AXIS_X) {
-						axis0 = selectmat.GetRow(0);
+						//axis0 = selectmat.GetRow(0);
+						axis0.SetParams(1.0f, 0.0f, 0.0f);
 					}
 					else if (rigaxis1 == AXIS_Y) {
-						axis0 = selectmat.GetRow(1);
+						//axis0 = selectmat.GetRow(1);
+						axis0.SetParams(0.0f, 1.0f, 0.0f);
 					}
 					else if (rigaxis1 == AXIS_Z) {
-						axis0 = selectmat.GetRow(2);
+						//axis0 = selectmat.GetRow(2);
+						axis0.SetParams(0.0f, 0.0f, 1.0);
 					}
 					else {
 						_ASSERT(0);
@@ -15397,6 +15404,19 @@ int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int dep
 						return -1;
 					}
 					ChaVector3Normalize(&axis0, &axis0);
+
+					ChaMatrix saveapplyframemat;
+					ChaVector3 saveapplyframeeul;
+					//if (curbone->GetParent(false)) {
+					//	saveapplyframemat = curbone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+					//	saveapplyframeeul = curbone->GetParent(false)->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+					//}
+					//else {
+					//	saveapplyframemat = curbone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+					//	saveapplyframeeul = curbone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+					//}
+					saveapplyframemat = curbone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+					saveapplyframeeul = curbone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 
 
 					//if (fabs(rotrad2) >= (0.020 * DEG2PAI)) {//2023/02/11
@@ -15408,8 +15428,11 @@ int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int dep
 						if (fabs(rotrad2) > (10.0 * DEG2PAI)) {//2024/09/17 FootRig時は　最大10degreeを一度に動かせるように
 							rotrad2 = 10.0f * (float)DEG2PAI * fabs(rotrad2) / rotrad2;
 						}
-
-						localq.SetAxisAndRot(axis0, rotrad2);
+						CQuaternion localq0;
+						localq0.SetAxisAndRot(axis0, rotrad2);
+						ChaMatrix axismat = ChaMatrixInv(selectmat) * localq0.MakeRotMatX() * selectmat;//2025/03/08 selectmat座標系
+						//localq.SetAxisAndRot(axis0, rotrad2);
+						localq = axismat.GetRotQ();
 
 						CQuaternion qForRot;
 						CQuaternion qForHipsRot;
@@ -15430,7 +15453,10 @@ int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int dep
 							//curbone, aplybone,
 							curbone, curbone, //curbone->GetParent(false),//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
 							curmotid, applyframe, applyframe, applyframe,
-							localq, keynum1flag, postflag, fromiktarget, nullptr);
+							localq, keynum1flag, postflag, fromiktarget, 
+							&saveapplyframemat
+							//nullptr
+						);
 
 
 
@@ -15498,7 +15524,6 @@ int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int dep
 			}
 		}
 	}
-
 
 	SetUnderFootRig(false);
 	//if (lastbone) {
@@ -17551,7 +17576,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 		}
 		lastbone = curbone;
 
-		float ikrate = g_ikrate * 120.0f / (float)g_avrgfps;
+		float ikrate = g_ikrate * fmin(1.0f, 120.0f / (float)g_avrgfps);
 		float currate = ikrate;
 
 		double firstframe = 0.0;
@@ -18073,7 +18098,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 		}
 		lastbone = curbone;
 
-		float ikrate = g_ikrate * 120.0f / (float)g_avrgfps;
+		float ikrate = g_ikrate * fmin(1.0f, 120.0f / (float)g_avrgfps);
 		float currate = ikrate;
 
 		double firstframe = 0.0;
@@ -24527,7 +24552,7 @@ ChaMatrix CModel::RotMocapWalk(double srcrot)
 	if (g_avrgfps <= 1.0) {
 		return wm;
 	}
-	float rotdeg = maxrotval * (float)-srcrot * (120.0f / (float)g_avrgfps);//fpsが変わっても同じ位 回転するように
+	float rotdeg = maxrotval * (float)-srcrot * (fmin(1.0f, 120.0f / (float)g_avrgfps));//fpsが変わっても同じ位 回転するように
 
 	befrot.SetTranslation(-currenthipspos);
 	aftrot.SetTranslation(currenthipspos);

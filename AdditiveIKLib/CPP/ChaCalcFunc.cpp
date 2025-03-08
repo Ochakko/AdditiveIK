@@ -650,6 +650,11 @@ int ChaCalcFunc::CalcQForRot(bool limitdegflag, bool calcaplyflag,
 	ChaMatrix* srcapplymat, bool srcfromiktarget
 )
 {
+	//#################################################################
+	//MultiThreading Additive IKの回転を計算する関数
+	//2025/03/08 マニピュレータ中央ドラッグも軸指定ドラッグもこの関数で対応
+	//#################################################################
+
 	if (!srcrotbone || !srcaplybone || !dstqForRot || !dstqForHipsRot) {
 		//srcapplymatはnullptrも有
 		_ASSERT(0);
@@ -665,43 +670,16 @@ int ChaCalcFunc::CalcQForRot(bool limitdegflag, bool calcaplyflag,
 	double roundingframe = RoundingTime(srcframe);
 	double roundingapplyframe = RoundingTime(srcapplyframe);
 
-
-	ChaMatrix currotmat;
-	ChaMatrix invcurrotmat;
-	//if (srcaplybone != nullptr) {
-	//	currotmat = srcaplybone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
-	//	//currotmat.SetTranslationZero();
-	//	invcurrotmat = ChaMatrixInv(currotmat);
-	//	//invcurrotmat.SetTranslationZero();
-	//}
-	//else {
-		currotmat = srcrotbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
-		//currotmat.SetTranslationZero();
-		invcurrotmat = ChaMatrixInv(currotmat);
-		//invcurrotmat.SetTranslationZero();
-	//}
-
-
-
-
-
+	ChaMatrix rotmat0 = srcrotbone->GetWorldMat(limitdegflag, srcmotid, srcframe, nullptr);
+	ChaMatrix invrotmat0 = ChaMatrixInv(rotmat0);
 
 	ChaMatrix aplyparrotmat, invaplyparrotmat;
-	ChaMatrix curparmat, invcurparmat;
-	//aplyparrotmat = srcrotbone->GetWorldMat(limitdegflag, srcmotid, roundingapplyframe, 0);
-	////aplyparrotmat.SetTranslationZero();
-	//invaplyparrotmat = ChaMatrixInv(aplyparrotmat);
-	////invaplyparrotmat.SetTranslationZero();
-
 	if (srcapplymat == nullptr) {
 		if (srcaplybone != nullptr) {
 			aplyparrotmat = srcaplybone->GetWorldMat(limitdegflag, srcmotid, roundingapplyframe, 0);
 			//aplyparrotmat.SetTranslationZero();
 			invaplyparrotmat = ChaMatrixInv(aplyparrotmat);
 			//invaplyparrotmat.SetTranslationZero();
-
-			curparmat = srcaplybone->GetWorldMat(limitdegflag, srcmotid, RoundingTime(srcframe), nullptr);
-			invcurparmat = ChaMatrixInv(curparmat);
 		}
 		else {
 			//aplyparrotmat.SetIdentity();
@@ -710,43 +688,14 @@ int ChaCalcFunc::CalcQForRot(bool limitdegflag, bool calcaplyflag,
 			//aplyparrotmat.SetTranslationZero();
 			invaplyparrotmat = ChaMatrixInv(aplyparrotmat);
 			//invaplyparrotmat.SetTranslationZero();
-
-			curparmat.SetIdentity();;
-			invcurparmat.SetIdentity();
 		}
-	//	if (srcrotbone) {
-	//		aplyparrotmat = srcrotbone->GetWorldMat(limitdegflag, srcmotid, roundingapplyframe, 0);
-	//		aplyparrotmat.SetTranslationZero();
-	//		invaplyparrotmat = ChaMatrixInv(aplyparrotmat);
-	//		invaplyparrotmat.SetTranslationZero();
-	//	}
-	//	else {
-	//		aplyparrotmat.SetIdentity();
-	//		invaplyparrotmat.SetIdentity();
-	//	}
 	}
 	else {
 		aplyparrotmat = *srcapplymat;
 		//aplyparrotmat.SetTranslationZero();
 		invaplyparrotmat = ChaMatrixInv(aplyparrotmat);
 		//invaplyparrotmat.SetTranslationZero();
-
-		if (srcaplybone != nullptr) {
-			curparmat = srcaplybone->GetWorldMat(limitdegflag, srcmotid, RoundingTime(srcframe), nullptr);
-			invcurparmat = ChaMatrixInv(curparmat);
-		}
-		else {
-			curparmat.SetIdentity();;
-			invcurparmat.SetIdentity();
-		}
 	}
-
-
-	//CQuaternion invcurparrotq, aplyparrotq, invaplyparrotq, curparrotq;
-	//invcurparrotq.RotationMatrix(invcurparrotmat);
-	//aplyparrotq.RotationMatrix(aplyparrotmat);
-	//invaplyparrotq.RotationMatrix(invaplyparrotmat);
-	//curparrotq.RotationMatrix(curparrotmat);
 
 
 	//意味：RotBoneQReq()にrotqを渡し　currentworldmatの後ろに　invpivot * rotq * pivotを掛ける
@@ -789,59 +738,15 @@ int ChaCalcFunc::CalcQForRot(bool limitdegflag, bool calcaplyflag,
 		addrotq2 = srcaddrot;
 	}
 
-	//if (IsEqualRoundingTime(srcframe, srcapplyframe) == false) {
-	ChaMatrix nodemat;
-	ChaMatrix invnodemat;
-	if (srcaplybone != nullptr) {
-		nodemat = srcaplybone->GetNodeMat();
-		invnodemat = ChaMatrix(nodemat);
-	}
-	else {
-		nodemat = srcrotbone->GetNodeMat();
-		invnodemat = ChaMatrix(nodemat);
-	}
-
-
-	//transmat2ForRot = invcurrotmat * aplyparrotmat * invnodemat * addrotq2.MakeRotMatX() * nodemat * invaplyparrotmat * currotmat;
-	//transmat2ForRot = invcurrotmat * nodemat * aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat * currotmat;
-	
-	//if (IsInitRot(currotmat) == false) {
-	//	if (IsInitRot(aplyparrotmat) == false) {
-	//		transmat2ForRot = invcurrotmat * aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat * currotmat;
-	//	}
-	//	else {
-	//		transmat2ForRot = invcurrotmat * addrotq2.MakeRotMatX() * currotmat;
-	//	}
-	//}
-	//else {
-	//	if (IsInitRot(aplyparrotmat) == false) {
-	//		transmat2ForRot = aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat;
-	//	}
-	//	else {
-	//		transmat2ForRot = addrotq2.MakeRotMatX();
-	//	}
-	//}
-
-	ChaMatrix rotmat0 = srcrotbone->GetWorldMat(limitdegflag, srcmotid, srcframe, nullptr);
-	ChaMatrix invrotmat0 = ChaMatrixInv(rotmat0);
-
-	//transmat2ForRot = addrotq2.MakeRotMatX() * currotmat;
-
-	//transmat2ForRot = invaplyparrotmat * addrotq2.MakeRotMatX() * aplyparrotmat * currotmat;
-	//transmat2ForRot = aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat * currotmat;
-	//transmat2ForRot = addrotq2.MakeRotMatX() * rotmat0 * invaplyparrotmat * currotmat;
 
 	if (srcapplymat != nullptr) {
 		//transmat2ForRot = invcurrotmat * aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat * currotmat;
 		//transmat2ForRot = rotmat0 * invaplyparrotmat * addrotq2.MakeRotMatX() * aplyparrotmat * invrotmat0;
 		// 
-	//transmat2ForRot = invrotmat0 * aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat * rotmat0;
-		// 
 		//transmat2ForRot = invrotmat0 * invaplyparrotmat * addrotq2.MakeRotMatX() * aplyparrotmat * rotmat0;
 		// 
 		//transmat2ForRot = invaplyparrotmat * addrotq2.MakeRotMatX() * aplyparrotmat;
 		// 	
-
 
 		transmat2ForRot = invrotmat0 * aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat * rotmat0;
 	}
@@ -852,14 +757,10 @@ int ChaCalcFunc::CalcQForRot(bool limitdegflag, bool calcaplyflag,
 	}
 
 	dstqForRot->RotationMatrix(transmat2ForRot);
-
-	//transmat2ForHipsRot = srcaddrot.MakeRotMatX();//for hips edit
-	//dstqForHipsRot->RotationMatrix(transmat2ForHipsRot);
 	*dstqForHipsRot = addrotq2;
 
 	dstqForRot->normalize();
 	dstqForHipsRot->normalize();
-
 
 	return 0;
 
