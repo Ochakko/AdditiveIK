@@ -835,12 +835,15 @@ int ChaCalcFunc::CalcQForRot(bool limitdegflag, bool calcaplyflag,
 		//transmat2ForRot = invcurrotmat * aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat * currotmat;
 		//transmat2ForRot = rotmat0 * invaplyparrotmat * addrotq2.MakeRotMatX() * aplyparrotmat * invrotmat0;
 		// 
-		transmat2ForRot = invrotmat0 * aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat * rotmat0;
+	//transmat2ForRot = invrotmat0 * aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat * rotmat0;
 		// 
 		//transmat2ForRot = invrotmat0 * invaplyparrotmat * addrotq2.MakeRotMatX() * aplyparrotmat * rotmat0;
 		// 
 		//transmat2ForRot = invaplyparrotmat * addrotq2.MakeRotMatX() * aplyparrotmat;
 		// 	
+
+
+		transmat2ForRot = invrotmat0 * aplyparrotmat * addrotq2.MakeRotMatX() * invaplyparrotmat * rotmat0;
 	}
 	else {
 		//transmat2ForRot = invcurrotmat * nodemat * addrotq2.MakeRotMatX() * currotmat;
