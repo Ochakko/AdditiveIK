@@ -530,11 +530,15 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, int wallsc
 		CQuaternion curqForRot;
 		CQuaternion curqForHipsRot;
 		endq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-		qForRot.Slerp2(endq, 0.080f, &curqForRot);
+		//qForRot.Slerp2(endq, 0.080f, &curqForRot);
+		qForRot.Slerp2(endq, (1.0f - 0.95f), &curqForRot);
 		curqForHipsRot = curqForRot;
 		bool infooutflag = !underfootrig;
 		ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag, 0, RoundingTime(startframe),
-			infooutflag, 0, srcmotid, curframe, curqForRot, curqForHipsRot, fromiktarget);
+			infooutflag, 0, srcmotid, curframe, 
+			curqForRot, curqForHipsRot, 
+			//qForRot, qForHipsRot,
+			fromiktarget);
 
 		////bool infooutflag = true;
 		////parentbone->RotAndTraBoneQReq(limitdegflag, 0, RoundingTime(startframe),
@@ -1194,7 +1198,7 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wa
 	}
 
 
-	double curframe = directframe;
+	double curframe = RoundingTime(directframe);
 
 	CBone* firstbone = srcmodel->GetBoneByID(srcboneno);
 	if (!firstbone) {
@@ -1218,7 +1222,9 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wa
 	int keynum;
 	double startframe, endframe, applyframe;
 	erptr->GetRange(&keynum, &startframe, &endframe, &applyframe);
-
+	startframe = RoundingTime(startframe);
+	endframe = RoundingTime(endframe);
+	applyframe = RoundingTime(applyframe);
 
 	//if (postflag && (directframe == applyframe)) {
 	//	return srcboneno;
@@ -1249,7 +1255,8 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wa
 		int levelcnt = 0;
 		float currate;
 		//currate = g_ikrate;
-		currate = 0.750f;
+		//currate = 0.750f;
+		currate = 1.0f;
 
 		while (curbone && lastpar && lastpar->GetParent(false) && ((maxlevel == 0) || (levelcnt < maxlevel)))
 		{
@@ -1272,8 +1279,9 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wa
 						lastpar = parentbone;
 					}
 					levelcnt++;
-					currate = (float)pow((double)g_ikrate, (double)g_ikfirst * (double)levelcnt);
-					continue;
+					//currate = (float)pow((double)g_ikrate, (double)g_ikfirst * (double)levelcnt);
+					//continue;
+					break;
 				}
 
 				ChaVector3 rotaxis2;
@@ -1299,12 +1307,15 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wa
 				ChaVector3 ikaxis;
 				if ((calccnt % 3) == 0) {
 					ikaxis = parentnoderot.GetRow(0);
+					//ikaxis.SetParams(1.0f, 0.0f, 0.0f);
 				}
 				else if ((calccnt % 2) == 0) {
 					ikaxis = parentnoderot.GetRow(1);
+					//ikaxis.SetParams(0.0f, 1.0f, 0.0);
 				}
 				else {
 					ikaxis = parentnoderot.GetRow(2);
+					//ikaxis.SetParams(0.0f, 0.0f, 1.0f);
 				}
 				bool nearflag = CalcAxisAndRotForIKRotateAxis(srcmodel, limitdegflag,
 					parentbone, firstbone,
@@ -1319,6 +1330,10 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wa
 					CQuaternion rotq0;
 					rotq0.SetAxisAndRot(rotaxis2, rotrad2);
 
+					//ChaMatrix rotmat = ChaMatrixInv(parentnodemat) * rotq0.MakeRotMatX() * parentnodemat;
+					//CQuaternion rotq1;
+					//rotq1.RotationMatrix(rotmat);
+					
 					//parentbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
 					// 
 					//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
@@ -1345,7 +1360,9 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wa
 						//parentbone, 
 						parentbone->GetParent(false),
 						srcmotid, curframe, startframe, applyframe,
-						rotq0, keynum1flag, postflag, fromiktarget, &saveapplyframemat);
+						rotq0, 
+						//rotq1,
+						keynum1flag, postflag, fromiktarget, &saveapplyframemat);
 					keyno++;
 
 					//if (g_applyendflag == 1) {

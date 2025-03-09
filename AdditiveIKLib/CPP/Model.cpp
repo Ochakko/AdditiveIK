@@ -1019,6 +1019,7 @@ int CModel::LoadFBX(int skipdefref, ID3D12Device* pdev, const WCHAR* wfile, cons
 	char utf8path[MAX_PATH] = {0};
     // Unicode 文字コードを第一引数で指定した文字コードに変換する
     ::WideCharToMultiByte( CP_UTF8, 0, wfile, -1, utf8path, MAX_PATH, NULL, NULL );	
+	//::WideCharToMultiByte(CP_ACP, 0, wfile, -1, utf8path, MAX_PATH, NULL, NULL);
 
 	FbxScene* pScene = 0;
 	FbxImporter* pImporter = 0;
