@@ -34,7 +34,7 @@ public:
 		int srckeyno, CBone* srcrotbone, CBone* srcparentbone,
 		int srcmotid, double srcstartframe, double srcapplyframe,
 		CQuaternion srcrotq0, ChaMatrix srcsaveapplymat,
-		bool srckeynum1flag, bool srcpostflag, bool srcfromiktarget);
+		bool srckeynum1flag, bool srcskip_ikconstraint_flag, bool srcfromiktarget);
 
 private:
 	//static unsigned __stdcall ThreadFuncCaller(LPVOID lpThreadParam);
@@ -63,7 +63,7 @@ private:
 	CQuaternion rotq0;
 	ChaMatrix applymat;
 	bool keynum1flag;
-	bool postflag;
+	bool skip_ikconstraint_flag;
 	bool fromiktarget;
 
 	std::vector<double> m_framenovec;

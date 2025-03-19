@@ -655,8 +655,8 @@ public:
 	//int IKRotateForIKTarget(bool limitdegflag, CEditRange* erptr, int srcboneno, ChaVector3 targetpos, 
 
 	//2023/10/17 ChaCalcFuncに移動
-	//	int maxlevel, double directframe, bool postflag);
-	//int IKTargetVec(bool limitdegflag, CEditRange* srptr, double srcframe, bool postflag);
+	//	int maxlevel, double directframe, bool skip_ikconstraint_flag);
+	//int IKTargetVec(bool limitdegflag, CEditRange* srptr, double srcframe, bool skip_ikconstraint_flag);
 
 	int SetIKTargetVec();
 	void SetIKTargetVecReq(CBone* srcbone);
@@ -1458,7 +1458,7 @@ private:
 	//int IKRotateOneFrame(int limitdegflag, CEditRange* erptr,
 	//	int keyno, CBone* rotbone, CBone* parentbone,
 	//	double curframe, double startframe, double applyframe,
-	//	CQuaternion rotq0, bool keynum1flag, bool postflag, bool fromiktarget);
+	//	CQuaternion rotq0, bool keynum1flag, bool skip_ikconstraint_flag, bool fromiktarget);
 
 
 	//int GetFreeThreadIndex();

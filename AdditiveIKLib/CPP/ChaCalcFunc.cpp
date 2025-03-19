@@ -489,7 +489,7 @@ int ChaCalcFunc::GetBefNextMP(CBone* srcbone, int srcmotid, double srcframe, CMo
 int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 	int keyno, CBone* rotbone, CBone* parentbone,
 	int srcmotid, double curframe, double startframe, double applyframe,
-	CQuaternion rotq0, bool keynum1flag, bool postflag, bool fromiktarget,
+	CQuaternion rotq0, bool keynum1flag, bool skip_ikconstraint_flag, bool fromiktarget,
 	ChaMatrix* srcapplymat
 )
 {
@@ -559,8 +559,8 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, int wallsc
 		ismovable = rotbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag, 0, RoundingTime(startframe),
 			infooutflag, 0, srcmotid, curframe, qForRot, qForHipsRot, fromiktarget);
 
-		if ((fromiktarget != true) && (postflag != true) && erptr) {
-			IKTargetVec(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcmotid, curframe, postflag);
+		if (ismovable && (fromiktarget != true) && (skip_ikconstraint_flag != true) && erptr) {
+			IKTargetVec(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcmotid, curframe, skip_ikconstraint_flag);
 		}
 	}
 	else {
@@ -638,8 +638,8 @@ int ChaCalcFunc::IKRotateOneFrame(CModel* srcmodel, int limitdegflag, int wallsc
 		//}
 
 
-		if ((fromiktarget != true) && (postflag != true) && erptr) {
-			IKTargetVec(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcmotid, curframe, postflag);
+		if (ismovable && (fromiktarget != true) && (skip_ikconstraint_flag != true) && erptr) {
+			IKTargetVec(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcmotid, curframe, skip_ikconstraint_flag);
 		}
 	}
 
@@ -1161,7 +1161,7 @@ int ChaCalcFunc::RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int wallsc
 }
 
 int ChaCalcFunc::IKTargetVec(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, 
-	CEditRange* erptr, int srcmotid, double srcframe, bool postflag)
+	CEditRange* erptr, int srcmotid, double srcframe, bool skip_ikconstraint_flag)
 {
 	if (!srcmodel || !erptr) {
 		_ASSERT(0);
@@ -1180,7 +1180,7 @@ int ChaCalcFunc::IKTargetVec(CModel* srcmodel, bool limitdegflag, int wallscrapi
 			for (calccount = 0; calccount < calccountmax; calccount++) {
 				int maxlevel = 0;
 				IKRotateForIKTarget(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcbone->GetBoneNo(), srcmotid,
-					iktargetpos, maxlevel, srcframe, postflag);
+					iktargetpos, maxlevel, srcframe, skip_ikconstraint_flag);
 			}
 		}
 	}
@@ -1190,7 +1190,7 @@ int ChaCalcFunc::IKTargetVec(CModel* srcmodel, bool limitdegflag, int wallscrapi
 
 int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, 
 	CEditRange* erptr,
-	int srcboneno, int srcmotid, ChaVector3 targetpos, int maxlevel, double directframe, bool postflag)
+	int srcboneno, int srcmotid, ChaVector3 targetpos, int maxlevel, double directframe, bool skip_ikconstraint_flag)
 {
 	if (!srcmodel) {
 		_ASSERT(0);
@@ -1226,7 +1226,7 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wa
 	endframe = RoundingTime(endframe);
 	applyframe = RoundingTime(applyframe);
 
-	//if (postflag && (directframe == applyframe)) {
+	//if (skip_ikconstraint_flag && (directframe == applyframe)) {
 	//	return srcboneno;
 	//}
 
@@ -1362,7 +1362,7 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wa
 						srcmotid, curframe, startframe, applyframe,
 						rotq0, 
 						//rotq1,
-						keynum1flag, postflag, fromiktarget, &saveapplyframemat);
+						keynum1flag, skip_ikconstraint_flag, fromiktarget, &saveapplyframemat);
 					keyno++;
 
 					//if (g_applyendflag == 1) {
@@ -1563,8 +1563,8 @@ int ChaCalcFunc::FKBoneTra(CModel* srcmodel, bool limitdegflag, int wallscraping
 				}
 			}
 
-			bool postflag = false;
-			IKTargetVec(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcmotid, curframe, postflag);
+			bool skip_ikconstraint_flag = false;
+			IKTargetVec(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcmotid, curframe, skip_ikconstraint_flag);
 
 
 			keyno++;
@@ -1574,8 +1574,8 @@ int ChaCalcFunc::FKBoneTra(CModel* srcmodel, bool limitdegflag, int wallscraping
 	else {
 		curbone->AddBoneTraReq(limitdegflag, wallscrapingikflag, 0, srcmotid, startframe, addtra, dummyparentwm, dummyparentwm);
 
-		bool postflag = false;
-		IKTargetVec(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcmotid, startframe, postflag);
+		bool skip_ikconstraint_flag = false;
+		IKTargetVec(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcmotid, startframe, skip_ikconstraint_flag);
 	}
 
 
@@ -1673,8 +1673,8 @@ int ChaCalcFunc::FKBoneTraOneFrame(CModel* srcmodel, bool limitdegflag, int wall
 				}
 			}
 
-			bool postflag = false;
-			IKTargetVec(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcmotid, curframe, postflag);
+			bool skip_ikconstraint_flag = false;
+			IKTargetVec(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcmotid, curframe, skip_ikconstraint_flag);
 
 
 			keyno++;
@@ -1683,8 +1683,8 @@ int ChaCalcFunc::FKBoneTraOneFrame(CModel* srcmodel, bool limitdegflag, int wall
 	}
 	//else {
 	//	curbone->AddBoneTraReq(limitdegflag, 0, srcmotid, startframe, addtra, dummyparentwm, dummyparentwm);
-	//	bool postflag = false;
-	//	IKTargetVec(srcmodel, limitdegflag, erptr, srcmotid, startframe, postflag);
+	//	bool skip_ikconstraint_flag = false;
+	//	IKTargetVec(srcmodel, limitdegflag, erptr, srcmotid, startframe, skip_ikconstraint_flag);
 	//}
 
 

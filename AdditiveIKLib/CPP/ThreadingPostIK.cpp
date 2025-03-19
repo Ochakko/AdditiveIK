@@ -65,7 +65,7 @@ int CThreadingPostIK::InitParams()
 	rotq0.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 	applymat.SetIdentity();
 	keynum1flag = false;
-	postflag = true;
+	skip_ikconstraint_flag = true;
 	fromiktarget = false;
 
 	ClearFrameList();
@@ -131,7 +131,7 @@ int CThreadingPostIK::ThreadFunc()
 										//rotbone, 
 										parentbone,
 										motid, curframe, startframe, applyframe,
-										rotq0, keynum1flag, postflag, fromiktarget,
+										rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget,
 										&applymat);
 								}
 							}
@@ -196,7 +196,7 @@ int CThreadingPostIK::ThreadFunc()
 										//rotbone, 
 										parentbone,
 										motid, curframe, startframe, applyframe,
-										rotq0, keynum1flag, postflag, fromiktarget,
+										rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget,
 										&applymat);
 								}
 							}
@@ -262,7 +262,7 @@ void CThreadingPostIK::IKRotateOneFrame(CModel* srcmodel, int srclimitdegflag, i
 	int srckeyno, CBone* srcrotbone, CBone* srcparentbone,
 	int srcmotid, double srcstartframe, double srcapplyframe,
 	CQuaternion srcrotq0, ChaMatrix srcapplymat,
-	bool srckeynum1flag, bool srcpostflag, bool srcfromiktarget)
+	bool srckeynum1flag, bool srcskip_ikconstraint_flag, bool srcfromiktarget)
 {
 
 	if (!m_model) {
@@ -282,12 +282,12 @@ void CThreadingPostIK::IKRotateOneFrame(CModel* srcmodel, int srclimitdegflag, i
 		rotbone = srcrotbone;
 		parentbone = srcparentbone;
 		motid = srcmotid;
-		startframe = srcstartframe;
-		applyframe = srcapplyframe;
+		startframe = RoundingTime(srcstartframe);
+		applyframe = RoundingTime(srcapplyframe);
 		rotq0 = srcrotq0;
 		applymat = srcapplymat;
 		keynum1flag = srckeynum1flag;
-		postflag = srcpostflag;
+		skip_ikconstraint_flag = srcskip_ikconstraint_flag;
 		fromiktarget = srcfromiktarget;
 
 		LeaveCriticalSection(&m_CritSection);

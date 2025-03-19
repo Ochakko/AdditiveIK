@@ -12842,7 +12842,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 						int keyno = 0;
 
 						bool keynum1flag = false;
-						bool postflag = false;
+						bool skip_ikconstraint_flag = false;
 						bool fromiktarget = false;
 						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 							keyno, 
@@ -12850,7 +12850,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 							//parentbone,
 							parentbone->GetParent(false),
 							curmotid, applyframe, startframe, applyframe,
-							rotq0, keynum1flag, postflag, fromiktarget, 
+							rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
 							&saveapplyframemat
 							//nullptr
 						);
@@ -12859,7 +12859,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 					}
 					else {
 						bool keynum1flag = true;
-						bool postflag = false;
+						bool skip_ikconstraint_flag = false;
 						bool fromiktarget = false;
 						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 							0, 
@@ -12867,7 +12867,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 							//parentbone, 
 							parentbone->GetParent(false),
 							curmotid, GetCurrentFrame(), startframe, applyframe,
-							rotq0, keynum1flag, postflag, fromiktarget, 
+							rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
 							&saveapplyframemat
 							//nullptr
 						);
@@ -12904,27 +12904,27 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 					// 
 					// 
 				}
-				else {
-					//rotqの回転角度が1e-4より小さい場合
-					//ウェイトが小さいフレームにおいても　IKTargetが走るように記録する必要がある
+				//else {
+				//	//rotqの回転角度が1e-4より小さい場合
+				//	//ウェイトが小さいフレームにおいても　IKTargetが走るように記録する必要がある
 
-					CQuaternion rotq0;
-					rotq0.SetAxisAndRot(rotaxis2, rotrad2);
+				//	CQuaternion rotq0;
+				//	rotq0.SetAxisAndRot(rotaxis2, rotrad2);
 
-					IKROTREC currotrec;
-					currotrec.Init();
-					currotrec.rotbone = parentbone;
-					//currotrec.aplybone = parentbone;
-					currotrec.aplybone = parentbone->GetParent(false);
-					//currotrec.applyframemat = parentbone->GetWorldMat(limitdegflag, curmotid, applyframe, 0);
-					currotrec.applyframemat = saveapplyframemat;//2025/02/24 変更前のapplymatが必要
-					currotrec.applyframeeul = saveapplyframeeul;//2025/02/24 変更前のapplymatが必要
-					//currotrec.rotq = rotq0;
-					currotrec.rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-					currotrec.targetpos = targetpos;
-					currotrec.lessthanthflag = true;//!!!!!!!!!!!
-					AddIKRotRec(currotrec);
-				}
+				//	IKROTREC currotrec;
+				//	currotrec.Init();
+				//	currotrec.rotbone = parentbone;
+				//	//currotrec.aplybone = parentbone;
+				//	currotrec.aplybone = parentbone->GetParent(false);
+				//	//currotrec.applyframemat = parentbone->GetWorldMat(limitdegflag, curmotid, applyframe, 0);
+				//	currotrec.applyframemat = saveapplyframemat;//2025/02/24 変更前のapplymatが必要
+				//	currotrec.applyframeeul = saveapplyframeeul;//2025/02/24 変更前のapplymatが必要
+				//	//currotrec.rotq = rotq0;
+				//	currotrec.rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+				//	currotrec.targetpos = targetpos;
+				//	currotrec.lessthanthflag = true;//!!!!!!!!!!!
+				//	AddIKRotRec(currotrec);
+				//}
 
 			}
 
@@ -13089,7 +13089,7 @@ int CModel::IKRotatePostIK(bool limitdegflag, int wallscrapingikflag, CEditRange
 					if (keynum >= 2) {
 						int keyno = 0;
 						bool keynum1flag = false;
-						bool postflag = false;
+						bool skip_ikconstraint_flag = false;//applyframe時と同様に
 						bool fromiktarget = false;
 						if (m_PostIKThreads) {
 							//SetUnderPostIK(true);
@@ -13100,7 +13100,7 @@ int CModel::IKRotatePostIK(bool limitdegflag, int wallscrapingikflag, CEditRange
 									keyno,
 									parentbone, aplybone,
 									curmotid, startframe, applyframe,
-									rotq0, saveapplymat, keynum1flag, postflag, fromiktarget);
+									rotq0, saveapplymat, keynum1flag, skip_ikconstraint_flag, fromiktarget);
 							}
 							WaitPostIKFinished();
 							//SetUnderPostIK(false);
@@ -13128,13 +13128,14 @@ int CModel::IKRotatePostIK(bool limitdegflag, int wallscrapingikflag, CEditRange
 		}
 	}
 
-	double curframe;
-	for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
-		if (IsEqualRoundingTime(curframe, applyframe) == false) {
-			bool postflag = true;
-			chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, postflag);
-		}
-	}
+	//2025/03/16 applyframe時と同様に
+	//double curframe;
+	//for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
+	//	if (IsEqualRoundingTime(curframe, applyframe) == false) {
+	//		bool skip_ikconstraint_flag = true;
+	//		chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, skip_ikconstraint_flag);
+	//	}
+	//}
 
 	////絶対モードの場合
 	//if ((calccnt == (calcnum - 1)) && g_absikflag && lastpar) {
@@ -13316,7 +13317,7 @@ int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erpt
 						for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
 							
 							bool keynum1flag = false;
-							bool postflag = false;
+							bool skip_ikconstraint_flag = false;
 							bool fromiktarget = false;
 							chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 								keyno, 
@@ -13324,14 +13325,14 @@ int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erpt
 								//parentbone, 
 								parentbone->GetParent(false),
 								curmotid, curframe, startframe, applyframe,
-								rotq0, keynum1flag, postflag, fromiktarget, &saveapplyframemat);
+								rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget, &saveapplyframemat);
 
 							keyno++;
 						}
 					}
 					else {
 						bool keynum1flag = true;
-						bool postflag = false;
+						bool skip_ikconstraint_flag = false;
 						bool fromiktarget = false;
 						chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 							0, 
@@ -13339,7 +13340,7 @@ int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erpt
 							//parentbone, 
 							parentbone->GetParent(false),
 							curmotid, GetCurrentFrame(), startframe, applyframe,
-							rotq0, keynum1flag, postflag, fromiktarget, &saveapplyframemat);
+							rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget, &saveapplyframemat);
 					}
 
 
@@ -15123,7 +15124,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 							int keyno = 0;
 							double curframe = applyframe;//!!!!!!
 							bool keynum1flag = false;
-							bool postflag = false;
+							bool skip_ikconstraint_flag = false;
 							bool fromiktarget = false;
 							ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 								keyno, 
@@ -15132,14 +15133,14 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 								curbone,//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
 								//curbone->GetParent(false),
 								curmotid, curframe, startframe, applyframe,
-								localq, keynum1flag, postflag, fromiktarget, 
+								localq, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
 								&saveapplyframemat
 								//nullptr
 							);
 						}
 						else {
 							bool keynum1flag = true;
-							bool postflag = false;
+							bool skip_ikconstraint_flag = false;
 							bool fromiktarget = false;
 							ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 								0, 
@@ -15148,7 +15149,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 								curbone,//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
 								//curbone->GetParent(false),
 								curmotid, GetCurrentFrame(), startframe, applyframe,
-								localq, keynum1flag, postflag, fromiktarget, 
+								localq, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
 								&saveapplyframemat
 								//nullptr
 							);
@@ -15191,34 +15192,34 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 							}
 						}
 					}
-					else {
-						//rotqの回転角度が1e-4より小さい場合
-						//ウェイトが小さいフレームにおいても　IKTargetが走るように記録する必要がある
-						if (fabs(rotrad2) > (float)(10.0 * DEG2PAI)) {//2023/02/11
-							rotrad2 = (float)(10.0 * DEG2PAI) * fabs(rotrad2) / rotrad2;
-						}
-						localq.SetAxisAndRot(axis0, rotrad2);
+				//	else {
+				//		//rotqの回転角度が1e-4より小さい場合
+				//		//ウェイトが小さいフレームにおいても　IKTargetが走るように記録する必要がある
+				//		if (fabs(rotrad2) > (float)(10.0 * DEG2PAI)) {//2023/02/11
+				//			rotrad2 = (float)(10.0 * DEG2PAI) * fabs(rotrad2) / rotrad2;
+				//		}
+				//		localq.SetAxisAndRot(axis0, rotrad2);
 
-						IKROTREC currotrec;
-						currotrec.Init();
-						currotrec.rotbone = curbone;
-						currotrec.aplybone = curbone;
-						//currotrec.aplybone = curbone->GetParent(false);
-						currotrec.applyframemat = saveapplyframemat;
-						currotrec.rotq = localq;
-						currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
-						currotrec.lessthanthflag = true;//!!!!!!!!!!!
-						if (uvno == 0) {
-							AddIKRotRec_U(currotrec);
-						}
-						else if (uvno == 1) {
-							AddIKRotRec_V(currotrec);
-						}
-						else {
-							_ASSERT(0);
-							return -1;
-						}
-					}
+				//		IKROTREC currotrec;
+				//		currotrec.Init();
+				//		currotrec.rotbone = curbone;
+				//		currotrec.aplybone = curbone;
+				//		//currotrec.aplybone = curbone->GetParent(false);
+				//		currotrec.applyframemat = saveapplyframemat;
+				//		currotrec.rotq = localq;
+				//		currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
+				//		currotrec.lessthanthflag = true;//!!!!!!!!!!!
+				//		if (uvno == 0) {
+				//			AddIKRotRec_U(currotrec);
+				//		}
+				//		else if (uvno == 1) {
+				//			AddIKRotRec_V(currotrec);
+				//		}
+				//		else {
+				//			_ASSERT(0);
+				//			return -1;
+				//		}
+				//	}
 				}
 			}
 			else {
@@ -15447,14 +15448,14 @@ int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int dep
 						int ismovable2 = 1;
 
 						bool keynum1flag = true;
-						bool postflag = false;
+						bool skip_ikconstraint_flag = false;
 						bool fromiktarget = false;
 						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, nullptr,
 							0,
 							//curbone, aplybone,
 							curbone, curbone, //curbone->GetParent(false),//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
 							curmotid, applyframe, applyframe, applyframe,
-							localq, keynum1flag, postflag, fromiktarget, 
+							localq, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
 							&saveapplyframemat
 							//nullptr
 						);
@@ -15640,7 +15641,8 @@ int CModel::RigControlPostRig(bool limitdegflag, int wallscrapingikflag, int dep
 				if (keynum >= 2) {
 					int keyno = 0;
 					bool keynum1flag = false;
-					bool postflag = true;
+					//bool skip_ikconstraint_flag = true;
+					bool skip_ikconstraint_flag = false;//2025/03/16 applyframe時と同様に
 					bool fromiktarget = false;
 
 					if (m_PostIKThreads) {
@@ -15653,7 +15655,7 @@ int CModel::RigControlPostRig(bool limitdegflag, int wallscrapingikflag, int dep
 								//curbone, aplybone,
 								curbone, curbone, //parentbone,//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
 								curmotid, startframe, applyframe,
-								localq, saveapplymat, keynum1flag, postflag, fromiktarget);
+								localq, saveapplymat, keynum1flag, skip_ikconstraint_flag, fromiktarget);
 						}
 						WaitPostIKFinished();
 						//SetUnderPostIK(false);
@@ -15679,16 +15681,16 @@ int CModel::RigControlPostRig(bool limitdegflag, int wallscrapingikflag, int dep
 		ClearIKRotRecU();
 	}
 
-
-	if (uvno == 1) {
-		double curframe;
-		for (curframe = roundingstartframe; curframe <= roundingendframe; curframe += 1.0) {
-			if (curframe != roundingapplyframe) {
-				bool postflag = true;
-				chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, postflag);
-			}
-		}
-	}
+	//2025/03/16 applyframe時と同様に
+	//if (uvno == 1) {
+	//	double curframe;
+	//	for (curframe = roundingstartframe; curframe <= roundingendframe; curframe += 1.0) {
+	//		if (curframe != roundingapplyframe) {
+	//			bool skip_ikconstraint_flag = true;
+	//			chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, skip_ikconstraint_flag);
+	//		}
+	//	}
+	//}
 
 	if (lastbone) {
 		return lastbone->GetBoneNo();
@@ -17522,8 +17524,9 @@ int CModel::IKRotateAxisDeltaUnderIK(
 	//	s_undercalling = false;
 	//	return 0;
 	//}
-	if (fabs(rotrad) > (float)(10.0 * DEG2PAI)) {//2023/02/11
-		rotrad = (float)(10.0 * DEG2PAI) * fabs(rotrad) / rotrad;
+	//if (fabs(rotrad) > (float)(10.0 * DEG2PAI)) {//2023/02/11
+	if (fabs(rotrad) > (float)(8.0 * DEG2PAI)) {//2025/03/16
+		rotrad = (float)(8.0 * DEG2PAI) * fabs(rotrad) / rotrad;
 	}
 
 
@@ -17602,8 +17605,9 @@ int CModel::IKRotateAxisDeltaUnderIK(
 			//if (fabs(rotrad2) < (0.010 * DEG2PAI)) {
 			//	break;
 			//}
-			if (fabs(rotrad2) > (float)(10.0 * DEG2PAI)) {//2023/02/11
-				rotrad2 = (float)(10.0 * DEG2PAI) * fabs(rotrad2) / rotrad2;
+			//if (fabs(rotrad2) > (float)(10.0 * DEG2PAI)) {//2023/02/11
+			if (fabs(rotrad2) > (float)(8.0 * DEG2PAI)) {//2025/03/16
+				rotrad2 = (float)(8.0 * DEG2PAI) * fabs(rotrad2) / rotrad2;
 			}
 
 			CRigidElem* curre = GetRigidElem(curbone->GetBoneNo());
@@ -17729,7 +17733,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 					//for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
 
 					bool keynum1flag = false;
-					bool postflag = false;
+					bool skip_ikconstraint_flag = false;
 					bool fromiktarget = false;
 					ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 						keyno, 
@@ -17737,7 +17741,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 						aplybone, 
 						//aplybone->GetParent(false),
 						curmotid, curframe, startframe, applyframe,
-						localq, keynum1flag, postflag, fromiktarget, 
+						localq, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
 						&saveapplyframemat
 						//&saveapplyframematpar
 						//&selectmat
@@ -17753,7 +17757,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 					//rotq.RotationMatrix(transmat);
 
 					bool keynum1flag = true;
-					bool postflag = false;
+					bool skip_ikconstraint_flag = false;
 					bool fromiktarget = false;
 					ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 						0, 
@@ -17809,23 +17813,23 @@ int CModel::IKRotateAxisDeltaUnderIK(
 				currotrec.lessthanthflag = false;
 				AddIKRotRec(currotrec);
 			}
-			else {
-				//rotqの回転角度が1e-4より小さい場合
-				//ウェイトが小さいフレームにおいても　IKTargetが走るように記録する必要がある
-				IKROTREC currotrec;
-				currotrec.Init();
-				currotrec.rotbone = aplybone;
-				currotrec.aplybone = aplybone;
-				//currotrec.aplybone = aplybone->GetParent(false);
-				//currotrec.applyframemat = aplybone->GetWorldMat(limitdegflag, curmotid, applyframe, 0);
-				currotrec.applyframemat = saveapplyframemat;//2025/02/24 変更前のapplymatが必要
-				//currotrec.applyframemat = selectmat;
-				currotrec.applyframeeul = saveapplyframeeul;//2025/02/24 変更前のapplymatが必要
-				currotrec.rotq = localq;
-				currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
-				currotrec.lessthanthflag = true;//!!!!!!!!!!!
-				AddIKRotRec(currotrec);
-			}
+			//else {
+			//	//rotqの回転角度が1e-4より小さい場合
+			//	//ウェイトが小さいフレームにおいても　IKTargetが走るように記録する必要がある
+			//	IKROTREC currotrec;
+			//	currotrec.Init();
+			//	currotrec.rotbone = aplybone;
+			//	currotrec.aplybone = aplybone;
+			//	//currotrec.aplybone = aplybone->GetParent(false);
+			//	//currotrec.applyframemat = aplybone->GetWorldMat(limitdegflag, curmotid, applyframe, 0);
+			//	currotrec.applyframemat = saveapplyframemat;//2025/02/24 変更前のapplymatが必要
+			//	//currotrec.applyframemat = selectmat;
+			//	currotrec.applyframeeul = saveapplyframeeul;//2025/02/24 変更前のapplymatが必要
+			//	currotrec.rotq = localq;
+			//	currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
+			//	currotrec.lessthanthflag = true;//!!!!!!!!!!!
+			//	AddIKRotRec(currotrec);
+			//}
 
 			if (aplybone) {
 				if (aplybone->GetIKStopFlag() == true) {
@@ -17946,7 +17950,8 @@ int CModel::IKRotateAxisDeltaPostIK(
 				if (keynum >= 2) {
 					int keyno = 0;
 					bool keynum1flag = false;
-					bool postflag = true;
+					//bool skip_ikconstraint_flag = true;
+					bool skip_ikconstraint_flag = false;//2025/03/16 applyframe時と同様に
 					bool fromiktarget = false;
 
 					if (m_PostIKThreads) {
@@ -17958,7 +17963,7 @@ int CModel::IKRotateAxisDeltaPostIK(
 								keyno,
 								aplybone, aplybone, //parentbone,
 								curmotid, startframe, applyframe,
-								localq, saveapplymat, keynum1flag, postflag, fromiktarget);
+								localq, saveapplymat, keynum1flag, skip_ikconstraint_flag, fromiktarget);
 						}
 						WaitPostIKFinished();
 						//SetUnderPostIK(false);
@@ -17993,13 +17998,14 @@ int CModel::IKRotateAxisDeltaPostIK(
 	}
 
 
-	double curframe;
-	for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
-		if (curframe != applyframe) {
-			bool postflag = true;
-			chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, postflag);
-		}
-	}
+	//2025/03/16 applyframe時と同様に
+	//double curframe;
+	//for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0) {
+	//	if (curframe != applyframe) {
+	//		bool skip_ikconstraint_flag = true;
+	//		chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, skip_ikconstraint_flag);
+	//	}
+	//}
 
 	////絶対モードの場合
 	//if ((calccnt == (calcnum - 1)) && g_absikflag && lastbone) {
@@ -18124,8 +18130,8 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 			//if (fabs(rotrad2) < (0.020 * DEG2PAI)) {
 			//	break;
 			//}
-			if (fabs(rotrad2) > (float)(10.0 * DEG2PAI)) {//2023/02/11
-				rotrad2 = (float)(10.0 * DEG2PAI) * fabs(rotrad2) / rotrad2;
+			if (fabs(rotrad2) > (float)(8.0 * DEG2PAI)) {//2023/02/11
+				rotrad2 = (float)(8.0 * DEG2PAI) * fabs(rotrad2) / rotrad2;
 			}
 
 			CRigidElem* curre = GetRigidElem(curbone->GetBoneNo());
@@ -18236,13 +18242,13 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 				for (curframe = RoundingTime(startframe); curframe <= endframe; curframe += 1.0){
 
 					bool keynum1flag = false;
-					bool postflag = false;
+					bool skip_ikconstraint_flag = false;
 					bool fromiktarget = false;
 					chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 						keyno, 
 						aplybone, aplybone, //aplybone->GetParent(false),
 						curmotid, curframe, startframe, applyframe,
-						localq, keynum1flag, postflag, fromiktarget, &saveapplyframemat);
+						localq, keynum1flag, skip_ikconstraint_flag, fromiktarget, &saveapplyframemat);
 
 					keyno++;
 				}
@@ -18253,13 +18259,13 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 				//rotq.RotationMatrix(transmat);
 
 				bool keynum1flag = true;
-				bool postflag = false;
+				bool skip_ikconstraint_flag = false;
 				bool fromiktarget = false;
 				chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
 					0, 
 					aplybone, aplybone, //aplybone->GetParent(false),
 					curmotid, GetCurrentFrame(), startframe, applyframe,
-					localq, keynum1flag, postflag, fromiktarget, &saveapplyframemat);
+					localq, keynum1flag, skip_ikconstraint_flag, fromiktarget, &saveapplyframemat);
 			}
 
 
@@ -18663,8 +18669,8 @@ int CModel::FKBoneTraUnderFK(
 				//}
 			}
 
-			bool postflag = false;
-			chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, postflag);
+			bool skip_ikconstraint_flag = false;
+			chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, skip_ikconstraint_flag);
 
 
 			keyno++;
@@ -18675,8 +18681,8 @@ int CModel::FKBoneTraUnderFK(
 		translation = addtra;
 		curbone->AddBoneTraReq(limitdegflag, wallscrapingikflag, 0, curmotid, startframe, translation, dummyparentwm, dummyparentwm);
 
-		bool postflag = false;
-		chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, startframe, postflag);
+		bool skip_ikconstraint_flag = false;
+		chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, startframe, skip_ikconstraint_flag);
 
 	}
 
@@ -18771,8 +18777,8 @@ int CModel::FKBoneTraPostFK(
 	double curframe;
 	for (curframe = RoundingTime(startframe); curframe <= RoundingTime(endframe); curframe += 1.0) {
 		if (curframe != RoundingTime(applyframe)) {
-			bool postflag = true;
-			chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, postflag);
+			bool skip_ikconstraint_flag = true;
+			chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, skip_ikconstraint_flag);
 		}
 	}
 
@@ -18876,10 +18882,10 @@ int CModel::PosConstraintExecuteFromButton(bool limitdegflag, int wallscrapingik
 		erptr->GetRange(&keynum, &startframe, &endframe, &applyframe);
 		double curframe;
 		for (curframe = RoundingTime(startframe); curframe <= RoundingTime(endframe); curframe += 1.0) {
-			bool postflag = true;
+			bool skip_ikconstraint_flag = true;
 			int calccount;
 			for (calccount = 0; calccount < 1; calccount++) {//IKTargetVecでも複数回計算している
-				chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, postflag);
+				chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, skip_ikconstraint_flag);
 			}
 		}
 	}

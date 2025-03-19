@@ -28,7 +28,7 @@ public:
 	int IKRotateOneFrame(CModel* srcmodel, int limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 		int keyno, CBone* rotbone, CBone* parentbone,
 		int srcmotid, double curframe, double startframe, double applyframe,
-		CQuaternion rotq0, bool keynum1flag, bool postflag, bool fromiktarget,
+		CQuaternion rotq0, bool keynum1flag, bool skip_ikconstraint_flag, bool fromiktarget,
 		ChaMatrix* srcapplymat//2025/02/24
 	);
 	int RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int wallscrapingikflag, 
@@ -38,10 +38,10 @@ public:
 
 
 	int IKTargetVec(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, 
-		CEditRange* erptr, int srcmotid, double srcframe, bool postflag);
+		CEditRange* erptr, int srcmotid, double srcframe, bool skip_ikconstraint_flag);
 	int IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, 
 		CEditRange* erptr,
-		int srcboneno, int srcmotid, ChaVector3 targetpos, int maxlevel, double directframe, bool postflag);
+		int srcboneno, int srcmotid, ChaVector3 targetpos, int maxlevel, double directframe, bool skip_ikconstraint_flag);
 
 	int AdjustBoneTra(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, 
 		CEditRange* erptr, CBone* lastpar, int srcmotid);
