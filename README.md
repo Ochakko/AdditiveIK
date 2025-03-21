@@ -245,7 +245,7 @@ Smooth平滑化<br>
 2025/3/1からの環境<br>
 　一世代前のIntelCPU 20コア 28スレッド<br>
 　　GeForce RTX 4070 12GB<br>
-　　32GB RAM(多分足りない　増設予定)<br>
+　　DDR5-6000 64GB RAM(2025/3/21)<br>
 　　1T SSD(多分足りない　増設予定)<br>
 2025/2/28までの環境<br>
 　古めの８コアIntelマシン<br>

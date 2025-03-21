@@ -303,7 +303,7 @@ enum {
 };
 
 
-
+static int s_ik_timer_id = 9876;
 //#define FPSSAVENUM 100
 #define FPSSAVENUM 120
 static double s_fTime = 0.0;
@@ -3325,7 +3325,6 @@ INT WINAPI wWinMain(
 	//}
 
 
-	//s_iktimerid = (int)::SetTimer(g_mainhwnd, s_iktimerid, 16, NULL);
 
 	//if (g_mainhwnd) {
 	//	SetCapture(g_mainhwnd);
@@ -3367,6 +3366,10 @@ INT WINAPI wWinMain(
 	//CGltfLoader gltfloader;
 	//int resulttest = gltfloader.LoadTest();
 	//int dbgflag1 = 1;
+
+
+	s_ik_timer_id = (int)::SetTimer(g_hWnd, s_ik_timer_id, 30, NULL);
+
 
 	int dbgcount = 0;
 	while (DispatchWindowMessage())
@@ -3691,7 +3694,9 @@ void InitApp()
 	s_cpinfo.Init();
 	s_cpmotinfo.Init();
 
-	g_ikrate = 0.20f;
+	//g_ikrate = 0.20f;
+	g_ikrate = 0.5f;
+	g_ikmaxdeg = 2.0f;
 
 	s_moa_nextmotid = 0;
 	s_moa_nextframe = 0;
@@ -5133,6 +5138,12 @@ void OnDestroyDevice()
 	g_endappflag = 1;
 	//UNREFERENCED_PARAMETER(pUserContext);
 
+	if (s_ik_timer_id > 0) {
+		::KillTimer(g_mainhwnd, s_ik_timer_id);
+		SleepEx(60, TRUE);
+	}
+
+
 	OrgWindowListenMouse(false);
 
 	SaveIniFile();
@@ -5247,9 +5258,6 @@ void OnDestroyDevice()
 	s_cameramenuindexmap.clear();
 	s_reindexmap.clear();
 	s_rgdindexmap.clear();
-
-
-	//::KillTimer(g_mainhwnd, s_iktimerid);
 
 
 	if (s_editrangehistory) {
@@ -8388,11 +8396,14 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	else if (uMsg == WM_MBUTTONDOWN) {
 
 	}
-	else if (uMsg == WM_MOUSEMOVE) {
 
-		OnMouseMoveFunc();
-
+	//else if (uMsg == WM_MOUSEMOVE) {
+	else if (uMsg == WM_TIMER) {
+		if (wParam == s_ik_timer_id) {//2025/03/22 マウスを動かさない場合にもIKが目標に近づくようにTimerから呼び出す
+			OnMouseMoveFunc();
+		}
 	}
+
 	else if (uMsg == WM_LBUTTONUP) {
 		if (s_cancelLButtonDown) {
 			s_cancelLButtonDown = false;
@@ -14342,18 +14353,25 @@ int CalcTargetPos(ChaVector3* dstpos)
 
 int CalcPickRay(ChaVector3* startptr, ChaVector3* endptr)
 {
-	s_pickinfo.diffmouse.x = (float)(s_pickinfo.mousepos.x - s_pickinfo.mousebefpos.x);
-	s_pickinfo.diffmouse.y = (float)(s_pickinfo.mousepos.y - s_pickinfo.mousebefpos.y);
+	//s_pickinfo.diffmouse.x = (float)(s_pickinfo.mousepos.x - s_pickinfo.mousebefpos.x);
+	//s_pickinfo.diffmouse.y = (float)(s_pickinfo.mousepos.y - s_pickinfo.mousebefpos.y);
+	//ChaVector3 mousesc;
+	////以下2行。相対位置で動かすことができるが、マウスが可動でボーンが可動でないような位置への操作があると、その後の操作と結果の関係が不自然にみえる。
+	//mousesc.x = s_pickinfo.objscreen.x + s_pickinfo.diffmouse.x;
+	//mousesc.y = s_pickinfo.objscreen.y + s_pickinfo.diffmouse.y;
 
+	//###############################################################
+	//2025/03/22
+	//MouseMoveFunc()呼び出しトリガーを　WM_MOUSEMOVEからWM_TIMERに変更
+	//###############################################################
+	s_pickinfo.diffmouse.x = (float)(s_pickinfo.objscreen.x - s_pickinfo.mousepos.x);
+	s_pickinfo.diffmouse.y = (float)(s_pickinfo.objscreen.y - s_pickinfo.mousepos.y);
 	ChaVector3 mousesc;
-	//以下2行。相対位置で動かすことができるが、マウスが可動でボーンが可動でないような位置への操作があると、その後の操作と結果の関係が不自然にみえる。
-	mousesc.x = s_pickinfo.objscreen.x + s_pickinfo.diffmouse.x;
-	mousesc.y = s_pickinfo.objscreen.y + s_pickinfo.diffmouse.y;
-
 	//以下２行。常にマウス位置を目標にする。
-	//mousesc.x = s_pickinfo.mousepos.x;
-	//mousesc.y = s_pickinfo.mousepos.y;
+	mousesc.x = (float)s_pickinfo.mousepos.x;
+	mousesc.y = (float)s_pickinfo.mousepos.y;
 	mousesc.z = s_pickinfo.objscreen.z;
+
 
 	ChaVector3 startsc, endsc;
 	float rayx, rayy;
@@ -35106,6 +35124,12 @@ int OnMouseMoveFunc()
 {
 	//OutputToInfoWnd(INFOCOLOR_INFO, L"AdditiveIK.cpp : MouseMoveFunc 0");
 
+	//static int s_dbgcount = 0;
+
+	if (g_previewFlag != 0) {
+		return 0;
+	}
+
 	static bool s_doingflag = false;
 	if (s_doingflag == true) {
 		return 0;
@@ -35191,11 +35215,18 @@ int OnMouseMoveFunc()
 							//CallF(CalcTargetPos(&targetpos), return 1);
 							CalcTargetPos(&targetpos);
 							if (s_ikkind == 0) {
+
+								//s_dbgcount++;
+								//if (s_dbgcount >= 60) {
+								//	int dbgflag1 = 1;
+								//}
+
 								s_editmotionflag = GetCurrentModel()->IKRotateUnderIK(g_limitdegflag, g_wallscrapingikflag,
 									&s_editrange, s_pickinfo.pickobjno, targetpos, g_iklevel);
 
 								//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
 								//UpdateEditedEuler();
+
 							}
 							else if (s_ikkind == 1) {
 								//ChaVector3 diffvec = targetpos - s_pickinfo.objworld;

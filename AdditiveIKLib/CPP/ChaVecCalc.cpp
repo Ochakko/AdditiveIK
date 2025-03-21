@@ -2832,43 +2832,46 @@ int CQuaternion::Slerp2(CQuaternion endq, double t, CQuaternion* dstq)
 
 CQuaternion CQuaternion::Slerp(CQuaternion endq, int framenum, int frameno)
 {
+
 	CQuaternion retq;
 	retq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-
-	double kaku;
-	kaku = this->CalcRad(endq);
-
-	if (kaku > (PI * 0.5)) {
-		//片方を-qにすれば、(PI * 0.5f)より小さくなる。（最短コースをたどれる）
-		endq = -endq;
-		kaku = this->CalcRad(endq);
-		_ASSERT(kaku <= (PI * 0.5));
+	if (framenum == 0) {
+		_ASSERT(0);
+		return retq;
 	}
-
-	// sin( kaku ) == 0.0 付近を調整。
-	//180度にはならないので（ならないようにするので）０度のみケア
-	int kaku0flag = 0;
-	if ((kaku <= 1e-4) && (kaku >= -1e-4)) {
-		kaku0flag = 1;
-		//DbgOut( "Quaternion : Slerp : kaku0flag 1 : dot %f, kaku %f\n", dot, kaku );
-	}
-
-
 	double t = (double)frameno / (double)framenum;
-	double alpha, beta;
-	if (kaku0flag == 0) {
-		alpha = sin(kaku * (1.0 - t)) / sin(kaku);
-		beta = sin(kaku * t) / sin(kaku);
-
-		retq = *this * alpha + endq * beta;
-	}
-	else {
-		retq = *this;
-		//DbgOut( "MotionInfo : FillUpMotionPoint 2: frame %d, %f, %f, %f, %f\n",
-		//	   frameno, startq.w, startq.x, startq.y, startq.z );
-	}
+	Slerp2(endq, t, &retq);
 
 	return retq;
+
+	//double kaku;
+	//kaku = this->CalcRad(endq);
+	//if (kaku > (PI * 0.5)) {
+	//	//片方を-qにすれば、(PI * 0.5f)より小さくなる。（最短コースをたどれる）
+	//	endq = -endq;
+	//	kaku = this->CalcRad(endq);
+	//	_ASSERT(kaku <= (PI * 0.5));
+	//}
+	//// sin( kaku ) == 0.0 付近を調整。
+	////180度にはならないので（ならないようにするので）０度のみケア
+	//int kaku0flag = 0;
+	//if ((kaku <= 1e-4) && (kaku >= -1e-4)) {
+	//	kaku0flag = 1;
+	//	//DbgOut( "Quaternion : Slerp : kaku0flag 1 : dot %f, kaku %f\n", dot, kaku );
+	//}
+	//double t = (double)frameno / (double)framenum;
+	//double alpha, beta;
+	//if (kaku0flag == 0) {
+	//	alpha = sin(kaku * (1.0 - t)) / sin(kaku);
+	//	beta = sin(kaku * t) / sin(kaku);
+	//	retq = *this * alpha + endq * beta;
+	//}
+	//else {
+	//	retq = *this;
+	//	//DbgOut( "MotionInfo : FillUpMotionPoint 2: frame %d, %f, %f, %f, %f\n",
+	//	//	   frameno, startq.w, startq.x, startq.y, startq.z );
+	//}
+	//return retq;
 }
 
 //#ifdef CONVD3DX11

@@ -12785,6 +12785,9 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 					&rotaxis2, &rotrad2);
 
 				rotrad2 *= currate;
+				if (fabs(rotrad2) > (float)(g_ikmaxdeg * DEG2PAI)) {//2025/03/21
+					rotrad2 = (float)(g_ikmaxdeg * DEG2PAI) * fabs(rotrad2) / rotrad2;
+				}
 
 				ChaMatrix saveapplyframemat;
 				ChaVector3 saveapplyframeeul;
@@ -14965,8 +14968,8 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 	//if (fabs(rotrad) < (0.010 * DEG2PAI)) {//2023/03/04
 	//	return 0;
 	//}
-	if (fabs(rotrad) > (float)(10.0 * DEG2PAI)) {//2023/03/04
-		rotrad = (float)(10.0 * DEG2PAI) * fabs(rotrad) / rotrad;
+	if (fabs(rotrad) > (float)(g_ikmaxdeg * DEG2PAI)) {//2023/03/04
+		rotrad = (float)(g_ikmaxdeg * DEG2PAI) * fabs(rotrad) / rotrad;
 	}
 
 
@@ -15101,8 +15104,8 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 					//if (fabs(rotrad2) >= (0.020 * DEG2PAI)) {//2023/02/11
 					if (fabs(rotrad2) >= (0.010 * DEG2PAI)) {//2023/03/04
 
-						if (fabs(rotrad2) > (float)(10.0 * DEG2PAI)) {//2023/02/11
-							rotrad2 = (float)(10.0 * DEG2PAI) * fabs(rotrad2) / rotrad2;
+						if (fabs(rotrad2) > (float)(g_ikmaxdeg * DEG2PAI)) {//2023/02/11
+							rotrad2 = (float)(g_ikmaxdeg * DEG2PAI) * fabs(rotrad2) / rotrad2;
 						}
 						CQuaternion localq0;
 						localq0.SetAxisAndRot(axis0, rotrad2);
@@ -17525,8 +17528,8 @@ int CModel::IKRotateAxisDeltaUnderIK(
 	//	return 0;
 	//}
 	//if (fabs(rotrad) > (float)(10.0 * DEG2PAI)) {//2023/02/11
-	if (fabs(rotrad) > (float)(8.0 * DEG2PAI)) {//2025/03/16
-		rotrad = (float)(8.0 * DEG2PAI) * fabs(rotrad) / rotrad;
+	if (fabs(rotrad) > (float)(g_ikmaxdeg * DEG2PAI)) {//2025/03/16
+		rotrad = (float)(g_ikmaxdeg * DEG2PAI) * fabs(rotrad) / rotrad;
 	}
 
 
@@ -17606,8 +17609,8 @@ int CModel::IKRotateAxisDeltaUnderIK(
 			//	break;
 			//}
 			//if (fabs(rotrad2) > (float)(10.0 * DEG2PAI)) {//2023/02/11
-			if (fabs(rotrad2) > (float)(8.0 * DEG2PAI)) {//2025/03/16
-				rotrad2 = (float)(8.0 * DEG2PAI) * fabs(rotrad2) / rotrad2;
+			if (fabs(rotrad2) > (float)(g_ikmaxdeg * DEG2PAI)) {//2025/03/16
+				rotrad2 = (float)(g_ikmaxdeg * DEG2PAI) * fabs(rotrad2) / rotrad2;
 			}
 
 			CRigidElem* curre = GetRigidElem(curbone->GetBoneNo());
@@ -18058,8 +18061,8 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 		//g_underIKRot = false;//2023/01/14 parent limited or not
 		return 0;
 	}
-	if (fabs(rotrad) > (float)(10.0 * DEG2PAI)) {//2023/02/11
-		rotrad = (float)(10.0 * DEG2PAI) * fabs(rotrad) / rotrad;
+	if (fabs(rotrad) > (float)(g_ikmaxdeg * DEG2PAI)) {//2023/02/11
+		rotrad = (float)(g_ikmaxdeg * DEG2PAI) * fabs(rotrad) / rotrad;
 	}
 
 
@@ -18130,8 +18133,8 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 			//if (fabs(rotrad2) < (0.020 * DEG2PAI)) {
 			//	break;
 			//}
-			if (fabs(rotrad2) > (float)(8.0 * DEG2PAI)) {//2023/02/11
-				rotrad2 = (float)(8.0 * DEG2PAI) * fabs(rotrad2) / rotrad2;
+			if (fabs(rotrad2) > (float)(g_ikmaxdeg * DEG2PAI)) {//2023/02/11
+				rotrad2 = (float)(g_ikmaxdeg * DEG2PAI) * fabs(rotrad2) / rotrad2;
 			}
 
 			CRigidElem* curre = GetRigidElem(curbone->GetBoneNo());

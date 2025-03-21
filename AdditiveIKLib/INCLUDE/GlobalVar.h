@@ -341,7 +341,9 @@ double g_dspeedsave = 1.0;
 
 float g_ikfirst = 1.0f;
 //float g_ikrate = 1.0f;
-float g_ikrate = 0.20f;
+//float g_ikrate = 0.20f;
+float g_ikrate = 0.50f;
+float g_ikmaxdeg =2.0f;
 double g_applyrate = 50.0;
 int g_refposstep = 10;
 int g_refalpha = 50;
@@ -633,6 +635,7 @@ extern double g_dspeedsave;
 
 extern float g_ikfirst;
 extern float g_ikrate;
+extern float g_ikmaxdeg;
 extern double g_applyrate;
 extern int g_refposstep;
 extern int g_refalpha;
