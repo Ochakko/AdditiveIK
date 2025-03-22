@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2025/03/22
-　AdditiveIK 1.0.0.41 RC1(リリース候補1)
+　AdditiveIK 1.0.0.41 release
 　　1.0.0.40からの変更点
 　　　マルチスレッド・アディティブIKの動作の改善
 　　　　IK最大角度を導入.
