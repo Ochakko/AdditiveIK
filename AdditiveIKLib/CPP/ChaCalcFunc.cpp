@@ -1245,7 +1245,8 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wa
 
 	//For IKTraget
 	//カメラ軸回転とカメラ軸に垂直な軸回転と　２回実行する
-	int calcnum = 3;
+	//int calcnum = 3;
+	int calcnum = 20;//2023/03/22 rotrad2に上限を設定したので回数を多く
 
 	int calccnt;
 	for (calccnt = 1; calccnt <= calcnum; calccnt++) {
@@ -1324,6 +1325,11 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wa
 					&rotaxis2, &rotrad2);
 
 				//rotrad2 *= currate;
+				if (fabs(rotrad2) > (float)(g_ikmaxdeg * DEG2PAI)) {//2023/03/22
+					rotrad2 = (float)(g_ikmaxdeg * DEG2PAI) * fabs(rotrad2) / rotrad2;
+				}
+
+
 
 				double firstframe = 0.0;
 				if ((nearflag == false) && (fabs(rotrad2) > 1.0e-4)) {

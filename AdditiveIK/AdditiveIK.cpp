@@ -1789,7 +1789,7 @@ static WCHAR s_Gconame[MAX_PATH] = { 0L };
 
 static bool s_cancelLButtonDown = false;
 static bool s_cancelRButtonDown = false;
-
+static bool s_LButtonDown = false;
 
 static int s_camtargetflag = 0;
 static int s_camtargetOnceflag = 0;
@@ -3655,6 +3655,11 @@ void InitApp()
 	srand(28347);//2025/01/12 適当にキーをガチャガチャ押して入力しただけで未調整
 
 	InitCommonControls();
+
+	s_cancelLButtonDown = false;
+	s_cancelRButtonDown = false;
+	s_LButtonDown = false;
+
 
 	s_copyhistorydlg2.InitParams();
 
@@ -7668,11 +7673,12 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			return 0;//!!!!!!!!!!!!!!!!
 		}
 
+		s_LButtonDown = true;//2025/03/22
+
 		if (!GetCurrentModel()) {
 			//!!!!!!!!!!!!!! 
 			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 		}
-
 
 		//s_cameraeditkind = CAMERAANIMEDIT_NONE;//コメントアウト：グラフ表示を保持するために初期化しない
 
@@ -8405,6 +8411,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	}
 
 	else if (uMsg == WM_LBUTTONUP) {
+
+		s_LButtonDown = false;//2025/03/22
+
 		if (s_cancelLButtonDown) {
 			s_cancelLButtonDown = false;
 			return 0;
@@ -15398,7 +15407,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.40\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.41\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -34235,11 +34244,17 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	case WM_LBUTTONDOWN:
 	case WM_LBUTTONDBLCLK:
+		SetCapture(g_mainhwnd);
+		s_LButtonDown = true;
+		break;
 	case WM_RBUTTONDOWN:
 	case WM_RBUTTONDBLCLK:
 		SetCapture(g_mainhwnd);
 		break;
 	case WM_LBUTTONUP:
+		ReleaseCapture();
+		s_LButtonDown = false;
+		break;
 	case WM_RBUTTONUP:
 		ReleaseCapture();
 		break;
@@ -35127,6 +35142,9 @@ int OnMouseMoveFunc()
 	//static int s_dbgcount = 0;
 
 	if (g_previewFlag != 0) {
+		return 0;
+	}
+	if (s_LButtonDown == false) {
 		return 0;
 	}
 

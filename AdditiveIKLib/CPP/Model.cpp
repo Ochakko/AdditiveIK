@@ -18888,6 +18888,7 @@ int CModel::PosConstraintExecuteFromButton(bool limitdegflag, int wallscrapingik
 			bool skip_ikconstraint_flag = true;
 			int calccount;
 			for (calccount = 0; calccount < 1; calccount++) {//IKTargetVecでも複数回計算している
+			//for (calccount = 0; calccount < 3; calccount++) {//IKTargetVecでも複数回計算している
 				chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, skip_ikconstraint_flag);
 			}
 		}
