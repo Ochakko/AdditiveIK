@@ -2638,7 +2638,7 @@ static int SetSpUndoParams();
 static int SetSpMouseCenterParams();
 static int PickSpAxis(POINT srcpos);
 static int PickSpUndo(POINT srcpos);
-static int PickBone(UIPICKINFO* ppickinfo);
+static int PickBone(UIPICKINFO* ppickinfo, bool calcfirstdiff);
 
 static int SetSpGUISWParams();
 static int PickSpGUISW(POINT srcpos);
@@ -8224,7 +8224,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 				if ((pickflag == false) && (s_oprigflag == 0)) {
 					if (g_shiftkey == false) {
-						CallF(PickBone(&s_pickinfo), return 1);
+						bool calcfirstdiff = true;
+						CallF(PickBone(&s_pickinfo, calcfirstdiff), return 1);
 					}
 					if (s_pickinfo.pickobjno >= 0) {
 						s_curboneno = s_pickinfo.pickobjno;//!!!!!!!
@@ -14328,7 +14329,11 @@ int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderCon
 int CalcTargetPos(ChaVector3* dstpos)
 {
 	ChaVector3 start3d, end3d;
-	CalcPickRay(&start3d, &end3d);
+	int result = CalcPickRay(&start3d, &end3d);
+	if (result == -2) {
+		//2025/03/23 マウスLボタンを押した瞬間にジョイントが動くのを防止
+		return -2;
+	}
 
 	//カメラの面とレイとの交点(targetpos)を求める。
 	ChaVector3 sb, se, n;
@@ -14373,14 +14378,38 @@ int CalcPickRay(ChaVector3* startptr, ChaVector3* endptr)
 	//2025/03/22
 	//MouseMoveFunc()呼び出しトリガーを　WM_MOUSEMOVEからWM_TIMERに変更
 	//###############################################################
-	s_pickinfo.diffmouse.x = (float)(s_pickinfo.objscreen.x - s_pickinfo.mousepos.x);
-	s_pickinfo.diffmouse.y = (float)(s_pickinfo.objscreen.y - s_pickinfo.mousepos.y);
+	//s_pickinfo.diffmouse.x = (float)(s_pickinfo.objscreen.x - s_pickinfo.mousepos.x);
+	//s_pickinfo.diffmouse.y = (float)(s_pickinfo.objscreen.y - s_pickinfo.mousepos.y);
+	//ChaVector3 mousesc;
+	////以下２行。常にマウス位置を目標にする。
+	//mousesc.x = (float)s_pickinfo.mousepos.x;
+	//mousesc.y = (float)s_pickinfo.mousepos.y;
+
+
+	//###############################################################################
+	//2025/03/23
+	//クリックしたときのジョイント位置との位置のずれを考慮する必要.
+	//firstdiff = clickscpos(mouse) - jointscpos(joint) [CModel::PickBone()内で計算]
+	//--> jointscpos = clickpos - firstdiff
+	// diffmouse = mousepos - clickpos
+	// --> diffmouse = mousescpos - (objscreen + fristdiff)
+	//###############################################################################
+	if (s_curboneno < 0) {
+		return 0;
+	}
+	s_pickinfo.diffmouse.x = (float)s_pickinfo.mousepos.x - (float)s_pickinfo.clickpos.x;
+	s_pickinfo.diffmouse.y = (float)s_pickinfo.mousepos.y - (float)s_pickinfo.clickpos.y;
+	float moveth = PICKRANGE;
+	if ((fabs(s_pickinfo.diffmouse.x) < moveth) && (fabs(s_pickinfo.diffmouse.y) < moveth)) {
+		//クリックしたときのジョイント位置との位置のずれを考慮する必要.
+		//2025/03/23 マウスLボタンを押した瞬間にジョイントが動くのを防止
+		return -2;
+	}
+
 	ChaVector3 mousesc;
-	//以下２行。常にマウス位置を目標にする。
 	mousesc.x = (float)s_pickinfo.mousepos.x;
 	mousesc.y = (float)s_pickinfo.mousepos.y;
 	mousesc.z = s_pickinfo.objscreen.z;
-
 
 	ChaVector3 startsc, endsc;
 	float rayx, rayy;
@@ -14388,7 +14417,7 @@ int CalcPickRay(ChaVector3* startptr, ChaVector3* endptr)
 	rayy = 1.0f - mousesc.y / (s_pickinfo.winy / 2.0f);
 
 	startsc.SetParams(rayx, rayy, 0.0f);
-	endsc.SetParams(rayx, rayy, 1.0f);
+	endsc.SetParams(rayx, rayy, 0.999999f);
 
 	ChaMatrix mView;
 	ChaMatrix mProj;
@@ -22557,7 +22586,7 @@ int SetSelectState()
 	else {
 
 		if (g_shiftkey == false) {
-			CallF(PickBone(&pickinfo), return 1);
+			CallF(PickBone(&pickinfo, false), return 1);
 		}
 
 		if (pickinfo.pickobjno >= 0) {
@@ -33345,7 +33374,8 @@ int BoneRClick(int srcboneno)
 		s_curboneno = -1;//2023/08/28 ジョイント以外を右クリックした場合には　メニューを出さない
 
 		if (s_oprigflag == 0) {
-			CallF(PickBone(&s_pickinfo), return pickflag);
+			bool calcfirstdiff = true;
+			CallF(PickBone(&s_pickinfo, calcfirstdiff), return pickflag);
 			if (s_pickinfo.pickobjno >= 0) {
 				s_curboneno = s_pickinfo.pickobjno;
 				pickflag = 1;
@@ -34784,7 +34814,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.41 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.42 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -35231,42 +35261,43 @@ int OnMouseMoveFunc()
 						if (s_oprigflag == 0) {
 							ChaVector3 targetpos(0.0f, 0.0f, 0.0f);
 							//CallF(CalcTargetPos(&targetpos), return 1);
-							CalcTargetPos(&targetpos);
-							if (s_ikkind == 0) {
+							int result = CalcTargetPos(&targetpos);
+							if (result == 0) {//2025/03/23 マウスLボタンを押した瞬間にジョイントが動くのを防止
+								if (s_ikkind == 0) {
 
-								//s_dbgcount++;
-								//if (s_dbgcount >= 60) {
-								//	int dbgflag1 = 1;
-								//}
+									//s_dbgcount++;
+									//if (s_dbgcount >= 60) {
+									//	int dbgflag1 = 1;
+									//}
 
-								s_editmotionflag = GetCurrentModel()->IKRotateUnderIK(g_limitdegflag, g_wallscrapingikflag,
-									&s_editrange, s_pickinfo.pickobjno, targetpos, g_iklevel);
+									s_editmotionflag = GetCurrentModel()->IKRotateUnderIK(g_limitdegflag, g_wallscrapingikflag,
+										&s_editrange, s_pickinfo.pickobjno, targetpos, g_iklevel);
 
-								//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
-								//UpdateEditedEuler();
+									//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
+									//UpdateEditedEuler();
 
+								}
+								else if (s_ikkind == 1) {
+									//ChaVector3 diffvec = targetpos - s_pickinfo.objworld;
+
+									ChaVector3 modelobjworld;
+									ChaMatrix invmodelwm = ChaMatrixInv(GetCurrentModel()->GetWorldMat());
+									ChaVector3TransformCoord(&modelobjworld, &s_pickinfo.objworld, &invmodelwm);
+									ChaVector3 diffvec = targetpos - modelobjworld;
+									AddBoneTra2(diffvec);
+									s_editmotionflag = s_curboneno;
+								}
+								else if (s_ikkind == 2) {
+									//ChaVector3 diffvec = targetpos - s_pickinfo.objworld;
+
+									ChaVector3 modelobjworld;
+									ChaMatrix invmodelwm = ChaMatrixInv(GetCurrentModel()->GetWorldMat());
+									ChaVector3TransformCoord(&modelobjworld, &s_pickinfo.objworld, &invmodelwm);
+									ChaVector3 diffvec = targetpos - modelobjworld;
+									AddBoneScale2(diffvec);
+									s_editmotionflag = s_curboneno;
+								}
 							}
-							else if (s_ikkind == 1) {
-								//ChaVector3 diffvec = targetpos - s_pickinfo.objworld;
-
-								ChaVector3 modelobjworld;
-								ChaMatrix invmodelwm = ChaMatrixInv(GetCurrentModel()->GetWorldMat());
-								ChaVector3TransformCoord(&modelobjworld, &s_pickinfo.objworld, &invmodelwm);
-								ChaVector3 diffvec = targetpos - modelobjworld;
-								AddBoneTra2(diffvec);
-								s_editmotionflag = s_curboneno;
-							}
-							else if (s_ikkind == 2) {
-								//ChaVector3 diffvec = targetpos - s_pickinfo.objworld;
-
-								ChaVector3 modelobjworld;
-								ChaMatrix invmodelwm = ChaMatrixInv(GetCurrentModel()->GetWorldMat());
-								ChaVector3TransformCoord(&modelobjworld, &s_pickinfo.objworld, &invmodelwm);
-								ChaVector3 diffvec = targetpos - modelobjworld;
-								AddBoneScale2(diffvec);
-								s_editmotionflag = s_curboneno;
-							}
-
 						}
 						else {
 							if (s_customrigbone) {
@@ -38200,7 +38231,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.41 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.42 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && s_chascene) {
@@ -42432,7 +42463,7 @@ bool DispTipBone()
 	bool dispfontfortip = false;
 
 	if (g_shiftkey == false) {
-		PickBone(&tmppickinfo);
+		PickBone(&tmppickinfo, false);
 	}
 	if (tmppickinfo.pickobjno >= 0) {
 		int curboneno = tmppickinfo.pickobjno;
@@ -46031,7 +46062,7 @@ void InitPickInfo(UIPICKINFO* ppickinfo)
 	}
 }
 
-int PickBone(UIPICKINFO* ppickinfo)
+int PickBone(UIPICKINFO* ppickinfo, bool calcfirstdiff)
 {
 	if (!GetCurrentModel()) {
 		return 0;
@@ -46050,7 +46081,7 @@ int PickBone(UIPICKINFO* ppickinfo)
 		return 0;
 	}
 
-	int result0 = GetCurrentModel()->PickBone(ppickinfo);
+	int result0 = GetCurrentModel()->PickBone(ppickinfo, calcfirstdiff);
 	return result0;
 }
 

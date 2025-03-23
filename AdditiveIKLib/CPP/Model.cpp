@@ -4191,7 +4191,7 @@ CBone* CModel::GetSymPosBone(CBone* srcbone)
 }
 
 
-int CModel::PickBone( UIPICKINFO* pickinfo )
+int CModel::PickBone(UIPICKINFO* pickinfo, bool calcfirstdiff)
 {
 	pickinfo->pickobjno = -1;
 
@@ -4250,7 +4250,9 @@ int CModel::PickBone( UIPICKINFO* pickinfo )
 	if( minno >= 0 ){
 		pickinfo->objscreen = picksc;
 		pickinfo->objworld = pickworld;
-		pickinfo->firstdiff = firstdiff;
+		if (calcfirstdiff) {//2025/03/23
+			pickinfo->firstdiff = firstdiff;
+		}
 	}
 
 	return 0;

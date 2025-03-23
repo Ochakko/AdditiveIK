@@ -2,6 +2,10 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/03/23
+　マウスLボタンを押した瞬間にジョイントが動いてしまうのを防止
+
+
 2025/03/22
 　AdditiveIK 1.0.0.41 release
 　　1.0.0.40からの変更点

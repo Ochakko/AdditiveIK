@@ -626,7 +626,7 @@ public:
  * @return 成功したら０。
  * @detail pickinfoにウインドウのサイズとクリックした２D座標とボーンとの最大距離を指定して呼び出す。
  */
-	int PickBone( UIPICKINFO* pickinfo );
+	int PickBone(UIPICKINFO* pickinfo, bool calcfirstdiff);
 
 /**
  * @fn
