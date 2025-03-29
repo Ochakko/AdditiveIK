@@ -2,9 +2,15 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/03/30
+　DispAndLimitsプレートメニューのダイアログにGUI追加
+　　IKRate : 大きくするとジョイントドラッグ時のIKスピードが速くなりますが精度は落ちます。
+　　IKMaxDeg : 大きくするとジョイントドラッグ時のIKスピードが速くなりますが精度は落ちます。
+　　PosConstTimes : 大きくすると位置コンストレイント時の計算回数が多くなります。計算回数が多いほど位置が定まりやすくなりますが計算が重くなります。
+
+
 2025/03/23
 　マウスLボタンを押した瞬間にジョイントが動いてしまうのを防止
-
 
 2025/03/22
 　AdditiveIK 1.0.0.41 release

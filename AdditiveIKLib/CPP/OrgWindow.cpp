@@ -2284,6 +2284,9 @@ namespace OrgWinGUI{
 						peditbox->clearChar();
 					}
 					else if (pushnum == SKNUMBUTTON_CLOSE) {
+						if (peditbox) {
+							peditbox->callCloseListener();//2025/03/30
+						}
 						if (getParent()) {
 							getParent()->setVisible(false);//2024/07/08 閉じるボタン
 							return;
@@ -2393,6 +2396,9 @@ namespace OrgWinGUI{
 						peditbox->clearChar();
 					}
 					else if (pushnum == SKALNUM_CLOSE) {
+						if (peditbox) {
+							peditbox->callCloseListener();//2025/03/30
+						}
 						if (getParent()) {
 							getParent()->setVisible(false);//2024/07/08 閉じるボタン
 							return;

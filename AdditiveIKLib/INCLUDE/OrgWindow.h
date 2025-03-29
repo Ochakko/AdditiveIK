@@ -4611,6 +4611,7 @@ void s_dummyfunc()
 			buttonPush = false;
 			//buttonListener = [](){s_dummyfunc();};
 			buttonListener = NULL;
+			closeListener = NULL;
 
 			//psoftnumWnd = nullptr;
 			//psoftnumkey = nullptr;
@@ -4739,6 +4740,14 @@ void s_dummyfunc()
 		void setButtonListener(std::function<void()> listener) {
 			this->buttonListener = listener;
 		}
+		void setCloseListener(std::function<void()> listener) {
+			this->closeListener = listener;
+		}
+		void callCloseListener() {
+			if (this->closeListener != nullptr) {
+				(this->closeListener)();
+			}
+		}
 		void setName(const TCHAR* value) {
 			if (name && value) {
 				size_t tclen = _tcslen(value);
@@ -4768,6 +4777,7 @@ void s_dummyfunc()
 
 		bool buttonPush;
 		std::function<void()> buttonListener;
+		std::function<void()> closeListener;//入力ダイアログを閉じたときに呼ばれる
 
 		int SIZE_Y = 15;
 		static const int BOX_POS_X = 3;

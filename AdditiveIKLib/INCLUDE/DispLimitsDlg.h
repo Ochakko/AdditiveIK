@@ -108,6 +108,15 @@ private:
 	OrgWinGUI::OWP_Label* m_dispspacerLabel002;
 	OrgWinGUI::OWP_Label* m_dispspacerLabel003;
 
+	OrgWinGUI::OWP_Label* m_ikrateLabel;
+	OrgWinGUI::OWP_EditBox* m_ikrateEdit;
+	OrgWinGUI::OWP_Separator* m_dispsp6;
+	OrgWinGUI::OWP_Label* m_ikmaxdegLabel;
+	OrgWinGUI::OWP_EditBox* m_ikmaxdegEdit;
+	OrgWinGUI::OWP_Separator* m_dispsp7;
+	OrgWinGUI::OWP_Label* m_posconsttimesLabel;
+	OrgWinGUI::OWP_EditBox* m_posconsttimesEdit;
+	OrgWinGUI::OWP_Separator* m_dispsp8;
 };
 
 #endif //__ColiIDDlg_H_

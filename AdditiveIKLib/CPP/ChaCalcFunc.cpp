@@ -1176,7 +1176,8 @@ int ChaCalcFunc::IKTargetVec(CModel* srcmodel, bool limitdegflag, int wallscrapi
 		if (srcbone && srcbone->IsSkeleton() && srcbone->GetParent(false) && srcbone->GetIKTargetFlag()) {
 			ChaVector3 iktargetpos = srcbone->GetIKTargetPos();//model座標系
 			int calccount;
-			const int calccountmax = 30;
+			//const int calccountmax = 30;
+			const int calccountmax = 1;//2025/03/29 IKRotateForIKTarget()内でg_iktargettimes回だけループする
 			for (calccount = 0; calccount < calccountmax; calccount++) {
 				int maxlevel = 0;
 				IKRotateForIKTarget(srcmodel, limitdegflag, wallscrapingikflag, erptr, srcbone->GetBoneNo(), srcmotid,
@@ -1246,7 +1247,8 @@ int ChaCalcFunc::IKRotateForIKTarget(CModel* srcmodel, bool limitdegflag, int wa
 	//For IKTraget
 	//カメラ軸回転とカメラ軸に垂直な軸回転と　２回実行する
 	//int calcnum = 3;
-	int calcnum = 20;//2023/03/22 rotrad2に上限を設定したので回数を多く
+	//int calcnum = 20;//2023/03/22 rotrad2に上限を設定したので回数を多く
+	int calcnum = g_iktargettimes;//2025/03/29
 
 	int calccnt;
 	for (calccnt = 1; calccnt <= calcnum; calccnt++) {

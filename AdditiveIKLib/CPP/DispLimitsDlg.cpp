@@ -226,6 +226,42 @@ int CDispLimitsDlg::DestroyObjs()
 		m_dispspacerLabel003 = nullptr;
 	}
 
+	if (m_ikrateLabel) {
+		delete m_ikrateLabel;
+		m_ikrateLabel = nullptr;
+	}
+	if (m_ikrateEdit) {
+		delete m_ikrateEdit;
+		m_ikrateEdit = nullptr;
+	}
+	if (m_dispsp6) {
+		delete m_dispsp6;
+		m_dispsp6 = nullptr;
+	}
+	if (m_ikmaxdegLabel) {
+		delete m_ikmaxdegLabel;
+		m_ikmaxdegLabel = nullptr;
+	}
+	if (m_ikmaxdegEdit) {
+		delete m_ikmaxdegEdit;
+		m_ikmaxdegEdit = nullptr;
+	}
+	if (m_dispsp7) {
+		delete m_dispsp7;
+		m_dispsp7 = nullptr;
+	}
+	if (m_posconsttimesLabel) {
+		delete m_posconsttimesLabel;
+		m_posconsttimesLabel = nullptr;
+	}
+	if (m_posconsttimesEdit) {
+		delete m_posconsttimesEdit;
+		m_posconsttimesEdit = nullptr;
+	}
+	if (m_dispsp8) {
+		delete m_dispsp8;
+		m_dispsp8 = nullptr;
+	}
 
 	if (m_dlgWnd) {
 		delete m_dlgWnd;
@@ -294,7 +330,15 @@ void CDispLimitsDlg::InitParams()
 	m_dispspacerLabel002 = nullptr;
 	m_dispspacerLabel003 = nullptr;
 
-
+	m_ikrateLabel = nullptr;
+	m_ikrateEdit = nullptr;
+	m_dispsp6 = nullptr;
+	m_ikmaxdegLabel = nullptr;
+	m_ikmaxdegEdit = nullptr;
+	m_dispsp7 = nullptr;
+	m_posconsttimesLabel = nullptr;
+	m_posconsttimesEdit = nullptr;
+	m_dispsp8 = nullptr;
 }
 
 
@@ -626,6 +670,61 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 		}
 
 
+
+		m_ikrateLabel = new OWP_Label(L"IK Rate", labelheight);
+		if (!m_ikrateLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		WCHAR strikrate[256] = { 0L };
+		swprintf_s(strikrate, 256, L"%.2f", g_ikrate);
+		m_ikrateEdit = new OWP_EditBox(true, strikrate, labelheight, EDIT_BUFLEN_NUM);
+		if (!m_ikrateEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		m_dispsp6 = new OWP_Separator(m_dlgWnd, true, rate50, true);
+		if (!m_dispsp6) {
+			_ASSERT(0);
+			abort();
+		}
+		m_ikmaxdegLabel = new OWP_Label(L"IK Max Degree", labelheight);
+		if (!m_ikmaxdegLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		WCHAR strikmaxdeg[256] = { 0L };
+		swprintf_s(strikmaxdeg, 256, L"%.2f", g_ikmaxdeg);
+		m_ikmaxdegEdit = new OWP_EditBox(true, strikmaxdeg, labelheight, EDIT_BUFLEN_NUM);
+		if (!m_ikmaxdegEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		m_dispsp7 = new OWP_Separator(m_dlgWnd, true, rate50, true);
+		if (!m_dispsp7) {
+			_ASSERT(0);
+			abort();
+		}
+		m_posconsttimesLabel = new OWP_Label(L"PosConstraint Times", labelheight);
+		if (!m_posconsttimesLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		WCHAR strikconsttimes[256] = { 0L };
+		swprintf_s(strikconsttimes, 256, L"%d", g_iktargettimes);
+		m_posconsttimesEdit = new OWP_EditBox(true, strikconsttimes, labelheight, EDIT_BUFLEN_NUM);
+		if (!m_posconsttimesEdit) {
+			_ASSERT(0);
+			abort();
+		}
+		m_dispsp8 = new OWP_Separator(m_dlgWnd, true, rate50, true);
+		if (!m_dispsp8) {
+			_ASSERT(0);
+			abort();
+		}
+
+
+
 		m_dlgWnd->addParts(*m_lightssp);
 		m_lightssp->addParts1(*m_lightsChk);
 		m_lightssp->addParts2(*m_lightsSlider);
@@ -671,6 +770,19 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 		m_dispsp4->addParts2(*m_skydispChk);
 		m_dlgWnd->addParts(*m_dispsp5);
 		m_dispsp5->addParts1(*m_graphskipMOAChk);
+
+		m_dlgWnd->addParts(*m_dispsp6);
+		m_dispsp6->addParts1(*m_ikrateLabel);
+		m_dispsp6->addParts2(*m_ikrateEdit);
+
+		m_dlgWnd->addParts(*m_dispsp7);
+		m_dispsp7->addParts1(*m_ikmaxdegLabel);
+		m_dispsp7->addParts2(*m_ikmaxdegEdit);
+
+		m_dlgWnd->addParts(*m_dispsp8);
+		m_dispsp8->addParts1(*m_posconsttimesLabel);
+		m_dispsp8->addParts2(*m_posconsttimesEdit);
+
 
 		//###########
 		//CheckBox
@@ -812,6 +924,56 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 			g_uvset = comboid;
 			});
 
+		//###########
+		//EditBox
+		//###########
+		m_ikrateEdit->setCloseListener([=, this]() {
+			WCHAR strikrate[256] = { 0L };
+			if (m_ikrateEdit) {
+				m_ikrateEdit->getName(strikrate, 256);
+			}
+			float tempeditvalue = (float)_wtof(strikrate);
+			if ((tempeditvalue >= 0.0f) && (tempeditvalue <= 1000.0f)) {
+				g_ikrate = tempeditvalue;
+			}
+			else {
+				//if (m_dlgWnd && m_dlgWnd->getHWnd()) {
+				//	::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : ikrate", L"Invalid Value", MB_OK);
+				//}
+			}
+		});
+
+		m_ikmaxdegEdit->setCloseListener([=, this]() {
+			WCHAR strikmaxdeg[256] = { 0L };
+			if (m_ikmaxdegEdit) {
+				m_ikmaxdegEdit->getName(strikmaxdeg, 256);
+			}
+			float tempeditvalue = (float)_wtof(strikmaxdeg);
+			if ((tempeditvalue >= 0.0f) && (tempeditvalue <= 100.0f)) {
+				g_ikmaxdeg = tempeditvalue;
+			}
+			else {
+				//if (m_dlgWnd && m_dlgWnd->getHWnd()) {
+				//	::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : ikrate", L"Invalid Value", MB_OK);
+				//}
+			}
+		});
+
+		m_posconsttimesEdit->setCloseListener([=, this]() {
+			WCHAR strposconsttimes[256] = { 0L };
+			if (m_posconsttimesEdit) {
+				m_posconsttimesEdit->getName(strposconsttimes, 256);
+			}
+			int tempeditvalue = (int)_wtoi(strposconsttimes);
+			if ((tempeditvalue >= 0) && (tempeditvalue <= 1000)) {
+				g_iktargettimes = tempeditvalue;
+			}
+			else {
+				//if (m_dlgWnd && m_dlgWnd->getHWnd()) {
+				//	::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : ikrate", L"Invalid Value", MB_OK);
+				//}
+			}
+		});
 
 		m_dlgWnd->setSize(WindowSize(m_sizex, m_sizey));
 		m_dlgWnd->setPos(WindowPos(m_posx, m_posy));
@@ -908,6 +1070,26 @@ int CDispLimitsDlg::ParamsToDlg()
 		}
 		if (m_alphaChk) {
 			m_alphaChk->setValue(g_alphablending, false);
+		}
+
+
+		//###########
+		//EditBox
+		//###########
+		if (m_ikrateEdit) {
+			WCHAR strvalue[256] = { 0L };
+			swprintf_s(strvalue, 256, L"%.2f", g_ikrate);
+			m_ikrateEdit->setName(strvalue);
+		}
+		if (m_ikmaxdegEdit) {
+			WCHAR strvalue[256] = { 0L };
+			swprintf_s(strvalue, 256, L"%.2f", g_ikmaxdeg);
+			m_ikmaxdegEdit->setName(strvalue);
+		}
+		if (m_posconsttimesEdit) {
+			WCHAR strvalue[256] = { 0L };
+			swprintf_s(strvalue, 256, L"%d", g_iktargettimes);
+			m_posconsttimesEdit->setName(strvalue);
 		}
 
 		m_dlgWnd->callRewrite();
