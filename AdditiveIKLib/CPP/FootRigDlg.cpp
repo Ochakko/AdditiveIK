@@ -1717,11 +1717,24 @@ int CFootRigDlg::Dlg2ParamsListener()
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
 			m_leftoffsetEditY1->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
-			if (m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
-				itrelem = m_footrigelem.find(m_model);
-				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.leftoffsetY1 = offsetval;
+			if ((offsetval >= -5000.0f) && (offsetval <= 5000.0f)) {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						itrelem->second.leftoffsetY1 = offsetval;
+					}
+				}
+			}
+			else {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						WCHAR strnotchange[256] = { 0L };
+						swprintf_s(strnotchange, 256, L"%f", itrelem->second.leftoffsetY1);
+						m_leftoffsetEditY1->setName(strnotchange);
+					}
 				}
 			}
 		});
@@ -1731,11 +1744,24 @@ int CFootRigDlg::Dlg2ParamsListener()
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
 			m_leftoffsetEditZ1->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
-			if (m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
-				itrelem = m_footrigelem.find(m_model);
-				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.leftoffsetZ1 = offsetval;
+			if ((offsetval >= -5000.0f) && (offsetval <= 5000.0f)) {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						itrelem->second.leftoffsetZ1 = offsetval;
+					}
+				}
+			}
+			else {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						WCHAR strnotchange[256] = { 0L };
+						swprintf_s(strnotchange, 256, L"%f", itrelem->second.leftoffsetZ1);
+						m_leftoffsetEditZ1->setName(strnotchange);
+					}
 				}
 			}
 		});
@@ -1745,11 +1771,24 @@ int CFootRigDlg::Dlg2ParamsListener()
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
 			m_rightoffsetEditY1->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
-			if (m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
-				itrelem = m_footrigelem.find(m_model);
-				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.rightoffsetY1 = offsetval;
+			if ((offsetval >= -5000.0f) && (offsetval <= 5000.0f)) {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						itrelem->second.rightoffsetY1 = offsetval;
+					}
+				}
+			}
+			else {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						WCHAR strnotchange[256] = { 0L };
+						swprintf_s(strnotchange, 256, L"%f", itrelem->second.rightoffsetY1);
+						m_rightoffsetEditY1->setName(strnotchange);
+					}
 				}
 			}
 		});
@@ -1759,11 +1798,24 @@ int CFootRigDlg::Dlg2ParamsListener()
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
 			m_rightoffsetEditZ1->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
-			if (m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
-				itrelem = m_footrigelem.find(m_model);
-				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.rightoffsetZ1 = offsetval;
+			if ((offsetval >= -5000.0f) && (offsetval <= 5000.0f)) {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						itrelem->second.rightoffsetZ1 = offsetval;
+					}
+				}
+			}
+			else {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						WCHAR strnotchange[256] = { 0L };
+						swprintf_s(strnotchange, 256, L"%f", itrelem->second.rightoffsetZ1);
+						m_rightoffsetEditZ1->setName(strnotchange);
+					}
 				}
 			}
 		});
@@ -1775,11 +1827,24 @@ int CFootRigDlg::Dlg2ParamsListener()
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
 			m_leftoffsetEditY2->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
-			if (m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
-				itrelem = m_footrigelem.find(m_model);
-				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.leftoffsetY2 = offsetval;
+			if ((offsetval >= -5000.0f) && (offsetval <= 5000.0f)) {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						itrelem->second.leftoffsetY2 = offsetval;
+					}
+				}
+			}
+			else {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						WCHAR strnotchange[256] = { 0L };
+						swprintf_s(strnotchange, 256, L"%f", itrelem->second.leftoffsetY2);
+						m_leftoffsetEditY2->setName(strnotchange);
+					}
 				}
 			}
 		});
@@ -1789,11 +1854,24 @@ int CFootRigDlg::Dlg2ParamsListener()
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
 			m_leftoffsetEditZ2->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
-			if (m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
-				itrelem = m_footrigelem.find(m_model);
-				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.leftoffsetZ2 = offsetval;
+			if ((offsetval >= -5000.0f) && (offsetval <= 5000.0f)) {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						itrelem->second.leftoffsetZ2 = offsetval;
+					}
+				}
+			}
+			else {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						WCHAR strnotchange[256] = { 0L };
+						swprintf_s(strnotchange, 256, L"%f", itrelem->second.leftoffsetZ2);
+						m_leftoffsetEditZ2->setName(strnotchange);
+					}
 				}
 			}
 		});
@@ -1803,11 +1881,24 @@ int CFootRigDlg::Dlg2ParamsListener()
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
 			m_rightoffsetEditY2->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
-			if (m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
-				itrelem = m_footrigelem.find(m_model);
-				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.rightoffsetY2 = offsetval;
+			if ((offsetval >= -5000.0f) && (offsetval <= 5000.0f)) {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						itrelem->second.rightoffsetY2 = offsetval;
+					}
+				}
+			}
+			else {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						WCHAR strnotchange[256] = { 0L };
+						swprintf_s(strnotchange, 256, L"%f", itrelem->second.rightoffsetY2);
+						m_rightoffsetEditY2->setName(strnotchange);
+					}
 				}
 			}
 		});
@@ -1817,11 +1908,24 @@ int CFootRigDlg::Dlg2ParamsListener()
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
 			m_rightoffsetEditZ2->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
-			if (m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
-				itrelem = m_footrigelem.find(m_model);
-				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.rightoffsetZ2 = offsetval;
+			if ((offsetval >= -5000.0f) && (offsetval <= 5000.0f)) {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						itrelem->second.rightoffsetZ2 = offsetval;
+					}
+				}
+			}
+			else {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						WCHAR strnotchange[256] = { 0L };
+						swprintf_s(strnotchange, 256, L"%f", itrelem->second.rightoffsetZ2);
+						m_rightoffsetEditZ2->setName(strnotchange);
+					}
 				}
 			}
 		});
@@ -1833,11 +1937,24 @@ int CFootRigDlg::Dlg2ParamsListener()
 			WCHAR strdiff[EDIT_BUFLEN_NUM] = { 0L };
 			m_hdiffmaxEdit->getName(strdiff, EDIT_BUFLEN_NUM);
 			float diffval = (float)_wtof(strdiff);
-			if (m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
-				itrelem = m_footrigelem.find(m_model);
-				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.hdiffmax = diffval;
+			if ((diffval >= -50000.0f) && (diffval <= 50000.0f)) {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						itrelem->second.hdiffmax = diffval;
+					}
+				}
+			}
+			else {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						WCHAR strnotchange[256] = { 0L };
+						swprintf_s(strnotchange, 256, L"%f", itrelem->second.hdiffmax);
+						m_hdiffmaxEdit->setName(strnotchange);
+					}
 				}
 			}
 		});
@@ -1848,11 +1965,24 @@ int CFootRigDlg::Dlg2ParamsListener()
 			WCHAR strstep[EDIT_BUFLEN_NUM] = { 0L };
 			m_rigstepEdit->getName(strstep, EDIT_BUFLEN_NUM);
 			float stepval = (float)_wtof(strstep);
-			if (m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
-				itrelem = m_footrigelem.find(m_model);
-				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.rigstep = stepval;
+			if ((stepval >= 0.0f) && (stepval <= 400.0f)) {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						itrelem->second.rigstep = stepval;
+					}
+				}
+			}
+			else {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						WCHAR strnotchange[256] = { 0L };
+						swprintf_s(strnotchange, 256, L"%f", itrelem->second.rigstep);
+						m_rigstepEdit->setName(strnotchange);
+					}
 				}
 			}
 		});
@@ -1863,11 +1993,24 @@ int CFootRigDlg::Dlg2ParamsListener()
 			WCHAR strmaxcount[EDIT_BUFLEN_NUM] = { 0L };
 			m_maxcountEdit->getName(strmaxcount, EDIT_BUFLEN_NUM);
 			int countval = _wtoi(strmaxcount);
-			if (m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
-				itrelem = m_footrigelem.find(m_model);
-				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.maxcalccount = countval;
+			if ((countval >= 0) && (countval <= 10000)) {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						itrelem->second.maxcalccount = countval;
+					}
+				}
+			}
+			else {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						WCHAR strnotchange[256] = { 0L };
+						swprintf_s(strnotchange, 256, L"%d", itrelem->second.maxcalccount);
+						m_maxcountEdit->setName(strnotchange);
+					}
 				}
 			}
 		});
@@ -1878,11 +2021,24 @@ int CFootRigDlg::Dlg2ParamsListener()
 			WCHAR strstep[EDIT_BUFLEN_NUM] = { 0L };
 			m_hopyperstepEdit->getName(strstep, EDIT_BUFLEN_NUM);
 			float stepval = (float)_wtof(strstep);
-			if (m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
-				itrelem = m_footrigelem.find(m_model);
-				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.hopyperstep = stepval;
+			if ((stepval >= -50000.0f) && (stepval <= 50000.0f)) {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						itrelem->second.hopyperstep = stepval;
+					}
+				}
+			}
+			else {
+				if (m_model) {
+					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					itrelem = m_footrigelem.find(m_model);
+					if (itrelem != m_footrigelem.end()) {
+						WCHAR strnotchange[256] = { 0L };
+						swprintf_s(strnotchange, 256, L"%f", itrelem->second.hopyperstep);
+						m_hopyperstepEdit->setName(strnotchange);
+					}
 				}
 			}
 		});

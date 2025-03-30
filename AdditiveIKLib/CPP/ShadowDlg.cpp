@@ -921,7 +921,10 @@ int CShadowDlg::CreateShadowWnd()
 				}
 			}
 			else {
-				::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : plusup", L"Invalid Value", MB_OK);
+				//::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : plusup", L"Invalid Value", MB_OK);
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%f", g_shadowmap_plusup[g_shadowmap_slotno]);
+				m_shadowcamposupEdit->setName(strnotchange);
 			}
 		});
 
@@ -937,7 +940,10 @@ int CShadowDlg::CreateShadowWnd()
 				}
 			}
 			else {
-				::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : plusright", L"Invalid Value", MB_OK);
+				//::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : plusright", L"Invalid Value", MB_OK);
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%f", g_shadowmap_distscale[g_shadowmap_slotno]);
+				m_shadowcamposdistEdit->setName(strnotchange);
 			}
 		});
 
@@ -953,7 +959,10 @@ int CShadowDlg::CreateShadowWnd()
 				}
 			}
 			else {
-				::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : near", L"Invalid Value", MB_OK);
+				//::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : near", L"Invalid Value", MB_OK);
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%f", g_shadowmap_near[g_shadowmap_slotno]);
+				m_shadowprojnearEdit->setName(strnotchange);
 			}
 		});
 
@@ -969,7 +978,10 @@ int CShadowDlg::CreateShadowWnd()
 				}
 			}
 			else {
-				::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : near", L"Invalid Value", MB_OK);
+				//::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : near", L"Invalid Value", MB_OK);
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%f", g_shadowmap_far[g_shadowmap_slotno]);
+				m_shadowprojfarEdit->setName(strnotchange);
 			}
 		});
 

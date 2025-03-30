@@ -586,7 +586,10 @@ int CThresholdDlg::DlgToParamsListener()
 			int val_thdeg = Float2Int(g_thdeg);
 			int result_thdeg = GetThresholdEditIntOWP(m_ththnoendjEdit, &val_thdeg);
 			if (result_thdeg != 0) {
-				::MessageBox(g_mainhwnd, L"ThresholdDlgのNotEndJointの入力値が不正です。", L"入力し直してください。", MB_OK);
+				//::MessageBox(g_mainhwnd, L"ThresholdDlgのNotEndJointの入力値が不正です。", L"入力し直してください。", MB_OK);
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%f", g_thdeg);
+				m_ththnoendjEdit->setName(strnotchange);
 			}
 			else {
 				g_thdeg = (float)val_thdeg;
@@ -598,7 +601,10 @@ int CThresholdDlg::DlgToParamsListener()
 			int val_thdeg_endjoint = Float2Int(g_thdeg_endjoint);
 			int result_thdeg_endjoint = GetThresholdEditIntOWP(m_ththendjEdit, &val_thdeg_endjoint);
 			if (result_thdeg_endjoint != 0) {
-				::MessageBox(g_mainhwnd, L"ThresholdDlgのEndJointの入力値が不正です。", L"入力し直してください。", MB_OK);
+				//::MessageBox(g_mainhwnd, L"ThresholdDlgのEndJointの入力値が不正です。", L"入力し直してください。", MB_OK);
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%f", g_thdeg_endjoint);
+				m_ththendjEdit->setName(strnotchange);
 			}
 			else {
 				g_thdeg_endjoint = (float)val_thdeg_endjoint;
@@ -610,7 +616,10 @@ int CThresholdDlg::DlgToParamsListener()
 			int val_xround = Float2Int(g_thRoundX);
 			int result_xround = GetThresholdEditIntOWP(m_throundxEdit, &val_xround);
 			if (result_xround != 0) {
-				::MessageBox(g_mainhwnd, L"ThresholdDlgのXRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
+				//::MessageBox(g_mainhwnd, L"ThresholdDlgのXRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%f", g_thRoundX);
+				m_throundxEdit->setName(strnotchange);
 			}
 			else {
 				g_thRoundX = (float)val_xround;
@@ -622,7 +631,10 @@ int CThresholdDlg::DlgToParamsListener()
 			int val_yround = Float2Int(g_thRoundY);
 			int result_yround = GetThresholdEditIntOWP(m_throundyEdit, &val_yround);
 			if (result_yround != 0) {
-				::MessageBox(g_mainhwnd, L"ThresholdDlgのYRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
+				//::MessageBox(g_mainhwnd, L"ThresholdDlgのYRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%f", g_thRoundY);
+				m_throundyEdit->setName(strnotchange);
 			}
 			else {
 				g_thRoundY = (float)val_yround;
@@ -634,7 +646,10 @@ int CThresholdDlg::DlgToParamsListener()
 			int val_zround = Float2Int(g_thRoundZ);
 			int result_zround = GetThresholdEditIntOWP(m_throundzEdit, &val_zround);
 			if (result_zround != 0) {
-				::MessageBox(g_mainhwnd, L"ThresholdDlgのZRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
+				//::MessageBox(g_mainhwnd, L"ThresholdDlgのZRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%f", g_thRoundZ);
+				m_throundzEdit->setName(strnotchange);
 			}
 			else {
 				g_thRoundZ = (float)val_zround;

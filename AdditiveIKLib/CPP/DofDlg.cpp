@@ -384,9 +384,12 @@ int CDofDlg::CreateDofWnd()
 				g_dofparams[g_dofindex].x = tempeditvalue;
 			}
 			else {
-				if (m_dlgWnd) {
-					::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Near", L"Invalid Value", MB_OK);
-				}
+				//if (m_dlgWnd) {
+				//	::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Near", L"Invalid Value", MB_OK);
+				//}
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%f", g_dofparams[g_dofindex].x);
+				m_dofdistnearEdit->setName(strnotchange);
 			}
 		});
 
@@ -399,9 +402,12 @@ int CDofDlg::CreateDofWnd()
 				g_dofparams[g_dofindex].y = tempeditvalue;
 			}
 			else {
-				if (m_dlgWnd) {
-					::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Far", L"Invalid Value", MB_OK);
-				}
+				//if (m_dlgWnd) {
+				//	::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Far", L"Invalid Value", MB_OK);
+				//}
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%f", g_dofparams[g_dofindex].y);
+				m_dofdistfarEdit->setName(strnotchange);
 			}
 		});
 

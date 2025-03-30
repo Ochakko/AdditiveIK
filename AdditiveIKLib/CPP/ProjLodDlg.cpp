@@ -895,9 +895,12 @@ int CProjLodDlg::CreateProjLodWnd()
 				}
 			}
 			else {
-				if (m_dlgWnd && m_dlgWnd->getHWnd()) {
-					::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : near", L"Invalid Value", MB_OK);
-				}
+				//if (m_dlgWnd && m_dlgWnd->getHWnd()) {
+				//	::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : near", L"Invalid Value", MB_OK);
+				//}
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%f", g_projnear);
+				m_lodnearEdit->setName(strnotchange);
 			}
 		});
 
@@ -914,9 +917,12 @@ int CProjLodDlg::CreateProjLodWnd()
 				}
 			}
 			else {
-				if (m_dlgWnd && m_dlgWnd->getHWnd()) {
-					::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : far", L"Invalid Value", MB_OK);
-				}
+				//if (m_dlgWnd && m_dlgWnd->getHWnd()) {
+				//	::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : far", L"Invalid Value", MB_OK);
+				//}
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%f", g_projfar);
+				m_lodfarEdit->setName(strnotchange);
 			}
 		});
 

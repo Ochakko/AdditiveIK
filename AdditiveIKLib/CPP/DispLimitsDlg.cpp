@@ -950,6 +950,9 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 				//if (m_dlgWnd && m_dlgWnd->getHWnd()) {
 				//	::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : ikrate", L"Invalid Value", MB_OK);
 				//}
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%.4f", g_ikrate);
+				m_ikrateEdit->setName(strnotchange);
 			}
 		});
 
@@ -966,6 +969,9 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 				//if (m_dlgWnd && m_dlgWnd->getHWnd()) {
 				//	::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : ikrate", L"Invalid Value", MB_OK);
 				//}
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%.2f", g_ikmaxdeg);
+				m_ikmaxdegEdit->setName(strnotchange);
 			}
 		});
 
@@ -982,6 +988,9 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 				//if (m_dlgWnd && m_dlgWnd->getHWnd()) {
 				//	::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : ikrate", L"Invalid Value", MB_OK);
 				//}
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%d", g_iktargettimes);
+				m_posconsttimesEdit->setName(strnotchange);
 			}
 		});
 

@@ -617,6 +617,11 @@ int CLightsDlg::Dlg2LightsListener()
 						ConvPolarCoord2Dir(degxz, degy0, &dirx, &diry, &dirz);
 						g_lightDir[g_lightSlot][lightindex].SetParams(dirx, diry, dirz);
 					}
+					else {
+						WCHAR strnotchange[256] = { 0L };
+						swprintf_s(strnotchange, 256, L"%f", degxz0);
+						m_polarxzEdit[lightindex]->setName(strnotchange);
+					}
 				});
 			}
 
@@ -640,6 +645,11 @@ int CLightsDlg::Dlg2LightsListener()
 						float dirz = 0.0f;
 						ConvPolarCoord2Dir(degxz0, degy, &dirx, &diry, &dirz);
 						g_lightDir[g_lightSlot][lightindex].SetParams(dirx, diry, dirz);
+					}
+					else {
+						WCHAR strnotchange[256] = { 0L };
+						swprintf_s(strnotchange, 256, L"%f", degy0);
+						m_polaryEdit[lightindex]->setName(strnotchange);
 					}
 				});
 

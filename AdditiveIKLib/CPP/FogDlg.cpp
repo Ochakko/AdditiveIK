@@ -637,9 +637,12 @@ int CFogDlg::CreateFogWnd()
 				g_fogparams[g_fogindex].SetDistNear(tempeditvalue);
 			}
 			else {
-				if (m_dlgWnd) {
-					::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Near", L"Invalid Value", MB_OK);
-				}
+				//if (m_dlgWnd) {
+				//	::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Near", L"Invalid Value", MB_OK);
+				//}
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%f", g_fogparams[g_fogindex].GetDistNear());
+				m_fogdistnearEdit->setName(strnotchange);
 			}
 		});
 		
@@ -652,9 +655,12 @@ int CFogDlg::CreateFogWnd()
 				g_fogparams[g_fogindex].SetDistFar(tempeditvalue);
 			}
 			else {
-				if (m_dlgWnd) {
-					::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Far", L"Invalid Value", MB_OK);
-				}
+				//if (m_dlgWnd) {
+				//	::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Far", L"Invalid Value", MB_OK);
+				//}
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%f", g_fogparams[g_fogindex].GetDistFar());
+				m_fogdistfarEdit->setName(strnotchange);
 			}
 		});
 
@@ -668,9 +674,12 @@ int CFogDlg::CreateFogWnd()
 				g_fogparams[g_fogindex].SetHeightLow(tempeditvalue);
 			}
 			else {
-				if (m_dlgWnd) {
-					::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Min Height", L"Invalid Value", MB_OK);
-				}
+				//if (m_dlgWnd) {
+				//	::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Min Height", L"Invalid Value", MB_OK);
+				//}
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%f", g_fogparams[g_fogindex].GetHeightLow());
+				m_fogheightminEdit->setName(strnotchange);
 			}
 		});
 
@@ -683,9 +692,12 @@ int CFogDlg::CreateFogWnd()
 				g_fogparams[g_fogindex].SetHeightHigh(tempeditvalue);
 			}
 			else {
-				if (m_dlgWnd) {
-					::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Max Height", L"Invalid Value", MB_OK);
-				}
+				//if (m_dlgWnd) {
+				//	::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Max Height", L"Invalid Value", MB_OK);
+				//}
+				WCHAR strnotchange[256] = { 0L };
+				swprintf_s(strnotchange, 256, L"%f", g_fogparams[g_fogindex].GetHeightHigh());
+				m_fogheightmaxEdit->setName(strnotchange);
 			}
 		});
 

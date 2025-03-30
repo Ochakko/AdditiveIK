@@ -13,6 +13,8 @@ https://github.com/Ochakko/AdditiveIK
 
 　IKRate, IKMaxDeg, PosConstTimesの設定値をiniファイルに保存読み込み(アプリ終了時とアプリ起動時)
 
+　EditBoxの入力エラー対応
+
 
 2025/03/23
 　マウスLボタンを押した瞬間にジョイントが動いてしまうのを防止
