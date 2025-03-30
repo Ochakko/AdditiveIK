@@ -116,18 +116,18 @@ int CLightsDlg::DestroyObjs()
 			m_polaryEdit[lightindex] = nullptr;
 		}
 	}
-	if (m_lightsapplysp) {
-		delete m_lightsapplysp;
-		m_lightsapplysp = nullptr;
-	}
-	if (m_lightsspace1Label) {
-		delete m_lightsspace1Label;
-		m_lightsspace1Label = nullptr;
-	}
-	if (m_lightsapplyB) {
-		delete m_lightsapplyB;
-		m_lightsapplyB = nullptr;
-	}
+	//if (m_lightsapplysp) {
+	//	delete m_lightsapplysp;
+	//	m_lightsapplysp = nullptr;
+	//}
+	//if (m_lightsspace1Label) {
+	//	delete m_lightsspace1Label;
+	//	m_lightsspace1Label = nullptr;
+	//}
+	//if (m_lightsapplyB) {
+	//	delete m_lightsapplyB;
+	//	m_lightsapplyB = nullptr;
+	//}
 
 
 	if (m_dlgWnd) {
@@ -171,9 +171,9 @@ void CLightsDlg::InitParams()
 		m_polaryLabel[lightindex] = nullptr;
 		m_polaryEdit[lightindex] = nullptr;
 	}
-	m_lightsapplysp = nullptr;
-	m_lightsspace1Label = nullptr;
-	m_lightsapplyB = nullptr;
+	//m_lightsapplysp = nullptr;
+	//m_lightsspace1Label = nullptr;
+	//m_lightsapplyB = nullptr;
 
 }
 
@@ -361,22 +361,22 @@ int CLightsDlg::CreateLightsWnd()
 				abort();
 			}
 		}
-		m_lightsapplysp = new OWP_Separator(m_dlgWnd, true, rate50, true);
-		if (!m_lightsapplysp) {
-			_ASSERT(0);
-			abort();
-		}
-		m_lightsspace1Label = new OWP_Label(L"     ", 24);
-		if (!m_lightsspace1Label) {
-			_ASSERT(0);
-			abort();
-		}
-		m_lightsapplyB = new OWP_Button(L"Apply(適用)", 38);
-		if (!m_lightsapplyB) {
-			_ASSERT(0);
-			abort();
-		}
-		m_lightsapplyB->setTextColor(RGB(168, 129, 129));
+		//m_lightsapplysp = new OWP_Separator(m_dlgWnd, true, rate50, true);
+		//if (!m_lightsapplysp) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_lightsspace1Label = new OWP_Label(L"     ", 24);
+		//if (!m_lightsspace1Label) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_lightsapplyB = new OWP_Button(L"Apply(適用)", 38);
+		//if (!m_lightsapplyB) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_lightsapplyB->setTextColor(RGB(168, 129, 129));
 
 
 		m_dlgWnd->addParts(*m_lightsslotsp);
@@ -399,9 +399,9 @@ int CLightsDlg::CreateLightsWnd()
 			m_polarsp2[lightindex2]->addParts1(*m_polaryLabel[lightindex2]);
 			m_polarsp2[lightindex2]->addParts2(*m_polaryEdit[lightindex2]);
 		}
-		m_dlgWnd->addParts(*m_lightsspace1Label);
-		m_dlgWnd->addParts(*m_lightsapplysp);
-		m_lightsapplysp->addParts2(*m_lightsapplyB);
+		//m_dlgWnd->addParts(*m_lightsspace1Label);
+		//m_dlgWnd->addParts(*m_lightsapplysp);
+		//m_lightsapplysp->addParts2(*m_lightsapplyB);
 
 
 		//############
@@ -459,7 +459,9 @@ int CLightsDlg::CreateLightsWnd()
 				if (g_mainhwnd && IsWindow(g_mainhwnd)) {
 					PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_LIGHTSDLG), (LPARAM)0);
 				}
-				});
+			});
+
+
 
 			//##########
 			//ColorBox
@@ -489,14 +491,20 @@ int CLightsDlg::CreateLightsWnd()
 				});
 		}
 
-		m_lightsapplyB->setButtonListener([=, this]() {
-			Dlg2Lights();
+		//########
+		//EditBox
+		//########
+		Dlg2LightsListener();
 
-			//SetLightDirection();
-			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
-				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_LIGHTSDLG), (LPARAM)0);
-			}
-			});
+
+		//m_lightsapplyB->setButtonListener([=, this]() {
+		//	Dlg2Lights();
+
+		//	//SetLightDirection();
+		//	if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+		//		PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_LIGHTSDLG), (LPARAM)0);
+		//	}
+		//	});
 
 
 
@@ -576,7 +584,7 @@ int CLightsDlg::ParamsToDlg()
 
 }
 
-int CLightsDlg::Dlg2Lights()
+int CLightsDlg::Dlg2LightsListener()
 {
 	if (m_dlgWnd != 0) {
 		if ((g_lightSlot < 0) || (g_lightSlot >= LIGHTSLOTNUM)) {
@@ -587,42 +595,65 @@ int CLightsDlg::Dlg2Lights()
 
 		int lightindex;
 		for (lightindex = 0; lightindex < 8; lightindex++) {
-			WCHAR strdegxz[256] = { 0L };
+
 			if (m_polarxzEdit[lightindex]) {
-				m_polarxzEdit[lightindex]->getName(strdegxz, 256);
+				m_polarxzEdit[lightindex]->setExitDialogListener([=, this]() {
+					ChaVector3 dir0 = g_lightDir[g_lightSlot][lightindex];
+					float degxz0 = 0.0f;
+					float degy0 = 0.0f;
+					ConvDir2PolarCoord(dir0.x, dir0.y, dir0.z, &degxz0, &degy0);
+
+					WCHAR strdegxz[256] = { 0L };
+					m_polarxzEdit[lightindex]->getName(strdegxz, 256);
+					int chkvalue;
+					chkvalue = CheckStr_float(strdegxz);
+					if (chkvalue == 0) {
+						float degxz;
+						degxz = (float)_wtof(strdegxz);
+
+						float dirx = 0.0f;
+						float diry = 0.0f;
+						float dirz = 0.0f;
+						ConvPolarCoord2Dir(degxz, degy0, &dirx, &diry, &dirz);
+						g_lightDir[g_lightSlot][lightindex].SetParams(dirx, diry, dirz);
+					}
+				});
 			}
-			WCHAR strdegy[256] = { 0L };
+
 			if (m_polaryEdit[lightindex]) {
-				m_polaryEdit[lightindex]->getName(strdegy, 256);
-			}
-			int chkx, chky;
-			chkx = CheckStr_float(strdegxz);
-			chky = CheckStr_float(strdegy);
-			if ((chkx != 0) || (chky != 0)) {
-				_ASSERT(0);
-				return 2;//!!!!!! input error
-			}
-			float degxz, degy;
-			degxz = (float)_wtof(strdegxz);
-			degy = (float)_wtof(strdegy);
+				m_polaryEdit[lightindex]->setExitDialogListener([=, this]() {
+					ChaVector3 dir0 = g_lightDir[g_lightSlot][lightindex];
+					float degxz0 = 0.0f;
+					float degy0 = 0.0f;
+					ConvDir2PolarCoord(dir0.x, dir0.y, dir0.z, &degxz0, &degy0);
 
-			float dirx = 0.0f;
-			float diry = 0.0f;
-			float dirz = 0.0f;
-			ConvPolarCoord2Dir(degxz, degy, &dirx, &diry, &dirz);
-			g_lightDir[g_lightSlot][lightindex].SetParams(dirx, diry, dirz);
+					WCHAR strdegy[256] = { 0L };
+					m_polaryEdit[lightindex]->getName(strdegy, 256);
+					int chkvalue;
+					chkvalue = CheckStr_float(strdegy);
+					if (chkvalue == 0) {
+						float degy;
+						degy = (float)_wtof(strdegy);
 
-			if (m_lightsenableChk[lightindex]) {
-				g_lightEnable[g_lightSlot][lightindex] = m_lightsenableChk[lightindex]->getValue();
-			}
+						float dirx = 0.0f;
+						float diry = 0.0f;
+						float dirz = 0.0f;
+						ConvPolarCoord2Dir(degxz0, degy, &dirx, &diry, &dirz);
+						g_lightDir[g_lightSlot][lightindex].SetParams(dirx, diry, dirz);
+					}
+				});
 
-			if (m_lightsviewrotChk[lightindex]) {
-				g_lightDirWithView[g_lightSlot][lightindex] = m_lightsviewrotChk[lightindex]->getValue();
 			}
 
-			if (m_lightsmultSlider[lightindex]) {
-				g_lightScale[g_lightSlot][lightindex] = (float)m_lightsmultSlider[lightindex]->getValue();
-			}
+			//if (m_lightsenableChk[lightindex]) {
+			//	g_lightEnable[g_lightSlot][lightindex] = m_lightsenableChk[lightindex]->getValue();
+			//}
+			//if (m_lightsviewrotChk[lightindex]) {
+			//	g_lightDirWithView[g_lightSlot][lightindex] = m_lightsviewrotChk[lightindex]->getValue();
+			//}
+			//if (m_lightsmultSlider[lightindex]) {
+			//	g_lightScale[g_lightSlot][lightindex] = (float)m_lightsmultSlider[lightindex]->getValue();
+			//}
 		}
 
 

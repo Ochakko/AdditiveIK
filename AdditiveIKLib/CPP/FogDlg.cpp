@@ -166,18 +166,18 @@ int CFogDlg::DestroyObjs()
 		delete m_fogheightSlider;
 		m_fogheightSlider = nullptr;
 	}
-	if (m_fogspacerLabel3) {
-		delete m_fogspacerLabel3;
-		m_fogspacerLabel3 = nullptr;
-	}
-	if (m_fogapplysp) {
-		delete m_fogapplysp;
-		m_fogapplysp = nullptr;
-	}
-	if (m_fogapplyB) {
-		delete m_fogapplyB;
-		m_fogapplyB = nullptr;
-	}
+	//if (m_fogspacerLabel3) {
+	//	delete m_fogspacerLabel3;
+	//	m_fogspacerLabel3 = nullptr;
+	//}
+	//if (m_fogapplysp) {
+	//	delete m_fogapplysp;
+	//	m_fogapplysp = nullptr;
+	//}
+	//if (m_fogapplyB) {
+	//	delete m_fogapplyB;
+	//	m_fogapplyB = nullptr;
+	//}
 
 
 	if (m_dlgWnd) {
@@ -230,9 +230,9 @@ void CFogDlg::InitParams()
 	m_fogheightsp4 = nullptr;
 	m_fogheightColor = nullptr;
 	m_fogheightSlider = nullptr;
-	m_fogspacerLabel3 = nullptr;
-	m_fogapplysp = nullptr;
-	m_fogapplyB = nullptr;
+	//m_fogspacerLabel3 = nullptr;
+	//m_fogapplysp = nullptr;
+	//m_fogapplyB = nullptr;
 
 }
 
@@ -505,22 +505,22 @@ int CFogDlg::CreateFogWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_fogspacerLabel3 = new OWP_Label(L"     ", 34);
-		if (!m_fogspacerLabel3) {
-			_ASSERT(0);
-			abort();
-		}
-		m_fogapplysp = new OWP_Separator(m_dlgWnd, true, rate50, true);
-		if (!m_fogapplysp) {
-			_ASSERT(0);
-			abort();
-		}
-		m_fogapplyB = new OWP_Button(L"Apply(適用)", labelheight);
-		if (!m_fogapplyB) {
-			_ASSERT(0);
-			abort();
-		}
-		m_fogapplyB->setTextColor(RGB(168, 129, 129));
+		//m_fogspacerLabel3 = new OWP_Label(L"     ", 34);
+		//if (!m_fogspacerLabel3) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_fogapplysp = new OWP_Separator(m_dlgWnd, true, rate50, true);
+		//if (!m_fogapplysp) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_fogapplyB = new OWP_Button(L"Apply(適用)", labelheight);
+		//if (!m_fogapplyB) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_fogapplyB->setTextColor(RGB(168, 129, 129));
 
 
 		m_dlgWnd->addParts(*m_fogslotCombo);
@@ -553,9 +553,9 @@ int CFogDlg::CreateFogWnd()
 		m_dlgWnd->addParts(*m_fogheightsp4);
 		m_fogheightsp4->addParts1(*m_fogheightColor);//g_fogparams[g_fogindex].GetHeightColor()
 		m_fogheightsp4->addParts2(*m_fogheightSlider);//g_fogparams[g_fogindex].GetHeightRate()
-		m_dlgWnd->addParts(*m_fogspacerLabel3);
-		m_dlgWnd->addParts(*m_fogapplysp);
-		m_fogapplysp->addParts2(*m_fogapplyB);
+		//m_dlgWnd->addParts(*m_fogspacerLabel3);
+		//m_dlgWnd->addParts(*m_fogapplysp);
+		//m_fogapplysp->addParts2(*m_fogapplyB);
 
 
 
@@ -625,59 +625,69 @@ int CFogDlg::CreateFogWnd()
 			g_fogparams[g_fogindex].SetHeightRate((float)value);
 			});
 
-		m_fogapplyB->setButtonListener([=, this]() {
+		//########
+		//EditBox
+		//########
+		m_fogdistnearEdit->setExitDialogListener([=, this]() {
 			WCHAR streditbox[256] = { 0L };
 			float tempeditvalue;
+			m_fogdistnearEdit->getName(streditbox, 256);
+			tempeditvalue = (float)_wtof(streditbox);
+			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
+				g_fogparams[g_fogindex].SetDistNear(tempeditvalue);
+			}
+			else {
+				if (m_dlgWnd) {
+					::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Near", L"Invalid Value", MB_OK);
+				}
+			}
+		});
+		
+		m_fogdistfarEdit->setExitDialogListener([=, this]() {
+			WCHAR streditbox[256] = { 0L };
+			float tempeditvalue;
+			m_fogdistfarEdit->getName(streditbox, 256);
+			tempeditvalue = (float)_wtof(streditbox);
+			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
+				g_fogparams[g_fogindex].SetDistFar(tempeditvalue);
+			}
+			else {
+				if (m_dlgWnd) {
+					::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Far", L"Invalid Value", MB_OK);
+				}
+			}
+		});
 
-			if (m_fogdistnearEdit) {
-				m_fogdistnearEdit->getName(streditbox, 256);
-				tempeditvalue = (float)_wtof(streditbox);
-				if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-					g_fogparams[g_fogindex].SetDistNear(tempeditvalue);
-				}
-				else {
-					if (m_dlgWnd) {
-						::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Near", L"Invalid Value", MB_OK);
-					}
+
+		m_fogheightminEdit->setExitDialogListener([=, this]() {
+			WCHAR streditbox[256] = { 0L };
+			float tempeditvalue;
+			m_fogheightminEdit->getName(streditbox, 256);
+			tempeditvalue = (float)_wtof(streditbox);
+			if ((tempeditvalue >= -500000.0f) && (tempeditvalue <= 500000.0f)) {
+				g_fogparams[g_fogindex].SetHeightLow(tempeditvalue);
+			}
+			else {
+				if (m_dlgWnd) {
+					::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Min Height", L"Invalid Value", MB_OK);
 				}
 			}
-			if (m_fogdistfarEdit) {
-				m_fogdistfarEdit->getName(streditbox, 256);
-				tempeditvalue = (float)_wtof(streditbox);
-				if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-					g_fogparams[g_fogindex].SetDistFar(tempeditvalue);
-				}
-				else {
-					if (m_dlgWnd) {
-						::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Far", L"Invalid Value", MB_OK);
-					}
+		});
+
+		m_fogheightmaxEdit->setExitDialogListener([=, this]() {
+			WCHAR streditbox[256] = { 0L };
+			float tempeditvalue;
+			m_fogheightmaxEdit->getName(streditbox, 256);
+			tempeditvalue = (float)_wtof(streditbox);
+			if ((tempeditvalue >= -500000.0f) && (tempeditvalue <= 500000.0f)) {
+				g_fogparams[g_fogindex].SetHeightHigh(tempeditvalue);
+			}
+			else {
+				if (m_dlgWnd) {
+					::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Max Height", L"Invalid Value", MB_OK);
 				}
 			}
-			if (m_fogheightminEdit) {
-				m_fogheightminEdit->getName(streditbox, 256);
-				tempeditvalue = (float)_wtof(streditbox);
-				if ((tempeditvalue >= -500000.0f) && (tempeditvalue <= 500000.0f)) {
-					g_fogparams[g_fogindex].SetHeightLow(tempeditvalue);
-				}
-				else {
-					if (m_dlgWnd) {
-						::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Min Height", L"Invalid Value", MB_OK);
-					}
-				}
-			}
-			if (m_fogheightmaxEdit) {
-				m_fogheightmaxEdit->getName(streditbox, 256);
-				tempeditvalue = (float)_wtof(streditbox);
-				if ((tempeditvalue >= -500000.0f) && (tempeditvalue <= 500000.0f)) {
-					g_fogparams[g_fogindex].SetHeightHigh(tempeditvalue);
-				}
-				else {
-					if (m_dlgWnd) {
-						::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Max Height", L"Invalid Value", MB_OK);
-					}
-				}
-			}
-			});
+		});
 
 
 		m_dlgWnd->setSize(WindowSize(m_sizex, m_sizey));

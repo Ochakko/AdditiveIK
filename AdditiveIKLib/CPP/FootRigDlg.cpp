@@ -247,10 +247,10 @@ int CFootRigDlg::DestroyObjs()
 		delete m_wmblendSlider;
 		m_wmblendSlider = nullptr;
 	}
-	if (m_applyB) {
-		delete m_applyB;
-		m_applyB = nullptr;
-	}
+	//if (m_applyB) {
+	//	delete m_applyB;
+	//	m_applyB = nullptr;
+	//}
 
 	//separator sp
 	if (m_groundmeshsp) {
@@ -451,7 +451,7 @@ void CFootRigDlg::InitParams()
 	m_hopyperstepEdit = nullptr;
 	m_wmblendlabel = nullptr;
 	m_wmblendSlider = nullptr;
-	m_applyB = nullptr;
+	//m_applyB = nullptr;
 
 	m_groundmeshsp = nullptr;
 	m_leftfootbonesp = nullptr;
@@ -915,12 +915,12 @@ int CFootRigDlg::CreateFootRigWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_applyB = new OWP_Button(L"Apply(適用)", 38);
-		if (!m_applyB) {
-			_ASSERT(0);
-			abort();
-		}
-		m_applyB->setTextColor(RGB(168, 129, 129));
+		//m_applyB = new OWP_Button(L"Apply(適用)", 38);
+		//if (!m_applyB) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_applyB->setTextColor(RGB(168, 129, 129));
 
 
 		m_groundmeshsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
@@ -1163,7 +1163,7 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_dlgWnd->addParts(*m_rightinfolabel);
 
 		m_dlgWnd->addParts(*m_spacerlabel6);
-		m_dlgWnd->addParts(*m_applyB);
+		//m_dlgWnd->addParts(*m_applyB);
 
 		//int slotindex;
 		//for (slotindex = 0; slotindex < 8; slotindex++) {
@@ -1173,6 +1173,29 @@ int CFootRigDlg::CreateFootRigWnd()
 		//}
 		//m_lightsslotCombo->setSelectedCombo(g_lightSlot);
 
+		//#######
+		//Button
+		//#######
+		m_gpuChk->setButtonListener([=, this]() {
+			bool value = m_gpuChk->getValue();
+			if (m_model) {
+				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				itrelem = m_footrigelem.find(m_model);
+				if (itrelem != m_footrigelem.end()) {
+					itrelem->second.gpucollision = value;
+					CModel* groundmodel = itrelem->second.groundmodel;
+					if (groundmodel && m_chascene) {
+						int gindex = m_chascene->FindModelIndex(groundmodel);
+						if (gindex >= 0) {
+							int result = groundmodel->SetGPUInteraction(value);
+							if (result != 0) {
+								_ASSERT(0);
+							}
+						}
+					}
+				}
+			}
+		});
 
 		//############
 		//ComboBox
@@ -1340,14 +1363,14 @@ int CFootRigDlg::CreateFootRigWnd()
 			}
 			});
 
-		m_applyB->setButtonListener([=, this]() {
-			Dlg2Params();
+		//m_applyB->setButtonListener([=, this]() {
+		//	Dlg2Params();
 
-			////SetLightDirection();
-			//if (g_mainhwnd && IsWindow(g_mainhwnd)) {
-			//	PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_LIGHTSDLG), (LPARAM)0);
-			//}
-			});
+		//	////SetLightDirection();
+		//	//if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+		//	//	PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_LIGHTSDLG), (LPARAM)0);
+		//	//}
+		//	});
 
 		//#######
 		//Slider
@@ -1363,7 +1386,13 @@ int CFootRigDlg::CreateFootRigWnd()
 			}
 			});
 
+		//########
+		//EditBox
+		//########
+		Dlg2ParamsListener();
 
+		
+		
 		m_dlgWnd->setSize(WindowSize(m_sizex, m_sizey));
 		m_dlgWnd->setPos(WindowPos(m_posx, m_posy));
 
@@ -1681,42 +1710,10 @@ int CFootRigDlg::ParamsToDlg_RightRig()
 }
 
 
-int CFootRigDlg::Dlg2Params()
+int CFootRigDlg::Dlg2ParamsListener()
 {
-	//###############################
-	//Applyボタンを押された場合に呼ばれる
-	//###############################
-
-	if (m_dlgWnd != 0) {
-		//if ((g_lightSlot < 0) || (g_lightSlot >= LIGHTSLOTNUM)) {
-		//	_ASSERT(0);
-		//	return 1;
-		//}
-
-
-		if (m_gpuChk && m_chascene) {//2024/09/15
-			bool value = m_gpuChk->getValue();
-			if (m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
-				itrelem = m_footrigelem.find(m_model);
-				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.gpucollision = value;
-					CModel* groundmodel = itrelem->second.groundmodel;
-					if (groundmodel) {
-						int gindex = m_chascene->FindModelIndex(groundmodel);
-						if (gindex >= 0) {
-							int result = groundmodel->SetGPUInteraction(value);
-							if (result != 0) {
-								_ASSERT(0);
-							}
-						}
-					}
-				}
-			}
-		}
-
-
-		if (m_leftoffsetEditY1) {
+	if (m_leftoffsetEditY1) {
+		m_leftoffsetEditY1->setExitDialogListener([=, this]() {
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
 			m_leftoffsetEditY1->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
@@ -1727,8 +1724,10 @@ int CFootRigDlg::Dlg2Params()
 					itrelem->second.leftoffsetY1 = offsetval;
 				}
 			}
-		}
-		if (m_leftoffsetEditZ1) {
+		});
+	}
+	if (m_leftoffsetEditZ1) {
+		m_leftoffsetEditZ1->setExitDialogListener([=, this]() {
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
 			m_leftoffsetEditZ1->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
@@ -1739,8 +1738,10 @@ int CFootRigDlg::Dlg2Params()
 					itrelem->second.leftoffsetZ1 = offsetval;
 				}
 			}
-		}
-		if (m_rightoffsetEditY1) {
+		});
+	}
+	if (m_rightoffsetEditY1) {
+		m_rightoffsetEditY1->setExitDialogListener([=, this]() {
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
 			m_rightoffsetEditY1->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
@@ -1751,8 +1752,10 @@ int CFootRigDlg::Dlg2Params()
 					itrelem->second.rightoffsetY1 = offsetval;
 				}
 			}
-		}
-		if (m_rightoffsetEditZ1) {
+		});
+	}
+	if (m_rightoffsetEditZ1) {
+		m_rightoffsetEditZ1->setExitDialogListener([=, this]() {
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
 			m_rightoffsetEditZ1->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
@@ -1763,10 +1766,12 @@ int CFootRigDlg::Dlg2Params()
 					itrelem->second.rightoffsetZ1 = offsetval;
 				}
 			}
-		}
+		});
+	}
 
 
-		if (m_leftoffsetEditY2) {
+	if (m_leftoffsetEditY2) {
+		m_leftoffsetEditY2->setExitDialogListener([=, this]() {
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
 			m_leftoffsetEditY2->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
@@ -1777,8 +1782,10 @@ int CFootRigDlg::Dlg2Params()
 					itrelem->second.leftoffsetY2 = offsetval;
 				}
 			}
-		}
-		if (m_leftoffsetEditZ2) {
+		});
+	}
+	if (m_leftoffsetEditZ2) {
+		m_leftoffsetEditZ2->setExitDialogListener([=, this]() {
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
 			m_leftoffsetEditZ2->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
@@ -1789,8 +1796,10 @@ int CFootRigDlg::Dlg2Params()
 					itrelem->second.leftoffsetZ2 = offsetval;
 				}
 			}
-		}
-		if (m_rightoffsetEditY2) {
+		});
+	}
+	if (m_rightoffsetEditY2) {
+		m_rightoffsetEditY2->setExitDialogListener([=, this]() {
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
 			m_rightoffsetEditY2->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
@@ -1801,8 +1810,10 @@ int CFootRigDlg::Dlg2Params()
 					itrelem->second.rightoffsetY2 = offsetval;
 				}
 			}
-		}
-		if (m_rightoffsetEditZ2) {
+		});
+	}
+	if (m_rightoffsetEditZ2) {
+		m_rightoffsetEditZ2->setExitDialogListener([=, this]() {
 			WCHAR stroffset[EDIT_BUFLEN_NUM] = { 0L };
 			m_rightoffsetEditZ2->getName(stroffset, EDIT_BUFLEN_NUM);
 			float offsetval = (float)_wtof(stroffset);
@@ -1813,10 +1824,12 @@ int CFootRigDlg::Dlg2Params()
 					itrelem->second.rightoffsetZ2 = offsetval;
 				}
 			}
-		}
+		});
+	}
 
 
-		if (m_hdiffmaxEdit) {
+	if (m_hdiffmaxEdit) {
+		m_hdiffmaxEdit->setExitDialogListener([=, this]() {
 			WCHAR strdiff[EDIT_BUFLEN_NUM] = { 0L };
 			m_hdiffmaxEdit->getName(strdiff, EDIT_BUFLEN_NUM);
 			float diffval = (float)_wtof(strdiff);
@@ -1827,9 +1840,11 @@ int CFootRigDlg::Dlg2Params()
 					itrelem->second.hdiffmax = diffval;
 				}
 			}
-		}
+		});
+	}
 
-		if (m_rigstepEdit) {
+	if (m_rigstepEdit) {
+		m_rigstepEdit->setExitDialogListener([=, this]() {
 			WCHAR strstep[EDIT_BUFLEN_NUM] = { 0L };
 			m_rigstepEdit->getName(strstep, EDIT_BUFLEN_NUM);
 			float stepval = (float)_wtof(strstep);
@@ -1840,9 +1855,11 @@ int CFootRigDlg::Dlg2Params()
 					itrelem->second.rigstep = stepval;
 				}
 			}
-		}
+		});
+	}
 
-		if (m_maxcountEdit) {
+	if (m_maxcountEdit) {
+		m_maxcountEdit->setExitDialogListener([=, this]() {
 			WCHAR strmaxcount[EDIT_BUFLEN_NUM] = { 0L };
 			m_maxcountEdit->getName(strmaxcount, EDIT_BUFLEN_NUM);
 			int countval = _wtoi(strmaxcount);
@@ -1853,9 +1870,11 @@ int CFootRigDlg::Dlg2Params()
 					itrelem->second.maxcalccount = countval;
 				}
 			}
-		}
+		});
+	}
 
-		if (m_hopyperstepEdit) {
+	if (m_hopyperstepEdit) {
+		m_hopyperstepEdit->setExitDialogListener([=, this]() {
 			WCHAR strstep[EDIT_BUFLEN_NUM] = { 0L };
 			m_hopyperstepEdit->getName(strstep, EDIT_BUFLEN_NUM);
 			float stepval = (float)_wtof(strstep);
@@ -1866,19 +1885,7 @@ int CFootRigDlg::Dlg2Params()
 					itrelem->second.hopyperstep = stepval;
 				}
 			}
-		}
-
-		if (m_wmblendSlider) {
-			float value = (float)m_wmblendSlider->getValue();
-			if (m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
-				itrelem = m_footrigelem.find(m_model);
-				if (itrelem != m_footrigelem.end()) {
-					itrelem->second.wmblend = value;
-				}
-			}
-		}
-
+		});
 	}
 
 	return 0;

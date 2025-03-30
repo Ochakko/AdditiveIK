@@ -76,7 +76,7 @@ public:
 
 
 private:
-	int Dlg2Params();
+	int Dlg2ParamsListener();
 	int ParamsToDlg_LeftRig();
 	int ParamsToDlg_RightRig();
 
@@ -162,7 +162,7 @@ private:
 	OrgWinGUI::OWP_Label* m_wmblendlabel;//2024/10/06
 	OrgWinGUI::OWP_Slider* m_wmblendSlider;//2024/10/06
 
-	OrgWinGUI::OWP_Button* m_applyB;
+	//OrgWinGUI::OWP_Button* m_applyB;
 
 	OrgWinGUI::OWP_Separator* m_groundmeshsp;
 	OrgWinGUI::OWP_Separator* m_leftfootbonesp;

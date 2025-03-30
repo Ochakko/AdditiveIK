@@ -94,18 +94,18 @@ int CDofDlg::DestroyObjs()
 		delete m_dofskyChk;
 		m_dofskyChk = nullptr;
 	}
-	if (m_dofspacerLabel3) {
-		delete m_dofspacerLabel3;
-		m_dofspacerLabel3 = nullptr;
-	}
-	if (m_dofapplysp) {
-		delete m_dofapplysp;
-		m_dofapplysp = nullptr;
-	}
-	if (m_dofapplyB) {
-		delete m_dofapplyB;
-		m_dofapplyB = nullptr;
-	}
+	//if (m_dofspacerLabel3) {
+	//	delete m_dofspacerLabel3;
+	//	m_dofspacerLabel3 = nullptr;
+	//}
+	//if (m_dofapplysp) {
+	//	delete m_dofapplysp;
+	//	m_dofapplysp = nullptr;
+	//}
+	//if (m_dofapplyB) {
+	//	delete m_dofapplyB;
+	//	m_dofapplyB = nullptr;
+	//}
 
 
 
@@ -141,9 +141,9 @@ void CDofDlg::InitParams()
 	m_dofdistfarEdit = nullptr;
 	m_dofspacerLabel2 = nullptr;
 	m_dofskyChk = nullptr;
-	m_dofspacerLabel3 = nullptr;
-	m_dofapplysp = nullptr;
-	m_dofapplyB = nullptr;
+	//m_dofspacerLabel3 = nullptr;
+	//m_dofapplysp = nullptr;
+	//m_dofapplyB = nullptr;
 
 }
 
@@ -325,22 +325,22 @@ int CDofDlg::CreateDofWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_dofspacerLabel3 = new OWP_Label(L"     ", 32);
-		if (!m_dofspacerLabel3) {
-			_ASSERT(0);
-			abort();
-		}
-		m_dofapplysp = new OWP_Separator(m_dlgWnd, true, rate50, true);
-		if (!m_dofapplysp) {
-			_ASSERT(0);
-			abort();
-		}
-		m_dofapplyB = new OWP_Button(L"Apply(適用)", 38);
-		if (!m_dofapplyB) {
-			_ASSERT(0);
-			abort();
-		}
-		m_dofapplyB->setTextColor(RGB(168, 129, 129));
+		//m_dofspacerLabel3 = new OWP_Label(L"     ", 32);
+		//if (!m_dofspacerLabel3) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_dofapplysp = new OWP_Separator(m_dlgWnd, true, rate50, true);
+		//if (!m_dofapplysp) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_dofapplyB = new OWP_Button(L"Apply(適用)", 38);
+		//if (!m_dofapplyB) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_dofapplyB->setTextColor(RGB(168, 129, 129));
 
 
 		m_dlgWnd->addParts(*m_dofLabel);
@@ -355,9 +355,9 @@ int CDofDlg::CreateDofWnd()
 		m_dofdistsp3->addParts2(*m_dofdistfarEdit);
 		m_dlgWnd->addParts(*m_dofspacerLabel2);
 		m_dlgWnd->addParts(*m_dofskyChk);
-		m_dlgWnd->addParts(*m_dofspacerLabel3);
-		m_dlgWnd->addParts(*m_dofapplysp);
-		m_dofapplysp->addParts2(*m_dofapplyB);
+		//m_dlgWnd->addParts(*m_dofspacerLabel3);
+		//m_dlgWnd->addParts(*m_dofapplysp);
+		//m_dofapplysp->addParts2(*m_dofapplyB);
 
 
 		m_dofslotCombo->setButtonListener([=, this]() {
@@ -372,35 +372,38 @@ int CDofDlg::CreateDofWnd()
 			g_skydofflag[g_dofindex] = value;
 			});
 
-		m_dofapplyB->setButtonListener([=, this]() {
+		//########
+		//EditBox
+		//########
+		m_dofdistnearEdit->setExitDialogListener([=, this]() {
 			WCHAR streditbox[256] = { 0L };
 			float tempeditvalue;
+			m_dofdistnearEdit->getName(streditbox, 256);
+			tempeditvalue = (float)_wtof(streditbox);
+			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
+				g_dofparams[g_dofindex].x = tempeditvalue;
+			}
+			else {
+				if (m_dlgWnd) {
+					::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Near", L"Invalid Value", MB_OK);
+				}
+			}
+		});
 
-			if (m_dofdistnearEdit) {
-				m_dofdistnearEdit->getName(streditbox, 256);
-				tempeditvalue = (float)_wtof(streditbox);
-				if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-					g_dofparams[g_dofindex].x = tempeditvalue;
-				}
-				else {
-					if (m_dlgWnd) {
-						::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Near", L"Invalid Value", MB_OK);
-					}
+		m_dofdistfarEdit->setExitDialogListener([=, this]() {
+			WCHAR streditbox[256] = { 0L };
+			float tempeditvalue;
+			m_dofdistfarEdit->getName(streditbox, 256);
+			tempeditvalue = (float)_wtof(streditbox);
+			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
+				g_dofparams[g_dofindex].y = tempeditvalue;
+			}
+			else {
+				if (m_dlgWnd) {
+					::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Far", L"Invalid Value", MB_OK);
 				}
 			}
-			if (m_dofdistfarEdit) {
-				m_dofdistfarEdit->getName(streditbox, 256);
-				tempeditvalue = (float)_wtof(streditbox);
-				if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-					g_dofparams[g_dofindex].y = tempeditvalue;
-				}
-				else {
-					if (m_dlgWnd) {
-						::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : Far", L"Invalid Value", MB_OK);
-					}
-				}
-			}
-			});
+		});
 
 
 		m_dlgWnd->setSize(WindowSize(m_sizex, m_sizey));

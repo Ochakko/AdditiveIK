@@ -105,9 +105,9 @@ private:
 	OrgWinGUI::OWP_Separator* m_lodlevel4lod3sp;
 	OrgWinGUI::OWP_Label* m_lodlevel4lod3Label;
 	OrgWinGUI::OWP_Slider* m_lodlevel4lod3Slider;
-	OrgWinGUI::OWP_Label* m_lodspacer1Label;
-	OrgWinGUI::OWP_Separator* m_lodapplysp;
-	OrgWinGUI::OWP_Button* m_lodapplyB;
+	//OrgWinGUI::OWP_Label* m_lodspacer1Label;
+	//OrgWinGUI::OWP_Separator* m_lodapplysp;
+	//OrgWinGUI::OWP_Button* m_lodapplyB;
 	OrgWinGUI::OWP_Label* m_lodspacerLabel001;
 	OrgWinGUI::OWP_Label* m_lodspacerLabel002;
 	OrgWinGUI::OWP_Label* m_lodspacerLabel003;

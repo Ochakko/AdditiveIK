@@ -107,6 +107,7 @@ private:
 	OrgWinGUI::OWP_Label* m_dispspacerLabel001;
 	OrgWinGUI::OWP_Label* m_dispspacerLabel002;
 	OrgWinGUI::OWP_Label* m_dispspacerLabel003;
+	OrgWinGUI::OWP_Label* m_dispspacerLabel004;
 
 	OrgWinGUI::OWP_Label* m_ikrateLabel;
 	OrgWinGUI::OWP_EditBox* m_ikrateEdit;

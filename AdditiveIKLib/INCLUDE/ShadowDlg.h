@@ -123,7 +123,7 @@ private:
 	OrgWinGUI::OWP_Slider* m_shadowothermultSlider;
 	OrgWinGUI::OWP_Label* m_shadowspacerLabel;
 	OrgWinGUI::OWP_Separator* m_shadowapplysp;
-	OrgWinGUI::OWP_Button* m_shadowapplyB;
+	//OrgWinGUI::OWP_Button* m_shadowapplyB;
 	OrgWinGUI::OWP_Button* m_shadowinitB;
 	OrgWinGUI::OWP_Label* m_shadowspacerLabel001;
 	OrgWinGUI::OWP_Label* m_shadowspacerLabel002;

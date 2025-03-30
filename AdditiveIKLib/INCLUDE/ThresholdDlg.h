@@ -57,7 +57,7 @@ public:
 
 private:
 	int CreateThresholdWnd();
-	int DlgToParams();
+	int DlgToParamsListener();
 	int GetThresholdEditIntOWP(OrgWinGUI::OWP_EditBox* srcedit, int* dstlimit);
 	int CheckStr_SInt(const WCHAR* srcstr);
 
@@ -111,7 +111,7 @@ private:
 	OrgWinGUI::OWP_Label* m_thspacerLabel;
 	OrgWinGUI::OWP_Separator* m_thapplysp1;
 	OrgWinGUI::OWP_Separator* m_thapplysp2;
-	OrgWinGUI::OWP_Button* m_thapplyB;
+	//OrgWinGUI::OWP_Button* m_thapplyB;
 	OrgWinGUI::OWP_Button* m_thdefaultB;
 	OrgWinGUI::OWP_Label* m_thspacerLabel1;
 	OrgWinGUI::OWP_Label* m_thspacerLabel2;

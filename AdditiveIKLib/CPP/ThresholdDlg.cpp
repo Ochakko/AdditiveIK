@@ -150,10 +150,10 @@ int CThresholdDlg::DestroyObjs()
 		delete m_thapplysp2;
 		m_thapplysp2 = nullptr;
 	}
-	if (m_thapplyB) {
-		delete m_thapplyB;
-		m_thapplyB = nullptr;
-	}
+	//if (m_thapplyB) {
+	//	delete m_thapplyB;
+	//	m_thapplyB = nullptr;
+	//}
 	if (m_thdefaultB) {
 		delete m_thdefaultB;
 		m_thdefaultB = nullptr;
@@ -210,7 +210,7 @@ void CThresholdDlg::InitParams()
 	m_thspacerLabel2 = nullptr;
 	m_thapplysp1 = nullptr;
 	m_thapplysp2 = nullptr;
-	m_thapplyB = nullptr;
+	//m_thapplyB = nullptr;
 	m_thdefaultB = nullptr;
 
 }
@@ -456,12 +456,12 @@ int CThresholdDlg::CreateThresholdWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_thapplyB = new OWP_Button(L"Apply", 32);
-		if (!m_thapplyB) {
-			_ASSERT(0);
-			abort();
-		}
-		m_thapplyB->setTextColor(RGB(168, 129, 129));
+		//m_thapplyB = new OWP_Button(L"Apply", 32);
+		//if (!m_thapplyB) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_thapplyB->setTextColor(RGB(168, 129, 129));
 		m_thdefaultB = new OWP_Button(L"Default", 32);
 		if (!m_thdefaultB) {
 			_ASSERT(0);
@@ -496,20 +496,25 @@ int CThresholdDlg::CreateThresholdWnd()
 		m_dlgWnd->addParts(*m_thspacerLabel);
 		m_dlgWnd->addParts(*m_thapplysp1);
 		m_thapplysp1->addParts2(*m_thapplysp2);
-		m_thapplysp2->addParts1(*m_thapplyB);
+		//m_thapplysp2->addParts1(*m_thapplyB);
 		m_thapplysp2->addParts2(*m_thdefaultB);
 
 
+		//########
+		//EditBox
+		//########
+		DlgToParamsListener();
 
-		m_thapplyB->setButtonListener([=, this]() {
-			//m_changelimitangleFlag = true;
-			//PrepairUndo();//全フレーム変更の前に全フレーム保存
 
-			DlgToParams();
+		//m_thapplyB->setButtonListener([=, this]() {
+		//	//m_changelimitangleFlag = true;
+		//	//PrepairUndo();//全フレーム変更の前に全フレーム保存
 
-			//PrepairUndo();//全フレーム変更後に全フレーム保存
-			//m_changelimitangleFlag = false;
-			});
+		//	DlgToParams();
+
+		//	//PrepairUndo();//全フレーム変更後に全フレーム保存
+		//	//m_changelimitangleFlag = false;
+		//	});
 		m_thdefaultB->setButtonListener([=, this]() {
 			g_thdeg = 181.0f;
 			g_thdeg_endjoint = 159.0f;
@@ -574,76 +579,70 @@ int CThresholdDlg::ParamsToDlg()
 	return 0;
 }
 
-int CThresholdDlg::DlgToParams()
+int CThresholdDlg::DlgToParamsListener()
 {
-	int result_thdeg, result_thdeg_endjoint;
-	int result_xround, result_yround, result_zround;
-	int val_thdeg, val_thdeg_endjoint;
-	int val_xround, val_yround, val_zround;
-
-	result_thdeg = 1;
-	result_thdeg_endjoint = 1;
-	result_xround = 1;
-	result_yround = 1;
-	result_zround = 1;
-	val_thdeg = Float2Int(g_thdeg);
-	val_thdeg_endjoint = Float2Int(g_thdeg_endjoint);
-	val_xround = Float2Int(g_thRoundX);
-	val_yround = Float2Int(g_thRoundY);
-	val_zround = Float2Int(g_thRoundZ);
-	bool errorflag = false;
-
 	if (m_ththnoendjEdit) {
-		result_thdeg = GetThresholdEditIntOWP(m_ththnoendjEdit, &val_thdeg);
-		if (result_thdeg != 0) {
-			::MessageBox(g_mainhwnd, L"ThresholdDlgのNotEndJointの入力値が不正です。", L"入力し直してください。", MB_OK);
-			errorflag = true;
-		}
+		m_ththnoendjEdit->setExitDialogListener([=, this]() {
+			int val_thdeg = Float2Int(g_thdeg);
+			int result_thdeg = GetThresholdEditIntOWP(m_ththnoendjEdit, &val_thdeg);
+			if (result_thdeg != 0) {
+				::MessageBox(g_mainhwnd, L"ThresholdDlgのNotEndJointの入力値が不正です。", L"入力し直してください。", MB_OK);
+			}
+			else {
+				g_thdeg = (float)val_thdeg;
+			}
+		});
 	}
 	if (m_ththendjEdit) {
-		result_thdeg_endjoint = GetThresholdEditIntOWP(m_ththendjEdit, &val_thdeg_endjoint);
-		if (result_thdeg_endjoint != 0) {
-			::MessageBox(g_mainhwnd, L"ThresholdDlgのEndJointの入力値が不正です。", L"入力し直してください。", MB_OK);
-			errorflag = true;
-		}
+		m_ththendjEdit->setExitDialogListener([=, this]() {
+			int val_thdeg_endjoint = Float2Int(g_thdeg_endjoint);
+			int result_thdeg_endjoint = GetThresholdEditIntOWP(m_ththendjEdit, &val_thdeg_endjoint);
+			if (result_thdeg_endjoint != 0) {
+				::MessageBox(g_mainhwnd, L"ThresholdDlgのEndJointの入力値が不正です。", L"入力し直してください。", MB_OK);
+			}
+			else {
+				g_thdeg_endjoint = (float)val_thdeg_endjoint;
+			}
+		});
 	}
-
 	if (m_throundxEdit) {
-		result_xround = GetThresholdEditIntOWP(m_throundxEdit, &val_xround);
-		if (result_xround != 0) {
-			::MessageBox(g_mainhwnd, L"ThresholdDlgのXRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
-			errorflag = true;
-		}
+		m_throundxEdit->setExitDialogListener([=, this]() {
+			int val_xround = Float2Int(g_thRoundX);
+			int result_xround = GetThresholdEditIntOWP(m_throundxEdit, &val_xround);
+			if (result_xround != 0) {
+				::MessageBox(g_mainhwnd, L"ThresholdDlgのXRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
+			}
+			else {
+				g_thRoundX = (float)val_xround;
+			}
+		});
 	}
 	if (m_throundyEdit) {
-		result_yround = GetThresholdEditIntOWP(m_throundyEdit, &val_yround);
-		if (result_yround != 0) {
-			::MessageBox(g_mainhwnd, L"ThresholdDlgのYRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
-			errorflag = true;
-		}
+		m_throundyEdit->setExitDialogListener([=, this]() {
+			int val_yround = Float2Int(g_thRoundY);
+			int result_yround = GetThresholdEditIntOWP(m_throundyEdit, &val_yround);
+			if (result_yround != 0) {
+				::MessageBox(g_mainhwnd, L"ThresholdDlgのYRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
+			}
+			else {
+				g_thRoundY = (float)val_yround;
+			}
+		});
 	}
 	if (m_throundzEdit) {
-		result_zround = GetThresholdEditIntOWP(m_throundzEdit, &val_zround);
-		if (result_zround != 0) {
-			::MessageBox(g_mainhwnd, L"ThresholdDlgのZRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
-			errorflag = true;
-		}
+		m_throundzEdit->setExitDialogListener([=, this]() {
+			int val_zround = Float2Int(g_thRoundZ);
+			int result_zround = GetThresholdEditIntOWP(m_throundzEdit, &val_zround);
+			if (result_zround != 0) {
+				::MessageBox(g_mainhwnd, L"ThresholdDlgのZRoundの入力値が不正です。", L"入力し直してください。", MB_OK);
+			}
+			else {
+				g_thRoundZ = (float)val_zround;
+			}
+		});
 	}
 
-
-	if (errorflag == false) {
-		g_thdeg = (float)val_thdeg;
-		g_thdeg_endjoint = (float)val_thdeg_endjoint;
-		g_thRoundX = (float)val_xround;
-		g_thRoundY = (float)val_yround;
-		g_thRoundZ = (float)val_zround;
-
-		return 0;
-	}
-	else {
-		return 1;
-	}
-
+	return 0;
 }
 
 int CThresholdDlg::GetThresholdEditIntOWP(OWP_EditBox* srcedit, int* dstlimit)

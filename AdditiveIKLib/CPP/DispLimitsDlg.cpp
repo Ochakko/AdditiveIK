@@ -225,6 +225,10 @@ int CDispLimitsDlg::DestroyObjs()
 		delete m_dispspacerLabel003;
 		m_dispspacerLabel003 = nullptr;
 	}
+	if (m_dispspacerLabel004) {
+		delete m_dispspacerLabel004;
+		m_dispspacerLabel004 = nullptr;
+	}
 
 	if (m_ikrateLabel) {
 		delete m_ikrateLabel;
@@ -329,6 +333,7 @@ void CDispLimitsDlg::InitParams()
 	m_dispspacerLabel001 = nullptr;
 	m_dispspacerLabel002 = nullptr;
 	m_dispspacerLabel003 = nullptr;
+	m_dispspacerLabel004 = nullptr;
 
 	m_ikrateLabel = nullptr;
 	m_ikrateEdit = nullptr;
@@ -668,6 +673,11 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 			_ASSERT(0);
 			abort();
 		}
+		m_dispspacerLabel004 = new OWP_Label(L"     ", 32);
+		if (!m_dispspacerLabel004) {
+			_ASSERT(0);
+			abort();
+		}
 
 
 
@@ -771,14 +781,13 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 		m_dlgWnd->addParts(*m_dispsp5);
 		m_dispsp5->addParts1(*m_graphskipMOAChk);
 
+		m_dlgWnd->addParts(*m_dispspacerLabel004);//
 		m_dlgWnd->addParts(*m_dispsp6);
 		m_dispsp6->addParts1(*m_ikrateLabel);
 		m_dispsp6->addParts2(*m_ikrateEdit);
-
 		m_dlgWnd->addParts(*m_dispsp7);
 		m_dispsp7->addParts1(*m_ikmaxdegLabel);
 		m_dispsp7->addParts2(*m_ikmaxdegEdit);
-
 		m_dlgWnd->addParts(*m_dispsp8);
 		m_dispsp8->addParts1(*m_posconsttimesLabel);
 		m_dispsp8->addParts2(*m_posconsttimesEdit);
@@ -924,10 +933,11 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 			g_uvset = comboid;
 			});
 
+
 		//###########
 		//EditBox
 		//###########
-		m_ikrateEdit->setCloseListener([=, this]() {
+		m_ikrateEdit->setExitDialogListener([=, this]() {
 			WCHAR strikrate[256] = { 0L };
 			if (m_ikrateEdit) {
 				m_ikrateEdit->getName(strikrate, 256);
@@ -943,7 +953,7 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 			}
 		});
 
-		m_ikmaxdegEdit->setCloseListener([=, this]() {
+		m_ikmaxdegEdit->setExitDialogListener([=, this]() {
 			WCHAR strikmaxdeg[256] = { 0L };
 			if (m_ikmaxdegEdit) {
 				m_ikmaxdegEdit->getName(strikmaxdeg, 256);
@@ -959,7 +969,7 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 			}
 		});
 
-		m_posconsttimesEdit->setCloseListener([=, this]() {
+		m_posconsttimesEdit->setExitDialogListener([=, this]() {
 			WCHAR strposconsttimes[256] = { 0L };
 			if (m_posconsttimesEdit) {
 				m_posconsttimesEdit->getName(strposconsttimes, 256);

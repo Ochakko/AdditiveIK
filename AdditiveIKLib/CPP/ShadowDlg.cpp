@@ -254,10 +254,10 @@ int CShadowDlg::DestroyObjs()
 		delete m_shadowapplysp;
 		m_shadowapplysp = nullptr;
 	}
-	if (m_shadowapplyB) {
-		delete m_shadowapplyB;
-		m_shadowapplyB = nullptr;
-	}
+	//if (m_shadowapplyB) {
+	//	delete m_shadowapplyB;
+	//	m_shadowapplyB = nullptr;
+	//}
 	if (m_shadowinitB) {
 		delete m_shadowinitB;
 		m_shadowinitB = nullptr;
@@ -351,7 +351,7 @@ void CShadowDlg::InitParams()
 	m_shadowothermultSlider = nullptr;
 	m_shadowspacerLabel = nullptr;
 	m_shadowapplysp = nullptr;
-	m_shadowapplyB = nullptr;
+	//m_shadowapplyB = nullptr;
 	m_shadowinitB = nullptr;
 
 	m_shadowspacerLabel001 = nullptr;
@@ -735,12 +735,12 @@ int CShadowDlg::CreateShadowWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_shadowapplyB = new OWP_Button(L"Apply(適用)", 38);
-		if (!m_shadowapplyB) {
-			_ASSERT(0);
-			abort();
-		}
-		m_shadowapplyB->setTextColor(RGB(168, 129, 129));
+		//m_shadowapplyB = new OWP_Button(L"Apply(適用)", 38);
+		//if (!m_shadowapplyB) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_shadowapplyB->setTextColor(RGB(168, 129, 129));
 		m_shadowinitB = new OWP_Button(L"InitParams", 38);
 		if (!m_shadowinitB) {
 			_ASSERT(0);
@@ -823,7 +823,7 @@ int CShadowDlg::CreateShadowWnd()
 		m_shadowothersp3->addParts2(*m_shadowothermultSlider);
 		m_dlgWnd->addParts(*m_shadowspacerLabel);
 		m_dlgWnd->addParts(*m_shadowapplysp);
-		m_shadowapplysp->addParts1(*m_shadowapplyB);
+		//m_shadowapplysp->addParts1(*m_shadowapplyB);
 		m_shadowapplysp->addParts2(*m_shadowinitB);
 
 
@@ -841,7 +841,7 @@ int CShadowDlg::CreateShadowWnd()
 			if (m_SetCamera3DFromEyePos) {
 				(this->m_SetCamera3DFromEyePos)();
 			}
-			});
+		});
 
 		//###########
 		//CheckBox
@@ -849,15 +849,15 @@ int CShadowDlg::CreateShadowWnd()
 		m_shadowenableChk->setButtonListener([=, this]() {
 			bool value = m_shadowenableChk->getValue();
 			g_enableshadow = value;
-			});
+		});
 		m_shadowvsmChk->setButtonListener([=, this]() {
 			bool value = m_shadowvsmChk->getValue();
 			g_VSMflag = value;
-			});
+		});
 		m_shadowvsmblurChk->setButtonListener([=, this]() {
 			bool value = m_shadowvsmblurChk->getValue();
 			g_blurShadow = value;
-			});
+		});
 
 		int dirindex2;
 		for (dirindex2 = 0; dirindex2 < 8; dirindex2++) {
@@ -869,7 +869,7 @@ int CShadowDlg::CreateShadowWnd()
 				if (m_SetCamera3DFromEyePos) {
 					(this->m_SetCamera3DFromEyePos)();
 				}
-				});
+			});
 		}
 
 		//##########
@@ -881,73 +881,102 @@ int CShadowDlg::CreateShadowWnd()
 			if (m_SetCamera3DFromEyePos) {
 				(this->m_SetCamera3DFromEyePos)();
 			}
-			});
+		});
 		m_shadowothercolorSlider->setCursorListener([=, this]() {
 			double value = m_shadowothercolorSlider->getValue();
 			g_shadowmap_color[g_shadowmap_slotno] = (float)value;
 			if (m_SetCamera3DFromEyePos) {
 				(this->m_SetCamera3DFromEyePos)();
 			}
-			});
+		});
 		m_shadowotherbiasSlider->setCursorListener([=, this]() {
 			double value = m_shadowotherbiasSlider->getValue();
 			g_shadowmap_bias[g_shadowmap_slotno] = (float)value;
 			if (m_SetCamera3DFromEyePos) {
 				(this->m_SetCamera3DFromEyePos)();
 			}
-			});
+		});
 		m_shadowothermultSlider->setCursorListener([=, this]() {
 			double value = m_shadowothermultSlider->getValue();
 			g_shadowmap_projscale[g_shadowmap_slotno] = (float)value;
 			if (m_SetCamera3DFromEyePos) {
 				(this->m_SetCamera3DFromEyePos)();
 			}
-			});
+		});
 
 
+		//########
+		//EditBox
+		//########
 
-		m_shadowapplyB->setButtonListener([=, this]() {
+		m_shadowcamposupEdit->setExitDialogListener([=, this]() {
 			WCHAR streditbox[256] = { 0L };
 			m_shadowcamposupEdit->getName(streditbox, 256);
 			float tempeditvalue = (float)_wtof(streditbox);
 			if ((tempeditvalue >= -50000.0f) && (tempeditvalue <= 50000.0f)) {
 				g_shadowmap_plusup[g_shadowmap_slotno] = tempeditvalue;
+
+				if (m_SetCamera3DFromEyePos) {
+					(this->m_SetCamera3DFromEyePos)();
+				}
 			}
 			else {
 				::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : plusup", L"Invalid Value", MB_OK);
 			}
+		});
 
+		m_shadowcamposdistEdit->setExitDialogListener([=, this]() {
+			WCHAR streditbox[256] = { 0L };
 			m_shadowcamposdistEdit->getName(streditbox, 256);
-			tempeditvalue = (float)_wtof(streditbox);
+			float tempeditvalue = (float)_wtof(streditbox);
 			if ((tempeditvalue >= -50000.0f) && (tempeditvalue <= 50000.0f)) {
 				g_shadowmap_distscale[g_shadowmap_slotno] = tempeditvalue;
+
+				if (m_SetCamera3DFromEyePos) {
+					(this->m_SetCamera3DFromEyePos)();
+				}
 			}
 			else {
 				::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : plusright", L"Invalid Value", MB_OK);
 			}
+		});
 
+		m_shadowprojnearEdit->setExitDialogListener([=, this]() {
+			WCHAR streditbox[256] = { 0L };
 			m_shadowprojnearEdit->getName(streditbox, 256);
-			tempeditvalue = (float)_wtof(streditbox);
+			float tempeditvalue = (float)_wtof(streditbox);
 			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
 				g_shadowmap_near[g_shadowmap_slotno] = tempeditvalue;
+
+				if (m_SetCamera3DFromEyePos) {
+					(this->m_SetCamera3DFromEyePos)();
+				}
 			}
 			else {
 				::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : near", L"Invalid Value", MB_OK);
 			}
+		});
 
+		m_shadowprojfarEdit->setExitDialogListener([=, this]() {
+			WCHAR streditbox[256] = { 0L };
 			m_shadowprojfarEdit->getName(streditbox, 256);
-			tempeditvalue = (float)_wtof(streditbox);
+			float tempeditvalue = (float)_wtof(streditbox);
 			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
 				g_shadowmap_far[g_shadowmap_slotno] = tempeditvalue;
+
+				if (m_SetCamera3DFromEyePos) {
+					(this->m_SetCamera3DFromEyePos)();
+				}
 			}
 			else {
 				::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : near", L"Invalid Value", MB_OK);
 			}
+		});
 
-			if (m_SetCamera3DFromEyePos) {
-				(this->m_SetCamera3DFromEyePos)();
-			}
-			});
+		//	if (m_SetCamera3DFromEyePos) {
+		//		(this->m_SetCamera3DFromEyePos)();
+		//	}
+
 		m_shadowinitB->setButtonListener([=, this]() {
 			g_shadowmap_fov[g_shadowmap_slotno] = 60.0f;
 			g_shadowmap_projscale[g_shadowmap_slotno] = 1.0f;
@@ -963,7 +992,7 @@ int CShadowDlg::CreateShadowWnd()
 			if (m_SetCamera3DFromEyePos) {
 				(this->m_SetCamera3DFromEyePos)();
 			}
-			});
+		});
 
 
 		m_dlgWnd->setSize(WindowSize(m_sizex, m_sizey));

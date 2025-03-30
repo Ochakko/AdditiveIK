@@ -54,7 +54,7 @@ private:
 	int ConvPolarCoord2Dir(float srcxzdeg, float srcydeg, float* dstdirx, float* dstdiry, float* dstdirz);
 	int CheckStr_float(const WCHAR* srcstr);
 
-	int Dlg2Lights();
+	int Dlg2LightsListener();
 
 private:
 	bool m_createdflag;
@@ -88,9 +88,9 @@ private:
 	OrgWinGUI::OWP_Label* m_polaryLabel[8];
 	OrgWinGUI::OWP_EditBox* m_polaryEdit[8];
 	//OrgWinGUI::OWP_Button* m_polaryEdit[8];
-	OrgWinGUI::OWP_Separator* m_lightsapplysp;
-	OrgWinGUI::OWP_Label* m_lightsspace1Label;
-	OrgWinGUI::OWP_Button* m_lightsapplyB;
+	//OrgWinGUI::OWP_Separator* m_lightsapplysp;
+	//OrgWinGUI::OWP_Label* m_lightsspace1Label;
+	//OrgWinGUI::OWP_Button* m_lightsapplyB;
 
 
 

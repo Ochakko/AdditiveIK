@@ -221,18 +221,18 @@ int CProjLodDlg::DestroyObjs()
 		delete m_lodlevel4lod3Slider;
 		m_lodlevel4lod3Slider = nullptr;
 	}
-	if (m_lodspacer1Label) {
-		delete m_lodspacer1Label;
-		m_lodspacer1Label = nullptr;
-	}
-	if (m_lodapplysp) {
-		delete m_lodapplysp;
-		m_lodapplysp = nullptr;
-	}
-	if (m_lodapplyB) {
-		delete m_lodapplyB;
-		m_lodapplyB = nullptr;
-	}
+	//if (m_lodspacer1Label) {
+	//	delete m_lodspacer1Label;
+	//	m_lodspacer1Label = nullptr;
+	//}
+	//if (m_lodapplysp) {
+	//	delete m_lodapplysp;
+	//	m_lodapplysp = nullptr;
+	//}
+	//if (m_lodapplyB) {
+	//	delete m_lodapplyB;
+	//	m_lodapplyB = nullptr;
+	//}
 	if (m_lodspacerLabel001) {
 		delete m_lodspacerLabel001;
 		m_lodspacerLabel001 = nullptr;
@@ -312,9 +312,9 @@ void CProjLodDlg::InitParams()
 	m_lodlevel4lod3sp = nullptr;
 	m_lodlevel4lod3Label = nullptr;
 	m_lodlevel4lod3Slider = nullptr;
-	m_lodspacer1Label = nullptr;
-	m_lodapplysp = nullptr;
-	m_lodapplyB = nullptr;
+	//m_lodspacer1Label = nullptr;
+	//m_lodapplysp = nullptr;
+	//m_lodapplyB = nullptr;
 	m_lodspacerLabel001 = nullptr;
 	m_lodspacerLabel002 = nullptr;
 	m_lodspacerLabel003 = nullptr;
@@ -630,22 +630,22 @@ int CProjLodDlg::CreateProjLodWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_lodspacer1Label = new OWP_Label(L"     ", 24);
-		if (!m_lodspacer1Label) {
-			_ASSERT(0);
-			abort();
-		}
-		m_lodapplysp = new OWP_Separator(m_dlgWnd, true, rate50, true);
-		if (!m_lodapplysp) {
-			_ASSERT(0);
-			abort();
-		}
-		m_lodapplyB = new OWP_Button(L"Apply(適用)", 38);
-		if (!m_lodapplyB) {
-			_ASSERT(0);
-			abort();
-		}
-		m_lodapplyB->setTextColor(RGB(168, 129, 129));
+		//m_lodspacer1Label = new OWP_Label(L"     ", 24);
+		//if (!m_lodspacer1Label) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_lodapplysp = new OWP_Separator(m_dlgWnd, true, rate50, true);
+		//if (!m_lodapplysp) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_lodapplyB = new OWP_Button(L"Apply(適用)", 38);
+		//if (!m_lodapplyB) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_lodapplyB->setTextColor(RGB(168, 129, 129));
 		m_lodspacerLabel001 = new OWP_Label(L"     ", 32);
 		if (!m_lodspacerLabel001) {
 			_ASSERT(0);
@@ -712,9 +712,9 @@ int CProjLodDlg::CreateProjLodWnd()
 		m_dlgWnd->addParts(*m_lodlevel4lod3sp);
 		m_lodlevel4lod3sp->addParts1(*m_lodlevel4lod3Label);
 		m_lodlevel4lod3sp->addParts2(*m_lodlevel4lod3Slider);
-		m_dlgWnd->addParts(*m_lodspacer1Label);
-		m_dlgWnd->addParts(*m_lodapplysp);
-		m_lodapplysp->addParts2(*m_lodapplyB);
+		//m_dlgWnd->addParts(*m_lodspacer1Label);
+		//m_dlgWnd->addParts(*m_lodapplysp);
+		//m_lodapplysp->addParts2(*m_lodapplyB);
 
 
 
@@ -723,59 +723,166 @@ int CProjLodDlg::CreateProjLodWnd()
 		//##########
 		m_lodprojfovSlider->setCursorListener([=, this]() {
 			double value = m_lodprojfovSlider->getValue();
-			g_fovy = (float)(value * PI / 180.0);
-			
+			g_fovy = (float)(value * PI / 180.0);			
 			//SetCamera3DFromEyePos();//2023/12/30
 			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
 				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
 			}
-			});
+		});
+		m_lodprojfovSlider->setLUpListener([=, this]() {
+			double value = m_lodprojfovSlider->getValue();
+			g_fovy = (float)(value * PI / 180.0);
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
 		m_lodpickdistSlider->setCursorListener([=, this]() {
 			double value = m_lodpickdistSlider->getValue();
 			g_pickdistrate = value;
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
 			});
-
+		m_lodpickdistSlider->setLUpListener([=, this]() {
+			double value = m_lodpickdistSlider->getValue();
+			g_pickdistrate = value;
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
 		m_lodlevel2lod0Slider->setCursorListener([=, this]() {
 			double value = m_lodlevel2lod0Slider->getValue();
 			g_lodrate2L[CHKINVIEW_LOD0] = (float)value;
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
 			});
+		m_lodlevel2lod0Slider->setLUpListener([=, this]() {
+			double value = m_lodlevel2lod0Slider->getValue();
+			g_lodrate2L[CHKINVIEW_LOD0] = (float)value;
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
 		m_lodlevel2lod1Slider->setCursorListener([=, this]() {
 			double value = m_lodlevel2lod1Slider->getValue();
 			g_lodrate2L[CHKINVIEW_LOD1] = (float)value;
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
 			});
-
+		m_lodlevel2lod1Slider->setLUpListener([=, this]() {
+			double value = m_lodlevel2lod1Slider->getValue();
+			g_lodrate2L[CHKINVIEW_LOD1] = (float)value;
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
 		m_lodlevel3lod0Slider->setCursorListener([=, this]() {
 			double value = m_lodlevel3lod0Slider->getValue();
 			g_lodrate3L[CHKINVIEW_LOD0] = (float)value;
-			});
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
+		m_lodlevel3lod0Slider->setLUpListener([=, this]() {
+			double value = m_lodlevel3lod0Slider->getValue();
+			g_lodrate3L[CHKINVIEW_LOD0] = (float)value;
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
 		m_lodlevel3lod1Slider->setCursorListener([=, this]() {
 			double value = m_lodlevel3lod1Slider->getValue();
 			g_lodrate3L[CHKINVIEW_LOD1] = (float)value;
-			});
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
+		m_lodlevel3lod1Slider->setLUpListener([=, this]() {
+			double value = m_lodlevel3lod1Slider->getValue();
+			g_lodrate3L[CHKINVIEW_LOD1] = (float)value;
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
 		m_lodlevel3lod2Slider->setCursorListener([=, this]() {
 			double value = m_lodlevel3lod2Slider->getValue();
 			g_lodrate3L[CHKINVIEW_LOD2] = (float)value;
-			});
-
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
+		m_lodlevel3lod2Slider->setLUpListener([=, this]() {
+			double value = m_lodlevel3lod2Slider->getValue();
+			g_lodrate3L[CHKINVIEW_LOD2] = (float)value;
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
 		m_lodlevel4lod0Slider->setCursorListener([=, this]() {
 			double value = m_lodlevel4lod0Slider->getValue();
 			g_lodrate4L[CHKINVIEW_LOD0] = (float)value;
-			});
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
+		m_lodlevel4lod0Slider->setLUpListener([=, this]() {
+			double value = m_lodlevel4lod0Slider->getValue();
+			g_lodrate4L[CHKINVIEW_LOD0] = (float)value;
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
 		m_lodlevel4lod1Slider->setCursorListener([=, this]() {
 			double value = m_lodlevel4lod1Slider->getValue();
 			g_lodrate4L[CHKINVIEW_LOD1] = (float)value;
-			});
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
+		m_lodlevel4lod1Slider->setLUpListener([=, this]() {
+			double value = m_lodlevel4lod1Slider->getValue();
+			g_lodrate4L[CHKINVIEW_LOD1] = (float)value;
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
 		m_lodlevel4lod2Slider->setCursorListener([=, this]() {
 			double value = m_lodlevel4lod2Slider->getValue();
 			g_lodrate4L[CHKINVIEW_LOD2] = (float)value;
-			});
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
+		m_lodlevel4lod2Slider->setLUpListener([=, this]() {
+			double value = m_lodlevel4lod2Slider->getValue();
+			g_lodrate4L[CHKINVIEW_LOD2] = (float)value;
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
 		m_lodlevel4lod3Slider->setCursorListener([=, this]() {
 			double value = m_lodlevel4lod3Slider->getValue();
 			g_lodrate4L[CHKINVIEW_LOD3] = (float)value;
-			});
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
+		m_lodlevel4lod3Slider->setLUpListener([=, this]() {
+			double value = m_lodlevel4lod3Slider->getValue();
+			g_lodrate4L[CHKINVIEW_LOD3] = (float)value;
+			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+			}
+		});
 
 
-		m_lodapplyB->setButtonListener([=, this]() {
+		//##########
+		//EditBox
+		//##########
+
+		m_lodnearEdit->setExitDialogListener([=, this]() {
 			WCHAR strnear[256] = { 0L };
 			if (m_lodnearEdit) {
 				m_lodnearEdit->getName(strnear, 256);
@@ -783,32 +890,36 @@ int CProjLodDlg::CreateProjLodWnd()
 			float tempeditvalue = (float)_wtof(strnear);
 			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
 				g_projnear = tempeditvalue;
+				if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+					PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+				}
 			}
 			else {
 				if (m_dlgWnd && m_dlgWnd->getHWnd()) {
 					::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : near", L"Invalid Value", MB_OK);
 				}
 			}
+		});
 
+		m_lodfarEdit->setExitDialogListener([=, this]() {
 			WCHAR strfar[256] = { 0L };
 			if (m_lodfarEdit) {
 				m_lodfarEdit->getName(strfar, 256);
 			}
-			tempeditvalue = (float)_wtof(strfar);
+			float tempeditvalue = (float)_wtof(strfar);
 			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
 				g_projfar = tempeditvalue;
+				if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+					PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
+				}
 			}
 			else {
 				if (m_dlgWnd && m_dlgWnd->getHWnd()) {
 					::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : far", L"Invalid Value", MB_OK);
 				}
 			}
+		});
 
-			//SetCamera3DFromEyePos();//2023/12/30			
-			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
-				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
-			}
-			});
 
 		m_dlgWnd->setSize(WindowSize(m_sizex, m_sizey));
 		m_dlgWnd->setPos(WindowPos(m_posx, m_posy));

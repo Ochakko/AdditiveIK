@@ -113,9 +113,9 @@ private:
 	OrgWinGUI::OWP_Separator* m_fogheightsp4;
 	OrgWinGUI::OWP_ColorBox* m_fogheightColor;
 	OrgWinGUI::OWP_Slider* m_fogheightSlider;
-	OrgWinGUI::OWP_Label* m_fogspacerLabel3;
-	OrgWinGUI::OWP_Separator* m_fogapplysp;
-	OrgWinGUI::OWP_Button* m_fogapplyB;
+	//OrgWinGUI::OWP_Label* m_fogspacerLabel3;
+	//OrgWinGUI::OWP_Separator* m_fogapplysp;
+	//OrgWinGUI::OWP_Button* m_fogapplyB;
 
 };
 

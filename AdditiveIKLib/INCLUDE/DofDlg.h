@@ -94,9 +94,9 @@ private:
 	OrgWinGUI::OWP_EditBox* m_dofdistfarEdit;
 	OrgWinGUI::OWP_Label* m_dofspacerLabel2;
 	OrgWinGUI::OWP_CheckBoxA* m_dofskyChk;
-	OrgWinGUI::OWP_Label* m_dofspacerLabel3;
-	OrgWinGUI::OWP_Separator* m_dofapplysp;
-	OrgWinGUI::OWP_Button* m_dofapplyB;
+	//OrgWinGUI::OWP_Label* m_dofspacerLabel3;
+	//OrgWinGUI::OWP_Separator* m_dofapplysp;
+	//OrgWinGUI::OWP_Button* m_dofapplyB;
 
 };
 
