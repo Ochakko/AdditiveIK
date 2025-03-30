@@ -3699,10 +3699,13 @@ void InitApp()
 	s_cpinfo.Init();
 	s_cpmotinfo.Init();
 
-	//g_ikrate = 0.20f;
-	g_ikrate = 0.5f;
-	g_ikmaxdeg = 2.0f;
-	g_iktargettimes = 100;
+
+	//以下３つはiniファイルから読み込む
+	////g_ikrate = 0.20f;
+	//g_ikrate = 0.5f;
+	//g_ikmaxdeg = 2.0f;
+	//g_iktargettimes = 100;
+
 
 	s_moa_nextmotid = 0;
 	s_moa_nextframe = 0;

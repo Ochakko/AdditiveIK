@@ -75,8 +75,12 @@ int CIniFile::WriteFileInfo()
 
 	//CallF( Write2File( "  <FileInfo>\r\n    <kind>AdditiveIKIniFile</kind>\r\n    <version>1001</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n" ), return 1 );
 
-	//2024/01/12
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIKIniFile</kind>\r\n    <version>1002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	////2024/01/12
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIKIniFile</kind>\r\n    <version>1002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+
+	//2025/03/30
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIKIniFile</kind>\r\n    <version>1003</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+
 
 	return 0;
 }
@@ -102,6 +106,11 @@ int CIniFile::WriteIniInfo()
 	CallF(Write2File("    <BoneMarkBrightness>%f</BoneMarkBrightness>\r\n", g_bonemark_bright), return 1);
 	CallF(Write2File("    <RigidMarkAlpha>%f</RigidMarkAlpha>\r\n", g_rigidmark_alpha), return 1);
 	CallF(Write2File("    <RigMarkAlpha>%f</RigMarkAlpha>\r\n", g_rigmark_alpha), return 1);
+
+	CallF(Write2File("    <IKRate>%f</IKRate>\r\n", g_ikrate), return 1);
+	CallF(Write2File("    <IKMaxDeg>%f</IKMaxDeg>\r\n", g_ikmaxdeg), return 1);
+	CallF(Write2File("    <PosConstTimes>%d</PosConstTimes>\r\n", g_iktargettimes), return 1);
+
 
 	CallF(Write2File("  </IniFileBody>\r\n"), return 1);
 
@@ -374,6 +383,46 @@ int CIniFile::ReadIniInfo(XMLIOBUF* xmlbuf )
 	}
 
 
+	int result15, result16, result17;
+	float ikrate, ikmaxdeg;
+	int iktargettimes;
+	result15 = Read_Float(xmlbuf, "<IKRate>", "</IKRate>", &ikrate);
+	if (result15 == 0) {
+		if ((ikrate >= 0.0f) && (ikrate <= 1000.0f)) {
+			g_ikrate = ikrate;
+		}
+		else {
+			g_ikrate = 0.50f;
+		}
+	}
+	else {
+		g_ikrate = 0.50f;
+	}
+	result16 = Read_Float(xmlbuf, "<IKMaxDeg>", "</IKMaxDeg>", &ikmaxdeg);
+	if (result16 == 0) {
+		if ((ikmaxdeg >= 0.0f) && (ikmaxdeg <= 360.0f)) {
+			g_ikmaxdeg = ikmaxdeg;
+		}
+		else {
+			g_ikmaxdeg = 2.0f;
+		}
+	}
+	else {
+		g_ikmaxdeg = 2.0f;
+	}
+	result17 = Read_Int(xmlbuf, "<PosConstTimes>", "</PosConstTimes>", &iktargettimes);
+	if (result17 == 0) {
+		if ((iktargettimes >= 1) && (iktargettimes <= 5000)) {
+			g_iktargettimes = iktargettimes;
+		}
+		else {
+			g_iktargettimes = 100;
+		}
+	}
+	else {
+		g_iktargettimes = 100;
+	}
+
 /*
 	CallF(Write2File("    <AmbientFactorAtLoading>%f</AmbientFactorAtLoading>\r\n", g_AmbientFactorAtLoading), return 1);
 	CallF(Write2File("    <DiffuseFactorAtLoading>%f</DiffuseFactorAtLoading>\r\n", g_DiffuseFactorAtLoading), return 1);
@@ -384,6 +433,10 @@ int CIniFile::ReadIniInfo(XMLIOBUF* xmlbuf )
 	CallF(Write2File("    <DiffuseFactorAtLoading>%f</DiffuseFactorAtSaving>\r\n", g_AmbientFactorAtSaving), return 1);
 	CallF(Write2File("    <SpecularFactorAtLoading>%f</SpecularFactorAtSaving>\r\n", g_AmbientFactorAtSaving), return 1);
 	CallF(Write2File("    <EmissiveFactorAtLoading>%f</EmissiveFactorAtSaving>\r\n", g_AmbientFactorAtSaving), return 1);
+
+	CallF(Write2File("    <IKRate>%f</IKRate>\r\n", g_ikrate), return 1);
+	CallF(Write2File("    <IKMaxDeg>%f</IKMaxDeg>\r\n", g_ikmaxdeg), return 1);
+	CallF(Write2File("    <PosConstTimes>%d</PosConstTimes>\r\n", g_iktargettimes), return 1);
 */
 	return 0;
 }
