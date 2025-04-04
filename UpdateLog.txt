@@ -2,6 +2,12 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/04/05
+　OWP_EditBox修正
+　　ソフトキーウインドウ右下のXを押さないで　他のエディットボックスをクリックした場合にも
+　　選択変更前のエディットボックスの入力値をアプライするためにcallExitDialogListenerを呼ぶ
+
+
 2025/03/30
 　プレートメニューから呼び出されるダイアログのApplyボタンを無くしました
 　　EditBoxへの入力数値適用タイミングをEditBoxの右下のXボタンを押したときに変更(今までは別ボタンとしてのApplyボタンを押したタイミングだった)

@@ -2023,6 +2023,19 @@ namespace OrgWinGUI{
 				(this->buttonListener)();
 			}
 
+
+
+			//2025/04/05
+			//ソフトキーウインドウ右下のXを押さないで　他のエディットボックスをクリックした場合
+			//選択変更前のエディットボックスの入力値をアプライするためにcallExitDialogListenerを呼ぶ
+			if (s_psoftalnumWnd && s_psoftalnumkey && getParent() && s_psoftalnumkey->getEditBox()) {
+				s_psoftalnumkey->getEditBox()->callExitDialogListener();
+			}
+			if (s_psoftnumWnd && s_psoftnumkey && getParent() && s_psoftnumkey->getEditBox()) {
+				s_psoftnumkey->getEditBox()->callExitDialogListener();
+			}
+
+
 			buttonPush = true;
 
 			if (onlynumflag) {

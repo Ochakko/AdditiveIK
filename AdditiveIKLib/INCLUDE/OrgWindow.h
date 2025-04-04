@@ -4195,6 +4195,9 @@ void s_dummyfunc()
 		void setEditBox(OWP_EditBox* srceditbox) {
 			peditbox = srceditbox;
 		}
+		OWP_EditBox* getEditBox() {
+			return peditbox;
+		}
 	private:
 		////////////////////////// MemberVar /////////////////////////////
 
@@ -4527,6 +4530,10 @@ void s_dummyfunc()
 		void setEditBox(OWP_EditBox* srceditbox) {
 			peditbox = srceditbox;
 		}
+		OWP_EditBox* getEditBox() {
+			return peditbox;
+		}
+
 	private:
 		////////////////////////// MemberVar /////////////////////////////
 
