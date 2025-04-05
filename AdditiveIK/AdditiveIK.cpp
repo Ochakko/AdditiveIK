@@ -11112,8 +11112,8 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 				s_appFolder,
 				localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 			HANDLE hfile;
-			hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
-				FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+			hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
+				FILE_ATTRIBUTE_NORMAL, NULL);
 			if (hfile != INVALID_HANDLE_VALUE) {
 				//int pathlen;
 				//pathlen = (int)wcslen(saveprojpath);
@@ -11122,6 +11122,9 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 					DWORD writelen = 0;
 					WriteFile(hfile, fbxpath0, (DWORD)(savepathlen * sizeof(WCHAR)), &writelen, NULL);
 					_ASSERT((savepathlen * sizeof(WCHAR)) == writelen);
+					FlushFileBuffers(hfile);
+					SetEndOfFile(hfile);
+					Sleep(100);
 				}
 				CloseHandle(hfile);
 			}
@@ -19082,8 +19085,8 @@ int SaveProject()
 				s_appFolder,
 				localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 			HANDLE hfile;
-			hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
-				FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+			hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
+				FILE_ATTRIBUTE_NORMAL, NULL);
 			if (hfile != INVALID_HANDLE_VALUE) {
 				//int pathlen;
 				//pathlen = (int)wcslen(saveprojpath);
@@ -19092,6 +19095,9 @@ int SaveProject()
 					DWORD writelen = 0;
 					WriteFile(hfile, saveprojpath, (DWORD)(savepathlen * sizeof(WCHAR)), &writelen, NULL);
 					_ASSERT((savepathlen * sizeof(WCHAR)) == writelen);
+					FlushFileBuffers(hfile);
+					SetEndOfFile(hfile);
+					Sleep(100);
 				}
 				CloseHandle(hfile);
 			}
@@ -19328,8 +19334,7 @@ int OpenChaFile()
 	//g_tmpmqopathはプロジェクト読み込み時にプロジェクトファイル内に記述されているファイル名に変わっていくので先に保存しておく。
 	WCHAR saveprojpath[MAX_PATH] = { 0L };
 	wcscpy_s(saveprojpath, MAX_PATH, g_tmpmqopath);
-
-	//先に履歴を保存する。chaファイルだけ。
+	//履歴を保存する。chaファイルだけ。
 	size_t savepathlen;
 	saveprojpath[MAX_PATH - 1] = 0L;
 	savepathlen = wcslen(saveprojpath);
@@ -19344,8 +19349,8 @@ int OpenChaFile()
 				s_appFolder,
 				localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 			HANDLE hfile;
-			hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
-				FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+			hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
+				FILE_ATTRIBUTE_NORMAL, NULL);
 			if (hfile != INVALID_HANDLE_VALUE) {
 				//int pathlen;
 				//pathlen = (int)wcslen(saveprojpath);
@@ -19353,6 +19358,9 @@ int OpenChaFile()
 					DWORD writelen = 0;
 					WriteFile(hfile, saveprojpath, (DWORD)(savepathlen * sizeof(WCHAR)), &writelen, NULL);
 					_ASSERT((savepathlen * sizeof(WCHAR)) == writelen);
+					FlushFileBuffers(hfile);
+					SetEndOfFile(hfile);
+					Sleep(100);
 				}
 				CloseHandle(hfile);
 			}
@@ -19455,8 +19463,8 @@ int OpenChaFile()
 
 	PostOpenChaFile();//2024/04/17 常駐スライダーなどにchaファイル読込値を反映する
 
-	SetCursor(oldcursor);
 
+	SetCursor(oldcursor);
 
 	//ChangeCurrentBone();
 
@@ -38296,8 +38304,8 @@ int SaveRtgHistory(WCHAR* selectname)
 		s_appFolder,
 		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 	HANDLE hfile;
-	hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
-		FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+	hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hfile != INVALID_HANDLE_VALUE) {
 		//int pathlen;
 		//pathlen = (int)wcslen(saveprojpath);
@@ -38305,6 +38313,9 @@ int SaveRtgHistory(WCHAR* selectname)
 			DWORD writelen = 0;
 			WriteFile(hfile, saveprojpath, (DWORD)(savepathlen * sizeof(WCHAR)), &writelen, NULL);
 			_ASSERT((savepathlen * sizeof(WCHAR)) == writelen);
+			FlushFileBuffers(hfile);
+			SetEndOfFile(hfile);
+			Sleep(100);
 		}
 		CloseHandle(hfile);
 	}
@@ -38331,8 +38342,8 @@ int Savebvh2FBXHistory(WCHAR* selectname)
 		s_appFolder,
 		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 	HANDLE hfile;
-	hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
-		FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+	hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hfile != INVALID_HANDLE_VALUE) {
 		//int pathlen;
 		//pathlen = (int)wcslen(saveprojpath);
@@ -38340,6 +38351,9 @@ int Savebvh2FBXHistory(WCHAR* selectname)
 			DWORD writelen = 0;
 			WriteFile(hfile, saveprojpath, (DWORD)(savepathlen * sizeof(WCHAR)), &writelen, NULL);
 			_ASSERT((savepathlen * sizeof(WCHAR)) == writelen);
+			FlushFileBuffers(hfile);
+			SetEndOfFile(hfile);
+			Sleep(100);
 		}
 		CloseHandle(hfile);
 	}
@@ -38365,8 +38379,8 @@ int SaveBatchHistory(WCHAR* selectname)
 		s_appFolder,
 		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 	HANDLE hfile;
-	hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
-		FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+	hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hfile != INVALID_HANDLE_VALUE) {
 		//int pathlen;
 		//pathlen = (int)wcslen(saveprojpath);
@@ -38374,6 +38388,9 @@ int SaveBatchHistory(WCHAR* selectname)
 			DWORD writelen = 0;
 			WriteFile(hfile, saveprojpath, (DWORD)(savepathlen * sizeof(WCHAR)), &writelen, NULL);
 			_ASSERT((savepathlen * sizeof(WCHAR)) == writelen);
+			FlushFileBuffers(hfile);
+			SetEndOfFile(hfile);
+			Sleep(100);
 		}
 		CloseHandle(hfile);
 	}
@@ -38544,7 +38561,7 @@ int GetchaHistoryDir(std::vector<wstring>& dstvecopenfilename, int filter_cha)
 
 			HANDLE hfile;
 			hfile = CreateFileW(openfilename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-				FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+				FILE_ATTRIBUTE_NORMAL, NULL);
 			if (hfile != INVALID_HANDLE_VALUE) {
 				WCHAR readwstr[MAX_PATH] = { 0L };
 				DWORD readleng = 0;
@@ -38708,7 +38725,7 @@ int GetRtgHistoryDir(std::vector<wstring>& dstvecopenfilename)
 
 			HANDLE hfile;
 			hfile = CreateFileW(openfilename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-				FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+				FILE_ATTRIBUTE_NORMAL, NULL);
 			if (hfile != INVALID_HANDLE_VALUE) {
 				WCHAR readwstr[MAX_PATH] = { 0L };
 				readwstr[0L] = { 0L };
@@ -38857,7 +38874,7 @@ int GetbvhHistoryDir(std::vector<wstring>& dstvecopenfilename)
 
 			HANDLE hfile;
 			hfile = CreateFileW(openfilename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-				FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+				FILE_ATTRIBUTE_NORMAL, NULL);
 			if (hfile != INVALID_HANDLE_VALUE) {
 				WCHAR readwstr[MAX_PATH] = { 0L };
 				readwstr[0L] = { 0L };
@@ -39091,7 +39108,7 @@ int GetBatchHistoryDir(WCHAR* dstname, int dstlen)
 
 			HANDLE hfile;
 			hfile = CreateFileW(openfilename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-				FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+				FILE_ATTRIBUTE_NORMAL, NULL);
 			if (hfile != INVALID_HANDLE_VALUE) {
 				WCHAR readwstr[MAX_PATH] = { 0L };
 				DWORD readleng = 0;
@@ -39496,8 +39513,8 @@ int WriteCPTFile(WCHAR* dstfilename)
 		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
 
 
-	HANDLE hfile = CreateFile(cptfilename, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
-		FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+	HANDLE hfile = CreateFile(cptfilename, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hfile == INVALID_HANDLE_VALUE) {
 		DbgOut(L"CPTFile : WriteCPTFile : file open error !!!\n");
 		_ASSERT(0);
@@ -39609,6 +39626,7 @@ int WriteCPTFile(WCHAR* dstfilename)
 
 	FlushFileBuffers(hfile);
 	SetEndOfFile(hfile);
+	Sleep(100);
 	CloseHandle(hfile);
 
 
@@ -39728,8 +39746,8 @@ int WriteCPIFile(CModel* srcmodel, MOTINFO* curmi, WCHAR* srccptfilename)
 	wcscat_s(cpifilename, MAX_PATH, L".cpi");
 
 
-	HANDLE hfile = CreateFile(cpifilename, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
-		FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+	HANDLE hfile = CreateFile(cpifilename, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hfile == INVALID_HANDLE_VALUE) {
 		DbgOut(L"CPTFile : WriteCPTFile : file open error !!!\n");
 		_ASSERT(0);
@@ -39769,6 +39787,7 @@ int WriteCPIFile(CModel* srcmodel, MOTINFO* curmi, WCHAR* srccptfilename)
 
 	FlushFileBuffers(hfile);
 	SetEndOfFile(hfile);
+	Sleep(100);
 	CloseHandle(hfile);
 
 	return 0;
@@ -39946,7 +39965,7 @@ int LoadCPIFile(HISTORYELEM* srcdstelem)
 
 	HANDLE hfile;
 	hfile = CreateFile(cpifilename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-		FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+		FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hfile == INVALID_HANDLE_VALUE) {
 		//_ASSERT(0);
 		srcdstelem->hascpinfo = 0;
@@ -40084,7 +40103,7 @@ bool LoadCPTFile(CModel* srcmodel)
 
 	HANDLE hfile;
 	hfile = CreateFile(infilename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-		FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+		FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hfile == INVALID_HANDLE_VALUE) {
 		_ASSERT(0);
 		return false;
