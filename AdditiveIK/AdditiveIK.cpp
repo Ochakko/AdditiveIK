@@ -186,7 +186,6 @@ using namespace std;
 //#define ANGLEDLGEDITLEN	256
 
 
-
 enum {//OnCameraAnimMouseMove()
 	CAMERAANIMEDIT_NONE,
 	CAMERAANIMEDIT_ROT,
@@ -2498,10 +2497,23 @@ static int BVH2FBX();
 static void FindF(std::vector<wstring>& out, const wstring& directory, const wstring& findext);
 static int BVH2FBXBatch();
 static int RetargetBatch();
-static int SaveBatchHistory(WCHAR* selectname);
+
+
+enum {//SaveOpenedNameToHistoryFile
+	HISTORY_CHA,
+	HISTORY_FBX,
+	HISTORY_BVH,
+	HISTORY_RTG,
+	HISTORY_BATCHDIR,
+	HISTORY_MAX
+};
+static int SaveOpenedNameToHistoryFile(int srctype, WCHAR* srcname, int srcleng);//2025/04/06 以下３つの関数とchaファイル用の履歴ファイル保存を１つの関数に.
+//static int SaveBatchHistory(WCHAR* selectname);
+//static int Savebvh2FBXHistory(WCHAR* selectname);
+//static int SaveRtgHistory(WCHAR* selectname);
+
+
 static int GetBatchHistoryDir(WCHAR* dstname, int dstlen);
-static int Savebvh2FBXHistory(WCHAR* selectname);
-static int SaveRtgHistory(WCHAR* selectname);
 static int GetbvhHistoryDir(std::vector<wstring>& dstvecopenfilename);//appfolder
 static int GetchaHistoryDir(std::vector<wstring>& dstvecopenfilename, int filter_cha);//appfolder
 static int GetCPTFileName(std::vector<HISTORYELEM>& dstcptfilename);
@@ -9812,7 +9824,7 @@ int RetargetBatch()
 		target = selectname;
 		findext = L".fbx";
 
-		SaveBatchHistory(selectname);
+		SaveOpenedNameToHistoryFile(HISTORY_BATCHDIR, selectname, MAX_PATH);
 
 		FindF(s_retargetout, target, findext);
 		int outnum = (int)s_retargetout.size();
@@ -10042,7 +10054,7 @@ int BVH2FBXBatch()
 		target = selectname;
 		findext = L".bvh";
 
-		SaveBatchHistory(selectname);
+		SaveOpenedNameToHistoryFile(HISTORY_BATCHDIR, selectname, MAX_PATH);
 
 		FindF(s_bvh2fbxout, target, findext);
 		int outnum = (int)s_bvh2fbxout.size();
@@ -10114,7 +10126,7 @@ int BVH2FBX()
 		return 1;
 	}
 
-	Savebvh2FBXHistory(tmpsavepath);
+	SaveOpenedNameToHistoryFile(HISTORY_BVH, tmpsavepath, MULTIPATH);
 	if (tmpsavepath)
 		delete[] tmpsavepath;
 
@@ -11097,39 +11109,8 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	//############################
 	//############################
 
-		//読み込み処理が成功してから履歴を保存する。fbxファイル。
-	size_t savepathlen;
-	fbxpath0[MAX_PATH - 1] = 0L;
-	savepathlen = wcslen(fbxpath0);
-	if ((savepathlen > 4) && (savepathlen < MAX_PATH)) {
-		WCHAR* pwext;
-		pwext = fbxpath0 + ((size_t)savepathlen - 1) - 3;
-		if (wcscmp(pwext, L".fbx") == 0) {
-			SYSTEMTIME localtime;
-			GetLocalTime(&localtime);
-			WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
-			swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProj_%04u%02u%02u%02u%02u%02u.txt",
-				s_appFolder,
-				localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
-			HANDLE hfile;
-			hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
-				FILE_ATTRIBUTE_NORMAL, NULL);
-			if (hfile != INVALID_HANDLE_VALUE) {
-				//int pathlen;
-				//pathlen = (int)wcslen(saveprojpath);
-				//if ((pathlen > 0) && (pathlen < MAX_PATH)) {
-				if ((savepathlen > 0) && (savepathlen < MAX_PATH)) {
-					DWORD writelen = 0;
-					WriteFile(hfile, fbxpath0, (DWORD)(savepathlen * sizeof(WCHAR)), &writelen, NULL);
-					_ASSERT((savepathlen * sizeof(WCHAR)) == writelen);
-					FlushFileBuffers(hfile);
-					SetEndOfFile(hfile);
-					Sleep(100);
-				}
-				CloseHandle(hfile);
-			}
-		}
-	}
+	//読み込み処理が成功してから履歴を保存する。fbxファイル。
+	SaveOpenedNameToHistoryFile(HISTORY_FBX, fbxpath0, MAX_PATH);
 
 	return newmodel;
 }
@@ -15443,7 +15424,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.41\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.42\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -18244,7 +18225,7 @@ int SaveRetargetFile()
 
 	//履歴を保存
 	if ((result == 0) && (savepath[0] != 0L)) {
-		SaveRtgHistory(savepath);
+		SaveOpenedNameToHistoryFile(HISTORY_RTG, savepath, MULTIPATH);
 	}
 
 
@@ -18341,7 +18322,7 @@ int LoadRetargetFile(WCHAR* srcfilename)
 			}
 		}
 
-		SaveRtgHistory(tmpsavepath);
+		SaveOpenedNameToHistoryFile(HISTORY_RTG, tmpsavepath, MULTIPATH);
 		if (tmpsavepath)
 			delete[] tmpsavepath;
 
@@ -19071,39 +19052,7 @@ int SaveProject()
 
 
 	//書き込み処理が成功してから履歴を保存する。chaファイルだけ。
-	size_t savepathlen;
-	saveprojpath[MAX_PATH - 1] = 0L;
-	savepathlen = wcslen(saveprojpath);
-	if ((savepathlen > 4) && (savepathlen < MAX_PATH)) {
-		WCHAR* pwext;
-		pwext = saveprojpath + ((size_t)savepathlen - 1) - 3;
-		if (wcscmp(pwext, L".cha") == 0) {
-			SYSTEMTIME localtime;
-			GetLocalTime(&localtime);
-			WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
-			swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProj_%04u%02u%02u%02u%02u%02u.txt",
-				s_appFolder,
-				localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
-			HANDLE hfile;
-			hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
-				FILE_ATTRIBUTE_NORMAL, NULL);
-			if (hfile != INVALID_HANDLE_VALUE) {
-				//int pathlen;
-				//pathlen = (int)wcslen(saveprojpath);
-				//if ((pathlen > 0) && (pathlen < MAX_PATH)) {
-				if ((savepathlen > 0) && (savepathlen < MAX_PATH)) {
-					DWORD writelen = 0;
-					WriteFile(hfile, saveprojpath, (DWORD)(savepathlen * sizeof(WCHAR)), &writelen, NULL);
-					_ASSERT((savepathlen * sizeof(WCHAR)) == writelen);
-					FlushFileBuffers(hfile);
-					SetEndOfFile(hfile);
-					Sleep(100);
-				}
-				CloseHandle(hfile);
-			}
-		}
-	}
-
+	SaveOpenedNameToHistoryFile(HISTORY_CHA, saveprojpath, MAX_PATH);
 
 	//2024/06/17 各パネル選択状態がずれないように
 	if (GetCurrentModel()) {
@@ -19335,37 +19284,7 @@ int OpenChaFile()
 	WCHAR saveprojpath[MAX_PATH] = { 0L };
 	wcscpy_s(saveprojpath, MAX_PATH, g_tmpmqopath);
 	//履歴を保存する。chaファイルだけ。
-	size_t savepathlen;
-	saveprojpath[MAX_PATH - 1] = 0L;
-	savepathlen = wcslen(saveprojpath);
-	if ((savepathlen > 4) && (savepathlen < MAX_PATH)) {
-		WCHAR* pwext;
-		pwext = saveprojpath + ((size_t)savepathlen - 1) - 3;
-		if (wcscmp(pwext, L".cha") == 0) {
-			SYSTEMTIME localtime;
-			GetLocalTime(&localtime);
-			WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
-			swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProj_%04u%02u%02u%02u%02u%02u.txt",
-				s_appFolder,
-				localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
-			HANDLE hfile;
-			hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
-				FILE_ATTRIBUTE_NORMAL, NULL);
-			if (hfile != INVALID_HANDLE_VALUE) {
-				//int pathlen;
-				//pathlen = (int)wcslen(saveprojpath);
-				if ((savepathlen > 0) && (savepathlen < MAX_PATH)) {
-					DWORD writelen = 0;
-					WriteFile(hfile, saveprojpath, (DWORD)(savepathlen * sizeof(WCHAR)), &writelen, NULL);
-					_ASSERT((savepathlen * sizeof(WCHAR)) == writelen);
-					FlushFileBuffers(hfile);
-					SetEndOfFile(hfile);
-					Sleep(100);
-				}
-				CloseHandle(hfile);
-			}
-		}
-	}
+	SaveOpenedNameToHistoryFile(HISTORY_CHA, saveprojpath, MAX_PATH);
 
 
 	WCHAR* lasten = 0;
@@ -38288,116 +38207,6 @@ void SetMainWindowTitle()
 }
 
 
-int SaveRtgHistory(WCHAR* selectname)
-{
-	WCHAR saveprojpath[MAX_PATH] = { 0L };
-	wcscpy_s(saveprojpath, MAX_PATH, selectname);
-
-	//書き込み処理が成功してから履歴を保存する。rtgファイル。
-	size_t savepathlen;
-	saveprojpath[MAX_PATH - 1] = 0L;
-	savepathlen = wcslen(saveprojpath);
-	SYSTEMTIME localtime;
-	GetLocalTime(&localtime);
-	WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
-	swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProjRtgDir_%04u%02u%02u%02u%02u%02u.txt",
-		s_appFolder,
-		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
-	HANDLE hfile;
-	hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
-		FILE_ATTRIBUTE_NORMAL, NULL);
-	if (hfile != INVALID_HANDLE_VALUE) {
-		//int pathlen;
-		//pathlen = (int)wcslen(saveprojpath);
-		if ((savepathlen > 0) && (savepathlen < MAX_PATH)) {
-			DWORD writelen = 0;
-			WriteFile(hfile, saveprojpath, (DWORD)(savepathlen * sizeof(WCHAR)), &writelen, NULL);
-			_ASSERT((savepathlen * sizeof(WCHAR)) == writelen);
-			FlushFileBuffers(hfile);
-			SetEndOfFile(hfile);
-			Sleep(100);
-		}
-		CloseHandle(hfile);
-	}
-
-	return 0;
-}
-
-
-
-int Savebvh2FBXHistory(WCHAR* selectname)
-{
-	WCHAR saveprojpath[MAX_PATH] = { 0L };
-	wcscpy_s(saveprojpath, MAX_PATH, selectname);
-
-
-	//書き込み処理が成功してから履歴を保存する。chaファイルだけ。
-	size_t savepathlen;
-	saveprojpath[MAX_PATH - 1] = 0L;
-	savepathlen = wcslen(saveprojpath);
-	SYSTEMTIME localtime;
-	GetLocalTime(&localtime);
-	WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
-	swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProjBvhDir_%04u%02u%02u%02u%02u%02u.txt",
-		s_appFolder,
-		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
-	HANDLE hfile;
-	hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
-		FILE_ATTRIBUTE_NORMAL, NULL);
-	if (hfile != INVALID_HANDLE_VALUE) {
-		//int pathlen;
-		//pathlen = (int)wcslen(saveprojpath);
-		if ((savepathlen > 0) && (savepathlen < MAX_PATH)) {
-			DWORD writelen = 0;
-			WriteFile(hfile, saveprojpath, (DWORD)(savepathlen * sizeof(WCHAR)), &writelen, NULL);
-			_ASSERT((savepathlen * sizeof(WCHAR)) == writelen);
-			FlushFileBuffers(hfile);
-			SetEndOfFile(hfile);
-			Sleep(100);
-		}
-		CloseHandle(hfile);
-	}
-
-	return 0;
-}
-
-
-int SaveBatchHistory(WCHAR* selectname)
-{
-	WCHAR saveprojpath[MAX_PATH] = { 0L };
-	wcscpy_s(saveprojpath, MAX_PATH, selectname);
-
-
-	//書き込み処理が成功してから履歴を保存する。chaファイルだけ。
-	size_t savepathlen;
-	saveprojpath[MAX_PATH - 1] = 0L;
-	savepathlen = wcslen(saveprojpath);
-	SYSTEMTIME localtime;
-	GetLocalTime(&localtime);
-	WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
-	swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProjBatchDir_%04u%02u%02u%02u%02u%02u.txt",
-		s_appFolder,
-		localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
-	HANDLE hfile;
-	hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
-		FILE_ATTRIBUTE_NORMAL, NULL);
-	if (hfile != INVALID_HANDLE_VALUE) {
-		//int pathlen;
-		//pathlen = (int)wcslen(saveprojpath);
-		if ((savepathlen > 0) && (savepathlen < MAX_PATH)) {
-			DWORD writelen = 0;
-			WriteFile(hfile, saveprojpath, (DWORD)(savepathlen * sizeof(WCHAR)), &writelen, NULL);
-			_ASSERT((savepathlen * sizeof(WCHAR)) == writelen);
-			FlushFileBuffers(hfile);
-			SetEndOfFile(hfile);
-			Sleep(100);
-		}
-		CloseHandle(hfile);
-	}
-
-	return 0;
-}
-
 bool FindAtTheLast(std::wstring const& strsource, std::wstring const& strpat) {
 	if (strsource.length() < strpat.length()) {
 		return false;
@@ -47246,4 +47055,109 @@ int ChangeMotionWithGUI(int srcmotid)
 
 	return 0;
 
+}
+
+int SaveOpenedNameToHistoryFile(int srctype, WCHAR* srcname, int srcleng)
+{
+	if ((srctype < 0) || (srctype >= HISTORY_MAX) || 
+		(srcname == nullptr) || (srcleng <= 0) || (srcleng > MULTIPATH)) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	size_t savepathlen;
+	srcname[srcleng - 1] = 0L;
+	savepathlen = wcslen(srcname);
+	if ((savepathlen > 4) && (savepathlen < srcleng)) {
+		SYSTEMTIME localtime;
+		GetLocalTime(&localtime);
+		WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
+		WCHAR* pwext;
+		pwext = srcname + ((size_t)savepathlen - 1) - 3;
+		bool chkext = true;
+
+		switch (srctype) {
+		case HISTORY_CHA:
+			if (wcscmp(pwext, L".cha") == 0) {
+				swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProj_%04u%02u%02u%02u%02u%02u.txt",
+					s_appFolder,
+					localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
+				chkext = true;
+			}
+			else {
+				chkext = false;
+			}
+			break;
+		case HISTORY_FBX:
+			if ((wcscmp(pwext, L".fbx") == 0) || (wcscmp(pwext, L".FBX") == 0)) {
+				swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProj_%04u%02u%02u%02u%02u%02u.txt",
+					s_appFolder,
+					localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
+				chkext = true;
+			}
+			else {
+				chkext = false;
+			}
+			break;
+		case HISTORY_BVH:
+			if (wcscmp(pwext, L".bvh") == 0) {
+				swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProjBvhDir_%04u%02u%02u%02u%02u%02u.txt",
+					s_appFolder,
+					localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
+			}
+			else {
+				chkext = false;
+			}
+			break;
+		case HISTORY_RTG:
+			if (wcscmp(pwext, L".rtg") == 0) {
+				swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProjRtgDir_%04u%02u%02u%02u%02u%02u.txt",
+					s_appFolder,
+					localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
+			}
+			else {
+				chkext = false;
+			}
+			break;
+		case HISTORY_BATCHDIR:
+			swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProjBatchDir_%04u%02u%02u%02u%02u%02u.txt",
+				s_appFolder,
+				localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
+			break;
+		default:
+			chkext = false;
+			break;
+		}
+
+		if (chkext) {
+			HANDLE hfile;
+			hfile = CreateFile(HistoryForOpeningProjectWithGamePad, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
+				FILE_ATTRIBUTE_NORMAL, NULL);
+			if (hfile != INVALID_HANDLE_VALUE) {
+				if ((savepathlen > 0) && (savepathlen < srcleng)) {
+					DWORD writelen = 0;
+					WriteFile(hfile, srcname, (DWORD)(savepathlen * sizeof(WCHAR)), &writelen, NULL);
+					FlushFileBuffers(hfile);
+					SetEndOfFile(hfile);
+					Sleep(100);
+					if ((savepathlen * sizeof(WCHAR)) != writelen) {
+						_ASSERT(0);
+						CloseHandle(hfile);
+						DeleteFile(HistoryForOpeningProjectWithGamePad);
+						return 1;
+					}
+				}
+				CloseHandle(hfile);
+			}
+			else {
+				_ASSERT(0);
+				return 1;
+			}
+		}
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+	return 0;
 }
