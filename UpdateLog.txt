@@ -2,6 +2,13 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/04/12
+　[ToDo]
+　　操作性を改善"したい"
+　　TourBoxNEO(下記リンクのデバイス)を注文. 対応できるかどうか調査"予定".
+　　https://www.tourboxtech.com/jp/
+
+
 2025/04/06
 　AdditiveIK 1.0.0.42 relase
 　　1.0.0.41からの変更点
