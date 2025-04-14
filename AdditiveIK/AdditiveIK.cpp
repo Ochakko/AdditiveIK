@@ -19281,10 +19281,16 @@ int OpenChaFile()
 {
 
 	//g_tmpmqopathはプロジェクト読み込み時にプロジェクトファイル内に記述されているファイル名に変わっていくので先に保存しておく。
-	WCHAR saveprojpath[MAX_PATH] = { 0L };
-	wcscpy_s(saveprojpath, MAX_PATH, g_tmpmqopath);
-	//履歴を保存する。chaファイルだけ。
-	SaveOpenedNameToHistoryFile(HISTORY_CHA, saveprojpath, MAX_PATH);
+	WCHAR saveprojpath[MULTIPATH] = { 0L };
+	ZeroMemory(saveprojpath, sizeof(WCHAR) * MULTIPATH);
+	int savepathlen = (int)wcslen(g_tmpmqopath);
+	if ((savepathlen > 0) && (savepathlen < MULTIPATH)) {
+		wcscpy_s(saveprojpath, MULTIPATH, g_tmpmqopath);
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
 
 
 	WCHAR* lasten = 0;
@@ -19381,6 +19387,10 @@ int OpenChaFile()
 
 
 	PostOpenChaFile();//2024/04/17 常駐スライダーなどにchaファイル読込値を反映する
+
+
+	//履歴を保存する。chaファイルだけ。
+	SaveOpenedNameToHistoryFile(HISTORY_CHA, saveprojpath, MULTIPATH);
 
 
 	SetCursor(oldcursor);
@@ -47060,7 +47070,10 @@ int ChangeMotionWithGUI(int srcmotid)
 int SaveOpenedNameToHistoryFile(int srctype, WCHAR* srcname, int srcleng)
 {
 	if ((srctype < 0) || (srctype >= HISTORY_MAX) || 
-		(srcname == nullptr) || (srcleng <= 0) || (srcleng > MULTIPATH)) {
+		(srcname == nullptr) || (srcleng <= 0) || 
+		(srcleng > MULTIPATH)
+		//(srcleng > MAX_PATH)
+		) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -47072,13 +47085,17 @@ int SaveOpenedNameToHistoryFile(int srctype, WCHAR* srcname, int srcleng)
 		SYSTEMTIME localtime;
 		GetLocalTime(&localtime);
 		WCHAR HistoryForOpeningProjectWithGamePad[MAX_PATH] = { 0L };
-		WCHAR* pwext;
-		pwext = srcname + ((size_t)savepathlen - 1) - 3;
+		ZeroMemory(HistoryForOpeningProjectWithGamePad, sizeof(WCHAR) * MAX_PATH);
+		//WCHAR* pwext;
+		//pwext = srcname + ((size_t)savepathlen - 1) - 3;
 		bool chkext = true;
+		wstring wstrsrcname = srcname;
+
 
 		switch (srctype) {
 		case HISTORY_CHA:
-			if (wcscmp(pwext, L".cha") == 0) {
+			//if (wcscmp(pwext, L".cha") == 0) {
+			if(FindAtTheLast(wstrsrcname, L".cha")) {
 				swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProj_%04u%02u%02u%02u%02u%02u.txt",
 					s_appFolder,
 					localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
@@ -47089,7 +47106,8 @@ int SaveOpenedNameToHistoryFile(int srctype, WCHAR* srcname, int srcleng)
 			}
 			break;
 		case HISTORY_FBX:
-			if ((wcscmp(pwext, L".fbx") == 0) || (wcscmp(pwext, L".FBX") == 0)) {
+			//if ((wcscmp(pwext, L".fbx") == 0) || (wcscmp(pwext, L".FBX") == 0)) {
+			if (FindAtTheLast(wstrsrcname, L".fbx")) {
 				swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProj_%04u%02u%02u%02u%02u%02u.txt",
 					s_appFolder,
 					localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
@@ -47100,7 +47118,8 @@ int SaveOpenedNameToHistoryFile(int srctype, WCHAR* srcname, int srcleng)
 			}
 			break;
 		case HISTORY_BVH:
-			if (wcscmp(pwext, L".bvh") == 0) {
+			//if (wcscmp(pwext, L".bvh") == 0) {
+			if (FindAtTheLast(wstrsrcname, L".bvh")) {
 				swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProjBvhDir_%04u%02u%02u%02u%02u%02u.txt",
 					s_appFolder,
 					localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
@@ -47110,7 +47129,8 @@ int SaveOpenedNameToHistoryFile(int srctype, WCHAR* srcname, int srcleng)
 			}
 			break;
 		case HISTORY_RTG:
-			if (wcscmp(pwext, L".rtg") == 0) {
+			//if (wcscmp(pwext, L".rtg") == 0) {
+			if (FindAtTheLast(wstrsrcname, L".rtg")) {
 				swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProjRtgDir_%04u%02u%02u%02u%02u%02u.txt",
 					s_appFolder,
 					localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
@@ -47140,12 +47160,12 @@ int SaveOpenedNameToHistoryFile(int srctype, WCHAR* srcname, int srcleng)
 					FlushFileBuffers(hfile);
 					SetEndOfFile(hfile);
 					Sleep(100);
-					if ((savepathlen * sizeof(WCHAR)) != writelen) {
-						_ASSERT(0);
-						CloseHandle(hfile);
-						DeleteFile(HistoryForOpeningProjectWithGamePad);
-						return 1;
-					}
+					//if ((savepathlen * sizeof(WCHAR)) != writelen) {
+					//	_ASSERT(0);
+					//	CloseHandle(hfile);
+					//	DeleteFile(HistoryForOpeningProjectWithGamePad);
+					//	return 1;
+					//}
 				}
 				CloseHandle(hfile);
 			}
