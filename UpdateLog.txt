@@ -1,6 +1,24 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2025/04/20
+　TourBoxNEO(https://www.tourboxtech.com/jp/)デバイスのテストをしました
+　　テスト用のPresetをTest/TourBox_Presetフォルダに置きました
+　　テスト用の動作(Test/0_VRoid202406_Cam004フォルダのサンプル読み込みしてテスト)は以下のようにしてみました
+　　　グラフウインドウのカエルボタンを押してBoneモードの場合
+　　　　ダイヤル回転：選択ジョイントY軸回転
+　　　　ノブ回転：選択ジョイントZ軸回転
+　　　　Tourボタン＋ノブ回転：選択ジョイントX軸回転
+　　　グラフウインドウのカエルボタンを押してCameraモードの場合
+　　　　ダイヤル回転：カメラY軸回転
+　　　　ノブ回転：カメラZ軸回転
+　　　　Tourボタン＋ノブ回転：カメラX軸回転
+　　TourBoxのPresetの適用の仕方についてはhttps://www.tourboxtech.com/jp/ のマニュアルをみてください
+
+　　取り急ぎテストまで
+　　続きは次の週末以降に
+　　
+
 2025/04/14
 　ファイルオープン履歴が消える件
 　　バッファ長修正、タイミング修正、拡張子判定部分修正により
