@@ -248,7 +248,7 @@ Smooth平滑化<br>
 　　DDR5-6000 64GB RAM(2025/3/21)<br>
 　　1T SSD(多分足りない　増設予定)<br>
 　　Sony GameController DualSense<br>
-　　TourBoxNEOデバイス[2025/04/12注文] https://www.tourboxtech.com/jp/<br>
+　　TourBoxNEO 左手用デバイス(2025/04/16) https://www.tourboxtech.com/jp/<br>
 2025/2/28までの環境<br>
 　古めの８コアIntelマシン<br>
 　　GeForce RTX 2080 8GB<br>

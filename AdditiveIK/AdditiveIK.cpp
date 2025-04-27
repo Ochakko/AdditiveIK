@@ -186,6 +186,16 @@ using namespace std;
 //#define ANGLEDLGEDITLEN	256
 
 
+
+//s_activewindowkind
+enum {
+	ACTIVEWIN_3D,
+	ACTIVEWIN_TIMELINE,
+	ACTIVEWIN_JOINTTREE,
+	ACTIVEWIN_MAX
+};
+
+
 enum {//OnCameraAnimMouseMove()
 	CAMERAANIMEDIT_NONE,
 	CAMERAANIMEDIT_ROT,
@@ -890,6 +900,7 @@ static int s_selectuserscale = 100;
 
 static int s_onragdollik = 0;
 static int s_physicskind = 0;
+static int s_activewindowkind = ACTIVEWIN_3D;
 static int s_platemenukind = 0;
 static int s_platemenuno = 1;
 
@@ -1033,6 +1044,7 @@ static WCHAR s_strmark[256] = L"LongTimeLine";
 
 bool g_controlkey = false;
 bool g_shiftkey = false;
+bool g_altkey = false;
 bool g_ctrlshiftkeyformb = false;//ForMiddleButton
 static bool s_skey = false;
 static int s_akeycnt = 0;
@@ -3813,6 +3825,7 @@ void InitApp()
 
 	//g_materialbank.InitParams();
 
+	s_activewindowkind = ACTIVEWIN_3D;//2025/04/27
 	s_platemenukind = SPPLATEMENUKIND_DISP;
 	s_platemenuno = 1;
 	s_guiswflag = true;//true : １段目メニュー内容を右ペインに. false : ２段目メニュー内容を右ペインに
@@ -4094,6 +4107,7 @@ void InitApp()
 
 	g_controlkey = false;
 	g_shiftkey = false;
+	g_altkey = false;
 	g_ctrlshiftkeyformb = false;//ForMiddleButton
 	s_skey = false;
 	
@@ -5850,6 +5864,14 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 	static double savetime = 0.0;
 	static double savetooltiptime = 0.0;
 	static int capcnt = 0;
+
+	MoveMemory(g_savekeybuf, g_keybuf, sizeof(BYTE) * 256);
+	g_tb_XPlus = false;
+	g_tb_XMinus = false;
+	g_tb_YPlus = false;
+	g_tb_YMinus = false;
+	g_tb_ZPlus = false;
+	g_tb_ZMinus = false;
 
 	if (ploopstartflag) {
 		*ploopstartflag = 0;
@@ -7644,24 +7666,33 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		}
 	}
 	else if (uMsg == WM_MOUSEWHEEL) {
-		if (((g_keybuf['T'] & 0x80) != 0)) {
+		if (((g_keybuf['T'] & 0x80) != 0) || g_altkey) {
 			if (GetCurrentModel() && (s_curboneno > 0) && ChkEnableIK()) {
 				s_tkeyflag = 1;
 
-				int delta;
-				//if (g_tb_XPlus) {
-				//	delta = 1;
-				//}
-				//else if (g_tb_XMinus) {
-				//	delta = -1;
-				//}
-				//else {
-					delta = GET_WHEEL_DELTA_WPARAM(wParam);
-				//}
+				float twistvalue = 0.5f;
+				float delta;
+				if (g_altkey) {
+					//TourBox
+					float wheelvalue = GET_WHEEL_DELTA_WPARAM(wParam);
+					if (wheelvalue >= 0.0f) {
+						delta = twistvalue;
+					}
+					else {
+						delta = -twistvalue;
+					}
+				}
+				else {
+					delta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
+				}
+				if (g_controlkey) {
+					delta *= 0.25f;
+				}
+
 				s_ikselectmat = s_selm;
 				//s_editmotionflag = GetCurrentModel()->TwistBoneAxisDelta(&s_editrange, s_curboneno, (float)delta, g_iklevel, s_ikcnt, s_ikselectmat);
 				s_editmotionflag = GetCurrentModel()->IKRotateAxisDelta(g_limitdegflag, g_wallscrapingikflag,
-					&s_editrange, PICK_X, s_curboneno, (float)delta, g_iklevel, s_ikcnt, s_ikselectmat);
+					&s_editrange, AXIS_X, s_curboneno, delta, g_iklevel, s_ikcnt, s_ikselectmat);
 
 				//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
 				//UpdateEditedEuler();
@@ -8440,6 +8471,11 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	}
 	else if (uMsg == WM_MBUTTONDOWN) {
 
+		//s_timelinembuttonFlag = true;
+
+		//if ((g_keybuf[VK_MENU] & 0x80) && ((g_savekeybuf[VK_MENU] & 0x80) == 0)) {
+		//	BrushesContextMenu();
+		//}
 	}
 
 	//else if (uMsg == WM_MOUSEMOVE) {
@@ -24707,13 +24743,16 @@ int ChangeToolSpriteMode()
 
 int OnFrameKeyboard()
 {
-	MoveMemory(g_savekeybuf, g_keybuf, sizeof(BYTE) * 256);
-	g_tb_XPlus = false;
-	g_tb_XMinus = false;
-	g_tb_YPlus = false;
-	g_tb_YMinus = false;
-	g_tb_ZPlus = false;
-	g_tb_ZMinus = false;
+	//###################################
+	//#### OnUserFrameMove()にて初期化 ###
+	//###################################
+	//MoveMemory(g_savekeybuf, g_keybuf, sizeof(BYTE) * 256);
+	//g_tb_XPlus = false;
+	//g_tb_XMinus = false;
+	//g_tb_YPlus = false;
+	//g_tb_YMinus = false;
+	//g_tb_ZPlus = false;
+	//g_tb_ZMinus = false;
 
 	ZeroMemory(g_keybuf, sizeof(BYTE) * 256);
 	if (GetKeyboardState((PBYTE)g_keybuf) == FALSE) {
@@ -24728,13 +24767,14 @@ int OnFrameKeyboard()
 	if (!FocusEditWnd()) {
 		//プレートメニュー：スペースキーを押すたびにkind変更. Cキーを押し続けながらスペースキーを押すたびにplate変更.
 		//2023/08/22 以下のメニュー変更にスペースキーを使うので　DXUTの　スペースキーのホットキー機能をコメントアウト
-		if ((g_keybuf[VK_SPACE] & 0x80) && ((g_savekeybuf[VK_SPACE] & 0x80) == 0)) {
-			if (g_keybuf['C'] & 0x80) {
+		if ((g_keybuf[VK_SPACE] & 0x80) && ((g_savekeybuf[VK_SPACE] & 0x80) == 0)) {//TourBox ショートボタンを押す度に
+			if (g_keybuf['C'] & 0x80) {//TourBox 下ボタンを押しながら
 				if (s_plateFlag == false) {
+					s_guiswflag = false;//!!!!2025/04/27
 					s_plateFlag = true;
 				}
 			}
-			else if (g_keybuf['V'] & 0x80) {
+			else if (g_keybuf['V'] & 0x80) {//TourBox 上ボタンを押しながら
 				ChangeToolSpriteMode();
 			}
 			else {
@@ -24746,7 +24786,7 @@ int OnFrameKeyboard()
 
 
 		//マニピュレータ：SHIFTを押している間は非表示
-		if (g_keybuf[VK_SHIFT] & 0x80) {
+		if (g_keybuf[VK_SHIFT] & 0x80) {//TourBox 上ボタン
 			s_dispselect = false;
 		}
 		else {
@@ -24796,17 +24836,90 @@ int OnFrameKeyboard()
 		//		StartBt(GetCurrentModel(), TRUE, 2, 1);
 		//	}
 		//}
-		if ((g_keybuf[VK_CONTROL] & 0x80) || (g_keybuf[VK_CONTROL] == 1)) {
+		if ((g_keybuf[VK_CONTROL] & 0x80)) {//TourBox サイドボタン
 			g_controlkey = true;
 		}
 		else {
 			g_controlkey = false;
 		}
-		if ((g_keybuf[VK_SHIFT] & 0x80) || (g_keybuf[VK_SHIFT] == 1)) {
+
+		if ((g_keybuf[VK_SHIFT] & 0x80)) {//TourBox 上ボタン
 			g_shiftkey = true;
 		}
 		else {
 			g_shiftkey = false;
+		}
+
+
+		//if ((g_keybuf[VK_SHIFT] & 0x80) && ((g_savekeybuf[VK_SHIFT] & 0x80) == 0)) {
+		//	HWND prevactivehwnd = s_3dwnd;
+		//	switch (s_activewindowkind) {
+		//	case ACTIVEWIN_3D:
+		//		prevactivehwnd = s_3dwnd;
+		//		break;
+		//	case ACTIVEWIN_TIMELINE:
+		//		prevactivehwnd = s_LtimelineWnd->getHWnd();
+		//		break;
+		//	case ACTIVEWIN_JOINTTREE:
+		//		prevactivehwnd = s_timelineWnd->getHWnd();
+		//		break;
+		//	default:
+		//		prevactivehwnd = nullptr;
+		//		break;
+		//	}
+		//
+		//	s_activewindowkind++;
+		//	if (s_activewindowkind >= ACTIVEWIN_MAX) {
+		//		s_activewindowkind = ACTIVEWIN_3D;
+		//	}
+		//
+		//	if ((s_3dwnd != nullptr) && (s_LtimelineWnd != nullptr) && (s_timelineWnd != nullptr)) {
+		//		HWND activehwnd = nullptr;
+		//		RECT wndrect;
+		//
+		//		switch (s_activewindowkind) {
+		//		case ACTIVEWIN_3D:
+		//			activehwnd = s_3dwnd;
+		//			break;
+		//		case ACTIVEWIN_TIMELINE:
+		//			activehwnd = s_LtimelineWnd->getHWnd();
+		//			break;
+		//		case ACTIVEWIN_JOINTTREE:
+		//			activehwnd = s_timelineWnd->getHWnd();
+		//			break;
+		//		default:
+		//			activehwnd = nullptr;
+		//			break;
+		//		}
+		//
+		//		if (activehwnd != nullptr) {
+		//			::GetWindowRect(activehwnd, &wndrect);
+		//			WORD cursorx, cursory;
+		//			cursorx = wndrect.left + (wndrect.right - wndrect.left) / 2;
+		//			cursory = wndrect.top + (wndrect.bottom - wndrect.top) / 2;
+		//			SetCursorPos(cursorx, cursory);
+		//			//SetCursorPos(wndrect.left + 25, wndrect.top + 10);
+		//
+		//			LPARAM panallparam;
+		//			panallparam = (cursory << 16) | (cursorx + 25);
+		//			//SendMessage(activehwnd, WM_LBUTTONDOWN, MK_LBUTTON, panallparam);
+		//			//Sleep(10);
+		//			//SendMessage(activehwnd, WM_LBUTTONUP, MK_LBUTTON, panallparam);
+		//
+		//			//SendMessage(activehwnd, WM_ACTIVATE, WA_ACTIVE, (LPARAM)prevactivehwnd);
+		//			SendMessage(activehwnd, WM_ACTIVATE, WA_CLICKACTIVE, (LPARAM)prevactivehwnd);
+		//		}
+		//	}
+		//}
+
+
+
+
+		if ((g_keybuf[VK_MENU] & 0x80)) {//TourBox トールボタン
+			g_altkey = true;
+		}
+		else {
+			g_altkey = false;
 		}
 
 		if (g_keybuf['S'] & 0x80) {
@@ -24818,28 +24931,76 @@ int OnFrameKeyboard()
 
 
 	//TourBox
-		if ((g_keybuf[VK_OEM_COMMA] & 0x80) || (g_keybuf[','] & 0x80)) {// || (g_keybuf[','] == 1)) {
-			g_tb_YPlus = true;
+		if (s_timelinembuttonFlag == false) {//ホイールボタンオフの場合　ジョイントとカメラ操作
+			if ((g_keybuf[VK_OEM_COMMA] & 0x80) || (g_keybuf[','] & 0x80)) {//ダイヤル
+				g_tb_YPlus = true;
+			}
+			else if ((g_keybuf[VK_OEM_PERIOD] & 0x80) || (g_keybuf['.'] & 0x80)) {//ダイヤル
+				g_tb_YMinus = true;
+			}
+			else if ((g_keybuf['O'] & 0x80)) {//ノブ
+				g_tb_ZPlus = true;
+			}
+			else if ((g_keybuf['P'] & 0x80)) {//ノブ
+				g_tb_ZMinus = true;
+			}
+
+			//X回転はスクロールによるホイールメッセージ　
+			//else if ((g_keybuf['N'] & 0x80)) {
+			//	g_tb_XPlus = true;
+			//}
+			//else if ((g_keybuf['M'] & 0x80)) {
+			//	g_tb_XMinus = true;
+			//}
 		}
-		else if ((g_keybuf[VK_OEM_PERIOD] & 0x80) || (g_keybuf['.'] & 0x80)) {// || (g_keybuf['.'] == 1)) {
-			g_tb_YMinus = true;
-		}
-		else if ((g_keybuf['O'] & 0x80)) {// || (g_keybuf['['] == 1)) {
-			g_tb_ZPlus = true;
-		}
-		else if ((g_keybuf['P'] & 0x80)) {// || (g_keybuf[']'] == 1)) {
-			g_tb_ZMinus = true;
-		}
-		else if ((g_keybuf['N'] & 0x80)) {// || (g_keybuf['-'] == 1)) {
-			g_tb_XPlus = true;
-		}
-		else if ((g_keybuf['M'] & 0x80)) {// || (g_keybuf['/'] == 1)) {
-			g_tb_XMinus = true;
+
+		
+		//ApplyFrameの移動　Tourボタン+ノブ
+		if (RoundingTime(g_motionbrush_startframe) != (RoundingTime(g_motionbrush_endframe))) {
+			bool applyFrameMove = false;
+			int deltaApplyFrame = 0;
+			if ((g_keybuf['N'] & 0x80)) {
+				applyFrameMove = true;
+				deltaApplyFrame = -1;
+			}
+			else if ((g_keybuf['M'] & 0x80)) {
+				applyFrameMove = true;
+				deltaApplyFrame = 1;
+			}
+			if (applyFrameMove) {
+				double tempapplyframe = g_motionbrush_applyframe;
+				if ((RoundingTime(tempapplyframe + deltaApplyFrame) >= RoundingTime(g_motionbrush_startframe)) &&
+					(RoundingTime(tempapplyframe + deltaApplyFrame) <= RoundingTime(g_motionbrush_endframe))) {
+
+					g_motionbrush_applyframe = RoundingTime(tempapplyframe + deltaApplyFrame);
+
+
+					double currenttime = g_motionbrush_applyframe;
+					s_owpTimeline->setCurrentTime(currenttime, false);
+					s_owpEulerGraph->setCurrentTime(currenttime, false);//eulergraphとshowpostimeも同期
+
+
+					g_applyrate = (g_motionbrush_applyframe - RoundingTime(g_motionbrush_startframe)) * 100.0 / (RoundingTime(g_motionbrush_endframe) - RoundingTime(g_motionbrush_startframe));
+					if (s_editmotionflag < 0) {//IK中でないとき
+						int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
+						if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
+							_ASSERT(0);
+							::MessageBox(g_mainhwnd, L"致命的なエラーが生じたので終了します。", L"CreateMotionBrush ERROR !!!", MB_OK);
+							PostQuitMessage(result);
+						}
+					}
+
+					//UpdateEditedEuler();
+					refreshEulerGraph();
+				}
+			}
+			//g_playingstart = g_motionbrush_startframe;
+			//g_playingend = g_motionbrush_endframe;
 		}
 
 
 
-		else if ((g_keybuf[VK_NUMPAD1] & 0x80) || (g_keybuf['1'] & 0x80)) {
+		if ((g_keybuf[VK_NUMPAD1] & 0x80) || (g_keybuf['1'] & 0x80)) {
 			g_pickorder = 1;
 		}
 		else if ((g_keybuf[VK_NUMPAD2] & 0x80) || (g_keybuf['2'] & 0x80)) {
@@ -24928,18 +25089,31 @@ int OnFrameKeyboard()
 		//##################
 		//OnTimeLineWheel()
 		//##################
-		if (g_keybuf['A'] & 0x80) {
-			s_akeycnt++;
-		}
-		else {
-			s_akeycnt = 0;
-		}
-		if (g_keybuf['D'] & 0x80) {
-			s_dkeycnt++;
+		if (s_timelinembuttonFlag == true) {
+			if ((g_keybuf['A'] & 0x80)) {// || (g_keybuf['O'] & 0x80)) {
+				s_akeycnt++;
+			}
+			else {
+				s_akeycnt = 0;
+			}
+			if ((g_keybuf['D'] & 0x80)) {// || (g_keybuf['P'] & 0x80)) {
+				s_dkeycnt++;
+			}
+			else {
+				s_dkeycnt = 0;
+			}
 		}
 		else {
 			s_dkeycnt = 0;
 		}
+
+
+		/*if ((g_keybuf[VK_OEM_COMMA] & 0x80) || (g_keybuf[','] & 0x80)) {// || (g_keybuf[','] == 1)) {
+			g_tb_YPlus = true;
+		}
+		else if ((g_keybuf[VK_OEM_PERIOD] & 0x80) || (g_keybuf['.'] & 0x80)) {// || (g_keybuf['.'] == 1)) {
+			g_tb_YMinus = true;
+		}*/
 
 		//if (g_keybuf['1'] & 0x80) {//num
 		//	s_1keycnt++;
@@ -26477,7 +26651,8 @@ int OnFrameMouseButton()
 		OnTimeLineMButtonDown(g_ctrlshiftkeyformb);
 		g_ctrlshiftkeyformb = false;
 	}
-	if (s_timelinewheelFlag || (g_underselectingframe && ((g_keybuf['A'] & 0x80) || (g_keybuf['D'] & 0x80)))) {
+	if (s_timelinewheelFlag || (g_underselectingframe && 
+		((g_keybuf['A'] & 0x80) || (g_keybuf['D'] & 0x80)))) {// || (g_keybuf['O'] & 0x80) || (g_keybuf['P'] & 0x80)))) {
 		//if (s_timelinewheelFlag || (g_underselectingframe == 1) || (g_underselectingframe == 2)) {//wheeldeltaの値は取得後も消えない仕様のためこの条件だと止まらなくなる
 		s_timelinewheelFlag = false;//OnTimeLineWheelの後ろにするとホイールしない？？？
 		OnTimeLineWheel();
@@ -34095,7 +34270,7 @@ int OnTimeLineWheel()
 			int adkeyflag = 0;
 
 			//A D key
-			if (g_keybuf['A'] & 0x80) {
+			if ((g_keybuf['A'] & 0x80)) {// || (g_keybuf['O'] & 0x80)) {
 				adkeyflag = 1;
 				if ((s_akeycnt % 5) == 0) {
 					if (g_controlkey == false) {
@@ -34109,7 +34284,7 @@ int OnTimeLineWheel()
 					delta2 = 0;
 				}
 			}
-			else if (g_keybuf['D'] & 0x80) {
+			else if ((g_keybuf['D'] & 0x80)) {// || (g_keybuf['P'] & 0x80)) {
 				adkeyflag = 1;
 				if ((s_dkeycnt % 5) == 0) {
 					if (g_controlkey == false) {
@@ -34683,24 +34858,33 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	case WM_MOUSEWHEEL:
 	{
-		if (((g_keybuf['T'] & 0x80) != 0)) {
-			if (ChkEnableIK() && GetCurrentModel() && (s_curboneno > 0)) {
+		if (((g_keybuf['T'] & 0x80) != 0) || g_altkey) {
+			if (GetCurrentModel() && (s_curboneno > 0) && ChkEnableIK()) {
 				s_tkeyflag = 1;
 
-				int delta;
-				//if (g_tb_XPlus) {
-				//	delta = 1;
-				//}
-				//else if (g_tb_XMinus) {
-				//	delta = -1;
-				//}
-				//else {
-					delta = GET_WHEEL_DELTA_WPARAM(wParam);
-				//}
+				float twistvalue = 0.5f;
+				float delta;
+				if (g_altkey) {
+					//TourBox
+					float wheelvalue = GET_WHEEL_DELTA_WPARAM(wParam);
+					if (wheelvalue >= 0.0f) {
+						delta = twistvalue;
+					}
+					else {
+						delta = -twistvalue;
+					}
+				}
+				else {
+				delta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
+				}
+				if (g_controlkey){
+					delta *= 0.25f;
+				}
+
 				s_ikselectmat = s_selm;
 				//s_editmotionflag = GetCurrentModel()->TwistBoneAxisDelta(&s_editrange, s_curboneno, (float)delta, g_iklevel, s_ikcnt, s_ikselectmat);
 				s_editmotionflag = GetCurrentModel()->IKRotateAxisDelta(g_limitdegflag, g_wallscrapingikflag,
-					&s_editrange, PICK_X, s_curboneno, (float)delta, g_iklevel, s_ikcnt, s_ikselectmat);
+					&s_editrange, AXIS_X, s_curboneno, delta, g_iklevel, s_ikcnt, s_ikselectmat);
 
 				//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
 				//UpdateEditedEuler();
@@ -35526,7 +35710,9 @@ int OnMouseMoveFunc()
 	}
 
 	//TourBoxNEO ここから
-	else if ((s_curboneno > 0) &&
+	else if ((g_graphicsEngine != nullptr) && 
+		(s_curboneno > 0) &&
+		(g_altkey == false) &&//TourBox : Alt+Wheel->Bone Twist
 		(g_tb_XPlus || g_tb_XMinus || g_tb_YPlus || g_tb_YMinus || g_tb_ZPlus || g_tb_ZMinus)
 		) {
 		if (GetCurrentModel()) {
@@ -35542,17 +35728,18 @@ int OnMouseMoveFunc()
 				s_pickinfo.pickrange = PICKRANGE;
 				s_pickinfo.pickobjno = s_curboneno;//!!!!!!!!!!
 
-				float value = 10.0f;
+				float value = 2.0f;
+				float twistvalue = 0.5f;
 				float deltax = value;
 
 				int buttonflagForIkFunc = PICK_X;
 				if (g_tb_XPlus) {
 					buttonflagForIkFunc = PICK_X;
-					deltax = 1.0f;
+					deltax = twistvalue;
 				}
 				else if (g_tb_XMinus) {
 					buttonflagForIkFunc = PICK_X;
-					deltax = -1.0f;
+					deltax = -twistvalue;
 				}
 				else if (g_tb_YPlus) {
 					buttonflagForIkFunc = PICK_Y;
@@ -35569,6 +35756,10 @@ int OnMouseMoveFunc()
 				else if (g_tb_ZMinus) {
 					buttonflagForIkFunc = PICK_Z;
 					deltax = -value;
+				}
+
+				if (g_controlkey) {
+					deltax *= 0.25f;
 				}
 
 				s_pickinfo.mousebefpos = s_pickinfo.mousepos;

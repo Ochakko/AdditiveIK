@@ -328,7 +328,7 @@ int CXMLIO::Read_Vec3( XMLIOBUF* xmliobuf, const char* startpat, const char* end
 	char* startptr;
 	startptr = strstr( xmliobuf->buf + xmliobuf->pos, startpat );
 	if( !startptr ){
-		_ASSERT( 0 );
+		//_ASSERT( 0 );
 		return 1;
 	}
 	char* endptr;
