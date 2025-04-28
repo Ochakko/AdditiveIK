@@ -1045,11 +1045,15 @@ static WCHAR s_strmark[256] = L"LongTimeLine";
 bool g_controlkey = false;
 bool g_shiftkey = false;
 bool g_altkey = false;
+bool g_spacekey = false;
+bool g_Lkey = false;
+bool g_Ikey = false;
 bool g_ctrlshiftkeyformb = false;//ForMiddleButton
 static bool s_skey = false;
 static int s_akeycnt = 0;
 static int s_dkeycnt = 0;
 static int s_1keycnt = 0;
+
 
 bool g_tb_XPlus = false;
 bool g_tb_XMinus = false;
@@ -1086,7 +1090,7 @@ using namespace OrgWinGUI;
 static ChaMatrix s_inimat;
 static double s_time = 0.0;
 //static double s_difftime = 0.0;
-static int s_ikkind = 0;
+static int s_ikkind = IKKIND_ROTATE;
 static int s_cameraeditkind = 0;//2024/08/05
 
 //PICKRANGEを大きくするとジョイントではなく疑似ボーンドラッグまで可能になるが、マニピュレータのリングのpickが難しくなる
@@ -2547,12 +2551,24 @@ static int ExportFBXFile();
 
 static void refreshTimeline(OWP_Timeline& timeline);
 static int refreshEulerGraph();
-static int AddBoneTra(int kind, float srctra);
+static int AddBoneTra(bool useMT, int kind, float srctra);
 static int AddBoneTra2(ChaVector3 diffvec);
 //static int AddBoneTraPhysics(ChaVector3 diffvec);
 
 static int AddBoneScale(int kind, float srctra);
 static int AddBoneScale2(ChaVector3 diffvec);
+
+static int IKOperateJointAxisDelta(int srcpickkind, float srcdeltax);
+static int IKOperateCameraAxisDelta(int srcpickkind, float srcdeltax);
+
+static int CameraForEditMove(ChaVector3 cammv);
+static int CameraForEditTwist(float deltax);
+static int CameraForEditRotate(float rotxz, float roty);
+static int CameraForEditDist(float deltadist);
+
+static void OnCameraTargetAlways();
+static void OnCameraTargetOnce();
+static void OnCameraTargetManipulator();
 
 static int DispMotionWindow();
 static int DispToolWindow();
@@ -4108,6 +4124,9 @@ void InitApp()
 	g_controlkey = false;
 	g_shiftkey = false;
 	g_altkey = false;
+	g_spacekey = false;
+	g_Lkey = false;
+	g_Ikey = false;
 	g_ctrlshiftkeyformb = false;//ForMiddleButton
 	s_skey = false;
 	
@@ -4326,7 +4345,7 @@ void InitApp()
 
 	g_wallscrapingikflag = 0;
 
-	s_ikkind = 0;
+	s_ikkind = IKKIND_ROTATE;
 	s_cameraeditkind = CAMERAANIMEDIT_NONE;
 
 	//g_wmatDirectSetFlag = false;
@@ -6921,7 +6940,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		//if (curbone && curbone->GetParent()) {
 		//2023/02/08 opeboneにparentをセットするのは　IKRotのときだけ
-		if (curbone && curbone->GetParent(false) && curbone->GetParent(false)->IsSkeleton() && (s_ikkind == 0)) {
+		if (curbone && curbone->GetParent(false) && curbone->GetParent(false)->IsSkeleton() && (s_ikkind == IKKIND_ROTATE)) {
 			opebone = curbone->GetParent(false);
 		}
 		else {
@@ -7690,9 +7709,22 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 
 				s_ikselectmat = s_selm;
-				//s_editmotionflag = GetCurrentModel()->TwistBoneAxisDelta(&s_editrange, s_curboneno, (float)delta, g_iklevel, s_ikcnt, s_ikselectmat);
-				s_editmotionflag = GetCurrentModel()->IKRotateAxisDelta(g_limitdegflag, g_wallscrapingikflag,
-					&s_editrange, AXIS_X, s_curboneno, delta, g_iklevel, s_ikcnt, s_ikselectmat);
+
+				//シングルスレッド　TourBoxから呼び出す用
+				if (g_edittarget == EDITTARGET_BONE && !g_Ikey) {
+					if (ChkEnableIK()) {
+						s_pickinfo.pickobjno = s_curboneno;
+						IKOperateJointAxisDelta(PICK_X, delta);
+						s_pickinfo.pickobjno = -1;
+					}
+				}
+				else if ((g_edittarget == EDITTARGET_CAMERA) || g_Ikey) {
+					IKOperateCameraAxisDelta(PICK_X, delta);
+				}
+				s_befdeltax = delta;
+				s_ikcnt++;
+				s_editmotionflag = -1;//シングルスレッドなので　IK中では無い
+
 
 				//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
 				//UpdateEditedEuler();
@@ -7901,7 +7933,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				int pickikmodeflag = 0;
 				pickikmodeflag = PickSpIkModeSW(ptCursor);
 				if (pickikmodeflag == 1) {
-					s_ikkind = 0;
+					s_ikkind = IKKIND_ROTATE;
 					s_spikmodesw[0].state = true;
 					s_spikmodesw[1].state = false;
 					s_spikmodesw[2].state = false;
@@ -7910,7 +7942,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					pickflag = true;
 				}
 				else if (pickikmodeflag == 2) {
-					s_ikkind = 1;
+					s_ikkind = IKKIND_MOVE;
 					s_spikmodesw[0].state = false;
 					s_spikmodesw[1].state = true;
 					s_spikmodesw[2].state = false;
@@ -7919,7 +7951,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					pickflag = true;
 				}
 				else if (pickikmodeflag == 3) {
-					s_ikkind = 2;
+					s_ikkind = IKKIND_SCALE;
 					s_spikmodesw[0].state = false;
 					s_spikmodesw[1].state = false;
 					s_spikmodesw[2].state = true;
@@ -8555,7 +8587,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		if (g_edittarget != EDITTARGET_CAMERA) {
 			if (ChkEnableIK() && (s_undoFlag == false) && (s_redoFlag == false)) {
 				if (s_oprigflag == 0) {
-					if ((s_ikkind == 0) && (editmotionflag >= 0)) {
+					if ((s_ikkind == IKKIND_ROTATE) && (editmotionflag >= 0)) {
 						if (s_pickinfo.buttonflag == PICK_CENTER) {
 							HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 							s_editmotionflag = GetCurrentModel()->IKRotatePostIK(g_limitdegflag, g_wallscrapingikflag,
@@ -8586,7 +8618,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							ikdoneflag = true;
 						}
 					}
-					else if ((s_ikkind == 1) && (editmotionflag >= 0)) {
+					else if ((s_ikkind == IKKIND_MOVE) && (editmotionflag >= 0)) {
 						if (s_pickinfo.buttonflag == PICK_CENTER) {
 							HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
@@ -11688,13 +11720,13 @@ int UpdateEditedEuler()
 
 
 			int graphkind = 0;
-			if ((s_ikkind == 0) || (s_cameraeditkind == CAMERAANIMEDIT_ROT) || (s_cameraeditkind == CAMERAANIMEDIT_TWIST) || (s_cameraeditkind == CAMERAANIMEDIT_TWISTRESET)) {//回転
+			if ((s_ikkind == IKKIND_ROTATE) || (s_cameraeditkind == CAMERAANIMEDIT_ROT) || (s_cameraeditkind == CAMERAANIMEDIT_TWIST) || (s_cameraeditkind == CAMERAANIMEDIT_TWISTRESET)) {//回転
 				graphkind = 0;
 			}
-			else if ((s_ikkind == 1) || (s_cameraeditkind == CAMERAANIMEDIT_MV) || (s_cameraeditkind == CAMERAANIMEDIT_DIST)) {//移動
+			else if ((s_ikkind == IKKIND_MOVE) || (s_cameraeditkind == CAMERAANIMEDIT_MV) || (s_cameraeditkind == CAMERAANIMEDIT_DIST)) {//移動
 				graphkind = 1;
 			}
-			else if (s_ikkind == 2) {//スケール
+			else if (s_ikkind == IKKIND_SCALE) {//スケール
 				graphkind = 2;
 			}
 
@@ -11983,13 +12015,13 @@ int refreshEulerGraph()
 
 
 				int graphkind = 0;
-				if ((s_ikkind == 0) || (s_cameraeditkind == CAMERAANIMEDIT_ROT) || (s_cameraeditkind == CAMERAANIMEDIT_TWIST) || (s_cameraeditkind == CAMERAANIMEDIT_TWISTRESET)) {//回転
+				if ((s_ikkind == IKKIND_ROTATE) || (s_cameraeditkind == CAMERAANIMEDIT_ROT) || (s_cameraeditkind == CAMERAANIMEDIT_TWIST) || (s_cameraeditkind == CAMERAANIMEDIT_TWISTRESET)) {//回転
 					graphkind = 0;
 				}
-				else if ((s_ikkind == 1) || (s_cameraeditkind == CAMERAANIMEDIT_MV) || (s_cameraeditkind == CAMERAANIMEDIT_DIST)) {//移動
+				else if ((s_ikkind == IKKIND_MOVE) || (s_cameraeditkind == CAMERAANIMEDIT_MV) || (s_cameraeditkind == CAMERAANIMEDIT_DIST)) {//移動
 					graphkind = 1;
 				}
-				else if (s_ikkind == 2) {//スケール
+				else if (s_ikkind == IKKIND_SCALE) {//スケール
 					graphkind = 2;
 				}
 
@@ -12277,7 +12309,7 @@ int ImpulseBonePhysics(ChaVector3 diffvec)
 }
 */
 
-int AddBoneTra(int kind, float srctra)
+int AddBoneTra(bool useMT, int kind, float srctra)
 {
 	if (!GetCurrentModel() || (s_curboneno < 0) && !GetCurrentModel()->GetTopBone()) {
 		return 0;
@@ -12289,10 +12321,18 @@ int AddBoneTra(int kind, float srctra)
 		return 0;
 	}
 
-	GetCurrentModel()->FKBoneTraAxisUnderFK(
-		g_limitdegflag, g_wallscrapingikflag,
-		&s_editrange, s_curboneno, kind, srctra, s_ikselectmat);
-	s_editmotionflag = s_curboneno;
+	if (useMT) {
+		GetCurrentModel()->FKBoneTraAxisUnderFK(
+			g_limitdegflag, g_wallscrapingikflag,
+			&s_editrange, s_curboneno, kind, srctra, s_ikselectmat);
+		s_editmotionflag = s_curboneno;
+	}
+	else {
+		GetCurrentModel()->FKBoneTraAxis(
+			g_limitdegflag, g_wallscrapingikflag,
+			&s_editrange, s_curboneno, kind, srctra, s_ikselectmat);
+		s_editmotionflag = s_curboneno;
+	}
 
 	return 0;
 }
@@ -22519,7 +22559,7 @@ int SetSelectState()
 
 
 	if (s_camtargetdisp == false) {
-		if (s_ikkind == 0) {
+		if (s_ikkind == IKKIND_ROTATE) {
 			s_select->SetDispFlag("ringX", 1);
 			s_select->SetDispFlag("ringY", 1);
 			s_select->SetDispFlag("ringZ", 1);
@@ -22527,7 +22567,7 @@ int SetSelectState()
 			s_select->SetDispFlag("planeY", 1);
 			s_select->SetDispFlag("planeZ", 1);
 		}
-		else if ((s_ikkind == 1) || (s_ikkind == 2)) {
+		else if ((s_ikkind == IKKIND_MOVE) || (s_ikkind == IKKIND_SCALE)) {
 			s_select->SetDispFlag("ringX", 0);
 			s_select->SetDispFlag("ringY", 0);
 			s_select->SetDispFlag("ringZ", 0);
@@ -22605,7 +22645,7 @@ int SetSelectState()
 				colliobjx = s_select->CollisionNoBoneObj_Mouse(&pickinfo, "objX", excludeinvface);
 				colliobjy = s_select->CollisionNoBoneObj_Mouse(&pickinfo, "objY", excludeinvface);
 				colliobjz = s_select->CollisionNoBoneObj_Mouse(&pickinfo, "objZ", excludeinvface);
-				if (s_ikkind == 0) {
+				if (s_ikkind == IKKIND_ROTATE) {
 					colliringx = s_select->CollisionNoBoneObj_Mouse(&pickinfo, "ringX", excludeinvface);
 					colliringy = s_select->CollisionNoBoneObj_Mouse(&pickinfo, "ringY", excludeinvface);
 					colliringz = s_select->CollisionNoBoneObj_Mouse(&pickinfo, "ringZ", excludeinvface);
@@ -23208,7 +23248,7 @@ int SetLTimelineMark(int curboneno)
 			CBone* opebone = GetCurrentModel()->GetBoneByID(curboneno);
 			if (opebone) {
 				CBone* parentbone = opebone->GetParent(false);
-				if (s_ikkind == 0) {
+				if (s_ikkind == IKKIND_ROTATE) {
 					//ikkind がROT(0)の場合はIK　それ以外のMV, SCALEの場合にはFK
 					if (parentbone && parentbone->IsSkeleton()) {
 						opebone = parentbone;
@@ -24765,16 +24805,57 @@ int OnFrameKeyboard()
 	//2023/08/24 Editコントロールに入力中は　キーボードショートカット機能は実行しない
 	//################################################################################
 	if (!FocusEditWnd()) {
+
+		if ((g_keybuf[VK_CONTROL] & 0x80)) {//TourBox サイドボタン
+			g_controlkey = true;
+		}
+		else {
+			g_controlkey = false;
+		}
+		if ((g_keybuf[VK_SHIFT] & 0x80)) {//TourBox トップボタン
+			g_shiftkey = true;
+		}
+		else {
+			g_shiftkey = false;
+		}
+		if ((g_keybuf[VK_MENU] & 0x80)) {//TourBox トールボタン
+			g_altkey = true;
+		}
+		else {
+			g_altkey = false;
+		}
+		if ((g_keybuf[VK_SPACE] & 0x80)) {//TourBox ショートボタン
+			g_spacekey = true;
+		}
+		else {
+			g_spacekey = false;
+		}
+		if (g_keybuf['L'] & 0x80) {//TourBox Tourボタン
+			g_Lkey = true;
+		}
+		else {
+			g_Lkey = false;
+		}
+		if (g_keybuf['I'] & 0x80) {//TourBox 右矢印ボタン
+			g_Ikey = true;
+		}
+		else {
+			g_Ikey = false;
+		}
+
+
+
+
 		//プレートメニュー：スペースキーを押すたびにkind変更. Cキーを押し続けながらスペースキーを押すたびにplate変更.
 		//2023/08/22 以下のメニュー変更にスペースキーを使うので　DXUTの　スペースキーのホットキー機能をコメントアウト
 		if ((g_keybuf[VK_SPACE] & 0x80) && ((g_savekeybuf[VK_SPACE] & 0x80) == 0)) {//TourBox ショートボタンを押す度に
-			if (g_keybuf['C'] & 0x80) {//TourBox 下ボタンを押しながら
+			if (g_keybuf['C'] & 0x80) {//TourBox 下矢印ボタンを押しながら
 				if (s_plateFlag == false) {
 					s_guiswflag = false;//!!!!2025/04/27
 					s_plateFlag = true;
 				}
 			}
-			else if (g_keybuf['V'] & 0x80) {//TourBox 上ボタンを押しながら
+			else if (g_keybuf['V'] & 0x80) {//TourBox 上矢印ボタンを押しながら
 				ChangeToolSpriteMode();
 			}
 			else {
@@ -24786,7 +24867,7 @@ int OnFrameKeyboard()
 
 
 		//マニピュレータ：SHIFTを押している間は非表示
-		if (g_keybuf[VK_SHIFT] & 0x80) {//TourBox 上ボタン
+		if (g_keybuf[VK_SHIFT] & 0x80) {//TourBox トップボタン
 			s_dispselect = false;
 		}
 		else {
@@ -24836,20 +24917,59 @@ int OnFrameKeyboard()
 		//		StartBt(GetCurrentModel(), TRUE, 2, 1);
 		//	}
 		//}
-		if ((g_keybuf[VK_CONTROL] & 0x80)) {//TourBox サイドボタン
-			g_controlkey = true;
-		}
-		else {
-			g_controlkey = false;
-		}
 
-		if ((g_keybuf[VK_SHIFT] & 0x80)) {//TourBox 上ボタン
-			g_shiftkey = true;
-		}
-		else {
-			g_shiftkey = false;
-		}
 
+		if ((g_keybuf[VK_SHIFT] & 0x80) && ((g_savekeybuf[VK_SHIFT] & 0x80) == 0)) {//TourBox 上ボタン押す度に IKKINDを変更
+			s_ikkind++;
+			if (s_ikkind >= IKKIND_MAX) {
+				s_ikkind = IKKIND_ROTATE;
+			}
+
+			switch (s_ikkind) {
+			case IKKIND_ROTATE:
+				s_spikmodesw[0].state = true;
+				s_spikmodesw[1].state = false;
+				s_spikmodesw[2].state = false;
+				break;
+			case IKKIND_MOVE:
+				s_spikmodesw[0].state = false;
+				s_spikmodesw[1].state = true;
+				s_spikmodesw[2].state = false;
+				break;
+			case IKKIND_SCALE:
+				s_spikmodesw[0].state = false;
+				s_spikmodesw[1].state = false;
+				s_spikmodesw[2].state = true;
+				break;
+			default:
+				_ASSERT(0);
+				break;
+			}
+			SetLTimelineMark(s_curboneno);//グラフの操作ジョイント名表示も
+			refreshEulerGraph();
+		}
+		
+		//TourBox
+		if ((g_keybuf['T'] & 0x80) && ((g_savekeybuf['T'] & 0x80) == 0)) {//TourBox ノブボタンを押す
+			//Always Lock to Selected Joint.
+			s_camtargetflag = (s_camtargetflag == 0) ? 1 : 0;
+			if (s_sidemenu_sellock) {
+				s_sidemenu_sellock->setValue(s_camtargetflag, true);
+			}
+		}
+		//TourBox
+		if ((g_keybuf['Y'] & 0x80) && ((g_savekeybuf['Y'] & 0x80) == 0)) {//TourBox ダイヤルボタンを押す
+			//Lock to Selected Joint Once.
+			OnCameraTargetOnce();
+		}
+		//TourBox
+		if ((g_keybuf['R'] & 0x80) && ((g_savekeybuf['R'] & 0x80) == 0)) {//TourBox 右矢印＋ノブボタンを押す
+			//Lock to Manipulator
+			s_camtargetdisp = (s_camtargetdisp == 0) ? 1 : 0;
+			if (s_sidemenu_targetdisp) {
+				s_sidemenu_targetdisp->setValue(s_camtargetdisp, true);
+			}
+		}
 
 		//if ((g_keybuf[VK_SHIFT] & 0x80) && ((g_savekeybuf[VK_SHIFT] & 0x80) == 0)) {
 		//	HWND prevactivehwnd = s_3dwnd;
@@ -24912,16 +25032,6 @@ int OnFrameKeyboard()
 		//	}
 		//}
 
-
-
-
-		if ((g_keybuf[VK_MENU] & 0x80)) {//TourBox トールボタン
-			g_altkey = true;
-		}
-		else {
-			g_altkey = false;
-		}
-
 		if (g_keybuf['S'] & 0x80) {
 			s_skey = true;
 		}
@@ -24930,6 +25040,11 @@ int OnFrameKeyboard()
 		}
 
 
+	//TourBox
+		if (g_keybuf['U'] & 0x80) {//TourBox 左矢印ボタン　アンドゥデータ作成
+			PrepairUndo();
+		}
+		
 	//TourBox
 		if (s_timelinembuttonFlag == false) {//ホイールボタンオフの場合　ジョイントとカメラ操作
 			if ((g_keybuf[VK_OEM_COMMA] & 0x80) || (g_keybuf[','] & 0x80)) {//ダイヤル
@@ -27737,14 +27852,14 @@ int InterpolateMotionFunc(CModel* srcmodel, MOTINFO* curmi)
 		}
 		//if (curbone && curbone->GetParent()) {
 		//2023/02/08 opeboneにparentをセットするのは　IKRotのときだけ
-		if (curbone && curbone->GetParent(false) && curbone->GetParent(false)->IsSkeleton() && (s_ikkind == 0)) {
+		if (curbone && curbone->GetParent(false) && curbone->GetParent(false)->IsSkeleton() && (s_ikkind == IKKIND_ROTATE)) {
 			opebone = curbone->GetParent(false);
 		}
 		else {
 			opebone = curbone;
 		}
 
-		if (s_ikkind == 0) {
+		if (s_ikkind == IKKIND_ROTATE) {
 			interpolatebone = opebone;
 		}
 		else {
@@ -29234,7 +29349,7 @@ bool UnderDragOperation_L()//左ドラッグ中かどうか
 
 
 	if (s_oprigflag == 0) {
-		if ((s_ikkind == 0) && (s_editmotionflag >= 0)) {
+		if ((s_ikkind == IKKIND_ROTATE) && (s_editmotionflag >= 0)) {
 			if (s_pickinfo.buttonflag == PICK_CENTER) {
 				return true;
 			}
@@ -29247,7 +29362,7 @@ bool UnderDragOperation_L()//左ドラッグ中かどうか
 				return true;
 			}
 		}
-		else if ((s_ikkind == 1) && (s_editmotionflag >= 0)) {
+		else if ((s_ikkind == IKKIND_MOVE) && (s_editmotionflag >= 0)) {
 			if (s_pickinfo.buttonflag == PICK_CENTER) {
 				return true;
 			}
@@ -29260,7 +29375,7 @@ bool UnderDragOperation_L()//左ドラッグ中かどうか
 				return true;
 			}
 		}
-		else if ((s_ikkind == 2) && (s_editmotionflag >= 0)) {
+		else if ((s_ikkind == IKKIND_SCALE) && (s_editmotionflag >= 0)) {
 			if (s_pickinfo.buttonflag == PICK_CENTER) {
 				return true;
 			}
@@ -30082,76 +30197,17 @@ int CreateSideMenuWnd()
 
 		if (s_sidemenu_sellock) {
 			s_sidemenu_sellock->setButtonListener([]() {
-				bool value = s_sidemenu_sellock->getValue();
-				if (value) {
-					if (GetCurrentModel()) {
-						int curmotid = GetCurrentModel()->GetCurrentMotID();
-						bool cameraanimflag = GetCurrentModel()->IsCameraMotion(curmotid);
-						if (cameraanimflag) {
-							//jointの位置はjointのモーションに依存するから
-							::MessageBox(s_3dwnd, L"カメラモーション以外を選択してから再試行してください.", L"CurrentMotion is Camera warning",
-								MB_OK | MB_ICONINFORMATION);
-
-							s_sidemenu_sellock->setValue(false, false);
-						}
-						else {
-							s_befLockMatView = s_matView;//2024/06/06
-							s_camtargetflag = true;
-
-							//sellockオンの時はカメラが選択ジョイント中心回転、targetdispオンの時はカメラがマニピュレータ(カメラターゲット位置)中心回転
-							//両方オンにすると分かりずらいので排他選択
-							if (s_sidemenu_targetdisp) {
-								s_sidemenu_targetdisp->setValue(false, false);
-								s_camtargetdisp = false;
-							}
-
-							s_camtargetOnceflag = 1;//2024/06/04  2024/06/06オンの時だけ
-
-						}
-					}
-				}
-				else {
-					s_camtargetflag = false;
-				}
+				OnCameraTargetAlways();
 			});
 		}
 		if (s_sidemenu_sellockOnce) {
 			s_sidemenu_sellockOnce->setButtonListener([]() {
-				if (GetCurrentModel()) {
-					int curmotid = GetCurrentModel()->GetCurrentMotID();
-					bool cameraanimflag = GetCurrentModel()->IsCameraMotion(curmotid);
-					if (cameraanimflag) {
-						//jointの位置はjointのモーションに依存するから
-						::MessageBox(s_3dwnd, L"カメラモーション以外を選択してから再試行してください.", L"CurrentMotion is Camera warning",
-							MB_OK | MB_ICONINFORMATION);
-
-						s_sidemenu_sellock->setValue(false, false);
-					}
-					else {
-						//Once
-						s_befLockMatView = s_matView;
-						s_camtargetOnceflag = 1;
-
-					}
-				}
+				OnCameraTargetOnce();
 			});
 		}
 		if (s_sidemenu_targetdisp) {
 			s_sidemenu_targetdisp->setButtonListener([]() {
-				bool value = s_sidemenu_targetdisp->getValue();
-				if (value) {
-					s_camtargetdisp = true;
-
-					//sellockオンの時はカメラが選択ジョイント中心回転、targetdispオンの時はカメラがマニピュレータ(カメラターゲット位置)中心回転
-					//両方オンにすると分かりずらいので排他選択
-					if (s_sidemenu_sellock) {
-						s_sidemenu_sellock->setValue(false, false);
-						s_camtargetflag = false;
-					}
-				}
-				else {
-					s_camtargetdisp = false;
-				}
+				OnCameraTargetManipulator();
 			});
 		}
 		if (s_sidemenu_moveeyepos) {
@@ -34875,16 +34931,28 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 					}
 				}
 				else {
-				delta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
+					delta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
 				}
 				if (g_controlkey){
 					delta *= 0.25f;
 				}
 
 				s_ikselectmat = s_selm;
-				//s_editmotionflag = GetCurrentModel()->TwistBoneAxisDelta(&s_editrange, s_curboneno, (float)delta, g_iklevel, s_ikcnt, s_ikselectmat);
-				s_editmotionflag = GetCurrentModel()->IKRotateAxisDelta(g_limitdegflag, g_wallscrapingikflag,
-					&s_editrange, AXIS_X, s_curboneno, delta, g_iklevel, s_ikcnt, s_ikselectmat);
+
+				//シングルスレッド　TourBoxから呼び出す用
+				if (g_edittarget == EDITTARGET_BONE && !g_Ikey) {
+					if (ChkEnableIK()) {
+						s_pickinfo.pickobjno = s_curboneno;
+						IKOperateJointAxisDelta(PICK_X, delta);
+						s_pickinfo.pickobjno = -1;
+					}
+				}
+				else if (g_edittarget == EDITTARGET_CAMERA || g_Ikey) {
+					IKOperateCameraAxisDelta(PICK_X, delta);
+				}
+				s_befdeltax = delta;
+				s_ikcnt++;
+				s_editmotionflag = -1;//シングルスレッドなので　IK中では無い
 
 				//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
 				//UpdateEditedEuler();
@@ -35449,7 +35517,7 @@ int OnMouseMoveFunc()
 							//CallF(CalcTargetPos(&targetpos), return 1);
 							int result = CalcTargetPos(&targetpos);
 							if (result == 0) {//2025/03/23 マウスLボタンを押した瞬間にジョイントが動くのを防止
-								if (s_ikkind == 0) {
+								if (s_ikkind == IKKIND_ROTATE) {
 
 									//s_dbgcount++;
 									//if (s_dbgcount >= 60) {
@@ -35463,7 +35531,7 @@ int OnMouseMoveFunc()
 									//UpdateEditedEuler();
 
 								}
-								else if (s_ikkind == 1) {
+								else if (s_ikkind == IKKIND_MOVE) {
 									//ChaVector3 diffvec = targetpos - s_pickinfo.objworld;
 
 									ChaVector3 modelobjworld;
@@ -35473,7 +35541,7 @@ int OnMouseMoveFunc()
 									AddBoneTra2(diffvec);
 									s_editmotionflag = s_curboneno;
 								}
-								else if (s_ikkind == 2) {
+								else if (s_ikkind == IKKIND_SCALE) {
 									//ChaVector3 diffvec = targetpos - s_pickinfo.objworld;
 
 									ChaVector3 modelobjworld;
@@ -35552,7 +35620,7 @@ int OnMouseMoveFunc()
 					}
 					else if (g_edittarget == EDITTARGET_BONE) {
 						if (ChkEnableIK()) {
-							if (s_ikkind == 0) {
+							if (s_ikkind == IKKIND_ROTATE) {
 								s_editmotionflag = GetCurrentModel()->IKRotateAxisDeltaUnderIK(
 									g_limitdegflag, g_wallscrapingikflag,
 									&s_editrange, s_pickinfo.buttonflag, s_pickinfo.pickobjno,
@@ -35561,11 +35629,12 @@ int OnMouseMoveFunc()
 								//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
 								//UpdateEditedEuler();
 							}
-							else if (s_ikkind == 1) {
-								AddBoneTra(s_pickinfo.buttonflag - PICK_X, deltax * 0.1f);
+							else if (s_ikkind == IKKIND_MOVE) {
+								bool useMT = true;
+								AddBoneTra(useMT, s_pickinfo.buttonflag - PICK_X, deltax * 0.1f);
 								s_editmotionflag = s_curboneno;
 							}
-							else if (s_ikkind == 2) {
+							else if (s_ikkind == IKKIND_SCALE) {
 								if (g_shiftkey == false) {
 									AddBoneScale(s_pickinfo.buttonflag - PICK_X, deltax);
 									s_editmotionflag = s_curboneno;
@@ -35581,13 +35650,13 @@ int OnMouseMoveFunc()
 					}
 					else if (g_edittarget == EDITTARGET_CAMERA) {
 						switch (s_ikkind) {
-						case 0:
+						case IKKIND_ROTATE:
 							s_cameraeditkind = CAMERAANIMEDIT_ROT;
 							break;
-						case 1:
+						case IKKIND_MOVE:
 							s_cameraeditkind = CAMERAANIMEDIT_MV;
 							break;
-						case 2:
+						case IKKIND_SCALE:
 							s_cameraeditkind = CAMERAANIMEDIT_DIST;
 							break;
 						default:
@@ -35660,7 +35729,8 @@ int OnMouseMoveFunc()
 								//UpdateEditedEuler();
 							}
 							else if (s_ikkind == 1) {
-								AddBoneTra(buttonflagForIkFunc - PICK_X, deltax * 0.1f);
+								bool useMT = true;
+								AddBoneTra(useMT, buttonflagForIkFunc - PICK_X, deltax * 0.1f);
 								s_editmotionflag = s_curboneno;
 							}
 							else if (s_ikkind == 2) {
@@ -35680,13 +35750,13 @@ int OnMouseMoveFunc()
 					}
 					else if (g_edittarget == EDITTARGET_CAMERA) {
 						switch (s_ikkind) {
-						case 0:
+						case IKKIND_ROTATE:
 							s_cameraeditkind = CAMERAANIMEDIT_ROT;
 							break;
-						case 1:
+						case IKKIND_MOVE:
 							s_cameraeditkind = CAMERAANIMEDIT_MV;
 							break;
-						case 2:
+						case IKKIND_SCALE:
 							s_cameraeditkind = CAMERAANIMEDIT_DIST;
 							break;
 						default:
@@ -35715,6 +35785,10 @@ int OnMouseMoveFunc()
 		(g_altkey == false) &&//TourBox : Alt+Wheel->Bone Twist
 		(g_tb_XPlus || g_tb_XMinus || g_tb_YPlus || g_tb_YMinus || g_tb_ZPlus || g_tb_ZMinus)
 		) {
+
+		static int s_callingcount = 0;
+		s_callingcount++;
+
 		if (GetCurrentModel()) {
 			if (g_previewFlag == 0) {
 
@@ -35729,7 +35803,7 @@ int OnMouseMoveFunc()
 				s_pickinfo.pickobjno = s_curboneno;//!!!!!!!!!!
 
 				float value = 2.0f;
-				float twistvalue = 0.5f;
+				float twistvalue = 0.50f;
 				float deltax = value;
 
 				int buttonflagForIkFunc = PICK_X;
@@ -35777,66 +35851,32 @@ int OnMouseMoveFunc()
 
 				if (g_previewFlag == 0) {
 
-					if (g_edittarget == EDITTARGET_MORPH) {
+					if (g_edittarget == EDITTARGET_MORPH && !g_Ikey) {
 						//::MessageBox(s_3dwnd, L"EdittingMorph mode now. \nClick red frog and change graph mode!",
 						//	L"Current mode is not for editing BoneMotion.", MB_OK);
 						OutputToInfoWnd(INFOCOLOR_WARNING, L"### EdittingMorph mode now. ###");
 						OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change graph mode! ###");
 					}
-					else if (g_edittarget == EDITTARGET_BONE) {
+					else if (g_edittarget == EDITTARGET_BONE && !g_Ikey) {
 						if (ChkEnableIK()) {
-							if (s_ikkind == 0) {
-								s_editmotionflag = GetCurrentModel()->IKRotateAxisDelta(//!!!! UnderIK()ではない
-									g_limitdegflag, g_wallscrapingikflag,
-									&s_editrange, buttonflagForIkFunc - PICK_X, s_pickinfo.pickobjno,
-									deltax, g_iklevel, s_ikcnt, s_ikselectmat);
-
-								//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
-								//UpdateEditedEuler();
-							}
-							else if (s_ikkind == 1) {
-								AddBoneTra(buttonflagForIkFunc - PICK_X, deltax * 0.1f);
-								s_editmotionflag = s_curboneno;
-							}
-							else if (s_ikkind == 2) {
-								if (g_shiftkey) {
-									AddBoneScale(buttonflagForIkFunc - PICK_X, deltax);
-									s_editmotionflag = s_curboneno;
+							CBone* chkbone = GetCurrentModel()->GetBoneByID(s_curboneno);
+							if (chkbone && chkbone->IsHipsBone()) {
+								if ((s_callingcount % 3) == 0) {//Hipsジョイント編集を　シングルスレッドで実行すると重くて待ちが長いので　3回に１回だけ実行
+									s_editmotionflag = IKOperateJointAxisDelta(buttonflagForIkFunc, deltax);
 								}
-								else {
-									//2024/01/30 
-									//shiftキーを押しながらX,Y,ZどれかのスプライトドラッグでPICK_CENTER
-									AddBoneScale(-1, deltax);
-									s_editmotionflag = s_curboneno;
-								}
-
 							}
-							UpdateEditedEuler();
+							else {
+								s_editmotionflag = IKOperateJointAxisDelta(buttonflagForIkFunc, deltax);
+							}
 						}
 					}
-					else if (g_edittarget == EDITTARGET_CAMERA) {
-						switch (s_ikkind) {
-						case 0:
-							s_cameraeditkind = CAMERAANIMEDIT_ROT;
-							break;
-						case 1:
-							s_cameraeditkind = CAMERAANIMEDIT_MV;
-							break;
-						case 2:
-							s_cameraeditkind = CAMERAANIMEDIT_DIST;
-							break;
-						default:
-							_ASSERT(0);
-							s_cameraeditkind = CAMERAANIMEDIT_ROT;
-							break;
-						}
-						deltax *= 0.10f;
-
-						OnCameraAnimMouseMove(s_cameraeditkind, buttonflagForIkFunc, deltax);
+					else if (g_edittarget == EDITTARGET_CAMERA || g_Ikey) {
+						IKOperateCameraAxisDelta(buttonflagForIkFunc, deltax);
 					}
 
 					s_befdeltax = deltax;
 					s_ikcnt++;
+					s_editmotionflag = -1;//シングルスレッドなので　IK中では無い
 				}
 
 				s_pickinfo.pickobjno = -1;//!!!!!!!!!!
@@ -35847,6 +35887,7 @@ int OnMouseMoveFunc()
 				}
 			}
 		}
+
 	}
 //TourBoxNEO ここまで
 
@@ -35868,39 +35909,7 @@ int OnMouseMoveFunc()
 		}
 		cammv *= g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
 
-		if (g_edittarget != EDITTARGET_CAMERA) {
-			if (s_spcameramode.state) {
-				OutputToInfoWnd(INFOCOLOR_WARNING, L"### PlayingCameraAnim mode now. ###");
-				OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change to CameraEditMode or Off CameraAnimSwitch! ###");
-			}
-			else {
-				ChaMatrix invmatView;
-				invmatView = ChaMatrixInv(s_matView);
-				ChaVector3 camdirx, camdiry;
-				camdirx.SetParams(invmatView.data[MATI_11], invmatView.data[MATI_12], invmatView.data[MATI_13]);
-				camdiry.SetParams(invmatView.data[MATI_21], invmatView.data[MATI_22], invmatView.data[MATI_23]);
-				ChaVector3Normalize(&camdirx, &camdirx);
-				ChaVector3Normalize(&camdiry, &camdiry);
-				ChaVector3 movevec = camdirx * cammv.x + camdiry * cammv.y;
-
-				g_befcamEye = g_camEye;
-				g_befcamtargetpos = g_camtargetpos;
-
-				g_camEye = g_camEye + movevec;
-				g_camtargetpos = g_camtargetpos + movevec;
-
-				ChaVector3 diffv;
-				diffv = g_camtargetpos - g_camEye;
-				g_camdist = (float)ChaVector3LengthDbl(&diffv);
-			}
-		}
-		else {
-			OnCameraAnimMouseMove(CAMERAANIMEDIT_MV, PICK_X, cammv.x);
-			OnCameraAnimMouseMove(CAMERAANIMEDIT_MV, PICK_Y, cammv.y);
-		}
-
-		SetCamera3DFromEyePos();
-
+		CameraForEditMove(cammv);
 	}
 	else if (s_twistcameraFlag) {
 		s_pickinfo.mousebefpos = s_pickinfo.mousepos;
@@ -35915,36 +35924,7 @@ int OnMouseMoveFunc()
 			deltax *= 0.250f;
 		}
 
-		if (g_edittarget != EDITTARGET_CAMERA) {
-			if (s_spcameramode.state) {
-				OutputToInfoWnd(INFOCOLOR_WARNING, L"### PlayingCameraAnim mode now. ###");
-				OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change to CameraEditMode or Off CameraAnimSwitch! ###");
-			}
-			else {
-				ChaVector3 twistaxis;
-				CQuaternion twistq;
-				twistaxis = g_camtargetpos - g_camEye;
-				ChaVector3Normalize(&twistaxis, &twistaxis);
-				twistq.SetAxisAndRot(twistaxis, deltax);
-				ChaVector3 newupvec;
-				twistq.Rotate(&newupvec, g_cameraupdir);
-				ChaVector3Normalize(&newupvec, &newupvec);
-				g_cameraupdir = newupvec;
-
-				g_befcamEye = g_camEye;
-				ChaVector3 diffv;
-				diffv = g_camEye - g_camtargetpos;
-				g_camdist = (float)ChaVector3LengthDbl(&diffv);
-
-				SetCamera3DFromEyePos();
-			}
-		}
-		else {
-			//##################################
-			//g_edittarget == EDITTARGET_CAMERA
-			//##################################
-			OnCameraAnimMouseMove(CAMERAANIMEDIT_TWIST, PICK_Z, deltax);
-		}
+		CameraForEditTwist(deltax);
 	}
 	else if (s_pickinfo.buttonflag == PICK_CAMROT) {
 
@@ -35964,91 +35944,7 @@ int OnMouseMoveFunc()
 			roty *= 0.250f;
 		}
 
-		if (g_edittarget != EDITTARGET_CAMERA) {
-			if (s_spcameramode.state) {
-				OutputToInfoWnd(INFOCOLOR_WARNING, L"### PlayingCameraAnim mode now. ###");
-				OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change to CameraEditMode or Off CameraAnimSwitch! ###");
-			}
-			else {
-				ChaMatrix matview;
-				ChaVector3 weye, wat;
-				weye = g_camEye;
-				wat = g_camtargetpos;
-
-				ChaVector3 viewvec, upvec, rotaxisy, rotaxisxz;
-				viewvec = wat - weye;
-				ChaVector3Normalize(&viewvec, &viewvec);
-				upvec.SetParams(0.000001f, 1.0f, 0.0f);
-
-				float chkdot;
-				chkdot = ChaVector3Dot(&viewvec, &upvec);
-				if (fabs(chkdot) < 0.99965f) {
-					ChaVector3Cross(&rotaxisxz, (const ChaVector3*)&upvec, (const ChaVector3*)&viewvec);
-					ChaVector3Normalize(&rotaxisxz, &rotaxisxz);
-
-					ChaVector3Cross(&rotaxisy, (const ChaVector3*)&viewvec, (const ChaVector3*)&rotaxisxz);
-					ChaVector3Normalize(&rotaxisy, &rotaxisy);
-
-					if (GetCurrentModel() && (s_curboneno >= 0) && s_camtargetflag) {
-						CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
-						_ASSERT(curbone);
-						if (curbone) {
-							g_befcamtargetpos = g_camtargetpos;
-							g_camtargetpos = curbone->GetChildWorld();
-						}
-						else {
-							s_curboneno = -1;
-						}
-					}
-
-					ChaMatrix befrotmat, rotmaty, rotmatxz, aftrotmat;
-					befrotmat.SetIdentity();//2023/02/12
-					aftrotmat.SetIdentity();//2023/02/12
-					rotmaty.SetIdentity();//2023/02/12
-					rotmatxz.SetIdentity();//2023/02/12
-					ChaMatrixTranslation(&befrotmat, -g_camtargetpos.x, -g_camtargetpos.y, -g_camtargetpos.z);
-					ChaMatrixTranslation(&aftrotmat, g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
-					ChaMatrixRotationAxis(&rotmaty, &rotaxisy, rotxz * (float)DEG2PAI);
-					ChaMatrixRotationAxis(&rotmatxz, &rotaxisxz, roty * (float)DEG2PAI);
-
-					ChaMatrix mat;
-					mat = befrotmat * rotmatxz * rotmaty * aftrotmat;
-					ChaVector3 neweye;
-					ChaVector3TransformCoord(&neweye, &weye, &mat);
-
-					g_befcamEye = g_camEye;
-					g_camEye = neweye;
-					//!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-					//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-
-					ChaVector3 diffv;
-					diffv = neweye - g_camtargetpos;
-					g_camdist = (float)ChaVector3LengthDbl(&diffv);
-
-				}
-				else {
-					g_camEye = g_befcamEye;
-					g_camtargetpos = g_befcamtargetpos;
-				}
-
-				SetCamera3DFromEyePos();
-			}
-		}
-		else {
-			if (GetCurrentModel() && (s_curboneno >= 0) && s_camtargetflag) {
-				CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
-				_ASSERT(curbone);
-				if (curbone) {
-					g_befcamtargetpos = g_camtargetpos;
-					g_camtargetpos = curbone->GetChildWorld();
-				}
-				else {
-					s_curboneno = -1;
-				}
-			}
-			OnCameraAnimMouseMove(CAMERAANIMEDIT_ROT, PICK_Y, rotxz);
-			OnCameraAnimMouseMove(CAMERAANIMEDIT_ROT, PICK_X, -roty);
-		}
+		CameraForEditRotate(rotxz, roty);
 	}
 	else if (s_pickinfo.buttonflag == PICK_CAMDIST) {
 		s_pickinfo.mousebefpos = s_pickinfo.mousepos;
@@ -36065,27 +35961,7 @@ int OnMouseMoveFunc()
 		}
 		deltadist *= g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
 
-		if (g_edittarget != EDITTARGET_CAMERA) {
-			if (s_spcameramode.state) {
-				OutputToInfoWnd(INFOCOLOR_WARNING, L"### PlayingCameraAnim mode now. ###");
-				OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change to CameraEditMode or Off CameraAnimSwitch! ###");
-			}
-			else {
-				float newcamdist = g_camdist + deltadist;
-				ChangeCameraDist(newcamdist, true, false);
-			}
-		}
-		else {
-			//int ikkind_translation = 1;
-			//OnCameraAnimMouseMove(ikkind_translation, PICK_Z, deltadist);
-			
-			//2024/07/30
-			//camaradist操作は　カメラが回転していく場合には　回転に応じてカメラ位置を動かす必要がある
-			//よってZ方向の移動ではうまくいかないことが多かった
-			//CameraDist操作専用の関数を呼び出す
-			OnCameraAnimMouseMove(CAMERAANIMEDIT_DIST, PICK_Z, deltadist);//2024/07/30
-		}
-
+		CameraForEditDist(deltadist);
 	}
 
 	s_doingflag = false;
@@ -37242,7 +37118,10 @@ void OnDSUpdate()
 		OnArrowKey();
 		return;//!!!!!
 	}
-
+	else {
+		OnArrowKey();
+	}
+	
 	GetDSValues();
 
 	//ChangeMouseSetCapture();//処理前にキャプチャーをセット
@@ -41135,7 +41014,7 @@ int PickManipulator(UIPICKINFO* ppickinfo, bool pickring)
 		colliobjx = s_select->CollisionNoBoneObj_Mouse(ppickinfo, "objX", excludeinvface);
 		colliobjy = s_select->CollisionNoBoneObj_Mouse(ppickinfo, "objY", excludeinvface);
 		colliobjz = s_select->CollisionNoBoneObj_Mouse(ppickinfo, "objZ", excludeinvface);
-		if ((s_ikkind == 0) || (pickring == true)) {
+		if ((s_ikkind == IKKIND_ROTATE) || (pickring == true)) {
 			colliringx = s_select->CollisionNoBoneObj_Mouse(ppickinfo, "ringX", excludeinvface);
 			colliringy = s_select->CollisionNoBoneObj_Mouse(ppickinfo, "ringY", excludeinvface);
 			colliringz = s_select->CollisionNoBoneObj_Mouse(ppickinfo, "ringZ", excludeinvface);
@@ -41679,7 +41558,7 @@ int FilterFuncDlg()
 					CBone* curbone = 0;
 					curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 					if (curbone) {
-						if ((s_ikkind == 0) && curbone->GetParent(false) && curbone->GetParent(false)->IsSkeleton()) {
+						if ((s_ikkind == IKKIND_ROTATE) && curbone->GetParent(false) && curbone->GetParent(false)->IsSkeleton()) {
 							opebone = curbone->GetParent(false);
 						}
 						else {
@@ -46516,7 +46395,7 @@ CBone* GetEditTargetOpeBone(int* pmotid, int* pframeleng)
 			opebone = GetCurrentModel()->GetBoneByID(s_curboneno);
 			if (opebone) {
 				CBone* parentbone = opebone->GetParent(false);
-				if (s_ikkind == 0) {
+				if (s_ikkind == IKKIND_ROTATE) {
 					//ikkind がROT(0)の場合はIK　それ以外のMV, SCALEの場合にはFK
 					if (parentbone && parentbone->IsSkeleton()) {
 						opebone = parentbone;
@@ -47568,4 +47447,405 @@ int SaveOpenedNameToHistoryFile(int srctype, WCHAR* srcname, int srcleng)
 		return 1;
 	}
 	return 0;
+}
+
+
+int IKOperateJointAxisDelta(int srcpickkind, float srcdeltax)//シングルスレッド　TourBoxから呼び出す用
+{
+
+	int result = -1;
+	if (!GetCurrentModel()) {
+		return -1;
+	}
+
+	if (s_ikkind == IKKIND_ROTATE) {
+		result = GetCurrentModel()->IKRotateAxisDelta(//!!!! UnderIK()ではない
+			g_limitdegflag, g_wallscrapingikflag,
+			&s_editrange, srcpickkind - PICK_X, s_pickinfo.pickobjno,
+			srcdeltax, g_iklevel, s_ikcnt, s_ikselectmat);
+
+		//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
+		//UpdateEditedEuler();
+	}
+	else if (s_ikkind == IKKIND_MOVE) {
+		bool useMT = false;//シングルスレッド
+		AddBoneTra(useMT, srcpickkind - PICK_X, srcdeltax);
+		result = s_curboneno;
+	}
+	else if (s_ikkind == IKKIND_SCALE) {
+		//if (g_shiftkey) {
+		if (g_controlkey) {//2025/04/28 shiftキーは　IKKINDの変更に使用することになったので 軸ごとのスケールはControlキー(TourBoxのサイドボタン)を押しながら
+			AddBoneScale(srcpickkind - PICK_X, srcdeltax);
+			result = s_curboneno;
+		}
+		else {
+			AddBoneScale(-1, srcdeltax);
+			result = s_curboneno;
+		}
+
+	}
+
+	//ChaMatrix tmpwm = GetCurrentModel()->GetWorldMat();
+	//GetCurrentModel()->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
+
+	UpdateEditedEuler();
+
+	return result;
+}
+
+int IKOperateCameraAxisDelta(int srcpickkind, float srcdeltax)//シングルスレッド　TourBoxから呼び出す用
+{
+	int result = -1;
+
+	switch (s_ikkind) {
+	case IKKIND_ROTATE:
+		s_cameraeditkind = CAMERAANIMEDIT_ROT;
+		break;
+	case IKKIND_MOVE:
+		s_cameraeditkind = CAMERAANIMEDIT_MV;
+		break;
+	case IKKIND_SCALE:
+		s_cameraeditkind = CAMERAANIMEDIT_DIST;
+		break;
+	default:
+		_ASSERT(0);
+		s_cameraeditkind = CAMERAANIMEDIT_ROT;
+		break;
+	}
+
+	if (g_edittarget == EDITTARGET_CAMERA) {
+		srcdeltax *= 0.10f;
+		OnCameraAnimMouseMove(s_cameraeditkind, srcpickkind, srcdeltax);
+	}
+	else {
+		if (s_cameraeditkind == CAMERAANIMEDIT_ROT) {
+			if (srcpickkind == PICK_X) {
+				srcdeltax *= 0.10f;
+				CameraForEditTwist(srcdeltax);
+			}
+			else {
+				float rotxz, roty;
+				if (srcpickkind == PICK_Y) {
+					rotxz = 0.0f;
+					roty = srcdeltax;
+					CameraForEditRotate(rotxz, roty);
+				}
+				else if (srcpickkind == PICK_Z) {
+					rotxz = srcdeltax;
+					roty = 0.0f;
+					CameraForEditRotate(rotxz, roty);
+				}
+				else {
+					//上のif分でPICK_X処理をしている
+					_ASSERT(0);
+				}
+			}
+		}
+		else if (s_cameraeditkind == CAMERAANIMEDIT_MV) {
+			s_pickinfo.mousebefpos = s_pickinfo.mousepos;
+			POINT ptCursor;
+			GetCursorPos(&ptCursor);
+			::ScreenToClient(s_3dwnd, &ptCursor);
+			s_pickinfo.mousepos = ptCursor;
+
+			ChaVector3 cammv;
+			if (srcpickkind == PICK_X) {
+				cammv.x = srcdeltax;
+				cammv.y = 0.0f;
+				cammv.z = 0.0f;
+				//if (g_controlkey == true) {
+				//	cammv *= 0.250f;
+				//}
+				cammv *= g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
+				CameraForEditMove(cammv);
+			}
+			else if (srcpickkind == PICK_Y) {
+				cammv.x = 0.0f;
+				cammv.y = srcdeltax;
+				cammv.z = 0.0f;
+				//if (g_controlkey == true) {
+				//	cammv *= 0.250f;
+				//}
+				cammv *= g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
+				CameraForEditMove(cammv);
+			}
+			else {
+				CameraForEditDist(srcdeltax * 2.0f);
+			}
+
+		}
+		else if (s_cameraeditkind == CAMERAANIMEDIT_DIST) {
+			CameraForEditDist(srcdeltax * 2.0f);
+		}
+		else {
+			_ASSERT(0);
+		}
+	}
+
+	return 0;
+}
+
+
+int CameraForEditMove(ChaVector3 cammv)
+{
+	if (g_edittarget != EDITTARGET_CAMERA) {
+		if (s_spcameramode.state) {
+			OutputToInfoWnd(INFOCOLOR_WARNING, L"### PlayingCameraAnim mode now. ###");
+			OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change to CameraEditMode or Off CameraAnimSwitch! ###");
+		}
+		else {
+			ChaMatrix invmatView;
+			invmatView = ChaMatrixInv(s_matView);
+			ChaVector3 camdirx, camdiry;
+			camdirx.SetParams(invmatView.data[MATI_11], invmatView.data[MATI_12], invmatView.data[MATI_13]);
+			camdiry.SetParams(invmatView.data[MATI_21], invmatView.data[MATI_22], invmatView.data[MATI_23]);
+			ChaVector3Normalize(&camdirx, &camdirx);
+			ChaVector3Normalize(&camdiry, &camdiry);
+			ChaVector3 movevec = camdirx * cammv.x + camdiry * cammv.y;
+
+			g_befcamEye = g_camEye;
+			g_befcamtargetpos = g_camtargetpos;
+
+			g_camEye = g_camEye + movevec;
+			g_camtargetpos = g_camtargetpos + movevec;
+
+			ChaVector3 diffv;
+			diffv = g_camtargetpos - g_camEye;
+			g_camdist = (float)ChaVector3LengthDbl(&diffv);
+		}
+	}
+	else {
+		OnCameraAnimMouseMove(CAMERAANIMEDIT_MV, PICK_X, cammv.x);
+		OnCameraAnimMouseMove(CAMERAANIMEDIT_MV, PICK_Y, cammv.y);
+	}
+
+	SetCamera3DFromEyePos();
+
+	return 0;
+}
+
+int CameraForEditTwist(float deltax)
+{
+	if (g_edittarget != EDITTARGET_CAMERA) {
+		if (s_spcameramode.state) {
+			OutputToInfoWnd(INFOCOLOR_WARNING, L"### PlayingCameraAnim mode now. ###");
+			OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change to CameraEditMode or Off CameraAnimSwitch! ###");
+		}
+		else {
+			ChaVector3 twistaxis;
+			CQuaternion twistq;
+			twistaxis = g_camtargetpos - g_camEye;
+			ChaVector3Normalize(&twistaxis, &twistaxis);
+			twistq.SetAxisAndRot(twistaxis, deltax);
+			ChaVector3 newupvec;
+			twistq.Rotate(&newupvec, g_cameraupdir);
+			ChaVector3Normalize(&newupvec, &newupvec);
+			g_cameraupdir = newupvec;
+
+			g_befcamEye = g_camEye;
+			ChaVector3 diffv;
+			diffv = g_camEye - g_camtargetpos;
+			g_camdist = (float)ChaVector3LengthDbl(&diffv);
+
+			SetCamera3DFromEyePos();
+		}
+	}
+	else {
+		//##################################
+		//g_edittarget == EDITTARGET_CAMERA
+		//##################################
+		OnCameraAnimMouseMove(CAMERAANIMEDIT_TWIST, PICK_Z, deltax);
+	}
+
+	return 0;
+}
+
+int CameraForEditRotate(float rotxz, float roty)
+{
+	if (g_edittarget != EDITTARGET_CAMERA) {
+		if (s_spcameramode.state) {
+			OutputToInfoWnd(INFOCOLOR_WARNING, L"### PlayingCameraAnim mode now. ###");
+			OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change to CameraEditMode or Off CameraAnimSwitch! ###");
+		}
+		else {
+			ChaMatrix matview;
+			ChaVector3 weye, wat;
+			weye = g_camEye;
+			wat = g_camtargetpos;
+
+			ChaVector3 viewvec, upvec, rotaxisy, rotaxisxz;
+			viewvec = wat - weye;
+			ChaVector3Normalize(&viewvec, &viewvec);
+			upvec.SetParams(0.000001f, 1.0f, 0.0f);
+
+			float chkdot;
+			chkdot = ChaVector3Dot(&viewvec, &upvec);
+			if (fabs(chkdot) < 0.99965f) {
+				ChaVector3Cross(&rotaxisxz, (const ChaVector3*)&upvec, (const ChaVector3*)&viewvec);
+				ChaVector3Normalize(&rotaxisxz, &rotaxisxz);
+
+				ChaVector3Cross(&rotaxisy, (const ChaVector3*)&viewvec, (const ChaVector3*)&rotaxisxz);
+				ChaVector3Normalize(&rotaxisy, &rotaxisy);
+
+				if (GetCurrentModel() && (s_curboneno >= 0) && s_camtargetflag) {
+					CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
+					_ASSERT(curbone);
+					if (curbone) {
+						g_befcamtargetpos = g_camtargetpos;
+						g_camtargetpos = curbone->GetChildWorld();
+					}
+					else {
+						s_curboneno = -1;
+					}
+				}
+
+				ChaMatrix befrotmat, rotmaty, rotmatxz, aftrotmat;
+				befrotmat.SetIdentity();//2023/02/12
+				aftrotmat.SetIdentity();//2023/02/12
+				rotmaty.SetIdentity();//2023/02/12
+				rotmatxz.SetIdentity();//2023/02/12
+				ChaMatrixTranslation(&befrotmat, -g_camtargetpos.x, -g_camtargetpos.y, -g_camtargetpos.z);
+				ChaMatrixTranslation(&aftrotmat, g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
+				ChaMatrixRotationAxis(&rotmaty, &rotaxisy, rotxz * (float)DEG2PAI);
+				ChaMatrixRotationAxis(&rotmatxz, &rotaxisxz, roty * (float)DEG2PAI);
+
+				ChaMatrix mat;
+				mat = befrotmat * rotmatxz * rotmaty * aftrotmat;
+				ChaVector3 neweye;
+				ChaVector3TransformCoord(&neweye, &weye, &mat);
+
+				g_befcamEye = g_camEye;
+				g_camEye = neweye;
+				//!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
+				//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
+
+				ChaVector3 diffv;
+				diffv = neweye - g_camtargetpos;
+				g_camdist = (float)ChaVector3LengthDbl(&diffv);
+
+			}
+			else {
+				g_camEye = g_befcamEye;
+				g_camtargetpos = g_befcamtargetpos;
+			}
+
+			SetCamera3DFromEyePos();
+		}
+	}
+	else {
+		if (GetCurrentModel() && (s_curboneno >= 0) && s_camtargetflag) {
+			CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
+			_ASSERT(curbone);
+			if (curbone) {
+				g_befcamtargetpos = g_camtargetpos;
+				g_camtargetpos = curbone->GetChildWorld();
+			}
+			else {
+				s_curboneno = -1;
+			}
+		}
+		OnCameraAnimMouseMove(CAMERAANIMEDIT_ROT, PICK_Y, rotxz);
+		OnCameraAnimMouseMove(CAMERAANIMEDIT_ROT, PICK_X, -roty);
+	}
+
+	return 0;
+}
+
+int CameraForEditDist(float deltadist)
+{
+	if (g_edittarget != EDITTARGET_CAMERA) {
+		if (s_spcameramode.state) {
+			OutputToInfoWnd(INFOCOLOR_WARNING, L"### PlayingCameraAnim mode now. ###");
+			OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change to CameraEditMode or Off CameraAnimSwitch! ###");
+		}
+		else {
+			float newcamdist = g_camdist + deltadist;
+			ChangeCameraDist(newcamdist, true, false);
+		}
+	}
+	else {
+		//int ikkind_translation = 1;
+		//OnCameraAnimMouseMove(ikkind_translation, PICK_Z, deltadist);
+
+		//2024/07/30
+		//camaradist操作は　カメラが回転していく場合には　回転に応じてカメラ位置を動かす必要がある
+		//よってZ方向の移動ではうまくいかないことが多かった
+		//CameraDist操作専用の関数を呼び出す
+		OnCameraAnimMouseMove(CAMERAANIMEDIT_DIST, PICK_Z, deltadist);//2024/07/30
+	}
+
+	return 0;
+}
+
+void OnCameraTargetOnce()
+{
+	if (GetCurrentModel()) {
+		int curmotid = GetCurrentModel()->GetCurrentMotID();
+		bool cameraanimflag = GetCurrentModel()->IsCameraMotion(curmotid);
+		if (cameraanimflag) {
+			//jointの位置はjointのモーションに依存するから
+			::MessageBox(s_3dwnd, L"カメラモーション以外を選択してから再試行してください.", L"CurrentMotion is Camera warning",
+				MB_OK | MB_ICONINFORMATION);
+
+			s_sidemenu_sellock->setValue(false, false);
+		}
+		else {
+			//Once　
+			s_befLockMatView = s_matView;
+			s_camtargetOnceflag = 1;
+		}
+	}
+}
+
+void OnCameraTargetAlways()
+{
+	bool value = s_sidemenu_sellock->getValue();
+	if (value) {
+		if (GetCurrentModel()) {
+			int curmotid = GetCurrentModel()->GetCurrentMotID();
+			bool cameraanimflag = GetCurrentModel()->IsCameraMotion(curmotid);
+			if (cameraanimflag) {
+				//jointの位置はjointのモーションに依存するから
+				::MessageBox(s_3dwnd, L"カメラモーション以外を選択してから再試行してください.", L"CurrentMotion is Camera warning",
+					MB_OK | MB_ICONINFORMATION);
+
+				s_sidemenu_sellock->setValue(false, false);
+			}
+			else {
+				s_befLockMatView = s_matView;//2024/06/06
+				s_camtargetflag = true;
+
+				//sellockオンの時はカメラが選択ジョイント中心回転、targetdispオンの時はカメラがマニピュレータ(カメラターゲット位置)中心回転
+				//両方オンにすると分かりずらいので排他選択
+				if (s_sidemenu_targetdisp) {
+					s_sidemenu_targetdisp->setValue(false, false);
+					s_camtargetdisp = false;
+				}
+
+				s_camtargetOnceflag = 1;//2024/06/04  2024/06/06オンの時だけ
+
+			}
+		}
+	}
+	else {
+		s_camtargetflag = false;
+	}
+}
+
+void OnCameraTargetManipulator()
+{
+	bool value = s_sidemenu_targetdisp->getValue();
+	if (value) {
+		s_camtargetdisp = true;
+
+		//sellockオンの時はカメラが選択ジョイント中心回転、targetdispオンの時はカメラがマニピュレータ(カメラターゲット位置)中心回転
+		//両方オンにすると分かりずらいので排他選択
+		if (s_sidemenu_sellock) {
+			s_sidemenu_sellock->setValue(false, false);
+			s_camtargetflag = false;
+		}
+	}
+	else {
+		s_camtargetdisp = false;
+	}
 }

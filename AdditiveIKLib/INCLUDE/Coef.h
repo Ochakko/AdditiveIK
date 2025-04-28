@@ -24,6 +24,13 @@ class CMQOMaterial;
 #define	u_long	unsigned long
 
 
+enum {
+	IKKIND_ROTATE,
+	IKKIND_MOVE,
+	IKKIND_SCALE,
+	IKKIND_MAX
+};
+
 //######################
 //GamePad SonyDualSense
 //######################

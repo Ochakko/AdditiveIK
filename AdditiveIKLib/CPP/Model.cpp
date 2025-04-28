@@ -18150,7 +18150,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 			}
 
 			CBone* aplybone;
-			if (parentbone) {
+			if (parentbone && parentbone->IsSkeleton()) {//2025/04/28
 				aplybone = parentbone;
 			}
 			else {
@@ -18526,7 +18526,7 @@ int CModel::FKBoneTraAxisPostFK(
 
 
 int CModel::FKBoneTraAxis(bool limitdegflag, int wallscrapingikflag, 
-	int onlyoneflag, CEditRange* erptr, int srcboneno, int axiskind, float delta, ChaMatrix selectmat)
+	CEditRange* erptr, int srcboneno, int axiskind, float delta, ChaMatrix selectmat)
 {
 	ChaCalcFunc chacalcfunc;
 

@@ -799,7 +799,7 @@ public:
 		bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 		int srcboneno);
 	int FKBoneTraAxis(bool limitdegflag, int wallscrapingikflag, 
-		int onlyoneflag, CEditRange* erptr,
+		CEditRange* erptr,
 		int srcboneno, int axiskind, float delta, ChaMatrix selectmat);
 
 
